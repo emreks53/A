@@ -355,7 +355,7 @@
 {"w":"Aliyy","o":"Ar.","f":1,"m":"Pek yüce, her şeyin üstünde olan; Allah'ın isimlerinden (el-Aliyy). 'Aliyyü'l-Azîm': pek yüce ve pek büyük olan Allah."}
 {"w":"Allahu a'lem","o":"Ar.","f":1,"m":"Allah daha iyi bilir; doğrusunu Allah bilir. Kesin hüküm verilmeyen yerlerde edeb ifadesi olarak söylenir."}
 {"w":"Allahümme","o":"Ar.","f":1,"m":"Allah'ım! Ey Allah'ım! Duaların başında kullanılan nida."}
-{"w":"allâm","o":"Ar.","f":1,"m":"Çok iyi bilen, her şeyi bilen."}
+{"w":"allâm","o":"Ar.","f":1,"m":"Çok bilen, her şeyi en ince ayrıntısına kadar bilen; Allah'ın sıfatı olarak kullanılır ('Allâmü'l-Guyub': gizli ve görünmeyen her şeyi bilen Allah)."}
 {"w":"allâme","o":"Ar.","f":1,"m":"Çok bilgili, derin âlim."}
 {"w":"Allâmü'l-Guyub","o":"Ar.","f":1,"m":"Bütün gizlilikleri ve görünmeyenleri hakkıyla bilen Allah."}
 {"w":"âlûde","o":"Fa.","f":1,"m":"Bulaşmış, bulaşık; bir şeye düşkün, müptela."}
@@ -685,7 +685,7 @@
 {"w":"bedhah","o":"Fa.","f":1,"m":"Kötülük dileyen, kötü niyetli, düşman."}
 {"w":"bedhû","o":"Fa.","f":1,"m":"Kötü huylu, huysuz, geçimsiz."}
 {"w":"bedî'","o":"Ar.","f":2,"m":"Eşi ve örneği olmayan, benzersiz güzel; Allah'ın ismi olarak (el-Bedî') varlıkları örneksiz ve eşsiz bir sanatla yaratan; belâgatte sözü süsleme sanatlarını inceleyen ilim."}
-{"w":"bedîa","o":"Ar.","f":1,"m":"Eşsiz, hayret verici güzel eser; harika (çoğulu: bedâyi')."}
+{"w":"bedîa","o":"Ar.","f":1,"m":"Eşsiz, benzeri görülmemiş, hayret verecek derecede güzel (bedî' kelimesinin müennes şekli; Risale'de sık geçen 'san'at-ı bedîa': benzersiz, harika sanat); isim olarak: hayret verici güzel eser, harika (çoğulu: bedâyi')."}
 {"w":"bedihî","o":"Ar.","f":2,"m":"Apaçık; delil gerektirmeden ilk bakışta bilinen."}
 {"w":"bedihiyat","o":"Ar.","f":1,"m":"Apaçık gerçekler; akla ilk bakışta görünen, ispata ihtiyaç duymayan bilgiler."}
 {"w":"bedihiye","o":"Ar.","f":1,"m":"Apaçık, delile ihtiyaç duymayan (bedihî kelimesinin müennesi); 'hakikat-i bedihiye': herkesin kabul ettiği açık gerçek."}
@@ -4337,11 +4337,11 @@
 {"w":"kafile","o":"Ar.","f":1,"m":"Yolcu topluluğu, kervan; Risale'de dünyaya gelip geçen nesiller ve mahlukat kafileleri."}
 {"w":"kâfir","o":"Ar.","f":2,"m":"İman etmeyen, Allah'ı ve dinin esaslarını inkâr eden; kelimenin aslı hakikati ve nimeti örten demektir."}
 {"w":"kâfirane","o":"Ar.-Fa.","f":1,"m":"Kâfirce, kâfirlere yakışır şekilde."}
-{"w":"kâfiye","o":"Ar.","f":1,"m":"Şiirde mısra veya beyit sonlarındaki ses benzerliği, uyak."}
+{"w":"kâfiye","o":"Ar.","f":1,"m":"Şiirde mısra veya beyit sonlarındaki ses benzerliği, uyak. Ayrıca aynı yazılışla 'kâfî' (yeterli) kelimesinin müennesi olarak tamlamalarda: yeterli, yetecek kadar ('izahat-ı kâfiye': yeterli açıklama)."}
 {"w":"kâfur","o":"Ar.","f":1,"m":"Kâfur ağacından elde edilen, keskin ve güzel kokulu, serinletici beyaz madde; Kur'ân'da (İnsan, 5-6) iyilerin Cennet'te içtikleri içeceğe karışan, kâfur kokulu bir pınar olarak geçer."}
 {"w":"kahhar","o":"Ar.","f":2,"m":"Allah'ın isimlerinden (el-Kahhâr): her şeye galip gelen, hiçbir şeyin kudretine karşı duramadığı, dilediğini mutlaka yerine getiren; zalimleri ve isyankârları celaliyle kahreden."}
 {"w":"kahhariyet","o":"Ar.","f":1,"m":"Kahhar isminin tecellisi; Allah'ın her şeye galip gelmesi, hiçbir şeyin O'na karşı koyamaması ve celal cihetiyle zalimleri, isyankârları kahretmesi."}
-{"w":"kâhil","o":"Ar.","f":1,"m":"Gençliği geçip olgunluk çağına girmiş, orta yaşlı kimse."}
+{"w":"kâhil","o":"Ar.","f":1,"m":"Gençliği geçip olgunluk çağına girmiş, orta yaşlı (kimse). Farsça kökenli eş yazılışlı kelime olarak: tembel, üşengeç, işi ağırdan alan."}
 {"w":"kâhin","o":"Ar.","f":1,"m":"Cinlerden haber aldığını veya gaybı bildiğini iddia eden kimse, falcı."}
 {"w":"kâhir","o":"Ar.","f":1,"m":"Kahreden, galip gelen, ezici (kâhir ekseriyet: ezici çoğunluk)."}
 {"w":"kâhire","o":"Ar.","f":1,"m":"Kâhir kelimesinin dişil şekli: kahreden, ezici, karşı konulamaz (hüccet-i kâhire: susturan kesin delil); Mısır'ın başşehri Kahire."}
@@ -4866,7 +4866,7 @@
 {"w":"lem'a","o":"Ar.","f":2,"m":"Parıltı, ışık parlaması. Risale-i Nur'da eserlerin bir kısmına verilen isimdir; 'Lem'alar' bu parıltıların toplandığı kitaptır ve her bir risale Kur'ân'dan gelen bir nur parıltısı sayılır."}
 {"w":"lemean","o":"Ar.","f":1,"m":"Parlama, parıldama, ışıldama."}
 {"w":"lemeat","o":"Ar.","f":1,"m":"Parıltılar, ışıltılar (tekili: lem'a); Sözler'in sonunda yer alan manzum risalenin adı.","v":["lemaat"]}
-{"w":"lemha","o":"Ar.","f":1,"m":"Bir göz atış, kısa bir bakış; an, lahza."}
+{"w":"lemha","o":"Ar.","f":1,"m":"Bir göz atış, kısa bir bakış; parıltı, şimşek gibi bir anlık parlayış; an, lahza (bir lemhada: göz açıp kapayıncaya kadar)."}
 {"w":"lemha-i basar","o":"Ar.","f":1,"m":"Göz açıp kapayıncaya kadar geçen an; pek kısa zaman."}
 {"w":"lemmî","o":"Ar.","f":1,"m":"Sebepten neticeye, müessirden esere giden (delil). Lemmî delil, sebebin varlığından onun neticesini ispat eder; karşılığı eserden müessire giden innî delildir.","v":["limmî"]}
 {"w":"lems","o":"Ar.","f":1,"m":"Dokunma, el sürme; dokunma duyusu."}
@@ -5007,7 +5007,7 @@
 {"w":"mağşuş","o":"Ar.","f":1,"m":"İçine başka şey karıştırılmış, katışık, hileli; saf olmayan."}
 {"w":"mağzub","o":"Ar.","f":1,"m":"Gazaba uğramış, öfkeye hedef olmuş."}
 {"w":"mah","o":"Fa.","f":1,"m":"Ay (gökteki ay); otuz günlük zaman dilimi."}
-{"w":"mahal","o":"Ar.","f":2,"m":"Yer, mekân; bir şeyin bulunduğu veya gerektiği yer, münasip zaman."}
+{"w":"mahal","o":"Ar.","f":2,"m":"Yer, mekân; bir şeyin bulunduğu veya bulunması uygun düşen yer; uygun durum, gerek, sebep ('buna mahal yok': buna gerek yok, bunun yeri değil)."}
 {"w":"mahârim","o":"Ar.","f":1,"m":"Aralarında evlenmenin haram olduğu yakın akrabalar; haram ve dokunulmaz şeyler (tekili: mahrem)."}
 {"w":"mâhasal","o":"Ar.","f":1,"m":"Elde edilen sonuç, netice; bir sözün özü. Zarf olarak: kısacası, hâsılı, sonuç olarak."}
 {"w":"mahâzir","o":"Ar.","f":1,"m":"Sakıncalar, mahzurlar, çekinilecek şeyler (tekili: mahzur)."}
@@ -7044,7 +7044,7 @@
 {"w":"nakliye","o":"Ar.","f":1,"m":"Nakle, rivayete dayanan (naklî kelimesinin dişil şekli); 'edille-i nakliye': Kur'an ve hadise dayanan deliller. Bugünkü dilde: taşımacılık."}
 {"w":"nakş","o":"Ar.","f":3,"m":"Nakış, süsleme, işleme; resim ve desen. Risale-i Nur'da kâinattaki varlıkların üzerindeki san'atlı şekillerin Allah'ın isimlerinin nakışları olduğu; nakşın nakkaşı, san'atın san'atkârı gösterdiği anlatılır.","v":["nakış"]}
 {"w":"Nakşibendî","o":"Fa.","f":1,"m":"Şah-ı Nakşibend'e (Bahâeddin Nakşibend) nispet edilen tarikat ve bu tarikata mensup kimse."}
-{"w":"nâkus","o":"Ar.","f":1,"m":"Hristiyanların ibadete çağırmak için çaldıkları çan veya tahta tokmak."}
+{"w":"nâkus","o":"Ar.","f":1,"m":"Hristiyanların ibadet vaktini duyurmak için tokmakla vurdukları uzun tahta levha; sonraları kilise çanı."}
 {"w":"nakz","o":"Ar.","f":1,"m":"Bozma, yıkma; bir sözü, anlaşmayı veya hükmü geçersiz kılma ('nakz-ı ahd': sözü bozma)."}
 {"w":"nâlân","o":"Fa.","f":1,"m":"İnleyen, ağlayıp sızlayan."}
 {"w":"nâlâyık","o":"Fa.-Ar.","f":1,"m":"Layık olmayan, yakışmayan, uygunsuz."}
@@ -7490,7 +7490,7 @@
 {"w":"râbian","o":"Ar.","f":2,"m":"Dördüncü olarak, dördüncüsü (sıralamada evvelen, sâniyen, sâlisen'den sonra gelir)."}
 {"w":"rabt","o":"Ar.","f":2,"m":"Bağlama, bağlanma; ilişki kurma, birleştirme (rabtetmek: bağlamak)."}
 {"w":"râci'","o":"Ar.","f":1,"m":"Dönen, geri dönen; bir şeye ait, onunla ilgili olan (zamir ona râci'dir: onu gösterir)."}
-{"w":"râcî","o":"Ar.","f":1,"m":"Ümit eden, umutla isteyen, rica eden."}
+{"w":"râcî","o":"Ar.","f":1,"m":"Ümit eden, umutla isteyen, rica eden. Ayrı bir kelime olan râci (râci'): dönen; ilgili, ait ('ona râcidir': onunla ilgilidir, ona döner)."}
 {"w":"râcih","o":"Ar.","f":1,"m":"Ağır basan, üstün gelen; tercih edilmeye daha layık olan (karşıtı: mercûh)."}
 {"w":"racîm","o":"Ar.","f":1,"m":"Taşlanmış, kovulmuş, rahmetten uzaklaştırılmış; şeytanın sıfatı (şeytan-ı racîm). 'Eûzü billâhi mine'ş-şeytâni'r-racîm': kovulmuş şeytanın şerrinden Allah'a sığınırım.","v":["recîm"]}
 {"w":"racül","o":"Ar.","f":1,"m":"Erkek, adam (çoğulu: ricâl)."}
@@ -8814,7 +8814,7 @@
 {"w":"tahmil","o":"Ar.","f":2,"m":"Yükleme, yük vurma; bir sorumluluğu birinin üzerine bırakma."}
 {"w":"tahnit","o":"Ar.","f":1,"m":"Mumyalama; ölünün bozulmaması için cesedi ilaçlama."}
 {"w":"tahrib","o":"Ar.","f":2,"m":"Yıkma, harap etme, bozma.","v":["tahrip"]}
-{"w":"tahribat","o":"Ar.","f":2,"m":"Yıkımlar, bozgunculuklar, verilen zararlar (tekili: tahrib)."}
+{"w":"tahribat","o":"Ar.","f":2,"m":"Yıkımlar, harap etmeler; bir şeye verilen ağır zararlar (tekili: tahrib)."}
 {"w":"tahribkâr","o":"Ar.-Fa.","f":1,"m":"Yıkıcı, harap eden, bozguncu.","v":["tahripkâr"]}
 {"w":"tahric","o":"Ar.","f":1,"m":"Çıkarma, dışarı çıkarma; bir hadisi kaynaklarını göstererek nakletme; bir hükmü bir asıldan çıkarma."}
 {"w":"tahrif","o":"Ar.","f":2,"m":"Bir sözü veya metni asıl şeklinden çıkarıp değiştirme, bozma; özellikle önceki semavi kitapların değiştirilmesi."}
@@ -9240,7 +9240,7 @@
 {"w":"tefavüt","o":"Ar.","f":2,"m":"Fark, ayrılık; derece ve mertebe farkı."}
 {"w":"tefazul","o":"Ar.","f":1,"m":"Birbirinden üstün olma; fazilet bakımından farklı derecelerde bulunma."}
 {"w":"tefazzul","o":"Ar.","f":1,"m":"Üstün olma, üstünlük; üstünlük taslama; lütfedip ihsanda bulunma.","v":["tafazzul"]}
-{"w":"tefcir","o":"Ar.","f":1,"m":"Suyu fışkırtıp akıtma; birikmiş suları kanallarla akıtıp kaynak açma."}
+{"w":"tefcir","o":"Ar.","f":1,"m":"Suyu fışkırtma, pınar ve kaynak açıp akıtma (taştan veya yerden su çıkarma gibi); ayrıca bir yerde birikmiş suyu kanal ve borularla dışarı akıtma."}
 {"w":"tefehhüm","o":"Ar.","f":1,"m":"Anlamaya çalışma, yavaş yavaş anlama."}
 {"w":"tefekkür","o":"Ar.","f":3,"m":"Derin düşünme. Risale-i Nur'da kâinattaki eserlere ve insanın kendi nefsine bakarak Allah'ın isim ve sıfatlarını tanımaya yönelen iman merkezli düşünce olarak anlatılır; 'bir saat tefekkür bir sene nafile ibadetten hayırlıdır' manasındaki söz zikredilir. Dört hatvenin sonuncusudur; Risale-i Nur'un kendisi de Kur'ânî bir tefekkür dersidir."}
 {"w":"tefekkürat","o":"Ar.","f":1,"m":"Düşünceler, tefekkürler (tekili: tefekkür)."}
