@@ -61,11 +61,23 @@ Lügat `assets/lugat.jsonl` dosyasındadır; her satır bir maddedir:
 | `f`  | Risale-i Nur'da karşılaşılma sıklığı: 3 çok sık, 2 sık, 1 seyrek — sıralamada kullanılır |
 | `v`  | Başka baskılarda görülen farklı yazılışlar (isteğe bağlı) |
 
-Manalar, kelimeler harf gruplarına bölünerek yapay zekâ ile yazıldı; ardından her dosya
-ayrı bir denetçi tarafından madde madde kontrol edildi (yanlış manalar düzeltildi, var
-olmayan kelimeler çıkarıldı, eksik önemli kelimeler eklendi). Yine de hata bulunabilir;
-yayından önce Osmanlıcaya ve Risale-i Nur'a vâkıf birinin gözden geçirmesi tavsiye edilir.
-Uygulamanın Ayarlar > Hakkında bölümünde de okuyucuya bu not düşülür.
+Lügatte **10.504 kelime ve ifade** var: Risale-i Nur'da geçen Arapça ve Farsça kökenli
+kelimeler, çoğulları, terkipler (ör. "mana-yı harfî", "kudret-i ezeliye"), Risale'nin temel
+kavramları (bunlar daha ayrıntılı açıklanır) ve yalnızca şapka/kesme farkıyla ayrılan
+kelimeler (âlim / alîm, hâkim / hakîm).
+
+Hazırlanışı:
+1. Kelimeler harf gruplarına bölünüp yapay zekâ ile yazıldı; her dosya ayrı bir denetçi
+   tarafından madde madde kontrol edildi (yanlış manalar düzeltildi, var olmayan kelimeler
+   çıkarıldı).
+2. Her harf grubu için eksik kelimeler ayrıca tarandı ve eklendi.
+3. Her madde, **Kubbealtı Lugatı** (lugatim.com) karşılığıyla yan yana konup yeniden
+   denetlendi: yanlış manalar, karışmış eşyazılışlı kelimeler, yanlış tekil/çoğul ve köken
+   bilgileri düzeltildi. Kubbealtı'nın metni telif hakkıyla korunduğundan kopyalanmadı;
+   yalnızca doğrulama kaynağı olarak kullanıldı ve manalar kendi cümlelerimizle yazıldı.
+
+Yine de hata bulunabilir; yayından önce Osmanlıcaya ve Risale-i Nur'a vâkıf birinin gözden
+geçirmesi tavsiye edilir. Uygulamanın Ayarlar > Hakkında bölümünde de okuyucuya bu not düşülür.
 
 **Düzeltme ve ekleme:** `assets/lugat.jsonl` dosyasını düzenleyin, sonra
 
