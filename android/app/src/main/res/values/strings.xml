@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lügat-ı Risale-i Nur</string>
+    <!-- Ayarlar > Rahatsız Etmeyin listesinde görünen kural adı -->
+    <string name="focus_rule_name">Lügat-ı Risale-i Nur (okuma)</string>
+    <string name="focus_condition_summary">Risale-i Nur okunuyor</string>
+</resources>

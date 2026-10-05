@@ -1,0 +1,26 @@
+name: lugat_risale
+description: "Lügat-ı Risale-i Nur — Risale-i Nur okurken karşılaşılan Osmanlıca kelimelerin manasına hızlıca bakın."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  shared_preferences: ^2.5.5
+  wakelock_plus: ^1.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/lugat.jsonl
