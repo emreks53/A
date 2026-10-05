@@ -11,6 +11,8 @@ class FocusStatus {
     this.enabled = true,
     this.permissionGranted = false,
     this.active = false,
+    this.disabledInSystem = false,
+    this.sdk = 0,
   });
 
   /// Bu cihazda uygulama bildirimleri kendisi engelleyebilir mi?
@@ -23,8 +25,19 @@ class FocusStatus {
   /// Android'de "Rahatsız Etmeyin erişimi" verilmiş mi?
   final bool permissionGranted;
 
-  /// Şu anda bildirimler uygulama tarafından gizleniyor mu?
+  /// Şu anda bildirimler gerçekten gizleniyor mu? (Android sistemin o anki
+  /// durumuna bakılarak belirlenir.)
   final bool active;
+
+  /// Kullanıcı uygulamanın "Rahatsız Etmeyin" kuralını Android ayarlarından
+  /// kapatmış.
+  final bool disabledInSystem;
+
+  /// Android API sürümü (Android dışında 0).
+  final int sdk;
+
+  /// Android 9 ve öncesi: odak modu bu sürümlerde sunulmuyor.
+  bool get oldAndroid => sdk > 0 && sdk < 29;
 
   /// Ayar açık ama izin olmadığı için çalışamıyor.
   bool get needsPermission => supported && enabled && !permissionGranted;
@@ -34,6 +47,8 @@ class FocusStatus {
         enabled: enabled ?? this.enabled,
         permissionGranted: permissionGranted,
         active: active,
+        disabledInSystem: disabledInSystem,
+        sdk: sdk,
       );
 
   factory FocusStatus.fromMap(Map<Object?, Object?> map) => FocusStatus(
@@ -41,6 +56,8 @@ class FocusStatus {
         enabled: map['enabled'] != false,
         permissionGranted: map['granted'] == true,
         active: map['active'] == true,
+        disabledInSystem: map['disabledInSystem'] == true,
+        sdk: (map['sdk'] as num?)?.toInt() ?? 0,
       );
 
   @override
@@ -49,10 +66,12 @@ class FocusStatus {
       other.supported == supported &&
       other.enabled == enabled &&
       other.permissionGranted == permissionGranted &&
-      other.active == active;
+      other.active == active &&
+      other.disabledInSystem == disabledInSystem &&
+      other.sdk == sdk;
 
   @override
-  int get hashCode => Object.hash(supported, enabled, permissionGranted, active);
+  int get hashCode => Object.hash(supported, enabled, permissionGranted, active, disabledInSystem, sdk);
 }
 
 /// Android tarafındaki `FocusModeController` ile konuşur.
@@ -79,10 +98,16 @@ class FocusModeService {
   Future<FocusStatus?> setEnabled(bool enabled) => _call('setEnabled', {'enabled': enabled});
 
   /// Android'in "Rahatsız Etmeyin erişimi" ayar ekranını açar.
-  Future<bool> openPermissionSettings() async {
+  Future<bool> openPermissionSettings() => _open('openSettings');
+
+  /// Uygulamanın Rahatsız Etmeyin kuralının (ya da Rahatsız Etmeyin'in)
+  /// Android ayar ekranını açar.
+  Future<bool> openRuleSettings() => _open('openRuleSettings');
+
+  Future<bool> _open(String method) async {
     if (!_isAndroid) return false;
     try {
-      return await _channel.invokeMethod<bool>('openSettings') ?? false;
+      return await _channel.invokeMethod<bool>(method) ?? false;
     } on PlatformException {
       return false;
     } on MissingPluginException {

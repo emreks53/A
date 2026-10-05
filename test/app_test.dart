@@ -37,7 +37,7 @@ EditableText searchField(WidgetTester tester) =>
     tester.widget<EditableText>(find.descendant(of: find.byKey(const Key('arama-kutusu')), matching: find.byType(EditableText)));
 
 /// Android tarafını taklit eder.
-List<MethodCall> mockAndroidFocus({required bool granted, bool enabled = true}) {
+List<MethodCall> mockAndroidFocus({required bool granted, bool enabled = true, bool disabledInSystem = false}) {
   final calls = <MethodCall>[];
   var isEnabled = enabled;
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(_channel, (call) async {
@@ -45,10 +45,17 @@ List<MethodCall> mockAndroidFocus({required bool granted, bool enabled = true}) 
     switch (call.method) {
       case 'setEnabled':
         isEnabled = (call.arguments as Map)['enabled'] as bool;
-      case 'openSettings':
+      case 'openSettings' || 'openRuleSettings':
         return true;
     }
-    return {'supported': true, 'enabled': isEnabled, 'granted': granted, 'active': granted && isEnabled};
+    return {
+      'supported': true,
+      'sdk': 36,
+      'enabled': isEnabled,
+      'granted': granted,
+      'active': granted && isEnabled && !disabledInSystem,
+      'disabledInSystem': disabledInSystem,
+    };
   });
   return calls;
 }
@@ -147,7 +154,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Ekran kapanmaz'), findsOneWidget);
-    expect(find.text('Bildirimleri gizleme (iPhone)'), findsOneWidget);
+    expect(find.text('Bildirim gizleme (iPhone)'), findsOneWidget);
     expect(find.byKey(const Key('odak-anahtari')), findsNothing);
   });
 
@@ -165,6 +172,85 @@ void main() {
     await tester.tap(find.text('Şimdi değil'));
     await tester.pump();
     expect(find.textContaining('“Rahatsız Etmeyin”'), findsNothing);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('odak_uyarisi_kapatildi'), isTrue, reason: 'bir daha sorulmamalı');
+  });
+
+  testWidgets('izin uyarısı yazmaya başlayınca önerilerin yerini kaplamaz', (tester) async {
+    mockAndroidFocus(granted: false);
+    await startApp(tester, android: true);
+
+    await tester.enterText(find.byKey(const Key('arama-kutusu')), 'in');
+    await tester.pump();
+
+    expect(find.textContaining('“Rahatsız Etmeyin”'), findsNothing);
+    expect(tile('inkişaf'), findsOneWidget);
+  });
+
+  testWidgets('kural Android ayarlarında kapatılmışsa ayarlarda söylenir', (tester) async {
+    final calls = mockAndroidFocus(granted: true, disabledInSystem: true);
+    final controller = await startApp(tester, android: true);
+    expect(controller.focus.active, isFalse);
+    expect(find.byTooltip('Odak modu Android ayarlarında kapatılmış'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Ayarlar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Android ayarlarını aç'));
+    await tester.pump();
+    expect(calls.map((c) => c.method), contains('openRuleSettings'));
+  });
+
+  testWidgets('iPhone\'da bir kereye mahsus Kestirmeler ipucu gösterilir', (tester) async {
+    await startApp(tester);
+
+    expect(find.textContaining('Kestirmeler kurulumu'), findsOneWidget);
+    await tester.tap(find.text('Nasıl?'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('“Odağı Ayarla”'), findsOneWidget, reason: 'rehber açık gelmeli');
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tamam'));
+    await tester.pump();
+    expect(find.textContaining('Kestirmeler kurulumu'), findsNothing);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('iphone_odak_ipucu_kapatildi'), isTrue);
+  });
+
+  testWidgets('kenardan kaydırarak geri dönünce de klavye açılır (iPhone)', (tester) async {
+    await startApp(tester);
+
+    await tester.enterText(find.byKey(const Key('arama-kutusu')), 'muhab');
+    await tester.pump();
+    await tester.tap(tile('muhabbet'));
+    await tester.pumpAndSettle();
+    expect(find.byType(EntryPage), findsOneWidget);
+
+    await tester.dragFrom(const Offset(5, 300), const Offset(500, 0));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(EntryPage), findsNothing);
+    expect(searchField(tester).focusNode.hasFocus, isTrue);
+    expect(tester.testTextInput.isVisible, isTrue);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  testWidgets('Kaydedilenler\'den açılan kelimede "Yeni kelime" arama kutusunu boşaltır', (tester) async {
+    final controller = await startApp(tester);
+    controller.toggleFavorite(controller.lugat!.byWord('insaf')!);
+    await tester.enterText(find.byKey(const Key('arama-kutusu')), 'eski arama');
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Kaydedilenler'));
+    await tester.pumpAndSettle();
+    await tester.tap(tile('insaf'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('yeni-kelime')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(EntryPage), findsNothing);
+    expect(find.text('Kaydedilenler'), findsNothing);
+    expect(searchField(tester).controller.text, isEmpty);
+    expect(searchField(tester).focusNode.hasFocus, isTrue);
   });
 
   testWidgets('Android\'de odak modu varsayılan açık ve ayarlardan kapatılabilir', (tester) async {

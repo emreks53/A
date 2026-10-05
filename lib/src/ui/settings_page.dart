@@ -5,7 +5,10 @@ import 'app.dart';
 import 'widgets.dart';
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, this.showIosFocusHelp = false});
+
+  /// iPhone'da Kestirmeler rehberi açık gelsin mi?
+  final bool showIosFocusHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -23,10 +26,10 @@ class SettingsPage extends StatelessWidget {
             title: Text('Ekran kapanmaz'),
             subtitle: Text('Uygulama açıkken telefon kendiliğinden uyku moduna geçmez.'),
           ),
-          if (controller.focusService.isAndroid)
+          if (controller.isAndroid)
             ..._androidFocus(context, controller)
           else
-            const _IosFocusHelp(),
+            _IosFocusHelp(initiallyExpanded: showIosFocusHelp),
           const Divider(height: 32),
           const SectionHeader('Görünüm'),
           ListTile(
@@ -85,14 +88,18 @@ class SettingsPage extends StatelessWidget {
     final theme = Theme.of(context);
     final focus = controller.focus;
     if (!focus.supported) {
-      return const [
+      return [
         ListTile(
-          leading: Icon(Icons.do_not_disturb_off_outlined),
-          title: Text('Bildirimleri gizleme bu cihazda kullanılamıyor'),
+          leading: const Icon(Icons.do_not_disturb_off_outlined),
+          title: const Text('Bildirimleri gizleme bu telefonda kullanılamıyor'),
           subtitle: Text(
-            'Bu telefon, uygulamaların “Rahatsız Etmeyin” modunu açmasına izin vermiyor. '
-            'Okurken bildirim gelmesin isterseniz bildirim panelinden “Rahatsız Etmeyin”i '
-            'kendiniz açabilirsiniz.',
+            focus.oldAndroid
+                ? 'Android 9 ve önceki sürümlerde uygulama, telefonun kendi “Rahatsız Etmeyin” '
+                    'ayarlarını bozmadan bildirimleri gizleyemiyor. Okurken bildirim gelmesin '
+                    'isterseniz bildirim panelinden “Rahatsız Etmeyin”i kendiniz açabilirsiniz.'
+                : 'Bu telefon, uygulamaların “Rahatsız Etmeyin” modunu açmasına izin vermiyor. '
+                    'Okurken bildirim gelmesin isterseniz bildirim panelinden '
+                    '“Rahatsız Etmeyin”i kendiniz açabilirsiniz.',
           ),
         ),
       ];
@@ -102,44 +109,54 @@ class SettingsPage extends StatelessWidget {
       state = 'Kapalı.';
     } else if (!focus.permissionGranted) {
       state = 'İzin verilmediği için şu an çalışmıyor.';
+    } else if (focus.disabledInSystem) {
+      state = 'Android ayarlarında kapatılmış; şu an çalışmıyor.';
     } else if (focus.active) {
       state = 'Şu an bildirimler gizleniyor.';
     } else {
       state = 'Uygulama ekrandayken devreye girer.';
     }
+
+    Widget warning(String text, String button, VoidCallback onPressed) => Padding(
+          padding: const EdgeInsets.fromLTRB(72, 0, 20, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(text, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
+              const SizedBox(height: 8),
+              FilledButton.tonal(onPressed: onPressed, child: Text(button)),
+            ],
+          ),
+        );
+
     return [
       SwitchListTile(
         key: const Key('odak-anahtari'),
         secondary: const Icon(Icons.do_not_disturb_on_outlined),
         title: const Text('Bildirimleri gizle (odak modu)'),
         subtitle: Text(
-          'Uygulama açıkken mesaj ve diğer bildirimler ekrana gelmez, ses çıkarmaz. '
-          'Uygulamadan çıkınca ya da ekran kapanınca her şey eski hâline döner. '
-          'Alarmlar, medya sesi ve aynı kişinin 15 dakika içinde ikinci kez araması '
-          'yine duyulur.\n$state',
+          'Uygulama açıkken mesajlar, bildirimler ve telefon aramaları sessize alınır, '
+          'ekrana gelmez. Uygulamadan çıkınca ya da ekran kapanınca her şey eski hâline döner. '
+          'Alarmlar, medya sesi, yıldızlı kişilerin aramaları ve 15 dakika içinde ikinci kez '
+          'arayanlar yine duyulur.\n$state',
         ),
         isThreeLine: true,
         value: focus.enabled,
         onChanged: controller.setFocusEnabled,
       ),
       if (focus.needsPermission)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(72, 0, 20, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Bunun için bir kereye mahsus “Rahatsız Etmeyin erişimi” izni gerekir. '
-                'Açılan listede “Lügat-ı Risale-i Nur”u bulup izni açın, sonra geri dönün.',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
-              ),
-              const SizedBox(height: 8),
-              FilledButton.tonal(
-                onPressed: controller.openFocusPermissionSettings,
-                child: const Text('İzin ver'),
-              ),
-            ],
-          ),
+        warning(
+          'Bunun için bir kereye mahsus “Rahatsız Etmeyin erişimi” izni gerekir. '
+          'Açılan listede “Lügat-ı Risale-i Nur”u bulup izni açın, sonra geri dönün.',
+          'İzin ver',
+          controller.openFocusPermissionSettings,
+        )
+      else if (focus.enabled && focus.disabledInSystem)
+        warning(
+          'Uygulamanın “Lügat-ı Risale-i Nur (okuma)” kuralı Android’in Rahatsız Etmeyin '
+          'ayarlarından kapatılmış. Tekrar açarsanız odak modu çalışır.',
+          'Android ayarlarını aç',
+          controller.openFocusRuleSettings,
         ),
     ];
   }
@@ -149,7 +166,9 @@ class SettingsPage extends StatelessWidget {
 /// Kestirmeler uygulamasıyla, Lügat açılınca odak modunu açan ve kapanınca
 /// kapatan bir otomasyon kurulabilir.
 class _IosFocusHelp extends StatelessWidget {
-  const _IosFocusHelp();
+  const _IosFocusHelp({this.initiallyExpanded = false});
+
+  final bool initiallyExpanded;
 
   @override
   Widget build(BuildContext context) {
@@ -157,16 +176,18 @@ class _IosFocusHelp extends StatelessWidget {
     final steps = [
       'Kestirmeler (Shortcuts) uygulamasını açın ve alttaki “Otomasyon” sekmesine geçin.',
       '“Yeni Otomasyon” (veya +) → “Uygulama”yı seçin.',
-      'Uygulama olarak “Lügat-ı Risale-i Nur”u seçin; “Açıldığında” işaretli olsun, '
-          '“Hemen Çalıştır”ı seçin.',
+      'Uygulama olarak “Lügat-ı Risale-i Nur”u seçin; “Açıldığında” işaretli olsun ve '
+          '“Hemen Çalıştır”ı seçin (iOS 16 ve öncesinde bu seçenek yoktur; eylemi ekledikten '
+          'sonra son ekranda “Çalıştırmadan Önce Sor”u kapatın).',
       '“Odağı Ayarla” (Set Focus) eylemini ekleyin: “Rahatsız Etme” → “Aç”.',
       'Aynı adımlarla ikinci bir otomasyon kurun: bu sefer “Kapatıldığında” seçip '
           '“Rahatsız Etme”yi “Kapat”.',
     ];
     return ExpansionTile(
+      initiallyExpanded: initiallyExpanded,
       leading: const Icon(Icons.do_not_disturb_on_outlined),
-      title: const Text('Bildirimleri gizleme (iPhone)'),
-      subtitle: const Text('Apple, uygulamaların “Rahatsız Etme”yi kendisinin açmasına izin vermiyor. '
+      title: const Text('Bildirim gizleme (iPhone)'),
+      subtitle: const Text('iPhone’da uygulamalar “Rahatsız Etme”yi kendi başlarına açamaz. '
           'Bir kereye mahsus kuracağınız bir otomasyonla aynı sonucu alabilirsiniz.'),
       childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +198,7 @@ class _IosFocusHelp extends StatelessWidget {
             child: Text('${i + 1}. ${steps[i]}', style: theme.textTheme.bodyMedium),
           ),
         Text(
-          'Böylece Lügat açılınca bildirimler susar, uygulamadan çıkınca eski hâline döner.',
+          'Böylece Lügat açılınca bildirimler susar, uygulamadan çıkınca “Rahatsız Etme” kapanır.',
           style: theme.textTheme.bodySmall,
         ),
       ],

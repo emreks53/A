@@ -29,6 +29,8 @@ class AppController extends ChangeNotifier {
   static const _kTextScale = 'yazi_boyutu';
   static const _kHistory = 'gecmis';
   static const _kFavorites = 'kaydedilenler';
+  static const _kFocusBannerDismissed = 'odak_uyarisi_kapatildi';
+  static const _kIosTipDismissed = 'iphone_odak_ipucu_kapatildi';
 
   final Future<Lugat> Function() _loadLugat;
   final Future<void> Function() _keepScreenOn;
@@ -53,8 +55,13 @@ class AppController extends ChangeNotifier {
 
   FocusStatus focus = const FocusStatus();
 
-  /// İzin uyarısı bu oturum için kapatıldı mı?
+  /// Android'de izin uyarısı "Şimdi değil" ile kapatıldı mı?
   bool focusBannerDismissed = false;
+
+  /// iPhone'da Kestirmeler kurulumu ipucu kapatıldı mı?
+  bool iosFocusTipDismissed = false;
+
+  bool get isAndroid => focusService.isAndroid;
 
   bool _disposed = false;
 
@@ -81,6 +88,8 @@ class AppController extends ChangeNotifier {
       textScale = (prefs.getDouble(_kTextScale) ?? 1.0).clamp(minTextScale, maxTextScale);
       history = prefs.getStringList(_kHistory) ?? const [];
       favorites = prefs.getStringList(_kFavorites) ?? const [];
+      focusBannerDismissed = prefs.getBool(_kFocusBannerDismissed) ?? false;
+      iosFocusTipDismissed = prefs.getBool(_kIosTipDismissed) ?? false;
       _notify();
     } catch (e) {
       debugPrint('Ayarlar okunamadı: $e');
@@ -133,8 +142,17 @@ class AppController extends ChangeNotifier {
 
   Future<void> openFocusPermissionSettings() => focusService.openPermissionSettings();
 
+  Future<void> openFocusRuleSettings() => focusService.openRuleSettings();
+
   void dismissFocusBanner() {
     focusBannerDismissed = true;
+    _prefs?.setBool(_kFocusBannerDismissed, true);
+    _notify();
+  }
+
+  void dismissIosFocusTip() {
+    iosFocusTipDismissed = true;
+    _prefs?.setBool(_kIosTipDismissed, true);
     _notify();
   }
 

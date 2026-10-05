@@ -2,9 +2,13 @@ package io.github.emreks53.lugat_risale
 
 import android.app.ActivityManager
 import android.app.Application
+import android.app.AutomaticZenRule
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
-import org.robolectric.RuntimeEnvironment
+import android.net.Uri
+import android.os.Build
+import android.service.notification.ZenPolicy
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -14,6 +18,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
@@ -31,8 +36,11 @@ class FocusModeControllerTest {
 
     private fun grant(granted: Boolean = true) = shadowOf(nm).setNotificationPolicyAccessGranted(granted)
 
-    private fun ruleId(): String? =
-        context.getSharedPreferences("odak_modu", Context.MODE_PRIVATE).getString("rule_id", null)
+    private val prefs get() = context.getSharedPreferences("odak_modu", Context.MODE_PRIVATE)
+
+    private fun ruleId(): String? = prefs.getString("rule_id", null)
+
+    private fun ownRules() = nm.automaticZenRules.filterValues { it.conditionId == CONDITION }
 
     @Test
     fun `varsayilan olarak acik ama izin olmadan hicbir sey yapmaz`() {
@@ -42,6 +50,7 @@ class FocusModeControllerTest {
         assertFalse(focus.hasPermission)
 
         focus.activate()
+        focus.deactivate()
 
         assertFalse(focus.isActive)
         assertNull(ruleId())
@@ -53,8 +62,11 @@ class FocusModeControllerTest {
         val focus = FocusModeController(context)
 
         focus.activate()
+        // Robolectric, Android 14 ve öncesinde kuralın açılmasını telefonun genel
+        // filtresine yansıtmıyor; gerçek sistemin yaptığını burada taklit ediyoruz.
+        if (Build.VERSION.SDK_INT < 35) nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+        assertTrue("açıldıktan sonra etkin olmalı", focus.isActive)
 
-        assertTrue(focus.isActive)
         val id = ruleId()
         assertNotNull(id)
         val rule = nm.getAutomaticZenRule(id)
@@ -63,19 +75,25 @@ class FocusModeControllerTest {
         assertEquals(NotificationManager.INTERRUPTION_FILTER_PRIORITY, rule.interruptionFilter)
         assertTrue(rule.isEnabled)
         val policy = rule.zenPolicy!!
-        assertEquals(android.service.notification.ZenPolicy.STATE_ALLOW, policy.priorityCategoryAlarms)
-        assertEquals(android.service.notification.ZenPolicy.STATE_ALLOW, policy.priorityCategoryMedia)
-        assertEquals(android.service.notification.ZenPolicy.STATE_ALLOW, policy.priorityCategoryRepeatCallers)
-        assertEquals(android.service.notification.ZenPolicy.STATE_DISALLOW, policy.priorityCategoryMessages)
-        assertEquals(android.service.notification.ZenPolicy.STATE_DISALLOW, policy.visualEffectPeek)
-        assertEquals(android.service.notification.ZenPolicy.STATE_DISALLOW, policy.visualEffectStatusBar)
+        assertEquals(ZenPolicy.STATE_ALLOW, policy.priorityCategoryAlarms)
+        assertEquals(ZenPolicy.STATE_ALLOW, policy.priorityCategoryMedia)
+        assertEquals(ZenPolicy.STATE_ALLOW, policy.priorityCategoryRepeatCallers)
+        assertEquals(ZenPolicy.STATE_ALLOW, policy.priorityCategoryCalls)
+        assertEquals(ZenPolicy.PEOPLE_TYPE_STARRED, policy.priorityCallSenders)
+        assertEquals(ZenPolicy.STATE_DISALLOW, policy.priorityCategoryMessages)
+        assertEquals(ZenPolicy.STATE_DISALLOW, policy.priorityCategoryEvents)
+        assertEquals(ZenPolicy.STATE_DISALLOW, policy.priorityCategoryReminders)
+        assertEquals(ZenPolicy.STATE_DISALLOW, policy.visualEffectPeek)
+        assertEquals(ZenPolicy.STATE_DISALLOW, policy.visualEffectStatusBar)
+        assertEquals(ZenPolicy.STATE_DISALLOW, policy.visualEffectNotificationList)
 
         // Uygulama tekrar ekrana gelince aynı kural kullanılır.
         focus.deactivate()
-        assertFalse(focus.isActive)
+        if (Build.VERSION.SDK_INT < 35) nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
+        assertFalse("kapatıldıktan sonra etkin olmamalı", focus.isActive)
         focus.activate()
         assertEquals(id, ruleId())
-        assertEquals(1, nm.automaticZenRules.size)
+        assertEquals(1, ownRules().size)
     }
 
     @Test
@@ -92,7 +110,73 @@ class FocusModeControllerTest {
         val second = ruleId()
         assertNotNull(second)
         assertNotNull(nm.getAutomaticZenRule(second))
-        assertEquals(1, nm.automaticZenRules.size)
+        assertEquals(1, ownRules().size)
+    }
+
+    @Test
+    fun `uygulama verisi silinse de eski kural benimsenir, kopya olusmaz`() {
+        grant()
+        FocusModeController(context).activate()
+        val original = ruleId()!!
+
+        prefs.edit().clear().commit() // "Depolamayı temizle"
+        val focus = FocusModeController(context)
+        focus.activate()
+
+        assertEquals(original, ruleId())
+        assertEquals(1, ownRules().size)
+    }
+
+    @Test
+    fun `fazladan kalmis kopya kurallar temizlenir`() {
+        grant()
+        val component = ComponentName(context, MainActivity::class.java)
+        repeat(2) {
+            nm.addAutomaticZenRule(
+                AutomaticZenRule("eski", null, component, CONDITION, null,
+                    NotificationManager.INTERRUPTION_FILTER_PRIORITY, true),
+            )
+        }
+        assertEquals(2, ownRules().size)
+
+        FocusModeController(context).activate()
+
+        assertEquals(1, ownRules().size)
+        assertEquals(ownRules().keys.single(), ruleId())
+    }
+
+    @Test
+    fun `baska kurallara dokunmaz`() {
+        grant()
+        val other = nm.addAutomaticZenRule(
+            AutomaticZenRule("Uyku", null, ComponentName(context, MainActivity::class.java),
+                Uri.parse("condition://baska/uyku"), null, NotificationManager.INTERRUPTION_FILTER_PRIORITY, true),
+        )
+        val focus = FocusModeController(context)
+        focus.activate()
+        focus.deactivate()
+        focus.enabled = false
+        focus.disableAndCleanUp()
+
+        assertNotNull(nm.getAutomaticZenRule(other))
+        assertTrue(ownRules().isEmpty())
+    }
+
+    @Test
+    fun `kullanici kurali Android ayarlarindan kapattiysa durum bunu soyler`() {
+        grant()
+        val focus = FocusModeController(context)
+        focus.activate()
+        val id = ruleId()!!
+        val rule = nm.getAutomaticZenRule(id)
+        rule.isEnabled = false
+        nm.updateAutomaticZenRule(id, rule)
+
+        focus.activate()
+
+        assertFalse(focus.isActive)
+        assertEquals(true, focus.status()["disabledInSystem"])
+        assertEquals(false, focus.status()["active"])
     }
 
     @Test
@@ -100,29 +184,28 @@ class FocusModeControllerTest {
         grant()
         val focus = FocusModeController(context)
         focus.activate()
-        assertEquals(1, nm.automaticZenRules.size)
+        assertEquals(1, ownRules().size)
 
         focus.enabled = false
         focus.disableAndCleanUp()
 
         assertFalse(focus.isActive)
-        assertTrue(nm.automaticZenRules.isEmpty())
+        assertTrue(ownRules().isEmpty())
         assertNull(ruleId())
 
         focus.activate()
-        assertFalse(focus.isActive)
-        assertTrue(nm.automaticZenRules.isEmpty())
+        assertTrue(ownRules().isEmpty())
     }
 
     @Test
     fun `durum haritasi Dart tarafinin bekledigi anahtarlari icerir`() {
         grant()
-        val focus = FocusModeController(context)
-        focus.activate()
-        assertEquals(
-            mapOf("supported" to true, "enabled" to true, "granted" to true, "active" to true),
-            focus.status(),
-        )
+        val status = FocusModeController(context).status()
+        assertEquals(setOf("supported", "sdk", "enabled", "granted", "active", "disabledInSystem"), status.keys)
+        assertEquals(true, status["supported"])
+        assertEquals(true, status["enabled"])
+        assertEquals(true, status["granted"])
+        assertEquals(false, status["disabledInSystem"])
     }
 
     @Test
@@ -134,35 +217,26 @@ class FocusModeControllerTest {
 
         assertFalse(focus.isSupported)
         focus.activate()
-        assertFalse(focus.isActive)
+        assertNull(ruleId())
     }
 
     @Test
     @Config(sdk = [28])
-    fun `Android 9 ve oncesinde yalnizca alarmlar moduna gecer ve geri alir`() {
+    fun `Android 9 ve oncesinde desteklenmez ve telefonun ayarlarina dokunmaz`() {
         grant()
         nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
         val focus = FocusModeController(context)
 
+        assertFalse(focus.isSupported)
         focus.activate()
-        assertTrue(focus.isActive)
-        assertEquals(NotificationManager.INTERRUPTION_FILTER_ALARMS, nm.currentInterruptionFilter)
-
-        focus.deactivate()
-        assertFalse(focus.isActive)
         assertEquals(NotificationManager.INTERRUPTION_FILTER_ALL, nm.currentInterruptionFilter)
+        focus.deactivate()
+        assertEquals(NotificationManager.INTERRUPTION_FILTER_ALL, nm.currentInterruptionFilter)
+        assertEquals(false, focus.status()["supported"])
+        assertEquals(28, focus.status()["sdk"])
     }
 
-    @Test
-    @Config(sdk = [28])
-    fun `Android 9 ve oncesinde kullanicinin kendi sessiz moduna dokunmaz`() {
-        grant()
-        nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
-        val focus = FocusModeController(context)
-
-        focus.activate()
-        assertFalse(focus.isActive)
-        focus.deactivate()
-        assertEquals(NotificationManager.INTERRUPTION_FILTER_PRIORITY, nm.currentInterruptionFilter)
+    companion object {
+        private val CONDITION: Uri = Uri.parse("condition://io.github.emreks53.lugat_risale/okuma")
     }
 }

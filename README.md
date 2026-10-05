@@ -12,27 +12,34 @@ ilk harflerini yazar ve manasını görür. Bu sırada telefon kendiliğinden ka
 - **Açılır açılmaz klavye** — Uygulama arama kutusu seçili ve klavye açık hâlde açılır.
   Bir kelimeye bakıp geri dönünce klavye yine açılır; "Yeni kelime" düğmesi kutuyu boşaltır,
   geri tuşuyla dönülünce yazı seçili kalır ve yazmaya başlayınca yerine geçer.
-- **İlk harflerle öneri** — "in" yazınca "inkişaf", "inhisar", "indirac"… gibi kelimeler
+- **İlk harflerle öneri** — "in" yazınca "inkişaf", "inhisar", "inayet"… gibi kelimeler
   manalarının ilk satırlarıyla birlikte hemen listelenir. Klavyedeki ara tuşu ilk sonucu açar.
   - ş, ç, ğ, ı, ö, ü harflerini ve â, î, û şapkalarını yazmak gerekmez ("inkisaf" → inkişaf).
   - Kesme işareti ve tire gerekmez ("sanat" → san'at, "manayi harfi" → mana-yı harfî).
   - Birleşik ifadeler içindeki kelimeyle de bulunur ("harfi" → mana-yı harfî).
-  - Ekli yazılan kelimenin kökü önerilir ("inkişafına" → inkişaf, "tezahüratından" → tezahürat).
+  - Ekli yazılan kelimenin kökü önerilir ("inkişafına" → inkişaf, "kudreti" → kudret,
+    "kalbinden" → kalb).
   - Küçük yazım hatalarında benzer kelime önerilir ("muhabet" → muhabbet).
   - Risale-i Nur'da sık geçen kelimeler önce gelir; aynı yazılıp farklı okunan kelimeler
     (hâkim / hakîm) mana sayfasında birlikte gösterilir.
 - **Ekran kapanmaz** — Uygulama açıkken telefon kendiliğinden uyku moduna geçmez.
 - **Bildirimleri gizleme (odak modu)** — varsayılan olarak açık; Ayarlar'dan kapatılabilir.
-  - **Android:** Uygulama ekrandayken kendine ait bir "Rahatsız Etmeyin" kuralını devreye
-    alır; mesaj ve diğer bildirimler ekrana gelmez, ses çıkarmaz. Uygulamadan çıkınca, başka
-    uygulamaya geçince ya da ekran kapanınca kural hemen kapanır; kullanıcının kendi
-    Rahatsız Etmeyin ayarlarına dokunulmaz. Alarmlar, medya sesi ve aynı kişinin 15 dakika
-    içinde ikinci kez araması engellenmez. Bunun için bir kereye mahsus
-    "Rahatsız Etmeyin erişimi" izni gerekir; uygulama, klavyeyi kapatmayan bir uyarıyla bu
-    izni ister.
-  - **iPhone:** Apple, uygulamaların "Rahatsız Etme"yi kendisinin açmasına izin vermiyor.
-    Ayarlar ekranında, Kestirmeler uygulamasıyla "Lügat açılınca Rahatsız Etme'yi aç,
-    kapanınca kapat" otomasyonunun nasıl kurulacağı adım adım anlatılır.
+  - **Android 10 ve sonrası:** Uygulama ekrandayken kendine ait bir "Rahatsız Etmeyin"
+    kuralını devreye alır; mesajlar, bildirimler ve telefon aramaları sessize alınır,
+    ekrana gelmez. Uygulamadan çıkınca, başka uygulamaya geçince ya da ekran kapanınca kural
+    hemen kapanır; kullanıcının kendi Rahatsız Etmeyin ayarlarına ve zamanlamalarına
+    dokunulmaz. Alarmlar, medya sesi, yıldızlı kişilerin aramaları ve 15 dakika içinde
+    ikinci kez arayanlar engellenmez. Bunun için bir kereye mahsus "Rahatsız Etmeyin erişimi"
+    izni gerekir; uygulama bunu, arama kutusu boşken listenin başında çıkan ve klavyeyi
+    kapatmayan bir uyarıyla ister. Durum göstergesi sistemin gerçek durumuna bakar (kural
+    Android ayarlarından kapatılmışsa bunu söyler).
+  - **Android 7–9:** Bu sürümlerde uygulama ancak telefonun genel Rahatsız Etmeyin modunu
+    değiştirebiliyor; bu, kullanıcının kendi zamanlamalarını bozabildiği için odak modu
+    sunulmaz ve kullanıcıya Rahatsız Etmeyin'i kendisinin açabileceği söylenir.
+  - **iPhone:** iPhone'da uygulamalar "Rahatsız Etme"yi kendi başlarına açamaz. Uygulama
+    ilk açılışta bir kereye mahsus hatırlatır; Ayarlar ekranında, Kestirmeler uygulamasıyla
+    "Lügat açılınca Rahatsız Etme'yi aç, kapanınca kapat" otomasyonunun nasıl kurulacağı
+    adım adım anlatılır.
 - **Son bakılanlar ve kaydedilenler** — Bakılan kelimeler arama kutusu boşken listelenir;
   tekrar etmek istenen kelimeler kaydedilebilir.
 - **Rahat okuma** — Büyük yazılı mana sayfası, ayarlanabilir yazı boyutu, açık/koyu tema.
@@ -72,8 +79,9 @@ bu dosyanın yerine koymanız yeterlidir.
 
 ## Geliştirme
 
-Gerekenler: Flutter 3.47+ (Dart 3.13+), Android için Android SDK ve JDK 17+,
-iPhone için macOS + Xcode.
+Gerekenler: Flutter 3.47+ (Dart 3.13+), Android için Android SDK ve JDK 17+
+(Android birim testleri Android 16 ortamı için JDK 21 ister; Android Studio'nun kendi
+JDK'sı uygundur), iPhone için macOS + Xcode.
 
 ```sh
 flutter pub get
@@ -81,6 +89,7 @@ flutter run                     # bağlı telefonda / emülatörde çalıştır
 flutter test                    # Dart testleri (arama, arayüz akışı, lügat dosyası)
 flutter analyze
 
+flutter build apk --config-only                  # bir kereye mahsus: android/gradlew dosyasını oluşturur
 cd android && ./gradlew app:testDebugUnitTest   # Android "Rahatsız Etmeyin" kodunun testleri (Robolectric)
 
 flutter build apk --release     # Android APK
@@ -100,7 +109,7 @@ lib/
   src/ui/                          arama, mana, kaydedilenler ve ayarlar ekranları
 android/app/src/main/kotlin/.../
   MainActivity.kt                  odak modunu ekrana gelince açar, ekrandan çıkınca kapatır
-  FocusModeController.kt           "Rahatsız Etmeyin" kuralı (Android 10+) ve eski sürümler için yedek yol
+  FocusModeController.kt           uygulamaya ait "Rahatsız Etmeyin" kuralı (Android 10+)
 assets/lugat.jsonl                 lügat
 tool/lugat_kontrol.py              lügat dosyası denetleyicisi
 ```

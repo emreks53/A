@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -23,6 +24,9 @@ class _SearchPageState extends State<SearchPage> {
   final _focusNode = FocusNode(debugLabel: 'arama');
   late final AppLifecycleListener _lifecycle;
 
+  ValueListenable<bool>? _gestureNotifier;
+  VoidCallback? _gestureListener;
+
   String _lastQuery = '';
   Lugat? _lastLugat;
   List<SearchHit> _hits = const [];
@@ -37,6 +41,8 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
+    final listener = _gestureListener;
+    if (listener != null) _gestureNotifier?.removeListener(listener);
     _lifecycle.dispose();
     _text.dispose();
     _focusNode.dispose();
@@ -51,6 +57,26 @@ class _SearchPageState extends State<SearchPage> {
   /// yoksa arama kutusuna odaklanıp klavyeyi açar.
   void _focusSearchIfVisible() {
     if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? true)) return;
+    final navigator = Navigator.of(context);
+    if (navigator.userGestureInProgress) {
+      // Kaydırarak geri dönülürken (iPhone'da kenardan kaydırma, Android'de
+      // tahmini geri hareketi) bu sayfa hareket bitene kadar odak alamaz;
+      // hareket bitince tekrar denenir.
+      if (_gestureListener != null) return;
+      final notifier = navigator.userGestureInProgressNotifier;
+      void listener() {
+        if (notifier.value) return;
+        notifier.removeListener(listener);
+        _gestureListener = null;
+        _gestureNotifier = null;
+        WidgetsBinding.instance.addPostFrameCallback((_) => _focusSearchIfVisible());
+      }
+
+      _gestureNotifier = notifier;
+      _gestureListener = listener;
+      notifier.addListener(listener);
+      return;
+    }
     if (_focusNode.hasFocus) {
       // Kutu odakta ama klavye (ör. Android geri tuşuyla) gizlenmiş olabilir.
       SystemChannels.textInput.invokeMethod<void>('TextInput.show');
@@ -68,16 +94,18 @@ class _SearchPageState extends State<SearchPage> {
     return _hits;
   }
 
-  Future<void> _open(Entry entry) async {
-    final controller = AppScope.read(context);
-    controller.recordLookup(entry);
-    final newSearch = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => EntryPage(entry: entry)),
-    );
+  void _open(Entry entry) {
+    AppScope.read(context).recordLookup(entry);
+    _openPage(EntryPage(entry: entry));
+  }
+
+  /// Bir sayfayı açar; dönünce hemen yeni kelime yazılabilsin diye arama
+  /// kutusuna odaklanır. Sayfa "Yeni kelime" ile kapandıysa (`true`) kutu
+  /// boşaltılır, geri tuşuyla kapandıysa yazı seçili kalır (yazmaya
+  /// başlayınca yerine geçer).
+  Future<void> _openPage(Widget page) async {
+    final newSearch = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => page));
     if (!mounted) return;
-    // Geri dönünce hemen yeni kelime yazılabilsin: "Yeni kelime" ile
-    // dönüldüyse kutu boşaltılır, geri tuşuyla dönüldüyse yazı seçili
-    // kalır (yazmaya başlayınca yerine geçer).
     if (newSearch == true) {
       _text.clear();
     } else {
@@ -95,23 +123,21 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  Future<void> _openPage(Widget page) async {
-    await Navigator.of(context).push<void>(MaterialPageRoute(builder: (_) => page));
-    if (mounted) _focusSearchIfVisible();
-  }
-
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final lugat = controller.lugat;
     final hits = _currentHits(lugat);
-    final showBanner = controller.focus.needsPermission && !controller.focusBannerDismissed;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lügat-ı Risale-i Nur'),
         actions: [
-          _FocusIndicator(status: controller.focus, onTap: () => _openPage(const SettingsPage())),
+          _FocusIndicator(
+            status: controller.focus,
+            isAndroid: controller.isAndroid,
+            onTap: () => _openPage(const SettingsPage()),
+          ),
           IconButton(
             tooltip: 'Kaydedilenler',
             icon: const Icon(Icons.bookmarks_outlined),
@@ -126,7 +152,6 @@ class _SearchPageState extends State<SearchPage> {
       ),
       body: Column(
         children: [
-          if (showBanner) _PermissionBanner(controller: controller),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: TextField(
@@ -135,7 +160,6 @@ class _SearchPageState extends State<SearchPage> {
               focusNode: _focusNode,
               autofocus: true,
               autocorrect: false,
-              enableSuggestions: false,
               keyboardType: TextInputType.text,
               textInputAction: TextInputAction.search,
               textCapitalization: TextCapitalization.none,
@@ -193,7 +217,8 @@ class _SearchPageState extends State<SearchPage> {
     for (final hit in hits) {
       if (hit.kind != lastKind) {
         final header = switch (hit.kind) {
-          MatchKind.prefix => null,
+          // İlk bölümse başlığa gerek yok; köklerden sonra geliyorsa ayırt edilsin.
+          MatchKind.prefix => children.isEmpty ? null : 'Bu harflerle başlayanlar',
           MatchKind.part => 'Birleşik ifadelerde',
           MatchKind.stem => 'Yazdığınız kelimenin kökü olabilir',
           MatchKind.fuzzy => 'Bunu mu demek istediniz?',
@@ -223,49 +248,78 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  /// Arama kutusu boşken: odak modu uyarısı (gerekirse), son bakılanlar ya da
+  /// kısa bir kullanım açıklaması.
   Widget _buildHome(AppController controller) {
     final theme = Theme.of(context);
+    final focus = controller.focus;
+    final notice = controller.isAndroid
+        ? (focus.needsPermission && !controller.focusBannerDismissed
+            ? _Notice(
+                text: 'Okurken mesaj, bildirim ve aramalar dikkatinizi dağıtmasın diye '
+                    '“Rahatsız Etmeyin” erişimi gerekiyor. Açılan listede '
+                    '“Lügat-ı Risale-i Nur”u bulup izni açın.',
+                dismissLabel: 'Şimdi değil',
+                onDismiss: controller.dismissFocusBanner,
+                actionLabel: 'İzin ver',
+                onAction: controller.openFocusPermissionSettings,
+              )
+            : null)
+        : (!controller.iosFocusTipDismissed
+            ? _Notice(
+                text: 'iPhone’da okurken bildirimleri susturmak için bir kereye mahsus '
+                    'kısa bir Kestirmeler kurulumu gerekiyor.',
+                dismissLabel: 'Tamam',
+                onDismiss: controller.dismissIosFocusTip,
+                actionLabel: 'Nasıl?',
+                onAction: () => _openPage(const SettingsPage(showIosFocusHelp: true)),
+              )
+            : null);
+
     final recent = controller.resolve(controller.history);
-    if (recent.isEmpty) {
-      final count = controller.lugat?.entries.length;
-      return ListView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-        children: [
-          Icon(Icons.menu_book_outlined, size: 48, color: theme.colorScheme.primary),
-          const SizedBox(height: 16),
-          Text(
-            'Okurken manasını merak ettiğiniz kelimenin ilk harflerini yazın; '
-            'uyan kelimeler hemen aşağıda çıkar.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'ş, ç, ğ, ı harflerini ve â, î, û gibi şapkaları yazmasanız da kelime bulunur. '
-            'Ekli bir kelime yazarsanız (ör. “inkişafına”) kökü önerilir.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-          if (count != null) ...[
-            const SizedBox(height: 24),
-            Text(
-              'Lügatte $count kelime ve ifade var.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
-        ],
-      );
-    }
+    final count = controller.lugat?.entries.length;
     return ListView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 16),
       children: [
-        SectionHeader(
-          'Son bakılanlar',
-          action: TextButton(onPressed: controller.clearHistory, child: const Text('Temizle')),
-        ),
-        for (final entry in recent.take(30)) EntryTile(entry: entry, onTap: () => _open(entry)),
+        ?notice,
+        if (recent.isNotEmpty) ...[
+          SectionHeader(
+            'Son bakılanlar',
+            action: TextButton(onPressed: controller.clearHistory, child: const Text('Temizle')),
+          ),
+          for (final entry in recent.take(30)) EntryTile(entry: entry, onTap: () => _open(entry)),
+        ] else
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            child: Column(
+              children: [
+                Icon(Icons.menu_book_outlined, size: 48, color: theme.colorScheme.primary),
+                const SizedBox(height: 16),
+                Text(
+                  'Okurken manasını merak ettiğiniz kelimenin ilk harflerini yazın; '
+                  'uyan kelimeler hemen aşağıda çıkar.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'ş, ç, ğ, ı harflerini ve â, î, û gibi şapkaları yazmasanız da kelime bulunur. '
+                  'Ekli bir kelime yazarsanız (ör. “inkişafına”) kökü önerilir.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+                if (count != null) ...[
+                  const SizedBox(height: 24),
+                  Text(
+                    'Lügatte $count kelime ve ifade var.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -292,42 +346,58 @@ class _Message extends StatelessWidget {
   }
 }
 
-/// Üst çubukta odak modunun durumunu gösteren simge.
+/// Üst çubukta odak modunun durumunu gösteren simge; dokununca ayarlar açılır.
 class _FocusIndicator extends StatelessWidget {
-  const _FocusIndicator({required this.status, required this.onTap});
+  const _FocusIndicator({required this.status, required this.isAndroid, required this.onTap});
 
   final FocusStatus status;
+  final bool isAndroid;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final (IconData icon, Color? color, String tip) = !status.supported
-        ? (Icons.do_not_disturb_on_outlined, null, 'Bildirimleri gizleme')
+        ? (
+            Icons.do_not_disturb_off_outlined,
+            null,
+            isAndroid ? 'Bu telefonda bildirimler uygulamadan gizlenemiyor' : 'Odak modu kurulumu',
+          )
         : !status.enabled
-            ? (Icons.notifications_none, null, 'Bildirimler açık')
-            : status.active
-                ? (Icons.do_not_disturb_on, scheme.primary, 'Odak modu açık: bildirimler gizleniyor')
-                : status.permissionGranted
-                    ? (Icons.do_not_disturb_on_outlined, null, 'Odak modu')
-                    : (Icons.do_not_disturb_off_outlined, scheme.error,
-                        'Bildirimleri gizlemek için izin gerekiyor');
+            ? (Icons.notifications_none, null, 'Odak modu kapalı')
+            : !status.permissionGranted
+                ? (Icons.do_not_disturb_off_outlined, scheme.error, 'Bildirimleri gizlemek için izin gerekiyor')
+                : status.disabledInSystem
+                    ? (Icons.do_not_disturb_off_outlined, scheme.error, 'Odak modu Android ayarlarında kapatılmış')
+                    : status.active
+                        ? (Icons.do_not_disturb_on, scheme.primary, 'Odak modu açık: bildirimler gizleniyor')
+                        : (Icons.do_not_disturb_on_outlined, null, 'Odak modu ayarları');
     return IconButton(tooltip: tip, icon: Icon(icon, color: color), onPressed: onTap);
   }
 }
 
-/// Android'de "Rahatsız Etmeyin erişimi" verilmemişse arama kutusunun
-/// üstünde çıkan, klavyeyi engellemeyen uyarı.
-class _PermissionBanner extends StatelessWidget {
-  const _PermissionBanner({required this.controller});
+/// Arama kutusu boşken listenin başında çıkan, klavyeyi ve önerileri
+/// engellemeyen kısa uyarı.
+class _Notice extends StatelessWidget {
+  const _Notice({
+    required this.text,
+    required this.dismissLabel,
+    required this.onDismiss,
+    required this.actionLabel,
+    required this.onAction,
+  });
 
-  final AppController controller;
+  final String text;
+  final String dismissLabel;
+  final VoidCallback onDismiss;
+  final String actionLabel;
+  final VoidCallback onAction;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       color: theme.colorScheme.secondaryContainer,
       elevation: 0,
       child: Padding(
@@ -336,18 +406,14 @@ class _PermissionBanner extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Okurken bildirimler dikkatinizi dağıtmasın diye “Rahatsız Etmeyin” '
-              'erişimi gerekiyor. Açılan listede “Lügat-ı Risale-i Nur”u bulup izni açın.',
+              text,
               style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSecondaryContainer),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            OverflowBar(
+              alignment: MainAxisAlignment.end,
               children: [
-                TextButton(onPressed: controller.dismissFocusBanner, child: const Text('Şimdi değil')),
-                TextButton(
-                  onPressed: controller.openFocusPermissionSettings,
-                  child: const Text('İzin ver'),
-                ),
+                TextButton(onPressed: onDismiss, child: Text(dismissLabel)),
+                TextButton(onPressed: onAction, child: Text(actionLabel)),
               ],
             ),
           ],

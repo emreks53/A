@@ -15,6 +15,16 @@ const sampleJsonl = '''
 {"w":"itikad","o":"Ar.","f":3,"m":"İnanç.","v":["itikat"]}
 {"w":"tezahürat","o":"Ar.","f":2,"m":"Görünmeler, belirmeler."}
 {"w":"tezahür","o":"Ar.","f":3,"m":"Görünme, belirme."}
+{"w":"kudret","o":"Ar.","f":3,"m":"Güç, kuvvet."}
+{"w":"kudret-i ezeliye","o":"Ar.","f":2,"m":"Allah'ın başlangıcı olmayan kudreti."}
+{"w":"kalb","o":"Ar.","f":3,"m":"Gönül, yürek."}
+{"w":"kalbî","o":"Ar.","f":2,"m":"Kalple ilgili."}
+{"w":"kâin","o":"Ar.","f":1,"m":"Olan, bulunan."}
+{"w":"kâinat","o":"Ar.","f":3,"m":"Bütün varlıklar, evren."}
+{"w":"rahm","o":"Ar.","f":1,"m":"Ana rahmi; akrabalık."}
+{"w":"rahmet","o":"Ar.","f":3,"m":"Merhamet, acıma."}
+{"w":"hakik","o":"Ar.","f":1,"m":"Akik taşı."}
+{"w":"hakikat","o":"Ar.","f":3,"m":"Gerçek, asıl."}
 bu satır bozuk
 {"w":"","m":"boş kelime"}
 ''';

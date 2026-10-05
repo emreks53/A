@@ -11,7 +11,7 @@ void main() {
   setUp(() => lugat = Lugat.parseJsonl(sampleJsonl));
 
   test('bozuk satırlar atlanır ve sayılır', () {
-    expect(lugat.entries, hasLength(15));
+    expect(lugat.entries, hasLength(25));
     expect(lugat.skippedLines, 2);
   });
 
@@ -31,7 +31,7 @@ void main() {
   test('Türkçe harf ve şapka yazmadan da bulunur', () {
     expect(words(lugat.search('inkisaf')).first, 'inkişaf');
     expect(words(lugat.search('INKISAF')).first, 'inkişaf');
-    expect(words(lugat.search('ilmi')), ['ilmî']);
+    expect(words(lugat.search('ilmi')).first, 'ilmî');
   });
 
   test('kesme işareti yazılmasa da bulunur', () {
@@ -60,6 +60,35 @@ void main() {
     expect(words(hits), ['inkişaf']);
     expect(hits.single.kind, MatchKind.stem);
     expect(words(lugat.search('tezahüratından')), ['tezahürat', 'tezahür']);
+  });
+
+  test('-î ile biten sıfatla aynı yazılan ekli kelimede kök de önerilir', () {
+    expect(words(lugat.search('ilmi')), ['ilmî', 'ilm']);
+    expect(words(lugat.search('kalbi')), ['kalbî', 'kalb']);
+    // Ekli hâlde asıl kök, sıfattan önce gelir.
+    expect(words(lugat.search('kalbin')), ['kalb', 'kalbî']);
+    expect(words(lugat.search('kalbinden')), ['kalb', 'kalbî']);
+  });
+
+  test('izafetli yazılan kelimede kök, birleşik ifadelerden önce gelir', () {
+    final hits = lugat.search('kudreti');
+    expect(words(hits), ['kudret', 'kudret-i ezeliye']);
+    expect(hits.map((h) => h.kind), [MatchKind.stem, MatchKind.prefix]);
+  });
+
+  test('kelimenin ortasındayken önce o kelimeyle başlayanlar gelir', () {
+    final hits = lugat.search('rahme');
+    expect(words(hits), ['rahmet', 'rahm']);
+    expect(hits.map((h) => h.kind), [MatchKind.prefix, MatchKind.stem]);
+  });
+
+  test('uzun kelimedeki yazım hatası, kısa kelimeyi kök sanmaz', () {
+    final hits = lugat.search('kâinaat');
+    expect(words(hits), ['kâinat', 'kâin']);
+    expect(hits.map((h) => h.kind), [MatchKind.fuzzy, MatchKind.stem]);
+    expect(words(lugat.search('hakikad')), ['hakikat', 'hakik']);
+    // Ekli kelimede kök, çoğul hâlinden önce gelir.
+    expect(words(lugat.search('inkişafı')), ['inkişaf', 'inkişafat']);
   });
 
   test('küçük yazım hatalarında benzer kelime önerilir', () {

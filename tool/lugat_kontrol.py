@@ -51,6 +51,8 @@ def sort_key(entry):
 
 
 def problems(entry):
+    if not isinstance(entry, dict):
+        return ["madde bir JSON nesnesi olmalı"]
     errs = []
     w, m = entry.get("w"), entry.get("m")
     if set(entry) - set(KEYS):
@@ -65,11 +67,16 @@ def problems(entry):
         errs.append("'m' satır sonu/sekme içeriyor")
     if entry.get("o", "") not in ORIGINS:
         errs.append(f"'o' tanınmıyor: {entry.get('o')!r}")
-    if entry.get("f") not in (1, 2, 3):
+    f = entry.get("f")
+    if isinstance(f, bool) or not isinstance(f, int) or f not in (1, 2, 3):
         errs.append("'f' 1, 2 ya da 3 olmalı")
     v = entry.get("v", [])
     if not isinstance(v, list) or not all(isinstance(x, str) and WORD_RE.match(x) for x in v):
-        errs.append("'v' kelime listesi olmalı")
+        errs.append("'v' kelime listesi olmalı (ör. [\"itikat\"])")
+    elif isinstance(w, str):
+        for x in v:
+            if len(search_key(x)) < 2 or search_key(x) == search_key(w):
+                errs.append(f"'v' içindeki {x!r} anlamsız (çok kısa ya da kelimenin kendisiyle aynı)")
     return errs
 
 
@@ -82,7 +89,7 @@ def tidy(entry):
         if isinstance(val, str):
             val = unicodedata.normalize("NFC", re.sub(r"\s+", " ", val.replace("’", "'")).strip())
         if k == "v":
-            val = [unicodedata.normalize("NFC", x.strip()) for x in val if x.strip()]
+            val = [unicodedata.normalize("NFC", x.replace("’", "'").strip()) for x in val if x.strip()]
             if not val:
                 continue
         if k == "o" and not val:
@@ -114,21 +121,27 @@ def main(argv):
                 entries.append((no, e))
         seen = {}
         for no, e in entries:
-            w = e.get("w")
+            w = e.get("w") if isinstance(e, dict) else None
+            if not isinstance(w, str):
+                continue
             if w in seen:
                 errors.append(f"{path}:{no}: '{w}' iki kez var (ilki {seen[w]}. satırda)")
             seen.setdefault(w, no)
-        ordered = [e for _, e in entries]
-        if ordered != sorted(ordered, key=sort_key):
+        if errors:
+            # Sıralama ve düzeltme yalnızca bütün maddeler geçerliyken yapılır.
             if fix:
-                print(f"{path}: Türk alfabesine göre sıralanıyor")
-            else:
+                errors.append(f"{path}: önce yukarıdaki hataları düzeltin, sonra --duzelt'i yeniden çalıştırın")
+        else:
+            ordered = [e for _, e in entries]
+            in_order = ordered == sorted(ordered, key=sort_key)
+            if fix:
+                tidied = sorted((tidy(e) for e in ordered), key=sort_key)
+                if tidied != ordered:
+                    with open(path, "w", encoding="utf-8") as fh:
+                        fh.writelines(dump(e) + "\n" for e in tidied)
+                    print(f"{path}: Türk alfabesine göre sıralandı ve biçimi düzeltildi")
+            elif not in_order:
                 errors.append(f"{path}: maddeler alfabetik sırada değil (--duzelt ile sıralanabilir)")
-        if fix and not any("JSON" in e for e in errors):
-            tidied = sorted((tidy(e) for e in ordered), key=sort_key)
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.writelines(dump(e) + "\n" for e in tidied)
-            errors = [e for e in errors if "alfabetik" not in e]
         for err in errors[:100]:
             print(err)
         if len(errors) > 100:
