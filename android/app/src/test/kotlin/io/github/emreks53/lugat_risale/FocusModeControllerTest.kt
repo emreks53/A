@@ -7,7 +7,6 @@ import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.service.notification.ZenPolicy
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -62,9 +61,9 @@ class FocusModeControllerTest {
         val focus = FocusModeController(context)
 
         focus.activate()
-        // Robolectric, Android 14 ve öncesinde kuralın açılmasını telefonun genel
-        // filtresine yansıtmıyor; gerçek sistemin yaptığını burada taklit ediyoruz.
-        if (Build.VERSION.SDK_INT < 35) nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+        // Robolectric kuralın açılmasını telefonun genel filtresine yansıtmıyor;
+        // gerçek sistemin yaptığını burada taklit ediyoruz.
+        nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
         assertTrue("açıldıktan sonra etkin olmalı", focus.isActive)
 
         val id = ruleId()
@@ -89,11 +88,26 @@ class FocusModeControllerTest {
 
         // Uygulama tekrar ekrana gelince aynı kural kullanılır.
         focus.deactivate()
-        if (Build.VERSION.SDK_INT < 35) nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
+        nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
         assertFalse("kapatıldıktan sonra etkin olmamalı", focus.isActive)
         focus.activate()
         assertEquals(id, ruleId())
         assertEquals(1, ownRules().size)
+    }
+
+    @Test
+    fun `kullanici Rahatsiz Etmeyin'i hizli ayarlardan kapatirsa etkin gorunmez`() {
+        grant()
+        val focus = FocusModeController(context)
+        focus.activate()
+        nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY) // sistem kuralı uyguladı
+        assertTrue(focus.isActive)
+
+        // Hızlı Ayarlar'dan kapatma: kuralın koşulu hâlâ "açık" ama telefon artık sessizde değil.
+        nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
+
+        assertFalse(focus.isActive)
+        assertEquals(false, focus.status()["active"])
     }
 
     @Test

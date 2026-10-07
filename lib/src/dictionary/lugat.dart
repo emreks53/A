@@ -86,6 +86,14 @@ enum MatchKind {
   fuzzy,
 }
 
+/// Ekli bir kelimenin içinde bulunan kök: madde ve eşleşen kısmın uzunluğu.
+class _Stem {
+  const _Stem(this.entry, this.length);
+
+  final int entry;
+  final int length;
+}
+
 class SearchHit {
   const SearchHit(this.entry, this.kind);
 
@@ -233,15 +241,16 @@ class Lugat {
   /// * Yazılan harflerle başlayan kelimeler: tam eşleşme en üstte, sonra
   ///   kullanıcının Türkçe harflerini (ş, ç, ı...) birebir tutanlar, sonra
   ///   Risale-i Nur'da sık geçenler, sonra kısa olanlar.
-  /// * Yazılan kelime ekli olabilir ("kudreti", "kalbinden"): sözlükte tam
-  ///   karşılığı yoksa (ya da yalnızca "kalbî" gibi -î'li bir sıfat varsa)
-  ///   kökü olabilecek kelimeler de önerilir. Kullanıcı kelimenin ortasında
-  ///   değil de sonunda görünüyorsa ("kudreti" → "kudret") kökler öne alınır.
+  /// * Yazılan kelime ekli olabilir ("kudreti", "hakikatin", "kalbinden"):
+  ///   sözlükte tam karşılığı yoksa (ya da yalnızca "hayatî" gibi -î'li bir
+  ///   sıfat varsa) kökü önerilir. Kökün kabul edilmesi için kalan kısmın
+  ///   gerçekten bir Türkçe ek dizisi olması gerekir ("kudret" + "i"); böylece
+  ///   kelime yazılırken kısa, ilgisiz kelimeler ("tahak" → "Tâhâ") öne geçmez.
   /// * Birleşik ifadelerin içindeki kelimeyle eşleşenler ("harfi" →
   ///   "mana-yı harfî").
   /// * Hiçbir kelime yazılanla başlamıyorsa yazım hatasına karşı benzer
-  ///   kelimeler; bir harf farkla tutan bir kelime ("kâinaat" → "kâinat")
-  ///   kökten ("kâin") önce gelir.
+  ///   kelimeler; kalan kısım ek gibi görünmüyorsa ("kâin" + "aat") bir harf
+  ///   farkla tutan kelime ("kâinat") kökten önce gelir.
   List<SearchHit> search(String query, {int limit = 60}) {
     final qe = searchKey(query);
     if (qe.isEmpty || limit <= 0) return const [];
@@ -278,71 +287,143 @@ class Lugat {
     }
 
     // Yazılanın tamamıyla eşleşen kelimeler (şapka ve Türkçe harf farkı hariç).
-    final whole = [for (final e in tiers.entries) if (e.value <= 1) e.key];
+    final whole = [for (final id in prefixIds) if (tiers[id]! <= 1) id];
     final onlyAdjectives = whole.isNotEmpty && whole.every((id) => _endsWithLongVowel(entries[id].word));
-    final stemIds = (whole.isEmpty || onlyAdjectives) ? _stems(qf).where((id) => !tiers.containsKey(id)).toList() : <int>[];
+    final stems = (whole.isEmpty || onlyAdjectives)
+        ? _stems(qe, qf).where((s) => !tiers.containsKey(s.entry)).toList()
+        : const <_Stem>[];
+    // Kalan kısmı bir ek dizisi olan kökler ("hakikat" + "in"); en uzun olanlar
+    // ("imanı" için "iman", "îma" değil) öne alınmaya aday.
+    final suffixedStems = [for (final s in stems) if (_isSuffixChain(qf.substring(s.length))) s];
+    final suffixed = [for (final s in suffixedStems) s.entry];
+    final longest = suffixedStems.isEmpty ? 0 : suffixedStems.map((s) => s.length).reduce((a, b) => a > b ? a : b);
+    final bestStems = [for (final s in suffixedStems) if (s.length == longest) s.entry];
 
     final ordered = <SearchHit>[];
+    final shown = <int>{};
     void add(Iterable<int> ids, MatchKind kind) {
       for (final id in ids) {
         if (ordered.length >= limit) return;
-        ordered.add(SearchHit(entries[id], kind));
+        if (shown.add(id)) ordered.add(SearchHit(entries[id], kind));
       }
     }
 
     if (prefixIds.isNotEmpty || partIds.isNotEmpty) {
-      // Kullanıcı bir kelimenin ortasındaysa ("rahme" → "rahmet") önce o kelimeler;
-      // yazdığı kelime bitmiş ve ekli görünüyorsa ("kudreti") önce kökler.
-      final midWord = prefixIds.any((id) => _folded[id].length <= qf.length + 2);
-      final stemsFirst = stemIds.isNotEmpty && whole.isEmpty && !midWord;
-      if (stemsFirst) add(stemIds, MatchKind.stem);
-      add(prefixIds, MatchKind.prefix);
-      if (!stemsFirst) add(stemIds, MatchKind.stem);
+      if (onlyAdjectives) {
+        // "hayatı": önce "hayatî", hemen ardından kök "hayat", sonra diğerleri.
+        add(whole, MatchKind.prefix);
+        add(bestStems, MatchKind.stem);
+        add(prefixIds, MatchKind.prefix);
+        add(suffixed, MatchKind.stem);
+      } else {
+        // Kullanıcı bir kelimenin ortasındaysa ("rahme" → "rahmet") ya da yazılanla
+        // başlayan kelimeler kökten daha sık geçiyorsa ("bediü" → "Bediüzzaman")
+        // önce o kelimeler; yazdığı kelime bitmiş ve ekli görünüyorsa ("kudreti")
+        // önce kök.
+        final stemFrequency = bestStems.isEmpty ? 0 : entries[bestStems.first].frequency;
+        final midWord = prefixIds.any((id) =>
+            !_isCompound(entries[id].word) &&
+            _folded[id].length <= qf.length + 4 &&
+            entries[id].frequency >= stemFrequency);
+        final topPrefix = prefixIds.isEmpty ? 0 : entries[prefixIds.first].frequency;
+        final stemsFirst = bestStems.isNotEmpty && !midWord && stemFrequency >= topPrefix;
+        if (stemsFirst) add(bestStems, MatchKind.stem);
+        // Öne alınmayan kökler de gözden kaybolmasın: ilk iki sonucun hemen ardından.
+        add(prefixIds.take(2), MatchKind.prefix);
+        add(suffixed, MatchKind.stem);
+        add(prefixIds, MatchKind.prefix);
+      }
       add(partIds, MatchKind.part);
       return ordered;
     }
 
     // Hiçbir kelime yazılanla başlamıyor: kökler ve yazım hatası önerileri.
-    final typos = _fuzzy(qf, maxDistance: stemIds.isEmpty ? null : 1)
-        .where((id) => !stemIds.contains(id))
+    // Ek dizisiyle bitmeyen kökler yalnızca yeterince uzunsa önerilir.
+    final minOther = (qf.length + 1) ~/ 2 < 4 ? 4 : (qf.length + 1) ~/ 2;
+    final otherStems = [
+      for (final s in stems)
+        if (!suffixed.contains(s.entry) && s.length >= minOther) s.entry,
+    ];
+    final typos = _fuzzy(qf, maxDistance: stems.isEmpty ? null : 1)
+        .where((id) => !stems.any((s) => s.entry == id))
         .toList();
     final close = [for (final id in typos) if (_isOneEditAway(qf, _folded[id])) id];
-    if (close.isNotEmpty) {
-      add(close, MatchKind.fuzzy);
-      add(typos.where((id) => !close.contains(id)), MatchKind.fuzzy);
-      add(stemIds, MatchKind.stem);
-    } else {
-      add(stemIds, MatchKind.stem);
-      add(typos, MatchKind.fuzzy);
-    }
+    add(suffixed, MatchKind.stem);
+    add(close, MatchKind.fuzzy);
+    add(otherStems, MatchKind.stem);
+    add(typos, MatchKind.fuzzy);
     return ordered;
   }
+
+  /// "mana-yı harfî" gibi birden çok kelimeden oluşan ifadeler.
+  static bool _isCompound(String word) => word.contains(' ') || word.contains('-');
 
   /// "kalbî", "ulvî" gibi uzun ünlüyle biten (çoğunlukla -î sıfatları) kelimeler.
   static bool _endsWithLongVowel(String word) =>
       word.endsWith('î') || word.endsWith('û') || word.endsWith('â');
 
+  /// Sık görülen Türkçe ekler, katlanmış yazılışlarıyla (ı → i, ü → u, ç → c...).
+  static const Set<String> _suffixMorphemes = {
+    'i', 'u', 'a', 'e', 'yi', 'yu', 'ya', 'ye', 'si', 'su', 'ni', 'nu', 'na', 'ne', //
+    'in', 'un', 'nin', 'nun', 'im', 'um', 'm', 'imiz', 'umuz', 'miz', 'muz', //
+    'iniz', 'unuz', 'niz', 'nuz', 'da', 'de', 'ta', 'te', 'dan', 'den', 'tan', 'ten', //
+    'nda', 'nde', 'ndan', 'nden', 'la', 'le', 'yla', 'yle', 'lar', 'ler', 'ki', //
+    'dir', 'dur', 'tir', 'tur', 'ca', 'ce', 'li', 'lu', 'siz', 'suz', 'lik', 'luk', //
+    'et', 'eden', 'etmek', 'etmis', 'etti', 'edil', 'edilen', 'edilmis', //
+    'olan', 'olmak', 'olmus', 'olur', 'olup',
+  };
+
+  /// [rest], en fazla dört ekin art arda gelmesinden mi oluşuyor?
+  /// ("inden" = "in" + "den", "lari" = "lar" + "i"; "aat" değil.)
+  static bool _isSuffixChain(String rest, [int depth = 0]) {
+    if (rest.isEmpty) return depth > 0;
+    if (depth >= 4) return false;
+    for (var len = rest.length < 7 ? rest.length : 7; len >= 1; len--) {
+      if (_suffixMorphemes.contains(rest.substring(0, len)) && _isSuffixChain(rest.substring(len), depth + 1)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// "inkişafına", "kalbinden" gibi ekli yazılmış bir kelimenin içinden, en
   /// uzundan başlayarak sözlükte bulunan kökleri bulur (en fazla 8). Aynı
-  /// uzunlukta sık geçen önce gelir; "kalbî" gibi -î'li sıfatlar asıl kökün
-  /// ("kalb") arkasına alınır.
-  List<int> _stems(String qf) {
+  /// uzunlukta, kullanıcının yazdığı harfleri birebir tutan, sonra sık geçen
+  /// önce gelir; "kalbî" gibi -î'li sıfatlar asıl kökün ("kalb") arkasına
+  /// alınır. Kullanıcı ş, ç, ı gibi bir harfi bilerek yazdıysa o harfi
+  /// taşımayan kök önerilmez ("şemai" için "sema" değil).
+  List<_Stem> _stems(String qe, String qf) {
     if (qf.length < 4) return const [];
     final seen = <int>{};
-    final roots = <int>[];
-    final adjectives = <int>[];
+    final roots = <_Stem>[];
+    final adjectives = <_Stem>[];
     for (var len = qf.length - 1; len >= 3 && roots.length + adjectives.length < 8; len--) {
       final prefix = qf.substring(0, len);
-      final group = <int>[];
+      final typed = qe.substring(0, len);
+      final group = <_Key>[];
       for (var i = _lowerBound(_keys, prefix); i < _keys.length && _keys[i].folded == prefix; i++) {
-        if (seen.add(_keys[i].entry)) group.add(_keys[i].entry);
+        final k = _keys[i];
+        if (_respectsTypedLetters(typed, k.exact) && seen.add(k.entry)) group.add(k);
       }
-      group.sort((a, b) => entries[b].frequency - entries[a].frequency);
-      for (final id in group) {
-        (_endsWithLongVowel(entries[id].word) ? adjectives : roots).add(id);
+      int rank(_Key k) => (k.exact == typed ? 0 : 10) - entries[k.entry].frequency;
+      group.sort((a, b) => rank(a) - rank(b));
+      for (final k in group) {
+        (_endsWithLongVowel(entries[k.entry].word) ? adjectives : roots).add(_Stem(k.entry, len));
       }
     }
     return [...roots, ...adjectives].take(8).toList();
+  }
+
+  /// [typed] içinde kullanıcının bilerek yazdığı ş, ç, ğ, ı, ö, ü harfleri
+  /// [exact]'ta da aynı mı? (Türkçe klavyesi olmayanın yazdığı sade harfler
+  /// her zaman uyar.)
+  static bool _respectsTypedLetters(String typed, String exact) {
+    if (typed.length != exact.length) return true;
+    for (var i = 0; i < typed.length; i++) {
+      final t = typed[i];
+      if ('çğıöşü'.contains(t) && exact[i] != t) return false;
+    }
+    return true;
   }
 
   /// Yazım hatalarına karşı: aynı harfle başlayan ve yazılana en fazla bir
@@ -365,9 +446,25 @@ class Lugat {
     return ids.take(10).toList();
   }
 
-  /// [a] ile [b] (bütün olarak) en fazla bir harf farklı mı?
-  static bool _isOneEditAway(String a, String b) =>
-      (a.length - b.length).abs() <= 1 && _prefixDistance(a, b, 1) <= 1 && _prefixDistance(b, a, 1) <= 1;
+  /// [a] ile [b] bütün olarak en fazla bir harf farklı mı (ekleme, silme,
+  /// değiştirme ya da yan yana iki harfin yer değişimi)?
+  static bool _isOneEditAway(String a, String b) {
+    if ((a.length - b.length).abs() > 1) return false;
+    var i = 0;
+    while (i < a.length && i < b.length && a.codeUnitAt(i) == b.codeUnitAt(i)) {
+      i++;
+    }
+    final ra = a.substring(i);
+    final rb = b.substring(i);
+    if (ra.isEmpty || rb.isEmpty) return (ra.length - rb.length).abs() <= 1; // sonda bir harf fazla/eksik
+    if (ra.substring(1) == rb.substring(1)) return true; // değiştirme
+    if (ra.substring(1) == rb || ra == rb.substring(1)) return true; // ekleme/silme
+    return ra.length >= 2 &&
+        rb.length >= 2 &&
+        ra[0] == rb[1] &&
+        ra[1] == rb[0] &&
+        ra.substring(2) == rb.substring(2); // yer değişimi
+  }
 
   /// [q] ile [key]'in herhangi bir öneki arasındaki en küçük düzenleme
   /// uzaklığı (ekleme, silme, değiştirme, yan yana iki harfin yer değişimi).

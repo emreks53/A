@@ -83,7 +83,21 @@ class FocusStatus {
 class FocusModeService {
   FocusModeService({MethodChannel? channel, bool? isAndroid})
       : _channel = channel ?? const MethodChannel('lugat/odak'),
-        _isAndroid = isAndroid ?? (!kIsWeb && Platform.isAndroid);
+        _isAndroid = isAndroid ?? (!kIsWeb && Platform.isAndroid) {
+    if (_isAndroid) _channel.setMethodCallHandler(_handlePlatformCall);
+  }
+
+  /// Rahatsız Etmeyin durumu sistemde değişince (kural devreye girince,
+  /// kullanıcı Hızlı Ayarlar'dan kapatınca...) Android tarafı haber verir.
+  void Function(FocusStatus status)? onStatusChanged;
+
+  Future<Object?> _handlePlatformCall(MethodCall call) async {
+    final args = call.arguments;
+    if (call.method == 'statusChanged' && args is Map) {
+      onStatusChanged?.call(FocusStatus.fromMap(args.cast<Object?, Object?>()));
+    }
+    return null;
+  }
 
   final MethodChannel _channel;
   final bool _isAndroid;

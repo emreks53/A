@@ -1,5 +1,11 @@
 package io.github.emreks53.lugat_risale
 
+import android.app.NotificationManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -7,6 +13,19 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val focusMode by lazy { FocusModeController(this) }
+    private var channel: MethodChannel? = null
+
+    /**
+     * Rahatsız Etmeyin durumu değişince (kural sistem tarafından devreye alınınca,
+     * kullanıcı Hızlı Ayarlar'dan kapatınca...) güncel durumu Dart tarafına iletir.
+     * Android 10–13'te kural birkaç an sonra devreye girdiğinden durum ancak bu
+     * yayınla doğru öğrenilebilir.
+     */
+    private val zenReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            channel?.invokeMethod("statusChanged", focusMode.status())
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,7 +38,9 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lugat/odak").setMethodCallHandler { call, result ->
+        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "lugat/odak")
+        this.channel = channel
+        channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "status" -> result.success(focusMode.status())
                 "setEnabled" -> {
@@ -38,10 +59,23 @@ class MainActivity : FlutterActivity() {
     // Odak modu yalnızca uygulama ekranda görünürken açıktır.
     override fun onStart() {
         super.onStart()
+        val filter = IntentFilter(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            filter.addAction(NotificationManager.ACTION_AUTOMATIC_ZEN_RULE_STATUS_CHANGED)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(zenReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(zenReceiver, filter)
+        }
         focusMode.activate()
     }
 
     override fun onStop() {
+        try {
+            unregisterReceiver(zenReceiver)
+        } catch (_: IllegalArgumentException) {
+        }
         focusMode.deactivate()
         super.onStop()
     }

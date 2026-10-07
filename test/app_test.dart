@@ -275,6 +275,30 @@ void main() {
     expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
   });
 
+  testWidgets('Rahatsız Etmeyin durumu sistemde değişince gösterge hemen güncellenir', (tester) async {
+    mockAndroidFocus(granted: true);
+    final controller = await startApp(tester, android: true);
+    expect(controller.focus.active, isTrue);
+
+    // Kullanıcı Hızlı Ayarlar'dan Rahatsız Etmeyin'i kapattı; Android haber veriyor.
+    await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.handlePlatformMessage(
+      'lugat/odak',
+      const StandardMethodCodec().encodeMethodCall(const MethodCall('statusChanged', {
+        'supported': true,
+        'sdk': 35,
+        'enabled': true,
+        'granted': true,
+        'active': false,
+        'disabledInSystem': false,
+      })),
+      (_) {},
+    );
+    await tester.pump();
+
+    expect(controller.focus.active, isFalse);
+    expect(find.byTooltip('Odak modu ayarları'), findsOneWidget);
+  });
+
   testWidgets('yazı boyutu ve tema ayarları kaydedilir', (tester) async {
     final controller = await startApp(tester);
     controller.setTextScale(1.3);

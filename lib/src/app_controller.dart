@@ -18,7 +18,14 @@ class AppController extends ChangeNotifier {
     Future<void> Function()? keepScreenOn,
   })  : _loadLugat = loadLugat ?? loadBundledLugat,
         focusService = focusService ?? FocusModeService(),
-        _keepScreenOn = keepScreenOn ?? _enableWakelock;
+        _keepScreenOn = keepScreenOn ?? _enableWakelock {
+    this.focusService.onStatusChanged = (status) {
+      if (status != focus) {
+        focus = status;
+        _notify();
+      }
+    };
+  }
 
   static const assetPath = 'assets/lugat.jsonl';
   static const maxHistory = 100;

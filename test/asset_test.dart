@@ -51,6 +51,40 @@ void main() {
     }
   });
 
+  test('ekli yazılan sık kelimelerde kök ilk sırada', () {
+    const cases = {
+      'hakikatin': 'hakikat',
+      'hayata': 'hayat',
+      'ruhun': 'ruh',
+      'manası': 'mana',
+      'dinin': 'din',
+      'duaya': 'dua',
+      'esması': 'esma',
+      'kalbin': 'kalb',
+      'kudreti': 'kudret',
+      'rahmetinden': 'rahmet',
+      'inkişafına': 'inkişaf',
+      'âlemi': 'âlem',
+    };
+    cases.forEach((query, root) => expect(words(query).first, root, reason: query));
+  });
+
+  test('-î sıfatıyla aynı yazılan ekli kelimede kök hemen ikinci sırada', () {
+    expect(words('hayatı').take(2), ['hayatî', 'hayat']);
+    expect(words('insanı').take(2), ['insanî', 'insan']);
+  });
+
+  test('kelime yazılırken kısa ve ilgisiz kelimeler öne geçmez', () {
+    const cases = {'tahak': 'tahakkuk', 'salt': 'saltanat', 'hürri': 'hürriyet', 'bediü': 'Bediüzzaman', 'ferdan': 'ferdaniyet'};
+    cases.forEach((query, word) => expect(words(query).first, word, reason: query));
+    expect(words('şemai').first, 'şemail', reason: 'ş bilerek yazıldı; "sema" kök sayılmaz');
+  });
+
+  test('uzun kelimedeki yazım hatasında doğru kelime önce gelir', () {
+    expect(words('kâinaat').first, 'kâinat');
+    expect(words('muhabet').first, 'muhabbet');
+  });
+
   test('arama tek harfte bile hızlı', () {
     final watch = Stopwatch()..start();
     for (final q in ['a', 'm', 't', 'mu', 'te', 'in', 'kâ', 'xq', 'muhabet', 'tezahüratından']) {

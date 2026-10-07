@@ -183,12 +183,15 @@ class FocusModeController(context: Context) {
         notificationManager.automaticZenRules.filterValues { it.conditionId == CONDITION_ID }
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    private fun isRuleOn(id: String): Boolean =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+    private fun isRuleOn(id: String): Boolean {
+        // Kural PRIORITY filtresi kullandığından, gerçekten devredeyken telefonun genel
+        // filtresi hiçbir zaman ALL olamaz. Bu kontrol, Android 15'te kullanıcının Hızlı
+        // Ayarlar'dan Rahatsız Etmeyin'i kapatmasını (kuralın "ertelenmesi") da yakalar;
+        // getAutomaticZenRuleState bunu bazı sürümlerde göstermiyor.
+        if (notificationManager.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALL) return false
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM ||
             notificationManager.getAutomaticZenRuleState(id) == Condition.STATE_TRUE
-        } else {
-            notificationManager.currentInterruptionFilter != NotificationManager.INTERRUPTION_FILTER_ALL
-        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun policy(): ZenPolicy = ZenPolicy.Builder()
