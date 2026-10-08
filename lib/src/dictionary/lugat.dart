@@ -241,11 +241,12 @@ class Lugat {
   /// * Yazılan harflerle başlayan kelimeler: tam eşleşme en üstte, sonra
   ///   kullanıcının Türkçe harflerini (ş, ç, ı...) birebir tutanlar, sonra
   ///   Risale-i Nur'da sık geçenler, sonra kısa olanlar.
-  /// * Yazılan kelime ekli olabilir ("kudreti", "hakikatin", "kalbinden"):
-  ///   sözlükte tam karşılığı yoksa (ya da yalnızca "hayatî" gibi -î'li bir
-  ///   sıfat varsa) kökü önerilir. Kökün kabul edilmesi için kalan kısmın
-  ///   gerçekten bir Türkçe ek dizisi olması gerekir ("kudret" + "i"); böylece
-  ///   kelime yazılırken kısa, ilgisiz kelimeler ("tahak" → "Tâhâ") öne geçmez.
+  /// * Yazılan kelime ekli olabilir ("kudreti", "hakikatin", "kalbinden",
+  ///   "iman ediyor"): sözlükte tam karşılığı yoksa (ya da yalnızca "hayatî"
+  ///   gibi -î'li bir sıfat varsa) kökü önerilir. Kökün kabul edilmesi için
+  ///   kalan kısmın Türkçe ses kurallarına uyan bir ek dizisi olması gerekir
+  ///   ("kudret" + "i", "dua" + "ya"; "din" + "ya" değil); böylece kelime
+  ///   yazılırken kısa, ilgisiz kelimeler öne geçmez.
   /// * Birleşik ifadelerin içindeki kelimeyle eşleşenler ("harfi" →
   ///   "mana-yı harfî").
   /// * Hiçbir kelime yazılanla başlamıyorsa yazım hatasına karşı benzer
@@ -289,15 +290,24 @@ class Lugat {
     // Yazılanın tamamıyla eşleşen kelimeler (şapka ve Türkçe harf farkı hariç).
     final whole = [for (final id in prefixIds) if (tiers[id]! <= 1) id];
     final onlyAdjectives = whole.isNotEmpty && whole.every((id) => _endsWithLongVowel(entries[id].word));
-    final stems = (whole.isEmpty || onlyAdjectives)
+    // Kesme işaretinden önceki kısım çoğu zaman kelimenin kendisidir:
+    // "cem'i" → "cem'", "Hakk'ın" → "hak".
+    final apostrophe = query.indexOf(RegExp("['’]"));
+    final marker = apostrophe > 0 ? searchKey(query.substring(0, apostrophe)).length : -1;
+    final stemsWanted = whole.isEmpty || onlyAdjectives;
+    var stems = (stemsWanted || marker > 0)
         ? _stems(qe, qf).where((s) => !tiers.containsKey(s.entry)).toList()
         : const <_Stem>[];
-    // Kalan kısmı bir ek dizisi olan kökler ("hakikat" + "in"); en uzun olanlar
-    // ("imanı" için "iman", "îma" değil) öne alınmaya aday.
-    final suffixedStems = [for (final s in stems) if (_isSuffixChain(qf.substring(s.length))) s];
+    // Kalan kısmı bir ek dizisi olan kökler ("hakikat" + "in"), en uzunu önce.
+    final suffixStart = {for (final s in stems) s: _suffixStart(qf, s.length, _endsWithAyn(entries[s.entry].word))};
+    var suffixedStems = _rankSuffixed([for (final s in stems) if (suffixStart[s]! > 0) s], suffixStart);
+    final marked = [for (final s in suffixedStems) if (suffixStart[s] == marker) s.entry];
+    if (!stemsWanted) stems = suffixedStems = const [];
     final suffixed = [for (final s in suffixedStems) s.entry];
-    final longest = suffixedStems.isEmpty ? 0 : suffixedStems.map((s) => s.length).reduce((a, b) => a > b ? a : b);
-    final bestStems = [for (final s in suffixedStems) if (s.length == longest) s.entry];
+    // Son harfi iki kez yazılmış kelime ("takdimm", "emaree", "mevzuu").
+    final doubledLast = qf.length > 1 && qf[qf.length - 1] == qf[qf.length - 2]
+        ? [for (final s in stems) if (s.length == qf.length - 1) s.entry]
+        : const <int>[];
 
     final ordered = <SearchHit>[];
     final shown = <int>{};
@@ -311,77 +321,199 @@ class Lugat {
     if (prefixIds.isNotEmpty || partIds.isNotEmpty) {
       if (onlyAdjectives) {
         // "hayatı": önce "hayatî", hemen ardından kök "hayat", sonra diğerleri.
+        // ("hakiki" için "hak" değil: kök, sıfattan yalnız son harfi eksik olmalı.)
         add(whole, MatchKind.prefix);
-        add(bestStems, MatchKind.stem);
+        add(marked, MatchKind.stem);
+        add([for (final s in suffixedStems) if (s.length == qf.length - 1) s.entry], MatchKind.stem);
         add(prefixIds, MatchKind.prefix);
         add(suffixed, MatchKind.stem);
       } else {
-        // Kullanıcı bir kelimenin ortasındaysa ("rahme" → "rahmet") ya da yazılanla
-        // başlayan kelimeler kökten daha sık geçiyorsa ("bediü" → "Bediüzzaman")
-        // önce o kelimeler; yazdığı kelime bitmiş ve ekli görünüyorsa ("kudreti")
-        // önce kök.
-        final stemFrequency = bestStems.isEmpty ? 0 : entries[bestStems.first].frequency;
+        add(whole, MatchKind.prefix);
+        add(marked, MatchKind.stem);
+        // Öne alınmaya aday kök: "kalbinden" için önce "kalb", sonra "kalbî".
+        final roots = [for (final s in suffixedStems) if (!_endsWithLongVowel(entries[s.entry].word)) s];
+        final pool = roots.isNotEmpty ? roots : suffixedStems;
+        // Aynı yazılan kökler birlikte: "hâdisi" için "hadîs" ve "hâdis".
+        final best = [for (final s in pool) if (s.length == pool.first.length) s.entry];
+        final stemFrequency = best.isEmpty ? 0 : entries[best.first].frequency;
+        // Kullanıcı bir kelimenin ortasındaysa ("rahme" → "rahmet") ya da
+        // yazılanla başlayan kelimeler kökten daha sık geçiyorsa ("bediü" →
+        // "Bediüzzaman") önce o kelimeler; yazdığı kelime bitmiş ve ekli
+        // görünüyorsa ("kudreti") önce kök.
         final midWord = prefixIds.any((id) =>
             !_isCompound(entries[id].word) &&
             _folded[id].length <= qf.length + 4 &&
             entries[id].frequency >= stemFrequency);
         final topPrefix = prefixIds.isEmpty ? 0 : entries[prefixIds.first].frequency;
-        final stemsFirst = bestStems.isNotEmpty && !midWord && stemFrequency >= topPrefix;
-        if (stemsFirst) add(bestStems, MatchKind.stem);
-        // Öne alınmayan kökler de gözden kaybolmasın: ilk iki sonucun hemen ardından.
+        if (best.isNotEmpty && !midWord && stemFrequency >= topPrefix) add(best, MatchKind.stem);
+        // Öne alınmayan kök de gözden kaybolmasın: ilk iki sonucun hemen
+        // ardından. Diğer kökler, yazılanla başlayan kelimelerden sonra.
         add(prefixIds.take(2), MatchKind.prefix);
-        add(suffixed, MatchKind.stem);
+        add(best, MatchKind.stem);
         add(prefixIds, MatchKind.prefix);
+        add(suffixed, MatchKind.stem);
+        add(doubledLast, MatchKind.stem);
       }
       add(partIds, MatchKind.part);
       return ordered;
     }
 
     // Hiçbir kelime yazılanla başlamıyor: kökler ve yazım hatası önerileri.
-    // Ek dizisiyle bitmeyen kökler yalnızca yeterince uzunsa önerilir.
-    final minOther = (qf.length + 1) ~/ 2 < 4 ? 4 : (qf.length + 1) ~/ 2;
-    final otherStems = [
-      for (final s in stems)
-        if (!suffixed.contains(s.entry) && s.length >= minOther) s.entry,
-    ];
     final typos = _fuzzy(qf, maxDistance: stems.isEmpty ? null : 1)
         .where((id) => !stems.any((s) => s.entry == id))
         .toList();
     final close = [for (final id in typos) if (_isOneEditAway(qf, _folded[id])) id];
-    add(suffixed, MatchKind.stem);
+    final closeFrequency = close.fold(0, (m, id) => entries[id].frequency > m ? entries[id].frequency : m);
+    // Kök, bir harf farkla tutan kelimenin ("rahmetn" için "rahmeti") önüne
+    // ancak yazılanın çoğunu kapsıyorsa ya da ondan daha sık geçiyorsa geçer
+    // ("aşkına": "aşk", "âşina"dan önce; "diniyle": "din", "diniye"den önce).
+    bool strong(_Stem s) {
+      final coverage = _reach(s, suffixedStems, suffixStart) / qf.length;
+      final frequency = entries[s.entry].frequency;
+      return coverage >= 0.6 ||
+          (coverage >= 0.5 && frequency >= closeFrequency) ||
+          (coverage >= 0.4 && frequency > closeFrequency);
+    }
+
+    // Ek dizisiyle bitmeyen kökler yalnızca yeterince uzunsa önerilir; başka
+    // öneri yoksa hepsi ("ruhen" → "ruh").
+    final minOther = (qf.length + 1) ~/ 2 < 4 ? 4 : (qf.length + 1) ~/ 2;
+    add(marked, MatchKind.stem);
+    add([for (final s in suffixedStems) if (strong(s)) s.entry], MatchKind.stem);
+    add(doubledLast, MatchKind.stem);
     add(close, MatchKind.fuzzy);
-    add(otherStems, MatchKind.stem);
+    add(suffixed, MatchKind.stem);
+    add([for (final s in stems) if (s.length >= minOther) s.entry], MatchKind.stem);
     add(typos, MatchKind.fuzzy);
+    if (ordered.isEmpty) add([for (final s in stems) s.entry], MatchKind.stem);
     return ordered;
   }
 
   /// "mana-yı harfî" gibi birden çok kelimeden oluşan ifadeler.
   static bool _isCompound(String word) => word.contains(' ') || word.contains('-');
 
+  /// "cem'", "bedî'" gibi ayın ya da hemze ile biten kelimeler.
+  static bool _endsWithAyn(String word) => word.endsWith("'") || word.endsWith('’');
+
   /// "kalbî", "ulvî" gibi uzun ünlüyle biten (çoğunlukla -î sıfatları) kelimeler.
   static bool _endsWithLongVowel(String word) =>
       word.endsWith('î') || word.endsWith('û') || word.endsWith('â');
 
-  /// Sık görülen Türkçe ekler, katlanmış yazılışlarıyla (ı → i, ü → u, ç → c...).
-  static const Set<String> _suffixMorphemes = {
-    'i', 'u', 'a', 'e', 'yi', 'yu', 'ya', 'ye', 'si', 'su', 'ni', 'nu', 'na', 'ne', //
-    'in', 'un', 'nin', 'nun', 'im', 'um', 'm', 'imiz', 'umuz', 'miz', 'muz', //
-    'iniz', 'unuz', 'niz', 'nuz', 'da', 'de', 'ta', 'te', 'dan', 'den', 'tan', 'ten', //
-    'nda', 'nde', 'ndan', 'nden', 'la', 'le', 'yla', 'yle', 'lar', 'ler', 'ki', //
-    'dir', 'dur', 'tir', 'tur', 'ca', 'ce', 'li', 'lu', 'siz', 'suz', 'lik', 'luk', //
-    'et', 'eden', 'etmek', 'etmis', 'etti', 'edil', 'edilen', 'edilmis', //
-    'olan', 'olmak', 'olmus', 'olur', 'olup',
+  /// Ekli kökleri sıralar: yazılanın daha çoğunu karşılayan önce; kök ile
+  /// ondan yapılmış -î sıfatı arasında daha sık geçen ("nefs" / "nefsî"), eşitse kök.
+  List<_Stem> _rankSuffixed(List<_Stem> stems, Map<_Stem, int> suffixStart) {
+    final reach = {for (final s in stems) s: _reach(s, stems, suffixStart)};
+    final index = {for (var i = 0; i < stems.length; i++) stems[i]: i};
+    return [...stems]..sort((a, b) {
+        final r = reach[b]! - reach[a]!;
+        if (r != 0) return r;
+        if ((a.length - b.length).abs() == 1) {
+          final adjective = a.length > b.length ? a : b;
+          final root = a.length > b.length ? b : a;
+          if (_endsWithLongVowel(entries[adjective.entry].word) &&
+              !_endsWithLongVowel(entries[root.entry].word) &&
+              entries[adjective.entry].frequency > entries[root.entry].frequency) {
+            return identical(adjective, a) ? -1 : 1;
+          }
+        }
+        return index[a]! - index[b]!;
+      });
+  }
+
+  /// Kökün yazılanın ne kadarını karşıladığı: ikizleşen ünsüz ("hakk-ın")
+  /// köke sayılır; "nefsine" için "nefs" kökü, ondan yapılmış ve aynı yazılışta
+  /// tutan "nefsî" sıfatı kadar uzun sayılır.
+  int _reach(_Stem s, List<_Stem> suffixed, Map<_Stem, int> suffixStart) {
+    final own = suffixStart[s]!;
+    if (_endsWithLongVowel(entries[s.entry].word)) return own;
+    final adjective = suffixed.any((a) => a.length == s.length + 1 && _endsWithLongVowel(entries[a.entry].word));
+    return adjective && own < s.length + 1 ? s.length + 1 : own;
+  }
+
+  static const String _vowels = 'aeiou';
+
+  /// Sert ünsüzler (katlanmış: ç → c, ş → s); bunlardan sonra "-de" yerine "-te" gelir.
+  static const String _hardConsonants = 'fstkchp';
+
+  /// Türkçe ekler, katlanmış yazılışlarıyla (ı → i, ü → u, ç → c...).
+  /// Ünsüzle biten kelimeye gelenler: "kalb-i", "kalb-in", "kalb-e".
+  static const Set<String> _afterConsonant = {
+    'i', 'u', 'a', 'e', 'in', 'un', 'im', 'um', 'imiz', 'umuz', 'iniz', 'unuz', //
   };
 
-  /// [rest], en fazla dört ekin art arda gelmesinden mi oluşuyor?
-  /// ("inden" = "in" + "den", "lari" = "lar" + "i"; "aat" değil.)
-  static bool _isSuffixChain(String rest, [int depth = 0]) {
-    if (rest.isEmpty) return depth > 0;
-    if (depth >= 4) return false;
-    for (var len = rest.length < 7 ? rest.length : 7; len >= 1; len--) {
-      if (_suffixMorphemes.contains(rest.substring(0, len)) && _isSuffixChain(rest.substring(len), depth + 1)) {
-        return true;
+  /// Ünlüyle biten kelimeye gelenler: "dua-ya", "mana-sı", "esma-nın".
+  static const Set<String> _afterVowel = {
+    'yi', 'yu', 'ya', 'ye', 'si', 'su', 'ni', 'nu', 'na', 'ne', 'nin', 'nun', //
+    'm', 'miz', 'muz', 'niz', 'nuz', 'yla', 'yle', 'nda', 'nde', 'ndan', 'nden', //
+    'sin', 'sun', 'yken', 'yiz', 'yim', //
+  };
+
+  /// Sert ünsüzden sonra gelenler: "hikmet-te", "hikmet-ten", "hikmet-tir".
+  static const Set<String> _afterHard = {'ta', 'te', 'tan', 'ten', 'tir', 'tur'};
+
+  /// Her kelimeye gelebilenler: "nur-da", "nur-lar", "nur-ken".
+  static const Set<String> _afterAny = {
+    'da', 'de', 'dan', 'den', 'la', 'le', 'lar', 'ler', 'ki', 'dir', 'dur', //
+    'ca', 'ce', 'li', 'lu', 'siz', 'suz', 'lik', 'luk', 'ken', 'ci', 'cu', //
+  };
+
+  /// İyelik ekinden ("kudret-i") sonra gelebilenler: "kudret-i-ne", "kudret-i-yle".
+  static const Set<String> _afterPossessive = {
+    'ni', 'nu', 'na', 'ne', 'nin', 'nun', 'nda', 'nde', 'ndan', 'nden', 'yla', 'yle', 'dir', 'dur', //
+  };
+
+  /// "et-" ve "ol-" yardımcı fiilleri: "iman ediyor", "dua eder", "sebep olan".
+  /// Yalnız kökten sonra tek başına gelir.
+  static const Set<String> _auxiliaryVerbs = {
+    'eder', 'ederek', 'eden', 'edip', 'ediyor', 'ediyorlar', 'edilir', 'edilen', 'edilmis', //
+    'ederiz', 'ederim', 'etmek', 'etmis', 'etti', 'ettigi', 'etmez', 'etse', 'ettiren', 'eyler', //
+    'olan', 'olmak', 'olmus', 'olur', 'olup', 'oldu', 'olarak', 'olunur', 'olunan', 'oluyor', //
+    'olsa', 'olsun', 'olmaz', //
+  };
+
+  /// [qf]'nin ilk [length] harfi bir kökse, kalan kısım bu köke gelebilecek
+  /// bir ek dizisi mi? Öyleyse ek dizisinin başladığı yer, değilse -1.
+  /// ("kudreti" = "kudret" + "i"; "kâinaat" = "kâin" + "aat" değil.)
+  /// Arapça kökenli kısa kelimelerde ünlüyle başlayan ekten önce son ünsüz
+  /// ikizleşir: "hak" → "hakk-ın", "his" → "hiss-in", "zan" → "zann-ediyor".
+  ///
+  /// Ayın/hemze ile biten kelime ([ayn]: "cem'", "bedî'") ünsüzle biter gibi
+  /// ek alır: "cem'-i", "bedî'-i".
+  static int _suffixStart(String qf, int length, bool ayn) {
+    final rest = qf.substring(length);
+    final last = ayn ? "'" : qf[length - 1];
+    if (_auxiliaryVerbs.contains(rest) || _isSuffixChain(rest, last, null, 0)) return length;
+    // Sonundaki ayın yazılmamış kelimeler: "vuku-u", "mevki-i", "menba-ı".
+    if (length >= 4 && _vowels.contains(last) && _vowels.contains(rest[0]) && _isSuffixChain(rest, "'", null, 0)) {
+      return length;
+    }
+    final doubles = length <= 4 && !ayn && !_vowels.contains(last) && _vowels.contains(qf[length - 2]);
+    if (!doubles || rest.length < 2 || rest[0] != last || !_vowels.contains(rest[1])) return -1;
+    final afterDouble = rest.substring(1);
+    return _auxiliaryVerbs.contains(afterDouble) || _isSuffixChain(afterDouble, last, null, 0) ? length + 1 : -1;
+  }
+
+  /// [rest], [before] harfinden sonra en fazla dört ekin art arda
+  /// gelmesinden mi oluşuyor? Ünlü/ünsüz uyumuna bakılır ("kalb-in",
+  /// "dua-nın"; "din-ya" değil) ve tek ünlülük ek yalnız sonda ya da iyelik
+  /// ekiyse ardından bir hâl ekiyle gelir ("kudret-i-ne"; "insan-i-et" değil).
+  static bool _isSuffixChain(String rest, String before, String? previous, int count) {
+    if (rest.isEmpty) return count > 0;
+    if (count >= 4) return false;
+    final afterVowel = _vowels.contains(before);
+    for (var len = rest.length < 5 ? rest.length : 5; len >= 1; len--) {
+      final m = rest.substring(0, len);
+      if (m == previous) continue;
+      final fits = afterVowel
+          ? _afterVowel.contains(m) || _afterAny.contains(m)
+          : _afterConsonant.contains(m) ||
+              _afterAny.contains(m) ||
+              (_afterHard.contains(m) && _hardConsonants.contains(before));
+      if (!fits) continue;
+      if (previous != null && previous.length == 1) {
+        if (!(previous == 'i' || previous == 'u') || !_afterPossessive.contains(m)) continue;
       }
+      if (_isSuffixChain(rest.substring(len), m[len - 1], m, count + 1)) return true;
     }
     return false;
   }

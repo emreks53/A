@@ -83,6 +83,47 @@ void main() {
   test('uzun kelimedeki yazım hatasında doğru kelime önce gelir', () {
     expect(words('kâinaat').first, 'kâinat');
     expect(words('muhabet').first, 'muhabbet');
+    // Kalan kısım gerçek bir ek değil: "rahm" + "te", "din" + "ya" kök sayılmaz.
+    const cases = {
+      'rahmte': 'rahmet',
+      'adlet': 'adalet',
+      'besmle': 'besmele',
+      'insaniet': 'insaniyet',
+      'dinya': 'dünya',
+      'isalm': 'İslâm',
+      'tabita': 'tabiat',
+      'şerita': 'şeriat',
+    };
+    cases.forEach((query, word) => expect(words(query).first, word, reason: query));
+  });
+
+  test('ekli kelimede kök, ondan yapılmış -î sıfatından önce gelir', () {
+    expect(words('nefsine').first, 'nefs');
+    expect(words('ehline').first, 'ehl');
+    expect(words('kalbinden').first, 'kalb');
+  });
+
+  test('"et-" ve "ol-" ile kurulan fiillerde kök bulunur', () {
+    expect(words('iman ediyor').first, 'iman');
+    expect(words('dua eder').first, 'dua');
+    expect(words('zannediyor').first, 'zan');
+    expect(words('tasdik ederek').first, 'tasdik');
+    expect(words('sebep olan').first, 'sebeb');
+  });
+
+  test('ikizleşen son ünsüz ve kesme işaretli yazılış', () {
+    expect(words("Hakk'ın").first, 'hak');
+    expect(words('hissin').first, 'his');
+    expect(words("cem'i"), contains("cem'"));
+    expect(words('mevzuu').first, 'mevzu');
+    expect(words('nurken'), ['nur']);
+  });
+
+  test('kelime yazılırken kısaltılmış kökler araya girmez', () {
+    expect(words('mevcudiye').first, 'mevcudiyet');
+    expect(words('kabiliye').first, 'kabiliyet');
+    expect(words('hakiki'), isNot(contains('hak')));
+    expect(words('medeni'), isNot(contains('medd')));
   });
 
   test('arama tek harfte bile hızlı', () {
