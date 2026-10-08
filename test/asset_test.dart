@@ -109,12 +109,32 @@ void main() {
     expect(words('zannediyor').first, 'zan');
     expect(words('tasdik ederek').first, 'tasdik');
     expect(words('sebep olan').first, 'sebeb');
+    // Yardımcı fiil de ek alabilir.
+    expect(words('iman edenler').first, 'iman');
+    expect(words('helâk etmiştir').first, 'helâk');
+    expect(words('kıyam etmiştir').first, 'kıyam');
+    expect(words('semavî olanlar').first, 'semavî');
+    expect(words('arz etmek').first, 'arz');
+  });
+
+  test('ekli kelimede hâl ekleri ve "-dır" doğru ayrılır', () {
+    expect(words('imanıda').first, 'iman', reason: '"îma" + "nı" + "da" olamaz');
+    expect(words('esmamı').first, 'esma');
+    expect(words('duama').first, 'dua');
+    expect(words('hastır').first, 'has');
+    expect(words('kârdır').first, 'kâr');
+    expect(words('hissine').take(2), ['his', 'hissî']);
+    expect(words('kudreti ').first, 'kudret', reason: 'sondaki boşluk');
   });
 
   test('ikizleşen son ünsüz ve kesme işaretli yazılış', () {
     expect(words("Hakk'ın").first, 'hak');
     expect(words('hissin').first, 'his');
     expect(words("cem'i"), contains("cem'"));
+    expect(words("nev'ine").first, 'nevi');
+    // Kesmeden önceki kısım ayınlı bir kelime değilse öne alınmaz.
+    expect(words("san'a").first, "san'at");
+    expect(words("mir'a").take(2), containsAll(["mi'rac", "mir'at"]));
     expect(words('mevzuu').first, 'mevzu');
     expect(words('nurken'), ['nur']);
   });
@@ -124,6 +144,9 @@ void main() {
     expect(words('kabiliye').first, 'kabiliyet');
     expect(words('hakiki'), isNot(contains('hak')));
     expect(words('medeni'), isNot(contains('medd')));
+    expect(words('nevci').first, 'nevcivan');
+    expect(words('alakka').first, 'alâka');
+    expect(words('kemal-i ci'), ['kemal-i ciddiyet']);
   });
 
   test('arama tek harfte bile hızlı', () {

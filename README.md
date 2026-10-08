@@ -18,7 +18,8 @@ ilk harflerini yazar ve manasını görür. Bu sırada telefon kendiliğinden ka
   - Kesme işareti ve tire gerekmez ("sanat" → san'at, "manayi harfi" → mana-yı harfî).
   - Birleşik ifadeler içindeki kelimeyle de bulunur ("harfi" → mana-yı harfî).
   - Ekli yazılan kelimenin kökü önerilir ("inkişafına" → inkişaf, "kudreti" → kudret,
-    "kalbinden" → kalb).
+    "kalbinden" → kalb, "Hakk'ın" → hak, "iman edenler" → iman). Ek, Türkçe ses
+    kurallarına göre tanınır; böylece kelime yazılırken ilgisiz kısa kelimeler öne geçmez.
   - Küçük yazım hatalarında benzer kelime önerilir ("muhabet" → muhabbet).
   - Risale-i Nur'da sık geçen kelimeler önce gelir; aynı yazılıp farklı okunan kelimeler
     (hâkim / hakîm) mana sayfasında birlikte gösterilir.
