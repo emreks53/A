@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_controller.dart';
 import 'app.dart';
+import 'privacy_page.dart';
 import 'widgets.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -41,16 +42,20 @@ class SettingsPage extends StatelessWidget {
               max: AppController.maxTextScale,
               divisions: 15,
               label: '%${(controller.textScale * 100).round()}',
+              // Ekran okuyucu kaydırıcının konumunu değil yazı boyutunu söylesin.
+              semanticFormatterCallback: (v) => 'Yazı boyutu yüzde ${(v * 100).round()}',
               onChanged: controller.setTextScale,
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: SegmentedButton<ThemeMode>(
+              // Büyük yazıda etiketler bölünmesin, küçülsün.
+              showSelectedIcon: false,
               segments: const [
-                ButtonSegment(value: ThemeMode.system, label: Text('Sistem')),
-                ButtonSegment(value: ThemeMode.light, label: Text('Açık')),
-                ButtonSegment(value: ThemeMode.dark, label: Text('Koyu')),
+                ButtonSegment(value: ThemeMode.system, label: _SegmentLabel('Sistem')),
+                ButtonSegment(value: ThemeMode.light, label: _SegmentLabel('Açık')),
+                ButtonSegment(value: ThemeMode.dark, label: _SegmentLabel('Koyu')),
               ],
               selected: {controller.themeMode},
               onSelectionChanged: (s) => controller.setThemeMode(s.first),
@@ -63,7 +68,16 @@ class SettingsPage extends StatelessWidget {
             title: const Text('Son bakılanları temizle'),
             subtitle: Text('${controller.history.length} kelime'),
             enabled: controller.history.isNotEmpty,
-            onTap: controller.clearHistory,
+            onTap: () {
+              final previous = controller.history;
+              controller.clearHistory();
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(SnackBar(
+                  content: const Text('Son bakılanlar temizlendi'),
+                  action: SnackBarAction(label: 'Geri al', onPressed: () => controller.restoreHistory(previous)),
+                ));
+            },
           ),
           const Divider(height: 32),
           const SectionHeader('Hakkında'),
@@ -73,12 +87,17 @@ class SettingsPage extends StatelessWidget {
               'Lügat-ı Risale-i Nur, Risale-i Nur Külliyatı’nı okurken karşılaşılan '
               'Osmanlıca kelime ve ifadelerin manasını hızlıca öğrenmek için hazırlandı.'
               '${controller.lugat == null ? '' : '\n\nLügatte ${formatCount(controller.lugat!.entries.length)} kelime ve ifade var.'}'
-              '\n\nManalar RNK Neşriyat’ın Risale-i Nur lügatından (rnk.tr) alınmıştır. '
-              'O lügatta bulunmayan az sayıdaki kelimenin manası ayrıca hazırlanmıştır.'
+              '\n\nManaların neredeyse tamamı RNK Neşriyat’ın Risale-i Nur lügatından (rnk.tr) '
+              'alınmıştır. O lügatta bulunmayan az sayıdaki kelimenin manası ayrıca hazırlanmıştır.'
               '\n\nUygulama internet kullanmaz ve hiçbir kişisel veri toplamaz; son bakılanlar ve '
-              'kaydedilenler yalnızca bu telefonda durur.',
+              'kaydedilenler telefonunuzda saklanır, hiçbir yere gönderilmez.',
               style: theme.textTheme.bodyMedium,
             ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: const Text('Gizlilik politikası'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const PrivacyPage())),
           ),
           ListTile(
             leading: const Icon(Icons.description_outlined),
@@ -210,4 +229,14 @@ class _IosFocusHelp extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Tema seçicideki etiket: sığmazsa bölünmek yerine küçülür.
+class _SegmentLabel extends StatelessWidget {
+  const _SegmentLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => FittedBox(fit: BoxFit.scaleDown, child: Text(text, maxLines: 1));
 }

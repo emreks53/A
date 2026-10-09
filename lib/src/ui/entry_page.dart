@@ -19,19 +19,16 @@ class EntryPage extends StatefulWidget {
 }
 
 class _EntryPageState extends State<EntryPage> {
-  late Entry _entry = widget.entry;
-  final _scroll = ScrollController();
+  Entry get _entry => widget.entry;
 
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  void _show(Entry other) {
+  /// Gösterilen kelime yeni bir sayfada açılır; geri tuşu bu kelimeye döner.
+  /// O sayfa "Yeni kelime" ile kapanırsa bu sayfa da kapanır.
+  Future<void> _show(Entry other) async {
     AppScope.read(context).recordLookup(other);
-    setState(() => _entry = other);
-    if (_scroll.hasClients) _scroll.jumpTo(0);
+    final newSearch = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => EntryPage(entry: other)),
+    );
+    if (newSearch == true && mounted) Navigator.of(context).pop(true);
   }
 
   Future<void> _copy() async {
@@ -69,7 +66,6 @@ class _EntryPageState extends State<EntryPage> {
         label: const Text('Yeni kelime'),
       ),
       body: ListView(
-        controller: _scroll,
         padding: EdgeInsets.fromLTRB(0, 8, 0, MediaQuery.paddingOf(context).bottom + 96),
         children: [
           Padding(

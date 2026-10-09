@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -115,13 +117,30 @@ class _SearchPageState extends State<SearchPage> {
     _focusSearchIfVisible();
   }
 
-  void _onSubmitted(String _) {
-    final hits = _currentHits(AppScope.read(context).lugat);
+  Future<void> _onSubmitted(String _) async {
+    final controller = AppScope.read(context);
+    // Lügatın geri kalanı henüz yükleniyorsa yanlış kelime açılmasın diye beklenir.
+    if (!controller.fullyLoaded) {
+      await controller.fullReady;
+      if (!mounted) return;
+    }
+    final hits = _currentHits(controller.lugat);
     if (hits.isNotEmpty) {
       _open(hits.first.entry);
     } else {
       _focusNode.requestFocus();
     }
+  }
+
+  void _clearHistory(AppController controller) {
+    final previous = controller.history;
+    controller.clearHistory();
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: const Text('Son bakılanlar temizlendi'),
+        action: SnackBarAction(label: 'Geri al', onPressed: () => controller.restoreHistory(previous)),
+      ));
   }
 
   @override
@@ -132,6 +151,12 @@ class _SearchPageState extends State<SearchPage> {
 
     final theme = Theme.of(context);
     final onHeader = Colors.white;
+    // Arama kutusunun yüksekliği yazı boyutuyla büyür; üst çubuk ona göre
+    // ayarlanır ki düğmeler sıkışmasın. Çok büyük yazıda kutu daha fazla büyümez.
+    final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 2.0);
+    final fieldStyle = theme.textTheme.titleLarge!;
+    final fieldHeight =
+        math.max(48.0, (scaler.scale(fieldStyle.fontSize!) * (fieldStyle.height ?? 1.27) + 28).ceilToDouble());
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Palette.logoEdge,
@@ -176,24 +201,27 @@ class _SearchPageState extends State<SearchPage> {
           const SizedBox(width: 4),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(72),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-            child: _SearchField(
-              controller: _text,
-              focusNode: _focusNode,
-              onSubmitted: _onSubmitted,
-              onClear: () {
-                _text.clear();
-                _focusNode.requestFocus();
-              },
+          preferredSize: Size.fromHeight(20 + fieldHeight),
+          child: MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: scaler),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+              child: _SearchField(
+                controller: _text,
+                focusNode: _focusNode,
+                onSubmitted: _onSubmitted,
+                onClear: () {
+                  _text.clear();
+                  _focusNode.requestFocus();
+                },
+              ),
             ),
           ),
         ),
       ),
       body: Column(
         children: [
-          if (lugat == null && controller.loadError == null) const LinearProgressIndicator(minHeight: 2),
+          if (!controller.fullyLoaded && controller.loadError == null) const LinearProgressIndicator(minHeight: 2),
           Expanded(child: _buildBody(controller, lugat, hits)),
         ],
       ),
@@ -210,6 +238,12 @@ class _SearchPageState extends State<SearchPage> {
     }
     if (_text.text.trim().isEmpty) return _buildHome(controller);
     if (lugat == null) return const _Message(icon: Icons.hourglass_empty, text: 'Lügat yükleniyor…');
+    if (!controller.fullyLoaded) {
+      // Lügatın geri kalanı yüklenirken kök ve yazım hatası tahminleri gösterilmez:
+      // aranan kelime henüz yüklenmemiş kısımda olabilir.
+      hits = [for (final h in hits) if (h.kind == MatchKind.prefix || h.kind == MatchKind.part) h];
+      if (hits.isEmpty) return const _Message(icon: Icons.hourglass_empty, text: 'Lügat yükleniyor…');
+    }
     if (hits.isEmpty) {
       return _Message(
         icon: Icons.search_off,
@@ -292,7 +326,7 @@ class _SearchPageState extends State<SearchPage> {
         if (recent.isNotEmpty) ...[
           SectionHeader(
             'Son bakılanlar',
-            action: TextButton(onPressed: controller.clearHistory, child: const Text('Temizle')),
+            action: TextButton(onPressed: () => _clearHistory(controller), child: const Text('Temizle')),
           ),
           for (final entry in recent.take(30)) EntryTile(entry: entry, onTap: () => _open(entry)),
         ] else
@@ -465,40 +499,41 @@ class _SearchField extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       borderSide: BorderSide(color: light ? Colors.transparent : Palette.nightLine),
     );
-    return TextField(
-      key: const Key('arama-kutusu'),
-      controller: controller,
-      focusNode: focusNode,
-      autofocus: true,
-      autocorrect: false,
-      keyboardType: TextInputType.text,
-      textInputAction: TextInputAction.search,
-      textCapitalization: TextCapitalization.none,
-      onSubmitted: onSubmitted,
-      cursorColor: light ? Palette.navy : Palette.sky,
-      style: theme.textTheme.titleLarge?.copyWith(color: ink, fontWeight: FontWeight.w500),
-      decoration: InputDecoration(
-        hintText: 'Kelimeyi yazın… (ör. inkişaf)',
-        hintStyle: theme.textTheme.titleMedium?.copyWith(color: muted, fontWeight: FontWeight.w400),
-        prefixIcon: Icon(Icons.search, color: light ? Palette.navy : Palette.sky),
-        suffixIcon: ListenableBuilder(
-          listenable: controller,
-          builder: (context, _) => controller.text.isEmpty
-              ? const SizedBox.shrink()
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => TextField(
+        key: const Key('arama-kutusu'),
+        controller: controller,
+        focusNode: focusNode,
+        autofocus: true,
+        autocorrect: false,
+        keyboardType: TextInputType.text,
+        textInputAction: TextInputAction.search,
+        textCapitalization: TextCapitalization.none,
+        onSubmitted: onSubmitted,
+        cursorColor: light ? Palette.navy : Palette.sky,
+        style: theme.textTheme.titleLarge?.copyWith(color: ink, fontWeight: FontWeight.w500),
+        decoration: InputDecoration(
+          hintText: 'Kelime arayın',
+          hintStyle: theme.textTheme.titleMedium?.copyWith(color: muted, fontWeight: FontWeight.w400),
+          prefixIcon: Icon(Icons.search, color: light ? Palette.navy : Palette.sky),
+          // Kutu boşken ipucu bütün genişliği kullanabilsin.
+          suffixIcon: controller.text.isEmpty
+              ? null
               : IconButton(
                   tooltip: 'Temizle',
                   icon: Icon(Icons.close, color: muted),
                   onPressed: onClear,
                 ),
+          filled: true,
+          fillColor: fill,
+          border: border,
+          enabledBorder: border,
+          focusedBorder: border.copyWith(
+            borderSide: BorderSide(color: light ? Palette.goldLight : Palette.goldLight.withValues(alpha: 0.7), width: 1.2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),
-        filled: true,
-        fillColor: fill,
-        border: border,
-        enabledBorder: border,
-        focusedBorder: border.copyWith(
-          borderSide: BorderSide(color: light ? Palette.goldLight : Palette.goldLight.withValues(alpha: 0.7), width: 1.2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14),
       ),
     );
   }

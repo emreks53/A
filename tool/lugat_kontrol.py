@@ -9,11 +9,11 @@ Her satır bir maddedir:
      o lügatta birden çok satırı varsa her biri ayrı paragraf,
      aralarında "\n")                           — zorunlu
   o  köken: Ar., Fa., Tr., Ar.-Fa. ...          — isteğe bağlı
-  f  sıklık: 3 çok sık, 2 sık, 1 seyrek, 0 Risale-i Nur'a
-     özgü listede olmayan (RNK lügatının geri kalanı) — zorunlu
+  f  sıklık: 3 çok sık, 2 sık, 1 seyrek; 0 Risale-i Nur metninde
+     (neredeyse) geçmeyen, RNK lügatının geri kalanı — zorunlu
   v  başka baskılarda görülen yazılışlar         — isteğe bağlı
 
-İki dosya vardır: assets/lugat.jsonl (Risale-i Nur'a özgü liste, f = 1-3) ve
+İki dosya vardır: assets/lugat.jsonl (Risale-i Nur'da geçen kelimeler, f = 1-3) ve
 assets/lugat_ek.jsonl (RNK lügatının geri kalanı, f = 0). Uygulama önce birincisini,
 ardından ikisini birlikte yükler.
 
@@ -29,7 +29,7 @@ import sys
 import unicodedata
 
 ASSETS = os.path.join(os.path.dirname(__file__), "..", "assets")
-# Risale-i Nur'a özgü kelimeler (sıklık 1-3) ve RNK lügatının geri kalanı (sıklık 0).
+# Risale-i Nur'da geçen kelimeler (sıklık 1-3) ve RNK lügatının geri kalanı (sıklık 0).
 DEFAULT = os.path.join(ASSETS, "lugat.jsonl")
 EXTRA = os.path.join(ASSETS, "lugat_ek.jsonl")
 
@@ -75,6 +75,8 @@ def problems(entry):
         errs.append("'m' boş ya da çok kısa")
     elif "\t" in m or any(not p.strip() or p != p.strip() for p in m.split("\n")):
         errs.append("'m' sekme, boş paragraf ya da paragraf başında/sonunda boşluk içeriyor")
+    elif "\\" in m:
+        errs.append("'m' ters bölü içeriyor (kaynaktan kalmış bir \\n kaçışı olabilir)")
     if entry.get("o", "") not in ORIGINS:
         errs.append(f"'o' tanınmıyor: {entry.get('o')!r}")
     f = entry.get("f")

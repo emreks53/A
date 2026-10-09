@@ -25,7 +25,7 @@ void main() {
     expect(lugat.skippedLines, 0);
     expect(core.entries.length, greaterThan(10000));
     expect(lugat.entries.length, greaterThan(70000));
-    // Risale-i Nur'a özgü listede sıklık 1-3, lügatın geri kalanında 0.
+    // Risale-i Nur'da geçen kelimelerin sıklığı 1-3, lügatın geri kalanında 0.
     expect(core.entries.every((e) => e.frequency >= 1), isTrue);
     expect(lugat.entries.skip(core.entries.length).every((e) => e.frequency == 0), isTrue);
   });
@@ -115,12 +115,13 @@ void main() {
       'adlet': 'adalet',
       'besmle': 'besmele',
       'insaniet': 'insaniyet',
-      'dinya': 'dünya',
       'isalm': 'İslâm',
       'tabita': 'tabiat',
       'şerita': 'şeriat',
     };
     cases.forEach((query, word) => expect(words(query).first, word, reason: query));
+    // Yazılan, lügatta nadir bir kelimenin kendisiyse önce o, hemen ardından düzeltme.
+    expect(words('dinya').take(2), ['dinya', 'dünya']);
   });
 
   test('ekli kelimede kök, ondan yapılmış -î sıfatından önce gelir', () {
@@ -197,6 +198,92 @@ void main() {
     // Yalnız nadir kelimelerin başına denk gelen yazım hatası.
     expect(words('mezure'), contains('mezkûre'));
     expect(words('delali').first, 'delâil');
+  });
+
+  test('Risale-i Nur metninde sık geçen kelimeler birebir yazılınca ilk sırada', () {
+    for (final w in ['Allah', 'şeytan', 'cennet', 'kitab', 'hayvan', 'kabul', 'vakit', 'isim']) {
+      expect(words(w).first, w, reason: w);
+    }
+    // Sıklıkları Risale-i Nur metninden: lügatın geri kalanındaki nadir kelimelerin önünde.
+    expect(lugat.byWord('cennet')!.frequency, greaterThan(0));
+    expect(words('sabır').first, 'sabır');
+  });
+
+  test('lügatın geri kalanındaki kelime birebir yazılınca düzeltmelerin önünde', () {
+    expect(words('sahil').first, 'sahil');
+    expect(words('eyvah').first, 'eyvah');
+  });
+
+  test('yazılan ekli kelime sözlükte de olsa kökü gösterilir', () {
+    expect(words('kazaya'), contains('kaza'));
+    expect(words('âlemin').take(3), contains('âlem'));
+    expect(words('haşirin').take(3), contains('haşir'));
+  });
+
+  test('ünlüsü düşen yazılış ve bugünkü p/t ile biten yazılış', () {
+    for (final q in ['haşre', 'haşrin', 'haşri', 'haşre dair']) {
+      expect(words(q).first, 'haşir', reason: q);
+    }
+    // Birebir tutan nadir kelime de ilk birkaç sonuç arasında.
+    expect(words('haşri').take(4), contains('haşrî'));
+    expect(words('kitap').take(2), contains('kitab'));
+    expect(words('cevap').take(2), contains('cevab'));
+    expect(words('ümit').take(2), contains('ümid'));
+    // Ekli hâlde de: "kitap-lar" → kitab, ünlüsü düşen "sabr-ın" → sabır, "vakt-in" → vakit.
+    expect(words('kitaplar').first, 'kitab');
+    expect(words('sabrın').first, 'sabır');
+    expect(words('vaktin').take(2), contains('vakit'));
+  });
+
+  test('birleşik ifadenin içindeki kelime öne çıkar; izafetsiz yazılan terkip bulunur', () {
+    expect(words('harfi').take(3), contains('mana-yı harfî'));
+    expect(words('ehl iman').take(3), contains('ehl-i iman'));
+    expect(words('mana harfi').first, 'mana-yı harfî');
+    expect(words('bu kainatın').first, 'kâinat');
+  });
+
+  test('şapka bilerek yazılınca şapkası tutan kelime önce', () {
+    expect(words('âdet').first, 'âdet');
+  });
+
+  test('Türkçe klavyesiz büyük "I" ile yazılan ekli kelimede kök bulunur', () {
+    expect(words('Imanin').first, 'iman');
+    expect(words('INKISAFINA').first, 'inkişaf');
+    expect(words('HAKIKATIN').first, 'hakikat');
+  });
+
+  test('özel isim, çok daha sık geçen kökün önüne geçmez', () {
+    expect(words('enesi').first, 'ene');
+  });
+
+  test('"(asm)", "r.a." gibi kısaltmalar açılır', () {
+    expect(words('(asm)').first, 'aleyhissalâtü vesselâm');
+    expect(words('a.s.m.').first, 'aleyhissalâtü vesselâm');
+    expect(words('(as)').first, 'aleyhisselâm');
+    expect(words('r.a.').first, 'radıyallahü anh');
+    expect(words('c.c.').first, 'celle celâlühü');
+    expect(words('Hz.').first, 'hazret');
+  });
+
+  test('"Bakınız" bağlantıları kelimenin kendi yazılışına gitmez', () {
+    List<String> refs(String w) => [for (final e in lugat.crossReferences(lugat.byWord(w)!)) e.word];
+    expect(refs('asır'), isNot(contains('aşr')));
+    expect(refs('şuhur'), isNot(contains('suhur')));
+  });
+
+  test('özel isimler büyük harfle; kaynaktaki ayın işareti korunur', () {
+    expect(lugat.byWord('Allah'), isNotNull);
+    expect(lugat.byWord('Emirdağ'), isNotNull);
+    expect(lugat.byWord('İbn-i Sina'), isNotNull);
+    expect(lugat.byWord("Sebe'"), isNotNull);
+    expect(lugat.byWord('allah'), isNull);
+  });
+
+  test('manalarda kaynaktan kalmış "\\n" kaçışı yok', () {
+    for (final e in lugat.entries) {
+      expect(e.meaning.contains(r'\'), isFalse, reason: e.word);
+    }
+    expect(lugat.byWord('belki')!.meaning, '1.Olabilir, muhtemelen. 2.Hattâ, bile. 3.Olsa olsa, ancak.');
   });
 
   test('arama tek harfte bile hızlı', () {

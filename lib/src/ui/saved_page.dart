@@ -49,7 +49,19 @@ class SavedPage extends StatelessWidget {
                     trailing: IconButton(
                       tooltip: 'Kaydedilenlerden çıkar',
                       icon: const Icon(Icons.bookmark_remove_outlined),
-                      onPressed: () => controller.toggleFavorite(entry),
+                      onPressed: () {
+                        final previous = controller.favorites;
+                        controller.toggleFavorite(entry);
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(SnackBar(
+                            content: Text('“${entry.word}” kaydedilenlerden çıkarıldı'),
+                            action: SnackBarAction(
+                              label: 'Geri al',
+                              onPressed: () => controller.restoreFavorites(previous),
+                            ),
+                          ));
+                      },
                     ),
                   ),
               ],

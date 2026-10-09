@@ -17,22 +17,22 @@ Lügat-ı Risale-i Nur
 Risale-i Nur okurken Osmanlıca kelimelerin manası: ilk harfleri yazmak yeter.
 ```
 
-**Tam açıklama** (1601/4000 karakter)
+**Tam açıklama** (1764/4000 karakter)
 
 ```
 Lügat-ı Risale-i Nur, Risale-i Nur Külliyatı'nı okurken karşılaştığınız Osmanlıca kelime ve terkiplerin manasını bir an içinde gösteren sade bir lügattir.
 
 Kitabı okurken telefonunuz yanınızda olsun: uygulamayı açtığınızda arama kutusu hazır ve klavye açık gelir. Bilmediğiniz kelimenin ilk birkaç harfini yazmanız yeterlidir; uyan kelimeler ve manaları hemen altta listelenir.
 
-◆ RNK Neşriyat lügatı
-72.000'i aşkın kelime ve terkip, RNK Neşriyat'ın Risale-i Nur lügatındaki metniyle. Risale-i Nur'da sık geçen kelimeler aramada önce gelir.
+◆ Zengin lügat
+72.000'i aşkın kelime ve terkip; manaların neredeyse tamamı RNK Neşriyat'ın Risale-i Nur lügatındaki metniyle. Risale-i Nur'da sık geçen kelimeler aramada önce gelir.
 
 ◆ Kolay arama
 • "in" yazınca inkişaf, inhisar, inayet… hemen listelenir.
 • ş, ç, ğ, ı harflerini ve â, î, û gibi şapkaları yazmanız gerekmez.
 • Ekli yazılan kelimenin kökü bulunur: "hakikatlerinden" → hakikat, "iman ediyor" → iman.
 • Küçük yazım hatalarında doğru kelime önerilir.
-• Birleşik ifadeler içindeki kelimeyle de bulunur.
+• Birleşik ifadeler içindeki kelimeyle de bulunur; "(asm)", "r.a." gibi kısaltmalar açılır.
 
 ◆ Rahat okuma
 • Her mananın asıl kısmı kalın yazılır.
@@ -42,10 +42,12 @@ Kitabı okurken telefonunuz yanınızda olsun: uygulamayı açtığınızda aram
 
 ◆ Dikkat dağıtmayan okuma
 • Uygulama açıkken ekran kendiliğinden kapanmaz.
-• Android'de, isteğe bağlı olarak, uygulama açıkken mesaj ve diğer bildirimler gizlenir; uygulamadan çıkınca her şey eski hâline döner. (Alarmlar ve yıldızlı kişilerin aramaları susturulmaz.)
+• Android 10 ve sonrasında, isteğe bağlı olarak, uygulama açıkken mesaj ve diğer bildirimler gizlenir; uygulamadan çıkınca her şey eski hâline döner. (Alarmlar ve yıldızlı kişilerin aramaları susturulmaz.)
 
 ◆ İnternet gerekmez, veri toplanmaz
-Lügat uygulamanın içindedir; internet bağlantısı kullanılmaz. Hiçbir kişisel veri toplanmaz ya da paylaşılmaz; son bakılanlar ve kaydedilenler yalnızca telefonunuzda durur.
+Lügat uygulamanın içindedir; internet bağlantısı kullanılmaz. Hiçbir kişisel veri toplanmaz ya da paylaşılmaz; son bakılanlar ve kaydedilenler telefonunuzda saklanır, hiçbir yere gönderilmez.
+
+Bu uygulama bağımsızdır; RNK Neşriyat'ın resmî uygulaması değildir.
 ```
 
 **Görseller**
@@ -63,8 +65,10 @@ Görseller `tool/magaza/` altındaki araçla yeniden üretilebilir.
 
 ## Uygulama içeriği
 
-**Gizlilik politikası:** `store/gizlilik-politikasi.md` metni herkese açık bir web sayfasında
-yayımlanmalı ve adresi buraya girilmelidir (Play bunu her uygulama için ister).
+**Gizlilik politikası:** `store/gizlilik-politikasi.md` metni (geliştirici adı ve iletişim
+adresi doldurularak) herkese açık bir web sayfasında yayımlanmalı ve adresi buraya
+girilmelidir (Play bunu her uygulama için ister). Aynı metin uygulamada Ayarlar > Gizlilik
+politikası'nda da gösterilir.
 
 **Reklamlar:** Uygulamada reklam yok.
 
@@ -90,5 +94,7 @@ politikası gereklilikleri doğmaz).
   normal çalışır.
 - Ekranın açık kalması için izin gerekmez (pencere bayrağıyla yapılır).
 
-**Telif:** Manalar RNK Neşriyat'ın Risale-i Nur lügatından alınmıştır. Yayından önce
-yayınevinin yazılı izninin bulunduğundan emin olun.
+**Telif:** Manaların neredeyse tamamı RNK Neşriyat'ın Risale-i Nur lügatından alınmıştır.
+Yayından önce yayınevinin yazılı izninin bulunduğundan emin olun. İzin alındıysa tam
+açıklamanın sonundaki cümle şöyle değiştirilebilir: "Bu uygulama bağımsızdır; manalar RNK
+Neşriyat'ın Risale-i Nur lügatından yayınevinin izniyle alınmıştır."

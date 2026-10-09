@@ -25,6 +25,18 @@ void main() {
     expect(bold('(Ar. Hiss) 1.Dış dünyaya ait etkileri idrak etme. 2.Duygu.'), 'Dış dünyaya ait etkileri idrak etme.');
   });
 
+  test('alan kısaltması atlanır; sıra sayısı ve küçük harfle süren açıklama manaya dahildir', () {
+    expect(bold('Gr. Arabçada harfleri (E, A) diye okutan işâret, üstün. Fetih.'),
+        'Arabçada harfleri (E, A) diye okutan işâret, üstün.');
+    expect(bold('Psk. Hafıza kaybı. Bunama.'), 'Hafıza kaybı.');
+    expect(bold('19. asırda yaşamış bir âlim. Eserleri çoktur.'), '19. asırda yaşamış bir âlim.');
+    expect(bold('(Gibi) manasına gelerek kullanılır. Başka.'), '(Gibi) manasına gelerek kullanılır.');
+    expect(bold('(Ağaç) yapraklanma. Başka.'), '(Ağaç) yapraklanma.');
+    // Dil bilgisi notu ve büyük harfe çevrilmemiş "ş" ile başlayan cümle.
+    expect(bold('(Tekili: şâki) şikâyet edenler, şikâyetçiler.'), 'şikâyet edenler, şikâyetçiler.');
+    expect(bold('(Nebahat) şeref, şan.'), 'şeref, şan.');
+  });
+
   test('parantez içindeki ve kısaltmadaki nokta cümleyi bitirmez', () {
     expect(bold('Hz. Peygamberin amcası. Başka bir kişi.'), 'Hz. Peygamberin amcası.');
     expect(bold('Allah’ın (c.c.) ismi. Başka.'), 'Allah’ın (c.c.) ismi.');

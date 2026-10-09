@@ -16,13 +16,17 @@ ilk harflerini yazar ve manasını görür. Bu sırada telefon kendiliğinden ka
   manalarının ilk satırlarıyla birlikte hemen listelenir. Klavyedeki ara tuşu ilk sonucu açar.
   - ş, ç, ğ, ı, ö, ü harflerini ve â, î, û şapkalarını yazmak gerekmez ("inkisaf" → inkişaf).
   - Kesme işareti ve tire gerekmez ("sanat" → san'at, "manayi harfi" → mana-yı harfî).
-  - Birleşik ifadeler içindeki kelimeyle de bulunur ("harfi" → mana-yı harfî).
+  - Birleşik ifadeler içindeki kelimeyle de bulunur ("harfi" → mana-yı harfî); izafetsiz
+    yazılan terkip de bulunur ("ehl iman" → ehl-i iman).
   - Ekli yazılan kelimenin kökü önerilir ("inkişafına" → inkişaf, "kudreti" → kudret,
     "kalbinden" → kalb, "Hakk'ın" → hak, "iman edenler" → iman). Ek, Türkçe ses
     kurallarına göre tanınır; böylece kelime yazılırken ilgisiz kısa kelimeler öne geçmez.
   - Küçük yazım hatalarında benzer kelime önerilir ("muhabet" → muhabbet).
+  - Bugünkü yazılış da bulunur ("kitap" → kitab, "ümit" → ümid, "haşre" → haşir).
+  - Kısaltmalar açılır ("(asm)" → aleyhissalâtü vesselâm, "r.a." → radıyallahü anh).
   - Risale-i Nur'da sık geçen kelimeler önce gelir; aynı yazılıp farklı okunan kelimeler
-    (hâkim / hakîm) mana sayfasında birlikte gösterilir.
+    (hâkim / hakîm) ve "(Bak: …)" ile gösterilen kelimeler mana sayfasında bağlantı olarak
+    verilir.
 - **Ekran kapanmaz** — Uygulama açıkken telefon kendiliğinden uyku moduna geçmez.
 - **Bildirimleri gizleme (odak modu)** — varsayılan olarak açık; Ayarlar'dan kapatılabilir.
   - **Android 10 ve sonrası:** Uygulama ekrandayken kendine ait bir "Rahatsız Etmeyin"
@@ -52,13 +56,13 @@ ilk harflerini yazar ve manasını görür. Bu sırada telefon kendiliğinden ka
 
 Lügat iki dosyadadır; her satır bir maddedir:
 
-- `assets/lugat.jsonl` — Risale-i Nur'a özgü **10.504 kelime ve ifade** (sıklık 1-3).
+- `assets/lugat.jsonl` — Risale-i Nur'da geçen **11.905 kelime ve ifade** (sıklık 1-3).
   Uygulama açılınca önce bu dosya yüklenir; arama bir an içinde hazır olur.
-- `assets/lugat_ek.jsonl` — RNK Neşriyat lügatının geri kalanı, **61.565 kelime ve
+- `assets/lugat_ek.jsonl` — RNK Neşriyat lügatının geri kalanı, **60.212 kelime ve
   ifade** (sıklık 0). Arka planda yüklenir; aramada Risale-i Nur kelimelerinin ardından
-  gelir.
+  gelir. Yüklenene kadar ekranın üstünde ince bir çubuk görünür.
 
-Toplam **72.069** madde.
+Toplam **72.117** madde.
 
 ```json
 {"w":"inkişaf","o":"Ar.","f":3,"m":"Açılma. Meydana çıkma. Yetişme. Terakki etme, ilerleme. Gizli sırların bilinmesi."}
@@ -66,27 +70,38 @@ Toplam **72.069** madde.
 
 | Alan | Anlamı |
 |------|--------|
-| `w`  | Kelime (zorunlu). Özel isimler büyük harfle başlar ("Yunus Emre", "Bâbil"). |
+| `w`  | Kelime (zorunlu). Özel isimler büyük harfle başlar ("Yunus Emre", "Emirdağ", "Alak Suresi"). |
 | `m`  | Manası (zorunlu). Aynı kelimenin kaynak lügatta birden çok satırı varsa her biri ayrı paragraftır (aralarında `\n`). |
 | `o`  | Köken: `Ar.`, `Fa.`, `Tr.`, `Ar.-Fa.` … (isteğe bağlı; ekranda gösterilmez) |
-| `f`  | Sıklık: 3 çok sık, 2 sık, 1 seyrek (Risale-i Nur'a özgü liste), 0 lügatın geri kalanı — sıralamada kullanılır |
+| `f`  | Risale-i Nur'da sıklık: 3 çok sık, 2 sık, 1 seyrek, 0 (neredeyse) geçmeyen — sıralamada kullanılır |
 | `v`  | Başka yazılışlar (isteğe bağlı; aramada kullanılır, ekranda gösterilmez) |
 
 Uygulama her mananın ilk cümlesini ("asıl mana") kalın yazar; baştaki "(Çoğulu: …)",
-"(Bak: …)", "Tıb:", "1." gibi kısımlar buna katılmaz (`lib/src/dictionary/meaning.dart`).
+"(Bak: …)", "Tıb:", "Gr.", "1." gibi kısımlar buna katılmaz (`lib/src/dictionary/meaning.dart`).
 
 **Manaların kaynağı:**
-- **9.562 kelimenin** manası RNK Neşriyat'ın Risale-i Nur lügatındaki (rnk.tr) metnin
-  aynısıdır; hiçbir yorum ya da ek ifade katılmamıştır. Kelimeler o lügattaki satırlarla
-  eşleştirilirken aynı yazılıp farklı olan kelimeler (hâkim / hakîm, âlem / alem, nefs
-  "can" / nefs "üfürmek") ayırt edildi; eşleşmeler ikinci bir denetimden geçirildi. Bir
-  satır başka bir satırın içinde aynen geçiyorsa tekrar etmesin diye alınmadı; yalnızca
-  "(Bak: …)" diyen ya da boş satırlar da alınmadı.
-- RNK lügatında olup bu listede bulunmayan bütün kelime ve terkipler de `lugat_ek.jsonl`
-  dosyasına aynen eklendi (61.565 madde; yalnızca tek harflik bir başlık ile manası boş bir
-  başlık alınmadı). Lügatta BÜYÜK harfle yazılan başlıklar Türkçe küçük harfe çevrildi;
-  özel isimler (962 başlık) büyük harfle başlar.
-- O lügatta bulunmayan **942 kelimenin** (ör. "Barla", bazı terkipler) manası daha önce
+- **71.174 maddenin** manası RNK Neşriyat'ın Risale-i Nur lügatındaki (rnk.tr) metnin
+  aynısıdır; hiçbir yorum ya da ek ifade katılmamıştır. Risale-i Nur listesindeki kelimeler o
+  lügattaki satırlarla eşleştirilirken aynı yazılıp farklı olan kelimeler (hâkim / hakîm,
+  âlem / alem) ayırt edildi; eşleşmeler ikinci bir denetimden geçirildi. Aynı başlığın
+  eşleşmeyen diğer satırları (eş yazılışlı başka kelimeler) maddenin sonuna ayrı paragraf
+  olarak eklendi; böylece RNK lügatının bütün satırları uygulamada bulunur. Bir satır başka
+  bir satırın içinde aynen geçiyorsa tekrar etmesin diye alınmadı; yalnızca "(Bak: …)" diyen,
+  boş ya da tek harflik başlıklı satırlar alınmadı. Kaynakta metin olarak duran `\n`
+  kaçışları boşluğa çevrildi.
+- RNK lügatında olup Risale-i Nur listesinde bulunmayan bütün kelime ve terkipler de aynen
+  eklendi. Lügatta BÜYÜK harfle yazılan başlıklar Türkçe küçük harfe çevrildi; özel isimler
+  (kişi, yer, sure, eser adları) büyük harfle başlar; kelimenin sonundaki ayın/hemze
+  işareti korunur ("Sebe'", "cem'"). Aynı yazılışlı ve aynı manalı mükerrer başlıklar
+  birleştirildi. Risale-i Nur listesindeki bir kelimenin RNK lügatındaki farklı yazılışı
+  aramada kullanılır ("hacer-ül esved" → Hacer-i Esved).
+- **Sıklık:** Risale-i Nur listesindeki kelimelerin sıklığı listeyle birlikte belirlendi.
+  RNK lügatının geri kalanındaki kelimelerden Risale-i Nur metninde geçenler (rnk.tr'nin
+  arama önerileri için kullandığı kelime sayımlarına göre; ekli biçimler köküne sayılarak)
+  `lugat.jsonl`'e alındı: en az 10 kez geçenler sıklık 1, en az 40 kez geçenler sıklık 2
+  (1.401 kelime; ör. Allah, cennet, şeytan, kitab, sabır). Aynı yazılıp lügattaki manası
+  metindeki kelimeden farklı olanlar (ör. "daha" = kuşluk vakti) alınmadı.
+- O lügatta bulunmayan **943 kelimenin** (ör. "Barla", bazı terkipler) manası daha önce
   hazırlanan manaların yalnızca ilk tanım kısmıdır; yorum ve açıklama cümleleri
   çıkarılmıştır. Bu kelimelerin listesi `tool/rnk_disi_kelimeler.txt` dosyasındadır.
 
@@ -94,10 +109,11 @@ Uygulama her mananın ilk cümlesini ("asıl mana") kalın yazar; baştaki "(Ço
 aittir ve yayınevinin yazılı izni olmadan çoğaltılamaz. Uygulamayı yayımlamadan önce bu iznin
 bulunduğundan emin olun.
 
-**Düzeltme ve ekleme:** `assets/lugat.jsonl` dosyasını düzenleyin, sonra
+**Düzeltme ve ekleme:** `assets/lugat.jsonl` ya da `assets/lugat_ek.jsonl` dosyasını düzenleyin
+(sıklığı 1-3 olan kelimeler birincisinde, 0 olanlar ikincisinde durur), sonra
 
 ```sh
-python3 tool/lugat_kontrol.py            # iki dosyada biçim, mükerrer kelime, sıklık ve sıra denetimi
+python3 tool/lugat_kontrol.py            # iki dosyada biçim, mükerrer kelime, sıklık, sıra ve kaçış denetimi
 python3 tool/lugat_kontrol.py --duzelt   # Türk alfabesine göre sıralar, biçimi düzeltir
 ```
 
@@ -135,11 +151,11 @@ lib/
   src/dictionary/meaning.dart      mananın kalın yazılacak ilk cümlesi ("asıl mana")
   src/focus/focus_mode.dart        Android odak modu kanalı
   src/ui/theme.dart                renkler (logodan) ve yazı tipleri
-  src/ui/                          arama, mana, kaydedilenler ve ayarlar ekranları
+  src/ui/                          arama, mana, kaydedilenler, ayarlar ve gizlilik ekranları
 android/app/src/main/kotlin/.../
   MainActivity.kt                  odak modunu ekrana gelince açar, ekrandan çıkınca kapatır
   FocusModeController.kt           uygulamaya ait "Rahatsız Etmeyin" kuralı (Android 10+)
-assets/lugat.jsonl                 lügat: Risale-i Nur'a özgü kelimeler (önce yüklenir)
+assets/lugat.jsonl                 lügat: Risale-i Nur'da geçen kelimeler (önce yüklenir)
 assets/lugat_ek.jsonl              lügat: RNK lügatının geri kalanı (arka planda yüklenir)
 assets/fonts/                      Lora yazı tipi (SIL Open Font License, OFL.txt)
 assets/images/logo_isaret.png      uygulama içi logo işareti
@@ -151,9 +167,31 @@ tool/ikon_uret.py, tool/ikon/      uygulama simgeleri ve açılış görselleri 
 
 ### Yayınlamadan önce
 
-- Uygulama kimliği `io.github.emreks53.lugat_risale`; değiştirmek isterseniz
-  `android/app/build.gradle.kts` ve iOS projesindeki Bundle Identifier'ı güncelleyin.
-- Android sürüm derlemesi şimdilik hata ayıklama anahtarıyla imzalanır; Google Play için
-  kendi imza anahtarınızı tanımlayın (`android/app/build.gradle.kts` → `signingConfigs`).
+- **Uygulama kimliği:** Android'de `io.github.emreks53.lugat_risale`, iPhone'da
+  `io.github.emreks53.lugatRisale` (iOS kimliğinde "_" kullanılamaz). Değiştirmek isterseniz
+  `android/app/build.gradle.kts` (`applicationId`, `namespace`) ve iOS projesindeki Bundle
+  Identifier'ı güncelleyin. Google Play'e bir kez yüklenen kimlik sonradan değiştirilemez.
+- **İmza anahtarı (Android):** Bir kereye mahsus bir yükleme anahtarı oluşturun ve güvenli
+  bir yerde saklayın:
+
+  ```sh
+  keytool -genkey -v -keystore ~/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+  ```
+
+  Sonra `android/key.properties` dosyasını oluşturun (git'e eklenmez):
+
+  ```properties
+  storeFile=/home/kullanici/upload-keystore.jks
+  storePassword=…
+  keyAlias=upload
+  keyPassword=…
+  ```
+
+  Bu dosya yoksa sürüm derlemesi hata ayıklama anahtarıyla imzalanır; Google Play bunu kabul
+  etmez.
+- **Gizlilik politikası:** `store/gizlilik-politikasi.md` içindeki geliştirici adı ve iletişim
+  adresini doldurup metni herkese açık bir web sayfasında yayımlayın. Uygulama içindeki metin
+  (`lib/src/ui/privacy_page.dart`) bununla aynı tutulmalıdır.
+- **Telif izni:** RNK Neşriyat'ın yazılı izni alınmadan yayımlamayın (yukarıya bakın).
 - iPhone sürümü bu ortamda derlenemedi (macOS/Xcode gerekir); Xcode'da imzalama ekibini
   seçip bir kez derleyip denemek gerekir.

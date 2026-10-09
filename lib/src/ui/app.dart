@@ -31,6 +31,11 @@ class LugatApp extends StatefulWidget {
 class _LugatAppState extends State<LugatApp> {
   late final AppLifecycleListener _lifecycle;
 
+  // Bir kez kurulur: her bildirimde yeniden kurulan tema eşit sayılmaz ve
+  // MaterialApp boşuna tema geçiş animasyonu başlatır.
+  late final ThemeData _light = buildTheme(Brightness.light);
+  late final ThemeData _dark = buildTheme(Brightness.dark);
+
   @override
   void initState() {
     super.initState();
@@ -52,8 +57,8 @@ class _LugatAppState extends State<LugatApp> {
         builder: (context, _) => MaterialApp(
           title: 'Lügat-ı Risale-i Nur',
           debugShowCheckedModeBanner: false,
-          theme: buildTheme(Brightness.light),
-          darkTheme: buildTheme(Brightness.dark),
+          theme: _light,
+          darkTheme: _dark,
           themeMode: widget.controller.themeMode,
           locale: const Locale('tr', 'TR'),
           supportedLocales: const [Locale('tr', 'TR')],

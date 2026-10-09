@@ -56,6 +56,15 @@ class AppController extends ChangeNotifier {
   /// Sözlük yüklenemediyse sebebi.
   Object? loadError;
 
+  /// Lügatın tamamı yüklendi mi (ya da yüklenemeyeceği anlaşıldı mı)? O
+  /// zamana kadar [lugat] yalnız Risale-i Nur'da geçen kelimeleri içerir.
+  bool fullyLoaded = false;
+
+  final Completer<void> _fullReady = Completer<void>();
+
+  /// [fullyLoaded] olunca tamamlanır.
+  Future<void> get fullReady => _fullReady.future;
+
   ThemeMode themeMode = ThemeMode.system;
   double textScale = 1.0;
 
@@ -127,6 +136,7 @@ class AppController extends ChangeNotifier {
       loadError = e;
       debugPrint('Sözlük yüklenemedi: $e');
     }
+    if (fullFuture == null) _markFullyLoaded();
     _notify();
 
     if (fullFuture != null) {
@@ -139,8 +149,15 @@ class AppController extends ChangeNotifier {
         if (lugat == null) loadError ??= e;
         debugPrint('Lügatın geri kalanı yüklenemedi: $e');
       }
+      _markFullyLoaded();
       _notify();
     }
+  }
+
+  void _markFullyLoaded() {
+    if (fullyLoaded) return;
+    fullyLoaded = true;
+    _fullReady.complete();
   }
 
   /// Ekranın kendiliğinden kapanmasını engeller. Uygulama her ön plana
@@ -217,6 +234,20 @@ class AppController extends ChangeNotifier {
   void clearHistory() {
     history = const [];
     _prefs?.remove(_kHistory);
+    _notify();
+  }
+
+  /// "Geri al" için: geçmişi önceki hâline döndürür.
+  void restoreHistory(List<String> words) {
+    history = List.unmodifiable(words.take(maxHistory));
+    _prefs?.setStringList(_kHistory, history);
+    _notify();
+  }
+
+  /// "Geri al" için: kaydedilenleri önceki hâline döndürür.
+  void restoreFavorites(List<String> words) {
+    favorites = List.unmodifiable(words);
+    _prefs?.setStringList(_kFavorites, favorites);
     _notify();
   }
 

@@ -1,6 +1,6 @@
 # RNK Neşriyat lügatında (rnk.tr) karşılığı bulunamayan kelimeler.
 # Bu kelimelerin uygulamadaki manası, önceden hazırlanmış manaların yalnızca ilk tanım kısmıdır.
-# 942 kelime.
+# 943 kelime.
 âbâdân
 abâpûş
 âbdâr
@@ -486,6 +486,7 @@ kalb-i mahiyet
 kalbiye
 kalîle
 kâmile
+Kânun-u Evvel
 karibü'l-fehm
 kâsıra
 kasîre

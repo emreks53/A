@@ -104,6 +104,21 @@ String _keyCharOf(int rune) {
   return _plainVowels[lower] ?? lower;
 }
 
+/// [searchKey] gibi, ama â, î, û, ê, ô harflerini korur: "Âdet" → "âdet".
+/// Kullanıcı şapkayı bilerek yazdıysa şapkası da tutan kelimeyi öne almak için.
+String circumflexKey(String input) {
+  final out = StringBuffer();
+  for (final rune in input.runes) {
+    if (_dropped.contains(rune) || _combIgnored.contains(rune)) continue;
+    final ch = String.fromCharCode(rune);
+    final lower = _turkishLower[ch] ?? ch.toLowerCase();
+    out.write(_circumflexes.contains(lower) ? lower : (_plainVowels[lower] ?? lower));
+  }
+  return out.toString();
+}
+
+const Set<String> _circumflexes = {'â', 'î', 'û', 'ê', 'ô'};
+
 /// Daha önce [searchKey] ile üretilmiş (katlanmamış) bir anahtarı katlar.
 String foldKey(String key) {
   List<int>? out;

@@ -66,7 +66,7 @@ ThemeData buildTheme(Brightness brightness) {
           surfaceContainer: Color(0xFFF0ECE3),
           surfaceContainerHigh: Color(0xFFECE7DD),
           surfaceContainerHighest: Color(0xFFE7E2D7),
-          outline: Color(0xFF9C9584),
+          outline: Color(0xFF7A7466),
           outlineVariant: Palette.line,
         )
       : const ColorScheme(

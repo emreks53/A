@@ -128,6 +128,22 @@ void main() {
     expect(refs('idlal'), isEmpty);
   });
 
+  test('gönderme maddenin kendi yazılışını gösteriyorsa aynı harfli başka kelimeye bağlanmaz', () {
+    final l = Lugat.parseJsonl('''
+{"w":"asır","f":2,"m":"Yüzyıl. (Bak: Asr)","v":["asr"]}
+{"w":"aşr","f":0,"m":"On."}
+{"w":"İsmail","f":1,"m":"Peygamber. (Bak: Kâbe, İbrahim (as))"}
+{"w":"Kâbe","f":2,"m":"Mekke'deki mabed."}
+{"w":"İbrahim","f":2,"m":"Peygamber."}
+{"w":"nasıbe","f":0,"m":"(Bk: Nasibe)"}
+{"w":"nasibe","f":0,"m":"Dikilmiş."}
+''');
+    List<String> refs(String w) => [for (final e in l.crossReferences(l.byWord(w)!)) e.word];
+    expect(refs('asır'), isEmpty);
+    expect(refs('İsmail'), ['Kâbe', 'İbrahim']);
+    expect(refs('nasıbe'), ['nasibe']);
+  });
+
   test('Entry köken etiketini açar', () {
     expect(lugat.byWord('inkişaf')!.originLabel, 'Arapça');
   });

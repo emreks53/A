@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -309,5 +311,120 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getDouble('yazi_boyutu'), 1.3);
     expect(prefs.getString('tema'), 'dark');
+  });
+
+  testWidgets('lügatın geri kalanı yüklenirken tahmin gösterilmez, ara tuşu yüklenmesini bekler', (tester) async {
+    final full = Completer<Lugat>();
+    const core = '{"w":"âlem","f":3,"m":"Dünya, cihan."}\n{"w":"abd","f":2,"m":"Kul, köle."}';
+    final controller = AppController(
+      loadLugat: () async => Lugat.parseJsonl(core),
+      loadFullLugat: () => full.future,
+      focusService: FocusModeService(channel: _channel, isAndroid: false),
+      keepScreenOn: () async {},
+    );
+    controller.init();
+    await tester.pumpWidget(LugatApp(controller: controller));
+    await tester.pump();
+    await tester.pump();
+    expect(controller.fullyLoaded, isFalse);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+
+    // "abdest" henüz yüklenmedi: kök tahmini ("abd") gösterilmez.
+    await tester.enterText(find.byKey(const Key('arama-kutusu')), 'abdest');
+    await tester.pump();
+    expect(tile('abd'), findsNothing);
+    expect(find.text('Lügat yükleniyor…'), findsOneWidget);
+
+    // Ara tuşu, lügatın tamamı gelince doğru kelimeyi açar.
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pump();
+    expect(find.byType(EntryPage), findsNothing);
+    full.complete(Lugat.parseJsonl('$core\n{"w":"abdest","f":2,"m":"Namaz için yıkanma."}'));
+    await tester.pumpAndSettle();
+    expect(controller.fullyLoaded, isTrue);
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(find.byType(EntryPage), findsOneWidget);
+    expect(controller.history, ['abdest']);
+  });
+
+  testWidgets('"Bakınız" bağlantısı yeni sayfada açılır; geri tuşu önceki kelimeye döner', (tester) async {
+    final controller = AppController(
+      loadLugat: () async => Lugat.parseJsonl(
+        '{"w":"abdal","f":1,"m":"Dervişler. (Bak: Ebdal)"}\n{"w":"ebdal","f":1,"m":"Veliler."}',
+      ),
+      focusService: FocusModeService(channel: _channel, isAndroid: false),
+      keepScreenOn: () async {},
+    );
+    controller.init();
+    await tester.pumpWidget(LugatApp(controller: controller));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('arama-kutusu')), 'abdal');
+    await tester.pump();
+    await tester.tap(tile('abdal'));
+    await tester.pumpAndSettle();
+    await tester.tap(tile('ebdal'));
+    await tester.pumpAndSettle();
+    expect(find.byType(EntryPage), findsNWidgets(1)); // önceki sayfa altta, ekranda değil
+    expect(find.text('Veliler.'), findsOneWidget);
+    expect(controller.history, ['ebdal', 'abdal']);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Dervişler. (Bak: Ebdal)'), findsOneWidget);
+
+    // "Yeni kelime" bütün sayfaları kapatıp aramaya döner.
+    await tester.tap(tile('ebdal'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('yeni-kelime')));
+    await tester.pumpAndSettle();
+    expect(find.byType(EntryPage), findsNothing);
+    expect(searchField(tester).controller.text, isEmpty);
+  });
+
+  testWidgets('kaydedilenden çıkarma ve geçmişi temizleme geri alınabilir', (tester) async {
+    final controller = await startApp(tester);
+    controller.toggleFavorite(controller.lugat!.byWord('insaf')!);
+    controller.recordLookup(controller.lugat!.byWord('muhabbet')!);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Temizle'));
+    await tester.pumpAndSettle();
+    expect(controller.history, isEmpty);
+    await tester.tap(find.text('Geri al'));
+    await tester.pumpAndSettle();
+    expect(controller.history, ['muhabbet']);
+
+    await tester.tap(find.byTooltip('Kaydedilenler'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Kaydedilenlerden çıkar'));
+    await tester.pumpAndSettle();
+    expect(controller.favorites, isEmpty);
+    await tester.tap(find.text('Geri al'));
+    await tester.pumpAndSettle();
+    expect(controller.favorites, ['insaf']);
+    expect(tile('insaf'), findsOneWidget);
+  });
+
+  testWidgets('ayarlarda gizlilik politikası okunabilir', (tester) async {
+    await startApp(tester);
+    await tester.tap(find.byTooltip('Ayarlar'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Gizlilik politikası'), 200);
+    await tester.tap(find.text('Gizlilik politikası'));
+    await tester.pumpAndSettle();
+    expect(find.text('Toplanan veriler'), findsOneWidget);
+  });
+
+  testWidgets('büyük yazıda arama çubuğu düğmeleri sıkışmaz', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    final controller = await startApp(tester);
+    controller.setTextScale(AppController.maxTextScale);
+    await tester.pumpAndSettle();
+    // Üst çubuk tam yüksekliğinde kalır; düğme normal boyunda (40) görünür.
+    expect(tester.getSize(find.byType(NavigationToolbar).first).height, greaterThanOrEqualTo(56));
+    expect(tester.getSize(find.byTooltip('Ayarlar')).height, greaterThanOrEqualTo(40));
   });
 }

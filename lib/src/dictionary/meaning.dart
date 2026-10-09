@@ -110,6 +110,9 @@ int _skipPrefix(String p) {
         }
       }
       if (j >= n) break;
+      // "(Gibi) manasına gelerek…", "(Ağaç) yapraklanma.": ardından küçük harfle
+      // devam eden açıklama manaya dahildir ("(Tekili: …)" gibi notlar değil).
+      if (!_note.hasMatch(p.substring(i + 1, j)) && _continuesLowercase(p, j + 1)) break;
       i = j + 1;
       continue;
     }
@@ -122,6 +125,23 @@ int _skipPrefix(String p) {
   }
   return i;
 }
+
+/// Parantezden sonraki metin küçük harfli bir kelimeyle mi sürüyor? ("t. ",
+/// "Tıb: " gibi kısaltma ve etiketler sayılmaz.)
+bool _continuesLowercase(String p, int i) {
+  final n = p.length;
+  while (i < n && (_isSpace(p[i]) || '.,;:'.contains(p[i]))) {
+    i++;
+  }
+  if (i >= n || !_isLetter(p[i])) return false;
+  final c = p[i];
+  // Kaynakta büyük harfe çevrilmemiş ş, ç, ğ, ö, ü, ı ile başlayan cümleler de yeni cümledir.
+  if (c == c.toUpperCase() || 'şçğöüı'.contains(c)) return false;
+  return _label.matchAsPrefix(p, i) == null && _languageAbbreviation(p, i) == null;
+}
+
+/// Parantez içindeki dil bilgisi notları: "(Tekili: …)", "(Çoğulu: …)", "(Bak: …)".
+final RegExp _note = RegExp(r'^\s*(tekil|çoğul|müfred|cem|müennes|müzekker|bak|bk|aslı|ar\.|fa\.|far)', caseSensitive: false);
 
 /// Noktasıyla yazılan ve cümleyi bitirmeyen kısaltmalar (küçük harfle).
 const Set<String> _abbreviations = {
@@ -147,10 +167,11 @@ final RegExp _abbreviationPrefix = RegExp(r'([A-Za-zÇĞİÖŞÜçğıöşü]{1,
 /// Manadan önce gelebilen dil ve alan kısaltmaları ("Hz." değil; o ismin parçasıdır).
 const Set<String> _prefixAbbreviations = {
   'yun', 'ar', 'fa', 'far', 'fars', 'fr', 'lat', 'ing', 'it', 'itl', 'rum', 'ibr', 'sür', 'tr', 'alm', 'fels', 'mc', //
+  'gr', 'kim', 'psk', 'mant', 'sosy', 'isp', 'ask', //
 };
 
-/// "1. ", "1)", "2-" gibi madde numaraları.
-final RegExp _number = RegExp(r'\d{1,2}[.)\-] ?');
+/// "1. ", "1)", "2-" gibi madde numaraları ("19. asırda" bir madde numarası değildir).
+final RegExp _number = RegExp(r'\d[.)\-](?!\d) ?');
 
 final RegExp _letter = RegExp(r'\p{L}', unicode: true);
 final RegExp _digit = RegExp(r'\d');
