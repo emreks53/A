@@ -2,7 +2,7 @@ name: lugat_risale
 description: "Lügat-ı Risale-i Nur — Risale-i Nur okurken karşılaşılan Osmanlıca kelimelerin manasına hızlıca bakın."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.13.0
