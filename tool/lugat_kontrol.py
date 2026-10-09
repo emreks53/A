@@ -9,11 +9,16 @@ Her satır bir maddedir:
      o lügatta birden çok satırı varsa her biri ayrı paragraf,
      aralarında "\n")                           — zorunlu
   o  köken: Ar., Fa., Tr., Ar.-Fa. ...          — isteğe bağlı
-  f  sıklık: 3 çok sık, 2 sık, 1 seyrek         — zorunlu
+  f  sıklık: 3 çok sık, 2 sık, 1 seyrek, 0 Risale-i Nur'a
+     özgü listede olmayan (RNK lügatının geri kalanı) — zorunlu
   v  başka baskılarda görülen yazılışlar         — isteğe bağlı
 
+İki dosya vardır: assets/lugat.jsonl (Risale-i Nur'a özgü liste, f = 1-3) ve
+assets/lugat_ek.jsonl (RNK lügatının geri kalanı, f = 0). Uygulama önce birincisini,
+ardından ikisini birlikte yükler.
+
 Kullanım:
-  python3 tool/lugat_kontrol.py                 # denetle
+  python3 tool/lugat_kontrol.py                 # iki dosyayı birlikte denetle
   python3 tool/lugat_kontrol.py --duzelt        # Türk alfabesine göre sırala, biçimi düzelt
   python3 tool/lugat_kontrol.py DOSYA.jsonl     # başka bir dosyayı denetle
 """
@@ -23,14 +28,17 @@ import re
 import sys
 import unicodedata
 
-DEFAULT = os.path.join(os.path.dirname(__file__), "..", "assets", "lugat.jsonl")
+ASSETS = os.path.join(os.path.dirname(__file__), "..", "assets")
+# Risale-i Nur'a özgü kelimeler (sıklık 1-3) ve RNK lügatının geri kalanı (sıklık 0).
+DEFAULT = os.path.join(ASSETS, "lugat.jsonl")
+EXTRA = os.path.join(ASSETS, "lugat_ek.jsonl")
 
 ORIGINS = {
     "", "Ar.", "Fa.", "Tr.", "Ar.-Fa.", "Fa.-Ar.", "Ar.-Tr.", "Fa.-Tr.", "Tr.-Ar.",
     "Tr.-Fa.", "Yun.", "Fr.", "İt.", "Lat.", "İbr.", "Sür.",
 }
 KEYS = ("w", "o", "f", "m", "v")
-WORD_RE = re.compile(r"^[a-zA-ZçÇğĞıİöÖşŞüÜâÂîÎûÛêÊôÔ' \-]+$")
+WORD_RE = re.compile(r"^[a-zA-ZçÇğĞıİöÖşŞüÜâÂîÎûÛêÊôÔ' .\-]+$")
 
 # Uygulamadaki (lib/src/dictionary/normalize.dart) arama anahtarıyla aynı kurallar.
 _PLAIN = str.maketrans({"â": "a", "î": "i", "û": "u", "ê": "e", "ô": "o"})
@@ -70,8 +78,8 @@ def problems(entry):
     if entry.get("o", "") not in ORIGINS:
         errs.append(f"'o' tanınmıyor: {entry.get('o')!r}")
     f = entry.get("f")
-    if isinstance(f, bool) or not isinstance(f, int) or f not in (1, 2, 3):
-        errs.append("'f' 1, 2 ya da 3 olmalı")
+    if isinstance(f, bool) or not isinstance(f, int) or f not in (0, 1, 2, 3):
+        errs.append("'f' 0, 1, 2 ya da 3 olmalı")
     v = entry.get("v", [])
     if not isinstance(v, list) or not all(isinstance(x, str) and WORD_RE.match(x) for x in v):
         errs.append("'v' kelime listesi olmalı (ör. [\"itikat\"])")
@@ -109,8 +117,10 @@ def dump(entry):
 
 def main(argv):
     fix = "--duzelt" in argv
-    paths = [a for a in argv if not a.startswith("--")] or [DEFAULT]
+    given = [a for a in argv if not a.startswith("--")]
+    paths = given or [DEFAULT, EXTRA]
     rc = 0
+    across = {}  # dosyalar arası mükerrer denetimi (küçük harfe çevrilmiş kelime → dosya)
     for path in paths:
         entries, errors = [], []
         with open(path, encoding="utf-8") as fh:
@@ -132,6 +142,16 @@ def main(argv):
             if w in seen:
                 errors.append(f"{path}:{no}: '{w}' iki kez var (ilki {seen[w]}. satırda)")
             seen.setdefault(w, no)
+            low = turkish_lower(w)
+            if low in across and across[low] != path:
+                errors.append(f"{path}:{no}: '{w}' {os.path.basename(across[low])} dosyasında da var")
+            across.setdefault(low, path)
+            if not given:
+                core = os.path.abspath(path) == os.path.abspath(DEFAULT)
+                if core and e.get("f") == 0:
+                    errors.append(f"{path}:{no}: '{w}' sıklığı 0; lugat_ek.jsonl'e taşınmalı")
+                if not core and e.get("f") != 0:
+                    errors.append(f"{path}:{no}: '{w}' sıklığı 0 olmalı (yoksa lugat.jsonl'e taşınmalı)")
         if errors:
             # Sıralama ve düzeltme yalnızca bütün maddeler geçerliyken yapılır.
             if fix:

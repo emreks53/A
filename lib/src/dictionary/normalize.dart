@@ -88,22 +88,39 @@ String searchKey(String input, {bool fold = false}) {
 
     flush();
     if (_dropped.contains(rune)) continue;
-    final ch = String.fromCharCode(rune);
-    final lower = _turkishLower[ch] ?? ch.toLowerCase();
-    pending = _plainVowels[lower] ?? lower;
+    pending = _keyChar[rune] ??= _keyCharOf(rune);
   }
   flush();
   return out.toString();
 }
 
+/// Bir karakterin anahtardaki karşılığı (Türkçe küçük harf, sade ünlü).
+/// Lügat açılırken on binlerce kelime için çağrıldığından sonuçlar saklanır.
+final Map<int, String> _keyChar = {};
+
+String _keyCharOf(int rune) {
+  final ch = String.fromCharCode(rune);
+  final lower = _turkishLower[ch] ?? ch.toLowerCase();
+  return _plainVowels[lower] ?? lower;
+}
+
 /// Daha önce [searchKey] ile üretilmiş (katlanmamış) bir anahtarı katlar.
 String foldKey(String key) {
-  final out = StringBuffer();
-  for (final rune in key.runes) {
-    final ch = String.fromCharCode(rune);
-    out.write(_foldMap[ch] ?? ch);
+  List<int>? out;
+  for (var i = 0; i < key.length; i++) {
+    final c = key.codeUnitAt(i);
+    final folded = switch (c) {
+      0xE7 => 0x63, // ç → c
+      0x11F => 0x67, // ğ → g
+      0x131 => 0x69, // ı → i
+      0xF6 => 0x6F, // ö → o
+      0x15F => 0x73, // ş → s
+      0xFC => 0x75, // ü → u
+      _ => c,
+    };
+    if (folded != c) (out ??= key.codeUnits.toList())[i] = folded;
   }
-  return out.toString();
+  return out == null ? key : String.fromCharCodes(out);
 }
 
 /// Türk alfabesi sırası. Düzeltme işaretli ünlüler sade hâlleriyle aynı
@@ -130,7 +147,36 @@ int compareTurkish(String a, String b) {
 
 /// Bileşik bir kelimenin (izafet terkibi vb.) parçaları:
 /// "mana-yı harfî" → ["mana", "yı", "harfî"].
-List<String> wordParts(String word) => word
-    .split(RegExp(r"[\s\-‐‑–—]+"))
-    .where((p) => p.isNotEmpty)
-    .toList(growable: false);
+List<String> wordParts(String word) {
+  final parts = <String>[];
+  var start = -1;
+  for (var i = 0; i <= word.length; i++) {
+    final separator = i == word.length || _isPartSeparator(word.codeUnitAt(i));
+    if (separator) {
+      if (start >= 0) parts.add(word.substring(start, i));
+      start = -1;
+    } else if (start < 0) {
+      start = i;
+    }
+  }
+  return List.unmodifiable(parts);
+}
+
+/// Boşluk (RegExp'teki \s ile aynı karakterler) ya da tire.
+bool _isPartSeparator(int c) =>
+    c == 0x20 ||
+    (c >= 0x09 && c <= 0x0D) ||
+    c == 0xA0 ||
+    c == 0x1680 ||
+    (c >= 0x2000 && c <= 0x200A) ||
+    c == 0x2028 ||
+    c == 0x2029 ||
+    c == 0x202F ||
+    c == 0x205F ||
+    c == 0x3000 ||
+    c == 0xFEFF ||
+    c == 0x2D ||
+    c == 0x2010 ||
+    c == 0x2011 ||
+    c == 0x2013 ||
+    c == 0x2014;

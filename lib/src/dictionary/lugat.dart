@@ -40,7 +40,7 @@ class Entry {
       word: (json['w'] as String).trim(),
       meaning: (json['m'] as String).trim(),
       origin: (json['o'] as String?)?.trim() ?? '',
-      frequency: (json['f'] is num ? (json['f'] as num).toInt() : 1).clamp(1, 3),
+      frequency: (json['f'] is num ? (json['f'] as num).toInt() : 1).clamp(0, 3),
       variants: variants is List
           ? [for (final v in variants) if (v is String && v.trim().isNotEmpty) v.trim()]
           : const [],
@@ -56,7 +56,8 @@ class Entry {
   /// Köken kısaltması (ör. "Ar.", "Fa."); bilinmiyorsa boş.
   final String origin;
 
-  /// Risale-i Nur'da karşılaşılma sıklığı: 3 çok sık, 2 sık, 1 seyrek.
+  /// Risale-i Nur'da karşılaşılma sıklığı: 3 çok sık, 2 sık, 1 seyrek; 0 Risale-i
+  /// Nur'a özgü listede olmayan, lügatın geri kalanından gelen kelime.
   final int frequency;
 
   /// Başka baskılarda görülebilecek farklı yazılışlar.
@@ -123,30 +124,37 @@ class Lugat {
 
   /// JSON Lines biçimindeki sözlüğü okur. Bozuk satırlar atlanır ve
   /// [skippedLines] içinde sayılır.
-  factory Lugat.parseJsonl(String text) {
+  factory Lugat.parseJsonl(String text) => Lugat.parseJsonlAll([text]);
+
+  /// Birden çok JSON Lines metnini tek sözlükte birleştirir (ör. Risale-i
+  /// Nur'a özgü liste ve lügatın geri kalanı).
+  factory Lugat.parseJsonlAll(List<String> texts) {
     final entries = <Entry>[];
     var skipped = 0;
-    for (final line in const LineSplitter().convert(text)) {
-      final trimmed = line.trim();
-      if (trimmed.isEmpty) continue;
-      try {
-        final decoded = jsonDecode(trimmed);
-        final entry = Entry.fromJson(decoded as Map<String, dynamic>);
-        if (entry.word.isEmpty || entry.meaning.isEmpty) {
+    for (final text in texts) {
+      for (final line in const LineSplitter().convert(text)) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty) continue;
+        try {
+          final decoded = jsonDecode(trimmed);
+          final entry = Entry.fromJson(decoded as Map<String, dynamic>);
+          if (entry.word.isEmpty || entry.meaning.isEmpty) {
+            skipped++;
+            continue;
+          }
+          entries.add(entry);
+        } catch (_) {
           skipped++;
-          continue;
         }
-        entries.add(entry);
-      } catch (_) {
-        skipped++;
       }
     }
     return Lugat(entries).._skipped = skipped;
   }
 
-  /// UTF-8 baytlardan okur (uygulama paketindeki dosya için).
-  factory Lugat.fromBytes(Uint8List bytes) =>
-      Lugat.parseJsonl(utf8.decode(bytes, allowMalformed: true));
+  /// UTF-8 baytlardan okur (uygulama paketindeki dosyalar için).
+  factory Lugat.fromBytes(Uint8List bytes, [List<Uint8List> more = const []]) => Lugat.parseJsonlAll([
+        for (final b in [bytes, ...more]) utf8.decode(b, allowMalformed: true),
+      ]);
 
   final List<Entry> entries;
 
@@ -258,16 +266,27 @@ class Lugat {
     final qf = foldKey(qe);
 
     final tiers = <int, int>{};
+    final rareWhole = <int>{};
+    final preciseRare = <int>{};
     for (var i = _lowerBound(_keys, qf); i < _keys.length; i++) {
       final k = _keys[i];
       if (!k.folded.startsWith(qf)) break;
-      final tier = k.exact == qe
+      var tier = k.exact == qe
           ? 0
           : k.folded == qf
               ? 1
               : k.exact.startsWith(qe)
                   ? 2
                   : 3;
+      // Lügatın Risale-i Nur'a özgü listesinde olmayan (f=0) nadir bir kelime,
+      // yazılanla birebir aynı olsa da sık geçen kelimelerin önüne geçmez:
+      // "cela" yazılırken "celâ" değil "celâl" önce gelir.
+      if (tier <= 1 && entries[k.entry].frequency == 0) {
+        // ş, ç, ğ, ı, ö, ü harfleriyle birebir yazılmışsa kullanıcı bu kelimeyi kastediyordur.
+        if (tier == 0 && _hasTurkishLetter(qe)) preciseRare.add(k.entry);
+        tier += 2;
+        rareWhole.add(k.entry);
+      }
       final prev = tiers[k.entry];
       if (prev == null || tier < prev) tiers[k.entry] = tier;
     }
@@ -334,21 +353,42 @@ class Lugat {
     }
 
     if (prefixIds.isNotEmpty || partIds.isNotEmpty) {
+      // Yazılanla başlayan yalnız nadir kelimeler varsa ekli bir kelime ya da
+      // yazım hatası olabilir. Sırayla: ekli yazılmış sık bir kelimenin kökü
+      // ("ruhun" → "ruh", "rühun" değil), Türkçe harfleriyle birebir yazılmış
+      // nadir kelime ("rühun"), bir harf farkla tutan çok sık kelime ("dinya" →
+      // "dünya"), birebir yazılan diğer nadir kelimeler, diğer düzeltmeler
+      // ("mezure" → "mezkûre").
+      if (qf.length >= 4 && !prefixIds.any(_common) && !partIds.any(_common)) {
+        final fixes = [
+          for (final id in _fuzzy(qf, maxDistance: 1))
+            if (_common(id) && !tiers.containsKey(id) && _isOneEditAway(qf, _folded[id])) id,
+        ];
+        add([for (final s in suffixedStems) if (_common(s.entry)) s.entry], MatchKind.stem);
+        add([for (final id in prefixIds) if (preciseRare.contains(id)) id], MatchKind.prefix);
+        add(fixes.where((id) => entries[id].frequency >= 2), MatchKind.fuzzy);
+        add([for (final id in prefixIds) if (rareWhole.contains(id)) id], MatchKind.prefix);
+        add(fixes, MatchKind.fuzzy);
+      }
       if (onlyAdjectives) {
         // "hayatı": önce "hayatî", hemen ardından kök "hayat", sonra diğerleri.
         // ("hakiki" için "hak" değil: kök, sıfattan yalnız son harfi eksik olmalı.)
         add(whole, MatchKind.prefix);
         add(marked, MatchKind.stem);
-        add([for (final s in suffixedStems) if (suffixStart[s] == qf.length - 1) s.entry], MatchKind.stem);
+        add([for (final s in suffixedStems) if (suffixStart[s] == qf.length - 1 && _common(s.entry)) s.entry],
+            MatchKind.stem);
         add(prefixIds, MatchKind.prefix);
         add(suffixed, MatchKind.stem);
       } else {
         add(whole, MatchKind.prefix);
         add(marked, MatchKind.stem);
-        // Öne alınmaya aday kök: "kalbinden" için önce "kalb", sonra "kalbî".
-        final roots = [for (final s in suffixedStems) if (!_endsWithLongVowel(entries[s.entry].word)) s];
-        final pool = roots.isNotEmpty ? roots : suffixedStems;
-        // Aynı yazılan kökler birlikte: "hâdisi" için "hadîs" ve "hâdis".
+        // Öne alınmaya aday kök: "kalbinden" için önce "kalb", sonra "kalbî". Nadir
+        // kökler ("mele" yazılırken "mel") yazılanla başlayan kelimelerin önüne geçmez.
+        final common = [for (final s in suffixedStems) if (_common(s.entry)) s];
+        final roots = [for (final s in common) if (!_endsWithLongVowel(entries[s.entry].word)) s];
+        final pool = roots.isNotEmpty ? roots : common;
+        // Aynı yazılan kökler birlikte: "hâdisi" için "hadîs" ve "hâdis" (nadir
+        // bir eşyazılışlı kelime değil).
         final best = [for (final s in pool) if (s.length == pool.first.length) s.entry];
         final stemFrequency = best.isEmpty ? 0 : entries[best.first].frequency;
         // Kullanıcı bir kelimenin ortasındaysa ("rahme" → "rahmet") ya da
@@ -389,6 +429,9 @@ class Lugat {
     // Kalan kısım yardımcı fiil ya da "-dır" ise kök her zaman önce gelir
     // ("arz etmek", "hastır").
     bool strong(_Stem s) {
+      // Nadir bir kök, sık geçen ve bir harf farkla tutan kelimenin önüne geçmez
+      // ("delali" için "delal" değil "delâil").
+      if (!_common(s.entry) && (closeFrequency > 0 || suffixedStems.any((o) => _common(o.entry)))) return false;
       final tail = qf.substring(suffixStart[s]!);
       if (_isAuxiliaryPhrase(tail) || _copulas.contains(tail)) return true;
       final coverage = _reach(s, suffixedStems, suffixStart) / qf.length;
@@ -403,6 +446,10 @@ class Lugat {
     final minOther = (qf.length + 1) ~/ 2 < 4 ? 4 : (qf.length + 1) ~/ 2;
     add(marked, MatchKind.stem);
     add([for (final s in suffixedStems) if (strong(s)) s.entry], MatchKind.stem);
+    // Önce sık geçen kelimeler; lügatın geri kalanından gelen nadir olanlar ardından.
+    add(doubledLast.where(_common), MatchKind.stem);
+    add(close.where(_common), MatchKind.fuzzy);
+    add(suffixed.where(_common), MatchKind.stem);
     add(doubledLast, MatchKind.stem);
     add(close, MatchKind.fuzzy);
     add(suffixed, MatchKind.stem);
@@ -438,9 +485,20 @@ class Lugat {
   /// "cem'", "bedî'" gibi ayın ya da hemze ile biten kelimeler.
   static bool _endsWithAyn(String word) => word.endsWith("'") || word.endsWith('’');
 
-  /// "kalbî", "ulvî" gibi uzun ünlüyle biten (çoğunlukla -î sıfatları) kelimeler.
-  static bool _endsWithLongVowel(String word) =>
-      word.endsWith('î') || word.endsWith('û') || word.endsWith('â');
+  /// "kalbî", "ulvî" gibi -î ile biten (çoğunlukla nispet sıfatı) kelimeler.
+  /// ("sadâ", "recâ" gibi uzun "â" ile bitenler sıfat değildir.)
+  static bool _endsWithLongVowel(String word) => word.endsWith('î');
+
+  static bool _hasTurkishLetter(String key) {
+    for (var i = 0; i < key.length; i++) {
+      if ('çğıöşü'.contains(key[i])) return true;
+    }
+    return false;
+  }
+
+  /// Kelime Risale-i Nur'a özgü listede mi (sıklığı 1-3)? Lügatın geri
+  /// kalanından gelen nadir kelimelerin sıklığı 0'dır.
+  bool _common(int id) => entries[id].frequency > 0;
 
   /// "hâk", "dâir" gibi uzun ünlü taşıyan kelimeler.
   static bool _hasLongVowel(String word) => word.contains('â') || word.contains('î') || word.contains('û');
@@ -456,6 +514,8 @@ class Lugat {
     }
 
     return [...stems]..sort((a, b) {
+        // Risale-i Nur'a özgü listedeki kökler, lügatın geri kalanındakilerden önce.
+        if (_common(a.entry) != _common(b.entry)) return _common(a.entry) ? -1 : 1;
         final r = reach[b]! - reach[a]!;
         if (r != 0) return r;
         final ab = adjectiveFirst(b, a);
@@ -622,6 +682,7 @@ class Lugat {
     final seen = <int>{};
     final roots = <_Stem>[];
     final adjectives = <_Stem>[];
+    final rare = <_Stem>[];
     for (var len = qf.length - 1; len >= 3 && roots.length + adjectives.length < 8; len--) {
       final prefix = qf.substring(0, len);
       final typed = qe.substring(0, len);
@@ -633,10 +694,15 @@ class Lugat {
       int rank(_Key k) => (k.exact == typed ? 0 : 10) - entries[k.entry].frequency;
       group.sort((a, b) => rank(a) - rank(b));
       for (final k in group) {
-        (_endsWithLongVowel(entries[k.entry].word) ? adjectives : roots).add(_Stem(k.entry, len));
+        final list = !_common(k.entry)
+            ? rare
+            : _endsWithLongVowel(entries[k.entry].word)
+                ? adjectives
+                : roots;
+        list.add(_Stem(k.entry, len));
       }
     }
-    return [...roots, ...adjectives].take(8).toList();
+    return [...roots, ...adjectives, ...rare.take(4)];
   }
 
   /// [typed] içinde kullanıcının bilerek yazdığı ş, ç, ğ, ı, ö, ü harfleri

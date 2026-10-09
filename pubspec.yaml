@@ -24,6 +24,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/lugat.jsonl
+    - assets/lugat_ek.jsonl
     - assets/images/logo_isaret.png
     - assets/fonts/OFL.txt
   fonts:

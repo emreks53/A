@@ -5,30 +5,42 @@ import 'package:lugat_risale/src/dictionary/lugat.dart';
 import 'package:lugat_risale/src/dictionary/meaning.dart';
 import 'package:lugat_risale/src/dictionary/normalize.dart';
 
-/// Uygulamayla birlikte gelen gerçek lügat dosyasının denetimi.
+/// Uygulamayla birlikte gelen gerçek lügat dosyalarının denetimi: Risale-i
+/// Nur'a özgü liste (assets/lugat.jsonl) ve RNK lügatının geri kalanı
+/// (assets/lugat_ek.jsonl), uygulamadaki gibi birlikte.
 void main() {
+  late Lugat core;
   late Lugat lugat;
 
   setUpAll(() {
-    lugat = Lugat.fromBytes(File('assets/lugat.jsonl').readAsBytesSync());
+    final coreBytes = File('assets/lugat.jsonl').readAsBytesSync();
+    core = Lugat.fromBytes(coreBytes);
+    lugat = Lugat.fromBytes(coreBytes, [File('assets/lugat_ek.jsonl').readAsBytesSync()]);
   });
 
   List<String> words(String q) => [for (final h in lugat.search(q)) h.entry.word];
 
   test('bütün satırlar okunabiliyor', () {
+    expect(core.skippedLines, 0);
     expect(lugat.skippedLines, 0);
-    expect(lugat.entries.length, greaterThan(5000));
+    expect(core.entries.length, greaterThan(10000));
+    expect(lugat.entries.length, greaterThan(70000));
+    // Risale-i Nur'a özgü listede sıklık 1-3, lügatın geri kalanında 0.
+    expect(core.entries.every((e) => e.frequency >= 1), isTrue);
+    expect(lugat.entries.skip(core.entries.length).every((e) => e.frequency == 0), isTrue);
   });
 
-  test('maddeler Türk alfabesine göre sıralı (tool/lugat_kontrol.py ile aynı sıra)', () {
-    for (var i = 1; i < lugat.entries.length; i++) {
-      final a = searchKey(lugat.entries[i - 1].word);
-      final b = searchKey(lugat.entries[i].word);
-      expect(compareTurkish(a, b), lessThanOrEqualTo(0), reason: '${lugat.entries[i - 1].word} > ${lugat.entries[i].word}');
+  test('her dosyadaki maddeler Türk alfabesine göre sıralı (tool/lugat_kontrol.py ile aynı sıra)', () {
+    for (final list in [core.entries, lugat.entries.skip(core.entries.length).toList()]) {
+      for (var i = 1; i < list.length; i++) {
+        final a = searchKey(list[i - 1].word);
+        final b = searchKey(list[i].word);
+        expect(compareTurkish(a, b), lessThanOrEqualTo(0), reason: '${list[i - 1].word} > ${list[i].word}');
+      }
     }
   });
 
-  test('aynı kelime iki kez yok', () {
+  test('aynı kelime iki kez yok (iki dosya birlikte)', () {
     final seen = <String>{};
     final dupes = [for (final e in lugat.entries) if (!seen.add(e.word)) e.word];
     expect(dupes, isEmpty);
@@ -150,7 +162,7 @@ void main() {
     expect(words("san'a").first, "san'at");
     expect(words("mir'a").take(2), containsAll(["mi'rac", "mir'at"]));
     expect(words('mevzuu').first, 'mevzu');
-    expect(words('nurken'), ['nur']);
+    expect(words('nurken').first, 'nur');
   });
 
   test('kelime yazılırken kısaltılmış kökler araya girmez', () {
@@ -161,6 +173,30 @@ void main() {
     expect(words('nevci').first, 'nevcivan');
     expect(words('alakka').first, 'alâka');
     expect(words('kemal-i ci'), ['kemal-i ciddiyet']);
+  });
+
+  test('lügatın geri kalanındaki kelimeler de bulunur', () {
+    expect(words('Yunus Emre').first, 'Yunus Emre');
+    expect(words('bünyamin').first, 'Bünyamin');
+    expect(lugat.byWord('alem')!.meaning, startsWith('Bayrak.'));
+  });
+
+  test('nadir kelimeler Risale-i Nur kelimelerinin önüne geçmez', () {
+    // Yazarken: "cela" → önce "celâl", sonra nadir "celâ".
+    final cela = words('cela');
+    expect(cela.first, 'celâl');
+    expect(cela.indexOf('celâ'), greaterThan(0));
+    // Birebir yazılan nadir kelime de çıkar, ama ekli sık kelimenin kökü önce.
+    expect(words('ruhun').first, 'ruh');
+    expect(words('ruhun'), contains('rühun'));
+    expect(words('rühun').first, 'rühun');
+    expect(words('pad').first, 'padişah');
+    // Ekli kelimede kök, aynı harflerle başlayan nadir kelimeden önce.
+    expect(words('nazarın').first, 'nazar');
+    expect(words('tafsilinde').first, 'tafsil');
+    // Yalnız nadir kelimelerin başına denk gelen yazım hatası.
+    expect(words('mezure'), contains('mezkûre'));
+    expect(words('delali').first, 'delâil');
   });
 
   test('arama tek harfte bile hızlı', () {

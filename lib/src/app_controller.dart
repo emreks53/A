@@ -14,9 +14,11 @@ import 'focus/focus_mode.dart';
 class AppController extends ChangeNotifier {
   AppController({
     Future<Lugat> Function()? loadLugat,
+    Future<Lugat> Function()? loadFullLugat,
     FocusModeService? focusService,
     Future<void> Function()? keepScreenOn,
   })  : _loadLugat = loadLugat ?? loadBundledLugat,
+        _loadFullLugat = loadFullLugat ?? (loadLugat == null ? loadBundledFullLugat : null),
         focusService = focusService ?? FocusModeService(),
         _keepScreenOn = keepScreenOn ?? _enableWakelock {
     this.focusService.onStatusChanged = (status) {
@@ -27,7 +29,9 @@ class AppController extends ChangeNotifier {
     };
   }
 
+  /// Risale-i Nur'a özgü kelimeler (hızlı açılır) ve lügatın geri kalanı.
   static const assetPath = 'assets/lugat.jsonl';
+  static const extraAssetPath = 'assets/lugat_ek.jsonl';
   static const maxHistory = 100;
   static const minTextScale = 0.85;
   static const maxTextScale = 1.6;
@@ -40,6 +44,7 @@ class AppController extends ChangeNotifier {
   static const _kIosTipDismissed = 'iphone_odak_ipucu_kapatildi';
 
   final Future<Lugat> Function() _loadLugat;
+  final Future<Lugat> Function()? _loadFullLugat;
   final Future<void> Function() _keepScreenOn;
   final FocusModeService focusService;
 
@@ -72,11 +77,24 @@ class AppController extends ChangeNotifier {
 
   bool _disposed = false;
 
-  /// Paketlenmiş sözlüğü ayrı bir isolate'te okur; arayüz takılmaz.
+  /// Paketlenmiş sözlüğün Risale-i Nur'a özgü kısmını ayrı bir isolate'te
+  /// okur; arayüz takılmaz ve arama birkaç yüz milisaniyede hazır olur.
   static Future<Lugat> loadBundledLugat() async {
-    final data = await rootBundle.load(assetPath);
-    final bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    final bytes = await _assetBytes(assetPath);
     return Isolate.run(() => Lugat.fromBytes(bytes));
+  }
+
+  /// Bütün sözlük (Risale-i Nur'a özgü liste + lügatın geri kalanı); ilk
+  /// kısım kullanılırken arka planda hazırlanır.
+  static Future<Lugat> loadBundledFullLugat() async {
+    final core = await _assetBytes(assetPath);
+    final extra = await _assetBytes(extraAssetPath);
+    return Isolate.run(() => Lugat.fromBytes(core, [extra]));
+  }
+
+  static Future<Uint8List> _assetBytes(String path) async {
+    final data = await rootBundle.load(path);
+    return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
   }
 
   static Future<void> _enableWakelock() => WakelockPlus.enable();
@@ -84,6 +102,7 @@ class AppController extends ChangeNotifier {
   Future<void> init() async {
     unawaited(keepScreenOn());
     final lugatFuture = _loadLugat();
+    final fullFuture = _loadFullLugat?.call();
     unawaited(refreshFocus());
 
     try {
@@ -109,6 +128,19 @@ class AppController extends ChangeNotifier {
       debugPrint('Sözlük yüklenemedi: $e');
     }
     _notify();
+
+    if (fullFuture != null) {
+      try {
+        final full = await fullFuture;
+        lugat = full;
+        loadError = null;
+      } catch (e) {
+        // İlk kısım açıldıysa uygulama onunla çalışmaya devam eder.
+        if (lugat == null) loadError ??= e;
+        debugPrint('Lügatın geri kalanı yüklenemedi: $e');
+      }
+      _notify();
+    }
   }
 
   /// Ekranın kendiliğinden kapanmasını engeller. Uygulama her ön plana

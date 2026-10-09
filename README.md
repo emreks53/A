@@ -50,7 +50,15 @@ ilk harflerini yazar ve manasını görür. Bu sırada telefon kendiliğinden ka
 
 ## Lügat verisi
 
-Lügat `assets/lugat.jsonl` dosyasındadır; her satır bir maddedir:
+Lügat iki dosyadadır; her satır bir maddedir:
+
+- `assets/lugat.jsonl` — Risale-i Nur'a özgü **10.504 kelime ve ifade** (sıklık 1-3).
+  Uygulama açılınca önce bu dosya yüklenir; arama bir an içinde hazır olur.
+- `assets/lugat_ek.jsonl` — RNK Neşriyat lügatının geri kalanı, **61.565 kelime ve
+  ifade** (sıklık 0). Arka planda yüklenir; aramada Risale-i Nur kelimelerinin ardından
+  gelir.
+
+Toplam **72.069** madde.
 
 ```json
 {"w":"inkişaf","o":"Ar.","f":3,"m":"Açılma. Meydana çıkma. Yetişme. Terakki etme, ilerleme. Gizli sırların bilinmesi."}
@@ -58,15 +66,14 @@ Lügat `assets/lugat.jsonl` dosyasındadır; her satır bir maddedir:
 
 | Alan | Anlamı |
 |------|--------|
-| `w`  | Kelime, Risale-i Nur'un Latin harfli baskılarındaki yazılışıyla (zorunlu) |
+| `w`  | Kelime (zorunlu). Özel isimler büyük harfle başlar ("Yunus Emre", "Bâbil"). |
 | `m`  | Manası (zorunlu). Aynı kelimenin kaynak lügatta birden çok satırı varsa her biri ayrı paragraftır (aralarında `\n`). |
 | `o`  | Köken: `Ar.`, `Fa.`, `Tr.`, `Ar.-Fa.` … (isteğe bağlı; ekranda gösterilmez) |
-| `f`  | Risale-i Nur'da karşılaşılma sıklığı: 3 çok sık, 2 sık, 1 seyrek — sıralamada kullanılır |
-| `v`  | Başka baskılarda görülen farklı yazılışlar (isteğe bağlı; aramada kullanılır, ekranda gösterilmez) |
+| `f`  | Sıklık: 3 çok sık, 2 sık, 1 seyrek (Risale-i Nur'a özgü liste), 0 lügatın geri kalanı — sıralamada kullanılır |
+| `v`  | Başka yazılışlar (isteğe bağlı; aramada kullanılır, ekranda gösterilmez) |
 
-Lügatte **10.504 kelime ve ifade** var. Uygulama her mananın ilk cümlesini ("asıl mana")
-kalın yazar; baştaki "(Çoğulu: …)", "(Bak: …)", "Tıb:", "1." gibi kısımlar buna katılmaz
-(`lib/src/dictionary/meaning.dart`).
+Uygulama her mananın ilk cümlesini ("asıl mana") kalın yazar; baştaki "(Çoğulu: …)",
+"(Bak: …)", "Tıb:", "1." gibi kısımlar buna katılmaz (`lib/src/dictionary/meaning.dart`).
 
 **Manaların kaynağı:**
 - **9.562 kelimenin** manası RNK Neşriyat'ın Risale-i Nur lügatındaki (rnk.tr) metnin
@@ -75,6 +82,10 @@ kalın yazar; baştaki "(Çoğulu: …)", "(Bak: …)", "Tıb:", "1." gibi kıs�
   "can" / nefs "üfürmek") ayırt edildi; eşleşmeler ikinci bir denetimden geçirildi. Bir
   satır başka bir satırın içinde aynen geçiyorsa tekrar etmesin diye alınmadı; yalnızca
   "(Bak: …)" diyen ya da boş satırlar da alınmadı.
+- RNK lügatında olup bu listede bulunmayan bütün kelime ve terkipler de `lugat_ek.jsonl`
+  dosyasına aynen eklendi (61.565 madde; yalnızca tek harflik bir başlık ile manası boş bir
+  başlık alınmadı). Lügatta BÜYÜK harfle yazılan başlıklar Türkçe küçük harfe çevrildi;
+  özel isimler (962 başlık) büyük harfle başlar.
 - O lügatta bulunmayan **942 kelimenin** (ör. "Barla", bazı terkipler) manası daha önce
   hazırlanan manaların yalnızca ilk tanım kısmıdır; yorum ve açıklama cümleleri
   çıkarılmıştır. Bu kelimelerin listesi `tool/rnk_disi_kelimeler.txt` dosyasındadır.
@@ -86,7 +97,7 @@ bulunduğundan emin olun.
 **Düzeltme ve ekleme:** `assets/lugat.jsonl` dosyasını düzenleyin, sonra
 
 ```sh
-python3 tool/lugat_kontrol.py            # biçim, mükerrer kelime ve sıra denetimi
+python3 tool/lugat_kontrol.py            # iki dosyada biçim, mükerrer kelime, sıklık ve sıra denetimi
 python3 tool/lugat_kontrol.py --duzelt   # Türk alfabesine göre sıralar, biçimi düzeltir
 ```
 
@@ -128,7 +139,8 @@ lib/
 android/app/src/main/kotlin/.../
   MainActivity.kt                  odak modunu ekrana gelince açar, ekrandan çıkınca kapatır
   FocusModeController.kt           uygulamaya ait "Rahatsız Etmeyin" kuralı (Android 10+)
-assets/lugat.jsonl                 lügat
+assets/lugat.jsonl                 lügat: Risale-i Nur'a özgü kelimeler (önce yüklenir)
+assets/lugat_ek.jsonl              lügat: RNK lügatının geri kalanı (arka planda yüklenir)
 assets/fonts/                      Lora yazı tipi (SIL Open Font License, OFL.txt)
 assets/images/logo_isaret.png      uygulama içi logo işareti
 tool/lugat_kontrol.py              lügat dosyası denetleyicisi
