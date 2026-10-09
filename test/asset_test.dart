@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lugat_risale/src/dictionary/lugat.dart';
+import 'package:lugat_risale/src/dictionary/meaning.dart';
 import 'package:lugat_risale/src/dictionary/normalize.dart';
 
 /// Uygulamayla birlikte gelen gerçek lügat dosyasının denetimi.
@@ -38,6 +39,19 @@ void main() {
       expect(e.meaning.length, greaterThanOrEqualTo(3), reason: e.word);
       expect(e.origin.isEmpty || originLabels.containsKey(e.origin), isTrue, reason: '${e.word}: ${e.origin}');
       expect(searchKey(e.word), isNotEmpty, reason: e.word);
+    }
+  });
+
+  test('manalar RNK lügatındaki metnin aynısı', () {
+    expect(lugat.byWord('inkişaf')!.meaning, 'Açılma. Meydana çıkma. Yetişme. Terakki etme, ilerleme. Gizli sırların bilinmesi.');
+    expect(lugat.byWord('kâinat')!.meaning, 'Var edilen şeylerin hepsi. Yaratılanlar. Mevcudat. Âlemler.');
+  });
+
+  test('her maddede kalın yazılacak bir asıl mana var', () {
+    final letter = RegExp(r'\p{L}', unicode: true);
+    for (final e in lugat.entries) {
+      final main = splitMeaning(e.meaning).where((p) => p.main).map((p) => p.text).join();
+      expect(letter.hasMatch(main), isTrue, reason: e.word);
     }
   });
 

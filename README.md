@@ -43,7 +43,9 @@ ilk harflerini yazar ve manasını görür. Bu sırada telefon kendiliğinden ka
     adım adım anlatılır.
 - **Son bakılanlar ve kaydedilenler** — Bakılan kelimeler arama kutusu boşken listelenir;
   tekrar etmek istenen kelimeler kaydedilebilir.
-- **Rahat okuma** — Büyük yazılı mana sayfası, ayarlanabilir yazı boyutu, açık/koyu tema.
+- **Rahat okuma** — Büyük yazılı mana sayfası; her mananın ilk cümlesi ("asıl mana") kalın;
+  ayarlanabilir yazı boyutu, açık/koyu tema. Renkler logodaki laciverten, kelime ve manalar
+  Lora yazı tipiyle.
 - İnternet gerektirmez; lügat uygulamanın içindedir.
 
 ## Lügat verisi
@@ -51,34 +53,35 @@ ilk harflerini yazar ve manasını görür. Bu sırada telefon kendiliğinden ka
 Lügat `assets/lugat.jsonl` dosyasındadır; her satır bir maddedir:
 
 ```json
-{"w":"inkişaf","o":"Ar.","f":3,"m":"Açılma, gelişme, ilerleme; gizli olanın açığa çıkması."}
+{"w":"inkişaf","o":"Ar.","f":3,"m":"Açılma. Meydana çıkma. Yetişme. Terakki etme, ilerleme. Gizli sırların bilinmesi."}
 ```
 
 | Alan | Anlamı |
 |------|--------|
 | `w`  | Kelime, Risale-i Nur'un Latin harfli baskılarındaki yazılışıyla (zorunlu) |
-| `m`  | Günümüz Türkçesiyle manası (zorunlu) |
-| `o`  | Köken: `Ar.`, `Fa.`, `Tr.`, `Ar.-Fa.` … (isteğe bağlı) |
+| `m`  | Manası (zorunlu). Aynı kelimenin kaynak lügatta birden çok satırı varsa her biri ayrı paragraftır (aralarında `\n`). |
+| `o`  | Köken: `Ar.`, `Fa.`, `Tr.`, `Ar.-Fa.` … (isteğe bağlı; ekranda gösterilmez) |
 | `f`  | Risale-i Nur'da karşılaşılma sıklığı: 3 çok sık, 2 sık, 1 seyrek — sıralamada kullanılır |
-| `v`  | Başka baskılarda görülen farklı yazılışlar (isteğe bağlı) |
+| `v`  | Başka baskılarda görülen farklı yazılışlar (isteğe bağlı; aramada kullanılır, ekranda gösterilmez) |
 
-Lügatte **10.504 kelime ve ifade** var: Risale-i Nur'da geçen Arapça ve Farsça kökenli
-kelimeler, çoğulları, terkipler (ör. "mana-yı harfî", "kudret-i ezeliye"), Risale'nin temel
-kavramları (bunlar daha ayrıntılı açıklanır) ve yalnızca şapka/kesme farkıyla ayrılan
-kelimeler (âlim / alîm, hâkim / hakîm).
+Lügatte **10.504 kelime ve ifade** var. Uygulama her mananın ilk cümlesini ("asıl mana")
+kalın yazar; baştaki "(Çoğulu: …)", "(Bak: …)", "Tıb:", "1." gibi kısımlar buna katılmaz
+(`lib/src/dictionary/meaning.dart`).
 
-Hazırlanışı:
-1. Kelimeler harf gruplarına bölünüp yapay zekâ ile yazıldı; her dosya ayrı bir denetçi
-   tarafından madde madde kontrol edildi (yanlış manalar düzeltildi, var olmayan kelimeler
-   çıkarıldı).
-2. Her harf grubu için eksik kelimeler ayrıca tarandı ve eklendi.
-3. Her madde, **Kubbealtı Lugatı** (lugatim.com) karşılığıyla yan yana konup yeniden
-   denetlendi: yanlış manalar, karışmış eşyazılışlı kelimeler, yanlış tekil/çoğul ve köken
-   bilgileri düzeltildi. Kubbealtı'nın metni telif hakkıyla korunduğundan kopyalanmadı;
-   yalnızca doğrulama kaynağı olarak kullanıldı ve manalar kendi cümlelerimizle yazıldı.
+**Manaların kaynağı:**
+- **9.571 kelimenin** manası RNK Neşriyat'ın Risale-i Nur lügatındaki (rnk.tr) metnin
+  aynısıdır; hiçbir yorum ya da ek ifade katılmamıştır. Kelimeler o lügattaki satırlarla
+  eşleştirilirken aynı yazılıp farklı olan kelimeler (hâkim / hakîm, âlem / alem, nefs
+  "can" / nefs "üfürmek") ayırt edildi; eşleşmeler ikinci bir denetimden geçirildi. Bir
+  satır başka bir satırın içinde aynen geçiyorsa tekrar etmesin diye alınmadı; yalnızca
+  "(Bak: …)" diyen ya da boş satırlar da alınmadı.
+- O lügatta bulunmayan **933 kelimenin** (ör. "Barla", bazı terkipler) manası daha önce
+  hazırlanan manaların yalnızca ilk tanım kısmıdır; yorum ve açıklama cümleleri
+  çıkarılmıştır. Bu kelimelerin listesi `tool/rnk_disi_kelimeler.txt` dosyasındadır.
 
-Yine de hata bulunabilir; yayından önce Osmanlıcaya ve Risale-i Nur'a vâkıf birinin gözden
-geçirmesi tavsiye edilir. Uygulamanın Ayarlar > Hakkında bölümünde de okuyucuya bu not düşülür.
+**Telif:** RNK Neşriyat'ın telif sayfasına göre lügat dahil içeriklerin hakları yayınevine
+aittir ve yayınevinin yazılı izni olmadan çoğaltılamaz. Uygulamayı yayımlamadan önce bu iznin
+bulunduğundan emin olun.
 
 **Düzeltme ve ekleme:** `assets/lugat.jsonl` dosyasını düzenleyin, sonra
 
@@ -118,13 +121,20 @@ lib/
   src/app_controller.dart          uygulama durumu: lügat, ayarlar, geçmiş, kaydedilenler, odak modu
   src/dictionary/normalize.dart    arama anahtarı (Türkçe küçük harf, şapka/kesme/tire temizliği)
   src/dictionary/lugat.dart        madde modeli, önek dizini, sıralama, kök ve benzer kelime önerisi
+  src/dictionary/meaning.dart      mananın kalın yazılacak ilk cümlesi ("asıl mana")
   src/focus/focus_mode.dart        Android odak modu kanalı
+  src/ui/theme.dart                renkler (logodan) ve yazı tipleri
   src/ui/                          arama, mana, kaydedilenler ve ayarlar ekranları
 android/app/src/main/kotlin/.../
   MainActivity.kt                  odak modunu ekrana gelince açar, ekrandan çıkınca kapatır
   FocusModeController.kt           uygulamaya ait "Rahatsız Etmeyin" kuralı (Android 10+)
 assets/lugat.jsonl                 lügat
+assets/fonts/                      Lora yazı tipi (SIL Open Font License, OFL.txt)
+assets/images/logo_isaret.png      uygulama içi logo işareti
 tool/lugat_kontrol.py              lügat dosyası denetleyicisi
+tool/rnk_disi_kelimeler.txt        RNK lügatında bulunmayan kelimeler
+tool/ikon_uret.py, tool/ikon/      uygulama simgeleri ve açılış görselleri logo.jpg'den üretilir
+                                   (python3 tool/ikon_uret.py; Pillow ve numpy gerekir)
 ```
 
 ### Yayınlamadan önce

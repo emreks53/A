@@ -1,0 +1,936 @@
+# RNK Neşriyat lügatında (rnk.tr) karşılığı bulunamayan kelimeler.
+# Bu kelimelerin uygulamadaki manası, önceden hazırlanmış manaların yalnızca ilk tanım kısmıdır.
+# 933 kelime.
+âbâdân
+abâpûş
+âbdâr
+abede
+abede-i esnam
+Abese
+abesle iştigal
+âbgîne
+âbir
+abkarî
+âbnûs
+âbşâr
+âb ü hevâ
+aceleten
+âcile
+a'dâ-yı dîn
+âdemiyet
+âdemîzâd
+âdiye
+âfâk ve enfüs
+âferîde
+âferîniş
+afife
+âğâz
+ağlât
+ahcâr-ı kerîme
+ahd-i elest
+âhenîn
+âhirîn
+âhirü'l-emr
+âhirü'l-kelâm
+ahlâk-ı zemîme
+Ahmedî
+Ahmediye
+âh u figân
+ahz-ı sâr
+âid
+akd-i nikâh
+akîben
+âlem-i bâlâ
+âlem-i cemadat
+âlem-i ecsam
+âlem-i hayal
+âlem-i lâhut
+âlem-i mülk
+âlem-i nebatat
+âlem-i nur
+âlem-i ruhaniyat
+âlem-i rüya
+âlem-i ukbâ
+aleyhimürrıdvan
+aleyhirrahme
+Allahümme
+âmâl-i ebediye
+a'mâl-i seyyie
+amelen
+ânen
+âniyen
+a'raz
+ârızât
+âsıfe
+atîka
+âyinedarlık
+âzâdâne
+bâ
+bâdi-i nazar
+bâhire
+bâkiye
+bâl
+bâliğa
+Barla
+bâsıra
+bâtıla
+bâtılperest
+bâtına
+bekabillah
+beliğa
+Benî Hâşim
+berzahiye
+beşeriye
+bevâis
+beyne'l-havf ve'r-reca
+bezm-i ezel
+Bezzâr
+bid'at-ı seyyie
+bîderman
+biemrillah
+bihakkı
+bihamdillah
+bîhaya
+bilâhilâf
+bilâmuhakeme
+bilistikra
+bilmünasebe
+bilvekâle
+bimennihî
+birahmetike
+bîsebat
+bismihî sübhanehû
+bîşuur
+bitamamiha
+bittahkik
+bittaklid
+bittamam
+bittebaiye
+câhilî
+câhperest
+Câmiü's-Sağir
+Cebbar-ı Zülcelâl
+cebîn
+cedîde
+celâliye
+celîle
+celiyye
+celle şânühü
+cemâliye
+cem'-i kesret
+cem'-i kıllet
+cereyanat
+cesîme
+Cevâd-ı Kerîm
+cevr ü cefa
+cevvî
+cezâkallahü hayran
+cifrî
+civar-ı rahmet
+cüz'î-i hakikî
+cüz'î-i izafî
+cüz'iye
+çeşme
+çeşm-i ibret
+çeşm-i ser
+çocukane
+dahldar
+dâimen
+dâimiyet
+dâlle
+dânişver
+Dâniyal
+dâr-ı gurur
+dâr-ı hikmet
+dâr-ı mihnet
+dâr-ı ukba
+dârülküfr
+dâvâ-yı rububiyet
+def'-i mazarrat
+dehşetâmiz
+dehşetli
+dehşetnâk
+dehşetzede
+delâlet-i akliye
+delâlet-i lafziye
+delâlet-i mutabakıye
+delâlet-i tabiiye
+delâlet-i tazammuniye
+delâlet-i vaz'iye
+delil-i hudus
+delil-i imkân
+dendan
+dendânşiken
+der
+derağuş
+derdâlûd
+dergâh-ı İlâhî
+dergüzar
+deryadil
+destâviz
+devletlü
+devletmend
+devletpenah
+devrî
+dîbâ
+dilâşüfte
+dilbahte
+dilberane
+dilberî
+dildârî
+dilhaste
+dilpesend
+dilpezir
+dilsuzane
+dilsûzî
+dilzede
+dimağî
+diniye
+diyaneten
+diyanetkâr
+dört hatve
+duhanî
+dü
+dübare
+dünyadîde
+düşmenkâm
+ebcedî
+ebediye
+ebkâ
+ebna-yı âhiret
+ebna-yı dünya
+ebna-yı nev'
+ebna-yı zaman
+Ebu Davud
+Ebu Hanife
+Ebu Nuaym
+ebülbeşer
+ebü'l-enbiya
+ecirnâ mine'n-nâr
+ecram-ı cesîme
+ecza-yı ferdiye
+edall
+ed-dünya mezraatü'l-âhire
+edille-i nakliye
+ed'iye-i nebeviye
+ehl-i bâtıl
+ehl-i Bedir
+ehl-i cennet
+ehl-i cihad
+ehl-i edeb
+ehl-i fıkıh
+ehl-i hayır
+ehl-i hiref
+ehl-i iffet
+ehl-i ihlas
+ehl-i istikamet
+ehl-i işrak
+ehl-i mantık
+ehl-i taklit
+ehl-i tecrübe
+ehl-i tıb
+ehl-i usul
+ehl-i yakîn
+ehl-i zındıka
+ehl-i zühd
+eknaf
+ekser-i evkat
+ekseriyet-i gâlibe
+elhamdülillahi alâ külli hâl
+el-hayru fîmâ ihtârahullah
+el-mer'ü mea men ehabbe
+Emevî
+Emirdağ Lâhikası
+emr-i vücudî
+enbâ
+ene'l-hak
+erbab-ı akıl
+erbab-ı basiret
+erbab-ı dalâlet
+erbab-ı dikkat
+erbab-ı fen
+erbab-ı hakikat
+erbab-ı hamiyet
+erbab-ı hikmet
+erbab-ı hükûmet
+erbab-ı insaf
+erbab-ı kalb
+erbab-ı kemal
+erbab-ı keşif
+erbab-ı siyaset
+erbab-ı tahkik
+erbab-ı ukul
+erbab-ı velâyet
+erbab-ı vicdan
+ervah-ı mücerrede
+eser-i kudret
+Eski Said
+esma-i celâliye
+es-sabru miftâhu'l-ferec
+Eş'ariye
+eşhas-ı maneviye
+eşkâl-i hendesiye
+etraf ve eknaf
+evamir ve nevahî
+evc-i kemal
+evvelîn
+eyyam-ı sitte
+ezvac-ı mutahhara
+fâcirane
+fâika
+Fâil-i Mutlak
+fâka
+fâniye
+faraziyat
+fâsıka
+fâsıkane
+fâsılasız
+fâzıla
+fâzılane
+felsefeperest
+felsefiye
+fenniye
+fersude
+fevatih-i süver
+fevkaniye
+fevkattabia
+fevkattâka
+fevz ü felah
+fıkhen
+fıkhî
+fıkhiye
+fıtriye
+fî hıfzillah
+fiiliye
+fikrî
+fikr-i milliyet
+fikriye
+filhasıl
+Furkan-ı Hakîm
+fürsan
+füssak
+fütursuz
+füzela
+gadd-ı basar
+Gadîr-i Hum
+Gaffariyet
+gâî
+gâlibe
+garaiz
+Gâr-ı Sevr
+garibe
+garîk-ı rahmet
+garîzî
+gaybiye
+gayr-ı iradî
+gayr-ı kâfi
+gayr-ı lâyık
+gayr-ı mahlûk
+gayr-ı mahsus
+gayr-ı muhtar
+gayr-ı mu'tad
+gayr-ı mükellef
+gayr-ı münasib
+gayr-ı mütenasib
+gayr-ı sahih
+gayr-ı tabiî
+gazabî
+Gazve-i Hayber
+Gazve-i Hendek
+Gazve-i Huneyn
+Gazve-i Tebük
+Gazve-i Uhud
+gencine
+habîsâne
+habîse
+hadem
+hadîs-i zayıf
+hâfıd
+hakikat-i Muhammediye
+hakikatnüma
+hakikiye
+Hak Teâlâ
+Hâlık-ı Zülcelal
+halile
+hâlise
+hâmis
+hannâne
+hareket-i yevmiye
+hark-ı âdet
+Haseneyn
+hâşâ sümme hâşâ
+hâşâ ve kellâ
+haşretmek
+hayalhane
+hayaliye
+hayat-ı beşeriye
+hayat-ı maneviye
+hayatiye
+hayırhahâne
+hayranâne
+hayrü'l-kurûn
+hayvaniye
+hazâin-i rahmet
+hazfetmek
+hazine-i rahmet
+hedmetmek
+hemrâh
+hendesiye
+hıfzetmek
+hikemî
+hikemiye
+hikmet-i felsefe
+hikmet-i Rabbaniye
+hilâf-ı mu'tad
+hilkiye
+hissî
+hiss-i müşterek
+hissiye
+hodbinlik
+hubb-u beka
+hududullah
+hudûs-u âlem
+husule gelmek
+hususiye
+hücumat
+ibretengiz
+ibtidaiye
+icab-ı hal
+icab ve kabul
+içtihadiye
+içtimaiye
+iftiharen
+iğvaat
+ihtilafiye
+ihtimalî
+ihtiraat
+ihtiyar-ı ehven-i şerreyn
+ihtiyariye
+ihtiyatiye
+ihya ve imate
+ihya-yı mevta
+ikame-i delil
+ikame-i salât
+iknaî
+iktisabî
+iktisadiye
+ilâhiye
+illetü'l-ilel
+ilmî
+ilm-i fıkıh
+ilm-i hendese
+ilm-i maani
+ilm-i tecvid
+ilm-i tefsir
+i'mal-i fikir
+İmam-ı Buharî
+imaniyat
+imaniye
+imdi
+imkâniye
+infiraden
+infiradiye
+inhirafat
+inhiyar
+inkısamat
+inşaiye
+intikadat
+intikalat
+intikamen
+iradiye
+İrem
+irtika
+îsal-i sevab
+İseviye
+İslâmiye
+ismet-i enbiya
+ismî
+ism-i Bâkî
+ism-i Ehad
+ism-i Kayyum
+ism-i Kerîm
+ism-i Latîf
+ism-i Musavvir
+ism-i Mümît
+ism-i Rezzak
+ism-i Samed
+ism-i Şâfî
+ism-i Vâhid
+ismiye
+isnad-ı mecazî
+istidlalî
+istiklalen
+istikşafat
+istirza
+istisnaen
+işariye
+işkâlat
+iştiraken
+itibariye
+itikadiye
+itiyadat
+itmam-ı hüccet
+ittifakan
+ivazen
+izdihar
+kadhetmek
+kadîme
+kahhariyet
+kâhire
+kâime
+kâinen mâ kân
+kalb-i mahiyet
+kalbiye
+kalîle
+kâmile
+karibü'l-fehm
+kâsıra
+kasîre
+kasretmek
+kat'iye
+kaviye
+kelâmiye
+Kelâmü'l-mülûk mülûkü'l-kelâm
+kelime-i küfür
+kemahakkahu
+kemal-i acz
+kemal-i itminan
+kemal-i ubudiyet
+kesbetmek
+kesîfe
+kesîr
+kesîre
+kesr
+keşfî
+kevniye
+kıyamet-i suğra
+Kitab-ı Kerîm
+kuddusiyet
+Kuddûs-u Zülcelâl
+Kur'âniye
+kuvveden fiile çıkmak
+küdurat
+külfetsiz
+külliyetli
+küllü bid'atin dalâletün
+kün feyekûn
+küntü kenzen mahfiyyen
+lâmahdud
+lâmekân
+lâ müessire fi'l-kevni illallah
+lâşerike leh
+lâyenam
+lâ yüs'elü amma yef'al
+lâzım gelmek
+lebib
+ledelicab
+ledünniye
+lehib
+lehülmülk
+Leyle-i Mevlid
+lillâhi'l-meselü'l-a'lâ
+lücce
+lügaten
+mâbihi'l-iştirak
+mağribeyn
+mahdude
+mahfiye
+mâhi
+mahmude
+mahruse
+makbere
+maksude
+maşrıkeyn
+maşukane
+matlube
+maziye
+mecaziye
+medârik
+medide
+medyuniyet
+mehâbit
+mehakim
+mehâtır
+mekkârane
+melekûtiye
+mel'une
+menfiye
+Mescid-i Nebevî
+mesnune
+mesturat
+meşmumat
+mezmume
+mezukat
+mihen
+mihr
+milliyet-i İslâmiye
+minallah
+mine'l-ezel ile'l-ebed
+min haysü'l-mecmu
+mir'atiyet
+miskî
+muannidîn
+mugalit
+muğterr
+muhalata
+muhalifîn
+Muhammediye
+muhassene
+muhcil
+muhdesat
+muhita
+muhlisîn
+mukaddese
+Mukallibü'l-kulûb
+mukavvimat
+musırran
+mutabıkan
+mu'tebir
+mu'tekad
+mutkan
+muzırrat
+mübareke
+mübariz
+mübtekir
+mücalese
+mücamele
+mücbire
+mücerrede
+mücessim
+Mücessime
+mücmelat
+müemmen
+müeyyidat
+müfsidat
+mükâşefat
+mükerreme
+mükeyyef
+mükezzibîn
+mülhidîn
+mümani
+mümteniü'l-vücud
+münafir
+münakkiş
+münciyat
+münevvere
+münezzel
+müreffehiyet
+müstağfirîn
+müstahfi
+müstahsenat
+müstenbit
+müşarünileyha
+müşarünileyhim
+mütefelsifîn
+müteferrikat
+mütegallibe
+mütelâşi
+mütelâzım
+mütemmimat
+mütenevvia
+mütun
+nâfize
+nâgehanî
+nâgüzir
+nâhalef
+nâmevcud
+nâmuntazam
+nâmutad
+nâmüstakim
+nâmütenasib
+nâpedid
+nârî
+nazarat
+nâzırîn
+nazîrsiz
+nebatiye
+nebeviye
+nebiyyin
+nefsaniye
+nefsülemrî
+nefy ü isbat
+nekhet
+nerdüban
+nesîme
+neticeten
+nısf-ı küre
+nisbiye
+niyabeten
+niyazmendane
+nukabâ
+nuraniye
+Nurcu
+Nursî
+Nur-u Ezelî
+ol
+ömr-ü fânî
+örfiye
+padişahane
+Padişah-ı Ezel ve Ebed
+Perverdigâr
+pinhânî
+pîrâye
+pişkadem
+pürnur
+râbıt
+rahatperest
+rahîmî
+rahîmiye
+rahmaniye
+Ramazan-ı Şerif
+râst
+râziye
+refahiyet
+remziye
+revâfız
+reyâhin
+rezîn
+rızk-ı hakikî
+rûberû
+rûgerdan
+ruhaniye
+ruhiye
+Ruhu'l-Kudüs
+rûsiyahî
+sâcidîn
+Sadakallahü'l-azîm
+sadamat
+sâdelevh
+sadık-ı masduk
+sahiha
+sâilîn
+sa'îr
+sakalet
+sâlhurde
+sâlikîn
+samedaniye
+sânih
+sarîha
+sâriye
+sath-ı mâil
+sâtıa
+sefilane
+sehare
+selbiye
+sem'an ve tâaten
+sem'î
+sem'iyyat
+senî
+serâyâ
+sermediye
+seryan
+settariyet
+seyyaliyet
+sıfat-ı celaliye
+Sıhah-ı Sitte
+sıkl
+sinn-i rüşd
+sinn-i şeyhuhet
+sipasgüzar
+sirac-ı münir
+sofestaiyun
+sofiyane
+subh-u kâzib
+subh-u sadık
+sû-i hâtime
+sukut-u hayal
+sultanane
+suret-i hak
+sutuh
+Sübhanehu ve Teâlâ
+sübhaneke
+sübhaniyet
+sübutiye
+sünbül
+şahsiye
+şakk-ı sadr
+Şâri'-i Hakîm
+şarkan
+şarkiye
+şa'şaalı
+şathiyat
+şâyan-ı ibret
+şâyan-ı tahsin
+şâyiat
+şaz ve nadir
+şeairullah
+şebçerağ
+şecere-i tayyibe
+şedidü'l-kuva
+şefkat tokadı
+şehadeteyn
+şehadet parmağı
+şehvaniye
+şehvaniyet
+şemmetmek
+şemsiye
+şenia
+şerarefeşan
+şeriat-ı mutahhara
+şer'-i şerif
+şeyatin-i cin ve ins
+Şeyh-i Ekber
+şeytanetkâr
+şeytanetkârane
+şeytaniye
+Şifa-i Şerif
+şikârgâh
+şikâyetname
+şikestehal
+Şîr-i Hudâ
+şirk-i celî
+şitaban
+şûridehal
+şuurlu
+şuursuz
+şükrane
+şümullü
+taaddiyat
+taaddüd-ü âlihe
+taarruzat
+taazzuv
+Taberânî
+tab'-ı selim
+tabiaten
+tabiiyat
+tabiiye
+tabiye
+tafrafuruş
+tagaffül
+tahammülfersa
+tâhirîn
+tahsil-i hâsıl
+tâibîn
+takallübat
+takariz
+takatsûz
+takdirâmiz
+tâk-ı Kisrâ
+taklid-i a'mâ
+takriben ilel-fehm
+takrizat
+takvadar
+tâlibîn
+talil
+tâmi'
+tarabengiz
+tarifat
+tarizkâr
+tasdikî
+tasdik-i kalbî
+tavzihat
+tayyibe
+teâlim
+Tebbet
+tecavüzkârane
+tecelli-i ef'al
+tecellizar
+tecrübedide
+tedânî
+tedbirat
+tedbirkâr
+tedevvür
+teemmülat
+teferrücgâh
+tefevvühat
+Teftazanî
+tehlilat
+tekevvünat
+teklifî
+tekmilen
+telâfi-i mâfat
+temhidat
+te'mil
+temrinat
+temsilen
+tenzihat
+terâhum
+teressüh
+tesvilât
+teşehhür
+teşrik-i a'mal
+teşvişat
+tevazuan
+tevehhümat
+tevkiat
+tevkifî
+te'yidat
+tılsımat
+Tillo
+Timurlenk
+Tirmizî
+tûlânî
+ubbad
+ufk-u a'lâ
+Uhud
+ulûm-u hadîse
+ulûm-u şer'iye
+umur-u nisbiye
+usul-ü hadis
+usul-ü tefsir
+ülü'l-ilm
+vâfire
+vâhide
+vahyî
+vallahu a'lem bi's-savab
+vâzıha
+vaz'-ı ilahî
+vaz'î
+vechile
+vech-i münasebet
+vech-i tesmiye
+vedâyi'
+ve fî külli şey'in lehû âyetün tedüllü alâ ennehû vâhid
+vehbiye
+vehmiye
+ve hüve alâ külli şey'in kadîr
+ve hüve hayyün lâ yemût
+ve ileyhi'l-masîr
+ve in min şey'in illâ yüsebbihu bihamdih
+ve kıs alâ hâzâ
+ve lillâhi'l-meselü'l-a'lâ
+ve's-selâmü alâ meni'ttebaa'l-hüdâ
+vicdaniye
+vücuben
+yâ Bâkî ente'l-Bâkî
+yâkutî
+yed-i gaybî
+yef'alullahu mâ yeşâ
+yekâhenk
+yekcihet
+yekreng
+yevm-i âhir
+yevm-i ceza
+yuhyî ve yümît
+zabtetmek
+zabt-ı nefs
+zâhirbîn
+zâhir-i hal
+zâhiriye
+zâirîn
+zâkirîn
+zammetmek
+zanniyât
+zanniye
+zât-ı ilahiye
+zebân-ı hal
+zebhetmek
+Zebîhullah
+zebuniyet
+zecretmek
+zekiyâne
+zemmetmek
+zerrebîn
+zevalsiz
+zevi'ş-şuur
+zımnında
+zımniye
+zîhis
+zikr-i daim
+zulmâniye
+zûr
+zûvücuh
+zühhâd
+zühulen
+zülcelali ve'l-ikram
+zülvecheyn
