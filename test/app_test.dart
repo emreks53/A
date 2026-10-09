@@ -95,7 +95,8 @@ void main() {
 
     expect(find.byType(EntryPage), findsOneWidget);
     expect(find.text('Bir şeye has olma, tekel.'), findsOneWidget);
-    expect(find.text('Arapça'), findsOneWidget);
+    // Ekranda yalnız kelime ve lügattaki manası var; köken gösterilmez.
+    expect(find.text('Arapça'), findsNothing);
     expect(controller.history, ['inhisar']);
 
     await tester.tap(find.byKey(const Key('yeni-kelime')));
