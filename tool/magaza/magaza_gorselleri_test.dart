@@ -6,10 +6,12 @@
 //
 // Roboto ve Material simge yazı tipleri Flutter SDK'sından okunur (FLUTTER_ROOT ya da
 // /opt/sdk/flutter); çıktılar tool/magaza/shots/ altına yazılır (git'e girmez).
+
+// Bir test olduğu hâlde test/ dışında durduğu için analizör test yardımcılarını uyarır.
+// ignore_for_file: invalid_use_of_visible_for_testing_member
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lugat_risale/src/app_controller.dart';
