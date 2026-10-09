@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Logodaki lacivert (zeminin kenar rengi). -->
-    <color name="launch_background">#00356B</color>
+    <color name="launch_background">#00376B</color>
 </resources>

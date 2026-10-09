@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 /// kullanılan mat bir altın.
 abstract final class Palette {
   /// Logonun zemini: merkez (açık) ve kenar (koyu) renkleri.
-  static const logoCenter = Color(0xFF004D90);
-  static const logoEdge = Color(0xFF00356B);
+  static const logoCenter = Color(0xFF013C77);
+  static const logoEdge = Color(0xFF003365);
 
   static const navy = Color(0xFF0B3D78);
   static const navyDeep = Color(0xFF062A55);
