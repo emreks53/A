@@ -69,13 +69,13 @@ kalın yazar; baştaki "(Çoğulu: …)", "(Bak: …)", "Tıb:", "1." gibi kıs�
 (`lib/src/dictionary/meaning.dart`).
 
 **Manaların kaynağı:**
-- **9.571 kelimenin** manası RNK Neşriyat'ın Risale-i Nur lügatındaki (rnk.tr) metnin
+- **9.562 kelimenin** manası RNK Neşriyat'ın Risale-i Nur lügatındaki (rnk.tr) metnin
   aynısıdır; hiçbir yorum ya da ek ifade katılmamıştır. Kelimeler o lügattaki satırlarla
   eşleştirilirken aynı yazılıp farklı olan kelimeler (hâkim / hakîm, âlem / alem, nefs
   "can" / nefs "üfürmek") ayırt edildi; eşleşmeler ikinci bir denetimden geçirildi. Bir
   satır başka bir satırın içinde aynen geçiyorsa tekrar etmesin diye alınmadı; yalnızca
   "(Bak: …)" diyen ya da boş satırlar da alınmadı.
-- O lügatta bulunmayan **933 kelimenin** (ör. "Barla", bazı terkipler) manası daha önce
+- O lügatta bulunmayan **942 kelimenin** (ör. "Barla", bazı terkipler) manası daha önce
   hazırlanan manaların yalnızca ilk tanım kısmıdır; yorum ve açıklama cümleleri
   çıkarılmıştır. Bu kelimelerin listesi `tool/rnk_disi_kelimeler.txt` dosyasındadır.
 

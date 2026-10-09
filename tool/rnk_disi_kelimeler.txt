@@ -1,6 +1,6 @@
 # RNK Neşriyat lügatında (rnk.tr) karşılığı bulunamayan kelimeler.
 # Bu kelimelerin uygulamadaki manası, önceden hazırlanmış manaların yalnızca ilk tanım kısmıdır.
-# 933 kelime.
+# 942 kelime.
 âbâdân
 abâpûş
 âbdâr
@@ -196,6 +196,7 @@ dünyadîde
 düşmenkâm
 ebcedî
 ebediye
+ebhas
 ebkâ
 ebna-yı âhiret
 ebna-yı dünya
@@ -412,6 +413,7 @@ ihya-yı mevta
 ikame-i delil
 ikame-i salât
 iknaî
+iktirah
 iktisabî
 iktisadiye
 ilâhiye
@@ -431,6 +433,7 @@ imkâniye
 infiraden
 infiradiye
 inhirafat
+inhitam
 inhiyar
 inkısamat
 inşaiye
@@ -523,6 +526,7 @@ lâyenam
 lâ yüs'elü amma yef'al
 lâzım gelmek
 lebib
+Lebid
 ledelicab
 ledünniye
 lehib
@@ -546,6 +550,7 @@ matlube
 maziye
 mecaziye
 medârik
+medeniye
 medide
 medyuniyet
 mehâbit
@@ -599,6 +604,7 @@ mücerrede
 mücessim
 Mücessime
 mücmelat
+müemmel
 müemmen
 müeyyidat
 müfsidat
@@ -633,6 +639,7 @@ nâfize
 nâgehanî
 nâgüzir
 nâhalef
+nakliye
 nâmevcud
 nâmuntazam
 nâmutad
@@ -697,6 +704,7 @@ Sadakallahü'l-azîm
 sadamat
 sâdelevh
 sadık-ı masduk
+sadr-ı İslâm
 sahiha
 sâilîn
 sa'îr
@@ -896,6 +904,7 @@ yâ Bâkî ente'l-Bâkî
 yâkutî
 yed-i gaybî
 yef'alullahu mâ yeşâ
+Yehud
 yekâhenk
 yekcihet
 yekreng

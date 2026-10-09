@@ -1612,7 +1612,7 @@
 {"w":"ebedperest","o":"Ar.-Fa.","f":1,"m":"Sonsuzluğu kuvvetli sevip isteyen, sonsuzluk tutkunu ve düşkünü."}
 {"w":"ebedü'l-âbâd","o":"Ar.","f":2,"m":"Sonsuzlar sonsuzu, tükenmez sonsuzluk.\nTükenmez, ebedî hayat. Sonsuzluk. Cennet."}
 {"w":"ebeveyn","o":"Ar.","f":2,"m":"Ana ile baba. (Eb ile ümm.)"}
-{"w":"ebhas","o":"Ar.","f":1,"m":"Gözlerinin üstünde veya altında bir miktar yumruca et parçası olan kişi."}
+{"w":"ebhas","o":"Ar.","f":1,"m":"Bahisler, konular. Araştırmalar, tartışmalar (tekili: bahs)."}
 {"w":"ebkâ","o":"Ar.","f":1,"m":"Daha bâki, daha kalıcı, en devamlı."}
 {"w":"ebkâr","o":"Ar.","f":1,"m":"(Tekili: Bikr) Bekârlar. Mc: Evvelce kimsenin söylemediği sözler."}
 {"w":"ebkem","o":"Ar.","f":1,"m":"(Bükm. den) Dilsiz. Konuşamıyan."}
@@ -3633,7 +3633,7 @@
 {"w":"iktidar","o":"Ar.","f":2,"m":"Güç, takat. Kudret. Güç yetmek. Yapabilmek."}
 {"w":"iktifa","o":"Ar.","f":2,"m":"Fazla istemeyiş. Yeter bulmak. Kâfi görmek. Var olanı yeter saymak."}
 {"w":"iktiham","o":"Ar.","f":1,"m":"Hücum ve istilâ eylemek. Dayanmak. Tahammül etmek. Katlanmak. Güçlükleri yenmek. Mülâhazasız bir işe başlamak. Bir şeyi hakir addetmek."}
-{"w":"iktirah","o":"Ar.","f":1,"m":"(Çoğulu: İktirahat) (Karh. dan) Evvelden hazırlamadan düzgün bir şekilde ve içe doğduğu gibi (şiir veya nutuk) söyleme."}
+{"w":"iktirah","o":"Ar.","f":1,"m":"Keyfine göre bir şey isteme, talep ve teklif etme."}
 {"w":"iktiran","o":"Ar.","f":2,"m":"Ulaşmak. Mukarin olmak. Yaklaşmak. Yetişmek. İki şeyin bir arada gelmesi. İki nimetin aynı anda bulunması gibi.."}
 {"w":"iktisab","o":"Ar.","f":1,"m":"Kazanmak. Tahsil etmek. Elde etmek.","v":["iktisap"]}
 {"w":"iktisabat","o":"Ar.","f":1,"m":"(Tekili: İktisab): İktisablar, kazanmalar, elde etmeler ve edinmeler."}
@@ -3836,7 +3836,7 @@
 {"w":"inhiraf","o":"Ar.","f":2,"m":"Doğru yoldan sapma. Dönme. Bozulma. Değişme. Kırıklık. Tecvidde: Harf okunduğu zaman o harfde, dil ucuna veya dil arkasına doğru bir meyli bulunmasına denir. İnhirâf sıfatının harfleri Lâm ve Ra harfleridir. Bunlara Münharif denir."}
 {"w":"inhirafat","o":"Ar.","f":1,"m":"Sapmalar, doğru yoldan ayrılmalar (tekili: inhiraf)."}
 {"w":"inhisar","o":"Ar.","f":2,"m":"Hasr olunma. Tecavüz etmeme. Bir iş veya malın idâresinin bir kişiye, bir ele bırakılması. Bir elden idâre. Bir şeye mahsus olup, başka şeye şümulü olmama. Yalnız bir şeye veya bir şahsa hasrolunma."}
-{"w":"inhitam","o":"Ar.","f":1,"m":"Kırılma, ezilme, ufalanma."}
+{"w":"inhitam","o":"Ar.","f":1,"m":"Sona erme, bitme, tamamlanma."}
 {"w":"inhitat","o":"Ar.","f":1,"m":"Aşağılanma, aşağı inme. İhtiyarlama, yaşlıyığa yüz tutma. Kuvvetten düşme. Bir şişin inmesi. Düşme, inme."}
 {"w":"inhiyar","o":"Ar.","f":1,"m":"Yıkılma, çökme, göçme."}
 {"w":"inhizam","o":"Ar.","f":1,"m":"Basılıp ezilme. Bozulma. Askerin bozulup dağılması."}
@@ -4844,7 +4844,7 @@
 {"w":"lebbeyk","o":"Ar.","f":1,"m":"Buyurunuz. Emredersiniz. Benim muhabbet ve incizâbım dâim sanadır, başkasına değildir, sıdk ve ubudiyyetim dâim sanadır (gibi mânâlar ifâde eder)."}
 {"w":"leben","o":"Ar.","f":1,"m":"Süt. Boyun ağrısı."}
 {"w":"lebib","o":"Ar.","f":1,"m":"Akıllı, anlayışlı, zeki."}
-{"w":"Lebid","o":"Ar.","f":1,"m":"Küçük çuval."}
+{"w":"Lebid","o":"Ar.","f":1,"m":"Cahiliye devrinin meşhur şairi."}
 {"w":"lebriz","o":"Fa.","f":1,"m":"Taşacak kadar. Ağıza kadar. Taşkın."}
 {"w":"lecac","o":"Ar.","f":1,"m":"(Lecâcet) Çekişme, inad etme, ayak direme (düşmanlıkta). Taannüd."}
 {"w":"ledelhace","o":"Ar.","f":1,"m":"İhtiyaç görüldüğü zaman. Hacet ânında."}
@@ -5281,7 +5281,7 @@
 {"w":"meded","o":"Ar.","f":1,"m":"İnayet, yardım, imdad, eman. Eyvah."}
 {"w":"medenî","o":"Ar.","f":1,"m":"Faziletli, terbiyeli, kibâr. Medineli. Şehirli. Kur'an-ı Kerimin Medine şehrinde nâzil olan âyet ve sureleri.\nUygar, insanlığa yakışır toplum hayatı durumunda olan."}
 {"w":"medenî-bittab","o":"Ar.","f":1,"m":"Tabiatıyla medenî, yaratılışıyla medenî (uygar).\nDoğuştan, yaradılıştan huyları ile medeni oluş. Cenab-ı Hakkın yaratması ile tab'an iyi huylu, kibar, faziletli kimse."}
-{"w":"medeniye","o":"Ar.","f":1,"m":"Medine'ye ait, Medine'deki."}
+{"w":"medeniye","o":"Ar.","f":1,"m":"Medenî, medeniyete ve toplum hayatına ait (sıfatın müennes şekli; hayat-ı medeniye: içtimaî hayat)."}
 {"w":"medeniyet","o":"Ar.","f":3,"m":"Adaletseverlik, insanca iyi ve ferah yaşayış. Şehirlilik. Yaşayışta, içtimaî münâsebetlerde, ilim, fenn ve san'atta tekâmül etmiş cemiyetlerin hâli. İslâmiyetin emirlerine göre, usulü dâiresinde yaşayış."}
 {"w":"medeniyet-i hazıra","o":"Ar.","f":2,"m":"Şimdiki medeniyet."}
 {"w":"medeniyet-i sefihe","o":"Ar.","f":1,"m":"Sefih medeniyet, zevk ve eğlence düşkünü medeniyet."}
@@ -6291,7 +6291,7 @@
 {"w":"müellefat","o":"Ar.","f":1,"m":"Te'lif olunmuş olanlar. Yazılmış eserler."}
 {"w":"müellem","o":"Ar.","f":1,"m":"Elemli, kederli."}
 {"w":"müellif","o":"Ar.","f":2,"m":"(Ülfet. den) Te'lif eden. Kitab tertib eden, kitab yazan. Kitab meydana getiren. İmtizac ettiren."}
-{"w":"müemmel","o":"Ar.","f":1,"m":"Yarış atlarının sekizincisi veya yedincisi."}
+{"w":"müemmel","o":"Ar.","f":1,"m":"Umulan, ümit edilen, arzu edilen."}
 {"w":"müemmen","o":"Ar.","f":1,"m":"Emniyet altına alınmış, güvenceye kavuşmuş."}
 {"w":"müennes","o":"Ar.","f":1,"m":"Dişi. Müzekkerin mukabili. Gr: Hakiki, itibarî veya söylenişi cihetiyle \"dişi\" olan kelime.Müennes-i hakikî : Müzekker kelimenin sonuna bir \"e-a\" ilâve ederek yapılan kelime. Meselâ: (Kâtib: ): Erkek yazıcı. (Kâtibe: ): Kadın yazıcı.Sonu \"e\" ile biten kelimeler ekseriyetle müennestir. Muallime, Müdire, Sıddıka, Şahide gibi."}
 {"w":"müesses","o":"Ar.","f":1,"m":"Tesis olunmuş, temeli atılmış, bina edilmiş."}
@@ -6535,7 +6535,7 @@
 {"w":"müntefî","o":"Ar.","f":1,"m":"Sönen, ortadan yok olan, intifa eden."}
 {"w":"müntehâ","o":"Ar.","f":2,"m":"Son, en son derece, en son yer, nihayet. Son uç."}
 {"w":"müntehi","o":"Ar.","f":1,"m":"Sona eren. Son. Bir şeyi tamamlayan. Biten.\nSona eren, son bulan, biten."}
-{"w":"müntehib","o":"Ar.","f":1,"m":"(Nehib. den) Yağma eden, talan eden, yağmacı."}
+{"w":"müntehib","o":"Ar.","f":1,"m":"(Nahb. dan) Seçen, intihâb eden. Seçmen."}
 {"w":"müntesib","o":"Ar.","f":2,"m":"İntisab etmiş, intisab eden, giren, alâkası olan.","v":["müntesip"]}
 {"w":"müntesibîn","o":"Ar.","f":1,"m":"İntisab edenler, alâkası olanlar, girenler,"}
 {"w":"münteşir","o":"Ar.","f":1,"m":"Açılmış, yayılmış, dağılmış, neşredilmiş, basılmış. Duyulmuş, etrafa yayılmış."}
@@ -7041,7 +7041,7 @@
 {"w":"nakl","o":"Ar.","f":1,"m":"Bir şeyi başka bir yere götürmek, taşımak, yer değiştirmek. Anlatmak, duyduğu bir şeyi başkasına hikâye etmek, rivâyet etmek. Bir dilden başka dile çevirmek, terceme etmek. Eski mest ve çizme. Yırtık elbiseyi yamamak.","v":["nakil"]}
 {"w":"naklen","o":"Ar.","f":1,"m":"Nakil yoluyla. Anlatmak veya hikâye etmek suretiyle."}
 {"w":"naklî","o":"Ar.","f":1,"m":"Nakliye ile, taşıma ile ilgili. Akla değil de nakle dayanan, yani söylenen hakikat."}
-{"w":"nakliye","o":"Ar.","f":1,"m":"(Çoğulu: Nakliyat) Eşya taşıma işi. Taşıma parası."}
+{"w":"nakliye","o":"Ar.","f":1,"m":"Nakle, rivayete dayanan (naklî kelimesinin dişil şekli)."}
 {"w":"nakş","o":"Ar.","f":3,"m":"İşleme, san'atlı süsleme, güzel şekillerle süsleme, motif.\nBir şeyi çeşitli renklerle boyamak. Resim. Tezyin etmek. Bedene batmış dikeni çıkarmak. Bir şeyin esasını araştırmak. Yaymak. Suda ıslanmış hurma. İpekle, sırma ile işleme. Mc: Hile.","v":["nakış"]}
 {"w":"Nakşibendî","o":"Fa.","f":1,"m":"Şeyh Bahâüddin Nakş-bendî adındaki büyük bir velinin kurduğu tarikat."}
 {"w":"nâkus","o":"Ar.","f":1,"m":"Kiliselerde asılı bir vaziyette durup belirli vakitlerde çalınan çan. Kilisenin büyük çanı."}
@@ -7558,7 +7558,7 @@
 {"w":"râşid","o":"Ar.","f":1,"m":"(Rüşd. den) Hak dinini kabul eden, doğruya giden, rüşde erişmiş olan. Akıllı."}
 {"w":"râşidîn","o":"Ar.","f":1,"m":"Hakka erişmiş olanlar. Kâmil ve çok ileri olgun kimseler. Akıllılar."}
 {"w":"ratb","o":"Ar.","f":1,"m":"Rutubet, nemlilik yaşlık. Rutubetli, yaş. Yaş hurma. Mülâyim, yumuşak."}
-{"w":"ratk","o":"Ar.","f":1,"m":"Ulaşmak, yetişmek."}
+{"w":"ratk","o":"Ar.","f":1,"m":"Yırtığı onarmak, yarığı düzeltmek, bitiştirmek."}
 {"w":"raûf","o":"Ar.","f":1,"m":"Çok acıyan, esirgeyen, merhamet sâhibi. Esmâ-i İlâhiyedendir."}
 {"w":"râvi","o":"Ar.","f":2,"m":"Rivayet eden. İnsanlara haberleri nakleden. Hadis nakleden. Söyleyen, anlatan.\nRivayet eden, nakleden, aktaran, bildiren."}
 {"w":"ravza","o":"Ar.","f":1,"m":"Sulu yer, bahçe, bostan, çimenlik yer."}
@@ -7794,7 +7794,7 @@
 {"w":"sadme","o":"Ar.","f":2,"m":"Bir vuruş, çarpma, vurma, çatma. Birden bire patlama. Ansızın başa gelen musibet."}
 {"w":"sadr","o":"Ar.","f":1,"m":"Her şeyin evveli ve başlangıcının en iyisi. Kalb, göğüs, ön. Meclisin önü ve en muteber yeri. Reisin oturduğu yer. Rücu. Bir aruz kalıbı. Baş, reis, başkan. Oturulacak yerlerin en iyisi."}
 {"w":"sadr-ı evvel","o":"Ar.","f":1,"m":"İlk öndekiler, islâm dininin başlangıcında olanlar."}
-{"w":"sadr-ı İslâm","o":"Ar.","f":1,"m":"Baş vezir, padişahın vekili, başvekil."}
+{"w":"sadr-ı İslâm","o":"Ar.","f":1,"m":"İslâm'ın ilk dönemi."}
 {"w":"safa","o":"Ar.","f":1,"m":"Gönül rahatlığı, iç huzuru, gönül şenliği, ferahlık, eğlence.\nGönül şenliği, eğlence. Duru olmak, itmi'nan ve meserret üzere olmak. Temiz, sâfi olmak. Hava açık ve ayaz olmak. Mekke-i Mükerreme'de bir yerin ismi.","v":["sefa"]}
 {"w":"safahat","o":"Ar.","f":2,"m":"(Tekili: Safha) Safhalar. İstiklâl Marşı şâiri Merhum Mehmed Akif'in manzum eserinin adı."}
 {"w":"safderun","o":"Ar.-Fa.","f":1,"m":"Safi, içi temiz, kolay aldanabilen."}
@@ -7812,7 +7812,7 @@
 {"w":"sahabet","o":"Ar.","f":1,"m":"Sâhib olma, sâhib çıkma. Sohbetinde bulunmuş olma. Yardım etme, koruma, arka olma."}
 {"w":"sahabî","o":"Ar.","f":2,"m":"(Çoğulu sahabe) Hz.Muhammed'i (asm) sağlığında görüp iman ederek izinden yürümüş müslüman."}
 {"w":"sahaif","o":"Ar.","f":1,"m":"(Tekili: Sahife) Sahifeler."}
-{"w":"sahat","o":"Ar.","f":1,"m":"(Tekili: Sâha) Sâhalar, meydanlar, açık yerler, alanlar."}
+{"w":"sahat","o":"Ar.","f":1,"m":"Hışım, hiddet, kızgınlık, gadap.\nKızgınlık, gadab. (Rızânın zıddı)"}
 {"w":"sahî","o":"Ar.","f":1,"m":"Cömert, eli açık, herkese iyilik etmek isteyen."}
 {"w":"sahib-i şeriat","o":"Ar.","f":1,"m":"Şeriatın sahibi, islâm dininin sahibi (Hz.Muhammed (asm))."}
 {"w":"sahife","o":"Ar.","f":3,"m":"Sayfa, kitap sayfası. Mc: Bir mâna ifade eden her hangi bir şeyin hâli."}
@@ -8468,7 +8468,7 @@
 {"w":"şekva","o":"Ar.","f":2,"m":"Şikâyet, âciz kaldığını ve zayıflığını haber vermek. Su kabının ağzını açmak."}
 {"w":"şem'","o":"Ar.","f":1,"m":"Mum, ışık."}
 {"w":"şemail","o":"Ar.","f":2,"m":"(Tekili: Şimal) Huylar, ahlâklar, tabiatlar."}
-{"w":"şematet","o":"Ar.","f":1,"m":"Kuru gürültü. şamata."}
+{"w":"şematet","o":"Ar.","f":1,"m":"Destenik çiçeği. Düşmana belâ, gam ve tasa geldiğinde şâd olup sevinmek."}
 {"w":"şemm","o":"Ar.","f":1,"m":"Koku hissetmek, koklamak."}
 {"w":"şemme","o":"Ar.","f":1,"m":"Bir defa koklamak. En küçük mikdar."}
 {"w":"şemmetmek","o":"Ar.-Tr.","f":1,"m":"Koklamak, kokusunu almak (bk. şâmme)."}
@@ -10207,7 +10207,7 @@
 {"w":"yed-i tûlâ","o":"Ar.","f":1,"m":"En uzun el. Geniş nüfuz. Tam, çok geniş ilim ve ihtisas. Büyük kudret.\nUzun el (uzun ve geniş ilgi alanı)."}
 {"w":"yef'alullahu mâ yeşâ","o":"Ar.","f":1,"m":"Allah dilediğini yapar."}
 {"w":"yegâne","o":"Fa.","f":2,"m":"Tek, bir."}
-{"w":"Yehud","o":"Ar.","f":1,"m":"Yakub (as) ın büyük oğlunun adıdır."}
+{"w":"Yehud","o":"Ar.","f":1,"m":"Yahudiler, Yahudi kavmi."}
 {"w":"yek","o":"Fa.","f":1,"m":"Bir, münferid. Bir oluş, birlik."}
 {"w":"yekâhenk","o":"Fa.","f":1,"m":"Aynı ahenk içinde olan, birbiriyle uyumlu. Hep aynı tarzda süren, tekdüze."}
 {"w":"yekcihet","o":"Fa.-Ar.","f":1,"m":"Aynı yöne yönelmiş, bir maksatta birleşmiş. Söz ve iş birliği etmiş."}
