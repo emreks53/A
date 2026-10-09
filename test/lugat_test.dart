@@ -115,6 +115,19 @@ void main() {
     expect(lugat.sameSpelling(lugat.byWord('ilm')!), isEmpty);
   });
 
+  test('"(Bak: …)" göndermeleri maddelere bağlanır', () {
+    final l = Lugat.parseJsonl('''
+{"w":"idlal","f":0,"m":"(İdlâl) Saptırmak."}
+{"w":"ıdlal","f":0,"m":"(Bak: Idlal)"}
+{"w":"zan","f":2,"m":"Sanma. (Bak: Zann) (Bak: yok, idlal)"}
+{"w":"zann","f":0,"m":"Sanmak."}
+''');
+    List<String> refs(String w) => [for (final e in l.crossReferences(l.byWord(w)!)) e.word];
+    expect(refs('ıdlal'), ['idlal']);
+    expect(refs('zan'), ['zann', 'idlal']);
+    expect(refs('idlal'), isEmpty);
+  });
+
   test('Entry köken etiketini açar', () {
     expect(lugat.byWord('inkişaf')!.originLabel, 'Arapça');
   });

@@ -49,6 +49,7 @@ class _EntryPageState extends State<EntryPage> {
     final entry = _entry;
     final favorite = controller.isFavorite(entry);
     final similar = controller.lugat?.sameSpelling(entry) ?? const <Entry>[];
+    final references = controller.lugat?.crossReferences(entry) ?? const <Entry>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -97,6 +98,11 @@ class _EntryPageState extends State<EntryPage> {
               ],
             ),
           ),
+          if (references.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const SectionHeader('Bakınız'),
+            for (final other in references) EntryTile(entry: other, onTap: () => _show(other)),
+          ],
           if (similar.isNotEmpty) ...[
             const SizedBox(height: 16),
             const SectionHeader('Benzer yazılan kelimeler'),

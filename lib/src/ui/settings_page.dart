@@ -74,7 +74,9 @@ class SettingsPage extends StatelessWidget {
               'Osmanlıca kelime ve ifadelerin manasını hızlıca öğrenmek için hazırlandı.'
               '${controller.lugat == null ? '' : '\n\nLügatte ${formatCount(controller.lugat!.entries.length)} kelime ve ifade var.'}'
               '\n\nManalar RNK Neşriyat’ın Risale-i Nur lügatından (rnk.tr) alınmıştır. '
-              'O lügatta bulunmayan az sayıdaki kelimenin manası ayrıca hazırlanmıştır.',
+              'O lügatta bulunmayan az sayıdaki kelimenin manası ayrıca hazırlanmıştır.'
+              '\n\nUygulama internet kullanmaz ve hiçbir kişisel veri toplamaz; son bakılanlar ve '
+              'kaydedilenler yalnızca bu telefonda durur.',
               style: theme.textTheme.bodyMedium,
             ),
           ),

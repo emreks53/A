@@ -233,6 +233,36 @@ class Lugat {
     return result;
   }
 
+  /// Mananın gösterdiği maddeler: "(Bak: Idlal)" → "idlal". Bulunamayan
+  /// göndermeler atlanır; madde kendini göstermez.
+  List<Entry> crossReferences(Entry entry) {
+    final self = _byWord[entry.word];
+    final result = <Entry>[];
+    for (final m in _crossReference.allMatches(entry.meaning)) {
+      for (final target in m.group(1)!.split(RegExp('[,;]'))) {
+        final exact = searchKey(target);
+        final folded = foldKey(exact);
+        if (folded.length < 2) continue;
+        // Aynı harflerle yazılanlardan önce birebir tutan, sonra sık geçen.
+        int? best;
+        var bestScore = -1;
+        for (var i = _lowerBound(_keys, folded); i < _keys.length && _keys[i].folded == folded; i++) {
+          final id = _keys[i].entry;
+          if (id == self) continue;
+          final score = (_keys[i].exact == exact ? 10 : 0) + entries[id].frequency;
+          if (score > bestScore) {
+            best = id;
+            bestScore = score;
+          }
+        }
+        if (best != null && !result.contains(entries[best])) result.add(entries[best]);
+      }
+    }
+    return result;
+  }
+
+  static final RegExp _crossReference = RegExp(r'\(\s*Bak\s*:\s*([^()]+?)\s*\)', caseSensitive: false);
+
   int _rankCompare(int a, int b, Map<int, int> tiers) {
     final t = tiers[a]! - tiers[b]!;
     if (t != 0) return t;
