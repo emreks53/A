@@ -32,7 +32,9 @@ class PrivacyPage extends StatelessWidget {
           'Son bakılanlar uygulamanın Ayarlar ekranından, kaydedilen kelimeler Kaydedilenler '
           'ekranından silinebilir. Bütün bu bilgiler uygulama kaldırıldığında (Android’de ayrıca '
           'telefonun Ayarlar > Uygulamalar > Lügat-ı Risale-i Nur > Depolama > Verileri temizle '
-          'yoluyla) tamamen silinir.',
+          'yoluyla) cihazdan silinir. Telefonun yedeklemesi açıksa yedekteki kopya, telefonun ya da '
+          'Google/iCloud hesabının yedekleme ayarlarından silinene kadar kalabilir ve uygulama '
+          'yeniden yüklendiğinde geri gelebilir.',
     ),
     (
       'İzinler',
@@ -46,6 +48,7 @@ class PrivacyPage extends StatelessWidget {
       'Çocuklar',
       'Uygulama çocuklardan bilerek veri toplamaz; zaten hiçbir kullanıcıdan veri toplamaz.',
     ),
+    ('Değişiklikler', 'Bu politika değişirse güncel metin aynı adreste ve uygulamanın yeni sürümünde yayımlanır.'),
     ('İletişim', 'Sorularınız için: $contactEmail'),
   ];
 

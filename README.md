@@ -171,17 +171,20 @@ tool/ikon_uret.py, tool/ikon/      uygulama simgeleri ve açılış görselleri 
   `android/app/build.gradle.kts` (`applicationId`, `namespace`), Kotlin paket klasörü ve iOS
   projesindeki Bundle Identifier'ı güncelleyin. Google Play'e bir kez yüklenen kimlik sonradan
   değiştirilemez.
-- **İmza anahtarı (Android):** Bir kereye mahsus bir yükleme anahtarı oluşturun ve güvenli
-  bir yerde saklayın:
+- **İmza anahtarı (Android):** Yükleme anahtarı (`lugat-upload-keystore.jks`, takma ad `upload`)
+  oluşturuldu ve sahibine teslim edildi; Play'e bu anahtarla imzalı sürüm yüklendikten sonra her
+  güncelleme aynı anahtarla imzalanmalıdır, yenisini oluşturmayın. Anahtar dosyasının yanına
+  `android/key.properties` dosyasını aşağıdaki gibi yazmak yeterlidir. (Yalnız hiç anahtar yoksa
+  yeni bir tane şöyle oluşturulur:)
 
   ```sh
-  keytool -genkey -v -keystore ~/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+  keytool -genkey -v -keystore ~/lugat-upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
   ```
 
-  Sonra `android/key.properties` dosyasını oluşturun (git'e eklenmez):
+  `android/key.properties` (git'e eklenmez; `storeFile` tam yol olmalı, `~` açılmaz):
 
   ```properties
-  storeFile=/home/kullanici/upload-keystore.jks
+  storeFile=/home/kullanici/lugat-upload-keystore.jks
   storePassword=…
   keyAlias=upload
   keyPassword=…

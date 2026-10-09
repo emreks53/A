@@ -17,7 +17,7 @@ Lügat-ı Risale-i Nur
 Risale-i Nur okurken Osmanlıca kelimelerin manası: ilk harfleri yazmak yeter.
 ```
 
-**Tam açıklama** (1764/4000 karakter)
+**Tam açıklama** (1789/4000 karakter)
 
 ```
 Lügat-ı Risale-i Nur, Risale-i Nur Külliyatı'nı okurken karşılaştığınız Osmanlıca kelime ve terkiplerin manasını bir an içinde gösteren sade bir lügattir.
@@ -45,7 +45,7 @@ Kitabı okurken telefonunuz yanınızda olsun: uygulamayı açtığınızda aram
 • Android 10 ve sonrasında, isteğe bağlı olarak, uygulama açıkken mesaj ve diğer bildirimler gizlenir; uygulamadan çıkınca her şey eski hâline döner. (Alarmlar ve yıldızlı kişilerin aramaları susturulmaz.)
 
 ◆ İnternet gerekmez, veri toplanmaz
-Lügat uygulamanın içindedir; internet bağlantısı kullanılmaz. Hiçbir kişisel veri toplanmaz ya da paylaşılmaz; son bakılanlar ve kaydedilenler telefonunuzda saklanır, hiçbir yere gönderilmez.
+Lügat uygulamanın içindedir; internet bağlantısı kullanılmaz. Hiçbir kişisel veri toplanmaz ya da paylaşılmaz; son bakılanlar ve kaydedilenler telefonunuzda saklanır, geliştiriciye ya da üçüncü taraflara gönderilmez.
 
 Bu uygulama bağımsızdır; RNK Neşriyat'ın resmî uygulaması değildir.
 ```

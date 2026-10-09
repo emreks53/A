@@ -90,7 +90,7 @@ class SettingsPage extends StatelessWidget {
               '\n\nManaların neredeyse tamamı RNK Neşriyat’ın Risale-i Nur lügatından (rnk.tr) '
               'alınmıştır. O lügatta bulunmayan az sayıdaki kelimenin manası ayrıca hazırlanmıştır.'
               '\n\nUygulama internet kullanmaz ve hiçbir kişisel veri toplamaz; son bakılanlar ve '
-              'kaydedilenler telefonunuzda saklanır, hiçbir yere gönderilmez.',
+              'kaydedilenler telefonunuzda saklanır, geliştiriciye ya da üçüncü taraflara gönderilmez.',
               style: theme.textTheme.bodyMedium,
             ),
           ),

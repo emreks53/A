@@ -49,3 +49,9 @@ app.*.map.json
 
 # Mağaza görselleri üreticisinin ara çıktıları
 /tool/magaza/shots/
+
+# İmza anahtarları ve şifreleri hiçbir yerde git'e girmesin.
+key.properties
+*.jks
+*.keystore
+*.p12
