@@ -1,4 +1,4 @@
-package io.github.emreks53.lugat_risale
+package com.lugatirisaleinur
 
 import android.app.ActivityManager
 import android.app.Application
@@ -251,6 +251,6 @@ class FocusModeControllerTest {
     }
 
     companion object {
-        private val CONDITION: Uri = Uri.parse("condition://io.github.emreks53.lugat_risale/okuma")
+        private val CONDITION: Uri = Uri.parse("condition://com.lugatirisaleinur/okuma")
     }
 }

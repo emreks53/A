@@ -65,10 +65,15 @@ Görseller `tool/magaza/` altındaki araçla yeniden üretilebilir.
 
 ## Uygulama içeriği
 
-**Gizlilik politikası:** `store/gizlilik-politikasi.md` metni (geliştirici adı ve iletişim
-adresi doldurularak) herkese açık bir web sayfasında yayımlanmalı ve adresi buraya
-girilmelidir (Play bunu her uygulama için ister). Aynı metin uygulamada Ayarlar > Gizlilik
-politikası'nda da gösterilir.
+**Gizlilik politikası:** `store/gizlilik-politikasi.md` metni herkese açık bir web sayfasında
+yayımlanmalı ve adresi buraya girilmelidir (Play bunu her uygulama için ister). Aynı metin
+uygulamada Ayarlar > Gizlilik politikası'nda da gösterilir.
+
+**İletişim e-postası** (Mağaza ayarları > Mağaza girişi iletişim bilgileri):
+`lugatirisaleinur@gmail.com`
+
+**Uygulama kimliği (paket adı):** `com.lugatirisaleinur` — ilk yüklemeden sonra
+değiştirilemez.
 
 **Reklamlar:** Uygulamada reklam yok.
 

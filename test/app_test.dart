@@ -414,6 +414,8 @@ void main() {
     await tester.tap(find.text('Gizlilik politikası'));
     await tester.pumpAndSettle();
     expect(find.text('Toplanan veriler'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Sorularınız için: lugatirisaleinur@gmail.com'), 200);
+    expect(find.text('Sorularınız için: lugatirisaleinur@gmail.com'), findsOneWidget);
   });
 
   testWidgets('büyük yazıda arama çubuğu düğmeleri sıkışmaz', (tester) async {

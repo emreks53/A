@@ -1,4 +1,4 @@
-package io.github.emreks53.lugat_risale
+package com.lugatirisaleinur
 
 import android.app.NotificationManager
 import android.content.BroadcastReceiver

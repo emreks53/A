@@ -1,7 +1,8 @@
 # Gizlilik Politikası — Lügat-ı Risale-i Nur
 
 Son güncelleme: 9 Ekim 2026
-Geliştirici: [geliştiricinin adı]
+Geliştirici: Lügat-ı Risale-i Nur
+İletişim: lugatirisaleinur@gmail.com
 
 Lügat-ı Risale-i Nur ("uygulama"), Risale-i Nur okurken karşılaşılan Osmanlıca kelimelerin
 manasını göstermek için hazırlanmış bir lügat uygulamasıdır.
@@ -45,8 +46,7 @@ Bu politika değişirse güncel metin aynı adreste yayımlanır.
 
 ## İletişim
 
-Sorularınız için: [iletişim e-posta adresi]
+Sorularınız için: lugatirisaleinur@gmail.com
 
-<!-- Uygulama içindeki metin (lib/src/ui/privacy_page.dart) bununla aynıdır; yalnız iletişim
-bölümü mağaza sayfasındaki geliştirici e-postasını gösterir. Biri değişirse öteki de
-güncellenmeli. -->
+<!-- Uygulama içindeki metin (lib/src/ui/privacy_page.dart) bununla aynıdır. Biri değişirse
+öteki de güncellenmeli. -->

@@ -1,4 +1,4 @@
-package io.github.emreks53.lugat_risale
+package com.lugatirisaleinur
 
 import android.app.Activity
 import android.app.ActivityManager
@@ -246,6 +246,6 @@ class FocusModeController(context: Context) {
 
         /** [policy] değiştikçe artırılır; mevcut kurallar bir kereye mahsus güncellenir. */
         private const val POLICY_VERSION = 2
-        private val CONDITION_ID: Uri = Uri.parse("condition://io.github.emreks53.lugat_risale/okuma")
+        private val CONDITION_ID: Uri = Uri.parse("condition://com.lugatirisaleinur/okuma")
     }
 }

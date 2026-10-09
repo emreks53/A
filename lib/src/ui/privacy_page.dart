@@ -3,15 +3,19 @@ import 'package:flutter/material.dart';
 import 'widgets.dart';
 
 /// Gizlilik politikası. Metin, mağazada yayımlanan store/gizlilik-politikasi.md
-/// ile aynıdır (iletişim bölümü hariç); biri değişirse öteki de güncellenmeli.
+/// ile aynıdır; biri değişirse öteki de güncellenmeli.
 class PrivacyPage extends StatelessWidget {
   const PrivacyPage({super.key});
+
+  /// Geliştiriciye ulaşmak için e-posta adresi.
+  static const contactEmail = 'lugatirisaleinur@gmail.com';
 
   static const sections = <(String, String)>[
     (
       '',
       'Lügat-ı Risale-i Nur, Risale-i Nur okurken karşılaşılan Osmanlıca kelimelerin manasını '
-          'göstermek için hazırlanmış bir lügat uygulamasıdır.',
+          'göstermek için hazırlanmış bir lügat uygulamasıdır.\n\n'
+          'Geliştirici: Lügat-ı Risale-i Nur',
     ),
     (
       'Toplanan veriler',
@@ -42,11 +46,7 @@ class PrivacyPage extends StatelessWidget {
       'Çocuklar',
       'Uygulama çocuklardan bilerek veri toplamaz; zaten hiçbir kullanıcıdan veri toplamaz.',
     ),
-    (
-      'İletişim',
-      'Sorularınız için Google Play’deki uygulama sayfasında yer alan geliştirici e-posta '
-          'adresine yazabilirsiniz.',
-    ),
+    ('İletişim', 'Sorularınız için: $contactEmail'),
   ];
 
   @override

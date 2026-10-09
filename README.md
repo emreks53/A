@@ -167,10 +167,10 @@ tool/ikon_uret.py, tool/ikon/      uygulama simgeleri ve açılış görselleri 
 
 ### Yayınlamadan önce
 
-- **Uygulama kimliği:** Android'de `io.github.emreks53.lugat_risale`, iPhone'da
-  `io.github.emreks53.lugatRisale` (iOS kimliğinde "_" kullanılamaz). Değiştirmek isterseniz
-  `android/app/build.gradle.kts` (`applicationId`, `namespace`) ve iOS projesindeki Bundle
-  Identifier'ı güncelleyin. Google Play'e bir kez yüklenen kimlik sonradan değiştirilemez.
+- **Uygulama kimliği:** Android'de ve iPhone'da `com.lugatirisaleinur`. Değiştirmek isterseniz
+  `android/app/build.gradle.kts` (`applicationId`, `namespace`), Kotlin paket klasörü ve iOS
+  projesindeki Bundle Identifier'ı güncelleyin. Google Play'e bir kez yüklenen kimlik sonradan
+  değiştirilemez.
 - **İmza anahtarı (Android):** Bir kereye mahsus bir yükleme anahtarı oluşturun ve güvenli
   bir yerde saklayın:
 
@@ -189,8 +189,8 @@ tool/ikon_uret.py, tool/ikon/      uygulama simgeleri ve açılış görselleri 
 
   Bu dosya yoksa sürüm derlemesi hata ayıklama anahtarıyla imzalanır; Google Play bunu kabul
   etmez.
-- **Gizlilik politikası:** `store/gizlilik-politikasi.md` içindeki geliştirici adı ve iletişim
-  adresini doldurup metni herkese açık bir web sayfasında yayımlayın. Uygulama içindeki metin
+- **Gizlilik politikası:** `store/gizlilik-politikasi.md` metnini herkese açık bir web sayfasında
+  yayımlayın (iletişim: lugatirisaleinur@gmail.com). Uygulama içindeki metin
   (`lib/src/ui/privacy_page.dart`) bununla aynı tutulmalıdır.
 - **Telif izni:** RNK Neşriyat'ın yazılı izni alınmadan yayımlamayın (yukarıya bakın).
 - iPhone sürümü bu ortamda derlenemedi (macOS/Xcode gerekir); Xcode'da imzalama ekibini
