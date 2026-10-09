@@ -36,8 +36,8 @@ class LogoMark extends StatelessWidget {
       );
 }
 
-/// Arama sonuçlarında ve listelerde bir madde: kelime, kökeni ve manasının
-/// ilk iki satırı (asıl mana kalın). Çoğu zaman bu önizleme okumaya dönmek
+/// Arama sonuçlarında ve listelerde bir madde: kelime ve manasının ilk iki
+/// satırı (asıl mana kalın). Çoğu zaman bu önizleme okumaya dönmek
 /// için yeterlidir.
 class EntryTile extends StatelessWidget {
   const EntryTile({super.key, required this.entry, required this.onTap, this.trailing});
@@ -64,18 +64,9 @@ class EntryTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text.rich(
-                    TextSpan(children: [
-                      TextSpan(
-                        text: entry.word,
-                        style: theme.textTheme.titleMedium?.copyWith(fontSize: 18, color: scheme.primary),
-                      ),
-                      if (entry.origin.isNotEmpty)
-                        TextSpan(
-                          text: '   ${entry.origin}',
-                          style: theme.textTheme.labelSmall?.copyWith(color: scheme.tertiary, letterSpacing: 0.4),
-                        ),
-                    ]),
+                  Text(
+                    entry.word,
+                    style: theme.textTheme.titleMedium?.copyWith(fontSize: 18, color: scheme.primary),
                   ),
                   const SizedBox(height: 3),
                   Text.rich(

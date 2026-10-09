@@ -84,30 +84,6 @@ class _EntryPageState extends State<EntryPage> {
                     height: 1.2,
                   ),
                 ),
-                if (entry.origin.isNotEmpty || entry.variants.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 4,
-                    children: [
-                      if (entry.origin.isNotEmpty)
-                        Text(
-                          entry.originLabel,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.tertiary,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      if (entry.variants.isNotEmpty)
-                        Text(
-                          'Diğer yazılış: ${entry.variants.join(', ')}',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
                 const SizedBox(height: 14),
                 // İnce altın çizgi: kelimeyi manasından ayırır.
                 Container(width: 44, height: 2, color: theme.colorScheme.tertiary.withValues(alpha: 0.8)),
