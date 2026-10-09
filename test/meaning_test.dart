@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lugat_risale/src/dictionary/meaning.dart';
+import 'package:lugat_risale/src/ui/widgets.dart' show formatCount;
 
 /// Kalın yazılacak asıl mana.
 String bold(String meaning) => splitMeaning(meaning).where((p) => p.main).map((p) => p.text).join(' | ');
@@ -42,5 +43,11 @@ void main() {
 
   test('yalnız açıklamadan oluşan mana bütünüyle kalın', () {
     expect(bold('(Risale-i Nur eserleri).'), '(Risale-i Nur eserleri).');
+  });
+
+  test('sayılar Türkçe binlik ayırıcıyla yazılır', () {
+    expect(formatCount(10504), '10.504');
+    expect(formatCount(942), '942');
+    expect(formatCount(1234567), '1.234.567');
   });
 }

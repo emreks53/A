@@ -327,7 +327,7 @@ class _SearchPageState extends State<SearchPage> {
                 if (count != null) ...[
                   const SizedBox(height: 24),
                   Text(
-                    'Lügatte $count kelime ve ifade var.',
+                    'Lügatte ${formatCount(count)} kelime ve ifade var.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall,
                   ),

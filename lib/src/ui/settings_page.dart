@@ -72,7 +72,7 @@ class SettingsPage extends StatelessWidget {
             child: Text(
               'Lügat-ı Risale-i Nur, Risale-i Nur Külliyatı’nı okurken karşılaşılan '
               'Osmanlıca kelime ve ifadelerin manasını hızlıca öğrenmek için hazırlandı.'
-              '${controller.lugat == null ? '' : '\n\nLügatte ${controller.lugat!.entries.length} kelime ve ifade var.'}'
+              '${controller.lugat == null ? '' : '\n\nLügatte ${formatCount(controller.lugat!.entries.length)} kelime ve ifade var.'}'
               '\n\nManalar RNK Neşriyat’ın Risale-i Nur lügatından (rnk.tr) alınmıştır. '
               'O lügatta bulunmayan az sayıdaki kelimenin manası ayrıca hazırlanmıştır.',
               style: theme.textTheme.bodyMedium,

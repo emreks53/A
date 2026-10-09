@@ -18,6 +18,9 @@ TextSpan meaningSpan(String meaning, TextStyle? style, {Color? mainColor}) => Te
       ],
     );
 
+/// Sayıyı Türkçe binlik ayırıcıyla yazar: 10504 → "10.504".
+String formatCount(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => '.');
+
 /// Logodaki kitap ve ışınlar; [color] ile boyanır.
 class LogoMark extends StatelessWidget {
   const LogoMark({super.key, required this.size, this.color});
