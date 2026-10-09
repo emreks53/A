@@ -73,11 +73,15 @@ class SettingsPage extends StatelessWidget {
               'Lügat-ı Risale-i Nur, Risale-i Nur Külliyatı’nı okurken karşılaşılan '
               'Osmanlıca kelime ve ifadelerin manasını hızlıca öğrenmek için hazırlandı.'
               '${controller.lugat == null ? '' : '\n\nLügatte ${controller.lugat!.entries.length} kelime ve ifade var.'}'
-              '\n\nManalar okumaya yardım için kısa tutulmuştur ve hazırlanırken '
-              'yapay zekâ desteğinden yararlanılmıştır; dikkatle kontrol edilmiş olsa da '
-              'hata bulunabilir. İnce bir meselede muteber bir lügate ve ehline danışınız.',
+              '\n\nManalar RNK Neşriyat’ın Risale-i Nur lügatından (rnk.tr) alınmıştır. '
+              'O lügatta bulunmayan az sayıdaki kelimenin manası ayrıca hazırlanmıştır.',
               style: theme.textTheme.bodyMedium,
             ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.description_outlined),
+            title: const Text('Lisanslar'),
+            onTap: () => showLicensePage(context: context, applicationName: 'Lügat-ı Risale-i Nur'),
           ),
         ],
       ),

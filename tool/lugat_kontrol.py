@@ -5,7 +5,9 @@ Her satır bir maddedir:
   {"w":"inkişaf","o":"Ar.","f":3,"m":"Açılma, gelişme...","v":["..."]}
 
   w  kelime (Risale-i Nur'daki yazılışıyla)      — zorunlu
-  m  günümüz Türkçesiyle manası                 — zorunlu
+  m  manası (RNK Neşriyat lügatındaki metin; bir kelimenin
+     o lügatta birden çok satırı varsa her biri ayrı paragraf,
+     aralarında "\n")                           — zorunlu
   o  köken: Ar., Fa., Tr., Ar.-Fa. ...          — isteğe bağlı
   f  sıklık: 3 çok sık, 2 sık, 1 seyrek         — zorunlu
   v  başka baskılarda görülen yazılışlar         — isteğe bağlı
@@ -63,8 +65,8 @@ def problems(entry):
         errs.append(f"'w' geçersiz karakter/boşluk içeriyor: {w!r}")
     if not isinstance(m, str) or len(m.strip()) < 3:
         errs.append("'m' boş ya da çok kısa")
-    elif "\n" in m or "\t" in m:
-        errs.append("'m' satır sonu/sekme içeriyor")
+    elif "\t" in m or any(not p.strip() or p != p.strip() for p in m.split("\n")):
+        errs.append("'m' sekme, boş paragraf ya da paragraf başında/sonunda boşluk içeriyor")
     if entry.get("o", "") not in ORIGINS:
         errs.append(f"'o' tanınmıyor: {entry.get('o')!r}")
     f = entry.get("f")
@@ -86,7 +88,10 @@ def tidy(entry):
         if k not in entry:
             continue
         val = entry[k]
-        if isinstance(val, str):
+        if k == "m" and isinstance(val, str):
+            paragraphs = (re.sub(r"\s+", " ", p.replace("’", "'")).strip() for p in val.split("\n"))
+            val = unicodedata.normalize("NFC", "\n".join(p for p in paragraphs if p))
+        elif isinstance(val, str):
             val = unicodedata.normalize("NFC", re.sub(r"\s+", " ", val.replace("’", "'")).strip())
         if k == "v":
             val = [unicodedata.normalize("NFC", x.replace("’", "'").strip()) for x in val if x.strip()]

@@ -81,16 +81,23 @@ class _EntryPageState extends State<EntryPage> {
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.primary,
+                    height: 1.2,
                   ),
                 ),
                 if (entry.origin.isNotEmpty || entry.variants.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Wrap(
-                    spacing: 8,
+                    spacing: 12,
                     runSpacing: 4,
                     children: [
                       if (entry.origin.isNotEmpty)
-                        Text(entry.originLabel, style: theme.textTheme.labelLarge),
+                        Text(
+                          entry.originLabel,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: theme.colorScheme.tertiary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       if (entry.variants.isNotEmpty)
                         Text(
                           'Diğer yazılış: ${entry.variants.join(', ')}',
@@ -101,10 +108,15 @@ class _EntryPageState extends State<EntryPage> {
                     ],
                   ),
                 ],
-                const SizedBox(height: 20),
-                SelectableText(
-                  entry.meaning,
-                  style: theme.textTheme.bodyLarge?.copyWith(fontSize: 21, height: 1.55),
+                const SizedBox(height: 14),
+                // İnce altın çizgi: kelimeyi manasından ayırır.
+                Container(width: 44, height: 2, color: theme.colorScheme.tertiary.withValues(alpha: 0.8)),
+                const SizedBox(height: 18),
+                SelectableText.rich(
+                  meaningSpan(
+                    entry.meaning,
+                    theme.textTheme.bodyLarge?.copyWith(fontSize: 21, height: 1.6),
+                  ),
                 ),
               ],
             ),

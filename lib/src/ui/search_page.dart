@@ -9,6 +9,7 @@ import 'app.dart';
 import 'entry_page.dart';
 import 'saved_page.dart';
 import 'settings_page.dart';
+import 'theme.dart';
 import 'widgets.dart';
 
 /// Ana ekran: açılır açılmaz klavye açık gelir, yazdıkça öneriler çıkar.
@@ -129,9 +130,33 @@ class _SearchPageState extends State<SearchPage> {
     final lugat = controller.lugat;
     final hits = _currentHits(lugat);
 
+    final theme = Theme.of(context);
+    final onHeader = Colors.white;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lügat-ı Risale-i Nur'),
+        backgroundColor: Palette.logoEdge,
+        foregroundColor: onHeader,
+        flexibleSpace: DecoratedBox(
+          decoration: BoxDecoration(gradient: Palette.header(theme.brightness)),
+        ),
+        titleSpacing: 16,
+        title: Row(
+          children: [
+            LogoMark(size: 30, color: onHeader),
+            const SizedBox(width: 12),
+            // Dar ekranda kesilmesin diye gerekirse küçülür.
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Lügat-ı Risale-i Nur',
+                  style: theme.textTheme.titleLarge?.copyWith(color: onHeader, letterSpacing: 0.2),
+                ),
+              ),
+            ),
+          ],
+        ),
         actions: [
           _FocusIndicator(
             status: controller.focus,
@@ -148,45 +173,26 @@ class _SearchPageState extends State<SearchPage> {
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => _openPage(const SettingsPage()),
           ),
+          const SizedBox(width: 4),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(72),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: _SearchField(
+              controller: _text,
+              focusNode: _focusNode,
+              onSubmitted: _onSubmitted,
+              onClear: () {
+                _text.clear();
+                _focusNode.requestFocus();
+              },
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: TextField(
-              key: const Key('arama-kutusu'),
-              controller: _text,
-              focusNode: _focusNode,
-              autofocus: true,
-              autocorrect: false,
-              keyboardType: TextInputType.text,
-              textInputAction: TextInputAction.search,
-              textCapitalization: TextCapitalization.none,
-              onSubmitted: _onSubmitted,
-              style: Theme.of(context).textTheme.titleLarge,
-              decoration: InputDecoration(
-                hintText: 'Kelimeyi yazın… (ör. inkişaf)',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _text.text.isEmpty
-                    ? null
-                    : IconButton(
-                        tooltip: 'Temizle',
-                        icon: const Icon(Icons.close),
-                        onPressed: () {
-                          _text.clear();
-                          _focusNode.requestFocus();
-                        },
-                      ),
-                filled: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-            ),
-          ),
           if (lugat == null && controller.loadError == null) const LinearProgressIndicator(minHeight: 2),
           Expanded(child: _buildBody(controller, lugat, hits)),
         ],
@@ -294,7 +300,16 @@ class _SearchPageState extends State<SearchPage> {
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
             child: Column(
               children: [
-                Icon(Icons.menu_book_outlined, size: 48, color: theme.colorScheme.primary),
+                Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: Palette.header(theme.brightness),
+                  ),
+                  alignment: Alignment.center,
+                  child: const LogoMark(size: 50, color: Colors.white),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Okurken manasını merak ettiğiniz kelimenin ilk harflerini yazın; '
@@ -356,7 +371,9 @@ class _FocusIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    // Lacivert başlık bandında: uyarı açık kırmızı, açık mod altın.
+    const warning = Color(0xFFFFB4AB);
+    const active = Palette.goldLight;
     final (IconData icon, Color? color, String tip) = !status.supported
         ? (
             Icons.do_not_disturb_off_outlined,
@@ -366,11 +383,11 @@ class _FocusIndicator extends StatelessWidget {
         : !status.enabled
             ? (Icons.notifications_none, null, 'Odak modu kapalı')
             : !status.permissionGranted
-                ? (Icons.do_not_disturb_off_outlined, scheme.error, 'Bildirimleri gizlemek için izin gerekiyor')
+                ? (Icons.do_not_disturb_off_outlined, warning, 'Bildirimleri gizlemek için izin gerekiyor')
                 : status.disabledInSystem
-                    ? (Icons.do_not_disturb_off_outlined, scheme.error, 'Odak modu Android ayarlarında kapatılmış')
+                    ? (Icons.do_not_disturb_off_outlined, warning, 'Odak modu Android ayarlarında kapatılmış')
                     : status.active
-                        ? (Icons.do_not_disturb_on, scheme.primary, 'Odak modu açık: bildirimler gizleniyor')
+                        ? (Icons.do_not_disturb_on, active, 'Odak modu açık: bildirimler gizleniyor')
                         : (Icons.do_not_disturb_on_outlined, null, 'Odak modu ayarları');
     return IconButton(tooltip: tip, icon: Icon(icon, color: color), onPressed: onTap);
   }
@@ -418,6 +435,70 @@ class _Notice extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Başlık bandındaki arama kutusu: beyaz zemin, lacivert yazı.
+class _SearchField extends StatelessWidget {
+  const _SearchField({
+    required this.controller,
+    required this.focusNode,
+    required this.onSubmitted,
+    required this.onClear,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final ValueChanged<String> onSubmitted;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final light = theme.brightness == Brightness.light;
+    final fill = light ? Palette.card : Palette.nightHigh;
+    final ink = light ? Palette.ink : Palette.nightInk;
+    final muted = light ? Palette.inkMuted : Palette.nightMuted;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: light ? Colors.transparent : Palette.nightLine),
+    );
+    return TextField(
+      key: const Key('arama-kutusu'),
+      controller: controller,
+      focusNode: focusNode,
+      autofocus: true,
+      autocorrect: false,
+      keyboardType: TextInputType.text,
+      textInputAction: TextInputAction.search,
+      textCapitalization: TextCapitalization.none,
+      onSubmitted: onSubmitted,
+      cursorColor: light ? Palette.navy : Palette.sky,
+      style: theme.textTheme.titleLarge?.copyWith(color: ink, fontWeight: FontWeight.w500),
+      decoration: InputDecoration(
+        hintText: 'Kelimeyi yazın… (ör. inkişaf)',
+        hintStyle: theme.textTheme.titleMedium?.copyWith(color: muted, fontWeight: FontWeight.w400),
+        prefixIcon: Icon(Icons.search, color: light ? Palette.navy : Palette.sky),
+        suffixIcon: ListenableBuilder(
+          listenable: controller,
+          builder: (context, _) => controller.text.isEmpty
+              ? const SizedBox.shrink()
+              : IconButton(
+                  tooltip: 'Temizle',
+                  icon: Icon(Icons.close, color: muted),
+                  onPressed: onClear,
+                ),
+        ),
+        filled: true,
+        fillColor: fill,
+        border: border,
+        enabledBorder: border,
+        focusedBorder: border.copyWith(
+          borderSide: BorderSide(color: light ? Palette.goldLight : Palette.goldLight.withValues(alpha: 0.7), width: 1.2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 14),
       ),
     );
   }

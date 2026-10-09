@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../app_controller.dart';
 import 'search_page.dart';
+import 'theme.dart';
 
 /// Alt sayfaların [AppController]'a ulaşması ve değiştiğinde yeniden
 /// çizilmesi için.
@@ -16,25 +17,6 @@ class AppScope extends InheritedNotifier<AppController> {
   /// Değişiklikleri dinlemeden (ör. bir düğmenin içinde) erişmek için.
   static AppController read(BuildContext context) =>
       context.getInheritedWidgetOfExactType<AppScope>()!.notifier!;
-}
-
-const _seed = Color(0xFF1F5C4A); // koyu yeşil
-const _paper = Color(0xFFFBF8F1); // kâğıt rengi
-
-ThemeData buildTheme(Brightness brightness) {
-  final scheme = ColorScheme.fromSeed(seedColor: _seed, brightness: brightness);
-  final light = brightness == Brightness.light;
-  return ThemeData(
-    colorScheme: light ? scheme.copyWith(surface: _paper) : scheme,
-    scaffoldBackgroundColor: light ? _paper : scheme.surface,
-    visualDensity: VisualDensity.standard,
-    appBarTheme: AppBarTheme(
-      backgroundColor: light ? _paper : scheme.surface,
-      surfaceTintColor: Colors.transparent,
-      centerTitle: false,
-    ),
-    listTileTheme: const ListTileThemeData(contentPadding: EdgeInsets.symmetric(horizontal: 20)),
-  );
 }
 
 class LugatApp extends StatefulWidget {
