@@ -1,0 +1,91 @@
+[
+{
+"t": 106.4,
+"dur": 7.4,
+"kind": "room tone",
+"desc": "cavernous hall room tone",
+"gain": 2
+},
+{
+"t": 107.0,
+"dur": 0.6,
+"kind": "fire",
+"desc": "quiet flutter of two candles near camera",
+"gain": -4
+},
+{
+"t": 108.08,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition"
+},
+{
+"t": 108.45,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -2
+},
+{
+"t": 108.8,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -4
+},
+{
+"t": 109.15,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -6
+},
+{
+"t": 109.5,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -8
+},
+{
+"t": 109.9,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -10
+},
+{
+"t": 108.1,
+"dur": 0.3,
+"kind": "pop",
+"desc": "subtle pop for text",
+"gain": -3
+},
+{
+"t": 108.58,
+"dur": 0.3,
+"kind": "pop",
+"desc": "subtle pop for text",
+"gain": -3
+},
+{
+"t": 109.3,
+"dur": 2.4,
+"kind": "whoosh",
+"desc": "soft air move as the camera cranes up",
+"gain": -3
+},
+{
+"t": 110.8,
+"dur": 3.0,
+"kind": "fire",
+"desc": "gentle bed of many candles flickering"
+},
+{
+"t": 111.94,
+"dur": 1.5,
+"kind": "chime",
+"desc": "very soft warm shimmer",
+"gain": -6
+}
+]

@@ -26,7 +26,7 @@ export class UI {
   font(size, weight = 900, family = 'Nunito', italic = false) { return `${italic ? 'italic ' : ''}${weight} ${size}px "${family}"`; }
 
   // Project a world position to overlay pixel coords.
-  project(v) { const p = v.clone().project(this.camera); return [(p.x * .5 + .5) * this.W, (-p.y * .5 + .5) * this.H, p.z]; }
+  project(v) { this.camera.updateMatrixWorld(); const p = v.clone().project(this.camera); return [(p.x * .5 + .5) * this.W, (-p.y * .5 + .5) * this.H, p.z]; }
 
   // Text with optional pill background.
   // o: {x,y,t,t0,t1,size,weight,family,italic,color,align('center'|'left'|'right'),anim('pop'|'fade'|'rise'|'type'|'wipe'),

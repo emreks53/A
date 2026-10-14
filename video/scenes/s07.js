@@ -47,7 +47,7 @@ export default {
     items.push({ x: .75, z: -.62, s: [.42, .3, .36], ry: .3, variant: 1 }); // rock propping the hero shield
     items.forEach(it => { it.y = gh(it.x, it.z) + it.s[1] * .15; });
     R.rockItems = items;
-    scene.add(C.scatterRocks(items, { seed: 17, detail: 3, palette: ['#6a3a26', '#4e2a1c', '#80482e'] }));
+    scene.add(C.scatterRocks(items, { seed: 17, detail: 3, palette: ['#6a3a26', '#4e2a1c', '#80482e'], bigTint: '#6e5446' }));
 
     // shields & spears
     const sh = (o, x, z, rx, ry, rz, dy = 0) => { const s = C.shield(o); s.position.set(x, gh(x, z) + dy, z); s.rotation.set(rx, ry, rz); scene.add(s); s.updateMatrixWorld(true); return s; };

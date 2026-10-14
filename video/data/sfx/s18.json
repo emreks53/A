@@ -1,0 +1,48 @@
+[
+{
+"t": 100.0,
+"dur": 7.4,
+"kind": "room tone",
+"desc": "large library room tone at dusk",
+"gain": 2
+},
+{
+"t": 100.6,
+"dur": 0.6,
+"kind": "creak",
+"desc": "faint creak of wooden shelving",
+"gain": -8
+},
+{
+"t": 102.4,
+"dur": 1.5,
+"kind": "wind",
+"desc": "soft evening wind at the high window",
+"gain": -10
+},
+{
+"t": 103.6,
+"dur": 2.3,
+"kind": "whoosh",
+"desc": "gentle airy whoosh as the camera pulls back"
+},
+{
+"t": 104.65,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft marker pop as the ring and 2 ornek appear"
+},
+{
+"t": 105.2,
+"dur": 0.8,
+"kind": "paper",
+"desc": "distant page turn",
+"gain": -8
+},
+{
+"t": 106.12,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft pop for IKI ORNEK"
+}
+]

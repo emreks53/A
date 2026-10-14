@@ -203,7 +203,7 @@ export function rockMaterial(o = {}) {
 }
 
 // Scatter instanced rocks. items: [{x,y,z,s:[sx,sy,sz]|number,ry,variant}]
-export function scatterRocks(items, { variants = 3, seed = 5, detail = 2, palette, material, cast = true, faceted = true, big = .3 } = {}) {
+export function scatterRocks(items, { variants = 3, seed = 5, detail = 2, palette, material, cast = true, faceted = true, big = .3, bigTint = null } = {}) {
   const grp = new THREE.Group(); const mat = material ?? rockMaterial();
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), S = new THREE.Vector3(), P = new THREE.Vector3();
   const sz = it => Array.isArray(it.s) ? Math.max(...it.s) : it.s;
@@ -218,6 +218,7 @@ export function scatterRocks(items, { variants = 3, seed = 5, detail = 2, palett
   for (let v = 0; v < 2; v++) {
     const list = items.filter(it => (it.variant ?? 0) % 2 === v && sz(it) > big); if (!list.length) continue;
     const fr = facetRock({ a: 1, b: .8, c: 1.15, n: 2.2, planes: 20, jitter: .55, off: [-.28, 0], k: .045, joints: 0, lump: .04, seed: seed + 50 + v * 7, detail: 18, bury: .25, grain: 1.2, nScale: .9 });
+    if (bigTint) fr.material.color.set(bigTint);
     place(new THREE.InstancedMesh(fr.geometry, fr.material, list.length), list, -.12);
   }
   return grp;

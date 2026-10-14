@@ -1,0 +1,63 @@
+[
+{
+"t": 112.8,
+"dur": 11.85,
+"kind": "birds",
+"desc": "birds at dawn outside the open window",
+"gain": -2
+},
+{
+"t": 112.8,
+"dur": 11.85,
+"kind": "room tone",
+"desc": "quiet morning room tone"
+},
+{
+"t": 113.4,
+"dur": 4.0,
+"kind": "cloth",
+"desc": "soft rustle of tulle curtains",
+"gain": -10
+},
+{
+"t": 115.3,
+"dur": 0.6,
+"kind": "cloth",
+"desc": "leather book cover lifting and swinging open",
+"gain": -3
+},
+{
+"t": 115.9,
+"dur": 0.3,
+"kind": "wood",
+"desc": "cover settling onto the wooden rahle",
+"gain": -4
+},
+{
+"t": 115.65,
+"dur": 0.8,
+"kind": "paper",
+"desc": "three pages riffling over in the breeze"
+},
+{
+"t": 115.97,
+"dur": 0.3,
+"kind": "pop",
+"desc": "subtle marker for ring",
+"gain": -3
+},
+{
+"t": 118.08,
+"dur": 0.3,
+"kind": "pop",
+"desc": "subtle marker for ring",
+"gain": -3
+},
+{
+"t": 121.9,
+"dur": 2.2,
+"kind": "chime",
+"desc": "single soft warm bell under the end card",
+"gain": -4
+}
+]
