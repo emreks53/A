@@ -19,7 +19,7 @@ const EX = [
   { f: E.carafe, ty: .15, D: 2.2, h: .32, ry: 0 },
   { f: E.balance, ty: .22, D: 2.5, h: .28, ry: -.35 },
   { f: E.chest, ty: .11, D: 2.3, h: .38, ry: -.4 },
-  { f: E.wheat, ty: .29, D: 2.65, h: .22, ry: 0, L: .8 },
+  { f: E.wheat, ty: .29, D: 2.65, h: .22, ry: 0, L: .42 },
   { f: E.letters, ty: .12, D: 2.1, h: .3, ry: -.38, L: .5 },
   { f: E.cesme, ty: .2, D: 2.15, h: .55, ry: -.3 },
   { f: E.shoes, ty: .05, D: 2.05, h: .62, ry: -.3, L: .8 },
@@ -89,7 +89,7 @@ export default {
     const tileGeo = new THREE.ShapeGeometry(tileShape, 10).translate(0, 0, nb + .003);
     const iz = E.iznikTex(); iz.repeat.set(1 / .205, 1 / .205); iz.offset.set(.5, 0);
     const tileMat = new THREE.MeshPhysicalMaterial({ map: iz, roughness: .32, clearcoat: .7, clearcoatRoughness: .25 });
-    const nichePl = TEX.plaster({ a: '#3f8584', b: '#2a5f62', seed: 15, repeat: [1.2, 1.2] });
+    const nichePl = TEX.plaster({ a: '#69a8a4', b: '#4b8686', seed: 15, repeat: [1.2, 1.2] });
     const nicheMat = new THREE.MeshStandardMaterial({ map: nichePl.map, normalMap: nichePl.normalMap, normalScale: new THREE.Vector2(.5, .5), roughness: .92 });
     const bayIdx = []; for (let i = -16; i <= 64; i++) if (i !== DOOR) bayIdx.push(i);
     const m4 = new THREE.Matrix4();
@@ -274,7 +274,10 @@ export default {
     const c0 = camFor(0);
     keys.push({ t: -.75, pos: c0.pos.clone().add(V(-1.0, .55, 1.25)), look: c0.look.clone().add(V(.45, .05, 0)), fov: 33, a: 1 });
     keys.push({ t: R.T[0] + .78, ...camFor(0), a: .45 });
-    for (let i = 1; i < 14; i++) { const k = camFor(i), prev = keys[keys.length - 1], tk = R.T[i] + .28, tm = (prev.t + tk) / 2;
+    for (let i = 1; i < 14; i++) { const k = camFor(i), tk = R.T[i] + .28; let prev = keys[keys.length - 1];
+      if (tk - prev.t > 1.25) { // long gap: linger on the current exhibit (slow drift + push-in), then glide on
+        const th = Math.max(prev.t + .45, tk - .85); keys.push({ t: th, pos: prev.pos.clone().add(V(.11, -.01, -.07)), look: prev.look.clone().add(V(.06, 0, 0)), fov: prev.fov, a: .9 }); prev = keys[keys.length - 1]; }
+      const tm = (prev.t + tk) / 2;
       keys.push({ t: tm, pos: prev.pos.clone().lerp(k.pos, .5).add(V(0, .05, .2)), look: prev.look.clone().lerp(k.look, .5).add(V(0, .03, 0)), fov: 31.5, a: 1 });
       keys.push({ t: tk, ...k, a: .35 }); }
     const c13 = camFor(13);
@@ -343,8 +346,8 @@ export default {
     // ---- typography
     const X = ui.ctx;
     const label = (str, t0, t1) => {
-      if (t < t0 - .01 || t > t1 + .25) return;
-      const a = U.clamp((t - t0) / .14), sIn = U.ease.outBack(U.clamp((t - t0) / .3), 2.4), ex = U.clamp((t - t1) / .2);
+      if (t < t0 - .01 || t > t1 + .16) return;
+      const a = U.clamp((t - t0) / .12), sIn = U.ease.outBack(U.clamp((t - t0) / .3), 2.4), ex = U.clamp((t - t1) / .14);
       const alpha = a * (1 - ex); if (alpha <= .001) return;
       X.save(); X.font = '900 100px "Nunito"'; X.letterSpacing = '5px'; const w = X.measureText(str).width; const size = Math.min(104, 100 * 840 / w);
       X.globalAlpha = alpha; X.translate(540 - ex * 70, 455 - ex * 10); const sc = (.55 + .45 * sIn) * (1 - .06 * ex); X.scale(sc, sc);
@@ -355,7 +358,7 @@ export default {
       X.restore();
     };
     if (!DEBUG) {
-      R.heroes.forEach((h, i) => { const t1 = i < 13 ? R.heroes[i + 1].t0 - .08 : R.W.ve - .12; label(NAMES[i], h.t0 - .04, t1); });
+      R.heroes.forEach((h, i) => { const t1 = i < 13 ? R.heroes[i + 1].t0 - .2 : R.W.ve - .18; label(NAMES[i], h.t0 - .04, t1); });
       // progress dots
       const dAlpha = U.smoothstep(-.4, 0, t) * (1 - U.smoothstep(R.W.ve - .1, R.W.ve + .25, t));
       if (dAlpha > .001) { X.save(); X.globalAlpha = dAlpha; for (let i = 0; i < 14; i++) { const x = 540 + (i - 6.5) * 52, y = 318; const on = U.clamp((t - R.T[i] + .04) / .25); const cur = on > 0 && (i === 13 || t < R.T[i + 1] - .05);

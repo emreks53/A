@@ -387,7 +387,6 @@ export default {
       const probe = camera.clone(); let bs = 1e9;
       for (const l of lights) { let sc = 0; for (const tt of [3.5, 3.9, 4.3]) { camRig(probe, tt, U, false); const p = lightPos(l, tt, U).project(probe); sc += Math.hypot(p.x - .15, p.y - .05) + (Math.abs(p.x) > .8 || Math.abs(p.y) > .8 ? 5 : 0); } if (sc < bs) { bs = sc; R.lead = l; } }
     }
-    console.log('s04 houses', houses.length, 'red', red.length, 'lights', NL, 'dest', dest.x.toFixed(1), dest.z.toFixed(1), 'doorAz', doorAz.toFixed(1));
   },
 
   update(t, ctx) {

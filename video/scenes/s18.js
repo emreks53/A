@@ -106,8 +106,8 @@ export default {
     });
     const gibbon = heroBook({
       w: .08, h: .296, d: .21, seed: 43,
-      spine: { color: '#6a3c20', dark: '#3a1f0e', bands: 7, top: .05, bottom: .95, gold,
-        labels: [{ panel: 1, span: 3, bg: '#16110d', lines: ['THE DECLINE', 'AND FALL', 'OF THE', 'ROMAN', 'EMPIRE'] }, { panel: 4, bg: '#7a1d15', lines: ['GIBBON'], size: .17 }, { panel: 5, bg: '#16110d', lines: ['VOL. I'], size: .15 }] },
+      spine: { color: '#5c3418', dark: '#2e170a', bands: 7, top: .05, bottom: .95, gold,
+        labels: [{ panel: 1, span: 3, bg: '#7d1a14', lines: ['THE DECLINE', 'AND FALL', 'OF THE', 'ROMAN', 'EMPIRE'] }, { panel: 4, bg: '#16110d', lines: ['VOL. I'], size: .16 }, { panel: 5, bg: '#16110d', lines: ['GIBBON'], size: .15 }] },
     });
     const hb = new THREE.Group(); hb.position.set(0, HERO_Y, 0); scene.add(hb); R.hb = hb;
     carlyle.position.set(-.043, 0, -.057); carlyle.rotation.y = .03; hb.add(carlyle); R.carlyle = carlyle;

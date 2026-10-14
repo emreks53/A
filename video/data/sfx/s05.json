@@ -1,0 +1,83 @@
+[
+{
+"t": 24.75,
+"dur": 5.0,
+"kind": "fire",
+"desc": "quiet oil-lamp flame sputter",
+"gain": -2
+},
+{
+"t": 24.75,
+"dur": 5.0,
+"kind": "room tone",
+"desc": "quiet room tone"
+},
+{
+"t": 25.55,
+"dur": 0.6,
+"kind": "chime",
+"desc": "soft warm tone under el-Emin title",
+"gain": -3
+},
+{
+"t": 25.59,
+"dur": 0.3,
+"kind": "thud",
+"desc": "leather pouch lands on shelf"
+},
+{
+"t": 25.99,
+"dur": 0.35,
+"kind": "wood",
+"desc": "wooden chest set down"
+},
+{
+"t": 26.05,
+"dur": 0.3,
+"kind": "metal",
+"desc": "faint brass rattle of the hasp",
+"gain": -6
+},
+{
+"t": 26.37,
+"dur": 0.3,
+"kind": "wood",
+"desc": "small jewellery box tap"
+},
+{
+"t": 26.75,
+"dur": 0.35,
+"kind": "thud",
+"desc": "heavy clay jar thunk on wood"
+},
+{
+"t": 27.15,
+"dur": 0.3,
+"kind": "paper",
+"desc": "parchment scroll rolls and settles"
+},
+{
+"t": 27.53,
+"dur": 0.4,
+"kind": "cloth",
+"desc": "folded textile flops onto the shelf"
+},
+{
+"t": 27.91,
+"dur": 0.3,
+"kind": "metal",
+"desc": "sheathed dagger small brass clink"
+},
+{
+"t": 28.29,
+"dur": 0.3,
+"kind": "thud",
+"desc": "leather pouch set down"
+},
+{
+"t": 28.65,
+"dur": 0.3,
+"kind": "thud",
+"desc": "leather pouch set down"
+}
+]

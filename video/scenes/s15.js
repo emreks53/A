@@ -81,7 +81,7 @@ export default {
     const tilt = new THREE.Group(); tilt.rotation.z = -23.5 * DEG; globe.add(tilt);
     const spin = new THREE.Group(); tilt.add(spin); R.spin = spin;
     const mapTex = TEX.drawTexture(2048, 1024, (x, W, H) => G.paintGlobeMap(x, W, H, { fbm: TEX.fbmField(5, 6, 4), seed: 3 })); mapTex.anisotropy = 8;
-    const sphere = new THREE.Mesh(new THREE.SphereGeometry(Rg, 128, 80), new THREE.MeshPhysicalMaterial({ map: mapTex, roughness: .5, clearcoat: .85, clearcoatRoughness: .2 }));
+    const sphere = new THREE.Mesh(new THREE.SphereGeometry(Rg, 128, 80), new THREE.MeshPhysicalMaterial({ map: mapTex, roughness: .55, clearcoat: .7, clearcoatRoughness: .38 }));
     sphere.castShadow = true; sphere.receiveShadow = true; spin.add(sphere); R.sphere = sphere;
     // brass meridian ring with engraved degree ticks
     const ringTex = TEX.drawTexture(2048, 64, (x, W, H) => {
@@ -138,10 +138,10 @@ export default {
     R.spinAt = t => (R.sEnd - (R.Dtot - R.dist(t))) * DEG;
     spin.rotation.y = R.spinAt(10); globe.updateMatrixWorld(true);
     const dirW = (lat, lon) => { const d = G.latLonDir(lat, lon); return new THREE.Vector3(...d).multiplyScalar(Rg).applyMatrix4(sphere.matrixWorld); };
-    const Pt = dirW(36, 22); const n = Pt.clone().sub(Gc).normalize();
-    const nh = new THREE.Vector3(n.x, 0, n.z).normalize(); const el = 22 * DEG;
+    const Pt = dirW(40, 20); const n = Pt.clone().sub(Gc).normalize();
+    const nh = new THREE.Vector3(n.x, 0, n.z).normalize(); const el = 34 * DEG;
     const dirC = nh.clone().multiplyScalar(Math.cos(el)).add(new THREE.Vector3(0, Math.sin(el), 0));
-    const C = Gc.clone().addScaledVector(dirC, 1.08); const C2 = Gc.clone().addScaledVector(dirC.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), .06), 1.0);
+    const C = Gc.clone().addScaledVector(dirC, 1.1); const C2 = Gc.clone().addScaledVector(dirC.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), .06), 1.03);
     const g0 = Gc.clone();
     camera.fov = 36; camera.near = .03; camera.far = 60; camera.updateProjectionMatrix();
     R.cam = G.camPath(camera, {
@@ -182,7 +182,7 @@ export default {
     const X = ui.ctx; const M = R.sphere.matrixWorld; const cam = camera.position;
     // hidden by the horizon ring? (segment point->camera crosses the ring plane within the ring annulus)
     const ringHide = wp => { const dy = cam.y - wp.y; if (Math.abs(dy) < 1e-4) return 1; const s = (R.Gc.y + .0095 - wp.y) / dy; if (s <= 0 || s >= 1) return 1; const px = wp.x + (cam.x - wp.x) * s - R.Gc.x, pz = wp.z + (cam.z - wp.z) * s - R.Gc.z; const r = Math.hypot(px, pz); return 1 - U.smoothstep(R.Rg + .01, R.Rg + .03, r) * (1 - U.smoothstep(R.Rg + .085, R.Rg + .095, r)); };
-    const vis = wp => { const nn = wp.clone().sub(R.Gc).normalize(); const vv = cam.clone().sub(wp).normalize(); return U.smoothstep(.06, .32, nn.dot(vv)) * ringHide(wp); };
+    const vis = wp => { const nn = wp.clone().sub(R.Gc).normalize(); const vv = cam.clone().sub(wp).normalize(); const below = cam.y > R.Gc.y ? U.smoothstep(R.Gc.y - .012, R.Gc.y + .004, wp.y) : 1; return U.smoothstep(.06, .32, nn.dot(vv)) * ringHide(wp) * below; };
     const persp = wp => U.clamp(1.75 / cam.distanceTo(wp), .85, 1.55);
     const tK = ctx.wordTime('kabul'), tP = ctx.wordTime('peygamberimizin');
     const pulseAll = U.smoothstep(tK - .05, tK + .15, t) * (1 - U.smoothstep(tK + .3, tK + .9, t));
@@ -221,10 +221,6 @@ export default {
       X.restore();
       ui.callout('Medine', { t, t0: tP + .2, anchor: [mx, my], to: [U.clamp(mx - 175, 200, 880), U.clamp(my + 105, 300, 1300)], size: 40, dotColor: '#3fb67a' });
     }
-    // DEBUG-G (temporary): known reference points
-    for (const [la, lo, nm] of [[30, 32.5, 'Suez'], [12.7, 43.3, 'Bab'], [21.5, 39.2, 'Jeddah'], [41, 29, 'Ist'], [36.1, -5.4, 'Gib'], [45.4, 12.4, 'Ven'], [29.9, 48.3, 'Kuw']]) {
-      const wp = new THREE.Vector3(...G.latLonDir(la, lo)).multiplyScalar(R.Rg).applyMatrix4(M); const [qx, qy] = ui.project(wp);
-      X.save(); X.strokeStyle = '#00ffff'; X.lineWidth = 3; X.beginPath(); X.moveTo(qx - 10, qy); X.lineTo(qx + 10, qy); X.moveTo(qx, qy - 10); X.lineTo(qx, qy + 10); X.stroke(); X.fillStyle = '#00ffff'; X.font = '24px Nunito'; X.fillText(nm, qx + 12, qy - 8); X.restore(); }
     // typography
     const tD = ctx.wordTime('dünya'), tB = ctx.wordTime('büyük');
     ui.text('Dünya çapında', { t, t0: tD - .04, x: 540, y: 300, size: 66, weight: 900, color: '#fff4dc', anim: 'pop', letterSpacing: 2 });

@@ -209,7 +209,7 @@ export function nest() {
   // eggs
   const eggProf = []; const L = .072, W = .026; for (let k = 0; k <= 18; k++) { const t = k / 18 * 2 - 1; eggProf.push([W * Math.sqrt(Math.max(0, 1 - t * t)) * (1 - .14 * t), (t * .5 + .5) * L]); }
   const eggGeo = latheGeo(eggProf, 28);
-  const eggMat = phys({ map: speckleTex('egg', '#bfe0dc', '#6a4a30', 260, 9), roughness: .42, clearcoat: .35, clearcoatRoughness: .4, sheen: .3, sheenColor: new THREE.Color('#ffffff') });
+  const eggMat = phys({ map: speckleTex('egg', '#8fc9c6', '#5a3a22', 260, 9), roughness: .42, clearcoat: .35, clearcoatRoughness: .4, sheen: .3, sheenColor: new THREE.Color('#ffffff') });
   const eggs = [];
   [[0, .0], [2.15, .004], [4.2, -.003]].forEach(([a, dy], i) => {
     const piv = new THREE.Group(); piv.position.set(Math.cos(a) * .036, .05 + dy, Math.sin(a) * .036); piv.rotation.y = -a + PI / 2 + (i - 1) * .3;

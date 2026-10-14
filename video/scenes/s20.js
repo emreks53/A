@@ -123,8 +123,8 @@ export default {
     const ftex = plankTex({ a: '#8a5a34', b: '#5e3a1e', planks: 8, seed: 12 }); ftex.repeat.set(3, 3);
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(6, 6).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: ftex, roughness: .6 })); floor.position.set(0, 0, 1.5); floor.receiveShadow = true; scene.add(floor);
     const kilim = tex(TEX, 512, 512, (x, W, H) => {
-      x.fillStyle = '#7a3a2c'; x.fillRect(0, 0, W, H); x.fillStyle = '#d8c09a'; x.fillRect(14, 14, W - 28, H - 28); x.fillStyle = '#8a4434'; x.fillRect(24, 24, W - 48, H - 48); x.fillStyle = '#9c5644'; x.fillRect(44, 44, W - 88, H - 88);
-      for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) { const cx = 70 + i * 53, cy = 70 + j * 53; x.fillStyle = (i + j) % 2 ? 'rgba(216,192,154,.55)' : 'rgba(60,64,90,.45)'; x.beginPath(); x.moveTo(cx, cy - 16); x.lineTo(cx + 16, cy); x.lineTo(cx, cy + 16); x.lineTo(cx - 16, cy); x.closePath(); x.fill(); }
+      x.fillStyle = '#6a3226'; x.fillRect(0, 0, W, H); x.fillStyle = '#b89a74'; x.fillRect(10, 10, W - 20, H - 20); x.fillStyle = '#74382a'; x.fillRect(18, 18, W - 36, H - 36);
+      for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) { const cx = 34 + i * 29.5, cy = 34 + j * 29.5; x.fillStyle = (i + j) % 2 ? 'rgba(200,170,130,.28)' : 'rgba(50,50,80,.22)'; x.beginPath(); x.moveTo(cx, cy - 9); x.lineTo(cx + 9, cy); x.lineTo(cx, cy + 9); x.lineTo(cx - 9, cy); x.closePath(); x.fill(); }
     });
     const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.7).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: kilim, roughness: 1, sheen: .7, sheenColor: new THREE.Color('#ffb38a') })); rug.position.set(0, .004, .25); rug.receiveShadow = true; scene.add(rug);
 
@@ -174,7 +174,7 @@ export default {
     };
     const leftHalf = mkHalf(-1, pageDraw('194', 'L', 31, { para: [2, 9, 15] }), false); leftHalf.rotation.z = -ALPHA; bookRoot.add(leftHalf);
     const rightHalf = mkHalf(1, pageDraw('195', 'R', 32, { para: [6, 13] }), true); bookRoot.add(rightHalf); R.rightHalf = rightHalf;
-    const spine = new THREE.Mesh(new THREE.CylinderGeometry(TAU * .95, TAU * .95, BH + .01, 16, 1, true).rotateX(Math.PI / 2), leatherM); spine.position.y = -TAU * .55; spine.castShadow = true; bookRoot.add(spine);
+    const spine = new THREE.Mesh(new THREE.CylinderGeometry(TAU * .95, TAU * .95, BH - .006, 16, 1, false).rotateX(Math.PI / 2), leatherM); spine.position.y = -TAU * .55; spine.castShadow = true; bookRoot.add(spine);
     // riffling leaves (CPU-bent sheets), front = plain page, back = page 194 (last one)
     R.sheets = [];
     for (let i = 0; i < 3; i++) {
@@ -233,7 +233,10 @@ export default {
     const rim = new THREE.Mesh(new THREE.TorusGeometry(.0645, .0012, 6, 48), M.MAT.gold()); rim.rotation.x = Math.PI / 2; rim.position.y = .0125; tea.add(rim);
     const gp = [[0, .006], [.02, .006], [.022, .012], [.017, .04], [.019, .07], [.025, .1], [.026, .104]];
     const glass = M.lathe(gp.concat([[.0245, .104], [.0235, .1], [.0178, .07], [.0158, .04], [.0195, .014], [0, .012]]), new THREE.MeshPhysicalMaterial({ color: '#ffffff', transparent: true, opacity: .13, roughness: .02, metalness: 0, envMapIntensity: 3.0, clearcoat: 1, clearcoatRoughness: .02, specularIntensity: 1, depthWrite: false }), 40); glass.renderOrder = 8; tea.add(glass);
-    const teaLiq = M.lathe([[0, .013], [.0192, .014], [.0154, .04], [.0172, .07], [.0225, .092], [0, .092]], new THREE.MeshPhysicalMaterial({ color: '#4a0e03', roughness: .05, emissive: '#a8300a', emissiveIntensity: .45, clearcoat: 1, clearcoatRoughness: .03 }), 32); tea.add(teaLiq);
+    const teaGrad = tex(TEX, 8, 256, (x, W, H) => { const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2a0702'); g.addColorStop(.12, '#5a1604'); g.addColorStop(.6, '#9a3a0c'); g.addColorStop(1, '#d26a1e'); x.fillStyle = g; x.fillRect(0, 0, W, H); });
+    teaGrad.wrapS = teaGrad.wrapT = THREE.ClampToEdgeWrapping;
+    const teaLiq = M.lathe([[0, .013], [.0192, .014], [.0154, .04], [.0172, .07], [.0225, .092], [0, .092]], new THREE.MeshPhysicalMaterial({ map: teaGrad, emissiveMap: teaGrad, emissive: '#ffffff', emissiveIntensity: .32, roughness: .05, clearcoat: 1, clearcoatRoughness: .03, transparent: true, opacity: .92 }), 32); tea.add(teaLiq);
+    const gRim = new THREE.Mesh(new THREE.TorusGeometry(.0252, .0009, 6, 40), new THREE.MeshStandardMaterial({ color: '#ffffff', transparent: true, opacity: .55, roughness: .05, envMapIntensity: 2 })); gRim.rotation.x = Math.PI / 2; gRim.position.y = .1035; tea.add(gRim);
     // steam (soft sprites)
     const steamTex = TEX.softDot(64, 0); R.steam = [];
     for (let i = 0; i < 7; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: steamTex, color: '#ffffff', transparent: true, opacity: 0, depthWrite: false })); s.userData.noDepth = true; s.renderOrder = 9; tea.add(s); R.steam.push({ s, ph: i / 7 }); }
@@ -274,7 +277,7 @@ export default {
     ]);
     R.camLook = path3([
       [-0.6, [-.12, .6, -.06]], [1.1, [-.13, .6, -.06]],
-      [1.75, [-.17, .6, -.06]], [2.6, [-.06, .57, -.07]], [3.3, [-.04, .57, -.075]], [4.1, [-.02, .57, -.085]],
+      [1.75, [-.17, .6, -.06]], [2.6, [-.06, .57, -.07]], [3.3, [-.04, .545, -.035]], [4.1, [-.02, .545, -.045]],
       [4.95, [.212, .44, .04]], [5.9, [.213, .44, .05]],
       [7.3, [.04, .54, -.02]], [9.1, [-.01, .57, -.05]], [11.6, [-.01, .58, -.06]],
     ]);

@@ -369,9 +369,32 @@ export function tor({ a = 4, b = 3.2, c = 5.5, n = 2.6, cell = 1.7, cellY = null
   mesh.userData.height = 2 * b - bury + yOff; return mesh;
 }
 
+// Tileable rock-surface texture (colour multiplier + normal + roughness): Voronoi chipped plates with tilted planes,
+// irregular cracks along some plate edges, ridged grain and speckle. Cached.
+let _rockSurf = null;
+export function rockSurface({ size = 512, cells = 4, seed = 61 } = {}) {
+  if (_rockSurf) return _rockSurf;
+  const fine = TEX.fbmField(seed, 48, 3), mid = TEX.fbmField(seed + 7, 8, 4), H = (i, j, s) => h3(((i % cells) + cells) % cells, ((j % cells) + cells) % cells, 0, seed + s);
+  const b = TEX.bake(size, (u, v) => {
+    const x = u * cells, y = v * cells, gx = Math.floor(x), gy = Math.floor(y);
+    let f1 = 9, f2 = 9, ci = 0, cj = 0, fx = 0, fy = 0;
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const cx = gx + i, cy = gy + j; const px = cx + H(cx, cy, 1), py = cy + H(cx, cy, 2); const d = Math.hypot(x - px, y - py); if (d < f1) { f2 = f1; f1 = d; ci = cx; cj = cy; fx = px; fy = py; } else if (d < f2) f2 = d; }
+    const tx = (H(ci, cj, 3) - .5) * .45, ty = (H(ci, cj, 4) - .5) * .45; const plate = (x - fx) * tx + (y - fy) * ty + (H(ci, cj, 5) - .5) * .3;
+    const edge = f2 - f1; const crackOn = H(ci, cj, 6) > .7 ? 1 : 0; const crack = (1 - smoothstep(0, .035, edge)) * crackOn * (.5 + .5 * smoothstep(.3, .7, mid(u * 3 % 1, v * 3 % 1) * .5 + .5));
+    const g = fine(u, v) * .5 + .5, m = mid(u, v) * .5 + .5; const ridged = 1 - Math.abs(mid(u * 2 % 1, v * 2 % 1));
+    const h = .45 + plate * .35 + ridged * .22 + g * .16 - crack * .5;
+    const tone = .9 + (H(ci, cj, 7) - .5) * .06 + (g - .5) * .18 + (m - .5) * .16 - crack * .4;
+    const speck = g > .8 ? .1 : g < .18 ? -.1 : 0;
+    const c = clamp(tone + speck, .35, 1.1);
+    return { c: [c, c * .985, c * .97], h, r: .82 + g * .12 + crack * .05 };
+  }, { normalStrength: 5 });
+  _rockSurf = { map: TEX.texFromCanvas(b.colorCanvas), normalMap: TEX.texFromCanvas(b.normalCanvas, { srgb: false }), roughnessMap: TEX.texFromCanvas(b.roughCanvas, { srgb: false }) };
+  return _rockSurf;
+}
+
 // Faceted boulder/tor: smooth-min hull of many jittered tangent planes over a superellipsoid -> flat chiselled facets
 // with softly rounded edges (stylised but unmistakably stone), a few through-going joints, gentle large-scale unevenness.
-export function facetRock({ a = 4, b = 3, c = 5.5, n = 2.4, planes = 220, jitter = .32, off = [-.12, .2], k = .1, joints = 4, jointW = .1, jointD = .22, lump = .35, seed = 4, detail = 84, bury = .9, grain = 1.5, nScale = .45, palette } = {}) {
+export function facetRock({ a = 4, b = 3, c = 5.5, n = 2.4, planes = 220, jitter = .32, off = [-.12, .2], k = .1, joints = 4, jointW = .1, jointD = .22, lump = .35, seed = 4, detail = 84, bury = .9, grain = 1.5, nScale = .45, bands = 0, palette } = {}) {
   let geo = new THREE.IcosahedronGeometry(1, detail); geo.deleteAttribute('uv'); geo.deleteAttribute('normal'); geo = mergeVertices(geo);
   const r = rng(seed); const r0 = d => 1 / Math.pow(Math.pow(Math.abs(d.x / a), n) + Math.pow(Math.abs(d.y / b), n) + Math.pow(Math.abs(d.z / c), n), 1 / n);
   const gN = P => new THREE.Vector3(Math.sign(P.x) * Math.pow(Math.abs(P.x / a), n - 1) / a, Math.sign(P.y) * Math.pow(Math.abs(P.y / b), n - 1) / b, Math.sign(P.z) * Math.pow(Math.abs(P.z / c), n - 1) / c).normalize();
@@ -404,6 +427,7 @@ export function facetRock({ a = 4, b = 3, c = 5.5, n = 2.4, planes = 220, jitter
     p.setXYZ(v, P.x, P.y + b - bury, P.z);
     const tone = h3(im, 1, 2, seed); const col = pal[Math.floor(tone * pal.length) % pal.length].clone();
     col.multiplyScalar(.94 + .12 * fbm3(P.x * 2.5, P.y * 2.5, P.z * 2.5, seed + 5, 2));
+    if (bands > 0) { const by = P.y * .85 + .35 * fbm3(P.x * .12, 0, P.z * .12, seed + 51, 2); col.multiplyScalar(1 + bands * (smoothstep(.35, .5, fract(by)) - smoothstep(.8, .95, fract(by)) - .4)); }
     const edgeK = 1 - smoothstep(0, .22, t2 - tmin); col.lerp(topC, edgeK * .3);                       // worn, lighter facet edges
     col.lerp(varn, clamp((fbm3(P.x * 1.3, P.y * .1, P.z * 1.3, seed + 13, 3) - .1) * 2.6) * .45 * clamp((P.y + b) / (2 * b) + .3));
     col.lerp(baseC, clamp(1 - (P.y + b - bury) / 1.1) * .45);
@@ -421,8 +445,7 @@ export function facetRock({ a = 4, b = 3, c = 5.5, n = 2.4, planes = 220, jitter
     const tk = clamp((ny - .55) * 2.2) * .5; if (tk > 0) { cols[v * 3] = lerp(cols[v * 3], topC.r, tk); cols[v * 3 + 1] = lerp(cols[v * 3 + 1], topC.g, tk); cols[v * 3 + 2] = lerp(cols[v * 3 + 2], topC.b, tk); }
   }
   geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
-  const st = TEX.stone({ a: '#ffffff', b: '#c8bcb0', seed: 53, repeat: [1, 1] });
-  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, map: st.map, normalMap: st.normalMap, normalScale: new THREE.Vector2(nScale, nScale), roughness: .9 });
+  const rs = rockSurface(); const mat = new THREE.MeshStandardMaterial({ vertexColors: true, map: rs.map, normalMap: rs.normalMap, roughnessMap: rs.roughnessMap, normalScale: new THREE.Vector2(nScale, nScale), roughness: 1 });
   const mesh = new THREE.Mesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true;
   mesh.userData.height = 2 * b - bury; return mesh;
 }

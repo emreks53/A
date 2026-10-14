@@ -41,7 +41,7 @@ export default {
     const rg = C.ridge({ width: 1000, depth: 240, height: 80, seed: 5, color: '#8e4c36', top: '#a4624a' }); rg.position.set(-380, -3, 40); rg.rotation.y = Math.PI / 2 + .1; scene.add(rg);
 
     // THE ROCK: wide red-sandstone butte, long axis along Z, storm comes from -X
-    const rock = C.facetRock({ a: 4.6, b: 4.5, c: 6.6, n: 3.2, planes: 60, jitter: .55, off: [-.38, 0], k: .035, joints: 0, lump: .08, seed: 7, detail: 84, bury: 3.9, grain: .9, nScale: .35 });
+    const rock = C.facetRock({ a: 4.6, b: 4.5, c: 6.6, n: 3.2, planes: 60, jitter: .55, off: [-.38, 0], k: .035, joints: 0, lump: .1, seed: 7, detail: 84, bury: 3.9, grain: .3, nScale: 1.0, bands: .14 });
     scene.add(rock); rock.updateMatrixWorld(true); R.rock = rock; const H = rock.userData.height;
     // boulders at its foot + scatter
     const rr = U.rng(31); const items = [];
