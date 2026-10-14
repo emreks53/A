@@ -48,7 +48,7 @@ export default {
     [[-4.6, -3.2, .7], [-4.9, 2.0, .5], [-3.6, 6.0, .9], [4.0, -4.6, .8], [4.4, -1.4, .45], [2.6, 6.6, .6], [-2.2, 6.9, .5], [6.6, 5.4, .3], [4.6, 1.0, .28]].forEach(([x, z, s], i) => items.push({ x, z, s: [s, s * .62, s * .85], ry: i * 1.3, variant: i % 3 }));
     for (let i = 0; i < 220; i++) { const a = rr() * 6.28, d = 6.5 + Math.pow(rr(), .8) * 30; const x = Math.cos(a) * d * .8, z = Math.sin(a) * d; if (Math.hypot(x - 6.6, z - 2.4) < 1.4 || Math.hypot(x - 9.5, z - 5.8) < 2.5) continue; const s = .03 + Math.pow(rr(), 3) * .3; items.push({ x, z, s: [s, s * .6, s * .8], ry: rr() * 6, variant: i % 3 }); }
     items.forEach(it => { it.y = gh(it.x, it.z) + it.s[1] * .15; });
-    scene.add(C.scatterRocks(items, { seed: 17, detail: 3, palette: ['#8f5a3a', '#6a3f2a', '#a96f48'] }));
+    scene.add(C.scatterRocks(items, { seed: 17, detail: 3, palette: ['#a86e4c', '#80523a', '#bd825a'], big: .12 }));
 
     // the Zülfikar, safe in the lee (same model as s06)
     const SW = [6.6, 2.4]; R.swPos = new THREE.Vector3(SW[0], gh(...SW), SW[1]);
@@ -165,7 +165,7 @@ export default {
     // "defalarca": pill + tally marks that pulse with each spark burst over the rim
     const e = ui.env(t, R.tDef - .05, Infinity, .4, 'pop');
     if (e.o > 0.01) {
-      X.save(); X.globalAlpha = e.o; X.translate(262, 905); X.scale(e.s, e.s);
+      X.save(); X.globalAlpha = e.o; X.translate(300, 905); X.scale(e.s, e.s);
       X.font = '800 44px "Nunito"'; X.textAlign = 'left'; X.textBaseline = 'middle';
       const tw = X.measureText('defalarca').width, n = R.rimT.length, gap = 22, tallyW = n * gap; const W = tw + 34 + tallyW + 60, Hh = 76;
       X.fillStyle = 'rgba(20,12,16,.66)'; X.shadowColor = 'rgba(0,0,0,.35)'; X.shadowBlur = 20; ui.rrect(-W / 2, -Hh / 2, W, Hh, Hh / 2); X.fill(); X.shadowColor = 'transparent';

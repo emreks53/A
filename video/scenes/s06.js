@@ -53,7 +53,7 @@ export default {
     for (let i = 0; i < 190; i++) { const a = rr() * 6.28, d = .35 + Math.pow(rr(), .8) * 14; const x = Math.cos(a) * d, z = Math.sin(a) * d - 2; if (z > 1.2 && Math.abs(x) < 2.4) continue; if (Math.abs(x) < .9 && z < -.5 && z > -9) continue; const s = .02 + Math.pow(rr(), 3) * .2 * (1 + d * .05); items.push({ x, z, s: [s, s * (.5 + rr() * .4), s * (.7 + rr() * .5)], ry: rr() * 6, variant: i % 3 }); }
     for (let i = 0; i < 26; i++) { const x = (rr() < .5 ? -1 : 1) * (6 + rr() * 60), z = -12 - rr() * 70; const s = .6 + rr() * 2.2; items.push({ x, z, s: [s, s * .6, s * .9], ry: rr() * 6, variant: i % 3 }); }
     items.forEach(it => { it.y = gh(it.x, it.z) + (Array.isArray(it.s) ? it.s[1] : it.s) * .12; });
-    scene.add(C.scatterRocks(items, { seed: 9, detail: 3, palette: ['#8f5a3a', '#6a3f2a', '#a96f48'] }));
+    scene.add(C.scatterRocks(items, { seed: 9, detail: 3, palette: ['#a86e4c', '#80523a', '#bd825a'], big: .12 }));
     // distant red-sandstone buttes (same family as the sheltering rock of s08) + Uhud-like ridge
     const b1 = C.butte({ hx: 9, hy: 7, hz: 14, round: 1.5, seed: 21, detail: 24, bury: 2, ledge: .2, noiseAmp: .3 }); b1.position.set(-70, gh(-70, -150) - .5, -150); b1.rotation.y = .5; scene.add(b1);
     const b2 = C.butte({ hx: 7, hy: 5, hz: 10, round: 1.2, seed: 33, detail: 22, bury: 1.5, ledge: .2, noiseAmp: .3 }); b2.position.set(80, gh(80, -190) - .5, -190); b2.rotation.y = -.3; scene.add(b2);

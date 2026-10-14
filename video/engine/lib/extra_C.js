@@ -120,15 +120,17 @@ export function zulfikar(o = {}) {
   const hwF = o.hwF ?? .037, hwG = o.hwG ?? .028, tG = .0058, tF = .0038;
   const bendX = y => bend * Math.pow(1 - y / Lb, 2);
   const hex = (cx, hw, t, bf = .42) => { const b = hw * bf; return [[cx - hw, 0], [cx - hw + b, t], [cx + hw - b, t], [cx + hw, 0], [cx + hw - b, -t], [cx - hw + b, -t]]; };
+  // body cross-section with a central fuller (groove) on both faces
+  const fullered = (cx, hw, t, bf = .4) => { const b = hw * bf, g = hw * .2, dp = t * .5; return [[cx - hw, 0], [cx - hw + b, t], [cx - g, t], [cx, t - dp], [cx + g, t], [cx + hw - b, t], [cx + hw, 0], [cx + hw - b, -t], [cx + g, -t], [cx, -t + dp], [cx - g, -t], [cx - hw + b, -t]]; };
   const loft = secs => {
-    const out = [];
-    for (let k = 0; k < 6; k++) {
+    const out = []; const NP = secs[0].pts.length;
+    for (let k = 0; k < NP; k++) {
       const pos = [], uv = [], idx = [];
-      secs.forEach(s => { const A = s.pts[k], B = s.pts[(k + 1) % 6]; pos.push(A[0], s.y, A[1], B[0], s.y, B[1]); uv.push(s.y / Lb, (A[0] + .06) * 5, s.y / Lb, (B[0] + .06) * 5); });
+      secs.forEach(s => { const A = s.pts[k], B = s.pts[(k + 1) % NP]; pos.push(A[0], s.y, A[1], B[0], s.y, B[1]); uv.push(s.y / Lb, (A[0] + .06) * 5, s.y / Lb, (B[0] + .06) * 5); });
       const m = Math.floor(secs.length / 2), P = i => new THREE.Vector3(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
       const a = P(m * 2), b = P(m * 2 + 1), c = P(m * 2 + 2);
       const n = c.clone().sub(a).cross(b.clone().sub(a));
-      const s = secs[m]; const A = s.pts[k], B = s.pts[(k + 1) % 6]; const exp = new THREE.Vector3((A[0] + B[0]) / 2 - s.cx, 0, (A[1] + B[1]) / 2);
+      const s = secs[m]; const A = s.pts[k], B = s.pts[(k + 1) % NP]; const exp = new THREE.Vector3((A[0] + B[0]) / 2 - s.cx, 0, (A[1] + B[1]) / 2);
       const flip = n.dot(exp) < 0;
       for (let i = 0; i < secs.length - 1; i++) { const a = i * 2, b = a + 1, c = a + 2, d = a + 3; if (!flip) idx.push(a, c, b, b, c, d); else idx.push(a, b, c, b, d, c); }
       const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals(); out.push(geo);
@@ -138,7 +140,7 @@ export function zulfikar(o = {}) {
   const geos = [];
   // body (fork apex -> guard)
   const body = []; const NB = 30;
-  for (let i = 0; i <= NB; i++) { const u = i / NB, y = F + (Lb - F) * u; const hw = hwF + (hwG - hwF) * Math.pow(u, .85), t = lerp(tF, tG, u), cx = bendX(y); body.push({ y, cx, pts: hex(cx, hw, t) }); }
+  for (let i = 0; i <= NB; i++) { const u = i / NB, y = F + (Lb - F) * u; const hw = hwF + (hwG - hwF) * Math.pow(u, .85), t = lerp(tF, tG, u), cx = bendX(y); body.push({ y, cx, pts: o.fuller === false ? hex(cx, hw, t) : fullered(cx, hw, t) }); }
   geos.push(...loft(body));
   // two prongs (tip -> apex)
   for (const sg of [1, -1]) {
@@ -147,7 +149,7 @@ export function zulfikar(o = {}) {
     geos.push(...loft(pr));
   }
   // cap at the notch apex (faces -Y)
-  { const s = body[0].pts; const pos = []; s.forEach(p => pos.push(p[0], F, p[1])); const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Array(12).fill(0), 2)); geo.setIndex([0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 5, 4]); geo.computeVertexNormals(); if (geo.attributes.normal.getY(0) > 0) geo.setIndex([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5]); geo.computeVertexNormals(); geos.push(geo); }
+  { const s = body[0].pts; const n = s.length; const pos = []; s.forEach(p => pos.push(p[0], F, p[1])); const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Array(n * 2).fill(0), 2)); const A = [], B = []; for (let i = 1; i < n - 1; i++) { A.push(0, i + 1, i); B.push(0, i, i + 1); } geo.setIndex(A); geo.computeVertexNormals(); if (geo.attributes.normal.getY(0) > 0) { geo.setIndex(B); } geo.computeVertexNormals(); geos.push(geo); }
   const bladeGeo = mergeGeometries(geos);
   const bm = TEX.brushedMetal({ a: '#f4f6f8', b: '#b4bcc6', seed: 31 });
   const steel = new THREE.MeshPhysicalMaterial({ color: o.steelColor ?? '#e8ecf0', metalness: 1, roughness: o.steelRough ?? .45, map: bm.map, roughnessMap: bm.roughnessMap, clearcoat: o.clearcoat ?? .7, clearcoatRoughness: .1, envMapIntensity: 1.25 });
@@ -217,9 +219,9 @@ export function scatterRocks(items, { variants = 3, seed = 5, detail = 2, palett
   // boulders: mini faceted rocks with rounded edges (same look as the big rock)
   for (let v = 0; v < 2; v++) {
     const list = items.filter(it => (it.variant ?? 0) % 2 === v && sz(it) > big); if (!list.length) continue;
-    const fr = facetRock({ a: 1, b: .8, c: 1.15, n: 2.2, planes: 20, jitter: .55, off: [-.28, 0], k: .045, joints: 0, lump: .04, seed: seed + 50 + v * 7, detail: 18, bury: .25, grain: 1.2, nScale: .9 });
+    const fr = facetRock({ a: 1, b: .8, c: 1.15, n: 2.2, planes: 20, jitter: .55, off: [-.28, 0], k: .045, joints: 0, lump: .04, seed: seed + 50 + v * 7, detail: 18, bury: .5, grain: 1.2, nScale: .9 });
     if (bigTint) fr.material.color.set(bigTint);
-    place(new THREE.InstancedMesh(fr.geometry, fr.material, list.length), list, -.12);
+    place(new THREE.InstancedMesh(fr.geometry, fr.material, list.length), list, -.06);
   }
   return grp;
 }
@@ -389,10 +391,10 @@ export function rockSurface({ size = 512, cells = 4, seed = 61 } = {}) {
     let f1 = 9, f2 = 9, ci = 0, cj = 0, fx = 0, fy = 0;
     for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const cx = gx + i, cy = gy + j; const px = cx + H(cx, cy, 1), py = cy + H(cx, cy, 2); const d = Math.hypot(x - px, y - py); if (d < f1) { f2 = f1; f1 = d; ci = cx; cj = cy; fx = px; fy = py; } else if (d < f2) f2 = d; }
     const tx = (H(ci, cj, 3) - .5) * .45, ty = (H(ci, cj, 4) - .5) * .45; const plate = (x - fx) * tx + (y - fy) * ty + (H(ci, cj, 5) - .5) * .3;
-    const edge = f2 - f1; const crackOn = H(ci, cj, 6) > .7 ? 1 : 0; const crack = (1 - smoothstep(0, .035, edge)) * crackOn * (.5 + .5 * smoothstep(.3, .7, mid(u * 3 % 1, v * 3 % 1) * .5 + .5));
+    const edge = f2 - f1; const crackOn = H(ci, cj, 6) > .86 ? 1 : 0; const crack = (1 - smoothstep(0, .06, edge)) * crackOn * (.5 + .5 * smoothstep(.3, .7, mid(u * 3 % 1, v * 3 % 1) * .5 + .5));
     const g = fine(u, v) * .5 + .5, m = mid(u, v) * .5 + .5; const ridged = 1 - Math.abs(mid(u * 2 % 1, v * 2 % 1));
-    const h = .45 + plate * .35 + ridged * .22 + g * .16 - crack * .5;
-    const tone = .9 + (H(ci, cj, 7) - .5) * .06 + (g - .5) * .18 + (m - .5) * .16 - crack * .4;
+    const h = .45 + plate * .1 + ridged * .26 + g * .18 - crack * .3;
+    const tone = .9 + (H(ci, cj, 7) - .5) * .06 + (g - .5) * .18 + (m - .5) * .16 - crack * .22;
     const speck = g > .8 ? .1 : g < .18 ? -.1 : 0;
     const c = clamp(tone + speck, .35, 1.1);
     return { c: [c, c * .985, c * .97], h, r: .82 + g * .12 + crack * .05 };

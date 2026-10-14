@@ -24,10 +24,10 @@ const EX = [
   { f: E.cesme, ty: .2, D: 2.15, h: .55, ry: -.3, L: .6 },
   { f: E.shoes, ty: .05, D: 2.0, h: .78, ry: -.3, L: .8 },
   { f: E.swordOlive, ty: .1, D: 2.35, h: .42, ry: -.25 },
-  { f: E.rose, ty: .3, D: 2.35, h: .18, ry: -.3 },
+  { f: E.rose, ty: .3, D: 2.35, h: .18, ry: -.3, L: .45 },
   { f: E.dates, ty: .05, D: 1.95, h: .66, ry: -.3 },
   { f: null, ty: 0, D: 3.75, h: .2, ry: 0 },
-  { f: E.bread, ty: .05, D: 2.0, h: .64, ry: -.3 },
+  { f: E.bread, ty: .05, D: 2.0, h: .6, ry: -.3, L: .6 },
   { f: E.jugPour, ty: .14, D: 2.45, h: .36, ry: -.35 },
 ];
 const xA = i => i * S; // row A pedestal x for 0-based hero index i (hero 0 at x=0); far pedestals continue the grid
@@ -208,7 +208,10 @@ export default {
       R.heroes.push(h);
     }
     // ---- far lamps (instanced) + flames + light pools (shader-driven on-times)
-    const far = pa.filter(p => p.hero < 0); R.far = far;
+    const farObj = pa.filter(p => p.hero < 0);
+    farObj.forEach(p => { p.detail = (p.row === 0 && p.x > x14 + .1 && p.x < x14 + 5.2) || (p.row === 1 && p.x > x14 - 4.5 && p.x < x14 + 4.5); });
+    R.detailLamps = farObj.filter(p => p.detail).map((p, k) => { const l = E.hangingLamp({ topY: R.vaultY(p.lamp.z) - p.lamp.y + .3, seed: 30 + k }); l.position.copy(p.lamp); scene.add(l); return { l, p }; });
+    const far = farObj.filter(p => !p.detail); R.far = far;
     const lampProf = [[0, 0], [.014, 0], [.016, .01], [.034, .016], [.06, .036], [.072, .062], [.066, .088], [.043, .108], [.033, .122], [.037, .15], [.049, .172], [.055, .18], [.05, .18], [.03, .12], [0, .11]];
     const glassGeo = E.latheGeo(lampProf, 10);
     R.farGlass = inst(glassGeo, new THREE.MeshBasicMaterial({ color: '#ffffff' }), far.map(p => p.x), (x, k) => m4.makeTranslation(far[k].lamp.x, far[k].lamp.y, far[k].lamp.z), { color: true, recv: false });
@@ -244,7 +247,7 @@ export default {
     halos.userData.uniforms = fu; halos.userData.noDepth = true; halos.frustumCulled = false; scene.add(halos);
     // generic exhibits on far pedestals
     const gg = E.genericGeos(); const pal = ['#c47a48', '#d6a94e', '#3f8a86', '#e8dcc2', '#8a3a2a', '#5b7a3a', '#2f5d9a'];
-    R.genIM = gg.map((geo, ti) => { const list = far.filter((p, k) => (k * 7 + 3) % gg.length === ti); list.forEach((p, k) => { p.gc = new THREE.Color(pal[(k * 3 + ti) % pal.length]); });
+    R.genIM = gg.map((geo, ti) => { const list = farObj.filter((p, k) => (k * 7 + 3) % gg.length === ti); list.forEach((p, k) => { p.gc = new THREE.Color(pal[(k * 3 + ti) % pal.length]); });
       const r = inst(geo, new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: .45, clearcoat: .3 }), list.map(p => p.x), (x, k) => m4.makeRotationY(list[k].rot + k).setPosition(list[k].x, R.PT, list[k].z), { color: true, chunk: 6 }); r.list = list; return r; });
 
     // ---- two real spot lights (lamp keys) alternating between even/odd exhibits
@@ -340,6 +343,7 @@ export default {
     R.motes2.userData.uniforms.opacity.value = .45 * fin;
     // far lamps: glass glow + pedestal / exhibit brightening
     const c = new THREE.Color();
+    R.detailLamps.forEach(({ l, p }) => l.userData.setLit(U.smoothstep(p.on, p.on + .35, t), t));
     R.far.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .35, t); const f = .85 + .15 * Math.sin(t * 9 + k); c.setRGB(.05 + .62 * b * f, .06 + .3 * b * f, .05 + .09 * b * f); R.farGlass.setColor(k, c); });
     R.farGlass.flush();
     R.pedFar.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .4, t); c.setRGB(.8 + .75 * b, .8 + .52 * b, .8 + .28 * b); R.pedIM.setColor(k, c); }); R.pedIM.flush();

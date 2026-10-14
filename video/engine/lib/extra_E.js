@@ -493,7 +493,7 @@ export function shoes() {
 // ---------------------------------------------------------------- 9 AFFEDİCİLİK: sheathed sword laid on a rest + olive branch
 export function swordOlive() {
   const g = new THREE.Group(); const R = rng(91);
-  const brass = MAT.brass(); const leather = MAT.leather({ a: '#3e2618', b: '#22130a', seed: 33 });
+  const brass = MAT.gold({ a: '#b8904a', b: '#6e5226' }); brass.roughness = 1; brass.clearcoat = 0; const leather = MAT.leather({ a: '#2a1a12', b: '#140b06', seed: 33 }); leather.sheen = .08; leather.roughness = .8;
   const wood = MAT.wood({ a: '#7a4c2a', b: '#4a2a14', rings: 10, seed: 93 });
   const sw = new THREE.Group();
   const sc = latheGeo([[0, 0], [.009, .004], [.014, .02], [.017, .07], [.021, .3], [.024, .5]], 24); sc.scale(1, 1, .42); sw.add(M(sc, leather));
@@ -553,7 +553,7 @@ export function rose() {
 // ---------------------------------------------------------------- 11 KANAATKÂRLIK: a few dates and a cup of water on a glazed plate
 export function dates() {
   const g = new THREE.Group(); const R = rng(111);
-  const plateTex = ctex('plate', 64, 256, (x, W, H) => { x.fillStyle = '#efe0bd'; x.fillRect(0, 0, W, H); const band = (v0, v1, c) => { x.fillStyle = c; x.fillRect(0, v0 * H, W, (v1 - v0) * H); }; band(0, .52, '#9a5a32'); band(.52, .74, '#2f7a5a'); band(.74, .77, '#8a5228'); band(.9, .92, '#2f7a5a'); });
+  const plateTex = ctex('plate', 64, 256, (x, W, H) => { x.fillStyle = '#efe0bd'; x.fillRect(0, 0, W, H); const band = (v0, v1, c) => { x.fillStyle = c; x.fillRect(0, (1 - v1) * H, W, (v1 - v0) * H); }; band(0, .46, '#a8653a'); band(.46, .64, '#7a4426'); band(.64, .82, '#2f7a5a'); band(.82, .84, '#7a4426'); band(.93, .945, '#2f7a5a'); });
   const plate = M(latheGeo([[0, 0], [.1, 0], [.118, .004], [.138, .018], [.15, .028], [.147, .032], [.133, .025], [.108, .014], [0, .013]], 48), new THREE.MeshPhysicalMaterial({ map: plateTex, roughness: .3, clearcoat: .8, clearcoatRoughness: .2 }));
   g.add(plate);
   const lt = TEX.leather({ a: '#6a2c12', b: '#3a1407', seed: 29 });
@@ -572,25 +572,26 @@ export function dates() {
 // ---------------------------------------------------------------- 13 DİĞERKÂMLIK: round loaf broken in two, the larger half offered forward
 export function bread() {
   const g = new THREE.Group(); const R = rng(131);
-  const crustTex = ctex('crust', 256, 256, (x, W, H) => { const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#a85a1e'); gr.addColorStop(.5, '#c98a3e'); gr.addColorStop(.8, '#d9a35a'); gr.addColorStop(1, '#b9783a'); x.fillStyle = gr; x.fillRect(0, 0, W, H);
+  const crustTex = ctex('crust', 256, 256, (x, W, H) => { const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#9a5422'); gr.addColorStop(.45, '#b46e30'); gr.addColorStop(.75, '#c98a44'); gr.addColorStop(1, '#b07a44'); x.fillStyle = gr; x.fillRect(0, 0, W, H);
     for (let i = 0; i < 260; i++) { const y = R() * H * .7; x.fillStyle = `rgba(110,50,15,${R() * .25})`; x.beginPath(); x.ellipse(R() * W, y, 3 + R() * 10, 2 + R() * 6, R() * 3, 0, PI * 2); x.fill(); }
     for (let i = 0; i < 160; i++) { const y = R() * H * .45; x.fillStyle = R() < .7 ? '#f3e2b8' : '#2a1d14'; x.beginPath(); x.ellipse(R() * W, y, 1.6, 3.2, R() * 3, 0, PI * 2); x.fill(); }
     for (let i = 0; i < 40; i++) { x.fillStyle = 'rgba(255,245,225,.25)'; x.beginPath(); x.arc(R() * W, R() * H * .5, 4 + R() * 8, 0, PI * 2); x.fill(); } });
-  const crumbTex = ctex('crumb', 256, 128, (x, W, H) => { x.fillStyle = '#f1dfb8'; x.fillRect(0, 0, W, H); for (let i = 0; i < 420; i++) { x.fillStyle = `rgba(${170 + R() * 40 | 0},${130 + R() * 30 | 0},${80 + R() * 20 | 0},${.3 + R() * .5})`; x.beginPath(); x.ellipse(R() * W, R() * H, 1 + R() * 4, 1 + R() * 3, R() * 3, 0, PI * 2); x.fill(); } });
+  const crumbTex = ctex('crumb', 256, 128, (x, W, H) => { x.fillStyle = '#e2c594'; x.fillRect(0, 0, W, H); for (let i = 0; i < 420; i++) { x.fillStyle = `rgba(${170 + R() * 40 | 0},${130 + R() * 30 | 0},${80 + R() * 20 | 0},${.3 + R() * .5})`; x.beginPath(); x.ellipse(R() * W, R() * H, 1 + R() * 4, 1 + R() * 3, R() * 3, 0, PI * 2); x.fill(); } });
   const crustMat = new THREE.MeshPhysicalMaterial({ map: crustTex, roughness: .7, sheen: .5, sheenColor: new THREE.Color('#ffd9a0') });
   const crumbMat = new THREE.MeshStandardMaterial({ map: crumbTex, roughness: .95 });
   const prof = [[0, .066], [.04, .065], [.075, .058], [.1, .044], [.113, .026], [.112, .01], [.104, .001], [0, 0]];
   const topAt = r => { for (let i = 1; i < prof.length - 1; i++) if (prof[i][0] >= r) { const [r0, y0] = prof[i - 1], [r1, y1] = prof[i]; return y0 + (y1 - y0) * (r - r0) / (r1 - r0); } return 0; };
   const half = (seed) => { const hg = new THREE.Group(); const Rh = rng(seed);
-    hg.add(M(latheGeo(prof, 28, 0, PI), crustMat));
+    hg.add(M(latheGeo(prof.slice().reverse(), 28, 0, PI), crustMat));
     const face = surface((u, v) => { const z = (u * 2 - 1) * .109; const top = Math.max(topAt(Math.abs(z)), .0); const y = v * top; const edge = Math.min(u, 1 - u, v, 1 - v); const n = (Math.sin(z * 180 + seed) * Math.sin(y * 210 + seed * 2) * .5 + .5) * .012 + .006; return [-n * smoothstep(0, .12, edge), y, z]; }, 22, 8, true);
     hg.add(M(face, crumbMat)); return hg; };
   const board = M(latheGeo([[0, 0], [.17, 0], [.178, .006], [.176, .018], [.168, .022], [0, .022]], 40), MAT.wood({ a: '#9a6a3c', b: '#6a4220', rings: 20, seed: 133, clearcoat: .2 })); g.add(board);
-  const A = half(3); A.rotation.y = PI; A.position.set(-.012, .022, 0); g.add(A);
-  const B = half(7); B.position.set(.012, .022, 0); g.add(B);
-  const crumbs = []; for (let i = 0; i < 9; i++) { const c = M(new THREE.IcosahedronGeometry(.004 + R() * .004, 0), i % 3 ? crumbMat : crustMat); c.position.set((R() - .5) * .03, .025, (R() - .5) * .12); c.rotation.set(R() * 3, R() * 3, R() * 3); g.add(c); crumbs.push([c, c.position.clone(), R()]); }
+  const bg = new THREE.Group(); bg.rotation.y = PI / 2 + .25; g.add(bg); // break line runs left-right: back half shows its crumb to the viewer
+  const A = half(3); A.rotation.y = PI; A.position.set(-.012, .022, 0); bg.add(A);
+  const B = half(7); B.position.set(.012, .022, 0); bg.add(B);
+  const crumbs = []; for (let i = 0; i < 9; i++) { const c = M(new THREE.IcosahedronGeometry(.004 + R() * .004, 0), i % 3 ? crumbMat : crustMat); c.position.set((R() - .5) * .03, .025, (R() - .5) * .12); c.rotation.set(R() * 3, R() * 3, R() * 3); bg.add(c); crumbs.push([c, c.position.clone(), R()]); }
   g.userData.h = .09; g.userData.w = .36;
-  g.userData.anim = (tau) => { const p = tau > 0 ? 1 - Math.pow(1 - clamp(tau / .55), 3) : 0; B.position.set(.012 + .045 * p, .022, .05 * p); B.rotation.y = -.35 * p; A.position.x = -.012 - .006 * p;
+  g.userData.anim = (tau) => { const p = tau > 0 ? 1 - Math.pow(1 - clamp(tau / .55), 3) : 0; A.position.set(-.012 - .05 * p, .022, -.012 * p); A.rotation.y = PI + .25 * p; B.position.x = .012 + .004 * p;
     crumbs.forEach(([c, p0, r]) => { const s = tau - .05 * r; const hop = s > 0 && s < .35 ? Math.sin(s / .35 * PI) * .012 * (1 - r * .5) : 0; c.position.set(p0.x + (p0.x > 0 ? .02 : -.004) * p, p0.y + hop, p0.z + .01 * p); }); };
   return g;
 }
