@@ -217,15 +217,17 @@ export default {
 
     // ---------- other Risale volumes (untitled spines): stack on the table + row on a wall shelf ----------
     const vols = [['#6b1d22', '#3f0e12'], ['#1f4a3b', '#0f2a20'], ['#23385e', '#101c34'], ['#5a3a1c', '#2e1c0c'], ['#6b1d22', '#3f0e12'], ['#1f4a3b', '#0f2a20'], ['#23385e', '#101c34'], ['#4a2440', '#24101e']];
-    const spineTexFor = (c, seed) => { const t = tex(TEX, 128, 512, (x, W, H) => paintSpine(x, W, H, { color: c[0], dark: c[1], bands: 5, gold: '#e6c068', labels: [{ panel: 1, bg: c[1], dashes: 0 }], fleurons: true }, U.rng(seed))); return t; };
+    const spineTexFor = (c, seed) => { const t = tex(TEX, 128, 512, (x, W, H) => paintSpine(x, W, H, { color: c[0], dark: c[1], bands: 5, gold: '#e6c068', labels: [{ panel: 1, bg: c[1] }], fleurons: true }, U.rng(seed))); return t; };
     const stack = new THREE.Group(); stack.visible = false;
     let yy = 0; [0, 2, 3].forEach((ci, k) => { const th = .036 + k * .004; const b = new THREE.Mesh(M.rbox(.15, th, .215, .003, 1), [M.MAT.leather({ a: vols[ci][0], b: vols[ci][1], seed: 80 + ci })][0]); b.position.set((k - 1) * .006, yy + th / 2, (k - 1) * .004); b.rotation.y = (k - 1) * .06; stack.add(b); const sp = new THREE.Mesh(new THREE.PlaneGeometry(th * .95, .2).rotateZ(Math.PI / 2), new THREE.MeshStandardMaterial({ map: spineTexFor(vols[ci], 90 + k), roughness: .5, metalness: .2 })); sp.rotation.y = -Math.PI / 2; sp.position.set(b.position.x - .0755, yy + th / 2, b.position.z); stack.add(sp); yy += th; });
     M.shadowAll(stack);
-    const shelf = new THREE.Group(); shelf.position.set(.86, 1.06, WALL_Z + .11); scene.add(shelf);
-    const sBoard = new THREE.Mesh(M.rbox(.62, .03, .2, .008), walnut); shelf.add(sBoard);
-    for (const sx of [-1, 1]) { const br = new THREE.Mesh(M.rbox(.025, .12, .16, .006), walnut); br.position.set(sx * .26, -.07, -.01); shelf.add(br); }
-    let sxp = -.27; vols.forEach((c, k) => { const th = .034 + (k % 3) * .006, hh = .2 + (k % 2) * .015; const b = new THREE.Mesh(M.rbox(th, hh, .15, .003, 1), M.MAT.leather({ a: c[0], b: c[1], seed: 100 + k })); b.position.set(sxp + th / 2, .015 + hh / 2, -.005); shelf.add(b); const sp = new THREE.Mesh(new THREE.PlaneGeometry(th * .92, hh * .96), new THREE.MeshStandardMaterial({ map: spineTexFor(c, 120 + k), roughness: .5, metalness: .25 })); sp.position.set(sxp + th / 2, .015 + hh / 2, .0705); shelf.add(sp); sxp += th + .002; });
-    M.shadowAll(shelf);
+    // a row of other Risale volumes standing on the sunlit window sill (untitled spines, gilt ornaments only)
+    const sillRow = new THREE.Group(); sillRow.position.set(-.02, WY0, WALL_Z - .02 + .1); scene.add(sillRow); R.sillRow = sillRow;
+    let sxp = 0; const sillVols = [0, 1, 2, 4, 5, 3, 6];
+    sillVols.forEach((vi, k) => { const c = vols[vi]; const th = .034 + (k % 3) * .005, hh = .2 + (k % 2) * .012; const b = new THREE.Mesh(M.rbox(th, hh, .15, .003, 1), M.MAT.leather({ a: c[0], b: c[1], seed: 100 + vi })); b.position.set(sxp + th / 2, hh / 2, 0); b.rotation.z = k === sillVols.length - 1 ? -.12 : 0; if (k === sillVols.length - 1) b.position.x += .012; sillRow.add(b);
+      const sp = new THREE.Mesh(new THREE.PlaneGeometry(th * .92, hh * .96), new THREE.MeshStandardMaterial({ map: spineTexFor(c, 120 + k), roughness: .5, metalness: .25 })); sp.position.set(b.position.x, hh / 2, .0755); sp.rotation.z = b.rotation.z; sillRow.add(sp); sxp += th + .002; });
+    const bookend = new THREE.Mesh(M.rbox(.012, .12, .1, .004), M.MAT.brass()); bookend.position.set(-.008, .06, 0); sillRow.add(bookend);
+    M.shadowAll(sillRow);
 
     // ---------- tea glass on saucer + rose ----------
     const tea = new THREE.Group(); tea.position.set(-.225, TABLE_Y, .205); scene.add(tea); R.tea = tea;
@@ -272,14 +274,14 @@ export default {
     R.camPos = path3([
       [-0.6, [-.5, .98, 1.3]], [1.1, [-.32, .93, .9]],
       [1.75, [-.15, .99, .22]], [2.6, [-.08, 1.03, .28]], [3.3, [-.03, 1.04, .33]], [4.1, [-.0, .98, .27]],
-      [4.95, [.245, .9, .55]], [5.9, [.25, .9, .6]],
-      [7.3, [.12, 1.02, 1.0]], [9.1, [-.01, 1.06, 1.2]], [11.6, [-.015, 1.08, 1.33]],
+      [4.95, [.25, .97, .63]], [5.9, [.255, .97, .67]],
+      [6.9, [.22, .95, .9]], [8.3, [.02, 1.04, 1.14]], [9.4, [-.01, 1.065, 1.23]], [11.6, [-.015, 1.08, 1.33]],
     ]);
     R.camLook = path3([
       [-0.6, [-.12, .6, -.06]], [1.1, [-.13, .6, -.06]],
       [1.75, [-.17, .6, -.06]], [2.6, [-.06, .57, -.07]], [3.3, [-.04, .545, -.035]], [4.1, [-.02, .545, -.045]],
-      [4.95, [.212, .44, .04]], [5.9, [.213, .44, .05]],
-      [7.3, [.04, .54, -.02]], [9.1, [-.01, .57, -.05]], [11.6, [-.01, .58, -.06]],
+      [4.95, [.213, .44, .085]], [5.9, [.214, .44, .095]],
+      [6.9, [.13, .78, -.58]], [8.3, [-.01, .57, -.06]], [9.4, [-.01, .575, -.055]], [11.6, [-.01, .58, -.06]],
     ]);
     R.camFocus = path1([[-0.6, 1.5], [1.2, 1.1], [2.0, .45], [2.9, .42], [4.0, .36], [5.0, .33], [6.0, .4], [7.4, 1.05], [9.2, 1.5], [11.6, 1.75]]);
   },
@@ -298,7 +300,7 @@ export default {
     const thR = ALPHA + (Math.PI - 2 * ALPHA) * (1 - open);
     R.rightHalf.rotation.z = thR;
     R.sheets.forEach(({ geo, i }) => {
-      const f0 = o1 - .25 + i * .14; const fl = U.prog(t, f0, f0 + .5, 'inOutCubic');
+      const f0 = o1 - .3 + i * .11; const fl = U.prog(t, f0, f0 + .42, 'inOutCubic');
       const base = thR + (Math.PI - 2 * ALPHA) * fl;
       const lag = .9 * Math.sin(Math.PI * fl) - .5 * Math.sin(Math.PI * U.clamp((t - o0) / (o1 - o0)));
       const p = geo.attributes.position; const n = 16; let x = 0, y = 0; const lift = .0012 + i * .0006 + (2 - i) * .0;
@@ -336,7 +338,7 @@ export default {
     const ec = U.smoothstep(tEtr - .1, tEtr + .9, t);
     if (ec > 0) {
       const X = ui.ctx; X.save(); X.globalAlpha = ec; const y0 = 300 + (1 - ec) * 14;
-      const g = X.createLinearGradient(0, y0 - 140, 0, y0 + 190); g.addColorStop(0, 'rgba(255,248,236,0)'); g.addColorStop(.35, 'rgba(255,246,230,.55)'); g.addColorStop(.7, 'rgba(255,246,230,.55)'); g.addColorStop(1, 'rgba(255,248,236,0)'); X.fillStyle = g; X.fillRect(0, y0 - 140, 1080, 330);
+      const g = X.createLinearGradient(0, y0 - 140, 0, y0 + 190); g.addColorStop(0, 'rgba(255,248,236,0)'); g.addColorStop(.3, 'rgba(252,244,228,.8)'); g.addColorStop(.72, 'rgba(252,244,228,.8)'); g.addColorStop(1, 'rgba(255,248,236,0)'); X.fillStyle = g; X.fillRect(0, y0 - 140, 1080, 330);
       X.fillStyle = '#b8862e'; X.fillRect(540 - 170 * ec, y0 - 44, 340 * ec, 2.5); X.fillRect(540 - 170 * ec, y0 + 96, 340 * ec, 2.5);
       X.save(); X.translate(540, y0 - 43); X.rotate(Math.PI / 4); X.fillRect(-6, -6, 12, 12); X.restore(); X.save(); X.translate(540, y0 + 97); X.rotate(Math.PI / 4); X.fillRect(-6, -6, 12, 12); X.restore();
       X.restore();

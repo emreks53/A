@@ -1,0 +1,80 @@
+[
+{
+"t": 77.45,
+"dur": 10.3,
+"kind": "room tone",
+"desc": "quiet large stone-hall room tone",
+"gain": 2
+},
+{
+"t": 78.75,
+"dur": 1.0,
+"kind": "whoosh",
+"desc": "gentle pan whoosh",
+"gain": -3
+},
+{
+"t": 79.98,
+"dur": 0.6,
+"kind": "paper",
+"desc": "soft page whisper as Sifa-i Serif appears"
+},
+{
+"t": 80.5,
+"dur": 0.2,
+"kind": "pop",
+"desc": "small pop for tag"
+},
+{
+"t": 82.38,
+"dur": 1.2,
+"kind": "whoosh",
+"desc": "big airy pull-back whoosh"
+},
+{
+"t": 82.6,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock"
+},
+{
+"t": 82.95,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -2
+},
+{
+"t": 83.25,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -3
+},
+{
+"t": 83.5,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -4
+},
+{
+"t": 83.75,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -5
+},
+{
+"t": 84.2,
+"dur": 0.6,
+"kind": "paper",
+"desc": "single page turn"
+},
+{
+"t": 86.62,
+"dur": 0.5,
+"kind": "stamp",
+"desc": "rubber-stamp thump on ispat"
+}
+]

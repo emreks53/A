@@ -64,7 +64,12 @@ export default {
     const ribList = []; for (let z = ZN - 1; z > ZF; z -= 4) ribList.push({ x: 0, y: 10.3, z });
     scene.add(instances(new THREE.TorusGeometry(HALF - .05, .12, 8, 40, Math.PI), caseMat, ribList, { cast: false }));
     // far wall + tall arched window with the first pre-dawn glow
-    const farWall = new THREE.Mesh(new THREE.PlaneGeometry(2 * HALF + .2, 18), plaster); farWall.position.set(0, 9, ZF); scene.add(farWall);
+    const farPl = M.MAT.plaster({ a: '#a8957a', b: '#7e6d58', seed: 8, repeat: [3, 4] });
+    const farWall = new THREE.Mesh(new THREE.PlaneGeometry(2 * HALF + .2, 18), farPl); farWall.position.set(0, 9, ZF); scene.add(farWall);
+    // window surround: jambs + arched moulding, and two tall pilasters on the end wall
+    const stoneM = new THREE.MeshStandardMaterial({ color: '#8a7860', roughness: .85 });
+    for (const sx of [-1, 1]) { const j = new THREE.Mesh(M.rbox(.28, 5.2, .22, .04), stoneM); j.position.set(sx * 1.84, 2.4 + 2.6, ZF + .1); scene.add(j); const pl = new THREE.Mesh(M.rbox(.6, 10.3, .3, .05), caseMat); pl.position.set(sx * 4.2, 5.15, ZF + .14); scene.add(pl); }
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(1.84, .14, 10, 32, Math.PI), stoneM); arch.position.set(0, 2.4 + 5.1, ZF + .1); scene.add(arch);
     const dawnTex = TEX.drawTexture(256, 512, (x, W, H) => {
       const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#121c3c'); g.addColorStop(.6, '#2c3c6c'); g.addColorStop(.86, '#7a6a80'); g.addColorStop(1, '#c98a66'); x.fillStyle = g;
       x.beginPath(); x.moveTo(0, H); x.lineTo(0, W / 2); x.arc(W / 2, W / 2, W / 2, Math.PI, 0); x.lineTo(W, H); x.closePath(); x.fill();
@@ -147,7 +152,7 @@ export default {
 
     camera.fov = 40; camera.near = .05; camera.far = 300; camera.updateProjectionMatrix();
     R.camPos = path3([[-0.6, [.22, 1.42, 4.7]], [1.2, [.16, 1.52, 3.7]], [2.6, [.08, 2.1, 2.9]], [4.2, [-.08, 3.4, .6]], [5.6, [-.22, 4.5, -1.2]], [6.9, [-.3, 5.0, -2.3]]]);
-    R.camLook = path3([[-0.6, [.1, 1.05, -3]], [1.2, [.05, 1.05, -6]], [2.6, [0, 1.0, -11]], [4.4, [0, .9, -19]], [6.9, [-.05, .8, -25]]]);
+    R.camLook = path3([[-0.6, [.1, 1.28, -3]], [1.2, [.05, 1.22, -6]], [2.6, [0, 1.0, -11]], [4.4, [0, .9, -19]], [6.9, [-.05, .8, -25]]]);
   },
 
   update(t, ctx) {

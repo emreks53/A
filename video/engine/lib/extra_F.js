@@ -130,6 +130,7 @@ export function bookInstances(items, o = {}) {
   const mk = (geo, mat, tint) => { const im = new THREE.InstancedMesh(geo, mat, n); if (tint) im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3); im.castShadow = o.castShadow ?? true; im.receiveShadow = true; im.frustumCulled = false; return im; };
   const spineGeo = spine.clone(); const aS = new Float32Array(n); spineGeo.setAttribute('aSpine', new THREE.InstancedBufferAttribute(aS, 1));
   const mC = mk(covers, coverMat, true), mS = mk(spineGeo, spineMat, true), mP = mk(pages, pageMat, false);
+  mP.castShadow = false; // page blocks sit inside the covers: no need to render them into the shadow map
   const C = new THREE.Color();
   items.forEach((it, i) => {
     mC.setMatrixAt(i, it.m); mS.setMatrixAt(i, it.m); mP.setMatrixAt(i, it.m);

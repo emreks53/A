@@ -141,7 +141,7 @@ export default {
 
   update(t, ctx) {
     const { ui, U, camera, post } = ctx;
-    const wideK = U.smoothstep(4.1, 6.0, t); post.exposure = U.lerp(0.72, 1.3, wideK); R.hemi.intensity = U.lerp(.8, 1.25, wideK);
+    const wideK = U.smoothstep(4.1, 6.0, t); post.exposure = U.lerp(0.72, 1.42, wideK); R.hemi.intensity = U.lerp(.8, 1.45, wideK);
     const P = R.camPos(t), L = R.camLook(t);
     P.add(U.shake(t, .006 + .02 * U.smoothstep(3.2, 6, t), .35, 4));
     camera.position.copy(P); camera.lookAt(L); camera.updateMatrixWorld();

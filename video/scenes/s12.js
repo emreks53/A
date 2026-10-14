@@ -127,8 +127,8 @@ export default {
       const r = U.rng(8); x.fillStyle = '#6e5232'; x.fillRect(W * .47, H * .38, W * .05, H * .3);
       for (let i = 0; i < 70; i++) { const a = r() * 6.28, d = Math.pow(r(), .6) * W * .32; const cx = W * .5 + Math.cos(a) * d * 1.2, cy = H * .3 + Math.sin(a) * d * .55; const c = 70 + r() * 60; x.fillStyle = `rgba(${c * .55 | 0},${c * 1.3 | 0},${c * .35 | 0},.95)`; x.beginPath(); x.arc(cx, cy, 30 + r() * 60, 0, 6.3); x.fill(); }
       for (let i = 0; i < 90; i++) { const a = r() * 6.28, d = W * .3 + r() * W * .06; x.fillStyle = `rgba(255,236,170,${.25 + r() * .3})`; x.beginPath(); x.arc(W * .5 + Math.cos(a) * d * 1.2, H * .3 + Math.sin(a) * d * .55, 8 + r() * 18, 0, 6.3); x.fill(); } });
-    const garden = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshBasicMaterial({ map: gardenTex, fog: false, color: new THREE.Color(.95, .92, .86) }));
-    garden.position.set(xd + .8, 2.6, -6.5); scene.add(garden);
+    const garden = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshBasicMaterial({ map: gardenTex, fog: false, color: new THREE.Color(.78, .76, .72) }));
+    garden.position.set(xd + 2.5, 2.3, -6.5); scene.add(garden);
 
     // ---- moldings along the back wall
     const runs = [[-20, xd - .62], [xd + .62, 82]];
@@ -184,8 +184,8 @@ export default {
     const x14 = xA(13); R.x14 = x14;
     pa.forEach(p => {
       if (p.hero >= 0) p.on = R.T[p.hero] - .05;
-      else if (p.row === 0) p.on = p.x > x14 ? R.W.butun - .25 + (p.x - x14) * .026 : R.W.diger;
-      else p.on = p.x > x14 - 3 ? R.W.butun - .2 + (p.x - x14 + 3) * .026 : R.W.diger - .1;
+      else if (p.row === 0) p.on = p.x > x14 ? R.W.ve + .12 + (p.x - x14) * .03 : R.W.diger;
+      else p.on = p.x > x14 - 3 ? R.W.ve + .2 + (p.x - x14 + 3) * .03 : R.W.ve + .1;
       p.lamp = p.row === 0 ? V(p.x - .34, 1.68, .3) : V(p.x + .34, 1.68, ROWB - .3);
     });
 
@@ -229,7 +229,7 @@ export default {
     const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.BufferAttribute(fpos, 3)); fg.setAttribute('on', new THREE.BufferAttribute(fon, 1)); fg.setAttribute('seed', new THREE.BufferAttribute(fsd, 1));
     const fu = { time: { value: 0 }, map: { value: TEX.softDot(64, .25) } };
     const flames = new THREE.Points(fg, new THREE.ShaderMaterial({ uniforms: fu, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      vertexShader: `uniform float time; attribute float on, seed; varying float vB; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; float b = smoothstep(on, on + .3, time); vB = b * (.85 + .15 * sin(time * 11. + seed * 7.)); gl_PointSize = max(2., 300. / -mv.z) * (.4 + .6 * b); }`,
+      vertexShader: `uniform float time; attribute float on, seed; varying float vB; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; float b = smoothstep(on, on + .3, time); vB = b * (.85 + .15 * sin(time * 11. + seed * 7.)); gl_PointSize = max(2., 240. / -mv.z) * (.4 + .6 * b); }`,
       fragmentShader: `uniform sampler2D map; varying float vB; void main(){ float a = texture2D(map, gl_PointCoord).a; vec3 c = mix(vec3(1., .5, .16), vec3(1., .9, .65), a * a); gl_FragColor = vec4(c * 2.4, a * vB); }` }));
     flames.userData.uniforms = fu; flames.userData.noDepth = true; flames.frustumCulled = false; scene.add(flames);
     const halos = new THREE.Points(fg, new THREE.ShaderMaterial({ uniforms: fu, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
@@ -275,7 +275,7 @@ export default {
     keys.push({ t: -.75, pos: c0.pos.clone().add(V(-1.0, .55, 1.25)), look: c0.look.clone().add(V(.45, .05, 0)), fov: 33, a: 1 });
     keys.push({ t: R.T[0] + .78, ...camFor(0), a: .45 });
     for (let i = 1; i < 14; i++) { const k = camFor(i), tk = R.T[i] + .28; let prev = keys[keys.length - 1];
-      if (tk - prev.t > 1.25) { // long gap: linger on the current exhibit (slow drift + push-in), then glide on
+      if (tk - prev.t > .95) { // long gap: linger on the current exhibit (slow drift + push-in), then glide on
         const th = Math.max(prev.t + .45, tk - .85); keys.push({ t: th, pos: prev.pos.clone().add(V(.11, -.01, -.07)), look: prev.look.clone().add(V(.06, 0, 0)), fov: prev.fov, a: .9 }); prev = keys[keys.length - 1]; }
       const tm = (prev.t + tk) / 2;
       keys.push({ t: tm, pos: prev.pos.clone().lerp(k.pos, .5).add(V(0, .05, .2)), look: prev.look.clone().lerp(k.look, .5).add(V(0, .03, 0)), fov: 31.5, a: 1 });
@@ -333,7 +333,7 @@ export default {
     R.motes2.userData.uniforms.opacity.value = .45 * fin;
     // far lamps: glass glow + pedestal / exhibit brightening
     const c = new THREE.Color();
-    R.far.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .35, t); const f = .85 + .15 * Math.sin(t * 9 + k); c.setRGB(.06 + 1.15 * b * f, .07 + .72 * b * f, .06 + .32 * b * f); R.farGlass.setColorAt(k, c); });
+    R.far.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .35, t); const f = .85 + .15 * Math.sin(t * 9 + k); c.setRGB(.05 + .62 * b * f, .06 + .3 * b * f, .05 + .09 * b * f); R.farGlass.setColorAt(k, c); });
     R.farGlass.instanceColor.needsUpdate = true;
     R.pedFar.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .4, t); R.pedIM.instanceColor.setXYZ(k, .8 + .75 * b, .8 + .52 * b, .8 + .28 * b); }); R.pedIM.instanceColor.needsUpdate = true;
     R.genIM.forEach(im => { im.userData.list.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .4, t); c.copy(p.gc).multiplyScalar(.55 + 1.0 * b); c.r *= 1 + .25 * b; im.setColorAt(k, c); }); im.instanceColor.needsUpdate = true; });

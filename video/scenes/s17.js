@@ -103,7 +103,7 @@ export default {
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(6, 6).rotateX(-Math.PI / 2), M.MAT.darkWood({ rings: 40, repeat: [3, 3] })); floor.receiveShadow = true; scene.add(floor);
 
     // ---------------- desk + Gibbon's things ----------------
-    const desk = M.desk({ w: 1.45, d: .8, leather: false, material: G.GMAT.mahogany({ a: '#7a3a1e', b: '#3c170a', rings: 10 }) }); desk.position.set(0, 0, wz + .41); scene.add(desk);
+    const desk = M.desk({ w: 1.45, d: .8, leather: false, material: G.GMAT.mahogany({ a: '#7a3a1e', b: '#3c170a', rings: 10, clearcoat: .12 }) }); desk.position.set(0, 0, wz + .41); scene.add(desk);
     const csL = G.candlestick({ seed: 3, candleH: .15 }); csL.position.set(-.33, deskTop, .12); scene.add(csL);
     const csR = G.candlestick({ seed: 8, candleH: .12 }); csR.position.set(.47, deskTop, .1); scene.add(csR);
     R.fL = new THREE.Vector3(-.33, deskTop + csL.userData.flameY, .12); R.fR = new THREE.Vector3(.47, deskTop + csR.userData.flameY, .1);
@@ -126,7 +126,7 @@ export default {
       // gilt rosettes in the lower compartments
       for (const cy of [.675, .835]) { x.save(); x.translate(W / 2, H * cy); for (let k = 0; k < 8; k++) { x.rotate(Math.PI / 4); x.beginPath(); x.ellipse(0, -11, 4, 9, 0, 0, 7); x.fill(); } x.beginPath(); x.arc(0, 0, 5, 0, 7); x.fill(); x.restore(); }
     };
-    const vols = new THREE.Group(); vols.position.set(.12, deskTop, -.2); vols.rotation.y = -.04; scene.add(vols); R.vols = vols;
+    const vols = new THREE.Group(); vols.position.set(.12, deskTop, -.2); vols.rotation.y = -.09; scene.add(vols); R.vols = vols;
     const vr2 = U.rng(5); const vd = .078, vw = .25, vh = .34; const bandMat = M.MAT.leather({ a: '#5a3218', b: '#2e170a', seed: 9 });
     for (let i = 0; i < 6; i++) {
       const b = G.tome({ w: vw, h: vh, d: vd, a: '#5c3418', b: '#2e170a', seed: 70 + i, spineDraw: spine(i), spineBg: '#4e2c14', raised: [.07, .45, .6, .75, .92].map(b => .5 - b), bandMat, spineFlat: .4 });
@@ -147,9 +147,9 @@ export default {
     // ---------------- camera: night view -> down to the desk -> the six volumes ----------------
     camera.fov = 40; camera.near = .03; camera.far = 900; camera.updateProjectionMatrix();
     R.cam = G.camPath(camera, {
-      pos: [[.1, 1.45, .25], [.11, 1.42, .55], [.13, 1.37, .98], [.14, 1.33, 1.24], [.14, 1.315, 1.2]],
-      look: [[.12, 1.56, -3], [.12, 1.45, -2], [.13, 1.2, -.9], [.13, 1.07, -.45], [.13, 1.06, -.4]],
-      keys: [[-.6, 0], [.4, .22], [1.4, .58], [2.3, .87], [3.9, 1]], shake: { amp: .0022, freq: .4 },
+      pos: [[.1, 1.45, .25], [.11, 1.42, .55], [.12, 1.37, .98], [.13, 1.33, 1.24], [.2, 1.31, 1.13]],
+      look: [[.12, 1.56, -3], [.12, 1.45, -2], [.13, 1.2, -.9], [.13, 1.07, -.45], [.15, 1.055, -.4]],
+      keys: [[-.6, 0], [.4, .22], [1.4, .58], [2.2, .8], [3.9, 1]], shake: { amp: .0022, freq: .4 },
     });
   },
 
