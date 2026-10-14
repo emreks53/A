@@ -291,7 +291,7 @@ export default {
     const P = R.camPos(t), L = R.camLook(t); P.add(U.shake(t, .004, .3, 6));
     camera.fov = U.lerp(34, 42, U.smoothstep(6.3, 9.5, t)); camera.updateProjectionMatrix();
     camera.position.copy(P); camera.lookAt(L); camera.updateMatrixWorld();
-    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.25, .9, U.smoothstep(6.5, 9.5, t)) + (t < 1.5 ? .5 : 0); post.dof.amount = .75;
+    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.3, .9, U.smoothstep(6.5, 9.5, t)) + .5 * (1 - U.smoothstep(1.0, 1.8, t)) + .45 * U.smoothstep(4.2, 4.9, t) * (1 - U.smoothstep(6.1, 6.8, t)); post.dof.amount = .72;
 
     // --- book opening on "kitabının" + riffle (breeze) ---
     const tKit = ctx.wordTime('kitabının'), t195 = ctx.wordTime('195');

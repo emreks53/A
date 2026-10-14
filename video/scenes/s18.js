@@ -154,7 +154,7 @@ export default {
     R.carlyle.localToWorld(cW.set(-.022, .15, .11)); R.gibbon.localToWorld(gW.set(.026, .17, .12));
     if (0) ui.callout('T. Carlyle', { t, t0: tEser - .05, t1: tBat + .15, anchor: cW, to: [205, 700], size: 38, bg: 'rgba(16,20,38,.78)', color: '#fff4dc' });
     if (0) ui.callout('E. Gibbon', { t, t0: tEser + .3, t1: tBat + .15, anchor: gW, to: [868, 760], size: 38, bg: 'rgba(16,20,38,.78)', color: '#fff4dc' });
-    ui.text('bu hakikati ifade eden eserler', { t, t0: tHak - .05, t1: tYal - .1, x: 540, y: 300, size: 44, weight: 800, color: '#fff4dc', anim: 'rise' });
+    ui.text('bu hakikati ifade eden eserler', { t, t0: tHak - .05, t1: tYal - .1, x: 540, y: 300, size: 44, weight: 800, color: '#fff4dc', anim: 'rise', bg: 'rgba(16,20,38,.55)', pad: 22 });
 
     // ring around the two books (draw-on), then "2 örnek" pill
     const c3 = new THREE.Vector3(); R.hb.localToWorld(c3.set(.003, .14, .06));

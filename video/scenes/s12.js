@@ -21,8 +21,8 @@ const EX = [
   { f: E.chest, ty: .11, D: 2.3, h: .38, ry: -.4 },
   { f: E.wheat, ty: .29, D: 2.65, h: .22, ry: 0, L: .42 },
   { f: E.letters, ty: .12, D: 2.1, h: .3, ry: -.38, L: .5 },
-  { f: E.cesme, ty: .2, D: 2.15, h: .55, ry: -.3 },
-  { f: E.shoes, ty: .05, D: 2.05, h: .62, ry: -.3, L: .8 },
+  { f: E.cesme, ty: .2, D: 2.15, h: .55, ry: -.3, L: .6 },
+  { f: E.shoes, ty: .05, D: 2.0, h: .78, ry: -.3, L: .8 },
   { f: E.swordOlive, ty: .1, D: 2.35, h: .42, ry: -.25 },
   { f: E.rose, ty: .3, D: 2.35, h: .18, ry: -.3 },
   { f: E.dates, ty: .05, D: 1.95, h: .66, ry: -.3 },
@@ -58,11 +58,13 @@ export default {
     const sunDir = V(-.25, .62, -.74).normalize();
     const sun = new THREE.DirectionalLight('#ffd7a0', 2.6); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -.0006; sun.shadow.normalBias = .03; sun.shadow.radius = 2;
     const sTarget = V(32, 0, 0); sun.position.copy(sTarget).addScaledVector(sunDir, 60); sun.target.position.copy(sTarget); scene.add(sun, sun.target);
-    { // fit the static shadow frustum around the hall (x -12..78) + garden strip behind the door
-      const cam = sun.shadow.camera; cam.position.copy(sun.position); cam.lookAt(sTarget); cam.updateMatrixWorld(true); const inv = cam.matrixWorldInverse;
-      let mn = V(1e9, 1e9, 1e9), mx = V(-1e9, -1e9, -1e9);
-      for (const x of [-12, 78]) for (const y of [0, 8]) for (const z of [-4, 6]) { const p = V(x, y, z).applyMatrix4(inv); mn.min(p); mx.max(p); }
-      cam.left = mn.x; cam.right = mx.x; cam.bottom = mn.y; cam.top = mx.y; cam.near = Math.max(.1, -mx.z - 5); cam.far = -mn.z + 5; cam.updateProjectionMatrix();
+    { // shadow frustum fitted per frame around the visible part of the hall (texel-snapped to avoid shimmer)
+      const cam = sun.shadow.camera; cam.position.copy(sun.position); cam.lookAt(sTarget); cam.updateMatrixWorld(true); const inv = cam.matrixWorldInverse.clone();
+      R.fitSun = (x0, x1) => { const mn = V(1e9, 1e9, 1e9), mx = V(-1e9, -1e9, -1e9), p = V();
+        for (const x of [x0, x1]) for (const y of [0, 8]) for (const z of [-4, 6]) { p.set(x, y, z).applyMatrix4(inv); mn.min(p); mx.max(p); }
+        const w = mx.x - mn.x, h = mx.y - mn.y, tw = w / 2048, th = h / 2048; const l = Math.floor(mn.x / tw) * tw, b = Math.floor(mn.y / th) * th;
+        cam.left = l; cam.right = l + w + tw; cam.bottom = b; cam.top = b + h + th; cam.near = Math.max(.1, -mx.z - 5); cam.far = -mn.z + 5; cam.updateProjectionMatrix(); };
+      R.fitSun(-12, 78);
     }
     const hemi = new THREE.HemisphereLight('#a4bce4', '#8a6848', .62); scene.add(hemi); R.hemi = hemi;
 
@@ -72,7 +74,7 @@ export default {
       x.fillStyle = '#9a4a32'; for (const [cx, cy] of [[0, 0], [W, 0], [0, H], [W, H], [W / 2, H / 2], [W / 2, 0], [0, H / 2], [W / 2, H], [W, H / 2]]) { x.save(); x.translate(cx, cy); x.rotate(Math.PI / 4); x.fillRect(-26, -26, 52, 52); x.restore(); } });
     tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping; tileTex.repeat.set(160 / 1.5, 50 / 1.5); tileTex.anisotropy = 8;
     const stN = TEX.stone({ a: '#ffffff', b: '#cccccc', seed: 3, repeat: [160 / 3, 50 / 3] });
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(160, 50).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: tileTex, normalMap: stN.normalMap, normalScale: new THREE.Vector2(.35, .35), roughness: .78, clearcoat: .12, clearcoatRoughness: .5 }));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(160, 50).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: tileTex, normalMap: stN.normalMap, normalScale: new THREE.Vector2(.35, .35), roughness: .62 }));
     floor.position.set(40, 0, 10); floor.receiveShadow = true; scene.add(floor);
 
     // ---- back wall: instanced bays (niche + clerestory window), door bay for HOŞGÖRÜ
@@ -93,8 +95,16 @@ export default {
     const nicheMat = new THREE.MeshStandardMaterial({ map: nichePl.map, normalMap: nichePl.normalMap, normalScale: new THREE.Vector2(.5, .5), roughness: .92 });
     const bayIdx = []; for (let i = -16; i <= 64; i++) if (i !== DOOR) bayIdx.push(i);
     const m4 = new THREE.Matrix4();
-    const inst = (geo, mat, xs, fn) => { const im = new THREE.InstancedMesh(geo, mat, xs.length); xs.forEach((x, k) => { im.setMatrixAt(k, fn ? fn(x, k) : m4.makeTranslation(x, 0, 0)); }); im.castShadow = true; im.receiveShadow = true; scene.add(im); return im; };
-    inst(frontGeo, lime, bayIdx.map(xA)); inst(backGeo, lime, bayIdx.map(xA)); const tilesIM = inst(tileGeo, nicheMat, bayIdx.map(xA)); tilesIM.castShadow = false;
+    // chunked instancing (8 per mesh) so camera / shadow frustum culling can skip far parts of the endless gallery
+    const inst = (geo, mat, xs, fn, o = {}) => { const CH = o.chunk ?? 8, res = { meshes: [], map: [] };
+      for (let s0 = 0; s0 < xs.length; s0 += CH) { const n = Math.min(CH, xs.length - s0); const im = new THREE.InstancedMesh(geo, mat, n);
+        for (let j = 0; j < n; j++) { const k = s0 + j; im.setMatrixAt(j, fn ? fn(xs[k], k) : m4.makeTranslation(xs[k], 0, 0)); res.map.push([res.meshes.length, j]); }
+        if (o.color) im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3).fill(1), 3);
+        im.castShadow = o.cast ?? false; im.receiveShadow = o.recv ?? true; im.computeBoundingSphere(); if (o.order != null) im.renderOrder = o.order; scene.add(im); res.meshes.push(im); }
+      res.setColor = (k, c) => { const [mi, j] = res.map[k]; res.meshes[mi].setColorAt(j, c); };
+      res.flush = () => res.meshes.forEach(m => { if (m.instanceColor) m.instanceColor.needsUpdate = true; });
+      return res; };
+    inst(frontGeo, lime, bayIdx.map(xA), null, { cast: true }); inst(backGeo, lime, bayIdx.map(xA), null, { cast: true }); inst(tileGeo, nicheMat, bayIdx.map(xA));
     // door bay
     const xd = xA(DOOR); R.xd = xd;
     const dS = new THREE.Shape(); [[-S / 2, 0], [-.46, 0], [-.46, 2.02], [.46, 2.02], [.46, 0], [S / 2, 0], [S / 2, VS], [-S / 2, VS]].forEach(([x, y], i) => i ? dS.lineTo(x, y) : dS.moveTo(x, y)); dS.closePath(); dS.holes.push(winHole());
@@ -108,7 +118,7 @@ export default {
     const tymRing = new THREE.Shape(); E.archPts(.58, 2.18, 1.6, 14).forEach((p, i) => i ? tymRing.lineTo(p.x, p.y) : tymRing.moveTo(p.x, p.y)); tymRing.closePath(); tymRing.holes.push((() => { const p = new THREE.Path(); E.archPts(.5, 2.18, 1.6, 14).forEach((q, i) => i ? p.lineTo(q.x, q.y) : p.moveTo(q.x, q.y)); p.closePath(); return p; })());
     const tr = new THREE.Mesh(ext(tymRing, .05, .012).translate(xd, 0, WZ - .01), jambMat); tr.castShadow = true; scene.add(tr);
     // door leaves (open inward on HOŞGÖRÜ)
-    const doorWood = MAT.wood({ a: '#6e3f1e', b: '#3e200c', rings: 26, seed: 51, clearcoat: .35 });
+    const doorWood = MAT.wood({ a: '#8f5a32', b: '#5a3418', rings: 26, seed: 51, clearcoat: .35 });
     const studMat = new THREE.MeshStandardMaterial({ color: '#2e2a26', metalness: .8, roughness: .4 });
     R.leaves = [];
     for (const sx of [-1, 1]) {
@@ -133,7 +143,7 @@ export default {
     // ---- moldings along the back wall
     const runs = [[-20, xd - .62], [xd + .62, 82]];
     for (const [a, b] of runs) { const base = new THREE.Mesh(Mo.rbox(b - a, .12, .05, .015), lime); base.position.set((a + b) / 2, .06, WZ + .02); base.receiveShadow = true; scene.add(base); }
-    const band = new THREE.Mesh(Mo.rbox(102, .09, .07, .02), lime); band.position.set(31, 2.78, WZ + .03); band.castShadow = band.receiveShadow = true; scene.add(band);
+    const band = new THREE.Mesh(Mo.rbox(102, .09, .07, .02), lime); band.position.set(31, 2.78, WZ + .03); band.receiveShadow = true; scene.add(band);
 
     // ---- vault + transverse ribs + arcade on the courtyard side + roof
     const zc = (WZ + AZ) / 2, va = (AZ - WZ) / 2, LEN = 104, X0 = -22;
@@ -176,16 +186,15 @@ export default {
     R.peds = pa;
     const pedM = (p) => m4.makeRotationY(p.rot).setPosition(p.x, 0, p.z);
     const near = pa.filter(p => p.row === 0 && p.x > -2 && p.x < xA(14) + .1), farP = pa.filter(p => !near.includes(p)); R.pedFar = farP;
-    inst(ped.stone, pedStone, near.map(p => p.x), (x, k) => pedM(near[k]).clone()); inst(ped.pad, felt, near.map(p => p.x), (x, k) => pedM(near[k]).clone());
+    inst(ped.stone, pedStone, near.map(p => p.x), (x, k) => pedM(near[k]).clone(), { cast: true, chunk: 4 }); inst(ped.pad, felt, near.map(p => p.x), (x, k) => pedM(near[k]).clone(), { cast: true, chunk: 4 });
     const pedLo = E.pedestalGeos(1);
-    R.pedIM = inst(pedLo.stone, pedStone, farP.map(p => p.x), (x, k) => pedM(farP[k]).clone()); inst(pedLo.pad, felt, farP.map(p => p.x), (x, k) => pedM(farP[k]).clone());
-    R.pedIM.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(farP.length * 3).fill(1), 3);
+    R.pedIM = inst(pedLo.stone, pedStone, farP.map(p => p.x), (x, k) => pedM(farP[k]).clone(), { color: true }); inst(pedLo.pad, felt, farP.map(p => p.x), (x, k) => pedM(farP[k]).clone());
     // lamp + light-on times for every pedestal (heroes: their word; others: the finale cascade)
     const x14 = xA(13); R.x14 = x14;
     pa.forEach(p => {
       if (p.hero >= 0) p.on = R.T[p.hero] - .05;
-      else if (p.row === 0) p.on = p.x > x14 ? R.W.ve + .12 + (p.x - x14) * .03 : R.W.diger;
-      else p.on = p.x > x14 - 3 ? R.W.ve + .2 + (p.x - x14 + 3) * .03 : R.W.ve + .1;
+      else if (p.row === 0) p.on = p.x > x14 ? R.W.ve - .08 + (p.x - x14) * .03 : R.W.diger;
+      else p.on = p.x > x14 - 3 ? R.W.ve + (p.x - x14 + 3) * .03 : R.W.ve - .1;
       p.lamp = p.row === 0 ? V(p.x - .34, 1.68, .3) : V(p.x + .34, 1.68, ROWB - .3);
     });
 
@@ -202,13 +211,10 @@ export default {
     const far = pa.filter(p => p.hero < 0); R.far = far;
     const lampProf = [[0, 0], [.014, 0], [.016, .01], [.034, .016], [.06, .036], [.072, .062], [.066, .088], [.043, .108], [.033, .122], [.037, .15], [.049, .172], [.055, .18], [.05, .18], [.03, .12], [0, .11]];
     const glassGeo = E.latheGeo(lampProf, 10);
-    R.farGlass = new THREE.InstancedMesh(glassGeo, new THREE.MeshBasicMaterial({ color: '#ffffff' }), far.length);
-    R.farGlass.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(far.length * 3), 3);
-    far.forEach((p, k) => R.farGlass.setMatrixAt(k, m4.makeTranslation(p.lamp.x, p.lamp.y, p.lamp.z))); scene.add(R.farGlass);
+    R.farGlass = inst(glassGeo, new THREE.MeshBasicMaterial({ color: '#ffffff' }), far.map(p => p.x), (x, k) => m4.makeTranslation(far[k].lamp.x, far[k].lamp.y, far[k].lamp.z), { color: true, recv: false });
     const chainGeo = E.merge([new THREE.CylinderGeometry(.004, .004, 1, 4).translate(0, .5, 0)]);
-    const chains = new THREE.InstancedMesh(chainGeo, new THREE.MeshStandardMaterial({ color: '#3a2c1c', metalness: .6, roughness: .5 }), far.length);
-    far.forEach((p, k) => { const top = R.vaultY(p.lamp.z) + .3; chains.setMatrixAt(k, m4.compose(V(p.lamp.x, p.lamp.y + .18, p.lamp.z), new THREE.Quaternion(), V(1, top - p.lamp.y - .18, 1))); }); scene.add(chains);
-    const balls = new THREE.InstancedMesh(new THREE.SphereGeometry(.03, 6, 4), MAT.brass(), far.length); far.forEach((p, k) => balls.setMatrixAt(k, m4.makeTranslation(p.lamp.x, p.lamp.y + .56, p.lamp.z))); scene.add(balls);
+    inst(chainGeo, new THREE.MeshStandardMaterial({ color: '#3a2c1c', metalness: .6, roughness: .5 }), far.map(p => p.x), (x, k) => { const p = far[k]; const top = R.vaultY(p.lamp.z) + .3; return m4.compose(V(p.lamp.x, p.lamp.y + .18, p.lamp.z), new THREE.Quaternion(), V(1, top - p.lamp.y - .18, 1)); }, { recv: false });
+    inst(new THREE.SphereGeometry(.03, 6, 4), MAT.brass(), far.map(p => p.x), (x, k) => m4.makeTranslation(far[k].lamp.x, far[k].lamp.y + .56, far[k].lamp.z));
     const all = pa; // pools for every pedestal (heroes too)
     const decal = (geoFn, color, gain, posFn, list = all) => {
       const g = geoFn(); const im = new THREE.InstancedMesh(g, null, list.length);
@@ -238,9 +244,8 @@ export default {
     halos.userData.uniforms = fu; halos.userData.noDepth = true; halos.frustumCulled = false; scene.add(halos);
     // generic exhibits on far pedestals
     const gg = E.genericGeos(); const pal = ['#c47a48', '#d6a94e', '#3f8a86', '#e8dcc2', '#8a3a2a', '#5b7a3a', '#2f5d9a'];
-    R.genIM = gg.map((geo, ti) => { const list = far.filter((p, k) => (k * 7 + 3) % gg.length === ti); const im = new THREE.InstancedMesh(geo, new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: .45, clearcoat: .3 }), list.length);
-      im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(list.length * 3), 3); list.forEach((p, k) => { im.setMatrixAt(k, m4.makeRotationY(p.rot + k).setPosition(p.x, R.PT, p.z)); p.gc = new THREE.Color(pal[(k * 3 + ti) % pal.length]); });
-      im.castShadow = true; im.receiveShadow = true; im.userData.list = list; scene.add(im); return im; });
+    R.genIM = gg.map((geo, ti) => { const list = far.filter((p, k) => (k * 7 + 3) % gg.length === ti); list.forEach((p, k) => { p.gc = new THREE.Color(pal[(k * 3 + ti) % pal.length]); });
+      const r = inst(geo, new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: .45, clearcoat: .3 }), list.map(p => p.x), (x, k) => m4.makeRotationY(list[k].rot + k).setPosition(list[k].x, R.PT, list[k].z), { color: true, chunk: 6 }); r.list = list; return r; });
 
     // ---- two real spot lights (lamp keys) alternating between even/odd exhibits
     R.spots = [0, 1].map(() => { const s = new THREE.SpotLight('#ffc88e', 0, 4.2, .62, .75, 2); s.castShadow = true; s.shadow.mapSize.set(1024, 1024); s.shadow.bias = -.0004; s.shadow.normalBias = .015; s.shadow.camera.near = .05; s.shadow.radius = 3; scene.add(s, s.target); return s; });
@@ -264,6 +269,7 @@ export default {
     const wb = []; for (let i = -16; i <= 64; i++) { const x = xA(i); wb.push(beamGeo([V(x - .2, 3.05, zw), V(x + .2, 3.05, zw), V(x + .2, 3.62, zw), V(x - .2, 3.62, zw)])); }
     R.winBeams = new THREE.Mesh(E.merge(wb), beamMat(.05)); R.winBeams.userData.noDepth = true; R.winBeams.renderOrder = 4; R.winBeams.frustumCulled = false; scene.add(R.winBeams);
     R.doorBeam = new THREE.Mesh(beamGeo([V(xd - .45, .02, WZ - .1), V(xd + .45, .02, WZ - .1), V(xd + .45, 2.0, WZ - .1), V(xd - .45, 2.0, WZ - .1)]), beamMat(0)); R.doorBeam.userData.noDepth = true; R.doorBeam.renderOrder = 4; R.doorBeam.frustumCulled = false; scene.add(R.doorBeam);
+    R.bounce = new THREE.PointLight('#ffcf98', 0, 3.5, 2); R.bounce.position.set(xd - .25, .45, WZ + .35); scene.add(R.bounce);
     R.doorDust = FX.particles({ count: 160, center: [xd + .4, 1.0, 0], box: [1.4, 2.0, 1.6], size: 2.5, color: '#ffe6b8', opacity: 0, drift: [.02, .04, .01], swirl: .06 }); scene.add(R.doorDust);
     R.motes = FX.particles({ count: 380, center: [9, 1.6, .1], box: [26, 2.6, 1.3], size: 2.2, color: '#ffe2b0', opacity: .4, drift: [.03, .02, 0], swirl: .05 }); scene.add(R.motes);
     R.motes2 = FX.particles({ count: 600, center: [x14 + 16, 2.0, 1.6], box: [30, 3.6, 4.6], size: 3.5, color: '#ffe2b0', opacity: 0, drift: [.03, .02, 0], swirl: .06 }); scene.add(R.motes2);
@@ -325,18 +331,19 @@ export default {
     const td = R.T[DOOR]; const op = U.prog(t, td - .08, td + .8, 'outCubic'); const settle = t > td + .5 ? Math.exp(-4 * (t - td - .5)) * Math.sin((t - td - .5) * 9) * .04 : 0;
     const ang = DEBUG && Math.floor(t) === DOOR ? 1.6 : 1.62 * op + settle;
     R.leaves.forEach(({ hinge, sx }) => { hinge.rotation.y = sx < 0 ? ang : -ang; });
-    R.doorBeam.material.userData.u.opacity.value = .07 * U.smoothstep(.0, .8, op); R.doorBeam.material.userData.u.time.value = t; R.doorBeam.material.userData.u.camPos.value.copy(camera.position);
+    R.doorBeam.material.userData.u.opacity.value = .07 * U.smoothstep(.0, .8, op); R.doorBeam.visible = op > .002 && t < td + 3.5; R.doorDust.visible = R.doorBeam.visible; R.bounce.intensity = 2.6 * op * (t < td + 3.5 ? 1 : 0); R.doorBeam.material.userData.u.time.value = t; R.doorBeam.material.userData.u.camPos.value.copy(camera.position);
     R.doorDust.userData.uniforms.opacity.value = .75 * op;
     // window beams stronger in the wide finale
     const fin = U.prog(t, R.W.ve, R.W.ve + 2.2, 'inOutSine');
-    R.winBeams.material.userData.u.opacity.value = .016 * fin; R.winBeams.material.userData.u.time.value = t; R.winBeams.material.userData.u.camPos.value.copy(camera.position);
+    { const cx = Math.round(camera.position.x * 2) / 2, g = U.prog(t, R.W.ve - .3, R.W.ve + 1.6, 'inOutSine'); R.fitSun(cx - 7 - 5 * g, cx + 9 + 60 * g); }
+    R.winBeams.material.userData.u.opacity.value = .016 * fin; R.winBeams.visible = fin > .002; R.winBeams.material.userData.u.time.value = t; R.winBeams.material.userData.u.camPos.value.copy(camera.position);
     R.motes2.userData.uniforms.opacity.value = .45 * fin;
     // far lamps: glass glow + pedestal / exhibit brightening
     const c = new THREE.Color();
-    R.far.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .35, t); const f = .85 + .15 * Math.sin(t * 9 + k); c.setRGB(.05 + .62 * b * f, .06 + .3 * b * f, .05 + .09 * b * f); R.farGlass.setColorAt(k, c); });
-    R.farGlass.instanceColor.needsUpdate = true;
-    R.pedFar.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .4, t); R.pedIM.instanceColor.setXYZ(k, .8 + .75 * b, .8 + .52 * b, .8 + .28 * b); }); R.pedIM.instanceColor.needsUpdate = true;
-    R.genIM.forEach(im => { im.userData.list.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .4, t); c.copy(p.gc).multiplyScalar(.55 + 1.0 * b); c.r *= 1 + .25 * b; im.setColorAt(k, c); }); im.instanceColor.needsUpdate = true; });
+    R.far.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .35, t); const f = .85 + .15 * Math.sin(t * 9 + k); c.setRGB(.05 + .62 * b * f, .06 + .3 * b * f, .05 + .09 * b * f); R.farGlass.setColor(k, c); });
+    R.farGlass.flush();
+    R.pedFar.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .4, t); c.setRGB(.8 + .75 * b, .8 + .52 * b, .8 + .28 * b); R.pedIM.setColor(k, c); }); R.pedIM.flush();
+    R.genIM.forEach(im => { im.list.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .4, t); c.copy(p.gc).multiplyScalar(.55 + 1.0 * b); c.r *= 1 + .25 * b; im.setColor(k, c); }); im.flush(); });
     // ---- post: DOF on the current exhibit, opening up in the finale
     const look = camera.position.clone().add(dir.clone().multiplyScalar(1));
     let fd = 2.5; { let best = 1e9; R.heroes.forEach(h => { const d = h.tgt.clone().sub(camera.position); const along = d.dot(dir); const lat = d.clone().sub(dir.clone().multiplyScalar(along)).length(); if (along > .5 && lat < best) { best = lat; fd = along; } }); }

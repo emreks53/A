@@ -24,7 +24,7 @@ export default {
     const deskTop = .7825;
     scene.background = new THREE.Color('#0a1022');
     scene.fog = new THREE.FogExp2('#18213b', .0022);
-    scene.environment = await ctx.loadHDR('satara_night_no_lamps'); scene.environmentIntensity = .35;
+    scene.environment = await ctx.loadHDR('satara_night_no_lamps'); scene.environmentIntensity = .2;
 
     // ---------------- outside: moon, Alps, Lake Geneva, garden ----------------
     const el = 7.5 * Math.PI / 180, az = 4.5 * Math.PI / 180; const moonDir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)); R.moonDir = moonDir;
@@ -136,7 +136,7 @@ export default {
 
     // ---------------- lights ----------------
     const hemi = new THREE.HemisphereLight('#2a3760', '#1a120c', .3); scene.add(hemi);
-    const moonL = new THREE.DirectionalLight('#8fa8ff', .38); moonL.position.copy(moonDir).multiplyScalar(-1).multiplyScalar(-6).add(new THREE.Vector3(0, 2, 0)); moonL.target.position.set(0, deskTop, 0); scene.add(moonL, moonL.target);
+    const moonL = new THREE.DirectionalLight('#8fa8ff', .26); moonL.position.copy(moonDir).multiplyScalar(-1).multiplyScalar(-6).add(new THREE.Vector3(0, 2, 0)); moonL.target.position.set(0, deskTop, 0); scene.add(moonL, moonL.target);
     const spot = new THREE.SpotLight('#ffbe78', .85, 5, .9, 1, 2); spot.position.copy(R.fL).add(new THREE.Vector3(.0, .02, .03)); spot.target.position.set(.12, deskTop + .15, -.1);
     spot.castShadow = true; spot.shadow.mapSize.set(1024, 1024); spot.shadow.bias = -.0006; spot.shadow.normalBias = .01; spot.shadow.camera.near = .04; scene.add(spot, spot.target); R.spot = spot;
     const pL = ENV.pointLight({ color: '#ffa04a', intensity: .35, distance: 3, pos: R.fL.toArray() }); scene.add(pL);
@@ -147,8 +147,8 @@ export default {
     // ---------------- camera: night view -> down to the desk -> the six volumes ----------------
     camera.fov = 40; camera.near = .03; camera.far = 900; camera.updateProjectionMatrix();
     R.cam = G.camPath(camera, {
-      pos: [[.1, 1.45, .25], [.11, 1.42, .55], [.12, 1.37, .98], [.13, 1.33, 1.24], [.2, 1.31, 1.13]],
-      look: [[.12, 1.56, -3], [.12, 1.45, -2], [.13, 1.2, -.9], [.13, 1.07, -.45], [.15, 1.055, -.4]],
+      pos: [[.1, 1.45, .25], [.11, 1.42, .55], [.12, 1.37, .98], [.155, 1.335, 1.25], [.115, 1.3, 1.2]],
+      look: [[.12, 1.56, -3], [.12, 1.45, -2], [.13, 1.2, -.9], [.14, 1.07, -.45], [.12, 1.05, -.4]],
       keys: [[-.6, 0], [.4, .22], [1.4, .58], [2.2, .8], [3.9, 1]], shake: { amp: .0022, freq: .4 },
     });
   },

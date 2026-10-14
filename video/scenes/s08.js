@@ -52,7 +52,7 @@ export default {
 
     // the Zülfikar, safe in the lee (same model as s06)
     const SW = [6.6, 2.4]; R.swPos = new THREE.Vector3(SW[0], gh(...SW), SW[1]);
-    const sword = C.zulfikar({ hwF: .041, hwG: .033, hiltScale: 1.28, steelRough: .22, bend: .03 }); sword.scale.setScalar(1.12);
+    const sword = C.zulfikar({ hwF: .041, hwG: .033, hiltScale: 1.28, steelRough: .34, bend: .03, clearcoat: 0 }); sword.scale.setScalar(1.12);
     sword.position.set(SW[0], gh(...SW) - .05, SW[1]); sword.rotation.set(-.12, .76, .03); scene.add(sword); sword.updateMatrixWorld(true); R.sword = sword;
     const heap = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 14, 0, Math.PI * 2, 0, Math.PI / 2), M.MAT.sand({ a: '#d6985e', b: '#ad6e42', repeat: [2, 1] }));
     heap.scale.set(.2, .03, .14); heap.position.copy(R.swPos).add(new THREE.Vector3(0, -.004, 0)); heap.rotation.y = .76; heap.receiveShadow = true; scene.add(heap);
@@ -83,12 +83,22 @@ export default {
     for (let k = 0; k < 9; k++) hit(tAl - .05 + k * .045 + ar() * .03, 1.0 + ar() * 3, -3 + ar() * 7, .12 + ar() * .2, (ar() - .5) * .4, 16, k < 3);
     // impacts high on the rim later (sparks fly over the top -> seen from the lee), pulsing on "defalarca"
     R.rimT = [];
-    for (let k = 0; k < 5; k++) { const t = tDef + .05 + k * .24; const zz = 1.2 + (k % 2 ? 1.1 : -0.6) + k * .35; const top = ray.set(new THREE.Vector3(-1.6 - (k % 2) * .5, 30, zz), new THREE.Vector3(0, -1, 0)) || ray.intersectObject(rock, false)[0]; const I = top ? hit(t, 0, 0, .05, .02, 0, false, top.point.clone().add(new THREE.Vector3(0, -.12, 0))) : null; if (I) { R.rimT.push(t); C.sparkBurst(sparks, { p: I.point.toArray(), dir: [.8, .75, -.05], t0: t, n: 30, speed: [6.5, 10.5], spread: .3, life: [.9, 1.35], w: .016, seed: 300 + k, color: '#ffd896', i: 3.6, drag: .6 }); } }
+    { // choose top-surface points that the lee camera sees just under the rock's skyline (top-right), so their sparks rise into view
+      const tc = new THREE.PerspectiveCamera(36, 9 / 16, .1, 500); tc.position.set(10.5, gh(10.5, 6.05) + .86, 6.05); tc.lookAt(6.6, .62, 2.42); tc.updateMatrixWorld(true);
+      const gp = rock.geometry.attributes.position, gn = rock.geometry.attributes.normal; const cand = []; const v = new THREE.Vector3();
+      for (let i = 0; i < gp.count; i += 5) { if (gn.getY(i) < .55 || gp.getX(i) > 1.5) continue; v.fromBufferAttribute(gp, i); const q = v.clone().project(tc); const sx = (q.x * .5 + .5), sy = (-q.y * .5 + .5); if (sx > .6 && sx < .92 && sy > .1 && sy < .26 && q.z < 1) cand.push({ v: v.clone(), sx, sy }); }
+      cand.sort((A, B) => A.sx - B.sx); R.rimCand = cand.length;
+      for (let k = 0; k < 5 && cand.length; k++) { const c = cand[Math.floor((k + .5) / 5 * cand.length)]; const t = tDef + .05 + k * .24;
+        arrows.push({ L: c.v.clone(), vL: C.landingVel(Math.PI / 2 + (k - 2) * .05, .42, 40), tL: t, flight: 2.2, mode: 'break', normal: new THREE.Vector3(0, 1, 0), ground: gh });
+        R.rimT.push(t); R.hits.push({ t, p: c.v.clone().add(new THREE.Vector3(0, .4, 0)), big: false });
+        C.sparkBurst(sparks, { p: c.v.toArray(), dir: [.45, 1, -.25], t0: t, n: 34, speed: [4.5, 8.5], spread: .4, life: [.7, 1.15], w: .034, seed: 300 + k, color: '#ffd896', i: 5, drag: .7 });
+        pf.push({ p: c.v.clone().add(new THREE.Vector3(0, .3, 0)).toArray(), t0: t, life: 1.1, s0: .2, s1: 1.2, v: [.8, .9, 0], a: .35, color: '#e0aa80' }); }
+    }
     // a few more distant impacts while in the lee (keeps the storm audible/visible over the rim)
     for (let k = 0; k < 10; k++) hit(3 + ar() * 3.6, 2 + ar() * 2.4, -4 + ar() * 9, .12 + ar() * .2, (ar() - .5) * .4, 10);
     // arrows that clear the top and fly on, high over the lee (never landing near the sword)
     for (let i = 0; i < 40; i++) { const t = -.4 + ar() * 7.4; const x = 40 + ar() * 25, z = -8 + ar() * 18; arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL: C.landingVel(Math.PI / 2 + (ar() - .5) * .3, .32 + ar() * .15, 44), tL: t + 1.1, flight: 2.6, mode: 'pass', ground: gh }); }
-    for (let i = 0; i < 26; i++) { const t = 2.6 + ar() * 4.6; const x = 46 + ar() * 20, z = 9.5 + ar() * 5; arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL: C.landingVel(Math.PI / 2 + (ar() - .5) * .1, .12 + ar() * .1, 44), tL: t + 1.2, flight: 2.6, mode: 'pass', ground: gh }); }
+    for (let i = 0; i < 26; i++) { const t = 2.6 + ar() * 4.6; const x = 46 + ar() * 20, z = -9.5 - ar() * 5; arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL: C.landingVel(Math.PI / 2 + (ar() - .5) * .1, .12 + ar() * .1, 44), tL: t + 1.2, flight: 2.6, mode: 'pass', ground: gh }); }
     R.volley = C.arrowVolley(arrows, { seed: 21, arrow: { thick: 1.6 } }); scene.add(R.volley.group);
     R.trails = C.streaks(R.volley.trails({ w: .06, len: 2.4, color: '#ffe8d0', a: .5 }).filter(it => it.t0 > -3), { fadeIn: .02, fadeOut: .97, fog: fogO }); scene.add(R.trails);
     R.sparks = C.streaks(sparks, { gravity: [0, -9.8, 0], shutter: .03, additive: true, cool: '#a02a08', fadeIn: .01, fadeOut: .55 }); scene.add(R.sparks);
@@ -99,7 +109,7 @@ export default {
     // storm dust: streams in from -X, lifted over the rock, passes high over the lee; fast sand streaks on the windward side only
     R.storm = C.dustField({ count: 90, center: [-8, 2.6, -3], box: [64, 5.2, 26], size: [2.5, 7], wind: [8, 0, 0], swirl: .5, shade: '#6a2c18', lit: '#f09a5a', sunDir: sunDir.toArray(), opacity: .3, nearFade: 3.5, scatter: 1.4, seed: 4, fog: fogO, yMin: 0, flow: [-4.6, H, 5.6, 1] });
     R.sheets = C.dustField({ count: 40, center: [-14, .55, 0], box: [22, .8, 30], size: [1, 2.6], wind: [9, 0, 0], swirl: .2, shade: '#7a3a20', lit: '#e8884a', sunDir: sunDir.toArray(), opacity: .2, nearFade: 2.5, scatter: 1.4, seed: 5, fog: fogO, yMin: 0 });
-    R.endStream = C.dustField({ count: 46, center: [6, 1.9, 10.6], box: [48, 3.6, 5], size: [1.6, 4.2], wind: [9.5, 0, 0], swirl: .4, shade: '#7a3a22', lit: '#f0a060', sunDir: sunDir.toArray(), opacity: .28, nearFade: 2.5, scatter: 1.2, seed: 6, yMin: 0 });
+    R.endStream = C.dustField({ count: 46, center: [6, 1.9, -10.8], box: [48, 3.6, 5], size: [1.6, 4.2], wind: [9.5, 0, 0], swirl: .4, shade: '#7a3a22', lit: '#f0a060', sunDir: sunDir.toArray(), opacity: .28, nearFade: 2.5, scatter: 1.2, seed: 6, yMin: 0 });
     scene.add(R.storm, R.sheets, R.endStream);
     const sr = U.rng(8); const sand = [];
     for (let i = 0; i < 240; i++) { const sp = 8 + sr() * 5, life = 18 / sp; const z = -9 + sr() * 18; sand.push({ p: [-23 + sr() * 2, .02 + Math.pow(sr(), 2.2) * .8, z], v: [sp, (sr() - .4) * .3, (sr() - .5) * .4], t0: -sr() * life, life, w: .009 + sr() * .008, len: .3 + sr() * .5, color: '#eca06a', a: .2 + sr() * .2, loop: 1 }); }
@@ -146,7 +156,7 @@ export default {
     R.sky.userData.uniforms.dark.value = .45 * (1 - calm);
     post.vignette = U.lerp(.55, .45, calm);
     const fd = camera.position.distanceTo(calm > .5 ? R.swPos.clone().setY(R.swPos.y + .6) : R.L);
-    post.dof.focus = fd; post.dof.range = U.lerp(14, 5, calm); post.dof.amount = U.lerp(.25, .5, calm);
+    post.dof.focus = fd; post.dof.range = U.lerp(14, 8, calm); post.dof.amount = U.lerp(.25, .42, calm);
     R.motes.material.uniforms.master.value = calm;
 
     // --- typography ---

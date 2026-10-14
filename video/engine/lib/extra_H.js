@@ -289,7 +289,7 @@ export function flamePoints(positions, on, { size = 0.05, seedBase = 0, glow = f
         float fl = .86 + .14 * sin(time * 11. + seed) * sin(time * 5.3 + seed * 1.7);
         ${glow ? '' : 'p.y += size * .35 * b;'}
         vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
-        vB = b * fl; gl_PointSize = max(1.5, size * pxScale / -mv.z) * b * pop * (${glow ? '1.' : '.9 + .1 * fl'}); }`,
+        vB = b * fl; gl_PointSize = min(${glow ? '320.' : '160.'}, max(1.5, size * pxScale / -mv.z) * b * pop * (${glow ? '1.' : '.9 + .1 * fl'})); }`,
     fragmentShader: `uniform sampler2D map; uniform float master, inten; uniform vec3 col; varying float vB;
       void main(){ vec4 t = texture2D(map, gl_PointCoord); ${glow ? 'gl_FragColor = vec4(col * inten, t.a * vB * master);' : 'gl_FragColor = vec4(t.rgb * inten, t.a * vB * master);'} }`,
   });

@@ -67,10 +67,6 @@ export default {
       const glass = new THREE.Mesh(new THREE.PlaneGeometry(sashW - st * 2, sashH - st * 2), new THREE.MeshBasicMaterial({ map: condTex[k], transparent: true, depthWrite: false, color: '#e9eef3', opacity: .75 }));
       glass.position.set(0, cy, z + .004); glass.renderOrder = 5; scene.add(glass); R.panes.push(glass);
     });
-    // a few rain drops trickling down the lower panes
-    R.drops = [];
-    const dropMat = new THREE.MeshPhysicalMaterial({ color: '#eef3f8', roughness: .05, clearcoat: 1, transparent: true, opacity: .85 });
-    [[-.28, .3, 1.4], [-.05, .7, 1.75], [.24, .1, 1.55]].forEach(([x, ph, y0]) => { const d = new THREE.Mesh(new THREE.SphereGeometry(.006, 10, 8), dropMat); d.scale.set(1, 1.4, .4); d.position.set(x, y0, fz + .034); scene.add(d); R.drops.push({ d, x, ph, y0 }); });
     // curtains
     const cL = G.curtain({ w: .42, h: 2.25, a: '#4a3a52', b: '#2a2030', sheen: '#c8b8e0', sway: .004, seed: 1, pleats: 6 }); cL.position.set(ox0 - .2, 2.55, wz + .06); scene.add(cL);
     const cR = G.curtain({ w: .42, h: 2.25, a: '#4a3a52', b: '#2a2030', sheen: '#c8b8e0', sway: .004, seed: 4, pleats: 6 }); cR.position.set(ox1 + .2, 2.55, wz + .06); scene.add(cR);
@@ -126,7 +122,7 @@ export default {
     // ---------------- lights ----------------
     const hemi = new THREE.HemisphereLight('#a9b8cc', '#4a3d33', .3); scene.add(hemi);
     const day = new THREE.DirectionalLight('#c7d4e6', 2.4); day.position.set(-.5, 3.4, -3.6); day.target.position.set(0, deskTop, 0);
-    day.castShadow = true; day.shadow.mapSize.set(2048, 2048); const sc = day.shadow.camera; sc.left = -1.3; sc.right = 1.3; sc.top = 1.3; sc.bottom = -1.3; sc.near = .5; sc.far = 9; day.shadow.bias = -.0004; day.shadow.normalBias = .015; day.shadow.radius = 7;
+    day.castShadow = true; day.shadow.mapSize.set(1024, 1024); const sc = day.shadow.camera; sc.left = -1.3; sc.right = 1.3; sc.top = 1.3; sc.bottom = -1.3; sc.near = .5; sc.far = 9; day.shadow.bias = -.0004; day.shadow.normalBias = .015; day.shadow.radius = 7;
     scene.add(day, day.target);
     const fill = new THREE.DirectionalLight('#ffe4c8', .55); fill.position.set(1.2, 1.8, 3); scene.add(fill); // soft bounce from the room
     const cl = ENV.pointLight({ color: '#ffa04a', intensity: .45, distance: 2.4, pos: R.flamePos.toArray() }); scene.add(cl); R.cl = cl;
@@ -152,7 +148,6 @@ export default {
     // candle flicker, rain drops, loose page lifting in the draught
     R.cl.intensity = .45 * (1 + (Math.sin(t * 12.7) * .5 + Math.sin(t * 7.9 + 1) * .3 + Math.sin(t * 21.3) * .2) * .12);
     for (const v of R.veils) v.nt.offset.set(t * .012 * (3 - v.k), Math.sin(t * .3 + v.k) * .01);
-    for (const d of R.drops) { const s = ((t * .045 + d.ph) % 1); d.d.position.y = d.y0 - s * .22 - Math.max(0, Math.sin(t * 3 + d.ph * 9)) * .002; }
     const lift = U.smoothstep(.4, 1.1, t) * (1 - U.smoothstep(1.6, 2.6, t)); const p = R.loose.geometry.attributes.position;
     for (let i = 0; i < p.count; i++) { const x0 = R.looseBase[i * 3], z0 = R.looseBase[i * 3 + 2]; const k = Math.max(0, x0 / .19 - .35) / .65; p.setY(i, (k * k * .03 + Math.sin(t * 6 + z0 * 20) * .002 * k) * lift); }
     p.needsUpdate = true; R.loose.geometry.computeVertexNormals();

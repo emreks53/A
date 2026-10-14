@@ -10,7 +10,7 @@ let R = {};
 export default {
   post: {
     exposure: 1.0,
-    bloom: { enabled: true, strength: 0.45, radius: 0.5, threshold: 0.82 },
+    bloom: { enabled: true, strength: 0.32, radius: 0.4, threshold: 0.92 },
     grade: { contrast: 1.1, saturation: 1.14, warmth: 0.03, lift: [0.01, 0.008, 0.025], gain: [1.03, 1.0, 0.97] },
     vignette: 0.45, grain: 0.03, aberration: 0.0012,
     dof: { enabled: true, focus: 4.5, range: 3.4, amount: 0.5 },
@@ -39,7 +39,7 @@ export default {
     scene.add(ground); R.ground = ground; const gh = (x, z) => ground.userData.heightAt(x, z);
 
     // the Zülfikar, planted (only the very points in the sand so the split tip stays visible)
-    const sword = C.zulfikar({ hwF: .041, hwG: .033, hiltScale: 1.28, steelRough: .22, bend: .03 }); sword.scale.setScalar(1.12); sword.position.set(0, -.05, 0); sword.rotation.set(-.07, -.19, .025);
+    const sword = C.zulfikar({ hwF: .041, hwG: .033, hiltScale: 1.28, steelRough: .34, bend: .03, clearcoat: 0 }); sword.scale.setScalar(1.12); sword.position.set(0, -.05, 0); sword.rotation.set(-.07, -.41, .025);
     scene.add(sword); sword.updateMatrixWorld(true); R.sword = sword;
     const heap = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 14, 0, Math.PI * 2, 0, Math.PI / 2), M.MAT.sand({ a: '#dca064', b: '#b57646', repeat: [2, 1] }));
     heap.scale.set(.2, .032, .14); heap.position.set(.005, -.004, 0); heap.receiveShadow = true; scene.add(heap);
@@ -73,7 +73,7 @@ export default {
     R.wall = C.dustField({ count: 26, center: [-60, 30, -300], box: [640, 24, 60], size: [110, 170], wind: [6, 0, 0], shade: '#5e3628', lit: '#a8694a', sunDir: sunDir.toArray(), opacity: 0, nearFade: 1, scatter: .6, seed: 7 });
     scene.add(R.cape, R.wisps, R.sheets, R.wall);
     // reflections: capture the real surroundings from the sword's position (sword hidden)
-    sky.userData.uniforms.sunI.value = 1.6; scene.environment = C.envFromScene(renderer, scene, [0, .55, 0], [sword, R.cape, R.wisps, R.sheets, R.wall, R.sand]); sky.userData.uniforms.sunI.value = 6; R.gh = gh;
+    sky.userData.uniforms.sunI.value = .9; scene.environment = C.envFromScene(renderer, scene, [0, .55, 0], [sword, R.cape, R.wisps, R.sheets, R.wall, R.sand]); sky.userData.uniforms.sunI.value = 6; R.gh = gh;
     // specular glint of the sun on the right quillon ball (short, on "benzersiz")
     R.glint = C.starGlint({ size: .16 }); R.glint.position.copy(sword.userData.ballR).add(new THREE.Vector3(.004, .006, .01)); sword.add(R.glint);
 
@@ -97,7 +97,7 @@ export default {
     R.sand.userData.uniforms.master.value = gust; R.sheets.userData.uniforms.master.value = gust; R.cape.userData.uniforms.master.value = .7 + .5 * (gust - .6);
     // --- glint ---
     const g = Math.exp(-Math.pow((t - (tBen + .1)) / .2, 2));
-    R.glint.material.opacity = .9 * g; R.glint.scale.setScalar(.05 + .17 * g); R.glint.material.rotation = t * .8;
+    R.glint.material.opacity = .75 * g; R.glint.scale.setScalar(.03 + .085 * g); R.glint.material.rotation = t * .8;
     // --- storm approaching at the end ---
     const st = U.smoothstep(tZat - .7, ctx.dur + .5, t);
     R.wall.userData.uniforms.opacity.value = .85 * st; R.wall.userData.uniforms.boxCenter.value.set(-60, 22 + st * 20, -300 + st * 60);

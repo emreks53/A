@@ -1,0 +1,97 @@
+[
+{
+"t": 87.3,
+"dur": 3.4,
+"kind": "globe",
+"desc": "antique globe spinning in brass meridian, slowing"
+},
+{
+"t": 87.5,
+"dur": 4.95,
+"kind": "fire",
+"desc": "quiet candle flutter",
+"gain": -4
+},
+{
+"t": 87.5,
+"dur": 4.95,
+"kind": "room tone",
+"desc": "dim study room tone"
+},
+{
+"t": 87.6,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -6
+},
+{
+"t": 88.1,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -6
+},
+{
+"t": 88.6,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -6
+},
+{
+"t": 89.0,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -5
+},
+{
+"t": 89.2,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -5
+},
+{
+"t": 89.4,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -5
+},
+{
+"t": 89.6,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -5
+},
+{
+"t": 90.35,
+"dur": 0.6,
+"kind": "chime",
+"desc": "soft low chime as the Medina marker appears",
+"gain": -3
+},
+{
+"t": 90.45,
+"dur": 1.4,
+"kind": "whoosh",
+"desc": "light airy swish of arcs travelling",
+"gain": -4
+},
+{
+"t": 90.65,
+"dur": 0.3,
+"kind": "metal",
+"desc": "gentle brass settle",
+"gain": -6
+},
+{
+"t": 91.75,
+"dur": 1.0,
+"kind": "chime",
+"desc": "warm resonant ping as arcs land"
+}
+]

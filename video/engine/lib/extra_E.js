@@ -281,7 +281,7 @@ export function chest() {
   g.add(M(rbox(W, H, D, .012).translate(0, H / 2, 0), wood));
   const dome = new THREE.Shape(); dome.moveTo(-D / 2, 0); dome.lineTo(D / 2, 0); dome.lineTo(D / 2, .015); dome.absellipse(0, .015, D / 2, .055, 0, PI, false); dome.lineTo(-D / 2, 0);
   const lidGeo = new THREE.ExtrudeGeometry(dome, { depth: W, bevelEnabled: true, bevelThickness: .006, bevelSize: .006, bevelSegments: 2, curveSegments: 24 }); lidGeo.translate(0, 0, -W / 2); lidGeo.rotateY(PI / 2);
-  const lid = M(lidGeo, wood); lid.position.y = H + .002; g.add(lid);
+  const lid = M(lidGeo, MAT.wood({ a: '#7c4a26', b: '#4b2a13', rings: 9, seed: 41, clearcoat: .35, repeat: [4, 4] })); lid.position.y = H + .002; g.add(lid);
   for (const bx of [-.105, .105]) {
     g.add(M(rbox(.026, H + .004, D + .008, .004).translate(bx, H / 2, 0), brass));
     const bandGeo = new THREE.ExtrudeGeometry(dome, { depth: .026, bevelEnabled: false, curveSegments: 24 }); bandGeo.translate(0, 0, -.013); bandGeo.rotateY(PI / 2);
@@ -418,7 +418,7 @@ export function letters() {
 // ---------------------------------------------------------------- 7 SABIR: fountain spout dripping onto a worn stone hollow
 export function cesme() {
   const g = new THREE.Group(); const R = rng(71);
-  const lime = MAT.stone({ a: '#d9c7a4', b: '#a8916c', seed: 17 });
+  const lime = MAT.stone({ a: '#a8a294', b: '#77715f', seed: 17 });
   const grey = new THREE.MeshPhysicalMaterial({ ...(() => { const t = TEX.stone({ a: '#e2dace', b: '#aaa08e', seed: 19 }); return { map: t.map, normalMap: t.normalMap }; })(), roughness: .75, clearcoat: .25, clearcoatRoughness: .5 });
   const P0 = V(-.13, 0, -.1);
   const post = M(latheGeo([[0, 0], [.07, 0], [.07, .03], [.056, .042], [.048, .062], [.048, .33], [.062, .346], [.066, .37], [.045, .388], [.026, .405], [0, .41]], 8), lime); post.position.copy(P0); g.add(post);
@@ -465,24 +465,24 @@ export function shoes() {
   const matTex = ctex('reedmat', 256, 256, (x, W, H) => { x.fillStyle = '#c6a46a'; x.fillRect(0, 0, W, H); for (let i = 0; i < H; i += 8) { x.fillStyle = (i / 8) % 2 ? '#b08c52' : '#d4b67c'; x.fillRect(0, i, W, 6); } for (let j = 0; j < W; j += 64) { x.fillStyle = '#7e3a2a'; x.fillRect(j + 28, 0, 6, H); } });
   const mat = M(rbox(.44, .01, .28, .004), new THREE.MeshStandardMaterial({ map: matTex, roughness: .95 })); mat.position.set(0, .005, .065); g.add(mat);
   const L = .25;
-  const hw = u => { const heel = Math.sqrt(Math.max(0, 1 - Math.pow(1 - Math.min(u / .13, 1), 2))); const body = .034 + .012 * Math.sin(PI * Math.min(u / .78, 1) * .92); const toe = u > .66 ? Math.pow(Math.max(0, 1 - (u - .66) / .34), .75) : 1; return Math.max(body * heel * toe, 1e-4); };
+  const hw = u => { const heel = Math.sqrt(Math.max(0, 1 - Math.pow(1 - Math.min(u / .14, 1), 2))); const body = .036 + .011 * Math.sin(PI * Math.min(u / .8, 1) * .9); const toe = u > .76 ? Math.pow(Math.max(0, 1 - Math.pow((u - .76) / .24, 1.6)), .5) : 1; return Math.max(body * heel * toe, 1e-4); };
   const soleShape = new THREE.Shape(); const n = 40;
   for (let i = 0; i <= n; i++) { const u = i / n; const p = V2(hw(u), -(u - .5) * L); i ? soleShape.lineTo(p.x, p.y) : soleShape.moveTo(p.x, p.y); }
   for (let i = n; i >= 0; i--) { const u = i / n; soleShape.lineTo(-hw(u), -(u - .5) * L); }
   const soleGeo = new THREE.ExtrudeGeometry(soleShape, { depth: .012, bevelEnabled: true, bevelThickness: .003, bevelSize: .003, bevelSegments: 2, curveSegments: 4 }); soleGeo.rotateX(-PI / 2);
   const ins = soleGeo.clone(); ins.scale(.9, .3, .95); ins.translate(0, .012, 0);
   const sole = .015;
-  const hv = u => .058 * (1 - Math.pow(clamp((u - .44) / .56), 2.3)) + .006;
-  const vamp = surface((u0, v) => { const u = .44 + u0 * .56; const ph = v * PI; const w = hw(u) * 1.04 + .002; return [-Math.cos(ph) * w, sole + Math.pow(Math.sin(ph), .75) * hv(u), (u - .5) * L]; }, 26, 18);
+  const hv = u => .05 * (1 - Math.pow(clamp((u - .44) / .56), 2.8)) + .012 * (1 - Math.pow(clamp((u - .44) / .56), 6));
+  const vamp = surface((u0, v) => { const u = .44 + u0 * .56; const ph = v * PI; const w = hw(u) * 1.04 + .002; return [-Math.cos(ph) * w, sole + Math.pow(Math.sin(ph), .75) * hv(u), (u - .5) * L]; }, 26, 18, true);
   const counter = surface((s, v) => { // s: 0..1 around the back from right side u=.47 -> heel -> left side u=.47
-    const side = s < .5 ? 1 : -1; const u = s < .5 ? .47 * (1 - s * 2) : .47 * ((s - .5) * 2); const w = hw(u) * 1.04 + .002; const hc = .03 + .03 * smoothstep(.25, .47, u);
+    const side = s < .5 ? 1 : -1; const u = s < .5 ? .47 * (1 - s * 2) : .47 * ((s - .5) * 2); const w = hw(u) * 1.04 + .002; const hc = .036 + .022 * smoothstep(.25, .47, u);
     return [side * w, sole + v * hc, (u - .5) * L];
   }, 40, 4, true);
-  const leather = new THREE.MeshPhysicalMaterial({ color: '#e9bd52', roughness: .5, sheen: .5, sheenColor: new THREE.Color('#fff0c0'), clearcoat: .25, clearcoatRoughness: .5 });
-  const lining = new THREE.MeshStandardMaterial({ color: '#9e2b24', roughness: .8, side: THREE.BackSide });
-  const soleMat = new THREE.MeshStandardMaterial({ color: '#4a2c18', roughness: .7 }); const insMat = new THREE.MeshStandardMaterial({ color: '#c08a52', roughness: .8 });
+  const leather = new THREE.MeshPhysicalMaterial({ color: '#9a5a2c', roughness: .45, sheen: .5, sheenColor: new THREE.Color('#ffd8a8'), clearcoat: .45, clearcoatRoughness: .35 });
+  const lining = new THREE.MeshStandardMaterial({ color: '#8e2a22', roughness: .8, side: THREE.BackSide });
+  const soleMat = new THREE.MeshStandardMaterial({ color: '#3a2214', roughness: .7 }); const insMat = new THREE.MeshStandardMaterial({ color: '#d2a46c', roughness: .8 });
   const rim = tube([...Array(21)].map((_, i) => { const ph = i / 20 * PI; const u = .44; const w = hw(u) * 1.04 + .002; return V(-Math.cos(ph) * w, sole + Math.pow(Math.sin(ph), .75) * hv(u), (u - .5) * L); }), .0028, 24, 5);
-  const rim2 = tube([...Array(31)].map((_, i) => { const s = i / 30; const side = s < .5 ? 1 : -1; const u = s < .5 ? .47 * (1 - s * 2) : .47 * ((s - .5) * 2); const w = hw(u) * 1.04 + .002; const hc = .03 + .03 * smoothstep(.25, .47, u); return V(side * w, sole + hc, (u - .5) * L); }), .0026, 40, 5);
+  const rim2 = tube([...Array(31)].map((_, i) => { const s = i / 30; const side = s < .5 ? 1 : -1; const u = s < .5 ? .47 * (1 - s * 2) : .47 * ((s - .5) * 2); const w = hw(u) * 1.04 + .002; const hc = .036 + .022 * smoothstep(.25, .47, u); return V(side * w, sole + hc, (u - .5) * L); }), .0026, 40, 5);
   const mkShoe = () => { const s = new THREE.Group(); s.add(M(soleGeo, soleMat), M(ins, insMat), M(vamp, leather), M(vamp, lining, false), M(counter, leather), M(counter, lining, false), M(rim, soleMat), M(rim2, soleMat)); return s; };
   const ang = .78; for (const sx of [-1, 1]) { const s = mkShoe(); s.rotation.y = ang + sx * .02; s.position.set(sx * .064 * Math.cos(ang) + .0, .01, .07 - sx * .064 * Math.sin(ang)); g.add(s); }
   g.userData.h = .1; g.userData.w = .3;

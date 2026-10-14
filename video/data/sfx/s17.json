@@ -1,0 +1,49 @@
+[
+{
+"t": 96.6,
+"dur": 4.4,
+"kind": "crickets",
+"desc": "night garden crickets"
+},
+{
+"t": 96.6,
+"dur": 4.4,
+"kind": "lake",
+"desc": "soft lake lapping"
+},
+{
+"t": 97.1,
+"dur": 3.4,
+"kind": "wind",
+"desc": "light night breeze",
+"gain": -8
+},
+{
+"t": 97.2,
+"dur": 1.3,
+"kind": "whoosh",
+"desc": "soft air swell as camera pulls back",
+"gain": -4
+},
+{
+"t": 97.8,
+"dur": 2.7,
+"kind": "fire",
+"desc": "two candle flames fluttering",
+"gain": -3
+},
+{
+"t": 98.62,
+"dur": 0.5,
+"kind": "whoosh",
+"desc": "name card slides in",
+"gain": -3
+},
+{
+"t": 100.09,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft tick as pointer touches the volumes",
+"gain": -4
+}
+]

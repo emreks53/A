@@ -39,8 +39,8 @@ export default {
     const levels = () => [{ y0: 0, plinth: .14, rows: 8, rowH: .38, top: .22, gallery: true }, { y0: 3.62, plinth: .08, rows: 7, rowH: .37, top: .3 }];
     for (const side of [-1, 1]) {
       // local +z (spines) faces the hall centre; local x maps to world -z (left wall) or +z (right wall)
-      const w = side < 0 ? bookWall(M, { X0: -(ZN - .5), X1: -(ZF + .5), bay: 1.0, levels: levels(), atlas, R: rnd, caseMat, shelfMat, segs: 2, galleryDepth: 1.0, balStep: .2, cheap: true })
-                         : bookWall(M, { X0: ZF + .5, X1: ZN - .5, bay: 1.0, levels: levels(), atlas, R: rnd, caseMat, shelfMat, segs: 2, galleryDepth: 1.0, balStep: .2, cheap: true });
+      const w = side < 0 ? bookWall(M, { X0: -(ZN - .5), X1: -(ZF + .5), bay: 1.0, levels: levels(), atlas, R: rnd, caseMat, shelfMat, segs: 1, galleryDepth: 1.0, balStep: .2, cheap: true })
+                         : bookWall(M, { X0: ZF + .5, X1: ZN - .5, bay: 1.0, levels: levels(), atlas, R: rnd, caseMat, shelfMat, segs: 1, galleryDepth: 1.0, balStep: .2, cheap: true });
       w.group.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
       w.group.position.set(side * HALF, 0, 0);
       scene.add(w.group);
@@ -87,14 +87,14 @@ export default {
     // ---------- desks, chairs, candles ----------
     const deskMat = M.MAT.wood({ a: '#8a5530', b: '#5a331a', rings: 12, seed: 17 });
     const chairMat = M.MAT.wood({ a: '#7b4a28', b: '#4a2a14', rings: 20, seed: 31 });
-    const legGeo = new THREE.LatheGeometry([[0, 0], [.03, 0], [.026, .05], [.019, .2], [.028, .32], [.024, .5], [.03, .62], [.03, TOPY - .05], [0, TOPY - .05]].map(([r, y]) => new THREE.Vector2(Math.max(r, 1e-4), y)), 10);
-    const deskParts = [M.rbox(1.25, .045, .68, .012).translate(0, TOPY - .0225, 0), M.rbox(1.12, .1, .56, .01).translate(0, TOPY - .1, 0)];
+    const legGeo = new THREE.LatheGeometry([[0, 0], [.03, 0], [.026, .05], [.019, .2], [.028, .32], [.024, .5], [.03, .62], [.03, TOPY - .05], [0, TOPY - .05]].map(([r, y]) => new THREE.Vector2(Math.max(r, 1e-4), y)), 8);
+    const deskParts = [M.rbox(1.25, .045, .68, .012, 2).translate(0, TOPY - .0225, 0), M.rbox(1.12, .1, .56, .01, 1).translate(0, TOPY - .1, 0)];
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) deskParts.push(legGeo.clone().translate(sx * .55, 0, sz * .27));
-    const deskGeo = mergeGeometries(deskParts.map(g => g.toNonIndexed ? g.toNonIndexed() : g));
-    const chairParts = [M.rbox(.44, .05, .42, .012).translate(0, .45, 0)];
+    const deskGeo = mergeGeometries(deskParts.map(g => g.index ? g.toNonIndexed() : g));
+    const chairParts = [M.rbox(.44, .05, .42, .012, 1).translate(0, .45, 0)];
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) chairParts.push(new THREE.CylinderGeometry(.018, .016, .45, 8).translate(sx * .19, .225, sz * .18));
-    for (const sx of [-1, 1]) chairParts.push(M.rbox(.04, .52, .04, .01).translate(sx * .19, .71, .19));
-    chairParts.push(M.rbox(.44, .09, .035, .012).translate(0, .93, .19), M.rbox(.36, .05, .025, .01).translate(0, .74, .19));
+    for (const sx of [-1, 1]) chairParts.push(M.rbox(.04, .52, .04, .01, 1).translate(sx * .19, .71, .19));
+    chairParts.push(M.rbox(.44, .09, .035, .012, 1).translate(0, .93, .19), M.rbox(.36, .05, .025, .01, 1).translate(0, .74, .19));
     const chairGeo = mergeGeometries(chairParts.map(g => g.index ? g.toNonIndexed() : g));
     const holderGeo = new THREE.LatheGeometry([[0, 0], [.065, 0], [.068, .008], [.06, .014], [.02, .018], [.016, .05], [.024, .056], [.02, .06], [0, .06]].map(([r, y]) => new THREE.Vector2(Math.max(r, 1e-4), y)), 20);
     const candleGeo = new THREE.LatheGeometry([[0, 0], [.014, 0], [.014, .96], [.011, 1], [.003, 1.0], [0, 1]].map(([r, y]) => new THREE.Vector2(Math.max(r, 1e-4), y)), 12);
@@ -143,7 +143,7 @@ export default {
     // flames, halos, light pools (GPU-driven by ignition time)
     const fl = flamePoints(flames, flameOn, { size: .055, intensity: 2.6 }); scene.add(fl); R.fl = fl;
     const halo = flamePoints(flames, flameOn, { size: .36, glow: true, color: [1, .55, .2], intensity: .6 }); scene.add(halo); R.halo = halo;
-    const halo2 = flamePoints(flames, flameOn, { size: 1.3, glow: true, color: [1, .5, .18], intensity: .05 }); scene.add(halo2); R.halo2 = halo2;
+    R.halo2 = null;
     scene.add(lightPools(poolsTop, { opacity: .7, color: '#ffb066' }));
     scene.add(lightPools(poolsFloor, { opacity: .2, color: '#ff9a4a' }));
     R.flameOn = flameOn;
@@ -160,7 +160,7 @@ export default {
     const P = R.camPos(t), L = R.camLook(t); P.add(U.shake(t, .012, .35, 2));
     camera.fov = U.lerp(48, 40, U.smoothstep(1.0, 5.0, t)); camera.updateProjectionMatrix();
     camera.position.copy(P); camera.lookAt(L); camera.updateMatrixWorld();
-    const pxs = ctx.renderer.domElement.height / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); for (const o of [R.fl, R.halo, R.halo2]) o.userData.uniforms.pxScale.value = pxs;
+    const pxs = ctx.renderer.domElement.height / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); for (const o of [R.fl, R.halo]) o.userData.uniforms.pxScale.value = pxs;
 
     // fraction of lit candles -> overall warmth of the hall
     let lit = 0; for (const o of R.flameOn) lit += U.smoothstep(o, o + .3, t); const k = lit / R.flameOn.length;

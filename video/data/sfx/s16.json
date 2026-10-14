@@ -1,0 +1,42 @@
+[
+{
+"t": 91.95,
+"dur": 5.6,
+"kind": "rain",
+"desc": "muffled foggy London drizzle through glass",
+"gain": -4
+},
+{
+"t": 92.45,
+"dur": 4.65,
+"kind": "clock",
+"desc": "slow tick of a mantel clock"
+},
+{
+"t": 92.95,
+"dur": 0.9,
+"kind": "paper",
+"desc": "loose manuscript page flutters"
+},
+{
+"t": 94.7,
+"dur": 2.4,
+"kind": "fire",
+"desc": "soft candle flutter",
+"gain": -3
+},
+{
+"t": 95.3,
+"dur": 0.5,
+"kind": "whoosh",
+"desc": "soft swipe as the name card slides in",
+"gain": -3
+},
+{
+"t": 96.64,
+"dur": 0.35,
+"kind": "pop",
+"desc": "light tick as the pointer touches the book",
+"gain": -4
+}
+]

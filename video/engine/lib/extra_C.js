@@ -150,7 +150,7 @@ export function zulfikar(o = {}) {
   { const s = body[0].pts; const pos = []; s.forEach(p => pos.push(p[0], F, p[1])); const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Array(12).fill(0), 2)); geo.setIndex([0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 5, 4]); geo.computeVertexNormals(); if (geo.attributes.normal.getY(0) > 0) geo.setIndex([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5]); geo.computeVertexNormals(); geos.push(geo); }
   const bladeGeo = mergeGeometries(geos);
   const bm = TEX.brushedMetal({ a: '#f4f6f8', b: '#b4bcc6', seed: 31 });
-  const steel = new THREE.MeshPhysicalMaterial({ color: o.steelColor ?? '#e8ecf0', metalness: 1, roughness: o.steelRough ?? .45, map: bm.map, roughnessMap: bm.roughnessMap, clearcoat: .7, clearcoatRoughness: .1, envMapIntensity: 1.25 });
+  const steel = new THREE.MeshPhysicalMaterial({ color: o.steelColor ?? '#e8ecf0', metalness: 1, roughness: o.steelRough ?? .45, map: bm.map, roughnessMap: bm.roughnessMap, clearcoat: o.clearcoat ?? .7, clearcoatRoughness: .1, envMapIntensity: 1.25 });
   const blade = new THREE.Mesh(bladeGeo, steel); g.add(blade);
   // hilt (built around the guard, scalable for chunkier Pixar proportions)
   const gold = MAT.gold({ a: o.goldA ?? '#f3cd72', b: o.goldB ?? '#a9792b' });
@@ -175,7 +175,7 @@ export function zulfikar(o = {}) {
 // ---------------------------------------------------------------------------------------------
 // Rocks
 // Small/medium boulder geometry with baked vertex colours (dark crevices). Unit size ~1.
-export function rockGeo({ seed = 1, detail = 3, rough = .32, flat = .3, stretch = [1, .65, 1], palette = ['#8c5a3c', '#6e4430', '#a06a48'] } = {}) {
+export function rockGeo({ seed = 1, detail = 3, rough = .32, flat = .3, stretch = [1, .65, 1], palette = ['#8c5a3c', '#6e4430', '#a06a48'], faceted = false } = {}) {
   let geo = new THREE.IcosahedronGeometry(1, detail); geo.deleteAttribute('uv'); geo.deleteAttribute('normal'); geo = mergeVertices(geo);
   const p = geo.attributes.position; const v = new THREE.Vector3(); const cols = new Float32Array(p.count * 3);
   const C = palette.map(c => new THREE.Color(c));
@@ -192,25 +192,33 @@ export function rockGeo({ seed = 1, detail = 3, rough = .32, flat = .3, stretch 
     cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b;
   }
   geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  if (faceted) { geo = geo.toNonIndexed(); const c = geo.attributes.color; for (let i = 0; i < c.count; i += 3) { const k = .86 + .28 * h3(i, seed, 3, 1); for (let j = 0; j < 3; j++) c.setXYZ(i + j, c.getX(i) * k, c.getY(i) * k, c.getZ(i) * k); } }
   geo.computeVertexNormals();
   return geo;
 }
 let _rockNrm = null;
 export function rockMaterial(o = {}) {
-  if (!_rockNrm) _rockNrm = TEX.stone({ a: '#ffffff', b: '#cfc6ba', seed: 41, repeat: [1, 1] });
-  return new THREE.MeshStandardMaterial({ vertexColors: true, roughness: o.roughness ?? .88, map: _rockNrm.map, normalMap: _rockNrm.normalMap, normalScale: new THREE.Vector2(.7, .7), color: o.tint ?? '#ffffff' });
+  const rs = rockSurface();
+  return new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, roughnessMap: rs.roughnessMap, map: rs.map, normalMap: rs.normalMap, normalScale: new THREE.Vector2(.8, .8), color: o.tint ?? '#ffffff' });
 }
 
 // Scatter instanced rocks. items: [{x,y,z,s:[sx,sy,sz]|number,ry,variant}]
-export function scatterRocks(items, { variants = 3, seed = 5, detail = 2, palette, material, cast = true } = {}) {
+export function scatterRocks(items, { variants = 3, seed = 5, detail = 2, palette, material, cast = true, faceted = true, big = .3 } = {}) {
   const grp = new THREE.Group(); const mat = material ?? rockMaterial();
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), S = new THREE.Vector3(), P = new THREE.Vector3();
+  const sz = it => Array.isArray(it.s) ? Math.max(...it.s) : it.s;
+  const place = (im, list, yOff = 0) => { list.forEach((it, i) => { e.set(it.rx ?? 0, it.ry ?? 0, it.rz ?? 0); q.setFromEuler(e); const s = it.s; if (Array.isArray(s)) S.set(...s); else S.set(s, s, s); P.set(it.x, it.y + yOff * S.y, it.z); m4.compose(P, q, S); im.setMatrixAt(i, m4); }); im.castShadow = cast; im.receiveShadow = true; grp.add(im); };
+  // pebbles / small stones: chunky faceted
   for (let v = 0; v < variants; v++) {
-    const list = items.filter(it => (it.variant ?? 0) % variants === v); if (!list.length) continue;
-    const geo = rockGeo({ seed: seed + v * 13, detail, palette, stretch: [1, .55 + v * .12, 1 - v * .1] });
-    const im = new THREE.InstancedMesh(geo, mat, list.length);
-    list.forEach((it, i) => { e.set(it.rx ?? 0, it.ry ?? 0, it.rz ?? 0); q.setFromEuler(e); const s = it.s; if (Array.isArray(s)) S.set(...s); else S.set(s, s, s); P.set(it.x, it.y, it.z); m4.compose(P, q, S); im.setMatrixAt(i, m4); });
-    im.castShadow = cast; im.receiveShadow = true; grp.add(im);
+    const list = items.filter(it => (it.variant ?? 0) % variants === v && sz(it) <= big); if (!list.length) continue;
+    const geo = rockGeo({ seed: seed + v * 13, detail: faceted ? Math.min(detail, 2) : detail, palette: palette ?? ['#b07656', '#8e5a40', '#c48a66'], stretch: [1, .55 + v * .12, 1 - v * .1], faceted, rough: faceted ? .42 : .32 });
+    place(new THREE.InstancedMesh(geo, mat, list.length), list);
+  }
+  // boulders: mini faceted rocks with rounded edges (same look as the big rock)
+  for (let v = 0; v < 2; v++) {
+    const list = items.filter(it => (it.variant ?? 0) % 2 === v && sz(it) > big); if (!list.length) continue;
+    const fr = facetRock({ a: 1, b: .8, c: 1.15, n: 2.2, planes: 20, jitter: .55, off: [-.28, 0], k: .045, joints: 0, lump: .04, seed: seed + 50 + v * 7, detail: 18, bury: .25, grain: 1.2, nScale: .9 });
+    place(new THREE.InstancedMesh(fr.geometry, fr.material, list.length), list, -.12);
   }
   return grp;
 }

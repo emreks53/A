@@ -622,7 +622,7 @@ export function condensationTex(o = {}) {
       x.fillStyle = g; x.fillRect(px, py, pw, ph);
       for (let k = 0; k < (o.drops ?? 22); k++) { const dx = px + r() * pw, dy = py + ph * (.55 + .45 * Math.pow(r(), .5)), dr = .6 + r() * 1.5; x.fillStyle = `rgba(255,255,255,${.12 + r() * .2})`; x.beginPath(); x.arc(dx, dy, dr, 0, 7); x.fill(); }
       // a couple of clear trickle streaks through the fog
-      for (let k = 0; k < 2; k++) { const sx = px + pw * (.15 + r() * .7); x.save(); x.globalCompositeOperation = 'destination-out'; x.strokeStyle = 'rgba(0,0,0,.8)'; x.lineWidth = 2 + r() * 2; x.beginPath(); x.moveTo(sx, py + ph * (.2 + r() * .4)); x.bezierCurveTo(sx + 3, py + ph * .7, sx - 3, py + ph * .85, sx + 1, py + ph); x.stroke(); x.restore(); }
+      for (let k = 0; k < (o.streaks ?? 0); k++) { const sx = px + pw * (.15 + r() * .7); x.save(); x.globalCompositeOperation = 'destination-out'; x.strokeStyle = 'rgba(0,0,0,.8)'; x.lineWidth = 2 + r() * 2; x.beginPath(); x.moveTo(sx, py + ph * (.2 + r() * .4)); x.bezierCurveTo(sx + 3, py + ph * .7, sx - 3, py + ph * .85, sx + 1, py + ph); x.stroke(); x.restore(); }
     }
   });
 }
