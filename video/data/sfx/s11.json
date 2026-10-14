@@ -1,0 +1,52 @@
+[
+{
+"t": 49.27,
+"dur": 1.0,
+"kind": "stone",
+"desc": "stone grinding as columns rise"
+},
+{
+"t": 49.25,
+"dur": 3.6,
+"kind": "wind",
+"desc": "light courtyard breeze ambience",
+"gain": -6
+},
+{
+"t": 50.08,
+"dur": 2.1,
+"kind": "stone",
+"desc": "deeper rising grind for the marble column"
+},
+{
+"t": 50.16,
+"dur": 0.2,
+"kind": "pop",
+"desc": "title pop"
+},
+{
+"t": 50.3,
+"dur": 1.4,
+"kind": "whoosh",
+"desc": "upward whoosh as the column soars"
+},
+{
+"t": 50.92,
+"dur": 0.15,
+"kind": "pop",
+"desc": "callout pop"
+},
+{
+"t": 52.23,
+"dur": 0.4,
+"kind": "thud",
+"desc": "soft settling thud of the capital"
+},
+{
+"t": 52.25,
+"dur": 0.7,
+"kind": "chime",
+"desc": "tiny glint shimmer on gilded band",
+"gain": -4
+}
+]

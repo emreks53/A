@@ -1,0 +1,46 @@
+[
+{
+"t": 41.7,
+"dur": 0.9,
+"kind": "whoosh",
+"desc": "soft airy fall as the drops enter frame (slow-mo air)"
+},
+{
+"t": 42.0,
+"dur": 2.6,
+"kind": "water",
+"desc": "distant calm sea ambience, ocean low and soft"
+},
+{
+"t": 42.6,
+"dur": 0.15,
+"kind": "pop",
+"desc": "badge 1 pop"
+},
+{
+"t": 42.74,
+"dur": 0.15,
+"kind": "pop",
+"desc": "badge 2 pop"
+},
+{
+"t": 43.43,
+"dur": 0.15,
+"kind": "pop",
+"desc": "label pop (very soft)",
+"gain": -4
+},
+{
+"t": 43.57,
+"dur": 0.15,
+"kind": "pop",
+"desc": "label pop (very soft)",
+"gain": -4
+},
+{
+"t": 43.91,
+"dur": 0.7,
+"kind": "chime",
+"desc": "warm glassy chime under IKI ORNEK"
+}
+]

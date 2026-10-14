@@ -1,0 +1,69 @@
+[
+{
+"t": 45.02,
+"dur": 0.8,
+"kind": "water",
+"desc": "slow-motion deep plink of drop 1 hitting the sea"
+},
+{
+"t": 45.05,
+"dur": 1.4,
+"kind": "water",
+"desc": "splash crown"
+},
+{
+"t": 45.27,
+"dur": 0.8,
+"kind": "water",
+"desc": "drop 2 plink"
+},
+{
+"t": 45.3,
+"dur": 1.8,
+"kind": "whoosh",
+"desc": "airy rising pull-back whoosh"
+},
+{
+"t": 45.56,
+"dur": 1.2,
+"kind": "chime",
+"desc": "soft warm swell under AHLAK-I ALIYE"
+},
+{
+"t": 46.18,
+"dur": 0.3,
+"kind": "water",
+"desc": "tiny drip"
+},
+{
+"t": 46.43,
+"dur": 0.3,
+"kind": "water",
+"desc": "tiny drip"
+},
+{
+"t": 45.8,
+"dur": 3.9,
+"kind": "ocean",
+"desc": "open-sea ambience: gentle swell waves"
+},
+{
+"t": 46.96,
+"dur": 0.15,
+"kind": "pop",
+"desc": "badge pop"
+},
+{
+"t": 47.08,
+"dur": 0.15,
+"kind": "pop",
+"desc": "badge pop"
+},
+{
+"t": 48.52,
+"dur": 0.15,
+"kind": "pop",
+"desc": "caption completes (very soft)",
+"gain": -4
+}
+]
