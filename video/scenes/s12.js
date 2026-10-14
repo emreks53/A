@@ -272,7 +272,6 @@ export default {
     const wb = []; for (let i = -16; i <= 64; i++) { const x = xA(i); wb.push(beamGeo([V(x - .2, 3.05, zw), V(x + .2, 3.05, zw), V(x + .2, 3.62, zw), V(x - .2, 3.62, zw)])); }
     R.winBeams = new THREE.Mesh(E.merge(wb), beamMat(.05)); R.winBeams.userData.noDepth = true; R.winBeams.renderOrder = 4; R.winBeams.frustumCulled = false; scene.add(R.winBeams);
     R.doorBeam = new THREE.Mesh(beamGeo([V(xd - .45, .02, WZ - .1), V(xd + .45, .02, WZ - .1), V(xd + .45, 2.0, WZ - .1), V(xd - .45, 2.0, WZ - .1)]), beamMat(0)); R.doorBeam.userData.noDepth = true; R.doorBeam.renderOrder = 4; R.doorBeam.frustumCulled = false; scene.add(R.doorBeam);
-    R.bounce = new THREE.PointLight('#ffcf98', 0, 3.5, 2); R.bounce.position.set(xd - .25, .45, WZ + .35); scene.add(R.bounce);
     R.doorDust = FX.particles({ count: 160, center: [xd + .4, 1.0, 0], box: [1.4, 2.0, 1.6], size: 2.5, color: '#ffe6b8', opacity: 0, drift: [.02, .04, .01], swirl: .06 }); scene.add(R.doorDust);
     R.motes = FX.particles({ count: 380, center: [9, 1.6, .1], box: [26, 2.6, 1.3], size: 2.2, color: '#ffe2b0', opacity: .4, drift: [.03, .02, 0], swirl: .05 }); scene.add(R.motes);
     R.motes2 = FX.particles({ count: 600, center: [x14 + 16, 2.0, 1.6], box: [30, 3.6, 4.6], size: 3.5, color: '#ffe2b0', opacity: 0, drift: [.03, .02, 0], swirl: .06 }); scene.add(R.motes2);
@@ -324,9 +323,12 @@ export default {
     });
     // spots: even/odd exhibits (skipping the door)
     R.spots.forEach((s, k) => {
-      let cur = -1; R.heroes.forEach((h, i) => { if (i !== DOOR && i % 2 === k && (DEBUG || t >= h.t0 - .1)) cur = i; });
+      let cur = -1; R.heroes.forEach((h, i) => { if (i % 2 === k && (DEBUG || t >= h.t0 - .1)) cur = i; });
       if (DEBUG) cur = Math.min(13, Math.max(0, Math.floor(t)));
-      if (cur < 0 || cur === DOOR) { s.intensity = 0; return; }
+      if (cur === DOOR && !DEBUG) { // the idle spot doubles as warm bounce light from the sunlit floor patch onto door leaves and jambs
+        const opn = U.prog(t, R.T[DOOR] - .08, R.T[DOOR] + .8, 'outCubic'); s.position.set(R.xd - .3, .22, WZ + 1.3); s.target.position.set(R.xd + .25, 1.1, WZ - .4); s.target.updateMatrixWorld(); s.color.set('#ffd2a0'); s.intensity = 5 * opn; return; }
+      s.color.set('#ffc88e');
+      if (cur < 0) { s.intensity = 0; return; }
       const h = R.heroes[cur]; s.position.copy(h.lampP); s.target.position.copy(h.tgt).add(V(0, -.06, 0)); s.target.updateMatrixWorld();
       s.intensity = 7.5 * (h.ex.L ?? 1) * lits[cur] * (1 + .04 * Math.sin(t * 13 + cur) * Math.sin(t * 7.3 + cur));
     });
@@ -334,7 +336,7 @@ export default {
     const td = R.T[DOOR]; const op = U.prog(t, td - .08, td + .8, 'outCubic'); const settle = t > td + .5 ? Math.exp(-4 * (t - td - .5)) * Math.sin((t - td - .5) * 9) * .04 : 0;
     const ang = DEBUG && Math.floor(t) === DOOR ? 1.6 : 1.62 * op + settle;
     R.leaves.forEach(({ hinge, sx }) => { hinge.rotation.y = sx < 0 ? ang : -ang; });
-    R.doorBeam.material.userData.u.opacity.value = .07 * U.smoothstep(.0, .8, op); R.doorBeam.visible = op > .002 && t < td + 3.5; R.doorDust.visible = R.doorBeam.visible; R.bounce.intensity = 2.6 * op * (t < td + 3.5 ? 1 : 0); R.doorBeam.material.userData.u.time.value = t; R.doorBeam.material.userData.u.camPos.value.copy(camera.position);
+    R.doorBeam.material.userData.u.opacity.value = .07 * U.smoothstep(.0, .8, op); R.doorBeam.visible = op > .002 && t < td + 3.5; R.doorDust.visible = R.doorBeam.visible; R.doorBeam.material.userData.u.time.value = t; R.doorBeam.material.userData.u.camPos.value.copy(camera.position);
     R.doorDust.userData.uniforms.opacity.value = .75 * op;
     // window beams stronger in the wide finale
     const fin = U.prog(t, R.W.ve, R.W.ve + 2.2, 'inOutSine');

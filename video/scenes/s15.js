@@ -14,7 +14,7 @@ const DOTS = [ // [lat, lon, weight(1 = Europe emphasis), special, arc?]
   [51.5, -0.1, 1, 'london', 1], [46.52, 6.63, 1, 'lausanne', 1], [55.95, -3.2, 1, 0, 1], [48.85, 2.35, 1, 0, 1], [50.98, 11.33, 1, 0, 1], [48.2, 16.37, 1, 0, 1],
   [41.9, 12.5, 1, 0, 1], [40.4, -3.7, 1, 0, 1], [59.33, 18.07, 1, 0, 0], [59.94, 30.3, 1, 0, 1], [55.75, 37.6, 1, 0, 1], [52.52, 13.4, 1, 0, 0],
   [38.7, -9.1, 1, 0, 0], [37.98, 23.7, 1, 0, 0], [53.35, -6.26, 1, 0, 0],
-  [41.0, 28.97, .6, 0, 0], [30.04, 31.24, .6, 0, 0], [35.7, 51.4, .6, 0, 0], [28.6, 77.2, .6, 0, 1], [22.57, 88.36, .6, 0, 1], [19.07, 72.88, .6, 0, 0], [36.8, 10.2, .6, 0, 0], [34.0, -5.0, .6, 0, 0],
+  [41.0, 28.97, .6, 0, 0], [30.04, 31.24, .6, 0, 0], [35.7, 51.4, .6, 0, 0], [28.6, 77.2, .6, 0, 0], [22.57, 88.36, .6, 0, 0], [19.07, 72.88, .6, 0, 0], [36.8, 10.2, .6, 0, 0], [34.0, -5.0, .6, 0, 0],
   [42.36, -71.06, .6], [40.7, -74.0, .6], [38.9, -77.0, .6], [43.65, -79.4, .6], [19.4, -99.1, .6], [-34.6, -58.4, .6], [-22.9, -43.2, .6],
   [-12.05, -77.04, .6], [37.77, -122.4, .6], [23.1, -82.4, .6], [35.68, 139.7, .6], [39.9, 116.4, .6], [31.2, 121.5, .6], [37.5, 127.0, .6], [1.35, 103.8, .6],
   [-33.9, 18.4, .6], [6.5, 3.4, .6], [9.0, 38.7, .6], [-33.87, 151.2, .6], [-37.8, 144.96, .6], [-36.85, 174.76, .6], [13.08, 80.27, .6], [41.3, 69.3, .6],
@@ -132,13 +132,13 @@ export default {
 
     // ---------------- spin & camera ----------------
     // Spin: steady ~110°/s, smooth (cubic) stop at t=3.2 with lon 22°E facing +Z.
-    const v0 = 110, t1 = 1.6, T = 1.6; R.sEnd = (-90 - 22);
+    const v0 = 110, t1 = 1.6, T = 1.6; R.sEnd = (-90 - 28);
     R.dist = t => { if (t <= t1) return v0 * (t + .5); const tau = Math.min(1, (t - t1) / T); return v0 * (t1 + .5) + v0 * T * (1 - Math.pow(1 - tau, 3)) / 3; };
     R.Dtot = R.dist(99);
     R.spinAt = t => (R.sEnd - (R.Dtot - R.dist(t))) * DEG;
     spin.rotation.y = R.spinAt(10); globe.updateMatrixWorld(true);
     const dirW = (lat, lon) => { const d = G.latLonDir(lat, lon); return new THREE.Vector3(...d).multiplyScalar(Rg).applyMatrix4(sphere.matrixWorld); };
-    const Pt = dirW(40, 20); const n = Pt.clone().sub(Gc).normalize();
+    const Pt = dirW(38, 25); const n = Pt.clone().sub(Gc).normalize();
     const nh = new THREE.Vector3(n.x, 0, n.z).normalize(); const el = 34 * DEG;
     const dirC = nh.clone().multiplyScalar(Math.cos(el)).add(new THREE.Vector3(0, Math.sin(el), 0));
     const C = Gc.clone().addScaledVector(dirC, 1.1); const C2 = Gc.clone().addScaledVector(dirC.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), .06), 1.03);
@@ -215,11 +215,11 @@ export default {
     const mk = U.ease.outBack(U.clamp((t - (tP + .05)) / .4), 2.2);
     if (mk > 0 && mA > .01) {
       const s = persp(mW); X.save(); X.globalAlpha = mA;
-      const gr = X.createRadialGradient(mx, my, 0, mx, my, 40 * s * mk); gr.addColorStop(0, 'rgba(120,230,160,.5)'); gr.addColorStop(1, 'rgba(80,200,130,0)'); X.fillStyle = gr; X.beginPath(); X.arc(mx, my, 40 * s * mk, 0, 7); X.fill();
-      X.fillStyle = '#3fb67a'; X.strokeStyle = '#ffd27a'; X.lineWidth = 3.5; X.beginPath(); X.arc(mx, my, 9 * s * mk, 0, 7); X.fill(); X.beginPath(); X.arc(mx, my, 15 * s * mk, 0, 7); X.stroke();
-      for (const off of [0, .35]) { const pa = U.clamp((t - tK - off) / .9); if (pa > 0 && pa < 1) { X.strokeStyle = `rgba(255,214,130,${(1 - pa) * .9})`; X.lineWidth = 3; X.beginPath(); X.arc(mx, my, 15 * s + pa * 70, 0, 7); X.stroke(); } }
+      const gr = X.createRadialGradient(mx, my, 0, mx, my, 22 * s * mk); gr.addColorStop(0, 'rgba(120,230,160,.42)'); gr.addColorStop(1, 'rgba(80,200,130,0)'); X.fillStyle = gr; X.beginPath(); X.arc(mx, my, 22 * s * mk, 0, 7); X.fill();
+      X.fillStyle = '#3fb67a'; X.strokeStyle = '#ffd27a'; X.lineWidth = 3; X.beginPath(); X.arc(mx, my, 6.5 * s * mk, 0, 7); X.fill(); X.beginPath(); X.arc(mx, my, 10.5 * s * mk, 0, 7); X.stroke();
+      for (const off of [0, .35]) { const pa = U.clamp((t - tK - off) / .9); if (pa > 0 && pa < 1) { X.strokeStyle = `rgba(255,214,130,${(1 - pa) * .9})`; X.lineWidth = 3; X.beginPath(); X.arc(mx, my, 10.5 * s + pa * 60, 0, 7); X.stroke(); } }
       X.restore();
-      ui.callout('Medine', { t, t0: tP + .2, anchor: [mx, my], to: [U.clamp(mx - 175, 200, 880), U.clamp(my + 105, 300, 1300)], size: 40, dotColor: '#3fb67a' });
+      ui.callout('Medine', { t, t0: tP + .2, anchor: [mx, my], to: [U.clamp(mx + 185, 200, 880), U.clamp(my + 95, 300, 1300)], size: 40, dotColor: '#3fb67a' });
     }
     // typography
     const tD = ctx.wordTime('dünya'), tB = ctx.wordTime('büyük');

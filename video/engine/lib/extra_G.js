@@ -257,7 +257,7 @@ export function paintGlobeMap(x, W, H, { fbm = null, labels = true, seed = 1 } =
     const lab = (str, lon, lat, size, ital = false, color = 'rgba(70,40,22,.8)', sp = 6) => { const [cx, cy] = P(lon, lat); x.save(); x.translate(cx, cy); x.scale(1 / Math.cos(lat * Math.PI / 180), 1);
       x.font = `${ital ? 'italic ' : ''}700 ${size * s}px "Playfair Display"`; if ('letterSpacing' in x) x.letterSpacing = sp * s + 'px'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = color; x.fillText(str, 0, 0); x.restore(); };
     lab('EUROPE', 27, 54, 20); lab('ASIA', 95, 50, 34); lab('AFRICA', 18, 12, 30); lab('NORTH', -106, 55, 24); lab('AMERICA', -104, 49, 24);
-    lab('SOUTH', -60, -12, 22); lab('AMERICA', -60, -18, 22); lab('AUSTRALIA', 134, -26, 20); lab('ARABIA', 45, 22, 13);
+    lab('SOUTH', -60, -12, 22); lab('AMERICA', -60, -18, 22); lab('AUSTRALIA', 134, -26, 20); lab('ARABIA', 48.5, 20.5, 14);
     lab('Atlantic Ocean', -38, 28, 22, true, 'rgba(40,62,64,.75)', 4); lab('Pacific Ocean', -140, -8, 26, true, 'rgba(40,62,64,.75)', 6);
     lab('Indian Ocean', 78, -12, 22, true, 'rgba(40,62,64,.75)', 4);
   }

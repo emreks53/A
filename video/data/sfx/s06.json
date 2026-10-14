@@ -1,0 +1,48 @@
+[
+{
+"t": 29.6,
+"dur": 4.2,
+"kind": "wind",
+"desc": "warm desert wind with blowing sand",
+"gain": -2
+},
+{
+"t": 30.16,
+"dur": 0.4,
+"kind": "pop",
+"desc": "soft title reveal"
+},
+{
+"t": 30.95,
+"dur": 1.0,
+"kind": "wind",
+"desc": "sand gust sweeping past the blade",
+"gain": -2
+},
+{
+"t": 31.0,
+"dur": 1.6,
+"kind": "sword",
+"desc": "faint steel shimmer as the sun glint travels down the edge",
+"gain": -6
+},
+{
+"t": 32.02,
+"dur": 0.35,
+"kind": "pop",
+"desc": "punchy word pop"
+},
+{
+"t": 32.12,
+"dur": 0.6,
+"kind": "metal",
+"desc": "tiny bright ting of the star glint",
+"gain": -4
+},
+{
+"t": 32.2,
+"dur": 1.6,
+"kind": "rumble",
+"desc": "distant low rumble of the approaching dust storm"
+}
+]
