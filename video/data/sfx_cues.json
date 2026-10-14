@@ -481,7 +481,7 @@
 "dur": 2.9,
 "kind": "wind",
 "desc": "howling battle dust-storm roar",
-"gain": 4,
+"gain": 0,
 "scene": "s07"
 },
 {
@@ -489,6 +489,7 @@
 "dur": 2.6,
 "kind": "rumble",
 "desc": "low storm rumble",
+"gain": -4,
 "scene": "s07"
 },
 {
@@ -496,6 +497,7 @@
 "dur": 1.1,
 "kind": "volley",
 "desc": "first volley arrows whistling overhead",
+"gain": -4,
 "scene": "s07"
 },
 {
@@ -503,6 +505,7 @@
 "dur": 0.4,
 "kind": "arrow hit",
 "desc": "arrow thud into sand",
+"gain": -4,
 "scene": "s07"
 },
 {
@@ -510,7 +513,7 @@
 "dur": 0.4,
 "kind": "arrow hit",
 "desc": "arrow thud into sand",
-"gain": -3,
+"gain": -7,
 "scene": "s07"
 },
 {
@@ -518,7 +521,7 @@
 "dur": 0.35,
 "kind": "arrow",
 "desc": "close arrow whizzing past the lens",
-"gain": 3,
+"gain": -1,
 "scene": "s07"
 },
 {
@@ -526,7 +529,7 @@
 "dur": 0.6,
 "kind": "metal",
 "desc": "hard iron clang on the shield boss",
-"gain": 6,
+"gain": 2,
 "scene": "s07"
 },
 {
@@ -534,7 +537,7 @@
 "dur": 0.7,
 "kind": "impact",
 "desc": "impact punch",
-"gain": 2,
+"gain": -2,
 "scene": "s07"
 },
 {
@@ -542,6 +545,7 @@
 "dur": 0.4,
 "kind": "wood",
 "desc": "shield rattling back against the rock",
+"gain": -4,
 "scene": "s07"
 },
 {
@@ -549,7 +553,7 @@
 "dur": 1.5,
 "kind": "volley",
 "desc": "dense second volley",
-"gain": 2,
+"gain": -2,
 "scene": "s07"
 },
 {
@@ -557,6 +561,7 @@
 "dur": 0.4,
 "kind": "arrow hit",
 "desc": "arrow thud",
+"gain": -4,
 "scene": "s07"
 },
 {
@@ -564,7 +569,7 @@
 "dur": 0.4,
 "kind": "arrow hit",
 "desc": "arrow thud",
-"gain": -2,
+"gain": -6,
 "scene": "s07"
 },
 {
@@ -572,6 +577,7 @@
 "dur": 0.4,
 "kind": "stone",
 "desc": "stony clack",
+"gain": -4,
 "scene": "s07"
 },
 {
@@ -579,6 +585,7 @@
 "dur": 0.35,
 "kind": "arrow",
 "desc": "last arrow skimming past the camera",
+"gain": -4,
 "scene": "s07"
 },
 {
@@ -586,7 +593,7 @@
 "dur": 2.8,
 "kind": "wind",
 "desc": "storm wind battering against the rock face",
-"gain": 2,
+"gain": -1,
 "scene": "s08"
 },
 {
@@ -594,7 +601,7 @@
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "big arrow strike on stone",
-"gain": 4,
+"gain": 1,
 "scene": "s08"
 },
 {
@@ -602,7 +609,7 @@
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "second heavy strike on the rock",
-"gain": 4,
+"gain": 1,
 "scene": "s08"
 },
 {
@@ -610,7 +617,7 @@
 "dur": 0.3,
 "kind": "wood",
 "desc": "broken arrow pieces clattering",
-"gain": -4,
+"gain": -7,
 "scene": "s08"
 },
 {
@@ -618,7 +625,7 @@
 "dur": 0.3,
 "kind": "wood",
 "desc": "broken arrow pieces clattering",
-"gain": -6,
+"gain": -9,
 "scene": "s08"
 },
 {
@@ -626,7 +633,7 @@
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "rapid burst of stone impacts",
-"gain": 3,
+"gain": 0,
 "scene": "s08"
 },
 {
@@ -634,7 +641,7 @@
 "dur": 1.2,
 "kind": "wind",
 "desc": "dust surge rushing up over the top",
-"gain": 2,
+"gain": -1,
 "scene": "s08"
 },
 {
@@ -642,7 +649,7 @@
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "rapid burst of stone impacts",
-"gain": 1,
+"gain": -2,
 "scene": "s08"
 },
 {
@@ -650,6 +657,7 @@
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "rapid burst of stone impacts",
+"gain": -3,
 "scene": "s08"
 },
 {
@@ -657,6 +665,7 @@
 "dur": 0.9,
 "kind": "whoosh",
 "desc": "camera swing around the rock into the lee",
+"gain": -3,
 "scene": "s08"
 },
 {

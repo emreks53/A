@@ -4,68 +4,70 @@
 "dur": 2.8,
 "kind": "wind",
 "desc": "storm wind battering against the rock face",
-"gain": 2
+"gain": -1
 },
 {
 "t": 35.7,
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "big arrow strike on stone",
-"gain": 4
+"gain": 1
 },
 {
 "t": 35.98,
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "second heavy strike on the rock",
-"gain": 4
+"gain": 1
 },
 {
 "t": 36.0,
 "dur": 0.3,
 "kind": "wood",
 "desc": "broken arrow pieces clattering",
-"gain": -4
+"gain": -7
 },
 {
 "t": 36.4,
 "dur": 0.3,
 "kind": "wood",
 "desc": "broken arrow pieces clattering",
-"gain": -6
+"gain": -9
 },
 {
 "t": 36.82,
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "rapid burst of stone impacts",
-"gain": 3
+"gain": 0
 },
 {
 "t": 36.95,
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "rapid burst of stone impacts",
-"gain": 1
+"gain": -2
 },
 {
 "t": 37.1,
 "dur": 0.5,
 "kind": "arrow hit",
-"desc": "rapid burst of stone impacts"
+"desc": "rapid burst of stone impacts",
+"gain": -3
 },
 {
 "t": 36.85,
 "dur": 1.2,
 "kind": "wind",
 "desc": "dust surge rushing up over the top",
-"gain": 2
+"gain": -1
 },
 {
 "t": 37.95,
 "dur": 0.9,
 "kind": "whoosh",
-"desc": "camera swing around the rock into the lee"
+"desc": "camera swing around the rock into the lee",
+"gain": -3
 },
 {
 "t": 38.6,

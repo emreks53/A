@@ -315,10 +315,14 @@ def main():
     bus = signal.sosfilt(sos('highpass', 38, 4), bus, axis=0)
     # duck SFX under the voice
     env = np.sqrt(np.maximum(signal.sosfilt(sos('lowpass', 8), vbuf ** 2), 0) * 2 + 1e-12); env = env / (np.percentile(env, 99) + 1e-9)
-    duck = 1 - 0.45 * np.clip(env * 2.5, 0, 1); duck = signal.sosfilt(sos('lowpass', 4), duck)
+    duck = 1 - 0.62 * np.clip(env * 2.5, 0, 1); duck = signal.sosfilt(sos('lowpass', 4), duck)
     bus *= duck[:, None]
     out = opt.get('out', 'out/mix.wav')
     mix = np.stack([vbuf, vbuf], 1) * 0.5 + bus
+    if 'stems' in opt:
+        sc = 0.89 / (np.max(np.abs(mix)) + 1e-9)
+        sf.write(os.path.join(ROOT, 'out/_stem_voice.wav'), np.stack([vbuf, vbuf], 1) * 0.5 * sc, SR, subtype='FLOAT')
+        sf.write(os.path.join(ROOT, 'out/_stem_sfx.wav'), bus * sc, SR, subtype='FLOAT')
     if 'audition' in opt: sf.write(os.path.join(ROOT, opt['audition']), bus / (np.max(np.abs(bus)) + 1e-9) * .9, SR)
     sf.write(os.path.join(ROOT, 'out/_mix_raw.wav'), mix / (np.max(np.abs(mix)) + 1e-9) * 0.89, SR, subtype='FLOAT')
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', os.path.join(ROOT, 'out/_mix_raw.wav'), '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-ar', str(SR), os.path.join(ROOT, out)], check=True)
