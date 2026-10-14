@@ -41,14 +41,17 @@ export default {
     const rg = C.ridge({ width: 1000, depth: 240, height: 80, seed: 5, color: '#8e4c36', top: '#a4624a' }); rg.position.set(-380, -3, 40); rg.rotation.y = Math.PI / 2 + .1; scene.add(rg);
 
     // THE ROCK: wide red-sandstone butte, long axis along Z, storm comes from -X
-    const rock = C.facetRock({ a: 4.6, b: 4.5, c: 6.6, n: 3.2, planes: 60, jitter: .55, off: [-.38, 0], k: .035, joints: 0, lump: .1, seed: 7, detail: 84, bury: 3.9, grain: .3, nScale: 1.0, bands: .14 });
-    scene.add(rock); rock.updateMatrixWorld(true); R.rock = rock; const H = rock.userData.height;
-    // boulders at its foot + scatter
+    const rock = C.sandstoneMassif({ a: 4.6, c: 6.6, n: 4, layers: 8, height: 5.5, bury: .5, seed: 11, fissures: 10 });
+    scene.add(rock); rock.updateMatrixWorld(true); R.rock = rock; const H = rock.userData.height; const R0 = rock.userData.R0;
+    // fallen blocks + boulders + scree at its foot (kept clear of the sword and the lee camera), plus far scatter
     const rr = U.rng(31); const items = [];
-    [[-4.6, -3.2, .7], [-4.9, 2.0, .5], [-3.6, 6.0, .9], [4.0, -4.6, .8], [4.4, -1.4, .45], [2.6, 6.6, .6], [-2.2, 6.9, .5], [6.6, 5.4, .3], [4.6, 1.0, .28]].forEach(([x, z, s], i) => items.push({ x, z, s: [s, s * .62, s * .85], ry: i * 1.3, variant: i % 3 }));
-    for (let i = 0; i < 220; i++) { const a = rr() * 6.28, d = 6.5 + Math.pow(rr(), .8) * 30; const x = Math.cos(a) * d * .8, z = Math.sin(a) * d; if (Math.hypot(x - 6.6, z - 2.4) < 1.4 || Math.hypot(x - 9.5, z - 5.8) < 2.5) continue; const s = .03 + Math.pow(rr(), 3) * .3; items.push({ x, z, s: [s, s * .6, s * .8], ry: rr() * 6, variant: i % 3 }); }
+    const clear = (x, z) => Math.hypot(x - 6.6, z - 2.4) < 1.5 || (x > 7 && z > 2 && z < 9) || Math.hypot(x - 9.5, z - 5.8) < 2.5;
+    for (let i = 0; i < 22; i++) { const t = rr() * Math.PI * 2, d = R0(t) + .3 + Math.pow(rr(), 1.5) * 2.4; const x = Math.cos(t) * d, z = Math.sin(t) * d; if (clear(x, z)) continue; const s = .35 + Math.pow(rr(), 1.6) * .9; items.push({ x, z, s: [s * (1 + rr() * .4), s * .7, s], ry: rr() * 6, rz: (rr() - .5) * .3, variant: i % 2 }); }
+    for (let i = 0; i < 320; i++) { const t = rr() * Math.PI * 2, d = R0(t) + .1 + Math.pow(rr(), 2) * 3.5; const x = Math.cos(t) * d, z = Math.sin(t) * d; if (clear(x, z)) continue; const s = .035 + Math.pow(rr(), 2.5) * .14; items.push({ x, z, s: [s, s * .6, s * .8], ry: rr() * 6, variant: i % 3 }); }
+    for (let i = 0; i < 200; i++) { const a = rr() * 6.28, d = 9 + Math.pow(rr(), .8) * 30; const x = Math.cos(a) * d * .8, z = Math.sin(a) * d; if (clear(x, z)) continue; const s = .03 + Math.pow(rr(), 3) * .3; items.push({ x, z, s: [s, s * .6, s * .8], ry: rr() * 6, variant: i % 3 }); }
     items.forEach(it => { it.y = gh(it.x, it.z) + it.s[1] * .15; });
-    scene.add(C.scatterRocks(items, { seed: 17, detail: 3, palette: ['#a86e4c', '#80523a', '#bd825a'], big: .12 }));
+    const bm = C.sandstoneMaterial({ nScale: .8 }); bm.color.set('#e2c4b0');
+    scene.add(C.scatterRocks(items, { seed: 17, detail: 3, palette: ['#9a5a3c', '#7a4430', '#b06c48'], big: .3, material: C.sandstoneMaterial({ nScale: .7 }), boulderMat: bm, boulderOpts: [{ n: 3.5, planes: 16, jitter: .45, off: [-.22, 0], k: .03, a: 1.1, b: .75, c: 1, grain: .16 }, { n: 4.5, planes: 12, jitter: .3, off: [-.15, 0], k: .025, a: 1.25, b: .6, c: 1, grain: .16 }] }));
 
     // the Zülfikar, safe in the lee (same model as s06)
     const SW = [6.6, 2.4]; R.swPos = new THREE.Vector3(SW[0], gh(...SW), SW[1]);
@@ -60,12 +63,12 @@ export default {
     // --- arrows vs rock ---
     const tRes = ctx.wordTime('resulullah'), tAl = ctx.wordTime('aleyhis'), tArk = ctx.wordTime('arkasına'), tSig = ctx.wordTime('sığındık'), tDef = ctx.wordTime('defalarca');
     Object.assign(R, { tRes, tAl, tArk, tSig, tDef });
-    const ray = new THREE.Raycaster(); const arrows = [], sparks = [], pf = [];
+    const ray = new THREE.Raycaster(); const arrows = [], sparks = [], pf = [], rimSparks = [];
     const ar = U.rng(13); R.hits = [];
     const hit = (t, y, z, pitch, az, sparkN = 14, big = false, aim = null) => {
       const vL = C.landingVel(Math.PI / 2 + az, pitch, 40); const d = vL.clone().normalize();
-      ray.set((aim ? aim.clone() : new THREE.Vector3(-4, y, z)).addScaledVector(d, -40), d); const I = ray.intersectObject(rock, false)[0]; if (!I) return null;
-      const n = I.face.normal.clone().transformDirection(rock.matrixWorld);
+      ray.set((aim ? aim.clone() : new THREE.Vector3(-4, y, z)).addScaledVector(d, -40), d); const I = ray.intersectObject(rock, true)[0]; if (!I) return null;
+      const n = I.face.normal.clone().transformDirection(I.object.matrixWorld);
       arrows.push({ L: I.point.clone(), vL, tL: t, flight: 2.2, mode: 'break', normal: n, ground: gh });
       if (t > -1.2) {
         const refl = d.clone().reflect(n).multiplyScalar(.7).add(n.clone().multiplyScalar(.5)).add(new THREE.Vector3(0, .35, 0)).normalize();
@@ -85,13 +88,14 @@ export default {
     R.rimT = [];
     { // choose top-surface points that the lee camera sees just under the rock's skyline (top-right), so their sparks rise into view
       const tc = new THREE.PerspectiveCamera(36, 9 / 16, .1, 500); tc.position.set(10.5, gh(10.5, 6.05) + .86, 6.05); tc.lookAt(6.6, .62, 2.42); tc.updateMatrixWorld(true);
-      const gp = rock.geometry.attributes.position, gn = rock.geometry.attributes.normal; const cand = []; const v = new THREE.Vector3();
-      for (let i = 0; i < gp.count; i += 5) { if (gn.getY(i) < .55 || gp.getX(i) > 1.5) continue; v.fromBufferAttribute(gp, i); const q = v.clone().project(tc); const sx = (q.x * .5 + .5), sy = (-q.y * .5 + .5); if (sx > .6 && sx < .92 && sy > .1 && sy < .26 && q.z < 1) cand.push({ v: v.clone(), sx, sy }); }
+      const cand = []; const v = new THREE.Vector3();
+      for (const lm of rock.children) { const gp = lm.geometry.attributes.position, gn = lm.geometry.attributes.normal;
+      for (let i = 0; i < gp.count; i += 3) { if (gn.getY(i) < .75) continue; v.fromBufferAttribute(gp, i); if (v.x < 3.6 || v.x > 5.0 || v.z < -.8 || v.z > 3.4 || v.y < H - 1.4) continue; const q = v.clone().project(tc); cand.push({ v: v.clone(), sx: q.x * .5 + .5, sy: -q.y * .5 + .5 }); } }
       cand.sort((A, B) => A.sx - B.sx); R.rimCand = cand.length;
-      for (let k = 0; k < 5 && cand.length; k++) { const c = cand[Math.floor((k + .5) / 5 * cand.length)]; const t = tDef + .05 + k * .24;
+      for (let k = 0; k < 5 && cand.length; k++) { const c = cand[Math.floor((k + .5) / 5 * cand.length)]; const t = tDef - .15 + k * .24;
         arrows.push({ L: c.v.clone(), vL: C.landingVel(Math.PI / 2 + (k - 2) * .05, .42, 40), tL: t, flight: 2.2, mode: 'break', normal: new THREE.Vector3(0, 1, 0), ground: gh });
-        R.rimT.push(t); R.hits.push({ t, p: c.v.clone().add(new THREE.Vector3(0, .4, 0)), big: false });
-        C.sparkBurst(sparks, { p: c.v.toArray(), dir: [.45, 1, -.25], t0: t, n: 34, speed: [4.5, 8.5], spread: .4, life: [.7, 1.15], w: .034, seed: 300 + k, color: '#ffd896', i: 5, drag: .7 });
+        R.rimT.push(t + .25); R.hits.push({ t, p: c.v.clone().add(new THREE.Vector3(0, .4, 0)), big: false });
+        C.sparkBurst(rimSparks, { p: c.v.toArray(), dir: [.9, .12, .12], t0: t, n: 40, speed: [1.8, 4.2], spread: .4, life: [.8, 1.15], w: .028, seed: 300 + k, color: '#ffd896', i: 6, drag: .6 });
         pf.push({ p: c.v.clone().add(new THREE.Vector3(0, .3, 0)).toArray(), t0: t, life: 1.1, s0: .2, s1: 1.2, v: [.8, .9, 0], a: .35, color: '#e0aa80' }); }
     }
     // a few more distant impacts while in the lee (keeps the storm audible/visible over the rim)
@@ -102,6 +106,7 @@ export default {
     R.volley = C.arrowVolley(arrows, { seed: 21, arrow: { thick: 1.6 } }); scene.add(R.volley.group);
     R.trails = C.streaks(R.volley.trails({ w: .06, len: 2.4, color: '#ffe8d0', a: .5 }).filter(it => it.t0 > -3), { fadeIn: .02, fadeOut: .97, fog: fogO }); scene.add(R.trails);
     R.sparks = C.streaks(sparks, { gravity: [0, -9.8, 0], shutter: .03, additive: true, cool: '#a02a08', fadeIn: .01, fadeOut: .55 }); scene.add(R.sparks);
+    R.rimSparks = C.streaks(rimSparks, { gravity: [0, -9.8, 0], shutter: .014, additive: true, cool: '#a02a08', fadeIn: .01, fadeOut: .5 }); scene.add(R.rimSparks);
     // dust surge slamming into the face on "aleyhissalatü" and boiling up over the top
     for (let i = 0; i < 26; i++) { const z = -6 + ar() * 12, y = .6 + ar() * 3.8; const t = tAl - .25 + ar() * .6; pf.push({ p: [-5.4 - ar() * 2.5, y, z], t0: t, life: 1.6 + ar() * .8, s0: 1.4, s1: 4.2 + ar() * 2.4, v: [.3, 2.8 + ar() * 1.6, (ar() - .5) * 1.5], a: .5, color: '#e2a878' }); }
     R.puffs = C.puffs(pf, { sunDir: sunDir.toArray(), litMul: 1.4, shadeMul: .75 }); scene.add(R.puffs);
@@ -119,7 +124,7 @@ export default {
 
     // reflections for the steel from its real surroundings (sword hidden)
     sky.userData.uniforms.sunI.value = 1.6;
-    scene.fog.density = .006; scene.fog.color.set('#d09868'); scene.environment = C.envFromScene(renderer, scene, [SW[0], .9, SW[1]], [sword, R.storm, R.sheets, R.endStream, R.sand, R.motes, R.puffs, R.sparks, R.trails]); scene.fog.density = .02; scene.fog.color.copy(R.fogStorm);
+    scene.fog.density = .006; scene.fog.color.set('#d09868'); scene.environment = C.envFromScene(renderer, scene, [SW[0], .9, SW[1]], [sword, R.storm, R.sheets, R.endStream, R.sand, R.motes, R.puffs, R.sparks, R.rimSparks, R.trails]); scene.fog.density = .02; scene.fog.color.copy(R.fogStorm);
     sky.userData.uniforms.sunI.value = 5;
 
     camera.fov = 38; camera.near = .05; R.fovA = 38; camera.far = 1500; camera.updateProjectionMatrix();

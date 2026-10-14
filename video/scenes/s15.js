@@ -141,13 +141,16 @@ export default {
     const Pt = dirW(38, 25); const n = Pt.clone().sub(Gc).normalize();
     const nh = new THREE.Vector3(n.x, 0, n.z).normalize(); const el = 34 * DEG;
     const dirC = nh.clone().multiplyScalar(Math.cos(el)).add(new THREE.Vector3(0, Math.sin(el), 0));
-    const C = Gc.clone().addScaledVector(dirC, 1.1); const C2 = Gc.clone().addScaledVector(dirC.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), .06), 1.03);
+    const C = Gc.clone().addScaledVector(dirC, 1.1);
+    // final push-in toward Arabia/Medina (after the arcs land) so the Red Sea reads wide and Medina clearly inland
+    const Pm = dirW(27.5, 38.5); const nm = Pm.clone().sub(Gc).normalize(); const nmh = new THREE.Vector3(nm.x, 0, nm.z).normalize(); const el2 = 31 * DEG;
+    const C2 = Gc.clone().addScaledVector(nmh.clone().multiplyScalar(Math.cos(el2)).add(new THREE.Vector3(0, Math.sin(el2), 0)), .62);
     const g0 = Gc.clone();
     camera.fov = 36; camera.near = .03; camera.far = 60; camera.updateProjectionMatrix();
     R.cam = G.camPath(camera, {
       pos: [g0.clone().add(new THREE.Vector3(-.5, .25, 1.82)).toArray(), g0.clone().add(new THREE.Vector3(-.22, .3, 1.5)).toArray(), C.toArray(), C2.toArray()],
-      look: [g0.clone().add(new THREE.Vector3(0, .02, 0)).toArray(), g0.clone().add(new THREE.Vector3(0, .05, 0)).toArray(), Pt.toArray(), Pt.clone().add(new THREE.Vector3(.005, -.004, 0)).toArray()],
-      keys: [[-.6, 0], [1.9, .33], [4.15, .9], [5.6, 1]], shake: { amp: .003, freq: .45 },
+      look: [g0.clone().add(new THREE.Vector3(0, .02, 0)).toArray(), g0.clone().add(new THREE.Vector3(0, .05, 0)).toArray(), Pt.toArray(), Pm.toArray()],
+      keys: [[-.6, 0], [1.9, .33], [3.7, .72], [4.25, .79], [5.6, 1]], shake: { amp: .003, freq: .45 },
     });
     R.Pt = Pt;
 
@@ -189,9 +192,9 @@ export default {
     // dots
     for (const d of R.dots) {
       if (t < d.pop) continue; const wp = d.v.clone().applyMatrix4(M); const a = vis(wp); if (a <= .01) continue;
-      const [sx, sy] = ui.project(wp); const k = U.ease.outBack(U.clamp((t - d.pop) / .35), 2.4); const s = persp(wp);
+      const [sx, sy] = ui.project(wp); const k = U.ease.outBack(U.clamp((t - d.pop) / .35), 2.4); const s = persp(wp); const under = 1 - .65 * (1 - U.smoothstep(440, 520, sy));
       const r = (d.sp ? 8 : d.w >= 1 ? 6.8 : 5.4) * s * k * (1 + pulseAll * .35);
-      X.save(); X.globalAlpha = a;
+      X.save(); X.globalAlpha = a * under;
       const gr = X.createRadialGradient(sx, sy, 0, sx, sy, r * 3.4); gr.addColorStop(0, 'rgba(255,196,96,.55)'); gr.addColorStop(1, 'rgba(255,170,70,0)'); X.fillStyle = gr; X.beginPath(); X.arc(sx, sy, r * 3.4, 0, 7); X.fill();
       X.fillStyle = '#ffcf6b'; X.shadowColor = 'rgba(40,20,0,.6)'; X.shadowBlur = 6; X.beginPath(); X.arc(sx, sy, r, 0, 7); X.fill(); X.shadowColor = 'transparent';
       X.fillStyle = '#fff6dc'; X.beginPath(); X.arc(sx, sy, r * .45, 0, 7); X.fill();
@@ -207,7 +210,7 @@ export default {
       for (let i = 0; i <= N; i++) { const s = (i / N) * p; const qv = new THREE.Vector3().copy(u0).lerp(u1, s).normalize(); // near-slerp (short arcs)
         const lift = 1 + (.025 + A.ang * .16) * Math.sin(Math.PI * s); const wp = qv.multiplyScalar(R.Rg * lift).applyMatrix4(M); pts.push({ s: ui.project(wp), o: occluded(wp) || ringHide(wp) < .5 ? 0 : 1 }); }
       X.save(); X.lineCap = 'round'; X.strokeStyle = '#ffd27a'; X.lineWidth = 2.8; X.setLineDash([8, 7]); X.lineDashOffset = -t * 40; X.shadowColor = 'rgba(30,15,0,.7)'; X.shadowBlur = 5;
-      X.beginPath(); let pen = false; for (const q of pts) { if (!q.o) { pen = false; continue; } pen ? X.lineTo(q.s[0], q.s[1]) : X.moveTo(q.s[0], q.s[1]); pen = true; } X.globalAlpha = .95; X.stroke(); X.setLineDash([]);
+      X.beginPath(); let pen = false; for (const q of pts) { if (!q.o || q.s[1] < 450) { pen = false; continue; } pen ? X.lineTo(q.s[0], q.s[1]) : X.moveTo(q.s[0], q.s[1]); pen = true; } X.globalAlpha = .95 - .4 * U.smoothstep(4.5, 5.1, t); X.stroke(); X.setLineDash([]);
       const hd = pts[pts.length - 1]; if (p < 1 && hd.o) { X.fillStyle = '#fff3d0'; X.beginPath(); X.arc(hd.s[0], hd.s[1], 4.5, 0, 7); X.fill(); }
       X.restore();
     }
@@ -215,9 +218,9 @@ export default {
     const mk = U.ease.outBack(U.clamp((t - (tP + .05)) / .4), 2.2);
     if (mk > 0 && mA > .01) {
       const s = persp(mW); X.save(); X.globalAlpha = mA;
-      const gr = X.createRadialGradient(mx, my, 0, mx, my, 22 * s * mk); gr.addColorStop(0, 'rgba(120,230,160,.42)'); gr.addColorStop(1, 'rgba(80,200,130,0)'); X.fillStyle = gr; X.beginPath(); X.arc(mx, my, 22 * s * mk, 0, 7); X.fill();
-      X.fillStyle = '#3fb67a'; X.strokeStyle = '#ffd27a'; X.lineWidth = 3; X.beginPath(); X.arc(mx, my, 6.5 * s * mk, 0, 7); X.fill(); X.beginPath(); X.arc(mx, my, 10.5 * s * mk, 0, 7); X.stroke();
-      for (const off of [0, .35]) { const pa = U.clamp((t - tK - off) / .9); if (pa > 0 && pa < 1) { X.strokeStyle = `rgba(255,214,130,${(1 - pa) * .9})`; X.lineWidth = 3; X.beginPath(); X.arc(mx, my, 10.5 * s + pa * 60, 0, 7); X.stroke(); } }
+      const gr = X.createRadialGradient(mx, my, 0, mx, my, 16 * mk); gr.addColorStop(0, 'rgba(120,230,160,.4)'); gr.addColorStop(1, 'rgba(80,200,130,0)'); X.fillStyle = gr; X.beginPath(); X.arc(mx, my, 16 * mk, 0, 7); X.fill();
+      X.fillStyle = '#3fb67a'; X.strokeStyle = '#ffd27a'; X.lineWidth = 2.5; X.beginPath(); X.arc(mx, my, 6 * mk, 0, 7); X.fill(); X.beginPath(); X.arc(mx, my, 9.5 * mk, 0, 7); X.stroke();
+      for (const off of [0, .35]) { const pa = U.clamp((t - tK - off) / .9); if (pa > 0 && pa < 1) { X.strokeStyle = `rgba(255,214,130,${(1 - pa) * .9})`; X.lineWidth = 3; X.beginPath(); X.arc(mx, my, 9.5 + pa * 38, 0, 7); X.stroke(); } }
       X.restore();
       ui.callout('Medine', { t, t0: tP + .2, anchor: [mx, my], to: [U.clamp(mx + 185, 200, 880), U.clamp(my + 95, 300, 1300)], size: 40, dotColor: '#3fb67a' });
     }

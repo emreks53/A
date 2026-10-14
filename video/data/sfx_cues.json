@@ -1,0 +1,1823 @@
+[
+{
+"t": 0.0,
+"dur": 7.6,
+"kind": "wind",
+"desc": "soft desert night wind bed",
+"gain": -6,
+"scene": "s01"
+},
+{
+"t": 0.25,
+"dur": 0.6,
+"kind": "ignite",
+"desc": "first lamps ignite, soft",
+"gain": -8,
+"scene": "s01"
+},
+{
+"t": 1.1,
+"dur": 0.6,
+"kind": "ignite",
+"desc": "lamp ignite",
+"gain": -10,
+"scene": "s01"
+},
+{
+"t": 2.3,
+"dur": 2.0,
+"kind": "fire",
+"desc": "many tiny flames crackle, distant",
+"gain": -6,
+"scene": "s01"
+},
+{
+"t": 2.55,
+"dur": 1.6,
+"kind": "shimmer",
+"desc": "wave of lamps lighting, glow swell",
+"gain": -4,
+"scene": "s01"
+},
+{
+"t": 4.25,
+"dur": 2.4,
+"kind": "whoosh",
+"desc": "camera glide down to the Mushaf",
+"gain": -3,
+"scene": "s01"
+},
+{
+"t": 5.9,
+"dur": 2.2,
+"kind": "chime",
+"desc": "warm reveal as dawn light hits the Mushaf",
+"gain": -3,
+"scene": "s01"
+},
+{
+"t": 6.2,
+"dur": 1.4,
+"kind": "fire",
+"desc": "close oil lamp crackle",
+"gain": -4,
+"scene": "s01"
+},
+{
+"t": 6.66,
+"dur": 1.4,
+"kind": "shimmer",
+"desc": "transition into s02",
+"gain": -6,
+"scene": "trans"
+},
+{
+"t": 7.3,
+"dur": 4.9,
+"kind": "wind",
+"desc": "soft dawn breeze over Medina",
+"gain": -5,
+"scene": "s02"
+},
+{
+"t": 7.6,
+"dur": 3.5,
+"kind": "birds",
+"desc": "distant dawn birds",
+"gain": -6,
+"scene": "s02"
+},
+{
+"t": 7.72,
+"dur": 0.3,
+"kind": "pop",
+"desc": "Medine location tag pops in",
+"scene": "s02"
+},
+{
+"t": 9.55,
+"dur": 0.5,
+"kind": "whoosh",
+"desc": "light air whoosh as text rises",
+"gain": -3,
+"scene": "s02"
+},
+{
+"t": 10.62,
+"dur": 0.6,
+"kind": "impact",
+"desc": "soft low impact when EN BUYUK MUCIZE lands",
+"gain": -6,
+"scene": "s02"
+},
+{
+"t": 10.75,
+"dur": 1.2,
+"kind": "chime",
+"desc": "delicate sparkle on the gilded crescent",
+"scene": "s02"
+},
+{
+"t": 11.72,
+"dur": 0.8,
+"kind": "whoosh",
+"desc": "slow airy cross-dissolve into the Hilye room",
+"scene": "s02"
+},
+{
+"t": 11.9,
+"dur": 1.8,
+"kind": "fire",
+"desc": "quiet candle flicker",
+"gain": -4,
+"scene": "s02"
+},
+{
+"t": 11.96,
+"dur": 1.5,
+"kind": "chime",
+"desc": "warm resonant tone under KENDI ZATI",
+"scene": "s02"
+},
+{
+"t": 12.63,
+"dur": 0.4,
+"kind": "paper",
+"desc": "soft paper swish as caption appears",
+"gain": -4,
+"scene": "s02"
+},
+{
+"t": 13.0,
+"dur": 6.9,
+"kind": "wind",
+"desc": "low steady dusk desert wind",
+"gain": -4,
+"scene": "s03"
+},
+{
+"t": 13.0,
+"dur": 6.9,
+"kind": "fire",
+"desc": "two campfires crackling",
+"scene": "s03"
+},
+{
+"t": 13.1,
+"dur": 6.6,
+"kind": "cloth",
+"desc": "banners flapping softly",
+"gain": -8,
+"scene": "s03"
+},
+{
+"t": 13.36,
+"dur": 0.3,
+"kind": "pop",
+"desc": "DOSTLARI label pops",
+"scene": "s03"
+},
+{
+"t": 14.4,
+"dur": 0.3,
+"kind": "pop",
+"desc": "DUSMANLARI label pops",
+"scene": "s03"
+},
+{
+"t": 15.35,
+"dur": 0.6,
+"kind": "ignite",
+"desc": "wick ignitions along lamp chains",
+"scene": "s03"
+},
+{
+"t": 15.4,
+"dur": 0.9,
+"kind": "whoosh",
+"desc": "dashed arrows drawing toward the central lamp",
+"gain": -3,
+"scene": "s03"
+},
+{
+"t": 15.95,
+"dur": 0.6,
+"kind": "ignite",
+"desc": "wick ignitions along lamp chains",
+"scene": "s03"
+},
+{
+"t": 18.2,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "ring of small lamps catching",
+"scene": "s03"
+},
+{
+"t": 18.72,
+"dur": 0.6,
+"kind": "stamp",
+"desc": "SAHIT stamp slam",
+"scene": "s03"
+},
+{
+"t": 18.78,
+"dur": 0.9,
+"kind": "sand",
+"desc": "sand dust puff settling",
+"gain": -6,
+"scene": "s03"
+},
+{
+"t": 19.3,
+"dur": 6.2,
+"kind": "wind",
+"desc": "soft night desert wind over the valley",
+"gain": -6,
+"scene": "s04"
+},
+{
+"t": 19.4,
+"dur": 5.8,
+"kind": "crickets",
+"desc": "distant night crickets",
+"gain": -4,
+"scene": "s04"
+},
+{
+"t": 19.72,
+"dur": 0.3,
+"kind": "pop",
+"desc": "Mekke location tag pops in",
+"scene": "s04"
+},
+{
+"t": 20.15,
+"dur": 0.5,
+"kind": "chime",
+"desc": "very soft tone as the ring draws around the label",
+"gain": -6,
+"scene": "s04"
+},
+{
+"t": 21.15,
+"dur": 0.2,
+"kind": "pop",
+"desc": "tiny soft tick dot",
+"gain": -6,
+"scene": "s04"
+},
+{
+"t": 21.45,
+"dur": 0.2,
+"kind": "pop",
+"desc": "tiny soft tick dot",
+"gain": -7,
+"scene": "s04"
+},
+{
+"t": 21.75,
+"dur": 0.2,
+"kind": "pop",
+"desc": "tiny soft tick dot",
+"gain": -7,
+"scene": "s04"
+},
+{
+"t": 22.05,
+"dur": 0.3,
+"kind": "pop",
+"desc": "musrikler label pop",
+"scene": "s04"
+},
+{
+"t": 22.6,
+"dur": 2.8,
+"kind": "fire",
+"desc": "many small lantern flames flickering, moving",
+"gain": -4,
+"scene": "s04"
+},
+{
+"t": 23.9,
+"dur": 0.5,
+"kind": "chime",
+"desc": "warm low chime as the gold pin drops",
+"gain": -3,
+"scene": "s04"
+},
+{
+"t": 24.2,
+"dur": 1.3,
+"kind": "whoosh",
+"desc": "camera swoop down toward the lit doorway",
+"scene": "s04"
+},
+{
+"t": 24.75,
+"dur": 5.0,
+"kind": "fire",
+"desc": "quiet oil-lamp flame sputter",
+"gain": -2,
+"scene": "s05"
+},
+{
+"t": 24.75,
+"dur": 5.0,
+"kind": "room tone",
+"desc": "quiet room tone",
+"scene": "s05"
+},
+{
+"t": 24.89,
+"dur": 0.6,
+"kind": "whoosh",
+"desc": "transition into s05",
+"gain": -6,
+"scene": "trans"
+},
+{
+"t": 25.55,
+"dur": 0.6,
+"kind": "chime",
+"desc": "soft warm tone under el-Emin title",
+"gain": -3,
+"scene": "s05"
+},
+{
+"t": 25.59,
+"dur": 0.3,
+"kind": "thud",
+"desc": "leather pouch lands on shelf",
+"scene": "s05"
+},
+{
+"t": 25.99,
+"dur": 0.35,
+"kind": "wood",
+"desc": "wooden chest set down",
+"scene": "s05"
+},
+{
+"t": 26.05,
+"dur": 0.3,
+"kind": "metal",
+"desc": "faint brass rattle of the hasp",
+"gain": -6,
+"scene": "s05"
+},
+{
+"t": 26.37,
+"dur": 0.3,
+"kind": "wood",
+"desc": "small jewellery box tap",
+"scene": "s05"
+},
+{
+"t": 26.75,
+"dur": 0.35,
+"kind": "thud",
+"desc": "heavy clay jar thunk on wood",
+"scene": "s05"
+},
+{
+"t": 27.15,
+"dur": 0.3,
+"kind": "paper",
+"desc": "parchment scroll rolls and settles",
+"scene": "s05"
+},
+{
+"t": 27.53,
+"dur": 0.4,
+"kind": "cloth",
+"desc": "folded textile flops onto the shelf",
+"scene": "s05"
+},
+{
+"t": 27.91,
+"dur": 0.3,
+"kind": "metal",
+"desc": "sheathed dagger small brass clink",
+"scene": "s05"
+},
+{
+"t": 28.29,
+"dur": 0.3,
+"kind": "thud",
+"desc": "leather pouch set down",
+"scene": "s05"
+},
+{
+"t": 28.65,
+"dur": 0.3,
+"kind": "thud",
+"desc": "leather pouch set down",
+"scene": "s05"
+},
+{
+"t": 29.6,
+"dur": 4.2,
+"kind": "wind",
+"desc": "warm desert wind with blowing sand",
+"gain": -2,
+"scene": "s06"
+},
+{
+"t": 30.16,
+"dur": 0.4,
+"kind": "pop",
+"desc": "soft title reveal",
+"scene": "s06"
+},
+{
+"t": 30.95,
+"dur": 1.0,
+"kind": "wind",
+"desc": "sand gust sweeping past the blade",
+"gain": -2,
+"scene": "s06"
+},
+{
+"t": 31.0,
+"dur": 1.6,
+"kind": "sword",
+"desc": "faint steel shimmer as the sun glint travels down the edge",
+"gain": -6,
+"scene": "s06"
+},
+{
+"t": 32.02,
+"dur": 0.35,
+"kind": "pop",
+"desc": "punchy word pop",
+"scene": "s06"
+},
+{
+"t": 32.12,
+"dur": 0.6,
+"kind": "metal",
+"desc": "tiny bright ting of the star glint",
+"gain": -4,
+"scene": "s06"
+},
+{
+"t": 32.2,
+"dur": 1.6,
+"kind": "rumble",
+"desc": "distant low rumble of the approaching dust storm",
+"scene": "s06"
+},
+{
+"t": 33.0,
+"dur": 0.5,
+"kind": "whoosh",
+"desc": "transition into s07",
+"gain": -2,
+"scene": "trans"
+},
+{
+"t": 33.2,
+"dur": 2.9,
+"kind": "wind",
+"desc": "howling battle dust-storm roar",
+"gain": 4,
+"scene": "s07"
+},
+{
+"t": 33.2,
+"dur": 2.6,
+"kind": "rumble",
+"desc": "low storm rumble",
+"scene": "s07"
+},
+{
+"t": 33.25,
+"dur": 1.1,
+"kind": "volley",
+"desc": "first volley arrows whistling overhead",
+"scene": "s07"
+},
+{
+"t": 33.6,
+"dur": 0.4,
+"kind": "arrow hit",
+"desc": "arrow thud into sand",
+"scene": "s07"
+},
+{
+"t": 33.85,
+"dur": 0.4,
+"kind": "arrow hit",
+"desc": "arrow thud into sand",
+"gain": -3,
+"scene": "s07"
+},
+{
+"t": 33.95,
+"dur": 0.35,
+"kind": "arrow",
+"desc": "close arrow whizzing past the lens",
+"gain": 3,
+"scene": "s07"
+},
+{
+"t": 34.34,
+"dur": 0.6,
+"kind": "metal",
+"desc": "hard iron clang on the shield boss",
+"gain": 6,
+"scene": "s07"
+},
+{
+"t": 34.34,
+"dur": 0.7,
+"kind": "impact",
+"desc": "impact punch",
+"gain": 2,
+"scene": "s07"
+},
+{
+"t": 34.38,
+"dur": 0.4,
+"kind": "wood",
+"desc": "shield rattling back against the rock",
+"scene": "s07"
+},
+{
+"t": 34.5,
+"dur": 1.5,
+"kind": "volley",
+"desc": "dense second volley",
+"gain": 2,
+"scene": "s07"
+},
+{
+"t": 34.9,
+"dur": 0.4,
+"kind": "arrow hit",
+"desc": "arrow thud",
+"scene": "s07"
+},
+{
+"t": 35.1,
+"dur": 0.4,
+"kind": "arrow hit",
+"desc": "arrow thud",
+"gain": -2,
+"scene": "s07"
+},
+{
+"t": 35.3,
+"dur": 0.4,
+"kind": "stone",
+"desc": "stony clack",
+"scene": "s07"
+},
+{
+"t": 35.42,
+"dur": 0.35,
+"kind": "arrow",
+"desc": "last arrow skimming past the camera",
+"scene": "s07"
+},
+{
+"t": 35.5,
+"dur": 2.8,
+"kind": "wind",
+"desc": "storm wind battering against the rock face",
+"gain": 2,
+"scene": "s08"
+},
+{
+"t": 35.7,
+"dur": 0.5,
+"kind": "arrow hit",
+"desc": "big arrow strike on stone",
+"gain": 4,
+"scene": "s08"
+},
+{
+"t": 35.98,
+"dur": 0.5,
+"kind": "arrow hit",
+"desc": "second heavy strike on the rock",
+"gain": 4,
+"scene": "s08"
+},
+{
+"t": 36.0,
+"dur": 0.3,
+"kind": "wood",
+"desc": "broken arrow pieces clattering",
+"gain": -4,
+"scene": "s08"
+},
+{
+"t": 36.4,
+"dur": 0.3,
+"kind": "wood",
+"desc": "broken arrow pieces clattering",
+"gain": -6,
+"scene": "s08"
+},
+{
+"t": 36.82,
+"dur": 0.5,
+"kind": "arrow hit",
+"desc": "rapid burst of stone impacts",
+"gain": 3,
+"scene": "s08"
+},
+{
+"t": 36.85,
+"dur": 1.2,
+"kind": "wind",
+"desc": "dust surge rushing up over the top",
+"gain": 2,
+"scene": "s08"
+},
+{
+"t": 36.95,
+"dur": 0.5,
+"kind": "arrow hit",
+"desc": "rapid burst of stone impacts",
+"gain": 1,
+"scene": "s08"
+},
+{
+"t": 37.1,
+"dur": 0.5,
+"kind": "arrow hit",
+"desc": "rapid burst of stone impacts",
+"scene": "s08"
+},
+{
+"t": 37.95,
+"dur": 0.9,
+"kind": "whoosh",
+"desc": "camera swing around the rock into the lee",
+"scene": "s08"
+},
+{
+"t": 38.6,
+"dur": 3.9,
+"kind": "wind",
+"desc": "calm lee soft breeze",
+"gain": -8,
+"scene": "s08"
+},
+{
+"t": 38.66,
+"dur": 0.5,
+"kind": "paper",
+"desc": "soft card swipe as the quote appears",
+"gain": -3,
+"scene": "s08"
+},
+{
+"t": 39.83,
+"dur": 0.4,
+"kind": "stone",
+"desc": "muffled distant stone strike",
+"gain": -8,
+"scene": "s08"
+},
+{
+"t": 39.83,
+"dur": 0.1,
+"kind": "tick",
+"desc": "tally tick",
+"scene": "s08"
+},
+{
+"t": 40.07,
+"dur": 0.4,
+"kind": "stone",
+"desc": "muffled distant stone strike",
+"gain": -8,
+"scene": "s08"
+},
+{
+"t": 40.07,
+"dur": 0.1,
+"kind": "tick",
+"desc": "tally tick",
+"scene": "s08"
+},
+{
+"t": 40.31,
+"dur": 0.4,
+"kind": "stone",
+"desc": "muffled distant stone strike",
+"gain": -8,
+"scene": "s08"
+},
+{
+"t": 40.31,
+"dur": 0.1,
+"kind": "tick",
+"desc": "tally tick",
+"scene": "s08"
+},
+{
+"t": 40.55,
+"dur": 0.4,
+"kind": "stone",
+"desc": "muffled distant stone strike",
+"gain": -8,
+"scene": "s08"
+},
+{
+"t": 40.55,
+"dur": 0.1,
+"kind": "tick",
+"desc": "tally tick",
+"scene": "s08"
+},
+{
+"t": 40.79,
+"dur": 0.4,
+"kind": "stone",
+"desc": "muffled distant stone strike",
+"gain": -8,
+"scene": "s08"
+},
+{
+"t": 40.79,
+"dur": 0.1,
+"kind": "tick",
+"desc": "tally tick",
+"scene": "s08"
+},
+{
+"t": 41.7,
+"dur": 0.9,
+"kind": "whoosh",
+"desc": "soft airy fall as the drops enter frame (slow-mo air)",
+"scene": "s09"
+},
+{
+"t": 42.0,
+"dur": 2.6,
+"kind": "water",
+"desc": "distant calm sea ambience, ocean low and soft",
+"scene": "s09"
+},
+{
+"t": 42.6,
+"dur": 0.15,
+"kind": "pop",
+"desc": "badge 1 pop",
+"scene": "s09"
+},
+{
+"t": 42.74,
+"dur": 0.15,
+"kind": "pop",
+"desc": "badge 2 pop",
+"scene": "s09"
+},
+{
+"t": 43.43,
+"dur": 0.15,
+"kind": "pop",
+"desc": "label pop (very soft)",
+"gain": -4,
+"scene": "s09"
+},
+{
+"t": 43.57,
+"dur": 0.15,
+"kind": "pop",
+"desc": "label pop (very soft)",
+"gain": -4,
+"scene": "s09"
+},
+{
+"t": 43.91,
+"dur": 0.7,
+"kind": "chime",
+"desc": "warm glassy chime under IKI ORNEK",
+"scene": "s09"
+},
+{
+"t": 45.02,
+"dur": 0.8,
+"kind": "water",
+"desc": "slow-motion deep plink of drop 1 hitting the sea",
+"scene": "s10"
+},
+{
+"t": 45.05,
+"dur": 1.4,
+"kind": "water",
+"desc": "splash crown",
+"scene": "s10"
+},
+{
+"t": 45.27,
+"dur": 0.8,
+"kind": "water",
+"desc": "drop 2 plink",
+"scene": "s10"
+},
+{
+"t": 45.3,
+"dur": 1.8,
+"kind": "whoosh",
+"desc": "airy rising pull-back whoosh",
+"scene": "s10"
+},
+{
+"t": 45.56,
+"dur": 1.2,
+"kind": "chime",
+"desc": "soft warm swell under AHLAK-I ALIYE",
+"scene": "s10"
+},
+{
+"t": 45.8,
+"dur": 3.9,
+"kind": "ocean",
+"desc": "open-sea ambience: gentle swell waves",
+"scene": "s10"
+},
+{
+"t": 46.18,
+"dur": 0.3,
+"kind": "water",
+"desc": "tiny drip",
+"scene": "s10"
+},
+{
+"t": 46.43,
+"dur": 0.3,
+"kind": "water",
+"desc": "tiny drip",
+"scene": "s10"
+},
+{
+"t": 46.96,
+"dur": 0.15,
+"kind": "pop",
+"desc": "badge pop",
+"scene": "s10"
+},
+{
+"t": 47.08,
+"dur": 0.15,
+"kind": "pop",
+"desc": "badge pop",
+"scene": "s10"
+},
+{
+"t": 48.52,
+"dur": 0.15,
+"kind": "pop",
+"desc": "caption completes (very soft)",
+"gain": -4,
+"scene": "s10"
+},
+{
+"t": 49.25,
+"dur": 3.6,
+"kind": "wind",
+"desc": "light courtyard breeze ambience",
+"gain": -6,
+"scene": "s11"
+},
+{
+"t": 49.27,
+"dur": 1.0,
+"kind": "stone",
+"desc": "stone grinding as columns rise",
+"scene": "s11"
+},
+{
+"t": 50.08,
+"dur": 2.1,
+"kind": "stone",
+"desc": "deeper rising grind for the marble column",
+"scene": "s11"
+},
+{
+"t": 50.16,
+"dur": 0.2,
+"kind": "pop",
+"desc": "title pop",
+"scene": "s11"
+},
+{
+"t": 50.3,
+"dur": 1.4,
+"kind": "whoosh",
+"desc": "upward whoosh as the column soars",
+"scene": "s11"
+},
+{
+"t": 50.92,
+"dur": 0.15,
+"kind": "pop",
+"desc": "callout pop",
+"scene": "s11"
+},
+{
+"t": 52.23,
+"dur": 0.4,
+"kind": "thud",
+"desc": "soft settling thud of the capital",
+"scene": "s11"
+},
+{
+"t": 52.25,
+"dur": 0.7,
+"kind": "chime",
+"desc": "tiny glint shimmer on gilded band",
+"gain": -4,
+"scene": "s11"
+},
+{
+"t": 52.35,
+"dur": 18.6,
+"kind": "room tone",
+"desc": "quiet stone-gallery room tone",
+"gain": 2,
+"scene": "s12"
+},
+{
+"t": 52.35,
+"dur": 18.0,
+"kind": "fire",
+"desc": "very soft oil-lamp flame crackle bed",
+"gain": -8,
+"scene": "s12"
+},
+{
+"t": 52.43,
+"dur": 0.7,
+"kind": "whoosh",
+"desc": "transition into s12",
+"gain": -4,
+"scene": "trans"
+},
+{
+"t": 52.92,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"scene": "s12"
+},
+{
+"t": 53.0,
+"dur": 0.5,
+"kind": "rustle",
+"desc": "twig straw rustle nest",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 54.68,
+"dur": 0.6,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 54.75,
+"dur": 1.4,
+"kind": "glass",
+"desc": "clear glass ting",
+"scene": "s12"
+},
+{
+"t": 55.68,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 55.75,
+"dur": 0.6,
+"kind": "metal",
+"desc": "small brass clink scale",
+"scene": "s12"
+},
+{
+"t": 56.46,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 56.55,
+"dur": 0.4,
+"kind": "metal",
+"desc": "iron padlock clack against hasp",
+"scene": "s12"
+},
+{
+"t": 57.56,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 57.6,
+"dur": 0.6,
+"kind": "rustle",
+"desc": "dry wheat rustle",
+"scene": "s12"
+},
+{
+"t": 58.38,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 58.45,
+"dur": 0.5,
+"kind": "paper",
+"desc": "old letters rustle",
+"scene": "s12"
+},
+{
+"t": 59.22,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 59.34,
+"dur": 0.4,
+"kind": "drip",
+"desc": "single water drop plink into stone",
+"scene": "s12"
+},
+{
+"t": 60.0,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 60.05,
+"dur": 0.4,
+"kind": "cloth",
+"desc": "soft leather pat of slippers",
+"scene": "s12"
+},
+{
+"t": 60.39,
+"dur": 0.4,
+"kind": "drip",
+"desc": "water drop plink",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 60.74,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 60.8,
+"dur": 0.5,
+"kind": "thud",
+"desc": "muted thud sword on wooden rests",
+"scene": "s12"
+},
+{
+"t": 62.18,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 62.25,
+"dur": 0.8,
+"kind": "shimmer",
+"desc": "very soft shimmer as the rose lifts",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 63.3,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 63.38,
+"dur": 0.3,
+"kind": "wood",
+"desc": "clay cup tapping the plate",
+"scene": "s12"
+},
+{
+"t": 64.56,
+"dur": 1.1,
+"kind": "creak",
+"desc": "heavy wooden door creaking open",
+"scene": "s12"
+},
+{
+"t": 64.8,
+"dur": 1.5,
+"kind": "birds",
+"desc": "outdoor garden birds through the door",
+"gain": -6,
+"scene": "s12"
+},
+{
+"t": 65.48,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 65.55,
+"dur": 0.5,
+"kind": "paper",
+"desc": "crusty bread cracking apart, crumbs",
+"scene": "s12"
+},
+{
+"t": 66.6,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "lamp wick catches",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 66.6,
+"dur": 1.4,
+"kind": "pour",
+"desc": "water pouring from the jug into the bowl",
+"scene": "s12"
+},
+{
+"t": 67.7,
+"dur": 2.0,
+"kind": "whoosh",
+"desc": "slow airy rise as the camera cranes up",
+"scene": "s12"
+},
+{
+"t": 67.85,
+"dur": 2.4,
+"kind": "fire",
+"desc": "cascade of many small lamp flames catching",
+"gain": 2,
+"scene": "s12"
+},
+{
+"t": 68.4,
+"dur": 1.6,
+"kind": "shimmer",
+"desc": "glow swell",
+"gain": -4,
+"scene": "s12"
+},
+{
+"t": 70.15,
+"dur": 7.6,
+"kind": "wind",
+"desc": "thin high-altitude wind bed, swelling",
+"gain": -4,
+"scene": "s13"
+},
+{
+"t": 70.57,
+"dur": 0.6,
+"kind": "paper",
+"desc": "soft parchment rustle",
+"scene": "s13"
+},
+{
+"t": 72.5,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft text pop",
+"scene": "s13"
+},
+{
+"t": 72.85,
+"dur": 1.6,
+"kind": "whoosh",
+"desc": "airy rising whoosh as the camera cranes up",
+"scene": "s13"
+},
+{
+"t": 74.5,
+"dur": 1.6,
+"kind": "chime",
+"desc": "very soft warm chime on first light at the summit",
+"gain": -3,
+"scene": "s13"
+},
+{
+"t": 75.82,
+"dur": 0.8,
+"kind": "impact",
+"desc": "deep soft thud under YETISILEMEZ",
+"gain": -4,
+"scene": "s13"
+},
+{
+"t": 75.9,
+"dur": 0.35,
+"kind": "quill",
+"desc": "marker scratch for dotted line",
+"gain": -4,
+"scene": "s13"
+},
+{
+"t": 76.15,
+"dur": 0.35,
+"kind": "quill",
+"desc": "marker scratch for dotted line",
+"gain": -4,
+"scene": "s13"
+},
+{
+"t": 76.7,
+"dur": 1.2,
+"kind": "creak",
+"desc": "faint distant creak of lashed wooden ladders",
+"gain": -8,
+"scene": "s13"
+},
+{
+"t": 77.45,
+"dur": 10.3,
+"kind": "room tone",
+"desc": "quiet large stone-hall room tone",
+"gain": 2,
+"scene": "s14"
+},
+{
+"t": 78.75,
+"dur": 1.0,
+"kind": "whoosh",
+"desc": "gentle pan whoosh",
+"gain": -3,
+"scene": "s14"
+},
+{
+"t": 79.98,
+"dur": 0.6,
+"kind": "paper",
+"desc": "soft page whisper as Sifa-i Serif appears",
+"scene": "s14"
+},
+{
+"t": 80.5,
+"dur": 0.2,
+"kind": "pop",
+"desc": "small pop for tag",
+"scene": "s14"
+},
+{
+"t": 82.38,
+"dur": 1.2,
+"kind": "whoosh",
+"desc": "big airy pull-back whoosh",
+"scene": "s14"
+},
+{
+"t": 82.6,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"scene": "s14"
+},
+{
+"t": 82.95,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -2,
+"scene": "s14"
+},
+{
+"t": 83.25,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -3,
+"scene": "s14"
+},
+{
+"t": 83.5,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -4,
+"scene": "s14"
+},
+{
+"t": 83.75,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -5,
+"scene": "s14"
+},
+{
+"t": 84.2,
+"dur": 0.6,
+"kind": "paper",
+"desc": "single page turn",
+"scene": "s14"
+},
+{
+"t": 86.62,
+"dur": 0.5,
+"kind": "stamp",
+"desc": "rubber-stamp thump on ispat",
+"scene": "s14"
+},
+{
+"t": 87.3,
+"dur": 3.4,
+"kind": "globe",
+"desc": "antique globe spinning in brass meridian, slowing",
+"scene": "s15"
+},
+{
+"t": 87.5,
+"dur": 4.95,
+"kind": "fire",
+"desc": "quiet candle flutter",
+"gain": -4,
+"scene": "s15"
+},
+{
+"t": 87.5,
+"dur": 4.95,
+"kind": "room tone",
+"desc": "dim study room tone",
+"scene": "s15"
+},
+{
+"t": 87.6,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -6,
+"scene": "s15"
+},
+{
+"t": 88.1,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -6,
+"scene": "s15"
+},
+{
+"t": 88.6,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -6,
+"scene": "s15"
+},
+{
+"t": 89.0,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -5,
+"scene": "s15"
+},
+{
+"t": 89.2,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -5,
+"scene": "s15"
+},
+{
+"t": 89.4,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -5,
+"scene": "s15"
+},
+{
+"t": 89.6,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft tick map dot",
+"gain": -5,
+"scene": "s15"
+},
+{
+"t": 90.35,
+"dur": 0.6,
+"kind": "chime",
+"desc": "soft low chime as the Medina marker appears",
+"gain": -3,
+"scene": "s15"
+},
+{
+"t": 90.45,
+"dur": 1.4,
+"kind": "whoosh",
+"desc": "light airy swish of arcs travelling",
+"gain": -4,
+"scene": "s15"
+},
+{
+"t": 90.65,
+"dur": 0.3,
+"kind": "metal",
+"desc": "gentle brass settle",
+"gain": -6,
+"scene": "s15"
+},
+{
+"t": 91.75,
+"dur": 1.0,
+"kind": "chime",
+"desc": "warm resonant ping as arcs land",
+"scene": "s15"
+},
+{
+"t": 91.95,
+"dur": 5.6,
+"kind": "rain",
+"desc": "muffled foggy London drizzle through glass",
+"gain": -4,
+"scene": "s16"
+},
+{
+"t": 92.03,
+"dur": 0.7,
+"kind": "whoosh",
+"desc": "transition into s16",
+"gain": -5,
+"scene": "trans"
+},
+{
+"t": 92.45,
+"dur": 4.65,
+"kind": "clock",
+"desc": "slow tick of a mantel clock",
+"scene": "s16"
+},
+{
+"t": 92.95,
+"dur": 0.9,
+"kind": "paper",
+"desc": "loose manuscript page flutters",
+"scene": "s16"
+},
+{
+"t": 94.7,
+"dur": 2.4,
+"kind": "fire",
+"desc": "soft candle flutter",
+"gain": -3,
+"scene": "s16"
+},
+{
+"t": 95.3,
+"dur": 0.5,
+"kind": "whoosh",
+"desc": "soft swipe as the name card slides in",
+"gain": -3,
+"scene": "s16"
+},
+{
+"t": 96.6,
+"dur": 4.4,
+"kind": "crickets",
+"desc": "night garden crickets",
+"scene": "s17"
+},
+{
+"t": 96.6,
+"dur": 4.4,
+"kind": "lake",
+"desc": "soft lake lapping",
+"scene": "s17"
+},
+{
+"t": 96.64,
+"dur": 0.35,
+"kind": "pop",
+"desc": "light tick as the pointer touches the book",
+"gain": -4,
+"scene": "s16"
+},
+{
+"t": 96.68,
+"dur": 0.7,
+"kind": "whoosh",
+"desc": "transition into s17",
+"gain": -5,
+"scene": "trans"
+},
+{
+"t": 97.1,
+"dur": 3.4,
+"kind": "wind",
+"desc": "light night breeze",
+"gain": -8,
+"scene": "s17"
+},
+{
+"t": 97.2,
+"dur": 1.3,
+"kind": "whoosh",
+"desc": "soft air swell as camera pulls back",
+"gain": -4,
+"scene": "s17"
+},
+{
+"t": 97.8,
+"dur": 2.7,
+"kind": "fire",
+"desc": "two candle flames fluttering",
+"gain": -3,
+"scene": "s17"
+},
+{
+"t": 98.62,
+"dur": 0.5,
+"kind": "whoosh",
+"desc": "name card slides in",
+"gain": -3,
+"scene": "s17"
+},
+{
+"t": 100.0,
+"dur": 7.4,
+"kind": "room tone",
+"desc": "large library room tone at dusk",
+"gain": 2,
+"scene": "s18"
+},
+{
+"t": 100.09,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft tick as pointer touches the volumes",
+"gain": -4,
+"scene": "s17"
+},
+{
+"t": 100.6,
+"dur": 0.6,
+"kind": "creak",
+"desc": "faint creak of wooden shelving",
+"gain": -8,
+"scene": "s18"
+},
+{
+"t": 102.4,
+"dur": 1.5,
+"kind": "wind",
+"desc": "soft evening wind at the high window",
+"gain": -10,
+"scene": "s18"
+},
+{
+"t": 103.6,
+"dur": 2.3,
+"kind": "whoosh",
+"desc": "gentle airy whoosh as the camera pulls back",
+"scene": "s18"
+},
+{
+"t": 104.65,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft marker pop as the ring and 2 ornek appear",
+"scene": "s18"
+},
+{
+"t": 105.2,
+"dur": 0.8,
+"kind": "paper",
+"desc": "distant page turn",
+"gain": -8,
+"scene": "s18"
+},
+{
+"t": 106.12,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft pop for IKI ORNEK",
+"scene": "s18"
+},
+{
+"t": 106.4,
+"dur": 7.4,
+"kind": "room tone",
+"desc": "cavernous hall room tone",
+"gain": 2,
+"scene": "s19"
+},
+{
+"t": 107.0,
+"dur": 0.6,
+"kind": "fire",
+"desc": "quiet flutter of two candles near camera",
+"gain": -4,
+"scene": "s19"
+},
+{
+"t": 108.08,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"scene": "s19"
+},
+{
+"t": 108.1,
+"dur": 0.3,
+"kind": "pop",
+"desc": "subtle pop for text",
+"gain": -3,
+"scene": "s19"
+},
+{
+"t": 108.45,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -2,
+"scene": "s19"
+},
+{
+"t": 108.58,
+"dur": 0.3,
+"kind": "pop",
+"desc": "subtle pop for text",
+"gain": -3,
+"scene": "s19"
+},
+{
+"t": 108.8,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -4,
+"scene": "s19"
+},
+{
+"t": 109.15,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -6,
+"scene": "s19"
+},
+{
+"t": 109.3,
+"dur": 2.4,
+"kind": "whoosh",
+"desc": "soft air move as the camera cranes up",
+"gain": -3,
+"scene": "s19"
+},
+{
+"t": 109.5,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -8,
+"scene": "s19"
+},
+{
+"t": 109.9,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -10,
+"scene": "s19"
+},
+{
+"t": 110.8,
+"dur": 3.0,
+"kind": "fire",
+"desc": "gentle bed of many candles flickering",
+"scene": "s19"
+},
+{
+"t": 111.94,
+"dur": 1.5,
+"kind": "chime",
+"desc": "very soft warm shimmer",
+"gain": -6,
+"scene": "s19"
+},
+{
+"t": 112.34,
+"dur": 1.6,
+"kind": "shimmer",
+"desc": "transition into s20",
+"gain": -6,
+"scene": "trans"
+},
+{
+"t": 112.8,
+"dur": 11.85,
+"kind": "birds",
+"desc": "birds at dawn outside the open window",
+"gain": -2,
+"scene": "s20"
+},
+{
+"t": 112.8,
+"dur": 11.85,
+"kind": "room tone",
+"desc": "quiet morning room tone",
+"scene": "s20"
+},
+{
+"t": 113.4,
+"dur": 4.0,
+"kind": "cloth",
+"desc": "soft rustle of tulle curtains",
+"gain": -10,
+"scene": "s20"
+},
+{
+"t": 115.3,
+"dur": 0.6,
+"kind": "cloth",
+"desc": "leather book cover lifting and swinging open",
+"gain": -3,
+"scene": "s20"
+},
+{
+"t": 115.65,
+"dur": 0.8,
+"kind": "paper",
+"desc": "three pages riffling over in the breeze",
+"scene": "s20"
+},
+{
+"t": 115.9,
+"dur": 0.3,
+"kind": "wood",
+"desc": "cover settling onto the wooden rahle",
+"gain": -4,
+"scene": "s20"
+},
+{
+"t": 115.97,
+"dur": 0.3,
+"kind": "pop",
+"desc": "subtle marker for ring",
+"gain": -3,
+"scene": "s20"
+},
+{
+"t": 118.08,
+"dur": 0.3,
+"kind": "pop",
+"desc": "subtle marker for ring",
+"gain": -3,
+"scene": "s20"
+},
+{
+"t": 121.9,
+"dur": 2.2,
+"kind": "chime",
+"desc": "single soft warm bell under the end card",
+"gain": -4,
+"scene": "s20"
+}
+]

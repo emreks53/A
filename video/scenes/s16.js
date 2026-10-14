@@ -2,7 +2,7 @@
 // Visual: Carlyle's Chelsea study, London c.1840, a foggy grey-blue afternoon. Camera opens on the fogged Georgian
 // sash window (rooftops & chimney pots dissolving in the fog, candle-lit windows across the street), then dollies
 // down and across the writing desk: brass candlestick (lit against the gloom), inkwell & quill, manuscript stack,
-// a sealed letter, a long clay pipe still trailing smoke — and settles on "On Heroes, Hero-Worship".
+// sealed letters (a small tied bundle in front) — and settles on "On Heroes, Hero-Worship".
 // Name card (shared design with s17): "Filozof · 1795–1881" on "filozof", "THOMAS CARLYLE" on "Thomas",
 // "On Heroes (1841)" + pointer to the book. No person is shown.
 import * as THREE from 'three';
@@ -113,11 +113,18 @@ export default {
     const lean = .36; const bookHolder = new THREE.Group(); bookHolder.position.set(.15, deskTop + .001, -.044); bookHolder.rotation.y = -.06; scene.add(bookHolder);
     book.rotation.x = -lean; book.position.set(0, Math.cos(lean) * .1075 + Math.sin(lean) * .017, -Math.sin(lean) * .1075 + .002); bookHolder.add(book);
     bookHolder.updateMatrixWorld(true); R.bookAnchorW = book.localToWorld(new THREE.Vector3(.0, .1, .017));
-    // long clay pipe resting front-right, still smoking
-    const pipe = G.clayPipe({ length: .3 }); pipe.position.set(-.185, deskTop + .002, .294); pipe.rotation.y = .62; scene.add(pipe);
-    pipe.updateMatrixWorld(true); const bowl = pipe.localToWorld(pipe.userData.bowlTop.clone()); R.pipe = pipe;
-    const smoke = G.smokeWisp({ w: .22, h: .5, opacity: .4, color: '#e6e8ec', seed: 2 }); smoke.position.copy(bowl).add(new THREE.Vector3(0, -.008, 0)); scene.add(smoke);
-    const smoke2 = G.smokeWisp({ w: .3, h: .62, opacity: .14, color: '#dfe3e8', seed: 7 }); smoke2.position.copy(bowl).add(new THREE.Vector3(.004, -.008, 0)); scene.add(smoke2);
+    // a small bundle of folded letters, tied with a cord, the top one sealed with red wax (front, left of the book)
+    const bundle = new THREE.Group(); bundle.position.set(.02, deskTop + .002, .15); bundle.rotation.y = .32; scene.add(bundle);
+    const lr = U.rng(44); let ly = 0;
+    for (let i = 0; i < 4; i++) {
+      const th = .005 + lr() * .002; const lm = new THREE.Mesh(M.rbox(.125 - i * .004, th, .078 - i * .003, .0018), new THREE.MeshStandardMaterial({ map: G.manuscriptTex({ seed: 50 + i, lines: 3, top: .35, bottom: .65, paper: ['#efe3c8', '#e9dcbc', '#f2e8d2', '#e6d6b2'][i] }), roughness: .9 }));
+      lm.position.set((lr() - .5) * .008, ly + th / 2, (lr() - .5) * .008); lm.rotation.y = (lr() - .5) * .14; bundle.add(lm); ly += th;
+    }
+    const cord = new THREE.MeshStandardMaterial({ color: '#8a6a44', roughness: .9 });
+    const c1 = new THREE.Mesh(M.rbox(.004, ly + .003, .084, .0015), cord); c1.position.set(.012, ly / 2, 0); bundle.add(c1);
+    const c2 = new THREE.Mesh(M.rbox(.13, .0025, .004, .001), cord); c2.position.set(0, ly + .0012, 0); bundle.add(c2);
+    const seal2 = M.lathe([[0, 0], [.011, 0], [.012, .002], [.009, .004], [0, .0045]], new THREE.MeshPhysicalMaterial({ color: '#9a1f18', roughness: .35, clearcoat: .6 }), 20); seal2.position.set(-.03, ly, .006); bundle.add(seal2);
+    M.shadowAll(bundle);
 
     // ---------------- lights ----------------
     const hemi = new THREE.HemisphereLight('#a9b8cc', '#4a3d33', .3); scene.add(hemi);

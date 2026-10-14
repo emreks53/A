@@ -1,7 +1,7 @@
 // Shared props + FX for group C (s06 Zülfikar → s07 battle storm → s08 the sheltering rock).
 // Everything procedural & deterministic. No people, only objects / terrain / dust / light.
 import * as THREE from 'three';
-import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import * as TEX from './textures.js';
 import { rng, clamp, lerp, smoothstep } from './util.js';
 import { MAT, rbox, lathe, shadowAll } from './models.js';
@@ -205,7 +205,7 @@ export function rockMaterial(o = {}) {
 }
 
 // Scatter instanced rocks. items: [{x,y,z,s:[sx,sy,sz]|number,ry,variant}]
-export function scatterRocks(items, { variants = 3, seed = 5, detail = 2, palette, material, cast = true, faceted = true, big = .3, bigTint = null } = {}) {
+export function scatterRocks(items, { variants = 3, seed = 5, detail = 2, palette, material, cast = true, faceted = true, big = .3, bigTint = null, boulderMat = null, boulderOpts = null } = {}) {
   const grp = new THREE.Group(); const mat = material ?? rockMaterial();
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), S = new THREE.Vector3(), P = new THREE.Vector3();
   const sz = it => Array.isArray(it.s) ? Math.max(...it.s) : it.s;
@@ -219,7 +219,8 @@ export function scatterRocks(items, { variants = 3, seed = 5, detail = 2, palett
   // boulders: mini faceted rocks with rounded edges (same look as the big rock)
   for (let v = 0; v < 2; v++) {
     const list = items.filter(it => (it.variant ?? 0) % 2 === v && sz(it) > big); if (!list.length) continue;
-    const fr = facetRock({ a: 1, b: .8, c: 1.15, n: 2.2, planes: 20, jitter: .55, off: [-.28, 0], k: .045, joints: 0, lump: .04, seed: seed + 50 + v * 7, detail: 18, bury: .5, grain: 1.2, nScale: .9 });
+    const fr = facetRock({ a: 1, b: .8, c: 1.15, n: 2.2, planes: 20, jitter: .55, off: [-.28, 0], k: .045, joints: 0, lump: .04, seed: seed + 50 + v * 7, detail: 18, bury: .5, grain: 1.2, nScale: .9, ...((boulderOpts && boulderOpts[v]) || {}) });
+    if (boulderMat) fr.material = boulderMat;
     if (bigTint) fr.material.color.set(bigTint);
     place(new THREE.InstancedMesh(fr.geometry, fr.material, list.length), list, -.06);
   }
@@ -459,6 +460,92 @@ export function facetRock({ a = 4, b = 3, c = 5.5, n = 2.4, planes = 220, jitter
   const rs = rockSurface(); const mat = new THREE.MeshStandardMaterial({ vertexColors: true, map: rs.map, normalMap: rs.normalMap, roughnessMap: rs.roughnessMap, normalScale: new THREE.Vector2(nScale, nScale), roughness: 1 });
   const mesh = new THREE.Mesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true;
   mesh.userData.height = 2 * b - bury; return mesh;
+}
+
+// Sandstone surface texture (no cells / no outlines): fine wavy bedding laminations, grain, pits, speckle. Cached.
+let _sandSurf = null;
+export function sandstoneSurface({ size = 512, seed = 71 } = {}) {
+  if (_sandSurf) return _sandSurf;
+  const fine = TEX.fbmField(seed, 64, 3), mid = TEX.fbmField(seed + 7, 8, 4), warp = TEX.fbmField(seed + 13, 4, 3);
+  const b = TEX.bake(size, (u, v) => {
+    const g = fine(u, v) * .5 + .5, m = mid(u, v) * .5 + .5, w = warp(u, v);
+    const lv = v * 9 + w * .35; const lam = Math.abs(Math.sin(lv * Math.PI)); const lam2 = Math.abs(Math.sin(lv * Math.PI * 3.1 + 1.3));
+    const pit = g < .2 ? (.2 - g) * 3 : 0;
+    const h = .5 + (lam - .5) * .25 + (lam2 - .5) * .08 + (g - .5) * .35 + (m - .5) * .25 - pit * .4;
+    const tone = .9 + (lam - .5) * .1 + (g - .5) * .16 + (m - .5) * .14 - pit * .25;
+    const c = clamp(tone, .45, 1.08);
+    return { c: [c, c * .98, c * .955], h, r: .84 + g * .12 };
+  }, { normalStrength: 4 });
+  _sandSurf = { map: TEX.texFromCanvas(b.colorCanvas), normalMap: TEX.texFromCanvas(b.normalCanvas, { srgb: false }), roughnessMap: TEX.texFromCanvas(b.roughCanvas, { srgb: false }) };
+  return _sandSurf;
+}
+export function sandstoneMaterial({ nScale = .9 } = {}) {
+  const ss = sandstoneSurface();
+  return new THREE.MeshStandardMaterial({ vertexColors: true, map: ss.map, normalMap: ss.normalMap, roughnessMap: ss.roughnessMap, normalScale: new THREE.Vector2(nScale, nScale), roughness: 1 });
+}
+
+// Ancient sandstone massif: a stack of irregular horizontal strata (each an extruded, bevelled slab whose plan outline
+// recedes upward), a broken stepped top, deep vertical fissures cutting through several layers, weathering colours
+// (dark red-brown base, light weathered ledges, dark crevices, ground-contact darkening, desert-varnish streaks).
+// Returns a Group of layer meshes (geometry already in group-local coords). Base at y=0, `bury` below ground. Long axis Z.
+export function sandstoneMassif({ a = 4.6, c = 6.6, n = 3, layers = 7, height = 5.6, bury = .5, seed = 4, K = 240, fissures = 7, recede = .022 } = {}) {
+  const r = rng(seed); const grp = new THREE.Group(); const mat = sandstoneMaterial();
+  const th = []; for (let i = 0; i < layers; i++) th.push(.4 + r() * .75 + (i === 0 ? .5 : 0)); const sc = (height + bury) / th.reduce((x, y) => x + y, 0); for (let i = 0; i < layers; i++) th[i] *= sc;
+  const fis = []; for (let j = 0; j < fissures; j++) { const f = { ang: r() * Math.PI * 2, w: .02 + r() * .022, d: .5 + r() * .5, from: Math.floor(r() * 2), to: layers - 1 - Math.floor(r() * 2) }; fis.push(f); }
+  const R0 = t => 1 / Math.pow(Math.pow(Math.abs(Math.cos(t)) / a, n) + Math.pow(Math.abs(Math.sin(t)) / c, n), 1 / n);
+  const angD = (x, y) => { let d = x - y; d = ((d + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; return d; };
+  const pal = ['#8a4630', '#a55a38', '#9a5034', '#bd6f45', '#c98050', '#d6955f', '#dfa874', '#e4b483'].map(x => new THREE.Color(x));
+  const ledgeC = new THREE.Color('#ecc296'), crevC = new THREE.Color('#3e2016'), groundC = new THREE.Color('#5e3222'), varnC = new THREE.Color('#5a2e20');
+  const fl = fis.map((f, j) => Array.from({ length: layers }, (_, i) => ({ on: i >= f.from && i <= f.to, da: (h3(j, i, 2, seed) - .5) * .006 + .005 * i * (h3(j, 0, 3, seed) - .5), dk: .75 + h3(j, i, 4, seed) * .35 + .06 * i, wk: .7 + .12 * i + h3(j, i, 5, seed) * .3 })));   // joints run straight through the beds, widening upward
+  const fissAt = (t, i) => { let dd = 0; fis.forEach((f, j) => { const q = fl[j][i]; if (!q.on) return; const x = Math.abs(angD(t, f.ang + q.da)); dd = Math.max(dd, f.d * q.dk * (1 - smoothstep(0, f.w * q.wk, x))); }); return dd; };
+  let y0 = -bury; let topY = 0;
+  for (let i = 0; i < layers; i++) {
+    const hard = r(); const s0 = 1 - recede * i + (hard - .5) * .07;   // mostly flush cliff; hard beds protrude, soft beds recess
+    const topCut = i === layers - 1 ? .55 : i === layers - 2 ? .32 : i === layers - 3 ? .12 : 0;
+    const pts = [];
+    for (let k = 0; k < K; k++) {
+      const t = k / K * Math.PI * 2;
+      let rr = R0(t) * s0 * (1 + .1 * fbm3(Math.cos(t) * 1.5, Math.sin(t) * 1.5, i * .1, seed, 3) + .05 * fbm3(Math.cos(t) * 4, Math.sin(t) * 4, i * .15, seed + 17, 2) + .035 * fbm3(Math.cos(t) * 9, Math.sin(t) * 9, i * 1.7, seed + 3, 2) + .016 * fbm3(Math.cos(t) * 24, Math.sin(t) * 24, i * 3.1, seed + 8, 2));
+      rr -= fissAt(t, i);
+      if (topCut) { const bite = smoothstep(.0, .35, fbm3(Math.cos(t) * 1.4 + 3, Math.sin(t) * 1.4, i * 2.1, seed + 9, 3)); rr *= 1 - topCut * bite; }
+      pts.push(new THREE.Vector2(Math.cos(t) * rr, -Math.sin(t) * rr));
+    }
+    const h = th[i], bt = Math.min(.05, h * .1);
+    let geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: Math.max(.05, h - 2 * bt), bevelEnabled: true, bevelThickness: bt, bevelSize: .045, bevelOffset: -.045, bevelSegments: 1, steps: 4, curveSegments: 1 });
+    geo.rotateX(-Math.PI / 2); geo.translate(0, y0 + bt, 0);
+    geo.deleteAttribute('uv'); geo.deleteAttribute('normal'); geo = mergeVertices(geo, 1e-3);
+    const p = geo.attributes.position, cols = new Float32Array(p.count * 3);
+    for (let v = 0; v < p.count; v++) {
+      const x = p.getX(v), y = p.getY(v), z = p.getZ(v); const L = Math.hypot(x, z) || 1;
+      const prof = hard < .45 ? -(.08 + .12 * (.45 - hard)) * Math.sin(Math.PI * clamp((y - y0) / h)) : 0;   // soft beds weather back (concave)
+      const dsp = prof + .06 * fbm3(x * .7, y * .5, z * .7, seed + 21, 3) + .04 * fbm3(x * 2.3, y * 2.3, z * 2.3, seed + 5, 2);
+      const und = .5 * fbm3(x * .08, 0, z * .08, seed + 61, 3) * smoothstep(-bury, height, y);   // gently undulating bedding (shared field: layers stay in contact)
+      p.setXYZ(v, x + x / L * dsp, y + und, z + z / L * dsp);
+      // colour
+      const t = Math.atan2(z, x); const fd = fissAt(t, i);
+      const col = pal[Math.min(pal.length - 1, Math.round(i / (layers - 1) * (pal.length - 1)))].clone(); col.multiplyScalar(i % 2 ? .9 : 1.06);
+      col.multiplyScalar(.9 + .16 * fbm3(x * .9, y * 2.5, z * .9, seed + 31, 2) + .22 * fbm3(x * .28, y * .2, z * .28, seed + 41, 3)); if (hard < .45) col.multiplyScalar(.86);
+      const yy = y - y0; if (yy < bt * 1.1) col.multiplyScalar(.72); if (yy > h - bt * 1.2) col.lerp(ledgeC, .15);
+      col.lerp(varnC, clamp((fbm3(x * 1.3, y * .1, z * 1.3, seed + 13, 3) - .05) * 2.8) * .55);
+      col.lerp(crevC, clamp(fd / .5) * .75);
+      col.lerp(groundC, clamp(1 - y / .9) * .6);
+      cols[v * 3] = col.r; cols[v * 3 + 1] = col.g; cols[v * 3 + 2] = col.b;
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    geo = toCreasedNormals(geo, Math.PI / 4.5);
+    const p2 = geo.attributes.position; const cols2 = geo.attributes.color.array;
+    const nr = geo.attributes.normal, uvs = new Float32Array(p2.count * 2), us = .5;
+    for (let v = 0; v < p2.count; v++) {
+      const x = p2.getX(v), y = p2.getY(v), z = p2.getZ(v), ny = nr.getY(v), ax = Math.abs(nr.getX(v)), az = Math.abs(nr.getZ(v));
+      if (Math.abs(ny) > .7) { uvs[v * 2] = x * us * .6; uvs[v * 2 + 1] = z * us * .6; const k = clamp((ny - .7) / .3) * .25; cols2[v * 3] = lerp(cols2[v * 3], ledgeC.r, k); cols2[v * 3 + 1] = lerp(cols2[v * 3 + 1], ledgeC.g, k); cols2[v * 3 + 2] = lerp(cols2[v * 3 + 2], ledgeC.b, k); }
+      else if (ax > az) { uvs[v * 2] = z * us; uvs[v * 2 + 1] = y * us; } else { uvs[v * 2] = x * us; uvs[v * 2 + 1] = y * us; }
+    }
+    geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    const mesh = new THREE.Mesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh);
+    y0 += h; topY = y0;
+  }
+  grp.userData.height = topY; grp.userData.R0 = R0;
+  return grp;
 }
 
 // Distant mountain ridge (Uhud-like long granite massif). Built along X, centred at origin, faces +Z.

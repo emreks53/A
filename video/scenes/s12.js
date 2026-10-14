@@ -15,7 +15,7 @@ const FALLBACK = [0.07, 1.83, 2.83, 3.61, 4.71, 5.53, 6.37, 7.15, 7.89, 9.33, 10
 const DOOR = 11; // index of HOŞGÖRÜ (0-based)
 // exhibit builders + framing: ty = target height above pad top, D = camera distance, h = camera height above target, ry = object yaw
 const EX = [
-  { f: E.nest, ty: .06, D: 2.05, h: .62, ry: 0 },
+  { f: E.nest, ty: .06, D: 2.05, h: .62, ry: 0, L: .85 },
   { f: E.carafe, ty: .15, D: 2.2, h: .32, ry: 0 },
   { f: E.balance, ty: .22, D: 2.5, h: .28, ry: -.35 },
   { f: E.chest, ty: .11, D: 2.3, h: .38, ry: -.4 },
@@ -25,7 +25,7 @@ const EX = [
   { f: E.shoes, ty: .05, D: 2.0, h: .78, ry: -.3, L: .8 },
   { f: E.swordOlive, ty: .1, D: 2.35, h: .42, ry: -.25 },
   { f: E.rose, ty: .3, D: 2.35, h: .18, ry: -.3, L: .45 },
-  { f: E.dates, ty: .05, D: 1.95, h: .66, ry: -.3 },
+  { f: E.dates, ty: .05, D: 1.95, h: .66, ry: -.3, L: .55 },
   { f: null, ty: 0, D: 3.75, h: .2, ry: 0 },
   { f: E.bread, ty: .05, D: 2.0, h: .6, ry: -.3, L: .6 },
   { f: E.jugPour, ty: .14, D: 2.45, h: .36, ry: -.35 },
@@ -229,7 +229,7 @@ export default {
         fragmentShader: `uniform vec3 color; uniform float gain, master; varying float vB; varying vec2 vUv; void main(){ vec2 d = (vUv - .5) * 2.; float a = pow(max(0., 1. - dot(d, d)), 2.); gl_FragColor = vec4(color * gain, a * vB * master); }` });
       im.userData.uniforms = u; im.userData.noDepth = true; im.renderOrder = 3; im.frustumCulled = false; scene.add(im); return im;
     };
-    R.padPool = decal(() => new THREE.PlaneGeometry(.62, .62).rotateX(-Math.PI / 2), '#ffb46a', .35, p => m4.makeTranslation(p.x, R.PT + .003, p.z));
+    R.padPool = decal(() => new THREE.PlaneGeometry(.62, .62).rotateX(-Math.PI / 2), '#ffb46a', .2, p => m4.makeTranslation(p.x, R.PT + .003, p.z));
     R.floorPool = decal(() => new THREE.PlaneGeometry(1.8, 1.8).rotateX(-Math.PI / 2), '#ff9c50', .12, p => m4.makeTranslation(p.x, .004, p.z + (p.row ? -.9 : .9)));
     R.nicheGlow = decal(() => new THREE.PlaneGeometry(.85, 1.9), '#ffc07a', .2, p => m4.makeTranslation(p.x, 1.55, nb + .006), all.filter(p => p.row === 0));
     // flames for far lamps
@@ -282,12 +282,12 @@ export default {
     const c0 = camFor(0);
     keys.push({ t: -.75, pos: c0.pos.clone().add(V(-1.0, .55, 1.25)), look: c0.look.clone().add(V(.45, .05, 0)), fov: 33, a: 1 });
     keys.push({ t: R.T[0] + .78, ...camFor(0), a: .45 });
-    for (let i = 1; i < 14; i++) { const k = camFor(i), tk = R.T[i] + .28; let prev = keys[keys.length - 1];
+    for (let i = 1; i < 14; i++) { const k = camFor(i), tk = R.T[i] + .16; let prev = keys[keys.length - 1];
       if (tk - prev.t > .95) { // long gap: linger on the current exhibit (slow drift + push-in), then glide on
         const th = Math.max(prev.t + .45, tk - .85); keys.push({ t: th, pos: prev.pos.clone().add(V(.11, -.01, -.07)), look: prev.look.clone().add(V(.06, 0, 0)), fov: prev.fov, a: .9 }); prev = keys[keys.length - 1]; }
       const tm = (prev.t + tk) / 2;
       keys.push({ t: tm, pos: prev.pos.clone().lerp(k.pos, .5).add(V(0, .05, .2)), look: prev.look.clone().lerp(k.look, .5).add(V(0, .03, 0)), fov: 31.5, a: 1 });
-      keys.push({ t: tk, ...k, a: .35 }); }
+      keys.push({ t: tk, ...k, a: .28 }); }
     const c13 = camFor(13);
     keys.push({ t: R.W.ve - .1, pos: c13.pos.clone().add(V(.16, .1, .06)), look: c13.look.clone().add(V(.25, .06, 0)), fov: 31.5, a: 1 });
     keys.push({ t: 16.2, pos: V(x14 - .6, 2.35, 2.05), look: V(x14 + 5, 1.35, .9), fov: 37, a: 1 });
@@ -330,7 +330,7 @@ export default {
       s.color.set('#ffc88e');
       if (cur < 0) { s.intensity = 0; return; }
       const h = R.heroes[cur]; s.position.copy(h.lampP); s.target.position.copy(h.tgt).add(V(0, -.06, 0)); s.target.updateMatrixWorld();
-      s.intensity = 7.5 * (h.ex.L ?? 1) * lits[cur] * (1 + .04 * Math.sin(t * 13 + cur) * Math.sin(t * 7.3 + cur));
+      s.intensity = 6.6 * (h.ex.L ?? 1) * lits[cur] * (1 + .04 * Math.sin(t * 13 + cur) * Math.sin(t * 7.3 + cur));
     });
     // door (HOŞGÖRÜ): leaves swing inward, sunlight pours in
     const td = R.T[DOOR]; const op = U.prog(t, td - .08, td + .8, 'outCubic'); const settle = t > td + .5 ? Math.exp(-4 * (t - td - .5)) * Math.sin((t - td - .5) * 9) * .04 : 0;
