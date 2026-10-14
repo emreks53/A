@@ -1,0 +1,150 @@
+{
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "audio": "data/narration.m4a",
+ "audioDuration": 124.65,
+ "handle": 0.5,
+ "scenes": [
+  {
+   "id": "s01",
+   "file": "s01.js",
+   "start": 0.0,
+   "end": 7.5,
+   "title": "1000 kandil -> en parlak: Kur'an (Mushaf)"
+  },
+  {
+   "id": "s02",
+   "file": "s02.js",
+   "start": 7.5,
+   "end": 13.2,
+   "title": "Kendi zatı: Mescid-i Nebevi Yeşil Kubbe"
+  },
+  {
+   "id": "s03",
+   "file": "s03.js",
+   "start": 13.2,
+   "end": 19.6,
+   "title": "Dostları ve düşmanları dahi şahit"
+  },
+  {
+   "id": "s04",
+   "file": "s04.js",
+   "start": 19.6,
+   "end": 25.25,
+   "title": "Mekke haritası: emanetler tek kapıya akıyor"
+  },
+  {
+   "id": "s05",
+   "file": "s05.js",
+   "start": 25.25,
+   "end": 29.75,
+   "title": "Emanet odası: el-Emîn"
+  },
+  {
+   "id": "s06",
+   "file": "s06.js",
+   "start": 29.75,
+   "end": 33.3,
+   "title": "Hz. Ali'nin cesareti: Zülfikar"
+  },
+  {
+   "id": "s07",
+   "file": "s07.js",
+   "start": 33.3,
+   "end": 35.6,
+   "title": "Savaşın şiddetli anları"
+  },
+  {
+   "id": "s08",
+   "file": "s08.js",
+   "start": 35.6,
+   "end": 42.0,
+   "title": "Sığınak: oklara karşı sarsılmaz kaya + söz"
+  },
+  {
+   "id": "s09",
+   "file": "s09.js",
+   "start": 42.0,
+   "end": 44.6,
+   "title": "İki damla"
+  },
+  {
+   "id": "s10",
+   "file": "s10.js",
+   "start": 44.6,
+   "end": 49.25,
+   "title": "Damlalar denize: Ahlâk-ı Âliye"
+  },
+  {
+   "id": "s11",
+   "file": "s11.js",
+   "start": 49.25,
+   "end": 52.85,
+   "title": "Dürüstlükte en yüksek derece"
+  },
+  {
+   "id": "s12",
+   "file": "s12.js",
+   "start": 52.85,
+   "end": 70.45,
+   "title": "Güzel ahlak galerisi (14 haslet)"
+  },
+  {
+   "id": "s13",
+   "file": "s13.js",
+   "start": 70.45,
+   "end": 77.75,
+   "title": "Tarihin şehadeti: yetişilemeyecek zirve"
+  },
+  {
+   "id": "s14",
+   "file": "s14.js",
+   "start": 77.75,
+   "end": 87.5,
+   "title": "Kütüphane: Şifâ-i Şerif ve yüzlerce cilt"
+  },
+  {
+   "id": "s15",
+   "file": "s15.js",
+   "start": 87.5,
+   "end": 92.45,
+   "title": "Dünya çapında düşünürler (küre)"
+  },
+  {
+   "id": "s16",
+   "file": "s16.js",
+   "start": 92.45,
+   "end": 97.1,
+   "title": "Thomas Carlyle"
+  },
+  {
+   "id": "s17",
+   "file": "s17.js",
+   "start": 97.1,
+   "end": 100.5,
+   "title": "Edward Gibbon"
+  },
+  {
+   "id": "s18",
+   "file": "s18.js",
+   "start": 100.5,
+   "end": 106.9,
+   "title": "Yalnızca iki örnek"
+  },
+  {
+   "id": "s19",
+   "file": "s19.js",
+   "start": 106.9,
+   "end": 113.3,
+   "title": "Birçok düşünür hayran kaldı"
+  },
+  {
+   "id": "s20",
+   "file": "s20.js",
+   "start": 113.3,
+   "end": 124.65,
+   "title": "Mektubat s.195 ve 19. Söz – kapanış"
+  }
+ ]
+}
