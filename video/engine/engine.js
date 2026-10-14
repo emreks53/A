@@ -35,7 +35,7 @@ async function main() {
   document.body.appendChild(renderer.domElement);
 
   const overlay = document.createElement('canvas'); overlay.width = W; overlay.height = H; document.body.appendChild(overlay);
-  const out = document.createElement('canvas'); out.width = W; out.height = H; const outX = out.getContext('2d');
+  const out = document.createElement('canvas'); out.width = W; out.height = H; const outX = out.getContext('2d'); outX.imageSmoothingEnabled = true; outX.imageSmoothingQuality = 'high';
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, W / H, 0.1, 1000);

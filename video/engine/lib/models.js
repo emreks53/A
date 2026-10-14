@@ -57,7 +57,7 @@ export function oilLamp(o = {}) {
   const spout = new THREE.Mesh(new THREE.CapsuleGeometry(.012, .05, 6, 12), mat); spout.rotation.z = Math.PI / 2 - .25; spout.position.set(.062, .022, 0); spout.castShadow = true; g.add(spout);
   const handle = new THREE.Mesh(new THREE.TorusGeometry(.016, .006, 8, 16, Math.PI * 1.2), mat); handle.position.set(-.058, .028, 0); handle.rotation.y = Math.PI / 2; handle.rotation.x = .2; g.add(handle);
   const f = flame({ height: .05, seed: o.seed ?? 2 }); f.position.set(.088, .036, 0); g.add(f);
-  const gl = glow({ size: .3, opacity: .45 }); gl.position.set(.088, .06, 0); g.add(gl);
+  const gl = glow({ size: .16, opacity: .3, depthTest: false }); gl.position.set(.088, .065, 0); g.add(gl);
   if (o.light !== false) { const l = pointLight({ intensity: o.lightIntensity ?? 1.4, distance: o.lightDistance ?? 2.5, pos: [.09, .08, 0] }); g.add(l); g.userData.light = l; }
   g.userData.flame = f; g.userData.glow = gl; g.scale.setScalar(s); return g;
 }
@@ -107,7 +107,7 @@ export function rahle(o = {}) {
   const hole = new THREE.Path(); hole.absellipse(0, L * .2, W * .16, L * .06, 0, Math.PI * 2, true); shape.holes.push(hole);
   const geo = new THREE.ExtrudeGeometry(shape, { depth: T, bevelEnabled: true, bevelThickness: .003, bevelSize: .003, bevelSegments: 2, curveSegments: 24 }); geo.translate(0, 0, -T / 2);
   // Side view is an X: board A leans forward (+z at top), board B leans back; they cross at fraction c of their length.
-  const th = o.angle ?? 1.0, c = .42;
+  const th = o.angle ?? 0.8, c = .42;
   const a = new THREE.Mesh(geo, mat), b = new THREE.Mesh(geo, mat);
   a.rotation.x = th; a.position.set(0, 0, -L * Math.sin(th) * c);
   b.rotation.x = -th; b.position.set(0, 0, L * Math.sin(th) * c); b.scale.x = .9; // inner leaf a bit narrower (interlocked)

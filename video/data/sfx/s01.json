@@ -1,0 +1,10 @@
+[
+ {"t":0.0,"dur":7.6,"kind":"wind","desc":"soft desert night wind bed","gain":-6},
+ {"t":0.25,"dur":0.6,"kind":"ignite","desc":"first lamps ignite, soft","gain":-8},
+ {"t":1.1,"dur":0.6,"kind":"ignite","desc":"lamp ignite","gain":-10},
+ {"t":2.3,"dur":2.0,"kind":"fire","desc":"many tiny flames crackle, distant","gain":-6},
+ {"t":2.55,"dur":1.6,"kind":"shimmer","desc":"wave of lamps lighting, glow swell","gain":-4},
+ {"t":4.25,"dur":2.4,"kind":"whoosh","desc":"camera glide down to the Mushaf","gain":-3},
+ {"t":5.9,"dur":2.2,"kind":"chime","desc":"warm reveal as dawn light hits the Mushaf","gain":-3},
+ {"t":6.2,"dur":1.4,"kind":"fire","desc":"close oil lamp crackle","gain":-4}
+]

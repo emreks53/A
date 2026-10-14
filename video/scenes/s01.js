@@ -27,7 +27,7 @@ export default {
 
     // moonlight (cool key) + warm horizon bounce
     const moon = ENV.sunLight({ color: '#9db8ff', intensity: 0.55, pos: [-20, 30, 12], target: [0, 0, 0], size: 6, mapSize: 2048 });
-    scene.add(moon, moon.target);
+    scene.add(moon, moon.target); R.moon = moon;
     const bounce = new THREE.HemisphereLight('#4b64a8', '#6b4a3a', 0.35); scene.add(bounce);
 
     // --- lamp field (instanced) ---
@@ -69,33 +69,34 @@ export default {
     // --- hero: rug + rahle + mushaf at the center, lit by the first ray of dawn ---
     const hero = new THREE.Group(); hero.position.set(0, dunes.userData.heightAt(0, 0), 0); scene.add(hero); R.hero = hero;
     const rugTex = TEX.drawTexture(512, 768, (x, W, H) => {
-      x.fillStyle = '#7d1f1a'; x.fillRect(0, 0, W, H); x.fillStyle = '#e3b65a'; x.fillRect(18, 18, W - 36, H - 36); x.fillStyle = '#7d1f1a'; x.fillRect(34, 34, W - 68, H - 68);
-      x.fillStyle = '#20345e'; x.fillRect(60, 60, W - 120, H - 120);
-      x.fillStyle = '#e3b65a'; for (let i = 0; i < 9; i++) for (let j = 0; j < 14; j++) { x.save(); x.translate(90 + i * 42, 90 + j * 44); x.rotate(Math.PI / 4); x.fillRect(-9, -9, 18, 18); x.restore(); }
-      x.fillStyle = '#b8402e'; x.beginPath(); x.moveTo(W / 2, 120); x.lineTo(W - 110, H / 2); x.lineTo(W / 2, H - 120); x.lineTo(110, H / 2); x.closePath(); x.fill();
-      x.fillStyle = '#e8d3a0'; x.beginPath(); x.moveTo(W / 2, 200); x.lineTo(W - 180, H / 2); x.lineTo(W / 2, H - 200); x.lineTo(180, H / 2); x.closePath(); x.fill();
+      x.fillStyle = '#5e1712'; x.fillRect(0, 0, W, H); x.fillStyle = '#b8893e'; x.fillRect(18, 18, W - 36, H - 36); x.fillStyle = '#5e1712'; x.fillRect(34, 34, W - 68, H - 68);
+      x.fillStyle = '#1b2a4a'; x.fillRect(60, 60, W - 120, H - 120);
+      x.fillStyle = '#a8803c'; for (let i = 0; i < 9; i++) for (let j = 0; j < 14; j++) { x.save(); x.translate(90 + i * 42, 90 + j * 44); x.rotate(Math.PI / 4); x.fillRect(-9, -9, 18, 18); x.restore(); }
+      x.fillStyle = '#8a2e22'; x.beginPath(); x.moveTo(W / 2, 120); x.lineTo(W - 110, H / 2); x.lineTo(W / 2, H - 120); x.lineTo(110, H / 2); x.closePath(); x.fill();
+      x.fillStyle = '#c9b07c'; x.beginPath(); x.moveTo(W / 2, 200); x.lineTo(W - 180, H / 2); x.lineTo(W / 2, H - 200); x.lineTo(180, H / 2); x.closePath(); x.fill();
     });
     const rugGeo = new THREE.PlaneGeometry(1.2, 1.8, 30, 30); rugGeo.rotateX(-Math.PI / 2); { const p = rugGeo.attributes.position; for (let i = 0; i < p.count; i++) p.setY(i, Math.sin(p.getX(i) * 9) * .006 + Math.cos(p.getZ(i) * 7) * .006); rugGeo.computeVertexNormals(); }
-    const rug = new THREE.Mesh(rugGeo, new THREE.MeshPhysicalMaterial({ map: rugTex, roughness: 1, sheen: 1, sheenColor: new THREE.Color('#ffb98a'), sheenRoughness: .4 })); rug.position.y = .02; rug.receiveShadow = true; hero.add(rug);
-    const rahle = M.rahle({ length: .62, width: .28, angle: 1.0 }); hero.add(rahle);
+    const rug = new THREE.Mesh(rugGeo, new THREE.MeshPhysicalMaterial({ map: rugTex, roughness: 1, sheen: .5, sheenColor: new THREE.Color('#d9a07a'), sheenRoughness: .6 })); rug.position.y = .02; rug.receiveShadow = true; hero.add(rug);
+    const rahle = M.rahle({ length: .62, width: .28, angle: 0.8, material: M.MAT.wood({ a: '#b87440', b: '#70401c', rings: 26, clearcoat: .08 }) });
+    rahle.traverse(o => { if (o.isMesh) o.material.envMapIntensity = .35; }); hero.add(rahle);
     const mus = M.mushaf({ w: .2, h: .27, d: .055 });
     // closed Mushaf leaning on the back leaf of the rahle, front cover facing the camera
     const holder = new THREE.Group(); holder.position.set(0, rahle.userData.crossY, 0); holder.rotation.x = -rahle.userData.openAngle; hero.add(holder);
     mus.position.set(0, .27 / 2 + .01, .014 / 2 + .055 / 2 + .002); holder.add(mus); R.mushaf = holder;
     // hero lamps around the rug (real flames + 2 real lights)
     const heroLamps = [[-.55, .55], [.6, .45], [-.45, -.75], [.5, -.7], [0, 1.05]];
-    heroLamps.forEach(([x, z], i) => { const l = M.oilLamp({ scale: 2.6, light: i < 2, lightIntensity: 2.2, lightDistance: 4, seed: i + 3 }); l.position.set(x, .02, z); l.rotation.y = Math.atan2(-x, -z) + Math.PI / 2; hero.add(l); });
+    heroLamps.forEach(([x, z], i) => { const l = M.oilLamp({ scale: 2.6, light: i < 2, lightIntensity: 1.2, lightDistance: 3, seed: i + 3 }); l.position.set(x, .02, z); l.rotation.y = Math.atan2(-x, -z) + Math.PI / 2; hero.add(l); });
     // dawn ray: spot light + visible shaft
     const spot = new THREE.SpotLight('#ffd08a', 0, 40, 0.16, 0.6, 1.2); spot.position.set(6, 9, -16); spot.target.position.set(0, .4, 0); spot.castShadow = true; spot.shadow.mapSize.set(1024, 1024); spot.shadow.bias = -0.0005;
     hero.add(spot, spot.target); R.spot = spot;
     const shaft = FX.lightShaft({ from: [6, 9, -16], to: [0, .2, 0], r0: .25, r1: 1.0, color: '#ffcf8a', opacity: 0 }); hero.add(shaft); R.shaft = shaft;
     const halo = FX.glow({ size: 1.1, opacity: 0, color: '#ffd28c' }); halo.position.set(0, rahle.userData.crossY + .25, -.3); hero.add(halo); R.halo = halo;
-    const motes = FX.particles({ count: 220, center: [0, 1.2, 0], box: [3, 2.4, 3], size: 9, color: '#ffe0a8', opacity: .7, drift: [.02, .05, 0], swirl: .08 }); hero.add(motes); R.motes = motes;
+    const motes = FX.particles({ count: 120, center: [0, .9, -.6], box: [2.4, 1.8, 2], size: 5, color: '#ffe0a8', opacity: .7, drift: [.02, .05, 0], swirl: .08 }); hero.add(motes); R.motes = motes;
 
     camera.fov = 38; camera.near = .05; camera.far = 600; camera.updateProjectionMatrix();
     R.cam = U.cameraRig(camera, {
-      pos: [[-2, 16, 30], [-1, 10, 18], [0.1, 2.6, 5.0], [0.06, 1.05, 1.15]],
-      look: [[0, 0, -18], [0, .3, -8], [0, .35, -.4], [0, .32, -.05]], t0: 0, t1: 7.6, ease: t => {
+      pos: [[-2, 16, 30], [-1, 10, 18], [1.3, 2.0, 4.4], [0.9, 0.72, 1.08]],
+      look: [[0, 0, -18], [0, .3, -8], [0, .35, -.4], [0, .34, -.05]], t0: 0, t1: 7.6, ease: t => {
         // slow drift during the lamp wave, then a confident glide to the Mushaf from "en büyük" (~4.3s)
         const k = 4.3 / 7.6; return t < k ? (t / k) * 0.22 : 0.22 + 0.78 * (1 - Math.pow(1 - (t - k) / (1 - k), 2.4));
       }, shake: { amp: .02, freq: .4 },
@@ -110,8 +111,8 @@ export default {
     // brightest: the Mushaf catches dawn light from "en büyük ve parlağını"
     const tB = ctx.wordTime('parlağını'), tK = ctx.wordTime("kur'an");
     const glowP = U.prog(t, tB - .7, tK + .2, 'inOutCubic');
-    R.spot.intensity = 60 * glowP; R.shaft.userData.uniforms.opacity.value = .22 * glowP; R.halo.material.opacity = .25 * glowP;
-    R.sky.userData.uniforms.sunGlow.value = 1.6 + glowP * 1.2;
+    R.spot.intensity = 45 * glowP; R.shaft.userData.uniforms.opacity.value = .22 * glowP; R.halo.material.opacity = .25 * glowP;
+    R.sky.userData.uniforms.sunGlow.value = 0.8 + glowP * 1.0; R.moon.intensity = 0.55 * (1 - glowP * .6); ctx.scene.environmentIntensity = 0.22 + glowP * .15;
     post.exposure = 1.05 + glowP * .08;
     // DOF follows the camera target distance
     post.dof.focus = ctx.camera.position.distanceTo(new THREE.Vector3(0, .35, -.05)); post.dof.range = U.lerp(30, 1.4, U.prog(t, 4.3, 7.0)); post.dof.amount = U.lerp(.35, 1, U.prog(t, 4.3, 7.0));
