@@ -221,6 +221,10 @@ export default {
       X.restore();
       ui.callout('Medine', { t, t0: tP + .2, anchor: [mx, my], to: [U.clamp(mx - 175, 200, 880), U.clamp(my + 105, 300, 1300)], size: 40, dotColor: '#3fb67a' });
     }
+    // DEBUG-G (temporary): known reference points
+    for (const [la, lo, nm] of [[30, 32.5, 'Suez'], [12.7, 43.3, 'Bab'], [21.5, 39.2, 'Jeddah'], [41, 29, 'Ist'], [36.1, -5.4, 'Gib'], [45.4, 12.4, 'Ven'], [29.9, 48.3, 'Kuw']]) {
+      const wp = new THREE.Vector3(...G.latLonDir(la, lo)).multiplyScalar(R.Rg).applyMatrix4(M); const [qx, qy] = ui.project(wp);
+      X.save(); X.strokeStyle = '#00ffff'; X.lineWidth = 3; X.beginPath(); X.moveTo(qx - 10, qy); X.lineTo(qx + 10, qy); X.moveTo(qx, qy - 10); X.lineTo(qx, qy + 10); X.stroke(); X.fillStyle = '#00ffff'; X.font = '24px Nunito'; X.fillText(nm, qx + 12, qy - 8); X.restore(); }
     // typography
     const tD = ctx.wordTime('dünya'), tB = ctx.wordTime('büyük');
     ui.text('Dünya çapında', { t, t0: tD - .04, x: 540, y: 300, size: 66, weight: 900, color: '#fff4dc', anim: 'pop', letterSpacing: 2 });

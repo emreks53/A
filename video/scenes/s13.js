@@ -226,9 +226,9 @@ export default {
 
     const stack = new THREE.Group(); ledge.add(stack); R.stack = stack;
     // [w (cover width -> depth), h (book height -> left/right), d (thickness), colour, label]
-    const vols = [[.5, .36, .11, '#4f2f1c', 0], [.45, .33, .085, '#7a2418', 0], [.47, .34, .07, '#2f4a2c', 0], [.42, .3, .1, '#6b4226', 1], [.44, .31, .06, '#24304f', 0],
-      [.4, .29, .09, '#8a5a30', 0], [.41, .3, .065, '#5a1a2a', 0], [.37, .27, .08, '#9a3a22', 0], [.39, .28, .055, '#33402a', 0], [.35, .26, .075, '#6b4226', 0],
-      [.33, .245, .06, '#7a2418', 2], [.3, .23, .07, '#2c1d16', 0], [.29, .22, .05, '#8a5a30', 0]];
+    const vols = [[.5, .36, .11, '#7a4628', 0], [.45, .33, .085, '#c0392b', 0], [.47, .34, .07, '#3f9a62', 0], [.42, .3, .1, '#b07a3a', 0], [.44, .31, .06, '#3d6cc0', 0],
+      [.4, .29, .09, '#a03a5a', 0], [.41, .3, .065, '#d4923a', 0], [.37, .27, .08, '#4a8a4e', 0], [.39, .28, .055, '#b8402e', 0], [.35, .26, .075, '#5a5ab0', 0],
+      [.33, .245, .06, '#c8743a', 0], [.3, .23, .07, '#7e3e86', 0], [.29, .22, .05, '#c0902e', 0]];
     const rnd = U.rng(33); let y = 0; R.vols = [];
     const spineDraw = (lab) => (x, W, H) => {
       x.clearRect(0, 0, W, H); const gold = '#d9ac4e';
@@ -238,11 +238,11 @@ export default {
     };
     const LAB = [null, '#1e1410', '#3a0f0c'];
     vols.forEach(([w, h, d, c, lab], i) => {
-      const b = M.book({ w, h, d, color: c, dark: new THREE.Color(c).multiplyScalar(.55).getStyle(), seed: 70 + i, pageColor: '#d8c6a2', spineDraw: spineDraw(LAB[lab]) });
+      const b = M.book({ w, h, d, color: c, dark: new THREE.Color(c).multiplyScalar(.72).getStyle(), seed: 70 + i, pageColor: '#d8c6a2', spineDraw: spineDraw(LAB[lab]) });
       const holder = new THREE.Group(); holder.add(b);
       // lay flat with the spine toward the camera: book local x(spine at -x) -> world -z, y -> world x, z(cover) -> world -y
       const m = new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 0, -1), new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, -1, 0)); b.quaternion.setFromRotationMatrix(m);
-      const flip = i === 9; // a couple of volumes lie the other way round (page edges out)
+      const flip = false; // a couple of volumes lie the other way round (page edges out)
       holder.position.set((rnd() - .5) * .07, y + d / 2, (rnd() - .5) * .05 + (flip ? w / 2 - .2 + .04 : .2 - w / 2));
       holder.rotation.y = (rnd() - .5) * .2 + (flip ? Math.PI : 0);
       stack.add(holder); R.vols.push(holder); y += d + .0015;
@@ -297,7 +297,7 @@ export default {
     ui.text('kabul ediyor', { t, t0: tK - .05, t1: tEn + .1, x: 540, y: 392, size: 64, weight: 800, color: '#fff4dc', anim: 'rise', stroke: 'rgba(30,24,50,.5)', strokeW: 9 });
     // summit callout + big keyword
     const sp = ui.project(R.summit);
-    ui.callout('en yüksek derece', { t, t0: tY - .1, t1: 99, anchor: [sp[0], sp[1] + 4], to: [Math.min(sp[0] + 220, 780), sp[1] + 150], size: 46, weight: 800, color: '#fff4dc', dotColor: '#ffcf6b' });
+    ui.callout('en yüksek derece', { t, t0: tEn + .05, t1: 99, anchor: [sp[0], sp[1] + 4], to: [Math.min(sp[0] + 220, 780), sp[1] + 150], size: 46, weight: 800, color: '#fff4dc', dotColor: '#ffcf6b' });
     const attempt = (from, k, t0, side) => {
       const p = U.clamp((t - t0) / .7); if (p <= 0) return; const a = ui.project(from), b = ui.project(R.summit); const X = ui.ctx;
       const ex = a[0] + (b[0] - a[0]) * k * .35 + side * 40, ey = a[1] + (b[1] - a[1]) * k; // ends well below the summit

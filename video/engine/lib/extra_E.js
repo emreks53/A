@@ -1,7 +1,7 @@
 // Group E (scene s12 "virtue gallery") — procedural props + helpers. Pure code, no external assets.
 // Units: meters. Every exhibit builder returns a THREE.Group sitting on y=0 with userData {h, anim(tau, t, lit)}.
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import * as TEX from './textures.js';
 import { rng, clamp, smoothstep } from './util.js';
 import { MAT, rbox } from './models.js';
@@ -170,14 +170,14 @@ export function hangingLamp(o = {}) {
   const oil = M(new THREE.CircleGeometry(.05, 24).rotateX(-PI / 2), new THREE.MeshStandardMaterial({ color: '#7a5414', roughness: .2, transparent: true, opacity: .8 }), false, false); oil.position.y = .045; oil.renderOrder = 6; g.add(oil);
   const wick = M(new THREE.CylinderGeometry(.004, .006, .03, 8), new THREE.MeshStandardMaterial({ color: '#2b2016' }), false, false); wick.position.y = .06; g.add(wick);
   const fl = flame({ height: .042, seed: o.seed ?? 1, intensity: 4 }); fl.position.y = .072; g.add(fl);
-  const halo = glow({ size: .6, opacity: 0, color: '#ffb35a' }); halo.position.y = .09; g.add(halo);
+  const halo = glow({ size: .42, opacity: 0, color: '#ffb35a' }); halo.position.y = .09; g.add(halo);
   const halo2 = glow({ size: .16, opacity: 0, color: '#fff0c8' }); halo2.position.y = .085; g.add(halo2);
   g.userData.flameY = .08;
   g.userData.setLit = (v, t) => {
     const ign = v > 0 && v < 1 ? Math.sin(v * PI) * .35 : 0;
     fl.visible = v > .01; fl.scale.setScalar(Math.max(.01, v * (1 + ign)) * (1 + .05 * Math.sin(t * 9 + (o.seed ?? 1))));
     fl.userData.uniforms.intensity.value = 4 * v;
-    halo.material.opacity = .42 * v * (1 + ign); halo2.material.opacity = .6 * v;
+    halo.material.opacity = .3 * v * (1 + ign); halo2.material.opacity = .45 * v;
     gm.emissive.set('#ffae55'); gm.emissiveIntensity = .9 * v;
     halo.visible = halo2.visible = v > .01;
   };
@@ -347,9 +347,9 @@ export function wheat() {
       { float hh = smoothstep(.22, .55, transformed.y); vec2 rd = transformed.xz; float rl = length(rd) + 1e-4;
         transformed.x += sin(uTime * 1.6 + transformed.y * 5.) * .005 * hh; transformed.z += cos(uTime * 1.25 + transformed.y * 4.) * .004 * hh;
         float hb = smoothstep(.43, .52, transformed.y); transformed.xz += rd / rl * uBow * hb * .018; transformed.y -= uBow * hb * .022; }`); }; m.customProgramCacheKey = () => 'wheatSway'; return m; };
-  const stalkMat = sway(new THREE.MeshPhysicalMaterial({ color: '#d4a84e', roughness: .6, sheen: .6, sheenColor: new THREE.Color('#fff0b0') }));
-  const earMat = sway(new THREE.MeshPhysicalMaterial({ color: '#e0ad4c', roughness: .5, sheen: .8, sheenColor: new THREE.Color('#fff1b8'), clearcoat: .2 }));
-  const awnMat = sway(new THREE.MeshStandardMaterial({ color: '#f0d58e', roughness: .6 }));
+  const stalkMat = sway(new THREE.MeshPhysicalMaterial({ color: '#b98a3a', roughness: .65, sheen: .3, sheenColor: new THREE.Color('#ffe0a0') }));
+  const earMat = sway(new THREE.MeshPhysicalMaterial({ color: '#c8913a', roughness: .55, sheen: .4, sheenColor: new THREE.Color('#ffe2a0'), clearcoat: .15 }));
+  const awnMat = sway(new THREE.MeshStandardMaterial({ color: '#c9a25c', roughness: .7 }));
   g.add(M(merge(stalks), stalkMat), M(merge(ears), earMat), M(merge(awns), awnMat, true, false));
   // twine band + cut ends
   const twine = new THREE.MeshPhysicalMaterial({ color: '#9b7240', roughness: .9, sheen: .5 });
@@ -363,7 +363,7 @@ export function wheat() {
 // ---------------------------------------------------------------- shared rose head (fresh or dried)
 export function roseHead(o = {}) {
   const g = new THREE.Group(); const R = rng(o.seed ?? 77); const S = o.size ?? 1; const dried = !!o.dried;
-  const petalTex = ctex(dried ? 'petalD' : 'petal', 64, 128, (x, W, H) => { const gr = x.createLinearGradient(0, H, 0, 0); if (dried) { gr.addColorStop(0, '#3d0f14'); gr.addColorStop(.6, '#6a2128'); gr.addColorStop(1, '#7d3b33'); } else { gr.addColorStop(0, '#6e0716'); gr.addColorStop(.45, '#b3122a'); gr.addColorStop(1, '#d8283d'); } x.fillStyle = gr; x.fillRect(0, 0, W, H); const e = x.createLinearGradient(0, 0, W, 0); e.addColorStop(0, 'rgba(60,0,10,.35)'); e.addColorStop(.2, 'rgba(0,0,0,0)'); e.addColorStop(.8, 'rgba(0,0,0,0)'); e.addColorStop(1, 'rgba(60,0,10,.35)'); x.fillStyle = e; x.fillRect(0, 0, W, H); });
+  const petalTex = ctex(dried ? 'petalD' : 'petal', 64, 128, (x, W, H) => { const gr = x.createLinearGradient(0, H, 0, 0); if (dried) { gr.addColorStop(0, '#5a1a22'); gr.addColorStop(.6, '#8e3a40'); gr.addColorStop(1, '#a8645a'); } else { gr.addColorStop(0, '#6e0716'); gr.addColorStop(.45, '#b3122a'); gr.addColorStop(1, '#d8283d'); } x.fillStyle = gr; x.fillRect(0, 0, W, H); const e = x.createLinearGradient(0, 0, W, 0); e.addColorStop(0, 'rgba(60,0,10,.35)'); e.addColorStop(.2, 'rgba(0,0,0,0)'); e.addColorStop(.8, 'rgba(0,0,0,0)'); e.addColorStop(1, 'rgba(60,0,10,.35)'); x.fillStyle = e; x.fillRect(0, 0, W, H); });
   const mat = new THREE.MeshPhysicalMaterial({ map: petalTex, roughness: dried ? .8 : .5, sheen: 1, sheenColor: new THREE.Color(dried ? '#a0606a' : '#ff8090'), sheenRoughness: .4, side: THREE.DoubleSide });
   const outer = new THREE.Group(); g.add(outer);
   const petal = (w, h, cup, curl) => surface((u, v) => { const uu = u * 2 - 1; const wid = w * Math.pow(Math.sin(PI * (.12 + .88 * v)), .55) * (v > .85 ? 1 - (v - .85) * 1.2 : 1); const z = cup * (1 - uu * uu) * Math.sin(PI * v * .9) + curl * Math.pow(smoothstep(.55, 1, v), 2) * (1 - .3 * uu * uu); return [uu * wid, v * h - curl * .3 * Math.pow(smoothstep(.6, 1, v), 2), z]; }, 10, 8);
@@ -418,20 +418,26 @@ export function letters() {
 // ---------------------------------------------------------------- 7 SABIR: fountain spout dripping onto a worn stone hollow
 export function cesme() {
   const g = new THREE.Group(); const R = rng(71);
-  const lime = MAT.stone({ a: '#efe3c9', b: '#cbb894', seed: 17 });
+  const lime = MAT.stone({ a: '#d9c7a4', b: '#a8916c', seed: 17 });
   const grey = new THREE.MeshPhysicalMaterial({ ...(() => { const t = TEX.stone({ a: '#e2dace', b: '#aaa08e', seed: 19 }); return { map: t.map, normalMap: t.normalMap }; })(), roughness: .75, clearcoat: .25, clearcoatRoughness: .5 });
   const P0 = V(-.13, 0, -.1);
-  const post = M(latheGeo([[0, 0], [.078, 0], [.078, .03], [.064, .042], [.056, .062], [.056, .35], [.07, .366], [.074, .392], [.052, .41], [.03, .43], [0, .435]], 8), lime); post.position.copy(P0); g.add(post);
+  const post = M(latheGeo([[0, 0], [.07, 0], [.07, .03], [.056, .042], [.048, .062], [.048, .33], [.062, .346], [.066, .37], [.045, .388], [.026, .405], [0, .41]], 8), lime); post.position.copy(P0); g.add(post);
   const brass = MAT.brass();
-  const dirS = V(.85, -.15, .5).normalize(); const sBase = P0.clone().add(V(dirS.x, 0, dirS.z).normalize().multiplyScalar(.05)).setY(.3);
+  const dirS = V(.85, -.12, .5).normalize(); const sBase = P0.clone().add(V(dirS.x, 0, dirS.z).normalize().multiplyScalar(.044)).setY(.29);
   const spout = M(latheGeo([[.018, 0], [.019, .012], [.0135, .022], [.0125, .12], [.0105, .145], [.012, .152], [.008, .154]], 20), brass); spout.quaternion.setFromUnitVectors(V(0, 1, 0), dirS); spout.position.copy(sBase); g.add(spout);
   const mouth = sBase.clone().addScaledVector(dirS, .152).add(V(0, -.008, 0));
-  const sp = [[0, 0], [.1, 0], [.12, .012], [.132, .04], [.128, .07], [.11, .09], [.085, .094], [.068, .088], [.052, .074], [.03, .064], [0, .062]];
-  const sg = latheGeo(sp, 40); { const p = sg.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const r = Math.hypot(x, z); const a = Math.atan2(z, x); const n = (Math.sin(a * 3 + 1) * .007 + Math.sin(a * 5 + 2) * .004) * smoothstep(.07, .11, r); p.setXYZ(i, x * (1 + n / Math.max(r, .01)), y, z * (1 + n / Math.max(r, .01))); } sg.computeVertexNormals(); }
-  const stone = M(sg, grey); stone.scale.set(.9, 1, .86); stone.position.set(mouth.x, 0, mouth.z); g.add(stone);
-  const surfY = .074;
-  const ws = waterSurface({ color: '#3d7176', opacity: .8, amb: .00015 });
-  const water = M(new THREE.CircleGeometry(.05, 36).rotateX(-PI / 2), ws, false, true); water.position.set(mouth.x, surfY, mouth.z); water.scale.set(.9, 1, .86); g.add(water);
+  // natural rock with a smooth hollow worn by the drops
+  const rg = mergeVertices(new THREE.IcosahedronGeometry(1, 4).deleteAttribute('uv').deleteAttribute('normal')); { const p = rg.attributes.position; const top = .1, hb = .062, hd = .034;
+    for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const n = Math.sin(x * 3.1 + 1) * Math.sin(y * 2.7 + 2) * .09 + Math.sin(z * 5.3 + x * 4.1) * .05 + Math.sin(x * 9 + z * 7) * .02;
+      x *= .15 * (1 + n); z *= .125 * (1 + n); y = y < 0 ? y * .03 : y * top * (1 + n * .6); const r = Math.hypot(x - .01, z);
+      if (r < hb * 1.15) { const yb = top * .93 - hd * Math.max(0, 1 - (r / hb) ** 2); y = Math.min(y, yb + Math.max(0, r - hb) * .4); }
+      p.setXYZ(i, x, y, z); } rg.computeVertexNormals(); const uvs = []; for (let i = 0; i < p.count; i++) uvs.push(p.getX(i) * 4 + .5, p.getZ(i) * 4 + p.getY(i) * 3); rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); }
+  const rt = TEX.stone({ a: '#a7a196', b: '#6e685e', seed: 29 });
+  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: rt.map, normalMap: rt.normalMap, normalScale: V2(1.2, 1.2), roughness: .7, clearcoat: .35, clearcoatRoughness: .4 }));
+  rock.position.set(mouth.x - .01, 0, mouth.z); g.add(rock);
+  const surfY = .081;
+  const ws = waterSurface({ color: '#3a7a80', opacity: .82, amb: .00015 });
+  const water = M(new THREE.CircleGeometry(.046, 36).rotateX(-PI / 2), ws, false, true); water.position.set(mouth.x, surfY, mouth.z); g.add(water);
   const moss = M(merge([0, 1, 2, 3, 4, 5].map(i => new THREE.SphereGeometry(.011 + R() * .009, 7, 5).scale(1.5, .45, 1.2).translate(P0.x + Math.cos(i * 1.1 + .5) * .085, .004, P0.z + Math.sin(i * 1.1 + .5) * .085))), new THREE.MeshStandardMaterial({ color: '#6a8a3e', roughness: 1 })); g.add(moss);
   const dropMat = fakeGlass({ color: '#a8dce4', opacity: .4, rim: .9, gain: 1.2 });
   const dropGeo = latheGeo([[0, -.012], [.006, -.0095], [.0085, -.005], [.008, 0], [.0045, .006], [0, .011]], 16);

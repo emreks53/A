@@ -219,6 +219,7 @@ export default {
     key.castShadow = true; key.shadow.mapSize.set(512, 512); key.shadow.bias = -.002; key.shadow.radius = 7; key.shadow.camera.near = .04; scene.add(key); R.key = key;
     const fill = new THREE.PointLight('#ffa060', 2.6, 7, 2); fill.position.set(-1.9, .7, 2.6); room.add(fill); R.fill = fill; // a second lamp on the floor, out of frame
     scene.add(new THREE.HemisphereLight('#6a7ab0', '#3a2616', .3));
+    const moonL = new THREE.SpotLight('#7f9cff', 7, 9, .55, 1, 1.5); moonL.position.set(-2.3, 2.9, 1.8); moonL.target.position.set(-1.0, 1.3, -.1); room.add(moonL, moonL.target); // moonlight from a small window in the left wall (off-screen)
     const moonS = new THREE.SpotLight('#8eaaff', 16, 14, .5, .7, 1.4); moonS.position.set(1.9, 3.9, -3.4); moonS.target.position.set(.6, 0, 1.2); room.add(moonS, moonS.target);
 
     // ---------------- outside the door: the moonlit alley + the lantern lights from s04 ----------------
@@ -324,6 +325,9 @@ export default {
     { const a = U.clamp((t - .15) / .3) * (1 - U.prog(t, 4.3, 4.6)); if (a > 0) { const g = X.createLinearGradient(0, 160, 0, 640); g.addColorStop(0, 'rgba(20,10,6,0)'); g.addColorStop(.3, 'rgba(20,10,6,.5)'); g.addColorStop(.62, 'rgba(20,10,6,.32)'); g.addColorStop(1, 'rgba(20,10,6,0)'); X.save(); X.globalAlpha = a; X.fillStyle = g; X.fillRect(0, 160, 1080, 480); X.restore(); } }
     ui.text('el-Emîn', { t, t0: .3, t1: 4.62, x: 540, y: 345, size: 128, weight: 900, family: 'Playfair Display', color: '#ffd77e', anim: 'pop', letterSpacing: 2, shadowBlur: 26, shadowColor: 'rgba(30,12,0,.75)' });
     ui.underline({ t, t0: .62, t1: 4.62, x: 540, y: 432, w: 300, color: '#ffd77e', width: 6 });
+    // "emanet" keyword pointing at the chest's red-wax tag, on the spoken word
+    { const tg = R.items[0].obj.userData.tag; const wp = new THREE.Vector3(0, -.066, .004); tg.localToWorld(wp); const [ax, ay, az] = ui.project(wp);
+      if (az < 1) ui.callout('emanet', { t, t0: ctx.wordTime('emanet') - .2, t1: 4.62, anchor: [ax, ay], to: [U.clamp(ax - 230, 200, 880), Math.max(660, ay - 190)], size: 46, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ff5a4e', lineColor: 'rgba(255,236,200,.95)' }); }
     ui.text('Mekkeliler O’na “el-Emîn”\n(güvenilir) derdi', { t, t0: 1.38, t1: 4.62, x: 540, y: 532, size: 42, weight: 800, bg: 'rgba(28,16,10,.78)', color: '#fff1d6', anim: 'rise', maxWidth: 900, lineHeight: 1.2 });
   },
 };

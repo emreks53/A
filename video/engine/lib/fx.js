@@ -4,6 +4,9 @@ import * as THREE from 'three';
 import { rng } from './util.js';
 import { softDot, noiseTex } from './textures.js';
 
+// Pixel-size factor for GL point sprites so they look the same at any --scale (tuned at preview scale 0.5).
+export const PX = { scale: 1 };
+
 // ---- Floating dust motes / embers / sparkles (GPU-animated points) ----------------------------
 // o: {count, center:[x,y,z], box:[sx,sy,sz], color, size(px at 1m), opacity, drift:[x,y,z] (m/s), swirl, twinkle, seed, additive}
 export function particles(o = {}) {
@@ -15,16 +18,16 @@ export function particles(o = {}) {
     time: { value: 0 }, map: { value: softDot(64, o.hardness ?? 0) }, color: { value: new THREE.Color(o.color ?? '#ffe2a8') },
     size: { value: o.size ?? 22 }, opacity: { value: o.opacity ?? .8 }, box: { value: new THREE.Vector3(...box) },
     drift: { value: new THREE.Vector3(...(o.drift ?? [0.02, 0.03, 0])) }, swirl: { value: o.swirl ?? 0.15 }, twinkle: { value: o.twinkle ?? 0.5 },
-    fadeIn: { value: o.fadeIn ?? 0 }, master: { value: o.master ?? 1 },
+    fadeIn: { value: o.fadeIn ?? 0 }, master: { value: o.master ?? 1 }, pxScale: { value: PX.scale },
   };
   const m = new THREE.ShaderMaterial({
     uniforms: u, transparent: true, depthWrite: false, blending: o.additive === false ? THREE.NormalBlending : THREE.AdditiveBlending,
-    vertexShader: `uniform float time, size, swirl, twinkle; uniform vec3 box, drift; attribute vec4 rnd; varying float vA;
+    vertexShader: `uniform float time, size, swirl, twinkle, pxScale; uniform vec3 box, drift; attribute vec4 rnd; varying float vA;
       void main(){ vec3 p = position + drift * time; p += swirl * vec3(sin(time*.7 + rnd.x*40.), sin(time*.5 + rnd.y*40.)*.6, cos(time*.6 + rnd.z*40.));
         p = mod(p + box*.5, box) - box*.5; vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
         float tw = mix(1., .5 + .5*sin(time*(1.5+rnd.w*3.) + rnd.x*30.), twinkle);
         vec3 e = abs(p) / (box*.5); float edge = 1. - smoothstep(.8, 1., max(max(e.x, e.y), e.z));
-        vA = tw * edge; gl_PointSize = size * (.4 + rnd.y) * (1. / -mv.z) * 10.; }`,
+        vA = tw * edge; gl_PointSize = size * pxScale * (.4 + rnd.y) * (1. / -mv.z) * 10.; }`,
     fragmentShader: `uniform sampler2D map; uniform vec3 color; uniform float opacity, master; varying float vA; void main(){ vec4 t = texture2D(map, gl_PointCoord); gl_FragColor = vec4(color, t.a * vA * opacity * master); }`,
   });
   const pts = new THREE.Points(g, m); pts.position.set(...c); pts.frustumCulled = false; pts.userData.uniforms = u; pts.userData.noDepth = true; pts.renderOrder = 10;

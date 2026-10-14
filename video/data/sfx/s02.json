@@ -1,0 +1,68 @@
+[
+{
+"t": 7.3,
+"dur": 4.9,
+"kind": "wind",
+"desc": "soft dawn breeze over Medina",
+"gain": -5
+},
+{
+"t": 7.6,
+"dur": 3.5,
+"kind": "birds",
+"desc": "distant dawn birds",
+"gain": -6
+},
+{
+"t": 7.72,
+"dur": 0.3,
+"kind": "pop",
+"desc": "Medine location tag pops in"
+},
+{
+"t": 9.55,
+"dur": 0.5,
+"kind": "whoosh",
+"desc": "light air whoosh as text rises",
+"gain": -3
+},
+{
+"t": 10.62,
+"dur": 0.6,
+"kind": "impact",
+"desc": "soft low impact when EN BUYUK MUCIZE lands",
+"gain": -6
+},
+{
+"t": 10.75,
+"dur": 1.2,
+"kind": "chime",
+"desc": "delicate sparkle on the gilded crescent"
+},
+{
+"t": 11.72,
+"dur": 0.8,
+"kind": "whoosh",
+"desc": "slow airy cross-dissolve into the Hilye room"
+},
+{
+"t": 11.96,
+"dur": 1.5,
+"kind": "chime",
+"desc": "warm resonant tone under KENDI ZATI"
+},
+{
+"t": 11.9,
+"dur": 1.8,
+"kind": "fire",
+"desc": "quiet candle flicker",
+"gain": -4
+},
+{
+"t": 12.63,
+"dur": 0.4,
+"kind": "paper",
+"desc": "soft paper swish as caption appears",
+"gain": -4
+}
+]

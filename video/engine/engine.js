@@ -37,6 +37,7 @@ async function main() {
   const overlay = document.createElement('canvas'); overlay.width = W; overlay.height = H; document.body.appendChild(overlay);
   const out = document.createElement('canvas'); out.width = W; out.height = H; const outX = out.getContext('2d'); outX.imageSmoothingEnabled = true; outX.imageSmoothingQuality = 'high';
 
+  FX.PX.scale = SCALE / 0.5; // particle sprites were tuned on 0.5-scale previews
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, W / H, 0.1, 1000);
   camera.layers.enable(1);

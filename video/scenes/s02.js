@@ -112,6 +112,7 @@ export default {
     // ---- typography ----
     const tK = ctx.wordTime("kur'an"), tKe = ctx.wordTime('kendi'), tZ = ctx.wordTime('zat');
     locTag(ui, t, .2, tK - .1, 'Medine');
+    { const e = ui.env(t, tK - .15, D0 + .15, .5, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .4; X.translate(540, 370); X.scale(1, .36); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 680); gr.addColorStop(0, 'rgba(40,28,44,.75)'); gr.addColorStop(.45, 'rgba(40,28,44,.4)'); gr.addColorStop(1, 'rgba(40,28,44,0)'); X.fillStyle = gr; X.fillRect(-680, -680, 1360, 1360); X.restore(); } }
     ui.text("Kur'ân'dan sonra", { t, t0: tK - .05, t1: D0 + .12, x: 540, y: 318, size: 56, weight: 800, color: '#fff4dc', anim: 'rise', shadowBlur: 22, shadowColor: 'rgba(60,25,10,.6)' });
     ui.text("EN BÜYÜK MU'CİZE", { t, t0: tEn + .02, t1: D0 + .12, x: 540, y: 408, size: 76, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 2, shadowBlur: 26, shadowColor: 'rgba(60,20,0,.6)' });
     { const e = ui.env(t, tKe - .05, Infinity, .6, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .5; X.translate(540, 330); X.scale(1, .32); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 560); gr.addColorStop(0, 'rgba(36,20,10,.85)'); gr.addColorStop(.6, 'rgba(36,20,10,.45)'); gr.addColorStop(1, 'rgba(36,20,10,0)'); X.fillStyle = gr; X.fillRect(-560, -560, 1120, 1120); X.restore(); } }
@@ -197,8 +198,11 @@ function buildMedina(ctx, G) {
   // ---- THE GREEN DOME ----
   const GD = new THREE.Group(); GD.position.set(0, 12, -6); G.add(GD); R.gd = GD;
   const baseMat = MAT.plaster({ a: '#efe1c4', b: '#d6c19c', seed: 14, repeat: [2, 1] }); baseMat.normalScale.set(.3, .3);
-  const base = new THREE.Mesh(M.rbox(13, 3.2, 13, .25), baseMat); base.position.y = 1.6; GD.add(base);
-  const baseC = new THREE.Mesh(M.rbox(13.8, .5, 13.8, .18), baseMat); baseC.position.y = 3.3; GD.add(baseC);
+  const baseTex = TEX.drawTexture(512, 128, (x, w, h) => { x.fillStyle = '#ead9b8'; x.fillRect(0, 0, w, h); for (let i = 0; i < 8; i++) { const cx = (i + .5) * w / 8; x.fillStyle = '#d2bd96'; archPath(x, cx, h - 14, 40, 84); x.fill(); x.fillStyle = '#bfa67e'; archPath(x, cx, h - 18, 30, 72); x.fill(); } x.fillStyle = '#d8c39e'; x.fillRect(0, 0, w, 10); x.fillRect(0, h - 10, w, 10); });
+  const baseM2 = new THREE.MeshStandardMaterial({ map: baseTex, roughness: .9 });
+  const base = new THREE.Mesh(M.rbox(12.6, 2.4, 12.6, .2), [baseM2, baseM2, baseMat, baseMat, baseM2, baseM2]); base.position.y = 2.0; GD.add(base);
+  const baseC = new THREE.Mesh(M.rbox(13.4, .45, 13.4, .16), baseMat); baseC.position.y = 3.35; GD.add(baseC);
+  const plinth = new THREE.Mesh(M.rbox(13.2, .8, 13.2, .14), baseMat); plinth.position.y = .4; GD.add(plinth);
   const greenTex = TEX.plaster({ a: '#2f9a5c', b: '#23804a', seed: 21, repeat: [3, 2] });
   const drumTex = TEX.drawTexture(1024, 256, (x, w, h) => {
     x.fillStyle = '#1f8a4c'; x.fillRect(0, 0, w, h);
@@ -233,7 +237,7 @@ function buildMedina(ctx, G) {
   for (const [r, y] of [[.5, 1.08], [.38, 1.86], [.28, 2.44]]) { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 18), goldMat); s.position.y = y; s.castShadow = true; fin.add(s); }
   for (const y of [1.6, 2.22]) { const c = new THREE.Mesh(new THREE.TorusGeometry(.17, .05, 8, 20), goldMat); c.rotation.x = Math.PI / 2; c.position.y = y; fin.add(c); }
   const rod = new THREE.Mesh(new THREE.CylinderGeometry(.07, .09, 1.0, 10), goldMat); rod.position.y = 3.0; fin.add(rod);
-  const cs = new THREE.Shape(); cs.absarc(0, 0, .82, 0, Math.PI * 2, false); const ch = new THREE.Path(); ch.absarc(0, .3, .7, 0, Math.PI * 2, true); cs.holes.push(ch);
+  const cs = crescentShape(.82, .26, .66);
   const cres = new THREE.Mesh(new THREE.ExtrudeGeometry(cs, { depth: .1, bevelEnabled: true, bevelThickness: .045, bevelSize: .045, bevelSegments: 3, curveSegments: 48 }), goldMat);
   cres.geometry.translate(0, 0, -.05); cres.position.y = 4.15; cres.rotation.y = -.35; cres.castShadow = true; fin.add(cres);
   R.finTop = new THREE.Vector3(0, 12 + y0 + .3 + Hd * .985 + 3.9, -6);
@@ -281,6 +285,14 @@ function buildMedina(ctx, G) {
   G.add(FX.particles({ count: 160, center: [0, 6, 40], box: [30, 12, 30], size: 10, color: '#ffe6c2', opacity: .35, drift: [.12, .05, 0], swirl: .2 }));
 }
 
+// Upward-opening crescent outline: outer circle r1 at origin minus inner circle r2 centred (0, dy)
+function crescentShape(r1, dy, r2) {
+  const yi = (r1 * r1 - r2 * r2 + dy * dy) / (2 * dy), xi = Math.sqrt(Math.max(0, r1 * r1 - yi * yi));
+  const a1 = Math.atan2(yi, xi), a2 = Math.atan2(yi - dy, xi); const sh = new THREE.Shape(); const N = 48;
+  for (let i = 0; i <= N; i++) { const a = a1 - (i / N) * (Math.PI + 2 * a1); const p = [Math.cos(a) * r1, Math.sin(a) * r1]; i ? sh.lineTo(...p) : sh.moveTo(...p); }
+  for (let i = 0; i <= N; i++) { const a = (Math.PI - a2) + (i / N) * (Math.PI + 2 * a2); sh.lineTo(Math.cos(a) * r2, dy + Math.sin(a) * r2); }
+  sh.closePath(); return sh;
+}
 function archPath(x, cx, by, w, h) { // pointed (ogival) arch, bottom y = by
   const top = by - h, spring = top + w * .62;
   x.beginPath(); x.moveTo(cx - w / 2, by); x.lineTo(cx - w / 2, spring); x.quadraticCurveTo(cx - w / 2, top + w * .12, cx, top);
@@ -379,10 +391,10 @@ function ebruCanvas(w, h, seed) {
   let s = seed >>> 0; const rnd = () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   const pal = [[34, 60, 108], [58, 92, 140], [186, 146, 78], [222, 206, 172], [112, 128, 136], [28, 46, 86], [160, 112, 66], [204, 182, 140], [124, 64, 50]];
   const base = [226, 212, 182];
-  const ops = []; for (let i = 0; i < 420; i++) ops.push([rnd() * w, rnd() * h, 5 + Math.pow(rnd(), 1.4) * 17, pal[Math.floor(rnd() * pal.length)]]);
+  const ops = []; for (let i = 0; i < 760; i++) ops.push([rnd() * w * 1.1 - w * .05, rnd() * h * 1.1 - h * .05, 6 + Math.pow(rnd(), 1.3) * 15, pal[Math.floor(rnd() * pal.length)]]);
   const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); const im = x.createImageData(w, h); const D = im.data;
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
-    let px = i + .5 + Math.sin(j * .045) * 5, py = j + .5 + Math.sin(i * .03) * 3; let col = base, vein = 0;
+    let px = i + .5 - Math.sin(j * .05) * 9, py = j + .5 - Math.sin(px * .06) * 12; let col = base, vein = 0;
     for (let k = ops.length - 1; k >= 0; k--) {
       const o = ops[k]; const dx = px - o[0], dy = py - o[1]; const d2 = dx * dx + dy * dy, r2 = o[2] * o[2];
       if (d2 < r2) { col = o[3]; const qq = Math.sqrt(d2 / r2); vein = Math.max(0, (qq - .9) / .1); break; }

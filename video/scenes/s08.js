@@ -20,7 +20,7 @@ export default {
   async setup(ctx) {
     const { scene, camera, U, MODELS: M, ENV, FX, renderer } = ctx;
     R = {};
-    const sunDir = new THREE.Vector3(.12, .8, .62).normalize(); R.sunDir = sunDir;
+    const sunDir = new THREE.Vector3(.06, .55, .83).normalize(); R.sunDir = sunDir;
     scene.fog = new THREE.FogExp2('#8a4224', .02); R.fogStorm = new THREE.Color('#8a4224'); R.fogCalm = new THREE.Color('#c08058');
     const fogO = { color: '#8a4224', density: .02 };
     const { sky, env } = C.gradSkyAndEnv(renderer, {
@@ -41,17 +41,17 @@ export default {
     const rg = C.ridge({ width: 1000, depth: 240, height: 80, seed: 5, color: '#8e4c36', top: '#a4624a' }); rg.position.set(-380, -3, 40); rg.rotation.y = Math.PI / 2 + .1; scene.add(rg);
 
     // THE ROCK: wide red-sandstone butte, long axis along Z, storm comes from -X
-    const rock = C.tor({ a: 3.9, b: 3.1, c: 5.6, n: 2.5, cell: 1.8, seed: 4, detail: 84, bury: .9 });
+    const rock = C.facetRock({ a: 4.6, b: 4.5, c: 6.6, n: 3.2, planes: 60, jitter: .55, off: [-.38, 0], k: .035, joints: 0, lump: .08, seed: 7, detail: 84, bury: 3.9, grain: .9, nScale: .35 });
     scene.add(rock); rock.updateMatrixWorld(true); R.rock = rock; const H = rock.userData.height;
     // boulders at its foot + scatter
     const rr = U.rng(31); const items = [];
     [[-4.6, -3.2, .7], [-4.9, 2.0, .5], [-3.6, 6.0, .9], [4.0, -4.6, .8], [4.4, -1.4, .45], [2.6, 6.6, .6], [-2.2, 6.9, .5], [6.6, 5.4, .3], [4.6, 1.0, .28]].forEach(([x, z, s], i) => items.push({ x, z, s: [s, s * .62, s * .85], ry: i * 1.3, variant: i % 3 }));
-    for (let i = 0; i < 220; i++) { const a = rr() * 6.28, d = 6.5 + Math.pow(rr(), .8) * 30; const x = Math.cos(a) * d * .8, z = Math.sin(a) * d; if (Math.hypot(x - 5.7, z - 2.6) < 1.4 || Math.hypot(x - 8.5, z - 6) < 2.5) continue; const s = .03 + Math.pow(rr(), 3) * .3; items.push({ x, z, s: [s, s * .6, s * .8], ry: rr() * 6, variant: i % 3 }); }
+    for (let i = 0; i < 220; i++) { const a = rr() * 6.28, d = 6.5 + Math.pow(rr(), .8) * 30; const x = Math.cos(a) * d * .8, z = Math.sin(a) * d; if (Math.hypot(x - 6.6, z - 2.4) < 1.4 || Math.hypot(x - 9.5, z - 5.8) < 2.5) continue; const s = .03 + Math.pow(rr(), 3) * .3; items.push({ x, z, s: [s, s * .6, s * .8], ry: rr() * 6, variant: i % 3 }); }
     items.forEach(it => { it.y = gh(it.x, it.z) + it.s[1] * .15; });
     scene.add(C.scatterRocks(items, { seed: 17, detail: 3, palette: ['#8f5a3a', '#6a3f2a', '#a96f48'] }));
 
     // the Zülfikar, safe in the lee (same model as s06)
-    const SW = [5.7, 2.6]; R.swPos = new THREE.Vector3(SW[0], gh(...SW), SW[1]);
+    const SW = [6.6, 2.4]; R.swPos = new THREE.Vector3(SW[0], gh(...SW), SW[1]);
     const sword = C.zulfikar({ hwF: .041, hwG: .033, hiltScale: 1.28, steelRough: .22, bend: .03 }); sword.scale.setScalar(1.12);
     sword.position.set(SW[0], gh(...SW) - .05, SW[1]); sword.rotation.set(-.05, .76, .03); scene.add(sword); sword.updateMatrixWorld(true); R.sword = sword;
     const heap = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 14, 0, Math.PI * 2, 0, Math.PI / 2), M.MAT.sand({ a: '#d6985e', b: '#ad6e42', repeat: [2, 1] }));
@@ -62,15 +62,15 @@ export default {
     Object.assign(R, { tRes, tAl, tArk, tSig, tDef });
     const ray = new THREE.Raycaster(); const arrows = [], sparks = [], pf = [];
     const ar = U.rng(13); R.hits = [];
-    const hit = (t, y, z, pitch, az, sparkN = 14, big = false) => {
+    const hit = (t, y, z, pitch, az, sparkN = 14, big = false, aim = null) => {
       const vL = C.landingVel(Math.PI / 2 + az, pitch, 40); const d = vL.clone().normalize();
-      ray.set(new THREE.Vector3(-4, y, z).addScaledVector(d, -40), d); const I = ray.intersectObject(rock, false)[0]; if (!I) return null;
+      ray.set((aim ? aim.clone() : new THREE.Vector3(-4, y, z)).addScaledVector(d, -40), d); const I = ray.intersectObject(rock, false)[0]; if (!I) return null;
       const n = I.face.normal.clone().transformDirection(rock.matrixWorld);
       arrows.push({ L: I.point.clone(), vL, tL: t, flight: 2.2, mode: 'break', normal: n, ground: gh });
       if (t > -1.2) {
         const refl = d.clone().reflect(n).multiplyScalar(.7).add(n.clone().multiplyScalar(.5)).add(new THREE.Vector3(0, .35, 0)).normalize();
         C.sparkBurst(sparks, { p: I.point.toArray(), dir: refl.toArray(), t0: t, n: sparkN, speed: big ? [3, 9] : [2.5, 7], spread: .6, life: [.18, big ? .75 : .5], w: .012, seed: 100 + arrows.length, color: '#ffd28a', i: 3 });
-        pf.push({ p: I.point.clone().addScaledVector(n, .15).toArray(), t0: t, life: 1.2, s0: .15, s1: big ? 1.6 : .9, v: [n.x * .8, .6, n.z * .8], a: .5, color: '#d8a07a' });
+        pf.push({ p: I.point.clone().addScaledVector(n, .15).toArray(), t0: t, life: 1.0, s0: .1, s1: big ? 1.1 : .6, v: [n.x * .8, .6, n.z * .8], a: .3, color: '#d8a07a' });
         R.hits.push({ t, p: I.point.clone().addScaledVector(n, .4), big });
       }
       return I;
@@ -83,7 +83,7 @@ export default {
     for (let k = 0; k < 9; k++) hit(tAl - .05 + k * .045 + ar() * .03, 1.0 + ar() * 3, -3 + ar() * 7, .12 + ar() * .2, (ar() - .5) * .4, 16, k < 3);
     // impacts high on the rim later (sparks fly over the top -> seen from the lee), pulsing on "defalarca"
     R.rimT = [];
-    for (let k = 0; k < 5; k++) { const t = tDef + .05 + k * .24; const zz = 1.2 + (k % 2 ? 1.1 : -0.6) + k * .35; const I = hit(t, H - .55 + (k % 2) * .15, zz, .05, .02, 0); if (I) { R.rimT.push(t); C.sparkBurst(sparks, { p: I.point.toArray(), dir: [.55, 1, .05], t0: t, n: 26, speed: [4, 9], spread: .45, life: [.45, .9], w: .014, seed: 300 + k, color: '#ffd896', i: 3.4 }); } }
+    for (let k = 0; k < 5; k++) { const t = tDef + .05 + k * .24; const zz = 1.2 + (k % 2 ? 1.1 : -0.6) + k * .35; const top = ray.set(new THREE.Vector3(-1.6 - (k % 2) * .5, 30, zz), new THREE.Vector3(0, -1, 0)) || ray.intersectObject(rock, false)[0]; const I = top ? hit(t, 0, 0, .05, .02, 0, false, top.point.clone().add(new THREE.Vector3(0, -.12, 0))) : null; if (I) { R.rimT.push(t); C.sparkBurst(sparks, { p: I.point.toArray(), dir: [.55, 1, .05], t0: t, n: 26, speed: [4, 9], spread: .45, life: [.45, .9], w: .014, seed: 300 + k, color: '#ffd896', i: 3.4 }); } }
     // a few more distant impacts while in the lee (keeps the storm audible/visible over the rim)
     for (let k = 0; k < 10; k++) hit(3 + ar() * 3.6, 2 + ar() * 2.4, -4 + ar() * 9, .12 + ar() * .2, (ar() - .5) * .4, 10);
     // arrows that clear the top and fly on, high over the lee (never landing near the sword)
@@ -96,14 +96,14 @@ export default {
     R.puffs = C.puffs(pf, { sunDir: sunDir.toArray(), litMul: 1.4, shadeMul: .75 }); scene.add(R.puffs);
 
     // storm dust: streams in from -X, lifted over the rock, passes high over the lee; fast sand streaks on the windward side only
-    R.storm = C.dustField({ count: 80, center: [-8, 2.6, -3], box: [64, 5.2, 26], size: [2.5, 7], wind: [8, 0, 0], swirl: .5, shade: '#5e2616', lit: '#e88a4c', sunDir: sunDir.toArray(), opacity: .24, nearFade: 3.5, scatter: 1.4, seed: 4, fog: fogO, yMin: 0, flow: [-3.6, H, 5.0, 1] });
+    R.storm = C.dustField({ count: 80, center: [-8, 2.6, -3], box: [64, 5.2, 26], size: [2.5, 7], wind: [8, 0, 0], swirl: .5, shade: '#5e2616', lit: '#e88a4c', sunDir: sunDir.toArray(), opacity: .24, nearFade: 3.5, scatter: 1.4, seed: 4, fog: fogO, yMin: 0, flow: [-4.6, H, 5.6, 1] });
     R.sheets = C.dustField({ count: 40, center: [-14, .55, 0], box: [22, .8, 30], size: [1, 2.6], wind: [9, 0, 0], swirl: .2, shade: '#7a3a20', lit: '#e8884a', sunDir: sunDir.toArray(), opacity: .2, nearFade: 2.5, scatter: 1.4, seed: 5, fog: fogO, yMin: 0 });
     scene.add(R.storm, R.sheets);
     const sr = U.rng(8); const sand = [];
     for (let i = 0; i < 240; i++) { const sp = 8 + sr() * 5, life = 18 / sp; const z = -9 + sr() * 18; sand.push({ p: [-23 + sr() * 2, .02 + Math.pow(sr(), 2.2) * .8, z], v: [sp, (sr() - .4) * .3, (sr() - .5) * .4], t0: -sr() * life, life, w: .009 + sr() * .008, len: .3 + sr() * .5, color: '#eca06a', a: .2 + sr() * .2, loop: 1 }); }
     R.sand = C.streaks(sand, { fadeIn: .08, fadeOut: .85, fog: fogO }); scene.add(R.sand);
     // the lee: calm golden motes settling in the sunlight
-    R.motes = FX.particles({ count: 140, center: [6.4, 1.3, 3.4], box: [5, 2.6, 5], size: 1.6, color: '#ffe6bc', opacity: .45, drift: [.03, -.04, 0], swirl: .04, twinkle: .3, seed: 9 }); scene.add(R.motes);
+    R.motes = FX.particles({ count: 140, center: [7.3, 1.3, 3.2], box: [5, 2.6, 5], size: 1.6, color: '#ffe6bc', opacity: .45, drift: [.03, -.04, 0], swirl: .04, twinkle: .3, seed: 9 }); scene.add(R.motes);
 
     // reflections for the steel from its real surroundings (sword hidden)
     sky.userData.uniforms.sunI.value = 1.6;
@@ -112,13 +112,13 @@ export default {
 
     camera.fov = 38; camera.near = .05; camera.far = 1500; camera.updateProjectionMatrix();
     R.cam = C.camPath([
-      [-0.5, [-16.5, 1.7, 8.0], [0, 2.6, 0]],
-      [1.4, [-14.2, 2.0, 10.4], [0, 2.5, 1.0]],
-      [2.45, [-8.4, 2.7, 13.6], [.6, 2.3, 2.0]],
-      [3.0, [0.2, 3.0, 15.2], [3.2, 1.9, 3.2]],
-      [3.6, [8.6, 1.35, 9.6], [5.2, 1.55, 2.6]],
-      [5.0, [9.2, .78, 6.7], [5.4, 1.6, 2.4]],
-      [6.9, [9.0, .62, 6.0], [5.4, 1.66, 2.4]],
+      [-0.5, [-17.5, 1.7, 8.0], [0, 2.8, 0]],
+      [1.4, [-15.2, 2.0, 10.6], [0, 2.7, 1.0]],
+      [2.45, [-9.2, 2.8, 14.2], [.6, 2.4, 2.0]],
+      [3.0, [0.4, 3.1, 15.8], [3.8, 1.9, 3.0]],
+      [3.6, [9.8, 1.4, 8.2], [6.3, 1.3, 2.5]],
+      [5.0, [9.2, .75, 5.7], [6.4, 1.2, 2.45]],
+      [6.9, [8.95, .64, 5.15], [6.45, 1.22, 2.45]],
     ]);
     R.P = new THREE.Vector3(); R.L = new THREE.Vector3();
   },
@@ -142,7 +142,7 @@ export default {
     ctx.scene.fog.density = U.lerp(.02, .009, calm); ctx.scene.fog.color.copy(R.fogStorm).lerp(R.fogCalm, calm);
     post.vignette = U.lerp(.55, .45, calm);
     const fd = camera.position.distanceTo(calm > .5 ? R.swPos.clone().setY(R.swPos.y + .6) : R.L);
-    post.dof.focus = fd; post.dof.range = U.lerp(14, 3.2, calm); post.dof.amount = U.lerp(.25, .5, calm);
+    post.dof.focus = fd; post.dof.range = U.lerp(14, 5, calm); post.dof.amount = U.lerp(.25, .5, calm);
     R.motes.material.uniforms.master.value = calm;
 
     // --- typography ---

@@ -27,22 +27,43 @@ export default {
     scene.environment = await ctx.loadHDR('satara_night_no_lamps'); scene.environmentIntensity = .35;
 
     // ---------------- outside: moon, Alps, Lake Geneva, garden ----------------
-    const moonDir = new THREE.Vector3(.2, .25, -1).normalize(); R.moonDir = moonDir;
+    const el = 7.5 * Math.PI / 180, az = 4.5 * Math.PI / 180; const moonDir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)); R.moonDir = moonDir;
     const sky = ENV.skyDome({ top: '#040814', mid: '#0b1634', horizon: '#26365e', bottom: '#0b1222', sunDir: moonDir.toArray(), sunColor: '#a9bde8', sunSize: 0, sunGlow: .9, stars: 1.0, clouds: .12, cloudColor: '#3a4a74', intensity: 1 });
     scene.add(sky);
-    const moon = G.moonSprite({ size: 22 }); moon.position.copy(moonDir).multiplyScalar(400).add(new THREE.Vector3(0, 1.4, 0)); scene.add(moon);
-    const mg = FX.glow({ size: 120, opacity: .2, color: '#8ea6e0' }); mg.material.fog = false; mg.position.copy(moon.position); scene.add(mg);
-    // lake (moon glitter path from the ocean shader's glint)
-    const lake = FX.ocean({ size: 420, segments: 160, deep: '#081428', shallow: '#13254a', sky: '#24365f', sunDir: moonDir.toArray(), sunColor: '#e4ecff', amp: .05, choppy: .6, fogColor: '#1a2644', fogNear: 60, fogFar: 300 });
-    lake.position.set(0, -6, -160); scene.add(lake);
+    const moon = G.moonSprite({ size: 17 }); moon.position.copy(moonDir).multiplyScalar(400).add(new THREE.Vector3(0, 1.4, 0)); scene.add(moon);
+    const mg = FX.glow({ size: 110, opacity: .22, color: '#8ea6e0' }); mg.material.fog = false; mg.position.copy(moon.position); scene.add(mg);
+    // Lake Geneva: dark water, sky-tinted toward the horizon, sparkling moon path (custom shader)
+    const lu = { time: { value: 0 }, moonDir: { value: moonDir.clone() }, deep: { value: new THREE.Color('#050b18') }, skyC: { value: new THREE.Color('#1e2d52') }, glint: { value: new THREE.Color('#dfe8ff') }, fogC: { value: new THREE.Color('#1a2644') } };
+    const lakeMat = new THREE.ShaderMaterial({ uniforms: lu,
+      vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }`,
+      fragmentShader: `uniform float time; uniform vec3 moonDir, deep, skyC, glint, fogC; varying vec3 vW;
+        float h21(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x*p.y); }
+        float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3. - 2.*f); return mix(mix(h21(i), h21(i + vec2(1,0)), f.x), mix(h21(i + vec2(0,1)), h21(i + vec2(1,1)), f.x), f.y); }
+        void main(){
+          vec3 V = normalize(vW - cameraPosition); float dep = max(-V.y, 0.);
+          float dAz = acos(clamp(dot(normalize(V.xz), normalize(moonDir.xz)), -1., 1.));
+          float w = .012 + dep*.42; float path = exp(-dAz*dAz/(w*w));
+          vec2 q = vW.xz*vec2(.9, 3.2);
+          float n = vn(q + vec2(time*.35, time*1.3)) * vn(q*1.9 - vec2(time*.9, -time*.4));
+          float sp = smoothstep(.28, .62, n);
+          float fres = pow(1. - dep, 7.);
+          vec3 col = mix(deep, skyC, fres*.75);
+          col += glint * path * (.12 + 2.4*sp) * (.5 + .5*smoothstep(.0, .05, dep));
+          col += glint * exp(-dAz*dAz/.0009) * smoothstep(.06, .0, dep) * .6;   // bright streak near the far shore
+          float d = length(vW - cameraPosition); col = mix(col, fogC, smoothstep(80., 260., d)*.5);
+          gl_FragColor = vec4(col, 1.);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }` });
+    const lake = new THREE.Mesh(new THREE.PlaneGeometry(900, 400).rotateX(-Math.PI / 2), lakeMat); lake.position.set(0, -6, -170); lake.userData.uniforms = lu; scene.add(lake);
     // Savoy Alps across the lake (heightfield, snow by height)
     const mg2 = new THREE.PlaneGeometry(760, 140, 220, 40); mg2.rotateX(-Math.PI / 2); const mp = mg2.attributes.position; const colors = [];
-    const P = x => 22 + 13 * Math.sin(x * .012 + 1.3) + 12 * Math.pow(Math.max(0, Math.sin(x * .029 + 2.1)), 2) + 7 * U.fbm1(x * .05, 3) + 9 * Math.pow(Math.max(0, Math.sin(x * .07 + .5)), 6);
+    const sx = moonDir.x / -moonDir.z * 200; const P = x => 26 + 7 * Math.sin(x * .017 + .3) + 6 * U.fbm1(x * .05, 3) - 13 * Math.exp(-Math.pow((x - sx) / 24, 2)) + 7 * Math.pow(Math.max(0, Math.sin(x * .045 + 1.2)), 4);
     for (let i = 0; i < mp.count; i++) {
       const x = mp.getX(i), z = mp.getZ(i) - 240; const d = -z - 175;
       let h = d < 0 ? -12 : P(x) * (1 - Math.exp(-d / 16)) * (1 - U.smoothstep(70, 140, d) * .35) + 2.5 * U.fbm1(x * .21 + z * .13, 7) * U.smoothstep(0, 20, d);
       mp.setY(i, h - 6); const hn = (h - 6) / 50;
-      const snow = U.smoothstep(.32, .55, hn + U.fbm1(x * .15, 11) * .08), forest = 1 - U.smoothstep(.05, .22, hn);
+      const snow = U.smoothstep(.3, .52, hn + U.fbm1(x * .15, 11) * .08), forest = 1 - U.smoothstep(.04, .2, hn);
       const c = new THREE.Color('#2a3150').lerp(new THREE.Color('#17203a'), forest).lerp(new THREE.Color('#b8c6e6'), snow); colors.push(c.r, c.g, c.b);
     }
     mg2.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); mg2.computeVertexNormals();
@@ -83,13 +104,13 @@ export default {
 
     // ---------------- desk + Gibbon's things ----------------
     const desk = M.desk({ w: 1.45, d: .8, leather: false, material: G.GMAT.mahogany({ a: '#7a3a1e', b: '#3c170a', rings: 10 }) }); desk.position.set(0, 0, wz + .41); scene.add(desk);
-    const csL = G.candlestick({ seed: 3, candleH: .15 }); csL.position.set(-.4, deskTop, -.27); scene.add(csL);
-    const csR = G.candlestick({ seed: 8, candleH: .12 }); csR.position.set(.43, deskTop, -.3); scene.add(csR);
-    R.fL = new THREE.Vector3(-.4, deskTop + csL.userData.flameY, -.27); R.fR = new THREE.Vector3(.43, deskTop + csR.userData.flameY, -.3);
+    const csL = G.candlestick({ seed: 3, candleH: .15 }); csL.position.set(-.33, deskTop, .12); scene.add(csL);
+    const csR = G.candlestick({ seed: 8, candleH: .12 }); csR.position.set(.47, deskTop, .1); scene.add(csR);
+    R.fL = new THREE.Vector3(-.33, deskTop + csL.userData.flameY, .12); R.fR = new THREE.Vector3(.47, deskTop + csR.userData.flameY, .1);
     // finished manuscript with the quill laid down on it
-    const ms = G.paperStack({ w: .22, d: .3, h: .055, sheets: 3, seed: 21, curl: .008, topTex: G.manuscriptTex({ seed: 22, lines: 28, stopAt: .45 }) }); ms.position.set(-.26, deskTop + .002, -.02); ms.rotation.y = .12; scene.add(ms);
-    const q = G.quill({ length: .3, bend: .025 }); q.rotation.set(-Math.PI / 2 + .04, 0, -2.2); q.position.set(-.2, deskTop + .002 + ms.userData.topY + .004, .05); scene.add(q);
-    const ink = M.inkwell({ quill: false }); ink.position.set(-.15, deskTop, -.27); scene.add(ink);
+    const ms = G.paperStack({ w: .22, d: .3, h: .055, sheets: 3, seed: 21, curl: .008, topTex: G.manuscriptTex({ seed: 22, lines: 28, stopAt: .45 }) }); ms.position.set(-.04, deskTop + .002, .2); ms.rotation.y = .18; scene.add(ms);
+    const q = G.quill({ length: .3, bend: .025 }); q.rotation.set(-Math.PI / 2 + .04, 0, -2.2); q.position.set(.02, deskTop + .002 + ms.userData.topY + .004, .27); scene.add(q);
+    const ink = M.inkwell({ quill: false }); ink.position.set(-.36, deskTop, -.2); scene.add(ink);
     // six quarto volumes: calf, raised bands, red & black morocco labels
     const gilt = '#efc96a';
     const spine = (n) => (x, W, H) => {
@@ -106,29 +127,29 @@ export default {
       for (const cy of [.675, .835]) { x.save(); x.translate(W / 2, H * cy); for (let k = 0; k < 8; k++) { x.rotate(Math.PI / 4); x.beginPath(); x.ellipse(0, -11, 4, 9, 0, 0, 7); x.fill(); } x.beginPath(); x.arc(0, 0, 5, 0, 7); x.fill(); x.restore(); }
     };
     const vols = new THREE.Group(); vols.position.set(.12, deskTop, -.2); vols.rotation.y = -.04; scene.add(vols); R.vols = vols;
-    const vr2 = U.rng(5); const vd = .062, vw = .22, vh = .28; const bandMat = M.MAT.leather({ a: '#5a3218', b: '#2e170a', seed: 9 });
+    const vr2 = U.rng(5); const vd = .078, vw = .25, vh = .34; const bandMat = M.MAT.leather({ a: '#5a3218', b: '#2e170a', seed: 9 });
     for (let i = 0; i < 6; i++) {
-      const b = G.tome({ w: vw, h: vh, d: vd, a: '#7b4a26', b: '#3f220e', seed: 70 + i, spineDraw: spine(i), spineBg: '#6e4022', raised: [.07 - .5, .45 - .5, .6 - .5, .75 - .5, .92 - .5], bandMat, spineFlat: .4 });
+      const b = G.tome({ w: vw, h: vh, d: vd, a: '#5c3418', b: '#2e170a', seed: 70 + i, spineDraw: spine(i), spineBg: '#4e2c14', raised: [.07, .45, .6, .75, .92].map(b => .5 - b), bandMat, spineFlat: .4 });
       b.rotation.y = Math.PI / 2; b.rotation.z = (vr2() - .5) * .015; b.position.set((i - 2.5) * (vd + .003), vh / 2, (vr2() - .5) * .01); vols.add(b);
     }
     vols.updateMatrixWorld(true); R.volAnchor = vols.localToWorld(new THREE.Vector3((2 - 2.5) * (vd + .003), vh + .002, vw / 2 - .01));
 
     // ---------------- lights ----------------
     const hemi = new THREE.HemisphereLight('#2a3760', '#1a120c', .3); scene.add(hemi);
-    const moonL = new THREE.DirectionalLight('#8fa8ff', .7); moonL.position.copy(moonDir).multiplyScalar(-1).multiplyScalar(-6).add(new THREE.Vector3(0, 2, 0)); moonL.target.position.set(0, deskTop, 0); scene.add(moonL, moonL.target);
-    const spot = new THREE.SpotLight('#ffb466', 1.1, 5, 1.2, 1, 2); spot.position.copy(R.fL).add(new THREE.Vector3(.0, .02, .03)); spot.target.position.set(.15, deskTop, -.1);
+    const moonL = new THREE.DirectionalLight('#8fa8ff', .38); moonL.position.copy(moonDir).multiplyScalar(-1).multiplyScalar(-6).add(new THREE.Vector3(0, 2, 0)); moonL.target.position.set(0, deskTop, 0); scene.add(moonL, moonL.target);
+    const spot = new THREE.SpotLight('#ffbe78', .85, 5, .9, 1, 2); spot.position.copy(R.fL).add(new THREE.Vector3(.0, .02, .03)); spot.target.position.set(.12, deskTop + .15, -.1);
     spot.castShadow = true; spot.shadow.mapSize.set(1024, 1024); spot.shadow.bias = -.0006; spot.shadow.normalBias = .01; spot.shadow.camera.near = .04; scene.add(spot, spot.target); R.spot = spot;
     const pL = ENV.pointLight({ color: '#ffa04a', intensity: .35, distance: 3, pos: R.fL.toArray() }); scene.add(pL);
     const pR = ENV.pointLight({ color: '#ffa04a', intensity: .45, distance: 3, pos: R.fR.toArray() }); scene.add(pR); R.pts = [pL, pR];
     for (const f of [R.fL, R.fR]) { const g = FX.glow({ size: .24, opacity: .32, color: '#ffb060' }); g.position.copy(f); scene.add(g); }
-    const motes = FX.particles({ count: 50, center: [0, 1.15, -.15], box: [1.0, .6, .6], size: 3, color: '#ffd9a0', opacity: .25, drift: [.004, .01, 0], swirl: .03 }); scene.add(motes);
+    
 
     // ---------------- camera: night view -> down to the desk -> the six volumes ----------------
     camera.fov = 40; camera.near = .03; camera.far = 900; camera.updateProjectionMatrix();
     R.cam = G.camPath(camera, {
-      pos: [[-.04, 1.5, .78], [-.04, 1.44, .82], [.08, 1.32, .86], [.17, 1.26, .8], [.2, 1.24, .76]],
-      look: [[.08, 1.62, -3], [.06, 1.3, -1.2], [.1, 1.02, -.35], [.12, .96, -.17], [.13, .95, -.16]],
-      keys: [[-.6, 0], [.5, .24], [1.5, .58], [2.4, .86], [3.9, 1]], shake: { amp: .0022, freq: .4 },
+      pos: [[.1, 1.45, .25], [.11, 1.42, .55], [.13, 1.37, .98], [.14, 1.33, 1.24], [.14, 1.315, 1.2]],
+      look: [[.12, 1.56, -3], [.12, 1.45, -2], [.13, 1.2, -.9], [.13, 1.07, -.45], [.13, 1.06, -.4]],
+      keys: [[-.6, 0], [.4, .22], [1.4, .58], [2.3, .87], [3.9, 1]], shake: { amp: .0022, freq: .4 },
     });
   },
 
@@ -136,9 +157,9 @@ export default {
     const { ui, U, post, camera } = ctx;
     const c = R.cam.update(t); camera.updateMatrixWorld();
     const dl = c.P.distanceTo(c.L);
-    post.dof.focus = U.lerp(9, dl * .95, U.prog(t, .1, 1.5)); post.dof.range = U.lerp(14, .45, U.prog(t, .1, 1.8)); post.dof.amount = U.lerp(.5, 1, U.prog(t, .3, 1.8));
+    post.dof.focus = U.lerp(40, c.P.distanceTo(new THREE.Vector3(.12, 1.0, -.08)), U.prog(t, .2, 1.8)); post.dof.range = U.lerp(200, .6, U.prog(t, .2, 1.9, 'inCubic')); post.dof.amount = U.lerp(.3, .9, U.prog(t, .3, 1.8));
     const f = (s) => 1 + (Math.sin(t * 12.3 + s) * .5 + Math.sin(t * 7.7 + s * 2) * .3 + Math.sin(t * 19.1 + s * .5) * .2) * .13;
-    R.pts[0].intensity = .35 * f(1); R.pts[1].intensity = .45 * f(4); R.spot.intensity = 1.1 * f(1);
+    R.pts[0].intensity = .35 * f(1); R.pts[1].intensity = .45 * f(4); R.spot.intensity = .85 * f(1);
 
     // ---------------- typography (same card design as s16) ----------------
     const tI = ctx.wordTime('ingiliz'), tE = ctx.wordTime('edward'), tG = ctx.wordTime('gibbon');

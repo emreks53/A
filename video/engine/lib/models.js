@@ -198,7 +198,8 @@ export function palm(o = {}) {
     geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3)); geo.setIndex(idx); geo.computeVertexNormals();
     const leaf = new THREE.Mesh(geo, leafMat); leaf.position.copy(top); g.add(leaf);
   }
-  const dates = new THREE.Mesh(new THREE.SphereGeometry(H * .05, 12, 8), new THREE.MeshStandardMaterial({ color: '#a3561c', roughness: .6 })); dates.position.copy(top).add(new THREE.Vector3(.1, -.25, .05)); dates.scale.set(1, 1.4, 1); g.add(dates);
+  const dm = new THREE.MeshStandardMaterial({ color: '#8a4a1c', roughness: .55 }); const dg = new THREE.SphereGeometry(H * .009, 8, 6); dg.scale(1, 1.5, 1);
+  for (let k = 0; k < 3; k++) { const a = k * 2.1 + .4; for (let j = 0; j < 14; j++) { const d = new THREE.Mesh(dg, dm); d.position.copy(top).add(new THREE.Vector3(Math.cos(a) * H * (.03 + R() * .025), -H * (.03 + j * .006 + R() * .01), Math.sin(a) * H * (.03 + R() * .025))); g.add(d); } }
   return shadowAll(g);
 }
 

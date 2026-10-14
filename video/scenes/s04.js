@@ -131,7 +131,7 @@ export default {
         }
       }
       geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-      const st = TEX.stone({ a: '#ffffff', b: '#b3a89c', seed: 9, repeat: [44, 52] });
+      const st = TEX.stone({ a: '#ffffff', b: '#d6cec4', seed: 9, repeat: [44, 52] });
       const mat = new THREE.MeshStandardMaterial({ vertexColors: true, map: st.map, normalMap: st.normalMap, normalScale: new THREE.Vector2(1.1, 1.1), roughness: .96 });
       const terrain = new THREE.Mesh(geo, mat); terrain.receiveShadow = true; terrain.castShadow = true; scene.add(terrain);
     }
@@ -144,7 +144,7 @@ export default {
         const sl = Math.abs(H(x + 3, z) - H(x - 3, z)) + Math.abs(H(x, z + 3) - H(x, z - 3)); if (sl > 9) continue;
         const sz = 2.2 + Math.pow(br(), 2.0) * 5; rocks.push([x, h - sz * .4, z, sz, br(), br(), br()]);
       }
-      const rg = new THREE.IcosahedronGeometry(1, 1); { const p = rg.attributes.position; const jr = U.rng(5); const seen = new Map(); for (let i = 0; i < p.count; i++) { const key = p.getX(i).toFixed(3) + p.getY(i).toFixed(3) + p.getZ(i).toFixed(3); if (!seen.has(key)) seen.set(key, .78 + jr() * .4); const f = seen.get(key); p.setXYZ(i, p.getX(i) * f, p.getY(i) * f * .72, p.getZ(i) * f); } rg.computeVertexNormals(); }
+      const rg = new THREE.IcosahedronGeometry(1, 0); { const p = rg.attributes.position; const jr = U.rng(5); const seen = new Map(); for (let i = 0; i < p.count; i++) { const key = p.getX(i).toFixed(3) + p.getY(i).toFixed(3) + p.getZ(i).toFixed(3); if (!seen.has(key)) seen.set(key, .78 + jr() * .4); const f = seen.get(key); p.setXYZ(i, p.getX(i) * f, p.getY(i) * f * .72, p.getZ(i) * f); } rg.computeVertexNormals(); }
       const rt = TEX.stone({ a: '#ffffff', b: '#a49a90', seed: 19, repeat: [1, 1] });
       const rm = new THREE.MeshStandardMaterial({ map: rt.map, normalMap: rt.normalMap, roughness: .9, flatShading: true });
       const ri = new THREE.InstancedMesh(rg, rm, rocks.length); const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), c = new THREE.Color();
@@ -165,7 +165,7 @@ export default {
     const edgeOk = (a, b) => a.h < 17 && b.h < 17 && H((a.x + b.x) / 2, (a.z + b.z) / 2) < 17;
     for (let i = I0; i <= I1; i++) for (let j = J0; j <= J1; j++) {
       const a = nodeAt(i, j);
-      for (const [di, dj] of [[1, 0], [0, 1]]) { if (i + di > I1 || j + dj > J1) continue; const b = nodeAt(i + di, j + dj); if (!edgeOk(a, b)) continue; const w = Math.hypot(a.x - b.x, a.z - b.z) * (1 + Math.abs(a.h - b.h) * .05); a.adj.push([nid(i + di, j + dj), w]); b.adj.push([nid(i, j), w]); }
+      for (const [di, dj] of [[1, 0], [0, 1]]) { if (i + di > I1 || j + dj > J1) continue; const b = nodeAt(i + di, j + dj); if (!edgeOk(a, b)) continue; const w = Math.hypot(a.x - b.x, a.z - b.z) * (1 + Math.abs(a.h - b.h) * .05) * (Math.hypot((a.x + b.x) / 2, (a.z + b.z) / 2) < 48 ? 4 : 1); a.adj.push([nid(i + di, j + dj), w]); b.adj.push([nid(i, j), w]); }
     }
     const bil = (q, u, v) => ({ x: (1 - u) * (1 - v) * q[0].x + u * (1 - v) * q[1].x + u * v * q[2].x + (1 - u) * v * q[3].x, z: (1 - u) * (1 - v) * q[0].z + u * (1 - v) * q[1].z + u * v * q[2].z + (1 - u) * v * q[3].z });
     const houses = [];
@@ -246,7 +246,7 @@ export default {
         for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); const u = (x / (w + .2)) + .5, v = (y / (KH - .75)) + .5; const low = 1 - v; let z = .07 + Math.sin(u * w * 2.3 + si) * .035 * (.4 + low) + fold(u, v * .3 + si * .25) * .03; if (v < .02) { p.setY(i, y + fold(u * 2, .5 + si * .2) * .12); z += .03; } p.setZ(i, z); }
         g.computeVertexNormals(); g.translate(0, (KH - .75) / 2 + .75, off); g.rotateY(ry); parts.push(g);
       });
-      const clothMat = new THREE.MeshPhysicalMaterial({ color: '#1b1a20', roughness: .78, sheen: .8, sheenColor: new THREE.Color('#6d6a7c'), sheenRoughness: .45, side: THREE.DoubleSide });
+      const clothMat = new THREE.MeshPhysicalMaterial({ color: '#141315', roughness: .8, sheen: .6, sheenColor: new THREE.Color('#57524f'), sheenRoughness: .5, side: THREE.DoubleSide, envMapIntensity: .4 });
       const cloth = new THREE.Mesh(mergeGeometries(parts), clothMat); K.add(cloth);
       // the raised wooden door on the east face
       const door = new THREE.Mesh(M.rbox(1.7, 2.8, .2, .06, 1), M.MAT.darkWood({ rings: 26 })); door.position.set(KW / 2 - 3.0, 2.2 + 1.4, KD / 2 + .12); K.add(door);
@@ -292,7 +292,7 @@ export default {
       const palm = M.palm({ height: 9, seed: 5, lean: .5, fronds: 14 }); palm.position.set(w / 2 + 2.4, 0, dp / 2 - 1.2); G.add(palm);
       M.shadowAll(G); floor.castShadow = false;
       // interior oil-lamp light: point light inside + a soft spot spilling out of the doorway onto the alley
-      const lamp = new THREE.PointLight('#ffa14a', 26, 7.5, 2); lamp.position.set(dx - .3, 1.9, dp / 2 - 2.2); G.add(lamp); R.destLamp = lamp;
+      const lamp = new THREE.PointLight('#ffa14a', 26, 2.9, 2); lamp.position.set(dx - .2, 1.5, dp / 2 - 1.5); G.add(lamp); R.destLamp = lamp;
       const spill = new THREE.SpotLight('#ffab55', 0, 22, .62, .85, 1.6); spill.position.set(dx, 2.0, dp / 2 - 2.4); spill.target.position.set(dx, 0, dp / 2 + 7); G.add(spill, spill.target); R.spill = spill;
       const doorLocal = new THREE.Vector3(dx, 0, dp / 2 + .9); G.updateMatrixWorld(); R.doorW = doorLocal.clone().applyMatrix4(G.matrixWorld);
       R.doorDir = new THREE.Vector3(0, 0, 1).applyQuaternion(G.quaternion).setY(0).normalize();
@@ -355,7 +355,7 @@ export default {
         fragmentShader: `varying float vB; void main(){ vec2 p = gl_PointCoord*2.-1.; float r2 = dot(p,p); if (r2 > 1.) discard; float a = exp(-r2*${k.toFixed(1)}) * (1. - r2); gl_FragColor = vec4(vec3(${col}) * ${gain.toFixed(2)}, a * vB); }` });
       const pts = new THREE.Points(lg, m); pts.frustumCulled = false; pts.userData.noDepth = true; pts.renderOrder = 30; scene.add(pts); return u;
     };
-    R.ptsU = [mkPts(2.5, 13, 4.5, .8, '1.,.55,.2'), mkPts(.38, 4.5, 3.0, 3.0, '1.,.86,.62')];
+    R.ptsU = [mkPts(2.5, 24, 4.5, .9, '1.,.55,.2'), mkPts(.38, 7, 3.0, 3.0, '1.,.86,.62')];
     const poolTex = TEX.gradientTex([[0, 'rgba(255,255,255,1)'], [0.3, 'rgba(255,255,255,0.45)'], [0.65, 'rgba(255,255,255,0.1)'], [1, 'rgba(255,255,255,0)']], { w: 128, h: 128, radial: true });
     const pool = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: poolTex, color: '#ff9440', transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), NL);
     pool.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(NL * 3), 3); pool.frustumCulled = false; pool.userData.noDepth = true; pool.renderOrder = 3; scene.add(pool); R.pool = pool;
@@ -374,9 +374,9 @@ export default {
     const G = new THREE.Vector3(dest.x, 0, dest.z).lerp(doorW, .78);
     const doorAz = Math.atan2(dd.x, dd.z) / DEG;
     R.camK = {
-      ld: mono([[-0.6, Math.log(600)], [1.6, Math.log(560)], [3.2, Math.log(500)], [4.5, Math.log(330)], [5.1, Math.log(140)], [5.65, Math.log(48)], [6.2, Math.log(33)]]),
+      ld: mono([[-0.6, Math.log(670)], [1.6, Math.log(580)], [3.2, Math.log(500)], [4.5, Math.log(330)], [5.1, Math.log(140)], [5.65, Math.log(48)], [6.2, Math.log(33)]]),
       pitch: mono([[-0.6, 63], [3.2, 64], [4.5, 62], [5.1, 54], [5.65, 33], [6.2, 26]]),
-      az: mono([[-0.6, -22], [3.2, -4], [4.6, doorAz * .5 + 4], [5.65, doorAz + 20], [6.2, doorAz + 26]]),
+      az: mono([[-0.6, -31], [3.2, -4], [4.6, doorAz * .5 + 4], [5.65, doorAz + 20], [6.2, doorAz + 26]]),
       tx: mono([[-0.6, -6], [3.2, -14], [4.5, (G.x - 14) * .6 + G.x * .4], [5.3, G.x], [6.2, G.x]]),
       tz: mono([[-0.6, 26], [3.2, 36], [4.5, G.z - 4], [5.3, G.z], [6.2, G.z]]),
       ty: mono([[-0.6, 0], [4.5, 0], [5.5, dest.y + 4.6], [6.2, dest.y + 4.2]]),
@@ -484,15 +484,22 @@ export default {
         X.restore();
       }
     }
-    // Kâbe callout (orientation)
+    // Kâbe label: a thin ring around it (nothing drawn on the Kaaba itself) + leader line + pill
     {
-      const kTop = new THREE.Vector3(0, R.kaaba.position.y + 11, 0); const [kx, ky, kz] = ui.project(kTop);
-      if (kz < 1) ui.callout('Kâbe', { t, t0: .55, t1: 2.5, anchor: [kx, ky], to: [kx + 190, ky - 150], size: 40, weight: 800, bg: 'rgba(14,20,40,.78)', color: '#fff4dc', dotColor: '#fff4dc', lineColor: 'rgba(255,244,220,.9)' });
+      const K = R.kaaba; const c = new THREE.Vector3(0, K.position.y + 5, 0); const [kx, ky, kz] = ui.project(c); const [ex, ey] = ui.project(new THREE.Vector3(11, K.position.y + 5, 0));
+      const e = ui.env(t, .55, 2.5, .45, 'fade');
+      if (kz < 1 && e.o > 0) {
+        const rr = Math.max(26, Math.hypot(ex - kx, ey - ky)) * (.85 + .15 * U.ease.outBack(e.a)); const p = U.ease.outCubic(U.clamp((t - .55) / .45));
+        X.save(); X.globalAlpha = e.o; X.strokeStyle = 'rgba(255,244,220,.9)'; X.lineWidth = 3.5; X.shadowColor = 'rgba(0,0,0,.4)'; X.shadowBlur = 8;
+        X.beginPath(); X.arc(kx, ky, rr, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p); X.stroke();
+        const sx = kx + rr * .707, sy = ky - rr * .707, tx = kx + 170, ty = ky - 160; X.beginPath(); X.moveTo(sx, sy); X.lineTo(sx + (tx - sx) * p, sy + (ty - sy) * p); X.stroke(); X.restore();
+        if (p > .6) ui.pill('Kâbe', { t, t0: .8, t1: 2.5, x: tx + 20, y: ty - 10, size: 40, weight: 800, bg: 'rgba(14,20,40,.78)', color: '#fff4dc' });
+      }
     }
     // "müşrikler" label on a red-dot house near the middle of the frame
-    if (R.mlabel && t > 2.4) { const [hx, hy] = ui.project(R.mlabel.top); ui.callout('müşrikler', { t, t0: 2.62, t1: 4.25, anchor: [hx, hy], to: [U.clamp(hx - 120, 250, 800), hy - 175], size: 44, weight: 900, bg: '#e2463c', color: '#fff4ec', dotColor: '#ff4d43', lineColor: 'rgba(255,240,228,.95)' }); }
+    if (R.mlabel && t > 2.3) { const [hx, hy] = ui.project(R.mlabel.top); ui.callout('müşrikler', { t, t0: 2.42, t1: 4.25, anchor: [hx, hy], to: [U.clamp(hx - 120, 250, 800), Math.max(255, hy - 175)], size: 44, weight: 900, bg: '#e2463c', color: '#fff4ec', dotColor: '#ff4d43', lineColor: 'rgba(255,240,228,.95)' }); }
     // "emanetler" label riding on a lantern
-    if (t > 3.2) { const lp = R.lead.pos; const [lx, ly, lz] = ui.project(lp); if (lz < 1) ui.callout('emanetler', { t, t0: 3.32, t1: 4.45, anchor: [lx, ly], to: [U.clamp(lx + 190, 260, 820), U.clamp(ly - 190, 520, 1250)], size: 44, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ffd88f', lineColor: 'rgba(255,226,160,.95)' }); }
+    if (t > 2.95) { const lp = R.lead.pos; const [lx, ly, lz] = ui.project(lp); if (lz < 1) ui.callout('emanetler', { t, t0: 3.02, t1: 4.45, anchor: [lx, ly], to: [U.clamp(lx + 190, 260, 820), U.clamp(ly - 190, 520, 1250)], size: 44, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ffd88f', lineColor: 'rgba(255,226,160,.95)' }); }
     // "o kadar kişi arasından" — many houses vs one door
     ui.text('o kadar kişi', { t, t0: 4.28, t1: 5.62, x: 540, y: 330, size: 82, weight: 900, color: '#fff4dc', anim: 'rise' });
     ui.text('arasından…', { t, t0: 4.62, t1: 5.62, x: 540, y: 420, size: 62, weight: 800, color: '#ffd27a', anim: 'rise' });

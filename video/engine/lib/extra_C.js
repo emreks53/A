@@ -324,7 +324,7 @@ export function butte({ hx = 3.2, hy = 3, hz = 5, round = .5, taper = .25, shear
 
 // Fractured granite tor (Uhud is red granite): superellipsoid mass broken by 3-D cellular jointing into tilted planar
 // blocks with dark cracks between them. Base at y=0 (bury below ground). Long axis along Z.
-export function tor({ a = 4, b = 3.2, c = 5.5, n = 2.6, cell = 1.7, seed = 4, detail = 80, bury = .9, step = .28, tilt = .32, crack = .22, lump = .45, yOff = 0 } = {}) {
+export function tor({ a = 4, b = 3.2, c = 5.5, n = 2.6, cell = 1.7, cellY = null, seed = 4, detail = 80, bury = .9, step = .28, tilt = .32, crack = .22, crackW = .22, lump = .45, yOff = 0 } = {}) {
   let geo = new THREE.IcosahedronGeometry(1, detail); geo.deleteAttribute('uv'); geo.deleteAttribute('normal'); geo = mergeVertices(geo);
   const p = geo.attributes.position; const d = new THREE.Vector3(), P = new THREE.Vector3(), N = new THREE.Vector3(), G = new THREE.Vector3();
   const cols = new Float32Array(p.count * 3), uvs = new Float32Array(p.count * 2);
@@ -337,16 +337,16 @@ export function tor({ a = 4, b = 3.2, c = 5.5, n = 2.6, cell = 1.7, seed = 4, de
     P.copy(d).multiplyScalar(r0);
     G.set(Math.sign(P.x) * Math.pow(Math.abs(P.x / a), n - 1) / a, Math.sign(P.y) * Math.pow(Math.abs(P.y / b), n - 1) / b, Math.sign(P.z) * Math.pow(Math.abs(P.z / c), n - 1) / c); N.copy(G).normalize();
     // cellular jointing
-    const gx = Math.floor(P.x / cell), gy = Math.floor(P.y / cell), gz = Math.floor(P.z / cell);
+    const cy = cellY ?? cell; const gx = Math.floor(P.x / cell), gy = Math.floor(P.y / cy), gz = Math.floor(P.z / cell);
     let f1 = 1e9, f2 = 1e9, id = null, fp = null;
     for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) {
-      const ci = gx + i, cj = gy + j, ck = gz + k; const fx = (ci + H(ci, cj, ck, 1)) * cell, fy = (cj + H(ci, cj, ck, 2)) * cell, fz = (ck + H(ci, cj, ck, 3)) * cell;
-      const dist = Math.hypot(P.x - fx, P.y - fy, P.z - fz);
+      const ci = gx + i, cj = gy + j, ck = gz + k; const fx = (ci + H(ci, cj, ck, 1)) * cell, fy = (cj + .3 + H(ci, cj, ck, 2) * .4) * cy, fz = (ck + H(ci, cj, ck, 3)) * cell;
+      const dist = Math.hypot((P.x - fx) / cell, (P.y - fy) / cy, (P.z - fz) / cell) * cell;
       if (dist < f1) { f2 = f1; f1 = dist; id = [ci, cj, ck]; fp = [fx, fy, fz]; } else if (dist < f2) f2 = dist;
     }
     const [ci, cj, ck] = id;
     const gxv = (H(ci, cj, ck, 4) - .5) * 2 * tilt, gyv = (H(ci, cj, ck, 5) - .5) * 2 * tilt * .6, gzv = (H(ci, cj, ck, 6) - .5) * 2 * tilt, oc = (H(ci, cj, ck, 7) - .5) * 2 * step;
-    const edge = f2 - f1; const cr = 1 - smoothstep(0, .22, edge);
+    const edge = f2 - f1; const cr = 1 - smoothstep(0, crackW, edge);
     let dd = oc + (P.x - fp[0]) * gxv + (P.y - fp[1]) * gyv + (P.z - fp[2]) * gzv - crack * cr + lump * fbm3(P.x * .14, P.y * .14, P.z * .14, seed, 3) + .05 * fbm3(P.x * 1.4, P.y * 1.4, P.z * 1.4, seed + 3, 2);
     P.addScaledVector(N, dd);
     p.setXYZ(v, P.x, P.y + b + yOff - bury, P.z);
@@ -367,6 +367,64 @@ export function tor({ a = 4, b = 3.2, c = 5.5, n = 2.6, cell = 1.7, seed = 4, de
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, map: st.map, normalMap: st.normalMap, normalScale: new THREE.Vector2(1.2, 1.2), roughness: .88 });
   const mesh = new THREE.Mesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true;
   mesh.userData.height = 2 * b - bury + yOff; return mesh;
+}
+
+// Faceted boulder/tor: smooth-min hull of many jittered tangent planes over a superellipsoid -> flat chiselled facets
+// with softly rounded edges (stylised but unmistakably stone), a few through-going joints, gentle large-scale unevenness.
+export function facetRock({ a = 4, b = 3, c = 5.5, n = 2.4, planes = 220, jitter = .32, off = [-.12, .2], k = .1, joints = 4, jointW = .1, jointD = .22, lump = .35, seed = 4, detail = 84, bury = .9, grain = 1.5, nScale = .45, palette } = {}) {
+  let geo = new THREE.IcosahedronGeometry(1, detail); geo.deleteAttribute('uv'); geo.deleteAttribute('normal'); geo = mergeVertices(geo);
+  const r = rng(seed); const r0 = d => 1 / Math.pow(Math.pow(Math.abs(d.x / a), n) + Math.pow(Math.abs(d.y / b), n) + Math.pow(Math.abs(d.z / c), n), 1 / n);
+  const gN = P => new THREE.Vector3(Math.sign(P.x) * Math.pow(Math.abs(P.x / a), n - 1) / a, Math.sign(P.y) * Math.pow(Math.abs(P.y / b), n - 1) / b, Math.sign(P.z) * Math.pow(Math.abs(P.z / c), n - 1) / c).normalize();
+  const PL = [];
+  for (let i = 0; i < planes; i++) {
+    const y = 1 - (i + .5) / planes * 2, rad = Math.sqrt(1 - y * y), th = i * 2.399963 + r() * .5;
+    const u = new THREE.Vector3(Math.cos(th) * rad, y, Math.sin(th) * rad).normalize();
+    const B = u.clone().multiplyScalar(r0(u)); const N = gN(B);
+    const nn = N.clone().add(new THREE.Vector3(r() - .5, (r() - .5) * .6, r() - .5).multiplyScalar(jitter * 2)).normalize();
+    const Q = B.addScaledVector(N, lerp(off[0], off[1], r()));
+    PL.push([nn.x, nn.y, nn.z, nn.dot(Q), i]);
+  }
+  const J = []; for (let i = 0; i < joints; i++) { const v = new THREE.Vector3(r() - .5, (r() - .5) * (i % 2 ? .3 : 2.5), r() - .5).normalize(); J.push([v, (r() - .5) * Math.min(a, c) * 1.1]); }
+  const pal = (palette ?? ['#b86c4c', '#c98a68', '#a65e44', '#d39e7c', '#bf7a58']).map(x => new THREE.Color(x));
+  const crk = new THREE.Color('#3e2219'), topC = new THREE.Color('#dcae88'), baseC = new THREE.Color('#7a4834'), varn = new THREE.Color('#5a3024');
+  const p = geo.attributes.position; const d = new THREE.Vector3(), P = new THREE.Vector3();
+  const cols = new Float32Array(p.count * 3), fid = new Float32Array(p.count);
+  const T = new Float32Array(planes);
+  for (let v = 0; v < p.count; v++) {
+    d.fromBufferAttribute(p, v).normalize();
+    let tmin = 1e9, t2 = 1e9, im = 0, cnt = 0;
+    for (let i = 0; i < planes; i++) { const q = PL[i]; const den = q[0] * d.x + q[1] * d.y + q[2] * d.z; if (den > .05) { const t = q[3] / den; T[i] = t; if (t < tmin) { t2 = tmin; tmin = t; im = i; } else if (t < t2) t2 = t; } else T[i] = 1e9; }
+    let sum = 0; for (let i = 0; i < planes; i++) if (T[i] < tmin + 6 * k) sum += Math.exp(-(T[i] - tmin) / k);
+    let t = tmin - k * Math.log(sum);
+    P.copy(d).multiplyScalar(t);
+    let jc = 0; for (const [jv, jo] of J) { const dist = Math.abs(P.dot(jv) - jo); jc = Math.max(jc, 1 - smoothstep(0, jointW, dist)); }
+    const lm = lump * fbm3(P.x * .15, P.y * .15, P.z * .15, seed + 1, 3);
+    t += lm - jointD * jc + .05 * fbm3(P.x * 1.1, P.y * 1.1, P.z * 1.1, seed + 3, 3);
+    P.copy(d).multiplyScalar(t);
+    p.setXYZ(v, P.x, P.y + b - bury, P.z);
+    const tone = h3(im, 1, 2, seed); const col = pal[Math.floor(tone * pal.length) % pal.length].clone();
+    col.multiplyScalar(.94 + .12 * fbm3(P.x * 2.5, P.y * 2.5, P.z * 2.5, seed + 5, 2));
+    const edgeK = 1 - smoothstep(0, .22, t2 - tmin); col.lerp(topC, edgeK * .3);                       // worn, lighter facet edges
+    col.lerp(varn, clamp((fbm3(P.x * 1.3, P.y * .1, P.z * 1.3, seed + 13, 3) - .1) * 2.6) * .45 * clamp((P.y + b) / (2 * b) + .3));
+    col.lerp(baseC, clamp(1 - (P.y + b - bury) / 1.1) * .45);
+    col.lerp(crk, jc * .8); col.multiplyScalar(clamp(.95 + lm * .5, .7, 1.1));
+    cols[v * 3] = col.r; cols[v * 3 + 1] = col.g; cols[v * 3 + 2] = col.b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  geo.computeVertexNormals();
+  // top-facing dust + box-projected uv for the fine grain normal map (computed with final normals)
+  const nr = geo.attributes.normal; const uvs = new Float32Array(p.count * 2); const sc = grain;
+  for (let v = 0; v < p.count; v++) {
+    const x = p.getX(v), y = p.getY(v), z = p.getZ(v), nx = nr.getX(v), ny = nr.getY(v), nz = nr.getZ(v);
+    const ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz);
+    if (ay > ax && ay > az) { uvs[v * 2] = x * sc; uvs[v * 2 + 1] = z * sc; } else if (ax > az) { uvs[v * 2] = z * sc; uvs[v * 2 + 1] = y * sc; } else { uvs[v * 2] = x * sc; uvs[v * 2 + 1] = y * sc; }
+    const tk = clamp((ny - .55) * 2.2) * .5; if (tk > 0) { cols[v * 3] = lerp(cols[v * 3], topC.r, tk); cols[v * 3 + 1] = lerp(cols[v * 3 + 1], topC.g, tk); cols[v * 3 + 2] = lerp(cols[v * 3 + 2], topC.b, tk); }
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  const st = TEX.stone({ a: '#ffffff', b: '#c8bcb0', seed: 53, repeat: [1, 1] });
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, map: st.map, normalMap: st.normalMap, normalScale: new THREE.Vector2(nScale, nScale), roughness: .9 });
+  const mesh = new THREE.Mesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true;
+  mesh.userData.height = 2 * b - bury; return mesh;
 }
 
 // Distant mountain ridge (Uhud-like long granite massif). Built along X, centred at origin, faces +Z.

@@ -1,0 +1,72 @@
+[
+{
+"t": 13.0,
+"dur": 6.9,
+"kind": "wind",
+"desc": "low steady dusk desert wind",
+"gain": -4
+},
+{
+"t": 13.0,
+"dur": 6.9,
+"kind": "fire",
+"desc": "two campfires crackling"
+},
+{
+"t": 13.1,
+"dur": 6.6,
+"kind": "cloth",
+"desc": "banners flapping softly",
+"gain": -8
+},
+{
+"t": 13.36,
+"dur": 0.3,
+"kind": "pop",
+"desc": "DOSTLARI label pops"
+},
+{
+"t": 14.4,
+"dur": 0.3,
+"kind": "pop",
+"desc": "DUSMANLARI label pops"
+},
+{
+"t": 15.35,
+"dur": 0.6,
+"kind": "ignite",
+"desc": "wick ignitions along lamp chains"
+},
+{
+"t": 15.95,
+"dur": 0.6,
+"kind": "ignite",
+"desc": "wick ignitions along lamp chains"
+},
+{
+"t": 15.4,
+"dur": 0.9,
+"kind": "whoosh",
+"desc": "dashed arrows drawing toward the central lamp",
+"gain": -3
+},
+{
+"t": 18.2,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "ring of small lamps catching"
+},
+{
+"t": 18.72,
+"dur": 0.6,
+"kind": "stamp",
+"desc": "SAHIT stamp slam"
+},
+{
+"t": 18.78,
+"dur": 0.9,
+"kind": "sand",
+"desc": "sand dust puff settling",
+"gain": -6
+}
+]

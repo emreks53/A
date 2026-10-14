@@ -135,13 +135,13 @@ export default {
     camera.fov = 36; camera.near = .03; camera.far = 200; camera.updateProjectionMatrix();
     // camera: slow 3/4 drift on the two spines, then (from "Batılı") a long pull-back & rise to the whole wall
     const cy = HERO_Y + .135;
-    R.camPos = path3([[-0.6, [.27, cy + .02, .92]], [3.05, [.07, cy + .005, .76]], [3.9, [-.02, cy + .12, 1.7]], [4.9, [-.35, cy + .5, 7.2]], [5.9, [-1.0, cy + .8, 14.2]], [6.9, [-1.25, cy + .9, 16.4]]]);
+    R.camPos = path3([[-0.6, [.36, cy - .02, .9]], [1.4, [.2, cy + .0, .82]], [3.05, [.02, cy + .02, .76]], [3.9, [-.02, cy + .12, 1.7]], [4.9, [-.35, cy + .5, 7.2]], [5.9, [-1.0, cy + .8, 14.2]], [6.9, [-1.25, cy + .9, 16.4]]]);
     R.camLook = path3([[-0.6, [0, cy + .03, 0]], [3.05, [0, cy + .028, 0]], [4.2, [0, cy + .35, 0]], [5.4, [.1, cy + 1.45, 0]], [6.9, [.2, cy + 1.72, 0]]]);
   },
 
   update(t, ctx) {
     const { ui, U, camera, post } = ctx;
-    const wideK = U.smoothstep(3.3, 5.8, t); post.exposure = U.lerp(0.72, 1.3, wideK); R.hemi.intensity = U.lerp(.8, 1.05, wideK);
+    const wideK = U.smoothstep(4.1, 6.0, t); post.exposure = U.lerp(0.72, 1.3, wideK); R.hemi.intensity = U.lerp(.8, 1.25, wideK);
     const P = R.camPos(t), L = R.camLook(t);
     P.add(U.shake(t, .006 + .02 * U.smoothstep(3.2, 6, t), .35, 4));
     camera.position.copy(P); camera.lookAt(L); camera.updateMatrixWorld();
