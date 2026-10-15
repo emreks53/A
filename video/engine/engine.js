@@ -118,11 +118,11 @@ async function main() {
     depthTest: false, depthWrite: false, transparent: true, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation,
     blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor,
   }));
-  const LDR_MB = P.get('ldrmb') === '1';
+  const LDR_MB = P.get('ldrmb') === '1', NOMB = P.get('nomb') === '1'; // nomb=1: no motion blur (renderer comparisons)
   function renderBlurred(t) {
     ctx.t = t; S.update(t, ctx); // let the scene set post.motionBlur for THIS frame before sampling
     const mb = post.motionBlur; const n = Math.max(1, Math.round((mb && mb.samples) || 1));
-    if (n <= 1) { renderFrame(t); return; }
+    if (n <= 1 || NOMB) { renderFrame(t); return; }
     const sh = (mb.shutter ?? 0.5) / FPS; const seed = (frameNo++ % 97) * 1.37 + t;
     const ts = []; for (let i = 0; i < n; i++) ts.push(t - sh / 2 + sh * (i + 0.5) / n);
     ts.sort((a, b) => Math.abs(b - t) - Math.abs(a - t));
