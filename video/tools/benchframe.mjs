@@ -12,10 +12,14 @@ for (let i = 0; i < a.length; i++) if (a[i].startsWith('--')) { const k = a[i].s
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.ttf': 'font/ttf', '.otf': 'font/otf', '.hdr': 'application/octet-stream', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const server = http.createServer((req, res) => { const u = decodeURIComponent(req.url.split('?')[0]); const f = path.join(ROOT, u === '/' ? 'index.html' : u); if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); res.end(); return; } res.writeHead(200, { 'Content-Type': types[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res); });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
-const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--js-flags=--max-old-space-size=4096'] });
+// --gl llvmpipe: full Chromium (headed, needs an X display e.g. xvfb-run) with ANGLE on desktop GL -> Mesa llvmpipe
+const browser = opt.gl === 'llvmpipe'
+  ? await chromium.launch({ headless: false, args: ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--disable-gpu-driver-bug-workarounds', '--js-flags=--max-old-space-size=4096'] })
+  : await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--js-flags=--max-old-space-size=4096'] });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 } });
 await page.goto(`http://127.0.0.1:${server.address().port}/index.html?scene=${opt.scene}&scale=${opt.scale ?? 1}&msaa=0&smaa=1&fps=30${opt.extra ?? ''}`);
 await page.waitForFunction('window.ENGINE && (window.ENGINE.ready || window.ENGINE.error)', null, { timeout: 300000 });
+console.log('GL', await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); }), 'err', await page.evaluate('window.ENGINE.error || ""'));
 if (opt.grab) { // timed full grabs (incl. motion blur) -> jpg files <grab>_<t>.jpg
   for (const t of String(opt.t).split(',').map(Number)) { const t0 = Date.now(); const b64 = await page.evaluate(t => window.ENGINE.grab(t, 0.95), t); fs.writeFileSync(`${opt.grab}_${t.toFixed(2)}.jpg`, Buffer.from(b64, 'base64')); console.log(JSON.stringify({ t, grabMs: Date.now() - t0, mb: await page.evaluate(() => { const p = window.ENGINE._dbg.post(); return p.motionBlur ? p.motionBlur.samples : 1; }) })); }
   await browser.close(); server.close(); process.exit(0);
