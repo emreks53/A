@@ -7,9 +7,9 @@
   (şema sürüm 3; panelde henüz içerik yok: 0 belge, 0 duyuru).
 - **Kaynak kod kaybı ve kurtarma:** bkz. README.md "15.10.2026 kurtarması". Depo artık yayın dosyalarını (site/)
   ve yeniden yazılan sunucu kodunu içerir.
-- **Henüz yayınlanmadı / gönderilmedi (15.10.2026):** aşağıdaki değişiklikler yerel depoda hazır ve yerelde
-  denendi; yayın için `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` ortam değişkenleri, GitHub'a gönderim için
-  Claude GitHub uygulamasının depoya yazma izni gerekiyor.
+- **15.10.2026 yayını:** kurtarılan site ve aşağıdaki değişiklikler yayında (dağıtım 9eb6eb72). Doğrulama: 1421 dosya
+  canlıyla birebir aynı; eski adres yönlendirmeleri, panel koruması, R2'deki büyük PDF'ler, iletişim formu denetimi
+  ve menü titremesi canlıda denendi. GitHub'a gönderim hâlâ 403 (Claude GitHub uygulamasının yazma izni gerekiyor).
 
 ## 15.10.2026 kullanıcı istekleri (araclar/degisiklikler/2026-10-15-ana-sayfa-portfoy-baslik.py)
 
