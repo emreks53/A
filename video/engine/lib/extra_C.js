@@ -876,10 +876,9 @@ function zulfikarBladeTex() {
   // watered-steel base: soft wavy bands along the blade
   const im = x.createImageData(W, H), ir = xr.createImageData(W, H); const n = TEX.fbmField(17, 4, 4);
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
-    const u = i / W, v = j / H; const w = Math.sin((v * 22 + n(u * .5, v * 2) * 2.4 + Math.abs(u - .5) * 2) * Math.PI);
-    const c = .91 + .028 * w + .02 * n(u * 3 % 1, v * 9 % 1); const k = (j * W + i) * 4;
-    im.data[k] = 236 * c; im.data[k + 1] = 240 * c; im.data[k + 2] = 245 * c; im.data[k + 3] = 255;
-    const rv = 62 + 10 * (w * .5 + .5); ir.data[k] = ir.data[k + 1] = ir.data[k + 2] = rv; ir.data[k + 3] = 255;
+    const u = i / W, v = j / H; const c = .955 + .008 * n(u * 3 % 1, v * 9 % 1); const k = (j * W + i) * 4;   // clean polished steel: no watered streaks
+    im.data[k] = 238 * c; im.data[k + 1] = 242 * c; im.data[k + 2] = 246 * c; im.data[k + 3] = 255;
+    const rv = 105; ir.data[k] = ir.data[k + 1] = ir.data[k + 2] = rv; ir.data[k + 3] = 255;
   }
   x.putImageData(im, 0, 0); xr.putImageData(ir, 0, 0);
   // gold koftgari band on the forte (canvas top = guard). Flat zone only (u in .19 .. .81)
@@ -907,7 +906,7 @@ export function zulfikar2(o = {}) {
   // half-thickness profile across the blade (u: 0 centre .. 1 edge), bevel = cutting-edge zone, fd = fuller depth (0..1)
   const prof = (u, t, fd, bev) => {
     const ub = 1 - bev; let z = u <= ub ? t : e0 + (t - e0) * Math.pow(Math.max(0, 1 - (u - ub) / bev), 1.1);
-    if (fd > 0) { const d = Math.abs(u - .4) / .12; if (d < 1) z -= fd * t * .45 * (.5 + .5 * Math.cos(Math.PI * d)); }
+    if (fd > 0) { const d = Math.abs(u - .4) / .09; if (d < 1) z -= fd * t * .2 * (.5 + .5 * Math.cos(Math.PI * d)); }
     return z;
   };
   const US = [0, .07, .14, .2, .26, .28, .31, .34, .37, .4, .43, .46, .49, .52, .54, .6, .66, .7, .74, .79, .85, .9, .95, 1];
@@ -952,12 +951,12 @@ export function zulfikar2(o = {}) {
   { const p = bladeGeo.attributes.position, nr = bladeGeo.attributes.normal; let bad = 0, tot = 0; for (let i = 0; i < 600 && i < p.count; i += 3) { const z = (p.getZ(i) + p.getZ(i + 1) + p.getZ(i + 2)) / 3; if (Math.abs(z) < .002) continue; tot++; if (Math.sign(nr.getZ(i)) !== Math.sign(z)) bad++; } if (bad > tot / 2) { const ix = bladeGeo.index; if (!ix) { for (let i = 0; i < p.count; i += 3) { for (const A of [p, nr, bladeGeo.attributes.uv, bladeGeo.attributes.edge]) { const it = A.itemSize; for (let c = 0; c < it; c++) { const t1 = A.array[(i + 1) * it + c]; A.array[(i + 1) * it + c] = A.array[(i + 2) * it + c]; A.array[(i + 2) * it + c] = t1; } } } for (let i = 0; i < nr.count; i++) nr.setXYZ(i, -nr.getX(i), -nr.getY(i), -nr.getZ(i)); } } }
   const tx = zulfikarBladeTex();
   const steel = new THREE.MeshPhysicalMaterial({ color: o.steelColor ?? '#f2f4f6', metalness: 1, roughness: o.steelRough ?? .3, map: tx.map, roughnessMap: tx.rmap, envMapIntensity: o.envI ?? 1.35 });
-  const gl = { y: { value: -10 }, i: { value: 0 }, c: { value: new THREE.Color('#fff2d8') }, dirSpec: { value: o.dirSpec ?? .3 } }; steel.userData.glint = gl;
+  const gl = { y: { value: -10 }, i: { value: 0 }, c: { value: new THREE.Color('#fff2d8') }, dirSpec: { value: o.dirSpec ?? .3 }, edgeI: { value: o.edgeI ?? .16 }, edgeC: { value: new THREE.Color(o.edgeC ?? '#f4f7fb') } }; steel.userData.glint = gl;
   steel.onBeforeCompile = sh => {
-    sh.uniforms.uGlY = gl.y; sh.uniforms.uGlI = gl.i; sh.uniforms.uGlC = gl.c; sh.uniforms.uDirSpec = gl.dirSpec;
+    sh.uniforms.uGlY = gl.y; sh.uniforms.uGlI = gl.i; sh.uniforms.uGlC = gl.c; sh.uniforms.uDirSpec = gl.dirSpec; sh.uniforms.uEdgeI = gl.edgeI; sh.uniforms.uEdgeC = gl.edgeC;
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float edge; varying float vEdge; varying float vLY;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvEdge = edge; vLY = position.y;');
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uGlY, uGlI, uDirSpec; uniform vec3 uGlC; varying float vEdge; varying float vLY;').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\nreflectedLight.directSpecular *= uDirSpec;')
-      .replace('#include <opaque_fragment>', 'outgoingLight += uGlC * uGlI * exp(-pow((vLY - uGlY) / .028, 2.)) * smoothstep(.62, .9, vEdge);\n#include <opaque_fragment>');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uGlY, uGlI, uDirSpec, uEdgeI; uniform vec3 uGlC, uEdgeC; varying float vEdge; varying float vLY;').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\nreflectedLight.directSpecular *= uDirSpec;')
+      .replace('#include <opaque_fragment>', 'outgoingLight += uGlC * uGlI * exp(-pow((vLY - uGlY) / .028, 2.)) * smoothstep(.62, .9, vEdge) + uEdgeC * uEdgeI * smoothstep(.74, .97, vEdge);\n#include <opaque_fragment>');
   };
   steel.customProgramCacheKey = () => 'zulfikar2';
   const blade = new THREE.Mesh(bladeGeo, steel); g.add(blade);
@@ -1110,4 +1109,21 @@ export function debris(events, { ground = () => 0, palette = ['#b06a44', '#8e503
   };
   update(-999);
   return { mesh: im, update };
+}
+
+// Clean "studio" environment for polished steel: smooth vertical gradient — warm sand below, a bright horizon band, pale cool
+// sky above — with no scene detail, so the blade reads as a mirror-like, streak-free steel gradient. stops: [[elevDeg, color] x8]
+export function steelEnv(renderer, o = {}) {
+  const st = (o.stops ?? [[-90, '#2e2925'], [-25, '#4a433d'], [-7, '#7a736c'], [-1.5, '#cfcbc6'], [1, '#f2f3f4'], [5, '#aebccd'], [22, '#6d7f99'], [90, '#4f5f78']]).slice(0, 8);
+  const kd = new THREE.Vector3(...(o.keyDir ?? [1, 0, 0])); kd.y = 0; kd.normalize();
+  const u = { e: { value: st.map(x => x[0]) }, c: { value: st.map(x => new THREE.Color(x[1])) }, k: { value: o.intensity ?? 1 }, kd: { value: kd }, ka: { value: o.keyAmt ?? .35 } };
+  const m = new THREE.ShaderMaterial({ uniforms: u, side: THREE.BackSide, depthWrite: false,
+    vertexShader: `varying vec3 vD; void main(){ vD = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+    fragmentShader: `uniform float e[8]; uniform vec3 c[8]; uniform float k, ka; uniform vec3 kd; varying vec3 vD;
+      void main(){ vec3 d = normalize(vD); float el = degrees(asin(clamp(d.y, -1., 1.))); vec3 col = c[0]; for (int i = 0; i < 7; i++) col = mix(col, c[i + 1], smoothstep(e[i], e[i + 1], el));
+        float az = dot(normalize(d.xz + 1e-5), kd.xz); col *= mix(1. - ka * .55, 1. + ka, smoothstep(-.5, .95, az));   // brighter toward the key light side -> bevels separate
+        gl_FragColor = vec4(col * k, 1.); }` });
+  const sc = new THREE.Scene(); sc.add(new THREE.Mesh(new THREE.SphereGeometry(10, 64, 32), m));
+  const pm = new THREE.PMREMGenerator(renderer); const rt = pm.fromScene(sc, 0, .1, 100); pm.dispose();
+  return rt.texture;
 }

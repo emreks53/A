@@ -63,7 +63,7 @@ export default {
     // the Zülfikar, safe in the lee (same model as s06), flat turned a little off the lee camera
     const camDir = new THREE.Vector3(CAM_LEE.x - SW[0], 0, CAM_LEE.z - SW[1]).normalize(); const ry = Math.atan2(camDir.x, camDir.z) - .38;
     const sword = C.zulfikar2({ hiltScale: 1.12, steelRough: .3, envI: 1.25, goldEnvI: 1.8, goldEnv: env, dirSpec: .55, steelColor: '#e6e9ec' }); sword.scale.setScalar(1.12);
-    sword.position.set(SW[0], gh(...SW) - .035, SW[1]); sword.rotation.set(0, ry, .028); scene.add(sword); sword.updateMatrixWorld(true); R.sword = sword;
+    sword.position.set(SW[0], gh(...SW) - .035, SW[1]); sword.rotation.order = 'YXZ'; sword.rotation.set(-.025, ry, .028); /* leans back ~1.5°: the flats catch the sky, not just sand */ scene.add(sword); sword.updateMatrixWorld(true); R.sword = sword;
 
     // --- arrows vs rock ---
     const tRes = ctx.wordTime('resulullah'), tAl = ctx.wordTime('aleyhis'), tArk = ctx.wordTime('arkasına'), tSig = ctx.wordTime('sığındık'), tDef = ctx.wordTime('defalarca');
@@ -132,7 +132,7 @@ export default {
     const card = new THREE.Mesh(new THREE.PlaneGeometry(7, 2.6), new THREE.MeshBasicMaterial({ color: '#ffd0a0', fog: false, side: THREE.DoubleSide }));
     card.position.set(SW[0] + rf.x * 5.5, 1.0, SW[1] + rf.z * 5.5); card.lookAt(SW[0], .7, SW[1]); scene.add(card);
     sky.userData.uniforms.sunI.value = 1.4; const fd0 = scene.fog.density; scene.fog.density = .005; scene.fog.color.copy(R.fogCalm);
-    scene.environment = C.envFromScene(renderer, scene, [SW[0], .8, SW[1]], [sword, R.storm, R.sheets, R.highStream, R.drift, R.motes, R.haze, R.puffs, R.sparks, R.trails, R.volley.group, R.chips.mesh, R.grains, ...R.shafts]); sword.userData.steel.envMap = scene.environment; sword.userData.steel.needsUpdate = true;
+    scene.environment = C.envFromScene(renderer, scene, [SW[0], .8, SW[1]], [sword, R.storm, R.sheets, R.highStream, R.drift, R.motes, R.haze, R.puffs, R.sparks, R.trails, R.volley.group, R.chips.mesh, R.grains, ...R.shafts]); sword.userData.steel.envMap = C.steelEnv(renderer, { keyDir: sunDir.toArray() }); sword.userData.steel.envMapIntensity = .92; sword.userData.steel.color.set('#dce6f2'); sword.userData.steel.needsUpdate = true; /* clean polished steel, cooler than the warm scene */
     scene.fog.density = fd0; scene.fog.color.copy(R.fogStorm); sky.userData.uniforms.sunI.value = 5; scene.remove(card);
 
     camera.fov = 36; camera.near = .05; camera.far = 1500; camera.updateProjectionMatrix();

@@ -82,7 +82,7 @@ export default {
     // reflector "card": the sunlit dune behind the camera, seen only by the reflection capture (fills the blade flats with warm light)
     const card = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.25), new THREE.MeshBasicMaterial({ color: '#eaa878', fog: false, side: THREE.DoubleSide }));
     card.position.set(Math.sin(-.8) * 5.5, 1.05, Math.cos(-.8) * 5.5); card.lookAt(0, .7, 0); scene.add(card);
-    sky.userData.uniforms.sunI.value = .9; scene.environment = C.envFromScene(renderer, scene, [0, .55, 0], [sword, R.cape, R.wisps, R.sheets, R.wall, R.sand, R.drift, R.glitter]); sword.userData.steel.envMap = scene.environment; sword.userData.steel.needsUpdate = true; sky.userData.uniforms.sunI.value = 6; R.gh = gh; scene.remove(card);
+    sky.userData.uniforms.sunI.value = .9; scene.environment = C.envFromScene(renderer, scene, [0, .55, 0], [sword, R.cape, R.wisps, R.sheets, R.wall, R.sand, R.drift, R.glitter]); sword.userData.steel.envMap = C.steelEnv(renderer, { keyDir: sunDir.toArray() }); sword.userData.steel.envMapIntensity = 0.95; sword.userData.steel.color.set('#eef1f4'); sword.userData.steel.needsUpdate = true; /* clean polished steel, cooler than the warm scene */ sky.userData.uniforms.sunI.value = 6; R.gh = gh; scene.remove(card);
     // specular glint of the sun on the right quillon ball (short, on "benzersiz")
     R.glint = C.starGlint({ size: .16 }); R.glint.position.copy(sword.userData.ballR).add(new THREE.Vector3(.004, .006, .01)); sword.add(R.glint);
 

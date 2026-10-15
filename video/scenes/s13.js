@@ -61,14 +61,17 @@ function tower(ctx, o) {
     r *= 1 + .03 * rough(th / 6.283, yN * 3);
     return r;
   };
-  const rimY = th => top + (o.rimVar ?? .06) * R0 * rimN(th / 6.283, .31) - (o.notch ?? .1) * R0 * U.smoothstep(.2, .32, rimN(th / 6.283 + .37, .77)) - .04 * R0 * Math.max(0, rough(th / 6.283 * 3, .62));
+  const rimB = th => top + (o.rimVar ?? .06) * R0 * rimN(th / 6.283, .31) - (o.notch ?? .1) * R0 * U.smoothstep(.2, .32, rimN(th / 6.283 + .37, .77));
+  const rimY = th => rimB(th) - (o.chip ?? .04) * R0 * Math.max(0, rough(th / 6.283 * 3, .62)); // chipped (broken) rim edge
   const lx = yN => Math.cos(la) * lean * yN * yN, lz = yN => Math.sin(la) * lean * yN * yN * .4;
   const rows = [];
   for (let j = 0; j <= nW; j++) { const s = 1 - Math.pow(1 - j / nW, 1.35); rows.push(th => { const yr = rimY(th), y = base + (yr - base) * s, yN = (y - base) / H; return [rAt(th, y), y, lx(yN), lz(yN)]; }); }
   const bev = Math.min(1.4, R0 * .045), dome = R0 * (o.dome ?? .09);
   rows.push(th => { const yr = rimY(th); return [rAt(th, yr) * .985 - bev * .5, yr + bev * .55, lx(1), lz(1)]; });
   rows.push(th => { const yr = rimY(th); return [rAt(th, yr) * .955 - bev, yr + bev, lx(1), lz(1)]; });
-  const capN = o.capN ?? 8; for (let c = 1; c <= capN; c++) { const f = c / capN; rows.push(th => { const yr = rimY(th); const rj = rAt(th, yr) * .955 - bev; noJ = true; const rs = rAt(th, yr) * .955 - bev; noJ = false; return [U.lerp(rj, rs, Math.min(1, f * 4)) * (1 - f), yr + bev + dome * (1 - Math.pow(1 - f, 2)) * (.6 + .5 * rough(th / 6.283 * 2, .9 + f * .3)), lx(1), lz(1)]; }); }
+  let ySum = 0; for (let k = 0; k < 64; k++) ySum += rimY(k / 64 * 6.283); const yC = ySum / 64 + bev + dome; // single plateau-centre height (no pinwheel of apex vertices)
+  const capN = o.capN ?? 8; for (let c = 1; c <= capN; c++) { const f = c / capN; rows.push(th => { const yr = rimY(th); const rj = rAt(th, yr) * .955 - bev; noJ = true; const rs = rAt(th, yr) * .955 - bev; noJ = false;
+    const yE = U.lerp(yr, rimB(th), Math.min(1, f * 2.5)) + bev + dome * (1 - Math.pow(1 - f, 2)) * (1 + (o.capRough ?? .5) * (rough(th / 6.283 * 2, .9 + f * .3) - .2)); return [U.lerp(rj, rs, Math.min(1, f * 4)) * (1 - f), U.lerp(yE, yC, Math.pow(f, 3)), lx(1), lz(1)]; }); }
   const geo = radialGrid(segR, rows, o.x, o.z);
   // vertex colours: pale sandstone with darker joints / lower walls; mossy green on the plateau
   const P = geo.attributes.position, Nn = geo.attributes.normal, col = new Float32Array(P.count * 3);
@@ -222,7 +225,7 @@ export default {
       (kids || []).forEach(([dx, dz, hk, rk], i) => add(tower, { ...o, x: o.x + dx * o.R, z: o.z + dz * o.R, top: -125 + (o.top + 125) * hk, R: o.R * rk, seed: o.seed + 50 + i, segR: 120, segY: 34, joints: 6 })); return m; };
     const G = add(horn, { x: -18, z: -600, top: 138, R: 132, seed: 11, lean: .05, phase: .25, segR: 300, segY: 230, a: '#9a8a90', b: '#3b3241' });
     R.G = G; R.summit = new THREE.Vector3(-18 + 132 * .05, 138, -600);
-    R.P0 = add(tower, { x: .3, z: -1.2, top: -.45, R: 6.5, seed: 4, taper: .14, rimVar: .02, notch: .02, strata: 2.2, a: '#d4c4b2', b: '#6e6070', g: '#a8987e', segR: 140, segY: 40, capN: 16, rimVar: .02, notch: .02, dome: .02 }); // our ledge tower
+    R.P0 = add(tower, { x: .3, z: -1.2, top: -.45, R: 6.5, seed: 4, taper: .14, rimVar: .02, notch: .02, strata: 2.2, a: '#d4c4b2', b: '#6e6070', g: '#a8987e', segR: 140, segY: 40, capN: 16, rimVar: .02, notch: .02, dome: .02, joints: 0, capRough: 0, chip: 0 }); // our ledge tower (smooth plateau under the stack)
     const L1 = cluster({ x: -30, z: -185, top: -2, R: 15, seed: 21 }, [[.78, -.42, .82, .52], [-.62, -.5, .7, .48]]);
     const L2 = cluster({ x: 36, z: -240, top: -10, R: 14, seed: 22 }, [[-.72, -.5, .85, .5]]);
     cluster({ x: -64, z: -390, top: 8, R: 24, seed: 23 }, [[.7, .3, .8, .5], [-.5, -.6, .9, .6]]);
