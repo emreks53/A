@@ -44,15 +44,15 @@ function deskPools(items, { opacity = .5, color = '#ffb066', w = 1.25 - .026, d 
   const S = 128, cv = document.createElement('canvas'); cv.width = cv.height = S; const x = cv.getContext('2d');
   const gr = x.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.2, 'rgba(255,255,255,.55)'); gr.addColorStop(.55, 'rgba(255,255,255,.12)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, S, S);
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
-  const u = { time: { value: 0 }, map: { value: tex }, opacity: { value: opacity }, color: { value: new THREE.Color(color) }, half: { value: new THREE.Vector2(w / 2, d / 2) } };
+  const u = { time: { value: 0 }, map: { value: tex }, opacity: { value: opacity }, color: { value: new THREE.Color(color) }, uHalf: { value: new THREE.Vector2(w / 2, d / 2) } };
   const m = new THREE.ShaderMaterial({
     uniforms: u, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
-    vertexShader: `attribute float aOn; attribute vec3 aC; uniform float time; uniform vec2 half; varying vec2 vQ; varying vec2 vL; varying float vB;
-      void main(){ vL = position.xz * half * 2.; vQ = (vL - aC.xy) / (2. * aC.z) + .5;
+    vertexShader: `attribute float aOn; attribute vec3 aC; uniform float time; uniform vec2 uHalf; varying vec2 vQ; varying vec2 vL; varying float vB;
+      void main(){ vL = position.xz * uHalf * 2.; vQ = (vL - aC.xy) / (2. * aC.z) + .5;
         float age = time - aOn; vB = smoothstep(0., .35, age) * (.92 + .08 * sin(time * 9. + aOn * 31.));
         gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.); }`,
-    fragmentShader: `uniform sampler2D map; uniform float opacity; uniform vec3 color; uniform vec2 half; varying vec2 vQ; varying vec2 vL; varying float vB;
-      void main(){ vec2 e = half - abs(vL); float edge = smoothstep(0., .012, min(e.x, e.y));
+    fragmentShader: `uniform sampler2D map; uniform float opacity; uniform vec3 color; uniform vec2 uHalf; varying vec2 vQ; varying vec2 vL; varying float vB;
+      void main(){ vec2 e = uHalf - abs(vL); float edge = smoothstep(0., .012, min(e.x, e.y));
         vec2 q = clamp(vQ, 0., 1.); float a = texture2D(map, q).a * step(abs(vQ.x - .5), .5) * step(abs(vQ.y - .5), .5);
         gl_FragColor = vec4(color, a * edge * vB * opacity); }`,
   });
@@ -236,6 +236,9 @@ export default {
 
     // ---------- typography ----------
     const tBir = ctx.wordTime('birçok'), tDus = ctx.wordTime('düşünür'), tHay = ctx.wordTime('hayran');
+    // soft scrims: the craning camera brings the far window's arch + mullions up behind the labels
+    scrim(ui, { x: 540, y: 330, rx: 470, ry: 165, a: .3 * ui.env(t, tBir - .06, tHay - .15, .45, 'rise').o });
+    scrim(ui, { x: 540, y: 330, rx: 480, ry: 155, a: .48 * ui.env(t, tHay - .04, Infinity, .6, 'rise').o });
     ui.text('birçok', { t, t0: tBir - .06, t1: tHay - .15, x: 540, y: 268, size: 66, weight: 800, color: '#fff4dc', anim: 'rise' });
     ui.text('DÜŞÜNÜR', { t, t0: tDus - .06, t1: tHay - .15, x: 540, y: 372, size: 112, weight: 900, color: '#ffcf6b', letterSpacing: 4, anim: 'pop' });
     ui.text('hayran kaldı', { t, t0: tHay - .04, x: 540, y: 330, size: 108, weight: 500, family: 'Lora', italic: true, color: '#ffd98a', anim: 'rise', dur: .6, shadowBlur: 26, shadowColor: 'rgba(0,0,0,.75)' });

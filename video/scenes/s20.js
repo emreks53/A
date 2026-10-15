@@ -358,34 +358,62 @@ export default {
     // ---------- light shaft + dust ----------
     const SH_FROM = [-.5, 1.18, WALL_Z - .02], SH_TO = [.02, TABLE_Y + .02, .02];
     const shaft = FX.lightShaft({ from: SH_FROM, to: SH_TO, r0: .32, r1: .42, color: '#ffe2b0', opacity: .1 }); scene.add(shaft); R.shaft = shaft;
+    { // the cone's source end crosses the wall plane below the sill: fade it out by distance from the wall (and at the
+      // source end) so the depth test never cuts a hard-edged dark half-disc into the wall
+      const sm = shaft.material;
+      sm.vertexShader = sm.vertexShader.replace('varying vec2 vUv;', 'varying vec2 vUv; varying float vWz;').replace('vUv = uv;', 'vUv = uv; vWz = (modelMatrix * vec4(position, 1.)).z;');
+      sm.fragmentShader = sm.fragmentShader.replace('varying vec2 vUv;', 'varying vec2 vUv; varying float vWz;').replace('float along =', `float along = smoothstep(${(WALL_Z + .02).toFixed(3)}, ${(WALL_Z + .26).toFixed(3)}, vWz) * smoothstep(1., .8, vUv.y) *`);
+      sm.needsUpdate = true;
+    }
     const motes = beamMotes({ from: SH_FROM, to: SH_TO, radius: .36, count: 650, size: 1.0, color: '#fff0d0', opacity: .8, speed: .012, nearFade: .45 }); scene.add(motes); R.motes = motes;
 
     camera.fov = 34; camera.near = .02; camera.far = 50; camera.updateProjectionMatrix();
-    // camera keys (local s): establishing → MEKTUBAT cover → open book / 195 → SÖZLER tag → sill set → final still life
-    R.cardY = 740;
-    R.camPos = path3([
-      [-0.6, [-.3, .95, .98]], [1.1, [-.22, .9, .62]],
-      [1.85, [-.15, .99, .3]], [2.6, [-.1, 1.0, .25]], [3.4, [-.095, 1.0, .235]], [4.15, [-.05, .97, .24]],
-      [4.95, [.195, .81, .74]], [5.6, [.2, .81, .76]],
-      [6.95, [-.02, .93, .48]], [7.6, [-.045, .95, .57]], [8.4, [-.07, .92, 1.12]], [9.6, [-.08, .915, 1.22]], [11.9, [-.09, .91, 1.3]],
-    ]);
-    R.camLook = path3([
-      [-0.6, [-.1, .58, -.08]], [1.1, [-.08, .58, -.08]],
-      [1.85, [-.035, .575, -.08]], [2.6, [-.09, .565, -.115]], [3.4, [-.09, .56, -.11]], [4.15, [-.04, .55, -.08]],
-      [4.95, [.1, .435, .19]], [5.6, [.1, .435, .2]],
-      [6.95, [-.08, .86, -.38]], [7.6, [-.09, .86, -.42]], [8.4, [-.08, .62, -.1]], [9.6, [-.08, .62, -.1]], [11.9, [-.08, .62, -.1]],
-    ]);
+    // camera (local s): establishing → MEKTUBAT cover → open book / 195 → SÖZLER tag → sill set → final still life.
+    // C2 rig: a sum of overlapping smootherstep moves (pos + look), so speed AND acceleration are continuous everywhere
+    // (no slam-stops / step starts at knots) and the camera never comes to a dead stop between beats.
+    R.cardY = 760;
+    const S5 = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * x * (x * (x * 6 - 15) + 10);
+    const P0 = [-.3, .95, .98], L0 = [-.1, .58, -.08];
+    let pp = P0, pl = L0;
+    const moves = [ // [start, end, pos target, look target]
+      [-1.3, 1.35, [-.22, .9, .62], [-.08, .58, -.08]],          // slow push-in on the still life
+      [.85, 2.1, [-.15, .99, .3], [-.05, .575, -.08]],           // onto the MEKTUBAT cover ("Mektubat")
+      [1.75, 3.1, [-.1, 1.0, .25], [-.085, .565, -.115]],        // settle over the opening book (195)
+      [2.5, 4.6, [-.05, .97, .24], [-.04, .55, -.08]],           // drift
+      [3.7, 5.2, [.195, .81, .74], [.1, .435, .19]],             // glide to SÖZLER + tag ("ve 19. Söz")
+      [4.7, 6.1, [.2, .81, .76], [.1, .435, .2]],                // drift
+      [5.35, 7.0, [-.02, .93, .48], [-.08, .86, -.38]],          // crane up to the sill set ("başka risalelerde")
+      [6.5, 7.9, [-.045, .95, .57], [-.09, .86, -.42]],          // drift
+      [7.15, 8.85, [-.055, .92, 1.38], [-.055, .61, -.1]],       // pull back to the wide still life
+      [7.4, 13.6, [-.055, .912, 1.52], [-.055, .605, -.1]],      // gentle end drift (still moving at the last frame)
+    ].map(([a, b, P, L]) => { const m = { a, b, dP: P.map((v, i) => v - pp[i]), dL: L.map((v, i) => v - pl[i]) }; pp = P; pl = L; return m; });
+    R.cam = t => {
+      const P = new THREE.Vector3(...P0), L = new THREE.Vector3(...L0);
+      for (const m of moves) { const s = S5((t - m.a) / (m.b - m.a)); if (s) { P.x += m.dP[0] * s; P.y += m.dP[1] * s; P.z += m.dP[2] * s; L.x += m.dL[0] * s; L.y += m.dL[1] * s; L.z += m.dL[2] * s; } }
+      return { P, L, fov: 34 + 6 * S5((t - 6.6) / 2.8) };
+    };
+    // probes for the adaptive motion blur: on-screen speed of the hero objects
+    R.mbCam = new THREE.PerspectiveCamera(34, 1080 / 1920, .02, 50);
+    R.mbPts = [[-.1, hingeY, -.07], [-.03, hingeY + .03, -.07], [-.17, hingeY + .03, -.07], [.13, TABLE_Y + .045, .06], [.18, TABLE_Y + .002, .24], [.05, TABLE_Y + .04, .12],
+      [R.sillCenter.x, R.sillCenter.y, R.sillCenter.z], [-.25, WY0 + .1, R.sillCenter.z], [.05, WY0 + .1, R.sillCenter.z], [-.22, TABLE_Y + .08, .17], [-.09, TABLE_Y + .03, .27], [-.1, .66, WALL_Z]].map(p => new THREE.Vector3(...p));
   },
 
   update(t, ctx) {
     const { ui, U, camera, post } = ctx;
-    const P = R.camPos(t), L = R.camLook(t); P.add(U.shake(t, .0035, .3, 6));
-    camera.fov = U.lerp(34, 40, U.smoothstep(6.6, 9.4, t)); camera.updateProjectionMatrix();
+    const C = R.cam(t), P = C.P, L = C.L; P.add(U.shake(t, .0035, .3, 6));
+    camera.fov = C.fov; camera.updateProjectionMatrix();
     camera.position.copy(P); camera.lookAt(L); camera.updateMatrixWorld();
-    // motion blur only while the camera cranes from the Sözler up to the sill (fast tilt); 5 sub-frames at the peak
-    post.motionBlur = (t > 5.95 && t < 6.6) ? { samples: 4, shutter: .6 } : (t > 5.7 && t < 6.88) ? { samples: 3, shutter: .55 } : { samples: 1 };
+    // adaptive motion blur (pure function of t): sub-frame count follows the fastest on-screen motion of the hero
+    // objects over one frame, so a 144° shutter smear is sampled every ~5 px (no stacked copies) and slow shots stay at 1
+    {
+      const proj = tt => { const c = R.cam(tt), mc = R.mbCam; mc.fov = c.fov; mc.updateProjectionMatrix(); mc.position.copy(c.P); mc.lookAt(c.L); mc.updateMatrixWorld(); return R.mbPts.map(p => p.clone().project(mc)); };
+      const a = proj(t - 1 / 60), b = proj(t + 1 / 60); let px = 0;
+      a.forEach((p, i) => { const q = b[i]; if (p.z > 1 || Math.abs(p.x) > 1.15 || Math.abs(p.y) > 1.15) return; px = Math.max(px, Math.hypot((q.x - p.x) * 540, (q.y - p.y) * 960)); });
+      const n = Math.min(9, Math.max(1, Math.ceil(px * .4 / 5)));
+      post.motionBlur = n > 1 ? { samples: n, shutter: .4 } : { samples: 1 };
+    }
     R.motes.userData.uniforms.size.value = .62 * ctx.renderer.domElement.height / 960; // same look at every render scale
-    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.28, .5, U.smoothstep(7.0, 9.4, t)) + .45 * (1 - U.smoothstep(.9, 1.7, t)) + .35 * U.smoothstep(4.2, 4.9, t) * (1 - U.smoothstep(5.7, 6.3, t)); post.dof.range *= 1 - .6 * Math.sin(Math.PI * U.prog(t, 5.65, 6.9)); post.dof.amount = .72;
+    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.28, .5, U.smoothstep(7.0, 9.4, t)) + .45 * (1 - U.smoothstep(.9, 1.7, t)) + .35 * U.smoothstep(4.2, 4.9, t) * (1 - U.smoothstep(5.7, 6.3, t)); post.dof.range *= 1 - .6 * Math.sin(Math.PI * U.prog(t, 5.45, 7.0)); post.dof.amount = .72;
 
     // --- front cover opens on "kitabının", then three leaves riffle over (right → left) ---
     const tKit = ctx.wordTime('kitabının');
@@ -445,18 +473,18 @@ export default {
     const pn = new THREE.Vector3(BW * .525, yTop(.525) + .0005, -BH * .437); R.rightHalf.localToWorld(pn);
     const [px, py] = ui.project(pn);
     const r0 = Math.max(t195 + .05, flipT(2) + .2);
-    const ra = U.prog(t, r0, r0 + .45, 'outCubic'); const rOut = U.smoothstep(tSay + .6, tSay + .3, t);
+    const ra = U.prog(t, r0, r0 + .45, 'outCubic'); const rOut = U.smoothstep(tSay + .45, tSay + .15, t);
     if (ra > 0 && rOut > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut; X.strokeStyle = '#d8a23a'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(40,10,0,.35)'; X.shadowBlur = 10; X.beginPath(); X.ellipse(px, py, 74, 50, -.04, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra); X.stroke(); X.restore(); }
-    ui.pill('s. 195', { t, t0: r0 + .1, t1: tSay + .6, x: Math.min(860, Math.max(220, px - 10)), y: Math.max(300, py - 128), size: 52, bg: 'rgba(96,14,20,.9)', color: '#ffdc8e' });
+    ui.pill('s. 195', { t, t0: r0 + .03, t1: tSay + .45, x: Math.min(860, Math.max(220, px - 10)), y: Math.max(300, py - 128), size: 52, bg: 'rgba(96,14,20,.9)', color: '#ffdc8e' });
     // "19. Söz" ring around the tag
     const tg = new THREE.Vector3(.004, 0, 0); R.tag.localToWorld(tg);
     const [tx, ty] = ui.project(tg);
-    const ra2 = U.prog(t, t19 - .05, t19 + .45, 'outCubic'), rOut2 = U.smoothstep(tBas + .2, tBas - .1, t);
+    const ra2 = U.prog(t, t19 - .05, t19 + .45, 'outCubic'), rOut2 = U.smoothstep(5.72, 5.45, t); // gone before the crane picks up speed
     if (ra2 > 0 && rOut2 > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut2; X.strokeStyle = '#d8a23a'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(40,10,0,.35)'; X.shadowBlur = 10; X.beginPath(); X.ellipse(tx, ty, 205, 112, -.04, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra2); X.stroke(); X.restore(); }
     // "başka risaleler" label over the sill set
     const sc = R.sillCenter.clone(); const [sx, sy] = ui.project(sc);
     const stp = R.sillCenter.clone(); stp.y += .135; const [, sty] = ui.project(stp);
-    ui.pill('başka risaleler', { t, t0: Math.max(tBas + .15, 6.75), t1: Math.min(tEtr - .55, 7.8), x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
+    ui.pill('başka risaleler', { t, t0: Math.max(tBas + .2, 6.7), t1: Math.min(tEtr - .55, 7.65), x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
     // end card
     const ec = U.smoothstep(tEtr - .1, tEtr + .9, t);
     if (ec > 0) {

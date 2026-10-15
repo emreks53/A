@@ -74,10 +74,13 @@ export default {
       const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelThickness: .04, bevelSize: .04, bevelSegments: 2, curveSegments: 12 }); g.translate(0, 0, -depth / 2); return g;
     };
     const tArch = pointedArch(9.0, 3.2, .45, .6);
-    for (let i = 0; i <= HALL.bays; i++) { const m = new THREE.Mesh(tArch, stoneM); m.position.set(0, 7.75, bayZ(i)); m.castShadow = m.receiveShadow = true; arch.add(m); }
-    // vault/ceiling: warm plaster barrel segments between arches
+    const archM = M.MAT.stone({ a: '#dcc8a6', b: '#bda381', seed: 41, repeat: [1, 2] }); // lower-contrast grain: big soffits read as dressed stone, not blotches
+    for (let i = 0; i <= HALL.bays; i++) { const m = new THREE.Mesh(tArch, archM); m.position.set(0, 7.75, bayZ(i)); m.castShadow = m.receiveShadow = true; arch.add(m); }
+    // vault/ceiling: warm plaster barrel segments between arches (lime plaster texture; faint warm emissive = sun bounce
+    // off the lit floor, so the big ceiling planes don't go cold-lavender under the blue skylight)
     const vaultGeo = new THREE.CylinderGeometry(4.9, 4.9, HALL.bayW, 24, 1, true, -Math.PI / 2, Math.PI); vaultGeo.rotateX(-Math.PI / 2); vaultGeo.scale(1, .68, 1);
-    const vaultMat = new THREE.MeshStandardMaterial({ color: '#d6bf9c', roughness: .95, side: THREE.BackSide });
+    const vaultMat = M.MAT.plaster({ a: '#eed6aa', b: '#d3b282', seed: 12, repeat: [5, 1] }); vaultMat.side = THREE.BackSide;
+    vaultMat.emissive = new THREE.Color('#3c2410'); vaultMat.emissiveIntensity = 1;
     for (let i = 0; i < HALL.bays; i++) { const v = new THREE.Mesh(vaultGeo, vaultMat); v.position.set(0, 7.75, bayZ(i) - HALL.bayW / 2); v.receiveShadow = true; arch.add(v); }
     // right wall (plaster) behind shelves, cornice above the upper tier
     const rwall = new THREE.Mesh(new THREE.PlaneGeometry(34, 8).rotateY(-Math.PI / 2), plasterM); rwall.position.set(5.25, 4, -10.75); rwall.receiveShadow = true; arch.add(rwall);
@@ -142,7 +145,11 @@ export default {
       for (let i = 0; i <= HALL.bays; i++) { const br = new THREE.Mesh(cg, walnut); br.position.set(4.5, 3.59, bayZ(i)); br.rotation.y = Math.PI; br.castShadow = br.receiveShadow = true; scene.add(br); } }
 
     const all = items.concat(late); R.nStatic = items.length; R.late = late;
-    late.forEach(r => { r.t0 = 5.0 + (Math.max(0, r.i - 1) * .12 + (5 - r.k) * .03 + (1 - r.x) * .08) + rnd() * .06; }); // near→far wave, in view once the crane settles
+    // time-lapse wave. Bays 0–3 are never in the wide frame: they fill off-screen during the whip (so the tally starts on
+    // "ciltlerle"). Bays 8→4 fill in view, far→near, as the whip lands on the right wall and the crane settles (5.4–6.4).
+    // (one rnd() per book either way -> the random sequence / shelf layout is unchanged)
+    late.forEach(r => { const j = rnd() * .06;
+      r.t0 = r.i < 4 ? 4.95 + r.i * .1 + (5 - r.k) * .02 + r.x * .05 + j : 5.42 + (8 - r.i) * .17 + (5 - r.k) * .03 + r.x * .1 + j; });
     const books = bookInstances(all); scene.add(books); R.books = books;
     // anti-shimmer for the hundreds of small spines at full resolution: sample the spine atlas one mip softer and keep
     // gilt bands from turning into sub-pixel specular sparkles (roughness floor).
@@ -201,9 +208,18 @@ export default {
       [-0.6, [2.5, 1.32, 4.3]], [0.0, [2.42, 1.36, 3.4]], [1.0, [2.15, 1.45, -1.2]], [1.95, [1.45, 1.6, -5.9]], [2.75, add(BP, [.72, .7, 1.12])],
       [4.2, add(BP, [.46, .6, .92])], [4.7, add(BP, [.62, .8, 1.3])], [5.35, [.7, 2.8, -4.6]], [6.25, [-.9, 4.5, -.6]], [10.3, [-1.75, 5.1, 1.6]],
     ], [
-      [-0.6, [4.6, 1.5, -3.2], -1, 0], [0.0, [4.6, 1.55, -3.5]], [1.0, [2.0, 1.15, -9.0]], [1.95, [0.25, 1.0, -9.55]], [2.75, BP],
-      [4.2, BP, 1.5, 0], [4.65, BP, 1, 3], [5.7, [2.2, 3.62, -11.5]], [6.8, [2.6, 5.0, -12.5]], [10.3, [2.9, 5.05, -14.5]],
+      [-0.6, [4.6, 1.5, -3.2], -3.4, 0], [0.0, [4.6, 1.55, -3.5]], [1.0, [2.0, 1.15, -9.0]], [1.95, [0.25, 1.0, -9.55]], [2.75, BP],
+      [4.2, BP, 1.5, 0], [4.65, BP, 1, 3], [5.7, [2.2, 3.62, -11.5]], [6.8, [2.6, 5.0, -12.5]], [10.3, [2.9, 5.55, -14.5]], // last key aimed a bit higher: lectern stays out of the bottom-left corner
     ], [[-0.6, 40], [0, 40], [1.75, 40], [2.7, 34], [4.4, 33], [4.75, 35], [5.3, 40], [5.95, 42], [10.3, 40]]);
+    // motion-blur driver: a fixed cloud of points on the set (shelf fronts, floor, vault, gallery rail, lectern + hero book);
+    // camFlow(t) = max image-space motion (px/frame) of the in-frame points, measured on the rig itself -> pure in t.
+    { const P = []; const p3 = (x, y, z) => P.push(x, y, z);
+      for (let z = 4.5; z >= -26; z -= 1) { for (const y of [.4, 1.4, 2.4, 3.4, 4.4, 5.4, 6.4]) p3(4.42, y, z); for (const y of [.4, 1.4, 2.4, 5, 7]) p3(-4.42, y, z);
+        for (const x of [-3, -1, 1, 3]) p3(x, 0, z); for (const x of [-3, 0, 3]) p3(x, 9, z); p3(3.48, 4.68, z); }
+      R.heroTilt.updateWorldMatrix(true, false); const v = new THREE.Vector3();
+      for (const x of [-.31, 0, .31]) for (const z of [-.23, 0, .23]) { v.set(x, .03, z).applyMatrix4(R.heroTilt.matrixWorld); p3(v.x, v.y, v.z); }
+      for (const y of [.1, .5, .85]) p3(.02, y, -9.5);
+      R.flowP = new Float32Array(P); R.flowCam = camera.clone(); R.flowM = [new THREE.Matrix4(), new THREE.Matrix4(), new THREE.Matrix4()]; }
   },
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
@@ -220,13 +236,15 @@ export default {
       bk.setMatrix(n0 + j, m);
     });
     bk.commit(); R.shown = shown;
-    // DOF: on the shelves / hero book, then wide
+    // DOF: on the shelves / hero book, then wide (focus on the upper tier of bays 4–8, where the time-lapse plays)
     const bf = U.smoothstep(1.6, 2.6, t) * (1 - U.smoothstep(4.6, 5.4, t)), wide = U.smoothstep(4.9, 5.9, t);
-    const fBase = U.lerp(7, camera.position.distanceTo(new THREE.Vector3(4.3, 3.6, -7)), wide);
+    const fBase = U.lerp(7, camera.position.distanceTo(R.wideFocus || (R.wideFocus = new THREE.Vector3(4.4, 4.6, -14))), wide);
     post.dof.focus = U.lerp(fBase, camera.position.distanceTo(R.bookP), bf);
-    post.dof.range = U.lerp(U.lerp(7, 10, wide), .9, bf); post.dof.amount = U.lerp(U.lerp(.5, .5, wide), .85, bf);
-    // motion blur only for the fast glide/pan, the whip move + time-lapse (decided for the next frame: the engine reads it before update)
-    { const tn = t + 1 / 30; post.motionBlur = { samples: tn > 4.75 && tn < 5.65 ? 5 : (tn > .3 && tn < 2.75) || (tn > 4.5 && tn < 6.75) ? 3 : 1, shutter: .5 }; } // 5 sub-frames at the whip peak (no stepped ghosts)
+    post.dof.range = U.lerp(U.lerp(7, 12, wide), .9, bf); post.dof.amount = U.lerp(U.lerp(.5, .5, wide), .85, bf);
+    // motion blur driven by the actual image motion of the set (engine reads post.motionBlur right after update(t) for this
+    // same frame). Constant 0.4 shutter -> the blur length grows/shrinks continuously with the motion; sub-frames are added
+    // so that the copies are never more than ~4 px apart (no stepped ghosts, no sharp<->ghosted snaps).
+    { const shutter = .4, bpx = camFlow(t) * shutter; post.motionBlur = { samples: bpx < 4 ? 1 : Math.min(8, Math.ceil(bpx / 4)), shutter }; }
     R.shafts.forEach((s, i) => { s.userData.uniforms.opacity.value = .045 + .012 * Math.sin(t * .7 + i); });
 
     // ---- typography ----------------------------------------------------------------------------------------
@@ -382,20 +400,39 @@ function monoSpline(keys) {
 }
 // Camera rig: position on an arc-length parametrised centripetal Catmull-Rom (pass times per control point), yaw/pitch
 // aimed at look targets at key times (monotone splines), FOV keys. Extrapolates smoothly past both ends (handles).
-function rig(T, pts, looks, fovs) {
+// - the arc-length table is fine and knot-aligned (1000 divisions per segment; three's default 200 for the whole curve
+//   left one-frame speed dips at every knot), and getPointAt uses the same table;
+// - every channel (path parameter, yaw, pitch, fov) is low-passed with a ±H s Hann window: the monotone splines are only
+//   C1, so landings/starts (book landing, whip end, crane end) had a one-frame jerk; the window turns them into ramps
+//   without changing the path or the beat timing.
+function rig(T, pts, looks, fovs, H = .15) {
   const curve = new T.CatmullRomCurve3(pts.map(p => new T.Vector3(...p[1])), false, 'centripetal');
-  const N = 2000, L = curve.getLengths(N), tot = L[N]; const uAt = i => L[Math.round(i / (pts.length - 1) * N)] / tot;
-  const u = monoSpline(pts.map((p, i) => [p[0], uAt(i)]));
+  const SEG = pts.length - 1, N = SEG * 1000; curve.arcLengthDivisions = N; const L = curve.getLengths(N), tot = L[N]; const uAt = i => L[i * 1000] / tot;
+  const taps = []; { const NT = 7; let sw = 0; for (let k = -NT; k <= NT; k++) { const w = .5 * (1 + Math.cos(Math.PI * k / (NT + 1))); taps.push([H * k / NT, w]); sw += w; } taps.forEach(tp => (tp[1] /= sw)); }
+  const sm = f => t => { let s = 0; for (const [d, w] of taps) s += w * f(t + d); return s; };
+  const u = sm(monoSpline(pts.map((p, i) => [p[0], uAt(i)])));
   const posAt = t => { const k = u(t); if (k >= 0 && k <= 1) return curve.getPointAt(k); const e = k < 0 ? 0 : 1, dd = k < 0 ? 1e-3 : -1e-3; const a = curve.getPointAt(e), b = curve.getPointAt(e + dd); return a.clone().add(a.clone().sub(b).multiplyScalar(Math.abs(k - e) / 1e-3)); };
   const ang = looks.map(([t, tg, dy = 0, dp = 0]) => { const [y, pi] = aim(posAt(t).toArray(), tg); return [t, y + dy, pi + dp]; });
   for (let i = 1; i < ang.length; i++) { while (ang[i][1] - ang[i - 1][1] > 180) ang[i][1] -= 360; while (ang[i][1] - ang[i - 1][1] < -180) ang[i][1] += 360; }
-  const yaw = monoSpline(ang.map(a => [a[0], a[1]])), pitch = monoSpline(ang.map(a => [a[0], a[2]])), fov = monoSpline(fovs);
-  return {
-    pos: posAt,
-    apply(camera, t, extra) {
-      camera.position.copy(posAt(t)); if (extra) camera.position.add(extra);
-      camera.rotation.order = 'YXZ'; camera.rotation.set(pitch(t) * Math.PI / 180, yaw(t) * Math.PI / 180, 0);
-      camera.fov = fov(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
-    },
+  const yaw = sm(monoSpline(ang.map(a => [a[0], a[1]]))), pitch = sm(monoSpline(ang.map(a => [a[0], a[2]]))), fov = sm(monoSpline(fovs));
+  const set = (camera, t, extra) => {
+    camera.position.copy(posAt(t)); if (extra) camera.position.add(extra);
+    camera.rotation.order = 'YXZ'; camera.rotation.set(pitch(t) * Math.PI / 180, yaw(t) * Math.PI / 180, 0);
+    camera.fov = fov(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
   };
+  return { pos: posAt, set, apply: set };
+}
+// image-space motion (px per frame at 1080x1920) of the set's sample points that are in frame at t (camera rig only, no shake)
+function camFlow(t) {
+  const c = R.flowCam, P = R.flowP, M3 = R.flowM, h = 1 / 60;
+  [-h, 0, h].forEach((d, i) => { R.cam.set(c, t + d); M3[i].multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse); });
+  const a = M3[0].elements, b = M3[1].elements, e = M3[2].elements; let m = 0;
+  for (let i = 0; i < P.length; i += 3) { const x = P[i], y = P[i + 1], z = P[i + 2];
+    const wb = b[3] * x + b[7] * y + b[11] * z + b[15]; if (wb < .1) continue;
+    const bx = (b[0] * x + b[4] * y + b[8] * z + b[12]) / wb, by = (b[1] * x + b[5] * y + b[9] * z + b[13]) / wb; if (Math.abs(bx) > 1.05 || Math.abs(by) > 1.05) continue;
+    const wa = a[3] * x + a[7] * y + a[11] * z + a[15], we = e[3] * x + e[7] * y + e[11] * z + e[15]; if (wa < .1 || we < .1) continue;
+    const dx = ((e[0] * x + e[4] * y + e[8] * z + e[12]) / we - (a[0] * x + a[4] * y + a[8] * z + a[12]) / wa) * 540;
+    const dy = ((e[1] * x + e[5] * y + e[9] * z + e[13]) / we - (a[1] * x + a[5] * y + a[9] * z + a[13]) / wa) * 960;
+    m = Math.max(m, Math.hypot(dx, dy)); }
+  return m;
 }

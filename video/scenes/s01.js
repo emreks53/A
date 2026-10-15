@@ -33,7 +33,7 @@ export default {
     dunes.receiveShadow = false; /* ray shadows land on the opaque-centred sand patch / rug */ scene.add(dunes); R.dunes = dunes; const hAt = dunes.userData.heightAt; R.hAt = hAt;
 
     // ---- lights: cool sky fill, faint warm dawn-sky light on east slopes, the dawn ray (spot), two lamp practicals ----
-    const hemi = new THREE.HemisphereLight('#7088d8', '#463a3c', 2.0); scene.add(hemi); R.hemi = hemi;
+    const hemi = new THREE.HemisphereLight('#7088d8', '#463a3c', 2.0); scene.add(hemi); R.hemi = hemi; R.hemiSky = hemi.color.clone(); R.hemiGnd = hemi.groundColor.clone(); R.hemiSkyP = new THREE.Color('#9c86b4'); R.hemiGndP = new THREE.Color('#6a4430');
     const dawnSkyL = new THREE.DirectionalLight('#ffb08a', .55); dawnSkyL.position.copy(skySun.clone().setY(.12).normalize().multiplyScalar(50)); scene.add(dawnSkyL, dawnSkyL.target); R.dawnSkyL = dawnSkyL;
 
     // ---- hero: rug + rahle + Mushaf ----
@@ -51,12 +51,12 @@ export default {
     rahle.traverse(o => { if (o.isMesh) { o.material.envMap = env; } }); R.envMats.push(ud.material);
 
     // hero lamps on the sand around the rug (real flames); two of them carry the practical lights
-    const heroLampXZ = [[-.44, -.66, 2.2], [.42, -.78, -2.6], [-.06, -1.02, 1.4], [-.95, -.5, .4], [.7, .02, 2.9], [-.55, .66, -.6], [.78, .5, 2.2], [-1.0, .34, 0], [1.05, -.42, 3.0], [-.86, -.94, 1.1]];
+    const heroLampXZ = [[-.44, -.66, 2.2], [.42, -.78, -2.6], [-.62, -1.05, 1.4], [-.95, -.5, .4], [.7, .02, 2.9], [-.55, .66, -.6], [.78, .5, 2.2], [-1.0, .34, 0], [1.05, -.42, 3.0], [-.86, -.94, 1.1]];
     R.heroLamps = [];
     heroLampXZ.forEach(([x, z, rot], i) => { const l = X.heroLamp({ scale: 1.15, seed: i + 3 }); l.position.set(x, hAt(x, z) - y0 + .001, z); l.rotation.y = rot; hero.add(l); R.heroLamps.push(l); });
     { const hp = X.lampField(heroLampXZ.map(([x, z], i) => ({ x, y: .003, z, rot: 0, s: .55, on: -5, seed: i })), { fog: 0 }); hp.userData.bodies.visible = false; hp.userData.flames.visible = false; hero.add(hp); R.heroPools = hp; }
     const pl = (x, y, z, inten, dist) => { const l = new THREE.PointLight('#ff9a48', inten, dist, 2); l.position.set(x, y, z); hero.add(l); l.userData.base = inten; return l; };
-    R.rimLamp = pl(-.3, .32, -.85, .16, 2.4); R.fillLamp = pl(-.55, .2, .62, .1, 2.2);
+    R.rimLamp = pl(-.3, .32, -.85, .16, 2.4); R.fillLamp = pl(-.42, .42, .52, .1, 2.2); // fill = glow of the lamps on the shadow (left) side, reaching the leaf beside the book
 
     // dawn ray: spot from the sun direction, raking across the cover from the right
     const spot = new THREE.SpotLight('#ffdcae', 0, 0, .0165, 1, 0); spot.position.copy(R.book).add(L.clone().multiplyScalar(16)); spot.target.position.copy(R.book).add(new THREE.Vector3(-.05, -.1, 0));
@@ -89,32 +89,87 @@ export default {
       if (dbg.includes('nopts')) R.field.userData.flames.visible = false; if (dbg.includes('nopools')) R.field.userData.pools.visible = false; if (dbg.includes('nobodies')) R.field.userData.bodies.visible = false;
       if (dbg.includes('nomotes')) R.motes.visible = false; if (dbg.includes('noshadow')) R.spot.castShadow = false; if (dbg.includes('nolamps')) { R.rimLamp.visible = R.fillLamp.visible = false; }
       if (dbg.includes('simplemat')) scene.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) if (m.isMeshPhysicalMaterial) { m.sheen = 0; m.clearcoat = 0; } });
-      if (dbg.includes('nodunes')) R.dunes.visible = false; }
+      if (dbg.includes('nodunes')) R.dunes.visible = false; if (dbg.includes('expose')) window.__s01 = R; }
     camera.near = .03; camera.far = 700; camera.fov = 38; camera.updateProjectionMatrix();
-    // ---- camera: polar spiral around the book, monotone splines in time (C1, no overshoot) ----
-    R.cAz = X.mono([[0, -46], [3.7, -38], [4.7, -10], [5.62, 22], [8.0, 13]]);
-    R.cLD = X.mono([[0, Math.log(46)], [3.7, Math.log(39)], [4.7, Math.log(9)], [5.62, Math.log(2.15)], [8.0, Math.log(1.85)]]);
-    R.cEl = X.mono([[0, 10], [3.7, 10.8], [4.7, 25], [5.62, 33], [8.0, 31.5]]);
+    // ---- camera path: polar spiral around the book, monotone splines over a path parameter tau (keys ~ the original timing).
+    //      After the wide shot az / el only increase and D / fov only shrink, so the landing never reverses direction. ----
+    R.cAz = X.mono([[0, -46], [3.7, -38], [4.7, -10], [5.62, 9], [8.0, 15]]);
+    R.cLD = X.mono([[0, Math.log(46)], [3.7, Math.log(39)], [4.7, Math.log(9)], [5.62, Math.log(2.15)], [8.0, Math.log(1.98)]]);
+    R.cEl = X.mono([[0, 10], [3.7, 10.8], [4.7, 25], [5.62, 30.5], [8.0, 32]]);
     R.cW = X.mono([[0, 0], [3.7, .02], [4.7, .55], [5.62, 1], [8.0, 1]]);
     R.cFov = X.mono([[0, 38], [3.7, 37.5], [4.7, 31], [5.62, 21.5], [8.0, 20]]);
+    { // Gaussian-smooth each monotone spline in tau (sigma .2): mono() is only C1, and its curvature jump at the knots (slow wide drift ->
+      // dive at 3.7, landing at 5.62) shows up as a speed kink once the path is re-timed. Convolution keeps every channel monotone.
+      const h = .002, T0 = -2.5, NT = Math.round(13 / h), sig = .2, rr = Math.ceil(3 * sig / h), wk = []; let ws = 0;
+      for (let j = -rr; j <= rr; j++) { const w = Math.exp(-.5 * (j * h / sig) ** 2); wk.push(w); ws += w; }
+      const sm = f => { const raw = new Float64Array(NT + 1), out = new Float64Array(NT + 1); for (let k = 0; k <= NT; k++) raw[k] = f(T0 + k * h);
+        for (let k = 0; k <= NT; k++) { let a = 0; for (let j = -rr; j <= rr; j++) a += wk[j + rr] * raw[Math.min(NT, Math.max(0, k + j))]; out[k] = a / ws; }
+        return tau => { const f2 = THREE.MathUtils.clamp((tau - T0) / h, 0, NT - 1e-6), k = Math.floor(f2), u = f2 - k; return out[k] + (out[k + 1] - out[k]) * u; }; };
+      R.cAz = sm(R.cAz); R.cLD = sm(R.cLD); R.cEl = sm(R.cEl); R.cW = sm(R.cW); R.cFov = sm(R.cFov); }
+    R.aimY = .027; // aim a touch above the cover: keeps the rahle crest clear of the title rule in the product shot
+    const B = R.book, Zm = new THREE.Vector3(0, 0, -1);
+    R.camPos = (tau, sh) => { // camera position on the spiral (+ optional shake), with soft terrain clearance
+      const az = R.cAz(tau) * D2R, D = Math.exp(R.cLD(tau)), el = R.cEl(tau) * D2R;
+      const cam = new THREE.Vector3(B.x + D * Math.cos(el) * Math.sin(az), B.y + D * Math.sin(el), B.z + D * Math.cos(el) * Math.cos(az)); if (sh) cam.add(sh);
+      const m = R.hAt(cam.x, cam.z) + Math.min(1.4, .22 + .03 * D), d = cam.y - m, k = .6; cam.y = m + (d > k ? d : k * Math.exp((d - k) / k)); return cam; };
+    R.camDir = (cam, tau) => { // look direction: from the far lamp field / horizon (wide) to the book (product shot)
+      const w = THREE.MathUtils.clamp(R.cW(tau), 0, 1); const hor = new THREE.Vector3(B.x - cam.x, 0, B.z - cam.z).normalize();
+      const far = new THREE.Vector3(B.x, 0, B.z).addScaledVector(hor, 40); far.y = 1.5; const near = B.clone().add(new THREE.Vector3(0, R.aimY, 0));
+      const qF = new THREE.Quaternion().setFromUnitVectors(Zm, far.sub(cam).normalize()), qN = new THREE.Quaternion().setFromUnitVectors(Zm, near.sub(cam).normalize());
+      return new THREE.Vector3(0, 0, -1).applyQuaternion(qF.slerp(qN, w)); };
+    // ---- re-time the path by its ON-SCREEN motion: optical flow of a fixed grid of view rays at three depths (0.6x, 1x, 2.5x the
+    //      book distance) between neighbouring path samples = how fast the whole picture moves (approach, orbit, aim, zoom).
+    //      The path is then driven by one smooth speed profile in that unit (wide drift -> eased dive -> soft landing -> slow push),
+    //      so perceived speed is smooth everywhere: no launch at a spline knot, no slam-stop on landing, no change of direction.
+    //      (A second, content-based measure -- 90th percentile flow of the lamp flames + hero set -- only sizes the motion blur.) ----
+    { hero.updateMatrixWorld(true);
+      const pc = new THREE.PerspectiveCamera(38, 1080 / 1920, .03, 700); const pts = [];
+      items.forEach((it, i) => { if (i % 5 === 0) pts.push(new THREE.Vector3(it.x, it.y + .06, it.z)); });
+      for (const l of R.heroLamps) { const p = new THREE.Vector3(); l.userData.flame.getWorldPosition(p); pts.push(p); }
+      { const r = U.rng(7); for (let i = 0; i < 160; i++) pts.push(B.clone().add(new THREE.Vector3((r() - .5) * .9, (r() - .5) * .8, (r() - .5) * .9))); } // the set + motes around the book
+      const rays = []; for (let iy = 0; iy < 9; iy++) for (let ix = 0; ix < 5; ix++) rays.push([-.9 + 1.8 * ix / 4, -.9 + 1.8 * iy / 8]);
+      const n = pts.length, TA = -1, TB = 9, NS = 2500, dT = (TB - TA) / NS; const px = new Float32Array(n), py = new Float32Array(n), pv = new Uint8Array(n);
+      const dens = new Float32Array(NS + 1), hi = new Float32Array(NS + 1); const v = new THREE.Vector3(), dd = [], ds = []; const nF = pts.length - 160; let prevW = null, prevT = 0, prevA = 0, prevDist = 1;
+      for (let k = 0; k <= NS; k++) { const tau = TA + k * dT; const cam = R.camPos(tau); pc.position.copy(cam); pc.lookAt(cam.clone().add(R.camDir(cam, tau))); pc.fov = R.cFov(tau); pc.updateProjectionMatrix(); pc.updateMatrixWorld();
+        if (k > 0) { let sd = 0, c = 0; // rays of the previous pose, re-projected with this pose
+          for (const f of [.6, 1, 2.5]) for (const [x, y] of rays) { v.set(x * prevT * pc.aspect, y * prevT, -1).multiplyScalar(f * prevDist).applyMatrix4(prevW).applyMatrix4(pc.matrixWorldInverse);
+            if (v.z < -.01) { v.applyMatrix4(pc.projectionMatrix); sd += Math.hypot((v.x - x) * 540, (v.y - y) * 960); c++; } }
+          dens[k] = c ? sd / c : dens[k - 1]; }
+        prevW = pc.matrixWorld.clone(); prevT = Math.tan(pc.fov * D2R / 2); prevDist = cam.distanceTo(B);
+        dd.length = 0; ds.length = 0;
+        for (let i = 0; i < n; i++) { v.copy(pts[i]).applyMatrix4(pc.matrixWorldInverse); const front = v.z < -.05; v.applyMatrix4(pc.projectionMatrix);
+          const vis = front && Math.abs(v.x) < 1 && Math.abs(v.y) < 1 ? 1 : 0; if (k > 0 && vis && pv[i]) (i < nF ? dd : ds).push(Math.hypot((v.x - px[i]) * 540, (v.y - py[i]) * 960));
+          px[i] = v.x; py[i] = v.y; pv[i] = vis; }
+        if (k > 0) { const q9 = a => a.length ? a.sort((x, y) => x - y)[Math.floor(a.length * .9)] : 0; hi[k] = Math.max(q9(dd), q9(ds)); } } // flames | set + motes
+      dens[0] = dens[1]; hi[0] = hi[1];
+      const box = (a, r) => a.map((_, k) => { let s = 0, c = 0; for (let j = Math.max(0, k - r); j <= Math.min(NS, k + r); j++) { s += a[j]; c++; } return s / c; });
+      const de = box(Array.from(dens), 6).map(x => Math.max(x, 1e-4)), hv = box(Array.from(hi), 12);
+      const Mc = new Float64Array(NS + 1); for (let k = 1; k <= NS; k++) Mc[k] = Mc[k - 1] + .5 * (de[k] + de[k - 1]);
+      const Mof = tau => { const f = THREE.MathUtils.clamp((tau - TA) / dT, 0, NS - 1e-6), k = Math.floor(f), u = f - k; return Mc[k] + (Mc[k + 1] - Mc[k]) * u; };
+      const tauOf = m => { let lo = 0, hi2 = NS; if (m <= Mc[0]) return TA; if (m >= Mc[NS]) return TB; while (hi2 - lo > 1) { const md = (lo + hi2) >> 1; if (Mc[md] <= m) lo = md; else hi2 = md; } return TA + (lo + (m - Mc[lo]) / Math.max(Mc[lo + 1] - Mc[lo], 1e-9)) * dT; };
+      const at = (a, tau) => { const f = THREE.MathUtils.clamp((tau - TA) / dT, 0, NS - 1e-6), k = Math.floor(f), u = f - k; return a[k] + (a[k + 1] - a[k]) * u; };
+      // speed profile (px of mean screen motion per second): r0 = original wide-shot drift, r1 = final product push-in
+      //  dive bump: symmetric 140 x^3 (1-x)^3 over [ta, tb] (slow onset from ~3.3 s on "mu'cize vermiş", peak ~4.6, landing ~6.0 on "Kur'an")
+      const ta = 2.7, tb = 6.5, T = tb - ta, m0 = Mof(-.5), mE = Mof(8.0);
+      const r0 = (Mof(3.3) - m0) / 3.8, r1 = (mE - Mof(5.62)) / 2.38;
+      const A = (mE - m0) - (r0 * (ta + .5) + r0 * T + (r1 - r0) * T / 2 + r1 * (8 - tb));
+      R.mAt = t => { if (t <= ta) return m0 + r0 * (t + .5); if (t >= tb) return mE + r1 * (t - 8); const x = (t - ta) / T, x4 = x * x * x * x;
+        return m0 + r0 * (t + .5) + (r1 - r0) * T * x4 * (x * x - 3 * x + 2.5) + A * x4 * (35 - 84 * x + 70 * x * x - 20 * x * x * x); };
+      R.vAt = t => { const x = THREE.MathUtils.clamp((t - ta) / T, 0, 1); return r0 + (r1 - r0) * x * x * x * (x * (x * 6 - 15) + 10) + A / T * 140 * Math.pow(x * (1 - x), 3); };
+      R.tauAt = t => tauOf(R.mAt(t));
+      R.flamePx = (t, tau) => at(hv, tau) * R.vAt(t) / at(de, tau) / 30; // 90th-percentile flame motion in px per frame
+      R.camInfo = { r0, r1, A, m0, mE }; }
   },
   update(t, ctx) {
     const { ui, U, post, camera, renderer } = ctx;
-    // ---- camera ----
-    const az = R.cAz(t) * D2R, D = Math.exp(R.cLD(t)), el = R.cEl(t) * D2R, w = THREE.MathUtils.clamp(R.cW(t), 0, 1);
-    const B = R.book; const cam = new THREE.Vector3(B.x + D * Math.cos(el) * Math.sin(az), B.y + D * Math.sin(el), B.z + D * Math.cos(el) * Math.cos(az));
-    const sh = U.shake(t, .03 * Math.min(1, D / 6) + .0025, .35, 7); cam.add(sh);
-    { const m = R.hAt(cam.x, cam.z) + Math.min(1.4, .22 + .03 * D), d = cam.y - m, k = .6; cam.y = m + (d > k ? d : k * Math.exp((d - k) / k)); } // soft terrain clearance
-    camera.position.copy(cam);
-    const hor = new THREE.Vector3(B.x - cam.x, 0, B.z - cam.z).normalize();
-    const far = new THREE.Vector3(B.x, 0, B.z).addScaledVector(hor, 40); far.y = 1.5;
-    const near = B.clone().add(new THREE.Vector3(0, .012, 0));
-    const dF = far.sub(cam).normalize(), dN = near.sub(cam).normalize(); const qF = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, -1), dF), qN = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, -1), dN);
-    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(qF.slerp(qN, w)); camera.lookAt(cam.clone().add(dir)); camera.fov = R.cFov(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    // ---- camera (re-timed path, see setup) ----
+    const tau = R.tauAt(t), D = Math.exp(R.cLD(tau)), B = R.book;
+    const cam = R.camPos(tau, U.shake(t, .03 * Math.min(1, D / 6) + .0025, .35, 7));
+    camera.position.copy(cam); camera.lookAt(cam.clone().add(R.camDir(cam, tau))); camera.fov = R.cFov(tau); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
     // pixel metrics for sprites / stars
     const rh = renderer.getDrawingBufferSize(new THREE.Vector2()).y; const fpx = rh / (2 * Math.tan(camera.fov * D2R / 2));
     R.patch.visible = D < 7; R.dust.visible = D < 8; // fine grain only matters near the hero (avoids far z-fighting)
-    const FU = R.field.userData.U; FU.uTime.value = t; FU.uFpx.value = fpx; FU.uMinPx.value = 2.2 * rh / 1920; FU.uCocMax.value = 120 * rh / 1920;
+    const FU = R.field.userData.U; FU.uTime.value = t; FU.uFpx.value = fpx; FU.uVh.value = rh; FU.uMinPx.value = 2.2 * rh / 1920; FU.uCocMax.value = 120 * rh / 1920;
     R.sky.userData.uniforms.starPx.value = 1.6 * (camera.fov * D2R) / rh;
     R.motes.material.uniforms.fpx.value = fpx;
 
@@ -128,30 +183,36 @@ export default {
     R.spot.updateMatrixWorld(); du.rayO.value.copy(R.spot.target.position); du.rayD.value.copy(R.spot.position).sub(R.spot.target.position).normalize();
     R.sky.userData.uniforms.sunUp.value = .4 * g; R.sky.userData.uniforms.gain.value = .85; R.sky.userData.uniforms.glow.value = 1 + .25 * U.smoothstep(0, 7.5, t);
     ctx.scene.environmentIntensity = .3 + .12 * g;
-    const prod = U.smoothstep(4.6, 5.8, t); // 0 wide .. 1 product shot
+    const prod = U.smoothstep(Math.log(10.5), Math.log(2.13), Math.log(D)); // 0 wide .. 1 product shot (follows the approach, not the clock)
     for (const m of R.envMats) m.envMapIntensity = .5 + .2 * prod + .25 * g;
-    R.hemi.intensity = 2.0 - 1.6 * prod; R.dawnSkyL.intensity = .55 * (1 - prod);
+    // product-shot fill: the shadow side sees the dawn sky (mauve near sunrise) and the lamp-lit sand / rug around the stand, not a pure navy zenith
+    R.hemi.intensity = 2.0 - 1.3 * prod; R.hemi.color.copy(R.hemiSky).lerp(R.hemiSkyP, prod); R.hemi.groundColor.copy(R.hemiGnd).lerp(R.hemiGndP, prod); R.dawnSkyL.intensity = .55 * (1 - prod);
     // perf: lights / passes only while they contribute (switching visibility recompiles once; output identical)
     R.spot.visible = t > 4.55; R.dawnSkyL.visible = prod < .995; post.dof.enabled = t > 4.2;
     // lamp practicals flicker
-    for (const l of [R.rimLamp, R.fillLamp]) l.intensity = l.userData.base * (1 + .07 * Math.sin(t * 13.1 + l.position.x * 9) + .05 * Math.sin(t * 7.7 + l.position.z * 5));
+    for (const l of [R.rimLamp, R.fillLamp]) l.intensity = l.userData.base * (l === R.fillLamp ? 1 + 10 * prod : 1) * (1 + .07 * Math.sin(t * 13.1 + l.position.x * 9) + .05 * Math.sin(t * 7.7 + l.position.z * 5));
     post.exposure = 1.18 + .04 * g - .1 * prod;
     post.grade.warmth = .0 + .05 * prod; post.grade.saturation = 1.06 + .02 * prod;
     // DOF: deep in the wide shot, shallow product focus on the cover
     const focus = camera.position.distanceTo(B); post.dof.focus = focus; FU.uFocus.value = focus; FU.uAperture.value = .05 * prod; post.dof.range = THREE.MathUtils.lerp(8, 1.1, prod); post.dof.amount = prod;
 
-    // motion blur only where the spiral glide is fast enough to strobe (point lights sweeping ~90 px/frame at 4.6 s)
-    const mbN = (t > 4.35 && t < 5.2) ? 6 : (t > 4.15 && t < 5.5) ? 4 : (t > 4.0 && t < 5.7) ? 2 : 1; post.motionBlur = { samples: R.dbg.includes('nomb') ? 1 : mbN, shutter: .5 };
+    // motion blur only where the glide is fast enough to strobe: sub-frame count from the on-screen speed of the fastest flames
+    // (90th percentile, from the path metric) so neighbouring sub-frames stay <= ~3.5 px apart -> continuous streaks, no ladders / doubled dots
+    const pxF = R.flamePx(t, tau), mbN = THREE.MathUtils.clamp(Math.ceil(pxF * .5 / 3.5), 1, 12); post.motionBlur = { samples: R.dbg.includes('nomb') ? 1 : mbN, shutter: .5 };
     if (R.dbg.includes('bigray')) { mu.rayR.value = 10; mu.base.value = 1; }
     if (R.dbg.includes('nospot')) { R.spot.intensity = 0; R.shaft.visible = false; } if (R.dbg.includes('noglow')) R.heroLamps.forEach(l => { l.userData.glow.visible = false; });
     if (R.dbg.includes('nodof')) post.dof.enabled = false; if (R.dbg.includes('nobloom')) post.bloom.enabled = false;
     // ---- typography ----
     const tBin = ctx.wordTime('bine'), tMu = ctx.wordTime("mu'cize");
     let lit = 0; { let lo = 0, hi = R.onTimes.length; while (lo < hi) { const m = (lo + hi) >> 1; if (R.onTimes[m] < t - .05) lo = m + 1; else hi = m; } lit = lo + R.nHero; }
-    const hide = tB - .25;
-    ui.text('≈ ' + lit.toLocaleString('tr-TR'), { t, t0: tBin - .2, t1: hide, x: 540, y: 400, size: 150, weight: 900, color: '#ffd27a', anim: 'pop', shadowBlur: 26, shadowColor: 'rgba(10,8,30,.7)' });
+    // counter + MU'CİZE leave on "ve" so "en büyüğü ve en parlağı" can land on the spoken "en büyük"
+    const tEn = ctx.wordTime('en'), hide = tEn - .06;
+    { // counter: the number grows to the right from a fixed '≈' (centred for the final "≈ 1.000"), no sideways jumps on ticks
+      const e = ui.env(t, tBin - .2, hide, .45, 'pop'); if (e.o > .001) { const X2 = ui.ctx; X2.save(); X2.font = ui.font(150, 900, 'Nunito'); if ('letterSpacing' in X2) X2.letterSpacing = '0px';
+        X2.textAlign = 'left'; X2.textBaseline = 'middle'; const w0 = X2.measureText('≈ 1.000').width; X2.globalAlpha = e.o; X2.translate(540, 400); X2.scale(e.s, e.s);
+        X2.shadowColor = 'rgba(10,8,30,.7)'; X2.shadowBlur = 26; X2.shadowOffsetY = 4; X2.fillStyle = '#ffd27a'; X2.fillText('≈ ' + lit.toLocaleString('tr-TR'), -w0 / 2, 0); X2.restore(); } }
     ui.text("MU'CİZE", { t, t0: tMu - .05, t1: hide, x: 540, y: 520, size: 56, weight: 900, color: '#fff4dc', letterSpacing: 12, anim: 'rise', shadowBlur: 20, shadowColor: 'rgba(10,8,30,.75)' });
-    ui.text('en büyüğü ve en parlağı', { t, t0: tB + .02, t1: 99, x: 540, y: 292, size: 54, weight: 800, color: '#fff4dc', anim: 'rise', shadowBlur: 22, shadowColor: 'rgba(30,12,4,.75)' });
+    ui.text('en büyüğü ve en parlağı', { t, t0: tEn - .04, t1: 99, x: 540, y: 292, size: 54, weight: 800, color: '#fff4dc', anim: 'rise', shadowBlur: 22, shadowColor: 'rgba(30,12,4,.75)' });
     ui.text("KUR'ÂN-I KERÎM", { t, t0: tK - .05, t1: 99, x: 540, y: 388, size: 96, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 4, shadowBlur: 28, shadowColor: 'rgba(40,14,0,.7)' });
     // thin gold rule with a central lozenge under the title
     { const p = U.prog(t, tK + .15, tK + .75, 'outCubic'); if (p > 0) { const X2 = ui.ctx; X2.save(); X2.globalAlpha = p; X2.strokeStyle = '#ffd27a'; X2.fillStyle = '#ffd27a'; X2.lineWidth = 3; X2.shadowColor = 'rgba(40,14,0,.6)'; X2.shadowBlur = 10;

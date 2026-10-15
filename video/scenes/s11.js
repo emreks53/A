@@ -3,7 +3,7 @@
 // sandstone rise from a travertine plinth like bars of a chart; one white-marble column with a gilded astragal —
 // "DÜRÜSTLÜK" (engraved on the plinth) — keeps rising past all others; the camera tilts after its capital (kept below
 // the title at all times) in a low-angle push, then pulls back to reveal the whole chart: "en yüksek derece".
-// Motion blur is switched on adaptively only for the soar (5 samples at peak speed, 3 otherwise) and the fast reveal.
+// Motion blur is adaptive: the sub-frame count follows the measured on-screen speed (1 when slow, up to 6 at peak).
 import * as THREE from 'three';
 import { worldBoxUV, fineStoneMat, flutedShaft, palmD } from '../engine/lib/extra_D.js';
 
@@ -71,7 +71,7 @@ function solveCam(t, ctx, hs) {
   const screenY = ly => { camera.lookAt(tx, ly, 0); camera.updateMatrixWorld(); return ui.project(capV)[1]; };
   const lyA = 1.55 + .02 * Math.sin(t * .7);                       // phase-A framing
   const ysA = screenY(lyA);
-  const S = 70; const want = CAP_Y + S * Math.log1p(Math.exp((ysA - CAP_Y) / S));
+  const S = 70, z = (ysA - CAP_Y) / S; const want = CAP_Y + S * (z > 30 ? z : Math.log1p(Math.exp(z)));
   // solve look height so the capital sits at `want` (screen y is monotonic in ly)
   let lo = -10, hi = heroTop + 30; for (let it = 0; it < 28; it++) { const mid = (lo + hi) / 2; if (screenY(mid) > want) hi = mid; else lo = mid; }
   camera.lookAt(tx, (lo + hi) / 2, 0); camera.updateMatrixWorld();
@@ -204,7 +204,9 @@ export default {
     const hsP = heights(t - 1 / 30, ctx); solveCam(t - 1 / 30, ctx, hsP); const pP = blurRefs(hsP).map(v => ui.project(v));
     const { pos, k, kr } = solveCam(t, ctx, hs); const pN = blurRefs(hs).map(v => ui.project(v));
     let md = 0; pN.forEach((p, i) => { const q = pP[i]; if (p[2] < 1 && q[2] < 1 && p[0] > -60 && p[0] < 1140 && p[1] > -60 && p[1] < 1980) md = Math.max(md, Math.hypot(p[0] - q[0], p[1] - q[1])); });
-    post.motionBlur.samples = U.clamp(Math.ceil(md * post.motionBlur.shutter / 4), 1, 6);
+    // 180° shutter, narrowed only for the very fastest bar pop-ups so 6 sub-frames still sit <= 4 px apart
+    const shut = Math.min(.5, 24 / Math.max(md, 1)); post.motionBlur.shutter = shut;
+    post.motionBlur.samples = U.clamp(Math.ceil(md * shut / 4), 1, 6);
     post.dof.focus = pos.distanceTo(new THREE.Vector3(hx, U.lerp(1, heroTop - 1, k), 0)); post.dof.range = U.lerp(7, 12, kr); post.dof.amount = U.lerp(.6, .3, k);
 
     R.clouds.forEach(c => { c.sp.position.x = c.x + c.v * t; });

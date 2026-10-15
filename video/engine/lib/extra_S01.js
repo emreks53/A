@@ -263,17 +263,13 @@ export function eliteMushaf(o = {}) {
   { const p = tbGeo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i); if (x < -tw / 2 + 1e-5) p.setX(i, x + .0022 * (1 - Math.pow(2 * z / tt, 2))); } tbGeo.computeVertexNormals(); }
   const tb = new THREE.Mesh(tbGeo, [paperMat, edgeU, edgeV, edgeV, paperMat, paperMat]); tb.position.x = -wb / 2 + fo + tw / 2; g.add(tb);
 
-  // rounded spine shell (+x), raised bands, gold fillets
+  // rounded spine shell (+x), gold fillets
   const B0 = .0075, x0 = wb / 2 - .0026;
   const crescent = (bulge, half, thick, n = 24) => { const s = new THREE.Shape(); for (let i = 0; i <= n; i++) { const f = -Math.PI / 2 + Math.PI * i / n; const px = x0 + bulge * Math.cos(f), pz = half * Math.sin(f); i ? s.lineTo(px, pz) : s.moveTo(px, pz); } for (let i = n; i >= 0; i--) { const f = -Math.PI / 2 + Math.PI * i / n; s.lineTo(x0 + (bulge - thick) * Math.cos(f), (half - thick) * Math.sin(f)); } return s; };
   const ext = (shape, height, bevel) => { const geo = new THREE.ExtrudeGeometry(shape, { depth: height - 2 * bevel, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel * .8, bevelSegments: 3, curveSegments: 4 }); geo.translate(0, 0, -(height - 2 * bevel) / 2); geo.rotateX(Math.PI / 2); return geo; };
   // rotateX(+90deg) maps shape (x, y=z_book) & extrusion z -> book: (x, -z_ext, y_shape) -> need y_shape -> z_book; fix by swapping sign below
   const spine = new THREE.Mesh(ext(crescent(B0, d / 2, .0024), hb, .0009), leatherMat); g.add(spine);
-  const bandYs = [-.088, -.03, .03, .088];
-  for (const y of bandYs) {
-    const band = new THREE.Mesh(ext(crescent(B0 + .0012, d / 2 + .0002, .003), .0058, .0014), leatherMat); band.position.y = y; g.add(band);
-    for (const dy of [-.0068, .0068]) { const f = new THREE.Mesh(ext(crescent(B0 + .0006, d / 2 + .0001, .0014), .0014, 0), goldMat); f.position.y = y + dy; g.add(f); }
-  }
+  // Ottoman bindings have smooth, flat-backed spines (unsupported sewing): no raised bands, only gold fillets at head and tail
   for (const y of [hb / 2 - .007, -hb / 2 + .007]) { const f = new THREE.Mesh(ext(crescent(B0 + .00035, d / 2 + .0002, .0012), .0012, 0), goldMat); f.position.y = y; g.add(f); }
 
   // headbands (şiraze): chevron silk in red / cream / green with gold, at head & tail of the spine
@@ -502,9 +498,17 @@ export function clayMaterial() {
   _clayMat = new THREE.MeshStandardMaterial({ map: t.map, normalMap: t.normalMap, normalScale: new THREE.Vector2(.4, .4), roughness: .82 });
   return _clayMat;
 }
+let _heroClay = null;
+function heroClayMaterial() { // clay lit from its own flame: warm emissive rising toward the discus / nozzle (as the lamp-field bodies)
+  if (_heroClay) return _heroClay; _heroClay = clayMaterial().clone();
+  _heroClay.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vUp;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvUp = clamp(position.y / .037, 0., 1.);');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vUp;').replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(1., .4, .12) * (.03 + .22 * vUp * vUp);'); };
+  _heroClay.customProgramCacheKey = () => 'heroClay'; return _heroClay;
+}
 export function heroLamp(o = {}) {
   const g = new THREE.Group(); const { geo, flameAt } = clayLampGeometry();
-  const body = new THREE.Mesh(geo, clayMaterial()); body.castShadow = true; body.receiveShadow = true; g.add(body);
+  const body = new THREE.Mesh(geo, heroClayMaterial()); body.castShadow = true; body.receiveShadow = true; g.add(body);
   const f = fxFlame({ height: .03, seed: o.seed ?? 1 }); f.position.copy(flameAt); g.add(f);
   const gl = fxGlow({ size: .2, opacity: .32, color: '#ffae5a' }); gl.position.copy(flameAt).add(new THREE.Vector3(0, .028, 0)); g.add(gl);
   g.userData.flameAt = flameAt; g.userData.flame = f; g.userData.glow = gl; g.scale.setScalar(o.scale ?? 1); return g;
@@ -515,7 +519,7 @@ export function heroLamp(o = {}) {
 // items: [{x,y,z,rot,s,on,seed,nx,ny,nz}]
 // =============================================================================================
 export function lampField(items, o = {}) {
-  const N = items.length; const U = { uTime: { value: 0 }, uFpx: { value: 1000 }, uMinPx: { value: 2 }, uFog: { value: o.fog ?? .0065 }, uMaster: { value: 1 }, uFocus: { value: 10 }, uAperture: { value: 0 }, uCocMax: { value: 120 } };
+  const N = items.length; const U = { uTime: { value: 0 }, uFpx: { value: 1000 }, uVh: { value: 1920 }, uMinPx: { value: 2 }, uFog: { value: o.fog ?? .0065 }, uMaster: { value: 1 }, uFocus: { value: 10 }, uAperture: { value: 0 }, uCocMax: { value: 120 } };
   const aOn = new Float32Array(N), aSeed = new Float32Array(N); items.forEach((it, i) => { aOn[i] = it.on; aSeed[i] = it.seed; });
   const { geo, flameAt } = clayLampGeometry(0);
   const bgeo = geo.clone(); bgeo.setAttribute('aOn', new THREE.InstancedBufferAttribute(aOn, 1));
@@ -539,14 +543,15 @@ export function lampField(items, o = {}) {
   // flames as camera-facing points (size from focal length, clamped to >= uMinPx with energy compensation)
   const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.BufferAttribute(fpos, 3)); fg.setAttribute('aOn', new THREE.BufferAttribute(aOn, 1)); fg.setAttribute('aSeed', new THREE.BufferAttribute(aSeed, 1));
   const fm = new THREE.ShaderMaterial({ uniforms: { ...U, map: { value: TEX.softDot(64, .2) } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    vertexShader: `uniform float uTime, uFpx, uMinPx, uFog, uMaster, uFocus, uAperture, uCocMax; attribute float aOn, aSeed; varying float vB; varying float vCore; varying float vBk;
+    vertexShader: `uniform float uTime, uFpx, uVh, uMinPx, uFog, uMaster, uFocus, uAperture, uCocMax; attribute float aOn, aSeed; varying float vB; varying float vCore; varying float vBk;
       void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; float dz = max(-mv.z, .05);
         float lit = smoothstep(aOn, aOn + .22, uTime); float flare = 1. + 1.6 * exp(-max(uTime - aOn, 0.) * 6.) * step(aOn, uTime);
         float fl = .86 + .14 * sin(uTime * 11. + aSeed * 7.) * sin(uTime * 5.3 + aSeed * 3.);
         float px = .1 * uFpx / dz; float fs = clamp(px, uMinPx, 140.); float en = min(1., pow(px / fs, 1.2));
         float coc = min(uAperture * uFpx * abs(1. / uFocus - 1. / dz), uCocMax); float bk = smoothstep(fs * 1.3, fs * 3., coc);
         float fog = exp(-pow(uFog * dz, 2.) * .7);
-        vB = lit * flare * fl * en * fog * uMaster; vCore = clamp(px / 14., 0., 1.); vBk = bk; gl_PointSize = max(fs, coc * bk) * (.75 + .25 * lit); }`,
+        vB = lit * flare * fl * en * fog * uMaster; vCore = clamp(px / 14., 0., 1.); vBk = bk; gl_PointSize = max(fs, coc * bk) * (.75 + .25 * lit);
+        vec2 eg = (1. - abs(gl_Position.xy / max(gl_Position.w, 1e-4))) * vec2(uVh * .5625, uVh) * .5; vB *= smoothstep(0., max(gl_PointSize * .5, 1.), min(eg.x, eg.y)); }`,
     fragmentShader: `uniform sampler2D map; varying float vB; varying float vCore; varying float vBk; void main(){ vec2 pc = gl_PointCoord - .5; float r = length(pc) * 2.;
         float halo = texture2D(map, gl_PointCoord).a; float core = smoothstep(.32, .0, length(vec2(pc.x * 2.2, (pc.y + .05) * 1.4)) * 2.);
         vec3 c = vec3(1., .5, .16) * halo * .6 + vec3(1., .86, .58) * core * mix(1.8, .7, vCore);
