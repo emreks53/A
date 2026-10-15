@@ -5,7 +5,7 @@
 // the sunbeam: the hero binding "Şifâ-i Şerif" (Kadı İyâz). On "yüzlerce ciltlerle" it pulls back and cranes up: the upper
 // shelves fill with volumes in a rapid time-lapse wave (counter), revealing the immense wall. "beyan ve ispat" stamp.
 import * as THREE from 'three';
-import { camPath, aim, bookInstances, fillShelf, itemMatrix } from '../engine/lib/extra_F.js';
+import { aim, bookInstances, fillShelf, itemMatrix } from '../engine/lib/extra_F.js';
 
 let R = {};
 const HALL = { x0: -5, x1: 5, z0: 5.5, z1: -27, bays: 9, bayW: 3.4, zStart: 4.6 };
@@ -15,13 +15,12 @@ export default {
     exposure: 1.0,
     bloom: { enabled: true, strength: 0.5, radius: 0.7, threshold: 0.8 },
     grade: { contrast: 1.08, saturation: 1.08, warmth: 0.02, lift: [0.0, 0.008, 0.022], gain: [1.03, 1.0, 0.97] },
-    vignette: 0.45, grain: 0.03,
+    vignette: 0.45, grain: 0.03, aberration: 0.0007,
     dof: { enabled: true, focus: 8, range: 6, amount: 0.8 },
   },
   async setup(ctx) {
     const { scene, camera, U, MODELS: M, ENV, FX, TEX } = ctx;
     R = {};
-    await document.fonts.load('700 60px Amiri', 'الشفا');
     scene.background = new THREE.Color('#1a120c');
     scene.fog = new THREE.FogExp2('#3b2c22', 0.012);
     scene.environment = await ctx.loadHDR('old_hall'); scene.environmentIntensity = 0.32;
@@ -43,11 +42,11 @@ export default {
 
     // floor: polished stone tiles + a long kilim runner
     const tileTex = TEX.drawTexture(1024, 1024, (x, W, H) => {
-      const n = 4, s = W / n; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const c = (i + j) % 2 ? '#c9a77e' : '#e2ccaa'; x.fillStyle = c; x.fillRect(i * s, j * s, s, s);
+      const n = 4, s = W / n; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const c = (i + j) % 2 ? '#b48f66' : '#c9ad86'; x.fillStyle = c; x.fillRect(i * s, j * s, s, s);
         for (let k = 0; k < 60; k++) { x.fillStyle = `rgba(${(i + j) % 2 ? '120,80,50' : '160,130,100'},0.06)`; x.beginPath(); x.ellipse(i * s + ((k * 37) % s), j * s + ((k * 71) % s), 20 + (k % 7) * 9, 6 + (k % 5) * 3, k, 0, 7); x.fill(); } }
       x.strokeStyle = '#7d6347'; x.lineWidth = 5; for (let i = 0; i <= n; i++) { x.beginPath(); x.moveTo(i * s, 0); x.lineTo(i * s, H); x.stroke(); x.beginPath(); x.moveTo(0, i * s); x.lineTo(W, i * s); x.stroke(); } });
     tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping; tileTex.repeat.set(4, 13);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(10.4, 34).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: tileTex, roughness: .45, clearcoat: .25, clearcoatRoughness: .45 }));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(10.4, 34).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: tileTex, roughness: .5, clearcoat: .18, clearcoatRoughness: .5 }));
     floor.position.set(0, 0, -10.75); floor.receiveShadow = true; scene.add(floor);
     const kilimTex = TEX.drawTexture(256, 1024, (x, W, H) => {
       x.fillStyle = '#8c2418'; x.fillRect(0, 0, W, H); x.fillStyle = '#e1b45a'; x.fillRect(10, 0, 8, H); x.fillRect(W - 18, 0, 8, H); x.fillStyle = '#23324f'; x.fillRect(26, 0, 12, H); x.fillRect(W - 38, 0, 12, H);
@@ -143,8 +142,18 @@ export default {
       for (let i = 0; i <= HALL.bays; i++) { const br = new THREE.Mesh(cg, walnut); br.position.set(4.5, 3.59, bayZ(i)); br.rotation.y = Math.PI; br.castShadow = br.receiveShadow = true; scene.add(br); } }
 
     const all = items.concat(late); R.nStatic = items.length; R.late = late;
-    late.forEach(r => { r.t0 = 4.85 + (r.i * .15 + (5 - r.k) * .045 + (1 - r.x) * .12) + rnd() * .1; });
+    late.forEach(r => { r.t0 = 5.0 + (Math.max(0, r.i - 1) * .12 + (5 - r.k) * .03 + (1 - r.x) * .08) + rnd() * .06; }); // near→far wave, in view once the crane settles
     const books = bookInstances(all); scene.add(books); R.books = books;
+    // anti-shimmer for the hundreds of small spines at full resolution: sample the spine atlas one mip softer and keep
+    // gilt bands from turning into sub-pixel specular sparkles (roughness floor).
+    { const sm = books.userData.meshes[1].material; const prev = sm.onBeforeCompile;
+      sm.onBeforeCompile = sh => { prev(sh);
+        sh.fragmentShader = sh.fragmentShader
+          .replace('texture2D(metalnessMap, vMetalnessMapUv).r', 'texture2D(metalnessMap, vMetalnessMapUv, 1.0).r')
+          .replace('#include <map_fragment>', '#ifdef USE_MAP\n vec4 sampledDiffuseColor = texture2D( map, vMapUv, 1.0 ); diffuseColor *= sampledDiffuseColor;\n#endif')
+          .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = roughness;\n#ifdef USE_ROUGHNESSMAP\n roughnessFactor *= texture2D( roughnessMap, vRoughnessMapUv, 1.0 ).g;\n#endif\n roughnessFactor = max(roughnessFactor, .5);')
+          .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = metalness;\n#ifdef USE_METALNESSMAP\n metalnessFactor *= texture2D( metalnessMap, vMetalnessMapUv, 1.0 ).b * .85;\n#endif'); };
+      sm.customProgramCacheKey = () => 'F_spine_atlas_s14aa'; sm.needsUpdate = true; }
     R.tmpM = new THREE.Matrix4(); R.zero = new THREE.Matrix4().makeScale(0, 0, 0);
 
     // ---- lectern + hero book (Şifâ-i Şerif) in the sunbeam ----------------------------------------------------
@@ -154,30 +163,11 @@ export default {
       const lip = new THREE.Mesh(M.rbox(.62, .05, .03, .01, 2), walnut); lip.position.set(0, .035, .22); tilt.add(lip);
       const post = new THREE.Mesh(M.rbox(.14, .2, .14, .02, 2), walnut); post.position.set(0, .86, 0); lec.add(post);
       shadowify(lec);
-      // hero book: Islamic binding (spine on the right, fore-edge flap), gold-tooled şemse and a title cartouche with الشفا
+      // hero book: classical Ottoman şemseli binding (oxblood morocco, gold-tooled şemse + salbek pendants, köşebent
+      // corner pieces, zencerek chain border; spine on the right, fore-edge flap). No lettering on the cover (as on
+      // real Islamic bindings — the title is given by the overlay).
       const w = .24, h = .33, d = .065;
-      const cover = (x, W, H) => {
-        x.clearRect(0, 0, W, H); x.save(); x.translate(W, H); x.rotate(Math.PI); // book is turned 180° (spine on the right)
-        const gold = x.createLinearGradient(0, 0, W, H); gold.addColorStop(0, '#f7da8e'); gold.addColorStop(.35, '#d6a243'); gold.addColorStop(.6, '#f3cf7a'); gold.addColorStop(1, '#b27f2a'); x.strokeStyle = gold; x.fillStyle = gold;
-        x.lineWidth = W * .014; x.strokeRect(W * .06, H * .045, W * .88, H * .91); x.lineWidth = W * .006; x.strokeRect(W * .09, H * .065, W * .82, H * .87);
-        // chain border of small lozenges
-        for (let k = 0; k < 22; k++) { const yy = H * (.09 + k * .82 / 21); for (const xx of [W * .075, W * .925]) { x.save(); x.translate(xx, yy); x.rotate(Math.PI / 4); x.fillRect(-W * .007, -W * .007, W * .014, W * .014); x.restore(); } }
-        const cx = W / 2, cy = H * .55;
-        x.save(); x.translate(cx, cy); x.beginPath(); x.ellipse(0, 0, W * .25, H * .165, 0, 0, Math.PI * 2); x.fill();
-        x.beginPath(); x.moveTo(0, -H * .2); x.lineTo(W * .03, -H * .165); x.lineTo(-W * .03, -H * .165); x.fill(); x.beginPath(); x.moveTo(0, H * .2); x.lineTo(W * .03, H * .165); x.lineTo(-W * .03, H * .165); x.fill();
-        x.fillStyle = '#5a1610'; x.beginPath(); x.ellipse(0, 0, W * .2, H * .125, 0, 0, Math.PI * 2); x.fill();
-        x.fillStyle = gold; for (let k = 0; k < 12; k++) { x.save(); x.rotate(k * Math.PI / 6); x.beginPath(); x.ellipse(0, -W * .1, W * .016, W * .05, 0, 0, Math.PI * 2); x.fill(); x.restore(); }
-        x.beginPath(); x.arc(0, 0, W * .035, 0, 7); x.fill(); x.restore();
-        // corner pieces
-        x.globalAlpha = .9; [[W * .09, H * .065, 0], [W * .91, H * .065, Math.PI / 2], [W * .91, H * .935, Math.PI], [W * .09, H * .935, -Math.PI / 2]].forEach(([px, py, r]) => { x.save(); x.translate(px, py); x.rotate(r); x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, W * .13, 0, Math.PI / 2); x.closePath(); x.fill(); x.restore(); }); x.globalAlpha = 1;
-        // title cartouche (dark leather inlay) with the Arabic title
-        const ty = H * .2; x.fillStyle = '#2a0e0a'; x.beginPath(); x.ellipse(cx, ty, W * .27, H * .055, 0, 0, Math.PI * 2); x.fill(); x.lineWidth = W * .008; x.strokeStyle = gold; x.stroke();
-        x.fillStyle = gold; x.font = `700 ${Math.round(W * .13)}px Amiri`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.direction = 'rtl'; x.fillText('الشفا', cx, ty + H * .004);
-        x.restore();
-      };
-      const hb = M.book({ w, h, d, color: '#7a2216', dark: '#3a0e08', seed: 5, gold: false, coverDraw: cover, pageColor: '#e8d9b8' });
-      hb.traverse(o => { if (o.isMesh && o.material && o.material.map && o.material.transparent) { o.material.metalness = .7; o.material.roughness = .32; } });
-      const flap = new THREE.Mesh(M.rbox(.006, h, d + .01, .003, 2), hb.children[1].material); flap.position.x = w / 2 + .002; hb.add(flap);
+      const hb = heroBinding(ctx, { w, h, d });
       hb.rotation.z = Math.PI; // spine to the right
       const hold = new THREE.Group(); hold.position.set(0, .02 + d / 2, -.01); hold.rotation.x = -Math.PI / 2; // lie on the board, cover up
       hold.add(hb); tilt.add(hold); shadowify(hold);
@@ -204,41 +194,37 @@ export default {
     const bookP = new THREE.Vector3(); R.hero.updateMatrixWorld(true); R.hero.getWorldPosition(bookP); R.bookP = bookP;
     const BP = bookP.toArray();
     const add = (a, b) => a.map((v, i) => v + b[i]);
-    const c0 = [2.45, 1.35, 3.6], c1 = [2.15, 1.5, -2.8], c2 = add(BP, [.72, .7, 1.12]), c3 = add(BP, [.46, .6, .9]), c3b = add(BP, [.66, .76, 1.25]);
-    const c4a = [.4, 2.9, -2.4], c4 = [-1.6, 4.6, 1.2], c5 = [-.7, 5.25, -3.4];
-    const k0 = aim(c0, [4.6, 1.55, -3.5]), k1 = aim(c1, [.2, .95, -9.6]), k2 = aim(c2, BP), k3 = aim(c3, BP), k3b = aim(c3b, BP), k4a = aim(c4a, [3.2, 3.0, -11]), k4 = aim(c4, [2.5, 3.2, -12]), k5 = aim(c5, [3.0, 3.1, -15.5]);
-    R.cam = camPath([
-      [-0.6, [2.5, 1.32, 4.3], k0[0] - 1, k0[1], 40],
-      [0.0, c0, k0[0], k0[1], 40],
-      [1.75, c1, k1[0], k1[1], 40],
-      [2.7, c2, k2[0], k2[1], 34],
-      [4.4, c3, k3[0] + 1.5, k3[1], 33],
-      [4.75, c3b, k3b[0] + 1, k3b[1] + 4, 35],
-      [5.3, c4a, k4a[0], k4a[1], 40],
-      [5.95, c4, k4[0], k4[1], 42],
-      [10.3, c5, k5[0] - 2, k5[1] + 1, 40],
-    ]);
+    // arc-length camera rig: position speed and yaw/pitch are C1-smooth (no dead stops, no jerks); whip move eased
+    R.cam = rig(THREE, [
+      [-0.6, [2.5, 1.32, 4.3]], [0.0, [2.42, 1.36, 3.4]], [1.0, [2.15, 1.45, -1.2]], [1.95, [1.45, 1.6, -5.9]], [2.75, add(BP, [.72, .7, 1.12])],
+      [4.2, add(BP, [.46, .6, .92])], [4.7, add(BP, [.62, .8, 1.3])], [5.35, [.7, 2.8, -4.6]], [6.25, [-.9, 4.5, -.6]], [10.3, [-1.75, 5.1, 1.6]],
+    ], [
+      [-0.6, [4.6, 1.5, -3.2], -1, 0], [0.0, [4.6, 1.55, -3.5]], [1.0, [2.0, 1.15, -9.0]], [1.95, [0.25, 1.0, -9.55]], [2.75, BP],
+      [4.2, BP, 1.5, 0], [4.65, BP, 1, 3], [5.7, [2.2, 3.62, -11.5]], [6.8, [2.6, 5.0, -12.5]], [10.3, [2.9, 5.05, -14.5]],
+    ], [[-0.6, 40], [0, 40], [1.75, 40], [2.7, 34], [4.4, 33], [4.75, 35], [5.3, 40], [5.95, 42], [10.3, 40]]);
   },
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
-    R.cam.apply(camera, t, U.shake(t, .01, .5, 11));
+    R.cam.apply(camera, t, U.shake(t, .008, .5, 11));
     // time-lapse fill of the upper shelves
     const bk = R.books.userData; const n0 = R.nStatic; let shown = 0;
     R.late.forEach((r, j) => {
-      const p = U.clamp((t - r.t0) / .32);
+      const p = U.clamp((t - r.t0) / .42);
       if (p <= 0) { bk.setMatrix(n0 + j, R.zero); return; }
       shown++;
       if (p >= 1) { bk.setMatrix(n0 + j, r.m); return; }
-      const e = U.ease.outBack(p, 1.6); const m = R.tmpM.copy(r.m); const off = (1 - e);
-      m.elements[12] += -r.side * off * .8; m.elements[13] += off * .3; // slides in from the front, settling down
+      const e = U.ease.outBack(p, 1.15); const m = R.tmpM.copy(r.m); const off = (1 - e);
+      m.elements[12] += -r.side * off * .7; m.elements[13] += off * .25; // slides in from the front, settling down
       bk.setMatrix(n0 + j, m);
     });
     bk.commit(); R.shown = shown;
     // DOF: on the shelves / hero book, then wide
     const bf = U.smoothstep(1.6, 2.6, t) * (1 - U.smoothstep(4.6, 5.4, t)), wide = U.smoothstep(4.9, 5.9, t);
-    const fBase = U.lerp(7, camera.position.distanceTo(new THREE.Vector3(4.3, 3.3, -8)), wide);
+    const fBase = U.lerp(7, camera.position.distanceTo(new THREE.Vector3(4.3, 3.6, -7)), wide);
     post.dof.focus = U.lerp(fBase, camera.position.distanceTo(R.bookP), bf);
-    post.dof.range = U.lerp(U.lerp(7, 18, wide), .9, bf); post.dof.amount = U.lerp(U.lerp(.5, .18, wide), .85, bf);
+    post.dof.range = U.lerp(U.lerp(7, 10, wide), .9, bf); post.dof.amount = U.lerp(U.lerp(.5, .5, wide), .85, bf);
+    // motion blur only for the fast glide/pan, the whip move + time-lapse (decided for the next frame: the engine reads it before update)
+    { const tn = t + 1 / 30; post.motionBlur = { samples: (tn > .3 && tn < 2.75) || (tn > 4.5 && tn < 6.75) ? 3 : 1, shutter: .5 }; }
     R.shafts.forEach((s, i) => { s.userData.uniforms.opacity.value = .045 + .012 * Math.sin(t * .7 + i); });
 
     // ---- typography ----------------------------------------------------------------------------------------
@@ -247,7 +233,7 @@ export default {
     ui.text('Şifâ-i Şerif', { t, t0: tS - .05, t1: tY - .05, x: 540, y: 330, size: 104, weight: 900, family: 'Playfair Display', color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
     ui.pill('Kadı İyâz (ö. 1149)', { t, t0: tSe - .05, t1: tY - .05, x: 540, y: 450, size: 44, weight: 800, bg: 'rgba(40,22,12,.72)', color: '#fff1d6' });
     ui.text('yüzlerce cilt', { t, t0: tY - .05, t1: tYu - .1, x: 540, y: 330, size: 92, weight: 900, color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
-    tally(ui, U, t, tY + .05, tYu - .1, R.shown / Math.max(1, R.late.length));
+    tally(ui, U, t, tY + .05, tYu + .2, R.shown / Math.max(1, R.late.length));
     ui.text('“yüksek ahlâk” mu\'cizesi', { t, t0: tYu - .05, t1: 99, x: 540, y: 330, size: 62, weight: 500, family: 'Lora', italic: true, color: '#fff4dc', anim: 'rise', stroke: 'rgba(40,20,8,.5)', strokeW: 8 });
     const hit = U.clamp((t - (tI - .04)) / .16); const jolt = hit > 0 && hit < 1 ? Math.sin(hit * Math.PI) : 0;
     ui.text('beyan ve ispat', { t, t0: tB - .05, t1: 99, x: 540, y: 455, size: 84 * (1 - .05 * jolt), weight: 900, color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
@@ -269,3 +255,143 @@ function tally(ui, U, t, t0, t1, frac) {
   X.restore();
 }
 function shadowify(o) { o.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } }); }
+
+// ---------------------------------------------------------------------------------------------------------------
+// Hero binding: one hand-made cover map set (colour / tangent normal / roughness+metalness) baked from canvas masks.
+// Local frame like MODELS.book: x across the cover (spine at -x), y = height, z = thickness (front cover at +z).
+function heroBinding(ctx, { w, h, d }) {
+  const { THREE: T, MODELS: M, U } = ctx; const g = new T.Group(); const ct = .0055;
+  const CW = 832, CH = Math.round(CW * h / w); const r = U.rng(1149);
+  const mk = () => { const c = document.createElement('canvas'); c.width = CW; c.height = CH; return [c, c.getContext('2d')]; };
+  // ---- masks: gold tooling (gm) and blind tooling (bm), white on black -------------------------------------------
+  const [gC, gx] = mk(), [bC, bx] = mk(); [gx, bx].forEach(x => { x.fillStyle = '#000'; x.fillRect(0, 0, CW, CH); x.fillStyle = x.strokeStyle = '#fff'; x.lineCap = x.lineJoin = 'round'; });
+  const W = CW, H = CH, cx = W / 2, cy = H / 2;
+  const frame = (x, inset, lw) => { x.lineWidth = lw; x.strokeRect(inset, inset, W - inset * 2, H - inset * 2); };
+  frame(gx, W * .032, W * .007); frame(gx, W * .104, W * .0055); frame(bx, W * .118, W * .004); frame(bx, W * .02, W * .003);
+  // zencerek: a chain of small stamped rosettes between the two gold fillets
+  const stamp = (x, px, py, s) => { x.save(); x.translate(px, py); for (let k = 0; k < 4; k++) { x.rotate(Math.PI / 2); x.beginPath(); x.ellipse(0, -s * .55, s * .26, s * .45, 0, 0, 7); x.fill(); } x.beginPath(); x.arc(0, 0, s * .2, 0, 7); x.fillStyle = '#000'; x.fill(); x.fillStyle = '#fff'; x.restore(); };
+  const bi = W * .068, step = W * .046;
+  for (let px = bi; px <= W - bi + 1; px += (W - 2 * bi) / Math.round((W - 2 * bi) / step)) { stamp(gx, px, bi, W * .03); stamp(gx, px, H - bi, W * .03); }
+  for (let py = bi; py <= H - bi + 1; py += (H - 2 * bi) / Math.round((H - 2 * bi) / step)) { stamp(gx, bi, py, W * .03); stamp(gx, W - bi, py, W * .03); }
+  // rumi/hatayi scrollwork cut out of a gold ground (thin leather-coloured lines inside the gold)
+  // şemse: cusped almond medallion
+  const semse = (x, sx, sy, fill = true) => { x.beginPath(); const N = 96; for (let i = 0; i <= N; i++) { const a = i / N * Math.PI * 2; const ca = Math.cos(a), sa = Math.sin(a);
+      const pr = 1 + .1 * Math.pow(Math.abs(sa), 6); const cusp = 1 + .035 * Math.cos(a * 16); const px = cx + ca * sx * cusp, py = cy + sa * sy * pr * cusp * (1 - .18 * ca * ca); i ? x.lineTo(px, py) : x.moveTo(px, py); }
+    x.closePath(); fill ? x.fill() : x.stroke(); };
+  const SX = W * .25, SY = H * .19;
+  semse(gx, SX, SY);
+  for (const s of [-1, 1]) { // salbek pendants + stem
+    gx.beginPath(); gx.moveTo(cx, cy + s * SY * 1.02); gx.lineTo(cx, cy + s * SY * 1.22); gx.lineWidth = W * .012; gx.stroke();
+    gx.save(); gx.translate(cx, cy + s * SY * 1.33); gx.beginPath(); gx.ellipse(0, 0, W * .07, H * .038, 0, 0, 7); gx.fill();
+    gx.beginPath(); gx.moveTo(-W * .03, s * H * .03); gx.lineTo(0, s * H * .07); gx.lineTo(W * .03, s * H * .03); gx.fill(); gx.restore(); }
+  // symmetric arabesque cut into the gold ground (leather-coloured lines in relief): inner contour, central
+  // rosette, rumi scrolls on the diagonals and on the vertical axis — drawn in one quadrant, mirrored.
+  gx.save(); gx.globalCompositeOperation = 'destination-out'; gx.strokeStyle = '#000'; gx.fillStyle = '#000'; gx.lineWidth = W * .0105;
+  gx.save(); gx.lineWidth = W * .006; semse(gx, SX * .84, SY * .84, false); gx.restore();
+  gx.beginPath(); gx.arc(cx, cy, W * .062, 0, 7); gx.stroke();
+  for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2 + Math.PI / 8; gx.beginPath(); gx.ellipse(cx + Math.cos(a) * W * .036, cy + Math.sin(a) * W * .036, W * .024, W * .01, a, 0, 7); gx.stroke(); }
+  gx.beginPath(); gx.arc(cx, cy, W * .011, 0, 7); gx.fill();
+  for (const sxm of [-1, 1]) for (const sym of [-1, 1]) { gx.save(); gx.translate(cx, cy); gx.scale(sxm, sym);
+    gx.beginPath(); gx.moveTo(W * .052, H * .03); gx.bezierCurveTo(W * .1, H * .035, W * .1, H * .085, W * .15, H * .09); gx.stroke();
+    gx.beginPath(); for (let k = 0; k <= 26; k++) { const a = -Math.PI / 2 + k * .3, rad = W * .032 * (1 - k / 30); const px = W * .165 + Math.cos(a) * rad, py = H * .072 + Math.sin(a) * rad; k ? gx.lineTo(px, py) : gx.moveTo(px, py); } gx.stroke();
+    gx.beginPath(); gx.moveTo(W * .1, H * .055); gx.quadraticCurveTo(W * .13, H * .02, W * .175, H * .025); gx.quadraticCurveTo(W * .14, H * .045, W * .115, H * .062); gx.stroke();
+    gx.beginPath(); gx.moveTo(W * .012, H * .045); gx.bezierCurveTo(W * .05, H * .07, W * .015, H * .11, W * .04, H * .135); gx.stroke();
+    gx.beginPath(); for (let k = 0; k <= 22; k++) { const a = Math.PI + k * .32, rad = W * .022 * (1 - k / 26); const px = W * .06 + Math.cos(a) * rad, py = H * .138 + Math.sin(a) * rad; k ? gx.lineTo(px, py) : gx.moveTo(px, py); } gx.stroke();
+    gx.restore(); }
+  gx.restore();
+  semse(gx, SX * 1.06, SY * 1.06, false); gx.lineWidth = W * .004; semse(gx, SX * 1.06, SY * 1.06, false);
+  // köşebent corner pieces (quarter medallions with cusped edges)
+  const ci = W * .118;
+  [[ci, ci, 0], [W - ci, ci, 1], [W - ci, H - ci, 2], [ci, H - ci, 3]].forEach(([px, py, k]) => { gx.save(); gx.translate(px, py); gx.rotate(k * Math.PI / 2);
+    gx.beginPath(); gx.moveTo(0, 0); const R0 = W * .19; for (let i = 0; i <= 40; i++) { const a = i / 40 * Math.PI / 2; const rr = R0 * (1 + .05 * Math.cos(a * 18)); gx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } gx.closePath(); gx.fill(); gx.restore(); });
+  [[ci, ci, 0], [W - ci, ci, 1], [W - ci, H - ci, 2], [ci, H - ci, 3]].forEach(([px, py, k]) => { gx.save(); gx.translate(px, py); gx.rotate(k * Math.PI / 2); gx.globalCompositeOperation = 'destination-out'; gx.strokeStyle = '#000'; gx.lineWidth = W * .0065;
+    gx.beginPath(); for (let i = 0; i <= 40; i++) { const a = i / 40 * Math.PI / 2; const rr = W * .145 * (1 + .05 * Math.cos(a * 18)); i ? gx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : gx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); } gx.stroke();
+    gx.beginPath(); gx.moveTo(W * .02, W * .02); gx.bezierCurveTo(W * .07, W * .03, W * .05, W * .08, W * .1, W * .09); gx.stroke();
+    gx.beginPath(); for (let i = 0; i <= 20; i++) { const a = i * .33, rad = W * .022 * (1 - i / 24); const qx = W * .1 + Math.cos(a) * rad, qy = W * .07 + Math.sin(a) * rad; i ? gx.lineTo(qx, qy) : gx.moveTo(qx, qy); } gx.stroke();
+    gx.restore(); });
+  // blind-tooled fine lines echoing the şemse
+  bx.lineWidth = W * .003; semse(bx, SX * 1.16, SY * 1.16, false);
+  // ---- wear: gold rubbed off in small patches near the edges / corners ---------------------------------------------
+  gx.save(); gx.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 90; i++) { const e = r(); const px = e < .5 ? (r() < .5 ? r() * W * .14 : W - r() * W * .14) : r() * W, py = e < .5 ? r() * H : (r() < .5 ? r() * H * .1 : H - r() * H * .1);
+    const rr = (3 + r() * 9) * W / 832; const gg = gx.createRadialGradient(px, py, 0, px, py, rr); gg.addColorStop(0, `rgba(0,0,0,${.4 + r() * .5})`); gg.addColorStop(1, 'rgba(0,0,0,0)'); gx.fillStyle = gg; gx.fillRect(px - rr, py - rr, rr * 2, rr * 2); }
+  gx.restore();
+  // ---- leather grain (height) + mottled colour --------------------------------------------------------------------
+  const [hC, hx] = mk(); hx.fillStyle = 'rgb(128,128,128)'; hx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 46000; i++) { const v = r() < .5 ? 175 : 85; hx.fillStyle = `rgba(${v},${v},${v},${.18 + r() * .22})`; hx.beginPath(); hx.ellipse(r() * W, r() * H, .8 + r() * 2.2, .7 + r() * 1.8, r() * 3, 0, 7); hx.fill(); }
+  hx.strokeStyle = 'rgba(70,70,70,.35)'; for (let i = 0; i < 26; i++) { hx.lineWidth = .8 + r() * 1.4; hx.beginPath(); let px = r() * W, py = r() * H; hx.moveTo(px, py); for (let k = 0; k < 8; k++) { px += (r() - .5) * 60; py += (r() - .3) * 40; hx.lineTo(px, py); } hx.stroke(); }
+  const [cC, cx2] = mk(); cx2.fillStyle = '#521310'; cx2.fillRect(0, 0, W, H);
+  for (let i = 0; i < 260; i++) { const px = r() * W, py = r() * H, rr = 30 + r() * 120; const lt = r() < .5; const gg = cx2.createRadialGradient(px, py, 0, px, py, rr); gg.addColorStop(0, lt ? 'rgba(130,44,30,.1)' : 'rgba(34,5,3,.14)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); cx2.fillStyle = gg; cx2.fillRect(px - rr, py - rr, rr * 2, rr * 2); }
+  { const eg = (x0, y0, x1, y1) => { const gg = cx2.createLinearGradient(x0, y0, x1, y1); gg.addColorStop(0, 'rgba(30,5,3,.55)'); gg.addColorStop(1, 'rgba(30,5,3,0)'); return gg; };
+    cx2.fillStyle = eg(0, 0, W * .06, 0); cx2.fillRect(0, 0, W * .06, H); cx2.fillStyle = eg(W, 0, W * .94, 0); cx2.fillRect(W * .94, 0, W * .06, H);
+    cx2.fillStyle = eg(0, 0, 0, W * .06); cx2.fillRect(0, 0, W, W * .06); cx2.fillStyle = eg(0, H, 0, H - W * .06); cx2.fillRect(0, H - W * .06, W, W * .06); }
+  // ---- compose colour / height / roughness-metalness per pixel ----------------------------------------------------
+  const soft = (c, px) => { const [o, x] = mk(); x.filter = `blur(${px}px)`; x.drawImage(c, 0, 0); return x.getImageData(0, 0, W, H).data; };
+  const G1 = soft(gC, .6), G2 = soft(gC, 1.6), B2 = soft(bC, 1.2), HG = soft(hC, .6), CL = cx2.getImageData(0, 0, W, H).data;
+  const [oC, ox] = mk(), [nC, nx] = mk(), [rC, rx] = mk(); const io = ox.createImageData(W, H), inn = nx.createImageData(W, H), ir = rx.createImageData(W, H);
+  const HT = new Float32Array(W * H); const gn = U.rng(77);
+  for (let k = 0, p = 0; k < W * H; k++, p += 4) {
+    const gA = G1[p] / 255, gS = G2[p] / 255, bl = B2[p] / 255, gr = HG[p] / 255 - .5;
+    const lr = CL[p] / 255 * (1 + gr * .5) * (1 - bl * .4), lg = CL[p + 1] / 255 * (1 + gr * .5) * (1 - bl * .4), lb = CL[p + 2] / 255 * (1 + gr * .5) * (1 - bl * .4);
+    const n2 = gn() * .08; const gR = .92 - n2 * .3, gG = .76 - n2 * .35, gB = .43 - n2 * .3; // warm gold leaf with tiny speckle
+    io.data[p] = 255 * (lr + (gR - lr) * gA); io.data[p + 1] = 255 * (lg + (gG - lg) * gA); io.data[p + 2] = 255 * (lb + (gB - lb) * gA); io.data[p + 3] = 255;
+    HT[k] = gr * .22 * (1 - gA) - gS * .5 - bl * .32 + gA * gr * .05;
+    ir.data[p] = 0; ir.data[p + 1] = 255 * (.6 + gr * .25 + (.24 + n2 - (.6 + gr * .25)) * gA); ir.data[p + 2] = 255 * gA; ir.data[p + 3] = 255;
+  }
+  const NS = 4.5;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const xm = Math.max(0, x - 1), xp = Math.min(W - 1, x + 1), ym = Math.max(0, y - 1), yp = Math.min(H - 1, y + 1);
+    let ax = -(HT[y * W + xp] - HT[y * W + xm]) * NS, ay = (HT[yp * W + x] - HT[ym * W + x]) * NS, az = 1; const l = Math.hypot(ax, ay, az); const p = (y * W + x) * 4;
+    inn.data[p] = (ax / l * .5 + .5) * 255; inn.data[p + 1] = (ay / l * .5 + .5) * 255; inn.data[p + 2] = (az / l * .5 + .5) * 255; inn.data[p + 3] = 255;
+  }
+  ox.putImageData(io, 0, 0); nx.putImageData(inn, 0, 0); rx.putImageData(ir, 0, 0);
+  const tex = (c, srgb) => { const t = new T.CanvasTexture(c); t.colorSpace = srgb ? T.SRGBColorSpace : T.NoColorSpace; t.anisotropy = 8; return t; };
+  const coverMat = new T.MeshPhysicalMaterial({ map: tex(oC, true), normalMap: tex(nC, false), roughnessMap: tex(rC, false), metalnessMap: tex(rC, false), roughness: 1, metalness: 1,
+    sheen: .22, sheenColor: new T.Color('#d08070'), sheenRoughness: .55, clearcoat: .18, clearcoatRoughness: .55, envMap: ctx.scene.environment, envMapIntensity: .95 });
+  // boards / spine / flap: same morocco (tileable grain), slightly darker at the edges
+  const leather = M.MAT.leather({ a: '#4c120d', b: '#2c0806', seed: 61 }); leather.sheen = .2; leather.envMap = ctx.scene.environment; leather.envMapIntensity = .7;
+  const front = new T.Mesh(M.rbox(w, h, ct, .0022, 2), leather); front.position.z = d / 2 - ct / 2; g.add(front);
+  const back = front.clone(); back.position.z = -d / 2 + ct / 2; g.add(back);
+  const cover = new T.Mesh(new T.PlaneGeometry(w - .003, h - .003), coverMat); cover.position.z = d / 2 + .0002; g.add(cover);
+  // flat Islamic spine
+  const spine = new T.Mesh(M.rbox(.008, h, d, .003, 2), leather); spine.position.x = -w / 2 - .001; g.add(spine);
+  // fore-edge flap (sertap) closing over the fore-edge, blind fillets
+  const flap = new T.Mesh(M.rbox(.0045, h - .001, d + .003, .002, 2), leather); flap.position.x = w / 2 + .0012; g.add(flap);
+  // text block: aged laid paper, fine page lines, slightly darker towards the edges
+  const pt = ctx.TEX.drawTexture(64, 256, (x, PW, PH) => { x.fillStyle = '#cdb489'; x.fillRect(0, 0, PW, PH); for (let i = 0; i < PH; i++) { x.fillStyle = `rgba(96,66,34,${.06 + ((i * 7919) % 13) / 13 * .2})`; x.fillRect(0, i, PW, 1); }
+    const gg = x.createLinearGradient(0, 0, 0, PH); gg.addColorStop(0, 'rgba(90,60,30,.25)'); gg.addColorStop(.12, 'rgba(90,60,30,0)'); gg.addColorStop(.88, 'rgba(90,60,30,0)'); gg.addColorStop(1, 'rgba(90,60,30,.25)'); x.fillStyle = gg; x.fillRect(0, 0, PW, PH); });
+  const pages = new T.Mesh(M.rbox(w - .007, h - .008, d - ct * 2, .0015, 2), new T.MeshStandardMaterial({ map: pt, roughness: .92 })); pages.position.x = .0015; g.add(pages);
+  // silk headbands (şiraze) at head and tail of the spine
+  const hbT = ctx.TEX.drawTexture(128, 16, (x, PW, PH) => { const cs = ['#b8322a', '#e2b54e', '#2f6b4a', '#e2b54e']; for (let i = 0; i < 32; i++) { x.fillStyle = cs[i % 4]; x.beginPath(); x.moveTo(i * 4, 0); x.lineTo(i * 4 + 4, 0); x.lineTo(i * 4 + 8, PH); x.lineTo(i * 4 + 4, PH); x.fill(); } });
+  for (const s of [-1, 1]) { const band = new T.Mesh(new T.CylinderGeometry(.0032, .0032, d - ct * 2 - .002, 12), new T.MeshPhysicalMaterial({ map: hbT, roughness: .5, sheen: .8, sheenColor: new T.Color('#ffe0b0') })); band.rotation.x = Math.PI / 2; band.position.set(-w / 2 + .006, s * (h / 2 - .0045), 0); g.add(band); }
+  return g;
+}
+
+// monotone cubic through [[t, v], ...] (Fritsch–Carlson), linear extrapolation outside
+function monoSpline(keys) {
+  const n = keys.length, xs = keys.map(k => k[0]), ys = keys.map(k => k[1]); const d = [], m = new Array(n);
+  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i])); m[0] = d[0]; m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++) { if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; } const a = m[i] / d[i], b = m[i + 1] / d[i], s = a * a + b * b; if (s > 9) { const k = 3 / Math.sqrt(s); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; } }
+  return t => { if (t <= xs[0]) return ys[0] + m[0] * (t - xs[0]); if (t >= xs[n - 1]) return ys[n - 1] + m[n - 1] * (t - xs[n - 1]); let i = 0; while (t > xs[i + 1]) i++;
+    const h = xs[i + 1] - xs[i], s = (t - xs[i]) / h, s2 = s * s, s3 = s2 * s; return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (-2 * s3 + 3 * s2) * ys[i + 1] + (s3 - s2) * h * m[i + 1]; };
+}
+// Camera rig: position on an arc-length parametrised centripetal Catmull-Rom (pass times per control point), yaw/pitch
+// aimed at look targets at key times (monotone splines), FOV keys. Extrapolates smoothly past both ends (handles).
+function rig(T, pts, looks, fovs) {
+  const curve = new T.CatmullRomCurve3(pts.map(p => new T.Vector3(...p[1])), false, 'centripetal');
+  const N = 2000, L = curve.getLengths(N), tot = L[N]; const uAt = i => L[Math.round(i / (pts.length - 1) * N)] / tot;
+  const u = monoSpline(pts.map((p, i) => [p[0], uAt(i)]));
+  const posAt = t => { const k = u(t); if (k >= 0 && k <= 1) return curve.getPointAt(k); const e = k < 0 ? 0 : 1, dd = k < 0 ? 1e-3 : -1e-3; const a = curve.getPointAt(e), b = curve.getPointAt(e + dd); return a.clone().add(a.clone().sub(b).multiplyScalar(Math.abs(k - e) / 1e-3)); };
+  const ang = looks.map(([t, tg, dy = 0, dp = 0]) => { const [y, pi] = aim(posAt(t).toArray(), tg); return [t, y + dy, pi + dp]; });
+  for (let i = 1; i < ang.length; i++) { while (ang[i][1] - ang[i - 1][1] > 180) ang[i][1] -= 360; while (ang[i][1] - ang[i - 1][1] < -180) ang[i][1] += 360; }
+  const yaw = monoSpline(ang.map(a => [a[0], a[1]])), pitch = monoSpline(ang.map(a => [a[0], a[2]])), fov = monoSpline(fovs);
+  return {
+    pos: posAt,
+    apply(camera, t, extra) {
+      camera.position.copy(posAt(t)); if (extra) camera.position.add(extra);
+      camera.rotation.order = 'YXZ'; camera.rotation.set(pitch(t) * Math.PI / 180, yaw(t) * Math.PI / 180, 0);
+      camera.fov = fov(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    },
+  };
+}

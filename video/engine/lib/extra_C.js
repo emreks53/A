@@ -488,9 +488,9 @@ export function sandstoneMaterial({ nScale = .9 } = {}) {
 // recedes upward), a broken stepped top, deep vertical fissures cutting through several layers, weathering colours
 // (dark red-brown base, light weathered ledges, dark crevices, ground-contact darkening, desert-varnish streaks).
 // Returns a Group of layer meshes (geometry already in group-local coords). Base at y=0, `bury` below ground. Long axis Z.
-export function sandstoneMassif({ a = 4.6, c = 6.6, n = 3, layers = 7, height = 5.6, bury = .5, seed = 4, K = 240, fissures = 7, recede = .022 } = {}) {
+export function sandstoneMassif({ a = 4.6, c = 6.6, n = 3, layers = 7, height = 5.6, bury = .5, seed = 4, K = 240, fissures = 7, recede = .022, ...o } = {}) {
   const r = rng(seed); const grp = new THREE.Group(); const mat = sandstoneMaterial();
-  const th = []; for (let i = 0; i < layers; i++) th.push(.4 + r() * .75 + (i === 0 ? .5 : 0)); const sc = (height + bury) / th.reduce((x, y) => x + y, 0); for (let i = 0; i < layers; i++) th[i] *= sc;
+  const th = []; for (let i = 0; i < layers; i++) th.push((o.thinBeds && r() < .3 ? .22 : .4) + r() * .75 + (i === 0 ? .5 : 0)); const sc = (height + bury) / th.reduce((x, y) => x + y, 0); for (let i = 0; i < layers; i++) th[i] *= sc;
   const fis = []; for (let j = 0; j < fissures; j++) { const f = { ang: r() * Math.PI * 2, w: .02 + r() * .022, d: .5 + r() * .5, from: Math.floor(r() * 2), to: layers - 1 - Math.floor(r() * 2) }; fis.push(f); }
   const R0 = t => 1 / Math.pow(Math.pow(Math.abs(Math.cos(t)) / a, n) + Math.pow(Math.abs(Math.sin(t)) / c, n), 1 / n);
   const angD = (x, y) => { let d = x - y; d = ((d + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; return d; };
@@ -510,15 +510,16 @@ export function sandstoneMassif({ a = 4.6, c = 6.6, n = 3, layers = 7, height = 
       if (topCut) { const bite = smoothstep(.0, .35, fbm3(Math.cos(t) * 1.4 + 3, Math.sin(t) * 1.4, i * 2.1, seed + 9, 3)); rr *= 1 - topCut * bite; }
       pts.push(new THREE.Vector2(Math.cos(t) * rr, -Math.sin(t) * rr));
     }
-    const h = th[i], bt = Math.min(.05, h * .1);
-    let geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: Math.max(.05, h - 2 * bt), bevelEnabled: true, bevelThickness: bt, bevelSize: .045, bevelOffset: -.045, bevelSegments: 1, steps: 4, curveSegments: 1 });
+    const h = th[i], bt = Math.min(o.bevelT ?? .05, h * .1), bs = o.bevelS ?? .045;
+    let geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: Math.max(.05, h - 2 * bt), bevelEnabled: true, bevelThickness: bt, bevelSize: bs, bevelOffset: -bs, bevelSegments: 1, steps: o.steps ?? 4, curveSegments: 1 });
     geo.rotateX(-Math.PI / 2); geo.translate(0, y0 + bt, 0);
     geo.deleteAttribute('uv'); geo.deleteAttribute('normal'); geo = mergeVertices(geo, 1e-3);
     const p = geo.attributes.position, cols = new Float32Array(p.count * 3);
     for (let v = 0; v < p.count; v++) {
       const x = p.getX(v), y = p.getY(v), z = p.getZ(v); const L = Math.hypot(x, z) || 1;
-      const prof = hard < .45 ? -(.08 + .12 * (.45 - hard)) * Math.sin(Math.PI * clamp((y - y0) / h)) : 0;   // soft beds weather back (concave)
-      const dsp = prof + .06 * fbm3(x * .7, y * .5, z * .7, seed + 21, 3) + .04 * fbm3(x * 2.3, y * 2.3, z * 2.3, seed + 5, 2);
+      const prof = hard < .45 ? -((.08 + .12 * (.45 - hard)) * (o.softK ?? 1)) * Math.sin(Math.PI * clamp((y - y0) / h)) : 0;   // soft beds weather back (concave)
+      const yy0 = (y - y0) / h; const lip = (o.lip ?? 0) * (smoothstep(.72, .95, yy0) - .55 * smoothstep(0, .18, 1 - Math.abs(yy0 - .08) / .08));   // hard cap lip + undercut groove
+      const dsp = prof + lip + (o.rough ?? .06) * fbm3(x * .55, y * .4, z * .55, seed + 21, 3) + .04 * fbm3(x * 2.3, y * 2.3, z * 2.3, seed + 5, 2);
       const und = .5 * fbm3(x * .08, 0, z * .08, seed + 61, 3) * smoothstep(-bury, height, y);   // gently undulating bedding (shared field: layers stay in contact)
       p.setXYZ(v, x + x / L * dsp, y + und, z + z / L * dsp);
       // colour
@@ -852,4 +853,260 @@ export function camPath(keys) { // keys: [[t, [px,py,pz], [lx,ly,lz]], ...]
   const lc = new THREE.CatmullRomCurve3(keys.map(k => new THREE.Vector3(...k[2])), false, 'centripetal');
   const n = keys.length; const u = monotone(keys.map(k => k[0]), keys.map((k, i) => i / (n - 1)));
   return { at(t, P, L) { const v = clamp(u(t), 0, 1); pc.getPoint(v, P); lc.getPoint(v, L); return v; } };
+}
+
+// =============================================================================================
+// ZÜLFİKAR v2 — finely crafted, historically plausible double-pointed sword.
+// Broad straight blade (slightly widening toward the fork), cutting-edge bevels, twin narrow fullers ("fiqar"), a split
+// tip whose two points diverge a little (rounded notch apex), gold-inlaid (koftgari) geometric band on the forte,
+// faint watered-steel figure. Hilt: drooping tapered quillons with acorn finials, langets, carnelian cabochons, leather
+// grip bound with twisted gold wire, gold collars, onion pommel. Origin = the tips (y=0), blade along +Y, flats ±Z.
+// steel.userData.glint = {y, i} drives a travelling specular sweep along the edge bevels (blade-local Y).
+function taperTube(curve, segs, radial, rFn) {
+  const geo = new THREE.TubeGeometry(curve, segs, 1, radial, false); const p = geo.attributes.position; const P = new THREE.Vector3(), V = new THREE.Vector3();
+  for (let i = 0; i <= segs; i++) { curve.getPointAt(i / segs, P); const r = rFn(i / segs); for (let j = 0; j <= radial; j++) { const k = i * (radial + 1) + j; V.fromBufferAttribute(p, k).sub(P).multiplyScalar(r).add(P); p.setXYZ(k, V.x, V.y, V.z); } }
+  geo.computeVertexNormals(); return geo;
+}
+let _zulTex = null;
+function zulfikarBladeTex() {
+  if (_zulTex) return _zulTex;
+  const W = 128, H = 1024; const r = rng(91);
+  const col = document.createElement('canvas'); col.width = W; col.height = H; const x = col.getContext('2d');
+  const rough = document.createElement('canvas'); rough.width = W; rough.height = H; const xr = rough.getContext('2d');
+  // watered-steel base: soft wavy bands along the blade
+  const im = x.createImageData(W, H), ir = xr.createImageData(W, H); const n = TEX.fbmField(17, 4, 4);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const u = i / W, v = j / H; const w = Math.sin((v * 22 + n(u * .5, v * 2) * 2.4 + Math.abs(u - .5) * 2) * Math.PI);
+    const c = .91 + .028 * w + .02 * n(u * 3 % 1, v * 9 % 1); const k = (j * W + i) * 4;
+    im.data[k] = 236 * c; im.data[k + 1] = 240 * c; im.data[k + 2] = 245 * c; im.data[k + 3] = 255;
+    const rv = 62 + 10 * (w * .5 + .5); ir.data[k] = ir.data[k + 1] = ir.data[k + 2] = rv; ir.data[k + 3] = 255;
+  }
+  x.putImageData(im, 0, 0); xr.putImageData(ir, 0, 0);
+  // gold koftgari band on the forte (canvas top = guard). Flat zone only (u in .19 .. .81)
+  const y0 = 14, y1 = 190, xa = 26, xb = W - 26, cx = W / 2;
+  const gold = '#f0c46a', gr = 'rgb(70,70,70)';
+  const strokeBoth = (fn, lw) => { for (const [ctx, st] of [[x, gold], [xr, gr]]) { ctx.save(); ctx.strokeStyle = st; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; fn(ctx); ctx.restore(); } };
+  const fillBoth = (fn) => { for (const [ctx, st] of [[x, gold], [xr, gr]]) { ctx.save(); ctx.fillStyle = st; fn(ctx); ctx.restore(); } };
+  strokeBoth(c => { c.beginPath(); c.moveTo(xa, y0); c.lineTo(xa, y1); c.moveTo(xb, y0); c.lineTo(xb, y1); c.stroke(); }, 2.2);
+  strokeBoth(c => { c.beginPath(); c.moveTo(xa + 5, y0 + 4); c.lineTo(xa + 5, y1 - 6); c.moveTo(xb - 5, y0 + 4); c.lineTo(xb - 5, y1 - 6); c.stroke(); }, 1);
+  // interlaced lozenge chain
+  const nL = 4, lh = (y1 - y0 - 24) / nL, hw = (xb - xa) / 2 - 12;
+  strokeBoth(c => { for (let k = 0; k < nL; k++) { const yy = y0 + 12 + k * lh; c.beginPath(); c.moveTo(cx, yy); c.lineTo(cx + hw, yy + lh / 2); c.lineTo(cx, yy + lh); c.lineTo(cx - hw, yy + lh / 2); c.closePath(); c.stroke(); c.beginPath(); c.moveTo(cx, yy + lh * .22); c.lineTo(cx + hw * .55, yy + lh / 2); c.lineTo(cx, yy + lh * .78); c.lineTo(cx - hw * .55, yy + lh / 2); c.closePath(); c.stroke(); } }, 1.6);
+  fillBoth(c => { for (let k = 0; k < nL; k++) { const yy = y0 + 12 + k * lh + lh / 2; c.beginPath(); c.arc(cx, yy, 3.2, 0, 7); c.fill(); for (const s of [-1, 1]) { c.beginPath(); c.arc(cx + s * (hw + 4), y0 + 12 + k * lh, 2, 0, 7); c.fill(); } } });
+  // tapering leaf terminal pointing down the blade
+  strokeBoth(c => { c.beginPath(); c.moveTo(cx - 16, y1 - 4); c.quadraticCurveTo(cx - 6, y1 + 22, cx, y1 + 48); c.quadraticCurveTo(cx + 6, y1 + 22, cx + 16, y1 - 4); c.stroke(); c.beginPath(); c.moveTo(cx, y1 + 2); c.lineTo(cx, y1 + 34); c.stroke(); }, 1.5);
+  const map = new THREE.CanvasTexture(col); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 8;
+  const rmap = new THREE.CanvasTexture(rough); rmap.colorSpace = THREE.NoColorSpace; rmap.anisotropy = 8;
+  _zulTex = { map, rmap }; return _zulTex;
+}
+export function zulfikar2(o = {}) {
+  const g = new THREE.Group();
+  const Lb = o.bladeLen ?? .86, F = o.fork ?? .25, bend = o.bend ?? .016;
+  const hwG = o.hwG ?? .034, hwF = o.hwF ?? .041, tG = .0066, tF = .0042, e0 = .0005;
+  const bendX = y => bend * Math.pow(1 - y / Lb, 2);
+  // half-thickness profile across the blade (u: 0 centre .. 1 edge), bevel = cutting-edge zone, fd = fuller depth (0..1)
+  const prof = (u, t, fd, bev) => {
+    const ub = 1 - bev; let z = u <= ub ? t : e0 + (t - e0) * Math.pow(Math.max(0, 1 - (u - ub) / bev), 1.1);
+    if (fd > 0) { const d = Math.abs(u - .4) / .12; if (d < 1) z -= fd * t * .45 * (.5 + .5 * Math.cos(Math.PI * d)); }
+    return z;
+  };
+  const US = [0, .07, .14, .2, .26, .28, .31, .34, .37, .4, .43, .46, .49, .52, .54, .6, .66, .7, .74, .79, .85, .9, .95, 1];
+  const ring = (cx, hw, t, fd, bev, flip = 1) => { // closed loop: top surface -1..1 then bottom 1..-1
+    const pts = []; const us = [...US.slice(1).reverse().map(u => -u), ...US];
+    us.forEach(u => pts.push([cx + u * hw, prof(Math.abs(u), t, fd, bev), (u + 1) / 2]));
+    us.slice(1, -1).reverse().forEach(u => pts.push([cx + u * hw, -prof(Math.abs(u), t, fd, bev), (u + 1) / 2]));
+    return pts;
+  };
+  const loft = secs => {
+    const NP = secs[0].pts.length, pos = [], uv = [], edge = [], idx = [];
+    secs.forEach(s => s.pts.forEach(p => { pos.push(p[0], s.y, p[1]); uv.push(p[2], s.y / Lb); edge.push(Math.abs(p[2] * 2 - 1)); }));
+    for (let i = 0; i < secs.length - 1; i++) for (let k = 0; k < NP; k++) { const a = i * NP + k, b = i * NP + (k + 1) % NP, c = a + NP, d = b + NP; idx.push(a, b, c, b, d, c); }
+    let geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setAttribute('edge', new THREE.Float32BufferAttribute(edge, 1)); geo.setIndex(idx);
+    return toCreasedNormals(geo, .5);
+  };
+  const geos = [];
+  // body: fork apex -> guard (fullers between y = F+.1 and the decorated forte)
+  const body = []; const NB = 48;
+  for (let i = 0; i <= NB; i++) { const u = i / NB, y = F + (Lb - F) * u; const hw = lerp(hwF, hwG, Math.pow(u, .9)), t = lerp(tF, tG, u);
+    const fd = smoothstep(F + .06, F + .16, y) * (1 - smoothstep(Lb - .23, Lb - .19, y)); body.push({ y, pts: ring(bendX(y), hw, t, fd, .3) }); }
+  geos.push(loft(body));
+  // the two points: inner edge follows a rounded V notch, outer edge bulges slightly then sweeps out to a point that
+  // sits a little outside the blade line (diverging tips)
+  const T = hwF * 1.06;
+  for (const sg of [1, -1]) {
+    const pr = []; const NP = 34;
+    for (let i = 0; i <= NP; i++) { const s = i / NP, y = F * s;
+      const inner = T * Math.pow(1 - s, .62), outer = T + (hwF - T) * s + hwF * .09 * Math.sin(Math.PI * Math.pow(s, .75));
+      const hw = Math.max((outer - inner) / 2, 2e-5), cx = sg * (outer + inner) / 2 + bendX(y); const t = tF * (.3 + .7 * Math.pow(s, .45));
+      pr.push({ y, pts: ring(cx, hw, Math.max(t, 1e-4), 0, .42) }); }
+    geos.push(loft(pr));
+  }
+  { // cap under the notch apex (faces -Y)
+    const s = body[0].pts; const pos = [], uv = [], edge = []; s.forEach(p => { pos.push(p[0], F, p[1]); uv.push(p[2], F / Lb); edge.push(0); }); const idx = []; for (let i = 1; i < s.length - 1; i++) idx.push(0, i, i + 1);
+    let geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setAttribute('edge', new THREE.Float32BufferAttribute(edge, 1)); geo.setIndex(idx); geo.computeVertexNormals();
+    if (geo.attributes.normal.getY(0) > 0) { idx.length = 0; for (let i = 1; i < s.length - 1; i++) idx.push(0, i + 1, i); geo.setIndex(idx); geo.computeVertexNormals(); }
+    geos.push(geo.toNonIndexed());
+  }
+  const bladeGeo = mergeGeometries(geos);
+  // make sure all faces point outward (centroid test on a top-surface face of the body)
+  { const p = bladeGeo.attributes.position, nr = bladeGeo.attributes.normal; let bad = 0, tot = 0; for (let i = 0; i < 600 && i < p.count; i += 3) { const z = (p.getZ(i) + p.getZ(i + 1) + p.getZ(i + 2)) / 3; if (Math.abs(z) < .002) continue; tot++; if (Math.sign(nr.getZ(i)) !== Math.sign(z)) bad++; } if (bad > tot / 2) { const ix = bladeGeo.index; if (!ix) { for (let i = 0; i < p.count; i += 3) { for (const A of [p, nr, bladeGeo.attributes.uv, bladeGeo.attributes.edge]) { const it = A.itemSize; for (let c = 0; c < it; c++) { const t1 = A.array[(i + 1) * it + c]; A.array[(i + 1) * it + c] = A.array[(i + 2) * it + c]; A.array[(i + 2) * it + c] = t1; } } } for (let i = 0; i < nr.count; i++) nr.setXYZ(i, -nr.getX(i), -nr.getY(i), -nr.getZ(i)); } } }
+  const tx = zulfikarBladeTex();
+  const steel = new THREE.MeshPhysicalMaterial({ color: o.steelColor ?? '#f2f4f6', metalness: 1, roughness: o.steelRough ?? .3, map: tx.map, roughnessMap: tx.rmap, envMapIntensity: o.envI ?? 1.35 });
+  const gl = { y: { value: -10 }, i: { value: 0 }, c: { value: new THREE.Color('#fff2d8') }, dirSpec: { value: o.dirSpec ?? .3 } }; steel.userData.glint = gl;
+  steel.onBeforeCompile = sh => {
+    sh.uniforms.uGlY = gl.y; sh.uniforms.uGlI = gl.i; sh.uniforms.uGlC = gl.c; sh.uniforms.uDirSpec = gl.dirSpec;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float edge; varying float vEdge; varying float vLY;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvEdge = edge; vLY = position.y;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uGlY, uGlI, uDirSpec; uniform vec3 uGlC; varying float vEdge; varying float vLY;').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\nreflectedLight.directSpecular *= uDirSpec;')
+      .replace('#include <opaque_fragment>', 'outgoingLight += uGlC * uGlI * exp(-pow((vLY - uGlY) / .028, 2.)) * smoothstep(.62, .9, vEdge);\n#include <opaque_fragment>');
+  };
+  steel.customProgramCacheKey = () => 'zulfikar2';
+  const blade = new THREE.Mesh(bladeGeo, steel); g.add(blade);
+
+  // ---------------- hilt ----------------
+  const gt = TEX.brushedMetal({ a: '#ffd889', b: '#c08a34', seed: 37 });
+  const gold = new THREE.MeshPhysicalMaterial({ color: '#fff4dc', map: gt.map, metalness: 1, roughness: .26, clearcoat: .5, clearcoatRoughness: .2, envMapIntensity: o.goldEnvI ?? 1.9 }); if (o.goldEnv) gold.envMap = o.goldEnv;
+  const leather = MAT.leather({ a: '#7a3420', b: '#40180c', seed: 23 });
+  const yG = Lb; const H = new THREE.Group(); H.position.set(bendX(yG), yG, 0); H.scale.setScalar(o.hiltScale ?? 1); g.add(H);
+  // quillons: one tapered sweep, thick in the middle, drooping toward the blade at both ends
+  const qPts = []; for (let i = 0; i <= 12; i++) { const s = i / 12 * 2 - 1; const ax = Math.abs(s); qPts.push(new THREE.Vector3(s * .098, .012 - .03 * Math.pow(ax, 2.4) + .004 * (1 - ax * ax), 0)); }
+  const qc = new THREE.CatmullRomCurve3(qPts);
+  const qr = s => { const a = Math.abs(s * 2 - 1); return .0062 + .0062 * Math.pow(1 - a, 1.4) - .0014 * Math.pow(a, 6); };
+  const quil = new THREE.Mesh(taperTube(qc, 64, 14, qr), gold); quil.scale.z = 1.25; H.add(quil);
+  // guard centre block (écusson) with cabochons + langets on both faces
+  const blk = new THREE.Mesh(rbox(.074, .024, .024, .0085, 3), gold); blk.position.y = .009; H.add(blk);
+  const blk2 = new THREE.Mesh(rbox(.04, .034, .027, .01, 3), gold); blk2.position.y = .013; H.add(blk2);
+  const gem = new THREE.MeshPhysicalMaterial({ color: '#a3241a', roughness: .12, clearcoat: 1, clearcoatRoughness: .05, sheen: .3, sheenColor: new THREE.Color('#ff8060'), envMapIntensity: 1.4 });
+  for (const sz of [-1, 1]) {
+    const bez = new THREE.Mesh(new THREE.TorusGeometry(.0072, .0016, 8, 24), gold); bez.position.set(0, .012, sz * .0132); H.add(bez);
+    const cab = new THREE.Mesh(new THREE.SphereGeometry(.0068, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), gem); cab.rotation.x = sz * Math.PI / 2; cab.scale.y = .55; cab.position.set(0, .012, sz * .013); H.add(cab);
+    const ls = new THREE.Shape(); ls.moveTo(-.0085, .004); ls.quadraticCurveTo(-.0082, -.024, 0, -.046); ls.quadraticCurveTo(.0082, -.024, .0085, .004); ls.closePath();
+    const lg = new THREE.ExtrudeGeometry(ls, { depth: .0016, bevelEnabled: true, bevelThickness: .0007, bevelSize: .0008, bevelSegments: 2, curveSegments: 12 });
+    const lang = new THREE.Mesh(lg, gold); lang.position.set(0, 0, sz > 0 ? tG + .0006 : -(tG + .0006)); if (sz < 0) lang.rotation.y = Math.PI; H.add(lang);
+  }
+  // finials (acorn) at the quillon ends, aligned with the curve tangent
+  for (const s of [0, 1]) {
+    const tip = qc.getPointAt(s), tg = qc.getTangentAt(s).multiplyScalar(s === 0 ? -1 : 1);
+    const fin = lathe([[0, 0], [.0052, .001], [.0085, .006], [.0092, .011], [.0072, .0165], [.0048, .0195], [.0058, .022], [.0026, .026], [0, .0285]], gold, 20);
+    fin.position.copy(tip); fin.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tg.normalize()); fin.position.addScaledVector(tg, -.003); H.add(fin);
+    if (s === 1) g.userData.ballLocal = tip.clone().addScaledVector(tg, .012);
+  }
+  // grip: waisted leather, twisted gold wire binding, collars
+  const Lg = .132, y0g = .027;
+  const gr = y => .0132 + .0022 * Math.sin(Math.PI * y / Lg);
+  const gp = [[0, 0]]; for (let i = 0; i <= 30; i++) { const y = i / 30 * Lg; gp.push([gr(y), y]); } gp.push([0, Lg]);
+  const grip = lathe(gp, leather, 32); grip.position.y = y0g; H.add(grip);
+  for (const ph of [0, Math.PI]) { const hp = []; const turns = 15; for (let i = 0; i <= 600; i++) { const s = i / 600, y = s * Lg, a = s * turns * Math.PI * 2 + ph; hp.push(new THREE.Vector3(Math.cos(a) * (gr(y) + .0004), y0g + y, Math.sin(a) * (gr(y) + .0004))); }
+    H.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(hp), 1200, .0008, 5), gold)); }
+  for (const [y, r] of [[y0g + .002, .0158], [y0g + Lg - .002, .0154]]) { const c = lathe([[r - .002, -.004], [r + .0012, -.003], [r + .0016, 0], [r + .0012, .003], [r - .002, .004]], gold, 32); c.position.y = y; H.add(c); }
+  // onion pommel with finial
+  const pom = lathe([[0, 0], [.0135, 0], [.0158, .003], [.0145, .007], [.0175, .014], [.0205, .023], [.0198, .031], [.0158, .039], [.0098, .046], [.0068, .051], [.0082, .055], [.0048, .06], [.0025, .066], [0, .068]], gold, 36);
+  pom.position.y = y0g + Lg; H.add(pom);
+  const hs = o.hiltScale ?? 1;
+  g.userData.hilt = H; g.userData.ballR = g.userData.ballLocal.clone().multiplyScalar(hs).add(H.position);
+  g.userData.guardY = yG + .012 * hs; g.userData.topY = yG + (y0g + Lg + .068) * hs; g.userData.blade = blade; g.userData.steel = steel; g.userData.bladeLen = Lb; g.userData.fork = F;
+  return shadowAll(g);
+}
+
+// Wind-blown sand (saltation): stacked horizontal sheets hugging flat ground; world-space noise streaks stretched along the
+// wind and scrolling downwind, forward-scattering the low sun. Optional wake plume behind an obstacle (e.g. the sword).
+// o: {center:[x,y,z], size:[sx,sz], layers:[[h, opacityMul, speedMul]], wind:[x,z], speed, opacity, lit, shade, sunDir, scatter,
+//     plume:[x,z,strength,width], nearFade, farFade, density, scale}
+export function sandDrift(o = {}) {
+  const grp = new THREE.Group(); const c = o.center ?? [0, 0, 0], size = o.size ?? [30, 30];
+  const u = {
+    time: { value: 0 }, opacity: { value: o.opacity ?? .45 }, master: { value: 1 }, wind: { value: new THREE.Vector2(...(o.wind ?? [1, 0])).normalize() }, speed: { value: o.speed ?? 3 },
+    lit: { value: new THREE.Color(o.lit ?? '#ffe2b4') }, shade: { value: new THREE.Color(o.shade ?? '#b4794c') }, sunDir: { value: new THREE.Vector3(...(o.sunDir ?? [0, .2, -1])).normalize() }, scatter: { value: o.scatter ?? 1.6 },
+    plume: { value: new THREE.Vector4(...(o.plume ?? [0, 0, 0, .12])) }, nearFade: { value: o.nearFade ?? 1.2 }, farFade: { value: o.farFade ?? 30 }, density: { value: o.density ?? .5 }, scale: { value: o.scale ?? 1 },
+    fogColor: { value: new THREE.Color(o.fog?.color ?? '#000') }, fogDensity: { value: o.fog?.density ?? 0 }, gust: { value: 1 },
+  };
+  const layers = o.layers ?? [[.01, 1, 1], [.035, .75, 1.15], [.09, .45, 1.3], [.2, .2, 1.5]];
+  layers.forEach(([h, om, sm], li) => {
+    const geo = new THREE.PlaneGeometry(size[0], size[1], 1, 1); geo.rotateX(-Math.PI / 2);
+    const m = new THREE.ShaderMaterial({
+      uniforms: { ...u, layerH: { value: h }, layerO: { value: om }, layerS: { value: sm }, layerI: { value: li } }, transparent: true, depthWrite: false,
+      vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+      fragmentShader: `uniform float time, opacity, master, speed, scatter, nearFade, farFade, density, scale, layerH, layerO, layerS, layerI, fogDensity, gust; uniform vec2 wind; uniform vec3 lit, shade, sunDir, fogColor; uniform vec4 plume; varying vec3 vW;
+        float hs(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f); return mix(mix(hs(i), hs(i+vec2(1,0)), f.x), mix(hs(i+vec2(0,1)), hs(i+vec2(1,1)), f.x), f.y); }
+        float fbm(vec2 p){ float a = 0., w = .5; for (int i = 0; i < 4; i++){ a += w * vn(p); p = p * 2.03 + 17.1; w *= .5; } return a; }
+        void main(){
+          vec2 q = vec2(dot(vW.xz, wind), dot(vW.xz, vec2(-wind.y, wind.x))) / scale;
+          float s = time * speed * layerS / scale;
+          float n1 = fbm(vec2((q.x - s) * .3, q.y * 2.6 + layerI * 7.3));
+          float n2 = fbm(vec2((q.x - s * 1.25) * .9, q.y * 5.5 + 3.1 + layerI * 2.));
+          float n3 = vn(vec2((q.x - s * 1.6) * 3.5, q.y * 22. + layerI * 5.));
+          float st = smoothstep(1. - density, 1. - density + .35, n1) * (.45 + .75 * n2) * (.7 + .5 * n3);
+          // wake plume behind an obstacle
+          vec2 pq = vec2(dot(plume.xy, wind), dot(plume.xy, vec2(-wind.y, wind.x))) / scale; vec2 d = q - pq;
+          float wk = plume.z * exp(-pow(d.y / (plume.w + .06 * max(d.x, 0.)), 2.)) * smoothstep(-.05, .35, d.x) * exp(-max(d.x, 0.) / 2.2) * (.5 + .8 * n2);
+          st = st * gust + wk;
+          float dist = length(cameraPosition - vW);
+          float a = st * opacity * layerO * master * smoothstep(nearFade * .4, nearFade, dist) * (1. - smoothstep(farFade * .6, farFade, dist));
+          if (a < .003) discard;
+          vec3 V = normalize(vW - cameraPosition); float ph = pow(max(dot(V, sunDir), 0.), 4.);
+          vec3 col = mix(shade, lit, clamp(.3 + ph * scatter + .25 * n2, 0., 1.)) * (1. + ph * scatter * .5);
+          float ff = 1. - exp(-fogDensity * fogDensity * dist * dist); col = mix(col, fogColor, ff);
+          gl_FragColor = vec4(col, min(a, .9));
+        }`,
+    });
+    const mesh = new THREE.Mesh(geo, m); mesh.position.set(c[0], c[1] + h, c[2]); mesh.renderOrder = 7 + li * .01; mesh.frustumCulled = false; mesh.userData.noDepth = true; grp.add(mesh);
+  });
+  grp.userData.uniforms = u; return grp;
+}
+
+// Closed-ring loft (rings of [x,z] at heights y) -> creased-normal BufferGeometry. secs: [{y, pts:[[x,z],...]}] (CCW seen from +Y)
+export function loftRings(secs, crease = .55) {
+  const NP = secs[0].pts.length, pos = [], uv = [], idx = [];
+  secs.forEach((s, i) => s.pts.forEach((p, k) => { pos.push(p[0], s.y, p[1]); uv.push(k / NP, i / (secs.length - 1)); }));
+  for (let i = 0; i < secs.length - 1; i++) for (let k = 0; k < NP; k++) { const a = i * NP + k, b = i * NP + (k + 1) % NP, c = a + NP, d = b + NP; idx.push(a, b, c, b, d, c); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx);
+  return toCreasedNormals(geo, crease);
+}
+// Crafted spear (rumh): ash shaft with grain running along it and a slight taper, leather bindings, forged leaf-shaped head
+// with a raised midrib and bevelled edges, collared socket with rivets, iron butt ferrule. Origin at the butt, head along +Y.
+export function spear2(o = {}) {
+  const g = new THREE.Group(); const L = o.length ?? 2.5; const r = rng(o.seed ?? 3);
+  const wt = TEX.wood({ a: o.woodA ?? '#a8784a', b: o.woodB ?? '#6a4424', rings: 26, seed: (o.seed ?? 3) + 40 });
+  const wood = new THREE.MeshStandardMaterial({ map: wt.map, normalMap: wt.normalMap, roughnessMap: wt.roughnessMap, roughness: 1, normalScale: new THREE.Vector2(.5, .5) });
+  const sg = new THREE.CylinderGeometry(.0128, .0152, L, 14, 24); const uv = sg.attributes.uv; for (let i = 0; i < uv.count; i++) { const u = uv.getX(i), v = uv.getY(i); uv.setXY(i, v * 6, u * .5); }
+  const sp = sg.attributes.position; const bow = (r() - .5) * .03; for (let i = 0; i < sp.count; i++) { const y = sp.getY(i) / L + .5; sp.setX(i, sp.getX(i) + bow * Math.sin(Math.PI * y)); }
+  sg.computeVertexNormals(); const shaft = new THREE.Mesh(sg, wood); shaft.position.y = L / 2; g.add(shaft);
+  const iron = new THREE.MeshPhysicalMaterial({ color: o.iron ?? '#8a8580', metalness: .92, roughness: .34, clearcoat: .2, envMapIntensity: 1.3 });
+  const lth = MAT.leather({ a: '#5a3420', b: '#2a160c', seed: 31 });
+  // head: leaf blade with midrib
+  const Lh = .3, W = [[0, .0115], [.12, .024], [.28, .031], [.44, .0325], [.6, .029], [.75, .021], [.88, .011], [.96, .004], [1, .0002]];
+  const hwAt = s => { for (let i = 0; i < W.length - 1; i++) if (s <= W[i + 1][0]) { const k = (s - W[i][0]) / (W[i + 1][0] - W[i][0]); const e = k * k * (3 - 2 * k); return lerp(W[i][1], W[i + 1][1], e); } return 0; };
+  const secs = []; for (let i = 0; i <= 40; i++) { const s = i / 40, hw = Math.max(hwAt(s), .0002), tz = lerp(.0095, .0012, s), e = .0005;
+    secs.push({ y: s * Lh, pts: [[-hw, 0], [-hw * .5, tz * .55], [0, tz], [hw * .5, tz * .55], [hw, 0], [hw * .5, -tz * .55], [0, -tz], [-hw * .5, -tz * .55]].map(([x, z]) => [x, Math.abs(x) >= hw - 1e-6 ? Math.sign(z) * e : z]) }); }
+  const head = new THREE.Mesh(loftRings(secs, .7), iron); head.position.y = L + .1; g.add(head);
+  // socket with collars + rivets
+  const sock = lathe([[.0158, 0], [.0168, .006], [.0158, .012], [.0145, .03], [.0158, .036], [.0165, .041], [.0152, .047], [.0128, .08], [.0112, .1], [.0095, .108], [0, .11]], iron, 20); sock.position.y = L - .008; g.add(sock);
+  const rv = new THREE.SphereGeometry(.0035, 8, 6); for (const sx of [-1, 1]) { const m = new THREE.Mesh(rv, iron); m.position.set(sx * .0158, L + .022, 0); g.add(m); }
+  // leather bindings (spiral) below the socket and at the grip
+  const helix = (y0, len, R, turns, tr) => { const pts = []; for (let i = 0; i <= turns * 24; i++) { const s = i / (turns * 24), a = s * turns * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * R, y0 + s * len, Math.sin(a) * R)); } return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), turns * 24, tr, 6), lth); };
+  g.add(helix(L - .12, .1, .0146, 7, .0028)); g.add(helix(L * .5, .16, .0152, 9, .003));
+  // butt ferrule
+  const butt = lathe([[0, -.06], [.006, -.05], [.0135, -.012], [.0158, 0], [.0158, .03], [0, .03]], iron, 14); g.add(butt);
+  g.userData.length = L + .42; g.userData.head = head;
+  return shadowAll(g);
+}
+
+// Flying rock chips (instanced): ballistic, spinning, settle on the ground. events: [{p:[x,y,z], v:[x,y,z], t0, s, spin:[x,y,z], w}]
+export function debris(events, { ground = () => 0, palette = ['#b06a44', '#8e5034', '#c88458'], seed = 5, material = null } = {}) {
+  const geo = rockGeo({ seed, detail: 0, palette, faceted: true, rough: .5, stretch: [1, .7, .9] });
+  const mat = material ?? new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95 });
+  const im = new THREE.InstancedMesh(geo, mat, Math.max(1, events.length)); im.castShadow = true; im.receiveShadow = true; im.frustumCulled = false;
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), S = new THREE.Vector3(), P = new THREE.Vector3(), ax = new THREE.Vector3();
+  events.forEach(e => { const gy = ground(e.p[0], e.p[2]) + e.s * .35; const h = e.p[1] - gy; const vy = e.v[1]; e.tl = (vy + Math.sqrt(vy * vy + 2 * 9.8 * Math.max(h, 0))) / 9.8; ax.set(...(e.spin ?? [1, .3, .2])).normalize(); e.ax = ax.clone(); });
+  const update = t => {
+    events.forEach((e, i) => {
+      const age = t - e.t0; if (age < 0) { m4.makeScale(0, 0, 0); m4.setPosition(0, -999, 0); im.setMatrixAt(i, m4); return; }
+      const a = Math.min(age, e.tl); P.set(e.p[0] + e.v[0] * a, e.p[1] + e.v[1] * a - 4.9 * a * a, e.p[2] + e.v[2] * a);
+      if (age >= e.tl) P.y = ground(P.x, P.z) + e.s * .3;
+      q.setFromAxisAngle(e.ax, (e.w ?? 14) * a); S.setScalar(e.s); m4.compose(P, q, S); im.setMatrixAt(i, m4);
+    });
+    im.instanceMatrix.needsUpdate = true;
+  };
+  update(-999);
+  return { mesh: im, update };
 }

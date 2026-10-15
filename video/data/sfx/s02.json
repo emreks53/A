@@ -64,5 +64,12 @@
 "kind": "paper",
 "desc": "soft paper swish as caption appears",
 "gain": -4
+},
+{
+"t": 11.1,
+"dur": 0.35,
+"kind": "impact",
+"desc": "second headline line pops on mu'cizesi (soft)",
+"gain": -10
 }
 ]

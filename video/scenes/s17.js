@@ -10,6 +10,64 @@ import * as G from '../engine/lib/extra_G.js';
 
 let R = {};
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+
+// Hi-res copy of extra_G.tome (512-px-wide spine texture instead of 256) so the gilt spine titles stay crisp at 1080p.
+// Spine at -x, front cover at +z, fore-edge at +x (identical layout/behaviour to G.tome; kept local so s15/s16 are untouched).
+function tomeHi(ctx, o) {
+  const { MODELS: M, TEX, U } = ctx;
+  const g = new THREE.Group(); const w = o.w, h = o.h, d = o.d, ct = o.ct ?? .004;
+  const leather = M.MAT.leather({ a: o.a, b: o.b, seed: o.seed });
+  const pageTex = TEX.drawTexture(64, 256, (x, W, H) => { x.fillStyle = '#ecdfc0'; x.fillRect(0, 0, W, H); for (let i = 0; i < H; i += 2) { x.fillStyle = `rgba(120,90,50,${0.07 + (i % 6 === 0 ? .08 : 0)})`; x.fillRect(0, i, W, 1); } });
+  const pages = new THREE.Mesh(M.rbox(w - .008, h - .012, d - ct * 2, .002, 2), new THREE.MeshStandardMaterial({ map: pageTex, roughness: .95 })); pages.position.x = .002; g.add(pages);
+  const front = new THREE.Mesh(M.rbox(w, h, ct, .0018, 2), leather); front.position.z = d / 2 - ct / 2; g.add(front);
+  const back = front.clone(); back.position.z = -d / 2 + ct / 2; g.add(back);
+  const SW = 512, SH = Math.min(2048, Math.round(SW * h / (Math.PI * d / 2)));
+  const tex = TEX.drawTexture(SW, SH, (x, W, H) => { x.fillStyle = o.spineBg; x.fillRect(0, 0, W, H); const r = U.rng(o.seed); for (let i = 0; i < 700; i++) { x.fillStyle = `rgba(0,0,0,${r() * .08})`; x.fillRect(r() * W, r() * H, 3 + r() * 10, 3 + r() * 10); } o.spineDraw(x, W, H); });
+  tex.anisotropy = 8;
+  const spineMat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: .55, sheen: .4, sheenColor: new THREE.Color('#ffd8b0'), sheenRoughness: .6, clearcoat: .15, clearcoatRoughness: .4 });
+  const sw = o.spineFlat ?? .45;
+  const spine = new THREE.Mesh(new THREE.CylinderGeometry(d / 2, d / 2, h, 40, 1, true, Math.PI, Math.PI), spineMat); spine.scale.x = sw; spine.position.x = -w / 2 + .001; g.add(spine);
+  const bg = new THREE.Group(); bg.position.x = -w / 2 + .001; bg.scale.x = sw; g.add(bg);
+  for (const yy of o.raised) { const band = new THREE.Mesh(new THREE.TorusGeometry(d / 2, .0024, 6, 32, Math.PI), o.bandMat); band.rotation.set(Math.PI / 2, 0, Math.PI / 2); band.position.y = yy * h; bg.add(band); }
+  return M.shadowAll(g);
+}
+
+// Candle flame: teardrop with a blue root, white-hot inner cone, orange mantle, slow lean + fast flicker (billboard).
+function candleFlame({ h = .034, w = .02, seed = 1, inten = 2.6 } = {}) {
+  const geo = new THREE.PlaneGeometry(w, h / .8); geo.translate(0, h / .8 * .3, 0); // base of the flame at y = 0
+  const u = { time: { value: 0 }, seed: { value: seed }, inten: { value: inten } };
+  const m = new THREE.ShaderMaterial({
+    uniforms: u, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader: `uniform float time, seed, inten; varying vec2 vUv;
+      void main(){
+        float t = time + seed * 7.3;
+        float flick = .93 + .05 * sin(t * 17.3) * sin(t * 6.1 + 1.3) + .03 * sin(t * 29.7);
+        float y = (vUv.y - .2) / .8 / flick;                       // 0 at the wick .. 1 at the tip
+        float lean = (sin(t * 1.9) * .6 + sin(t * 3.7 + 2.) * .4) * .07;
+        float x = (vUv.x - .5) * 2. - lean * y * y * 2.2 - sin(t * 9. + y * 6.) * .025 * y * y;
+        float yc = clamp(y, 0., 1.);
+        float wdt = 1.05 * pow(yc, .42) * pow(1. - yc, .85) + .001;  // teardrop profile (widest ~1/3 up)
+        float d = abs(x) / wdt;
+        float body = smoothstep(1.0, .62, d) * smoothstep(-.06, .05, y) * smoothstep(1.0, .82, y);
+        float core = smoothstep(.62, .12, d) * smoothstep(.04, .2, y) * smoothstep(.78, .32, y);
+        vec3 c = mix(vec3(1., .34, .05), vec3(1., .7, .22), smoothstep(0., .7, 1. - d));
+        c = mix(c, vec3(1., .96, .84), core);
+        float root = smoothstep(.3, .0, y) * smoothstep(1.1, .2, d);
+        c = mix(c, vec3(.18, .32, 1.) * .55, root * .75);
+        c *= mix(.9, 1.15, smoothstep(.2, .6, y)) * (1. - .35 * smoothstep(.75, 1., y));
+        float a = body * (1. - root * .35);
+        gl_FragColor = vec4(c * inten, a); }`,
+  });
+  const mesh = new THREE.Mesh(geo, m); mesh.userData.uniforms = u; mesh.userData.yBillboard = true; mesh.userData.noDepth = true; mesh.renderOrder = 20;
+  return mesh;
+}
+// Invisible depth stand-in for a flame: draws nothing in the beauty pass (no colour, no depth) but is rendered
+// by the engine's DOF depth pre-pass, so the flame keeps the candle's focus distance instead of the far window's.
+function depthProxy(rx, ry) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+  m.scale.set(rx, ry, rx); return m;
+}
 export default {
   post: {
     exposure: 1.08,
@@ -45,7 +103,9 @@ export default {
           float w = .012 + dep*.42; float path = exp(-dAz*dAz/(w*w));
           vec2 q = vW.xz*vec2(.9, 3.2);
           float n = vn(q + vec2(time*.35, time*1.3)) * vn(q*1.9 - vec2(time*.9, -time*.4));
-          float sp = smoothstep(.28, .62, n);
+          float fw = max(length(fwidth(q)), 1e-4);                   // noise cells per pixel
+          float e = clamp(fw * .7, 0., .3);                          // widen the threshold with the footprint (filtered glints)
+          float sp = mix(smoothstep(.28 - e, .62 + e, n), .14, smoothstep(.3, 1.0, fw));
           float fres = pow(1. - dep, 7.);
           vec3 col = mix(deep, skyC, fres*.75);
           col += glint * path * (.12 + 2.4*sp) * (.5 + .5*smoothstep(.0, .05, dep));
@@ -63,11 +123,14 @@ export default {
       const x = mp.getX(i), z = mp.getZ(i) - 240; const d = -z - 175;
       let h = d < 0 ? -12 : P(x) * (1 - Math.exp(-d / 16)) * (1 - U.smoothstep(70, 140, d) * .35) + 2.5 * U.fbm1(x * .21 + z * .13, 7) * U.smoothstep(0, 20, d);
       mp.setY(i, h - 6); const hn = (h - 6) / 50;
-      const snow = U.smoothstep(.3, .52, hn + U.fbm1(x * .15, 11) * .08), forest = 1 - U.smoothstep(.04, .2, hn);
+      const snow = U.smoothstep(.2, .4, hn + U.fbm1(x * .15, 11) * .08), forest = 1 - U.smoothstep(.04, .2, hn);
       const c = new THREE.Color('#2a3150').lerp(new THREE.Color('#17203a'), forest).lerp(new THREE.Color('#b8c6e6'), snow); colors.push(c.r, c.g, c.b);
     }
     mg2.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); mg2.computeVertexNormals();
-    const mtn = new THREE.Mesh(mg2, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95 })); mtn.position.z = -240; scene.add(mtn);
+    const mtnMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95 });
+    // moonlit snow scatters a little sky light: faint self-illumination proportional to the (squared) snow colour
+    mtnMat.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += vColor.rgb * vColor.rgb * vec3(.17, .2, .3);'); };
+    const mtn = new THREE.Mesh(mg2, mtnMat); mtn.position.z = -240; scene.add(mtn);
     // village lights on the far shore (1787: a few candle-lit windows)
     const vr = U.rng(17), vl = new Float32Array(14 * 3); for (let i = 0; i < 14; i++) vl.set([-160 + vr() * 300, -5.3 + vr() * 1.5, -176 - vr() * 6], i * 3);
     const vg = new THREE.BufferGeometry(); vg.setAttribute('position', new THREE.BufferAttribute(vl, 3));
@@ -95,7 +158,7 @@ export default {
       bar(st, leafH, .035, lx - s * (leafW / 2 - st / 2), 0, 0, hinge); bar(st, leafH, .035, lx + s * (leafW / 2 - st / 2), 0, 0, hinge);
       bar(leafW, st, .035, lx, leafH / 2 - st / 2, 0, hinge); bar(leafW, st, .035, lx, -leafH / 2 + st / 2, 0, hinge);
       bar(leafW - st, .014, .022, lx, leafH / 6, 0, hinge); bar(leafW - st, .014, .022, lx, -leafH / 6, 0, hinge); bar(.014, leafH - st, .022, lx, 0, 0, hinge);
-      const gl = new THREE.Mesh(new THREE.PlaneGeometry(leafW - st * 2, leafH - st * 2), glassMat); gl.position.set(lx, 0, 0); hinge.add(gl);
+      const gl = new THREE.Mesh(new THREE.PlaneGeometry(leafW - st * 2, leafH - st * 2), glassMat); gl.position.set(lx, 0, 0); gl.userData.noDepth = true; hinge.add(gl);
     }
     // muslin curtains breathing in the night air
     const cL = G.curtain({ w: .38, h: 2.0, a: '#e7dcc4', b: '#cbbd9e', sheen: '#fff1d8', sway: .035, seed: 1, pleats: 6 }); cL.position.set(ox0 - .14, 2.45, wz + .07); cL.material.transparent = true; cL.material.opacity = .9; scene.add(cL);
@@ -104,9 +167,20 @@ export default {
 
     // ---------------- desk + Gibbon's things ----------------
     const desk = M.desk({ w: 1.45, d: .8, leather: false, material: G.GMAT.mahogany({ a: '#7a3a1e', b: '#3c170a', rings: 10, clearcoat: .12 }) }); desk.position.set(0, 0, wz + .41); scene.add(desk);
-    const csL = G.candlestick({ seed: 3, candleH: .15 }); csL.position.set(-.33, deskTop, .12); scene.add(csL);
+    const csL = G.candlestick({ seed: 3, candleH: .15 }); csL.position.set(-.36, deskTop, .3); scene.add(csL);
     const csR = G.candlestick({ seed: 8, candleH: .12 }); csR.position.set(.47, deskTop, .1); scene.add(csR);
-    R.fL = new THREE.Vector3(-.33, deskTop + csL.userData.flameY, .12); R.fR = new THREE.Vector3(.47, deskTop + csR.userData.flameY, .1);
+    // tall candlestick standing just behind the six volumes: its flame burns in the gap between the name card and the books
+    const csB = G.candlestick({ seed: 12, candleH: .17 }); csB.position.set(.21, deskTop, -.31); scene.add(csB);
+    csB.traverse(o => { if (o.isMesh && o.geometry.type === 'CapsuleGeometry') o.castShadow = false; }); // no hard drip shadow streak on the lit candle
+    R.fL = new THREE.Vector3(-.36, deskTop + csL.userData.flameY, .3); R.fR = new THREE.Vector3(.47, deskTop + csR.userData.flameY, .1);
+    R.fB = new THREE.Vector3(.21, deskTop + csB.userData.flameY, -.31);
+    R.flames = [];
+    for (const cs of [csL, csR, csB]) {
+      cs.userData.flame.visible = false; cs.userData.glow.visible = false;
+      const base = cs.userData.flameY - .03 + .006; // candle top + wick
+      const fl = candleFlame({ seed: R.flames.length * 3 + 1, h: .046, w: .026 }); fl.position.y = base; cs.add(fl); R.flames.push(fl);
+      const dp = depthProxy(.005, .013); dp.position.y = base + .015; cs.add(dp);
+    }
     // finished manuscript with the quill laid down on it
     const ms = G.paperStack({ w: .22, d: .3, h: .055, sheets: 3, seed: 21, curl: .008, topTex: G.manuscriptTex({ seed: 22, lines: 28, stopAt: .45 }) }); ms.position.set(-.04, deskTop + .002, .2); ms.rotation.y = .18; scene.add(ms);
     const q = G.quill({ length: .3, bend: .025 }); q.rotation.set(-Math.PI / 2 + .04, 0, -2.2); q.position.set(.02, deskTop + .002 + ms.userData.topY + .004, .27); scene.add(q);
@@ -114,22 +188,32 @@ export default {
     // six quarto volumes: calf, raised bands, red & black morocco labels
     const gilt = '#efc96a';
     const spine = (n) => (x, W, H) => {
-      const bands = [.07, .45, .6, .75, .92];
-      x.fillStyle = gilt; bands.forEach(b => { x.fillRect(0, H * b - 9, W, 2); x.fillRect(0, H * b + 7, W, 2); });
-      // red title label spanning the top compartment
-      x.fillStyle = '#7d1a14'; x.fillRect(W * .16, H * .1, W * .68, H * .32); x.strokeStyle = gilt; x.lineWidth = 3; x.strokeRect(W * .19, H * .11, W * .62, H * .3);
-      x.fillStyle = gilt; x.textAlign = 'center'; x.textBaseline = 'middle';
-      const lines = [['THE', 22], ['DECLINE', 33], ['AND FALL', 30], ['OF THE', 22], ['ROMAN', 33], ['EMPIRE', 33]]; let y = H * .135;
-      lines.forEach(([s, f]) => { x.font = `700 ${f}px "Playfair Display"`; y += f * .62; x.fillText(s, W / 2, y); y += f * .55; });
+      const k = W / 256; const bands = [.07, .45, .6, .75, .92];
+      x.fillStyle = gilt; bands.forEach(b => { x.fillRect(0, H * b - 9 * k, W, 2 * k); x.fillRect(0, H * b + 7 * k, W, 2 * k); });
+      // red morocco title label in the top compartment, gilt fillet; title fitted inside the fillet (no overrun)
+      const lx = W * .17, lw = W * .66, ly = H * .1, lh = H * .32;
+      x.fillStyle = '#7d1a14'; x.fillRect(lx, ly, lw, lh);
+      const lr = U.rng(90 + n); for (let i = 0; i < 160; i++) { x.fillStyle = `rgba(${lr() < .5 ? '0,0,0' : '255,200,160'},${lr() * .06})`; x.beginPath(); x.arc(lx + lr() * lw, ly + lr() * lh, 2 + lr() * 9, 0, 7); x.fill(); }
+      x.strokeStyle = gilt; x.lineWidth = 3 * k; const fx0 = lx + W * .035, fy0 = ly + H * .012, fw0 = lw - W * .07, fh0 = lh - H * .024; x.strokeRect(fx0, fy0, fw0, fh0);
+      x.lineWidth = 1.2 * k; x.strokeRect(fx0 + 5 * k, fy0 + 5 * k, fw0 - 10 * k, fh0 - 10 * k);
+      const lines = [['THE', .6], ['DECLINE', 1], ['AND FALL', .92], ['OF THE', .6], ['ROMAN', 1], ['EMPIRE', 1]];
+      const boxW = fw0 - 26 * k, boxH = fh0 - 30 * k; const sumK = lines.reduce((a, l) => a + l[1], 0);
+      x.font = '700 100px "Playfair Display"'; const wpx = Math.max(...lines.map(([s, f]) => x.measureText(s).width / 100 * f));
+      const f = Math.min(boxH / sumK, boxW / (wpx * .82)); const cond = Math.min(1, boxW / (wpx * f));
+      x.fillStyle = gilt; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+      let y = fy0 + 15 * k + (boxH - f * sumK) / 2;
+      lines.forEach(([s, kk]) => { const fs = f * kk; x.font = `700 ${fs}px "Playfair Display"`; x.save(); x.translate(W / 2, y + fs * .5 + fs * .35); x.scale(cond, 1); x.fillText(s, 0, 0); x.restore(); y += fs; });
       // black volume label
-      x.fillStyle = '#1b1612'; x.fillRect(W * .2, H * .485, W * .6, H * .085); x.fillStyle = gilt; x.font = '700 30px "Playfair Display"'; x.fillText('VOL. ' + ROMAN[n], W / 2, H * .528);
+      const vy = H * .485, vh = H * .085; x.fillStyle = '#1b1612'; x.fillRect(W * .2, vy, W * .6, vh); x.strokeStyle = gilt; x.lineWidth = 1.5 * k; x.strokeRect(W * .2 + 5 * k, vy + 5 * k, W * .6 - 10 * k, vh - 10 * k);
+      x.fillStyle = gilt; let vf = vh * .5; x.font = `700 ${vf}px "Playfair Display"`; const vw = x.measureText('VOL. ' + ROMAN[n]).width; const vc = Math.min(1, W * .5 / vw);
+      x.save(); x.translate(W / 2, vy + vh / 2 + vf * .35); x.scale(vc, 1); x.fillText('VOL. ' + ROMAN[n], 0, 0); x.restore();
       // gilt rosettes in the lower compartments
-      for (const cy of [.675, .835]) { x.save(); x.translate(W / 2, H * cy); for (let k = 0; k < 8; k++) { x.rotate(Math.PI / 4); x.beginPath(); x.ellipse(0, -11, 4, 9, 0, 0, 7); x.fill(); } x.beginPath(); x.arc(0, 0, 5, 0, 7); x.fill(); x.restore(); }
+      for (const cy of [.675, .835]) { x.save(); x.translate(W / 2, H * cy); x.scale(k, k); for (let q = 0; q < 8; q++) { x.rotate(Math.PI / 4); x.beginPath(); x.ellipse(0, -11, 4, 9, 0, 0, 7); x.fill(); } x.beginPath(); x.arc(0, 0, 5, 0, 7); x.fill(); x.restore(); }
     };
-    const vols = new THREE.Group(); vols.position.set(.12, deskTop, -.2); vols.rotation.y = -.09; scene.add(vols); R.vols = vols;
+    const vols = new THREE.Group(); vols.position.set(.12, deskTop, -.12); vols.rotation.y = -.09; scene.add(vols); R.vols = vols;
     const vr2 = U.rng(5); const vd = .078, vw = .25, vh = .34; const bandMat = M.MAT.leather({ a: '#5a3218', b: '#2e170a', seed: 9 });
     for (let i = 0; i < 6; i++) {
-      const b = G.tome({ w: vw, h: vh, d: vd, a: '#5c3418', b: '#2e170a', seed: 70 + i, spineDraw: spine(i), spineBg: '#4e2c14', raised: [.07, .45, .6, .75, .92].map(b => .5 - b), bandMat, spineFlat: .4 });
+      const b = tomeHi(ctx, { w: vw, h: vh, d: vd, a: '#5c3418', b: '#2e170a', seed: 70 + i, spineDraw: spine(i), spineBg: '#4e2c14', raised: [.07, .45, .6, .75, .92].map(b => .5 - b), bandMat, spineFlat: .4 });
       b.rotation.y = Math.PI / 2; b.rotation.z = (vr2() - .5) * .015; b.position.set((i - 2.5) * (vd + .003), vh / 2, (vr2() - .5) * .01); vols.add(b);
     }
     vols.updateMatrixWorld(true); R.volAnchor = vols.localToWorld(new THREE.Vector3((2 - 2.5) * (vd + .003), vh + .002, vw / 2 - .01));
@@ -137,11 +221,17 @@ export default {
     // ---------------- lights ----------------
     const hemi = new THREE.HemisphereLight('#2a3760', '#1a120c', .3); scene.add(hemi);
     const moonL = new THREE.DirectionalLight('#8fa8ff', .26); moonL.position.copy(moonDir).multiplyScalar(-1).multiplyScalar(-6).add(new THREE.Vector3(0, 2, 0)); moonL.target.position.set(0, deskTop, 0); scene.add(moonL, moonL.target);
-    const spot = new THREE.SpotLight('#ffbe78', .85, 5, .9, 1, 2); spot.position.copy(R.fL).add(new THREE.Vector3(.0, .02, .03)); spot.target.position.set(.12, deskTop + .15, -.1);
+    const spot = new THREE.SpotLight('#ffbe78', .85, 5, .9, 1, 2); spot.position.copy(R.fL).add(new THREE.Vector3(.0, .02, .03)); spot.target.position.set(.12, deskTop + .16, -.02);
     spot.castShadow = true; spot.shadow.mapSize.set(1024, 1024); spot.shadow.bias = -.0006; spot.shadow.normalBias = .01; spot.shadow.camera.near = .04; scene.add(spot, spot.target); R.spot = spot;
-    const pL = ENV.pointLight({ color: '#ffa04a', intensity: .35, distance: 3, pos: R.fL.toArray() }); scene.add(pL);
-    const pR = ENV.pointLight({ color: '#ffa04a', intensity: .45, distance: 3, pos: R.fR.toArray() }); scene.add(pR); R.pts = [pL, pR];
-    for (const f of [R.fL, R.fR]) { const g = FX.glow({ size: .24, opacity: .32, color: '#ffb060' }); g.position.copy(f); scene.add(g); }
+    const pL = ENV.pointLight({ color: '#ffa04a', intensity: .55, distance: 3, pos: R.fL.toArray() }); scene.add(pL);
+    const pB = ENV.pointLight({ color: '#ffa04a', intensity: .12, distance: 3, pos: R.fB.clone().add(new THREE.Vector3(0, .06, -.03)).toArray() }); scene.add(pB); R.pts = [pL, pB];
+    // warm bounce off the manuscript pages onto the spines (soft frontal fill so the right-hand volumes do not fall into shadow)
+    const pPaper = new THREE.SpotLight('#ffc88e', .5, 2, .34, 1, 2); pPaper.position.set(.1, deskTop + .12, .55); pPaper.target.position.set(.12, deskTop + .17, -.02); scene.add(pPaper, pPaper.target);
+    R.glows = [];
+    for (const f of [R.fL, R.fR, R.fB]) {
+      const g = FX.glow({ size: .16, opacity: .4, color: '#ffb35a' }); g.position.copy(f).add(new THREE.Vector3(0, -.004, 0)); scene.add(g);
+      const g2 = FX.glow({ size: .55, opacity: .1, color: '#ff9a40' }); g2.position.copy(g.position); g2.visible = f === R.fB; scene.add(g2); R.glows.push(g, g2);
+    }
     
 
     // ---------------- camera: night view -> down to the desk -> the six volumes ----------------
@@ -156,10 +246,10 @@ export default {
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
     const c = R.cam.update(t); camera.updateMatrixWorld();
-    const dl = c.P.distanceTo(c.L);
-    post.dof.focus = U.lerp(40, c.P.distanceTo(new THREE.Vector3(.12, 1.0, -.08)), U.prog(t, .2, 1.8)); post.dof.range = U.lerp(200, .6, U.prog(t, .2, 1.9, 'inCubic')); post.dof.amount = U.lerp(.3, .9, U.prog(t, .3, 1.8));
-    const f = (s) => 1 + (Math.sin(t * 12.3 + s) * .5 + Math.sin(t * 7.7 + s * 2) * .3 + Math.sin(t * 19.1 + s * .5) * .2) * .13;
-    R.pts[0].intensity = .35 * f(1); R.pts[1].intensity = .45 * f(4); R.spot.intensity = .85 * f(1);
+    post.dof.focus = U.lerp(40, c.P.distanceTo(new THREE.Vector3(.12, 1.0, .0)), U.prog(t, .2, 1.8)); post.dof.range = U.lerp(200, .6, U.prog(t, .2, 1.9, 'inCubic')); post.dof.amount = U.lerp(.3, .9, U.prog(t, .3, 1.8));
+    const f = (s) => 1 + (Math.sin(t * 12.3 + s) * .5 + Math.sin(t * 7.7 + s * 2) * .3 + Math.sin(t * 19.1 + s * .5) * .2) * .07; // gentle candle flicker (no strobing on the spines)
+    R.pts[0].intensity = .55 * f(1); R.pts[1].intensity = .12 * f(4); R.spot.intensity = .85 * f(1);
+    R.glows.forEach((g, i) => { g.material.opacity = (i % 2 ? .1 : .4) * (.9 + .1 * f(i)); });
 
     // ---------------- typography (same card design as s16) ----------------
     const tI = ctx.wordTime('ingiliz'), tE = ctx.wordTime('edward'), tG = ctx.wordTime('gibbon');

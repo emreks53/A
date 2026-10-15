@@ -84,14 +84,25 @@ export default {
     const sphere = new THREE.Mesh(new THREE.SphereGeometry(Rg, 128, 80), new THREE.MeshPhysicalMaterial({ map: mapTex, roughness: .55, clearcoat: .7, clearcoatRoughness: .38 }));
     sphere.castShadow = true; sphere.receiveShadow = true; spin.add(sphere); R.sphere = sphere;
     // brass meridian ring with engraved degree ticks
-    const ringTex = TEX.drawTexture(2048, 64, (x, W, H) => {
-      const g = x.createLinearGradient(0, 0, W, 0); for (let i = 0; i <= 8; i++) g.addColorStop(i / 8, i % 2 ? '#c99a48' : '#e0b860'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-      x.fillStyle = 'rgba(60,40,15,.85)';
-      for (let d = 0; d < 360; d++) { const px = d / 360 * W, L = d % 10 === 0 ? 11 : d % 5 === 0 ? 8 : 5; x.fillRect(px, 48, 1.4, L); x.fillRect(px, 32 - L, 1.4, L); }
-      x.fillRect(0, 47, W, 1.2); x.fillRect(0, 31.5, W, 1.2);
+    // engraved brass meridian: brushed along the ring, black-wax-filled degree scale (1°/5°/10°) and latitude numbers
+    // (90 at the poles, 0 at the equator) on the front face; texture rows follow the lathe profile (v .5–.75 = front face).
+    const engrave = (x, W, H, ink) => {
+      const tick = (y0, dir) => { for (let d = 0; d < 360; d++) { const px = d / 360 * W, L = d % 10 === 0 ? 24 : d % 5 === 0 ? 15 : 9; x.fillRect(px - 1.2, dir > 0 ? y0 : y0 - L, 2.4, L); } };
+      x.fillStyle = ink; x.fillRect(0, 69, W, 2.2); x.fillRect(0, 121, W, 2.2); x.fillRect(0, 199, W, 2.2); x.fillRect(0, 249, W, 2.2);
+      tick(121, -1); tick(201, 1);
+      x.font = '700 26px "Playfair Display"'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      for (let d = 10; d < 360; d += 10) { if (d % 180 === 0) continue; const lab = String(Math.abs(90 - (d % 180))); x.save(); x.translate(d / 360 * W, 84); x.rotate(Math.PI); x.fillText(lab, 0, 0); x.restore(); }
+    };
+    const ringTex = TEX.drawTexture(4096, 256, (x, W, H) => {
+      const g = x.createLinearGradient(0, 0, W, 0); for (let i = 0; i <= 12; i++) g.addColorStop(i / 12, ['#d8ad55', '#c49640', '#e2bb66'][i % 3]); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      const rr = U_rng(ctx, 33); for (let i = 0; i < 1400; i++) { x.fillStyle = rr() < .5 ? `rgba(255,236,170,${rr() * .14})` : `rgba(90,60,20,${rr() * .14})`; x.fillRect(rr() * W, rr() * H, 60 + rr() * 500, 1); }
+      x.fillStyle = 'rgba(255,240,190,.35)'; x.fillRect(0, 71, W, 1.2); x.fillRect(0, 123, W, 1.2); // bevel catch-light under each engraved line
+      engrave(x, W, H, 'rgba(38,24,8,.92)');
     });
+    ringTex.anisotropy = 8; ringTex.wrapS = THREE.RepeatWrapping;
+    const ringBump = TEX.drawTexture(4096, 256, (x, W, H) => { x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); engrave(x, W, H, '#000'); }, { srgb: false });
     const ringProf = (r0, r1, th) => [[r0, -th], [r1, -th], [r1, th], [r0, th], [r0, -th]];
-    const meridian = M.lathe(ringProf(Rg + .006, Rg + .026, .0045), new THREE.MeshPhysicalMaterial({ map: ringTex, metalness: 1, roughness: .32, clearcoat: .3 }), 160);
+    const meridian = M.lathe(ringProf(Rg + .006, Rg + .026, .0045), new THREE.MeshPhysicalMaterial({ map: ringTex, bumpMap: ringBump, bumpScale: 1.2, metalness: 1, roughness: .3, clearcoat: .35, clearcoatRoughness: .25 }), 240);
     meridian.material.map.wrapS = THREE.RepeatWrapping; meridian.rotation.x = Math.PI / 2; tilt.add(meridian);
     const brass = M.MAT.brass({ a: '#dcb15a', b: '#8c6426' });
     for (const s of [-1, 1]) { const pin = new THREE.Mesh(new THREE.CylinderGeometry(.005, .005, .03, 12), brass); pin.position.y = s * (Rg + .014); tilt.add(pin); }
@@ -128,7 +139,7 @@ export default {
     const pl = ENV.pointLight({ color: '#ff9f4a', intensity: .22, distance: 3, pos: flamePos.toArray() }); scene.add(pl); R.pl = pl;
     const rim = new THREE.DirectionalLight('#86a2ff', 1.4); rim.position.set(1.4, 2.4, -2.2); rim.target.position.copy(Gc); scene.add(rim, rim.target);
     const glowC = FX.glow({ size: .3, opacity: .2, color: '#ffae5a' }); glowC.position.copy(flamePos); scene.add(glowC);
-    const motes = FX.particles({ count: 140, center: [Gc.x - .1, Gc.y + .1, Gc.z + .1], box: [1.1, .9, .8], size: 5, color: '#ffd9a0', opacity: .45, drift: [.01, .02, 0], swirl: .05 }); scene.add(motes);
+    const motes = FX.particles({ count: 90, center: [Gc.x - .15, Gc.y + .15, Gc.z - .25], box: [1.3, .9, .5], size: 4, color: '#ffd9a0', opacity: .38, drift: [.01, .02, 0], swirl: .05 }); scene.add(motes);
 
     // ---------------- spin & camera ----------------
     // Spin: steady ~110°/s, smooth (cubic) stop at t=3.2 with lon 22°E facing +Z.
@@ -180,6 +191,8 @@ export default {
     // DOF on the globe surface facing the camera
     const dC = camera.position.distanceTo(R.Gc) - R.Rg * .92;
     post.dof.focus = dC; post.dof.range = U.lerp(.55, .3, U.prog(t, 2, 4.2)); post.dof.amount = 1;
+    // the fast spin (~110°/s, coastlines move ~20 px/frame) strobes without blur: 3 sub-frames until it has slowed down
+    { const tn = t + 1 / 30; post.motionBlur = { samples: tn < 2.3 ? 3 : 1, shutter: .5 }; }
 
     // ---------------- Kurzgesagt map layer ----------------
     const X = ui.ctx; const M = R.sphere.matrixWorld; const cam = camera.position;
@@ -218,14 +231,16 @@ export default {
     const mk = U.ease.outBack(U.clamp((t - (tP + .05)) / .4), 2.2);
     if (mk > 0 && mA > .01) {
       const s = persp(mW); X.save(); X.globalAlpha = mA;
-      const gr = X.createRadialGradient(mx, my, 0, mx, my, 16 * mk); gr.addColorStop(0, 'rgba(120,230,160,.4)'); gr.addColorStop(1, 'rgba(80,200,130,0)'); X.fillStyle = gr; X.beginPath(); X.arc(mx, my, 16 * mk, 0, 7); X.fill();
-      X.fillStyle = '#3fb67a'; X.strokeStyle = '#ffd27a'; X.lineWidth = 2.5; X.beginPath(); X.arc(mx, my, 6 * mk, 0, 7); X.fill(); X.beginPath(); X.arc(mx, my, 9.5 * mk, 0, 7); X.stroke();
+      const gr = X.createRadialGradient(mx, my, 0, mx, my, 12 * mk); gr.addColorStop(0, 'rgba(120,230,160,.35)'); gr.addColorStop(1, 'rgba(80,200,130,0)'); X.fillStyle = gr; X.beginPath(); X.arc(mx, my, 12 * mk, 0, 7); X.fill();
+      X.fillStyle = '#3fb67a'; X.strokeStyle = '#ffd27a'; X.lineWidth = 2.2; X.beginPath(); X.arc(mx, my, 4.8 * mk, 0, 7); X.fill(); X.beginPath(); X.arc(mx, my, 7.6 * mk, 0, 7); X.stroke();
       for (const off of [0, .35]) { const pa = U.clamp((t - tK - off) / .9); if (pa > 0 && pa < 1) { X.strokeStyle = `rgba(255,214,130,${(1 - pa) * .9})`; X.lineWidth = 3; X.beginPath(); X.arc(mx, my, 9.5 + pa * 38, 0, 7); X.stroke(); } }
       X.restore();
       ui.callout('Medine', { t, t0: tP + .2, anchor: [mx, my], to: [U.clamp(mx + 185, 200, 880), U.clamp(my + 95, 300, 1300)], size: 40, dotColor: '#3fb67a' });
     }
     // typography
     const tD = ctx.wordTime('dünya'), tB = ctx.wordTime('büyük');
+    { const e = ui.env(t, tD - .1, Infinity, .5, 'fade'); if (e.o > .001) { const X2 = ui.ctx, g2 = X2.createLinearGradient(0, 200, 0, 500); g2.addColorStop(0, 'rgba(12,7,4,0)'); g2.addColorStop(.3, 'rgba(12,7,4,.58)'); g2.addColorStop(.7, 'rgba(12,7,4,.5)'); g2.addColorStop(1, 'rgba(12,7,4,0)');
+      X2.save(); X2.globalAlpha = e.o; X2.fillStyle = g2; X2.fillRect(0, 200, 1080, 300); X2.restore(); } }
     ui.text('Dünya çapında', { t, t0: tD - .04, x: 540, y: 300, size: 66, weight: 900, color: '#fff4dc', anim: 'pop', letterSpacing: 2 });
     ui.text('büyük düşünürler', { t, t0: tB - .04, x: 540, y: 392, size: 88, weight: 900, color: '#ffcf6b', anim: 'pop', letterSpacing: 1 });
   },

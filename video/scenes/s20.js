@@ -1,95 +1,107 @@
 // s20 (113.30–124.65) "Bu tatlı hakikatten Mektubat kitabının 195. sayfasında ve 19. Söz gibi başka risalelerde çok hoş ve
 // etraflıca bahsedilmiştir."  — closing scene of the film.
 // Visual: a quiet Turkish room at morning. Sun through a window with tulle curtains (gentle breeze), dust in the beam.
-// On a low table: a wooden rahle with "MEKTUBAT" (closed) which opens on "kitabının"; the breeze riffles a few leaves and
-// the book settles on page "195". The camera glides to "SÖZLER" lying beside it, its ribbon bookmark tagged "19. Söz";
-// then pulls back past other Risale volumes into a calm wide still life (tea glass, rose) and the end card.
+// On a low walnut table: a rahle with the deep-red, gold-stamped "MEKTUBAT" (closed, front cover up). On "kitabının"
+// the front cover swings open, a few leaves riffle over and the book settles on pages 194 | 195. The camera glides to
+// the matching red "SÖZLER" lying beside it, its green satin ribbon bookmark tagged "19. Söz"; on "başka risalelerde"
+// it rises to the uniform red set of other Risale volumes on the sunlit sill, then pulls back into a calm wide still
+// life (tea glass with steam, rose) and the end card.
 import * as THREE from 'three';
-import { path3, path1, beamMotes, drawPage, paintSpine, plankTex, contactShadows, grainWood } from '../engine/lib/extra_H.js';
+import { path3, path1, beamMotes, plankTex, contactShadows, grainWood, foilLeather, foilMaterial, drawRisaleCover, drawRisaleSpine } from '../engine/lib/extra_H.js';
 
 let R = {};
 const TABLE_Y = .42;
-const BW = .14, BH = .2, TAU = .015; // book half width, height, half thickness
-const ALPHA = Math.PI / 2 - 1.1;         // rahle arm angle above horizontal
+const BW = .15, BH = .215, TAU = .0145;          // Mektubat: page width, height, half block thickness
+const ALPHA = Math.PI / 2 - 1.1;                   // rahle arm angle above horizontal
+const WALL_Z = -.52;
+const RED = '#7e1117', RED_D = '#4c070b';
 
-// ---------- cover / page artwork ----------
-function drawCover(x, W, H, { color, title, gold = '#e6c068' }) {
-  const c = new THREE.Color(color);
-  x.fillStyle = `#${c.getHexString()}`; x.fillRect(0, 0, W, H);
-  const R0 = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(7);
-  for (let i = 0; i < 700; i++) { x.fillStyle = R0() < .5 ? `rgba(0,0,0,${R0() * .07})` : `rgba(255,230,200,${R0() * .04})`; x.beginPath(); x.arc(R0() * W, R0() * H, 1 + R0() * 6, 0, 7); x.fill(); }
-  x.strokeStyle = gold; x.lineWidth = W * .012; x.strokeRect(W * .07, H * .05, W * .86, H * .9); x.lineWidth = W * .004; x.strokeRect(W * .1, H * .07, W * .8, H * .86);
-  // corner ornaments: small lozenges
-  x.fillStyle = gold;
-  for (const [px, py] of [[.1, .07], [.9, .07], [.1, .93], [.9, .93]]) { x.save(); x.translate(W * px, H * py); x.rotate(Math.PI / 4); x.fillRect(-W * .025, -W * .025, W * .05, W * .05); x.restore(); }
-  x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.font = `italic 500 ${W * .052}px "Lora"`; x.fillText('Risale-i Nur Külliyatı', W / 2, H * .17);
-  x.fillRect(W * .3, H * .21, W * .4, H * .0025);
-  // title cartouche
-  x.lineWidth = W * .006; x.strokeRect(W * .16, H * .29, W * .68, H * .15);
-  let fs = W * .13; x.font = `700 ${fs}px "Cinzel"`; const mw = x.measureText(title).width; if (mw > W * .6) { fs *= W * .6 / mw; x.font = `700 ${fs}px "Cinzel"`; }
-  x.fillText(title, W / 2, H * .368);
-  // geometric rosette (8-point star of two squares + ring) — ornament only, no letters
-  x.save(); x.translate(W / 2, H * .6); const r = W * .14;
-  x.lineWidth = W * .008; x.beginPath(); x.arc(0, 0, r * 1.18, 0, 7); x.stroke();
-  for (let k = 0; k < 2; k++) { x.save(); x.rotate(k * Math.PI / 4); x.strokeRect(-r * .78, -r * .78, r * 1.56, r * 1.56); x.restore(); }
-  x.beginPath(); x.arc(0, 0, r * .32, 0, 7); x.fill();
-  for (let k = 0; k < 8; k++) { x.save(); x.rotate(k * Math.PI / 4 + Math.PI / 8); x.beginPath(); x.ellipse(0, -r * .62, r * .07, r * .16, 0, 0, 7); x.fill(); x.restore(); }
-  x.restore();
-  x.font = `600 ${W * .05}px "Lora"`; x.fillText('Bediüzzaman Said Nursî', W / 2, H * .84);
-}
-function pageDraw(num, side, seed, opts = {}) {
-  return (x, W, H) => {
-    drawPage(x, W, H, { seed, lines: 21, top: .16, bottom: .9, marginX: .13, paraAt: opts.para ?? [4, 12], gapAt: opts.gap ?? [], ink: 'rgba(85,72,60,.4)', bg: '#ebdfc3' });
-    // gutter shading
-    const gx = side === 'R' ? 0 : W; const g = x.createLinearGradient(gx, 0, side === 'R' ? W * .16 : W * .84, 0); g.addColorStop(0, 'rgba(90,60,30,.32)'); g.addColorStop(1, 'rgba(90,60,30,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-    if (num) {
-      x.fillStyle = 'rgba(60,45,35,.92)'; x.font = `600 ${W * .11}px "Lora"`; x.textBaseline = 'middle';
-      x.textAlign = side === 'R' ? 'right' : 'left'; x.fillText(num, side === 'R' ? W * .87 : W * .13, H * .083);
-      x.fillStyle = 'rgba(80,60,45,.5)'; x.fillRect(W * .13, H * .118, W * .74, Math.max(1, H * .0025));
-    }
-  };
-}
+const lrng = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
 const tex = (TEX, w, h, f) => { const t = TEX.drawTexture(w, h, f); t.anisotropy = 8; return t; };
+
+async function loadFonts() {
+  const list = [['Playfair Display', 'assets/fonts/PlayfairDisplayItalic-600.ttf', { style: 'italic', weight: '600' }],
+    ['Cormorant Garamond', 'assets/fonts/CormorantGaramond-700.ttf', { weight: '700' }], ['Cormorant Garamond', 'assets/fonts/CormorantGaramond-600.ttf', { weight: '600' }]];
+  await Promise.all(list.map(async ([fam, url, d]) => { try { const f = new FontFace(fam, `url(${url})`, d); await f.load(); document.fonts.add(f); } catch (e) { console.warn('font load failed', url); } }));
+}
+
+// ---------- page artwork: cream paper, double-rule frame (cetvel), page number, grey line strokes (not readable) ----------
+function drawRisalePage(x, W, H, { num = null, side = 'R', seed = 1, para = [5, 15], gap = [] } = {}) {
+  const Rr = lrng(seed * 977 + 13);
+  x.fillStyle = '#f3e9d1'; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 420; i++) { x.fillStyle = `rgba(165,125,75,${Rr() * .028})`; x.beginPath(); x.arc(Rr() * W, Rr() * H, 1 + Rr() * W * .045, 0, 7); x.fill(); }
+  const fx0 = W * (side === 'R' ? .135 : .085), fx1 = W * (side === 'R' ? .915 : .865), fy0 = H * .1, fy1 = H * .935;
+  x.strokeStyle = 'rgba(130,44,36,.6)'; x.lineWidth = W * .0048; x.strokeRect(fx0, fy0, fx1 - fx0, fy1 - fy0);
+  x.lineWidth = W * .0019; const d = W * .013; x.strokeRect(fx0 + d, fy0 + d, fx1 - fx0 - 2 * d, fy1 - fy0 - 2 * d);
+  // page number centred in the head margin, flanked by two short rules
+  const cxp = (fx0 + fx1) / 2;
+  if (num) { x.fillStyle = 'rgba(52,36,28,.96)'; x.font = `700 ${W * .074}px "Playfair Display"`; x.textBaseline = 'alphabetic'; x.textAlign = 'center'; x.fillText(num, cxp, fy0 - H * .02);
+    x.fillStyle = 'rgba(130,44,36,.55)'; for (const sgn of [-1, 1]) x.fillRect(cxp + sgn * W * .1 - (sgn < 0 ? W * .12 : 0), fy0 - H * .036, W * .12, W * .003); }
+  // body text as subtle grey line strokes (one stroke per word, thin) — not readable
+  const tx0 = fx0 + W * .05, tx1 = fx1 - W * .05, ty0 = fy0 + H * .034, ty1 = fy1 - H * .028, n = 31, lh = (ty1 - ty0) / n;
+  x.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    if (gap.includes(i)) continue;
+    const y = ty0 + lh * (i + .55), isP = para.includes(i), endS = para.includes(i + 1) || i === n - 1;
+    let xx = tx0 + (isP ? W * .05 : 0); const xe = tx1 - (endS ? (tx1 - tx0) * (.25 + Rr() * .45) : 0);
+    while (xx < xe - 3) { const wl = Math.min(xe - xx, W * (.012 + Rr() * Rr() * .07 + Rr() * .015)); x.strokeStyle = `rgba(78,70,64,${.36 + Rr() * .12})`; x.lineWidth = lh * (.2 + Rr() * .04); x.beginPath(); x.moveTo(xx + 2, y); x.lineTo(xx + wl - 2, y); x.stroke(); xx += wl + W * .0085; }
+  }
+  const gx = side === 'R' ? 0 : W; const g = x.createLinearGradient(gx, 0, side === 'R' ? W * .22 : W * .78, 0);
+  g.addColorStop(0, 'rgba(85,52,26,.42)'); g.addColorStop(.35, 'rgba(85,52,26,.12)'); g.addColorStop(1, 'rgba(85,52,26,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const ge = x.createLinearGradient(side === 'R' ? W : 0, 0, side === 'R' ? W * .9 : W * .1, 0); ge.addColorStop(0, 'rgba(120,90,50,.12)'); ge.addColorStop(1, 'rgba(120,90,50,0)'); x.fillStyle = ge; x.fillRect(0, 0, W, H);
+}
+// page-surface profile of an open book: dips into the gutter (u=0), rises, then falls gently to the fore-edge (u=1)
+const yTop = u => .0044 * Math.pow(Math.sin(Math.PI * Math.min(1, Math.pow(u, .7) * 1.04)), .65) - .0072 * Math.exp(-u / .045);
+
+// strip grid (N along u, NZ along z) with right-handed winding; flip=true reverses it
+function stripGeo(N, NZ, flip) {
+  const g = new THREE.BufferGeometry(); const pos = new Float32Array((N + 1) * (NZ + 1) * 3), uv = new Float32Array((N + 1) * (NZ + 1) * 2), idx = [];
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < N; i++) { const a = j * (N + 1) + i, b = a + 1, c = a + N + 1, d = c + 1; if (!flip) idx.push(a, c, b, b, c, d); else idx.push(a, b, c, b, d, c); }
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); return g;
+}
 
 export default {
   post: {
-    exposure: 1.0,
+    exposure: 1.06,
     toneMapping: 'aces',
-    bloom: { enabled: true, strength: 0.28, radius: 0.6, threshold: 0.9 },
-    grade: { contrast: 1.04, saturation: 1.06, warmth: 0.035, lift: [0.02, 0.016, 0.012], gain: [1.02, 1.0, 0.96] },
-    vignette: 0.32, grain: 0.025,
+    bloom: { enabled: true, strength: 0.3, radius: 0.65, threshold: 0.93 },
+    grade: { contrast: 1.08, saturation: 1.07, warmth: 0.03, lift: [0.018, 0.014, 0.012], gain: [1.02, 1.0, 0.96] },
+    vignette: 0.3, grain: 0.022,
     dof: { enabled: true, focus: .6, range: .5, amount: .7 },
   },
   async setup(ctx) {
     const { scene, camera, U, MODELS: M, FX, TEX } = ctx;
     R = {};
-    const rnd = U.rng(2020);
+    await loadFonts();
     scene.background = new THREE.Color('#e8d8bf');
-    scene.environment = await ctx.loadHDR('kiara_interior'); scene.environmentIntensity = 0.5;
-    scene.add(new THREE.HemisphereLight('#e4ebff', '#b08a60', 0.85));
-    const sun = new THREE.DirectionalLight('#ffd9a0', 3.3); sun.position.set(-1.25, 2.35, -2.3); sun.target.position.set(.05, TABLE_Y, 0);
-    sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = -1.7; sc.right = 1.7; sc.top = 1.7; sc.bottom = -1.7; sc.near = .5; sc.far = 6; sun.shadow.bias = -.0003; sun.shadow.normalBias = .01; sun.shadow.radius = 4;
+    scene.environment = await ctx.loadHDR('kiara_interior'); scene.environmentIntensity = 0.42;
+    const hemi = new THREE.HemisphereLight('#e4ebff', '#a07a52', 0.5); scene.add(hemi);
+    const sun = new THREE.DirectionalLight('#ffe2b4', 2.9); sun.position.set(-1.25, 2.35, -2.3); sun.target.position.set(.05, TABLE_Y, 0);
+    sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = -1.1; sc.right = 1.1; sc.top = 1.25; sc.bottom = -1.25; sc.near = .5; sc.far = 6; sun.shadow.bias = -.00025; sun.shadow.normalBias = .008; sun.shadow.radius = 5;
     scene.add(sun, sun.target); R.sun = sun;
-    const fill = new THREE.PointLight('#ffe2c0', 2.2, 4, 1.5); fill.position.set(.5, 1.2, 1.4); scene.add(fill);
+    const fill = new THREE.PointLight('#ffe6c8', 1.3, 4, 1.5); fill.position.set(.55, 1.15, 1.35); scene.add(fill);
+    // soft frontal kicker so the gold foil catches light toward the lens
+    const kick = new THREE.PointLight('#fff1d8', 1.1, 2.6, 1.6); kick.position.set(.15, 1.3, .9); scene.add(kick); R.kick = kick;
 
     // ---------- room ----------
-    const WALL_Z = -.78;
     const wallTex = TEX.plaster({ a: '#efe2c9', b: '#d9c5a3', seed: 9, repeat: [2, 2] });
     const wallMat = new THREE.MeshStandardMaterial({ map: wallTex.map, normalMap: wallTex.normalMap, normalScale: new THREE.Vector2(.4, .4), roughness: .95 });
     const wshape = new THREE.Shape(); wshape.moveTo(-2.5, 0); wshape.lineTo(2.5, 0); wshape.lineTo(2.5, 2.8); wshape.lineTo(-2.5, 2.8); wshape.closePath();
     const WX0 = -.82, WX1 = .32, WY0 = .78, WY1 = 2.02;
     const hole = new THREE.Path(); hole.moveTo(WX0, WY0); hole.lineTo(WX0, WY1); hole.lineTo(WX1, WY1); hole.lineTo(WX1, WY0); hole.closePath(); wshape.holes.push(hole);
     const wall = new THREE.Mesh(new THREE.ShapeGeometry(wshape), wallMat); wall.position.z = WALL_Z; wall.receiveShadow = true; scene.add(wall);
+    // window reveal (wall thickness) so the opening has depth
+    const reveal = new THREE.MeshStandardMaterial({ color: '#eadcc2', roughness: .95 });
+    for (const [w, h, x0, y0] of [[.02, WY1 - WY0, WX0, (WY0 + WY1) / 2], [.02, WY1 - WY0, WX1, (WY0 + WY1) / 2]]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, .22), reveal); m.position.set(x0 + (x0 < 0 ? -.01 : .01), y0, WALL_Z - .11); m.receiveShadow = true; scene.add(m); }
+    { const m = new THREE.Mesh(new THREE.BoxGeometry(WX1 - WX0 + .04, .02, .22), reveal); m.position.set((WX0 + WX1) / 2, WY1 + .01, WALL_Z - .11); scene.add(m); }
     const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(4, 2.8), wallMat); sideWall.rotation.y = Math.PI / 2; sideWall.position.set(-1.45, 1.4, 1.2); sideWall.receiveShadow = true; scene.add(sideWall);
-    // window frame (painted wood), sill, open left casement
-    const frameMat = new THREE.MeshStandardMaterial({ color: '#efe6d6', roughness: .55 });
+    const frameMat = new THREE.MeshPhysicalMaterial({ color: '#f1e9da', roughness: .45, clearcoat: .3, clearcoatRoughness: .4 });
     const fw = .06, wcx = (WX0 + WX1) / 2, ww = WX1 - WX0, wh = WY1 - WY0;
     const addF = (w, h, d, x, y, z, parent = scene) => { const m = new THREE.Mesh(M.rbox(w, h, d, .01), frameMat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; parent.add(m); return m; };
     addF(ww + .1, fw, .14, wcx, WY1 + fw / 2 - .01, WALL_Z); addF(fw, wh + .1, .14, WX0 - fw / 2 + .01, (WY0 + WY1) / 2, WALL_Z); addF(fw, wh + .1, .14, WX1 + fw / 2 - .01, (WY0 + WY1) / 2, WALL_Z);
-    const sill = new THREE.Mesh(M.rbox(ww + .22, .04, .26, .012), M.MAT.wood({ a: '#9a6a40', b: '#6a4426', rings: 18, seed: 41 })); sill.position.set(wcx, WY0 - .02, WALL_Z + .06); sill.castShadow = sill.receiveShadow = true; scene.add(sill);
-    const glassMat = new THREE.MeshPhysicalMaterial({ color: '#ffffff', transparent: true, opacity: .1, roughness: .05, metalness: 0, envMapIntensity: 1.2, depthWrite: false });
-    // right casement (closed): frame + 2 panes
+    const sillMat = grainWood({ a: '#a06a3c', b: '#714524', seed: 41, streaks: 120, clearcoat: .45, roughness: .5 });
+    const sill = new THREE.Mesh(M.rbox(ww + .22, .04, .27, .012), sillMat); sill.position.set(wcx, WY0 - .02, WALL_Z + .06); sill.castShadow = sill.receiveShadow = true; scene.add(sill);
+    const glassMat = new THREE.MeshPhysicalMaterial({ color: '#ffffff', transparent: true, opacity: .08, roughness: .05, metalness: 0, envMapIntensity: 1.2, depthWrite: false });
     const cas = (open, hingeX, sign) => {
       const g = new THREE.Group(); g.position.set(hingeX, WY0, WALL_Z - .02); const cw = ww / 2 - .01;
       addF(cw, .045, .04, sign * cw / 2, .02, 0, g); addF(cw, .045, .04, sign * cw / 2, wh - .02, 0, g); addF(.045, wh, .04, sign * .02, wh / 2, 0, g); addF(.045, wh, .04, sign * (cw - .02), wh / 2, 0, g); addF(cw, .035, .035, sign * cw / 2, wh * .62, 0, g);
@@ -97,252 +109,358 @@ export default {
       g.rotation.y = open; scene.add(g); return g;
     };
     cas(0, WX1, -1);
-    R.casement = cas(-1.05, WX0, 1); // left casement swung open outward (breeze)
-    // outside: morning garden backdrop (soft, out of focus)
+    R.casement = cas(-1.05, WX0, 1);
+    // outside: soft morning garden (out of focus)
     const outTex = tex(TEX, 512, 512, (x, W, H) => {
-      const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#a9cdee'); g.addColorStop(.5, '#e2ecf2'); g.addColorStop(1, '#fbeedb'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-      const Rr = (q => () => (q = (q * 16807) % 2147483647) / 2147483647)(3);
-      // distant soft tree canopy (plane tree) on the right, low hills
-      for (let i = 0; i < 46; i++) { const cx = W * (.58 + Rr() * .5), cy = H * (.42 + Rr() * .3), r = W * (.05 + Rr() * .09); x.fillStyle = `rgba(${120 + Rr() * 30},${150 + Rr() * 25},${110 + Rr() * 20},${.35 + Rr() * .25})`; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); }
+      const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#a3c8ec'); g.addColorStop(.45, '#dfeaf1'); g.addColorStop(1, '#fbeedb'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      const Rr = lrng(3);
+      for (let i = 0; i < 60; i++) { const cx = W * (.55 + Rr() * .55), cy = H * (.38 + Rr() * .32), r = W * (.04 + Rr() * .09); x.fillStyle = `rgba(${110 + Rr() * 40},${145 + Rr() * 30},${100 + Rr() * 20},${.3 + Rr() * .25})`; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); }
+      for (let i = 0; i < 4; i++) { const cx = W * (.05 + i * .1 + Rr() * .05); x.fillStyle = 'rgba(95,125,95,.28)'; x.beginPath(); x.ellipse(cx, H * .62, W * .025, H * .16, 0, 0, 7); x.fill(); }
       x.fillStyle = 'rgba(150,170,150,.35)'; x.beginPath(); x.moveTo(0, H * .78); x.quadraticCurveTo(W * .3, H * .68, W * .6, H * .76); x.lineTo(W, H * .74); x.lineTo(W, H); x.lineTo(0, H); x.fill();
-      const s = x.createRadialGradient(W * .2, H * .28, 0, W * .2, H * .28, W * .6); s.addColorStop(0, 'rgba(255,250,230,1)'); s.addColorStop(.3, 'rgba(255,240,205,.75)'); s.addColorStop(1, 'rgba(255,236,200,0)'); x.fillStyle = s; x.fillRect(0, 0, W, H);
+      const s = x.createRadialGradient(W * .2, H * .28, 0, W * .2, H * .28, W * .65); s.addColorStop(0, 'rgba(255,250,232,1)'); s.addColorStop(.3, 'rgba(255,240,205,.75)'); s.addColorStop(1, 'rgba(255,236,200,0)'); x.fillStyle = s; x.fillRect(0, 0, W, H);
     });
-    const outside = new THREE.Mesh(new THREE.PlaneGeometry(5, 4), new THREE.MeshBasicMaterial({ map: outTex, color: new THREE.Color(1.35, 1.3, 1.24) }));
+    const outside = new THREE.Mesh(new THREE.PlaneGeometry(5, 4), new THREE.MeshBasicMaterial({ map: outTex, color: new THREE.Color(1.12, 1.1, 1.06) }));
     outside.position.set(-.3, 1.5, WALL_Z - 1.8); outside.userData.depthOk = true; scene.add(outside);
-    // tulle curtains (breeze)
-    const curtTex = tex(TEX, 256, 512, (x, W, H) => { x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H); x.strokeStyle = 'rgba(200,190,170,.35)'; x.lineWidth = 1; for (let i = 0; i < W; i += 6) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); } for (let j = 0; j < H; j += 6) { x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); } x.fillStyle = 'rgba(230,220,200,.5)'; x.fillRect(0, H - 30, W, 30); });
-    const curtMat = new THREE.MeshPhysicalMaterial({ map: curtTex, color: '#fffaf0', transparent: true, opacity: .5, side: THREE.DoubleSide, roughness: .9, sheen: 1, sheenColor: new THREE.Color('#ffffff'), emissive: '#fff1dc', emissiveIntensity: .3, depthWrite: false });
+    // tulle curtains (pleated sheer; breeze)
+    const curtTex = tex(TEX, 256, 512, (x, W, H) => { x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H); x.strokeStyle = 'rgba(205,195,175,.3)'; x.lineWidth = 1; for (let i = 0; i < W; i += 5) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); } for (let j = 0; j < H; j += 5) { x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); } x.fillStyle = 'rgba(232,222,204,.55)'; x.fillRect(0, H - 26, W, 26); x.fillStyle = 'rgba(232,222,204,.35)'; x.fillRect(0, H - 34, W, 3); });
+    curtTex.wrapS = THREE.RepeatWrapping; curtTex.repeat.x = 2;
+    const curtMat = new THREE.MeshPhysicalMaterial({ map: curtTex, color: '#fffaf0', transparent: true, opacity: .52, side: THREE.DoubleSide, roughness: .9, sheen: 1, sheenColor: new THREE.Color('#ffffff'), emissive: '#fff0d6', emissiveIntensity: .32, depthWrite: false });
     R.curtains = [];
-    for (const [x0, w, ph] of [[WX0 - .14, .46, 0], [WX1 - .22, .38, 1.7]]) {
-      const geo = new THREE.PlaneGeometry(w, 1.62, 28, 14); const base = geo.attributes.position.array.slice();
-      const m = new THREE.Mesh(geo, curtMat); m.position.set(x0 + w / 2, WY1 + .2 - .81, WALL_Z + .1); m.renderOrder = 6; m.userData.noDepth = true; scene.add(m);
-      R.curtains.push({ m, base, w, ph });
+    const CH = 1.42, CZ = WALL_Z + .2;
+    for (const [x0, w, ph, pleats] of [[WX0 - .22, .44, 0, 8], [WX1 - .05, .38, 1.7, 7]]) {
+      const geo = new THREE.PlaneGeometry(w, CH, 48, 16); const base = geo.attributes.position.array.slice();
+      const m = new THREE.Mesh(geo, curtMat); m.position.set(x0 + w / 2, WY1 + .2 - CH / 2, CZ); m.renderOrder = 6; m.userData.noDepth = true; scene.add(m);
+      R.curtains.push({ m, base, w, ph, pleats });
     }
-    const rod = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, ww + .7, 12).rotateZ(Math.PI / 2), M.MAT.brass()); rod.position.set(wcx, WY1 + .2, WALL_Z + .1); scene.add(rod);
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, ww + .7, 12).rotateZ(Math.PI / 2), M.MAT.brass()); rod.position.set(wcx, WY1 + .2, CZ); scene.add(rod);
+    for (const s of [-1, 1]) { const f = new THREE.Mesh(new THREE.SphereGeometry(.022, 16, 12), M.MAT.brass()); f.position.set(wcx + s * (ww / 2 + .36), WY1 + .2, CZ); scene.add(f); }
     // floor + kilim
     const ftex = plankTex({ a: '#8a5a34', b: '#5e3a1e', planks: 8, seed: 12 }); ftex.repeat.set(3, 3);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(6, 6).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: ftex, roughness: .6 })); floor.position.set(0, 0, 1.5); floor.receiveShadow = true; scene.add(floor);
-    const kilim = tex(TEX, 512, 512, (x, W, H) => {
-      x.fillStyle = '#6a3226'; x.fillRect(0, 0, W, H); x.fillStyle = '#b89a74'; x.fillRect(10, 10, W - 20, H - 20); x.fillStyle = '#74382a'; x.fillRect(18, 18, W - 36, H - 36);
-      for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) { const cx = 34 + i * 29.5, cy = 34 + j * 29.5; x.fillStyle = (i + j) % 2 ? 'rgba(200,170,130,.28)' : 'rgba(50,50,80,.22)'; x.beginPath(); x.moveTo(cx, cy - 9); x.lineTo(cx + 9, cy); x.lineTo(cx, cy + 9); x.lineTo(cx - 9, cy); x.closePath(); x.fill(); }
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(6, 6).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: ftex, roughness: .55 })); floor.position.set(0, 0, 1.5); floor.receiveShadow = true; scene.add(floor);
+    const kilim = tex(TEX, 1024, 1024, (x, W, H) => {
+      x.fillStyle = '#6a2a22'; x.fillRect(0, 0, W, H); x.fillStyle = '#c6a57a'; x.fillRect(16, 16, W - 32, H - 32); x.fillStyle = '#7a3026'; x.fillRect(30, 30, W - 60, H - 60);
+      x.fillStyle = '#2f3d5a'; x.fillRect(70, 70, W - 140, H - 140); x.fillStyle = '#8a3a2c'; x.fillRect(90, 90, W - 180, H - 180);
+      for (let j = 0; j < 9; j++) for (let i = 0; i < 9; i++) { const cx = 140 + i * 93, cy = 140 + j * 93; x.fillStyle = (i + j) % 2 ? 'rgba(214,180,130,.55)' : 'rgba(40,52,82,.5)'; x.beginPath(); x.moveTo(cx, cy - 30); x.lineTo(cx + 30, cy); x.lineTo(cx, cy + 30); x.lineTo(cx - 30, cy); x.closePath(); x.fill(); x.fillStyle = 'rgba(240,220,180,.5)'; x.beginPath(); x.moveTo(cx, cy - 9); x.lineTo(cx + 9, cy); x.lineTo(cx, cy + 9); x.lineTo(cx - 9, cy); x.closePath(); x.fill(); }
+      for (let i = 0; i < 20000; i++) { const Rr = (i * 7919 % 1000) / 1000, Rq = (i * 104729 % 997) / 997; x.fillStyle = `rgba(0,0,0,${.04})`; x.fillRect(Rr * W, Rq * H, 2, 1); }
     });
     const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.7).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: kilim, roughness: 1, sheen: .7, sheenColor: new THREE.Color('#ffb38a') })); rug.position.set(0, .004, .25); rug.receiveShadow = true; scene.add(rug);
 
-    // ---------- low table (sehpa) + linen runner ----------
-    const walnut = grainWood({ a: '#9a6236', b: '#744624', seed: 51, streaks: 160, clearcoat: .5 });
+    // ---------- low walnut table + linen runner ----------
+    const walnut = grainWood({ a: '#7f4f2c', b: '#68401f', seed: 51, streaks: 260, clearcoat: .55, roughness: .4 });
     const table = new THREE.Group(); scene.add(table);
     const top = new THREE.Mesh(M.rbox(1.12, .036, .62, .012), walnut); top.position.y = TABLE_Y - .018; table.add(top);
     const apron = new THREE.Mesh(M.rbox(1.0, .06, .5, .01), walnut); apron.position.y = TABLE_Y - .065; table.add(apron);
     const legGeo = new THREE.LatheGeometry([[0, 0], [.024, 0], [.03, .04], [.02, .12], [.028, .22], [.02, .3], [.026, .36], [0, .36]].map(([r, y]) => new THREE.Vector2(Math.max(r, 1e-4), y)), 16);
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const l = new THREE.Mesh(legGeo, walnut); l.position.set(sx * .5, 0, sz * .25); table.add(l); }
     M.shadowAll(table);
-    const runnerTex = tex(TEX, 512, 256, (x, W, H) => {
-      x.clearRect(0, 0, W, H); x.fillStyle = '#f7f1e4'; x.fillRect(0, 22, W, H - 44);
-      for (let i = 0; i < W; i += 22) { x.beginPath(); x.arc(i + 11, 22, 11, Math.PI, 0); x.fill(); x.beginPath(); x.arc(i + 11, H - 22, 11, 0, Math.PI); x.fill(); }
-      x.strokeStyle = 'rgba(200,180,150,.6)'; x.lineWidth = 2; x.strokeRect(20, 36, W - 40, H - 72); for (let i = 40; i < W - 40; i += 24) { x.beginPath(); x.arc(i, H / 2, 6, 0, 7); x.stroke(); }
+    const runnerTex = tex(TEX, 1024, 512, (x, W, H) => {
+      x.clearRect(0, 0, W, H); x.fillStyle = '#f5efe2'; x.fillRect(0, 18, W, H - 36);
+      for (let i = 0; i < W; i += 4) { x.fillStyle = `rgba(190,170,140,${.06 + (i % 12 === 0 ? .05 : 0)})`; x.fillRect(i, 18, 1, H - 36); } for (let j = 18; j < H - 18; j += 4) { x.fillStyle = 'rgba(190,170,140,.06)'; x.fillRect(0, j, W, 1); }
+      // drawn-thread border + small embroidered lozenges
+      x.strokeStyle = 'rgba(185,160,120,.55)'; x.lineWidth = 2; x.strokeRect(34, 40, W - 68, H - 80); x.strokeRect(42, 48, W - 84, H - 96);
+      x.fillStyle = 'rgba(176,64,52,.45)'; for (let i = 70; i < W - 60; i += 34) { for (const y of [64, H - 64]) { x.beginPath(); x.moveTo(i, y - 6); x.lineTo(i + 6, y); x.lineTo(i, y + 6); x.lineTo(i - 6, y); x.closePath(); x.fill(); } }
+      x.fillStyle = 'rgba(200,180,150,.5)'; for (let i = 0; i < W; i += 5) { x.fillRect(i, 22, 2, 3); x.fillRect(i + 2, H - 25, 2, 3); }
     });
-    const runner = new THREE.Mesh(new THREE.PlaneGeometry(.9, .45).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: runnerTex, transparent: true, alphaTest: .5, roughness: 1 }));
-    runner.position.set(-.02, TABLE_Y + .0015, -.02); runner.receiveShadow = true; scene.add(runner);
+    const runner = new THREE.Mesh(new THREE.PlaneGeometry(.98, .5).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: runnerTex, transparent: true, alphaTest: .5, roughness: .95, sheen: .6, sheenColor: new THREE.Color('#fff4e0') }));
+    runner.position.set(-.02, TABLE_Y + .0012, -.02); runner.receiveShadow = true; scene.add(runner);
+
+    // ---------- shared book materials ----------
+    const leatherTile = foilLeather({ W: 512, H: 512, base: RED, dark: RED_D, seed: 3, repeat: [4, 5.6], grainPx: 512 / 4 });
+    const leather = foilMaterial(leatherTile, { normalScale: .9 });
+    const edgeTex = tex(TEX, 128, 128, (x, W, H) => { x.fillStyle = '#e3d5b6'; x.fillRect(0, 0, W, H); for (let i = 0; i < H; i += 2) { x.fillStyle = `rgba(140,106,66,${.12 + ((i * 7) % 10 === 0 ? .12 : 0)})`; x.fillRect(0, i, W, 1); } });
+    edgeTex.wrapS = edgeTex.wrapT = THREE.RepeatWrapping; edgeTex.repeat.set(1, 3);
+    const edgeMat = new THREE.MeshStandardMaterial({ map: edgeTex, roughness: .92 });
+    const edgeMatDS = new THREE.MeshStandardMaterial({ map: edgeTex, roughness: .92, side: THREE.DoubleSide });
+    const coverMaps = t => foilLeather({ W: 1024, H: 1468, draw: (x, W, H) => drawRisaleCover(x, W, H, { title: t }), base: RED, dark: RED_D, seed: t.length, grainPx: 230 });
+    const spineMaps = (title, w, seed) => foilLeather({ W: 192, H: 1024, draw: (x, W, H) => drawRisaleSpine(x, W, H, { title }), base: RED, dark: RED_D, seed, grainPx: 156, blur: 1.1, deboss: 1.6 });
 
     // ---------- rahle + MEKTUBAT (animated opening) ----------
-    const rahle = M.rahle({ length: .42, width: .25, angle: 1.1, material: grainWood({ a: '#b27846', b: '#8a5530', seed: 61, streaks: 150, repeat: [1.6, 1.6], clearcoat: .45 }) });
-    rahle.rotation.y = Math.PI / 2; rahle.position.set(-.1, TABLE_Y, -.04); scene.add(rahle);
-    const hingeY = TABLE_Y + rahle.userData.crossY + (.007 + .003) / Math.cos(ALPHA) + TAU / Math.cos(ALPHA) + .0015;
-    const bookRoot = new THREE.Group(); bookRoot.position.set(-.1, hingeY, -.04); scene.add(bookRoot); R.bookRoot = bookRoot;
-    const leatherM = M.MAT.leather({ a: '#6b1d22', b: '#3f0e12', seed: 71 });
-    const pageEdge = tex(TEX, 64, 64, (x, W, H) => { x.fillStyle = '#efe3c6'; x.fillRect(0, 0, W, H); for (let i = 0; i < H; i += 2) { x.fillStyle = `rgba(140,110,70,${.12 + (i % 6 === 0 ? .1 : 0)})`; x.fillRect(0, i, W, 1); } });
-    const blockMat = new THREE.MeshStandardMaterial({ map: pageEdge, roughness: .95 });
-    const pageCurve = u => .0055 * Math.sin(Math.min(u * 1.5, 1) * Math.PI / 2) - .0018 * u * u;
-    const mkPagePlane = (sign, drawFn) => {
-      const geo = new THREE.PlaneGeometry(BW, BH, 18, 1).rotateX(-Math.PI / 2);
-      const p = geo.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i) + BW / 2; p.setX(i, sign * x); p.setY(i, pageCurve(x / BW)); }
-      if (sign < 0) { const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, 1 - uv.getX(i)); const ix = geo.index.array; for (let i = 0; i < ix.length; i += 3) { const a = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = a; } }
-      geo.computeVertexNormals();
-      const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex(TEX, 512, 742, drawFn), roughness: .9 })); m.castShadow = m.receiveShadow = true; return m;
-    };
-    const mkHalf = (sign, pageFn, withCover) => {
+    const rahle = M.rahle({ length: .42, width: .25, angle: 1.1, material: grainWood({ a: '#9c673a', b: '#7f4f2b', seed: 61, streaks: 320, repeat: [1.6, 1.6], clearcoat: .55, roughness: .38 }) });
+    rahle.rotation.y = Math.PI / 2; rahle.position.set(-.1, TABLE_Y, -.07); scene.add(rahle);
+    const hingeY = TABLE_Y + rahle.userData.crossY + (.010 + TAU + .0034) / Math.cos(ALPHA) + .0008;
+    const bookRoot = new THREE.Group(); bookRoot.position.set(-.1, hingeY, -.07); scene.add(bookRoot); R.bookRoot = bookRoot;
+    const pageT = (num, side, seed, o) => tex(TEX, 768, 1100, (x, W, H) => drawRisalePage(x, W, H, { num, side, seed, ...o }));
+    const mkHalf = (sign, map, cover) => {
       const g = new THREE.Group();
-      const blk = new THREE.Mesh(M.rbox(BW - .004, TAU - .004, BH - .004, .002, 1), blockMat); blk.position.set(sign * (BW / 2), -TAU / 2 + .0005, 0); g.add(blk);
-      const cov = new THREE.Mesh(M.rbox(BW + .006, .003, BH + .01, .0012, 1), leatherM); cov.position.set(sign * (BW / 2 + .002), -TAU - .0005, 0); g.add(cov);
-      g.add(mkPagePlane(sign, pageFn));
-      if (withCover) {
-        const ct = tex(TEX, 512, 742, (x, W, H) => drawCover(x, W, H, { color: '#6b1d22', title: 'MEKTUBAT' }));
-        const cg = new THREE.PlaneGeometry(BW + .002, BH + .006).rotateX(Math.PI / 2).rotateY(Math.PI);
-        const cm = new THREE.Mesh(cg, new THREE.MeshPhysicalMaterial({ map: ct, roughness: .55, clearcoat: .3, clearcoatRoughness: .5, sheen: .3, sheenColor: new THREE.Color('#ffd0b0') })); cm.position.set(sign * (BW / 2 + .002), -TAU - .0022, 0); g.add(cm);
-      }
-      M.shadowAll(g); return g;
+      const board = new THREE.Mesh(M.rbox(BW + .007, .0032, BH + .009, .0013, 2), leather); board.position.set(sign * (BW / 2 + .0015), -TAU - .0016, 0); g.add(board);
+      const N = 30, NZ = 3;
+      const topG = stripGeo(N, NZ, sign > 0); const uvA = topG.attributes.uv;
+      for (let j = 0; j <= NZ; j++) for (let i = 0; i <= N; i++) { const k = j * (N + 1) + i; uvA.setXY(k, sign > 0 ? i / N : 1 - i / N, j / NZ); }
+      const topM = new THREE.Mesh(topG, new THREE.MeshStandardMaterial({ map, roughness: .88 })); g.add(topM);
+      const walls = stripGeo(N, 1, sign > 0); const wallU = walls.attributes.uv; for (let j = 0; j <= 1; j++) for (let i = 0; i <= N; i++) wallU.setXY(j * (N + 1) + i, i / N * 2, j * .35);
+      const head = new THREE.Mesh(walls, edgeMatDS), tail = new THREE.Mesh(walls.clone(), edgeMatDS); g.add(head, tail);
+      const fore = new THREE.Mesh(new THREE.PlaneGeometry(BH - .001, TAU).rotateY(sign * Math.PI / 2), edgeMat); fore.position.set(sign * BW, -TAU / 2, 0); g.add(fore);
+      if (cover) { const cg = new THREE.PlaneGeometry(BW + .0056, BH + .0076).rotateX(Math.PI / 2).rotateY(Math.PI); const cm = new THREE.Mesh(cg, foilMaterial(cover)); cm.material.polygonOffset = true; cm.material.polygonOffsetFactor = -2; cm.material.polygonOffsetUnits = -2; cm.position.set(sign * (BW / 2 + .0015), -TAU - .0033, 0); g.add(cm); }
+      M.shadowAll(g);
+      g.userData = { topG, N, NZ, head: head.geometry, tail: tail.geometry, sign, topM };
+      return g;
     };
-    const leftHalf = mkHalf(-1, pageDraw('194', 'L', 31, { para: [2, 9, 15] }), false); leftHalf.rotation.z = -ALPHA; bookRoot.add(leftHalf);
-    const rightHalf = mkHalf(1, pageDraw('195', 'R', 32, { para: [6, 13] }), true); bookRoot.add(rightHalf); R.rightHalf = rightHalf;
-    const spine = new THREE.Mesh(new THREE.CylinderGeometry(TAU * .95, TAU * .95, BH - .006, 16, 1, false).rotateX(Math.PI / 2), leatherM); spine.position.y = -TAU * .55; spine.castShadow = true; bookRoot.add(spine);
-    // riffling leaves (CPU-bent sheets), front = plain page, back = page 194 (last one)
+    R.pg194 = pageT('194', 'L', 31, { para: [2, 10, 17] }); R.pg188 = pageT('188', 'L', 35, { para: [6, 14] });
+    const leftHalf = mkHalf(-1, R.pg188, coverMaps('MEKTUBAT')); bookRoot.add(leftHalf); R.leftHalf = leftHalf;
+    const rightHalf = mkHalf(1, pageT('195', 'R', 32, { para: [7, 15, 21] }), null); bookRoot.add(rightHalf); R.rightHalf = rightHalf;
+    rightHalf.rotation.z = ALPHA;
+    // spine (moves under the gutter as the book opens) + gutter fold of the pages
+    // spine: an open half-shell (leather both sides) that bulges toward the crease when closed and sits under the gutter when open
+    const spineMat = leather.clone(); spineMat.side = THREE.DoubleSide;
+    const spine = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, BH + .009, 24, 1, true, Math.PI / 2, Math.PI).rotateX(Math.PI / 2), spineMat); spine.castShadow = true; bookRoot.add(spine); R.spine = spine;
+    const fold = new THREE.Mesh(new THREE.CylinderGeometry(.0045, .0045, BH - .002, 12, 1, false).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: '#8a7458', roughness: .95 })); bookRoot.add(fold); R.fold = fold;
+    // riffling leaves: front = odd page (lying on the right), back = even page (on the left, mirrored)
     R.sheets = [];
     for (let i = 0; i < 3; i++) {
-      const geo = new THREE.PlaneGeometry(BW - .003, BH - .004, 16, 1);
-      const fT = tex(TEX, 256, 371, pageDraw(null, 'R', 40 + i, { para: [3 + i, 11] })), bT = tex(TEX, 256, 371, i === 2 ? pageDraw('194', 'L', 31, { para: [2, 9, 15] }) : pageDraw(null, 'L', 50 + i));
-      const front = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: fT, roughness: .9, side: THREE.FrontSide }));
-      const back = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: bT, roughness: .9, side: THREE.BackSide }));
+      const N = 24; const geo = stripGeo(N, 1, true); const uvA = geo.attributes.uv; for (let j = 0; j <= 1; j++) for (let k = 0; k <= N; k++) uvA.setXY(j * (N + 1) + k, k / N, j);
+      const fT = pageT(String(189 + i * 2), 'R', 40 + i, { para: [3 + i, 11 + i] }), bT = pageT(String(190 + i * 2), 'L', 50 + i, { para: [4, 12 + i] });
       bT.wrapS = THREE.RepeatWrapping; bT.repeat.x = -1;
-      front.castShadow = back.castShadow = true; front.receiveShadow = back.receiveShadow = true;
-      bookRoot.add(front, back); R.sheets.push({ geo, i });
+      const front = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: fT, roughness: .88, side: THREE.FrontSide }));
+      const back = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: bT, roughness: .88, side: THREE.BackSide }));
+      front.castShadow = back.castShadow = true; front.receiveShadow = back.receiveShadow = true; front.frustumCulled = back.frustumCulled = false;
+      bookRoot.add(front, back); R.sheets.push({ geo, i, N, front, back });
     }
 
-    // ---------- SÖZLER with ribbon bookmark "19. Söz" ----------
-    const soz = new THREE.Group(); soz.position.set(.205, TABLE_Y, -.085); soz.rotation.y = -.04; scene.add(soz); R.soz = soz;
-    const SW = .15, SH = .215, SD = .042;
-    const greenL = M.MAT.leather({ a: '#1f4a3b', b: '#0f2a20', seed: 73 });
-    const sBlock = new THREE.Mesh(M.rbox(SW - .006, SD - .007, SH - .008, .002, 1), blockMat); sBlock.position.set(.002, SD / 2, 0); soz.add(sBlock);
-    for (const y of [.0018, SD - .0018]) { const c = new THREE.Mesh(M.rbox(SW + .004, .0036, SH + .008, .0015, 1), greenL); c.position.set(.0, y, 0); soz.add(c); }
-    const sSp = new THREE.Mesh(new THREE.CylinderGeometry(SD / 2, SD / 2, SH + .008, 16, 1, false, Math.PI, Math.PI).rotateX(Math.PI / 2), greenL); sSp.position.set(-SW / 2, SD / 2, 0); sSp.scale.x = .35; soz.add(sSp);
-    const sCov = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: tex(TEX, 512, 734, (x, W, H) => drawCover(x, W, H, { color: '#1f4a3b', title: 'SÖZLER' })), roughness: .55, clearcoat: .3, clearcoatRoughness: .5 }));
-    sCov.position.set(.001, SD + .0003, 0); soz.add(sCov);
+    // ---------- SÖZLER (closed, on the table) with green satin ribbon + "19. Söz" tag ----------
+    const soz = new THREE.Group(); soz.position.set(.13, TABLE_Y + .0012, .06); soz.rotation.y = -.35; scene.add(soz); R.soz = soz;
+    const SW = .152, SH = .217, SD = .044;
+    for (const y of [.0016, SD - .0016]) { const c = new THREE.Mesh(M.rbox(SW, .0032, SH, .0013, 2), leather); c.position.set(.002, y, 0); soz.add(c); }
+    const sBlock = new THREE.Mesh(M.rbox(SW - .006, SD - .0062, SH - .007, .0012, 1), edgeMat); sBlock.position.set(.003, SD / 2, 0); soz.add(sBlock);
+    const sSpine = new THREE.Mesh(new THREE.CylinderGeometry(SD / 2, SD / 2, SH, 24, 1, true, Math.PI, Math.PI), foilMaterial(spineMaps('SÖZLER', SD, 5))); sSpine.position.set(-SW / 2 + .004, SD / 2, 0); sSpine.scale.set(.32, 1, 1); sSpine.rotation.x = -Math.PI / 2; sSpine.rotation.z = 0; soz.add(sSpine);
+    // spine cylinder: axis along z after rotX(-90°); theta range PI..2PI faces -x ; v along -z -> head
+    const sCov = new THREE.Mesh(new THREE.PlaneGeometry(SW - .0026, SH - .0026).rotateX(-Math.PI / 2), foilMaterial(coverMaps('SÖZLER')));
+    sCov.material.polygonOffset = true; sCov.material.polygonOffsetFactor = -2; sCov.material.polygonOffsetUnits = -2; sCov.position.set(.002, SD + .0001, 0); soz.add(sCov);
     M.shadowAll(soz);
-    // ribbon: emerges at the tail (+z) edge, drapes to the table and runs toward the camera
-    const ribPts = [[.03, SD * .55, SH / 2 - .01], [.032, SD * .55, SH / 2 + .003], [.034, SD * .25, SH / 2 + .012], [.036, .003, SH / 2 + .03], [.036, .0016, SH / 2 + .065], [.014, .0016, SH / 2 + .1], [-.008, .0016, SH / 2 + .13]].map(p => new THREE.Vector3(...p));
-    const ribCurve = new THREE.CatmullRomCurve3(ribPts); const RN = 60; const rv = [], ri = [], ruv = [];
-    for (let k = 0; k <= RN; k++) { const p = ribCurve.getPoint(k / RN), tg = ribCurve.getTangent(k / RN); const side = new THREE.Vector3(0, 1, 0).cross(tg).normalize().multiplyScalar(.0045); rv.push(p.x - side.x, p.y - side.y + .0004, p.z - side.z, p.x + side.x, p.y + side.y + .0004, p.z + side.z); ruv.push(0, k / RN, 1, k / RN); if (k < RN) ri.push(k * 2, k * 2 + 1, k * 2 + 2, k * 2 + 1, k * 2 + 3, k * 2 + 2); }
+    const ribPts = [[.035, SD * .55, SH / 2 - .012], [.037, SD * .56, SH / 2 + .002], [.04, SD * .3, SH / 2 + .011], [.042, .004, SH / 2 + .025], [.04, .0012, SH / 2 + .05], [.028, .0012, SH / 2 + .07], [.014, .0012, SH / 2 + .083]].map(p => new THREE.Vector3(...p));
+    const ribCurve = new THREE.CatmullRomCurve3(ribPts); const RN = 70; const rv = [], ri = [], ruv = [];
+    for (let k = 0; k <= RN; k++) { const p = ribCurve.getPoint(k / RN), tg = ribCurve.getTangent(k / RN); const side = new THREE.Vector3(0, 1, 0).cross(tg).normalize().multiplyScalar(.0055); const tw = Math.sin(k / RN * Math.PI) * .0006; rv.push(p.x - side.x, p.y - side.y + .0004 + tw, p.z - side.z, p.x + side.x, p.y + side.y + .0004 - tw, p.z + side.z); ruv.push(0, k / RN, 1, k / RN); if (k < RN) ri.push(k * 2, k * 2 + 1, k * 2 + 2, k * 2 + 1, k * 2 + 3, k * 2 + 2); }
     const ribGeo = new THREE.BufferGeometry(); ribGeo.setAttribute('position', new THREE.Float32BufferAttribute(rv, 3)); ribGeo.setAttribute('uv', new THREE.Float32BufferAttribute(ruv, 2)); ribGeo.setIndex(ri); ribGeo.computeVertexNormals();
-    const ribbon = new THREE.Mesh(ribGeo, new THREE.MeshPhysicalMaterial({ color: '#2f7a4a', roughness: .35, sheen: 1, sheenColor: new THREE.Color('#bff0c8'), side: THREE.DoubleSide })); ribbon.castShadow = ribbon.receiveShadow = true; soz.add(ribbon);
-    // paper tag tied to the ribbon end
-    const tagTex = tex(TEX, 384, 224, (x, W, H) => {
-      x.clearRect(0, 0, W, H); x.fillStyle = '#f6ecd6'; const r = 26; x.beginPath(); x.moveTo(60, 8); x.lineTo(W - 8 - r, 8); x.arcTo(W - 8, 8, W - 8, 8 + r, r); x.lineTo(W - 8, H - 8 - r); x.arcTo(W - 8, H - 8, W - 8 - r, H - 8, r); x.lineTo(60, H - 8); x.lineTo(8, H / 2); x.closePath(); x.fill();
-      x.strokeStyle = 'rgba(150,120,80,.6)'; x.lineWidth = 3; x.stroke();
-      x.fillStyle = '#ffffff'; x.beginPath(); x.arc(44, H / 2, 11, 0, 7); x.fill(); x.strokeStyle = 'rgba(150,120,80,.8)'; x.lineWidth = 3; x.stroke();
-      x.fillStyle = '#3a2416'; x.font = `italic 500 92px "Lora"`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('19. Söz', W * .58, H * .53);
+    const ribTex = tex(TEX, 64, 256, (x, W, H) => { x.fillStyle = '#1f6a44'; x.fillRect(0, 0, W, H); for (let i = 0; i < W; i += 2) { x.fillStyle = `rgba(255,255,255,${.03 + (i % 6 === 0 ? .03 : 0)})`; x.fillRect(i, 0, 1, H); } x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, 0, 4, H); x.fillRect(W - 4, 0, 4, H); });
+    const ribbon = new THREE.Mesh(ribGeo, new THREE.MeshPhysicalMaterial({ map: ribTex, roughness: .32, sheen: 1, sheenColor: new THREE.Color('#9be0b4'), sheenRoughness: .3, clearcoat: .35, clearcoatRoughness: .25, side: THREE.DoubleSide }));
+    ribbon.castShadow = ribbon.receiveShadow = true; soz.add(ribbon);
+    const tagTex = tex(TEX, 640, 352, (x, W, H) => {
+      x.clearRect(0, 0, W, H); const r = 30, l = 86;
+      const shape = () => { x.beginPath(); x.moveTo(l, 10); x.lineTo(W - 10 - r, 10); x.arcTo(W - 10, 10, W - 10, 10 + r, r); x.lineTo(W - 10, H - 10 - r); x.arcTo(W - 10, H - 10, W - 10 - r, H - 10, r); x.lineTo(l, H - 10); x.lineTo(12, H / 2 + 34); x.lineTo(12, H / 2 - 34); x.closePath(); };
+      shape(); x.fillStyle = '#efe1c3'; x.fill();
+      for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(170,130,80,${(i * 37 % 10) / 10 * .03})`; x.beginPath(); x.arc((i * 211) % W, (i * 97) % H, 2 + (i % 7), 0, 7); x.fill(); }
+      x.save(); shape(); x.clip(); x.strokeStyle = 'rgba(134,21,26,.75)'; x.lineWidth = 5; x.strokeRect(l + 6, 28, W - l - 44, H - 56); x.lineWidth = 2; x.strokeRect(l + 16, 38, W - l - 64, H - 76); x.restore();
+      shape(); x.strokeStyle = 'rgba(150,120,80,.55)'; x.lineWidth = 3; x.stroke();
+      x.fillStyle = '#ffffff'; x.beginPath(); x.arc(52, H / 2, 15, 0, 7); x.fill(); x.strokeStyle = '#b8862e'; x.lineWidth = 6; x.stroke();
+      x.fillStyle = '#5e0a0f'; x.font = `700 118px "Playfair Display"`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('19. Söz', l + (W - l) / 2 - 10, H * .53);
     });
-    const tag = new THREE.Mesh(new THREE.PlaneGeometry(.074, .043).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: tagTex, transparent: true, alphaTest: .5, roughness: .9, side: THREE.DoubleSide }));
-    const tagEnd = ribPts[ribPts.length - 1]; tag.position.set(tagEnd.x + .03, .0022, tagEnd.z + .006); tag.rotation.y = .12; tag.castShadow = tag.receiveShadow = true; soz.add(tag); R.tag = tag;
-    // tag's string loop
-    const loop = new THREE.Mesh(new THREE.TorusGeometry(.006, .0008, 6, 20), new THREE.MeshStandardMaterial({ color: '#c9b48a', roughness: .8 })); loop.rotation.x = Math.PI / 2; loop.position.set(tagEnd.x - .0, .0022, tagEnd.z + .004); soz.add(loop);
+    const tagG = new THREE.PlaneGeometry(.088, .0484, 8, 1).rotateX(-Math.PI / 2); { const p = tagG.attributes.position; for (let i = 0; i < p.count; i++) { const xx = p.getX(i); p.setY(i, .0016 * Math.pow(Math.max(0, (xx + .044) / .088 - .55), 2) * 4); } tagG.computeVertexNormals(); }
+    const tag = new THREE.Mesh(tagG, new THREE.MeshStandardMaterial({ map: tagTex, transparent: true, alphaTest: .5, roughness: .85, side: THREE.DoubleSide }));
+    const tagEnd = ribPts[ribPts.length - 1]; tag.position.set(tagEnd.x + .036, .0018, tagEnd.z + .008); tag.rotation.y = .16; tag.castShadow = tag.receiveShadow = true; soz.add(tag); R.tag = tag;
+    const loop = new THREE.Mesh(new THREE.TorusGeometry(.0055, .0009, 6, 20), new THREE.MeshStandardMaterial({ color: '#2a6a46', roughness: .5 })); loop.rotation.x = Math.PI / 2; loop.position.set(tagEnd.x - .001, .0024, tagEnd.z + .004); soz.add(loop);
+    scene.add(contactShadows([{ x: .13, y: TABLE_Y + .0016, z: .06, s: [.2, 1, .27], ry: -.35 }], { opacity: .4 }));
 
-    // ---------- other Risale volumes (untitled spines): stack on the table + row on a wall shelf ----------
-    const vols = [['#6b1d22', '#3f0e12'], ['#1f4a3b', '#0f2a20'], ['#23385e', '#101c34'], ['#5a3a1c', '#2e1c0c'], ['#6b1d22', '#3f0e12'], ['#1f4a3b', '#0f2a20'], ['#23385e', '#101c34'], ['#4a2440', '#24101e']];
-    const spineTexFor = (c, seed) => { const t = tex(TEX, 128, 512, (x, W, H) => paintSpine(x, W, H, { color: c[0], dark: c[1], bands: 5, gold: '#e6c068', labels: [{ panel: 1, bg: c[1] }], fleurons: true }, U.rng(seed))); return t; };
-    const stack = new THREE.Group(); stack.visible = false;
-    let yy = 0; [0, 2, 3].forEach((ci, k) => { const th = .036 + k * .004; const b = new THREE.Mesh(M.rbox(.15, th, .215, .003, 1), [M.MAT.leather({ a: vols[ci][0], b: vols[ci][1], seed: 80 + ci })][0]); b.position.set((k - 1) * .006, yy + th / 2, (k - 1) * .004); b.rotation.y = (k - 1) * .06; stack.add(b); const sp = new THREE.Mesh(new THREE.PlaneGeometry(th * .95, .2).rotateZ(Math.PI / 2), new THREE.MeshStandardMaterial({ map: spineTexFor(vols[ci], 90 + k), roughness: .5, metalness: .2 })); sp.rotation.y = -Math.PI / 2; sp.position.set(b.position.x - .0755, yy + th / 2, b.position.z); stack.add(sp); yy += th; });
-    M.shadowAll(stack);
-    // a row of other Risale volumes standing on the sunlit window sill (untitled spines, gilt ornaments only)
-    const sillRow = new THREE.Group(); sillRow.position.set(-.02, WY0, WALL_Z - .02 + .1); scene.add(sillRow); R.sillRow = sillRow;
-    let sxp = 0; const sillVols = [0, 1, 2, 4, 5, 3, 6];
-    sillVols.forEach((vi, k) => { const c = vols[vi]; const th = .034 + (k % 3) * .005, hh = .2 + (k % 2) * .012; const b = new THREE.Mesh(M.rbox(th, hh, .15, .003, 1), M.MAT.leather({ a: c[0], b: c[1], seed: 100 + vi })); b.position.set(sxp + th / 2, hh / 2, 0); b.rotation.z = k === sillVols.length - 1 ? -.12 : 0; if (k === sillVols.length - 1) b.position.x += .012; sillRow.add(b);
-      const sp = new THREE.Mesh(new THREE.PlaneGeometry(th * .92, hh * .96), new THREE.MeshStandardMaterial({ map: spineTexFor(c, 120 + k), roughness: .5, metalness: .25 })); sp.position.set(b.position.x, hh / 2, .0755); sp.rotation.z = b.rotation.z; sillRow.add(sp); sxp += th + .002; });
-    const bookend = new THREE.Mesh(M.rbox(.012, .12, .1, .004), M.MAT.brass()); bookend.position.set(-.008, .06, 0); sillRow.add(bookend);
+    // ---------- the rest of the set on the sunlit sill (uniform red, gold spines) ----------
+    const sillRow = new THREE.Group(); sillRow.position.set(-.26, WY0, WALL_Z + .065); scene.add(sillRow); R.sillRow = sillRow;
+    const vols = [["LEM’ALAR", .042], ['ŞUALAR', .046], [['MESNEVÎ-İ', 'NURİYE'], .034], [["İŞARATÜ’L-", "İ’CAZ"], .036], [['BARLA', 'LÂHİKASI'], .038], [['KASTAMONU', 'LÂHİKASI'], .036], [['EMİRDAĞ', 'LÂHİKASI'], .04], [['TARİHÇE-İ', 'HAYAT'], .044]];
+    let sxp = 0; const VH = .217, VD = .152; R.sillBooks = [];
+    vols.forEach(([title, th], k) => {
+      const g = new THREE.Group();
+      for (const s of [-1, 1]) { const b = new THREE.Mesh(M.rbox(.0032, VH, VD, .0013, 2), leather); b.position.set(s * (th / 2 - .0016), VH / 2, -.002); g.add(b); }
+      const blk = new THREE.Mesh(M.rbox(th - .006, VH - .007, VD - .006, .001, 1), edgeMat); blk.position.set(0, VH / 2, -.004); g.add(blk);
+      const sp = new THREE.Mesh(new THREE.CylinderGeometry(th / 2, th / 2, VH, 20, 1, true, -Math.PI / 2, Math.PI), foilMaterial(spineMaps(title, th, 11 + k))); sp.scale.z = .32; sp.position.set(0, VH / 2, VD / 2 - .004); g.add(sp);
+      g.position.set(sxp + th / 2, 0, 0); sillRow.add(g); R.sillBooks.push(g); sxp += th + .0015;
+    });
+    const bookend = new THREE.Mesh(M.rbox(.012, .13, .11, .004), M.MAT.brass()); bookend.position.set(sxp + .007, .065, 0); sillRow.add(bookend);
+    const bookend2 = new THREE.Mesh(M.rbox(.012, .13, .11, .004), M.MAT.brass()); bookend2.position.set(-.008, .065, 0); sillRow.add(bookend2);
     M.shadowAll(sillRow);
+    R.sillCenter = new THREE.Vector3(-.26 + sxp / 2, WY0 + .11, WALL_Z + .065 + VD / 2);
 
-    // ---------- tea glass on saucer + rose ----------
-    const tea = new THREE.Group(); tea.position.set(-.225, TABLE_Y, .205); scene.add(tea); R.tea = tea;
-    const saucer = M.lathe([[0, 0], [.035, 0], [.05, .004], [.062, .009], [.066, .012], [.064, .013], [.05, .008], [0, .006]], new THREE.MeshPhysicalMaterial({ color: '#fbf7ef', roughness: .25, clearcoat: .8 }), 40); tea.add(saucer);
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(.0645, .0012, 6, 48), M.MAT.gold()); rim.rotation.x = Math.PI / 2; rim.position.y = .0125; tea.add(rim);
-    const gp = [[0, .006], [.02, .006], [.022, .012], [.017, .04], [.019, .07], [.025, .1], [.026, .104]];
-    const glass = M.lathe(gp.concat([[.0245, .104], [.0235, .1], [.0178, .07], [.0158, .04], [.0195, .014], [0, .012]]), new THREE.MeshPhysicalMaterial({ color: '#ffffff', transparent: true, opacity: .13, roughness: .02, metalness: 0, envMapIntensity: 3.0, clearcoat: 1, clearcoatRoughness: .02, specularIntensity: 1, depthWrite: false }), 40); glass.renderOrder = 8; tea.add(glass);
-    const teaGrad = tex(TEX, 8, 256, (x, W, H) => { const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2a0702'); g.addColorStop(.12, '#5a1604'); g.addColorStop(.6, '#9a3a0c'); g.addColorStop(1, '#d26a1e'); x.fillStyle = g; x.fillRect(0, 0, W, H); });
+    // ---------- tea glass (ince belli) on a saucer + teaspoon + steam ----------
+    const tea = new THREE.Group(); tea.position.set(-.22, TABLE_Y + .0012, .17); scene.add(tea); R.tea = tea;
+    const porcelain = new THREE.MeshPhysicalMaterial({ color: '#fbf8f1', roughness: .18, clearcoat: 1, clearcoatRoughness: .08 });
+    const saucer = M.lathe([[0, 0], [.035, 0], [.05, .004], [.062, .009], [.066, .0125], [.064, .0135], [.05, .0085], [.034, .0055], [0, .006]], porcelain, 48); tea.add(saucer);
+    const goldM = M.MAT.gold();
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(.0648, .0011, 6, 56), goldM); rim.rotation.x = Math.PI / 2; rim.position.y = .0131; tea.add(rim);
+    const rim2 = new THREE.Mesh(new THREE.TorusGeometry(.036, .0007, 6, 48), goldM); rim2.rotation.x = Math.PI / 2; rim2.position.y = .0062; tea.add(rim2);
+    const gOut = [[0, .006], [.019, .006], [.0215, .009], [.0222, .02], [.019, .036], [.0168, .048], [.0178, .062], [.0215, .085], [.0246, .102], [.0252, .106]];
+    const gIn = [[.0244, .106], [.0238, .102], [.0207, .085], [.0170, .062], [.0160, .048], [.0182, .036], [.0212, .02], [.0205, .011], [0, .0095]];
+    // fake thin glass: black diffuse + additive blending = only the reflections are added over what is behind it
+    const glassM = new THREE.MeshPhysicalMaterial({ color: '#000000', transparent: true, blending: THREE.AdditiveBlending, roughness: .03, metalness: 0, envMapIntensity: 2.2, clearcoat: 1, clearcoatRoughness: .03, specularIntensity: 1, depthWrite: false, side: THREE.FrontSide });
+    const glass = M.lathe(gOut.concat(gIn), glassM, 48); glass.renderOrder = 8; glass.castShadow = false; tea.add(glass);
+    // painted reflections on the glass (window catchlights) — always on the camera-facing side
+    const hlTex = tex(TEX, 128, 128, (x, W, H) => { x.clearRect(0, 0, W, H); const g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(.0, 'rgba(255,255,255,0)'); g.addColorStop(.22, 'rgba(255,255,255,.0)'); g.addColorStop(.3, 'rgba(255,255,255,.9)'); g.addColorStop(.36, 'rgba(255,255,255,0)'); g.addColorStop(.62, 'rgba(255,255,255,0)'); g.addColorStop(.66, 'rgba(255,255,255,.45)'); g.addColorStop(.7, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H); });
+    const hl = new THREE.Mesh(new THREE.LatheGeometry(gOut.map(([r, y]) => new THREE.Vector2(Math.max(r * 1.004, 1e-4), y)), 32, -Math.PI * .35, Math.PI * .7), new THREE.MeshBasicMaterial({ map: hlTex, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.FrontSide })); hl.renderOrder = 9; hl.userData.noDepth = true; tea.add(hl); R.teaHL = hl;
+    const teaGrad = tex(TEX, 8, 256, (x, W, H) => { const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2e0602'); g.addColorStop(.3, '#4e0e03'); g.addColorStop(.75, '#7e2207'); g.addColorStop(1, '#b4480f'); x.fillStyle = g; x.fillRect(0, 0, W, H); });
     teaGrad.wrapS = teaGrad.wrapT = THREE.ClampToEdgeWrapping;
-    const teaLiq = M.lathe([[0, .013], [.0192, .014], [.0154, .04], [.0172, .07], [.0225, .092], [0, .092]], new THREE.MeshPhysicalMaterial({ map: teaGrad, emissiveMap: teaGrad, emissive: '#ffffff', emissiveIntensity: .32, roughness: .05, clearcoat: 1, clearcoatRoughness: .03, transparent: true, opacity: .92 }), 32); tea.add(teaLiq);
-    const gRim = new THREE.Mesh(new THREE.TorusGeometry(.0252, .0009, 6, 40), new THREE.MeshStandardMaterial({ color: '#ffffff', transparent: true, opacity: .55, roughness: .05, envMapIntensity: 2 })); gRim.rotation.x = Math.PI / 2; gRim.position.y = .1035; tea.add(gRim);
-    // steam (soft sprites)
-    const steamTex = TEX.softDot(64, 0); R.steam = [];
-    for (let i = 0; i < 7; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: steamTex, color: '#ffffff', transparent: true, opacity: 0, depthWrite: false })); s.userData.noDepth = true; s.renderOrder = 9; tea.add(s); R.steam.push({ s, ph: i / 7 }); }
-    // rose (stylised, built from cupped petals)
-    const rose = new THREE.Group(); rose.position.set(-.02, TABLE_Y + .03, .235); rose.rotation.set(0, .45, 0); rose.scale.setScalar(1.3); scene.add(rose);
-    const petalMat = new THREE.MeshPhysicalMaterial({ color: '#b3122c', roughness: .5, sheen: 1, sheenColor: new THREE.Color('#ff7a8a'), sheenRoughness: .4, side: THREE.DoubleSide });
-    const head = new THREE.Group(); head.rotation.z = Math.PI / 2 - .25; rose.add(head);
-    for (let i = 0; i < 17; i++) {
-      const layer = i / 16; const pw = .018 + layer * .02, ph = .022 + layer * .016;
-      const geo = new THREE.PlaneGeometry(pw, ph, 6, 6); const p = geo.attributes.position;
-      for (let k = 0; k < p.count; k++) { const px = p.getX(k) / (pw / 2), py = (p.getY(k) + ph / 2) / ph; p.setZ(k, -(px * px) * pw * .32 + py * py * ph * (.1 + layer * .45)); p.setX(k, p.getX(k) * (1 - .25 * (1 - py))); }
-      geo.translate(0, ph / 2, 0); geo.computeVertexNormals();
-      const m = new THREE.Mesh(geo, petalMat); const a = i * 2.4; const rr = .002 + layer * .009;
-      m.position.set(Math.cos(a) * rr, -.004 + layer * .002, Math.sin(a) * rr); m.rotation.set(0, -a + Math.PI / 2, 0); m.rotateX(-(.05 + layer * .75)); head.add(m);
+    const teaLiq = M.lathe([[0, .0096], [.0204, .011], [.0211, .02], [.0181, .036], [.0159, .048], [.0168, .062], [.0203, .084], [.0209, .087], [0, .087]], new THREE.MeshPhysicalMaterial({ map: teaGrad, emissiveMap: teaGrad, emissive: '#ffffff', emissiveIntensity: .42, roughness: .06, clearcoat: 1, clearcoatRoughness: .03 }), 40); teaLiq.castShadow = false; tea.add(teaLiq);
+    const surf = new THREE.Mesh(new THREE.CircleGeometry(.0207, 40).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ color: '#3a0b03', emissive: '#7a2408', emissiveIntensity: .35, roughness: .03, clearcoat: 1, envMapIntensity: 2.5 })); surf.position.y = .0868; tea.add(surf);
+    const gRim = new THREE.Mesh(new THREE.TorusGeometry(.0249, .0008, 6, 48), new THREE.MeshStandardMaterial({ color: '#3a3a3a', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, roughness: .05, envMapIntensity: 2.5 })); gRim.rotation.x = Math.PI / 2; gRim.position.y = .106; tea.add(gRim);
+    // teaspoon resting on the saucer
+    const silver = new THREE.MeshPhysicalMaterial({ color: '#d9d6cf', metalness: 1, roughness: .18, clearcoat: .6 });
+    const spoon = new THREE.Group(); const bowl = new THREE.Mesh(new THREE.SphereGeometry(.0075, 20, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), silver); bowl.scale.set(1, .32, 1.45); spoon.add(bowl);
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(.0019, .0024, .058, 10).rotateX(Math.PI / 2), silver); handle.position.set(0, .002, .038); spoon.add(handle);
+    const knob = new THREE.Mesh(new THREE.SphereGeometry(.0038, 12, 8), silver); knob.scale.set(1, .45, 1.7); knob.position.set(0, .002, .068); spoon.add(knob);
+    spoon.position.set(.03, .011, .02); spoon.rotation.set(-.1, .75, 0); tea.add(spoon);
+    M.shadowAll(spoon); saucer.castShadow = true;
+    // steam: a soft, noise-driven wisp (billboarded, GPU animated)
+    const steamU = { time: { value: 0 }, op: { value: .3 } };
+    const steam = new THREE.Mesh(new THREE.PlaneGeometry(.11, .26), new THREE.ShaderMaterial({
+      uniforms: steamU, transparent: true, depthWrite: false,
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+      fragmentShader: `uniform float time, op; varying vec2 vUv;
+        float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+        float fbm(vec2 p){ float a = 0., w = .5; for (int i = 0; i < 4; i++){ a += w * n(p); p = p * 2.03 + 7.1; w *= .5; } return a; }
+        float ribbon(vec2 uv, float ph, float amp){ float y = uv.y;
+          float xc = .5 + amp * (.35 + y) * sin(y * 6. - time * 1.2 + ph) + .07 * y * sin(y * 3.1 - time * .65 + ph * 2.) + (fbm(vec2(y * 2.2 + ph, time * .25 + ph)) - .5) * .3 * y;
+          float w = .028 + y * .15; float d = (uv.x - xc) / w; return exp(-d * d); }
+        void main(){ vec2 uv = vUv; float y = uv.y;
+          float a = ribbon(uv, 0., .12) * .85 + ribbon(uv, 2.1, .17) * .6 + ribbon(uv, 4.3, .09) * .45;
+          float br = fbm(vec2(uv.x * 5. + y * 2., y * 3.5 - time * .75)); a *= smoothstep(.28, .72, br);
+          a *= smoothstep(0., .1, y) * (1. - smoothstep(.42, .95, y));
+          gl_FragColor = vec4(vec3(1., .985, .96), a * op); }`,
+    }));
+    steam.position.set(0, .106 + .13, 0); steam.userData.uniforms = steamU; steam.userData.yBillboard = true; steam.userData.noDepth = true; steam.renderOrder = 10; tea.add(steam);
+
+    // ---------- red rose (cupped spiral petals) lying on the table ----------
+    const rose = new THREE.Group(); rose.position.set(-.1, TABLE_Y + .027, .265); rose.rotation.set(0, .3, 0); rose.scale.setScalar(1.3); scene.add(rose); R.rose = rose;
+    const petalMat = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .55, sheen: 1, sheenColor: new THREE.Color('#ff8a9a'), sheenRoughness: .35, side: THREE.DoubleSide });
+    const head = new THREE.Group(); head.rotation.z = Math.PI / 2 - .2; rose.add(head);
+    const cBase = new THREE.Color('#4a0610'), cMid = new THREE.Color('#a3101f'), cTip = new THREE.Color('#c8283a');
+    const NP = 34;
+    for (let i = 0; i < NP; i++) {
+      const L = i / (NP - 1); const pw = .012 + L * .028, ph = .016 + L * .019;
+      const geo = new THREE.PlaneGeometry(1, 1, 10, 10); const p = geo.attributes.position; const col = new Float32Array(p.count * 3);
+      for (let k = 0; k < p.count; k++) {
+        const px = p.getX(k) * 2, py = p.getY(k) + .5; // px -1..1, py 0..1
+        const half = pw / 2 * (.3 + .7 * Math.pow(Math.sin(Math.PI / 2 * Math.min(1, py / .72)), .8));
+        const X = px * half, Y = py * ph - px * px * ph * .16 * py;           // rounded top edge
+        const cup = -(px * px) * half * (.75 - L * .35);                         // cupped across
+        const lean = py * py * ph * (.1 + (1 - L) * .35);                       // inner petals wrap inward
+        const curl = py > .6 ? Math.pow((py - .6) / .4, 2) * ph * (.04 + L * .4) : 0; // rim rolls back
+        p.setXYZ(k, X, Y, cup + lean - curl);
+        const c = cBase.clone().lerp(cMid, Math.min(1, py * 1.7)).lerp(cTip, Math.max(0, py - .65) * 1.5 * (.3 + L * .7)); const sh = .82 + .18 * Math.abs(px);
+        col[k * 3] = c.r * sh; col[k * 3 + 1] = c.g * sh; col[k * 3 + 2] = c.b * sh;
+      }
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
+      const m = new THREE.Mesh(geo, petalMat); const a = i * 2.39996; const rr = .001 + L * .0075;
+      m.position.set(Math.cos(a) * rr, -.006 + L * .0025, Math.sin(a) * rr); m.rotation.set(0, -a + Math.PI / 2, 0); m.rotateX(-(.02 + Math.pow(L, 1.5) * .78)); head.add(m);
     }
-    const sepMat = new THREE.MeshStandardMaterial({ color: '#3f6b2c', roughness: .6, side: THREE.DoubleSide });
-    for (let i = 0; i < 5; i++) { const s = new THREE.Mesh(new THREE.ConeGeometry(.004, .022, 4).translate(0, .011, 0), sepMat); const a = i * 1.2566; s.position.set(Math.cos(a) * .006, -.006, Math.sin(a) * .006); s.rotation.set(Math.sin(a) * 1.9, 0, -Math.cos(a) * 1.9); head.add(s); }
-    const stemCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, -.008, 0), new THREE.Vector3(.0, -.06, .0), new THREE.Vector3(.004, -.14, .003), new THREE.Vector3(.0, -.22, 0)]);
-    const stem = new THREE.Mesh(new THREE.TubeGeometry(stemCurve, 24, .0028, 8), sepMat); head.add(stem);
-    for (const [y, s] of [[-.09, 1], [-.15, -1]]) { const lshape = new THREE.Shape(); lshape.moveTo(0, 0); lshape.quadraticCurveTo(.018, .02, 0, .05); lshape.quadraticCurveTo(-.018, .02, 0, 0); const lf = new THREE.Mesh(new THREE.ShapeGeometry(lshape, 10), sepMat); lf.position.set(0, y, 0); lf.rotation.set(0, s * .6, s * 1.0); head.add(lf); }
+    const sepMat = new THREE.MeshStandardMaterial({ color: '#35602a', roughness: .55, side: THREE.DoubleSide });
+    for (let i = 0; i < 5; i++) { const s = new THREE.Mesh(new THREE.ConeGeometry(.0035, .024, 4).translate(0, .012, 0), sepMat); const a = i * 1.2566; s.position.set(Math.cos(a) * .006, -.007, Math.sin(a) * .006); s.rotation.set(Math.sin(a) * 2.0, 0, -Math.cos(a) * 2.0); head.add(s); }
+    const stemCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, -.008, 0), new THREE.Vector3(0, -.05, .001), new THREE.Vector3(.002, -.1, .002), new THREE.Vector3(0, -.15, 0)]);
+    const stem = new THREE.Mesh(new THREE.TubeGeometry(stemCurve, 30, .0026, 8), sepMat); head.add(stem);
+    for (let i = 0; i < 4; i++) { const th = new THREE.Mesh(new THREE.ConeGeometry(.0012, .004, 5), sepMat); th.position.copy(stemCurve.getPoint(.25 + i * .18)); th.rotation.z = (i % 2 ? 1 : -1) * 1.2; head.add(th); }
+    const leafShape = new THREE.Shape(); leafShape.moveTo(0, 0); for (let i = 0; i <= 12; i++) { const t = i / 12, w = Math.sin(Math.PI * t) * .011 * (1 + (i % 2) * .12); leafShape.lineTo(w, t * .04); } for (let i = 12; i >= 0; i--) { const t = i / 12, w = Math.sin(Math.PI * t) * .011 * (1 + (i % 2) * .12); leafShape.lineTo(-w, t * .04); }
+    const leafG = new THREE.ShapeGeometry(leafShape, 4); { const p = leafG.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, -Math.pow(p.getX(i) / .011, 2) * .003 + Math.pow(p.getY(i) / .04, 2) * .004); leafG.computeVertexNormals(); }
+    const leafM = new THREE.MeshPhysicalMaterial({ color: '#4a7a34', roughness: .5, clearcoat: .25, sheen: .4, sheenColor: new THREE.Color('#bfe0a0'), side: THREE.DoubleSide });
+    for (const [y, s] of [[-.07, 1], [-.115, -1]]) { const lf = new THREE.Mesh(leafG, leafM); lf.position.set(0, y, 0); lf.rotation.set(0, s * .5, s * 1.05); head.add(lf); }
     M.shadowAll(rose);
+    scene.add(contactShadows([{ x: -.22, y: TABLE_Y + .0016, z: .17, s: [.15, 1, .15] }, { x: -.1, y: TABLE_Y + .0016, z: .265, s: [.08, 1, .08] }], { opacity: .35 }));
 
     // grounding contact shadows under the table legs
     scene.add(contactShadows([[-.5, -.25], [.5, -.25], [-.5, .25], [.5, .25]].map(([x, z]) => ({ x, y: .006, z, s: [.12, 1, .12] })).concat([{ x: 0, y: .005, z: 0, s: [1.4, 1, .9] }]), { opacity: .35 }));
 
     // ---------- light shaft + dust ----------
     const SH_FROM = [-.5, 1.18, WALL_Z - .02], SH_TO = [.02, TABLE_Y + .02, .02];
-    const shaft = FX.lightShaft({ from: SH_FROM, to: SH_TO, r0: .32, r1: .42, color: '#ffe2b0', opacity: .07 }); scene.add(shaft); R.shaft = shaft;
-    const motes = beamMotes({ from: SH_FROM, to: SH_TO, radius: .36, count: 700, size: 1.0, color: '#fff0d0', opacity: .85, speed: .012 }); scene.add(motes); R.motes = motes;
+    const shaft = FX.lightShaft({ from: SH_FROM, to: SH_TO, r0: .32, r1: .42, color: '#ffe2b0', opacity: .085 }); scene.add(shaft); R.shaft = shaft;
+    const motes = beamMotes({ from: SH_FROM, to: SH_TO, radius: .36, count: 650, size: 1.0, color: '#fff0d0', opacity: .8, speed: .012, nearFade: .45 }); scene.add(motes); R.motes = motes;
 
     camera.fov = 34; camera.near = .02; camera.far = 50; camera.updateProjectionMatrix();
-    // camera keys (local s): establishing → MEKTUBAT cover → open book / 195 → SÖZLER tag → pull back → final still life
+    // camera keys (local s): establishing → MEKTUBAT cover → open book / 195 → SÖZLER tag → sill set → final still life
+    R.cardY = 740;
     R.camPos = path3([
-      [-0.6, [-.5, .98, 1.3]], [1.1, [-.32, .93, .9]],
-      [1.75, [-.15, .99, .22]], [2.6, [-.08, 1.03, .28]], [3.3, [-.03, 1.04, .33]], [4.1, [-.0, .98, .27]],
-      [4.95, [.25, .97, .63]], [5.9, [.255, .97, .67]],
-      [6.9, [.22, .95, .9]], [8.3, [.02, 1.04, 1.14]], [9.4, [-.01, 1.065, 1.23]], [11.6, [-.015, 1.08, 1.33]],
+      [-0.6, [-.3, .95, .98]], [1.1, [-.22, .9, .62]],
+      [1.85, [-.15, .99, .3]], [2.6, [-.1, 1.0, .25]], [3.4, [-.095, 1.0, .235]], [4.15, [-.05, .97, .24]],
+      [4.95, [.17, .85, .6]], [5.7, [.18, .85, .625]],
+      [6.75, [-.02, .93, .48]], [7.4, [-.045, .95, .57]], [8.4, [-.07, .92, 1.12]], [9.6, [-.08, .915, 1.22]], [11.9, [-.09, .91, 1.3]],
     ]);
     R.camLook = path3([
-      [-0.6, [-.12, .6, -.06]], [1.1, [-.13, .6, -.06]],
-      [1.75, [-.17, .6, -.06]], [2.6, [-.06, .57, -.07]], [3.3, [-.04, .545, -.035]], [4.1, [-.02, .545, -.045]],
-      [4.95, [.213, .44, .085]], [5.9, [.214, .44, .095]],
-      [6.9, [.13, .78, -.58]], [8.3, [-.01, .57, -.06]], [9.4, [-.01, .575, -.055]], [11.6, [-.01, .58, -.06]],
+      [-0.6, [-.1, .58, -.08]], [1.1, [-.08, .58, -.08]],
+      [1.85, [-.035, .575, -.08]], [2.6, [-.09, .565, -.115]], [3.4, [-.09, .56, -.11]], [4.15, [-.04, .55, -.08]],
+      [4.95, [.1, .44, .16]], [5.7, [.1, .44, .17]],
+      [6.75, [-.08, .86, -.38]], [7.4, [-.09, .86, -.42]], [8.4, [-.08, .62, -.1]], [9.6, [-.08, .62, -.1]], [11.9, [-.08, .62, -.1]],
     ]);
-    R.camFocus = path1([[-0.6, 1.5], [1.2, 1.1], [2.0, .45], [2.9, .42], [4.0, .36], [5.0, .33], [6.0, .4], [7.4, 1.05], [9.2, 1.5], [11.6, 1.75]]);
   },
 
   update(t, ctx) {
     const { ui, U, camera, post } = ctx;
-    const P = R.camPos(t), L = R.camLook(t); P.add(U.shake(t, .004, .3, 6));
-    camera.fov = U.lerp(34, 42, U.smoothstep(6.3, 9.5, t)); camera.updateProjectionMatrix();
+    const P = R.camPos(t), L = R.camLook(t); P.add(U.shake(t, .0035, .3, 6));
+    camera.fov = U.lerp(34, 40, U.smoothstep(6.6, 9.4, t)); camera.updateProjectionMatrix();
     camera.position.copy(P); camera.lookAt(L); camera.updateMatrixWorld();
-    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.3, .9, U.smoothstep(6.5, 9.5, t)) + .5 * (1 - U.smoothstep(1.0, 1.8, t)) + .45 * U.smoothstep(4.2, 4.9, t) * (1 - U.smoothstep(6.1, 6.8, t)); post.dof.amount = .72;
+    post.motionBlur = (t > 5.8 && t < 6.75) ? { samples: 3, shutter: .5 } : { samples: 1 };
+    R.motes.userData.uniforms.size.value = .62 * ctx.renderer.domElement.height / 960; // same look at every render scale
+    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.28, .5, U.smoothstep(7.0, 9.4, t)) + .45 * (1 - U.smoothstep(.9, 1.7, t)) + .35 * U.smoothstep(4.2, 4.9, t) * (1 - U.smoothstep(6.1, 6.8, t)); post.dof.amount = .72;
 
-    // --- book opening on "kitabının" + riffle (breeze) ---
-    const tKit = ctx.wordTime('kitabının'), t195 = ctx.wordTime('195');
-    const o0 = tKit - .25, o1 = o0 + .62;
-    const open = U.prog(t, o0, o1, x => x < .15 ? -0.06 * Math.sin(x / .15 * Math.PI) : U.ease.outBack((x - .15) / .85, 1.1));
-    const thR = ALPHA + (Math.PI - 2 * ALPHA) * (1 - open);
-    R.rightHalf.rotation.z = thR;
-    R.sheets.forEach(({ geo, i }) => {
-      const f0 = o1 - .3 + i * .11; const fl = U.prog(t, f0, f0 + .42, 'inOutCubic');
-      const base = thR + (Math.PI - 2 * ALPHA) * fl;
-      const lag = .9 * Math.sin(Math.PI * fl) - .5 * Math.sin(Math.PI * U.clamp((t - o0) / (o1 - o0)));
-      const p = geo.attributes.position; const n = 16; let x = 0, y = 0; const lift = .0012 + i * .0006 + (2 - i) * .0;
-      for (let k = 0; k <= n; k++) {
-        const u = k / n; if (k > 0) { const a = base - lag * (u - .5 / n); x += Math.cos(a) * (BW - .003) / n; y += Math.sin(a) * (BW - .003) / n; }
-        const nx = -Math.sin(base), ny = Math.cos(base);
-        for (const row of [0, 1]) { const idx = row * (n + 1) + k; p.setXYZ(idx, x + nx * lift, y + ny * lift, (row === 0 ? 1 : -1) * (BH - .004) / 2 * -1); }
+    // --- front cover opens on "kitabının", then three leaves riffle over (right → left) ---
+    const tKit = ctx.wordTime('kitabının');
+    const o0 = tKit - .21, o1 = o0 + .9;
+    let open = U.prog(t, o0, o1, x => x < .1 ? -0.03 * Math.sin(x / .1 * Math.PI) : U.ease.inOutCubic((x - .1) / .9));
+    if (t > o1) open = 1 - .03 * Math.abs(Math.sin((t - o1) * 13)) * Math.exp(-(t - o1) * 6.5); // small bounce off the rahle, never into it
+    const phiC = -Math.PI + ALPHA, phiO = -ALPHA;
+    R.leftHalf.rotation.z = phiC + (phiO - phiC) * open;
+    const k = U.smoothstep(.25, 1.0, open);
+    for (const half of [R.leftHalf, R.rightHalf]) {
+      const d = half.userData; if (d.k === k) continue; d.k = k; const s = d.sign;
+      const p = d.topG.attributes.position;
+      for (let j = 0; j <= d.NZ; j++) for (let i = 0; i <= d.N; i++) { const u = i / d.N; p.setXYZ(j * (d.N + 1) + i, s * u * BW, yTop(u) * k, BH / 2 - j / d.NZ * BH * .998 - .0002); }
+      p.needsUpdate = true; d.topG.computeVertexNormals(); d.topG.computeBoundingSphere();
+      for (const [geo, z] of [[d.head, -BH / 2 + .0003], [d.tail, BH / 2 - .0003]]) {
+        const q = geo.attributes.position;
+        for (let i = 0; i <= d.N; i++) { const u = i / d.N; q.setXYZ(i, s * u * BW, -TAU, z); q.setXYZ(d.N + 1 + i, s * u * BW, yTop(u) * k, z); }
+        q.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere();
+      }
+    }
+    { // half-shell faces -x (local) before rotation; orient it toward the crease (closed) or straight down (open)
+      const sr = U.lerp(TAU + .0034, .0088, k); R.spine.scale.set(sr, sr, 1); R.spine.position.set(0, U.lerp(0, -.0146, k), 0);
+      R.spine.rotation.z = U.lerp(Math.PI / 2 + ALPHA, Math.PI, k); }
+    R.fold.visible = k > .02; R.fold.scale.set(k, k, 1); R.fold.position.y = -.0098;
+    const flipT = i => o1 - .38 + i * .11;
+    let landed = 0;
+    R.sheets.forEach(({ geo, i, N, front, back }) => {
+      const f = U.prog(t, flipT(i), flipT(i) + .42, 'inOutSine');
+      const vis = f < 1; front.visible = back.visible = vis; if (f >= 1) landed++;
+      if (!vis) return;
+      const th = ALPHA + (Math.PI - 2 * ALPHA) * f; const curl = .75 * Math.sin(2 * Math.PI * f); const cs = Math.cos(Math.PI * f);
+      const lift = U.lerp(.0012 - i * .0004, .0004 + i * .0004, f);
+      const nx = -Math.sin(th), ny = Math.cos(th); const p = geo.attributes.position; let x = 0, y = 0; const ds = (BW - .002) / N;
+      for (let q = 0; q <= N; q++) {
+        const u = q / N; if (q > 0) { const a = th + curl * (u - .5 / N) * (1 - .3 * u); x += Math.cos(a) * ds; y += Math.sin(a) * ds; }
+        const off = (yTop(u) * k + lift) * cs;
+        for (const row of [0, 1]) p.setXYZ(row * (N + 1) + q, x + nx * off, y + ny * off, row === 0 ? (BH - .003) / 2 : -(BH - .003) / 2);
       }
       p.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere();
     });
+    const lm = landed >= 3 ? R.pg194 : R.pg188; if (R.leftHalf.userData.topM.material.map !== lm) { R.leftHalf.userData.topM.material.map = lm; R.leftHalf.userData.topM.material.needsUpdate = true; }
 
-    // curtains breeze
-    R.curtains.forEach(({ m, base, w, ph }) => {
-      const p = m.geometry.attributes.position; const gust = .6 + .4 * Math.sin(t * .7 + ph);
-      for (let i = 0; i < p.count; i++) { const bx = base[i * 3], by = base[i * 3 + 1]; const v = (.81 - by) / 1.62; p.setXYZ(i, bx + Math.sin(t * 1.1 + by * 3 + ph) * .012 * v * gust, by, Math.sin(bx * 46 + ph) * .018 + (Math.sin(t * 1.3 + bx * 5 + by * 2 + ph) * .035 + .03) * v * v * gust); }
+    // curtains breeze (pleated sheer)
+    R.curtains.forEach(({ m, base, w, ph, pleats }) => {
+      const p = m.geometry.attributes.position; const gust = .55 + .45 * Math.sin(t * .6 + ph) * Math.sin(t * .37 + ph * 2);
+      for (let i = 0; i < p.count; i++) { const bx = base[i * 3], by = base[i * 3 + 1]; const v = (.71 - by) / 1.42; const pl = Math.sin((bx / w + .5) * pleats * Math.PI * 2) * .016 * (1 - .4 * v);
+        p.setXYZ(i, bx + Math.sin(t * 1.0 + by * 3 + ph) * .01 * v * gust, by, pl + (Math.sin(t * 1.2 + bx * 5 + by * 2 + ph) * .03 + .028) * v * v * gust); }
       p.needsUpdate = true; m.geometry.computeVertexNormals();
     });
-    // tea steam
-    R.steam.forEach(({ s, ph }) => { const life = (t * .22 + ph) % 1; s.position.set(Math.sin(t * .9 + ph * 9) * .01 * life, .1 + life * .16, Math.cos(t * .7 + ph * 5) * .008 * life); s.scale.setScalar(.03 + life * .07); s.material.opacity = .16 * Math.sin(life * Math.PI); });
+    // keep the glass catchlights facing the lens
+    { const wp = new THREE.Vector3(); R.tea.getWorldPosition(wp); R.teaHL.rotation.y = Math.atan2(camera.position.x - wp.x, camera.position.z - wp.z); }
 
     // ---------- typography ----------
-    const tSay = ctx.wordTime('sayfasında'), tSoz = ctx.wordTime('söz'), t19 = ctx.wordTime('19'), tEtr = ctx.wordTime('etraflıca'), tBah = ctx.wordTime('bahsedilmiştir');
-    // ring around the printed page number "195"
-    const pn = new THREE.Vector3(BW * .8, .006, -BH * .417); R.rightHalf.localToWorld(pn);
+    const t195 = ctx.wordTime('195'), tSay = ctx.wordTime('sayfasında'), t19 = ctx.wordTime('19', 1), tRis = ctx.wordTime('risalelerde'), tBas = ctx.wordTime('başka'), tEtr = ctx.wordTime('etraflıca');
+    // ring around the printed page number "195" (after the last leaf has lifted away)
+    R.rightHalf.updateWorldMatrix(true, false); R.tag.updateWorldMatrix(true, false);
+    const pn = new THREE.Vector3(BW * .525, yTop(.525) + .0005, -BH * .437); R.rightHalf.localToWorld(pn);
     const [px, py] = ui.project(pn);
-    const ra = U.prog(t, t195 + .05, t195 + .5, 'outCubic'); const rOut = U.smoothstep(tSay + .55, tSay + .3, t);
-    if (ra > 0 && rOut > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut; X.strokeStyle = '#d99a2b'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(0,0,0,.25)'; X.shadowBlur = 8; X.beginPath(); X.ellipse(px, py, 78, 50, -.08, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra); X.stroke(); X.restore(); }
-    ui.pill('s. 195', { t, t0: t195 + .12, t1: tSay + .55, x: Math.min(860, Math.max(220, px)), y: Math.max(300, py - 120), size: 50, bg: 'rgba(40,26,16,.82)', color: '#ffd98a' });
-    // "19. Söz" callout to the tag
-    const tg = new THREE.Vector3(0, 0, 0); R.tag.localToWorld(tg);
-    const [tx, ty] = ui.project(tg); const tRis = ctx.wordTime('risalelerde');
-    const ra2 = U.prog(t, t19 - .05, t19 + .45, 'outCubic'), rOut2 = U.smoothstep(tRis + .25, tRis - .05, t);
-    if (ra2 > 0 && rOut2 > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut2; X.strokeStyle = '#d99a2b'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(0,0,0,.25)'; X.shadowBlur = 8; X.beginPath(); X.ellipse(tx + 8, ty, 210, 108, -.06, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra2); X.stroke(); X.restore(); }
+    const r0 = Math.max(t195 + .05, flipT(2) + .2);
+    const ra = U.prog(t, r0, r0 + .45, 'outCubic'); const rOut = U.smoothstep(tSay + .6, tSay + .3, t);
+    if (ra > 0 && rOut > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut; X.strokeStyle = '#d8a23a'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(40,10,0,.35)'; X.shadowBlur = 10; X.beginPath(); X.ellipse(px, py, 74, 50, -.04, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra); X.stroke(); X.restore(); }
+    ui.pill('s. 195', { t, t0: r0 + .1, t1: tSay + .6, x: Math.min(860, Math.max(220, px - 10)), y: Math.max(300, py - 128), size: 52, bg: 'rgba(96,14,20,.9)', color: '#ffdc8e' });
+    // "19. Söz" ring around the tag
+    const tg = new THREE.Vector3(.004, 0, 0); R.tag.localToWorld(tg);
+    const [tx, ty] = ui.project(tg);
+    const ra2 = U.prog(t, t19 - .05, t19 + .45, 'outCubic'), rOut2 = U.smoothstep(tBas + .2, tBas - .1, t);
+    if (ra2 > 0 && rOut2 > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut2; X.strokeStyle = '#d8a23a'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(40,10,0,.35)'; X.shadowBlur = 10; X.beginPath(); X.ellipse(tx, ty, 205, 112, -.04, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra2); X.stroke(); X.restore(); }
+    // "başka risaleler" label over the sill set
+    const sc = R.sillCenter.clone(); const [sx, sy] = ui.project(sc);
+    const stp = R.sillCenter.clone(); stp.y += .135; const [, sty] = ui.project(stp);
+    ui.pill('başka risaleler', { t, t0: Math.max(tBas + .15, 6.45), t1: tEtr - .55, x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
     // end card
     const ec = U.smoothstep(tEtr - .1, tEtr + .9, t);
     if (ec > 0) {
-      const X = ui.ctx; X.save(); X.globalAlpha = ec; const y0 = 300 + (1 - ec) * 14;
-      const g = X.createLinearGradient(0, y0 - 140, 0, y0 + 190); g.addColorStop(0, 'rgba(255,248,236,0)'); g.addColorStop(.3, 'rgba(252,244,228,.8)'); g.addColorStop(.72, 'rgba(252,244,228,.8)'); g.addColorStop(1, 'rgba(255,248,236,0)'); X.fillStyle = g; X.fillRect(0, y0 - 140, 1080, 330);
-      X.fillStyle = '#b8862e'; X.fillRect(540 - 170 * ec, y0 - 44, 340 * ec, 2.5); X.fillRect(540 - 170 * ec, y0 + 96, 340 * ec, 2.5);
-      X.save(); X.translate(540, y0 - 43); X.rotate(Math.PI / 4); X.fillRect(-6, -6, 12, 12); X.restore(); X.save(); X.translate(540, y0 + 97); X.rotate(Math.PI / 4); X.fillRect(-6, -6, 12, 12); X.restore();
+      const X = ui.ctx; X.save(); X.globalAlpha = ec; const y0 = R.cardY + (1 - ec) * 14;
+      X.save(); X.translate(540, y0); X.scale(1, .3); const g = X.createRadialGradient(0, 0, 0, 0, 0, 560); g.addColorStop(0, 'rgba(252,245,231,.9)'); g.addColorStop(.62, 'rgba(252,245,231,.78)'); g.addColorStop(1, 'rgba(252,245,231,0)'); X.fillStyle = g; X.fillRect(-560, -560, 1120, 1120); X.restore();
+      X.fillStyle = '#a8792a'; const lw = 330 * U.ease.outCubic(ec);
+      for (const yy of [y0 - 66, y0 + 66]) { X.fillRect(540 - lw, yy - 1.2, lw - 16, 2.4); X.fillRect(540 + 16, yy - 1.2, lw - 16, 2.4); X.save(); X.translate(540, yy); X.rotate(Math.PI / 4); X.fillRect(-6, -6, 12, 12); X.restore(); }
       X.restore();
     }
-    ui.text('Mektubat, s. 195 · Sözler, 19. Söz', { t, t0: tEtr - .1, x: 540, y: 326, size: 60, weight: 700, family: 'Playfair Display', color: '#3b2414', anim: 'fade', dur: .9, shadow: false, maxWidth: 940 });
+    ui.text('Mektubat, s. 195 · Sözler, 19. Söz', { t, t0: tEtr - .1, x: 540, y: R.cardY + 2, size: 62, weight: 700, family: 'Playfair Display', color: '#3d1a12', anim: 'fade', dur: .9, shadow: false, maxWidth: 940 });
   },
 };

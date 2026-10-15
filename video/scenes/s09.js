@@ -12,8 +12,8 @@ const badge = badgeD;
 export default {
   post: {
     exposure: 1.0, toneMapping: 'aces',
-    bloom: { enabled: true, strength: .55, radius: .6, threshold: .82 },
-    grade: { contrast: 1.07, saturation: 1.1, warmth: .03, lift: [.012, .008, .02], gain: [1.02, 1.0, .97] },
+    bloom: { enabled: true, strength: .42, radius: .55, threshold: .85 },
+    grade: { contrast: 1.07, saturation: 1.1, warmth: .03, lift: [.02, .015, .03], gain: [1.02, 1.0, .97] },
     vignette: .55, grain: .03, aberration: .0012,
     dof: { enabled: true, focus: 1, range: .3, amount: 1 },
   },
@@ -28,7 +28,7 @@ export default {
     const names = ['emanet', 'sığınak'];
     W.drops.forEach((d, i) => {
       if (!d.visible) return; const [x, y] = sp[i]; const r = rpx[i];
-      badge(ui, t, tIki + i * .14, x + (i ? 1 : -1) * r * .72, y - r * .78, String(i + 1), { r: 34, t1: ctx.dur + .35 });
+      badge(ui, t, tIki + i * .14, x + (i ? 1 : -1) * r * .93, y - r * .93, String(i + 1), { r: 34, t1: ctx.dur + .35 });
       ui.pill(names[i], { t, t0: (i ? tOlan : tGibi) - .05, t1: ctx.dur + .3, x, y: Math.min(y + r + 60, 1300), size: 46, weight: 800, bg: 'rgba(255,236,214,.14)', color: '#fff1d6', anim: 'pop', dur: .4 });
     });
     ui.text('iki damla gibi', { t, t0: tDam - .04, x: 540, y: 270, size: 52, weight: 800, color: '#fff1d6', anim: 'rise' });

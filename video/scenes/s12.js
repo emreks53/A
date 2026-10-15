@@ -60,8 +60,8 @@ export default {
     const sTarget = V(32, 0, 0); sun.position.copy(sTarget).addScaledVector(sunDir, 60); sun.target.position.copy(sTarget); scene.add(sun, sun.target);
     { // shadow frustum fitted per frame around the visible part of the hall (texel-snapped to avoid shimmer)
       const cam = sun.shadow.camera; cam.position.copy(sun.position); cam.lookAt(sTarget); cam.updateMatrixWorld(true); const inv = cam.matrixWorldInverse.clone();
-      R.fitSun = (x0, x1) => { const mn = V(1e9, 1e9, 1e9), mx = V(-1e9, -1e9, -1e9), p = V();
-        for (const x of [x0, x1]) for (const y of [0, 8]) for (const z of [-4, 6]) { p.set(x, y, z).applyMatrix4(inv); mn.min(p); mx.max(p); }
+      R.fitSun = (x0, x1, z0 = -4) => { const mn = V(1e9, 1e9, 1e9), mx = V(-1e9, -1e9, -1e9), p = V();
+        for (const x of [x0, x1]) for (const y of [0, 8]) for (const z of [z0, 6]) { p.set(x, y, z).applyMatrix4(inv); mn.min(p); mx.max(p); }
         const w = mx.x - mn.x, h = mx.y - mn.y, tw = w / 2048, th = h / 2048; const l = Math.floor(mn.x / tw) * tw, b = Math.floor(mn.y / th) * th;
         cam.left = l; cam.right = l + w + tw; cam.bottom = b; cam.top = b + h + th; cam.near = Math.max(.1, -mx.z - 5); cam.far = -mn.z + 5; cam.updateProjectionMatrix(); };
       R.fitSun(-12, 78);
@@ -72,10 +72,10 @@ export default {
     const tileTex = TEX.drawTexture(512, 512, (x, W, H) => { const r = U.rng(5); x.fillStyle = '#7a6650'; x.fillRect(0, 0, W, H); const n = 2, s = W / n;
       for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const l = 205 + r() * 22; x.fillStyle = `rgb(${l},${l * .88 | 0},${l * .72 | 0})`; x.fillRect(i * s + 4, j * s + 4, s - 8, s - 8); for (let k = 0; k < 60; k++) { x.fillStyle = `rgba(120,90,60,${r() * .07})`; x.beginPath(); x.arc(i * s + r() * s, j * s + r() * s, 4 + r() * 22, 0, 6.3); x.fill(); } }
       x.fillStyle = '#9a4a32'; for (const [cx, cy] of [[0, 0], [W, 0], [0, H], [W, H], [W / 2, H / 2], [W / 2, 0], [0, H / 2], [W / 2, H], [W, H / 2]]) { x.save(); x.translate(cx, cy); x.rotate(Math.PI / 4); x.fillRect(-26, -26, 52, 52); x.restore(); } });
-    tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping; tileTex.repeat.set(160 / 1.5, 50 / 1.5); tileTex.anisotropy = 8;
-    const stN = TEX.stone({ a: '#ffffff', b: '#cccccc', seed: 3, repeat: [160 / 3, 50 / 3] });
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(160, 50).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: tileTex, normalMap: stN.normalMap, normalScale: new THREE.Vector2(.35, .35), roughness: .62 }));
-    floor.position.set(40, 0, 10); floor.receiveShadow = true; scene.add(floor);
+    tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping; tileTex.repeat.set(200 / 1.5, 50 / 1.5); tileTex.anisotropy = 8;
+    const stN = TEX.stone({ a: '#ffffff', b: '#cccccc', seed: 3, repeat: [200 / 3, 50 / 3] });
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 50).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: tileTex, normalMap: stN.normalMap, normalScale: new THREE.Vector2(.35, .35), roughness: .62 }));
+    floor.position.set(60, 0, 10); floor.receiveShadow = true; scene.add(floor);
 
     // ---- back wall: instanced bays (niche + clerestory window), door bay for HOŞGÖRÜ
     const lime = MAT.stone({ a: '#ead9b8', b: '#c4ab84', seed: 7, repeat: [.6, .6] });
@@ -93,7 +93,7 @@ export default {
     const tileMat = new THREE.MeshPhysicalMaterial({ map: iz, roughness: .32, clearcoat: .7, clearcoatRoughness: .25 });
     const nichePl = TEX.plaster({ a: '#69a8a4', b: '#4b8686', seed: 15, repeat: [1.2, 1.2] });
     const nicheMat = new THREE.MeshStandardMaterial({ map: nichePl.map, normalMap: nichePl.normalMap, normalScale: new THREE.Vector2(.5, .5), roughness: .92 });
-    const bayIdx = []; for (let i = -16; i <= 64; i++) if (i !== DOOR) bayIdx.push(i);
+    const bayIdx = []; for (let i = -16; i <= 96; i++) if (i !== DOOR) bayIdx.push(i);
     const m4 = new THREE.Matrix4();
     // chunked instancing (8 per mesh) so camera / shadow frustum culling can skip far parts of the endless gallery
     const inst = (geo, mat, xs, fn, o = {}) => { const CH = o.chunk ?? 8, res = { meshes: [], map: [] };
@@ -117,36 +117,37 @@ export default {
     const tym = new THREE.Mesh(new THREE.ShapeGeometry(tymS, 10).translate(xd, 0, WZ + .004), tileMat); scene.add(tym);
     const tymRing = new THREE.Shape(); E.archPts(.58, 2.18, 1.6, 14).forEach((p, i) => i ? tymRing.lineTo(p.x, p.y) : tymRing.moveTo(p.x, p.y)); tymRing.closePath(); tymRing.holes.push((() => { const p = new THREE.Path(); E.archPts(.5, 2.18, 1.6, 14).forEach((q, i) => i ? p.lineTo(q.x, q.y) : p.moveTo(q.x, q.y)); p.closePath(); return p; })());
     const tr = new THREE.Mesh(ext(tymRing, .05, .012).translate(xd, 0, WZ - .01), jambMat); tr.castShadow = true; scene.add(tr);
-    // door leaves (open inward on HOŞGÖRÜ)
-    const doorWood = MAT.wood({ a: '#8f5a32', b: '#5a3418', rings: 26, seed: 51, clearcoat: .35 });
-    const studMat = new THREE.MeshStandardMaterial({ color: '#2e2a26', metalness: .8, roughness: .4 });
+    // door leaves: walnut, studded, opening INWARD on HOŞGÖRÜ (closed: a thin line of sunlight leaks through the gaps)
+    const doorWood = MAT.wood({ a: '#c08550', b: '#8a5830', rings: 10, seed: 51, clearcoat: .35 });
+    const panelWood = MAT.wood({ a: '#b47a46', b: '#7c4c26', rings: 9, seed: 53, clearcoat: .3 });
+    const grainUV = g => { const p = g.attributes.position, uv = g.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getY(i) * .22, (p.getX(i) + p.getZ(i)) * 2.0 + .3); return g; }; // vertical grain
+    const studMat = new THREE.MeshStandardMaterial({ color: '#3a322a', metalness: .8, roughness: .4 });
     R.leaves = [];
     for (const sx of [-1, 1]) {
-      const hinge = new THREE.Group(); hinge.position.set(xd + sx * .455, 0, WZ - .12); scene.add(hinge);
-      const leaf = new THREE.Group(); hinge.add(leaf); const lw = .45;
-      leaf.add(E.M(Mo.rbox(lw, 2.0, .055, .012).translate(-sx * lw / 2, 1.0, 0), doorWood));
-      for (const [y, h] of [[.35, .5], [1.0, .6], [1.65, .5]]) { leaf.add(E.M(Mo.rbox(lw - .1, h, .03, .012).translate(-sx * lw / 2, y, .03), doorWood)); }
-      const studs = []; for (let k = 0; k < 7; k++) for (const xx of [.04, lw - .04]) studs.push(new THREE.SphereGeometry(.011, 8, 6).translate(-sx * xx, .12 + k * .29, .03));
+      const hinge = new THREE.Group(); hinge.position.set(xd + sx * .432, .016, WZ - .07); scene.add(hinge);
+      const leaf = new THREE.Group(); hinge.add(leaf); const lw = .425;
+      leaf.add(E.M(grainUV(Mo.rbox(lw, 1.99, .055, .012).translate(-sx * lw / 2, .995, 0)), doorWood));
+      for (const zz of [.03, -.03]) for (const [y, h] of [[.36, .5], [1.0, .6], [1.64, .5]]) leaf.add(E.M(grainUV(Mo.rbox(lw - .1, h, .022, .01).translate(-sx * lw / 2, y, zz)), panelWood));
+      const studs = []; for (let k = 0; k < 7; k++) for (const xx of [.04, lw - .04]) for (const zz of [.03, -.03]) studs.push(new THREE.SphereGeometry(.011, 8, 6).translate(-sx * xx, .12 + k * .29, zz));
       leaf.add(E.M(E.merge(studs), studMat));
-      const ringK = E.M(new THREE.TorusGeometry(.04, .007, 8, 20), Mo.MAT.brass()); ringK.position.set(-sx * (lw - .08), 1.05, .045); leaf.add(ringK);
+      for (const zz of [.045, -.045]) { const ringK = E.M(new THREE.TorusGeometry(.04, .007, 8, 20), Mo.MAT.brass()); ringK.position.set(-sx * (lw - .08), 1.05, zz); leaf.add(ringK); }
       R.leaves.push({ hinge, sx });
     }
-    // garden seen through the door: sunlit tree + wall (painted backdrop, unlit/bright)
-    const gardenTex = TEX.drawTexture(1024, 1024, (x, W, H) => { const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#9cc4e6'); gr.addColorStop(.45, '#f3e6c8'); gr.addColorStop(.62, '#e6c48e'); gr.addColorStop(1, '#c99a62'); x.fillStyle = gr; x.fillRect(0, 0, W, H);
-      x.fillStyle = '#e9cf9e'; x.fillRect(0, H * .5, W, H * .14); x.fillStyle = 'rgba(160,110,60,.35)'; x.fillRect(0, H * .635, W, 6);
-      const r = U.rng(8); x.fillStyle = '#6e5232'; x.fillRect(W * .47, H * .38, W * .05, H * .3);
-      for (let i = 0; i < 70; i++) { const a = r() * 6.28, d = Math.pow(r(), .6) * W * .32; const cx = W * .5 + Math.cos(a) * d * 1.2, cy = H * .3 + Math.sin(a) * d * .55; const c = 70 + r() * 60; x.fillStyle = `rgba(${c * .55 | 0},${c * 1.3 | 0},${c * .35 | 0},.95)`; x.beginPath(); x.arc(cx, cy, 30 + r() * 60, 0, 6.3); x.fill(); }
-      for (let i = 0; i < 90; i++) { const a = r() * 6.28, d = W * .3 + r() * W * .06; x.fillStyle = `rgba(255,236,170,${.25 + r() * .3})`; x.beginPath(); x.arc(W * .5 + Math.cos(a) * d * 1.2, H * .3 + Math.sin(a) * d * .55, 8 + r() * 18, 0, 6.3); x.fill(); } });
-    const garden = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshBasicMaterial({ map: gardenTex, fog: false, color: new THREE.Color(.78, .76, .72) }));
-    garden.position.set(xd + 2.5, 2.3, -6.5); scene.add(garden);
+    // threshold stone + light leaking under the closed door (anticipation)
+    const thr = new THREE.Mesh(Mo.rbox(1.0, .03, .5, .012), jambMat); thr.position.set(xd, .006, WZ - .24); thr.receiveShadow = true; scene.add(thr);
+    R.leak = new THREE.Mesh(new THREE.PlaneGeometry(1.0, .55).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: TEX.softDot(64, .1), color: '#ffcf8a', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    R.leak.position.set(xd + .06, .006, WZ + .2); R.leak.scale.set(1, 1, .6); R.leak.userData.noDepth = true; scene.add(R.leak);
+    // the courtyard garden behind the door: a broad sunlit plane tree, flagstone path, geraniums, garden wall
+    const gard = E.garden({ seed: 9 }); gard.position.set(xd, 0, 0); scene.add(gard);
+    R.tree = E.shadeTree({ seed: 5, sunDir: V(-.25, .62, -.74), up: .72 }); R.tree.position.set(xd + 1.0, 0, -11); R.tree.rotation.y = .4; scene.add(R.tree);
 
     // ---- moldings along the back wall
-    const runs = [[-20, xd - .62], [xd + .62, 82]];
+    const runs = [[-20, xd - .62], [xd + .62, 124]];
     for (const [a, b] of runs) { const base = new THREE.Mesh(Mo.rbox(b - a, .12, .05, .015), lime); base.position.set((a + b) / 2, .06, WZ + .02); base.receiveShadow = true; scene.add(base); }
-    const band = new THREE.Mesh(Mo.rbox(102, .09, .07, .02), lime); band.position.set(31, 2.78, WZ + .03); band.receiveShadow = true; scene.add(band);
+    const band = new THREE.Mesh(Mo.rbox(144, .09, .07, .02), lime); band.position.set(52, 2.78, WZ + .03); band.receiveShadow = true; scene.add(band);
 
     // ---- vault + transverse ribs + arcade on the courtyard side + roof
-    const zc = (WZ + AZ) / 2, va = (AZ - WZ) / 2, LEN = 104, X0 = -22;
+    const zc = (WZ + AZ) / 2, va = (AZ - WZ) / 2, LEN = 146, X0 = -22;
     const vaultShape = new THREE.Shape(); const vin = E.archPts(va, VS, 1.15, 28), vout = E.archPts(va + .45, VS - .05, 1.15, 28);
     vin.forEach((p, i) => (i ? vaultShape.lineTo(-(zc + p.x), p.y) : vaultShape.moveTo(-(zc + p.x), p.y))); vout.slice().reverse().forEach(p => vaultShape.lineTo(-(zc + p.x), p.y + .35)); vaultShape.closePath();
     const vaultGeo = new THREE.ExtrudeGeometry(vaultShape, { depth: LEN, bevelEnabled: false }); vaultGeo.rotateY(Math.PI / 2); vaultGeo.translate(X0, 0, 0);
@@ -157,32 +158,33 @@ export default {
     rin.forEach((p, i) => (i ? ribShape.lineTo(-(zc + p.x), p.y) : ribShape.moveTo(-(zc + p.x), p.y))); vin.slice().reverse().forEach(p => ribShape.lineTo(-(zc + p.x), p.y + .05)); ribShape.closePath();
     const ribGeo = new THREE.ExtrudeGeometry(ribShape, { depth: .36, bevelEnabled: false }); ribGeo.rotateY(Math.PI / 2); ribGeo.translate(-.18, 0, 0);
     const ribMat = MAT.stone({ a: '#d9b98e', b: '#b08a60', seed: 13 });
-    const ribXs = []; for (let k = -9; k <= 32; k++) ribXs.push((2 * k + .5) * S);
+    const ribXs = []; for (let k = -9; k <= 48; k++) ribXs.push((2 * k + .5) * S);
     inst(ribGeo, ribMat, ribXs);
     const corb = Mo.rbox(.42, .22, .26, .04, 1); inst(corb, ribMat, ribXs, x => m4.makeTranslation(x, VS - .2, WZ + .1));
     // arcade (courtyard side)
     const aa = S - .24; const arcS = new THREE.Shape(); [[-S, 0], [-aa, 0], [-aa, 2.45]].forEach(([x, y], i) => i ? arcS.lineTo(x, y) : arcS.moveTo(x, y)); E.archPts(aa, 2.45, 1.5, 18).forEach(p => arcS.lineTo(p.x, p.y)); [[aa, 0], [S, 0], [S, VS + .7], [-S, VS + .7]].forEach(([x, y]) => arcS.lineTo(x, y)); arcS.closePath();
     const arcGeo = ext(arcS, .5, .03).translate(0, 0, AZ - .025);
-    const arcXs = []; for (let k = -9; k <= 31; k++) arcXs.push((2 * k + 1.5) * S);
+    const arcXs = []; for (let k = -9; k <= 47; k++) arcXs.push((2 * k + 1.5) * S);
     inst(arcGeo, lime, arcXs);
     const capG = E.merge([Mo.rbox(.56, .12, .62, .03, 1).translate(0, 2.38, 0), Mo.rbox(.5, .07, .56, .02, 1).translate(0, 2.29, 0), Mo.rbox(.56, .16, .62, .03, 1).translate(0, .08, 0)]);
     inst(capG, ribMat, ribXs, x => m4.makeTranslation(x, 0, AZ + .26));
+    { const endW = new THREE.Mesh(new THREE.PlaneGeometry(AZ - WZ + 3, 9).rotateY(-Math.PI / 2), lime); endW.position.set(X0 + LEN - .5, 4.5, zc); scene.add(endW); }
     const roof = new THREE.Mesh(Mo.rbox(LEN, .5, AZ - WZ + 2.2, .05), plaster); roof.position.set(X0 + LEN / 2, 7.75, zc); roof.castShadow = true; scene.add(roof);
     // courtyard: opposite wing (sunlit) + cypresses
-    const oppXs = []; for (let k = -12; k <= 34; k++) oppXs.push((2 * k + 1.5) * S);
+    const oppXs = []; for (let k = -12; k <= 50; k++) oppXs.push((2 * k + 1.5) * S);
     inst(arcGeo, lime, oppXs, x => m4.makeRotationY(Math.PI).setPosition(x, 0, 2 * AZ + 18));
     const oppWall = new THREE.Mesh(new THREE.BoxGeometry(LEN + 30, 7.2, .6), lime); oppWall.position.set(X0 + LEN / 2, 3.6, 2 * AZ + 18 + 3.2); oppWall.receiveShadow = true; scene.add(oppWall);
     const oppRoof = new THREE.Mesh(new THREE.BoxGeometry(LEN + 30, .5, 4.6), plaster); oppRoof.position.set(X0 + LEN / 2, VS + 1.0, 2 * AZ + 18 + 1.6); scene.add(oppRoof);
     const cyp = new THREE.SphereGeometry(1, 12, 10).scale(.65, 2.6, .65).translate(0, 2.6, 0);
-    const cr = U.rng(4); const cypXs = []; for (let k = 0; k < 16; k++) cypXs.push(-10 + k * 6 + cr() * 2);
+    const cr = U.rng(4); const cypXs = []; for (let k = 0; k < 24; k++) cypXs.push(-10 + k * 6 + cr() * 2);
     inst(cyp, new THREE.MeshStandardMaterial({ color: '#3f5a2e', roughness: .9 }), cypXs, (x, k) => m4.makeTranslation(x, 0, 12 + (k % 2) * 3));
 
     // ---- pedestals (row A along the back wall, row B facing it)
     const ped = E.pedestalGeos(); R.PT = ped.top;
     const pedStone = MAT.stone({ a: '#f3e9d3', b: '#dccaa8', seed: 21, repeat: [1, 1] });
     const felt = MAT.fabric({ a: '#6c1f2c', b: '#4a1220', weave: 90 }); felt.sheenColor = new THREE.Color('#ff9fa0');
-    const pa = []; for (let i = -16; i <= 64; i++) if (i !== DOOR) pa.push({ x: xA(i), z: 0, rot: 0, hero: i >= 0 && i < 14 ? i : -1, row: 0 });
-    for (let i = -16; i <= 64; i++) pa.push({ x: (i + .5) * S, z: ROWB, rot: Math.PI, hero: -1, row: 1 });
+    const pa = []; for (let i = -16; i <= 96; i++) if (i !== DOOR) pa.push({ x: xA(i), z: 0, rot: 0, hero: i >= 0 && i < 14 ? i : -1, row: 0 });
+    for (let i = -16; i <= 96; i++) pa.push({ x: (i + .5) * S, z: ROWB, rot: Math.PI, hero: -1, row: 1 });
     R.peds = pa;
     const pedM = (p) => m4.makeRotationY(p.rot).setPosition(p.x, 0, p.z);
     const near = pa.filter(p => p.row === 0 && p.x > -2 && p.x < xA(14) + .1), farP = pa.filter(p => !near.includes(p)); R.pedFar = farP;
@@ -269,7 +271,7 @@ export default {
         pos.push(a.x, a.y, a.z, b.x, b.y, b.z, b2.x, b2.y, b2.z, a2.x, a2.y, a2.z); uv.push(0, 0, 1, 0, 1, 1, 0, 1); idx.push(base, base + 1, base + 2, base, base + 2, base + 3); base += 4; }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); return g; };
     const zw = WZ - NICHE * .5;
-    const wb = []; for (let i = -16; i <= 64; i++) { const x = xA(i); wb.push(beamGeo([V(x - .2, 3.05, zw), V(x + .2, 3.05, zw), V(x + .2, 3.62, zw), V(x - .2, 3.62, zw)])); }
+    const wb = []; for (let i = -16; i <= 96; i++) { const x = xA(i); wb.push(beamGeo([V(x - .2, 3.05, zw), V(x + .2, 3.05, zw), V(x + .2, 3.62, zw), V(x - .2, 3.62, zw)])); }
     R.winBeams = new THREE.Mesh(E.merge(wb), beamMat(.05)); R.winBeams.userData.noDepth = true; R.winBeams.renderOrder = 4; R.winBeams.frustumCulled = false; scene.add(R.winBeams);
     R.doorBeam = new THREE.Mesh(beamGeo([V(xd - .45, .02, WZ - .1), V(xd + .45, .02, WZ - .1), V(xd + .45, 2.0, WZ - .1), V(xd - .45, 2.0, WZ - .1)]), beamMat(0)); R.doorBeam.userData.noDepth = true; R.doorBeam.renderOrder = 4; R.doorBeam.frustumCulled = false; scene.add(R.doorBeam);
     R.doorDust = FX.particles({ count: 160, center: [xd + .4, 1.0, 0], box: [1.4, 2.0, 1.6], size: 2.5, color: '#ffe6b8', opacity: 0, drift: [.02, .04, .01], swirl: .06 }); scene.add(R.doorDust);
@@ -278,26 +280,39 @@ export default {
 
     // ---- camera keys
     camera.near = .03; camera.far = 600;
-    const keys = []; const camFor = i => { const h = R.heroes[i]; const D = h.ex.D, hh = h.ex.h; return { pos: V(h.tgt.x - D * Math.sin(TH), h.tgt.y + hh, h.tgt.z + D * Math.cos(TH)), look: h.tgt.clone(), fov: 31 }; };
+    const keys = []; const camFor = i => { const h = R.heroes[i]; const D = h.ex.D * 1.16, hh = h.ex.h * 1.1; /* slightly wider framing: neighbours stay readable, lower glide speed */ return { pos: V(h.tgt.x - D * Math.sin(TH), h.tgt.y + hh, h.tgt.z + D * Math.cos(TH)), look: h.tgt.clone(), fov: 31 }; };
     const c0 = camFor(0);
     keys.push({ t: -.75, pos: c0.pos.clone().add(V(-1.0, .55, 1.25)), look: c0.look.clone().add(V(.45, .05, 0)), fov: 33, a: 1 });
     keys.push({ t: R.T[0] + .78, ...camFor(0), a: .45 });
     for (let i = 1; i < 14; i++) { const k = camFor(i), tk = R.T[i] + .16; let prev = keys[keys.length - 1];
-      if (tk - prev.t > .95) { // long gap: linger on the current exhibit (slow drift + push-in), then glide on
+      if (i === DOOR) { // HOŞGÖRÜ: arrive on the closed door just before the word, then a slow push toward the opening as it swings open
+        const A = { pos: V(xd - .46, 1.3, 2.9), look: V(xd + .2, 1.71, -3.0), fov: 40 }, B = { pos: V(xd - .34, 1.27, 2.4), look: V(xd + .24, 1.76, -3.0), fov: 39 };
+        const ta = R.T[i] - .1, tm = (prev.t + ta) / 2;
+        keys.push({ t: tm, pos: prev.pos.clone().lerp(A.pos, .5).add(V(0, .03, .3)), look: prev.look.clone().lerp(A.look, .5), fov: 36, a: 1 });
+        keys.push({ t: ta, ...A, a: .4 }); keys.push({ t: R.T[i] + .5, ...B, a: .5 }); continue; }
+      if (tk - prev.t > .95 && i !== DOOR + 1) { // long gap: linger on the current exhibit (slow drift + push-in), then glide on
         const th = Math.max(prev.t + .45, tk - .85); keys.push({ t: th, pos: prev.pos.clone().add(V(.11, -.01, -.07)), look: prev.look.clone().add(V(.06, 0, 0)), fov: prev.fov, a: .9 }); prev = keys[keys.length - 1]; }
-      const tm = (prev.t + tk) / 2;
-      keys.push({ t: tm, pos: prev.pos.clone().lerp(k.pos, .5).add(V(0, .05, .2)), look: prev.look.clone().lerp(k.look, .5).add(V(0, .03, 0)), fov: 31.5, a: 1 });
-      keys.push({ t: tk, ...k, a: .28 }); }
+      if (tk - prev.t > .6) { const tm = (prev.t + tk) / 2; // mid-glide: ease back + widen a little so both neighbours stay readable
+        keys.push({ t: tm, pos: prev.pos.clone().lerp(k.pos, .5).add(V(-.03, .06, .28)), look: prev.look.clone().lerp(k.look, .5).add(V(0, .03, 0)), fov: 33.5, a: 1 }); }
+      keys.push({ t: i === DOOR + 1 ? tk + .06 : tk, ...k, a: R.T[i + 1] !== undefined && R.T[i + 1] - R.T[i] < 1.0 ? .55 : .35 }); } // keep drifting through quick beats (lower peak glide speed)
     const c13 = camFor(13);
     keys.push({ t: R.W.ve - .1, pos: c13.pos.clone().add(V(.16, .1, .06)), look: c13.look.clone().add(V(.25, .06, 0)), fov: 31.5, a: 1 });
-    keys.push({ t: 16.2, pos: V(x14 - .6, 2.35, 2.05), look: V(x14 + 5, 1.35, .9), fov: 37, a: 1 });
-    keys.push({ t: 18.4, pos: V(x14 - 2.5, 3.0, 1.62), look: V(x14 + 16, 1.0, 1.6), fov: 41, a: 1 });
+    keys.push({ t: 15.8, pos: V(x14 - 1.05, 2.0, 2.45), look: V(x14 + 3.85, 1.4, -1.0), fov: 37, a: 1 });
+    keys.push({ t: 17.0, pos: V(x14 - 1.8, 2.45, 2.05), look: V(x14 + 12, 2.2, .95), fov: 40, a: 1 });
+    keys.push({ t: 18.4, pos: V(x14 - 2.6, 2.7, 1.7), look: V(x14 + 22, 2.6, 1.6), fov: 42, a: 1 });
     const toV = k => { const d = k.look.clone().sub(k.pos); return { t: k.t, a: k.a, v: [k.pos.x, k.pos.y, k.pos.z, Math.atan2(d.x, -d.z), Math.atan2(d.y, Math.hypot(d.x, d.z)), k.fov] }; };
     const hk = keys.map(toV); const n = hk.length;
     const tang = hk.map((k, i) => { const p = hk[Math.max(0, i - 1)], q = hk[Math.min(n - 1, i + 1)]; return k.v.map((_, c) => (q.v[c] - p.v[c]) / Math.max(1e-6, q.t - p.t) * (k.a ?? 1)); });
     R.camAt = t => { if (t <= hk[0].t) return hk[0].v.slice(); if (t >= hk[n - 1].t) return hk[n - 1].v.slice(); let i = 0; while (t > hk[i + 1].t) i++; const k0 = hk[i], k1 = hk[i + 1], dt = k1.t - k0.t, u = (t - k0.t) / dt, u2 = u * u, u3 = u2 * u;
       const h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u, h01 = -2 * u3 + 3 * u2, h11 = u3 - u2; return k0.v.map((v0, c) => h00 * v0 + h10 * dt * tang[i][c] + h01 * k1.v[c] + h11 * dt * tang[i + 1][c]); };
     R.lookTgt = new THREE.Vector3();
+    // screen-space speed (px per frame at 1920 px height) of a point 2.4 m ahead of the camera: drives per-frame motion blur
+    const dirOf = v => V(Math.sin(v[3]) * Math.cos(v[4]), Math.sin(v[4]), -Math.cos(v[3]) * Math.cos(v[4]));
+    R.pxSpeed = t => { const a = R.camAt(t), b = R.camAt(t + 1 / 30); const P = V(a[0], a[1], a[2]).addScaledVector(dirOf(a), 2.9); const d2 = P.sub(V(b[0], b[1], b[2])).normalize();
+      return Math.acos(Math.min(1, d2.dot(dirOf(b)))) / (b[5] * Math.PI / 180) * 1920; };
+    ctx.post.motionBlur = { samples: R.pxSpeed(-.5) > 40 ? 3 : 1, shutter: .5 };
+    window.__s12 = R; // debug handle (camera probes)
+    E.clampHDR(scene, 12);
   },
 
   update(t, ctx) {
@@ -325,22 +340,26 @@ export default {
     R.spots.forEach((s, k) => {
       let cur = -1; R.heroes.forEach((h, i) => { if (i % 2 === k && (DEBUG || t >= h.t0 - .1)) cur = i; });
       if (DEBUG) cur = Math.min(13, Math.max(0, Math.floor(t)));
-      if (cur === DOOR && !DEBUG) { // the idle spot doubles as warm bounce light from the sunlit floor patch onto door leaves and jambs
-        const opn = U.prog(t, R.T[DOOR] - .08, R.T[DOOR] + .8, 'outCubic'); s.position.set(R.xd - .3, .22, WZ + 1.3); s.target.position.set(R.xd + .25, 1.1, WZ - .4); s.target.updateMatrixWorld(); s.color.set('#ffd2a0'); s.intensity = 5 * opn; return; }
+      if (k === DOOR % 2 && t > R.T[DOOR] - 1.05 && (cur === DOOR || cur === DOOR - 2) && !DEBUG) { // door spot: warm lamp pool on the closed door, then bounce from the sunlit floor patch
+        const opn = U.prog(t, R.T[DOOR] - .08, R.T[DOOR] + .8, 'outCubic'), pre = U.smoothstep(R.T[DOOR] - 1.05, R.T[DOOR] - .55, t);
+        s.position.set(R.xd - .75 + .45 * opn, 2.3 - 2.05 * opn, WZ + 1.15 + .15 * opn); s.target.position.set(R.xd + .05 + .2 * opn, 1.0 + .1 * opn, WZ - .3); s.target.updateMatrixWorld();
+        s.color.set(opn > .5 ? '#ffd6a8' : '#ffc890'); s.intensity = (6.5 * pre * (1 - opn) + 7.5 * opn) * (1 - U.smoothstep(R.T[DOOR + 1], R.T[DOOR + 1] + .7, t)); return; }
       s.color.set('#ffc88e');
       if (cur < 0) { s.intensity = 0; return; }
       const h = R.heroes[cur]; s.position.copy(h.lampP); s.target.position.copy(h.tgt).add(V(0, -.06, 0)); s.target.updateMatrixWorld();
       s.intensity = 6.6 * (h.ex.L ?? 1) * lits[cur] * (1 + .04 * Math.sin(t * 13 + cur) * Math.sin(t * 7.3 + cur));
     });
     // door (HOŞGÖRÜ): leaves swing inward, sunlight pours in
-    const td = R.T[DOOR]; const op = U.prog(t, td - .08, td + .8, 'outCubic'); const settle = t > td + .5 ? Math.exp(-4 * (t - td - .5)) * Math.sin((t - td - .5) * 9) * .04 : 0;
-    const ang = DEBUG && Math.floor(t) === DOOR ? 1.6 : 1.62 * op + settle;
-    R.leaves.forEach(({ hinge, sx }) => { hinge.rotation.y = sx < 0 ? ang : -ang; });
-    R.doorBeam.material.userData.u.opacity.value = .07 * U.smoothstep(.0, .8, op); R.doorBeam.visible = op > .002 && t < td + 3.5; R.doorDust.visible = R.doorBeam.visible; R.doorBeam.material.userData.u.time.value = t; R.doorBeam.material.userData.u.camPos.value.copy(camera.position);
+    const td = R.T[DOOR]; const op = U.prog(t, td - .08, td + .85, 'outCubic'); const settle = t > td + .55 ? Math.exp(-4 * (t - td - .55)) * Math.sin((t - td - .55) * 9) * .035 : 0;
+    const ang = DEBUG && Math.floor(t) === DOOR ? 1.3 : (1.3 * op + settle) * (1 - .015 * Math.sin(t * 1.7)); // swing inward (toward the hall)
+    R.leaves.forEach(({ hinge, sx }, j) => { hinge.rotation.y = sx * ang * (j ? 1 : .96); });
+    R.leak.material.opacity = .5 * U.smoothstep(td - 1.1, td - .5, t) * (1 - U.smoothstep(td - .1, td + .25, t)) * (.9 + .1 * Math.sin(t * 7));
+    R.doorBeam.material.userData.u.opacity.value = .11 * U.smoothstep(.0, .8, op); R.doorBeam.visible = op > .002 && t < td + 3.5; R.doorDust.visible = R.doorBeam.visible; R.doorBeam.material.userData.u.time.value = t; R.doorBeam.material.userData.u.camPos.value.copy(camera.position);
     R.doorDust.userData.uniforms.opacity.value = .75 * op;
     // window beams stronger in the wide finale
     const fin = U.prog(t, R.W.ve, R.W.ve + 2.2, 'inOutSine');
-    { const cx = Math.round(camera.position.x * 2) / 2, g = U.prog(t, R.W.ve - .3, R.W.ve + 1.6, 'inOutSine'); R.fitSun(cx - 7 - 5 * g, cx + 9 + 60 * g); }
+    { const cx = Math.round(camera.position.x * 2) / 2, g = U.prog(t, R.W.ve - .3, R.W.ve + 1.6, 'inOutSine'); const gw = U.smoothstep(4.5, 2.5, Math.abs(camera.position.x - R.xd)); // garden (tree shade) needs the deeper frustum
+      R.fitSun(cx - 7 - 5 * g, cx + 9 + 60 * g, -4 - 18 * gw); }
     R.winBeams.material.userData.u.opacity.value = .016 * fin; R.winBeams.visible = fin > .002; R.winBeams.material.userData.u.time.value = t; R.winBeams.material.userData.u.camPos.value.copy(camera.position);
     R.motes2.userData.uniforms.opacity.value = .45 * fin;
     // far lamps: glass glow + pedestal / exhibit brightening
@@ -353,7 +372,10 @@ export default {
     // ---- post: DOF on the current exhibit, opening up in the finale
     const look = camera.position.clone().add(dir.clone().multiplyScalar(1));
     let fd = 2.5; { let best = 1e9; R.heroes.forEach(h => { const d = h.tgt.clone().sub(camera.position); const along = d.dot(dir); const lat = d.clone().sub(dir.clone().multiplyScalar(along)).length(); if (along > .5 && lat < best) { best = lat; fd = along; } }); }
-    post.dof.focus = U.lerp(fd, 9, fin); post.dof.range = U.lerp(1.5, 14, fin); post.dof.amount = U.lerp(.85, .55, fin);
+    const dw = U.smoothstep(R.T[DOOR] - .55, R.T[DOOR] - .15, t) * (1 - U.smoothstep(R.T[DOOR] + .7, R.T[DOOR] + 1.0, t)); // door shot: hold the tree and the doorway together
+    post.dof.focus = U.lerp(U.lerp(fd, 6.5, dw), 9, fin); post.dof.range = U.lerp(U.lerp(1.5, 10, dw), 14, fin); post.dof.amount = U.lerp(U.lerp(.85, .4, dw), .55, fin);
+    // motion blur only where the camera glides fast (decided one frame ahead: the engine reads it before update() of the next frame)
+    { const sp = R.pxSpeed(t + 1 / 30); post.motionBlur = sp > 40 ? { samples: 3, shutter: .36 } : { samples: 1 }; }
     post.exposure = 1.05 + .05 * fin;
 
     // ---- typography
@@ -374,13 +396,18 @@ export default {
       R.heroes.forEach((h, i) => { const t1 = i < 13 ? R.heroes[i + 1].t0 - .2 : R.W.ve - .18; label(NAMES[i], h.t0 - .04, t1); });
       // progress dots
       const dAlpha = U.smoothstep(-.4, 0, t) * (1 - U.smoothstep(R.W.ve - .1, R.W.ve + .25, t));
-      if (dAlpha > .001) { X.save(); X.globalAlpha = dAlpha; for (let i = 0; i < 14; i++) { const x = 540 + (i - 6.5) * 52, y = 318; const on = U.clamp((t - R.T[i] + .04) / .25); const cur = on > 0 && (i === 13 || t < R.T[i + 1] - .05);
-          X.beginPath(); X.arc(x, y, 9.5, 0, 6.283); X.lineWidth = 3; X.strokeStyle = 'rgba(255,240,215,.7)'; X.shadowColor = 'rgba(0,0,0,.45)'; X.shadowBlur = 8; X.stroke();
-          if (on > 0) { const s = U.ease.outBack(on, 3) * (cur ? 1.25 : 1); X.beginPath(); X.arc(x, y, 9.5 * s, 0, 6.283); X.fillStyle = '#ffcf6b'; X.fill(); } } X.restore(); }
+      if (dAlpha > .001) { X.save(); X.globalAlpha = dAlpha; // soft scrim keeps the row legible over lamp glow; equal dot sizes, current dot gets a ring
+        X.shadowColor = 'rgba(10,5,0,.35)'; X.shadowBlur = 18; X.fillStyle = 'rgba(28,14,6,.36)'; ui.rrect(540 - 7 * 52 - 14, 318 - 23, 14 * 52 + 28, 46, 23); X.fill(); X.shadowColor = 'transparent';
+        for (let i = 0; i < 14; i++) { const x = 540 + (i - 6.5) * 52, y = 318; const on = U.clamp((t - R.T[i] + .04) / .25); const cur = on > 0 && (i === 13 || t < R.T[i + 1] - .05);
+          X.beginPath(); X.arc(x, y, 9, 0, 6.283); X.lineWidth = 2.6; X.strokeStyle = 'rgba(255,240,215,.78)'; X.stroke();
+          if (on > 0) { const sc = U.ease.outBack(on, 3); X.beginPath(); X.arc(x, y, 10 * sc, 0, 6.283); X.fillStyle = '#ffcf6b'; X.fill(); X.lineWidth = 1.5; X.strokeStyle = 'rgba(70,36,10,.55)'; X.stroke();
+            if (cur) { X.globalAlpha = dAlpha * .85 * U.clamp(on * 2); X.beginPath(); X.arc(x, y, 15.5, 0, 6.283); X.lineWidth = 2.4; X.strokeStyle = '#ffd98a'; X.stroke(); X.globalAlpha = dAlpha; } } }
+        X.restore(); }
       // finale words
       const W = R.W;
-      ui.text('…ve bütün', { t, t0: W.ve - .03, x: 540, y: 392, size: 62, weight: 800, color: '#fff3dc', anim: 'rise', dur: .4 });
-      ui.text('güzel ahlâk', { t, t0: W.guzel - .04, x: 540, y: 500, size: 124, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 3, dur: .45 });
+      { const sa = U.smoothstep(W.ve - .1, W.ve + .4, t); if (sa > .001) { X.save(); X.globalAlpha = sa * .55; const gr = X.createRadialGradient(540, 450, 40, 540, 450, 420); gr.addColorStop(0, 'rgba(26,12,4,.75)'); gr.addColorStop(1, 'rgba(26,12,4,0)'); X.fillStyle = gr; X.setTransform(1, 0, 0, .42, 0, 450 * .58); X.fillRect(0, 0, 1080, 1080); X.restore(); } }
+      ui.text('…ve bütün', { t, t0: W.ve - .03, x: 540, y: 380, size: 70, weight: 800, color: '#fff3dc', anim: 'rise', dur: .4, stroke: 'rgba(40,20,8,.55)', strokeW: 9 });
+      ui.text('güzel ahlâk', { t, t0: W.guzel - .04, x: 540, y: 498, size: 128, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 3, dur: .45, stroke: 'rgba(52,26,10,.6)', strokeW: 15 });
     }
   },
 };

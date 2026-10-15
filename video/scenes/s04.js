@@ -30,28 +30,50 @@ const colorize = (g, c) => { const C = new THREE.Color(c); const n = g.attribute
 const place = (g, x, y, z, ry = 0) => { if (ry) g.rotateY(ry); g.translate(x, y, z); return g; };
 
 // reference house variants (8 x 8 m footprint, door on +z), merged with vertex colours (wall white -> tinted per instance)
-function houseVariant(M, v) {
+// lod=false: full bevels (houses near the destination, seen up close at the end of the swoop);
+// lod=true: same silhouette with cheap bevels (map-scale houses) — ~5x fewer triangles, identical at that distance.
+function houseVariant(M, v, lod = false) {
   const P = [], WALL = '#ffffff', ROOF = '#d9cbb6', DOOR = '#5a3a24', WIN = '#24180f', WOOD = '#7a5434';
   const hgt = v === 1 ? 7 : 4;
-  P.push(colorize(place(M.rbox(8, hgt, 8, .45, 2), 0, hgt / 2, 0), WALL));
+  const rb = (w, h, d, r, seg) => lod ? (seg > 1 && Math.min(w, h, d) > 2 ? M.rbox(w, h, d, r, 1) : new THREE.BoxGeometry(w, h, d)) : M.rbox(w, h, d, r, seg);
+  P.push(colorize(place(rb(8, hgt, 8, .45, 2), 0, hgt / 2, 0), WALL));
   P.push(colorize(place(new THREE.BoxGeometry(7.3, .12, 7.3), 0, hgt + .0, 0), ROOF));
   for (const s of [-1, 1]) {
-    P.push(colorize(place(M.rbox(8.1, .75, .45, .18, 1), 0, hgt + .3, s * 3.83), WALL));
-    P.push(colorize(place(M.rbox(.45, .75, 7.2, .18, 1), s * 3.83, hgt + .3, 0), WALL));
+    P.push(colorize(place(rb(8.1, .75, .45, .18, 1), 0, hgt + .3, s * 3.83), WALL));
+    P.push(colorize(place(rb(.45, .75, 7.2, .18, 1), s * 3.83, hgt + .3, 0), WALL));
   }
-  P.push(colorize(place(M.rbox(1.15, 2.15, .32, .1, 1), 1.4, 1.07, 4.0), DOOR));
-  P.push(colorize(place(M.rbox(1.7, .28, .4, .08, 1), 1.4, 2.28, 4.0), WOOD)); // lintel
-  P.push(colorize(place(M.rbox(.8, .8, .26, .1, 1), -2.0, 2.75, 4.0), WIN));
+  P.push(colorize(place(rb(1.15, 2.15, .32, .1, 1), 1.4, 1.07, 4.0), DOOR));
+  P.push(colorize(place(rb(1.7, .28, .4, .08, 1), 1.4, 2.28, 4.0), WOOD)); // lintel
+  P.push(colorize(place(rb(.8, .8, .26, .1, 1), -2.0, 2.75, 4.0), WIN));
   P.push(colorize(place(new THREE.BoxGeometry(.28, .22, 1.1), 3.0, hgt + .38, 4.3), WOOD)); // waterspout
-  if (v === 1) { P.push(colorize(place(M.rbox(.8, .8, .26, .1, 1), -2.0, 5.5, 4.0), WIN)); P.push(colorize(place(M.rbox(.8, .8, .26, .1, 1), 1.6, 5.5, 4.0), WIN)); P.push(colorize(place(M.rbox(.26, .8, .8, .1, 1), 4.0, 5.4, -1.5), WIN)); }
+  if (v === 1) { P.push(colorize(place(rb(.8, .8, .26, .1, 1), -2.0, 5.5, 4.0), WIN)); P.push(colorize(place(rb(.8, .8, .26, .1, 1), 1.6, 5.5, 4.0), WIN)); P.push(colorize(place(rb(.26, .8, .8, .1, 1), 4.0, 5.4, -1.5), WIN)); }
   if (v === 2) {
-    P.push(colorize(place(M.rbox(3.6, 2.7, 3.4, .32, 2), -1.9, hgt + 1.35, -1.9), WALL));
-    P.push(colorize(place(M.rbox(.9, 1.7, .24, .08, 1), -1.9, hgt + .85, -.2), DOOR));
+    P.push(colorize(place(rb(3.6, 2.7, 3.4, .32, 2), -1.9, hgt + 1.35, -1.9), WALL));
+    P.push(colorize(place(rb(.9, 1.7, .24, .08, 1), -1.9, hgt + .85, -.2), DOOR));
     P.push(colorize(place(new THREE.BoxGeometry(3.2, .1, 3.0), -1.9, hgt + 2.72, -1.9), ROOF));
   }
+  P.forEach(p => { if (p.attributes.normal && !p.attributes.uv) p.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(p.attributes.position.count * 2), 2)); });
   const g = mergeGeometries(P.map(p => (p.index ? p.toNonIndexed() : p)), false);
   g.userData = { h: hgt, win: [[-2.0, 2.75, 4.14]].concat(v === 1 ? [[-2.0, 5.5, 4.14], [1.6, 5.5, 4.14]] : []), door: [1.4, 0, 4.25] };
   return g;
+}
+
+// Polyline with circular-ish (quadratic) corner fillets, sampled every ~step metres in XZ.
+// Returns {pts:[[x,z]...], cum:[arc length], anchor: arc length where the fillet of vertex `anchorIdx` begins}.
+function filletPath(P0, rMax, step, anchorIdx) {
+  const P = [P0[0]]; for (let i = 1; i < P0.length; i++) { const a = P[P.length - 1], b = P0[i]; if (Math.hypot(b.x - a.x, b.z - a.z) > .05) P.push(b); else if (i === anchorIdx) anchorIdx = P.length - 1; }
+  const out = [[P[0].x, P[0].z]], cum = [0]; let cx = P[0].x, cz = P[0].z, anchor = 0;
+  const push = (x, z) => { const l = Math.hypot(x - cx, z - cz); if (l < 1e-4) return; out.push([x, z]); cum.push(cum[cum.length - 1] + l); cx = x; cz = z; };
+  const line = (x, z) => { const l = Math.hypot(x - cx, z - cz), n = Math.max(1, Math.ceil(l / step)), x0 = cx, z0 = cz; for (let k = 1; k <= n; k++) push(x0 + (x - x0) * k / n, z0 + (z - z0) * k / n); };
+  for (let i = 1; i < P.length; i++) {
+    const B = P[i]; if (i === P.length - 1) { if (i === anchorIdx) anchor = cum[cum.length - 1] + Math.hypot(B.x - cx, B.z - cz); line(B.x, B.z); break; }
+    const N = P[i + 1]; const lin = Math.hypot(B.x - cx, B.z - cz), lout = Math.hypot(N.x - B.x, N.z - B.z);
+    const r = Math.min(rMax, lin * .98, lout * .48); const ix = (B.x - cx) / lin, iz = (B.z - cz) / lin, ox = (N.x - B.x) / lout, oz = (N.z - B.z) / lout;
+    const ax = B.x - ix * r, az = B.z - iz * r, bx = B.x + ox * r, bz = B.z + oz * r;
+    line(ax, az); if (i === anchorIdx) anchor = cum[cum.length - 1];
+    const n = Math.max(2, Math.ceil(r * 2 / step)); for (let k = 1; k <= n; k++) { const u = k / n, w0 = (1 - u) * (1 - u), w1 = 2 * u * (1 - u), w2 = u * u; push(w0 * ax + w1 * B.x + w2 * bx, w0 * az + w1 * B.z + w2 * bz); }
+  }
+  return { pts: out, cum, anchor };
 }
 
 // camera: spherical rig around a moving target (pure function of t)
@@ -69,7 +91,8 @@ function lightPos(l, t, U) {
   const s = lightS(l, t); let k = 1; while (k < l.cum.length - 1 && l.cum[k] < s) k++;
   const f = U.clamp((s - l.cum[k - 1]) / Math.max(1e-6, l.cum[k] - l.cum[k - 1]));
   const P = new THREE.Vector3().lerpVectors(l.S[k - 1], l.S[k], f); const moving = t > l.td && t < l.ta ? 1 : 0;
-  P.y += 1.35 + Math.sin(t * 9 + l.seed * 5) * .05 * moving; return P;
+  const idle = U.smoothstep(l.ta - .2, l.ta + .6, t); // waiting at the door: a gentle sway, never frozen
+  P.y += 1.35 + Math.sin(t * 9 + l.seed * 5) * .05 * moving + Math.sin(t * 2.1 + l.seed * 3) * .05 * idle; P.x += Math.sin(t * 1.3 + l.seed) * .06 * idle; P.z += Math.cos(t * 1.1 + l.seed * 2) * .05 * idle; return P;
 }
 
 export default {
@@ -107,11 +130,16 @@ export default {
     };
     const H = (x, z) => { const r = Math.hypot(x, z); const fl = (1.1 * N(fC, x * .4, z * .4) + .008 * r) * U.smoothstep(22, 60, r); return mountain(x, z) + fl; };
     R.H = H;
+    let meshH = H;
     {
       const SEGX = 230, SEGZ = 280, TW = 1100, TD = 1300;
+      { const sw = TW / SEGX, sd = TD / SEGZ; const hv = (ix, iy) => H(-TW / 2 + ix * sw, -TD / 2 + iy * sd - 20);
+        meshH = (x, z) => { const gx = (x + TW / 2) / sw, gz = (z + 20 + TD / 2) / sd; const ix = Math.floor(gx), iy = Math.floor(gz), fx = gx - ix, fz = gz - iy;
+          const a = hv(ix, iy), b = hv(ix, iy + 1), c = hv(ix + 1, iy + 1), d = hv(ix + 1, iy);
+          return fx + fz <= 1 ? a + (d - a) * fx + (b - a) * fz : c + (b - c) * (1 - fx) + (d - c) * (1 - fz); }; }
       const geo = new THREE.PlaneGeometry(TW, TD, SEGX, SEGZ); geo.rotateX(-Math.PI / 2);
       const p = geo.attributes.position; const col = new Float32Array(p.count * 3);
-      const cSand = new THREE.Color('#968878'), cPlaza = new THREE.Color('#d2b994'), cRock = new THREE.Color('#86695a'), cRock2 = new THREE.Color('#4f3c34'), cDust = new THREE.Color('#7f6c5c'), c = new THREE.Color();
+      const cSand = new THREE.Color('#968878'), cPlaza = new THREE.Color('#d2b994'), cRock = new THREE.Color('#9a7c68'), cRock2 = new THREE.Color('#6a5246'), cDust = new THREE.Color('#7f6c5c'), c = new THREE.Color();
       for (let i = 0; i < p.count; i++) {
         const x = p.getX(i), z = p.getZ(i) - 20; const h = H(x, z); p.setY(i, h); p.setZ(i, z);
         const rk = U.smoothstep(2, 16, h), n = N(fC, x * 2, z * 2) * .5 + .5, n2 = N(fB, x, z) * .5 + .5;
@@ -131,7 +159,7 @@ export default {
         }
       }
       geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-      const st = TEX.stone({ a: '#ffffff', b: '#d6cec4', seed: 9, repeat: [44, 52] });
+      const st = TEX.stone({ a: '#ffffff', b: '#d6cec4', seed: 9, repeat: [150, 177] });
       const mat = new THREE.MeshStandardMaterial({ vertexColors: true, map: st.map, normalMap: st.normalMap, normalScale: new THREE.Vector2(1.1, 1.1), roughness: .96 });
       const terrain = new THREE.Mesh(geo, mat); terrain.receiveShadow = true; terrain.castShadow = true; scene.add(terrain);
     }
@@ -208,16 +236,24 @@ export default {
       R.square = Q;
     }
 
-    const variants = [0, 1, 2].map(v => houseVariant(M, v));
+    const variants = [0, 1, 2].map(v => houseVariant(M, v)), variantsLo = [0, 1, 2].map(v => houseVariant(M, v, true));
     const tints = ['#dcb68c', '#cfa67b', '#e3c49d', '#c99c73', '#d6b28e', '#c2946c'].map(c => new THREE.Color(c));
     const pl = TEX.plaster({ a: '#ffffff', b: '#d2c2ad', seed: 15, repeat: [1, 1] });
     const houseMat = new THREE.MeshStandardMaterial({ vertexColors: true, map: pl.map, normalMap: pl.normalMap, normalScale: new THREE.Vector2(.9, .9), roughness: .93 });
     const m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion(), yAx = new THREE.Vector3(0, 1, 0), v3 = new THREE.Vector3(), s3 = new THREE.Vector3();
     houses.forEach(h => { q4.setFromAxisAngle(yAx, h.yaw); h.mat = new THREE.Matrix4().compose(new THREE.Vector3(h.x, h.y, h.z), q4.clone(), new THREE.Vector3(h.sx, h.sh, h.sz)); });
+    {
+      const aoT = TEX.drawTexture(64, 64, (x, W, H) => { x.clearRect(0, 0, W, H); x.shadowColor = 'rgba(0,0,0,1)'; x.shadowBlur = 9; x.fillStyle = '#000'; ui_rr(x, 12, 12, 40, 40, 6); x.fill(); });
+      const aoM = new THREE.MeshBasicMaterial({ map: aoT, color: '#000000', transparent: true, opacity: .5, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      const ao = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), aoM, houses.length);
+      houses.forEach((hh, k) => { const sc = new THREE.Vector3(hh.sx * 8 * 1.45, 1, hh.sz * 8 * 1.45); m4.compose(new THREE.Vector3(hh.x, meshH(hh.x, hh.z) + .06, hh.z), q4.setFromAxisAngle(yAx, hh.yaw), sc); ao.setMatrixAt(k, m4); });
+      ao.renderOrder = 1; ao.userData.noDepth = true; scene.add(ao);
+    }
     const winList = [];
-    for (let v = 0; v < 3; v++) {
-      const list = houses.filter(h => h.variant === v && !h.isDest);
-      const im = new THREE.InstancedMesh(variants[v], houseMat, list.length);
+    const nearDest = h => Math.hypot(h.x - dest.x, h.z - dest.z) < 85;
+    for (let v = 0; v < 3; v++) for (const lo of [false, true]) {
+      const list = houses.filter(h => h.variant === v && !h.isDest && nearDest(h) === !lo); if (!list.length) continue;
+      const im = new THREE.InstancedMesh(lo ? variantsLo[v] : variants[v], houseMat, list.length);
       list.forEach((h, k) => { im.setMatrixAt(k, h.mat); im.setColorAt(k, tints[h.tint]); });
       im.castShadow = true; im.receiveShadow = true; scene.add(im);
       // a few warm-lit windows (oil lamps inside)
@@ -281,15 +317,16 @@ export default {
       // door leaf swung open inward against the jamb
       const leafP = new THREE.Group(); leafP.position.set(dx - dw / 2 + .05, 0, dp / 2 - T - .02); G.add(leafP);
       const leaf = new THREE.Mesh(M.rbox(dw - .08, dh - .06, .1, .03, 1), wood); leaf.position.set((dw - .08) / 2, dh / 2, 0); leafP.add(leaf); leafP.rotation.y = 1.35;
-      add(M.rbox(dw + .5, .16, .7, .05, 1), M.MAT.stone({ a: '#b7ab98', b: '#8c8070', seed: 3 }), dx, .08, dp / 2 + .3); // threshold
+      G.updateMatrixWorld(true); const gl = (lx, lz) => { const v = new THREE.Vector3(lx, 0, lz).applyMatrix4(G.matrixWorld); return meshH(v.x, v.z) - d.y; };
+      add(M.rbox(dw + .5, .16, .7, .05, 1), M.MAT.stone({ a: '#b7ab98', b: '#8c8070', seed: 3 }), dx, gl(dx, dp / 2 + .3) + .05, dp / 2 + .3); // threshold
       // small lit window with wooden bars
       const wx = -w / 2 + 1.9;
       add(new THREE.PlaneGeometry(.75, .75), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffb562').multiplyScalar(2.4) }), wx, 2.8, dp / 2 + .005);
       for (let k = -1; k <= 1; k++) add(M.rbox(.07, .8, .08, .02, 1), wood, wx + k * .22, 2.8, dp / 2 + .04);
       // bench by the door + water jar + palm
-      add(M.rbox(2.0, .5, .65, .14, 2), wallMat, dx + 2.2, .25, dp / 2 + .32);
-      const jar = M.lathe([[0, 0], [.16, .02], [.27, .2], [.29, .4], [.22, .62], [.12, .72], [.13, .8], [.1, .82]], M.MAT.clay({ a: '#b56a3f', b: '#87492a' }), 24); jar.position.set(dx - 1.25, 0, dp / 2 + .45); G.add(jar);
-      const palm = M.palm({ height: 9, seed: 5, lean: .5, fronds: 14 }); palm.position.set(w / 2 + 2.4, 0, dp / 2 - 1.2); G.add(palm);
+      add(M.rbox(2.0, .5 + .6, .65, .14, 2), wallMat, dx + 2.2, gl(dx + 2.2, dp / 2 + .32) + .25 - .3, dp / 2 + .32);
+      const jar = M.lathe([[0, 0], [.16, .02], [.27, .2], [.29, .4], [.22, .62], [.12, .72], [.13, .8], [.1, .82]], M.MAT.clay({ a: '#b56a3f', b: '#87492a' }), 24); jar.position.set(dx - 1.25, gl(dx - 1.25, dp / 2 + .45) - .02, dp / 2 + .45); G.add(jar);
+      const palm = M.palm({ height: 9, seed: 5, lean: .5, fronds: 14, leafColor: '#3c5a2c' }); palm.position.set(w / 2 + 2.4, gl(w / 2 + 2.4, dp / 2 - 1.2) - .1, dp / 2 - 1.2); G.add(palm);
       M.shadowAll(G); floor.castShadow = false;
       // interior oil-lamp light: point light inside + a soft spot spilling out of the doorway onto the alley
       const lamp = new THREE.PointLight('#ffa14a', 26, 2.9, 2); lamp.position.set(dx - .2, 1.5, dp / 2 - 1.5); G.add(lamp); R.destLamp = lamp;
@@ -327,18 +364,15 @@ export default {
       let k = c.k; const seen = new Set(); while (k >= 0 && !seen.has(k)) { seen.add(k); pts.push({ x: nodes[k].x, z: nodes[k].z }); k = prev[k]; }
       pts.push(dFoot);
       // a waypoint spread across the little square, then through the door into the lamp-lit room
-      const a = ((li * 7) % NL / (NL - 1) - .5) * 2.2, rr = 4.5 + pr() * 4.5;
-      const slot = doorW.clone().addScaledVector(dd, Math.cos(a) * rr + 1.2).addScaledVector(side, Math.sin(a) * rr * 1.2);
+      const ring = Math.floor(li / 10), a = (((li * 7) % 10) / 9 - .5) * (2.3 - ring * .3) + (pr() - .5) * .12, rr = 3.4 + ring * 2.5 + pr() * .6;
+      const slot = doorW.clone().addScaledVector(dd, Math.cos(a) * rr + .3).addScaledVector(side, Math.sin(a) * rr * 1.25);
       pts.push({ x: slot.x, z: slot.z });
-      const din = doorW.clone().addScaledVector(dd, .2), inside = doorW.clone().addScaledVector(dd, -2.6);
-      pts.push({ x: din.x, z: din.z }, { x: inside.x, z: inside.z });
-      // chaikin smoothing (keeps the first/last points)
-      let P = pts; for (let it = 0; it < 2; it++) { const Q = [P[0]]; for (let i = 0; i < P.length - 1; i++) { const A = P[i], B = P[i + 1]; Q.push({ x: A.x * .75 + B.x * .25, z: A.z * .75 + B.z * .25 }, { x: A.x * .25 + B.x * .75, z: A.z * .25 + B.z * .75 }); } Q.push(P[P.length - 1]); P = Q; }
-      // resample every ~2 m with terrain-following height
-      const S = []; for (let i = 0; i < P.length - 1; i++) { const A = P[i], B = P[i + 1]; const L = Math.hypot(B.x - A.x, B.z - A.z); const n = Math.max(1, Math.ceil(L / 2)); for (let s = 0; s < n; s++) { const x = A.x + (B.x - A.x) * s / n, z = A.z + (B.z - A.z) * s / n; S.push(new THREE.Vector3(x, H(x, z), z)); } }
-      const last = P[P.length - 1]; S.push(new THREE.Vector3(last.x, H(last.x, last.z), last.z));
-      const cum = [0]; for (let i = 1; i < S.length; i++) cum.push(cum[i - 1] + S[i].distanceTo(S[i - 1]));
-      lights.push({ S, cum, L: cum[cum.length - 1], src: c.h, seed: pr() * 10 });
+      // corner fillets (radius <= 3 m): beyond each fillet, lanterns that share a street follow IDENTICAL geometry, and the
+      // arc-length from any shared point to the meeting point in front of the door is identical too. Trail dots are
+      // phased from that meeting point (sF), so the dots of different lanterns on a shared street coincide exactly.
+      const F = filletPath(pts, 3, 1.0, pts.length - 2);
+      const S = F.pts.map(([x, z]) => new THREE.Vector3(x, meshH(x, z), z)), cum = F.cum;
+      lights.push({ S, cum, L: cum[cum.length - 1], src: c.h, seed: pr() * 10, sF: F.anchor });
     });
     // timing: depart 3.05–3.8 ("emanetlerini"), arrive 4.85–5.75 (long paths arrive last)
     const byL = lights.map((l, i) => [l.L, i]).sort((a, b) => a[0] - b[0]);
@@ -365,8 +399,8 @@ export default {
     R.lanternLights = near2.map(i => { const p = new THREE.PointLight('#ffa04a', 0, 16, 2); scene.add(p); return { p, i }; });
 
     // moonlight: the one shadow caster; its frustum follows the camera target
-    const moon = ENV.sunLight({ color: '#a8c2ff', intensity: 2.6, pos: [-150, 330, 60], target: [0, 0, 0], size: 240, mapSize: 2048, bias: -0.0006, normalBias: .05, radius: 2.5 });
-    moon.shadow.camera.far = 900; scene.add(moon, moon.target); R.moon = moon; R.moonDir = new THREE.Vector3(-150, 330, 60).normalize();
+    const moon = ENV.sunLight({ color: '#a8c2ff', intensity: 2.6, pos: [40, 330, 190], target: [0, 0, 0], size: 240, mapSize: 2048, bias: -0.0006, normalBias: .05, radius: 2.5 });
+    moon.shadow.camera.far = 900; scene.add(moon, moon.target); R.moon = moon; R.moonDir = new THREE.Vector3(40, 330, 190).normalize();
     scene.add(new THREE.HemisphereLight('#4c70c4', '#2a2c3c', 0.6));
 
     // ---------------- camera ----------------
@@ -374,11 +408,11 @@ export default {
     const G = new THREE.Vector3(dest.x, 0, dest.z).lerp(doorW, .78);
     const doorAz = Math.atan2(dd.x, dd.z) / DEG;
     R.camK = {
-      ld: mono([[-0.6, Math.log(670)], [1.6, Math.log(580)], [3.2, Math.log(500)], [4.5, Math.log(330)], [5.1, Math.log(140)], [5.65, Math.log(48)], [6.2, Math.log(33)]]),
-      pitch: mono([[-0.6, 63], [3.2, 64], [4.5, 62], [5.1, 54], [5.65, 33], [6.2, 26]]),
-      az: mono([[-0.6, -31], [3.2, -4], [4.6, doorAz * .5 + 4], [5.65, doorAz + 20], [6.2, doorAz + 26]]),
-      tx: mono([[-0.6, -6], [3.2, -14], [4.5, (G.x - 14) * .6 + G.x * .4], [5.3, G.x], [6.2, G.x]]),
-      tz: mono([[-0.6, 26], [3.2, 36], [4.5, G.z - 4], [5.3, G.z], [6.2, G.z]]),
+      ld: mono([[-0.6, Math.log(640)], [1.6, Math.log(565)], [3.2, Math.log(480)], [4.5, Math.log(320)], [5.1, Math.log(140)], [5.65, Math.log(48)], [6.2, Math.log(33)]]),
+      pitch: mono([[-0.6, 66], [3.2, 65], [4.5, 62], [5.1, 54], [5.65, 33], [6.2, 26]]),
+      az: mono([[-0.6, -13], [3.2, -3], [4.6, doorAz * .5 + 4], [5.65, doorAz + 20], [6.2, doorAz + 26]]),
+      tx: mono([[-0.6, -8], [3.2, -20], [4.5, (G.x - 14) * .6 + G.x * .4], [5.3, G.x], [6.2, G.x]]),
+      tz: mono([[-0.6, 18], [3.2, 32], [4.5, G.z - 4], [5.3, G.z], [6.2, G.z]]),
       ty: mono([[-0.6, 0], [4.5, 0], [5.5, dest.y + 4.6], [6.2, dest.y + 4.2]]),
     };
     R.G = G;
@@ -402,17 +436,18 @@ export default {
 
     // --- lanterns ---
     const L = R.lights, lpos = R.lpos, lb = R.lb, pc = R.pool.instanceColor; const m4 = new THREE.Matrix4(); const P = new THREE.Vector3();
-    let pulse = 0;
+    let pulse = 0; const closeK = U.prog(t, 4.7, 5.6, 'inOutSine');
+    R.ptsU[0].worldSize.value = U.lerp(2.5, .95, closeK); R.ptsU[1].worldSize.value = U.lerp(.38, .2, closeK);
     L.forEach((l, i) => {
       const u = U.clamp((t - l.td) / (l.ta - l.td));
       const s = lightS(l, t); P.copy(lightPos(l, t, U));
       l.pos = l.pos || new THREE.Vector3(); l.pos.copy(P); l.s = s;
-      const enter = 1 - U.smoothstep(l.L - 3.4, l.L - 1.0, s); // fades as it passes through the doorway
+      const enter = 1; // lights gather and wait in front of the door
       const dt = t - l.ta + .12; if (dt > 0) pulse += Math.exp(-dt * 4) * (1 - Math.exp(-dt * 30));
       const on = enter * U.smoothstep(l.td - .25, l.td + .1, t) * (.88 + .12 * Math.sin(t * 13 + l.seed * 7) * Math.sin(t * 5.3 + l.seed));
       lpos[i * 3] = P.x; lpos[i * 3 + 1] = P.y; lpos[i * 3 + 2] = P.z; lb[i] = on;
-      m4.compose(new THREE.Vector3(P.x, P.y - 1.25, P.z), new THREE.Quaternion(), new THREE.Vector3(7.5, 1, 7.5)); R.pool.setMatrixAt(i, m4);
-      const pb = on * (1 - .45 * U.smoothstep(.85, 1, u)); pc.setXYZ(i, pb, pb * .85, pb * .7);
+      const ps = U.lerp(7.5, 3.6, closeK); m4.compose(new THREE.Vector3(P.x, P.y - 1.25, P.z), new THREE.Quaternion(), new THREE.Vector3(ps, 1, ps)); R.pool.setMatrixAt(i, m4);
+      const pb = on * (1 - .45 * U.smoothstep(.85, 1, u)) * U.lerp(1, .55, closeK); pc.setXYZ(i, pb, pb * .85, pb * .7);
     });
     R.lg.attributes.position.needsUpdate = true; R.lg.attributes.bright.needsUpdate = true; R.pool.instanceMatrix.needsUpdate = true; pc.needsUpdate = true;
     const close = U.prog(t, 4.9, 5.7, 'inOutSine');
@@ -423,37 +458,43 @@ export default {
     // ================= Kurzgesagt map layer (2D overlay) =================
     const X = ui.ctx; const FO = ctx.H / 2 / Math.tan(camera.fov * DEG / 2);
     const mapFade = 1 - U.prog(t, 4.95, 5.4);
-    // red dots (müşrikler)
+    const pinA = U.clamp((t - 4.3) / .4) * (1 - U.prog(t, 5.35, 5.6));
+    // motion blur only on the fast swoop down to the door (camera zoom ~7%/frame there)
+    post.motionBlur = { samples: t > 4.5 && t < 5.95 ? 3 : 1, shutter: .5 };
+    if (!R.spr) R.spr = makeSprites();
+    const V = new THREE.Vector3();
+    // red dots (müşrikler) — sprite-based (crisp, no per-dot blur cost); dots near the destination give way to the gold pin
     const dim = U.lerp(1, .5, U.prog(t, 4.3, 4.8));
     X.save();
     for (const h of R.red) {
       const a = U.clamp((t - h.tp) / .32); if (a <= 0) continue;
       const [sx, sy, sz] = ui.project(h.top); if (sz > 1 || sx < -30 || sx > 1110 || sy < -30 || sy > 1950) continue;
-      const d = camera.position.distanceTo(h.top); const r = U.clamp(2.0 * FO / d, 4.5, 12) * U.ease.outBack(a, 2.6);
-      X.globalAlpha = Math.min(1, a * 3) * dim * mapFade;
-      X.shadowColor = 'rgba(0,0,0,.45)'; X.shadowBlur = 6; X.shadowOffsetY = 2;
-      X.beginPath(); X.arc(sx, sy, r, 0, Math.PI * 2); X.fillStyle = '#ff4d43'; X.fill();
-      X.shadowColor = 'transparent'; X.lineWidth = Math.max(1.6, r * .26); X.strokeStyle = '#fff0e4'; X.stroke();
+      const d = camera.position.distanceTo(h.top); const r = U.clamp(2.0 * FO / d, 5, 12) * U.ease.outBack(a, 2.6);
+      const near = 1 - pinA * U.smoothstep(34, 16, Math.hypot(h.x - R.dest.x, h.z - R.dest.z));
+      X.globalAlpha = Math.min(1, a * 3) * dim * mapFade * near; if (X.globalAlpha <= .01 || r <= .5) continue;
+      const k = r * 2 / 24; X.drawImage(R.spr.red, sx - 16 * k, sy - 16 * k + 2 * k, 32 * k, 32 * k);
     }
-    // departure ripples + dotted paths of the trusts (emanetler)
-    X.lineCap = 'round'; X.lineJoin = 'round';
+    // departure ripples + dotted trails of the trusts (emanetler): dots are anchored in WORLD space along each street
+    // path and march toward the destination — stable under the moving camera (no re-dashing shimmer)
+    const SP = 4.2, phase = (t * 8) % SP;
     for (const l of L) {
       if (t < l.td - .05) continue;
       const age = t - l.td; const [ox, oy, oz] = ui.project(l.S[0]);
-      if (age < .6 && oz < 1) { X.globalAlpha = (1 - age / .6) * mapFade; X.strokeStyle = '#ffd78a'; X.lineWidth = 3; X.setLineDash([]); X.beginPath(); X.arc(ox, oy, 8 + age * 70, 0, Math.PI * 2); X.stroke(); }
-      const gone = 1 - U.clamp((t - l.ta + .25) / .35);
-      X.globalAlpha = .92 * mapFade * U.clamp(age / .2) * gone; if (X.globalAlpha <= .01) continue; X.setLineDash([.1, 12]); X.lineDashOffset = -t * 36; X.lineWidth = 6.5; X.strokeStyle = '#ffd88f';
-      X.shadowColor = 'rgba(40,20,0,.55)'; X.shadowBlur = 5;
-      X.beginPath(); let started = false;
-      for (let k = 0; k < l.S.length; k += 2) { if (l.cum[k] > l.s) break; const [px, py, pz] = ui.project(l.S[k]); if (pz > 1) { started = false; continue; } if (!started) { X.moveTo(px, py); started = true; } else X.lineTo(px, py); }
-      if (started) { const [px, py] = ui.project(new THREE.Vector3(l.pos.x, l.pos.y - 1.35, l.pos.z)); X.lineTo(px, py); }
-      X.stroke(); X.shadowColor = 'transparent';
+      if (age < .6 && oz < 1) { X.globalAlpha = (1 - age / .6) * mapFade; X.strokeStyle = '#ffd78a'; X.lineWidth = 3.5; X.beginPath(); X.arc(ox, oy, 8 + age * 70, 0, Math.PI * 2); X.stroke(); }
+      const al = .95 * mapFade * U.clamp(age / .2); if (al <= .01) continue;
+      let k = 1; const off = ((l.sF + phase) % SP + SP) % SP;
+      for (let sd = off; sd < l.s - .8; sd += SP) {
+        while (k < l.cum.length - 1 && l.cum[k] < sd) k++;
+        const f = (sd - l.cum[k - 1]) / Math.max(1e-6, l.cum[k] - l.cum[k - 1]); V.lerpVectors(l.S[k - 1], l.S[k], U.clamp(f)); V.y += .3;
+        const [px, py, pz] = ui.project(V); if (pz > 1 || px < -20 || px > 1100 || py < -20 || py > 1940) continue;
+        const d = camera.position.distanceTo(V); const r = U.clamp(.8 * FO / d, 4.4, 8.5);
+        const head = U.smoothstep(l.s - 14, l.s - 1, sd); // trail brightens toward the moving light
+        X.globalAlpha = al * (.78 + .22 * head); X.drawImage(R.spr.dot, px - r * 2.1, py - r * 2.1, r * 4.2, r * 4.2);
+      }
     }
-    X.setLineDash([]);
     X.restore();
 
     // destination pin (gold) + pulse ring — "one door"
-    const pinA = U.clamp((t - 4.3) / .4) * (1 - U.prog(t, 5.35, 5.6));
     if (pinA > 0) {
       const [px, py, pz] = ui.project(R.destTop);
       if (pz < 1) {
@@ -464,20 +505,19 @@ export default {
         X.shadowColor = 'rgba(0,0,0,.5)'; X.shadowBlur = 14; X.shadowOffsetY = 5;
         X.beginPath(); X.moveTo(0, 62); X.bezierCurveTo(-14, 40, -30, 26, -30, 0); X.arc(0, 0, 30, Math.PI, 0); X.bezierCurveTo(30, 26, 14, 40, 0, 62); X.closePath(); X.fillStyle = '#ffc84a'; X.fill();
         X.shadowColor = 'transparent'; X.lineWidth = 4; X.strokeStyle = '#fff3d6'; X.stroke();
-        // tiny house glyph in the pin
         X.fillStyle = '#6b3a12'; X.fillRect(-13, -6, 26, 18); X.beginPath(); X.moveTo(-17, -5); X.lineTo(0, -17); X.lineTo(17, -5); X.closePath(); X.fill(); X.fillStyle = '#ffe6a8'; X.fillRect(-4, 2, 8, 10);
         X.restore();
       }
     }
 
     // --- typography ---
-    { const a = U.clamp((t - 4.15) / .3) * (1 - U.prog(t, 5.4, 5.65)); if (a > 0) { const g = X.createLinearGradient(0, 100, 0, 620); g.addColorStop(0, 'rgba(8,12,28,0)'); g.addColorStop(.3, 'rgba(8,12,28,.55)'); g.addColorStop(.6, 'rgba(8,12,28,.35)'); g.addColorStop(1, 'rgba(8,12,28,0)'); X.save(); X.globalAlpha = a; X.fillStyle = g; X.fillRect(0, 100, 1080, 520); X.restore(); } }
+    { const a = U.clamp((t - 4.15) / .3) * (1 - U.prog(t, 5.4, 5.65)); if (a > 0) { const g = X.createLinearGradient(0, 150, 0, 560); g.addColorStop(0, 'rgba(8,12,28,0)'); g.addColorStop(.3, 'rgba(8,12,28,.72)'); g.addColorStop(.7, 'rgba(8,12,28,.6)'); g.addColorStop(1, 'rgba(8,12,28,0)'); X.save(); X.globalAlpha = a; X.fillStyle = g; X.fillRect(0, 150, 1080, 410); X.restore(); } }
     // location tag "Mekke"
     {
       const e = ui.env(t, .12, 4.25, .45, 'pop'); if (e.o > 0) {
         X.save(); X.globalAlpha = e.o; X.translate(540, 300); X.scale(e.s, e.s);
         X.font = ui.font(76, 900, 'Nunito'); if ('letterSpacing' in X) X.letterSpacing = '6px'; const tw = X.measureText('Mekke').width; const W = tw + 150;
-        X.fillStyle = 'rgba(14,20,40,.72)'; X.shadowColor = 'rgba(0,0,0,.4)'; X.shadowBlur = 24; X.shadowOffsetY = 8; ui.rrect(-W / 2, -56, W, 112, 56); X.fill(); X.shadowColor = 'transparent';
+        X.fillStyle = 'rgba(14,20,40,.78)'; X.shadowColor = 'rgba(0,0,0,.4)'; X.shadowBlur = 24; X.shadowOffsetY = 8; ui.rrect(-W / 2, -56, W, 112, 56); X.fill(); X.shadowColor = 'transparent';
         const ix = -W / 2 + 62; X.fillStyle = '#ff5a4e'; X.beginPath(); X.moveTo(ix, 26); X.bezierCurveTo(ix - 8, 12, ix - 20, 4, ix - 20, -10); X.arc(ix, -10, 20, Math.PI, 0); X.bezierCurveTo(ix + 20, 4, ix + 8, 12, ix, 26); X.fill(); X.fillStyle = '#fff1e0'; X.beginPath(); X.arc(ix, -10, 7.5, 0, Math.PI * 2); X.fill();
         X.fillStyle = '#fff4dc'; X.textAlign = 'left'; X.textBaseline = 'middle'; X.fillText('Mekke', -W / 2 + 104, 4);
         X.restore();
@@ -489,18 +529,34 @@ export default {
       const e = ui.env(t, .55, 2.5, .45, 'fade');
       if (kz < 1 && e.o > 0) {
         const rr = Math.max(26, Math.hypot(ex - kx, ey - ky)) * (.85 + .15 * U.ease.outBack(e.a)); const p = U.ease.outCubic(U.clamp((t - .55) / .45));
-        X.save(); X.globalAlpha = e.o; X.strokeStyle = 'rgba(255,244,220,.9)'; X.lineWidth = 3.5; X.shadowColor = 'rgba(0,0,0,.4)'; X.shadowBlur = 8;
-        X.beginPath(); X.arc(kx, ky, rr, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p); X.stroke();
-        const sx = kx + rr * .707, sy = ky - rr * .707, tx = kx + 170, ty = ky - 160; X.beginPath(); X.moveTo(sx, sy); X.lineTo(sx + (tx - sx) * p, sy + (ty - sy) * p); X.stroke(); X.restore();
-        if (p > .6) ui.pill('Kâbe', { t, t0: .8, t1: 2.5, x: tx + 20, y: ty - 10, size: 40, weight: 800, bg: 'rgba(14,20,40,.78)', color: '#fff4dc' });
+        const tx = U.clamp(kx + 170, 160, 900), ty = Math.max(420, ky - 160);
+        X.save(); X.globalAlpha = e.o; X.lineCap = 'round';
+        for (const [w, c2] of [[7, 'rgba(10,14,30,.45)'], [3.5, 'rgba(255,244,220,.95)']]) { X.strokeStyle = c2; X.lineWidth = w;
+          X.beginPath(); X.arc(kx, ky, rr, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p); X.stroke();
+          const sx = kx + rr * .707, sy = ky - rr * .707; X.beginPath(); X.moveTo(sx, sy); X.lineTo(sx + (tx - sx) * p, sy + (ty - sy) * p); X.stroke(); }
+        X.restore();
+        if (p > .6) ui.pill('Kâbe', { t, t0: .8, t1: 2.5, x: tx + 20, y: ty - 10, size: 42, weight: 800, bg: 'rgba(14,20,40,.82)', color: '#fff4dc' });
       }
     }
-    // "müşrikler" label on a red-dot house near the middle of the frame
-    if (R.mlabel && t > 2.3) { const [hx, hy] = ui.project(R.mlabel.top); ui.callout('müşrikler', { t, t0: 2.42, t1: 4.25, anchor: [hx, hy], to: [U.clamp(hx - 120, 250, 800), Math.max(255, hy - 175)], size: 44, weight: 900, bg: '#e2463c', color: '#fff4ec', dotColor: '#ff4d43', lineColor: 'rgba(255,240,228,.95)' }); }
-    // "emanetler" label riding on a lantern
-    if (t > 2.95) { const lp = R.lead.pos; const [lx, ly, lz] = ui.project(lp); if (lz < 1) ui.callout('emanetler', { t, t0: 3.02, t1: 4.45, anchor: [lx, ly], to: [U.clamp(lx + 190, 260, 820), U.clamp(ly - 190, 520, 1250)], size: 44, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ffd88f', lineColor: 'rgba(255,226,160,.95)' }); }
-    // "o kadar kişi arasından" — many houses vs one door
-    ui.text('o kadar kişi', { t, t0: 4.28, t1: 5.62, x: 540, y: 330, size: 82, weight: 900, color: '#fff4dc', anim: 'rise' });
-    ui.text('arasından…', { t, t0: 4.62, t1: 5.62, x: 540, y: 420, size: 62, weight: 800, color: '#ffd27a', anim: 'rise' });
+    // "müşrikler" label on a red-dot house; kept clear of the Mekke tag (y 244..356)
+    let mPos = null;
+    if (R.mlabel && t > 2.3) { const [hx, hy] = ui.project(R.mlabel.top); mPos = [U.clamp(hx - 110, 200, 880), U.clamp(hy - 170, 450, 1250)]; ui.callout('müşrikler', { t, t0: 2.42, t1: 4.25, anchor: [hx, hy], to: mPos, size: 46, weight: 900, bg: '#e2463c', color: '#fff4ec', dotColor: '#ff4d43', lineColor: 'rgba(255,240,228,.95)' }); }
+    // "emanetler" label riding on a lantern (never on top of the müşrikler pill)
+    if (t > 2.95) { const lp = R.lead.pos; const [lx, ly, lz] = ui.project(lp); let to = [U.clamp(lx + 190, 230, 850), U.clamp(ly - 190, 520, 1250)];
+      if (mPos && t < 4.25 && Math.abs(to[1] - mPos[1]) < 110 && Math.abs(to[0] - mPos[0]) < 360) to[1] = mPos[1] + (to[1] >= mPos[1] ? 115 : -115);
+      if (lz < 1) ui.callout('emanetler', { t, t0: 3.02, t1: 4.45, anchor: [lx, ly], to, size: 46, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ffd88f', lineColor: 'rgba(255,226,160,.95)' }); }
+    // "o kadar kişi" — many houses vs one door
+    ui.text('o kadar kişi', { t, t0: 4.28, t1: 5.62, x: 540, y: 330, size: 84, weight: 900, color: '#fff4dc', anim: 'rise', shadowBlur: 22, shadowColor: 'rgba(4,6,18,.9)' });
+    ui.text('arasından…', { t, t0: 4.62, t1: 5.62, x: 540, y: 424, size: 64, weight: 800, color: '#ffd27a', anim: 'rise', shadowBlur: 20, shadowColor: 'rgba(4,6,18,.9)' });
   },
 };
+
+// pre-rendered overlay sprites (drawn with drawImage: crisp, cheap, identical every frame)
+function makeSprites() {
+  const mk = (sz, draw) => { const c = document.createElement('canvas'); c.width = c.height = sz; draw(c.getContext('2d'), sz); return c; };
+  const red = mk(32, (x, S) => { x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = 3; x.shadowOffsetY = 1.5; x.beginPath(); x.arc(S / 2, S / 2, 11, 0, Math.PI * 2); x.fillStyle = '#ff4d43'; x.fill(); x.shadowColor = 'transparent'; x.lineWidth = 2.8; x.strokeStyle = '#fff0e4'; x.stroke(); });
+  const dot = mk(32, (x, S) => { x.beginPath(); x.arc(S / 2, S / 2, 9.5, 0, Math.PI * 2); x.fillStyle = 'rgba(40,20,0,.55)'; x.fill(); x.beginPath(); x.arc(S / 2, S / 2, 7, 0, Math.PI * 2); x.fillStyle = '#ffdc96'; x.fill(); });
+  return { red, dot };
+}
+
+function ui_rr(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }

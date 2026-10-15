@@ -67,11 +67,12 @@ if (opt.video) {
   const to = opt.to !== undefined ? +opt.to : dur + Math.min(handle, timeline.audioDuration - info.end);
   const n = Math.round((to - from) * fps);
   const outFile = path.join(ROOT, opt.out ?? `out/clips/${info.id}.mp4`); fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  const ow = Math.round(W * (opt.out ? Math.min(1, scale) : 1) / 2) * 2, oh = Math.round(H * (opt.out ? Math.min(1, scale) : 1) / 2) * 2;
-  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-', '-vf', `scale=${ow}:${oh}:flags=lanczos`, '-c:v', 'libx264', '-preset', opt.out ? 'veryfast' : 'slow', '-crf', opt.out ? '23' : '14', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', outFile], { stdio: ['pipe', 'inherit', 'inherit'] });
+  const finalQ = !opt.out || opt.final;
+  const ow = Math.round(W * (finalQ ? 1 : Math.min(1, scale)) / 2) * 2, oh = Math.round(H * (finalQ ? 1 : Math.min(1, scale)) / 2) * 2;
+  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-', '-vf', `scale=${ow}:${oh}:flags=lanczos`, '-c:v', 'libx264', '-preset', finalQ ? 'slow' : 'veryfast', '-crf', finalQ ? '12' : '23', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', outFile], { stdio: ['pipe', 'inherit', 'inherit'] });
   const tStart = Date.now();
   for (let i = 0; i < n; i++) {
-    const t = from + i / fps; const buf = await grab(t, +(opt.quality ?? (opt.out ? 0.85 : 0.95)));
+    const t = from + i / fps; const buf = await grab(t, +(opt.quality ?? (finalQ ? 0.96 : 0.85)));
     if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));
     if (i % 15 === 0 || i === n - 1) { const el = (Date.now() - tStart) / 1000; process.stdout.write(`  frame ${i + 1}/${n} t=${t.toFixed(2)} ${(el / (i + 1) * 1000).toFixed(0)}ms/f eta ${((n - i - 1) * el / (i + 1) / 60).toFixed(1)}min\n`); }
   }

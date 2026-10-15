@@ -63,6 +63,26 @@ export function archPath(a, sill, y0, Rf = 1.6, n = 14, P = new THREE.Path()) {
 }
 
 // ---------------------------------------------------------------- materials
+// Clamp the HDR output of every lit material in a subtree. Near-mirror glass / water / clearcoat lit by point & spot lights
+// produced specular peaks above the half-float range (Inf) which the bloom pass smeared into square blocks.
+export function clampHDR(root, max = 12) {
+  const done = new Set();
+  root.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+    ms.forEach(m => { if (!m || done.has(m) || !(m.isMeshStandardMaterial || m.isMeshLambertMaterial || m.isMeshPhongMaterial)) return; done.add(m);
+      const prev = m.onBeforeCompile, ck = m.customProgramCacheKey;
+      m.onBeforeCompile = (s, r) => { prev && prev.call(m, s, r);
+        s.fragmentShader = s.fragmentShader.replace('#include <opaque_fragment>', `outgoingLight = min(outgoingLight, vec3(${max.toFixed(1)}));\n#include <opaque_fragment>`)
+          .replace('gl_FragColor = vec4(outgoingLight,', `gl_FragColor = vec4(min(outgoingLight, vec3(${max.toFixed(1)})),`); };
+      m.customProgramCacheKey = () => (ck ? ck.call(m) : '') + '|hdr' + max; m.needsUpdate = true; }); });
+}
+// Box-projected UVs (meters * k) so stone textures keep their scale on thin mouldings (RoundedBox UVs squash per face).
+export function boxUV(g, k = 1.6) {
+  const p = g.attributes.position, n = g.attributes.normal, uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) { const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i)); const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    let u, v; if (ay >= ax && ay >= az) { u = x; v = z; } else if (ax >= az) { u = z + .37; v = y; } else { u = x + .71; v = y; }
+    uv[i * 2] = u * k; uv[i * 2 + 1] = v * k; }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); return g;
+}
 export function phys(o) { return new THREE.MeshPhysicalMaterial(o); }
 // Cheap stylised glass: thin tinted transparency + fresnel rim + reflections boost alpha (no transmission pass).
 export function fakeGlass(o = {}) {
@@ -144,6 +164,7 @@ export function pedestalGeos(seg = 3) { // stone plinth (merged) + felt top pad;
     rbox(.40, .70, .40, .03, seg).translate(0, .51, 0), rbox(.46, .04, .46, .015, seg).translate(0, .875, 0),
     rbox(.53, .1, .53, .03, seg).translate(0, .945, 0),
   ]);
+  boxUV(stone, 1.6);
   const pad = rbox(.47, .02, .47, .009, Math.min(seg, 2)).translate(0, 1.0, 0);
   return { stone, pad, top: 1.01 };
 }
@@ -363,8 +384,8 @@ export function wheat() {
 // ---------------------------------------------------------------- shared rose head (fresh or dried)
 export function roseHead(o = {}) {
   const g = new THREE.Group(); const R = rng(o.seed ?? 77); const S = o.size ?? 1; const dried = !!o.dried;
-  const petalTex = ctex(dried ? 'petalD' : 'petal', 64, 128, (x, W, H) => { const gr = x.createLinearGradient(0, H, 0, 0); if (dried) { gr.addColorStop(0, '#5a1a22'); gr.addColorStop(.6, '#8e3a40'); gr.addColorStop(1, '#a8645a'); } else { gr.addColorStop(0, '#6e0716'); gr.addColorStop(.45, '#b3122a'); gr.addColorStop(1, '#d8283d'); } x.fillStyle = gr; x.fillRect(0, 0, W, H); const e = x.createLinearGradient(0, 0, W, 0); e.addColorStop(0, 'rgba(60,0,10,.35)'); e.addColorStop(.2, 'rgba(0,0,0,0)'); e.addColorStop(.8, 'rgba(0,0,0,0)'); e.addColorStop(1, 'rgba(60,0,10,.35)'); x.fillStyle = e; x.fillRect(0, 0, W, H); });
-  const mat = new THREE.MeshPhysicalMaterial({ map: petalTex, roughness: dried ? .8 : .5, sheen: 1, sheenColor: new THREE.Color(dried ? '#a0606a' : '#ff8090'), sheenRoughness: .4, side: THREE.DoubleSide });
+  const petalTex = ctex(dried ? 'petalD' : 'petal', 64, 128, (x, W, H) => { const gr = x.createLinearGradient(0, H, 0, 0); if (dried) { gr.addColorStop(0, '#6e2a36'); gr.addColorStop(.55, '#a65866'); gr.addColorStop(1, '#d09a8e'); } else { gr.addColorStop(0, '#6e0716'); gr.addColorStop(.45, '#b3122a'); gr.addColorStop(1, '#d8283d'); } x.fillStyle = gr; x.fillRect(0, 0, W, H); const e = x.createLinearGradient(0, 0, W, 0); e.addColorStop(0, 'rgba(60,0,10,.35)'); e.addColorStop(.2, 'rgba(0,0,0,0)'); e.addColorStop(.8, 'rgba(0,0,0,0)'); e.addColorStop(1, 'rgba(60,0,10,.35)'); x.fillStyle = e; x.fillRect(0, 0, W, H); });
+  const mat = new THREE.MeshPhysicalMaterial({ map: petalTex, roughness: dried ? .75 : .5, sheen: 1, sheenColor: new THREE.Color(dried ? '#f0b8b0' : '#ff8090'), sheenRoughness: .4, side: THREE.DoubleSide });
   const outer = new THREE.Group(); g.add(outer);
   const petal = (w, h, cup, curl) => surface((u, v) => { const uu = u * 2 - 1; const wid = w * Math.pow(Math.sin(PI * (.12 + .88 * v)), .55) * (v > .85 ? 1 - (v - .85) * 1.2 : 1); const z = cup * (1 - uu * uu) * Math.sin(PI * v * .9) + curl * Math.pow(smoothstep(.55, 1, v), 2) * (1 - .3 * uu * uu); return [uu * wid, v * h - curl * .3 * Math.pow(smoothstep(.6, 1, v), 2), z]; }, 10, 8);
   const layers = [[5, .018, .052, .006, 0, .05], [6, .026, .056, .009, .003, .3], [7, .032, .056, .01, .008, .62], [7, .036, .05, .008, .016, .95]];
@@ -406,7 +427,7 @@ export function letters() {
   const seal = M(latheGeo([[0, 0], [.02, 0], [.022, .002], [.019, .005], [.012, .006], [0, .0062]], 20), new THREE.MeshPhysicalMaterial({ color: '#8e1d1d', roughness: .35, clearcoat: .6 })); seal.rotation.x = PI / 2; seal.position.set(-.055, -.025, zf + .001); stack.add(seal);
   // dried rose tucked under the twine
   const rose = new THREE.Group(); rose.position.set(-.075, .045, zf + .02); rose.rotation.set(.0, 0, .9); stack.add(rose);
-  const head = roseHead({ dried: true, size: .85, seed: 12 }); head.rotation.x = -PI / 2 + .25; head.position.set(0, .0, .01); rose.add(head);
+  const head = roseHead({ dried: true, size: 1.0, seed: 12 }); head.rotation.x = -PI / 2 + .25; head.position.set(0, .0, .01); rose.add(head);
   const stemMat = new THREE.MeshStandardMaterial({ color: '#5a5032', roughness: .8 });
   rose.add(M(tube([V(0, -.01, .006), V(.0, -.07, .003), V(.004, -.13, .0), V(.01, -.19, .001)], u => .0028 * (1 - .3 * u), 12, 5), stemMat));
   const leaf = M(surface((u, v) => { const uu = u * 2 - 1; const w = .011 * Math.sin(PI * v); return [uu * w, -v * .04, Math.abs(uu) * w * .5 + Math.sin(v * 5) * .002]; }, 6, 8), new THREE.MeshStandardMaterial({ color: '#6a6236', roughness: .8, side: THREE.DoubleSide })); leaf.position.set(.004, -.09, .004); leaf.rotation.z = .9; rose.add(leaf);
@@ -427,18 +448,20 @@ export function cesme() {
   const spout = M(latheGeo([[.018, 0], [.019, .012], [.0135, .022], [.0125, .12], [.0105, .145], [.012, .152], [.008, .154]], 20), brass); spout.quaternion.setFromUnitVectors(V(0, 1, 0), dirS); spout.position.copy(sBase); g.add(spout);
   const mouth = sBase.clone().addScaledVector(dirS, .152).add(V(0, -.008, 0));
   // natural rock with a smooth hollow worn by the drops
-  const rg = mergeVertices(new THREE.IcosahedronGeometry(1, 4).deleteAttribute('uv').deleteAttribute('normal')); { const p = rg.attributes.position; const top = .1, hb = .062, hd = .034;
-    for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const n = Math.sin(x * 3.1 + 1) * Math.sin(y * 2.7 + 2) * .09 + Math.sin(z * 5.3 + x * 4.1) * .05 + Math.sin(x * 9 + z * 7) * .02;
-      x *= .15 * (1 + n); z *= .125 * (1 + n); y = y < 0 ? y * .03 : y * top * (1 + n * .6); const r = Math.hypot(x - .01, z);
+  const rg = mergeVertices(new THREE.IcosahedronGeometry(1, 5).deleteAttribute('uv').deleteAttribute('normal')); { const p = rg.attributes.position; const top = .1, hb = .062, hd = .034;
+    const se = (v, e) => Math.sign(v) * Math.pow(Math.abs(v), e); // superellipse: sphere -> rounded block (a worn stone, not a blob)
+    for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const n = Math.sin(x * 3.1 + 1) * Math.sin(y * 2.7 + 2) * .035 + Math.sin(z * 5.3 + x * 4.1) * .025 + Math.sin(x * 13 + z * 11 + y * 7) * .012 + Math.sin(x * 29 - z * 23) * .005;
+      x = se(x, .42); z = se(z, .42); y = se(y, .5); x *= .155 * (1 + n) * (1 - .12 * Math.max(0, y)); z *= .13 * (1 + n) * (1 - .12 * Math.max(0, y)); y = y < 0 ? y * .02 : y * top * (1 + n * .5); const r = Math.hypot(x - .01, z);
       if (r < hb * 1.15) { const yb = top * .93 - hd * Math.max(0, 1 - (r / hb) ** 2); y = Math.min(y, yb + Math.max(0, r - hb) * .4); }
       p.setXYZ(i, x, y, z); } rg.computeVertexNormals(); const uvs = []; for (let i = 0; i < p.count; i++) uvs.push(p.getX(i) * 4 + .5, p.getZ(i) * 4 + p.getY(i) * 3); rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); }
-  const rt = TEX.stone({ a: '#a7a196', b: '#6e685e', seed: 29 });
-  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: rt.map, normalMap: rt.normalMap, normalScale: V2(1.2, 1.2), roughness: .7, clearcoat: .35, clearcoatRoughness: .4 }));
+  const rt = TEX.stone({ a: '#b9b4aa', b: '#77736b', seed: 29 });
+  const gran = speckleTex('granite', '#c9c4ba', '#3e3a34', 2600, 31, 256, 256);
+  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: gran, normalMap: rt.normalMap, normalScale: V2(1.0, 1.0), roughness: .62, clearcoat: .3, clearcoatRoughness: .45, color: '#d8d4cc' }));
   rock.position.set(mouth.x - .01, 0, mouth.z); g.add(rock);
   const surfY = .081;
   const ws = waterSurface({ color: '#3a7a80', opacity: .82, amb: .00015 });
   const water = M(new THREE.CircleGeometry(.046, 36).rotateX(-PI / 2), ws, false, true); water.position.set(mouth.x, surfY, mouth.z); g.add(water);
-  const moss = M(merge([0, 1, 2, 3, 4, 5].map(i => new THREE.SphereGeometry(.011 + R() * .009, 7, 5).scale(1.5, .45, 1.2).translate(P0.x + Math.cos(i * 1.1 + .5) * .085, .004, P0.z + Math.sin(i * 1.1 + .5) * .085))), new THREE.MeshStandardMaterial({ color: '#6a8a3e', roughness: 1 })); g.add(moss);
+  const moss = M(merge([0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => new THREE.SphereGeometry(.006 + R() * .006, 7, 5).scale(1.6, .32, 1.2).translate(P0.x + Math.cos(i * .62 + 2.2) * (.072 + R() * .006), .003, P0.z + Math.sin(i * .62 + 2.2) * (.072 + R() * .006)))), new THREE.MeshStandardMaterial({ color: '#4d6630', roughness: 1 })); g.add(moss);
   const dropMat = fakeGlass({ color: '#a8dce4', opacity: .4, rim: .9, gain: 1.2 });
   const dropGeo = latheGeo([[0, -.012], [.006, -.0095], [.0085, -.005], [.008, 0], [.0045, .006], [0, .011]], 16);
   const drop = M(dropGeo.clone().scale(1.4, 1.4, 1.4), dropMat, false, false); drop.renderOrder = 6; drop.userData.depthOk = true; g.add(drop);
@@ -448,7 +471,7 @@ export function cesme() {
   g.userData.anim = (tau) => {
     ws.userData.u.uT.value = tau;
     const P = 1.05, off = .12; const kNow = Math.floor((tau - off) / P); const lastLand = off + kNow * P, nextLand = lastLand + P;
-    ws.userData.u.uImp.value[0].set(0, 0, lastLand, .0022); ws.userData.u.uImp.value[1].set(0, 0, lastLand - P, .0022);
+    ws.userData.u.uImp.value[0].set(0, 0, lastLand, .0034); ws.userData.u.uImp.value[1].set(0, 0, lastLand - P, .0034);
     const tf = nextLand - tau;
     if (tf > fallT) { const grow = clamp(1 - (tf - fallT) / (P - fallT - .05)); drop.position.copy(mouth).add(V(0, -.01 * grow, 0)); drop.scale.set(.45 + .55 * grow, .35 + .75 * grow, .45 + .55 * grow); }
     else { const s = fallT - tf; drop.position.set(mouth.x, mouth.y - .01 - 4.905 * s * s, mouth.z); drop.scale.set(.85, 1.3, .85); }
@@ -461,9 +484,9 @@ export function cesme() {
 export function shoes() {
   const g = new THREE.Group();
   const lime = MAT.stone({ a: '#e2d4b8', b: '#b9a684', seed: 23 });
-  const step = M(rbox(.46, .055, .15, .012), lime); step.position.set(0, .0275, -.155); g.add(step);
+  const step = M(rbox(.38, .055, .14, .012), lime); step.position.set(0, .0275, -.15); g.add(step);
   const matTex = ctex('reedmat', 256, 256, (x, W, H) => { x.fillStyle = '#c6a46a'; x.fillRect(0, 0, W, H); for (let i = 0; i < H; i += 8) { x.fillStyle = (i / 8) % 2 ? '#b08c52' : '#d4b67c'; x.fillRect(0, i, W, 6); } for (let j = 0; j < W; j += 64) { x.fillStyle = '#7e3a2a'; x.fillRect(j + 28, 0, 6, H); } });
-  const mat = M(rbox(.44, .01, .28, .004), new THREE.MeshStandardMaterial({ map: matTex, roughness: .95 })); mat.position.set(0, .005, .065); g.add(mat);
+  const mat = M(rbox(.40, .01, .26, .004), new THREE.MeshStandardMaterial({ map: matTex, roughness: .95 })); mat.position.set(0, .005, .06); g.add(mat);
   const L = .25;
   const hw = u => { const heel = Math.sqrt(Math.max(0, 1 - Math.pow(1 - Math.min(u / .14, 1), 2))); const body = .036 + .011 * Math.sin(PI * Math.min(u / .8, 1) * .9); const toe = u > .76 ? Math.pow(Math.max(0, 1 - Math.pow((u - .76) / .24, 1.6)), .5) : 1; return Math.max(body * heel * toe, 1e-4); };
   const soleShape = new THREE.Shape(); const n = 40;
@@ -556,8 +579,8 @@ export function dates() {
   const plateTex = ctex('plate', 64, 256, (x, W, H) => { x.fillStyle = '#efe0bd'; x.fillRect(0, 0, W, H); const band = (v0, v1, c) => { x.fillStyle = c; x.fillRect(0, (1 - v1) * H, W, (v1 - v0) * H); }; band(0, .46, '#a8653a'); band(.46, .64, '#7a4426'); band(.64, .82, '#2f7a5a'); band(.82, .84, '#7a4426'); band(.93, .945, '#2f7a5a'); });
   const plate = M(latheGeo([[0, 0], [.1, 0], [.118, .004], [.138, .018], [.15, .028], [.147, .032], [.133, .025], [.108, .014], [0, .013]], 48), new THREE.MeshPhysicalMaterial({ map: plateTex, roughness: .3, clearcoat: .8, clearcoatRoughness: .2 }));
   g.add(plate);
-  const lt = TEX.leather({ a: '#6a2c12', b: '#3a1407', seed: 29 });
-  const dateMat = new THREE.MeshPhysicalMaterial({ map: lt.map, normalMap: lt.normalMap, normalScale: V2(1.2, 1.2), roughness: .35, clearcoat: .8, clearcoatRoughness: .25, color: '#ffd8c0' });
+  const lt = TEX.leather({ a: '#9a4a1a', b: '#5a220c', seed: 29 });
+  const dateMat = new THREE.MeshPhysicalMaterial({ map: lt.map, normalMap: lt.normalMap, normalScale: V2(1.6, 1.6), roughness: .38, clearcoat: .7, clearcoatRoughness: .3, color: '#ffffff', sheen: .6, sheenColor: new THREE.Color('#ffb070') });
   const dGeo = latheGeo([...Array(13)].map((_, k) => { const t = k / 12 * 2 - 1; return [.0155 * Math.sqrt(Math.max(0, 1 - t * t)) * (1 + .06 * Math.sin(t * 3)), (t * .5 + .5) * .05]; }), 20);
   [[-.06, .02, .3, 0], [-.035, .055, -.5, 0], [-.07, -.03, 1.4, 0], [-.02, -.01, .9, 0], [-.045, .01, -.2, .022], [.01, .065, .2, 0]].forEach(([x, z, ry, y]) => { const d = M(dGeo, dateMat); d.rotation.set(0, ry, PI / 2 + (R() - .5) * .2); d.position.set(x, .028 + y, z); g.add(d); });
   const clay = MAT.clay({ a: '#c4784a', b: '#9a5432', seed: 37 });
@@ -598,7 +621,7 @@ export function bread() {
 
 // ---------------------------------------------------------------- 14 YARDIMSEVERLİK: clay jug on a pouring cradle, water stream into a bowl
 export function jugPour() {
-  const g = new THREE.Group();
+  const root = new THREE.Group(); const g = new THREE.Group(); g.position.x = -.017; g.scale.setScalar(.87); root.add(g); // scaled + centred so the base board sits fully on the felt pad
   const wood = MAT.wood({ a: '#8a5a32', b: '#5a3418', rings: 12, seed: 141, clearcoat: .2 });
   const clay = MAT.clay({ a: '#c97a48', b: '#97502e', seed: 43 }); const clay2 = MAT.clay({ a: '#b8693e', b: '#82442a', seed: 47 });
   g.add(M(rbox(.5, .024, .2, .008).translate(.02, .012, 0), wood));
@@ -634,7 +657,8 @@ export function jugPour() {
     foam.scale.setScalar(1 + .15 * Math.sin(t * 13)); foam.material.opacity = .25 + .2 * lit;
     spl.forEach((s, i) => { const per = .42, sa = ((t + i * .061) % per); const a = i * 2.4; s.position.set(land.x + Math.cos(a) * sa * .1, yEnd + .5 * sa - 4.9 * sa * sa, Math.sin(a) * sa * .1); s.visible = s.position.y > yEnd; s.scale.setScalar(1 - sa / per * .6); });
   };
-  return g;
+  root.userData = g.userData;
+  return root;
 }
 
 // ---------------------------------------------------------------- generic far-gallery exhibits (for instancing)
@@ -644,6 +668,101 @@ export function genericGeos() {
     merge([latheGeo([[0, 0], [.06, 0], [.1, .03], [.11, .06], [0, .06]], 14), new THREE.SphereGeometry(.035, 8, 6).translate(-.03, .07, 0), new THREE.SphereGeometry(.033, 8, 6).translate(.03, .07, .01), new THREE.SphereGeometry(.03, 8, 6).translate(0, .1, -.01)]), // bowl of fruit
     merge([rbox(.2, .04, .15, .01).translate(0, .02, 0), rbox(.18, .035, .14, .01).translate(.01, .058, 0), rbox(.17, .03, .13, .01).translate(-.005, .09, 0)]), // books
     latheGeo([[0, 0], [.06, 0], [.08, .05], [.075, .12], [.045, .16], [.05, .18], [.025, .2], [.012, .22], [0, .225]], 14), // lidded jar
-    merge([latheGeo([[0, 0], [.05, 0], [.065, .1], [0, .1]], 12), new THREE.SphereGeometry(.09, 10, 8).scale(1, .8, 1).translate(0, .17, 0)]), // potted shrub
+    latheGeo([[0, 0], [.045, 0], [.05, .012], [.04, .03], [.07, .07], [.075, .11], [.055, .15], [.028, .18], [.024, .23], [.034, .25], [.03, .26], [.012, .28], [.006, .3], [0, .305]], 14), // ewer (ibrik)
   ];
+}
+
+// ---------------------------------------------------------------- 12 HOŞGÖRÜ: a broad plane tree (çınar) in the sunlit courtyard garden
+// Leaf cards (alpha-tested, instanced) with canopy-shaped normals (soft volumetric shading) and sun-through-leaf translucency.
+function leafTex() {
+  return ctex('planeLeaves', 256, 256, (x, W, H) => {
+    x.clearRect(0, 0, W, H); const R = rng(212);
+    const leaf = (cx, cy, L, rot, c1, c2) => {
+      x.save(); x.translate(cx, cy); x.rotate(rot); x.beginPath();
+      for (let i = 0; i <= 60; i++) { const th = -PI / 2 + (i / 60 - .5) * PI * 1.62; const lob = Math.pow(Math.max(0, Math.cos(2.5 * (th + PI / 2))), 2.2); const r = L * (.42 + .58 * lob) * (1 - .25 * Math.abs(i / 60 - .5)); const px = Math.cos(th) * r, py = Math.sin(th) * r; i ? x.lineTo(px, py) : x.moveTo(px, py); }
+      x.lineTo(0, L * .12); x.closePath(); const gr = x.createLinearGradient(0, -L, 0, L * .2); gr.addColorStop(0, c1); gr.addColorStop(1, c2); x.fillStyle = gr; x.fill();
+      x.strokeStyle = 'rgba(40,60,20,.45)'; x.lineWidth = 1.4; for (const a of [-1.15, -.55, 0, .55, 1.15]) { x.beginPath(); x.moveTo(0, L * .08); x.lineTo(Math.sin(a) * L * .78, -Math.cos(a) * L * .78); x.stroke(); }
+      x.strokeStyle = 'rgba(70,90,30,.9)'; x.lineWidth = 2.2; x.beginPath(); x.moveTo(0, L * .1); x.lineTo(0, L * .45); x.stroke(); x.restore(); };
+    const cols = [['#9cc24a', '#5f8a2a'], ['#86b03e', '#4e7a24'], ['#a9c95a', '#6a9030'], ['#7aa236', '#46701e'], ['#b4cf66', '#78993a']];
+    for (let k = 0; k < 9; k++) { const c = cols[k % cols.length]; leaf(40 + R() * 176, 46 + R() * 170, 34 + R() * 20, (R() - .5) * 2.6, c[0], c[1]); }
+  });
+}
+function barkTex() {
+  return ctex('planeBark', 256, 512, (x, W, H) => { const R = rng(77); x.fillStyle = '#8f8a6a'; x.fillRect(0, 0, W, H);
+    const blob = (cx, cy, r, c) => { x.fillStyle = c; x.beginPath(); for (let i = 0; i <= 14; i++) { const a = i / 14 * PI * 2, rr = r * (.7 + R() * .5); x.lineTo(cx + Math.cos(a) * rr * 1.3, cy + Math.sin(a) * rr * .8); } x.closePath(); x.fill(); };
+    for (let i = 0; i < 140; i++) blob(R() * W, R() * H, 8 + R() * 26, ['#c9c39c', '#b0aa82', '#6f6c50', '#a29a72', '#d8d2b0', '#7d7a5c'][i % 6]);
+    for (let i = 0; i < 40; i++) { x.strokeStyle = 'rgba(60,55,40,.35)'; x.lineWidth = 1 + R() * 1.5; x.beginPath(); const yy = R() * H; x.moveTo(0, yy); x.bezierCurveTo(W * .3, yy + (R() - .5) * 20, W * .7, yy + (R() - .5) * 20, W, yy); x.stroke(); }
+  }, [1, 1]);
+}
+export function shadeTree(o = {}) {
+  const g = new THREE.Group(); const R = rng(o.seed ?? 5); const sunDir = (o.sunDir ?? V(-.25, .62, -.74)).clone().normalize();
+  const bark = new THREE.MeshStandardMaterial({ map: barkTex(), roughness: .85, color: '#e8e2cc' });
+  const wood = [];
+  const trunk = new THREE.CatmullRomCurve3([V(0, -.1, 0), V(.04, .9, .02), V(-.05, 1.8, .04), V(.02, 2.5, 0)]);
+  wood.push(tube(trunk, u => .25 + .16 * Math.exp(-u * 10), 20, 18));
+  for (let k = 0; k < 5; k++) { const a = k * 1.27 + .4, d = V(Math.cos(a), 0, Math.sin(a)); wood.push(tube([V(0, .45, 0).addScaledVector(d, .12), V(0, .18, 0).addScaledVector(d, .34), V(0, -.04, 0).addScaledVector(d, .62)], u => .13 * (1 - .75 * u) + .015, 8, 8)); }
+  const clusters = []; const canopyC = V(0, 3.9, 0); const UPK = o.up ?? .72;
+  const limbs = [[.3, 1.3, UPK], [2.0, 1.2, UPK * .95], [3.4, 1.35, UPK * 1.05], [4.9, 1.25, UPK * .9]];
+  limbs.forEach(([a, len, up], li) => {
+    const d = V(Math.cos(a), 0, Math.sin(a)); const p0 = V(0, 2.1 + li * .1, 0), p1 = p0.clone().addScaledVector(d, .55 * len).add(V(0, .8 * up, 0)), p2 = p0.clone().addScaledVector(d, 1.5 * len).add(V(0, 1.7 * up, 0)), p3 = p0.clone().addScaledVector(d, 2.3 * len).add(V(0, 2.2 * up, 0));
+    wood.push(tube([p0, p1, p2, p3], u => .16 * (1 - .7 * u) + .02, 14, 9));
+    clusters.push([p3, 1.15]);
+    for (let s = 0; s < 3; s++) { const b0 = new THREE.CatmullRomCurve3([p0, p1, p2, p3]).getPointAt(.35 + s * .2); const da = a + (s - 1) * .9 + (R() - .5) * .3; const dd = V(Math.cos(da), 0, Math.sin(da));
+      const e = b0.clone().addScaledVector(dd, 1.0 + R() * .5).add(V(0, .8 + R() * .6, 0)); wood.push(tube([b0, b0.clone().lerp(e, .5).add(V(0, .25, 0)), e], u => .06 * (1 - .6 * u) + .012, 8, 6)); clusters.push([e, .85 + R() * .3]); }
+  });
+  [[0, 5.3, 0, 1.4], [.9, 4.8, .8, 1.15], [-1.0, 4.9, -.6, 1.15], [-.6, 4.5, 1.1, 1.05], [1.1, 4.6, -1.0, 1.05], [0, 4.1, 0, 1.35], [1.7, 3.4, 1.2, .95], [-1.5, 3.3, 1.4, .95], [.3, 3.1, 2.0, .9], [2.2, 3.5, -.5, .9]].forEach(([x, y, z, r]) => clusters.push([V(x, y, z), r]));
+  g.add(M(merge(wood), bark));
+  // leaf cards
+  const per = o.cards ?? 170; const n = clusters.length * per; const card = new THREE.PlaneGeometry(.56, .56);
+  const im = new THREE.InstancedMesh(card, null, n); const aN = new Float32Array(n * 3); const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), col = new THREE.Color(); let k = 0;
+  im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3);
+  clusters.forEach(([c, r]) => { for (let i = 0; i < per; i++) {
+    const dir = V(R() - .5, R() - .5, R() - .5).normalize(); const rr = r * Math.pow(R(), .45); const p = c.clone().addScaledVector(dir, rr).multiply(V(1, .78, 1)).add(V(0, c.y * .22, 0));
+    if (p.y < 2.2) p.y = 2.2 + R() * .25;
+    e.set(R() * PI, R() * PI, R() * PI); q.setFromEuler(e); m4.compose(p, q, V(1, 1, 1).multiplyScalar(.8 + R() * .5)); im.setMatrixAt(k, m4);
+    const nl = p.clone().sub(c).normalize().multiplyScalar(.55).add(p.clone().sub(canopyC).normalize().multiplyScalar(.45)).normalize(); aN.set([nl.x, nl.y, nl.z], k * 3);
+    const v = .78 + R() * .34; col.setRGB(v * (.92 + R() * .12), v, v * (.85 + R() * .2)); im.setColorAt(k, col); k++; } });
+  card.setAttribute('aN', new THREE.InstancedBufferAttribute(aN, 3));
+  const U = { uSun: { value: sunDir }, uSunCol: { value: new THREE.Color(o.sunCol ?? '#ffd89a') }, uTrans: { value: o.trans ?? 1.3 } };
+  const leafMat = new THREE.MeshStandardMaterial({ map: leafTex(), alphaTest: .42, side: THREE.DoubleSide, roughness: .62, color: '#ffffff' });
+  leafMat.onBeforeCompile = s => { Object.assign(s.uniforms, U);
+    s.vertexShader = s.vertexShader.replace('#include <common>', '#include <common>\nattribute vec3 aN; varying float vOut;')
+      .replace('#include <defaultnormal_vertex>', 'vec3 transformedNormal = normalMatrix * aN; vOut = aN.y * .5 + .5;');
+    s.fragmentShader = s.fragmentShader.replace('#include <common>', '#include <common>\nuniform vec3 uSun, uSunCol; uniform float uTrans; varying float vOut;')
+      .replace('#include <normal_fragment_begin>', 'float faceDirection = 1.0; vec3 normal = normalize( vNormal ); vec3 nonPerturbedNormal = normal;')
+      .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+        { vec3 sv = normalize((viewMatrix * vec4(uSun, 0.)).xyz); float back = pow(clamp(dot(sv, -normalize(vViewPosition)) * .5 + .5, 0., 1.), 2.5);
+          float facing = clamp(dot(normal, sv) * .5 + .5, 0., 1.);
+          reflectedLight.directDiffuse += diffuseColor.rgb * vec3(1., .95, .55) * uSunCol * uTrans * (.3 + .7 * back) * (.45 + .55 * facing) * (.5 + .5 * vOut); }`);
+  };
+  leafMat.customProgramCacheKey = () => 'E_planeLeaf';
+  im.material = leafMat; im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); g.add(im);
+  g.userData.leafU = U; g.userData.leaves = im;
+  return g;
+}
+// Courtyard garden seen through the HOŞGÖRÜ door: grass, flagstone path, clay pots with geraniums, garden wall with cypresses.
+export function garden(o = {}) {
+  const g = new THREE.Group(); const R = rng(o.seed ?? 9);
+  const grass = ctex('grass2', 512, 512, (x, W, H) => { x.fillStyle = '#6d8a36'; x.fillRect(0, 0, W, H); const Rr = rng(3);
+    for (let i = 0; i < 70; i++) { x.fillStyle = `rgba(${90 + Rr() * 40 | 0},${110 + Rr() * 40 | 0},${40 + Rr() * 20 | 0},.35)`; x.beginPath(); x.arc(Rr() * W, Rr() * H, 20 + Rr() * 60, 0, PI * 2); x.fill(); }
+    for (let i = 0; i < 9000; i++) { const px = Rr() * W, py = Rr() * H, l = 4 + Rr() * 9; x.strokeStyle = ['#7f9c3e', '#5b7a2a', '#93ad4c', '#4f6c24', '#a3b85a'][i % 5]; x.globalAlpha = .55 + Rr() * .45; x.lineWidth = 1 + Rr(); x.beginPath(); x.moveTo(px, py); x.lineTo(px + (Rr() - .5) * 4, py - l); x.stroke(); }
+    x.globalAlpha = 1; }, [10, 10]);
+  const ground = M(new THREE.PlaneGeometry(28, 26).rotateX(-PI / 2), new THREE.MeshStandardMaterial({ map: grass, roughness: .95, color: '#d6dcc2' }), false, true); ground.position.set(0, .004, -14.2); g.add(ground);
+  // flagstone path from the threshold toward the tree
+  const flag = new THREE.MeshStandardMaterial({ color: '#d9cdb2', roughness: .85 }); const fl = [];
+  for (let z = -1.25, i = 0; z > -10; i++) { const w = .5 + R() * .18, d = .36 + R() * .14; for (const sx of [-1, 1]) { const ww = w * (.85 + R() * .2); fl.push(rbox(ww, .04, d, .02, 1).rotateY((R() - .5) * .16).translate(sx * (ww / 2 + .02) + (R() - .5) * .05, .02, z - d / 2)); } z -= d + .06; }
+  g.add(M(merge(fl), flag, false, true));
+  const clay = MAT.clay({ a: '#c97a48', b: '#97502e', seed: 51 }); const leafM = new THREE.MeshStandardMaterial({ color: '#4c7a2c', roughness: .8 }); const red = new THREE.MeshStandardMaterial({ color: '#e0332e', roughness: .55 });
+  const pot = (x, z, s) => { const p = new THREE.Group(); p.add(M(latheGeo([[0, 0], [.11, 0], [.14, .2], [.165, .23], [.15, .245], [.13, .23], [0, .22]], 24), clay));
+    const lg = [], fg = []; for (let i = 0; i < 26; i++) { const a = R() * PI * 2, r = R() * .15; lg.push(new THREE.SphereGeometry(.05 + R() * .03, 8, 6).scale(1, .6, 1).translate(Math.cos(a) * r, .26 + R() * .1, Math.sin(a) * r)); }
+    for (let i = 0; i < 9; i++) { const a = R() * PI * 2, r = R() * .12; fg.push(new THREE.SphereGeometry(.035 + R() * .015, 8, 6).translate(Math.cos(a) * r, .35 + R() * .08, Math.sin(a) * r)); }
+    p.add(M(merge(lg), leafM), M(merge(fg), red)); p.position.set(x, 0, z); p.scale.setScalar(s); g.add(p); };
+  (o.pots ?? [[.85, -2.9, 1], [-.75, -4.6, .9], [1.05, -6.4, 1.1]]).forEach(([x, z, s]) => pot(x, z, s));
+  // garden wall + coping + cypresses behind it
+  const plaster = MAT.plaster({ a: '#ecdcbc', b: '#cdb48a', seed: 61, repeat: [6, 1] });
+  const wall = M(rbox(30, 2.6, .5, .04, 1), plaster, true, true); wall.position.set(0, 1.3, -18.5); g.add(wall);
+  const cop = M(rbox(30.4, .12, .7, .03, 1), new THREE.MeshStandardMaterial({ color: '#b5603a', roughness: .7 }), true, true); cop.position.set(0, 2.66, -18.5); g.add(cop);
+  const cypG = new THREE.SphereGeometry(1, 12, 10).scale(.55, 2.4, .55).translate(0, 2.4, 0); const cypM = new THREE.MeshStandardMaterial({ color: '#3d5a2a', roughness: .9 });
+  for (let i = 0; i < 9; i++) { const c = M(cypG, cypM, true, true); c.position.set(-12 + i * 3 + R(), 0, -20.5 - R() * 1.5); c.scale.setScalar(.85 + R() * .35); g.add(c); }
+  return g;
 }

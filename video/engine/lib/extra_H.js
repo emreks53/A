@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { rng, clamp, lerp, smoothstep } from './util.js';
 import { rbox, MAT, shadowAll } from './models.js';
-import { softDot } from './textures.js';
+import { softDot, fbmField } from './textures.js';
 
 // ---------------------------------------------------------------------------------------------
 // Camera / animation: per-component monotone cubic (PCHIP) keyframe path. No overshoot, C1,
@@ -329,21 +329,21 @@ export function instances(geo, mat, list, { cast = true, receive = true } = {}) 
 }
 
 // Dust motes confined to a light beam (cylinder from A to B); alpha falls off radially.
-export function beamMotes({ from, to, radius = .5, count = 300, size = 6, color = '#ffe2b0', opacity = .8, seed = 9, speed = .03 } = {}) {
+export function beamMotes({ from, to, radius = .5, count = 300, size = 6, color = '#ffe2b0', opacity = .8, seed = 9, speed = .03, nearFade = 0 } = {}) {
   const A = new THREE.Vector3(...from), B = new THREE.Vector3(...to); const L = A.distanceTo(B); const R = rng(seed);
   const pos = new Float32Array(count * 3), rnd = new Float32Array(count * 4);
   for (let i = 0; i < count; i++) { const a = R() * 6.283, r = Math.sqrt(R()) * radius; pos[i * 3] = Math.cos(a) * r; pos[i * 3 + 1] = -R() * L; pos[i * 3 + 2] = Math.sin(a) * r; rnd[i * 4] = R(); rnd[i * 4 + 1] = R(); rnd[i * 4 + 2] = R(); rnd[i * 4 + 3] = R(); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('rnd', new THREE.BufferAttribute(rnd, 4));
-  const u = { time: { value: 0 }, map: { value: softDot(64, .1) }, color: { value: new THREE.Color(color) }, size: { value: size }, opacity: { value: opacity }, radius: { value: radius }, len: { value: L }, speed: { value: speed }, master: { value: 1 } };
+  const u = { time: { value: 0 }, map: { value: softDot(64, .1) }, color: { value: new THREE.Color(color) }, size: { value: size }, opacity: { value: opacity }, radius: { value: radius }, len: { value: L }, speed: { value: speed }, master: { value: 1 }, nearFade: { value: nearFade } };
   const m = new THREE.ShaderMaterial({
     uniforms: u, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    vertexShader: `uniform float time, size, radius, len, speed; attribute vec4 rnd; varying float vA;
+    vertexShader: `uniform float time, size, radius, len, speed, nearFade; attribute vec4 rnd; varying float vA;
       void main(){ vec3 p = position; p.x += sin(time * (.3 + rnd.x * .4) + rnd.y * 40.) * radius * .25; p.z += cos(time * (.25 + rnd.z * .4) + rnd.w * 40.) * radius * .25;
         p.y += sin(time * .2 + rnd.x * 30.) * .1 - time * speed * (.5 + rnd.y);
         p.y = -mod(-p.y, len);
         float rr = length(p.xz) / radius; float ends = smoothstep(0., len * .12, -p.y) * smoothstep(len, len * .7, -p.y);
         vA = (1. - smoothstep(.55, 1., rr)) * ends * (.45 + .55 * sin(time * (1. + rnd.w * 2.) + rnd.z * 20.) * .5 + .3);
-        vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = size * (.4 + rnd.y) * 10. / -mv.z; }`,
+        vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = size * (.4 + rnd.y) * 10. / -mv.z; if (nearFade > 0.) vA *= smoothstep(nearFade * .5, nearFade, -mv.z); }`,
     fragmentShader: `uniform sampler2D map; uniform vec3 color; uniform float opacity, master; varying float vA; void main(){ vec4 t = texture2D(map, gl_PointCoord); gl_FragColor = vec4(color, t.a * vA * opacity * master); }`,
   });
   const pts = new THREE.Points(g, m); pts.position.copy(A); pts.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), B.clone().sub(A).normalize());
@@ -445,11 +445,218 @@ export function grainWood({ a = '#a8703e', b = '#6e4220', seed = 3, streaks = 90
   x.fillStyle = `#${A.getHexString()}`; x.fillRect(0, 0, size, size);
   for (let i = 0; i < streaks; i++) {
     const col = A.clone().lerp(B, .25 + R() * .75); const w = 1 + R() * size / streaks * 1.6; let px = R() * size; const amp = 1 + R() * 4, fr = 1 + Math.floor(R() * 3);
-    x.strokeStyle = `rgba(${Math.round(col.r * 255)},${Math.round(col.g * 255)},${Math.round(col.b * 255)},${.08 + R() * .2})`; x.lineWidth = w;
+    const cs = col.getRGB({ r: 0, g: 0, b: 0 }, THREE.SRGBColorSpace); x.strokeStyle = `rgba(${Math.round(cs.r * 255)},${Math.round(cs.g * 255)},${Math.round(cs.b * 255)},${.1 + R() * .22})`; x.lineWidth = w;
     for (const off of [-size, 0, size]) { x.beginPath(); for (let y = 0; y <= size; y += 8) { const xx = px + off + Math.sin((y / size) * Math.PI * 2 * fr + i) * amp; if (y === 0) x.moveTo(xx, y); else x.lineTo(xx, y); } x.stroke(); }
   }
   // a couple of soft cathedral figures
   for (let k = 0; k < 3; k++) { const cx = R() * size, cy = R() * size; for (let r = 6; r < 60; r += 7) { x.strokeStyle = `rgba(60,30,10,${.08})`; x.lineWidth = 2; x.beginPath(); x.ellipse(cx, cy, r * .35, r * 1.6, 0, 0, 7); x.stroke(); } }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...repeat); t.anisotropy = 8;
   return new THREE.MeshPhysicalMaterial({ map: t, roughness, clearcoat, clearcoatRoughness: .35 });
+}
+
+// =============================================================================================
+// v2: Risale-i Nur hardcover look — deep red faux leather with debossed, metallic gold-foil stamping.
+// =============================================================================================
+// Tileable pebble grain (Worley F2-F1 creases + fine fbm). Returns Float32Array S*S in [0,1].
+const _grainCache = new Map();
+function grainTile(S = 256, cells = 30, seed = 7) {
+  const key = S + '_' + cells + '_' + seed; if (_grainCache.has(key)) return _grainCache.get(key);
+  const R = rng(seed); const pts = new Float32Array(cells * cells * 2);
+  for (let i = 0; i < cells * cells; i++) { pts[i * 2] = .15 + R() * .7; pts[i * 2 + 1] = .15 + R() * .7; }
+  const fine = fbmField(seed + 3, 32, 2);
+  const out = new Float32Array(S * S);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const gx = x / S * cells, gy = y / S * cells; const cx = Math.floor(gx), cy = Math.floor(gy);
+    let f1 = 9, f2 = 9;
+    for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+      const ix = (cx + i + cells) % cells, iy = (cy + j + cells) % cells; const k = (iy * cells + ix) * 2;
+      const dx = cx + i + pts[k] - gx, dy = cy + j + pts[k + 1] - gy; const d = dx * dx + dy * dy;
+      if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d;
+    }
+    const e = Math.sqrt(f2) - Math.sqrt(f1); // 0 on cell borders
+    const pebble = smoothstep(0, .42, e);
+    out[y * S + x] = clamp(pebble * .85 + (fine(x / S, y / S) * .5 + .5) * .3 - .1);
+  }
+  _grainCache.set(key, out); return out;
+}
+
+// Builds color / normal / ORM (G=roughness, B=metalness) / emissive maps for a leather surface with
+// optional gold foil design. draw(ctx, W, H) paints the foil design in WHITE on a transparent canvas.
+// grainPx: size of the grain tile in texels (smaller = finer grain).
+export function foilLeather({ W = 512, H = 512, draw = null, base = '#86151a', dark = '#560a0e', seed = 1, grainPx = 256, grainAmp = .55,
+  deboss = 2.2, blur = 1.6, normalStrength = 1.0, leatherRough = .52, foilRough = .3, wear = .5, gold = ['#f6d98a', '#d4a64a', '#a87a2c'], repeat = null } = {}) {
+  const mask = document.createElement('canvas'); mask.width = W; mask.height = H; const mx = mask.getContext('2d');
+  if (draw) draw(mx, W, H);
+  const M = mx.getImageData(0, 0, W, H).data;
+  const bl = document.createElement('canvas'); bl.width = W; bl.height = H; const bx = bl.getContext('2d');
+  if (draw) { bx.filter = `blur(${blur}px)`; bx.drawImage(mask, 0, 0); bx.filter = 'none'; }
+  const MB = bx.getImageData(0, 0, W, H).data;
+  const GS = 256, G = grainTile(GS, 30, 7 + (seed % 3)); const gs = GS / grainPx;
+  // low-frequency mottling on a small grid (bilinear)
+  const mott = fbmField(seed * 13 + 1, 3, 4), crinkle = fbmField(seed * 7 + 5, 24, 2);
+  const LW = 64, LH = Math.max(8, Math.round(64 * H / W)); const LM = new Float32Array(LW * LH);
+  for (let j = 0; j < LH; j++) for (let i = 0; i < LW; i++) LM[j * LW + i] = mott(i / LW, j / LH) * .5 + .5;
+  const lm = (u, v) => { const fx = u * (LW - 1), fy = v * (LH - 1), x0 = Math.floor(fx), y0 = Math.floor(fy), x1 = Math.min(LW - 1, x0 + 1), y1 = Math.min(LH - 1, y0 + 1), tx = fx - x0, ty = fy - y0; return lerp(lerp(LM[y0 * LW + x0], LM[y0 * LW + x1], tx), lerp(LM[y1 * LW + x0], LM[y1 * LW + x1], tx), ty); };
+  // canvas data is sRGB: parse the hex strings directly (THREE.Color would hand back linear values)
+  const sr = h => [parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255];
+  const b = sr(base), d = sr(dark), ga = sr(gold[0]), gb = sr(gold[1]), gc = sr(gold[2]);
+  const Hh = new Float32Array(W * H);
+  const cC = document.createElement('canvas'); cC.width = W; cC.height = H; const xC = cC.getContext('2d'); const iC = xC.createImageData(W, H);
+  const cO = document.createElement('canvas'); cO.width = W; cO.height = H; const xO = cO.getContext('2d'); const iO = xO.createImageData(W, H);
+  const cE = document.createElement('canvas'); cE.width = W; cE.height = H; const xE = cE.getContext('2d'); const iE = xE.createImageData(W, H);
+  const hasFoil = !!draw;
+  for (let y = 0; y < H; y++) {
+    const v = y / H;
+    for (let x = 0; x < W; x++) {
+      const k = y * W + x, p = k * 4, u = x / W;
+      const g = G[(Math.floor(y * gs) % GS) * GS + (Math.floor(x * gs) % GS)];
+      const m = hasFoil ? M[p + 3] / 255 : 0, mb = hasFoil ? MB[p + 3] / 255 : 0;
+      const mo = lm(u, v);
+      // edge wear (only when not tiling): slightly darker & smoother rim
+      const edge = repeat ? 1 : Math.min(u, 1 - u, v * H / W, (1 - v) * H / W) * W;
+      const ew = repeat ? 0 : (1 - smoothstep(0, W * .02, edge)) * wear;
+      // leather colour
+      const t = clamp(mo * .55 + (1 - g) * .35 - .12 + ew * .25);
+      let r = lerp(b[0], d[0], t), gg = lerp(b[1], d[1], t), bb = lerp(b[2], d[2], t);
+      const hi = g * .06; r += hi * .6; gg += hi * .25; bb += hi * .2;
+      // foil colour
+      let fr = r, fg = gg, fb = bb;
+      if (m > 0) {
+        const cn = crinkle(u * 3, v * 3) * .5 + .5; const tt = clamp(cn * 1.1 - .05);
+        fr = tt < .5 ? lerp(ga[0], gb[0], tt * 2) : lerp(gb[0], gc[0], (tt - .5) * 2); fg = tt < .5 ? lerp(ga[1], gb[1], tt * 2) : lerp(gb[1], gc[1], (tt - .5) * 2); fb = tt < .5 ? lerp(ga[2], gb[2], tt * 2) : lerp(gb[2], gc[2], (tt - .5) * 2);
+      }
+      const R_ = lerp(r, fr, m), G_ = lerp(gg, fg, m), B_ = lerp(bb, fb, m);
+      iC.data[p] = clamp(R_) * 255; iC.data[p + 1] = clamp(G_) * 255; iC.data[p + 2] = clamp(B_) * 255; iC.data[p + 3] = 255;
+      // height: grain (leather only) minus foil deboss (soft-edged)
+      Hh[k] = g * grainAmp * (1 - mb) * (1 - ew * .6) - deboss * mb;
+      const rough = lerp(leatherRough + (1 - g) * .12 - ew * .1, foilRough + (crinkle(u * 5, v * 5) * .5 + .5) * .08, m);
+      iO.data[p] = 255; iO.data[p + 1] = clamp(rough) * 255; iO.data[p + 2] = m * 255; iO.data[p + 3] = 255;
+      iE.data[p] = fr * m * 255; iE.data[p + 1] = fg * m * 255; iE.data[p + 2] = fb * m * 255; iE.data[p + 3] = 255;
+    }
+  }
+  const cN = document.createElement('canvas'); cN.width = W; cN.height = H; const xN = cN.getContext('2d'); const iN = xN.createImageData(W, H);
+  const wrap = !!repeat;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const xl = wrap ? (x - 1 + W) % W : Math.max(0, x - 1), xr = wrap ? (x + 1) % W : Math.min(W - 1, x + 1);
+    const yu = wrap ? (y - 1 + H) % H : Math.max(0, y - 1), yd = wrap ? (y + 1) % H : Math.min(H - 1, y + 1);
+    const hx = Hh[y * W + xr] - Hh[y * W + xl], hy = Hh[yd * W + x] - Hh[yu * W + x];
+    let nx = -hx * normalStrength, ny = hy * normalStrength, nz = 1; const l = Math.hypot(nx, ny, nz); nx /= l; ny /= l; nz /= l;
+    const p = (y * W + x) * 4; iN.data[p] = (nx * .5 + .5) * 255; iN.data[p + 1] = (ny * .5 + .5) * 255; iN.data[p + 2] = (nz * .5 + .5) * 255; iN.data[p + 3] = 255;
+  }
+  xC.putImageData(iC, 0, 0); xO.putImageData(iO, 0, 0); xE.putImageData(iE, 0, 0); xN.putImageData(iN, 0, 0);
+  const mk = (c, srgb) => { const tx = new THREE.CanvasTexture(c); tx.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; tx.anisotropy = 8; if (repeat) { tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(repeat[0], repeat[1]); } return tx; };
+  return { map: mk(cC, true), normalMap: mk(cN, false), ormMap: mk(cO, false), emissiveMap: mk(cE, true), hasFoil };
+}
+
+// Satin faux-leather + foil material from foilLeather() maps.
+export function foilMaterial(maps, { foilGlow = .1, sheen = .22, clearcoat = .12, normalScale = 1, env = 1 } = {}) {
+  return new THREE.MeshPhysicalMaterial({
+    map: maps.map, normalMap: maps.normalMap, normalScale: new THREE.Vector2(normalScale, normalScale), roughnessMap: maps.ormMap, metalnessMap: maps.ormMap, roughness: 1, metalness: 1,
+    sheen, sheenColor: new THREE.Color('#d8585a'), sheenRoughness: .5, clearcoat, clearcoatRoughness: .45, envMapIntensity: env,
+    emissiveMap: maps.hasFoil ? maps.emissiveMap : null, emissive: maps.hasFoil ? new THREE.Color('#ffffff') : new THREE.Color('#000000'), emissiveIntensity: maps.hasFoil ? foilGlow : 0,
+  });
+}
+
+// --- foil artwork (white on transparent). Ornament only (no letters except the given Latin strings). ---
+function teardrop(x, cx, cy, len, wid, ang) { x.save(); x.translate(cx, cy); x.rotate(ang); x.beginPath(); x.moveTo(0, 0); x.bezierCurveTo(wid, -len * .25, wid * .9, -len * .8, 0, -len); x.bezierCurveTo(-wid * .9, -len * .8, -wid, -len * .25, 0, 0); x.fill(); x.restore(); }
+function lozenge(x, cx, cy, sx, sy) { x.beginPath(); x.moveTo(cx - sx, cy); x.lineTo(cx, cy - sy); x.lineTo(cx + sx, cy); x.lineTo(cx, cy + sy); x.closePath(); x.fill(); }
+function fitFont(x, str, weight, family, maxW, maxSize, spacing = 0) {
+  let fs = maxSize; x.font = `${weight} ${fs}px "${family}"`; if ('letterSpacing' in x) x.letterSpacing = `${spacing * fs}px`;
+  const w = x.measureText(str).width; if (w > maxW) { fs *= maxW / w; x.font = `${weight} ${fs}px "${family}"`; if ('letterSpacing' in x) x.letterSpacing = `${spacing * fs}px`; }
+  return fs;
+}
+// quarter-medallion corner piece (köşebent) with scalloped edge, cut-out tooling and scroll tendrils.
+function cornerPiece(x, u, R) {
+  x.beginPath(); x.moveTo(0, 0); x.lineTo(R, 0);
+  const lobes = 3; for (let i = 0; i < lobes; i++) { const a0 = i / lobes * Math.PI / 2, a1 = (i + 1) / lobes * Math.PI / 2, am = (a0 + a1) / 2; x.quadraticCurveTo(Math.cos(am) * R * 1.2, Math.sin(am) * R * 1.2, Math.cos(a1) * R, Math.sin(a1) * R); }
+  x.closePath(); x.fill();
+  x.save(); x.globalCompositeOperation = 'destination-out';
+  x.lineWidth = .45 * u; x.beginPath(); x.arc(0, 0, R * .68, 0, Math.PI / 2); x.stroke();
+  x.beginPath(); x.arc(0, 0, R * .9, .12, Math.PI / 2 - .12); x.lineWidth = .25 * u; x.stroke();
+  teardrop(x, R * .1, R * .1, R * .45, R * .13, Math.PI * .75);
+  for (const a of [Math.PI / 4 - .5, Math.PI / 4 + .5]) teardrop(x, Math.cos(a) * R * .2, Math.sin(a) * R * .2, R * .3, R * .08, a + Math.PI / 2);
+  x.restore();
+  // scroll tendrils along both frame sides
+  x.lineWidth = .42 * u;
+  for (const flip of [false, true]) {
+    x.save(); if (flip) { x.rotate(Math.PI / 2); x.scale(1, -1); }
+    x.beginPath(); x.moveTo(R * 1.02, 1.6 * u); x.bezierCurveTo(R + 3 * u, 1.2 * u, R + 4.5 * u, 4.2 * u, R + 7.5 * u, 2.6 * u); x.stroke();
+    x.beginPath(); x.arc(R + 8.3 * u, 2.2 * u, .9 * u, Math.PI * .8, Math.PI * 2.6); x.stroke();
+    teardrop(x, R + 4.2 * u, 2.9 * u, 2.6 * u, .8 * u, Math.PI * .15);
+    x.beginPath(); x.arc(R + 10.4 * u, 1.6 * u, .55 * u, 0, 7); x.fill();
+    x.restore();
+  }
+}
+export function drawRisaleCover(x, W, H, { title = 'SÖZLER', top = 'Risale-i Nur Külliyatından', author = 'Bediüzzaman Said Nursî' } = {}) {
+  x.save(); x.clearRect(0, 0, W, H); x.fillStyle = x.strokeStyle = '#ffffff'; x.lineCap = 'round'; x.lineJoin = 'round';
+  const u = W / 100;
+  // frame: outer rule, lozenge chain, inner rule
+  const m1 = 4.4 * u, m2 = 8.0 * u, mc = (m1 + m2) / 2;
+  x.lineWidth = 1.05 * u; x.strokeRect(m1, m1, W - 2 * m1, H - 2 * m1);
+  x.lineWidth = .4 * u; x.strokeRect(m2, m2, W - 2 * m2, H - 2 * m2);
+  const step = 2.7 * u;
+  for (let px = mc + step * 1.5; px < W - mc - step; px += step) { lozenge(x, px, mc, .95 * u, .55 * u); lozenge(x, px, H - mc, .95 * u, .55 * u); }
+  for (let py = mc + step * 1.5; py < H - mc - step; py += step) { lozenge(x, mc, py, .55 * u, .95 * u); lozenge(x, W - mc, py, .55 * u, .95 * u); }
+  for (const [cx, cy] of [[mc, mc], [W - mc, mc], [mc, H - mc], [W - mc, H - mc]]) { x.beginPath(); x.arc(cx, cy, 1.25 * u, 0, 7); x.fill(); }
+  // corner pieces
+  for (const [cx, cy, sx, sy] of [[m2, m2, 1, 1], [W - m2, m2, -1, 1], [m2, H - m2, 1, -1], [W - m2, H - m2, -1, -1]]) { x.save(); x.translate(cx, cy); x.scale(sx, sy); cornerPiece(x, u, 11 * u); x.restore(); }
+  // top line
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  fitFont(x, top, 'italic 600', 'Playfair Display', 62 * u, 5.4 * u, .01); x.fillText(top, W / 2, H * .143);
+  // title cartouche with inverted-round corners (double outline)
+  const cy = H * .262, cw = 72 * u, ch = 17 * u;
+  const cart = (inset, lw) => {
+    const x0 = W / 2 - cw / 2 + inset, x1 = W / 2 + cw / 2 - inset, y0 = cy - ch / 2 + inset, y1 = cy + ch / 2 - inset, r = 3.2 * u;
+    x.beginPath(); x.moveTo(x0 + r, y0); x.lineTo(x1 - r, y0); x.arc(x1, y0, r, Math.PI, Math.PI / 2, true); x.lineTo(x1, y1 - r); x.arc(x1, y1, r, Math.PI * 1.5, Math.PI, true);
+    x.lineTo(x0 + r, y1); x.arc(x0, y1, r, 0, -Math.PI / 2, true); x.lineTo(x0, y0 + r); x.arc(x0, y0, r, Math.PI / 2, 0, true); x.closePath(); x.lineWidth = lw; x.stroke();
+  };
+  cart(0, .75 * u); cart(1.5 * u, .3 * u);
+  for (const s of [-1, 1]) { teardrop(x, W / 2 + s * (cw / 2 + .6 * u), cy, 3.6 * u, 1.1 * u, s * Math.PI / 2); x.beginPath(); x.arc(W / 2 + s * (cw / 2 + 5.4 * u), cy, .8 * u, 0, 7); x.fill(); }
+  fitFont(x, title, 700, 'Cinzel', cw - 13 * u, 9.6 * u, .06); x.fillText(title, W / 2 + .3 * u, cy + .5 * u);
+  // central medallion (şemse-like rosette) with pendants
+  const mx_ = W / 2, my = H * .575, R = 18 * u;
+  x.save(); x.translate(mx_, my);
+  for (let i = 0; i < 16; i++) teardrop(x, Math.cos(i * Math.PI / 8) * R * .84, Math.sin(i * Math.PI / 8) * R * .84, R * .3, R * .085, i * Math.PI / 8 + Math.PI / 2);
+  for (let i = 0; i < 16; i++) { const a = (i + .5) * Math.PI / 8; x.beginPath(); x.arc(Math.cos(a) * R * .98, Math.sin(a) * R * .98, .45 * u, 0, 7); x.fill(); }
+  x.lineWidth = .7 * u; x.beginPath(); x.arc(0, 0, R * .8, 0, 7); x.stroke(); x.lineWidth = .3 * u; x.beginPath(); x.arc(0, 0, R * .73, 0, 7); x.stroke();
+  // 8-point star (two squares) outline
+  x.lineWidth = .55 * u; for (let k = 0; k < 2; k++) { x.save(); x.rotate(k * Math.PI / 4); const s = R * .47; x.strokeRect(-s, -s, 2 * s, 2 * s); x.restore(); }
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + Math.PI / 8; x.beginPath(); x.arc(Math.cos(a) * R * .56, Math.sin(a) * R * .56, .55 * u, 0, 7); x.fill(); }
+  // centre: filled disc with cut-out 8-petal rosette
+  x.beginPath(); x.arc(0, 0, R * .34, 0, 7); x.fill();
+  x.save(); x.globalCompositeOperation = 'destination-out'; for (let i = 0; i < 8; i++) teardrop(x, 0, 0, R * .28, R * .075, i * Math.PI / 4); x.lineWidth = .3 * u; x.beginPath(); x.arc(0, 0, R * .31, 0, 7); x.stroke(); x.restore();
+  x.beginPath(); x.arc(0, 0, R * .07, 0, 7); x.fill();
+  // pendants (salbek) above / below, small side buds
+  for (const s of [-1, 1]) {
+    x.lineWidth = .4 * u; x.beginPath(); x.moveTo(0, s * R * 1.1); x.lineTo(0, s * R * 1.42); x.stroke();
+    teardrop(x, 0, s * R * 1.62, R * .3, R * .12, s > 0 ? Math.PI : 0); teardrop(x, 0, s * R * 1.3, R * .16, R * .07, s > 0 ? 0 : Math.PI);
+    for (const t of [-1, 1]) teardrop(x, 0, s * R * 1.32, R * .2, R * .06, (s > 0 ? Math.PI : 0) + t * .9);
+    x.beginPath(); x.arc(0, s * R * 1.98, .7 * u, 0, 7); x.fill();
+    teardrop(x, s * R * 1.12, 0, R * .22, R * .08, s * -Math.PI / 2); x.beginPath(); x.arc(s * R * 1.42, 0, .55 * u, 0, 7); x.fill();
+  }
+  x.restore();
+  // author with small rule ornament
+  const ay = H * .868;
+  x.lineWidth = .3 * u; x.beginPath(); x.moveTo(W / 2 - 16 * u, ay - 5.6 * u); x.lineTo(W / 2 - 2.2 * u, ay - 5.6 * u); x.moveTo(W / 2 + 2.2 * u, ay - 5.6 * u); x.lineTo(W / 2 + 16 * u, ay - 5.6 * u); x.stroke(); lozenge(x, W / 2, ay - 5.6 * u, 1.3 * u, .8 * u);
+  fitFont(x, author, 700, 'Playfair Display', 62 * u, 5.0 * u, .02); x.fillText(author, W / 2, ay);
+  x.restore();
+}
+// Spine artwork (white foil): rules, fleurons, title panel with vertical (top-to-bottom) title. title: string or [lines].
+export function drawRisaleSpine(x, W, H, { title = 'SÖZLER', panel = [.17, .7] } = {}) {
+  x.save(); x.clearRect(0, 0, W, H); x.fillStyle = x.strokeStyle = '#ffffff'; x.lineCap = 'round';
+  const u = W / 10;
+  const rule = (y, lw) => { x.fillRect(0, y - lw / 2, W, lw); };
+  for (const [y, lw] of [[.04, .016], [.052, .006], [.948, .006], [.96, .016]]) rule(H * y, H * lw * .55);
+  const fleuron = (cy) => { lozenge(x, W / 2, cy, 2.6 * u, 1.3 * u); x.save(); x.globalCompositeOperation = 'destination-out'; lozenge(x, W / 2, cy, 1.3 * u, .6 * u); x.restore(); for (const s of [-1, 1]) { x.beginPath(); x.arc(W / 2 + s * 3.4 * u, cy, .55 * u, 0, 7); x.fill(); } teardrop(x, W / 2, cy - 1.6 * u, 1.8 * u, .55 * u, 0); teardrop(x, W / 2, cy + 1.6 * u, 1.8 * u, .55 * u, Math.PI); };
+  fleuron(H * .105); fleuron(H * .865);
+  const [p0, p1] = panel; const py0 = H * p0, py1 = H * p1;
+  x.lineWidth = .3 * u; x.strokeRect(W * .16, py0, W * .68, py1 - py0); x.lineWidth = .15 * u; x.strokeRect(W * .22, py0 + .7 * u, W * .56, py1 - py0 - 1.4 * u);
+  for (const y of [py0, py1]) lozenge(x, W / 2, y, 1.4 * u, .7 * u);
+  const lines = Array.isArray(title) ? title : [title]; const n = lines.length;
+  x.save(); x.translate(W / 2, (py0 + py1) / 2); x.rotate(Math.PI / 2); x.textAlign = 'center'; x.textBaseline = 'middle';
+  const colW = W * .46 / n; let fs = Infinity;
+  for (const ln of lines) { const f = fitFont(x, ln, 700, 'Cinzel', (py1 - py0) * .84, colW * .95, .05); fs = Math.min(fs, f); }
+  x.font = `700 ${fs}px "Cinzel"`; if ('letterSpacing' in x) x.letterSpacing = `${fs * .05}px`;
+  lines.forEach((ln, i) => x.fillText(ln, 0, (i - (n - 1) / 2) * colW * 1.08));
+  x.restore(); x.restore();
 }

@@ -4,12 +4,13 @@
 // (b) On "kendi" a true cross-dissolve (set A rendered to a render target) into a framed Hilye-i Şerif panel in warm
 //     window light: ebru border, gilded frame, real Arabic (Amiri) — only the exact strings from the brief. "KENDİ ZÂTI".
 import * as THREE from 'three';
+import * as S2 from '../engine/lib/extra_S02.js';
 
 let R = {};
 
 // ---- per-set post looks (blended during the dissolve) ----
-const PA = { exposure: .94, bloomS: .4, bloomT: .82, bloomR: .6, contrast: 1.1, saturation: 1.16, warmth: .045, lift: [.012, .01, .03], gain: [1.04, 1.0, .96], vignette: .38 };
-const PB = { exposure: 1.0, bloomS: .32, bloomT: .85, bloomR: .5, contrast: 1.08, saturation: 1.08, warmth: .04, lift: [.02, .014, .02], gain: [1.03, 1.0, .96], vignette: .45 };
+const PA = { exposure: .92, bloomS: .28, bloomT: .9, bloomR: .55, contrast: 1.12, saturation: 1.1, warmth: .02, lift: [.004, .008, .02], gain: [1.02, 1.0, .98], vignette: .34 };
+const PB = { exposure: 1.0, bloomS: .3, bloomT: .86, bloomR: .5, contrast: 1.08, saturation: 1.0, warmth: .028, lift: [.02, .014, .02], gain: [1.03, 1.0, .96], vignette: .45 };
 
 // Arabic strings — exactly as given in the brief.
 const AR = {
@@ -35,22 +36,22 @@ export default {
     R = {};
     await Promise.all(['400 80px Amiri', '700 80px Amiri'].map(f => document.fonts.load(f, AR.besmele + AR.center)));
     const A = new THREE.Group(), B = new THREE.Group(); scene.add(A, B); R.A = A; R.B = B;
-    R.envA = await ctx.loadHDR('kiara_1_dawn'); R.envB = await ctx.loadHDR('kiara_interior');
-    R.fogA = new THREE.FogExp2('#f2c69c', .0017);
+    R.envA = await ctx.loadHDR('kloofendal_48d_partly_cloudy_puresky'); R.envB = await ctx.loadHDR('kiara_interior');
+    R.fogA = new THREE.FogExp2('#e6d6c8', .0013);
     buildMedina(ctx, A);
     buildHilye(ctx, B);
 
     // ---- cameras: one per set; the engine camera copies whichever is live ----
-    R.camA = new THREE.PerspectiveCamera(38, W / H, .5, 1500);
+    R.camA = new THREE.PerspectiveCamera(38, W / H, 1, 2000);
     R.camB = new THREE.PerspectiveCamera(36, W / H, .05, 60);
     R.rigA = U.cameraRig(R.camA, {
-      pos: [[4.2, 2.6, 72], [2.4, 8.5, 58], [-0.4, 17.5, 42], [-2.2, 23.4, 31.5]],
-      look: [[0, 16, -6], [0, 19.5, -6], [0, 23.5, -6], [0, 25.2, -6]],
-      t0: -0.6, t1: 5.0, ease: t => .18 * t + .82 * (-(Math.cos(Math.PI * t) - 1) / 2), shake: { amp: .05, freq: .35 },
+      pos: [[6, 10, 95], [4.8, 12.5, 86], [1.8, 17, 70], [-0.8, 21, 61]],
+      look: [[4.6, 24.8, -4], [3.6, 24.8, -4], [2.2, 24.2, -4], [1.8, 23.6, -4]],
+      t0: -0.6, t1: 5.0, ease: t => .34 * t + .66 * (-(Math.cos(Math.PI * t) - 1) / 2), shake: { amp: .05, freq: .35 },
     });
     R.rigB = U.cameraRig(R.camB, {
       pos: [[0.36, 1.7, 2.3], [0.08, 1.62, 3.8], [-0.3, 1.57, 4.72], [-0.38, 1.56, 4.86]],
-      look: [[0.0, 1.66, 0], [0.0, 1.54, 0], [0.01, 1.46, 0], [0.01, 1.45, 0]],
+      look: [[0.0, 1.66, 0], [0.0, 1.56, 0], [0.01, 1.505, 0], [0.01, 1.5, 0]],
       t0: 4.1, t1: 6.6, ease: t => 1 - Math.pow(1 - t, 2.6), shake: { amp: .004, freq: .5 },
     });
 
@@ -85,12 +86,18 @@ export default {
     }
 
     // ---- set A animation ----
-    R.palms.forEach((pl, i) => { pl.rotation.z = pl.userData.rz + Math.sin(t * .9 + i * 1.7) * .006; pl.rotation.x = Math.sin(t * .7 + i) * .004; });
+    { // dawn: the low sun gains strength, warms to gold and climbs a little as the camera rises (peaks on "mu'cizesi")
+      const d = U.smoothstep(-0.6, 3.9, t), el = U.lerp(.15, .23, d);
+      const dir = new THREE.Vector3(SUN.x, 0, SUN.z).normalize().multiplyScalar(Math.sqrt(1 - el * el)).setY(el);
+      R.sun.position.copy(dir).multiplyScalar(170).add(R.sun.target.position);
+      R.sun.intensity = U.lerp(3.4, 4.9, d); R.sun.color.copy(R.sunC0).lerp(R.sunC1, d);
+      R.sky.userData.uniforms.sunDir.value.copy(dir);
+    }
     const tEn = ctx.wordTime('en'), tMu = ctx.wordTime("mu'cizesi");
     // sun glint travelling onto the gilded crescent as the camera rises into the light
     const g = U.smoothstep(tEn - .4, tMu, t) * (1 - .35 * U.smoothstep(tMu + .2, tMu + 1.2, t));
-    R.glint.material.opacity = .75 * g; R.glint.scale.setScalar(1.8 + 1.0 * g);
-    R.glint2.material.opacity = .5 * g; R.glint2.material.rotation = t * .15;
+    R.glint.material.opacity = .42 * g; R.glint.scale.setScalar(1.0 + .5 * g);
+    R.glint2.material.opacity = .38 * g; R.glint2.material.rotation = .3 + t * .12;
 
     // ---- set B animation ----
     if (R.cnd.userData.light) ctx.ENV.flicker(R.cnd.userData.light, t, 3, .12);
@@ -101,9 +108,10 @@ export default {
     post.bloom.strength = m(PA.bloomS, PB.bloomS); post.bloom.threshold = m(PA.bloomT, PB.bloomT); post.bloom.radius = m(PA.bloomR, PB.bloomR);
     post.grade.contrast = m(PA.contrast, PB.contrast); post.grade.saturation = m(PA.saturation, PB.saturation); post.grade.warmth = m(PA.warmth, PB.warmth);
     post.grade.lift = ma(PA.lift, PB.lift); post.grade.gain = ma(PA.gain, PB.gain); post.vignette = m(PA.vignette, PB.vignette);
+    post.dof.enabled = inB; // set A is deep-focus (no depth pre-pass); the Hilye half uses shallow DOF
     if (!inB) {
-      post.dof.focus = R.camA.position.distanceTo(new THREE.Vector3(0, 22, -6)); post.dof.range = 26;
-      post.dof.amount = U.lerp(.75, .12, U.smoothstep(1.0, 4.0, t));
+      post.dof.focus = R.camA.position.distanceTo(new THREE.Vector3(0, 22, -4)); post.dof.range = 70;
+      post.dof.amount = U.lerp(.3, .12, U.smoothstep(0, 4.0, t));
     } else {
       post.dof.focus = R.camB.position.distanceTo(new THREE.Vector3(0, 1.6, .05)); post.dof.range = 1.4;
       post.dof.amount = U.lerp(0, .5, p);
@@ -111,10 +119,16 @@ export default {
 
     // ---- typography ----
     const tK = ctx.wordTime("kur'an"), tKe = ctx.wordTime('kendi'), tZ = ctx.wordTime('zat');
+    const TX = 470; // typography centred on the dome's axis (the minaret rises at the right edge)
     locTag(ui, t, .2, tK - .1, 'Medine');
-    { const e = ui.env(t, tK - .15, D0 + .15, .5, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .4; X.translate(540, 370); X.scale(1, .36); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 680); gr.addColorStop(0, 'rgba(40,28,44,.75)'); gr.addColorStop(.45, 'rgba(40,28,44,.4)'); gr.addColorStop(1, 'rgba(40,28,44,0)'); X.fillStyle = gr; X.fillRect(-680, -680, 1360, 1360); X.restore(); } }
-    ui.text("Kur'ân'dan sonra", { t, t0: tK - .05, t1: D0 + .12, x: 540, y: 318, size: 56, weight: 800, color: '#fff4dc', anim: 'rise', shadowBlur: 22, shadowColor: 'rgba(60,25,10,.6)' });
-    ui.text("EN BÜYÜK MU'CİZE", { t, t0: tEn + .02, t1: D0 + .12, x: 540, y: 408, size: 76, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 2, shadowBlur: 26, shadowColor: 'rgba(60,20,0,.6)' });
+    // the Medina headline holds until the dissolve, then fades over 4.26–4.46 (before "KENDİ ZÂTI" pops) — alpha via colours
+    const fo = 1 - U.smoothstep(D0 + .02, tKe + .04, t), ca = (rgb, a) => `rgba(${rgb},${(a * fo).toFixed(3)})`;
+    if (fo > 0) {
+      { const e = ui.env(t, tK - .15, Infinity, .5, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .4 * fo; X.translate(TX, 405); X.scale(1, .44); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 640); gr.addColorStop(0, 'rgba(40,28,44,.75)'); gr.addColorStop(.45, 'rgba(40,28,44,.4)'); gr.addColorStop(1, 'rgba(40,28,44,0)'); X.fillStyle = gr; X.fillRect(-640, -640, 1280, 1280); X.restore(); } }
+      ui.text("Kur'ân'dan sonra", { t, t0: tK - .05, x: TX, y: 318, size: 56, weight: 800, color: ca('255,244,220', 1), anim: 'rise', shadowBlur: 22, shadowColor: ca('60,25,10', .6) });
+      ui.text('EN BÜYÜK', { t, t0: tEn + .02, x: TX, y: 400, size: 74, weight: 900, color: ca('255,210,122', 1), anim: 'pop', letterSpacing: 2, shadowBlur: 26, shadowColor: ca('60,20,0', .6) });
+      ui.text("MU'CİZE", { t, t0: tMu - .02, x: TX, y: 490, size: 98, weight: 900, color: ca('255,210,122', 1), anim: 'pop', letterSpacing: 3, shadowBlur: 30, shadowColor: ca('60,20,0', .65) });
+    }
     { const e = ui.env(t, tKe - .05, Infinity, .6, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .5; X.translate(540, 330); X.scale(1, .32); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 560); gr.addColorStop(0, 'rgba(36,20,10,.85)'); gr.addColorStop(.6, 'rgba(36,20,10,.45)'); gr.addColorStop(1, 'rgba(36,20,10,0)'); X.fillStyle = gr; X.fillRect(-560, -560, 1120, 1120); X.restore(); } }
     ui.text('KENDİ ZÂTI', { t, t0: tKe + .04, x: 540, y: 282, size: 100, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 6, shadowBlur: 26, shadowColor: 'rgba(40,15,0,.65)' });
     ui.text('“Sen yüce bir ahlâk üzeresin.”', { t, t0: tZ + .05, x: 540, y: 368, size: 40, weight: 500, family: 'Lora', italic: true, color: '#fff4dc', anim: 'rise', shadowBlur: 16, shadowColor: 'rgba(30,12,0,.85)' });
@@ -127,7 +141,7 @@ function useSet(ctx, which) {
   const { scene } = ctx; const a = which === 'A';
   R.A.visible = a; R.B.visible = !a;
   scene.fog = a ? R.fogA : null;
-  scene.environment = a ? R.envA : R.envB; scene.environmentIntensity = a ? .3 : .28;
+  scene.environment = a ? R.envA : R.envB; scene.environmentIntensity = a ? .28 : .28;
 }
 
 // Location tag (Kurzgesagt chip with a map pin)
@@ -145,190 +159,106 @@ function locTag(ui, t, t0, t1, label) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// SET A: Medina at sunrise
-const SUN = new THREE.Vector3(-.9, .24, .12).normalize();
+// SET A: Medina at dawn — the Green Dome as in the reference photographs (see engine/lib/extra_S02.js)
+const SUN = new THREE.Vector3(-.9, .2, .38).normalize();
+const ROOF = 13, ZW = 8, DOME = new THREE.Vector3(0, ROOF, -4), MIN = [18.5, -40];
 function buildMedina(ctx, G) {
-  const { U, MODELS: M, ENV, FX, TEX } = ctx; const MAT = M.MAT;
-  const sky = ENV.skyDome({ top: '#3f6fb6', mid: '#93b2d8', horizon: '#f7bf92', bottom: '#d8a67e', sunDir: SUN.toArray(), sunColor: '#ffcf98', sunSize: .9, sunGlow: 1.4, clouds: .55, cloudColor: '#ffd3b6', intensity: 1 });
+  const { U, ENV, FX, TEX } = ctx; const MT = S2.materials();
+  // ---- sky: clear blue → peach dawn, a few high wisps; haze ----
+  const sky = ENV.skyDome({ top: '#1f4a8e', mid: '#6d99d4', horizon: '#f8d5b6', bottom: '#e2c6a8', sunDir: SUN.toArray(), sunColor: '#ffd8a6', sunSize: .7, sunGlow: 1.0, clouds: .15, cloudColor: '#ffe8d6', intensity: 1 });
   G.add(sky); R.sky = sky;
-  const sun = ENV.sunLight({ color: '#ffc58c', intensity: 4.4, pos: SUN.clone().multiplyScalar(140).add(new THREE.Vector3(0, 14, -6)).toArray(), target: [0, 14, -6], size: 34, mapSize: 2048, bias: -.0004, normalBias: .05 });
-  G.add(sun, sun.target);
-  G.add(new THREE.HemisphereLight('#9fbde6', '#c99a76', .42));
-  const fill = new THREE.DirectionalLight('#ffd2bd', .3); fill.position.set(10, 8, 40); G.add(fill); // warm sky bounce from the front
+  // ---- light: warm low sun raking from the left-front, cool sky fill, warm back-rim ----
+  const sun = ENV.sunLight({ color: '#ffbf80', intensity: 4.6, pos: SUN.clone().multiplyScalar(170).add(new THREE.Vector3(6, 24, -14)).toArray(), target: [6, 24, -14], size: 44, mapSize: 2048, bias: -.0002, normalBias: .05, radius: 2 });
+  sun.shadow.camera.far = 340; sun.shadow.camera.updateProjectionMatrix(); G.add(sun, sun.target); R.sun = sun; R.sunC0 = new THREE.Color('#ffb276'); R.sunC1 = new THREE.Color('#ffc890');
+  G.add(new THREE.HemisphereLight('#9dbcf0', '#cbb497', .32));
+  const rim = new THREE.DirectionalLight('#ffd7b0', .55); rim.position.set(15, 30, -90); G.add(rim);
+  const cool = new THREE.DirectionalLight('#a4bcff', .26); cool.position.set(70, 22, 50); G.add(cool);
 
-  // ground: sandy palm-garden soil + a marble plaza in front of the mosque
-  const sand = new THREE.Mesh(new THREE.PlaneGeometry(900, 900).rotateX(-Math.PI / 2), MAT.sand({ a: '#e2c49c', b: '#c09d74', repeat: [120, 120] }));
-  sand.receiveShadow = true; G.add(sand);
-  const tileTex = TEX.drawTexture(256, 256, (x, w, h) => { x.fillStyle = '#efe6d6'; x.fillRect(0, 0, w, h); x.strokeStyle = 'rgba(150,125,95,.45)'; x.lineWidth = 3; x.strokeRect(0, 0, w, h); x.fillStyle = 'rgba(190,160,120,.25)'; x.beginPath(); x.moveTo(w / 2, 40); x.lineTo(w - 40, h / 2); x.lineTo(w / 2, h - 40); x.lineTo(40, h / 2); x.closePath(); x.fill(); });
-  tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping; tileTex.repeat.set(36, 9);
-  const plaza = new THREE.Mesh(new THREE.PlaneGeometry(72, 18).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: tileTex, roughness: .55 }));
-  plaza.position.set(0, .02, 16); plaza.receiveShadow = true; G.add(plaza);
+  // ---- ground: polished marble plaza ----
+  const marble = S2.surface(512, 512, (x, w, h, P, H) => { // 6 m tile of the Haram's white marble with grey-brown inlay bands
+    x.fillStyle = P('#e4dbcd', .55); x.fillRect(0, 0, w, h);
+    if (!H) { const r = S2.srand(5); for (let i = 0; i < 70; i++) { x.strokeStyle = `rgba(140,128,112,${.05 + r() * .07})`; x.lineWidth = .6 + r() * 1.4; x.beginPath(); let px = r() * w, py = r() * h; x.moveTo(px, py); for (let k = 0; k < 6; k++) { px += (r() - .3) * 70; py += (r() - .5) * 40; x.lineTo(px, py); } x.stroke(); } }
+    x.fillStyle = P('#a89a88', .4); x.fillRect(0, 0, w, 10); x.fillRect(0, 0, 10, h); x.fillRect(0, h / 2 - 3, w, 6); x.fillRect(w / 2 - 3, 0, 6, h);
+    x.strokeStyle = P('#b7a994', .42); x.lineWidth = 5; for (const [cx, cy] of [[w / 4, h / 4], [3 * w / 4, h / 4], [w / 4, 3 * h / 4], [3 * w / 4, 3 * h / 4]]) { x.beginPath(); x.moveTo(cx, cy - 70); x.lineTo(cx + 70, cy); x.lineTo(cx, cy + 70); x.lineTo(cx - 70, cy); x.closePath(); x.stroke(); }
+  }, { strength: 1.2, rep: [60, 60], wrapY: true });
+  const plaza = new THREE.Mesh(new THREE.PlaneGeometry(360, 360).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: marble.map, normalMap: marble.normalMap, roughness: .5, envMapIntensity: .32 }));
+  plaza.position.set(0, 0, 60); plaza.receiveShadow = true; G.add(plaza);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: '#dcc6a6', roughness: .95 })); ground.position.y = -.06; G.add(ground);
 
-  // ---- mosque block ----
-  const stoneMat = MAT.stone({ a: '#ead7b4', b: '#c8ae86', seed: 4, repeat: [4, 2] });
-  const body = new THREE.Mesh(M.rbox(64, 12, 48, .3), stoneMat); body.position.set(0, 6, -16); G.add(body);
-  const facTex = TEX.drawTexture(512, 768, (x, w, h) => facadeDraw(x, w, h, false)); facTex.wrapS = THREE.RepeatWrapping; facTex.repeat.set(8, 1);
-  const facE = TEX.drawTexture(256, 384, (x, w, h) => facadeDraw(x, w, h, true)); facE.wrapS = THREE.RepeatWrapping; facE.repeat.set(8, 1);
-  const facade = new THREE.Mesh(new THREE.PlaneGeometry(64, 12), new THREE.MeshStandardMaterial({ map: facTex, emissiveMap: facE, emissive: '#ffffff', emissiveIntensity: .9, roughness: .9 }));
-  facade.position.set(0, 6, 8.03); G.add(facade);
-  const cornice = new THREE.Mesh(M.rbox(64.6, .55, .9, .2), stoneMat); cornice.position.set(0, 11.85, 8.1); G.add(cornice);
-  const roofTex = TEX.drawTexture(256, 256, (x, w, h) => { x.fillStyle = '#e6d6b8'; x.fillRect(0, 0, w, h); x.strokeStyle = 'rgba(140,115,85,.35)'; x.lineWidth = 2; for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(i * 64, 0); x.lineTo(i * 64, h); x.stroke(); x.beginPath(); x.moveTo(0, i * 64); x.lineTo(w, i * 64); x.stroke(); } });
-  roofTex.wrapS = roofTex.wrapT = THREE.RepeatWrapping; roofTex.repeat.set(16, 12);
-  const roof = new THREE.Mesh(new THREE.PlaneGeometry(63.4, 47.4).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: roofTex, roughness: .85 }));
-  roof.position.set(0, 12.02, -16); roof.receiveShadow = true; G.add(roof);
-  // crenellated parapet (pointed merlons), instanced
-  const ms = new THREE.Shape(); ms.moveTo(-.34, 0); ms.lineTo(.34, 0); ms.lineTo(.34, .6); ms.quadraticCurveTo(.3, .95, 0, 1.15); ms.quadraticCurveTo(-.3, .95, -.34, .6); ms.closePath();
-  const mg = new THREE.ExtrudeGeometry(ms, { depth: .28, bevelEnabled: true, bevelThickness: .05, bevelSize: .05, bevelSegments: 2, curveSegments: 8 }); mg.translate(0, 0, -.14);
-  const mpos = []; for (let xx = -31.4; xx <= 31.4; xx += 1.12) mpos.push([xx, 7.85, 0]);
-  for (let zz = -39.4; zz < 7.4; zz += 1.12) { mpos.push([-31.85, zz, Math.PI / 2]); mpos.push([31.85, zz, Math.PI / 2]); }
-  const merl = new THREE.InstancedMesh(mg, stoneMat, mpos.length); const m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
-  mpos.forEach(([a, b, ry], i) => { const p = ry ? new THREE.Vector3(a, 12.1, b) : new THREE.Vector3(a, 12.1, b); q.setFromEuler(new THREE.Euler(0, ry, 0)); m4.compose(p, q, new THREE.Vector3(1, 1, 1)); merl.setMatrixAt(i, m4); });
-  merl.castShadow = merl.receiveShadow = true; G.add(merl);
-
-  // ---- small lead domes of the roof (instanced) ----
-  const sd = []; for (const zz of [-2, -12, -22, -32]) for (const xx of [-26, -19, -12, 12, 19, 26]) sd.push([xx, zz]);
-  for (const xx of [-5, 5]) sd.push([xx, -24], [xx, -33]);
-  const leadMat = new THREE.MeshStandardMaterial({ color: '#8e9897', metalness: .35, roughness: .55 });
-  const sdDrum = new THREE.InstancedMesh(new THREE.CylinderGeometry(2.1, 2.2, .8, 24), stoneMat, sd.length);
-  const sdGeo = new THREE.SphereGeometry(2.0, 28, 10, 0, Math.PI * 2, 0, Math.PI / 2); sdGeo.scale(1, .72, 1);
-  const sdDome = new THREE.InstancedMesh(sdGeo, leadMat, sd.length);
-  sd.forEach(([xx, zz], i) => { m4.makeTranslation(xx, 12.42, zz); sdDrum.setMatrixAt(i, m4); m4.makeTranslation(xx, 12.8, zz); sdDome.setMatrixAt(i, m4); });
-  sdDrum.castShadow = sdDome.castShadow = true; sdDrum.receiveShadow = sdDome.receiveShadow = true; G.add(sdDrum, sdDome);
+  // ---- the mosque wall (beige block masonry, grilled arched windows) + crenellated parapet ----
+  const fac = S2.facadeSurface(14); fac.map.repeat.set(17, 1); fac.normalMap.repeat.set(17, 1);
+  const front = new THREE.Mesh(new THREE.PlaneGeometry(136, 14), new THREE.MeshStandardMaterial({ map: fac.map, normalMap: fac.normalMap, roughness: .85 }));
+  front.position.set(0, 7, ZW); front.receiveShadow = true; G.add(front);
+  const beige = new THREE.MeshStandardMaterial({ color: '#dcc8a6', roughness: .88 });
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(136, 14, 1.2), beige); wall.position.set(0, 7, ZW - .62); wall.receiveShadow = true; G.add(wall);
+  const coping = new THREE.Mesh(new THREE.BoxGeometry(136.4, .26, 1.5), new THREE.MeshStandardMaterial({ color: '#e4d2b2', roughness: .8 })); coping.position.set(0, 14.13, ZW - .55); coping.castShadow = coping.receiveShadow = true; G.add(coping);
+  const mg = S2.merlonGeo(); const mpos = []; for (let x = -67.8; x <= 67.8; x += .52) mpos.push(x);
+  const merl = new THREE.InstancedMesh(mg, new THREE.MeshStandardMaterial({ color: '#e2cfae', roughness: .82 }), mpos.length); const m4 = new THREE.Matrix4();
+  mpos.forEach((x, i) => { m4.makeTranslation(x, 14.26, ZW - .5); merl.setMatrixAt(i, m4); }); merl.castShadow = merl.receiveShadow = true; G.add(merl);
+  // roof deck (stone pavers) behind the parapet
+  const roofT = S2.surface(256, 256, (x, w, h, P, H) => { x.fillStyle = P('#e6d6b8', .55); x.fillRect(0, 0, w, h); if (!H) { const r = S2.srand(8); for (let i = 0; i < 16; i++) { x.fillStyle = `rgba(${r() < .5 ? '170,145,110' : '250,240,220'},${.05 + r() * .08})`; x.fillRect((i % 4) * 64, Math.floor(i / 4) * 64, 64, 64); } } x.fillStyle = P('rgba(150,125,95,.4)', .35); for (let i = 0; i < 4; i++) { x.fillRect(i * 64, 0, 2, h); x.fillRect(0, i * 64, w, 2); } }, { strength: 2, rep: [34, 26], wrapY: true });
+  const roof = new THREE.Mesh(new THREE.PlaneGeometry(136, 104).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: roofT.map, normalMap: roofT.normalMap, roughness: .9 }));
+  roof.position.set(0, ROOF, ZW - 52); roof.receiveShadow = true; G.add(roof);
 
   // ---- THE GREEN DOME ----
-  const GD = new THREE.Group(); GD.position.set(0, 12, -6); G.add(GD); R.gd = GD;
-  const baseMat = MAT.plaster({ a: '#efe1c4', b: '#d6c19c', seed: 14, repeat: [2, 1] }); baseMat.normalScale.set(.3, .3);
-  const baseTex = TEX.drawTexture(512, 128, (x, w, h) => { x.fillStyle = '#ead9b8'; x.fillRect(0, 0, w, h); for (let i = 0; i < 8; i++) { const cx = (i + .5) * w / 8; x.fillStyle = '#d2bd96'; archPath(x, cx, h - 14, 40, 84); x.fill(); x.fillStyle = '#bfa67e'; archPath(x, cx, h - 18, 30, 72); x.fill(); } x.fillStyle = '#d8c39e'; x.fillRect(0, 0, w, 10); x.fillRect(0, h - 10, w, 10); });
-  const baseM2 = new THREE.MeshStandardMaterial({ map: baseTex, roughness: .9 });
-  const base = new THREE.Mesh(M.rbox(12.6, 2.4, 12.6, .2), [baseM2, baseM2, baseMat, baseMat, baseM2, baseM2]); base.position.y = 2.0; GD.add(base);
-  const baseC = new THREE.Mesh(M.rbox(13.4, .45, 13.4, .16), baseMat); baseC.position.y = 3.35; GD.add(baseC);
-  const plinth = new THREE.Mesh(M.rbox(13.2, .8, 13.2, .14), baseMat); plinth.position.y = .4; GD.add(plinth);
-  const greenTex = TEX.plaster({ a: '#2f9a5c', b: '#23804a', seed: 21, repeat: [3, 2] });
-  const drumTex = TEX.drawTexture(1024, 256, (x, w, h) => {
-    x.fillStyle = '#1f8a4c'; x.fillRect(0, 0, w, h);
-    for (let i = 0; i < 8; i++) {
-      const cx = (i + .5) * w / 8; // window per octagon face
-      x.fillStyle = '#e9dcbc'; archPath(x, cx, h - 58, 48, 118); x.fill();
-      x.fillStyle = '#1a2620'; archPath(x, cx, h - 66, 32, 98); x.fill();
-      x.strokeStyle = 'rgba(233,220,188,.85)'; x.lineWidth = 3; x.beginPath(); x.moveTo(cx, h - 66); x.lineTo(cx, h - 150); x.stroke();
-      x.beginPath(); x.moveTo(cx - 16, h - 106); x.lineTo(cx + 16, h - 106); x.stroke();
-      x.fillStyle = 'rgba(255,255,255,.06)'; x.fillRect(i * w / 8, 0, 3, h);
-    }
-    x.fillStyle = '#efe3c6'; x.fillRect(0, h - 26, w, 26); x.fillRect(0, 0, w, 14);
-  });
-  const drum = new THREE.Mesh(new THREE.CylinderGeometry(5.45, 5.55, 4.4, 8, 1, true, Math.PI / 8), new THREE.MeshPhysicalMaterial({ map: drumTex, roughness: .5, clearcoat: .25, clearcoatRoughness: .5, side: THREE.DoubleSide }));
-  drum.position.y = 3.55 + 2.2; GD.add(drum);
-  const drumTop = new THREE.Mesh(new THREE.CylinderGeometry(5.95, 5.75, .5, 8, 1, false, Math.PI / 8), stoneMat); drumTop.position.y = 8.0; GD.add(drumTop);
-  const domeMat = new THREE.MeshPhysicalMaterial({ color: '#1e8f4d', normalMap: greenTex.normalMap, normalScale: new THREE.Vector2(.25, .25), roughness: .36, clearcoat: .55, clearcoatRoughness: .28, sheen: .2, sheenColor: new THREE.Color('#a8ffd0') });
-  const R0 = 5.3, Hd = 6.1, y0 = 8.25;
-  const prof = [[R0 + .15, 0], [R0, .02], [R0, .3]];
-  for (let i = 1; i <= 28; i++) { const a = i / 28 * Math.PI / 2; let r = R0 * Math.cos(a), y = .3 + Hd * Math.sin(a); r = r * (1 - .1 * Math.pow(Math.sin(a), 6)); if (r < .42) r = .42; prof.push([r, y]); }
-  const dome = M.lathe(prof, domeMat, 96); dome.position.y = y0; GD.add(dome);
-  // raised ribs (24) following the profile
-  const ribPts = prof.slice(2).map(([r, y]) => new THREE.Vector3(r + .03, y, 0));
-  const ribGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ribPts), 48, .11, 6, false);
-  const ribs = new THREE.InstancedMesh(ribGeo, new THREE.MeshPhysicalMaterial({ color: '#28a35c', roughness: .3, clearcoat: .6, clearcoatRoughness: .25 }), 24);
-  for (let i = 0; i < 24; i++) { m4.makeRotationY(i / 24 * Math.PI * 2); ribs.setMatrixAt(i, m4); }
-  ribs.position.y = y0; ribs.castShadow = ribs.receiveShadow = true; GD.add(ribs);
-  // gilded finial (alem): neck, three spheres, rod, upward crescent
-  const goldMat = new THREE.MeshPhysicalMaterial({ color: '#f1c35a', metalness: 1, roughness: .2, clearcoat: .5, clearcoatRoughness: .15 });
-  const fin = new THREE.Group(); fin.position.y = y0 + .3 + Hd * .985; GD.add(fin);
-  fin.add(M.lathe([[.5, 0], [.56, .12], [.34, .34], [.28, .55], [.36, .62], [.0001, .64]], goldMat, 32));
-  for (const [r, y] of [[.5, 1.08], [.38, 1.86], [.28, 2.44]]) { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 18), goldMat); s.position.y = y; s.castShadow = true; fin.add(s); }
-  for (const y of [1.6, 2.22]) { const c = new THREE.Mesh(new THREE.TorusGeometry(.17, .05, 8, 20), goldMat); c.rotation.x = Math.PI / 2; c.position.y = y; fin.add(c); }
-  const rod = new THREE.Mesh(new THREE.CylinderGeometry(.07, .09, 1.0, 10), goldMat); rod.position.y = 3.0; fin.add(rod);
-  const cs = crescentShape(.82, .26, .66);
-  const cres = new THREE.Mesh(new THREE.ExtrudeGeometry(cs, { depth: .1, bevelEnabled: true, bevelThickness: .045, bevelSize: .045, bevelSegments: 3, curveSegments: 48 }), goldMat);
-  cres.geometry.translate(0, 0, -.05); cres.position.y = 4.15; cres.rotation.y = -.35; cres.castShadow = true; fin.add(cres);
-  R.finTop = new THREE.Vector3(0, 12 + y0 + .3 + Hd * .985 + 3.9, -6);
-  // sun glint on the gilding (real specular sparkle, driven in update)
-  R.glint = FX.glow({ size: 2.0, opacity: 0, color: '#fff0c8' }); R.glint.position.copy(R.finTop).add(new THREE.Vector3(-.5, -.2, .6)); G.add(R.glint);
+  const gd = S2.greenDome({ R: 6.5, M: MT }); gd.position.copy(DOME); G.add(gd); R.gd = gd;
+  gd.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  // small silver dome in front of the white base (as in the photograph)
+  const sdm = S2.silverDome({ r: 2.1, M: MT }); sdm.position.set(7.07, ROOF, DOME.z + 7.07); G.add(sdm);
+  // the Ottoman roofscape: rows of small lead domes (low-poly, instanced)
+  { const spots = []; for (const z of [-2, -13, -24]) for (const x of [-40, -33, -26, -19, 21, 28, 35, 42]) spots.push([x, z]); for (const x of [-12, 12]) spots.push([x, -22]);
+    const dg = new THREE.SphereGeometry(2.0, 28, 9, 0, Math.PI * 2, 0, Math.PI / 2); dg.scale(1, 1.05, 1);
+    const drg = new THREE.CylinderGeometry(2.1, 2.15, .45, 28); drg.translate(0, .22, 0);
+    const im1 = new THREE.InstancedMesh(dg, MT.silver, spots.length), im2 = new THREE.InstancedMesh(drg, MT.white, spots.length);
+    spots.forEach(([x, z], i) => { m4.makeTranslation(x, ROOF + .4, z); im1.setMatrixAt(i, m4); m4.makeTranslation(x, ROOF, z); im2.setMatrixAt(i, m4); });
+    im1.castShadow = im2.castShadow = im1.receiveShadow = im2.receiveShadow = true; G.add(im1, im2); }
+
+  // ---- the minaret (Mamluk/Ottoman, cream stone: carved square shaft, muqarnas balconies, chevron band, fluted cap) ----
+  const mn = S2.minaret({ P: 14, M: MT }); mn.position.set(MIN[0], 0, MIN[1]); mn.rotation.y = -.12; G.add(mn); R.mn = mn;
+  // distant sister minarets of the Haram in the haze
+  for (const [x, z, ry] of [[-26, -210, .3]]) { const c = mn.clone(); c.position.set(x, 0, z); c.rotation.y = ry; c.traverse(o => { if (o.isMesh) o.castShadow = false; }); G.add(c); }
+
+  // ---- foreground: brass lantern posts on the plaza (with soft contact shadows) ----
+  const postStone = new THREE.MeshStandardMaterial({ color: '#ece0c8', roughness: .75 });
+  const shTex = TEX.drawTexture(128, 128, (x, w, h) => { const g = x.createRadialGradient(64, 64, 4, 64, 64, 64); g.addColorStop(0, 'rgba(60,40,25,.55)'); g.addColorStop(.5, 'rgba(60,40,25,.22)'); g.addColorStop(1, 'rgba(60,40,25,0)'); x.fillStyle = g; x.fillRect(0, 0, w, h); });
+  const shMat = new THREE.MeshBasicMaterial({ map: shTex, transparent: true, depthWrite: false, opacity: 1 });
+  R.posts = [];
+  for (const [x, z] of [[3, 75], [10, 58], [-1, 50]]) {
+    const lp = S2.lampPost(MT, postStone); lp.position.set(x, 0, z); lp.rotation.y = x * .1; G.add(lp); R.posts.push(lp);
+    const cs = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2).rotateX(-Math.PI / 2), shMat); cs.position.set(x + .5, .015, z - .3); cs.renderOrder = 1; cs.userData.noDepth = true; G.add(cs);
+  }
+
+  // ---- distance: low city, Uhud ridge in haze ----
+  const rnd = U.rng(77); const hs = [];
+  for (let i = 0; i < 140; i++) { const a = rnd() * Math.PI * 2, r = 170 + rnd() * 260; const x = Math.cos(a) * r, z = Math.sin(a) * r - 40; if (z > -60 && Math.abs(x) < 90) continue; hs.push([x, z, 8 + rnd() * 16, 8 + rnd() * 16, 3 + rnd() * 9]); }
+  const houses = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: '#ece2d2', roughness: .9 }), hs.length);
+  const q = new THREE.Quaternion(); hs.forEach(([x, z, w, d, h], i) => { m4.compose(new THREE.Vector3(x, h / 2, z), q.setFromEuler(new THREE.Euler(0, rnd() * .4, 0)), new THREE.Vector3(w, h, d)); houses.setMatrixAt(i, m4); }); G.add(houses);
+  { const seg = 220, pos = [], col = [], idx = []; const c1 = new THREE.Color('#b89c98'), c2 = new THREE.Color('#e6d0c0');
+    for (let i = 0; i <= seg; i++) { const u = i / seg, x = -1100 + 2200 * u; const h = 10 + 22 * Math.max(0, U.fbm1(u * 9 + 2, 4, 4) + .35) + 34 * Math.exp(-Math.pow((u - .4) / .08, 2)); const z = -950 - 80 * Math.sin(u * 7);
+      pos.push(x, -4, z, x, h, z); col.push(c2.r, c2.g, c2.b, c1.r, c1.g, c1.b); if (i < seg) { const b = i * 2; idx.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); } }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx);
+    const ridge = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })); G.add(ridge); }
+
+  // ---- sun glint on the gilded crescent (driven in update) ----
+  const cy = ROOF + gd.userData.crescentY;
+  R.glint = FX.glow({ size: 1.0, opacity: 0, color: '#fff0c8' }); R.glint.position.set(-.18, cy + .05, DOME.z + .35); G.add(R.glint);
   const starTex = TEX.drawTexture(128, 128, (x, w, h) => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.12, 'rgba(255,255,255,.5)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, w, h); x.globalCompositeOperation = 'destination-in'; x.fillStyle = '#fff'; x.beginPath(); for (let k = 0; k < 4; k++) { x.save(); x.translate(64, 64); x.rotate(k * Math.PI / 4); x.rect(-64, -2.2 + (k % 2), 128, 4.4 - 2 * (k % 2)); x.restore(); } x.fill(); });
   R.glint2 = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTex, color: '#fff2cf', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
-  R.glint2.scale.setScalar(3.6); R.glint2.position.copy(R.glint.position); R.glint2.userData.noDepth = true; R.glint2.renderOrder = 16; G.add(R.glint2);
-
-  // ---- slender minaret (rises from the roof, behind-left) ----
-  const MN = new THREE.Group(); MN.position.set(-10.5, 12, -27); G.add(MN);
-  const mbase = new THREE.Mesh(M.rbox(4.2, 6, 4.2, .2), stoneMat); mbase.position.y = 3; MN.add(mbase);
-  const mprof = [[2.2, 6], [1.6, 6.4], [1.5, 6.6], [1.45, 17], [1.5, 17.2], [1.62, 17.6], [2.05, 18.6], [2.2, 18.8], [2.2, 19.05], [1.2, 19.1], [1.18, 27], [1.3, 27.2], [1.75, 28.0], [1.85, 28.2], [1.85, 28.4], [1.0, 28.45], [.98, 32.2], [1.12, 32.4], [1.22, 33.2], [1.12, 34.3], [.75, 35.6], [.32, 36.6], [.12, 37.1], [.0001, 37.15]];
-  const mlath = M.lathe(mprof, stoneMat, 24); MN.add(mlath);
-  // balcony railings (alpha-tested lattice cylinders)
-  const latT = TEX.drawTexture(512, 64, (x, w, h) => { x.fillStyle = '#fff'; x.fillRect(0, 0, w, 10); x.fillRect(0, h - 8, w, 8); for (let i = 0; i < 32; i++) { x.fillRect(i * 16, 0, 4, h); x.save(); x.translate(i * 16 + 10, h / 2); x.rotate(Math.PI / 4); x.strokeStyle = '#fff'; x.lineWidth = 3; x.strokeRect(-7, -7, 14, 14); x.restore(); } });
-  const latMat = new THREE.MeshStandardMaterial({ color: '#f1e4c8', alphaMap: latT, alphaTest: .5, side: THREE.DoubleSide, roughness: .8 });
-  for (const [r, y] of [[2.12, 19.6], [1.8, 28.9]]) { const rail = new THREE.Mesh(new THREE.CylinderGeometry(r, r, .95, 32, 1, true), latMat); rail.position.y = y; rail.castShadow = true; MN.add(rail); }
-  const capMat = new THREE.MeshPhysicalMaterial({ color: '#1e8f4d', roughness: .38, clearcoat: .5 });
-  const cap = M.lathe([[1.0, 34.25], [1.12, 34.6], [.98, 35.4], [.62, 36.2], [.28, 36.9], [.1, 37.4], [.0001, 37.5]], capMat, 24); MN.add(cap);
-  const mfin = new THREE.Group(); mfin.position.y = 37.4; MN.add(mfin);
-  for (const [r, y] of [[.22, .25], [.16, .7]]) { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), goldMat); s.position.y = y; mfin.add(s); }
-  const mcres = cres.clone(); mcres.scale.setScalar(.38); mcres.position.y = 1.25; mcres.rotation.y = .4; mfin.add(mcres);
-  M.shadowAll(MN);
-
-  // ---- palm grove (foreground) + a low mudbrick garden wall ----
-  const wallMat = MAT.plaster({ a: '#dcbf96', b: '#b8946a', seed: 8, repeat: [12, 1] });
-  const gw = new THREE.Mesh(M.rbox(70, 1.5, .6, .25), wallMat); gw.position.set(0, .75, 25.2); gw.castShadow = gw.receiveShadow = true; G.add(gw);
-  R.palms = [];
-  const palmSpots = [[-8.5, 52, 9.5, .3], [9.5, 49, 8.6, -.25], [-13, 41, 10.5, .2], [13.5, 37, 9.8, -.2], [-6.5, 33, 8.4, .35], [7.5, 30, 9, -.3], [-18, 29.5, 10, .15], [19, 28, 10.6, -.1], [-11, 61, 9.2, .25], [12, 63, 9.6, -.2], [-15.5, 15, 9.4, .2], [16, 14, 10, -.25], [-23, 18, 9, .1], [24, 19, 9.5, -.1], [-2.5, 46, 7.6, .25], [6.2, 40, 8.2, -.3], [-4.2, 21, 9.6, .2], [3.6, 17, 8.8, -.15]];
-  palmSpots.forEach(([x, z, h, lean], i) => { const p = M.palm({ height: h, lean: lean * 4, seed: 30 + i, fronds: 18, leafColor: i % 2 ? '#4d7a33' : '#5a8236' }); p.position.set(x, 0, z); p.rotation.y = i * 1.3; p.userData.rz = 0; const dt = p.children[p.children.length - 1]; dt.scale.set(.45, .7, .45); dt.material.color.set('#7a3814'); G.add(p); R.palms.push(p); });
-
-  // ---- distant city fabric (flat-roofed, low) + mountains ----
-  const rnd = U.rng(77); const hs = [];
-  for (let i = 0; i < 160; i++) { const a = rnd() * Math.PI * 2, r = 70 + rnd() * 170; const x = Math.cos(a) * r, z = Math.sin(a) * r - 20; if (z > 0 && Math.abs(x) < 50) continue; hs.push([x, z, 5 + rnd() * 7, 4 + rnd() * 8, 3 + rnd() * 6]); }
-  const houses = new THREE.InstancedMesh(M.rbox(1, 1, 1, .06), MAT.plaster({ a: '#e6cfa8', b: '#c4a37a', seed: 3 }), hs.length);
-  hs.forEach(([x, z, w, d, h], i) => { m4.compose(new THREE.Vector3(x, h / 2, z), q.setFromEuler(new THREE.Euler(0, rnd() * .5, 0)), new THREE.Vector3(w, h, d)); houses.setMatrixAt(i, m4); });
-  houses.receiveShadow = true; G.add(houses);
-  const mt = []; const mi = []; const seg = 160, rad = 430; const f = (a) => 26 + 22 * U.fbm1(a * 4.0, 5, 4) + 14 * Math.max(0, Math.sin(a * 3 + 1));
-  for (let i = 0; i <= seg; i++) { const a = i / seg * Math.PI * 2; const h = f(a); mt.push(Math.cos(a) * rad, -2, Math.sin(a) * rad, Math.cos(a) * rad * .96, h, Math.sin(a) * rad * .96); if (i < seg) { const b = i * 2; mi.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } }
-  const mgeo = new THREE.BufferGeometry(); mgeo.setAttribute('position', new THREE.Float32BufferAttribute(mt, 3)); mgeo.setIndex(mi); mgeo.computeVertexNormals();
-  G.add(new THREE.Mesh(mgeo, new THREE.MeshBasicMaterial({ color: '#b59a92', side: THREE.DoubleSide })));
-
-  // dawn haze motes drifting through the grove
-  G.add(FX.particles({ count: 160, center: [0, 6, 40], box: [30, 12, 30], size: 10, color: '#ffe6c2', opacity: .35, drift: [.12, .05, 0], swirl: .2 }));
+  R.glint2.scale.setScalar(2.0); R.glint2.position.copy(R.glint.position); R.glint2.userData.noDepth = true; R.glint2.renderOrder = 16; G.add(R.glint2);
+  R.finTop = new THREE.Vector3(0, ROOF + gd.userData.topY, DOME.z);
 }
 
-// Upward-opening crescent outline: outer circle r1 at origin minus inner circle r2 centred (0, dy)
-function crescentShape(r1, dy, r2) {
-  const yi = (r1 * r1 - r2 * r2 + dy * dy) / (2 * dy), xi = Math.sqrt(Math.max(0, r1 * r1 - yi * yi));
-  const a1 = Math.atan2(yi, xi), a2 = Math.atan2(yi - dy, xi); const sh = new THREE.Shape(); const N = 48;
-  for (let i = 0; i <= N; i++) { const a = a1 - (i / N) * (Math.PI + 2 * a1); const p = [Math.cos(a) * r1, Math.sin(a) * r1]; i ? sh.lineTo(...p) : sh.moveTo(...p); }
-  for (let i = 0; i <= N; i++) { const a = (Math.PI - a2) + (i / N) * (Math.PI + 2 * a2); sh.lineTo(Math.cos(a) * r2, dy + Math.sin(a) * r2); }
-  sh.closePath(); return sh;
-}
 function archPath(x, cx, by, w, h) { // pointed (ogival) arch, bottom y = by
   const top = by - h, spring = top + w * .62;
   x.beginPath(); x.moveTo(cx - w / 2, by); x.lineTo(cx - w / 2, spring); x.quadraticCurveTo(cx - w / 2, top + w * .12, cx, top);
   x.quadraticCurveTo(cx + w / 2, top + w * .12, cx + w / 2, spring); x.lineTo(cx + w / 2, by); x.closePath();
 }
 
-function facadeDraw(x, w, h, emissive) { // 8 m × 12 m tile of the mosque front
-  const s = w / 512;
-  if (emissive) { x.fillStyle = '#000'; x.fillRect(0, 0, w, h); }
-  else {
-    x.fillStyle = '#e8d5b2'; x.fillRect(0, 0, w, h);
-    x.strokeStyle = 'rgba(150,120,88,.22)'; x.lineWidth = 2;
-    for (let y = 0; y < h; y += 32) { x.beginPath(); x.moveTo(0, y); x.lineTo(w, y); x.stroke(); for (let xx = ((y / 32) % 2) * 48; xx < w; xx += 96) { x.beginPath(); x.moveTo(xx, y); x.lineTo(xx, y + 32); x.stroke(); } }
-    x.fillStyle = '#d5c09c'; x.fillRect(0, h - 64, w, 64); x.fillStyle = '#dccaa6'; x.fillRect(0, 34, w, 30);
-    x.fillStyle = 'rgba(120,90,60,.25)'; x.fillRect(0, 62, w, 4); x.fillRect(0, h - 66, w, 4);
-    x.fillStyle = '#e4d3b2'; x.fillRect(250, 66, 12, h - 130);
-  }
-  for (const cx of [128, 384]) {
-    if (!emissive) { x.fillStyle = '#cdb68e'; archPath(x, cx * s, (h - 92 * s / s), 176 * s, 420 * s); x.fill(); }
-    x.fillStyle = emissive ? '#5a3410' : '#3a2a20'; archPath(x, cx * s, h - 104 * s, 140 * s, 392 * s); x.fill();
-    if (emissive) { const g = x.createLinearGradient(0, h - 480 * s, 0, h - 104 * s); g.addColorStop(0, 'rgba(255,170,80,.0)'); g.addColorStop(1, 'rgba(255,170,80,.55)'); x.fillStyle = g; archPath(x, cx * s, h - 104 * s, 140 * s, 392 * s); x.fill(); }
-    // window grille
-    x.strokeStyle = emissive ? '#000' : '#7a6248'; x.lineWidth = 5 * s;
-    for (let k = -1; k <= 1; k++) { x.beginPath(); x.moveTo(cx * s + k * 40 * s, h - 104 * s); x.lineTo(cx * s + k * 40 * s, h - 430 * s); x.stroke(); }
-    for (let k = 0; k < 6; k++) { const yy = h - 104 * s - k * 60 * s; x.beginPath(); x.moveTo(cx * s - 70 * s, yy); x.lineTo(cx * s + 70 * s, yy); x.stroke(); }
-    // upper small window
-    x.fillStyle = emissive ? '#000' : '#cdb68e'; archPath(x, cx * s, 230 * s, 96 * s, 130 * s); x.fill();
-    x.fillStyle = emissive ? '#3a200a' : '#3a2a20'; archPath(x, cx * s, 222 * s, 70 * s, 112 * s); x.fill();
-  }
-}
-
 // ------------------------------------------------------------------------------------------------
 // SET B: the Hilye-i Şerif panel on a plaster wall in warm window light
 function buildHilye(ctx, G) {
   const { MODELS: M, FX, TEX } = ctx; const MAT = M.MAT;
-  const wallMat = MAT.plaster({ a: '#dcc3a0', b: '#b99a74', seed: 12, repeat: [4, 3] }); wallMat.normalScale.set(.25, .25);
+  const wallMat = MAT.plaster({ a: '#dac6a8', b: '#b9a080', seed: 12, repeat: [4, 3] }); wallMat.normalScale.set(.25, .25);
   const wall = new THREE.Mesh(new THREE.PlaneGeometry(10, 7), wallMat); wall.position.set(0, 1.6, 0); wall.receiveShadow = true; G.add(wall);
 
   const PW = .76, PH = 1.1875; // painted face size (m), canvas 1024×1600
@@ -366,7 +296,7 @@ function buildHilye(ctx, G) {
     archPath(x, 236, 470, 330, 450); x.fill();
     x.fillStyle = '#000'; x.fillRect(392, 20, 16, 470); x.fillRect(60, 104, 380, 12); x.fillRect(80, 20, 12, 100); x.fillRect(150, 20, 12, 100); x.fillRect(310, 20, 12, 100);
   });
-  const key = new THREE.SpotLight('#ffd09a', 120, 18, .36, .75, 2);
+  const key = new THREE.SpotLight('#ffd8ae', 120, 18, .36, .75, 2);
   key.position.set(-2.4, 3.6, 3.8); key.target.position.set(.05, 1.5, 0); key.map = cookie;
   key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -.0003; key.shadow.normalBias = .01;
   G.add(key, key.target); R.key = key;
@@ -421,10 +351,21 @@ function hilyeDraw(x, W, H, mask, ebruC) {
   x.strokeStyle = C.gold; x.lineWidth = 5; x.strokeRect(106, 106, W - 212, H - 212);
   x.strokeStyle = C.ink; x.lineWidth = 1.5; x.strokeRect(113, 113, W - 226, H - 226);
 
-  const ar = (str, cx, cy, maxW, size, color, weight = 700) => {
-    x.save(); x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `${weight} ${size}px Amiri`;
+  // Arabic in Amiri (exact brief strings). This Amiri build places every haraka at a fixed ~0.82–1.24 em (HarfBuzz gives no
+  // vertical mark offsets), which leaves short words such as the stacked «محمد» with marks floating ~½ em above the letters.
+  // For those words the SAME shaped string is drawn twice: base letters clipped below 0.75 em, the mark layer clipped above
+  // it and lowered by `drop` em (gaps verified against glyph extents: bases ≤ .69 em, marks ≥ .82 em).
+  const ar = (str, cx, cy, maxW, size, color, weight = 700, drop = 0) => {
+    x.save(); x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = drop ? 'alphabetic' : 'middle'; x.font = `${weight} ${size}px Amiri`;
     const mw = x.measureText(str).width; if (mw > maxW) { size = size * maxW / mw; x.font = `${weight} ${size}px Amiri`; }
-    x.fillStyle = color; x.fillText(str, cx, cy); x.restore();
+    x.fillStyle = color;
+    if (!drop) x.fillText(str, cx, cy);
+    else {
+      const by = cy + (.42 - drop * .5) * size, sp = by - .75 * size;
+      x.save(); x.beginPath(); x.rect(cx - W, sp, 2 * W, H); x.clip(); x.fillText(str, cx, by); x.restore();
+      x.save(); x.beginPath(); x.rect(cx - W, sp - H + drop * size, 2 * W, H); x.clip(); x.fillText(str, cx, by + drop * size); x.restore();
+    }
+    x.restore();
   };
   const flower = (cx, cy, r, petal, mid, n = 5, rot = 0) => { x.fillStyle = petal; for (let i = 0; i < n; i++) { const a = rot + i / n * Math.PI * 2; x.beginPath(); x.ellipse(cx + Math.cos(a) * r * .55, cy + Math.sin(a) * r * .55, r * .5, r * .3, a, 0, Math.PI * 2); x.fill(); } x.fillStyle = mid; x.beginPath(); x.arc(cx, cy, r * .28, 0, Math.PI * 2); x.fill(); };
   const rosette = (cx, cy, r) => { x.fillStyle = C.gold; for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4; x.beginPath(); x.ellipse(cx + Math.cos(a) * r * .5, cy + Math.sin(a) * r * .5, r * .5, r * .2, a, 0, Math.PI * 2); x.fill(); } x.beginPath(); x.arc(cx, cy, r * .2, 0, Math.PI * 2); x.fill(); };
@@ -465,7 +406,7 @@ function hilyeDraw(x, W, H, mask, ebruC) {
   x.fillStyle = C.paper; x.beginPath(); x.arc(gcx, gcy, 272, 0, Math.PI * 2); x.fill();
   for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; flower(gcx + Math.cos(a) * 283, gcy + Math.sin(a) * 283, 7, C.white, C.red, 5, a); }
   const words = AR.center.split(' '); // مُحَمَّدٌ | رَسُولُ ٱللَّهِ
-  ar(words[0], gcx, gcy - 76, 420, 200, C.ink);
+  ar(words[0], gcx, gcy - 70, 420, 200, C.ink, 700, .22);
   ar(words.slice(1).join(' '), gcx, gcy + 112, 430, 124, C.ink);
   // corner roundels with the four names
   for (const [cx, cy, name] of corners) {
@@ -474,7 +415,7 @@ function hilyeDraw(x, W, H, mask, ebruC) {
     x.fillStyle = C.gold; x.beginPath(); x.arc(cx, cy, 55, 0, Math.PI * 2); x.fill();
     x.fillStyle = C.paper; x.beginPath(); x.arc(cx, cy, 51, 0, Math.PI * 2); x.fill();
     for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; x.fillStyle = C.gold; x.beginPath(); x.arc(cx + Math.cos(a) * 58.5, cy + Math.sin(a) * 58.5, 2.4, 0, Math.PI * 2); x.fill(); }
-    ar(name, cx, cy + 6, 84, 48, C.ink);
+    ar(name, cx, cy + 4, 84, 48, C.ink, 700, name === AR.omer ? .14 : 0);
   }
 
   // --- âyet band with side koltuks ---
