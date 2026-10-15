@@ -8,7 +8,6 @@ import * as THREE from 'three';
 import * as C from '../engine/lib/extra_C.js';
 
 let R = {};
-globalThis.__dbg07 = 0;
 export default {
   post: {
     exposure: 1.0,
@@ -66,7 +65,7 @@ export default {
     // foreground spear: right third, leaning away to the right, head rim-lit against the burning sky (never crosses the type)
     { const s = C.spear2({ length: 2.3, seed: 7 }); const dir = new THREE.Vector3(.5, .8, -.33).normalize(); s.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); s.rotateY(.6);
       s.position.set(-2.5, gh(-2.5, -2.7) - .25, -2.7); scene.add(s); R.fgSpear = s; }
-    sp(-2.1, 1.4, -.2, -.42, 0); sp(-3.6, -6, .1, .3); sp(3.2, -8.5, -.25, -.2); sp(-1.1, -11, .3, .5); sp(4.5, -2.5, .15, -.5);
+    sp(-3.0, 1.4, -.2, -.42, 0); sp(-3.6, -6, .1, .3); sp(3.2, -8.5, -.25, -.2); sp(-1.1, -11, .3, .5); sp(4.5, -2.5, .15, -.5);
     sp(.25, 5.3, Math.PI / 2 - .02, 0, 1.2, 2.4, .03); sp(-.9, -3.2, Math.PI / 2 - .03, 0, -.5, 2.4, .03);
 
     // --- arrows ---
@@ -112,7 +111,7 @@ export default {
     const sr = U.rng(8); const sand = [];
     for (let i = 0; i < 200; i++) { const sp2 = 7 + sr() * 5, life = 16 / sp2; const z = 7 - sr() * 18; sand.push({ p: [-8 + sr(), .02 + Math.pow(sr(), 2.2) * .7, z], v: [sp2, (sr() - .4) * .4, (sr() - .5) * .5], t0: -sr() * life, life, w: .004 + sr() * .004, len: .12 + sr() * .2, color: '#e6a070', a: .14 + sr() * .16, loop: 1 }); }
     R.sand = C.streaks(sand, { fadeIn: .08, fadeOut: .85, fog: fogO }); scene.add(R.sand);
-    R.drift = C.sandDrift({ center: [0, 0, -2], size: [44, 40], layers: [[.01, 1, 1], [.04, .7, 1.2], [.11, .35, 1.4]], wind: [1, .05], speed: 7, opacity: .5, density: .5, lit: '#f09a5c', shade: '#6e3018', sunDir: sunDir.toArray(), scatter: 1.1, nearFade: 4, farFade: 24, fog: fogO }); scene.add(R.drift);
+    R.drift = C.sandDrift({ ground: gh, center: [0, 0, -2], size: [44, 40], layers: [[.01, 1, 1], [.025, .7, 1.2], [.05, .35, 1.4]], wind: [1, .05], speed: 7, opacity: .26, density: .42, lit: '#f09a5c', shade: '#6e3018', sunDir: sunDir.toArray(), scatter: 1.1, nearFade: 4, farFade: 24, fog: fogO }); scene.add(R.drift);
 
     camera.fov = 38; camera.near = .05; camera.far = 1200; camera.updateProjectionMatrix();
     R.look = new THREE.Vector3();
@@ -143,7 +142,6 @@ export default {
     R.storm.userData.uniforms.opacity.value = .26 + .12 * st;
     post.exposure = 1.0 + .12 * Math.exp(-Math.max(0, t - tSid) * 6) * (t > tSid ? 1 : 0) - .06 * st;
 
-    if (globalThis.__dbg07) { const hp = R.fgSpear.userData.head.getWorldPosition(new THREE.Vector3()); const b = R.fgSpear.getWorldPosition(new THREE.Vector3()); console.warn('DBG', t.toFixed(2), ui.project(hp).map(v => v.toFixed(0)).join(','), ui.project(b).map(v => v.toFixed(0)).join(','), ui.project(R.boss).map(v => v.toFixed(0)).join(',')); }
     // --- typography ---
     const X = ui.ctx; { const gr = X.createLinearGradient(0, 150, 0, 760); gr.addColorStop(0, 'rgba(20,6,4,.38)'); gr.addColorStop(1, 'rgba(20,6,4,0)'); X.save(); X.fillStyle = gr; X.fillRect(0, 0, 1080, 760); X.restore(); }
     ui.text('savaşın', { t, t0: R.tSav - .03, x: 540, y: 330, size: 62, weight: 800, color: '#fff1dc', anim: 'rise' });

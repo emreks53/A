@@ -99,7 +99,7 @@ export default {
     const fw = .06, wcx = (WX0 + WX1) / 2, ww = WX1 - WX0, wh = WY1 - WY0;
     const addF = (w, h, d, x, y, z, parent = scene) => { const m = new THREE.Mesh(M.rbox(w, h, d, .01), frameMat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; parent.add(m); return m; };
     addF(ww + .1, fw, .14, wcx, WY1 + fw / 2 - .01, WALL_Z); addF(fw, wh + .1, .14, WX0 - fw / 2 + .01, (WY0 + WY1) / 2, WALL_Z); addF(fw, wh + .1, .14, WX1 + fw / 2 - .01, (WY0 + WY1) / 2, WALL_Z);
-    const sillMat = grainWood({ a: '#a06a3c', b: '#714524', seed: 41, streaks: 120, clearcoat: .45, roughness: .5 });
+    const sillMat = grainWood({ a: '#a06a3c', b: '#714524', seed: 41, streaks: 120, clearcoat: 0, roughness: .45 });
     const sill = new THREE.Mesh(M.rbox(ww + .22, .04, .27, .012), sillMat); sill.position.set(wcx, WY0 - .02, WALL_Z + .06); sill.castShadow = sill.receiveShadow = true; scene.add(sill);
     const glassMat = new THREE.MeshPhysicalMaterial({ color: '#ffffff', transparent: true, opacity: .08, roughness: .05, metalness: 0, envMapIntensity: 1.2, depthWrite: false });
     const cas = (open, hingeX, sign) => {
@@ -124,7 +124,7 @@ export default {
     // tulle curtains (pleated sheer; breeze)
     const curtTex = tex(TEX, 256, 512, (x, W, H) => { x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H); x.strokeStyle = 'rgba(205,195,175,.3)'; x.lineWidth = 1; for (let i = 0; i < W; i += 5) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); } for (let j = 0; j < H; j += 5) { x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); } x.fillStyle = 'rgba(232,222,204,.55)'; x.fillRect(0, H - 26, W, 26); x.fillStyle = 'rgba(232,222,204,.35)'; x.fillRect(0, H - 34, W, 3); });
     curtTex.wrapS = THREE.RepeatWrapping; curtTex.repeat.x = 2;
-    const curtMat = new THREE.MeshPhysicalMaterial({ map: curtTex, color: '#fffaf0', transparent: true, opacity: .52, side: THREE.DoubleSide, roughness: .9, sheen: 1, sheenColor: new THREE.Color('#ffffff'), emissive: '#fff0d6', emissiveIntensity: .32, depthWrite: false });
+    const curtMat = new THREE.MeshStandardMaterial({ map: curtTex, color: '#fffaf0', transparent: true, opacity: .52, side: THREE.DoubleSide, roughness: .9, emissive: '#fff0d6', emissiveIntensity: .36, depthWrite: false });
     R.curtains = [];
     const CH = 1.42, CZ = WALL_Z + .2;
     for (const [x0, w, ph, pleats] of [[WX0 - .22, .44, 0, 8], [WX1 - .05, .38, 1.7, 7]]) {
@@ -143,10 +143,10 @@ export default {
       for (let j = 0; j < 9; j++) for (let i = 0; i < 9; i++) { const cx = 140 + i * 93, cy = 140 + j * 93; x.fillStyle = (i + j) % 2 ? 'rgba(214,180,130,.55)' : 'rgba(40,52,82,.5)'; x.beginPath(); x.moveTo(cx, cy - 30); x.lineTo(cx + 30, cy); x.lineTo(cx, cy + 30); x.lineTo(cx - 30, cy); x.closePath(); x.fill(); x.fillStyle = 'rgba(240,220,180,.5)'; x.beginPath(); x.moveTo(cx, cy - 9); x.lineTo(cx + 9, cy); x.lineTo(cx, cy + 9); x.lineTo(cx - 9, cy); x.closePath(); x.fill(); }
       for (let i = 0; i < 20000; i++) { const Rr = (i * 7919 % 1000) / 1000, Rq = (i * 104729 % 997) / 997; x.fillStyle = `rgba(0,0,0,${.04})`; x.fillRect(Rr * W, Rq * H, 2, 1); }
     });
-    const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.7).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: kilim, roughness: 1, sheen: .7, sheenColor: new THREE.Color('#ffb38a') })); rug.position.set(0, .004, .25); rug.receiveShadow = true; scene.add(rug);
+    const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.7).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: kilim, roughness: 1 })); rug.position.set(0, .004, .25); rug.receiveShadow = true; scene.add(rug);
 
     // ---------- low walnut table + linen runner ----------
-    const walnut = grainWood({ a: '#7f4f2c', b: '#68401f', seed: 51, streaks: 260, clearcoat: .55, roughness: .4 });
+    const walnut = grainWood({ a: '#7f4f2c', b: '#68401f', seed: 51, streaks: 260, clearcoat: 0, roughness: .36 });
     const table = new THREE.Group(); scene.add(table);
     const top = new THREE.Mesh(M.rbox(1.12, .036, .62, .012), walnut); top.position.y = TABLE_Y - .018; table.add(top);
     const apron = new THREE.Mesh(M.rbox(1.0, .06, .5, .01), walnut); apron.position.y = TABLE_Y - .065; table.add(apron);
@@ -161,7 +161,7 @@ export default {
       x.fillStyle = 'rgba(176,64,52,.45)'; for (let i = 70; i < W - 60; i += 34) { for (const y of [64, H - 64]) { x.beginPath(); x.moveTo(i, y - 6); x.lineTo(i + 6, y); x.lineTo(i, y + 6); x.lineTo(i - 6, y); x.closePath(); x.fill(); } }
       x.fillStyle = 'rgba(200,180,150,.5)'; for (let i = 0; i < W; i += 5) { x.fillRect(i, 22, 2, 3); x.fillRect(i + 2, H - 25, 2, 3); }
     });
-    const runner = new THREE.Mesh(new THREE.PlaneGeometry(.98, .5).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: runnerTex, transparent: true, alphaTest: .5, roughness: .95, sheen: .6, sheenColor: new THREE.Color('#fff4e0') }));
+    const runner = new THREE.Mesh(new THREE.PlaneGeometry(.98, .5).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: runnerTex, transparent: true, alphaTest: .5, roughness: .95 }));
     runner.position.set(-.02, TABLE_Y + .0012, -.02); runner.receiveShadow = true; scene.add(runner);
 
     // ---------- shared book materials ----------
@@ -365,14 +365,14 @@ export default {
     R.camPos = path3([
       [-0.6, [-.3, .95, .98]], [1.1, [-.22, .9, .62]],
       [1.85, [-.15, .99, .3]], [2.6, [-.1, 1.0, .25]], [3.4, [-.095, 1.0, .235]], [4.15, [-.05, .97, .24]],
-      [4.95, [.179, .896, .685]], [5.7, [.186, .9, .71]],
-      [6.75, [-.02, .93, .48]], [7.4, [-.045, .95, .57]], [8.4, [-.07, .92, 1.12]], [9.6, [-.08, .915, 1.22]], [11.9, [-.09, .91, 1.3]],
+      [4.95, [.195, .81, .74]], [5.6, [.2, .81, .76]],
+      [6.95, [-.02, .93, .48]], [7.6, [-.045, .95, .57]], [8.4, [-.07, .92, 1.12]], [9.6, [-.08, .915, 1.22]], [11.9, [-.09, .91, 1.3]],
     ]);
     R.camLook = path3([
       [-0.6, [-.1, .58, -.08]], [1.1, [-.08, .58, -.08]],
       [1.85, [-.035, .575, -.08]], [2.6, [-.09, .565, -.115]], [3.4, [-.09, .56, -.11]], [4.15, [-.04, .55, -.08]],
-      [4.95, [.1, .435, .19]], [5.7, [.1, .435, .2]],
-      [6.75, [-.08, .86, -.38]], [7.4, [-.09, .86, -.42]], [8.4, [-.08, .62, -.1]], [9.6, [-.08, .62, -.1]], [11.9, [-.08, .62, -.1]],
+      [4.95, [.1, .435, .19]], [5.6, [.1, .435, .2]],
+      [6.95, [-.08, .86, -.38]], [7.6, [-.09, .86, -.42]], [8.4, [-.08, .62, -.1]], [9.6, [-.08, .62, -.1]], [11.9, [-.08, .62, -.1]],
     ]);
   },
 
@@ -381,9 +381,10 @@ export default {
     const P = R.camPos(t), L = R.camLook(t); P.add(U.shake(t, .0035, .3, 6));
     camera.fov = U.lerp(34, 40, U.smoothstep(6.6, 9.4, t)); camera.updateProjectionMatrix();
     camera.position.copy(P); camera.lookAt(L); camera.updateMatrixWorld();
-    post.motionBlur = (t > 5.82 && t < 6.7) ? { samples: 5, shutter: .6 } : { samples: 1 };
+    // motion blur only while the camera cranes from the Sözler up to the sill (fast tilt); 5 sub-frames at the peak
+    post.motionBlur = (t > 5.95 && t < 6.6) ? { samples: 4, shutter: .6 } : (t > 5.7 && t < 6.88) ? { samples: 3, shutter: .55 } : { samples: 1 };
     R.motes.userData.uniforms.size.value = .62 * ctx.renderer.domElement.height / 960; // same look at every render scale
-    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.28, .5, U.smoothstep(7.0, 9.4, t)) + .45 * (1 - U.smoothstep(.9, 1.7, t)) + .35 * U.smoothstep(4.2, 4.9, t) * (1 - U.smoothstep(6.1, 6.8, t)); post.dof.amount = .72;
+    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.28, .5, U.smoothstep(7.0, 9.4, t)) + .45 * (1 - U.smoothstep(.9, 1.7, t)) + .35 * U.smoothstep(4.2, 4.9, t) * (1 - U.smoothstep(5.7, 6.3, t)); post.dof.range *= 1 - .6 * Math.sin(Math.PI * U.prog(t, 5.65, 6.9)); post.dof.amount = .72;
 
     // --- front cover opens on "kitabının", then three leaves riffle over (right → left) ---
     const tKit = ctx.wordTime('kitabının');
@@ -454,7 +455,7 @@ export default {
     // "başka risaleler" label over the sill set
     const sc = R.sillCenter.clone(); const [sx, sy] = ui.project(sc);
     const stp = R.sillCenter.clone(); stp.y += .135; const [, sty] = ui.project(stp);
-    ui.pill('başka risaleler', { t, t0: Math.max(tBas + .15, 6.45), t1: Math.min(tEtr - .55, 7.8), x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
+    ui.pill('başka risaleler', { t, t0: Math.max(tBas + .15, 6.75), t1: Math.min(tEtr - .55, 7.8), x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
     // end card
     const ec = U.smoothstep(tEtr - .1, tEtr + .9, t);
     if (ec > 0) {

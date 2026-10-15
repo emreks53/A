@@ -8,7 +8,6 @@ import * as THREE from 'three';
 import * as C from '../engine/lib/extra_C.js';
 
 let R = {};
-globalThis.__dbg08 = 1;
 const STORM = { contrast: 1.12, saturation: 1.06, warmth: 0.06, lift: [0.025, 0.01, 0.012], gain: [1.06, 0.93, 0.83] };
 const CALM = { contrast: 1.08, saturation: .98, warmth: 0.03, lift: [0.02, 0.017, 0.026], gain: [1.05, 1.035, 0.87] };
 export default {
@@ -78,10 +77,11 @@ export default {
       arrows.push({ L: I.point.clone(), vL, tL: t, flight: 2.2, mode: 'break', normal: n, ground: gh });
       if (t > -1.2 && sparkN > 0) {
         const refl = d.clone().reflect(n).multiplyScalar(.7).add(n.clone().multiplyScalar(.5)).add(new THREE.Vector3(0, .35, 0)).normalize();
-        C.sparkBurst(sparks, { p: I.point.toArray(), dir: refl.toArray(), t0: t, n: sparkN, speed: big ? [4, 12] : [3, 8], spread: .65, life: [.2, big ? .85 : .55], w: big ? .026 : .018, seed: 100 + arrows.length, color: '#ffd28a', i: big ? 5 : 3.5 });
-        pf.push({ p: I.point.clone().addScaledVector(n, .2).toArray(), t0: t, life: big ? 1.6 : 1.1, s0: .2, s1: big ? 2.2 : 1.0, v: [n.x * 1.2, .7, n.z * 1.2], a: big ? .5 : .32, color: '#e0a87c' });
-        const nc = big ? 9 : 3; const cr = U.rng(500 + arrows.length);
-        for (let k = 0; k < nc; k++) { const v = refl.clone().multiplyScalar(2 + cr() * (big ? 5 : 3)).add(new THREE.Vector3((cr() - .5) * 2, cr() * 2, (cr() - .5) * 2)); chips.push({ p: I.point.clone().addScaledVector(n, .05).toArray(), v: v.toArray(), t0: t, s: (big ? .05 : .03) + cr() * (big ? .07 : .035), spin: [cr() - .5, cr() - .5, cr() - .5], w: 10 + cr() * 20 }); }
+        C.sparkBurst(sparks, { p: I.point.toArray(), dir: refl.toArray(), t0: t, n: big ? sparkN * 1.6 : sparkN, speed: big ? [4, 13] : [3, 8], spread: .7, life: [.2, big ? .9 : .55], w: big ? .03 : .02, seed: 100 + arrows.length, color: '#ffd28a', i: big ? 6 : 4 });
+        pf.push({ p: I.point.clone().addScaledVector(n, .2).toArray(), t0: t, life: big ? 1.8 : 1.2, s0: .25, s1: big ? 2.8 : 1.3, v: [n.x * 1.4, .8, n.z * 1.4], a: big ? .6 : .38, color: '#e6b088' });
+        if (big) pf.push({ p: I.point.clone().addScaledVector(n, .1).toArray(), t0: t + .02, life: .5, s0: .3, s1: 1.2, v: [n.x * 2.5, .4, n.z * 2.5], a: .55, color: '#f4c89a' });
+        const nc = big ? 16 : 5; const cr = U.rng(500 + arrows.length);
+        for (let k = 0; k < nc; k++) { const v = refl.clone().multiplyScalar(2 + cr() * (big ? 5 : 3)).add(new THREE.Vector3((cr() - .5) * 2, cr() * 2, (cr() - .5) * 2)); chips.push({ p: I.point.clone().addScaledVector(n, .05).toArray(), v: v.toArray(), t0: t, s: (big ? .06 : .035) + cr() * (big ? .09 : .045), spin: [cr() - .5, cr() - .5, cr() - .5], w: 10 + cr() * 20 }); }
         R.hits.push({ t, p: I.point.clone().addScaledVector(n, .6), big });
       }
       return I;
@@ -120,7 +120,7 @@ export default {
     R.sheets = C.dustField({ count: 44, center: [-19, .6, 0], box: [26, .9, 40], size: [1.2, 3], wind: [9, 0, 0], swirl: .2, shade: '#7a3a20', lit: '#ee9050', sunDir: sunDir.toArray(), opacity: .22, nearFade: 3, scatter: 1.4, seed: 5, fog: fogO, yMin: 0 });
     R.highStream = C.dustField({ count: 40, center: [16, 10.5, 24], box: [70, 5, 18], size: [5, 11], wind: [10, 0, 0], swirl: .5, shade: '#9a5a3a', lit: '#ffc890', sunDir: sunDir.toArray(), opacity: .2, nearFade: 6, scatter: 1.6, seed: 6, yMin: 0 });
     scene.add(R.storm, R.sheets, R.highStream);
-    R.drift = C.sandDrift({ center: [-16, 0, 0], size: [26, 44], layers: [[.01, 1, 1], [.04, .7, 1.2], [.11, .35, 1.4]], wind: [1, .03], speed: 8, opacity: .5, density: .5, lit: '#f6aa6a', shade: '#7a3a1e', sunDir: sunDir.toArray(), scatter: 1.2, nearFade: 3, farFade: 30, fog: fogO }); scene.add(R.drift);
+    R.drift = C.sandDrift({ ground: gh, center: [-16, 0, 0], size: [26, 44], layers: [[.01, 1, 1], [.025, .7, 1.2], [.05, .35, 1.4]], wind: [1, .03], speed: 8, opacity: .36, density: .45, lit: '#f6aa6a', shade: '#7a3a1e', sunDir: sunDir.toArray(), scatter: 1.2, nearFade: 3, farFade: 30, fog: fogO }); scene.add(R.drift);
     // the lee: calm golden motes in the sun + a soft settling haze
     R.motes = FX.particles({ count: 260, center: [11.2, 1.4, 4.0], box: [7, 2.8, 8], size: 1.7, color: '#ffe6bc', opacity: .7, drift: [.025, -.035, 0], swirl: .04, twinkle: .35, seed: 9 }); scene.add(R.motes);
     R.shafts = []; [[7.9, .1, 6.2, .5, 1.6, .16], [8.4, .1, 2.6, .45, 1.4, .14], [8.1, .2, -.6, .4, 1.2, .12], [11.4, .1, 6.9, .45, 1.3, .08]].forEach(([x, y, z, r0, r1, op]) => {
@@ -135,18 +135,25 @@ export default {
     scene.environment = C.envFromScene(renderer, scene, [SW[0], .8, SW[1]], [sword, R.storm, R.sheets, R.highStream, R.drift, R.motes, R.haze, R.puffs, R.sparks, R.trails, R.volley.group, R.chips.mesh, R.grains, ...R.shafts]); sword.userData.steel.envMap = scene.environment; sword.userData.steel.needsUpdate = true;
     scene.fog.density = fd0; scene.fog.color.copy(R.fogStorm); sky.userData.uniforms.sunI.value = 5; scene.remove(card);
 
-    { const rc = new THREE.Raycaster(R.swPos.clone().add(new THREE.Vector3(0, .8, 0)), sunDir.clone()); const hits = rc.intersectObjects(scene.children, true).filter(h => h.object.castShadow && h.object !== sword && !sword.children.includes(h.object)); console.warn('DBG8 sword shadow test:', hits.length ? hits[0].object.type + ' d=' + hits[0].distance.toFixed(2) : 'LIT'); }
     camera.fov = 36; camera.near = .05; camera.far = 1500; camera.updateProjectionMatrix();
     // windward (low, -Z flank, face raked by the sun) -> push -> whip around the -Z end ("arkasına") -> settle in the lee looking up-sun
-    R.cam = C.camPath([
-      [-0.5, [-30, 1.5, -19], [-6, 4.4, -1]],
-      [1.0, [-23, 1.7, -15.5], [-7, 3.9, -.6]],
-      [1.95, [-17.2, 2.2, -15.2], [-6.4, 3.4, -2.8]],
-      [2.6, [-5, 3.6, -27], [2, 3.8, -9]],
-      [3.25, [9.5, 2.6, -14], [10.6, 1.4, 3]],
-      [4.15, [14.95, 1.7, 2.1], [9.55, .72, 4.62]],
-      [6.9, [14.6, 1.6, 2.5], [9.55, .72, 4.62]],
-    ]);
+    // windward push -> (anticipation) -> eased whip on an arc around the -Z end ("arkasına") -> settle in the lee
+    const keys = [];
+    { // analytic path sampled every 0.1 s: constant-speed windward push -> cubic-Hermite eased arc around the -Z end -> slow lee drift
+      const O = [0, -10], t0 = 1.72, t1 = 4.12, Pw0 = new THREE.Vector3(-27.5, 1.55, -18.4), Lw0 = new THREE.Vector3(-6, 4.4, -1);
+      const A0 = Math.atan2(-16.6 - O[1], -19.5 - O[0]), A1 = Math.atan2(2.1 - O[1], 14.95 - O[0]);
+      const Lw = new THREE.Vector3(-6.4, 3.4, -2.8), Lm = new THREE.Vector3(1.5, 3.2, -9), Ls = new THREE.Vector3(9.55, .72, 4.62);
+      const r0 = Math.hypot(-19.5 - O[0], -16.6 - O[1]), r1 = Math.hypot(14.95 - O[0], 2.1 - O[1]);
+      const ha = .16, hb = .012, S = u => (u * u * u - 2 * u * u + u) * ha + (-2 * u * u * u + 3 * u * u) + (u * u * u - u * u) * hb;
+      const arcP = s => { const A = A0 + (A1 - A0) * s, r = r0 + (r1 - r0) * s - 6 * Math.sin(Math.PI * s), h = 2.1 + (1.7 - 2.1) * s + 1.4 * Math.sin(Math.PI * s); return new THREE.Vector3(O[0] + Math.cos(A) * r, h, O[1] + Math.sin(A) * r); };
+      const arcL = s => Lw.clone().multiplyScalar((1 - s) * (1 - s)).addScaledVector(Lm, 2 * s * (1 - s)).addScaledVector(Ls, s * s);
+      const P1 = arcP(1), Pend = new THREE.Vector3(14.55, 1.62, 2.52);
+      for (let i = 0; i <= 74; i++) { const t = -0.5 + i * .1; let P, L;
+        if (t <= t0) { const k = (t + .5) / (t0 + .5); P = Pw0.clone().lerp(arcP(0), k); L = Lw0.clone().lerp(Lw, k); }
+        else if (t <= t1) { const s = S((t - t0) / (t1 - t0)); P = arcP(s); L = arcL(s); }
+        else { const k = (t - t1) / (6.9 - t1); P = P1.clone().lerp(Pend, k); L = Ls.clone(); }
+        keys.push([t, P.toArray(), L.toArray()]); } }
+    R.cam = C.camPath(keys);
     R.P = new THREE.Vector3(); R.L = new THREE.Vector3();
   },
   update(t, ctx) {
@@ -154,7 +161,7 @@ export default {
     R.volley.update(t); R.chips.update(t);
     const calm = U.smoothstep(2.75, 3.75, t);
     // motion blur only while arrows strike and the camera whips; the calm lee renders single-sample
-    post.motionBlur = { samples: t < 3.7 ? (t > 1.9 && t < 3.1 ? 4 : 3) : 1, shutter: .5 };
+    post.motionBlur = { samples: t < 1.9 ? 3 : t < 3.1 ? 4 : t < 3.9 ? 3 : t < 4.3 ? 2 : 1, shutter: .5 };
     // camera
     R.cam.at(t, R.P, R.L);
     const sh = U.shake(t, U.lerp(.035, .006, calm), U.lerp(1.2, .45, calm), 5);
@@ -177,7 +184,6 @@ export default {
     R.motes.material.uniforms.master.value = U.smoothstep(2.9, 3.8, t); R.shafts.forEach((sh, i) => { sh.userData.uniforms.opacity.value = sh.userData.op * calm * (.85 + .15 * Math.sin(t * .9 + i * 1.7)); }); R.haze.userData.uniforms.master.value = calm;
     R.drift.userData.uniforms.master.value = 1 - calm; R.sheets.userData.uniforms.master.value = 1 - calm * .8;
 
-    if (globalThis.__dbg08 && t > 4) { const P = v => ui.project(v).map(q => q.toFixed(0)).join(','); const sp = R.swPos; console.warn('DBG8', t.toFixed(2), 'swTop', P(sp.clone().add(new THREE.Vector3(0, 1.25, 0))), 'swBase', P(sp), 'rockEnd', P(new THREE.Vector3(2, 7, 10)), 'rockEdge', P(new THREE.Vector3(6.5, 8, 5)), 'sun', P(camera.position.clone().addScaledVector(R.sunDir, 100))); }
     // --- typography ---
     const X = ui.ctx; const sc = U.smoothstep(R.tSig - .4, R.tSig + .2, t); if (sc > 0) { const gr = X.createLinearGradient(0, 160, 0, 900); gr.addColorStop(0, `rgba(24,10,10,${.4 * sc})`); gr.addColorStop(1, 'rgba(24,10,10,0)'); X.save(); X.fillStyle = gr; X.fillRect(0, 0, 1080, 900); X.restore(); }
     ui.quote('Savaş kızıştığında biz\nResûlullah\'a (a.s.m.) sığınırdık.', 'Hz. Ali (r.a.)', { t, t0: R.tSig - .02, x: 540, y: 440, w: 880, size: 50, typeDur: 1.35 });

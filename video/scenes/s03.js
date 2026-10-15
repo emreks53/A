@@ -33,12 +33,22 @@ export default {
     scene.add(glowL, glowL.target);
     scene.add(new THREE.HemisphereLight('#4a62c0', '#2a2030', 1.0));
 
+    // ---- camp layout (tents face the valley centre and the viewer) ----
+    const CAMPS = [
+      { side: -1, tents: [[-2.5, -8.6, 35, 3.4, 2.3, 1.78, 4], [-3.5, -12.6, 30, 3.0, 2.1, 1.62, 3], [-1.85, -16.2, 45, 2.7, 2.0, 1.55, 3]], fire: [-1.1, -6.6], flag: [-3.3, -9.9] },
+      { side: 1, tents: [[2.5, -9.0, -35, 3.4, 2.3, 1.78, 4], [3.5, -13.0, -30, 3.0, 2.1, 1.62, 3], [1.9, -16.6, -45, 2.7, 2.0, 1.55, 3]], fire: [1.1, -6.9], flag: [1.4, -10.8] },
+    ];
+    const TENTS = CAMPS.flatMap(C => C.tents);
     // ---- terrain: flat valley floor between gentle dune slopes, open toward the afterglow ----
     const tg = new THREE.PlaneGeometry(160, 160, 200, 200); tg.rotateX(-Math.PI / 2);
     const fb = TEX.fbmField(9, 3, 5); const tp = tg.attributes.position; const cols = new Float32Array(tp.count * 3);
-    const hAt = (x, z) => { const ax = Math.abs(x); const u = x / 160 + .5, v = z / 160 + .5; const n = fb(u, v);
+    const hRaw = (x, z) => { const ax = Math.abs(x); const u = x / 160 + .5, v = z / 160 + .5; const n = fb(u, v);
       const slope = Math.pow(U.smoothstep(5.5, 34, ax), 1.4) * 9; const far = U.smoothstep(-30, -85, z) * 3.5;
       return slope + far + n * (.18 + U.smoothstep(4, 16, ax) * 2.2) + Math.sin(z * .35 + x * .2) * .05; };
+    // camp ground is levelled under every tent (so rugs, poles and curtain hems sit exactly on the sand — no z-fighting)
+    const FLAT = TENTS.map(([x, z, yawDeg, L, D]) => ({ x, z, c: Math.cos(yawDeg * Math.PI / 180), s: Math.sin(yawDeg * Math.PI / 180), hx: L / 2 + .25, hz: D / 2 + .3, h0: hRaw(x, z) }));
+    const hAt = (x, z) => { let h = hRaw(x, z); for (const f of FLAT) { const dx = x - f.x, dz = z - f.z; const lx = dx * f.c - dz * f.s, lz = dx * f.s + dz * f.c;
+        const w = U.smoothstep(f.hx + 1.5, f.hx, Math.abs(lx)) * U.smoothstep(f.hz + 1.5, f.hz, Math.abs(lz)); if (w > 0) h = U.lerp(h, f.h0, w); } return h; };
     const sandC = new THREE.Color('#9c8476'), rockC = new THREE.Color('#6e5050'), darkC = new THREE.Color('#40303a');
     for (let i = 0; i < tp.count; i++) { const x = tp.getX(i), z = tp.getZ(i); const h = hAt(x, z); tp.setY(i, h); const k = U.smoothstep(1.0, 4.5, h); const c = sandC.clone().lerp(rockC, k).lerp(darkC, U.smoothstep(5, 10, h) * .6); cols.set([c.r, c.g, c.b], i * 3); }
     tg.setAttribute('color', new THREE.BufferAttribute(cols, 3)); tg.computeVertexNormals();
@@ -50,11 +60,6 @@ export default {
       const mg = new THREE.BufferGeometry(); mg.setAttribute('position', new THREE.Float32BufferAttribute(mt, 3)); mg.setIndex(mi);
       scene.add(new THREE.Mesh(mg, new THREE.MeshBasicMaterial({ color: '#2a2440', side: THREE.DoubleSide, fog: false }))); }
 
-    // ---- camp layout (tents face the valley centre and the viewer) ----
-    const CAMPS = [
-      { side: -1, tents: [[-2.5, -8.6, 35, 3.4, 2.3, 1.78, 4], [-3.5, -12.6, 30, 3.0, 2.1, 1.62, 3], [-1.85, -16.2, 45, 2.7, 2.0, 1.55, 3]], fire: [-1.1, -6.6], flag: [-3.3, -9.9] },
-      { side: 1, tents: [[2.5, -9.0, -35, 3.4, 2.3, 1.78, 4], [3.5, -13.0, -30, 3.0, 2.1, 1.62, 3], [1.9, -16.6, -45, 2.7, 2.0, 1.55, 3]], fire: [1.1, -6.9], flag: [1.4, -10.8] },
-    ];
     const inCamp = (x, z) => Math.abs(x) > .3 && Math.abs(x) < 5.2 && z < -5.3 && z > -19;
 
     // scattered rocks + desert scrub
@@ -87,7 +92,7 @@ export default {
       const cushion = new THREE.MeshPhysicalMaterial({ color: friend ? '#8a3a24' : '#5a2018', roughness: .95, sheen: 1, sheenColor: new THREE.Color('#ffb088'), sheenRoughness: .5 });
       C.tents.forEach(([x, z, yawDeg, L, D, hM, n], k) => {
         const T = bedouinTent({ L, D, hM, hB: hM * .58, hF: hM * .8, n, seed: k * 5 + (friend ? 1 : 21), mat: clothMat, poleMat, ropeMat, band, rug, cushionMat: cushion, tassel: friend ? '#c8401e' : '#9a1e16', nx: k ? 54 : 76, nz: k ? 28 : 40, endRopes: [friend ? -1 : 1], skipFront: [friend ? n - 1 : 0] });
-        T.position.set(x, hAt(x, z) - .02, z); T.rotation.y = yawDeg * Math.PI / 180; G.add(T);
+        T.position.set(x, hAt(x, z) - .005, z); T.rotation.y = yawDeg * Math.PI / 180; G.add(T);
         if (k === 0) R.tentA.push(T);
       });
       // banner (rāya) flying from a tall pole that rises through the main tent's ridge (wind toward +x for both camps)
@@ -116,9 +121,8 @@ export default {
           const hd = new THREE.Mesh(new THREE.ConeGeometry(.035, .24, 6), iron); hd.scale.z = .45; hd.position.y = h + .12; sp.add(hd);
           const bd = new THREE.Mesh(new THREE.CylinderGeometry(.022, .022, .06, 6), iron); bd.position.y = h - .01; sp.add(bd);
           sp.position.set(x, hAt(x, z) - .1, z); sp.rotation.set(rx, 0, rz); M.shadowAll(sp); G.add(sp); });
-        // a rolled leather saddle-bag and a coil of rope by the spears (war camp gear, no faces/figures)
-        { const bag = new THREE.Mesh(new THREE.CapsuleGeometry(.12, .42, 6, 14), MAT.leather({ a: '#6a3a22', b: '#3a1e10' })); bag.rotation.set(0, .7, Math.PI / 2); bag.position.set(1.5, hAt(1.5, -6.05) + .11, -6.05); bag.castShadow = bag.receiveShadow = true; G.add(bag);
-          const coil = new THREE.Mesh(new THREE.TorusGeometry(.16, .035, 8, 24), ropeMat); coil.rotation.x = Math.PI / 2; coil.position.set(2.05, hAt(2.05, -6.2) + .035, -6.2); coil.castShadow = true; G.add(coil); }
+        // a rolled leather saddle-bag by the spears (war camp gear)
+        { const bag = new THREE.Mesh(new THREE.CapsuleGeometry(.12, .42, 6, 14), MAT.leather({ a: '#6a3a22', b: '#3a1e10' })); bag.rotation.set(0, .7, Math.PI / 2); bag.position.set(1.5, hAt(1.5, -6.05) + .11, -6.05); bag.castShadow = bag.receiveShadow = true; G.add(bag); }
       }
     }
 

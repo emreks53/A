@@ -189,7 +189,7 @@ export default {
       const from = new THREE.Vector3(-5.6, 5.6, zc); const k = (from.y - .2) / -SUND.y; const to = from.clone().addScaledVector(SUND, k);
       const sh = FX.lightShaft({ from: from.toArray(), to: to.toArray(), r0: .7, r1: .95, color: '#ffd9a0', opacity: .05 }); scene.add(sh); R.shafts.push(sh);
     });
-    const motes = FX.particles({ count: 620, center: [0, 2.3, -9], box: [9, 3.6, 26], // kept below the crane height (no giant bokeh blobs in the wide shot) size: 5, color: '#ffe6b8', opacity: .55, drift: [.03, .02, -.01], swirl: .08 }); scene.add(motes);
+    const motes = FX.particles({ count: 620, center: [0, 2.3, -9], box: [9, 3.6, 26], size: 5, color: '#ffe6b8', opacity: .55, drift: [.03, .02, -.01], swirl: .08 }); scene.add(motes); // kept below the crane height (no giant bokeh blobs in the wide shot)
 
     camera.near = .05; camera.far = 120; camera.updateProjectionMatrix();
     // ---- camera ---------------------------------------------------------------------------------------------
@@ -226,7 +226,7 @@ export default {
     post.dof.focus = U.lerp(fBase, camera.position.distanceTo(R.bookP), bf);
     post.dof.range = U.lerp(U.lerp(7, 10, wide), .9, bf); post.dof.amount = U.lerp(U.lerp(.5, .5, wide), .85, bf);
     // motion blur only for the fast glide/pan, the whip move + time-lapse (decided for the next frame: the engine reads it before update)
-    { const tn = t + 1 / 30; post.motionBlur = { samples: tn > 4.75 && tn < 5.65 ? 5 : (tn > .3 && tn < 2.75) || (tn > 4.5 && tn < 6.75) ? 3 : 1, shutter: .5 }; // 5 sub-frames at the whip peak (no stepped ghosts) }
+    { const tn = t + 1 / 30; post.motionBlur = { samples: tn > 4.75 && tn < 5.65 ? 5 : (tn > .3 && tn < 2.75) || (tn > 4.5 && tn < 6.75) ? 3 : 1, shutter: .5 }; } // 5 sub-frames at the whip peak (no stepped ghosts)
     R.shafts.forEach((s, i) => { s.userData.uniforms.opacity.value = .045 + .012 * Math.sin(t * .7 + i); });
 
     // ---- typography ----------------------------------------------------------------------------------------

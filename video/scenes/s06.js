@@ -7,7 +7,6 @@ import * as THREE from 'three';
 import * as C from '../engine/lib/extra_C.js';
 
 let R = {};
-const DBG = 0;
 export default {
   post: {
     exposure: 1.0,
@@ -63,14 +62,14 @@ export default {
     // wind-blown sand: low streaks (looping), a thin dust "cape" streaming off the sword base, distant back-lit wisps
     // fine airborne grains (thin, short, low alpha; kept away from the lens so they never read as scratches)
     const sr = U.rng(8); const sand = [];
-    for (let i = 0; i < 180; i++) {
-      const sp = 4.5 + sr() * 4, life = 14 / sp; const z = -9 + sr() * 8.4; const y = .01 + Math.pow(sr(), 2.6) * .3;
+    for (let i = 0; i < 100; i++) {
+      const sp = 4.5 + sr() * 4, life = 14 / sp; const z = -11 + sr() * 7.5; const y = .01 + Math.pow(sr(), 2.6) * .3;
       sand.push({ p: [-7 + sr(), y, z - 2.9], v: [sp, (sr() - .3) * .2, sp * .42 + (sr() - .5) * .3], t0: -sr() * life, life, w: .0035 + sr() * .0035, len: .05 + sr() * .1, color: sr() < .5 ? '#ffe2b6' : '#f2c08e', a: .07 + sr() * .12, loop: 1 });
     }
     R.sand = C.streaks(sand, { fadeIn: .1, fadeOut: .8 }); scene.add(R.sand);
     const fog = { color: '#d9a27c', density: .0022 };
     // saltation: sand snaking across the ground in thin, back-lit ribbons + a wake streaming off the planted blade
-    R.drift = C.sandDrift({ center: [0, 0, -6], size: [44, 30], layers: [[.008, 1, 1], [.03, .7, 1.15], [.075, .38, 1.3]], wind: [1, .42], speed: 2.6, opacity: .6, density: .44, lit: '#f6cf9c', shade: '#b8784a', sunDir: sunDir.toArray(), scatter: 1.0, plume: [0, 0, .8, .04], nearFade: 5.4, farFade: 26, fog });
+    R.drift = C.sandDrift({ ground: gh, center: [0, 0, -6], size: [44, 30], layers: [[.01, 1, 1], [.02, .75, 1.15], [.036, .4, 1.3]], wind: [1, .42], speed: 2.6, opacity: .6, density: .44, lit: '#f6cf9c', shade: '#b8784a', sunDir: sunDir.toArray(), scatter: 1.0, plume: [0, 0, .8, .04], nearFade: 5.4, farFade: 26, fog });
     scene.add(R.drift);
     // sun glints sparkling on the sand grains
     R.glitter = FX.particles({ count: 420, center: [0, .012, -2.6], box: [10, .02, 7.5], size: 1.5, color: '#fff3d4', opacity: .9, drift: [0, 0, 0], swirl: 0, twinkle: 1, seed: 12, hardness: .5 }); scene.add(R.glitter);
@@ -87,7 +86,6 @@ export default {
     // specular glint of the sun on the right quillon ball (short, on "benzersiz")
     R.glint = C.starGlint({ size: .16 }); R.glint.position.copy(sword.userData.ballR).add(new THREE.Vector3(.004, .006, .01)); sword.add(R.glint);
 
-    if (DBG) scene.traverse(o => { if (o.geometry && o.geometry.attributes.position) { const a = o.geometry.attributes.position.array; for (let i = 0; i < a.length; i++) if (!isFinite(a[i])) { console.error('NaNDBG', o.type, o.geometry.type, o.parent && o.parent.type, a.length, i); break; } } });
     camera.fov = 33; camera.near = .05; camera.far = 1500; camera.updateProjectionMatrix();
     R.look = new THREE.Vector3();
   },
@@ -101,7 +99,6 @@ export default {
     camera.position.set(cx, R.gh(cx, cz) + h + sh.y, cz);
     R.look.set(0, U.lerp(.53, .54, p), 0); camera.lookAt(R.look); camera.updateMatrixWorld(true);
     post.dof.focus = camera.position.distanceTo(R.look);
-    if (DBG) { const a = t * 1.2; camera.position.set(Math.sin(a) * 1.5, .8, Math.cos(a) * 1.5); camera.lookAt(0, .78, 0); camera.updateMatrixWorld(true); post.dof.focus = 1.5; if (t > 2) { camera.position.set(Math.sin(a) * 1.1, .3, Math.cos(a) * 1.1); camera.lookAt(0, .2, 0); camera.updateMatrixWorld(true); post.dof.focus = 1.1; } }
 
     const tAli = ctx.wordTime('hazret'), tCes = ctx.wordTime('cesarette'), tBen = ctx.wordTime('benzersiz'), tZat = ctx.wordTime('bir');
     // --- wind gusts ---

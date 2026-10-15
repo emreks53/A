@@ -1021,7 +1021,8 @@ export function sandDrift(o = {}) {
   };
   const layers = o.layers ?? [[.01, 1, 1], [.035, .75, 1.15], [.09, .45, 1.3], [.2, .2, 1.5]];
   layers.forEach(([h, om, sm], li) => {
-    const geo = new THREE.PlaneGeometry(size[0], size[1], 1, 1); geo.rotateX(-Math.PI / 2);
+    const sg = o.ground ? (o.seg ?? [96, 72]) : [1, 1]; const geo = new THREE.PlaneGeometry(size[0], size[1], sg[0], sg[1]); geo.rotateX(-Math.PI / 2);
+    if (o.ground) { const gp = geo.attributes.position; for (let i = 0; i < gp.count; i++) gp.setY(i, o.ground(gp.getX(i) + c[0], gp.getZ(i) + c[2]) - c[1]); }   // hug the terrain
     const m = new THREE.ShaderMaterial({
       uniforms: { ...u, layerH: { value: h }, layerO: { value: om }, layerS: { value: sm }, layerI: { value: li } }, transparent: true, depthWrite: false,
       vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,

@@ -617,7 +617,7 @@ export function dawnSkyMaterial(o = {}) {
         #include <colorspace_fragment>
       }` });
 }
-export function dawnSky(o = {}) { const m = dawnSkyMaterial(o); const mesh = new THREE.Mesh(new THREE.SphereGeometry(o.radius ?? 450, 64, 32), m); mesh.frustumCulled = false; mesh.renderOrder = -1000; mesh.userData.noDepth = true; mesh.userData.uniforms = m.uniforms; return mesh; }
+export function dawnSky(o = {}) { const m = dawnSkyMaterial(o); const mesh = new THREE.Mesh(new THREE.SphereGeometry(o.radius ?? 450, 64, 32), m); mesh.frustumCulled = false; mesh.renderOrder = 1e6; /* drawn after opaques at the far plane: early-z skips hidden sky pixels */ mesh.userData.noDepth = true; mesh.userData.uniforms = m.uniforms; return mesh; }
 // Environment for reflections: the same dawn sky (no stars) + warm glow of the lamp-lit ground and haze
 export function dawnEnv(renderer, o = {}) {
   const sc = new THREE.Scene(); const m = dawnSkyMaterial({ ...o, stars: 0, clouds: .6, ground: o.ground ?? '#1c1a24', gain: o.gain ?? 2.2, lift: o.lift ?? 1 }); m.uniforms.glow.value = 1.2;

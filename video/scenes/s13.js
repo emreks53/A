@@ -222,7 +222,7 @@ export default {
       (kids || []).forEach(([dx, dz, hk, rk], i) => add(tower, { ...o, x: o.x + dx * o.R, z: o.z + dz * o.R, top: -125 + (o.top + 125) * hk, R: o.R * rk, seed: o.seed + 50 + i, segR: 120, segY: 34, joints: 6 })); return m; };
     const G = add(horn, { x: -18, z: -600, top: 138, R: 132, seed: 11, lean: .05, phase: .25, segR: 300, segY: 230, a: '#9a8a90', b: '#3b3241' });
     R.G = G; R.summit = new THREE.Vector3(-18 + 132 * .05, 138, -600);
-    R.P0 = add(tower, { x: .3, z: -1.2, top: -.45, R: 6.5, seed: 4, taper: .14, rimVar: .02, notch: .02, strata: 2.2, a: '#b8a99c', b: '#4f4650', g: '#7a6e64', segR: 140, segY: 40, capN: 16, rimVar: .02, notch: .02, dome: .02 }); // our ledge tower
+    R.P0 = add(tower, { x: .3, z: -1.2, top: -.45, R: 6.5, seed: 4, taper: .14, rimVar: .02, notch: .02, strata: 2.2, a: '#d4c4b2', b: '#6e6070', g: '#a8987e', segR: 140, segY: 40, capN: 16, rimVar: .02, notch: .02, dome: .02 }); // our ledge tower
     const L1 = cluster({ x: -30, z: -185, top: -2, R: 15, seed: 21 }, [[.78, -.42, .82, .52], [-.62, -.5, .7, .48]]);
     const L2 = cluster({ x: 36, z: -240, top: -10, R: 14, seed: 22 }, [[-.72, -.5, .85, .5]]);
     cluster({ x: -64, z: -390, top: 8, R: 24, seed: 23 }, [[.7, .3, .8, .5], [-.5, -.6, .9, .6]]);
@@ -344,10 +344,16 @@ export default {
       [5.4, v1, b1[0] + .4, b1[1] - 10.2, 41],
       [7.9, v2, b2[0] + .5, b2[1] - 9.6, 38.5],
     ]);
+    { const tc = new THREE.PerspectiveCamera(38, ctx.W / ctx.H, .05, 6000); const pts = [new THREE.Vector3(0, .6, 0), new THREE.Vector3(0, 1.4, 0), new THREE.Vector3(-30, -10, -185)];
+      const proj = (tt) => { R.cam.apply(tc, tt); tc.updateMatrixWorld(); tc.matrixWorldInverse.copy(tc.matrixWorld).invert(); return pts.map(p => { const v = p.clone().applyMatrix4(tc.matrixWorldInverse); if (v.z > -.1) return null; const q = p.clone().project(tc); return Math.abs(q.x) < 1.2 && Math.abs(q.y) < 1.2 ? [q.x * 540, q.y * 960] : null; }); };
+      R.pxSpeed = tt => { const a = proj(tt), b = proj(tt + 1 / 30); let m = 0; a.forEach((p, i) => { if (p && b[i]) m = Math.max(m, Math.hypot(b[i][0] - p[0], b[i][1] - p[1])); }); return m; }; }
+    ctx.post.motionBlur = { samples: R.pxSpeed(-.5) > 40 ? 3 : 1, shutter: .4 };
   },
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
     R.cam.apply(camera, t, U.shake(t, .012 + .02 * U.smoothstep(3, 4.5, t), .5, 4));
+    // motion blur only while the crane sweeps the near stack out of frame (decided one frame ahead: read before next update)
+    post.motionBlur = R.pxSpeed(t + 1 / 30) > 40 ? { samples: 3, shutter: .4 } : { samples: 1 };
     // sunrise creeps down the great summit (terminator height)
     R.UN.uTerm.value = U.lerp(104, 58, U.smoothstep(-.5, 7.8, t));
     R.sky.userData.uniforms.sunGlow.value = 1.0 + .3 * U.smoothstep(2, 7, t);
@@ -360,8 +366,8 @@ export default {
     // ---- typography -------------------------------------------------------------------------------------------
     const tT = ctx.wordTime('tarihin'), tSh = ctx.wordTime('şehadetiyle'), tD = ctx.wordTime('düşmanları'), tK = ctx.wordTime('kabul');
     const tEn = ctx.wordTime('en'), tY = ctx.wordTime('yüksek'), tYe = ctx.wordTime('yetişilemeyecek'), tDe = ctx.wordTime('derecedeydi');
-    const stackAnchor = R.stack.localToWorld(new THREE.Vector3(.02, R.stackTop * .72, -.22)); // right flank of the stack: the line never crosses the books
-    ui.callout('tarihin şehadeti', { t, t0: tT + .05, t1: tD - .05, anchor: stackAnchor, to: [770, 330], family: 'Playfair Display', weight: 700, size: 54, color: '#fff1d6', dotColor: '#ffcf6b' });
+    const stackAnchor = R.stack.localToWorld(new THREE.Vector3(.19, R.stackTop * .78, .02)); // page-edge (right) flank of the stack: the line never crosses the spines
+    ui.callout('tarihin şehadeti', { t, t0: tT + .05, t1: tD - .05, anchor: stackAnchor, to: [745, 330], family: 'Playfair Display', weight: 700, size: 54, color: '#fff1d6', dotColor: '#ffcf6b' });
     ui.text('düşmanları bile', { t, t0: tD - .05, t1: tEn + .1, x: 540, y: 300, size: 76, weight: 900, color: '#ff8a6e', anim: 'pop', stroke: 'rgba(30,24,50,.55)', strokeW: 10 });
     ui.text('kabul ediyor', { t, t0: tK - .05, t1: tEn + .1, x: 540, y: 392, size: 64, weight: 800, color: '#fff4dc', anim: 'rise', stroke: 'rgba(30,24,50,.5)', strokeW: 9 });
     // summit callout + big keyword

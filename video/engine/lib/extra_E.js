@@ -198,8 +198,8 @@ export function hangingLamp(o = {}) {
     const ign = v > 0 && v < 1 ? Math.sin(v * PI) * .35 : 0;
     fl.visible = v > .01; fl.scale.setScalar(Math.max(.01, v * (1 + ign)) * (1 + .05 * Math.sin(t * 9 + (o.seed ?? 1))));
     fl.userData.uniforms.intensity.value = 4 * v;
-    halo.material.opacity = .3 * v * (1 + ign); halo2.material.opacity = .45 * v;
-    gm.emissive.set('#ffae55'); gm.emissiveIntensity = .9 * v;
+    halo.material.opacity = .24 * v * (1 + ign); halo2.material.opacity = .4 * v;
+    gm.emissive.set('#ffae55'); gm.emissiveIntensity = .62 * v;
     halo.visible = halo2.visible = v > .01;
   };
   g.userData.setLit(0, 0);
@@ -454,9 +454,9 @@ export function cesme() {
       const fac = Math.round(Math.atan2(z, x) / (PI / 3.5)) * (PI / 3.5), cut = 1 - .06 * (1 - Math.cos(Math.atan2(z, x) - fac)) * 8; // chisel facets
       x = se(x, .55); z = se(z, .55); y = se(y, .7); x *= .165 * (1 + n) * cut * (1 - .16 * Math.max(0, y)); z *= .14 * (1 + n) * cut * (1 - .16 * Math.max(0, y)); y = y < 0 ? y * .02 : y * top * .9 * (1 + n * .6); const r = Math.hypot(x - .01, z);
       if (r < hb * 1.15) { const yb = top * .93 - hd * Math.max(0, 1 - (r / hb) ** 2); y = Math.min(y, yb + Math.max(0, r - hb) * .4); }
-      p.setXYZ(i, x, y, z); } rg.computeVertexNormals(); { const cc = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const r = Math.hypot(p.getX(i) - .01, p.getZ(i)); const wet = Math.max(0, 1 - Math.max(0, r - hb) / .035) * (p.getY(i) > .05 ? 1 : 0); const v = 1 - .42 * wet; cc.set([v * .98, v, v * 1.03], i * 3); } rg.setAttribute('color', new THREE.BufferAttribute(cc, 3)); } const uvs = []; for (let i = 0; i < p.count; i++) uvs.push(p.getX(i) * 4 + .5, p.getZ(i) * 4 + p.getY(i) * 3); rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); }
+      p.setXYZ(i, x, y, z); } rg.computeVertexNormals(); { const cc = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const r = Math.hypot(p.getX(i) - .01, p.getZ(i)); const wet = Math.max(0, 1 - Math.max(0, r - hb) / .035) * (p.getY(i) > .05 ? 1 : 0); const v = 1 - .3 * wet; cc.set([v * .98, v, v * 1.03], i * 3); } rg.setAttribute('color', new THREE.BufferAttribute(cc, 3)); } const uvs = []; for (let i = 0; i < p.count; i++) uvs.push(p.getX(i) * 4 + .5, p.getZ(i) * 4 + p.getY(i) * 3); rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); }
   const rt = TEX.stone({ a: '#b9b4aa', b: '#77736b', seed: 29 });
-  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: rt.map, normalMap: rt.normalMap, normalScale: V2(1.6, 1.6), roughness: .66, clearcoat: .3, clearcoatRoughness: .4, color: '#a8a49c', vertexColors: true }));
+  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: rt.map, normalMap: rt.normalMap, normalScale: V2(1.6, 1.6), roughness: .66, clearcoat: .3, clearcoatRoughness: .4, color: '#d2cec4', vertexColors: true }));
   rock.position.set(mouth.x - .01, 0, mouth.z); g.add(rock);
   const surfY = .081;
   const ws = waterSurface({ color: '#3a7a80', opacity: .82, amb: .00015 });
@@ -749,7 +749,7 @@ export function garden(o = {}) {
     x.globalAlpha = 1; }, [10, 10]);
   const ground = M(new THREE.PlaneGeometry(28, 26).rotateX(-PI / 2), new THREE.MeshStandardMaterial({ map: grass, roughness: .95, color: '#d6dcc2' }), false, true); ground.position.set(0, .004, -14.2); g.add(ground);
   // flagstone path from the threshold toward the tree
-  const flag = new THREE.MeshStandardMaterial({ color: '#d9cdb2', roughness: .85 }); const fl = [];
+  const flag = new THREE.MeshStandardMaterial({ color: '#c9b393', roughness: .85 }); const fl = [];
   for (let z = -1.25, i = 0; z > -10; i++) { const w = .5 + R() * .18, d = .36 + R() * .14; for (const sx of [-1, 1]) { const ww = w * (.85 + R() * .2); fl.push(rbox(ww, .04, d, .02, 1).rotateY((R() - .5) * .16).translate(sx * (ww / 2 + .02) + (R() - .5) * .05, .02, z - d / 2)); } z -= d + .06; }
   g.add(M(merge(fl), flag, false, true));
   const clay = MAT.clay({ a: '#c97a48', b: '#97502e', seed: 51 }); const leafM = new THREE.MeshStandardMaterial({ color: '#4c7a2c', roughness: .8 }); const red = new THREE.MeshStandardMaterial({ color: '#e0332e', roughness: .55 });

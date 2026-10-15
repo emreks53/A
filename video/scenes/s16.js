@@ -183,7 +183,7 @@ export default {
     // ---------------- typography ----------------
     const tF = ctx.wordTime('filozof'), tT = ctx.wordTime('thomas'), tC = ctx.wordEnd('carlyle');
     G.locTag(ui, t, { t0: .12, text: 'LONDRA · 1840', accent: '#9cc3e6', y: 266 });
-    const end = G.nameCard(ui, t, { y: 328, tCard: tF - .04, tName: tT - .04, tWork: tC - .55, name: 'THOMAS CARLYLE', sub: 'Filozof · 1795–1881', work: 'On Heroes (1841)', accent: '#9cc3e6', bg: 'rgba(16,22,34,.66)' });
+    const end = G.nameCard(ui, t, { y: 328, nameAnim: 'fade', tCard: tF - .04, tName: tT - .04, tWork: tC - .55, name: 'THOMAS CARLYLE', sub: 'Filozof · 1795–1881', work: 'On Heroes (1841)', accent: '#9cc3e6', bg: 'rgba(16,22,34,.66)' });
     if (end) { const a = R.bookAnchorW; const [ax] = ui.project(a); G.pointer(ui, t, { t0: tC - .2, from: [ax, 328 + 292 + 4], anchor: a, color: '#9cc3e6', dur: .35 }); }
   },
 };

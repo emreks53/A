@@ -159,7 +159,7 @@ export function bedouinTent(o = {}) {
   if (o.interior !== false) {
     const rug = new THREE.Mesh(new THREE.PlaneGeometry(L * .86, D * .82).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: o.rug ?? rugTex({ seed }), roughness: 1, sheen: .6, sheenColor: new THREE.Color('#ffc8a0') }));
     rug.material.map.rotation = Math.PI / 2; rug.material.map.center.set(.5, .5);
-    rug.position.set(0, .012, -.02); rug.receiveShadow = true; G.add(rug);
+    rug.position.set(0, .03, -.02); rug.receiveShadow = true; G.add(rug);
     const cm = o.cushionMat ?? new THREE.MeshPhysicalMaterial({ color: '#7a2a20', roughness: .95, sheen: 1, sheenColor: new THREE.Color('#ffb088'), sheenRoughness: .5 });
     const cg = []; for (let k = 0; k < Math.max(2, n - 1); k++) { const w = L * .8 / Math.max(2, n - 1) - .06; const c = rbox(w, .24, .3, .1, 3); c.translate(-L * .4 + w / 2 + .03 + k * (w + .06), .13, -D / 2 + .3); cg.push(c); }
     const cmesh = new THREE.Mesh(mergeGeometries(cg), cm); cmesh.castShadow = cmesh.receiveShadow = true; G.add(cmesh);

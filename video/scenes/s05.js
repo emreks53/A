@@ -365,6 +365,6 @@ export default {
     ui.text('Mekkeliler O’na “el-Emîn” (güvenilir) derdi', { t, t0: 1.38, t1: 4.62, x: 540, y: 384, size: 37, weight: 800, bg: 'rgba(28,16,10,.82)', color: '#fff1d6', anim: 'rise', maxWidth: 920 });
     // "emanet" keyword pointing at the chest's red-wax tag, on the spoken word
     { const tg = R.chest.userData.tag; const wp = new THREE.Vector3(0, -.066, .006); tg.localToWorld(wp); const [ax, ay, az] = ui.project(wp);
-      if (az < 1) ui.callout('emanet', { t, t0: ctx.wordTime('emanet') - .2, t1: 4.62, anchor: [ax, ay], to: [U.clamp(ax + 150, 200, 905), U.clamp(ay - 150, 600, 1260)], size: 48, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ff5a4e', lineColor: 'rgba(255,236,200,.95)' }); }
+      if (az < 1) ui.callout('emanet', { t, t0: ctx.wordTime('emanet') - .2, t1: 4.62, anchor: [ax, ay], to: [U.clamp(ax + 150, 200, 840), U.clamp(ay - 150, 600, 1260)], size: 48, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ff5a4e', lineColor: 'rgba(255,236,200,.95)' }); }
   },
 };

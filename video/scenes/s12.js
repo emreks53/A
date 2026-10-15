@@ -133,6 +133,9 @@ export default {
       for (const zz of [.045, -.045]) { const ringK = E.M(new THREE.TorusGeometry(.04, .007, 8, 20), Mo.MAT.brass()); ringK.position.set(-sx * (lw - .08), 1.05, zz); leaf.add(ringK); }
       R.leaves.push({ hinge, sx });
     }
+    // door stops (rebate) behind the leaves: no daylight through the hinge-side gaps, only the thin centre line + under-door leak
+    { const stopMat = MAT.wood({ a: '#7a4a26', b: '#4a2a14', rings: 8, seed: 57 }); for (const sx of [-1, 1]) { const st = E.M(Mo.rbox(.07, 2.04, .03, .008), stopMat); st.position.set(xd + sx * .445, 1.02, WZ - .125); scene.add(st); }
+      const top = E.M(Mo.rbox(.96, .05, .03, .008), stopMat); top.position.set(xd, 2.0, WZ - .125); scene.add(top); }
     // threshold stone + light leaking under the closed door (anticipation)
     const thr = new THREE.Mesh(Mo.rbox(1.0, .03, .5, .012), jambMat); thr.position.set(xd, .006, WZ - .24); thr.receiveShadow = true; scene.add(thr);
     R.leak = new THREE.Mesh(new THREE.PlaneGeometry(1.0, .55).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: TEX.softDot(64, .1), color: '#ffcf8a', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
@@ -249,8 +252,13 @@ export default {
     halos.userData.uniforms = fu; halos.userData.noDepth = true; halos.frustumCulled = false; scene.add(halos);
     // generic exhibits on far pedestals
     const gg = E.genericGeos(); const pal = ['#c47a48', '#d6a94e', '#3f8a86', '#e8dcc2', '#8a3a2a', '#5b7a3a', '#2f5d9a'];
+    const glazeTex = TEX.drawTexture(64, 256, (x, W, H) => { x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H); // glazed bands + small lozenges (tinted per instance)
+      for (const [y, h, c] of [[30, 10, '#d8cbb0'], [44, 4, '#8a7a62'], [120, 26, '#efe4cc'], [196, 4, '#8a7a62'], [204, 12, '#d8cbb0']]) { x.fillStyle = c; x.fillRect(0, y, W, h); }
+      x.fillStyle = '#9a8a70'; for (let i = 0; i < 4; i++) { x.save(); x.translate(i * 16 + 8, 133); x.rotate(Math.PI / 4); x.fillRect(-4, -4, 8, 8); x.restore(); } });
+    glazeTex.wrapS = glazeTex.wrapT = THREE.RepeatWrapping;
+    const genMat = new THREE.MeshPhysicalMaterial({ color: '#ffffff', map: glazeTex, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 });
     R.genIM = gg.map((geo, ti) => { const list = farObj.filter((p, k) => (k * 7 + 3) % gg.length === ti); list.forEach((p, k) => { p.gc = new THREE.Color(pal[(k * 3 + ti) % pal.length]); });
-      const r = inst(geo, new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: .45, clearcoat: .3 }), list.map(p => p.x), (x, k) => m4.makeRotationY(list[k].rot + k).setPosition(list[k].x, R.PT, list[k].z), { color: true, chunk: 6 }); r.list = list; return r; });
+      const r = inst(geo, genMat, list.map(p => p.x), (x, k) => m4.makeRotationY(list[k].rot + k).setPosition(list[k].x, R.PT, list[k].z), { color: true, chunk: 6 }); r.list = list; return r; });
 
     // ---- two real spot lights (lamp keys) alternating between even/odd exhibits
     R.spots = [0, 1].map(() => { const s = new THREE.SpotLight('#ffc88e', 0, 4.2, .62, .75, 2); s.castShadow = true; s.shadow.mapSize.set(1024, 1024); s.shadow.bias = -.0004; s.shadow.normalBias = .015; s.shadow.camera.near = .05; s.shadow.radius = 3; scene.add(s, s.target); return s; });
@@ -274,7 +282,7 @@ export default {
     const wb = []; for (let i = -16; i <= 96; i++) { const x = xA(i); wb.push(beamGeo([V(x - .2, 3.05, zw), V(x + .2, 3.05, zw), V(x + .2, 3.62, zw), V(x - .2, 3.62, zw)])); }
     R.winBeams = new THREE.Mesh(E.merge(wb), beamMat(.05)); R.winBeams.userData.noDepth = true; R.winBeams.renderOrder = 4; R.winBeams.frustumCulled = false; scene.add(R.winBeams);
     R.doorBeam = new THREE.Mesh(beamGeo([V(xd - .45, .02, WZ - .1), V(xd + .45, .02, WZ - .1), V(xd + .45, 2.0, WZ - .1), V(xd - .45, 2.0, WZ - .1)]), beamMat(0)); R.doorBeam.userData.noDepth = true; R.doorBeam.renderOrder = 4; R.doorBeam.frustumCulled = false; scene.add(R.doorBeam);
-    R.doorDust = FX.particles({ count: 160, center: [xd + .4, 1.0, 0], box: [1.4, 2.0, 1.6], size: 2.5, color: '#ffe6b8', opacity: 0, drift: [.02, .04, .01], swirl: .06 }); scene.add(R.doorDust);
+    R.doorDust = FX.particles({ count: 120, center: [xd + .4, 1.0, 0], box: [1.4, 2.0, 1.6], size: 1.7, color: '#ffe6b8', opacity: 0, drift: [.02, .04, .01], swirl: .06 }); scene.add(R.doorDust);
     R.motes = FX.particles({ count: 380, center: [9, 1.6, .1], box: [26, 2.6, 1.3], size: 2.2, color: '#ffe2b0', opacity: .4, drift: [.03, .02, 0], swirl: .05 }); scene.add(R.motes);
     R.motes2 = FX.particles({ count: 600, center: [x14 + 16, 2.0, 1.6], box: [30, 3.6, 4.6], size: 3.5, color: '#ffe2b0', opacity: 0, drift: [.03, .02, 0], swirl: .06 }); scene.add(R.motes2);
 
@@ -284,7 +292,7 @@ export default {
     const c0 = camFor(0);
     keys.push({ t: -.75, pos: c0.pos.clone().add(V(-1.0, .55, 1.25)), look: c0.look.clone().add(V(.45, .05, 0)), fov: 33, a: 1 });
     keys.push({ t: R.T[0] + .78, ...camFor(0), a: .45 });
-    for (let i = 1; i < 14; i++) { const k = camFor(i), tk = R.T[i] + .07; let prev = keys[keys.length - 1];
+    for (let i = 1; i < 14; i++) { const k = camFor(i), tk = R.T[i] + .14; let prev = keys[keys.length - 1];
       if (i === DOOR) { // HOŞGÖRÜ: arrive on the closed door just before the word, then a slow push toward the opening as it swings open
         const A = { pos: V(xd - .46, 1.3, 2.9), look: V(xd + .2, 1.71, -3.0), fov: 40 }, B = { pos: V(xd - .34, 1.27, 2.4), look: V(xd + .24, 1.76, -3.0), fov: 39 };
         const ta = R.T[i] - .1, tm = (prev.t + ta) / 2;
@@ -294,7 +302,7 @@ export default {
         const th = Math.max(prev.t + .45, tk - .85); keys.push({ t: th, pos: prev.pos.clone().add(V(.11, -.01, -.07)), look: prev.look.clone().add(V(.06, 0, 0)), fov: prev.fov, a: .9 }); prev = keys[keys.length - 1]; }
       if (tk - prev.t > .6) { const tm = (prev.t + tk) / 2; // mid-glide: ease back + widen a little so both neighbours stay readable
         keys.push({ t: tm, pos: prev.pos.clone().lerp(k.pos, .5).add(V(-.03, .06, .28)), look: prev.look.clone().lerp(k.look, .5).add(V(0, .03, 0)), fov: 33.5, a: 1 }); }
-      keys.push({ t: i === DOOR + 1 ? tk + .06 : tk, ...k, a: R.T[i + 1] !== undefined && R.T[i + 1] - R.T[i] < 1.0 ? .45 : .32 }); } // keep drifting through quick beats (lower peak glide speed)
+      keys.push({ t: i === DOOR + 1 ? tk + .06 : tk, ...k, a: R.T[i + 1] !== undefined && R.T[i + 1] - R.T[i] < 1.0 ? .32 : .3 }); } // keep drifting through quick beats (lower peak glide speed)
     const c13 = camFor(13);
     keys.push({ t: R.W.ve - .1, pos: c13.pos.clone().add(V(.16, .1, .06)), look: c13.look.clone().add(V(.25, .06, 0)), fov: 31.5, a: 1 });
     keys.push({ t: 15.8, pos: V(x14 - 1.05, 2.0, 2.45), look: V(x14 + 3.85, 1.4, -1.0), fov: 37, a: 1 });

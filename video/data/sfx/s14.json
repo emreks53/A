@@ -26,46 +26,6 @@
 "desc": "small pop for tag"
 },
 {
-"t": 82.38,
-"dur": 1.2,
-"kind": "whoosh",
-"desc": "big airy pull-back whoosh"
-},
-{
-"t": 82.6,
-"dur": 0.3,
-"kind": "wood",
-"desc": "book slides onto shelf knock"
-},
-{
-"t": 82.95,
-"dur": 0.3,
-"kind": "wood",
-"desc": "book slides onto shelf knock",
-"gain": -2
-},
-{
-"t": 83.25,
-"dur": 0.3,
-"kind": "wood",
-"desc": "book slides onto shelf knock",
-"gain": -3
-},
-{
-"t": 83.5,
-"dur": 0.3,
-"kind": "wood",
-"desc": "book slides onto shelf knock",
-"gain": -4
-},
-{
-"t": 83.75,
-"dur": 0.3,
-"kind": "wood",
-"desc": "book slides onto shelf knock",
-"gain": -5
-},
-{
 "t": 84.2,
 "dur": 0.6,
 "kind": "paper",
@@ -76,5 +36,53 @@
 "dur": 0.5,
 "kind": "stamp",
 "desc": "rubber-stamp thump on ispat"
+},
+{
+"t": 82.2,
+"dur": 1.6,
+"kind": "whoosh",
+"desc": "camera crane whip from lectern to gallery"
+},
+{
+"t": 82.75,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -0.0
+},
+{
+"t": 83.05,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -1.5
+},
+{
+"t": 83.35,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -3.0
+},
+{
+"t": 83.65,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -4.5
+},
+{
+"t": 83.95,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -6.0
+},
+{
+"t": 84.25,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -7.5
 }
 ]

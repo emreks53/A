@@ -30,7 +30,7 @@ export default {
     // ---- dunes (flattened around the hero spot) ----
     const dunes = X.desertDunes({ size: 400, seg: 300, height: 11, near: .3, r0: 40, r1: 130, swell: 2.4, seed: 12, a: '#c4a07c', b: '#977054' });
     dunes.material.envMapIntensity = .35;
-    scene.add(dunes); R.dunes = dunes; const hAt = dunes.userData.heightAt; R.hAt = hAt;
+    dunes.receiveShadow = false; /* ray shadows land on the opaque-centred sand patch / rug */ scene.add(dunes); R.dunes = dunes; const hAt = dunes.userData.heightAt; R.hAt = hAt;
 
     // ---- lights: cool sky fill, faint warm dawn-sky light on east slopes, the dawn ray (spot), two lamp practicals ----
     const hemi = new THREE.HemisphereLight('#7088d8', '#463a3c', 2.0); scene.add(hemi); R.hemi = hemi;
@@ -131,6 +131,8 @@ export default {
     const prod = U.smoothstep(4.6, 5.8, t); // 0 wide .. 1 product shot
     for (const m of R.envMats) m.envMapIntensity = .5 + .2 * prod + .25 * g;
     R.hemi.intensity = 2.0 - 1.6 * prod; R.dawnSkyL.intensity = .55 - .35 * prod;
+    // perf: lights / passes only while they contribute (switching visibility recompiles once; output identical)
+    R.spot.visible = t > 4.55; R.dawnSkyL.visible = prod < .995; post.dof.enabled = t > 4.2;
     // lamp practicals flicker
     for (const l of [R.rimLamp, R.fillLamp]) l.intensity = l.userData.base * (1 + .07 * Math.sin(t * 13.1 + l.position.x * 9) + .05 * Math.sin(t * 7.7 + l.position.z * 5));
     post.exposure = 1.18 + .04 * g - .1 * prod;

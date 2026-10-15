@@ -529,7 +529,7 @@ export default {
       const e = ui.env(t, .55, 2.5, .45, 'fade');
       if (kz < 1 && e.o > 0) {
         const rr = Math.max(26, Math.hypot(ex - kx, ey - ky)) * (.85 + .15 * U.ease.outBack(e.a)); const p = U.ease.outCubic(U.clamp((t - .55) / .45));
-        const tx = U.clamp(kx + 170, 160, 900), ty = Math.max(420, ky - 160);
+        const ty = Math.max(420, ky - 160), tx = safeX(ui, 'Kâbe', 42, kx + 190, ty - 10) - 20;
         X.save(); X.globalAlpha = e.o; X.lineCap = 'round';
         for (const [w, c2] of [[7, 'rgba(10,14,30,.45)'], [3.5, 'rgba(255,244,220,.95)']]) { X.strokeStyle = c2; X.lineWidth = w;
           X.beginPath(); X.arc(kx, ky, rr, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p); X.stroke();
@@ -540,9 +540,9 @@ export default {
     }
     // "müşrikler" label on a red-dot house; kept clear of the Mekke tag (y 244..356)
     let mPos = null;
-    if (R.mlabel && t > 2.3) { const [hx, hy] = ui.project(R.mlabel.top); mPos = [U.clamp(hx - 110, 200, 880), U.clamp(hy - 170, 450, 1250)]; ui.callout('müşrikler', { t, t0: 2.42, t1: 4.25, anchor: [hx, hy], to: mPos, size: 46, weight: 900, bg: '#e2463c', color: '#fff4ec', dotColor: '#ff4d43', lineColor: 'rgba(255,240,228,.95)' }); }
+    if (R.mlabel && t > 2.3) { const [hx, hy] = ui.project(R.mlabel.top); const my = U.clamp(hy - 170, 450, 1250); mPos = [safeX(ui, 'müşrikler', 46, hx - 110, my), my]; ui.callout('müşrikler', { t, t0: 2.42, t1: 4.25, anchor: [hx, hy], to: mPos, size: 46, weight: 900, bg: '#e2463c', color: '#fff4ec', dotColor: '#ff4d43', lineColor: 'rgba(255,240,228,.95)' }); }
     // "emanetler" label riding on a lantern (never on top of the müşrikler pill)
-    if (t > 2.95) { const lp = R.lead.pos; const [lx, ly, lz] = ui.project(lp); let to = [U.clamp(lx + 190, 230, 850), U.clamp(ly - 190, 520, 1250)];
+    if (t > 2.95) { const lp = R.lead.pos; const [lx, ly, lz] = ui.project(lp); const ey = U.clamp(ly - 190, 520, 1250); let to = [safeX(ui, 'emanetler', 46, lx + 190, ey), ey];
       if (mPos && t < 4.25 && Math.abs(to[1] - mPos[1]) < 110 && Math.abs(to[0] - mPos[0]) < 360) to[1] = mPos[1] + (to[1] >= mPos[1] ? 115 : -115);
       if (lz < 1) ui.callout('emanetler', { t, t0: 3.02, t1: 4.45, anchor: [lx, ly], to, size: 46, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ffd88f', lineColor: 'rgba(255,226,160,.95)' }); }
     // "o kadar kişi" — many houses vs one door
@@ -560,3 +560,7 @@ function makeSprites() {
 }
 
 function ui_rr(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
+
+// keep a pill (centred at x) inside the safe zone x 80..1000, and clear of the Shorts button column (x > 960, y 1000..1700)
+function safeX(ui, str, size, x, y) { const X = ui.ctx; X.save(); X.font = ui.font(size, 900, 'Nunito'); const w = X.measureText(str).width + size * .84; X.restore();
+  const xmax = (y > 960 && y < 1720 ? 950 : 1000) - w / 2 - 6; return Math.min(Math.max(x, 80 + w / 2 + 6), xmax); }
