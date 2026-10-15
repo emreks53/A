@@ -319,7 +319,6 @@ export default {
     R.pxSpeed = t => { const a = R.camAt(t), b = R.camAt(t + 1 / 30); const P = V(a[0], a[1], a[2]).addScaledVector(dirOf(a), 2.9); const d2 = P.sub(V(b[0], b[1], b[2])).normalize();
       return Math.acos(Math.min(1, d2.dot(dirOf(b)))) / (b[5] * Math.PI / 180) * 1920; };
     ctx.post.motionBlur = { samples: R.pxSpeed(-.5) > 40 ? 3 : 1, shutter: .5 };
-    window.__s12 = R; // debug handle (camera probes)
     E.clampHDR(scene, 12);
   },
 

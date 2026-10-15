@@ -379,7 +379,7 @@ export default {
     // failed attempts: dotted climb lines from the ladder / stair tops that stop far below the summit, each ending in a red ✕
     const fadeAll = 1 - U.smoothstep(7.55, 7.85, t);
     const attempt = (from, k, t0, bend) => {
-      const p = U.clamp((t - t0) / .65); if (p <= 0) return; const a = ui.project(from), b = ui.project(R.summit); const X = ui.ctx;
+      const p = U.clamp((t - t0) / .7); if (p <= 0) return; const a = ui.project(from), b = ui.project(R.summit); const X = ui.ctx;
       const ex = a[0] + (b[0] - a[0]) * k, ey = a[1] + (b[1] - a[1]) * k, cx = (a[0] + ex) / 2 + bend, cy = (a[1] + ey) / 2;
       const q = (u) => [(1 - u) * (1 - u) * a[0] + 2 * (1 - u) * u * cx + u * u * ex, (1 - u) * (1 - u) * a[1] + 2 * (1 - u) * u * cy + u * u * ey];
       const e = U.ease.outCubic(p); let len = 0, prev = q(0); const S = []; for (let i = 1; i <= 60; i++) { const c = q(i / 60); len += Math.hypot(c[0] - prev[0], c[1] - prev[1]); S.push([len, c]); prev = c; }
@@ -388,14 +388,14 @@ export default {
       X.fillStyle = 'rgba(28,20,52,.72)'; dots.forEach(([x, y]) => { X.beginPath(); X.arc(x, y, 8.5, 0, 6.283); X.fill(); });
       X.fillStyle = '#fff6e6'; dots.forEach(([x, y]) => { X.beginPath(); X.arc(x, y, 5.6, 0, 6.283); X.fill(); });
       X.beginPath(); X.arc(a[0], a[1], 10, 0, 6.283); X.fillStyle = 'rgba(28,20,52,.72)'; X.fill(); X.beginPath(); X.arc(a[0], a[1], 7, 0, 6.283); X.fillStyle = '#ffcf6b'; X.fill();
-      if (p > .78) { const qx = U.ease.outBack(U.clamp((p - .78) / .22), 3); const r = 22 * qx, jit = Math.exp(-6 * Math.max(0, t - t0 - .65)) * Math.sin((t - t0) * 40) * 3;
+      if (p > .8) { const qx = U.ease.outBack(U.clamp((p - .8) / .2), 3); const r = 22 * qx, jit = Math.exp(-6 * Math.max(0, t - t0 - .7)) * Math.sin((t - t0) * 40) * 3;
         X.translate(ex + jit, ey); X.lineCap = 'round';
         X.strokeStyle = 'rgba(40,10,24,.75)'; X.lineWidth = 17; X.beginPath(); X.moveTo(-r, -r); X.lineTo(r, r); X.moveTo(r, -r); X.lineTo(-r, r); X.stroke();
         X.strokeStyle = '#ff5a4e'; X.lineWidth = 10; X.beginPath(); X.moveTo(-r, -r); X.lineTo(r, r); X.moveTo(r, -r); X.lineTo(-r, r); X.stroke(); }
       X.restore();
     };
-    attempt(R.gLadTop, .3, tYe + .02, -30);
-    attempt(R.ladTop, .4, tYe + .26, 40);
+    attempt(R.gLadTop, .3, tYe + .05, -30);
+    attempt(R.ladTop, .4, tYe + .3, 40);
     ui.text('YETİŞİLEMEZ', { t, t0: tYe - .03, t1: 99, x: 540, y: 300, size: 118, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 6, stroke: 'rgba(28,24,60,.55)', strokeW: 14 });
   },
 };
