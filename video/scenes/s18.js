@@ -15,18 +15,18 @@ const HERO_Y = 0.14 + 4 * 0.38 + 0.028; // standing surface of the hero shelf (l
 function sunShaft({ from, to, r0, r1, color, opacity }) {
   const A = new THREE.Vector3(...from), B = new THREE.Vector3(...to); const len = A.distanceTo(B);
   const geo = new THREE.CylinderGeometry(r0, r1, len, 64, 1, true); geo.translate(0, -len / 2, 0);
-  const u = { time: { value: 0 }, color: { value: new THREE.Color(color) }, opacity: { value: opacity } };
+  const u = { time: { value: 0 }, color: { value: new THREE.Color(color) }, opacity: { value: opacity }, endBoost: { value: 0 }, fexp: { value: 2.4 } };
   const m = new THREE.ShaderMaterial({
     uniforms: u, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
     vertexShader: `varying vec3 vN, vV; varying vec2 vUv; varying float vD;
       void main(){ vUv = uv; vec4 mv = modelViewMatrix*vec4(position,1.); vV = normalize(-mv.xyz); vN = normalize(normalMatrix*normal); vD = -mv.z; gl_Position = projectionMatrix*mv; }`,
-    fragmentShader: `uniform vec3 color; uniform float opacity, time; varying vec3 vN, vV; varying vec2 vUv; varying float vD;
+    fragmentShader: `uniform vec3 color; uniform float opacity, time, endBoost, fexp; varying vec3 vN, vV; varying vec2 vUv; varying float vD;
       float h11(float p){ return fract(sin(p*127.1)*43758.5453); }
       float vn1(float x){ float i = floor(x), f = fract(x); f = f*f*(3.-2.*f); return mix(h11(i), h11(i+1.), f); }
       void main(){
-        float f = abs(dot(normalize(vN), normalize(vV))); f = pow(f, 2.4);
+        float f = abs(dot(normalize(vN), normalize(vV))); f = pow(f, fexp);
         float s = 1. - vUv.y;                                     // 0 at the window .. 1 at the books
-        float along = smoothstep(0., .1, s) * (1. - .45*smoothstep(.8, 1., s));
+        float along = smoothstep(0., .1, s) * (1. - .45*smoothstep(.8, 1., s) + endBoost*smoothstep(.55, 1., s));  // endBoost: wide shot only
         float a = vUv.x * 6.28318;                                 // periodic striations around the cone (no seam)
         float st = .5 + .5*sin(a*5. + vn1(s*3. + time*.15)*4.) * sin(a*3. - 1.3 + vn1(s*2. - time*.1)*3.);
         float near = smoothstep(.3, 1.2, vD);
@@ -230,14 +230,29 @@ export default {
     camera.fov = 36; camera.near = .03; camera.far = 200; camera.updateProjectionMatrix();
     // camera: slow 3/4 drift on the two spines, then (from "Batılı") a long pull-back & rise to the whole wall
     const cy = HERO_Y + .135;
-    R.camPos = path3([[-0.6, [.36, cy - .02, .9]], [1.4, [.2, cy + .0, .82]], [3.05, [.02, cy + .02, .76]], [3.9, [-.02, cy + .12, 1.7]], [4.9, [-.35, cy + .5, 7.2]], [5.9, [-.95, cy + .8, 14.2]], [6.9, [-1.15, cy + .9, 16.4]]]);
-    R.camLook = path3([[-0.6, [0, cy + .03, 0]], [3.05, [0, cy + .028, 0]], [4.2, [0, cy + .3, 0]], [5.4, [.05, cy + 1.05, 0]], [6.9, [.1, cy + 1.3, 0]]]);
+    // close-up drift (same keys as before); past 3.05 path3 extrapolates linearly, so the drift never stops dead
+    R.drift = path3([[-0.6, [.36, cy - .02, .9]], [1.4, [.2, cy + .0, .82]], [3.05, [.02, cy + .02, .76]]]);
+    // pull-back = ONE smooth ease in log-distance: perceived zoom speed d(lnD)/dt is a single bell
+    // (regularised incomplete beta I_x(a,b): zero velocity AND zero acceleration at the start, peak on
+    // "düşünürlerden", long tail that is still drifting at the end of the visible window). No knots -> no kinks.
+    const PA = 2.6, PB = 5.5, NT = 2048, tab = new Float64Array(NT + 1); let acc = 0;
+    for (let i = 1; i <= NT; i++) { const x = (i - .5) / NT; acc += Math.pow(x, PA - 1) * Math.pow(1 - x, PB - 1); tab[i] = acc; }
+    for (let i = 1; i <= NT; i++) tab[i] /= acc;
+    const norm = acc / NT;
+    R.pull = { T0: 2.85, T: 5.0, D0: .76, D1: 16.4, cy,
+      B: x => { if (x <= 0) return 0; if (x >= 1) return 1; const f = x * NT, i = Math.floor(f); return tab[i] + (tab[i + 1] - tab[i]) * (f - i); },
+      dB: x => (x <= 0 || x >= 1) ? 0 : Math.pow(x, PA - 1) * Math.pow(1 - x, PB - 1) / norm };
   },
 
   update(t, ctx) {
     const { ui, U, camera, post } = ctx;
-    // pull-back is fast between "Batılı" and the wide hold -> motion blur only there (state applies from the next frame)
-    post.motionBlur = { samples: t > 3.35 && t < 6.25 ? 3 : 1, shutter: .5 };
+    // ---------- camera: close-up drift + log-distance pull-back (see setup) ----------
+    const PL = R.pull, px = (t - PL.T0) / PL.T, lnR = Math.log(PL.D1 / PL.D0);
+    const Dd = PL.D0 * Math.exp(lnR * PL.B(px)), k = (Dd - PL.D0) / (PL.D1 - PL.D0);
+    const zoomRate = lnR * PL.dB(px) / PL.T;   // relative pull-back speed (1/s)
+    // motion blur follows the zoom rate (odd sample counts keep the overlay sub-frame exactly at t); switches on
+    // while the image motion is still ~1 px/frame, enough sub-frames at the peak to fuse into a smooth smear
+    post.motionBlur = { samples: zoomRate > 1.0 ? 7 : zoomRate > .55 ? 5 : zoomRate > .12 ? 3 : 1, shutter: .5 };
     const wideK = U.smoothstep(3.5, 5.7, t);
     post.exposure = U.lerp(0.74, 1.32, wideK);
     R.hemi.intensity = U.lerp(.8, 1.55, wideK);
@@ -245,10 +260,13 @@ export default {
     R.fill.intensity = U.lerp(.4, .7, wideK);
     R.spot.intensity = U.lerp(640, 470, wideK);
     R.shaft.userData.uniforms.opacity.value = U.lerp(.06, .2, U.smoothstep(3.4, 5.6, t));
+    // wide shot: carry the beam all the way down onto the two books (the close-up keeps its original falloff)
+    R.shaft.userData.uniforms.endBoost.value = 1.1 * wideK; R.shaft.userData.uniforms.fexp.value = U.lerp(2.4, 1.8, wideK);
     // on "yazdıkları" the two books are drawn out of the row (staggered, small overshoot, settle)
     const pull = (t0) => { const a = U.clamp((t - t0) / .7); return -.042 * (1 - U.ease.outBack(a, 1.7)); };
     R.carlyle.position.z = R.cz + pull(0.0); R.gibbon.position.z = R.gz + pull(.16);
-    const P = R.camPos(t), L = R.camLook(t);
+    const P = R.drift(t).add(new THREE.Vector3(-.72 * k, .88 * k, Dd - PL.D0));
+    const L = new THREE.Vector3(.1 * k, PL.cy + .03 - .002 * U.clamp((t + .6) / 3.65) + 1.272 * k, 0);
     P.add(U.shake(t, .006 + .02 * U.smoothstep(3.2, 6, t), .35, 4));
     camera.position.copy(P); camera.lookAt(L); camera.updateMatrixWorld();
 
@@ -302,7 +320,7 @@ export default {
     ui.pill('2 örnek', { t, t0: tDus + .15, x: badge[0], y: badge[1], size: 50, bg: 'rgba(16,20,38,.88)', color: '#ffcf6b', border: 'rgba(255,207,107,.5)', borderW: 2 });
 
     { const a = U.smoothstep(tYal - .3, tYal + .3, t); if (a > 0) { const g = X.createLinearGradient(0, 0, 0, 600); g.addColorStop(0, `rgba(8,10,20,${.6 * a})`); g.addColorStop(1, 'rgba(8,10,20,0)'); X.fillStyle = g; X.fillRect(0, 0, 1080, 600); } }
-    ui.text('yalnızca', { t, t0: tYal - .05, x: 540, y: 320, size: 62, weight: 800, color: '#fff4dc', anim: 'rise' });
-    ui.text('İKİ ÖRNEK', { t, t0: tIki - .06, x: 540, y: 425, size: 116, weight: 900, color: '#ffcf6b', letterSpacing: 4, anim: 'pop' });
+    ui.text('yalnızca', { t, t0: tYal - .05, x: 540, y: 304, size: 62, weight: 800, color: '#fff4dc', anim: 'rise' });
+    ui.text('İKİ ÖRNEK', { t, t0: tIki - .06, x: 540, y: 440, size: 116, weight: 900, color: '#ffcf6b', letterSpacing: 4, anim: 'pop' });
   },
 };

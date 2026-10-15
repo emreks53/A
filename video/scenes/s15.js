@@ -75,6 +75,13 @@ export default {
     [[.2, .27, .05, '#5a1e14', '#2c0b06'], [.18, .25, .045, '#2e4a33', '#142217'], [.16, .22, .04, '#7a4a22', '#3c200c']].reduce((y, [w, h, d, a, b], i) => {
       const t = G.tome({ w, h, d, a, b, seed: 30 + i }); t.rotation.x = -Math.PI / 2; t.rotation.z = (i - 1) * .12; t.position.set(0, y + d / 2, 0); stack.add(t); return y + d; }, 0);
     const dv = G.dividers({ length: .15 }); dv.position.set(.2, deskTop, .3); dv.rotation.y = 2.3; scene.add(dv);
+    { // G.dividers yaws the legs the wrong way (they meet at the points and splay outside the hinge; the steel points float
+      // beside them): re-yaw each leg so it starts at the hinge, and seat its steel point on the leg end, aligned with it.
+      const L = .15, kids = dv.children.filter(c => c.isMesh); // [leg-, tip-, leg+, tip+, hinge]
+      [-1, 1].forEach((s, j) => { const leg = kids[j * 2], tip = kids[j * 2 + 1], a = -s * .12;
+        leg.rotation.y = a; const dir = new THREE.Vector3(Math.cos(a), 0, -Math.sin(a)); const end = new THREE.Vector3(L / 2, .004, s * L * .06).addScaledVector(dir, L / 2);
+        tip.rotation.y = a; tip.position.copy(end).addScaledVector(dir, .008); });
+    }
 
     // ---------------- the globe ----------------
     const globe = new THREE.Group(); globe.position.copy(Gc); scene.add(globe); R.globe = globe;
@@ -172,7 +179,7 @@ export default {
     R.cam = arcRig(THREE, ctx.U, camera, {
       pos: [g0.clone().add(new THREE.Vector3(-.5, .25, 1.82)).toArray(), g0.clone().add(new THREE.Vector3(-.22, .3, 1.5)).toArray(), C.toArray(), C2.toArray()],
       look: [g0.clone().add(new THREE.Vector3(0, .02, 0)).toArray(), g0.clone().add(new THREE.Vector3(0, .05, 0)).toArray(), Pt.toArray(), Pm.toArray()],
-      keys: [[-.6, 0], [1.9, .33], [3.7, .72], [4.25, .79], [5.6, 1]], shake: { amp: .003, freq: .45 },
+      keys: [[-.6, 0], [1.9, .33], [3.7, .72], [5.6, 1]], shake: { amp: .003, freq: .45 },
     });
     R.Pt = Pt;
 
@@ -202,8 +209,9 @@ export default {
     // DOF on the globe surface facing the camera
     const dC = camera.position.distanceTo(R.Gc) - R.Rg * .92;
     post.dof.focus = dC; post.dof.range = U.lerp(.55, .3, U.prog(t, 2, 4.2)); post.dof.amount = 1;
-    // the fast spin (~110°/s, coastlines move ~20 px/frame) strobes without blur: 3 sub-frames until it has slowed down
-    { const tn = t + 1 / 30; post.motionBlur = { samples: tn < 2.3 ? 3 : 1, shutter: .5 }; }
+    // the fast spin (~110°/s, coastlines move ~20 px/frame) strobes without blur; sub-frame count follows the real spin
+    // rate so the ghost spacing stays <~2.5 px (5 samples at full speed) and the blur tapers off as the globe slows
+    { const rate = Math.abs(R.spinAt(t + 1 / 60) - R.spinAt(t - 1 / 60)) * 30 / DEG; post.motionBlur = { samples: rate > 70 ? 5 : rate > 25 ? 3 : rate > 8 ? 2 : 1, shutter: .5 }; }
 
     // ---------------- Kurzgesagt map layer ----------------
     const X = ui.ctx; const M = R.sphere.matrixWorld; const cam = camera.position;
@@ -212,11 +220,13 @@ export default {
     const vis = wp => { const nn = wp.clone().sub(R.Gc).normalize(); const vv = cam.clone().sub(wp).normalize(); const below = cam.y > R.Gc.y ? U.smoothstep(R.Gc.y - .012, R.Gc.y + .004, wp.y) : 1; return U.smoothstep(.06, .32, nn.dot(vv)) * ringHide(wp) * below; };
     const persp = wp => U.clamp(1.75 / cam.distanceTo(wp), .85, 1.55);
     const tK = ctx.wordTime('kabul'), tP = ctx.wordTime('peygamberimizin');
+    const tD = ctx.wordTime('dünya'), tB = ctx.wordTime('büyük'), tOut = ctx.wordTime('etmişler') + .3;
+    const eT = ui.env(t, tD - .1, tOut, .5, 'fade'); // title-band scrim visibility (dims what passes under the title)
     const pulseAll = U.smoothstep(tK - .05, tK + .15, t) * (1 - U.smoothstep(tK + .3, tK + .9, t));
     // dots
     for (const d of R.dots) {
       if (t < d.pop) continue; const wp = d.v.clone().applyMatrix4(M); const a = vis(wp); if (a <= .01) continue;
-      const [sx, sy] = ui.project(wp); const k = U.ease.outBack(U.clamp((t - d.pop) / .35), 2.4); const s = persp(wp); const under = 1 - .65 * (1 - U.smoothstep(440, 520, sy));
+      const [sx, sy] = ui.project(wp); const k = U.ease.outBack(U.clamp((t - d.pop) / .35), 2.4); const s = persp(wp); const under = 1 - .65 * eT.o * (1 - U.smoothstep(440, 520, sy));
       const r = (d.sp ? 8 : d.w >= 1 ? 6.8 : 5.4) * s * k * (1 + pulseAll * .35);
       X.save(); X.globalAlpha = a * under;
       const gr = X.createRadialGradient(sx, sy, 0, sx, sy, r * 3.4); gr.addColorStop(0, 'rgba(255,196,96,.55)'); gr.addColorStop(1, 'rgba(255,170,70,0)'); X.fillStyle = gr; X.beginPath(); X.arc(sx, sy, r * 3.4, 0, 7); X.fill();
@@ -233,8 +243,9 @@ export default {
       const u0 = A.d.v.clone().normalize(), u1 = R.medina.clone().normalize(); const N = 36; const pts = [];
       for (let i = 0; i <= N; i++) { const s = (i / N) * p; const qv = new THREE.Vector3().copy(u0).lerp(u1, s).normalize(); // near-slerp (short arcs)
         const lift = 1 + (.025 + A.ang * .16) * Math.sin(Math.PI * s); const wp = qv.multiplyScalar(R.Rg * lift).applyMatrix4(M); pts.push({ s: ui.project(wp), o: occluded(wp) || ringHide(wp) < .5 ? 0 : 1 }); }
-      X.save(); X.lineCap = 'round'; X.strokeStyle = '#ffd27a'; X.lineWidth = 2.8; X.setLineDash([8, 7]); X.lineDashOffset = -t * 40; X.shadowColor = 'rgba(30,15,0,.7)'; X.shadowBlur = 5;
-      X.beginPath(); let pen = false; for (const q of pts) { if (!q.o || q.s[1] < 450) { pen = false; continue; } pen ? X.lineTo(q.s[0], q.s[1]) : X.moveTo(q.s[0], q.s[1]); pen = true; } X.globalAlpha = .95 - .4 * U.smoothstep(4.5, 5.1, t); X.stroke(); X.setLineDash([]);
+      const ag = X.createLinearGradient(0, 425, 0, 485); ag.addColorStop(0, `rgba(255,210,122,${(1 - eT.o).toFixed(3)})`); ag.addColorStop(1, 'rgba(255,210,122,1)');
+      X.save(); X.lineCap = 'round'; X.strokeStyle = ag; X.lineWidth = 2.8; X.setLineDash([8, 7]); X.lineDashOffset = -t * 40; X.shadowColor = 'rgba(30,15,0,.7)'; X.shadowBlur = 5;
+      X.beginPath(); let pen = false; for (const q of pts) { if (!q.o) { pen = false; continue; } pen ? X.lineTo(q.s[0], q.s[1]) : X.moveTo(q.s[0], q.s[1]); pen = true; } X.globalAlpha = .95 - .4 * U.smoothstep(4.5, 5.1, t); X.stroke(); X.setLineDash([]);
       const hd = pts[pts.length - 1]; if (p < 1 && hd.o) { X.fillStyle = '#fff3d0'; X.beginPath(); X.arc(hd.s[0], hd.s[1], 4.5, 0, 7); X.fill(); }
       X.restore();
     }
@@ -249,11 +260,10 @@ export default {
       ui.callout('Medine', { t, t0: tP + .2, anchor: [mx, my], to: [U.clamp(mx + 185, 200, 880), U.clamp(my + 95, 300, 1300)], size: 40, dotColor: '#3fb67a' });
     }
     // typography
-    const tD = ctx.wordTime('dünya'), tB = ctx.wordTime('büyük');
-    { const e = ui.env(t, tD - .1, Infinity, .5, 'fade'); if (e.o > .001) { const X2 = ui.ctx, g2 = X2.createLinearGradient(0, 200, 0, 500); g2.addColorStop(0, 'rgba(12,7,4,0)'); g2.addColorStop(.3, 'rgba(12,7,4,.58)'); g2.addColorStop(.7, 'rgba(12,7,4,.5)'); g2.addColorStop(1, 'rgba(12,7,4,0)');
+    { const e = eT; if (e.o > .001) { const X2 = ui.ctx, g2 = X2.createLinearGradient(0, 200, 0, 500); g2.addColorStop(0, 'rgba(12,7,4,0)'); g2.addColorStop(.3, 'rgba(12,7,4,.58)'); g2.addColorStop(.7, 'rgba(12,7,4,.5)'); g2.addColorStop(1, 'rgba(12,7,4,0)');
       X2.save(); X2.globalAlpha = e.o; X2.fillStyle = g2; X2.fillRect(0, 200, 1080, 300); X2.restore(); } }
-    ui.text('Dünya çapında', { t, t0: tD - .04, x: 540, y: 300, size: 66, weight: 900, color: '#fff4dc', anim: 'pop', letterSpacing: 2 });
-    ui.text('büyük düşünürler', { t, t0: tB - .04, x: 540, y: 392, size: 88, weight: 900, color: '#ffcf6b', anim: 'pop', letterSpacing: 1 });
+    ui.text('Dünya çapında', { t, t0: tD - .04, x: 540, y: 300, size: 66, weight: 900, color: '#fff4dc', anim: 'pop', letterSpacing: 2, t1: tOut });
+    ui.text('büyük düşünürler', { t, t0: tB - .04, x: 540, y: 392, size: 88, weight: 900, color: '#ffcf6b', anim: 'pop', letterSpacing: 1, t1: tOut });
   },
 };
 
