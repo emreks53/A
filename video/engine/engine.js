@@ -2,6 +2,7 @@
 // URL params: scene=<id> (from data/timeline.json), w, h (output size, default 1080x1920), scale (internal 3D render scale, default 1)
 import * as THREE from 'three';
 import { makeComposer, DEFAULT_POST } from './post.js';
+import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
 import { UI } from './ui.js';
 import * as U from './lib/util.js';
 import * as TEX from './lib/textures.js';
@@ -76,12 +77,16 @@ async function main() {
   let frameNo = 0;
   const FPS = +(P.get('fps') || 30);
   const acc = document.createElement('canvas'); acc.width = W; acc.height = H; const accX = acc.getContext('2d'); accX.imageSmoothingEnabled = true; accX.imageSmoothingQuality = 'high';
-  function renderFrame(t, compose = true, seed = null) {
+  // per-frame scene logic (animation, camera, typography) for time t — no rendering
+  function stepLogic(t) {
     ctx.t = t; ui.clear();
     scene.traverse(o => { if (o.userData.uniforms && o.userData.uniforms.time) o.userData.uniforms.time.value = t; if (o.userData.update) o.userData.update(t, ctx); });
     S.update(t, ctx);
     camera.updateMatrixWorld();
     scene.traverse(o => { if (o.userData.yBillboard) { const wp = new THREE.Vector3(); o.getWorldPosition(wp); const a = Math.atan2(camera.position.x - wp.x, camera.position.z - wp.z); const pq = new THREE.Quaternion(); if (o.parent) o.parent.getWorldQuaternion(pq); o.quaternion.copy(pq.invert().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), a))); } });
+  }
+  // post settings, DOF depth pre-pass and the post chain for the current scene state
+  function finishFrame(compose, seed, t) {
     // apply post settings (scene may change ctx.post every frame)
     renderer.toneMapping = pmap[post.toneMapping] ?? THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = post.exposure;
     pp.bloom.enabled = post.bloom.enabled; pp.bloom.strength = post.bloom.strength; pp.bloom.radius = post.bloom.radius; pp.bloom.threshold = post.bloom.threshold;
@@ -99,8 +104,21 @@ async function main() {
     outX.drawImage(renderer.domElement, 0, 0, W, H);
     outX.drawImage(overlay, 0, 0);
   }
-  // Motion blur: post.motionBlur = { samples: 2..5, shutter: 0.5 } (fraction of a frame). Sub-frames are averaged;
-  // the overlay (typography) comes from the sub-frame closest to t, so text stays crisp.
+  function renderFrame(t, compose = true, seed = null) { stepLogic(t); finishFrame(compose, seed, t); }
+  // Motion blur: post.motionBlur = { samples: 2..n, shutter: 0.5 } (fraction of a frame).
+  // Sub-frames are rendered scene-linear (HDR) and averaged in the composer's half-float input buffer; the DOF depth
+  // pre-pass and the whole post chain (bloom, tone mapping, SMAA, grade, grain) then run ONCE on the average, with the
+  // state of the sub-frame closest to t. The overlay (typography) also comes from that sub-frame, so text stays crisp.
+  // (?ldrmb=1 selects the old path: full post per sub-frame, averaged after tone mapping.)
+  const subRT = new THREE.WebGLRenderTarget(RW, RH, { type: THREE.HalfFloatType });
+  const avgQuad = new FullScreenQuad(new THREE.ShaderMaterial({
+    uniforms: { tSub: { value: subRT.texture }, w: { value: 1 } },
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+    fragmentShader: 'uniform sampler2D tSub; uniform float w; varying vec2 vUv; void main() { gl_FragColor = vec4(texture2D(tSub, vUv).rgb, w); }',
+    depthTest: false, depthWrite: false, transparent: true, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation,
+    blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor,
+  }));
+  const LDR_MB = P.get('ldrmb') === '1';
   function renderBlurred(t) {
     ctx.t = t; S.update(t, ctx); // let the scene set post.motionBlur for THIS frame before sampling
     const mb = post.motionBlur; const n = Math.max(1, Math.round((mb && mb.samples) || 1));
@@ -108,8 +126,20 @@ async function main() {
     const sh = (mb.shutter ?? 0.5) / FPS; const seed = (frameNo++ % 97) * 1.37 + t;
     const ts = []; for (let i = 0; i < n; i++) ts.push(t - sh / 2 + sh * (i + 0.5) / n);
     ts.sort((a, b) => Math.abs(b - t) - Math.abs(a - t));
-    ts.forEach((ti, k) => { renderFrame(ti, false, seed); accX.globalAlpha = 1 / (k + 1); accX.drawImage(renderer.domElement, 0, 0, W, H); });
-    accX.globalAlpha = 1; outX.drawImage(acc, 0, 0); outX.drawImage(overlay, 0, 0);
+    if (LDR_MB) {
+      ts.forEach((ti, k) => { renderFrame(ti, false, seed); accX.globalAlpha = 1 / (k + 1); accX.drawImage(renderer.domElement, 0, 0, W, H); });
+      accX.globalAlpha = 1; outX.drawImage(acc, 0, 0); outX.drawImage(overlay, 0, 0); return;
+    }
+    const accBuf = pp.composer.readBuffer, m = avgQuad.material, autoClear = renderer.autoClear;
+    ts.forEach((ti, k) => {
+      stepLogic(ti);
+      renderer.setRenderTarget(subRT); renderer.clear(); renderer.render(scene, camera);
+      m.blending = k === 0 ? THREE.NoBlending : THREE.CustomBlending; m.uniforms.w.value = 1 / (k + 1); m.needsUpdate = true;
+      renderer.autoClear = false; renderer.setRenderTarget(accBuf); avgQuad.render(renderer); renderer.autoClear = autoClear;
+    });
+    renderer.setRenderTarget(null);
+    pp.renderPass.enabled = false; // the averaged image is already in the composer's input buffer
+    try { finishFrame(true, seed, t); } finally { pp.renderPass.enabled = true; }
   }
   async function grab(t, quality = 0.92) {
     renderBlurred(t);
@@ -126,6 +156,6 @@ async function main() {
     const p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3(); camera.matrixWorld.decompose(p, q, s);
     return [p.x, p.y, p.z, q.x, q.y, q.z, q.w, camera.fov];
   }
-  window.ENGINE = { ready: true, info, grab, renderFrame, probeCamera, setupMs, stats: () => ({ tris: Math.round(tris), calls: renderer.info.render.calls, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries }) };
+  window.ENGINE = { ready: true, info, grab, renderFrame, probeCamera, setupMs, _dbg: { renderer, scene, camera, pp, post: () => post, S, ctx }, stats: () => ({ tris: Math.round(tris), calls: renderer.info.render.calls, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries }) };
 }
 main().catch(e => { console.error('ENGINE ERROR', e && e.stack || e); window.ENGINE = { error: String(e && e.stack || e) }; });
