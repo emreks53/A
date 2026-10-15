@@ -419,7 +419,7 @@ export function ottomanRahle(o = {}) {
 export function anatolianRug(o = {}) {
   const RW = o.w ?? .72, RL = o.l ?? 1.08; const KW = 192, KH = 288, SC = 5; const TW = KW * SC, TH = KH * SC;
   const k = cnv(KW, KH), x = k.getContext('2d', { willReadFrequently: true }); x.imageSmoothingEnabled = false;
-  const C = { red: '#6e3029', red2: '#5e2a25', ind: '#29314a', ivo: '#cbbd9e', och: '#9c7c48', camel: '#8c7350', dk: '#261c18', teal: '#3e5650', rose: '#8a4c42' };
+  const C = { red: '#6e3029', red2: '#5e2a25', ind: '#29314a', ivo: '#b8aa8c', och: '#9c7c48', camel: '#8c7350', dk: '#261c18', teal: '#3e5650', rose: '#8a4c42' };
   const R = (c, a, b, w, h) => { x.fillStyle = c; x.fillRect(a, b, w, h); };
   R(C.dk, 0, 0, KW, KH);
   R(C.ivo, 2, 2, KW - 4, KH - 4);
@@ -462,15 +462,15 @@ export function anatolianRug(o = {}) {
   for (let j = 0; j < TH; j++) for (let i = 0; i < TW; i++) {
     const p = (j * TW + i) * 4, u = i / TW, v = j / TH; const kx = (i % SC) / SC - .5, ky = (j % SC) / SC - .5; const knot = 1 - (kx * kx + ky * ky) * 2.2;
     const fib = n2(u, v * TH / TW) * .5 + .5, mott = n1(u, v) * .5 + .5, abr = ab(.1, v) * .5 + .5;
-    const f = (.86 + .1 * knot + .1 * fib) * (.95 + .08 * abr) * (.96 + .06 * mott);
+    const f = (.9 + .045 * knot + .12 * fib) * (.95 + .08 * abr) * (.96 + .06 * mott);
     dd[p] = clamp(dd[p] * f * (1 + (abr - .5) * .06), 0, 255); dd[p + 1] = clamp(dd[p + 1] * f, 0, 255); dd[p + 2] = clamp(dd[p + 2] * f * (1 - (abr - .5) * .05), 0, 255);
-    Hf[j * TW + i] = knot * .5 + fib * .35;
+    Hf[j * TW + i] = knot * .25 + fib * .45;
   }
   bx.putImageData(id, 0, 0);
   const nrm = heightToNormal(Hf, TW, TH, 1.1);
   const mat = new THREE.MeshPhysicalMaterial({ map: texOf(big, true), normalMap: texOf(nrm, false), normalScale: new THREE.Vector2(.7, .7), roughness: .96, sheen: .8, sheenColor: new THREE.Color('#b8957c'), sheenRoughness: .55 });
   const geo = new THREE.PlaneGeometry(RW, RL, 48, 72); geo.rotateX(-Math.PI / 2);
-  { const p = geo.attributes.position; for (let i = 0; i < p.count; i++) { const px = p.getX(i), pz = p.getZ(i); const e = Math.min(RW / 2 - Math.abs(px), RL / 2 - Math.abs(pz)); let y = .006 + Math.sin(px * 7 + pz * 3) * .0015 + Math.sin(pz * 11 - px * 4) * .001; y -= sm(.012, 0, e) * .005; p.setY(i, y); } geo.computeVertexNormals(); }
+  { const p = geo.attributes.position; for (let i = 0; i < p.count; i++) { const px = p.getX(i), pz = p.getZ(i); const e = Math.min(RW / 2 - Math.abs(px), RL / 2 - Math.abs(pz)); let y = .0075 + Math.sin(px * 7 + pz * 3) * .0012 + Math.sin(pz * 11 - px * 4) * .0008; y -= sm(.012, 0, e) * .003; p.setY(i, y); } geo.computeVertexNormals(); }
   const rug = new THREE.Mesh(geo, mat); rug.receiveShadow = true; rug.castShadow = false;
   const g = new THREE.Group(); g.add(rug);
   // fringes
@@ -479,7 +479,7 @@ export function anatolianRug(o = {}) {
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(); let c = 0;
   for (const sz of [1, -1]) for (let i = 0; i < n; i++) { const px = -RW / 2 + .02 + (RW - .04) * i / (n - 1); e.set(-.05 + (fr() - .5) * .1, (fr() - .5) * .35, 0); q.setFromEuler(e); m4.compose(new THREE.Vector3(px, .0035, sz * (RL / 2 + .016 + fr() * .004)), q, new THREE.Vector3(1, 1, 1)); fm.setMatrixAt(c++, m4); }
   fm.castShadow = false; fm.receiveShadow = true; g.add(fm);
-  g.userData = { topY: .006, material: mat };
+  g.userData = { topY: .0075, material: mat };
   return g;
 }
 
@@ -498,7 +498,7 @@ export function clayLampGeometry(lod = 1) {
 let _clayMat = null;
 export function clayMaterial() {
   if (_clayMat) return _clayMat;
-  const t = TEX.plaster({ a: '#b4683c', b: '#8a4a28', seed: 33, repeat: [2, 2] });
+  const t = TEX.plaster({ a: '#a66a4c', b: '#7c4c36', seed: 33, repeat: [2, 2] });
   _clayMat = new THREE.MeshStandardMaterial({ map: t.map, normalMap: t.normalMap, normalScale: new THREE.Vector2(.4, .4), roughness: .82 });
   return _clayMat;
 }
@@ -594,7 +594,7 @@ export function dawnSkyMaterial(o = {}) {
         float anti = 1. - side; vec3 belt = vec3(.2, .11, .17), shadow = vec3(.035, .045, .12);
         c = mix(c, belt, anti * exp(-pow((e - .05) / .04, 2.)) * .35 * glow); c = mix(c, shadow, anti * smoothstep(.05, 0., e) * .7);
         // dawn glow toward the sun azimuth (narrow, hot near the horizon)
-        float hot = pow(max(caz, 0.), 6.); vec3 warm = mix(vec3(.38, .17, .13), vec3(1.1, .5, .2), hot);
+        float hot = pow(max(caz, 0.), 3.); vec3 warm = mix(vec3(.38, .17, .13), vec3(1.1, .5, .2), hot);
         float band = exp(-e / (.022 + .05 * side)) * side; c = mix(c, warm, clamp(band * (.15 + .85 * side) * glow, 0., 1.));
         c += vec3(1., .48, .2) * pow(max(dot(d, sunDir), 0.), 10.) * .25 * glow * smoothstep(-.05, .15, e + .05);
         // sun rising: bright halo at the horizon
@@ -668,15 +668,25 @@ export function mono(keys) {
 // DESERT — heightfield: flat pad at the hero, gentle swells in the lamp field, real dunes rising toward the horizon.
 // =============================================================================================
 export function desertDunes(o = {}) {
-  const size = o.size ?? 380, seg = o.seg ?? 280; const f = TEX.fbmField(o.seed ?? 12, 2, 5), f2 = TEX.fbmField((o.seed ?? 12) + 5, 6, 3);
+  const size = o.size ?? 380, seg = o.seg ?? 280; const f = TEX.fbmField(o.seed ?? 12, 2, 5), f2 = TEX.fbmField((o.seed ?? 12) + 5, 9, 3);
   const hAt = (x, z) => { const u = x / size + .5, v = z / size + .5, r = Math.hypot(x, z);
     let h = f(u, v) * .5 + .5; const ridge = 1 - Math.abs(f(u + .3, v * .7) * 2); h = h * .55 + Math.pow(Math.max(ridge, 0), 2.5) * .65;
-    const swell = (f2(u, v) * .5 + .5) * .9; const amp = (o.near ?? .5) + (o.height ?? 7) * sm(o.r0 ?? 22, o.r1 ?? 110, r);
-    return (h * amp + swell * sm(4, 20, r)) * sm(o.pad ?? 2.6, o.padFade ?? 10, r); };
+    const sv = f2(u, v), swell = (Math.pow(1 - Math.abs(sv), 2.2) * .7 + (sv * .5 + .5) * .5) * (o.swell ?? 2.2); const amp = (o.near ?? .5) + (o.height ?? 7) * sm(o.r0 ?? 22, o.r1 ?? 110, r);
+    return (h * amp + swell * sm(5, 24, r)) * sm(o.pad ?? 2.6, o.padFade ?? 10, r); };
   const geo = new THREE.PlaneGeometry(size, size, seg, seg); geo.rotateX(-Math.PI / 2); const p = geo.attributes.position;
   for (let i = 0; i < p.count; i++) p.setY(i, hAt(p.getX(i), p.getZ(i)));
   geo.computeVertexNormals();
   const t = TEX.sand({ a: o.a ?? '#b8936f', b: o.b ?? '#8c6547', repeat: [size / 5, size / 5] });
   const mat = new THREE.MeshStandardMaterial({ map: t.map, normalMap: t.normalMap, normalScale: new THREE.Vector2(.45, .45), roughness: 1 });
   const m = new THREE.Mesh(geo, mat); m.receiveShadow = true; m.userData.heightAt = hAt; return m;
+}
+
+// fine sand patch around the hero (close-up grain), fading out at the rim
+export function sandPatch(o = {}) {
+  const R = o.r ?? 2.8; const t = TEX.sand({ a: o.a ?? '#c4a07c', b: o.b ?? '#977054', seed: 8, repeat: [1, 1] });
+  const map = t.map.clone(), nm = t.normalMap.clone(); for (const x of [map, nm]) { x.repeat.set(R * 2 / .7, R * 2 / .7); x.needsUpdate = true; }
+  const alpha = TEX.gradientTex([[0, 'rgba(255,255,255,1)'], [.7, 'rgba(255,255,255,1)'], [1, 'rgba(255,255,255,0)']], { w: 128, h: 128, radial: true });
+  const m = new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(.8, .8), roughness: 1, alphaMap: alpha, transparent: true, depthWrite: false });
+  const g = new THREE.CircleGeometry(R, 48); g.rotateX(-Math.PI / 2); const uv = g.attributes.uv; // alphaMap uses the same uv: map radial texture over the disc
+  const mesh = new THREE.Mesh(g, m); mesh.receiveShadow = true; mesh.userData.depthOk = false; mesh.renderOrder = 1; return mesh;
 }

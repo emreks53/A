@@ -158,7 +158,9 @@ export default {
 
     // ---- lectern + hero book (Şifâ-i Şerif) in the sunbeam ----------------------------------------------------
     const lec = new THREE.Group(); lec.position.set(.02, 0, -9.5); lec.rotation.y = .42; scene.add(lec); R.lec = lec;
-    { const base = M.lathe([[0, 0], [.3, 0], [.3, .05], [.22, .09], [.11, .14], [.085, .3], [.1, .55], [.08, .75], [.13, .84], [.0, .86]], walnut, 8); lec.add(base);
+    { const base = M.lathe([[0, 0], [.3, 0], [.3, .035], [.28, .05], [.23, .07], [.205, .09], [0, .09]], walnutDark, 8); lec.add(base); // octagonal plinth
+      const col = M.lathe([[0, .09], [.13, .09], [.135, .105], [.11, .125], [.08, .15], [.072, .19], [.088, .225], [.072, .26], [.06, .32], [.066, .4], [.086, .48], [.097, .54], [.09, .6], [.072, .66], [.062, .7],
+        [.082, .725], [.09, .745], [.074, .765], [.1, .79], [.122, .815], [.13, .84], [0, .86]], walnut, 32); lec.add(col); // turned baluster with beads and coves
       const topB = new THREE.Mesh(M.rbox(.62, .04, .46, .012, 2), walnut); const tilt = new THREE.Group(); tilt.position.set(0, .93, 0); tilt.rotation.x = .42; lec.add(tilt); tilt.add(topB);
       const lip = new THREE.Mesh(M.rbox(.62, .05, .03, .01, 2), walnut); lip.position.set(0, .035, .22); tilt.add(lip);
       const post = new THREE.Mesh(M.rbox(.14, .2, .14, .02, 2), walnut); post.position.set(0, .86, 0); lec.add(post);
@@ -187,7 +189,7 @@ export default {
       const from = new THREE.Vector3(-5.6, 5.6, zc); const k = (from.y - .2) / -SUND.y; const to = from.clone().addScaledVector(SUND, k);
       const sh = FX.lightShaft({ from: from.toArray(), to: to.toArray(), r0: .7, r1: .95, color: '#ffd9a0', opacity: .05 }); scene.add(sh); R.shafts.push(sh);
     });
-    const motes = FX.particles({ count: 700, center: [0, 3, -9], box: [9, 6, 26], size: 5, color: '#ffe6b8', opacity: .55, drift: [.03, .02, -.01], swirl: .08 }); scene.add(motes);
+    const motes = FX.particles({ count: 620, center: [0, 2.3, -9], box: [9, 3.6, 26], // kept below the crane height (no giant bokeh blobs in the wide shot) size: 5, color: '#ffe6b8', opacity: .55, drift: [.03, .02, -.01], swirl: .08 }); scene.add(motes);
 
     camera.near = .05; camera.far = 120; camera.updateProjectionMatrix();
     // ---- camera ---------------------------------------------------------------------------------------------
@@ -224,7 +226,7 @@ export default {
     post.dof.focus = U.lerp(fBase, camera.position.distanceTo(R.bookP), bf);
     post.dof.range = U.lerp(U.lerp(7, 10, wide), .9, bf); post.dof.amount = U.lerp(U.lerp(.5, .5, wide), .85, bf);
     // motion blur only for the fast glide/pan, the whip move + time-lapse (decided for the next frame: the engine reads it before update)
-    { const tn = t + 1 / 30; post.motionBlur = { samples: (tn > .3 && tn < 2.75) || (tn > 4.5 && tn < 6.75) ? 3 : 1, shutter: .5 }; }
+    { const tn = t + 1 / 30; post.motionBlur = { samples: tn > 4.75 && tn < 5.65 ? 5 : (tn > .3 && tn < 2.75) || (tn > 4.5 && tn < 6.75) ? 3 : 1, shutter: .5 }; // 5 sub-frames at the whip peak (no stepped ghosts) }
     R.shafts.forEach((s, i) => { s.userData.uniforms.opacity.value = .045 + .012 * Math.sin(t * .7 + i); });
 
     // ---- typography ----------------------------------------------------------------------------------------
@@ -234,6 +236,8 @@ export default {
     ui.pill('Kadı İyâz (ö. 1149)', { t, t0: tSe - .05, t1: tY - .05, x: 540, y: 450, size: 44, weight: 800, bg: 'rgba(40,22,12,.72)', color: '#fff1d6' });
     ui.text('yüzlerce cilt', { t, t0: tY - .05, t1: tYu - .1, x: 540, y: 330, size: 92, weight: 900, color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
     tally(ui, U, t, tY + .05, tYu + .2, R.shown / Math.max(1, R.late.length));
+    { const e = ui.env(t, tYu - .25, 99, .5, 'fade'); if (e.o > .001) { const X = ui.ctx, g = X.createLinearGradient(0, 230, 0, 600); g.addColorStop(0, 'rgba(34,18,8,0)'); g.addColorStop(.25, 'rgba(34,18,8,.42)'); g.addColorStop(.7, 'rgba(34,18,8,.36)'); g.addColorStop(1, 'rgba(34,18,8,0)');
+      X.save(); X.globalAlpha = e.o; X.fillStyle = g; X.fillRect(0, 230, 1080, 370); X.restore(); } } // soft scrim: cream/gold type over the bright vault
     ui.text('“yüksek ahlâk” mu\'cizesi', { t, t0: tYu - .05, t1: 99, x: 540, y: 330, size: 62, weight: 500, family: 'Lora', italic: true, color: '#fff4dc', anim: 'rise', stroke: 'rgba(40,20,8,.5)', strokeW: 8 });
     const hit = U.clamp((t - (tI - .04)) / .16); const jolt = hit > 0 && hit < 1 ? Math.sin(hit * Math.PI) : 0;
     ui.text('beyan ve ispat', { t, t0: tB - .05, t1: 99, x: 540, y: 455, size: 84 * (1 - .05 * jolt), weight: 900, color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });

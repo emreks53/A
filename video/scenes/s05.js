@@ -161,7 +161,7 @@ export default {
     exposure: 1.08,
     toneMapping: 'agx',
     bloom: { enabled: true, strength: 0.42, radius: 0.6, threshold: 0.88 },
-    grade: { contrast: 1.12, saturation: 1.1, warmth: 0.01, lift: [0.018, 0.016, 0.03], gain: [1.0, 0.985, 0.96] },
+    grade: { contrast: 1.15, saturation: 1.08, warmth: 0.0, lift: [0.008, 0.012, 0.034], gain: [1.02, 0.99, 0.95] },
     vignette: 0.52, grain: 0.03,
     dof: { enabled: true, focus: 4.9, range: 1.6, amount: 0.7 },
   },
@@ -171,7 +171,7 @@ export default {
     const { mergeGeometries } = await import('three/addons/utils/BufferGeometryUtils.js');
     scene.background = new THREE.Color('#0d1226');
     scene.fog = new THREE.Fog('#1a1a2a', 9, 30);
-    scene.environment = await ctx.loadHDR('fireplace'); scene.environmentIntensity = 0.22;
+    scene.environment = await ctx.loadHDR('fireplace'); scene.environmentIntensity = 0.13;
 
     const mats = {
       cord: new THREE.MeshStandardMaterial({ color: '#c9a36c', roughness: .85 }),
@@ -182,7 +182,7 @@ export default {
     };
     R.mats = mats;
     // ---------------- room ----------------
-    const pw = plasterWall({ a: '#efe0c8', b: '#cdae8e', seed: 8, size: 1024, crack: .22 });
+    const pw = plasterWall({ a: '#ece2d2', b: '#c8ab90', seed: 8, size: 1024, crack: .22 });
     const plaster = (rx, ry, tint = '#ffffff') => { const cl = t => { const c = t.clone(); c.repeat.set(rx, ry); c.needsUpdate = true; return c; };
       return new THREE.MeshStandardMaterial({ map: cl(pw.map), normalMap: cl(pw.normalMap), normalScale: new THREE.Vector2(.5, .5), roughnessMap: cl(pw.roughnessMap), roughness: 1, color: tint }); };
     const wall = plaster(.45, .45), wallDark = plaster(.45, .45, '#d9c2a6'), sideWall = plaster(2.5, 1.4, '#e8d6c0');
@@ -243,11 +243,11 @@ export default {
     lamp.userData.glow.material.opacity = .2; lamp.userData.glow.scale.setScalar(.22); lamp.userData.flame.userData.uniforms.intensity.value = 2.8;
     room.updateMatrixWorld(true); const flameW = new THREE.Vector3(); lamp.userData.flame.getWorldPosition(flameW); R.flameW = flameW;
     const halo = FX.glow({ size: .5, opacity: .14, color: '#ffb066' }); halo.position.copy(flameW).add(new THREE.Vector3(0, .05, 0)); scene.add(halo); R.halo = halo;
-    const key = new THREE.PointLight('#ffb870', 1.7, 9, 2); key.position.copy(flameW).add(new THREE.Vector3(0, .07, 0));
-    key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -.0015; key.shadow.normalBias = .01; key.shadow.radius = 10; key.shadow.camera.near = .03; scene.add(key); R.key = key;
-    const fill = new THREE.PointLight('#ffa060', 1.0, 8, 2); fill.position.set(-1.3, 1.1, 2.3); room.add(fill); R.fill = fill; // warm bounce off the floor / a second lamp out of frame
-    scene.add(new THREE.HemisphereLight('#6a7ab0', '#3a2616', .22));
-    const winMoon = new THREE.SpotLight('#86a2ff', 5, 9, .32, .9, 1.2); winMoon.position.set(-2.5, 2.85, 2.2); winMoon.target.position.set(-1.75, 1.35, 0); room.add(winMoon, winMoon.target);
+    const key = new THREE.PointLight('#ffb870', 2.0, 9, 2); key.position.copy(flameW).add(new THREE.Vector3(0, .07, 0));
+    const DBG = new URLSearchParams(location.search); R.DBG = DBG;
+    key.castShadow = !DBG.has('noshadow'); key.shadow.mapSize.set(DBG.has('sm512') ? 512 : 1024, DBG.has('sm512') ? 512 : 1024); key.shadow.bias = -.0015; key.shadow.normalBias = .01; key.shadow.radius = 10; key.shadow.camera.near = .03; scene.add(key); R.key = key;
+    const fill = new THREE.PointLight('#ff9c5a', .62, 8, 2); fill.position.set(-1.3, 1.0, 2.3); room.add(fill); R.fill = fill; // warm bounce off the floor / a second lamp out of frame
+    scene.add(new THREE.HemisphereLight('#5a6ea8', '#2a1a10', .3));
     const moonS = new THREE.SpotLight('#8eaaff', 16, 14, .5, .7, 1.4); moonS.position.set(2.0, 3.9, -3.4); moonS.target.position.set(.9, 0, 1.4); room.add(moonS, moonS.target);
 
     // ---------------- outside the door: the moonlit alley + the lantern lights from s04 ----------------
@@ -258,7 +258,7 @@ export default {
     out.add(mesh(M.rbox(.3, .28, .8, .08, 1), darkWood, -.4, 3.4, -4.9));
     out.add(mesh(M.rbox(1.0, 1.9, .2, .05, 1), darkWood, 2.4, .95, -5.05));
     const sky = ENV.skyDome({ top: '#060b1e', mid: '#12224a', horizon: '#33406a', bottom: '#141a2c', sunDir: [.3, .5, -1], sunColor: '#e9efff', sunSize: 0, sunGlow: .3, stars: .8, clouds: 0, intensity: 1 }); scene.add(sky);
-    const outMoon = new THREE.SpotLight('#8eaaff', 26, 30, .42, .5, 1.2); outMoon.position.set(-1.5, 7.5, 1.0); outMoon.target.position.set(1.2, .5, -4.6); scene.add(outMoon, outMoon.target);
+    out.traverse(o => { if (o.isMesh && o.material && o.material.emissive) { o.material = o.material.clone(); o.material.emissive = new THREE.Color('#2a3658'); o.material.emissiveIntensity = .3; } });
     R.lanterns = [[.98, 1.3, -2.2, 0], [1.4, 1.24, -3.5, 1.3], [.68, 1.2, -4.3, 2.2], [1.8, 1.32, -2.7, 3.1], [2.3, 1.28, -3.9, 4.2]].map(([x, y, z, ph]) => {
       const gl = FX.glow({ size: .95, opacity: 1, color: '#ffa850' }); gl.position.set(x, y, z); out.add(gl);
       const core = FX.glow({ size: .16, opacity: 1, color: '#fff0c8' }); core.position.set(x, y, z); out.add(core);
@@ -323,12 +323,13 @@ export default {
 
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
+    if (R.DBG.has('nodof')) post.dof.enabled = false; if (R.DBG.has('nobloom')) post.bloom.enabled = false;
     const C = R.cam; camera.position.set(C.px(t), C.py(t), C.pz(t)).add(U.shake(t, .006, .5, 5)); camera.lookAt(C.lx(t), C.ly(t), C.lz(t)); camera.updateMatrixWorld();
     post.dof.focus = camera.position.distanceTo(new THREE.Vector3(C.lx(t), 1.6, -.15)); post.dof.range = U.lerp(3.0, 1.7, U.prog(t, .4, 2.6)); post.dof.amount = U.lerp(.55, .72, U.prog(t, .4, 2.6));
 
     // lamp flicker (soft, calm flame)
     const fl = 1 + .05 * Math.sin(t * 13.1) * Math.sin(t * 5.3 + 1) + .025 * Math.sin(t * 23.7);
-    R.key.intensity = 1.7 * fl; R.fill.intensity = 1.0 * (1 + .04 * Math.sin(t * 9.1 + 2)); R.halo.material.opacity = .16 * fl;
+    R.key.intensity = 2.0 * fl; R.fill.intensity = .62 * (1 + .04 * Math.sin(t * 9.1 + 2)); R.halo.material.opacity = .16 * fl;
     // lanterns outside sway gently (carried lights waiting at the door)
     R.lanterns.forEach(l => { const b = Math.sin(t * 2.2 + l.ph) * .025, s = Math.sin(t * 1.3 + l.ph) * .03; l.gl.position.set(l.x + s, l.y + b, l.z); l.core.position.copy(l.gl.position); l.gl.material.opacity = .78 + .08 * Math.sin(t * 11 + l.ph * 3); });
 

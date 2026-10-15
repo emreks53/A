@@ -15,7 +15,7 @@ export default {
     exposure: 1.1,
     bloom: { enabled: true, strength: 0.6, radius: 0.6, threshold: 0.72 },
     grade: { contrast: 1.06, saturation: 1.1, warmth: 0.0, lift: [0.008, 0.012, 0.04], gain: [1.02, 1.0, 0.97] },
-    vignette: 0.45, grain: 0.03,
+    vignette: 0.45, grain: 0.03, aberration: 0.0007,
     dof: { enabled: false },
   },
   async setup(ctx) {
@@ -31,7 +31,7 @@ export default {
     // ---------- architecture ----------
     const HALF = 7.0, ZN = 4, ZF = -40.5, LEN = ZN - ZF;
     const ftex = plankTex({ a: '#4e2e1a', b: '#2c1a0e', planks: 10, seed: 5 }); ftex.repeat.set(12, 30);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(2 * HALF + 1, LEN + 4).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: ftex, roughness: .5, envMapIntensity: .5 }));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(2 * HALF + 1, LEN + 4).rotateX(-Math.PI / 2), new THREE.MeshPhysicalMaterial({ map: ftex, roughness: .5, clearcoat: .3, clearcoatRoughness: .5, envMapIntensity: .3 }));
     floor.position.set(0, 0, (ZN + ZF) / 2); scene.add(floor);
     const caseMat = M.MAT.wood({ a: '#6b3d20', b: '#3a1f0f', rings: 14, seed: 21 });
     const shelfMat = M.MAT.wood({ a: '#7a4626', b: '#45240f', rings: 30, seed: 23 });
@@ -85,9 +85,9 @@ export default {
     for (let z = ZN - 3; z > ZF + 6; z -= 8) { const sh = FX.lightShaft({ from: [-HALF + .2, 8.4, z], to: [-1.2, 0, z - 2.2], r0: .5, r1: .8, color: '#7f9fe8', opacity: .032 }); scene.add(sh); }
 
     // ---------- desks, chairs, candles ----------
-    const deskMat = M.MAT.wood({ a: '#8a5530', b: '#5a331a', rings: 12, seed: 17 });
+    const deskMat = M.MAT.wood({ a: '#8a5530', b: '#5a331a', rings: 12, seed: 17, clearcoat: .6 });
     const chairMat = M.MAT.wood({ a: '#7b4a28', b: '#4a2a14', rings: 20, seed: 31 });
-    const legGeo = new THREE.LatheGeometry([[0, 0], [.03, 0], [.026, .05], [.019, .2], [.028, .32], [.024, .5], [.03, .62], [.03, TOPY - .05], [0, TOPY - .05]].map(([r, y]) => new THREE.Vector2(Math.max(r, 1e-4), y)), 8);
+    const legGeo = new THREE.LatheGeometry([[0, 0], [.036, 0], [.032, .05], [.025, .2], [.034, .32], [.03, .5], [.037, .62], [.037, TOPY - .05], [0, TOPY - .05]].map(([r, y]) => new THREE.Vector2(Math.max(r, 1e-4), y)), 8);
     const deskParts = [M.rbox(1.25, .045, .68, .012, 2).translate(0, TOPY - .0225, 0), M.rbox(1.12, .1, .56, .01, 1).translate(0, TOPY - .1, 0)];
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) deskParts.push(legGeo.clone().translate(sx * .55, 0, sz * .27));
     const deskGeo = mergeGeometries(deskParts.map(g => g.index ? g.toNonIndexed() : g));
@@ -141,10 +141,10 @@ export default {
     scene.add(instances(pg, new THREE.MeshStandardMaterial({ map: pageTex, roughness: .9, side: THREE.DoubleSide }), pages));
     scene.add(contactShadows(shadows, { opacity: .5 }));
     // flames, halos, light pools (GPU-driven by ignition time)
-    const fl = flamePoints(flames, flameOn, { size: .055, intensity: 2.6 }); scene.add(fl); R.fl = fl;
-    const halo = flamePoints(flames, flameOn, { size: .36, glow: true, color: [1, .55, .2], intensity: .6 }); scene.add(halo); R.halo = halo;
+    const fl = flamePoints(flames, flameOn, { size: .064, intensity: 2.6 }); scene.add(fl); R.fl = fl;
+    const halo = flamePoints(flames, flameOn, { size: .34, glow: true, color: [1, .56, .24], intensity: .85 }); scene.add(halo); R.halo = halo;
     R.halo2 = null;
-    scene.add(lightPools(poolsTop, { opacity: .7, color: '#ffb066' }));
+    scene.add(lightPools(poolsTop, { opacity: .5, color: '#ffb066' }));
     scene.add(lightPools(poolsFloor, { opacity: .2, color: '#ff9a4a' }));
     R.flameOn = flameOn;
     // practical warm lights that come up as the wave passes (stand-ins for the sum of many candles)
@@ -173,8 +173,8 @@ export default {
 
     // ---------- typography ----------
     const tBir = ctx.wordTime('birçok'), tDus = ctx.wordTime('düşünür'), tHay = ctx.wordTime('hayran');
-    ui.text('birçok', { t, t0: tBir - .06, t1: tHay - .15, x: 540, y: 290, size: 66, weight: 800, color: '#fff4dc', anim: 'rise' });
-    ui.text('DÜŞÜNÜR', { t, t0: tDus - .06, t1: tHay - .15, x: 540, y: 395, size: 112, weight: 900, color: '#ffcf6b', letterSpacing: 4, anim: 'pop' });
+    ui.text('birçok', { t, t0: tBir - .06, t1: tHay - .15, x: 540, y: 268, size: 66, weight: 800, color: '#fff4dc', anim: 'rise' });
+    ui.text('DÜŞÜNÜR', { t, t0: tDus - .06, t1: tHay - .15, x: 540, y: 372, size: 112, weight: 900, color: '#ffcf6b', letterSpacing: 4, anim: 'pop' });
     ui.text('hayran kaldı', { t, t0: tHay - .04, x: 540, y: 330, size: 108, weight: 500, family: 'Lora', italic: true, color: '#ffd98a', anim: 'rise', dur: .6, shadowBlur: 26, shadowColor: 'rgba(0,0,0,.75)' });
   },
 };

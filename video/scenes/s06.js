@@ -33,7 +33,7 @@ export default {
     scene.add(sun, sun.target); R.sun = sun;
     const hemi = new THREE.HemisphereLight('#9fb4dc', '#b07a50', .55); scene.add(hemi);
     const bounce = new THREE.DirectionalLight('#ffc89a', .8); bounce.position.set(-1, .8, 4); scene.add(bounce); R.bounce = bounce;
-    R.kick = new THREE.PointLight('#ffd09a', 1.4, 3.2, 2); R.kick.position.set(-.55, 1.15, 1.1); scene.add(R.kick);
+    R.kick = new THREE.PointLight('#ffd09a', .7, 3.2, 2); R.kick.position.set(-.55, 1.15, 1.1); scene.add(R.kick);
 
     // ground
     const sandMat = M.MAT.sand({ a: '#e2a46a', b: '#b8784a', repeat: [400 / 2.4, 400 / 2.4] }); sandMat.normalScale.set(.6, .6);
@@ -41,7 +41,7 @@ export default {
     scene.add(ground); R.ground = ground; const gh = (x, z) => ground.userData.heightAt(x, z);
 
     // the Zülfikar (v2: split twin points, fullers, gold-inlaid forte, jewelled drooping guard), planted by its points
-    const sword = C.zulfikar2({ hiltScale: 1.12, steelRough: .3, envI: 1.1, goldEnvI: 1.6, goldEnv: env, dirSpec: .12, steelColor: '#e2e6ea' }); sword.scale.setScalar(1.12); sword.position.set(0, -.035, 0); sword.rotation.set(0, -.42, .022);
+    const sword = C.zulfikar2({ hiltScale: 1.12, steelRough: .3, envI: .66, goldEnvI: 1.6, goldEnv: env, dirSpec: .12, steelColor: '#e2e6ea' }); sword.scale.setScalar(1.12); sword.position.set(0, -.035, 0); sword.rotation.set(0, -.42, .022);
     scene.add(sword); sword.updateMatrixWorld(true); R.sword = sword; R.glint2 = sword.userData.steel.userData.glint;
     // no sand heap: the points simply pierce the flat sand (contact shadow + the drift wake ground it)
 
@@ -56,16 +56,16 @@ export default {
     items.forEach(it => { it.y = gh(it.x, it.z) - (Array.isArray(it.s) ? it.s[1] : it.s) * .12; });
     scene.add(C.scatterRocks(items, { seed: 9, detail: 3, palette: ['#a86e4c', '#80523a', '#bd825a'], big: .12 }));
     // distant red-sandstone buttes (same family as the sheltering rock of s08) + Uhud-like ridge
-    const b1 = C.butte({ hx: 9, hy: 7, hz: 14, round: 1.5, seed: 21, detail: 24, bury: 2, ledge: .2, noiseAmp: .3 }); b1.position.set(-70, gh(-70, -150) - .5, -150); b1.rotation.y = .5; scene.add(b1);
+    const b1 = C.butte({ hx: 9, hy: 7, hz: 14, round: 1.5, seed: 21, detail: 24, bury: 2, ledge: .2, noiseAmp: .3 }); b1.position.set(-100, gh(-100, -150) - .5, -150); b1.rotation.y = .5; scene.add(b1);
     const b2 = C.butte({ hx: 7, hy: 5, hz: 10, round: 1.2, seed: 33, detail: 22, bury: 1.5, ledge: .2, noiseAmp: .3 }); b2.position.set(80, gh(80, -190) - .5, -190); b2.rotation.y = -.3; scene.add(b2);
     const rg = C.ridge({ width: 1100, depth: 260, height: 78, seed: 5, color: '#94503a', top: '#ad6a4c' }); rg.position.set(-60, -2, -480); rg.rotation.y = .04; scene.add(rg);
 
     // wind-blown sand: low streaks (looping), a thin dust "cape" streaming off the sword base, distant back-lit wisps
     // fine airborne grains (thin, short, low alpha; kept away from the lens so they never read as scratches)
     const sr = U.rng(8); const sand = [];
-    for (let i = 0; i < 260; i++) {
+    for (let i = 0; i < 180; i++) {
       const sp = 4.5 + sr() * 4, life = 14 / sp; const z = -9 + sr() * 8.4; const y = .01 + Math.pow(sr(), 2.6) * .3;
-      sand.push({ p: [-7 + sr(), y, z - 2.9], v: [sp, (sr() - .3) * .2, sp * .42 + (sr() - .5) * .3], t0: -sr() * life, life, w: .0035 + sr() * .0035, len: .05 + sr() * .1, color: sr() < .5 ? '#ffe2b6' : '#f2c08e', a: .12 + sr() * .2, loop: 1 });
+      sand.push({ p: [-7 + sr(), y, z - 2.9], v: [sp, (sr() - .3) * .2, sp * .42 + (sr() - .5) * .3], t0: -sr() * life, life, w: .0035 + sr() * .0035, len: .05 + sr() * .1, color: sr() < .5 ? '#ffe2b6' : '#f2c08e', a: .07 + sr() * .12, loop: 1 });
     }
     R.sand = C.streaks(sand, { fadeIn: .1, fadeOut: .8 }); scene.add(R.sand);
     const fog = { color: '#d9a27c', density: .0022 };
@@ -81,9 +81,9 @@ export default {
     scene.add(R.cape, R.wisps, R.sheets, R.wall);
     // reflections: capture the real surroundings from the sword's position (sword hidden)
     // reflector "card": the sunlit dune behind the camera, seen only by the reflection capture (fills the blade flats with warm light)
-    const card = new THREE.Mesh(new THREE.PlaneGeometry(7, 2.4), new THREE.MeshBasicMaterial({ color: '#f0b483', fog: false, side: THREE.DoubleSide }));
-    card.position.set(Math.sin(-.8) * 5.5, .9, Math.cos(-.8) * 5.5); card.lookAt(0, .7, 0); scene.add(card);
-    sky.userData.uniforms.sunI.value = .9; scene.environment = C.envFromScene(renderer, scene, [0, .55, 0], [sword, R.cape, R.wisps, R.sheets, R.wall, R.sand, R.drift, R.glitter]); sky.userData.uniforms.sunI.value = 6; R.gh = gh; scene.remove(card);
+    const card = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.25), new THREE.MeshBasicMaterial({ color: '#eaa878', fog: false, side: THREE.DoubleSide }));
+    card.position.set(Math.sin(-.8) * 5.5, 1.05, Math.cos(-.8) * 5.5); card.lookAt(0, .7, 0); scene.add(card);
+    sky.userData.uniforms.sunI.value = .9; scene.environment = C.envFromScene(renderer, scene, [0, .55, 0], [sword, R.cape, R.wisps, R.sheets, R.wall, R.sand, R.drift, R.glitter]); sword.userData.steel.envMap = scene.environment; sword.userData.steel.needsUpdate = true; sky.userData.uniforms.sunI.value = 6; R.gh = gh; scene.remove(card);
     // specular glint of the sun on the right quillon ball (short, on "benzersiz")
     R.glint = C.starGlint({ size: .16 }); R.glint.position.copy(sword.userData.ballR).add(new THREE.Vector3(.004, .006, .01)); sword.add(R.glint);
 
@@ -123,10 +123,10 @@ export default {
 
     // --- typography (soft top scrim keeps the light sky from eating the letters) ---
     const X = ui.ctx; const sc = U.smoothstep(tAli - .3, tAli + .3, t); if (sc > 0) { const gr = X.createLinearGradient(0, 120, 0, 760); gr.addColorStop(0, `rgba(36,18,40,${.34 * sc})`); gr.addColorStop(1, 'rgba(36,18,40,0)'); X.save(); X.fillStyle = gr; X.fillRect(0, 0, 1080, 760); X.restore(); }
-    ui.text('Hz. Ali (r.a.)', { t, t0: tAli - .05, x: 540, y: 268, size: 76, weight: 900, family: 'Playfair Display', color: '#fff3dc', anim: 'rise', dur: .5, letterSpacing: 1, shadowColor: 'rgba(40,20,30,.6)' });
-    ui.underline({ t, t0: tAli + .25, x: 540, y: 316, w: 230, color: 'rgba(255,214,140,.9)', width: 4, dur: .5 });
-    ui.text('cesarette', { t, t0: tCes - .03, x: 540, y: 372, size: 54, weight: 800, color: '#fff4dc', anim: 'rise', shadowColor: 'rgba(40,20,30,.6)' });
-    ui.text('BENZERSİZ', { t, t0: tBen - .03, x: 540, y: 446, size: 106, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 5, shadowColor: 'rgba(40,20,30,.65)' });
+    ui.text('Hz. Ali (r.a.)', { t, t0: tAli - .05, x: 540, y: 262, size: 76, weight: 900, family: 'Playfair Display', color: '#fff3dc', anim: 'rise', dur: .5, letterSpacing: 1, shadowColor: 'rgba(40,20,30,.6)' });
+    ui.underline({ t, t0: tAli + .25, x: 540, y: 306, w: 230, color: 'rgba(255,214,140,.9)', width: 4, dur: .5 });
+    ui.text('cesarette', { t, t0: tCes - .03, x: 540, y: 354, size: 52, weight: 800, color: '#fff4dc', anim: 'rise', shadowColor: 'rgba(40,20,30,.6)' });
+    ui.text('BENZERSİZ', { t, t0: tBen - .03, x: 540, y: 450, size: 104, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 5, shadowColor: 'rgba(40,20,30,.65)' });
     const gp = ui.project(R.sword.userData.ballR.clone().applyMatrix4(R.sword.matrixWorld));
     ui.callout('Zülfikar', { t, t0: tAli + .35, anchor: [gp[0], gp[1]], to: [846, 830], size: 36, weight: 800 });
   },

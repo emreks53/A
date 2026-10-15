@@ -64,6 +64,21 @@ function candleFlame({ h = .034, w = .02, seed = 1, inten = 2.6 } = {}) {
 }
 // Invisible depth stand-in for a flame: draws nothing in the beauty pass (no colour, no depth) but is rendered
 // by the engine's DOF depth pre-pass, so the flame keeps the candle's focus distance instead of the far window's.
+// Wax without MeshPhysical transmission (a visible transmissive object forces three.js to render the whole scene a
+// second time for the transmission buffer — ~2x frame cost). The translucent glow of the wax under the flame is
+// faked with a world-height emissive ramp instead.
+function waxGlow(group, topY) {
+  const mats = new Set(); group.traverse(o => { if (o.isMesh && o.material && o.material.transmission > 0) mats.add(o.material); });
+  mats.forEach(mat => {
+    mat.transmission = 0; mat.roughness = .5;
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uTop = { value: topY };
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vWY;').replace('#include <project_vertex>', '#include <project_vertex>\n vWY = (modelMatrix * vec4(transformed, 1.0)).y;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uTop; varying float vWY;').replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += vec3(1., .52, .2) * (.5 * smoothstep(uTop - .045, uTop, vWY) + .07 * smoothstep(uTop - .22, uTop, vWY));');
+    };
+    mat.customProgramCacheKey = () => 'waxGlow' + topY.toFixed(4); mat.needsUpdate = true;
+  });
+}
 function depthProxy(rx, ry) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
   m.scale.set(rx, ry, rx); return m;
@@ -175,6 +190,7 @@ export default {
     R.fL = new THREE.Vector3(-.36, deskTop + csL.userData.flameY, .3); R.fR = new THREE.Vector3(.47, deskTop + csR.userData.flameY, .1);
     R.fB = new THREE.Vector3(.21, deskTop + csB.userData.flameY, -.31);
     R.flames = [];
+    for (const cs of [csL, csR, csB]) waxGlow(cs, deskTop + cs.userData.flameY - .03);
     for (const cs of [csL, csR, csB]) {
       cs.userData.flame.visible = false; cs.userData.glow.visible = false;
       const base = cs.userData.flameY - .03 + .006; // candle top + wick
@@ -185,6 +201,7 @@ export default {
     const ms = G.paperStack({ w: .22, d: .3, h: .055, sheets: 3, seed: 21, curl: .008, topTex: G.manuscriptTex({ seed: 22, lines: 28, stopAt: .45 }) }); ms.position.set(-.04, deskTop + .002, .2); ms.rotation.y = .18; scene.add(ms);
     const q = G.quill({ length: .3, bend: .025 }); q.rotation.set(-Math.PI / 2 + .04, 0, -2.2); q.position.set(.02, deskTop + .002 + ms.userData.topY + .004, .27); scene.add(q);
     const ink = M.inkwell({ quill: false }); ink.position.set(-.36, deskTop, -.2); scene.add(ink);
+    ink.traverse(o => { if (o.isMesh && o.material.transmission > 0) { o.material.transmission = 0; o.material.roughness = .12; } });
     // six quarto volumes: calf, raised bands, red & black morocco labels
     const gilt = '#efc96a';
     const spine = (n) => (x, W, H) => {
@@ -254,7 +271,7 @@ export default {
     // ---------------- typography (same card design as s16) ----------------
     const tI = ctx.wordTime('ingiliz'), tE = ctx.wordTime('edward'), tG = ctx.wordTime('gibbon');
     G.locTag(ui, t, { t0: .12, text: 'LOZAN · 1787', accent: '#ffcf6b', y: 268 });
-    const end = G.nameCard(ui, t, { y: 312, tCard: tI - .04, tName: tE - .04, tWork: tG - .3, name: 'EDWARD GIBBON', sub: 'İngiliz tarihçi · 1737–1794', work: 'Roma İmparatorluğu\'nun Çöküşü (1776–1789)', accent: '#ffcf6b', bg: 'rgba(16,16,32,.66)' });
+    const end = G.nameCard(ui, t, { y: 312, tCard: tI - .04, tName: tE - .04, tWork: tG - .3, name: 'EDWARD GIBBON', sub: 'İngiliz tarihçi · 1737–1794', work: 'Roma İmparatorluğu\'nun Çöküşü (1776–1789)', accent: '#ffcf6b', bg: 'rgba(16,16,32,.66)', nameAnim: 'wipe' }); // wipe-in: the name never slides over the sub-line
     if (end) { const a = R.volAnchor; const [ax] = ui.project(a); G.pointer(ui, t, { t0: tG - .05, from: [ax, 312 + 292 + 4], anchor: a, color: '#ffcf6b', dur: .3 }); }
   },
 };

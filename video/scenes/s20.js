@@ -75,8 +75,8 @@ export default {
     await loadFonts();
     scene.background = new THREE.Color('#e8d8bf');
     scene.environment = await ctx.loadHDR('kiara_interior'); scene.environmentIntensity = 0.42;
-    const hemi = new THREE.HemisphereLight('#e4ebff', '#a07a52', 0.5); scene.add(hemi);
-    const sun = new THREE.DirectionalLight('#ffe2b4', 2.9); sun.position.set(-1.25, 2.35, -2.3); sun.target.position.set(.05, TABLE_Y, 0);
+    const hemi = new THREE.HemisphereLight('#e4ebff', '#a07a52', 0.42); scene.add(hemi);
+    const sun = new THREE.DirectionalLight('#ffe2b4', 3.15); sun.position.set(-1.25, 2.35, -2.3); sun.target.position.set(.05, TABLE_Y, 0);
     sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = -1.1; sc.right = 1.1; sc.top = 1.25; sc.bottom = -1.25; sc.near = .5; sc.far = 6; sun.shadow.bias = -.00025; sun.shadow.normalBias = .008; sun.shadow.radius = 5;
     scene.add(sun, sun.target); R.sun = sun;
     const fill = new THREE.PointLight('#ffe6c8', 1.3, 4, 1.5); fill.position.set(.55, 1.15, 1.35); scene.add(fill);
@@ -84,7 +84,7 @@ export default {
     const kick = new THREE.PointLight('#fff1d8', 1.1, 2.6, 1.6); kick.position.set(.15, 1.3, .9); scene.add(kick); R.kick = kick;
 
     // ---------- room ----------
-    const wallTex = TEX.plaster({ a: '#efe2c9', b: '#d9c5a3', seed: 9, repeat: [2, 2] });
+    const wallTex = TEX.plaster({ a: '#e6d6ba', b: '#cfb994', seed: 9, repeat: [2, 2] });
     const wallMat = new THREE.MeshStandardMaterial({ map: wallTex.map, normalMap: wallTex.normalMap, normalScale: new THREE.Vector2(.4, .4), roughness: .95 });
     const wshape = new THREE.Shape(); wshape.moveTo(-2.5, 0); wshape.lineTo(2.5, 0); wshape.lineTo(2.5, 2.8); wshape.lineTo(-2.5, 2.8); wshape.closePath();
     const WX0 = -.82, WX1 = .32, WY0 = .78, WY1 = 2.02;
@@ -313,7 +313,7 @@ export default {
     steam.position.set(0, .106 + .13, 0); steam.userData.uniforms = steamU; steam.userData.yBillboard = true; steam.userData.noDepth = true; steam.renderOrder = 10; tea.add(steam);
 
     // ---------- red rose (cupped spiral petals) lying on the table ----------
-    const rose = new THREE.Group(); rose.position.set(-.1, TABLE_Y + .027, .265); rose.rotation.set(0, .3, 0); rose.scale.setScalar(1.3); scene.add(rose); R.rose = rose;
+    const rose = new THREE.Group(); rose.position.set(-.09, TABLE_Y + .027, .27); rose.rotation.set(0, 1.94, 0); rose.scale.setScalar(1.3); scene.add(rose); R.rose = rose;
     const petalMat = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .55, sheen: 1, sheenColor: new THREE.Color('#ff8a9a'), sheenRoughness: .35, side: THREE.DoubleSide });
     const head = new THREE.Group(); head.rotation.z = Math.PI / 2 - .2; rose.add(head);
     const cBase = new THREE.Color('#4a0610'), cMid = new THREE.Color('#a3101f'), cTip = new THREE.Color('#c8283a');
@@ -346,14 +346,14 @@ export default {
     const leafM = new THREE.MeshPhysicalMaterial({ color: '#4a7a34', roughness: .5, clearcoat: .25, sheen: .4, sheenColor: new THREE.Color('#bfe0a0'), side: THREE.DoubleSide });
     for (const [y, s] of [[-.07, 1], [-.115, -1]]) { const lf = new THREE.Mesh(leafG, leafM); lf.position.set(0, y, 0); lf.rotation.set(0, s * .5, s * 1.05); head.add(lf); }
     M.shadowAll(rose);
-    scene.add(contactShadows([{ x: -.22, y: TABLE_Y + .0016, z: .17, s: [.15, 1, .15] }, { x: -.1, y: TABLE_Y + .0016, z: .265, s: [.08, 1, .08] }], { opacity: .35 }));
+    scene.add(contactShadows([{ x: -.22, y: TABLE_Y + .0016, z: .17, s: [.15, 1, .15] }, { x: -.09, y: TABLE_Y + .0016, z: .27, s: [.08, 1, .08] }], { opacity: .35 }));
 
     // grounding contact shadows under the table legs
     scene.add(contactShadows([[-.5, -.25], [.5, -.25], [-.5, .25], [.5, .25]].map(([x, z]) => ({ x, y: .006, z, s: [.12, 1, .12] })).concat([{ x: 0, y: .005, z: 0, s: [1.4, 1, .9] }]), { opacity: .35 }));
 
     // ---------- light shaft + dust ----------
     const SH_FROM = [-.5, 1.18, WALL_Z - .02], SH_TO = [.02, TABLE_Y + .02, .02];
-    const shaft = FX.lightShaft({ from: SH_FROM, to: SH_TO, r0: .32, r1: .42, color: '#ffe2b0', opacity: .085 }); scene.add(shaft); R.shaft = shaft;
+    const shaft = FX.lightShaft({ from: SH_FROM, to: SH_TO, r0: .32, r1: .42, color: '#ffe2b0', opacity: .1 }); scene.add(shaft); R.shaft = shaft;
     const motes = beamMotes({ from: SH_FROM, to: SH_TO, radius: .36, count: 650, size: 1.0, color: '#fff0d0', opacity: .8, speed: .012, nearFade: .45 }); scene.add(motes); R.motes = motes;
 
     camera.fov = 34; camera.near = .02; camera.far = 50; camera.updateProjectionMatrix();
@@ -362,13 +362,13 @@ export default {
     R.camPos = path3([
       [-0.6, [-.3, .95, .98]], [1.1, [-.22, .9, .62]],
       [1.85, [-.15, .99, .3]], [2.6, [-.1, 1.0, .25]], [3.4, [-.095, 1.0, .235]], [4.15, [-.05, .97, .24]],
-      [4.95, [.17, .85, .6]], [5.7, [.18, .85, .625]],
+      [4.95, [.179, .896, .685]], [5.7, [.186, .9, .71]],
       [6.75, [-.02, .93, .48]], [7.4, [-.045, .95, .57]], [8.4, [-.07, .92, 1.12]], [9.6, [-.08, .915, 1.22]], [11.9, [-.09, .91, 1.3]],
     ]);
     R.camLook = path3([
       [-0.6, [-.1, .58, -.08]], [1.1, [-.08, .58, -.08]],
       [1.85, [-.035, .575, -.08]], [2.6, [-.09, .565, -.115]], [3.4, [-.09, .56, -.11]], [4.15, [-.04, .55, -.08]],
-      [4.95, [.1, .44, .16]], [5.7, [.1, .44, .17]],
+      [4.95, [.1, .435, .19]], [5.7, [.1, .435, .2]],
       [6.75, [-.08, .86, -.38]], [7.4, [-.09, .86, -.42]], [8.4, [-.08, .62, -.1]], [9.6, [-.08, .62, -.1]], [11.9, [-.08, .62, -.1]],
     ]);
   },
@@ -378,7 +378,7 @@ export default {
     const P = R.camPos(t), L = R.camLook(t); P.add(U.shake(t, .0035, .3, 6));
     camera.fov = U.lerp(34, 40, U.smoothstep(6.6, 9.4, t)); camera.updateProjectionMatrix();
     camera.position.copy(P); camera.lookAt(L); camera.updateMatrixWorld();
-    post.motionBlur = (t > 5.8 && t < 6.75) ? { samples: 3, shutter: .5 } : { samples: 1 };
+    post.motionBlur = (t > 5.82 && t < 6.7) ? { samples: 5, shutter: .6 } : { samples: 1 };
     R.motes.userData.uniforms.size.value = .62 * ctx.renderer.domElement.height / 960; // same look at every render scale
     post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.28, .5, U.smoothstep(7.0, 9.4, t)) + .45 * (1 - U.smoothstep(.9, 1.7, t)) + .35 * U.smoothstep(4.2, 4.9, t) * (1 - U.smoothstep(6.1, 6.8, t)); post.dof.amount = .72;
 
@@ -451,7 +451,7 @@ export default {
     // "başka risaleler" label over the sill set
     const sc = R.sillCenter.clone(); const [sx, sy] = ui.project(sc);
     const stp = R.sillCenter.clone(); stp.y += .135; const [, sty] = ui.project(stp);
-    ui.pill('başka risaleler', { t, t0: Math.max(tBas + .15, 6.45), t1: tEtr - .55, x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
+    ui.pill('başka risaleler', { t, t0: Math.max(tBas + .15, 6.45), t1: Math.min(tEtr - .55, 7.8), x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
     // end card
     const ec = U.smoothstep(tEtr - .1, tEtr + .9, t);
     if (ec > 0) {

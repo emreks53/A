@@ -274,13 +274,21 @@ export function flameTex() {
   x.putImageData(im, 0, 0); _flameTex = new THREE.CanvasTexture(c); _flameTex.colorSpace = THREE.SRGBColorSpace; return _flameTex;
 }
 
+// Smooth gaussian glow sprite (no visible disc edge).
+let _glowTex = null;
+function glowTex() {
+  if (_glowTex) return _glowTex;
+  const S = 128, c = document.createElement('canvas'); c.width = S; c.height = S; const x = c.getContext('2d'); const im = x.createImageData(S, S);
+  for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) { const u = (i + .5) / S * 2 - 1, v = (j + .5) / S * 2 - 1, r2 = u * u + v * v; const a = r2 >= 1 ? 0 : Math.exp(-r2 * 6) * (1 - r2) * (1 - r2); const p = (j * S + i) * 4; im.data[p] = im.data[p + 1] = im.data[p + 2] = 255; im.data[p + 3] = Math.round(255 * a); }
+  x.putImageData(im, 0, 0); _glowTex = new THREE.CanvasTexture(c); return _glowTex;
+}
 // Candle-flame field: one point per candle. on[i] = ignition time (local s). GPU animated.
 // Returns Points; set userData.uniforms.master for global fade.
 export function flamePoints(positions, on, { size = 0.05, seedBase = 0, glow = false, color = [1, .62, .25], intensity = 2.4 } = {}) {
   const n = on.length; const fpos = new Float32Array(positions), fon = new Float32Array(on), fs = new Float32Array(n);
   for (let i = 0; i < n; i++) fs[i] = (i * 0.618 + seedBase) % 1 * 40;
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(fpos, 3)); g.setAttribute('on', new THREE.BufferAttribute(fon, 1)); g.setAttribute('seed', new THREE.BufferAttribute(fs, 1));
-  const u = { time: { value: 0 }, map: { value: glow ? softDot(64, 0) : flameTex() }, master: { value: 1 }, size: { value: size }, pxScale: { value: 1000 }, col: { value: new THREE.Vector3(...color) }, inten: { value: intensity } };
+  const u = { time: { value: 0 }, map: { value: glow ? glowTex() : flameTex() }, master: { value: 1 }, size: { value: size }, pxScale: { value: 1000 }, col: { value: new THREE.Vector3(...color) }, inten: { value: intensity } };
   const m = new THREE.ShaderMaterial({
     uniforms: u, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: `uniform float time, size, pxScale; attribute float on, seed; varying float vB;

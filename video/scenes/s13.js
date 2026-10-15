@@ -9,74 +9,121 @@ import { camPath, aim, scroll } from '../engine/lib/extra_F.js';
 
 let R = {};
 
-// ---- rock tower / mountain built on a radial grid, displaced with tileable noise (seamless around) ----------------
-function spire(ctx, o) {
-  const { TEX, U } = ctx;
-  const segR = o.segR ?? 72, segY = o.segY ?? 56, base = o.base ?? -150, top = o.top, Rr = o.R;
-  const f = TEX.fbmField(o.seed ?? 3, o.nb ?? 6, 4), g = TEX.fbmField((o.seed ?? 3) + 7, 3, 3), f2 = TEX.fbmField((o.seed ?? 3) + 13, 14, 3);
-  const prof = yN => {
-    if (o.shape === 'peak') return Math.pow(Math.max(0, 1 - yN), o.pow ?? .9) * (1 + .12 * Math.exp(-Math.pow((yN - .55) / .2, 2)));
-    const k = o.cap ?? .86, tp = o.taper ?? .2; // tower: steep walls, a stepped shoulder, then a blunt broken top
-    const sh = o.shoulder ?? .62, sw = o.shoulderW ?? .7;
-    const wall = yN < sh ? 1 - tp * yN : U.lerp(1 - tp * sh, sw, U.smoothstep(sh, sh + .05, yN)) - tp * .5 * Math.max(0, yN - sh - .05);
-    const kk = Math.max(k, sh + .1);
-    return yN < kk ? wall : (sw - tp * .5 * (kk - sh - .05)) * Math.pow(Math.max(0, 1 - Math.pow((yN - kk) / (1 - kk), 3.5)), .3);
-  };
-  const H = top - base;
-  const rAt = (th, y) => {
-    const yN = U.clamp((y - base) / H); const u = ((th / (Math.PI * 2)) % 1 + 1) % 1;
-    const flute = 1 - Math.abs(f(u, (y - base) / 900 + (o.seed ?? 0) * .1)), fl2 = 1 - Math.abs(f2(u, (y - base) / 700));
-    const sy = (y - base) / (o.strata ?? 11) + g(u, .7) * 1.5; const ledge = U.smoothstep(.0, .12, sy - Math.floor(sy)) * .5 + .5; // horizontal bedding ledges
-    let r = Rr * prof(yN) * (1 + (o.flute ?? .3) * (flute - .5) + (o.flute ?? .3) * .45 * (fl2 - .5) + .1 * g(u, (y - base) / 500) + (o.ledges ?? .05) * (ledge - .75));
-    if (o.ridges) r *= 1 + o.ridges * Math.pow(Math.max(0, Math.cos(4 * th + (o.rPhase ?? 0))), 3) * (1 - yN * .6);
-    if (o.shape !== 'peak') r *= 1 + .22 * Math.cos(2 * th + (o.seed ?? 0) * 1.7) + .1 * Math.cos(3 * th + (o.seed ?? 0) * 2.3);
-    return Math.max(r, 0);
-  };
-  const pos = [], idx = [], uvs = []; const C1 = segR + 1; const uRep = Math.max(1, Math.round(Math.PI * 2 * Rr / 38));
-  for (let j = 0; j <= segY; j++) {
-    const yN = j / segY; const y = base + H * yN;
-    for (let k = 0; k <= segR; k++) {
-      const th = k / segR * Math.PI * 2; const r = j === segY ? 0 : rAt(th, y);
-      const ln = (o.lean ?? 0) * yN * yN * Rr, la = (o.seed ?? 0) * 2.1;
-      let yy = y; if (o.shape !== 'peak' && yN > .8) { const u = k / segR; const nn = j === segY ? .62 : f2(u, .37) * .5 + .5; yy -= Math.pow(U.smoothstep(.45, .8, nn), 1.5) * H * .07 * U.smoothstep(.86, 1, yN); }
-      pos.push(o.x + Math.cos(th) * r + Math.cos(la) * ln, yy, o.z + Math.sin(th) * r + Math.sin(la) * ln * .4); uvs.push(k / segR * uRep, (y - base) / 38);
-    }
-  }
-  for (let j = 0; j < segY; j++) for (let k = 0; k < segR; k++) {
-    const a = j * C1 + k, b = a + 1, c = a + C1, d = c + 1;
-    idx.push(a, c, b, b, c, d);
-  }
+// ---- tileable rock-face detail texture (vertical water streaks, bedding lines, joints/cracks) ----------------------
+function rockTex(ctx) {
+  const { TEX, U } = ctx; const N = 512, R = U.rng(901);
+  const sinSum = (count, kmin, kmax, seed) => { const r = U.rng(seed); const T = []; for (let i = 0; i < count; i++) T.push([kmin + Math.floor(r() * (kmax - kmin)), r() * 6.283, r() * .8 + .2]); const nrm = T.reduce((a, t) => a + t[2], 0); const tab = new Float32Array(N); for (let i = 0; i < N; i++) { const u = i / N; tab[i] = T.reduce((a, [k, p, am]) => a + am * Math.sin(6.283 * k * u + p), 0) / nrm; } return tab; };
+  const st1 = sinSum(12, 2, 24, 11), st2 = sinSum(8, 1, 5, 12), wav = sinSum(6, 1, 5, 13);
+  const beds = [...Array(4)].map((_, i) => [(i + R() * .7) / 4, .004 + R() * .006, .3 + R() * .7]);
+  const cracks = [...Array(4)].map((_, i) => [R(), sinSum(5, 1, 4, 40 + i), .002 + R() * .003, sinSum(4, 1, 3, 60 + i)]);
+  const fine = TEX.fbmField(905, 32, 3), mid = TEX.fbmField(906, 6, 5), blot = TEX.fbmField(907, 12, 4);
+  const b = TEX.bake(N, (u, v) => { const iu = Math.floor(u * N) % N, iv = Math.floor(v * N) % N;
+    const s = st1[iu] * (.65 + .35 * st2[iv]);
+    let bed = 0; for (const [bv, bw, bs] of beds) { const d = Math.abs(((v - bv - wav[iu] * .03) % 1 + 1.5) % 1 - .5); bed = Math.max(bed, Math.max(0, 1 - d / bw) * bs * (.5 + .5 * st2[iu])); }
+    let cr = 0; for (const [cu, w, wd, vis] of cracks) { const d = Math.abs(((u - cu - w[iv] * .04) % 1 + 1.5) % 1 - .5); cr = Math.max(cr, Math.max(0, 1 - d / wd) * U.clamp(vis[iv] * 2)); }
+    const f = fine(u, v) * .5 + .5, m = mid(u, v) * .5 + .5;
+    const bl = blot(u, v) * .5 + .5, bk = Math.abs(mid(u * 1.0 + .3, v * 1.0)) ; const blocky = Math.floor((m + bl) * 3) / 3;
+    const h = .5 + .14 * s + .3 * (m - .5) + .25 * (blocky - .5) + .08 * (f - .5) - .12 * bed - .4 * cr;
+    const g = .8 + .12 * s + .25 * (m - .5) + .18 * (bl - .5) + .06 * (f - .5) - .1 * bed - .28 * cr - .12 * bk;
+    return { c: [g, g * .975, g * .95], h, r: .9 }; }, { normalStrength: 4.5 });
+  return { map: TEX.texFromCanvas(b.colorCanvas, { aniso: 8 }), normalMap: TEX.texFromCanvas(b.normalCanvas, { srgb: false, aniso: 8 }) };
+}
+
+// ---- grid helpers ----------------------------------------------------------------------------------------------------
+// rows: array of functions th -> [r, y] (bottom to top); last row collapses to the apex/centre. Returns indexed geometry.
+function radialGrid(segR, rows, cx, cz, off) {
+  const C1 = segR + 1, pos = [], uvs = [], idx = [];
+  rows.forEach((row, j) => { for (let k = 0; k <= segR; k++) { const th = k / segR * Math.PI * 2; const [r, y, dx = 0, dz = 0] = row(th, k); pos.push(cx + Math.cos(th) * r + dx, y, cz + Math.sin(th) * r + dz); uvs.push(k / segR, j / rows.length); } });
+  for (let j = 0; j < rows.length - 1; j++) for (let k = 0; k < segR; k++) { const a = j * C1 + k, b = a + 1, c = a + C1, d = c + 1; idx.push(a, c, b, b, c, d); }
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); geo.setIndex(idx); geo.computeVertexNormals();
-  { const Nn = geo.attributes.normal; for (let j = 0; j <= segY; j++) { const a = j * C1, b = j * C1 + segR; const nx = Nn.getX(a) + Nn.getX(b), ny = Nn.getY(a) + Nn.getY(b), nz = Nn.getZ(a) + Nn.getZ(b), l = Math.hypot(nx, ny, nz) || 1; Nn.setXYZ(a, nx / l, ny / l, nz / l); Nn.setXYZ(b, nx / l, ny / l, nz / l); } }
-  // vertex colours: pale dolomite rock, darker vertical streaks, snow on flat high faces of big peaks
-  const P = geo.attributes.position, N = geo.attributes.normal, col = new Float32Array(P.count * 3);
-  const A = new THREE.Color(o.a ?? '#cdbba4'), B = new THREE.Color(o.b ?? '#7f6f66'), S = new THREE.Color('#f1e4da'), C = new THREE.Color();
-  for (let i = 0; i < P.count; i++) {
-    const x = P.getX(i) - o.x, y = P.getY(i), z = P.getZ(i) - o.z; const th = Math.atan2(z, x); const u = ((th / (Math.PI * 2)) % 1 + 1) % 1;
-    const streak = f(u * 1.0 + .37, (y - base) / 300) * .5 + .5; const band = .5 + .5 * Math.sin(y * .21 + g(u, .3) * 3);
-    const crev = 1 - Math.abs(f(u, (y - base) / 900 + (o.seed ?? 0) * .1));
-    C.copy(A).lerp(B, U.clamp(streak * .6 + band * .2 + (1 - crev) * .55 - .25));
-    if (o.snow) { const yN = (y - base) / H; const sn = U.smoothstep(o.snow, o.snow + .08, yN + (streak - .5) * .12) * U.smoothstep(.25, .6, N.getY(i) + .35); C.lerp(S, sn * .9); }
-    col.set([C.r, C.g, C.b], i * 3);
-  }
+  const Nn = geo.attributes.normal; for (let j = 0; j < rows.length; j++) { const a = j * C1, b = j * C1 + segR; const nx = Nn.getX(a) + Nn.getX(b), ny = Nn.getY(a) + Nn.getY(b), nz = Nn.getZ(a) + Nn.getZ(b), l = Math.hypot(nx, ny, nz) || 1; Nn.setXYZ(a, nx / l, ny / l, nz / l); Nn.setXYZ(b, nx / l, ny / l, nz / l); }
+  { const j = rows.length - 1; let nx = 0, ny = 0, nz = 0; for (let k = 0; k <= segR; k++) { const i = j * C1 + k; nx += Nn.getX(i); ny += Nn.getY(i); nz += Nn.getZ(i); } const l = Math.hypot(nx, ny, nz) || 1; for (let k = 0; k <= segR; k++) Nn.setXYZ(j * C1 + k, nx / l, ny / l, nz / l); } // apex / cap centre: one shared normal (no star artefact)
+  return geo;
+}
+
+// ---- sandstone pillar (Zhangjiajie-like): faceted section, deep vertical joints, stepped bedding ledges, crisp flat top ----
+function tower(ctx, o) {
+  const { U, TEX } = ctx; const rr = U.rng(o.seed * 7 + 1);
+  const segR = o.segR ?? 168, nW = o.segY ?? 46, base = o.base ?? -125, top = o.top, R0 = o.R, H = top - base;
+  const nf = 6 + Math.floor(rr() * 4); const fac = []; let a = rr() * 6.283;
+  for (let i = 0; i < nf; i++) { fac.push([a, R0 * (.84 + rr() * .2)]); a += 6.283 / nf * (.65 + rr() * .7); }
+  const joints = [...Array(o.joints ?? 8)].map(() => [rr() * 6.283, .035 + rr() * .05, .06 + rr() * .12]);
+  const wan = TEX.fbmField(o.seed + 3, 4, 3), rough = TEX.fbmField(o.seed + 5, 16, 4), rimN = TEX.fbmField(o.seed + 9, 6, 3);
+  const strata = o.strata ?? 8.5, lean = (o.lean ?? 0) * R0, la = o.seed * 2.1;
+  const jointAt = (th, yN) => { let g = 0; for (const [ja, jw, jd] of joints) { const d = Math.abs((((th - ja - wan(th / 6.283, yN * .5) * .12) / 6.283) % 1 + 1.5) % 1 - .5) * 6.283; if (d < jw) g = Math.max(g, jd * Math.pow(1 - d / jw, 1.3)); } return g; };
+  let noJ = false; const rAt = (th, y) => {
+    let r = 1e9; for (const [fa, fd] of fac) { const c = Math.cos(th - fa); if (c > .25) r = Math.min(r, fd / c); } if (r > 1e8) r = R0;
+    const yN = U.clamp((y - base) / H);
+    r = U.lerp(r, R0 * (.95 + .12 * wan(th / 6.283 + .5, yN * 1.3)), .45) * (1 + .07 * wan(th / 6.283 * 2, yN * 2.2 + .3));
+    if (!noJ) r *= 1 - jointAt(th, yN);
+    const sy = (y - base) / strata + rough(th / 6.283, .3) * 2.5 + wan(.3, yN * 3) * 2; const fr = sy - Math.floor(sy); r *= 1 - .014 * U.smoothstep(.85, 1, fr) - .006 * (1 - fr);
+    r *= 1 - (o.taper ?? .1) * yN + .12 * Math.max(0, .12 - yN) / .12 * .12;
+    r *= 1 + .03 * rough(th / 6.283, yN * 3);
+    return r;
+  };
+  const rimY = th => top + (o.rimVar ?? .06) * R0 * rimN(th / 6.283, .31) - (o.notch ?? .1) * R0 * U.smoothstep(.2, .32, rimN(th / 6.283 + .37, .77)) - .04 * R0 * Math.max(0, rough(th / 6.283 * 3, .62));
+  const lx = yN => Math.cos(la) * lean * yN * yN, lz = yN => Math.sin(la) * lean * yN * yN * .4;
+  const rows = [];
+  for (let j = 0; j <= nW; j++) { const s = 1 - Math.pow(1 - j / nW, 1.35); rows.push(th => { const yr = rimY(th), y = base + (yr - base) * s, yN = (y - base) / H; return [rAt(th, y), y, lx(yN), lz(yN)]; }); }
+  const bev = Math.min(1.4, R0 * .045), dome = R0 * (o.dome ?? .09);
+  rows.push(th => { const yr = rimY(th); return [rAt(th, yr) * .985 - bev * .5, yr + bev * .55, lx(1), lz(1)]; });
+  rows.push(th => { const yr = rimY(th); return [rAt(th, yr) * .955 - bev, yr + bev, lx(1), lz(1)]; });
+  const capN = o.capN ?? 8; for (let c = 1; c <= capN; c++) { const f = c / capN; rows.push(th => { const yr = rimY(th); const rj = rAt(th, yr) * .955 - bev; noJ = true; const rs = rAt(th, yr) * .955 - bev; noJ = false; return [U.lerp(rj, rs, Math.min(1, f * 4)) * (1 - f), yr + bev + dome * (1 - Math.pow(1 - f, 2)) * (.6 + .5 * rough(th / 6.283 * 2, .9 + f * .3)), lx(1), lz(1)]; }); }
+  const geo = radialGrid(segR, rows, o.x, o.z);
+  // vertex colours: pale sandstone with darker joints / lower walls; mossy green on the plateau
+  const P = geo.attributes.position, Nn = geo.attributes.normal, col = new Float32Array(P.count * 3);
+  const A = new THREE.Color(o.a ?? '#a69fb0'), B = new THREE.Color(o.b ?? '#3a3248'), G = new THREE.Color(o.g ?? '#56603e'), C = new THREE.Color();
+  for (let i = 0; i < P.count; i++) { const x = P.getX(i) - o.x, y = P.getY(i), z = P.getZ(i) - o.z, th = (Math.atan2(z, x) + 6.283) % 6.283, yN = U.clamp((y - base) / H);
+    const jg = jointAt(th, Math.min(yN, 1)); C.copy(A).lerp(B, U.clamp(.18 + jg * 4 + (1 - yN) * .35 + rough(th / 6.283, yN * 6) * .25));
+    if (y > top - R0 * .12 && Nn.getY(i) > .55) C.lerp(G, .75 * U.smoothstep(.55, .8, Nn.getY(i)));
+    col.set([C.r, C.g, C.b], i * 3); }
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   const m = new THREE.Mesh(geo, o.mat); m.receiveShadow = true; m.castShadow = !!o.cast;
-  m.userData.rAt = rAt; m.userData.c = [o.x, o.z];
+  m.userData.rAt = rAt; m.userData.c = [o.x, o.z]; m.userData.topAt = th => rimY(th); m.userData.R = R0; m.userData.capR = th => rAt(th, rimY(th)) * .9 - bev;
   return m;
 }
 
-// Rock material whose direct SUN term only exists above the sunrise terminator height (first light on high peaks).
-function rockMat(UN, TEX) {
-  const st = TEX.stone({ a: '#ffffff', b: '#7c7a78', seed: 19, repeat: [1, 1] });
-  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .93, metalness: 0, map: st.map, normalMap: st.normalMap, normalScale: new THREE.Vector2(1.3, 1.3) });
+// ---- the great summit: a Matterhorn-like horn — four twisting aretes, concave faces cut by couloirs, snow ledges ----------
+function horn(ctx, o) {
+  const { U, TEX } = ctx; const segR = o.segR ?? 300, segY = o.segY ?? 220, base = o.base ?? -150, top = o.top, R0 = o.R, H = top - base;
+  const f1 = TEX.fbmField(o.seed, 6, 5), f2 = TEX.fbmField(o.seed + 7, 24, 3), cou = TEX.fbmField(o.seed + 13, 20, 2);
+  const prof = yN => Math.pow(Math.max(0, 1 - yN), .62) * .62 + .38 * (1 - U.smoothstep(.0, .45, yN)) * Math.pow(Math.max(0, 1 - yN), .5);
+  const rid = (x, p) => Math.pow(1 - Math.abs(Math.sin(x)), p); // sharp ridged profile
+  const rAt = (th, y) => { const yN = U.clamp((y - base) / H), u = th / 6.283;
+    const tw = (o.phase ?? .2) + .55 * yN + .25 * f1(.13, yN * 1.5);
+    const big = Math.pow(Math.abs(Math.cos(2 * (th - tw))), 3); // 4 main aretes
+    const rib = rid(th * 5 + 1.3 + 2.2 * f1(u, yN * .8 + .2) + yN * 2, 3), gul = rid(th * 13 + 3 * f1(u + .4, yN * 1.2) - yN * 3, 4);
+    let r = R0 * prof(yN) * (.6 + .4 * big) * (1 + .16 * rib * (1 - .5 * yN) + .06 * gul * (1 - yN * .6));
+    r *= 1 + .05 * f1(u, yN * 1.6) + .025 * f2(u, yN * 4);
+    const sy = (y - base) / 14 + f1(u, .4) * 3; const fr = sy - Math.floor(sy); r *= 1 - .006 * U.smoothstep(.8, 1, fr);
+    return Math.max(r, 0); };
+  const leanX = (o.lean ?? 0) * R0, hook = yN => Math.pow(yN, 3);
+  const rows = []; for (let j = 0; j <= segY; j++) { const yN = j / segY, y = base + H * yN; rows.push(th => j === segY ? [0, y, leanX * hook(1), 0] : [rAt(th, y), y, leanX * hook(yN), 0]); }
+  const geo = radialGrid(segR, rows, o.x, o.z);
+  const P = geo.attributes.position, Nn = geo.attributes.normal, col = new Float32Array(P.count * 3);
+  const A = new THREE.Color(o.a ?? '#8f7f86'), B = new THREE.Color(o.b ?? '#3f3542'), S = new THREE.Color('#f4e9e4'), C = new THREE.Color();
+  for (let i = 0; i < P.count; i++) { const x = P.getX(i) - o.x, y = P.getY(i), z = P.getZ(i) - o.z, u = ((Math.atan2(z, x) / 6.283) % 1 + 1) % 1, yN = (y - base) / H;
+    C.copy(A).lerp(B, U.clamp(.45 + f1(u * 2, yN * 5) * .6 + f2(u, yN * 3) * .3));
+    const sn = U.smoothstep(.42, .62, yN + f2(u, yN * 2) * .12) * U.smoothstep(.3, .55, Nn.getY(i) + f1(u * 2, yN * 3) * .15); C.lerp(S, U.clamp(sn * 1.15));
+    col.set([C.r, C.g, C.b], i * 3); }
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const m = new THREE.Mesh(geo, o.mat); m.receiveShadow = true; m.userData.rAt = rAt; m.userData.c = [o.x, o.z];
+  return m;
+}
+
+// Rock material: triplanar detail, a warm side light from the glowing eastern sky, and the direct SUN only above the
+// sunrise terminator height (first light on the highest peak). Snow (bright vertex colour) gets a pink-gold alpenglow.
+function rockMat(UN, TEX, tex) {
+  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9, metalness: 0, map: tex.map, normalMap: tex.normalMap, normalScale: new THREE.Vector2(1.5, 1.5) });
   m.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, UN);
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vWY; varying vec3 vWP, vWN;')
       .replace('#include <project_vertex>', '#include <project_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.)).xyz; vWY = vWP.y; vWN = normalize(mat3(modelMatrix) * objectNormal);');
-    // triplanar rock texturing (no UV stretching on tops / apexes)
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vWY; varying vec3 vWP, vWN; uniform float uTerm, uSoft; uniform vec3 uSunDir, uSunCol;\nconst float TS = 1. / 34.;')
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vWY; varying vec3 vWP, vWN; uniform float uTerm, uSoft; uniform vec3 uSunDir, uSunCol, uEastDir, uEastCol;\nconst float TS = 1. / 34., TS2 = 1. / 151.;')
       .replace('#include <map_fragment>', `{ vec3 bw = pow(abs(normalize(vWN)), vec3(4.)); bw /= (bw.x + bw.y + bw.z);
-          diffuseColor *= texture2D(map, vWP.zy * TS) * bw.x + texture2D(map, vWP.xz * TS) * bw.y + texture2D(map, vWP.xy * TS) * bw.z; }`)
+          vec4 tx = texture2D(map, vWP.zy * TS) * bw.x + texture2D(map, vWP.xz * TS) * bw.y + texture2D(map, vWP.xy * TS) * bw.z;
+          vec4 t2 = texture2D(map, vWP.zy * TS2 + .37) * bw.x + texture2D(map, vWP.xz * TS2 + .61) * bw.y + texture2D(map, vWP.xy * TS2 + .13) * bw.z; tx.rgb *= .55 + .55 * t2.rgb;
+          float snowy = smoothstep(.8, .92, dot(vColor.rgb, vec3(.33))); diffuseColor.rgb *= mix(tx.rgb, vec3(1.), snowy * .85); }`)
       .replace('#include <normal_fragment_maps>', `{ vec3 wn = normalize(vWN); vec3 bw = pow(abs(wn), vec3(4.)); bw /= (bw.x + bw.y + bw.z);
           vec3 nX = texture2D(normalMap, vWP.zy * TS).xyz * 2. - 1., nY = texture2D(normalMap, vWP.xz * TS).xyz * 2. - 1., nZ = texture2D(normalMap, vWP.xy * TS).xyz * 2. - 1.;
           nX.xy *= normalScale; nY.xy *= normalScale; nZ.xy *= normalScale;
@@ -85,11 +132,15 @@ function rockMat(UN, TEX) {
           normal = normalize((viewMatrix * vec4(wN, 0.)).xyz); }`)
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
         reflectedLight.directDiffuse *= .45;
+        { vec3 ev = normalize((viewMatrix * vec4(uEastDir, 0.)).xyz); float ne = dot(normal, ev);
+          reflectedLight.directDiffuse += diffuseColor.rgb * uEastCol * (pow(max(ne, 0.), 1.4) * .55 + max(ne + .3, 0.) * .07);
+          float fr = pow(1. - max(dot(normal, normalize(vViewPosition)), 0.), 3.); reflectedLight.directDiffuse += diffuseColor.rgb * uEastCol * fr * max(ne + .2, 0.) * .5; }
         { vec3 sv = normalize((viewMatrix * vec4(uSunDir, 0.)).xyz); float nd = max(dot(normal, sv), 0.);
-          float msk = smoothstep(uTerm - uSoft, uTerm + uSoft, vWY);
-          reflectedLight.directDiffuse += diffuseColor.rgb * uSunCol * (nd * .9 + .1) * msk; }`);
+          float msk = smoothstep(uTerm - uSoft, uTerm + uSoft, vWY); float edge = 1. - smoothstep(uTerm, uTerm + 22., vWY);
+          vec3 sc = mix(uSunCol, uSunCol * vec3(1.15, .72, .62), edge); // redder alpenglow just above the terminator
+          reflectedLight.directDiffuse += diffuseColor.rgb * sc * (nd * .9 + .12) * msk; }`);
   };
-  m.customProgramCacheKey = () => 'F_rock_terminator';
+  m.customProgramCacheKey = () => 'F_rock_terminator2';
   return m;
 }
 
@@ -138,9 +189,9 @@ export default {
     scene.add(new THREE.HemisphereLight('#7f8fd6', '#342f50', 0.78));
     const east = ENV.sunLight({ color: '#ffab80', intensity: 1.7, pos: SUN.clone().multiplyScalar(30).toArray(), target: [0, .4, 0], size: 2.2, mapSize: 2048, radius: 6, bias: -0.0003, normalBias: .01 });
     scene.add(east, east.target); R.east = east;
-    const UN = { uTerm: { value: 70 }, uSoft: { value: 3.5 }, uSunDir: { value: SUN.clone() }, uSunCol: { value: new THREE.Color(5.2, 2.35, .9) } };
+    const UN = { uTerm: { value: 70 }, uSoft: { value: 3.5 }, uSunDir: { value: SUN.clone() }, uSunCol: { value: new THREE.Color(5.6, 2.6, 1.15) }, uEastDir: { value: SUN.clone() }, uEastCol: { value: new THREE.Color(1.05, .62, .5) } };
     R.UN = UN;
-    const rock = rockMat(UN, TEX);
+    const rock = rockMat(UN, TEX, rockTex(ctx));
 
     // ---- cloud sea (displaced, custom-lit) -----------------------------------------------------------------
     const CS = 5200, cseg = 200; const cgeo = new THREE.PlaneGeometry(CS, CS, cseg, cseg); cgeo.rotateX(-Math.PI / 2);
@@ -165,25 +216,33 @@ export default {
 
     // ---- rock towers ------------------------------------------------------------------------------------------
     const towers = [];
-    const add = o => { const m = spire(ctx, { mat: rock, ...o }); scene.add(m); towers.push(m); return m; };
-    const cluster = (o, kids) => { const rr = U.rng(o.seed); o = { shoulder: .45 + rr() * .3, shoulderW: .84 + rr() * .1, lean: (rr() - .5) * .45, ...o }; const m = add(o); (kids || []).forEach(([dx, dz, hk, rk], i) => add({ ...o, x: o.x + dx * o.R, z: o.z + dz * o.R, top: o.base === undefined ? -150 + (o.top + 150) * hk : o.top * hk, R: o.R * rk, seed: o.seed + 50 + i, segR: 48, segY: 40 })); return m; };
-    const G = add({ x: -18, z: -600, top: 138, R: 150, shape: 'peak', pow: .92, seed: 11, nb: 8, flute: .26, ridges: .2, rPhase: .3, snow: .86, segR: 140, segY: 110, strata: 14, ledges: .04, a: '#c9a98c', b: '#5e5059' });
-    R.G = G; R.summit = new THREE.Vector3(-18, 138, -600);
-    R.P0 = add({ x: .3, z: -1.2, top: -.45, R: 6.5, seed: 4, cap: .965, taper: .2, flute: .12, a: '#a8998c', b: '#4f4650' }); // our ledge tower
-    const TA = '#a39fae', TB = '#34304a';
-    const L1 = cluster({ x: -30, z: -185, top: -2, R: 15, seed: 21, cap: .88, a: TA, b: TB }, [[.75, -.4, .82, .55], [-.6, -.5, .7, .5]]);
-    const L2 = cluster({ x: 36, z: -240, top: -10, R: 14, seed: 22, cap: .88, a: TA, b: TB }, [[-.7, -.5, .85, .5]]);
-    cluster({ x: -64, z: -390, top: 8, R: 24, seed: 23, a: TA, b: TB }, [[.7, .3, .8, .5], [-.5, -.6, .9, .6]]);
-    cluster({ x: 62, z: -430, top: 2, R: 22, seed: 24, a: TA, b: TB }, [[-.7, .2, .75, .55]]);
-    cluster({ x: 12, z: -125, top: -50, R: 9, seed: 25, a: TA, b: TB });
-    cluster({ x: -14, z: -300, top: -32, R: 11, seed: 26, a: TA, b: TB });
-    cluster({ x: -92, z: -500, top: -10, R: 22, seed: 27, a: TA, b: TB }, [[.6, .5, .7, .5]]);
-    cluster({ x: 100, z: -540, top: 14, R: 28, seed: 28, a: TA, b: TB }, [[-.6, .4, .8, .5]]);
-    cluster({ x: -140, z: -300, top: 2, R: 24, seed: 29, a: TA, b: TB }, [[.6, .4, .7, .55]]);
-    cluster({ x: 130, z: -280, top: -6, R: 22, seed: 30, a: TA, b: TB }, [[-.6, -.4, .75, .5]]);
-    // distant ranges in the haze
-    [[-700, -1500, 70, 330], [-150, -1700, 40, 420], [520, -1450, 80, 380], [1100, -1300, 30, 300], [-1200, -1200, 40, 330]].forEach(([x, z, t, r], i) => add({ x, z, top: t, R: r, shape: 'peak', pow: 1.1, seed: 40 + i, segR: 48, segY: 30, flute: .25, ridges: .1 }));
+    const add = (fn, o) => { const m = fn(ctx, { mat: rock, ...o }); scene.add(m); towers.push(m); return m; };
+    const TA = '#a8a0b2', TB = '#342c44';
+    const cluster = (o, kids) => { const rr = U.rng(o.seed); o = { lean: (rr() - .5) * .35, a: TA, b: TB, ...o }; const m = add(tower, o);
+      (kids || []).forEach(([dx, dz, hk, rk], i) => add(tower, { ...o, x: o.x + dx * o.R, z: o.z + dz * o.R, top: -125 + (o.top + 125) * hk, R: o.R * rk, seed: o.seed + 50 + i, segR: 120, segY: 34, joints: 6 })); return m; };
+    const G = add(horn, { x: -18, z: -600, top: 138, R: 132, seed: 11, lean: .05, phase: .25, segR: 300, segY: 230, a: '#9a8a90', b: '#3b3241' });
+    R.G = G; R.summit = new THREE.Vector3(-18 + 132 * .05, 138, -600);
+    R.P0 = add(tower, { x: .3, z: -1.2, top: -.45, R: 6.5, seed: 4, taper: .14, rimVar: .02, notch: .02, strata: 2.2, a: '#b8a99c', b: '#4f4650', g: '#7a6e64', segR: 140, segY: 40, capN: 16, rimVar: .02, notch: .02, dome: .02 }); // our ledge tower
+    const L1 = cluster({ x: -30, z: -185, top: -2, R: 15, seed: 21 }, [[.78, -.42, .82, .52], [-.62, -.5, .7, .48]]);
+    const L2 = cluster({ x: 36, z: -240, top: -10, R: 14, seed: 22 }, [[-.72, -.5, .85, .5]]);
+    cluster({ x: -64, z: -390, top: 8, R: 24, seed: 23 }, [[.7, .3, .8, .5], [-.5, -.6, .9, .6]]);
+    cluster({ x: 62, z: -430, top: 2, R: 22, seed: 24 }, [[-.7, .2, .75, .55]]);
+    cluster({ x: 12, z: -125, top: -50, R: 9, seed: 25 });
+    cluster({ x: -14, z: -300, top: -32, R: 11, seed: 26 });
+    cluster({ x: -92, z: -500, top: -10, R: 22, seed: 27 }, [[.6, .5, .7, .5]]);
+    cluster({ x: 100, z: -540, top: 14, R: 28, seed: 28 }, [[-.6, .4, .8, .5]]);
+    cluster({ x: -140, z: -300, top: 2, R: 24, seed: 29 }, [[.6, .4, .7, .55]]);
+    cluster({ x: 130, z: -280, top: -6, R: 22, seed: 30 }, [[-.6, -.4, .75, .5]]);
+    // distant ranges in the haze (lower, softer horns)
+    [[-700, -1500, 70, 330], [-150, -1700, 40, 420], [520, -1450, 80, 380], [1100, -1300, 30, 300], [-1200, -1200, 40, 330]].forEach(([x, z, t, r], i) => add(horn, { x, z, top: t, R: r, seed: 40 + i, segR: 96, segY: 48, phase: i * .7, a: '#8a8098', b: '#4a4460' }));
     R.towers = towers;
+    // small pines on the plateaus (scale cue: these pillars are hundreds of metres tall)
+    { const cones = []; for (let k = 0; k < 3; k++) cones.push(new THREE.ConeGeometry(.55 - k * .14, .9, 7).translate(0, .75 + k * .5, 0)); cones.push(new THREE.CylinderGeometry(.06, .08, .7, 5).translate(0, .35, 0));
+      const pg = mergeGeo(cones); const pm = new THREE.MeshStandardMaterial({ color: '#2f4a32', roughness: .9 }); const list = [];
+      towers.slice(2, -5).forEach((T, ti) => { const rr = U.rng(300 + ti); const n = Math.round(Math.min(26, T.userData.R * 1.1)); for (let i = 0; i < n; i++) { const th = rr() * 6.283, f = Math.sqrt(rr()) * .92; const r = T.userData.capR(th) * f; const y = T.userData.topAt(th) - .3; list.push([T.userData.c[0] + Math.cos(th) * r, y, T.userData.c[1] + Math.sin(th) * r, (1.4 + rr() * 2.2) * Math.max(.6, T.userData.R / 16), rr() * 6.28]); } });
+      const im = new THREE.InstancedMesh(pg, pm, list.length); const m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+      list.forEach(([x, y, z, sc, ry], i) => { q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), ry); m4.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(sc, sc * (1.1 + (i % 3) * .2), sc)); im.setMatrixAt(i, m4); });
+      im.receiveShadow = true; scene.add(im); }
 
     // ladders on L1 (lashed, two segments) and carved stairs on L2: both end at their tower's top — far below the summit
     const ladMat = M.MAT.wood({ a: '#a8743e', b: '#5e3a1c', rings: 6 });
@@ -196,7 +255,7 @@ export default {
       const c = T.userData.c; return [[c[0] + Math.cos(th) * rb, y0, c[1] + Math.sin(th) * rb], [c[0] + Math.cos(th) * rt, y1, c[1] + Math.sin(th) * rt]];
     };
     const th1 = 1.45; // face pointing toward the camera (+z)
-    const [ladA, ladB] = ladderOn(L1, th1, -64, -32), [ladB2, ladC] = ladderOn(L1, th1 + .06, -36, -8.5);
+    const [ladA, ladB] = ladderOn(L1, th1, -64, -32), [ladB2, ladC] = ladderOn(L1, th1 + .06, -36, L1.userData.topAt(th1 + .06) + .4);
     scene.add(ladder(ctx, ladA, ladB, camSide(th1), { mat: ladMat }));
     scene.add(ladder(ctx, ladB2, ladC, camSide(th1 + .06), { mat: ladMat }));
     R.ladTop = new THREE.Vector3(...ladC);
@@ -215,6 +274,15 @@ export default {
     { const tex = FX.cloudSprite(); const rr = U.rng(5); const g = new THREE.Group();
       towers.forEach((T, ti) => { const [cx, cz] = T.userData.c; const k = ti === 0 ? 8 : ti > 11 ? 2 : 3; for (let i = 0; i < k; i++) { const a = rr() * 6.28; const base = ti === 0 ? 120 : 26; const rad = base * (.6 + rr() * .8); const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: new THREE.Color().setHSL(.69, .32, .5 + rr() * .1), transparent: true, opacity: .38, depthWrite: false, rotation: rr() * 6 })); s.position.set(cx + Math.cos(a) * rad, -70 + rr() * 8, cz + Math.sin(a) * rad); s.scale.setScalar((ti === 0 ? 120 : 45) * (.7 + rr() * .7)); s.userData.noDepth = true; g.add(s); } });
       scene.add(g); }
+
+    // banner cloud streaming from the summit (the first light catches it) + a soft glow of sunlit snow
+    { const tex = FX.cloudSprite(); const g = new THREE.Group(); const S0 = R.summit; R.banner = [];
+      for (let i = 0; i < 11; i++) { const f = i / 10; const m = new THREE.SpriteMaterial({ map: tex, color: new THREE.Color().setHSL(.035 + f * .03, .7, .74 - f * .14), transparent: true, opacity: (.55 - f * .38), depthWrite: false, rotation: i * 1.7 });
+        const sp = new THREE.Sprite(m); sp.userData.noDepth = true; sp.userData.base = new THREE.Vector3(S0.x - 4 - f * 105, S0.y - 8 - f * 18 + Math.sin(i * 2.1) * 3, S0.z + 15 - f * 10); sp.userData.sz = 16 + f * 52; sp.userData.f = f; g.add(sp); R.banner.push(sp); }
+      g.userData.update = t => R.banner.forEach((sp, i) => { const d = (t + 2) * 2.2 * (.5 + sp.userData.f); sp.position.copy(sp.userData.base).add(new THREE.Vector3(-d, Math.sin(t * .4 + i) * .8, 0)); sp.scale.setScalar(sp.userData.sz * (1 + .03 * Math.sin(t * .7 + i))); sp.material.rotation = i * 1.7 + t * .02 * (i % 2 ? 1 : -1); });
+      scene.add(g);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX.softDot(128, 0), color: '#ffb48a', transparent: true, opacity: .2, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+      halo.position.copy(S0).add(new THREE.Vector3(10, -26, -40)); halo.scale.setScalar(170); halo.userData.noDepth = true; scene.add(halo); R.halo = halo; }
 
     // ---- the ledge + chronicle stack (history testifies) -------------------------------------------------------
     const ledge = new THREE.Group(); scene.add(ledge); R.ledge = ledge;
@@ -283,6 +351,7 @@ export default {
     // sunrise creeps down the great summit (terminator height)
     R.UN.uTerm.value = U.lerp(104, 58, U.smoothstep(-.5, 7.8, t));
     R.sky.userData.uniforms.sunGlow.value = 1.0 + .3 * U.smoothstep(2, 7, t);
+    R.halo.material.opacity = .06 + .06 * U.smoothstep(3.5, 7, t);
     // DOF: on the stack first, then deep focus on the peaks
     const far = U.smoothstep(2.5, 3.6, t);
     post.dof.focus = U.lerp(camera.position.distanceTo(new THREE.Vector3(0, .55, .2)), 450, far);
@@ -291,23 +360,33 @@ export default {
     // ---- typography -------------------------------------------------------------------------------------------
     const tT = ctx.wordTime('tarihin'), tSh = ctx.wordTime('şehadetiyle'), tD = ctx.wordTime('düşmanları'), tK = ctx.wordTime('kabul');
     const tEn = ctx.wordTime('en'), tY = ctx.wordTime('yüksek'), tYe = ctx.wordTime('yetişilemeyecek'), tDe = ctx.wordTime('derecedeydi');
-    const stackAnchor = R.stack.localToWorld(new THREE.Vector3(-.05, R.stackTop * .55, .2));
-    ui.callout('tarihin şehadeti', { t, t0: tT + .05, t1: tD - .05, anchor: stackAnchor, to: [540, 330], family: 'Playfair Display', weight: 700, size: 52, color: '#fff1d6', dotColor: '#ffcf6b' });
+    const stackAnchor = R.stack.localToWorld(new THREE.Vector3(.02, R.stackTop * .72, -.22)); // right flank of the stack: the line never crosses the books
+    ui.callout('tarihin şehadeti', { t, t0: tT + .05, t1: tD - .05, anchor: stackAnchor, to: [770, 330], family: 'Playfair Display', weight: 700, size: 54, color: '#fff1d6', dotColor: '#ffcf6b' });
     ui.text('düşmanları bile', { t, t0: tD - .05, t1: tEn + .1, x: 540, y: 300, size: 76, weight: 900, color: '#ff8a6e', anim: 'pop', stroke: 'rgba(30,24,50,.55)', strokeW: 10 });
     ui.text('kabul ediyor', { t, t0: tK - .05, t1: tEn + .1, x: 540, y: 392, size: 64, weight: 800, color: '#fff4dc', anim: 'rise', stroke: 'rgba(30,24,50,.5)', strokeW: 9 });
     // summit callout + big keyword
     const sp = ui.project(R.summit);
     ui.callout('en yüksek derece', { t, t0: tEn + .05, t1: 99, anchor: [sp[0], sp[1] + 4], to: [Math.min(sp[0] + 220, 780), sp[1] + 150], size: 46, weight: 800, color: '#fff4dc', dotColor: '#ffcf6b' });
-    const attempt = (from, k, t0, side) => {
-      const p = U.clamp((t - t0) / .7); if (p <= 0) return; const a = ui.project(from), b = ui.project(R.summit); const X = ui.ctx;
-      const ex = a[0] + (b[0] - a[0]) * k * .35 + side * 40, ey = a[1] + (b[1] - a[1]) * k; // ends well below the summit
-      const e = U.ease.outCubic(p); X.save(); X.globalAlpha = Math.min(1, p * 3) * (1 - U.smoothstep(7.6, 7.9, t)); X.setLineDash([4, 14]); X.lineCap = 'round'; X.lineWidth = 7; X.strokeStyle = 'rgba(255,244,220,.9)';
-      X.shadowColor = 'rgba(20,16,40,.6)'; X.shadowBlur = 8; X.beginPath(); X.moveTo(a[0], a[1]); X.quadraticCurveTo(a[0] + side * 20, a[1] + (ey - a[1]) * .5, a[0] + (ex - a[0]) * e, a[1] + (ey - a[1]) * e); X.stroke(); X.setLineDash([]);
-      if (p > .8) { const q = U.ease.outBack(U.clamp((p - .8) / .2 * 1.6 > 1 ? 1 : (p - .8) / .2), 2.5); const cx = ex, cy = ey, r = 16 * q; X.strokeStyle = '#ff6b5e'; X.lineWidth = 9; X.beginPath(); X.moveTo(cx - r, cy - r); X.lineTo(cx + r, cy + r); X.moveTo(cx + r, cy - r); X.lineTo(cx - r, cy + r); X.stroke(); }
+    // failed attempts: dotted climb lines from the ladder / stair tops that stop far below the summit, each ending in a red ✕
+    const fadeAll = 1 - U.smoothstep(7.55, 7.85, t);
+    const attempt = (from, k, t0, bend) => {
+      const p = U.clamp((t - t0) / .65); if (p <= 0) return; const a = ui.project(from), b = ui.project(R.summit); const X = ui.ctx;
+      const ex = a[0] + (b[0] - a[0]) * k, ey = a[1] + (b[1] - a[1]) * k, cx = (a[0] + ex) / 2 + bend, cy = (a[1] + ey) / 2;
+      const q = (u) => [(1 - u) * (1 - u) * a[0] + 2 * (1 - u) * u * cx + u * u * ex, (1 - u) * (1 - u) * a[1] + 2 * (1 - u) * u * cy + u * u * ey];
+      const e = U.ease.outCubic(p); let len = 0, prev = q(0); const S = []; for (let i = 1; i <= 60; i++) { const c = q(i / 60); len += Math.hypot(c[0] - prev[0], c[1] - prev[1]); S.push([len, c]); prev = c; }
+      X.save(); X.globalAlpha = Math.min(1, p * 3) * fadeAll;
+      const dots = []; for (let d = 0; d <= len * e; d += 21) { const s2 = S.find(z => z[0] >= d) || S[S.length - 1]; dots.push(s2[1]); }
+      X.fillStyle = 'rgba(28,20,52,.72)'; dots.forEach(([x, y]) => { X.beginPath(); X.arc(x, y, 8.5, 0, 6.283); X.fill(); });
+      X.fillStyle = '#fff6e6'; dots.forEach(([x, y]) => { X.beginPath(); X.arc(x, y, 5.6, 0, 6.283); X.fill(); });
+      X.beginPath(); X.arc(a[0], a[1], 10, 0, 6.283); X.fillStyle = 'rgba(28,20,52,.72)'; X.fill(); X.beginPath(); X.arc(a[0], a[1], 7, 0, 6.283); X.fillStyle = '#ffcf6b'; X.fill();
+      if (p > .78) { const qx = U.ease.outBack(U.clamp((p - .78) / .22), 3); const r = 22 * qx, jit = Math.exp(-6 * Math.max(0, t - t0 - .65)) * Math.sin((t - t0) * 40) * 3;
+        X.translate(ex + jit, ey); X.lineCap = 'round';
+        X.strokeStyle = 'rgba(40,10,24,.75)'; X.lineWidth = 17; X.beginPath(); X.moveTo(-r, -r); X.lineTo(r, r); X.moveTo(r, -r); X.lineTo(-r, r); X.stroke();
+        X.strokeStyle = '#ff5a4e'; X.lineWidth = 10; X.beginPath(); X.moveTo(-r, -r); X.lineTo(r, r); X.moveTo(r, -r); X.lineTo(-r, r); X.stroke(); }
       X.restore();
     };
-    attempt(R.gLadTop, .3, tYe + .05, -1);
-    attempt(R.ladTop, .42, tYe + .3, 1);
+    attempt(R.gLadTop, .3, tYe + .02, -30);
+    attempt(R.ladTop, .4, tYe + .26, 40);
     ui.text('YETİŞİLEMEZ', { t, t0: tYe - .03, t1: 99, x: 540, y: 300, size: 118, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 6, stroke: 'rgba(28,24,60,.55)', strokeW: 14 });
   },
 };

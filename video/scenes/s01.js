@@ -23,12 +23,12 @@ export default {
     const L = new THREE.Vector3(Math.sin(sunAz) * Math.cos(sunEl), Math.sin(sunEl), Math.cos(sunAz) * Math.cos(sunEl));
     const skySun = new THREE.Vector3(Math.sin(sunAz), -.03, Math.cos(sunAz)).normalize();
     R.L = L;
-    scene.fog = new THREE.FogExp2('#3a416c', 0.0062);
+    scene.fog = new THREE.FogExp2('#3d4572', 0.0052);
     const sky = X.dawnSky({ sunDir: skySun.toArray(), ground: '#20263f' }); scene.add(sky); R.sky = sky;
     const env = X.dawnEnv(renderer, { sunDir: skySun.toArray() }); scene.environment = env; scene.environmentIntensity = .3; R.env = env;
 
     // ---- dunes (flattened around the hero spot) ----
-    const dunes = X.desertDunes({ size: 380, seg: 280, height: 7.5, near: .5, r0: 24, r1: 115, seed: 12, a: '#c4a07c', b: '#977054' });
+    const dunes = X.desertDunes({ size: 400, seg: 300, height: 11, near: .3, r0: 40, r1: 130, swell: 2.4, seed: 12, a: '#c4a07c', b: '#977054' });
     dunes.material.envMapIntensity = .35;
     scene.add(dunes); R.dunes = dunes; const hAt = dunes.userData.heightAt; R.hAt = hAt;
 
@@ -38,6 +38,7 @@ export default {
 
     // ---- hero: rug + rahle + Mushaf ----
     const y0 = hAt(0, 0); const hero = new THREE.Group(); hero.position.set(0, y0, 0); scene.add(hero); R.hero = hero;
+    const patch = X.sandPatch({ r: 2.8 }); patch.position.y = .0028; hero.add(patch); R.patch = patch;
     const rug = X.anatolianRug({ w: .74, l: 1.1 }); rug.position.y = .001; rug.rotation.y = .03; hero.add(rug);
     const rahle = X.ottomanRahle({ L: .64, W: .3, T: .017, angle: 55 * D2R, Yc: .255 }); rahle.position.y = rug.userData.topY; hero.add(rahle); R.rahle = rahle;
     const mus = X.eliteMushaf({ w: .19, h: .27, d: .056 });
@@ -45,6 +46,7 @@ export default {
     hero.updateMatrixWorld(true);
     R.book = new THREE.Vector3(); mus.getWorldPosition(R.book);
     R.bookN = new THREE.Vector3(0, 0, 1).applyQuaternion(mus.getWorldQuaternion(new THREE.Quaternion()));
+    R.leafUp = new THREE.Vector3(0, 1, 0).applyQuaternion(mus.getWorldQuaternion(new THREE.Quaternion()));
     R.envMats = []; mus.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) { m.envMap = env; R.envMats.push(m); } });
     rahle.traverse(o => { if (o.isMesh) { o.material.envMap = env; } }); R.envMats.push(ud.material);
 
@@ -52,14 +54,15 @@ export default {
     const heroLampXZ = [[-.44, -.66, 2.2], [.42, -.78, -2.6], [-.06, -1.02, 1.4], [-.68, -.08, .4], [.7, .02, 2.9], [-.55, .66, -.6], [.78, .5, 2.2], [-1.0, .34, 0], [1.05, -.42, 3.0], [-.86, -.94, 1.1]];
     R.heroLamps = [];
     heroLampXZ.forEach(([x, z, rot], i) => { const l = X.heroLamp({ scale: 1.15, seed: i + 3 }); l.position.set(x, hAt(x, z) - y0 + .001, z); l.rotation.y = rot; hero.add(l); R.heroLamps.push(l); });
+    { const hp = X.lampField(heroLampXZ.map(([x, z], i) => ({ x, y: .003, z, rot: 0, s: .55, on: -5, seed: i })), { fog: 0 }); hp.userData.bodies.visible = false; hp.userData.flames.visible = false; hero.add(hp); R.heroPools = hp; }
     const pl = (x, y, z, inten, dist) => { const l = new THREE.PointLight('#ff9a48', inten, dist, 2); l.position.set(x, y, z); hero.add(l); l.userData.base = inten; return l; };
-    R.rimLamp = pl(-.38, .2, -.7, .45, 2.6); R.fillLamp = pl(-.55, .16, .62, .18, 2.4);
+    R.rimLamp = pl(-.38, .2, -.7, .32, 2.2); R.fillLamp = pl(-.55, .16, .62, .16, 2.2);
 
     // dawn ray: spot from the sun direction, raking across the cover from the right
-    const spot = new THREE.SpotLight('#ffd29a', 0, 0, .028, .9, 0); spot.position.copy(R.book).add(L.clone().multiplyScalar(16)); spot.target.position.copy(R.book).add(new THREE.Vector3(-.05, -.1, 0));
+    const spot = new THREE.SpotLight('#ffd29a', 0, 0, .0165, 1, 0); spot.position.copy(R.book).add(L.clone().multiplyScalar(16)); spot.target.position.copy(R.book).add(new THREE.Vector3(-.05, -.1, 0));
     spot.castShadow = true; spot.shadow.mapSize.set(2048, 2048); spot.shadow.camera.near = 12; spot.shadow.camera.far = 20; spot.shadow.bias = -.00015; spot.shadow.normalBias = .004; spot.shadow.radius = 2;
     scene.add(spot, spot.target); R.spot = spot;
-    const shaft = ctx.FX.lightShaft({ from: spot.position.toArray(), to: R.book.clone().add(L.clone().multiplyScalar(-1.2)).toArray(), r0: .35, r1: .75, color: '#ffcf8a', opacity: 0 }); scene.add(shaft); R.shaft = shaft;
+    const shaft = ctx.FX.lightShaft({ from: spot.position.toArray(), to: R.book.clone().add(L.clone().multiplyScalar(-1.2)).toArray(), r0: .3, r1: .3, color: '#ffcf8a', opacity: 0 }); scene.add(shaft); R.shaft = shaft;
     const motes = X.rayMotes({ count: 650, center: [0, .65, 0], box: [2.2, 1.3, 2.2], size: .0065, base: .04 }); hero.add(motes); R.motes = motes;
     motes.material.uniforms.rayO.value.copy(R.book); motes.material.uniforms.rayD.value.copy(L); motes.material.uniforms.rayR.value = .55; // beam test in world space
 
@@ -87,7 +90,7 @@ export default {
       if (dbg.includes('nodunes')) R.dunes.visible = false; }
     camera.near = .03; camera.far = 700; camera.fov = 38; camera.updateProjectionMatrix();
     // ---- camera: polar spiral around the book, monotone splines in time (C1, no overshoot) ----
-    R.cAz = X.mono([[0, -62], [3.7, -55], [4.7, -20], [5.62, 22], [8.0, 13]]);
+    R.cAz = X.mono([[0, -46], [3.7, -38], [4.7, -10], [5.62, 22], [8.0, 13]]);
     R.cLD = X.mono([[0, Math.log(46)], [3.7, Math.log(39)], [4.7, Math.log(9)], [5.62, Math.log(2.15)], [8.0, Math.log(1.85)]]);
     R.cEl = X.mono([[0, 10], [3.7, 10.8], [4.7, 25], [5.62, 33], [8.0, 31.5]]);
     R.cW = X.mono([[0, 0], [3.7, .02], [4.7, .55], [5.62, 1], [8.0, 1]]);
@@ -108,6 +111,7 @@ export default {
     const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(qF.slerp(qN, w)); camera.lookAt(cam.clone().add(dir)); camera.fov = R.cFov(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
     // pixel metrics for sprites / stars
     const rh = renderer.getDrawingBufferSize(new THREE.Vector2()).y; const fpx = rh / (2 * Math.tan(camera.fov * D2R / 2));
+    R.patch.visible = D < 7; // fine grain only matters near the hero (avoids far z-fighting)
     const FU = R.field.userData.U; FU.uTime.value = t; FU.uFpx.value = fpx; FU.uMinPx.value = 2.2 * rh / 1920; FU.uCocMax.value = 120 * rh / 1920;
     R.sky.userData.uniforms.starPx.value = 1.6 * (camera.fov * D2R) / rh;
     R.motes.material.uniforms.fpx.value = fpx;
@@ -115,14 +119,14 @@ export default {
     // ---- the dawn ray: from "en büyük ve parlağını" the first ray finds the Mushaf ----
     const tB = ctx.wordTime('parlağını'), tK = ctx.wordTime("kur'an"), tBu = ctx.wordTime('büyük');
     const g = U.prog(t, tBu - .2, tK + .25, 'inOutSine'), sw = U.prog(t, tB - .45, tK + .45, 'inOutSine');
-    R.spot.intensity = 20 * g; R.shaft.userData.uniforms.opacity.value = .1 * g * (1 - .75 * U.smoothstep(4.8, 5.8, t));
-    R.spot.target.position.copy(R.book).add(new THREE.Vector3(.75 * (1 - sw) + .02, -.06, -.3 * (1 - sw))); R.spot.target.updateMatrixWorld();
+    R.spot.intensity = 26 * g; R.shaft.userData.uniforms.opacity.value = .1 * g * (1 - .75 * U.smoothstep(4.8, 5.8, t));
+    R.spot.target.position.copy(R.book).add(R.leafUp.clone().multiplyScalar(.03 + .2 * (1 - sw))); R.spot.target.updateMatrixWorld();
     const mu = R.motes.material.uniforms; mu.rayAmt.value = g; mu.base.value = .05 + .04 * g;
     R.sky.userData.uniforms.sunUp.value = .4 * g; R.sky.userData.uniforms.gain.value = .85; R.sky.userData.uniforms.glow.value = 1 + .25 * U.smoothstep(0, 7.5, t);
     ctx.scene.environmentIntensity = .3 + .12 * g;
     const prod = U.smoothstep(4.6, 5.8, t); // 0 wide .. 1 product shot
     for (const m of R.envMats) m.envMapIntensity = .5 + .2 * prod + .25 * g;
-    R.hemi.intensity = 2.0 - 1.6 * prod;
+    R.hemi.intensity = 2.0 - 1.6 * prod; R.dawnSkyL.intensity = .55 - .35 * prod;
     // lamp practicals flicker
     for (const l of [R.rimLamp, R.fillLamp]) l.intensity = l.userData.base * (1 + .07 * Math.sin(t * 13.1 + l.position.x * 9) + .05 * Math.sin(t * 7.7 + l.position.z * 5));
     post.exposure = 1.18 + .04 * g - .1 * prod;
@@ -130,6 +134,9 @@ export default {
     // DOF: deep in the wide shot, shallow product focus on the cover
     const focus = camera.position.distanceTo(B); post.dof.focus = focus; FU.uFocus.value = focus; FU.uAperture.value = .05 * prod; post.dof.range = THREE.MathUtils.lerp(80, 1.1, prod); post.dof.amount = THREE.MathUtils.lerp(.25, 1, prod);
 
+    // motion blur only where the spiral glide is fast enough to strobe (point lights sweeping ~90 px/frame at 4.6 s)
+    const mbN = (t > 4.35 && t < 5.2) ? 6 : (t > 4.15 && t < 5.5) ? 4 : (t > 4.0 && t < 5.7) ? 2 : 1; post.motionBlur = { samples: R.dbg.includes('nomb') ? 1 : mbN, shutter: .5 };
+    if (R.dbg.includes('nospot')) { R.spot.intensity = 0; R.shaft.visible = false; } if (R.dbg.includes('noglow')) R.heroLamps.forEach(l => { l.userData.glow.visible = false; });
     if (R.dbg.includes('nodof')) post.dof.enabled = false; if (R.dbg.includes('nobloom')) post.bloom.enabled = false;
     // ---- typography ----
     const tBin = ctx.wordTime('bine'), tMu = ctx.wordTime("mu'cize");

@@ -33,7 +33,7 @@ export default {
     const sun = ENV.sunLight({ color: '#ff8a4c', intensity: 1.8, pos: sunDir.clone().multiplyScalar(40).toArray(), target: [0, 0, 2], size: 9, mapSize: 2048, bias: -.0003, normalBias: .02, radius: 3 });
     scene.add(sun, sun.target);
     scene.add(new THREE.HemisphereLight('#c8683e', '#4a2418', .95));
-    const fill = new THREE.DirectionalLight('#ffa878', 1.1); fill.position.set(2.5, 2.2, 6); scene.add(fill);   // warm light scattered back by the dust
+    const fill = new THREE.DirectionalLight('#ffa878', 1.4); fill.position.set(2.5, 2.2, 6); scene.add(fill);   // warm light scattered back by the dust
     const rim = new THREE.DirectionalLight('#ffb070', 1.4); rim.position.set(-3, 1.2, -6); scene.add(rim);   // sun through the dust: rims the shields, shafts, arrows
     R.flash = new THREE.PointLight('#ffb060', 0, 2.5, 2); scene.add(R.flash);
 
@@ -65,7 +65,7 @@ export default {
     const sp = (x, z, rx, rz, ry = 0, len = 2.5, dy = -.35) => { const s = C.spear2({ length: len, seed: Math.abs(Math.round(x * 10)) + 1 }); s.position.set(x, gh(x, z) + dy, z); s.rotation.set(rx, ry, rz); scene.add(s); return s; };
     // foreground spear: right third, leaning away to the right, head rim-lit against the burning sky (never crosses the type)
     { const s = C.spear2({ length: 2.3, seed: 7 }); const dir = new THREE.Vector3(.5, .8, -.33).normalize(); s.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); s.rotateY(.6);
-      s.position.set(-1.75, gh(-1.75, -.6) - .25, -.6); scene.add(s); R.fgSpear = s; }
+      s.position.set(-2.5, gh(-2.5, -2.7) - .25, -2.7); scene.add(s); R.fgSpear = s; }
     sp(-2.1, 1.4, -.2, -.42, 0); sp(-3.6, -6, .1, .3); sp(3.2, -8.5, -.25, -.2); sp(-1.1, -11, .3, .5); sp(4.5, -2.5, .15, -.5);
     sp(.25, 5.3, Math.PI / 2 - .02, 0, 1.2, 2.4, .03); sp(-.9, -3.2, Math.PI / 2 - .03, 0, -.5, 2.4, .03);
 
@@ -92,7 +92,7 @@ export default {
     const vHero = C.landingVel(.08, .42, 44);
     arrows.push({ L: boss.clone(), vL: vHero, tL: tSid, flight: 2.6, mode: 'break', normal: nrm, ground: gh });
     const refl = vHero.clone().normalize().reflect(nrm).multiplyScalar(.6).add(nrm).normalize();
-    C.sparkBurst(sparks, { p: boss.toArray(), dir: refl.toArray(), t0: tSid, n: 28, speed: [2.5, 8], spread: .55, life: [.15, .5], w: .009, seed: 3, color: '#ffd68a', i: 2.2 });
+    C.sparkBurst(sparks, { p: boss.toArray(), dir: refl.toArray(), t0: tSid, n: 46, speed: [2.5, 9], spread: .6, life: [.15, .55], w: .011, seed: 3, color: '#ffd68a', i: 3.4 });
     pf.push({ p: [boss.x, boss.y + .05, boss.z], t0: tSid, life: .8, s0: .1, s1: .7, v: [.8, .6, .5], a: .45, color: '#c08a60' });
     R.boss = boss;
     // a few arrows strike rocks (sparks)
@@ -112,7 +112,7 @@ export default {
     const sr = U.rng(8); const sand = [];
     for (let i = 0; i < 200; i++) { const sp2 = 7 + sr() * 5, life = 16 / sp2; const z = 7 - sr() * 18; sand.push({ p: [-8 + sr(), .02 + Math.pow(sr(), 2.2) * .7, z], v: [sp2, (sr() - .4) * .4, (sr() - .5) * .5], t0: -sr() * life, life, w: .004 + sr() * .004, len: .12 + sr() * .2, color: '#e6a070', a: .14 + sr() * .16, loop: 1 }); }
     R.sand = C.streaks(sand, { fadeIn: .08, fadeOut: .85, fog: fogO }); scene.add(R.sand);
-    R.drift = C.sandDrift({ center: [0, 0, -2], size: [44, 40], layers: [[.01, 1, 1], [.04, .7, 1.2], [.11, .35, 1.4]], wind: [1, .05], speed: 7, opacity: .5, density: .5, lit: '#f09a5c', shade: '#6e3018', sunDir: sunDir.toArray(), scatter: 1.1, nearFade: 2.6, farFade: 24, fog: fogO }); scene.add(R.drift);
+    R.drift = C.sandDrift({ center: [0, 0, -2], size: [44, 40], layers: [[.01, 1, 1], [.04, .7, 1.2], [.11, .35, 1.4]], wind: [1, .05], speed: 7, opacity: .5, density: .5, lit: '#f09a5c', shade: '#6e3018', sunDir: sunDir.toArray(), scatter: 1.1, nearFade: 4, farFade: 24, fog: fogO }); scene.add(R.drift);
 
     camera.fov = 38; camera.near = .05; camera.far = 1200; camera.updateProjectionMatrix();
     R.look = new THREE.Vector3();
@@ -122,7 +122,7 @@ export default {
     const tSid = R.tSid;
     R.volley.update(t);
     // --- camera: fast low hand-held dolly forward, roll, shake, jolt + punch-in on the hit ---
-    const k = [[-0.5, [1.35, 1.2, 9.6]], [tSid, [.55, 1.02, 4.9]], [ctx.dur + .55, [-1.0, 1.55, .4]]];
+    const k = [[-0.5, [1.35, 1.2, 9.6]], [tSid, [.55, 1.02, 4.9]], [tSid + .55, [-.25, 1.42, 3.0]], [ctx.dur + .55, [-1.0, 1.62, .4]]];
     const P = U.kf(t, k.map(([a, b]) => [a, b]), 'linear');
     const L = U.kf(t, [[-0.5, [-1.4, 3.3, -20]], [tSid - .3, [-.4, 2.6, -20]], [tSid + .02, [.45, .25, -12]], [tSid + .45, [.3, .9, -15]], [ctx.dur + .55, [-1.2, 3.6, -20]]], 'inOutSine');
     const jolt = Math.exp(-Math.max(0, t - tSid) * 9) * (t > tSid ? 1 : 0);

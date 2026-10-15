@@ -61,14 +61,14 @@ function houseVariant(M, v, lod = false) {
 // Polyline with circular-ish (quadratic) corner fillets, sampled every ~step metres in XZ.
 // Returns {pts:[[x,z]...], cum:[arc length], anchor: arc length where the fillet of vertex `anchorIdx` begins}.
 function filletPath(P0, rMax, step, anchorIdx) {
-  const P = [P0[0]]; for (let i = 1; i < P0.length; i++) { const a = P[P.length - 1], b = P0[i]; if (Math.hypot(b.x - a.x, b.z - a.z) > .05) P.push(b); else if (i === anchorIdx) anchorIdx = P.length - 1; }
+  const P = [P0[0]]; let aI = anchorIdx; for (let i = 1; i < P0.length; i++) { const a = P[P.length - 1], b = P0[i]; if (Math.hypot(b.x - a.x, b.z - a.z) > .05) P.push(b); if (i === anchorIdx) aI = P.length - 1; } anchorIdx = aI;
   const out = [[P[0].x, P[0].z]], cum = [0]; let cx = P[0].x, cz = P[0].z, anchor = 0;
   const push = (x, z) => { const l = Math.hypot(x - cx, z - cz); if (l < 1e-4) return; out.push([x, z]); cum.push(cum[cum.length - 1] + l); cx = x; cz = z; };
   const line = (x, z) => { const l = Math.hypot(x - cx, z - cz), n = Math.max(1, Math.ceil(l / step)), x0 = cx, z0 = cz; for (let k = 1; k <= n; k++) push(x0 + (x - x0) * k / n, z0 + (z - z0) * k / n); };
   for (let i = 1; i < P.length; i++) {
     const B = P[i]; if (i === P.length - 1) { if (i === anchorIdx) anchor = cum[cum.length - 1] + Math.hypot(B.x - cx, B.z - cz); line(B.x, B.z); break; }
     const N = P[i + 1]; const lin = Math.hypot(B.x - cx, B.z - cz), lout = Math.hypot(N.x - B.x, N.z - B.z);
-    const r = Math.min(rMax, lin * .98, lout * .48); const ix = (B.x - cx) / lin, iz = (B.z - cz) / lin, ox = (N.x - B.x) / lout, oz = (N.z - B.z) / lout;
+    const r = Math.min(i === anchorIdx ? 1.2 : rMax, lin * .98, lout * .48); const ix = (B.x - cx) / lin, iz = (B.z - cz) / lin, ox = (N.x - B.x) / lout, oz = (N.z - B.z) / lout;
     const ax = B.x - ix * r, az = B.z - iz * r, bx = B.x + ox * r, bz = B.z + oz * r;
     line(ax, az); if (i === anchorIdx) anchor = cum[cum.length - 1];
     const n = Math.max(2, Math.ceil(r * 2 / step)); for (let k = 1; k <= n; k++) { const u = k / n, w0 = (1 - u) * (1 - u), w1 = 2 * u * (1 - u), w2 = u * u; push(w0 * ax + w1 * B.x + w2 * bx, w0 * az + w1 * B.z + w2 * bz); }
@@ -555,7 +555,7 @@ export default {
 function makeSprites() {
   const mk = (sz, draw) => { const c = document.createElement('canvas'); c.width = c.height = sz; draw(c.getContext('2d'), sz); return c; };
   const red = mk(32, (x, S) => { x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = 3; x.shadowOffsetY = 1.5; x.beginPath(); x.arc(S / 2, S / 2, 11, 0, Math.PI * 2); x.fillStyle = '#ff4d43'; x.fill(); x.shadowColor = 'transparent'; x.lineWidth = 2.8; x.strokeStyle = '#fff0e4'; x.stroke(); });
-  const dot = mk(32, (x, S) => { x.beginPath(); x.arc(S / 2, S / 2, 9.5, 0, Math.PI * 2); x.fillStyle = 'rgba(40,20,0,.55)'; x.fill(); x.beginPath(); x.arc(S / 2, S / 2, 7, 0, Math.PI * 2); x.fillStyle = '#ffdc96'; x.fill(); });
+  const dot = mk(32, (x, S) => { x.beginPath(); x.arc(S / 2, S / 2, 9.5, 0, Math.PI * 2); x.fillStyle = 'rgba(40,20,0,.4)'; x.fill(); x.beginPath(); x.arc(S / 2, S / 2, 7, 0, Math.PI * 2); x.fillStyle = '#ffdc96'; x.fill(); });
   return { red, dot };
 }
 

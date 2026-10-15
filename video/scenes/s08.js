@@ -18,7 +18,7 @@ export default {
     grade: { ...STORM },
     vignette: 0.55, grain: 0.04, aberration: 0.0018,
     dof: { enabled: true, focus: 14, range: 14, amount: 0.3 },
-    motionBlur: { samples: 1, shutter: 0.5 },
+    motionBlur: { samples: 3, shutter: 0.5 },
   },
   async setup(ctx) {
     const { scene, camera, U, MODELS: M, ENV, FX, renderer } = ctx;
@@ -63,7 +63,7 @@ export default {
 
     // the Zülfikar, safe in the lee (same model as s06), flat turned a little off the lee camera
     const camDir = new THREE.Vector3(CAM_LEE.x - SW[0], 0, CAM_LEE.z - SW[1]).normalize(); const ry = Math.atan2(camDir.x, camDir.z) - .38;
-    const sword = C.zulfikar2({ hiltScale: 1.12, steelRough: .3, envI: 1.4, goldEnvI: 1.8, goldEnv: env, dirSpec: .55, steelColor: '#e6e9ec' }); sword.scale.setScalar(1.12);
+    const sword = C.zulfikar2({ hiltScale: 1.12, steelRough: .3, envI: 1.25, goldEnvI: 1.8, goldEnv: env, dirSpec: .55, steelColor: '#e6e9ec' }); sword.scale.setScalar(1.12);
     sword.position.set(SW[0], gh(...SW) - .035, SW[1]); sword.rotation.set(0, ry, .028); scene.add(sword); sword.updateMatrixWorld(true); R.sword = sword;
 
     // --- arrows vs rock ---
@@ -86,22 +86,30 @@ export default {
       }
       return I;
     };
+    // arrows that fell short and stuck in the sand of the windward approach (scale + battle context in the foreground)
+    for (let i = 0; i < 70; i++) { const x = -26 + ar() * 17, z = -16 + ar() * 22; if (Math.hypot(x + 23, z + 15.5) < 2.2 || Math.hypot(x + 16.5, z + 14.2) < 2) continue; arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL: C.landingVel(Math.PI / 2 + (ar() - .5) * .5, .5 + ar() * .5, 40), tL: -5 - ar(), flight: 2.4, mode: 'stick', embed: .1 + ar() * .14, ground: gh }); }
     // the pile: arrows that already broke on the rock before we arrive
     for (let i = 0; i < 60; i++) hit(-6 + ar() * 5.2, .5 + ar() * 5, -8 + ar() * 16, .1 + ar() * .25, (ar() - .5) * .5, 0);
     // a steady hail on the face, a heavy strike on "Resulullah", a dense burst on "aleyhissalatü"
     for (let i = 0; i < 40; i++) { const t = -.5 + ar() * 3.2; hit(t, .8 + ar() * 6, -7 + ar() * 13, .1 + ar() * .25, (ar() - .5) * .5, 14); }
     [[tRes + .02, 3.4, -1.0], [tRes + .3, 2.0, 1.8], [tRes + .62, 4.6, -3.2]].forEach(([t, y, z]) => hit(t, y, z, .18, .05, 30, true));
     for (let k = 0; k < 11; k++) hit(tAl - .05 + k * .05 + ar() * .03, 1.0 + ar() * 5, -5 + ar() * 9, .12 + ar() * .2, (ar() - .5) * .4, 20, k < 4);
-    // volleys that clear the massif and sail high over the lee — one group per tally tick on "defalarca"
-    R.rimT = [];
-    for (let k = 0; k < 5; k++) { const tk = tDef - .1 + k * .24; R.rimT.push(tk);
-      for (let j = 0; j < 7; j++) { const P = new THREE.Vector3(9 + (ar() - .5) * 6, 4.6 + ar() * 2.6, 19 + ar() * 12), vk = new THREE.Vector3(38 + ar() * 5, -2 - ar() * 2, (ar() - .5) * 3); const tj = tk + (ar() - .5) * .14;
-        const L = P.clone().addScaledVector(vk, 1).add(new THREE.Vector3(0, -4.9, 0)); const vL = vk.clone().add(new THREE.Vector3(0, -9.8, 0)); arrows.push({ L, vL, tL: tj + 1, flight: 2.2, mode: 'pass', ground: gh }); } }
+    // "defalarca": every further strike on the far side shakes a little sand loose — it trickles down the calm lee face behind
+    // the sword (the rock itself never moves); the tally ticks with each one
+    R.rimT = []; const grains = [];
+    for (let k = 0; k < 5; k++) { const tk = tDef + .05 + k * .24; R.rimT.push(tk);
+      const zz = [5.6, 3.1, 6.6, 2.2, 4.4][k], yy = [3.9, 4.4, 3.4, 4.1, 3.6][k];
+      ray.set(new THREE.Vector3(16, yy, zz), new THREE.Vector3(-1, 0, 0)); const I = ray.intersectObject(rock, true)[0]; if (!I) continue;
+      const p = I.point.clone().add(new THREE.Vector3(.06, 0, 0)); const gr = U.rng(700 + k);
+      for (let j = 0; j < 46; j++) grains.push({ p: [p.x + gr() * .05, p.y - gr() * .06, p.z + (gr() - .5) * .35], v: [.25 + gr() * .55, -gr() * .4, (gr() - .5) * .2], t0: tk + .04 + gr() * .3, life: .75 + gr() * .3, w: .006 + gr() * .006, len: -1, color: gr() < .5 ? '#f2c08a' : '#d89a68', a: .75, drag: .4 });
+      pf.push({ p: p.toArray(), t0: tk + .02, life: 1.3, s0: .15, s1: .8, v: [.5, -.25, 0], a: .32, color: '#e8b488' });
+      pf.push({ p: [p.x + .5, gh(p.x + .5, p.z) + .15, p.z], t0: tk + .75, life: 1.2, s0: .15, s1: .7, v: [.4, .15, 0], a: .25, color: '#e0aa80' }); }
     // plus a thinner stream over the top through the storm part
     for (let i = 0; i < 46; i++) { const t = -.4 + ar() * 7.2; const x = 40 + ar() * 25, z = -10 + ar() * 22; arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL: C.landingVel(Math.PI / 2 + (ar() - .5) * .3, .3 + ar() * .15, 46), tL: t + 1.1, flight: 2.6, mode: 'pass', ground: gh }); }
     R.volley = C.arrowVolley(arrows, { seed: 21, arrow: { thick: 1.5, fletch: '#8a7058', fletch2: '#3e2c20' } }); scene.add(R.volley.group);
     R.trails = C.streaks(R.volley.trails({ w: .05, len: 2.4, color: '#ffe8d0', a: .4 }).filter(it => it.t0 > -3), { fadeIn: .02, fadeOut: .97, fog: fogO }); scene.add(R.trails);
     R.sparks = C.streaks(sparks, { gravity: [0, -9.8, 0], shutter: .035, additive: true, cool: '#a02a08', fadeIn: .01, fadeOut: .55 }); scene.add(R.sparks);
+    R.grains = C.streaks(grains, { gravity: [0, -9.8, 0], shutter: .03, fadeIn: .05, fadeOut: .8 }); scene.add(R.grains);
     R.chips = C.debris(chips, { ground: gh, palette: ['#c47a4e', '#a85c3a', '#dba274'], seed: 9 }); scene.add(R.chips.mesh);
     // dust surge slamming into the face on "aleyhissalatü" and boiling up over the top
     for (let i = 0; i < 34; i++) { const z = -8 + ar() * 16, y = .6 + ar() * 6; const t = tAl - .3 + ar() * .7; pf.push({ p: [-7.6 - ar() * 3, y, z], t0: t, life: 1.6 + ar() * .8, s0: 1.6, s1: 5 + ar() * 3, v: [.4, 3.2 + ar() * 2, (ar() - .5) * 1.5], a: .45, color: '#e2a878' }); }
@@ -124,7 +132,7 @@ export default {
     const card = new THREE.Mesh(new THREE.PlaneGeometry(7, 2.6), new THREE.MeshBasicMaterial({ color: '#ffd0a0', fog: false, side: THREE.DoubleSide }));
     card.position.set(SW[0] + rf.x * 5.5, 1.0, SW[1] + rf.z * 5.5); card.lookAt(SW[0], .7, SW[1]); scene.add(card);
     sky.userData.uniforms.sunI.value = 1.4; const fd0 = scene.fog.density; scene.fog.density = .005; scene.fog.color.copy(R.fogCalm);
-    scene.environment = C.envFromScene(renderer, scene, [SW[0], .8, SW[1]], [sword, R.storm, R.sheets, R.highStream, R.drift, R.motes, R.haze, R.puffs, R.sparks, R.trails, R.volley.group, R.chips.mesh, ...R.shafts]);
+    scene.environment = C.envFromScene(renderer, scene, [SW[0], .8, SW[1]], [sword, R.storm, R.sheets, R.highStream, R.drift, R.motes, R.haze, R.puffs, R.sparks, R.trails, R.volley.group, R.chips.mesh, R.grains, ...R.shafts]); sword.userData.steel.envMap = scene.environment; sword.userData.steel.needsUpdate = true;
     scene.fog.density = fd0; scene.fog.color.copy(R.fogStorm); sky.userData.uniforms.sunI.value = 5; scene.remove(card);
 
     { const rc = new THREE.Raycaster(R.swPos.clone().add(new THREE.Vector3(0, .8, 0)), sunDir.clone()); const hits = rc.intersectObjects(scene.children, true).filter(h => h.object.castShadow && h.object !== sword && !sword.children.includes(h.object)); console.warn('DBG8 sword shadow test:', hits.length ? hits[0].object.type + ' d=' + hits[0].distance.toFixed(2) : 'LIT'); }
@@ -136,8 +144,8 @@ export default {
       [1.95, [-16.5, 2.1, -14.2], [-6.6, 3.3, -2.6]],
       [2.6, [-6, 3.2, -23], [3, 3.4, -8]],
       [3.25, [9, 2.3, -11.5], [10.6, 1.4, 3]],
-      [4.15, [14.95, 1.42, 2.1], [9.55, .9, 4.62]],
-      [6.9, [14.6, 1.32, 2.5], [9.55, .9, 4.62]],
+      [4.15, [14.95, 1.7, 2.1], [9.55, .72, 4.62]],
+      [6.9, [14.6, 1.6, 2.5], [9.55, .72, 4.62]],
     ]);
     R.P = new THREE.Vector3(); R.L = new THREE.Vector3();
   },
@@ -146,7 +154,7 @@ export default {
     R.volley.update(t); R.chips.update(t);
     const calm = U.smoothstep(2.75, 3.75, t);
     // motion blur only while arrows strike and the camera whips; the calm lee renders single-sample
-    post.motionBlur = { samples: 1, shutter: .5 };
+    post.motionBlur = { samples: t < 3.7 ? 3 : 1, shutter: .5 };
     // camera
     R.cam.at(t, R.P, R.L);
     const sh = U.shake(t, U.lerp(.035, .006, calm), U.lerp(1.2, .45, calm), 5);

@@ -155,10 +155,10 @@ export default {
     // ---------------- camera: window -> across the desk -> the book ----------------
     camera.near = .03; camera.far = 120;
     camera.fov = 40; camera.updateProjectionMatrix();
-    R.cam = G.camPath(camera, {
-      pos: [[-.22, 1.45, .86], [-.22, 1.3, .9], [-.1, 1.16, .88], [.15, 1.09, .96], [.25, 1.075, .97]],
+    R.cam = arcRig(THREE, U, camera, {
+      pos: [[-.22, 1.45, .86], [-.22, 1.3, .9], [-.1, 1.16, .88], [.15, 1.09, .96], [.3, 1.07, .955]],
       look: [[-.04, 1.5, -.7], [-.1, 1.18, -.45], [-.02, .95, -.25], [.13, .89, -.2], [.16, .875, -.2]],
-      keys: [[-.6, 0], [.8, .22], [2.2, .55], [3.5, .86], [5.3, 1]], shake: { amp: .0025, freq: .4 },
+      keys: [[-.6, 0], [.8, .22], [2.2, .55], [3.5, .82], [5.6, 1]], shake: { amp: .0025, freq: .4 },
     });
     R.focusTargets = [[-.6, 1.25], [.7, .95], [2.2, .78], [3.6, .7], [5.3, .66]];
   },
@@ -224,4 +224,23 @@ function gasLamp(T, k = 1) {
   const cap = add(new T.ConeGeometry(.22, .16, 4), iron, 2.88); cap.rotation.y = Math.PI / 4; add(new T.SphereGeometry(.035, 8, 6), iron, 2.99);
   g.traverse(o => { if (o.isMesh) o.renderOrder = -9.5; });
   return g;
+}
+
+// Camera on centripetal Catmull-Rom paths, ARC-LENGTH parametrised (the parametric version changes speed abruptly at
+// every control point). keys = [[t, k]] with k the curve parameter at that time (as in extra_G.camPath); each key is
+// converted to arc-length fractions of the position and look curves, then eased with monotone cubics (C1 speed).
+function arcRig(T, U, camera, o) {
+  const pc = new T.CatmullRomCurve3(o.pos.map(p => new T.Vector3(...p)), false, 'centripetal'), lc = new T.CatmullRomCurve3(o.look.map(p => new T.Vector3(...p)), false, 'centripetal');
+  const arcOf = (c) => { const N = 1000, L = c.getLengths(N), tot = L[N]; return k => L[Math.round(Math.min(1, Math.max(0, k)) * N)] / tot; };
+  const ap = arcOf(pc), al = arcOf(lc); const up = monoSpline(o.keys.map(([t, k]) => [t, ap(k)])), ul = monoSpline(o.keys.map(([t, k]) => [t, al(k)]));
+  const at = (c, u) => { if (u >= 0 && u <= 1) return c.getPointAt(u); const e = u < 0 ? 0 : 1, a = c.getPointAt(e), b = c.getPointAt(e + (u < 0 ? 1e-3 : -1e-3)); return a.clone().add(a.clone().sub(b).multiplyScalar(Math.abs(u - e) / 1e-3)); };
+  return { update(t) { const P = at(pc, up(t)), L = at(lc, ul(t)); if (o.shake) P.add(U.shake(t, o.shake.amp, o.shake.freq, 7)); camera.position.copy(P); camera.lookAt(L); return { P, L }; } };
+}
+function monoSpline(keys) {
+  const n = keys.length, xs = keys.map(k => k[0]), ys = keys.map(k => k[1]); const d = [], m = new Array(n);
+  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i])); m[0] = d[0]; m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++) { if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; } const a = m[i] / d[i], b = m[i + 1] / d[i], s = a * a + b * b; if (s > 9) { const k = 3 / Math.sqrt(s); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; } }
+  return t => { if (t <= xs[0]) return ys[0] + m[0] * (t - xs[0]); if (t >= xs[n - 1]) return ys[n - 1] + m[n - 1] * (t - xs[n - 1]); let i = 0; while (t > xs[i + 1]) i++;
+    const h = xs[i + 1] - xs[i], s = (t - xs[i]) / h, s2 = s * s, s3 = s2 * s; return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (-2 * s3 + 3 * s2) * ys[i + 1] + (s3 - s2) * h * m[i + 1]; };
 }

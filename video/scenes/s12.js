@@ -280,11 +280,11 @@ export default {
 
     // ---- camera keys
     camera.near = .03; camera.far = 600;
-    const keys = []; const camFor = i => { const h = R.heroes[i]; const D = h.ex.D * 1.16, hh = h.ex.h * 1.1; /* slightly wider framing: neighbours stay readable, lower glide speed */ return { pos: V(h.tgt.x - D * Math.sin(TH), h.tgt.y + hh, h.tgt.z + D * Math.cos(TH)), look: h.tgt.clone(), fov: 31 }; };
+    const keys = []; const camFor = i => { const h = R.heroes[i]; const D = h.ex.D * 1.1, hh = h.ex.h * 1.05; /* slightly wider framing: neighbours stay readable, lower glide speed */ return { pos: V(h.tgt.x - D * Math.sin(TH), h.tgt.y + hh, h.tgt.z + D * Math.cos(TH)), look: h.tgt.clone(), fov: 31 }; };
     const c0 = camFor(0);
     keys.push({ t: -.75, pos: c0.pos.clone().add(V(-1.0, .55, 1.25)), look: c0.look.clone().add(V(.45, .05, 0)), fov: 33, a: 1 });
     keys.push({ t: R.T[0] + .78, ...camFor(0), a: .45 });
-    for (let i = 1; i < 14; i++) { const k = camFor(i), tk = R.T[i] + .16; let prev = keys[keys.length - 1];
+    for (let i = 1; i < 14; i++) { const k = camFor(i), tk = R.T[i] + .07; let prev = keys[keys.length - 1];
       if (i === DOOR) { // HOŞGÖRÜ: arrive on the closed door just before the word, then a slow push toward the opening as it swings open
         const A = { pos: V(xd - .46, 1.3, 2.9), look: V(xd + .2, 1.71, -3.0), fov: 40 }, B = { pos: V(xd - .34, 1.27, 2.4), look: V(xd + .24, 1.76, -3.0), fov: 39 };
         const ta = R.T[i] - .1, tm = (prev.t + ta) / 2;
@@ -294,7 +294,7 @@ export default {
         const th = Math.max(prev.t + .45, tk - .85); keys.push({ t: th, pos: prev.pos.clone().add(V(.11, -.01, -.07)), look: prev.look.clone().add(V(.06, 0, 0)), fov: prev.fov, a: .9 }); prev = keys[keys.length - 1]; }
       if (tk - prev.t > .6) { const tm = (prev.t + tk) / 2; // mid-glide: ease back + widen a little so both neighbours stay readable
         keys.push({ t: tm, pos: prev.pos.clone().lerp(k.pos, .5).add(V(-.03, .06, .28)), look: prev.look.clone().lerp(k.look, .5).add(V(0, .03, 0)), fov: 33.5, a: 1 }); }
-      keys.push({ t: i === DOOR + 1 ? tk + .06 : tk, ...k, a: R.T[i + 1] !== undefined && R.T[i + 1] - R.T[i] < 1.0 ? .55 : .35 }); } // keep drifting through quick beats (lower peak glide speed)
+      keys.push({ t: i === DOOR + 1 ? tk + .06 : tk, ...k, a: R.T[i + 1] !== undefined && R.T[i + 1] - R.T[i] < 1.0 ? .45 : .32 }); } // keep drifting through quick beats (lower peak glide speed)
     const c13 = camFor(13);
     keys.push({ t: R.W.ve - .1, pos: c13.pos.clone().add(V(.16, .1, .06)), look: c13.look.clone().add(V(.25, .06, 0)), fov: 31.5, a: 1 });
     keys.push({ t: 15.8, pos: V(x14 - 1.05, 2.0, 2.45), look: V(x14 + 3.85, 1.4, -1.0), fov: 37, a: 1 });

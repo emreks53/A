@@ -106,8 +106,19 @@ export default {
     meridian.material.map.wrapS = THREE.RepeatWrapping; meridian.rotation.x = Math.PI / 2; tilt.add(meridian);
     const brass = M.MAT.brass({ a: '#dcb15a', b: '#8c6426' });
     for (const s of [-1, 1]) { const pin = new THREE.Mesh(new THREE.CylinderGeometry(.005, .005, .03, 12), brass); pin.position.y = s * (Rg + .014); tilt.add(pin); }
-    const hourTex = TEX.drawTexture(256, 256, (x, W, H) => { x.fillStyle = '#efe2bd'; x.beginPath(); x.arc(W / 2, H / 2, W / 2, 0, 7); x.fill(); x.strokeStyle = '#4a3118'; x.lineWidth = 3; x.beginPath(); x.arc(W / 2, H / 2, W * .46, 0, 7); x.stroke(); for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; x.lineWidth = i % 6 ? 2 : 4; x.beginPath(); x.moveTo(W / 2 + Math.cos(a) * W * .3, H / 2 + Math.sin(a) * W * .3); x.lineTo(W / 2 + Math.cos(a) * W * .44, H / 2 + Math.sin(a) * W * .44); x.stroke(); } });
-    const hour = new THREE.Mesh(new THREE.CylinderGeometry(.036, .036, .003, 40), [brass, new THREE.MeshStandardMaterial({ map: hourTex, roughness: .7 }), brass]); hour.position.y = Rg + .03; tilt.add(hour);
+    // hour circle: engraved brass dial (I–XII twice) instead of a paper disc
+    const dialDraw = (x, W, H, base) => { const c = W / 2; const ink = base ? 'rgba(40,24,8,.9)' : '#000';
+      if (base) { const g = x.createRadialGradient(c * .8, c * .7, 0, c, c, c); g.addColorStop(0, '#f0cd7c'); g.addColorStop(.6, '#cfa04a'); g.addColorStop(1, '#a87a30'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+        for (let r = 8; r < c; r += 2.2) { x.strokeStyle = `rgba(${(r * 37) % 2 ? '255,236,180' : '90,60,20'},${.05 + ((r * 13) % 7) / 70})`; x.lineWidth = 1; x.beginPath(); x.arc(c, c, r, 0, 7); x.stroke(); } }
+      else { x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); }
+      x.strokeStyle = ink; x.fillStyle = ink; x.lineWidth = 4; [.95, .9, .62].forEach(k => { x.beginPath(); x.arc(c, c, c * k, 0, 7); x.stroke(); });
+      for (let i = 0; i < 96; i++) { const a = i / 96 * Math.PI * 2, L = i % 4 ? .045 : .1; x.lineWidth = i % 4 ? 2 : 4; x.beginPath(); x.moveTo(c + Math.cos(a) * c * .9, c + Math.sin(a) * c * .9); x.lineTo(c + Math.cos(a) * c * (.9 - L), c + Math.sin(a) * c * (.9 - L)); x.stroke(); }
+      const RN = ['XII', 'I', 'II', 'III', 'IIII', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI']; x.font = `700 ${W * .055}px Cinzel`; x.textAlign = 'center'; x.textBaseline = 'middle';
+      for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2 - Math.PI / 2; x.save(); x.translate(c + Math.cos(a) * c * .71, c + Math.sin(a) * c * .71); x.rotate(a + Math.PI / 2); x.fillText(RN[i % 12], 0, 0); x.restore(); }
+      x.beginPath(); x.arc(c, c, c * .08, 0, 7); x.fill(); };
+    const hourTex = TEX.drawTexture(512, 512, (x, W, H) => dialDraw(x, W, H, true)); hourTex.anisotropy = 8;
+    const hourBump = TEX.drawTexture(512, 512, (x, W, H) => dialDraw(x, W, H, false), { srgb: false });
+    const hour = new THREE.Mesh(new THREE.CylinderGeometry(.036, .036, .003, 48), [brass, new THREE.MeshPhysicalMaterial({ map: hourTex, bumpMap: hourBump, bumpScale: 1, metalness: 1, roughness: .34, clearcoat: .35, clearcoatRoughness: .3 }), brass]); hour.position.y = Rg + .03; tilt.add(hour);
     const hand = new THREE.Mesh(M.rbox(.004, .003, .03, .001), brass); hand.position.set(0, Rg + .033, .012); tilt.add(hand);
     // mahogany horizon ring with printed paper top
     const hr = M.lathe(ringProf(Rg + .034, Rg + .088, .0095), G.GMAT.mahogany({ a: '#7a321a', b: '#3a1408' }), 128); globe.add(hr);
@@ -158,7 +169,7 @@ export default {
     const C2 = Gc.clone().addScaledVector(nmh.clone().multiplyScalar(Math.cos(el2)).add(new THREE.Vector3(0, Math.sin(el2), 0)), .62);
     const g0 = Gc.clone();
     camera.fov = 36; camera.near = .03; camera.far = 60; camera.updateProjectionMatrix();
-    R.cam = G.camPath(camera, {
+    R.cam = arcRig(THREE, ctx.U, camera, {
       pos: [g0.clone().add(new THREE.Vector3(-.5, .25, 1.82)).toArray(), g0.clone().add(new THREE.Vector3(-.22, .3, 1.5)).toArray(), C.toArray(), C2.toArray()],
       look: [g0.clone().add(new THREE.Vector3(0, .02, 0)).toArray(), g0.clone().add(new THREE.Vector3(0, .05, 0)).toArray(), Pt.toArray(), Pm.toArray()],
       keys: [[-.6, 0], [1.9, .33], [3.7, .72], [4.25, .79], [5.6, 1]], shake: { amp: .003, freq: .45 },
@@ -247,3 +258,22 @@ export default {
 };
 
 function U_rng(ctx, s) { return ctx.U.rng(s); }
+
+// Camera on centripetal Catmull-Rom paths, ARC-LENGTH parametrised (the parametric version changes speed abruptly at
+// every control point). keys = [[t, k]] with k the curve parameter at that time (as in extra_G.camPath); each key is
+// converted to arc-length fractions of the position and look curves, then eased with monotone cubics (C1 speed).
+function arcRig(T, U, camera, o) {
+  const pc = new T.CatmullRomCurve3(o.pos.map(p => new T.Vector3(...p)), false, 'centripetal'), lc = new T.CatmullRomCurve3(o.look.map(p => new T.Vector3(...p)), false, 'centripetal');
+  const arcOf = (c) => { const N = 1000, L = c.getLengths(N), tot = L[N]; return k => L[Math.round(Math.min(1, Math.max(0, k)) * N)] / tot; };
+  const ap = arcOf(pc), al = arcOf(lc); const up = monoSpline(o.keys.map(([t, k]) => [t, ap(k)])), ul = monoSpline(o.keys.map(([t, k]) => [t, al(k)]));
+  const at = (c, u) => { if (u >= 0 && u <= 1) return c.getPointAt(u); const e = u < 0 ? 0 : 1, a = c.getPointAt(e), b = c.getPointAt(e + (u < 0 ? 1e-3 : -1e-3)); return a.clone().add(a.clone().sub(b).multiplyScalar(Math.abs(u - e) / 1e-3)); };
+  return { update(t) { const P = at(pc, up(t)), L = at(lc, ul(t)); if (o.shake) P.add(U.shake(t, o.shake.amp, o.shake.freq, 7)); camera.position.copy(P); camera.lookAt(L); return { P, L }; } };
+}
+function monoSpline(keys) {
+  const n = keys.length, xs = keys.map(k => k[0]), ys = keys.map(k => k[1]); const d = [], m = new Array(n);
+  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i])); m[0] = d[0]; m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++) { if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; } const a = m[i] / d[i], b = m[i + 1] / d[i], s = a * a + b * b; if (s > 9) { const k = 3 / Math.sqrt(s); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; } }
+  return t => { if (t <= xs[0]) return ys[0] + m[0] * (t - xs[0]); if (t >= xs[n - 1]) return ys[n - 1] + m[n - 1] * (t - xs[n - 1]); let i = 0; while (t > xs[i + 1]) i++;
+    const h = xs[i + 1] - xs[i], s = (t - xs[i]) / h, s2 = s * s, s3 = s2 * s; return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (-2 * s3 + 3 * s2) * ys[i + 1] + (s3 - s2) * h * m[i + 1]; };
+}

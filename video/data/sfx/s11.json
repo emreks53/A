@@ -37,16 +37,23 @@
 "desc": "callout pop"
 },
 {
-"t": 52.23,
+"t": 51.98,
 "dur": 0.4,
 "kind": "thud",
 "desc": "soft settling thud of the capital"
 },
 {
-"t": 52.25,
+"t": 52.0,
 "dur": 0.7,
 "kind": "chime",
 "desc": "tiny glint shimmer on gilded band",
 "gain": -4
+},
+{
+"t": 51.6,
+"dur": 1.6,
+"kind": "whoosh",
+"desc": "soft airy pull-back revealing the chart",
+"gain": -6
 }
 ]

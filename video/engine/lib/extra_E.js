@@ -450,13 +450,12 @@ export function cesme() {
   // natural rock with a smooth hollow worn by the drops
   const rg = mergeVertices(new THREE.IcosahedronGeometry(1, 5).deleteAttribute('uv').deleteAttribute('normal')); { const p = rg.attributes.position; const top = .1, hb = .062, hd = .034;
     const se = (v, e) => Math.sign(v) * Math.pow(Math.abs(v), e); // superellipse: sphere -> rounded block (a worn stone, not a blob)
-    for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const n = Math.sin(x * 3.1 + 1) * Math.sin(y * 2.7 + 2) * .035 + Math.sin(z * 5.3 + x * 4.1) * .025 + Math.sin(x * 13 + z * 11 + y * 7) * .012 + Math.sin(x * 29 - z * 23) * .005;
-      x = se(x, .42); z = se(z, .42); y = se(y, .5); x *= .155 * (1 + n) * (1 - .12 * Math.max(0, y)); z *= .13 * (1 + n) * (1 - .12 * Math.max(0, y)); y = y < 0 ? y * .02 : y * top * (1 + n * .5); const r = Math.hypot(x - .01, z);
+    for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const n = Math.sin(x * 3.1 + 1) * Math.sin(y * 2.7 + 2) * .06 + Math.sin(z * 5.3 + x * 4.1) * .04 + Math.sin(x * 13 + z * 11 + y * 7) * .018 + Math.sin(x * 29 - z * 23) * .007;
+      x = se(x, .6); z = se(z, .6); y = se(y, .62); x *= .155 * (1 + n) * (1 - .12 * Math.max(0, y)); z *= .13 * (1 + n) * (1 - .12 * Math.max(0, y)); y = y < 0 ? y * .02 : y * top * (1 + n * .5); const r = Math.hypot(x - .01, z);
       if (r < hb * 1.15) { const yb = top * .93 - hd * Math.max(0, 1 - (r / hb) ** 2); y = Math.min(y, yb + Math.max(0, r - hb) * .4); }
       p.setXYZ(i, x, y, z); } rg.computeVertexNormals(); const uvs = []; for (let i = 0; i < p.count; i++) uvs.push(p.getX(i) * 4 + .5, p.getZ(i) * 4 + p.getY(i) * 3); rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); }
   const rt = TEX.stone({ a: '#b9b4aa', b: '#77736b', seed: 29 });
-  const gran = speckleTex('granite', '#c9c4ba', '#3e3a34', 2600, 31, 256, 256);
-  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: gran, normalMap: rt.normalMap, normalScale: V2(1.0, 1.0), roughness: .62, clearcoat: .3, clearcoatRoughness: .45, color: '#d8d4cc' }));
+  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: rt.map, normalMap: rt.normalMap, normalScale: V2(1.4, 1.4), roughness: .6, clearcoat: .35, clearcoatRoughness: .4, color: '#b4b0a8', sheen: .2, sheenColor: new THREE.Color('#9fb0b8') }));
   rock.position.set(mouth.x - .01, 0, mouth.z); g.add(rock);
   const surfY = .081;
   const ws = waterSurface({ color: '#3a7a80', opacity: .82, amb: .00015 });

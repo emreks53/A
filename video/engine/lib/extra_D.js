@@ -1,7 +1,9 @@
-// Group D helpers (s09, s10, s11): golden-hour sky + ocean with per-pixel wave normals and drop-impact ripples,
-// clear water-drop shader (fresnel + sky reflection + sun glint + caustic + refracted mini-image from a render target),
-// slow-motion splash (crown, Worthington jet, droplets), bokeh glints, and the shared continuous drop world/camera
-// used by s09 and s10 (both scenes evaluate the same world at GLOBAL time T, so the cut between them is seamless).
+// Group D helpers (s09, s10, s11): golden-hour sky + ocean with per-pixel wave normals (footprint-AA'd, crest-bent so no
+// regular weave) and drop-impact ripples; ball-lens water shader (dispersion, inverted refracted world + upright prop
+// image from a render target, crisp key/sun speculars, caustic crescent, shape wobble + micro-ripples, star glint);
+// slow-motion splash (fingered crown with pinch-off beads, clear Worthington jet), bokeh glints, the shared continuous
+// drop world/camera used by s09 and s10 (both evaluate the same world at GLOBAL time T -> seamless cut), and s11 parts
+// (world-scaled stone UVs, fine carved stone, fluted shafts, pinnate date palm).
 import * as THREE from 'three';
 import * as U from './util.js';
 import * as TEX from './textures.js';
@@ -152,8 +154,9 @@ export function oceanD(su, o = {}) {
         float spec = uSunI * D * Fs / (4. * NdV) * smoothstep(-.02, .03, L.y);
         float sss = pow(max(dot(-V, L), 0.), 3.) * (.4 + .6 * clamp(dot(N, -L) * 3. + .5, 0., 1.));
         vec3 body = uDeep * (.7 + .3 * sss) + uScatter * sss * .45;
-        vec3 c = mix(body, refl, F) + uSunCol * min(spec, 10.);
-        float dist = length(cameraPosition - P); float hz = 1. - exp(-dist / uHaze);
+        float dist = length(cameraPosition - P);
+        vec3 c = mix(body, refl, F) + uSunCol * min(spec, mix(2.2, 10., smoothstep(1.5, 6., dist))); // no blown-out flares in macro
+        float hz = 1. - exp(-dist / uHaze);
         vec3 hzc = skyGrad(normalize(vec3(-V.x, .012, -V.z)));
         c = mix(c, hzc, hz);
         gl_FragColor = vec4(c, 1.);
@@ -202,7 +205,7 @@ export function waterMat(su, o = {}) {
         float kr = max(dot(R, keyDir), 0.);
         float sp = pow(kr, 1500.) * 70. + pow(kr, 120.) * 1.6 + pow(kr, 14.) * .12;
         #ifdef CLEAR
-        float a = baseA + (1. - baseA) * F; vec3 add = refl * F + bodyCol * .05 * (1. - F) + keyCol * (sp * specStr + caus * causStr * .3) + keyCol * coreStr * pow(NdV, 24.);
+        float a = baseA + (1. - baseA) * F; vec3 add = refl * F + bodyCol * .05 * (1. - F) + keyCol * (min(sp * specStr, 3.) + caus * causStr * .3) + keyCol * coreStr * pow(NdV, 24.);
         gl_FragColor = vec4(add / a, a);
         #else
         vec3 col = mix(inner, refl, F) + keyCol * (sp * specStr + caus * causStr * (.6 + .4 * inner));
@@ -481,7 +484,7 @@ export async function buildDropWorld(ctx, o = {}) {
   });
   W.stars = W.drops.map(() => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTex, color: '#fff3dc', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false })); sp.userData.noDepth = true; sp.renderOrder = 40; scene.add(sp); return sp; });
   // splash parts: thin crown sheet (see-through), bodies of water (jet, beads) with the refracting water shader
-  const sm = waterMat(su, { caus: .5, spec: 1.2, keyDir: [-.5, .5, -.7], clear: true, body: '#3a6a70' });
+  const sm = waterMat(su, { caus: .45, spec: .55, keyDir: [-.5, .5, -.7], clear: true, body: '#3a6a70' });
   const bm = dropMat(su, { keyDir: [-.5, .5, -.7], caus: .6, rimDark: .12, envGain: 1.7, tint: '#fff2e2', deep: '#2a2a36' }); W.beadMat = bm;
   const jm = waterMat(su, { caus: .3, spec: 1.3, keyDir: [-.5, .5, -.7], clear: true, body: '#3a6a70', baseA: .12, core: .07 }); W.jetMat = jm;
   const NF = DW.fingers;

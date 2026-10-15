@@ -1,8 +1,9 @@
 // s11 (49.25–52.85) "Hem mesela dürüstlükte en yüksek derecede olduğu gibi;"
 // Kurzgesagt-style 3D bar chart built from real materials in a sunlit stone courtyard: fluted columns of fine carved
 // sandstone rise from a travertine plinth like bars of a chart; one white-marble column with a gilded astragal —
-// "DÜRÜSTLÜK" (engraved on the plinth) — keeps rising past all others; the camera tilts and cranes after its capital
-// (kept below the title at all times), then pulls back to reveal the whole chart: "en yüksek derece".
+// "DÜRÜSTLÜK" (engraved on the plinth) — keeps rising past all others; the camera tilts after its capital (kept below
+// the title at all times) in a low-angle push, then pulls back to reveal the whole chart: "en yüksek derece".
+// Motion blur is switched on adaptively only for the soar (5 samples at peak speed, 3 otherwise) and the fast reveal.
 import * as THREE from 'three';
 import { worldBoxUV, fineStoneMat, flutedShaft, palmD } from '../engine/lib/extra_D.js';
 
@@ -57,15 +58,15 @@ export default {
   },
   async setup(ctx) {
     const { scene, camera, U, MODELS: M, ENV, FX, TEX } = ctx; R = {};
-    scene.environment = await ctx.loadHDR('kloofendal_48d_partly_cloudy_puresky'); scene.environmentIntensity = .5;
+    scene.environment = await ctx.loadHDR('kloofendal_48d_partly_cloudy_puresky'); scene.environmentIntensity = .42;
     scene.fog = new THREE.Fog('#e9dcc6', 26, 95);
     const sky = ENV.skyDome({ top: '#3d6db4', mid: '#7cb0e4', horizon: '#efdcc0', bottom: '#d9bf98', sunDir: [-.55, .55, .45], sunColor: '#fff0d0', sunSize: 0, sunGlow: .5, clouds: .75, cloudColor: '#fff8f0' });
     scene.add(sky);
-    const sun = ENV.sunLight({ color: '#ffe0b0', intensity: 3.4, pos: [-7, 10, 9.5], target: [0, 2.5, -2], size: 15, mapSize: 2048, bias: -.0003, normalBias: .025, radius: 4 });
+    const sun = ENV.sunLight({ color: '#ffdcaa', intensity: 4.1, pos: [-7, 10, 9.5], target: [0, 2.5, -2], size: 15, mapSize: 2048, bias: -.0003, normalBias: .025, radius: 4 });
     sun.shadow.camera.top = 13; sun.shadow.camera.bottom = -8; sun.shadow.camera.updateProjectionMatrix();
     scene.add(sun, sun.target); R.sun = sun;
     const rim = new THREE.DirectionalLight('#ffd7a6', 1.6); rim.position.set(6, 5, -7); scene.add(rim);
-    scene.add(new THREE.HemisphereLight('#bcd6f5', '#b48c62', .55));
+    scene.add(new THREE.HemisphereLight('#a9c8f0', '#a8825c', .42));
 
     // courtyard floor: large stone flags
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(120, 120).rotateX(-Math.PI / 2), M.MAT.stone({ a: '#d9d0c1', b: '#a3988a', blocks: 4, repeat: [30, 30], seed: 21 }));
@@ -157,8 +158,9 @@ export default {
       p.s.scale.setScalar(.25 + a * .5); p.s.material.opacity = .38 * Math.sin(Math.PI * U.clamp(a / 1.1)) * (p.i === HERO ? 1.2 : .8);
     });
     // ---- camera ----
-    // A: low 3/4 view of the chart with a slow push. B: on "dürüstlükte" the camera tilts + cranes after the hero capital,
-    // which is held at screen y = CAP_Y (always below the title). C: it keeps craning while pulling back to reveal the chart.
+    // A: 3/4 view of the whole chart with a slow push. B: on "dürüstlükte" the camera tilts after the soaring hero capital,
+    // which is held at screen y = CAP_Y (always below the title / callout), while dollying in low so the column towers.
+    // C: on "derecede" it pulls back + up to reveal the complete chart (all bars above the subtitle band).
     const hx = XS[HERO]; const heroTop = PLAT_Y + .17 + hs[HERO] + .2;
     const k = U.smoothstep(tD - .05, tD + 1.7, t);                  // follow weight
     const kr = U.smoothstep(2.1, 4.05, t);                           // reveal (pull back) weight
