@@ -50,9 +50,17 @@ const layouts = phrases.map(ph => {
   if (lines.length === 2) { const all = [...lines[0], ...lines[1]]; let best = null; for (let k = 1; k < all.length; k++) { const a = all.slice(0, k), b = all.slice(k); const wa = a.reduce((s, w) => s + w.width, 0) + space * (a.length - 1), wb = b.reduce((s, w) => s + w.width, 0) + space * (b.length - 1); if (wa > MAX_W || wb > MAX_W) continue; const d = Math.abs(wa - wb) + (wb > wa ? 0 : 1); if (!best || d < best.d) best = { d, a, b }; } if (best) { lines[0] = best.a; lines[1] = best.b; } }
   const lh = S.size * S.lh; const top = BASE_Y - (lines.length * lh) / 2 + lh / 2;
   lines.forEach((ln, li) => { const lw = ln.reduce((s, w) => s + w.width, 0) + space * (ln.length - 1); let x = W / 2 - lw / 2; ln.forEach(w => { w.x = x; w.y = top + li * lh; x += w.width + space; }); });
-  return { words: ws, lines, start: ph[0].s - 0.12, end: ph[ph.length - 1].e };
+  return { words: ws, lines, start: ph[0].s - 0.08, end: ph[ph.length - 1].e };
 });
-layouts.forEach((L, i) => { const next = layouts[i + 1]; L.out = next ? Math.min(L.end + 0.45, next.start + 0.04) : L.end + 0.8; });
+// Phrase hand-off is strictly sequential (never two phrases on screen at once): a phrase lingers 0.45 s after its
+// last word, but if the next phrase comes sooner it fades out quickly so that it is gone exactly when the next begins.
+const FI = 0.24;
+layouts.forEach((L, i) => {
+  const next = layouts[i + 1]; L.fo = 0.22;
+  if (!next) { L.out = L.end + 0.8; return; }
+  if (L.end + 0.45 + L.fo <= next.start) { L.out = L.end + 0.45; return; }
+  L.fo = 0.13; L.out = Math.max(L.start + FI + 0.05, next.start - L.fo);
+});
 
 function scrim(alpha) {
   if (alpha <= 0) return;
@@ -85,14 +93,17 @@ function drawWord(w, x, y, state, k, alpha, lift) {
   X.restore();
 }
 
+const TL = await (await fetch('data/timeline.json')).json();
+const END = TL.audioDuration; // the picture fades to black over the last 0.9 s; captions follow it
 window.drawAt = (t) => {
   X.clearRect(0, 0, W, H);
+  const gfade = clamp((END - t) / 0.9); if (gfade <= 0) return;
   // scrim follows caption presence (smoothly)
-  let pres = 0; for (const L of layouts) { const a = clamp((t - L.start + 0.2) / 0.3), b = clamp((L.out + 0.35 - t) / 0.35); pres = Math.max(pres, Math.min(a, b)); }
+  let pres = 0; for (const L of layouts) { const a = clamp((t - L.start + 0.2) / 0.3), b = clamp((L.out + L.fo + 0.35 - t) / 0.35); pres = Math.max(pres, Math.min(a, b)); }
   scrim(easeInOut(pres));
   for (const L of layouts) {
-    if (t < L.start - 0.05 || t > L.out + 0.25) continue;
-    const pin = easeOut(clamp((t - L.start) / 0.28)), pout = 1 - easeInOut(clamp((t - L.out) / 0.22));
+    if (t < L.start - 0.01 || t > L.out + L.fo + 0.01) continue;
+    const pin = easeOut(clamp((t - L.start) / FI)), pout = 1 - easeInOut(clamp((t - L.out) / L.fo));
     const phraseA = pin * pout; if (phraseA <= 0.001) continue;
     const rise = (1 - pin) * 14 - (1 - pout) * 10;
     // soft elliptical shadow behind the phrase; darker when the background under it is bright
@@ -112,6 +123,7 @@ window.drawAt = (t) => {
       drawWord(w, w.x, w.y + rise + (1 - stag) * 10, state, k, phraseA * stag, lift);
     });
   }
+  if (gfade < 1) { X.save(); X.globalCompositeOperation = 'destination-in'; X.fillStyle = `rgba(0,0,0,${gfade})`; X.fillRect(0, 0, W, H); X.restore(); }
 };
 window.grabPNG = async (t) => {
   window.drawAt(t);
