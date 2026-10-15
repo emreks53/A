@@ -3,12 +3,12 @@
 "t": 52.35,
 "dur": 18.6,
 "kind": "room tone",
-"desc": "quiet stone-gallery room tone",
+"desc": "quiet vaulted gallery room tone",
 "gain": 2
 },
 {
 "t": 52.35,
-"dur": 18.0,
+"dur": 18.4,
 "kind": "fire",
 "desc": "very soft oil-lamp flame crackle bed",
 "gain": -8
@@ -105,13 +105,6 @@
 "desc": "single water drop plink into stone"
 },
 {
-"t": 60.39,
-"dur": 0.4,
-"kind": "drip",
-"desc": "water drop plink",
-"gain": -4
-},
-{
 "t": 60.0,
 "dur": 0.5,
 "kind": "ignite",
@@ -135,7 +128,7 @@
 "t": 60.8,
 "dur": 0.5,
 "kind": "thud",
-"desc": "muted thud sword on wooden rests"
+"desc": "muted thud as the steel-and-olive exhibit settles on its wooden rests"
 },
 {
 "t": 62.18,
@@ -165,7 +158,7 @@
 "desc": "clay cup tapping the plate"
 },
 {
-"t": 64.56,
+"t": 64.48,
 "dur": 1.1,
 "kind": "creak",
 "desc": "heavy wooden door creaking open"
@@ -191,6 +184,12 @@
 "desc": "crusty bread cracking apart, crumbs"
 },
 {
+"t": 66.44,
+"dur": 2.4,
+"kind": "whoosh",
+"desc": "slow airy rise as the camera turns and cranes up the gallery"
+},
+{
 "t": 66.6,
 "dur": 0.5,
 "kind": "ignite",
@@ -199,15 +198,9 @@
 },
 {
 "t": 66.6,
-"dur": 1.4,
+"dur": 0.7,
 "kind": "pour",
 "desc": "water pouring from the jug into the bowl"
-},
-{
-"t": 67.7,
-"dur": 2.0,
-"kind": "whoosh",
-"desc": "slow airy rise as the camera cranes up"
 },
 {
 "t": 67.85,

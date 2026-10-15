@@ -20,14 +20,14 @@
 "desc": "Medine location tag pops in"
 },
 {
-"t": 9.55,
+"t": 9.47,
 "dur": 0.5,
 "kind": "whoosh",
-"desc": "light air whoosh as text rises",
-"gain": -3
+"desc": "soft airy whoosh as the headline rises",
+"gain": -5
 },
 {
-"t": 10.62,
+"t": 10.67,
 "dur": 0.6,
 "kind": "impact",
 "desc": "soft low impact when EN BUYUK MUCIZE lands",
@@ -40,16 +40,17 @@
 "desc": "delicate sparkle on the gilded crescent"
 },
 {
+"t": 11.11,
+"dur": 0.35,
+"kind": "impact",
+"desc": "second headline line pops on mu'cizesi (soft)",
+"gain": -10
+},
+{
 "t": 11.72,
 "dur": 0.8,
 "kind": "whoosh",
-"desc": "slow airy cross-dissolve into the Hilye room"
-},
-{
-"t": 11.96,
-"dur": 1.5,
-"kind": "chime",
-"desc": "warm resonant tone under KENDI ZATI"
+"desc": "slow airy whoosh, cross-dissolve into the Hilye panel"
 },
 {
 "t": 11.9,
@@ -59,17 +60,16 @@
 "gain": -4
 },
 {
-"t": 12.63,
+"t": 11.96,
+"dur": 1.5,
+"kind": "chime",
+"desc": "warm resonant tone under KENDI ZATI"
+},
+{
+"t": 12.65,
 "dur": 0.4,
 "kind": "paper",
 "desc": "soft paper swish as caption appears",
 "gain": -4
-},
-{
-"t": 11.1,
-"dur": 0.35,
-"kind": "impact",
-"desc": "second headline line pops on mu'cizesi (soft)",
-"gain": -10
 }
 ]
