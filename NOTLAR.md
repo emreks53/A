@@ -79,7 +79,8 @@ uzun metinler ve habere tıklayınca açılan metin Türkçe kalır.** Sonra (ay
   ölçüler mevcut görsellerden; uzun başlıkta yazı küçülür; çizilenler `cikti/og-durum.json`'da, yalnız yeni ya da
   başlığı değişenler yeniden çizilir). Fotoğraflı şablonlar (ana sayfa, portföy) değişmedi; iki proje görselinde eski
   kısa başlıklar ("İZMİR", "ŞİLE") duruyor.
-- **Yayın:** 370b65b9 (15.10.2026); canlı doğrulama 1697/1697 dosya aynı; canlıda EN sayfalar, 301'ler ve hreflang denendi.
+- **Yayın:** 370b65b9, belge adları/özel isimler düzeltmesiyle d6a2bad2 (15.10.2026); canlı doğrulama 1697/1697 dosya
+  aynı; canlıda EN sayfalar, 301'ler ve hreflang denendi.
 - **TR değişince EN'i yenilemek:** `python3 araclar/ceviri/cikar.py` (yeni sayfa varsa) → sözlüğe başlık ekle →
   `python3 araclar/ceviri/kur.py --yaz && python3 araclar/ceviri/ozel.py --yaz` →
   `node araclar/ceviri/og.mjs araclar/ceviri/cikti/og-isler.json`. Çevrilemeyen metin `cikti/eksik.txt`'ye düşer.
