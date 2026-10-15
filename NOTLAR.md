@@ -27,6 +27,13 @@
 5. Üst menü titremesi: tek eşik (40 px) + menünün 84→64 px küçülmesi kaydırma konumunu 20 px oynatıp sonsuz döngüye
    sokuyordu (ölçüm: 1,5 sn'de ~60 geçiş). Yeni: küçülme > 64 px, büyüme < 12 px (geçiş başına tek değişim).
 
+## 15.10.2026 ikinci istek (araclar/degisiklikler/2026-10-15b-slogan-profil.py)
+
+- Slogan büyütüldü: masaüstünde son satırın altı Yatırımcı Köşesi kutusunun altıyla hizalı (1150 px ve üstü ±12 px;
+  1280 px'te 71 px yazı / 87 px satır). Telefon görünümü değişmedi. EN ana sayfaya da uygulandı.
+- Ana sayfa Şirket Profili bölümünden "HAKKIMIZDA / Şirket Profili" başlığı ve "Şirket Profili" düğmesi kaldırıldı;
+  iki paragraf tam genişlikte, yazı 19 px → 20–28 px (1280 px'te ~26 px). Yayın: 79c9cac6.
+
 ## Kullanıcı kararları (özet)
 
 - Hero: "Ülkemize faydalı, prestijli gayrimenkul projelerini ideal şekilde gerçekleştirmek." / EN "…in an ideal way."
