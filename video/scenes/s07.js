@@ -34,7 +34,7 @@ export default {
     scene.add(new THREE.HemisphereLight('#c8683e', '#4a2418', .95));
     const fill = new THREE.DirectionalLight('#ffa878', 1.4); fill.position.set(2.5, 2.2, 6); scene.add(fill);   // warm light scattered back by the dust
     const rim = new THREE.DirectionalLight('#ffb070', 1.4); rim.position.set(-3, 1.2, -6); scene.add(rim);   // sun through the dust: rims the shields, shafts, arrows
-    R.flash = new THREE.PointLight('#ffb060', 0, 2.5, 2); scene.add(R.flash);
+    R.flash = new THREE.PointLight('#ffb060', 0, .6, 2); scene.add(R.flash);   // short-range: a hot spot on the boss, not a glowing disc
 
     // ground
     const sandMat = M.MAT.sand({ a: '#b86a42', b: '#7e4128', repeat: [300 / 2.2, 300 / 2.2] }); sandMat.normalScale.set(.7, .7);
@@ -74,18 +74,20 @@ export default {
     R.tSav = tSav; R.tSid = tSid; R.tAn = tAn;
     const okSpot = (x, z) => !(Math.abs(x - .3) < .9 && z > -1.2 && z < 10.5) && !(Math.abs(x - .62) < .6 && Math.abs(z + .3) < .6);
     // already-stuck arrows from earlier volleys
-    for (let i = 0; i < 80; i++) { const x = (ar() - .5) * 18, z = 9 - ar() * 26; if (!okSpot(x, z)) continue; const vL = C.landingVel(Math.PI - .2 + (ar() - .5) * .5, .45 + ar() * .5, 40); arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL, tL: -5 - ar(), flight: 2.6, mode: 'stick', embed: .12 + ar() * .12, ground: gh }); }
+    // (azimuth well off the view axis + moderate pitch: they lean diagonally on screen and read as arrows, never as upright posts/figures)
+    for (let i = 0; i < 80; i++) { const x = (ar() - .5) * 18, z = 9 - ar() * 26; if (!okSpot(x, z)) continue; const vL = C.landingVel(1.0 + (ar() - .5) * 1.1, .38 + ar() * .4, 40); arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL, tL: -5 - ar(), flight: 2.6, mode: 'stick', embed: .12 + ar() * .12, ground: gh }); }
     // arrows stuck in shield B
     sB.updateMatrixWorld(true); for (let k = 0; k < 3; k++) { const p = new THREE.Vector3(Math.cos(k * 2.1) * .17, .07, Math.sin(k * 2.1) * .17).applyMatrix4(sB.matrixWorld); arrows.push({ L: p, vL: C.landingVel(Math.PI - .3 + k * .2, .7, 40), tL: -6, flight: 2.6, mode: 'stick', embed: .06, ground: gh }); }
     const sparks = [], pf = [];
     // volleys fly over the camera from behind and rain down into the plain ahead (silhouetted against the glowing horizon)
     const camZ = t => t < tSid ? U.lerp(9.6, 4.9, (t + .5) / (tSid + .5)) : U.lerp(4.9, .4, (t - tSid) / (ctx.dur + .55 - tSid));
     // landing points sampled inside the (narrow, portrait) view cone ahead of where the camera will be
-    const land = (tL, n, dr, pitch, seed) => { const r = U.rng(seed); for (let i = 0; i < n; i++) { const t = tL[0] + r() * (tL[1] - tL[0]); const d = dr[0] + Math.pow(r(), .8) * (dr[1] - dr[0]); const z = camZ(t) - d, x = -.4 + (r() - .5) * 2 * .3 * d; if (!okSpot(x, z)) continue; const vL = C.landingVel(.1 + (r() - .5) * .25, pitch[0] + r() * (pitch[1] - pitch[0]), 34 + r() * 6); const L = new THREE.Vector3(x, gh(x, z), z); arrows.push({ L, vL, tL: t, flight: 2.4, mode: 'stick', embed: .12 + r() * .1, ground: gh }); if (d < 30) pf.push({ p: [x, L.y + .1, z], t0: t, life: .8 + r() * .5, s0: .12, s1: .45 + r() * .55, v: [1.4, .55, 0], a: .55, color: '#8e5234' }); } };
-    land([tSav - .45, tSid + .3], 150, [6, 38], [.6, .95], 11);
-    land([tAn - .55, ctx.dur + .7], 320, [5, 34], [.55, .95], 12);
+    // flights come from behind-left (az .3-.65): they cross the sky diagonally and stick leaning; near landings come in steeper so they clear the lens
+    const land = (tL, n, dr, pitch, seed) => { const r = U.rng(seed); for (let i = 0; i < n; i++) { const t = tL[0] + r() * (tL[1] - tL[0]); const d = dr[0] + Math.pow(r(), .8) * (dr[1] - dr[0]); const z = camZ(t) - d, x = -.4 + (r() - .5) * 2 * .3 * d; if (!okSpot(x, z)) continue; const p0 = Math.min(pitch[1] - .05, pitch[0] + .3 * Math.max(0, (9 - d) / 4)); const vL = C.landingVel(.3 + r() * .35, p0 + r() * (pitch[1] - p0), 34 + r() * 6); const L = new THREE.Vector3(x, gh(x, z), z); arrows.push({ L, vL, tL: t, flight: 2.4, mode: 'stick', embed: .12 + r() * .1, ground: gh }); if (d < 30) pf.push({ p: [x, L.y + .1, z], t0: t, life: .8 + r() * .5, s0: .12, s1: .45 + r() * .55, v: [1.4, .55, 0], a: .55, color: '#8e5234' }); } };
+    land([tSav - .45, tSid + .3], 300, [5, 26], [.45, .85], 11);
+    land([tAn - .55, ctx.dur + .7], 640, [5, 24], [.42, .85], 12);   // the dense second volley that darkens the sky
     // a few skim low right over the lens (whoosh) and keep going into the distance
-    [[tSav + .3, .7, 1.6], [tSid + .4, -.6, 1.2], [tAn + .15, .3, 2.0], [tAn + .5, -1.0, 1.5]].forEach(([t, dx, hy], k) => { const x = dx, z = -26 - k * 4; arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL: C.landingVel(.05, .28, 46), tL: t + .62, flight: 1.4, mode: 'stick', embed: .15, ground: gh }); });
+    [[tSav - .2, 1.1], [tSav + .3, .7], [tSav + .55, -.4], [tSid - .35, .9], [tSid + .4, -.6], [tAn + .15, .3], [tAn + .5, -1.0], [tAn + .75, .5]].forEach(([t, dx], k) => { const x = dx, z = -24 - (k % 4) * 4; arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL: C.landingVel(.05, .28, 46), tL: t + .62, flight: 1.4, mode: 'stick', embed: .15, ground: gh }); });
     // hero arrow -> iron boss of the propped shield, breaks with sparks
     const boss = new THREE.Vector3(0, .1, 0).applyMatrix4(R.hero.matrixWorld); const nrm = new THREE.Vector3(0, 1, 0).transformDirection(R.hero.matrixWorld);
     const vHero = C.landingVel(.08, .42, 44);
@@ -93,12 +95,13 @@ export default {
     const refl = vHero.clone().normalize().reflect(nrm).multiplyScalar(.6).add(nrm).normalize();
     C.sparkBurst(sparks, { p: boss.toArray(), dir: refl.toArray(), t0: tSid, n: 46, speed: [2.5, 9], spread: .6, life: [.15, .55], w: .011, seed: 3, color: '#ffd68a', i: 3.4 });
     pf.push({ p: [boss.x, boss.y + .05, boss.z], t0: tSid, life: .8, s0: .1, s1: .7, v: [.8, .6, .5], a: .45, color: '#c08a60' });
-    R.boss = boss;
+    R.boss = boss; R.flashPos = boss.clone().addScaledVector(nrm, .14);
     // a few arrows strike rocks (sparks)
     const bigRocks = items.filter(it => it.s[0] > .5 && Math.hypot(it.x, it.z - 2) < 12).slice(0, 5);
     bigRocks.forEach((it, k) => { const top = new THREE.Vector3(it.x, it.y + it.s[1] * .55, it.z); const t = (k % 2 ? tAn : tSav + .3) + k * .23; const vL = C.landingVel(Math.PI - .2, .6, 42); arrows.push({ L: top, vL, tL: t, flight: 2.6, mode: 'break', normal: new THREE.Vector3(0, 1, 0), ground: gh }); C.sparkBurst(sparks, { p: top.toArray(), dir: [.5, 1, .3], t0: t, n: 14, speed: [2, 6], spread: .6, life: [.15, .4], w: .008, seed: 20 + k, color: '#ffcf80', i: 3 }); });
-    R.volley = C.arrowVolley(arrows, { seed: 9, arrow: { thick: 1.6, fletch: '#8a7058', fletch2: '#3e2c20' } }); scene.add(R.volley.group);
-    R.trails = C.streaks(R.volley.trails({ w: .05, len: 2.2, color: '#ffe2c4', a: .42 }).filter(it => it.t0 > -4), { fadeIn: .02, fadeOut: .97, fog: fogO }); scene.add(R.trails);
+    R.volley = C.arrowVolley(arrows, { seed: 9, arrow: { thick: 2.0, fletch: '#c4a582', fletch2: '#9c7c5c' } }); scene.add(R.volley.group);
+    // dark motion smears behind each flying shaft: silhouettes read against the burning sky (no light emitted)
+    R.trails = C.streaks(R.volley.trails({ w: .03, len: 1.7, color: '#2a0f07', a: .5 }).filter(it => it.t0 > -4), { fadeIn: .02, fadeOut: .97, fog: fogO }); scene.add(R.trails);
     R.sparks = C.streaks(sparks, { gravity: [0, -9.8, 0], shutter: .03, additive: true, cool: '#a02a08', fadeIn: .01, fadeOut: .55 }); scene.add(R.sparks);
     R.puffs = C.puffs(pf, { sunDir: sunDir.toArray(), litMul: 1.05, shadeMul: .7 }); scene.add(R.puffs);
 
@@ -109,7 +112,9 @@ export default {
     R.wall = C.dustField({ count: 34, center: [0, 22, -140], box: [360, 34, 70], size: [40, 80], wind: [5, .3, 0], swirl: 1.5, shade: '#3a1309', lit: '#e0662c', sunDir: sunDir.toArray(), opacity: .55, nearFade: 1, scatter: 1.8, seed: 21 });
     scene.add(R.storm, R.sheets, R.wall);
     const sr = U.rng(8); const sand = [];
-    for (let i = 0; i < 200; i++) { const sp2 = 7 + sr() * 5, life = 16 / sp2; const z = 7 - sr() * 18; sand.push({ p: [-8 + sr(), .02 + Math.pow(sr(), 2.2) * .7, z], v: [sp2, (sr() - .4) * .4, (sr() - .5) * .5], t0: -sr() * life, life, w: .004 + sr() * .004, len: .12 + sr() * .2, color: '#e6a070', a: .14 + sr() * .16, loop: 1 }); }
+    // blowing-sand wisps: kept >= ~1.5 m ahead of the camera's whole path (z < -1.5) and thin/short, so none can sweep across the
+    // lens as a full-width horizontal line
+    for (let i = 0; i < 200; i++) { const sp2 = 7 + sr() * 5, life = 16 / sp2; const z = -1.5 - sr() * 15; sand.push({ p: [-8 + sr(), .02 + Math.pow(sr(), 2.2) * .5, z], v: [sp2, (sr() - .4) * .4, (sr() - .5) * .5], t0: -sr() * life, life, w: .0025 + sr() * .0025, len: .06 + sr() * .1, color: '#e6a070', a: .14 + sr() * .14, loop: 1 }); }
     R.sand = C.streaks(sand, { fadeIn: .08, fadeOut: .85, fog: fogO }); scene.add(R.sand);
     R.drift = C.sandDrift({ ground: gh, center: [0, 0, -2], size: [44, 40], layers: [[.01, 1, 1], [.025, .7, 1.2], [.05, .35, 1.4]], wind: [1, .05], speed: 7, opacity: .26, density: .42, lit: '#f09a5c', shade: '#6e3018', sunDir: sunDir.toArray(), scatter: 1.1, nearFade: 4, farFade: 24, fog: fogO }); scene.add(R.drift);
 
@@ -120,6 +125,8 @@ export default {
     const { ui, U, post, camera } = ctx;
     const tSid = R.tSid;
     R.volley.update(t);
+    // more blur sub-samples only around the strike (hero arrow ~500 px/frame, sparks): smooth smears instead of stepped copies
+    post.motionBlur = { samples: (t > tSid - .2 && t < tSid + .45) ? 8 : 4, shutter: .5 };
     // --- camera: fast low hand-held dolly forward, roll, shake, jolt + punch-in on the hit ---
     // position + look are interpolated per axis with monotone cubics keyed in TIME (C1: no speed kinks at knots, no stalls
     // at intermediate keys). Look keys keep the hero shield in the middle third (clear of the caption band) until the hit,
@@ -139,12 +146,12 @@ export default {
     camera.rotateZ(U.lerp(-.07, .06, U.prog(t, -.5, ctx.dur + .5)) + jolt * .03 * Math.sin((t - tSid) * 45) + s1.x * .4);
     camera.fov = 38 - 5 * U.prog(t, tSid - .12, tSid + .1, 'outCubic') + 3 * U.prog(t, tSid + .25, ctx.dur, 'inOutSine'); camera.updateProjectionMatrix();
     camera.updateMatrixWorld(true);
-    const fb = 1 - U.prog(t, tSid - .55, tSid - .2, 'inOutSine') + U.prog(t, tSid + .15, tSid + .7, 'inOutSine'); post.dof.focus = U.lerp(Math.max(2, camera.position.distanceTo(R.boss)), 16, fb); post.dof.range = U.lerp(6, 16, fb); post.dof.amount = U.lerp(.35, .25, fb);
+    const fb = 1 - U.prog(t, tSid - .55, tSid - .2, 'inOutSine') + U.prog(t, tSid + .15, tSid + .7, 'inOutSine'); post.dof.focus = U.lerp(Math.max(2, camera.position.distanceTo(R.boss)), 9, fb); post.dof.range = U.lerp(6, 12, fb); post.dof.amount = U.lerp(.35, .25, fb);
     // hero shield jolts on impact
     const sj = Math.exp(-Math.max(0, t - tSid) * 7) * (t > tSid ? 1 : 0);
     R.hero.rotation.set(R.heroRot.x - sj * .09 * Math.cos((t - tSid) * 38), R.heroRot.y + sj * .04 * Math.sin((t - tSid) * 30), R.heroRot.z);
     // spark flash light at the boss
-    R.flash.position.copy(R.boss).add(new THREE.Vector3(.3, .3, .1)); R.flash.intensity = 1.0 * Math.exp(-Math.max(0, t - tSid) * 14) * (t > tSid - .01 ? 1 : 0);
+    R.flash.position.copy(R.flashPos); R.flash.intensity = .35 * Math.exp(-Math.max(0, t - tSid) * 14) * (t > tSid - .01 ? 1 : 0);
     // storm thickens toward the end
     const st = U.smoothstep(R.tAn - .5, ctx.dur + .5, t);
     R.storm.userData.uniforms.opacity.value = .26 + .12 * st;

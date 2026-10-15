@@ -276,6 +276,12 @@ export default {
     // soft cloud puffs around the tower bases (hide the cloud-sea seams, add volume)
     { const tex = FX.cloudSprite(); const rr = U.rng(5); const g = new THREE.Group();
       towers.forEach((T, ti) => { const [cx, cz] = T.userData.c; const k = ti === 0 ? 8 : ti > 11 ? 2 : 3; for (let i = 0; i < k; i++) { const a = rr() * 6.28; const base = ti === 0 ? 120 : 26; const rad = base * (.6 + rr() * .8); const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: new THREE.Color().setHSL(.69, .32, .5 + rr() * .1), transparent: true, opacity: .38, depthWrite: false, rotation: rr() * 6 })); s.position.set(cx + Math.cos(a) * rad, -70 + rr() * 8, cz + Math.sin(a) * rad); s.scale.setScalar((ti === 0 ? 120 : 45) * (.7 + rr() * .7)); s.userData.noDepth = true; g.add(s); } });
+      // a bank of puffs along the camera-facing foot of the great summit: buries the crisp cloud-sea / rock contact line
+      // (own rng so every other random draw in the scene stays identical)
+      { const r2 = U.rng(613), [cx, cz] = G.userData.c;
+        for (let i = 0; i < 12; i++) { const a = Math.PI / 2 + (i / 11 - .5) * 2.7 + (r2() - .5) * .1; const rad = G.userData.rAt(a, -80) + 6 + r2() * 16;
+          const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: new THREE.Color().setHSL(.69, .34, .66 + r2() * .06), transparent: true, opacity: .55, depthWrite: false, rotation: r2() * 6 }));
+          s.position.set(cx + Math.cos(a) * rad, -80 + r2() * 6, cz + Math.sin(a) * rad); s.scale.setScalar(78 + r2() * 36); s.userData.noDepth = true; g.add(s); } }
       scene.add(g); }
 
     // banner cloud streaming from the summit (the first light catches it) + a soft glow of sunlit snow
@@ -322,6 +328,8 @@ export default {
     // scrolls on top + beside
     const s1 = scroll({ length: .38, radius: .034, rollers: true, seed: 3 }); s1.position.set(0, y + .036, .02); s1.rotation.y = .25; stack.add(s1);
     const s2 = scroll({ length: .32, radius: .028, seed: 5, cord: '#3f5a2a', sealColor: '#7a1a12', tieAt: .05 }); s2.position.set(.02, y + .072 + .03, -.03); s2.rotation.y = -.4; stack.add(s2);
+    // 'tarihin şehadeti' callout anchor: ON the wax seal of the top scroll (stack-local) — the leader then rises through clear sky
+    s2.updateMatrix(); R.anchorL = new THREE.Vector3(.056, 0, .028 + .008).applyMatrix4(s2.matrix);
     const s3 = scroll({ length: .36, radius: .03, rollers: true, seed: 7 }); s3.position.set(.5, .03, .25); s3.rotation.y = 1.2; ledge.add(s3);
     const s4 = scroll({ length: .3, radius: .026, seed: 9, cord: '#6a3a1a' }); s4.position.set(.47, .026, .12); s4.rotation.y = 1.0; ledge.add(s4);
     // a smaller second stack to the left
@@ -347,7 +355,7 @@ export default {
       [5.4, v1, b1[0] + .4, b1[1] - 10.2, 41],
       [7.9, v2, b2[0] + .5, b2[1] - 9.6, 38.5],
     ]);
-    { const tc = new THREE.PerspectiveCamera(38, ctx.W / ctx.H, .05, 6000); const pts = [new THREE.Vector3(0, .6, 0), new THREE.Vector3(0, 1.4, 0), new THREE.Vector3(-30, -10, -185)];
+    { const tc = new THREE.PerspectiveCamera(38, ctx.W / ctx.H, .05, 6000); const pts = [new THREE.Vector3(0, .6, 0), new THREE.Vector3(0, 1.4, 0), new THREE.Vector3(-30, -10, -185), new THREE.Vector3(.3, -.45, -7), new THREE.Vector3(.3, -.45, -4)]; // + far rim of our ledge tower (it sweeps out of the bottom of frame right after the stack)
       const proj = (tt) => { R.cam.apply(tc, tt); tc.updateMatrixWorld(); tc.matrixWorldInverse.copy(tc.matrixWorld).invert(); return pts.map(p => { const v = p.clone().applyMatrix4(tc.matrixWorldInverse); if (v.z > -.1) return null; const q = p.clone().project(tc); return Math.abs(q.x) < 1.2 && Math.abs(q.y) < 1.2 ? [q.x * 540, q.y * 960] : null; }); };
       R.pxSpeed = tt => { const a = proj(tt), b = proj(tt + 1 / 30); let m = 0; a.forEach((p, i) => { if (p && b[i]) m = Math.max(m, Math.hypot(b[i][0] - p[0], b[i][1] - p[1])); }); return m; }; }
     ctx.post.motionBlur = { samples: R.pxSpeed(-.5) > 40 ? 3 : 1, shutter: .4 };
@@ -356,7 +364,8 @@ export default {
     const { ui, U, post, camera } = ctx;
     R.cam.apply(camera, t, U.shake(t, .012 + .02 * U.smoothstep(3, 4.5, t), .5, 4));
     // motion blur only while the crane sweeps the near stack out of frame (screen speed centred on this frame)
-    post.motionBlur = R.pxSpeed(t - 1 / 60) > 40 ? { samples: 3, shutter: .4 } : { samples: 1 };
+    // (sample count scales with the blur length so the 80-150 px/frame sweep reads as a smear, not as 3 discrete copies)
+    { const v = R.pxSpeed(t - 1 / 60), sh = .45; const n = v > 30 ? Math.min(8, Math.max(3, Math.ceil(v * sh / 9))) : 1; post.motionBlur = n > 1 ? { samples: n, shutter: sh } : { samples: 1 }; }
     // sunrise creeps down the great summit (terminator height)
     R.UN.uTerm.value = U.lerp(104, 58, U.smoothstep(-.5, 7.8, t));
     R.sky.userData.uniforms.sunGlow.value = 1.0 + .3 * U.smoothstep(2, 7, t);
@@ -369,13 +378,14 @@ export default {
     // ---- typography -------------------------------------------------------------------------------------------
     const tT = ctx.wordTime('tarihin'), tSh = ctx.wordTime('şehadetiyle'), tD = ctx.wordTime('düşmanları'), tK = ctx.wordTime('kabul');
     const tEn = ctx.wordTime('en'), tY = ctx.wordTime('yüksek'), tYe = ctx.wordTime('yetişilemeyecek'), tDe = ctx.wordTime('derecedeydi');
-    const stackAnchor = R.stack.localToWorld(new THREE.Vector3(.19, R.stackTop * .78, .02)); // page-edge (right) flank of the stack: the line never crosses the spines
-    ui.callout('tarihin şehadeti', { t, t0: tT + .05, t1: tD - .05, anchor: stackAnchor, to: [745, 330], family: 'Playfair Display', weight: 700, size: 54, color: '#fff1d6', dotColor: '#ffcf6b' });
+    const stackAnchor = R.stack.localToWorld(R.anchorL.clone()); // on the seal of the top scroll: the line never crosses the books
+    ui.callout('tarihin şehadeti', { t, t0: tT + .05, t1: tD - .05, anchor: stackAnchor, to: [745, 330], family: 'Playfair Display', weight: 700, size: 54, color: '#fff1d6', dotColor: '#ffcf6b', bg: 'rgba(16,20,38,0.86)' });
     ui.text('düşmanları bile', { t, t0: tD - .05, t1: tEn + .1, x: 540, y: 300, size: 76, weight: 900, color: '#ff8a6e', anim: 'pop', stroke: 'rgba(30,24,50,.55)', strokeW: 10 });
     ui.text('kabul ediyor', { t, t0: tK - .05, t1: tEn + .1, x: 540, y: 392, size: 64, weight: 800, color: '#fff4dc', anim: 'rise', stroke: 'rgba(30,24,50,.5)', strokeW: 9 });
     // summit callout + big keyword
     const sp = ui.project(R.summit);
-    ui.callout('en yüksek derece', { t, t0: tEn + .05, t1: 99, anchor: [sp[0], sp[1] + 4], to: [Math.min(sp[0] + 220, 780), sp[1] + 150], size: 46, weight: 800, color: '#fff4dc', dotColor: '#ffcf6b' });
+    // two-line chip in the clear sky right of the peak: the leader runs over sky and the sunlit cap stays uncovered
+    ui.callout('en yüksek\nderece', { t, t0: tEn + .05, t1: 99, anchor: [sp[0], sp[1] + 4], to: [Math.min(sp[0] + 270, 858), sp[1] + 108], size: 46, weight: 800, radius: 26, bg: 'rgba(16,20,38,0.86)', color: '#fff4dc', dotColor: '#ffcf6b' });
     // failed attempts: dotted climb lines from the ladder / stair tops that stop far below the summit, each ending in a red ✕
     const fadeAll = 1 - U.smoothstep(7.55, 7.85, t);
     const attempt = (from, k, t0, bend) => {
@@ -396,6 +406,6 @@ export default {
     };
     attempt(R.gLadTop, .3, tYe + .05, -30);
     attempt(R.ladTop, .4, tYe + .3, 40);
-    ui.text('YETİŞİLEMEZ', { t, t0: tYe - .03, t1: 99, x: 540, y: 300, size: 118, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 6, stroke: 'rgba(28,24,60,.55)', strokeW: 14 });
+    ui.text('YETİŞİLEMEZ', { t, t0: tYe - .03, t1: 99, x: 540, y: 322, size: 108, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 4, stroke: 'rgba(28,24,60,.55)', strokeW: 13 }); // pop overshoot stays inside x 80-1000, İ dots below y 230
   },
 };

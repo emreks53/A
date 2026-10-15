@@ -304,7 +304,8 @@ export default {
       if (i === DOOR) { // HOŞGÖRÜ: arrive on the closed door just before the word, then a slow push toward the opening as it swings open
         keys.push({ t: R.T[i] - .12, pos: V(xd - .5, 1.32, 2.72), look: V(xd + .55, 1.45, -3.0), fov: 42, a: .7 });
         keys.push({ t: R.T[i] + .3, pos: V(xd - .36, 1.3, 2.38), look: V(xd + .6, 1.42, -3.0), fov: 41, a: .7 }); continue; }
-      keys.push({ t: R.T[i] + .18, ...camFor(i) }); }
+      const gp = R.T[i] - R.T[i - 1], gn = (R.T[i + 1] ?? R.W.ve) - R.T[i]; // centre a little later before a long gap / earlier after one: evens out the glide speed
+      keys.push({ t: R.T[i] + .18 + U.clamp(.3 * (gn - gp), -.08, .14), ...camFor(i) }); }
     // finale: from the jug the camera turns down the gallery and cranes up / dollies back while the far lamps light (reads by "bütün")
     const yp = (t, pos, yaw, pitch, fov) => { const y = yaw * Math.PI / 180, p = pitch * Math.PI / 180; return { t, pos, look: pos.clone().add(V(Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p)).multiplyScalar(5)), fov }; };
     keys.push(yp(R.W.butun - .15, V(x14 - .3, 2.05, 2.58), 57, -7.5, 40));
