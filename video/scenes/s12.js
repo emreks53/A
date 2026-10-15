@@ -316,9 +316,9 @@ export default {
     R.camAt = t => { if (t <= hk[0].t) return hk[0].v.slice(); if (t >= hk[n - 1].t) return hk[n - 1].v.slice(); let i = 0; while (t > hk[i + 1].t) i++; const k0 = hk[i], k1 = hk[i + 1], dt = k1.t - k0.t, u = (t - k0.t) / dt, u2 = u * u, u3 = u2 * u;
       const h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u, h01 = -2 * u3 + 3 * u2, h11 = u3 - u2; return k0.v.map((v0, c) => h00 * v0 + h10 * dt * tang[i][c] + h01 * k1.v[c] + h11 * dt * tang[i + 1][c]); };
     R.lookTgt = new THREE.Vector3();
-    // screen-space speed (px per frame at 1920 px height) of a point 2.4 m ahead of the camera: drives per-frame motion blur
+    // screen-space speed (px per frame at 1920 px height) of a point `dist` m ahead of the camera: drives per-frame motion blur
     const dirOf = v => V(Math.sin(v[3]) * Math.cos(v[4]), Math.sin(v[4]), -Math.cos(v[3]) * Math.cos(v[4]));
-    R.pxSpeed = t => { const a = R.camAt(t), b = R.camAt(t + 1 / 30); const P = V(a[0], a[1], a[2]).addScaledVector(dirOf(a), 2.9); const d2 = P.sub(V(b[0], b[1], b[2])).normalize();
+    R.pxSpeed = (t, dist = 2.9) => { const a = R.camAt(t), b = R.camAt(t + 1 / 30); const P = V(a[0], a[1], a[2]).addScaledVector(dirOf(a), dist); const d2 = P.sub(V(b[0], b[1], b[2])).normalize();
       return Math.acos(Math.min(1, d2.dot(dirOf(b)))) / (b[5] * Math.PI / 180) * 1920; };
     ctx.post.motionBlur = { samples: R.pxSpeed(-.5) > 40 ? 3 : 1, shutter: .5 };
     E.clampHDR(scene, 12);
@@ -386,7 +386,8 @@ export default {
     const dw = U.smoothstep(R.T[DOOR] - .55, R.T[DOOR] - .15, t) * (1 - U.smoothstep(R.T[DOOR] + .7, R.T[DOOR] + 1.0, t)); // door shot: hold the tree and the doorway together
     post.dof.focus = U.lerp(U.lerp(fd, 6.5, dw), 9, fin); post.dof.range = U.lerp(U.lerp(1.5, 10, dw), 14, fin); post.dof.amount = U.lerp(U.lerp(.85, .4, dw), .55, fin);
     // motion blur only where the camera glides fast (screen speed centred on this frame)
-    { const sp = R.pxSpeed(t - 1 / 60); post.motionBlur = sp < 14 ? { samples: 1 } : { samples: sp < 26 ? 2 : sp < 40 ? 3 : sp < 52 ? 4 : 5, shutter: .5 };
+    { // measured at the focused exhibit's distance (that is what strobes); enough sub-frames that copies sit <= ~4.5 px apart
+      const sp = R.pxSpeed(t - 1 / 60, U.clamp(fd, 1.8, 6)); const n = U.clamp(Math.ceil(sp / 10), 1, 6); post.motionBlur = n > 1 ? { samples: n, shutter: .45 } : { samples: 1 };
       R.motes.userData.uniforms.opacity.value = .4 * (1 - .6 * U.smoothstep(25, 55, sp)); } // point sprites strobe worst: thin them while gliding
     post.exposure = 1.05 + .05 * fin;
 
