@@ -26,17 +26,17 @@
 "gain": -3
 },
 {
-"t": 95.3,
+"t": 95.1,
 "dur": 0.5,
 "kind": "whoosh",
 "desc": "soft swipe as the name card slides in",
 "gain": -3
 },
 {
-"t": 96.64,
+"t": 96.73,
 "dur": 0.35,
 "kind": "pop",
-"desc": "light tick as the pointer touches the book",
+"desc": "soft click as the pointer ring snaps onto the cover",
 "gain": -4
 }
 ]

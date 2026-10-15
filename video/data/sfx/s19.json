@@ -14,47 +14,6 @@
 "gain": -4
 },
 {
-"t": 108.08,
-"dur": 0.5,
-"kind": "ignite",
-"desc": "candle ignition"
-},
-{
-"t": 108.45,
-"dur": 0.5,
-"kind": "ignite",
-"desc": "candle ignition",
-"gain": -2
-},
-{
-"t": 108.8,
-"dur": 0.5,
-"kind": "ignite",
-"desc": "candle ignition",
-"gain": -4
-},
-{
-"t": 109.15,
-"dur": 0.5,
-"kind": "ignite",
-"desc": "candle ignition",
-"gain": -6
-},
-{
-"t": 109.5,
-"dur": 0.5,
-"kind": "ignite",
-"desc": "candle ignition",
-"gain": -8
-},
-{
-"t": 109.9,
-"dur": 0.5,
-"kind": "ignite",
-"desc": "candle ignition",
-"gain": -10
-},
-{
 "t": 108.1,
 "dur": 0.3,
 "kind": "pop",
@@ -62,22 +21,63 @@
 "gain": -3
 },
 {
-"t": 108.58,
+"t": 108.43,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition"
+},
+{
+"t": 108.6,
 "dur": 0.3,
 "kind": "pop",
 "desc": "subtle pop for text",
 "gain": -3
 },
 {
-"t": 109.3,
+"t": 108.72,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -2
+},
+{
+"t": 108.95,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -4
+},
+{
+"t": 109.14,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -6
+},
+{
+"t": 109.37,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -8
+},
+{
+"t": 109.55,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -10
+},
+{
+"t": 109.82,
 "dur": 2.4,
 "kind": "whoosh",
 "desc": "soft air move as the camera cranes up",
 "gain": -3
 },
 {
-"t": 110.8,
-"dur": 3.0,
+"t": 110.05,
+"dur": 3.75,
 "kind": "fire",
 "desc": "gentle bed of many candles flickering"
 },

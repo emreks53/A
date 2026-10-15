@@ -1,5 +1,11 @@
 [
 {
+"t": 44.3,
+"dur": 5.4,
+"kind": "ocean",
+"desc": "open-sea ambience: gentle swell waves"
+},
+{
 "t": 45.02,
 "dur": 0.8,
 "kind": "water",
@@ -18,43 +24,39 @@
 "desc": "drop 2 plink"
 },
 {
-"t": 45.3,
-"dur": 1.8,
-"kind": "whoosh",
-"desc": "airy rising pull-back whoosh"
-},
-{
 "t": 45.56,
 "dur": 1.2,
 "kind": "chime",
 "desc": "soft warm swell under AHLAK-I ALIYE"
 },
 {
-"t": 46.18,
+"t": 45.65,
+"dur": 1.8,
+"kind": "whoosh",
+"desc": "airy rising pull-back whoosh"
+},
+{
+"t": 46.25,
 "dur": 0.3,
 "kind": "water",
-"desc": "tiny drip"
+"desc": "tiny drip",
+"gain": -4
 },
 {
-"t": 46.43,
+"t": 46.5,
 "dur": 0.3,
 "kind": "water",
-"desc": "tiny drip"
+"desc": "tiny drip",
+"gain": -4
 },
 {
-"t": 45.8,
-"dur": 3.9,
-"kind": "ocean",
-"desc": "open-sea ambience: gentle swell waves"
-},
-{
-"t": 46.96,
+"t": 47.08,
 "dur": 0.15,
 "kind": "pop",
 "desc": "badge pop"
 },
 {
-"t": 47.08,
+"t": 47.2,
 "dur": 0.15,
 "kind": "pop",
 "desc": "badge pop"

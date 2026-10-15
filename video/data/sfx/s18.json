@@ -7,49 +7,17 @@
 "gain": 2
 },
 {
+"t": 100.55,
+"dur": 0.35,
+"kind": "wood",
+"desc": "book slides forward out of the shelf row"
+},
+{
 "t": 100.6,
 "dur": 0.6,
 "kind": "creak",
 "desc": "faint creak of wooden shelving",
 "gain": -8
-},
-{
-"t": 102.4,
-"dur": 1.5,
-"kind": "wind",
-"desc": "soft evening wind at the high window",
-"gain": -10
-},
-{
-"t": 103.6,
-"dur": 2.3,
-"kind": "whoosh",
-"desc": "gentle airy whoosh as the camera pulls back"
-},
-{
-"t": 104.65,
-"dur": 0.3,
-"kind": "pop",
-"desc": "soft marker pop as the ring and 2 ornek appear"
-},
-{
-"t": 105.2,
-"dur": 0.8,
-"kind": "paper",
-"desc": "distant page turn",
-"gain": -8
-},
-{
-"t": 106.12,
-"dur": 0.3,
-"kind": "pop",
-"desc": "soft pop for IKI ORNEK"
-},
-{
-"t": 100.55,
-"dur": 0.35,
-"kind": "wood",
-"desc": "book slides forward out of the shelf row"
 },
 {
 "t": 100.71,
@@ -59,7 +27,26 @@
 "gain": -2
 },
 {
-"t": 105.0,
+"t": 102.4,
+"dur": 1.5,
+"kind": "wind",
+"desc": "soft evening wind at the high window",
+"gain": -10
+},
+{
+"t": 103.74,
+"dur": 2.3,
+"kind": "whoosh",
+"desc": "gentle airy whoosh as the camera pulls back"
+},
+{
+"t": 104.73,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft marker pop as the ring and 2 ornek appear"
+},
+{
+"t": 104.9,
 "dur": 0.5,
 "kind": "whoosh",
 "desc": "magnifier lens swells out of the ring",
@@ -71,5 +58,11 @@
 "kind": "pop",
 "desc": "tiny pop lens",
 "gain": -6
+},
+{
+"t": 106.17,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft pop for IKI ORNEK"
 }
 ]

@@ -1,11 +1,5 @@
 [
 {
-"t": 49.27,
-"dur": 1.0,
-"kind": "stone",
-"desc": "stone grinding as columns rise"
-},
-{
 "t": 49.25,
 "dur": 3.6,
 "kind": "wind",
@@ -13,28 +7,41 @@
 "gain": -6
 },
 {
-"t": 50.08,
-"dur": 2.1,
+"t": 49.27,
+"dur": 1.0,
 "kind": "stone",
-"desc": "deeper rising grind for the marble column"
+"desc": "stone grinding as columns rise"
 },
 {
-"t": 50.16,
+"t": 50.15,
+"dur": 1.4,
+"kind": "whoosh",
+"desc": "upward whoosh as the camera tilts up after the soaring hero"
+},
+{
+"t": 50.18,
 "dur": 0.2,
 "kind": "pop",
 "desc": "title pop"
 },
 {
-"t": 50.3,
-"dur": 1.4,
-"kind": "whoosh",
-"desc": "upward whoosh as the column soars"
+"t": 50.18,
+"dur": 2.1,
+"kind": "stone",
+"desc": "deeper rising grind for the marble column"
 },
 {
-"t": 50.92,
+"t": 51.19,
 "dur": 0.15,
 "kind": "pop",
 "desc": "callout pop"
+},
+{
+"t": 51.4,
+"dur": 1.6,
+"kind": "whoosh",
+"desc": "soft airy pull-back whoosh widening to the full chart",
+"gain": -6
 },
 {
 "t": 51.98,
@@ -48,12 +55,5 @@
 "kind": "chime",
 "desc": "tiny glint shimmer on gilded band",
 "gain": -4
-},
-{
-"t": 51.6,
-"dur": 1.6,
-"kind": "whoosh",
-"desc": "soft airy pull-back revealing the chart",
-"gain": -6
 }
 ]

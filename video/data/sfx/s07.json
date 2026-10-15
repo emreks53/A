@@ -35,7 +35,7 @@
 "gain": -7
 },
 {
-"t": 33.95,
+"t": 33.87,
 "dur": 0.35,
 "kind": "arrow",
 "desc": "close arrow whizzing past the lens",
@@ -63,7 +63,7 @@
 "gain": -4
 },
 {
-"t": 34.5,
+"t": 34.41,
 "dur": 1.5,
 "kind": "volley",
 "desc": "dense second volley",
@@ -77,24 +77,17 @@
 "gain": -4
 },
 {
-"t": 35.1,
-"dur": 0.4,
-"kind": "arrow hit",
-"desc": "arrow thud",
-"gain": -6
-},
-{
-"t": 35.3,
-"dur": 0.4,
-"kind": "stone",
-"desc": "stony clack",
-"gain": -4
-},
-{
-"t": 35.42,
+"t": 35.15,
 "dur": 0.35,
 "kind": "arrow",
 "desc": "last arrow skimming past the camera",
 "gain": -4
+},
+{
+"t": 35.18,
+"dur": 0.4,
+"kind": "arrow hit",
+"desc": "arrow thud",
+"gain": -6
 }
 ]

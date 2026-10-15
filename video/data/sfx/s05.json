@@ -54,13 +54,15 @@
 "t": 27.4,
 "dur": 0.3,
 "kind": "wood",
-"desc": "small jewellery box tap"
+"desc": "small inlaid wooden box tap",
+"gain": -3
 },
 {
 "t": 27.75,
 "dur": 0.4,
 "kind": "cloth",
-"desc": "folded textile settles"
+"desc": "folded textile settles",
+"gain": -4
 },
 {
 "t": 28.11,
@@ -72,6 +74,7 @@
 "t": 28.47,
 "dur": 0.3,
 "kind": "paper",
-"desc": "parchment scroll rolls and settles"
+"desc": "parchment scroll rolls and settles",
+"gain": -3
 }
 ]

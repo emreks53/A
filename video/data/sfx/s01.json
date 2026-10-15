@@ -7,7 +7,7 @@
 "gain": -6
 },
 {
-"t": 0.25,
+"t": 0.27,
 "dur": 0.6,
 "kind": "ignite",
 "desc": "first lamps ignite, soft",
@@ -31,15 +31,22 @@
 "t": 2.55,
 "dur": 1.6,
 "kind": "shimmer",
-"desc": "wave of lamps lighting, glow swell",
+"desc": "glow swell as the ring of lamps spreads to the horizon",
 "gain": -4
 },
 {
-"t": 3.75,
-"dur": 2.0,
+"t": 3.3,
+"dur": 2.8,
 "kind": "whoosh",
 "desc": "camera glide down to the Mushaf",
 "gain": -3
+},
+{
+"t": 5.25,
+"dur": 1.2,
+"kind": "shimmer",
+"desc": "first dawn ray flows over the Mushaf",
+"gain": -6
 },
 {
 "t": 5.9,
@@ -54,12 +61,5 @@
 "kind": "fire",
 "desc": "close oil lamp crackle",
 "gain": -4
-},
-{
-"t": 5.25,
-"dur": 1.2,
-"kind": "shimmer",
-"desc": "first dawn ray flows over the Mushaf",
-"gain": -6
 }
 ]

@@ -1,7 +1,7 @@
 [
 {
 "t": 35.5,
-"dur": 2.8,
+"dur": 2.6,
 "kind": "wind",
 "desc": "storm wind battering against the rock face",
 "gain": -1
@@ -24,115 +24,8 @@
 "t": 36.0,
 "dur": 0.3,
 "kind": "wood",
-"desc": "broken arrow pieces clattering",
+"desc": "broken shaft pieces clattering",
 "gain": -7
-},
-{
-"t": 36.4,
-"dur": 0.3,
-"kind": "wood",
-"desc": "broken arrow pieces clattering",
-"gain": -9
-},
-{
-"t": 36.82,
-"dur": 0.5,
-"kind": "arrow hit",
-"desc": "rapid burst of stone impacts",
-"gain": 0
-},
-{
-"t": 36.95,
-"dur": 0.5,
-"kind": "arrow hit",
-"desc": "rapid burst of stone impacts",
-"gain": -2
-},
-{
-"t": 37.1,
-"dur": 0.5,
-"kind": "arrow hit",
-"desc": "rapid burst of stone impacts",
-"gain": -3
-},
-{
-"t": 36.85,
-"dur": 1.2,
-"kind": "wind",
-"desc": "dust surge rushing up over the top",
-"gain": -1
-},
-{
-"t": 38.66,
-"dur": 0.5,
-"kind": "paper",
-"desc": "soft card swipe as the quote appears",
-"gain": -3
-},
-{
-"t": 39.83,
-"dur": 0.4,
-"kind": "stone",
-"desc": "muffled distant stone strike",
-"gain": -8
-},
-{
-"t": 40.07,
-"dur": 0.4,
-"kind": "stone",
-"desc": "muffled distant stone strike",
-"gain": -8
-},
-{
-"t": 40.31,
-"dur": 0.4,
-"kind": "stone",
-"desc": "muffled distant stone strike",
-"gain": -8
-},
-{
-"t": 40.55,
-"dur": 0.4,
-"kind": "stone",
-"desc": "muffled distant stone strike",
-"gain": -8
-},
-{
-"t": 40.79,
-"dur": 0.4,
-"kind": "stone",
-"desc": "muffled distant stone strike",
-"gain": -8
-},
-{
-"t": 39.83,
-"dur": 0.1,
-"kind": "tick",
-"desc": "tally tick"
-},
-{
-"t": 40.07,
-"dur": 0.1,
-"kind": "tick",
-"desc": "tally tick"
-},
-{
-"t": 40.31,
-"dur": 0.1,
-"kind": "tick",
-"desc": "tally tick"
-},
-{
-"t": 40.55,
-"dur": 0.1,
-"kind": "tick",
-"desc": "tally tick"
-},
-{
-"t": 40.79,
-"dur": 0.1,
-"kind": "tick",
-"desc": "tally tick"
 },
 {
 "t": 36.3,
@@ -148,23 +41,135 @@
 "desc": "rock chips flying"
 },
 {
-"t": 37.35,
-"dur": 2.35,
+"t": 36.4,
+"dur": 0.3,
+"kind": "wood",
+"desc": "broken shaft pieces clattering",
+"gain": -9
+},
+{
+"t": 36.65,
+"dur": 2.1,
 "kind": "whoosh",
 "desc": "camera whip around the massif into the lee"
 },
 {
-"t": 39.2,
-"dur": 3.3,
+"t": 36.83,
+"dur": 0.5,
+"kind": "arrow hit",
+"desc": "rapid burst of stone impacts",
+"gain": 0
+},
+{
+"t": 36.85,
+"dur": 1.2,
+"kind": "wind",
+"desc": "dust surge boiling up over the top",
+"gain": -1
+},
+{
+"t": 36.93,
+"dur": 0.5,
+"kind": "arrow hit",
+"desc": "rapid burst of stone impacts",
+"gain": -2
+},
+{
+"t": 37.08,
+"dur": 0.5,
+"kind": "arrow hit",
+"desc": "rapid burst of stone impacts",
+"gain": -3
+},
+{
+"t": 38.64,
+"dur": 0.5,
+"kind": "paper",
+"desc": "soft card swipe as the quote appears",
+"gain": -3
+},
+{
+"t": 38.8,
+"dur": 3.7,
 "kind": "wind",
 "desc": "calm lee soft breeze",
 "gain": -8
 },
 {
+"t": 39.83,
+"dur": 0.4,
+"kind": "stone",
+"desc": "muffled distant stone strike",
+"gain": -8
+},
+{
+"t": 39.83,
+"dur": 0.1,
+"kind": "blip",
+"desc": "tally mark blip",
+"gain": -5
+},
+{
 "t": 39.87,
-"dur": 1.4,
+"dur": 2.0,
 "kind": "sand",
 "desc": "faint sand trickling down the lee wall",
 "gain": -10
+},
+{
+"t": 40.07,
+"dur": 0.4,
+"kind": "stone",
+"desc": "muffled distant stone strike",
+"gain": -8
+},
+{
+"t": 40.07,
+"dur": 0.1,
+"kind": "blip",
+"desc": "tally mark blip",
+"gain": -5
+},
+{
+"t": 40.31,
+"dur": 0.4,
+"kind": "stone",
+"desc": "muffled distant stone strike",
+"gain": -8
+},
+{
+"t": 40.31,
+"dur": 0.1,
+"kind": "blip",
+"desc": "tally mark blip",
+"gain": -5
+},
+{
+"t": 40.55,
+"dur": 0.4,
+"kind": "stone",
+"desc": "muffled distant stone strike",
+"gain": -8
+},
+{
+"t": 40.55,
+"dur": 0.1,
+"kind": "blip",
+"desc": "tally mark blip",
+"gain": -5
+},
+{
+"t": 40.79,
+"dur": 0.4,
+"kind": "stone",
+"desc": "muffled distant stone strike",
+"gain": -8
+},
+{
+"t": 40.79,
+"dur": 0.1,
+"kind": "blip",
+"desc": "tally mark blip",
+"gain": -5
 }
 ]

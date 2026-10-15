@@ -19,52 +19,52 @@
 "desc": "dim study room tone"
 },
 {
-"t": 87.6,
+"t": 87.62,
 "dur": 0.15,
 "kind": "pop",
-"desc": "soft tick map dot",
+"desc": "soft pop as a map dot blinks on",
 "gain": -6
 },
 {
-"t": 88.1,
+"t": 88.08,
 "dur": 0.15,
 "kind": "pop",
-"desc": "soft tick map dot",
+"desc": "soft pop as a map dot blinks on",
 "gain": -6
 },
 {
-"t": 88.6,
+"t": 88.79,
 "dur": 0.15,
 "kind": "pop",
-"desc": "soft tick map dot",
+"desc": "soft pop as a map dot blinks on",
 "gain": -6
 },
 {
-"t": 89.0,
+"t": 89.01,
 "dur": 0.15,
 "kind": "pop",
-"desc": "soft tick map dot",
+"desc": "soft pop as a map dot blinks on",
 "gain": -5
 },
 {
-"t": 89.2,
+"t": 89.21,
 "dur": 0.15,
 "kind": "pop",
-"desc": "soft tick map dot",
+"desc": "soft pop as a map dot blinks on",
 "gain": -5
 },
 {
-"t": 89.4,
+"t": 89.45,
 "dur": 0.15,
 "kind": "pop",
-"desc": "soft tick map dot",
+"desc": "soft pop as a map dot blinks on",
 "gain": -5
 },
 {
-"t": 89.6,
+"t": 89.57,
 "dur": 0.15,
 "kind": "pop",
-"desc": "soft tick map dot",
+"desc": "soft pop as a map dot blinks on",
 "gain": -5
 },
 {
@@ -75,21 +75,21 @@
 "gain": -3
 },
 {
-"t": 90.45,
+"t": 90.48,
 "dur": 1.4,
 "kind": "whoosh",
 "desc": "light airy swish of arcs travelling",
 "gain": -4
 },
 {
-"t": 90.65,
+"t": 90.7,
 "dur": 0.3,
 "kind": "metal",
 "desc": "gentle brass settle",
 "gain": -6
 },
 {
-"t": 91.75,
+"t": 91.74,
 "dur": 1.0,
 "kind": "chime",
 "desc": "warm resonant ping as arcs land"

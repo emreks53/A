@@ -3,7 +3,7 @@
 "t": 112.8,
 "dur": 11.85,
 "kind": "birds",
-"desc": "birds at dawn outside the open window",
+"desc": "birds at dawn outside the open casement",
 "gain": -2
 },
 {
@@ -16,28 +16,14 @@
 "t": 113.4,
 "dur": 4.0,
 "kind": "cloth",
-"desc": "soft rustle of tulle curtains",
+"desc": "soft sway of tulle curtains in the breeze",
 "gain": -10
-},
-{
-"t": 118.08,
-"dur": 0.3,
-"kind": "pop",
-"desc": "subtle marker for ring",
-"gain": -3
-},
-{
-"t": 121.9,
-"dur": 2.2,
-"kind": "chime",
-"desc": "single soft warm bell under the end card",
-"gain": -4
 },
 {
 "t": 115.35,
 "dur": 0.9,
 "kind": "cloth",
-"desc": "leather front cover lifting and swinging open",
+"desc": "leather front cover lifts and swings open",
 "gain": -3
 },
 {
@@ -61,17 +47,31 @@
 "gain": -3
 },
 {
-"t": 118.9,
+"t": 118.08,
+"dur": 0.3,
+"kind": "pop",
+"desc": "subtle marker for ring",
+"gain": -3
+},
+{
+"t": 118.81,
 "dur": 1.35,
 "kind": "whoosh",
 "desc": "soft air move as the camera cranes up",
 "gain": -5
 },
 {
-"t": 120.05,
+"t": 120.02,
 "dur": 0.3,
 "kind": "pop",
 "desc": "very subtle marker label",
 "gain": -5
+},
+{
+"t": 121.9,
+"dur": 2.2,
+"kind": "chime",
+"desc": "single soft warm bell under the end card",
+"gain": -4
 }
 ]
