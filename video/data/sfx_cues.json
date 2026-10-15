@@ -40,11 +40,19 @@
 "scene": "s01"
 },
 {
-"t": 4.25,
-"dur": 2.4,
+"t": 3.75,
+"dur": 2.0,
 "kind": "whoosh",
 "desc": "camera glide down to the Mushaf",
 "gain": -3,
+"scene": "s01"
+},
+{
+"t": 5.25,
+"dur": 1.2,
+"kind": "shimmer",
+"desc": "first dawn ray flows over the Mushaf",
+"gain": -6,
 "scene": "s01"
 },
 {
@@ -115,6 +123,14 @@
 "dur": 1.2,
 "kind": "chime",
 "desc": "delicate sparkle on the gilded crescent",
+"scene": "s02"
+},
+{
+"t": 11.1,
+"dur": 0.35,
+"kind": "impact",
+"desc": "second headline line pops on mu'cizesi (soft)",
+"gain": -10,
 "scene": "s02"
 },
 {
@@ -346,20 +362,13 @@
 },
 {
 "t": 25.59,
-"dur": 0.3,
-"kind": "thud",
-"desc": "leather pouch lands on shelf",
-"scene": "s05"
-},
-{
-"t": 25.99,
 "dur": 0.35,
 "kind": "wood",
 "desc": "wooden chest set down",
 "scene": "s05"
 },
 {
-"t": 26.05,
+"t": 25.65,
 "dur": 0.3,
 "kind": "metal",
 "desc": "faint brass rattle of the hasp",
@@ -367,52 +376,52 @@
 "scene": "s05"
 },
 {
-"t": 26.37,
+"t": 26.15,
+"dur": 0.3,
+"kind": "thud",
+"desc": "small leather pouch set down",
+"scene": "s05"
+},
+{
+"t": 26.69,
+"dur": 0.35,
+"kind": "thud",
+"desc": "sealed clay jar thunk on wood",
+"scene": "s05"
+},
+{
+"t": 27.05,
+"dur": 0.3,
+"kind": "thud",
+"desc": "large leather pouch set down",
+"scene": "s05"
+},
+{
+"t": 27.4,
 "dur": 0.3,
 "kind": "wood",
 "desc": "small jewellery box tap",
 "scene": "s05"
 },
 {
-"t": 26.75,
-"dur": 0.35,
-"kind": "thud",
-"desc": "heavy clay jar thunk on wood",
-"scene": "s05"
-},
-{
-"t": 27.15,
-"dur": 0.3,
-"kind": "paper",
-"desc": "parchment scroll rolls and settles",
-"scene": "s05"
-},
-{
-"t": 27.53,
+"t": 27.75,
 "dur": 0.4,
 "kind": "cloth",
-"desc": "folded textile flops onto the shelf",
+"desc": "folded textile settles",
 "scene": "s05"
 },
 {
-"t": 27.91,
+"t": 28.11,
 "dur": 0.3,
 "kind": "metal",
 "desc": "sheathed dagger small brass clink",
 "scene": "s05"
 },
 {
-"t": 28.29,
+"t": 28.47,
 "dur": 0.3,
-"kind": "thud",
-"desc": "leather pouch set down",
-"scene": "s05"
-},
-{
-"t": 28.65,
-"dur": 0.3,
-"kind": "thud",
-"desc": "leather pouch set down",
+"kind": "paper",
+"desc": "parchment scroll rolls and settles",
 "scene": "s05"
 },
 {
@@ -621,6 +630,21 @@
 "scene": "s08"
 },
 {
+"t": 36.3,
+"dur": 0.5,
+"kind": "arrow hit",
+"desc": "third heavy strike on the windward face",
+"gain": 2,
+"scene": "s08"
+},
+{
+"t": 36.32,
+"dur": 0.6,
+"kind": "stone",
+"desc": "rock chips flying",
+"scene": "s08"
+},
+{
 "t": 36.4,
 "dur": 0.3,
 "kind": "wood",
@@ -661,19 +685,10 @@
 "scene": "s08"
 },
 {
-"t": 37.95,
-"dur": 0.9,
+"t": 37.35,
+"dur": 2.35,
 "kind": "whoosh",
-"desc": "camera swing around the rock into the lee",
-"gain": -3,
-"scene": "s08"
-},
-{
-"t": 38.6,
-"dur": 3.9,
-"kind": "wind",
-"desc": "calm lee soft breeze",
-"gain": -8,
+"desc": "camera whip around the massif into the lee",
 "scene": "s08"
 },
 {
@@ -682,6 +697,14 @@
 "kind": "paper",
 "desc": "soft card swipe as the quote appears",
 "gain": -3,
+"scene": "s08"
+},
+{
+"t": 39.2,
+"dur": 3.3,
+"kind": "wind",
+"desc": "calm lee soft breeze",
+"gain": -8,
 "scene": "s08"
 },
 {
@@ -697,6 +720,14 @@
 "dur": 0.1,
 "kind": "tick",
 "desc": "tally tick",
+"scene": "s08"
+},
+{
+"t": 39.87,
+"dur": 1.4,
+"kind": "sand",
+"desc": "faint sand trickling down the lee wall",
+"gain": -10,
 "scene": "s08"
 },
 {
@@ -932,14 +963,22 @@
 "scene": "s11"
 },
 {
-"t": 52.23,
+"t": 51.6,
+"dur": 1.6,
+"kind": "whoosh",
+"desc": "soft airy pull-back revealing the chart",
+"gain": -6,
+"scene": "s11"
+},
+{
+"t": 51.98,
 "dur": 0.4,
 "kind": "thud",
 "desc": "soft settling thud of the capital",
 "scene": "s11"
 },
 {
-"t": 52.25,
+"t": 52.0,
 "dur": 0.7,
 "kind": "chime",
 "desc": "tiny glint shimmer on gilded band",
@@ -1312,49 +1351,50 @@
 "scene": "s14"
 },
 {
-"t": 82.38,
-"dur": 1.2,
+"t": 82.2,
+"dur": 1.6,
 "kind": "whoosh",
-"desc": "big airy pull-back whoosh",
+"desc": "camera crane whip from lectern to gallery",
 "scene": "s14"
 },
 {
-"t": 82.6,
+"t": 82.75,
 "dur": 0.3,
 "kind": "wood",
 "desc": "book slides onto shelf knock",
+"gain": -0.0,
 "scene": "s14"
 },
 {
-"t": 82.95,
+"t": 83.05,
 "dur": 0.3,
 "kind": "wood",
 "desc": "book slides onto shelf knock",
-"gain": -2,
+"gain": -1.5,
 "scene": "s14"
 },
 {
-"t": 83.25,
+"t": 83.35,
 "dur": 0.3,
 "kind": "wood",
 "desc": "book slides onto shelf knock",
-"gain": -3,
+"gain": -3.0,
 "scene": "s14"
 },
 {
-"t": 83.5,
+"t": 83.65,
 "dur": 0.3,
 "kind": "wood",
 "desc": "book slides onto shelf knock",
-"gain": -4,
+"gain": -4.5,
 "scene": "s14"
 },
 {
-"t": 83.75,
+"t": 83.95,
 "dur": 0.3,
 "kind": "wood",
 "desc": "book slides onto shelf knock",
-"gain": -5,
+"gain": -6.0,
 "scene": "s14"
 },
 {
@@ -1362,6 +1402,14 @@
 "dur": 0.6,
 "kind": "paper",
 "desc": "single page turn",
+"scene": "s14"
+},
+{
+"t": 84.25,
+"dur": 0.3,
+"kind": "wood",
+"desc": "book slides onto shelf knock",
+"gain": -7.5,
 "scene": "s14"
 },
 {
@@ -1605,11 +1653,26 @@
 "scene": "s17"
 },
 {
+"t": 100.55,
+"dur": 0.35,
+"kind": "wood",
+"desc": "book slides forward out of the shelf row",
+"scene": "s18"
+},
+{
 "t": 100.6,
 "dur": 0.6,
 "kind": "creak",
 "desc": "faint creak of wooden shelving",
 "gain": -8,
+"scene": "s18"
+},
+{
+"t": 100.71,
+"dur": 0.35,
+"kind": "wood",
+"desc": "second book slides forward",
+"gain": -2,
 "scene": "s18"
 },
 {
@@ -1635,11 +1698,27 @@
 "scene": "s18"
 },
 {
+"t": 105.0,
+"dur": 0.5,
+"kind": "whoosh",
+"desc": "magnifier lens swells out of the ring",
+"gain": -6,
+"scene": "s18"
+},
+{
 "t": 105.2,
 "dur": 0.8,
 "kind": "paper",
 "desc": "distant page turn",
 "gain": -8,
+"scene": "s18"
+},
+{
+"t": 105.3,
+"dur": 0.15,
+"kind": "pop",
+"desc": "tiny pop lens",
+"gain": -6,
 "scene": "s18"
 },
 {
@@ -1783,33 +1862,33 @@
 "scene": "s20"
 },
 {
-"t": 115.3,
-"dur": 0.6,
+"t": 115.35,
+"dur": 0.9,
 "kind": "cloth",
-"desc": "leather book cover lifting and swinging open",
+"desc": "leather front cover lifting and swinging open",
 "gain": -3,
 "scene": "s20"
 },
 {
-"t": 115.65,
-"dur": 0.8,
+"t": 115.87,
+"dur": 0.65,
 "kind": "paper",
-"desc": "three pages riffling over in the breeze",
+"desc": "three leaves riffling over",
 "scene": "s20"
 },
 {
-"t": 115.9,
+"t": 116.25,
 "dur": 0.3,
 "kind": "wood",
-"desc": "cover settling onto the wooden rahle",
+"desc": "cover settling onto the rahle",
 "gain": -4,
 "scene": "s20"
 },
 {
-"t": 115.97,
+"t": 116.29,
 "dur": 0.3,
 "kind": "pop",
-"desc": "subtle marker for ring",
+"desc": "subtle marker for the 195 ring",
 "gain": -3,
 "scene": "s20"
 },
@@ -1819,6 +1898,22 @@
 "kind": "pop",
 "desc": "subtle marker for ring",
 "gain": -3,
+"scene": "s20"
+},
+{
+"t": 118.9,
+"dur": 1.35,
+"kind": "whoosh",
+"desc": "soft air move as the camera cranes up",
+"gain": -5,
+"scene": "s20"
+},
+{
+"t": 120.05,
+"dur": 0.3,
+"kind": "pop",
+"desc": "very subtle marker label",
+"gain": -5,
 "scene": "s20"
 },
 {

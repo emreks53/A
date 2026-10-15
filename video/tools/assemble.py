@@ -21,7 +21,7 @@ TRANS = {
 
 inputs, filters = [], []
 for i, s in enumerate(S):
-    clip = os.path.join(ROOT, 'out/clips', s['id'] + '.mp4')
+    clip = os.path.join(ROOT, opt('clips', 'out/clips'), s['id'] + '.mp4')
     meta = json.load(open(clip + '.json'))
     g0 = s['start'] + meta['from']                   # global time of clip t=0
     d_in = TRANS.get(s['id'], ('fade', 0))[1] if i > 0 else 0
