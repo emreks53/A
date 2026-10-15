@@ -147,8 +147,8 @@ export function belgeHedefi(bol: Bolum, b: BelgeEk, dil: Dil, h: Harita): Hedef 
 }
 
 /** Sitedeki belge satırı (statik sayfalardaki .docrow ile aynı yapı) */
-export const belgeSatiri = (dil: Dil, yil: string, etiket: string, yol: string, boyut: number, ad: string): string =>
-  `<a class="docrow" href="${esc(yol)}" download><span class="d-y">${esc(yil)}</span><span class="d-t">${esc(etiket)}</span>` +
+export const belgeSatiri = (dil: Dil, yil: string, etiket: string, yol: string, boyut: number, ad: string, trEtiket = false): string =>
+  `<a class="docrow" href="${esc(yol)}" download><span class="d-y">${esc(yil)}</span><span class="d-t"${dil === 'en' && trEtiket ? ' lang="tr"' : ''}>${esc(etiket)}</span>` +
   `<span class="d-f" title="${esc(ad)}">${esc(ad)}</span><span class="d-s">PDF ${mb(boyut)}</span><span class="d-dl">${dil === 'en' ? 'Download' : 'İndir'}</span></a>`;
 
 /** Duyuru metni: kaçışlı, boş satır = paragraf, tek satır sonu = <br>, adresler bağlantı */

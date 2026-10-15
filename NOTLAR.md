@@ -85,6 +85,23 @@ uzun metinler ve habere tıklayınca açılan metin Türkçe kalır.** Sonra (ay
   `python3 araclar/ceviri/kur.py --yaz && python3 araclar/ceviri/ozel.py --yaz` →
   `node araclar/ceviri/og.mjs araclar/ceviri/cikti/og-isler.json`. Çevrilemeyen metin `cikti/eksik.txt`'ye düşer.
 
+## 15.10.2026 son kontroller
+
+Yerel: 792 HTML sayfada title/h1/açıklama/kanonik/hreflang/OG/dil seçici, yinelenen kimlik, HTML yapısı, görsel alt
+metni, yer tutucu kalıntısı, tüm yerel bağlantı ve kaynaklar (srcset, CSS url) denetlendi. Canlı: sitemap'teki 784
+sayfa 200, 272 belge 200 (doğru türle), 1994 eski adres yönlendirmesi 301 ve 780 hedefin hepsi 200, 51 dış bağlantı.
+Tarayıcı: her sayfa 390 ve 1280 px genişlikte açıldı (1568 açılış): yatay taşma, kırık görsel, JS hatası, eksik
+istek yok. Etkileşim: çerez bandı, mobil menü (Esc dahil), dil geçişi, arama (TR/EN), kütüphane filtreleri, iletişim
+formu doğrulaması, üst menünün kaydırmada titrememesi denendi. Bulunup düzeltilenler
+(`araclar/degisiklikler/2026-10-15c-son-kontrol.py`, `2026-10-15d-404-dil.py`, sunucu kodu):
+- SPK bağlantısı (alt bilgi, Linkler) SPK sitesinde 404'e gidiyordu → https://spk.gov.tr/.
+- İletişim API'si ve panelin iki yükleme noktası bozuk/boş istekte çöküyordu (500, "error code 1101") → 400;
+  e-posta gönderiminde ağ hatası → 502 (çökme yerine).
+- 404 sayfası: TR metinde "Yatırımcı İlişkileri" → "Yatırımcı Köşesi"; EN bölüme "Document Library" düğmesi; EN
+  bölüm `lang="en"`.
+- EN sayfalarda Türkçe kalan uzun metinler ve belge adları `lang="tr"` ile işaretlendi (ekran okuyucu doğru
+  okusun; panelden eklenen Türkçe adlı belgeler de).
+
 ## Kullanıcı kararları (özet)
 
 - Hero: "Ülkemize faydalı, prestijli gayrimenkul projelerini ideal şekilde gerçekleştirmek." / EN "…in an ideal way."

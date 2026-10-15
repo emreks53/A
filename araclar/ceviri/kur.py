@@ -93,6 +93,8 @@ BELGE_CEVIR = False
 BELGE_ADI = {norm(x['tr']) for x in json.load(open(os.path.join(CEVIRI, 'cikti', 'etiketler.json'), encoding='utf-8'))} | set(ETIKET)
 # Ana sayfadaki güncel belge satırlarında bölüm adı öneki ("Faaliyet Raporları, 6 Aylık"): önek çevrilir, belge adı kalır
 GUNCEL_ONEK = ('Faaliyet Raporları', 'Mali Tablolar')
+# EN sayfada Türkçe kalan kısa başlıklar (lang="tr" ile işaretlenir)
+TR_KALAN = {'AÇIKLAMA:'}
 
 def belge_adi_mi(n):
     return n in BELGE_ADI or kalip.belge_adi_kalibi(n)
@@ -159,7 +161,7 @@ class Kurucu:
         self.eksik = []       # (bağlam, metin)
 
     # ------------------------------------------------------------ metin düğümü
-    def metin(self, ham, yigin):
+    def metin(self, ham, yigin, out=None):
         bas = re.match(r'\s*', ham).group(0)
         son = ham[len(ham.rstrip()):] if ham.strip() else ''
         cek = ham[len(bas):len(ham) - len(son)] if ham.strip() else ''
@@ -181,6 +183,9 @@ class Kurucu:
         duz = html.unescape(cek)
         en = kisa(duz, href, baglam)
         if en is not None:
+            if out is not None and ust.get('ana') and (
+                    (baglam == 'etiket' and en == norm(duz)) or norm(duz) in TR_KALAN):
+                self.dil_tr(out, ust)                    # EN sayfada Türkçe kalan belge adı / başlık
             return bas + metin_kacis(en) + son
         m = re.match(r'^(.*\S)(\s+)\((\d{2}\.\d{2}\.\d{4})\)$', duz, re.S)
         if m:
@@ -189,6 +194,12 @@ class Kurucu:
                 return bas + metin_kacis(en) + m.group(2) + '(' + m.group(3) + ')' + son
         self.eksik.append((self.yer(yigin), duz))
         return ham
+
+    @staticmethod
+    def dil_tr(out, ust):
+        i = ust.get('idx')
+        if i is not None and ' lang=' not in out[i] and out[i].endswith('>') and not out[i].endswith('/>'):
+            out[i] = out[i][:-1] + ' lang="tr">'
 
     def yer(self, yigin):
         x = yigin[-1] if yigin else {}
@@ -243,13 +254,15 @@ class Kurucu:
                         t2 = self.oznitelik(t2, o, lambda v, o=o: self.oz_metin(v, o))
                     if 'd-f' not in sinif.split():
                         t2 = self.oznitelik(t2, 'title', lambda v: self.oz_metin(v, 'title'))
+                if prose and ana and not (yigin and yigin[-1]['prose']) and ' lang=' not in t2 and not t2.endswith('/>'):
+                    t2 = t2[:-1] + ' lang="tr">'            # Türkçe kalan uzun metin (ekran okuyucu, arama motoru)
                 if ad not in VOID and not t.endswith('/>'):
-                    d = dict(oz); d.update(ad=ad, prose=prose, ana=ana)
+                    d = dict(oz); d.update(ad=ad, prose=prose, ana=ana, idx=len(out))
                     yigin.append(d)
                 out.append(t2); continue
             if yigin and yigin[-1]['prose']:
                 out.append(t); continue
-            out.append(self.metin(t, yigin))
+            out.append(self.metin(t, yigin, out))
         return ''.join(out)
 
 
@@ -325,7 +338,7 @@ def sayfa_kur(tr, en):
     if n != 2:
         raise SystemExit('dil seçici kalıbı tutmadı: %s (%d)' % (tr, n))
     for tr_m, en_m in ESKI_EN_METIN.items():
-        s = s.replace(tr_m, en_m)
+        s = s.replace(' lang="tr">' + tr_m, '>' + en_m).replace(tr_m, en_m)
     s, baslik, og = bas_kur(s, s_tr, tr, en, eski_en)
     if tr == '/site-haritasi/':
         s = site_haritasi_sirala(s)

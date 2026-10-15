@@ -134,7 +134,8 @@ export const onRequest: PagesFunction<Env> = async ({ request, env, params }) =>
       return json({ belgeler: r.results });
     }
     if (yontem === 'POST' && !idStr) {
-      const f = await request.formData();
+      const f = await request.formData().catch(() => null);
+      if (!f) return hata('Form okunamadı; sayfayı yenileyip tekrar deneyin.');
       const kid = String(f.get('kid') || ''); const bol = h.bolumler.find((b) => b.kid === kid) as Bolum | undefined;
       if (!bol) return hata('Bölüm seçin.');
       const yil = String(f.get('yil') || '').trim(); if (!yilGecerli(yil)) return hata('Yılı dört haneli yazın (ör. 2026).');
@@ -185,7 +186,8 @@ export const onRequest: PagesFunction<Env> = async ({ request, env, params }) =>
       return json({ haberler: r.results });
     }
     if (yontem === 'POST' && !idStr) {
-      const f = await request.formData();
+      const f = await request.formData().catch(() => null);
+      if (!f) return hata('Form okunamadı; sayfayı yenileyip tekrar deneyin.');
       const baslik = String(f.get('baslik') || '').trim().slice(0, 300); if (!baslik) return hata('Başlık yazın.');
       const tarih = String(f.get('tarih') || '').trim(); if (!tarihGecerli(tarih)) return hata('Tarihi seçin.');
       const govdeMetin = String(f.get('govde') || '').trim().slice(0, 20000); if (!govdeMetin) return hata('Duyuru metnini yazın.');

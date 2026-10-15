@@ -110,7 +110,7 @@ function yerlesim(h: Harita, veri: PanelVerisi, dil: Dil): Yerlesim {
     const bol = h.bolumler.find((x) => x.kid === b.kid); if (!bol) continue;
     const hd = belgeHedefi(bol, b, dil, h); if (!hd) continue;
     const yol = belgeYolu(b.anahtar);
-    const s: Satir = { html: belgeSatiri(dil, b.yil, hd.etiket, yol, b.boyut, b.dosya_adi), yil: b.yil, donem: donemSirasi(b.etiket), id: b.id };
+    const s: Satir = { html: belgeSatiri(dil, b.yil, hd.etiket, yol, b.boyut, b.dosya_adi, !(b.etiket_en || '').trim()), yil: b.yil, donem: donemSirasi(b.etiket), id: b.id };
     let sayfa = '';
     if (bol.tip === 'grup' && hd.grupIdx !== undefined) {
       ekle(y.grup, `${hd.grupIdx}|${b.yil}`, s);

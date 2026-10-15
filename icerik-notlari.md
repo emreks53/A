@@ -22,6 +22,8 @@ Kural gereği bunların **hiçbiri değiştirilmemiştir**; envanterde ve yeni s
 | A12 | Yatırımcı ilişkileri iletişim | Sitede Yİ birimi iletişim bilgisi yok. KAP'ta "Yusuf ŞİMŞEK – Yatırımcı İlişkileri Yöneticisi, yi@idealistgyo.com, 0216 443 82 90". | Yİ giriş sayfasına eklenmesi önerilir (KAP kaynaklı; onayınızla). | ☐ |
 | A13 | Sigorta Poliçeleri | "Henüz sitemize sigorta poliçelerimiz eklenmemiştir." (TR/EN). | Aynen taşınır; belge varsa iletin. | ☐ |
 | A14 | Paylaşım görselleri (TR) | Uzun başlıklı en az 2 haber görselinde (Mercek sözleşmesi 2011 ve 2012) başlık logonun üstüne taşıyor, bölüm adı kesiliyor. EN görseller 15.10.2026'da yazı küçülten yeni araçla (`araclar/ceviri/og.mjs`) çizildi. | TR görseller de aynı araçla yeniden çizilebilir (onayınızla). | ☐ |
+| A15 | Alt bilgi ve Linkler: SPK bağlantısı | `http://www.spk.gov.tr/index.aspx` SPK sitesinde "404 İçerik Bulunamadı" sayfasına gidiyordu. **15.10.2026 son kontrolde https://spk.gov.tr/ yapıldı** (bağlantı yazısı aynı). | — | ☑ |
+| A16 | Basında Biz: Emlak Kulisi haberi | Eski haber adresi (emlakkulisi.com/…-88233.html) otomatik denetimde Cloudflare doğrulamasına takılıyor (403); gerçek tarayıcıda açılıp açılmadığı buradan doğrulanamadı. | Bir kez tarayıcıdan açıp bakın; kalktıysa bağlantı kaldırılabilir veya arşiv adresi verilebilir. | ☐ |
 
 ## B. Metin içi hatalar (değiştirilmedi)
 
