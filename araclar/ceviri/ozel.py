@@ -6,7 +6,7 @@ Türkçe asıldan kurulmayan EN sayfalarının düzeltmesi (15.10.2026; kur.py'd
     (panel-sablon/yk/en-*): yan menü, içerik haritası ve alt bilgi bağlantı adları başlık sözlüğünden;
     alt bilgide Telefon/Faks → Phone/Fax.
   - EN arama verisi (srchData) TR arama verisinden: adres, başlık ve bölüm yolu İngilizce; gövde metni
-    Türkçe kalır (EN sayfalarda olduğu gibi).
+    Türkçe kalır (EN sayfalarda olduğu gibi); kur.CEVRILEN_METIN'deki çevrilmiş metinlerin gövdesi İngilizce.
   - EN belge kütüphanesi verisi (libData): belge adı, bölüm yolu ve tür adları İngilizce.
   - Arama ve kütüphane betiklerinde İngilizce aramada "I/ı" eşleşmesi (tr küçük harf dönüşümü yüzünden
     "Investor" bulunamıyordu).
@@ -87,6 +87,16 @@ def k_cevir(k, tr_r):
             return (en_ust + ' ' + bolum_yolu(tr_r)).strip()
     eksik.append(('k', k)); return k
 
+def duz(h):
+    return re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', h))).strip()
+
+def govde_cevir(b):
+    """Gövde metni (TR sayfanın ilk kısmı) çevrilmiş bir metinle başlıyorsa yerine İngilizcesinin tamamı."""
+    for tr_m, (en_m, _) in kur.CEVRILEN_METIN.items():
+        if b.strip() and duz(tr_m).startswith(b.strip()):
+            return duz(en_m)
+    return b
+
 def arama():
     s_tr = oku('arama/index.html'); s = oku('en/search/index.html')
     tr_veri = json_oku(s_tr, 'srchData'); eski = {x['r']: x for x in json_oku(s, 'srchData')}
@@ -98,7 +108,7 @@ def arama():
         if x['r'] in kur.OZEL and en_r in eski:
             out.append(eski[en_r]); continue                 # elle hazırlanmış EN kayıt (iletişim vb.)
         t = EN_BASLIK[x['r']] if katla(x['t']) == katla(TR_BASLIK[x['r']]) else (kisa(x['t'], x['r']) or EN_BASLIK[x['r']])
-        out.append({'r': en_r, 't': t, 'k': k_cevir(x['k'], x['r']), 'b': x['b']})
+        out.append({'r': en_r, 't': t, 'k': k_cevir(x['k'], x['r']), 'b': govde_cevir(x['b'])})
     s = json_betik(s, 'srchData', out)
     s = kucuk_harf(s)
     return kabuk(s), len(out)

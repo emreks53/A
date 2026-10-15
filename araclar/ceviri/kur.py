@@ -327,6 +327,37 @@ ESKI_EN_METIN = {
     '<p>Henüz sitemize sigorta poliçelerimiz eklenmemiştir.</p>': '<p>Our insurance policies has not been added to the site yet.</p>',
 }
 
+# Kullanıcının istediği uzun metin çevirileri (15.10.2026; onay-bekleyen-metinler.md §12). Anahtar TR sayfadaki metin
+# kutusunun içeriği; metnin tamamı çevrildiği için kutudaki lang="tr" de kalkar. TR metin değişirse kur.py durur.
+PROFIL_TR = ('<p>İdealist Gayrimenkul Yatırım Ortaklığı A.Ş. 28.11.2007 tarihinde, ülkemize faydalı, prestijli gayrimenkul '
+             'projelerini en iyi şekilde gerçekleştirmek, kurucularının gayrimenkul sektöründeki bilgi ve tecrübe birikimleriyle '
+             'gerek müşterilerinin, gerekse yatırımcılarının güven ve memnuniyetini sağlamak hedefleriyle hayata geçti.</p>\n'
+             "<p>Sermaye Piyasası Kurulu Mevzuatı ve Gayrimenkul Yatırım Ortaklıklarına İlişkin Esaslar Tebliği'ne (Seri: VI, "
+             'No: 11) göre kurulan İdealist Gayrimenkul Yatırım Ortaklığı A.Ş., değişen ve gelişen gayrimenkul sektöründe öncü '
+             'şirketler arasında yer alma amacındadır. Bu düşünceyle inşaat, pazarlama, finansman ve hukuk faaliyetlerini kurumsal '
+             'bir yapıda profesyonelce yürüterek, her projesinde kalite standartlarını bir basamak daha yükseltecek, likit ve kârlı '
+             'portföyler oluşturacaktır.</p>')
+PROFIL_EN = ('<p>İdealist Gayrimenkul Yatırım Ortaklığı A.Ş. was established on 28.11.2007 with the objectives of delivering, '
+             'in the best possible way, prestigious real estate projects that benefit our country, and of securing the trust and '
+             "satisfaction of both its customers and its investors by drawing on its founders' accumulated knowledge and "
+             'experience in the real estate sector.</p>\n'
+             '<p>Established in accordance with Sermaye Piyasası Kurulu legislation and the Communiqué on Principles Regarding '
+             'Real Estate Investment Companies (Series: VI, No: 11), İdealist Gayrimenkul Yatırım Ortaklığı A.Ş. aims to be among '
+             'the leading companies in the ever-changing and evolving real estate sector. To this end, by conducting its '
+             'construction, marketing, finance and legal activities professionally within a corporate structure, the Company '
+             'will raise its quality standards a step further with every project and build liquid and profitable portfolios.</p>')
+CEVRILEN_METIN = {
+    PROFIL_TR: (PROFIL_EN, {'/', '/kurumsal/', '/kurumsal/sirket-profili/'}),
+}
+
+def metin_cevir(s, tr):
+    for tr_m, (en_m, sayfalar) in CEVRILEN_METIN.items():
+        n = s.count(' lang="tr">' + tr_m + '</div>')
+        if n != (tr in sayfalar):
+            raise SystemExit('çevrilen metin kalıbı tutmadı: %s (%d)' % (tr, n))
+        s = s.replace(' lang="tr">' + tr_m + '</div>', '>' + en_m + '</div>')
+    return s
+
 DIL_TR = re.compile(r'<b aria-current="true" data-astro-cid-nen7h5rs>TR</b><a href="[^"]*" hreflang="en" lang="en" data-astro-cid-nen7h5rs>EN</a>')
 
 def sayfa_kur(tr, en):
@@ -339,13 +370,14 @@ def sayfa_kur(tr, en):
         raise SystemExit('dil seçici kalıbı tutmadı: %s (%d)' % (tr, n))
     for tr_m, en_m in ESKI_EN_METIN.items():
         s = s.replace(' lang="tr">' + tr_m, '>' + en_m).replace(tr_m, en_m)
+    s = metin_cevir(s, tr)
     s, baslik, og = bas_kur(s, s_tr, tr, en, eski_en)
     if tr == '/site-haritasi/':
         s = site_haritasi_sirala(s)
     return s, k.eksik, og
 
 def ana_sayfa_kur():
-    """EN ana sayfa: TR ana sayfadan (aynı yerleşim, profil metni Türkçe), <head> değerleri mevcut EN ana sayfadan."""
+    """EN ana sayfa: TR ana sayfadan (aynı yerleşim, profil metni CEVRILEN_METIN'den), <head> değerleri mevcut EN ana sayfadan."""
     s_tr = oku('index.html'); eski = oku('en/index.html')
     k = Kurucu('/', '/en/')
     s = k.cevir(s_tr)
@@ -353,6 +385,7 @@ def ana_sayfa_kur():
     if n != 2:
         raise SystemExit('ana sayfa dil seçici kalıbı tutmadı')
     s = s.replace('<html lang="tr"', '<html lang="en"', 1)
+    s = metin_cevir(s, '/')
     # Yatırımcı Köşesi kutusu: kısa ad (sunucu kodundaki EN adla aynı; kutu yüksekliği TR ile eşit kalsın)
     s, n = re.subn(r'(<a data-ek="ir-mali"[^>]*>)Financial Statements and Reports, ', r'\1Financial Statements, ', s)
     if n != 1:

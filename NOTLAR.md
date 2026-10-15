@@ -112,6 +112,8 @@ formu doğrulaması, üst menünün kaydırmada titrememesi denendi. Bulunup dü
   yazılarının altına değiyor. Vitrin: projelerin bitmiş hâlleri (Şile, İdealist Cadde).
 - EN site (15.10.2026): başlıklar, menüler ve liste/haber başlıkları İngilizce; uzun metinler (haber, açıklama, politika
   metinleri) ve belge adları Türkçe kalır; SPK, KAP gibi özel isimler çevrilmez. Belgelerin (PDF) kendisine dokunulmaz.
+  İstisna: Şirket Profili'nin iki paragrafı kullanıcı isteğiyle İngilizceye çevrildi (ana sayfa, About Us, Company
+  Profile, EN arama; `kur.py` → `CEVRILEN_METIN`, metin onay-bekleyen-metinler.md §12).
 - Üst siyah şerit kaldırıldı; bağlantıları (Bilgi Toplumu Hizmetleri, KAP, Site Haritası, Arama, TR/EN) mobil menüye
   ve masaüstünde arama simgesi + dil seçimine taşındı.
 

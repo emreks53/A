@@ -95,3 +95,20 @@ Yeni arayüz metinleri (seçme):
 | "İdealist GYO {başlık}: documents and disclosures. Borsa Istanbul: IDGYO." / "{başlık} — İdealist Gayrimenkul Yatırım Ortaklığı A.Ş." | EN sayfa açıklamaları (meta description), TR'deki kalıbın karşılığı | ☐ |
 | Investor Relations, About Us, News & Announcements, In Media, Portfolio and Projects | EN paylaşım görsellerindeki bölüm adı | ☐ |
 
+Şirket Profili metninin çevirisi (kullanıcı isteği 15.10.2026: "bu iki paragrafı da İngilizceye en doğru şekilde çevir").
+EN ana sayfa, About Us ve Company Profile sayfalarında ve EN arama verisinde; kaynak `araclar/ceviri/kur.py` →
+`CEVRILEN_METIN`. Metnin tamamı çevrildiği için bu kutudaki `lang="tr"` kaldırıldı. Sermaye Piyasası Kurulu özel isim
+olduğu için çevrilmedi; Tebliğ adı ÖDA başlıklarındaki karşılıkla aynı ("Communiqué on Principles Regarding Real Estate
+Investment Companies"). Durum: ☐
+
+> İdealist Gayrimenkul Yatırım Ortaklığı A.Ş. was established on 28.11.2007 with the objectives of delivering, in the
+> best possible way, prestigious real estate projects that benefit our country, and of securing the trust and
+> satisfaction of both its customers and its investors by drawing on its founders' accumulated knowledge and experience
+> in the real estate sector.
+>
+> Established in accordance with Sermaye Piyasası Kurulu legislation and the Communiqué on Principles Regarding Real
+> Estate Investment Companies (Series: VI, No: 11), İdealist Gayrimenkul Yatırım Ortaklığı A.Ş. aims to be among the
+> leading companies in the ever-changing and evolving real estate sector. To this end, by conducting its construction,
+> marketing, finance and legal activities professionally within a corporate structure, the Company will raise its
+> quality standards a step further with every project and build liquid and profitable portfolios.
+
