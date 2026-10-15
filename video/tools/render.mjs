@@ -34,7 +34,7 @@ const page = await browser.newPage({ viewport: { width: W, height: H } });
 const logs = [];
 page.on('console', m => { const t = `[${m.type()}] ${m.text()}`; logs.push(t); if (m.type() === 'error' || m.type() === 'warning' || opt.verbose) console.log('page', t); });
 page.on('pageerror', e => { console.log('PAGE ERROR', e.message); logs.push('pageerror ' + e.message); });
-const url = `http://127.0.0.1:${port}/index.html?scene=${info.id}&scale=${scale}&msaa=${opt.msaa ?? 0}&smaa=${opt.smaa ?? 1}`;
+const url = `http://127.0.0.1:${port}/index.html?scene=${info.id}&scale=${scale}&msaa=${opt.msaa ?? 0}&smaa=${opt.smaa ?? 1}&fps=${opt.fps ?? timeline.fps ?? 30}`;
 const tSetup = Date.now();
 await page.goto(url);
 await page.waitForFunction('window.ENGINE && (window.ENGINE.ready || window.ENGINE.error)', null, { timeout: 180000 });

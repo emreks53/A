@@ -41,16 +41,30 @@ for i in range(1, len(S)):
     filters.append(f"[{cur}][v{i}]xfade=transition={tr}:duration={d}:offset={off:.4f}[x{i}]"); cur = f'x{i}'
 
 post = f"[{cur}]fade=t=in:st=0:d=0.35,fade=t=out:st={TOTAL - 0.9:.3f}:d=0.9"
-if '--nosubs' not in args:
+CANVAS_CAPS = '--canvas-captions' in args
+if CANVAS_CAPS:
+    # Step 1: caption-free picture -> measure luminance under the caption band -> render the caption layer
+    nosubs = os.path.join(ROOT, 'out/_nosubs.mp4')
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-stats', *inputs, '-filter_complex', ';'.join(filters + [post + '[vout]']), '-map', '[vout]', '-t', f'{TOTAL:.3f}', '-c:v', 'libx264', '-preset', 'medium', '-crf', '10', '-pix_fmt', 'yuv420p', '-r', str(FPS), nosubs], check=True)
+    meta = subprocess.run(['ffmpeg', '-loglevel', 'error', '-i', nosubs, '-vf', 'crop=880:260:100:1360,signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-', '-f', 'null', '-'], capture_output=True, text=True).stdout
+    import re as _re
+    luma = [round(float(v) / 255, 4) for v in _re.findall(r'YAVG=([\d.]+)', meta)]
+    json.dump(luma, open(os.path.join(ROOT, 'data/caption_luma.json'), 'w'))
+    subprocess.run(['node', os.path.join(ROOT, 'tools/render_captions.mjs'), '--style', opt('capstyle', 'serif'), '--video'], check=True)
+    inputs = ['-i', nosubs, '-i', os.path.join(ROOT, 'out/captions_layer.mov')]
+    filters = ['[0:v][1:v]overlay=0:0:format=auto,format=yuv420p[vout]']
+    S = [None]  # audio input index becomes 2 below
+elif '--nosubs' not in args:
     ass = os.path.join(ROOT, 'out/captions.ass'); fonts = os.path.join(ROOT, 'assets/fonts')
     post += f",subtitles={ass}:fontsdir={fonts}" + (":original_size=1080x1920" if preview else '')
-post += "[vout]"; filters.append(post)
+if not CANVAS_CAPS:
+    post += "[vout]"; filters.append(post)
 
 mix = os.path.join(ROOT, opt('audio', 'out/mix.wav'))
 inputs += ['-i', mix]
 out = os.path.join(ROOT, opt('out', 'out/final_preview.mp4' if preview else 'out/final.mp4'))
 cmd = ['ffmpeg', '-y', '-loglevel', 'error', '-stats', *inputs, '-filter_complex', ';'.join(filters),
-       '-map', '[vout]', '-map', f'{len(S)}:a', '-t', f'{TOTAL:.3f}',
+       '-map', '[vout]', '-map', f'{(2 if CANVAS_CAPS else len(S))}:a', '-t', f'{TOTAL:.3f}',
        '-c:v', 'libx264', '-preset', 'veryfast' if preview else 'slow', '-crf', opt('crf', '26' if preview else '18'), '-profile:v', 'high',
        '-pix_fmt', 'yuv420p', '-r', str(FPS), '-c:a', 'aac', '-b:a', '192k', '-ar', '48000',
        '-af', f'afade=t=out:st={TOTAL - 0.9:.3f}:d=0.9', '-movflags', '+faststart', out]

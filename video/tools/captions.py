@@ -165,3 +165,7 @@ with open(out, 'w', encoding='utf-8') as f:
 print(len(phrases), 'phrases,', len(events), 'events ->', out)
 for ph in phrases[:60]:
     print(f"{ph[0]['s']:7.2f}  {' '.join(x['w'] for x in ph)}")
+
+# Also export phrases for the canvas caption renderer (tools/render_captions.mjs)
+json.dump([[{'w': clean(x['w']), 's': x['s'], 'e': x['e']} for x in ph] for ph in phrases],
+          open(os.path.join(ROOT, 'data/phrases.json'), 'w'), ensure_ascii=False)

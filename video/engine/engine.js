@@ -74,7 +74,9 @@ async function main() {
 
   const pmap = { aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neutral: THREE.NeutralToneMapping };
   let frameNo = 0;
-  function renderFrame(t) {
+  const FPS = +(P.get('fps') || 30);
+  const acc = document.createElement('canvas'); acc.width = W; acc.height = H; const accX = acc.getContext('2d'); accX.imageSmoothingEnabled = true; accX.imageSmoothingQuality = 'high';
+  function renderFrame(t, compose = true, seed = null) {
     ctx.t = t; ui.clear();
     scene.traverse(o => { if (o.userData.uniforms && o.userData.uniforms.time) o.userData.uniforms.time.value = t; if (o.userData.update) o.userData.update(t, ctx); });
     S.update(t, ctx);
@@ -84,7 +86,7 @@ async function main() {
     renderer.toneMapping = pmap[post.toneMapping] ?? THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = post.exposure;
     pp.bloom.enabled = post.bloom.enabled; pp.bloom.strength = post.bloom.strength; pp.bloom.radius = post.bloom.radius; pp.bloom.threshold = post.bloom.threshold;
     pp.gtao.enabled = !!post.ao.enabled;
-    pp.finish.p = post; pp.finish.u.seed.value = (frameNo++ % 97) * 1.37 + t;
+    pp.finish.p = post; pp.finish.u.seed.value = seed ?? ((frameNo++ % 97) * 1.37 + t);
     if (post.dof.enabled && !post.dof.tiltShift) {
       const hidden = []; scene.traverse(o => { if (o.visible && (o.userData.noDepth || o.isPoints || o.isSprite || (o.material && o.material.transparent && !o.userData.depthOk))) { o.visible = false; hidden.push(o); } });
       const bg = scene.background; scene.background = null; scene.overrideMaterial = depthMat;
@@ -93,11 +95,23 @@ async function main() {
       pp.finish.u.tDepth.value = depthRT.texture; pp.finish.u.cNear.value = camera.near; pp.finish.u.cFar.value = camera.far;
     }
     pp.composer.render();
+    if (!compose) return;
     outX.drawImage(renderer.domElement, 0, 0, W, H);
     outX.drawImage(overlay, 0, 0);
   }
+  // Motion blur: post.motionBlur = { samples: 2..5, shutter: 0.5 } (fraction of a frame). Sub-frames are averaged;
+  // the overlay (typography) comes from the sub-frame closest to t, so text stays crisp.
+  function renderBlurred(t) {
+    const mb = post.motionBlur; const n = Math.max(1, Math.round((mb && mb.samples) || 1));
+    if (n <= 1) { renderFrame(t); return; }
+    const sh = (mb.shutter ?? 0.5) / FPS; const seed = (frameNo++ % 97) * 1.37 + t;
+    const ts = []; for (let i = 0; i < n; i++) ts.push(t - sh / 2 + sh * (i + 0.5) / n);
+    ts.sort((a, b) => Math.abs(b - t) - Math.abs(a - t));
+    ts.forEach((ti, k) => { renderFrame(ti, false, seed); accX.globalAlpha = 1 / (k + 1); accX.drawImage(renderer.domElement, 0, 0, W, H); });
+    accX.globalAlpha = 1; outX.drawImage(acc, 0, 0); outX.drawImage(overlay, 0, 0);
+  }
   async function grab(t, quality = 0.92) {
-    renderFrame(t);
+    renderBlurred(t);
     const blob = await new Promise(res => out.toBlob(res, 'image/jpeg', quality));
     const u = new Uint8Array(await blob.arrayBuffer()); let s = ''; for (let i = 0; i < u.length; i += 32768) s += String.fromCharCode.apply(null, u.subarray(i, i + 32768));
     return btoa(s);
