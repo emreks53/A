@@ -118,6 +118,14 @@ async function main() {
     return btoa(s);
   }
   let tris = 0; scene.traverse(o => { if (o.isMesh && o.geometry) { const g = o.geometry; const n = (g.index ? g.index.count : g.attributes.position.count) / 3; tris += o.isInstancedMesh ? n * o.count : n; } });
-  window.ENGINE = { ready: true, info, grab, renderFrame, setupMs, stats: () => ({ tris: Math.round(tris), calls: renderer.info.render.calls, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries }) };
+  // camera probe (no rendering): run the per-frame logic and report the live camera -> used by tools/camprobe.mjs
+  function probeCamera(t) {
+    ctx.t = t; ui.clear();
+    scene.traverse(o => { if (o.userData.uniforms && o.userData.uniforms.time) o.userData.uniforms.time.value = t; if (o.userData.update) o.userData.update(t, ctx); });
+    S.update(t, ctx); camera.updateMatrixWorld();
+    const p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3(); camera.matrixWorld.decompose(p, q, s);
+    return [p.x, p.y, p.z, q.x, q.y, q.z, q.w, camera.fov];
+  }
+  window.ENGINE = { ready: true, info, grab, renderFrame, probeCamera, setupMs, stats: () => ({ tris: Math.round(tris), calls: renderer.info.render.calls, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries }) };
 }
 main().catch(e => { console.error('ENGINE ERROR', e && e.stack || e); window.ENGINE = { error: String(e && e.stack || e) }; });

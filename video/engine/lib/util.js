@@ -93,7 +93,8 @@ export function cameraRig(camera, o) {
     pos: pc, look: lc,
     update(t, extra = {}) {
       const p = prog(t, o.t0, o.t1, o.ease || 'inOutSine');
-      const P = pc.getPoint(p), L = lc.getPoint(p);
+      // o.arc: arc-length parametrisation (constant speed along unequal segments; avoids speed kinks at knots)
+      const P = o.arc ? pc.getPointAt(p) : pc.getPoint(p), L = o.arc ? lc.getPointAt(p) : lc.getPoint(p);
       if (o.shake) P.add(shake(t, o.shake.amp ?? .02, o.shake.freq ?? .5, 7));
       camera.position.copy(P); camera.lookAt(L);
       if (o.roll) camera.rotateZ(typeof o.roll === 'function' ? o.roll(t) : o.roll);

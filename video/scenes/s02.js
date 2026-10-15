@@ -47,12 +47,12 @@ export default {
     R.rigA = U.cameraRig(R.camA, {
       pos: [[6, 10, 95], [4.8, 12.5, 86], [1.8, 17, 70], [-0.8, 21, 61]],
       look: [[4.6, 24.8, -4], [3.6, 24.8, -4], [2.2, 24.2, -4], [1.8, 23.6, -4]],
-      t0: -0.6, t1: 5.0, ease: t => .34 * t + .66 * (-(Math.cos(Math.PI * t) - 1) / 2), shake: { amp: .05, freq: .35 },
+      t0: -0.6, t1: 5.0, ease: t => .34 * t + .66 * (-(Math.cos(Math.PI * t) - 1) / 2), shake: { amp: .05, freq: .35 }, arc: true,
     });
     R.rigB = U.cameraRig(R.camB, {
       pos: [[0.36, 1.7, 2.3], [0.08, 1.62, 3.8], [-0.3, 1.57, 4.72], [-0.38, 1.56, 4.86]],
       look: [[0.0, 1.66, 0], [0.0, 1.56, 0], [0.01, 1.505, 0], [0.01, 1.5, 0]],
-      t0: 4.1, t1: 6.6, ease: t => 1 - Math.pow(1 - t, 2.6), shake: { amp: .004, freq: .5 },
+      t0: 4.1, t1: 6.6, ease: t => 1 - Math.pow(1 - t, 2.6), shake: { amp: .004, freq: .5 }, arc: true,
     });
 
     // ---- cross-dissolve: set A rendered to a linear HDR target, shown on a camera-locked quad over set B ----
@@ -124,10 +124,10 @@ export default {
     // the Medina headline holds until the dissolve, then fades over 4.26–4.46 (before "KENDİ ZÂTI" pops) — alpha via colours
     const fo = 1 - U.smoothstep(D0 + .02, tKe + .04, t), ca = (rgb, a) => `rgba(${rgb},${(a * fo).toFixed(3)})`;
     if (fo > 0) {
-      { const e = ui.env(t, tK - .15, Infinity, .5, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .4 * fo; X.translate(TX, 405); X.scale(1, .44); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 640); gr.addColorStop(0, 'rgba(40,28,44,.75)'); gr.addColorStop(.45, 'rgba(40,28,44,.4)'); gr.addColorStop(1, 'rgba(40,28,44,0)'); X.fillStyle = gr; X.fillRect(-640, -640, 1280, 1280); X.restore(); } }
+      { const e = ui.env(t, tK - .15, Infinity, .5, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .26 * fo; X.translate(TX, U.lerp(345, 430, U.smoothstep(tEn, tMu + .2, t))); X.scale(1, .44); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 640); gr.addColorStop(0, 'rgba(40,28,44,.75)'); gr.addColorStop(.45, 'rgba(40,28,44,.4)'); gr.addColorStop(1, 'rgba(40,28,44,0)'); X.fillStyle = gr; X.fillRect(-640, -640, 1280, 1280); X.restore(); } }
       ui.text("Kur'ân'dan sonra", { t, t0: tK - .05, x: TX, y: 318, size: 56, weight: 800, color: ca('255,244,220', 1), anim: 'rise', shadowBlur: 22, shadowColor: ca('60,25,10', .6) });
       ui.text('EN BÜYÜK', { t, t0: tEn + .02, x: TX, y: 400, size: 74, weight: 900, color: ca('255,210,122', 1), anim: 'pop', letterSpacing: 2, shadowBlur: 26, shadowColor: ca('60,20,0', .6) });
-      ui.text("MU'CİZE", { t, t0: tMu - .02, x: TX, y: 490, size: 98, weight: 900, color: ca('255,210,122', 1), anim: 'pop', letterSpacing: 3, shadowBlur: 30, shadowColor: ca('60,20,0', .65) });
+      ui.text("MU'CİZE", { t, t0: tMu - .02, x: TX, y: 514, size: 98, weight: 900, color: ca('255,210,122', 1), anim: 'pop', letterSpacing: 3, shadowBlur: 30, shadowColor: ca('60,20,0', .65) });
     }
     { const e = ui.env(t, tKe - .05, Infinity, .6, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .5; X.translate(540, 330); X.scale(1, .32); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 560); gr.addColorStop(0, 'rgba(36,20,10,.85)'); gr.addColorStop(.6, 'rgba(36,20,10,.45)'); gr.addColorStop(1, 'rgba(36,20,10,0)'); X.fillStyle = gr; X.fillRect(-560, -560, 1120, 1120); X.restore(); } }
     ui.text('KENDİ ZÂTI', { t, t0: tKe + .04, x: 540, y: 282, size: 100, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 6, shadowBlur: 26, shadowColor: 'rgba(40,15,0,.65)' });
@@ -223,7 +223,7 @@ function buildMedina(ctx, G) {
   const shTex = TEX.drawTexture(128, 128, (x, w, h) => { const g = x.createRadialGradient(64, 64, 4, 64, 64, 64); g.addColorStop(0, 'rgba(60,40,25,.55)'); g.addColorStop(.5, 'rgba(60,40,25,.22)'); g.addColorStop(1, 'rgba(60,40,25,0)'); x.fillStyle = g; x.fillRect(0, 0, w, h); });
   const shMat = new THREE.MeshBasicMaterial({ map: shTex, transparent: true, depthWrite: false, opacity: 1 });
   R.posts = [];
-  for (const [x, z] of [[3, 75], [10, 58], [-1, 50]]) {
+  for (const [x, z] of [[3, 75], [10, 58], [-6, 50]]) {
     const lp = S2.lampPost(MT, postStone); lp.position.set(x, 0, z); lp.rotation.y = x * .1; G.add(lp); R.posts.push(lp);
     const cs = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2).rotateX(-Math.PI / 2), shMat); cs.position.set(x + .5, .015, z - .3); cs.renderOrder = 1; cs.userData.noDepth = true; G.add(cs);
   }
@@ -428,7 +428,7 @@ function hilyeDraw(x, W, H, mask, ebruC) {
   }
   const ax = bx + 120, aw = bw - 240;
   x.fillStyle = C.lapis; x.fillRect(ax, ay, aw, ah); x.strokeStyle = C.gold; x.lineWidth = 5; x.strokeRect(ax, ay, aw, ah);
-  ar(AR.ayet, W / 2, ay + ah / 2 + 6, aw - 60, 72, C.gold);
+  ar(AR.ayet, W / 2, ay + ah / 2 + 5, aw - 60, 60, C.gold);
 
   // --- etek (lower part): illuminated şemse medallion + corner pieces, no lettering ---
   const ey = 1176, eh = H - 124 - ey;
