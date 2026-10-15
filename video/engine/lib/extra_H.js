@@ -650,7 +650,7 @@ export function drawRisaleCover(x, W, H, { title = 'SÖZLER', top = 'Risale-i Nu
   x.restore();
 }
 // Spine artwork (white foil): rules, fleurons, title panel with vertical (top-to-bottom) title. title: string or [lines].
-export function drawRisaleSpine(x, W, H, { title = 'SÖZLER', panel = [.17, .7] } = {}) {
+export function drawRisaleSpine(x, W, H, { title = 'SÖZLER', panel = [.17, .7], family = 'Cinzel', weight = 700 } = {}) {
   x.save(); x.clearRect(0, 0, W, H); x.fillStyle = x.strokeStyle = '#ffffff'; x.lineCap = 'round';
   const u = W / 10;
   const rule = (y, lw) => { x.fillRect(0, y - lw / 2, W, lw); };
@@ -663,8 +663,8 @@ export function drawRisaleSpine(x, W, H, { title = 'SÖZLER', panel = [.17, .7] 
   const lines = Array.isArray(title) ? title : [title]; const n = lines.length;
   x.save(); x.translate(W / 2, (py0 + py1) / 2); x.rotate(Math.PI / 2); x.textAlign = 'center'; x.textBaseline = 'middle';
   const colW = W * .46 / n; let fs = Infinity;
-  for (const ln of lines) { const f = fitFont(x, ln, 700, 'Cinzel', (py1 - py0) * .84, colW * .95, .05); fs = Math.min(fs, f); }
-  x.font = `700 ${fs}px "Cinzel"`; if ('letterSpacing' in x) x.letterSpacing = `${fs * .05}px`;
+  for (const ln of lines) { const f = fitFont(x, ln, weight, family, (py1 - py0) * .84, colW * 1.05, .06); fs = Math.min(fs, f); }
+  x.font = `${weight} ${fs}px "${family}"`; if ('letterSpacing' in x) x.letterSpacing = `${fs * .06}px`;
   lines.forEach((ln, i) => x.fillText(ln, 0, (i - (n - 1) / 2) * colW * 1.08));
   x.restore(); x.restore();
 }

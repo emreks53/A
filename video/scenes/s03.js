@@ -116,11 +116,9 @@ export default {
           const hd = new THREE.Mesh(new THREE.ConeGeometry(.035, .24, 6), iron); hd.scale.z = .45; hd.position.y = h + .12; sp.add(hd);
           const bd = new THREE.Mesh(new THREE.CylinderGeometry(.022, .022, .06, 6), iron); bd.position.y = h - .01; sp.add(bd);
           sp.position.set(x, hAt(x, z) - .1, z); sp.rotation.set(rx, 0, rz); M.shadowAll(sp); G.add(sp); });
-        const shieldMat = MAT.leather({ a: '#7a3a20', b: '#3a1a0c' });
-        const shG = new THREE.Group(); const sh = new THREE.Mesh(new THREE.CylinderGeometry(.27, .27, .045, 32), shieldMat); shG.add(sh);
-        const boss = new THREE.Mesh(new THREE.SphereGeometry(.065, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), MAT.brass()); boss.position.y = .025; shG.add(boss);
-        const rim = new THREE.Mesh(new THREE.TorusGeometry(.27, .016, 6, 40), MAT.brass()); rim.rotation.x = Math.PI / 2; shG.add(rim);
-        shG.rotation.set(Math.PI / 2 - .35, 0, 0); shG.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), -1.1); shG.position.set(1.95, hAt(1.95, -6.0) + .26, -6.0); M.shadowAll(shG); G.add(shG);
+        // a rolled leather saddle-bag and a coil of rope by the spears (war camp gear, no faces/figures)
+        { const bag = new THREE.Mesh(new THREE.CapsuleGeometry(.12, .42, 6, 14), MAT.leather({ a: '#6a3a22', b: '#3a1e10' })); bag.rotation.set(0, .7, Math.PI / 2); bag.position.set(1.5, hAt(1.5, -6.05) + .11, -6.05); bag.castShadow = bag.receiveShadow = true; G.add(bag);
+          const coil = new THREE.Mesh(new THREE.TorusGeometry(.16, .035, 8, 24), ropeMat); coil.rotation.x = Math.PI / 2; coil.position.set(2.05, hAt(2.05, -6.2) + .035, -6.2); coil.castShadow = true; G.add(coil); }
       }
     }
 

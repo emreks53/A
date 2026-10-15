@@ -172,7 +172,7 @@ export default {
     const edgeMat = new THREE.MeshStandardMaterial({ map: edgeTex, roughness: .92 });
     const edgeMatDS = new THREE.MeshStandardMaterial({ map: edgeTex, roughness: .92, side: THREE.DoubleSide });
     const coverMaps = t => foilLeather({ W: 1024, H: 1468, draw: (x, W, H) => drawRisaleCover(x, W, H, { title: t }), base: RED, dark: RED_D, seed: t.length, grainPx: 230 });
-    const spineMaps = (title, w, seed) => foilLeather({ W: 192, H: 1024, draw: (x, W, H) => drawRisaleSpine(x, W, H, { title }), base: RED, dark: RED_D, seed, grainPx: 156, blur: 1.1, deboss: 1.6 });
+    const spineMaps = (title, w, seed) => foilLeather({ W: 192, H: 1024, draw: (x, W, H) => drawRisaleSpine(x, W, H, { title, family: 'Cormorant Garamond' }), base: RED, dark: RED_D, seed, grainPx: 156, blur: 1.1, deboss: 1.6 });
 
     // ---------- rahle + MEKTUBAT (animated opening) ----------
     const rahle = M.rahle({ length: .42, width: .25, angle: 1.1, material: grainWood({ a: '#9c673a', b: '#7f4f2b', seed: 61, streaks: 320, repeat: [1.6, 1.6], clearcoat: .55, roughness: .38 }) });
@@ -313,29 +313,32 @@ export default {
     steam.position.set(0, .106 + .13, 0); steam.userData.uniforms = steamU; steam.userData.yBillboard = true; steam.userData.noDepth = true; steam.renderOrder = 10; tea.add(steam);
 
     // ---------- red rose (cupped spiral petals) lying on the table ----------
-    const rose = new THREE.Group(); rose.position.set(-.09, TABLE_Y + .027, .27); rose.rotation.set(0, 1.94, 0); rose.scale.setScalar(1.3); scene.add(rose); R.rose = rose;
-    const petalMat = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .55, sheen: 1, sheenColor: new THREE.Color('#ff8a9a'), sheenRoughness: .35, side: THREE.DoubleSide });
+    const rose = new THREE.Group(); rose.position.set(-.09, TABLE_Y + .032, .27); rose.rotation.set(0, 1.94, 0); rose.scale.setScalar(1.05); scene.add(rose); R.rose = rose;
+    const petalMat = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .5, sheen: .7, sheenColor: new THREE.Color('#ff3a50'), sheenRoughness: .4, side: THREE.DoubleSide });
     const head = new THREE.Group(); head.rotation.z = Math.PI / 2 - .2; rose.add(head);
-    const cBase = new THREE.Color('#4a0610'), cMid = new THREE.Color('#a3101f'), cTip = new THREE.Color('#c8283a');
-    const NP = 34;
-    for (let i = 0; i < NP; i++) {
-      const L = i / (NP - 1); const pw = .012 + L * .028, ph = .016 + L * .019;
-      const geo = new THREE.PlaneGeometry(1, 1, 10, 10); const p = geo.attributes.position; const col = new Float32Array(p.count * 3);
-      for (let k = 0; k < p.count; k++) {
-        const px = p.getX(k) * 2, py = p.getY(k) + .5; // px -1..1, py 0..1
-        const half = pw / 2 * (.3 + .7 * Math.pow(Math.sin(Math.PI / 2 * Math.min(1, py / .72)), .8));
-        const X = px * half, Y = py * ph - px * px * ph * .16 * py;           // rounded top edge
-        const cup = -(px * px) * half * (.75 - L * .35);                         // cupped across
-        const lean = py * py * ph * (.1 + (1 - L) * .35);                       // inner petals wrap inward
-        const curl = py > .6 ? Math.pow((py - .6) / .4, 2) * ph * (.04 + L * .4) : 0; // rim rolls back
-        p.setXYZ(k, X, Y, cup + lean - curl);
-        const c = cBase.clone().lerp(cMid, Math.min(1, py * 1.7)).lerp(cTip, Math.max(0, py - .65) * 1.5 * (.3 + L * .7)); const sh = .82 + .18 * Math.abs(px);
-        col[k * 3] = c.r * sh; col[k * 3 + 1] = c.g * sh; col[k * 3 + 2] = c.b * sh;
+    // concentric layers of cupped petals on a surface of revolution: tight spiral bud in the middle, opening, reflexed rims outside
+    const cBase = new THREE.Color('#3e040c'), cMid = new THREE.Color('#9c0d1e'), cTip = new THREE.Color('#c42238');
+    const LAY = [3, 4, 5, 5, 6, 7], NU = 8, NV = 10;
+    LAY.forEach((n, k) => {
+      const o = k / (LAY.length - 1), dphi = Math.PI * 2 / n * 1.38, phase = k * 2.39996;
+      for (let j = 0; j < n; j++) {
+        const phi0 = phase + j * Math.PI * 2 / n;
+        const geo = new THREE.PlaneGeometry(1, 1, NU, NV); const p = geo.attributes.position; const col = new Float32Array(p.count * 3);
+        for (let q = 0; q < p.count; q++) {
+          const u = p.getX(q) + .5, v0 = p.getY(q) + .5; const e = 2 * u - 1;
+          const v = v0 * (1 - .22 * e * e);                                   // rounded petal top
+          const phi = phi0 + e * dphi / 2;
+          let r = .0016 + k * .0016 + v * (.0035 + o * .013) + Math.pow(v, 3) * o * .007 - (1 - o) * .0012 * e * e;
+          let y = v * (.019 - o * .006) - Math.pow(v, 4) * o * .005;
+          r *= 1 + .06 * Math.sin(phi * 3 + k); // slight irregularity
+          p.setXYZ(q, Math.cos(phi) * r, y, Math.sin(phi) * r);
+          const c = cBase.clone().lerp(cMid, Math.min(1, v * 2.2)).lerp(cTip, Math.max(0, v - .7) * 2.2 * (.4 + .6 * o)); const sh = .8 + .2 * Math.abs(e);
+          col[q * 3] = c.r * sh; col[q * 3 + 1] = c.g * sh; col[q * 3 + 2] = c.b * sh;
+        }
+        geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
+        const m = new THREE.Mesh(geo, petalMat); m.position.y = -.004; head.add(m);
       }
-      geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
-      const m = new THREE.Mesh(geo, petalMat); const a = i * 2.39996; const rr = .001 + L * .0075;
-      m.position.set(Math.cos(a) * rr, -.006 + L * .0025, Math.sin(a) * rr); m.rotation.set(0, -a + Math.PI / 2, 0); m.rotateX(-(.02 + Math.pow(L, 1.5) * .78)); head.add(m);
-    }
+    });
     const sepMat = new THREE.MeshStandardMaterial({ color: '#35602a', roughness: .55, side: THREE.DoubleSide });
     for (let i = 0; i < 5; i++) { const s = new THREE.Mesh(new THREE.ConeGeometry(.0035, .024, 4).translate(0, .012, 0), sepMat); const a = i * 1.2566; s.position.set(Math.cos(a) * .006, -.007, Math.sin(a) * .006); s.rotation.set(Math.sin(a) * 2.0, 0, -Math.cos(a) * 2.0); head.add(s); }
     const stemCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, -.008, 0), new THREE.Vector3(0, -.05, .001), new THREE.Vector3(.002, -.1, .002), new THREE.Vector3(0, -.15, 0)]);

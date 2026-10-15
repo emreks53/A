@@ -427,7 +427,7 @@ export function letters() {
   const seal = M(latheGeo([[0, 0], [.02, 0], [.022, .002], [.019, .005], [.012, .006], [0, .0062]], 20), new THREE.MeshPhysicalMaterial({ color: '#8e1d1d', roughness: .35, clearcoat: .6 })); seal.rotation.x = PI / 2; seal.position.set(-.055, -.025, zf + .001); stack.add(seal);
   // dried rose tucked under the twine
   const rose = new THREE.Group(); rose.position.set(-.075, .045, zf + .02); rose.rotation.set(.0, 0, .9); stack.add(rose);
-  const head = roseHead({ dried: true, size: 1.0, seed: 12 }); head.rotation.x = -PI / 2 + .25; head.position.set(0, .0, .01); rose.add(head);
+  const head = roseHead({ dried: true, size: 1.0, seed: 12 }); head.rotation.x = PI / 2 - .35; head.position.set(0, .0, .016); rose.add(head); // bloom faces the viewer
   const stemMat = new THREE.MeshStandardMaterial({ color: '#5a5032', roughness: .8 });
   rose.add(M(tube([V(0, -.01, .006), V(.0, -.07, .003), V(.004, -.13, .0), V(.01, -.19, .001)], u => .0028 * (1 - .3 * u), 12, 5), stemMat));
   const leaf = M(surface((u, v) => { const uu = u * 2 - 1; const w = .011 * Math.sin(PI * v); return [uu * w, -v * .04, Math.abs(uu) * w * .5 + Math.sin(v * 5) * .002]; }, 6, 8), new THREE.MeshStandardMaterial({ color: '#6a6236', roughness: .8, side: THREE.DoubleSide })); leaf.position.set(.004, -.09, .004); leaf.rotation.z = .9; rose.add(leaf);
@@ -451,11 +451,12 @@ export function cesme() {
   const rg = mergeVertices(new THREE.IcosahedronGeometry(1, 5).deleteAttribute('uv').deleteAttribute('normal')); { const p = rg.attributes.position; const top = .1, hb = .062, hd = .034;
     const se = (v, e) => Math.sign(v) * Math.pow(Math.abs(v), e); // superellipse: sphere -> rounded block (a worn stone, not a blob)
     for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const n = Math.sin(x * 3.1 + 1) * Math.sin(y * 2.7 + 2) * .06 + Math.sin(z * 5.3 + x * 4.1) * .04 + Math.sin(x * 13 + z * 11 + y * 7) * .018 + Math.sin(x * 29 - z * 23) * .007;
-      x = se(x, .6); z = se(z, .6); y = se(y, .62); x *= .155 * (1 + n) * (1 - .12 * Math.max(0, y)); z *= .13 * (1 + n) * (1 - .12 * Math.max(0, y)); y = y < 0 ? y * .02 : y * top * (1 + n * .5); const r = Math.hypot(x - .01, z);
+      const fac = Math.round(Math.atan2(z, x) / (PI / 3.5)) * (PI / 3.5), cut = 1 - .06 * (1 - Math.cos(Math.atan2(z, x) - fac)) * 8; // chisel facets
+      x = se(x, .55); z = se(z, .55); y = se(y, .7); x *= .165 * (1 + n) * cut * (1 - .16 * Math.max(0, y)); z *= .14 * (1 + n) * cut * (1 - .16 * Math.max(0, y)); y = y < 0 ? y * .02 : y * top * .9 * (1 + n * .6); const r = Math.hypot(x - .01, z);
       if (r < hb * 1.15) { const yb = top * .93 - hd * Math.max(0, 1 - (r / hb) ** 2); y = Math.min(y, yb + Math.max(0, r - hb) * .4); }
-      p.setXYZ(i, x, y, z); } rg.computeVertexNormals(); const uvs = []; for (let i = 0; i < p.count; i++) uvs.push(p.getX(i) * 4 + .5, p.getZ(i) * 4 + p.getY(i) * 3); rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); }
+      p.setXYZ(i, x, y, z); } rg.computeVertexNormals(); { const cc = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const r = Math.hypot(p.getX(i) - .01, p.getZ(i)); const wet = Math.max(0, 1 - Math.max(0, r - hb) / .035) * (p.getY(i) > .05 ? 1 : 0); const v = 1 - .42 * wet; cc.set([v * .98, v, v * 1.03], i * 3); } rg.setAttribute('color', new THREE.BufferAttribute(cc, 3)); } const uvs = []; for (let i = 0; i < p.count; i++) uvs.push(p.getX(i) * 4 + .5, p.getZ(i) * 4 + p.getY(i) * 3); rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); }
   const rt = TEX.stone({ a: '#b9b4aa', b: '#77736b', seed: 29 });
-  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: rt.map, normalMap: rt.normalMap, normalScale: V2(1.4, 1.4), roughness: .6, clearcoat: .35, clearcoatRoughness: .4, color: '#b4b0a8', sheen: .2, sheenColor: new THREE.Color('#9fb0b8') }));
+  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: rt.map, normalMap: rt.normalMap, normalScale: V2(1.6, 1.6), roughness: .66, clearcoat: .3, clearcoatRoughness: .4, color: '#a8a49c', vertexColors: true }));
   rock.position.set(mouth.x - .01, 0, mouth.z); g.add(rock);
   const surfY = .081;
   const ws = waterSurface({ color: '#3a7a80', opacity: .82, amb: .00015 });

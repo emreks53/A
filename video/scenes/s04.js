@@ -511,7 +511,7 @@ export default {
     }
 
     // --- typography ---
-    { const a = U.clamp((t - 4.15) / .3) * (1 - U.prog(t, 5.4, 5.65)); if (a > 0) { const g = X.createLinearGradient(0, 150, 0, 560); g.addColorStop(0, 'rgba(8,12,28,0)'); g.addColorStop(.3, 'rgba(8,12,28,.72)'); g.addColorStop(.7, 'rgba(8,12,28,.6)'); g.addColorStop(1, 'rgba(8,12,28,0)'); X.save(); X.globalAlpha = a; X.fillStyle = g; X.fillRect(0, 150, 1080, 410); X.restore(); } }
+    { const a = U.clamp((t - 4.15) / .3) * (1 - U.prog(t, 5.6, 5.95)); if (a > 0) { const g = X.createLinearGradient(0, 150, 0, 560); g.addColorStop(0, 'rgba(8,12,28,0)'); g.addColorStop(.3, 'rgba(8,12,28,.72)'); g.addColorStop(.7, 'rgba(8,12,28,.6)'); g.addColorStop(1, 'rgba(8,12,28,0)'); X.save(); X.globalAlpha = a; X.fillStyle = g; X.fillRect(0, 150, 1080, 410); X.restore(); } }
     // location tag "Mekke"
     {
       const e = ui.env(t, .12, 4.25, .45, 'pop'); if (e.o > 0) {
@@ -546,8 +546,8 @@ export default {
       if (mPos && t < 4.25 && Math.abs(to[1] - mPos[1]) < 110 && Math.abs(to[0] - mPos[0]) < 360) to[1] = mPos[1] + (to[1] >= mPos[1] ? 115 : -115);
       if (lz < 1) ui.callout('emanetler', { t, t0: 3.02, t1: 4.45, anchor: [lx, ly], to, size: 46, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ffd88f', lineColor: 'rgba(255,226,160,.95)' }); }
     // "o kadar kişi" — many houses vs one door
-    ui.text('o kadar kişi', { t, t0: 4.28, t1: 5.62, x: 540, y: 330, size: 84, weight: 900, color: '#fff4dc', anim: 'rise', shadowBlur: 22, shadowColor: 'rgba(4,6,18,.9)' });
-    ui.text('arasından…', { t, t0: 4.62, t1: 5.62, x: 540, y: 424, size: 64, weight: 800, color: '#ffd27a', anim: 'rise', shadowBlur: 20, shadowColor: 'rgba(4,6,18,.9)' });
+    ui.text('o kadar kişi', { t, t0: 4.28, t1: 5.95, x: 540, y: 330, size: 84, weight: 900, color: '#fff4dc', anim: 'rise', shadowBlur: 22, shadowColor: 'rgba(4,6,18,.9)' });
+    ui.text('arasından…', { t, t0: ctx.wordTime('arasından') - .1, t1: 5.95, x: 540, y: 424, size: 64, weight: 800, color: '#ffd27a', anim: 'rise', shadowBlur: 20, shadowColor: 'rgba(4,6,18,.9)' });
   },
 };
 

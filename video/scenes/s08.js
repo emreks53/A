@@ -10,7 +10,7 @@ import * as C from '../engine/lib/extra_C.js';
 let R = {};
 globalThis.__dbg08 = 1;
 const STORM = { contrast: 1.12, saturation: 1.06, warmth: 0.06, lift: [0.025, 0.01, 0.012], gain: [1.06, 0.93, 0.83] };
-const CALM = { contrast: 1.08, saturation: 1.02, warmth: 0.04, lift: [0.02, 0.016, 0.026], gain: [1.06, 1.03, 0.9] };
+const CALM = { contrast: 1.08, saturation: .98, warmth: 0.03, lift: [0.02, 0.017, 0.026], gain: [1.05, 1.035, 0.87] };
 export default {
   post: {
     exposure: 1.0,
@@ -98,7 +98,7 @@ export default {
     // the sword (the rock itself never moves); the tally ticks with each one
     R.rimT = []; const grains = [];
     for (let k = 0; k < 5; k++) { const tk = tDef + .05 + k * .24; R.rimT.push(tk);
-      const zz = [5.6, 3.1, 6.6, 2.2, 4.4][k], yy = [3.9, 4.4, 3.4, 4.1, 3.6][k];
+      const zz = [5.4, 2.9, 6.7, 1.9, 4.2][k], yy = [1.32, 1.5, 1.22, 1.42, 1.3][k];
       ray.set(new THREE.Vector3(16, yy, zz), new THREE.Vector3(-1, 0, 0)); const I = ray.intersectObject(rock, true)[0]; if (!I) continue;
       const p = I.point.clone().add(new THREE.Vector3(.06, 0, 0)); const gr = U.rng(700 + k);
       for (let j = 0; j < 46; j++) grains.push({ p: [p.x + gr() * .05, p.y - gr() * .06, p.z + (gr() - .5) * .35], v: [.25 + gr() * .55, -gr() * .4, (gr() - .5) * .2], t0: tk + .04 + gr() * .3, life: .75 + gr() * .3, w: .006 + gr() * .006, len: -1, color: gr() < .5 ? '#f2c08a' : '#d89a68', a: .75, drag: .4 });
@@ -141,9 +141,9 @@ export default {
     R.cam = C.camPath([
       [-0.5, [-30, 1.5, -19], [-6, 4.4, -1]],
       [1.0, [-23, 1.7, -15.5], [-7, 3.9, -.6]],
-      [1.95, [-16.5, 2.1, -14.2], [-6.6, 3.3, -2.6]],
-      [2.6, [-6, 3.2, -23], [3, 3.4, -8]],
-      [3.25, [9, 2.3, -11.5], [10.6, 1.4, 3]],
+      [1.95, [-17.2, 2.2, -15.2], [-6.4, 3.4, -2.8]],
+      [2.6, [-5, 3.6, -27], [2, 3.8, -9]],
+      [3.25, [9.5, 2.6, -14], [10.6, 1.4, 3]],
       [4.15, [14.95, 1.7, 2.1], [9.55, .72, 4.62]],
       [6.9, [14.6, 1.6, 2.5], [9.55, .72, 4.62]],
     ]);
@@ -154,7 +154,7 @@ export default {
     R.volley.update(t); R.chips.update(t);
     const calm = U.smoothstep(2.75, 3.75, t);
     // motion blur only while arrows strike and the camera whips; the calm lee renders single-sample
-    post.motionBlur = { samples: t < 3.7 ? 3 : 1, shutter: .5 };
+    post.motionBlur = { samples: t < 3.7 ? (t > 1.9 && t < 3.1 ? 4 : 3) : 1, shutter: .5 };
     // camera
     R.cam.at(t, R.P, R.L);
     const sh = U.shake(t, U.lerp(.035, .006, calm), U.lerp(1.2, .45, calm), 5);
@@ -171,7 +171,7 @@ export default {
     ctx.scene.fog.density = U.lerp(.016, .0075, calm); ctx.scene.fog.color.copy(R.fogStorm).lerp(R.fogCalm, calm);
     R.hemi.color.copy(R.hemiA).lerp(R.hemiB, calm); R.hemi.intensity = U.lerp(.6, .55, calm); R.sun.intensity = U.lerp(3.4, 4.2, calm); R.sun.color.copy(R.sunA).lerp(R.sunB, calm);
     R.sky.userData.uniforms.dark.value = .4 * (1 - calm); R.bounce.intensity = 1.1 * calm; R.sky.userData.uniforms.storm.value = U.lerp(.8, .25, calm);
-    post.vignette = U.lerp(.55, .42, calm); post.exposure = 1 + .15 * calm;
+    post.vignette = U.lerp(.55, .42, calm); post.exposure = 1 + .18 * calm;
     const fd = camera.position.distanceTo(calm > .5 ? R.swPos.clone().setY(R.swPos.y + .62) : R.L);
     post.dof.focus = fd; post.dof.range = U.lerp(14, 7, calm); post.dof.amount = U.lerp(.25, .34, calm);
     R.motes.material.uniforms.master.value = U.smoothstep(2.9, 3.8, t); R.shafts.forEach((sh, i) => { sh.userData.uniforms.opacity.value = sh.userData.op * calm * (.85 + .15 * Math.sin(t * .9 + i * 1.7)); }); R.haze.userData.uniforms.master.value = calm;

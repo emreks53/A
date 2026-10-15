@@ -195,8 +195,8 @@ export function mushafCoverMaps(o = {}) {
     const wear = clamp(sm(24, 0, e) * (.4 + .6 * big) + sm(80, 0, cornerD) * .55);
     // leather (burgundy goatskin)
     const t1 = .35 + .4 * sm(.25, .75, mott), t2 = sm(.62, .85, mott) * .25, gm = .88 + .12 * grain;
-    let lr = (28 + (52 - 28) * t1), lg = (5 + (10 - 5) * t1), lb = (9 + (17 - 9) * t1);
-    lr += (70 - lr) * t2; lg += (18 - lg) * t2; lb += (24 - lb) * t2; lr *= gm; lg *= gm; lb *= gm;
+    let lr = (25 + (46 - 25) * t1), lg = (4 + (8 - 4) * t1), lb = (10 + (19 - 10) * t1);
+    lr += (62 - lr) * t2; lg += (15 - lg) * t2; lb += (25 - lb) * t2; lr *= gm; lg *= gm; lb *= gm;
     const w5 = wear * .55; lr += (118 - lr) * w5; lg += (58 - lg) * w5; lb += (44 - lb) * w5;
     // gold
     let m = dM[p] / 255; const pol = dP[p] / 255;
@@ -498,7 +498,7 @@ export function clayLampGeometry(lod = 1) {
 let _clayMat = null;
 export function clayMaterial() {
   if (_clayMat) return _clayMat;
-  const t = TEX.plaster({ a: '#a66a4c', b: '#7c4c36', seed: 33, repeat: [2, 2] });
+  const t = TEX.plaster({ a: '#94604a', b: '#6c4434', seed: 33, repeat: [2, 2] });
   _clayMat = new THREE.MeshStandardMaterial({ map: t.map, normalMap: t.normalMap, normalScale: new THREE.Vector2(.4, .4), roughness: .82 });
   return _clayMat;
 }

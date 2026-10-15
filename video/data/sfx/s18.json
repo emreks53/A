@@ -44,5 +44,32 @@
 "dur": 0.3,
 "kind": "pop",
 "desc": "soft pop for IKI ORNEK"
+},
+{
+"t": 100.55,
+"dur": 0.35,
+"kind": "wood",
+"desc": "book slides forward out of the shelf row"
+},
+{
+"t": 100.71,
+"dur": 0.35,
+"kind": "wood",
+"desc": "second book slides forward",
+"gain": -2
+},
+{
+"t": 105.0,
+"dur": 0.5,
+"kind": "whoosh",
+"desc": "magnifier lens swells out of the ring",
+"gain": -6
+},
+{
+"t": 105.3,
+"dur": 0.15,
+"kind": "pop",
+"desc": "tiny pop lens",
+"gain": -6
 }
 ]

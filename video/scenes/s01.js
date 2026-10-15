@@ -51,19 +51,21 @@ export default {
     rahle.traverse(o => { if (o.isMesh) { o.material.envMap = env; } }); R.envMats.push(ud.material);
 
     // hero lamps on the sand around the rug (real flames); two of them carry the practical lights
-    const heroLampXZ = [[-.44, -.66, 2.2], [.42, -.78, -2.6], [-.06, -1.02, 1.4], [-.68, -.08, .4], [.7, .02, 2.9], [-.55, .66, -.6], [.78, .5, 2.2], [-1.0, .34, 0], [1.05, -.42, 3.0], [-.86, -.94, 1.1]];
+    const heroLampXZ = [[-.44, -.66, 2.2], [.42, -.78, -2.6], [-.06, -1.02, 1.4], [-.95, -.5, .4], [.7, .02, 2.9], [-.55, .66, -.6], [.78, .5, 2.2], [-1.0, .34, 0], [1.05, -.42, 3.0], [-.86, -.94, 1.1]];
     R.heroLamps = [];
     heroLampXZ.forEach(([x, z, rot], i) => { const l = X.heroLamp({ scale: 1.15, seed: i + 3 }); l.position.set(x, hAt(x, z) - y0 + .001, z); l.rotation.y = rot; hero.add(l); R.heroLamps.push(l); });
     { const hp = X.lampField(heroLampXZ.map(([x, z], i) => ({ x, y: .003, z, rot: 0, s: .55, on: -5, seed: i })), { fog: 0 }); hp.userData.bodies.visible = false; hp.userData.flames.visible = false; hero.add(hp); R.heroPools = hp; }
     const pl = (x, y, z, inten, dist) => { const l = new THREE.PointLight('#ff9a48', inten, dist, 2); l.position.set(x, y, z); hero.add(l); l.userData.base = inten; return l; };
-    R.rimLamp = pl(-.38, .2, -.7, .32, 2.2); R.fillLamp = pl(-.55, .16, .62, .16, 2.2);
+    R.rimLamp = pl(-.34, .17, -.88, .34, 2.4); R.fillLamp = pl(-.55, .16, .62, .16, 2.2);
 
     // dawn ray: spot from the sun direction, raking across the cover from the right
-    const spot = new THREE.SpotLight('#ffd29a', 0, 0, .0165, 1, 0); spot.position.copy(R.book).add(L.clone().multiplyScalar(16)); spot.target.position.copy(R.book).add(new THREE.Vector3(-.05, -.1, 0));
+    const spot = new THREE.SpotLight('#ffdcae', 0, 0, .0165, 1, 0); spot.position.copy(R.book).add(L.clone().multiplyScalar(16)); spot.target.position.copy(R.book).add(new THREE.Vector3(-.05, -.1, 0));
     spot.castShadow = true; spot.shadow.mapSize.set(2048, 2048); spot.shadow.camera.near = 12; spot.shadow.camera.far = 20; spot.shadow.bias = -.00015; spot.shadow.normalBias = .004; spot.shadow.radius = 2;
     scene.add(spot, spot.target); R.spot = spot;
     const shaft = ctx.FX.lightShaft({ from: spot.position.toArray(), to: R.book.clone().add(L.clone().multiplyScalar(-1.2)).toArray(), r0: .3, r1: .3, color: '#ffcf8a', opacity: 0 }); scene.add(shaft); R.shaft = shaft;
     const motes = X.rayMotes({ count: 650, center: [0, .65, 0], box: [2.2, 1.3, 2.2], size: .0065, base: .04 }); hero.add(motes); R.motes = motes;
+    const dust = X.rayMotes({ count: 700, center: [0, 0, 0], box: [1.1, .9, 1.1], size: .0034, base: .006, seed: 91 }); dust.position.copy(R.book).sub(hero.position); hero.add(dust); R.dust = dust;
+    dust.material.uniforms.rayO.value.copy(R.book); dust.material.uniforms.rayD.value.copy(L); dust.material.uniforms.rayR.value = .3;
     motes.material.uniforms.rayO.value.copy(R.book); motes.material.uniforms.rayD.value.copy(L); motes.material.uniforms.rayR.value = .55; // beam test in world space
 
     // ---- the lamp field: jittered rings around the hero, terrain-following, ~1000 lamps incl. the hero lamps ----
@@ -111,7 +113,7 @@ export default {
     const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(qF.slerp(qN, w)); camera.lookAt(cam.clone().add(dir)); camera.fov = R.cFov(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
     // pixel metrics for sprites / stars
     const rh = renderer.getDrawingBufferSize(new THREE.Vector2()).y; const fpx = rh / (2 * Math.tan(camera.fov * D2R / 2));
-    R.patch.visible = D < 7; // fine grain only matters near the hero (avoids far z-fighting)
+    R.patch.visible = D < 7; R.dust.visible = D < 8; // fine grain only matters near the hero (avoids far z-fighting)
     const FU = R.field.userData.U; FU.uTime.value = t; FU.uFpx.value = fpx; FU.uMinPx.value = 2.2 * rh / 1920; FU.uCocMax.value = 120 * rh / 1920;
     R.sky.userData.uniforms.starPx.value = 1.6 * (camera.fov * D2R) / rh;
     R.motes.material.uniforms.fpx.value = fpx;
@@ -119,9 +121,11 @@ export default {
     // ---- the dawn ray: from "en büyük ve parlağını" the first ray finds the Mushaf ----
     const tB = ctx.wordTime('parlağını'), tK = ctx.wordTime("kur'an"), tBu = ctx.wordTime('büyük');
     const g = U.prog(t, tBu - .2, tK + .25, 'inOutSine'), sw = U.prog(t, tB - .45, tK + .45, 'inOutSine');
-    R.spot.intensity = 26 * g; R.shaft.userData.uniforms.opacity.value = .1 * g * (1 - .75 * U.smoothstep(4.8, 5.8, t));
+    R.spot.intensity = 23 * g; R.shaft.userData.uniforms.opacity.value = .1 * g * (1 - .75 * U.smoothstep(4.8, 5.8, t));
     R.spot.target.position.copy(R.book).add(R.leafUp.clone().multiplyScalar(.03 + .2 * (1 - sw))); R.spot.target.updateMatrixWorld();
     const mu = R.motes.material.uniforms; mu.rayAmt.value = g; mu.base.value = .05 + .04 * g;
+    const du = R.dust.material.uniforms; du.rayAmt.value = g * 1.3; du.fpx.value = fpx;
+    R.spot.updateMatrixWorld(); du.rayO.value.copy(R.spot.target.position); du.rayD.value.copy(R.spot.position).sub(R.spot.target.position).normalize();
     R.sky.userData.uniforms.sunUp.value = .4 * g; R.sky.userData.uniforms.gain.value = .85; R.sky.userData.uniforms.glow.value = 1 + .25 * U.smoothstep(0, 7.5, t);
     ctx.scene.environmentIntensity = .3 + .12 * g;
     const prod = U.smoothstep(4.6, 5.8, t); // 0 wide .. 1 product shot
@@ -136,6 +140,7 @@ export default {
 
     // motion blur only where the spiral glide is fast enough to strobe (point lights sweeping ~90 px/frame at 4.6 s)
     const mbN = (t > 4.35 && t < 5.2) ? 6 : (t > 4.15 && t < 5.5) ? 4 : (t > 4.0 && t < 5.7) ? 2 : 1; post.motionBlur = { samples: R.dbg.includes('nomb') ? 1 : mbN, shutter: .5 };
+    if (R.dbg.includes('bigray')) { mu.rayR.value = 10; mu.base.value = 1; }
     if (R.dbg.includes('nospot')) { R.spot.intensity = 0; R.shaft.visible = false; } if (R.dbg.includes('noglow')) R.heroLamps.forEach(l => { l.userData.glow.visible = false; });
     if (R.dbg.includes('nodof')) post.dof.enabled = false; if (R.dbg.includes('nobloom')) post.bloom.enabled = false;
     // ---- typography ----
