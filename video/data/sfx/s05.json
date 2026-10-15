@@ -42,7 +42,7 @@
 "t": 26.69,
 "dur": 0.35,
 "kind": "thud",
-"desc": "sealed clay jar thunk on wood"
+"desc": "sealed clay jar set down on wood"
 },
 {
 "t": 27.05,
@@ -61,7 +61,7 @@
 "t": 27.75,
 "dur": 0.4,
 "kind": "cloth",
-"desc": "folded textile settles",
+"desc": "folded textile laid down, soft fabric",
 "gain": -4
 },
 {
@@ -74,7 +74,7 @@
 "t": 28.47,
 "dur": 0.3,
 "kind": "paper",
-"desc": "parchment scroll rolls and settles",
+"desc": "parchment scroll rolls into place",
 "gain": -3
 }
 ]

@@ -1,6 +1,6 @@
 [
 {
-"t": 29.6,
+"t": 29.60,
 "dur": 4.2,
 "kind": "wind",
 "desc": "warm desert wind with blowing sand",
@@ -16,14 +16,14 @@
 "t": 30.95,
 "dur": 1.0,
 "kind": "wind",
-"desc": "sand gust sweeping past the blade",
+"desc": "sand gust sweeping across the plain",
 "gain": -2
 },
 {
-"t": 31.0,
+"t": 31.35,
 "dur": 1.6,
 "kind": "sword",
-"desc": "faint steel shimmer as the sun glint travels down the edge",
+"desc": "faint steel shimmer as the sun glint travels up the edge",
 "gain": -6
 },
 {
@@ -40,7 +40,7 @@
 "gain": -4
 },
 {
-"t": 32.2,
+"t": 32.20,
 "dur": 1.6,
 "kind": "rumble",
 "desc": "distant low rumble of the approaching dust storm"
