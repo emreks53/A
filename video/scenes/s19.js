@@ -10,6 +10,67 @@ import { path3, spineAtlas, bookWall, instances, flamePoints, lightPools, contac
 let R = {};
 const COLS = [-4.0, -1.6, 1.6, 4.0], ROWS = 16, Z0 = -1.6, DZ = 2.45, TOPY = .76;
 
+// Natural cubic spline per component (C2 = continuous acceleration), linear extrapolation outside the keys
+// (still C2 at the ends because s'' = 0 there). keys: [[t, [x,y,z]], ...] -> f(t) => THREE.Vector3
+function spline3(keys) {
+  const n = keys.length, T = keys.map(k => k[0]), P = keys.map(k => k[1]), comps = [];
+  for (let d = 0; d < 3; d++) {
+    const y = P.map(p => p[d]), h = []; for (let i = 0; i < n - 1; i++) h.push(T[i + 1] - T[i]);
+    const a = new Array(n).fill(0), b = new Array(n).fill(1), c = new Array(n).fill(0), r = new Array(n).fill(0);
+    for (let i = 1; i < n - 1; i++) { a[i] = h[i - 1]; b[i] = 2 * (h[i - 1] + h[i]); c[i] = h[i]; r[i] = 6 * ((y[i + 1] - y[i]) / h[i] - (y[i] - y[i - 1]) / h[i - 1]); }
+    for (let i = 1; i < n; i++) { const m = a[i] / b[i - 1]; b[i] -= m * c[i - 1]; r[i] -= m * r[i - 1]; }
+    const M = new Array(n).fill(0); M[n - 1] = r[n - 1] / b[n - 1]; for (let i = n - 2; i >= 0; i--) M[i] = (r[i] - c[i] * M[i + 1]) / b[i];
+    comps.push({ y, h, M });
+  }
+  const ev = ({ y, h, M }, t) => {
+    if (t <= T[0]) return y[0] + ((y[1] - y[0]) / h[0] - h[0] * (2 * M[0] + M[1]) / 6) * (t - T[0]);
+    if (t >= T[n - 1]) { const k = n - 2; return y[n - 1] + ((y[k + 1] - y[k]) / h[k] + h[k] * (M[k] + 2 * M[k + 1]) / 6) * (t - T[n - 1]); }
+    let i = 0; while (i < n - 2 && t > T[i + 1]) i++;
+    const A = (T[i + 1] - t) / h[i], B = (t - T[i]) / h[i];
+    return A * y[i] + B * y[i + 1] + ((A * A * A - A) * M[i] + (B * B * B - B) * M[i + 1]) * h[i] * h[i] / 6;
+  };
+  return t => new THREE.Vector3(ev(comps[0], t), ev(comps[1], t), ev(comps[2], t));
+}
+
+// Candle light pool on a desktop, clipped to the desktop rectangle (no glow overhanging into the air).
+// items: {x, z, ry (desk), cx, cz (pool centre, world), r (pool radius), on (ignition time)}
+function deskPools(items, { opacity = .5, color = '#ffb066', w = 1.25 - .026, d = .68 - .026 } = {}) {
+  const geo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+  const onA = new Float32Array(items.length), cA = new Float32Array(items.length * 3);
+  const v = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  items.forEach((it, i) => { onA[i] = it.on; v.set(it.cx - it.x, 0, it.cz - it.z).applyAxisAngle(up, -it.ry); cA[i * 3] = v.x; cA[i * 3 + 1] = v.z; cA[i * 3 + 2] = it.r; });
+  geo.setAttribute('aOn', new THREE.InstancedBufferAttribute(onA, 1));
+  geo.setAttribute('aC', new THREE.InstancedBufferAttribute(cA, 3));
+  const S = 128, cv = document.createElement('canvas'); cv.width = cv.height = S; const x = cv.getContext('2d');
+  const gr = x.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.2, 'rgba(255,255,255,.55)'); gr.addColorStop(.55, 'rgba(255,255,255,.12)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, S, S);
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  const u = { time: { value: 0 }, map: { value: tex }, opacity: { value: opacity }, color: { value: new THREE.Color(color) }, half: { value: new THREE.Vector2(w / 2, d / 2) } };
+  const m = new THREE.ShaderMaterial({
+    uniforms: u, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    vertexShader: `attribute float aOn; attribute vec3 aC; uniform float time; uniform vec2 half; varying vec2 vQ; varying vec2 vL; varying float vB;
+      void main(){ vL = position.xz * half * 2.; vQ = (vL - aC.xy) / (2. * aC.z) + .5;
+        float age = time - aOn; vB = smoothstep(0., .35, age) * (.92 + .08 * sin(time * 9. + aOn * 31.));
+        gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.); }`,
+    fragmentShader: `uniform sampler2D map; uniform float opacity; uniform vec3 color; uniform vec2 half; varying vec2 vQ; varying vec2 vL; varying float vB;
+      void main(){ vec2 e = half - abs(vL); float edge = smoothstep(0., .012, min(e.x, e.y));
+        vec2 q = clamp(vQ, 0., 1.); float a = texture2D(map, q).a * step(abs(vQ.x - .5), .5) * step(abs(vQ.y - .5), .5);
+        gl_FragColor = vec4(color, a * edge * vB * opacity); }`,
+  });
+  const mesh = new THREE.InstancedMesh(geo, m, items.length);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+  items.forEach((it, i) => { q.setFromAxisAngle(up, it.ry); m4.compose(new THREE.Vector3(it.x, TOPY + .002, it.z), q, new THREE.Vector3(w, 1, d)); mesh.setMatrixAt(i, m4); });
+  mesh.userData.uniforms = u; mesh.userData.noDepth = true; mesh.renderOrder = 3; mesh.frustumCulled = false;
+  return mesh;
+}
+
+// Soft elliptical dark scrim on the overlay behind a label (calms the window arch / mullions under the letters).
+function scrim(ui, { x, y, rx, ry, a }) {
+  if (a <= .001) return;
+  const X = ui.x; X.save(); X.translate(x, y); X.scale(1, ry / rx);
+  const g = X.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, `rgba(10,7,12,${a})`); g.addColorStop(.45, `rgba(10,7,12,${a * .72})`); g.addColorStop(.75, `rgba(10,7,12,${a * .28})`); g.addColorStop(1, 'rgba(10,7,12,0)');
+  X.fillStyle = g; X.fillRect(-rx, -rx, rx * 2, rx * 2); X.restore();
+}
+
 export default {
   post: {
     exposure: 1.1,
