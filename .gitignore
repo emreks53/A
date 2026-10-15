@@ -1,0 +1,8 @@
+# Gizli anahtarlar asla depoya girmez
+.env
+.env.*
+.dev.vars
+.wrangler/
+node_modules/
+# Yayın sırasında oluşturulan geçici klasör
+.yayin/
