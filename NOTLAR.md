@@ -107,6 +107,7 @@ formu doğrulaması, üst menünün kaydırmada titrememesi denendi. Bulunup dü
 - Hero: "Ülkemize faydalı, prestijli gayrimenkul projelerini ideal şekilde gerçekleştirmek." / EN "…in an ideal way."
   (05.10.2026).
 - İçerik notlarındaki B18–B21 (Komiteler çelişkisi, T.C. kimlik no, 01.01.0000 tarihleri, yazım hataları): dokunma.
+  15.10.2026: 01.01.0000 yazan yerlerde hiç tarih yazmasın (kaldırıldı).
 - Hero görseli: denizi ve binanın tamamını gösteren en yüksek çözünürlüklü kadraj; masaüstünde ufuk çizgisi menü
   yazılarının altına değiyor. Vitrin: projelerin bitmiş hâlleri (Şile, İdealist Cadde).
 - EN site (15.10.2026): başlıklar, menüler ve liste/haber başlıkları İngilizce; uzun metinler (haber, açıklama, politika

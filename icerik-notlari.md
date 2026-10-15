@@ -1,4 +1,4 @@
-> **Kurtarma notu (15.10.2026):** Bu dosya, kaybolan geliştirme ortamından oturum kaydı üzerinden kurtarıldı (son tam görüntü 05.10.2026). O tarihten sonraki kararlar: B18–B21 (Komiteler çelişkisi, T.C. kimlik no, 01.01.0000 tarihleri, yazım hataları) için kullanıcı "dokunma" dedi (05.10.2026); B1 15.10.2026'da düzeltildi.
+> **Kurtarma notu (15.10.2026):** Bu dosya, kaybolan geliştirme ortamından oturum kaydı üzerinden kurtarıldı (son tam görüntü 05.10.2026). O tarihten sonraki kararlar: B18–B21 (Komiteler çelişkisi, T.C. kimlik no, 01.01.0000 tarihleri, yazım hataları) için kullanıcı "dokunma" dedi (05.10.2026); 01.01.0000 tarihleri 15.10.2026'da kullanıcı isteğiyle kaldırıldı (5 haber, liste ve arama verisi; `araclar/degisiklikler/2026-10-15e-tarihsiz-haberler.py`); B1 15.10.2026'da düzeltildi.
 
 # İçerik Notları — mevcut sitede fark edilen hatalar, eskimiş içerikler ve sorular
 
