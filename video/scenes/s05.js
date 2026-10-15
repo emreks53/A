@@ -244,8 +244,7 @@ export default {
     room.updateMatrixWorld(true); const flameW = new THREE.Vector3(); lamp.userData.flame.getWorldPosition(flameW); R.flameW = flameW;
     const halo = FX.glow({ size: .5, opacity: .14, color: '#ffb066' }); halo.position.copy(flameW).add(new THREE.Vector3(0, .05, 0)); scene.add(halo); R.halo = halo;
     const key = new THREE.PointLight('#ffb870', 2.0, 9, 2); key.position.copy(flameW).add(new THREE.Vector3(0, .07, 0));
-    const DBG = new URLSearchParams(location.search); R.DBG = DBG;
-    key.castShadow = !DBG.has('noshadow'); key.shadow.mapSize.set(DBG.has('sm512') ? 512 : 1024, DBG.has('sm512') ? 512 : 1024); key.shadow.bias = -.0015; key.shadow.normalBias = .01; key.shadow.radius = 10; key.shadow.camera.near = .03; scene.add(key); R.key = key;
+    key.castShadow = true; key.shadow.mapSize.set(512, 512); key.shadow.bias = -.0015; key.shadow.normalBias = .01; key.shadow.radius = 10; key.shadow.camera.near = .03; scene.add(key); R.key = key;
     const fill = new THREE.PointLight('#ff9c5a', .62, 8, 2); fill.position.set(-1.3, 1.0, 2.3); room.add(fill); R.fill = fill; // warm bounce off the floor / a second lamp out of frame
     scene.add(new THREE.HemisphereLight('#5a6ea8', '#2a1a10', .3));
     const moonS = new THREE.SpotLight('#8eaaff', 16, 14, .5, .7, 1.4); moonS.position.set(2.0, 3.9, -3.4); moonS.target.position.set(.9, 0, 1.4); room.add(moonS, moonS.target);
@@ -323,7 +322,6 @@ export default {
 
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
-    if (R.DBG.has('nodof')) post.dof.enabled = false; if (R.DBG.has('nobloom')) post.bloom.enabled = false;
     const C = R.cam; camera.position.set(C.px(t), C.py(t), C.pz(t)).add(U.shake(t, .006, .5, 5)); camera.lookAt(C.lx(t), C.ly(t), C.lz(t)); camera.updateMatrixWorld();
     post.dof.focus = camera.position.distanceTo(new THREE.Vector3(C.lx(t), 1.6, -.15)); post.dof.range = U.lerp(3.0, 1.7, U.prog(t, .4, 2.6)); post.dof.amount = U.lerp(.55, .72, U.prog(t, .4, 2.6));
 

@@ -186,7 +186,7 @@ export default {
     const csR = G.candlestick({ seed: 8, candleH: .12 }); csR.position.set(.47, deskTop, .1); scene.add(csR);
     // tall candlestick standing just behind the six volumes: its flame burns in the gap between the name card and the books
     const csB = G.candlestick({ seed: 12, candleH: .17 }); csB.position.set(.21, deskTop, -.31); scene.add(csB);
-    csB.traverse(o => { if (o.isMesh && o.geometry.type === 'CapsuleGeometry') o.castShadow = false; }); // no hard drip shadow streak on the lit candle
+    csB.traverse(o => { if (o.isMesh && o.geometry.type === 'CapsuleGeometry') o.visible = false; }); // its side drips read as a dark crack line in close-up
     R.fL = new THREE.Vector3(-.36, deskTop + csL.userData.flameY, .3); R.fR = new THREE.Vector3(.47, deskTop + csR.userData.flameY, .1);
     R.fB = new THREE.Vector3(.21, deskTop + csB.userData.flameY, -.31);
     R.flames = [];
