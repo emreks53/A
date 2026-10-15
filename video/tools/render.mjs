@@ -29,7 +29,12 @@ const server = http.createServer((req, res) => {
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r)); const port = server.address().port;
 
-const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--js-flags=--max-old-space-size=4096'] });
+// --gl llvmpipe: full Chromium (headed; run under xvfb-run) with ANGLE on desktop GL -> Mesa llvmpipe (multi-threaded,
+// ~3-5x faster than SwiftShader here; verified equivalent with tools/glcompare.mjs). Default: SwiftShader (headless).
+const GL = opt.gl || process.env.RENDER_GL || 'swiftshader';
+const browser = GL === 'llvmpipe'
+  ? await chromium.launch({ headless: false, args: ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--js-flags=--max-old-space-size=4096'] })
+  : await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--js-flags=--max-old-space-size=4096'] });
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 const logs = [];
 page.on('console', m => { const t = `[${m.type()}] ${m.text()}`; logs.push(t); if (m.type() === 'error' || m.type() === 'warning' || opt.verbose) console.log('page', t); });
