@@ -7,8 +7,87 @@
 import * as THREE from 'three';
 import * as C from '../engine/lib/extra_C.js';
 
+// Camera: ONE analytic path, arc-length parametrised (no spline knots). Constant-speed windward push -> C1 geometric blend into
+// the arc around the -Z end -> soft landing (relative deceleration bounded, no dead stop) that flows on into a slow lee drift.
+// The look target follows the same progress and settles on the sword (zero velocity) before the camera lands, so the hero
+// never sweeps across frame. Pure function of t.
+function buildCam(cfg) {
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const { O, Ta, Tb, vA, vB, dip, lift, sigK, blend, Pw0, Lw0, Lw, Lm, Ls, A0P, A1P, h0, h1 } = cfg;
+  const A0 = Math.atan2(A0P[1] - O[1], A0P[0] - O[0]), A1 = Math.atan2(A1P[1] - O[1], A1P[0] - O[0]);
+  const r0 = Math.hypot(A0P[0] - O[0], A0P[1] - O[1]), r1 = Math.hypot(A1P[0] - O[0], A1P[1] - O[1]);
+  const arcP = s => { const A = A0 + (A1 - A0) * s, r = r0 + (r1 - r0) * s - dip * Math.sin(Math.PI * s), h = h0 + (h1 - h0) * s + lift * Math.sin(Math.PI * s); return V(O[0] + Math.cos(A) * r, h, O[1] + Math.sin(A) * r); };
+  const arcL = s => Lw.clone().multiplyScalar((1 - s) * (1 - s)).addScaledVector(Lm, 2 * s * (1 - s)).addScaledVector(Ls, s * s);
+  // arc-length table of the arc
+  const NA = 4000, sTab = new Float64Array(NA + 1), lTab = new Float64Array(NA + 1); let prev = arcP(0);
+  for (let i = 1; i <= NA; i++) { const s = i / NA, p = arcP(s); sTab[i] = s; lTab[i] = lTab[i - 1] + p.distanceTo(prev); prev = p; }
+  const Larc = lTab[NA];
+  const sOfLen = l => { if (l <= 0) return 0; if (l >= Larc) return 1; let a = 0, b = NA; while (b - a > 1) { const m = (a + b) >> 1; if (lTab[m] < l) a = m; else b = m; } return sTab[a] + (sTab[b] - sTab[a]) * (l - lTab[a]) / (lTab[b] - lTab[a]); };
+  const P0 = arcP(0), P1 = arcP(1), T0 = arcP(1e-4).sub(P0).normalize(), T1 = P1.clone().sub(arcP(1 - 1e-4)).normalize();
+  const Lp = P0.distanceTo(Pw0), Dp = P0.clone().sub(Pw0).normalize();
+  // look target along the arc: original Bezier, but it settles onto Ls (zero velocity) at sigK so the hero stops sliding early
+  const g = s => { if (s >= sigK) return 1; const x = s / sigK; return (x * x * x - 2 * x * x + x) * sigK + (-2 * x * x * x + 3 * x * x); };
+  const LaD0 = arcL(1e-4).sub(Lw).multiplyScalar(1 / (lTab[1] * (1e-4 * NA)));   // dL/dlambda at the arc start
+  const LpD = Lw.clone().sub(Lw0).multiplyScalar(1 / Lp);
+  // nominal path (lambda = metres): push line, arc, tangent line; C1 blends (smootherstep) across the push->arc junction
+  const S5 = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * x * (x * (6 * x - 15) + 10);
+  const nomP = (lam, P) => {
+    const pushP = Pw0.clone().addScaledVector(Dp, lam);
+    const l = lam - Lp; let arc;
+    if (l < 0) arc = P0.clone().addScaledVector(T0, l); else if (l <= Larc) arc = arcP(sOfLen(l)); else arc = P1.clone().addScaledVector(T1, l - Larc);
+    const w = S5((l + blend) / (2 * blend)); return P.copy(pushP).lerp(arc, w);
+  };
+  const nomL = (lam, L) => {
+    const pushL = Lw0.clone().addScaledVector(LpD, lam);
+    const l = lam - Lp; let arc;
+    if (l < 0) arc = Lw.clone().addScaledVector(LaD0, l); else if (l <= Larc) arc = arcL(g(sOfLen(l))); else arc = Ls.clone();
+    const w = S5((l + blend) / (2 * blend)); return L.copy(pushL).lerp(arc, w);
+  };
+  // true arc length of the blended path -> lambda(mu)
+  const lamEnd = Lp + Larc + 6, NN = 8000, lamT = new Float64Array(NN + 1), muT = new Float64Array(NN + 1); const q = V(0, 0, 0), qp = V(0, 0, 0); nomP(0, qp);
+  for (let i = 1; i <= NN; i++) { const lam = lamEnd * i / NN; nomP(lam, q); lamT[i] = lam; muT[i] = muT[i - 1] + q.distanceTo(qp); qp.copy(q); }
+  const lamOfMu = mu => { if (mu <= 0) return mu; if (mu >= muT[NN]) return lamEnd + (mu - muT[NN]); let a = 0, b = NN; while (b - a > 1) { const m = (a + b) >> 1; if (muT[m] < mu) a = m; else b = m; } return lamT[a] + (lamT[b] - lamT[a]) * (mu - muT[a]) / (muT[b] - muT[a]); };
+  const muLand = (() => { let a = 0, b = NN; const target = Lp + Larc; while (b - a > 1) { const m = (a + b) >> 1; if (lamT[m] < target) a = m; else b = m; } return muT[a] + (muT[b] - muT[a]) * (target - lamT[a]) / (lamT[b] - lamT[a]); })();
+  // speed profile (m/s along the true path): vA push -> smootherstep ramp -> plateau vP -> soft exponential landing (no hard stop,
+  // relative deceleration bounded) that settles into the vB lee drift. vP is solved so the camera passes the end of the arc at Tb.
+  const { Tr, Tu, tau, eps } = cfg;
+  const shape = (t, vP) => { if (t <= Ta) return vA; if (t <= Ta + Tr) return vA * Math.pow(vP / vA, S5((t - Ta) / Tr)); if (t <= Tu) return vP; const x = t - Tu; return vB + (vP - vB) * Math.exp(-(Math.sqrt(x * x + eps * eps) - eps) / tau); };
+  const DT = 1 / 600, NT = Math.ceil((7.5 + .5) / DT); const integ = vP => { const d = new Float64Array(NT + 1); for (let i = 1; i <= NT; i++) { const t = -.5 + i * DT; d[i] = d[i - 1] + .5 * DT * (shape(t - DT, vP) + shape(t, vP)); } return d; };
+  const iB = Math.round((Tb + .5) / DT); let lo = vA, hi = 200; for (let k = 0; k < 50; k++) { const m = (lo + hi) / 2; if (integ(m)[iB] < muLand) lo = m; else hi = m; } const vP = (lo + hi) / 2;
+  const dTab = integ(vP);
+  const dist = t => { const x = (t + .5) / DT; if (x <= 0) return vA * (t + .5); if (x >= NT) return dTab[NT] + vB * (t - (-.5 + NT * DT)); const i = Math.floor(x), f = x - i; return dTab[i] + (dTab[i + 1] - dTab[i]) * f; };
+  return { at(t, P, L) { const lam = lamOfMu(dist(t)); nomP(lam, P); nomL(lam, L); return lam; } };
+}
+
+// Bilateral low-pass of a (non-indexed) mesh's vertex normals: Gaussian over radius r, only between similarly oriented vertices
+// (dot > minDot), so strata, bevels and joints keep their creases while the fine corrugation that the low raking sun turned into
+// regular vertical light/dark bands on every bed is ironed out. Geometry (silhouette, shadows) is unchanged.
+function smoothNormals(geo, r = .24, minDot = .75) {
+  const p = geo.attributes.position, nr = geo.attributes.normal, N = p.count;
+  const map = new Map(), E = [], ent = new Int32Array(N);
+  for (let i = 0; i < N; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i), a = nr.getX(i), b = nr.getY(i), c = nr.getZ(i);
+    const k = Math.round(x * 500) + ',' + Math.round(y * 500) + ',' + Math.round(z * 500) + ',' + Math.round(a * 2) + ',' + Math.round(b * 2) + ',' + Math.round(c * 2);
+    let e = map.get(k); if (e === undefined) { e = E.length / 6; map.set(k, e); E.push(x, y, z, 0, 0, 0); }
+    E[e * 6 + 3] += a; E[e * 6 + 4] += b; E[e * 6 + 5] += c; ent[i] = e;
+  }
+  const M = E.length / 6; for (let e = 0; e < M; e++) { const l = Math.hypot(E[e * 6 + 3], E[e * 6 + 4], E[e * 6 + 5]) || 1; E[e * 6 + 3] /= l; E[e * 6 + 4] /= l; E[e * 6 + 5] /= l; }
+  const grid = new Map(), cell = r; const ck = (x, y, z) => x + ',' + y + ',' + z;
+  for (let e = 0; e < M; e++) { const k = ck(Math.floor(E[e * 6] / cell), Math.floor(E[e * 6 + 1] / cell), Math.floor(E[e * 6 + 2] / cell)); let l = grid.get(k); if (!l) grid.set(k, l = []); l.push(e); }
+  const out = new Float32Array(M * 3), s2 = 2 * (r * .5) * (r * .5);
+  for (let e = 0; e < M; e++) {
+    const x = E[e * 6], y = E[e * 6 + 1], z = E[e * 6 + 2], a = E[e * 6 + 3], b = E[e * 6 + 4], c = E[e * 6 + 5]; let sx = 0, sy = 0, sz = 0;
+    const gx = Math.floor(x / cell), gy = Math.floor(y / cell), gz = Math.floor(z / cell);
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) { const l = grid.get(ck(gx + i, gy + j, gz + k)); if (!l) continue;
+      for (const f of l) { const fa = E[f * 6 + 3], fb = E[f * 6 + 4], fc = E[f * 6 + 5]; if (a * fa + b * fb + c * fc < minDot) continue; const dx = E[f * 6] - x, dy = E[f * 6 + 1] - y, dz = E[f * 6 + 2] - z, d2 = dx * dx + dy * dy + dz * dz; if (d2 > r * r) continue; const w = Math.exp(-d2 / s2); sx += fa * w; sy += fb * w; sz += fc * w; } }
+    const l = Math.hypot(sx, sy, sz) || 1; out[e * 3] = sx / l; out[e * 3 + 1] = sy / l; out[e * 3 + 2] = sz / l;
+  }
+  for (let i = 0; i < N; i++) { const e = ent[i]; nr.setXYZ(i, out[e * 3], out[e * 3 + 1], out[e * 3 + 2]); }
+  nr.needsUpdate = true;
+}
+
 let R = {};
-const STORM = { contrast: 1.12, saturation: 1.06, warmth: 0.06, lift: [0.025, 0.01, 0.012], gain: [1.06, 0.93, 0.83] };
+const STORM = { contrast: 1.12, saturation: 1.06, warmth: 0.06, lift: [0.025, 0.01, 0.012], gain: [1.05, 0.95, 0.87] };
 const CALM = { contrast: 1.08, saturation: .98, warmth: 0.03, lift: [0.02, 0.017, 0.026], gain: [1.05, 1.035, 0.87] };
 export default {
   post: {
@@ -37,6 +116,7 @@ export default {
     R.hemi = new THREE.HemisphereLight('#c88a6a', '#5a3020', .6); scene.add(R.hemi); R.hemiA = new THREE.Color('#c88a6a'); R.hemiB = new THREE.Color('#e6b494');
     R.flash = new THREE.PointLight('#ffb468', 0, 5, 2); scene.add(R.flash);
     R.bounce = new THREE.DirectionalLight('#ffb27a', 0); R.bounce.position.set(1, .35, .25); scene.add(R.bounce);   // sunlit sand bouncing warm light onto the shaded lee wall
+    R.fill = new THREE.DirectionalLight('#98a6d6', .45); R.fill.position.set(8, 9, -12); scene.add(R.fill);   // cool skylight from the clear anti-sun sky: lifts and cools the shaded sides
 
     // ground + far ridges on two horizons
     const sandMat = M.MAT.sand({ a: '#dca674', b: '#b07a4c', repeat: [300 / 2.4, 300 / 2.4] }); sandMat.normalScale.set(.6, .6);
@@ -46,8 +126,8 @@ export default {
     const rgB = C.ridge({ width: 1000, depth: 240, height: 55, seed: 9, color: '#9a5a40', top: '#b4745a' }); rgB.position.set(-60, -3, 460); rgB.rotation.y = Math.PI; scene.add(rgB);
 
     // THE ROCK: wide layered red-sandstone massif, long axis along Z; the storm comes from -X
-    const rock = C.sandstoneMassif({ a: 7, c: 10, n: 4, layers: 11, height: 8.6, bury: .6, seed: 11, fissures: 16, bevelT: .03, bevelS: .028, steps: 6, lip: 0, rough: .11, thinBeds: true, softK: 1.8 });
-    scene.add(rock); rock.updateMatrixWorld(true); R.rock = rock; const H = rock.userData.height; const R0 = rock.userData.R0;
+    const rock = C.sandstoneMassif({ a: 7, c: 10, n: 3, K: 720, layers: 11, height: 8.6, bury: .6, seed: 11, fissures: 8, bevelT: .03, bevelS: .028, steps: 6, lip: 0, rough: .11, thinBeds: true, softK: 1.8 });
+    rock.children.forEach(m => smoothNormals(m.geometry, .24, .75)); scene.add(rock); rock.updateMatrixWorld(true); R.rock = rock; const H = rock.userData.height; const R0 = rock.userData.R0;
     const SW = [9.45, 4.4]; R.swPos = new THREE.Vector3(SW[0], gh(...SW), SW[1]);
     const CAM_LEE = new THREE.Vector3(14.95, 1.1, 2.1);
     // fallen blocks + boulders + scree at its foot (clear of the sword, the lee camera and the camera's arc), far scatter
@@ -63,7 +143,26 @@ export default {
     // the Zülfikar, safe in the lee (same model as s06), flat turned a little off the lee camera
     const camDir = new THREE.Vector3(CAM_LEE.x - SW[0], 0, CAM_LEE.z - SW[1]).normalize(); const ry = Math.atan2(camDir.x, camDir.z) - .38;
     const sword = C.zulfikar2({ hiltScale: 1.12, steelRough: .3, envI: 1.25, goldEnvI: 1.8, goldEnv: env, dirSpec: .55, steelColor: '#e6e9ec' }); sword.scale.setScalar(1.12);
-    sword.position.set(SW[0], gh(...SW) - .035, SW[1]); sword.rotation.order = 'YXZ'; sword.rotation.set(-.025, ry, .028); /* leans back ~1.5°: the flats catch the sky, not just sand */ scene.add(sword); sword.updateMatrixWorld(true); R.sword = sword;
+    sword.position.set(SW[0], gh(...SW) - .1, SW[1]); sword.rotation.order = 'YXZ'; sword.rotation.set(-.025, ry, .028); /* leans back ~1.5°: the flats catch the sky, not just sand */ scene.add(sword); sword.updateMatrixWorld(true); R.sword = sword;
+
+    { // the two points are driven into the sand: a low rim of displaced sand around the entry + contact darkening. Same material and
+      // the ground's own UV mapping (u = x/300+.5, v = .5-z/300), so ripples/colour run continuously into it; polygonOffset avoids rim z-fight
+      const mg = new THREE.RingGeometry(.004, .36, 72, 30); mg.rotateX(-Math.PI / 2);
+      const ax = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), ry);   // blade width axis (the prongs sit along it)
+      const p = mg.attributes.position, uv = mg.attributes.uv, col = new Float32Array(p.count * 3); const mr = U.rng(57);
+      for (let i = 0; i < p.count; i++) {
+        const lx = p.getX(i), lz = p.getZ(i); const a = lx * ax.x + lz * ax.z, b = -lx * ax.z + lz * ax.x;   // along / across the blade width
+        const re = Math.hypot(a / 1.35, b);   // elliptical radius, a little longer along the width (two prongs)
+        const ang = Math.atan2(b, a); const jag = 1 + .18 * Math.sin(ang * 3 + 1.3) + .1 * Math.sin(ang * 7 + mr() * .2);
+        const rim = .026 * Math.exp(-Math.pow((re - .055) / (.05 * jag), 2)) * (1 - U.smoothstep(.2, .34, Math.hypot(lx, lz)));
+        const x = SW[0] + lx, z = SW[1] + lz; p.setXYZ(i, x, gh(x, z) + rim - .004 * Math.exp(-Math.pow(re / .03, 2)), z);
+        uv.setXY(i, x / 300 + .5, .5 - z / 300);
+        const ao = 1 - .42 * Math.exp(-Math.pow(re / .07, 2)) - .1 * Math.exp(-Math.pow(re / .16, 2)); col[i * 3] = ao; col[i * 3 + 1] = ao * .97; col[i * 3 + 2] = ao * .95;
+      }
+      mg.setAttribute('color', new THREE.BufferAttribute(col, 3)); mg.computeVertexNormals();
+      const mm = sandMat.clone(); mm.vertexColors = true; mm.polygonOffset = true; mm.polygonOffsetFactor = -2; mm.polygonOffsetUnits = -2;
+      const mound = new THREE.Mesh(mg, mm); mound.receiveShadow = true; scene.add(mound); R.mound = mound;
+    }
 
     // --- arrows vs rock ---
     const tRes = ctx.wordTime('resulullah'), tAl = ctx.wordTime('aleyhis'), tArk = ctx.wordTime('arkasına'), tSig = ctx.wordTime('sığındık'), tDef = ctx.wordTime('defalarca');
@@ -101,15 +200,15 @@ export default {
       const zz = [5.4, 2.9, 6.7, 1.9, 4.2][k], yy = [1.32, 1.5, 1.22, 1.42, 1.3][k];
       ray.set(new THREE.Vector3(16, yy, zz), new THREE.Vector3(-1, 0, 0)); const I = ray.intersectObject(rock, true)[0]; if (!I) continue;
       const p = I.point.clone().add(new THREE.Vector3(.06, 0, 0)); const gr = U.rng(700 + k);
-      for (let j = 0; j < 46; j++) grains.push({ p: [p.x + gr() * .05, p.y - gr() * .06, p.z + (gr() - .5) * .35], v: [.25 + gr() * .55, -gr() * .4, (gr() - .5) * .2], t0: tk + .04 + gr() * .3, life: .75 + gr() * .3, w: .006 + gr() * .006, len: -1, color: gr() < .5 ? '#f2c08a' : '#d89a68', a: .75, drag: .4 });
+      for (let j = 0; j < 46; j++) grains.push({ p: [p.x + gr() * .05, p.y - gr() * .06, p.z + (gr() - .5) * .35], v: [.25 + gr() * .55, -gr() * .4, (gr() - .5) * .2], t0: tk + .04 + gr() * .3, life: .75 + gr() * .3, w: .006 + gr() * .006, len: -1, color: gr() < .5 ? '#c68c5c' : '#a86c46', a: .5, drag: .4 });
       pf.push({ p: p.toArray(), t0: tk + .02, life: 1.3, s0: .15, s1: .8, v: [.5, -.25, 0], a: .32, color: '#e8b488' });
       pf.push({ p: [p.x + .5, gh(p.x + .5, p.z) + .15, p.z], t0: tk + .75, life: 1.2, s0: .15, s1: .7, v: [.4, .15, 0], a: .25, color: '#e0aa80' }); }
     // plus a thinner stream over the top through the storm part
     for (let i = 0; i < 46; i++) { const t = -.4 + ar() * 7.2; const x = 40 + ar() * 25, z = -10 + ar() * 22; arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL: C.landingVel(Math.PI / 2 + (ar() - .5) * .3, .3 + ar() * .15, 46), tL: t + 1.1, flight: 2.6, mode: 'pass', ground: gh }); }
     R.volley = C.arrowVolley(arrows, { seed: 21, arrow: { thick: 1.5, fletch: '#8a7058', fletch2: '#3e2c20' } }); scene.add(R.volley.group);
-    R.trails = C.streaks(R.volley.trails({ w: .05, len: 2.4, color: '#ffe8d0', a: .4 }).filter(it => it.t0 > -3), { fadeIn: .02, fadeOut: .97, fog: fogO }); scene.add(R.trails);
+    R.trails = C.streaks(R.volley.trails({ w: .05, len: 2.4, color: '#ffe8d0', a: .5 }).filter(it => it.t0 > -3), { fadeIn: .02, fadeOut: .97, fog: fogO }); scene.add(R.trails);
     R.sparks = C.streaks(sparks, { gravity: [0, -9.8, 0], shutter: .035, additive: true, cool: '#a02a08', fadeIn: .01, fadeOut: .55 }); scene.add(R.sparks);
-    R.grains = C.streaks(grains, { gravity: [0, -9.8, 0], shutter: .03, fadeIn: .05, fadeOut: .8 }); scene.add(R.grains);
+    R.grains = C.streaks(grains, { gravity: [0, -9.8, 0], shutter: .013, fadeIn: .05, fadeOut: .8 }); scene.add(R.grains);
     R.chips = C.debris(chips, { ground: gh, palette: ['#c47a4e', '#a85c3a', '#dba274'], seed: 9 }); scene.add(R.chips.mesh);
     // dust surge slamming into the face on "aleyhissalatü" and boiling up over the top
     for (let i = 0; i < 34; i++) { const z = -8 + ar() * 16, y = .6 + ar() * 6; const t = tAl - .3 + ar() * .7; pf.push({ p: [-7.6 - ar() * 3, y, z], t0: t, life: 1.6 + ar() * .8, s0: 1.6, s1: 5 + ar() * 3, v: [.4, 3.2 + ar() * 2, (ar() - .5) * 1.5], a: .45, color: '#e2a878' }); }
@@ -136,32 +235,18 @@ export default {
     scene.fog.density = fd0; scene.fog.color.copy(R.fogStorm); sky.userData.uniforms.sunI.value = 5; scene.remove(card);
 
     camera.fov = 36; camera.near = .05; camera.far = 1500; camera.updateProjectionMatrix();
-    // windward (low, -Z flank, face raked by the sun) -> push -> whip around the -Z end ("arkasına") -> settle in the lee looking up-sun
-    // windward push -> (anticipation) -> eased whip on an arc around the -Z end ("arkasına") -> settle in the lee
-    const keys = [];
-    { // analytic path sampled every 0.1 s: constant-speed windward push -> cubic-Hermite eased arc around the -Z end -> slow lee drift
-      const O = [0, -10], t0 = 1.72, t1 = 4.12, Pw0 = new THREE.Vector3(-27.5, 1.55, -18.4), Lw0 = new THREE.Vector3(-6, 4.4, -1);
-      const A0 = Math.atan2(-16.6 - O[1], -19.5 - O[0]), A1 = Math.atan2(2.1 - O[1], 14.95 - O[0]);
-      const Lw = new THREE.Vector3(-6.4, 3.4, -2.8), Lm = new THREE.Vector3(10, 2.6, -17), Ls = new THREE.Vector3(9.55, .72, 4.62);
-      const r0 = Math.hypot(-19.5 - O[0], -16.6 - O[1]), r1 = Math.hypot(14.95 - O[0], 2.1 - O[1]);
-      const ha = .16, hb = .012, S = u => (u * u * u - 2 * u * u + u) * ha + (-2 * u * u * u + 3 * u * u) + (u * u * u - u * u) * hb;
-      const arcP = s => { const A = A0 + (A1 - A0) * s, r = r0 + (r1 - r0) * s - 6 * Math.sin(Math.PI * s), h = 2.1 + (1.7 - 2.1) * s + 1.4 * Math.sin(Math.PI * s); return new THREE.Vector3(O[0] + Math.cos(A) * r, h, O[1] + Math.sin(A) * r); };
-      const arcL = s => Lw.clone().multiplyScalar((1 - s) * (1 - s)).addScaledVector(Lm, 2 * s * (1 - s)).addScaledVector(Ls, s * s);
-      const P1 = arcP(1), Pend = new THREE.Vector3(14.55, 1.62, 2.52);
-      for (let i = 0; i <= 74; i++) { const t = -0.5 + i * .1; let P, L;
-        if (t <= t0) { const k = (t + .5) / (t0 + .5); P = Pw0.clone().lerp(arcP(0), k); L = Lw0.clone().lerp(Lw, k); }
-        else if (t <= t1) { const s = S((t - t0) / (t1 - t0)); P = arcP(s); L = arcL(s); }
-        else { const k = (t - t1) / (6.9 - t1); P = P1.clone().lerp(Pend, k); L = Ls.clone(); }
-        keys.push([t, P.toArray(), L.toArray()]); } }
-    R.cam = C.camPath(keys);
+    // windward (low, -Z flank, face raked by the sun) -> push -> whip around the -Z end ("arkasına") -> settle in the lee by "sığındıklarını"
+    R.cam = buildCam({ O: [0, -10], A0P: [-19.5, -16.6], A1P: [14.95, 2.1], h0: 2.1, h1: 1.7, dip: 6, lift: 1.4,
+      Pw0: new THREE.Vector3(-27.5, 1.55, -18.4), Lw0: new THREE.Vector3(-6, 4.4, -1), Lw: new THREE.Vector3(-6.4, 3.4, -2.8), Lm: new THREE.Vector3(10, 2.6, -17), Ls: new THREE.Vector3(9.55, .72, 4.62),
+      Ta: 1.0, Tr: 1.2, Tu: 2.8, Tb: 3.9, vA: 3.7, vB: .3, tau: .24, eps: .15, sigK: .85, blend: 4 });
     R.P = new THREE.Vector3(); R.L = new THREE.Vector3();
   },
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
     R.volley.update(t); R.chips.update(t);
-    const calm = U.smoothstep(2.75, 3.75, t);
+    const calm = U.smoothstep(2.5, 3.45, t), transit = U.smoothstep(1.6, 2.2, t) * (1 - calm);
     // motion blur only while arrows strike and the camera whips; the calm lee renders single-sample
-    post.motionBlur = { samples: t < 1.9 ? 3 : t < 3.1 ? 4 : t < 3.9 ? 3 : t < 4.3 ? 2 : 1, shutter: .5 };
+    post.motionBlur = { samples: t < 1.9 ? 3 : t < 2.15 ? 4 : t < 3.25 ? 5 : t < 3.55 ? 4 : t < 3.85 ? 3 : t < 4.1 ? 2 : 1, shutter: .5 };
     // camera
     R.cam.at(t, R.P, R.L);
     const sh = U.shake(t, U.lerp(.035, .006, calm), U.lerp(1.2, .45, calm), 5);
@@ -178,10 +263,10 @@ export default {
     ctx.scene.fog.density = U.lerp(.016, .0075, calm); ctx.scene.fog.color.copy(R.fogStorm).lerp(R.fogCalm, calm);
     R.hemi.color.copy(R.hemiA).lerp(R.hemiB, calm); R.hemi.intensity = U.lerp(.6, .55, calm); R.sun.intensity = U.lerp(3.4, 4.2, calm); R.sun.color.copy(R.sunA).lerp(R.sunB, calm);
     R.sky.userData.uniforms.dark.value = .4 * (1 - calm); R.bounce.intensity = 1.1 * calm; R.sky.userData.uniforms.storm.value = U.lerp(.8, .25, calm);
-    post.vignette = U.lerp(.55, .42, calm); post.exposure = 1 + .18 * calm;
+    post.vignette = U.lerp(.55, .42, calm); post.exposure = 1 + .18 * calm + .24 * transit; R.fill.intensity = U.lerp(.45, .3, calm) + .25 * transit;
     const fd = camera.position.distanceTo(calm > .5 ? R.swPos.clone().setY(R.swPos.y + .62) : R.L);
     post.dof.focus = fd; post.dof.range = U.lerp(14, 7, calm); post.dof.amount = U.lerp(.25, .34, calm);
-    R.motes.material.uniforms.master.value = U.smoothstep(2.9, 3.8, t); R.shafts.forEach((sh, i) => { sh.userData.uniforms.opacity.value = sh.userData.op * calm * (.85 + .15 * Math.sin(t * .9 + i * 1.7)); }); R.haze.userData.uniforms.master.value = calm;
+    R.motes.material.uniforms.master.value = U.smoothstep(2.7, 3.5, t); R.shafts.forEach((sh, i) => { sh.userData.uniforms.opacity.value = sh.userData.op * calm * (.85 + .15 * Math.sin(t * .9 + i * 1.7)); }); R.haze.userData.uniforms.master.value = calm;
     R.drift.userData.uniforms.master.value = 1 - calm; R.sheets.userData.uniforms.master.value = 1 - calm * .8;
 
     // --- typography ---

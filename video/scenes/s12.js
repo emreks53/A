@@ -13,22 +13,23 @@ const NAMES = ['MERHAMET', 'SAMİMİYET', 'ADALET', 'GÜVENİLİRLİK', 'TEVAZU'
 const WORDS = ['merhamet', 'samimiyet', 'adalet', 'güvenilirlik', 'tevazu', 'vefa', 'sabır', 'saygı', 'affedicilik', 'nezaket', 'kanaatkâr', 'hoşgörü', 'diğerkâm', 'yardımsever'];
 const FALLBACK = [0.07, 1.83, 2.83, 3.61, 4.71, 5.53, 6.37, 7.15, 7.89, 9.33, 10.45, 11.71, 12.63, 13.75];
 const DOOR = 11; // index of HOŞGÖRÜ (0-based)
-// exhibit builders + framing: ty = target height above pad top, D = camera distance, h = camera height above target, ry = object yaw
+// exhibit builders + framing: ty = target height above pad top, D = camera distance, h = camera height above target, ry = object yaw,
+// ly = hero lamp height (hung so that, in the glide framing, the lit lamp sits above the label / progress-dot band instead of behind it)
 const EX = [
-  { f: E.nest, ty: .06, D: 2.05, h: .62, ry: 0, L: .85 },
-  { f: E.carafe, ty: .15, D: 2.2, h: .32, ry: 0 },
-  { f: E.balance, ty: .22, D: 2.5, h: .28, ry: -.35 },
-  { f: E.chest, ty: .11, D: 2.3, h: .38, ry: -.4 },
-  { f: E.wheat, ty: .29, D: 2.65, h: .22, ry: 0, L: .42 },
-  { f: E.letters, ty: .12, D: 2.1, h: .3, ry: -.38, L: .5 },
-  { f: E.cesme, ty: .2, D: 2.15, h: .55, ry: -.3, L: .6 },
-  { f: E.shoes, ty: .05, D: 2.0, h: .78, ry: -.3, L: .8 },
-  { f: E.swordOlive, ty: .1, D: 2.35, h: .42, ry: -.25 },
-  { f: E.rose, ty: .3, D: 2.35, h: .18, ry: -.3, L: .45 },
-  { f: E.dates, ty: .05, D: 1.95, h: .66, ry: -.3, L: .55 },
+  { f: E.nest, ty: .06, D: 2.05, h: .62, ry: 0, L: .85, ly: 1.77 },
+  { f: E.carafe, ty: .15, D: 2.2, h: .32, ry: 0, ly: 1.74 },
+  { f: E.balance, ty: .22, D: 2.5, h: .28, ry: -.35, ly: 1.89 },
+  { f: E.chest, ty: .11, D: 2.3, h: .38, ry: -.4, ly: 1.73 },
+  { f: E.wheat, ty: .29, D: 2.65, h: .22, ry: 0, L: .42, ly: 1.95 },
+  { f: E.letters, ty: .12, D: 2.1, h: .3, ry: -.38, L: .5, ly: 1.68 },
+  { f: E.cesme, ty: .2, D: 2.15, h: .55, ry: -.3, L: .6, ly: 1.79 },
+  { f: E.shoes, ty: .05, D: 2.0, h: .78, ry: -.3, L: .8, ly: 1.68 },
+  { f: E.swordOlive, ty: .1, D: 2.35, h: .42, ry: -.25, ly: 1.75 },
+  { f: E.rose, ty: .3, D: 2.35, h: .18, ry: -.3, L: .45, ly: 1.92 },
+  { f: E.dates, ty: .05, D: 1.95, h: .66, ry: -.3, L: .55, ly: 1.68 },
   { f: null, ty: 0, D: 3.75, h: .2, ry: 0 },
-  { f: E.bread, ty: .05, D: 2.0, h: .6, ry: -.3, L: .6 },
-  { f: E.jugPour, ty: .14, D: 2.45, h: .36, ry: -.35 },
+  { f: E.bread, ty: .05, D: 2.0, h: .6, ry: -.3, L: .6, ly: 1.68 },
+  { f: E.jugPour, ty: .14, D: 2.45, h: .36, ry: -.35, ly: 1.83 },
 ];
 const xA = i => i * S; // row A pedestal x for 0-based hero index i (hero 0 at x=0); far pedestals continue the grid
 
@@ -52,7 +53,7 @@ export default {
 
     // ---- world, light
     scene.fog = new THREE.FogExp2('#a0805e', .02);
-    scene.environment = await ctx.loadHDR('kiara_interior'); scene.environmentIntensity = .2;
+    scene.environment = await ctx.loadHDR('kiara_interior'); scene.environmentIntensity = .26;
     const sky = ENV.skyDome({ top: '#4f86c4', mid: '#94bde0', horizon: '#f3d6a6', bottom: '#c9a274', sunDir: [-.25, .62, -.74], sunColor: '#ffe2b0', sunSize: .6, sunGlow: .9, clouds: .35, cloudColor: '#fff0dc', intensity: 1.0 });
     scene.add(sky);
     const sunDir = V(-.25, .62, -.74).normalize();
@@ -66,7 +67,7 @@ export default {
         cam.left = l; cam.right = l + w + tw; cam.bottom = b; cam.top = b + h + th; cam.near = Math.max(.1, -mx.z - 5); cam.far = -mn.z + 5; cam.updateProjectionMatrix(); };
       R.fitSun(-12, 78);
     }
-    const hemi = new THREE.HemisphereLight('#a4bce4', '#8a6848', .62); scene.add(hemi); R.hemi = hemi;
+    const hemi = new THREE.HemisphereLight('#a4bce4', '#8a6848', .76); scene.add(hemi); R.hemi = hemi;
 
     // ---- floor (stone tiles), extends into the garden and the courtyard
     const tileTex = TEX.drawTexture(512, 512, (x, W, H) => { const r = U.rng(5); x.fillStyle = '#7a6650'; x.fillRect(0, 0, W, H); const n = 2, s = W / n;
@@ -91,7 +92,7 @@ export default {
     const tileGeo = new THREE.ShapeGeometry(tileShape, 10).translate(0, 0, nb + .003);
     const iz = E.iznikTex(); iz.repeat.set(1 / .205, 1 / .205); iz.offset.set(.5, 0);
     const tileMat = new THREE.MeshPhysicalMaterial({ map: iz, roughness: .32, clearcoat: .7, clearcoatRoughness: .25 });
-    const nichePl = TEX.plaster({ a: '#69a8a4', b: '#4b8686', seed: 15, repeat: [1.2, 1.2] });
+    const nichePl = TEX.plaster({ a: '#78b4ae', b: '#579490', seed: 15, repeat: [1.2, 1.2] });
     const nicheMat = new THREE.MeshStandardMaterial({ map: nichePl.map, normalMap: nichePl.normalMap, normalScale: new THREE.Vector2(.5, .5), roughness: .92 });
     const bayIdx = []; for (let i = -16; i <= 96; i++) if (i !== DOOR) bayIdx.push(i);
     const m4 = new THREE.Matrix4();
@@ -200,7 +201,7 @@ export default {
       if (p.hero >= 0) p.on = R.T[p.hero] - .05;
       else if (p.row === 0) p.on = p.x > x14 ? R.W.ve - .08 + (p.x - x14) * .03 : R.W.diger;
       else p.on = p.x > x14 - 3 ? R.W.ve + (p.x - x14 + 3) * .03 : R.W.ve - .1;
-      p.lamp = p.row === 0 ? V(p.x - .34, 1.68, .3) : V(p.x + .34, 1.68, ROWB - .3);
+      p.lamp = p.row === 0 ? V(p.x - .34, p.hero >= 0 ? EX[p.hero].ly ?? 1.68 : 1.68, .3) : V(p.x + .34, 1.68, ROWB - .3);
     });
 
     // ---- hero exhibits + hero lamps
@@ -209,7 +210,8 @@ export default {
       const tgt = i === DOOR ? V(x, 1.05, WZ - .1) : V(x, R.PT + ex.ty, 0);
       const h = { i, tgt, ex, t0: R.T[i] };
       if (ex.f) { const obj = ex.f(); const holder = new THREE.Group(); holder.position.set(x, R.PT, 0); holder.rotation.y = ex.ry; holder.add(obj); scene.add(holder); h.obj = obj; h.holder = holder; }
-      if (i !== DOOR) { const p = pa.find(q => q.hero === i); const lamp = E.hangingLamp({ topY: R.vaultY(p.lamp.z) - p.lamp.y + .3, seed: i + 1 }); lamp.position.copy(p.lamp); scene.add(lamp); h.lamp = lamp; h.lampP = p.lamp.clone().add(V(0, lamp.userData.flameY, 0)); }
+      if (i !== DOOR) { const p = pa.find(q => q.hero === i); const lamp = E.hangingLamp({ topY: R.vaultY(p.lamp.z) - p.lamp.y + .3, seed: i + 1 }); lamp.position.copy(p.lamp); scene.add(lamp); h.lamp = lamp; h.lampP = p.lamp.clone().add(V(0, lamp.userData.flameY, 0));
+        const aim = tgt.clone().add(V(0, -.06, 0)); h.lampK = h.lampP.distanceToSquared(aim) / V(p.lamp.x, 1.68 + lamp.userData.flameY, p.lamp.z).distanceToSquared(aim); } // same light on the exhibit from a higher hang
       R.heroes.push(h);
     }
     // ---- far lamps (instanced) + flames + light pools (shader-driven on-times)
@@ -219,7 +221,7 @@ export default {
     const far = farObj.filter(p => !p.detail); R.far = far;
     const lampProf = [[0, 0], [.014, 0], [.016, .01], [.034, .016], [.06, .036], [.072, .062], [.066, .088], [.043, .108], [.033, .122], [.037, .15], [.049, .172], [.055, .18], [.05, .18], [.03, .12], [0, .11]];
     const glassGeo = E.latheGeo(lampProf, 10);
-    R.farGlass = inst(glassGeo, new THREE.MeshBasicMaterial({ color: '#ffffff' }), far.map(p => p.x), (x, k) => m4.makeTranslation(far[k].lamp.x, far[k].lamp.y, far[k].lamp.z), { color: true, recv: false });
+    R.farGlass = inst(glassGeo, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .62, depthWrite: false }), far.map(p => p.x), (x, k) => m4.makeTranslation(far[k].lamp.x, far[k].lamp.y, far[k].lamp.z), { color: true, recv: false, order: 2 }); R.farGlass.meshes.forEach(m => { m.userData.depthOk = true; });
     const chainGeo = E.merge([new THREE.CylinderGeometry(.004, .004, 1, 4).translate(0, .5, 0)]);
     inst(chainGeo, new THREE.MeshStandardMaterial({ color: '#3a2c1c', metalness: .6, roughness: .5 }), far.map(p => p.x), (x, k) => { const p = far[k]; const top = R.vaultY(p.lamp.z) + .3; return m4.compose(V(p.lamp.x, p.lamp.y + .18, p.lamp.z), new THREE.Quaternion(), V(1, top - p.lamp.y - .18, 1)); }, { recv: false });
     inst(new THREE.SphereGeometry(.03, 6, 4), MAT.brass(), far.map(p => p.x), (x, k) => m4.makeTranslation(far[k].lamp.x, far[k].lamp.y + .56, far[k].lamp.z));
@@ -245,11 +247,11 @@ export default {
     const flames = new THREE.Points(fg, new THREE.ShaderMaterial({ uniforms: fu, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
       vertexShader: `uniform float time; attribute float on, seed; varying float vB; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; float b = smoothstep(on, on + .3, time); vB = b * (.85 + .15 * sin(time * 11. + seed * 7.)); gl_PointSize = max(2., 240. / -mv.z) * (.4 + .6 * b); }`,
       fragmentShader: `uniform sampler2D map; varying float vB; void main(){ float a = texture2D(map, gl_PointCoord).a; vec3 c = mix(vec3(1., .5, .16), vec3(1., .9, .65), a * a); gl_FragColor = vec4(c * 2.4, a * vB); }` }));
-    flames.userData.uniforms = fu; flames.userData.noDepth = true; flames.frustumCulled = false; scene.add(flames);
+    flames.userData.uniforms = fu; flames.userData.noDepth = true; flames.frustumCulled = false; flames.renderOrder = 3; scene.add(flames);
     const halos = new THREE.Points(fg, new THREE.ShaderMaterial({ uniforms: fu, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
       vertexShader: `uniform float time; attribute float on, seed; varying float vB; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; float b = smoothstep(on, on + .4, time); vB = b; gl_PointSize = max(3., 700. / -mv.z) * (.5 + .5 * b); }`,
       fragmentShader: `uniform sampler2D map; varying float vB; void main(){ float a = texture2D(map, gl_PointCoord).a; gl_FragColor = vec4(vec3(1., .62, .3), a * a * vB * .06); }` }));
-    halos.userData.uniforms = fu; halos.userData.noDepth = true; halos.frustumCulled = false; scene.add(halos);
+    halos.userData.uniforms = fu; halos.userData.noDepth = true; halos.frustumCulled = false; halos.renderOrder = 3; scene.add(halos);
     // generic exhibits on far pedestals
     const gg = E.genericGeos(); const pal = ['#c47a48', '#d6a94e', '#3f8a86', '#e8dcc2', '#8a3a2a', '#5b7a3a', '#2f5d9a'];
     const glazeTex = TEX.drawTexture(64, 256, (x, W, H) => { x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H); // glazed bands + small lozenges (tinted per instance)
@@ -286,28 +288,28 @@ export default {
     R.motes = FX.particles({ count: 380, center: [9, 1.6, .1], box: [26, 2.6, 1.3], size: 2.2, color: '#ffe2b0', opacity: .4, drift: [.03, .02, 0], swirl: .05 }); scene.add(R.motes);
     R.motes2 = FX.particles({ count: 600, center: [x14 + 16, 2.0, 1.6], box: [30, 3.6, 4.6], size: 3.5, color: '#ffe2b0', opacity: 0, drift: [.03, .02, 0], swirl: .06 }); scene.add(R.motes2);
 
-    // ---- camera keys
+    // ---- camera keys: ONE continuous glide past the pedestals (Catmull-Rom through one key per exhibit, the exhibit centred ~.18 s
+    //      after its word; no dwell-then-whip, no fov pumping). At fov 40 the 9:16 frame holds about one bay, so screen speed stays
+    //      ~30-45 px/frame through the quick beats and the lit exhibit is in frame while its name is up.
     camera.near = .03; camera.far = 600;
-    const keys = []; const camFor = i => { const h = R.heroes[i]; const D = h.ex.D * 1.1, hh = h.ex.h * 1.05; /* slightly wider framing: neighbours stay readable, lower glide speed */ return { pos: V(h.tgt.x - D * Math.sin(TH), h.tgt.y + hh, h.tgt.z + D * Math.cos(TH)), look: h.tgt.clone(), fov: 31 }; };
-    const c0 = camFor(0);
-    keys.push({ t: -.75, pos: c0.pos.clone().add(V(-1.0, .55, 1.25)), look: c0.look.clone().add(V(.45, .05, 0)), fov: 33, a: 1 });
-    keys.push({ t: R.T[0] + .78, ...camFor(0), a: .45 });
-    for (let i = 1; i < 14; i++) { const k = camFor(i), tk = R.T[i] + .14; let prev = keys[keys.length - 1];
+    const FOV = 40, lerp = (a, b, u) => a + (b - a) * u;
+    const meanP = R.heroes.filter(h => h.i !== DOOR).reduce((s, h) => s + Math.atan2(h.ex.h, h.ex.D), 0) / 13;
+    const camFor = i => { const h = R.heroes[i]; const D = Math.min(h.ex.D * 1.15, 2.72 / Math.cos(TH)); // stay clear of row B (z < 2.72)
+      const hh = D * Math.tan(lerp(Math.atan2(h.ex.h * .955, h.ex.D), meanP, .5)); // per-exhibit view angle, half-way to the mean (flatter glide)
+      return { pos: V(h.tgt.x - D * Math.sin(TH), h.tgt.y + hh, h.tgt.z + D * Math.cos(TH)), look: h.tgt.clone(), fov: FOV }; };
+    const keys = []; const c0 = camFor(0);
+    keys.push({ t: -.75, pos: c0.pos.clone().add(V(-1.0, .5, .3)), look: c0.look.clone().add(V(.4, .05, 0)), fov: FOV + 1.5 });
+    keys.push({ t: R.T[0] + .78, ...c0 });
+    for (let i = 1; i < 14; i++) {
       if (i === DOOR) { // HOŞGÖRÜ: arrive on the closed door just before the word, then a slow push toward the opening as it swings open
-        const A = { pos: V(xd - .46, 1.3, 2.9), look: V(xd + .2, 1.71, -3.0), fov: 40 }, B = { pos: V(xd - .34, 1.27, 2.4), look: V(xd + .24, 1.76, -3.0), fov: 39 };
-        const ta = R.T[i] - .1, tm = (prev.t + ta) / 2;
-        keys.push({ t: tm, pos: prev.pos.clone().lerp(A.pos, .5).add(V(0, .03, .3)), look: prev.look.clone().lerp(A.look, .5), fov: 36, a: 1 });
-        keys.push({ t: ta, ...A, a: .4 }); keys.push({ t: R.T[i] + .5, ...B, a: .5 }); continue; }
-      if (tk - prev.t > .95 && i !== DOOR + 1) { // long gap: linger on the current exhibit (slow drift + push-in), then glide on
-        const th = Math.max(prev.t + .45, tk - .85); keys.push({ t: th, pos: prev.pos.clone().add(V(.11, -.01, -.07)), look: prev.look.clone().add(V(.06, 0, 0)), fov: prev.fov, a: .9 }); prev = keys[keys.length - 1]; }
-      if (tk - prev.t > .6) { const tm = (prev.t + tk) / 2; // mid-glide: ease back + widen a little so both neighbours stay readable
-        keys.push({ t: tm, pos: prev.pos.clone().lerp(k.pos, .5).add(V(-.03, .06, .28)), look: prev.look.clone().lerp(k.look, .5).add(V(0, .03, 0)), fov: 33.5, a: 1 }); }
-      keys.push({ t: i === DOOR + 1 ? tk + .06 : tk, ...k, a: R.T[i + 1] !== undefined && R.T[i + 1] - R.T[i] < 1.0 ? .32 : .3 }); } // keep drifting through quick beats (lower peak glide speed)
-    const c13 = camFor(13);
-    keys.push({ t: R.W.ve - .4, pos: c13.pos.clone().add(V(.12, .08, .08)), look: c13.look.clone().add(V(.2, .05, 0)), fov: 31.5, a: 1 });
-    keys.push({ t: 15.7, pos: V(x14 + .2, 2.05, 2.62), look: V(x14 + 4.8, 1.3, -.2), fov: 37.5, a: 1 }); // pulled back across the hall: the lit row recedes diagonally
-    keys.push({ t: 16.75, pos: V(x14 - .9, 2.5, 2.15), look: V(x14 + 12, 2.15, .95), fov: 40, a: 1 });
-    keys.push({ t: 18.4, pos: V(x14 - 2.6, 2.7, 1.7), look: V(x14 + 22, 2.6, 1.6), fov: 42, a: 1 });
+        keys.push({ t: R.T[i] - .12, pos: V(xd - .5, 1.32, 2.72), look: V(xd + .55, 1.45, -3.0), fov: 42, a: .7 });
+        keys.push({ t: R.T[i] + .3, pos: V(xd - .36, 1.3, 2.38), look: V(xd + .6, 1.42, -3.0), fov: 41, a: .7 }); continue; }
+      keys.push({ t: R.T[i] + .18, ...camFor(i) }); }
+    // finale: from the jug the camera turns down the gallery and cranes up / dollies back while the far lamps light (reads by "bütün")
+    const yp = (t, pos, yaw, pitch, fov) => { const y = yaw * Math.PI / 180, p = pitch * Math.PI / 180; return { t, pos, look: pos.clone().add(V(Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p)).multiplyScalar(5)), fov }; };
+    keys.push(yp(R.W.butun - .15, V(x14 - .3, 2.05, 2.58), 57, -7.5, 40));
+    keys.push(yp(R.W.ahlak + .4, V(x14 - 1.05, 2.45, 2.18), 84.5, -1.6, 41));
+    keys.push(yp(18.4, V(x14 - 2.6, 2.7, 1.7), 89.8, -.3, 42.5));
     const toV = k => { const d = k.look.clone().sub(k.pos); return { t: k.t, a: k.a, v: [k.pos.x, k.pos.y, k.pos.z, Math.atan2(d.x, -d.z), Math.atan2(d.y, Math.hypot(d.x, d.z)), k.fov] }; };
     const hk = keys.map(toV); const n = hk.length;
     const tang = hk.map((k, i) => { const p = hk[Math.max(0, i - 1)], q = hk[Math.min(n - 1, i + 1)]; return k.v.map((_, c) => (q.v[c] - p.v[c]) / Math.max(1e-6, q.t - p.t) * (k.a ?? 1)); });
@@ -354,7 +356,7 @@ export default {
       s.color.set('#ffc88e');
       if (cur < 0) { s.intensity = 0; return; }
       const h = R.heroes[cur]; s.position.copy(h.lampP); s.target.position.copy(h.tgt).add(V(0, -.06, 0)); s.target.updateMatrixWorld();
-      s.intensity = 6.6 * (h.ex.L ?? 1) * lits[cur] * (1 + .04 * Math.sin(t * 13 + cur) * Math.sin(t * 7.3 + cur));
+      s.intensity = 6.6 * (h.ex.L ?? 1) * (h.lampK ?? 1) * lits[cur] * (1 + .04 * Math.sin(t * 13 + cur) * Math.sin(t * 7.3 + cur));
     });
     // door (HOŞGÖRÜ): leaves swing inward, sunlight pours in
     const td = R.T[DOOR]; const op = U.prog(t, td - .08, td + .85, 'outCubic'); const settle = t > td + .55 ? Math.exp(-4 * (t - td - .55)) * Math.sin((t - td - .55) * 9) * .035 : 0;
@@ -378,18 +380,21 @@ export default {
     R.genIM.forEach(im => { im.list.forEach((p, k) => { const b = U.smoothstep(p.on, p.on + .4, t); c.copy(p.gc).multiplyScalar(.55 + 1.0 * b); c.r *= 1 + .25 * b; im.setColor(k, c); }); im.flush(); });
     // ---- post: DOF on the current exhibit, opening up in the finale
     const look = camera.position.clone().add(dir.clone().multiplyScalar(1));
-    let fd = 2.5; { let best = 1e9; R.heroes.forEach(h => { const d = h.tgt.clone().sub(camera.position); const along = d.dot(dir); const lat = d.clone().sub(dir.clone().multiplyScalar(along)).length(); if (along > .5 && lat < best) { best = lat; fd = along; } }); }
+    let fd = 2.5; { // focus on the exhibit nearest the view axis, soft-blended between neighbours so the focus never jumps mid-glide
+      const c = R.heroes.map(h => { const d = h.tgt.clone().sub(camera.position); const along = d.dot(dir); return { along, lat: d.clone().sub(dir.clone().multiplyScalar(along)).length() }; }).filter(c => c.along > .5);
+      if (c.length) { const best = Math.min(...c.map(c => c.lat)); let sw = 0, sf = 0; c.forEach(c => { const w = Math.exp(-(c.lat - best) / .18) * (.02 + U.smoothstep(.5, 1.1, c.along)); sw += w; sf += w * c.along; }); fd = sf / sw; } }
     const dw = U.smoothstep(R.T[DOOR] - .55, R.T[DOOR] - .15, t) * (1 - U.smoothstep(R.T[DOOR] + .7, R.T[DOOR] + 1.0, t)); // door shot: hold the tree and the doorway together
     post.dof.focus = U.lerp(U.lerp(fd, 6.5, dw), 9, fin); post.dof.range = U.lerp(U.lerp(1.5, 10, dw), 14, fin); post.dof.amount = U.lerp(U.lerp(.85, .4, dw), .55, fin);
     // motion blur only where the camera glides fast (screen speed centred on this frame)
-    { const sp = R.pxSpeed(t - 1 / 60); post.motionBlur = sp > 40 ? { samples: 3, shutter: .36 } : { samples: 1 }; }
+    { const sp = R.pxSpeed(t - 1 / 60); post.motionBlur = sp < 14 ? { samples: 1 } : { samples: sp < 26 ? 2 : sp < 40 ? 3 : sp < 52 ? 4 : 5, shutter: .5 };
+      R.motes.userData.uniforms.opacity.value = .4 * (1 - .6 * U.smoothstep(25, 55, sp)); } // point sprites strobe worst: thin them while gliding
     post.exposure = 1.05 + .05 * fin;
 
     // ---- typography
     const X = ui.ctx;
-    const label = (str, t0, t1) => {
-      if (t < t0 - .01 || t > t1 + .16) return;
-      const a = U.clamp((t - t0) / .12), sIn = U.ease.outBack(U.clamp((t - t0) / .3), 2.4), ex = U.clamp((t - t1) / .14);
+    const label = (str, t0, t1, gone = 0) => {
+      if (t < t0 - .01 || t > t1 + .16 || gone >= 1) return;
+      const a = U.clamp((t - t0) / .12), sIn = U.ease.outBack(U.clamp((t - t0) / .3), 2.4), ex = Math.max(U.clamp((t - t1) / .14), gone);
       const alpha = a * (1 - ex); if (alpha <= .001) return;
       X.save(); X.font = '900 100px "Nunito"'; X.letterSpacing = '5px'; const w = X.measureText(str).width; const size = Math.min(104, 100 * 840 / w);
       X.globalAlpha = alpha; X.translate(540 - ex * 70, 455 - ex * 10); const sc = (.55 + .45 * sIn) * (1 - .06 * ex); X.scale(sc, sc);
@@ -400,7 +405,9 @@ export default {
       X.restore();
     };
     if (!DEBUG) {
-      R.heroes.forEach((h, i) => { const t1 = i < 13 ? R.heroes[i + 1].t0 - .2 : R.W.ve - .18; label(NAMES[i], h.t0 - .04, t1); });
+      R.heroes.forEach((h, i) => { const t1 = i < 13 ? R.heroes[i + 1].t0 - .2 : R.W.ve - .18; if (t < h.t0 - .05 || t > t1 + .16) return;
+        const sx = ui.project(h.tgt)[0]; const gone = t > h.t0 + .15 ? 1 - U.smoothstep(70, 240, sx) : 0; // the name leaves with its exhibit
+        label(NAMES[i], h.t0 - .04, t1, gone); });
       // progress dots
       const dAlpha = U.smoothstep(-.4, 0, t) * (1 - U.smoothstep(R.W.ve - .1, R.W.ve + .25, t));
       if (dAlpha > .001) { X.save(); X.globalAlpha = dAlpha; // soft scrim keeps the row legible over lamp glow; equal dot sizes, current dot gets a ring
@@ -413,7 +420,9 @@ export default {
       // finale words
       const W = R.W;
       { const sa = U.smoothstep(W.ve - .1, W.ve + .4, t); if (sa > .001) { X.save(); X.globalAlpha = sa * .55; const gr = X.createRadialGradient(540, 450, 40, 540, 450, 420); gr.addColorStop(0, 'rgba(26,12,4,.75)'); gr.addColorStop(1, 'rgba(26,12,4,0)'); X.fillStyle = gr; X.setTransform(1, 0, 0, .42, 0, 450 * .58); X.fillRect(0, 0, 1080, 1080); X.restore(); } }
-      ui.text('…ve bütün', { t, t0: W.ve - .03, x: 540, y: 380, size: 70, weight: 800, color: '#fff3dc', anim: 'rise', dur: .4, stroke: 'rgba(40,20,8,.55)', strokeW: 9 });
+      { X.save(); X.font = '800 70px "Nunito"'; X.letterSpacing = '0px'; const wAll = X.measureText('…ve bütün').width, wB = X.measureText('bütün').width; X.restore();
+        const fo = { t, y: 380, size: 70, weight: 800, color: '#fff3dc', anim: 'rise', dur: .4, stroke: 'rgba(40,20,8,.55)', strokeW: 9 };
+        ui.text('…ve', { ...fo, t0: W.ve - .03, x: 540 - wAll / 2, align: 'left' }); ui.text('bütün', { ...fo, t0: W.butun - .04, x: 540 + wAll / 2 - wB / 2 }); }
       ui.text('güzel ahlâk', { t, t0: W.guzel - .04, x: 540, y: 498, size: 128, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 3, dur: .45, stroke: 'rgba(52,26,10,.6)', strokeW: 15 });
     }
   },

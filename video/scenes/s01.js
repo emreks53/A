@@ -166,6 +166,10 @@ export default {
     const tau = R.tauAt(t), D = Math.exp(R.cLD(tau)), B = R.book;
     const cam = R.camPos(tau, U.shake(t, .03 * Math.min(1, D / 6) + .0025, .35, 7));
     camera.position.copy(cam); camera.lookAt(cam.clone().add(R.camDir(cam, tau))); camera.fov = R.cFov(tau); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    // hero-lamp flame cores fade within ~110 px of the frame edge: screen-space bloom / DOF drop an off-screen core in one frame (edge pop);
+    // their large glow sprites are real geometry and keep sliding out smoothly
+    { const v = new THREE.Vector3(); for (const l of R.heroLamps) { const fl = l.userData.flame; fl.getWorldPosition(v); v.project(camera);
+      const e = v.z < 1 ? Math.min((1 - Math.abs(v.x)) * 540, (1 - Math.abs(v.y)) * 960) : -1; fl.material.uniforms.intensity.value = 4 * U.smoothstep(0, 110, e); } }
     // pixel metrics for sprites / stars
     const rh = renderer.getDrawingBufferSize(new THREE.Vector2()).y; const fpx = rh / (2 * Math.tan(camera.fov * D2R / 2));
     R.patch.visible = D < 7; R.dust.visible = D < 8; // fine grain only matters near the hero (avoids far z-fighting)

@@ -148,7 +148,13 @@ export default {
     });
     const shelves = instances(M.rbox(BAY - PIL, .028, .34, .008, 2), shelfMat, shelfList); scene.add(shelves);
     const pils = instances(M.rbox(PIL, 1, .42, .015, 2), caseMat, pilList); scene.add(pils);
+    // One gold-tooled book on the shelf above the heroes sits inside the sun-spot: when the pull-back starts the camera
+    // crosses its mirror plane and the foil reflection of the spot flashed on in a single frame (t≈3.32). Render that
+    // one book with its own, rougher material (broader lobe -> the sheen fades in smoothly instead of popping).
+    const gi = bookItems.findIndex(it => Math.abs(it.x - .175) < .004 && Math.abs(it.y - (HERO_Y + .38)) < .004);
+    const glintBook = gi >= 0 ? bookItems.splice(gi, 1)[0] : null;
     const books = instancedBooks(bookItems, atlas, { envIntensity: 1.2 }); scene.add(books); R.books = books;
+    if (glintBook) { const gb = instancedBooks([glintBook], atlas, { envIntensity: 1.2 }); gb.material.roughness = 1.8; scene.add(gb); R.glintBook = gb; }
 
     // galleries with balustrades
     const balGeo = new THREE.LatheGeometry([[0, 0], [.03, 0], [.03, .05], [.018, .1], [.032, .3], [.02, .55], [.026, .7], [.03, .74], [0, .74]].map(([r, y]) => new THREE.Vector2(Math.max(r, 1e-4), y)), 10);

@@ -82,7 +82,8 @@ export default {
     // ---- the two camps ----
     R.flags = []; R.fires = []; R.tentA = [];
     const poleMat = MAT.wood({ a: '#7a5532', b: '#4a3018', rings: 30 });
-    const ropeMat = new THREE.MeshStandardMaterial({ color: '#c4ad84', roughness: .95 });
+    // dark goat-hair rope (a pale rope lit by the fires blooms into bright lines)
+    const ropeMat = new THREE.MeshStandardMaterial({ color: '#7e6a50', roughness: 1 });
     for (const C of CAMPS) {
       const friend = C.side < 0; const G = new THREE.Group(); scene.add(G);
       const cl = tentCloth({ dark: !friend, seed: friend ? 4 : 8 });
@@ -91,7 +92,7 @@ export default {
       const rug = rugTex(friend ? { a: '#8a2a1e', b: '#22335a', c: '#e2c48a', d: '#3a1810', seed: 3 } : { a: '#5a1a14', b: '#1a1a24', c: '#b89a6a', d: '#2a120c', seed: 6 });
       const cushion = new THREE.MeshPhysicalMaterial({ color: friend ? '#8a3a24' : '#5a2018', roughness: .95, sheen: 1, sheenColor: new THREE.Color('#ffb088'), sheenRoughness: .5 });
       C.tents.forEach(([x, z, yawDeg, L, D, hM, n], k) => {
-        const T = bedouinTent({ L, D, hM, hB: hM * .58, hF: hM * .8, n, seed: k * 5 + (friend ? 1 : 21), mat: clothMat, poleMat, ropeMat, band, rug, cushionMat: cushion, tassel: friend ? '#c8401e' : '#9a1e16', nx: k ? 54 : 76, nz: k ? 28 : 40, endRopes: [friend ? -1 : 1], skipFront: [friend ? n - 1 : 0] });
+        const T = bedouinTent({ L, D, hM, hB: hM * .58, hF: hM * .8, n, seed: k * 5 + (friend ? 1 : 21), mat: clothMat, poleMat, ropeMat, band, rug, cushionMat: cushion, tassel: friend ? '#c8401e' : '#9a1e16', nx: k ? 54 : 76, nz: k ? 28 : 40, endRopes: [friend ? -1 : 1], skipFront: k ? [friend ? n - 1 : 0] : (friend ? [1, 2, 3] : [0, 1, 2]) }); // main tent: no front ropes staked into the campfire ring
         T.position.set(x, hAt(x, z) - .005, z); T.rotation.y = yawDeg * Math.PI / 180; G.add(T);
         if (k === 0) R.tentA.push(T);
       });
@@ -100,10 +101,11 @@ export default {
       const plx = TA.userData.poleX[1]; const pb = TA.localToWorld(new THREE.Vector3(plx, 0, 0)), ptop = TA.localToWorld(new THREE.Vector3(plx, 3.1, 0));
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(.03, .04, 3.1, 10), poleMat); pole.position.copy(pb).add(new THREE.Vector3(0, 1.55, 0)); pole.castShadow = true; G.add(pole);
       const tip = M.lathe([[.045, 0], [.055, .035], [.018, .17], [.0001, .22]], MAT.brass(), 12); tip.position.copy(ptop); G.add(tip);
-      const fg = new THREE.PlaneGeometry(1.0, .62, 26, 12); fg.translate(.5, 0, 0);
-      const flagTex = TEX.drawTexture(256, 160, (x, w, h) => { x.fillStyle = friend ? '#2f9a5a' : '#8e1f1c'; x.fillRect(0, 0, w, h); x.fillStyle = friend ? 'rgba(10,50,25,.5)' : 'rgba(50,8,6,.5)'; x.fillRect(0, 0, 14, h); x.fillRect(0, 0, w, 6); x.fillRect(0, h - 6, w, 6); const r = U.rng(friend ? 2 : 3); x.globalAlpha = .1; for (let i = 0; i < 700; i++) { x.fillStyle = r() < .5 ? '#000' : '#fff'; x.fillRect(r() * w, r() * h, 3, 1); } });
-      const flagMat = new THREE.MeshPhysicalMaterial({ map: flagTex, roughness: .9, sheen: .9, sheenColor: new THREE.Color(friend ? '#9effc0' : '#ff8a7a'), side: THREE.DoubleSide });
-      const flag = new THREE.Mesh(fg, flagMat); flag.position.copy(ptop).add(new THREE.Vector3(0, -.36, 0)); flag.castShadow = true; G.add(flag);
+      const fg = new THREE.PlaneGeometry(1.0, .62, 26, 12); fg.translate(.5, 0, 0); fg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(fg.attributes.position.count * 3).fill(1), 3));
+      const flagTex = TEX.drawTexture(256, 160, (x, w, h) => { x.fillStyle = friend ? '#278550' : '#7a1917'; x.fillRect(0, 0, w, h);
+        const gr = x.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(0,0,0,.22)'); gr.addColorStop(.6, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(255,190,120,.10)'); x.fillStyle = gr; x.fillRect(0, 0, w, h); x.fillStyle = friend ? 'rgba(10,50,25,.5)' : 'rgba(50,8,6,.5)'; x.fillRect(0, 0, 14, h); x.fillRect(0, 0, w, 6); x.fillRect(0, h - 6, w, 6); const r = U.rng(friend ? 2 : 3); x.globalAlpha = .1; for (let i = 0; i < 700; i++) { x.fillStyle = r() < .5 ? '#000' : '#fff'; x.fillRect(r() * w, r() * h, 3, 1); } });
+      const flagMat = new THREE.MeshPhysicalMaterial({ map: flagTex, roughness: .9, sheen: .35, sheenRoughness: .6, sheenColor: new THREE.Color(friend ? '#58b07c' : '#b0453a'), vertexColors: true, side: THREE.DoubleSide });
+      const flag = new THREE.Mesh(fg, flagMat); flag.position.copy(ptop).add(new THREE.Vector3(0, -.36, 0)); flag.rotation.y = -.55; flag.castShadow = true; G.add(flag); // streams downwind (+x, a little toward the viewer) so the ripple reads in silhouette
       flag.userData.base = Float32Array.from(fg.attributes.position.array); flag.userData.L = 1.0; R.flags.push(flag);
       R[friend ? 'flagTopL' : 'flagTopR'] = ptop.clone().add(new THREE.Vector3(0, .2, 0));
       // campfire in front of the main tent: its light plays on the cloth
@@ -176,7 +178,7 @@ export default {
     R.rig = U.cameraRig(camera, {
       pos: [[0.55, 3.75, 14.8], [0.4, 3.55, 13.4], [0.15, 3.3, 12.2], [0, 3.1, 11.2]],
       look: [[0.12, .3, -3.4], [.08, .28, -3.35], [0.03, .26, -3.25], [0, .25, -3.2]],
-      t0: -0.6, t1: 7.0, ease: t => .3 * t + .7 * (-(Math.cos(Math.PI * t) - 1) / 2), shake: { amp: .02, freq: .4 },
+      t0: -0.6, t1: 7.0, arc: true, ease: t => .3 * t + .7 * (-(Math.cos(Math.PI * t) - 1) / 2), shake: { amp: .02, freq: .4 },
     });
     // label anchors: tops of the two banner poles
     R.anchorL = R.flagTopL; R.anchorR = R.flagTopR;
@@ -190,9 +192,12 @@ export default {
     const ti = t - (tSah + .12); if (ti > 0 && ti < .5) { const a = .045 * Math.exp(-ti * 9); camera.position.x += Math.sin(ti * 70) * a; camera.position.y += Math.cos(ti * 55) * a * .7; }
     // fires flicker, flags wave
     R.fires.forEach((L, i) => ENV.flicker(L, t, i * 3 + 1, .2));
-    R.flags.forEach((f, k) => { const g = f.geometry, p = g.attributes.position, b = f.userData.base; const ph = k * 1.7;
-      for (let i = 0; i < p.count; i++) { const x = b[i * 3], y = b[i * 3 + 1]; const u = x / f.userData.L; const w = Math.sin(x * 4.6 - t * 5.6 + ph) * .14 * u + Math.sin(x * 9.5 - t * 9.3 + y * 3 + ph) * .045 * u; p.setXYZ(i, x * (1 - .04 * u), y - u * u * .06 + Math.sin(x * 3 - t * 4 + ph) * .015 * u, w); }
-      p.needsUpdate = true; g.computeVertexNormals(); });
+    // (the visible face is back-lit by the afterglow, so the folds also get a baked light/dark term from the wave slope)
+    R.flags.forEach((f, k) => { const g = f.geometry, p = g.attributes.position, c = g.attributes.color, b = f.userData.base; const ph = k * 1.7;
+      for (let i = 0; i < p.count; i++) { const x = b[i * 3], y = b[i * 3 + 1]; const u = x / f.userData.L; const a1 = x * 7 - t * 6.8 + ph, a2 = x * 12 - t * 10 + y * 3 + ph;
+        const w = Math.sin(a1) * .16 * u + Math.sin(a2) * .04 * u; p.setXYZ(i, x * (1 - .05 * u), y - u * u * .06 + Math.sin(x * 3 - t * 4 + ph) * .015 * u + Math.sin(x * 6 - t * 7 + ph) * .045 * u, w);
+        const sl = Math.cos(a1) * 1.12 * u + Math.cos(a2) * .48 * u + (Math.sin(a1) * .16 + Math.sin(a2) * .04); const sh = U.clamp(.82 + .3 * sl, .48, 1.16); c.setXYZ(i, sh, sh, sh); }
+      p.needsUpdate = true; c.needsUpdate = true; g.computeVertexNormals(); });
     // lamp chain pools
     const pc = R.pools.instanceColor; R.items.forEach((it, i) => { const b = U.smoothstep(it.on, it.on + .3, t) * (.88 + .12 * Math.sin(t * 9 + i)); pc.setXYZ(i, b, b * .8, b * .6); }); pc.needsUpdate = true;
     // the central light breathes very slightly (steady flame), gains attention on "onun şahsında"
@@ -206,8 +211,11 @@ export default {
     const endT = 99;
     const aL = ui.project(R.anchorL), aR = ui.project(R.anchorR);
     const pL = pillPos(ui, aL, 'DOSTLARI', 50), pR = pillPos(ui, aR, 'DÜŞMANLARI', 50);
-    ui.callout('DOSTLARI', { t, t0: tD - .05, t1: endT, anchor: [aL[0], aL[1]], to: pL, size: 50, weight: 900, bg: 'rgba(31,110,66,.94)', color: '#f2fff4', dotColor: '#7dffb0', lineColor: 'rgba(220,255,230,.9)' });
-    ui.callout('DÜŞMANLARI', { t, t0: tDu - .05, t1: endT, anchor: [aR[0], aR[1]], to: pR, size: 50, weight: 900, bg: 'rgba(140,30,26,.94)', color: '#fff0ec', dotColor: '#ff9a8a', lineColor: 'rgba(255,225,220,.9)' });
+    // leader (dot + line ending at the pill's bottom edge, never through the letters), then an opaque pill that lands on the word
+    leader(ui, t, tD - .45, aL, pL, '#7dffb0', 'rgba(220,255,230,.9)');
+    leader(ui, t, tDu - .45, aR, pR, '#ff9a8a', 'rgba(255,225,220,.9)');
+    ui.pill('DOSTLARI', { t, t0: tD - .2, x: pL[0], y: pL[1], size: 50, weight: 900, bg: 'rgb(31,110,66)', color: '#f2fff4' });
+    ui.pill('DÜŞMANLARI', { t, t0: tDu - .2, x: pR[0], y: pR[1], size: 50, weight: 900, bg: 'rgb(140,30,26)', color: '#fff0ec' });
     // "dahi" — small gold tag tucked under the right end of the DÜŞMANLARI pill, clear of the pill and its leader line
     ui.text('dahi', { t, t0: tDa - .03, t1: endT, x: Math.min(pR[0] + pR[2] / 2 - 38, 1000 - 52), y: pR[1] + 82, size: 40, weight: 900, color: '#ffd27a', anim: 'pop', rotate: -.06, shadowBlur: 10, shadowColor: 'rgba(20,6,4,.85)' });
     // dashed arrows: both camps -> the same light
@@ -218,7 +226,11 @@ export default {
     }
     // label for the light
     const slabS = ui.project(R.slabFront);
-    typedPill(ui, 'üstün ve yetişilemeyen ahlâk', t, tU - .02, tY + .55 - tU, 540, U.clamp(slabS[1] + 62, 1150, 1288), 44);
+    // typed in step with the narration: 'üstün' (5) holds through the pause, ' ve' (8), ' yetişilemeyen' (22), ' ahlâk' (28)
+    const tVe = ctx.wordTime('ve'), tA = ctx.wordTime('ahlaka');
+    const nC = U.kf(t, [[tU - .04, 0], [tU + .32, 5], [tVe - .05, 5], [tVe + .1, 8], [tY - .03, 8], [tY + .44, 22], [tA - .03, 22], [tA + .26, 28]], x => x);
+    const hold = t > tU + .32 && t < tVe - .05; const caret = !hold || ((t - tU - .32) * 2.4) % 1 < .55;
+    typedPill(ui, 'üstün ve yetişilemeyen ahlâk', t, tU - .04, nC, caret, 540, U.clamp(slabS[1] + 62, 1150, 1288), 44);
     // ŞAHİT stamp with dust puff
     stamp(ui, t, tSah + .02, 540, 600);
   },
@@ -230,6 +242,17 @@ function rngLocal(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5
 // pill placed above its anchor (the camp), kept inside the safe zone x 80..1000; returns [x, y, width]
 function pillPos(ui, a, str, size) { const X = ui.ctx; X.save(); X.font = ui.font(size, 900, 'Nunito'); const w = X.measureText(str).width + size * .84; X.restore();
   return [Math.min(Math.max(a[0], 80 + w / 2 + 8), 1000 - w / 2 - 8), Math.min(Math.max(a[1] - 112, 292), 420), w]; }
+
+// Callout leader: dot pops on the anchor, line grows to the pill's bottom edge (the opaque pill is drawn on top, so the line never crosses its text)
+function leader(ui, t, t0, a, p, dotColor, lineColor) {
+  const k = t - t0; if (k <= 0) return; const X = ui.ctx; const c01 = v => Math.max(0, Math.min(1, v));
+  const pr = 1 - Math.pow(1 - c01(k / .4), 3), al = 1 - Math.pow(1 - c01(k / .3), 3); const u = c01(k / .3), ds = 1 + 2.70158 * Math.pow(u - 1, 3) + 1.70158 * Math.pow(u - 1, 2);
+  const bx = Math.min(Math.max(a[0], p[0] - p[2] / 2 + 34), p[0] + p[2] / 2 - 34), by = p[1] + 38;
+  X.save(); X.globalAlpha = al; X.lineCap = 'round'; X.shadowColor = 'rgba(0,0,0,.4)'; X.shadowBlur = 8;
+  X.strokeStyle = lineColor; X.lineWidth = 4; X.beginPath(); X.moveTo(a[0], a[1]); X.lineTo(a[0] + (bx - a[0]) * pr, a[1] + (by - a[1]) * pr); X.stroke();
+  X.beginPath(); X.arc(a[0], a[1], 9 * Math.max(0, ds), 0, Math.PI * 2); X.fillStyle = dotColor; X.fill();
+  X.restore();
+}
 
 // Dashed Kurzgesagt arrow (quadratic arc) from a to b, drawn up to progress pr
 function arrow(ui, a, b, pr, alpha, bend) {
@@ -266,14 +289,14 @@ function stamp(ui, t, t0, x, y) {
 }
 
 // pill whose background grows with the typed text (no empty box before the first letters)
-function typedPill(ui, str, t, t0, dur, x, y, size) {
+function typedPill(ui, str, t, t0, nC, caret, x, y, size) {
   const k = t - t0; if (k < 0) return; const X = ui.ctx;
-  const n = Math.min(str.length, Math.floor(str.length * Math.min(1, k / dur)) + 1); const shown = str.slice(0, n);
+  const n = Math.min(str.length, Math.max(1, Math.ceil(nC - 1e-6))); const shown = str.slice(0, n);
   X.save(); X.font = ui.font(size, 800, 'Nunito'); const full = X.measureText(str).width, w = X.measureText(shown).width;
   const a = Math.min(1, k / .18); const pad = size * .42, h = size * 1.12 + pad * 1.24; const bw = Math.max(w, size * .6) + pad * 2;
   X.globalAlpha = a; X.translate(x - full / 2 - pad, y);
   X.fillStyle = 'rgba(22,24,44,.8)'; X.shadowColor = 'rgba(0,0,0,.35)'; X.shadowBlur = 24; X.shadowOffsetY = 8; ui.rrect(0, -h / 2, bw, h, h / 2); X.fill();
   X.shadowColor = 'transparent'; X.fillStyle = '#fff4dc'; X.textAlign = 'left'; X.textBaseline = 'middle'; X.fillText(shown, pad, 0);
-  if (n < str.length) { X.fillStyle = 'rgba(255,244,220,.8)'; X.fillRect(pad + w + 4, -size * .4, 4, size * .8); }
+  if (n < str.length && caret) { X.fillStyle = 'rgba(255,244,220,.8)'; X.fillRect(pad + w + 4, -size * .4, 4, size * .8); }
   X.restore();
 }
