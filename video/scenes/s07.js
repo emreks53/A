@@ -121,9 +121,17 @@ export default {
     const tSid = R.tSid;
     R.volley.update(t);
     // --- camera: fast low hand-held dolly forward, roll, shake, jolt + punch-in on the hit ---
-    if (!R.camP) R.camP = C.camPath([[-0.5, [1.35, 1.2, 9.6], [0, 0, 0]], [tSid, [.55, 1.02, 4.9], [0, 0, 0]], [tSid + .55, [-.25, 1.42, 3.0], [0, 0, 0]], [ctx.dur + .55, [-1.0, 1.62, .4], [0, 0, 0]]]);
-    R.camP.at(t, R.cp || (R.cp = new THREE.Vector3()), R.cl || (R.cl = new THREE.Vector3())); const P = R.cp.toArray();   // smooth spline, no velocity kinks
-    const L = U.kf(t, [[-0.5, [-1.4, 3.3, -20]], [tSid - .3, [-.4, 2.6, -20]], [tSid + .02, [.45, .25, -12]], [tSid + .45, [.3, .9, -15]], [ctx.dur + .55, [-1.2, 3.6, -20]]], 'inOutSine');
+    // position + look are interpolated per axis with monotone cubics keyed in TIME (C1: no speed kinks at knots, no stalls
+    // at intermediate keys). Look keys keep the hero shield in the middle third (clear of the caption band) until the hit,
+    // then the camera pushes past it and tilts up into the second volley.
+    if (!R.cam) {
+      const mk = keys => [0, 1, 2].map(a => C.monotone(keys.map(k => k[0]), keys.map(k => k[1][a])));
+      R.cam = {
+        p: mk([[-0.5, [1.35, 1.2, 9.6]], [tSid, [.55, 1.02, 4.9]], [tSid + .55, [-.25, 1.42, 3.0]], [ctx.dur + .55, [-1.0, 1.62, .4]]]),
+        l: mk([[-0.5, [-1.4, -0.1, -20]], [tSid - .3, [-.5, -.75, -20]], [tSid + .06, [.3, -.95, -20]], [tSid + .5, [.2, .6, -20]], [ctx.dur + .55, [-1.2, 3.4, -20]]]),
+      };
+    }
+    const P = R.cam.p.map(f => f(t)), L = R.cam.l.map(f => f(t));
     const jolt = Math.exp(-Math.max(0, t - tSid) * 9) * (t > tSid ? 1 : 0);
     const s1 = U.shake(t, .045, 1.6, 11), s2 = U.shake(t, .012, 7, 4);
     camera.position.set(P[0] + s1.x + s2.x, R.gh(P[0], P[2]) + P[1] + s1.y + s2.y + jolt * .05 * Math.sin((t - tSid) * 60), P[2]);
