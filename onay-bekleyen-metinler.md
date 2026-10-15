@@ -59,22 +59,24 @@ Sosyal ağ ve mesajlaşma önizlemeleri için 1200×630 görseller (`public/og/`
 
 ## 12. EN başlık ve arayüz çevirileri (15.10.2026)
 
-Kullanıcı kararı (15.10.2026): yan menü, sayfa başlıkları, haber/liste başlıkları ve belge adları İngilizce; uzun metinler
-(haber, açıklama ve politika metinleri) Türkçe kalır. Çevirilerin tamamı yeni metindir; kaynakları:
+Kullanıcı kararı (15.10.2026): yan menü, sayfa başlıkları ve haber/liste başlıkları İngilizce; uzun metinler (haber,
+açıklama ve politika metinleri) ve belge adları Türkçe kalır; SPK, KAP gibi özel isimler çevrilmez. Çevirilerin tamamı
+yeni metindir; kaynakları:
 
 | Ne | Nerede | Adet | Durum |
 |----|--------|------|-------|
 | Sayfa başlıkları (menü, içerik haritası, liste ve haber başlıkları da buradan) | `araclar/ceviri/bellek/basliklar/*.txt` + kalıplar `araclar/ceviri/kalip.py` | 306 + 86 | ☐ |
-| Belge adları | `araclar/ceviri/bellek/etiketler/1-belgeler.txt` + kalıplar | ~210 | ☐ |
+| Belge adları (uygulanmıyor: belge adları Türkçe kalır) | `araclar/ceviri/bellek/etiketler/1-belgeler.txt` | ~210 | — |
 | Arayüz metinleri | `araclar/ceviri/bellek/arayuz/1-arayuz.txt` | ~90 | ☐ |
 
-Terim tercihleri: SPK → CMB (Capital Markets Board); KAP → Public Disclosure Platform (KAP); GYO → REIT; Özel Durum
+Özel isimler çevrilmez: SPK, KAP, Merkezi Kayıt Kuruluşu (MKK), T.C. Ticaret Bakanlığı, Borsa İstanbul, GYODER, Emlak
+Konut GYO. Terim tercihleri: GYO (tür adı) → REIT; Özel Durum
 Açıklaması → Material Event Disclosure; Faaliyet Raporları (bölüm) → Annual Reports, Yönetim Kurulu Faaliyet Raporu →
 Board of Directors' Activity Report; Mali Tablo ve Raporlar → Financial Statements and Reports; Dipnotlar → Footnotes;
 Olağan / Olağanüstü Genel Kurul → Ordinary / Extraordinary General Assembly (Meeting); Hazirun Cetveli → List of
 Attendees; Sorumluluk Beyanı → Statement of Responsibility; Geçici Vergi Beyannamesi → Provisional Tax Return;
 Bedelli Sermaye Artırımı → Rights Issue; Kayıtlı Sermaye Tavanı → Authorised Capital Ceiling; Pay Alım Teklifi → Tender
-Offer; Riskin Erken Saptanması Komitesi → Early Detection of Risk Committee; dönemler 3-Month / 6-Month / Annual, Q1–Q4;
+Offer; Riskin Erken Saptanması Komitesi → Early Detection of Risk Committee; başlıklarda dönemler Q1–Q4 (belge adlarındaki "6 Aylık" gibi dönem adları Türkçe);
 İngiliz yazımı (realise, authorised, neighbourhood); tarihler gg.aa.yyyy; sayılar Türkçe biçimde (10.000 m²) bırakıldı.
 
 Yeni arayüz metinleri (seçme):
@@ -83,7 +85,7 @@ Yeni arayüz metinleri (seçme):
 |----|-------------------------|-------|
 | Phone: … / Fax: … | alt bilgi "Telefon / Faks" (EN'de Türkçe kalmıştı) | ☐ |
 | Latest material event disclosures: | ÖDA sayfaları "Güncel özel durum açıklamaları:" | ☐ |
-| Click here to download {dosya} / Click here to visit {adres} | "… dosyasını indirmek için tıklayınız" / "… adresine gitmek için tıklayınız" (belge satırı ve Basında Biz) | ☐ |
+| Click here to visit {adres} | "… adresine gitmek için tıklayınız" (Basında Biz; belge satırlarındaki "… dosyasını indirmek için tıklayınız" Türkçe kalır) | ☐ |
 | Documents and disclosures, Latest announcements, All documents, View project, View property | ana sayfa | ☐ |
 | block 1147, parcel 1(A) · 10.000 m² land · 14.390 m² construction area · block/parcel 91/205 and 70/82 · 22.465,18 m² total construction area · block 91, parcel 205 | ana sayfa vitrin künyeleri | ☐ |
 | İzmir/Aliağa Logistics Warehouse Construction; 12 commercial units in the İdealist Cadde Project | portföy kartları ve görsel alt metinleri | ☐ |

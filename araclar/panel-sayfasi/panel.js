@@ -69,7 +69,7 @@
       return `<article class="y-kart p-oge" data-id="${b.id}">
         <div class="p-oge-ust"><span class="p-etiket">${esc(b.yil)}</span><b class="p-ad">${esc(b.etiket)}</b></div>
         <div class="p-ek">${esc(yer)}</div>
-        <div class="p-ek">EN: ${b.etiket_en ? esc(b.etiket_en) : '<i>İngilizce sitede gösterilmiyor</i>'}</div>
+        <div class="p-ek">EN: ${b.etiket_en ? esc(b.etiket_en) : '<i>Türkçe adıyla</i>'}</div>
         <div class="p-ek">${esc(b.dosya_adi)} · PDF ${mb(b.boyut)} · ${esc(tarihTr((b.olusturma || '').slice(0, 10)))} · ${esc(b.olusturan)}</div>
         <div class="p-eylem"><a class="y-dugme ikincil kucuk" href="${esc(sayfaAdresi(b))}" target="_blank" rel="noopener">Sayfada gör</a><a class="y-dugme ikincil kucuk" href="/belgeler/${b.anahtar.split('/').map(encodeURIComponent).join('/')}" target="_blank" rel="noopener">PDF'i aç</a><button class="y-dugme ikincil kucuk" type="button" data-is="ad">Adını düzenle</button><button class="y-dugme tehlike kucuk" type="button" data-is="kaldir">Kaldır</button></div>
         <form class="p-duzen" hidden novalidate><label class="y-etiket">Türkçe adı<input class="y-girdi" name="etiket" maxlength="300" value="${esc(b.etiket)}" required></label><label class="y-etiket">İngilizce adı<input class="y-girdi" name="etiket_en" maxlength="300" value="${esc(b.etiket_en)}"></label><div class="p-eylem"><button class="y-dugme kucuk" type="submit">Kaydet</button><button class="y-dugme ikincil kucuk" type="button" data-is="vazgec">Vazgeç</button></div></form>

@@ -1,3 +1,5 @@
+# UYGULANMIYOR (15.10.2026 kullanıcı kararı: "Belgeleri çevirmeyecen değil mi"): belge adları EN sayfalarda da Türkçe.
+# Çeviriler ileride istenirse diye duruyor; kur.py içinde BELGE_CEVIR = True yapılınca kullanılır.
 # Belge satırı adları (TR ad → EN ad). Sayfa başlığıyla aynı olan adlar başlık sözlüğünden, dönem adları
 # ("3 Aylık" …) ve "… dosyasını indirmek için tıklayınız" kalıbı kalip.py'den gelir.
 

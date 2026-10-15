@@ -3,12 +3,14 @@
 // Figtree 20px; son satır taban çizgisi y=485, bölüm adı ondan 88px yukarıda; uzun başlıkta yazı küçülür).
 // Kullanım: node araclar/ceviri/og.mjs <işler.json>   (işler: [{cikti, taban, kicker, baslik}], yollar site/ köküne göre)
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
-import { readFileSync, writeFileSync, mkdtempSync } from 'fs';
+import { readFileSync, writeFileSync, mkdtempSync, existsSync } from 'fs';
 import { tmpdir } from 'os';
 import { join, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const KOK = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'site');
+const DURUM = resolve(dirname(fileURLToPath(import.meta.url)), 'cikti', 'og-durum.json');   // çizilenler (ozel.py yeniden çizmesin)
+const durum = existsSync(DURUM) ? JSON.parse(readFileSync(DURUM, 'utf8')) : {};
 const isler = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 const gecici = mkdtempSync(join(tmpdir(), 'og-'));
 const kacis = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -48,6 +50,8 @@ i{display:inline-block;width:0;height:0;vertical-align:baseline}
   });
   if (sonuc.ust < 140) throw new Error('başlık sığmadı: ' + is.cikti + ' ' + JSON.stringify(sonuc));
   await p.screenshot({ path: join(KOK, is.cikti), type: 'jpeg', quality: 88 });
+  durum[is.cikti] = { kicker: is.kicker, baslik: is.baslik };
   console.log(is.cikti, sonuc.s + 'px');
 }
 await b.close();
+writeFileSync(DURUM, JSON.stringify(Object.fromEntries(Object.entries(durum).sort()), null, 1) + '\n');

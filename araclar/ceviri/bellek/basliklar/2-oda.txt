@@ -13,7 +13,7 @@ Update of the Draft Amendment to the Articles of Association
 Board of Directors' Resolution on Dividend Distribution
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2012/sermaye-piyasasi-kurulu-nun-kurumsal-yonetim-ilkelerinin-belirlenmesine-ve-uygulanmasina-iliskin-teblig-kapsamindaesas-sozlesmemizin-1418263138-maddelerinin-tadil-edilmesi/
-Amendment of Articles 14, 18, 26, 31 and 38 of Our Articles of Association under the CMB Communiqué on the Determination and Implementation of Corporate Governance Principles
+Amendment of Articles 14, 18, 26, 31 and 38 of Our Articles of Association under the SPK Communiqué on the Determination and Implementation of Corporate Governance Principles
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2013/2012-yil-sonu-portfoy-degerleme-raporu/
 2012 Year-End Portfolio Valuation Report
@@ -43,7 +43,7 @@ Unusual Price and Volume Movement
 Selection of Market Maker (07.04.2016)
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2016/sirket-ortaklari-arasindaki-pay-devirleri-ve-spk-onay-basvurusu/
-Share Transfers Between Company Shareholders and Application for CMB Approval
+Share Transfers Between Company Shareholders and Application for SPK Approval
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2017/2016-4donem-gecici-vergi-beyannamesi-eki/
 Annex to the 2016 Q4 Provisional Tax Return
@@ -106,10 +106,10 @@ Decision to Participate in the Tender
 İstanbul Şile Çavuş Tender – Site Handover
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2017/kayitli-sermaye-tavani-azaltimi-ve-kayitli-sermaye-tavan-izin-suresinin-uzatilmasi-sureci-spk-onayi-hk/
-CMB Approval for the Reduction of the Authorised Capital Ceiling and the Extension of Its Validity Period
+SPK Approval for the Reduction of the Authorised Capital Ceiling and the Extension of Its Validity Period
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2017/pay-alim-teklifi-bilgi-formu-spk-onayi/
-CMB Approval of the Tender Offer Information Form
+SPK Approval of the Tender Offer Information Form
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2017/pay-alim-teklifi-surecinin-tamamlanmasi-islem-sonucu-hk/
 Completion of the Tender Offer Process (Transaction Result)
@@ -262,10 +262,10 @@ Revision of the Mandatory Tender Offer Application under the Communiqué on Tend
 Notification on the Acquisition of Shares through a Tender Offer
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2020/pay-devrine-iliskin-yonetim-kurulu-karari-ve-spk-onay-basvurusu-2/
-Board of Directors' Resolution on Share Transfer and Application for CMB Approval
+Board of Directors' Resolution on Share Transfer and Application for SPK Approval
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2020/pay-devrine-iliskin-yonetim-kurulu-karari-ve-spk-onay-basvurusu/
-Board of Directors' Resolution on Share Transfer and Application for CMB Approval
+Board of Directors' Resolution on Share Transfer and Application for SPK Approval
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2020/sirket-ortaklik-yapisi-degisikligi-hk/
 Change in the Company's Shareholding Structure
@@ -343,7 +343,7 @@ Registration of the Results of the Extraordinary General Assembly Meeting Held o
 Board of Directors' Resolution on the Rights Issue
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2025/esas-sozlesme-degisikligine-iliskin-spk-basvuru-sonucu/
-Result of the CMB Application Regarding the Amendment to the Articles of Association
+Result of the SPK Application Regarding the Amendment to the Articles of Association
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2025/esas-sozlesmenin-039039yonetim-kurulu-ve-gorev-suresi039039-baslikli-14-maddesinin-tadili-hakkinda/
 Amendment of Article 14 of the Articles of Association Titled "Board of Directors and Term of Office"
@@ -376,10 +376,10 @@ Unusual Price and Volume Movement
 Registration of the Capital Article of the Articles of Association
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2025/sirket-ana-sozlesmesinin-tadiline-iliskin-tcticaret-bakanligi-izni/
-Permission of the Ministry of Trade of the Republic of Türkiye for the Amendment of the Articles of Association
+T.C. Ticaret Bakanlığı Permission for the Amendment of the Articles of Association
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-icin-sermaye-piyasasi-kurul039una-basvurulmasi/
-Application to the Capital Markets Board for a Capital Increase by Private Placement
+Application to the SPK for a Capital Increase by Private Placement
 
 #### /yatirimci-iliskileri/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-iptal-karari/
 Resolution to Cancel the Capital Increase by Private Placement

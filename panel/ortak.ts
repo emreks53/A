@@ -128,9 +128,12 @@ export const yilRotasi = (bol: Bolum, yil: string, dil: Dil): string => bol.yill
 export const yilBasligi = (bol: Bolum, yil: string, dil: Dil): string => (bol.desen[dil] || '{yil}').replace('{yil}', yil);
 
 export interface Hedef { rota?: string; grupIdx?: number; yil: string; etiket: string }
-/** Belgenin bir dildeki yeri. EN'de yalnızca İngilizce adı girilmiş belgeler gösterilir. */
+/** Belge adı: belge adları çevrilmez (15.10.2026); EN sayfada da Türkçe adı, panelde İngilizce ad girilmişse o. */
+export const belgeEtiketi = (b: BelgeEk, dil: Dil): string => (dil === 'en' && (b.etiket_en || '').trim()) || b.etiket;
+
+/** Belgenin bir dildeki yeri. */
 export function belgeHedefi(bol: Bolum, b: BelgeEk, dil: Dil, h: Harita): Hedef | null {
-  const etiket = dil === 'en' ? (b.etiket_en || '').trim() : b.etiket;
+  const etiket = belgeEtiketi(b, dil);
   if (!etiket) return null;
   if (bol.tip === 'yil') return { rota: yilRotasi(bol, b.yil, dil), yil: b.yil, etiket };
   if (bol.tip === 'grup') {

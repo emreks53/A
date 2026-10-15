@@ -248,13 +248,13 @@ Internal Directive
 Prospectuses and Public Offering Circulars
 
 #### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayina-sunulan-taslak-izahname25032024/
-Rights Issue – Draft Prospectus Submitted for CMB Approval (25.03.2024)
+Rights Issue – Draft Prospectus Submitted for SPK Approval (25.03.2024)
 
 #### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayli-izahname-08082024/
-Rights Issue – CMB-Approved Prospectus (08.08.2024)
+Rights Issue – SPK-Approved Prospectus (08.08.2024)
 
 #### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayli-izahname/
-Rights Issue – CMB-Approved Prospectus
+Rights Issue – SPK-Approved Prospectus
 
 #### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-tasarruf-sahipleri-satis-duyurusu25032024/
 Rights Issue – Announcement of Sale to Investors (25.03.2024)
@@ -287,7 +287,7 @@ IPO Prospectus and Annex 1 – Articles of Association
 Public Offering Circular
 
 #### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/spk-onayina-sunulan-izahname-23012026/
-Prospectus Submitted for CMB Approval (23.01.2026)
+Prospectus Submitted for SPK Approval (23.01.2026)
 
 #### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/tasarruf-sahiplerine-satis-duyurusu-03092024/
 Announcement of Sale to Investors (03.09.2024)

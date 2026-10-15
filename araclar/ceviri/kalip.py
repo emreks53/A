@@ -17,8 +17,28 @@ DONEM = {'3 Aylık': '3-Month', '6 Aylık': '6-Month', '6Aylık': '6-Month', '9 
 
 ETIKET = [
     (r'^(.+?) dosyasını indirmek için tıklayınız$', lambda m: f'Click here to download {m.group(1)}'),
+]
+BAGLANTI = [
     (r'^(\S+) adresine gitmek için tıklayınız$', lambda m: f'Click here to visit {m.group(1)}'),
 ]
+
+def baglanti(tr):
+    """Site dışı bağlantı satırı ("… adresine gitmek için tıklayınız")."""
+    for desen, f in BAGLANTI:
+        m = re.match(desen, tr.strip())
+        if m:
+            return f(m)
+    return None
+
+def belge_adi_kalibi(tr):
+    """Belge adı kalıpları: dönem adı, "2026 6 Aylık", "… dosyasını indirmek için tıklayınız"."""
+    t = tr.strip()
+    if t in DONEM:
+        return True
+    m = re.match(r'^(\d{4}) (.+)$', t)
+    if m and m.group(2) in DONEM:
+        return True
+    return bool(re.match(ETIKET[0][0], t))
 
 def etiket(tr):
     t = tr.strip()
@@ -27,7 +47,7 @@ def etiket(tr):
     m = re.match(r'^(\d{4}) (.+)$', t)
     if m and m.group(2) in DONEM:
         return f'{m.group(1)} {DONEM[m.group(2)]}'
-    for desen, f in ETIKET:
+    for desen, f in ETIKET + BAGLANTI:
         m = re.match(desen, t)
         if m:
             return f(m)

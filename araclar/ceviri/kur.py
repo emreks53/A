@@ -86,32 +86,58 @@ def tr_rotasi(href):
 
 DOSYA = re.compile(r'^[^\s,]+\.(?:pdf|docx?|xlsx?|zip|rar|jpe?g|png)(?:, [A-Z]+ [\d.,]+ MB)?$', re.I)
 
+# Belge adları çevrilmez (kullanıcı kararı 15.10.2026: "Belgeleri çevirmeyecen değil mi"): belge satırlarındaki adlar,
+# dönem adları ("6 Aylık"), "… dosyasını indirmek için tıklayınız" EN sayfalarda da TR'deki gibi kalır.
+# İleride çevrilmesi istenirse True yapılır (çeviriler bellek/etiketler/ altında duruyor).
+BELGE_CEVIR = False
+BELGE_ADI = {norm(x['tr']) for x in json.load(open(os.path.join(CEVIRI, 'cikti', 'etiketler.json'), encoding='utf-8'))} | set(ETIKET)
+# Ana sayfadaki güncel belge satırlarında bölüm adı öneki ("Faaliyet Raporları, 6 Aylık"): önek çevrilir, belge adı kalır
+GUNCEL_ONEK = ('Faaliyet Raporları', 'Mali Tablolar')
+
+def belge_adi_mi(n):
+    return n in BELGE_ADI or kalip.belge_adi_kalibi(n)
+
 def kisa(t, href=None, baglam=''):
     """Kısa görünen metnin EN karşılığı; bulunamazsa None."""
     n = norm(t)
     if not HARF.search(n) or DOSYA.match(n):
         return n
+    if baglam == 'etiket':
+        if BELGE_CEVIR:
+            if n in ETIKET:
+                return ETIKET[n]
+            k = kalip.etiket(n)
+            if k:
+                return k
+        else:
+            on, ayrac, kalan = n.partition(', ')
+            if ayrac and on in GUNCEL_ONEK:
+                return kisa(on) + ', ' + kalan
+            return n
     r = tr_rotasi(href)
     if r:
         if baglam == 'yan' and r in YAN_MENU:
             return YAN_MENU[r]
         if katla(TR_BASLIK[r]) == katla(n):
             return EN_BASLIK[r]
+        m = re.match(r'^(.*\S)\s+\((\d{2}\.\d{2}\.\d{4})\)$', n)
+        if m and katla(TR_BASLIK[r]) == katla(m.group(1)):      # sayfa bağlantısı: "başlık (tarih)"
+            return '%s (%s)' % (EN_BASLIK[r], m.group(2))
     if n in ARAYUZ:
         return n if ARAYUZ[n] == '=' else ARAYUZ[n]
-    if baglam == 'etiket':
+    if n in METIN:
+        return METIN[n]
+    if katla(n) in METIN_K:
+        return METIN_K[katla(n)]
+    if BELGE_CEVIR:
         if n in ETIKET:
             return ETIKET[n]
         k = kalip.etiket(n)
         if k:
             return k
-    if n in METIN:
-        return METIN[n]
-    if katla(n) in METIN_K:
-        return METIN_K[katla(n)]
-    if n in ETIKET:
-        return ETIKET[n]
-    k = kalip.etiket(n)
+    elif belge_adi_mi(n):
+        return n
+    k = kalip.baglanti(n)
     if k:
         return k
     if ', ' in n:

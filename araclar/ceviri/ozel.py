@@ -158,7 +158,7 @@ def kutuphane():
         if x.get('l'):
             en_p = []
             for p in tr_p:
-                e = kisa(p, baglam='etiket')
+                e = kisa(p, baglam='etiket') if kur.BELGE_CEVIR else p    # belge adları çevrilmez (kullanıcı kararı)
                 if e is None:
                     eksik.append(('l', p)); e = p
                 en_p.append(e)
@@ -192,6 +192,9 @@ def harita_guncelle():
             g['adEn'] = {'Mali Tablolar': 'Financial Statements', 'Dipnotlar': 'Footnotes'}.get(g['ad'], g['adEn'])
     h['esler'] = {tr: en for tr, en in sorted(es.items()) if os.path.exists(os.path.join(SITE, en.lstrip('/'), 'index.html'))}
     for g in h['guncel']:
+        if not kur.BELGE_CEVIR:
+            g.pop('etiket_en', None)                      # EN sayfada da TR belge adı
+            continue
         e = kisa(g['etiket'], baglam='etiket')
         if e is None:
             eksik.append(('guncel', g['etiket']))
@@ -259,6 +262,8 @@ UST_OG = {'investor-relations': 'Investor Relations', 'corporate': 'About Us', '
 def og_isleri():
     """EN sayfaların kullandığı OG görsellerinden yeni olanlar ve başlığı değişenler için iş listesi."""
     bas = {x['rota']: x for x in json.load(open(os.path.join(kur.CEVIRI, 'cikti', 'basliklar.json'), encoding='utf-8'))}
+    durum_yol = os.path.join(kur.CEVIRI, 'cikti', 'og-durum.json')        # og.mjs'in çizdikleri: {dosya: {kicker, baslik}}
+    durum = json.load(open(durum_yol, encoding='utf-8')) if os.path.exists(durum_yol) else {}
     ad_rota = {('/og/' + en.strip('/').replace('/', '--') + '.jpg'): (tr, en) for tr, en in eslesme().items() if en != '/en/'}
     kullanilan = set()
     for kok, _, ds in os.walk(os.path.join(SITE, 'en')):
@@ -275,7 +280,8 @@ def og_isleri():
         parcalar = en.strip('/').split('/')
         kicker = 'İdealist Gayrimenkul Yatırım Ortaklığı A.Ş.' if len(parcalar) == 2 else UST_OG[parcalar[1]]
         var = os.path.exists(os.path.join(SITE, og.lstrip('/')))
-        if var and bas[tr].get('en_mevcut') == baslik:
+        cizilen = durum.get(og.lstrip('/'))
+        if var and (cizilen == {'kicker': kicker, 'baslik': baslik} or (cizilen is None and bas[tr].get('en_mevcut') == baslik)):
             continue
         isler.append({'cikti': og.lstrip('/'), 'taban': TABAN, 'kicker': kicker, 'baslik': baslik})
     return isler

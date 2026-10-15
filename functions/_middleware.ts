@@ -7,7 +7,7 @@
 import YONLENDIRME from '../panel/yonlendirmeler.json';
 import {
   type Env, type Dil, type Bolum, type BelgeEk, type HaberEk, type Harita, type PanelVerisi,
-  esc, mb, tarihTr, jsonGom, donemSirasi, harita, panelVerisi, oturum, belgeHedefi, belgeSatiri, belgeYolu,
+  esc, mb, tarihTr, jsonGom, donemSirasi, harita, panelVerisi, oturum, belgeHedefi, belgeEtiketi, belgeSatiri, belgeYolu,
   belgeTuru, yilRotasi, yilBasligi, haberHtml, haberEkleri,
 } from '../panel/ortak';
 
@@ -221,7 +221,7 @@ function anaSayfa(html: string, h: Harita, veri: PanelVerisi, dil: Dil): string 
     const bol = h.bolumler.find((x) => x.kid === b.kid); if (!bol) continue;
     const tur = belgeTuru(bol, b.grup);
     if (!['faaliyet-raporlari', 'mali-tablolar', 'degerleme-raporlari'].includes(tur)) continue;
-    const etiket = dil === 'en' ? (b.etiket_en || '').trim() : b.etiket; if (!etiket) continue;
+    const etiket = belgeEtiketi(b, dil); if (!etiket) continue;
     adaylar.push({ tur, yil: b.yil, rank: donemSirasi(b.etiket), etiket, ad: b.dosya_adi, yol: belgeYolu(b.anahtar), boyut: b.boyut, panel: true, id: b.id });
   }
   const enYeni = (tur: string) => adaylar.filter((a) => a.tur === tur)
@@ -259,7 +259,7 @@ async function sablondan(env: Env, url: URL, h: Harita, veri: PanelVerisi, y: Ye
     const r = await env.ASSETS.fetch(new URL(sablon, url).toString());
     if (!r.ok) return null;
     const diger: Dil = dil === 'tr' ? 'en' : 'tr';
-    const digerVar = !!bol.yillar[yil]?.[diger] || veri.belgeler.some((b) => b.kid === bol.kid && b.yil === yil && (diger === 'tr' || (b.etiket_en || '').trim()));
+    const digerVar = !!bol.yillar[yil]?.[diger] || veri.belgeler.some((b) => b.kid === bol.kid && b.yil === yil);
     const esYol = digerVar ? yilRotasi(bol, yil, diger) : bol.kok[diger];
     const og = dil === 'tr' ? bol.og : '/og/' + bol.kok.en.slice(1, -1).replace(/\//g, '--') + '.jpg';
     return (await r.text()).split(sablon).join(p).split('__ESYOL__').join(esYol).split('__BASLIK__').join(esc(yilBasligi(bol, yil, dil)))

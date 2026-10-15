@@ -97,13 +97,13 @@ Resignation of General Manager
 İdealist GYO A.Ş. Reached an Agreement with Bizim Menkul Değerler A.Ş. for Its Public Offering
 
 #### /haberler/idealist-gyo-as-halka-arz-icin-spk039ya-basvurdu/
-İdealist GYO A.Ş. Applied to the CMB for Its Public Offering
+İdealist GYO A.Ş. Applied to the SPK for Its Public Offering
 
 #### /haberler/idealist-gyo-as-mali-tablolarini-yayimladi/
 İdealist GYO A.Ş. Published Its Financial Statements
 
 #### /haberler/idealist-gyo-as-merkezi-kayit-kurulusu-mkk-temsilcisi-olarak-bizim-menkul-degerler-as-ile-sozlesme-imzaladi/
-İdealist GYO A.Ş. Signed an Agreement with Bizim Menkul Değerler A.Ş. as Its Central Registry Agency (MKK) Representative
+İdealist GYO A.Ş. Signed an Agreement with Bizim Menkul Değerler A.Ş. as Its Merkezi Kayıt Kuruluşu (MKK) Representative
 
 #### /haberler/idealist-gyo-as-olagan-genel-kurul-toplantisi/
 İdealist GYO A.Ş. Ordinary General Assembly Meeting
@@ -133,10 +133,10 @@ Material Event Disclosure
 Material Event Disclosure
 
 #### /haberler/pay-alim-teklifi-bilgi-formu-spk-onayi-ve-zorunlu-pay-alim-teklifi-surecine-baslanilmasi/
-CMB Approval of the Tender Offer Information Form and Commencement of the Mandatory Tender Offer Process
+SPK Approval of the Tender Offer Information Form and Commencement of the Mandatory Tender Offer Process
 
 #### /haberler/pay-alim-teklifi-bilgi-formu-spk-onayi/
-CMB Approval of the Tender Offer Information Form
+SPK Approval of the Tender Offer Information Form
 
 #### /haberler/pay-alim-teklifi-surecinin-tamamlanmasi-islem-sonucu-hk/
 Completion of the Tender Offer Process (Transaction Result)
@@ -145,4 +145,4 @@ Completion of the Tender Offer Process (Transaction Result)
 Sale of an Apartment in Our Portfolio
 
 #### /haberler/sirket-ortaklari-arasindaki-pay-devirleri-ve-spk-onay-basvurusu-karari/
-Share Transfers Between Company Shareholders and Resolution to Apply for CMB Approval
+Share Transfers Between Company Shareholders and Resolution to Apply for SPK Approval

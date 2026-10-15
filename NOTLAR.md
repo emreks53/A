@@ -38,17 +38,21 @@
 
 Kullanıcı: "İngilizce halinde eksik kalan yerleri profesyonel bir çevirmen gibi, bağlamı gözeterek Türkçe asıllarına
 bakarak oluştur"; ardından kapsamı daralttı: **yan menü, sayfa başlıkları, liste/haber başlıkları İngilizce; sağdaki
-uzun metinler ve habere tıklayınca açılan metin Türkçe kalır.**
+uzun metinler ve habere tıklayınca açılan metin Türkçe kalır.** Sonra (aynı gün): **"Belgeleri çevirmeyecen değil mi",
+"SPK ve KAP gibi özel isimleri çevirme"** → belge adları EN sayfalarda da Türkçe; kurum adları çevrilmez.
 
 - **Kurulum:** EN sayfaların hepsi TR asıldan yeniden kuruldu (`kur.py`): 207 yeni (63 haber, 8 Hakkımızda alt sayfası,
   136 Yatırımcı Köşesi sayfası) + 180 mevcut (çoğunda başlık ve gövde `*` idi) + EN ana sayfa. Yöntem: TR HTML
   belirteçlerine ayrılır, yalnızca görünen kısa metinler ve birkaç öznitelik değişir; panel işaretleri, stiller ve
   bağlantı yapısı aynen kalır, site içi bağlantılar EN eşlerine çevrilir. Gövde metinleri (prose) Türkçe.
 - **Sözlükler:** `bellek/basliklar/` (392 sayfa başlığının 306'sı; 86'sı `kalip.py` kalıbından: tarihli ÖDA, yıl
-  sayfaları, portföy tabloları), `bellek/etiketler/` (belge adları), `bellek/arayuz/` (menü, alt bilgi, künye vb.).
-  Terimler: SPK → CMB, KAP → Public Disclosure Platform (KAP), GYO → REIT, Özel Durum Açıklaması → Material Event
+  sayfaları, portföy tabloları), `bellek/arayuz/` (menü, alt bilgi, künye vb.). `bellek/etiketler/` (belge adlarının
+  çevirisi) **uygulanmıyor**: belge satırı ve kütüphane adları, dönem adları ("6 Aylık"), "… dosyasını indirmek için
+  tıklayınız" EN'de de Türkçe (`kur.py` içinde `BELGE_CEVIR = False`; istenirse True yapılıp yeniden kurulur).
+  Özel isimler çevrilmez: SPK, KAP, Merkezi Kayıt Kuruluşu (MKK), T.C. Ticaret Bakanlığı, Borsa İstanbul, GYODER,
+  Emlak Konut GYO, şirket ve proje adları. Terimler: GYO (tür adı) → REIT, Özel Durum Açıklaması → Material Event
   Disclosure, Faaliyet Raporu → Annual/Activity Report, Hazirun Cetveli → List of Attendees, Bedelli Sermaye Artırımı →
-  Rights Issue, Pay Alım Teklifi → Tender Offer, dönem adları 3-Month / Q1 …; İngiliz yazımı, tarihler gg.aa.yyyy.
+  Rights Issue, Pay Alım Teklifi → Tender Offer; İngiliz yazımı, tarihler gg.aa.yyyy.
 - **Düzeltilen eski EN adlar** (liste: icerik-notlari.md A2): Annual Repots, General Assembly Informations,
   The List Of Attendees, IPO Prospectuses And Circulars, Internal Instruction, About REIT, The Risk Assessment
   Committee, yanlış sayfa adları ("82", izahname sayfalarında "Annual Reports", tek tek portföy tablolarında
@@ -59,19 +63,22 @@ uzun metinler ve habere tıklayınca açılan metin Türkçe kalır.**
   sunucu kodunda 301, eski adres haritasında (`panel/yonlendirmeler.json`, 99 kayıt) hedefleri yeni sayfalar.
 - **Belge erişimi:** EN'de önceden ulaşılan 247 belgenin hepsi yine ulaşılabilir (şimdi 272 = TR ile aynı); kırık iç
   bağlantı yok; EN sayfalarda Türkçe arayüz metni kalmadı (dosya adları hariç).
-- **Arama / kütüphane (`ozel.py`):** EN arama verisi 375 kayıt (başlık ve bölüm yolu EN, gövde TR); EN kütüphane
-  belge adları, bölüm yolları ve tür adları EN. EN aramada "Investor" gibi büyük I'lı kelimeler bulunamıyordu
+- **Arama / kütüphane (`ozel.py`):** EN arama verisi 375 kayıt (başlık ve bölüm yolu EN, gövde TR); EN kütüphanede
+  belge adları TR, bölüm yolları ve tür adları EN. EN aramada "Investor" gibi büyük I'lı kelimeler bulunamıyordu
   (tr küçük harf dönüşümü): iki tarafa da `ı→i` eklendi. TR kütüphanede belge adlarına eski EN adlar karışmıştı
   ("3 Aylık | Annual Reports"): yalnız TR sayfalardaki adlar bırakıldı.
 - **Panel (sunucu kodu + `panel-veri/harita.json`):** EN bölüm adları, yıl başlık kalıbı ("2027 Annual Reports"),
-  tüm yılların EN sayfaları ve 392 sayfa eşi; Mali Tablo grupları EN'de ana sayfaya ekleniyor (önceden reports/);
-  güncel belgelerin EN adı (`etiket_en`). Yerelde panelden belge ekleme denendi: EN yıl sayfası, ana sayfa kutusu,
-  kütüphane ve arama doğru. Panelden eklenen duyurular yalnız TR'de (EN başlığı alanı yok).
+  tüm yılların EN sayfaları ve 392 sayfa eşi; Mali Tablo grupları EN'de ana sayfaya ekleniyor (önceden reports/).
+  Panelden eklenen belge EN sayfalarda da Türkçe adıyla görünür (önceden İngilizce adı girilmemişse EN'de hiç
+  görünmüyordu); "İngilizce adı" alanı isteğe bağlı, doldurulursa EN'de o kullanılır. Yerelde denendi: EN yıl sayfası,
+  ana sayfa kutusu ("2026 Annual Reports, 9 Aylık"), kütüphane ve arama doğru. Panelden eklenen duyurular yalnız
+  TR'de (EN başlığı alanı yok).
 - **TR tarafı:** EN eşi olmayan 207 TR sayfaya `hreflang="en"` ve dil seçicide EN adresi (önceden /en/). Sitemap: 784
   adres (392 TR + 392 EN).
 - **Paylaşım görselleri:** 81 EN OG görseli `og.mjs` ile çizildi (71 yeni, başlığı değişen 10; sitenin yazı tipleri,
-  ölçüler mevcut görsellerden; uzun başlıkta yazı küçülür). Fotoğraflı şablonlar (ana sayfa, portföy) değişmedi;
-  iki proje görselinde eski kısa başlıklar ("İZMİR", "ŞİLE") duruyor.
+  ölçüler mevcut görsellerden; uzun başlıkta yazı küçülür; çizilenler `cikti/og-durum.json`'da, yalnız yeni ya da
+  başlığı değişenler yeniden çizilir). Fotoğraflı şablonlar (ana sayfa, portföy) değişmedi; iki proje görselinde eski
+  kısa başlıklar ("İZMİR", "ŞİLE") duruyor.
 - **Yayın:** 370b65b9 (15.10.2026); canlı doğrulama 1697/1697 dosya aynı; canlıda EN sayfalar, 301'ler ve hreflang denendi.
 - **TR değişince EN'i yenilemek:** `python3 araclar/ceviri/cikar.py` (yeni sayfa varsa) → sözlüğe başlık ekle →
   `python3 araclar/ceviri/kur.py --yaz && python3 araclar/ceviri/ozel.py --yaz` →
@@ -84,8 +91,8 @@ uzun metinler ve habere tıklayınca açılan metin Türkçe kalır.**
 - İçerik notlarındaki B18–B21 (Komiteler çelişkisi, T.C. kimlik no, 01.01.0000 tarihleri, yazım hataları): dokunma.
 - Hero görseli: denizi ve binanın tamamını gösteren en yüksek çözünürlüklü kadraj; masaüstünde ufuk çizgisi menü
   yazılarının altına değiyor. Vitrin: projelerin bitmiş hâlleri (Şile, İdealist Cadde).
-- EN site (15.10.2026): başlıklar, menüler, liste ve belge adları İngilizce; uzun metinler (haber, açıklama, politika
-  metinleri) Türkçe kalır.
+- EN site (15.10.2026): başlıklar, menüler ve liste/haber başlıkları İngilizce; uzun metinler (haber, açıklama, politika
+  metinleri) ve belge adları Türkçe kalır; SPK, KAP gibi özel isimler çevrilmez. Belgelerin (PDF) kendisine dokunulmaz.
 - Üst siyah şerit kaldırıldı; bağlantıları (Bilgi Toplumu Hizmetleri, KAP, Site Haritası, Arama, TR/EN) mobil menüye
   ve masaüstünde arama simgesi + dil seçimine taşındı.
 
