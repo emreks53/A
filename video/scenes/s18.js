@@ -307,13 +307,13 @@ export default {
       }
       X.save(); X.globalAlpha = Math.min(1, ip * 2);
       X.shadowColor = 'rgba(0,0,0,.55)'; X.shadowBlur = 30; X.shadowOffsetY = 10; X.fillStyle = '#120e0c'; X.beginPath(); X.arc(cx, cyy, rr, 0, Math.PI * 2); X.fill(); X.shadowColor = 'transparent';
-      X.save(); X.beginPath(); X.arc(cx, cyy, rr - 2, 0, Math.PI * 2); X.clip();
+      X.save(); X.beginPath(); X.arc(cx, cyy, Math.max(.5, rr - 2), 0, Math.PI * 2); X.clip();
       const z = 1.04 + .05 * U.smoothstep(tIn, 7.2, t), S = rr * 2 * z;  // slow push inside the lens (never static)
       X.drawImage(R.inset, cx - S / 2, cyy - S / 2, S, S);
       const gl = X.createRadialGradient(cx - rr * .35, cyy - rr * .45, rr * .05, cx, cyy, rr); gl.addColorStop(0, 'rgba(255,255,255,.10)'); gl.addColorStop(.5, 'rgba(255,255,255,0)'); gl.addColorStop(1, 'rgba(0,0,0,.28)'); X.fillStyle = gl; X.fillRect(cx - rr, cyy - rr, rr * 2, rr * 2);
       X.restore();
       X.lineWidth = 7; X.strokeStyle = '#ffcf6b'; X.beginPath(); X.arc(cx, cyy, rr, 0, Math.PI * 2); X.stroke();
-      X.lineWidth = 2; X.strokeStyle = 'rgba(40,24,8,.6)'; X.beginPath(); X.arc(cx, cyy, rr - 5, 0, Math.PI * 2); X.stroke();
+      X.lineWidth = 2; X.strokeStyle = 'rgba(40,24,8,.6)'; X.beginPath(); X.arc(cx, cyy, Math.max(.5, rr - 5), 0, Math.PI * 2); X.stroke();
       X.restore();
       badge = [U.lerp(badge[0], icx, ip), U.lerp(badge[1], icy + RIN + 6, ip)];
     }

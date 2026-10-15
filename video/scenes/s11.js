@@ -34,17 +34,56 @@ function marbleMat(TEX, U, o = {}) {
 function heights(t, ctx) {
   const { U } = ctx; const tD = ctx.wordTime('dürüstlük');
   const hs = SHORT.map((H, i) => { if (i === HERO) return 0; const p = U.clamp((t - .02 - RISE0[i]) / .55); return H * U.ease.outBack(p, 1.6); });
-  // hero: rises with the others to ~1.22, a tiny anticipation dip on "dürüstlükte", then soars and settles with a bounce
-  const p0 = U.clamp((t - .3) / .55); let h = 1.22 * U.ease.outBack(p0, 1.6);
+  // hero: rises with the others to ~1.22, sinks a touch in anticipation on "dürüstlükte", then soars and settles with a bounce.
+  // Velocity is continuous everywhere (C1): the launch speed ramps up linearly over R0 instead of spiking, the
+  // anticipation sink is released by the launch itself, and the bounce starts from rest.
+  const p0 = U.clamp((t - .3) / .55); const h0 = 1.22 * U.ease.outBack(p0, 1.6); let h = h0, settle = 0;
   const a = t - (tD - .12);
   if (a > 0) {
-    const dip = -.05 * Math.sin(Math.PI * U.clamp(a / .16));
-    const r = U.clamp((a - .1) / 1.8); const e = .62 * (1 - Math.pow(1 - r, 2.4)) + .38 * U.ease.inOutSine(r); // quick launch, long glide
-    const ease0 = U.smoothstep(0, .14, r);                                // no velocity jump at lift-off
-    const settle = a > 1.9 ? Math.sin((a - 1.9) * 9) * Math.exp(-(a - 1.9) * 5) * .08 : 0;
-    h = 1.22 + dip + (HERO_H - 1.22) * e * ease0 + settle;
+    const r = U.clamp((a - .1) / 1.8), R0 = .14;
+    const s = r < R0 ? r * r / (2 * R0 * (1 - R0 / 2)) : (r - R0 / 2) / (1 - R0 / 2);
+    const e = .62 * (1 - Math.pow(1 - s, 2.4)) + .38 * U.ease.inOutSine(s);          // quick launch, long glide
+    const dip = .05 * U.smoothstep(0, .1, a) * (1 - e);
+    const x = a - 1.9; settle = x > 0 ? Math.sin(x * 9) * Math.exp(-x * 5) * .08 * U.smoothstep(0, .12, x) : 0;
+    h = h0 - dip + (HERO_H - h0) * e + settle;
   }
-  hs[HERO] = h; return hs;
+  hs[HERO] = h; hs.settle = settle; return hs;
+}
+
+// camera (pure function of t): A = 3/4 view of the whole chart with a slow push. B: on "dürüstlükte" the camera tilts
+// after the soaring hero capital, held at screen y = CAP_Y (always below the title / callout), while dollying in low so
+// the column towers. C: pulls back + up to reveal the complete chart. The capital lock is a smooth one-sided clamp
+// (softplus): the camera only ever tilts UP from the phase-A framing and eases into the lock with continuous speed.
+// It tracks the bounce-free height, so the landing bounce reads on the column instead of bobbing the whole frame.
+function solveCam(t, ctx, hs) {
+  const { ui, U, camera } = ctx; const tD = ctx.wordTime('dürüstlük');
+  const hx = XS[HERO]; const heroTop = PLAT_Y + .17 + (hs[HERO] - hs.settle) + .2;
+  const k = U.smoothstep(tD - .05, tD + 1.7, t);                  // follow weight
+  const kr = U.smootherstep(1.95, 4.1, t);                         // reveal (pull back) weight; C2 onset -> no jolt
+  const ang = (U.lerp(U.lerp(27, 19, U.prog(t, -.5, tD, 'inOutSine')), 9, U.ease.inOutSine(k)) - 5 * kr - .9 * t) * Math.PI / 180;
+  const dist = U.lerp(12.8, 11.5, U.prog(t, -.5, tD + .3, 'inOutSine')) - 3.0 * U.ease.inOutSine(k) + 13.6 * kr + .25 * t;
+  const camY = U.lerp(1.95, 1.75, U.prog(t, -.5, tD)) - .4 * U.ease.inOutSine(k) + 3.3 * kr;
+  const tx = U.lerp(.08, hx, U.ease.inOutSine(U.smoothstep(tD - .3, tD + 1, t)));
+  const pos = new THREE.Vector3(tx + Math.sin(ang) * dist, camY, Math.cos(ang) * dist).add(U.shake(t, .012, .5, 4));
+  camera.position.copy(pos);
+  camera.fov = U.lerp(40, 41, U.ease.inOutSine(k)); camera.updateProjectionMatrix();
+  const capV = new THREE.Vector3(hx, heroTop, 0);
+  const screenY = ly => { camera.lookAt(tx, ly, 0); camera.updateMatrixWorld(); return ui.project(capV)[1]; };
+  const lyA = 1.55 + .02 * Math.sin(t * .7);                       // phase-A framing
+  const ysA = screenY(lyA);
+  const S = 70; const want = CAP_Y + S * Math.log1p(Math.exp((ysA - CAP_Y) / S));
+  // solve look height so the capital sits at `want` (screen y is monotonic in ly)
+  let lo = -10, hi = heroTop + 30; for (let it = 0; it < 28; it++) { const mid = (lo + hi) / 2; if (screenY(mid) > want) hi = mid; else lo = mid; }
+  camera.lookAt(tx, (lo + hi) / 2, 0); camera.updateMatrixWorld();
+  return { pos, k, kr, heroTop };
+}
+
+// world points whose screen travel drives the adaptive motion blur (bar capitals, plinth front, back wall)
+function blurRefs(hs) {
+  const v = XS.map((x, i) => new THREE.Vector3(x, PLAT_Y + .17 + hs[i] + .14, 0));
+  v.push(new THREE.Vector3(-2.6, PLAT_Y, .75), new THREE.Vector3(2.6, PLAT_Y, .75), new THREE.Vector3(XS[HERO], .25, .75),
+    new THREE.Vector3(-4, 5.1, -10.6), new THREE.Vector3(4, 5.1, -10.6), new THREE.Vector3(0, 3.35, -10.3));
+  return v;
 }
 
 export default {
@@ -108,7 +147,9 @@ export default {
       if (hero) {
         const ring = new THREE.Mesh(new THREE.TorusGeometry(RH + .005, .026, 12, 72), gold); ring.rotation.x = Math.PI / 2; ring.position.y = -.07; top.add(ring);
         const ring2 = new THREE.Mesh(new THREE.TorusGeometry(RH, .014, 10, 72), gold); ring2.rotation.x = Math.PI / 2; ring2.position.y = -.115; top.add(ring2);
-        const band = new THREE.Mesh(M.rbox(.56 * s + .01, .02, .56 * s + .01, .008), gold); band.position.y = .163; top.add(band);
+        // gilded fillet wrapped round the abacus sides (its top sits well below the marble abacus top, so seen from above
+        // the capital stays white marble with a thin gold lip — no dark sky-reflecting metal lid, no coplanar faces)
+        const band = new THREE.Mesh(M.rbox(.56 * s + .012, .022, .56 * s + .012, .008), gold); band.position.y = .128; top.add(band);
       }
       M.shadowAll(g);
       return { g, shaft, top, hero, len: hero ? HERO_H + 1.4 : 2.4 };
@@ -157,35 +198,14 @@ export default {
       const r = .2 + a * (p.i === HERO ? .55 : .4); p.s.position.set(XS[p.i] + Math.cos(p.a) * r, PLAT_Y + .12 + a * .18, Math.sin(p.a) * r * .7 + .1);
       p.s.scale.setScalar(.25 + a * .5); p.s.material.opacity = .38 * Math.sin(Math.PI * U.clamp(a / 1.1)) * (p.i === HERO ? 1.2 : .8);
     });
-    // ---- camera ----
-    // A: 3/4 view of the whole chart with a slow push. B: on "dürüstlükte" the camera tilts after the soaring hero capital,
-    // which is held at screen y = CAP_Y (always below the title / callout), while dollying in low so the column towers.
-    // C: on "derecede" it pulls back + up to reveal the complete chart (all bars above the subtitle band).
-    const hx = XS[HERO]; const heroTop = PLAT_Y + .17 + hs[HERO] + .2;
-    const k = U.smoothstep(tD - .05, tD + 1.7, t);                  // follow weight
-    const kr = U.smoothstep(2.1, 4.05, t);                           // reveal (pull back) weight
-    const ang = (U.lerp(U.lerp(27, 19, U.prog(t, -.5, tD, 'inOutSine')), 9, U.ease.inOutSine(k)) - 5 * kr - .9 * t) * Math.PI / 180;
-    // B is a low-angle push (the column towers and the others drop out of frame), C pulls back + up to the full chart
-    const dist = U.lerp(12.8, 11.5, U.prog(t, -.5, tD + .3, 'inOutSine')) - 3.0 * U.ease.inOutSine(k) + 13.6 * kr + .25 * t;
-    const camY = U.lerp(1.95, 1.75, U.prog(t, -.5, tD)) - .4 * U.ease.inOutSine(k) + 3.3 * kr;
-    const tx = U.lerp(.08, hx, U.ease.inOutSine(U.smoothstep(tD - .3, tD + 1, t)));
-    const pos = new THREE.Vector3(tx + Math.sin(ang) * dist, camY, Math.cos(ang) * dist).add(U.shake(t, .012, .5, 4));
-    camera.position.copy(pos);
-    camera.fov = U.lerp(40, 41, U.ease.inOutSine(k)); camera.updateProjectionMatrix();
-    const capV = new THREE.Vector3(hx, heroTop, 0);
-    const screenY = ly => { camera.lookAt(tx, ly, 0); camera.updateMatrixWorld(); return ui.project(capV)[1]; };
-    const lyA = 1.55 + .02 * Math.sin(t * .7);                       // phase-A framing
-    const ysA = screenY(lyA);
-    const w = U.smoothstep(tD, tD + .55, t);                         // hand-over to the capital lock
-    const want = Math.max(CAP_Y, U.lerp(ysA, CAP_Y, w));
-    let ly = lyA;
-    if (w > 0 || ysA < CAP_Y) { // solve look height so the capital sits at `want` (screen y is monotonic in ly)
-      let lo = -10, hi = heroTop + 30; for (let it = 0; it < 26; it++) { const mid = (lo + hi) / 2; if (screenY(mid) > want) hi = mid; else lo = mid; } ly = (lo + hi) / 2;
-    }
-    camera.lookAt(tx, ly, 0); camera.updateMatrixWorld();
+    // ---- camera ---- (see solveCam). Adaptive motion blur: solve the camera one frame earlier too and measure how far
+    // the bar capitals / plinth / back wall travel on screen; enough sub-frames to keep ghost copies <= ~4 px apart.
+    const hx = XS[HERO]; const heroTop = PLAT_Y + .17 + hs[HERO] + .2;   // real capital (incl. landing bounce)
+    const hsP = heights(t - 1 / 30, ctx); solveCam(t - 1 / 30, ctx, hsP); const pP = blurRefs(hsP).map(v => ui.project(v));
+    const { pos, k, kr } = solveCam(t, ctx, hs); const pN = blurRefs(hs).map(v => ui.project(v));
+    let md = 0; pN.forEach((p, i) => { const q = pP[i]; if (p[2] < 1 && q[2] < 1 && p[0] > -60 && p[0] < 1140 && p[1] > -60 && p[1] < 1980) md = Math.max(md, Math.hypot(p[0] - q[0], p[1] - q[1])); });
+    post.motionBlur.samples = U.clamp(Math.ceil(md * post.motionBlur.shutter / 4), 1, 6);
     post.dof.focus = pos.distanceTo(new THREE.Vector3(hx, U.lerp(1, heroTop - 1, k), 0)); post.dof.range = U.lerp(7, 12, kr); post.dof.amount = U.lerp(.6, .3, k);
-    // motion blur only while the column soars and the camera whips up after it
-    post.motionBlur.samples = (t > tD + .03 && t < tD + .8) ? 5 : ((t > tD - .05 && t < tD + 1.4) || (t > 2.55 && t < 3.6)) ? 3 : 1;
 
     R.clouds.forEach(c => { c.sp.position.x = c.x + c.v * t; });
     { const a = t - (tD + 1.8); const hero = R.cols[HERO]; const p = new THREE.Vector3(XS[HERO] - .2, hero.top.position.y + PLAT_Y - .07, .12);
@@ -197,7 +217,15 @@ export default {
     const la = ui.project(new THREE.Vector3(XS[0] - .45, maxH, 0)), lb = ui.project(new THREE.Vector3(XS[5] + .45, maxH, 0));
     const ge = ui.env(t, .75, Infinity, .4, 'fade');
     const onScr = U.smoothstep(1880, 1700, Math.max(la[1], lb[1]));
-    if (ge.o * onScr > .001) { const X = ui.ctx; const pp = U.ease.outCubic(U.clamp((t - .75) / .5)); X.save(); X.globalAlpha = ge.o * onScr * .85; X.setLineDash([18, 12]); X.lineWidth = 5; X.strokeStyle = '#fff6e6'; X.shadowColor = 'rgba(0,0,0,.35)'; X.shadowBlur = 6; X.beginPath(); X.moveTo(la[0], la[1]); X.lineTo(la[0] + (lb[0] - la[0]) * pp, la[1] + (lb[1] - la[1]) * pp); X.stroke(); X.restore(); }
+    if (ge.o * onScr > .001) { const X = ui.ctx; const pp = U.ease.outCubic(U.clamp((t - .75) / .5)); X.save();
+      // chart convention: the guide passes BEHIND the record bar -> cut the hero's silhouette out once it reaches the line
+      const abTop = PLAT_Y + .17 + hs[HERO] + .1725;
+      if (abTop > maxH) {
+        const hw = abTop - .3 < maxH ? .43 : .29;                   // capital (abacus) or fluted shaft half-width at the line
+        const xl = ui.project(new THREE.Vector3(hx - hw, maxH, 0))[0], xr = ui.project(new THREE.Vector3(hx + hw, maxH, 0))[0];
+        X.beginPath(); X.rect(0, 0, ui.W, ui.H); X.rect(Math.min(xl, xr) - 4, 0, Math.abs(xr - xl) + 8, ui.H); X.clip('evenodd');
+      }
+      X.globalAlpha = ge.o * onScr * .85; X.setLineDash([18, 12]); X.lineWidth = 5; X.strokeStyle = '#fff6e6'; X.shadowColor = 'rgba(0,0,0,.35)'; X.shadowBlur = 6; X.beginPath(); X.moveTo(la[0], la[1]); X.lineTo(la[0] + (lb[0] - la[0]) * pp, la[1] + (lb[1] - la[1]) * pp); X.stroke(); X.restore(); }
     ui.text('DÜRÜSTLÜK', { t, t0: tD - .04, x: 540, y: 300, size: 100, weight: 900, color: '#ffcf6b', letterSpacing: 5, anim: 'pop', shadowBlur: 22, shadowColor: 'rgba(30,24,40,.75)', stroke: 'rgba(90,50,20,.5)', strokeW: 9 });
     // callout from the capital: "en yüksek derece"; on "derece" the anchor pulses (a ring) — lands on the words
     const cap = new THREE.Vector3(hx, heroTop + .02, .2);

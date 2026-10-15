@@ -114,7 +114,8 @@ export default {
       COLS.forEach((cx, ci) => {
         const z = Z0 - r * DZ + (rnd() - .5) * .12, x = cx + (rnd() - .5) * .1, ry = (rnd() - .5) * .06;
         desks.push({ x, y: 0, z, ry });
-        const cpull = .42 + rnd() * .2; chairs.push({ x: x + (rnd() - .5) * .2, y: 0, z: z + cpull, ry: Math.PI + (rnd() - .5) * .35 });
+        // chair faces its desk: backrest (chair-local +z) on the aisle side, seat front tucked under the desk edge
+        const cpull = .36 + rnd() * .12; chairs.push({ x: x + (rnd() - .5) * .2, y: 0, z: z + cpull, ry: (rnd() - .5) * .35 });
         shadows.push({ x, y: .004, z, s: [1.7, 1, 1.0] }, { x, y: .004, z: z + cpull + .02, s: [.7, 1, .7] });
         const side = cx < 0 ? -1 : 1; // candle on the corner nearest the central aisle
         const cxl = x - side * .44, czl = z - .17;
@@ -122,7 +123,7 @@ export default {
         const ch = .15 + rnd() * .07; candles.push({ x: cxl, y: TOPY + .05, z: czl, s: [1, ch, 1] });
         const on = ignite(r, ci);
         flames.push(cxl, TOPY + .05 + ch + .012, czl); flameOn.push(on);
-        poolsTop.push({ x: cxl + side * .12, y: TOPY + .002, z: czl + .1, r: .75, on: on + .02 });
+        poolsTop.push({ x, z, ry, cx: cxl + side * .12, cz: czl + .1, r: .75, on: on + .02 });
         poolsFloor.push({ x: cxl + side * .2, y: .006, z: z + .3, r: 1.6, on: on + .05 });
         pages.push({ x: x + side * .08, y: TOPY, z: z + .04, ry: ry + (rnd() - .5) * .2 });
         covers.push({ x: x + side * .08, y: TOPY, z: z + .04, ry: ry + (rnd() - .5) * .2 });
@@ -144,15 +145,16 @@ export default {
     const fl = flamePoints(flames, flameOn, { size: .064, intensity: 2.6 }); scene.add(fl); R.fl = fl;
     const halo = flamePoints(flames, flameOn, { size: .34, glow: true, color: [1, .56, .24], intensity: .85 }); scene.add(halo); R.halo = halo;
     R.halo2 = null;
-    scene.add(lightPools(poolsTop, { opacity: .5, color: '#ffb066' }));
+    scene.add(deskPools(poolsTop, { opacity: .5, color: '#ffb066' }));
     scene.add(lightPools(poolsFloor, { opacity: .2, color: '#ff9a4a' }));
     R.flameOn = flameOn;
     // practical warm lights that come up as the wave passes (stand-ins for the sum of many candles)
     R.lights = [[-2.8, -2.5, 0], [2.8, -8.5, 2], [-2.8, -16, 6], [2.8, -26, 10]].map(([x, z, row]) => { const l = new THREE.PointLight('#ffa65a', 0, 16, 1.5); l.position.set(x, 3.2, z); scene.add(l); return { l, row }; });
 
     camera.fov = 40; camera.near = .05; camera.far = 300; camera.updateProjectionMatrix();
-    R.camPos = path3([[-0.6, [.22, 1.42, 4.7]], [1.2, [.16, 1.52, 3.7]], [2.6, [.08, 2.1, 2.9]], [4.2, [-.08, 3.4, .6]], [5.6, [-.22, 4.5, -1.2]], [6.9, [-.3, 5.0, -2.3]]]);
-    R.camLook = path3([[-0.6, [.1, 1.28, -3]], [1.2, [.05, 1.22, -6]], [2.6, [0, 1.0, -11]], [4.4, [0, .9, -19]], [6.9, [-.05, .8, -25]]]);
+    // C2 natural splines through the original keys: continuous acceleration (no speed/tilt kinks at the knots)
+    R.camPos = spline3([[-0.6, [.22, 1.42, 4.7]], [1.2, [.16, 1.52, 3.7]], [2.6, [.08, 2.1, 2.9]], [4.2, [-.08, 3.4, .6]], [5.6, [-.22, 4.5, -1.2]], [6.9, [-.3, 5.0, -2.3]]]);
+    R.camLook = spline3([[-0.6, [.1, 1.28, -3]], [1.2, [.05, 1.22, -6]], [2.6, [0, 1.0, -11]], [4.4, [0, .9, -19]], [6.9, [-.05, .8, -25]]]);
   },
 
   update(t, ctx) {

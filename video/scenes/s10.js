@@ -11,8 +11,9 @@ let W = null;
 // Splash refinements layered on top of the shared drop world (extra_D.js is shared with s09/s11, so it stays
 // untouched): re-evaluates the crown / jet-tip / bead transforms after W.update(). Identical to the shared
 // version for a < .2 s (everything s09 can show); afterwards
-//  - the crown collapse is slightly slowed (smooth time warp) and the crown SINKS below the water surface
-//    instead of flattening into a one-frame sawtooth ring that then vanishes;
+//  - the crown collapse is slightly slowed (smooth time warp) and the crown SINKS below the water surface while
+//    its sheet fades (riding beads shrink with it) instead of flattening into a one-frame sawtooth ring that then
+//    vanishes;
 //  - the jet-tip droplet pinches off continuously: the ballistic phase starts exactly at the attached tip
 //    position with the jet's velocity (+ a gently ramped separation impulse), and grows smoothly.
 const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _v = new THREE.Vector3(), _s = new THREE.Vector3();
