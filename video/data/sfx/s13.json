@@ -13,19 +13,19 @@
 "desc": "soft parchment rustle"
 },
 {
-"t": 72.5,
+"t": 72.48,
 "dur": 0.3,
 "kind": "pop",
 "desc": "soft text pop"
 },
 {
-"t": 72.85,
+"t": 72.82,
 "dur": 1.6,
 "kind": "whoosh",
 "desc": "airy rising whoosh as the camera cranes up"
 },
 {
-"t": 74.5,
+"t": 74.55,
 "dur": 1.6,
 "kind": "chime",
 "desc": "very soft warm chime on first light at the summit",
@@ -39,7 +39,7 @@
 "gain": -4
 },
 {
-"t": 75.9,
+"t": 75.88,
 "dur": 0.35,
 "kind": "quill",
 "desc": "marker scratch for dotted line",

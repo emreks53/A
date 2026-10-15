@@ -1,44 +1,44 @@
 [
 {
-"t": 41.7,
+"t": 41.75,
 "dur": 0.9,
 "kind": "whoosh",
-"desc": "soft airy fall as the drops enter frame (slow-mo air)"
+"desc": "soft airy whoosh, slow-mo air as the macro shot fades in from black"
 },
 {
 "t": 42.0,
-"dur": 2.6,
+"dur": 2.9,
 "kind": "water",
 "desc": "distant calm sea ambience, ocean low and soft"
 },
 {
-"t": 42.6,
+"t": 42.63,
 "dur": 0.15,
 "kind": "pop",
 "desc": "badge 1 pop"
 },
 {
-"t": 42.74,
+"t": 42.77,
 "dur": 0.15,
 "kind": "pop",
 "desc": "badge 2 pop"
 },
 {
-"t": 43.43,
+"t": 43.46,
 "dur": 0.15,
 "kind": "pop",
-"desc": "label pop (very soft)",
+"desc": "label pop emanet (very soft)",
 "gain": -4
 },
 {
-"t": 43.57,
+"t": 43.6,
 "dur": 0.15,
 "kind": "pop",
-"desc": "label pop (very soft)",
+"desc": "label pop sığınak (very soft)",
 "gain": -4
 },
 {
-"t": 43.91,
+"t": 43.93,
 "dur": 0.7,
 "kind": "chime",
 "desc": "warm glassy chime under IKI ORNEK"
