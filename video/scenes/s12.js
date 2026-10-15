@@ -253,7 +253,7 @@ export default {
     // generic exhibits on far pedestals
     const gg = E.genericGeos(); const pal = ['#c47a48', '#d6a94e', '#3f8a86', '#e8dcc2', '#8a3a2a', '#5b7a3a', '#2f5d9a'];
     const glazeTex = TEX.drawTexture(64, 256, (x, W, H) => { x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H); // glazed bands + small lozenges (tinted per instance)
-      for (const [y, h, c] of [[30, 10, '#d8cbb0'], [44, 4, '#8a7a62'], [120, 26, '#efe4cc'], [196, 4, '#8a7a62'], [204, 12, '#d8cbb0']]) { x.fillStyle = c; x.fillRect(0, y, W, h); }
+      for (const [y, h, c] of [[30, 10, '#c9b896'], [44, 4, '#6e5e48'], [120, 26, '#e8d8b6'], [196, 4, '#6e5e48'], [204, 12, '#c9b896']]) { x.fillStyle = c; x.fillRect(0, y, W, h); }
       x.fillStyle = '#9a8a70'; for (let i = 0; i < 4; i++) { x.save(); x.translate(i * 16 + 8, 133); x.rotate(Math.PI / 4); x.fillRect(-4, -4, 8, 8); x.restore(); } });
     glazeTex.wrapS = glazeTex.wrapT = THREE.RepeatWrapping;
     const genMat = new THREE.MeshPhysicalMaterial({ color: '#ffffff', map: glazeTex, roughness: .32, clearcoat: .6, clearcoatRoughness: .25 });
@@ -304,9 +304,9 @@ export default {
         keys.push({ t: tm, pos: prev.pos.clone().lerp(k.pos, .5).add(V(-.03, .06, .28)), look: prev.look.clone().lerp(k.look, .5).add(V(0, .03, 0)), fov: 33.5, a: 1 }); }
       keys.push({ t: i === DOOR + 1 ? tk + .06 : tk, ...k, a: R.T[i + 1] !== undefined && R.T[i + 1] - R.T[i] < 1.0 ? .32 : .3 }); } // keep drifting through quick beats (lower peak glide speed)
     const c13 = camFor(13);
-    keys.push({ t: R.W.ve - .1, pos: c13.pos.clone().add(V(.16, .1, .06)), look: c13.look.clone().add(V(.25, .06, 0)), fov: 31.5, a: 1 });
-    keys.push({ t: 15.8, pos: V(x14 - 1.05, 2.0, 2.45), look: V(x14 + 3.85, 1.4, -1.0), fov: 37, a: 1 });
-    keys.push({ t: 17.0, pos: V(x14 - 1.8, 2.45, 2.05), look: V(x14 + 12, 2.2, .95), fov: 40, a: 1 });
+    keys.push({ t: R.W.ve - .4, pos: c13.pos.clone().add(V(.12, .08, .08)), look: c13.look.clone().add(V(.2, .05, 0)), fov: 31.5, a: 1 });
+    keys.push({ t: 15.7, pos: V(x14 + .2, 2.05, 2.62), look: V(x14 + 4.8, 1.3, -.2), fov: 37.5, a: 1 }); // pulled back across the hall: the lit row recedes diagonally
+    keys.push({ t: 16.75, pos: V(x14 - .9, 2.5, 2.15), look: V(x14 + 12, 2.15, .95), fov: 40, a: 1 });
     keys.push({ t: 18.4, pos: V(x14 - 2.6, 2.7, 1.7), look: V(x14 + 22, 2.6, 1.6), fov: 42, a: 1 });
     const toV = k => { const d = k.look.clone().sub(k.pos); return { t: k.t, a: k.a, v: [k.pos.x, k.pos.y, k.pos.z, Math.atan2(d.x, -d.z), Math.atan2(d.y, Math.hypot(d.x, d.z)), k.fov] }; };
     const hk = keys.map(toV); const n = hk.length;

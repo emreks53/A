@@ -116,9 +116,9 @@ export default {
     R.puffs = C.puffs(pf, { sunDir: sunDir.toArray(), litMul: 1.25, shadeMul: .72 }); scene.add(R.puffs);
 
     // storm dust: streams in from -X, lifted over the rock; ground sheets + sand on the windward side; a high dust river over the lee
-    R.storm = C.dustField({ count: 100, center: [-14, 3.6, 0], box: [60, 7.5, 40], size: [3, 8], wind: [8, 0, 0], swirl: .5, shade: '#6a2c18', lit: '#f6a060', sunDir: sunDir.toArray(), opacity: .3, nearFade: 4, scatter: 1.4, seed: 4, fog: fogO, yMin: 0, flow: [-7, H, 10, 1] });
+    R.storm = C.dustField({ count: 76, center: [-14, 3.6, 0], box: [60, 7.5, 40], size: [3, 8], wind: [8, 0, 0], swirl: .5, shade: '#6a2c18', lit: '#f6a060', sunDir: sunDir.toArray(), opacity: .3, nearFade: 4, scatter: 1.4, seed: 4, fog: fogO, yMin: 0, flow: [-7, H, 10, 1] });
     R.sheets = C.dustField({ count: 44, center: [-19, .6, 0], box: [26, .9, 40], size: [1.2, 3], wind: [9, 0, 0], swirl: .2, shade: '#7a3a20', lit: '#ee9050', sunDir: sunDir.toArray(), opacity: .22, nearFade: 3, scatter: 1.4, seed: 5, fog: fogO, yMin: 0 });
-    R.highStream = C.dustField({ count: 40, center: [16, 10.5, 24], box: [70, 5, 18], size: [5, 11], wind: [10, 0, 0], swirl: .5, shade: '#9a5a3a', lit: '#ffc890', sunDir: sunDir.toArray(), opacity: .2, nearFade: 6, scatter: 1.6, seed: 6, yMin: 0 });
+    R.highStream = C.dustField({ count: 24, center: [16, 10.5, 24], box: [70, 5, 18], size: [5, 11], wind: [10, 0, 0], swirl: .5, shade: '#9a5a3a', lit: '#ffc890', sunDir: sunDir.toArray(), opacity: .2, nearFade: 6, scatter: 1.6, seed: 6, yMin: 0 });
     scene.add(R.storm, R.sheets, R.highStream);
     R.drift = C.sandDrift({ ground: gh, center: [-16, 0, 0], size: [26, 44], layers: [[.01, 1, 1], [.025, .7, 1.2], [.05, .35, 1.4]], wind: [1, .03], speed: 8, opacity: .36, density: .45, lit: '#f6aa6a', shade: '#7a3a1e', sunDir: sunDir.toArray(), scatter: 1.2, nearFade: 3, farFade: 30, fog: fogO }); scene.add(R.drift);
     // the lee: calm golden motes in the sun + a soft settling haze
@@ -142,7 +142,7 @@ export default {
     { // analytic path sampled every 0.1 s: constant-speed windward push -> cubic-Hermite eased arc around the -Z end -> slow lee drift
       const O = [0, -10], t0 = 1.72, t1 = 4.12, Pw0 = new THREE.Vector3(-27.5, 1.55, -18.4), Lw0 = new THREE.Vector3(-6, 4.4, -1);
       const A0 = Math.atan2(-16.6 - O[1], -19.5 - O[0]), A1 = Math.atan2(2.1 - O[1], 14.95 - O[0]);
-      const Lw = new THREE.Vector3(-6.4, 3.4, -2.8), Lm = new THREE.Vector3(1.5, 3.2, -9), Ls = new THREE.Vector3(9.55, .72, 4.62);
+      const Lw = new THREE.Vector3(-6.4, 3.4, -2.8), Lm = new THREE.Vector3(10, 2.6, -17), Ls = new THREE.Vector3(9.55, .72, 4.62);
       const r0 = Math.hypot(-19.5 - O[0], -16.6 - O[1]), r1 = Math.hypot(14.95 - O[0], 2.1 - O[1]);
       const ha = .16, hb = .012, S = u => (u * u * u - 2 * u * u + u) * ha + (-2 * u * u * u + 3 * u * u) + (u * u * u - u * u) * hb;
       const arcP = s => { const A = A0 + (A1 - A0) * s, r = r0 + (r1 - r0) * s - 6 * Math.sin(Math.PI * s), h = 2.1 + (1.7 - 2.1) * s + 1.4 * Math.sin(Math.PI * s); return new THREE.Vector3(O[0] + Math.cos(A) * r, h, O[1] + Math.sin(A) * r); };

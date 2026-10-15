@@ -63,20 +63,6 @@
 "gain": -1
 },
 {
-"t": 37.95,
-"dur": 0.9,
-"kind": "whoosh",
-"desc": "camera swing around the rock into the lee",
-"gain": -3
-},
-{
-"t": 38.6,
-"dur": 3.9,
-"kind": "wind",
-"desc": "calm lee soft breeze",
-"gain": -8
-},
-{
 "t": 38.66,
 "dur": 0.5,
 "kind": "paper",
@@ -147,5 +133,38 @@
 "dur": 0.1,
 "kind": "tick",
 "desc": "tally tick"
+},
+{
+"t": 36.3,
+"dur": 0.5,
+"kind": "arrow hit",
+"desc": "third heavy strike on the windward face",
+"gain": 2
+},
+{
+"t": 36.32,
+"dur": 0.6,
+"kind": "stone",
+"desc": "rock chips flying"
+},
+{
+"t": 37.35,
+"dur": 2.35,
+"kind": "whoosh",
+"desc": "camera whip around the massif into the lee"
+},
+{
+"t": 39.2,
+"dur": 3.3,
+"kind": "wind",
+"desc": "calm lee soft breeze",
+"gain": -8
+},
+{
+"t": 39.87,
+"dur": 1.4,
+"kind": "sand",
+"desc": "faint sand trickling down the lee wall",
+"gain": -10
 }
 ]

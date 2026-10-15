@@ -65,7 +65,7 @@ export default {
     // foreground spear: right third, leaning away to the right, head rim-lit against the burning sky (never crosses the type)
     { const s = C.spear2({ length: 2.3, seed: 7 }); const dir = new THREE.Vector3(.5, .8, -.33).normalize(); s.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); s.rotateY(.6);
       s.position.set(-2.5, gh(-2.5, -2.7) - .25, -2.7); scene.add(s); R.fgSpear = s; }
-    sp(-4.4, 2.2, -.2, -.42, 0); sp(-3.6, -6, .1, .3); sp(3.2, -8.5, -.25, -.2); sp(-1.1, -11, .3, .5); sp(4.5, -2.5, .15, -.5);
+    sp(-4.4, 2.2, -.2, -.42, 0); sp(-7.2, -9.5, .1, .3); sp(3.2, -8.5, -.25, -.2); sp(5.8, -12.5, .3, .5); sp(4.5, -2.5, .15, -.5);
     sp(.25, 5.3, Math.PI / 2 - .02, 0, 1.2, 2.4, .03); sp(-.9, -3.2, Math.PI / 2 - .03, 0, -.5, 2.4, .03);
 
     // --- arrows ---
