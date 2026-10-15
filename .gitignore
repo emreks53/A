@@ -3,3 +3,4 @@ video/out/
 video/release/parcalar/
 video/tmp/
 video/release/parcalar_v2/
+__pycache__/
