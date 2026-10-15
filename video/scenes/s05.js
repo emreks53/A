@@ -196,16 +196,15 @@ export default {
       const bt = .035; const g = new THREE.ExtrudeGeometry(sh, { depth: ND - bt * 2, bevelEnabled: true, bevelThickness: bt, bevelSize: .03, bevelSegments: 4, curveSegments: 4 }); g.translate(0, 0, -ND + bt);
       room.add(mesh(g, wall)); }
     { const g = new THREE.ExtrudeGeometry(outline(), { depth: T - ND, bevelEnabled: false }); g.translate(0, 0, -T); room.add(mesh(g, wallDark)); }
-    room.add(mesh(M.rbox(T, RH, 5.5, .03, 2), sideWall, -2.6, RH / 2, 2.6));
-    room.add(mesh(M.rbox(T, RH, 5.5, .03, 2), sideWall, 2.6, RH / 2, 2.6));
+    for (const sx of [-2.6, 2.6]) { const sw = mesh(M.rbox(T, RH, 5.5, .03, 2), sideWall, sx, RH / 2, 2.6); sw.castShadow = false; room.add(sw); } // far walls: no need to cast
     const floorT = TEX.plaster({ a: '#a8886a', b: '#7a5e44', seed: 22, repeat: [4, 4] });
     const floorM = new THREE.MeshStandardMaterial({ map: floorT.map, normalMap: floorT.normalMap, normalScale: new THREE.Vector2(.8, .8), roughness: .95 });
     const floor = mesh(new THREE.PlaneGeometry(5.4, 6).rotateX(-Math.PI / 2), floorM, 0, 0, 2.7); floor.castShadow = false; room.add(floor);
     const beamT = TEX.drawTexture(64, 512, (x, W, H) => { x.fillStyle = '#6a4a30'; x.fillRect(0, 0, W, H); for (let y = 0; y < H; y += 10) { x.fillStyle = `rgba(40,25,12,${.25 + (y % 30 ? 0 : .2)})`; x.fillRect(0, y, W, 3); } });
     const beamM = new THREE.MeshStandardMaterial({ map: beamT, roughness: .95 });
-    for (let k = 0; k < 7; k++) { const b = mesh(new THREE.CylinderGeometry(.09, .1, 5.6, 12), beamM, -2.4 + k * .8, RH + .02, 2.6); b.rotation.x = Math.PI / 2; b.rotation.z = (k % 2 ? .02 : -.02); room.add(b); }
+    for (let k = 0; k < 7; k++) { const b = mesh(new THREE.CylinderGeometry(.09, .1, 5.6, 12), beamM, -2.4 + k * .8, RH + .02, 2.6); b.rotation.x = Math.PI / 2; b.rotation.z = (k % 2 ? .02 : -.02); b.castShadow = false; room.add(b); }
     const reed = TEX.fabric({ a: '#a88a5c', b: '#7a6040', weave: 90 });
-    room.add(mesh(new THREE.PlaneGeometry(5.4, 6).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ map: reed.map, normalMap: reed.normalMap, roughness: 1 }), 0, RH + .1, 2.7));
+    { const ce = mesh(new THREE.PlaneGeometry(5.4, 6).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ map: reed.map, normalMap: reed.normalMap, roughness: 1 }), 0, RH + .1, 2.7); ce.castShadow = false; room.add(ce); }
     const wood = M.MAT.wood({ a: '#a06c3c', b: '#64401f', rings: 18, seed: 31 });
     const darkWood = M.MAT.darkWood({ rings: 26, seed: 17 });
     const SH0 = NY0 + .02, SH1 = 1.66; R.SH0 = SH0; R.SH1 = SH1;
@@ -257,7 +256,7 @@ export default {
     out.add(mesh(M.rbox(.3, .28, .8, .08, 1), darkWood, -.4, 3.4, -4.9));
     out.add(mesh(M.rbox(1.0, 1.9, .2, .05, 1), darkWood, 2.4, .95, -5.05));
     const sky = ENV.skyDome({ top: '#060b1e', mid: '#12224a', horizon: '#33406a', bottom: '#141a2c', sunDir: [.3, .5, -1], sunColor: '#e9efff', sunSize: 0, sunGlow: .3, stars: .8, clouds: 0, intensity: 1 }); scene.add(sky);
-    out.traverse(o => { if (o.isMesh && o.material && o.material.emissive) { o.material = o.material.clone(); o.material.emissive = new THREE.Color('#2a3658'); o.material.emissiveIntensity = .3; } });
+    out.traverse(o => { if (o.isMesh) o.castShadow = false; if (o.isMesh && o.material && o.material.emissive) { o.material = o.material.clone(); o.material.emissive = new THREE.Color('#2a3658'); o.material.emissiveIntensity = .3; } });
     R.lanterns = [[.98, 1.3, -2.2, 0], [1.4, 1.24, -3.5, 1.3], [.68, 1.2, -4.3, 2.2], [1.8, 1.32, -2.7, 3.1], [2.3, 1.28, -3.9, 4.2]].map(([x, y, z, ph]) => {
       const gl = FX.glow({ size: .95, opacity: 1, color: '#ffa850' }); gl.position.set(x, y, z); out.add(gl);
       const core = FX.glow({ size: .16, opacity: 1, color: '#fff0c8' }); core.position.set(x, y, z); out.add(core);

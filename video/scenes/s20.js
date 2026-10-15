@@ -51,7 +51,8 @@ function drawRisalePage(x, W, H, { num = null, side = 'R', seed = 1, para = [5, 
   const ge = x.createLinearGradient(side === 'R' ? W : 0, 0, side === 'R' ? W * .9 : W * .1, 0); ge.addColorStop(0, 'rgba(120,90,50,.12)'); ge.addColorStop(1, 'rgba(120,90,50,0)'); x.fillStyle = ge; x.fillRect(0, 0, W, H);
 }
 // page-surface profile of an open book: dips into the gutter (u=0), rises, then falls gently to the fore-edge (u=1)
-const yTop = u => .0044 * Math.pow(Math.sin(Math.PI * Math.min(1, Math.pow(u, .7) * 1.04)), .65) - .0072 * Math.exp(-u / .045);
+const yTop = u => u < 0 ? -.0072 + u * .07 : .0044 * Math.pow(Math.sin(Math.PI * Math.min(1, Math.pow(u, .7) * 1.04)), .65) - .0072 * Math.exp(-u / .045);
+const U0 = -.05; // page surfaces run slightly past the hinge so the two halves close the gutter valley
 
 // strip grid (N along u, NZ along z) with right-handed winding; flip=true reverses it
 function stripGeo(N, NZ, flip) {
@@ -185,7 +186,7 @@ export default {
       const board = new THREE.Mesh(M.rbox(BW + .007, .0032, BH + .009, .0013, 2), leather); board.position.set(sign * (BW / 2 + .0015), -TAU - .0016, 0); g.add(board);
       const N = 30, NZ = 3;
       const topG = stripGeo(N, NZ, sign > 0); const uvA = topG.attributes.uv;
-      for (let j = 0; j <= NZ; j++) for (let i = 0; i <= N; i++) { const k = j * (N + 1) + i; uvA.setXY(k, sign > 0 ? i / N : 1 - i / N, j / NZ); }
+      for (let j = 0; j <= NZ; j++) for (let i = 0; i <= N; i++) { const k = j * (N + 1) + i, uu = Math.max(0, U0 + (1 - U0) * i / N); uvA.setXY(k, sign > 0 ? uu : 1 - uu, j / NZ); }
       const topM = new THREE.Mesh(topG, new THREE.MeshStandardMaterial({ map, roughness: .88 })); g.add(topM);
       const walls = stripGeo(N, 1, sign > 0); const wallU = walls.attributes.uv; for (let j = 0; j <= 1; j++) for (let i = 0; i <= N; i++) wallU.setXY(j * (N + 1) + i, i / N * 2, j * .35);
       const head = new THREE.Mesh(walls, edgeMatDS), tail = new THREE.Mesh(walls.clone(), edgeMatDS); g.add(head, tail);
@@ -397,18 +398,18 @@ export default {
     for (const half of [R.leftHalf, R.rightHalf]) {
       const d = half.userData; if (d.k === k) continue; d.k = k; const s = d.sign;
       const p = d.topG.attributes.position;
-      for (let j = 0; j <= d.NZ; j++) for (let i = 0; i <= d.N; i++) { const u = i / d.N; p.setXYZ(j * (d.N + 1) + i, s * u * BW, yTop(u) * k, BH / 2 - j / d.NZ * BH * .998 - .0002); }
+      for (let j = 0; j <= d.NZ; j++) for (let i = 0; i <= d.N; i++) { const u = U0 + (1 - U0) * i / d.N; p.setXYZ(j * (d.N + 1) + i, s * u * BW, yTop(u) * k, BH / 2 - j / d.NZ * BH * .998 - .0002); }
       p.needsUpdate = true; d.topG.computeVertexNormals(); d.topG.computeBoundingSphere();
       for (const [geo, z] of [[d.head, -BH / 2 + .0003], [d.tail, BH / 2 - .0003]]) {
         const q = geo.attributes.position;
-        for (let i = 0; i <= d.N; i++) { const u = i / d.N; q.setXYZ(i, s * u * BW, -TAU, z); q.setXYZ(d.N + 1 + i, s * u * BW, yTop(u) * k, z); }
+        for (let i = 0; i <= d.N; i++) { const u = Math.max(0, i / d.N); q.setXYZ(i, s * u * BW, -TAU, z); q.setXYZ(d.N + 1 + i, s * u * BW, yTop(u) * k, z); }
         q.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere();
       }
     }
     { // half-shell faces -x (local) before rotation; orient it toward the crease (closed) or straight down (open)
       const sr = U.lerp(TAU + .0034, .0088, k); R.spine.scale.set(sr, sr, 1); R.spine.position.set(0, U.lerp(0, -.0146, k), 0);
       R.spine.rotation.z = U.lerp(Math.PI / 2 + ALPHA, Math.PI, k); }
-    R.fold.visible = k > .02; R.fold.scale.set(k, k, 1); R.fold.position.y = -.0098;
+    R.fold.visible = false;
     const flipT = i => o1 - .38 + i * .11;
     let landed = 0;
     R.sheets.forEach(({ geo, i, N, front, back }) => {
@@ -465,6 +466,6 @@ export default {
       for (const yy of [y0 - 66, y0 + 66]) { X.fillRect(540 - lw, yy - 1.2, lw - 16, 2.4); X.fillRect(540 + 16, yy - 1.2, lw - 16, 2.4); X.save(); X.translate(540, yy); X.rotate(Math.PI / 4); X.fillRect(-6, -6, 12, 12); X.restore(); }
       X.restore();
     }
-    ui.text('Mektubat, s. 195 · Sözler, 19. Söz', { t, t0: tEtr - .1, x: 540, y: R.cardY + 2, size: 62, weight: 700, family: 'Playfair Display', color: '#3d1a12', anim: 'fade', dur: .9, shadow: false, maxWidth: 940 });
+    ui.text('Mektubat, s. 195 · Sözler, 19. Söz', { t, t0: tEtr - .1, x: 540, y: R.cardY + 2, size: 58, weight: 700, family: 'Playfair Display', color: '#3d1a12', anim: 'fade', dur: .9, shadow: false, maxWidth: 940 });
   },
 };

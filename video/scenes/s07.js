@@ -121,8 +121,8 @@ export default {
     const tSid = R.tSid;
     R.volley.update(t);
     // --- camera: fast low hand-held dolly forward, roll, shake, jolt + punch-in on the hit ---
-    const k = [[-0.5, [1.35, 1.2, 9.6]], [tSid, [.55, 1.02, 4.9]], [tSid + .55, [-.25, 1.42, 3.0]], [ctx.dur + .55, [-1.0, 1.62, .4]]];
-    const P = U.kf(t, k.map(([a, b]) => [a, b]), 'linear');
+    if (!R.camP) R.camP = C.camPath([[-0.5, [1.35, 1.2, 9.6], [0, 0, 0]], [tSid, [.55, 1.02, 4.9], [0, 0, 0]], [tSid + .55, [-.25, 1.42, 3.0], [0, 0, 0]], [ctx.dur + .55, [-1.0, 1.62, .4], [0, 0, 0]]]);
+    R.camP.at(t, R.cp || (R.cp = new THREE.Vector3()), R.cl || (R.cl = new THREE.Vector3())); const P = R.cp.toArray();   // smooth spline, no velocity kinks
     const L = U.kf(t, [[-0.5, [-1.4, 3.3, -20]], [tSid - .3, [-.4, 2.6, -20]], [tSid + .02, [.45, .25, -12]], [tSid + .45, [.3, .9, -15]], [ctx.dur + .55, [-1.2, 3.6, -20]]], 'inOutSine');
     const jolt = Math.exp(-Math.max(0, t - tSid) * 9) * (t > tSid ? 1 : 0);
     const s1 = U.shake(t, .045, 1.6, 11), s2 = U.shake(t, .012, 7, 4);

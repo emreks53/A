@@ -382,8 +382,8 @@ export default {
     let fd = 2.5; { let best = 1e9; R.heroes.forEach(h => { const d = h.tgt.clone().sub(camera.position); const along = d.dot(dir); const lat = d.clone().sub(dir.clone().multiplyScalar(along)).length(); if (along > .5 && lat < best) { best = lat; fd = along; } }); }
     const dw = U.smoothstep(R.T[DOOR] - .55, R.T[DOOR] - .15, t) * (1 - U.smoothstep(R.T[DOOR] + .7, R.T[DOOR] + 1.0, t)); // door shot: hold the tree and the doorway together
     post.dof.focus = U.lerp(U.lerp(fd, 6.5, dw), 9, fin); post.dof.range = U.lerp(U.lerp(1.5, 10, dw), 14, fin); post.dof.amount = U.lerp(U.lerp(.85, .4, dw), .55, fin);
-    // motion blur only where the camera glides fast (decided one frame ahead: the engine reads it before update() of the next frame)
-    { const sp = R.pxSpeed(t + 1 / 30); post.motionBlur = sp > 40 ? { samples: 3, shutter: .36 } : { samples: 1 }; }
+    // motion blur only where the camera glides fast (screen speed centred on this frame)
+    { const sp = R.pxSpeed(t - 1 / 60); post.motionBlur = sp > 40 ? { samples: 3, shutter: .36 } : { samples: 1 }; }
     post.exposure = 1.05 + .05 * fin;
 
     // ---- typography

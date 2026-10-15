@@ -352,8 +352,8 @@ export default {
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
     R.cam.apply(camera, t, U.shake(t, .012 + .02 * U.smoothstep(3, 4.5, t), .5, 4));
-    // motion blur only while the crane sweeps the near stack out of frame (decided one frame ahead: read before next update)
-    post.motionBlur = R.pxSpeed(t + 1 / 30) > 40 ? { samples: 3, shutter: .4 } : { samples: 1 };
+    // motion blur only while the crane sweeps the near stack out of frame (screen speed centred on this frame)
+    post.motionBlur = R.pxSpeed(t - 1 / 60) > 40 ? { samples: 3, shutter: .4 } : { samples: 1 };
     // sunrise creeps down the great summit (terminator height)
     R.UN.uTerm.value = U.lerp(104, 58, U.smoothstep(-.5, 7.8, t));
     R.sky.userData.uniforms.sunGlow.value = 1.0 + .3 * U.smoothstep(2, 7, t);

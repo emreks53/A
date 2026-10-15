@@ -13,7 +13,7 @@ export default {
     bloom: { enabled: true, strength: 0.5, radius: 0.55, threshold: 0.78 },
     grade: { contrast: 1.05, saturation: 1.06, warmth: 0.0, lift: [0.012, 0.014, 0.03], gain: [1.0, 1.0, 1.0] },
     vignette: 0.36, grain: 0.028, aberration: 0.0008,
-    dof: { enabled: true, focus: 30, range: 60, amount: 0.3 },
+    dof: { enabled: false, focus: 30, range: 60, amount: 0 },
   },
   async setup(ctx) {
     const { scene, camera, U, MODELS: M, renderer } = ctx;
@@ -130,7 +130,7 @@ export default {
     ctx.scene.environmentIntensity = .3 + .12 * g;
     const prod = U.smoothstep(4.6, 5.8, t); // 0 wide .. 1 product shot
     for (const m of R.envMats) m.envMapIntensity = .5 + .2 * prod + .25 * g;
-    R.hemi.intensity = 2.0 - 1.6 * prod; R.dawnSkyL.intensity = .55 - .35 * prod;
+    R.hemi.intensity = 2.0 - 1.6 * prod; R.dawnSkyL.intensity = .55 * (1 - prod);
     // perf: lights / passes only while they contribute (switching visibility recompiles once; output identical)
     R.spot.visible = t > 4.55; R.dawnSkyL.visible = prod < .995; post.dof.enabled = t > 4.2;
     // lamp practicals flicker
@@ -138,7 +138,7 @@ export default {
     post.exposure = 1.18 + .04 * g - .1 * prod;
     post.grade.warmth = .0 + .05 * prod; post.grade.saturation = 1.06 + .02 * prod;
     // DOF: deep in the wide shot, shallow product focus on the cover
-    const focus = camera.position.distanceTo(B); post.dof.focus = focus; FU.uFocus.value = focus; FU.uAperture.value = .05 * prod; post.dof.range = THREE.MathUtils.lerp(80, 1.1, prod); post.dof.amount = THREE.MathUtils.lerp(.25, 1, prod);
+    const focus = camera.position.distanceTo(B); post.dof.focus = focus; FU.uFocus.value = focus; FU.uAperture.value = .05 * prod; post.dof.range = THREE.MathUtils.lerp(8, 1.1, prod); post.dof.amount = prod;
 
     // motion blur only where the spiral glide is fast enough to strobe (point lights sweeping ~90 px/frame at 4.6 s)
     const mbN = (t > 4.35 && t < 5.2) ? 6 : (t > 4.15 && t < 5.5) ? 4 : (t > 4.0 && t < 5.7) ? 2 : 1; post.motionBlur = { samples: R.dbg.includes('nomb') ? 1 : mbN, shutter: .5 };

@@ -92,7 +92,7 @@ export default {
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
     // --- camera: slow low orbit + gentle push-in (never stops) ---
-    const p = U.prog(t, -0.5, 4.05, 'inOutSine');
+    const p = .25 * U.prog(t, -0.5, 4.05, 'linear') + .75 * U.prog(t, -0.5, 4.05, 'inOutSine');   // never fully at rest, even on the handles
     const th = U.lerp(.26, -.34, p), rad = U.lerp(5.3, 4.8, p), h = U.lerp(.42, .3, p);
     const sh = U.shake(t, .006, .5, 3);
     const cx = Math.sin(th) * rad + sh.x, cz = Math.cos(th) * rad;

@@ -102,6 +102,7 @@ async function main() {
   // Motion blur: post.motionBlur = { samples: 2..5, shutter: 0.5 } (fraction of a frame). Sub-frames are averaged;
   // the overlay (typography) comes from the sub-frame closest to t, so text stays crisp.
   function renderBlurred(t) {
+    ctx.t = t; S.update(t, ctx); // let the scene set post.motionBlur for THIS frame before sampling
     const mb = post.motionBlur; const n = Math.max(1, Math.round((mb && mb.samples) || 1));
     if (n <= 1) { renderFrame(t); return; }
     const sh = (mb.shutter ?? 0.5) / FPS; const seed = (frameNo++ % 97) * 1.37 + t;
