@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /yonetim/
+Disallow: /panel-sablon/
+Disallow: /panel-veri/
+Disallow: /api/
+Sitemap: https://www.idealistgyo.com/sitemap-index.xml
