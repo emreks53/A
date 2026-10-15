@@ -1,8 +1,8 @@
 // s05 (25.25–29.75) "…Peygamberimiz ﷺ'a emanet ederlerdi."
-// Visual: inside the modest house the lights converged to in s04 (open door on the right, the lantern lights waiting in
-// the moonlit alley outside). One clay oil lamp on a small wall bracket beside a deep plastered wall niche with two wooden
+// Visual: inside the modest house the lights converged to in s04 (open door on the right, clay lamps burning on the
+// neighbour's wall across the moonlit alley). One clay oil lamp on a small wall bracket beside a deep plastered wall niche with two wooden
 // shelves: warm raking light, soft shadows on the plaster, cool moonlight spilling through the door.
-// The entrusted items arrive one by one on the beat — each pops in just in front of the niche and glides onto its shelf
+// The entrusted items arrive one by one on the beat — each grows in just in front of the niche and glides onto its shelf
 // with a small hop, landing with squash & stretch and a puff of dust (paths stay inside the compartments: no clipping):
 // leather pouches tied with cord, a wooden chest with brass bands, a sealed clay jar, a folded fine textile, a sheathed
 // dagger, a small jewellery box, a rolled parchment with a wax seal — each with a small parchment tag sealed with red wax
@@ -59,8 +59,11 @@ function pouch(M, mats, o) {
 function chest(M, mats, o) {
   const g = new THREE.Group(); const w = o.w, h = o.h, d = o.d; const hb = h * .66;
   g.add(mesh(M.rbox(w, hb, d, .014, 2), o.wood, 0, hb / 2, 0));
-  const lid = mesh(new THREE.CylinderGeometry(d / 2 + .004, d / 2 + .004, w + .006, 26, 1, false, 0, Math.PI), o.wood, 0, hb, 0); lid.rotation.z = Math.PI / 2; lid.scale.set((h - hb) / (d / 2), 1, 1); g.add(lid);
-  const lidSide = (s) => { const c = mesh(new THREE.CircleGeometry(d / 2 + .004, 26, 0, Math.PI), o.wood, s * (w / 2 + .003), hb, 0); c.rotation.y = s * Math.PI / 2; c.scale.y = (h - hb) / (d / 2); return c; };
+  // the barrel lid is an open half-cylinder + single-sided end caps: render both faces into the shadow map, otherwise the
+  // lamp-facing cap is culled and light leaks through the hollow lid as a pale band inside the chest's wall shadow
+  const lidM = o.wood.clone(); lidM.shadowSide = THREE.DoubleSide;
+  const lid = mesh(new THREE.CylinderGeometry(d / 2 + .004, d / 2 + .004, w + .006, 26, 1, false, 0, Math.PI), lidM, 0, hb, 0); lid.rotation.z = Math.PI / 2; lid.scale.set((h - hb) / (d / 2), 1, 1); g.add(lid);
+  const lidSide = (s) => { const c = mesh(new THREE.CircleGeometry(d / 2 + .004, 26, 0, Math.PI), lidM, s * (w / 2 + .003), hb, 0); c.rotation.y = s * Math.PI / 2; c.scale.y = (h - hb) / (d / 2); return c; };
   g.add(lidSide(1), lidSide(-1));
   for (const x of [-w * .3, w * .3]) {
     g.add(mesh(M.rbox(.022, hb + .004, d + .006, .003, 1), mats.brass, x, hb / 2, 0));
@@ -148,9 +151,13 @@ function scroll(M, mats, o, TEX) {
   for (const s of [-1, 1]) { const c = new THREE.Mesh(new THREE.CircleGeometry(r * .995, 28), new THREE.MeshStandardMaterial({ map: endTex, roughness: .9 })); c.position.set(s * (L / 2 + .0005), r, 0); c.rotation.y = s * Math.PI / 2; c.castShadow = true; g.add(c); }
   const leaf = new THREE.Mesh(new THREE.CylinderGeometry(r + .0015, r + .0015, L * .995, 24, 1, true, Math.PI * .05, Math.PI * .5), pm); leaf.rotation.z = Math.PI / 2; leaf.position.y = r; leaf.castShadow = true; g.add(leaf);
   const cord = mesh(new THREE.TorusGeometry(r + .003, .0032, 6, 26), mats.redCord, -L * .08, r, 0); cord.rotation.y = Math.PI / 2; g.add(cord);
-  const sealG = new THREE.CylinderGeometry(.024, .026, .005, 20); { const p = sealG.attributes.position; for (let i = 0; i < p.count; i++) { const a = Math.atan2(p.getZ(i), p.getX(i)); const f = 1 + .08 * Math.sin(a * 5) + .05 * Math.sin(a * 9); p.setX(i, p.getX(i) * f); p.setZ(i, p.getZ(i) * f); } sealG.computeVertexNormals(); }
-  const seal = mesh(sealG, mats.wax, -L * .08, r * .95, r + .002); seal.rotation.x = Math.PI / 2; g.add(seal);
-  const tg = tag(M, mats, 11); tg.position.set(L * .3, r * 1.4, r * .8); tg.rotation.x = -1.2; g.add(tg); g.userData.tagFlat = true;
+  // wax seal: wrapped onto the roll's curvature and tilted up-forward (a flat disc facing the lamp mirrored its whole
+  // clearcoat highlight and read as a white blob), satin wax so it stays red
+  const sealG = new THREE.CylinderGeometry(.021, .023, .005, 20); { const p = sealG.attributes.position; for (let i = 0; i < p.count; i++) { const a = Math.atan2(p.getZ(i), p.getX(i)); const f = 1 + .08 * Math.sin(a * 5) + .05 * Math.sin(a * 9); p.setX(i, p.getX(i) * f); p.setZ(i, p.getZ(i) * f); const z = p.getZ(i); p.setY(i, p.getY(i) - z * z / (2 * (r + .005))); } sealG.computeVertexNormals(); }
+  const sealM = mats.wax.clone(); sealM.roughness = .5; sealM.clearcoat = .3; sealM.clearcoatRoughness = .55;
+  const sa = .6, sd = r + .005; const seal = mesh(sealG, sealM, -L * .08, r + sd * Math.sin(sa), sd * Math.cos(sa)); seal.rotation.x = Math.PI / 2 - sa; g.add(seal);
+  // tag tied over the top of the roll, its card leaning forward-down on the shelf facing the camera (not edge-on)
+  const tg = tag(M, mats, 11); tg.position.set(L * .28, r * 1.9, r * .75); tg.rotation.x = -.8; g.add(tg); g.userData.tagFlat = true;
   g.userData.w = L + .01; g.userData.d = 2 * r + .01; g.userData.h = 2 * r;
   return g;
 }
@@ -257,12 +264,21 @@ export default {
     out.add(mesh(M.rbox(1.0, 1.9, .2, .05, 1), darkWood, 2.4, .95, -5.05));
     const sky = ENV.skyDome({ top: '#060b1e', mid: '#12224a', horizon: '#33406a', bottom: '#141a2c', sunDir: [.3, .5, -1], sunColor: '#e9efff', sunSize: 0, sunGlow: .3, stars: .8, clouds: 0, intensity: 1 }); scene.add(sky);
     out.traverse(o => { if (o.isMesh) o.castShadow = false; if (o.isMesh && o.material && o.material.emissive) { o.material = o.material.clone(); o.material.emissive = new THREE.Color('#2a3658'); o.material.emissiveIntensity = .3; } });
-    R.lanterns = [[.98, 1.3, -2.2, 0], [1.4, 1.24, -3.5, 1.3], [.68, 1.2, -4.3, 2.2], [1.8, 1.32, -2.7, 3.1], [2.3, 1.28, -3.9, 4.2]].map(([x, y, z, ph]) => {
-      const gl = FX.glow({ size: .95, opacity: 1, color: '#ffa850' }); gl.position.set(x, y, z); out.add(gl);
-      const core = FX.glow({ size: .16, opacity: 1, color: '#fff0c8' }); core.position.set(x, y, z); out.add(core);
-      return { gl, core, x, y, z, ph };
+    // the warm lights seen through the door are real sources: two clay oil lamps on small wooden wall brackets on the
+    // neighbour's wall across the alley (small glows -> soft bokeh, no floating hand-height lights), plus one warm point
+    // light so the lamps visibly light the plaster and the ground around them
+    R.lanterns = [[1.22, 1.36, .3, 0], [2.08, 1.5, -.35, 2.1]].map(([x, y, ry, ph], k) => {
+      const br = mesh(M.rbox(.3, .035, .24, .01, 1), darkWood, x, y - .0175, -4.98); br.castShadow = false; out.add(br);
+      const lp = M.oilLamp({ scale: 1.8, light: false, seed: 7 + k }); lp.position.set(x - .04, y, -4.98); lp.rotation.y = ry; out.add(lp);
+      lp.userData.glow.visible = false; // its built-in glow ignores depth (would shine through the door jamb)
+      lp.traverse(c => { if (c.isMesh) c.castShadow = false; });
+      out.updateMatrixWorld(true); const fw = new THREE.Vector3(); lp.userData.flame.getWorldPosition(fw);
+      const gl = FX.glow({ size: .34, opacity: .5, color: '#ffa850' }); gl.position.copy(fw).add(new THREE.Vector3(0, .07, .02)); out.add(gl);
+      const core = FX.glow({ size: .08, opacity: .9, color: '#fff0c8' }); core.position.copy(fw).add(new THREE.Vector3(0, .05, .02)); out.add(core);
+      return { gl, core, ph };
     });
-    
+    R.alleyL = new THREE.PointLight('#ffa04a', .45, 3.4, 2); R.alleyL.position.set(1.65, 1.72, -4.55); out.add(R.alleyL);
+
 
     // ---------------- items ----------------
     const leatherA = M.MAT.leather({ a: '#9a5a2e', b: '#5a3014', seed: 13 });
@@ -274,7 +290,7 @@ export default {
     const capCloth = M.MAT.fabric({ a: '#d8c7a2', b: '#a8946c', weave: 70, sheen: '#fff3d8' });
     const stripes = TEX.drawTexture(512, 512, (x, W, H) => { x.fillStyle = '#8a2420'; x.fillRect(0, 0, W, H); const st = [['#1f3466', 54], ['#e3b04e', 10], ['#8a2420', 40], ['#e3b04e', 6], ['#f0e0c0', 12], ['#e3b04e', 6], ['#8a2420', 34]]; let u = 0; while (u < W) for (const [c, w] of st) { x.fillStyle = c; x.fillRect(u, 0, w, H); u += w; } for (let i = 0; i < H; i += 3) { x.fillStyle = 'rgba(0,0,0,.08)'; x.fillRect(0, i, W, 1); } for (let i = 0; i < W; i += 5) { x.fillStyle = 'rgba(255,255,255,.04)'; x.fillRect(i, 0, 1, H); } });
     const textileM = new THREE.MeshPhysicalMaterial({ map: stripes, roughness: .9, sheen: 1, sheenColor: new THREE.Color('#9fb6ff'), sheenRoughness: .4 });
-    const sheathL = M.MAT.leather({ a: '#7a3220', b: '#45180c', seed: 51 });
+    const sheathL = M.MAT.leather({ a: '#a8562e', b: '#5e2a16', seed: 51 }); // lighter tan-red so the sheath reads against the textile
     const IS = 1.3; R.IS = IS;
     const items = [];
     // compartment ceilings (for collision-free arrival paths)
@@ -292,7 +308,8 @@ export default {
     const sc = scroll(M, mats, { len: .26, r: .032 }, TEX);
     // arrival order: right -> left (the camera pans from the door toward the niche), alternating shelves
     layout([[tx, -.05, 2.5, 'cloth', .02], [jr, .4, 1.44, 'clay', .01], [ch, -.04, .34, 'wood', .015]], SH0, CEIL.lo);
-    layout([[sc, .55, 3.22, 'paper', .03], [jb, -.1, 2.15, 'wood', .02], [pA, .3, 1.8, 'cloth', .02], [pB, -.4, .9, 'cloth', .02]], SH1, CEIL.hi);
+    // the sealed scroll sits at the lamp-lit right end of the upper shelf (it was lost in the jewel box's shadow at the left)
+    layout([[jb, -.1, 2.15, 'wood', .02], [pA, .3, 1.8, 'cloth', .02], [pB, -.4, .9, 'cloth', .02], [sc, .18, 3.22, 'paper', .03]], SH1, CEIL.hi);
     { const dg = dagger(M, mats, { len: .15, leather: sheathL, wood: boxWood }); add(dg, tx.position.x + .005, SH0 + tx.userData.top * IS, tx.position.z + .02, Math.PI / 2 - .22, 2.86, 'metal', CEIL.lo); }
     R.chest = ch;
     items.forEach(it => it.obj.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } }));
@@ -304,7 +321,7 @@ export default {
     const du = { map: { value: TEX.softDot(64, .1) }, pxs: { value: ctx.renderer.getSize(new THREE.Vector2()).y / 960 } };
     const dm = new THREE.ShaderMaterial({ uniforms: du, transparent: true, depthWrite: false,
       vertexShader: `uniform float pxs; attribute float alpha; varying float vA; void main(){ vec4 mv = modelViewMatrix*vec4(position,1.); gl_Position = projectionMatrix*mv; vA = alpha; gl_PointSize = (9. + 22.*(1.-alpha)) * 3.2 * pxs / -mv.z; }`,
-      fragmentShader: `uniform sampler2D map; varying float vA; void main(){ float a = texture2D(map, gl_PointCoord).a; gl_FragColor = vec4(vec3(.9,.76,.58), a * vA * .34); }` });
+      fragmentShader: `uniform sampler2D map; varying float vA; void main(){ float a = texture2D(map, gl_PointCoord).a; gl_FragColor = vec4(vec3(.9,.76,.58), a * vA * .26); }` });
     const dust = new THREE.Points(dg, dm); dust.frustumCulled = false; dust.userData.noDepth = true; dust.renderOrder = 12; scene.add(dust);
     const pr = U.rng(55); R.puff = items.map(() => Array.from({ length: NP }, () => ({ a: pr() * 6.283, sp: .25 + pr() * .35, up: .05 + pr() * .12, life: .5 + pr() * .4 })));
     R.dpos = dpos; R.dal = dal; R.dg = dg; R.NP = NP;
@@ -327,21 +344,24 @@ export default {
     // lamp flicker (soft, calm flame)
     const fl = 1 + .05 * Math.sin(t * 13.1) * Math.sin(t * 5.3 + 1) + .025 * Math.sin(t * 23.7);
     R.key.intensity = 2.0 * fl; R.fill.intensity = .62 * (1 + .04 * Math.sin(t * 9.1 + 2)); R.halo.material.opacity = .16 * fl;
-    // lanterns outside sway gently (carried lights waiting at the door)
-    R.lanterns.forEach(l => { const b = Math.sin(t * 2.2 + l.ph) * .025, s = Math.sin(t * 1.3 + l.ph) * .03; l.gl.position.set(l.x + s, l.y + b, l.z); l.core.position.copy(l.gl.position); l.gl.material.opacity = .78 + .08 * Math.sin(t * 11 + l.ph * 3); });
+    // the alley lamps across the street: fixed flames, gentle flicker only
+    R.lanterns.forEach(l => { const f = 1 + .06 * Math.sin(t * 11 + l.ph * 3) * Math.sin(t * 4.3 + l.ph); l.gl.material.opacity = .5 * f; l.core.material.opacity = .9 * f; });
+    R.alleyL.intensity = .45 * (1 + .05 * Math.sin(t * 9.7 + 1) * Math.sin(t * 3.1));
 
-    // items: pop in just in front of their compartment, glide in with a small hop that never reaches the shelf above,
-    // land with squash & stretch (bottom stays on the shelf), settle; tags swing outward only (never into the item)
+    // items: grow in just in front of their compartment (smooth spring: zero start slope, ~4 % overshoot, never a one-frame
+    // pop), glide back onto the shelf with a small hop that never reaches the shelf above, land with squash & stretch
+    // (bottom stays on the shelf), settle; tags swing outward only (never into the item). Landing beats tl are unchanged.
     const dpos = R.dpos, dal = R.dal; const NP = R.NP; const IS = R.IS;
     R.items.forEach((it, i) => {
-      const { obj, base, tl } = it; const travel = .36, t0 = tl - travel;
+      const { obj, base, tl } = it; const travel = .46, t0 = tl - travel;
       const hItem = (obj.userData.h ?? .2) * IS; const room = it.ceil - base.y - hItem * 1.09; const hop = U.clamp(room - .015, 0, .085);
-      if (t < t0 - .02) { obj.visible = false; } else {
+      const tau = t - t0; const pop = tau <= 0 ? 0 : 1 - Math.exp(-9.1 * tau) * (Math.cos(9.28 * tau) + .98 * Math.sin(9.28 * tau)); // zeta .7, wn 13
+      if (pop < .002) { obj.visible = false; } else {
         obj.visible = true;
-        let y = base.y, z = base.z, x = base.x, sy = 1, rx = 0, rz = 0, pop = 1;
-        if (t < tl) { const u = U.clamp((t - t0) / travel); const e = 1 - Math.pow(1 - u, 2.6);
-          z = base.z + .62 * (1 - e); x = base.x + .05 * (1 - e) * (i % 2 ? 1 : -1); y = base.y + hop * Math.sin(Math.PI * Math.min(1, u * 1.05)) * (1 - u * .2);
-          pop = U.ease.outBack(U.clamp((t - t0) / .16), 2.2); sy = 1 + .06 * Math.sin(Math.PI * u); rx = -(1 - u) * .12; rz = (1 - u) * .1 * (i % 2 ? 1 : -1); }
+        let y = base.y, z = base.z, x = base.x, sy = 1, rx = 0, rz = 0;
+        if (t < tl) { const u = U.clamp(tau / travel); const e = 1 - (1 - u) * (1 - u);
+          z = base.z + .2 * (1 - e); x = base.x + .03 * (1 - e) * (i % 2 ? 1 : -1); y = base.y + hop * Math.sin(Math.PI * Math.min(1, u * 1.05)) * (1 - u * .2);
+          sy = 1 + .06 * Math.sin(Math.PI * u); rx = -(1 - u) * .12; rz = (1 - u) * .1 * (i % 2 ? 1 : -1); }
         else { const a = t - tl; sy = 1 - .13 * Math.exp(-a * 9) * Math.cos(a * 27); rz = .03 * Math.exp(-a * 7) * Math.sin(a * 21) * (i % 2 ? 1 : -1); }
         const sx = 1 / Math.sqrt(sy); obj.scale.set(IS * pop * sx, IS * pop * sy, IS * pop * sx);
         obj.position.set(x, y, z); obj.rotation.set(rx, it.ry, rz);
@@ -358,12 +378,13 @@ export default {
 
     // ---------------- typography ----------------
     const X = ui.ctx;
-    { const a = U.clamp((t - .15) / .3) * (1 - U.prog(t, 4.3, 4.6)); if (a > 0) { const g = X.createLinearGradient(0, 150, 0, 520); g.addColorStop(0, 'rgba(20,10,6,0)'); g.addColorStop(.3, 'rgba(20,10,6,.5)'); g.addColorStop(.72, 'rgba(20,10,6,.36)'); g.addColorStop(1, 'rgba(20,10,6,0)'); X.save(); X.globalAlpha = a; X.fillStyle = g; X.fillRect(0, 150, 1080, 370); X.restore(); } }
-    ui.text('el-Emîn', { t, t0: .3, t1: 4.62, x: 540, y: 250, size: 118, weight: 900, family: 'Playfair Display', color: '#ffd77e', anim: 'pop', letterSpacing: 2, shadowBlur: 26, shadowColor: 'rgba(30,12,0,.8)' });
-    ui.underline({ t, t0: .62, t1: 4.62, x: 540, y: 324, w: 300, color: '#ffd77e', width: 6 });
-    ui.text('Mekkeliler O’na “el-Emîn” (güvenilir) derdi', { t, t0: 1.38, t1: 4.62, x: 540, y: 384, size: 37, weight: 800, bg: 'rgba(28,16,10,.82)', color: '#fff1d6', anim: 'rise', maxWidth: 920 });
+    // title block sits inside the text safe zone (circumflex top ~y 236 > 230)
+    { const a = U.clamp((t - .15) / .3) * (1 - U.prog(t, 4.3, 4.6)); if (a > 0) { const g = X.createLinearGradient(0, 190, 0, 560); g.addColorStop(0, 'rgba(20,10,6,0)'); g.addColorStop(.3, 'rgba(20,10,6,.5)'); g.addColorStop(.72, 'rgba(20,10,6,.36)'); g.addColorStop(1, 'rgba(20,10,6,0)'); X.save(); X.globalAlpha = a; X.fillStyle = g; X.fillRect(0, 190, 1080, 370); X.restore(); } }
+    ui.text('el-Emîn', { t, t0: .3, t1: 4.62, x: 540, y: 293, size: 110, weight: 900, family: 'Playfair Display', color: '#ffd77e', anim: 'pop', letterSpacing: 2, shadowBlur: 26, shadowColor: 'rgba(30,12,0,.8)' });
+    ui.underline({ t, t0: .62, t1: 4.62, x: 540, y: 362, w: 290, color: '#ffd77e', width: 6 });
+    ui.text('Mekkeliler O’na “el-Emîn” (güvenilir) derdi', { t, t0: 1.38, t1: 4.62, x: 540, y: 420, size: 37, weight: 800, bg: 'rgba(28,16,10,.82)', color: '#fff1d6', anim: 'rise', maxWidth: 920 });
     // "emanet" keyword pointing at the chest's red-wax tag, on the spoken word
     { const tg = R.chest.userData.tag; const wp = new THREE.Vector3(0, -.066, .006); tg.localToWorld(wp); const [ax, ay, az] = ui.project(wp);
-      if (az < 1) ui.callout('emanet', { t, t0: ctx.wordTime('emanet') - .2, t1: 4.62, anchor: [ax, ay], to: [U.clamp(ax + 150, 200, 840), U.clamp(ay - 150, 600, 1260)], size: 48, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ff5a4e', lineColor: 'rgba(255,236,200,.95)' }); }
+      if (az < 1) ui.callout('emanet', { t, t0: ctx.wordTime('emanet') - .2, t1: 4.62, anchor: [ax, ay], to: [U.clamp(ax + 30, 200, 780), U.clamp(ay - 255, 600, 1260)], size: 48, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ff5a4e', lineColor: 'rgba(255,236,200,.95)' }); }
   },
 };

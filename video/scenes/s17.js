@@ -83,6 +83,29 @@ function depthProxy(rx, ry) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
   m.scale.set(rx, ry, rx); return m;
 }
+// Progress 0..1 over [T0, T1] whose SPEED is a constant base drift plus an asymmetric raised-cosine bump (rises t0..tm,
+// falls tm..t1). Closed-form integral -> C1 speed everywhere: no knot kinks, no stall, never dead still.
+function bellProg({ T0, T1, t0, tm, t1, base }) {
+  const r = tm - t0, f = t1 - tm;
+  const I = t => t <= t0 ? 0 : t <= tm ? (t - t0) / 2 - r / (2 * Math.PI) * Math.sin(Math.PI * (t - t0) / r)
+    : t <= t1 ? r / 2 + (t - tm) / 2 + f / (2 * Math.PI) * Math.sin(Math.PI * (t - tm) / f) : r / 2 + f / 2;
+  const raw = t => base * (t - T0) + I(t), a = raw(T0), b = raw(T1);
+  return t => (raw(t) - a) / (b - a);
+}
+// Camera: position glides along an ARC-LENGTH parametrised centripetal Catmull-Rom path (constant speed across unequal
+// segments), orientation is an explicit pitch/yaw (degrees) instead of a look-at spline; both follow bellProg profiles.
+function smoothCam(camera, U, o) {
+  const pc = new THREE.CatmullRomCurve3(o.pos.map(p => new THREE.Vector3(...p)), false, 'centripetal'); pc.arcLengthDivisions = 2000; pc.updateArcLengths();
+  const up = bellProg(o.pp), ua = bellProg(o.pa), D = Math.PI / 180;
+  const at = u => { if (u >= 0 && u <= 1) return pc.getPointAt(u); const e = u < 0 ? 0 : 1, a = pc.getPointAt(e), b = pc.getPointAt(e + (u < 0 ? 1e-3 : -1e-3)); return a.clone().add(a.clone().sub(b).multiplyScalar(Math.abs(u - e) / 1e-3)); };
+  return {
+    update(t) {
+      const P = at(up(t)); if (o.shake) P.add(U.shake(t, o.shake.amp, o.shake.freq, 7)); const a = ua(t);
+      camera.position.copy(P); camera.rotation.set(U.lerp(o.pitch[0], o.pitch[1], a) * D, U.lerp(o.yaw[0], o.yaw[1], a) * D, 0, 'YXZ');
+      return { P };
+    },
+  };
+}
 export default {
   post: {
     exposure: 1.08,
@@ -181,14 +204,20 @@ export default {
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(6, 6).rotateX(-Math.PI / 2), M.MAT.darkWood({ rings: 40, repeat: [3, 3] })); floor.receiveShadow = true; scene.add(floor);
 
     // ---------------- desk + Gibbon's things ----------------
-    const desk = M.desk({ w: 1.45, d: .8, leather: false, material: G.GMAT.mahogany({ a: '#7a3a1e', b: '#3c170a', rings: 10, clearcoat: .12 }) }); desk.position.set(0, 0, wz + .41); scene.add(desk);
+    // 1 m deep writing table (back edge against the wall as before) so its front edge stays below frame in the hold;
+    // weak specular / env reflection: the gloss mirrored the moonlight + night sky at grazing angles and read as navy cloth.
+    const deskMat = G.GMAT.mahogany({ a: '#9c6842', b: '#784828', rings: 22, clearcoat: 0 }); deskMat.envMapIntensity = .35; deskMat.specularIntensity = .3; deskMat.normalScale.set(.05, .05); deskMat.roughnessMap = null; deskMat.roughness = .62;
+    const desk = M.desk({ w: 1.45, d: 1.0, leather: false, material: deskMat }); desk.position.set(0, 0, wz + .51); scene.add(desk);
     const csL = G.candlestick({ seed: 3, candleH: .15 }); csL.position.set(-.36, deskTop, .3); scene.add(csL);
-    const csR = G.candlestick({ seed: 8, candleH: .12 }); csR.position.set(.47, deskTop, .1); scene.add(csR);
-    // tall candlestick standing just behind the six volumes: its flame burns in the gap between the name card and the books
-    const csB = G.candlestick({ seed: 12, candleH: .17 }); csB.position.set(.21, deskTop, -.31); scene.add(csB);
+    const csR = G.candlestick({ seed: 8, candleH: .12 }); csR.position.set(.54, deskTop, .12); scene.add(csR);
+    // tall candlestick standing just behind the six volumes: its flame burns in the gap between the name card and the books.
+    // Long stem + a candle burnt low (late night): the brass drip-pan and socket clear the book tops, so it reads as a
+    // candlestick standing BEHIND the row (not a candle sitting on the volumes); flame height stays below the card.
+    const bX = .21, bZ = -.32;
+    const csB = G.candlestick({ seed: 12, stemH: .27, candleH: .06 }); csB.position.set(bX, deskTop, bZ); scene.add(csB);
     csB.traverse(o => { if (o.isMesh && o.geometry.type === 'CapsuleGeometry') o.visible = false; }); // its side drips read as a dark crack line in close-up
-    R.fL = new THREE.Vector3(-.36, deskTop + csL.userData.flameY, .3); R.fR = new THREE.Vector3(.47, deskTop + csR.userData.flameY, .1);
-    R.fB = new THREE.Vector3(.21, deskTop + csB.userData.flameY, -.31);
+    R.fL = new THREE.Vector3(-.36, deskTop + csL.userData.flameY, .3); R.fR = new THREE.Vector3(.54, deskTop + csR.userData.flameY, .12);
+    R.fB = new THREE.Vector3(bX, deskTop + csB.userData.flameY, bZ);
     R.flames = [];
     for (const cs of [csL, csR, csB]) waxGlow(cs, deskTop + cs.userData.flameY - .03);
     for (const cs of [csL, csR, csB]) {
@@ -244,6 +273,8 @@ export default {
     const pB = ENV.pointLight({ color: '#ffa04a', intensity: .12, distance: 3, pos: R.fB.clone().add(new THREE.Vector3(0, .06, -.03)).toArray() }); scene.add(pB); R.pts = [pL, pB];
     // warm bounce off the manuscript pages onto the spines (soft frontal fill so the right-hand volumes do not fall into shadow)
     const pPaper = new THREE.SpotLight('#ffc88e', .5, 2, .34, 1, 2); pPaper.position.set(.1, deskTop + .12, .55); pPaper.target.position.set(.12, deskTop + .17, -.02); scene.add(pPaper, pPaper.target);
+    // warm pool of the right-hand candle on the desk top in front of Vols. III-VI (aimed past the manuscript and below the spines)
+    const pool = new THREE.SpotLight('#ffc88e', 2.2, 2.5, .55, 1, 2); pool.position.copy(R.fR).add(new THREE.Vector3(0, .02, 0)); pool.target.position.set(.32, deskTop, .27); scene.add(pool, pool.target); R.pool = pool;
     R.glows = [];
     for (const f of [R.fL, R.fR, R.fB]) {
       const g = FX.glow({ size: .16, opacity: .4, color: '#ffb35a' }); g.position.copy(f).add(new THREE.Vector3(0, -.004, 0)); scene.add(g);
@@ -253,19 +284,27 @@ export default {
 
     // ---------------- camera: night view -> down to the desk -> the six volumes ----------------
     camera.fov = 40; camera.near = .03; camera.far = 900; camera.updateProjectionMatrix();
-    R.cam = G.camPath(camera, {
-      pos: [[.1, 1.45, .25], [.11, 1.42, .55], [.12, 1.37, .98], [.155, 1.335, 1.25], [.115, 1.3, 1.2]],
-      look: [[.12, 1.56, -3], [.12, 1.45, -2], [.13, 1.2, -.9], [.14, 1.07, -.45], [.12, 1.05, -.4]],
-      keys: [[-.6, 0], [.4, .22], [1.4, .58], [2.2, .8], [3.9, 1]], shake: { amp: .0022, freq: .4 },
+    // One continuous pull-back + tilt-down (lake -> window -> desk) that eases into a slow drift (~6 cm/s, 0.4 deg/s)
+    // for the hero hold; ends far enough back that the six-volume row sits inside x ~70..940 (clear of the Shorts UI).
+    R.cam = smoothCam(camera, U, {
+      pos: [[.1, 1.45, .25], [.11, 1.43, .58], [.12, 1.39, .98], [.13, 1.36, 1.3], [.14, 1.345, 1.46]],
+      pp: { T0: -.5, T1: 3.9, t0: -1.0, tm: .65, t1: 2.6, base: .12 },
+      pa: { T0: -.5, T1: 3.9, t0: -.4, tm: .8, t1: 2.5, base: .06 },
+      pitch: [1.9, -10.2], yaw: [0, .3], shake: { amp: .0022, freq: .4 },
     });
+    R.focusPt = new THREE.Vector3(.12, 1.0, .0);
   },
 
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
     const c = R.cam.update(t); camera.updateMatrixWorld();
-    post.dof.focus = U.lerp(40, c.P.distanceTo(new THREE.Vector3(.12, 1.0, .0)), U.prog(t, .2, 1.8)); post.dof.range = U.lerp(200, .6, U.prog(t, .2, 1.9, 'inCubic')); post.dof.amount = U.lerp(.3, .9, U.prog(t, .3, 1.8));
+    // focus pull: focus distance and range interpolate geometrically with zero-slope eases (no one-frame snap); the focus
+    // reaches the books while the range is still wide, then the range narrows so window/sill/lake soften gradually.
+    post.dof.focus = 40 * Math.pow(c.P.distanceTo(R.focusPt) / 40, U.prog(t, 0, 1.2, 'inOutSine'));
+    post.dof.range = 200 * Math.pow(.6 / 200, U.prog(t, -.2, 2.3, 'inOutSine'));
+    post.dof.amount = U.lerp(.3, .9, U.prog(t, .4, 2.2, 'inOutSine'));
     const f = (s) => 1 + (Math.sin(t * 12.3 + s) * .5 + Math.sin(t * 7.7 + s * 2) * .3 + Math.sin(t * 19.1 + s * .5) * .2) * .07; // gentle candle flicker (no strobing on the spines)
-    R.pts[0].intensity = .55 * f(1); R.pts[1].intensity = .12 * f(4); R.spot.intensity = .85 * f(1);
+    R.pts[0].intensity = .55 * f(1); R.pts[1].intensity = .12 * f(4); R.spot.intensity = .85 * f(1); R.pool.intensity = 2.2 * f(7);
     R.glows.forEach((g, i) => { g.material.opacity = (i % 2 ? .1 : .4) * (.9 + .1 * f(i)); });
 
     // ---------------- typography (same card design as s16) ----------------

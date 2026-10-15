@@ -26,8 +26,34 @@ function mono(keys) {
     return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (-2 * s3 + 3 * s2) * ys[i + 1] + (s3 - s2) * h * m[i + 1];
   };
 }
+// log-distance from an integrated, smooth closing-speed profile vk = [[t, speed (log-units/s)], ...]: the zoom speed
+// itself is a monotone cubic, so the push-in only ever accelerates smoothly into the swoop and eases out (no sag at knots)
+function zoomCurve(vk, y0) {
+  const v = mono(vk), t0 = vk[0][0], t1 = vk[vk.length - 1][0], R6 = 600, N = Math.round((t1 - t0) * R6); const tab = new Float64Array(N + 1); tab[0] = y0;
+  for (let k = 1; k <= N; k++) { const a = t0 + (k - 1) / R6, b = t0 + k / R6; tab[k] = tab[k - 1] - (v(a) + 4 * v((a + b) / 2) + v(b)) / 6 / R6; }
+  return t => { if (t <= t0) return y0 - v(t0) * (t - t0); if (t >= t1) return tab[N] - v(t1) * (t - t1); const g = (t - t0) * R6, i = Math.min(N - 1, Math.floor(g)), f = g - i; return tab[i] + (tab[i + 1] - tab[i]) * f; };
+}
 const colorize = (g, c) => { const C = new THREE.Color(c); const n = g.attributes.position.count; const a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = C.r; a[i * 3 + 1] = C.g; a[i * 3 + 2] = C.b; } g.setAttribute('color', new THREE.BufferAttribute(a, 3)); return g; };
 const place = (g, x, y, z, ry = 0) => { if (ry) g.rotateY(ry); g.translate(x, y, z); return g; };
+// world-scale box-projected UVs (tile metres per texture repeat): plaster no longer stretches along long thin pieces
+// (parapets, lintels). (Rounded)BoxGeometry: the axis comes from the face block (6 equal blocks +x,-x,+y,-y,+z,-z);
+// anything else: from the triangle's dominant normal axis. o = offset added to positions (mesh position).
+function boxUV(g, tile, o = [0, 0, 0]) {
+  const boxy = g.type === 'RoundedBoxGeometry' || g.type === 'BoxGeometry';
+  if (g.index) g = g.toNonIndexed();
+  const p = g.attributes.position, n = g.attributes.normal, cnt = p.count, uv = new Float32Array(cnt * 2);
+  const six = boxy && cnt % 18 === 0;
+  for (let t = 0; t < cnt; t += 3) {
+    let ax;
+    if (six) ax = Math.floor(Math.floor(t / (cnt / 6)) / 2);
+    else { let sx = 0, sy = 0, sz = 0; for (let k = 0; k < 3; k++) { sx += Math.abs(n.getX(t + k)); sy += Math.abs(n.getY(t + k)); sz += Math.abs(n.getZ(t + k)); } ax = sx >= sy && sx >= sz ? 0 : sy >= sz ? 1 : 2; }
+    for (let k = 0; k < 3; k++) {
+      const i = t + k, x = p.getX(i) + o[0], y = p.getY(i) + o[1], z = p.getZ(i) + o[2];
+      uv[i * 2] = (ax === 0 ? z : x) / tile; uv[i * 2 + 1] = (ax === 1 ? z : y) / tile;
+    }
+  }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); return g;
+}
 
 // reference house variants (8 x 8 m footprint, door on +z), merged with vertex colours (wall white -> tinted per instance)
 // lod=false: full bevels (houses near the destination, seen up close at the end of the swoop);
@@ -52,8 +78,7 @@ function houseVariant(M, v, lod = false) {
     P.push(colorize(place(rb(.9, 1.7, .24, .08, 1), -1.9, hgt + .85, -.2), DOOR));
     P.push(colorize(place(new THREE.BoxGeometry(3.2, .1, 3.0), -1.9, hgt + 2.72, -1.9), ROOF));
   }
-  P.forEach(p => { if (p.attributes.normal && !p.attributes.uv) p.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(p.attributes.position.count * 2), 2)); });
-  const g = mergeGeometries(P.map(p => (p.index ? p.toNonIndexed() : p)), false);
+  const g = mergeGeometries(P.map(p => boxUV(p, 4)), false);
   g.userData = { h: hgt, win: [[-2.0, 2.75, 4.14]].concat(v === 1 ? [[-2.0, 5.5, 4.14], [1.6, 5.5, 4.14]] : []), door: [1.4, 0, 4.25] };
   return g;
 }
@@ -78,7 +103,7 @@ function filletPath(P0, rMax, step, anchorIdx) {
 
 // camera: spherical rig around a moving target (pure function of t)
 function camRig(camera, t, U, withShake) {
-  const K = R.camK; const dist = Math.exp(K.ld(t)), pitch = K.pitch(t) * DEG, az = K.az(t) * DEG;
+  const K = R.camK; const ld = K.ld(t), dist = Math.exp(ld), pitch = K.pitchD(ld) * DEG, az = K.az(t) * DEG;
   const T = new THREE.Vector3(K.tx(t), K.ty(t), K.tz(t));
   const off = new THREE.Vector3(Math.sin(az) * Math.cos(pitch), Math.sin(pitch), Math.cos(az) * Math.cos(pitch)).multiplyScalar(dist);
   camera.position.copy(T).add(off); if (withShake) camera.position.add(U.shake(t, .0025 * dist, .35, 11));
@@ -90,9 +115,23 @@ function lightS(l, t) { const u = Math.min(1, Math.max(0, (t - l.td) / (l.ta - l
 function lightPos(l, t, U) {
   const s = lightS(l, t); let k = 1; while (k < l.cum.length - 1 && l.cum[k] < s) k++;
   const f = U.clamp((s - l.cum[k - 1]) / Math.max(1e-6, l.cum[k] - l.cum[k - 1]));
-  const P = new THREE.Vector3().lerpVectors(l.S[k - 1], l.S[k], f); const moving = t > l.td && t < l.ta ? 1 : 0;
+  const P = new THREE.Vector3().lerpVectors(l.S[k - 1], l.S[k], f); l.gy = P.y;
+  const moving = lightMv(l, t, U); // walking bob fades in/out with the speed (was a 0/1 step -> a 5 cm jump on arrival)
   const idle = U.smoothstep(l.ta - .2, l.ta + .6, t); // waiting at the door: a gentle sway, never frozen
-  P.y += 1.35 + Math.sin(t * 9 + l.seed * 5) * .05 * moving + Math.sin(t * 2.1 + l.seed * 3) * .05 * idle; P.x += Math.sin(t * 1.3 + l.seed) * .06 * idle; P.z += Math.cos(t * 1.1 + l.seed * 2) * .05 * idle; return P;
+  P.y += 1.35 + Math.sin(t * 9 + l.seed * 5) * .04 * moving + Math.sin(t * 2.1 + l.seed * 3) * .05 * idle; P.x += Math.sin(t * 1.3 + l.seed) * .06 * idle; P.z += Math.cos(t * 1.1 + l.seed * 2) * .05 * idle; return P;
+}
+function lightMv(l, t, U) { const u = (t - l.td) / (l.ta - l.td); return U.smoothstep(0, .08, u) * (1 - U.smoothstep(.7, 1, u)); }
+// a hand lantern (brass base, four posts, domed cap, ring handle; glowing glass) hanging from its handle: origin = handle top
+const LANT_H = .2835; // handle top -> glass centre (lantern units)
+function lanternGeos() {
+  const V = a => a.map(([x, y]) => new THREE.Vector2(x, y)); const top = .416, parts = [];
+  parts.push(new THREE.LatheGeometry(V([[0, 0], [.085, 0], [.095, .018], [.088, .04], [.07, .05], [0, .05]]), 14));
+  parts.push(new THREE.LatheGeometry(V([[0, .215], [.094, .215], [.088, .24], [.055, .285], [.024, .312], [.022, .33], [0, .335]]), 14));
+  for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; parts.push(new THREE.BoxGeometry(.016, .17, .016).translate(Math.cos(a) * .072, .132, Math.sin(a) * .072)); }
+  parts.push(new THREE.TorusGeometry(.038, .008, 6, 18).translate(0, .37, 0));
+  const frame = mergeGeometries(parts.map(g => { g = g.index ? g.toNonIndexed() : g; return g; }), false).translate(0, -top, 0);
+  const glass = new THREE.CylinderGeometry(.066, .066, .165, 14, 1).translate(0, .1325 - top, 0);
+  return { frame, glass };
 }
 
 export default {
@@ -143,7 +182,8 @@ export default {
       for (let i = 0; i < p.count; i++) {
         const x = p.getX(i), z = p.getZ(i) - 20; const h = H(x, z); p.setY(i, h); p.setZ(i, z);
         const rk = U.smoothstep(2, 16, h), n = N(fC, x * 2, z * 2) * .5 + .5, n2 = N(fB, x, z) * .5 + .5;
-        c.copy(cSand).lerp(cDust, n * .6).lerp(cPlaza, (1 - U.smoothstep(26, 40, Math.hypot(x, z))) * .9);
+        // open ground around the Kaaba: only a faint packed-earth tint with a ragged edge (bounded by the houses, not a radial glow)
+        c.copy(cSand).lerp(cDust, n * .6).lerp(cPlaza, (1 - U.smoothstep(27, 34, Math.hypot(x, z) + N(fC, x * 4, z * 4) * 5)) * .3);
         const rc = cRock.clone().lerp(cRock2, U.smoothstep(.3, .7, n2 * .6 + n * .5)); c.lerp(rc, rk);
         col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
       }
@@ -239,7 +279,7 @@ export default {
     const variants = [0, 1, 2].map(v => houseVariant(M, v)), variantsLo = [0, 1, 2].map(v => houseVariant(M, v, true));
     const tints = ['#dcb68c', '#cfa67b', '#e3c49d', '#c99c73', '#d6b28e', '#c2946c'].map(c => new THREE.Color(c));
     const pl = TEX.plaster({ a: '#ffffff', b: '#d2c2ad', seed: 15, repeat: [1, 1] });
-    const houseMat = new THREE.MeshStandardMaterial({ vertexColors: true, map: pl.map, normalMap: pl.normalMap, normalScale: new THREE.Vector2(.9, .9), roughness: .93 });
+    const houseMat = new THREE.MeshStandardMaterial({ vertexColors: true, map: pl.map, normalMap: pl.normalMap, normalScale: new THREE.Vector2(.6, .6), roughness: .93 }); // (UVs now world-scale: 4 m tiles)
     const m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion(), yAx = new THREE.Vector3(0, 1, 0), v3 = new THREE.Vector3(), s3 = new THREE.Vector3();
     houses.forEach(h => { q4.setFromAxisAngle(yAx, h.yaw); h.mat = new THREE.Matrix4().compose(new THREE.Vector3(h.x, h.y, h.z), q4.clone(), new THREE.Vector3(h.sx, h.sh, h.sz)); });
     {
@@ -286,9 +326,16 @@ export default {
       const cloth = new THREE.Mesh(mergeGeometries(parts), clothMat); K.add(cloth);
       // the raised wooden door on the east face
       const door = new THREE.Mesh(M.rbox(1.7, 2.8, .2, .06, 1), M.MAT.darkWood({ rings: 26 })); door.position.set(KW / 2 - 3.0, 2.2 + 1.4, KD / 2 + .12); K.add(door);
-      // Hijr (Hatim): low semicircular wall beside the north-west face, open at both ends
-      const hm = M.MAT.stone({ a: '#c2b8a8', b: '#968c7e', seed: 6, repeat: [1, 1] });
-      for (let k = 0; k <= 14; k++) { const a = (.12 + .76 * k / 14) * Math.PI; const x = Math.cos(a) * KW * .42, z = -KD / 2 - Math.sin(a) * 7.6; const sgm = new THREE.Mesh(M.rbox(2.05, 1.3, .9, .2, 1), hm); sgm.position.set(x, .65, z); sgm.rotation.y = Math.atan2(7.6 * Math.cos(a), -KW * .42 * Math.sin(a)); K.add(sgm); }
+      // Hijr (Hatim): low, thick, pale semicircular wall beside the north-west face, open at both ends (one bevelled
+      // extrusion: reads as a stone enclosure on the ground, not as a thin dark "handle" on the cube)
+      const hm = M.MAT.stone({ a: '#d9cfbf', b: '#b0a493', seed: 6, repeat: [1, 1] });
+      {
+        const rx = KW * .45, rz = 7.8, th = .62, a0 = .11 * Math.PI, a1 = .89 * Math.PI, bv = .14; const sh = new THREE.Shape();
+        sh.absellipse(0, KD / 2, rx + th, rz + th, a0, a1, false); sh.lineTo((rx - th) * Math.cos(a1), KD / 2 + (rz - th) * Math.sin(a1));
+        sh.absellipse(0, KD / 2, rx - th, rz - th, a1, a0, true); sh.closePath();
+        const hg = new THREE.ExtrudeGeometry(sh, { depth: 1.0, bevelEnabled: true, bevelThickness: bv, bevelSize: bv, bevelSegments: 2, curveSegments: 28 }); hg.rotateX(-Math.PI / 2);
+        const hijr = new THREE.Mesh(hg, hm); hijr.position.y = bv - .08; K.add(hijr);
+      }
       // Zamzam well: a low stone ring
       const well = M.lathe([[1.0, 0], [1.25, 0], [1.25, .85], [1.05, .95], [.95, .85], [.95, .2]], hm, 28); well.position.set(17, 0, 5); K.add(well);
       M.shadowAll(K);
@@ -300,16 +347,19 @@ export default {
       G.position.set(d.x, d.y, d.z); G.rotation.y = d.yaw; scene.add(G); R.destG = G;
       const wallMat = M.MAT.plaster({ a: '#e4c59c', b: '#bc946b', seed: 9, repeat: [1, 1] });
       const T = .55, dw = 1.35, dh = 2.3, dx = .9;
-      const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); G.add(m); return m; };
-      add(M.rbox(w, h, T, .2, 2), wallMat, 0, h / 2, -dp / 2 + T / 2);
-      add(M.rbox(T, h, dp, .2, 2), wallMat, -w / 2 + T / 2, h / 2, 0);
-      add(M.rbox(T, h, dp, .2, 2), wallMat, w / 2 - T / 2, h / 2, 0);
-      const lw = (dx - dw / 2) - (-w / 2), rw = w / 2 - (dx + dw / 2);
-      add(M.rbox(lw, h, T, .2, 2), wallMat, -w / 2 + lw / 2, h / 2, dp / 2 - T / 2);
-      add(M.rbox(rw, h, T, .2, 2), wallMat, w / 2 - rw / 2, h / 2, dp / 2 - T / 2);
-      add(M.rbox(dw + .1, h - dh, T, .12, 2), wallMat, dx, dh + (h - dh) / 2, dp / 2 - T / 2);
-      add(M.rbox(w + .05, .42, dp + .05, .15, 2), wallMat, 0, h + .05, 0); // roof slab
-      for (const s of [-1, 1]) { add(M.rbox(w + .1, .7, .42, .16, 1), wallMat, 0, h + .5, s * (dp / 2 - .2)); add(M.rbox(.42, .7, dp - .3, .16, 1), wallMat, s * (w / 2 - .2), h + .5, 0); }
+      // uvT: plaster pieces get world-scale box-projected UVs (continuous across pieces, no stretching)
+      const add = (geo, mat, x, y, z, uvT) => { if (uvT) geo = boxUV(geo, uvT, [x, y, z]); const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); G.add(m); return m; };
+      add(M.rbox(w, h, T, .2, 2), wallMat, 0, h / 2, -dp / 2 + T / 2, 3.5);
+      add(M.rbox(T, h, dp, .2, 2), wallMat, -w / 2 + T / 2, h / 2, 0, 3.5);
+      add(M.rbox(T, h, dp, .2, 2), wallMat, w / 2 - T / 2, h / 2, 0, 3.5);
+      { // front wall: ONE bevelled extrusion with the doorway notch (no seams/grooves beside the door)
+        const b = .12, s = new THREE.Shape(), d0 = dx - dw / 2 - b, d1 = dx + dw / 2 + b;
+        s.moveTo(-w / 2 + b, b); s.lineTo(d0, b); s.lineTo(d0, dh + b); s.lineTo(d1, dh + b); s.lineTo(d1, b); s.lineTo(w / 2 - b, b); s.lineTo(w / 2 - b, h - b); s.lineTo(-w / 2 + b, h - b); s.closePath();
+        const fg = new THREE.ExtrudeGeometry(s, { depth: T - 2 * b, bevelEnabled: true, bevelThickness: b, bevelSize: b, bevelSegments: 2, curveSegments: 1 });
+        add(fg, wallMat, 0, 0, dp / 2 - T + b, 3.5);
+      }
+      add(M.rbox(w + .05, .42, dp + .05, .15, 2), wallMat, 0, h + .05, 0, 3.5); // roof slab
+      for (const s of [-1, 1]) { add(M.rbox(w + .1, .7, .42, .16, 1), wallMat, 0, h + .5, s * (dp / 2 - .2), 3.5); add(M.rbox(.42, .7, dp - .3, .16, 1), wallMat, s * (w / 2 - .2), h + .5, 0, 3.5); }
       add(new THREE.BoxGeometry(w - .8, .1, dp - .8), M.MAT.plaster({ a: '#cdb595', b: '#a88c6c', seed: 21 }), 0, h + .3, 0);
       const wood = M.MAT.darkWood({ rings: 24 });
       add(M.rbox(dw + .7, .3, T + .2, .08, 1), wood, dx, dh + .15, dp / 2 - T / 2); // lintel beam
@@ -324,7 +374,7 @@ export default {
       add(new THREE.PlaneGeometry(.75, .75), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffb562').multiplyScalar(2.4) }), wx, 2.8, dp / 2 + .005);
       for (let k = -1; k <= 1; k++) add(M.rbox(.07, .8, .08, .02, 1), wood, wx + k * .22, 2.8, dp / 2 + .04);
       // bench by the door + water jar + palm
-      add(M.rbox(2.0, .5 + .6, .65, .14, 2), wallMat, dx + 2.2, gl(dx + 2.2, dp / 2 + .32) + .25 - .3, dp / 2 + .32);
+      add(M.rbox(2.0, .5 + .6, .65, .14, 2), wallMat, dx + 2.2, gl(dx + 2.2, dp / 2 + .32) + .25 - .3, dp / 2 + .32, 3.5);
       const jar = M.lathe([[0, 0], [.16, .02], [.27, .2], [.29, .4], [.22, .62], [.12, .72], [.13, .8], [.1, .82]], M.MAT.clay({ a: '#b56a3f', b: '#87492a' }), 24); jar.position.set(dx - 1.25, gl(dx - 1.25, dp / 2 + .45) - .02, dp / 2 + .45); G.add(jar);
       const palm = M.palm({ height: 9, seed: 5, lean: .5, fronds: 14, leafColor: '#3c5a2c' }); palm.position.set(w / 2 + 2.4, gl(w / 2 + 2.4, dp / 2 - 1.2) - .1, dp / 2 - 1.2); G.add(palm);
       M.shadowAll(G); floor.castShadow = false;
@@ -374,19 +424,20 @@ export default {
       const S = F.pts.map(([x, z]) => new THREE.Vector3(x, meshH(x, z), z)), cum = F.cum;
       lights.push({ S, cum, L: cum[cum.length - 1], src: c.h, seed: pr() * 10, sF: F.anchor });
     });
-    // timing: depart 3.05–3.8 ("emanetlerini"), arrive 4.85–5.75 (long paths arrive last)
+    // timing: depart 3.0–3.8 ("emanetlerini"), arrive 4.4–5.55 (long paths arrive last): every lantern has arrived and
+    // hangs still-ish before the close-up (5.65+) — physical lanterns must not zip past the camera at 60 m/s there
     const byL = lights.map((l, i) => [l.L, i]).sort((a, b) => a[0] - b[0]);
-    byL.forEach(([L, i], rank) => { const l = lights[i]; l.td = 3.0 + pr() * .8; l.ta = 4.55 + (rank / (NL - 1)) * 1.55 + pr() * .1; });
+    byL.forEach(([L, i], rank) => { const l = lights[i]; l.td = 3.0 + pr() * .8; l.ta = 4.4 + (rank / (NL - 1)) * 1.05 + pr() * .1; });
     R.lights = lights;
 
     // lantern glow points (core + halo) and warm ground pools
     const lpos = new Float32Array(NL * 3), lb = new Float32Array(NL);
     const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(lpos, 3)); lg.setAttribute('bright', new THREE.BufferAttribute(lb, 1));
     const mkPts = (worldSize, minPx, k, gain, col) => {
-      const u = { focal: { value: 1000 }, worldSize: { value: worldSize }, minPx: { value: minPx } };
+      const u = { focal: { value: 1000 }, worldSize: { value: worldSize }, minPx: { value: minPx }, gain: { value: gain } };
       const m = new THREE.ShaderMaterial({ uniforms: u, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
         vertexShader: `uniform float focal, worldSize, minPx; attribute float bright; varying float vB; void main(){ vec4 mv = modelViewMatrix*vec4(position,1.); gl_Position = projectionMatrix*mv; vB = bright; gl_PointSize = bright > .001 ? clamp(worldSize*focal/(-mv.z), minPx, 900.) : 0.; }`,
-        fragmentShader: `varying float vB; void main(){ vec2 p = gl_PointCoord*2.-1.; float r2 = dot(p,p); if (r2 > 1.) discard; float a = exp(-r2*${k.toFixed(1)}) * (1. - r2); gl_FragColor = vec4(vec3(${col}) * ${gain.toFixed(2)}, a * vB); }` });
+        fragmentShader: `uniform float gain; varying float vB; void main(){ vec2 p = gl_PointCoord*2.-1.; float r2 = dot(p,p); if (r2 > 1.) discard; float a = exp(-r2*${k.toFixed(1)}) * (1. - r2); gl_FragColor = vec4(vec3(${col}) * gain, a * vB); }` });
       const pts = new THREE.Points(lg, m); pts.frustumCulled = false; pts.userData.noDepth = true; pts.renderOrder = 30; scene.add(pts); return u;
     };
     R.ptsU = [mkPts(2.5, 24, 4.5, .9, '1.,.55,.2'), mkPts(.38, 7, 3.0, 3.0, '1.,.86,.62')];
@@ -394,6 +445,14 @@ export default {
     const pool = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: poolTex, color: '#ff9440', transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), NL);
     pool.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(NL * 3), 3); pool.frustumCulled = false; pool.userData.noDepth = true; pool.renderOrder = 3; scene.add(pool); R.pool = pool;
     R.lpos = lpos; R.lb = lb; R.lg = lg;
+    { // the physical lanterns the glows belong to (visible in the close-up; sub-pixel under the glow at map scale)
+      const LG = lanternGeos();
+      const fm = new THREE.MeshStandardMaterial({ color: '#7d5a32', metalness: .7, roughness: .4, emissive: new THREE.Color('#ff9a40'), emissiveIntensity: .1 });
+      const gm = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+      R.lantF = new THREE.InstancedMesh(LG.frame, fm, NL); R.lantG = new THREE.InstancedMesh(LG.glass, gm, NL);
+      for (const im of [R.lantF, R.lantG]) { im.frustumCulled = false; for (let i = 0; i < NL; i++) im.setMatrixAt(i, new THREE.Matrix4().makeScale(0, 0, 0)); scene.add(im); }
+      for (let i = 0; i < NL; i++) R.lantG.setColorAt(i, new THREE.Color(0, 0, 0));
+    }
     // two real lantern lights for the close-up (follow the two lights that end nearest the door)
     const near2 = lights.map((l, i) => [-l.ta, i]).sort((a, b) => a[0] - b[0]).slice(0, 2).map(a => a[1]);
     R.lanternLights = near2.map(i => { const p = new THREE.PointLight('#ffa04a', 0, 16, 2); scene.add(p); return { p, i }; });
@@ -408,8 +467,10 @@ export default {
     const G = new THREE.Vector3(dest.x, 0, dest.z).lerp(doorW, .78);
     const doorAz = Math.atan2(dd.x, dd.z) / DEG;
     R.camK = {
-      ld: mono([[-0.6, Math.log(640)], [1.6, Math.log(565)], [3.2, Math.log(480)], [4.5, Math.log(320)], [5.1, Math.log(140)], [5.65, Math.log(48)], [6.2, Math.log(33)]]),
-      pitch: mono([[-0.6, 66], [3.2, 65], [4.5, 62], [5.1, 54], [5.65, 33], [6.2, 26]]),
+      // distance: 640 m -> ~488 (t 3.2) -> ~311 (4.5) -> ~144 (5.1) -> ~50 (5.65) -> 33 (6.2), from a smooth speed profile
+      ld: zoomCurve([[-0.6, .05], [1.0, .055], [2.2, .08], [3.0, .135], [3.6, .215], [4.1, .4], [4.6, .95], [5.0, 1.62], [5.3, 2.08], [5.5, 1.9], [5.75, 1.05], [6.0, .58], [6.2, .52]], Math.log(640)),
+      // pitch follows the distance (crane down as we come in): same values as before at the same distances, no own knots in time
+      pitchD: mono([[Math.log(33), 26], [Math.log(48), 33], [Math.log(140), 54], [Math.log(320), 62], [Math.log(480), 65], [Math.log(640), 66]]),
       az: mono([[-0.6, -13], [3.2, -3], [4.6, doorAz * .5 + 4], [5.65, doorAz + 20], [6.2, doorAz + 26]]),
       tx: mono([[-0.6, -8], [3.2, -20], [4.5, (G.x - 14) * .6 + G.x * .4], [5.3, G.x], [6.2, G.x]]),
       tz: mono([[-0.6, 18], [3.2, 32], [4.5, G.z - 4], [5.3, G.z], [6.2, G.z]]),
@@ -437,19 +498,26 @@ export default {
     // --- lanterns ---
     const L = R.lights, lpos = R.lpos, lb = R.lb, pc = R.pool.instanceColor; const m4 = new THREE.Matrix4(); const P = new THREE.Vector3();
     let pulse = 0; const closeK = U.prog(t, 4.7, 5.6, 'inOutSine');
-    R.ptsU[0].worldSize.value = U.lerp(2.5, .95, closeK); R.ptsU[1].worldSize.value = U.lerp(.38, .2, closeK);
+    // close-up: the glow shrinks to flame size inside the lantern glass and the white-hot core is toned down (no "orbs")
+    R.ptsU[0].worldSize.value = U.lerp(2.5, .7, closeK); R.ptsU[1].worldSize.value = U.lerp(.38, .17, closeK); R.ptsU[1].gain.value = U.lerp(3.0, 1.7, closeK);
+    const LS = 1.3, lq = new THREE.Quaternion(), le = new THREE.Euler(), piv = new THREE.Vector3(), hang = new THREE.Vector3(), one = new THREE.Vector3(), gcol = new THREE.Color();
     L.forEach((l, i) => {
       const u = U.clamp((t - l.td) / (l.ta - l.td));
       const s = lightS(l, t); P.copy(lightPos(l, t, U));
+      // the lantern hangs from its handle and swings a little as it is carried (gentle sway while waiting at the door)
+      const mv = lightMv(l, t, U), idle = U.smoothstep(l.ta - .2, l.ta + .6, t);
+      le.set(Math.sin(t * 5.6 + l.seed * 4) * .1 * mv + Math.sin(t * 1.7 + l.seed * 3) * .04 * idle, l.seed * 2.1, Math.cos(t * 4.9 + l.seed * 2) * .08 * mv + Math.cos(t * 1.4 + l.seed) * .035 * idle); lq.setFromEuler(le);
+      piv.copy(P); piv.y += LANT_H * LS; hang.set(0, -LANT_H * LS, 0).applyQuaternion(lq); P.copy(piv).add(hang); // glow = glass centre
       l.pos = l.pos || new THREE.Vector3(); l.pos.copy(P); l.s = s;
-      const enter = 1; // lights gather and wait in front of the door
       const dt = t - l.ta + .12; if (dt > 0) pulse += Math.exp(-dt * 4) * (1 - Math.exp(-dt * 30));
-      const on = enter * U.smoothstep(l.td - .25, l.td + .1, t) * (.88 + .12 * Math.sin(t * 13 + l.seed * 7) * Math.sin(t * 5.3 + l.seed));
+      const vis = U.smoothstep(l.td - .25, l.td + .1, t), on = vis * (.88 + .12 * Math.sin(t * 13 + l.seed * 7) * Math.sin(t * 5.3 + l.seed));
       lpos[i * 3] = P.x; lpos[i * 3 + 1] = P.y; lpos[i * 3 + 2] = P.z; lb[i] = on;
-      const ps = U.lerp(7.5, 3.6, closeK); m4.compose(new THREE.Vector3(P.x, P.y - 1.25, P.z), new THREE.Quaternion(), new THREE.Vector3(ps, 1, ps)); R.pool.setMatrixAt(i, m4);
+      m4.compose(piv, lq, one.setScalar(LS * Math.max(vis, 1e-3))); R.lantF.setMatrixAt(i, m4); R.lantG.setMatrixAt(i, m4); R.lantG.setColorAt(i, gcol.setRGB(1.7 * on, 1.02 * on, .42 * on));
+      const ps = U.lerp(7.5, 3.6, closeK); m4.compose(new THREE.Vector3(P.x, l.gy + .1, P.z), new THREE.Quaternion(), new THREE.Vector3(ps, 1, ps)); R.pool.setMatrixAt(i, m4);
       const pb = on * (1 - .45 * U.smoothstep(.85, 1, u)) * U.lerp(1, .55, closeK); pc.setXYZ(i, pb, pb * .85, pb * .7);
     });
     R.lg.attributes.position.needsUpdate = true; R.lg.attributes.bright.needsUpdate = true; R.pool.instanceMatrix.needsUpdate = true; pc.needsUpdate = true;
+    R.lantF.instanceMatrix.needsUpdate = true; R.lantG.instanceMatrix.needsUpdate = true; R.lantG.instanceColor.needsUpdate = true;
     const close = U.prog(t, 4.9, 5.7, 'inOutSine');
     R.lanternLights.forEach(({ p, i }) => { p.position.copy(L[i].pos); p.intensity = 14 * close * lb[i]; });
     const grow = U.prog(t, 4.4, 5.9);
@@ -500,7 +568,8 @@ export default {
       if (pz < 1) {
         X.save();
         const ringT = ((t - 4.3) % .9) / .9; X.globalAlpha = pinA * (1 - ringT) * .9; X.strokeStyle = '#ffd36e'; X.lineWidth = 4; X.beginPath(); X.ellipse(px, py + 8, 20 + ringT * 70, (20 + ringT * 70) * .55, 0, 0, Math.PI * 2); X.stroke();
-        const s = U.ease.outBack(U.clamp((t - 4.3) / .45), 2.4); const bob = Math.sin(t * 5) * 4; const top = py - 22 - 70 * s + bob;
+        // the pin's tip rests on the ring centre (the destination roof), hopping up a few px — never over the neighbour
+        const s = U.ease.outBack(U.clamp((t - 4.3) / .45), 2.4); const hop = (.5 + .5 * Math.sin(t * 5)) * 6; const top = py + 8 - 62 * s - hop;
         X.globalAlpha = pinA; X.translate(px, top); X.scale(s, s);
         X.shadowColor = 'rgba(0,0,0,.5)'; X.shadowBlur = 14; X.shadowOffsetY = 5;
         X.beginPath(); X.moveTo(0, 62); X.bezierCurveTo(-14, 40, -30, 26, -30, 0); X.arc(0, 0, 30, Math.PI, 0); X.bezierCurveTo(30, 26, 14, 40, 0, 62); X.closePath(); X.fillStyle = '#ffc84a'; X.fill();
@@ -562,5 +631,6 @@ function makeSprites() {
 function ui_rr(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
 
 // keep a pill (centred at x) inside the safe zone x 80..1000, and clear of the Shorts button column (x > 960, y 1000..1700)
-function safeX(ui, str, size, x, y) { const X = ui.ctx; X.save(); X.font = ui.font(size, 900, 'Nunito'); const w = X.measureText(str).width + size * .84; X.restore();
+// (w includes the pop-in overshoot: ui.env 'pop' = outBack(a, 2.2), peak scale 1.154)
+function safeX(ui, str, size, x, y) { const X = ui.ctx; X.save(); X.font = ui.font(size, 900, 'Nunito'); const w = (X.measureText(str).width + size * .84) * 1.16; X.restore();
   const xmax = (y > 960 && y < 1720 ? 950 : 1000) - w / 2 - 6; return Math.min(Math.max(x, 80 + w / 2 + 6), xmax); }

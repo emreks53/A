@@ -12,7 +12,7 @@ let R = {};
 export default {
   post: {
     exposure: 1.02,
-    bloom: { enabled: true, strength: .32, radius: .55, threshold: .86 },
+    bloom: { enabled: true, strength: .32, radius: .55, threshold: .9 },
     grade: { contrast: 1.05, saturation: .96, warmth: -.015, lift: [.018, .024, .036], gain: [.99, 1.0, 1.03] },
     vignette: .45, grain: .04,
     dof: { enabled: true, focus: 1.2, range: .45, amount: 1 },
@@ -89,13 +89,25 @@ export default {
 
     // ---------------- desk + Carlyle's things ----------------
     const desk = M.desk({ w: 1.45, d: .8, leather: false }); desk.position.set(0, 0, wz + .41); scene.add(desk);
+    // the window light grazes the desk close to its mirror angle: the broad specular lobe turned the lit patches into flat
+    // grey-blue slabs. A less glossy finish lets the wood grain read through the daylight.
+    { const dm = desk.children[0].material; dm.specularIntensity = .5; dm.clearcoat = .14; dm.clearcoatRoughness = .38; dm.normalScale.set(.9, .9); }
     // candlestick (left)
-    const cs = G.chamberstick({ seed: 6, candleH: .1 }); cs.position.set(.31, deskTop, -.3); cs.rotation.y = 2.4; scene.add(cs);
+    const cs = G.chamberstick({ seed: 6, candleH: .1, flameH: .03 }); cs.position.set(.31, deskTop, -.3); cs.rotation.y = 2.4; scene.add(cs);
+    // the stock FX.flame body never fades out before the top edge of its quad, so (out of focus) it rendered as a pale
+    // flat-topped column of light: replace it with a closed teardrop flame (warm core, orange rim, blue base); smaller halo.
+    cs.userData.flame.visible = false; cs.userData.glow.material.opacity = .22; cs.userData.glow.scale.setScalar(.14);
+    { const fl = candleFlame(THREE, { h: .031, intensity: 3.0 }); fl.position.set(.31, deskTop + .03 + .1 + .003, -.3); scene.add(fl); }
     R.flamePos = new THREE.Vector3(.31, deskTop + cs.userData.flameY, -.3);
     // stack of old books (back left)
     const bs = new THREE.Group(); bs.position.set(.15, deskTop, -.24); bs.rotation.y = -.06; scene.add(bs);
     [[.19, .26, .045, '#5a2216', '#2a0d07'], [.17, .24, .05, '#3d3a2a', '#1e1c12'], [.18, .23, .035, '#6a4a26', '#33200e'], [.15, .21, .04, '#2a3a4a', '#121c26']].reduce((y, [w, h, d, a, b], i) => {
-      const t = G.tome({ w, h, d, a, b, seed: 40 + i }); t.rotation.x = -Math.PI / 2; t.rotation.z = (i % 2 ? 1 : -1) * .04 + i * .015; t.position.set(0, y + d / 2, 0); t.children[0].material.color.set('#cdbb96'); bs.add(t); return y + d; }, 0);
+      const t = G.tome({ w, h, d, a, b, seed: 40 + i }); t.rotation.x = -Math.PI / 2; t.rotation.z = (i % 2 ? 1 : -1) * .04 + i * .015; t.position.set(0, y + d / 2, 0); t.children[0].material.color.set('#cdbb96');
+      // tome()'s spine is an OPEN half-cylinder: seen end-on (the camera passes the spine side) its culled interior reads as pale
+      // pointed shards. Close its ends and calm the grazing-angle sheen (the cool window light turned it grey).
+      const sp = t.children[3]; sp.geometry.dispose(); sp.geometry = new THREE.CylinderGeometry(d / 2, d / 2, h, 28, 1, false, Math.PI, Math.PI);
+      const lm = t.children[1].material; lm.sheen = .12; lm.normalScale.set(.45, .45);
+      bs.add(t); return y + d; }, 0);
     // inkwell + quill
     const ink = M.inkwell({ quill: false }); ink.position.set(-.05, deskTop, -.08); scene.add(ink);
     const q = G.quill({ length: .29, bend: .03 }); q.position.set(-.055, deskTop + .02, -.08); q.rotation.set(-.32, .5, .32); scene.add(q);
@@ -144,12 +156,15 @@ export default {
 
     // ---------------- lights ----------------
     const hemi = new THREE.HemisphereLight('#a9b8cc', '#4a3d33', .3); scene.add(hemi);
-    const day = new THREE.DirectionalLight('#c7d4e6', 2.4); day.position.set(-.5, 3.4, -3.6); day.target.position.set(0, deskTop, 0);
-    day.castShadow = true; day.shadow.mapSize.set(1024, 1024); const sc = day.shadow.camera; sc.left = -1.3; sc.right = 1.3; sc.top = 1.3; sc.bottom = -1.3; sc.near = .5; sc.far = 9; day.shadow.bias = -.0004; day.shadow.normalBias = .015; day.shadow.radius = 7;
+    const day = new THREE.DirectionalLight('#ccd6e3', 1.9); day.position.set(-.5, 3.4, -3.6); day.target.position.set(0, deskTop, 0);
+    // shadow frustum fitted to the desk + window opening (light space x ±.8, y −.46…1.13), 2048² -> ~0.8 mm texels (was 2.5 mm,
+    // stair-stepped). PCF honours shadow.radius (PCFSoft does not) -> soft, smooth edges for the overcast window light.
+    ctx.renderer.shadowMap.type = THREE.PCFShadowMap;
+    day.castShadow = true; day.shadow.mapSize.set(2048, 2048); const sc = day.shadow.camera; sc.left = -.88; sc.right = .88; sc.top = 1.18; sc.bottom = -.52; sc.near = .5; sc.far = 9; day.shadow.bias = -.0004; day.shadow.normalBias = .012; day.shadow.radius = 3;
     scene.add(day, day.target);
     const fill = new THREE.DirectionalLight('#ffe4c8', .55); fill.position.set(1.2, 1.8, 3); scene.add(fill); // soft bounce from the room
     const cl = ENV.pointLight({ color: '#ffa04a', intensity: .45, distance: 2.4, pos: R.flamePos.toArray() }); scene.add(cl); R.cl = cl;
-    const cg = FX.glow({ size: .22, opacity: .32, color: '#ffb060' }); cg.position.copy(R.flamePos); scene.add(cg);
+    const cg = FX.glow({ size: .13, opacity: .2, color: '#ffb060' }); cg.position.copy(R.flamePos); scene.add(cg);
     
 
     // ---------------- camera: window -> across the desk -> the book ----------------
@@ -184,7 +199,7 @@ export default {
     const tF = ctx.wordTime('filozof'), tT = ctx.wordTime('thomas'), tC = ctx.wordEnd('carlyle');
     G.locTag(ui, t, { t0: .12, text: 'LONDRA · 1840', accent: '#9cc3e6', y: 266 });
     const end = G.nameCard(ui, t, { y: 328, nameAnim: 'fade', tCard: tF - .04, tName: tT - .04, tWork: tC - .55, name: 'THOMAS CARLYLE', sub: 'Filozof · 1795–1881', work: 'On Heroes (1841)', accent: '#9cc3e6', bg: 'rgba(16,22,34,.66)' });
-    if (end) { const a = R.bookAnchorW; const [ax] = ui.project(a); G.pointer(ui, t, { t0: tC - .2, from: [ax, 328 + 292 + 4], anchor: a, color: '#9cc3e6', dur: .35 }); }
+    if (end) { const a = R.bookAnchorW; const [ax] = ui.project(a); G.pointer(ui, t, { t0: tC - .47, from: [ax, 328 + 292 + 4], anchor: a, color: '#9cc3e6', dur: .35 }); }
   },
 };
 
@@ -213,6 +228,23 @@ function skyline(TEX, U, o, stacksOut) {
     if (o.fog) { x.save(); x.globalCompositeOperation = 'source-atop'; const g = x.createLinearGradient(0, base, 0, H); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, o.fog); x.fillStyle = g; x.fillRect(0, 0, W, H); x.restore(); }
     if (o.blur) { const c2 = document.createElement('canvas'); c2.width = W; c2.height = H; c2.getContext('2d').drawImage(x.canvas, 0, 0); x.clearRect(0, 0, W, H); x.filter = `blur(${o.blur}px)`; x.drawImage(c2, 0, 0); x.filter = 'none'; }
   });
+}
+// Candle flame: y-billboarded additive quad with a closed teardrop (alpha reaches 0 inside the quad), gentle sway/flicker.
+function candleFlame(T, o = {}) {
+  const H = o.h ?? .032; const geo = new T.PlaneGeometry(H * .62, H * 1.25); geo.translate(0, H * .55, 0);
+  const u = { time: { value: 0 }, intensity: { value: o.intensity ?? 3 } };
+  const m = new T.ShaderMaterial({ uniforms: u, transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide,
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+    fragmentShader: `uniform float time, intensity; varying vec2 vUv;
+      void main(){ float y = vUv.y; float sway = (sin(time * 7.3) * .05 + sin(time * 12.9 + 1.3) * .025) * smoothstep(.2, 1., y);
+        float x = vUv.x * 2. - 1. - sway; float qy = y - .32; float k = clamp(qy / .6, 0., 1.); float wdt = .86 * (1. - k * k * .8);
+        float r = length(vec2(x / wdt, qy > 0. ? qy / .6 : qy / .21));
+        float body = smoothstep(1., .3, r); float hot = smoothstep(.62, .05, length(vec2(x / wdt * 1.25, (qy + .04) / .36)));
+        vec3 c = mix(vec3(1., .36, .08), vec3(1., .66, .22), smoothstep(0., .6, body)); c = mix(c, vec3(1., .95, .82), hot);
+        c += vec3(.15, .3, 1.) * smoothstep(.2, .1, y) * .5;
+        float flick = 1. + .05 * sin(time * 23. + 1.7) + .03 * sin(time * 37.1);
+        gl_FragColor = vec4(c * intensity * flick, body * .95); }` });
+  const mesh = new T.Mesh(geo, m); mesh.userData.uniforms = u; mesh.userData.yBillboard = true; mesh.userData.noDepth = true; mesh.renderOrder = 20; return mesh;
 }
 // Victorian cast-iron gas street lamp (unlit-shaded, pre-fogged silhouette colour) with a glowing lantern. k = distance fade.
 function gasLamp(T, k = 1) {
