@@ -1,0 +1,24 @@
+# Cloudflare Pages başlıkları (yalnızca statik dosyalar; panel ve API başlıkları functions/ içinde)
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# Derleyicinin içerik özetli dosya adları değişmez: uzun önbellek
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Yazı tipleri, görseller, paylaşım görselleri: adları sabit olabilir, bir hafta
+/fonts/*
+  Cache-Control: public, max-age=604800
+/gorseller/*
+  Cache-Control: public, max-age=604800
+/logo/*
+  Cache-Control: public, max-age=604800
+/og/*
+  Cache-Control: public, max-age=604800
+
+# Belgeler (PDF): eski siteden taşınanlar değişmez (panel belgeleri R2'den kısa önbellekle sunulur)
+/belgeler/*
+  Cache-Control: public, max-age=86400

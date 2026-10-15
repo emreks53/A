@@ -1,0 +1,20 @@
+# Cloudflare Pages yapılandırması (proje: idealistgyo). Yayın: araclar/yayinla.sh
+# Gizli anahtarlar (RESEND_API_KEY, KOD_TUZU) burada DEĞİL, Pages proje ayarlarında "secret" olarak durur.
+name = "idealistgyo"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "site"
+
+[vars]
+ADMIN_EMAILS = "emreks1453@gmail.com"
+PANEL_FROM = "İdealist GYO Panel <onboarding@resend.dev>"
+IL_FROM = "İdealist GYO Web <onboarding@resend.dev>"
+IL_TO = "emreks1453@gmail.com"
+
+[[r2_buckets]]
+binding = "BELGELER"
+bucket_name = "idealist-belgeler"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "idealist-panel"
+database_id = "302311de-a469-4e07-a058-97760c410154"

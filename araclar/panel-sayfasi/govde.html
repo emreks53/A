@@ -1,0 +1,73 @@
+<body class="yonetim">
+<header class="p-ust">
+  <div class="p-kap p-ust-ic">
+    <a href="/" class="p-logo"><img src="/logo/idealist-gyo-logo-330.jpg" alt="İdealist GYO" width="330" height="156"></a>
+    <div class="p-baslik"><b>Yönetim paneli</b><span id="ben"></span></div>
+    <div class="p-ust-dugmeler"><a class="y-dugme ikincil kucuk" href="/" target="_blank" rel="noopener">Siteyi aç</a><button class="y-dugme ikincil kucuk" type="button" id="cikis">Çıkış</button></div>
+  </div>
+  <div class="p-kap" role="tablist" aria-label="Bölümler">
+    <button class="y-sekme" role="tab" id="s-belge" aria-controls="b-belge" aria-selected="true">Belgeler</button>
+    <button class="y-sekme" role="tab" id="s-haber" aria-controls="b-haber" aria-selected="false">Haber &amp; Duyurular</button>
+    <button class="y-sekme" role="tab" id="s-kayit" aria-controls="b-kayit" aria-selected="false">İşlem geçmişi</button>
+  </div>
+</header>
+<main class="p-kap p-ana">
+  <p id="mesaj" class="y-mesaj" role="status" hidden></p>
+
+  <section id="b-belge" role="tabpanel" aria-labelledby="s-belge">
+    <details class="p-yardim"><summary>Nasıl kullanılır?</summary>
+      <ol>
+        <li>Belgenin görüneceği <b>bölümü</b> seçin (ör. Faaliyet Raporları, Özel Durum Açıklamaları).</li>
+        <li><b>Yılı</b> ve sitede görünecek <b>Türkçe adı</b> yazın (ör. "6 Aylık", "2026 Yılı Olağan Genel Kurul Toplantı Tutanağı").</li>
+        <li>İngilizce adı yazarsanız belge İngilizce sitede de görünür; boş bırakırsanız yalnızca Türkçe sitede görünür.</li>
+        <li>PDF dosyasını seçip <b>Belgeyi yayınla</b>'ya basın. Belge birkaç saniye içinde sitede görünür.</li>
+        <li>Yanlış eklenen belgeyi aşağıdaki listeden <b>Kaldır</b> ile silebilir, adını <b>Adını düzenle</b> ile değiştirebilirsiniz.</li>
+      </ol>
+      <p>Eski siteden taşınan belgeler bu listede görünmez ve panelden değiştirilemez; yalnızca buradan eklenen belgeler yönetilir.</p>
+    </details>
+    <form id="belgeForm" class="y-kart p-form" novalidate>
+      <h2>Yeni belge</h2>
+      <div class="p-izgara">
+        <label class="y-etiket">Bölüm<select class="y-girdi" name="kid" id="kid" required></select></label>
+        <label class="y-etiket" id="grupAlan" hidden>Grup<select class="y-girdi" name="grup" id="grup"></select></label>
+        <label class="y-etiket" id="hedefAlan" hidden>Görüneceği sayfa<select class="y-girdi" name="hedef" id="hedef"></select></label>
+        <label class="y-etiket">Yıl<input class="y-girdi" name="yil" id="yil" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required></label>
+        <label class="y-etiket">Türkçe adı<small>Sitede görünecek ad, ör. "6 Aylık"</small><input class="y-girdi" name="etiket" maxlength="300" required></label>
+        <label class="y-etiket">İngilizce adı<small>İsteğe bağlı; boşsa İngilizce sitede gösterilmez</small><input class="y-girdi" name="etiket_en" maxlength="300"></label>
+        <label class="y-etiket p-genis">PDF dosyası<small>En çok 60 MB</small><input class="y-girdi" name="dosya" type="file" accept="application/pdf,.pdf" required></label>
+      </div>
+      <div class="y-ilerleme" id="belgeIlerleme" hidden><span></span></div>
+      <button class="y-dugme" type="submit">Belgeyi yayınla</button>
+    </form>
+    <h2 class="p-liste-baslik">Panelden eklenen belgeler <span id="belgeSayi" class="p-sayi"></span></h2>
+    <div id="belgeListe" class="p-liste"></div>
+  </section>
+
+  <section id="b-haber" role="tabpanel" aria-labelledby="s-haber" hidden>
+    <details class="p-yardim"><summary>Nasıl kullanılır?</summary>
+      <ol>
+        <li>Duyurunun <b>başlığını</b>, <b>tarihini</b> ve <b>metnini</b> yazın. Boş bir satır yeni paragraf başlatır.</li>
+        <li>Gerekirse en çok 5 PDF ekleyin. Duyuru Haber &amp; Duyurular sayfasında ve ana sayfada en üstte görünür.</li>
+      </ol>
+    </details>
+    <form id="haberForm" class="y-kart p-form" novalidate>
+      <h2>Yeni duyuru</h2>
+      <div class="p-izgara">
+        <label class="y-etiket p-genis">Başlık<input class="y-girdi" name="baslik" maxlength="300" required></label>
+        <label class="y-etiket">Tarih<input class="y-girdi" name="tarih" id="tarih" type="date" required></label>
+        <label class="y-etiket">Ekler (PDF)<small>İsteğe bağlı, en çok 5 dosya</small><input class="y-girdi" name="ek" type="file" accept="application/pdf,.pdf" multiple></label>
+        <label class="y-etiket p-genis">Metin<textarea class="y-girdi" name="govde" maxlength="20000" required></textarea></label>
+      </div>
+      <div class="y-ilerleme" id="haberIlerleme" hidden><span></span></div>
+      <button class="y-dugme" type="submit">Duyuruyu yayınla</button>
+    </form>
+    <h2 class="p-liste-baslik">Panelden eklenen duyurular <span id="haberSayi" class="p-sayi"></span></h2>
+    <div id="haberListe" class="p-liste"></div>
+  </section>
+
+  <section id="b-kayit" role="tabpanel" aria-labelledby="s-kayit" hidden>
+    <h2 class="p-liste-baslik">Son 50 işlem</h2>
+    <div class="p-tablo-kap"><table class="p-tablo"><thead><tr><th>Zaman (UTC)</th><th>Kişi</th><th>İşlem</th><th>Ayrıntı</th></tr></thead><tbody id="kayitListe"></tbody></table></div>
+  </section>
+</main>
+</body></html>

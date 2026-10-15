@@ -1,0 +1,28 @@
+.p-kap{max-width:1080px;margin:0 auto;padding:0 20px}
+.p-ust{background:#fff;border-bottom:1px solid var(--color-pus);position:sticky;top:0;z-index:5}
+.p-ust-ic{display:flex;align-items:center;gap:16px;padding-top:12px;padding-bottom:8px;flex-wrap:wrap}
+.p-logo img{height:40px;width:auto;display:block}
+.p-baslik{display:grid;line-height:1.3}.p-baslik b{font-size:18px}.p-baslik span{font-size:13px;color:var(--color-celik)}
+.p-ust-dugmeler{margin-left:auto;display:flex;gap:8px}
+.p-ust [role=tablist]{display:flex;gap:4px;overflow-x:auto}
+.p-ana{padding-top:24px;padding-bottom:64px;display:grid;gap:20px}
+.p-ana>section{display:grid;gap:18px}.p-ana>section[hidden]{display:none}
+.p-yardim{background:#fff;border:1px solid var(--color-pus);border-radius:4px;padding:12px 16px;font-size:15px;line-height:1.55}
+.p-yardim summary{cursor:pointer;font-weight:600}.p-yardim ol{margin:10px 0 6px;padding-left:20px}.p-yardim p{margin:6px 0 0;color:var(--color-celik)}
+.p-form{padding:20px;display:grid;gap:16px}.p-form h2,.p-liste-baslik{font-size:20px;font-weight:600;margin:0}
+.p-izgara{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}.p-izgara .p-genis{grid-column:1/-1}
+.p-izgara [hidden]{display:none}
+.p-form .y-dugme[type=submit]{justify-self:start}
+.p-sayi{color:var(--color-celik);font-weight:400}
+.p-liste{display:grid;gap:10px}
+.p-oge{padding:14px 16px;display:grid;gap:6px}
+.p-oge-ust{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.p-etiket{font-size:13px;font-weight:600;color:var(--color-celik);font-variant-numeric:tabular-nums}
+.p-ad{font-size:16px}.p-ek{font-size:13.5px;color:var(--color-celik);overflow-wrap:anywhere}
+.p-eylem{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}.p-eylem a{text-decoration:none;display:inline-flex;align-items:center}
+.p-duzen{display:grid;gap:10px;margin-top:8px;padding-top:12px;border-top:1px solid var(--color-pus)}.p-duzen[hidden]{display:none}
+.p-bos{color:var(--color-celik);margin:0}
+.p-tablo-kap{overflow-x:auto;background:#fff;border:1px solid var(--color-pus);border-radius:4px}
+.p-tablo{border-collapse:collapse;width:100%;font-size:14px}.p-tablo th,.p-tablo td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--color-pus);vertical-align:top}
+.p-tablo th{font-weight:600;background:var(--color-sis)}
+@media (max-width:640px){.p-izgara{grid-template-columns:1fr}.p-ust-dugmeler{margin-left:0;width:100%}.p-logo img{height:32px}}
