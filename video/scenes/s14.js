@@ -161,7 +161,7 @@ export default {
           .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = roughness;\n#ifdef USE_ROUGHNESSMAP\n roughnessFactor *= texture2D( roughnessMap, vRoughnessMapUv, 1.0 ).g;\n#endif\n roughnessFactor = max(roughnessFactor, .5);')
           .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = metalness;\n#ifdef USE_METALNESSMAP\n metalnessFactor *= texture2D( metalnessMap, vMetalnessMapUv, 1.0 ).b * .85;\n#endif'); };
       sm.customProgramCacheKey = () => 'F_spine_atlas_s14aa'; sm.needsUpdate = true; }
-    R.tmpM = new THREE.Matrix4(); R.zero = new THREE.Matrix4().makeScale(0, 0, 0);
+    R.tmpM = new THREE.Matrix4(); R.sclM = new THREE.Matrix4(); R.zero = new THREE.Matrix4().makeScale(0, 0, 0);
 
     // ---- lectern + hero book (Şifâ-i Şerif) in the sunbeam ----------------------------------------------------
     const lec = new THREE.Group(); lec.position.set(.02, 0, -9.5); lec.rotation.y = .42; scene.add(lec); R.lec = lec;
@@ -233,6 +233,7 @@ export default {
       if (p >= 1) { bk.setMatrix(n0 + j, r.m); return; }
       const e = U.ease.outBack(p, 1.15); const m = R.tmpM.copy(r.m); const off = (1 - e);
       m.elements[12] += -r.side * off * .7; m.elements[13] += off * .25; // slides in from the front, settling down
+      const s = .3 + .7 * U.smoothstep(0, .3, p); if (s < 1) m.multiply(R.sclM.makeScale(s, s, s)); // grows in instead of popping into existence mid-air
       bk.setMatrix(n0 + j, m);
     });
     bk.commit(); R.shown = shown;
