@@ -1,0 +1,2746 @@
+[
+ {
+  "rota": "/",
+  "en_rota": "/en/",
+  "tr": "Ülkemize faydalı, prestijli gayrimenkul projelerini ideal şekilde gerçekleştirmek.",
+  "en_mevcut": "Realising prestigious real estate projects that benefit our country, in an ideal way.",
+  "en_var": true
+ },
+ {
+  "rota": "/arama/",
+  "en_rota": "/en/search/",
+  "tr": "Arama",
+  "en_mevcut": "Search",
+  "en_var": true
+ },
+ {
+  "rota": "/basinda-biz/",
+  "en_rota": "/en/in-media/",
+  "tr": "Basında Biz",
+  "en_mevcut": "IN MEDIA",
+  "en_var": true
+ },
+ {
+  "rota": "/basinda-biz/emlak-kulisi/",
+  "en_rota": "/en/in-media/emlak-kulisi/",
+  "tr": "İdealist GYO, Uluslar Arası Kalite Yıldızı Ödülü Aldı! / Emlak Kulisi",
+  "en_mevcut": "* / Emlak Kulisi",
+  "en_var": true
+ },
+ {
+  "rota": "/gizlilik-ve-cerez-politikasi/",
+  "en_rota": "/en/privacy-and-cookie-policy/",
+  "tr": "Gizlilik ve Çerez Politikası",
+  "en_mevcut": "Privacy & Cookie Policy",
+  "en_var": true
+ },
+ {
+  "rota": "/haberler/",
+  "en_rota": "/en/news/",
+  "tr": "Haber & Duyurular",
+  "en_mevcut": "NEWS & ANNOUNCEMENTS",
+  "en_var": true
+ },
+ {
+  "rota": "/haberler/02062011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/02062011-ozel-durum-aciklamasi/",
+  "tr": "02.06.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/02082011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/02082011-ozel-durum-aciklamasi/",
+  "tr": "02.08.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/03012012-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/03012012-ozel-durum-aciklamasi/",
+  "tr": "03.01.2012 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/08092011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/08092011-ozel-durum-aciklamasi/",
+  "tr": "08.09.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/09012012-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/09012012-ozel-durum-aciklamasi/",
+  "tr": "09.01.2012 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/09062011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/09062011-ozel-durum-aciklamasi/",
+  "tr": "09.06.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/09092011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/09092011-ozel-durum-aciklamasi/",
+  "tr": "09.09.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/13052011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/13052011-ozel-durum-aciklamasi/",
+  "tr": "13.05.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/13062011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/13062011-ozel-durum-aciklamasi/",
+  "tr": "13.06.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/14092011-ozel-durum-aciklanmasi/",
+  "en_rota": "/en/news/14092011-ozel-durum-aciklanmasi/",
+  "tr": "14.09.2011 Özel Durum Açıklanması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/16112011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/16112011-ozel-durum-aciklamasi/",
+  "tr": "16.11.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2011-yili-a-grubu-imtiyazli-pay-sahipleri-toplantimiz-yapildi/",
+  "en_rota": "/en/news/2011-yili-a-grubu-imtiyazli-pay-sahipleri-toplantimiz-yapildi/",
+  "tr": "2011 Yılı A Grubu İmtiyazlı Pay Sahipleri Toplantımız Yapıldı ...",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2011-yili-a-grubu-imtiyazli-pay-sahipleri-toplantisi-30032012-tarihinde-yapilacaktir/",
+  "en_rota": "/en/news/2011-yili-a-grubu-imtiyazli-pay-sahipleri-toplantisi-30032012-tarihinde-yapilacaktir/",
+  "tr": "2011 yılı A grubu imtiyazlı pay sahipleri toplantısı 30.03.2012 tarihinde yapılacaktır.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2011-yili-olagan-genel-kurul-toplantimiz-yapildi/",
+  "en_rota": "/en/news/2011-yili-olagan-genel-kurul-toplantimiz-yapildi/",
+  "tr": "2011 Yılı Olağan Genel Kurul Toplantımız Yapıldı ...",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2011-yili-olagan-genel-kurul-toplantisi-30032012-tarihinde-yapilacaktir/",
+  "en_rota": "/en/news/2011-yili-olagan-genel-kurul-toplantisi-30032012-tarihinde-yapilacaktir/",
+  "tr": "2011 Yılı Olağan Genel Kurul Toplantısı 30.03.2012 tarihinde yapılacaktır.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2012-yili-olagan-genel-kurul-toplantimiz-yapildi/",
+  "en_rota": "/en/news/2012-yili-olagan-genel-kurul-toplantimiz-yapildi/",
+  "tr": "2012 Yılı Olağan Genel Kurul Toplantımız Yapıldı ...",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2016-yili-olagan-genel-kurul-toplantisi-hk/",
+  "en_rota": "/en/news/2016-yili-olagan-genel-kurul-toplantisi-hk/",
+  "tr": "2016 Yılı Olağan Genel Kurul Toplantısı Hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2016-yili-olaganustu-genel-kurul-toplantisi-2/",
+  "en_rota": "/en/news/2016-yili-olaganustu-genel-kurul-toplantisi-2/",
+  "tr": "2016 Yılı Olağanüstü Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2016-yili-olaganustu-genel-kurul-toplantisi-3/",
+  "en_rota": "/en/news/2016-yili-olaganustu-genel-kurul-toplantisi-3/",
+  "tr": "2016 Yılı Olağanüstü Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2016-yili-olaganustu-genel-kurul-toplantisi-4/",
+  "en_rota": "/en/news/2016-yili-olaganustu-genel-kurul-toplantisi-4/",
+  "tr": "2016 Yılı Olağanüstü Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2016-yili-olaganustu-genel-kurul-toplantisi-5/",
+  "en_rota": "/en/news/2016-yili-olaganustu-genel-kurul-toplantisi-5/",
+  "tr": "2016 Yılı Olağanüstü Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/2016-yili-olaganustu-genel-kurul-toplantisi/",
+  "en_rota": "/en/news/2016-yili-olaganustu-genel-kurul-toplantisi/",
+  "tr": "2016 Yılı Olağanüstü Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/26082011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/26082011-ozel-durum-aciklamasi/",
+  "tr": "26.08.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/27012012-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/27012012-ozel-durum-aciklamasi/",
+  "tr": "27.01.2012 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/27052011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/27052011-ozel-durum-aciklamasi/",
+  "tr": "27.05.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/degerleme-sirketi-belirlenmesi/",
+  "en_rota": "/en/news/degerleme-sirketi-belirlenmesi/",
+  "tr": "DEĞERLEME ŞİRKETİ BELİRLENMESİ",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/gayrimenkul-degerleme-sirketi-secimi/",
+  "en_rota": "/en/news/gayrimenkul-degerleme-sirketi-secimi/",
+  "tr": "Gayrimenkul Değerleme Şirketi Seçimi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/genel-kurul-toplantisi-2/",
+  "en_rota": "/en/news/genel-kurul-toplantisi-2/",
+  "tr": "Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/genel-kurul-toplantisi/",
+  "en_rota": "/en/news/genel-kurul-toplantisi/",
+  "tr": "Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/genel-mudur-atamasi-hk/",
+  "en_rota": "/en/news/genel-mudur-atamasi-hk/",
+  "tr": "Genel Müdür Ataması Hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/genel-mudur-istifasi-hk/",
+  "en_rota": "/en/news/genel-mudur-istifasi-hk/",
+  "tr": "Genel Müdür istifası hk",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2010-6-aylik-mali-tablolarini-yayimladi/",
+  "en_rota": "/en/news/idealist-gyo-as-2010-6-aylik-mali-tablolarini-yayimladi/",
+  "tr": "İdealist GYO A.Ş. 2010 6 Aylık Mali Tablolarını Yayımladı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2010-9-aylik-mali-tablolarini-yayimladi/",
+  "en_rota": "/en/news/idealist-gyo-as-2010-9-aylik-mali-tablolarini-yayimladi/",
+  "tr": "İdealist GYO A.Ş. 2010 9 Aylık Mali Tablolarını Yayımladı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2010-yillik-mali-tablolarini-yayimladi/",
+  "en_rota": "/en/news/idealist-gyo-as-2010-yillik-mali-tablolarini-yayimladi/",
+  "tr": "İdealist GYO A.Ş. 2010 Yıllık Mali Tablolarını Yayımladı.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2011-6-aylik-mali-tablolarini-yayimladi/",
+  "en_rota": "/en/news/idealist-gyo-as-2011-6-aylik-mali-tablolarini-yayimladi/",
+  "tr": "İdealist GYO A.Ş. 2011 6 Aylık Mali Tablolarını Yayımladı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2011-9-aylik-mali-tablolarini-yayimladi/",
+  "en_rota": "/en/news/idealist-gyo-as-2011-9-aylik-mali-tablolarini-yayimladi/",
+  "tr": "İdealist GYO A.Ş. 2011 9 Aylık Mali Tablolarını Yayımladı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2011-bagimsiz-denetimlerinin-yaptirilmasi-amaciyla-mercek-bagimsiz-denetim-ve-yeminli-mali-musavirlik-as-ile-sozlesme-yapilmasina-karar-verilmistir/",
+  "en_rota": "/en/news/idealist-gyo-as-2011-bagimsiz-denetimlerinin-yaptirilmasi-amaciyla-mercek-bagimsiz-denetim-ve-yeminli-mali-musavirlik-as-ile-sozlesme-yapilmasina-karar-verilmistir/",
+  "tr": "İdealist GYO A.Ş. 2011 Bağımsız denetimlerinin yaptırılması amacıyla Mercek Bağımsız Denetim Ve Yeminli Mali Müşavirlik A.Ş. ile sözleşme yapılmasına karar verilmiştir.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2012-6-aylik-mali-tablolarini-yayimladi/",
+  "en_rota": "/en/news/idealist-gyo-as-2012-6-aylik-mali-tablolarini-yayimladi/",
+  "tr": "İdealist GYO A.Ş. 2012 6 Aylık Mali Tablolarını Yayımladı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2012-9-aylik-mali-tablolarini-yayimladi/",
+  "en_rota": "/en/news/idealist-gyo-as-2012-9-aylik-mali-tablolarini-yayimladi/",
+  "tr": "İdealist GYO A.Ş 2012 9 Aylık Mali Tablolarını Yayımladı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2012-bagimsiz-denetimlerinin-yaptirilmasi-amaciyla-mercek-bagimsiz-denetim-ve-yeminli-mali-musavirlik-as-ile-sozlesme-yapilmasina-karar-verilmistir/",
+  "en_rota": "/en/news/idealist-gyo-as-2012-bagimsiz-denetimlerinin-yaptirilmasi-amaciyla-mercek-bagimsiz-denetim-ve-yeminli-mali-musavirlik-as-ile-sozlesme-yapilmasina-karar-verilmistir/",
+  "tr": "İdealist GYO A.Ş. 2012 Bağımsız denetimlerinin yaptırılması amacıyla Mercek Bağımsız Denetim Ve Yeminli Mali Müşavirlik A.Ş. ile sözleşme yapılmasına karar verilmiştir.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2012-yili-genel-kurulu-2/",
+  "en_rota": "/en/news/idealist-gyo-as-2012-yili-genel-kurulu-2/",
+  "tr": "İdealist GYO A.Ş 2012 Yılı Genel Kurulu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-2012-yili-genel-kurulu/",
+  "en_rota": "/en/news/idealist-gyo-as-2012-yili-genel-kurulu/",
+  "tr": "İdealist GYO A.Ş 2012 Yılı Genel Kurulu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-21-24-haziran-2010-tarihleri-arasinda-halka-arz-ediliyor/",
+  "en_rota": "/en/news/idealist-gyo-as-21-24-haziran-2010-tarihleri-arasinda-halka-arz-ediliyor/",
+  "tr": "İdealist GYO A.Ş. 21-24 Haziran 2010 tarihleri arasında halka arz ediliyor.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-bid-uluslar-arasi-kalite-odulu-aldi/",
+  "en_rota": "/en/news/idealist-gyo-as-bid-uluslar-arasi-kalite-odulu-aldi/",
+  "tr": "İDEALİST GYO A.Ş. B.I.D. ULUSLAR ARASI KALİTE ÖDÜLÜ ALDI",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-halka-acildi/",
+  "en_rota": "/en/news/idealist-gyo-as-halka-acildi/",
+  "tr": "İdealist GYO A.Ş. Halka Açıldı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-halka-arz-calismalari-icin-bizim-menkul-degerler-as-ile-anlasti/",
+  "en_rota": "/en/news/idealist-gyo-as-halka-arz-calismalari-icin-bizim-menkul-degerler-as-ile-anlasti/",
+  "tr": "İdealist GYO A.Ş. halka arz çalışmaları için Bizim Menkul Değerler A.Ş. ile anlaştı.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-halka-arz-icin-spk039ya-basvurdu/",
+  "en_rota": "/en/news/idealist-gyo-as-halka-arz-icin-spk039ya-basvurdu/",
+  "tr": "İdealist GYO A.Ş. halka arz için SPK'ya başvurdu.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-mali-tablolarini-yayimladi/",
+  "en_rota": "/en/news/idealist-gyo-as-mali-tablolarini-yayimladi/",
+  "tr": "İdealist GYO A.Ş. Mali Tablolarını Yayımladı.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-merkezi-kayit-kurulusu-mkk-temsilcisi-olarak-bizim-menkul-degerler-as-ile-sozlesme-imzaladi/",
+  "en_rota": "/en/news/idealist-gyo-as-merkezi-kayit-kurulusu-mkk-temsilcisi-olarak-bizim-menkul-degerler-as-ile-sozlesme-imzaladi/",
+  "tr": "İdealist GYO A.Ş. Merkezi Kayıt Kuruluşu (MKK) temsilcisi olarak Bizim Menkul Değerler A.Ş. ile sözleşme imzaladı.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-olagan-genel-kurul-toplantisi/",
+  "en_rota": "/en/news/idealist-gyo-as-olagan-genel-kurul-toplantisi/",
+  "tr": "İdealist GYO A.Ş. Olağan Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-yeni-yonetim-kurulu-gorev-dagilimi-ve-denetimden-sorumlu-komitenin-secimini-yapti/",
+  "en_rota": "/en/news/idealist-gyo-as-yeni-yonetim-kurulu-gorev-dagilimi-ve-denetimden-sorumlu-komitenin-secimini-yapti/",
+  "tr": "İdealist GYO A.Ş. Yeni Yönetim Kurulu Görev Dağılımı Ve Denetimden Sorumlu Komitenin Seçimini Yaptı.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-as-yonetim-kurulu-halka-arz-karari-aldi-ve-hazirliklara-basladi/",
+  "en_rota": "/en/news/idealist-gyo-as-yonetim-kurulu-halka-arz-karari-aldi-ve-hazirliklara-basladi/",
+  "tr": "İdealist GYO A.Ş. Yönetim Kurulu halka arz kararı aldı ve hazırlıklara başladı.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/idealist-gyo-ashalka-arz-basin-duyurusu/",
+  "en_rota": "/en/news/idealist-gyo-ashalka-arz-basin-duyurusu/",
+  "tr": "İdealist GYO A.Ş.Halka Arz Basın Duyurusu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/kayitli-sermaye-tavani-guncellemesi/",
+  "en_rota": "/en/news/kayitli-sermaye-tavani-guncellemesi/",
+  "tr": "Kayıtlı Sermaye Tavanı Güncellemesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/olaganustu-genel-kurul-toplantisi/",
+  "en_rota": "/en/news/olaganustu-genel-kurul-toplantisi/",
+  "tr": "Olağanüstü Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/olaganustu-genel-kurul-toplantisi039nin-ertelenmesi/",
+  "en_rota": "/en/news/olaganustu-genel-kurul-toplantisi039nin-ertelenmesi/",
+  "tr": "Olağanüstü Genel Kurul Toplantısı'nın Ertelenmesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/ozel-durum-aciklamasi-2/",
+  "en_rota": "/en/news/ozel-durum-aciklamasi-2/",
+  "tr": "Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/ozel-durum-aciklamasi/",
+  "en_rota": "/en/news/ozel-durum-aciklamasi/",
+  "tr": "Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/pay-alim-teklifi-bilgi-formu-spk-onayi-ve-zorunlu-pay-alim-teklifi-surecine-baslanilmasi/",
+  "en_rota": "/en/news/pay-alim-teklifi-bilgi-formu-spk-onayi-ve-zorunlu-pay-alim-teklifi-surecine-baslanilmasi/",
+  "tr": "Pay Alım Teklifi Bilgi Formu SPK Onayı ve Zorunlu Pay Alım Teklifi Sürecine Başlanılması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/pay-alim-teklifi-bilgi-formu-spk-onayi/",
+  "en_rota": "/en/news/pay-alim-teklifi-bilgi-formu-spk-onayi/",
+  "tr": "Pay Alım Teklifi Bilgi Formu SPK Onayı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/pay-alim-teklifi-surecinin-tamamlanmasi-islem-sonucu-hk/",
+  "en_rota": "/en/news/pay-alim-teklifi-surecinin-tamamlanmasi-islem-sonucu-hk/",
+  "tr": "Pay Alım Teklifi Sürecinin Tamamlanması (İşlem Sonucu) hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/portoyumuzde-bulunan-daire-satisi-hakkinda/",
+  "en_rota": "/en/news/portoyumuzde-bulunan-daire-satisi-hakkinda/",
+  "tr": "Portöyümüzde bulunan daire satışı hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/haberler/sirket-ortaklari-arasindaki-pay-devirleri-ve-spk-onay-basvurusu-karari/",
+  "en_rota": "/en/news/sirket-ortaklari-arasindaki-pay-devirleri-ve-spk-onay-basvurusu-karari/",
+  "tr": "Şirket Ortakları Arasındaki Pay Devirleri ve SPK Onay Başvurusu Kararı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/iletisim/",
+  "en_rota": "/en/contact/",
+  "tr": "İLETİŞİM BİLGİLERİ",
+  "en_mevcut": "CONTACT INFORMATION",
+  "en_var": true
+ },
+ {
+  "rota": "/kurumsal/",
+  "en_rota": "/en/corporate/",
+  "tr": "Hakkımızda",
+  "en_mevcut": "ABOUT US",
+  "en_var": true
+ },
+ {
+  "rota": "/kurumsal/bilgi-toplumu-hizmetleri/",
+  "en_rota": "/en/corporate/bilgi-toplumu-hizmetleri/",
+  "tr": "Bilgi Toplumu Hizmetleri",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/kurumsal/insan-kaynaklari/",
+  "en_rota": "/en/corporate/insan-kaynaklari/",
+  "tr": "İnsan Kaynakları",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/kurumsal/ortaklik-yapisi/",
+  "en_rota": "/en/corporate/ortaklik-yapisi/",
+  "tr": "Ortaklık Yapısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/kurumsal/sirket-profili/",
+  "en_rota": "/en/corporate/sirket-profili/",
+  "tr": "Şirket Profili",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/kurumsal/ticaret-sicil-bilgileri/",
+  "en_rota": "/en/corporate/ticaret-sicil-bilgileri/",
+  "tr": "Ticaret Sicil Bilgileri",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/kurumsal/vizyon-misyon-hedef/",
+  "en_rota": "/en/corporate/vizyon-misyon-hedef/",
+  "tr": "Vizyon-Misyon-Hedef",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/kurumsal/yonetim-kurulu-komiteleri/",
+  "en_rota": "/en/corporate/yonetim-kurulu-komiteleri/",
+  "tr": "Yönetim Kurulu Komiteleri",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/kurumsal/yonetim-kurulu-ve-ust-yonetim/",
+  "en_rota": "/en/corporate/yonetim-kurulu-ve-ust-yonetim/",
+  "tr": "Yönetim Kurulu ve Üst Yönetim",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/linkler/",
+  "en_rota": "/en/links/",
+  "tr": "Linkler",
+  "en_mevcut": "LINKS",
+  "en_var": true
+ },
+ {
+  "rota": "/portfoy/",
+  "en_rota": "/en/portfolio/",
+  "tr": "Portföy ve Projelerimiz",
+  "en_mevcut": "PORTFOLIO AND PROJECTS",
+  "en_var": true
+ },
+ {
+  "rota": "/portfoy/degerleme-raporlari/",
+  "en_rota": "/en/portfolio/degerleme-raporlari/",
+  "tr": "Değerleme Raporları",
+  "en_mevcut": "Valuation Reports",
+  "en_var": true
+ },
+ {
+  "rota": "/portfoy/gayrimenkul-portfoyumuz/",
+  "en_rota": "/en/portfolio/gayrimenkul-portfoyumuz/",
+  "tr": "Gayrimenkul Portföyümüz",
+  "en_mevcut": "Properties Portfolio",
+  "en_var": true
+ },
+ {
+  "rota": "/portfoy/projelerimiz/",
+  "en_rota": "/en/portfolio/projelerimiz/",
+  "tr": "Projelerimiz",
+  "en_mevcut": "Our Projects",
+  "en_var": true
+ },
+ {
+  "rota": "/portfoy/projelerimiz/devam-eden/",
+  "en_rota": "/en/portfolio/projelerimiz/devam-eden/",
+  "tr": "Devam Eden Projeler",
+  "en_mevcut": "Ongoing Projects",
+  "en_var": true
+ },
+ {
+  "rota": "/portfoy/projelerimiz/devam-eden/izmir-aliaga-lojistik-depo-yapimi/",
+  "en_rota": "/en/portfolio/projelerimiz/devam-eden/izmir-aliaga-lojistik-depo-yapimi/",
+  "tr": "İZMİR ALİAĞA LOJİSTİK DEPO YAPIMI",
+  "en_mevcut": "İZMİR",
+  "en_var": true
+ },
+ {
+  "rota": "/portfoy/projelerimiz/tamamlanan/",
+  "en_rota": "/en/portfolio/projelerimiz/tamamlanan/",
+  "tr": "Tamamlanan Projeler",
+  "en_mevcut": "Completed Projects",
+  "en_var": true
+ },
+ {
+  "rota": "/portfoy/projelerimiz/tamamlanan/istanbul-sile-cavus-mahallesi-arsa-satisi-karsiligi-gelir-paylasimi-isi/",
+  "en_rota": "/en/portfolio/projelerimiz/tamamlanan/istanbul-sile-cavus-mahallesi-arsa-satisi-karsiligi-gelir-paylasimi-isi/",
+  "tr": "İSTANBUL ŞİLE ÇAVUŞ MAHALLESİ ARSA SATIŞI KARŞILIĞI GELİR PAYLAŞIMI İŞİ",
+  "en_mevcut": "ŞİLE",
+  "en_var": true
+ },
+ {
+  "rota": "/portfoy/sigorta-policeleri/",
+  "en_rota": "/en/portfolio/sigorta-policeleri/",
+  "tr": "Sigorta Poliçeleri",
+  "en_mevcut": "Insurance Policies",
+  "en_var": true
+ },
+ {
+  "rota": "/site-haritasi/",
+  "en_rota": "/en/site-map/",
+  "tr": "Site Haritası",
+  "en_mevcut": "SITE MAP",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/",
+  "en_rota": "/en/investor-relations/",
+  "tr": "Yatırımcı Köşesi",
+  "en_mevcut": "INVESTOR RELATIONS",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/belge-kutuphanesi/",
+  "en_rota": "/en/investor-relations/document-library/",
+  "tr": "Belge Kütüphanesi",
+  "en_mevcut": "Document Library",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/bilgilendirme-politikasi/",
+  "en_rota": "/en/investor-relations/bilgilendirme-politikasi/",
+  "tr": "Bilgilendirme Politikası",
+  "en_mevcut": "Disclosure Policy",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/esas-sozlesme/",
+  "en_rota": "/en/investor-relations/esas-sozlesme/",
+  "tr": "Esas Sözleşme",
+  "en_mevcut": "Articles of Association",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/esas-sozlesme/guncel/",
+  "en_rota": "/en/investor-relations/esas-sozlesme/guncel/",
+  "tr": "Esas Sözleşme(Güncel)",
+  "en_mevcut": "Articles of Association",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/esas-sozlesme/tadil-metni/",
+  "en_rota": "/en/investor-relations/esas-sozlesme/tadil-metni/",
+  "tr": "Esas Sözleşme Tadil Metni",
+  "en_mevcut": "Articles of Association",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/",
+  "tr": "Faaliyet Raporları",
+  "en_mevcut": "Annual Repots",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2017/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2017/",
+  "tr": "2017 Yılı Faaliyet Raporları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2018/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2018/",
+  "tr": "2018 Yılı Faaliyet Raporları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2018/2018-yili-2donem-yonetim-kurulu-faaliyet-raporu/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2018/2018-yili-2donem-yonetim-kurulu-faaliyet-raporu/",
+  "tr": "2018 Yılı 2.Dönem Yönetim Kurulu Faaliyet Raporu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2018/2018-yili-3donem-yonetim-kurulu-faaliyet-raporu/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2018/2018-yili-3donem-yonetim-kurulu-faaliyet-raporu/",
+  "tr": "2018 Yılı 3.Dönem Yönetim Kurulu Faaliyet Raporu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2018/2018-yili-4donem-yonetim-kurulu-faaliyet-raporu/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2018/2018-yili-4donem-yonetim-kurulu-faaliyet-raporu/",
+  "tr": "2018 Yılı 4.Dönem Yönetim Kurulu Faaliyet Raporu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2019/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2019/",
+  "tr": "2019 Yılı Faaliyet Raporları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2019/2019-yili-3donem-yonetim-kurulu-faaliyet-raporu/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2019/2019-yili-3donem-yonetim-kurulu-faaliyet-raporu/",
+  "tr": "2019 Yılı 3.Dönem Yönetim Kurulu Faaliyet Raporu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2019/bankadan-kredi-kullanilmasi-hk/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2019/bankadan-kredi-kullanilmasi-hk/",
+  "tr": "Bankadan Kredi Kullanılması Hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2020/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2020/",
+  "tr": "2020 Yılı Faaliyet Raporları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2020/2020-yili-2donem-yonetim-kurulu-faaliyet-raporu/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2020/2020-yili-2donem-yonetim-kurulu-faaliyet-raporu/",
+  "tr": "2020 Yılı 2.Dönem Yönetim Kurulu Faaliyet Raporu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2020/31032020-donemi-yonetim-kurulu-faaliyet-raporu/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2020/31032020-donemi-yonetim-kurulu-faaliyet-raporu/",
+  "tr": "31.03.2020 Dönemi Yönetim Kurulu Faaliyet Raporu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2020/31122019-yonetim-kurulu-faaliyet-raporu/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2020/31122019-yonetim-kurulu-faaliyet-raporu/",
+  "tr": "31.12.2019 Yönetim Kurulu Faaliyet Raporu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2021/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2021/",
+  "tr": "2021 Yılı Faaliyet Raporları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2022/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2022/",
+  "tr": "2022 Yılı Faaliyet Raporları",
+  "en_mevcut": "Annual reports",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2023/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2023/",
+  "tr": "2023 Yılı Faaliyet Raporları",
+  "en_mevcut": "Annual reports",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2024/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2024/",
+  "tr": "2024 Yılı Faaliyet Raporları",
+  "en_mevcut": "Annual reports",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2025/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2025/",
+  "tr": "2025 Yılı Faaliyet Raporları",
+  "en_mevcut": "2025",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/faaliyet-raporlari/2026/",
+  "en_rota": "/en/investor-relations/faaliyet-raporlari/2026/",
+  "tr": "2026 Yılı Faaliyet Raporları",
+  "en_mevcut": "2026",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/",
+  "tr": "Genel Kurul Bilgileri",
+  "en_mevcut": "General Assembly Informations",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/ek-aciklamalar/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/ek-aciklamalar/",
+  "tr": "Ek Açıklamalar",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/ek-aciklamalar/2019-yili-olagan-genel-kurul-toplanti-sonuclari-tescili/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/ek-aciklamalar/2019-yili-olagan-genel-kurul-toplanti-sonuclari-tescili/",
+  "tr": "2019 Yılı Olağan Genel Kurul Toplantı Sonuçları Tescili",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/ek-aciklamalar/kayit-152/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/ek-aciklamalar/kayit-152/",
+  "tr": "Ek Açıklamalar",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/",
+  "tr": "Genel Kurul Toplantı Davetleri",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2018-yili-olagan-genel-kurul-toplantisi/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2018-yili-olagan-genel-kurul-toplantisi/",
+  "tr": "2018 Yılı Olağan Genel Kurul Toplantısı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2019-yili-olagan-genel-kurul-toplantisi-toplanti-tarihi-revize/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2019-yili-olagan-genel-kurul-toplantisi-toplanti-tarihi-revize/",
+  "tr": "2019 Yılı Olağan Genel Kurul Toplantısı (Toplantı Tarihi Revize)",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2019-yili-olagan-genel-kurul-toplantisi/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2019-yili-olagan-genel-kurul-toplantisi/",
+  "tr": "2019 Yılı Olağan Genel Kurul Toplantısı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/",
+  "tr": "Toplantı Tutanakları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/03062010-tarihli-olaganustu-genel-kurul-toplanti-tutanagi/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/03062010-tarihli-olaganustu-genel-kurul-toplanti-tutanagi/",
+  "tr": "03.06.2010 Tarihli Olağanüstü Genel Kurul Toplantı Tutanağı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/19022010-tarihli-olagan-genel-kurul-toplanti-tutanagi/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/19022010-tarihli-olagan-genel-kurul-toplanti-tutanagi/",
+  "tr": "19.02.2010 Tarihli Olağan Genel Kurul Toplantı Tutanağı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/19022010-tarihli-olaganustu-genel-kurul-toplanti-tutanagi/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/19022010-tarihli-olaganustu-genel-kurul-toplanti-tutanagi/",
+  "tr": "19.02.2010 Tarihli Olağanüstü Genel Kurul Toplantı Tutanağı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/2019-yili-olagan-genel-kurulu-toplanti-tutanaklari/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/2019-yili-olagan-genel-kurulu-toplanti-tutanaklari/",
+  "tr": "2019 Yılı Olağan Genel Kurulu Toplantı Tutanakları",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/31032011-tarihli-a-grubu-imtiyazli-pay-sahipleri-olagan-genel-kurul-toplanti-tutanagi/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/31032011-tarihli-a-grubu-imtiyazli-pay-sahipleri-olagan-genel-kurul-toplanti-tutanagi/",
+  "tr": "31.03.2011 Tarihli A Grubu İmtiyazlı Pay Sahipleri Olağan Genel Kurul Toplantı Tutanağı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/31032011-tarihli-olagan-genel-kurul-toplanti-tutanagi/",
+  "en_rota": "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/31032011-tarihli-olagan-genel-kurul-toplanti-tutanagi/",
+  "tr": "31.03.2011 Tarihli Olağan Genel Kurul Toplantı Tutanağı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/gyolar-hakkinda/",
+  "en_rota": "/en/investor-relations/gyolar-hakkinda/",
+  "tr": "GYO'lar Hakkında",
+  "en_mevcut": "About REIT",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/",
+  "tr": "Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/03062010-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/03062010-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "03.06.2010 Tarihli Olağanüstü Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/05082016-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/05082016-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "05.08.2016 Tarihli Olağanüstü Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/19022010-tarihli-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/19022010-tarihli-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "19.02.2010 Tarihli Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/19022010-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/19022010-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "19.02.2010 Tarihli Olağanüstü Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/20032014-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/20032014-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "tr": "20.03.2014 Tarihli Olağan Genel Kurul Toplantısı Hazirun",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/2020-yili-olagan-genel-kurul-hazir-bulunanlar-listesi/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/2020-yili-olagan-genel-kurul-hazir-bulunanlar-listesi/",
+  "tr": "2020 Yılı Olağan Genel Kurul Hazır Bulunanlar Listesi",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/2021-yili-olagan-genel-kurul-hazir-bulunanlar-listesi/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/2021-yili-olagan-genel-kurul-hazir-bulunanlar-listesi/",
+  "tr": "2021 Yılı Olağan Genel Kurul Hazır Bulunanlar Listesi",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/2022-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/2022-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "2022 Yılı Olağan Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/2023-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/2023-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "2023 Yılı Olağan Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/2024-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/2024-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "2024 Yılı Olağan Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/2024-yili-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/2024-yili-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "2024 Yılı Olağanüstü Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/2025-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/2025-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "2025 Yılı Olağan Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/2026-yili-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/2026-yili-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "2026 Yılı Olağanüstü Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/29032013-tarihli-a-grubu-imtiyazli-pay-sahipleri-toplantisi-hazirun/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/29032013-tarihli-a-grubu-imtiyazli-pay-sahipleri-toplantisi-hazirun/",
+  "tr": "29.03.2013 Tarihli A Grubu İmtiyazlı Pay Sahipleri Toplantısı Hazirun",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/29032013-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/29032013-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "tr": "29.03.2013 Tarihli Olağan Genel Kurul Toplantısı Hazirun",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/29032016-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/29032016-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "tr": "29.03.2016 Tarihli Olağan Genel Kurul Toplantısı Hazirun",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/30032015-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/30032015-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "tr": "30.03.2015 Tarihli Olağan Genel Kurul Toplantısı Hazirun",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/30032017-tarihli-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/30032017-tarihli-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "30.03.2017 Tarihli Olağan Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/31032011-tarihli-a-grubu-imtiyazli-pay-sahipleri-olagan-genel-kurul-toplantisi-hazirun/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/31032011-tarihli-a-grubu-imtiyazli-pay-sahipleri-olagan-genel-kurul-toplantisi-hazirun/",
+  "tr": "31.03.2011 Tarihli A Grubu İmtiyazlı Pay Sahipleri Olağan Genel Kurul Toplantısı Hazirun",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/hazirun-cetveli/31032011-tarihli-genel-kurul-toplantisi-hazirun-cetveli/",
+  "en_rota": "/en/investor-relations/hazirun-cetveli/31032011-tarihli-genel-kurul-toplantisi-hazirun-cetveli/",
+  "tr": "31.03.2011 Tarihli Genel Kurul Toplantısı Hazirun Cetveli",
+  "en_mevcut": "The List Of Attendees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ic-yonerge/",
+  "en_rota": "/en/investor-relations/ic-yonerge/",
+  "tr": "İç Yönerge",
+  "en_mevcut": "Internal Instruction",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ic-yonerge/ic-yonerge/",
+  "en_rota": "/en/investor-relations/ic-yonerge/ic-yonerge/",
+  "tr": "İç Yönerge",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/",
+  "tr": "İzahname ve Halka Arz Sirküleri",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayina-sunulan-taslak-izahname25032024/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayina-sunulan-taslak-izahname25032024/",
+  "tr": "Bedelli Sermaye Artırımı SPK onayına sunulan Taslak İzahname_25.03.2024",
+  "en_mevcut": "Annual Reports",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayli-izahname-08082024/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayli-izahname-08082024/",
+  "tr": "Bedelli Sermaye Artırımı SPK Onaylı İzahname 08.08.2024",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayli-izahname/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayli-izahname/",
+  "tr": "Bedelli Sermaye Artırımı SPK Onaylı İzahname",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-tasarruf-sahipleri-satis-duyurusu25032024/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-tasarruf-sahipleri-satis-duyurusu25032024/",
+  "tr": "Bedelli Sermaye Artırımı Tasarruf Sahipleri Satış Duyurusu_25.03.2024",
+  "en_mevcut": "Annual Reports",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-tasarruf-sahiplerine-satis-duyurusu-27042021/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-tasarruf-sahiplerine-satis-duyurusu-27042021/",
+  "tr": "Bedelli Sermaye Artırımı Tasarruf Sahiplerine Satış Duyurusu 27.04.2021",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-taslak-izahname-27042021/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-taslak-izahname-27042021/",
+  "tr": "Bedelli Sermaye Artırımı Taslak İzahname 27.04.2021",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/ek2sozlesme-ornegi/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/ek2sozlesme-ornegi/",
+  "tr": "Ek2_Sözleşme Örnegi",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/ek3degerleme-raporlari/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/ek3degerleme-raporlari/",
+  "tr": "Ek3_Değerleme Raporları",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/ek4ic-bilgiye-ulasanlarin-listesi/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/ek4ic-bilgiye-ulasanlarin-listesi/",
+  "tr": "Ek4_İç Bilgiye Ulaşanların Listesi",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/ek5son-3-yil-bagimsiz-denetim-raporlari/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/ek5son-3-yil-bagimsiz-denetim-raporlari/",
+  "tr": "Ek5_Son 3 Yıl Bağımsız Denetim Raporları",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/ek6hukukcu-raporu/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/ek6hukukcu-raporu/",
+  "tr": "Ek6_Hukukçu Raporu",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/halka-arz-izahnamesi-ve-ek1esas-sozlesme/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/halka-arz-izahnamesi-ve-ek1esas-sozlesme/",
+  "tr": "Halka Arz İzahnamesi ve Ek1_Esas Sözleşme",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/halka-arz-sirkuleri/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/halka-arz-sirkuleri/",
+  "tr": "Halka Arz Sirküleri",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/spk-onayina-sunulan-izahname-23012026/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/spk-onayina-sunulan-izahname-23012026/",
+  "tr": "SPK Onayına Sunulan İzahname 23.01.2026",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/tasarruf-sahiplerine-satis-duyurusu-03092024/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/tasarruf-sahiplerine-satis-duyurusu-03092024/",
+  "tr": "Tasarruf Sahiplerine Satış Duyurusu 03.09.2024",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/tasarruf-sahiplerine-satis-duyurusu/",
+  "en_rota": "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/tasarruf-sahiplerine-satis-duyurusu/",
+  "tr": "Tasarruf Sahiplerine Satış Duyurusu",
+  "en_mevcut": "IPO Prospectuses And Circulars",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/kar-dagitim-politikasi/",
+  "en_rota": "/en/investor-relations/kar-dagitim-politikasi/",
+  "tr": "Kar Dağıtım Politikası",
+  "en_mevcut": "Profit Distribution Policy",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/komiteler/",
+  "en_rota": "/en/investor-relations/komiteler/",
+  "tr": "Komiteler",
+  "en_mevcut": "Committees",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/komiteler/denetim-komitesi/",
+  "en_rota": "/en/investor-relations/komiteler/denetim-komitesi/",
+  "tr": "Denetim Komitesi",
+  "en_mevcut": "The Audit Committee",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/komiteler/kurumsal-yonetim-komitesi/",
+  "en_rota": "/en/investor-relations/komiteler/kurumsal-yonetim-komitesi/",
+  "tr": "Kurumsal Yönetim Komitesi",
+  "en_mevcut": "Corporate Governance Committee",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/komiteler/riskin-erken-saptanmasi-komitesi/",
+  "en_rota": "/en/investor-relations/komiteler/riskin-erken-saptanmasi-komitesi/",
+  "tr": "Riskin Erken Saptanması Komitesi",
+  "en_mevcut": "The Risk Assessment Committee",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/kurumsal-kurallar/",
+  "en_rota": "/en/investor-relations/kurumsal-kurallar/",
+  "tr": "Kurumsal Kurallar",
+  "en_mevcut": "Corporate Rules",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/kurumsal-kurallar/etik-kurallarimiz/",
+  "en_rota": "/en/investor-relations/kurumsal-kurallar/etik-kurallarimiz/",
+  "tr": "Etik Kurallarımız",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/mali-tablo-ve-raporlar/",
+  "en_rota": "/en/investor-relations/mali-tablo-ve-raporlar/",
+  "tr": "Mali Tablo ve Raporlar",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/",
+  "tr": "Özel Durum Açıklamaları",
+  "en_mevcut": "Material Event Disclosure",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2010/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2010/",
+  "tr": "2010 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2010/01102010-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2010/01102010-ozel-durum-aciklamasi/",
+  "tr": "01.10.2010 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2010/02122010-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2010/02122010-ozel-durum-aciklamasi/",
+  "tr": "02.12.2010 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2010/06072010-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2010/06072010-ozel-durum-aciklamasi/",
+  "tr": "06.07.2010 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2010/07092010-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2010/07092010-ozel-durum-aciklamasi/",
+  "tr": "07.09.2010 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2010/24082010-ozel-durum-aciklamasi-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2010/24082010-ozel-durum-aciklamasi-2/",
+  "tr": "24.08.2010 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2010/24082010-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2010/24082010-ozel-durum-aciklamasi/",
+  "tr": "24.08.2010 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2010/25082010-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2010/25082010-ozel-durum-aciklamasi/",
+  "tr": "25.08.2010 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2010/30122010-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2010/30122010-ozel-durum-aciklamasi/",
+  "tr": "30.12.2010 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/",
+  "tr": "2011 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/01042011-ozel-durum-aciklamasi-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/01042011-ozel-durum-aciklamasi-2/",
+  "tr": "01.04.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/01042011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/01042011-ozel-durum-aciklamasi/",
+  "tr": "01.04.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/02062011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/02062011-ozel-durum-aciklamasi/",
+  "tr": "02.06.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/02082011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/02082011-ozel-durum-aciklamasi/",
+  "tr": "02.08.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/08092011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/08092011-ozel-durum-aciklamasi/",
+  "tr": "08.09.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/09062011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/09062011-ozel-durum-aciklamasi/",
+  "tr": "09.06.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/09092011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/09092011-ozel-durum-aciklamasi/",
+  "tr": "09.09.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/11032011-ozel-durum-aciklamasi-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/11032011-ozel-durum-aciklamasi-2/",
+  "tr": "11.03.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/11032011-ozel-durum-aciklamasi-3/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/11032011-ozel-durum-aciklamasi-3/",
+  "tr": "11.03.2011 Özel Durum Açıklaması",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/11032011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/11032011-ozel-durum-aciklamasi/",
+  "tr": "11.03.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/13052011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/13052011-ozel-durum-aciklamasi/",
+  "tr": "13.05.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/13062011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/13062011-ozel-durum-aciklamasi/",
+  "tr": "13.06.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/14012011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/14012011-ozel-durum-aciklamasi/",
+  "tr": "14.01.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/14092011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/14092011-ozel-durum-aciklamasi/",
+  "tr": "14.09.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/16112011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/16112011-ozel-durum-aciklamasi/",
+  "tr": "16.11.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/20092011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/20092011-ozel-durum-aciklamasi/",
+  "tr": "20.09.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/23032011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/23032011-ozel-durum-aciklamasi/",
+  "tr": "23.03.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/25032011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/25032011-ozel-durum-aciklamasi/",
+  "tr": "25.03.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/26082011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/26082011-ozel-durum-aciklamasi/",
+  "tr": "26.08.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/27052011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/27052011-ozel-durum-aciklamasi/",
+  "tr": "27.05.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/31032011-ozel-durum-aciklamasi-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/31032011-ozel-durum-aciklamasi-2/",
+  "tr": "31.03.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2011/31032011-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2011/31032011-ozel-durum-aciklamasi/",
+  "tr": "31.03.2011 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/",
+  "tr": "2012 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/03012012-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/03012012-ozel-durum-aciklamasi/",
+  "tr": "03.01.2012 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/07022012-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/07022012-ozel-durum-aciklamasi/",
+  "tr": "07.02.2012 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/09012012-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/09012012-ozel-durum-aciklamasi/",
+  "tr": "09.01.2012 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/15022012-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/15022012-ozel-durum-aciklamasi/",
+  "tr": "15.02.2012 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/17012012-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/17012012-ozel-durum-aciklamasi/",
+  "tr": "17.01.2012 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/27012012-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/27012012-ozel-durum-aciklamasi/",
+  "tr": "27.01.2012 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/31012012-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/31012012-ozel-durum-aciklamasi/",
+  "tr": "31.01.2012 Özel Durum Açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/esas-sozlesme-degisikligi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/esas-sozlesme-degisikligi/",
+  "tr": "Esas Sözleşme Değişikliği",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/esas-sozlesme-tadil-tasarisi-guncellemesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/esas-sozlesme-tadil-tasarisi-guncellemesi/",
+  "tr": "Esas Sözleşme Tadil Tasarısı Güncellemesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/kar-payi-dagitimina-iliskin-yonetim-kurulu-karari/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/kar-payi-dagitimina-iliskin-yonetim-kurulu-karari/",
+  "tr": "Kar Payı Dağıtımına İlişkin Yönetim Kurulu Kararı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2012/sermaye-piyasasi-kurulu-nun-kurumsal-yonetim-ilkelerinin-belirlenmesine-ve-uygulanmasina-iliskin-teblig-kapsamindaesas-sozlesmemizin-1418263138-maddelerinin-tadil-edilmesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2012/sermaye-piyasasi-kurulu-nun-kurumsal-yonetim-ilkelerinin-belirlenmesine-ve-uygulanmasina-iliskin-teblig-kapsamindaesas-sozlesmemizin-1418263138-maddelerinin-tadil-edilmesi/",
+  "tr": "Sermaye Piyasası Kurulu nun Kurumsal Yönetim İlkelerinin Belirlenmesine ve Uygulanmasına İlişkin Tebliğ kapsamında,esas sözleşmemizin 14,18,26,31,38 maddelerinin tadil edilmesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2013/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2013/",
+  "tr": "2013 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2013/2012-yil-sonu-portfoy-degerleme-raporu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2013/2012-yil-sonu-portfoy-degerleme-raporu/",
+  "tr": "2012 Yıl Sonu Portföy Değerleme Raporu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2013/2013-yil-sonu-gayrimenkul-portfoyu-degerleme-raporu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2013/2013-yil-sonu-gayrimenkul-portfoyu-degerleme-raporu/",
+  "tr": "2013 Yıl Sonu Gayrimenkul Portföyü Değerleme Raporu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2013/ic-yonerge-hakkinda/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2013/ic-yonerge-hakkinda/",
+  "tr": "İç Yönerge Hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2013/karin-dagitilmamasiriskin-erken-saptanmasi-komitesi-ve-bagimsiz-denetim-firmasi-secimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2013/karin-dagitilmamasiriskin-erken-saptanmasi-komitesi-ve-bagimsiz-denetim-firmasi-secimi/",
+  "tr": "Karın Dağıtılmaması,Riskin Erken Saptanması Komitesi ve Bağımsız Denetim Firması seçimi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2013/pay-sapleri-ile-iliskiler-birimi-yoneticisi-istifasi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2013/pay-sapleri-ile-iliskiler-birimi-yoneticisi-istifasi-hk/",
+  "tr": "Pay Sapleri İle İlişkiler Birimi Yöneticisi İstifası Hk",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2014/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2014/",
+  "tr": "2014 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2014/bagimsiz-denetim-kurulusu-secimi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2014/bagimsiz-denetim-kurulusu-secimi-hk/",
+  "tr": "Bağımsız Denetim Kuruluşu Seçimi Hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2014/degerleme-sirketi-secimi-ve-yatirimci-iliskileri-bolumu-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2014/degerleme-sirketi-secimi-ve-yatirimci-iliskileri-bolumu-hk/",
+  "tr": "Değerleme şirketi seçimi ve yatırımcı ilişkileri bölümü hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2014/olagandisi-fiyat-ve-miktar-hareketi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2014/olagandisi-fiyat-ve-miktar-hareketi/",
+  "tr": "Olağandışı Fiyat Ve Miktar Hareketi",
+  "en_mevcut": "82",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2016/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2016/",
+  "tr": "2016 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2016/piyasa-yapici-sirket-secimi-07042016/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2016/piyasa-yapici-sirket-secimi-07042016/",
+  "tr": "Piyasa Yapıcı Şirket Seçimi ( 07.04.2016 )",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2016/sirket-ortaklari-arasindaki-pay-devirleri-ve-spk-onay-basvurusu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2016/sirket-ortaklari-arasindaki-pay-devirleri-ve-spk-onay-basvurusu/",
+  "tr": "Şirket Ortakları Arasındaki Pay Devirleri ve SPK Onay Başvurusu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/",
+  "tr": "2017 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/2016-4donem-gecici-vergi-beyannamesi-eki/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/2016-4donem-gecici-vergi-beyannamesi-eki/",
+  "tr": "2016 4.Dönem Geçici Vergi Beyannamesi Eki",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/2016-yili-olagan-genel-kurul-toplantisi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/2016-yili-olagan-genel-kurul-toplantisi-hk/",
+  "tr": "2016 Yılı Olağan Genel Kurul Toplantısı Hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/2017-yili-1donem-gecici-vergi-beyannamesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/2017-yili-1donem-gecici-vergi-beyannamesi/",
+  "tr": "2017 Yılı 1.Dönem Geçici Vergi Beyannamesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/2017-yili-3donem-gecici-vergi-beyannamesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/2017-yili-3donem-gecici-vergi-beyannamesi/",
+  "tr": "2017 Yılı 3.Dönem Geçici Vergi Beyannamesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/2017-yili-icin-bagimsiz-denetim-kurulusu-secimi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/2017-yili-icin-bagimsiz-denetim-kurulusu-secimi-hk/",
+  "tr": "2017 Yılı İçin Bağımsız Denetim Kuruluşu Seçimi hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/2017-yili-sirket-gayrimenkul-portfoyu-degerlemesi-icin-degerleme-sirketi-secimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/2017-yili-sirket-gayrimenkul-portfoyu-degerlemesi-icin-degerleme-sirketi-secimi/",
+  "tr": "2017 Yılı Şirket Gayrimenkul Portföyü Değerlemesi İçin Değerleme Şirketi Seçimi",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/esas-sozlesme-guncel/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/esas-sozlesme-guncel/",
+  "tr": "Esas Sözleşme (Güncel)",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/esas-sozlesme-tadili-ticaret-sicil-mudurlugu-tescili/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/esas-sozlesme-tadili-ticaret-sicil-mudurlugu-tescili/",
+  "tr": "Esas Sözleşme Tadili Ticaret Sicil Müdürlüğü Tescili",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/ihaleye-katilim-sureci-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/ihaleye-katilim-sureci-hk/",
+  "tr": "İhaleye Katılım Süreci hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/ihaleye-katilma-karari-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/ihaleye-katilma-karari-2/",
+  "tr": "İhaleye Katılma Kararı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/ihaleye-katilma-karari/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/ihaleye-katilma-karari/",
+  "tr": "İhaleye Katılma Kararı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihale-sonucu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihale-sonucu/",
+  "tr": "İstanbul Şile Çavuş İhale Sonucu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-1oturum-sonucu-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-1oturum-sonucu-2/",
+  "tr": "İstanbul Şile Çavuş İhalesi 1.Oturum Sonucu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-1oturum-sonucu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-1oturum-sonucu/",
+  "tr": "İstanbul Şile Çavuş İhalesi 1.Oturum Sonucu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-2oturum-sonucu-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-2oturum-sonucu-hk/",
+  "tr": "İstanbul Şile Çavuş İhalesi 2.Oturum Sonucu hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-2oturuma-davet-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-2oturuma-davet-hk/",
+  "tr": "İstanbul Şile Çavuş İhalesi 2.Oturuma Davet hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-revize-nihai-teklif-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-revize-nihai-teklif-hk/",
+  "tr": "İstanbul Şile Çavuş İhalesi Revize Nihai Teklif hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-sozlesme-daveti/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-sozlesme-daveti/",
+  "tr": "İstanbul Şile Çavuş İhalesi Sözleşme Daveti",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-sozlesme-imzalanmasi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-sozlesme-imzalanmasi-hk/",
+  "tr": "İstanbul Şile Çavuş İhalesi Sözleşme İmzalanması Hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-yer-teslimi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-yer-teslimi-hk/",
+  "tr": "İstanbul Şile Çavuş İhalesi Yer Teslimi Hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/kayitli-sermaye-tavani-azaltimi-ve-kayitli-sermaye-tavan-izin-suresinin-uzatilmasi-sureci-spk-onayi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/kayitli-sermaye-tavani-azaltimi-ve-kayitli-sermaye-tavan-izin-suresinin-uzatilmasi-sureci-spk-onayi-hk/",
+  "tr": "Kayıtlı Sermaye Tavanı Azaltımı ve Kayıtlı Sermaye Tavan İzin Süresinin Uzatılması Süreci SPK Onayı hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/pay-alim-teklifi-bilgi-formu-spk-onayi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/pay-alim-teklifi-bilgi-formu-spk-onayi/",
+  "tr": "Pay Alım Teklifi Bilgi Formu SPK Onayı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2017/pay-alim-teklifi-surecinin-tamamlanmasi-islem-sonucu-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2017/pay-alim-teklifi-surecinin-tamamlanmasi-islem-sonucu-hk/",
+  "tr": "Pay Alım Teklifi Sürecinin Tamamlanması (İşlem Sonucu) hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/",
+  "tr": "2018 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/2018-yili-2donem-sorumluluk-beyani/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/2018-yili-2donem-sorumluluk-beyani/",
+  "tr": "2018 Yılı 2.Dönem Sorumluluk Beyanı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/2018-yili-3donem-gecici-vergi-beyannamesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/2018-yili-3donem-gecici-vergi-beyannamesi/",
+  "tr": "2018 Yılı 3.Dönem Geçici Vergi Beyannamesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/2018-yili-3donem-sorumluluk-beyani/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/2018-yili-3donem-sorumluluk-beyani/",
+  "tr": "2018 Yılı 3.Dönem Sorumluluk Beyanı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/2018-yili-icin-bagimsiz-denetim-kurulusu-secimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/2018-yili-icin-bagimsiz-denetim-kurulusu-secimi/",
+  "tr": "2018 Yılı İçin Bağımsız Denetim Kuruluşu Seçimi",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/2018-yili-sirket-gayrimenkul-portfoyu-icin-degerleme-sirketi-secimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/2018-yili-sirket-gayrimenkul-portfoyu-icin-degerleme-sirketi-secimi/",
+  "tr": "2018 Yılı Şirket Gayrimenkul Portföyü İçin Değerleme Şirketi Seçimi",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/31032018-donemi-sorumluluk-beyani/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/31032018-donemi-sorumluluk-beyani/",
+  "tr": "31.03.2018 Dönemi Sorumluluk Beyanı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/geri-alinan-sirket-paylarinin-satisi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/geri-alinan-sirket-paylarinin-satisi-hk/",
+  "tr": "Geri Alınan Şirket Paylarının Satışı hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/idealist-cadde-projesi-3ceyrek-satislari/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/idealist-cadde-projesi-3ceyrek-satislari/",
+  "tr": "İdealist Cadde Projesi 3.Çeyrek Satışları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/istanbul-sile-cavus-arsa-satisi-karsiligi-gelir-paylasimi-isi-yapi-ruhsati-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/istanbul-sile-cavus-arsa-satisi-karsiligi-gelir-paylasimi-isi-yapi-ruhsati-hk/",
+  "tr": "İstanbul Şile Çavuş Arsa Satışı Karşılığı Gelir Paylaşımı İşi Yapı Ruhsatı Hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/kredi-kullanimi-ve-istirak-sirkete-para-aktarimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/kredi-kullanimi-ve-istirak-sirkete-para-aktarimi/",
+  "tr": "Kredi Kullanımı ve İştirak Şirkete Para Aktarımı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2018/sirket-mulkiyetindeki-bagimsiz-bolumlerin-tadilati-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2018/sirket-mulkiyetindeki-bagimsiz-bolumlerin-tadilati-hk/",
+  "tr": "Şirket Mülkiyetindeki Bağımsız Bölümlerin Tadilatı Hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/",
+  "tr": "2019 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/2018-yili-4donem-gecici-vergi-beyannamesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/2018-yili-4donem-gecici-vergi-beyannamesi/",
+  "tr": "2018 Yılı 4.Dönem Geçici Vergi Beyannamesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/2019-yili-1donem-gecici-vergi-beyannamesinin-verilmesi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-1donem-gecici-vergi-beyannamesinin-verilmesi-hk/",
+  "tr": "2019 Yılı 1.Dönem Geçici Vergi Beyannamesinin Verilmesi hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/2019-yili-1donem-sorumluluk-beyani/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-1donem-sorumluluk-beyani/",
+  "tr": "2019 Yılı 1.Dönem Sorumluluk Beyanı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/2019-yili-2donem-yonetim-kurulu-sorumluluk-beyani/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-2donem-yonetim-kurulu-sorumluluk-beyani/",
+  "tr": "2019 Yılı 2.Dönem Yönetim Kurulu Sorumluluk Beyanı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/2019-yili-3donem-gecici-vergi-beyannamesi-verilmesi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-3donem-gecici-vergi-beyannamesi-verilmesi-hk/",
+  "tr": "2019 Yılı 3.Dönem Geçici Vergi Beyannamesi Verilmesi hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/2019-yili-3donem-sorumluluk-beyani/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-3donem-sorumluluk-beyani/",
+  "tr": "2019 Yılı 3.Dönem Sorumluluk Beyanı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/2019-yili-icin-bagimsiz-denetim-kurulusu-secimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-icin-bagimsiz-denetim-kurulusu-secimi/",
+  "tr": "2019 Yılı İçin Bağımsız Denetim Kuruluşu Seçimi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/2019-yili-sirket-gayrimenkul-portfoyu-degerlemesi-icin-degerleme-sirketi-secimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-sirket-gayrimenkul-portfoyu-degerlemesi-icin-degerleme-sirketi-secimi/",
+  "tr": "2019 Yılı Şirket Gayrimenkul Portföyü Değerlemesi İçin Değerleme Şirketi Seçimi",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/bankadan-kredi-kullanilmasi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/bankadan-kredi-kullanilmasi-hk/",
+  "tr": "Bankadan Kredi Kullanılması Hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/bankaya-ipotek-verilmesi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/bankaya-ipotek-verilmesi-hk/",
+  "tr": "Bankaya İpotek Verilmesi hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/kar-payi-dagitim-islemlerine-iliskin-bildirim/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/kar-payi-dagitim-islemlerine-iliskin-bildirim/",
+  "tr": "Kar Payı Dağıtım İşlemlerine İlişkin Bildirim",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/kurumsal-yonetim-bilgi-formu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/kurumsal-yonetim-bilgi-formu/",
+  "tr": "Kurumsal Yönetim Bilgi Formu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/kurumsal-yonetim-uyum-raporu-2018-yillik-bildirim/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/kurumsal-yonetim-uyum-raporu-2018-yillik-bildirim/",
+  "tr": "Kurumsal Yönetim Uyum Raporu *2018-Yıllık Bildirim",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/piyasa-yapiciligi-sozlesmesinin-feshedilmesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/piyasa-yapiciligi-sozlesmesinin-feshedilmesi/",
+  "tr": "Piyasa Yapıcılığı Sözleşmesinin Feshedilmesi",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2019/sirket-portfoyunden-gayrimenkul-satisi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2019/sirket-portfoyunden-gayrimenkul-satisi/",
+  "tr": "Şirket Portföyünden Gayrimenkul Satışı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/",
+  "tr": "2020 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/2019-yili-4donem-gecici-vergi-beyannamesinin-verilmesi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/2019-yili-4donem-gecici-vergi-beyannamesinin-verilmesi-hk/",
+  "tr": "2019 Yılı 4.Dönem Geçici Vergi Beyannamesinin Verilmesi hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/2019-yili-kurumlar-vergisi-beyannamesi-verilmesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/2019-yili-kurumlar-vergisi-beyannamesi-verilmesi/",
+  "tr": "2019 Yılı Kurumlar Vergisi Beyannamesi Verilmesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/2020-yili-1donem-gecici-vergi-beyannamesi-verilmesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/2020-yili-1donem-gecici-vergi-beyannamesi-verilmesi/",
+  "tr": "2020 Yılı 1.Dönem Geçici Vergi Beyannamesi Verilmesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/2020-yili-2donem-gecici-vergi-beyannamesi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/2020-yili-2donem-gecici-vergi-beyannamesi-hk/",
+  "tr": "2020 Yılı 2.Dönem Geçici Vergi Beyannamesi Hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/2020-yili-2donem-yonetim-kurulu-sorumluluk-beyani/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/2020-yili-2donem-yonetim-kurulu-sorumluluk-beyani/",
+  "tr": "2020 Yılı 2.Dönem Yönetim Kurulu Sorumluluk Beyanı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/2020-yili-3donem-sorumluluk-beyani/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/2020-yili-3donem-sorumluluk-beyani/",
+  "tr": "2020 Yılı 3.Dönem Sorumluluk Beyanı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/2020-yili-icin-degerleme-sirketi-secimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/2020-yili-icin-degerleme-sirketi-secimi/",
+  "tr": "2020 Yılı İçin Değerleme Şirketi Seçimi",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/31032020-donemi-sorumluluk-beyani/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/31032020-donemi-sorumluluk-beyani/",
+  "tr": "31.03.2020 Dönemi Sorumluluk Beyanı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/31122019-sorumluluk-beyani/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/31122019-sorumluluk-beyani/",
+  "tr": "31.12.2019 Sorumluluk Beyanı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/bagimsiz-denetim-kurulusu-tescili-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/bagimsiz-denetim-kurulusu-tescili-hk/",
+  "tr": "Bağımsız Denetim Kuruluşu Tescili hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/bagimsiz-denetim-kurulusunun-belirlenmesi-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/bagimsiz-denetim-kurulusunun-belirlenmesi-2/",
+  "tr": "Bağımsız Denetim Kuruluşunun Belirlenmesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/bagimsiz-denetim-kurulusunun-belirlenmesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/bagimsiz-denetim-kurulusunun-belirlenmesi/",
+  "tr": "Bağımsız Denetim Kuruluşunun Belirlenmesi",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/bagimsiz-yonetim-kurulu-uye-istifasi-yerine-yeni-uye-atamasi-ve-yonetim-kurulu-komite-gorevlendirmeleri/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/bagimsiz-yonetim-kurulu-uye-istifasi-yerine-yeni-uye-atamasi-ve-yonetim-kurulu-komite-gorevlendirmeleri/",
+  "tr": "Bağımsız Yönetim Kurulu Üye İstifası, Yerine Yeni Üye Ataması ve Yönetim Kurulu Komite Görevlendirmeleri",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/banka-kredisinin-kapatilmasi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/banka-kredisinin-kapatilmasi-hk/",
+  "tr": "Banka Kredisinin Kapatılması hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi-403c-maddesi-kapsaminda-yapilan-aciklama/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi-403c-maddesi-kapsaminda-yapilan-aciklama/",
+  "tr": "Gayrimenkul Yatırım Ortaklıklarına İlişkin Esaslar Tebliği 40/3/ç Maddesi Kapsamında Yapılan Açıklama",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/genel-mudur-yardimcisi-atanmasi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/genel-mudur-yardimcisi-atanmasi-hk/",
+  "tr": "Genel Müdür Yardımcısı Atanması hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/idealist-cadde-projesi-yapi-tadilat-ruhsatlari-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/idealist-cadde-projesi-yapi-tadilat-ruhsatlari-hk/",
+  "tr": "İdealist Cadde Projesi Yapı Tadilat Ruhsatları hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/kar-payi-dagitim-islemlerine-iliskin-bildirim-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/kar-payi-dagitim-islemlerine-iliskin-bildirim-2/",
+  "tr": "Kar Payı Dağıtım İşlemlerine İlişkin Bildirim",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/kar-payi-dagitim-islemlerine-iliskin-bildirim/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/kar-payi-dagitim-islemlerine-iliskin-bildirim/",
+  "tr": "Kar Payı Dağıtım İşlemlerine İlişkin Bildirim",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/kurumsal-yonetim-bilgi-formu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/kurumsal-yonetim-bilgi-formu/",
+  "tr": "Kurumsal Yönetim Bilgi Formu",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/pay-alim-teklifi-tebligi-uyarinca-yapilan-zorunlu-pay-alim-teklifi-basvurusu-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/pay-alim-teklifi-tebligi-uyarinca-yapilan-zorunlu-pay-alim-teklifi-basvurusu-hk/",
+  "tr": "Pay Alım Teklifi Tebliği Uyarınca Yapılan Zorunlu Pay Alım Teklifi Başvurusu Hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/pay-alim-teklifi-uyarinca-yapilan-zorunlu-pay-alim-teklifi-basvurusu-revizesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/pay-alim-teklifi-uyarinca-yapilan-zorunlu-pay-alim-teklifi-basvurusu-revizesi/",
+  "tr": "Pay Alım Teklifi Uyarınca Yapılan Zorunlu Pay Alım Teklifi Başvurusu Revizesi",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/pay-alim-teklifi-yoluyla-pay-toplanmasina-iliskin-bildirim/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/pay-alim-teklifi-yoluyla-pay-toplanmasina-iliskin-bildirim/",
+  "tr": "Pay Alım Teklifi Yoluyla Pay Toplanmasına İlişkin Bildirim",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/pay-devrine-iliskin-yonetim-kurulu-karari-ve-spk-onay-basvurusu-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/pay-devrine-iliskin-yonetim-kurulu-karari-ve-spk-onay-basvurusu-2/",
+  "tr": "Pay Devrine İlişkin Yönetim Kurulu Kararı ve SPK Onay Başvurusu",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/pay-devrine-iliskin-yonetim-kurulu-karari-ve-spk-onay-basvurusu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/pay-devrine-iliskin-yonetim-kurulu-karari-ve-spk-onay-basvurusu/",
+  "tr": "Pay Devrine İlişkin Yönetim Kurulu Kararı ve SPK Onay Başvurusu",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/sirket-ortaklik-yapisi-degisikligi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-ortaklik-yapisi-degisikligi-hk/",
+  "tr": "Şirket Ortaklık Yapısı Değişikliği hk",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-2/",
+  "tr": "Şirket Portföyünden Gayrimenkul Satışı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-3/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-3/",
+  "tr": "Şirket Portföyünden Gayrimenkul Satışı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-4/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-4/",
+  "tr": "Şirket Portföyünden Gayrimenkul Satışı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-5/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-5/",
+  "tr": "Şirket Portföyünden Gayrimenkul Satışı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-6/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-6/",
+  "tr": "Şirket Portföyünden Gayrimenkul Satışı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-ekspertiz-degeri-duzeltme/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-ekspertiz-degeri-duzeltme/",
+  "tr": "Şirket Portföyünden Gayrimenkul Satışı (Ekspertiz Değeri Düzeltme)",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi/",
+  "tr": "Şirket Portföyünden Gayrimenkul Satışı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/yonetim-kurulu-gorev-dagilimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/yonetim-kurulu-gorev-dagilimi/",
+  "tr": "Yönetim Kurulu Görev Dağılımı",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/yonetim-kurulu-komitelerine-uye-atanmasi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/yonetim-kurulu-komitelerine-uye-atanmasi-hk/",
+  "tr": "Yönetim Kurulu Komitelerine Üye Atanması hk.",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/yonetim-kurulu-uyesi-ve-genel-mudur-degisikligi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/yonetim-kurulu-uyesi-ve-genel-mudur-degisikligi/",
+  "tr": "Yönetim Kurulu Üyesi ve Genel Müdür Değişikliği",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/zorunlu-pay-alim-teklifi-hakkinda-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/zorunlu-pay-alim-teklifi-hakkinda-2/",
+  "tr": "Zorunlu Pay Alım Teklifi Hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/zorunlu-pay-alim-teklifi-hakkinda-3/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/zorunlu-pay-alim-teklifi-hakkinda-3/",
+  "tr": "Zorunlu Pay Alım Teklifi Hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2020/zorunlu-pay-alim-teklifi-hakkinda/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2020/zorunlu-pay-alim-teklifi-hakkinda/",
+  "tr": "Zorunlu Pay Alım Teklifi Hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2021/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2021/",
+  "tr": "2021 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2021/ozel-durum-hakkinda/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2021/ozel-durum-hakkinda/",
+  "tr": "Özel Durum Hakkında",
+  "en_mevcut": "**",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2022/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2022/",
+  "tr": "2022 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2023/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2023/",
+  "tr": "2023 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2024/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2024/",
+  "tr": "2024 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/",
+  "tr": "2025 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/2024-yili-kar-payi-dagitimina-iliskin-yonetim-kurulu-karari/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-kar-payi-dagitimina-iliskin-yonetim-kurulu-karari/",
+  "tr": "2024 yılı Kar Payı Dağıtımına İlişkin Yönetim Kurulu kararı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/2024-yili-kar-payi-dagitimina-iliskin-yonetim-kurulu-onerisinin-onaylanmasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-kar-payi-dagitimina-iliskin-yonetim-kurulu-onerisinin-onaylanmasi/",
+  "tr": "2024 yılı kar payı dağıtımına ilişkin yönetim kurulu önerisinin onaylanması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/2024-yili-olagan-genel-kurul-sonuclarinin-tescili-hakkinda-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-olagan-genel-kurul-sonuclarinin-tescili-hakkinda-2/",
+  "tr": "2024 Yılı Olağan Genel Kurul Sonuçlarının Tescili Hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/2024-yili-olagan-genel-kurul-sonuclarinin-tescili-hakkinda/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-olagan-genel-kurul-sonuclarinin-tescili-hakkinda/",
+  "tr": "2024 Yılı Olağan Genel Kurul Sonuçlarının Tescili Hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/2024-yili-olagan-genel-kurul-toplantisi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-olagan-genel-kurul-toplantisi/",
+  "tr": "2024 Yılı Olağan Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/2024-yili-olagangenel-kurul-toplanti-sonucu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-olagangenel-kurul-toplanti-sonucu/",
+  "tr": "2024 Yılı OlağanGenel Kurul Toplantı Sonucu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/2025-yili-bagimsiz-denetim-sirketi-secimi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/2025-yili-bagimsiz-denetim-sirketi-secimi-hk/",
+  "tr": "2025 Yılı Bağımsız Denetim Şirketi Seçimi Hk,",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/2025-yili-bagimsiz-denetim-sirketi-secimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/2025-yili-bagimsiz-denetim-sirketi-secimi/",
+  "tr": "2025 Yılı Bağımsız Denetim Şirketi Seçimi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/25122024-tarihli-olaganustu-genel-kurul-toplanti-sonuclarinin-tescili/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/25122024-tarihli-olaganustu-genel-kurul-toplanti-sonuclarinin-tescili/",
+  "tr": "25.12.2024 Tarihli Olağanüstü Genel Kurul Toplantı Sonuçlarının Tescili",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/bedelli-sermaye-artirimina-iliskin-yonetim-kurulu-karari/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/bedelli-sermaye-artirimina-iliskin-yonetim-kurulu-karari/",
+  "tr": "Bedelli Sermaye Artırımına İlişkin Yönetim Kurulu Kararı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/esas-sozlesme-degisikligine-iliskin-spk-basvuru-sonucu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/esas-sozlesme-degisikligine-iliskin-spk-basvuru-sonucu/",
+  "tr": "Esas Sözleşme Değişikliğine İlişkin SPK Başvuru Sonucu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/esas-sozlesmenin-039039yonetim-kurulu-ve-gorev-suresi039039-baslikli-14-maddesinin-tadili-hakkinda/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/esas-sozlesmenin-039039yonetim-kurulu-ve-gorev-suresi039039-baslikli-14-maddesinin-tadili-hakkinda/",
+  "tr": "Esas Sözleşmenin ''Yönetim Kurulu ve Görev Süresi'' Başlıklı 14. Maddesinin Tadili Hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/gayrimenkul-degerleme-kuruluslarinin-secimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/gayrimenkul-degerleme-kuruluslarinin-secimi/",
+  "tr": "Gayrimenkul Değerleme Kuruluşlarının Seçimi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-37039inci-maddesi-kapsaminda-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-37039inci-maddesi-kapsaminda-ozel-durum-aciklamasi/",
+  "tr": "Gayrimenkul Yatırım Ortaklıklarına İlişkin Esaslar Tebliği'nin 37'inci maddesi kapsamında özel durum açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-40-maddesi-403c-kapsaminda-yapilan-aciklama/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-40-maddesi-403c-kapsaminda-yapilan-aciklama/",
+  "tr": "Gayrimenkul Yatırım Ortaklıklarına İlişkin Esaslar Tebliği'nin 40. Maddesi (40/3/ç) kapsamında yapılan açıklama",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/idealist-cadde-projesinde-yer-alan-a-21nolu-bagimsiz-bolumun-kiraya-verilmesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/idealist-cadde-projesinde-yer-alan-a-21nolu-bagimsiz-bolumun-kiraya-verilmesi/",
+  "tr": "İdealist Cadde Projesinde yer alan A-21nolu bağımsız bölümün kiraya verilmesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/idealist-cadde-projesinde-yer-alan-a-23-nolu-bagimsiz-bolumun-kiraya-verilmesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/idealist-cadde-projesinde-yer-alan-a-23-nolu-bagimsiz-bolumun-kiraya-verilmesi/",
+  "tr": "İdealist Cadde Projesinde yer alan A-23 nolu bağımsız bölümün kiraya verilmesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/idealist-koruidealist-cadde-projesi-kesin-kabul-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/idealist-koruidealist-cadde-projesi-kesin-kabul-hk/",
+  "tr": "İdealist Koru/İdealist Cadde Projesi Kesin Kabul Hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/maddi-duran-varlik-satisi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/maddi-duran-varlik-satisi/",
+  "tr": "Maddi Duran Varlık Satışı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/olagandisi-fiyat-ve-miktar-hareketi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/olagandisi-fiyat-ve-miktar-hareketi-hk/",
+  "tr": "Olağandışı Fiyat ve Miktar Hareketi Hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/sirket-ana-sozlesmesinin-sermaye-maddesinin-tescili/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/sirket-ana-sozlesmesinin-sermaye-maddesinin-tescili/",
+  "tr": "Şirket Ana Sözleşmesinin sermaye maddesinin tescili",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/sirket-ana-sozlesmesinin-tadiline-iliskin-tcticaret-bakanligi-izni/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/sirket-ana-sozlesmesinin-tadiline-iliskin-tcticaret-bakanligi-izni/",
+  "tr": "Şirket Ana Sözleşmesinin tadiline ilişkin T.C.Ticaret Bakanlığı izni",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-icin-sermaye-piyasasi-kurul039una-basvurulmasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-icin-sermaye-piyasasi-kurul039una-basvurulmasi/",
+  "tr": "Tahsisli Sermaye Artırımı için Sermaye Piyasası Kurul'una Başvurulması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-iptal-karari/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-iptal-karari/",
+  "tr": "Tahsisli Sermaye Artırımı İptal Kararı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-yonetim-kurulu-karari-hakkinda/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-yonetim-kurulu-karari-hakkinda/",
+  "tr": "Tahsisli Sermaye Artırımı Yönetim Kurulu Kararı Hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/",
+  "tr": "2026 Yılı Özel Durum Açıklamaları",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2025-hesap-donemine-ait-finansal-tabloalrin-revize-edilmesi-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-hesap-donemine-ait-finansal-tabloalrin-revize-edilmesi-hk/",
+  "tr": "2025 HESAP DÖNEMİNE AİT FİNANSAL TABLOALRIN REVİZE EDİLMESİ HK.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2025-yili-kar-dagitimina-iliskin-yonetim-kurulu-onerisinin-onaylanmasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-kar-dagitimina-iliskin-yonetim-kurulu-onerisinin-onaylanmasi/",
+  "tr": "2025 yılı kar dağıtımına ilişkin yönetim kurulu önerisinin onaylanması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2025-yili-kar-payi-dagitimina-iliskin-yonetim-kurulu-karari/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-kar-payi-dagitimina-iliskin-yonetim-kurulu-karari/",
+  "tr": "2025 yılı Kar Payı Dağıtımına İlişkin Yönetim Kurulu kararı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-hk/",
+  "tr": "2025 Yılı Olagan Genel Kurul Hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-toplanti-sonucu-2/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-toplanti-sonucu-2/",
+  "tr": "2025 Yılı Olagan Genel Kurul Toplantı Sonucu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-toplanti-sonucu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-toplanti-sonucu/",
+  "tr": "2025 YılI Olagan Genel Kurul Toplantı Sonucu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-toplantisi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-toplantisi/",
+  "tr": "2025 Yılı Olağan Genel Kurul Toplantısı",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2026-yili-bagimsiz-denetim-firmasinin-secimi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2026-yili-bagimsiz-denetim-firmasinin-secimi/",
+  "tr": "2026 YILI BAĞIMSIZ DENETİM FİRMASININ SEÇİMİ",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2026-yili-icin-gayrimenkul-degerleme-hizmeti-alinacak-sirketlerin-belirlenmesi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2026-yili-icin-gayrimenkul-degerleme-hizmeti-alinacak-sirketlerin-belirlenmesi/",
+  "tr": "2026 yılı için Gayrimenkul Değerleme hizmeti alınacak şirketlerin belirlenmesi",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2026-yili-olaganustu-genel-kurul-hakkinda/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2026-yili-olaganustu-genel-kurul-hakkinda/",
+  "tr": "2026 Yılı Olağanüstü Genel Kurul Hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2026-yili-olaganustu-genel-kurul-tescili-hk/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2026-yili-olaganustu-genel-kurul-tescili-hk/",
+  "tr": "2026 Yılı Olağanüstü Genel Kurul Tescili hk.",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/2026-yilina-iliskin-olaganustu-genel-kurul-sonucu/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/2026-yilina-iliskin-olaganustu-genel-kurul-sonucu/",
+  "tr": "2026 Yılına İlişkin Olağanüstü Genel Kurul Sonucu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/bedelli-sermaye-artirimi-basvurumuz-hakkinda/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/bedelli-sermaye-artirimi-basvurumuz-hakkinda/",
+  "tr": "Bedelli Sermaye Artırımı Başvurumuz hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-37039inci-maddesi-kapsaminda-ozel-durum-aciklamasi/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-37039inci-maddesi-kapsaminda-ozel-durum-aciklamasi/",
+  "tr": "Gayrimenkul Yatırım Ortaklıklarına İlişkin Esaslar Tebliği'nin 37'inci maddesi kapsamında özel durum açıklaması",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-40-maddesi-403c-kapsaminda-yapilan-aciklama/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-40-maddesi-403c-kapsaminda-yapilan-aciklama/",
+  "tr": "Gayrimenkul Yatırım Ortaklıklarına İlişkin Esaslar Tebliği'nin 40. Maddesi (40/3/ç) kapsamında yapılan açıklama",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/genel-kurul-kararlarinin-tescili/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/genel-kurul-kararlarinin-tescili/",
+  "tr": "Genel Kurul Kararlarının Tescili",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ozel-durum-aciklamalari/2026/is-ortakligindaki-payimizin-devri-hakkinda/",
+  "en_rota": "/en/investor-relations/ozel-durum-aciklamalari/2026/is-ortakligindaki-payimizin-devri-hakkinda/",
+  "tr": "İş Ortaklığındaki Payımızın Devri Hakkında",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/portfoy-tablolari/",
+  "en_rota": "/en/investor-relations/portfoy-tablolari/",
+  "tr": "Portföy Tabloları",
+  "en_mevcut": "Portfolio Tables",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---aralik-2009/",
+  "en_rota": "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---aralik-2009/",
+  "tr": "İdealist GYO A.Ş. Portföy Tablosu - Aralık 2009",
+  "en_mevcut": "Portfolio Tables",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---aralik-2010/",
+  "en_rota": "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---aralik-2010/",
+  "tr": "İdealist GYO A.Ş. Portföy Tablosu - Aralık 2010",
+  "en_mevcut": "Portfolio Tables",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---aralik-2011/",
+  "en_rota": "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---aralik-2011/",
+  "tr": "İdealist GYO A.Ş. Portföy Tablosu - Aralık 2011",
+  "en_mevcut": "Portfolio Tables",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---eylul-2010/",
+  "en_rota": "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---eylul-2010/",
+  "tr": "İdealist GYO A.Ş. Portföy Tablosu - Eylül 2010",
+  "en_mevcut": "Portfolio Tables",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---eylul-2011/",
+  "en_rota": "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---eylul-2011/",
+  "tr": "İdealist GYO A.Ş. Portföy Tablosu - Eylül 2011",
+  "en_mevcut": "Portfolio Tables",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---haziran-2010/",
+  "en_rota": "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---haziran-2010/",
+  "tr": "İdealist GYO A.Ş. Portföy Tablosu - Haziran 2010",
+  "en_mevcut": "Portfolio Tables",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---haziran-2011/",
+  "en_rota": "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---haziran-2011/",
+  "tr": "İdealist GYO A.Ş. Portföy Tablosu - Haziran 2011",
+  "en_mevcut": "Portfolio Tables",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---mart-2010/",
+  "en_rota": "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---mart-2010/",
+  "tr": "İdealist GYO A.Ş. Portföy Tablosu - Mart 2010",
+  "en_mevcut": "Portfolio Tables",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---mart-2011/",
+  "en_rota": "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---mart-2011/",
+  "tr": "İdealist GYO A.Ş. Portföy Tablosu - Mart 2011",
+  "en_mevcut": "Portfolio Tables",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/ucret-politikasi/",
+  "en_rota": "/en/investor-relations/ucret-politikasi/",
+  "tr": "Ücret Politikası",
+  "en_mevcut": "Remuneration Policy",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/uyum-raporu/",
+  "en_rota": "/en/investor-relations/uyum-raporu/",
+  "tr": "Uyum Raporu",
+  "en_mevcut": "*",
+  "en_var": true
+ },
+ {
+  "rota": "/yatirimci-iliskileri/uyum-raporu/kurumsal-yonetim-ilkeleri-uyum-raporu/",
+  "en_rota": "/en/investor-relations/uyum-raporu/kurumsal-yonetim-ilkeleri-uyum-raporu/",
+  "tr": "Kurumsal Yönetim İlkeleri Uyum Raporu",
+  "en_mevcut": null,
+  "en_var": false
+ },
+ {
+  "rota": "/yatirimci-iliskileri/uyum-raporu/kurumsal-yonetim-ilkeleri-uyum-raporu/2019-yili-kurumsal-yonetim-uyum-raporu/",
+  "en_rota": "/en/investor-relations/uyum-raporu/kurumsal-yonetim-ilkeleri-uyum-raporu/2019-yili-kurumsal-yonetim-uyum-raporu/",
+  "tr": "2019 Yılı Kurumsal Yönetim Uyum Raporu",
+  "en_mevcut": "*",
+  "en_var": true
+ }
+]

@@ -6,3 +6,6 @@
 node_modules/
 # Yayın sırasında oluşturulan geçici klasör
 .yayin/
+# Python önbelleği ve çeviri ara çıktıları (yeniden üretilebilir)
+__pycache__/
+araclar/ceviri/cikti/birimler.json

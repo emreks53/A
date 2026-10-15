@@ -42,7 +42,7 @@ Hero alt satırı (isteğe bağlı, yeni): "Borsa İstanbul: IDGYO" / "Borsa Ist
 
 ## 10. EN arayüz etiketleri (yeni; içerik çevirisi değil)
 
-Kararınız gereği EN'de içerik çevirisi yapılmadı; yalnızca menü ve arayüz etiketleri gerekiyor. Mevcut EN sitedeki adlar aynen kullanıldı (ABOUT US, PORTFOLIO AND PROJECTS, INVESTOR RELATIONS, NEWS & ANNOUNCEMENTS, CONTACT, IN MEDIA, LINKS, SITE MAP, INFORMATION SOCIETY SERVICES, Annual Repots, Material Event Disclosure …). Yeni olanlar:
+(15.10.2026'ya kadar EN'de yalnızca menü ve arayüz etiketleri vardı; başlık çevirileri için §12.) Mevcut EN sitedeki adlar aynen kullanıldı (ABOUT US, PORTFOLIO AND PROJECTS, INVESTOR RELATIONS, NEWS & ANNOUNCEMENTS, CONTACT, IN MEDIA, LINKS, SITE MAP, INFORMATION SOCIETY SERVICES, Annual Repots, Material Event Disclosure …). Yeni olanlar:
 
 | EN etiket | Kullanım | Durum |
 |-----------|----------|-------|
@@ -56,3 +56,40 @@ Kararınız gereği EN'de içerik çevirisi yapılmadı; yalnızca menü ve aray
 
 ## 11. Paylaşım (OG) görsellerindeki etiketler
 Sosyal ağ ve mesajlaşma önizlemeleri için 1200×630 görseller (`public/og/`, üretici `scripts/og-gorselleri.mjs`). Başlıklar sayfaların kendi başlıklarıdır (yeni metin değil). Yeni olan yalnızca şu etiketler:
+
+## 12. EN başlık ve arayüz çevirileri (15.10.2026)
+
+Kullanıcı kararı (15.10.2026): yan menü, sayfa başlıkları, haber/liste başlıkları ve belge adları İngilizce; uzun metinler
+(haber, açıklama ve politika metinleri) Türkçe kalır. Çevirilerin tamamı yeni metindir; kaynakları:
+
+| Ne | Nerede | Adet | Durum |
+|----|--------|------|-------|
+| Sayfa başlıkları (menü, içerik haritası, liste ve haber başlıkları da buradan) | `araclar/ceviri/bellek/basliklar/*.txt` + kalıplar `araclar/ceviri/kalip.py` | 306 + 86 | ☐ |
+| Belge adları | `araclar/ceviri/bellek/etiketler/1-belgeler.txt` + kalıplar | ~210 | ☐ |
+| Arayüz metinleri | `araclar/ceviri/bellek/arayuz/1-arayuz.txt` | ~90 | ☐ |
+
+Terim tercihleri: SPK → CMB (Capital Markets Board); KAP → Public Disclosure Platform (KAP); GYO → REIT; Özel Durum
+Açıklaması → Material Event Disclosure; Faaliyet Raporları (bölüm) → Annual Reports, Yönetim Kurulu Faaliyet Raporu →
+Board of Directors' Activity Report; Mali Tablo ve Raporlar → Financial Statements and Reports; Dipnotlar → Footnotes;
+Olağan / Olağanüstü Genel Kurul → Ordinary / Extraordinary General Assembly (Meeting); Hazirun Cetveli → List of
+Attendees; Sorumluluk Beyanı → Statement of Responsibility; Geçici Vergi Beyannamesi → Provisional Tax Return;
+Bedelli Sermaye Artırımı → Rights Issue; Kayıtlı Sermaye Tavanı → Authorised Capital Ceiling; Pay Alım Teklifi → Tender
+Offer; Riskin Erken Saptanması Komitesi → Early Detection of Risk Committee; dönemler 3-Month / 6-Month / Annual, Q1–Q4;
+İngiliz yazımı (realise, authorised, neighbourhood); tarihler gg.aa.yyyy; sayılar Türkçe biçimde (10.000 m²) bırakıldı.
+
+Yeni arayüz metinleri (seçme):
+
+| EN | TR karşılığı / kullanım | Durum |
+|----|-------------------------|-------|
+| Phone: … / Fax: … | alt bilgi "Telefon / Faks" (EN'de Türkçe kalmıştı) | ☐ |
+| Latest material event disclosures: | ÖDA sayfaları "Güncel özel durum açıklamaları:" | ☐ |
+| Click here to download {dosya} / Click here to visit {adres} | "… dosyasını indirmek için tıklayınız" / "… adresine gitmek için tıklayınız" (belge satırı ve Basında Biz) | ☐ |
+| Documents and disclosures, Latest announcements, All documents, View project, View property | ana sayfa | ☐ |
+| block 1147, parcel 1(A) · 10.000 m² land · 14.390 m² construction area · block/parcel 91/205 and 70/82 · 22.465,18 m² total construction area · block 91, parcel 205 | ana sayfa vitrin künyeleri | ☐ |
+| İzmir/Aliağa Logistics Warehouse Construction; 12 commercial units in the İdealist Cadde Project | portföy kartları ve görsel alt metinleri | ☐ |
+| Revenue share, İdealist Cadde phase (91/205), İdealist Koru phase (70/82), Revenue sharing against land sale, 78% joint venture / 22% Emlak Konut GYO | Şile proje künyesi | ☐ |
+| in media, news, contact, corporate, links, portfolio, investor relations | site haritası bölüm başlıkları (TR'deki küçük harfli adların karşılığı) | ☐ |
+| Annual Reports, Financial Statements, Footnotes, Portfolio Tables, General Assembly, List of Attendees, Material Event Disclosures, Prospectuses and Circulars, Compliance Report, Valuation Reports, Committees, Articles of Association, Internal Directive, News Attachments, Images, Other | belge kütüphanesi tür adları | ☐ |
+| "İdealist GYO {başlık}: documents and disclosures. Borsa Istanbul: IDGYO." / "{başlık} — İdealist Gayrimenkul Yatırım Ortaklığı A.Ş." | EN sayfa açıklamaları (meta description), TR'deki kalıbın karşılığı | ☐ |
+| Investor Relations, About Us, News & Announcements, In Media, Portfolio and Projects | EN paylaşım görsellerindeki bölüm adı | ☐ |
+

@@ -34,6 +34,7 @@ Tailwind sınıfları sayfalara gömülü CSS'te hazır durur, yeni stiller elle
 | `araclar/degisiklikler/` | Her değişiklik bir betik olarak (tarihli); ne yapıldığı ve neden betiğin başında yazılı |
 | `araclar/panel-sayfasi/` | Yönetim paneli sayfasının parçaları ve üreticisi (`olustur.py`) |
 | `araclar/yonlendirme-haritasi.py` | Eski site → yeni site 301 haritasını yeniden üretir |
+| `araclar/ceviri/` | İngilizce sayfaların TR asıldan kurulması: `kur.py` (sayfalar), `ozel.py` (arama/kütüphane verisi, panel haritası, TR hreflang, sitemap), `og.mjs` (paylaşım görselleri); çeviriler `bellek/` altında (bkz. NOTLAR.md) |
 | `araclar/dogrula.py` | Yayındaki site ile `site/` klasörünü dosya dosya karşılaştırır |
 | `araclar/yayinla.sh` | Yayın (Cloudflare Pages) |
 | `wrangler.toml` | Pages yapılandırması: değişkenler, R2 (`BELGELER`) ve D1 (`DB`) bağları |

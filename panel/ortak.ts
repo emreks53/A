@@ -29,7 +29,7 @@ export interface Bolum {
   kok: Record<Dil, string>; yillar: Record<string, Record<Dil, string>>; desen: Record<Dil, string>;
   hedefler: { ad: string; rota: string }[]; gruplar: { ad: string; adEn: string; yillar: string[] }[]; og: string;
 }
-export interface GuncelBelge { tur: string; yil: string; rank: number; etiket: string; ad: string; yol: string; boyut: number }
+export interface GuncelBelge { tur: string; yil: string; rank: number; etiket: string; etiket_en?: string; ad: string; yol: string; boyut: number }
 export interface Harita {
   bolumler: Bolum[]; esler: Record<string, string>; guncel: GuncelBelge[];
   haberler: { slug: string; baslik: string; tarih: string }[]; haberSluglari: string[]; turAdlari: Record<string, string>;

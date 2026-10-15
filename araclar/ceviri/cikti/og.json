@@ -1,0 +1,591 @@
+{
+ "/og/en--corporate--bilgi-toplumu-hizmetleri.jpg": [
+  "/en/corporate/bilgi-toplumu-hizmetleri/"
+ ],
+ "/og/en--corporate--insan-kaynaklari.jpg": [
+  "/en/corporate/insan-kaynaklari/"
+ ],
+ "/og/en--corporate--ortaklik-yapisi.jpg": [
+  "/en/corporate/ortaklik-yapisi/"
+ ],
+ "/og/en--corporate--sirket-profili.jpg": [
+  "/en/corporate/sirket-profili/"
+ ],
+ "/og/en--corporate--ticaret-sicil-bilgileri.jpg": [
+  "/en/corporate/ticaret-sicil-bilgileri/"
+ ],
+ "/og/en--corporate--vizyon-misyon-hedef.jpg": [
+  "/en/corporate/vizyon-misyon-hedef/"
+ ],
+ "/og/en--corporate--yonetim-kurulu-komiteleri.jpg": [
+  "/en/corporate/yonetim-kurulu-komiteleri/"
+ ],
+ "/og/en--corporate--yonetim-kurulu-ve-ust-yonetim.jpg": [
+  "/en/corporate/yonetim-kurulu-ve-ust-yonetim/"
+ ],
+ "/og/en--corporate.jpg": [
+  "/en/corporate/"
+ ],
+ "/og/en--in-media--emlak-kulisi.jpg": [
+  "/en/in-media/emlak-kulisi/"
+ ],
+ "/og/en--in-media.jpg": [
+  "/en/in-media/"
+ ],
+ "/og/en--investor-relations--bilgilendirme-politikasi.jpg": [
+  "/en/investor-relations/bilgilendirme-politikasi/"
+ ],
+ "/og/en--investor-relations--esas-sozlesme.jpg": [
+  "/en/investor-relations/esas-sozlesme/",
+  "/en/investor-relations/esas-sozlesme/guncel/",
+  "/en/investor-relations/esas-sozlesme/tadil-metni/"
+ ],
+ "/og/en--investor-relations--faaliyet-raporlari.jpg": [
+  "/en/investor-relations/faaliyet-raporlari/",
+  "/en/investor-relations/faaliyet-raporlari/2017/",
+  "/en/investor-relations/faaliyet-raporlari/2018/",
+  "/en/investor-relations/faaliyet-raporlari/2018/2018-yili-2donem-yonetim-kurulu-faaliyet-raporu/",
+  "/en/investor-relations/faaliyet-raporlari/2018/2018-yili-3donem-yonetim-kurulu-faaliyet-raporu/",
+  "/en/investor-relations/faaliyet-raporlari/2018/2018-yili-4donem-yonetim-kurulu-faaliyet-raporu/",
+  "/en/investor-relations/faaliyet-raporlari/2019/",
+  "/en/investor-relations/faaliyet-raporlari/2019/2019-yili-3donem-yonetim-kurulu-faaliyet-raporu/",
+  "/en/investor-relations/faaliyet-raporlari/2019/bankadan-kredi-kullanilmasi-hk/",
+  "/en/investor-relations/faaliyet-raporlari/2020/",
+  "/en/investor-relations/faaliyet-raporlari/2020/2020-yili-2donem-yonetim-kurulu-faaliyet-raporu/",
+  "/en/investor-relations/faaliyet-raporlari/2020/31032020-donemi-yonetim-kurulu-faaliyet-raporu/",
+  "/en/investor-relations/faaliyet-raporlari/2020/31122019-yonetim-kurulu-faaliyet-raporu/",
+  "/en/investor-relations/faaliyet-raporlari/2021/",
+  "/en/investor-relations/faaliyet-raporlari/2022/",
+  "/en/investor-relations/faaliyet-raporlari/2023/",
+  "/en/investor-relations/faaliyet-raporlari/2024/",
+  "/en/investor-relations/faaliyet-raporlari/2025/",
+  "/en/investor-relations/faaliyet-raporlari/2026/"
+ ],
+ "/og/en--investor-relations--genel-kurul-bilgileri.jpg": [
+  "/en/investor-relations/genel-kurul-bilgileri/",
+  "/en/investor-relations/genel-kurul-bilgileri/ek-aciklamalar/",
+  "/en/investor-relations/genel-kurul-bilgileri/ek-aciklamalar/2019-yili-olagan-genel-kurul-toplanti-sonuclari-tescili/",
+  "/en/investor-relations/genel-kurul-bilgileri/ek-aciklamalar/kayit-152/",
+  "/en/investor-relations/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/",
+  "/en/investor-relations/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2018-yili-olagan-genel-kurul-toplantisi/",
+  "/en/investor-relations/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2019-yili-olagan-genel-kurul-toplantisi-toplanti-tarihi-revize/",
+  "/en/investor-relations/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2019-yili-olagan-genel-kurul-toplantisi/",
+  "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/",
+  "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/03062010-tarihli-olaganustu-genel-kurul-toplanti-tutanagi/",
+  "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/19022010-tarihli-olagan-genel-kurul-toplanti-tutanagi/",
+  "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/19022010-tarihli-olaganustu-genel-kurul-toplanti-tutanagi/",
+  "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/2019-yili-olagan-genel-kurulu-toplanti-tutanaklari/",
+  "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/31032011-tarihli-a-grubu-imtiyazli-pay-sahipleri-olagan-genel-kurul-toplanti-tutanagi/",
+  "/en/investor-relations/genel-kurul-bilgileri/toplanti-tutanaklari/31032011-tarihli-olagan-genel-kurul-toplanti-tutanagi/"
+ ],
+ "/og/en--investor-relations--gyolar-hakkinda.jpg": [
+  "/en/investor-relations/gyolar-hakkinda/"
+ ],
+ "/og/en--investor-relations--hazirun-cetveli.jpg": [
+  "/en/investor-relations/hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/03062010-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/05082016-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/19022010-tarihli-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/19022010-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/20032014-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "/en/investor-relations/hazirun-cetveli/2020-yili-olagan-genel-kurul-hazir-bulunanlar-listesi/",
+  "/en/investor-relations/hazirun-cetveli/2021-yili-olagan-genel-kurul-hazir-bulunanlar-listesi/",
+  "/en/investor-relations/hazirun-cetveli/2022-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/2023-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/2024-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/2024-yili-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/2025-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/2026-yili-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/29032013-tarihli-a-grubu-imtiyazli-pay-sahipleri-toplantisi-hazirun/",
+  "/en/investor-relations/hazirun-cetveli/29032013-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "/en/investor-relations/hazirun-cetveli/29032016-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "/en/investor-relations/hazirun-cetveli/30032015-tarihli-olagan-genel-kurul-toplantisi-hazirun/",
+  "/en/investor-relations/hazirun-cetveli/30032017-tarihli-olagan-genel-kurul-toplantisi-hazirun-cetveli/",
+  "/en/investor-relations/hazirun-cetveli/31032011-tarihli-a-grubu-imtiyazli-pay-sahipleri-olagan-genel-kurul-toplantisi-hazirun/",
+  "/en/investor-relations/hazirun-cetveli/31032011-tarihli-genel-kurul-toplantisi-hazirun-cetveli/"
+ ],
+ "/og/en--investor-relations--ic-yonerge.jpg": [
+  "/en/investor-relations/ic-yonerge/",
+  "/en/investor-relations/ic-yonerge/ic-yonerge/"
+ ],
+ "/og/en--investor-relations--izahname-ve-halka-arz-sirkuleri.jpg": [
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayina-sunulan-taslak-izahname25032024/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayli-izahname-08082024/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayli-izahname/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-tasarruf-sahipleri-satis-duyurusu25032024/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-tasarruf-sahiplerine-satis-duyurusu-27042021/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-taslak-izahname-27042021/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/ek2sozlesme-ornegi/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/ek3degerleme-raporlari/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/ek4ic-bilgiye-ulasanlarin-listesi/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/ek5son-3-yil-bagimsiz-denetim-raporlari/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/ek6hukukcu-raporu/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/halka-arz-izahnamesi-ve-ek1esas-sozlesme/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/halka-arz-sirkuleri/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/spk-onayina-sunulan-izahname-23012026/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/tasarruf-sahiplerine-satis-duyurusu-03092024/",
+  "/en/investor-relations/izahname-ve-halka-arz-sirkuleri/tasarruf-sahiplerine-satis-duyurusu/"
+ ],
+ "/og/en--investor-relations--kar-dagitim-politikasi.jpg": [
+  "/en/investor-relations/kar-dagitim-politikasi/"
+ ],
+ "/og/en--investor-relations--komiteler.jpg": [
+  "/en/investor-relations/komiteler/",
+  "/en/investor-relations/komiteler/denetim-komitesi/",
+  "/en/investor-relations/komiteler/kurumsal-yonetim-komitesi/",
+  "/en/investor-relations/komiteler/riskin-erken-saptanmasi-komitesi/"
+ ],
+ "/og/en--investor-relations--kurumsal-kurallar.jpg": [
+  "/en/investor-relations/kurumsal-kurallar/",
+  "/en/investor-relations/kurumsal-kurallar/etik-kurallarimiz/"
+ ],
+ "/og/en--investor-relations--mali-tablo-ve-raporlar.jpg": [
+  "/en/investor-relations/mali-tablo-ve-raporlar/"
+ ],
+ "/og/en--investor-relations--ozel-durum-aciklamalari.jpg": [
+  "/en/investor-relations/ozel-durum-aciklamalari/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2010/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2010/01102010-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2010/02122010-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2010/06072010-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2010/07092010-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2010/24082010-ozel-durum-aciklamasi-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2010/24082010-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2010/25082010-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2010/30122010-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/01042011-ozel-durum-aciklamasi-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/01042011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/02062011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/02082011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/08092011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/09062011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/09092011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/11032011-ozel-durum-aciklamasi-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/11032011-ozel-durum-aciklamasi-3/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/11032011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/13052011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/13062011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/14012011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/14092011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/16112011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/20092011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/23032011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/25032011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/26082011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/27052011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/31032011-ozel-durum-aciklamasi-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2011/31032011-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/03012012-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/07022012-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/09012012-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/15022012-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/17012012-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/27012012-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/31012012-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/esas-sozlesme-degisikligi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/esas-sozlesme-tadil-tasarisi-guncellemesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/kar-payi-dagitimina-iliskin-yonetim-kurulu-karari/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2012/sermaye-piyasasi-kurulu-nun-kurumsal-yonetim-ilkelerinin-belirlenmesine-ve-uygulanmasina-iliskin-teblig-kapsamindaesas-sozlesmemizin-1418263138-maddelerinin-tadil-edilmesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2013/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2013/2012-yil-sonu-portfoy-degerleme-raporu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2013/2013-yil-sonu-gayrimenkul-portfoyu-degerleme-raporu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2013/ic-yonerge-hakkinda/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2013/karin-dagitilmamasiriskin-erken-saptanmasi-komitesi-ve-bagimsiz-denetim-firmasi-secimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2013/pay-sapleri-ile-iliskiler-birimi-yoneticisi-istifasi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2014/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2014/bagimsiz-denetim-kurulusu-secimi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2014/degerleme-sirketi-secimi-ve-yatirimci-iliskileri-bolumu-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2014/olagandisi-fiyat-ve-miktar-hareketi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2016/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2016/piyasa-yapici-sirket-secimi-07042016/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2016/sirket-ortaklari-arasindaki-pay-devirleri-ve-spk-onay-basvurusu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/2016-4donem-gecici-vergi-beyannamesi-eki/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/2016-yili-olagan-genel-kurul-toplantisi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/2017-yili-1donem-gecici-vergi-beyannamesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/2017-yili-3donem-gecici-vergi-beyannamesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/2017-yili-icin-bagimsiz-denetim-kurulusu-secimi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/2017-yili-sirket-gayrimenkul-portfoyu-degerlemesi-icin-degerleme-sirketi-secimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/esas-sozlesme-guncel/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/esas-sozlesme-tadili-ticaret-sicil-mudurlugu-tescili/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/ihaleye-katilim-sureci-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/ihaleye-katilma-karari-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/ihaleye-katilma-karari/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihale-sonucu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-1oturum-sonucu-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-1oturum-sonucu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-2oturum-sonucu-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-2oturuma-davet-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-revize-nihai-teklif-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-sozlesme-daveti/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-sozlesme-imzalanmasi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/istanbul-sile-cavus-ihalesi-yer-teslimi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/kayitli-sermaye-tavani-azaltimi-ve-kayitli-sermaye-tavan-izin-suresinin-uzatilmasi-sureci-spk-onayi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/pay-alim-teklifi-bilgi-formu-spk-onayi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2017/pay-alim-teklifi-surecinin-tamamlanmasi-islem-sonucu-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/2018-yili-2donem-sorumluluk-beyani/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/2018-yili-3donem-gecici-vergi-beyannamesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/2018-yili-3donem-sorumluluk-beyani/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/2018-yili-icin-bagimsiz-denetim-kurulusu-secimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/2018-yili-sirket-gayrimenkul-portfoyu-icin-degerleme-sirketi-secimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/31032018-donemi-sorumluluk-beyani/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/geri-alinan-sirket-paylarinin-satisi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/idealist-cadde-projesi-3ceyrek-satislari/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/istanbul-sile-cavus-arsa-satisi-karsiligi-gelir-paylasimi-isi-yapi-ruhsati-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/kredi-kullanimi-ve-istirak-sirkete-para-aktarimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2018/sirket-mulkiyetindeki-bagimsiz-bolumlerin-tadilati-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/2018-yili-4donem-gecici-vergi-beyannamesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-1donem-gecici-vergi-beyannamesinin-verilmesi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-1donem-sorumluluk-beyani/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-2donem-yonetim-kurulu-sorumluluk-beyani/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-3donem-gecici-vergi-beyannamesi-verilmesi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-3donem-sorumluluk-beyani/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-icin-bagimsiz-denetim-kurulusu-secimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/2019-yili-sirket-gayrimenkul-portfoyu-degerlemesi-icin-degerleme-sirketi-secimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/bankadan-kredi-kullanilmasi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/bankaya-ipotek-verilmesi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/kar-payi-dagitim-islemlerine-iliskin-bildirim/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/kurumsal-yonetim-bilgi-formu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/kurumsal-yonetim-uyum-raporu-2018-yillik-bildirim/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/piyasa-yapiciligi-sozlesmesinin-feshedilmesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2019/sirket-portfoyunden-gayrimenkul-satisi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/2019-yili-4donem-gecici-vergi-beyannamesinin-verilmesi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/2019-yili-kurumlar-vergisi-beyannamesi-verilmesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/2020-yili-1donem-gecici-vergi-beyannamesi-verilmesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/2020-yili-2donem-gecici-vergi-beyannamesi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/2020-yili-2donem-yonetim-kurulu-sorumluluk-beyani/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/2020-yili-3donem-sorumluluk-beyani/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/2020-yili-icin-degerleme-sirketi-secimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/31032020-donemi-sorumluluk-beyani/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/31122019-sorumluluk-beyani/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/bagimsiz-denetim-kurulusu-tescili-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/bagimsiz-denetim-kurulusunun-belirlenmesi-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/bagimsiz-denetim-kurulusunun-belirlenmesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/bagimsiz-yonetim-kurulu-uye-istifasi-yerine-yeni-uye-atamasi-ve-yonetim-kurulu-komite-gorevlendirmeleri/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/banka-kredisinin-kapatilmasi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi-403c-maddesi-kapsaminda-yapilan-aciklama/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/genel-mudur-yardimcisi-atanmasi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/idealist-cadde-projesi-yapi-tadilat-ruhsatlari-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/kar-payi-dagitim-islemlerine-iliskin-bildirim-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/kar-payi-dagitim-islemlerine-iliskin-bildirim/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/kurumsal-yonetim-bilgi-formu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/pay-alim-teklifi-tebligi-uyarinca-yapilan-zorunlu-pay-alim-teklifi-basvurusu-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/pay-alim-teklifi-uyarinca-yapilan-zorunlu-pay-alim-teklifi-basvurusu-revizesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/pay-alim-teklifi-yoluyla-pay-toplanmasina-iliskin-bildirim/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/pay-devrine-iliskin-yonetim-kurulu-karari-ve-spk-onay-basvurusu-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/pay-devrine-iliskin-yonetim-kurulu-karari-ve-spk-onay-basvurusu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-ortaklik-yapisi-degisikligi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-3/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-4/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-5/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-6/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi-ekspertiz-degeri-duzeltme/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/sirket-portfoyunden-gayrimenkul-satisi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/yonetim-kurulu-gorev-dagilimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/yonetim-kurulu-komitelerine-uye-atanmasi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/yonetim-kurulu-uyesi-ve-genel-mudur-degisikligi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/zorunlu-pay-alim-teklifi-hakkinda-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/zorunlu-pay-alim-teklifi-hakkinda-3/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2020/zorunlu-pay-alim-teklifi-hakkinda/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2021/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2021/ozel-durum-hakkinda/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2022/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2023/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2024/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-kar-payi-dagitimina-iliskin-yonetim-kurulu-karari/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-kar-payi-dagitimina-iliskin-yonetim-kurulu-onerisinin-onaylanmasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-olagan-genel-kurul-sonuclarinin-tescili-hakkinda-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-olagan-genel-kurul-sonuclarinin-tescili-hakkinda/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-olagan-genel-kurul-toplantisi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/2024-yili-olagangenel-kurul-toplanti-sonucu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/2025-yili-bagimsiz-denetim-sirketi-secimi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/2025-yili-bagimsiz-denetim-sirketi-secimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/25122024-tarihli-olaganustu-genel-kurul-toplanti-sonuclarinin-tescili/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/bedelli-sermaye-artirimina-iliskin-yonetim-kurulu-karari/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/esas-sozlesme-degisikligine-iliskin-spk-basvuru-sonucu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/esas-sozlesmenin-039039yonetim-kurulu-ve-gorev-suresi039039-baslikli-14-maddesinin-tadili-hakkinda/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/gayrimenkul-degerleme-kuruluslarinin-secimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-37039inci-maddesi-kapsaminda-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-40-maddesi-403c-kapsaminda-yapilan-aciklama/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/idealist-cadde-projesinde-yer-alan-a-21nolu-bagimsiz-bolumun-kiraya-verilmesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/idealist-cadde-projesinde-yer-alan-a-23-nolu-bagimsiz-bolumun-kiraya-verilmesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/idealist-koruidealist-cadde-projesi-kesin-kabul-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/maddi-duran-varlik-satisi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/olagandisi-fiyat-ve-miktar-hareketi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/sirket-ana-sozlesmesinin-sermaye-maddesinin-tescili/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/sirket-ana-sozlesmesinin-tadiline-iliskin-tcticaret-bakanligi-izni/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-icin-sermaye-piyasasi-kurul039una-basvurulmasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-iptal-karari/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2025/tahsisli-sermaye-artirimi-yonetim-kurulu-karari-hakkinda/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-hesap-donemine-ait-finansal-tabloalrin-revize-edilmesi-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-kar-dagitimina-iliskin-yonetim-kurulu-onerisinin-onaylanmasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-kar-payi-dagitimina-iliskin-yonetim-kurulu-karari/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-toplanti-sonucu-2/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-toplanti-sonucu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2025-yili-olagan-genel-kurul-toplantisi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2026-yili-bagimsiz-denetim-firmasinin-secimi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2026-yili-icin-gayrimenkul-degerleme-hizmeti-alinacak-sirketlerin-belirlenmesi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2026-yili-olaganustu-genel-kurul-hakkinda/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2026-yili-olaganustu-genel-kurul-tescili-hk/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/2026-yilina-iliskin-olaganustu-genel-kurul-sonucu/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/bedelli-sermaye-artirimi-basvurumuz-hakkinda/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-37039inci-maddesi-kapsaminda-ozel-durum-aciklamasi/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/gayrimenkul-yatirim-ortakliklarina-iliskin-esaslar-tebligi039nin-40-maddesi-403c-kapsaminda-yapilan-aciklama/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/genel-kurul-kararlarinin-tescili/",
+  "/en/investor-relations/ozel-durum-aciklamalari/2026/is-ortakligindaki-payimizin-devri-hakkinda/"
+ ],
+ "/og/en--investor-relations--portfoy-tablolari.jpg": [
+  "/en/investor-relations/portfoy-tablolari/",
+  "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---aralik-2009/",
+  "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---aralik-2010/",
+  "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---aralik-2011/",
+  "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---eylul-2010/",
+  "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---eylul-2011/",
+  "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---haziran-2010/",
+  "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---haziran-2011/",
+  "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---mart-2010/",
+  "/en/investor-relations/portfoy-tablolari/idealist-gyo-as-portfoy-tablosu---mart-2011/"
+ ],
+ "/og/en--investor-relations--ucret-politikasi.jpg": [
+  "/en/investor-relations/ucret-politikasi/"
+ ],
+ "/og/en--investor-relations--uyum-raporu.jpg": [
+  "/en/investor-relations/uyum-raporu/",
+  "/en/investor-relations/uyum-raporu/kurumsal-yonetim-ilkeleri-uyum-raporu/",
+  "/en/investor-relations/uyum-raporu/kurumsal-yonetim-ilkeleri-uyum-raporu/2019-yili-kurumsal-yonetim-uyum-raporu/"
+ ],
+ "/og/en--investor-relations.jpg": [
+  "/en/investor-relations/"
+ ],
+ "/og/en--links.jpg": [
+  "/en/links/"
+ ],
+ "/og/en--news--02062011-ozel-durum-aciklamasi.jpg": [
+  "/en/news/02062011-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--02082011-ozel-durum-aciklamasi.jpg": [
+  "/en/news/02082011-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--03012012-ozel-durum-aciklamasi.jpg": [
+  "/en/news/03012012-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--08092011-ozel-durum-aciklamasi.jpg": [
+  "/en/news/08092011-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--09012012-ozel-durum-aciklamasi.jpg": [
+  "/en/news/09012012-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--09062011-ozel-durum-aciklamasi.jpg": [
+  "/en/news/09062011-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--09092011-ozel-durum-aciklamasi.jpg": [
+  "/en/news/09092011-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--13052011-ozel-durum-aciklamasi.jpg": [
+  "/en/news/13052011-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--13062011-ozel-durum-aciklamasi.jpg": [
+  "/en/news/13062011-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--14092011-ozel-durum-aciklanmasi.jpg": [
+  "/en/news/14092011-ozel-durum-aciklanmasi/"
+ ],
+ "/og/en--news--16112011-ozel-durum-aciklamasi.jpg": [
+  "/en/news/16112011-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--2011-yili-a-grubu-imtiyazli-pay-sahipleri-toplantimiz-yapildi.jpg": [
+  "/en/news/2011-yili-a-grubu-imtiyazli-pay-sahipleri-toplantimiz-yapildi/"
+ ],
+ "/og/en--news--2011-yili-a-grubu-imtiyazli-pay-sahipleri-toplantisi-30032012-tarihinde-yapilacaktir.jpg": [
+  "/en/news/2011-yili-a-grubu-imtiyazli-pay-sahipleri-toplantisi-30032012-tarihinde-yapilacaktir/"
+ ],
+ "/og/en--news--2011-yili-olagan-genel-kurul-toplantimiz-yapildi.jpg": [
+  "/en/news/2011-yili-olagan-genel-kurul-toplantimiz-yapildi/"
+ ],
+ "/og/en--news--2011-yili-olagan-genel-kurul-toplantisi-30032012-tarihinde-yapilacaktir.jpg": [
+  "/en/news/2011-yili-olagan-genel-kurul-toplantisi-30032012-tarihinde-yapilacaktir/"
+ ],
+ "/og/en--news--2012-yili-olagan-genel-kurul-toplantimiz-yapildi.jpg": [
+  "/en/news/2012-yili-olagan-genel-kurul-toplantimiz-yapildi/"
+ ],
+ "/og/en--news--2016-yili-olagan-genel-kurul-toplantisi-hk.jpg": [
+  "/en/news/2016-yili-olagan-genel-kurul-toplantisi-hk/"
+ ],
+ "/og/en--news--2016-yili-olaganustu-genel-kurul-toplantisi-2.jpg": [
+  "/en/news/2016-yili-olaganustu-genel-kurul-toplantisi-2/"
+ ],
+ "/og/en--news--2016-yili-olaganustu-genel-kurul-toplantisi-3.jpg": [
+  "/en/news/2016-yili-olaganustu-genel-kurul-toplantisi-3/"
+ ],
+ "/og/en--news--2016-yili-olaganustu-genel-kurul-toplantisi-4.jpg": [
+  "/en/news/2016-yili-olaganustu-genel-kurul-toplantisi-4/"
+ ],
+ "/og/en--news--2016-yili-olaganustu-genel-kurul-toplantisi-5.jpg": [
+  "/en/news/2016-yili-olaganustu-genel-kurul-toplantisi-5/"
+ ],
+ "/og/en--news--2016-yili-olaganustu-genel-kurul-toplantisi.jpg": [
+  "/en/news/2016-yili-olaganustu-genel-kurul-toplantisi/"
+ ],
+ "/og/en--news--26082011-ozel-durum-aciklamasi.jpg": [
+  "/en/news/26082011-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--27012012-ozel-durum-aciklamasi.jpg": [
+  "/en/news/27012012-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--27052011-ozel-durum-aciklamasi.jpg": [
+  "/en/news/27052011-ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--degerleme-sirketi-belirlenmesi.jpg": [
+  "/en/news/degerleme-sirketi-belirlenmesi/"
+ ],
+ "/og/en--news--gayrimenkul-degerleme-sirketi-secimi.jpg": [
+  "/en/news/gayrimenkul-degerleme-sirketi-secimi/"
+ ],
+ "/og/en--news--genel-kurul-toplantisi-2.jpg": [
+  "/en/news/genel-kurul-toplantisi-2/"
+ ],
+ "/og/en--news--genel-kurul-toplantisi.jpg": [
+  "/en/news/genel-kurul-toplantisi/"
+ ],
+ "/og/en--news--genel-mudur-atamasi-hk.jpg": [
+  "/en/news/genel-mudur-atamasi-hk/"
+ ],
+ "/og/en--news--genel-mudur-istifasi-hk.jpg": [
+  "/en/news/genel-mudur-istifasi-hk/"
+ ],
+ "/og/en--news--idealist-gyo-as-2010-6-aylik-mali-tablolarini-yayimladi.jpg": [
+  "/en/news/idealist-gyo-as-2010-6-aylik-mali-tablolarini-yayimladi/"
+ ],
+ "/og/en--news--idealist-gyo-as-2010-9-aylik-mali-tablolarini-yayimladi.jpg": [
+  "/en/news/idealist-gyo-as-2010-9-aylik-mali-tablolarini-yayimladi/"
+ ],
+ "/og/en--news--idealist-gyo-as-2010-yillik-mali-tablolarini-yayimladi.jpg": [
+  "/en/news/idealist-gyo-as-2010-yillik-mali-tablolarini-yayimladi/"
+ ],
+ "/og/en--news--idealist-gyo-as-2011-6-aylik-mali-tablolarini-yayimladi.jpg": [
+  "/en/news/idealist-gyo-as-2011-6-aylik-mali-tablolarini-yayimladi/"
+ ],
+ "/og/en--news--idealist-gyo-as-2011-9-aylik-mali-tablolarini-yayimladi.jpg": [
+  "/en/news/idealist-gyo-as-2011-9-aylik-mali-tablolarini-yayimladi/"
+ ],
+ "/og/en--news--idealist-gyo-as-2011-bagimsiz-denetimlerinin-yaptirilmasi-amaciyla-mercek-bagimsiz-denetim-ve-yeminli-mali-musavirlik-as-ile-sozlesme-yapilmasina-karar-verilmistir.jpg": [
+  "/en/news/idealist-gyo-as-2011-bagimsiz-denetimlerinin-yaptirilmasi-amaciyla-mercek-bagimsiz-denetim-ve-yeminli-mali-musavirlik-as-ile-sozlesme-yapilmasina-karar-verilmistir/"
+ ],
+ "/og/en--news--idealist-gyo-as-2012-6-aylik-mali-tablolarini-yayimladi.jpg": [
+  "/en/news/idealist-gyo-as-2012-6-aylik-mali-tablolarini-yayimladi/"
+ ],
+ "/og/en--news--idealist-gyo-as-2012-9-aylik-mali-tablolarini-yayimladi.jpg": [
+  "/en/news/idealist-gyo-as-2012-9-aylik-mali-tablolarini-yayimladi/"
+ ],
+ "/og/en--news--idealist-gyo-as-2012-bagimsiz-denetimlerinin-yaptirilmasi-amaciyla-mercek-bagimsiz-denetim-ve-yeminli-mali-musavirlik-as-ile-sozlesme-yapilmasina-karar-verilmistir.jpg": [
+  "/en/news/idealist-gyo-as-2012-bagimsiz-denetimlerinin-yaptirilmasi-amaciyla-mercek-bagimsiz-denetim-ve-yeminli-mali-musavirlik-as-ile-sozlesme-yapilmasina-karar-verilmistir/"
+ ],
+ "/og/en--news--idealist-gyo-as-2012-yili-genel-kurulu-2.jpg": [
+  "/en/news/idealist-gyo-as-2012-yili-genel-kurulu-2/"
+ ],
+ "/og/en--news--idealist-gyo-as-2012-yili-genel-kurulu.jpg": [
+  "/en/news/idealist-gyo-as-2012-yili-genel-kurulu/"
+ ],
+ "/og/en--news--idealist-gyo-as-21-24-haziran-2010-tarihleri-arasinda-halka-arz-ediliyor.jpg": [
+  "/en/news/idealist-gyo-as-21-24-haziran-2010-tarihleri-arasinda-halka-arz-ediliyor/"
+ ],
+ "/og/en--news--idealist-gyo-as-bid-uluslar-arasi-kalite-odulu-aldi.jpg": [
+  "/en/news/idealist-gyo-as-bid-uluslar-arasi-kalite-odulu-aldi/"
+ ],
+ "/og/en--news--idealist-gyo-as-halka-acildi.jpg": [
+  "/en/news/idealist-gyo-as-halka-acildi/"
+ ],
+ "/og/en--news--idealist-gyo-as-halka-arz-calismalari-icin-bizim-menkul-degerler-as-ile-anlasti.jpg": [
+  "/en/news/idealist-gyo-as-halka-arz-calismalari-icin-bizim-menkul-degerler-as-ile-anlasti/"
+ ],
+ "/og/en--news--idealist-gyo-as-halka-arz-icin-spk039ya-basvurdu.jpg": [
+  "/en/news/idealist-gyo-as-halka-arz-icin-spk039ya-basvurdu/"
+ ],
+ "/og/en--news--idealist-gyo-as-mali-tablolarini-yayimladi.jpg": [
+  "/en/news/idealist-gyo-as-mali-tablolarini-yayimladi/"
+ ],
+ "/og/en--news--idealist-gyo-as-merkezi-kayit-kurulusu-mkk-temsilcisi-olarak-bizim-menkul-degerler-as-ile-sozlesme-imzaladi.jpg": [
+  "/en/news/idealist-gyo-as-merkezi-kayit-kurulusu-mkk-temsilcisi-olarak-bizim-menkul-degerler-as-ile-sozlesme-imzaladi/"
+ ],
+ "/og/en--news--idealist-gyo-as-olagan-genel-kurul-toplantisi.jpg": [
+  "/en/news/idealist-gyo-as-olagan-genel-kurul-toplantisi/"
+ ],
+ "/og/en--news--idealist-gyo-as-yeni-yonetim-kurulu-gorev-dagilimi-ve-denetimden-sorumlu-komitenin-secimini-yapti.jpg": [
+  "/en/news/idealist-gyo-as-yeni-yonetim-kurulu-gorev-dagilimi-ve-denetimden-sorumlu-komitenin-secimini-yapti/"
+ ],
+ "/og/en--news--idealist-gyo-as-yonetim-kurulu-halka-arz-karari-aldi-ve-hazirliklara-basladi.jpg": [
+  "/en/news/idealist-gyo-as-yonetim-kurulu-halka-arz-karari-aldi-ve-hazirliklara-basladi/"
+ ],
+ "/og/en--news--idealist-gyo-ashalka-arz-basin-duyurusu.jpg": [
+  "/en/news/idealist-gyo-ashalka-arz-basin-duyurusu/"
+ ],
+ "/og/en--news--kayitli-sermaye-tavani-guncellemesi.jpg": [
+  "/en/news/kayitli-sermaye-tavani-guncellemesi/"
+ ],
+ "/og/en--news--olaganustu-genel-kurul-toplantisi.jpg": [
+  "/en/news/olaganustu-genel-kurul-toplantisi/"
+ ],
+ "/og/en--news--olaganustu-genel-kurul-toplantisi039nin-ertelenmesi.jpg": [
+  "/en/news/olaganustu-genel-kurul-toplantisi039nin-ertelenmesi/"
+ ],
+ "/og/en--news--ozel-durum-aciklamasi-2.jpg": [
+  "/en/news/ozel-durum-aciklamasi-2/"
+ ],
+ "/og/en--news--ozel-durum-aciklamasi.jpg": [
+  "/en/news/ozel-durum-aciklamasi/"
+ ],
+ "/og/en--news--pay-alim-teklifi-bilgi-formu-spk-onayi-ve-zorunlu-pay-alim-teklifi-surecine-baslanilmasi.jpg": [
+  "/en/news/pay-alim-teklifi-bilgi-formu-spk-onayi-ve-zorunlu-pay-alim-teklifi-surecine-baslanilmasi/"
+ ],
+ "/og/en--news--pay-alim-teklifi-bilgi-formu-spk-onayi.jpg": [
+  "/en/news/pay-alim-teklifi-bilgi-formu-spk-onayi/"
+ ],
+ "/og/en--news--pay-alim-teklifi-surecinin-tamamlanmasi-islem-sonucu-hk.jpg": [
+  "/en/news/pay-alim-teklifi-surecinin-tamamlanmasi-islem-sonucu-hk/"
+ ],
+ "/og/en--news--portoyumuzde-bulunan-daire-satisi-hakkinda.jpg": [
+  "/en/news/portoyumuzde-bulunan-daire-satisi-hakkinda/"
+ ],
+ "/og/en--news--sirket-ortaklari-arasindaki-pay-devirleri-ve-spk-onay-basvurusu-karari.jpg": [
+  "/en/news/sirket-ortaklari-arasindaki-pay-devirleri-ve-spk-onay-basvurusu-karari/"
+ ],
+ "/og/en--news.jpg": [
+  "/en/news/"
+ ],
+ "/og/en--portfolio--degerleme-raporlari.jpg": [
+  "/en/portfolio/degerleme-raporlari/"
+ ],
+ "/og/en--portfolio--gayrimenkul-portfoyumuz.jpg": [
+  "/en/portfolio/gayrimenkul-portfoyumuz/"
+ ],
+ "/og/en--portfolio--projelerimiz--devam-eden--izmir-aliaga-lojistik-depo-yapimi.jpg": [
+  "/en/portfolio/projelerimiz/devam-eden/izmir-aliaga-lojistik-depo-yapimi/"
+ ],
+ "/og/en--portfolio--projelerimiz--tamamlanan--istanbul-sile-cavus-mahallesi-arsa-satisi-karsiligi-gelir-paylasimi-isi.jpg": [
+  "/en/portfolio/projelerimiz/tamamlanan/istanbul-sile-cavus-mahallesi-arsa-satisi-karsiligi-gelir-paylasimi-isi/"
+ ],
+ "/og/en--portfolio--projelerimiz.jpg": [
+  "/en/portfolio/projelerimiz/",
+  "/en/portfolio/projelerimiz/devam-eden/",
+  "/en/portfolio/projelerimiz/tamamlanan/"
+ ],
+ "/og/en--portfolio--sigorta-policeleri.jpg": [
+  "/en/portfolio/sigorta-policeleri/"
+ ],
+ "/og/en--portfolio.jpg": [
+  "/en/portfolio/"
+ ],
+ "/og/en.jpg": [
+  "/en/site-map/"
+ ]
+}

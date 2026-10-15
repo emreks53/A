@@ -1,0 +1,148 @@
+# Haber ve duyuru başlıkları (tarihli "… Özel Durum Açıklaması" başlıkları kalip.py ile üretilir)
+
+#### /haberler/2011-yili-a-grubu-imtiyazli-pay-sahipleri-toplantimiz-yapildi/
+Our 2011 Group A Privileged Shareholders' Meeting Was Held
+
+#### /haberler/2011-yili-a-grubu-imtiyazli-pay-sahipleri-toplantisi-30032012-tarihinde-yapilacaktir/
+The 2011 Group A Privileged Shareholders' Meeting Will Be Held on 30.03.2012
+
+#### /haberler/2011-yili-olagan-genel-kurul-toplantimiz-yapildi/
+Our 2011 Ordinary General Assembly Meeting Was Held
+
+#### /haberler/2011-yili-olagan-genel-kurul-toplantisi-30032012-tarihinde-yapilacaktir/
+The 2011 Ordinary General Assembly Meeting Will Be Held on 30.03.2012
+
+#### /haberler/2012-yili-olagan-genel-kurul-toplantimiz-yapildi/
+Our 2012 Ordinary General Assembly Meeting Was Held
+
+#### /haberler/2016-yili-olagan-genel-kurul-toplantisi-hk/
+2016 Ordinary General Assembly Meeting
+
+#### /haberler/2016-yili-olaganustu-genel-kurul-toplantisi-2/
+2016 Extraordinary General Assembly Meeting
+
+#### /haberler/2016-yili-olaganustu-genel-kurul-toplantisi-3/
+2016 Extraordinary General Assembly Meeting
+
+#### /haberler/2016-yili-olaganustu-genel-kurul-toplantisi-4/
+2016 Extraordinary General Assembly Meeting
+
+#### /haberler/2016-yili-olaganustu-genel-kurul-toplantisi-5/
+2016 Extraordinary General Assembly Meeting
+
+#### /haberler/2016-yili-olaganustu-genel-kurul-toplantisi/
+2016 Extraordinary General Assembly Meeting
+
+#### /haberler/degerleme-sirketi-belirlenmesi/
+Appointment of a Valuation Company
+
+#### /haberler/gayrimenkul-degerleme-sirketi-secimi/
+Selection of a Real Estate Valuation Company
+
+#### /haberler/genel-kurul-toplantisi-2/
+General Assembly Meeting
+
+#### /haberler/genel-kurul-toplantisi/
+General Assembly Meeting
+
+#### /haberler/genel-mudur-atamasi-hk/
+Appointment of General Manager
+
+#### /haberler/genel-mudur-istifasi-hk/
+Resignation of General Manager
+
+#### /haberler/idealist-gyo-as-2010-6-aylik-mali-tablolarini-yayimladi/
+İdealist GYO A.Ş. Published Its 2010 6-Month Financial Statements
+
+#### /haberler/idealist-gyo-as-2010-9-aylik-mali-tablolarini-yayimladi/
+İdealist GYO A.Ş. Published Its 2010 9-Month Financial Statements
+
+#### /haberler/idealist-gyo-as-2010-yillik-mali-tablolarini-yayimladi/
+İdealist GYO A.Ş. Published Its 2010 Annual Financial Statements
+
+#### /haberler/idealist-gyo-as-2011-6-aylik-mali-tablolarini-yayimladi/
+İdealist GYO A.Ş. Published Its 2011 6-Month Financial Statements
+
+#### /haberler/idealist-gyo-as-2011-9-aylik-mali-tablolarini-yayimladi/
+İdealist GYO A.Ş. Published Its 2011 9-Month Financial Statements
+
+#### /haberler/idealist-gyo-as-2011-bagimsiz-denetimlerinin-yaptirilmasi-amaciyla-mercek-bagimsiz-denetim-ve-yeminli-mali-musavirlik-as-ile-sozlesme-yapilmasina-karar-verilmistir/
+İdealist GYO A.Ş. Resolved to Engage Mercek Bağımsız Denetim ve Yeminli Mali Müşavirlik A.Ş. for Its 2011 Independent Audits
+
+#### /haberler/idealist-gyo-as-2012-6-aylik-mali-tablolarini-yayimladi/
+İdealist GYO A.Ş. Published Its 2012 6-Month Financial Statements
+
+#### /haberler/idealist-gyo-as-2012-9-aylik-mali-tablolarini-yayimladi/
+İdealist GYO A.Ş. Published Its 2012 9-Month Financial Statements
+
+#### /haberler/idealist-gyo-as-2012-bagimsiz-denetimlerinin-yaptirilmasi-amaciyla-mercek-bagimsiz-denetim-ve-yeminli-mali-musavirlik-as-ile-sozlesme-yapilmasina-karar-verilmistir/
+İdealist GYO A.Ş. Resolved to Engage Mercek Bağımsız Denetim ve Yeminli Mali Müşavirlik A.Ş. for Its 2012 Independent Audits
+
+#### /haberler/idealist-gyo-as-2012-yili-genel-kurulu-2/
+İdealist GYO A.Ş. 2012 General Assembly
+
+#### /haberler/idealist-gyo-as-2012-yili-genel-kurulu/
+İdealist GYO A.Ş. 2012 General Assembly
+
+#### /haberler/idealist-gyo-as-21-24-haziran-2010-tarihleri-arasinda-halka-arz-ediliyor/
+İdealist GYO A.Ş. Shares to Be Offered to the Public on 21–24 June 2010
+
+#### /haberler/idealist-gyo-as-bid-uluslar-arasi-kalite-odulu-aldi/
+İdealist GYO A.Ş. Receives the B.I.D. International Quality Award
+
+#### /haberler/idealist-gyo-as-halka-acildi/
+İdealist GYO A.Ş. Has Gone Public
+
+#### /haberler/idealist-gyo-as-halka-arz-calismalari-icin-bizim-menkul-degerler-as-ile-anlasti/
+İdealist GYO A.Ş. Reached an Agreement with Bizim Menkul Değerler A.Ş. for Its Public Offering
+
+#### /haberler/idealist-gyo-as-halka-arz-icin-spk039ya-basvurdu/
+İdealist GYO A.Ş. Applied to the CMB for Its Public Offering
+
+#### /haberler/idealist-gyo-as-mali-tablolarini-yayimladi/
+İdealist GYO A.Ş. Published Its Financial Statements
+
+#### /haberler/idealist-gyo-as-merkezi-kayit-kurulusu-mkk-temsilcisi-olarak-bizim-menkul-degerler-as-ile-sozlesme-imzaladi/
+İdealist GYO A.Ş. Signed an Agreement with Bizim Menkul Değerler A.Ş. as Its Central Registry Agency (MKK) Representative
+
+#### /haberler/idealist-gyo-as-olagan-genel-kurul-toplantisi/
+İdealist GYO A.Ş. Ordinary General Assembly Meeting
+
+#### /haberler/idealist-gyo-as-yeni-yonetim-kurulu-gorev-dagilimi-ve-denetimden-sorumlu-komitenin-secimini-yapti/
+İdealist GYO A.Ş. Assigned Duties within Its New Board of Directors and Elected the Audit Committee
+
+#### /haberler/idealist-gyo-as-yonetim-kurulu-halka-arz-karari-aldi-ve-hazirliklara-basladi/
+İdealist GYO A.Ş. Board of Directors Resolved to Go Public and Began Preparations
+
+#### /haberler/idealist-gyo-ashalka-arz-basin-duyurusu/
+İdealist GYO A.Ş. Public Offering Press Release
+
+#### /haberler/kayitli-sermaye-tavani-guncellemesi/
+Update of the Authorised Capital Ceiling
+
+#### /haberler/olaganustu-genel-kurul-toplantisi/
+Extraordinary General Assembly Meeting
+
+#### /haberler/olaganustu-genel-kurul-toplantisi039nin-ertelenmesi/
+Postponement of the Extraordinary General Assembly Meeting
+
+#### /haberler/ozel-durum-aciklamasi-2/
+Material Event Disclosure
+
+#### /haberler/ozel-durum-aciklamasi/
+Material Event Disclosure
+
+#### /haberler/pay-alim-teklifi-bilgi-formu-spk-onayi-ve-zorunlu-pay-alim-teklifi-surecine-baslanilmasi/
+CMB Approval of the Tender Offer Information Form and Commencement of the Mandatory Tender Offer Process
+
+#### /haberler/pay-alim-teklifi-bilgi-formu-spk-onayi/
+CMB Approval of the Tender Offer Information Form
+
+#### /haberler/pay-alim-teklifi-surecinin-tamamlanmasi-islem-sonucu-hk/
+Completion of the Tender Offer Process (Transaction Result)
+
+#### /haberler/portoyumuzde-bulunan-daire-satisi-hakkinda/
+Sale of an Apartment in Our Portfolio
+
+#### /haberler/sirket-ortaklari-arasindaki-pay-devirleri-ve-spk-onay-basvurusu-karari/
+Share Transfers Between Company Shareholders and Resolution to Apply for CMB Approval

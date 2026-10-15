@@ -1,0 +1,281 @@
+# Belge satırı adları (TR ad → EN ad). Sayfa başlığıyla aynı olan adlar başlık sözlüğünden, dönem adları
+# ("3 Aylık" …) ve "… dosyasını indirmek için tıklayınız" kalıbı kalip.py'den gelir.
+
+#### Faaliyet Raporları, 6 Aylık
+Annual Reports, 6-Month
+
+#### Mali Tablolar, 6 Aylık
+Financial Statements, 6-Month
+
+#### 2025 Yılı İzmir Aliağa Arsa Değerleme Raporu
+2025 İzmir Aliağa Land Valuation Report
+
+#### 2025 Yılı İdealist Cadde Proje Değerleme Raporu (91 Ada 205 Parsel 12 adet bağımsız bölüm)
+2025 İdealist Cadde Project Valuation Report (Block 91, Parcel 205, 12 Independent Units)
+
+#### 2024 Yılı İdealist Cadde Proje Değerleme Raporu (91 Ada 205 Parsel 12 adet bağımsız bölüm)
+2024 İdealist Cadde Project Valuation Report (Block 91, Parcel 205, 12 Independent Units)
+
+#### 2024 Yılı İzmir Aliağa Arsa Değerleme Raporu
+2024 İzmir Aliağa Land Valuation Report
+
+#### 2023 Yılı İdealist Cadde/ Koru Gelir Paylaşımı İşi Proje Değerleme Raporu
+2023 İdealist Cadde/Koru Revenue Sharing Project Valuation Report
+
+#### 2023 Yılı İdealist Cadde Proje Değerleme Raporu (91 Ada 205 Parsel 9 adet bağımsız bölüm)
+2023 İdealist Cadde Project Valuation Report (Block 91, Parcel 205, 9 Independent Units)
+
+#### 2023 Yılı İzmir Aliağa Arsa Değerleme Raporu
+2023 İzmir Aliağa Land Valuation Report
+
+#### İdealist Koru Kat İrtifakına Esas Değerleme Raporu
+İdealist Koru Valuation Report for the Establishment of Construction Servitude
+
+#### 2022 Yılı İdealist Cadde Proje Değerleme Raporu(91 Ada 205 Parsel 9 adet bağımsız bölüm)
+2022 İdealist Cadde Project Valuation Report (Block 91, Parcel 205, 9 Independent Units)
+
+#### 2022 Yılı İdealist Cadde/Koru Gelir Paylaşımı işi Proje Değerleme Raporu
+2022 İdealist Cadde/Koru Revenue Sharing Project Valuation Report
+
+#### 2022 Yılı İzmir/ Aliağa Arsa Değerleme Raporu
+2022 İzmir/Aliağa Land Valuation Report
+
+#### 2021 Yılı İdealist Cadde / Koru Projesi Değerleme Raporu
+2021 İdealist Cadde/Koru Project Valuation Report
+
+#### 2021 Yılı İzmir/Aliağa Arsa Değerleme Raporu
+2021 İzmir/Aliağa Land Valuation Report
+
+#### 2021 Yılı Gayrimenkul Değerleme Raporu (91 Ada 205 Parsel İdealist Cadde Projesi 9 Adet Bağımsız Bölüm)
+2021 Real Estate Valuation Report (Block 91, Parcel 205, İdealist Cadde Project, 9 Independent Units)
+
+#### 2020 Yıl Sonu Portföy Değerleme Raporu
+2020 Year-End Portfolio Valuation Report
+
+#### 2019 Yılı Yıl Sonu Revize Değerleme Raporu
+2019 Year-End Revised Valuation Report
+
+#### 2019 Yıl Sonu Gayrimenkul Portföyü Değerleme Raporu
+2019 Year-End Real Estate Portfolio Valuation Report
+
+#### 2018 Yıl Sonu Gayrimenkul Portföyü Değerleme Raporu
+2018 Year-End Real Estate Portfolio Valuation Report
+
+#### 2017 Yılsonu Gayrimenkul Portföyü Değerleme Raporu
+2017 Year-End Real Estate Portfolio Valuation Report
+
+#### 2016 Yıl Sonu Portföy Değerleme Raporu
+2016 Year-End Portfolio Valuation Report
+
+#### 2015 Yıl Sonu Portföy Değerleme Raporu
+2015 Year-End Portfolio Valuation Report
+
+#### 2014 Yıl Sonu Porföy Değerleme Raporu
+2014 Year-End Portfolio Valuation Report
+
+#### 2013 Yıl Sonu Portföy Değerleme Raporu ( Revize Rapor )
+2013 Year-End Portfolio Valuation Report (Revised Report)
+
+#### 2013 Yıl Sonu Portföy Değerleme Raporu
+2013 Year-End Portfolio Valuation Report
+
+#### 2012 Yıl Sonu Portföy Değerleme Raporu
+2012 Year-End Portfolio Valuation Report
+
+#### 2011 Yıl Sonu Portföy Değerleme Raporu
+2011 Year-End Portfolio Valuation Report
+
+#### 31.12.2020 Yönetim Kurulu Faaliyet Raporu (02.03.2021)
+Board of Directors' Activity Report as of 31.12.2020 (02.03.2021)
+
+#### 2020 Yılı 3.Dönem Yönetim Kurulu Faaliyet Raporu (30.10.2020)
+2020 Q3 Board of Directors' Activity Report (30.10.2020)
+
+#### 2019 Yılı 2.Dönem Yönetim Kurulu Faaliyet Raporu (29.07.2019)
+2019 Q2 Board of Directors' Activity Report (29.07.2019)
+
+#### 2019 Yılı 1.Dönem Yönetim Kurulu Faaliyet Raporu (30.04.2019)
+2019 Q1 Board of Directors' Activity Report (30.04.2019)
+
+#### 2018 Yılı 1 Dönem Yönetim Kurulu Faaliyet Raporu
+2018 Q1 Board of Directors' Activity Report
+
+#### 2017 Yılı 4.Dönem Faaliyet Raporu 31.12.2017
+2017 Q4 Activity Report (31.12.2017)
+
+#### 2017 Yılı 3.Dönem Faaliyet Raporu 30.09.2017
+2017 Q3 Activity Report (30.09.2017)
+
+#### 2017 Yılı 2.Dönem Faaliyet Raporu (30.06.2017)
+2017 Q2 Activity Report (30.06.2017)
+
+#### 2017 Yılı 1.Dönem Faaliyet Raporu (31.03.2017)
+2017 Q1 Activity Report (31.03.2017)
+
+#### İdealist GYO A.Ş. 31.12.2016 Faaliyet Raporu
+İdealist GYO A.Ş. Annual Report as of 31.12.2016
+
+#### 2026 Yılı Olağanüstü Genel Kurul Toplantı Tutanağı
+Minutes of the 2026 Extraordinary General Assembly Meeting
+
+#### 2025 Yılı Olağan Genel Kurul Toplantı Tutanağı
+Minutes of the 2025 Ordinary General Assembly Meeting
+
+#### 25.12.2024 Tarihli Olağanüstü Genel Kurul Tutanağı
+Minutes of the Extraordinary General Assembly Held on 25.12.2024
+
+#### 2023 Yılı Olağan Genel Kurul Toplantı Tutanağı
+Minutes of the 2023 Ordinary General Assembly Meeting
+
+#### 2022 Yılı Olağan Genel Kurul Toplantı Tutanağı
+Minutes of the 2022 Ordinary General Assembly Meeting
+
+#### 2021 Yılı Olağan Genel Kurul Toplantı Tutanağı
+Minutes of the 2021 Ordinary General Assembly Meeting
+
+#### 2020 Yılı Olağan Genel Kurul Toplantı Tutanağı
+Minutes of the 2020 Ordinary General Assembly Meeting
+
+#### 28.03.2019 Tarihli Olağan Genel Kurul Toplantı Tutanağı (28.03.2019)
+Minutes of the Ordinary General Assembly Meeting Held on 28.03.2019 (28.03.2019)
+
+#### 30.03.2017 Tarihli Olağan Genel Kurul Toplantı Tutanağı (30.03.2017)
+Minutes of the Ordinary General Assembly Meeting Held on 30.03.2017 (30.03.2017)
+
+#### 05.08.2016 Tarihli Olağanüstü Genel Kurul Toplantı Tutanağı
+Minutes of the Extraordinary General Assembly Meeting Held on 05.08.2016
+
+#### 30.03.2015 Tarihli 2014 Yılı Olağan Genel Kurul Toplantı Tutanakları
+Minutes of the 2014 Ordinary General Assembly Meeting Held on 30.03.2015
+
+#### 20.03.2014 Tarihli 2013 Yılı Olağan Genel Kurul Toplantı Tutanağı
+Minutes of the 2013 Ordinary General Assembly Meeting Held on 20.03.2014
+
+#### 29.03.2013 Tarihli 2012 Yılı Olağan Genel Kurul Toplantı Tutanağı
+Minutes of the 2012 Ordinary General Assembly Meeting Held on 29.03.2013
+
+#### 29.03.2013 Tarihli 2012 Yılı A Grubu İmtiyazlı Pay Sahipleri Toplantı Tutanağı
+Minutes of the 2012 Group A Privileged Shareholders' Meeting Held on 29.03.2013
+
+#### 30.03.2012 Tarihli 2011 Yılı Olağan Genel Kurul Toplantı Tutanağı
+Minutes of the 2011 Ordinary General Assembly Meeting Held on 30.03.2012
+
+#### 30.03.2012 Tarihli 2011 Yılı A Grubu İmtiyazlı Pay Sahipleri Olağan Genel Kurul Toplantı Tutanğı
+Minutes of the 2011 Group A Privileged Shareholders' Ordinary General Meeting Held on 30.03.2012
+
+#### 02.09.2026 Tarihli Olağanüstü Genel Kurul Toplantı Daveti
+Invitation to the Extraordinary General Assembly Meeting of 02.09.2026
+
+#### 2025 Yılı Olağan Genel Kurul Daveti
+Invitation to the 2025 Ordinary General Assembly
+
+#### 2024 Yılı Olağan Genel Kurul Daveti
+Invitation to the 2024 Ordinary General Assembly
+
+#### 25.12.2024 Tarihli Olağanüstü Genel Kurul Daveti
+Invitation to the Extraordinary General Assembly of 25.12.2024
+
+#### 2023 Yılı Olağan Genel Kurul Daveti
+Invitation to the 2023 Ordinary General Assembly
+
+#### 2022 Yılı Olağan Genel Kurul Daveti
+Invitation to the 2022 Ordinary General Assembly
+
+#### 2021 Yılı Olağan Genel Kurul Daveti
+Invitation to the 2021 Ordinary General Assembly
+
+#### 2020 Yılı Olağan Genel Kurul Çağrısı (05.07.2021)
+Call for the 2020 Ordinary General Assembly (05.07.2021)
+
+#### İDEALİST GYO A.Ş.2017 Yılı Olağan Genel Kurul Toplantısı Daveti
+İdealist GYO A.Ş. Invitation to the 2017 Ordinary General Assembly Meeting
+
+#### İdealist GYO A.Ş. 2016 Yılı Olağanüstü Genel Kurul Toplantısı Daveti
+İdealist GYO A.Ş. Invitation to the 2016 Extraordinary General Assembly Meeting
+
+#### İdealist GYO A.Ş. 2015 Yılı Olağan Genel Kurul Toplantı Daveti
+İdealist GYO A.Ş. Invitation to the 2015 Ordinary General Assembly Meeting
+
+#### İdealist GYO A.Ş. 2014 Yılı Olağan Genel Kurul Toplantı Daveti
+İdealist GYO A.Ş. Invitation to the 2014 Ordinary General Assembly Meeting
+
+#### İdealist GYO A.Ş 2013 Genel Kurul Daveti
+İdealist GYO A.Ş. Invitation to the 2013 General Assembly
+
+#### İdealist GYO A.Ş 2012 Genel Kurul Daveti
+İdealist GYO A.Ş. Invitation to the 2012 General Assembly
+
+#### İdealist GYO A.Ş. 2011 Genel Kurul Daveti
+İdealist GYO A.Ş. Invitation to the 2011 General Assembly
+
+#### İdealist GYO A.Ş. 2010 Genel Kurul Daveti
+İdealist GYO A.Ş. Invitation to the 2010 General Assembly
+
+#### 2022 Yılı Olağan Genel Kurul Vekaletname Örneği
+Sample Proxy Form – 2022 Ordinary General Assembly
+
+#### 2022 Yılı Olağan Genel Kurul Bilgilendirme Dökümanı
+Information Document – 2022 Ordinary General Assembly
+
+#### 2021 Yılı Olağan Genel Kurul Bilgilendirme Dökümanı
+Information Document – 2021 Ordinary General Assembly
+
+#### 2021 Yılı Olağan Genel Kurul Gündem Maddeleri
+Agenda Items – 2021 Ordinary General Assembly
+
+#### 2021 Yılı Olağan Genel Kurul Vekaletname Örneği
+Sample Proxy Form – 2021 Ordinary General Assembly
+
+#### 2026 Yılı Olağanüstü Genel Kurul Toplantısı Hazirun Cetveli
+List of Attendees – 2026 Extraordinary General Assembly Meeting
+
+#### 2025 Yılı Olağan Genel Kurul Toplantısı Hazirun Cetveli
+List of Attendees – 2025 Ordinary General Assembly Meeting
+
+#### 2024 Yılı Olağan Genel Kurul Toplantısı Hazirun Cetveli
+List of Attendees – 2024 Ordinary General Assembly Meeting
+
+#### 2024 Yılı Olağanüstü Genel Kurul Toplantısı Hazirun Cetveli
+List of Attendees – 2024 Extraordinary General Assembly Meeting
+
+#### 2023 Yılı Olağan Genel Kurul Toplantısı Hazirun Cetveli
+List of Attendees – 2023 Ordinary General Assembly Meeting
+
+#### 2022 Yılı Olağan Genel Kurul Toplantısı Hazirun Cetveli
+List of Attendees – 2022 Ordinary General Assembly Meeting
+
+#### 2021 Yılı Olağan Genel Kurul Hazır Bulunanlar Listesi
+List of Attendees – 2021 Ordinary General Assembly
+
+#### 2020 Yılı Olağan Genel Kurul Hazır Bulunanlar Listesi
+List of Attendees – 2020 Ordinary General Assembly
+
+#### 30.03.2017 Tarihli Olağan Genel Kurul Toplantısı Hazirun Cetveli (30.03.2017)
+List of Attendees – Ordinary General Assembly Meeting of 30.03.2017 (30.03.2017)
+
+#### 05.08.2016 Tarihli Olağanüstü Genel Kurul Toplantısı Hazirun Cetveli
+List of Attendees – Extraordinary General Assembly Meeting of 05.08.2016
+
+#### 29.03.2016 Tarihli Olağan Genel Kurul Toplantısı Hazirun
+List of Attendees – Ordinary General Assembly Meeting of 29.03.2016
+
+#### 30.03.2015 Tarihli Olağan Genel Kurul Toplantısı Hazirun
+List of Attendees – Ordinary General Assembly Meeting of 30.03.2015
+
+#### 20.03.2014 Tarihli Olağan Genel Kurul Toplantısı Hazirun
+List of Attendees – Ordinary General Assembly Meeting of 20.03.2014
+
+#### 29.03.2013 Tarihli Olağan Genel Kurul Toplantısı Hazirun
+List of Attendees – Ordinary General Assembly Meeting of 29.03.2013
+
+#### 29.03.2013 Tarihli A Grubu İmtiyazlı Pay Sahipleri Toplantısı Hazirun
+List of Attendees – Group A Privileged Shareholders' Meeting of 29.03.2013
+
+#### 2018 Yılı Kurumlar Vergisi Beyannamesi (24.04.2019)
+2018 Corporate Tax Return (24.04.2019)
+
+#### Kurumsal Yönetim Bilgi Formu 2018 (26.02.2019)
+Corporate Governance Information Form 2018 (26.02.2019)
+
+#### Kurumsal Yönetim Uyum Raporu *2018-Yıllık Bildirim (26.02.2019)
+Corporate Governance Compliance Report – 2018 Annual Notification (26.02.2019)

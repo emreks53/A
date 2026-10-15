@@ -22,6 +22,11 @@ function yonlendirme(yol: string): string | undefined {
   return yonHaritasi.get(yol) ?? yonHaritasi.get(coz(yol));
 }
 
+const TASINAN: Record<string, string> = {
+  '/en/investor-relations/mali-tablo-ve-raporlar/reports/': '/en/investor-relations/mali-tablo-ve-raporlar/',
+  '/en/investor-relations/uyum-raporu/kurumsal-yonetim-ilkeleri-uyum-raporu/kayit-376/': '/en/investor-relations/uyum-raporu/kurumsal-yonetim-ilkeleri-uyum-raporu/',
+};
+
 const kapali = (r: Response, panel = false): Response => {
   const h = new Headers(r.headers);
   h.set('X-Robots-Tag', 'noindex, nofollow'); h.set('X-Frame-Options', 'DENY');
@@ -36,7 +41,9 @@ export const onRequest: PagesFunction<Env> = async ({ request, env, next }) => {
   const url = new URL(request.url);
   const p = url.pathname;
 
-  // 1) Eski adresler
+  // 1) Eski adresler (ve kaldırılan iki yalnız-EN sayfa: içerikleri TR asıldan kurulan EN sayfalarda)
+  const tasinan = TASINAN[p];
+  if (tasinan) return new Response(null, { status: 301, headers: { location: new URL(tasinan, url).toString(), 'cache-control': 'public, max-age=86400' } });
   if (ONEKLER.some((o) => p === o || p.startsWith(o.endsWith('/') ? o : o + '?') || p.startsWith(o))) {
     let hedef = yonlendirme(p + url.search);
     if (!hedef && (p === '/tr.php' || p === '/index.php')) hedef = '/';
@@ -110,7 +117,7 @@ function yerlesim(h: Harita, veri: PanelVerisi, dil: Dil): Yerlesim {
       if (!bol.gruplar[hd.grupIdx].yillar.includes(b.yil)) {
         const m = y.grupYeni.get(hd.grupIdx) || new Map<string, Satir[]>(); ekle(m, b.yil, s); y.grupYeni.set(hd.grupIdx, m);
       }
-      sayfa = dil === 'en' ? bol.kok.en + 'reports/' : bol.kok.tr;
+      sayfa = bol.kok[dil];
     } else if (hd.rota) {
       ekle(y.rota, hd.rota, s); y.bolumTipi.set(hd.rota, bol.tip); sayfa = hd.rota;
       if (bol.tip === 'yil' && !bol.yillar[b.yil]?.[dil]) {
@@ -209,7 +216,7 @@ function detay(yil: string, s: Satir[], acik: boolean): string {
 interface Aday { tur: string; yil: string; rank: number; etiket: string; ad: string; yol: string; boyut: number; panel: boolean; id: number }
 function anaSayfa(html: string, h: Harita, veri: PanelVerisi, dil: Dil): string {
   const CID = ' data-astro-cid-bkwvb2u2';
-  const adaylar: Aday[] = h.guncel.map((g) => ({ ...g, panel: false, id: 0 }));
+  const adaylar: Aday[] = h.guncel.map((g) => ({ ...g, etiket: dil === 'en' ? g.etiket_en || g.etiket : g.etiket, panel: false, id: 0 }));
   for (const b of veri.belgeler) {
     const bol = h.bolumler.find((x) => x.kid === b.kid); if (!bol) continue;
     const tur = belgeTuru(bol, b.grup);

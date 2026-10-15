@@ -1,0 +1,335 @@
+# Sayfa başlıkları (TR rota → EN başlık). Yalnızca başlıklar çevrilir; sayfa metinleri Türkçe kalır (kullanıcı kararı 15.10.2026).
+# Kalıplı başlıklar (tarihli özel durum açıklaması, yıl sayfaları, portföy tabloları) kalip.py içindeki kurallarla üretilir.
+
+#### /
+Realising prestigious real estate projects that benefit our country, in an ideal way.
+
+#### /arama/
+Search
+
+#### /basinda-biz/
+IN MEDIA
+
+#### /basinda-biz/emlak-kulisi/
+İdealist GYO Receives the International Quality Star Award! / Emlak Kulisi
+
+#### /gizlilik-ve-cerez-politikasi/
+Privacy & Cookie Policy
+
+#### /iletisim/
+CONTACT INFORMATION
+
+#### /kurumsal/
+ABOUT US
+
+#### /kurumsal/bilgi-toplumu-hizmetleri/
+Information Society Services
+
+#### /kurumsal/insan-kaynaklari/
+Human Resources
+
+#### /kurumsal/ortaklik-yapisi/
+Shareholding Structure
+
+#### /kurumsal/sirket-profili/
+Company Profile
+
+#### /kurumsal/ticaret-sicil-bilgileri/
+Trade Registry Information
+
+#### /kurumsal/vizyon-misyon-hedef/
+Vision, Mission and Goals
+
+#### /kurumsal/yonetim-kurulu-komiteleri/
+Board Committees
+
+#### /kurumsal/yonetim-kurulu-ve-ust-yonetim/
+Board of Directors and Senior Management
+
+#### /linkler/
+LINKS
+
+#### /portfoy/
+PORTFOLIO AND PROJECTS
+
+#### /portfoy/degerleme-raporlari/
+Valuation Reports
+
+#### /portfoy/gayrimenkul-portfoyumuz/
+Our Real Estate Portfolio
+
+#### /portfoy/projelerimiz/
+Our Projects
+
+#### /portfoy/projelerimiz/devam-eden/
+Ongoing Projects
+
+#### /portfoy/projelerimiz/devam-eden/izmir-aliaga-lojistik-depo-yapimi/
+İZMİR ALİAĞA LOGISTICS WAREHOUSE CONSTRUCTION
+
+#### /portfoy/projelerimiz/tamamlanan/
+Completed Projects
+
+#### /portfoy/projelerimiz/tamamlanan/istanbul-sile-cavus-mahallesi-arsa-satisi-karsiligi-gelir-paylasimi-isi/
+İSTANBUL ŞİLE ÇAVUŞ NEIGHBOURHOOD REVENUE SHARING IN RETURN FOR LAND SALE PROJECT
+
+#### /portfoy/sigorta-policeleri/
+Insurance Policies
+
+#### /site-haritasi/
+SITE MAP
+
+#### /haberler/
+NEWS & ANNOUNCEMENTS
+
+#### /yatirimci-iliskileri/
+INVESTOR RELATIONS
+
+#### /yatirimci-iliskileri/belge-kutuphanesi/
+Document Library
+
+#### /yatirimci-iliskileri/bilgilendirme-politikasi/
+Disclosure Policy
+
+#### /yatirimci-iliskileri/esas-sozlesme/
+Articles of Association
+
+#### /yatirimci-iliskileri/esas-sozlesme/guncel/
+Articles of Association (Current)
+
+#### /yatirimci-iliskileri/esas-sozlesme/tadil-metni/
+Amendment Text of the Articles of Association
+
+#### /yatirimci-iliskileri/faaliyet-raporlari/
+Annual Reports
+
+#### /yatirimci-iliskileri/faaliyet-raporlari/2018/2018-yili-2donem-yonetim-kurulu-faaliyet-raporu/
+2018 Q2 Board of Directors' Activity Report
+
+#### /yatirimci-iliskileri/faaliyet-raporlari/2018/2018-yili-3donem-yonetim-kurulu-faaliyet-raporu/
+2018 Q3 Board of Directors' Activity Report
+
+#### /yatirimci-iliskileri/faaliyet-raporlari/2018/2018-yili-4donem-yonetim-kurulu-faaliyet-raporu/
+2018 Q4 Board of Directors' Activity Report
+
+#### /yatirimci-iliskileri/faaliyet-raporlari/2019/2019-yili-3donem-yonetim-kurulu-faaliyet-raporu/
+2019 Q3 Board of Directors' Activity Report
+
+#### /yatirimci-iliskileri/faaliyet-raporlari/2019/bankadan-kredi-kullanilmasi-hk/
+Bank Loan Utilisation
+
+#### /yatirimci-iliskileri/faaliyet-raporlari/2020/2020-yili-2donem-yonetim-kurulu-faaliyet-raporu/
+2020 Q2 Board of Directors' Activity Report
+
+#### /yatirimci-iliskileri/faaliyet-raporlari/2020/31032020-donemi-yonetim-kurulu-faaliyet-raporu/
+Board of Directors' Activity Report for the Period Ended 31.03.2020
+
+#### /yatirimci-iliskileri/faaliyet-raporlari/2020/31122019-yonetim-kurulu-faaliyet-raporu/
+Board of Directors' Activity Report as of 31.12.2019
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/
+General Assembly Information
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/ek-aciklamalar/
+Additional Disclosures
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/ek-aciklamalar/2019-yili-olagan-genel-kurul-toplanti-sonuclari-tescili/
+Registration of the Results of the 2019 Ordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/ek-aciklamalar/kayit-152/
+Additional Disclosures
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/
+General Assembly Meeting Invitations
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2018-yili-olagan-genel-kurul-toplantisi/
+2018 Ordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2019-yili-olagan-genel-kurul-toplantisi-toplanti-tarihi-revize/
+2019 Ordinary General Assembly Meeting (Revised Meeting Date)
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/genel-kurul-toplanti-davetleri/2019-yili-olagan-genel-kurul-toplantisi/
+2019 Ordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/
+Meeting Minutes
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/03062010-tarihli-olaganustu-genel-kurul-toplanti-tutanagi/
+Minutes of the Extraordinary General Assembly Meeting Held on 03.06.2010
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/19022010-tarihli-olagan-genel-kurul-toplanti-tutanagi/
+Minutes of the Ordinary General Assembly Meeting Held on 19.02.2010
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/19022010-tarihli-olaganustu-genel-kurul-toplanti-tutanagi/
+Minutes of the Extraordinary General Assembly Meeting Held on 19.02.2010
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/2019-yili-olagan-genel-kurulu-toplanti-tutanaklari/
+Minutes of the 2019 Ordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/31032011-tarihli-a-grubu-imtiyazli-pay-sahipleri-olagan-genel-kurul-toplanti-tutanagi/
+Minutes of the Group A Privileged Shareholders' Ordinary General Meeting Held on 31.03.2011
+
+#### /yatirimci-iliskileri/genel-kurul-bilgileri/toplanti-tutanaklari/31032011-tarihli-olagan-genel-kurul-toplanti-tutanagi/
+Minutes of the Ordinary General Assembly Meeting Held on 31.03.2011
+
+#### /yatirimci-iliskileri/gyolar-hakkinda/
+About REITs
+
+#### /yatirimci-iliskileri/hazirun-cetveli/
+List of Attendees
+
+#### /yatirimci-iliskileri/hazirun-cetveli/03062010-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – Extraordinary General Assembly Meeting of 03.06.2010
+
+#### /yatirimci-iliskileri/hazirun-cetveli/05082016-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – Extraordinary General Assembly Meeting of 05.08.2016
+
+#### /yatirimci-iliskileri/hazirun-cetveli/19022010-tarihli-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – General Assembly Meeting of 19.02.2010
+
+#### /yatirimci-iliskileri/hazirun-cetveli/19022010-tarihli-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – Extraordinary General Assembly Meeting of 19.02.2010
+
+#### /yatirimci-iliskileri/hazirun-cetveli/20032014-tarihli-olagan-genel-kurul-toplantisi-hazirun/
+List of Attendees – Ordinary General Assembly Meeting of 20.03.2014
+
+#### /yatirimci-iliskileri/hazirun-cetveli/2020-yili-olagan-genel-kurul-hazir-bulunanlar-listesi/
+List of Attendees – 2020 Ordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/hazirun-cetveli/2021-yili-olagan-genel-kurul-hazir-bulunanlar-listesi/
+List of Attendees – 2021 Ordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/hazirun-cetveli/2022-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – 2022 Ordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/hazirun-cetveli/2023-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – 2023 Ordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/hazirun-cetveli/2024-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – 2024 Ordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/hazirun-cetveli/2024-yili-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – 2024 Extraordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/hazirun-cetveli/2025-yili-olagan-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – 2025 Ordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/hazirun-cetveli/2026-yili-olaganustu-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – 2026 Extraordinary General Assembly Meeting
+
+#### /yatirimci-iliskileri/hazirun-cetveli/29032013-tarihli-a-grubu-imtiyazli-pay-sahipleri-toplantisi-hazirun/
+List of Attendees – Group A Privileged Shareholders' Meeting of 29.03.2013
+
+#### /yatirimci-iliskileri/hazirun-cetveli/29032013-tarihli-olagan-genel-kurul-toplantisi-hazirun/
+List of Attendees – Ordinary General Assembly Meeting of 29.03.2013
+
+#### /yatirimci-iliskileri/hazirun-cetveli/29032016-tarihli-olagan-genel-kurul-toplantisi-hazirun/
+List of Attendees – Ordinary General Assembly Meeting of 29.03.2016
+
+#### /yatirimci-iliskileri/hazirun-cetveli/30032015-tarihli-olagan-genel-kurul-toplantisi-hazirun/
+List of Attendees – Ordinary General Assembly Meeting of 30.03.2015
+
+#### /yatirimci-iliskileri/hazirun-cetveli/30032017-tarihli-olagan-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – Ordinary General Assembly Meeting of 30.03.2017
+
+#### /yatirimci-iliskileri/hazirun-cetveli/31032011-tarihli-a-grubu-imtiyazli-pay-sahipleri-olagan-genel-kurul-toplantisi-hazirun/
+List of Attendees – Group A Privileged Shareholders' Ordinary General Meeting of 31.03.2011
+
+#### /yatirimci-iliskileri/hazirun-cetveli/31032011-tarihli-genel-kurul-toplantisi-hazirun-cetveli/
+List of Attendees – General Assembly Meeting of 31.03.2011
+
+#### /yatirimci-iliskileri/ic-yonerge/
+Internal Directive
+
+#### /yatirimci-iliskileri/ic-yonerge/ic-yonerge/
+Internal Directive
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/
+Prospectuses and Public Offering Circulars
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayina-sunulan-taslak-izahname25032024/
+Rights Issue – Draft Prospectus Submitted for CMB Approval (25.03.2024)
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayli-izahname-08082024/
+Rights Issue – CMB-Approved Prospectus (08.08.2024)
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-spk-onayli-izahname/
+Rights Issue – CMB-Approved Prospectus
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-tasarruf-sahipleri-satis-duyurusu25032024/
+Rights Issue – Announcement of Sale to Investors (25.03.2024)
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-tasarruf-sahiplerine-satis-duyurusu-27042021/
+Rights Issue – Announcement of Sale to Investors (27.04.2021)
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/bedelli-sermaye-artirimi-taslak-izahname-27042021/
+Rights Issue – Draft Prospectus (27.04.2021)
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/ek2sozlesme-ornegi/
+Annex 2 – Sample Agreement
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/ek3degerleme-raporlari/
+Annex 3 – Valuation Reports
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/ek4ic-bilgiye-ulasanlarin-listesi/
+Annex 4 – List of Persons with Access to Inside Information
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/ek5son-3-yil-bagimsiz-denetim-raporlari/
+Annex 5 – Independent Audit Reports for the Last Three Years
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/ek6hukukcu-raporu/
+Annex 6 – Legal Opinion
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/halka-arz-izahnamesi-ve-ek1esas-sozlesme/
+IPO Prospectus and Annex 1 – Articles of Association
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/halka-arz-sirkuleri/
+Public Offering Circular
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/spk-onayina-sunulan-izahname-23012026/
+Prospectus Submitted for CMB Approval (23.01.2026)
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/tasarruf-sahiplerine-satis-duyurusu-03092024/
+Announcement of Sale to Investors (03.09.2024)
+
+#### /yatirimci-iliskileri/izahname-ve-halka-arz-sirkuleri/tasarruf-sahiplerine-satis-duyurusu/
+Announcement of Sale to Investors
+
+#### /yatirimci-iliskileri/kar-dagitim-politikasi/
+Profit Distribution Policy
+
+#### /yatirimci-iliskileri/komiteler/
+Committees
+
+#### /yatirimci-iliskileri/komiteler/denetim-komitesi/
+Audit Committee
+
+#### /yatirimci-iliskileri/komiteler/kurumsal-yonetim-komitesi/
+Corporate Governance Committee
+
+#### /yatirimci-iliskileri/komiteler/riskin-erken-saptanmasi-komitesi/
+Early Detection of Risk Committee
+
+#### /yatirimci-iliskileri/kurumsal-kurallar/
+Corporate Rules
+
+#### /yatirimci-iliskileri/kurumsal-kurallar/etik-kurallarimiz/
+Our Code of Ethics
+
+#### /yatirimci-iliskileri/mali-tablo-ve-raporlar/
+Financial Statements and Reports
+
+#### /yatirimci-iliskileri/portfoy-tablolari/
+Portfolio Tables
+
+#### /yatirimci-iliskileri/ucret-politikasi/
+Remuneration Policy
+
+#### /yatirimci-iliskileri/uyum-raporu/
+Compliance Report
+
+#### /yatirimci-iliskileri/uyum-raporu/kurumsal-yonetim-ilkeleri-uyum-raporu/
+Corporate Governance Principles Compliance Report
+
+#### /yatirimci-iliskileri/uyum-raporu/kurumsal-yonetim-ilkeleri-uyum-raporu/2019-yili-kurumsal-yonetim-uyum-raporu/
+2019 Corporate Governance Compliance Report

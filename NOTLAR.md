@@ -9,7 +9,7 @@
   ve yeniden yazılan sunucu kodunu içerir.
 - **15.10.2026 yayını:** kurtarılan site ve aşağıdaki değişiklikler yayında (dağıtım 9eb6eb72). Doğrulama: 1421 dosya
   canlıyla birebir aynı; eski adres yönlendirmeleri, panel koruması, R2'deki büyük PDF'ler, iletişim formu denetimi
-  ve menü titremesi canlıda denendi. GitHub'a gönderim hâlâ 403 (Claude GitHub uygulamasının yazma izni gerekiyor).
+  ve menü titremesi canlıda denendi. GitHub'a gönderim artık çalışıyor (dal `claude/idealist-gyo-redesign-r2lnqp`).
 
 ## 15.10.2026 kullanıcı istekleri (araclar/degisiklikler/2026-10-15-ana-sayfa-portfoy-baslik.py)
 
@@ -34,6 +34,48 @@
 - Ana sayfa Şirket Profili bölümünden "HAKKIMIZDA / Şirket Profili" başlığı ve "Şirket Profili" düğmesi kaldırıldı;
   iki paragraf tam genişlikte, yazı 19 px → 20–28 px (1280 px'te ~26 px). Yayın: 79c9cac6.
 
+## 15.10.2026 üçüncü istek: İngilizce site (araclar/ceviri/)
+
+Kullanıcı: "İngilizce halinde eksik kalan yerleri profesyonel bir çevirmen gibi, bağlamı gözeterek Türkçe asıllarına
+bakarak oluştur"; ardından kapsamı daralttı: **yan menü, sayfa başlıkları, liste/haber başlıkları İngilizce; sağdaki
+uzun metinler ve habere tıklayınca açılan metin Türkçe kalır.**
+
+- **Kurulum:** EN sayfaların hepsi TR asıldan yeniden kuruldu (`kur.py`): 207 yeni (63 haber, 8 Hakkımızda alt sayfası,
+  136 Yatırımcı Köşesi sayfası) + 180 mevcut (çoğunda başlık ve gövde `*` idi) + EN ana sayfa. Yöntem: TR HTML
+  belirteçlerine ayrılır, yalnızca görünen kısa metinler ve birkaç öznitelik değişir; panel işaretleri, stiller ve
+  bağlantı yapısı aynen kalır, site içi bağlantılar EN eşlerine çevrilir. Gövde metinleri (prose) Türkçe.
+- **Sözlükler:** `bellek/basliklar/` (392 sayfa başlığının 306'sı; 86'sı `kalip.py` kalıbından: tarihli ÖDA, yıl
+  sayfaları, portföy tabloları), `bellek/etiketler/` (belge adları), `bellek/arayuz/` (menü, alt bilgi, künye vb.).
+  Terimler: SPK → CMB, KAP → Public Disclosure Platform (KAP), GYO → REIT, Özel Durum Açıklaması → Material Event
+  Disclosure, Faaliyet Raporu → Annual/Activity Report, Hazirun Cetveli → List of Attendees, Bedelli Sermaye Artırımı →
+  Rights Issue, Pay Alım Teklifi → Tender Offer, dönem adları 3-Month / Q1 …; İngiliz yazımı, tarihler gg.aa.yyyy.
+- **Düzeltilen eski EN adlar** (liste: icerik-notlari.md A2): Annual Repots, General Assembly Informations,
+  The List Of Attendees, IPO Prospectuses And Circulars, Internal Instruction, About REIT, The Risk Assessment
+  Committee, yanlış sayfa adları ("82", izahname sayfalarında "Annual Reports", tek tek portföy tablolarında
+  "Portfolio Tables") ve 100 sayfadaki `*` başlıklar. Eski EN bilgi notları ("Contents has not been added…",
+  "Our insurance policies has not been added…") aynen korundu.
+- **Kaldırılan yalnız-EN sayfalar:** `/en/investor-relations/mali-tablo-ve-raporlar/reports/` ve
+  `…/kurumsal-yonetim-ilkeleri-uyum-raporu/kayit-376/` yeni EN sayfaların birebir kopyasıydı (aynı 90 / 3 belge);
+  sunucu kodunda 301, eski adres haritasında (`panel/yonlendirmeler.json`, 99 kayıt) hedefleri yeni sayfalar.
+- **Belge erişimi:** EN'de önceden ulaşılan 247 belgenin hepsi yine ulaşılabilir (şimdi 272 = TR ile aynı); kırık iç
+  bağlantı yok; EN sayfalarda Türkçe arayüz metni kalmadı (dosya adları hariç).
+- **Arama / kütüphane (`ozel.py`):** EN arama verisi 375 kayıt (başlık ve bölüm yolu EN, gövde TR); EN kütüphane
+  belge adları, bölüm yolları ve tür adları EN. EN aramada "Investor" gibi büyük I'lı kelimeler bulunamıyordu
+  (tr küçük harf dönüşümü): iki tarafa da `ı→i` eklendi. TR kütüphanede belge adlarına eski EN adlar karışmıştı
+  ("3 Aylık | Annual Reports"): yalnız TR sayfalardaki adlar bırakıldı.
+- **Panel (sunucu kodu + `panel-veri/harita.json`):** EN bölüm adları, yıl başlık kalıbı ("2027 Annual Reports"),
+  tüm yılların EN sayfaları ve 392 sayfa eşi; Mali Tablo grupları EN'de ana sayfaya ekleniyor (önceden reports/);
+  güncel belgelerin EN adı (`etiket_en`). Yerelde panelden belge ekleme denendi: EN yıl sayfası, ana sayfa kutusu,
+  kütüphane ve arama doğru. Panelden eklenen duyurular yalnız TR'de (EN başlığı alanı yok).
+- **TR tarafı:** EN eşi olmayan 207 TR sayfaya `hreflang="en"` ve dil seçicide EN adresi (önceden /en/). Sitemap: 784
+  adres (392 TR + 392 EN).
+- **Paylaşım görselleri:** 81 EN OG görseli `og.mjs` ile çizildi (71 yeni, başlığı değişen 10; sitenin yazı tipleri,
+  ölçüler mevcut görsellerden; uzun başlıkta yazı küçülür). Fotoğraflı şablonlar (ana sayfa, portföy) değişmedi;
+  iki proje görselinde eski kısa başlıklar ("İZMİR", "ŞİLE") duruyor.
+- **TR değişince EN'i yenilemek:** `python3 araclar/ceviri/cikar.py` (yeni sayfa varsa) → sözlüğe başlık ekle →
+  `python3 araclar/ceviri/kur.py --yaz && python3 araclar/ceviri/ozel.py --yaz` →
+  `node araclar/ceviri/og.mjs araclar/ceviri/cikti/og-isler.json`. Çevrilemeyen metin `cikti/eksik.txt`'ye düşer.
+
 ## Kullanıcı kararları (özet)
 
 - Hero: "Ülkemize faydalı, prestijli gayrimenkul projelerini ideal şekilde gerçekleştirmek." / EN "…in an ideal way."
@@ -41,6 +83,8 @@
 - İçerik notlarındaki B18–B21 (Komiteler çelişkisi, T.C. kimlik no, 01.01.0000 tarihleri, yazım hataları): dokunma.
 - Hero görseli: denizi ve binanın tamamını gösteren en yüksek çözünürlüklü kadraj; masaüstünde ufuk çizgisi menü
   yazılarının altına değiyor. Vitrin: projelerin bitmiş hâlleri (Şile, İdealist Cadde).
+- EN site (15.10.2026): başlıklar, menüler, liste ve belge adları İngilizce; uzun metinler (haber, açıklama, politika
+  metinleri) Türkçe kalır.
 - Üst siyah şerit kaldırıldı; bağlantıları (Bilgi Toplumu Hizmetleri, KAP, Site Haritası, Arama, TR/EN) mobil menüye
   ve masaüstünde arama simgesi + dil seçimine taşındı.
 
