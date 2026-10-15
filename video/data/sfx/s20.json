@@ -20,33 +20,6 @@
 "gain": -10
 },
 {
-"t": 115.3,
-"dur": 0.6,
-"kind": "cloth",
-"desc": "leather book cover lifting and swinging open",
-"gain": -3
-},
-{
-"t": 115.9,
-"dur": 0.3,
-"kind": "wood",
-"desc": "cover settling onto the wooden rahle",
-"gain": -4
-},
-{
-"t": 115.65,
-"dur": 0.8,
-"kind": "paper",
-"desc": "three pages riffling over in the breeze"
-},
-{
-"t": 115.97,
-"dur": 0.3,
-"kind": "pop",
-"desc": "subtle marker for ring",
-"gain": -3
-},
-{
 "t": 118.08,
 "dur": 0.3,
 "kind": "pop",
@@ -59,5 +32,46 @@
 "kind": "chime",
 "desc": "single soft warm bell under the end card",
 "gain": -4
+},
+{
+"t": 115.35,
+"dur": 0.9,
+"kind": "cloth",
+"desc": "leather front cover lifting and swinging open",
+"gain": -3
+},
+{
+"t": 115.87,
+"dur": 0.65,
+"kind": "paper",
+"desc": "three leaves riffling over"
+},
+{
+"t": 116.25,
+"dur": 0.3,
+"kind": "wood",
+"desc": "cover settling onto the rahle",
+"gain": -4
+},
+{
+"t": 116.29,
+"dur": 0.3,
+"kind": "pop",
+"desc": "subtle marker for the 195 ring",
+"gain": -3
+},
+{
+"t": 118.9,
+"dur": 1.35,
+"kind": "whoosh",
+"desc": "soft air move as the camera cranes up",
+"gain": -5
+},
+{
+"t": 120.05,
+"dur": 0.3,
+"kind": "pop",
+"desc": "very subtle marker label",
+"gain": -5
 }
 ]

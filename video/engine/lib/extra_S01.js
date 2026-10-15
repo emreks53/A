@@ -519,7 +519,7 @@ export function lampField(items, o = {}) {
   const aOn = new Float32Array(N), aSeed = new Float32Array(N); items.forEach((it, i) => { aOn[i] = it.on; aSeed[i] = it.seed; });
   const { geo, flameAt } = clayLampGeometry(0);
   const bgeo = geo.clone(); bgeo.setAttribute('aOn', new THREE.InstancedBufferAttribute(aOn, 1));
-  const bmat = clayMaterial().clone();
+  const bmat = clayMaterial().clone(); bmat.color.setRGB(1.55, 1.4, 1.3); // unlit lamps read as soft clay bumps, not dark specks
   bmat.onBeforeCompile = (sh) => {
     sh.uniforms.uTime = U.uTime;
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aOn; uniform float uTime; varying float vLit; varying float vUp;')

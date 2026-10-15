@@ -454,9 +454,9 @@ export function cesme() {
       const fac = Math.round(Math.atan2(z, x) / (PI / 3.5)) * (PI / 3.5), cut = 1 - .06 * (1 - Math.cos(Math.atan2(z, x) - fac)) * 8; // chisel facets
       x = se(x, .55); z = se(z, .55); y = se(y, .7); x *= .165 * (1 + n) * cut * (1 - .16 * Math.max(0, y)); z *= .14 * (1 + n) * cut * (1 - .16 * Math.max(0, y)); y = y < 0 ? y * .02 : y * top * .9 * (1 + n * .6); const r = Math.hypot(x - .01, z);
       if (r < hb * 1.15) { const yb = top * .93 - hd * Math.max(0, 1 - (r / hb) ** 2); y = Math.min(y, yb + Math.max(0, r - hb) * .4); }
-      p.setXYZ(i, x, y, z); } rg.computeVertexNormals(); { const cc = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const r = Math.hypot(p.getX(i) - .01, p.getZ(i)); const wet = Math.max(0, 1 - Math.max(0, r - hb) / .035) * (p.getY(i) > .05 ? 1 : 0); const v = 1 - .3 * wet; cc.set([v * .98, v, v * 1.03], i * 3); } rg.setAttribute('color', new THREE.BufferAttribute(cc, 3)); } const uvs = []; for (let i = 0; i < p.count; i++) uvs.push(p.getX(i) * 4 + .5, p.getZ(i) * 4 + p.getY(i) * 3); rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); }
+      p.setXYZ(i, x, y, z); } rg.computeVertexNormals(); { const cc = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const r = Math.hypot(p.getX(i) - .01, p.getZ(i)); const wet = Math.max(0, 1 - Math.max(0, r - hb) / .035) * (p.getY(i) > .05 ? 1 : 0); const v = 1 - .3 * wet; cc.set([v * .98, v, v * 1.03], i * 3); } rg.setAttribute('color', new THREE.BufferAttribute(cc, 3)); } boxUV(rg, 5); }
   const rt = TEX.stone({ a: '#b9b4aa', b: '#77736b', seed: 29 });
-  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: rt.map, normalMap: rt.normalMap, normalScale: V2(1.6, 1.6), roughness: .66, clearcoat: .3, clearcoatRoughness: .4, color: '#d2cec4', vertexColors: true }));
+  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: rt.map, normalMap: rt.normalMap, normalScale: V2(1.6, 1.6), roughness: .66, clearcoat: .3, clearcoatRoughness: .4, color: '#cfd1d0', vertexColors: true }));
   rock.position.set(mouth.x - .01, 0, mouth.z); g.add(rock);
   const surfY = .081;
   const ws = waterSurface({ color: '#3a7a80', opacity: .82, amb: .00015 });

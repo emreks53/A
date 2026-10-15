@@ -56,7 +56,7 @@ export default {
     heroLampXZ.forEach(([x, z, rot], i) => { const l = X.heroLamp({ scale: 1.15, seed: i + 3 }); l.position.set(x, hAt(x, z) - y0 + .001, z); l.rotation.y = rot; hero.add(l); R.heroLamps.push(l); });
     { const hp = X.lampField(heroLampXZ.map(([x, z], i) => ({ x, y: .003, z, rot: 0, s: .55, on: -5, seed: i })), { fog: 0 }); hp.userData.bodies.visible = false; hp.userData.flames.visible = false; hero.add(hp); R.heroPools = hp; }
     const pl = (x, y, z, inten, dist) => { const l = new THREE.PointLight('#ff9a48', inten, dist, 2); l.position.set(x, y, z); hero.add(l); l.userData.base = inten; return l; };
-    R.rimLamp = pl(-.34, .17, -.88, .34, 2.4); R.fillLamp = pl(-.55, .16, .62, .16, 2.2);
+    R.rimLamp = pl(-.3, .32, -.85, .16, 2.4); R.fillLamp = pl(-.55, .2, .62, .1, 2.2);
 
     // dawn ray: spot from the sun direction, raking across the cover from the right
     const spot = new THREE.SpotLight('#ffdcae', 0, 0, .0165, 1, 0); spot.position.copy(R.book).add(L.clone().multiplyScalar(16)); spot.target.position.copy(R.book).add(new THREE.Vector3(-.05, -.1, 0));
