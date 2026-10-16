@@ -215,8 +215,10 @@ export default {
       const m = R.sparks.material, u = m.uniforms;
       Object.assign(u, { uVP0: { value: new THREE.Matrix4() }, uVP1: { value: new THREE.Matrix4() }, uSmear: { value: 0 }, uRes: { value: new THREE.Vector2(1080, 1920) } });
       const tgt = 'gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.);'; if (!m.vertexShader.includes(tgt)) throw new Error('s08: spark shader patch target missing');
-      m.vertexShader = 'uniform mat4 uVP0, uVP1; uniform float uSmear; uniform vec2 uRes;\n' + m.vertexShader.replace(tgt, `
-        mat4 VPc = projectionMatrix * viewMatrix; gl_Position = VPc * vec4(wp, 1.);
+      const ftg = 'float a = vA * (1. - vU*vU) * pow(vAl, 1.4);'; if (!m.fragmentShader.includes(ftg)) throw new Error('s08: spark fragment patch target missing');
+      m.fragmentShader = 'varying float vK, vQ;\n' + m.fragmentShader.replace(ftg, 'float a = vA * mix(1. - vU*vU, clamp((1. - abs(vU)) * vK, 0., 1.), vQ) * pow(vAl, 1.4);');
+      m.vertexShader = 'uniform mat4 uVP0, uVP1; uniform float uSmear; uniform vec2 uRes; varying float vK, vQ;\n' + m.vertexShader.replace(tgt, `
+        mat4 VPc = projectionMatrix * viewMatrix; gl_Position = VPc * vec4(wp, 1.); vK = 1.; vQ = 0.;
         if (uSmear > .5) {
           vec3 c = wp - side * position.x * aT.z; vec4 cc = VPc * vec4(c, 1.), ch = VPc * vec4(p, 1.), ct = VPc * vec4(p - dir * L, 1.), cs = VPc * vec4(c + side * aT.z, 1.);
           vec4 a0 = uVP0 * vec4(c, 1.), a1 = uVP1 * vec4(c, 1.);
@@ -225,8 +227,12 @@ export default {
             vec2 dpx = (ch.xy / ch.w - ct.xy / ct.w) * hr, spx = (cs.xy / cs.w - n0) * hr, mpx = (a1.xy / a1.w - a0.xy / a0.w) * hr;
             if (dot(mpx, spx) < 0.) mpx = -mpx;   // the smear segment is symmetric: orient it with the width so they add
             if (length(dpx) < 1.) dpx = vec2(-spx.y, spx.x) / max(length(spx), 1e-4);
-            vec2 sw = spx + mpx; float A0 = abs(dpx.x * spx.y - dpx.y * spx.x), A1 = abs(dpx.x * sw.y - dpx.y * sw.x);
-            vA *= clamp(A0 / max(A1, 1e-6), 0., 1.);
+            vec2 sw = spx + mpx; float dl = max(length(dpx), 1e-4);
+            float S = abs(dpx.x * spx.y - dpx.y * spx.x) / dl, Wd = max(abs(dpx.x * sw.y - dpx.y * sw.x) / dl, 1e-4), M = max(Wd - S, 0.);
+            // across the streak: spark profile (width S) convolved with the slice's sweep (M) = trapezoid; neighbouring slices'
+            // trapezoids sum to a flat band. Energy per copy kept equal to the unsmeared parabola (2/3 S).
+            float Rr = max(min(M, S), 1e-3); vK = .5 * Wd / Rr; vQ = smoothstep(0., 1., M / max(S, 1e-3));
+            float area = mix(2. / 3. * Wd, Wd - min(M, S), vQ); vA *= clamp(2. / 3. * S / max(area, 1e-4), 0., 1.);
             gl_Position = vec4((n0 + position.x * sw / hr) * cc.w, cc.z, cc.w);
           }
         }`);
