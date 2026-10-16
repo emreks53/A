@@ -1,8 +1,10 @@
 // s02 (7.50–13.20) "Resul-i Ekrem ﷺ'ın Kur'an'dan sonraki en büyük mu'cizesi ise, kendi zatıdır."
 // (a) Medina at sunrise: the Green Dome (Kubbe-i Hadrâ) on its octagonal drum, gilded crescent finial, a slender minaret,
-//     palm grove in the foreground. Majestic crane-up + push-in. Tag "Medine", text "Kur'ân'dan sonra / EN BÜYÜK MU'CİZE".
-// (b) On "kendi" a true cross-dissolve (set A rendered to a render target) into a framed Hilye-i Şerif panel in warm
-//     window light: ebru border, gilded frame, real Arabic (Amiri) — only the exact strings from the brief. "KENDİ ZÂTI".
+//     palm grove in the foreground. Majestic crane-up + push-in. Tag "Medine", text "Kur'an'dan sonra / EN BÜYÜK MU'CİZE"
+//     (cleared over "ise," before the dissolve, so no Latin type ever sits on the panel).
+// (b) Across the breath before "kendi" a true cross-dissolve (set A rendered to a render target) into a framed Hilye-i Şerif
+//     panel in warm window light: ebru border, gilded frame, real Arabic (Amiri) — only the exact strings from the brief.
+//     The meaning of its âyet ("Sen yüce bir ahlâk üzeresin." Kalem 4) fades in as it settles; "KENDİ ZATI" pops on "kendi".
 import * as THREE from 'three';
 import * as S2 from '../engine/lib/extra_S02.js';
 
@@ -20,9 +22,10 @@ const AR = {
   ebubekir: 'أَبُو بَكْرٍ', omer: 'عُمَرُ', osman: 'عُثْمَانُ', ali: 'عَلِيٌّ',
 };
 
-const D0 = 4.24, D1 = 4.66; // dissolve window (local s); "kendi" = 4.42
+let D0 = 0, D1 = 0; // dissolve window (local s), keyed to the narration in setup()
 
 export default {
+  endFade: false, // the KENDİ ZATI block fades itself out inside the s02->s03 crossfade (see tOut)
   post: {
     exposure: 1.0,
     bloom: { enabled: true, strength: .42, radius: .6, threshold: .8 },
@@ -34,6 +37,8 @@ export default {
   async setup(ctx) {
     const { scene, U, W, H, renderer } = ctx;
     R = {};
+    // the dissolve fills the "ise," tail + breath (the Medina headline is gone by D0) and lands the panel on "kendi"
+    D1 = ctx.wordTime('kendi') - .03; D0 = D1 - .36;
     await Promise.all(['400 80px Amiri', '700 80px Amiri'].map(f => document.fonts.load(f, AR.besmele + AR.center)));
     const A = new THREE.Group(), B = new THREE.Group(); scene.add(A, B); R.A = A; R.B = B;
     R.envA = await ctx.loadHDR('kloofendal_48d_partly_cloudy_puresky'); R.envB = await ctx.loadHDR('kiara_interior');
@@ -52,8 +57,8 @@ export default {
     R.rigB = U.cameraRig(R.camB, {
       pos: [[0.36, 1.7, 2.3], [0.08, 1.62, 3.8], [-0.3, 1.57, 4.72], [-0.38, 1.56, 4.86]],
       look: [[0.0, 1.66, 0], [0.0, 1.56, 0], [0.01, 1.505, 0], [0.01, 1.5, 0]],
-      t0: 4.1, t1: 6.6, ease: t => 1 - Math.pow(1 - t, 2.6), shake: { amp: .004, freq: .5 }, arc: true,
-    });
+      t0: D0 - .45, t1: D0 + 1.5, ease: t => 1 - Math.pow(1 - t, 2.6), shake: { amp: .004, freq: .5 }, arc: true,
+    }); // keyed to the dissolve: the frame's top has pulled back below the quote line (y ~400) by the time the quote fades in
 
     // ---- cross-dissolve: set A rendered to a linear HDR target, shown on a camera-locked quad over set B ----
     const sz = renderer.getSize(new THREE.Vector2());
@@ -86,14 +91,14 @@ export default {
     }
 
     // ---- set A animation ----
+    const tEn = ctx.wordTime('en'), tMu = ctx.wordTime("mu'cizesi");
     { // dawn: the low sun gains strength, warms to gold and climbs a little as the camera rises (peaks on "mu'cizesi")
-      const d = U.smoothstep(-0.6, 3.9, t), el = U.lerp(.15, .23, d);
+      const d = U.smoothstep(-0.6, tMu + .12, t), el = U.lerp(.15, .23, d);
       const dir = new THREE.Vector3(SUN.x, 0, SUN.z).normalize().multiplyScalar(Math.sqrt(1 - el * el)).setY(el);
       R.sun.position.copy(dir).multiplyScalar(170).add(R.sun.target.position);
       R.sun.intensity = U.lerp(3.4, 4.9, d); R.sun.color.copy(R.sunC0).lerp(R.sunC1, d);
       R.sky.userData.uniforms.sunDir.value.copy(dir);
     }
-    const tEn = ctx.wordTime('en'), tMu = ctx.wordTime("mu'cizesi");
     // sun glint travelling onto the gilded crescent as the camera rises into the light
     const g = U.smoothstep(tEn - .4, tMu, t) * (1 - .35 * U.smoothstep(tMu + .2, tMu + 1.2, t));
     R.glint.material.opacity = .42 * g; R.glint.scale.setScalar(1.0 + .5 * g);
@@ -118,21 +123,24 @@ export default {
     }
 
     // ---- typography ----
-    const tK = ctx.wordTime("kur'an"), tKe = ctx.wordTime('kendi'), tZ = ctx.wordTime('zat');
+    const tK = ctx.wordTime("kur'an"), tKe = ctx.wordTime('kendi'), tMuE = ctx.wordEnd("mu'cizesi");
     const TX = 470; // typography centred on the dome's axis (the minaret rises at the right edge)
-    locTag(ui, t, .2, tK - .1, 'Medine');
-    // the Medina headline holds until the dissolve, then fades over 4.26–4.46 (before "KENDİ ZÂTI" pops) — alpha via colours
-    const fo = 1 - U.smoothstep(D0 + .02, tKe + .04, t), ca = (rgb, a) => `rgba(${rgb},${(a * fo).toFixed(3)})`;
+    locTag(ui, t, ctx.wordTime('resul') - .03, tK - .1, 'Medine');
+    // the Medina headline holds through "mu'cizesi", then fades over "ise," and is gone as the dissolve starts (D0) — alpha via colours
+    const fo = 1 - U.smoothstep(tMuE - .02, D0 + .02, t), ca = (rgb, a) => `rgba(${rgb},${(a * fo).toFixed(3)})`;
     if (fo > 0) {
       { const e = ui.env(t, tK - .15, Infinity, .5, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .26 * fo; X.translate(TX, U.lerp(345, 430, U.smoothstep(tEn, tMu + .2, t))); X.scale(1, .44); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 640); gr.addColorStop(0, 'rgba(40,28,44,.75)'); gr.addColorStop(.45, 'rgba(40,28,44,.4)'); gr.addColorStop(1, 'rgba(40,28,44,0)'); X.fillStyle = gr; X.fillRect(-640, -640, 1280, 1280); X.restore(); } }
-      ui.text("Kur'ân'dan sonra", { t, t0: tK - .05, x: TX, y: 318, size: 56, weight: 800, color: ca('255,244,220', 1), anim: 'rise', shadowBlur: 22, shadowColor: ca('60,25,10', .6) });
+      ui.text("Kur'an'dan sonra", { t, t0: tK - .05, x: TX, y: 318, size: 56, weight: 800, color: ca('255,244,220', 1), anim: 'rise', shadowBlur: 22, shadowColor: ca('60,25,10', .6) });
       ui.text('EN BÜYÜK', { t, t0: tEn + .02, x: TX, y: 400, size: 74, weight: 900, color: ca('255,210,122', 1), anim: 'pop', letterSpacing: 2, shadowBlur: 26, shadowColor: ca('60,20,0', .6) });
       ui.text("MU'CİZE", { t, t0: tMu - .02, x: TX, y: 514, size: 98, weight: 900, color: ca('255,210,122', 1), anim: 'pop', letterSpacing: 3, shadowBlur: 30, shadowColor: ca('60,20,0', .65) });
     }
-    { const e = ui.env(t, tKe - .05, Infinity, .6, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .5; X.translate(540, 330); X.scale(1, .32); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 560); gr.addColorStop(0, 'rgba(36,20,10,.85)'); gr.addColorStop(.6, 'rgba(36,20,10,.45)'); gr.addColorStop(1, 'rgba(36,20,10,0)'); X.fillStyle = gr; X.fillRect(-560, -560, 1120, 1120); X.restore(); } }
-    ui.text('KENDİ ZÂTI', { t, t0: tKe + .04, x: 540, y: 282, size: 100, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 6, shadowBlur: 26, shadowColor: 'rgba(40,15,0,.65)' });
-    ui.text('“Sen yüce bir ahlâk üzeresin.”', { t, t0: tZ + .05, x: 540, y: 368, size: 40, weight: 500, family: 'Lora', italic: true, color: '#fff4dc', anim: 'rise', shadowBlur: 16, shadowColor: 'rgba(30,12,0,.85)' });
-    ui.text('Kalem, 4', { t, t0: tZ + .3, x: 540, y: 416, size: 30, weight: 800, color: '#ffd27a', anim: 'fade', letterSpacing: 2, shadowBlur: 14, shadowColor: 'rgba(30,12,0,.85)' });
+    // set B: the âyet's meaning fades in as the panel settles (~0.2 s before "kendi"), KENDİ ZATI pops on "kendi". endFade is
+    // off: the block fades out over dur-.15..dur+.2, inside the 0.4 s s02->s03 crossfade, so the quote reads for ~0.8 s.
+    const tQ = tKe - .22, tOut = ctx.dur + .2;
+    { const e = ui.env(t, tQ - .05, tOut, .6, 'fade'); if (e.o > 0) { const X = ui.ctx; X.save(); X.globalAlpha = e.o * .6; X.translate(540, 330); X.scale(1, .32); const gr = X.createRadialGradient(0, 0, 0, 0, 0, 560); gr.addColorStop(0, 'rgba(36,20,10,.85)'); gr.addColorStop(.6, 'rgba(36,20,10,.45)'); gr.addColorStop(1, 'rgba(36,20,10,0)'); X.fillStyle = gr; X.fillRect(-560, -560, 1120, 1120); X.restore(); } }
+    ui.text('KENDİ ZATI', { t, t0: tKe + .04, t1: tOut, x: 540, y: 282, size: 100, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 6, shadowBlur: 26, shadowColor: 'rgba(40,15,0,.65)' });
+    ui.text('“Sen yüce bir ahlâk üzeresin.”', { t, t0: tQ, t1: tOut, x: 540, y: 362, size: 48, weight: 500, family: 'Lora', italic: true, color: '#fff6e2', anim: 'fade', dur: .4, stroke: 'rgba(40,18,6,.5)', strokeW: 6, shadowBlur: 14, shadowColor: 'rgba(25,10,0,.9)' });
+    ui.text('Kalem, 4', { t, t0: tQ + .3, t1: tOut, x: 540, y: 410, size: 30, weight: 800, color: '#ffd27a', anim: 'fade', letterSpacing: 2, shadowBlur: 14, shadowColor: 'rgba(30,12,0,.85)' });
   },
 };
 

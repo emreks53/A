@@ -79,9 +79,10 @@ export default {
         const e = .25; const nx = hAt(x - e, z) - hAt(x + e, z), nz = hAt(x, z - e) - hAt(x, z + e); items.push({ x, y: hAt(x, z), z, nx, ny: 2 * e, nz, rot: rnd() * 6.283, s: 1.35 + rnd() * .3, seed: rnd() * 10, rr: rj }); } }
     while (items.length < target) { const a = rnd() * 6.283, rr = 60 + rnd() * 50; const x = Math.cos(a) * rr, z = Math.sin(a) * rr; items.push({ x, y: hAt(x, z), z, nx: 0, ny: 1, nz: 0, rot: rnd() * 6.283, s: 1.4, seed: rnd() * 10, rr }); }
     items.length = target;
-    // ignition: 12% scattered early sparks, the rest a wave from the centre outward whose lit count grows ~ x^1.8
-    const order = items.map((it, i) => i).sort((a, b) => items[a].rr - items[b].rr); const T0 = .3, T1 = 3.3;
-    order.forEach((idx, rank) => { const it = items[idx]; const f = rank / (order.length - 1); it.on = T0 + (T1 - T0) * Math.pow(f, 1 / 1.8) + (rnd() - .5) * .08; const q = rnd(); if (q < .035) it.on = -1 - rnd(); else if (q < .14) it.on = .3 + rnd() * 2.4; });
+    // ignition: 12% scattered early sparks, the rest a wave from the centre outward whose lit count grows ~ x^1.8;
+    // it starts just after "Allah" and completes as "bine" ends, so the tally reads "≈ 1.000" on "bine yakın"
+    const order = items.map((it, i) => i).sort((a, b) => items[a].rr - items[b].rr); const T0 = ctx.wordTime('allah') + .12, T1 = ctx.wordTime('yakın');
+    order.forEach((idx, rank) => { const it = items[idx]; const f = rank / (order.length - 1); it.on = T0 + (T1 - T0) * Math.pow(f, 1 / 1.8) + (rnd() - .5) * .08; const q = rnd(); if (q < .035) it.on = -1 - rnd(); else if (q < .14) it.on = T0 + rnd() * (T1 - T0) * .8; });
     const field = X.lampField(items, { fog: .0062 }); scene.add(field); R.field = field;
     R.onTimes = items.map(it => it.on).sort((a, b) => a - b); R.nHero = heroLampXZ.length;
 
@@ -91,7 +92,7 @@ export default {
       if (dbg.includes('simplemat')) scene.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) if (m.isMeshPhysicalMaterial) { m.sheen = 0; m.clearcoat = 0; } });
       if (dbg.includes('nodunes')) R.dunes.visible = false; if (dbg.includes('expose')) window.__s01 = R; }
     camera.near = .03; camera.far = 700; camera.fov = 38; camera.updateProjectionMatrix();
-    // ---- camera path: polar spiral around the book, monotone splines over a path parameter tau (keys ~ the original timing).
+    // ---- camera path: polar spiral around the book, monotone splines over a path parameter tau (keys ~ seconds of the first draft; the clock is mapped to tau by the re-timing below).
     //      After the wide shot az / el only increase and D / fov only shrink, so the landing never reverses direction. ----
     R.cAz = X.mono([[0, -46], [3.7, -38], [4.7, -10], [5.62, 9], [8.0, 15]]);
     R.cLD = X.mono([[0, Math.log(46)], [3.7, Math.log(39)], [4.7, Math.log(9)], [5.62, Math.log(2.15)], [8.0, Math.log(1.98)]]);
@@ -105,18 +106,31 @@ export default {
       const sm = f => { const raw = new Float64Array(NT + 1), out = new Float64Array(NT + 1); for (let k = 0; k <= NT; k++) raw[k] = f(T0 + k * h);
         for (let k = 0; k <= NT; k++) { let a = 0; for (let j = -rr; j <= rr; j++) a += wk[j + rr] * raw[Math.min(NT, Math.max(0, k + j))]; out[k] = a / ws; }
         return tau => { const f2 = THREE.MathUtils.clamp((tau - T0) / h, 0, NT - 1e-6), k = Math.floor(f2), u = f2 - k; return out[k] + (out[k + 1] - out[k]) * u; }; };
-      R.cAz = sm(R.cAz); R.cLD = sm(R.cLD); R.cEl = sm(R.cEl); R.cW = sm(R.cW); R.cFov = sm(R.cFov); }
+      R.cAz = sm(R.cAz); R.cLD = sm(R.cLD); R.cEl = sm(R.cEl); R.cFov = sm(R.cFov); R.smooth = sm; } // cW: smoothed after the framing guard below
     R.aimY = .027; // aim a touch above the cover: keeps the rahle crest clear of the title rule in the product shot
     const B = R.book, Zm = new THREE.Vector3(0, 0, -1);
     R.camPos = (tau, sh) => { // camera position on the spiral (+ optional shake), with soft terrain clearance
       const az = R.cAz(tau) * D2R, D = Math.exp(R.cLD(tau)), el = R.cEl(tau) * D2R;
       const cam = new THREE.Vector3(B.x + D * Math.cos(el) * Math.sin(az), B.y + D * Math.sin(el), B.z + D * Math.cos(el) * Math.cos(az)); if (sh) cam.add(sh);
       const m = R.hAt(cam.x, cam.z) + Math.min(1.4, .22 + .03 * D), d = cam.y - m, k = .6; cam.y = m + (d > k ? d : k * Math.exp((d - k) / k)); return cam; };
-    R.camDir = (cam, tau) => { // look direction: from the far lamp field / horizon (wide) to the book (product shot)
-      const w = THREE.MathUtils.clamp(R.cW(tau), 0, 1); const hor = new THREE.Vector3(B.x - cam.x, 0, B.z - cam.z).normalize();
+    R.camDir = (cam, tau, wO) => { // look direction: from the far lamp field / horizon (wide) to the book (product shot); wO overrides the aim weight
+      const w = THREE.MathUtils.clamp(wO ?? R.cW(tau), 0, 1); const hor = new THREE.Vector3(B.x - cam.x, 0, B.z - cam.z).normalize();
       const far = new THREE.Vector3(B.x, 0, B.z).addScaledVector(hor, 40); far.y = 1.5; const near = B.clone().add(new THREE.Vector3(0, R.aimY, 0));
       const qF = new THREE.Quaternion().setFromUnitVectors(Zm, far.sub(cam).normalize()), qN = new THREE.Quaternion().setFromUnitVectors(Zm, near.sub(cam).normalize());
       return new THREE.Vector3(0, 0, -1).applyQuaternion(qF.slerp(qN, w)); };
+    { // framing guard: with the aim still on the far field mid-dive, the set sank to the bottom of the frame and the Mushaf rose back
+      // up through the caption band (y 1380-1600, ~4-5.2 s). Raise the aim weight just enough that the Mushaf's lowest box corner stays
+      // above y 1350 (bisection per path sample), then smooth: the hero now grows in the lower-middle of the frame and rises to the centre.
+      const inv = mus.matrixWorld.clone().invert(), lb = new THREE.Box3(), c8 = [], v = new THREE.Vector3(), pc = new THREE.PerspectiveCamera(38, 1080 / 1920, .03, 700);
+      mus.traverse(o => { if (o.isMesh) { o.geometry.computeBoundingBox(); lb.union(o.geometry.boundingBox.clone().applyMatrix4(inv.clone().multiply(o.matrixWorld))); } });
+      for (let i = 0; i < 8; i++) c8.push(new THREE.Vector3(i & 1 ? lb.max.x : lb.min.x, i & 2 ? lb.max.y : lb.min.y, i & 4 ? lb.max.z : lb.min.z).applyMatrix4(mus.matrixWorld));
+      const lowY = (cam, tau, w) => { pc.position.copy(cam); pc.lookAt(cam.clone().add(R.camDir(cam, tau, w))); pc.fov = R.cFov(tau); pc.updateProjectionMatrix(); pc.updateMatrixWorld();
+        let y = -1e9; for (const c of c8) y = Math.max(y, (.5 - .5 * v.copy(c).project(pc).y) * 1920); return y; };
+      const cW0 = R.cW, g0 = -2.5, gh = .02, wq = [];
+      for (let tau = g0; tau <= 10.5 + 1e-9; tau += gh) { const cam = R.camPos(tau); let lo = THREE.MathUtils.clamp(cW0(tau), 0, 1), hi = 1;
+        if (lowY(cam, tau, lo) > 1350) { for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2; if (lowY(cam, tau, m) > 1350) lo = m; else hi = m; } lo = hi; }
+        wq.push(lo); }
+      R.cW = R.smooth(tau => { const f = THREE.MathUtils.clamp((tau - g0) / gh, 0, wq.length - 1.000001), k = Math.floor(f); return Math.max(cW0(tau), wq[k] + (wq[k + 1] - wq[k]) * (f - k)); }); }
     // ---- re-time the path by its ON-SCREEN motion: optical flow of a fixed grid of view rays at three depths (0.6x, 1x, 2.5x the
     //      book distance) between neighbouring path samples = how fast the whole picture moves (approach, orbit, aim, zoom).
     //      The path is then driven by one smooth speed profile in that unit (wide drift -> eased dive -> soft landing -> slow push),
@@ -149,8 +163,10 @@ export default {
       const tauOf = m => { let lo = 0, hi2 = NS; if (m <= Mc[0]) return TA; if (m >= Mc[NS]) return TB; while (hi2 - lo > 1) { const md = (lo + hi2) >> 1; if (Mc[md] <= m) lo = md; else hi2 = md; } return TA + (lo + (m - Mc[lo]) / Math.max(Mc[lo + 1] - Mc[lo], 1e-9)) * dT; };
       const at = (a, tau) => { const f = THREE.MathUtils.clamp((tau - TA) / dT, 0, NS - 1e-6), k = Math.floor(f), u = f - k; return a[k] + (a[k + 1] - a[k]) * u; };
       // speed profile (px of mean screen motion per second): r0 = original wide-shot drift, r1 = final product push-in
-      //  dive bump: symmetric 140 x^3 (1-x)^3 over [ta, tb] (slow onset from ~3.3 s on "mu'cize vermiş", peak ~4.6, landing ~6.0 on "Kur'an")
-      const ta = 2.7, tb = 6.5, T = tb - ta, m0 = Mof(-.5), mE = Mof(8.0);
+      //  dive bump: symmetric 140 x^3 (1-x)^3 over [ta, tb], keyed on the narration: slow onset as the tally completes on "yakın" (~3.3 s),
+      //  accelerating through "mu'cize vermiş", peak in the breath after "vermiş" (~4.6), decelerating onto the Mushaf on "en büyük ve
+      //  parlağını" and settled into the slow push just before "Kur'an" (tb)
+      const ta = ctx.wordTime('yakın') - .6, tb = ctx.wordTime("kur'an") - .06, T = tb - ta, m0 = Mof(-.5), mE = Mof(8.0);
       const r0 = (Mof(3.3) - m0) / 3.8, r1 = (mE - Mof(5.62)) / 2.38;
       const A = (mE - m0) - (r0 * (ta + .5) + r0 * T + (r1 - r0) * T / 2 + r1 * (8 - tb));
       R.mAt = t => { if (t <= ta) return m0 + r0 * (t + .5); if (t >= tb) return mE + r1 * (t - 8); const x = (t - ta) / T, x4 = x * x * x * x;
@@ -180,19 +196,19 @@ export default {
     // ---- the dawn ray: from "en büyük ve parlağını" the first ray finds the Mushaf ----
     const tB = ctx.wordTime('parlağını'), tK = ctx.wordTime("kur'an"), tBu = ctx.wordTime('büyük');
     const g = U.prog(t, tBu - .2, tK + .25, 'inOutSine'), sw = U.prog(t, tB - .45, tK + .45, 'inOutSine');
-    R.spot.intensity = 23 * g; R.shaft.userData.uniforms.opacity.value = .1 * g * (1 - .75 * U.smoothstep(4.8, 5.8, t));
+    R.spot.intensity = 23 * g; R.shaft.userData.uniforms.opacity.value = .1 * g * (1 - .75 * U.smoothstep(Math.log(6.1), Math.log(2.35), Math.log(D))); // the shaft volume thins as the camera closes in
     R.spot.target.position.copy(R.book).add(R.leafUp.clone().multiplyScalar(.03 + .2 * (1 - sw))); R.spot.target.updateMatrixWorld();
     const mu = R.motes.material.uniforms; mu.rayAmt.value = g; mu.base.value = .05 + .04 * g;
     const du = R.dust.material.uniforms; du.rayAmt.value = g * 1.3; du.fpx.value = fpx;
     R.spot.updateMatrixWorld(); du.rayO.value.copy(R.spot.target.position); du.rayD.value.copy(R.spot.position).sub(R.spot.target.position).normalize();
-    R.sky.userData.uniforms.sunUp.value = .4 * g; R.sky.userData.uniforms.gain.value = .85; R.sky.userData.uniforms.glow.value = 1 + .25 * U.smoothstep(0, 7.5, t);
+    R.sky.userData.uniforms.sunUp.value = .4 * g; R.sky.userData.uniforms.gain.value = .85; R.sky.userData.uniforms.glow.value = 1 + .25 * U.smoothstep(0, ctx.dur, t);
     ctx.scene.environmentIntensity = .3 + .12 * g;
     const prod = U.smoothstep(Math.log(10.5), Math.log(2.13), Math.log(D)); // 0 wide .. 1 product shot (follows the approach, not the clock)
     for (const m of R.envMats) m.envMapIntensity = .5 + .2 * prod + .25 * g;
     // product-shot fill: the shadow side sees the dawn sky (mauve near sunrise) and the lamp-lit sand / rug around the stand, not a pure navy zenith
     R.hemi.intensity = 2.0 - 1.3 * prod; R.hemi.color.copy(R.hemiSky).lerp(R.hemiSkyP, prod); R.hemi.groundColor.copy(R.hemiGnd).lerp(R.hemiGndP, prod); R.dawnSkyL.intensity = .55 * (1 - prod);
     // perf: lights / passes only while they contribute (switching visibility recompiles once; output identical)
-    R.spot.visible = t > 4.55; R.dawnSkyL.visible = prod < .995; post.dof.enabled = t > 4.2;
+    R.spot.visible = t > tBu - .65; R.dawnSkyL.visible = prod < .995; post.dof.enabled = D < 16; // spot: before g > 0; DOF: before prod > 0 (D < 10.5)
     // lamp practicals flicker
     for (const l of [R.rimLamp, R.fillLamp]) l.intensity = l.userData.base * (l === R.fillLamp ? 1 + 10 * prod : 1) * (1 + .07 * Math.sin(t * 13.1 + l.position.x * 9) + .05 * Math.sin(t * 7.7 + l.position.z * 5));
     post.exposure = 1.18 + .04 * g - .1 * prod;

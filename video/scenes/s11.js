@@ -56,10 +56,10 @@ function heights(t, ctx) {
 // (softplus): the camera only ever tilts UP from the phase-A framing and eases into the lock with continuous speed.
 // It tracks the bounce-free height, so the landing bounce reads on the column instead of bobbing the whole frame.
 function solveCam(t, ctx, hs) {
-  const { ui, U, camera } = ctx; const tD = ctx.wordTime('dürüstlük');
+  const { ui, U, camera } = ctx; const tD = ctx.wordTime('dürüstlük'), tEn = ctx.wordTime('en');
   const hx = XS[HERO]; const heroTop = PLAT_Y + .17 + (hs[HERO] - hs.settle) + .2;
   const k = U.smoothstep(tD - .05, tD + 1.7, t);                  // follow weight
-  const kr = U.smootherstep(1.95, 4.1, t);                         // reveal (pull back) weight; C2 onset -> no jolt
+  const kr = U.smootherstep(tEn, ctx.dur + .5, t);                 // reveal (pull back) weight: "en" -> clip end (incl. handle); C2 onset -> no jolt
   const ang = (U.lerp(U.lerp(27, 19, U.prog(t, -.5, tD, 'inOutSine')), 9, U.ease.inOutSine(k)) - 5 * kr - .9 * t) * Math.PI / 180;
   const dist = U.lerp(12.8, 11.5, U.prog(t, -.5, tD + .3, 'inOutSine')) - 3.0 * U.ease.inOutSine(k) + 13.6 * kr + .25 * t;
   const camY = U.lerp(1.95, 1.75, U.prog(t, -.5, tD)) - .4 * U.ease.inOutSine(k) + 3.3 * kr;
@@ -213,12 +213,17 @@ export default {
     { const a = t - (tD + 1.8); const hero = R.cols[HERO]; const p = new THREE.Vector3(XS[HERO] - .2, hero.top.position.y + PLAT_Y - .07, .12);
       R.glint.position.copy(p); const o = a > 0 ? Math.sin(Math.PI * U.clamp(a / .7)) : 0; R.glint.material.opacity = o; R.glint.scale.setScalar(.25 + .35 * o); R.glint.material.rotation = a * .8; R.glint.visible = o > .01; }
     // --- typography ---
-    const tEn = ctx.wordTime('en'), tYuk = ctx.wordTime('yüksek'), tDer = ctx.wordTime('derece');
-    // dashed reference line at the top of the other columns (Kurzgesagt chart guide), visible whenever it is on screen
+    const tEn = ctx.wordTime('en'), tDer = ctx.wordTime('derece');
+    // all in-scene type is gone before the s11->s12 smoothleft wipe (its first blended frame is ~.25 s before the cut),
+    // so s12's progress-dot row never slides through the fading title / pill; the engine end-fade still applies on top
+    const tOut = ctx.dur - .3;
+    // dashed reference line at the top of the other columns (Kurzgesagt chart guide). It slides down as the camera tilts
+    // after the hero, so it fades out on screen y before the safe-zone bottom (never in the subtitle band, y > 1380), and
+    // it is retired by "derecede" while it is down there, so it does not blip back in during the pull-back as the type clears.
     const maxH = PLAT_Y + .17 + Math.max(...SHORT) + .2;
     const la = ui.project(new THREE.Vector3(XS[0] - .45, maxH, 0)), lb = ui.project(new THREE.Vector3(XS[5] + .45, maxH, 0));
-    const ge = ui.env(t, .75, Infinity, .4, 'fade');
-    const onScr = U.smoothstep(1880, 1700, Math.max(la[1], lb[1]));
+    const ge = ui.env(t, .75, tDer, .4, 'fade');
+    const onScr = U.smoothstep(1330, 1150, Math.max(la[1], lb[1]));
     if (ge.o * onScr > .001) { const X = ui.ctx; const pp = U.ease.outCubic(U.clamp((t - .75) / .5)); X.save();
       // chart convention: the guide passes BEHIND the record bar -> cut the hero's silhouette out once it reaches the line
       const abTop = PLAT_Y + .17 + hs[HERO] + .1725;
@@ -228,10 +233,10 @@ export default {
         X.beginPath(); X.rect(0, 0, ui.W, ui.H); X.rect(Math.min(xl, xr) - 4, 0, Math.abs(xr - xl) + 8, ui.H); X.clip('evenodd');
       }
       X.globalAlpha = ge.o * onScr * .85; X.setLineDash([18, 12]); X.lineWidth = 5; X.strokeStyle = '#fff6e6'; X.shadowColor = 'rgba(0,0,0,.35)'; X.shadowBlur = 6; X.beginPath(); X.moveTo(la[0], la[1]); X.lineTo(la[0] + (lb[0] - la[0]) * pp, la[1] + (lb[1] - la[1]) * pp); X.stroke(); X.restore(); }
-    ui.text('DÜRÜSTLÜK', { t, t0: tD - .04, x: 540, y: 300, size: 100, weight: 900, color: '#ffcf6b', letterSpacing: 5, anim: 'pop', shadowBlur: 22, shadowColor: 'rgba(30,24,40,.75)', stroke: 'rgba(90,50,20,.5)', strokeW: 9 });
+    ui.text('DÜRÜSTLÜK', { t, t0: tD - .04, t1: tOut, x: 540, y: 300, size: 100, weight: 900, color: '#ffcf6b', letterSpacing: 5, anim: 'pop', shadowBlur: 22, shadowColor: 'rgba(30,24,40,.75)', stroke: 'rgba(90,50,20,.5)', strokeW: 9 });
     // callout from the capital: "en yüksek derece"; on "derece" the anchor pulses (a ring) — lands on the words
     const cap = new THREE.Vector3(hx, heroTop + .02, .2);
-    ui.callout('en yüksek derece', { t, t0: tEn - .02, anchor: cap, to: [540, 455], size: 50, weight: 800, bg: 'rgba(28,30,52,.74)', color: '#fff4dc', dotColor: '#ffcf6b' });
-    { const a = t - tDer; if (a > 0 && a < .9) { const [cx, cy] = ui.project(cap); const X = ui.ctx; X.save(); X.globalAlpha = (1 - a / .9) * .9; X.strokeStyle = '#ffcf6b'; X.lineWidth = 5; X.beginPath(); X.arc(cx, cy, 12 + 60 * U.ease.outCubic(a / .9), 0, Math.PI * 2); X.stroke(); X.restore(); } }
+    ui.callout('en yüksek derece', { t, t0: tEn - .02, t1: tOut, anchor: cap, to: [540, 455], size: 50, weight: 800, bg: 'rgba(28,30,52,.74)', color: '#fff4dc', dotColor: '#ffcf6b' });
+    { const a = t - tDer; if (a > 0 && a < .9) { const [cx, cy] = ui.project(cap); const X = ui.ctx; X.save(); X.globalAlpha = (1 - a / .9) * .9 * U.ease.inOutCubic(ui.env(t, tDer, tOut).d); X.strokeStyle = '#ffcf6b'; X.lineWidth = 5; X.beginPath(); X.arc(cx, cy, 12 + 60 * U.ease.outCubic(a / .9), 0, Math.PI * 2); X.stroke(); X.restore(); } }
   },
 };
