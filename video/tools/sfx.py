@@ -242,7 +242,7 @@ def s_clock(d=3, seed=32):
 def s_lake(d=4, seed=33):
     r = rng(seed); n = int(d * SR); t = tvec(d); y = lp(brown(n, r), 500) * (0.6 + .4 * np.sin(2 * np.pi * .25 * t)) * .5
     for k in range(int(d * 1.5)):
-        p = int(r.uniform(0, d - .2) * SR); a = s_drop(.2, seed + k, r.uniform(300, 500))[:, 0] * .15; y[p:p + len(a)] += a
+        p = int(r.uniform(0, d - .2) * SR); a = s_drop(.2, seed + k, r.uniform(300, 500))[:, 0] * .15; a = a[: max(0, min(len(a), n - p))]; y[p:p + len(a)] += a
     return stereo(norm(y) * .45, 0, .6) * np.minimum(1, np.minimum(t, d - t) / .5)[:, None]
 def s_jingle(d=0.8, seed=34):
     r = rng(seed); n = int(d * SR); y = np.zeros((n, 2))
