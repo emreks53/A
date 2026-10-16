@@ -1,11 +1,12 @@
-// s20 (113.30–124.65) "Bu tatlı hakikatten Mektubat kitabının 195. sayfasında ve 19. Söz gibi başka risalelerde çok hoş ve
-// etraflıca bahsedilmiştir."  — closing scene of the film.
+// s20 (113.30–125.65) "Bu tatlı hakikatten Mektubat kitabının 195. sayfasında ve 19. Söz gibi başka risalelerde çok hoş ve
+// etraflıca bahsedilmiştir."  — closing scene of the film (1 s hold after the last word, then the 0.9 s fade to black).
 // Visual: a quiet Turkish room at morning. Sun through a window with tulle curtains (gentle breeze), dust in the beam.
 // On a low walnut table: a rahle with the deep-red, gold-stamped "MEKTUBAT" (closed, front cover up). On "kitabının"
-// the front cover swings open, a few leaves riffle over and the book settles on pages 194 | 195. The camera glides to
-// the matching red "SÖZLER" lying beside it, its green satin ribbon bookmark tagged "19. Söz"; on "başka risalelerde"
-// it rises to the uniform red set of other Risale volumes on the sunlit sill, then pulls back into a calm wide still
-// life (tea glass with steam, rose) and the end card.
+// the front cover swings open, a few leaves riffle over and the book settles on pages 194 | 195. The camera drops to
+// the table front (rose) and pans right to the matching red "SÖZLER" lying beside it, its green satin ribbon bookmark
+// tagged "19. Söz"; on "başka risalelerde" it slides back left past the tea glass and rises to the uniform red set of
+// other Risale volumes on the sunlit sill, then pulls back into a calm wide still life (tea glass with steam, rose)
+// and the end card.
 import * as THREE from 'three';
 import { path3, path1, beamMotes, plankTex, contactShadows, grainWood, foilLeather, foilMaterial, drawRisaleCover, drawRisaleSpine } from '../engine/lib/extra_H.js';
 
@@ -368,33 +369,44 @@ export default {
     const motes = beamMotes({ from: SH_FROM, to: SH_TO, radius: .36, count: 650, size: 1.0, color: '#fff0d0', opacity: .8, speed: .012, nearFade: .45 }); scene.add(motes); R.motes = motes;
 
     camera.fov = 34; camera.near = .02; camera.far = 50; camera.updateProjectionMatrix();
-    // camera (local s): establishing → MEKTUBAT cover → open book / 195 → SÖZLER tag → sill set → final still life.
+    // camera (local s): establishing → MEKTUBAT cover → open book / 195 → table front → SÖZLER tag → tea glass → sill set
+    // → final still life.
     // C2 rig: a sum of overlapping smootherstep moves (pos + look), so speed AND acceleration are continuous everywhere
     // (no slam-stops / step starts at knots) and the camera never comes to a dead stop between beats.
     R.cardY = 760;
     const S5 = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * x * (x * (x * 6 - 15) + 10);
     const P0 = [-.3, .95, .98], L0 = [-.1, .58, -.08];
     let pp = P0, pl = L0;
-    // Beats are timed to the energy-aligned narration (local): 195. 3.15 · sayfasında 3.59–4.50 · ve 4.78 · 19. 5.16 ·
-    // Söz 5.48 · gibi 5.75–6.23 · başka 6.52 · risalelerde 6.87–7.59 · çok 7.89 · etraflıca 8.97 (end card).
-    // The SÖZLER glide lands BEFORE the "ve 19. Söz gibi" subtitle phrase appears (4.72), so the tag never sits on
-    // the subtitle band; the hold frames book + tag high (tag ~y 930–1120) so the gold ring stays inside y ≤ 1330.
+    // Beats are keyed to the narration words (CTC-aligned, local): Mektubat 1.88 · kitabının 2.43 · 195. 3.15 ·
+    // sayfasında 3.85–4.54 · ve 4.75 · 19. 4.98 · Söz 5.63 · gibi 5.90–6.26 · başka 6.52 · risalelerde 6.92–7.62 ·
+    // çok 7.88 · ve 8.73 (end card) · etraflıca 8.92 · bahsedilmiştir 9.61–10.52; fade to black 11.45–12.35.
+    // The "19. Söz" tag lies on the table IN FRONT of the books, so any straight glide/crane between it and the open book
+    // or the sill sweeps it up/down through the subtitle band. So the move in is a pair: drop to the table front (rose)
+    // with SÖZLER + tag still beyond the right edge, then pan right - the tag enters from the right at y ~1000–1230 and
+    // lands as "19." is spoken; the move out mirrors it (pan left past the tea glass until the tag has left through the
+    // right edge, THEN crane up to the sill). Each pair is keyed to ONE word so its shape, and with it the band clearance
+    // (tag never below y ~1230 while in frame), survives any retiming. Hold: tag ~y 930–1120, ring inside y ≤ 1330.
+    const tMek = ctx.wordTime('mektubat'), tKit = ctx.wordTime('kitabının'), t19 = ctx.wordTime('19', 1), tBas = ctx.wordTime('başka'), tCok = ctx.wordTime('çok');
+    const o0 = tKit - .21;                                          // the front cover starts to open (see update)
+    const B = R.beats = { in0: t19 - 1.23, out0: tBas - .67, pb0: tCok - .28 }; // move in / move out / pull back start
     const moves = [ // [start, end, pos target, look target]
-      [-1.3, 1.35, [-.22, .9, .62], [-.08, .58, -.08]],          // slow push-in on the still life
-      [.85, 2.1, [-.15, .99, .3], [-.05, .575, -.08]],           // onto the MEKTUBAT cover ("Mektubat")
-      [1.75, 3.1, [-.1, 1.0, .25], [-.085, .565, -.115]],        // settle over the opening book (195)
-      [2.5, 4.6, [-.05, .97, .24], [-.04, .55, -.08]],           // drift
-      [3.75, 5.05, [.22, .86, .86], [.125, .428, .24]],          // glide to SÖZLER + tag ("ve 19. Söz")
-      [4.6, 6.3, [.225, .86, .88], [.125, .428, .25]],           // drift
-      [5.95, 7.35, [-.02, .93, .48], [-.08, .86, -.38]],         // crane up to the sill set ("başka risalelerde")
-      [6.95, 8.3, [-.045, .95, .57], [-.09, .86, -.42]],         // drift
-      [7.6, 9.25, [-.055, .92, 1.38], [-.055, .61, -.1]],        // pull back to the wide still life
-      [7.85, 13.6, [-.055, .912, 1.52], [-.055, .605, -.1]],     // gentle end drift (still moving at the last frame)
+      [-1.3, 1.35, [-.22, .9, .62], [-.08, .58, -.08]],                        // slow push-in on the still life
+      [tMek - 1.03, tMek + .22, [-.15, .99, .3], [-.05, .575, -.08]],          // onto the MEKTUBAT cover ("Mektubat")
+      [o0 - .47, o0 + .88, [-.1, 1.0, .25], [-.085, .565, -.115]],             // settle over the opening book (195)
+      [tKit + .07, B.in0 + .45, [-.06, .975, .245], [-.05, .555, -.09]],       // drift
+      [B.in0, t19 - .26, [-.01, .9, .72], [-.14, .44, .25]],                   // drop to the table front (rose) ...
+      [t19 - .76, t19 + .17, [.22, .86, .86], [.125, .428, .24]],              // ... pan right onto SÖZLER + tag ("19.")
+      [t19 - .08, B.out0 + .45, [.225, .86, .88], [.125, .428, .25]],          // drift
+      [B.out0, tBas + .08, [-.01, .88, .86], [-.19, .45, .22]],                // pan left past the tea glass ...
+      [tBas - .37, tBas + 1.03, [-.02, .93, .48], [-.08, .86, -.38]],          // ... crane up to the sill set ("başka risalelerde")
+      [tBas + .43, B.pb0 + .7, [-.045, .95, .57], [-.09, .86, -.42]],          // drift
+      [B.pb0, tCok + 1.37, [-.055, .92, 1.38], [-.055, .61, -.1]],             // pull back to the wide still life
+      [tCok - .03, ctx.dur + 2.05, [-.055, .912, 1.52], [-.055, .605, -.1]],   // gentle end drift (still moving at the last frame)
     ].map(([a, b, P, L]) => { const m = { a, b, dP: P.map((v, i) => v - pp[i]), dL: L.map((v, i) => v - pl[i]) }; pp = P; pl = L; return m; });
     R.cam = t => {
       const P = new THREE.Vector3(...P0), L = new THREE.Vector3(...L0);
       for (const m of moves) { const s = S5((t - m.a) / (m.b - m.a)); if (s) { P.x += m.dP[0] * s; P.y += m.dP[1] * s; P.z += m.dP[2] * s; L.x += m.dL[0] * s; L.y += m.dL[1] * s; L.z += m.dL[2] * s; } }
-      return { P, L, fov: 34 + 6 * S5((t - 7.05) / 2.8) };
+      return { P, L, fov: 34 + 6 * S5((t - B.pb0 + .55) / 2.8) };
     };
     // probes for the adaptive motion blur: on-screen speed of the hero objects
     R.mbCam = new THREE.PerspectiveCamera(34, 1080 / 1920, .02, 50);
@@ -417,7 +429,10 @@ export default {
       post.motionBlur = n > 1 ? { samples: n, shutter: .4 } : { samples: 1 };
     }
     R.motes.userData.uniforms.size.value = .62 * ctx.renderer.domElement.height / 960; // same look at every render scale
-    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.28, .5, U.smoothstep(7.45, 9.85, t)) + .45 * (1 - U.smoothstep(.9, 1.7, t)) + .35 * U.smoothstep(4.15, 4.85, t) * (1 - U.smoothstep(6.0, 6.6, t)); post.dof.range *= 1 - .6 * Math.sin(Math.PI * U.prog(t, 5.95, 7.35)); post.dof.amount = .72;
+    // DOF range follows the camera beats: wide on the establishing shot, deeper on the SÖZLER hold (book + tag both sharp),
+    // shallower through the move out (hides the crane), opening up again on the final pull back
+    const B = R.beats, tMek = ctx.wordTime('mektubat');
+    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.28, .5, U.smoothstep(B.pb0 - .15, B.pb0 + 2.25, t)) + .45 * (1 - U.smoothstep(tMek - .98, tMek - .18, t)) + .35 * U.smoothstep(B.in0 + .65, B.in0 + 1.25, t) * (1 - U.smoothstep(B.out0 + .1, B.out0 + .7, t)); post.dof.range *= 1 - .6 * Math.sin(Math.PI * U.prog(t, B.out0 + .1, B.out0 + 1.5)); post.dof.amount = .72;
 
     // --- front cover opens on "kitabının", then three leaves riffle over (right → left) ---
     const tKit = ctx.wordTime('kitabının');
@@ -476,25 +491,26 @@ export default {
     R.rightHalf.updateWorldMatrix(true, false); R.tag.updateWorldMatrix(true, false);
     const pn = new THREE.Vector3(BW * .525, yTop(.525) + .0005, -BH * .437); R.rightHalf.localToWorld(pn);
     const [px, py] = ui.project(pn);
-    // ring + pill land on "195." and hold through "sayfasında"; gone (4.14) before the glide lifts the page number
-    // out of the top safe line
-    const r0 = Math.max(t195 - .05, flipT(2) + .2);
-    const ra = U.prog(t, r0, r0 + .45, 'outCubic'); const rOut = U.smoothstep(tSay + .55, tSay + .25, t);
+    // ring + pill land on "195." and hold into "sayfasında"; gone (in0 + .33 = 4.08) before the drop to the table front
+    // lifts the page number out of the top safe line (page number y ~300 at 4.05)
+    const r0 = Math.max(t195 - .05, flipT(2) + .2), rEnd = Math.min(tSay + .55, B.in0 + .33);
+    const ra = U.prog(t, r0, r0 + .45, 'outCubic'); const rOut = U.smoothstep(rEnd, rEnd - .3, t);
     if (ra > 0 && rOut > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut; X.strokeStyle = '#d8a23a'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(40,10,0,.35)'; X.shadowBlur = 10; X.beginPath(); X.ellipse(px, py, 74, 50, -.04, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra); X.stroke(); X.restore(); }
-    ui.pill('s. 195', { t, t0: r0 + .03, t1: tSay + .55, x: Math.min(860, Math.max(220, px - 10)), y: Math.max(300, py - 128), size: 52, bg: 'rgba(96,14,20,.9)', color: '#ffdc8e' });
+    ui.pill('s. 195', { t, t0: r0 + .03, t1: rEnd, x: Math.min(860, Math.max(220, px - 10)), y: Math.max(300, py - 128), size: 52, bg: 'rgba(96,14,20,.9)', color: '#ffdc8e' });
     // "19. Söz" ring: drawn around the tag's lettering, oriented and sized from the tag's on-screen projection so it
     // hugs the tag at any framing (hold: centre ~(475,1025), extent y ~915–1135 — well inside the y ≤ 1330 safe line)
     const tq = (x, z) => ui.project(R.tag.localToWorld(new THREE.Vector3(x, 0, z)));
     const [tx, ty] = tq(.004, 0), [ax, ay] = tq(-.044, 0), [bx, by] = tq(.044, 0), [cx0, cy0] = tq(.004, -.0242), [cx1, cy1] = tq(.004, .0242);
     const eRx = .52 * Math.hypot(bx - ax, by - ay), eRy = .78 * Math.hypot(cx1 - cx0, cy1 - cy0), eRot = Math.atan2(by - ay, bx - ax);
-    const ra2 = U.prog(t, t19 - .05, t19 + .45, 'outCubic'), rOut2 = U.smoothstep(6.15, 5.9, t); // through "gibi"; gone before the crane picks up speed
+    const ra2 = U.prog(t, t19 - .05, t19 + .45, 'outCubic'), rOut2 = U.smoothstep(B.out0 + .2, B.out0 - .05, t); // through "Söz" into "gibi"; gone before the pan left picks up speed
     if (ra2 > 0 && rOut2 > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut2; X.strokeStyle = '#d8a23a'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(40,10,0,.35)'; X.shadowBlur = 10; X.beginPath(); X.ellipse(tx, ty, eRx, eRy, eRot, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra2); X.stroke(); X.restore(); }
     // "başka risaleler" label over the sill set (lands on "risalelerde" as the crane settles)
     const sc = R.sillCenter.clone(); const [sx, sy] = ui.project(sc);
     const stp = R.sillCenter.clone(); stp.y += .135; const [, sty] = ui.project(stp);
-    ui.pill('başka risaleler', { t, t0: Math.max(tRis + .15, 6.7), t1: Math.min(tEtr - .55, 7.9), x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
-    // end card
-    const ec = U.smoothstep(tEtr - .1, tEtr + .9, t);
+    ui.pill('başka risaleler', { t, t0: tRis + .15, t1: Math.min(tEtr - .55, B.pb0 + .3), x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
+    // end card: comes in over 0.6 s on the "ve" of "ve etraflıca" (8.73) and is fully readable from ~9.3 through the 1 s
+    // hold after the last word until the fade to black (11.45)
+    const tEc = ctx.wordTime('ve', 1), ec = U.smoothstep(tEc, tEc + .6, t);
     if (ec > 0) {
       const X = ui.ctx; X.save(); X.globalAlpha = ec; const y0 = R.cardY + (1 - ec) * 14;
       X.save(); X.translate(540, y0); X.scale(1, .3); const g = X.createRadialGradient(0, 0, 0, 0, 0, 560); g.addColorStop(0, 'rgba(252,245,231,.9)'); g.addColorStop(.62, 'rgba(252,245,231,.78)'); g.addColorStop(1, 'rgba(252,245,231,0)'); X.fillStyle = g; X.fillRect(-560, -560, 1120, 1120); X.restore();
@@ -502,6 +518,6 @@ export default {
       for (const yy of [y0 - 66, y0 + 66]) { X.fillRect(540 - lw, yy - 1.2, lw - 16, 2.4); X.fillRect(540 + 16, yy - 1.2, lw - 16, 2.4); X.save(); X.translate(540, yy); X.rotate(Math.PI / 4); X.fillRect(-6, -6, 12, 12); X.restore(); }
       X.restore();
     }
-    ui.text('Mektubat, s. 195 · Sözler, 19. Söz', { t, t0: tEtr - .1, x: 540, y: R.cardY + 2, size: 58, weight: 700, family: 'Playfair Display', color: '#3d1a12', anim: 'fade', dur: .9, shadow: false, maxWidth: 940 });
+    ui.text('Mektubat, s. 195 · Sözler, 19. Söz', { t, t0: tEc, x: 540, y: R.cardY + 2, size: 58, weight: 700, family: 'Playfair Display', color: '#3d1a12', anim: 'fade', dur: .6, shadow: false, maxWidth: 940 });
   },
 };

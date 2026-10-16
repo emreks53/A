@@ -3,7 +3,8 @@
 // right camp (black goat-hair tents, dark red banner, spears) = DÜŞMANLARI. Each camp has a crackling fire whose light
 // plays on the tent cloth. Between them, in the foreground on a flat rock, one steady clay lamp.
 // On "onun şahsında gözüken" chains of small clay lamps ignite from BOTH camps toward that same calm light; on
-// "şahittirler" a ring of lamps closes around it and a big "ŞAHİT" stamp lands with a dust puff.
+// "şahittirler" a ring of lamps closes around it and a big "ŞAHİT" stamp lands with a dust puff (~0.3 s before the s03->s04
+// dissolve at 19.40); the labels clear just before that dissolve so only the stamp crosses into s04.
 import * as THREE from 'three';
 import { bedouinTent, tentCloth, saduBand, rugTex, campfire } from '../engine/lib/extra_B.js';
 import { cloudSprite } from '../engine/lib/fx.js';
@@ -12,7 +13,7 @@ let R = {};
 const LAMP = new THREE.Vector3(0, 0, 0);
 
 export default {
-  endFade: false, // the last beat lands at the very end: let the typography dissolve with the picture in the transition
+  endFade: false, // the ŞAHİT stamp is the payoff: it holds and dissolves with the picture (the other labels fade out themselves, see endT)
   post: {
     exposure: 1.0,
     bloom: { enabled: true, strength: .55, radius: .55, threshold: .74 },
@@ -188,9 +189,9 @@ export default {
   update(t, ctx) {
     const { ui, U, post, camera, ENV } = ctx;
     R.rig.update(t);
-    // stamp impact shake
-    const tSah = ctx.wordTime('şahittirler');
-    const ti = t - (tSah + .12); if (ti > 0 && ti < .5) { const a = .045 * Math.exp(-ti * 9); camera.position.x += Math.sin(ti * 70) * a; camera.position.y += Math.cos(ti * 55) * a * .7; }
+    // stamp impact shake (the stamp slams down .16 s after it starts, together with its dust puff and slam SFX)
+    const tSah = ctx.wordTime('şahittirler'), tStamp = tSah + .02;
+    const ti = t - (tStamp + .16); if (ti > 0 && ti < .5) { const a = .045 * Math.exp(-ti * 9); camera.position.x += Math.sin(ti * 70) * a; camera.position.y += Math.cos(ti * 55) * a * .7; }
     // fires flicker, flags wave
     R.fires.forEach((L, i) => ENV.flicker(L, t, i * 3 + 1, .2));
     // (the visible face is back-lit by the afterglow, so the folds also get a baked light/dark term from the wave slope)
@@ -209,14 +210,16 @@ export default {
 
     // ---- typography ----
     const tD = ctx.wordTime('dostlarının'), tDu = ctx.wordTime('düşmanları'), tDa = ctx.wordTime('dahi'), tU = ctx.wordTime('üstün'), tY = ctx.wordTime('yetişilemeyen');
-    const endT = 99;
+    // every label except the stamp clears before the 0.4 s s03->s04 fade (starts 0.2 s before the boundary): the ui fade-out
+    // runs over the last .35 s before endT (local 5.87-6.22, i.e. as the stamp lands) and is ~0 when the dissolve starts
+    const endT = ctx.dur - .18, fo = ui.env(t, -99, endT).o;
     const aL = ui.project(R.anchorL), aR = ui.project(R.anchorR);
     const pL = pillPos(ui, aL, 'DOSTLARI', 50), pR = pillPos(ui, aR, 'DÜŞMANLARI', 50);
     // leader (dot + line ending at the pill's bottom edge, never through the letters), then an opaque pill that lands on the word
-    leader(ui, t, tD - .45, aL, pL, '#7dffb0', 'rgba(220,255,230,.9)');
-    leader(ui, t, tDu - .45, aR, pR, '#ff9a8a', 'rgba(255,225,220,.9)');
-    ui.pill('DOSTLARI', { t, t0: tD - .2, x: pL[0], y: pL[1], size: 50, weight: 900, bg: 'rgb(31,110,66)', color: '#f2fff4' });
-    ui.pill('DÜŞMANLARI', { t, t0: tDu - .2, x: pR[0], y: pR[1], size: 50, weight: 900, bg: 'rgb(140,30,26)', color: '#fff0ec' });
+    leader(ui, t, tD - .45, aL, pL, '#7dffb0', 'rgba(220,255,230,.9)', fo);
+    leader(ui, t, tDu - .45, aR, pR, '#ff9a8a', 'rgba(255,225,220,.9)', fo);
+    ui.pill('DOSTLARI', { t, t0: tD - .2, t1: endT, x: pL[0], y: pL[1], size: 50, weight: 900, bg: 'rgb(31,110,66)', color: '#f2fff4' });
+    ui.pill('DÜŞMANLARI', { t, t0: tDu - .2, t1: endT, x: pR[0], y: pR[1], size: 50, weight: 900, bg: 'rgb(140,30,26)', color: '#fff0ec' });
     // "dahi" — small gold tag tucked under the right end of the DÜŞMANLARI pill, clear of the pill and its leader line
     ui.text('dahi', { t, t0: tDa - .03, t1: endT, x: Math.min(pR[0] + pR[2] / 2 - 38, 1000 - 52), y: pR[1] + 82, size: 40, weight: 900, color: '#ffd27a', anim: 'pop', rotate: -.06, shadowBlur: 10, shadowColor: 'rgba(20,6,4,.85)' });
     // dashed arrows: both camps -> the same light
@@ -227,13 +230,13 @@ export default {
     }
     // label for the light
     const slabS = ui.project(R.slabFront);
-    // typed in step with the narration: 'üstün' (5) holds through the pause, ' ve' (8), ' yetişilemeyen' (22), ' ahlâk' (28)
+    // typed in step with the narration: 'üstün' (5) holds to the end of the word, ' ve' (8), ' yetişilemeyen' (22), ' ahlak' (28)
     const tVe = ctx.wordTime('ve'), tA = ctx.wordTime('ahlaka');
     const nC = U.kf(t, [[tU - .04, 0], [tU + .32, 5], [tVe - .05, 5], [tVe + .1, 8], [tY - .03, 8], [tY + .44, 22], [tA - .03, 22], [tA + .26, 28]], x => x);
     const hold = t > tU + .32 && t < tVe - .05; const caret = !hold || ((t - tU - .32) * 2.4) % 1 < .55;
-    typedPill(ui, 'üstün ve yetişilemeyen ahlâk', t, tU - .04, nC, caret, 540, U.clamp(slabS[1] + 62, 1150, 1288), 44);
+    typedPill(ui, 'üstün ve yetişilemeyen ahlak', t, tU - .04, nC, caret, 540, U.clamp(slabS[1] + 62, 1150, 1288), 44, fo);
     // ŞAHİT stamp with dust puff
-    stamp(ui, t, tSah + .02, 540, 600);
+    stamp(ui, t, tStamp, 540, 600);
   },
 };
 
@@ -244,12 +247,13 @@ function rngLocal(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5
 function pillPos(ui, a, str, size) { const X = ui.ctx; X.save(); X.font = ui.font(size, 900, 'Nunito'); const w = X.measureText(str).width + size * .84; X.restore();
   return [Math.min(Math.max(a[0], 80 + w / 2 + 8), 1000 - w / 2 - 8), Math.min(Math.max(a[1] - 112, 292), 420), w]; }
 
-// Callout leader: dot pops on the anchor, line grows to the pill's bottom edge (the opaque pill is drawn on top, so the line never crosses its text)
-function leader(ui, t, t0, a, p, dotColor, lineColor) {
-  const k = t - t0; if (k <= 0) return; const X = ui.ctx; const c01 = v => Math.max(0, Math.min(1, v));
+// Callout leader: dot pops on the anchor, line grows to the pill's bottom edge (the opaque pill is drawn on top, so the line never crosses its text);
+// fo = fade-out multiplier (fades with its pill)
+function leader(ui, t, t0, a, p, dotColor, lineColor, fo = 1) {
+  const k = t - t0; if (k <= 0 || fo <= .001) return; const X = ui.ctx; const c01 = v => Math.max(0, Math.min(1, v));
   const pr = 1 - Math.pow(1 - c01(k / .4), 3), al = 1 - Math.pow(1 - c01(k / .3), 3); const u = c01(k / .3), ds = 1 + 2.70158 * Math.pow(u - 1, 3) + 1.70158 * Math.pow(u - 1, 2);
   const bx = Math.min(Math.max(a[0], p[0] - p[2] / 2 + 34), p[0] + p[2] / 2 - 34), by = p[1] + 38;
-  X.save(); X.globalAlpha = al; X.lineCap = 'round'; X.shadowColor = 'rgba(0,0,0,.4)'; X.shadowBlur = 8;
+  X.save(); X.globalAlpha = al * fo; X.lineCap = 'round'; X.shadowColor = 'rgba(0,0,0,.4)'; X.shadowBlur = 8;
   X.strokeStyle = lineColor; X.lineWidth = 4; X.beginPath(); X.moveTo(a[0], a[1]); X.lineTo(a[0] + (bx - a[0]) * pr, a[1] + (by - a[1]) * pr); X.stroke();
   X.beginPath(); X.arc(a[0], a[1], 9 * Math.max(0, ds), 0, Math.PI * 2); X.fillStyle = dotColor; X.fill();
   X.restore();
@@ -289,13 +293,13 @@ function stamp(ui, t, t0, x, y) {
   X.restore();
 }
 
-// pill whose background grows with the typed text (no empty box before the first letters)
-function typedPill(ui, str, t, t0, nC, caret, x, y, size) {
-  const k = t - t0; if (k < 0) return; const X = ui.ctx;
+// pill whose background grows with the typed text (no empty box before the first letters); fo = fade-out multiplier
+function typedPill(ui, str, t, t0, nC, caret, x, y, size, fo = 1) {
+  const k = t - t0; if (k < 0 || fo <= .001) return; const X = ui.ctx;
   const n = Math.min(str.length, Math.max(1, Math.ceil(nC - 1e-6))); const shown = str.slice(0, n);
   X.save(); X.font = ui.font(size, 800, 'Nunito'); const full = X.measureText(str).width, w = X.measureText(shown).width;
   const a = Math.min(1, k / .18); const pad = size * .42, h = size * 1.12 + pad * 1.24; const bw = Math.max(w, size * .6) + pad * 2;
-  X.globalAlpha = a; X.translate(x - full / 2 - pad, y);
+  X.globalAlpha = a * fo; X.translate(x - full / 2 - pad, y);
   X.fillStyle = 'rgba(22,24,44,.8)'; X.shadowColor = 'rgba(0,0,0,.35)'; X.shadowBlur = 24; X.shadowOffsetY = 8; ui.rrect(0, -h / 2, bw, h, h / 2); X.fill();
   X.shadowColor = 'transparent'; X.fillStyle = '#fff4dc'; X.textAlign = 'left'; X.textBaseline = 'middle'; X.fillText(shown, pad, 0);
   if (n < str.length && caret) { X.fillStyle = 'rgba(255,244,220,.8)'; X.fillRect(pad + w + 4, -size * .4, 4, size * .8); }
