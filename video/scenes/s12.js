@@ -11,7 +11,7 @@ const DEBUG = 0; // 1: close-up turntable of exhibit floor(t) (for modelling che
 const S = 1.25, WZ = -0.62, NICHE = .26, VS = 4.2, AZ = 4.35, ROWB = 3.25, TH = 0.42; // bay width, wall face z, niche depth, vault spring, arcade face z, row B z, camera yaw
 const NAMES = ['MERHAMET', 'SAMİMİYET', 'ADALET', 'GÜVENİLİRLİK', 'TEVAZU', 'VEFA', 'SABIR', 'SAYGI', 'AFFEDİCİLİK', 'NEZAKET', 'KANAATKÂRLIK', 'HOŞGÖRÜ', 'DİĞERKÂMLIK', 'YARDIMSEVERLİK'];
 const WORDS = ['merhamet', 'samimiyet', 'adalet', 'güvenilirlik', 'tevazu', 'vefa', 'sabır', 'saygı', 'affedicilik', 'nezaket', 'kanaatkâr', 'hoşgörü', 'diğerkâm', 'yardımsever'];
-const FALLBACK = [1.11, 1.73, 2.74, 3.56, 4.60, 5.82, 6.77, 7.72, 8.75, 9.78, 10.83, 12.05, 12.93, 14.10]; // refined (energy-aligned) word starts
+const FALLBACK = [1.11, 2.11, 3.08, 3.83, 4.87, 5.81, 6.50, 7.26, 8.44, 9.78, 10.83, 12.05, 12.93, 14.10]; // v2.3 CTC-aligned local word starts
 const DOOR = 11; // index of HOŞGÖRÜ (0-based)
 // exhibit builders + framing: ty = target height above pad top, D = camera distance, h = camera height above target, ry = object yaw,
 // ly = hero lamp height (hung so that, in the glide framing, the lit lamp sits above the label / progress-dot band instead of behind it)
@@ -49,7 +49,7 @@ export default {
     // ---- word times (local)
     R.T = WORDS.map((w, i) => { const v = ctx.wordTime(w); return Math.abs(v - FALLBACK[i]) < .6 ? v : FALLBACK[i]; });
     const ve = ctx.wordTime('ve', 1), diger = ctx.wordTime('diğer', 1), butun = ctx.wordTime('bütün'), guzel = ctx.wordTime('güzel'), ahlak = ctx.wordTime('ahlak'), ozel = ctx.wordTime('özellik');
-    R.W = { ve: Math.abs(ve - 14.95) < .5 ? ve : 14.95, diger: Math.abs(diger - 15.44) < .5 ? diger : 15.44, butun: Math.abs(butun - 15.81) < .5 ? butun : 15.81, guzel: Math.abs(guzel - 16.15) < .5 ? guzel : 16.15, ahlak: Math.abs(ahlak - 16.76) < .5 ? ahlak : 16.76, ozel: Math.abs(ozel - 17.17) < .5 ? ozel : 17.17 };
+    R.W = { ve: Math.abs(ve - 15.44) < .5 ? ve : 15.44, diger: Math.abs(diger - 15.49) < .5 ? diger : 15.49, butun: Math.abs(butun - 15.83) < .5 ? butun : 15.83, guzel: Math.abs(guzel - 16.25) < .5 ? guzel : 16.25, ahlak: Math.abs(ahlak - 16.76) < .5 ? ahlak : 16.76, ozel: Math.abs(ozel - 17.13) < .5 ? ozel : 17.13 };
 
     // ---- world, light
     scene.fog = new THREE.FogExp2('#a0805e', .02);
@@ -289,27 +289,30 @@ export default {
     R.motes = FX.particles({ count: 380, center: [9, 1.6, .1], box: [26, 2.6, 1.3], size: 2.2, color: '#ffe2b0', opacity: .4, drift: [.03, .02, 0], swirl: .05 }); scene.add(R.motes);
     R.motes2 = FX.particles({ count: 600, center: [x14 + 16, 2.0, 1.6], box: [30, 3.6, 4.6], size: 3.5, color: '#ffe2b0', opacity: 0, drift: [.03, .02, 0], swirl: .06 }); scene.add(R.motes2);
 
-    // ---- camera keys: ONE continuous glide past the pedestals (Catmull-Rom through one key per exhibit, the exhibit centred ~.18 s
-    //      after its word; no dwell-then-whip, no fov pumping). At fov 40 the 9:16 frame holds about one bay, so screen speed stays
-    //      ~30-45 px/frame through the quick beats and the lit exhibit is in frame while its name is up.
+    // ---- camera keys: ONE continuous glide past the pedestals (Catmull-Rom through one key per exhibit; no dwell-then-whip, no fov
+    //      pumping). At fov 40 the 9:16 frame holds about one bay and the virtue words run back to back (.7-1.3 s apart), so each
+    //      exhibit is centred ~28% of the way to the next word: it slides in from the right as its lamp lights and is still in frame
+    //      as its word ends. Screen speed stays ~30-63 px/frame through the glide (~70 on the door and finale moves).
     camera.near = .03; camera.far = 600;
     const FOV = 40, lerp = (a, b, u) => a + (b - a) * u;
     const meanP = R.heroes.filter(h => h.i !== DOOR).reduce((s, h) => s + Math.atan2(h.ex.h, h.ex.D), 0) / 13;
-    const camFor = i => { const h = R.heroes[i]; const D = Math.min(h.ex.D * 1.15, 2.72 / Math.cos(TH)); // stay clear of row B (z < 2.72)
+    const camFor = (i, dx = 0) => { const h = R.heroes[i]; const D = Math.min(h.ex.D * 1.15, 2.72 / Math.cos(TH)); // stay clear of row B (z < 2.72)
       const hh = D * Math.tan(lerp(Math.atan2(h.ex.h * .955, h.ex.D), meanP, .5)); // per-exhibit view angle, half-way to the mean (flatter glide)
-      return { pos: V(h.tgt.x - D * Math.sin(TH), h.tgt.y + hh, h.tgt.z + D * Math.cos(TH)), look: h.tgt.clone(), fov: FOV }; };
+      return { pos: V(h.tgt.x + dx - D * Math.sin(TH), h.tgt.y + hh, h.tgt.z + D * Math.cos(TH)), look: h.tgt.clone().add(V(dx, 0, 0)), fov: FOV }; };
     const keys = []; const c0 = camFor(0);
     keys.push({ t: -.75, pos: c0.pos.clone().add(V(-1.0, .5, .3)), look: c0.look.clone().add(V(.4, .05, 0)), fov: FOV + 1.5 });
-    keys.push({ t: R.T[0] + .1, ...c0 }); // centred just after its word (refined timings: MERHAMET->SAMİMİYET is only .62 s, keeps the hop >= .8 s)
-    for (let i = 1; i < 14; i++) {
-      if (i === DOOR) { // HOŞGÖRÜ: arrive on the closed door just before the word, then a slow push toward the opening as it swings open
-        keys.push({ t: R.T[i] - .12, pos: V(xd - .5, 1.32, 2.72), look: V(xd + .55, 1.45, -3.0), fov: 42, a: .7 });
-        keys.push({ t: R.T[i] + .3, pos: V(xd - .36, 1.3, 2.38), look: V(xd + .6, 1.42, -3.0), fov: 41, a: .7 }); continue; }
-      const gp = R.T[i] - R.T[i - 1], gn = (R.T[i + 1] ?? R.W.ve) - R.T[i]; // centre a little later before a long gap / earlier after one: evens out the glide speed
-      keys.push({ t: R.T[i] + .18 + U.clamp(.3 * (gn - gp), -.08, .14), ...camFor(i) }); }
-    // finale: from the jug the camera turns down the gallery and cranes up / dollies back while the far lamps light (reads by "bütün")
+    for (let i = 0; i < 14; i++) {
+      if (i === DOOR) { // HOŞGÖRÜ: arrive on the closed door as its leaves start to swing, then a slow push toward the opening
+        keys.push({ t: R.T[i], pos: V(xd - .5, 1.32, 2.72), look: V(xd + .55, 1.45, -3.0), fov: 42, a: .7 });
+        keys.push({ t: R.T[i] + .35, pos: V(xd - .36, 1.3, 2.38), look: V(xd + .6, 1.42, -3.0), fov: 41, a: .7 }); continue; }
+      if (i === 13) { // YARDIMSEVERLİK: the glide carries on past the jug (no stop) until the word is nearly over, then the finale turn
+        keys.push({ t: R.T[i] + .28, ...camFor(i, -.25) }, { t: R.T[i] + .75, ...camFor(i, .25) }); continue; }
+      const gn = R.T[i + 1] - R.T[i]; // KANAATKÂRLIK (before the door move) is centred later so the dates stay framed into their word
+      keys.push({ t: R.T[i] + (i === DOOR - 1 ? .45 : U.clamp(.28 * gn, .15, .42)), ...camFor(i) }); }
+    // finale: from the jug the camera turns down the gallery and cranes up / dollies back while the far lamps light (reads by "bütün";
+    // the fast part of the turn is over by "güzel", then it eases out under the headline)
     const yp = (t, pos, yaw, pitch, fov) => { const y = yaw * Math.PI / 180, p = pitch * Math.PI / 180; return { t, pos, look: pos.clone().add(V(Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p)).multiplyScalar(5)), fov }; };
-    keys.push(yp(R.W.butun - .15, V(x14 - .3, 2.05, 2.58), 57, -7.5, 40));
+    keys.push(yp(R.W.butun + .25, V(x14 - .3, 2.05, 2.58), 57, -7.5, 40));
     keys.push(yp(R.W.ahlak + .4, V(x14 - 1.05, 2.45, 2.18), 84.5, -1.6, 41));
     keys.push(yp(18.4, V(x14 - 2.6, 2.7, 1.7), 89.8, -.3, 42.5));
     const toV = k => { const d = k.look.clone().sub(k.pos); return { t: k.t, a: k.a, v: [k.pos.x, k.pos.y, k.pos.z, Math.atan2(d.x, -d.z), Math.atan2(d.y, Math.hypot(d.x, d.z)), k.fov] }; };
@@ -385,7 +388,7 @@ export default {
     let fd = 2.5; { // focus on the exhibit nearest the view axis, soft-blended between neighbours so the focus never jumps mid-glide
       const c = R.heroes.map(h => { const d = h.tgt.clone().sub(camera.position); const along = d.dot(dir); return { along, lat: d.clone().sub(dir.clone().multiplyScalar(along)).length() }; }).filter(c => c.along > .5);
       if (c.length) { const best = Math.min(...c.map(c => c.lat)); let sw = 0, sf = 0; c.forEach(c => { const w = Math.exp(-(c.lat - best) / .18) * (.02 + U.smoothstep(.5, 1.1, c.along)); sw += w; sf += w * c.along; }); fd = sf / sw; } }
-    const dw = U.smoothstep(R.T[DOOR] - .55, R.T[DOOR] - .15, t) * (1 - U.smoothstep(R.T[DOOR] + .7, R.T[DOOR] + 1.0, t)); // door shot: hold the tree and the doorway together
+    const dw = U.smoothstep(R.T[DOOR] - .45, R.T[DOOR] - .05, t) * (1 - U.smoothstep(R.T[DOOR] + .7, R.T[DOOR] + 1.0, t)); // door shot: hold the tree and the doorway together
     post.dof.focus = U.lerp(U.lerp(fd, 6.5, dw), 9, fin); post.dof.range = U.lerp(U.lerp(1.5, 10, dw), 14, fin); post.dof.amount = U.lerp(U.lerp(.85, .4, dw), .55, fin);
     // motion blur only where the camera glides fast (screen speed centred on this frame)
     { // measured at the focused exhibit's distance (that is what strobes); enough sub-frames that copies sit <= ~4.5 px apart
@@ -397,7 +400,7 @@ export default {
     const X = ui.ctx;
     const label = (str, t0, t1, gone = 0) => {
       if (t < t0 - .01 || t > t1 + .16 || gone >= 1) return;
-      const a = U.clamp((t - t0) / .12), sIn = U.ease.outBack(U.clamp((t - t0) / .3), 2.4), ex = Math.max(U.clamp((t - t1) / .14), gone);
+      const a = U.clamp((t - t0) / .08), sIn = U.ease.outBack(U.clamp((t - t0) / .3), 2.4), ex = Math.max(U.clamp((t - t1) / .08), gone);
       const alpha = a * (1 - ex); if (alpha <= .001) return;
       X.save(); X.font = '900 100px "Nunito"'; X.letterSpacing = '5px'; const w = X.measureText(str).width; const size = Math.min(104, 100 * 840 / w);
       X.globalAlpha = alpha; X.translate(540 - ex * 70, 455 - ex * 10); const sc = (.55 + .45 * sIn) * (1 - .06 * ex); X.scale(sc, sc);
@@ -408,11 +411,13 @@ export default {
       X.restore();
     };
     if (!DEBUG) {
-      R.heroes.forEach((h, i) => { const t1 = i < 13 ? R.heroes[i + 1].t0 - .2 : R.W.ve - .18; if (t < h.t0 - .05 || t > t1 + .16) return;
-        const sx = ui.project(h.tgt)[0]; const gone = t > h.t0 + .15 ? 1 - U.smoothstep(70, 240, sx) : 0; // the name leaves with its exhibit
+      R.heroes.forEach((h, i) => { const t1 = i < 13 ? R.heroes[i + 1].t0 - .08 : R.W.ve - .18; if (t < h.t0 - .05 || t > t1 + .16) return;
+        // the name leaves with its exhibit (as it slides out of the left edge), but not before it has been up >= .6 s: the words run
+        // back to back (.7-1.3 s apart), so on the quick beats it is handed straight to the next name instead
+        const sx = ui.project(h.tgt)[0]; const gone = (1 - U.smoothstep(-140, 60, sx)) * U.smoothstep(h.t0 + .62, h.t0 + .77, t);
         label(NAMES[i], h.t0 - .04, t1, gone); });
-      // progress dots
-      const dAlpha = U.smoothstep(-.4, 0, t) * (1 - U.smoothstep(R.W.ve - .1, R.W.ve + .25, t));
+      // progress dots (in after the midpoint of the s11->s12 wipe: never drawn through the outgoing DÜRÜSTLÜK title)
+      const dAlpha = U.smoothstep(0, .35, t) * (1 - U.smoothstep(R.W.ve - .1, R.W.ve + .25, t));
       if (dAlpha > .001) { X.save(); X.globalAlpha = dAlpha; // soft scrim keeps the row legible over lamp glow; equal dot sizes, current dot gets a ring
         X.shadowColor = 'rgba(10,5,0,.35)'; X.shadowBlur = 18; X.fillStyle = 'rgba(28,14,6,.36)'; ui.rrect(540 - 7 * 52 - 14, 318 - 23, 14 * 52 + 28, 46, 23); X.fill(); X.shadowColor = 'transparent';
         for (let i = 0; i < 14; i++) { const x = 540 + (i - 6.5) * 52, y = 318; const on = U.clamp((t - R.T[i] + .04) / .25); const cur = on > 0 && (i === 13 || t < R.T[i + 1] - .05);
@@ -426,7 +431,7 @@ export default {
       { X.save(); X.font = '800 70px "Nunito"'; X.letterSpacing = '0px'; const wAll = X.measureText('…ve bütün').width, wB = X.measureText('bütün').width; X.restore();
         const fo = { t, y: 380, size: 70, weight: 800, color: '#fff3dc', anim: 'rise', dur: .4, stroke: 'rgba(40,20,8,.55)', strokeW: 9 };
         ui.text('…ve', { ...fo, t0: W.ve - .03, x: 540 - wAll / 2, align: 'left' }); ui.text('bütün', { ...fo, t0: W.butun - .04, x: 540 + wAll / 2 - wB / 2 }); }
-      ui.text('güzel ahlâk', { t, t0: W.guzel - .04, x: 540, y: 498, size: 128, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 3, dur: .45, stroke: 'rgba(52,26,10,.6)', strokeW: 15 });
+      ui.text('güzel ahlak', { t, t0: W.guzel - .04, x: 540, y: 498, size: 128, weight: 900, color: '#ffd27a', anim: 'pop', letterSpacing: 3, dur: .45, stroke: 'rgba(52,26,10,.6)', strokeW: 15 });
     }
   },
 };

@@ -394,13 +394,17 @@ export default {
     const dist = new Float64Array(nodes.length).fill(Infinity), prev = new Int32Array(nodes.length).fill(-1), done = new Uint8Array(nodes.length);
     for (const e of dE) { const k = nodes.indexOf(e); dist[k] = Math.hypot(e.x - dFoot.x, e.z - dFoot.z); }
     for (; ;) { let k = -1, bd = Infinity; for (let i = 0; i < nodes.length; i++) if (!done[i] && dist[i] < bd) { bd = dist[i]; k = i; } if (k < 0) break; done[k] = 1; for (const [o, w] of nodes[k].adj) if (dist[k] + w < dist[o]) { dist[o] = dist[k] + w; prev[o] = k; } }
-    // red-dot houses (müşrikler) — many, but not all
+    // narration beats (local s, aligned word times): every word-driven beat of the scene is keyed on these
+    const tD = ctx.wordTime('düşman'), tMus = ctx.wordTime('müşrik'), tE = ctx.wordTime('emanet');
+    const tT = ctx.wordTime('kadar') - .17; // "o kadar kişi" title: rises on "o", legible by "kadar"
+    R.tk = { tMc: tMus - .39, tEc: tE - .15, tT, tPin: tT + .02 }; // callout starts (pills pop .25 s later: müşrikler .14 s before its word, emanetler .1 s after), title, gold pin
+    // red-dot houses (müşrikler) — many, but not all; they pop from "düşman" on, spreading outward through "müşrikler"
     const pr = U.rng(77);
     const red = houses.filter(h => !h.isDest && h.r1 < .46);
     const center = new THREE.Vector2(-8, 18);
-    red.forEach(h => { const dd = Math.hypot(h.x - center.x, h.z - center.y); h.tp = 1.55 + U.clamp(dd / 230, 0, 1) * 1.25 + pr() * .3; });
+    red.forEach(h => { const dd = Math.hypot(h.x - center.x, h.z - center.y); h.tp = tD - .05 + U.clamp(dd / 230, 0, 1) * 1.25 + pr() * .3; });
     R.red = red;
-    { let bs = 1e9; for (const h of red) { if (h.tp > 2.5) continue; const sc = Math.hypot(h.x + 48, h.z + 22); if (sc < bs) { bs = sc; R.mlabel = h; } } }
+    { let bs = 1e9; for (const h of red) { if (h.tp > tD + .9) continue; const sc = Math.hypot(h.x + 48, h.z + 22); if (sc < bs) { bs = sc; R.mlabel = h; } } }
     // pick sources spread around the destination
     const cand = red.map(h => { const f = footOn(h.edge, h.door); const ks = h.edge.map(e => nodes.indexOf(e)); const k = dist[ks[0]] + Math.hypot(f.x - h.edge[0].x, f.z - h.edge[0].z) < dist[ks[1]] + Math.hypot(f.x - h.edge[1].x, f.z - h.edge[1].z) ? ks[0] : ks[1]; const L = dist[k] + Math.hypot(f.x - nodes[k].x, f.z - nodes[k].z); return { h, f, k, L, ang: Math.atan2(h.x - dest.x, h.z - dest.z) }; })
       .filter(c => isFinite(c.L) && c.L > 35 && c.L < 330 && Math.hypot(c.h.x - dest.x, c.h.z - dest.z) > 25);
@@ -424,11 +428,14 @@ export default {
       const S = F.pts.map(([x, z]) => new THREE.Vector3(x, meshH(x, z), z)), cum = F.cum;
       lights.push({ S, cum, L: cum[cum.length - 1], src: c.h, seed: pr() * 10, sF: F.anchor });
     });
-    // timing: depart 3.0–3.8 ("emanetlerini"), arrive 4.4–5.55 (long paths arrive last): every lantern has arrived and
-    // hangs still-ish before the close-up (5.65+) — physical lanterns must not zip past the camera at 60 m/s there
+    // timing: depart over "emanetlerini" (word start -.1 .. +.4, long paths within the first .2 s; the glows light up .25 s
+    // before, after "müşrikler" has ended), arrive from just after the title/pin to 5.55 (long paths arrive last): every
+    // lantern has arrived and hangs still-ish before the close-up (5.65+, camera-keyed) — physical lanterns must not zip
+    // past the camera at 60 m/s there
+    const TA0 = tT + .12, TA1 = Math.max(TA0 + .3, 5.45);
     const byL = lights.map((l, i) => [l.L, i]).sort((a, b) => a[0] - b[0]);
-    byL.forEach(([L, i], rank) => { const l = lights[i]; l.td = 3.0 + pr() * .8; l.ta = 4.4 + (rank / (NL - 1)) * 1.05 + pr() * .1; });
-    R.lights = lights;
+    byL.forEach(([L, i], rank) => { const l = lights[i], q = rank / (NL - 1); l.td = tE - .1 + pr() * (.5 - .3 * q); l.ta = TA0 + q * (TA1 - TA0) + pr() * .1; });
+    R.lights = lights; R.tA0 = TA0;
 
     // lantern glow points (core + halo) and warm ground pools
     const lpos = new Float32Array(NL * 3), lb = new Float32Array(NL);
@@ -478,9 +485,9 @@ export default {
     };
     R.G = G;
     R.focal = ctx.H / 2 / Math.tan(camera.fov * DEG / 2);
-    {
+    { // the "emanetler" callout rides on the lantern that sits best on screen while the label is up, among the first to leave
       const probe = camera.clone(); let bs = 1e9;
-      for (const l of lights) { let sc = 0; for (const tt of [3.5, 3.9, 4.3]) { camRig(probe, tt, U, false); const p = lightPos(l, tt, U).project(probe); sc += Math.hypot(p.x - .15, p.y - .05) + (Math.abs(p.x) > .8 || Math.abs(p.y) > .8 ? 5 : 0); } if (sc < bs) { bs = sc; R.lead = l; } }
+      for (const l of lights) { let sc = Math.max(0, l.td - tE) * 8; for (const tt of [tE + .2, tE + .55, tE + .9]) { camRig(probe, tt, U, false); const p = lightPos(l, tt, U).project(probe); sc += Math.hypot(p.x - .15, p.y - .05) + (Math.abs(p.x) > .8 || Math.abs(p.y) > .8 ? 5 : 0); } if (sc < bs) { bs = sc; R.lead = l; } }
     }
   },
 
@@ -520,19 +527,19 @@ export default {
     R.lantF.instanceMatrix.needsUpdate = true; R.lantG.instanceMatrix.needsUpdate = true; R.lantG.instanceColor.needsUpdate = true;
     const close = U.prog(t, 4.9, 5.7, 'inOutSine');
     R.lanternLights.forEach(({ p, i }) => { p.position.copy(L[i].pos); p.intensity = 14 * close * lb[i]; });
-    const grow = U.prog(t, 4.4, 5.9);
+    const grow = U.prog(t, R.tA0, 5.9); // the doorway light swells as the lanterns gather
     R.spill.intensity = 30 * (.35 + .65 * grow) + 10 * Math.min(pulse, 2.5); R.destLamp.intensity = 22 * (.8 + .06 * Math.sin(t * 11)) + 9 * Math.min(pulse, 2.5);
 
     // ================= Kurzgesagt map layer (2D overlay) =================
     const X = ui.ctx; const FO = ctx.H / 2 / Math.tan(camera.fov * DEG / 2);
     const mapFade = 1 - U.prog(t, 4.95, 5.4);
-    const pinA = U.clamp((t - 4.3) / .4) * (1 - U.prog(t, 5.35, 5.6));
+    const tk = R.tk, pinA = U.clamp((t - tk.tPin) / .4) * (1 - U.prog(t, 5.35, 5.6));
     // motion blur only on the fast swoop down to the door (camera zoom ~7%/frame there)
     post.motionBlur = { samples: t > 4.5 && t < 5.95 ? 3 : 1, shutter: .5 };
     if (!R.spr) R.spr = makeSprites();
     const V = new THREE.Vector3();
     // red dots (müşrikler) — sprite-based (crisp, no per-dot blur cost); dots near the destination give way to the gold pin
-    const dim = U.lerp(1, .5, U.prog(t, 4.3, 4.8));
+    const dim = U.lerp(1, .5, U.prog(t, tk.tPin, tk.tPin + .5));
     X.save();
     for (const h of R.red) {
       const a = U.clamp((t - h.tp) / .32); if (a <= 0) continue;
@@ -567,9 +574,9 @@ export default {
       const [px, py, pz] = ui.project(R.destTop);
       if (pz < 1) {
         X.save();
-        const ringT = ((t - 4.3) % .9) / .9; X.globalAlpha = pinA * (1 - ringT) * .9; X.strokeStyle = '#ffd36e'; X.lineWidth = 4; X.beginPath(); X.ellipse(px, py + 8, 20 + ringT * 70, (20 + ringT * 70) * .55, 0, 0, Math.PI * 2); X.stroke();
+        const ringT = ((t - tk.tPin) % .9) / .9; X.globalAlpha = pinA * (1 - ringT) * .9; X.strokeStyle = '#ffd36e'; X.lineWidth = 4; X.beginPath(); X.ellipse(px, py + 8, 20 + ringT * 70, (20 + ringT * 70) * .55, 0, 0, Math.PI * 2); X.stroke();
         // the pin's tip rests on the ring centre (the destination roof), hopping up a few px — never over the neighbour
-        const s = U.ease.outBack(U.clamp((t - 4.3) / .45), 2.4); const hop = (.5 + .5 * Math.sin(t * 5)) * 6; const top = py + 8 - 62 * s - hop;
+        const s = U.ease.outBack(U.clamp((t - tk.tPin) / .45), 2.4); const hop = (.5 + .5 * Math.sin(t * 5)) * 6; const top = py + 8 - 62 * s - hop;
         X.globalAlpha = pinA; X.translate(px, top); X.scale(s, s);
         X.shadowColor = 'rgba(0,0,0,.5)'; X.shadowBlur = 14; X.shadowOffsetY = 5;
         X.beginPath(); X.moveTo(0, 62); X.bezierCurveTo(-14, 40, -30, 26, -30, 0); X.arc(0, 0, 30, Math.PI, 0); X.bezierCurveTo(30, 26, 14, 40, 0, 62); X.closePath(); X.fillStyle = '#ffc84a'; X.fill();
@@ -580,10 +587,11 @@ export default {
     }
 
     // --- typography ---
-    { const a = U.clamp((t - 4.15) / .3) * (1 - U.prog(t, 5.6, 5.95)); if (a > 0) { const g = X.createLinearGradient(0, 150, 0, 560); g.addColorStop(0, 'rgba(8,12,28,0)'); g.addColorStop(.3, 'rgba(8,12,28,.72)'); g.addColorStop(.7, 'rgba(8,12,28,.6)'); g.addColorStop(1, 'rgba(8,12,28,0)'); X.save(); X.globalAlpha = a; X.fillStyle = g; X.fillRect(0, 150, 1080, 410); X.restore(); } }
-    // location tag "Mekke"
+    // soft dark band behind the title (one line at y 330)
+    { const a = U.clamp((t - (tk.tT - .13)) / .3) * (1 - U.prog(t, 5.6, 5.95)); if (a > 0) { const g = X.createLinearGradient(0, 170, 0, 490); g.addColorStop(0, 'rgba(8,12,28,0)'); g.addColorStop(.3, 'rgba(8,12,28,.72)'); g.addColorStop(.7, 'rgba(8,12,28,.6)'); g.addColorStop(1, 'rgba(8,12,28,0)'); X.save(); X.globalAlpha = a; X.fillStyle = g; X.fillRect(0, 170, 1080, 320); X.restore(); } }
+    // location tag "Mekke" (clears the title's spot just before it rises)
     {
-      const e = ui.env(t, .12, 4.25, .45, 'pop'); if (e.o > 0) {
+      const e = ui.env(t, .12, tk.tT - .03, .45, 'pop'); if (e.o > 0) {
         X.save(); X.globalAlpha = e.o; X.translate(540, 300); X.scale(e.s, e.s);
         X.font = ui.font(76, 900, 'Nunito'); if ('letterSpacing' in X) X.letterSpacing = '6px'; const tw = X.measureText('Mekke').width; const W = tw + 150;
         X.fillStyle = 'rgba(14,20,40,.78)'; X.shadowColor = 'rgba(0,0,0,.4)'; X.shadowBlur = 24; X.shadowOffsetY = 8; ui.rrect(-W / 2, -56, W, 112, 56); X.fill(); X.shadowColor = 'transparent';
@@ -592,10 +600,10 @@ export default {
         X.restore();
       }
     }
-    // Kâbe label: a thin ring around it (nothing drawn on the Kaaba itself) + leader line + pill
+    // Kâbe label: a thin ring around it (nothing drawn on the Kaaba itself) + leader line + pill; gone as "müşrikler" comes in
     {
       const K = R.kaaba; const c = new THREE.Vector3(0, K.position.y + 5, 0); const [kx, ky, kz] = ui.project(c); const [ex, ey] = ui.project(new THREE.Vector3(11, K.position.y + 5, 0));
-      const e = ui.env(t, .55, 2.5, .45, 'fade');
+      const e = ui.env(t, .55, tk.tMc + .08, .45, 'fade');
       if (kz < 1 && e.o > 0) {
         const rr = Math.max(26, Math.hypot(ex - kx, ey - ky)) * (.85 + .15 * U.ease.outBack(e.a)); const p = U.ease.outCubic(U.clamp((t - .55) / .45));
         const ty = Math.max(420, ky - 160), tx = safeX(ui, 'Kâbe', 42, kx + 190, ty - 10) - 20;
@@ -604,19 +612,19 @@ export default {
           X.beginPath(); X.arc(kx, ky, rr, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p); X.stroke();
           const sx = kx + rr * .707, sy = ky - rr * .707; X.beginPath(); X.moveTo(sx, sy); X.lineTo(sx + (tx - sx) * p, sy + (ty - sy) * p); X.stroke(); }
         X.restore();
-        if (p > .6) ui.pill('Kâbe', { t, t0: .8, t1: 2.5, x: tx + 20, y: ty - 10, size: 42, weight: 800, bg: 'rgba(14,20,40,.82)', color: '#fff4dc' });
+        if (p > .6) ui.pill('Kâbe', { t, t0: .8, t1: tk.tMc + .08, x: tx + 20, y: ty - 10, size: 42, weight: 800, bg: 'rgba(14,20,40,.82)', color: '#fff4dc' });
       }
     }
-    // "müşrikler" label on a red-dot house; kept clear of the Mekke tag (y 244..356)
-    let mPos = null;
-    if (R.mlabel && t > 2.3) { const [hx, hy] = ui.project(R.mlabel.top); const my = U.clamp(hy - 170, 450, 1250); mPos = [safeX(ui, 'müşrikler', 46, hx - 110, my), my]; ui.callout('müşrikler', { t, t0: 2.42, t1: 4.25, anchor: [hx, hy], to: mPos, size: 46, weight: 900, bg: '#e2463c', color: '#fff4ec', dotColor: '#ff4d43', lineColor: 'rgba(255,240,228,.95)' }); }
-    // "emanetler" label riding on a lantern (never on top of the müşrikler pill)
-    if (t > 2.95) { const lp = R.lead.pos; const [lx, ly, lz] = ui.project(lp); const ey = U.clamp(ly - 190, 520, 1250); let to = [safeX(ui, 'emanetler', 46, lx + 190, ey), ey];
-      if (mPos && t < 4.25 && Math.abs(to[1] - mPos[1]) < 110 && Math.abs(to[0] - mPos[0]) < 360) to[1] = mPos[1] + (to[1] >= mPos[1] ? 115 : -115);
-      if (lz < 1) ui.callout('emanetler', { t, t0: 3.02, t1: 4.45, anchor: [lx, ly], to, size: 46, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ffd88f', lineColor: 'rgba(255,226,160,.95)' }); }
-    // "o kadar kişi" — many houses vs one door
-    ui.text('o kadar kişi', { t, t0: 4.28, t1: 5.95, x: 540, y: 330, size: 84, weight: 900, color: '#fff4dc', anim: 'rise', shadowBlur: 22, shadowColor: 'rgba(4,6,18,.9)' });
-    ui.text('arasından…', { t, t0: ctx.wordTime('arasından') - .1, t1: 5.95, x: 540, y: 424, size: 64, weight: 800, color: '#ffd27a', anim: 'rise', shadowBlur: 20, shadowColor: 'rgba(4,6,18,.9)' });
+    // "müşrikler" label on a red-dot house (pill pops ~.1 s before the word); kept clear of the Mekke tag (y 244..356)
+    let mPos = null; const tMo = tk.tT - .03;
+    if (R.mlabel && t > tk.tMc - .12) { const [hx, hy] = ui.project(R.mlabel.top); const my = U.clamp(hy - 170, 450, 1250); mPos = [safeX(ui, 'müşrikler', 46, hx - 110, my), my]; ui.callout('müşrikler', { t, t0: tk.tMc, t1: tMo, anchor: [hx, hy], to: mPos, size: 46, weight: 900, bg: '#e2463c', color: '#fff4ec', dotColor: '#ff4d43', lineColor: 'rgba(255,240,228,.95)' }); }
+    // "emanetler" label riding on a lantern (line from just before "emanetlerini", pill on the word; never on top of the müşrikler pill)
+    if (t > tk.tEc - .07) { const lp = R.lead.pos; const [lx, ly, lz] = ui.project(lp); const ey = U.clamp(ly - 190, 520, 1250); let to = [safeX(ui, 'emanetler', 46, lx + 190, ey), ey];
+      if (mPos && t < tMo && Math.abs(to[1] - mPos[1]) < 110 && Math.abs(to[0] - mPos[0]) < 360) to[1] = mPos[1] + (to[1] >= mPos[1] ? 115 : -115);
+      if (lz < 1) ui.callout('emanetler', { t, t0: tk.tEc, t1: tk.tT + .22, anchor: [lx, ly], to, size: 46, weight: 900, bg: '#f2b84b', color: '#3b2208', dotColor: '#ffd88f', lineColor: 'rgba(255,226,160,.95)' }); }
+    // "o kadar kişi" — many houses vs one door. (No "arasından…" line: the word starts .02 s before the xfade into s05,
+    // so it could only flicker for ~.3 s under the end fade; the subtitle carries it.)
+    ui.text('o kadar kişi', { t, t0: tk.tT, t1: 5.95, x: 540, y: 330, size: 84, weight: 900, color: '#fff4dc', anim: 'rise', shadowBlur: 22, shadowColor: 'rgba(4,6,18,.9)' });
   },
 };
 

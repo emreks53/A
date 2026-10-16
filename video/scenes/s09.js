@@ -11,6 +11,11 @@ const badge = badgeD;
 const DEEP_LIFT = '#1f1f32';
 
 export default {
+  // 'İKİ ÖRNEK' is the payoff on the scene's last words ("iki örnek" 44.16–44.78, cut at 44.60): the engine's end-of-scene
+  // type fade (44.32–44.62) wiped it out mid-word. s10 draws the same title + underline, settled, and fades them out over
+  // ~44.70–45.05, so with no end fade here the title holds at full strength through the s09->s10 dissolve (44.43–44.77).
+  // The other labels (kicker, badges, pills) dissolve with the picture; s10's next type is 'o deniz gibi' at ~45.17.
+  endFade: false,
   post: {
     exposure: 1.0, toneMapping: 'aces',
     bloom: { enabled: true, strength: .42, radius: .55, threshold: .85 },
@@ -41,7 +46,12 @@ export default {
       ui.pill(names[i], { t, t0: (i ? tOlan : tGibi) - .05, t1: ctx.dur + .3, x, y: Math.min(y + r + 60, 1300), size: 46, weight: 800, bg: 'rgba(255,236,214,.14)', color: '#fff1d6', anim: 'pop', dur: .4 });
     });
     ui.text('iki damla gibi', { t, t0: tDam - .04, x: 540, y: 270, size: 52, weight: 800, color: '#fff1d6', anim: 'rise' });
-    ui.text('İKİ ÖRNEK', { t, t0: tIki2 - .03, x: 540, y: 400, size: 104, weight: 900, color: '#ffcf6b', letterSpacing: 6, anim: 'pop' });
-    ui.underline({ t, t0: tOrn, x: 540, y: 470, w: 380, color: 'rgba(255,207,107,.85)', width: 7 });
+    // title lands on the second 'iki' with a quick pop (legible from ~44.25, settled by 44.40): it must be settled before the
+    // dissolve starts (44.43), where s10's identical static copy takes over (keep x/y/size/spacing in sync with s10.js)
+    ui.text('İKİ ÖRNEK', { t, t0: tIki2 - .06, x: 540, y: 400, size: 104, weight: 900, color: '#ffcf6b', letterSpacing: 6, anim: 'pop', dur: .3 });
+    // underline under ÖRNEK, drawn on 'örnek' (complete by ~44.58, while the word is still spoken; s10 continues it fully drawn)
+    { const X = ui.ctx; X.save(); X.font = ui.font(104, 900, 'Nunito'); if ('letterSpacing' in X) X.letterSpacing = '6px';
+      const wAll = X.measureText('İKİ ÖRNEK').width, wO = X.measureText('ÖRNEK').width - 6; X.restore();
+      ui.underline({ t, t0: tOrn - .07, dur: .24, x: 540 + wAll / 2 - 6 - wO / 2, y: 470, w: wO * .9, color: 'rgba(255,207,107,.85)', width: 7 }); }
   },
 };
