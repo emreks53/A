@@ -411,7 +411,7 @@ export default {
       X.restore();
     };
     if (!DEBUG) {
-      R.heroes.forEach((h, i) => { const t1 = i < 13 ? R.heroes[i + 1].t0 - .08 : R.W.ve - .18; if (t < h.t0 - .05 || t > t1 + .16) return;
+      R.heroes.forEach((h, i) => { const t1 = i < 13 ? R.heroes[i + 1].t0 - .12 : R.W.ve - .18; // exit (.08 s) ends before the next label starts (t0 - .04) if (t < h.t0 - .05 || t > t1 + .16) return;
         // the name leaves with its exhibit (as it slides out of the left edge), but not before it has been up >= .6 s: the words run
         // back to back (.7-1.3 s apart), so on the quick beats it is handed straight to the next name instead
         const sx = ui.project(h.tgt)[0]; const gone = (1 - U.smoothstep(-140, 60, sx)) * U.smoothstep(h.t0 + .62, h.t0 + .77, t);

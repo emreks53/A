@@ -231,6 +231,7 @@ export default {
             float S = abs(dpx.x * spx.y - dpx.y * spx.x) / dl, Wd = max(abs(dpx.x * sw.y - dpx.y * sw.x) / dl, 1e-4), M = max(Wd - S, 0.);
             // across the streak: spark profile (width S) convolved with the slice's sweep (M) = trapezoid; neighbouring slices'
             // trapezoids sum to a flat band. Energy per copy kept equal to the unsmeared parabola (2/3 S).
+            vA *= 1. - smoothstep(6., 20., M);   // whip speed: a spark cannot be read, its smear only builds flat slabs
             float Rr = max(min(M, S), 1e-3); vK = .5 * Wd / Rr; vQ = smoothstep(0., 1., M / max(S, 1e-3));
             float area = mix(2. / 3. * Wd, Wd - min(M, S), vQ); vA *= clamp(2. / 3. * S / max(area, 1e-4), 0., 1.);
             gl_Position = vec4((n0 + position.x * sw / hr) * cc.w, cc.z, cc.w);

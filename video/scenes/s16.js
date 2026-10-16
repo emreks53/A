@@ -10,6 +10,7 @@ import * as G from '../engine/lib/extra_G.js';
 
 let R = {};
 export default {
+  endFade: false,
   post: {
     exposure: 1.02,
     bloom: { enabled: true, strength: .32, radius: .55, threshold: .9 },
@@ -196,10 +197,12 @@ export default {
     p.needsUpdate = true; R.loose.geometry.computeVertexNormals();
 
     // ---------------- typography ----------------
-    const tF = ctx.wordTime('filozof'), tT = ctx.wordTime('thomas'), tC = ctx.wordEnd('carlyle');
-    G.locTag(ui, t, { t0: .12, text: 'LONDRA · 1840', accent: '#9cc3e6', y: 266 });
-    const end = G.nameCard(ui, t, { y: 328, nameAnim: 'fade', tCard: tF - .04, tName: tT - .04, tWork: tC - .55, name: 'THOMAS CARLYLE', sub: 'Filozof · 1795–1881', work: 'On Heroes (1841)', accent: '#9cc3e6', bg: 'rgba(16,22,34,.66)' });
-    if (end) { const a = R.bookAnchorW; const [ax] = ui.project(a); G.pointer(ui, t, { t0: tC - .47, from: [ax, 328 + 292 + 4], anchor: a, color: '#9cc3e6', dur: .35 }); }
+    // the card fills in on "filozof Thomas" (sub-line, name, then work line + pointer) and is complete ~0.5 s before the
+    // scene ends; it is not faded at the scene end but leaves with the picture in the smoothleft wipe into s17
+    const tF = ctx.wordTime('filozof'), tT = ctx.wordTime('thomas');
+    G.locTag(ui, t, { t0: .12, text: 'LONDRA · 1841', accent: '#9cc3e6', y: 266 });
+    const end = G.nameCard(ui, t, { y: 328, nameAnim: 'fade', tCard: tF - .04, tName: tT - .04, tWork: tT + .1, name: 'THOMAS CARLYLE', sub: 'Filozof · 1795–1881', work: 'On Heroes (1841)', accent: '#9cc3e6', bg: 'rgba(16,22,34,.66)' });
+    if (end) { const a = R.bookAnchorW; const [ax] = ui.project(a); G.pointer(ui, t, { t0: tT + .22, from: [ax, 328 + 292 + 4], anchor: a, color: '#9cc3e6', dur: .35 }); }
   },
 };
 

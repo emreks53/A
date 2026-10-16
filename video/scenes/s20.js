@@ -425,7 +425,7 @@ export default {
       const proj = tt => { const c = R.cam(tt), mc = R.mbCam; mc.fov = c.fov; mc.updateProjectionMatrix(); mc.position.copy(c.P); mc.lookAt(c.L); mc.updateMatrixWorld(); return R.mbPts.map(p => p.clone().project(mc)); };
       const a = proj(t - 1 / 60), b = proj(t + 1 / 60); let px = 0;
       a.forEach((p, i) => { const q = b[i]; if (p.z > 1 || Math.abs(p.x) > 1.15 || Math.abs(p.y) > 1.15) return; px = Math.max(px, Math.hypot((q.x - p.x) * 540, (q.y - p.y) * 960)); });
-      const n = Math.min(9, Math.max(1, Math.ceil(px * .4 / 5)));
+      const n = Math.min(20, Math.max(1, Math.ceil(px * .4 / 5)));
       post.motionBlur = n > 1 ? { samples: n, shutter: .4 } : { samples: 1 };
     }
     R.motes.userData.uniforms.size.value = .62 * ctx.renderer.domElement.height / 960; // same look at every render scale

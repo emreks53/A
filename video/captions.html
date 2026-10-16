@@ -35,6 +35,9 @@ await document.fonts.load(`${S.weight} ${S.size}px "${S.family}"`, 'ÇĞİÖŞÜ
 await document.fonts.ready;
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+// 1 on normal frames, 0 over a white dip: the dark scrim/halo/shadow that keep captions legible on mid and bright frames
+// would read as a grey smudge on a near-white frame, so they hand over to the fine outline alone there
+const unwhite = t => { const x = clamp((lumaAt(t) - 0.62) / 0.18); return 1 - x * x * (3 - 2 * x); };
 const easeOut = t => 1 - Math.pow(1 - t, 3);
 const easeInOut = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
@@ -55,14 +58,16 @@ const layouts = phrases.map(ph => {
 // Phrase hand-off is strictly sequential (never two phrases on screen at once): a phrase lingers 0.45 s after its
 // last word, but if the next phrase comes sooner it fades out quickly so that it is gone exactly when the next begins.
 // In continuous speech (next phrase within 0.3 s) the swap is quick and the incoming phrase starts at 55% opacity, so the
-// caption never blinks out between phrases. Over a white dip (very bright band) a phrase does not linger: its dark halo
-// would read as a grey smudge on the white frame.
+// caption never blinks out between phrases. Before a white dip (very bright band) a phrase leaves right after its last word
+// and the next one fades in from zero; on the dip itself scrim, halo and shadow fade away (unwhite) - a dark halo on a
+// near-white frame reads as a grey smudge.
 const FI = 0.18;
 layouts.forEach((L, i) => {
   const next = layouts[i + 1], prev = layouts[i - 1]; L.fo = 0.22; L.floor = 0; L.fi = FI;
-  if (prev && L.start - prev.end < 0.3) { L.floor = 0.55; L.fi = 0.12; }
+  if (prev && L.start - prev.end < 0.3 && lumaAt(L.start) <= 0.68) { L.floor = 0.55; L.fi = 0.12; }
   if (!next) { L.out = L.end + 0.8; return; }
-  const linger = lumaAt(L.end + 0.15) > 0.68 ? 0.1 : 0.45;
+  if (lumaAt(L.end + 0.1) > 0.68) { L.fo = 0.15; L.out = Math.max(L.start + L.fi + 0.05, Math.min(L.end + 0.05, next.start - L.fo)); return; } // white dip ahead: leave right after the last word
+  const linger = 0.45;
   if (L.end + linger + L.fo <= next.start) { L.out = L.end + linger; return; }
   L.fo = next.start - L.end < 0.3 ? 0.06 : 0.09; L.out = Math.max(L.start + L.fi + 0.05, next.start - L.fo);
 });
@@ -81,7 +86,7 @@ function drawWord(w, x, y, state, k, alpha, lift) {
   X.textBaseline = 'middle'; X.textAlign = 'left';
   const yy = y - lift;
   // legibility: soft dark halo + fine outline
-  { const lum = lumaAt(window.__t ?? 0); X.shadowColor = `rgba(0,0,0,${(0.55 + 0.25 * clamp((lum - 0.45) / 0.35)).toFixed(3)})`; X.shadowBlur = 16 + 6 * clamp((lum - 0.45) / 0.35); X.shadowOffsetY = 3; }
+  { const lum = lumaAt(window.__t ?? 0); X.shadowColor = `rgba(0,0,0,${((0.55 + 0.25 * clamp((lum - 0.45) / 0.35)) * (0.35 + 0.65 * unwhite(window.__t ?? 0))).toFixed(3)})`; X.shadowBlur = 16 + 6 * clamp((lum - 0.45) / 0.35); X.shadowOffsetY = 3; }
   X.lineJoin = 'round'; X.lineWidth = 3.6; X.strokeStyle = 'rgba(12,10,8,0.6)'; X.strokeText(w.w, x, yy);
   X.shadowColor = 'transparent';
   if (state === 1) {
@@ -106,14 +111,14 @@ window.drawAt = (t) => {
   const gfade = clamp((END - t) / 0.9); if (gfade <= 0) return;
   // scrim follows caption presence (smoothly)
   let pres = 0; for (const L of layouts) { const a = clamp((t - L.start + 0.2) / 0.3), b = clamp((L.out + L.fo + 0.35 - t) / 0.35); pres = Math.max(pres, Math.min(a, b)); }
-  scrim(easeInOut(pres));
+  scrim(easeInOut(pres) * unwhite(t));
   for (const L of layouts) {
     if (t < L.start - 0.01 || t > L.out + L.fo + 0.01) continue;
     const pin = L.floor + (1 - L.floor) * easeOut(clamp((t - L.start) / L.fi)), pout = 1 - easeInOut(clamp((t - L.out) / L.fo));
     const phraseA = pin * pout; if (phraseA <= 0.001) continue;
     const rise = (1 - pin) * 14 - (1 - pout) * 10;
     // soft elliptical shadow behind the phrase; darker when the background under it is bright
-    { const lum = lumaAt(t); const k = 0.34 + 0.30 * clamp((lum - 0.30) / 0.40); // capped: a heavy dark oval reads as a smudge on bright frames
+    { const lum = lumaAt(t); const k = (0.34 + 0.30 * clamp((lum - 0.30) / 0.40)) * unwhite(t); // capped: a heavy dark oval reads as a smudge on bright frames
       let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
       L.words.forEach(w => { x0 = Math.min(x0, w.x); x1 = Math.max(x1, w.x + w.width); y0 = Math.min(y0, w.y); y1 = Math.max(y1, w.y); });
       const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 + rise, rx = (x1 - x0) / 2 + 120, ry = (y1 - y0) / 2 + S.size * 1.05;
