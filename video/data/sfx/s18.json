@@ -34,16 +34,10 @@
 "gain": -10
 },
 {
-"t": 103.74,
+"t": 103.4,
 "dur": 2.3,
 "kind": "whoosh",
 "desc": "gentle airy whoosh as the camera pulls back"
-},
-{
-"t": 104.73,
-"dur": 0.3,
-"kind": "pop",
-"desc": "soft marker pop as the ring and 2 ornek appear"
 },
 {
 "t": 104.9,
@@ -53,6 +47,12 @@
 "gain": -6
 },
 {
+"t": 105.01,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft marker pop as the ring and 2 ornek appear"
+},
+{
 "t": 105.3,
 "dur": 0.15,
 "kind": "pop",
@@ -60,7 +60,7 @@
 "gain": -6
 },
 {
-"t": 106.17,
+"t": 106.25,
 "dur": 0.3,
 "kind": "pop",
 "desc": "soft pop for IKI ORNEK"

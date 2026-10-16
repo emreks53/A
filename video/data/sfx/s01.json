@@ -42,18 +42,11 @@
 "gain": -3
 },
 {
-"t": 5.25,
-"dur": 1.2,
+"t": 5.55,
+"dur": 1.5,
 "kind": "shimmer",
 "desc": "first dawn ray flows over the Mushaf",
 "gain": -6
-},
-{
-"t": 5.9,
-"dur": 2.2,
-"kind": "chime",
-"desc": "warm reveal as dawn light hits the Mushaf",
-"gain": -3
 },
 {
 "t": 6.2,
@@ -61,5 +54,12 @@
 "kind": "fire",
 "desc": "close oil lamp crackle",
 "gain": -4
+},
+{
+"t": 6.5,
+"dur": 1.4,
+"kind": "chime",
+"desc": "warm reveal as dawn light hits the Mushaf",
+"gain": -3
 }
 ]

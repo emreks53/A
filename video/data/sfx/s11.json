@@ -13,46 +13,46 @@
 "desc": "stone grinding as columns rise"
 },
 {
-"t": 50.15,
+"t": 50.33,
 "dur": 1.4,
 "kind": "whoosh",
 "desc": "upward whoosh as the camera tilts up after the soaring hero",
 "gain": -4
 },
 {
-"t": 50.18,
+"t": 50.5,
 "dur": 0.2,
 "kind": "pop",
 "desc": "title pop"
 },
 {
-"t": 50.18,
+"t": 50.5,
 "dur": 2.1,
 "kind": "stone",
 "desc": "deeper rising grind for the marble column",
 "gain": -4
 },
 {
-"t": 51.19,
+"t": 51.45,
 "dur": 0.15,
 "kind": "pop",
 "desc": "callout pop"
 },
 {
-"t": 51.4,
+"t": 51.47,
 "dur": 1.6,
 "kind": "whoosh",
 "desc": "soft airy pull-back whoosh widening to the full chart",
 "gain": -6
 },
 {
-"t": 51.98,
+"t": 52.3,
 "dur": 0.4,
 "kind": "thud",
 "desc": "soft settling thud of the capital"
 },
 {
-"t": 52.0,
+"t": 52.32,
 "dur": 0.7,
 "kind": "chime",
 "desc": "tiny glint shimmer on gilded band",

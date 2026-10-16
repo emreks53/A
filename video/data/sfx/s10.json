@@ -25,16 +25,16 @@
 "desc": "drop 2 plink"
 },
 {
-"t": 45.56,
-"dur": 1.2,
-"kind": "chime",
-"desc": "soft warm swell under AHLAK-I ALIYE"
-},
-{
 "t": 45.65,
 "dur": 1.8,
 "kind": "whoosh",
 "desc": "airy rising pull-back whoosh"
+},
+{
+"t": 45.87,
+"dur": 1.2,
+"kind": "chime",
+"desc": "soft warm swell under AHLAK-I ALIYE"
 },
 {
 "t": 46.25,
@@ -51,19 +51,19 @@
 "gain": -4
 },
 {
-"t": 47.08,
+"t": 47.59,
 "dur": 0.15,
 "kind": "pop",
 "desc": "badge pop"
 },
 {
-"t": 47.2,
+"t": 47.7,
 "dur": 0.15,
 "kind": "pop",
 "desc": "badge pop"
 },
 {
-"t": 48.52,
+"t": 48.62,
 "dur": 0.15,
 "kind": "pop",
 "desc": "caption completes (very soft)",

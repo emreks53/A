@@ -7,26 +7,26 @@
 "gain": -4
 },
 {
-"t": 70.57,
+"t": 71.43,
 "dur": 0.6,
 "kind": "paper",
 "desc": "soft parchment rustle"
 },
 {
-"t": 72.48,
-"dur": 0.3,
-"kind": "pop",
-"desc": "soft text pop"
-},
-{
-"t": 72.82,
+"t": 72.52,
 "dur": 1.6,
 "kind": "whoosh",
 "desc": "airy rising whoosh as the camera cranes up"
 },
 {
-"t": 74.55,
-"dur": 1.6,
+"t": 72.93,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft text pop"
+},
+{
+"t": 75.11,
+"dur": 1.0,
 "kind": "chime",
 "desc": "very soft warm chime on first light at the summit",
 "gain": -3

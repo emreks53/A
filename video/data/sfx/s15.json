@@ -33,6 +33,13 @@
 "gain": -6
 },
 {
+"t": 88.23,
+"dur": 0.15,
+"kind": "pop",
+"desc": "soft pop as the Dünya çapında title pops in",
+"gain": -5
+},
+{
 "t": 88.79,
 "dur": 0.15,
 "kind": "pop",
@@ -43,7 +50,7 @@
 "t": 89.01,
 "dur": 0.15,
 "kind": "pop",
-"desc": "soft pop as a map dot blinks on",
+"desc": "soft pop as the büyük düşünürler title and map dots blink on",
 "gain": -5
 },
 {
@@ -68,18 +75,18 @@
 "gain": -5
 },
 {
-"t": 90.35,
-"dur": 0.6,
-"kind": "chime",
-"desc": "soft low chime as the Medina marker appears",
-"gain": -3
-},
-{
 "t": 90.48,
 "dur": 1.4,
 "kind": "whoosh",
 "desc": "airy whoosh of arcs travelling",
 "gain": -4
+},
+{
+"t": 90.56,
+"dur": 0.6,
+"kind": "chime",
+"desc": "soft low chime as the Medina marker appears",
+"gain": -3
 },
 {
 "t": 90.7,
@@ -89,9 +96,9 @@
 "gain": -6
 },
 {
-"t": 91.74,
+"t": 91.86,
 "dur": 1.0,
 "kind": "chime",
-"desc": "warm resonant chime as the arcs arrive at Medina"
+"desc": "warm resonant chime as the arcs arrive at Medina and its rings pulse"
 }
 ]

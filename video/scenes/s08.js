@@ -210,8 +210,8 @@ export default {
     R.sparks = C.streaks(sparks, { gravity: [0, -9.8, 0], shutter: .035, additive: true, cool: '#a02a08', fadeIn: .01, fadeOut: .55 }); scene.add(R.sparks);
     { // camera-motion smear for the sparks: a spark is only a few px wide, so during the whip its sub-frame copies stay separate
       // (a comb) even at 12 samples. Each sub-frame copy is therefore stretched on screen over the path the camera sweeps during
-      // its own slice of the shutter (view-projection at both ends of the slice), with its intensity scaled by the area ratio
-      // (energy conserved) -> the copies tile into one continuous streak. No effect when the camera is (nearly) still.
+      // its own slice of the shutter (view-projection at both ends of the slice), energy conserved -> the copies tile into one
+      // continuous streak. No effect when the camera is (nearly) still or a frame renders single-sample.
       const m = R.sparks.material, u = m.uniforms;
       Object.assign(u, { uVP0: { value: new THREE.Matrix4() }, uVP1: { value: new THREE.Matrix4() }, uSmear: { value: 0 }, uRes: { value: new THREE.Vector2(1080, 1920) } });
       const tgt = 'gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.);'; if (!m.vertexShader.includes(tgt)) throw new Error('s08: spark shader patch target missing');
@@ -330,7 +330,9 @@ export default {
 
     // --- typography ---
     const X = ui.ctx; const sc = U.smoothstep(R.tSig - .4, R.tSig + .2, t); if (sc > 0) { const gr = X.createLinearGradient(0, 160, 0, 900); gr.addColorStop(0, `rgba(24,10,10,${.4 * sc})`); gr.addColorStop(1, 'rgba(24,10,10,0)'); X.save(); X.fillStyle = gr; X.fillRect(0, 0, 1080, 900); X.restore(); }
-    ui.quote('Savaş kızıştığında biz\nResûlullah\'a (a.s.m.) sığınırdık.', 'Hz. Ali (r.a.)', { t, t0: R.tSig - .02, x: 540, y: 440, w: 880, size: 50, typeDur: 1.35 });
+    // aligned words (local): sığındık 3.52, defalarca 4.71 -> quote types 3.50-4.65, attribution by 4.70, tally pill pops 4.66 and
+    // its five ticks land 4.76-5.72, all settled before the engine's end-of-scene type fade (6.12-6.40)
+    ui.quote('Savaş kızıştığında biz\nResûlullah\'a (a.s.m.) sığınırdık.', 'Hz. Ali (r.a.)', { t, t0: R.tSig - .02, x: 540, y: 440, w: 880, size: 50, typeDur: 1.15 });
     // "defalarca": pill + tally marks that tick as each volley passes overhead
     const e = ui.env(t, R.tDef - .05, Infinity, .4, 'pop');
     if (e.o > 0.01) {

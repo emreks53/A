@@ -14,33 +14,20 @@
 "gain": -6
 },
 {
-"t": 7.72,
-"dur": 0.3,
-"kind": "pop",
-"desc": "Medine location tag pops in"
-},
-{
-"t": 9.47,
-"dur": 0.5,
-"kind": "whoosh",
-"desc": "soft airy whoosh as the headline rises",
-"gain": -5
-},
-{
-"t": 10.67,
+"t": 10.81,
 "dur": 0.6,
 "kind": "impact",
 "desc": "soft low impact when EN BUYUK MUCIZE lands",
 "gain": -6
 },
 {
-"t": 10.75,
+"t": 10.9,
 "dur": 1.2,
 "kind": "chime",
 "desc": "delicate sparkle on the gilded crescent"
 },
 {
-"t": 11.11,
+"t": 11.27,
 "dur": 0.35,
 "kind": "impact",
 "desc": "second headline line pops on mu'cizesi (soft)",
@@ -60,13 +47,13 @@
 "gain": -4
 },
 {
-"t": 11.96,
+"t": 12.45,
 "dur": 1.5,
 "kind": "chime",
 "desc": "warm resonant tone under KENDI ZATI"
 },
 {
-"t": 12.65,
+"t": 12.82,
 "dur": 0.4,
 "kind": "paper",
 "desc": "soft paper swish as caption appears",

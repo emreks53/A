@@ -8,13 +8,13 @@
 },
 {
 "t": 19.4,
-"dur": 5.8,
+"dur": 5.85,
 "kind": "crickets",
 "desc": "distant night crickets",
 "gain": -4
 },
 {
-"t": 19.72,
+"t": 19.77,
 "dur": 0.3,
 "kind": "pop",
 "desc": "Mekke location tag pops in"
@@ -48,7 +48,7 @@
 "gain": -7
 },
 {
-"t": 22.3,
+"t": 22.33,
 "dur": 0.3,
 "kind": "pop",
 "desc": "musrikler label pop",

@@ -26,14 +26,14 @@
 "gain": -3
 },
 {
-"t": 95.1,
+"t": 95.26,
 "dur": 0.5,
 "kind": "whoosh",
 "desc": "soft swipe as the name card slides in",
 "gain": -3
 },
 {
-"t": 96.73,
+"t": 96.8,
 "dur": 0.35,
 "kind": "pop",
 "desc": "soft click as the pointer ring snaps onto the cover",

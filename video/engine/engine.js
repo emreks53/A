@@ -22,8 +22,12 @@ function deepMerge(a, b) { for (const k in b) { if (b[k] && typeof b[k] === 'obj
 
 async function main() {
   // word timings: energy-refined alignment (tools/align_words.py) when present - Whisper starts words inside the pause before them
+  // Which words belong to a scene's window is decided on the ORIGINAL timings (so every ctx.wordTime() lookup still
+  // matches the same word it was designed against); the matched words then carry the refined times.
   const wordsAligned = await fetch('data/words_aligned.json').then(r => (r.ok ? r.json() : null)).catch(() => null);
-  const [timeline, words] = await Promise.all([fetch('data/timeline.json').then(r => r.json()), wordsAligned || fetch('data/words.json').then(r => r.json())]);
+  const [timeline, wordsOrig] = await Promise.all([fetch('data/timeline.json').then(r => r.json()), fetch('data/words.json').then(r => r.json())]);
+  const WWIN_ALIGNED = P.get('wwin') === 'aligned'; // debug: reproduce the old windowing on refined times
+  const words = wordsOrig.map((w, k) => (wordsAligned ? { ...w, s: wordsAligned[k].s, e: wordsAligned[k].e, s0: WWIN_ALIGNED ? wordsAligned[k].s : w.s } : { ...w, s0: w.s }));
   const info = timeline.scenes.find(s => s.id === SCENE_ID);
   if (!info) throw new Error('unknown scene ' + SCENE_ID);
   await document.fonts.ready;
@@ -53,14 +57,14 @@ async function main() {
   const depthMat = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
 
   const IS_LAST = timeline.scenes[timeline.scenes.length - 1].id === info.id;
-  const sceneWords = words.filter(w => w.s >= info.start - 1.0 && w.s <= info.end + 1.0).map(w => ({ ...w, ls: w.s - info.start, le: w.e - info.start }));
+  const sceneWords = words.filter(w => w.s0 >= info.start - 1.0 && w.s0 <= info.end + 1.0).map(w => ({ ...w, ls: w.s - info.start, le: w.e - info.start }));
   const ctx = {
     THREE, renderer, scene, camera, W, H, ui, post, U, TEX, ENV, MODELS, FX,
     info, start: info.start, end: info.end, dur: info.end - info.start,
     words: sceneWords,
     // local time (seconds from scene start) of the n-th word in this scene's window whose text starts with `text`
-    wordTime(text, n = 0) { const k = norm(text); const m = sceneWords.filter(w => norm(w.w).startsWith(k)); if (!m[n]) { console.warn('wordTime: not found', text, n); return 0; } return m[n].ls; },
-    wordEnd(text, n = 0) { const k = norm(text); const m = sceneWords.filter(w => norm(w.w).startsWith(k)); if (!m[n]) { console.warn('wordEnd: not found', text, n); return 0; } return m[n].le; },
+    wordTime(text, n = 0) { const k = norm(text); const m = sceneWords.filter(w => norm(w.w).startsWith(k)); if (!m[n]) { console.warn('wordTime: not found', text, n); return 0; } (window.__wt ||= {})['T|' + text + '|' + n] = m[n].i; return m[n].ls; },
+    wordEnd(text, n = 0) { const k = norm(text); const m = sceneWords.filter(w => norm(w.w).startsWith(k)); if (!m[n]) { console.warn('wordEnd: not found', text, n); return 0; } (window.__wt ||= {})['E|' + text + '|' + n] = m[n].i; return m[n].le; },
     rng: U.rng,
     loadHDR: (name, o) => ENV.loadHDR(renderer, name, o),
     setPost(o) { deepMerge(post, o); },
@@ -85,7 +89,7 @@ async function main() {
     ctx.t = t; ui.clear();
     scene.traverse(o => { if (o.userData.uniforms && o.userData.uniforms.time) o.userData.uniforms.time.value = t; if (o.userData.update) o.userData.update(t, ctx); });
     S.update(t, ctx);
-    if (!IS_LAST) { const f = Math.min(1, Math.max(0, (ctx.dur + 0.02 - t) / 0.3)); if (f < 1) { const X = ui.ctx; X.save(); X.globalCompositeOperation = 'destination-in'; X.fillStyle = `rgba(0,0,0,${f * f * (3 - 2 * f)})`; X.fillRect(0, 0, W, H); X.restore(); } }
+    if (!IS_LAST && S.endFade !== false) { const f = Math.min(1, Math.max(0, (ctx.dur + 0.02 - t) / 0.3)); if (f < 1) { const X = ui.ctx; X.save(); X.globalCompositeOperation = 'destination-in'; X.fillStyle = `rgba(0,0,0,${f * f * (3 - 2 * f)})`; X.fillRect(0, 0, W, H); X.restore(); } }
     camera.updateMatrixWorld();
     scene.traverse(o => { if (o.userData.yBillboard) { const wp = new THREE.Vector3(); o.getWorldPosition(wp); const a = Math.atan2(camera.position.x - wp.x, camera.position.z - wp.z); const pq = new THREE.Quaternion(); if (o.parent) o.parent.getWorldQuaternion(pq); o.quaternion.copy(pq.invert().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), a))); } });
   }

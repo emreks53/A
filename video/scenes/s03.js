@@ -12,6 +12,7 @@ let R = {};
 const LAMP = new THREE.Vector3(0, 0, 0);
 
 export default {
+  endFade: false, // the last beat lands at the very end: let the typography dissolve with the picture in the transition
   post: {
     exposure: 1.0,
     bloom: { enabled: true, strength: .55, radius: .55, threshold: .74 },

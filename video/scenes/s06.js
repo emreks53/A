@@ -225,7 +225,7 @@ float sdAO = mix(.6, 1., smoothstep(-.004, .024, sdH));`)
     R.drift.userData.uniforms.gust.value = .75 + .45 * (gust - .6);
     // --- the low sun's glint travels up the edge bevels (from the sand line to the guard) and flares on the finial on "benzersiz" ---
     const gs = U.prog(t, tCes + .02, tBen + .08, 'inOutSine');
-    R.glint2.y.value = U.lerp(R.sandY, .9, gs);   // starts where the steel leaves the sand R.glint2.i.value = 2.2 * Math.sin(Math.PI * U.clamp((t - tCes) / (tBen + .12 - tCes))) ** .7;
+    R.glint2.y.value = U.lerp(R.sandY, .9, gs); R.glint2.i.value = 2.2 * Math.sin(Math.PI * U.clamp((t - tCes) / (tBen + .12 - tCes))) ** .7;   // starts where the steel leaves the sand
     const g = Math.exp(-Math.pow((t - (tBen + .1)) / .2, 2));
     R.glint.material.opacity = .9 * g; R.glint.scale.setScalar(.04 + .13 * g); R.glint.material.rotation = t * .8;
     // --- storm approaching at the end ---

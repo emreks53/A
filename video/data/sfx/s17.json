@@ -33,17 +33,10 @@
 "gain": -3
 },
 {
-"t": 98.42,
+"t": 98.69,
 "dur": 0.5,
 "kind": "whoosh",
 "desc": "name card slides in",
 "gain": -3
-},
-{
-"t": 100.4,
-"dur": 0.3,
-"kind": "pop",
-"desc": "soft click as the pointer ring snaps onto the volumes",
-"gain": -4
 }
 ]

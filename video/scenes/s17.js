@@ -107,6 +107,7 @@ function smoothCam(camera, U, o) {
   };
 }
 export default {
+  endFade: false, // the last beat lands at the very end: let the typography dissolve with the picture in the transition
   post: {
     exposure: 1.08,
     bloom: { enabled: true, strength: .45, radius: .6, threshold: .8 },
@@ -311,6 +312,6 @@ export default {
     const tI = ctx.wordTime('ingiliz'), tE = ctx.wordTime('edward'), tG = ctx.wordTime('gibbon');
     G.locTag(ui, t, { t0: .12, text: 'LOZAN · 1787', accent: '#ffcf6b', y: 268 });
     const end = G.nameCard(ui, t, { y: 312, tCard: tI - .04, tName: tE - .04, tWork: tG - .3, name: 'EDWARD GIBBON', sub: 'İngiliz tarihçi · 1737–1794', work: 'Roma İmparatorluğu\'nun Çöküşü (1776–1789)', accent: '#ffcf6b', bg: 'rgba(16,16,32,.66)', nameAnim: 'wipe' }); // wipe-in: the name never slides over the sub-line
-    if (end) { const a = R.volAnchor; const [ax] = ui.project(a); G.pointer(ui, t, { t0: tG - .05, from: [ax, 312 + 292 + 4], anchor: a, color: '#ffcf6b', dur: .3 }); }
+    if (end) { const a = R.volAnchor; const [ax] = ui.project(a); G.pointer(ui, t, { t0: tG - .32, from: [ax, 312 + 292 + 4], anchor: a, color: '#ffcf6b', dur: .3 }); }
   },
 };

@@ -21,55 +21,48 @@
 "gain": -8
 },
 {
-"t": 13.28,
+"t": 13.51,
 "dur": 0.3,
 "kind": "pop",
 "desc": "DOSTLARI label pops"
 },
 {
-"t": 14.31,
+"t": 14.52,
 "dur": 0.3,
 "kind": "pop",
 "desc": "DUSMANLARI label pops"
 },
 {
-"t": 15.4,
-"dur": 0.6,
-"kind": "ignite",
-"desc": "wick ignitions along lamp chains",
-"gain": -5
-},
-{
-"t": 15.4,
+"t": 15.55,
 "dur": 0.9,
 "kind": "whoosh",
 "desc": "soft glide as two dashed guide lines draw toward the central lamp",
 "gain": -3
 },
 {
-"t": 15.95,
+"t": 15.58,
 "dur": 0.6,
 "kind": "ignite",
 "desc": "wick ignitions along lamp chains",
 "gain": -5
 },
 {
-"t": 18.33,
+"t": 16.13,
+"dur": 0.6,
+"kind": "ignite",
+"desc": "wick ignitions along lamp chains",
+"gain": -5
+},
+{
+"t": 18.97,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "ring of small lamps catching"
 },
 {
-"t": 18.88,
+"t": 19.5,
 "dur": 0.6,
 "kind": "stamp",
 "desc": "SAHIT stamp slam"
-},
-{
-"t": 18.9,
-"dur": 0.9,
-"kind": "sand",
-"desc": "sand dust puff settling",
-"gain": -6
 }
 ]
