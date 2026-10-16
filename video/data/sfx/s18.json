@@ -47,12 +47,6 @@
 "gain": -6
 },
 {
-"t": 105.01,
-"dur": 0.3,
-"kind": "pop",
-"desc": "soft marker pop as the ring and 2 ornek appear"
-},
-{
 "t": 105.3,
 "dur": 0.15,
 "kind": "pop",
@@ -60,7 +54,13 @@
 "gain": -6
 },
 {
-"t": 106.25,
+"t": 105.49,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft marker pop as the 2 ornek badge appears on the lens rim"
+},
+{
+"t": 106.31,
 "dur": 0.3,
 "kind": "pop",
 "desc": "soft pop for IKI ORNEK"

@@ -14,24 +14,17 @@
 "gain": -4
 },
 {
-"t": 108.28,
+"t": 108.29,
 "dur": 0.3,
 "kind": "pop",
 "desc": "subtle pop for text",
 "gain": -3
 },
 {
-"t": 108.43,
+"t": 108.48,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "candle ignition"
-},
-{
-"t": 108.72,
-"dur": 0.5,
-"kind": "ignite",
-"desc": "candle ignition",
-"gain": -2
 },
 {
 "t": 108.74,
@@ -41,28 +34,35 @@
 "gain": -3
 },
 {
-"t": 108.95,
+"t": 108.78,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -2
+},
+{
+"t": 109.01,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "candle ignition",
 "gain": -4
 },
 {
-"t": 109.14,
+"t": 109.21,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "candle ignition",
 "gain": -6
 },
 {
-"t": 109.37,
+"t": 109.44,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "candle ignition",
 "gain": -8
 },
 {
-"t": 109.55,
+"t": 109.68,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "candle ignition",
@@ -82,7 +82,7 @@
 "desc": "gentle bed of many candles flickering"
 },
 {
-"t": 112.36,
+"t": 112.34,
 "dur": 1.5,
 "kind": "chime",
 "desc": "very soft warm shimmer",
