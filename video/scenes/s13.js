@@ -342,6 +342,11 @@ export default {
 
     camera.near = .05; camera.far = 6000; camera.updateProjectionMatrix();
     // ---- camera: keys [t, pos, yaw, pitch, fov] ----------------------------------------------------------------
+    // key times hang on the narration: the crane lifts off as the 'tarihin şehadeti' callout clears (just before "düşmanları"),
+    // clears the stack top, settles on the tower-field reveal a breath before "en" and pushes in on "en yüksek" (way = a
+    // constant-speed waypoint, no visible event), then the slow push runs to the end of the tail handle
+    const tD = ctx.wordTime('düşmanları'), tEn = ctx.wordTime('en');
+    const K = R.K = { lift: tD - .3, over: tD + .65, settle: tEn - .46, way: tEn + .79, end: ctx.dur + .6 };
     const S0 = [.8, .55, 2.75], S1 = [.42, .68, 2.3];
     const a0 = aim(S0, [.02, .66, 0]), a1 = aim(S1, [.02, .72, 0]);
     const sum = [-18, 138, -600]; const v1 = [-1.2, 9.4, -6], v2 = [-6, 12.2, -33];
@@ -349,11 +354,11 @@ export default {
     R.cam = camPath([
       [-0.6, [.98, .5, 2.95], a0[0] + 2.5, a0[1], 38],
       [0.0, S0, a0[0], a0[1], 38],
-      [2.2, S1, a1[0] - 1.5, a1[1] + .5, 38],
-      [3.15, [.3, 1.75, 2.2], a1[0] - 6, 3, 38],
-      [4.15, [1.4, 6.8, 4.6], 1.8, 1.6, 42],
-      [5.4, v1, b1[0] + .4, b1[1] - 10.2, 41],
-      [7.9, v2, b2[0] + .5, b2[1] - 9.6, 38.5],
+      [K.lift, S1, a1[0] - 1.5, a1[1] + .5, 38],
+      [K.over, [.3, 1.75, 2.2], a1[0] - 6, 3, 38],
+      [K.settle, [1.4, 6.8, 4.6], 1.8, 1.6, 42],
+      [K.way, v1, b1[0] + .4, b1[1] - 10.2, 41],
+      [K.end, v2, b2[0] + .5, b2[1] - 9.6, 38.5],
     ]);
     { const tc = new THREE.PerspectiveCamera(38, ctx.W / ctx.H, .05, 6000); const pts = [new THREE.Vector3(0, .6, 0), new THREE.Vector3(0, 1.4, 0), new THREE.Vector3(-30, -10, -185), new THREE.Vector3(.3, -.45, -7), new THREE.Vector3(.3, -.45, -4)]; // + far rim of our ledge tower (it sweeps out of the bottom of frame right after the stack)
       const proj = (tt) => { R.cam.apply(tc, tt); tc.updateMatrixWorld(); tc.matrixWorldInverse.copy(tc.matrixWorld).invert(); return pts.map(p => { const v = p.clone().applyMatrix4(tc.matrixWorldInverse); if (v.z > -.1) return null; const q = p.clone().project(tc); return Math.abs(q.x) < 1.2 && Math.abs(q.y) < 1.2 ? [q.x * 540, q.y * 960] : null; }); };
@@ -362,7 +367,8 @@ export default {
   },
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
-    R.cam.apply(camera, t, U.shake(t, .012 + .02 * U.smoothstep(3, 4.5, t), .5, 4));
+    const K = R.K;
+    R.cam.apply(camera, t, U.shake(t, .012 + .02 * U.smoothstep(K.over - .15, K.settle + .35, t), .5, 4)); // handheld grows over the crane
     // motion blur only while the crane sweeps the near stack out of frame (screen speed centred on this frame)
     // (sample count scales with the blur length so the 80-150 px/frame sweep reads as a smear, not as 3 discrete copies)
     { const v = R.pxSpeed(t - 1 / 60), sh = .45; const n = v > 30 ? Math.min(8, Math.max(3, Math.ceil(v * sh / 9))) : 1; post.motionBlur = n > 1 ? { samples: n, shutter: sh } : { samples: 1 }; }
@@ -370,8 +376,8 @@ export default {
     R.UN.uTerm.value = U.lerp(104, 58, U.smoothstep(-.5, 7.8, t));
     R.sky.userData.uniforms.sunGlow.value = 1.0 + .3 * U.smoothstep(2, 7, t);
     R.halo.material.opacity = .06 + .06 * U.smoothstep(3.5, 7, t);
-    // DOF: on the stack first, then deep focus on the peaks
-    const far = U.smoothstep(2.5, 3.6, t);
+    // DOF: on the stack first, then deep focus on the peaks (pulled while the crane clears the stack)
+    const far = U.smoothstep(K.lift + .3, K.over + .45, t);
     post.dof.focus = U.lerp(camera.position.distanceTo(new THREE.Vector3(0, .55, .2)), 450, far);
     post.dof.range = U.lerp(1.6, 2000, far); post.dof.amount = U.lerp(.85, .0, far);
 
@@ -387,6 +393,7 @@ export default {
     // two-line chip in the clear sky right of the peak: the leader runs over sky and the sunlit cap stays uncovered
     ui.callout('en yüksek\nderece', { t, t0: tEn + .05, t1: 99, anchor: [sp[0], sp[1] + 4], to: [Math.min(sp[0] + 270, 858), sp[1] + 108], size: 46, weight: 800, radius: 26, bg: 'rgba(16,20,38,0.86)', color: '#fff4dc', dotColor: '#ffcf6b' });
     // failed attempts: dotted climb lines from the ladder / stair tops that stop far below the summit, each ending in a red ✕
+    // (drawn under "yetişilemeyecek"; the first ✕ lands at its end, the second on "derecedeydi", both well before the end fade)
     const fadeAll = 1 - U.smoothstep(7.55, 7.85, t);
     const attempt = (from, k, t0, bend) => {
       const p = U.clamp((t - t0) / .7); if (p <= 0) return; const a = ui.project(from), b = ui.project(R.summit); const X = ui.ctx;

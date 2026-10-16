@@ -3,12 +3,16 @@
 // raining in volleys (streaking, thudding into the sand with dust puffs), spears and round leather shields on the ground,
 // sparks when iron meets iron/stone. Fast low hand-held dolly, roll, shake; darker red-orange grade.
 // Beats: "savaşın" → first volley arrives + "savaşın" · "şiddetli" → an arrow slams into the iron boss of a shield right in
-// front of camera (sparks, shield jolts, camera jolt, punch-in) + "ŞİDDETLİ" · "anlarında" → a dense second volley darkens the sky.
+// front of camera (sparks, shield jolts, camera jolt, punch-in) + "ŞİDDETLİ" · "anlarında" → the camera tilts up into a dense
+// second volley (shafts crossing the sky, which darkens) + "anlarında".
 import * as THREE from 'three';
 import * as C from '../engine/lib/extra_C.js';
 
 let R = {};
 export default {
+  // "anlarında" starts less than 0.5 s before the cut: the engine's 0.3 s end fade would leave it a flicker, so the stack holds
+  // and dissolves with the picture in the s07->s08 crossfade (s08 has no type until "Resulullah")
+  endFade: false,
   post: {
     exposure: 1.0,
     bloom: { enabled: true, strength: 0.75, radius: 0.55, threshold: 0.72 },
@@ -29,6 +33,7 @@ export default {
       storm: .55, stormDir: [.35, 0, -1], stormColor: '#3e140a',
     });
     scene.add(sky); R.sky = sky; scene.environment = env; scene.environmentIntensity = .55;
+    sky.userData.uniforms.darkColor.value.set('#2a0e08');   // the upper sky dims under the second volley + thickening storm (update)
     const sun = ENV.sunLight({ color: '#ff8a4c', intensity: 1.8, pos: sunDir.clone().multiplyScalar(40).toArray(), target: [0, 0, 2], size: 9, mapSize: 2048, bias: -.0003, normalBias: .02, radius: 3 });
     scene.add(sun, sun.target);
     scene.add(new THREE.HemisphereLight('#c8683e', '#4a2418', .95));
@@ -83,9 +88,14 @@ export default {
     const camZ = t => t < tSid ? U.lerp(9.6, 4.9, (t + .5) / (tSid + .5)) : U.lerp(4.9, .4, (t - tSid) / (ctx.dur + .55 - tSid));
     // landing points sampled inside the (narrow, portrait) view cone ahead of where the camera will be
     // flights come from behind-left (az .3-.65): they cross the sky diagonally and stick leaning; near landings come in steeper so they clear the lens
-    const land = (tL, n, dr, pitch, seed) => { const r = U.rng(seed); for (let i = 0; i < n; i++) { const t = tL[0] + r() * (tL[1] - tL[0]); const d = dr[0] + Math.pow(r(), .8) * (dr[1] - dr[0]); const z = camZ(t) - d, x = -.4 + (r() - .5) * 2 * .3 * d; if (!okSpot(x, z)) continue; const p0 = Math.min(pitch[1] - .05, pitch[0] + .3 * Math.max(0, (9 - d) / 4)); const vL = C.landingVel(.3 + r() * .35, p0 + r() * (pitch[1] - p0), 34 + r() * 6); const L = new THREE.Vector3(x, gh(x, z), z); arrows.push({ L, vL, tL: t, flight: 2.4, mode: 'stick', embed: .12 + r() * .1, ground: gh }); if (d < 30) pf.push({ p: [x, L.y + .1, z], t0: t, life: .8 + r() * .5, s0: .12, s1: .45 + r() * .55, v: [1.4, .55, 0], a: .55, color: '#8e5234' }); } };
+    // o.az: azimuth range, o.mirror: share of flights from behind-RIGHT (they stick leaning the other way), o.embed: depth range
+    const land = (tL, n, dr, pitch, seed, o = {}) => { const r = U.rng(seed), az = o.az ?? [.3, .65], em = o.embed ?? [.12, .22]; for (let i = 0; i < n; i++) { const t = tL[0] + r() * (tL[1] - tL[0]); const d = dr[0] + Math.pow(r(), .8) * (dr[1] - dr[0]); const z = camZ(t) - d, x = -.4 + (r() - .5) * 2 * .3 * d; if (!okSpot(x, z)) continue; const p0 = Math.min(pitch[1] - .05, pitch[0] + .3 * Math.max(0, (9 - d) / 4)); let a = az[0] + r() * (az[1] - az[0]); if (o.mirror && r() < o.mirror) a = -a; const vL = C.landingVel(a, p0 + r() * (pitch[1] - p0), 34 + r() * 6); const L = new THREE.Vector3(x, gh(x, z), z); arrows.push({ L, vL, tL: t, flight: 2.4, mode: 'stick', embed: em[0] + r() * (em[1] - em[0]), ground: gh }); if (d < 30) pf.push({ p: [x, L.y + .1, z], t0: t, life: .8 + r() * .5, s0: .12, s1: .45 + r() * .55, v: [1.4, .55, 0], a: .55, color: '#8e5234' }); } };
     land([tSav - .45, tSid + .3], 300, [5, 26], [.45, .85], 11);
-    land([tAn - .55, ctx.dur + .7], 640, [5, 24], [.42, .85], 12);   // the dense second volley that darkens the sky
+    // the dense second volley ("anlarında"). Only ~260 of it sticks in the plain around the camera, with varied lean (from both
+    // sides) and depth: a dense, uniform stuck field there reads as wheat/reeds. The rest drops far out on the plain (24-60 m):
+    // in the last frames (camera tilted up) their shafts keep crossing the sky without crowding the near field.
+    land([tAn - .55, ctx.dur + .7], 260, [6, 24], [.4, .9], 12, { az: [.3, 1.1], mirror: .3, embed: [.1, .34] });
+    land([tAn - .45, ctx.dur + 1], 320, [24, 60], [.32, .62], 13, { az: [.3, .75] });
     // a few skim low right over the lens (whoosh) and keep going into the distance
     [[tSav - .2, 1.1], [tSav + .3, .7], [tSav + .55, -.4], [tSid - .35, .9], [tSid + .4, -.6], [tAn + .15, .3], [tAn + .5, -1.0], [tAn + .75, .5]].forEach(([t, dx], k) => { const x = dx, z = -24 - (k % 4) * 4; arrows.push({ L: new THREE.Vector3(x, gh(x, z), z), vL: C.landingVel(.05, .28, 46), tL: t + .62, flight: 1.4, mode: 'stick', embed: .15, ground: gh }); });
     // hero arrow -> iron boss of the propped shield, breaks with sparks
@@ -99,9 +109,14 @@ export default {
     // a few arrows strike rocks (sparks)
     const bigRocks = items.filter(it => it.s[0] > .5 && Math.hypot(it.x, it.z - 2) < 12).slice(0, 5);
     bigRocks.forEach((it, k) => { const top = new THREE.Vector3(it.x, it.y + it.s[1] * .55, it.z); const t = (k % 2 ? tAn : tSav + .3) + k * .23; const vL = C.landingVel(Math.PI - .2, .6, 42); arrows.push({ L: top, vL, tL: t, flight: 2.6, mode: 'break', normal: new THREE.Vector3(0, 1, 0), ground: gh }); C.sparkBurst(sparks, { p: top.toArray(), dir: [.5, 1, .3], t0: t, n: 14, speed: [2, 6], spread: .6, life: [.15, .4], w: .008, seed: 20 + k, color: '#ffcf80', i: 3 }); });
-    R.volley = C.arrowVolley(arrows, { seed: 9, arrow: { thick: 2.0, fletch: '#c4a582', fletch2: '#9c7c5c' } }); scene.add(R.volley.group);
+    // fletching in three natural feather tones (dark brown, goose grey, barred tan), none paler than the shaft: one pale tone on
+    // every arrow lit orange made the stuck field read as seed heads. The strike arrows (hero + rocks) take the tan tone.
+    const tones = [['#5e4632', '#33251b'], ['#7c746a', '#4a423b'], ['#8e6e4e', '#4e3828']], fr = U.rng(23), byTone = tones.map(() => []);
+    arrows.forEach(a => byTone[a.mode === 'break' ? 2 : Math.floor(fr() * 3)].push(a));
+    R.volleys = tones.map(([f1, f2], k) => C.arrowVolley(byTone[k], { seed: 9 + k, arrow: { thick: 2.0, fletch: f1, fletch2: f2 } }));
+    R.volleys.forEach(v => scene.add(v.group));
     // dark motion smears behind each flying shaft: silhouettes read against the burning sky (no light emitted)
-    R.trails = C.streaks(R.volley.trails({ w: .03, len: 1.7, color: '#2a0f07', a: .5 }).filter(it => it.t0 > -4), { fadeIn: .02, fadeOut: .97, fog: fogO }); scene.add(R.trails);
+    R.trails = C.streaks(R.volleys.flatMap(v => v.trails({ w: .03, len: 1.7, color: '#2a0f07', a: .5 })).filter(it => it.t0 > -4), { fadeIn: .02, fadeOut: .97, fog: fogO }); scene.add(R.trails);
     R.sparks = C.streaks(sparks, { gravity: [0, -9.8, 0], shutter: .03, additive: true, cool: '#a02a08', fadeIn: .01, fadeOut: .55 }); scene.add(R.sparks);
     R.puffs = C.puffs(pf, { sunDir: sunDir.toArray(), litMul: 1.05, shadeMul: .7 }); scene.add(R.puffs);
 
@@ -124,18 +139,18 @@ export default {
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
     const tSid = R.tSid;
-    R.volley.update(t);
+    R.volleys.forEach(v => v.update(t));
     // more blur sub-samples only around the strike (hero arrow ~500 px/frame, sparks): smooth smears instead of stepped copies
     post.motionBlur = { samples: (t > tSid - .2 && t < tSid + .45) ? 8 : 4, shutter: .5 };
     // --- camera: fast low hand-held dolly forward, roll, shake, jolt + punch-in on the hit ---
     // position + look are interpolated per axis with monotone cubics keyed in TIME (C1: no speed kinks at knots, no stalls
     // at intermediate keys). Look keys keep the hero shield in the middle third (clear of the caption band) until the hit,
-    // then the camera pushes past it and tilts up into the second volley.
+    // then the camera pushes past it and tilts up into the second volley (from just before "anlarında").
     if (!R.cam) {
       const mk = keys => [0, 1, 2].map(a => C.monotone(keys.map(k => k[0]), keys.map(k => k[1][a])));
       R.cam = {
         p: mk([[-0.5, [1.35, 1.2, 9.6]], [tSid, [.55, 1.02, 4.9]], [tSid + .55, [-.25, 1.42, 3.0]], [ctx.dur + .55, [-1.0, 1.62, .4]]]),
-        l: mk([[-0.5, [-1.4, -0.1, -20]], [tSid - .3, [-.5, -.75, -20]], [tSid + .06, [.3, -.95, -20]], [tSid + .5, [.2, .6, -20]], [ctx.dur + .55, [-1.2, 3.4, -20]]]),
+        l: mk([[-0.5, [-1.4, -0.1, -20]], [tSid - .3, [-.5, -.75, -20]], [tSid + .06, [.3, -.95, -20]], [Math.max(tSid + .4, R.tAn - .16), [.2, .6, -20]], [ctx.dur + .55, [-1.2, 3.4, -20]]]),
       };
     }
     const P = R.cam.p.map(f => f(t)), L = R.cam.l.map(f => f(t));
@@ -155,6 +170,7 @@ export default {
     // storm thickens toward the end
     const st = U.smoothstep(R.tAn - .5, ctx.dur + .5, t);
     R.storm.userData.uniforms.opacity.value = .26 + .12 * st;
+    R.sky.userData.uniforms.dark.value = .32 * U.smoothstep(R.tAn - .35, ctx.dur + .2, t);   // the volley + dust dim the upper sky
     post.exposure = 1.0 + .12 * Math.exp(-Math.max(0, t - tSid) * 6) * (t > tSid ? 1 : 0) - .06 * st;
 
     // --- typography ---
@@ -162,6 +178,7 @@ export default {
     ui.text('savaşın', { t, t0: R.tSav - .03, x: 540, y: 330, size: 62, weight: 800, color: '#fff1dc', anim: 'rise' });
     const jx = jolt * 14 * Math.sin((t - tSid) * 70), jy = jolt * 10 * Math.cos((t - tSid) * 55);
     ui.text('ŞİDDETLİ', { t, t0: tSid - .03, x: 540 + jx, y: 452 + jy, size: 134, weight: 900, color: '#ffb066', anim: 'pop', letterSpacing: 6, stroke: 'rgba(60,12,4,.55)', strokeW: 10 });
-    ui.text('anları', { t, t0: R.tAn - .03, x: 540, y: 570, size: 62, weight: 800, color: '#fff1dc', anim: 'rise' });
+    // quick rise: legible as the voice says it, then held (endFade: false) until the crossfade: readable ~0.4 s
+    ui.text('anlarında', { t, t0: R.tAn - .05, dur: .3, x: 540, y: 570, size: 62, weight: 800, color: '#fff1dc', anim: 'rise' });
   },
 };
