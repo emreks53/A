@@ -318,7 +318,9 @@ def main():
     # 30 ms look-ahead so the dip is in place when a word starts. Zero-phase band split -> the bands sum back exactly.
     env = np.sqrt(np.maximum(signal.sosfilt(sos('lowpass', 8), vbuf ** 2), 0) * 2 + 1e-12); env = env / (np.percentile(env, 99) + 1e-9)
     la = int(0.03 * SR); env = np.concatenate([env[la:], np.repeat(env[-1:], la)])
-    act = np.clip(env * 4.0, 0, 1)   # sensitive: soft trailing words duck the bed too
+    # activation in dB relative to loud speech: full duck from -22 dB, none below -40 dB, so the narrator's soft trailing
+    # syllables (sentence ends drop 20-25 dB) still carve the bed out instead of letting it swell over them
+    act = np.clip((20 * np.log10(env + 1e-9) + 40) / 18, 0, 1)
     g_mid = signal.sosfiltfilt(sos('lowpass', 6), 1 - 0.82 * act); g_rest = signal.sosfiltfilt(sos('lowpass', 6), 1 - 0.50 * act)
     mid = signal.sosfiltfilt(signal.butter(4, [300, 4000], 'bandpass', fs=SR, output='sos'), bus, axis=0)
     bus = (bus - mid) * g_rest[:, None] + mid * g_mid[:, None]

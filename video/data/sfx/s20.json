@@ -1,14 +1,14 @@
 [
 {
 "t": 112.8,
-"dur": 11.85,
+"dur": 13.45,
 "kind": "birds",
 "desc": "birds at dawn outside the open casement",
 "gain": -2
 },
 {
 "t": 112.8,
-"dur": 11.85,
+"dur": 13.45,
 "kind": "room tone",
 "desc": "quiet morning room tone"
 },
@@ -68,10 +68,10 @@
 "gain": -5
 },
 {
-"t": 122.15,
-"dur": 2.2,
+"t": 123.86,
+"dur": 2.4,
 "kind": "chime",
-"desc": "single soft warm bell under the end card",
+"desc": "single soft warm bell as the end card holds, after the last word",
 "gain": -4
 }
 ]
