@@ -256,13 +256,13 @@ export default {
     // ---- typography ----------------------------------------------------------------------------------------
     const tS = ctx.wordTime('şifa'), tSe = ctx.wordTime('şerif'), tK = ctx.wordTime('kitaplar'), tY = ctx.wordTime('yüzlerce'), tC = ctx.wordTime('ciltlerle');
     const tYu = ctx.wordTime('yüksek'), tB = ctx.wordTime('beyan'), tI = ctx.wordTime('ispat');
-    ui.text('Şifâ-i Şerif', { t, t0: tS - .05, t1: tY - .05, x: 540, y: 330, size: 104, weight: 900, family: 'Playfair Display', color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
+    ui.text('Şifa-i Şerif', { t, t0: tS - .05, t1: tY - .05, x: 540, y: 330, size: 104, weight: 900, family: 'Playfair Display', color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
     ui.pill('Kadı İyâz (ö. 1149)', { t, t0: tSe - .05, t1: tY - .05, x: 540, y: 450, size: 44, weight: 800, bg: 'rgba(40,22,12,.72)', color: '#fff1d6' });
     ui.text('yüzlerce cilt', { t, t0: tY - .05, t1: tYu - .1, x: 540, y: 330, size: 100, weight: 900, family: 'Playfair Display', color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
     tally(ui, U, t, tY + .05, tYu + .2, R.shown / Math.max(1, R.late.length));
     { const e = ui.env(t, tYu - .25, 99, .5, 'fade'); if (e.o > .001) { const X = ui.ctx, g = X.createLinearGradient(0, 230, 0, 600); g.addColorStop(0, 'rgba(34,18,8,0)'); g.addColorStop(.25, 'rgba(34,18,8,.42)'); g.addColorStop(.7, 'rgba(34,18,8,.36)'); g.addColorStop(1, 'rgba(34,18,8,0)');
       X.save(); X.globalAlpha = e.o; X.fillStyle = g; X.fillRect(0, 230, 1080, 370); X.restore(); } } // soft scrim: cream/gold type over the bright vault
-    ui.text('“yüksek ahlâk” mu\'cizesi', { t, t0: tYu - .05, t1: 99, x: 540, y: 330, size: 62, weight: 500, family: 'Lora', italic: true, color: '#fff4dc', anim: 'rise', stroke: 'rgba(40,20,8,.5)', strokeW: 8 });
+    ui.text('“yüksek ahlak” mu\'cizesi', { t, t0: tYu - .05, t1: 99, x: 540, y: 330, size: 62, weight: 500, family: 'Lora', italic: true, color: '#fff4dc', anim: 'rise', stroke: 'rgba(40,20,8,.5)', strokeW: 8 });
     const hit = U.clamp((t - (tI - .04)) / .16); const jolt = hit > 0 && hit < 1 ? Math.sin(hit * Math.PI) : 0;
     ui.text('beyan ve ispat', { t, t0: tB - .05, t1: 99, x: 540, y: 452, size: 84 * (1 - .05 * jolt), weight: 900, family: 'Playfair Display', color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
     if (hit > 0) { // rubber-stamp frame slams down on "ispat"

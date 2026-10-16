@@ -239,8 +239,8 @@ export default {
     // soft scrims: the craning camera brings the far window's arch + mullions up behind the labels
     scrim(ui, { x: 540, y: 330, rx: 470, ry: 165, a: .3 * ui.env(t, tBir - .06, tHay - .15, .45, 'rise').o });
     scrim(ui, { x: 540, y: 330, rx: 480, ry: 155, a: .48 * ui.env(t, tHay - .04, Infinity, .6, 'rise').o });
-    ui.text('birçok', { t, t0: tBir - .06, t1: tHay - .15, x: 540, y: 268, size: 66, weight: 800, color: '#fff4dc', anim: 'rise' });
-    ui.text('DÜŞÜNÜR', { t, t0: tDus - .06, t1: tHay - .15, x: 540, y: 372, size: 112, weight: 900, color: '#ffcf6b', letterSpacing: 4, anim: 'pop' });
+    ui.text('birçok', { t, t0: tBir - .06, t1: tHay - .15, x: 540, y: 262, size: 66, weight: 800, color: '#fff4dc', anim: 'rise' });
+    ui.text('DÜŞÜNÜR', { t, t0: tDus - .06, t1: tHay - .15, x: 540, y: 390, size: 112, weight: 900, color: '#ffcf6b', letterSpacing: 4, anim: 'pop' });
     ui.text('hayran kaldı', { t, t0: tHay - .04, x: 540, y: 330, size: 108, weight: 500, family: 'Lora', italic: true, color: '#ffd98a', anim: 'rise', dur: .6, shadowBlur: 26, shadowColor: 'rgba(0,0,0,.75)' });
   },
 };

@@ -298,7 +298,7 @@ export default {
     // magnifier inset (Kurzgesagt-style call-out): grows out of the ring once the books get small in frame
     const tIn = 4.5, RIN = 178, icx = 400, icy = 790;
     const ip = U.prog(t, tIn, tIn + .55, 'outCubic'), ipop = U.ease.outBack(U.clamp((t - tIn) / .55), 1.6);
-    let badge = [sx, Math.max(560, sy - ry - 50)];
+    let lensBadge = null;
     if (ip > 0) {
       const cx = U.lerp(sx, icx, ip), cyy = U.lerp(sy, icy, ip), rr = Math.max(1, RIN * ipop);
       // connector "cone" from the ring to the lens
@@ -321,9 +321,11 @@ export default {
       X.lineWidth = 7; X.strokeStyle = '#ffcf6b'; X.beginPath(); X.arc(cx, cyy, rr, 0, Math.PI * 2); X.stroke();
       X.lineWidth = 2; X.strokeStyle = 'rgba(40,24,8,.6)'; X.beginPath(); X.arc(cx, cyy, Math.max(.5, rr - 5), 0, Math.PI * 2); X.stroke();
       X.restore();
-      badge = [U.lerp(badge[0], icx, ip), U.lerp(badge[1], icy + RIN + 6, ip)];
+      lensBadge = [cx, cyy + rr + 6];
     }
-    ui.pill('2 örnek', { t, t0: tDus + .15, x: badge[0], y: badge[1], size: 50, bg: 'rgba(16,20,38,.88)', color: '#ffcf6b', border: 'rgba(255,207,107,.5)', borderW: 2 });
+    // '2 örnek' appears on the lens's lower rim once the lens has grown (the lens starts 0.08 s after the ring would have
+    // shown it; sliding it from the ring to the rim carried it across the middle of the lens, over the spines it labels).
+    if (lensBadge) ui.pill('2 örnek', { t, t0: tIn + .45, x: lensBadge[0], y: lensBadge[1], size: 50, bg: 'rgba(16,20,38,.88)', color: '#ffcf6b', border: 'rgba(255,207,107,.5)', borderW: 2 });
 
     { const a = U.smoothstep(tYal - .3, tYal + .3, t); if (a > 0) { const g = X.createLinearGradient(0, 0, 0, 600); g.addColorStop(0, `rgba(8,10,20,${.6 * a})`); g.addColorStop(1, 'rgba(8,10,20,0)'); X.fillStyle = g; X.fillRect(0, 0, 1080, 600); } }
     ui.text('yalnızca', { t, t0: tYal - .05, x: 540, y: 304, size: 62, weight: 800, color: '#fff4dc', anim: 'rise' });

@@ -4,7 +4,7 @@
 // on the far shore; muslin curtains breathe in the night air. The camera sinks to the candle-lit desk: the finished
 // manuscript with the quill laid down on it, inkwell, and the six quarto volumes of "The Decline and Fall of the
 // Roman Empire". Same name-card design as s16 (Carlyle), warm-gold accent: "İngiliz tarihçi · 1737–1794" on
-// "İngiliz", "EDWARD GIBBON" on "Edward", "Roma İmparatorluğu'nun Çöküşü (1776–1789)" + pointer to the volumes.
+// "İngiliz", "EDWARD GIBBON" on "tarihçi", then "Roma İmparatorluğu'nun Çöküşü (1776–1789)" + pointer to the volumes.
 import * as THREE from 'three';
 import * as G from '../engine/lib/extra_G.js';
 
@@ -309,9 +309,13 @@ export default {
     R.glows.forEach((g, i) => { g.material.opacity = (i % 2 ? .1 : .4) * (.9 + .1 * f(i)); });
 
     // ---------------- typography (same card design as s16) ----------------
-    const tI = ctx.wordTime('ingiliz'), tE = ctx.wordTime('edward'), tG = ctx.wordTime('gibbon');
+    const tI = ctx.wordTime('ingiliz'), tTa = ctx.wordTime('tarihçi');
+    // "Edward Gibbon;" is the last word of the scene (dissolve into s18 at ~100.3 global), so the card fills in on
+    // "İngiliz tarihçi": sub-line on "İngiliz", name on "tarihçi", the work line + pointer right after - every line
+    // is then fully readable for ~0.4-1 s before the dissolve instead of the work line typing into it.
+    const tName = tTa - .04, tWork = tTa + .38;
     G.locTag(ui, t, { t0: .12, text: 'LOZAN · 1787', accent: '#ffcf6b', y: 268 });
-    const end = G.nameCard(ui, t, { y: 312, tCard: tI - .04, tName: tE - .04, tWork: tG - .3, name: 'EDWARD GIBBON', sub: 'İngiliz tarihçi · 1737–1794', work: 'Roma İmparatorluğu\'nun Çöküşü (1776–1789)', accent: '#ffcf6b', bg: 'rgba(16,16,32,.66)', nameAnim: 'wipe' }); // wipe-in: the name never slides over the sub-line
-    if (end) { const a = R.volAnchor; const [ax] = ui.project(a); G.pointer(ui, t, { t0: tG - .32, from: [ax, 312 + 292 + 4], anchor: a, color: '#ffcf6b', dur: .3 }); }
+    const end = G.nameCard(ui, t, { y: 312, tCard: tI - .04, tName, tWork, name: 'EDWARD GIBBON', sub: 'İngiliz tarihçi · 1737–1794', work: 'Roma İmparatorluğu\'nun Çöküşü (1776–1789)', accent: '#ffcf6b', bg: 'rgba(16,16,32,.66)', nameAnim: 'wipe' }); // wipe-in: the name never slides over the sub-line
+    if (end) { const a = R.volAnchor; const [ax] = ui.project(a); G.pointer(ui, t, { t0: tWork + .3, from: [ax, 312 + 292 + 4], anchor: a, color: '#ffcf6b', dur: .3 }); }
   },
 };

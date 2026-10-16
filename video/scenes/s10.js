@@ -1,7 +1,7 @@
 // s10 (44.60–49.25) "o deniz gibi Ahlak-ı Âliyenin iki damlası ve iki misalidir."
 // Same continuous world as s09 (global time): the two drops reach the golden-hour sea, hit it in slow motion
 // (crater, crown, Worthington jet, droplets, ripple rings); the camera then pulls back and up, swinging toward the low sun,
-// revealing the endless sea to the horizon. Title "AHLÂK-I ÂLİYE" over the sky; the tiny ripple spot is marked "1"/"2":
+// revealing the endless sea to the horizon. Title "AHLAK-I ÂLİYE" (spelled as in the narration text) over the sky; the tiny ripple spot is marked "1"/"2":
 // "iki damla · iki misal".
 import * as THREE from 'three';
 import { buildDropWorld, DW, badgeD, dashedRing, rippleFront } from '../engine/lib/extra_D.js';
@@ -87,7 +87,7 @@ export default {
     { const sp = ui.env(t, tAh - .04, Infinity, .45, 'pop').s, xo = sp - 1, c = .45, w = .04;
       const g = xo <= 0 ? xo : xo <= 2 * w ? xo - (1 - c) * xo * xo / (4 * w) : c * xo + (1 - c) * w; const k = sp > 1 ? (1 + g) / sp : 1;
       const X = ui.ctx; if (k !== 1) { X.save(); X.translate(540, 392); X.scale(k, k); X.translate(-540, -392); }
-      ui.text('AHLÂK-I ÂLİYE', { t, t0: tAh - .04, x: 540, y: 392, size: 104, weight: 900, color: '#fff3dc', letterSpacing: 3, anim: 'pop', shadowBlur: 30, shadowColor: 'rgba(50,16,28,.85)', stroke: 'rgba(110,44,36,.55)', strokeW: 10 });
+      ui.text('AHLAK-I ÂLİYE', { t, t0: tAh - .04, x: 540, y: 392, size: 104, weight: 900, color: '#fff3dc', letterSpacing: 3, anim: 'pop', shadowBlur: 30, shadowColor: 'rgba(50,16,28,.85)', stroke: 'rgba(110,44,36,.55)', strokeW: 10 });
       if (k !== 1) X.restore(); }
     // the two drops' ripple spot, marked in the vast sea
     const c = new THREE.Vector3((DW.P[0][0] + DW.P[1][0]) / 2, 0, (DW.P[0][1] + DW.P[1][1]) / 2);
