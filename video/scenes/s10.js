@@ -82,6 +82,14 @@ export default {
     // soft warm-dark scrim behind the title once the sky behind it turns bright (keeps the cream title legible)
     { const X = ui.ctx; const a = .34 * U.smoothstep(45.9, 47.4, T) * ui.env(t, tAh - .04, Infinity, .45, 'fade').o;
       if (a > .002) { X.save(); const g = X.createLinearGradient(0, 150, 0, 520); g.addColorStop(0, 'rgba(46,18,30,0)'); g.addColorStop(.42, `rgba(46,18,30,${a})`); g.addColorStop(.62, `rgba(46,18,30,${a})`); g.addColorStop(1, 'rgba(46,18,30,0)'); X.fillStyle = g; X.fillRect(0, 150, 1080, 370); X.restore(); } }
+    // s09's payoff title 'İKİ ÖRNEK' (+ its underline under ÖRNEK) is drawn here too, identical and already settled, so it
+    // holds steady through the s09->s10 dissolve while 'örnek' is still being spoken (to 44.74) and only then fades out,
+    // before 'o deniz gibi' comes in
+    { const tOut = Math.min(.45, tDen - .1);
+      ui.text('İKİ ÖRNEK', { t, t0: -3, t1: tOut, x: 540, y: 400, size: 104, weight: 900, color: '#ffcf6b', letterSpacing: 6, anim: 'fade' });
+      const X = ui.ctx; X.save(); X.font = ui.font(104, 900, 'Nunito'); if ('letterSpacing' in X) X.letterSpacing = '6px';
+      const wAll = X.measureText('İKİ ÖRNEK').width, wO = X.measureText('ÖRNEK').width - 6; X.restore();
+      ui.underline({ t, t0: -3, t1: tOut, dur: .01, x: 540 + wAll / 2 - 6 - wO / 2, y: 470, w: wO * .9, color: 'rgba(255,207,107,.85)', width: 7 }); }
     ui.text('o deniz gibi', { t, t0: tDen - .04, x: 540, y: 270, size: 52, weight: 800, color: '#fff1d6', anim: 'rise' });
     // title pop: soften the outBack overshoot (C1 soft-knee) so the 104 px title stays inside x 80..1000 at its peak
     { const sp = ui.env(t, tAh - .04, Infinity, .45, 'pop').s, xo = sp - 1, c = .45, w = .04;
