@@ -208,6 +208,30 @@ export default {
     R.volley = C.arrowVolley(arrows, { seed: 21, arrow: { thick: 1.5, fletch: '#8a7058', fletch2: '#3e2c20' } }); scene.add(R.volley.group);
     R.trails = C.streaks(R.volley.trails({ w: .05, len: 2.4, color: '#ffe8d0', a: .5 }).filter(it => it.t0 > -3), { fadeIn: .02, fadeOut: .97, fog: fogO }); scene.add(R.trails);
     R.sparks = C.streaks(sparks, { gravity: [0, -9.8, 0], shutter: .035, additive: true, cool: '#a02a08', fadeIn: .01, fadeOut: .55 }); scene.add(R.sparks);
+    { // camera-motion smear for the sparks: a spark is only a few px wide, so during the whip its sub-frame copies stay separate
+      // (a comb) even at 12 samples. Each sub-frame copy is therefore stretched on screen over the path the camera sweeps during
+      // its own slice of the shutter (view-projection at both ends of the slice), with its intensity scaled by the area ratio
+      // (energy conserved) -> the copies tile into one continuous streak. No effect when the camera is (nearly) still.
+      const m = R.sparks.material, u = m.uniforms;
+      Object.assign(u, { uVP0: { value: new THREE.Matrix4() }, uVP1: { value: new THREE.Matrix4() }, uSmear: { value: 0 }, uRes: { value: new THREE.Vector2(1080, 1920) } });
+      const tgt = 'gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.);'; if (!m.vertexShader.includes(tgt)) throw new Error('s08: spark shader patch target missing');
+      m.vertexShader = 'uniform mat4 uVP0, uVP1; uniform float uSmear; uniform vec2 uRes;\n' + m.vertexShader.replace(tgt, `
+        mat4 VPc = projectionMatrix * viewMatrix; gl_Position = VPc * vec4(wp, 1.);
+        if (uSmear > .5) {
+          vec3 c = wp - side * position.x * aT.z; vec4 cc = VPc * vec4(c, 1.), ch = VPc * vec4(p, 1.), ct = VPc * vec4(p - dir * L, 1.), cs = VPc * vec4(c + side * aT.z, 1.);
+          vec4 a0 = uVP0 * vec4(c, 1.), a1 = uVP1 * vec4(c, 1.);
+          if (cc.w > .05 && ch.w > .05 && ct.w > .05 && cs.w > .05 && a0.w > .05 && a1.w > .05) {
+            vec2 hr = .5 * uRes, n0 = cc.xy / cc.w;
+            vec2 dpx = (ch.xy / ch.w - ct.xy / ct.w) * hr, spx = (cs.xy / cs.w - n0) * hr, mpx = (a1.xy / a1.w - a0.xy / a0.w) * hr;
+            if (dot(mpx, spx) < 0.) mpx = -mpx;   // the smear segment is symmetric: orient it with the width so they add
+            if (length(dpx) < 1.) dpx = vec2(-spx.y, spx.x) / max(length(spx), 1e-4);
+            vec2 sw = spx + mpx; float A0 = abs(dpx.x * spx.y - dpx.y * spx.x), A1 = abs(dpx.x * sw.y - dpx.y * sw.x);
+            vA *= clamp(A0 / max(A1, 1e-6), 0., 1.);
+            gl_Position = vec4((n0 + position.x * sw / hr) * cc.w, cc.z, cc.w);
+          }
+        }`);
+      m.needsUpdate = true; u.uRes.value.set(ctx.W, ctx.H);
+    }
     R.grains = C.streaks(grains, { gravity: [0, -9.8, 0], shutter: .013, fadeIn: .05, fadeOut: .8 }); scene.add(R.grains);
     R.chips = C.debris(chips, { ground: gh, palette: ['#c47a4e', '#a85c3a', '#dba274'], seed: 9 }); scene.add(R.chips.mesh);
     // dust surge slamming into the face on "aleyhissalatü" and boiling up over the top
@@ -240,20 +264,49 @@ export default {
       Pw0: new THREE.Vector3(-27.5, 1.55, -18.4), Lw0: new THREE.Vector3(-6, 4.4, -1), Lw: new THREE.Vector3(-6.4, 3.4, -2.8), Lm: new THREE.Vector3(10, 2.6, -17), Ls: new THREE.Vector3(9.55, .72, 4.62),
       Ta: 1.0, Tr: 1.2, Tu: 2.8, Tb: 3.9, vA: 3.7, vB: .3, tau: .24, eps: .15, sigK: .85, blend: 4 });
     R.P = new THREE.Vector3(); R.L = new THREE.Vector3();
+    // full camera pose (path + hand-held shake + impact jolts + fov + roll) as a pure function of t, for any camera
+    R.pose = (t, cam, P, L) => {
+      const calm = U.smoothstep(2.5, 3.45, t);
+      R.cam.at(t, P, L);
+      const sh = U.shake(t, U.lerp(.035, .006, calm), U.lerp(1.2, .45, calm), 5);
+      // jolts on the big impacts (the camera flinches; the rock never moves)
+      let jolt = 0; for (const h of R.hits) { if (h.big && t > h.t) jolt += Math.exp(-(t - h.t) * 9) * Math.sin((t - h.t) * 50) * (1 - calm); }
+      cam.position.copy(P).add(sh); cam.position.y = Math.max(cam.position.y, gh(cam.position.x, cam.position.z) + .5) + jolt * .04;
+      cam.fov = U.lerp(36, 33.5, calm); cam.updateProjectionMatrix(); cam.lookAt(L); cam.rotateZ(U.lerp(-.03, .008, calm) + sh.x * .3); cam.updateMatrixWorld(true);
+    };
+    // motion-blur budget follows the on-screen motion: probe points on the massif + the sand around it are projected at both ends
+    // of the shutter; the sub-frame count keeps the spacing between sub-frame copies near MB_GAP px (full-res), so during the
+    // whip the copies of rock edges and sparks merge into one continuous streak instead of stair-stepped duplicates.
+    { const pr = U.rng(77), pts = []; let nv = 0; rock.traverse(m => { if (m.isMesh) nv += m.geometry.attributes.position.count; }); const step = Math.max(1, Math.round(nv / 1600));
+      rock.traverse(m => { if (!m.isMesh) return; const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i += step) pts.push(new THREE.Vector3(p.getX(i), p.getY(i), p.getZ(i)).applyMatrix4(m.matrixWorld)); });
+      for (let i = 0; i < 160; i++) { const x = -32 + pr() * 50, z = -26 + pr() * 40; pts.push(new THREE.Vector3(x, gh(x, z), z)); }
+      R.mbPts = pts; R.mbA = pts.map(() => new THREE.Vector3()); R.mbD = new Float32Array(pts.length); }
+    R.pc = camera.clone(); R.pP = new THREE.Vector3(); R.pL = new THREE.Vector3();
+    R.mbFps = +(new URLSearchParams(globalThis.location?.search ?? '').get('fps') || 30);
   },
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
     R.volley.update(t); R.chips.update(t);
     const calm = U.smoothstep(2.5, 3.45, t), transit = U.smoothstep(1.6, 2.2, t) * (1 - calm);
-    // motion blur only while arrows strike and the camera whips; the calm lee renders single-sample
-    post.motionBlur = { samples: t < 1.9 ? 3 : t < 2.15 ? 4 : t < 3.25 ? 5 : t < 3.55 ? 4 : t < 3.85 ? 3 : t < 4.1 ? 2 : 1, shutter: .5 };
+    // motion blur: a base budget while arrows strike / the camera lands (the calm lee renders single-sample), raised by the
+    // measured screen motion during the whip (up to MB_MAX sub-frames at its peak)
+    const MB_SHUT = .5, MB_GAP = 5.5, MB_MAX = 12;
+    const base = t < 1.9 ? 3 : t < 2.15 ? 4 : t < 3.25 ? 5 : t < 3.55 ? 4 : t < 3.85 ? 3 : t < 4.1 ? 2 : 1;
+    const dsh = MB_SHUT / R.mbFps / 2; let nd = 0;
+    R.pose(t - dsh, R.pc, R.pP, R.pL); R.mbPts.forEach((p, i) => R.mbA[i].copy(p).project(R.pc));
+    R.pose(t + dsh, R.pc, R.pP, R.pL);
+    R.mbPts.forEach((p, i) => { const a = R.mbA[i]; if (a.z > 1 || Math.abs(a.x) > 1 || Math.abs(a.y) > 1) return; const b = p.clone().project(R.pc); if (b.z > 1) return; R.mbD[nd++] = Math.hypot((b.x - a.x) * 540, (b.y - a.y) * 960); });
+    const dd = R.mbD.subarray(0, nd).sort(); const d90 = nd ? dd[Math.min(nd - 1, Math.floor(nd * .9))] : 0;
+    const nS = Math.min(MB_MAX, Math.max(base, Math.ceil(d90 / MB_GAP))); post.motionBlur = { samples: nS, shutter: MB_SHUT };
+    // the engine reads the sample count once per frame (first update at the frame time t), then calls update(ti) per sub-frame
+    // within +-shutter/2: remember the frame's count so each sub-frame knows its slice of the shutter for the spark smear
+    const shT = MB_SHUT / R.mbFps; if (R.frameT === undefined || Math.abs(t - R.frameT) > shT / 2 + 1e-6) { R.frameT = t; R.frameN = nS; }
+    { const su = R.sparks.material.uniforms; su.uSmear.value = R.frameN > 1 ? 1 : 0;
+      if (R.frameN > 1) { const ds = shT / R.frameN / 2;
+        R.pose(t - ds, R.pc, R.pP, R.pL); su.uVP0.value.multiplyMatrices(R.pc.projectionMatrix, R.pc.matrixWorldInverse);
+        R.pose(t + ds, R.pc, R.pP, R.pL); su.uVP1.value.multiplyMatrices(R.pc.projectionMatrix, R.pc.matrixWorldInverse); } }
     // camera
-    R.cam.at(t, R.P, R.L);
-    const sh = U.shake(t, U.lerp(.035, .006, calm), U.lerp(1.2, .45, calm), 5);
-    // jolts on the big impacts (the camera flinches; the rock never moves)
-    let jolt = 0; for (const h of R.hits) { if (h.big && t > h.t) jolt += Math.exp(-(t - h.t) * 9) * Math.sin((t - h.t) * 50) * (1 - calm); }
-    camera.position.copy(R.P).add(sh); camera.position.y = Math.max(camera.position.y, R.gh(camera.position.x, camera.position.z) + .5) + jolt * .04;
-    camera.fov = U.lerp(36, 33.5, calm); camera.updateProjectionMatrix(); camera.lookAt(R.L); camera.rotateZ(U.lerp(-.03, .008, calm) + sh.x * .3); camera.updateMatrixWorld(true);
+    R.pose(t, camera, R.P, R.L);
     // spark flash light follows the latest impact
     let fi = 0, fp = null; for (const h of R.hits) { const a = t - h.t; if (a >= 0 && a < .3) { const v = Math.exp(-a * 12) * (h.big ? 2.4 : 1.1); if (v > fi) { fi = v; fp = h.p; } } }
     if (fp) R.flash.position.copy(fp); R.flash.intensity = 2.2 * fi * (1 - calm);

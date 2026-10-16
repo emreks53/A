@@ -1,7 +1,7 @@
 // Group E (scene s12 "virtue gallery") — procedural props + helpers. Pure code, no external assets.
 // Units: meters. Every exhibit builder returns a THREE.Group sitting on y=0 with userData {h, anim(tau, t, lit)}.
 import * as THREE from 'three';
-import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import * as TEX from './textures.js';
 import { rng, clamp, smoothstep } from './util.js';
 import { MAT, rbox } from './models.js';
@@ -436,47 +436,126 @@ export function letters() {
   return g;
 }
 
-// ---------------------------------------------------------------- 7 SABIR: fountain spout dripping onto a worn stone hollow
-export function cesme() {
-  const g = new THREE.Group(); const R = rng(71);
-  const lime = MAT.stone({ a: '#a8a294', b: '#77715f', seed: 17 });
-  const grey = new THREE.MeshPhysicalMaterial({ ...(() => { const t = TEX.stone({ a: '#e2dace', b: '#aaa08e', seed: 19 }); return { map: t.map, normalMap: t.normalMap }; })(), roughness: .75, clearcoat: .25, clearcoatRoughness: .5 });
-  const P0 = V(-.13, 0, -.1);
-  const post = M(latheGeo([[0, 0], [.07, 0], [.07, .03], [.056, .042], [.048, .062], [.048, .33], [.062, .346], [.066, .37], [.045, .388], [.026, .405], [0, .41]], 8), lime); post.position.copy(P0); g.add(post);
-  const brass = MAT.brass();
-  const dirS = V(.85, -.12, .5).normalize(); const sBase = P0.clone().add(V(dirS.x, 0, dirS.z).normalize().multiplyScalar(.044)).setY(.29);
-  const spout = M(latheGeo([[.018, 0], [.019, .012], [.0135, .022], [.0125, .12], [.0105, .145], [.012, .152], [.008, .154]], 20), brass); spout.quaternion.setFromUnitVectors(V(0, 1, 0), dirS); spout.position.copy(sBase); g.add(spout);
-  const mouth = sBase.clone().addScaledVector(dirS, .152).add(V(0, -.008, 0));
-  // natural rock with a smooth hollow worn by the drops
-  const rg = mergeVertices(new THREE.IcosahedronGeometry(1, 5).deleteAttribute('uv').deleteAttribute('normal')); { const p = rg.attributes.position; const top = .1, hb = .062, hd = .034;
-    const se = (v, e) => Math.sign(v) * Math.pow(Math.abs(v), e); // superellipse: sphere -> rounded block (a worn stone, not a blob)
-    for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const n = Math.sin(x * 3.1 + 1) * Math.sin(y * 2.7 + 2) * .06 + Math.sin(z * 5.3 + x * 4.1) * .04 + Math.sin(x * 13 + z * 11 + y * 7) * .018 + Math.sin(x * 29 - z * 23) * .007;
-      const fac = Math.round(Math.atan2(z, x) / (PI / 3.5)) * (PI / 3.5), cut = 1 - .06 * (1 - Math.cos(Math.atan2(z, x) - fac)) * 8; // chisel facets
-      x = se(x, .55); z = se(z, .55); y = se(y, .7); x *= .165 * (1 + n) * cut * (1 - .16 * Math.max(0, y)); z *= .14 * (1 + n) * cut * (1 - .16 * Math.max(0, y)); y = y < 0 ? y * .02 : y * top * .9 * (1 + n * .6); const r = Math.hypot(x - .01, z);
-      if (r < hb * 1.15) { const yb = top * .93 - hd * Math.max(0, 1 - (r / hb) ** 2); y = Math.min(y, yb + Math.max(0, r - hb) * .4); }
-      p.setXYZ(i, x, y, z); } rg.computeVertexNormals(); { const cc = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const r = Math.hypot(p.getX(i) - .01, p.getZ(i)); const wet = Math.max(0, 1 - Math.max(0, r - hb) / .035) * (p.getY(i) > .05 ? 1 : 0); const v = 1 - .3 * wet; cc.set([v * .98, v, v * 1.03], i * 3); } rg.setAttribute('color', new THREE.BufferAttribute(cc, 3)); } boxUV(rg, 5); }
-  const rt = TEX.stone({ a: '#b9b4aa', b: '#77736b', seed: 29 });
-  const rock = M(rg, new THREE.MeshPhysicalMaterial({ map: rt.map, normalMap: rt.normalMap, normalScale: V2(1.6, 1.6), roughness: .66, clearcoat: .3, clearcoatRoughness: .4, color: '#cfd1d0', vertexColors: true }));
-  rock.position.set(mouth.x - .01, 0, mouth.z); g.add(rock);
-  const surfY = .081;
-  const ws = waterSurface({ color: '#3a7a80', opacity: .82, amb: .00015 });
-  const water = M(new THREE.CircleGeometry(.046, 36).rotateX(-PI / 2), ws, false, true); water.position.set(mouth.x, surfY, mouth.z); g.add(water);
-  const moss = M(merge([0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => new THREE.SphereGeometry(.006 + R() * .006, 7, 5).scale(1.6, .32, 1.2).translate(P0.x + Math.cos(i * .62 + 2.2) * (.072 + R() * .006), .003, P0.z + Math.sin(i * .62 + 2.2) * (.072 + R() * .006)))), new THREE.MeshStandardMaterial({ color: '#4d6630', roughness: 1 })); g.add(moss);
-  const dropMat = fakeGlass({ color: '#a8dce4', opacity: .4, rim: .9, gain: 1.2 });
-  const dropGeo = latheGeo([[0, -.012], [.006, -.0095], [.0085, -.005], [.008, 0], [.0045, .006], [0, .011]], 16);
-  const drop = M(dropGeo.clone().scale(1.4, 1.4, 1.4), dropMat, false, false); drop.renderOrder = 6; drop.userData.depthOk = true; g.add(drop);
-  const spl = [0, 1, 2, 3, 4, 5].map(() => { const s = M(new THREE.SphereGeometry(.0034, 8, 6), dropMat, false, false); s.renderOrder = 6; g.add(s); return s; });
-  const fallT = Math.sqrt(2 * (mouth.y - surfY) / 9.81);
-  g.userData.h = .43; g.userData.w = .32;
-  g.userData.anim = (tau) => {
-    ws.userData.u.uT.value = tau;
-    const P = 1.05, off = .12; const kNow = Math.floor((tau - off) / P); const lastLand = off + kNow * P, nextLand = lastLand + P;
-    ws.userData.u.uImp.value[0].set(0, 0, lastLand, .0034); ws.userData.u.uImp.value[1].set(0, 0, lastLand - P, .0034);
-    const tf = nextLand - tau;
-    if (tf > fallT) { const grow = clamp(1 - (tf - fallT) / (P - fallT - .05)); drop.position.copy(mouth).add(V(0, -.01 * grow, 0)); drop.scale.set(.45 + .55 * grow, .35 + .75 * grow, .45 + .55 * grow); }
-    else { const s = fallT - tf; drop.position.set(mouth.x, mouth.y - .01 - 4.905 * s * s, mouth.z); drop.scale.set(.85, 1.3, .85); }
-    const sa = tau - lastLand; spl.forEach((s, i) => { const a = i / 6 * PI * 2 + .3; const vis = sa > 0 && sa < .32; s.visible = vis; if (vis) { s.position.set(mouth.x + Math.cos(a) * sa * .13, surfY + .6 * sa - 4.9 * sa * sa, mouth.z + Math.sin(a) * sa * .13); s.scale.setScalar(1 - sa / .35); } });
-  };
+// ---------------------------------------------------------------- 7 SABIR: antique hourglass (kum saati)
+// Turned dark-walnut end plates + 3 turned spindles, two clear glass bulbs with a narrow waist. Fine golden sand: a crater-shaped
+// surface in the top bulb drains through the neck as a thin stream onto a growing cone in the bottom bulb (volume-conserving, driven
+// by scene time). Sand is lit by the scene lights; grains glint toward the exhibit lamp (setLamp) and slide down the cone slopes.
+export function hourglass() {
+  const g = new THREE.Group();
+  const T = .03, HG = .33, HALF = HG / 2; // plate thickness, glass height
+  const yB = T, yW = T + HALF, yT = T + HG, HT = HG + 2 * T; // glass bottom end, waist, glass top end, total height
+  // glass outer radius along a half (u: 0 at the plate end, 1 at the waist) - onion bulb tapering into a long slender neck
+  const gk = [[0, .03], [.03, .038], [.08, .048], [.15, .057], [.24, .0615], [.33, .0625], [.42, .0602], [.52, .0535], [.62, .0425], [.71, .0305], [.79, .0195], [.86, .0112], [.92, .0068], [.97, .005], [1, .0045]];
+  const sp = new THREE.SplineCurve(gk.map(([u, r]) => V2(u, r))).getPoints(300);
+  const rOut = u => { u = clamp(u, 0, 1); for (let i = 1; i < sp.length; i++) if (sp[i].x >= u) { const a = sp[i - 1], b = sp[i]; return a.y + (b.y - a.y) * (u - a.x) / Math.max(1e-6, b.x - a.x); } return sp[sp.length - 1].y; };
+  const GT = .0022; // glass wall thickness
+  const rIn = y => (y <= yW ? rOut((y - yB) / HALF) : rOut((yT - y) / HALF)) - GT;
+  // ---- glass (two-sided fake glass: back faces first, sand + stream, then front faces)
+  const NG = 132, gp = []; for (let i = 0; i <= NG; i++) { const y = yB + HG * i / NG; gp.push([rIn(y) + GT, y]); }
+  const glassGeo = latheGeo(gp, 48);
+  const back = M(glassGeo, fakeGlass({ color: '#62756a', opacity: .05, rim: .3, side: THREE.BackSide }), false, false); back.renderOrder = 1; back.userData.depthOk = true;
+  const front = M(glassGeo, fakeGlass({ color: '#62756a', opacity: .06, rim: .75, gain: .9 }), false, false); front.renderOrder = 5; front.userData.depthOk = true;
+  g.add(back, front);
+  // ---- walnut frame: turned end plates (ogee + bead), wax seals round the glass ends, 3 turned spindles
+  const walnut = MAT.wood({ a: '#76492a', b: '#3e2413', rings: 14, seed: 73, clearcoat: .5 });
+  const plateProf = [[0, 0], [.087, 0], [.094, .003], [.098, .008], [.097, .013], [.092, .016], [.089, .019], [.091, .023], [.087, .028], [.08, .03], [0, .03]];
+  const bot = M(latheGeo(plateProf, 56), walnut); g.add(bot);
+  const top = M(latheGeo(plateProf.map(([r, y]) => [r, HT - y]).reverse(), 56), walnut); g.add(top);
+  const sealMat = new THREE.MeshPhysicalMaterial({ color: '#4a2a18', roughness: .5, clearcoat: .4 });
+  for (const [y, s] of [[yB + .002, 1], [yT - .002, -1]]) { const sl = M(new THREE.TorusGeometry(.0315, .0042, 10, 40), sealMat); sl.rotation.x = PI / 2; sl.position.y = y + s * .001; g.add(sl); }
+  const SL = HG; const half = [[.0095, 0], [.0095, .007], [.0076, .010], [.0089, .016], [.0074, .022], [.0058, .029], [.0065, .062], [.0069, .09], [.0061, .118], [.005, .14], [.0063, .152], [.0076, .16], [.0076, SL / 2]];
+  const spProf = [...half, ...half.slice(0, -1).reverse().map(([r, y]) => [r, SL - y])];
+  const spGeo = latheGeo(spProf, 16).translate(0, yB, 0); const RS = .079, spg = [];
+  for (let k = 0; k < 3; k++) { const a = PI - .12 + k * 2 * PI / 3; spg.push(spGeo.clone().translate(Math.sin(a) * RS, 0, Math.cos(a) * RS)); } // one spindle behind the glass, two at ±60° (stream stays clear)
+  g.add(M(merge(spg), walnut));
+  // ---- sand bodies: lathe surfaces rewritten every frame from (bottom cone apex a, top crater apex c)
+  const K = .65; // angle of repose (~33°)
+  const NY = 600, tb = [], tt = []; // [y, rIn] samples per bulb
+  for (let i = 0; i <= NY; i++) { const yb = yB + HALF * i / NY; tb.push([yb, Math.max(0, rIn(yb))]); const yt = yW + HALF * i / NY; tt.push([yt, Math.max(0, rIn(yt))]); }
+  const ibB = tb.reduce((m, p, i) => (p[1] > tb[m][1] ? i : m), 0), ibT = tt.reduce((m, p, i) => (p[1] > tt[m][1] ? i : m), 0);
+  const firstY = (arr, i0, i1, r, step) => { for (let i = i0; step > 0 ? i <= i1 : i >= i1; i += step) if (arr[i][1] >= r) { const j = i - step; if (j < Math.min(i0, i1) || j > Math.max(i0, i1)) return arr[i][0]; const [ya, ra] = arr[j], [yb2, rb] = arr[i]; return ya + (yb2 - ya) * (r - ra) / Math.max(1e-9, rb - ra); } return NaN; };
+  const floorY = yB + .0012;
+  const lowB = r => (r <= tb[0][1] ? floorY : firstY(tb, 0, ibB, r, 1)), highB = r => (r <= tb[NY][1] ? yW : firstY(tb, NY, ibB, r, -1));
+  const lowT = r => (r <= tt[0][1] ? yW : firstY(tt, 0, ibT, r, 1)), highT = r => (r <= tt[NY][1] ? yT - .0012 : firstY(tt, NY, ibT, r, -1));
+  const RMAX = Math.max(tb[ibB][1], tt[ibT][1]);
+  const column = (r, surf, low, high) => { const lo = low(r), hi = high(r); if (!(lo === lo) || !(hi === hi)) return [0, lo, lo]; const top = Math.min(surf(r), hi); return [top - lo, lo, top]; };
+  const contact = (surf, low, high) => { let r = 0; const dr = RMAX / 400; if (column(0, surf, low, high)[0] <= 0) return 0; while (r + dr < RMAX && column(r + dr, surf, low, high)[0] > 0) r += dr;
+    let a = r, b = Math.min(RMAX, r + dr); for (let i = 0; i < 18; i++) { const m = (a + b) / 2; if (column(m, surf, low, high)[0] > 0) a = m; else b = m; } return a; };
+  const volume = (surf, low, high) => { let v = 0; const n = 240, dr = RMAX / n; for (let i = 0; i < n; i++) { const r = (i + .5) * dr; const h = column(r, surf, low, high)[0]; if (h > 0) v += 2 * PI * r * h * dr; } return v; };
+  const surfB = a => r => a - K * r, surfT = c => r => c + K * r;
+  // volume tables -> invert per frame
+  const NA = 160, tabB = [], tabT = [];
+  for (let i = 0; i <= NA; i++) { const a = floorY + (yW - floorY) * i / NA; tabB.push([a, volume(surfB(a), lowB, highB)]); const c = yW + (yT - yW) * i / NA; tabT.push([c, volume(surfT(c), lowT, highT)]); }
+  const inv = (tab, v) => { if (v <= tab[0][1]) return tab[0][0]; for (let i = 1; i < tab.length; i++) if (tab[i][1] >= v) { const [x0, v0] = tab[i - 1], [x1, v1] = tab[i]; return x0 + (x1 - x0) * (v - v0) / Math.max(1e-12, v1 - v0); } return tab[tab.length - 1][0]; };
+  let vb = 0; for (let i = 0; i < NY; i++) vb += PI * tb[i][1] ** 2 * (HALF / NY);
+  const V0 = .4 * vb; // sand: 40% of one bulb
+  // lathe updater: profile (bottom boundary out, top boundary back in) -> positions + analytic normals (no seam)
+  const NP = 34, SEG = 44;
+  const mkBody = () => { const geo = new THREE.LatheGeometry([...Array(NP)].map((_, i) => V2(.01, i * .001)), SEG); return geo; };
+  const writeBody = (geo, prof) => {
+    const pos = geo.attributes.position, nor = geo.attributes.normal; const n2 = prof.map((p, j) => { const a = prof[Math.max(0, j - 1)], b = prof[Math.min(NP - 1, j + 1)]; let dr = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dr, dy); if (l < 1e-9) return [0, 1]; return [dy / l, -dr / l]; });
+    for (let i = 0; i <= SEG; i++) { const ph = i / SEG * PI * 2, s = Math.sin(ph), c = Math.cos(ph);
+      for (let j = 0; j < NP; j++) { const k = i * NP + j; pos.setXYZ(k, prof[j][0] * s, prof[j][1], prof[j][0] * c); nor.setXYZ(k, n2[j][0] * s, n2[j][1], n2[j][0] * c); } }
+    pos.needsUpdate = nor.needsUpdate = true; geo.computeBoundingSphere(); };
+  const bodyProfile = (surf, low, high) => { const rc = contact(surf, low, high); const pr = []; const nb = 18, nt = NP - nb;
+    for (let j = 0; j < nb; j++) { const r = rc * Math.sin(PI / 2 * j / (nb - 1)); pr.push([r, column(r, surf, low, high)[1]]); }
+    for (let j = 0; j < nt; j++) { const r = rc * (1 - j / (nt - 1)); pr.push([r, column(r, surf, low, high)[2]]); }
+    return pr.map(([r, y]) => [Math.max(r, 1e-5), y]); };
+  // sand material: grain speckle + glints toward the lamp; grains slide along the cone / crater slopes
+  const sU = { uTime: { value: 0 }, uLamp: { value: V(-.34, .9, .3) }, uLit: { value: 0 }, uDisc: { value: new THREE.Vector4(0, yT + .002, 0, .098) } };
+  const sandMat = (flow) => { const u = { ...sU, uFlow: { value: flow } };
+    const m = new THREE.MeshPhysicalMaterial({ color: '#dfa956', roughness: .82, sheen: .35, sheenColor: new THREE.Color('#ffe2a8'), sheenRoughness: .5, envMapIntensity: 1.5 });
+    m.onBeforeCompile = s => { Object.assign(s.uniforms, u);
+      s.vertexShader = s.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vSO, vSN, vSW, vSWN;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSO = position; vSN = normal; vSW = (modelMatrix * vec4(position, 1.)).xyz; vSWN = normalize(mat3(modelMatrix) * normal);');
+      s.fragmentShader = s.fragmentShader.replace('#include <common>', `#include <common>
+        uniform float uTime, uLit, uFlow; uniform vec3 uLamp; uniform vec4 uDisc; varying vec3 vSO, vSN, vSW, vSWN;
+        float hS(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        vec3 hS3(vec2 p){ return fract(sin(vec3(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)), dot(p, vec2(419.2, 371.9)))) * 43758.5453); }
+        float vS(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(hS(i), hS(i + vec2(1., 0.)), f.x), mix(hS(i + vec2(0., 1.)), hS(i + vec2(1., 1.)), f.x), f.y); }`)
+        .replace('#include <map_fragment>', `#include <map_fragment>
+        vec3 sdN = normalize(vSN); float sdR = length(vSO.xz); vec2 sdRad = vSO.xz / max(sdR, 1e-5);
+        float sdSlope = 1. - smoothstep(.9, .97, sdN.y);
+        vec2 sdPf = vSO.xz + sdRad * uFlow * uTime * sdSlope; // grains slide down the slopes (crater: inward, cone: outward)
+        vec2 sdDom = sdN.y > .45 ? sdPf * 300. : vec2(atan(vSO.z, vSO.x) * .055 * 300., vSO.y * 300.);
+        vec2 sdCell = floor(sdDom);
+        diffuseColor.rgb *= .9 + .2 * vS(sdDom * 1.3);`)
+        .replace('#include <opaque_fragment>', `{ vec3 Lp = normalize(uLamp - vSW), sdV = normalize(cameraPosition - vSW), Hh = normalize(Lp + sdV);
+          float sdT = (uDisc.y - vSW.y) / max(Lp.y, 1e-4); vec2 sdQ = vSW.xz + Lp.xz * sdT - uDisc.xz; float sdVis = sdT > 0. && dot(sdQ, sdQ) < uDisc.w * uDisc.w ? 0. : 1.; // top plate blocks the lamp
+          vec3 sdG = normalize(normalize(vSWN) + (hS3(sdCell + 17.) * 2. - 1.) * .55);
+          float sdGl = pow(max(dot(sdG, Hh), 0.), 80.) * step(.6, hS(sdCell + 3.1)) * max(dot(normalize(vSWN), Lp), 0.) * smoothstep(.15, .45, dot(normalize(vSWN), sdV));
+          outgoingLight += vec3(1., .85, .58) * sdGl * uLit * sdVis * 2.2;
+          outgoingLight += diffuseColor.rgb * vec3(.3, .17, .06) * (.3 + .7 * uLit); } // warm bounce from the lit felt, walnut and glass
+        #include <opaque_fragment>`); };
+    m.customProgramCacheKey = () => 'E_sand';
+    m.userData.u = u; return m; };
+  const mTop = sandMat(.012), mBot = sandMat(-.01);
+  const sandTop = M(mkBody(), mTop), sandBot = M(mkBody(), mBot); sandTop.frustumCulled = sandBot.frustumCulled = false; g.add(sandTop, sandBot);
+  // the falling stream (lit, slightly granular, scrolling down at ~1 m/s)
+  const stU = { uTime: { value: 0 } };
+  const stMat = new THREE.MeshStandardMaterial({ color: '#e2b264', roughness: .7, transparent: true, depthWrite: false });
+  stMat.onBeforeCompile = s => { Object.assign(s.uniforms, stU);
+    s.vertexShader = s.vertexShader.replace('#include <common>', '#include <common>\nvarying float vWy;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWy = (modelMatrix * vec4(position, 1.)).y;');
+    s.fragmentShader = s.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uTime; varying float vWy;')
+      .replace('#include <alphamap_fragment>', `#include <alphamap_fragment>
+      { float yy = vWy + uTime * 1.0; float g1 = fract(sin(floor(yy * 320.) * 12.9898) * 43758.5); float g2 = fract(sin(floor(yy * 110.) * 78.233) * 43758.5);
+        diffuseColor.rgb *= .82 + .36 * g1; diffuseColor.a *= .78 + .22 * g2; }`); };
+  stMat.customProgramCacheKey = () => 'E_sandStream';
+  const stream = M(new THREE.CylinderGeometry(.00115, .00125, 1, 10, 1, true).translate(0, -.5, 0), stMat, false, false); stream.renderOrder = 3; stream.userData.depthOk = true; stream.position.y = yW + .002; g.add(stream);
+  // fraction of the sand already in the bottom bulb: a steady trickle over the scene, running faster (smoothly) while the exhibit is
+  // presented so the cone visibly grows and the top level drops while its word is spoken (tau = time since the word)
+  const fill = (t, tau) => clamp(.2 + .02 * (t + .5) + .12 * smoothstep(-.7, .9, tau), .02, .98);
+  const setSand = (t, tau = -9) => { const f = fill(t, tau);
+    const a = inv(tabB, f * V0), c = inv(tabT, (1 - f) * V0);
+    writeBody(sandBot.geometry, bodyProfile(surfB(a), lowB, highB)); writeBody(sandTop.geometry, bodyProfile(surfT(c), lowT, highT));
+    stream.scale.y = Math.max(.001, yW + .002 - a + .002); };
+  setSand(0);
+  g.userData.h = HT; g.userData.w = .2;
+  g.userData.setLamp = p => { sU.uLamp.value.copy(p); };
+  const dW = new THREE.Vector3();
+  g.userData.anim = (tau, t, lit) => { setSand(t, tau);
+    sU.uTime.value = t; sU.uLit.value = lit; stU.uTime.value = t;
+    g.updateWorldMatrix(true, false); dW.set(0, yT + .002, 0).applyMatrix4(g.matrixWorld); sU.uDisc.value.set(dW.x, dW.y, dW.z, .098 * g.matrixWorld.getMaxScaleOnAxis()); };
   return g;
 }
 
@@ -488,26 +567,31 @@ export function shoes() {
   const matTex = ctex('reedmat', 256, 256, (x, W, H) => { x.fillStyle = '#c6a46a'; x.fillRect(0, 0, W, H); for (let i = 0; i < H; i += 8) { x.fillStyle = (i / 8) % 2 ? '#b08c52' : '#d4b67c'; x.fillRect(0, i, W, 6); } for (let j = 0; j < W; j += 64) { x.fillStyle = '#7e3a2a'; x.fillRect(j + 28, 0, 6, H); } });
   const mat = M(rbox(.40, .01, .26, .004), new THREE.MeshStandardMaterial({ map: matTex, roughness: .95 })); mat.position.set(0, .005, .06); g.add(mat);
   const L = .25;
-  const hw = u => { const heel = Math.sqrt(Math.max(0, 1 - Math.pow(1 - Math.min(u / .14, 1), 2))); const body = .036 + .011 * Math.sin(PI * Math.min(u / .8, 1) * .9); const toe = u > .76 ? Math.pow(Math.max(0, 1 - Math.pow((u - .76) / .24, 1.6)), .5) : 1; return Math.max(body * heel * toe, 1e-4); };
-  const soleShape = new THREE.Shape(); const n = 40;
+  // Ottoman yemeni: slim last, pointed toe that turns up, low vamp (clearly a slipper from any angle - no rounded dome)
+  const hw = u => { const heel = Math.sqrt(Math.max(0, 1 - Math.pow(1 - Math.min(u / .14, 1), 2))); const body = .034 + .009 * Math.sin(PI * Math.min(u / .8, 1) * .9); const toe = u > .64 ? Math.pow(Math.max(0, 1 - Math.pow((u - .64) / .36, 1.3)), .75) : 1; return Math.max(body * heel * toe, 1e-4); };
+  const lift = u => .024 * Math.pow(smoothstep(.68, 1, u), 2.2);
+  const soleShape = new THREE.Shape(); const n = 48;
   for (let i = 0; i <= n; i++) { const u = i / n; const p = V2(hw(u), -(u - .5) * L); i ? soleShape.lineTo(p.x, p.y) : soleShape.moveTo(p.x, p.y); }
   for (let i = n; i >= 0; i--) { const u = i / n; soleShape.lineTo(-hw(u), -(u - .5) * L); }
-  const soleGeo = new THREE.ExtrudeGeometry(soleShape, { depth: .012, bevelEnabled: true, bevelThickness: .003, bevelSize: .003, bevelSegments: 2, curveSegments: 4 }); soleGeo.rotateX(-PI / 2);
-  const ins = soleGeo.clone(); ins.scale(.9, .3, .95); ins.translate(0, .012, 0);
-  const sole = .015;
-  const hv = u => .05 * (1 - Math.pow(clamp((u - .44) / .56), 2.8)) + .012 * (1 - Math.pow(clamp((u - .44) / .56), 6));
-  const vamp = surface((u0, v) => { const u = .44 + u0 * .56; const ph = v * PI; const w = hw(u) * 1.04 + .002; return [-Math.cos(ph) * w, sole + Math.pow(Math.sin(ph), .75) * hv(u), (u - .5) * L]; }, 26, 18, true);
+  const bend = geo => { const p = geo.attributes.position; for (let i = 0; i < p.count; i++) { const u = clamp(p.getZ(i) / L + .5, 0, 1); p.setY(i, p.getY(i) + lift(u)); } geo.computeVertexNormals(); return geo; };
+  const soleGeo = new THREE.ExtrudeGeometry(soleShape, { depth: .011, bevelEnabled: true, bevelThickness: .003, bevelSize: .003, bevelSegments: 2, curveSegments: 4 }); soleGeo.rotateX(-PI / 2);
+  const ins = soleGeo.clone(); ins.scale(.9, .3, .95); ins.translate(0, .011, 0); bend(soleGeo); bend(ins);
+  const sole = .014;
+  const hv = u => .03 * (1 - Math.pow(clamp((u - .44) / .56), 2.0)) + .007;
+  const vamp = surface((u0, v) => { const u = .44 + u0 * .56; const ph = v * PI; const w = hw(u) * 1.04 + .002; return [-Math.cos(ph) * w, sole + Math.pow(Math.sin(ph), .55) * hv(u) + lift(u), (u - .5) * L]; }, 30, 18, true);
+  const hcF = u => .022 + .015 * smoothstep(.25, .47, u);
   const counter = surface((s, v) => { // s: 0..1 around the back from right side u=.47 -> heel -> left side u=.47
-    const side = s < .5 ? 1 : -1; const u = s < .5 ? .47 * (1 - s * 2) : .47 * ((s - .5) * 2); const w = hw(u) * 1.04 + .002; const hc = .036 + .022 * smoothstep(.25, .47, u);
-    return [side * w, sole + v * hc, (u - .5) * L];
+    const side = s < .5 ? 1 : -1; const u = s < .5 ? .47 * (1 - s * 2) : .47 * ((s - .5) * 2); const w = hw(u) * 1.04 + .002;
+    return [side * w, sole + v * hcF(u), (u - .5) * L];
   }, 40, 4, true);
-  const leather = new THREE.MeshPhysicalMaterial({ color: '#9a5a2c', roughness: .45, sheen: .5, sheenColor: new THREE.Color('#ffd8a8'), clearcoat: .45, clearcoatRoughness: .35 });
-  const lining = new THREE.MeshStandardMaterial({ color: '#8e2a22', roughness: .8, side: THREE.BackSide });
-  const soleMat = new THREE.MeshStandardMaterial({ color: '#3a2214', roughness: .7 }); const insMat = new THREE.MeshStandardMaterial({ color: '#d2a46c', roughness: .8 });
-  const rim = tube([...Array(21)].map((_, i) => { const ph = i / 20 * PI; const u = .44; const w = hw(u) * 1.04 + .002; return V(-Math.cos(ph) * w, sole + Math.pow(Math.sin(ph), .75) * hv(u), (u - .5) * L); }), .0028, 24, 5);
-  const rim2 = tube([...Array(31)].map((_, i) => { const s = i / 30; const side = s < .5 ? 1 : -1; const u = s < .5 ? .47 * (1 - s * 2) : .47 * ((s - .5) * 2); const w = hw(u) * 1.04 + .002; const hc = .036 + .022 * smoothstep(.25, .47, u); return V(side * w, sole + hc, (u - .5) * L); }), .0026, 40, 5);
+  const leather = new THREE.MeshPhysicalMaterial({ color: '#c08a28', roughness: .55, sheen: .45, sheenColor: new THREE.Color('#ffe2a0'), clearcoat: .18, clearcoatRoughness: .45 });
+  const lining = new THREE.MeshStandardMaterial({ color: '#7e2a1e', roughness: .8, side: THREE.BackSide });
+  const soleMat = new THREE.MeshStandardMaterial({ color: '#3a2214', roughness: .7 }); const insMat = new THREE.MeshStandardMaterial({ color: '#b8875a', roughness: .8 });
+  const rim = tube([...Array(21)].map((_, i) => { const ph = i / 20 * PI; const u = .44; const w = hw(u) * 1.04 + .002; return V(-Math.cos(ph) * w, sole + Math.pow(Math.sin(ph), .55) * hv(u), (u - .5) * L); }), .0026, 24, 5);
+  const rim2 = tube([...Array(31)].map((_, i) => { const s = i / 30; const side = s < .5 ? 1 : -1; const u = s < .5 ? .47 * (1 - s * 2) : .47 * ((s - .5) * 2); const w = hw(u) * 1.04 + .002; return V(side * w, sole + hcF(u), (u - .5) * L); }), .0024, 40, 5);
   const mkShoe = () => { const s = new THREE.Group(); s.add(M(soleGeo, soleMat), M(ins, insMat), M(vamp, leather), M(vamp, lining, false), M(counter, leather), M(counter, lining, false), M(rim, soleMat), M(rim2, soleMat)); return s; };
-  const ang = .78; for (const sx of [-1, 1]) { const s = mkShoe(); s.rotation.y = ang + sx * .02; s.position.set(sx * .064 * Math.cos(ang) + .0, .01, .07 - sx * .064 * Math.sin(ang)); g.add(s); }
+  // side by side, toes turned along the step (3/4 profile to the passing camera: opening + pointed toe both read)
+  const ang = 1.2; for (const sx of [-1, 1]) { const s = mkShoe(); s.rotation.y = ang + sx * .025; s.position.set(sx * .056 * Math.cos(ang) + .005, .01, .05 - sx * .056 * Math.sin(ang)); g.add(s); }
   g.userData.h = .1; g.userData.w = .3;
   g.userData.anim = () => {};
   return g;

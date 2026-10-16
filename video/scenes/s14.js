@@ -220,6 +220,7 @@ export default {
       for (const x of [-.31, 0, .31]) for (const z of [-.23, 0, .23]) { v.set(x, .03, z).applyMatrix4(R.heroTilt.matrixWorld); p3(v.x, v.y, v.z); }
       for (const y of [.1, .5, .85]) p3(.02, y, -9.5);
       R.flowP = new Float32Array(P); R.flowCam = camera.clone(); R.flowM = [new THREE.Matrix4(), new THREE.Matrix4(), new THREE.Matrix4()]; }
+    planFlights(THREE, U, bayZ);
   },
   update(t, ctx) {
     const { ui, U, post, camera } = ctx;
@@ -227,13 +228,17 @@ export default {
     // time-lapse fill of the upper shelves
     const bk = R.books.userData; const n0 = R.nStatic; let shown = 0;
     R.late.forEach((r, j) => {
-      const p = U.clamp((t - r.t0) / .42);
+      const p = U.clamp((t - r.t0) / R.flyT);
       if (p <= 0) { bk.setMatrix(n0 + j, R.zero); return; }
       shown++;
       if (p >= 1) { bk.setMatrix(n0 + j, r.m); return; }
-      const e = U.ease.outBack(p, 1.15); const m = R.tmpM.copy(r.m); const off = (1 - e);
-      m.elements[12] += -r.side * off * .7; m.elements[13] += off * .25; // slides in from the front, settling down
-      const s = .3 + .7 * U.smoothstep(0, .3, p); if (s < 1) m.multiply(R.sclM.makeScale(s, s, s)); // grows in instead of popping into existence mid-air
+      const m = R.tmpM.copy(r.m);
+      // grows in from its resting surface (scale <= 1 about the centre, bottom kept on the board -> always inside its own slot)
+      const s = .3 + .7 * U.ease.outCubic(U.clamp(p / .45));
+      if (s < 1) { m.multiply(R.sclM.makeScale(s, s, s)); m.elements[13] -= (1 - s) * r.hy; }
+      // pushed straight in along the shelf normal (no vertical travel: never crosses a board, the book beside it or a stack
+      // neighbour); slide length planned per book so it never crosses a pier (planFlights)
+      if (r.D > 0) m.elements[12] -= r.side * r.D * (1 - U.ease.outBack(p, 1.15));
       bk.setMatrix(n0 + j, m);
     });
     bk.commit(); R.shown = shown;
@@ -253,13 +258,13 @@ export default {
     const tYu = ctx.wordTime('yüksek'), tB = ctx.wordTime('beyan'), tI = ctx.wordTime('ispat');
     ui.text('Şifâ-i Şerif', { t, t0: tS - .05, t1: tY - .05, x: 540, y: 330, size: 104, weight: 900, family: 'Playfair Display', color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
     ui.pill('Kadı İyâz (ö. 1149)', { t, t0: tSe - .05, t1: tY - .05, x: 540, y: 450, size: 44, weight: 800, bg: 'rgba(40,22,12,.72)', color: '#fff1d6' });
-    ui.text('yüzlerce cilt', { t, t0: tY - .05, t1: tYu - .1, x: 540, y: 330, size: 92, weight: 900, color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
+    ui.text('yüzlerce cilt', { t, t0: tY - .05, t1: tYu - .1, x: 540, y: 330, size: 100, weight: 900, family: 'Playfair Display', color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
     tally(ui, U, t, tY + .05, tYu + .2, R.shown / Math.max(1, R.late.length));
     { const e = ui.env(t, tYu - .25, 99, .5, 'fade'); if (e.o > .001) { const X = ui.ctx, g = X.createLinearGradient(0, 230, 0, 600); g.addColorStop(0, 'rgba(34,18,8,0)'); g.addColorStop(.25, 'rgba(34,18,8,.42)'); g.addColorStop(.7, 'rgba(34,18,8,.36)'); g.addColorStop(1, 'rgba(34,18,8,0)');
       X.save(); X.globalAlpha = e.o; X.fillStyle = g; X.fillRect(0, 230, 1080, 370); X.restore(); } } // soft scrim: cream/gold type over the bright vault
     ui.text('“yüksek ahlâk” mu\'cizesi', { t, t0: tYu - .05, t1: 99, x: 540, y: 330, size: 62, weight: 500, family: 'Lora', italic: true, color: '#fff4dc', anim: 'rise', stroke: 'rgba(40,20,8,.5)', strokeW: 8 });
     const hit = U.clamp((t - (tI - .04)) / .16); const jolt = hit > 0 && hit < 1 ? Math.sin(hit * Math.PI) : 0;
-    ui.text('beyan ve ispat', { t, t0: tB - .05, t1: 99, x: 540, y: 455, size: 84 * (1 - .05 * jolt), weight: 900, color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
+    ui.text('beyan ve ispat', { t, t0: tB - .05, t1: 99, x: 540, y: 452, size: 84 * (1 - .05 * jolt), weight: 900, family: 'Playfair Display', color: '#ffd98a', anim: 'pop', stroke: 'rgba(40,20,8,.55)', strokeW: 12 });
     if (hit > 0) { // rubber-stamp frame slams down on "ispat"
       const X = ui.ctx, sc = 1 + .35 * (1 - U.ease.outCubic(hit)); X.save(); X.globalAlpha = Math.min(1, hit * 2.5) * .92; X.translate(540, 458); X.rotate(-.035); X.scale(sc, sc);
       X.strokeStyle = '#e04a3c'; X.lineWidth = 9; ui.rrect(-330, -68, 660, 136, 22); X.stroke(); X.lineWidth = 3.5; ui.rrect(-314, -54, 628, 108, 14); X.stroke(); X.restore(); }
@@ -278,6 +283,32 @@ function tally(ui, U, t, t0, t1, frac) {
   X.restore();
 }
 function shadowify(o) { o.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } }); }
+
+// Time-lapse flight planning (pure, once in setup). Each late book slides straight out of its own slot along the shelf
+// normal; the stone piers stand ~12 cm proud of the shelf fronts, and from the grazing crane angle any book pushed in
+// from further out would sweep across a pier face (in front of the far one / into the near one). So per book, the longest
+// slide from a few candidates is kept for which its screen footprint - seen through the actual camera rig at every
+// moment of its flight - stays clear of every pier face; books whose slot itself borders a pier on screen just grow in place.
+function planFlights(T, U, bayZ) {
+  const FLY = R.flyT = .42, W = 1080, H = 1920, PAD = 4;
+  const cam = R.flowCam.clone(), PV = new T.Matrix4(), v = new T.Vector3();
+  const unit = []; for (const a of [-.5, .5]) for (const b of [-.5, .5]) for (const c of [-.5, .5]) unit.push(new T.Vector3(a, b, c));
+  const rect = (pts, dx) => { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const p of pts) { v.set(p.x + dx, p.y, p.z).applyMatrix4(PV); const sx = (v.x * .5 + .5) * W, sy = (-v.y * .5 + .5) * H;
+    if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy; } return [x0, y0, x1, y1]; };
+  const FS = [0, .05, .1, .16, .23, .31, .4, .52, .66, .82]; const CAND = [.34, .26, .19, .13, .08];
+  R.late.forEach(r => {
+    const C = unit.map(u => u.clone().applyMatrix4(r.m)); let ylo = 1e9, yhi = -1e9; C.forEach(c => { ylo = Math.min(ylo, c.y); yhi = Math.max(yhi, c.y); });
+    r.hy = (yhi - ylo) / 2;
+    // pier faces near this bay: the part of each pier in front of the shelf fronts (x 4.5..4.62), over the book's height band
+    const P = []; for (let p = Math.max(0, r.i - 1); p <= Math.min(HALL.bays, r.i + 2); p++) { const z = bayZ(p), pts = [];
+      for (const x of [4.48, 4.64]) for (const y of [ylo - .4, yhi + .4]) for (const zz of [z - .37, z + .37]) pts.push(new T.Vector3(x, y, zz)); P.push(pts); }
+    const clear = (ts, dx) => { R.cam.set(cam, ts); PV.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+      const b = rect(C, dx); if (b[2] < -20 || b[0] > W + 20 || b[3] < -20 || b[1] > H + 20) return true; // off screen
+      return P.every(pp => { const q = rect(pp, 0); return b[2] < q[0] - PAD || b[0] > q[2] + PAD || b[3] < q[1] - PAD || b[1] > q[3] + PAD; }); };
+    r.D = 0;
+    if (clear(r.t0 + FLY, 0) && clear(r.t0 + FLY * .5, 0)) for (const D of CAND) if (FS.every(f => clear(r.t0 + FLY * f, -r.side * D * Math.max(0, 1 - U.ease.outBack(f, 1.15))))) { r.D = D; break; }
+  });
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Hero binding: one hand-made cover map set (colour / tangent normal / roughness+metalness) baked from canvas masks.

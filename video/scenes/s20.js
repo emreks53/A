@@ -375,22 +375,26 @@ export default {
     const S5 = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * x * (x * (x * 6 - 15) + 10);
     const P0 = [-.3, .95, .98], L0 = [-.1, .58, -.08];
     let pp = P0, pl = L0;
+    // Beats are timed to the energy-aligned narration (local): 195. 3.15 · sayfasında 3.59–4.50 · ve 4.78 · 19. 5.16 ·
+    // Söz 5.48 · gibi 5.75–6.23 · başka 6.52 · risalelerde 6.87–7.59 · çok 7.89 · etraflıca 8.97 (end card).
+    // The SÖZLER glide lands BEFORE the "ve 19. Söz gibi" subtitle phrase appears (4.72), so the tag never sits on
+    // the subtitle band; the hold frames book + tag high (tag ~y 930–1120) so the gold ring stays inside y ≤ 1330.
     const moves = [ // [start, end, pos target, look target]
       [-1.3, 1.35, [-.22, .9, .62], [-.08, .58, -.08]],          // slow push-in on the still life
       [.85, 2.1, [-.15, .99, .3], [-.05, .575, -.08]],           // onto the MEKTUBAT cover ("Mektubat")
       [1.75, 3.1, [-.1, 1.0, .25], [-.085, .565, -.115]],        // settle over the opening book (195)
       [2.5, 4.6, [-.05, .97, .24], [-.04, .55, -.08]],           // drift
-      [3.7, 5.2, [.195, .81, .74], [.1, .435, .19]],             // glide to SÖZLER + tag ("ve 19. Söz")
-      [4.7, 6.1, [.2, .81, .76], [.1, .435, .2]],                // drift
-      [5.35, 7.0, [-.02, .93, .48], [-.08, .86, -.38]],          // crane up to the sill set ("başka risalelerde")
-      [6.5, 7.9, [-.045, .95, .57], [-.09, .86, -.42]],          // drift
-      [7.15, 8.85, [-.055, .92, 1.38], [-.055, .61, -.1]],       // pull back to the wide still life
-      [7.4, 13.6, [-.055, .912, 1.52], [-.055, .605, -.1]],      // gentle end drift (still moving at the last frame)
+      [3.75, 5.05, [.22, .86, .86], [.125, .428, .24]],          // glide to SÖZLER + tag ("ve 19. Söz")
+      [4.6, 6.3, [.225, .86, .88], [.125, .428, .25]],           // drift
+      [5.95, 7.35, [-.02, .93, .48], [-.08, .86, -.38]],         // crane up to the sill set ("başka risalelerde")
+      [6.95, 8.3, [-.045, .95, .57], [-.09, .86, -.42]],         // drift
+      [7.6, 9.25, [-.055, .92, 1.38], [-.055, .61, -.1]],        // pull back to the wide still life
+      [7.85, 13.6, [-.055, .912, 1.52], [-.055, .605, -.1]],     // gentle end drift (still moving at the last frame)
     ].map(([a, b, P, L]) => { const m = { a, b, dP: P.map((v, i) => v - pp[i]), dL: L.map((v, i) => v - pl[i]) }; pp = P; pl = L; return m; });
     R.cam = t => {
       const P = new THREE.Vector3(...P0), L = new THREE.Vector3(...L0);
       for (const m of moves) { const s = S5((t - m.a) / (m.b - m.a)); if (s) { P.x += m.dP[0] * s; P.y += m.dP[1] * s; P.z += m.dP[2] * s; L.x += m.dL[0] * s; L.y += m.dL[1] * s; L.z += m.dL[2] * s; } }
-      return { P, L, fov: 34 + 6 * S5((t - 6.6) / 2.8) };
+      return { P, L, fov: 34 + 6 * S5((t - 7.05) / 2.8) };
     };
     // probes for the adaptive motion blur: on-screen speed of the hero objects
     R.mbCam = new THREE.PerspectiveCamera(34, 1080 / 1920, .02, 50);
@@ -413,7 +417,7 @@ export default {
       post.motionBlur = n > 1 ? { samples: n, shutter: .4 } : { samples: 1 };
     }
     R.motes.userData.uniforms.size.value = .62 * ctx.renderer.domElement.height / 960; // same look at every render scale
-    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.28, .5, U.smoothstep(7.0, 9.4, t)) + .45 * (1 - U.smoothstep(.9, 1.7, t)) + .35 * U.smoothstep(4.2, 4.9, t) * (1 - U.smoothstep(5.7, 6.3, t)); post.dof.range *= 1 - .6 * Math.sin(Math.PI * U.prog(t, 5.45, 7.0)); post.dof.amount = .72;
+    post.dof.focus = P.distanceTo(L); post.dof.range = U.lerp(.28, .5, U.smoothstep(7.45, 9.85, t)) + .45 * (1 - U.smoothstep(.9, 1.7, t)) + .35 * U.smoothstep(4.15, 4.85, t) * (1 - U.smoothstep(6.0, 6.6, t)); post.dof.range *= 1 - .6 * Math.sin(Math.PI * U.prog(t, 5.95, 7.35)); post.dof.amount = .72;
 
     // --- front cover opens on "kitabının", then three leaves riffle over (right → left) ---
     const tKit = ctx.wordTime('kitabının');
@@ -472,19 +476,23 @@ export default {
     R.rightHalf.updateWorldMatrix(true, false); R.tag.updateWorldMatrix(true, false);
     const pn = new THREE.Vector3(BW * .525, yTop(.525) + .0005, -BH * .437); R.rightHalf.localToWorld(pn);
     const [px, py] = ui.project(pn);
-    const r0 = Math.max(t195 + .05, flipT(2) + .2);
-    const ra = U.prog(t, r0, r0 + .45, 'outCubic'); const rOut = U.smoothstep(tSay + .45, tSay + .15, t);
+    // ring + pill land on "195." and hold through "sayfasında"; gone (4.14) before the glide lifts the page number
+    // out of the top safe line
+    const r0 = Math.max(t195 - .05, flipT(2) + .2);
+    const ra = U.prog(t, r0, r0 + .45, 'outCubic'); const rOut = U.smoothstep(tSay + .55, tSay + .25, t);
     if (ra > 0 && rOut > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut; X.strokeStyle = '#d8a23a'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(40,10,0,.35)'; X.shadowBlur = 10; X.beginPath(); X.ellipse(px, py, 74, 50, -.04, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra); X.stroke(); X.restore(); }
-    ui.pill('s. 195', { t, t0: r0 + .03, t1: tSay + .45, x: Math.min(860, Math.max(220, px - 10)), y: Math.max(300, py - 128), size: 52, bg: 'rgba(96,14,20,.9)', color: '#ffdc8e' });
-    // "19. Söz" ring around the tag
-    const tg = new THREE.Vector3(.004, 0, 0); R.tag.localToWorld(tg);
-    const [tx, ty] = ui.project(tg);
-    const ra2 = U.prog(t, t19 - .05, t19 + .45, 'outCubic'), rOut2 = U.smoothstep(5.72, 5.45, t); // gone before the crane picks up speed
-    if (ra2 > 0 && rOut2 > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut2; X.strokeStyle = '#d8a23a'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(40,10,0,.35)'; X.shadowBlur = 10; X.beginPath(); X.ellipse(tx, ty, 205, 112, -.04, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra2); X.stroke(); X.restore(); }
-    // "başka risaleler" label over the sill set
+    ui.pill('s. 195', { t, t0: r0 + .03, t1: tSay + .55, x: Math.min(860, Math.max(220, px - 10)), y: Math.max(300, py - 128), size: 52, bg: 'rgba(96,14,20,.9)', color: '#ffdc8e' });
+    // "19. Söz" ring: drawn around the tag's lettering, oriented and sized from the tag's on-screen projection so it
+    // hugs the tag at any framing (hold: centre ~(475,1025), extent y ~915–1135 — well inside the y ≤ 1330 safe line)
+    const tq = (x, z) => ui.project(R.tag.localToWorld(new THREE.Vector3(x, 0, z)));
+    const [tx, ty] = tq(.004, 0), [ax, ay] = tq(-.044, 0), [bx, by] = tq(.044, 0), [cx0, cy0] = tq(.004, -.0242), [cx1, cy1] = tq(.004, .0242);
+    const eRx = .52 * Math.hypot(bx - ax, by - ay), eRy = .78 * Math.hypot(cx1 - cx0, cy1 - cy0), eRot = Math.atan2(by - ay, bx - ax);
+    const ra2 = U.prog(t, t19 - .05, t19 + .45, 'outCubic'), rOut2 = U.smoothstep(6.15, 5.9, t); // through "gibi"; gone before the crane picks up speed
+    if (ra2 > 0 && rOut2 > 0) { const X = ui.ctx; X.save(); X.globalAlpha = rOut2; X.strokeStyle = '#d8a23a'; X.lineWidth = 6; X.lineCap = 'round'; X.shadowColor = 'rgba(40,10,0,.35)'; X.shadowBlur = 10; X.beginPath(); X.ellipse(tx, ty, eRx, eRy, eRot, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ra2); X.stroke(); X.restore(); }
+    // "başka risaleler" label over the sill set (lands on "risalelerde" as the crane settles)
     const sc = R.sillCenter.clone(); const [sx, sy] = ui.project(sc);
     const stp = R.sillCenter.clone(); stp.y += .135; const [, sty] = ui.project(stp);
-    ui.pill('başka risaleler', { t, t0: Math.max(tBas + .2, 6.7), t1: Math.min(tEtr - .55, 7.65), x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
+    ui.pill('başka risaleler', { t, t0: Math.max(tRis + .15, 6.7), t1: Math.min(tEtr - .55, 7.9), x: U.lerp(540, Math.min(820, Math.max(260, sx)), .35), y: Math.max(290, Math.min(1250, sty - 60)), size: 46, bg: 'rgba(96,14,20,.88)', color: '#ffe3a6' });
     // end card
     const ec = U.smoothstep(tEtr - .1, tEtr + .9, t);
     if (ec > 0) {

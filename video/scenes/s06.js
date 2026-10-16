@@ -62,27 +62,88 @@ export default {
     const ground = M.dunes({ size: 400, seg: 240, height: 2.6, seed: 7, flatCenter: 45, flatAt: [0, 0], material: sandMat });
     scene.add(ground); R.ground = ground; const gh = (x, z) => ground.userData.heightAt(x, z);
 
-    // the Zülfikar (v2: split twin points, fullers, gold-inlaid forte, jewelled drooping guard), planted by its points
+    // the Zülfikar (v2: split twin points, fullers, gold-inlaid forte, jewelled drooping guard), planted point-first in the sand
     // dirSpec/edgeI: the low back-right sun catches the edge bevels as a warm rim (the flats face away from it)
-    const sword = C.zulfikar2({ hiltScale: 1.12, steelRough: .22, envI: .66, goldEnvI: 1.6, goldEnv: env, dirSpec: .6, edgeI: .55, edgeC: '#fff0d6', steelColor: '#e2e6ea' }); sword.scale.setScalar(1.12); sword.position.set(0, -.08, 0); sword.rotation.set(0, -.42, .022);
+    // Planted, not balanced: the blade is driven in until the undisturbed sand meets the prongs at blade-local y = Y_SAND
+    // (the fork is .25 long), so both needle tips are well buried and the prongs enter the sand at their broad part, while
+    // the upper half of the split (notch apex at .25) stays clearly above the mound. R.sink = how much deeper than the old
+    // .08 m placement; the camera aim follows it so the sword keeps its place in the frame.
+    const Y_SAND = .115, SC = 1.12; R.sink = Y_SAND * SC - .08;
+    const sword = C.zulfikar2({ hiltScale: 1.12, steelRough: .22, envI: .66, goldEnvI: 1.6, goldEnv: env, dirSpec: .6, edgeI: .55, edgeC: '#fff0d6', steelColor: '#e2e6ea' }); sword.scale.setScalar(SC); sword.position.set(0, gh(0, 0) - Y_SAND * SC, 0); sword.rotation.set(0, -.42, .022);
     fixBladeNormals(THREE, sword.userData.blade.geometry);
     scene.add(sword); sword.updateMatrixWorld(true); R.sword = sword; R.glint2 = sword.userData.steel.userData.glint;
-    // planted: the points are driven ~8 cm into the sand; a small rim of displaced sand rings each point where it enters.
-    // The rims use the ground's own material with world-matched UVs, so they continue the sand texture seamlessly.
+    // --- displaced sand: a low mound heaped around the entry, a slumped crater + lip hugging each prong, sand packed up
+    // between the prongs, a faint wind-tail in the lee and a few spilled clods. One mesh on the ground's own material with
+    // world-matched UVs (continues the sand texture); it rides the ground MESH height (not the analytic one) and meets it
+    // with a near-zero slope so there is no visible seam. Vertex colours: freshly turned sand a touch darker/warmer, plus
+    // baked contact occlusion in the crevice where the steel goes in.
     {
-      const prof = [[.062, 0], [.05, .0008], [.04, .0022], [.03, .0042], [.021, .0063], [.013, .0079], [.006, .0087], [0, .0085]];   // outer foot -> centre (outward-facing lathe)
-      const S = new THREE.Vector3(); const rimMat = sandMat.clone(); rimMat.vertexColors = true;   // shares the sand textures
-      for (const sg of [1, -1]) {
-        // point centre where it meets the sand (blade-local: prongs at x = ±.041, y ≈ .071 above the tips)
-        sword.localToWorld(S.set(sg * .041 + .016 * Math.pow(1 - .071 / .86, 2), .08 / 1.12, 0));
-        const geo = new THREE.LatheGeometry(prof.map(q => new THREE.Vector2(q[0], q[1])), 28); geo.scale(1, 1, .8); geo.rotateY(-.42);
-        const gp = geo.attributes.position, uv = geo.attributes.uv; const y0 = gh(S.x, S.z) - .0015;
-        const col = new Float32Array(gp.count * 3);
-        for (let i = 0; i < gp.count; i++) { const wx = gp.getX(i) + S.x, wz = gp.getZ(i) + S.z; gp.setY(i, gp.getY(i) + gh(wx, wz) - gh(S.x, S.z)); uv.setXY(i, wx / 400 + .5, .5 - wz / 400);
-          const k = .8 + .2 * Math.min(1, Math.pow(Math.hypot(gp.getX(i), gp.getZ(i) / .8) / .062, 1.5)); col[3 * i] = col[3 * i + 1] = col[3 * i + 2] = k; }   // freshly disturbed sand: a touch darker at the point, fading into the ground
-        geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
-        const rim = new THREE.Mesh(geo, rimMat); rim.position.set(S.x, y0, S.z); rim.receiveShadow = true; rim.castShadow = true; scene.add(rim);
+      const F = sword.userData.fork, Lb = sword.userData.bladeLen, hwF = .041, T = hwF * 1.06, tF = .0042;   // zulfikar2 defaults
+      const bx = .016 * Math.pow(1 - Y_SAND / Lb, 2), s = Y_SAND / F;
+      const inner = T * Math.pow(1 - s, .62), outer = T + (hwF - T) * s + hwF * .09 * Math.sin(Math.PI * Math.pow(s, .75));
+      const pc = (outer + inner) / 2, phw = (outer - inner) / 2, pth = tF * (.3 + .7 * Math.pow(s, .45));
+      const dProng = (lx, lz) => { let d = 1e9; for (const sg of [1, -1]) d = Math.min(d, Math.hypot(Math.max(Math.abs(lx - bx - sg * pc) - phw, 0), Math.max(Math.abs(lz) - pth, 0))); return d * SC; };
+      // exact height of the (coarse, 1.67 m) ground mesh: PlaneGeometry triangulation (a,b,d)/(b,c,d)
+      const GP = ground.geometry.attributes.position, gSeg = 240, gStep = 400 / gSeg;
+      const gy = (ix, iz) => GP.getY(iz * (gSeg + 1) + ix);
+      const groundY = (x, z) => { const fx0 = (x + 200) / gStep, fz0 = (z + 200) / gStep, ix = Math.floor(fx0), iz = Math.floor(fz0), fx = fx0 - ix, fz = fz0 - iz;
+        const ha = gy(ix, iz), hb = gy(ix, iz + 1), hc = gy(ix + 1, iz + 1), hd = gy(ix + 1, iz);
+        return fx + fz <= 1 ? ha + (hd - ha) * fx + (hb - ha) * fz : hc + (hb - hc) * (1 - fx) + (hd - hc) * (1 - fz); };
+      const nA = ctx.TEX.fbmField(41, 4, 4), nB = ctx.TEX.fbmField(43, 16, 2), nC = ctx.TEX.fbmField(47, 6, 2);
+      const E = sword.localToWorld(new THREE.Vector3(bx, Y_SAND, 0)); E.y = 0;
+      const rr = U.rng(17), clods = []; for (let i = 0; i < 18; i++) { const a = rr() * 6.283, r = 1.0 + rr() * .6; clods.push([Math.cos(a) * r * .23, Math.sin(a) * r * .165, .008 + rr() * .01, .0015 + rr() * .0025]); }
+      const SZ = 1.1, NS = 260, AU = .23, AV = .165;
+      const geo = new THREE.PlaneGeometry(SZ, SZ, NS, NS); geo.rotateX(-Math.PI / 2);
+      const gp = geo.attributes.position, uv = geo.attributes.uv, col = new Float32Array(gp.count * 3), L = new THREE.Vector3();
+      let hS = 0, hN = 0;
+      for (let i = 0; i < gp.count; i++) {
+        const wx = gp.getX(i) + E.x, wz = gp.getZ(i) + E.z;
+        sword.worldToLocal(L.set(wx, gh(wx, wz), wz));
+        const u = (L.x - bx) * SC, v = L.z * SC, d = dProng(L.x, L.z);   // blade-aligned metres: u along the edge line, v across the flats
+        const qa = .5 + u / SZ, qb = .5 + v / SZ;
+        const r2 = (u / AU) ** 2 + (v / AV) ** 2, env = Math.exp(-1.6 * r2 * (1 + .25 * nC(qa, qb)));
+        const lee = .007 * Math.exp(-(((u - .19) / .15) ** 2) - ((v / .07) ** 2));   // the wind runs along the edge line (+u): a little tail of caught sand
+        const lip = .007 * (1 + .9 * nC(qa * 2.3, qb * 2.3));
+        const crater = -.013 * Math.exp(-((d / .014) ** 2)) + lip * Math.exp(-(((d - .032) / .017) ** 2));
+        const lumps = (nA(qa, qb) * .004 + nB(qa, qb) * .001) * Math.sqrt(env);
+        let clod = 0; for (const c of clods) { const q = ((u - c[0]) ** 2 + (v - c[1]) ** 2) / (c[2] ** 2); if (q < 1) clod += c[3] * (1 - q) * (1 - q); }
+        const h = .036 * env + crater * Math.min(1, env * 3) + lumps + lee + clod;
+        gp.setY(i, groundY(wx, wz) - .0004 + Math.max(h, 0));
+        uv.setXY(i, wx / 400 + .5, .5 - wz / 400);
+        if (d < .003) { hS += h; hN++; }
+        const dis = Math.min(1, (env + lee * 60 + clod * 120) * 1.4);
+        const ao = 1 - .4 * Math.exp(-((d / .008) ** 2)) - .1 * Math.exp(-((d / .03) ** 2));
+        const k = (1 - .05 * dis) * ao; col[3 * i] = k; col[3 * i + 1] = k * (1 - .035 * dis); col[3 * i + 2] = k * (1 - .07 * dis);
       }
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals(); R.moundTop = hN ? hS / hN : .02;   // mean sand height where it meets the steel
+      const moundMat = sandMat.clone(); moundMat.vertexColors = true;   // shares the sand textures
+      R.moundC = E.clone(); R.moundR = [AU, AV];
+      const mound = new THREE.Mesh(geo, moundMat); mound.position.set(E.x, 0, E.z); mound.receiveShadow = true; mound.castShadow = true; scene.add(mound); R.mound = mound;
+    }
+    // sand clinging to the steel just above the mound (patchy grains, densest at the sand line) + contact occlusion where the
+    // prongs go in. Layered on top of zulfikar2's own shader patch (blade-local Y; the shared helper is left untouched).
+    {
+      const st = sword.userData.steel, prev = st.onBeforeCompile;
+      R.sandY = Y_SAND + R.moundTop / SC;   // blade-local height where the steel leaves the sand
+      const uS = { uSandY: { value: R.sandY }, uSandC: { value: new THREE.Color('#bc8048') } };
+      st.onBeforeCompile = (sh, rdr) => {
+        prev(sh, rdr); Object.assign(sh.uniforms, uS);
+        sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vLP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvLP = position;');
+        sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+uniform float uSandY; uniform vec3 uSandC; varying vec3 vLP;
+float sdHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float sdNoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(sdHash(i), sdHash(i + vec2(1., 0.)), f.x), mix(sdHash(i + vec2(0., 1.)), sdHash(i + vec2(1., 1.)), f.x), f.y); }`)
+          .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
+float sdH = vLP.y - uSandY; float sdBand = 1. - smoothstep(-.003, .055, sdH);
+float sdN = .3 * sdNoise(vLP.xy * vec2(240., 170.) + vLP.z * 40.) + .3 * sdNoise(vLP.xy * vec2(700., 520.) + 5.) + .4 * sdNoise(vLP.xy * vec2(1900., 1500.) + 17.);
+float sandM = .9 * smoothstep(.5, .6, sdN + (sdBand - .62) * .95) * smoothstep(0., .2, sdBand);   // fine grains: a continuous film at the sand line thinning to a few specks
+diffuseColor.rgb = mix(diffuseColor.rgb, uSandC, sandM); metalnessFactor = mix(metalnessFactor, 0., sandM); roughnessFactor = mix(roughnessFactor, .95, sandM);
+float sdAO = mix(.6, 1., smoothstep(-.004, .024, sdH));`)
+          .replace('outgoingLight += uGlC * uGlI', 'outgoingLight += (1. - sandM) * uGlC * uGlI').replace('uEdgeC * uEdgeI * smoothstep(.74, .97, vEdge)', 'uEdgeC * uEdgeI * smoothstep(.74, .97, vEdge) * (1. - sandM)')
+          .replace('#include <lights_fragment_end>', 'iblIrradiance *= mix(vec3(1.), vec3(.6, .5, .4), sandM);   // the grains take their light from the warm ground bounce + sky, not the bright steel studio env\n#include <lights_fragment_end>')
+          .replace('#include <opaque_fragment>', 'outgoingLight *= sdAO;\n#include <opaque_fragment>');
+      };
+      st.customProgramCacheKey = () => 'zulfikar2_s06_planted'; st.needsUpdate = true;
     }
 
     // rocks: small hero cluster (kept low, never behind the blade) + scatter + pebbles
@@ -116,6 +177,14 @@ export default {
     // saltation: sand snaking across the ground in thin, back-lit ribbons + a wake streaming off the planted blade
     R.drift = C.sandDrift({ ground: gh, center: [0, 0, -6], size: [44, 30], layers: [[.006, 1, 1], [.012, .64, 1.15], [.02, .26, 1.3]], wind: [1, .42], speed: 2.6, opacity: .6, density: .44, lit: '#f6cf9c', shade: '#b8784a', sunDir: sunDir.toArray(), scatter: 1.0, plume: [0, 0, .8, .04], nearFade: 5.4, farFade: 26, fog });
     scene.add(R.drift);
+    // the drift sheets are flat layers .6-2 cm above the ground: where the sand mound around the blade rises through them
+    // each layer would cut a hard contour line into it, so the drift thins out smoothly over the mound's footprint
+    // (elliptical, along the blade line; the wake still streams off its lee).
+    R.drift.traverse(o => { if (!o.isMesh) return; const m = o.material;
+      m.uniforms.uMC = { value: new THREE.Vector2(R.moundC.x, R.moundC.z) }; m.uniforms.uMA = { value: new THREE.Vector2(Math.cos(.42), Math.sin(.42)) }; m.uniforms.uMR = { value: new THREE.Vector2(R.moundR[0], R.moundR[1]) };
+      m.fragmentShader = m.fragmentShader.replace('uniform vec4 plume;', 'uniform vec4 plume; uniform vec2 uMC, uMA, uMR;')
+        .replace('float dist = length(cameraPosition - vW);', 'vec2 mq = vW.xz - uMC; st *= smoothstep(1.05, 2.1, length(vec2(dot(mq, uMA), dot(mq, vec2(-uMA.y, uMA.x))) / uMR));\n          float dist = length(cameraPosition - vW);');
+      m.needsUpdate = true; });
     // sun glints sparkling on the sand grains
     R.glitter = FX.particles({ count: 420, center: [0, .012, -2.6], box: [10, .02, 7.5], size: 1.5, color: '#fff3d4', opacity: .9, drift: [0, 0, 0], swirl: 0, twinkle: 1, seed: 12, hardness: .5 }); scene.add(R.glitter);
     R.cape = C.dustField({ count: 18, center: [2.0, .22, .85], box: [4.4, .26, 2.0], size: [.2, .55], wind: [2.4, .1, 1.0], swirl: .05, shade: '#c48d62', lit: '#ffdcaa', sunDir: sunDir.toArray(), opacity: .16, nearFade: 1, scatter: 1.6, seed: 4, yMin: 0 });
@@ -146,7 +215,7 @@ export default {
     const sh = U.shake(t, .006, .5, 3);
     const cx = Math.sin(th) * rad + sh.x, cz = Math.cos(th) * rad;
     camera.position.set(cx, R.gh(cx, cz) + h + sh.y, cz);
-    R.look.set(0, U.lerp(.53, .54, p), 0); camera.lookAt(R.look); camera.updateMatrixWorld(true);
+    R.look.set(0, U.lerp(.53, .54, p) - R.sink, 0); camera.lookAt(R.look); camera.updateMatrixWorld(true);
     post.dof.focus = camera.position.distanceTo(R.look);
 
     const tAli = ctx.wordTime('hazret'), tCes = ctx.wordTime('cesarette'), tBen = ctx.wordTime('benzersiz'), tZat = ctx.wordTime('bir');
@@ -154,9 +223,9 @@ export default {
     const gust = .6 + .4 * U.smoothstep(tCes - .2, tCes + .5, t) + .3 * U.smoothstep(tZat - .3, tZat + .6, t);
     R.sand.userData.uniforms.master.value = gust; R.sheets.userData.uniforms.master.value = gust; R.cape.userData.uniforms.master.value = .7 + .5 * (gust - .6);
     R.drift.userData.uniforms.gust.value = .75 + .45 * (gust - .6);
-    // --- the low sun's glint travels up the edge bevels (from the points to the guard) and flares on the finial on "benzersiz" ---
+    // --- the low sun's glint travels up the edge bevels (from the sand line to the guard) and flares on the finial on "benzersiz" ---
     const gs = U.prog(t, tCes + .02, tBen + .08, 'inOutSine');
-    R.glint2.y.value = U.lerp(.04, .9, gs); R.glint2.i.value = 2.2 * Math.sin(Math.PI * U.clamp((t - tCes) / (tBen + .12 - tCes))) ** .7;
+    R.glint2.y.value = U.lerp(R.sandY, .9, gs);   // starts where the steel leaves the sand R.glint2.i.value = 2.2 * Math.sin(Math.PI * U.clamp((t - tCes) / (tBen + .12 - tCes))) ** .7;
     const g = Math.exp(-Math.pow((t - (tBen + .1)) / .2, 2));
     R.glint.material.opacity = .9 * g; R.glint.scale.setScalar(.04 + .13 * g); R.glint.material.rotation = t * .8;
     // --- storm approaching at the end ---

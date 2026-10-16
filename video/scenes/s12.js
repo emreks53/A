@@ -11,7 +11,7 @@ const DEBUG = 0; // 1: close-up turntable of exhibit floor(t) (for modelling che
 const S = 1.25, WZ = -0.62, NICHE = .26, VS = 4.2, AZ = 4.35, ROWB = 3.25, TH = 0.42; // bay width, wall face z, niche depth, vault spring, arcade face z, row B z, camera yaw
 const NAMES = ['MERHAMET', 'SAMİMİYET', 'ADALET', 'GÜVENİLİRLİK', 'TEVAZU', 'VEFA', 'SABIR', 'SAYGI', 'AFFEDİCİLİK', 'NEZAKET', 'KANAATKÂRLIK', 'HOŞGÖRÜ', 'DİĞERKÂMLIK', 'YARDIMSEVERLİK'];
 const WORDS = ['merhamet', 'samimiyet', 'adalet', 'güvenilirlik', 'tevazu', 'vefa', 'sabır', 'saygı', 'affedicilik', 'nezaket', 'kanaatkâr', 'hoşgörü', 'diğerkâm', 'yardımsever'];
-const FALLBACK = [0.07, 1.83, 2.83, 3.61, 4.71, 5.53, 6.37, 7.15, 7.89, 9.33, 10.45, 11.71, 12.63, 13.75];
+const FALLBACK = [1.11, 1.73, 2.74, 3.56, 4.60, 5.82, 6.77, 7.72, 8.75, 9.78, 10.83, 12.05, 12.93, 14.10]; // refined (energy-aligned) word starts
 const DOOR = 11; // index of HOŞGÖRÜ (0-based)
 // exhibit builders + framing: ty = target height above pad top, D = camera distance, h = camera height above target, ry = object yaw,
 // ly = hero lamp height (hung so that, in the glide framing, the lit lamp sits above the label / progress-dot band instead of behind it)
@@ -22,7 +22,7 @@ const EX = [
   { f: E.chest, ty: .11, D: 2.3, h: .38, ry: -.4, ly: 1.73 },
   { f: E.wheat, ty: .29, D: 2.65, h: .22, ry: 0, L: .42, ly: 1.95 },
   { f: E.letters, ty: .12, D: 2.1, h: .3, ry: -.38, L: .5, ly: 1.68 },
-  { f: E.cesme, ty: .2, D: 2.15, h: .55, ry: -.3, L: .6, ly: 1.79 },
+  { f: E.hourglass, ty: .2, D: 2.15, h: .4, ry: -.3, L: .7, ly: 1.8 },
   { f: E.shoes, ty: .05, D: 2.0, h: .78, ry: -.3, L: .8, ly: 1.68 },
   { f: E.swordOlive, ty: .1, D: 2.35, h: .42, ry: -.25, ly: 1.75 },
   { f: E.rose, ty: .3, D: 2.35, h: .18, ry: -.3, L: .45, ly: 1.92 },
@@ -49,7 +49,7 @@ export default {
     // ---- word times (local)
     R.T = WORDS.map((w, i) => { const v = ctx.wordTime(w); return Math.abs(v - FALLBACK[i]) < .6 ? v : FALLBACK[i]; });
     const ve = ctx.wordTime('ve', 1), diger = ctx.wordTime('diğer', 1), butun = ctx.wordTime('bütün'), guzel = ctx.wordTime('güzel'), ahlak = ctx.wordTime('ahlak'), ozel = ctx.wordTime('özellik');
-    R.W = { ve: Math.abs(ve - 14.91) < .5 ? ve : 14.91, diger: Math.abs(diger - 15.25) < .5 ? diger : 15.25, butun: Math.abs(butun - 15.65) < .5 ? butun : 15.65, guzel: Math.abs(guzel - 15.97) < .5 ? guzel : 15.97, ahlak: Math.abs(ahlak - 16.35) < .5 ? ahlak : 16.35, ozel: Math.abs(ozel - 17.01) < .5 ? ozel : 17.01 };
+    R.W = { ve: Math.abs(ve - 14.95) < .5 ? ve : 14.95, diger: Math.abs(diger - 15.44) < .5 ? diger : 15.44, butun: Math.abs(butun - 15.81) < .5 ? butun : 15.81, guzel: Math.abs(guzel - 16.15) < .5 ? guzel : 16.15, ahlak: Math.abs(ahlak - 16.76) < .5 ? ahlak : 16.76, ozel: Math.abs(ozel - 17.17) < .5 ? ozel : 17.17 };
 
     // ---- world, light
     scene.fog = new THREE.FogExp2('#a0805e', .02);
@@ -211,7 +211,8 @@ export default {
       const h = { i, tgt, ex, t0: R.T[i] };
       if (ex.f) { const obj = ex.f(); const holder = new THREE.Group(); holder.position.set(x, R.PT, 0); holder.rotation.y = ex.ry; holder.add(obj); scene.add(holder); h.obj = obj; h.holder = holder; }
       if (i !== DOOR) { const p = pa.find(q => q.hero === i); const lamp = E.hangingLamp({ topY: R.vaultY(p.lamp.z) - p.lamp.y + .3, seed: i + 1 }); lamp.position.copy(p.lamp); scene.add(lamp); h.lamp = lamp; h.lampP = p.lamp.clone().add(V(0, lamp.userData.flameY, 0));
-        const aim = tgt.clone().add(V(0, -.06, 0)); h.lampK = h.lampP.distanceToSquared(aim) / V(p.lamp.x, 1.68 + lamp.userData.flameY, p.lamp.z).distanceToSquared(aim); } // same light on the exhibit from a higher hang
+        const aim = tgt.clone().add(V(0, -.06, 0)); h.lampK = h.lampP.distanceToSquared(aim) / V(p.lamp.x, 1.68 + lamp.userData.flameY, p.lamp.z).distanceToSquared(aim); // same light on the exhibit from a higher hang
+        if (h.obj && h.obj.userData.setLamp) h.obj.userData.setLamp(h.lampP); }
       R.heroes.push(h);
     }
     // ---- far lamps (instanced) + flames + light pools (shader-driven on-times)
@@ -299,7 +300,7 @@ export default {
       return { pos: V(h.tgt.x - D * Math.sin(TH), h.tgt.y + hh, h.tgt.z + D * Math.cos(TH)), look: h.tgt.clone(), fov: FOV }; };
     const keys = []; const c0 = camFor(0);
     keys.push({ t: -.75, pos: c0.pos.clone().add(V(-1.0, .5, .3)), look: c0.look.clone().add(V(.4, .05, 0)), fov: FOV + 1.5 });
-    keys.push({ t: R.T[0] + .78, ...c0 });
+    keys.push({ t: R.T[0] + .1, ...c0 }); // centred just after its word (refined timings: MERHAMET->SAMİMİYET is only .62 s, keeps the hop >= .8 s)
     for (let i = 1; i < 14; i++) {
       if (i === DOOR) { // HOŞGÖRÜ: arrive on the closed door just before the word, then a slow push toward the opening as it swings open
         keys.push({ t: R.T[i] - .12, pos: V(xd - .5, 1.32, 2.72), look: V(xd + .55, 1.45, -3.0), fov: 42, a: .7 });
