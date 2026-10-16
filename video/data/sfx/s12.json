@@ -14,203 +14,211 @@
 "gain": -8
 },
 {
-"t": 52.92,
+"t": 53.96,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches"
 },
 {
-"t": 53.0,
+"t": 54.04,
 "dur": 0.5,
 "kind": "rustle",
 "desc": "twig straw rustle nest",
 "gain": -4
 },
 {
-"t": 54.68,
+"t": 54.58,
 "dur": 0.6,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 54.75,
+"t": 54.65,
 "dur": 1.4,
 "kind": "glass",
 "desc": "clear glass ting"
 },
 {
-"t": 55.68,
+"t": 55.59,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 55.75,
+"t": 55.66,
 "dur": 0.6,
 "kind": "metal",
 "desc": "small brass clink scale"
 },
 {
-"t": 56.46,
+"t": 56.41,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 56.55,
+"t": 56.5,
 "dur": 0.4,
 "kind": "metal",
 "desc": "iron padlock clack against hasp"
 },
 {
-"t": 57.56,
+"t": 57.45,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 57.6,
+"t": 57.49,
 "dur": 0.6,
 "kind": "rustle",
 "desc": "dry wheat rustle"
 },
 {
-"t": 58.38,
+"t": 58.67,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 58.45,
+"t": 58.74,
 "dur": 0.5,
 "kind": "paper",
 "desc": "old letters rustle"
 },
 {
-"t": 59.22,
+"t": 59.62,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 59.34,
-"dur": 0.4,
-"kind": "drip",
-"desc": "single water drop plink into stone"
+"t": 59.7,
+"dur": 1.3,
+"kind": "rustle",
+"desc": "fine particles trickling softly",
+"gain": -10
 },
 {
-"t": 60.0,
+"t": 59.74,
+"dur": 0.3,
+"kind": "wood",
+"desc": "walnut timer base taps the felt softly",
+"gain": -6
+},
+{
+"t": 60.57,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 60.05,
+"t": 60.62,
 "dur": 0.4,
 "kind": "cloth",
 "desc": "soft leather pat of slippers"
 },
 {
-"t": 60.74,
+"t": 61.6,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 60.8,
+"t": 61.66,
 "dur": 0.5,
 "kind": "thud",
 "desc": "muted thud as the steel-and-olive exhibit settles on its wooden rests"
 },
 {
-"t": 62.18,
+"t": 62.63,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 62.25,
+"t": 62.7,
 "dur": 0.8,
 "kind": "shimmer",
 "desc": "very soft shimmer as the rose lifts",
 "gain": -4
 },
 {
-"t": 63.3,
+"t": 63.68,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 63.38,
+"t": 63.76,
 "dur": 0.3,
 "kind": "wood",
 "desc": "clay cup tapping the plate"
 },
 {
-"t": 64.48,
+"t": 64.82,
 "dur": 1.1,
 "kind": "creak",
 "desc": "heavy wooden door creaking open"
 },
 {
-"t": 64.8,
+"t": 65.14,
 "dur": 1.5,
 "kind": "birds",
 "desc": "outdoor garden birds through the door",
 "gain": -6
 },
 {
-"t": 65.48,
+"t": 65.78,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 65.55,
+"t": 65.85,
 "dur": 0.5,
 "kind": "paper",
 "desc": "crusty bread cracking apart, crumbs"
 },
 {
-"t": 66.44,
+"t": 66.6,
 "dur": 2.4,
 "kind": "whoosh",
 "desc": "slow airy rise as the camera turns and cranes up the gallery"
 },
 {
-"t": 66.6,
+"t": 66.95,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
 "gain": -4
 },
 {
-"t": 66.6,
+"t": 66.95,
 "dur": 0.7,
 "kind": "pour",
 "desc": "water pouring from the jug into the bowl"
 },
 {
-"t": 67.85,
+"t": 67.89,
 "dur": 2.4,
 "kind": "fire",
 "desc": "cascade of many small lamp flames catching",
 "gain": 2
 },
 {
-"t": 68.4,
+"t": 68.7,
 "dur": 1.6,
 "kind": "shimmer",
 "desc": "glow swell",
