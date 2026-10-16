@@ -332,7 +332,7 @@ def main():
         sf.write(os.path.join(ROOT, 'out/_stem_sfx.wav'), bus * sc, SR, subtype='FLOAT')
     if 'audition' in opt: sf.write(os.path.join(ROOT, opt['audition']), bus / (np.max(np.abs(bus)) + 1e-9) * .9, SR)
     sf.write(os.path.join(ROOT, 'out/_mix_raw.wav'), mix / (np.max(np.abs(mix)) + 1e-9) * 0.89, SR, subtype='FLOAT')
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', os.path.join(ROOT, 'out/_mix_raw.wav'), '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-ar', str(SR), os.path.join(ROOT, out)], check=True)
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', os.path.join(ROOT, 'out/_mix_raw.wav'), '-af', 'loudnorm=I=-14:TP=-2.2:LRA=11', '-ar', str(SR), os.path.join(ROOT, out)], check=True)
     print('\n'.join(log)); print('->', out, f'{len(cues)} cues')
 
 if __name__ == '__main__':
