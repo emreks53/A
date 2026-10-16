@@ -4,13 +4,14 @@
 "dur": 6.9,
 "kind": "wind",
 "desc": "low steady dusk desert wind",
-"gain": -4
+"gain": -7
 },
 {
 "t": 13.0,
 "dur": 6.9,
 "kind": "fire",
-"desc": "two campfires crackling"
+"desc": "two campfires crackling",
+"gain": -5
 },
 {
 "t": 13.1,
@@ -35,7 +36,8 @@
 "t": 15.4,
 "dur": 0.6,
 "kind": "ignite",
-"desc": "wick ignitions along lamp chains"
+"desc": "wick ignitions along lamp chains",
+"gain": -5
 },
 {
 "t": 15.4,
@@ -48,7 +50,8 @@
 "t": 15.95,
 "dur": 0.6,
 "kind": "ignite",
-"desc": "wick ignitions along lamp chains"
+"desc": "wick ignitions along lamp chains",
+"gain": -5
 },
 {
 "t": 18.33,

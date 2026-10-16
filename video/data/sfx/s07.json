@@ -4,7 +4,7 @@
 "dur": 2.9,
 "kind": "wind",
 "desc": "howling battle dust-storm roar",
-"gain": 0
+"gain": -5
 },
 {
 "t": 33.2,
@@ -18,7 +18,7 @@
 "dur": 1.1,
 "kind": "volley",
 "desc": "first volley arrows whistling overhead",
-"gain": -4
+"gain": -6
 },
 {
 "t": 33.6,
@@ -46,7 +46,7 @@
 "dur": 0.6,
 "kind": "metal",
 "desc": "hard iron clang on the shield boss",
-"gain": 2
+"gain": -1
 },
 {
 "t": 34.34,
@@ -67,7 +67,7 @@
 "dur": 1.5,
 "kind": "volley",
 "desc": "dense second volley",
-"gain": -2
+"gain": -5
 },
 {
 "t": 34.9,

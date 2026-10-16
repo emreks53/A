@@ -50,16 +50,16 @@ const layouts = phrases.map(ph => {
   if (lines.length === 2) { const all = [...lines[0], ...lines[1]]; let best = null; for (let k = 1; k < all.length; k++) { const a = all.slice(0, k), b = all.slice(k); const wa = a.reduce((s, w) => s + w.width, 0) + space * (a.length - 1), wb = b.reduce((s, w) => s + w.width, 0) + space * (b.length - 1); if (wa > MAX_W || wb > MAX_W) continue; const d = Math.abs(wa - wb) + (wb > wa ? 0 : 1); if (!best || d < best.d) best = { d, a, b }; } if (best) { lines[0] = best.a; lines[1] = best.b; } }
   const lh = S.size * S.lh; const top = BASE_Y - (lines.length * lh) / 2 + lh / 2;
   lines.forEach((ln, li) => { const lw = ln.reduce((s, w) => s + w.width, 0) + space * (ln.length - 1); let x = W / 2 - lw / 2; ln.forEach(w => { w.x = x; w.y = top + li * lh; x += w.width + space; }); });
-  return { words: ws, lines, start: ph[0].s - 0.08, end: ph[ph.length - 1].e };
+  return { words: ws, lines, start: ph[0].s - 0.06, end: ph[ph.length - 1].e };
 });
 // Phrase hand-off is strictly sequential (never two phrases on screen at once): a phrase lingers 0.45 s after its
 // last word, but if the next phrase comes sooner it fades out quickly so that it is gone exactly when the next begins.
-const FI = 0.24;
+const FI = 0.18;
 layouts.forEach((L, i) => {
   const next = layouts[i + 1]; L.fo = 0.22;
   if (!next) { L.out = L.end + 0.8; return; }
   if (L.end + 0.45 + L.fo <= next.start) { L.out = L.end + 0.45; return; }
-  L.fo = 0.13; L.out = Math.max(L.start + FI + 0.05, next.start - L.fo);
+  L.fo = 0.09; L.out = Math.max(L.start + FI + 0.05, next.start - L.fo);
 });
 
 function scrim(alpha) {
@@ -76,7 +76,7 @@ function drawWord(w, x, y, state, k, alpha, lift) {
   X.textBaseline = 'middle'; X.textAlign = 'left';
   const yy = y - lift;
   // legibility: soft dark halo + fine outline
-  X.shadowColor = 'rgba(0,0,0,0.55)'; X.shadowBlur = 16; X.shadowOffsetY = 3;
+  { const lum = lumaAt(window.__t ?? 0); X.shadowColor = `rgba(0,0,0,${(0.55 + 0.25 * clamp((lum - 0.45) / 0.35)).toFixed(3)})`; X.shadowBlur = 16 + 6 * clamp((lum - 0.45) / 0.35); X.shadowOffsetY = 3; }
   X.lineJoin = 'round'; X.lineWidth = 3.6; X.strokeStyle = 'rgba(12,10,8,0.6)'; X.strokeText(w.w, x, yy);
   X.shadowColor = 'transparent';
   if (state === 1) {
@@ -96,6 +96,7 @@ function drawWord(w, x, y, state, k, alpha, lift) {
 const TL = await (await fetch('data/timeline.json')).json();
 const END = TL.audioDuration; // the picture fades to black over the last 0.9 s; captions follow it
 window.drawAt = (t) => {
+  window.__t = t;
   X.clearRect(0, 0, W, H);
   const gfade = clamp((END - t) / 0.9); if (gfade <= 0) return;
   // scrim follows caption presence (smoothly)
@@ -107,7 +108,7 @@ window.drawAt = (t) => {
     const phraseA = pin * pout; if (phraseA <= 0.001) continue;
     const rise = (1 - pin) * 14 - (1 - pout) * 10;
     // soft elliptical shadow behind the phrase; darker when the background under it is bright
-    { const lum = lumaAt(t); const k = 0.36 + 0.52 * clamp((lum - 0.28) / 0.42); let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    { const lum = lumaAt(t); const k = 0.34 + 0.30 * clamp((lum - 0.30) / 0.40); // capped: a heavy dark oval reads as a smudge on bright frames let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
       L.words.forEach(w => { x0 = Math.min(x0, w.x); x1 = Math.max(x1, w.x + w.width); y0 = Math.min(y0, w.y); y1 = Math.max(y1, w.y); });
       const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 + rise, rx = (x1 - x0) / 2 + 120, ry = (y1 - y0) / 2 + S.size * 1.05;
       X.save(); X.globalAlpha = phraseA; X.translate(cx, cy); X.scale(1, ry / rx);

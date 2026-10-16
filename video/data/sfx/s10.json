@@ -3,7 +3,8 @@
 "t": 44.3,
 "dur": 5.4,
 "kind": "ocean",
-"desc": "open-sea ambience: gentle swell waves"
+"desc": "open-sea ambience: gentle swell waves",
+"gain": -5
 },
 {
 "t": 45.02,
@@ -66,6 +67,6 @@
 "dur": 0.15,
 "kind": "pop",
 "desc": "caption completes (very soft)",
-"gain": -4
+"gain": -11
 }
 ]

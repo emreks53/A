@@ -21,7 +21,9 @@ const norm = s => s.toLocaleLowerCase('tr-TR').normalize('NFC').replace(/[^\p{L}
 function deepMerge(a, b) { for (const k in b) { if (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object') deepMerge(a[k], b[k]); else a[k] = b[k]; } return a; }
 
 async function main() {
-  const [timeline, words] = await Promise.all([fetch('data/timeline.json').then(r => r.json()), fetch('data/words.json').then(r => r.json())]);
+  // word timings: energy-refined alignment (tools/align_words.py) when present - Whisper starts words inside the pause before them
+  const wordsAligned = await fetch('data/words_aligned.json').then(r => (r.ok ? r.json() : null)).catch(() => null);
+  const [timeline, words] = await Promise.all([fetch('data/timeline.json').then(r => r.json()), wordsAligned || fetch('data/words.json').then(r => r.json())]);
   const info = timeline.scenes.find(s => s.id === SCENE_ID);
   if (!info) throw new Error('unknown scene ' + SCENE_ID);
   await document.fonts.ready;
@@ -50,6 +52,7 @@ async function main() {
   const depthRT = new THREE.WebGLRenderTarget(RW >> 1, RH >> 1, { type: THREE.UnsignedByteType });
   const depthMat = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
 
+  const IS_LAST = timeline.scenes[timeline.scenes.length - 1].id === info.id;
   const sceneWords = words.filter(w => w.s >= info.start - 1.0 && w.s <= info.end + 1.0).map(w => ({ ...w, ls: w.s - info.start, le: w.e - info.start }));
   const ctx = {
     THREE, renderer, scene, camera, W, H, ui, post, U, TEX, ENV, MODELS, FX,
@@ -82,6 +85,7 @@ async function main() {
     ctx.t = t; ui.clear();
     scene.traverse(o => { if (o.userData.uniforms && o.userData.uniforms.time) o.userData.uniforms.time.value = t; if (o.userData.update) o.userData.update(t, ctx); });
     S.update(t, ctx);
+    if (!IS_LAST) { const f = Math.min(1, Math.max(0, (ctx.dur + 0.02 - t) / 0.3)); if (f < 1) { const X = ui.ctx; X.save(); X.globalCompositeOperation = 'destination-in'; X.fillStyle = `rgba(0,0,0,${f * f * (3 - 2 * f)})`; X.fillRect(0, 0, W, H); X.restore(); } }
     camera.updateMatrixWorld();
     scene.traverse(o => { if (o.userData.yBillboard) { const wp = new THREE.Vector3(); o.getWorldPosition(wp); const a = Math.atan2(camera.position.x - wp.x, camera.position.z - wp.z); const pq = new THREE.Quaternion(); if (o.parent) o.parent.getWorldQuaternion(pq); o.quaternion.copy(pq.invert().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), a))); } });
   }

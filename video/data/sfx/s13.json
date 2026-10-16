@@ -36,21 +36,21 @@
 "dur": 0.8,
 "kind": "impact",
 "desc": "deep soft thud under YETISILEMEZ",
-"gain": -4
+"gain": -7
 },
 {
 "t": 75.88,
 "dur": 0.35,
 "kind": "quill",
 "desc": "marker scratch for dotted line",
-"gain": -4
+"gain": -8
 },
 {
 "t": 76.15,
 "dur": 0.35,
 "kind": "quill",
 "desc": "marker scratch for dotted line",
-"gain": -4
+"gain": -8
 },
 {
 "t": 76.7,

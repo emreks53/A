@@ -3,7 +3,8 @@
 "t": 41.75,
 "dur": 0.9,
 "kind": "whoosh",
-"desc": "soft airy whoosh, slow-mo air as the macro shot fades in from black"
+"desc": "soft airy whoosh, slow-mo air as the macro shot fades in from black",
+"gain": -4
 },
 {
 "t": 42.0,
@@ -15,13 +16,15 @@
 "t": 42.63,
 "dur": 0.15,
 "kind": "pop",
-"desc": "badge 1 pop"
+"desc": "badge 1 pop",
+"gain": -10
 },
 {
 "t": 42.77,
 "dur": 0.15,
 "kind": "pop",
-"desc": "badge 2 pop"
+"desc": "badge 2 pop",
+"gain": -10
 },
 {
 "t": 43.46,
@@ -41,6 +44,7 @@
 "t": 43.93,
 "dur": 0.7,
 "kind": "chime",
-"desc": "warm glassy chime under IKI ORNEK"
+"desc": "warm glassy chime under IKI ORNEK",
+"gain": -5
 }
 ]

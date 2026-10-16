@@ -168,7 +168,7 @@
 "dur": 6.9,
 "kind": "wind",
 "desc": "low steady dusk desert wind",
-"gain": -4,
+"gain": -7,
 "scene": "s03"
 },
 {
@@ -176,6 +176,7 @@
 "dur": 6.9,
 "kind": "fire",
 "desc": "two campfires crackling",
+"gain": -5,
 "scene": "s03"
 },
 {
@@ -205,6 +206,7 @@
 "dur": 0.6,
 "kind": "ignite",
 "desc": "wick ignitions along lamp chains",
+"gain": -5,
 "scene": "s03"
 },
 {
@@ -220,6 +222,7 @@
 "dur": 0.6,
 "kind": "ignite",
 "desc": "wick ignitions along lamp chains",
+"gain": -5,
 "scene": "s03"
 },
 {
@@ -304,6 +307,7 @@
 "dur": 0.3,
 "kind": "pop",
 "desc": "musrikler label pop",
+"gain": -10,
 "scene": "s04"
 },
 {
@@ -478,6 +482,7 @@
 "dur": 1.6,
 "kind": "rumble",
 "desc": "distant low rumble of the approaching dust storm",
+"gain": -4,
 "scene": "s06"
 },
 {
@@ -485,7 +490,7 @@
 "dur": 0.5,
 "kind": "whoosh",
 "desc": "transition into s07",
-"gain": -2,
+"gain": -5,
 "scene": "trans"
 },
 {
@@ -493,7 +498,7 @@
 "dur": 2.9,
 "kind": "wind",
 "desc": "howling battle dust-storm roar",
-"gain": 0,
+"gain": -5,
 "scene": "s07"
 },
 {
@@ -509,7 +514,7 @@
 "dur": 1.1,
 "kind": "volley",
 "desc": "first volley arrows whistling overhead",
-"gain": -4,
+"gain": -6,
 "scene": "s07"
 },
 {
@@ -541,7 +546,7 @@
 "dur": 0.6,
 "kind": "metal",
 "desc": "hard iron clang on the shield boss",
-"gain": 2,
+"gain": -1,
 "scene": "s07"
 },
 {
@@ -565,7 +570,7 @@
 "dur": 1.5,
 "kind": "volley",
 "desc": "dense second volley",
-"gain": -2,
+"gain": -5,
 "scene": "s07"
 },
 {
@@ -597,7 +602,7 @@
 "dur": 2.6,
 "kind": "wind",
 "desc": "storm wind battering against the rock face",
-"gain": -1,
+"gain": -5,
 "scene": "s08"
 },
 {
@@ -605,7 +610,7 @@
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "big arrow strike on stone",
-"gain": 1,
+"gain": -2,
 "scene": "s08"
 },
 {
@@ -613,7 +618,7 @@
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "second heavy strike on the rock",
-"gain": 1,
+"gain": -2,
 "scene": "s08"
 },
 {
@@ -629,7 +634,7 @@
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "third heavy strike on the windward face",
-"gain": 2,
+"gain": -1,
 "scene": "s08"
 },
 {
@@ -637,6 +642,7 @@
 "dur": 0.6,
 "kind": "stone",
 "desc": "rock chips flying",
+"gain": -3,
 "scene": "s08"
 },
 {
@@ -652,6 +658,7 @@
 "dur": 2.1,
 "kind": "whoosh",
 "desc": "camera whip around the massif into the lee",
+"gain": -3,
 "scene": "s08"
 },
 {
@@ -659,7 +666,7 @@
 "dur": 0.5,
 "kind": "arrow hit",
 "desc": "rapid burst of stone impacts",
-"gain": 0,
+"gain": -3,
 "scene": "s08"
 },
 {
@@ -667,7 +674,7 @@
 "dur": 1.2,
 "kind": "wind",
 "desc": "dust surge boiling up over the top",
-"gain": -1,
+"gain": -4,
 "scene": "s08"
 },
 {
@@ -699,7 +706,7 @@
 "dur": 3.7,
 "kind": "wind",
 "desc": "calm lee soft breeze",
-"gain": -8,
+"gain": -12,
 "scene": "s08"
 },
 {
@@ -723,7 +730,7 @@
 "dur": 2.0,
 "kind": "sand",
 "desc": "faint sand trickling down the lee wall",
-"gain": -10,
+"gain": -14,
 "scene": "s08"
 },
 {
@@ -795,6 +802,7 @@
 "dur": 0.9,
 "kind": "whoosh",
 "desc": "soft airy whoosh, slow-mo air as the macro shot fades in from black",
+"gain": -4,
 "scene": "s09"
 },
 {
@@ -809,6 +817,7 @@
 "dur": 0.15,
 "kind": "pop",
 "desc": "badge 1 pop",
+"gain": -10,
 "scene": "s09"
 },
 {
@@ -816,6 +825,7 @@
 "dur": 0.15,
 "kind": "pop",
 "desc": "badge 2 pop",
+"gain": -10,
 "scene": "s09"
 },
 {
@@ -839,6 +849,7 @@
 "dur": 0.7,
 "kind": "chime",
 "desc": "warm glassy chime under IKI ORNEK",
+"gain": -5,
 "scene": "s09"
 },
 {
@@ -846,6 +857,7 @@
 "dur": 5.4,
 "kind": "ocean",
 "desc": "open-sea ambience: gentle swell waves",
+"gain": -5,
 "scene": "s10"
 },
 {
@@ -918,7 +930,7 @@
 "dur": 0.15,
 "kind": "pop",
 "desc": "caption completes (very soft)",
-"gain": -4,
+"gain": -11,
 "scene": "s10"
 },
 {
@@ -941,6 +953,7 @@
 "dur": 1.4,
 "kind": "whoosh",
 "desc": "upward whoosh as the camera tilts up after the soaring hero",
+"gain": -4,
 "scene": "s11"
 },
 {
@@ -955,6 +968,7 @@
 "dur": 2.1,
 "kind": "stone",
 "desc": "deeper rising grind for the marble column",
+"gain": -4,
 "scene": "s11"
 },
 {
@@ -1287,7 +1301,7 @@
 "dur": 0.8,
 "kind": "impact",
 "desc": "deep soft thud under YETISILEMEZ",
-"gain": -4,
+"gain": -7,
 "scene": "s13"
 },
 {
@@ -1295,7 +1309,7 @@
 "dur": 0.35,
 "kind": "quill",
 "desc": "marker scratch for dotted line",
-"gain": -4,
+"gain": -8,
 "scene": "s13"
 },
 {
@@ -1303,7 +1317,7 @@
 "dur": 0.35,
 "kind": "quill",
 "desc": "marker scratch for dotted line",
-"gain": -4,
+"gain": -8,
 "scene": "s13"
 },
 {
@@ -1335,6 +1349,7 @@
 "dur": 0.6,
 "kind": "paper",
 "desc": "soft page whisper as Sifa-i Serif appears",
+"gain": -5,
 "scene": "s14"
 },
 {

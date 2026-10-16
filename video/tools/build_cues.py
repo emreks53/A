@@ -7,7 +7,7 @@ for f in sorted(glob.glob(os.path.join(ROOT, 'data/sfx/s*.json'))):
     for c in json.load(open(f)):
         c['scene'] = os.path.basename(f)[:-5]; cues.append(c)
 # transition whooshes on the cuts that slide/blur (soft, under the voice)
-TRANS_SFX = {'s07': ('whoosh', 0.5, -2), 's12': ('whoosh', 0.7, -4), 's16': ('whoosh', 0.7, -5), 's17': ('whoosh', 0.7, -5),
+TRANS_SFX = {'s07': ('whoosh', 0.5, -5), 's12': ('whoosh', 0.7, -4), 's16': ('whoosh', 0.7, -5), 's17': ('whoosh', 0.7, -5),
              's05': ('whoosh', 0.6, -6), 's20': ('shimmer', 1.6, -6), 's02': ('shimmer', 1.4, -6)}
 for s in tl['scenes']:
     if s['id'] in TRANS_SFX:

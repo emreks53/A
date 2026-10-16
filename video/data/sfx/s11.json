@@ -16,7 +16,8 @@
 "t": 50.15,
 "dur": 1.4,
 "kind": "whoosh",
-"desc": "upward whoosh as the camera tilts up after the soaring hero"
+"desc": "upward whoosh as the camera tilts up after the soaring hero",
+"gain": -4
 },
 {
 "t": 50.18,
@@ -28,7 +29,8 @@
 "t": 50.18,
 "dur": 2.1,
 "kind": "stone",
-"desc": "deeper rising grind for the marble column"
+"desc": "deeper rising grind for the marble column",
+"gain": -4
 },
 {
 "t": 51.19,

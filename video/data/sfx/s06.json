@@ -1,6 +1,6 @@
 [
 {
-"t": 29.60,
+"t": 29.6,
 "dur": 4.2,
 "kind": "wind",
 "desc": "warm desert wind with blowing sand",
@@ -40,9 +40,10 @@
 "gain": -4
 },
 {
-"t": 32.20,
+"t": 32.2,
 "dur": 1.6,
 "kind": "rumble",
-"desc": "distant low rumble of the approaching dust storm"
+"desc": "distant low rumble of the approaching dust storm",
+"gain": -4
 }
 ]

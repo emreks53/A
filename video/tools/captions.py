@@ -3,7 +3,9 @@ Phrases of a few words; the word being spoken is highlighted (gold, slight pop).
 import json, os, re
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-words = json.load(open(os.path.join(ROOT, 'data/words.json')))
+# Prefer the energy-refined timings (tools/align_words.py): Whisper starts words inside the pause before them.
+_aligned = os.path.join(ROOT, 'data/words_aligned.json')
+words = json.load(open(_aligned if os.path.exists(_aligned) else os.path.join(ROOT, 'data/words.json')))
 
 MAX_CHARS = 26      # per phrase (~1-2 lines at this size)
 GAP_SPLIT = 0.33    # pause that forces a new phrase

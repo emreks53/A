@@ -13,11 +13,18 @@ W, H = (540, 960) if preview else (1080, 1920)
 
 # transition into scene i (from scene i-1): (xfade transition name, duration)
 TRANS = {
-    's02': ('fadewhite', 0.6), 's03': ('fade', 0.4), 's04': ('fade', 0.4), 's05': ('zoomin', 0.5), 's06': ('fadeblack', 0.5),
-    's07': ('hblur', 0.25), 's08': ('fade', 0.3), 's09': ('fadeblack', 0.5), 's10': ('fade', 0.35), 's11': ('fade', 0.4),
-    's12': ('smoothleft', 0.45), 's13': ('fade', 0.5), 's14': ('fade', 0.45), 's15': ('fadeblack', 0.5), 's16': ('smoothleft', 0.45),
-    's17': ('smoothleft', 0.45), 's18': ('fade', 0.4), 's19': ('fadeblack', 0.5), 's20': ('fadewhite', 0.7),
+    's02': ('dipwhite', 0.6), 's03': ('fade', 0.4), 's04': ('fade', 0.4), 's05': ('fade', 0.45), 's06': ('dipblack', 0.5),
+    's07': ('hblur', 0.25), 's08': ('fade', 0.3), 's09': ('dipblack', 0.5), 's10': ('fade', 0.35), 's11': ('fade', 0.4),
+    's12': ('smoothleft', 0.45), 's13': ('fade', 0.5), 's14': ('fade', 0.45), 's15': ('dipblack', 0.5), 's16': ('smoothleft', 0.45),
+    's17': ('smoothleft', 0.45), 's18': ('fade', 0.4), 's19': ('dipblack', 0.5), 's20': ('dipwhite', 0.7),
 }
+# Symmetric dips (ffmpeg's fadewhite/fadeblack drive the outgoing clip to the colour in ~20% of the duration -> a flash/blink).
+# P runs 1 -> 0 over the transition; q = 1 - P. Underneath, a smoothstep crossfade over q 0.3-0.7; on top, a bell-shaped
+# veil of colour (white peaks at 85% so it reads as a luminous dissolve, black at 100%). yuv420p limited range.
+def _dip(peak, y, gamma):
+    return ("st(1,1-P);st(2,clip((ld(1)-0.3)/0.4,0,1));st(2,ld(2)*ld(2)*(3-2*ld(2)));"
+            f"st(3,{peak}*pow(sin(PI*ld(1)),{gamma}));(A*(1-ld(2))+B*ld(2))*(1-ld(3))+if(eq(PLANE,0),{y},128)*ld(3)")
+CUSTOM = {'dipwhite': _dip(0.85, 235, 1.3), 'dipblack': _dip(1.0, 16, 0.8)}
 
 inputs, filters = [], []
 for i, s in enumerate(S):
@@ -38,7 +45,8 @@ cur = 'v0'; acc = S[0]['end'] + (TRANS[S[1]['id']][1] / 2)
 for i in range(1, len(S)):
     tr, d = TRANS.get(S[i]['id'], ('fade', 0.4))
     off = S[i]['start'] - d / 2
-    filters.append(f"[{cur}][v{i}]xfade=transition={tr}:duration={d}:offset={off:.4f}[x{i}]"); cur = f'x{i}'
+    tspec = f"custom:expr='{CUSTOM[tr]}'" if tr in CUSTOM else tr
+    filters.append(f"[{cur}][v{i}]xfade=transition={tspec}:duration={d}:offset={off:.4f}[x{i}]"); cur = f'x{i}'
 
 post = f"[{cur}]fade=t=in:st=0:d=0.35,fade=t=out:st={TOTAL - 0.9:.3f}:d=0.9"
 CANVAS_CAPS = '--canvas-captions' in args

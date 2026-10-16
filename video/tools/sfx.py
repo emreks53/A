@@ -313,10 +313,15 @@ def main():
         log.append(f"{c['t']:7.2f}s {name:12s} {g:6.1f}dB  {c.get('kind','')}: {c.get('desc','')[:60]}")
     bus = bus[: int(total * SR)]
     bus = signal.sosfilt(sos('highpass', 38, 4), bus, axis=0)
-    # duck SFX under the voice
+    # duck SFX under the voice - multiband sidechain: the speech band (300-4000 Hz) of the SFX bus is carved out much deeper
+    # (up to -15 dB) than lows/highs (up to -6 dB), so impacts keep their weight while every word stays clear.
+    # 30 ms look-ahead so the dip is in place when a word starts. Zero-phase band split -> the bands sum back exactly.
     env = np.sqrt(np.maximum(signal.sosfilt(sos('lowpass', 8), vbuf ** 2), 0) * 2 + 1e-12); env = env / (np.percentile(env, 99) + 1e-9)
-    duck = 1 - 0.62 * np.clip(env * 2.5, 0, 1); duck = signal.sosfilt(sos('lowpass', 4), duck)
-    bus *= duck[:, None]
+    la = int(0.03 * SR); env = np.concatenate([env[la:], np.repeat(env[-1:], la)])
+    act = np.clip(env * 4.0, 0, 1)   # sensitive: soft trailing words duck the bed too
+    g_mid = signal.sosfiltfilt(sos('lowpass', 6), 1 - 0.82 * act); g_rest = signal.sosfiltfilt(sos('lowpass', 6), 1 - 0.50 * act)
+    mid = signal.sosfiltfilt(signal.butter(4, [300, 4000], 'bandpass', fs=SR, output='sos'), bus, axis=0)
+    bus = (bus - mid) * g_rest[:, None] + mid * g_mid[:, None]
     out = opt.get('out', 'out/mix.wav')
     mix = np.stack([vbuf, vbuf], 1) * 0.5 + bus
     if 'stems' in opt:
