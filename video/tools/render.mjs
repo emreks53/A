@@ -32,7 +32,7 @@ await new Promise(r => server.listen(0, '127.0.0.1', r)); const port = server.ad
 // --gl llvmpipe: full Chromium (headed; run under xvfb-run) with ANGLE on desktop GL -> Mesa llvmpipe (multi-threaded,
 // ~3-5x faster than SwiftShader here; verified equivalent with tools/glcompare.mjs). Default: SwiftShader (headless).
 // s07/s08 (arrow volleys + storm) produce NaN-driven black blocks on llvmpipe (bloom spreads them) -> always SwiftShader.
-const SWIFTSHADER_ONLY = ['s07', 's08'];
+const SWIFTSHADER_ONLY = ['s06', 's07', 's08']; // s06 since its v2.2 sand/blade shaders (3 frames with black blocks on llvmpipe)
 let GL = opt.gl || process.env.RENDER_GL || 'swiftshader';
 if (GL === 'llvmpipe' && SWIFTSHADER_ONLY.includes(info.id)) { console.log(`  ${info.id}: llvmpipe disabled for this scene -> SwiftShader`); GL = 'swiftshader'; }
 const browser = GL === 'llvmpipe'
