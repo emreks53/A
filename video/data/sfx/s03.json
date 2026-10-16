@@ -27,40 +27,40 @@
 "desc": "DOSTLARI label pops"
 },
 {
-"t": 14.52,
+"t": 14.43,
 "dur": 0.3,
 "kind": "pop",
 "desc": "DUSMANLARI label pops"
 },
 {
-"t": 15.55,
+"t": 15.47,
 "dur": 0.9,
 "kind": "whoosh",
 "desc": "soft glide as two dashed guide lines draw toward the central lamp",
 "gain": -3
 },
 {
-"t": 15.58,
+"t": 15.52,
 "dur": 0.6,
 "kind": "ignite",
 "desc": "wick ignitions along lamp chains",
 "gain": -5
 },
 {
-"t": 16.13,
+"t": 16.07,
 "dur": 0.6,
 "kind": "ignite",
 "desc": "wick ignitions along lamp chains",
 "gain": -5
 },
 {
-"t": 18.97,
+"t": 18.53,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "ring of small lamps catching"
 },
 {
-"t": 19.52,
+"t": 19.08,
 "dur": 0.6,
 "kind": "stamp",
 "desc": "SAHIT stamp slam"

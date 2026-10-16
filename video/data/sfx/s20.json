@@ -20,48 +20,48 @@
 "gain": -10
 },
 {
-"t": 115.55,
+"t": 115.66,
 "dur": 0.9,
 "kind": "cloth",
 "desc": "leather front cover lifts and swings open",
 "gain": -3
 },
 {
-"t": 115.93,
+"t": 116.04,
 "dur": 0.65,
 "kind": "paper",
 "desc": "three leaves riffling over"
 },
 {
-"t": 116.31,
+"t": 116.42,
 "dur": 0.3,
 "kind": "wood",
 "desc": "cover settling onto the rahle",
 "gain": -4
 },
 {
-"t": 116.42,
+"t": 116.48,
 "dur": 0.3,
 "kind": "pop",
 "desc": "subtle marker for the 195 ring",
 "gain": -3
 },
 {
-"t": 118.42,
+"t": 118.25,
 "dur": 0.3,
 "kind": "pop",
 "desc": "subtle marker for ring",
 "gain": -3
 },
 {
-"t": 119.11,
-"dur": 1.35,
+"t": 119.08,
+"dur": 1.55,
 "kind": "whoosh",
-"desc": "soft air move as the camera cranes up",
+"desc": "soft air move as the camera slides left and cranes up to the sill",
 "gain": -5
 },
 {
-"t": 120.33,
+"t": 120.39,
 "dur": 0.3,
 "kind": "pop",
 "desc": "very subtle marker label",
