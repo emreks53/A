@@ -7,43 +7,43 @@
 "gain": -2
 },
 {
-"t": 30.16,
+"t": 30.24,
 "dur": 0.4,
 "kind": "pop",
 "desc": "soft title reveal"
 },
 {
-"t": 30.95,
+"t": 31.59,
 "dur": 1.0,
 "kind": "wind",
 "desc": "sand gust sweeping across the plain",
 "gain": -2
 },
 {
-"t": 31.35,
+"t": 31.85,
 "dur": 1.6,
 "kind": "sword",
 "desc": "faint steel shimmer as the sun glint travels up the edge",
 "gain": -6
 },
 {
-"t": 32.02,
+"t": 32.33,
+"dur": 1.6,
+"kind": "rumble",
+"desc": "distant low rumble of the approaching dust storm",
+"gain": -4
+},
+{
+"t": 32.38,
 "dur": 0.35,
 "kind": "pop",
 "desc": "punchy word pop"
 },
 {
-"t": 32.12,
+"t": 32.46,
 "dur": 0.6,
 "kind": "metal",
 "desc": "tiny bright ting of the star glint",
-"gain": -4
-},
-{
-"t": 32.2,
-"dur": 1.6,
-"kind": "rumble",
-"desc": "distant low rumble of the approaching dust storm",
 "gain": -4
 }
 ]
