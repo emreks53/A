@@ -21,6 +21,14 @@ OVERRIDES = {
     165: 94.36,   # düşünürlerinden - d release 94.365 (CTC fired at the ş)
     195: 109.455, # Peygamberimiz - mouth thump at 109.39; p burst 109.452
     205: 115.73,  # kitabının - k burst 115.735 (CTC started inside the final t closure of Mektubat)
+    # second review (final-video QA): stop-initial words inside running speech had their start on the silent closure
+    95: 50.46,    # dürüstlükte - d burst 50.46-50.49
+    135: 78.76,   # kadar - k release 78.765
+    136: 79.05,   # yazılmış - voiced y onset 79.06 after a low gap
+    155: 89.07,   # büyük - b release 89.08
+    191: 107.65,  # bunlar - b release 107.66
+    193: 108.38,  # birçok - b release 108.395
+    215: 121.47,  # hoş - h after the k burst of 'çok' (121.43), vowel 121.505
 }
 ROMAN = str.maketrans({'ş': 's', 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ü': 'u', 'â': 'a', 'î': 'i', 'û': 'u'})
 

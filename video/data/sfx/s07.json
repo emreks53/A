@@ -46,7 +46,7 @@
 "dur": 0.6,
 "kind": "metal",
 "desc": "hard iron clang on the shield boss",
-"gain": -1
+"gain": -5
 },
 {
 "t": 34.53,
@@ -60,7 +60,7 @@
 "dur": 0.4,
 "kind": "wood",
 "desc": "shield rattling back against the rock",
-"gain": -4
+"gain": -8
 },
 {
 "t": 34.6,

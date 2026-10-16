@@ -284,7 +284,7 @@ def synth(cue, seed):
     key = (cue.get('kind', '') + ' ' + cue.get('desc', '')).lower()
     for rx, fn, g in RECIPES:
         if re.search(rx, key):
-            d = float(cue.get('dur') or 0.6); d = max(0.08, min(d, 12))
+            d = float(cue.get('dur') or 0.6); d = max(0.08, min(d, 30))   # beds run the whole scene (s12 18.6 s, s20 13.45 s)
             try: y = fn(d=d, seed=seed)
             except TypeError: y = fn(d, seed)
             return np.asarray(y, dtype=float), g + float(cue.get('gain', 0)), fn.__name__

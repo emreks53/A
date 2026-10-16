@@ -48,7 +48,10 @@ for i, s in enumerate(S):
         print(f"WARNING {s['id']}: needs [{a:.2f},{b:.2f}] but clip has [0,{meta['to']-meta['from']:.2f}]")
     a = max(0, a)
     inputs += ['-i', clip]
-    filters.append(f"[{i}:v]trim=start={a:.4f}:end={b:.4f},setpts=PTS-STARTPTS,fps={FPS},scale={W}:{H}:flags=lanczos,format=yuv420p,setsar=1[v{i}]")
+    # trim by frame index (clip frame k sits at clip time k/FPS): a seconds value printed with 4 decimals can land just after a
+    # frame's pts (0.266667 -> "0.2667") and drop it, which cut the last blended frame of the following transition
+    k0, k1 = round(a * FPS), round(b * FPS)
+    filters.append(f"[{i}:v]trim=start_frame={k0}:end_frame={k1},setpts=PTS-STARTPTS,fps={FPS},scale={W}:{H}:flags=lanczos,format=yuv420p,setsar=1[v{i}]")
 
 cur = 'v0'
 for i in range(1, len(S)):

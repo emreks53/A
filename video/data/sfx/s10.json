@@ -16,13 +16,15 @@
 "t": 45.05,
 "dur": 1.4,
 "kind": "water",
-"desc": "splash crown"
+"desc": "splash crown",
+"gain": -4
 },
 {
 "t": 45.27,
 "dur": 0.8,
 "kind": "water",
-"desc": "drop 2 plink"
+"desc": "drop 2 plink",
+"gain": -6
 },
 {
 "t": 45.53,
@@ -54,13 +56,15 @@
 "t": 47.59,
 "dur": 0.15,
 "kind": "pop",
-"desc": "badge pop"
+"desc": "badge pop",
+"gain": -10
 },
 {
 "t": 47.7,
 "dur": 0.15,
 "kind": "pop",
-"desc": "badge pop"
+"desc": "badge pop",
+"gain": -10
 },
 {
 "t": 48.68,

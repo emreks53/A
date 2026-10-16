@@ -538,7 +538,7 @@
 "dur": 0.6,
 "kind": "metal",
 "desc": "hard iron clang on the shield boss",
-"gain": -1,
+"gain": -5,
 "scene": "s07"
 },
 {
@@ -554,7 +554,7 @@
 "dur": 0.4,
 "kind": "wood",
 "desc": "shield rattling back against the rock",
-"gain": -4,
+"gain": -8,
 "scene": "s07"
 },
 {
@@ -864,6 +864,7 @@
 "dur": 1.4,
 "kind": "water",
 "desc": "splash crown",
+"gain": -4,
 "scene": "s10"
 },
 {
@@ -871,6 +872,7 @@
 "dur": 0.8,
 "kind": "water",
 "desc": "drop 2 plink",
+"gain": -6,
 "scene": "s10"
 },
 {
@@ -908,6 +910,7 @@
 "dur": 0.15,
 "kind": "pop",
 "desc": "badge pop",
+"gain": -10,
 "scene": "s10"
 },
 {
@@ -915,6 +918,7 @@
 "dur": 0.15,
 "kind": "pop",
 "desc": "badge pop",
+"gain": -10,
 "scene": "s10"
 },
 {
@@ -1101,7 +1105,7 @@
 "scene": "s12"
 },
 {
-"t": 58.73,
+"t": 58.92,
 "dur": 0.5,
 "kind": "paper",
 "desc": "old letters rustle",
