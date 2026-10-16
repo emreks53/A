@@ -2,13 +2,13 @@
 Whisper tends to start a word at the end of the previous one, i.e. inside the pause before it. For every word boundary,
 look for a real pause (>=120 ms of non-speech) just after the reported boundary and, if found, end the previous word at the
 pause start and start the next word at the pause end. Breaths (runs that never exceed -30 dBFS) count as non-speech.
-Usage: python tools/align_words.py [--voice out/_stem_voice.wav] [--out data/words_aligned.json]"""
+Usage: python tools/align_words.py [--voice out/_stem_voice.wav] [--out data/words_energy.json]   (then tools/fa_align.py --write)"""
 import json, subprocess, sys, os
 import numpy as np
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 args = sys.argv[1:]
 opt = lambda k, d: args[args.index('--' + k) + 1] if '--' + k in args else d
-voice = os.path.join(ROOT, opt('voice', 'out/_stem_voice.wav')); out = os.path.join(ROOT, opt('out', 'data/words_aligned.json'))
+voice = os.path.join(ROOT, opt('voice', 'out/_stem_voice.wav')); out = os.path.join(ROOT, opt('out', 'data/words_energy.json'))
 raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', voice, '-ac', '1', '-ar', '16000', '-f', 'f32le', '-'], capture_output=True).stdout
 x = np.frombuffer(raw, np.float32); hop = 160; n = len(x) // hop
 db = 20 * np.log10(np.sqrt(np.mean(x[:n * hop].reshape(n, hop) ** 2, axis=1)) + 1e-9)

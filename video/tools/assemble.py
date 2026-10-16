@@ -24,29 +24,37 @@ TRANS = {
 def _dip(peak, y, gamma):
     return ("st(1,1-P);st(2,clip((ld(1)-0.3)/0.4,0,1));st(2,ld(2)*ld(2)*(3-2*ld(2)));"
             f"st(3,{peak}*pow(sin(PI*ld(1)),{gamma}));(A*(1-ld(2))+B*ld(2))*(1-ld(3))+if(eq(PLANE,0),{y},128)*ld(3)")
-CUSTOM = {'dipwhite': _dip(0.85, 235, 1.3), 'dipblack': _dip(1.0, 16, 0.8)}
+# Dip to black: the veil eases in and out with zero slope (smoothstep of the distance to the nearer end) and holds full black over
+# q 0.4-0.6, so the darkening neither starts with a one-frame drop nor ends with a brightness snap (sin^0.8 has infinite slope at both ends).
+def _dip_hold(peak, y, ramp=0.4):
+    return ("st(1,1-P);st(2,clip((ld(1)-0.3)/0.4,0,1));st(2,ld(2)*ld(2)*(3-2*ld(2)));"
+            f"st(4,clip(min(ld(1),1-ld(1))/{ramp},0,1));st(3,{peak}*ld(4)*ld(4)*(3-2*ld(4)));"
+            f"(A*(1-ld(2))+B*ld(2))*(1-ld(3))+if(eq(PLANE,0),{y},128)*ld(3)")
+CUSTOM = {'dipwhite': _dip(0.85, 235, 1.3), 'dipblack': _dip_hold(1.0, 16)}
+
+# Transition timing on the 30 fps output grid: every xfade starts on a whole frame and lasts a whole number of frames, so its last
+# blended frame is the true end of the blend (an off-grid offset left ~20% of the outgoing shot on the last frame, then a snap).
+def tr_dur(sid): return round(TRANS.get(sid, ('fade', 0.4))[1] * FPS) / FPS
+def tr_off(i): return round((S[i]['start'] - tr_dur(S[i]['id']) / 2) * FPS) / FPS
 
 inputs, filters = [], []
 for i, s in enumerate(S):
     clip = os.path.join(ROOT, opt('clips', 'out/clips'), s['id'] + '.mp4')
     meta = json.load(open(clip + '.json'))
     g0 = s['start'] + meta['from']                   # global time of clip t=0
-    d_in = TRANS.get(s['id'], ('fade', 0))[1] if i > 0 else 0
-    d_out = TRANS.get(S[i + 1]['id'], ('fade', 0))[1] if i + 1 < len(S) else 0
-    a = (s['start'] - d_in / 2) - g0
-    b = (s['end'] + d_out / 2) - g0 if i + 1 < len(S) else (TOTAL - g0)
+    a = (tr_off(i) if i > 0 else 0) - g0                                       # clip i enters at its xfade offset
+    b = (tr_off(i + 1) + tr_dur(S[i + 1]['id'])) - g0 if i + 1 < len(S) else (TOTAL - g0)   # ...and leaves when the next blend ends
     if a < -1e-3 or b > (meta['to'] - meta['from']) + 1e-3:
         print(f"WARNING {s['id']}: needs [{a:.2f},{b:.2f}] but clip has [0,{meta['to']-meta['from']:.2f}]")
     a = max(0, a)
     inputs += ['-i', clip]
     filters.append(f"[{i}:v]trim=start={a:.4f}:end={b:.4f},setpts=PTS-STARTPTS,fps={FPS},scale={W}:{H}:flags=lanczos,format=yuv420p,setsar=1[v{i}]")
 
-cur = 'v0'; acc = S[0]['end'] + (TRANS[S[1]['id']][1] / 2)
+cur = 'v0'
 for i in range(1, len(S)):
-    tr, d = TRANS.get(S[i]['id'], ('fade', 0.4))
-    off = S[i]['start'] - d / 2
+    tr = TRANS.get(S[i]['id'], ('fade', 0.4))[0]; d, off = tr_dur(S[i]['id']), tr_off(i)
     tspec = f"custom:expr='{CUSTOM[tr]}'" if tr in CUSTOM else tr
-    filters.append(f"[{cur}][v{i}]xfade=transition={tspec}:duration={d}:offset={off:.4f}[x{i}]"); cur = f'x{i}'
+    filters.append(f"[{cur}][v{i}]xfade=transition={tspec}:duration={d:.6f}:offset={off:.6f}[x{i}]"); cur = f'x{i}'
 
 post = f"[{cur}]fade=t=in:st=0:d=0.35,fade=t=out:st={TOTAL - 0.9:.3f}:d=0.9"
 CANVAS_CAPS = '--canvas-captions' in args

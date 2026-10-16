@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Which word does every ctx.wordTime()/wordEnd() lookup match? Runs each scene's logic over all frames (no rendering)
 // twice - scene word window on original timings (default) vs on refined timings (?wwin=aligned) - and lists lookups
-// that matched a different word.   node tools/wordprobe.mjs --scene s02,s03 | --all
+// that matched a different word.   node tools/wordprobe.mjs --scene s02,s03 | --all   [--dump lookups.json: just record every lookup]
 import { chromium } from 'playwright';
 import http from 'node:http';
 import fs from 'node:fs';
@@ -27,6 +27,10 @@ async function probe(id, extra) {
   await page.close(); return m;
 }
 let bad = 0;
+if (opt.dump) { // --dump out.json: every scene's lookups {scene: {'T|text|n': wordIndex}} (to see which scenes a re-alignment moves)
+  const all = {}; for (const id of ids) all[id] = await probe(id, '');
+  fs.writeFileSync(opt.dump, JSON.stringify(all, null, 1)); console.log('->', opt.dump); await browser.close(); server.close(); process.exit(0);
+}
 for (const id of ids) {
   const fixed = await probe(id, ''), old = await probe(id, '&wwin=aligned');
   const keys = [...new Set([...Object.keys(fixed), ...Object.keys(old)])];

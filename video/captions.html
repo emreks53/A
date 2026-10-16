@@ -54,12 +54,17 @@ const layouts = phrases.map(ph => {
 });
 // Phrase hand-off is strictly sequential (never two phrases on screen at once): a phrase lingers 0.45 s after its
 // last word, but if the next phrase comes sooner it fades out quickly so that it is gone exactly when the next begins.
+// In continuous speech (next phrase within 0.3 s) the swap is quick and the incoming phrase starts at 55% opacity, so the
+// caption never blinks out between phrases. Over a white dip (very bright band) a phrase does not linger: its dark halo
+// would read as a grey smudge on the white frame.
 const FI = 0.18;
 layouts.forEach((L, i) => {
-  const next = layouts[i + 1]; L.fo = 0.22;
+  const next = layouts[i + 1], prev = layouts[i - 1]; L.fo = 0.22; L.floor = 0; L.fi = FI;
+  if (prev && L.start - prev.end < 0.3) { L.floor = 0.55; L.fi = 0.12; }
   if (!next) { L.out = L.end + 0.8; return; }
-  if (L.end + 0.45 + L.fo <= next.start) { L.out = L.end + 0.45; return; }
-  L.fo = 0.09; L.out = Math.max(L.start + FI + 0.05, next.start - L.fo);
+  const linger = lumaAt(L.end + 0.15) > 0.68 ? 0.1 : 0.45;
+  if (L.end + linger + L.fo <= next.start) { L.out = L.end + linger; return; }
+  L.fo = next.start - L.end < 0.3 ? 0.06 : 0.09; L.out = Math.max(L.start + L.fi + 0.05, next.start - L.fo);
 });
 
 function scrim(alpha) {
@@ -104,7 +109,7 @@ window.drawAt = (t) => {
   scrim(easeInOut(pres));
   for (const L of layouts) {
     if (t < L.start - 0.01 || t > L.out + L.fo + 0.01) continue;
-    const pin = easeOut(clamp((t - L.start) / FI)), pout = 1 - easeInOut(clamp((t - L.out) / L.fo));
+    const pin = L.floor + (1 - L.floor) * easeOut(clamp((t - L.start) / L.fi)), pout = 1 - easeInOut(clamp((t - L.out) / L.fo));
     const phraseA = pin * pout; if (phraseA <= 0.001) continue;
     const rise = (1 - pin) * 14 - (1 - pout) * 10;
     // soft elliptical shadow behind the phrase; darker when the background under it is bright
@@ -116,7 +121,7 @@ window.drawAt = (t) => {
       const g = X.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, `rgba(8,7,12,${k})`); g.addColorStop(0.55, `rgba(8,7,12,${k * 0.72})`); g.addColorStop(1, 'rgba(8,7,12,0)');
       X.fillStyle = g; X.beginPath(); X.arc(0, 0, rx, 0, Math.PI * 2); X.fill(); X.restore(); }
     L.words.forEach((w, i) => {
-      const stag = easeOut(clamp((t - L.start - i * 0.035) / 0.26));
+      const stag = L.floor + (1 - L.floor) * easeOut(clamp((t - L.start - i * 0.035) / 0.26));
       let state = 0, k = 0;
       if (t >= w.s - 0.04) state = (t < w.e + 0.02 || (i === L.words.length - 1 && t < L.out)) ? 1 : 2;
       if (state === 1) k = easeOut(clamp((t - w.s + 0.04) / 0.14));
