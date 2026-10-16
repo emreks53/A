@@ -14,80 +14,80 @@
 "gain": -4
 },
 {
-"t": 33.4,
+"t": 33.34,
 "dur": 1.25,
 "kind": "volley",
 "desc": "first volley arrows whistling overhead",
 "gain": -6
 },
 {
-"t": 33.88,
+"t": 33.78,
 "dur": 0.35,
 "kind": "arrow",
 "desc": "close arrow whizzing past the lens",
 "gain": -1
 },
 {
-"t": 34.15,
+"t": 34.07,
 "dur": 0.4,
 "kind": "arrow hit",
 "desc": "arrow thud into sand",
 "gain": -4
 },
 {
-"t": 34.39,
+"t": 34.26,
 "dur": 0.4,
 "kind": "arrow hit",
 "desc": "arrow thud into sand",
 "gain": -7
 },
 {
-"t": 34.65,
-"dur": 1.25,
-"kind": "volley",
-"desc": "dense second volley",
-"gain": -5
-},
-{
-"t": 34.66,
+"t": 34.53,
 "dur": 0.6,
 "kind": "metal",
 "desc": "hard iron clang on the shield boss",
 "gain": -1
 },
 {
-"t": 34.66,
+"t": 34.53,
 "dur": 0.7,
 "kind": "impact",
 "desc": "impact punch",
 "gain": -2
 },
 {
-"t": 34.7,
+"t": 34.57,
 "dur": 0.4,
 "kind": "wood",
 "desc": "shield rattling back against the rock",
 "gain": -4
 },
 {
-"t": 35.07,
+"t": 34.6,
+"dur": 1.25,
+"kind": "volley",
+"desc": "dense second volley",
+"gain": -5
+},
+{
+"t": 35.06,
 "dur": 0.4,
 "kind": "arrow hit",
 "desc": "arrow thud",
 "gain": -4
 },
 {
-"t": 35.3,
-"dur": 0.4,
-"kind": "arrow hit",
-"desc": "arrow thud",
-"gain": -6
-},
-{
-"t": 35.37,
+"t": 35.23,
 "dur": 0.35,
 "kind": "arrow",
 "desc": "last arrow skimming past the camera",
 "gain": -4
+},
+{
+"t": 35.32,
+"dur": 0.4,
+"kind": "arrow hit",
+"desc": "arrow thud",
+"gain": -6
 }
 ]

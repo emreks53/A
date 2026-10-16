@@ -40,7 +40,7 @@
 "scene": "s01"
 },
 {
-"t": 3.3,
+"t": 3.15,
 "dur": 2.8,
 "kind": "whoosh",
 "desc": "camera glide down to the Mushaf",
@@ -81,7 +81,7 @@
 },
 {
 "t": 7.3,
-"dur": 4.9,
+"dur": 5.1,
 "kind": "wind",
 "desc": "soft dawn breeze over Medina",
 "gain": -5,
@@ -103,7 +103,7 @@
 "scene": "s02"
 },
 {
-"t": 9.79,
+"t": 9.66,
 "dur": 0.5,
 "kind": "whoosh",
 "desc": "soft airy whoosh as the headline rises",
@@ -118,7 +118,7 @@
 "scene": "s02"
 },
 {
-"t": 10.93,
+"t": 10.95,
 "dur": 0.6,
 "kind": "impact",
 "desc": "soft low impact when EN BUYUK MUCIZE lands",
@@ -134,17 +134,25 @@
 "scene": "s02"
 },
 {
-"t": 11.72,
+"t": 11.88,
 "dur": 0.8,
 "kind": "whoosh",
 "desc": "slow airy whoosh, cross-dissolve into the Hilye panel",
 "scene": "s02"
 },
 {
-"t": 11.9,
-"dur": 1.8,
+"t": 12.08,
+"dur": 1.62,
 "kind": "fire",
 "desc": "quiet candle flicker",
+"gain": -4,
+"scene": "s02"
+},
+{
+"t": 12.13,
+"dur": 0.4,
+"kind": "paper",
+"desc": "soft paper swish as the ayet caption fades in",
 "gain": -4,
 "scene": "s02"
 },
@@ -153,14 +161,6 @@
 "dur": 1.2,
 "kind": "chime",
 "desc": "warm resonant tone under KENDI ZATI",
-"scene": "s02"
-},
-{
-"t": 12.76,
-"dur": 0.4,
-"kind": "paper",
-"desc": "soft paper swish as caption appears",
-"gain": -4,
 "scene": "s02"
 },
 {
@@ -195,14 +195,14 @@
 "scene": "s03"
 },
 {
-"t": 14.52,
+"t": 14.43,
 "dur": 0.3,
 "kind": "pop",
 "desc": "DUSMANLARI label pops",
 "scene": "s03"
 },
 {
-"t": 15.55,
+"t": 15.47,
 "dur": 0.9,
 "kind": "whoosh",
 "desc": "soft glide as two dashed guide lines draw toward the central lamp",
@@ -210,7 +210,7 @@
 "scene": "s03"
 },
 {
-"t": 15.58,
+"t": 15.52,
 "dur": 0.6,
 "kind": "ignite",
 "desc": "wick ignitions along lamp chains",
@@ -218,7 +218,7 @@
 "scene": "s03"
 },
 {
-"t": 16.13,
+"t": 16.07,
 "dur": 0.6,
 "kind": "ignite",
 "desc": "wick ignitions along lamp chains",
@@ -226,10 +226,17 @@
 "scene": "s03"
 },
 {
-"t": 18.97,
+"t": 18.53,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "ring of small lamps catching",
+"scene": "s03"
+},
+{
+"t": 19.08,
+"dur": 0.6,
+"kind": "stamp",
+"desc": "SAHIT stamp slam",
 "scene": "s03"
 },
 {
@@ -249,13 +256,6 @@
 "scene": "s04"
 },
 {
-"t": 19.52,
-"dur": 0.6,
-"kind": "stamp",
-"desc": "SAHIT stamp slam",
-"scene": "s03"
-},
-{
 "t": 19.77,
 "dur": 0.3,
 "kind": "pop",
@@ -271,7 +271,7 @@
 "scene": "s04"
 },
 {
-"t": 21.45,
+"t": 21.62,
 "dur": 0.2,
 "kind": "pop",
 "desc": "tiny soft red map dot pop",
@@ -279,7 +279,7 @@
 "scene": "s04"
 },
 {
-"t": 21.7,
+"t": 21.87,
 "dur": 0.2,
 "kind": "pop",
 "desc": "tiny soft red map dot pop",
@@ -287,7 +287,7 @@
 "scene": "s04"
 },
 {
-"t": 21.95,
+"t": 22.12,
 "dur": 0.2,
 "kind": "pop",
 "desc": "tiny soft red map dot pop",
@@ -303,15 +303,15 @@
 "scene": "s04"
 },
 {
-"t": 22.6,
-"dur": 2.8,
+"t": 23.25,
+"dur": 2.15,
 "kind": "fire",
 "desc": "many small lantern flames flickering, moving",
 "gain": -4,
 "scene": "s04"
 },
 {
-"t": 23.9,
+"t": 24.21,
 "dur": 0.5,
 "kind": "chime",
 "desc": "warm low chime as the gold pin springs up over the house",
@@ -502,7 +502,7 @@
 "scene": "s07"
 },
 {
-"t": 33.4,
+"t": 33.34,
 "dur": 1.25,
 "kind": "volley",
 "desc": "first volley arrows whistling overhead",
@@ -510,7 +510,7 @@
 "scene": "s07"
 },
 {
-"t": 33.88,
+"t": 33.78,
 "dur": 0.35,
 "kind": "arrow",
 "desc": "close arrow whizzing past the lens",
@@ -518,7 +518,7 @@
 "scene": "s07"
 },
 {
-"t": 34.15,
+"t": 34.07,
 "dur": 0.4,
 "kind": "arrow hit",
 "desc": "arrow thud into sand",
@@ -526,7 +526,7 @@
 "scene": "s07"
 },
 {
-"t": 34.39,
+"t": 34.26,
 "dur": 0.4,
 "kind": "arrow hit",
 "desc": "arrow thud into sand",
@@ -534,15 +534,7 @@
 "scene": "s07"
 },
 {
-"t": 34.65,
-"dur": 1.25,
-"kind": "volley",
-"desc": "dense second volley",
-"gain": -5,
-"scene": "s07"
-},
-{
-"t": 34.66,
+"t": 34.53,
 "dur": 0.6,
 "kind": "metal",
 "desc": "hard iron clang on the shield boss",
@@ -550,7 +542,7 @@
 "scene": "s07"
 },
 {
-"t": 34.66,
+"t": 34.53,
 "dur": 0.7,
 "kind": "impact",
 "desc": "impact punch",
@@ -558,7 +550,7 @@
 "scene": "s07"
 },
 {
-"t": 34.7,
+"t": 34.57,
 "dur": 0.4,
 "kind": "wood",
 "desc": "shield rattling back against the rock",
@@ -566,7 +558,15 @@
 "scene": "s07"
 },
 {
-"t": 35.07,
+"t": 34.6,
+"dur": 1.25,
+"kind": "volley",
+"desc": "dense second volley",
+"gain": -5,
+"scene": "s07"
+},
+{
+"t": 35.06,
 "dur": 0.4,
 "kind": "arrow hit",
 "desc": "arrow thud",
@@ -574,19 +574,19 @@
 "scene": "s07"
 },
 {
-"t": 35.3,
-"dur": 0.4,
-"kind": "arrow hit",
-"desc": "arrow thud",
-"gain": -6,
-"scene": "s07"
-},
-{
-"t": 35.37,
+"t": 35.23,
 "dur": 0.35,
 "kind": "arrow",
 "desc": "last arrow skimming past the camera",
 "gain": -4,
+"scene": "s07"
+},
+{
+"t": 35.32,
+"dur": 0.4,
+"kind": "arrow hit",
+"desc": "arrow thud",
+"gain": -6,
 "scene": "s07"
 },
 {
@@ -790,8 +790,8 @@
 "scene": "s08"
 },
 {
-"t": 41.75,
-"dur": 0.9,
+"t": 41.7,
+"dur": 0.82,
 "kind": "whoosh",
 "desc": "soft airy whoosh, slow-mo air as the macro shot fades in from black",
 "gain": -4,
@@ -821,7 +821,7 @@
 "scene": "s09"
 },
 {
-"t": 43.48,
+"t": 43.55,
 "dur": 0.15,
 "kind": "pop",
 "desc": "label pop emanet (very soft)",
@@ -829,7 +829,7 @@
 "scene": "s09"
 },
 {
-"t": 43.74,
+"t": 43.83,
 "dur": 0.15,
 "kind": "pop",
 "desc": "label pop sığınak (very soft)",
@@ -837,7 +837,7 @@
 "scene": "s09"
 },
 {
-"t": 44.06,
+"t": 44.13,
 "dur": 0.7,
 "kind": "chime",
 "desc": "warm glassy chime under IKI ORNEK",
@@ -874,14 +874,14 @@
 "scene": "s10"
 },
 {
-"t": 45.65,
+"t": 45.53,
 "dur": 1.8,
 "kind": "whoosh",
 "desc": "airy rising pull-back whoosh",
 "scene": "s10"
 },
 {
-"t": 45.87,
+"t": 45.78,
 "dur": 1.2,
 "kind": "chime",
 "desc": "soft warm swell under AHLAK-I ALIYE",
@@ -918,7 +918,7 @@
 "scene": "s10"
 },
 {
-"t": 48.62,
+"t": 48.68,
 "dur": 0.15,
 "kind": "pop",
 "desc": "caption completes (very soft)",
@@ -941,7 +941,7 @@
 "scene": "s11"
 },
 {
-"t": 50.33,
+"t": 50.22,
 "dur": 1.4,
 "kind": "whoosh",
 "desc": "upward whoosh as the camera tilts up after the soaring hero",
@@ -949,14 +949,14 @@
 "scene": "s11"
 },
 {
-"t": 50.5,
+"t": 50.39,
 "dur": 0.2,
 "kind": "pop",
 "desc": "title pop",
 "scene": "s11"
 },
 {
-"t": 50.5,
+"t": 50.39,
 "dur": 2.1,
 "kind": "stone",
 "desc": "deeper rising grind for the marble column",
@@ -964,7 +964,7 @@
 "scene": "s11"
 },
 {
-"t": 51.45,
+"t": 51.46,
 "dur": 0.15,
 "kind": "pop",
 "desc": "callout pop",
@@ -979,14 +979,14 @@
 "scene": "s11"
 },
 {
-"t": 52.3,
+"t": 52.19,
 "dur": 0.4,
 "kind": "thud",
 "desc": "soft settling thud of the capital",
 "scene": "s11"
 },
 {
-"t": 52.32,
+"t": 52.21,
 "dur": 0.7,
 "kind": "chime",
 "desc": "tiny glint shimmer on gilded band",
@@ -1033,7 +1033,7 @@
 "scene": "s12"
 },
 {
-"t": 54.58,
+"t": 54.96,
 "dur": 0.6,
 "kind": "ignite",
 "desc": "lamp wick catches",
@@ -1041,14 +1041,14 @@
 "scene": "s12"
 },
 {
-"t": 54.65,
+"t": 55.03,
 "dur": 1.4,
 "kind": "glass",
 "desc": "clear glass ting",
 "scene": "s12"
 },
 {
-"t": 55.59,
+"t": 55.93,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
@@ -1056,14 +1056,14 @@
 "scene": "s12"
 },
 {
-"t": 55.66,
+"t": 56.0,
 "dur": 0.6,
 "kind": "metal",
 "desc": "small brass clink scale",
 "scene": "s12"
 },
 {
-"t": 56.41,
+"t": 56.68,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
@@ -1071,14 +1071,14 @@
 "scene": "s12"
 },
 {
-"t": 56.5,
+"t": 56.77,
 "dur": 0.4,
 "kind": "metal",
 "desc": "iron padlock clack against hasp",
 "scene": "s12"
 },
 {
-"t": 57.45,
+"t": 57.72,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
@@ -1086,14 +1086,14 @@
 "scene": "s12"
 },
 {
-"t": 57.49,
+"t": 57.76,
 "dur": 0.6,
 "kind": "rustle",
 "desc": "dry wheat rustle",
 "scene": "s12"
 },
 {
-"t": 58.67,
+"t": 58.66,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
@@ -1101,14 +1101,14 @@
 "scene": "s12"
 },
 {
-"t": 58.74,
+"t": 58.73,
 "dur": 0.5,
 "kind": "paper",
 "desc": "old letters rustle",
 "scene": "s12"
 },
 {
-"t": 59.62,
+"t": 59.35,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
@@ -1116,7 +1116,7 @@
 "scene": "s12"
 },
 {
-"t": 59.7,
+"t": 59.43,
 "dur": 1.3,
 "kind": "rustle",
 "desc": "fine particles trickling softly",
@@ -1124,7 +1124,7 @@
 "scene": "s12"
 },
 {
-"t": 59.74,
+"t": 59.47,
 "dur": 0.3,
 "kind": "wood",
 "desc": "walnut timer base taps the felt softly",
@@ -1132,7 +1132,7 @@
 "scene": "s12"
 },
 {
-"t": 60.57,
+"t": 60.11,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
@@ -1140,14 +1140,14 @@
 "scene": "s12"
 },
 {
-"t": 60.62,
+"t": 60.16,
 "dur": 0.4,
 "kind": "cloth",
 "desc": "soft leather pat of slippers",
 "scene": "s12"
 },
 {
-"t": 61.6,
+"t": 61.29,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "lamp wick catches",
@@ -1155,7 +1155,7 @@
 "scene": "s12"
 },
 {
-"t": 61.66,
+"t": 61.35,
 "dur": 0.5,
 "kind": "thud",
 "desc": "muted thud as the steel-and-olive exhibit settles on its wooden rests",
@@ -1223,7 +1223,7 @@
 "scene": "s12"
 },
 {
-"t": 66.6,
+"t": 66.8,
 "dur": 2.4,
 "kind": "whoosh",
 "desc": "slow airy rise as the camera turns and cranes up the gallery",
@@ -1245,15 +1245,15 @@
 "scene": "s12"
 },
 {
-"t": 67.89,
-"dur": 2.4,
+"t": 68.3,
+"dur": 2.15,
 "kind": "fire",
 "desc": "cascade of many small lamp flames catching",
 "gain": 2,
 "scene": "s12"
 },
 {
-"t": 68.7,
+"t": 68.85,
 "dur": 1.6,
 "kind": "shimmer",
 "desc": "glow swell",
@@ -1298,7 +1298,7 @@
 "scene": "s13"
 },
 {
-"t": 75.82,
+"t": 76.09,
 "dur": 0.8,
 "kind": "impact",
 "desc": "deep soft thud under YETISILEMEZ",
@@ -1306,7 +1306,7 @@
 "scene": "s13"
 },
 {
-"t": 75.88,
+"t": 76.15,
 "dur": 0.35,
 "kind": "quill",
 "desc": "marker scratch for dotted line",
@@ -1314,7 +1314,7 @@
 "scene": "s13"
 },
 {
-"t": 76.15,
+"t": 76.42,
 "dur": 0.35,
 "kind": "quill",
 "desc": "marker scratch for dotted line",
@@ -1346,7 +1346,7 @@
 "scene": "s14"
 },
 {
-"t": 80.1,
+"t": 80.11,
 "dur": 0.6,
 "kind": "paper",
 "desc": "soft page whisper as Sifa-i Serif appears",
@@ -1354,7 +1354,7 @@
 "scene": "s14"
 },
 {
-"t": 80.6,
+"t": 80.59,
 "dur": 0.2,
 "kind": "pop",
 "desc": "small pop for tag",
@@ -1416,14 +1416,14 @@
 "scene": "s14"
 },
 {
-"t": 84.34,
+"t": 84.26,
 "dur": 0.6,
 "kind": "paper",
 "desc": "single page turn",
 "scene": "s14"
 },
 {
-"t": 86.81,
+"t": 86.77,
 "dur": 0.5,
 "kind": "stamp",
 "desc": "rubber-stamp thump on ispat",
@@ -1647,7 +1647,7 @@
 "scene": "s17"
 },
 {
-"t": 98.69,
+"t": 98.76,
 "dur": 0.5,
 "kind": "whoosh",
 "desc": "name card slides in",
@@ -1709,13 +1709,6 @@
 "scene": "s18"
 },
 {
-"t": 105.01,
-"dur": 0.3,
-"kind": "pop",
-"desc": "soft marker pop as the ring and 2 ornek appear",
-"scene": "s18"
-},
-{
 "t": 105.3,
 "dur": 0.15,
 "kind": "pop",
@@ -1724,7 +1717,14 @@
 "scene": "s18"
 },
 {
-"t": 106.25,
+"t": 105.49,
+"dur": 0.3,
+"kind": "pop",
+"desc": "soft marker pop as the 2 ornek badge appears on the lens rim",
+"scene": "s18"
+},
+{
+"t": 106.31,
 "dur": 0.3,
 "kind": "pop",
 "desc": "soft pop for IKI ORNEK",
@@ -1747,7 +1747,7 @@
 "scene": "s19"
 },
 {
-"t": 108.28,
+"t": 108.29,
 "dur": 0.3,
 "kind": "pop",
 "desc": "subtle pop for text",
@@ -1755,18 +1755,10 @@
 "scene": "s19"
 },
 {
-"t": 108.43,
+"t": 108.48,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "candle ignition",
-"scene": "s19"
-},
-{
-"t": 108.72,
-"dur": 0.5,
-"kind": "ignite",
-"desc": "candle ignition",
-"gain": -2,
 "scene": "s19"
 },
 {
@@ -1778,7 +1770,15 @@
 "scene": "s19"
 },
 {
-"t": 108.95,
+"t": 108.78,
+"dur": 0.5,
+"kind": "ignite",
+"desc": "candle ignition",
+"gain": -2,
+"scene": "s19"
+},
+{
+"t": 109.01,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "candle ignition",
@@ -1786,7 +1786,7 @@
 "scene": "s19"
 },
 {
-"t": 109.14,
+"t": 109.21,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "candle ignition",
@@ -1794,7 +1794,7 @@
 "scene": "s19"
 },
 {
-"t": 109.37,
+"t": 109.44,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "candle ignition",
@@ -1802,7 +1802,7 @@
 "scene": "s19"
 },
 {
-"t": 109.55,
+"t": 109.68,
 "dur": 0.5,
 "kind": "ignite",
 "desc": "candle ignition",
@@ -1826,19 +1826,19 @@
 },
 {
 "t": 112.34,
-"dur": 1.6,
-"kind": "shimmer",
-"desc": "transition into s20",
-"gain": -6,
-"scene": "trans"
-},
-{
-"t": 112.36,
 "dur": 1.5,
 "kind": "chime",
 "desc": "very soft warm shimmer",
 "gain": -6,
 "scene": "s19"
+},
+{
+"t": 112.34,
+"dur": 1.6,
+"kind": "shimmer",
+"desc": "transition into s20",
+"gain": -6,
+"scene": "trans"
 },
 {
 "t": 112.8,
@@ -1864,7 +1864,7 @@
 "scene": "s20"
 },
 {
-"t": 115.55,
+"t": 115.66,
 "dur": 0.9,
 "kind": "cloth",
 "desc": "leather front cover lifts and swings open",
@@ -1872,14 +1872,14 @@
 "scene": "s20"
 },
 {
-"t": 115.93,
+"t": 116.04,
 "dur": 0.65,
 "kind": "paper",
 "desc": "three leaves riffling over",
 "scene": "s20"
 },
 {
-"t": 116.31,
+"t": 116.42,
 "dur": 0.3,
 "kind": "wood",
 "desc": "cover settling onto the rahle",
@@ -1887,7 +1887,7 @@
 "scene": "s20"
 },
 {
-"t": 116.42,
+"t": 116.48,
 "dur": 0.3,
 "kind": "pop",
 "desc": "subtle marker for the 195 ring",
@@ -1895,7 +1895,7 @@
 "scene": "s20"
 },
 {
-"t": 118.42,
+"t": 118.25,
 "dur": 0.3,
 "kind": "pop",
 "desc": "subtle marker for ring",
@@ -1903,15 +1903,15 @@
 "scene": "s20"
 },
 {
-"t": 119.11,
-"dur": 1.35,
+"t": 119.08,
+"dur": 1.55,
 "kind": "whoosh",
-"desc": "soft air move as the camera cranes up",
+"desc": "soft air move as the camera slides left and cranes up to the sill",
 "gain": -5,
 "scene": "s20"
 },
 {
-"t": 120.33,
+"t": 120.39,
 "dur": 0.3,
 "kind": "pop",
 "desc": "very subtle marker label",
