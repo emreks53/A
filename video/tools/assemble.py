@@ -50,7 +50,9 @@ for i, s in enumerate(S):
     inputs += ['-i', clip]
     # trim by frame index (clip frame k sits at clip time k/FPS): a seconds value printed with 4 decimals can land just after a
     # frame's pts (0.266667 -> "0.2667") and drop it, which cut the last blended frame of the following transition
-    k0, k1 = round(a * FPS), round(b * FPS)
+    # length from the output grid (whole frames between this clip's entry and its exit), so no blend loses its last frame
+    g_in = tr_off(i) if i > 0 else 0.0; g_out = tr_off(i + 1) + tr_dur(S[i + 1]['id']) if i + 1 < len(S) else TOTAL
+    k0 = round(a * FPS); k1 = k0 + round(g_out * FPS) - round(g_in * FPS)
     filters.append(f"[{i}:v]trim=start_frame={k0}:end_frame={k1},setpts=PTS-STARTPTS,fps={FPS},scale={W}:{H}:flags=lanczos,format=yuv420p,setsar=1[v{i}]")
 
 cur = 'v0'

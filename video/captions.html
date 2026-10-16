@@ -37,14 +37,16 @@ await document.fonts.ready;
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 // 1 on normal frames, 0 over a white dip: the dark scrim/halo/shadow that keep captions legible on mid and bright frames
 // would read as a grey smudge on a near-white frame, so they hand over to the fine outline alone there
-const unwhite = t => { const x = clamp((lumaAt(t) - 0.62) / 0.18); return 1 - x * x * (3 - 2 * x); };
+// (from the frame's own brightness - the max over +-2 frames - not the smoothed lumaAt, which flattens a short dip peak)
+const lumaPeak = t => { const o = lumaOverride[t.toFixed(3)]; if (o !== undefined) return o; if (!LUMA) return 0.45; const i = Math.round(t * 30); let m = 0; for (let k = -2; k <= 2; k++) { const j = Math.max(0, Math.min(LUMA.length - 1, i + k)); m = Math.max(m, LUMA[j]); } return m; };
+const unwhite = t => { const x = clamp((lumaPeak(t) - 0.55) / 0.2); return 1 - x * x * (3 - 2 * x); };
 const easeOut = t => 1 - Math.pow(1 - t, 3);
 const easeInOut = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 // Pre-layout every phrase into lines with per-word x positions.
 X.font = `${S.weight} ${S.size}px "${S.family}"`; if ('letterSpacing' in X) X.letterSpacing = S.track + 'px';
 const space = X.measureText(' ').width;
-const layouts = phrases.map(ph => {
+const layouts = phrases.map((ph, pi) => {
   const ws = ph.map(w => ({ ...w, width: X.measureText(w.w).width }));
   const lines = []; let cur = [], cw = 0;
   for (const w of ws) { const add = (cur.length ? space : 0) + w.width; if (cur.length && cw + add > MAX_W) { lines.push(cur); cur = [w]; cw = w.width; } else { cur.push(w); cw += add; } }
@@ -53,23 +55,26 @@ const layouts = phrases.map(ph => {
   if (lines.length === 2) { const all = [...lines[0], ...lines[1]]; let best = null; for (let k = 1; k < all.length; k++) { const a = all.slice(0, k), b = all.slice(k); const wa = a.reduce((s, w) => s + w.width, 0) + space * (a.length - 1), wb = b.reduce((s, w) => s + w.width, 0) + space * (b.length - 1); if (wa > MAX_W || wb > MAX_W) continue; const d = Math.abs(wa - wb) + (wb > wa ? 0 : 1); if (!best || d < best.d) best = { d, a, b }; } if (best) { lines[0] = best.a; lines[1] = best.b; } }
   const lh = S.size * S.lh; const top = BASE_Y - (lines.length * lh) / 2 + lh / 2;
   lines.forEach((ln, li) => { const lw = ln.reduce((s, w) => s + w.width, 0) + space * (ln.length - 1); let x = W / 2 - lw / 2; ln.forEach(w => { w.x = x; w.y = top + li * lh; x += w.width + space; }); });
-  return { words: ws, lines, start: ph[0].s - 0.06, end: ph[ph.length - 1].e };
+  // a phrase after a pause appears 0.12 s ahead of its first word (fully readable as the word starts); in running speech
+  // only 0.06 s, so the previous phrase's last word is not cut while it is still being spoken
+  const prevEnd = pi ? phrases[pi - 1][phrases[pi - 1].length - 1].e : -1;
+  return { words: ws, lines, start: ph[0].s - (ph[0].s - prevEnd >= 0.3 ? 0.12 : 0.06), end: ph[ph.length - 1].e };
 });
 // Phrase hand-off is strictly sequential (never two phrases on screen at once): a phrase lingers 0.45 s after its
 // last word, but if the next phrase comes sooner it fades out quickly so that it is gone exactly when the next begins.
 // In continuous speech (next phrase within 0.3 s) the swap is quick and the incoming phrase starts at 55% opacity, so the
 // caption never blinks out between phrases. Before a white dip (very bright band) a phrase leaves right after its last word
-// and the next one fades in from zero; on the dip itself scrim, halo and shadow fade away (unwhite) - a dark halo on a
-// near-white frame reads as a grey smudge.
+// and the next one fades in from zero; on very bright frames scrim and halo fade away and the glyph shadow tightens to a
+// crisp edge (unwhite) - a dark halo on a near-white frame reads as a grey smudge.
 const FI = 0.18;
 layouts.forEach((L, i) => {
   const next = layouts[i + 1], prev = layouts[i - 1]; L.fo = 0.22; L.floor = 0; L.fi = FI;
-  if (prev && L.start - prev.end < 0.3 && lumaAt(L.start) <= 0.68) { L.floor = 0.55; L.fi = 0.12; }
+  if (prev && L.words[0].s - prev.end < 0.3 && lumaAt(L.start) <= 0.68) { L.floor = 0.55; L.fi = 0.12; }
   if (!next) { L.out = L.end + 0.8; return; }
   if (lumaAt(L.end + 0.1) > 0.68) { L.fo = 0.15; L.out = Math.max(L.start + L.fi + 0.05, Math.min(L.end + 0.05, next.start - L.fo)); return; } // white dip ahead: leave right after the last word
   const linger = 0.45;
   if (L.end + linger + L.fo <= next.start) { L.out = L.end + linger; return; }
-  L.fo = next.start - L.end < 0.3 ? 0.06 : 0.09; L.out = Math.max(L.start + L.fi + 0.05, next.start - L.fo);
+  L.fo = next.words[0].s - L.end < 0.3 ? 0.06 : 0.09; L.out = Math.max(L.start + L.fi + 0.05, next.start - L.fo);
 });
 
 function scrim(alpha) {
@@ -86,7 +91,8 @@ function drawWord(w, x, y, state, k, alpha, lift) {
   X.textBaseline = 'middle'; X.textAlign = 'left';
   const yy = y - lift;
   // legibility: soft dark halo + fine outline
-  { const lum = lumaAt(window.__t ?? 0); X.shadowColor = `rgba(0,0,0,${((0.55 + 0.25 * clamp((lum - 0.45) / 0.35)) * (0.35 + 0.65 * unwhite(window.__t ?? 0))).toFixed(3)})`; X.shadowBlur = 16 + 6 * clamp((lum - 0.45) / 0.35); X.shadowOffsetY = 3; }
+  { const tt = window.__t ?? 0, lum = lumaAt(tt), w = unwhite(tt); X.shadowColor = `rgba(0,0,0,${(0.55 + 0.25 * clamp((lum - 0.45) / 0.35)).toFixed(3)})`;
+    X.shadowBlur = (16 + 6 * clamp((lum - 0.45) / 0.35)) * w + 7 * (1 - w); X.shadowOffsetY = 3 * w + 1.5 * (1 - w); }
   X.lineJoin = 'round'; X.lineWidth = 3.6; X.strokeStyle = 'rgba(12,10,8,0.6)'; X.strokeText(w.w, x, yy);
   X.shadowColor = 'transparent';
   if (state === 1) {
@@ -128,7 +134,7 @@ window.drawAt = (t) => {
     L.words.forEach((w, i) => {
       const stag = L.floor + (1 - L.floor) * easeOut(clamp((t - L.start - i * 0.035) / 0.26));
       let state = 0, k = 0;
-      if (t >= w.s - 0.04) state = (t < w.e + 0.02 || (i === L.words.length - 1 && t < L.out)) ? 1 : 2;
+      if (t >= w.s - 0.04) state = (t < w.e + 0.02 || (i === L.words.length - 1 && t < L.out + L.fo)) ? 1 : 2; // last word fades out in gold (no colour flip)
       if (state === 1) k = easeOut(clamp((t - w.s + 0.04) / 0.14));
       const nextW = L.words[i + 1]; if (state === 1 && nextW && t >= nextW.s - 0.04) state = 2;
       const lift = state === 1 ? 3 * k : 0;
