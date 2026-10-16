@@ -1,7 +1,7 @@
 [
 {
 "t": 7.3,
-"dur": 4.9,
+"dur": 5.1,
 "kind": "wind",
 "desc": "soft dawn breeze over Medina",
 "gain": -5
@@ -20,7 +20,7 @@
 "desc": "Medine location tag pops in"
 },
 {
-"t": 9.79,
+"t": 9.66,
 "dur": 0.5,
 "kind": "whoosh",
 "desc": "soft airy whoosh as the headline rises",
@@ -33,7 +33,7 @@
 "desc": "delicate sparkle on the gilded crescent"
 },
 {
-"t": 10.93,
+"t": 10.95,
 "dur": 0.6,
 "kind": "impact",
 "desc": "soft low impact when EN BUYUK MUCIZE lands",
@@ -47,16 +47,23 @@
 "gain": -10
 },
 {
-"t": 11.72,
+"t": 11.88,
 "dur": 0.8,
 "kind": "whoosh",
 "desc": "slow airy whoosh, cross-dissolve into the Hilye panel"
 },
 {
-"t": 11.9,
-"dur": 1.8,
+"t": 12.08,
+"dur": 1.62,
 "kind": "fire",
 "desc": "quiet candle flicker",
+"gain": -4
+},
+{
+"t": 12.13,
+"dur": 0.4,
+"kind": "paper",
+"desc": "soft paper swish as the ayet caption fades in",
 "gain": -4
 },
 {
@@ -64,12 +71,5 @@
 "dur": 1.2,
 "kind": "chime",
 "desc": "warm resonant tone under KENDI ZATI"
-},
-{
-"t": 12.76,
-"dur": 0.4,
-"kind": "paper",
-"desc": "soft paper swish as caption appears",
-"gain": -4
 }
 ]
