@@ -88,7 +88,7 @@
 "dur": 3.7,
 "kind": "wind",
 "desc": "calm lee soft breeze",
-"gain": -12
+"gain": -19
 },
 {
 "t": 39.1,
@@ -151,7 +151,7 @@
 "dur": 0.4,
 "kind": "stone",
 "desc": "muffled distant stone strike",
-"gain": -8
+"gain": -11
 },
 {
 "t": 41.08,
@@ -165,7 +165,7 @@
 "dur": 0.4,
 "kind": "stone",
 "desc": "muffled distant stone strike",
-"gain": -8
+"gain": -14
 },
 {
 "t": 41.32,

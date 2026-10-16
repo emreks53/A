@@ -108,7 +108,8 @@ window.drawAt = (t) => {
     const phraseA = pin * pout; if (phraseA <= 0.001) continue;
     const rise = (1 - pin) * 14 - (1 - pout) * 10;
     // soft elliptical shadow behind the phrase; darker when the background under it is bright
-    { const lum = lumaAt(t); const k = 0.34 + 0.30 * clamp((lum - 0.30) / 0.40); // capped: a heavy dark oval reads as a smudge on bright frames let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    { const lum = lumaAt(t); const k = 0.34 + 0.30 * clamp((lum - 0.30) / 0.40); // capped: a heavy dark oval reads as a smudge on bright frames
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
       L.words.forEach(w => { x0 = Math.min(x0, w.x); x1 = Math.max(x1, w.x + w.width); y0 = Math.min(y0, w.y); y1 = Math.max(y1, w.y); });
       const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 + rise, rx = (x1 - x0) / 2 + 120, ry = (y1 - y0) / 2 + S.size * 1.05;
       X.save(); X.globalAlpha = phraseA; X.translate(cx, cy); X.scale(1, ry / rx);

@@ -4,7 +4,7 @@
 "dur": 4.2,
 "kind": "wind",
 "desc": "warm desert wind with blowing sand",
-"gain": -2
+"gain": -5
 },
 {
 "t": 30.24,
@@ -24,14 +24,14 @@
 "dur": 1.6,
 "kind": "sword",
 "desc": "faint steel shimmer as the sun glint travels up the edge",
-"gain": -6
+"gain": -9
 },
 {
 "t": 32.33,
 "dur": 1.6,
 "kind": "rumble",
 "desc": "distant low rumble of the approaching dust storm",
-"gain": -4
+"gain": -7
 },
 {
 "t": 32.38,
@@ -44,6 +44,6 @@
 "dur": 0.6,
 "kind": "metal",
 "desc": "tiny bright ting of the star glint",
-"gain": -4
+"gain": -8
 }
 ]
