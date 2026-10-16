@@ -14,14 +14,14 @@
 "gain": -3
 },
 {
-"t": 79.95,
+"t": 80.1,
 "dur": 0.6,
 "kind": "paper",
 "desc": "soft page whisper as Sifa-i Serif appears",
 "gain": -5
 },
 {
-"t": 80.49,
+"t": 80.6,
 "dur": 0.2,
 "kind": "pop",
 "desc": "small pop for tag"
@@ -68,12 +68,6 @@
 "gain": -2.0
 },
 {
-"t": 84.15,
-"dur": 0.6,
-"kind": "paper",
-"desc": "single page turn"
-},
-{
 "t": 84.25,
 "dur": 0.3,
 "kind": "wood",
@@ -81,7 +75,13 @@
 "gain": -3.5
 },
 {
-"t": 86.65,
+"t": 84.34,
+"dur": 0.6,
+"kind": "paper",
+"desc": "single page turn"
+},
+{
+"t": 86.81,
 "dur": 0.5,
 "kind": "stamp",
 "desc": "rubber-stamp thump on ispat"
