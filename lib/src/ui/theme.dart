@@ -50,6 +50,9 @@ ThemeData panelTheme() {
       outline: const Color(0xFF3D5578),
       surfaceContainerHighest: const Color(0xFFD4E3F8),
     ),
+    dividerColor: Palette.navy.withValues(alpha: 0.25),
+    // Açılan iPhone rehberi çerçevenin içine çizgi çekmesin.
+    expansionTileTheme: const ExpansionTileThemeData(shape: Border(), collapsedShape: Border()),
   );
 }
 

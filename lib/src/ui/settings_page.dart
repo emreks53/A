@@ -133,6 +133,7 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           // Google Play, gizlilik politikasının uygulama içinde de bulunmasını şart koşar.
+          const Divider(height: 32),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text('Gizlilik politikası'),
@@ -182,7 +183,7 @@ class SettingsPage extends StatelessWidget {
     }
 
     Widget warning(String text, String button, VoidCallback onPressed) => Padding(
-          padding: const EdgeInsets.fromLTRB(72, 0, 20, 8),
+          padding: const EdgeInsets.fromLTRB(60, 0, 20, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

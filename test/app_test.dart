@@ -8,6 +8,8 @@ import 'package:lugat_risale/src/dictionary/lugat.dart';
 import 'package:lugat_risale/src/focus/focus_mode.dart';
 import 'package:lugat_risale/src/ui/app.dart';
 import 'package:lugat_risale/src/ui/entry_page.dart';
+import 'package:lugat_risale/src/ui/privacy_page.dart';
+import 'package:lugat_risale/src/ui/theme.dart';
 import 'package:lugat_risale/src/ui/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -411,6 +413,7 @@ void main() {
     await tester.tap(find.byTooltip('Ayarlar'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Gizlilik politikası'), 200);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Gizlilik politikası'));
     await tester.pumpAndSettle();
     expect(find.text('Toplanan veriler'), findsOneWidget);
@@ -428,5 +431,36 @@ void main() {
     // Üst çubuk tam yüksekliğinde kalır; düğme normal boyunda (40) görünür.
     expect(tester.getSize(find.byType(NavigationToolbar).first).height, greaterThanOrEqualTo(56));
     expect(tester.getSize(find.byTooltip('Ayarlar')).height, greaterThanOrEqualTo(40));
+  });
+
+  testWidgets('ayarlarda odak ayarları açık mavi çerçevede; İletişim e-postası kopyalanır', (tester) async {
+    mockAndroidFocus(granted: true);
+    final copied = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') copied.add((call.arguments as Map)['text'] as String);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    final controller = await startApp(tester, android: true);
+    controller.setThemeMode(ThemeMode.dark);
+    await tester.tap(find.byTooltip('Ayarlar'));
+    await tester.pumpAndSettle();
+
+    final panel = find.byKey(const Key('odak-cercevesi'));
+    expect(find.descendant(of: panel, matching: find.text('Dikkat dağıtmayan okuma')), findsOneWidget);
+    expect(find.descendant(of: panel, matching: find.text('Ekran kapanmaz')), findsOneWidget);
+    expect(find.descendant(of: panel, matching: find.byKey(const Key('odak-anahtari'))), findsOneWidget);
+    final material = tester.widget<Material>(find.descendant(of: panel, matching: find.byType(Material)).first);
+    expect(material.color, Palette.sky, reason: 'koyu temada da paletteki açık mavi');
+
+    await tester.scrollUntilVisible(find.byKey(const Key('iletisim-eposta')), 200);
+    await tester.pumpAndSettle();
+    expect(find.text('İletişim'), findsOneWidget);
+    expect(find.text(PrivacyPage.developerName), findsOneWidget);
+    expect(find.text(PrivacyPage.contactEmail), findsOneWidget);
+    await tester.tap(find.byKey(const Key('iletisim-eposta')));
+    await tester.pumpAndSettle();
+    expect(copied, [PrivacyPage.contactEmail]);
+    expect(find.text('E-posta adresi kopyalandı'), findsOneWidget);
   });
 }
