@@ -10,6 +10,9 @@
 	<array>
 		<string>tr</string>
 	</array>
+	<!-- Uygulama şifreleme kullanmıyor: App Store Connect her yüklemede ihracat uyumluluğu sormasın. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleDisplayName</key>
 	<string>Lügat-ı Risale-i Nur</string>
 	<key>CFBundleExecutable</key>
