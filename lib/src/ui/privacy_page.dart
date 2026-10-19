@@ -7,7 +7,8 @@ import 'widgets.dart';
 class PrivacyPage extends StatelessWidget {
   const PrivacyPage({super.key});
 
-  /// Geliştiriciye ulaşmak için e-posta adresi.
+  /// Geliştirici ve ona ulaşmak için e-posta adresi.
+  static const developerName = 'Lügat-ı Risale-i Nur';
   static const contactEmail = 'lugatirisaleinur@gmail.com';
 
   static const sections = <(String, String)>[
@@ -15,7 +16,7 @@ class PrivacyPage extends StatelessWidget {
       '',
       'Lügat-ı Risale-i Nur, Risale-i Nur okurken karşılaşılan Osmanlıca kelimelerin manasını '
           'göstermek için hazırlanmış bir lügat uygulamasıdır.\n\n'
-          'Geliştirici: Lügat-ı Risale-i Nur',
+          'Geliştirici: $developerName',
     ),
     (
       'Toplanan veriler',

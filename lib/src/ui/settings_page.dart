@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
 import 'app.dart';
 import 'privacy_page.dart';
+import 'theme.dart';
 import 'widgets.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -21,17 +23,28 @@ class SettingsPage extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 24),
         children: [
-          const SectionHeader('Dikkat dağıtmayan okuma'),
-          const ListTile(
-            leading: Icon(Icons.light_mode_outlined),
-            title: Text('Ekran kapanmaz'),
-            subtitle: Text('Uygulama açıkken telefon kendiliğinden uyku moduna geçmez.'),
+          // Uygulamanın asıl amacı: çerçeve içinde, paletteki açık mavi zeminde.
+          _Panel(
+            key: const Key('odak-cercevesi'),
+            child: Builder(
+              builder: (context) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SectionHeader('Dikkat dağıtmayan okuma'),
+                  const ListTile(
+                    leading: Icon(Icons.light_mode_outlined),
+                    title: Text('Ekran kapanmaz'),
+                    subtitle: Text('Uygulama açıkken telefon kendiliğinden uyku moduna geçmez.'),
+                  ),
+                  if (controller.isAndroid)
+                    ..._androidFocus(context, controller)
+                  else
+                    _IosFocusHelp(initiallyExpanded: showIosFocusHelp),
+                ],
+              ),
+            ),
           ),
-          if (controller.isAndroid)
-            ..._androidFocus(context, controller)
-          else
-            _IosFocusHelp(initiallyExpanded: showIosFocusHelp),
-          const Divider(height: 32),
+          const SizedBox(height: 8),
           const SectionHeader('Görünüm'),
           ListTile(
             leading: const Icon(Icons.format_size),
@@ -85,7 +98,11 @@ class SettingsPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
             child: Text(
               'Lügat-ı Risale-i Nur, Risale-i Nur Külliyatı’nı okurken karşılaşılan '
-              'Osmanlıca kelime ve ifadelerin manasını hızlıca öğrenmek için hazırlandı.'
+              'Osmanlıca kelime ve ifadelerin manasını hızlıca öğrenmek için hazırlandı. '
+              'Telefon veya tabletten bağımsız ve bilmediği Osmanlıca kelimeleri öğrenerek, '
+              'fiziksel kitap üzerinden okumak isteyenlerin; okumaları esnasında kelime manalarına '
+              'defalarca ve hızlıca bakarken yanlarında kapanmadan hazır bekleyecek ve dikkatini '
+              'dağıtacak etkenlerin engellendiği bir Miftah-ı Risale-i Nur.'
               '${controller.lugat == null ? '' : '\n\nLügatte ${formatCount(controller.lugat!.entries.length)} kelime ve ifade var.'}'
               '\n\nManaların neredeyse tamamı RNK Neşriyat’ın Risale-i Nur lügatından (rnk.tr) '
               'alınmıştır. O lügatta bulunmayan az sayıdaki kelimenin manası ayrıca hazırlanmıştır.'
@@ -94,6 +111,28 @@ class SettingsPage extends StatelessWidget {
               style: theme.textTheme.bodyMedium,
             ),
           ),
+          const Divider(height: 32),
+          const SectionHeader('İletişim'),
+          const ListTile(
+            leading: Icon(Icons.person_outline),
+            title: Text('Geliştirici'),
+            subtitle: Text(PrivacyPage.developerName),
+          ),
+          ListTile(
+            key: const Key('iletisim-eposta'),
+            leading: const Icon(Icons.mail_outline),
+            title: const Text('E-posta'),
+            subtitle: const Text(PrivacyPage.contactEmail),
+            trailing: const Icon(Icons.copy_outlined, size: 20),
+            onTap: () async {
+              await Clipboard.setData(const ClipboardData(text: PrivacyPage.contactEmail));
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(const SnackBar(content: Text('E-posta adresi kopyalandı')));
+            },
+          ),
+          // Google Play, gizlilik politikasının uygulama içinde de bulunmasını şart koşar.
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text('Gizlilik politikası'),
@@ -239,4 +278,29 @@ class _SegmentLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FittedBox(fit: BoxFit.scaleDown, child: Text(text, maxLines: 1));
+}
+
+/// Ayarlar'da öne çıkan çerçeve: paletteki açık mavi zemin ([panelTheme]).
+/// Dokunma efektleri çerçevenin üzerinde görünsün diye zemin bir [Material]'dır.
+class _Panel extends StatelessWidget {
+  const _Panel({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = panelTheme();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      child: Material(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: Theme(
+          data: theme,
+          child: Padding(padding: const EdgeInsets.only(bottom: 8), child: child),
+        ),
+      ),
+    );
+  }
 }

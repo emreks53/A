@@ -36,6 +36,23 @@ abstract final class Palette {
       );
 }
 
+/// Ayarlar'daki "Dikkat dağıtmayan okuma" çerçevesi: paletteki açık mavi zemin
+/// ([Palette.sky]), üzerinde lacivert yazı. Açık ve koyu temada aynıdır.
+ThemeData panelTheme() {
+  final light = buildTheme(Brightness.light);
+  return light.copyWith(
+    colorScheme: light.colorScheme.copyWith(
+      surface: Palette.sky,
+      onSurface: Palette.navyDeep,
+      onSurfaceVariant: const Color(0xFF1F3A5F),
+      tertiary: Palette.navy,
+      error: const Color(0xFF8C1D18),
+      outline: const Color(0xFF3D5578),
+      surfaceContainerHighest: const Color(0xFFD4E3F8),
+    ),
+  );
+}
+
 /// Kelime ve mana metinlerinin yazı tipi (assets/fonts, SIL Open Font License).
 const String serifFamily = 'Lora';
 
