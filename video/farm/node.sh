@@ -18,16 +18,16 @@ while true; do
   mapfile -t MY < <(python3 -c "
 import json; d=json.load(open('$VIDEO_OUT/jobs.json'))
 for j in d['jobs']:
-    if j['node']=='$NODE': print(j['branch'], j['shot'], j['from'], j['to'])")
+    if j['node']=='$NODE': print(j['branch'], j['shot'], j['from'], j['to'], j.get('ref', 'origin/'+j['branch']))")
   FIN=$(python3 -c "import json; print(int(json.load(open('$VIDEO_OUT/jobs.json')).get('finished', False)))")
   pending=0
   for line in "${MY[@]}"; do
-    read BR SHOT F T <<< "$line"
+    read BR SHOT F T REF <<< "$line"
     MARK="$VIDEO_OUT/node_done/${SHOT}_${F}_${T}"
     [ -e "$MARK" ] && continue
     pending=1
     echo "[node $NODE] job $BR $SHOT $F-$T"
-    git fetch -q origin "$BR" && git checkout -q "origin/$BR" -- video/blender || { echo "[node $NODE] fetch failed $BR"; sleep 60; continue; }
+    git fetch -q origin "$BR" && git checkout -q "$REF" -- video/blender || { echo "[node $NODE] fetch failed $BR"; sleep 60; continue; }
     if bash video/farm/render.sh "$SHOT" "$F" "$T"; then touch "$MARK"; echo "[node $NODE] JOB DONE $SHOT $F-$T"; else echo "[node $NODE] JOB FAILED $SHOT $F-$T"; sleep 60; fi
   done
   if [ "$pending" = 0 ]; then
