@@ -31,8 +31,8 @@
    "tracking": 0.075, "tracking_in": 0.05, "line_height": 1.16, "sep_gap": 0.5,
    "color": [250, 238, 212], "shadow": [0.46, 18, 2], "shadow2": [0.22, 3, 1],
    "glow": [[255, 196, 112, 0.36, 15], [255, 232, 190, 0.26, 4.5]],
-   "in": {"stagger": 0.05, "max_stagger": 0.5, "dur": 1.0, "rise": 0.07, "blur": 11, "fade": 0.62, "scale": 0.035},
-   "sweep": {"dur": 1.15, "width": 0.22, "gain": 1.25},
+   "in": {"stagger": 0.04, "max_stagger": 0.34, "dur": 0.85, "rise": 0.07, "blur": 11, "fade": 0.5, "scale": 0.035},
+   "sweep": {"dur": 1.0, "width": 0.22, "gain": 1.25},
    "out": {"dur": 0.75, "stagger": 0.02, "rise": -0.03, "blur": 10, "tracking": 0.03, "glow_boost": 0.6},
    "breathe": 0.10, "drift": 0.012, "legibility": 1.0
   },
@@ -57,8 +57,8 @@
   },
   "callout": {
    "_doc": "2 px lines, ring + dot on the tracked point, Inter Medium label + Inter Regular secondary at 75%",
-   "primary": {"family": "Inter", "weight": 500, "size": 38, "tracking": 0.01},
-   "secondary": {"family": "Inter", "weight": 400, "size": 27, "tracking": 0.015, "alpha": 0.75},
+   "primary": {"family": "Inter", "weight": 500, "size": 40, "tracking": 0.005},
+   "secondary": {"family": "Inter", "weight": 400, "size": 28, "tracking": 0.012, "alpha": 0.75},
    "line": 2.0, "ring": 14, "dot": 3.4, "leader": 74, "gap": 4, "pad": 10, "text_gap": 12,
    "color": [255, 255, 255], "line_alpha": 0.92, "glow": [255, 246, 228, 0.30, 5],
    "shadow": [0.42, 6, 1], "text_shadow": [0.50, 9, 1.5],
@@ -157,7 +157,7 @@
  "widgets": [
   {"id": "w_heart", "type": "ecg", "shot": "sh06", "primary": "Kalp", "secondary": "günde ~100.000 atış",
    "_doc": "corner monitor; R peaks locked to the mix's heartbeat (S1 anchor 31.42 s, 72 bpm, R = S1 - 0.03 s)",
-   "x": 70, "y": 232, "width": 300, "height": 62, "beat_anchor": 31.39, "period": 0.83333,
+   "x": 70, "y": 232, "width": 330, "height": 84, "beat_anchor": 31.39, "period": 0.83333,
    "sweep_s": 2.6, "sync": 33.12, "out": 35.55, "cue": "sh06.callout_heart"},
 
   {"id": "w_cells", "type": "counter", "shot": "sh10", "track": "cells",

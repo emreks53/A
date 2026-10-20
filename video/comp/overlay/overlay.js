@@ -532,15 +532,15 @@ function drawCalloutCore(el, f, t, prim, sec, opts = {}) {
   if (lb.P && ph.prim > 0 && ta > 0.003) {
     const prog = eOutCubic(ph.prim);
     const slide = (1 - prog) * 10 * el.sx;
-    const wipe = el.sx > 0 ? lerp(tx - 20, tx + lb.P.w + 40, prog) : lerp(tx + lb.P.w + 20, tx - 40, prog);
+    const wipe = lerp(tx - 36, tx + lb.P.w + 36, prog);
     if (opts.drawPrimary) opts.drawPrimary(tx - slide, prY, ta, prog);
-    else drawRunWipe(lb.P, tx - slide, prY, st.color, ta, wipe, el.sx, 34, st.text_shadow);
+    else drawRunWipe(lb.P, tx - slide, prY, st.color, ta, wipe, 1, 36, st.text_shadow);
   }
   if (lb.Q && ph.sec > 0 && ta > 0.003) {
     const prog = eOutCubic(ph.sec);
     const slide = (1 - prog) * 8 * el.sx;
-    const wipe = el.sx > 0 ? lerp(tx - 20, tx + lb.Q.w + 40, prog) : lerp(tx + lb.Q.w + 20, tx - 40, prog);
-    drawRunWipe(lb.Q, tx - slide, seY, st.color, ta * st.secondary.alpha, wipe, el.sx, 34, st.text_shadow);
+    const wipe = lerp(tx - 36, tx + lb.Q.w + 36, prog);
+    drawRunWipe(lb.Q, tx - slide, seY, st.color, ta * st.secondary.alpha, wipe, 1, 36, st.text_shadow);
   }
   if (ta > 0.05) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0.45 * ta]);
 }
@@ -830,6 +830,10 @@ function drawRings(el, f, t) {
 }
 
 // ------------------------------------------------------------------ Fibonacci / Vogel spiral (sh14a)
+/* Parastichies of Vogel's model: florets n = j + m*F (family F, arm j) sit at angle j*GA + m*delta_F with
+   delta_F = F*GA (mod 2pi) small, so each arm is the smooth curve n(s) = j + s*F, th(s) = j*GA + s*delta_F,
+   r(s) = c*sqrt(n(s)) passing exactly through its florets. With tracks/sh14a_disc.json the curve is projected
+   through the shot's own camera + head transform (exact matchmove); otherwise centred on TRK_spiral. */
 function drawSpiral(el, f, t) {
   if (t < el.t0 - 0.05 || t > el.out) return;
   const p = tk(el.trk, f);
@@ -837,73 +841,84 @@ function drawSpiral(el, f, t) {
   const GA = 137.50776405 * Math.PI / 180;
   let proj = null;
   if (el.proj) { const i = f - el.proj.f0; if (i >= 0 && i < el.proj.m.length) proj = el.proj.m[i]; }
-  const cPx = el.k_px_m / Math.max(1e-4, p.d);           // floret spacing constant in px (fallback mapping)
+  const cPx = el.k_px_m / Math.max(1e-4, p.d);
   const rot = (el.rot_deg || 0) * Math.PI / 180;
-  const pt = n => {
+  let ctr = [p.x, p.y];
+  const mapPt = (n, th) => {
     if (proj) {
-      const r = el.proj.c * Math.sqrt(n), th = n * GA;
-      const R = el.proj.R, dome = el.proj.dome || 0;
+      const c = el.proj.c, R = el.proj.R, dome = el.proj.dome || 0;
+      const r = c * Math.sqrt(n);
       const lx = r * Math.cos(th), ly = r * Math.sin(th), lz = dome * (1 - (r / R) * (r / R));
       const m = proj;
-      const hx = m[0] * lx + m[1] * ly + m[2] * lz + m[3], hy = m[4] * lx + m[5] * ly + m[6] * lz + m[7], hw = m[8] * lx + m[9] * ly + m[10] * lz + m[11];
-      return [hx / hw, hy / hw];
+      const hw = m[8] * lx + m[9] * ly + m[10] * lz + m[11];
+      return [(m[0] * lx + m[1] * ly + m[2] * lz + m[3]) / hw, (m[4] * lx + m[5] * ly + m[6] * lz + m[7]) / hw];
     }
-    const r = cPx * Math.sqrt(n), th = n * GA + rot;
-    return [p.x + r * Math.cos(th), p.y + r * Math.sin(th)];
+    const r = cPx * Math.sqrt(n);
+    return [p.x + r * Math.cos(th + rot), p.y + r * Math.sin(th + rot)];
   };
+  if (proj) ctr = mapPt(0, 0);
   const fadeOut = 1 - eInOutCubic(lin(t, el.fade0, el.out));
-  const aGlob = p.v * fadeOut * eOutCubic(lin(t, el.t0 - 0.05, el.t0 + 0.25));
+  const aGlob = p.v * fadeOut * eOutCubic(lin(t, el.t0 - 0.05, el.t0 + 0.3));
   if (aGlob < 0.003) return;
-  const rDisc = proj ? null : cPx * Math.sqrt(el.n_max);
-  const famCols = [[255, 214, 140], [255, 246, 226]];
+  const lens = el.lens || 470;
+  const famCols = [[255, 212, 138], [255, 244, 222]];
+  const famA = [0.78, 0.55];
+  const mkGrad = (ctx, col, a) => {
+    const g = ctx.createRadialGradient(ctr[0], ctr[1], 0, ctr[0], ctr[1], lens);
+    g.addColorStop(0, rgba(col, 0)); g.addColorStop(0.06, rgba(col, a * 0.35)); g.addColorStop(0.16, rgba(col, a));
+    g.addColorStop(0.5, rgba(col, a)); g.addColorStop(0.82, rgba(col, a * 0.32)); g.addColorStop(1, rgba(col, 0));
+    return g;
+  };
   el.families.forEach((F, fi) => {
-    const tStart = fi === 0 ? el.t0 : lerp(el.t0, el.t_mid, 0.55);
-    const grow = eInOutSine(lin(t, tStart, tStart + (el.t_mid - el.t0) + 0.55));
+    let dl = (F * GA) % (2 * Math.PI); if (dl > Math.PI) dl -= 2 * Math.PI;
+    const tStart = fi === 0 ? el.t0 : lerp(el.t0, el.t_mid, 0.6);
+    const grow = eInOutSine(lin(t, tStart, tStart + (el.t_mid - el.t0) + 0.6));
     if (grow <= 0) return;
-    const mMax = Math.floor(el.n_max / F);
+    const sMax = el.n_max / F;
+    const paths = [];
     for (let j = 0; j < F; j++) {
-      const stag = (j / F) * 0.35;
-      const g = clamp((grow - stag) / (1 - 0.35));
+      const stag = ((j * 7) % F) / F * 0.3;
+      const g = clamp((grow - stag) / 0.7);
       if (g <= 0) continue;
+      const sEnd = 0.2 + g * sMax;
       const pts = [];
-      const nEnd = Math.max(2, Math.floor(2 + g * (mMax - 1)));
-      for (let m = 1; m <= nEnd; m++) {
-        const n = j + m * F;
-        if (n < 3 || n > el.n_max) continue;
-        const q = pt(n);
-        if (q[0] < -200 || q[0] > W + 200 || q[1] < -200 || q[1] > H + 200) { if (pts.length) pts.push(null); continue; }
-        pts.push([q[0], q[1], n]);
+      let prev = null;
+      for (let s = 0.2; s <= sEnd + 1e-6; s += 0.25) {
+        const n = j + s * F;
+        if (n < 1.5) continue;
+        const q = mapPt(n, j * GA + s * dl);
+        const rr = Math.hypot(q[0] - ctr[0], q[1] - ctr[1]);
+        if (rr > lens * 1.02) break;
+        pts.push(q); prev = q;
       }
-      // segments with alpha falling off toward the rim and very near the centre
-      for (let i = 1; i < pts.length; i++) {
-        const p0 = pts[i - 1], p1 = pts[i];
-        if (!p0 || !p1) continue;
-        const nn = p1[2] / el.n_max;
-        const radial = (1 - smooth(clamp((nn - 0.25) / 0.75))) * smooth(clamp((p1[2] - 8) / 40));
-        const al = aGlob * radial * (fi === 0 ? 0.62 : 0.42);
-        if (al < 0.004) continue;
-        const build = (c, o) => { c.moveTo(p0[0] + o, p0[1]); c.lineTo(p1[0] + o, p1[1]); };
-        strokeSolid(X, build, fi === 0 ? 1.6 : 1.2, famCols[fi], al);
-        strokeGlow(A, build, 1.6, famCols[fi], al * 0.55, 4);
-      }
+      if (pts.length > 1) paths.push(pts);
     }
-    // the Fibonacci number of the family, set small near the head
+    if (!paths.length) return;
+    const build = (c, o) => { for (const pts of paths) pts.forEach((q, i) => (i ? c.lineTo(q[0] + o, q[1]) : c.moveTo(q[0] + o, q[1]))); };
+    // dark hairline under (legibility on the bright florets), crisp line, then light
+    X.save(); X.lineCap = 'round'; X.lineJoin = 'round';
+    X.strokeStyle = mkGrad(X, [0, 0, 0], aGlob * 0.35); X.lineWidth = 3.2; X.beginPath(); build(X, 0); X.stroke();
+    X.strokeStyle = mkGrad(X, famCols[fi], aGlob * famA[fi]); X.lineWidth = fi === 0 ? 1.7 : 1.3; X.beginPath(); build(X, 0); X.stroke();
+    X.restore(); drewOver = true;
+    A.save(); A.lineCap = 'round';
+    A.strokeStyle = mkGrad(A, famCols[fi], aGlob * famA[fi] * 0.55); A.lineWidth = 5; A.beginPath(); build(A, 0); A.stroke();
+    A.restore(); drewAdd = true;
     if (el.numbers) {
-      const na = aGlob * eOutCubic(lin(t, tStart + 0.35, tStart + 0.8));
+      const na = aGlob * eOutCubic(lin(t, tStart + 0.4, tStart + 0.85));
       if (na > 0.003) {
         const run = layoutRun(String(F), 'Inter', 500, 30, 0.02);
-        const ang = fi === 0 ? -0.85 : -2.3;
-        const rr = Math.min(300, rDisc ? rDisc * 0.18 : 260);
-        const lx = clamp(p.x + Math.cos(ang) * rr - run.w / 2, TL.safe.x0, TL.safe.x1 - run.w);
-        const ly = clamp(p.y + Math.sin(ang) * rr, TL.safe.y0 + 40, TL.safe.y1);
-        drawRunWipe(run, lx, ly, famCols[fi], na * 0.95, lx + run.w + 40, 1, 30, [0.5, 6, 1]);
+        const ang = fi === 0 ? -0.62 : 2.45;
+        const rr = lens * 0.9;
+        const lx = clamp(ctr[0] + Math.cos(ang) * rr - run.w / 2, TL.safe.x0, TL.safe.x1 - run.w);
+        const ly = clamp(ctr[1] + Math.sin(ang) * rr + run.capH / 2, TL.safe.y0 + 40, TL.safe.y1);
+        drawRunWipe(run, lx, ly, famCols[fi], na, lx + run.w + 40, 1, 30, [0.6, 7, 1]);
         setFont(A, 'Inter', 500, 30);
-        for (const c of run.chars) glyph(A, c.ch, lx + c.x, ly, famCols[fi], na * 0.4, 6);
+        for (const c of run.chars) glyph(A, c.ch, lx + c.x, ly, famCols[fi], na * 0.35, 6);
       }
     }
   });
-  fillCircle(X, p.x, p.y, 2.5, [255, 255, 255], aGlob * 0.8);
-  glowDot(A, p.x, p.y, 26, [255, 214, 140], aGlob * 0.5);
+  fillCircle(X, ctr[0], ctr[1], 2.4, [255, 255, 255], aGlob * 0.7);
+  glowDot(A, ctr[0], ctr[1], 30, [255, 214, 140], aGlob * 0.45);
 }
 
 // ================================================================== frame
