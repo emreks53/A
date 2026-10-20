@@ -36,7 +36,7 @@ def build(ctx):
         rise = C.remap(t, T_RISE, T_RISE + 3.6, C.smoother)
         z = 0.30 + 1.15 * rise + 0.012 * math.sin((t - T0) * 1.7)
         pitch = 2.5 - 9.0 * rise
-        yaw = -3.0 + 4.0 * math.sin((t - T0) * 0.32) + 4.0 * rise
+        yaw = -8.0 + 3.0 * math.sin((t - T0) * 0.32) + 7.0 * rise
         roll = 0.6 * math.sin((t - T0) * 0.8)
         focus = 1.6 + 2.2 * rise
         fstop = 2.8
@@ -59,7 +59,7 @@ def build(ctx):
     C.handheld(cam, amp_loc=0.004, amp_rot=0.002, speed=0.45, seed=13)
     cam_tests = [cams[f] for f in range(ctx.f0, ctx.f1, 10)] + [cams[ctx.f1 - 1]]
 
-    def visible(p, max_dist=1e9, margin=1.15):
+    def visible(p, max_dist=1e9, margin=1.04):
         return L.visible_from_any(p, cam_tests, tan_w, tan_h, margin=margin, max_dist=max_dist)
 
     # ------------------------------------------------------------------ light
@@ -161,7 +161,7 @@ def build(ctx):
                 return True
         return False
     # blades: dense near the glide path, culled to what any camera frame can see
-    for (n, xs, y0, y1, smin, smax) in ((26000, 3.0, -1.0, 9.0, 0.7, 1.25), (18000, 9.0, 9.0, 30.0, 0.8, 1.4)):
+    for (n, xs, y0, y1, smin, smax) in ((22000, 3.0, -1.0, 9.0, 0.7, 1.25), (9000, 9.0, 9.0, 30.0, 0.9, 1.5)):
         for _ in range(n):
             p = Vector((prng.uniform(-xs, xs), prng.uniform(y0, y1), 0.0))
             if near_path(p, 0.03):
@@ -171,7 +171,8 @@ def build(ctx):
                 continue
             pts.append(p); vidx.append(prng.randrange(nvar))
             rots.append((prng.uniform(-0.15, 0.15), prng.uniform(-0.15, 0.15), prng.uniform(0, 6.283)))
-            scls.append(prng.uniform(smin, smax))
+            hn = __import__("mathutils").noise.noise(Vector((p.x * 0.35, p.y * 0.35, 7.7)))
+            scls.append(prng.uniform(smin, smax) * (0.85 + 0.5 * hn))
     # Poly Haven grass clumps for body/volume, mid and far
     for (n, xs, y0, y1) in ((6000, 5.0, 0.5, 14.0), (9000, 25.0, 14.0, 45.0)):
         for _ in range(n):
@@ -203,8 +204,9 @@ def build(ctx):
     m_blue = L.mat_simple("FlBlue", (0.08, 0.15, 0.7), rough=0.5, trans=0.3)
     frng = random.Random(55)
     k = 0
+    m_butter = L.mat_simple("FlButter", (0.95, 0.62, 0.02), rough=0.15, trans=0.3)
     for kind, n, mats in (("daisy", 6, (m_stem, m_white, m_yel)), ("poppy", 4, (m_stem, m_red, m_dark)),
-                          ("cornflower", 3, (m_stem, m_blue, m_blue))):
+                          ("cornflower", 3, (m_stem, m_blue, m_blue)), ("buttercup", 5, (m_stem, m_butter, m_yel))):
         for i in range(n):
             L.daisy(f"f{k:02d}", frng, frng.uniform(0.35, 0.7), col=fcol, mats=mats, kind=kind)
             k += 1
@@ -237,7 +239,7 @@ def build(ctx):
         right = M @ Vector((1, 0, 0))
         p = Vector((c.x, c.y, 0)) + Vector((right.x, right.y, 0)).normalized() * (0.10 * side) + (M @ Vector((0, 0, -1))) * 0.45
         p.z = 0.0
-        fpts.append(p); fvidx.append(prng.randrange(13)); frots.append((0, 0, prng.uniform(0, 6.283))); fscls.append(0.75)
+        fpts.append(p); fvidx.append(prng.randrange(18)); frots.append((0, 0, prng.uniform(0, 6.283))); fscls.append(0.75)
     flf = L.point_cloud("FlowerField", fpts, {"vidx": ("INT", fvidx), "rot": ("FLOAT_VECTOR", frots), "scl": ("FLOAT", fscls)})
     L.gn_instancer(flf, fcol, sway=0.07, sway_scale=0.9, sway_speed=0.4, name="FlowerInst", clock=clock)
     flf.cycles.use_motion_blur = False
@@ -283,7 +285,9 @@ def build(ctx):
         for f in range(ctx.f0 - 2, ctx.f1 + 3):
             t = f / 24.0
             u = t - T0
-            pos = base + Vector((0.9 * math.sin(u * 0.45 + ph[0]) + 0.3 * math.sin(u * 1.3 + ph[1]),
+            if i == 0:
+                base = Vector((-0.9 + 0.42 * u, 0.55 * u + 1.0, 0.36))
+            pos = base + Vector((0.9 * math.sin(u * 0.45 + ph[0]) * (0.25 if i == 0 else 1) + 0.3 * math.sin(u * 1.3 + ph[1]),
                                  0.7 * math.sin(u * 0.35 + ph[2]) + 0.25 * u * math.cos(ph[5]),
                                  0.25 * math.sin(u * 0.9 + ph[3]) + 0.08 * math.sin(u * 3.1 + ph[4])))
             if prev is None:

@@ -110,7 +110,7 @@ class TimeWarp:
 
 # --------------------------------------------------------------------------- materials
 
-def mat_grass(name="GrassBlade", hue_shift=0.0, dry=0.0):
+def mat_grass(name="GrassBlade", hue_shift=0.0, dry=0.0, fresh_tip=False):
     """Thin backlit grass blade: principled (waxy spec) + translucency, parallel veins, colour breakup
     per instance (Object Info random) and along the blade (UV.x = 0 base .. 1 tip)."""
     m, nt, p = C.new_mat(name)
@@ -127,7 +127,7 @@ def mat_grass(name="GrassBlade", hue_shift=0.0, dry=0.0):
     cr.elements[1].position = 0.55
     cr.elements[1].color = (0.13, 0.26, 0.04, 1)
     e = cr.elements.new(0.95); e.color = (0.17, 0.27, 0.05, 1)
-    e = cr.elements.new(1.0); e.color = (0.32, 0.26, 0.09, 1)
+    e = cr.elements.new(1.0); e.color = (0.32, 0.26, 0.09, 1) if not fresh_tip else (0.15, 0.27, 0.05, 1)
     # blade coordinate perturbed by instance random so tips differ
     jit = math_node(nt, "MULTIPLY", oi.outputs["Random"], 0.08, (-1000, 100))
     sx = math_node(nt, "ADD", sep.outputs[0], jit, (-950, 200))
@@ -185,7 +185,12 @@ def mat_grass(name="GrassBlade", hue_shift=0.0, dry=0.0):
     nt.links.new(tmix.outputs[2], tr.inputs["Color"])
     nt.links.new(bump.outputs[0], tr.inputs["Normal"])
     ms = node(nt, "ShaderNodeMixShader", (250, 0))
-    ms.inputs[0].default_value = 0.0 if __import__("os").environ.get("S1_NOTRANS") == "1" else 0.42
+    # translucency only where the camera sees the blade directly; indirect paths treat blades as opaque
+    # (visually identical at this scale, saves ~15 % of render time in dense grass)
+    lpn = node(nt, "ShaderNodeLightPath", (0, 300))
+    trf = math_node(nt, "MULTIPLY", lpn.outputs["Is Camera Ray"],
+                    0.0 if __import__("os").environ.get("S1_NOTRANS") == "1" else 0.42, (150, 300))
+    nt.links.new(trf, ms.inputs[0])
     nt.links.new(p.outputs[0], ms.inputs[1])
     nt.links.new(tr.outputs[0], ms.inputs[2])
     nt.links.new(ms.outputs[0], out.inputs["Surface"])
@@ -1145,11 +1150,13 @@ def daisy(name, rng, height, col=None, mats=None, kind="daisy"):
             for i in range(2):
                 f = bm.faces.new((vs[i][0], vs[i][1], vs[i + 1][1], vs[i + 1][0]))
                 f.material_index = 1; f.smooth = True
-    elif kind == "poppy":
-        rd = rng.uniform(0.022, 0.032)
-        ellipsoid(bm, top + R @ Vector((0, 0, 0.004)), (0.004, 0.004, 0.005), R, subdiv=2, mat_index=2)
-        for k in range(4):
-            a = math.pi / 2 * k + rng.uniform(-0.2, 0.2)
+    elif kind in ("poppy", "buttercup"):
+        npet = 4 if kind == "poppy" else 5
+        rd = rng.uniform(0.022, 0.032) if kind == "poppy" else rng.uniform(0.009, 0.012)
+        cr = 0.004 if kind == "poppy" else 0.0018
+        ellipsoid(bm, top + R @ Vector((0, 0, cr)), (cr, cr, cr * 1.2), R, subdiv=2, mat_index=2)
+        for k in range(npet):
+            a = 2 * math.pi / npet * k + rng.uniform(-0.2, 0.2)
             cupv = rng.uniform(0.5, 0.9)
             rows = []
             for i in range(6):
@@ -1157,7 +1164,7 @@ def daisy(name, rng, height, col=None, mats=None, kind="daisy"):
                 ring = []
                 for j in range(7):
                     u = (j / 6 - 0.5) * 1.9
-                    ang = a + u * 0.75 * (0.3 + s)
+                    ang = a + u * (0.75 if npet == 4 else 0.55) * (0.3 + s)
                     r = rd * s
                     p = Vector((math.cos(ang) * r, math.sin(ang) * r, cupv * rd * s * s + 0.001))
                     ring.append(bm.verts.new(top + R @ p))

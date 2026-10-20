@@ -178,8 +178,9 @@ def build(ctx):
         rise = tp[-1].z
         bpy.data.objects.remove(tmp)
         hb_len *= (P_TIP.z + 0.004) / max(0.01, rise) if rise > 0 else 1.2
+    m_hero = L.mat_grass("HeroGrass", hue_shift=0.01, fresh_tip=True)
     hb, hpts = L.grass_blade("HeroBlade", hero_rng, length=hb_len, width=0.0045, lean=0.28, droop=2.25, twist=1.35,
-                             dew=9, tip_drop=0.0, mats=(m_grass, m_dew), seg=40, dew_scale=0.9)
+                             dew=9, tip_drop=0.0, mats=(m_hero, m_dew), seg=40, dew_scale=0.9)
     tip_local = hpts[-1]
     # rotate the blade so it arcs from the back-left toward the drop, then put its tip at P_TIP
     hb_rot = Euler((0, 0, math.radians(-18)), "XYZ")
