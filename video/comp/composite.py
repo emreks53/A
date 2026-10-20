@@ -569,6 +569,9 @@ def legibility(disp, boxes, cfg, scale, w, h):
         l85 = float(np.percentile(lum, 85))
         k = max(0.0, (l85 - lc["threshold"]) * lc["gain"]) * min(1.0, wt)
         k = min(k, lc["max_local"] if local else lc["max"])
+        # a flat, featureless background (overcast sky, plain wall) barely hurts legibility - the glyph shadow is
+        # enough - while any darkening on it would read as a smudge: scale down with the local texture
+        k *= float(np.clip(float(np.std(lum)) / lc["texture"], lc["flat_floor"], 1.0))
         if k <= 0.003:
             continue
         if local:
