@@ -28,7 +28,7 @@ from mathutils.geometry import tessellate_polygon
 
 # ============================================================================ constants
 
-DESIGN_VERSION = "v10"
+DESIGN_VERSION = "v11"
 DESIGN_DIR = os.path.join(C.ASSETS, "sh15_design", DESIGN_VERSION)
 
 FONT_URLS = {
@@ -393,7 +393,7 @@ def semse(P, cx, cy, rx, ry, lw):
         P.disc(cx, cy + s * (ry * 1.04 + 0.0062), 0.0007)
 
 
-def draw_cover(P, title=True):
+def draw_cover(P, title=True, name="SÖZLER"):
     """Front board (joint at x=0, fore-edge at x=BK_WF)."""
     W, H = BK_WF, BK_H
     lw = 0.0006
@@ -429,7 +429,7 @@ def draw_cover(P, title=True):
     if title:
         P.text("RİSALE-İ NUR KÜLLİYATINDAN", "corm_bold", 0.0030, cx, 0.1755, spacing=1.22, max_w=0.105)
         flourish(P, cx, 0.1690, 0.062, 0.00045, small=True)
-        P.text("SÖZLER", "corm_bold", 0.0128, cx, 0.1435, spacing=1.10, max_w=0.11)
+        P.text(name, "corm_bold", 0.0128 if len(name) < 8 else 0.0112, cx, 0.1435, spacing=1.10, max_w=0.11)
         flourish(P, cx, 0.1320, 0.088, 0.0006)
         semse(P, cx, 0.0905, 0.0125, 0.0190, 0.00045)
         P.text("BEDİÜZZAMAN SAİD NURSÎ", "corm_bold", 0.0031, cx, 0.0405, spacing=1.18, max_w=0.10)
@@ -635,6 +635,7 @@ def design_main():
 
     s = new_sheet("cover_sozler", BK_WF, BK_H, 16000); draw_cover(Painter(s, fonts), True)
     s = new_sheet("cover_plain", BK_WF, BK_H, 7000); draw_cover(Painter(s, fonts), False)
+    s = new_sheet("cover_mektubat", BK_WF, BK_H, 9000); draw_cover(Painter(s, fonts), True, "MEKTUBAT")
     s = new_sheet("spines", SPINE_SLOT * len(BOOKS), BK_H, 11000)
     P = Painter(s, fonts)
     for i, (lines, T) in enumerate(BOOKS):
@@ -713,11 +714,14 @@ TABLE_X0, TABLE_X1, TABLE_Y0 = -0.95, 1.15, -0.58
 FLOOR_Z = -0.74
 SUN_DIR = Vector((0.84, 0.16, -0.52)).normalized()
 SUN_K = 4300
-RAHLE_POS = Vector((-0.21, -0.03, 0.0))
+RAHLE_POS = Vector((-0.38, -0.06, 0.0))
+RAHLE_YAW = math.radians(90)          # reader sits at +x, facing the window
 BETA = math.radians(40)
 RAHLE_TB = 0.016
 SOZ_POS = Vector((0.17, -0.03, 0.0))   # closed Sozler lying on the table (camA)
 SOZ_YAW = math.radians(-9)
+STACK_POS = Vector((-0.58, 0.21, 0.0))
+STACK_YAW = math.radians(90 - 7)
 
 # ----------------------------------------------------------------------------- node helpers
 
@@ -1481,7 +1485,7 @@ def build_rahle(mat):
                 v.co.x = l_new
         bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
         ob = bm_to_obj(bm, "rahle_%s" % ("A" if side > 0 else "B"), mats=[mat], smooth=True, sharp_angle=35)
-        ob.matrix_world = Matrix.Translation(RAHLE_POS + Vector((0, 0, zh))) @ R.to_4x4()
+        ob.matrix_world = Matrix.Translation(RAHLE_POS) @ Matrix.Rotation(RAHLE_YAW, 4, "Z") @ Matrix.Translation((0, 0, zh)) @ R.to_4x4()
         add_bevel(ob, 0.0018, 3, 35)
         objs.append(ob)
     # wooden hinge pin ends (tiny dowel caps on the outer knuckles)
@@ -1726,7 +1730,7 @@ def build_open_book(mats):
     leaves = build_leaves(halfL, halfR, [mats["leaf_%d" % k] for k in range(4)], 0, 0)
     root = bpy.data.objects.new("open_book", None)
     bpy.context.scene.collection.objects.link(root)
-    root.location = RAHLE_POS + Vector((0, -PAGE_H / 2, 0))
+    root.matrix_world = Matrix.Translation(RAHLE_POS) @ Matrix.Rotation(RAHLE_YAW, 4, "Z") @ Matrix.Translation((0, -PAGE_H / 2, 0))
     for ob in objs + leaves:
         ob.parent = root
     # page-number tracker on the final page (leaf 3 resting on the right stack: recto 721)
@@ -1892,8 +1896,8 @@ def volume_box():
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     m, nt, out = new_mat("air")
     v = NN(nt, "ShaderNodeVolumePrincipled")
-    v.inputs["Density"].default_value = float(os.environ.get("SH15_DENS", "0.45"))
-    v.inputs["Anisotropy"].default_value = 0.55
+    v.inputs["Density"].default_value = float(os.environ.get("SH15_DENS", "0.35"))
+    v.inputs["Anisotropy"].default_value = 0.62
     v.inputs["Color"].default_value = (1.0, 0.96, 0.90, 1)
     LK(nt, v.outputs[0], out.inputs["Volume"])
     ob = bm_to_obj(bm, "air", mats=[m], smooth=False)
@@ -2055,9 +2059,9 @@ def place_closed(root, loc, yaw=0.0, upright=False, lean=0.0):
 
 def build_row(mats):
     rng = random.Random(15)
-    x = -0.03
+    x = 0.0
     roots = []
-    for idx in range(1, len(BOOKS)):
+    for idx in range(3, len(BOOKS)):
         lines, T = BOOKS[idx]
         root, objs = build_closed_book("vol_%02d" % idx, idx, [mats["leather_plain"], mats["cover_plain"], mats["cover_plain"], mats["spine"]])
         for o in objs:
@@ -2074,6 +2078,21 @@ def build_row(mats):
     return roots, x
 
 
+def build_stack(mats):
+    """MEKTUBAT lying on LEM'ALAR beside the rahle (spines toward the rahle, heads toward the window)."""
+    roots = []
+    z = 0.0
+    for k, (idx, dyaw, dxy) in enumerate(((2, 0.0, (0.0, 0.0)), (1, math.radians(-6), (0.006, -0.004)))):
+        cover = mats["cover_mektubat"] if idx == 1 else mats["cover_plain"]
+        root, objs = build_closed_book("stack_%d" % idx, idx, [mats["leather_plain"], cover, mats["cover_plain"], mats["spine"]])
+        T = BOOKS[idx][1]
+        loc = STACK_POS + Vector((dxy[0], dxy[1], z))
+        root.matrix_world = Matrix.Translation(loc) @ Matrix.Rotation(STACK_YAW + dyaw, 4, "Z") @ Matrix.Translation((-BK_WF / 2, -BK_H / 2, 0))
+        z += T
+        roots.append(root)
+    return roots
+
+
 # ----------------------------------------------------------------------------- build
 
 def build(ctx):
@@ -2085,6 +2104,7 @@ def build(ctx):
     MATS["leather_plain"] = mat_leather("leather_plain", None)
     MATS["cover_sozler"] = mat_leather("cover_sozler", os.path.join(d, "cover_sozler.png"), "uvb")
     MATS["cover_plain"] = mat_leather("cover_plain", os.path.join(d, "cover_plain.png"), "uvb")
+    MATS["cover_mektubat"] = mat_leather("cover_mektubat", os.path.join(d, "cover_mektubat.png"), "uvb")
     MATS["spine"] = mat_leather("spine", os.path.join(d, "spines.png"), "uvs")
     for num in (720, 729):
         MATS["page_%d" % num] = mat_page("page_%d" % num, os.path.join(d, "page_%d.png" % num))
@@ -2102,6 +2122,7 @@ def build(ctx):
     build_room(MATS)
     build_rahle(MATS["rahle"])
     row, row_end = build_row(MATS)
+    build_stack(MATS)
     soz, soz_objs = build_closed_book("sozler_closed", 0, [MATS["leather_plain"], MATS["cover_sozler"], MATS["cover_plain"], MATS["spine"]])
     place_closed(soz, SOZ_POS, yaw=SOZ_YAW)
     ob_root, ob_objs, halfL, halfR = build_open_book(MATS)
@@ -2140,25 +2161,26 @@ def build(ctx):
         (111.96, V((0.235, -0.35, 0.38)), V((0.175, 0.05, 0.02)), V((0.17, -0.03, 0.052))),
         (113.50, V((0.225, -0.31, 0.35)), V((0.175, 0.055, 0.02)), V((0.17, -0.03, 0.052))),
     ], 2622, 2724, seed=11)
+    bpy.context.view_layer.update()
     pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
     camB = rig_camera("camB", 40, 2.8, [
-        (113.30, V((-0.30, -0.44, 0.64)), V((-0.13, 0.05, 0.24)), pg + V((-0.03, -0.06, -0.02))),
-        (114.45, V((-0.28, -0.39, 0.60)), V((-0.125, 0.055, 0.245)), pg + V((-0.01, -0.02, 0.0))),
-        (115.90, V((-0.24, -0.30, 0.52)), V((-0.115, 0.07, 0.25)), pg),
+        (113.30, V((-0.05, 0.18, 0.57)), V((-0.45, 0.02, 0.34)), pg + V((0.03, -0.01, -0.01))),
+        (114.45, V((-0.08, 0.165, 0.545)), V((-0.455, 0.025, 0.335)), pg + V((0.01, 0.0, 0.0))),
+        (115.90, V((-0.13, 0.145, 0.50)), V((-0.47, 0.04, 0.33)), pg),
     ], 2718, 2782, seed=12)
     zc = 0.15
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
     camC = rig_camera("camC", 50, 2.8, [
-        (115.70, V((-0.02, yc - 0.27, 0.125)), V((0.01, yc, zc)), V((0.01, yc, zc))),
-        (117.30, V((0.22, yc - 0.25, 0.130)), V((0.25, yc, zc)), V((0.25, yc, zc))),
+        (115.70, V((0.01, yc - 0.27, 0.125)), V((0.04, yc, zc)), V((0.04, yc, zc))),
+        (117.30, V((0.21, yc - 0.25, 0.130)), V((0.24, yc, zc)), V((0.24, yc, zc))),
     ], 2774, 2818, seed=13)
-    camD = rig_camera("camD", 32, 3.2, [
-        (117.20, V((-0.27, -0.58, 0.55)), V((-0.22, 0.03, 0.21)), V((-0.17, -0.03, 0.25))),
-        (120.05, V((-0.18, -0.55, 0.53)), V((-0.20, 0.03, 0.21)), V((-0.17, -0.03, 0.25))),
+    camD = rig_camera("camD", 35, 2.8, [
+        (117.20, V((0.05, -0.12, 0.40)), V((-0.42, -0.06, 0.30)), V((-0.33, -0.06, 0.25))),
+        (120.05, V((0.04, -0.02, 0.39)), V((-0.42, -0.05, 0.30)), V((-0.33, -0.05, 0.25))),
     ], 2810, 2883, seed=14)
-    camE = rig_camera("camE", 32, 4.0, [
-        (119.90, V((-0.02, -0.88, 0.85)), V((-0.17, 0.03, 0.18)), V((-0.17, -0.02, 0.24))),
-        (125.60, V((-0.045, -0.76, 0.765)), V((-0.175, 0.03, 0.185)), V((-0.17, -0.02, 0.24))),
+    camE = rig_camera("camE", 28, 4.0, [
+        (119.90, V((0.36, -0.07, 0.61)), V((-0.45, -0.06, 0.36)), V((-0.36, -0.05, 0.25))),
+        (125.60, V((0.25, -0.065, 0.565)), V((-0.45, -0.06, 0.355)), V((-0.36, -0.05, 0.25))),
     ], 2875, 3014, seed=15)
     for name, f, cam in (("A", ctx.f0, camA), ("B", 2722, camB), ("C", 2778, camC), ("D", 2814, camD), ("E", 2879, camE)):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
