@@ -2150,6 +2150,13 @@ def build(ctx):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
         mk.camera = cam
     sc.camera = camA
+    dbg = os.environ.get("SH15_CAM")          # debug view: "px,py,pz,ax,ay,az,lens"
+    if dbg:
+        v = [float(x) for x in dbg.split(",")]
+        for mk in list(sc.timeline_markers):
+            sc.timeline_markers.remove(mk)
+        cd = C.camera("dbg", lens=v[6], loc=v[0:3], look_at=v[3:6])
+        sc.camera = cd
     sc.view_settings.exposure = -0.3
     return {"final_spp": 32, "preview_spp": 16, "diffuse_bounces": 3, "glossy_bounces": 2,
             "transmission_bounces": 3, "transparent_bounces": 8, "clamp_indirect": 3.0}
