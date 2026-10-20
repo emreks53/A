@@ -505,7 +505,7 @@
     "drips": 3,
     "pan": 0.1
    },
-   "lvl": -24,
+   "lvl": -27,
    "class": "spot",
    "space": "room",
    "send": -13,
@@ -2315,7 +2315,7 @@
     "pan_to": 0.6,
     "f0": 218
    },
-   "lvl": -38,
+   "lvl": -41,
    "class": "spot",
    "space": "meadow",
    "send": -16,
@@ -2359,7 +2359,7 @@
     "pan_to": -0.1,
     "f0": 226
    },
-   "lvl": -40,
+   "lvl": -42,
    "class": "spot",
    "space": "meadow",
    "send": -16,
@@ -2706,24 +2706,24 @@
   {
    "id": "sh14a.allah_air",
    "shot": "sh14a",
-   "t": 98.6733,
-   "pre": 0.8,
-   "dur": 2.4,
+   "t": 99.18,
+   "pre": 1.1,
+   "dur": 2.6,
    "gen": "bloom",
    "params": {
-    "sync": 0.8,
-    "rise": 0.8,
-    "decay": 1.6,
-    "bright": 0.7,
-    "low": 0.15
+    "sync": 1.1,
+    "rise": 1.1,
+    "decay": 1.8,
+    "bright": 0.45,
+    "low": 0.25
    },
-   "lvl": -31,
+   "lvl": -33,
    "class": "amb",
    "space": "meadow",
    "send": -16,
    "fade_in": 0.005,
    "fade_out": 0.7,
-   "ref": "Allah: the light grows into a radiant sunrise - a soft breath of light, no impact"
+   "ref": "Allah: the light grows into a radiant sunrise - a soft, dark breath of light that blooms through the word and opens after it; no impact"
   },
   {
    "id": "sh14b.shadow",

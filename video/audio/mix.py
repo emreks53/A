@@ -270,7 +270,7 @@ LF_SHELF_HZ, LF_SHELF_DB = 60.0, -5.0
 # the SFX is cut, only for that word (smooth 0.12 s ramps; neighbouring words merge).
 WEQ_FC = np.array([125, 250, 500, 1000, 2000, 4000, 8000], dtype=float)
 WEQ_TARGET = np.array([3, 5, 9, 12, 12, 12, 8], dtype=float)
-WEQ_MAXCUT = np.array([8, 8, 10, 18, 18, 18, 10], dtype=float)
+WEQ_MAXCUT = np.array([8, 8, 10, 24, 24, 24, 12], dtype=float)
 WEQ_RAMP, WEQ_ITER, WEQ_OVER = 0.12, 5, 1.3     # ramp (s), refinement passes, step over-correction
 
 
