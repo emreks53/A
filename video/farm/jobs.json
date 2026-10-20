@@ -1,5 +1,37 @@
-{"finished": false,
+{
+ "finished": false,
  "jobs": [
-  {"node": "n1", "branch": "render-dev-s1", "ref": "d0f3dda01535a9184f80ef4723311b65185781e9", "shot": "sh01", "from": 0, "to": 65},
-  {"node": "n2", "branch": "render-dev-s1", "ref": "d0f3dda01535a9184f80ef4723311b65185781e9", "shot": "sh01", "from": 66, "to": 131}
- ]}
+  {
+   "node": "n1",
+   "branch": "render-dev-s1",
+   "ref": "d0f3dda01535a9184f80ef4723311b65185781e9",
+   "shot": "sh01",
+   "from": 0,
+   "to": 65
+  },
+  {
+   "node": "n2",
+   "branch": "render-dev-s1",
+   "ref": "d0f3dda01535a9184f80ef4723311b65185781e9",
+   "shot": "sh01",
+   "from": 66,
+   "to": 131
+  },
+  {
+   "node": "n3",
+   "branch": "render-dev-s7",
+   "ref": "73747e7858af732889c86650ab21741da3ac9822",
+   "shot": "sh06",
+   "from": 716,
+   "to": 789
+  },
+  {
+   "node": "n4",
+   "branch": "render-dev-s7",
+   "ref": "73747e7858af732889c86650ab21741da3ac9822",
+   "shot": "sh06",
+   "from": 790,
+   "to": 862
+  }
+ ]
+}
