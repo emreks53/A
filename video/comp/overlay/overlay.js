@@ -857,58 +857,65 @@ function drawSpiral(el, f, t) {
     return [p.x + r * Math.cos(th + rot), p.y + r * Math.sin(th + rot)];
   };
   if (proj) ctr = mapPt(0, 0);
+  // the annulus where the drawn families are the eye's contact parastichies (21/34: n ~ 60..300)
+  const nA = el.n_band ? el.n_band : [34, 70, 250, 430];
+  const rOf = n => { let acc = 0; for (let k = 0; k < 6; k++) { const q = mapPt(n, k * 1.047 + 0.3); acc += Math.hypot(q[0] - ctr[0], q[1] - ctr[1]); } return acc / 6; };
+  const rB = nA.map(rOf);
+  // on-screen floret spacing: the pattern is only drawn while florets are big enough to read
+  const q1 = mapPt(150, 150 * GA), q2 = mapPt(150 + el.families[0], (150 + el.families[0]) * GA);
+  const spacing = Math.hypot(q1[0] - q2[0], q1[1] - q2[1]);
+  const scaleFade = smooth(clamp((spacing - 13) / 14));
   const fadeOut = 1 - eInOutCubic(lin(t, el.fade0, el.out));
-  const aGlob = p.v * fadeOut * eOutCubic(lin(t, el.t0 - 0.05, el.t0 + 0.3));
+  const aGlob = p.v * fadeOut * scaleFade * eOutCubic(lin(t, el.t0 - 0.05, el.t0 + 0.3));
   if (aGlob < 0.003) return;
-  const lens = el.lens || 470;
   const famCols = [[255, 212, 138], [255, 244, 222]];
-  const famA = [0.78, 0.55];
+  const famA = [0.80, 0.58];
   const mkGrad = (ctx, col, a) => {
-    const g = ctx.createRadialGradient(ctr[0], ctr[1], 0, ctr[0], ctr[1], lens);
-    g.addColorStop(0, rgba(col, 0)); g.addColorStop(0.06, rgba(col, a * 0.35)); g.addColorStop(0.16, rgba(col, a));
-    g.addColorStop(0.5, rgba(col, a)); g.addColorStop(0.82, rgba(col, a * 0.32)); g.addColorStop(1, rgba(col, 0));
+    const R = Math.max(rB[3], 1);
+    const g = ctx.createRadialGradient(ctr[0], ctr[1], 0, ctr[0], ctr[1], R);
+    const st = x => clamp(x / R, 0, 1);
+    g.addColorStop(0, rgba(col, 0)); g.addColorStop(st(rB[0]), rgba(col, 0));
+    g.addColorStop(st(rB[1]), rgba(col, a)); g.addColorStop(st(rB[2]), rgba(col, a));
+    g.addColorStop(1, rgba(col, 0));
     return g;
   };
   el.families.forEach((F, fi) => {
     let dl = (F * GA) % (2 * Math.PI); if (dl > Math.PI) dl -= 2 * Math.PI;
-    const tStart = fi === 0 ? el.t0 : lerp(el.t0, el.t_mid, 0.6);
-    const grow = eInOutSine(lin(t, tStart, tStart + (el.t_mid - el.t0) + 0.6));
+    const tStart = fi === 0 ? el.t0 : lerp(el.t0, el.t_mid, 0.55);
+    const grow = eInOutSine(lin(t, tStart, tStart + (el.t_mid - el.t0) + 0.55));
     if (grow <= 0) return;
-    const sMax = el.n_max / F;
     const paths = [];
     for (let j = 0; j < F; j++) {
       const stag = ((j * 7) % F) / F * 0.3;
       const g = clamp((grow - stag) / 0.7);
       if (g <= 0) continue;
-      const sEnd = 0.2 + g * sMax;
+      const nEnd = lerp(nA[0], nA[3], g);
       const pts = [];
-      let prev = null;
-      for (let s = 0.2; s <= sEnd + 1e-6; s += 0.25) {
+      const s0 = Math.max(0, (nA[0] - j) / F);
+      for (let s = s0; ; s += 0.2) {
         const n = j + s * F;
-        if (n < 1.5) continue;
-        const q = mapPt(n, j * GA + s * dl);
-        const rr = Math.hypot(q[0] - ctr[0], q[1] - ctr[1]);
-        if (rr > lens * 1.02) break;
-        pts.push(q); prev = q;
+        if (n > nEnd) break;
+        if (n < 1) continue;
+        pts.push(mapPt(n, j * GA + s * dl));
       }
       if (pts.length > 1) paths.push(pts);
     }
     if (!paths.length) return;
     const build = (c, o) => { for (const pts of paths) pts.forEach((q, i) => (i ? c.lineTo(q[0] + o, q[1]) : c.moveTo(q[0] + o, q[1]))); };
-    // dark hairline under (legibility on the bright florets), crisp line, then light
+    const lw = clamp(spacing / 40, 0.7, 1.15);
     X.save(); X.lineCap = 'round'; X.lineJoin = 'round';
-    X.strokeStyle = mkGrad(X, [0, 0, 0], aGlob * 0.35); X.lineWidth = 3.2; X.beginPath(); build(X, 0); X.stroke();
-    X.strokeStyle = mkGrad(X, famCols[fi], aGlob * famA[fi]); X.lineWidth = fi === 0 ? 1.7 : 1.3; X.beginPath(); build(X, 0); X.stroke();
+    X.strokeStyle = mkGrad(X, [0, 0, 0], aGlob * 0.32); X.lineWidth = 3.4 * lw; X.beginPath(); build(X, 0); X.stroke();
+    X.strokeStyle = mkGrad(X, famCols[fi], aGlob * famA[fi]); X.lineWidth = (fi === 0 ? 1.8 : 1.4) * lw; X.beginPath(); build(X, 0); X.stroke();
     X.restore(); drewOver = true;
     A.save(); A.lineCap = 'round';
-    A.strokeStyle = mkGrad(A, famCols[fi], aGlob * famA[fi] * 0.55); A.lineWidth = 5; A.beginPath(); build(A, 0); A.stroke();
+    A.strokeStyle = mkGrad(A, famCols[fi], aGlob * famA[fi] * 0.5); A.lineWidth = 5 * lw; A.beginPath(); build(A, 0); A.stroke();
     A.restore(); drewAdd = true;
     if (el.numbers) {
       const na = aGlob * eOutCubic(lin(t, tStart + 0.4, tStart + 0.85));
       if (na > 0.003) {
         const run = layoutRun(String(F), 'Inter', 500, 30, 0.02);
-        const ang = fi === 0 ? -0.62 : 2.45;
-        const rr = lens * 0.9;
+        const ang = fi === 0 ? -0.75 : 2.4;
+        const rr = clamp(rB[2] * 1.02, 160, 420);
         const lx = clamp(ctr[0] + Math.cos(ang) * rr - run.w / 2, TL.safe.x0, TL.safe.x1 - run.w);
         const ly = clamp(ctr[1] + Math.sin(ang) * rr + run.capH / 2, TL.safe.y0 + 40, TL.safe.y1);
         drawRunWipe(run, lx, ly, famCols[fi], na, lx + run.w + 40, 1, 30, [0.6, 7, 1]);
@@ -917,8 +924,7 @@ function drawSpiral(el, f, t) {
       }
     }
   });
-  fillCircle(X, ctr[0], ctr[1], 2.4, [255, 255, 255], aGlob * 0.7);
-  glowDot(A, ctr[0], ctr[1], 30, [255, 214, 140], aGlob * 0.45);
+  glowDot(A, ctr[0], ctr[1], 30, [255, 214, 140], aGlob * 0.35);
 }
 
 // ================================================================== frame
