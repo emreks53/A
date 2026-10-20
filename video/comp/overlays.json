@@ -62,7 +62,7 @@
    "secondary": {"family": "Inter", "weight": 400, "size": 28, "tracking": 0.012, "alpha": 0.75},
    "line": 2.0, "ring": 14, "dot": 3.4, "leader": 74, "gap": 4, "pad": 10, "text_gap": 12,
    "color": [255, 255, 255], "line_alpha": 0.92, "glow": [255, 246, 228, 0.30, 5],
-   "shadow": [0.42, 6, 1], "text_shadow": [0.50, 9, 1.5],
+   "shadow": [0.42, 6, 1], "text_shadow": [0.62, 10, 1.5],
    "on": 0.42, "off": 0.30
   }
  },
@@ -153,11 +153,12 @@
    "sync": 32.31, "out": 34.45, "cue": "sh06.callout_rbc", "fallback": [560, 1000]},
   {"id": "co_sun07", "shot": "sh07", "track": "sun", "primary": "~150 milyon km",
    "_doc": "the ring finds the sun on the horizon a breath before its rim breaks (38.88); only the distance (GÜNEŞ is the key word); gone before the light dissolve (40.35)",
-   "sync": 38.66, "out": 40.33, "cue": "sh07.callout_sun", "fallback": [540, 962], "prefer": ["dr", "dl"]},
+   "sync": 38.66, "out": 40.33, "cue": "sh07.callout_sun", "leader": 150, "fallback": [540, 962],
+   "prefer": ["dr", "dl"]},
   {"id": "co_hand", "shot": "sh08", "track": "hand", "primary": "Bir uzanış",
    "secondary": "onlarca kas · yüz binlerce kas lifi",
    "_doc": "long, steep leader: the label sits on the defocused wall above the hand, never on the skin",
-   "sync": 42.62, "out": 44.20, "cue": "sh08.callout_hand", "leader": 190, "follow": 0.6,
+   "sync": 42.62, "out": 44.20, "cue": "sh08.callout_hand", "leader": 225, "follow": 0.6,
    "fallback": [[42.0, 800, 560], [43.9, 735, 650], [44.3, 400, 1050]], "prefer": ["ul", "ur"]},
   {"id": "co_nerve", "shot": "sh09", "track": "nerve", "primary": "Sinir sinyali", "secondary": "~120 m/sn",
    "_doc": "the only sh09 callout until the mitochondria ('Kas lifi' dropped: there was no time to read both). Lands as the zoom-through settles; the label follows only a third of the fast camera drift; the anchor glides to a stop at the safe edge for the last frames",
