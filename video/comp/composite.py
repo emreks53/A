@@ -528,22 +528,44 @@ def legibility(disp, boxes, cfg, scale, w, h):
 
 
 # ============================================================================================ main loop
-def load_overlay(paths, w, h):
+def _read_rgba(path, w, h):
+    im = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    if im is None:
+        return None
+    if im.shape[1] != w:
+        im = cv2.resize(im, (w, h), interpolation=cv2.INTER_AREA)
+    x, y, bw, bh = cv2.boundingRect((im[..., 3] > 0).astype(np.uint8))
+    if bw == 0 or bh == 0:
+        return None
+    return (x, y, bw, bh), im[y:y + bh, x:x + bw]
+
+
+def apply_overlay(disp, paths, w, h, leg_cfg, scale):
+    """Legibility darkening, then OVER layer and additive (screen) layer, processed inside their bounding boxes.
+    Returns (disp, graphics alpha map or None)."""
     over_p, add_p, boxes = paths
-    ov = add = None
+    if boxes:
+        disp = legibility(disp, boxes, leg_cfg, scale, w, h)
+    gfx = None
     if over_p and os.path.exists(over_p):
-        im = cv2.imread(over_p, cv2.IMREAD_UNCHANGED)
-        if im.shape[1] != w:
-            im = cv2.resize(im, (w, h), interpolation=cv2.INTER_AREA)
-        ov = im.astype(np.float32) / 255.0
-        ov = np.concatenate([ov[..., 2::-1], ov[..., 3:4]], -1)
+        r = _read_rgba(over_p, w, h)
+        if r:
+            (x, y, bw, bh), im = r
+            o = im.astype(np.float32) * (1 / 255.0)
+            al = o[..., 3:4]
+            reg = disp[y:y + bh, x:x + bw]
+            disp[y:y + bh, x:x + bw] = o[..., 2::-1] * al + reg * (1 - al)
+            gfx = np.zeros((h, w), np.float32)
+            gfx[y:y + bh, x:x + bw] = al[..., 0]
     if add_p and os.path.exists(add_p):
-        im = cv2.imread(add_p, cv2.IMREAD_UNCHANGED)
-        if im.shape[1] != w:
-            im = cv2.resize(im, (w, h), interpolation=cv2.INTER_AREA)
-        a = im.astype(np.float32) / 255.0
-        add = a[..., 2::-1] * a[..., 3:4]
-    return ov, add, boxes
+        r = _read_rgba(add_p, w, h)
+        if r:
+            (x, y, bw, bh), im = r
+            a = im.astype(np.float32) * (1 / 255.0)
+            L = np.clip(a[..., 2::-1] * a[..., 3:4], 0, 1)
+            reg = np.clip(disp[y:y + bh, x:x + bw], 0, 1)
+            disp[y:y + bh, x:x + bw] = 1 - (1 - reg) * (1 - L)
+    return disp, gfx
 
 
 def audio_source():
@@ -650,15 +672,7 @@ def main():
         tim["fx"] += t2 - t1
         gfx = None
         if man is not None:
-            ov, add, boxes = load_overlay(OV.frame_paths(man, f), w, h)
-            if boxes:
-                disp = legibility(disp, boxes, edit["finish"]["legibility"], scale, w, h)
-            if ov is not None:
-                al = ov[..., 3:4]
-                disp = ov[..., :3] * al + disp * (1 - al)
-                gfx = al[..., 0]
-            if add is not None:
-                disp = 1 - (1 - np.clip(disp, 0, 1)) * (1 - np.clip(add, 0, 1))
+            disp, gfx = apply_overlay(disp, OV.frame_paths(man, f), w, h, edit["finish"]["legibility"], scale)
         t3 = time.time()
         tim["ov"] += t3 - t2
         if not a.no_finish:
