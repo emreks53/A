@@ -216,10 +216,18 @@ class ShotSource:
                     self.kind[f] = "render"
                     return decode16(u)
         if self.proxy is not None:
-            u = self.proxy.read(f)
+            eof = getattr(self, "proxy_eof", None)
+            u = self.proxy.read(f) if eof is None or f < eof else None
+            if u is None and eof is None:
+                self.proxy_eof = f
             if u is not None:
                 self.kind[f] = "proxy"
+                self.proxy_last = (f, u)
                 return decode16(u)
+            last = getattr(self, "proxy_last", None)
+            if last is not None and 0 < f - last[0] <= 6:
+                self.kind[f] = "proxy(held)"          # animatics are often a frame short of the handles
+                return decode16(last[1])
         if self.slate is None:
             self.slate = Slate(self.shot, self.w, self.h, "ANIMATIC MISSING" if self.proxy else "SLATE")
         self.kind[f] = "slate"
@@ -496,26 +504,31 @@ def mix(t, A, B, p, w, h):
         wgt = np.clip(m + lead * amt * math.sin(math.pi * p), 0, 1)[..., None]
         return A * (1 - wgt) + B * wgt
     if ty == "zoom":
-        # photographic push through the skin: no matte, no geometric edge. A keeps pushing in (scale + radial
-        # blur) and blooms into a warm subsurface-red exposure lift; B arrives out of a heavy defocus (still
-        # moving forward) and sharpens; B's own highlights lead the full-frame crossfade.
-        pa = smoothstep(p)
+        # photographic push through the skin - no matte, no geometric edge anywhere. A keeps pushing in (scale +
+        # radial blur) while the skin goes out of focus and turns into the warm red glow of light scattered in
+        # tissue; B starts as the same red glow at the same exposure (heavy defocus, still moving forward) and
+        # resolves into focus while its exposure settles to its own level. The full-frame crossfade happens where
+        # both are featureless, so there is nothing to see but the camera entering the arm.
         k = w / 1080
-        Az = radial_blur(A, 1 + 0.42 * p ** 1.5, 0.05 + 0.22 * pa)
-        Ab = down_blur_up(Az, 6 + 28 * k * pa, w, h)
-        sss = np.array([1.0, 0.50, 0.36], np.float32)                     # light scattered deep in tissue
-        tint = (1 - 0.75 * pa) + 0.75 * pa * sss
-        Az = (Az * (1 - 0.65 * pa) + Ab * 0.65 * pa) * np.float32(2 ** (1.3 * pa)) * tint
-        rb = 34 * k * (1 - smoothstep(min(1.0, p * 1.15))) ** 1.3
-        Bz = disk_defocus(scale_about_centre(B, 0.93 + 0.07 * pa), rb, w, h)
-        Bz = Bz * np.float32(2 ** (0.9 * (1 - pa) * smoothstep(p * 3)))     # arrives slightly over-exposed
-        lb = cv2.resize(Bz, (w // 4, h // 4), interpolation=cv2.INTER_AREA) @ LUMA
-        ref = float(np.median(lb)) + 1e-4
-        lead = cv2.resize(np.clip(np.log2((lb + 1e-4) / ref) * 0.22, -0.3, 0.3).astype(np.float32), (w, h),
-                          interpolation=cv2.INTER_LINEAR)
-        lead = cv2.GaussianBlur(lead, (0, 0), 10 * k)
-        wgt = np.clip(smoothstep((p - 0.12) / 0.76) + lead * math.sin(math.pi * p), 0, 1)[..., None]
-        return soft_shoulder(Az * (1 - wgt) + Bz * wgt, 0.85)
+        pa = smoothstep(p)
+        u = smoothstep(p / 0.55)                     # A: defocus + redden
+        v = smoothstep((p - 0.35) / 0.65)            # B: focus + exposure settle
+        sss = np.array([1.0, 0.42, 0.30], np.float32)
+        Az = radial_blur(A, 1 + 0.5 * p ** 1.4, 0.05 + 0.2 * pa)
+        if u > 0.01:
+            Az = down_blur_up(Az, 1.5 + 46 * k * u, w, h)
+        Az = Az * ((1 - 0.8 * u) + 0.8 * u * sss)
+        Bz = disk_defocus(scale_about_centre(B, 0.9 + 0.1 * pa), 46 * k * (1 - v) ** 1.2, w, h)
+        if v < 0.99:
+            Bz = down_blur_up(Bz, 1.0 + 30 * k * (1 - v) ** 1.5, w, h)
+        Bz = Bz * ((1 - 0.6 * (1 - v)) + 0.6 * (1 - v) * sss)
+        sa = cv2.resize(Az, (max(4, w // 16), max(4, h // 16)), interpolation=cv2.INTER_AREA) @ LUMA
+        sb = cv2.resize(Bz, (max(4, w // 16), max(4, h // 16)), interpolation=cv2.INTER_AREA) @ LUMA
+        g = float(np.clip((float(sa.mean()) + 1e-4) / (float(sb.mean()) + 1e-4), 1 / 8, 8)) ** (1 - v)
+        Bz = Bz * np.float32(g)
+        wgt = smoothstep((p - 0.25) / 0.5)
+        lift = 1 + 0.3 * math.sin(math.pi * p)       # a gentle exposure breath as the lens enters the skin
+        return soft_shoulder((Az * (1 - wgt) + Bz * wgt) * np.float32(lift), 0.85)
     if ty == "defocus":
         ra = 18 * (w / 1080) * smoothstep(min(1, p * 1.3))
         rb = 18 * (w / 1080) * smoothstep(min(1, (1 - p) * 1.3))
@@ -554,18 +567,19 @@ def legibility(disp, boxes, cfg, scale, w, h):
             continue
         lum = disp[ya:yb:3, xa:xb:3] @ LUMA
         l85 = float(np.percentile(lum, 85))
-        k = min(lc["max"], max(0.0, (l85 - lc["threshold"]) * lc["gain"])) * min(1.0, wt)
-        if local:
-            k *= 0.8
+        k = max(0.0, (l85 - lc["threshold"]) * lc["gain"]) * min(1.0, wt)
+        k = min(k, lc["max_local"] if local else lc["max"])
         if k <= 0.003:
             continue
+        if local:
+            k = min(k, lc["max_local"])
+        # elliptical, very soft (no corners, no straight edges): 50 % at text half-size + extent/pad,
+        # transition ~ +-35 % of that radius
         ext = (lc["extent_local"] if local else lc["extent"]) * scale
-        fe = lc["feather"] * scale
-        cy, hy = (y0s + y1s) / 2, (y1s - y0s) / 2 + lc["pad"] * scale * (0.5 if local else 1.0)
-        cx, hx = (x0s + x1s) / 2, (x1s - x0s) / 2 + ext
-        my = 1 / (1 + np.exp(-(hy - np.abs(yy - cy)) / (fe * 0.3)))
-        mx = 1 / (1 + np.exp(-(hx - np.abs(xx - cx)) / (fe * 0.3)))
-        m = (my[:, None] * mx[None, :]) * k
+        cy, ry = (y0s + y1s) / 2, (y1s - y0s) / 2 + lc["pad"] * scale * (0.6 if local else 1.0)
+        cx, rx = (x0s + x1s) / 2, (x1s - x0s) / 2 + ext
+        r = np.sqrt(((xx[None, :] - cx) / rx) ** 2 + ((yy[:, None] - cy) / ry) ** 2)
+        m = k / (1 + np.exp((r - 1) / lc["softness"]))
         mask = m if mask is None else np.maximum(mask, m)
     if mask is None:
         return disp
