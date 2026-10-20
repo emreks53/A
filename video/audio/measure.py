@@ -28,7 +28,7 @@ VIDEO = os.path.dirname(HERE)
 SR = 48000
 OCT = [250, 500, 1000, 2000, 4000, 8000]
 OCT_W = np.array([0.0617, 0.1671, 0.2373, 0.2648, 0.2142, 0.0549])   # ANSI S3.5 octave importance
-NAMED_KEY = ["Allah", "örtmek", "kan", "güneş", "takdim", "içmek", "bir", "721", "Haluk", "Rahim",
+NAMED_KEY = ["Allah", "örtmek", "kan", "güneş", "takdim", "içmek", "721",
              "birer", "şuursuz", "cansız", "şefkatsiz", "hakikati", "Sözler"]
 
 
