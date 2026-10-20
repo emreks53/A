@@ -2,7 +2,7 @@
 
 ## Round 2 changes (director notes 1-6)
 1. Render: 8 spp + OIDN, field deformation blur off, far field thinned, bounces trimmed. Accepted at ~80 s/frame
-   (clean re-measure follows; the 156 s logged for f94-96 ran while a stale job shared the CPU).
+   Clean measurement, frame 95 (heaviest: falling drop + leaf + bokeh), nothing else running: **89 s/frame** (round-2 additions cost ~9 s). Pollen motes trimmed 1300 -> 1000 after the measurement (expected ~2-3 s saving).
    `flicker_check_f94-96_100pct.png`: 100 % crops of a defocused leaf/background area, 3 consecutive frames: no blotches.
 2. Hero blade: own material - strong yellow-green backlit translucency, deeper parallel veins + midrib crease,
    lower sky glare (waxy, not paper), saturated, dry tan only in the last ~1.5 % at the very tip.
