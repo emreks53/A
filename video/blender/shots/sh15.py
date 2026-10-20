@@ -28,7 +28,7 @@ from mathutils.geometry import tessellate_polygon
 
 # ============================================================================ constants
 
-DESIGN_VERSION = "v11"
+DESIGN_VERSION = "v12"
 DESIGN_DIR = os.path.join(C.ASSETS, "sh15_design", DESIGN_VERSION)
 
 FONT_URLS = {
@@ -565,35 +565,37 @@ def star_ring(cx, cy, ro, ri, k=8, rot=0.0):
     return pts
 
 
+RELIEF_PANELS = [(-0.128, -0.034), (0.034, 0.206)]     # board-local l ranges of the carved panels
+RELIEF_YM = 0.012                                       # panel margin from the board's long edges
+
+
 def relief_panel(P, x0, y0, x1, y1, s):
-    """Carved panel: raised frame + interlaced 8-point star strapwork on a sunk ground."""
-    P.frame(x0, y0, x1, y1, 0.0075, v=1.0).location.z = 0.001
-    P.frame(x0 + 0.0105, y0 + 0.0105, x1 - 0.0105, y1 - 0.0105, 0.0022, v=0.85).location.z = 0.001
-    fx0, fy0, fx1, fy1 = x0 + 0.016, y0 + 0.016, x1 - 0.016, y1 - 0.016
-    nx = max(1, int((fx1 - fx0) / s)); ny = max(1, int((fy1 - fy0) / s))
+    """Carved panel height map (0 = board surface at the panel rim, 1 = top of the carving):
+    raised frame, sunk ground, interlaced 8-point star strapwork, rosette bosses."""
+    P.rect(x0 + 0.0012, y0 + 0.0012, x1 - 0.0012, y1 - 0.0012, v=0.30).location.z = 0.0005
+    P.frame(x0 + 0.0012, y0 + 0.0012, x1 - 0.0012, y1 - 0.0012, 0.0062, v=1.0).location.z = 0.001
+    P.frame(x0 + 0.0095, y0 + 0.0095, x1 - 0.0095, y1 - 0.0095, 0.0024, v=0.80).location.z = 0.001
+    fx0, fy0, fx1, fy1 = x0 + 0.015, y0 + 0.015, x1 - 0.015, y1 - 0.015
+    nx = max(1, int(round((fx1 - fx0) / s))); ny = max(1, int(round((fy1 - fy0) / s)))
     sx = (fx1 - fx0) / nx; sy = (fy1 - fy0) / ny
+    r = min(sx, sy) * 0.5
     for i in range(nx):
         for j in range(ny):
             cx, cy = fx0 + (i + 0.5) * sx, fy0 + (j + 0.5) * sy
-            r = min(sx, sy) * 0.5
-            P.stroke(star_ring(cx, cy, r * 0.98, r * 0.70, 8, math.pi / 8 * 0), 0.0034, v=1.0, closed=True, z=0.002)
-            P.stroke(star_ring(cx, cy, r * 0.52, r * 0.36, 8, math.pi / 8), 0.0024, v=0.9, closed=True, z=0.002)
-            P.disc(cx, cy, r * 0.13, n=18, v=0.95).location.z = 0.002
+            P.stroke(star_ring(cx, cy, r * 0.97, r * 0.68, 8, 0.0), 0.0048, v=1.0, closed=True, z=0.002)
+            P.stroke(star_ring(cx, cy, r * 0.50, r * 0.34, 8, math.pi / 8), 0.0030, v=0.85, closed=True, z=0.002)
+            P.disc(cx, cy, r * 0.15, n=20, v=0.95).location.z = 0.002
     for i in range(nx + 1):
         for j in range(ny + 1):
             cx, cy = fx0 + i * sx, fy0 + j * sy
-            if fx0 - 1e-6 <= cx <= fx1 + 1e-6 and fy0 - 1e-6 <= cy <= fy1 + 1e-6:
-                r = min(sx, sy) * 0.5
-                P.stroke(star_ring(cx, cy, r * 0.42, r * 0.20, 4, math.pi / 4), 0.0026, v=0.95, closed=True, z=0.002)
+            P.stroke(star_ring(cx, cy, r * 0.40, r * 0.18, 4, math.pi / 4), 0.0034, v=0.95, closed=True, z=0.002)
 
 
 def draw_relief(P, L, Wd):
-    """Rahle carving height map for one board (x = along the board from the leg end, y = across)."""
-    P.rect(0, 0, L, Wd, v=0.30, z=0.0)
-    relief_panel(P, 0.010, 0.010, RAHLE_LOW - 0.030, Wd - 0.010, 0.046)
-    relief_panel(P, RAHLE_LOW + 0.030, 0.010, L - 0.012, Wd - 0.010, 0.046)
-    # hinge band: smooth rounded (value 0.8)
-    P.rect(RAHLE_LOW - 0.020, 0.0, RAHLE_LOW + 0.020, Wd, v=0.8).location.z = 0.001
+    """Rahle carving height map for one board (x = l + RAHLE_LOW along the board, y across)."""
+    P.rect(-0.01, -0.01, L + 0.01, Wd + 0.01, v=0.0, z=-0.01)
+    for (l0, l1) in RELIEF_PANELS:
+        relief_panel(P, l0 + RAHLE_LOW, RELIEF_YM, l1 + RAHLE_LOW, Wd - RELIEF_YM, 0.056)
 
 
 def design_main():
@@ -644,7 +646,7 @@ def design_main():
         ppm = 15000 if num in (721, 720) else 9000
         s = new_sheet("page_%d" % num, PAGE_W, PAGE_H, ppm)
         draw_page(Painter(s, fonts), num, random.Random(num * 7919), PAGE_W, PAGE_H)
-    s = new_sheet("relief", RAHLE_LEN, RAHLE_W, 2600); draw_relief(Painter(s, fonts), RAHLE_LEN, RAHLE_W)
+    s = new_sheet("relief", RAHLE_LEN, RAHLE_W, 3000); draw_relief(Painter(s, fonts), RAHLE_LEN, RAHLE_W)
     for s in sheets:
         if only and s.name not in only:
             continue
@@ -713,12 +715,12 @@ WIN_Z0, WIN_Z1 = 0.32, 1.42
 TABLE_X0, TABLE_X1, TABLE_Y0 = -0.95, 1.15, -0.58
 FLOOR_Z = -0.74
 SUN_DIR = Vector((0.84, 0.16, -0.52)).normalized()
-SUN_K = 4300
+SUN_K = 3900
 RAHLE_POS = Vector((-0.38, -0.06, 0.0))
 RAHLE_YAW = math.radians(90)          # reader sits at +x, facing the window
 BETA = math.radians(40)
 RAHLE_TB = 0.016
-SOZ_POS = Vector((0.17, -0.03, 0.0))   # closed Sozler lying on the table (camA)
+SOZ_POS = Vector((0.03, -0.10, 0.0))   # closed Sozler lying on the table (camA)
 SOZ_YAW = math.radians(-9)
 STACK_POS = Vector((-0.58, 0.21, 0.0))
 STACK_YAW = math.radians(90 - 7)
@@ -1059,14 +1061,15 @@ def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), 
     if relief:
         uvr = NN(nt, "ShaderNodeUVMap", uv_map=uv_relief)
         rimg = img_node(nt, relief, True, vec=uvr.outputs[0], ext="EXTEND", interp="Cubic")
-        bmp = NN(nt, "ShaderNodeBump")
-        bmp.inputs["Strength"].default_value = 1.0
-        bmp.inputs["Distance"].default_value = relief_depth
-        LK(nt, rimg.outputs[0], bmp.inputs["Height"])
-        LK(nt, normal, bmp.inputs["Normal"])
-        normal = bmp.outputs[0]
+        if relief_depth > 0:
+            bmp = NN(nt, "ShaderNodeBump")
+            bmp.inputs["Strength"].default_value = 1.0
+            bmp.inputs["Distance"].default_value = relief_depth
+            LK(nt, rimg.outputs[0], bmp.inputs["Height"])
+            LK(nt, normal, bmp.inputs["Normal"])
+            normal = bmp.outputs[0]
         # carved recesses collect dust / darker oil
-        dk = maprange(nt, rimg.outputs[0], 0.25, 0.6, 0.62, 1.0)
+        dk = maprange(nt, rimg.outputs[0], 0.15, 0.55, 0.55, 1.0)
         col = mixrgb(nt, 1.0, col, dk, "MULTIPLY")
     rr = maprange(nt, r.outputs[0], 0.2, 0.8, rough[0], rough[1])
     p = principled(nt, **{"Base Color": col, "Roughness": rr, "Normal": normal, "Coat Weight": coat,
@@ -1093,7 +1096,7 @@ def mat_plaster(name="lime_plaster"):
     col = mixrgb(nt, 1.0, srgb("#E6DCCB"), v, "MULTIPLY")
     col = mixrgb(nt, 1.0, col, bigv, "MULTIPLY")
     nm = NN(nt, "ShaderNodeNormalMap")
-    nm.inputs["Strength"].default_value = 1.2
+    nm.inputs["Strength"].default_value = 0.35
     LK(nt, n.outputs[0], nm.inputs["Color"])
     tr = noise(nt, tc.outputs["Object"], 5.0, 5.0, 0.62)      # broad trowel undulation
     bmp = NN(nt, "ShaderNodeBump")
@@ -1410,7 +1413,45 @@ def _extrude_outline(bm, outline, t0, t1, uv, uvr_fn):
     return faces
 
 
-def build_rahle(mat):
+def carve_panels(name, M, mat, relief_path, step=0.0009, depth=0.0024):
+    """Real displaced geometry for the carved panels on both faces of one board (board-local frame
+    l, y, t; M = board world matrix)."""
+    RW, tb = RAHLE_W, RAHLE_TB
+    tex = bpy.data.textures.get("relief_tex")
+    if tex is None:
+        tex = bpy.data.textures.new("relief_tex", "IMAGE")
+        img = bpy.data.images.load(relief_path, check_existing=True)
+        img.colorspace_settings.name = "Non-Color"
+        tex.image = img
+        tex.extension = "EXTEND"
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("uvr")
+    y0, y1 = -RW / 2 + RELIEF_YM, RW / 2 - RELIEF_YM
+    for (l0, l1) in RELIEF_PANELS:
+        nl = int((l1 - l0) / step); ny = int((y1 - y0) / step)
+        for fs in (1, -1):
+            V = [[bm.verts.new((l0 + (l1 - l0) * i / nl, y0 + (y1 - y0) * j / ny, fs * (tb / 2 + 0.00004)))
+                  for j in range(ny + 1)] for i in range(nl + 1)]
+            for i in range(nl):
+                for j in range(ny):
+                    q = (V[i][j], V[i + 1][j], V[i + 1][j + 1], V[i][j + 1])
+                    f = bm.faces.new(q if fs > 0 else q[::-1])
+                    for lp in f.loops:
+                        co = lp.vert.co
+                        lp[uv].uv = ((co.x + RAHLE_LOW) / RAHLE_LEN, (co.y + RW / 2) / RW)
+    ob = bm_to_obj(bm, name, mats=[mat], smooth=True)
+    ob.matrix_world = M
+    d = ob.modifiers.new("carve", "DISPLACE")
+    d.texture = tex
+    d.texture_coords = "UV"
+    d.uv_layer = "uvr"
+    d.mid_level = 0.0
+    d.strength = depth
+    d.direction = "NORMAL"
+    return ob
+
+
+def build_rahle(mat, relief_path=None):
     RW = RAHLE_W
     tb = RAHLE_TB
     zh = rahle_hinge_z()
@@ -1488,6 +1529,8 @@ def build_rahle(mat):
         ob.matrix_world = Matrix.Translation(RAHLE_POS) @ Matrix.Rotation(RAHLE_YAW, 4, "Z") @ Matrix.Translation((0, 0, zh)) @ R.to_4x4()
         add_bevel(ob, 0.0018, 3, 35)
         objs.append(ob)
+        if relief_path:
+            objs.append(carve_panels(ob.name + "_carve", ob.matrix_world.copy(), mat, relief_path))
     # wooden hinge pin ends (tiny dowel caps on the outer knuckles)
     return objs
 
@@ -1811,6 +1854,12 @@ def build_room(mats):
     objs.append(box("floor", xo, 2.8, -4.0, WALL_BACK_Y + 0.3, FLOOR_Z - 0.05, FLOOR_Z, floor))
     # wooden sill board in the window reveal
     objs.append(box("win_sill", xo + 0.02, WALL_LEFT_X + 0.025, WIN_Y0 - 0.02, WIN_Y1 + 0.02, WIN_Z0 - 0.03, WIN_Z0, mats["kafes"], 0.003))
+    # inner wooden window frame (pervaz): two stepped boards around the opening, proud of the plaster
+    for (w_, d_) in ((0.075, 0.018), (0.040, 0.030)):
+        x0_, x1_ = WALL_LEFT_X - 0.004, WALL_LEFT_X + d_
+        objs.append(box("pervaz", x0_, x1_, WIN_Y0 - w_, WIN_Y0, WIN_Z0 - w_, WIN_Z1 + w_, mats["kafes"], 0.003))
+        objs.append(box("pervaz", x0_, x1_, WIN_Y1, WIN_Y1 + w_, WIN_Z0 - w_, WIN_Z1 + w_, mats["kafes"], 0.003))
+        objs.append(box("pervaz", x0_, x1_, WIN_Y0, WIN_Y1, WIN_Z1, WIN_Z1 + w_, mats["kafes"], 0.003))
     # table (thick old top on an apron and legs)
     objs.append(box("table_top", TABLE_X0, TABLE_X1, TABLE_Y0, WALL_BACK_Y - 0.002, -0.042, 0.0, wood_tab, 0.004))
     objs.append(box("table_apron", TABLE_X0 + 0.04, TABLE_X1 - 0.04, TABLE_Y0 + 0.04, WALL_BACK_Y - 0.04, -0.13, -0.042, wood_tab))
@@ -1824,7 +1873,7 @@ def build_room(mats):
     objs.append(box("kafes_f3", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, WIN_Z0, WIN_Z0 + fw, kafes, 0.002))
     objs.append(box("kafes_f4", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, WIN_Z1 - fw, WIN_Z1, kafes, 0.002))
     objs.append(box("kafes_mid", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, (WIN_Z0 + WIN_Z1) / 2 - 0.02, (WIN_Z0 + WIN_Z1) / 2 + 0.02, kafes, 0.002))
-    sp = 0.060
+    sp = 0.050
     y0, y1, z0, z1 = WIN_Y0 + fw * 0.6, WIN_Y1 - fw * 0.6, WIN_Z0 + fw * 0.6, WIN_Z1 - fw * 0.6
     for layer, dirv, dx in ((0, (1, 1), -0.011), (1, (1, -1), 0.011)):
         d = Vector(dirv).normalized()
@@ -1834,7 +1883,7 @@ def build_room(mats):
             p = c + nrm * (k * sp)
             seg = clip_segment(p, d, y0, y1, z0, z1)
             if seg and (Vector(seg[1]) - Vector(seg[0])).length > 0.01:
-                objs.append(slat("kafes_s", seg[0], seg[1], 0.0095, 0.016, xk + dx, kafes))
+                objs.append(slat("kafes_s", seg[0], seg[1], 0.0150, 0.018, xk + dx, kafes))
     # join small kafes pieces into one object
     ks = [o for o in objs if o.name.startswith("kafes_s")]
     if ks:
@@ -1866,7 +1915,7 @@ def shutter(ctx):
     ob.visible_camera = False
     ob.visible_glossy = False
     ob.visible_transmission = False
-    t0, t1 = 110.25, 113.10
+    t0, t1 = 110.45, 113.20
     for k in range(0, 31):
         t = t0 + (t1 - t0) * k / 30
         u = C.smooth(k / 30) * 0.65 + (k / 30) * 0.35
@@ -2111,16 +2160,16 @@ def build(ctx):
     for k in range(4):
         MATS["leaf_%d" % k] = mat_leaf("leaf_%d" % k, os.path.join(d, "page_%d.png" % (727 - 2 * k)),
                                        os.path.join(d, "page_%d.png" % (728 - 2 * k)))
-    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.62, 0.44, 0.32), val=0.62, sat=1.15,
-                             rough=(0.30, 0.52), relief=os.path.join(d, "relief.png"), coat=0.12, grain_rot=math.pi / 2,
-                             wear=0.35)
+    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.50, 0.39, 0.31), val=0.60, sat=0.95,
+                             rough=(0.30, 0.52), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.12,
+                             grain_rot=math.pi / 2, wear=0.35)
     MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7))
     MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8))
     MATS["kafes"] = mat_wood("kafes", "dark_wood", tile=0.6, tint=(0.55, 0.45, 0.38), val=0.55, sat=0.6, rough=(0.55, 0.8))
     MATS["plaster"] = mat_plaster()
     # ------------------------------------------------ set
     build_room(MATS)
-    build_rahle(MATS["rahle"])
+    build_rahle(MATS["rahle"], os.path.join(d, "relief.png"))
     row, row_end = build_row(MATS)
     build_stack(MATS)
     soz, soz_objs = build_closed_book("sozler_closed", 0, [MATS["leather_plain"], MATS["cover_sozler"], MATS["cover_plain"], MATS["spine"]])
@@ -2131,7 +2180,7 @@ def build(ctx):
     key_vis(ob_root, [(2722, 99999)], ctx.f0, ctx.f1)
     # ------------------------------------------------ light
     C.world_sky(sun_elev_deg=math.degrees(math.asin(-SUN_DIR.z)), sun_rot_deg=math.degrees(math.atan2(-SUN_DIR.x, SUN_DIR.y)) + 180,
-                strength=0.35, sun_disc=False, air=1.2, aerosol=1.5)
+                strength=1.6, sun_disc=False, air=1.2, aerosol=1.5)
     sun = sun_light()
     # sun brightens on "cok guzel ifadelerle" (thin haze clears)
     for t, e in ((109.5, 6.0), (117.25, 6.0), (118.9, 8.2), (125.6, 8.2)):
@@ -2139,8 +2188,8 @@ def build(ctx):
         sun.data.keyframe_insert("energy", frame=t * C.FPS)
     shutter(ctx)
     # cool fill: overcast skylight from a door/window behind camera (front wall)
-    C.area("fill_front", loc=(0.6, -3.6, 1.2), look_at=(0.0, 0.0, 0.2), size=2.0, size_y=1.4, power=55, kelvin_k=7800)
-    C.area("fill_right", loc=(2.5, -0.6, 1.1), look_at=(0.0, 0.0, 0.2), size=1.0, size_y=1.6, power=14, kelvin_k=7200)
+    C.area("fill_front", loc=(0.6, -3.6, 1.2), look_at=(0.0, 0.0, 0.2), size=2.0, size_y=1.4, power=30, kelvin_k=7800)
+    C.area("fill_right", loc=(2.5, -0.6, 1.1), look_at=(0.0, 0.0, 0.2), size=1.0, size_y=1.6, power=8, kelvin_k=7200)
     portal = C.area("portal", loc=(WALL_LEFT_X - 0.02, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2),
                     look_at=(1.0, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2), size=WIN_Y1 - WIN_Y0, size_y=WIN_Z1 - WIN_Z0, power=0)
     portal.data.size, portal.data.size_y = WIN_Y1 - WIN_Y0, WIN_Z1 - WIN_Z0
@@ -2156,17 +2205,17 @@ def build(ctx):
     # ------------------------------------------------ cameras
     V = Vector
     camA = rig_camera("camA", 35, 2.8, [
-        (109.40, V((0.20, -1.02, 0.84)), V((-0.10, 0.05, 0.06)), V((0.02, -0.03, 0.08))),
-        (110.80, V((0.24, -0.70, 0.62)), V((0.06, 0.05, 0.05)), V((0.15, -0.03, 0.05))),
-        (111.96, V((0.235, -0.35, 0.38)), V((0.175, 0.05, 0.02)), V((0.17, -0.03, 0.052))),
-        (113.50, V((0.225, -0.31, 0.35)), V((0.175, 0.055, 0.02)), V((0.17, -0.03, 0.052))),
+        (109.40, V((0.10, -1.05, 0.86)), V((-0.15, 0.05, 0.07)), V((-0.10, -0.06, 0.10))),
+        (110.80, V((0.10, -0.74, 0.65)), V((-0.04, 0.02, 0.05)), V((0.02, -0.10, 0.05))),
+        (111.96, V((0.085, -0.44, 0.41)), V((0.035, -0.02, 0.02)), V((0.03, -0.10, 0.052))),
+        (113.50, V((0.08, -0.40, 0.38)), V((0.035, -0.015, 0.02)), V((0.03, -0.10, 0.052))),
     ], 2622, 2724, seed=11)
     bpy.context.view_layer.update()
     pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
     camB = rig_camera("camB", 40, 2.8, [
-        (113.30, V((-0.05, 0.18, 0.57)), V((-0.45, 0.02, 0.34)), pg + V((0.03, -0.01, -0.01))),
-        (114.45, V((-0.08, 0.165, 0.545)), V((-0.455, 0.025, 0.335)), pg + V((0.01, 0.0, 0.0))),
-        (115.90, V((-0.13, 0.145, 0.50)), V((-0.47, 0.04, 0.33)), pg),
+        (113.30, V((-0.09, 0.065, 0.67)), V((-0.46, 0.02, 0.32)), pg + V((0.03, -0.01, -0.01))),
+        (114.45, V((-0.12, 0.062, 0.63)), V((-0.465, 0.024, 0.318)), pg + V((0.01, 0.0, 0.0))),
+        (115.90, V((-0.19, 0.06, 0.56)), V((-0.47, 0.03, 0.31)), pg),
     ], 2718, 2782, seed=12)
     zc = 0.15
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
