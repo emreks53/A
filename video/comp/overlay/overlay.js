@@ -431,6 +431,10 @@ function coldBitmap(el, L, line) {
 function drawColdKeyword(el, t, L) {
   const st = L.st, size = L.size, IN = st.in, ds = st.dust;
   const fam = st.family, wt = st.weight;
+  const shRGB = st.shadow_rgb || [0, 0, 0];
+  // everything (letters and every grain) is gone by the cut: a gentle fade over the last 0.35 s
+  const km = el.kill != null ? 1 - smooth(clamp((t - (el.kill - 0.35)) / 0.35)) : 1;
+  if (km < 0.003) return;
   for (const line of L.lines) {
     const tw = line.parts[0].t;
     if (t < tw) continue;
@@ -454,11 +458,12 @@ function drawColdKeyword(el, t, L) {
         const settle = (1 - eOutCubic(clamp((t - tw) / IN.dur))) * st.tracking_in * size;   // fully settled before the bitmap takes over
         const dx = (l.i - (n - 1) / 2) * settle;
         const dy = (1 - eOutExpo(u)) * IN.rise * size;
-        P.push({ l, x: l.x + dx, y: l.base + dy, a, blur });
-        maxA = Math.max(maxA, a);
+        P.push({ l, x: l.x + dx, y: l.base + dy, a: a * km, blur });
+        maxA = Math.max(maxA, a * km);
       }
       setFont(X, fam, wt, size);
-      for (const p of P) { glyphShadow(X, p.l.ch, p.x, p.y, p.a * st.shadow[0], Math.hypot(st.shadow[1], p.blur), st.shadow[2]); }
+      for (const p of P) { glyphShadow(X, p.l.ch, p.x, p.y, p.a * st.shadow[0], Math.hypot(st.shadow[1], p.blur), st.shadow[2], shRGB); }
+      if (st.shadow2) for (const p of P) { glyphShadow(X, p.l.ch, p.x, p.y, p.a * st.shadow2[0], Math.hypot(st.shadow2[1], p.blur), st.shadow2[2], shRGB); }
       for (const p of P) glyph(X, p.l.ch, p.x, p.y, st.color, p.a, p.blur);
     } else {
       // settled / crumbling: per-pixel erosion of the cached bitmap + dust grains
@@ -476,11 +481,15 @@ function drawColdKeyword(el, t, L) {
       }
       if (alive > 0) {
         B.sctx.putImageData(B.work, 0, 0);
-        X.save(); X.setTransform(1, 0, 0, 1, 0, 0);
-        X.shadowColor = rgba([0, 0, 0], st.shadow[0]); X.shadowBlur = 2 * st.shadow[1] * S; X.shadowOffsetY = st.shadow[2] * S;
+        X.save(); X.setTransform(1, 0, 0, 1, 0, 0); X.globalAlpha = km;
+        X.shadowColor = rgba(shRGB, st.shadow[0]); X.shadowBlur = 2 * st.shadow[1] * S; X.shadowOffsetY = st.shadow[2] * S;
         X.drawImage(B.scratch, Math.round(B.x0 * S), Math.round(B.y0 * S));
+        if (st.shadow2) {
+          X.shadowColor = rgba(shRGB, st.shadow2[0]); X.shadowBlur = 2 * st.shadow2[1] * S; X.shadowOffsetY = st.shadow2[2] * S;
+          X.drawImage(B.scratch, Math.round(B.x0 * S), Math.round(B.y0 * S));
+        }
         X.restore(); drewOver = true;
-        maxA = Math.max(maxA, Math.min(1, alive / 400));
+        maxA = Math.max(maxA, Math.min(1, alive / 400) * km);
       }
       // grains
       X.save();
@@ -492,7 +501,7 @@ function drawColdKeyword(el, t, L) {
         const tur = ds.turb;
         const px = g.x + g.vx * a + 0.5 * 26 * a * a + tur * a * Math.sin(g.fq * 2.1 * a + g.ph);
         const py = g.y + g.vy * a - 0.5 * 18 * a * a + tur * 0.7 * a * Math.cos(g.fq * 2.7 * a + g.ph2);
-        let al = Math.pow(1 - k, 1.5) * 0.92 * clamp(a / 0.05);
+        let al = Math.pow(1 - k, 1.5) * 0.92 * clamp(a / 0.05) * km;
         const s = g.s * (1 - 0.45 * k);
         X.fillStyle = rgba([st.color[0] * g.b, st.color[1] * g.b, st.color[2] * g.b].map(v => Math.min(255, v | 0)), al);
         X.fillRect(px - s / 2, py - s / 2, s, s);
@@ -500,7 +509,10 @@ function drawColdKeyword(el, t, L) {
       }
       X.restore();
     }
-    if (maxA > 0) BOXES.push([line.x0, line.cy - L.capH / 2, line.x0 + line.w, line.cy + L.capH / 2, maxA * (st.legibility || 1)]);
+    if (maxA > 0) {
+      BOXES.push([line.x0, line.cy - L.capH / 2, line.x0 + line.w, line.cy + L.capH / 2, maxA * (st.legibility || 1)]);
+      KWBOXES.push([...line.ink.slice(0, 4), maxA]);
+    }
   }
 }
 
