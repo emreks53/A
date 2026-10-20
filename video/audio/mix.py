@@ -270,7 +270,7 @@ UM_FC = np.array([100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 
                   4000, 5000, 6300, 8000, 10000, 12500], dtype=float)
 UM_TARGET = np.array([0, 4, 4, 4, 6, 6, 6, 9, 9, 9, 13, 13, 13, 13, 13, 13, 13, 13, 10, 10, 0, 0], dtype=float)
 UM_MAXCUT = np.array([0, 9, 9, 9, 9, 9, 9, 12, 12, 12, 20, 20, 20, 20, 20, 20, 20, 20, 14, 14, 6, 6], dtype=float)
-UM_VSMOOTH, UM_SSMOOTH, UM_HOLD, UM_RELEASE = 0.25, 0.12, 0.20, 0.40
+UM_VSMOOTH, UM_SSMOOTH, UM_HOLD, UM_RELEASE, UM_BAND_SMOOTH = 0.25, 0.12, 0.20, 0.40, 1
 
 
 def render_cues(cues, n_total, log):
@@ -382,6 +382,9 @@ def unmask(S, vch, act, fs_c, log=print):
     PS = np.maximum((np.abs(XL) ** 2) @ M, (np.abs(XR) ** 2) @ M)
     PV = uniform_filter1d(PV, size=max(int(UM_VSMOOTH / hop_s), 1), axis=0, mode="nearest")
     PS = uniform_filter1d(PS, size=max(int(UM_SSMOOTH / hop_s), 1), axis=0, mode="nearest")
+    if UM_BAND_SMOOTH > 1:     # compare voice and SFX over ~octave-wide windows (formant valleys
+        PV = uniform_filter1d(PV, size=UM_BAND_SMOOTH, axis=1, mode="nearest")   # don't count)
+        PS = uniform_filter1d(PS, size=UM_BAND_SMOOTH, axis=1, mode="nearest")
     LV, LS = 10 * np.log10(np.maximum(PV, 0) + 1e-20), 10 * np.log10(np.maximum(PS, 0) + 1e-20)
     need = np.clip(LV - UM_TARGET[None, :] - LS, -UM_MAXCUT[None, :], 0.0)
     need[:, UM_MAXCUT == 0] = 0.0
