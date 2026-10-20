@@ -31,8 +31,11 @@ Script: `video/blender/shots/sh04.py`, hero + helpers in `video/blender/lib_s3.p
   21.04 ("hiçbirine" 21.24) and is fully stretched at 22.5; focus racks plant → hand.
 
 ## Render time
-Measured `--final` frame 470 (ground level): **102 s/frame, 3.8 GB** — OVER budget. Working on it now
-(dicing, haze sheet, SSS/translucency bounces, texture limits) — will report the new number.
+Measured `--final` frame 470 (ground level): first 102 s/frame (32 spp, HIGH OIDN). Profiled: the
+fixed per-frame cost is dominated by OIDN HIGH (~10 s) and samples (~2.2 s/spp at full res); bounces,
+dicing, haze, hairs make little difference. Now 16 spp, adaptive threshold 0.04, OIDN BALANCED
+(set in a render_init handler because common.configure_render runs after build): **~47-50 s/frame**,
+3.8 GB peak. Still a little over; next: cheaper ground shader / hand at 540.
 
 ## Known issues / next
 * cotyledons read a bit glossy/plastic; stem colour too uniform lime; crumbs too grey → fixing.

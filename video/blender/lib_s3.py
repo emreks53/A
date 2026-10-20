@@ -320,9 +320,9 @@ def mat_leaf(name="S3_leaf", veins=None, wilt=0.0, wet=0.0, tone=(0.16, 0.36, 0.
     nt.links.new(base, p.inputs["Base Color"])
     p.inputs["Roughness"].default_value = 0.42 - 0.3 * wet
     p.inputs["Specular IOR Level"].default_value = 0.55
-    p.inputs["Coat Weight"].default_value = 0.25 + 0.6 * wet
-    p.inputs["Coat Roughness"].default_value = 0.25 - 0.2 * wet
-    p.inputs["Sheen Weight"].default_value = 0.15
+    p.inputs["Coat Weight"].default_value = 0.08 + 0.7 * wet
+    p.inputs["Coat Roughness"].default_value = 0.3 - 0.25 * wet
+    p.inputs["Sheen Weight"].default_value = 0.04
     p.inputs["Sheen Roughness"].default_value = 0.4
     p.inputs["Sheen Tint"].default_value = (0.8, 0.9, 0.75, 1)
     # bump: veins sunken on top, bullate puckering in between, cell texture
@@ -345,7 +345,7 @@ def mat_leaf(name="S3_leaf", veins=None, wilt=0.0, wet=0.0, tone=(0.16, 0.36, 0.
     return m
 
 
-def mat_stem(name="S3_stem", wet=0.0, base_tint=(0.36, 0.17, 0.12), green=(0.34, 0.50, 0.15)):
+def mat_stem(name="S3_stem", wet=0.0, base_tint=(0.33, 0.17, 0.13), green=(0.27, 0.40, 0.12)):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -357,17 +357,17 @@ def mat_stem(name="S3_stem", wet=0.0, base_tint=(0.36, 0.17, 0.12), green=(0.34,
     mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (1.0, 1.0, 0.08)
     nt.links.new(geo.outputs["Object"], mp.inputs["Vector"]); nt.links.new(mp.outputs[0], streak.inputs["Vector"])
     # gradient: pinkish-bronze near soil, pale green up the stem
-    g = _maprange(nt, sep.outputs[1], 0.0, 0.35, 0.0, 1.0)
+    g = _maprange(nt, _math(nt, "ADD", sep.outputs[1], _math(nt, "MULTIPLY", streak.outputs[0], 0.25)), 0.05, 0.55, 0.0, 1.0)
     col = _mix_rgb(nt, base_tint, green, g)
-    col = _mix_rgb(nt, col, (green[0] * 1.25, green[1] * 1.15, green[2] * 1.1), _maprange(nt, streak.outputs[0], 0.4, 0.7, 0, 0.6))
+    col = _mix_rgb(nt, col, (green[0] * 1.35, green[1] * 1.2, green[2] * 0.9), _maprange(nt, streak.outputs[0], 0.4, 0.7, 0, 0.7))
     nt.links.new(col, p.inputs["Base Color"])
     p.inputs["Subsurface Weight"].default_value = 0.6
     p.inputs["Subsurface Radius"].default_value = (0.7, 1.0, 0.35)
     p.inputs["Subsurface Scale"].default_value = 0.0012
     p.inputs["Roughness"].default_value = 0.38 - 0.25 * wet
-    p.inputs["Coat Weight"].default_value = 0.3 + 0.6 * wet
-    p.inputs["Coat Roughness"].default_value = 0.2
-    p.inputs["Sheen Weight"].default_value = 0.3
+    p.inputs["Coat Weight"].default_value = 0.12 + 0.7 * wet
+    p.inputs["Coat Roughness"].default_value = 0.25
+    p.inputs["Sheen Weight"].default_value = 0.2
     b = nt.nodes.new("ShaderNodeBump"); b.inputs["Strength"].default_value = 0.25
     b.inputs["Distance"].default_value = 0.00005
     nt.links.new(streak.outputs[0], b.inputs["Height"]); nt.links.new(b.outputs[0], p.inputs["Normal"])
@@ -380,20 +380,22 @@ def mat_cotyledon(name="S3_cotyledon"):
     nt = m.node_tree
     p = nt.nodes["Principled BSDF"]
     geo = nt.nodes.new("ShaderNodeTexCoord")
-    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 260.0; nz.inputs["Detail"].default_value = 8
+    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 420.0; nz.inputs["Detail"].default_value = 5
+    nz.inputs["Distortion"].default_value = 2.0
     nt.links.new(geo.outputs["Object"], nz.inputs["Vector"])
     nz2 = nt.nodes.new("ShaderNodeTexNoise"); nz2.inputs["Scale"].default_value = 55.0
     nt.links.new(geo.outputs["Object"], nz2.inputs["Vector"])
-    col = _mix_rgb(nt, (0.30, 0.42, 0.10), (0.50, 0.50, 0.16), _maprange(nt, nz2.outputs[0], 0.35, 0.7))
-    col = _mix_rgb(nt, col, (0.42, 0.26, 0.10), _maprange(nt, nz2.outputs[0], 0.62, 0.8, 0, 0.5))
+    col = _mix_rgb(nt, (0.20, 0.30, 0.07), (0.42, 0.44, 0.12), _maprange(nt, nz2.outputs[0], 0.35, 0.7))
+    col = _mix_rgb(nt, col, (0.38, 0.25, 0.10), _maprange(nt, nz2.outputs[0], 0.6, 0.78, 0, 0.6))
+    col = _mix_rgb(nt, col, (0.12, 0.09, 0.05), _maprange(nt, nz.outputs[0], 0.62, 0.75, 0, 0.5))
     nt.links.new(col, p.inputs["Base Color"])
     p.inputs["Subsurface Weight"].default_value = 0.8
     p.inputs["Subsurface Radius"].default_value = (0.9, 1.0, 0.4)
     p.inputs["Subsurface Scale"].default_value = 0.002
-    p.inputs["Roughness"].default_value = 0.33
-    p.inputs["Coat Weight"].default_value = 0.35
-    p.inputs["Coat Roughness"].default_value = 0.15
-    b = nt.nodes.new("ShaderNodeBump"); b.inputs["Strength"].default_value = 0.5
+    p.inputs["Roughness"].default_value = 0.5
+    p.inputs["Coat Weight"].default_value = 0.06
+    p.inputs["Coat Roughness"].default_value = 0.3
+    b = nt.nodes.new("ShaderNodeBump"); b.inputs["Strength"].default_value = 0.9
     b.inputs["Distance"].default_value = 0.00025
     nt.links.new(nz.outputs[0], b.inputs["Height"]); nt.links.new(b.outputs[0], p.inputs["Normal"])
     return m
@@ -602,8 +604,8 @@ def seedling(name="SEEDLING", loc=(0, 0, 0), rot_z=0.0, wilt=0.0, wet=0.0, seed=
         for j, (p, r) in enumerate(lumps):
             b = bmesh.new(); bmesh.ops.create_icosphere(b, subdivisions=2, radius=r)
             for v in b.verts:
-                v.co *= 1 + 0.35 * noise.noise(v.co * (3.0 / r) + Vector((j, 0, 0)))
-                v.co.z *= 0.7
+                v.co *= 1 + 0.45 * noise.noise(v.co * (2.0 / r) + Vector((j, 0, 0)))
+                v.co.z *= 0.55
             o = parent(obj_from_bm(f"{name}_crumb{j}", b, [sm]), root)
             o.location = p
             o.rotation_euler = (rc.random() * 3, rc.random() * 3, rc.random() * 3)
@@ -620,7 +622,7 @@ def mat_soil_crumb(name="S3_crumb"):
     geo = nt.nodes.new("ShaderNodeTexCoord")
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 2500; nz.inputs["Detail"].default_value = 8
     nt.links.new(geo.outputs["Object"], nz.inputs["Vector"])
-    col = _mix_rgb(nt, (0.30, 0.20, 0.12), (0.50, 0.37, 0.24), nz.outputs[0])
+    col = _mix_rgb(nt, (0.36, 0.25, 0.16), (0.62, 0.47, 0.33), nz.outputs[0])
     nt.links.new(col, p.inputs["Base Color"])
     p.inputs["Roughness"].default_value = 0.95
     b = nt.nodes.new("ShaderNodeBump"); b.inputs["Distance"].default_value = 0.0002
@@ -662,15 +664,15 @@ def mat_cracked_earth(name="S3_earth", tile=1.0, disp=0.012, res="4k", tint=(1.0
         n.image = bpy.data.images.load(tex[k], check_existing=True)
         if noncolor:
             n.image.colorspace_settings.name = "Non-Color"
-        n.interpolation = "Cubic"
+        n.interpolation = "Linear"
         nt.links.new(mp.outputs[0], n.inputs[0])
         return n.outputs["Color"]
     diff = img("diff", False); rough = img("rough", True); dsp = img("disp", True)
     nor = img("nor", True); ao = img("ao", True)
     # large-scale tonal variation so tiling never reads
-    big = nt.nodes.new("ShaderNodeTexNoise"); big.inputs["Scale"].default_value = 0.6; big.inputs["Detail"].default_value = 3
+    big = nt.nodes.new("ShaderNodeTexNoise"); big.inputs["Scale"].default_value = 0.6; big.inputs["Detail"].default_value = 2
     nt.links.new(geo.outputs["Object"], big.inputs["Vector"])
-    fine = nt.nodes.new("ShaderNodeTexNoise"); fine.inputs["Scale"].default_value = 900; fine.inputs["Detail"].default_value = 6
+    fine = nt.nodes.new("ShaderNodeTexNoise"); fine.inputs["Scale"].default_value = 900; fine.inputs["Detail"].default_value = 1.5
     nt.links.new(geo.outputs["Object"], fine.inputs["Vector"])
     col = _mix_rgb(nt, diff, tint, 1.0, "MULTIPLY")
     col = _mix_rgb(nt, col, (0.80, 0.70, 0.60), _maprange(nt, big.outputs[0], 0.3, 0.7, 0, 0.45), "MULTIPLY")
@@ -691,8 +693,7 @@ def mat_cracked_earth(name="S3_earth", tile=1.0, disp=0.012, res="4k", tint=(1.0
     dn.inputs["Scale"].default_value = disp; dn.inputs["Midlevel"].default_value = 0.55
     nt.links.new(dsp, dn.inputs["Height"])
     nt.links.new(dn.outputs[0], outn.inputs["Displacement"])
-    m.displacement_method = "BOTH"
-    m["nodes"] = {}
+    m.displacement_method = os.environ.get("S3_DISPM", "BOTH")
     return m, {"col": col, "p": p, "diff": diff, "rough": rr, "disp": dsp, "nt": nt, "wet": wet}
 
 
@@ -1290,7 +1291,7 @@ def wet_earth(info, spots, t_rain0, t_rain1, t_soak0, t_soak1, t0, t1, rand_scal
         d = _math(nt, "ADD", d, _math(nt, "MULTIPLY", jitter, rmax / 0.004))
         grow = _maprange(nt, T.outputs[0], ts, ts + 0.12, 0.0, rmax)
         grow = _math(nt, "ADD", grow, _maprange(nt, T.outputs[0], ts + 0.12, ts + 2.5, 0.0, rmax * 0.35))
-        msk = _math(nt, "SUBTRACT", 1.0, _maprange(nt, _math(nt, "SUBTRACT", d, grow), -0.0008, 0.0004, 0, 1))
+        msk = _math(nt, "SUBTRACT", 1.0, _maprange(nt, _math(nt, "SUBTRACT", d, grow), -0.0004, 0.0002, 0, 1))
         msk = _math(nt, "MULTIPLY", msk, _math(nt, "GREATER_THAN", T.outputs[0], ts))
         wet = msk if wet is None else _math(nt, "MAXIMUM", wet, msk)
     # random rain spots
@@ -1304,7 +1305,7 @@ def wet_earth(info, spots, t_rain0, t_rain1, t_soak0, t_soak1, t0, t1, rand_scal
     rad = _math(nt, "MULTIPLY", _maprange(nt, age, 0.0, 0.15, 0.0, 1.0), _math(nt, "ADD", _math(nt, "MULTIPLY", sc.outputs[1], 0.012), 0.004))
     rad = _math(nt, "DIVIDE", rad, 1.0 / rand_scale)      # voronoi distance is in cell units
     dd = _math(nt, "ADD", vor.outputs["Distance"], _math(nt, "MULTIPLY", jitter, rand_scale * 0.6))
-    rmask = _math(nt, "SUBTRACT", 1.0, _maprange(nt, _math(nt, "SUBTRACT", dd, rad), -0.02, 0.02, 0, 1))
+    rmask = _math(nt, "SUBTRACT", 1.0, _maprange(nt, _math(nt, "SUBTRACT", dd, rad), -0.012, 0.008, 0, 1))
     rmask = _math(nt, "MULTIPLY", rmask, _math(nt, "GREATER_THAN", age, 0.0))
     wet = rmask if wet is None else _math(nt, "MAXIMUM", wet, rmask)
     # global soak (cracks fill first)
@@ -1316,7 +1317,7 @@ def wet_earth(info, spots, t_rain0, t_rain1, t_soak0, t_soak1, t0, t1, rand_scal
     wet = _math(nt, "MINIMUM", wet, 1.0)
     # apply: darker & slightly more saturated, glossy
     col = info["col"]
-    dark = _mix_rgb(nt, col, (0.42, 0.36, 0.32), 1.0, "MULTIPLY")
+    dark = _mix_rgb(nt, col, (0.30, 0.24, 0.20), 1.0, "MULTIPLY")
     newcol = _mix_rgb(nt, col, dark, wet)
     newcol = _mix_rgb(nt, newcol, (0.10, 0.075, 0.06), _math(nt, "MULTIPLY", puddle, 0.6))
     nt.links.new(newcol, p.inputs["Base Color"])
@@ -1326,3 +1327,32 @@ def wet_earth(info, spots, t_rain0, t_rain1, t_soak0, t_soak1, t0, t1, rand_scal
     nt.links.new(bw.outputs[0], p.inputs["Roughness"])
     p.inputs["Specular IOR Level"].default_value = 0.5
     return {"T": T, "soak": soak}
+
+
+def experiment(ov):
+    """Dev hook: S3_OV='{"final_spp":16}' merges render overrides; S3_HIDE='name1,name2' hides
+    objects whose names start with those prefixes (render-time profiling only)."""
+    import json
+    ov.update(json.loads(os.environ.get("S3_OV", "{}")))
+    for pre in [x for x in os.environ.get("S3_HIDE", "").split(",") if x]:
+        for o in bpy.data.objects:
+            if o.name.startswith(pre):
+                o.hide_render = True
+    return ov
+
+
+def render_tuning(denoise_quality=None, prefilter=None):
+    """common.configure_render() runs after build(); apply denoiser tuning just before rendering."""
+    import sys as _sys
+    if "--final" not in _sys.argv:
+        return
+
+    def _pre(scene, *_):
+        c = scene.cycles
+        if denoise_quality:
+            c.denoising_quality = denoise_quality
+        if prefilter:
+            c.denoising_prefilter = prefilter
+        if os.environ.get("S3_NODENOISE"):
+            c.use_denoising = False
+    bpy.app.handlers.render_init.append(_pre)

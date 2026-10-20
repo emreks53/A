@@ -36,7 +36,7 @@ def build(ctx):
 
     # ---------------------------------------------------------------- ground + seedling
     em, _ = L.mat_cracked_earth(tile=1.0, disp=0.012)
-    L.ground(mat=em, size=8.0, dicing=2.0)
+    L.ground(mat=em, size=8.0, dicing=float(os.environ.get("S3_DICE", "2.0")))
     sd = L.seedling(wilt=0.35, rot_z=math.atan2(h.y, h.x) + 0.5)
     # a breath of hot wind: tiny sway of the whole plant
     root = sd["root"]
@@ -106,7 +106,9 @@ def build(ctx):
         focus.keyframe_insert("location", frame=f)
     C.handheld(cam, amp_loc=0.0004, amp_rot=0.0010, speed=0.5)
     bpy.context.scene.view_settings.exposure = -0.35
-    return {"final_spp": 32, "preview_spp": 32, "clamp_indirect": 4.0}
+    ov = {"final_spp": 16, "final_threshold": 0.04, "preview_spp": 32, "clamp_indirect": 4.0}
+    L.render_tuning(os.environ.get("S3_DQ", "BALANCED"), os.environ.get("S3_PF"))
+    return L.experiment(ov)
 
 
 def _sky_saturation(sat):

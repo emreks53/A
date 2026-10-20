@@ -46,7 +46,6 @@ def build(ctx):
             best = (score, a, pts)
     _, ang, path = best
     fwd_h = Vector((math.cos(ang), math.sin(ang), 0))   # camera looks along +fwd_h (water comes toward it)
-    fwd_h = -fwd_h
     side_h = fwd_h.cross(Vector((0, 0, 1))).normalized()
     # seedling root just beside the crack
     seed_xy = S + side_h * 0.0035
@@ -109,9 +108,14 @@ def build(ctx):
 
     # ---------------------------------------------------------------- rain
     rain(ctx, fwd_h, side_h, seed_xy, water, rnd)
+    for k, dd in enumerate((0.7, 1.4, 2.6, 4.5, 8.0)):
+        rain_card(ctx, seed_xy + fwd_h * dd, fwd_h, width=0.6 + dd * 1.4, height=0.3 + dd * 0.9, seed=k,
+                  density=0.55 + 0.1 * k, t_kar=t_kar)
 
     # ---------------------------------------------------------------- camera
     T = seed_xy + Vector((0, 0, 0.03))
+    near_end = path[-1]
+    leg = Vector((seed_xy.x - near_end.x, seed_xy.y - near_end.y, 0)).normalized()   # camera looks up the crack
     cam = C.camera("cam", lens=40, loc=(0, 0, 1), fstop=2.8)
     focus = C.empty("cam_focus", tuple(T)); cam.data.dof.focus_object = focus
     prev = None
@@ -119,13 +123,14 @@ def build(ctx):
         t = f / C.FPS
         s = C.remap(t, t_but + 0.4, t_ay - 0.1, C.smoother)            # descend to ground level
         dist = C.lerp(0.36, 0.20, s) - 0.02 * C.remap(t, t_ay, ctx.t1, C.smooth)
-        hgt = C.lerp(0.13, 0.016, s)
+        hgt = C.lerp(0.13, 0.024, s)
         lat = C.lerp(0.05, 0.012, s)
-        pos = T - fwd_h * dist + side_h * lat
+        look_h = fwd_h.lerp(leg, s).normalized()
+        pos = T - look_h * dist + side_h * lat
         pos.z = seed_xy.z + hgt
         aim = (T - Vector((0, 0, 0.004)) - pos).normalized()
         u = C.remap(t, t_kar + 0.45, ctx.t1 + 0.25, C.smoother)         # exit: tilt up into the sky
-        up_aim = (fwd_h * math.cos(math.radians(30)) + Vector((0, 0, math.sin(math.radians(30))))).normalized()
+        up_aim = (look_h * math.cos(math.radians(30)) + Vector((0, 0, math.sin(math.radians(30))))).normalized()
         fwd = aim.lerp(up_aim, u).normalized()
         M = look_matrix(pos, fwd)
         cam.matrix_world = M
@@ -137,8 +142,10 @@ def build(ctx):
         focus.location = T
         focus.keyframe_insert("location", frame=f)
     C.handheld(cam, amp_loc=0.0005, amp_rot=0.0012, speed=0.5)
-    bpy.context.scene.view_settings.exposure = 0.6
-    return {"final_spp": 32, "preview_spp": 32, "clamp_indirect": 4.0, "transmission_bounces": 6}
+    bpy.context.scene.view_settings.exposure = 0.25
+    L.render_tuning(os.environ.get("S3_DQ", "BALANCED"))
+    return L.experiment({"final_spp": 16, "final_threshold": 0.04, "preview_spp": 32, "clamp_indirect": 4.0,
+                         "transmission_bounces": 6})
 
 
 def world_rain(ctx, sdir, t_kar):
@@ -148,7 +155,7 @@ def world_rain(ctx, sdir, t_kar):
     tc = nt.nodes.new("ShaderNodeTexCoord")
     env = nt.nodes.new("ShaderNodeTexEnvironment"); env.image = bpy.data.images.load(path, check_existing=True)
     nt.links.new(tc.outputs["Generated"], env.inputs[0])
-    hs = nt.nodes.new("ShaderNodeHueSaturation"); hs.inputs["Saturation"].default_value = 0.75
+    hs = nt.nodes.new("ShaderNodeHueSaturation"); hs.inputs["Saturation"].default_value = 0.55
     hs.inputs["Value"].default_value = 1.0
     nt.links.new(env.outputs[0], hs.inputs["Color"])
     # sun glow: brightness gap in the cloud deck around the sun direction
@@ -173,7 +180,7 @@ def world_rain(ctx, sdir, t_kar):
     g_all = mth("ADD", g, mth("MULTIPLY", mth("MULTIPLY", disc, 400.0), lp.outputs["Is Camera Ray"]))
     g_all = mth("MULTIPLY", g_all, brk.outputs[0])
     # rain darkness: whole sky dims, brightens a little with the break
-    dim = mth("ADD", 0.38, mth("MULTIPLY", brk.outputs[0], 0.35))
+    dim = mth("ADD", 0.16, mth("MULTIPLY", brk.outputs[0], 0.30))
     mixc = nt.nodes.new("ShaderNodeMix"); mixc.data_type = "RGBA"; mixc.blend_type = "MULTIPLY"
     mixc.inputs[0].default_value = 1.0
     nt.links.new(hs.outputs[0], mixc.inputs[6])
@@ -194,7 +201,9 @@ def rivulet_material(t_start, t_seed, t_end):
     m = C.mat_water("S3_rivulet")
     nt = m.node_tree
     p = nt.nodes["Principled BSDF"]
-    p.inputs["Base Color"].default_value = (0.75, 0.70, 0.62, 1)
+    p.inputs["Base Color"].default_value = (0.36, 0.28, 0.20, 1)
+    p.inputs["Transmission Weight"].default_value = 0.65
+    p.inputs["Roughness"].default_value = 0.04
     outn = nt.nodes["Material Output"]
     uv = nt.nodes.new("ShaderNodeUVMap"); uv.uv_map = "UVMap"
     sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(uv.outputs[0], sep.inputs[0])
@@ -330,37 +339,106 @@ def crown(p, tt, mat):
         f.smooth = True
     o = L.obj_from_bm(f"S3_crown_{tt:.2f}", b, [mat])
     o.location = p
-    seq = ((tt - 0.01, (0, 0, 0)), (tt, (0.0015, 0.0015, 0.0005)), (tt + 0.05, (0.0035, 0.0035, 0.0028)),
-           (tt + 0.11, (0.0048, 0.0048, 0.0012)), (tt + 0.16, (0.005, 0.005, 0.0)))
+    seq = ((tt - 0.01, (0, 0, 0)), (tt, (0.0015, 0.0015, 0.0012)), (tt + 0.04, (0.0034, 0.0034, 0.0032)),
+           (tt + 0.08, (0.0042, 0.0042, 0.0022)), (tt + 0.1, (0, 0, 0)))
     o.scale = (0, 0, 0); o.keyframe_insert("scale", frame=(tt - 0.5) * C.FPS)
     for t_, s in seq:
         o.scale = s; o.keyframe_insert("scale", frame=t_ * C.FPS)
 
 
+def rain_material(ctx):
+    """Rain drops: water + a faint sheen term standing in for the sky glints a real drop catches over its
+    whole fall (keeps streaks readable after the 180-degree shutter smears them)."""
+    t_kar = ctx.word("karşılanıyor")
+    m = C.mat_water("S3_rainwater")
+    nt = m.node_tree; p = nt.nodes["Principled BSDF"]
+    p.inputs["Emission Color"].default_value = (0.8, 0.84, 0.9, 1)
+    for tt, val in ((ctx.t0, 0.5), (t_kar - 0.4, 0.6), (t_kar + 0.4, 2.2), (ctx.t1 + 0.5, 2.4)):
+        p.inputs["Emission Strength"].default_value = val
+        p.inputs["Emission Strength"].keyframe_insert("default_value", frame=tt * C.FPS)
+    return m
+
+
+def rain_card(ctx, centre, fwd_h, width, height, seed, density, t_kar):
+    """Far-field rain: a vertical card of procedural, vertically stretched streaks scrolling down at
+    terminal velocity (the curtain of distant drops a real long lens sees). Brightens when backlit."""
+    bpy.ops.mesh.primitive_plane_add(size=1)
+    o = bpy.context.object; o.name = f"S3_raincard{seed}"
+    o.scale = (width, height, 1)
+    o.location = centre + Vector((0, 0, height / 2 - 0.01))
+    o.rotation_euler = (math.radians(90), 0, math.atan2(fwd_h.y, fwd_h.x) - math.radians(90))
+    for a in ("visible_shadow", "visible_diffuse", "visible_glossy", "visible_transmission"):
+        setattr(o, a, False)
+    m = bpy.data.materials.new(o.name); m.use_nodes = True
+    nt = m.node_tree; nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = nt.nodes.new("ShaderNodeMapping")
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    # object coords: x across (-0.5..0.5 * width), y up (plane rotated); stretch 1:90
+    sx = 260.0 * width / max(0.5, (centre - centre).length + 1)
+    mp.inputs["Scale"].default_value = (width * 700 / (1 + seed * 0.6), height * 6.0, 1.0)
+    v = 7.0
+    for tt in (ctx.t0 - 1, ctx.t1 + 1):
+        mp.inputs["Location"].default_value = (seed * 3.1, (tt - ctx.t0) * v * 6.0, 0)
+        mp.inputs["Location"].keyframe_insert("default_value", frame=tt * C.FPS)
+    for fc in C._fcurves(nt.animation_data.action):
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 1.0
+    nz.inputs["Detail"].default_value = 0.0
+    nt.links.new(mp.outputs[0], nz.inputs["Vector"])
+    mr = nt.nodes.new("ShaderNodeMapRange")
+    nt.links.new(nz.outputs[0], mr.inputs["Value"])
+    mr.inputs["From Min"].default_value = 0.58 - 0.03 * density; mr.inputs["From Max"].default_value = 0.68
+    # fade at top/bottom edges of the card
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Generated"], sep.inputs[0])
+    edge = nt.nodes.new("ShaderNodeMapRange"); nt.links.new(sep.outputs["Y"], edge.inputs["Value"])
+    edge.inputs["From Min"].default_value = 1.0; edge.inputs["From Max"].default_value = 0.8
+    mul = nt.nodes.new("ShaderNodeMath"); mul.operation = "MULTIPLY"
+    nt.links.new(mr.outputs[0], mul.inputs[0]); nt.links.new(edge.outputs[0], mul.inputs[1])
+    op = nt.nodes.new("ShaderNodeMath"); op.operation = "MULTIPLY"
+    nt.links.new(mul.outputs[0], op.inputs[0])
+    for tt, val in ((ctx.t0, 0.22), (t_kar - 0.4, 0.3), (t_kar + 0.4, 0.55), (ctx.t1 + 0.5, 0.6)):
+        op.inputs[1].default_value = val; op.inputs[1].keyframe_insert("default_value", frame=tt * C.FPS)
+    em = nt.nodes.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (0.85, 0.88, 0.92, 1)
+    em.inputs["Strength"].default_value = 1.0
+    for tt, val in ((ctx.t0, 0.35), (t_kar - 0.4, 0.4), (t_kar + 0.4, 1.6), (ctx.t1 + 0.5, 1.8)):
+        em.inputs["Strength"].default_value = val; em.inputs["Strength"].keyframe_insert("default_value", frame=tt * C.FPS)
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    ad = nt.nodes.new("ShaderNodeAddShader")
+    mx = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(op.outputs[0], mx.inputs[0]); nt.links.new(tr.outputs[0], mx.inputs[1]); nt.links.new(em.outputs[0], mx.inputs[2])
+    nt.links.new(mx.outputs[0], out.inputs["Surface"])
+    o.data.materials.append(m)
+    return o
+
+
 def rain(ctx, fwd_h, side_h, centre, water, rnd):
-    """Rain: drops falling at terminal velocity through a wedge in front of the camera."""
-    tpl = L.template_drop("S3_rain_tpl", stretch=1.0, mat=water)
+    """Rain at terminal velocity: each drop is born 2.2 m up at its own time t0 and falls through the
+    wedge in front of the camera (constant topology -> real motion-blur streaks)."""
+    tpl = L.template_drop("S3_rain_tpl", stretch=1.0, mat=rain_material(ctx))
     p0, vel, t0, size = [], [], [], []
     v = 7.0
-    wind = side_h * 0.6
-    dur = (ctx.f1 - ctx.f0) / C.FPS + 1.0
-    tstart = ctx.t0 - 0.5
-    H = v * dur + 1.5
-    # density ramps up after "bütün" (sparser first)
-    for i in range(22000):
-        fd = rnd.uniform(0.0, 3.2) ** 1.0
-        lat = rnd.uniform(-1, 1) * (0.12 + 0.55 * fd)
-        z0 = rnd.uniform(0.0, H)
-        # reaching the ground at time tstart + z0/v; thin out early drops
-        t_ground = tstart + z0 / v
-        dens = 0.25 + 0.75 * C.smooth((t_ground - (ctx.t0 + 0.3)) / 2.5)
+    wind = side_h * 0.5
+    z_top = 2.2
+    t_a, t_b = ctx.t0 - 0.6, ctx.t1 + 0.4
+    t_full = ctx.word("bütün") + 0.6
+    n = 60000
+    for i in range(n):
+        tb = rnd.uniform(t_a, t_b)
+        # intensity: light at first, heavy from just after "bütün"
+        dens = 0.3 + 0.7 * C.smooth((tb + z_top / v - (t_full - 1.0)) / 1.6)
         if rnd.random() > dens:
             continue
-        p = centre + fwd_h * (fd - 0.25) + side_h * lat - wind * (z0 / v)
-        p.z = z0
-        p0.append(p); vel.append(Vector((wind.x, wind.y, -v))); t0.append(tstart)
-        size.append(rnd.uniform(0.0006, 0.0015))
-    L.particles("S3_rain", p0, vel, t0, size, tpl, mat=water, drag=0.0, gravity=0.0, ground_z=0.0, life=99.0)
+        fd = 3.0 * rnd.random() ** 1.8
+        lat = rnd.uniform(-1, 1) * (0.06 + 0.5 * fd)
+        p = centre + fwd_h * (fd - 0.22) + side_h * lat - wind * (z_top / v)
+        p.z = z_top
+        p0.append(p); vel.append(Vector((wind.x, wind.y, -v))); t0.append(tb)
+        size.append(rnd.uniform(0.0007, 0.002))
+    print("[sh11] rain drops", len(p0))
+    L.particles("S3_rain", p0, vel, t0, size, tpl, mat=tpl.data.materials[0], drag=0.0, gravity=0.0, ground_z=-0.002, life=1.0)
 
 
 C.run("sh11", build)
