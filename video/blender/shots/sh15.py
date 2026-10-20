@@ -903,7 +903,7 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
         LK(nt, leather.outputs[0], out.inputs["Surface"])
         return m
     uvm = NN(nt, "ShaderNodeUVMap", uv_map=uv_mask)
-    mk = img_node(nt, mask, True, vec=uvm.outputs[0], ext="CLIP", interp="Cubic")
+    mk = img_node(nt, mask, True, vec=uvm.outputs[0], ext="CLIP", interp="Linear")
     # foil breakup: irregular edge + tiny missing specks
     en = noise(nt, geo.outputs["Position"], 2600.0, 0.0, 0.5)
     m_e = math_node(nt, "ADD", mk.outputs[0], maprange(nt, en.outputs[0], 0.3, 0.7, -0.16, 0.16))
@@ -990,7 +990,7 @@ def mat_page(name, img, uv="UVMap"):
     m, nt, out = new_mat(name)
     geo = NN(nt, "ShaderNodeNewGeometry")
     uvn = NN(nt, "ShaderNodeUVMap", uv_map=uv)
-    mk = img_node(nt, img, True, vec=uvn.outputs[0], ext="CLIP", interp="Cubic")
+    mk = img_node(nt, img, True, vec=uvn.outputs[0], ext="CLIP", interp="Linear")
     col, rough, ink = _paper_and_ink(nt, mk.outputs[0], geo)
     p = principled(nt, **{"Base Color": col, "Roughness": rough})
     LK(nt, p.outputs[0], out.inputs["Surface"])
@@ -1010,8 +1010,8 @@ def mat_leaf(name, img_front, img_back):
     cmb = NN(nt, "ShaderNodeCombineXYZ")
     LK(nt, math_node(nt, "SUBTRACT", va=1.0, b=sep.outputs[0]), cmb.inputs[0])
     LK(nt, sep.outputs[1], cmb.inputs[1])
-    f = img_node(nt, img_front, True, vec=uvn.outputs[0], ext="CLIP", interp="Cubic")
-    b = img_node(nt, img_back, True, vec=cmb.outputs[0], ext="CLIP", interp="Cubic")
+    f = img_node(nt, img_front, True, vec=uvn.outputs[0], ext="CLIP", interp="Linear")
+    b = img_node(nt, img_back, True, vec=cmb.outputs[0], ext="CLIP", interp="Linear")
     bf = geo.outputs["Backfacing"]
     this = NN(nt, "ShaderNodeMix"); this.data_type = "FLOAT"
     LK(nt, bf, this.inputs[0]); LK(nt, f.outputs[0], this.inputs[2]); LK(nt, b.outputs[0], this.inputs[3])
@@ -1075,7 +1075,7 @@ def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), 
     normal = nm.outputs[0]
     if relief:
         uvr = NN(nt, "ShaderNodeUVMap", uv_map=uv_relief)
-        rimg = img_node(nt, relief, True, vec=uvr.outputs[0], ext="EXTEND", interp="Cubic")
+        rimg = img_node(nt, relief, True, vec=uvr.outputs[0], ext="EXTEND", interp="Linear")
         if relief_depth > 0:
             bmp = NN(nt, "ShaderNodeBump")
             bmp.inputs["Strength"].default_value = 1.0
@@ -1101,19 +1101,14 @@ def mat_plaster(name="lime_plaster"):
         return mat_simple(name, (0.7, 0.66, 0.6), 0.9)
     m, nt, out = new_mat(name)
     tc = NN(nt, "ShaderNodeTexCoord")
-    big = noise(nt, tc.outputs["Object"], 1.3, 3.0, 0.55)
-    mid = noise(nt, tc.outputs["Object"], 9.0, 2.0, 0.5)
+    big = noise(nt, tc.outputs["Object"], 1.3, 1.5, 0.55)
+    mid = noise(nt, tc.outputs["Object"], 9.0, 1.0, 0.5)
     v1 = maprange(nt, big.outputs[0], 0.3, 0.7, 0.92, 1.04)
     v2 = maprange(nt, mid.outputs[0], 0.3, 0.7, 0.975, 1.02)
     col = mixrgb(nt, 1.0, srgb("#E8DECD"), v1, "MULTIPLY")
     col = mixrgb(nt, 1.0, col, v2, "MULTIPLY")
-    bmp = NN(nt, "ShaderNodeBump")
-    bmp.inputs["Strength"].default_value = 0.035
-    bmp.inputs["Distance"].default_value = 0.0004
-    LK(nt, math_node(nt, "MULTIPLY", big.outputs[0], vb=6.0), bmp.inputs["Height"])
     p = NN(nt, "ShaderNodeBsdfDiffuse")
     LK(nt, col, p.inputs["Color"])
-    LK(nt, bmp.outputs[0], p.inputs["Normal"])
     p.inputs["Roughness"].default_value = 0.6
     LK(nt, p.outputs[0], out.inputs["Surface"])
     return m
