@@ -15,12 +15,12 @@ TABLE_Z = 0.0
 def mat_velvet():
     m, nt, p = C.new_mat("velvet")
     out = nt.nodes["Material Output"]
-    p.inputs["Base Color"].default_value = (0.022, 0.004, 0.008, 1)
+    p.inputs["Base Color"].default_value = (0.014, 0.003, 0.006, 1)
     p.inputs["Roughness"].default_value = 0.85
     p.inputs["Specular IOR Level"].default_value = 0.25
     p.inputs["Sheen Weight"].default_value = 1.0
     p.inputs["Sheen Roughness"].default_value = 0.32
-    p.inputs["Sheen Tint"].default_value = (0.95, 0.55, 0.55, 1)
+    p.inputs["Sheen Tint"].default_value = (0.75, 0.55, 0.55, 1)
     # pile direction / crush marks: low-freq noise modulating sheen; fibre noise in the bump
     tc = nt.nodes.new("ShaderNodeTexCoord")
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 9; nz.inputs["Detail"].default_value = 3
@@ -33,7 +33,7 @@ def mat_velvet():
     nt.links.new(fz.outputs["Fac"], bm.inputs["Height"]); nt.links.new(bm.outputs["Normal"], p.inputs["Normal"])
     # the weave lets a little warm light through where the lamp is close
     tr = nt.nodes.new("ShaderNodeBsdfTranslucent"); tr.inputs["Color"].default_value = (1.0, 0.35, 0.12, 1)
-    ms = nt.nodes.new("ShaderNodeMixShader"); ms.inputs[0].default_value = 0.10
+    ms = nt.nodes.new("ShaderNodeMixShader"); ms.inputs[0].default_value = 0.16
     nt.links.new(p.outputs[0], ms.inputs[1]); nt.links.new(tr.outputs[0], ms.inputs[2])
     nt.links.new(ms.outputs[0], out.inputs["Surface"])
     return m
@@ -43,7 +43,7 @@ def build(ctx):
     sc = bpy.context.scene
     rng = random.Random(41)
     t_cover = ctx.word("örtmek")
-    t_drop = t_cover - 0.30
+    t_drop = t_cover - 0.42
     f_drop = C.t2f(t_drop)
 
     C.world_color((0.0015, 0.0012, 0.001), 1.0)
@@ -72,17 +72,31 @@ def build(ctx):
     for o in objs:
         o.location = (0, 0, TABLE_Z)
         o.rotation_euler = (0, 0, math.radians(-25))
-    # glass: let direct light through (no caustics needed)
-    for o in (glass,):
-        for m in o.data.materials:
-            nt = m.node_tree
-            outn = nt.nodes["Material Output"]
-            src = outn.inputs["Surface"].links[0].from_socket
-            lp = nt.nodes.new("ShaderNodeLightPath"); tp = nt.nodes.new("ShaderNodeBsdfTransparent")
-            tp.inputs[0].default_value = (1.0, 0.95, 0.85, 1)
-            ms = nt.nodes.new("ShaderNodeMixShader")
-            nt.links.new(lp.outputs["Is Shadow Ray"], ms.inputs[0]); nt.links.new(src, ms.inputs[1]); nt.links.new(tp.outputs[0], ms.inputs[2])
-            nt.links.new(ms.outputs[0], outn.inputs["Surface"])
+    # chimney: replace the alpha-card material with real thin clear glass (soot film near the top);
+    # shadow rays pass straight through so the flame light reaches the room without caustics
+    gm, gnt, gp = C.new_mat("chimney_glass")
+    gp.inputs["Transmission Weight"].default_value = 1.0
+    gp.inputs["IOR"].default_value = 1.12
+    gp.inputs["Roughness"].default_value = 0.02
+    gp.inputs["Base Color"].default_value = (1.0, 0.97, 0.92, 1)
+    gtc = gnt.nodes.new("ShaderNodeTexCoord"); gsz = gnt.nodes.new("ShaderNodeSeparateXYZ")
+    gnt.links.new(gtc.outputs["Object"], gsz.inputs[0])
+    soot = gnt.nodes.new("ShaderNodeMapRange"); soot.inputs[1].default_value = 0.62; soot.inputs[2].default_value = 0.80
+    soot.inputs[3].default_value = 0.0; soot.inputs[4].default_value = 0.55
+    gnt.links.new(gsz.outputs["Z"], soot.inputs[0])
+    gnz = gnt.nodes.new("ShaderNodeTexNoise"); gnz.inputs["Scale"].default_value = 40
+    gnt.links.new(gtc.outputs["Object"], gnz.inputs["Vector"])
+    smul = gnt.nodes.new("ShaderNodeMath"); smul.operation = "MULTIPLY"
+    gnt.links.new(soot.outputs[0], smul.inputs[0]); gnt.links.new(gnz.outputs["Fac"], smul.inputs[1])
+    gdf = gnt.nodes.new("ShaderNodeBsdfDiffuse"); gdf.inputs["Color"].default_value = (0.02, 0.015, 0.01, 1)
+    gmix = gnt.nodes.new("ShaderNodeMixShader")
+    gnt.links.new(smul.outputs[0], gmix.inputs[0]); gnt.links.new(gp.outputs[0], gmix.inputs[1]); gnt.links.new(gdf.outputs[0], gmix.inputs[2])
+    glp = gnt.nodes.new("ShaderNodeLightPath"); gtp = gnt.nodes.new("ShaderNodeBsdfTransparent")
+    gtp.inputs[0].default_value = (1.0, 0.96, 0.9, 1)
+    gms = gnt.nodes.new("ShaderNodeMixShader")
+    gnt.links.new(glp.outputs["Is Shadow Ray"], gms.inputs[0]); gnt.links.new(gmix.outputs[0], gms.inputs[1]); gnt.links.new(gtp.outputs[0], gms.inputs[2])
+    gnt.links.new(gms.outputs[0], gnt.nodes["Material Output"].inputs["Surface"])
+    glass.data.materials[0] = gm
     # flame: emissive, hot core
     for m in flame.data.materials:
         nt = m.node_tree
@@ -96,13 +110,13 @@ def build(ctx):
     bb = [flame.matrix_world @ Vector(c) for c in flame.bound_box]
     fc = sum(bb, Vector()) / 8
     print("[sh14b] flame centre", tuple(round(x, 3) for x in fc), flush=True)
-    fl = C.point_light("flame_light", loc=fc, power=18, radius=0.008, kelvin_k=1850)
-    fl2 = C.point_light("flame_fill", loc=fc + Vector((0, 0, 0.015)), power=6, radius=0.03, kelvin_k=1700)
+    fl = C.point_light("flame_light", loc=fc, power=45, radius=0.008, kelvin_k=1850)
+    fl2 = C.point_light("flame_fill", loc=fc + Vector((0, 0, 0.015)), power=15, radius=0.03, kelvin_k=1700)
     # flicker
     for f in range(ctx.f0 - 4, ctx.f1 + 5):
         t = f / C.FPS
         fk = 1 + 0.06 * math.sin(t * 23.0) + 0.04 * math.sin(t * 37.3 + 1) + 0.03 * math.sin(t * 61.7 + 2)
-        fl.data.energy = 18 * fk; fl.data.keyframe_insert("energy", frame=f)
+        fl.data.energy = 45 * fk; fl.data.keyframe_insert("energy", frame=f)
         flame.scale = (1, 1, 0.96 + 0.05 * (fk - 1) / 0.13)
         flame.keyframe_insert("scale", frame=f)
 
@@ -114,14 +128,14 @@ def build(ctx):
     occ.rotation_euler = (0, math.radians(-60), math.radians(-20))
     C.assign(occ, C.principled("occ", base=(0, 0, 0)))
     for t, x, pw in ((ctx.t0 - 0.3, 2.4, 900), (99.45, 2.4, 900), (100.25, 0.65, 160), (100.6, 0.45, 0.0)):
-        occ.location = (x, -0.1, 1.15)
+        occ.location = (x, -0.1, 1.35)
         C.key(occ, "location", t, None)
         win.data.energy = pw
         C.key(win.data, "energy", t, None)
 
     # ------------------------------------------------------------ velvet cloth (sim baked here)
-    nx = 64
-    size = 1.25
+    nx = 72
+    size = 1.7
     verts, faces = [], []
     for j in range(nx + 1):
         for i in range(nx + 1):
@@ -134,8 +148,8 @@ def build(ctx):
     cloth = C.mesh_obj("velvet", verts, faces)
     C.smooth_shade(cloth)
     # starts above the frame, slightly tilted and pre-sagged (as if just let go of)
-    cloth.location = (0.03, 0.02, 0.95)
-    cloth.rotation_euler = (math.radians(6), math.radians(-4), math.radians(17))
+    cloth.location = (0.02, 0.03, 1.55)
+    cloth.rotation_euler = (math.radians(2), math.radians(-1.5), math.radians(17))
     bpy.context.view_layer.update()
     me = cloth.data
     mw = cloth.matrix_world.copy()
@@ -146,12 +160,14 @@ def build(ctx):
     cmod = cloth.modifiers.new("cloth", "CLOTH")
     cs = cmod.settings
     cs.quality = 10
-    cs.mass = 0.45
-    cs.air_damping = 1.5
-    cs.tension_stiffness = 40; cs.compression_stiffness = 40; cs.shear_stiffness = 20; cs.bending_stiffness = 2.5
+    cs.mass = 0.35
+    cs.air_damping = 2.0
+    cs.tension_stiffness = 40; cs.compression_stiffness = 40; cs.shear_stiffness = 20; cs.bending_stiffness = 1.2
     cs.tension_damping = 8; cs.compression_damping = 8; cs.shear_damping = 8; cs.bending_damping = 0.8
     cc = cmod.collision_settings
     cc.distance_min = 0.004
+    cc.friction = 20
+    cc.self_friction = 10
     cc.use_self_collision = True
     cc.self_distance_min = 0.003
     cc.collision_quality = 4
@@ -164,22 +180,24 @@ def build(ctx):
     for o in (lamp, glass, table):
         cm = o.modifiers.new("collision", "COLLISION")
         o.collision.thickness_outer = 0.004
-        o.collision.cloth_friction = 8
+        o.collision.cloth_friction = 40
     with bpy.context.temp_override(scene=sc, active_object=cloth, object=cloth, point_cache=pc):
         r = bpy.ops.ptcache.bake(bake=True)
     print("[sh14b] cloth bake", r, flush=True)
 
     # ------------------------------------------------------------ camera
-    look = Vector((0, 0, 0.24))
-    cam = C.camera("cam", lens=65, loc=(0.25, -1.75, 0.42), look_at=look, fstop=2.2, focus=Vector((0, 0, 0.22)))
-    for t, loc, tgt in ((ctx.t0 - 0.3, (0.30, -1.80, 0.44), (0, 0, 0.25)), (102.2, (0.12, -1.48, 0.38), (0, 0, 0.23)),
-                        (ctx.t1 + 0.3, (0.03, -1.30, 0.33), (0, 0, 0.18))):
+    look = Vector((0, 0, 0.45))
+    cam = C.camera("cam", lens=50, loc=(0.25, -2.3, 0.6), look_at=look, fstop=2.4, focus=Vector((0, 0, 0.45)))
+    for t, loc, tgt in ((ctx.t0 - 0.3, (0.40, -2.45, 0.62), (0, 0, 0.47)), (102.2, (0.18, -2.15, 0.56), (0, 0, 0.45)),
+                        (ctx.t1 + 0.3, (0.06, -1.95, 0.52), (0, 0, 0.42))):
         cam.location = loc
         C.point_at(cam, tgt)
         C.key(cam, "location", t, None)
         C.key(cam, "rotation_euler", t, None)
     C.handheld(cam, amp_loc=0.0012, amp_rot=0.001, speed=0.35, seed=21)
-    sc.view_settings.exposure = 0.0
+    for t, ev in ((ctx.t0, 0.0), (101.0, 0.35), (102.6, 0.35), (103.6, 0.75), (ctx.t1 + 0.3, 0.8)):
+        sc.view_settings.exposure = ev
+        C.key(sc.view_settings, "exposure", t, None)
     return {"final_spp": 48, "preview_spp": 32, "clamp_indirect": 4.0}
 
 

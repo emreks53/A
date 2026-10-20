@@ -343,19 +343,19 @@ def build_disc(name, R=0.075, N=1450, seed=1, seg=10, dome=0.006, detail=2, dew=
         open_start = 0.66 + rng.uniform(-0.04, 0.04)
         if m < open_start:
             # closed bud: 5 creased lobes meeting at an apex; colour lighter toward apex
-            h = c * (1.05 + 0.55 * m) * rng.uniform(0.9, 1.1)
+            h = c * (1.35 + 0.55 * m) * rng.uniform(0.88, 1.12)
             if m < 0.3:
                 top = _lerp3((0.30, 0.40, 0.07), (0.40, 0.33, 0.05), m / 0.3)
             else:
                 top = _lerp3((0.40, 0.33, 0.05), (0.16, 0.06, 0.02), min(1, (m - 0.3) / 0.25))
             if m > open_start - 0.07:
                 top = _lerp3(top, (0.75, 0.42, 0.03), (m - open_start + 0.07) / 0.07)
-            add_ring_strip([(0, a * 0.95, colb, 0), (0.42 * h, a, colb, 0), (0.66 * h, 0.86 * a, _lerp3(colb, top, 0.5), 0),
-                            (0.84 * h, 0.52 * a, top, 0), (0.95 * h, 0.2 * a, top, 0)],
-                           closed_top=(h, top, 0), mat=0, crease=0.2)
+            add_ring_strip([(0, a * 0.92, colb, 0), (0.35 * h, 0.97 * a, colb, 0), (0.58 * h, 0.85 * a, _lerp3(colb, top, 0.5), 0),
+                            (0.78 * h, 0.55 * a, top, 0), (0.92 * h, 0.22 * a, top, 0)],
+                           closed_top=(h, top, 0), mat=0, crease=0.3)
             # palea (chaff scale) on the outer side, leaning in over the bud: pointed, dark tip
             if m > 0.03:
-                pw = 0.55 * a
+                pw = 0.62 * a
                 Tl = T.inverted()
                 od = (Tl.to_3x3() @ out_dir).normalized()
                 sd = Vector((0, 0, 1)).cross(od).normalized()
