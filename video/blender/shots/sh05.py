@@ -27,7 +27,7 @@ def build_world(ctx, t_allah):
     def sky(disc):
         s = nt.nodes.new("ShaderNodeTexSky"); s.sky_type = "MULTIPLE_SCATTERING"
         s.sun_disc = disc; s.sun_elevation = math.radians(SUN_EL); s.sun_rotation = math.radians(SUN_AZ)
-        s.sun_size = math.radians(0.545); s.sun_intensity = 1.0
+        s.sun_size = math.radians(1.6 if disc else 0.545); s.sun_intensity = 0.4 if disc else 1.0   # disc smeared by forward scatter
         s.air_density = 1.0; s.aerosol_density = 0.6
         return s
     s_disc, s_flat = sky(True), sky(False)
@@ -185,7 +185,7 @@ def build_surface(ctx):
     smp.inputs["Location"].default_value = (0, 0, 0); smp.inputs["Location"].keyframe_insert("default_value", frame=0)
     smp.inputs["Location"].default_value = (2.0, 1.2, 6.0); smp.inputs["Location"].keyframe_insert("default_value", frame=100 * 24)
     nt.links.new(tcs.outputs["Object"], smp.inputs["Vector"]); nt.links.new(smp.outputs[0], nz.inputs["Vector"])
-    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.45; bp.inputs["Distance"].default_value = 0.0025
+    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 1.0; bp.inputs["Distance"].default_value = 0.008
     nt.links.new(nz.outputs[0], bp.inputs["Height"]); nt.links.new(bp.outputs[0], g.inputs["Normal"])
     nt.links.new(g.outputs[0], nt.nodes["Material Output"].inputs[0])
     C.assign(s, m)
@@ -816,7 +816,11 @@ def build(ctx):
     vs = sc.view_settings
     for t, ev in ((ctx.t0 - 0.3, -2.4), (t_tilt0, -2.4), (t_tilt0 + 1.3, 0.2), (ctx.t1 + 0.3, 0.3)):
         vs.exposure = ev; vs.keyframe_insert("exposure", frame=t * 24)      # camera exposure follows the tilt
-    L.compositor(bloom=0.0, fog=0.06, fog_size=0.8, threshold=1.5)
+    comp = L.compositor(bloom=0.0, fog=0.06, fog_size=0.8, threshold=1.5)
+    g = comp["fog"]
+    for t, v in ((ctx.t0 - 0.3, 0.32), (t_allah - 0.1, 0.32), (t_allah + 0.5, 0.42), (t_tilt0 + 0.3, 0.3), (t_tilt0 + 1.2, 0.06)):
+        g.inputs["Strength"].default_value = v; g.inputs["Strength"].keyframe_insert("default_value", frame=t * 24)
+    g.inputs["Threshold"].default_value = 1.0
     # ---- render-cost choices (see NOTES): homogeneous water volume (analytic, no ray marching), FAST denoise
     # prefilter, no motion blur on things that move < 1 px per shutter (specks, plants, distant bubbles)
     for m in list(bpy.data.materials):
