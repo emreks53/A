@@ -40,7 +40,7 @@ def build(ctx):
         for k in fc.keyframe_points: k.interpolation = "LINEAR"
     bg = nt.nodes.new("ShaderNodeBackground")
     # deepen the twilight colours (maritime haze) and add the aerosol forward-scatter glow around the sun
-    hs = nt.nodes.new("ShaderNodeHueSaturation"); hs.inputs["Saturation"].default_value = 1.55
+    hs = nt.nodes.new("ShaderNodeHueSaturation"); hs.inputs["Saturation"].default_value = 1.35
     hs.inputs["Value"].default_value = 1.0
     nt.links.new(sky.outputs[0], hs.inputs["Color"])
     tint = nt.nodes.new("ShaderNodeMix"); tint.data_type = "RGBA"; tint.blend_type = "MULTIPLY"
@@ -73,7 +73,7 @@ def build(ctx):
     g2, c2 = glow(0.30, (1.0, 0.30, 0.10), "glow_wide")
     ad1 = nt.nodes.new("ShaderNodeMix"); ad1.data_type = "RGBA"; ad1.blend_type = "ADD"; ad1.inputs[0].default_value = 1
     nt.links.new(tint.outputs[2], ad1.inputs[6]); nt.links.new(c1.outputs[2], ad1.inputs[7])
-    hzr = nt.nodes.new("ShaderNodeMapRange"); hzr.inputs["From Min"].default_value = 0.022
+    hzr = nt.nodes.new("ShaderNodeMapRange"); hzr.inputs["From Min"].default_value = 0.045
     hzr.inputs["From Max"].default_value = 0.0; hzr.interpolation_type = "SMOOTHERSTEP"
     nt.links.new(sepz.outputs["Z"], hzr.inputs[0])
     hzc = nt.nodes.new("ShaderNodeMix"); hzc.data_type = "RGBA"; hzc.blend_type = "MIX"
@@ -84,7 +84,7 @@ def build(ctx):
     vmx = nt.nodes.new("ShaderNodeMath"); vmx.operation = "MULTIPLY"; vmx.inputs[1].default_value = 1.6
     nt.links.new(vlum.outputs[0], vmx.inputs[0])
     nt.links.new(vmx.outputs[0], hzs.inputs[7]); nt.links.new(hzs.outputs[2], hzc.inputs[7])
-    hzm = nt.nodes.new("ShaderNodeMath"); hzm.operation = "MULTIPLY"; hzm.inputs[1].default_value = 0.55
+    hzm = nt.nodes.new("ShaderNodeMath"); hzm.operation = "MULTIPLY"; hzm.inputs[1].default_value = 0.72
     nt.links.new(hzr.outputs[0], hzm.inputs[0]); nt.links.new(hzm.outputs[0], hzc.inputs[0])
     nt.links.new(ad1.outputs[2], hzc.inputs[6])
     ad2 = nt.nodes.new("ShaderNodeMix"); ad2.data_type = "RGBA"; ad2.blend_type = "ADD"; ad2.inputs[0].default_value = 1
@@ -109,14 +109,15 @@ def build(ctx):
     disc_r = DIST * math.tan(math.radians(0.2665))
     bpy.ops.mesh.primitive_uv_sphere_add(radius=disc_r, segments=48, ring_count=24)
     disc = bpy.context.object; disc.name = "SunDisc"
+    disc.scale = (1.0, 1.0, 0.86)          # refraction squashes the low sun
     m, dnt, p = C.new_mat("sundisc")
     dnt.nodes.remove(p)
     em = dnt.nodes.new("ShaderNodeEmission")
     # limb darkening: facing ratio
     lw = dnt.nodes.new("ShaderNodeLayerWeight"); lw.inputs[0].default_value = 0.5
     ramp = dnt.nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].position = 0.0; ramp.color_ramp.elements[0].color = (1.0, 0.36, 0.10, 1)
-    ramp.color_ramp.elements[1].position = 1.0; ramp.color_ramp.elements[1].color = (1.0, 0.70, 0.32, 1)
+    ramp.color_ramp.elements[0].position = 0.0; ramp.color_ramp.elements[0].color = (1.0, 0.86, 0.58, 1)
+    ramp.color_ramp.elements[1].position = 1.0; ramp.color_ramp.elements[1].color = (1.0, 0.30, 0.07, 1)
     dnt.links.new(lw.outputs["Facing"], ramp.inputs[0]); dnt.links.new(ramp.outputs[0], em.inputs[0])
     em.inputs[1].default_value = 260.0
     for t, v in ((tg - 0.2, 40.0), (tg + 0.25, 70.0), (tg + 1.0, 180.0), (ctx.t1 + 0.3, 300.0)):
@@ -183,7 +184,7 @@ def build(ctx):
     far = bpy.context.object; far.name = "FarSea"
     far.scale = (40000, 40000, 1); far.location = (0, 940 + 20000 - 3, -0.02)
 
-    def water_mat(name, foam=True, rough=0.09):
+    def water_mat(name, foam=True, rough=0.025):
         m, nt, p = C.new_mat(name)
         p.inputs["Base Color"].default_value = (0.004, 0.012, 0.016, 1)
         p.inputs["Roughness"].default_value = rough
@@ -207,7 +208,40 @@ def build(ctx):
         bp2.inputs["Distance"].default_value = 0.008
         nt.links.new(nz2.outputs[0], bp2.inputs["Height"])
         nt.links.new(nz.outputs[0], bp.inputs["Height"]); nt.links.new(bp.outputs[0], bp2.inputs["Normal"])
-        nt.links.new(bp2.outputs[0], p.inputs["Normal"])
+        # capillaries + short wind ripples (crisp glitter points), faded with distance where they go sub-pixel;
+        # roughness rises with distance instead (the far sheen) and varies in wind streaks / slicks
+        lp = nt.nodes.new("ShaderNodeLightPath")
+        dist = nt.nodes.new("ShaderNodeMapRange"); dist.inputs["From Min"].default_value = 15.0
+        dist.inputs["From Max"].default_value = 160.0
+        nt.links.new(lp.outputs["Ray Length"], dist.inputs[0])
+        near = nt.nodes.new("ShaderNodeMath"); near.operation = "SUBTRACT"; near.inputs[0].default_value = 1.0
+        nt.links.new(dist.outputs[0], near.inputs[1])
+        cur = bp2.outputs[0]
+        for sc_, st_, dd_, an_ in ((70.0, 0.8, 0.0025, (1.0, 1.8, 1.0)), (190.0, 0.6, 0.001, (1.0, 1.3, 1.0))):
+            mpx = nt.nodes.new("ShaderNodeMapping"); mpx.inputs["Scale"].default_value = an_
+            nt.links.new(tc.outputs["Object" if name != "farsea" else "Generated"], mpx.inputs[0])
+            nzx = nt.nodes.new("ShaderNodeTexNoise"); nzx.inputs["Scale"].default_value = sc_
+            nzx.inputs["Detail"].default_value = 1
+            nt.links.new(mpx.outputs[0], nzx.inputs[0])
+            stx = nt.nodes.new("ShaderNodeMath"); stx.operation = "MULTIPLY"; stx.inputs[1].default_value = st_
+            nt.links.new(near.outputs[0], stx.inputs[0])
+            bpx = nt.nodes.new("ShaderNodeBump"); bpx.inputs["Distance"].default_value = dd_
+            nt.links.new(stx.outputs[0], bpx.inputs["Strength"])
+            nt.links.new(nzx.outputs[0], bpx.inputs["Height"]); nt.links.new(cur, bpx.inputs["Normal"])
+            cur = bpx.outputs[0]
+        nt.links.new(cur, p.inputs["Normal"])
+        sl = nt.nodes.new("ShaderNodeTexNoise"); sl.inputs["Scale"].default_value = 0.035
+        sl.inputs["Detail"].default_value = 2
+        msl = nt.nodes.new("ShaderNodeMapping"); msl.inputs["Scale"].default_value = (1.0, 0.35, 1.0)
+        nt.links.new(tc.outputs["Object" if name != "farsea" else "Generated"], msl.inputs[0]); nt.links.new(msl.outputs[0], sl.inputs[0])
+        rsl = nt.nodes.new("ShaderNodeMapRange"); rsl.inputs["From Min"].default_value = 0.4
+        rsl.inputs["From Max"].default_value = 0.62; rsl.inputs["To Min"].default_value = rough
+        rsl.inputs["To Max"].default_value = rough * 0.45
+        nt.links.new(sl.outputs[0], rsl.inputs[0])
+        rd = nt.nodes.new("ShaderNodeMath"); rd.operation = "MULTIPLY_ADD"
+        nt.links.new(dist.outputs[0], rd.inputs[0]); rd.inputs[1].default_value = 0.07
+        nt.links.new(rsl.outputs[0], rd.inputs[2])
+        nt.links.new(rd.outputs[0], p.inputs["Roughness"])
         if foam:
             at = nt.nodes.new("ShaderNodeAttribute"); at.attribute_name = "foam"
             fn = nt.nodes.new("ShaderNodeTexNoise"); fn.inputs["Scale"].default_value = 9
@@ -227,54 +261,94 @@ def build(ctx):
             nt.links.new(mix.outputs[0], nt.nodes["Material Output"].inputs[0])
         return m
     C.assign(sea, water_mat("sea")); C.assign(mid, sea.data.materials[0])
-    C.assign(far, water_mat("farsea", foam=False, rough=0.12))
+    C.assign(far, water_mat("farsea", foam=False, rough=0.06))
 
-    # ---------------------------------------------------------------- thin high clouds (emissive, sky-lit look)
+    # ---------------------------------------------------------------- clouds (emissive cards, metre-scale noise)
+    def cloud_mat(name, scale_m, stretch, thr, base_col, sun_col, sil=1.0, zfade=None):
+        m, nt, p = C.new_mat(name); nt.nodes.remove(p)
+        m.cycles.emission_sampling = "NONE"
+        geo = nt.nodes.new("ShaderNodeNewGeometry")
+        mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (1 / (scale_m * stretch[0]), 1 / (scale_m * stretch[1]), 1 / (scale_m * stretch[2]))
+        nt.links.new(geo.outputs["Position"], mp.inputs[0])
+        nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 1.0
+        nz.inputs["Detail"].default_value = 6; nz.inputs["Roughness"].default_value = 0.58
+        nz.inputs["Distortion"].default_value = 0.6
+        nt.links.new(mp.outputs[0], nz.inputs[0])
+        vo = nt.nodes.new("ShaderNodeTexVoronoi"); vo.feature = "SMOOTH_F1"; vo.inputs["Scale"].default_value = 4.0
+        nt.links.new(mp.outputs[0], vo.inputs["Vector"])
+        mx = nt.nodes.new("ShaderNodeMath"); mx.operation = "MULTIPLY_ADD"; mx.inputs[1].default_value = -0.25
+        nt.links.new(vo.outputs["Distance"], mx.inputs[0]); nt.links.new(nz.outputs[0], mx.inputs[2])
+        mr = nt.nodes.new("ShaderNodeMapRange"); mr.inputs["From Min"].default_value = thr
+        mr.inputs["From Max"].default_value = thr + 0.16; mr.interpolation_type = "SMOOTHSTEP"
+        nt.links.new(mx.outputs[0], mr.inputs[0])
+        alpha = mr.outputs[0]
+        if zfade:
+            sz = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(geo.outputs["Position"], sz.inputs[0])
+            zf = nt.nodes.new("ShaderNodeFloatCurve"); cv = zf.mapping.curves[0]
+            zf.mapping.clip_min_x, zf.mapping.clip_max_x = zfade[0], zfade[1]
+            zf.mapping.use_clip = False
+            cv.points[0].location = (zfade[0], 0.0); cv.points[1].location = (zfade[1], 0.0)
+            for x, y in zfade[2]:
+                cv.points.new(x, y)
+            zf.mapping.update()
+            nt.links.new(sz.outputs["Z"], zf.inputs["Value"])
+            am = nt.nodes.new("ShaderNodeMath"); am.operation = "MULTIPLY"
+            nt.links.new(alpha, am.inputs[0]); nt.links.new(zf.outputs[0], am.inputs[1]); alpha = am.outputs[0]
+        # azimuth from the sun (x / distance): hot under-light near the sun, cooler pink away
+        sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(geo.outputs["Position"], sep.inputs[0])
+        dv = nt.nodes.new("ShaderNodeMath"); dv.operation = "DIVIDE"
+        nt.links.new(sep.outputs["X"], dv.inputs[0]); nt.links.new(sep.outputs["Y"], dv.inputs[1])
+        ab = nt.nodes.new("ShaderNodeMath"); ab.operation = "ABSOLUTE"; nt.links.new(dv.outputs[0], ab.inputs[0])
+        az = nt.nodes.new("ShaderNodeMapRange"); az.inputs["From Max"].default_value = 0.12
+        nt.links.new(ab.outputs[0], az.inputs[0])
+        cmix = nt.nodes.new("ShaderNodeMix"); cmix.data_type = "RGBA"
+        cmix.inputs[6].default_value = (*sun_col, 1); cmix.inputs[7].default_value = (*base_col, 1)
+        nt.links.new(az.outputs[0], cmix.inputs[0])
+        # thick parts close to the sun go dark (backlit silhouettes), their thin edges stay bright
+        if sil < 1.0:
+            thick = nt.nodes.new("ShaderNodeMapRange"); thick.inputs["From Min"].default_value = thr + 0.12
+            thick.inputs["From Max"].default_value = thr + 0.30
+            nt.links.new(mx.outputs[0], thick.inputs[0])
+            nsun = nt.nodes.new("ShaderNodeMath"); nsun.operation = "SUBTRACT"; nsun.inputs[0].default_value = 1.0
+            nt.links.new(az.outputs[0], nsun.inputs[1])
+            k = nt.nodes.new("ShaderNodeMath"); k.operation = "MULTIPLY"
+            nt.links.new(thick.outputs[0], k.inputs[0]); nt.links.new(nsun.outputs[0], k.inputs[1])
+            k2 = nt.nodes.new("ShaderNodeMath"); k2.operation = "MULTIPLY_ADD"; k2.inputs[1].default_value = -(1 - sil)
+            k2.inputs[2].default_value = 1.0; nt.links.new(k.outputs[0], k2.inputs[0])
+            dk = nt.nodes.new("ShaderNodeMix"); dk.data_type = "RGBA"; dk.blend_type = "MULTIPLY"; dk.inputs[0].default_value = 1
+            nt.links.new(cmix.outputs[2], dk.inputs[6])
+            cc = nt.nodes.new("ShaderNodeCombineColor")
+            for i in range(3): nt.links.new(k2.outputs[0], cc.inputs[i])
+            nt.links.new(cc.outputs[0], dk.inputs[7]); colsock = dk.outputs[2]
+        else:
+            colsock = cmix.outputs[2]
+        emc = nt.nodes.new("ShaderNodeEmission"); nt.links.new(colsock, emc.inputs[0])
+        tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+        mix = nt.nodes.new("ShaderNodeMixShader")
+        nt.links.new(alpha, mix.inputs[0]); nt.links.new(tr.outputs[0], mix.inputs[1])
+        nt.links.new(emc.outputs[0], mix.inputs[2])
+        nt.links.new(mix.outputs[0], nt.nodes["Material Output"].inputs[0])
+        return m, emc
+    # sparse altocumulus/cirrus high up (only above y ~ 450 on screen, clear of the GÜNEŞ band)
     bpy.ops.mesh.primitive_plane_add(size=1)
     cl = bpy.context.object; cl.name = "Clouds"
-    cl.scale = (60000, 40000, 1); cl.location = (0, 15000, 1700)
-    m, nt, p = C.new_mat("clouds"); nt.nodes.remove(p)
-    tc = nt.nodes.new("ShaderNodeTexCoord")
-    mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (1.6, 2.6, 1.0)
-    nt.links.new(tc.outputs["Object"], mp.inputs[0])
-    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 2.5
-    nz.inputs["Detail"].default_value = 5; nz.inputs["Roughness"].default_value = 0.62
-    nz.inputs["Distortion"].default_value = 1.2
-    nt.links.new(mp.outputs[0], nz.inputs[0])
-    mr = nt.nodes.new("ShaderNodeMapRange")
-    mr.inputs["From Min"].default_value = 0.47; mr.inputs["From Max"].default_value = 0.74
-    nt.links.new(nz.outputs[0], mr.inputs[0])
-    # fade near the plane edges and toward the horizon (keeps the GÜNEŞ band clean)
-    sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Object"], sep.inputs[0])
-    ry = nt.nodes.new("ShaderNodeMapRange")
-    ry.inputs["From Min"].default_value = 0.04; ry.inputs["From Max"].default_value = -0.12
-    nt.links.new(sep.outputs["Y"], ry.inputs[0])
-    am = nt.nodes.new("ShaderNodeMath"); am.operation = "MULTIPLY"
-    nt.links.new(mr.outputs[0], am.inputs[0]); nt.links.new(ry.outputs[0], am.inputs[1])
-    am2 = nt.nodes.new("ShaderNodeMath"); am2.operation = "MULTIPLY"; am2.inputs[1].default_value = 0.85
-    nt.links.new(am.outputs[0], am2.inputs[0])
-    emc = nt.nodes.new("ShaderNodeEmission")
-    # colour: hot near sun azimuth, violet-grey away
-    sx = nt.nodes.new("ShaderNodeMapRange"); sx.inputs["From Min"].default_value = 0.0
-    sx.inputs["From Max"].default_value = 0.25
-    ab = nt.nodes.new("ShaderNodeMath"); ab.operation = "ABSOLUTE"
-    nt.links.new(sep.outputs["X"], ab.inputs[0]); nt.links.new(ab.outputs[0], sx.inputs[0])
-    cr = nt.nodes.new("ShaderNodeValToRGB")
-    cr.color_ramp.elements[0].color = (1.0, 0.36, 0.14, 1)
-    cr.color_ramp.elements[1].color = (0.30, 0.12, 0.13, 1)
-    nt.links.new(sx.outputs[0], cr.inputs[0]); nt.links.new(cr.outputs[0], emc.inputs[0])
-    emc.inputs[1].default_value = 0.10
-    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
-    mix = nt.nodes.new("ShaderNodeMixShader")
-    nt.links.new(am2.outputs[0], mix.inputs[0]); nt.links.new(tr.outputs[0], mix.inputs[1])
-    nt.links.new(emc.outputs[0], mix.inputs[2])
-    nt.links.new(mix.outputs[0], nt.nodes["Material Output"].inputs[0])
+    cl.scale = (40000, 9000, 1); cl.location = (0, 6500, 1700)      # y 2000..11000 m -> elevation > ~8.8 deg
+    m, emc = cloud_mat("clouds", 700.0, (1.0, 0.45, 1.0), 0.34, (0.62, 0.26, 0.30), (1.0, 0.48, 0.20))
     C.assign(cl, m)
+    # low stratus streaks just above the horizon (y ~ 850-940), backlit near the sun
+    vs7 = [(-1800, 7000, 22), (1800, 7000, 22), (1800, 7000, 125), (-1800, 7000, 125)]
+    st = C.mesh_obj("Stratus", vs7, [(0, 1, 2, 3)])
+    ms, ems = cloud_mat("stratus", 260.0, (1.8, 1.0, 0.03), 0.47, (0.42, 0.17, 0.17), (1.0, 0.5, 0.2), sil=0.35,
+                       zfade=(22.0, 125.0, ((40.0, 0.8), (62.0, 0.35), (85.0, 0.7), (105.0, 0.25))))
+    C.assign(st, ms)
+    st.visible_shadow = False
+    for t, v in ((ctx.t0 - 0.3, 0.45), (tg - 0.2, 0.55), (tg + 1.2, 1.0), (ctx.t1 + 0.3, 1.2)):
+        ems.inputs[1].default_value = v; ems.inputs[1].keyframe_insert("default_value", frame=t * 24)
     for a in ("visible_diffuse", "visible_shadow"):
         setattr(cl, a, False)
     sc["cloud_emit"] = 0
     # clouds brighten as the sun comes up
-    for t, s in ((ctx.t0 - 0.3, 0.2), (tg - 0.2, 0.26), (tg + 1.2, 0.42), (ctx.t1 + 0.3, 0.5)):
+    for t, s in ((ctx.t0 - 0.3, 0.5), (tg - 0.2, 0.6), (tg + 1.2, 0.95), (ctx.t1 + 0.3, 1.1)):
         emc.inputs[1].default_value = s; emc.inputs[1].keyframe_insert("default_value", frame=t * 24)
 
     # ---------------------------------------------------------------- camera: low over water, slowly rising

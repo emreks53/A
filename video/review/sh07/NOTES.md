@@ -45,3 +45,19 @@ reduced noise octaves, glossy bounce 1. First measurement before these was 118 s
   starts at 40.15 s (was 39.9) so 40.2 s still shows the glitter path before the glare takes over.
 * One large defocused glint occasionally passes in the near foreground (~39.5 s) — physically correct, can
   tame it if the director prefers.
+
+## Round 2 (director notes 1–5)
+1. **Sky:** the line streaks are gone. Sparse altocumulus/cirrus at metre scale (noise + voronoi clumps, 700 m
+   cells) sits high (elevation > ~9°, y < ~450), with a hot under-light near the sun and cooler pink away from it.
+   Thin low stratus streaks sit just above the horizon (≈0.15–1.1°), dark and backlit near the sun with
+   bright edges. The red horizon stripe is softened (less saturation, wider haze bloom). The GÜNEŞ band stays clean.
+2. **Water:** two more capillary/wind-ripple normal scales (≈1.4 cm and 5 mm, anisotropic) on top of the swell
+   and chop. Base roughness is lowered to 0.025, so the glitter breaks into crisp points. Roughness and ripple
+   strength vary with distance (fine detail fades where it goes sub-pixel; the far sheen roughens), and
+   large-scale slick/wind-streak roughness variation adds tonal variety.
+3. **Horizon:** the far sea roughens into a sheen that matches the horizon haze, and the haze band is widened,
+   so there is no hard edge.
+4. **Sun:** limb darkening now runs the right way round (hot white-yellow core, red limb), and the disc is
+   flattened to 86 % vertically (refraction).
+5. **Measured:** `--final` frames 950–952 (sun up, full glitter): **55.7 s/frame** (new ceiling 90, aim 60).
+   The animatic and track are updated in this folder.
