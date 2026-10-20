@@ -1950,7 +1950,7 @@ def shutter(ctx):
     ob.visible_camera = False
     ob.visible_glossy = False
     ob.visible_transmission = False
-    t0, t1 = 109.75, 112.70
+    t0, t1 = 109.50, 112.50
     for k in range(0, 31):
         t = t0 + (t1 - t0) * k / 30
         u = C.smooth(k / 30) * 0.65 + (k / 30) * 0.35
@@ -2044,9 +2044,9 @@ def build_motes(n=700, seed=7):
     ng.links.new(add.outputs[0], setp.inputs["Offset"])
     smat = ng.nodes.new("GeometryNodeSetMaterial")
     m, nt, out = new_mat("mote")
-    p = principled(nt, **{"Base Color": (0.95, 0.92, 0.86), "Roughness": 0.5})
+    p = principled(nt, **{"Base Color": (0.40, 0.38, 0.35), "Roughness": 0.5})
     tr = NN(nt, "ShaderNodeBsdfTranslucent")
-    tr.inputs["Color"].default_value = (1.0, 0.95, 0.88, 1)
+    tr.inputs["Color"].default_value = (0.55, 0.52, 0.48, 1)
     mx = NN(nt, "ShaderNodeMixShader"); mx.inputs[0].default_value = 0.6
     LK(nt, p.outputs[0], mx.inputs[1]); LK(nt, tr.outputs[0], mx.inputs[2]); LK(nt, mx.outputs[0], out.inputs["Surface"])
     smat.inputs["Material"].default_value = m
@@ -2316,8 +2316,8 @@ def build(ctx):
     if os.environ.get("SH15_MATOVR"):
         bpy.context.view_layer.material_override = mat_simple("ovr", (0.5, 0.5, 0.5), 0.6)
     ov = {"final_spp": 5, "final_threshold": 0.05, "final_min_spp": 3, "preview_spp": 16,
-          "diffuse_bounces": 2, "glossy_bounces": 2, "transmission_bounces": 2, "transparent_bounces": 6,
-          "max_bounces": 6, "clamp_indirect": 2.0, "texture_limit": "8192"}
+          "diffuse_bounces": 1, "glossy_bounces": 2, "transmission_bounces": 2, "transparent_bounces": 4,
+          "max_bounces": 4, "clamp_indirect": 2.0, "texture_limit": "8192"}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
     return ov
 
