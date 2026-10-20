@@ -235,19 +235,19 @@ def build(ctx):
     cl.scale = (60000, 40000, 1); cl.location = (0, 15000, 1700)
     m, nt, p = C.new_mat("clouds"); nt.nodes.remove(p)
     tc = nt.nodes.new("ShaderNodeTexCoord")
-    mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (1.5, 5.0, 1.0)
+    mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (1.6, 2.6, 1.0)
     nt.links.new(tc.outputs["Object"], mp.inputs[0])
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 2.5
     nz.inputs["Detail"].default_value = 5; nz.inputs["Roughness"].default_value = 0.62
     nz.inputs["Distortion"].default_value = 1.2
     nt.links.new(mp.outputs[0], nz.inputs[0])
     mr = nt.nodes.new("ShaderNodeMapRange")
-    mr.inputs["From Min"].default_value = 0.50; mr.inputs["From Max"].default_value = 0.80
+    mr.inputs["From Min"].default_value = 0.47; mr.inputs["From Max"].default_value = 0.74
     nt.links.new(nz.outputs[0], mr.inputs[0])
     # fade near the plane edges and toward the horizon (keeps the GÜNEŞ band clean)
     sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Object"], sep.inputs[0])
     ry = nt.nodes.new("ShaderNodeMapRange")
-    ry.inputs["From Min"].default_value = -0.02; ry.inputs["From Max"].default_value = -0.22
+    ry.inputs["From Min"].default_value = 0.04; ry.inputs["From Max"].default_value = -0.12
     nt.links.new(sep.outputs["Y"], ry.inputs[0])
     am = nt.nodes.new("ShaderNodeMath"); am.operation = "MULTIPLY"
     nt.links.new(mr.outputs[0], am.inputs[0]); nt.links.new(ry.outputs[0], am.inputs[1])
@@ -274,7 +274,7 @@ def build(ctx):
         setattr(cl, a, False)
     sc["cloud_emit"] = 0
     # clouds brighten as the sun comes up
-    for t, s in ((ctx.t0 - 0.3, 0.07), (tg - 0.2, 0.10), (tg + 1.2, 0.20), (ctx.t1 + 0.3, 0.26)):
+    for t, s in ((ctx.t0 - 0.3, 0.2), (tg - 0.2, 0.26), (tg + 1.2, 0.42), (ctx.t1 + 0.3, 0.5)):
         emc.inputs[1].default_value = s; emc.inputs[1].keyframe_insert("default_value", frame=t * 24)
 
     # ---------------------------------------------------------------- camera: low over water, slowly rising
@@ -295,11 +295,11 @@ def build(ctx):
 
     # ---------------------------------------------------------------- exposure + glare
     vs = sc.view_settings
-    for t, ev in ((ctx.t0 - 0.3, -0.55), (tg - 0.1, -0.6), (tg + 0.7, -1.35), (39.9, -1.2), (ctx.t1 + 0.25, 1.6)):
+    for t, ev in ((ctx.t0 - 0.3, -0.55), (tg - 0.1, -0.6), (tg + 0.7, -1.35), (40.15, -1.15), (ctx.t1 + 0.25, 1.7)):
         vs.exposure = ev; vs.keyframe_insert("exposure", frame=t * 24)
     comp = L.compositor(bloom=0.0, threshold=1.0, fog=0.25, fog_size=0.9)
     g = comp["fog"]
-    for t, s in ((ctx.t0 - 0.3, 0.04), (tg, 0.05), (tg + 0.8, 0.07), (39.9, 0.12), (ctx.t1 + 0.25, 0.9)):
+    for t, s in ((ctx.t0 - 0.3, 0.04), (tg, 0.05), (tg + 0.8, 0.07), (40.15, 0.12), (ctx.t1 + 0.25, 0.95)):
         g.inputs["Strength"].default_value = s; g.inputs["Strength"].keyframe_insert("default_value", frame=t * 24)
     prof = os.environ.get("S6_PROF", "")
     if "nosky" in prof:

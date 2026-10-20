@@ -48,13 +48,14 @@ def build_world(ctx, t_allah):
 def build_lights(ctx, t_allah):
     # broad sun (soft: the ripples smear the sun disc)
     sun = C.sun(elev_deg=SUN_EL, azim_deg=180 + SUN_AZ, strength=1.6, kelvin_k=5600, angle_deg=4.0)
+    sun.data.color = (0.62, 0.95, 0.9)      # ~1 m of water already took the reds
     L.aim_sun_lamp(sun, SUN_EL, SUN_AZ)
     # caustic gobo: a spot far up along the refracted sun ray, projecting an animated caustic web
     d_up = refracted_up()
     dist = 30.0
     sp = bpy.data.lights.new("Caustics", "SPOT")
     sp.spot_size = math.radians(16); sp.spot_blend = 0.3; sp.shadow_soft_size = 0.0
-    sp.color = C.kelvin(5800)
+    sp.color = (0.62, 0.95, 0.9)
     o = bpy.data.objects.new("Caustics", sp); bpy.context.scene.collection.objects.link(o)
     o.location = Vector((0, 0.5, -0.9)) + d_up * dist
     C.point_at(o, (0, 0.5, -0.9))
@@ -67,7 +68,7 @@ def build_lights(ctx, t_allah):
         vo.inputs["Randomness"].default_value = 0.9
         mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Location"].default_value = (seed, seed * 1.7, 0)
         nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = scale * 0.35
-        nz.inputs["Detail"].default_value = 2
+        nz.inputs["Detail"].default_value = 0
         nt.links.new(tc.outputs["Normal"], nz.inputs["Vector"])
         # warp the cells so they read as liquid, not as a voronoi diagram
         wv = nt.nodes.new("ShaderNodeVectorMath"); wv.operation = "MULTIPLY_ADD"
@@ -85,10 +86,9 @@ def build_lights(ctx, t_allah):
         pw = nt.nodes.new("ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 1.6
         nt.links.new(mr.outputs[0], pw.inputs[0])
         return pw
-    a = web(260.0, 0.55, 0.11, 0.0)
-    b = web(430.0, 0.8, 0.09, 3.3)
-    ad = nt.nodes.new("ShaderNodeMath"); ad.operation = "ADD"
-    nt.links.new(a.outputs[0], ad.inputs[0]); nt.links.new(b.outputs[0], ad.inputs[1])
+    a = web(300.0, 0.6, 0.12, 0.0)
+    ad = nt.nodes.new("ShaderNodeMath"); ad.operation = "MULTIPLY"; ad.inputs[1].default_value = 1.6
+    nt.links.new(a.outputs[0], ad.inputs[0])
     ml = nt.nodes.new("ShaderNodeMath"); ml.operation = "MULTIPLY"; ml.inputs[1].default_value = 1.0
     nt.links.new(ad.outputs[0], ml.inputs[0]); nt.links.new(ml.outputs[0], em.inputs["Strength"])
     for fc in C._fcurves(nt.animation_data.action):
@@ -101,14 +101,60 @@ def build_lights(ctx, t_allah):
     return sun, o
 
 
+FOG_SIGMA = (1.0, 0.50, 0.44)      # per-metre extinction (red goes first)
+FOG_COL = (0.014, 0.090, 0.080)     # in-scatter radiance the water converges to (teal)
+
+
+def add_fog(mat, glow_gain=1.6):
+    """Cheap water fog without a volume: blend each shading point toward the in-scatter colour by the
+    length of the ray segment that reached it (1 - exp(-sigma * L)). The in-scatter is
+    brighter toward the surface and toward the sun (forward scattering)."""
+    nt = mat.node_tree
+    out = nt.nodes["Material Output"]
+    if not out.inputs["Surface"].links:
+        return
+    src = out.inputs["Surface"].links[0].from_socket
+    lp = nt.nodes.new("ShaderNodeLightPath")
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(geo.outputs["Position"], sep.inputs[0])
+    zr = nt.nodes.new("ShaderNodeMapRange"); zr.inputs["From Min"].default_value = -DEPTH
+    zr.inputs["From Max"].default_value = 0.0; zr.inputs["To Min"].default_value = 0.5; zr.inputs["To Max"].default_value = 1.25
+    nt.links.new(sep.outputs["Z"], zr.inputs[0])
+    d_up = refracted_up()
+    dp = nt.nodes.new("ShaderNodeVectorMath"); dp.operation = "DOT_PRODUCT"
+    dp.inputs[1].default_value = (-d_up.x, -d_up.y, -d_up.z)
+    nt.links.new(geo.outputs["Incoming"], dp.inputs[0])
+    cl = nt.nodes.new("ShaderNodeMath"); cl.operation = "MAXIMUM"; cl.inputs[1].default_value = 0.0
+    nt.links.new(dp.outputs["Value"], cl.inputs[0])
+    pw = nt.nodes.new("ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 6.0
+    nt.links.new(cl.outputs[0], pw.inputs[0])
+    fw = nt.nodes.new("ShaderNodeMath"); fw.operation = "MULTIPLY_ADD"
+    fw.inputs[1].default_value = glow_gain; fw.inputs[2].default_value = 1.0
+    nt.links.new(pw.outputs[0], fw.inputs[0])
+    g = nt.nodes.new("ShaderNodeMath"); g.operation = "MULTIPLY"
+    nt.links.new(zr.outputs[0], g.inputs[0]); nt.links.new(fw.outputs[0], g.inputs[1])
+    # shader mixes are scalar: blend with the luminance-weighted extinction; the teal fog colour carries the
+    # colour shift (distant things go blue-green, red is lost first)
+    sig_m = 0.25 * FOG_SIGMA[0] + 0.5 * FOG_SIGMA[1] + 0.25 * FOG_SIGMA[2]
+    mlt = nt.nodes.new("ShaderNodeMath"); mlt.operation = "MULTIPLY"; mlt.inputs[1].default_value = -sig_m
+    nt.links.new(lp.outputs["Ray Length"], mlt.inputs[0])
+    ex = nt.nodes.new("ShaderNodeMath"); ex.operation = "EXPONENT"; nt.links.new(mlt.outputs[0], ex.inputs[0])
+    f = nt.nodes.new("ShaderNodeMath"); f.operation = "SUBTRACT"; f.inputs[0].default_value = 1.0
+    nt.links.new(ex.outputs[0], f.inputs[1])
+    em = nt.nodes.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (*FOG_COL, 1)
+    nt.links.new(g.outputs[0], em.inputs["Strength"])
+    mx = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(f.outputs[0], mx.inputs[0]); nt.links.new(src, mx.inputs[1]); nt.links.new(em.outputs[0], mx.inputs[2])
+    nt.links.new(mx.outputs[0], out.inputs["Surface"])
+
 # --------------------------------------------------------------------------- water
 
 def build_surface(ctx):
     bpy.ops.mesh.primitive_plane_add(size=2)
     s = bpy.context.object; s.name = "Surface"
     oc = s.modifiers.new("Ripples", "OCEAN")
-    oc.resolution = 12; oc.viewport_resolution = 4
-    oc.spatial_size = 3; oc.repeat_x = 4; oc.repeat_y = 4
+    oc.resolution = 10; oc.viewport_resolution = 4
+    oc.spatial_size = 3; oc.repeat_x = 3; oc.repeat_y = 3
     oc.wind_velocity = 1.8; oc.wave_scale = 0.16; oc.choppiness = 0.35; oc.wave_scale_min = 0.0
     oc.wave_alignment = 0.3; oc.wave_direction = math.radians(30); oc.depth = 2.0; oc.random_seed = 3
     oc.use_normals = True
@@ -116,23 +162,26 @@ def build_surface(ctx):
     oc.time = ctx.t0 + 100; oc.keyframe_insert("time", frame=100 * 24)
     for fc in C.fcurves(s):
         for k in fc.keyframe_points: k.interpolation = "LINEAR"
-    s.location = (-4.5, -4.5 + 0.6, 0)
+    s.location = (-3.0, -3.0 + 0.6, 0)
+    s.cycles.use_deform_motion = False
     C.smooth_shade(s)
     m, nt, p = C.new_mat("surface"); nt.nodes.remove(p)
     g = nt.nodes.new("ShaderNodeBsdfGlass"); g.inputs["IOR"].default_value = N_W
     g.inputs["Roughness"].default_value = 0.0
     # capillary ripples on top of the simulated wavelets
     tcs = nt.nodes.new("ShaderNodeTexCoord")
-    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.noise_dimensions = "4D"; nz.inputs["Scale"].default_value = 14.0
-    nz.inputs["Detail"].default_value = 3
-    nz.inputs["W"].default_value = 0; nz.inputs["W"].keyframe_insert("default_value", frame=0)
-    nz.inputs["W"].default_value = 60; nz.inputs["W"].keyframe_insert("default_value", frame=100 * 24)
-    nt.links.new(tcs.outputs["Object"], nz.inputs["Vector"])
+    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 14.0
+    nz.inputs["Detail"].default_value = 1
+    smp = nt.nodes.new("ShaderNodeMapping")        # drift instead of 4D evolution (much cheaper)
+    smp.inputs["Location"].default_value = (0, 0, 0); smp.inputs["Location"].keyframe_insert("default_value", frame=0)
+    smp.inputs["Location"].default_value = (2.0, 1.2, 6.0); smp.inputs["Location"].keyframe_insert("default_value", frame=100 * 24)
+    nt.links.new(tcs.outputs["Object"], smp.inputs["Vector"]); nt.links.new(smp.outputs[0], nz.inputs["Vector"])
     bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.25; bp.inputs["Distance"].default_value = 0.004
     nt.links.new(nz.outputs[0], bp.inputs["Height"]); nt.links.new(bp.outputs[0], g.inputs["Normal"])
     nt.links.new(g.outputs[0], nt.nodes["Material Output"].inputs[0])
     C.assign(s, m)
     s.visible_shadow = False
+    s.visible_diffuse = False        # diffuse bounces see the sky directly (cheaper, same look)
     return s
 
 
@@ -216,7 +265,7 @@ def build_bottom():
     bpy.ops.mesh.primitive_plane_add(size=12)
     b = bpy.context.object; b.name = "Bottom"; b.location = (0, 0.6, -DEPTH)
     sub = b.modifiers.new("sub", "SUBSURF"); sub.subdivision_type = "SIMPLE"; sub.levels = 0; sub.render_levels = 5
-    tex = C.ph_texture("ganges_river_pebbles", "2k")
+    tex = C.ph_texture("ganges_river_pebbles", "1k")
     m = C.mat_from_textures("bottom", tex, scale=7.0, disp_scale=0.0, base_tint=(0.55, 0.62, 0.45))
     C.assign(b, m)
     # gentle mounds
@@ -484,7 +533,15 @@ def build(ctx):
     build_world(ctx, t_allah)
     build_lights(ctx, t_allah)
     build_surface(ctx)
-    build_volume(ctx, t_allah)
+    # pond walls far away: rays that would escape sideways end in fully fogged water
+    hx, z0, z1 = 4.3, -DEPTH - 0.1, 0.06      # inside the simulated surface patch, poking out of the water
+    vs_ = [(-hx, -hx + 0.6, z0), (hx, -hx + 0.6, z0), (hx, hx + 0.6, z0), (-hx, hx + 0.6, z0),
+           (-hx, -hx + 0.6, z1), (hx, -hx + 0.6, z1), (hx, hx + 0.6, z1), (-hx, hx + 0.6, z1)]
+    wall = C.mesh_obj("PondWalls", vs_, [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)])   # open top/bottom
+    C.assign(wall, C.principled("pond_wall", base=(0.02, 0.03, 0.02), rough=0.9))
+    wall.visible_shadow = False
+    # (build_volume kept for reference: a ray-marched/homogeneous water volume cost ~25-40 % of the frame;
+    #  replaced by add_fog() on every material)
     build_bottom()
 
     # ---- plants: a hero clump in front of the camera, a midground bed, a far bed, a defocused foreground stem
@@ -500,7 +557,7 @@ def build(ctx):
         add(math.cos(a) * rr * 1.3, 0.55 + math.sin(a) * rr, rng.uniform(-1.20, -0.86))
     for i in range(44):                       # midground bed
         add(rng.uniform(-0.9, 0.9), rng.uniform(0.85, 1.9), rng.uniform(-1.35, -0.75), 0.08)
-    for i in range(28):                       # far bed (fog)
+    for i in range(14):                       # far bed (fog)
         add(rng.uniform(-2.2, 2.2), rng.uniform(2.0, 4.5), rng.uniform(-1.4, -0.6), 0.1)
     for i in range(3):                        # foreground, close to the lens in the tilt-down
         add(rng.uniform(-0.28, -0.16) if i % 2 else rng.uniform(0.14, 0.24), rng.uniform(0.18, 0.3), rng.uniform(-1.0, -0.8), 0.03)
@@ -525,7 +582,7 @@ def build(ctx):
             p = st["path"](s) + Vector((rng.uniform(-0.01, 0.01), rng.uniform(-0.01, 0.01), 0))
             streams.append((p, rng.uniform(0.3, 0.8), rng.uniform(0.6e-3, 1.1e-3)))
     for st in stems[27:71]:
-        if rng.random() < 0.35:
+        if rng.random() < 0.22:
             s = rng.uniform(0.85, 0.99)
             streams.append((st["path"](s), rng.uniform(0.35, 0.9), rng.uniform(0.5e-3, 1.0e-3)))
     # hero bubble: an accumulated ~3 mm bubble swelling at a leaf axil just under the apex, detaching just before
@@ -538,7 +595,7 @@ def build(ctx):
     trk = C.empty("TRK_bubble", (0, 0, 0)); trk.parent = hobj
     trk.scale = (1 / 1.0,) * 3
 
-    build_particles(rng)
+    build_particles(rng, n=420)
 
     # ---- camera
     cam = C.camera("cam", lens=28, loc=(0, 0, -0.8), fstop=3.5, focus=0.6, clip_start=0.002)
@@ -613,9 +670,46 @@ def build(ctx):
     for t, ev in ((ctx.t0 - 0.3, -1.6), (t_tilt0, -1.6), (t_tilt0 + 1.2, 0.2), (ctx.t1 + 0.3, 0.3)):
         vs.exposure = ev; vs.keyframe_insert("exposure", frame=t * 24)      # camera exposure follows the tilt
     L.compositor(bloom=0.0, fog=0.06, fog_size=0.8, threshold=1.5)
-    return {"final_spp": 32, "preview_spp": 20, "max_bounces": 10, "diffuse_bounces": 2, "glossy_bounces": 3,
-            "transmission_bounces": 10, "transparent_bounces": 8, "volume_bounces": 0, "volume_step_rate": 4.0,
-            "clamp_indirect": 4.0}
+    # ---- render-cost choices (see NOTES): homogeneous water volume (analytic, no ray marching), FAST denoise
+    # prefilter, no motion blur on things that move < 1 px per shutter (specks, plants, distant bubbles)
+    for m in list(bpy.data.materials):
+        add_fog(m)
+    bpy.app.handlers.render_init.append(lambda *_: setattr(bpy.context.scene.cycles, "denoising_prefilter", "FAST"))
+    for o in bpy.data.collections["Specks"].objects: o.cycles.use_motion_blur = False
+    for o in (leaves, stemso): o.cycles.use_motion_blur = False
+    apex0 = stems[0]["path"](1.0)
+    for o in bpy.data.collections["Bubbles"].objects:
+        fc = [f for f in C.fcurves(o) if f.data_path == "location"]
+        p0 = Vector([f.evaluate(ctx.f0 + 90) for f in fc]) if len(fc) == 3 else apex0
+        if (Vector((p0.x, p0.y, 0)) - Vector((apex0.x, apex0.y, 0))).length > 0.35 and o.name != "HeroBubble":
+            o.cycles.use_motion_blur = False
+    prof = os.environ.get("S6_PROF", "")
+    if "fastdn" in prof:
+        def _dn(*_):
+            bpy.context.scene.cycles.denoising_prefilter = "FAST"
+        bpy.app.handlers.render_init.append(_dn)
+    if "nodn" in prof:
+        def _dn2(*_):
+            bpy.context.scene.cycles.use_denoising = False
+        bpy.app.handlers.render_init.append(_dn2)
+    if "nocaust" in prof: bpy.data.lights["Caustics"].use_nodes = False
+    lowb = "lowb" in prof
+    if "nomb" in prof:
+        bpy.app.handlers.render_init.append(lambda *_: setattr(bpy.context.scene.render, "use_motion_blur", False))
+    if "nodof" in prof: cam.data.dof.use_dof = False
+    if "nocomp" in prof: sc.render.use_compositing = False
+    if "nowmis" in prof: sc.world.cycles.sampling_method = "NONE"
+    if "nobub" in prof:
+        for o in bpy.data.collections["Bubbles"].objects: o.hide_render = True
+    if "nospeck" in prof:
+        for o in bpy.data.collections["Specks"].objects: o.hide_render = True
+    if "nosurf" in prof: bpy.data.objects["Surface"].hide_render = True
+    if "noplant" in prof:
+        bpy.data.objects["ElodeaLeaves"].hide_render = True; bpy.data.objects["ElodeaStems"].hide_render = True
+    if "nobot" in prof: bpy.data.objects["Bottom"].hide_render = True
+    return {"final_spp": 5, "preview_spp": 20, "clamp_direct": 12.0, "max_bounces": 6, "diffuse_bounces": 1, "glossy_bounces": 1,
+            "transmission_bounces": 6, "transparent_bounces": 4, "volume_bounces": 0, "volume_step_rate": 8.0,
+            "clamp_indirect": 2.5}
 
 
 C.run("sh05", build)

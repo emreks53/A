@@ -33,19 +33,24 @@ Clear sunlit pond, 28 mm lens (underwater housing feel), f/3.5, focus tracked th
 * Bubbles: glass with IOR 1/1.333 (air in water) → correct TIR silver rims; radius 0.6–1.1 mm for the
   strings, rise speed v = 0.07 + 110·r m/s (≈0.15–0.19 m/s), 0.08 s acceleration, zig-zag wobble 4–8 Hz,
   bubbles > 1.2 mm flattened 10 %. Hero bubble 1.7 mm radius (rises ≈0.26 m/s), flattened 14 %.
-* Water body: absorption (red absorbed most) + an emissive in-scatter term (brighter toward the surface and
-  toward the sun, view dependent) = cheap blue-green depth falloff without volume scattering. Light shafts are
-  volume emission striped along the refracted sun direction (fake but perspective-correct, they converge on
-  the sun). Caustics: an animated warped-voronoi gobo on a spot lamp along the refracted sun ray (no real
-  refractive caustics). Surface casts no shadow (so sun/sky light enter), sky disc only visible to rays that
-  refracted out (avoids double sun).
-* ~700 particulate specks drift through the water (DOF bokeh). Pebble bed: Poly Haven `ganges_river_pebbles`.
+* Water: no volume object (a ray-marched volume cost 2.5–4 s per sample). Instead every material blends toward
+  the in-scatter colour by 1 − exp(−σ·ray length) (σ ≈ 0.6 /m), with the in-scatter brighter toward the
+  surface and toward the sun (view-dependent forward scattering). The underwater lights are tinted cyan (~1 m
+  of water already took the reds). Pond walls at ±4.3 m end sideways rays in fully fogged water.
+* Caustics: an animated warped-voronoi gobo on a spot lamp along the refracted sun ray (no real refractive
+  caustics). The surface casts no shadow and is invisible to diffuse rays (sun/sky light reach the bed
+  directly); the sky's sun disc is only visible to rays that refracted out (avoids a double sun).
+* ~420 particulate specks drift through the water (DOF bokeh). Pebble bed: Poly Haven `ganges_river_pebbles`.
 * TRK_bubble parented to the hero bubble.
 
 ## Render cost
 **First measurement: 361 s/frame** (frame 660, `--final`) — far over the 40–45 s budget. Profiling now
-(heterogeneous emission volume, refractive surface, ~600 glass bubbles); an optimised version will follow
-without changing the look. The stills above are the target look.
+… → optimised: per-material ray-length fog instead of the volume, FAST denoise prefilter (ACCURATE alone
+cost 10.7 s at 1080×1920), no motion blur on objects moving < 1 px/shutter (specks, plants, distant
+bubbles; camera + near bubbles keep it), 5 spp + OIDN with clamps, glossy 1 / transmission 6 bounces,
+cheaper surface ripple bump, fewer far stems. **Measured: 41.1 s/frame** at frame 700 (one of the heaviest:
+bubble string over the sunlit bed). This version (stills in this folder): **42.3 s/frame** at frame 700.
 
 ## Known issues / next
-* Plant density / brightness still being tuned; shafts are subtle.
+* Light shafts were lost with the volume; camera-only shaft geometry is being added next (cheap).
+* Phase A sky in the window is a bit flat; the sun could use more burst.
