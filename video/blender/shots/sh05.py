@@ -301,7 +301,7 @@ def build_elodea(rng, stems):
                 # angle from the stem: young leaves hug the apex, mature ones spread out / droop slightly
                 tilt = math.radians(18 + 72 * age + rng.uniform(-10, 10) + (12 * age if rng.random() < 0.3 else 0))
                 outd = (t * math.cos(tilt) + radial * math.sin(tilt)).normalized()
-                length = (0.007 + 0.014 * age ** 0.6) * rng.uniform(0.85, 1.15)
+                length = (0.009 + 0.019 * age ** 0.6) * rng.uniform(0.85, 1.15)
                 width = length * rng.uniform(0.14, 0.18)
                 curl = rng.uniform(0.05, 0.25) * (1.5 - age)
                 if age > 0.95 and rng.random() < 0.06:
@@ -340,8 +340,8 @@ def leaf_material():
     cell = nt.nodes.new("ShaderNodeTexVoronoi"); cell.inputs["Scale"].default_value = 2200.0
     nt.links.new(tc.outputs["Object"], cell.inputs["Vector"])
     cr = nt.nodes.new("ShaderNodeValToRGB")
-    cr.color_ramp.elements[0].color = (0.10, 0.36, 0.025, 1); cr.color_ramp.elements[1].color = (0.30, 0.55, 0.06, 1)
-    cr.color_ramp.elements.new(0.5).color = (0.17, 0.48, 0.04, 1)
+    cr.color_ramp.elements[0].color = (0.14, 0.45, 0.03, 1); cr.color_ramp.elements[1].color = (0.38, 0.66, 0.07, 1)
+    cr.color_ramp.elements.new(0.5).color = (0.22, 0.58, 0.05, 1)
     nt.links.new(ob.outputs["Fac"], cr.inputs[0])
     vm = nt.nodes.new("ShaderNodeMix"); vm.data_type = "RGBA"; vm.blend_type = "MIX"
     vm.inputs[7].default_value = (0.42, 0.62, 0.20, 1)
@@ -495,10 +495,10 @@ def build(ctx):
     HERO_APEX = Vector((0.0, 0.50, -0.93))
     add(HERO_APEX.x, HERO_APEX.y, HERO_APEX.z, sway=0.0)
     stems[0]["sway"] = (0.02, -0.015, 0.0, 0.0)
-    for i in range(16):                       # hero clump
+    for i in range(26):                       # hero clump
         a = rng.random() * 6.28; rr = 0.03 + 0.16 * rng.random()
         add(math.cos(a) * rr * 1.3, 0.55 + math.sin(a) * rr, rng.uniform(-1.20, -0.86))
-    for i in range(30):                       # midground bed
+    for i in range(44):                       # midground bed
         add(rng.uniform(-0.9, 0.9), rng.uniform(0.85, 1.9), rng.uniform(-1.35, -0.75), 0.08)
     for i in range(28):                       # far bed (fog)
         add(rng.uniform(-2.2, 2.2), rng.uniform(2.0, 4.5), rng.uniform(-1.4, -0.6), 0.1)
@@ -519,12 +519,12 @@ def build(ctx):
     for s, per, rm in ((0.985, 0.34, 0.75e-3), (0.955, 0.42, 0.95e-3), (0.93, 0.5, 0.7e-3), (0.90, 0.38, 1.05e-3)):
         p = hp(s); off = Vector((rng.uniform(-0.009, 0.009), rng.uniform(-0.009, 0.009), 0))
         streams.append((p + off, per, rm))
-    for st in stems[1:17]:
+    for st in stems[1:27]:
         if rng.random() < 0.55:
             s = rng.uniform(0.86, 0.99)
             p = st["path"](s) + Vector((rng.uniform(-0.01, 0.01), rng.uniform(-0.01, 0.01), 0))
             streams.append((p, rng.uniform(0.3, 0.8), rng.uniform(0.6e-3, 1.1e-3)))
-    for st in stems[17:47]:
+    for st in stems[27:71]:
         if rng.random() < 0.35:
             s = rng.uniform(0.85, 0.99)
             streams.append((st["path"](s), rng.uniform(0.35, 0.9), rng.uniform(0.5e-3, 1.0e-3)))
