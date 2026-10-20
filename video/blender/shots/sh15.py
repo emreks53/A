@@ -1044,7 +1044,7 @@ def mat_headband(name="headband"):
 
 
 def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), relief=None, relief_depth=0.0025,
-             coat=0.0, grain_rot=0.0, uv_relief="uvr", sat=1.0, wear=0.0, spec=0.5):
+             coat=0.0, grain_rot=0.0, uv_relief="uvr", sat=1.0, wear=0.0, spec=0.5, uvmap=False):
     if _simple("wood"):
         return mat_simple(name, (0.2, 0.12, 0.07), 0.5)
     m, nt, out = new_mat(name)
@@ -1053,9 +1053,14 @@ def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), 
     mp = NN(nt, "ShaderNodeMapping")
     mp.inputs["Scale"].default_value = (1 / tile, 1 / tile, 1 / tile)
     mp.inputs["Rotation"].default_value = (0, 0, grain_rot)
-    LK(nt, tc.outputs["Object"], mp.inputs["Vector"])
-    d = img_node(nt, t["diff"], vec=mp.outputs[0], proj="BOX", blend=0.25)
-    n = img_node(nt, t["nor"], True, vec=mp.outputs[0], proj="BOX", blend=0.25)
+    if uvmap:
+        LK(nt, tc.outputs["UV"], mp.inputs["Vector"])
+        proj = "FLAT"
+    else:
+        LK(nt, tc.outputs["Object"], mp.inputs["Vector"])
+        proj = "BOX"
+    d = img_node(nt, t["diff"], vec=mp.outputs[0], proj=proj, blend=0.25)
+    n = img_node(nt, t["nor"], True, vec=mp.outputs[0], proj=proj, blend=0.25)
     hsv = NN(nt, "ShaderNodeHueSaturation")
     hsv.inputs["Saturation"].default_value = sat
     hsv.inputs["Value"].default_value = val
@@ -1794,10 +1799,22 @@ def build_open_book(mats):
 
 def box(name, x0, x1, y0, y1, z0, z1, mat, bevel=0.0):
     bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("UVMap")
     vs = [bm.verts.new(c) for c in ((x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0),
                                      (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1))]
     for f in ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
-        bm.faces.new([vs[i] for i in f])
+        face = bm.faces.new([vs[i] for i in f])
+        face.normal_update()
+        n = face.normal
+        for lp in face.loops:
+            co = lp.vert.co
+            # same planes as a box projection (X side -> (y,z), Y side -> (x,z), Z side -> (x,y))
+            if abs(n.x) > 0.5:
+                lp[uv].uv = (co.y, co.z)
+            elif abs(n.y) > 0.5:
+                lp[uv].uv = (co.x, co.z)
+            else:
+                lp[uv].uv = (co.x, co.y)
     ob = bm_to_obj(bm, name, mats=[mat], smooth=False)
     if bevel:
         add_bevel(ob, bevel, 3, 30)
@@ -2180,8 +2197,8 @@ def build(ctx):
     MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.42, 0.29, 0.20), val=0.55, sat=1.05,
                              rough=(0.55, 0.78), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
                              grain_rot=math.pi / 2, wear=0.35, spec=0.32)
-    MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7))
-    MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8))
+    MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7), uvmap=True)
+    MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8), uvmap=True)
     MATS["kafes"] = mat_wood("kafes", "dark_wood", tile=0.6, tint=(0.55, 0.45, 0.38), val=0.55, sat=0.6, rough=(0.55, 0.8))
     MATS["plaster"] = mat_plaster()
     # ------------------------------------------------ set
