@@ -1,4 +1,4 @@
-# sh13b — review 3 (studio S3)
+# sh13b — review 4 (studio S3)
 
 Script: `video/blender/shots/sh13b.py` (+ THE SEEDLING from `lib_s3.py`).
 
@@ -23,6 +23,16 @@ Script: `video/blender/shots/sh13b.py` (+ THE SEEDLING from `lib_s3.py`).
 | TRK_g | pine sapling (Poly Haven `pine_sapling_small`), back right | (850, 460) |
 | TRK_h | THE SEEDLING (parented to its apex) | (540, 1200) |
 Subjects are placed by solving the camera hold pose in screen space, so the spread is guaranteed.
+
+## Review 4 — final pass (director notes)
+* Subjects embedded in vegetation: every subject's base is surrounded by grass/weed clumps scaled to
+  hide 55-90 % of its stalk; the butterfly sits on a daisy inside a cluster of five; the ladybird now
+  crawls along a broad weed leaf held up among the grasses; soft out-of-focus grass + one daisy in the
+  foreground corners for depth (kept out of the key-word band and the camera path).
+* Richer golden backlight: sun 6.5 (was 5), grass translucency 0.5 → rim on every blade.
+* Macro drop on the leaf tip unchanged (clumps excluded from the seedling's macro framing).
+* Only sh13b.py changed; lib_s3.py (seedling) is identical to the approved commit 1a56381.
+* Render: `--final` steady state frame 2061 ≈ 58 s, macro frame 2121 ≈ 69 s (ceiling 90).
 
 ## Review 3 — director notes addressed
 * MATCHES sh13a: Poly Haven `evening_field` 4k, its sun measured at 9.8° (lamp at 9.8°, 3000 K), placed
