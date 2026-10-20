@@ -42,6 +42,6 @@ cracked earth's displacement cost (it is ~35 % of every frame in both sh04 and s
 * crowns shortened (no "coins"), wet spots darker.
 
 ## Known issues / next
-* exit frame (63.95) is a near-white sky — fine for the cloud dissolve into sh12? (tell me if you
-  want more cloud texture there).
+* exit frame (63.95): sun glow through the thinning cloud deck (glow reduced so the sky is not a flat
+  white any more; stills 63.30/63.95 updated after the animatic was made).
 * ground in the first second is still a bit warm for the rain light.

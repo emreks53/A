@@ -149,6 +149,8 @@ def make_hand(ctx, M):
             m.levels = min(1, m.total_levels)
     mesh.data.materials.clear()
     mesh.data.materials.append(mat_skin())
+    spread_fingers(mesh)
+    sub = mesh.modifiers.new("Smooth", "SUBSURF"); sub.levels = 1; sub.render_levels = 2
     vs = [v.co for v in mesh.data.vertices]
     zmin = min(v.z for v in vs); zmax = max(v.z for v in vs)
     top = [v for v in vs if v.z > zmax - 0.04]; bot = [v for v in vs if v.z < zmin + 0.04]
@@ -196,6 +198,23 @@ def make_hand(ctx, M):
 
 
 PALM_SIGN = 1.0
+
+
+def spread_fingers(mesh, knuckle_z=-0.112, amount=0.17):
+    """The base mesh is a flat rest pose; fan the four fingers apart (straining, reaching) by rotating
+    each finger vertex about the palm normal around its knuckle, blended in over the first phalanx."""
+    for v in mesh.data.vertices:
+        x, y, z = v.co
+        if z > knuckle_z or x > 0.045:            # palm, wrist and thumb stay
+            continue
+        w = min(1.0, (knuckle_z - z) / 0.02)       # 0 at the knuckle -> 1 a phalanx later
+        a = -amount * (x - 0.004) / 0.05 * w
+        dx, dz = x - x, z - knuckle_z
+        # rotate (x, z) about (x_k, knuckle_z) where x_k = the finger's own column at the knuckle
+        px = x; pz = knuckle_z
+        rx = px + (x - px) * math.cos(a) - (z - pz) * math.sin(a)
+        rz = pz + (x - px) * math.sin(a) + (z - pz) * math.cos(a)
+        v.co = (rx, y, rz)
 
 
 def mat_skin():

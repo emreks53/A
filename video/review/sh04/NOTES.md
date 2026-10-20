@@ -43,4 +43,4 @@ the cracked-earth shader lost a fine-noise bump that cost ~15 % for invisible de
 
 ## Known issues / next
 * heat shimmer is subtle (deliberately - say if you want it stronger).
-* hand = rest pose of the base mesh (straight fingers); a finger spread/curl pass is next.
+* hand: fingers now fanned apart (straining reach) by a knuckle-pivot deformation of the base mesh + subdivision (22.6 still updated); the bundle's multires has only 1 level, so skin micro-detail comes from the shader (pores/creases bump) — fine for a backlit silhouette.

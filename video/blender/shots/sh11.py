@@ -182,7 +182,7 @@ def world_rain(ctx, sdir, t_kar):
     brk = nt.nodes.new("ShaderNodeValue"); brk.name = "BREAK"
     for tt, v in ((ctx.t0, 0.0), (t_kar - 0.4, 0.0), (t_kar + 0.3, 1.0), (ctx.t1 + 0.5, 1.15)):
         brk.outputs[0].default_value = v; brk.outputs[0].keyframe_insert("default_value", frame=tt * C.FPS)
-    g = mth("ADD", mth("MULTIPLY", glow_wide, 1.6), mth("MULTIPLY", glow_tight, 9.0))
+    g = mth("ADD", mth("MULTIPLY", glow_wide, 0.7), mth("MULTIPLY", glow_tight, 6.0))
     g_cam = mth("ADD", g, mth("MULTIPLY", disc, 400.0))
     lp = nt.nodes.new("ShaderNodeLightPath")
     g_all = mth("ADD", g, mth("MULTIPLY", mth("MULTIPLY", disc, 400.0), lp.outputs["Is Camera Ray"]))
