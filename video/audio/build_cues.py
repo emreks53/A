@@ -310,8 +310,9 @@ A, B = CUT["sh13a"], CUT["sh14a"]
 t_hr = w(s, "Haluk")
 bed("sh13.meadow", s, A - 0.35, B + 0.4, "wind", -28, 0.8, 0.8, space="meadow", send=-20,
     params=dict(strength=0.85, gustiness=0.45, rate=0.09, bright=0.9, low=0.03, veg=1.3, veg_lo=1800, veg_hi=9000,
-                veg_density=1.2, width=1.0, events=[[t_hr + 0.5 - (A - 0.35), 0.9, 0.9]]),
-    ref="golden-hour meadow (warm breeze across the grass on 'Halık-ı Rahîm')")
+                veg_density=1.2, width=1.0, events=[[t_hr + 0.5 - (A - 0.35), 0.9, 0.9],
+                                                         [CUT["sh13b"] + 2.2 - (A - 0.35), 0.7, 1.4]]),
+    ref="golden-hour meadow (warm breeze across the grass on 'Halık-ı Rahîm', soft swell under the rings)")
 bed("sh13.birds", s, A - 0.35, B + 0.4, "birds", -29, 0.8, 0.8, space="meadow", send=-8,
     params=dict(n_birds=7, rate=0.3, dist=(0.35, 1.0), fmin=2200, fmax=6800, start=0.8),
     ref="forest edge, birds far away")
