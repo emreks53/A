@@ -1874,15 +1874,29 @@ def shutter(ctx):
 
 
 def volume_box():
-    ob = box("air", WALL_LEFT_X + 0.003, 1.3, -0.95, WALL_BACK_Y - 0.003, 0.002, 1.55, None)
-    ob.data.materials.clear()
+    """Dusty air only inside the sun-beam corridor: the window opening (outer face) swept along the
+    sun direction. Homogeneous scatter, does not shadow (the beam is not dimmed by its own dust)."""
+    xo = WALL_LEFT_X - WALL_THICK - 0.01
+    m_ = 0.03
+    cs = [Vector((xo, y, z)) for (y, z) in ((WIN_Y0 - m_, WIN_Z0 - m_), (WIN_Y1 + m_, WIN_Z0 - m_),
+                                             (WIN_Y1 + m_, WIN_Z1 + m_), (WIN_Y0 - m_, WIN_Z1 + m_))]
+    L = 3.2
+    bm = bmesh.new()
+    a = [bm.verts.new(c) for c in cs]
+    b = [bm.verts.new(c + SUN_DIR * L) for c in cs]
+    for f in ((0, 1, 2, 3),):
+        bm.faces.new([a[i] for i in f][::-1]); bm.faces.new([b[i] for i in f])
+    for i in range(4):
+        i2 = (i + 1) % 4
+        bm.faces.new((a[i], a[i2], b[i2], b[i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     m, nt, out = new_mat("air")
     v = NN(nt, "ShaderNodeVolumePrincipled")
-    v.inputs["Density"].default_value = 0.18
-    v.inputs["Anisotropy"].default_value = 0.45
-    v.inputs["Color"].default_value = (1.0, 0.97, 0.92, 1)
+    v.inputs["Density"].default_value = 0.45
+    v.inputs["Anisotropy"].default_value = 0.55
+    v.inputs["Color"].default_value = (1.0, 0.96, 0.90, 1)
     LK(nt, v.outputs[0], out.inputs["Volume"])
-    ob.data.materials.append(m)
+    ob = bm_to_obj(bm, "air", mats=[m], smooth=False)
     ob.visible_shadow = False
     return ob
 
@@ -2041,7 +2055,7 @@ def place_closed(root, loc, yaw=0.0, upright=False, lean=0.0):
 
 def build_row(mats):
     rng = random.Random(15)
-    x = 0.075
+    x = -0.03
     roots = []
     for idx in range(1, len(BOOKS)):
         lines, T = BOOKS[idx]
@@ -2121,30 +2135,30 @@ def build(ctx):
     # ------------------------------------------------ cameras
     V = Vector
     camA = rig_camera("camA", 35, 2.8, [
-        (109.40, V((0.40, -0.98, 0.86)), V((-0.04, 0.04, 0.06)), V((0.10, -0.04, 0.05))),
-        (110.70, V((0.34, -0.72, 0.66)), V((0.06, 0.02, 0.05)), V((0.15, -0.03, 0.05))),
-        (111.96, V((0.25, -0.34, 0.37)), V((0.175, 0.04, 0.02)), V((0.17, -0.03, 0.052))),
-        (113.50, V((0.235, -0.30, 0.345)), V((0.175, 0.045, 0.02)), V((0.17, -0.03, 0.052))),
+        (109.40, V((0.20, -1.02, 0.84)), V((-0.10, 0.05, 0.06)), V((0.02, -0.03, 0.08))),
+        (110.80, V((0.24, -0.70, 0.62)), V((0.06, 0.05, 0.05)), V((0.15, -0.03, 0.05))),
+        (111.96, V((0.235, -0.35, 0.38)), V((0.175, 0.05, 0.02)), V((0.17, -0.03, 0.052))),
+        (113.50, V((0.225, -0.31, 0.35)), V((0.175, 0.055, 0.02)), V((0.17, -0.03, 0.052))),
     ], 2622, 2724, seed=11)
     pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
     camB = rig_camera("camB", 40, 2.8, [
-        (113.30, V((-0.40, -0.40, 0.62)), V((-0.13, 0.06, 0.25)), pg + V((-0.02, -0.05, -0.01))),
-        (114.45, V((-0.37, -0.35, 0.58)), V((-0.12, 0.07, 0.25)), pg + V((-0.01, -0.02, 0.0))),
-        (115.90, V((-0.30, -0.25, 0.50)), V((-0.11, 0.085, 0.255)), pg),
+        (113.30, V((-0.30, -0.44, 0.64)), V((-0.13, 0.05, 0.24)), pg + V((-0.03, -0.06, -0.02))),
+        (114.45, V((-0.28, -0.39, 0.60)), V((-0.125, 0.055, 0.245)), pg + V((-0.01, -0.02, 0.0))),
+        (115.90, V((-0.24, -0.30, 0.52)), V((-0.115, 0.07, 0.25)), pg),
     ], 2718, 2782, seed=12)
     zc = 0.15
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
     camC = rig_camera("camC", 50, 2.8, [
-        (115.70, V((0.07, yc - 0.27, 0.125)), V((0.10, yc, zc)), V((0.10, yc, zc))),
-        (117.30, V((0.31, yc - 0.25, 0.130)), V((0.34, yc, zc)), V((0.34, yc, zc))),
+        (115.70, V((-0.02, yc - 0.27, 0.125)), V((0.01, yc, zc)), V((0.01, yc, zc))),
+        (117.30, V((0.22, yc - 0.25, 0.130)), V((0.25, yc, zc)), V((0.25, yc, zc))),
     ], 2774, 2818, seed=13)
-    camD = rig_camera("camD", 40, 3.2, [
-        (117.20, V((-0.36, -0.16, 0.52)), V((-0.09, 0.02, 0.22)), pg + V((-0.03, -0.06, -0.01))),
-        (120.05, V((-0.33, -0.10, 0.50)), V((-0.09, 0.03, 0.22)), pg + V((-0.03, -0.05, -0.01))),
+    camD = rig_camera("camD", 32, 3.2, [
+        (117.20, V((-0.27, -0.58, 0.55)), V((-0.22, 0.03, 0.21)), V((-0.17, -0.03, 0.25))),
+        (120.05, V((-0.18, -0.55, 0.53)), V((-0.20, 0.03, 0.21)), V((-0.17, -0.03, 0.25))),
     ], 2810, 2883, seed=14)
     camE = rig_camera("camE", 32, 4.0, [
-        (119.90, V((0.02, -0.98, 0.66)), V((-0.17, 0.05, 0.24)), V((-0.16, -0.03, 0.24))),
-        (125.60, V((-0.02, -0.80, 0.57)), V((-0.17, 0.05, 0.235)), V((-0.16, -0.03, 0.24))),
+        (119.90, V((-0.02, -0.88, 0.85)), V((-0.17, 0.03, 0.18)), V((-0.17, -0.02, 0.24))),
+        (125.60, V((-0.045, -0.76, 0.765)), V((-0.175, 0.03, 0.185)), V((-0.17, -0.02, 0.24))),
     ], 2875, 3014, seed=15)
     for name, f, cam in (("A", ctx.f0, camA), ("B", 2722, camB), ("C", 2778, camC), ("D", 2814, camD), ("E", 2879, camE)):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
