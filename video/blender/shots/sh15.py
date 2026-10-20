@@ -28,7 +28,7 @@ from mathutils.geometry import tessellate_polygon
 
 # ============================================================================ constants
 
-DESIGN_VERSION = "v9"
+DESIGN_VERSION = "v10"
 DESIGN_DIR = os.path.join(C.ASSETS, "sh15_design", DESIGN_VERSION)
 
 FONT_URLS = {
@@ -553,7 +553,7 @@ def draw_page(P, num, rng, W, H):
         P.textbox("* " + pseudo_text(rng, 40), "ebg_reg", 0.0030, x0, ny - 0.0045, tw, 0.0165, line=1.0)
 
 
-RAHLE_LEN, RAHLE_W, RAHLE_LOW = 0.56, 0.26, 0.23     # board length, width, leg length (from hinge)
+RAHLE_LEN, RAHLE_W, RAHLE_LOW = 0.50, 0.26, 0.21     # board length, width, leg length (from hinge)
 
 
 def star_ring(cx, cy, ro, ri, k=8, rot=0.0):
@@ -1878,7 +1878,7 @@ def volume_box():
     ob.data.materials.clear()
     m, nt, out = new_mat("air")
     v = NN(nt, "ShaderNodeVolumePrincipled")
-    v.inputs["Density"].default_value = 0.055
+    v.inputs["Density"].default_value = 0.18
     v.inputs["Anisotropy"].default_value = 0.45
     v.inputs["Color"].default_value = (1.0, 0.97, 0.92, 1)
     LK(nt, v.outputs[0], out.inputs["Volume"])
@@ -2121,16 +2121,16 @@ def build(ctx):
     # ------------------------------------------------ cameras
     V = Vector
     camA = rig_camera("camA", 35, 2.8, [
-        (109.40, V((0.66, -1.02, 0.60)), V((-0.06, 0.06, 0.12)), V((0.10, -0.05, 0.05))),
-        (110.70, V((0.56, -0.70, 0.48)), V((0.06, 0.00, 0.07)), V((0.15, -0.06, 0.05))),
-        (111.96, V((0.38, -0.40, 0.36)), V((0.165, -0.04, 0.03)), V((0.17, -0.07, 0.052))),
-        (113.50, V((0.335, -0.335, 0.325)), V((0.17, -0.035, 0.03)), V((0.17, -0.07, 0.052))),
+        (109.40, V((0.40, -0.98, 0.86)), V((-0.04, 0.04, 0.06)), V((0.10, -0.04, 0.05))),
+        (110.70, V((0.34, -0.72, 0.66)), V((0.06, 0.02, 0.05)), V((0.15, -0.03, 0.05))),
+        (111.96, V((0.25, -0.34, 0.37)), V((0.175, 0.04, 0.02)), V((0.17, -0.03, 0.052))),
+        (113.50, V((0.235, -0.30, 0.345)), V((0.175, 0.045, 0.02)), V((0.17, -0.03, 0.052))),
     ], 2622, 2724, seed=11)
     pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
-    camB = rig_camera("camB", 50, 2.8, [
-        (113.30, V((-0.33, -0.47, 0.58)), V((-0.10, 0.00, 0.21)), pg),
-        (114.45, V((-0.30, -0.40, 0.54)), V((-0.10, 0.01, 0.22)), pg),
-        (115.90, V((-0.25, -0.30, 0.48)), V((-0.095, 0.03, 0.235)), pg),
+    camB = rig_camera("camB", 40, 2.8, [
+        (113.30, V((-0.40, -0.40, 0.62)), V((-0.13, 0.06, 0.25)), pg + V((-0.02, -0.05, -0.01))),
+        (114.45, V((-0.37, -0.35, 0.58)), V((-0.12, 0.07, 0.25)), pg + V((-0.01, -0.02, 0.0))),
+        (115.90, V((-0.30, -0.25, 0.50)), V((-0.11, 0.085, 0.255)), pg),
     ], 2718, 2782, seed=12)
     zc = 0.15
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
@@ -2143,8 +2143,8 @@ def build(ctx):
         (120.05, V((-0.33, -0.10, 0.50)), V((-0.09, 0.03, 0.22)), pg + V((-0.03, -0.05, -0.01))),
     ], 2810, 2883, seed=14)
     camE = rig_camera("camE", 32, 4.0, [
-        (119.90, V((0.32, -0.82, 0.64)), V((-0.17, 0.02, 0.22)), V((-0.15, -0.02, 0.24))),
-        (125.60, V((0.235, -0.64, 0.54)), V((-0.165, 0.02, 0.225)), V((-0.15, -0.02, 0.24))),
+        (119.90, V((0.02, -0.98, 0.66)), V((-0.17, 0.05, 0.24)), V((-0.16, -0.03, 0.24))),
+        (125.60, V((-0.02, -0.80, 0.57)), V((-0.17, 0.05, 0.235)), V((-0.16, -0.03, 0.24))),
     ], 2875, 3014, seed=15)
     for name, f, cam in (("A", ctx.f0, camA), ("B", 2722, camB), ("C", 2778, camC), ("D", 2814, camD), ("E", 2879, camE)):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
