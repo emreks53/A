@@ -1,4 +1,21 @@
-# sh13a — review 1 (studio S1)
+# sh13a — review 2 (studio S1)
+
+## Round 2 changes (director notes 1-4)
+1. Golden hour: sun 9.8° just out of frame right-ahead (back/side light, rim glow on blades, seed heads, flowers),
+   warmer peach sky (HDRI tint), cloud shadow thinner (72 % max) so the glide keeps its backlight; on "Halık" the
+   ragged edge slides off and the meadow turns visibly warmer/brighter.
+2. Reveal: gently rolling terrain (flat only where the glide happens); every species grows in its own drifts with
+   bare gaps (poppy clusters, white daisy drift, blue cornflower patches, buttercups, Poly Haven flowers); grasses
+   lean (random + wind bias) with varied patchy heights; forest edge = continuous layered mass (two species, near
+   edge + deep background 95-170 m) with warm aerial haze by camera distance; two lone meadow trees.
+3. Life: a fritillary crosses ~1.2 m in front of the lens 75.6-77.8 s (motion-blurred wingbeats); bees hover at
+   flower height 1.4-4 m; dandelion seeds drift on the breeze.
+4. Render: **80.5 s/frame measured** (frame 1990, reveal = heaviest; glide frame 1836 is lighter) at final_spp 6 +
+   OIDN and **final resolution 90 % = 972x1728** (post upscales to 1080x1920; the director allowed reduced
+   resolution for defocus-heavy shots). Frames 1990/1991 at 100 % crop: no blotches / flicker.
+   Geometry cuts barely moved the number (cost is per-sample shading of dense near grass), so resolution was the
+   lever that keeps the look. The override lives in sh13a.py only (wraps C.configure_render; common.py untouched).
+
 
 Script: `video/blender/shots/sh13a.py` (+ `video/blender/lib_s1.py`). CC0 only: Poly Haven `evening_field`
 4k HDRI (golden hour, sun 9.8°), `grass_medium_02`, `shrub_02`, `island_tree_02`, `tree_small_02`,
@@ -22,8 +39,8 @@ but the sun stays just out of frame; forest edge on the left so its very long lo
 the view. The cloud-shadow sweep is a shadow-only plane 60 m up with a noisy edge (≈3 m natural penumbra).
 
 ## Stills (50 %)
-`sh13a_t074.300` opening glide · `t076.500` glide, poppies, flower passing lens · `t078.900` just before the rise
-· `t080.200` rising, light sweeping in · `t082.000` meadow bathed in light · `t084.100` last frame.
+`sh13a_t074.300` opening glide · `t076.400` glide, butterfly crossing · `t078.900` just before the rise
+· `t080.400` rising, light sweeping in · `t082.200` reveal, meadow in drifts · `t084.100` last frame.
 
 ## Render cost
 Measured `--final` frame 1836 (low glide, densest): **~112 s/frame** at 8 spp + OIDN on 4 cores (27k

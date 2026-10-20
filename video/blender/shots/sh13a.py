@@ -171,7 +171,7 @@ def build(ctx):
                 return True
         return False
     # blades: dense near the glide path, culled to what any camera frame can see
-    for (n, xs, y0, y1, smin, smax) in ((22000, 3.0, -1.0, 9.0, 0.7, 1.25), (9000, 9.0, 9.0, 30.0, 0.9, 1.5)):
+    for (n, xs, y0, y1, smin, smax) in ((17000, 3.0, -1.0, 9.0, 0.75, 1.3), (8000, 9.0, 9.0, 30.0, 0.9, 1.5)):
         for _ in range(n):
             p = Vector((prng.uniform(-xs, xs), prng.uniform(y0, y1), 0.0))
             if near_path(p, 0.03):
@@ -185,7 +185,7 @@ def build(ctx):
             hn = __import__("mathutils").noise.noise(Vector((p.x * 0.35, p.y * 0.35, 7.7)))
             scls.append(prng.uniform(smin, smax) * (0.85 + 0.5 * hn))
     # Poly Haven grass clumps for body/volume, mid and far
-    for (n, xs, y0, y1) in ((6000, 5.0, 0.5, 14.0), (9000, 25.0, 14.0, 45.0)):
+    for (n, xs, y0, y1) in ((5000, 5.0, 0.5, 14.0), (4000, 25.0, 14.0, 45.0)):
         for _ in range(n):
             p = Vector((prng.uniform(-xs, xs), prng.uniform(y0, y1), 0.0))
             if near_path(p, 0.25):
@@ -199,7 +199,7 @@ def build(ctx):
     field = L.point_cloud("MeadowField", pts, {"vidx": ("INT", vidx), "rot": ("FLOAT_VECTOR", rots), "scl": ("FLOAT", scls)})
     L.gn_instancer(field, inst, sway=0.06, sway_scale=0.8, sway_speed=0.35, name="MeadowInst", clock=clock)
     pfield = L.point_cloud("PHField", ppts, {"vidx": ("INT", pvidx), "rot": ("FLOAT_VECTOR", prots), "scl": ("FLOAT", pscls)})
-    L.gn_instancer(pfield, gcol, sway=0.03, sway_scale=0.6, sway_speed=0.35, name="PHInst", clock=clock)
+    L.gn_instancer(pfield, gcol, name="PHInst")   # static: no per-frame rebuild
     for o in (field, pfield):
         o.cycles.use_motion_blur = False
     L.key_clock(clock, [(f, f / 24.0) for f in range(ctx.f0 - 2, ctx.f1 + 3)])
@@ -237,7 +237,7 @@ def build(ctx):
     from mathutils import noise as mn
     groups = [list(range(0, 6)), list(range(6, 10)), list(range(10, 13)), list(range(13, 18)), list(range(18, nfl))]
     gdens = [1.0, 0.85, 0.9, 1.0, 0.6]
-    for _ in range(46000):
+    for _ in range(36000):
         p = Vector((prng.uniform(-12, 12), prng.uniform(-0.5, 40), 0.0))
         # each species grows in its own drifts/patches, with bare gaps between
         vals = [mn.noise(Vector((p.x * 0.22, p.y * 0.22, 3.3 + 11.0 * g))) for g in range(len(groups))]
@@ -376,11 +376,23 @@ def build(ctx):
         for o in bpy.data.objects:
             if o.name.startswith(pre):
                 o.hide_render = True
-    ov = {"final_spp": 8, "final_threshold": 0.05, "preview_spp": 24, "transmission_bounces": 4, "max_bounces": 5,
+    ov = {"final_spp": 6, "final_res": 90, "final_threshold": 0.05, "preview_spp": 24, "transmission_bounces": 4, "max_bounces": 5,
           "glossy_bounces": 2, "diffuse_bounces": 1, "transparent_bounces": 8, "clamp_indirect": 6.0}
     for kk, v in json.loads(os.environ.get("S1_OV", "{}")).items():
         ov[kk] = v
     return ov
 
 
+# final-resolution override (director allows < 100 % for defocus-heavy shots; post upscales to 1080x1920).
+# common.configure_render has no such key, so wrap it here (common.py itself is untouched).
+_orig_configure = C.configure_render
+
+
+def _configure(mode, ov):
+    _orig_configure(mode, ov)
+    if mode == "final" and ov.get("final_res"):
+        bpy.context.scene.render.resolution_percentage = int(ov["final_res"])
+
+
+C.configure_render = _configure
 C.run("sh13a", build)
