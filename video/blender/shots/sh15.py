@@ -720,8 +720,8 @@ RAHLE_POS = Vector((-0.38, -0.06, 0.0))
 RAHLE_YAW = math.radians(90)          # reader sits at +x, facing the window
 BETA = math.radians(40)
 RAHLE_TB = 0.016
-SOZ_POS = Vector((0.03, -0.10, 0.0))   # closed Sozler lying on the table (camA)
-SOZ_YAW = math.radians(-9)
+SOZ_POS = Vector((0.06, -0.12, 0.0))   # closed Sozler lying on the table (camA)
+SOZ_YAW = math.radians(90 - 9)
 STACK_POS = Vector((-0.58, 0.21, 0.0))
 STACK_YAW = math.radians(90 - 7)
 
@@ -1044,7 +1044,7 @@ def mat_headband(name="headband"):
 
 
 def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), relief=None, relief_depth=0.0025,
-             coat=0.0, grain_rot=0.0, uv_relief="uvr", sat=1.0, wear=0.0):
+             coat=0.0, grain_rot=0.0, uv_relief="uvr", sat=1.0, wear=0.0, spec=0.5):
     if _simple("wood"):
         return mat_simple(name, (0.2, 0.12, 0.07), 0.5)
     m, nt, out = new_mat(name)
@@ -1085,30 +1085,31 @@ def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), 
     LK(nt, d.outputs[0], lumw.inputs[0])
     rr = maprange(nt, lumw.outputs[0], 0.5, 0.05, rough[0], rough[1])
     p = principled(nt, **{"Base Color": col, "Roughness": rr, "Normal": normal, "Coat Weight": coat,
-                          "Coat Roughness": 0.25})
+                          "Coat Roughness": 0.25, "Specular IOR Level": spec})
     LK(nt, p.outputs[0], out.inputs["Surface"])
     return m
 
 
 def mat_plaster(name="lime_plaster"):
+    """Lime plaster: warm off-white, soft low-frequency mottling (lime wash, damp), fine sand grain."""
     if _simple("plaster"):
         return mat_simple(name, (0.7, 0.66, 0.6), 0.9)
     m, nt, out = new_mat(name)
-    t = tex("beige_wall_001")
     tc = NN(nt, "ShaderNodeTexCoord")
-    mp = NN(nt, "ShaderNodeMapping")
-    mp.inputs["Scale"].default_value = (0.7, 0.7, 0.7)
-    LK(nt, tc.outputs["Object"], mp.inputs["Vector"])
-    d = img_node(nt, t["diff"], vec=mp.outputs[0], proj="BOX", blend=0.3)
-    lum = NN(nt, "ShaderNodeRGBToBW")
-    LK(nt, d.outputs[0], lum.inputs[0])
-    v = maprange(nt, lum.outputs[0], 0.35, 0.65, 0.95, 1.03)
-    big = noise(nt, tc.outputs["Object"], 1.6, 2.0, 0.55)
-    bigv = maprange(nt, big.outputs[0], 0.3, 0.7, 0.90, 1.05)
-    col = mixrgb(nt, 1.0, srgb("#E6DCCB"), v, "MULTIPLY")
-    col = mixrgb(nt, 1.0, col, bigv, "MULTIPLY")
+    big = noise(nt, tc.outputs["Object"], 1.3, 3.0, 0.55)
+    mid = noise(nt, tc.outputs["Object"], 9.0, 2.0, 0.5)
+    v1 = maprange(nt, big.outputs[0], 0.3, 0.7, 0.92, 1.04)
+    v2 = maprange(nt, mid.outputs[0], 0.3, 0.7, 0.975, 1.02)
+    col = mixrgb(nt, 1.0, srgb("#E8DECD"), v1, "MULTIPLY")
+    col = mixrgb(nt, 1.0, col, v2, "MULTIPLY")
+    grain = noise(nt, tc.outputs["Object"], 700.0, 0.0, 0.5)
+    bmp = NN(nt, "ShaderNodeBump")
+    bmp.inputs["Strength"].default_value = 0.10
+    bmp.inputs["Distance"].default_value = 0.0004
+    LK(nt, math_node(nt, "ADD", grain.outputs[0], math_node(nt, "MULTIPLY", big.outputs[0], vb=6.0)), bmp.inputs["Height"])
     p = NN(nt, "ShaderNodeBsdfDiffuse")
     LK(nt, col, p.inputs["Color"])
+    LK(nt, bmp.outputs[0], p.inputs["Normal"])
     p.inputs["Roughness"].default_value = 0.6
     LK(nt, p.outputs[0], out.inputs["Surface"])
     return m
@@ -2177,8 +2178,8 @@ def build(ctx):
         MATS["leaf_%d" % k] = mat_leaf("leaf_%d" % k, os.path.join(d, "page_%d.png" % (727 - 2 * k)),
                                        os.path.join(d, "page_%d.png" % (728 - 2 * k)))
     MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.42, 0.29, 0.20), val=0.55, sat=1.05,
-                             rough=(0.48, 0.70), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
-                             grain_rot=math.pi / 2, wear=0.35)
+                             rough=(0.55, 0.78), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
+                             grain_rot=math.pi / 2, wear=0.35, spec=0.32)
     MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7))
     MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8))
     MATS["kafes"] = mat_wood("kafes", "dark_wood", tile=0.6, tint=(0.55, 0.45, 0.38), val=0.55, sat=0.6, rough=(0.55, 0.8))
@@ -2243,18 +2244,18 @@ def build(ctx):
             bpy.data.objects.remove(o)
     # ------------------------------------------------ cameras
     V = Vector
-    camA = rig_camera("camA", 35, 2.8, [
-        (109.40, V((0.12, -0.92, 0.62)), V((-0.30, 0.0, 0.12)), V((-0.30, -0.06, 0.14))),
-        (110.80, V((0.16, -0.70, 0.55)), V((-0.10, -0.02, 0.07)), V((-0.05, -0.08, 0.07))),
-        (111.96, V((0.14, -0.42, 0.40)), V((0.025, -0.02, 0.02)), V((0.03, -0.10, 0.052))),
-        (113.50, V((0.13, -0.38, 0.375)), V((0.025, -0.015, 0.02)), V((0.03, -0.10, 0.052))),
+    camA = rig_camera("camA", 32, 2.8, [
+        (109.40, V((0.64, -0.23, 0.64)), V((-0.36, -0.06, 0.22)), V((-0.36, -0.06, 0.22))),
+        (110.80, V((0.50, -0.20, 0.53)), V((-0.20, -0.08, 0.15)), V((-0.10, -0.08, 0.12))),
+        (111.96, V((0.29, -0.135, 0.34)), V((0.0, -0.12, 0.028)), V((0.06, -0.12, 0.052))),
+        (113.50, V((0.27, -0.13, 0.32)), V((0.0, -0.12, 0.025)), V((0.06, -0.12, 0.052))),
     ], 2622, 2724, seed=11)
     bpy.context.view_layer.update()
     pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
     camB = rig_camera("camB", 40, 2.8, [
-        (113.30, V((-0.08, 0.12, 0.52)), V((-0.58, 0.0, 0.30)), pg + V((0.03, 0.0, -0.01))),
-        (114.45, V((-0.11, 0.115, 0.505)), V((-0.59, 0.005, 0.30)), pg + V((0.01, 0.0, 0.0))),
-        (115.90, V((-0.17, 0.10, 0.47)), V((-0.61, 0.02, 0.30)), pg),
+        (113.30, V((-0.11, -0.37, 0.56)), V((-0.50, 0.08, 0.27)), pg + V((0.03, -0.02, -0.01))),
+        (114.45, V((-0.14, -0.33, 0.54)), V((-0.505, 0.08, 0.27)), pg + V((0.01, 0.0, 0.0))),
+        (115.90, V((-0.22, -0.25, 0.50)), V((-0.51, 0.08, 0.275)), pg),
     ], 2718, 2782, seed=12)
     zc = 0.15
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
