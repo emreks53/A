@@ -212,7 +212,7 @@ def birds(id, shot, a, b, lvl, fin, fout, space, n_birds=4, fmin=2600, fmax=6200
         note="sparse distant calls (FM-sweep syllables), kept off the key words")
 
 
-def tick(id, shot, t_fallback, kind="callout", lvl=-17.0, pan=0.0, track=None, ref=""):
+def tick(id, shot, t_fallback, kind="callout", lvl=-19.0, pan=0.0, track=None, ref=""):
     t, prov = graphic_t(id, t_fallback)
     cue(id, shot, t, 0.15, "ui_tick", lvl, cls="ui", pre=0.02, space="ui", send=-30.0,
         params=dict(sync=0.02, kind=kind), pan=pan, track=track, provisional=prov,
@@ -222,7 +222,7 @@ def tick(id, shot, t_fallback, kind="callout", lvl=-17.0, pan=0.0, track=None, r
 # ============================================================== sh01 dawn meadow macro
 s = "sh01"
 X12 = CUT["sh02"]                      # light dissolve sh01 -> sh02, 0.8 s centred on the cut
-bed("sh01.wind", s, 0.0, X12 + 0.4, "wind", -27, 0.35, 0.8, space="meadow", send=-22,
+bed("sh01.wind", s, 0.0, X12 + 0.4, "wind", -29, 0.35, 0.8, space="meadow", send=-22,
     params=dict(strength=1.0, gustiness=0.35, bright=0.8, low=0.03, veg=1.3, veg_lo=1600, veg_hi=10000,
                 veg_density=0.8, width=0.95), ref="cut 0.00 (film start)", note="dawn breeze in dewy grass")
 birds("sh01.birds", s, 0.0, X12 + 0.4, -35, 0.5, 0.8, "meadow", n_birds=4, fmin=2800, fmax=6500, start=0.35,
@@ -241,7 +241,7 @@ A = X12 - 0.4
 B = CUT["sh04"]                        # hard graphic match cut
 bed("sh02.room", s, A, B + 0.02, "room_tone", -42, 0.8, 0.04, space="room", send=-40,
     params=dict(warmth=1.0, bright=0.9), ref="light dissolve 5.24 -> hard cut 16.00")
-bed("sh02.window_air", s, A, B + 0.02, "wind", -32, 0.8, 0.04, space="room", send=-12,
+bed("sh02.window_air", s, A, B + 0.02, "wind", -34, 0.8, 0.04, space="room", send=-12,
     params=dict(strength=1.0, gustiness=0.4, rate=0.1, bright=0.5, low=0.0, veg=1.0, veg_lo=1500, veg_hi=6000,
                 veg_density=0.7, width=0.6), ref="soft air and leaves outside the open window")
 birds("sh02.window_birds", s, A, B + 0.02, -39, 0.8, 0.04, "room", n_birds=3, fmin=2600, fmax=6000,
@@ -271,7 +271,7 @@ s = "sh04"
 A, B = CUT["sh04"], CUT["sh05"]
 t_reach = w(s, "hiçbirine")
 under = [[B - 0.25, 16000.0], [B - 0.05, 2500.0], [B + 0.12, 380.0]]     # the world goes under water
-bed("sh04.wind", s, A - 0.02, B + 0.35, "wind", -25, 0.04, 0.3, space="desert", send=-24,
+bed("sh04.wind", s, A - 0.02, B + 0.35, "wind", -28, 0.04, 0.3, space="desert", send=-24,
     params=dict(strength=1.0, gustiness=0.7, rate=0.12, bright=0.9, low=0.05, veg=0.3, veg_lo=2600, veg_hi=9000,
                 veg_density=0.35, width=1.0, events=[[0.25, 0.8, 0.3], [t_reach + 0.4 - A, -0.9, 0.9]]),
     lpf=under, ref="hard cut 16.00 (dry gust on the cut, in the pause before 'Halbuki'); wind falls away as the "
@@ -335,7 +335,7 @@ tick("sh06.callout_heart", s, w(s, "ama") + 0.3, track={"shot": s, "name": "hear
 # ============================================================== sh07 open sea at dawn
 s = "sh07"
 A, B = CUT["sh07"], CUT["sh08"]
-bed("sh07.sea", s, A - 0.3, B + 0.3, "ocean", -26, 0.6, 0.6, space="outdoor", send=-22,
+bed("sh07.sea", s, A - 0.3, B + 0.3, "ocean", -29, 0.6, 0.6, space="outdoor", send=-22,
     params=dict(period=8.0), ref="colour-match dissolve 35.70 -> light dissolve 40.60")
 t_sun = on(s, "güneş")
 cue("sh07.sunrise_air", s, t_sun - F, 3.1, "bloom", -28, cls="amb", pre=0.6, space="outdoor", send=-20,
@@ -348,7 +348,7 @@ s = "sh08"
 A, B = CUT["sh08"], CUT["sh09"]
 bed("sh08.room", s, A - 0.3, B + 0.2, "room_tone", -40, 0.6, 0.5, space="room", send=-40,
     params=dict(warmth=1.0, bright=0.9), ref="light dissolve 40.60")
-bed("sh08.window_air", s, A - 0.3, B + 0.2, "wind", -31, 0.6, 0.5, space="room", send=-12,
+bed("sh08.window_air", s, A - 0.3, B + 0.2, "wind", -33, 0.6, 0.5, space="room", send=-12,
     params=dict(strength=1.0, gustiness=0.4, rate=0.1, bright=0.5, low=0.0, veg=1.0, veg_lo=1500, veg_hi=6000,
                 veg_density=0.7, width=0.6), ref="soft air and leaves outside the window")
 birds("sh08.window_birds", s, A - 0.3, B - 0.2, -36, 0.6, 0.8, "room", n_birds=3, fmin=2600, fmax=6000,
@@ -405,7 +405,7 @@ bed("sh10.field", s, A - 0.2, B + 0.3, "body_amb", -28, 0.6, 0.6, space="micro",
 t1, t2, t3 = w(s, "bildiğimiz"), w(s, "bilmediğimiz"), w(s, "hadsiz")
 cue("sh10.lights_one", s, t1 - F, t2 + 0.8 - (t1 - F), "sparkle", -30, pre=0.0, space="micro", send=-12, fade_out=0.6,
     params=dict(rate=11.0, bright=1.0, far=0.1, width=0.8), ref="bildiğimiz (cells light up one after another)")
-cue("sh10.lights_wave", s, t2 - F, B + 0.35 - (t2 - F), "sparkle", -26, pre=0.0, space="micro", send=-10,
+cue("sh10.lights_wave", s, t2 - F, B + 0.35 - (t2 - F), "sparkle", -28, pre=0.0, space="micro", send=-10,
     fade_in=0.4, fade_out=0.5,
     params=dict(rate=[[0, 40], [t3 - t2, 450], [t3 - t2 + 0.8, 900], [B - t2 - 0.5, 700], [B - t2 + 0.35, 250]],
                 bright=0.9, far=0.75, sweep=[[0, -0.9], [t3 - t2 + 0.6, 0.9], [B - t2, 0.0]]),
@@ -420,7 +420,7 @@ cue("sh11.thunder", s, A - 0.05, 5.0, "thunder", -27, cls="amb", pre=0.1, space=
     fade_out=0.8, params=dict(sync=0.1, dist=1.3), ref="dark rain sky (distant thunder roll)")
 a0 = A - 0.4
 r = lambda x: round(x - a0, 3)
-bed("sh11.rain", s, a0, B + 0.7, "rain", -28, 0.6, 0.8, space="outdoor", send=-20,
+bed("sh11.rain", s, a0, B + 0.7, "rain", -31, 0.6, 0.8, space="outdoor", send=-20,
     params=dict(near=[[0, 0], [r(t_b), 0.15], [r(t_b + 1.0), 0.4], [r(t_ay), 0.85], [r(t_k), 0.7], [r(t_k + 0.4), 0.35], [r(B + 0.7), 0.2]],
                 mid=[[0, 0], [r(t_b), 0.1], [r(t_b + 1.2), 0.5], [r(t_ay), 0.9], [r(t_k), 0.8], [r(t_k + 0.6), 0.4], [r(B + 0.7), 0.3]],
                 far=[[0, 0.15], [r(t_b), 0.3], [r(t_b + 1.4), 0.8], [r(t_k), 0.9], [r(t_k + 0.6), 0.6], [r(B + 0.7), 0.5]],
@@ -431,10 +431,10 @@ cue("sh11.first_drops", s, t_b - F, 1.6, "heavy_drops", -22, pre=0.05, space="ou
     params=dict(times=[0.05, 0.27, 0.42, 0.7, 0.97, 1.12], pans=[0.0, -0.45, 0.35, -0.2, 0.55, -0.6],
                 amps=[1.0, 0.6, 0.8, 0.5, 0.7, 0.45], surface="dust"),
     ref="bütün (first heavy drops hit the dust: crowns, puffs) - checked against the sh11 animatic")
-cue("sh11.trickle", s, t_ay - 0.3, 2.7, "trickle", -26, pre=0.0, space="outdoor", send=-18, fade_in=0.3, fade_out=0.5,
+cue("sh11.trickle", s, t_ay - 0.3, 2.7, "trickle", -29, pre=0.0, space="outdoor", send=-18, fade_in=0.3, fade_out=0.5,
     params=dict(flow=[[0, 0], [0.4, 0.6], [1.2, 1.0], [2.2, 0.8], [2.7, 0.4]], approach=[[0, 0.3], [1.3, 1.0]], pan=0.0),
     ref="ayağımıza (water trickles along the cracks toward camera)")
-cue("sh11.leaf_hits", s, t_ay + 0.5, 1.2, "leaf_hits", -26, pre=0.05, space="outdoor", send=-16,
+cue("sh11.leaf_hits", s, t_ay + 0.5, 1.2, "leaf_hits", -28, pre=0.05, space="outdoor", send=-16,
     params=dict(times=[0.05, 0.4, 0.86], pans=[0.0, -0.2, 0.15], amps=[1.0, 0.75, 0.9]),
     ref="drops hit the seedling's leaves, they bounce")
 
@@ -446,8 +446,8 @@ cue("sh12.cloud", s, A + 0.25, 2.2, "whoosh", -26, cls="amb", pre=0.85, space="a
     ref="tilt up into the rain sky -> emerge from cloud into sunlight")
 a0 = A - 0.25
 swell = pause_near(B - 1.2)
-bed("sh12.altitude", s, a0, B + 0.45, "wind", -27, 0.6, 0.8, space="aerial", send=-16,
-    params=dict(strength=1.0, gustiness=0.3, rate=0.06, bright=1.3, low=0.03, width=1.0,
+bed("sh12.altitude", s, a0, B + 0.45, "wind", -30, 0.6, 0.8, space="aerial", send=-16,
+    params=dict(strength=1.0, gustiness=0.3, rate=0.06, bright=1.0, low=0.03, width=1.0,
                 events=[[swell - a0, 0.3, 0.3]]),
     ref=f"vast open air high above the land; swells as we descend, in the pause at {swell:.2f} (not on 'olamaz')")
 t = on(s, "bir")
@@ -458,7 +458,7 @@ cue("sh12.one_air", s, t - F, 3.6, "bloom", -32, cls="amb", pre=0.4, space="aeri
     params=dict(sync=0.4, rise=0.4, decay=3.0, bright=0.5, low=0.2), ref="bir tek")
 for dt, pn, nm in [(0.45, 0.0, "sun"), (0.72, -0.55, "sea"), (0.98, 0.45, "cloud"), (1.26, 0.65, "rain"),
                    (1.52, -0.3, "river"), (1.8, -0.65, "forest")]:
-    tick(f"sh12.link_{nm}", s, t + dt, kind="link", lvl=-19, pan=pn, track={"shot": s, "name": nm},
+    tick(f"sh12.link_{nm}", s, t + dt, kind="link", lvl=-21, pan=pn, track={"shot": s, "name": nm},
          ref=f"network node '{nm}' lights")
 
 # ============================================================== sh13a/b golden meadow
@@ -467,8 +467,8 @@ A, B = CUT["sh13a"], CUT["sh14a"]
 t_hr = on(s, "Halık")
 a0 = A - 0.35
 breeze = pause_near(t_hr - 0.2)
-bed("sh13.meadow", s, a0, B + 0.4, "wind", -28, 0.8, 0.8, space="meadow", send=-20,
-    params=dict(strength=0.85, gustiness=0.45, rate=0.09, bright=0.9, low=0.03, veg=1.3, veg_lo=1800, veg_hi=9000,
+bed("sh13.meadow", s, a0, B + 0.4, "wind", -30, 0.8, 0.8, space="meadow", send=-20,
+    params=dict(strength=0.85, gustiness=0.45, rate=0.09, bright=0.9, low=0.03, veg=1.0, veg_lo=1800, veg_hi=9000,
                 veg_density=1.2, width=1.0, events=[[breeze - a0, 0.8, 0.35]]),
     ref=f"golden-hour meadow; warm breeze through the grass in the pause before 'Halık-ı Rahîm' ({breeze:.2f})")
 birds("sh13.birds", s, a0, B + 0.4, -34, 0.8, 0.8, "meadow", n_birds=5, fmin=2200, fmax=6800, start=0.8,
@@ -490,7 +490,7 @@ rt[4] = round((rt[3] + rt[5]) / 2, 2)
 fallback = [-0.45, 0.5, -0.2, 0.35, -0.55, 0.15, 0.6, 0.0]
 for i, (tt, pn) in enumerate(zip(rt, fallback)):
     nm = "abcdefgh"[i]
-    tick(f"sh13b.ring_{nm}", s, tt - F, kind="ring", lvl=-15 if i < 7 else -14, pan=pn,
+    tick(f"sh13b.ring_{nm}", s, tt - F, kind="ring", lvl=-18 if i < 7 else -17, pan=pn,
          track={"shot": s, "name": nm}, ref=f"birer birer: tracking ring {i + 1}/8 snaps onto TRK_{nm}")
 cue("sh13b.bee", s, SYNC.get("sh13b.ring_b", rt[1]), 2.2, "bee", -40, pre=0.7, space="meadow", send=-16, fade_in=0.2,
     fade_out=0.3, params=dict(sync=0.7, dist=0.55, pan_from=0.6, pan_to=-0.1, f0=226), ref="the bee found by ring b")
@@ -501,7 +501,7 @@ A, B = CUT["sh14a"], CUT["sh14b"]
 t_allah = on(s, "Allah")
 a0 = A - 0.4
 stir = pause_near(t_allah - 1.4)
-bed("sh14a.field", s, a0, B + 0.08, "wind", -26, 0.8, 0.35, space="meadow", send=-20,
+bed("sh14a.field", s, a0, B + 0.08, "wind", -28, 0.8, 0.35, space="meadow", send=-20,
     params=dict(strength=0.8, gustiness=0.4, rate=0.08, bright=0.85, low=0.03, veg=1.0, veg_lo=900, veg_hi=6000,
                 veg_density=0.8, width=1.0, events=[[stir - a0, 0.6, 0.3]]),
     ref=f"sunrise field, big papery sunflower leaves; the leaves stir in the pause at {stir:.2f}; shadow cuts it at 99.50")
@@ -510,7 +510,7 @@ birds("sh14a.birds", s, a0, B + 0.05, -33, 0.8, 0.3, "meadow", n_birds=4, fmin=2
 t = w(s, "görüyormuşçasına")
 cue("sh14a.turn", s, t - F, 2.7, "stalks_turn", -27, pre=0.1, space="meadow", send=-16, fade_out=0.4,
     params=dict(sync=0.1, length=1.4), ref="görüyormuşçasına (all flower heads turn toward the sun)")
-tick("sh14a.spiral", s, w(s, "hikmetli") - F, kind="link", lvl=-19, track={"shot": s, "name": "spiral"},
+tick("sh14a.spiral", s, w(s, "hikmetli") - F, kind="link", lvl=-21, track={"shot": s, "name": "spiral"},
      ref="Fibonacci spiral arcs drawn")
 cue("sh14a.allah_air", s, t_allah - F, 2.4, "bloom", -31, cls="amb", pre=0.8, space="meadow", send=-16, fade_out=0.7,
     params=dict(sync=0.8, rise=0.8, decay=1.6, bright=0.7, low=0.15),
@@ -554,7 +554,7 @@ cue("sh15.sunbeam", s, A + 0.2, 3.2, "bloom", -32, cls="amb", pre=0.5, space="ro
     params=dict(sync=0.5, rise=0.5, decay=2.5, bright=0.55, low=0.3), ref="warm sunbeam sweeps across the room")
 bed("sh15.room", s, A - 0.3, TOTAL, "room_tone", -39, 0.6, 1.8, space="room_wood", send=-40,
     params=dict(warmth=1.2, bright=0.8), ref="quiet old wooden room; fades to silence at the end")
-bed("sh15.window_air", s, A - 0.3, TOTAL, "wind", -31, 0.8, 1.8, space="room_wood", send=-12,
+bed("sh15.window_air", s, A - 0.3, TOTAL, "wind", -33, 0.8, 1.8, space="room_wood", send=-12,
     params=dict(strength=1.0, gustiness=0.35, rate=0.08, bright=0.45, low=0.0, veg=1.0, veg_lo=1400, veg_hi=5500,
                 veg_density=0.6, width=0.6), ref="warm air and leaves outside the window")
 birds("sh15.window_birds", s, A - 0.3, TOTAL, -36, 0.8, 1.8, "room_wood", n_birds=3, fmin=2600, fmax=6000,
