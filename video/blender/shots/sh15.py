@@ -720,7 +720,7 @@ RAHLE_POS = Vector((-0.38, -0.06, 0.0))
 RAHLE_YAW = math.radians(90)          # reader sits at +x, facing the window
 BETA = math.radians(40)
 RAHLE_TB = 0.016
-SOZ_POS = Vector((0.06, -0.12, 0.0))   # closed Sozler lying on the table (camA)
+SOZ_POS = Vector((0.06, -0.07, 0.0))   # closed Sozler lying on the table (camA)
 SOZ_YAW = math.radians(90 - 9)
 STACK_POS = Vector((-0.58, 0.21, 0.0))
 STACK_YAW = math.radians(90 - 7)
@@ -1942,7 +1942,7 @@ def shutter(ctx):
     ob.visible_camera = False
     ob.visible_glossy = False
     ob.visible_transmission = False
-    t0, t1 = 110.45, 113.20
+    t0, t1 = 109.75, 112.70
     for k in range(0, 31):
         t = t0 + (t1 - t0) * k / 30
         u = C.smooth(k / 30) * 0.65 + (k / 30) * 0.35
@@ -2228,7 +2228,7 @@ def build(ctx):
     wnt.links.new(mixw.outputs[2], bg.inputs["Color"])
     sun = sun_light()
     # sun brightens on "cok guzel ifadelerle" (thin haze clears)
-    for t, e in ((109.5, 6.0), (117.25, 6.0), (118.9, 8.2), (125.6, 8.2)):
+    for t, e in ((109.5, 5.4), (117.25, 5.4), (119.0, 8.4), (125.6, 8.4)):
         sun.data.energy = e
         sun.data.keyframe_insert("energy", frame=t * C.FPS)
     shutter(ctx)
@@ -2262,10 +2262,10 @@ def build(ctx):
     # ------------------------------------------------ cameras
     V = Vector
     camA = rig_camera("camA", 32, 2.8, [
-        (109.40, V((0.64, -0.23, 0.64)), V((-0.36, -0.06, 0.22)), V((-0.36, -0.06, 0.22))),
-        (110.80, V((0.50, -0.20, 0.53)), V((-0.20, -0.08, 0.15)), V((-0.10, -0.08, 0.12))),
-        (111.96, V((0.29, -0.135, 0.34)), V((0.0, -0.12, 0.028)), V((0.06, -0.12, 0.052))),
-        (113.50, V((0.27, -0.13, 0.32)), V((0.0, -0.12, 0.025)), V((0.06, -0.12, 0.052))),
+        (109.40, V((0.66, -0.20, 0.65)), V((-0.36, -0.05, 0.22)), V((-0.36, -0.05, 0.22))),
+        (110.70, V((0.50, -0.16, 0.52)), V((-0.22, -0.06, 0.15)), V((-0.10, -0.06, 0.12))),
+        (111.96, V((0.29, -0.085, 0.34)), V((0.0, -0.07, 0.028)), V((0.06, -0.07, 0.052))),
+        (113.50, V((0.265, -0.08, 0.315)), V((0.0, -0.07, 0.025)), V((0.06, -0.07, 0.052))),
     ], 2622, 2724, seed=11)
     bpy.context.view_layer.update()
     pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
@@ -2281,12 +2281,12 @@ def build(ctx):
         (117.30, V((0.165, yc - 0.255, 0.132)), V((0.185, yc, zc)), V((0.185, yc, zc))),
     ], 2774, 2818, seed=13)
     camD = rig_camera("camD", 35, 2.8, [
-        (117.20, V((0.05, -0.12, 0.40)), V((-0.42, -0.06, 0.30)), V((-0.33, -0.06, 0.25))),
-        (120.05, V((0.04, -0.02, 0.39)), V((-0.42, -0.05, 0.30)), V((-0.33, -0.05, 0.25))),
+        (117.20, V((0.06, -0.15, 0.41)), V((-0.42, -0.06, 0.30)), V((-0.33, -0.06, 0.25))),
+        (120.05, V((0.02, 0.0, 0.38)), V((-0.42, -0.04, 0.30)), V((-0.33, -0.04, 0.25))),
     ], 2810, 2883, seed=14)
     camE = rig_camera("camE", 28, 4.0, [
         (119.90, V((0.36, -0.07, 0.61)), V((-0.45, -0.06, 0.36)), V((-0.36, -0.05, 0.25))),
-        (125.60, V((0.25, -0.065, 0.565)), V((-0.45, -0.06, 0.355)), V((-0.36, -0.05, 0.25))),
+        (125.60, V((0.20, -0.065, 0.54)), V((-0.45, -0.06, 0.35)), V((-0.36, -0.05, 0.25))),
     ], 2875, 3014, seed=15)
     for name, f, cam in (("A", ctx.f0, camA), ("B", 2722, camB), ("C", 2778, camC), ("D", 2814, camD), ("E", 2879, camE)):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
