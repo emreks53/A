@@ -1,0 +1,3 @@
+# STATUS — studio S1 (branch render-dev-s1)
+sh01: READY_FOR_REVIEW (review 1; render time still over budget, fixing)
+sh13a: IN_PROGRESS
