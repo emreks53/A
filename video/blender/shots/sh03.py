@@ -11,11 +11,8 @@ import common as C
 import lib_s4 as S
 
 TZ = S.TABLE_Z
-BOWL = Vector((-0.22, 0.42, TZ))
-GLASS = Vector((-0.50, 0.08, TZ))
-BREAD = Vector((-0.02, 0.02, TZ))
-PLATE0 = Vector((-0.235, 0.185, TZ))
-PLATE1 = Vector((-0.22, 0.115, TZ))
+BOWL = Vector((*S.SOFRA["bowl"], TZ))
+GLASS = Vector((*S.SOFRA["glass"], TZ))
 
 
 def look_quat(eye, target, up):
@@ -63,178 +60,92 @@ def catmull(keys, t):
 
 def build(ctx):
     sc = bpy.context.scene
-    rng = random.Random(77)
-    S.light_rig(exposure=2.4)
+    S.light_rig(exposure=1.7)
     S.build_room()
     S.build_table()
     t_yemek, t_icmek, t_butun, t_takdim = ctx.word("yemek"), ctx.word("içmek"), ctx.word("bütün"), ctx.word("takdim")
-
-    # ---------------------------------------------------------------- sofra
-    bowl = [o for o in C.ph_model("wooden_bowl_01", "2k") if o.type == "MESH"][0]
-    bowl.location = (BOWL.x, BOWL.y, TZ - min((bowl.matrix_world @ Vector(c)).z for c in bowl.bound_box))
-    bpy.context.view_layer.update()
-    fruit = []
-
-    def add_fruit(name, n=1, pick=None):
-        objs = [o for o in C.ph_model(name, "1k") if o.type == "MESH"]
-        if pick is not None:
-            for o in objs[pick:]:
-                bpy.data.objects.remove(o)
-            objs = objs[:pick]
-        for o in objs:
-            # centre origin on geometry for the rigid body
-            bpy.context.view_layer.update()
-            cen = sum((Vector(c) for c in o.bound_box), Vector()) / 8
-            o.data.transform(Matrix.Translation(-cen))
-            o.location = o.location + o.matrix_world.to_3x3() @ cen
-            fruit.append(o)
-        return objs
-    for _ in range(2):
-        add_fruit("food_apple_01")
-    add_fruit("food_pomegranate_01")
-    add_fruit("food_pears_asian_01", pick=3)
-    for _ in range(2):
-        add_fruit("food_kiwi_01")
-    for _ in range(2):
-        add_fruit("food_lime_01")
-    for _ in range(2):
-        add_fruit("lemon")
-    # drop positions: a loose spiral above the bowl, staggered in height
-    order = list(range(len(fruit))); rng.shuffle(order)
-    for k, i in enumerate(order):
-        o = fruit[i]
-        a = k * 2.4
-        r = 0.035 + 0.05 * ((k * 0.37) % 1.0)
-        o.location = (BOWL.x + r * math.cos(a), BOWL.y + r * math.sin(a), TZ + 0.12 + 0.07 * k)
-        o.rotation_euler = (rng.uniform(-0.6, 0.6), rng.uniform(-0.6, 0.6), rng.uniform(0, 6.28))
-    S.settle_fruit(bowl, fruit, frames=120)
-
-    # loose fruit on the table, in the sun near the window
-    lem = [o for o in C.ph_model("lemon", "1k") if o.type == "MESH"][0]
-    lem.rotation_euler = (math.radians(88), 0, math.radians(30))
-    bpy.context.view_layer.update()
-    lem.location = (-0.70, 0.52, 0)
-    bpy.context.view_layer.update()
-    lem.location.z += TZ - min((lem.matrix_world @ Vector(c)).z for c in lem.bound_box)
-    app = [o for o in C.ph_model("food_apple_01", "1k") if o.type == "MESH"][0]
-    bpy.context.view_layer.update()
-    app.location = (0.10, 0.50, TZ - min((app.matrix_world @ Vector(c)).z for c in app.bound_box))
-    app.rotation_euler.z = 1.3
-
-    # bread
-    S.build_bread(BREAD, rot=0.6)
-
-    # glass, jug, tea
-    glass = S.build_tumbler(GLASS)
+    so = S.build_sofra()
+    water = so["water"]
     r_in = S.inner_radius(0.05)
-    wprof = [(0.0, 0.0)]
-    for k in range(12):
-        z = 0.0005 + 0.1 * k / 11
-        wprof.append((S.inner_radius(0.009 + z) + 0.0003, z))
-    wprof += [(S.inner_radius(0.109) - 0.0006, 0.1012), (S.inner_radius(0.109) - 0.0025, 0.1006), (0.0, 0.1004)]
-    water = S.lathe("GlassWater", wprof, 96, S.mat_water_s4("GlassWaterMat"))
-    water.location = (GLASS.x, GLASS.y, TZ + 0.0092)
-    S.build_tea_glass((0.22, 0.46, TZ), fill=0.82)
 
-    # pour timeline
+    # ---------------------------------------------------------------- the pour
     t_hit = t_icmek - 0.04                    # jet reaches the glass bottom just before the word
     t_end = t_butun - 0.12
-    lvl0, lvl1 = 0.0, 0.082                   # water height above the inner bottom
+    lvl1 = 0.082                              # final water height above the inner bottom
+
     def level(t):
         x = C.remap(t, t_hit, t_end + 0.15, lambda v: 1 - (1 - min(1.0, max(0.0, v))) ** 1.6)
-        return lvl0 + (lvl1 - lvl0) * x
+        return lvl1 * x
     for f in range(ctx.f0 - 2, ctx.f1 + 3):
-        t = f / C.FPS
-        water.scale = (1, 1, max(0.002, level(t) / 0.1))
+        water.scale = (1, 1, max(0.002, level(f / C.FPS) / 0.1))
         water.keyframe_insert("scale", index=2, frame=f)
-    # jug: spout tip at the pivot; pivot tilts / moves
     jug, jw = S.build_glass_jug((0, 0, 0))
-    bpy.data.objects.remove(jw)              # no visible body of water in the tilted jug (it stays above frame)
+    bpy.data.objects.remove(jw)              # the jug body stays above frame while pouring
     tip_local = Vector((0.0485 * 1.55 + 0.004, 0.0, 0.2325 + 0.012))
     piv = C.empty("JugPivot", (0, 0, 0))
     jug.parent = piv
     jug.location = -tip_local
-    jug.rotation_euler = (0, 0, 0)
-    impact = Vector((GLASS.x - 0.006, GLASS.y + 0.004, 0))
+    impact = Vector((GLASS.x + 0.004, GLASS.y + 0.003, 0))
     v0 = 0.30
     spout_h = 0.215                           # spout height above the inner bottom of the glass
     fall_t = math.sqrt(2 * spout_h / 9.81)
-    spout = Vector((impact.x, impact.y + v0 * fall_t, TZ + 0.009 + spout_h))
-    stream, sng = S.build_stream("Stream", spout, v0=(v0, 0, 0), r0=0.0040)
-    stream.rotation_euler.z = math.radians(-90)       # pour direction -Y (from frame right to left)
-    piv_keys_loc = [(t_hit - 0.75, spout + Vector((0.0, 0.10, 0.20))), (t_hit - 0.28, spout + Vector((0, 0.004, 0.006))),
-                    (t_hit - 0.1, spout), (t_end, spout + Vector((0, 0.003, 0.004))),
-                    (t_end + 0.35, spout + Vector((0.02, 0.10, 0.12))), (t_end + 1.0, spout + Vector((0.25, 0.45, 0.65)))]
-    piv_keys_tilt = [(t_hit - 0.75, 15), (t_hit - 0.3, 48), (t_hit - 0.15, 60), (t_end - 0.1, 66), (t_end + 0.3, 35), (t_end + 1.0, 20)]
-    for t, p in piv_keys_loc:
-        C.key(piv, "location", t, tuple(p))
-    for t, a in piv_keys_tilt:
-        piv.rotation_euler = (0, math.radians(a), math.radians(-90))
+    spout = Vector((impact.x + v0 * fall_t, impact.y, TZ + 0.009 + spout_h))
+    stream, sng = S.build_stream("Stream", spout, v0=(v0, 0, 0), r0=0.0036)
+    stream.rotation_euler.z = math.radians(180)       # pours toward -X (enters from frame right)
+    for t, off in [(t_hit - 1.3, (0.25, 0.10, 0.60)), (t_hit - 0.5, (0.10, 0.0, 0.45)), (t_hit - 0.25, (0.02, 0.0, 0.03)), (t_hit - 0.10, (0, 0, 0)),
+                   (t_end, (0.003, 0, 0.004)), (t_end + 0.4, (0.10, 0.05, 0.15)), (t_end + 1.0, (0.45, 0.30, 0.70))]:
+        C.key(piv, "location", t, tuple(spout + Vector(off)))
+    for t, a in [(t_hit - 1.3, 10), (t_hit - 0.5, 25), (t_hit - 0.25, 50), (t_hit - 0.12, 60), (t_end - 0.1, 67), (t_end + 0.4, 30), (t_end + 1.0, 15)]:
+        piv.rotation_euler = (0, math.radians(a), math.radians(180))
         piv.keyframe_insert("rotation_euler", frame=t * C.FPS)
-    # stream controls
-    t_leave = t_hit - math.sqrt(2 * spout_h / 9.81)
+    t_leave = t_hit - fall_t
     S.key_node_value(sng, "FRONT", [(t_leave - 0.01, 0.0), (t_hit, 1.0)], interp="LINEAR")
     S.key_node_value(sng, "TAIL", [(t_end, 0.0), (t_end + 0.2, 1.0)], interp="LINEAR")
     S.key_node_value(sng, "FLOW", [(t_leave, 0.55), (t_leave + 0.12, 1.0), (t_end - 0.25, 1.0), (t_end, 0.45)])
-    hk = []
-    for f in range(ctx.f0 - 2, ctx.f1 + 3, 2):
-        t = f / C.FPS
-        hk.append((t, spout_h - level(t)))
+    hk = [(f / C.FPS, spout_h - level(f / C.FPS)) for f in range(ctx.f0 - 2, ctx.f1 + 3, 2)]
     S.key_node_value(sng, "HEIGHT", hk, interp="LINEAR")
     bub, bng = S.build_bubbles("Bubbles", (impact.x, impact.y, TZ + 0.0092), r_in)
     S.key_node_value(bng, "LEVEL", [(t, level(t)) for t, _ in hk], interp="LINEAR")
     S.key_node_value(bng, "FLOW", [(t_hit - 0.02, 0.0), (t_hit + 0.15, 1.0), (t_end, 1.0), (t_end + 0.8, 0.0)])
-    C.empty("TRK_water", (GLASS.x, GLASS.y, TZ + 0.06)).parent = None
+    C.empty("TRK_water", (GLASS.x, GLASS.y, TZ + 0.06))
+    # the water body's material lives on the glass-water lathe (GlassWaterMat): impact rings while pouring
+    wm = water.data.materials[0]
+    S.add_water_ripples(wm, (impact.x - GLASS.x, impact.y - GLASS.y, 0.1), ctx.t0, ctx.t1,
+                        [(t_hit, 0.0), (t_hit + 0.1, 1.0), (t_end, 1.0), (t_end + 0.9, 0.15), (ctx.t1, 0.05)])
 
-    # plate with the opened pomegranate
-    ts = C.ph_model("tea_set_01", "1k")
-    plate = None
-    for o in ts:
-        if o.name.startswith("tea_set_01_plate_large_circular_03"):
-            plate = o
-        elif o.type == "MESH":
-            bpy.data.objects.remove(o)
-    plate.location = (0, 0, 0)
-    pom, arils, zc = S.build_open_pomegranate()
-    bpy.context.view_layer.update()
-    pz = max((plate.matrix_world @ Vector(c)).z for c in plate.bound_box) - 0.004
-    pmin = min((pom.matrix_world @ Vector(c)).z for c in pom.bound_box)
-    pom.location = (0.012, -0.008, pz - pmin)
-    pom.rotation_euler = (math.radians(8), math.radians(-5), 0.4)
-    pom.parent = plate
-    plate_root = C.empty("PlateRoot", tuple(PLATE0))
-    plate.parent = plate_root
-    plate.location = (0, 0, -min((plate.matrix_world @ Vector(c)).z for c in plate.bound_box) + 0.0005)
-    C.key(plate_root, "location", t_takdim - 0.55, tuple(PLATE0))
-    C.key(plate_root, "location", t_takdim + 0.75, tuple(PLATE1))
+    # ---------------------------------------------------------------- takdim: the plate is offered
+    pr = so["plate_root"]
+    C.key(pr, "location", t_takdim - 0.5, (*S.SOFRA["plate0"], TZ))
+    C.key(pr, "location", t_takdim + 0.85, (*S.SOFRA["plate1"], TZ))
 
     # ---------------------------------------------------------------- camera (keyed every frame)
-    cam = C.camera("cam", lens=40, loc=(0.6, -0.2, 1.1), fstop=2.8)
+    cam = C.camera("cam", lens=35, loc=(0.6, -0.2, 1.1), fstop=2.8)
     cam.rotation_mode = "QUATERNION"
     cam.data.dof.focus_object = None
-    top = BOWL + Vector((0, 0.005, 1.02))
+    top = BOWL + Vector((0, 0.005, 0.86))
+    G = Vector((GLASS.x, GLASS.y, TZ + 0.075))
     P = [(ctx.t0 - 0.30, (0.63, -0.22, 1.10)),
-         (t_yemek + 0.15, (0.36, -0.20, 0.96)),
-         (t_icmek - 0.55, (-0.04, -0.06, 0.880)),
-         (t_icmek - 0.05, (-0.235, 0.020, 0.862)),
-         (t_butun - 0.05, (-0.290, 0.040, 0.858)),
-         (t_butun + 0.9, (-0.30, 0.02, 1.10)),
-         (t_takdim - 0.9, (-0.24, 0.30, 1.62)),
+         (t_yemek + 0.10, (0.30, -0.32, 0.90)),
+         (t_icmek - 0.45, (-0.15, -0.30, 0.875)),
+         (t_icmek - 0.05, (-0.505, -0.255, 0.862)),
+         (t_icmek + 0.70, (-0.511, -0.244, 0.860)),
+         (t_butun - 0.05, (-0.518, -0.232, 0.858)),
+         (t_butun + 1.0, (-0.30, -0.24, 1.55)),
+         (t_takdim - 0.7, (-0.27, 0.02, 1.64)),
          (t_takdim + 0.6, tuple(top)),
-         (ctx.t1 + 0.4, tuple(top + Vector((0, 0, 0.03))))]
+         (ctx.t1 + 0.4, tuple(top + Vector((0, 0, 0.02))))]
     T = [(ctx.t0 - 0.30, (-0.40, 0.30, 0.68)),
-         (t_yemek + 0.15, (-0.35, 0.18, 0.78)),
-         (t_icmek - 0.55, (-0.50, 0.10, 0.83)),
-         (t_icmek - 0.05, (-0.52, 0.085, 0.840)),
-         (t_butun - 0.05, (-0.52, 0.083, 0.836)),
-         (t_butun + 0.9, (-0.42, 0.25, 0.78)),
-         (t_takdim - 0.9, (-0.22, 0.40, TZ)),
+         (t_yemek + 0.10, (0.00, 0.15, 0.80)),
+         (t_icmek - 0.45, (-0.30, 0.15, 0.80)),
+         (t_icmek - 0.05, tuple(G)),
+         (t_icmek + 0.70, tuple(G - Vector((0, 0, 0.002)))),
+         (t_butun - 0.05, tuple(G - Vector((0, 0, 0.004)))),
+         (t_butun + 1.0, (-0.24, 0.34, 0.76)),
+         (t_takdim - 0.7, (-0.25, 0.30, TZ)),
          (t_takdim + 0.6, (BOWL.x, BOWL.y + 0.005, TZ)),
          (ctx.t1 + 0.4, (BOWL.x, BOWL.y + 0.005, TZ))]
-    U = [(ctx.t0 - 0.30, (0, 0, 1)), (t_butun + 0.3, (0, 0, 1)), (t_takdim - 0.9, (-0.2, 1, 1.2)),
+    U = [(ctx.t0 - 0.30, (0, 0, 1)), (t_butun + 0.3, (0, 0, 1)), (t_takdim - 0.7, (-0.05, 1, 0.6)),
          (t_takdim + 0.4, (0, 1, 0)), (ctx.t1 + 0.4, (0, 1, 0))]
-    F = [(ctx.t0 - 0.3, 1.0), (t_yemek + 0.15, 0.62), (t_icmek - 0.55, 0.30), (t_icmek - 0.08, 0.30),
-         (t_butun, 0.30), (t_butun + 0.9, 0.55), (t_takdim + 0.6, 1.02)]
     for f in range(ctx.f0 - 3, ctx.f1 + 4):
         t = f / C.FPS
         e = catmull(P, t); g = catmull(T, t); u = curve([(a, b) for a, b in U], t)
@@ -243,7 +154,7 @@ def build(ctx):
         cam.rotation_quaternion = look_quat(e, g, u)
         cam.keyframe_insert("location", frame=f)
         cam.keyframe_insert("rotation_quaternion", frame=f)
-        cam.data.dof.focus_distance = (g - e).length if t > t_icmek - 0.6 else curve([(a, (b, 0, 0)) for a, b in F], t).x
+        cam.data.dof.focus_distance = (g - e).length
         cam.data.dof.keyframe_insert("focus_distance", frame=f)
     for fc in C.fcurves(cam):
         for kp in fc.keyframe_points:

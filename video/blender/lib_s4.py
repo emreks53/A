@@ -17,11 +17,11 @@ HDRI = "garden_nook"          # Poly Haven, CC0; morning garden, sun measured at
 HDRI_RES = "2k"
 SUN_ELEV = 25.9               # deg, matches the HDRI's sun
 SUN_AZIM = -112.0             # deg, C.sun convention (0 = travelling +Y); here travelling +X, -0.37 Y
-SUN_KELVIN = 4700
+SUN_KELVIN = 5000
 SUN_STRENGTH = 9.0            # W/m^2 (sun lamp, Cycles)
 SUN_ANGLE = 0.9               # deg, slightly larger than the real disc: softer mullion shadows
 HDRI_STRENGTH = 1.0
-SKY_FILL_W = 60.0             # W, window-sized sky fill area light (measured by eye vs the HDRI)
+SKY_FILL_W = 140.0            # W, window-sized sky fill area light (measured by eye vs the HDRI)
 SKY_FILL_K = 7500
 HDRI_CLAMP = 60.0             # the HDRI's own sun is clamped (the sun lamp replaces it)
 EXPOSURE = 0.0                # set per shot
@@ -105,7 +105,7 @@ def light_rig(exposure=EXPOSURE, sun_strength=SUN_STRENGTH):
 # ----------------------------------------------------------------------------- materials
 
 def box_mat(name, tex, scale=1.0, tint=None, rough_mul=1.0, rough_add=0.0, nor_strength=1.0,
-            disp=0.0, coords="Object", blend=0.25, sat=1.0):
+            disp=0.0, coords="Object", blend=0.25, sat=1.0, flatten=0.0, flat_color=(0.8, 0.8, 0.8)):
     """Principled material from a Poly Haven texture dict, BOX-projected (no UVs needed).
     `scale` = texture repeats per metre."""
     m, nt, p = C.new_mat(name)
@@ -126,6 +126,10 @@ def box_mat(name, tex, scale=1.0, tint=None, rough_mul=1.0, rough_add=0.0, nor_s
     if sat != 1.0:
         hs = nt.nodes.new("ShaderNodeHueSaturation"); hs.inputs["Saturation"].default_value = sat
         nt.links.new(col, hs.inputs["Color"]); col = hs.outputs["Color"]
+    if flatten > 0:
+        fm = nt.nodes.new("ShaderNodeMix"); fm.data_type = "RGBA"; fm.inputs[0].default_value = flatten
+        nt.links.new(col, fm.inputs[6]); fm.inputs[7].default_value = (*flat_color, 1)
+        col = fm.outputs[2]
     if tint:
         mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"; mix.blend_type = "MULTIPLY"
         mix.inputs[0].default_value = 1.0
@@ -250,8 +254,9 @@ def lathe(name, profile, segs=64, mat=None, close_bottom=False):
 # ----------------------------------------------------------------------------- the room
 
 def build_room(detail=True):
-    plaster = box_mat("LimePlaster", tex("white_plaster_rough_01"), scale=1.3, tint=(1.0, 0.94, 0.84),
-                      rough_mul=0.3, rough_add=0.65, nor_strength=0.7, sat=0.6)
+    plaster = box_mat("LimePlaster", tex("white_plaster_rough_01"), scale=0.9, tint=(1.0, 0.95, 0.86),
+                      rough_mul=0.3, rough_add=0.65, nor_strength=0.45, sat=0.5, flatten=0.6,
+                      flat_color=(0.86, 0.83, 0.77))
     # very soft large-scale tonal mottling of lime wash
     nt = plaster.node_tree; p = nt.nodes["Principled BSDF"]
     base_link = p.inputs["Base Color"].links[0].from_socket
@@ -665,9 +670,9 @@ def mat_bread():
     L(nz.outputs["Fac"], mixf.inputs[0]); L(hz.outputs["Result"], mixf.inputs[2])
     ramp = nt.nodes.new("ShaderNodeValToRGB")
     cr = ramp.color_ramp
-    cr.elements[0].position = 0.15; cr.elements[0].color = (0.62, 0.40, 0.17, 1)
-    cr.elements[1].position = 0.95; cr.elements[1].color = (0.20, 0.085, 0.03, 1)
-    e = cr.elements.new(0.55); e.color = (0.42, 0.21, 0.07, 1)
+    cr.elements[0].position = 0.15; cr.elements[0].color = (0.78, 0.50, 0.20, 1)
+    cr.elements[1].position = 0.97; cr.elements[1].color = (0.30, 0.13, 0.04, 1)
+    e = cr.elements.new(0.6); e.color = (0.58, 0.30, 0.09, 1)
     L(mixf.outputs[0], ramp.inputs["Fac"])
     inner = nt.nodes.new("ShaderNodeMix"); inner.data_type = "RGBA"
     inner.inputs[7].default_value = (0.80, 0.62, 0.36, 1)     # fissure: paler, less baked
@@ -676,7 +681,8 @@ def mat_bread():
     fl = nt.nodes.new("ShaderNodeTexNoise"); fl.inputs["Scale"].default_value = 14; fl.inputs["Detail"].default_value = 10
     fl.inputs["Roughness"].default_value = 0.75
     L(tc.outputs["Object"], fl.inputs["Vector"])
-    flm = nt.nodes.new("ShaderNodeMapRange"); flm.inputs["From Min"].default_value = 0.56; flm.inputs["From Max"].default_value = 0.70
+    flm = nt.nodes.new("ShaderNodeMapRange"); flm.inputs["From Min"].default_value = 0.64; flm.inputs["From Max"].default_value = 0.80
+    flm.inputs["To Max"].default_value = 0.7
     L(fl.outputs["Fac"], flm.inputs["Value"])
     flh = nt.nodes.new("ShaderNodeMath"); flh.operation = "MULTIPLY"; L(flm.outputs["Result"], flh.inputs[0]); L(hz.outputs["Result"], flh.inputs[1])
     flour = nt.nodes.new("ShaderNodeMix"); flour.data_type = "RGBA"
@@ -955,12 +961,12 @@ def build_open_pomegranate(name="PomOpen", seed=9, n_arils=420):
     for i, p in enumerate(pts):
         o = bpy.data.objects.new(f"{name}_aril", ame)
         C.link(o)
-        s = rng.uniform(0.0036, 0.0048)
-        o.scale = (s, s * rng.uniform(0.9, 1.1), s * rng.uniform(1.15, 1.45))
-        # arils point outward-ish, tilted
+        s = rng.uniform(0.0030, 0.0038)
+        o.scale = (s * rng.uniform(1.25, 1.5), s, s * rng.uniform(0.8, 0.95))
+        # long axis (local X) lies in the cut plane, radial; kernels sit mostly below the cut (cut face)
         ang = math.atan2(p.y, p.x)
-        o.rotation_euler = Euler((rng.uniform(-0.5, 0.5) + 1.2 * (p.length / rmax), rng.uniform(-0.4, 0.4), ang + math.pi / 2), "XYZ")
-        o.location = (p.x, p.y, zc + rng.uniform(-0.0012, 0.0016))
+        o.rotation_euler = Euler((rng.uniform(-0.25, 0.25), rng.uniform(-0.35, 0.15), ang + rng.uniform(-0.4, 0.4)), "XYZ")
+        o.location = (p.x, p.y, zc - rng.uniform(0.0002, 0.0018))
         o.data.materials.append(am) if not o.data.materials else None
         o.parent = src
         arils.append(o)
@@ -1090,6 +1096,9 @@ def build_stream(name, spout, v0=(0.32, 0.0, 0.0), r0=0.0042, n=96):
     circ = _gn(ng, "GeometryNodeCurvePrimitiveCircle"); circ.inputs["Resolution"].default_value = 16; circ.inputs["Radius"].default_value = 1.0
     c2m = _gn(ng, "GeometryNodeCurveToMesh"); L(trim.outputs[0], c2m.inputs["Curve"]); L(circ.outputs[0], c2m.inputs["Profile Curve"])
     c2m.inputs["Fill Caps"].default_value = True
+    if "Scale" in c2m.inputs:          # Blender 5: profile scale is an explicit input (radius not implied)
+        rin = _gn(ng, "GeometryNodeInputRadius")          # radius stored before the trim
+        L(rin.outputs[0], c2m.inputs["Scale"])
     shs = _gn(ng, "GeometryNodeSetShadeSmooth"); L(c2m.outputs[0], shs.inputs["Geometry"])
     L(shs.outputs[0], out.inputs[0])
     obj.modifiers.new("GN", "NODES").node_group = ng
@@ -1097,7 +1106,7 @@ def build_stream(name, spout, v0=(0.32, 0.0, 0.0), r0=0.0042, n=96):
     return obj, ng
 
 
-def build_bubbles(name, centre, r_in, count=260, seed=31):
+def build_bubbles(name, centre, r_in, count=700, seed=31):
     """Entrained air bubbles under the impact point: each loops down then rises; LEVEL (abs z of the
     water surface, object space of the glass base) clips them; FLOW scales the cloud."""
     me = bpy.data.meshes.new(name)
@@ -1138,7 +1147,7 @@ def build_bubbles(name, centre, r_in, count=260, seed=31):
     cmb = _gn(ng, "ShaderNodeCombineXYZ"); L(px.outputs[0], cmb.inputs[0]); L(py.outputs[0], cmb.inputs[1]); L(zz.outputs[0], cmb.inputs[2])
     setp = _gn(ng, "GeometryNodeSetPosition"); L(pts.outputs[0], setp.inputs["Geometry"]); L(cmb.outputs[0], setp.inputs["Position"])
     # size: small, shrinks near the end of life; times FLOW (no bubbles when not pouring)
-    bs = _gn(ng, "FunctionNodeRandomValue", data_type="FLOAT"); bs.inputs["Min"].default_value = 0.0003; bs.inputs["Max"].default_value = 0.0014
+    bs = _gn(ng, "FunctionNodeRandomValue", data_type="FLOAT"); bs.inputs["Min"].default_value = 0.00012; bs.inputs["Max"].default_value = 0.0007
     bs.inputs["Seed"].default_value = seed + 5
     life = _gn(ng, "ShaderNodeMath", operation="MULTIPLY"); life.inputs[1].default_value = 6.0; L(one.outputs[0], life.inputs[0])
     lifec = _gn(ng, "ShaderNodeMath", operation="MINIMUM"); lifec.inputs[1].default_value = 1.0; L(life.outputs[0], lifec.inputs[0])
@@ -1151,8 +1160,17 @@ def build_bubbles(name, centre, r_in, count=260, seed=31):
     shs = _gn(ng, "GeometryNodeSetShadeSmooth"); L(ri.outputs[0], shs.inputs["Geometry"])
     L(shs.outputs[0], out.inputs[0])
     obj.modifiers.new("GN", "NODES").node_group = ng
-    # air in water: an IOR 1/1.333 dielectric
-    C.assign(obj, C.principled(name + "Mat", base=(1, 1, 1), rough=0.0, transmission=1.0, ior=0.75))
+    # air in water: silvery (total internal reflection) - a clear dielectric of relative IOR 1/1.333 with a
+    # strong glossy rim
+    bm_ = C.principled(name + "Mat", base=(1, 1, 1), rough=0.0, transmission=1.0, ior=0.75)
+    bnt = bm_.node_tree
+    gl = bnt.nodes.new("ShaderNodeBsdfGlossy"); gl.inputs["Roughness"].default_value = 0.05
+    fr = bnt.nodes.new("ShaderNodeLayerWeight"); fr.inputs["Blend"].default_value = 0.55
+    mx = bnt.nodes.new("ShaderNodeMixShader")
+    bnt.links.new(fr.outputs["Fresnel"], mx.inputs[0])
+    bnt.links.new(bnt.nodes["Principled BSDF"].outputs[0], mx.inputs[1]); bnt.links.new(gl.outputs[0], mx.inputs[2])
+    bnt.links.new(mx.outputs[0], bnt.nodes["Material Output"].inputs["Surface"])
+    C.assign(obj, bm_)
     return obj, ng
 
 
@@ -1370,3 +1388,145 @@ def build_beam_emission(bmin, bmax, strength=0.03, noise_amp=0.55, curtain_y=Non
                 kp.interpolation = "LINEAR"
             fc.extrapolation = "LINEAR"
     return o
+
+
+# ----------------------------------------------------------------------------- the sofra (shared by sh02 + sh03)
+
+SOFRA = {
+    "bowl": (-0.25, 0.33),
+    "glass": (-0.53, -0.01),
+    "bread": (0.03, 0.12),
+    "tea": (0.10, 0.47),
+    "plate0": (-0.08, 0.125),     # plate start ...
+    "plate1": (-0.245, 0.065),    # ... slides toward camera on "takdim"
+    "lemon": (-0.72, 0.48),
+    "apple": (0.16, 0.62),
+}
+
+
+def _drop_to_table(o, xy, rot=None):
+    if rot is not None:
+        o.rotation_euler = rot
+    bpy.context.view_layer.update()
+    o.location = (xy[0], xy[1], 0)
+    bpy.context.view_layer.update()
+    o.location.z += TABLE_Z - min((o.matrix_world @ Vector(c)).z for c in o.bound_box)
+
+
+def build_sofra(seed=77):
+    """Bowl of rigid-body-settled fruit, round village loaf, clear tumbler (+ water body, empty), tulip tea
+    glass, plate with the opened pomegranate, a loose lemon and apple. Returns handles for animation."""
+    rng = random.Random(seed)
+    TZ = TABLE_Z
+    bx, by = SOFRA["bowl"]
+    bowl = [o for o in C.ph_model("wooden_bowl_01", "2k") if o.type == "MESH"][0]
+    bowl.location = (bx, by, TZ - min((bowl.matrix_world @ Vector(c)).z for c in bowl.bound_box))
+    bpy.context.view_layer.update()
+    fruit = []
+
+    def add_fruit(name, pick=None):
+        objs = [o for o in C.ph_model(name, "1k") if o.type == "MESH"]
+        if pick is not None:
+            for o in objs[pick:]:
+                bpy.data.objects.remove(o)
+            objs = objs[:pick]
+        for o in objs:
+            bpy.context.view_layer.update()
+            cen = sum((Vector(c) for c in o.bound_box), Vector()) / 8
+            o.data.transform(Matrix.Translation(-cen))
+            o.location = o.location + o.matrix_world.to_3x3() @ cen
+            fruit.append(o)
+        return objs
+    for n in ("food_apple_01", "food_apple_01", "food_pomegranate_01"):
+        add_fruit(n)
+    add_fruit("food_pears_asian_01", pick=3)
+    for n in ("food_kiwi_01", "food_kiwi_01", "food_lime_01", "food_lime_01", "lemon", "lemon"):
+        add_fruit(n)
+    order = list(range(len(fruit))); rng.shuffle(order)
+    for k, i in enumerate(order):
+        o = fruit[i]
+        a = k * 2.4
+        r = 0.03 + 0.045 * ((k * 0.37) % 1.0)
+        o.location = (bx + r * math.cos(a), by + r * math.sin(a), TZ + 0.13 + 0.075 * k)
+        o.rotation_euler = (rng.uniform(-0.6, 0.6), rng.uniform(-0.6, 0.6), rng.uniform(0, 6.28))
+    settle_fruit(bowl, fruit, frames=130)
+    for o in list(fruit):                      # anything that escaped the bowl is cleared off the set
+        if o.matrix_world.translation.z < TZ - 0.01 or (o.matrix_world.translation.xy - Vector((bx, by))).length > 0.2:
+            bpy.data.objects.remove(o); fruit.remove(o)
+    lem = [o for o in C.ph_model("lemon", "1k") if o.type == "MESH"][0]
+    _drop_to_table(lem, SOFRA["lemon"], (math.radians(88), 0, math.radians(30)))
+    app = [o for o in C.ph_model("food_apple_01", "1k") if o.type == "MESH"][0]
+    _drop_to_table(app, SOFRA["apple"], (0, 0, 1.3))
+    bread = build_bread(Vector((*SOFRA["bread"], TZ)), rot=0.6)
+    gx, gy = SOFRA["glass"]
+    glass = build_tumbler((gx, gy, TZ))
+    wprof = [(0.0, 0.0)]
+    for k in range(12):
+        z = 0.0005 + 0.1 * k / 11
+        wprof.append((inner_radius(0.009 + z) + 0.0003, z))
+    wprof += [(inner_radius(0.109) - 0.0006, 0.1012), (inner_radius(0.109) - 0.0025, 0.1006), (0.0, 0.1004)]
+    water = lathe("GlassWater", wprof, 96, mat_water_s4("GlassWaterMat"))
+    water.location = (gx, gy, TZ + 0.0092)
+    water.scale.z = 0.002
+    build_tea_glass((*SOFRA["tea"], TZ), fill=0.82)
+    # plate with the opened pomegranate
+    ts = C.ph_model("tea_set_01", "1k")
+    plate = None
+    for o in ts:
+        if o.name.startswith("tea_set_01_plate_large_circular_03"):
+            plate = o
+        elif o.type == "MESH":
+            bpy.data.objects.remove(o)
+    plate.location = (0, 0, 0)
+    pom, arils, zc = build_open_pomegranate()
+    bpy.context.view_layer.update()
+    pz = max((plate.matrix_world @ Vector(c)).z for c in plate.bound_box) - 0.004
+    pmin = min((pom.matrix_world @ Vector(c)).z for c in pom.bound_box)
+    pom.location = (0.012, -0.008, pz - pmin)
+    pom.rotation_euler = (math.radians(6), math.radians(-4), 0.4)
+    pom.parent = plate
+    plate_root = C.empty("PlateRoot", (*SOFRA["plate0"], TZ))
+    plate.parent = plate_root
+    bpy.context.view_layer.update()
+    plate.location = (0, 0, -min((plate.matrix_world @ Vector(c)).z for c in plate.bound_box) + TZ + 0.0005)
+    return {"bowl": bowl, "fruit": fruit, "bread": bread, "glass": glass, "water": water, "plate_root": plate_root,
+            "pom": pom}
+
+
+def add_water_ripples(mat, centre, t0, t1, amp_keys):
+    """Impact ripples on the top surface of a water body: concentric travelling rings around `centre`
+    (object space) + choppy 4D noise, masked to up-facing normals; amplitude keyed (pour on/off)."""
+    nt = mat.node_tree; L = nt.links.new
+    p = nt.nodes["Principled BSDF"]
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ"); L(geo.outputs["Normal"], sep.inputs[0])
+    mask = nt.nodes.new("ShaderNodeMapRange"); mask.inputs["From Min"].default_value = 0.7; mask.inputs["From Max"].default_value = 0.95
+    L(sep.outputs["Z"], mask.inputs["Value"])
+    tv = nt.nodes.new("ShaderNodeValue"); tv.name = "TIME"
+    av = nt.nodes.new("ShaderNodeValue"); av.name = "AMP"
+    d = nt.nodes.new("ShaderNodeVectorMath"); d.operation = "DISTANCE"; d.inputs[1].default_value = centre
+    L(tc.outputs["Object"], d.inputs[0])
+    ph = nt.nodes.new("ShaderNodeMath"); ph.operation = "MULTIPLY_ADD"; ph.inputs[1].default_value = 900.0
+    L(d.outputs["Value"], ph.inputs[0])
+    tw = nt.nodes.new("ShaderNodeMath"); tw.operation = "MULTIPLY"; tw.inputs[1].default_value = -40.0
+    L(tv.outputs[0], tw.inputs[0]); L(tw.outputs[0], ph.inputs[2])
+    sn = nt.nodes.new("ShaderNodeMath"); sn.operation = "SINE"; L(ph.outputs[0], sn.inputs[0])
+    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.noise_dimensions = "4D"; nz.inputs["Scale"].default_value = 260
+    nz.inputs["Detail"].default_value = 2
+    L(tc.outputs["Object"], nz.inputs["Vector"]); L(tv.outputs[0], nz.inputs["W"])
+    h = nt.nodes.new("ShaderNodeMath"); h.operation = "MULTIPLY_ADD"; h.inputs[1].default_value = 0.6
+    L(sn.outputs[0], h.inputs[0]); L(nz.outputs["Fac"], h.inputs[2])
+    m1 = nt.nodes.new("ShaderNodeMath"); m1.operation = "MULTIPLY"; L(h.outputs[0], m1.inputs[0]); L(mask.outputs["Result"], m1.inputs[1])
+    m2 = nt.nodes.new("ShaderNodeMath"); m2.operation = "MULTIPLY"; L(m1.outputs[0], m2.inputs[0]); L(av.outputs[0], m2.inputs[1])
+    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Distance"].default_value = 0.0006; bp.inputs["Strength"].default_value = 1.0
+    L(m2.outputs[0], bp.inputs["Height"]); L(bp.outputs["Normal"], p.inputs["Normal"])
+    for t, v in ((t0, t0), (t1, t1)):
+        tv.outputs[0].default_value = v; tv.outputs[0].keyframe_insert("default_value", frame=t * C.FPS)
+    for t, v in amp_keys:
+        av.outputs[0].default_value = v; av.outputs[0].keyframe_insert("default_value", frame=t * C.FPS)
+    for fc in C._fcurves(nt.animation_data.action):
+        if "TIME" in fc.data_path:
+            fc.extrapolation = "LINEAR"
+            for kp in fc.keyframe_points:
+                kp.interpolation = "LINEAR"

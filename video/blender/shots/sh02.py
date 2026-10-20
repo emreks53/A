@@ -12,6 +12,7 @@ def build(ctx):
     S.light_rig(exposure=1.0)
     room = S.build_room()
     S.build_table()
+    S.build_sofra()                                    # the set table sh03 continues onto
     t_ox = ctx.word("oksijen")                         # 8.32
     # breath rhythm: ~2 s in / ~2 s out; biggest inhale peaks just before "oksijen"
     wind = [(ctx.t0 - 2.2, 20), (ctx.t0 - 1.1, 150), (ctx.t0 + 0.1, 20), (t_ox - 2.1, 25),
@@ -20,7 +21,7 @@ def build(ctx):
     S.build_beam_emission((-0.99, -1.3, 0.765), (1.2, 1.24, 2.6), strength=0.009, curtain_y=0.36,
                           time_keys=[(ctx.t0 - 1, 0.0), (ctx.t1 + 1, 0.9)])
     gust = [(t_ox - 0.4, 0.0), (t_ox - 0.1, 0.03), (t_ox + 0.6, 0.30), (t_ox + 1.6, 0.50)]
-    S.build_motes("Motes", (-0.97, -0.6, 0.80), (0.35, 1.0, 2.30), count=7000, seed=21, r_min=0.00035, r_max=0.0011,
+    S.build_motes("Motes", (-0.97, -0.6, 0.80), (0.12, 1.0, 2.30), count=7000, seed=21, r_min=0.00035, r_max=0.0011,
                   gust_dir=(1.0, -0.35, -0.25), gust_keys=gust)
     # camera: seated eye height at the table's right end, looking up-left into the window;
     # the sun sits in the open casement at the upper right of frame (match to sh01's flare)
@@ -42,9 +43,9 @@ def build(ctx):
     C.handheld(cam, amp_loc=0.0012, amp_rot=0.0, speed=0.3, seed=2)
     C.handheld(tgt, amp_loc=0.004, amp_rot=0.0, speed=0.25, seed=3)
     # exposure settling after the flare (eye/auto-iris adapting)
-    sc.view_settings.exposure = 3.4
-    sc.view_settings.keyframe_insert("exposure", frame=(ctx.t0 - 0.3) * C.FPS)
     sc.view_settings.exposure = 2.6
+    sc.view_settings.keyframe_insert("exposure", frame=(ctx.t0 - 0.3) * C.FPS)
+    sc.view_settings.exposure = 1.9
     sc.view_settings.keyframe_insert("exposure", frame=(ctx.t0 + 1.2) * C.FPS)
     C.empty("TRK_air", (-0.25, 0.25, 1.45))
     S.fast_denoise()
