@@ -80,6 +80,22 @@
    "shot": "sh14b",
    "from": 2444,
    "to": 2506
+  },
+  {
+   "node": "s2",
+   "branch": "render-dev-s6",
+   "ref": "4280bbb6d07edb9ef90bd058a5b5d43de46c1795",
+   "shot": "sh07",
+   "from": 851,
+   "to": 915
+  },
+  {
+   "node": "n3",
+   "branch": "render-dev-s6",
+   "ref": "4280bbb6d07edb9ef90bd058a5b5d43de46c1795",
+   "shot": "sh07",
+   "from": 916,
+   "to": 979
   }
  ]
 }
