@@ -843,7 +843,7 @@ def srgb(h):
 # ----------------------------------------------------------------------------- materials
 
 LEATHER_RGB = srgb("#7A141A")
-GOLD_RGB = (1.0, 0.74, 0.36)
+GOLD_RGB = (0.96, 0.64, 0.24)
 PAPER_RGB = srgb("#ECDFC4")
 _TEX = {}
 
@@ -926,7 +926,7 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     LK(nt, bump.outputs[0], leather.inputs["Normal"])
     gn = noise(nt, geo.outputs["Position"], 900.0, 1.0, 0.6)
     gr = maprange(nt, gn.outputs[0], 0.3, 0.7, 0.09, 0.22)
-    gcol = mixrgb(nt, maprange(nt, gn.outputs[0], 0.3, 0.7, 0.0, 1.0), GOLD_RGB, (0.80, 0.56, 0.25))
+    gcol = mixrgb(nt, maprange(nt, gn.outputs[0], 0.3, 0.7, 0.0, 1.0), GOLD_RGB, (0.82, 0.52, 0.18))
     gold = principled(nt, **{"Base Color": gcol, "Metallic": 1.0, "Roughness": gr, "Normal": bump.outputs[0],
                              "Specular Tint": (1.0, 0.9, 0.7)})
     mix = NN(nt, "ShaderNodeMixShader")
@@ -2253,9 +2253,9 @@ def build(ctx):
     bpy.context.view_layer.update()
     pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
     camB = rig_camera("camB", 40, 2.8, [
-        (113.30, V((-0.11, -0.37, 0.56)), V((-0.50, 0.08, 0.27)), pg + V((0.03, -0.02, -0.01))),
-        (114.45, V((-0.14, -0.33, 0.54)), V((-0.505, 0.08, 0.27)), pg + V((0.01, 0.0, 0.0))),
-        (115.90, V((-0.22, -0.25, 0.50)), V((-0.51, 0.08, 0.275)), pg),
+        (113.30, V((-0.11, -0.37, 0.56)), V((-0.50, 0.08, 0.25)), pg + V((0.03, -0.02, -0.01))),
+        (114.45, V((-0.14, -0.33, 0.54)), V((-0.505, 0.08, 0.25)), pg + V((0.01, 0.0, 0.0))),
+        (115.90, V((-0.22, -0.25, 0.50)), V((-0.51, 0.08, 0.255)), pg),
     ], 2718, 2782, seed=12)
     zc = 0.15
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
