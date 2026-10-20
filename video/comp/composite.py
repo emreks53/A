@@ -495,7 +495,8 @@ def legibility(disp, boxes, cfg, scale, w, h):
     mask = None
     sw, shh = max(8, w // 8), max(8, h // 8)
     for b in boxes:
-        x0, y0, x1, y1, wt = b
+        x0, y0, x1, y1, wt = b[:5]
+        local = len(b) > 5 and b[5] == 1
         if wt < 0.02:
             continue
         x0s, y0s, x1s, y1s = [int(v * scale) for v in (x0, y0, x1, y1)]
@@ -512,13 +513,28 @@ def legibility(disp, boxes, cfg, scale, w, h):
             continue
         if mask is None:
             mask = np.zeros((shh, sw), np.float32)
-        m = np.zeros((shh, sw), np.float32)
+        if local:
+            # small labels: soft local ellipse, gentler
+            k *= 0.8
+            m = np.zeros((shh, sw), np.float32)
+            pp = 0.5 * lc["pad"] * scale
+            cv2.ellipse(m, (int(round((x0s + x1s) / 2 / w * sw)), int(round((y0s + y1s) / 2 / h * shh))),
+                        (max(1, int(((x1s - x0s) / 2 + pp) / w * sw)), max(1, int(((y1s - y0s) / 2 + pp) / h * shh))),
+                        0, 0, 360, 1.0, -1)
+            m = cv2.GaussianBlur(m, (0, 0), 0.5 * lc["feather"] * scale / 8)
+            mask = np.maximum(mask, m * k)
+            continue
+        # graduated-ND-like soft band across the frame (reads as natural sky/light falloff, never as a box),
+        # a little stronger toward the text's horizontal extent
         pp = lc["pad"] * scale
-        cx, cy = (x0s + x1s) / 2 / w * sw, (y0s + y1s) / 2 / h * shh
-        ax = ((x1s - x0s) / 2 + pp) / w * sw * 1.08
-        ay = ((y1s - y0s) / 2 + pp * 0.75) / h * shh * 1.08
-        cv2.ellipse(m, (int(round(cx)), int(round(cy))), (max(1, int(ax)), max(1, int(ay))), 0, 0, 360, 1.0, -1)
-        m = cv2.GaussianBlur(m, (0, 0), lc["feather"] * scale / 8)
+        yy = (np.arange(shh, dtype=np.float32) + 0.5) / shh * h
+        cy, hy = (y0s + y1s) / 2, (y1s - y0s) / 2 + pp
+        fe = lc["feather"] * scale
+        band = 1 / (1 + np.exp(-(hy - np.abs(yy - cy)) / (fe * 0.35)))
+        xx = (np.arange(sw, dtype=np.float32) + 0.5) / sw * w
+        cx, hx = (x0s + x1s) / 2, max(1.0, (x1s - x0s) / 2 + 2 * pp)
+        horiz = 0.55 + 0.45 * np.exp(-0.5 * ((xx - cx) / hx) ** 2)
+        m = band[:, None] * horiz[None, :]
         mask = np.maximum(mask, m * k)
     if mask is None:
         return disp
