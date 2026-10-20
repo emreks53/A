@@ -939,6 +939,38 @@ const DRAW = { keyword: (el, f, t) => drawKeyword(el, t), callout: drawCallout, 
 
 window.ovActive = function (f) { return TL.elements.some(e => f >= e.f0 && f < e.f1); };
 
+/** Bounding box (device px) of non-transparent content: 2x box-filter pyramid down to ~1/16, then scan. */
+let PYR = null;
+function contentBox(cv) {
+  if (!PYR) {
+    PYR = [];
+    let w = cv.width, h = cv.height;
+    for (let i = 0; i < 4; i++) {
+      w = Math.ceil(w / 2); h = Math.ceil(h / 2);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      PYR.push(c);
+    }
+  }
+  let src = cv;
+  for (const c of PYR) {
+    const g = c.getContext('2d', { willReadFrequently: c === PYR[PYR.length - 1] });
+    g.globalCompositeOperation = 'copy'; g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'low';
+    g.drawImage(src, 0, 0, c.width, c.height);
+    src = c;
+  }
+  const last = PYR[PYR.length - 1];
+  const d = last.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, last.width, last.height).data;
+  let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+  for (let y = 0; y < last.height; y++) for (let x = 0; x < last.width; x++) {
+    if (d[(y * last.width + x) * 4 + 3] > 0) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  }
+  if (x1 < 0) return null;
+  const k = cv.width / last.width, m = Math.ceil(20 * S) + 2 * k;
+  const bx0 = Math.max(0, Math.floor(x0 * k - m)), by0 = Math.max(0, Math.floor(y0 * k - m));
+  const bx1 = Math.min(cv.width, Math.ceil((x1 + 1) * k + m)), by1 = Math.min(cv.height, Math.ceil((y1 + 1) * k + m));
+  return [bx0, by0, bx1 - bx0, by1 - by0];
+}
+
 window.ovRender = function (f) {
   const t = f / FPS;
   X.setTransform(1, 0, 0, 1, 0, 0); X.clearRect(0, 0, cOver.width, cOver.height);
@@ -951,7 +983,9 @@ window.ovRender = function (f) {
     X.save(); A.save();
     try { DRAW[el.type](el, f, t); } finally { X.restore(); A.restore(); }
   }
-  return { over: drewOver, add: drewAdd, boxes: BOXES.map(b => b.map(v => Math.round(v * 10) / 10)) };
+  const ob = drewOver ? contentBox(cOver) : null;
+  const ab = drewAdd ? contentBox(cAdd) : null;
+  return { over: ob, add: ab, boxes: BOXES.map(b => b.map(v => Math.round(v * 10) / 10)) };
 };
 
 window.ovInit = async function (timeline, scale) {
