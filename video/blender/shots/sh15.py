@@ -1892,7 +1892,7 @@ def volume_box():
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     m, nt, out = new_mat("air")
     v = NN(nt, "ShaderNodeVolumePrincipled")
-    v.inputs["Density"].default_value = 0.45
+    v.inputs["Density"].default_value = float(os.environ.get("SH15_DENS", "0.45"))
     v.inputs["Anisotropy"].default_value = 0.55
     v.inputs["Color"].default_value = (1.0, 0.96, 0.90, 1)
     LK(nt, v.outputs[0], out.inputs["Volume"])
