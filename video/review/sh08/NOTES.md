@@ -1,3 +1,29 @@
+# sh08 — review v2 (Studio S5) — work in progress
+
+Stills (50 %, 16 spp), prefix sh08_v2_: t040.620 (first frame, set unchanged), t041.550 (reach from the right,
+"uzanıp"), t042.300 (grasp, "alırken"), t043.400 (lift), t045.400 (glide along the forearm), t047.050
+("değil", macro skin + hairs). sh08_v2_final_f1129_full.png = one full-quality frame of the macro end.
+The v1 stills/animatic/track below are kept for reference.
+
+Director notes addressed:
+* MAN'S HAND (confirmed): fingers +9 % radial, broader palm, raised MCP/PIP knuckles + extensor tendons, volume-
+  preserving skinning, darker tone, short matte nails (no polish/shine), hair on the back of the hand, first
+  finger segments and dorsal forearm; no jewellery; man's rolled chambray/cotton cuff.
+* Grasp: enters from the right in profile, low; thumb near side, fingers wrap the far/left side, apple tilts on lift.
+  Orientation chosen by a numeric fit to target palm/finger/thumb directions; per-finger contact solver.
+* Push: log-paced so macro arrives on "değil".
+
+Still wrong (next round):
+* The palm still rests on the apple top rather than its side; index/middle are posed in a relaxed curl instead
+  of pad contact; joint deformation still slightly rubbery. Skin still reads somewhat CG at the grasp.
+* Macro micro-relief net was too strong (crackle look) -> reduced; needs pore check at 100 %.
+* RENDER TIME: measured --final on f1128-1129 (macro, heaviest): 480 s/frame at 16 spp, 100 % res
+  (random-walk skin SSS + 500 hair strands). Over the 90 s ceiling. Now testing Burley SSS + 12 spp +
+  80 % res for the macro section; will report the number.
+
+
+---
+
 # sh08 — review v1 (Studio S5)
 
 40.60–47.40 s · "Hatta uzanıp bir şey alırken bile elimizi uzatmak aslında … değil"

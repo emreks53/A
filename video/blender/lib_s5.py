@@ -357,7 +357,7 @@ def skin_material(hand, nails):
     vein = _math(nt, "MULTIPLY", vein, vmask)
 
     h = _math(nt, "MULTIPLY", pores, -0.9)
-    h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", net1, -0.55))
+    h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", net1, -0.30))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", wrinkles, -1.6))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", lumpy, 0.8))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", vein, 1.2))
@@ -375,7 +375,7 @@ def skin_material(hand, nails):
     col = _mixc(nt, _math(nt, "MULTIPLY", knuck, 0.55), col, (0.50, 0.20, 0.16))               # red knuckles
     col = _mixc(nt, _math(nt, "MULTIPLY", tip, 0.45), col, (0.56, 0.21, 0.17))                 # flushed fingertips
     col = _mixc(nt, _math(nt, "MULTIPLY", vein, 0.30), col, (0.30, 0.25, 0.28))                # bluish veins
-    col = _mixc(nt, _math(nt, "MULTIPLY", net1, 0.10), col, (0.36, 0.20, 0.14))                # dirt-free darker furrows
+    col = _mixc(nt, _math(nt, "MULTIPLY", net1, 0.04), col, (0.36, 0.20, 0.14))                # dirt-free darker furrows
     # crevices (between fingers, knuckle folds, wrist creases) darker and redder; ridges slightly paler
     geo = nt.nodes.new("ShaderNodeNewGeometry")
     crev = _smoothstep(nt, geo.outputs["Pointiness"], 0.5, 0.44)
@@ -394,7 +394,7 @@ def skin_material(hand, nails):
     rough = _math(nt, "ADD", rough, _math(nt, "MULTIPLY", knuck, 0.08))
 
     skin = _node(nt, "ShaderNodeBsdfPrincipled")
-    skin.subsurface_method = os.environ.get("S5_SSS", "RANDOM_WALK_SKIN")
+    skin.subsurface_method = os.environ.get("S5_SSS", "BURLEY")
     nt.links.new(col, skin.inputs["Base Color"])
     nt.links.new(rough, skin.inputs["Roughness"])
     skin.inputs["Subsurface Weight"].default_value = 1.0

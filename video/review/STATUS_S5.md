@@ -1,1 +1,1 @@
-sh08: READY_FOR_REVIEW (v1 — known issues listed in review/sh08/NOTES.md; v2 in progress)
+sh08: IN_PROGRESS (v2 stills up; hand not final; render time 480 s/frame, optimising)
