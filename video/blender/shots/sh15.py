@@ -1087,7 +1087,9 @@ def mat_plaster(name="lime_plaster"):
     bigv = maprange(nt, big.outputs[0], 0.3, 0.7, 0.90, 1.05)
     col = mixrgb(nt, 1.0, srgb("#E6DCCB"), v, "MULTIPLY")
     col = mixrgb(nt, 1.0, col, bigv, "MULTIPLY")
-    p = principled(nt, **{"Base Color": col, "Roughness": 0.9})
+    p = NN(nt, "ShaderNodeBsdfDiffuse")
+    LK(nt, col, p.inputs["Color"])
+    p.inputs["Roughness"].default_value = 0.6
     LK(nt, p.outputs[0], out.inputs["Surface"])
     return m
 
@@ -1933,6 +1935,10 @@ def volume_box():
     LK(nt, v.outputs[0], out.inputs["Volume"])
     ob = bm_to_obj(bm, "air", mats=[m], smooth=False)
     ob.visible_shadow = False
+    # only camera rays see the dusty air (indirect contribution is negligible, but costly)
+    ob.visible_diffuse = False
+    ob.visible_glossy = False
+    ob.visible_transmission = False
     return ob
 
 
@@ -1997,6 +2003,9 @@ def build_motes(n=900, seed=7):
     mod = ob.modifiers.new("gn", "NODES")
     mod.node_group = ng
     ob.visible_shadow = False
+    ob.visible_diffuse = False
+    ob.visible_glossy = False
+    ob.visible_transmission = False
     return ob
 
 
