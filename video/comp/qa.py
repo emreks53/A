@@ -51,8 +51,12 @@ def background(f, shots, stills, size):
     return np.repeat(g[:, None, :], w, 1).astype(np.float32), f"{s['id']} (no still)"
 
 
-def comp(bg, over_p, add_p, scale):
+def comp(bg, over_p, add_p, scale, boxes=None):
     img = bg.copy()
+    if boxes:
+        import composite as CP
+        ed = OV.load_json(os.path.join(OV.HERE, "edit.json"))
+        img = CP.legibility(img, boxes, ed["finish"]["legibility"], scale, img.shape[1], img.shape[0])
     if over_p:
         o = np.asarray(Image.open(over_p).convert("RGBA")).astype(np.float32) / 255
         a = o[..., 3:4]
@@ -86,7 +90,8 @@ def main():
             frames.append(int(r))
     os.makedirs(a.out, exist_ok=True)
     shots = OV.shots_table()
-    dirs = a.bg_dir or [os.path.join(OV.SCRATCH, "director", "rev"), os.path.join(OV.OUT, "previews")]
+    dirs = a.bg_dir or [os.path.join(OV.SCRATCH, "director", "rev"), os.path.join(OV.OUT, "previews"),
+                        os.path.join(OV.SCRATCH, "qa_bg")]
     stills = find_stills(dirs)
     man = OV.ensure(0, 0, a.scale, frames=frames, quiet=True)
     size = (round(1080 * a.scale), round(1920 * a.scale))
@@ -94,7 +99,7 @@ def main():
     for f in frames:
         bg, desc = background(f, shots, stills, size)
         op, ad, boxes = OV.frame_paths(man, f)
-        img = comp(bg, op, ad, a.scale)
+        img = comp(bg, op, ad, a.scale, boxes)
         im = Image.fromarray((img * 255 + 0.5).astype(np.uint8))
         if a.crop:
             x0, y0, x1, y1 = [int(float(v) * a.scale) for v in a.crop.split(",")]
