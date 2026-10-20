@@ -73,8 +73,8 @@ def tick(id, shot, t, kind="callout", lvl=-30.0, pan=0.0, track=None, provisiona
 # ============================================================== sh01 dawn meadow macro
 s = "sh01"
 X12 = CUT["sh02"]                      # light dissolve sh01 -> sh02, 0.8 s centred on the cut
-bed("sh01.wind", s, 0.0, X12 + 0.4, "wind", -29, 0.35, 0.8, space="meadow", send=-22,
-    params=dict(strength=1.0, gustiness=0.35, bright=0.8, low=0.03, veg=1.3, veg_lo=2600, veg_hi=10000,
+bed("sh01.wind", s, 0.0, X12 + 0.4, "wind", -27, 0.35, 0.8, space="meadow", send=-22,
+    params=dict(strength=1.0, gustiness=0.35, bright=0.8, low=0.03, veg=1.3, veg_lo=1600, veg_hi=10000,
                 veg_density=0.8, width=0.95), ref="cut 0.00 (film start)", note="dawn breeze in dewy grass")
 bed("sh01.birds", s, 0.0, X12 + 0.4, "birds", -30, 0.5, 0.8, space="meadow", send=-8,
     params=dict(n_birds=5, rate=0.35, dist=(0.55, 1.0), fmin=2800, fmax=6500, start=0.35),
@@ -95,7 +95,7 @@ A = X12 - 0.4
 B = CUT["sh04"]                        # hard graphic match cut
 bed("sh02.room", s, A, B + 0.02, "room_tone", -42, 0.8, 0.04, space="room", send=-40,
     params=dict(warmth=1.0, bright=0.9), ref="light dissolve 5.24 -> hard cut 16.00")
-bed("sh02.window_air", s, A, B + 0.02, "wind", -36, 0.8, 0.04, space="room", send=-12,
+bed("sh02.window_air", s, A, B + 0.02, "wind", -32, 0.8, 0.04, space="room", send=-12,
     params=dict(strength=1.0, gustiness=0.4, rate=0.1, bright=0.5, low=0.0, veg=1.0, veg_lo=1500, veg_hi=6000,
                 veg_density=0.7, width=0.6), ref="soft air and leaves outside the open window")
 bed("sh02.window_birds", s, A, B + 0.02, "birds", -34, 0.8, 0.04, space="room", send=-12,
@@ -124,7 +124,7 @@ cue("sh03.plate", s, t, 0.95, "plate_slide", -24, pre=0.05, space="room", send=-
 s = "sh04"
 A, B = CUT["sh04"], CUT["sh05"]
 t_reach = w(s, "hiçbirine")
-bed("sh04.wind", s, A - 0.02, B + 0.03, "wind", -28, 0.04, 0.05, space="desert", send=-24,
+bed("sh04.wind", s, A - 0.02, B + 0.03, "wind", -25, 0.04, 0.05, space="desert", send=-24,
     params=dict(strength=1.0, gustiness=0.7, rate=0.12, bright=0.9, low=0.05, veg=0.3, veg_lo=2600, veg_hi=9000,
                 veg_density=0.35, width=1.0, events=[[0.25, 0.8, 0.3], [t_reach + 0.4 - A, -0.9, 0.9]]),
     ref="hard cut 16.00 (dry gust on the cut); wind falls away as the hand reaches")
@@ -139,7 +139,7 @@ s = "sh05"
 A, B = CUT["sh05"], CUT["sh06"]
 cue("sh05.immerse", s, A, 1.6, "immerse", -23, pre=0.12, space="underwater", send=-12,
     params=dict(sync=0.12), ref="match cut on the sun: into the water")
-bed("sh05.water", s, A - 0.02, B + 0.25, "underwater", -30, 0.05, 0.45, space="underwater", send=-14,
+bed("sh05.water", s, A - 0.02, B + 0.25, "underwater", -29, 0.05, 0.45, space="underwater", send=-14,
     params=dict(slosh=0.6, clicks=0.3, bubbles=0.3), ref="cut 22.95 -> shape match 30.10")
 t_ox = w(s, "oksijenler")
 cue("sh05.o2_streams", s, w(s, "bize"), B - w(s, "bize"), "bubble_streams", -27, pre=0.0, space="underwater",
@@ -179,7 +179,7 @@ tick("sh06.callout_heart", s, w(s, "ama") + 0.3, track={"shot": s, "name": "hear
 # ============================================================== sh07 open sea at dawn
 s = "sh07"
 A, B = CUT["sh07"], CUT["sh08"]
-bed("sh07.sea", s, A - 0.3, B + 0.3, "ocean", -28, 0.6, 0.6, space="outdoor", send=-22,
+bed("sh07.sea", s, A - 0.3, B + 0.3, "ocean", -25, 0.6, 0.6, space="outdoor", send=-22,
     params=dict(period=8.0), ref="colour-match dissolve 35.70 -> light dissolve 40.60")
 t_sun = w(s, "güneş")
 cue("sh07.sunrise_air", s, t_sun - F, 3.1, "bloom", -28, cls="amb", pre=0.6, space="outdoor", send=-20,
@@ -190,12 +190,12 @@ tick("sh07.callout_sun", s, t_sun + 0.7, track={"shot": s, "name": "sun"}, ref="
 # ============================================================== sh08 hand & apple
 s = "sh08"
 A, B = CUT["sh08"], CUT["sh09"]
-bed("sh08.room", s, A - 0.3, B + 0.2, "room_tone", -42, 0.6, 0.5, space="room", send=-40,
+bed("sh08.room", s, A - 0.3, B + 0.2, "room_tone", -40, 0.6, 0.5, space="room", send=-40,
     params=dict(warmth=1.0, bright=0.9), ref="light dissolve 40.60")
-bed("sh08.window_air", s, A - 0.3, B + 0.2, "wind", -36, 0.6, 0.5, space="room", send=-12,
+bed("sh08.window_air", s, A - 0.3, B + 0.2, "wind", -31, 0.6, 0.5, space="room", send=-12,
     params=dict(strength=1.0, gustiness=0.4, rate=0.1, bright=0.5, low=0.0, veg=1.0, veg_lo=1500, veg_hi=6000,
                 veg_density=0.7, width=0.6), ref="soft air and leaves outside the window")
-bed("sh08.window_birds", s, A - 0.3, B - 0.2, "birds", -34, 0.6, 0.8, space="room", send=-12,
+bed("sh08.window_birds", s, A - 0.3, B - 0.2, "birds", -31, 0.6, 0.8, space="room", send=-12,
     params=dict(n_birds=3, rate=0.25, dist=(0.65, 1.0), fmin=2600, fmax=6000, start=0.5), ref="outside the window")
 t = w(s, "uzanıp")
 cue("sh08.sleeve", s, t - 0.2, 1.7, "cloth", -28, space="room", send=-16, fade_out=0.3,
@@ -207,7 +207,7 @@ cue("sh08.grab", s, t, 0.35, "grab", -26, pre=0.05, space="room", send=-16, para
 cue("sh08.lift", s, t + 0.3, 0.45, "lift", -32, pre=0.03, space="room", send=-16, params=dict(sync=0.03, pan=0.1),
     ref="apple leaves the table")
 t = w(s, "aslında")
-cue("sh08.pulse_in", s, t, B + 4.9 - t, "heartbeat", -28, cls="amb", pre=0.0, space="body", send=-14,
+cue("sh08.pulse_in", s, t, B + 4.9 - t, "heartbeat", -26, cls="amb", pre=0.0, space="body", send=-14,
     fade_in=1.5, fade_out=0.8,
     params=dict(anchor=1.0, period=60 / 70, muffle=320, body=0.6,
                 strength=[[0, 0.0], [1.0, 0.2], [B - t - 0.4, 0.55], [B - t + 0.6, 0.8], [B - t + 4.9, 0.6]]),
@@ -244,7 +244,7 @@ A, B = CUT["sh10"], CUT["sh11"]
 cue("sh10.pullback", s, A + 0.45, 1.3, "whoosh", -25, cls="amb", pre=0.45, space="body", send=-10, fade_out=0.3,
     params=dict(sync=0.45, f_from=260, f_peak=1000, f_to=2200, pan_from=0.0, pan_to=0.0, bw=1.8, rough=0.5),
     ref="pull back out through the membrane")
-bed("sh10.field", s, A - 0.2, B + 0.3, "body_amb", -31, 0.6, 0.6, space="micro", send=-10,
+bed("sh10.field", s, A - 0.2, B + 0.3, "body_amb", -28, 0.6, 0.6, space="micro", send=-10,
     params=dict(wet=0.5, creaks=0.2, depth=1.5), ref="vast field of living cells")
 t1, t2, t3 = w(s, "bildiğimiz"), w(s, "bilmediğimiz"), w(s, "hadsiz")
 cue("sh10.lights_one", s, t1 - F, t2 + 0.8 - (t1 - F), "sparkle", -28, pre=0.0, space="micro", send=-12, fade_out=0.6,
@@ -288,9 +288,9 @@ A, B = CUT["sh12"], CUT["sh13a"]
 cue("sh12.cloud", s, A + 0.25, 2.2, "whoosh", -26, cls="amb", pre=0.85, space="aerial", send=-12, fade_out=0.5,
     params=dict(sync=0.85, f_from=300, f_peak=1300, f_to=420, pan_from=-0.5, pan_to=0.5, bw=2.2, rough=0.7),
     ref="tilt up into the rain sky -> emerge from cloud into sunlight")
-bed("sh12.altitude", s, A - 0.25, B + 0.45, "wind", -29, 0.6, 0.8, space="aerial", send=-16,
-    params=dict(strength=1.0, gustiness=0.3, rate=0.06, bright=0.7, low=0.03, width=1.0,
-                events=[[B - 0.6 - (A - 0.25), 0.8, 0.6]]),
+bed("sh12.altitude", s, A - 0.25, B + 0.45, "wind", -27, 0.6, 0.8, space="aerial", send=-16,
+    params=dict(strength=1.0, gustiness=0.3, rate=0.06, bright=1.3, low=0.03, width=1.0,
+                events=[[B - 0.6 - (A - 0.25), 0.45, 0.6]]),
     ref="vast open air high above the land; swells as we descend")
 t = w(s, "bir")
 cue("sh12.one_source", s, t - F, 4.2, "sub", -22, cls="sub", pre=0.55, space="aerial", send=-14, fade_out=0.8,
@@ -306,7 +306,7 @@ for i, (dt, pn, nm) in enumerate([(0.45, 0.0, "sun"), (0.72, -0.55, "sea"), (0.9
 s = "sh13a"
 A, B = CUT["sh13a"], CUT["sh14a"]
 t_hr = w(s, "Haluk")
-bed("sh13.meadow", s, A - 0.35, B + 0.4, "wind", -29, 0.8, 0.8, space="meadow", send=-20,
+bed("sh13.meadow", s, A - 0.35, B + 0.4, "wind", -28, 0.8, 0.8, space="meadow", send=-20,
     params=dict(strength=0.85, gustiness=0.45, rate=0.09, bright=0.9, low=0.03, veg=1.3, veg_lo=1800, veg_hi=9000,
                 veg_density=1.2, width=1.0, events=[[t_hr + 0.5 - (A - 0.35), 0.9, 0.9]]),
     ref="golden-hour meadow (warm breeze across the grass on 'Halık-ı Rahîm')")
@@ -342,11 +342,11 @@ cue("sh13b.bee", s, rt[1], 2.2, "bee", -33, pre=0.7, space="meadow", send=-16, f
 s = "sh14a"
 A, B = CUT["sh14a"], CUT["sh14b"]
 t_allah = w(s, "Allah")
-bed("sh14a.field", s, A - 0.4, B + 0.08, "wind", -29, 0.8, 0.35, space="meadow", send=-20,
+bed("sh14a.field", s, A - 0.4, B + 0.08, "wind", -26, 0.8, 0.35, space="meadow", send=-20,
     params=dict(strength=0.8, gustiness=0.4, rate=0.08, bright=0.85, low=0.03, veg=1.0, veg_lo=900, veg_hi=6000,
                 veg_density=0.8, width=1.0, events=[[t_allah - 0.5 - (A - 0.4), 0.8, 1.2]]),
     ref="sunrise field, big papery sunflower leaves; dissolve in, shadow cuts it at 99.50")
-bed("sh14a.birds", s, A - 0.4, B + 0.05, "birds", -29, 0.8, 0.3, space="meadow", send=-8,
+bed("sh14a.birds", s, A - 0.4, B + 0.05, "birds", -28, 0.8, 0.3, space="meadow", send=-8,
     params=dict(n_birds=6, rate=0.3, dist=(0.4, 1.0), fmin=2400, fmax=6600, start=0.8,
                 density=[[0, 0.6], [B - A, 1.5]]), ref="dawn calls, growing toward 'Allah'")
 t = w(s, "görüyormuşçasına")
@@ -366,11 +366,11 @@ A, B = CUT["sh14b"], CUT["sh14c"]
 cue("sh14b.shadow", s, A + 0.05, 1.7, "whoosh", -25, cls="amb", pre=0.45, space="dark", send=-10, fade_out=0.4,
     params=dict(sync=0.45, f_from=900, f_peak=420, f_to=110, pan_from=0.7, pan_to=-0.7, bw=1.6, rough=0.4),
     ref="shadow sweeps in, darkness")
-bed("sh14b.dark", s, A - 0.1, B + 0.3, "room_tone", -42, 0.3, 0.6, space="dark", send=-20,
+bed("sh14b.dark", s, A - 0.1, B + 0.3, "room_tone", -40, 0.3, 0.6, space="dark", send=-20,
     params=dict(warmth=0.6, bright=0.5, width=0.8), ref="dark space")
 t_ort = w(s, "örtmek")
 land = t_ort + 0.07
-cue("sh14b.flame", s, A - 0.1, B + 0.3 - (A - 0.1), "flame", -33, pre=0.0, space="dark", send=-12, fade_in=0.5, fade_out=0.6,
+cue("sh14b.flame", s, A - 0.1, B + 0.3 - (A - 0.1), "flame", -31, pre=0.0, space="dark", send=-12, fade_in=0.5, fade_out=0.6,
     params=dict(muffle_at=land - (A - 0.1), muffle_len=0.35), ref="small oil-lamp flame; muffled under the cloth")
 cue("sh14b.cloth", s, land, 2.7, "cloth_fall", -19, pre=0.6, space="dark", send=-9, fade_out=0.5,
     params=dict(sync=0.6, fall=0.5, settle=1.4), ref="örtmek (heavy velvet cloth falls over the light)")
@@ -381,11 +381,11 @@ A, B = CUT["sh14c"], CUT["sh15"]
 t_su, t_iz = w(s, "şuursuz"), w(s, "izah")
 a0 = A - 0.3
 silence = [[a0, 0.0], [t_iz - 0.1, 0.0], [t_iz + 0.45, -15.0], [B, -22.0]]
-bed("sh14c.wind", s, a0, B + 0.05, "wind", -28, 0.6, 0.05, space="desert", send=-22,
+bed("sh14c.wind", s, a0, B + 0.05, "wind", -23, 0.6, 0.05, space="desert", send=-22,
     params=dict(strength=1.0, gustiness=0.55, rate=0.1, bright=0.7, hollow=1.0, low=0.04, width=1.0,
                 events=[[t_su + 0.1 - a0, 1.2, 0.5]]),
     env=silence, ref="cold hollow wind; gust on 'şuursuz'; drops to near-silence on 'izah edebilir mi'")
-cue("sh14c.sand", s, A, B - A, "sand", -27, cls="amb", space="desert", send=-24, fade_in=0.6, fade_out=0.05,
+cue("sh14c.sand", s, A, B - A, "sand", -24, cls="amb", space="desert", send=-24, fade_in=0.6, fade_out=0.05,
     params=dict(strength=1.0, gustiness=0.5, threshold=0.42, events=[[t_su + 0.15 - A, 2.2, 0.45]]),
     env=silence, ref="sand blows aimlessly on 'şuursuz'")
 
@@ -394,12 +394,12 @@ s = "sh15"
 A = CUT["sh15"]
 cue("sh15.sunbeam", s, A + 0.2, 3.2, "bloom", -32, cls="amb", pre=0.5, space="room_wood", send=-18, fade_out=0.8,
     params=dict(sync=0.5, rise=0.5, decay=2.5, bright=0.55, low=0.3), ref="warm sunbeam sweeps across the room")
-bed("sh15.room", s, A - 0.3, TOTAL, "room_tone", -42, 0.6, 1.8, space="room_wood", send=-40,
+bed("sh15.room", s, A - 0.3, TOTAL, "room_tone", -39, 0.6, 1.8, space="room_wood", send=-40,
     params=dict(warmth=1.2, bright=0.8), ref="quiet old wooden room; fades to silence at the end")
-bed("sh15.window_air", s, A - 0.3, TOTAL, "wind", -36, 0.8, 1.8, space="room_wood", send=-12,
+bed("sh15.window_air", s, A - 0.3, TOTAL, "wind", -31, 0.8, 1.8, space="room_wood", send=-12,
     params=dict(strength=1.0, gustiness=0.35, rate=0.08, bright=0.45, low=0.0, veg=1.0, veg_lo=1400, veg_hi=5500,
                 veg_density=0.6, width=0.6), ref="warm air and leaves outside the window")
-bed("sh15.window_birds", s, A - 0.3, TOTAL, "birds", -34, 0.8, 1.8, space="room_wood", send=-12,
+bed("sh15.window_birds", s, A - 0.3, TOTAL, "birds", -31, 0.8, 1.8, space="room_wood", send=-12,
     params=dict(n_birds=4, rate=0.22, dist=(0.65, 1.0), fmin=2600, fmax=6000, start=1.0), ref="warm morning outside")
 t721 = w(s, "721")
 cue("sh15.book_open", s, t721 + 0.22, 1.0, "book_open", -23, pre=0.32, space="room_wood", send=-14,

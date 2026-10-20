@@ -238,7 +238,7 @@ CLASSES = ("amb", "spot", "sub", "ui")
 # everything else (spot effects, sparse beds such as birds) by its loudest moment
 NORM_TYPICAL = {"room_tone", "wind", "underwater", "ocean", "rain", "body_amb", "blood_flow", "flame"}
 # ducking depth (dB) per class for the bands  <250 Hz | 250 Hz-5 kHz | >5 kHz
-DUCK = {"amb": (2.5, 5.5, 3.5), "spot": (1.5, 4.0, 2.5), "sub": (0.5, 2.5, 1.5), "ui": (0.0, 1.5, 1.0)}
+DUCK = {"amb": (2.5, 5.0, 3.5), "spot": (1.5, 4.0, 2.5), "sub": (0.5, 2.5, 1.5), "ui": (0.0, 1.5, 1.0)}
 
 
 def render_cues(cues, n_total, log):
@@ -385,6 +385,8 @@ def main():
 
     log("[mix] ducking")
     sfx_bus, curves = duck(buses, act, fs_c, n_total)
+    # remove sub-sonic energy (inaudible, costs headroom); keep everything from ~30 Hz up
+    sfx_bus = signal.sosfiltfilt(signal.butter(2, 28, "highpass", fs=SR, output="sos"), sfx_bus, axis=0)
     vst = np.stack([v, v], 1) * db(-3.0)          # centred dual-mono voice
 
     log("[mix] mastering")
