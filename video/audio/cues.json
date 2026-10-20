@@ -64,6 +64,10 @@
    15.38
   ],
   [
+   15.38,
+   15.78
+  ],
+  [
    21.9,
    22.24
   ],
@@ -102,6 +106,10 @@
   [
    66.58,
    67.28
+  ],
+  [
+   67.28,
+   67.58
   ],
   [
    67.58,
@@ -435,6 +443,10 @@
      [
       10.06,
       10.54
+     ],
+     [
+      10.54,
+      10.94
      ]
     ]
    },
@@ -450,7 +462,7 @@
   {
    "id": "sh02.callout_air",
    "shot": "sh02",
-   "t": 6.4,
+   "t": 8.38,
    "pre": 0.02,
    "dur": 0.15,
    "gen": "ui_tick",
@@ -1045,7 +1057,7 @@
   {
    "id": "sh07.callout_sun",
    "shot": "sh07",
-   "t": 39.58,
+   "t": 38.66,
    "pre": 0.02,
    "dur": 0.15,
    "gen": "ui_tick",
@@ -1354,7 +1366,7 @@
   {
    "id": "sh09.callout_nerve",
    "shot": "sh09",
-   "t": 47.86,
+   "t": 47.56,
    "pre": 0.02,
    "dur": 0.15,
    "gen": "ui_tick",
@@ -1396,30 +1408,6 @@
    "fade_in": 0.005,
    "fade_out": 0.02,
    "ref": "kaslarda (impulse races node to node)"
-  },
-  {
-   "id": "sh09.callout_fiber",
-   "shot": "sh09",
-   "t": 48.2,
-   "pre": 0.02,
-   "dur": 0.15,
-   "gen": "ui_tick",
-   "params": {
-    "sync": 0.02,
-    "kind": "callout"
-   },
-   "lvl": -19.0,
-   "class": "ui",
-   "space": "ui",
-   "send": -30.0,
-   "fade_in": 0.005,
-   "fade_out": 0.02,
-   "ref": "callout Kas lifi [graphic: comp/sync_points.json]",
-   "pan": 0.0,
-   "track": {
-    "shot": "sh09",
-    "name": "fiber"
-   }
   },
   {
    "id": "sh09.dive",
@@ -2663,7 +2651,7 @@
   {
    "id": "sh14a.spiral",
    "shot": "sh14a",
-   "t": 89.92,
+   "t": 89.88,
    "pre": 0.02,
    "dur": 0.15,
    "gen": "ui_tick",

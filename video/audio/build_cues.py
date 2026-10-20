@@ -131,7 +131,9 @@ def pause_near(t, min_len=0.3):
 
 
 # ------------------------------------------------------------------ overlay graphics
-_SP = json.load(open(os.path.join(VIDEO, "comp", "sync_points.json"), encoding="utf-8"))["points"]
+_SPF = os.path.join(VIDEO, "comp", "sync_points.json")
+_SP = json.load(open(_SPF, encoding="utf-8"))["points"] if os.path.exists(_SPF) else []
+DROPPED = []
 SYNC = {p["id"]: p["t"] for p in _SP}
 SYNC_ALIAS = {"sh08.callout_hand": "co_hand"}
 
@@ -214,7 +216,13 @@ def birds(id, shot, a, b, lvl, fin, fout, space, n_birds=4, fmin=2600, fmax=6200
 
 
 def tick(id, shot, t_fallback, kind="callout", lvl=-19.0, pan=0.0, track=None, ref=""):
+    """UI tick on an overlay graphic.  The overlay system is the source of truth: when
+    comp/sync_points.json exists, a graphic missing from it (removed or disabled) gets no tick;
+    the fallback time is used only if the sync sheet does not exist at all."""
     t, prov = graphic_t(id, t_fallback)
+    if prov and _SP:
+        DROPPED.append(id)
+        return
     cue(id, shot, t, 0.15, "ui_tick", lvl, cls="ui", pre=0.02, space="ui", send=-30.0,
         params=dict(sync=0.02, kind=kind), pan=pan, track=track, provisional=prov,
         ref=ref + (" [graphic: comp/sync_points.json]" if not prov else " [graphic time not in sync_points]"))
@@ -580,4 +588,4 @@ out = {"sr": SR, "total_seconds": TOTAL, "version": 2,
               "comp/sync_points.json, the narration's voice onsets and timing/shots.json; rendered by mix.py.",
        "cuts": CUT, "picture_spots_frames": PIC, "key_word_spans": KEY_SPANS, "cues": CUES}
 json.dump(out, open(os.path.join(HERE, "cues.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-print(len(CUES), "cues ->", os.path.join(HERE, "cues.json"))
+print(len(CUES), "cues ->", os.path.join(HERE, "cues.json"), "| ticks without a graphic (dropped):", DROPPED or "none")
