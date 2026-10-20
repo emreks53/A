@@ -10,8 +10,8 @@ a soft visibility, callout labels get a side chosen to stay in the safe area and
 The timeline is drawn by overlay/overlay.js in headless Chromium (render_overlays.mjs).
 
 Output (large media, outside the repo): $VIDEO_OUT/overlays/s<scale>/
-    over/ov_<f>.png  straight-alpha graphics      add/ad_<f>.png  additive light layer
-    manifest.json    {"hash":..., "frames": {"<f>": [over, add, boxes]}}   (frames without content are listed as 0/0)
+    over/ov_<f>.png  straight-alpha graphics      add/ad_<f>.png  additive light layer (both cropped to content)
+    manifest.json    {"hash":..., "frames": {"<f>": [over_xywh|0, add_xywh|0, boxes]}}  (empty frames: 0/0)
 A frame is re-rendered when the resolved timeline, the renderer code or the scale changes (hash).
 """
 import argparse
@@ -484,13 +484,14 @@ def ensure(f_from, f_to, scale=1.0, pages=2, frames=None, tl=None, quiet=False):
 
 
 def frame_paths(man, f):
+    """-> (over_png, over_xywh, add_png, add_xywh, boxes); PNGs are cropped to their content box."""
     e = man["frames"].get(str(f))
     if not e:
-        return None, None, []
+        return None, None, None, None, []
     d = man["dir"]
     over = os.path.join(d, "over", f"ov_{f:05d}.png") if e[0] else None
     add = os.path.join(d, "add", f"ad_{f:05d}.png") if e[1] else None
-    return over, add, e[2]
+    return over, (e[0] or None), add, (e[1] or None), e[2]
 
 
 def main():
