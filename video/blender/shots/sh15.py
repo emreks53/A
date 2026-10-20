@@ -819,7 +819,10 @@ def principled(nt, **inputs):
         if isinstance(v, bpy.types.NodeSocket):
             LK(nt, v, sock)
         elif isinstance(v, (tuple, list)):
-            sock.default_value = (*v, 1) if len(v) == 3 else v
+            try:
+                sock.default_value = (*v, 1) if len(v) == 3 else v
+            except (ValueError, TypeError):
+                sock.default_value = v
         else:
             sock.default_value = v
     return p
@@ -1292,9 +1295,9 @@ def build_closed_book(name, idx, mats, front_mat_idx=1):
                 a, b, c = uv_for(ii, ys[jj])
                 if ii == 0 and i2 == 0:
                     pass
-                lp[uvb] = a; lp[uvs] = b; lp[uvl] = c
+                lp[uvb].uv = a; lp[uvs].uv = b; lp[uvl].uv = c
                 if i2 == 0 and ii == 0 and i == M - 1:
-                    lp[uvl] = (perim[M], ys[jj])
+                    lp[uvl].uv = (perim[M], ys[jj])
             if i == M - 1:
                 for lp, jj in zip(f.loops, (j, j, j + 1, j + 1)):
                     pass
@@ -1304,8 +1307,8 @@ def build_closed_book(name, idx, mats, front_mat_idx=1):
         f.material_index = 0
         for lp in f.loops:
             co = lp.vert.co
-            lp[uvl] = (co.x, co.z)
-            lp[uvb] = (co.x / BK_WF, co.z)
+            lp[uvl].uv = (co.x, co.z)
+            lp[uvb].uv = (co.x / BK_WF, co.z)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     shell = bm_to_obj(bm, name + "_cover", mats=mats, smooth=True, sharp_angle=50)
     add_bevel(shell, 0.00045, 2, 50)
@@ -1399,7 +1402,7 @@ def _extrude_outline(bm, outline, t0, t1, uv, uvr_fn):
     faces.append(bm.faces.new(vt))
     for f in faces:
         for lp in f.loops:
-            lp[uv] = uvr_fn(lp.vert.co)
+            lp[uv].uv = uvr_fn(lp.vert.co)
     return faces
 
 
@@ -1465,7 +1468,7 @@ def build_rahle(mat):
             fs += _extrude_outline(bm, box, -tb / 2, tb / 2, uv, uvr_fn)
             for f in fs:
                 for lp in f.loops:
-                    lp[uv] = uvr_fn(lp.vert.co)
+                    lp[uv].uv = uvr_fn(lp.vert.co)
         # board rotation: l -> e, y -> Y, t -> e x Y
         e = Vector((side * math.cos(BETA), 0, math.sin(BETA)))
         nrm = e.cross(Vector((0, 1, 0)))
@@ -1574,7 +1577,7 @@ def build_block(half, name, page_img, mat_top, mat_edge, nleaves):
         f.material_index = slot
         if uvs:
             for lp, u in zip(f.loops, uvs):
-                lp[uv] = u
+                lp[uv].uv = u
         return f
 
     def us(i):
@@ -1637,7 +1640,7 @@ def build_leaves(halfL, halfR, mats_leaf, fps_start, fps_end):
             for i in range(NS):
                 f = bm.faces.new((V[j][i], V[j][i + 1], V[j + 1][i + 1], V[j + 1][i]))
                 for lp, (ii, jj) in zip(f.loops, ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))):
-                    lp[uv] = (ss[ii] / OB_L, ys[jj] / PAGE_H)
+                    lp[uv].uv = (ss[ii] / OB_L, ys[jj] / PAGE_H)
         ob = bm_to_obj(bm, "leaf_%d" % k, mats=[mats_leaf[k]], smooth=True)
         ob.shape_key_add(name="Basis", from_mix=False)
         t0, dur = LEAF_T0[k], LEAF_DUR[k]
@@ -1691,7 +1694,7 @@ def build_open_book(mats):
         bm.faces.new(vs[0][::-1]); bm.faces.new(vs[1])
         for f in bm.faces:
             for lp in f.loops:
-                lp[uvl] = (lp.vert.co.x * side + lp.vert.co.z, lp.vert.co.y)
+                lp[uvl].uv = (lp.vert.co.x * side + lp.vert.co.z, lp.vert.co.y)
         bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
         ob = bm_to_obj(bm, "ob_board_%d" % side, mats=[mats["leather_plain"]], smooth=True, sharp_angle=40)
         add_bevel(ob, 0.0006, 2, 40)
@@ -1717,7 +1720,7 @@ def build_open_book(mats):
     bm.faces.new(rings[0][::-1]); bm.faces.new(rings[1])
     for f in bm.faces:
         for lp in f.loops:
-            lp[uvl] = (lp.vert.co.x, lp.vert.co.y)
+            lp[uvl].uv = (lp.vert.co.x, lp.vert.co.y)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     objs.append(bm_to_obj(bm, "ob_spine", mats=[mats["leather_plain"]], smooth=True))
     leaves = build_leaves(halfL, halfR, [mats["leaf_%d" % k] for k in range(4)], 0, 0)
