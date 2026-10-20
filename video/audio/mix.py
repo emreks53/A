@@ -271,7 +271,7 @@ LF_SHELF_HZ, LF_SHELF_DB = 60.0, -5.0
 WEQ_FC = np.array([125, 250, 500, 1000, 2000, 4000, 8000], dtype=float)
 WEQ_TARGET = np.array([3, 5, 9, 13, 13, 13, 8], dtype=float)
 WEQ_MAXCUT = np.array([8, 8, 10, 24, 24, 24, 12], dtype=float)
-WEQ_RAMP, WEQ_ITER, WEQ_OVER = 0.16, 5, 1.3     # ramp (s), refinement passes, step over-correction
+WEQ_RAMP, WEQ_ITER, WEQ_OVER = 0.25, 5, 1.3     # ramp (s), refinement passes, step over-correction
 WEQ_BRIDGE = 0.45    # gaps between words shorter than this keep the shallower neighbouring cut (no
                      # word-rate brightening of the beds inside a phrase)
 

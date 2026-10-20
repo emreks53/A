@@ -16,7 +16,7 @@
 let TL = null, S = 1, W = 1080, H = 1920, FPS = 24;
 let cOver, cAdd, X, A;
 const OFF = 6000;                 // offscreen offset for the shadow-blur trick (layout px)
-let drewOver = false, drewAdd = false, BOXES = [];
+let drewOver = false, drewAdd = false, BOXES = [], KWBOXES = [];
 const CACHE = new Map();
 
 // ------------------------------------------------------------------ maths / easing
@@ -161,6 +161,20 @@ function tk(trk, f) {
 }
 
 // ================================================================== KEYWORDS
+function inkOf(ch, fam, wt, size) {
+  const key = `ink|${ch}|${fam}|${wt}|${size.toFixed(3)}`;
+  if (CACHE.has(key)) return CACHE.get(key);
+  X.save(); X.font = fontStr(fam, wt, size); X.letterSpacing = '0px';
+  const m = X.measureText(ch);
+  X.restore();
+  const r = { l: -m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent };
+  CACHE.set(key, r);
+  return r;
+}
+
+/** Key-word layout. Lines are centred on one block centre; the block is shrunk until its ink (glyph outlines,
+ *  at the largest drift scale) fits between the safe edges, and shifted left of the frame centre only when the
+ *  widest line would otherwise reach into the right-hand UI column (x > safe.x1). */
 function keywordLayout(el) {
   const key = 'kwl|' + el.id;
   if (CACHE.has(key)) return CACHE.get(key);
@@ -168,10 +182,13 @@ function keywordLayout(el) {
   const lhEm = el.line_height || st.line_height;
   let size = el.size || st.size;
   const maxW = el.max_width || st.max_width;
-  let lines;
+  const sf = TL.safe, MARGIN = 20;
+  const XL = sf.x0 + MARGIN, XR = sf.x1 - MARGIN;
+  const kmax = 1 + (st.drift || 0);
+  const trk = el.tracking !== undefined ? el.tracking : st.tracking;
+  let lines, inkL, inkR;
   for (;;) {
     lines = el.lines.map(ln => {
-      const trk = el.tracking !== undefined ? el.tracking : st.tracking;
       const parts = ln.parts.map(p => ({ ...p, text: upperTR(p.text), run: layoutRun(upperTR(p.text), st.family, st.weight, size, trk) }));
       let x = 0; const segs = [];
       parts.forEach((p, k) => {
@@ -182,12 +199,25 @@ function keywordLayout(el) {
         }
         p.x0 = x; x += p.run.w;
       });
-      return { parts, segs, w: x };
+      // ink extent of the line relative to its left edge
+      let il = 1e9, ir = -1e9;
+      parts.forEach(p => p.run.chars.forEach(c => {
+        if (c.ch === ' ') return;
+        const g = inkOf(c.ch, st.family, st.weight, size);
+        il = Math.min(il, p.x0 + c.x + g.l); ir = Math.max(ir, p.x0 + c.x + g.r);
+      }));
+      return { parts, segs, w: x, il, ir };
     });
     const mw = Math.max(...lines.map(l => l.w));
-    if (mw <= maxW || size <= st.min_size) break;
-    size = Math.max(st.min_size, size * Math.max(0.9, maxW / mw * 0.995));
+    // block ink relative to the block centre (lines are centred on it)
+    inkL = Math.min(...lines.map(l => l.il - l.w / 2)); inkR = Math.max(...lines.map(l => l.ir - l.w / 2));
+    const inkW = (inkR - inkL) * kmax;
+    if ((mw <= maxW && inkW <= XR - XL) || size <= st.min_size) break;
+    size = Math.max(st.min_size, size * Math.max(0.9, Math.min(maxW / mw, (XR - XL) / inkW) * 0.995));
   }
+  let cx = W / 2;
+  if (cx + inkR * kmax > XR) cx = XR - inkR * kmax;
+  if (cx + inkL * kmax < XL) cx = XL - inkL * kmax;
   const capH = layoutRun('H', st.family, st.weight, size, 0).capH;
   // punctuation that should sit on the cap-height centre in an all-caps setting (no 'case' feature in canvas)
   X.save(); X.font = fontStr(st.family, st.weight, size);
@@ -200,22 +230,43 @@ function keywordLayout(el) {
   lines.forEach((l, i) => {
     l.cy = yc - (n - 1) / 2 * lh + i * lh;      // optical centre of the caps
     l.base = l.cy + capH / 2;
-    l.x0 = W / 2 - l.w / 2;
+    l.x0 = cx - l.w / 2;
   });
   // global letter index (for exit stagger) and letter metadata
   let g = 0;
   const letters = [];
-  lines.forEach((l, li) => l.parts.forEach((p, pi) => {
-    const nch = p.run.chars.length;
-    p.run.chars.forEach((c, i) => {
-      if (c.ch === ' ') return;
-      letters.push({ ch: c.ch, li, pi, i, n: nch, g: g++, x: l.x0 + p.x0 + c.x, base: l.base + (capsDy[c.ch] || 0), t: p.t, part: p, line: l });
+  lines.forEach((l, li) => {
+    let ia = 1e9, id = -1e9;
+    l.parts.forEach((p, pi) => {
+      const nch = p.run.chars.length;
+      p.run.chars.forEach((c, i) => {
+        if (c.ch === ' ') return;
+        const base = l.base + (capsDy[c.ch] || 0);
+        const gi = inkOf(c.ch, st.family, st.weight, size);
+        ia = Math.min(ia, base - gi.a); id = Math.max(id, base + gi.d);
+        letters.push({ ch: c.ch, li, pi, i, n: nch, g: g++, x: l.x0 + p.x0 + c.x, base, t: p.t, part: p, line: l });
+      });
     });
-  }));
-  const r = { st, size, capH, lines, letters, lh, yc };
+    l.ink = [l.x0 + l.il, ia, l.x0 + l.ir, id];      // settled ink box (layout px)
+  });
+  const r = { st, size, capH, lines, letters, lh, yc, cx, kmax };
   CACHE.set(key, r);
   return r;
 }
+
+/** Ink boxes of every key-word line at their largest extent (drift scale about the block centre) - for the
+ *  resolve-time safe-area assertion (overlays.py layout_check). */
+window.ovLayoutReport = function () {
+  const out = [];
+  for (const el of TL.elements) {
+    if (el.type !== 'keyword') continue;
+    const L = keywordLayout(el);
+    out.push({ id: el.id, size: +L.size.toFixed(2), cx: +L.cx.toFixed(1), lines: L.lines.map(l => ({
+      ink: [L.cx + (l.ink[0] - L.cx) * L.kmax, L.yc + (l.ink[1] - L.yc) * L.kmax, L.cx + (l.ink[2] - L.cx) * L.kmax, L.yc + (l.ink[3] - L.yc) * L.kmax].map(v => +v.toFixed(1)),
+      text: l.parts.map(p => p.text).join(' ') })) });
+  }
+  return { keywords: out };
+};
 
 function drawKeyword(el, t) {
   const L = keywordLayout(el);
@@ -224,13 +275,14 @@ function drawKeyword(el, t) {
   const IN = st.in, OUT = st.out;
   const tFirst = Math.min(...L.letters.map(l => l.t));
   const nTot = L.letters.length;
-  const outStag = Math.min(OUT.stagger, 0.26 / Math.max(1, nTot - 1));
+  // short, light exit that starts late (overlays.py checks it starts after the last word has been spoken)
+  const outStag = Math.min(OUT.stagger, (OUT.max_stagger !== undefined ? OUT.max_stagger : 0.26) / Math.max(1, nTot - 1));
   const te0 = el.out - OUT.dur - outStag * (nTot - 1);
   // slow drift (scale about the block centre) over the element's life
   const life = clamp((t - tFirst) / Math.max(0.5, el.out - tFirst));
   const k = 1 + (st.drift || 0) * eInOutSine(life);
   const sz = size * k;
-  const cx = W / 2, cy = L.yc;
+  const cx = L.cx, cy = L.yc;
   const swell = el.swell ? Math.exp(-Math.pow(Math.max(0, el.swell.t - t) / 0.18, 2)) * Math.exp(-Math.max(0, t - el.swell.t) / el.swell.dur) * el.swell.gain : 0;
   const breathe = st.breathe ? 1 + st.breathe * Math.sin(2 * Math.PI * (t - tFirst) / 4.2) : 1;
   const P = [];
@@ -284,11 +336,12 @@ function drawKeyword(el, t) {
     seps.push({ x: sx, y: sy, a, r: 0.052 * sz * (0.6 + 0.4 * eOutCubic(clamp((t - ta) / 0.3))) });
   }
   // pass 1: legibility shadows
+  const shRGB = st.shadow_rgb || [0, 0, 0];
   for (const p of P) {
     setFont(X, fam, wt, sz * p.scl);
     const sh = st.shadow, sh2 = st.shadow2;
-    glyphShadow(X, p.l.ch, p.x, p.y, p.alpha * sh[0], Math.hypot(sh[1], p.blur), sh[2]);
-    glyphShadow(X, p.l.ch, p.x, p.y, p.alpha * sh2[0], Math.hypot(sh2[1], p.blur), sh2[2]);
+    glyphShadow(X, p.l.ch, p.x, p.y, p.alpha * sh[0], Math.hypot(sh[1], p.blur), sh[2], shRGB);
+    glyphShadow(X, p.l.ch, p.x, p.y, p.alpha * sh2[0], Math.hypot(sh2[1], p.blur), sh2[2], shRGB);
   }
   for (const s of seps) { glowDot(X, s.x, s.y + 1.5, s.r * 5, [0, 0, 0], s.a * 0.35); }
   // pass 2: glyphs
@@ -314,11 +367,12 @@ function drawKeyword(el, t) {
     }
     for (const s of seps) glowDot(A, s.x, s.y, s.r * 6, st.glow[0], s.a * 0.35 * breathe);
   }
-  // legibility boxes for the compositor
+  // legibility boxes for the compositor + knock-out boxes (graphics never cross a key word)
   for (const [ln, b] of boxLines) {
     const y0 = cy + ((ln.cy - L.capH * 0.5) - cy) * k, y1 = cy + ((ln.cy + L.capH * 0.5) - cy) * k;
     const x0 = cx + (ln.x0 - cx) * k, x1 = cx + (ln.x0 + ln.w - cx) * k;
     BOXES.push([x0, y0, x1, y1, b.a * (st.legibility || 1)]);
+    KWBOXES.push([cx + (ln.ink[0] - cx) * k, cy + (ln.ink[1] - cy) * k, cx + (ln.ink[2] - cx) * k, cy + (ln.ink[3] - cy) * k, b.a]);
   }
 }
 
