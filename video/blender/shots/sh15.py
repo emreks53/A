@@ -706,17 +706,17 @@ T_CUT_B, T_CUT_C, T_CUT_D, T_CUT_E = C.f2t(2722), C.f2t(2778), C.f2t(2814), C.f2
 # room layout (table top at z = 0)
 WALL_BACK_Y = 0.40
 WALL_LEFT_X = -0.95
-WALL_THICK = 0.45
-WIN_Y0, WIN_Y1 = -0.62, -0.02
+WALL_THICK = 0.32
+WIN_Y0, WIN_Y1 = -0.40, 0.22
 WIN_Z0, WIN_Z1 = 0.32, 1.42
 TABLE_X0, TABLE_X1, TABLE_Y0 = -0.95, 1.15, -0.58
 FLOOR_Z = -0.74
-SUN_DIR = Vector((0.80, 0.30, -0.52)).normalized()
+SUN_DIR = Vector((0.84, 0.16, -0.52)).normalized()
 SUN_K = 4300
 RAHLE_POS = Vector((-0.21, -0.03, 0.0))
 BETA = math.radians(40)
 RAHLE_TB = 0.016
-SOZ_POS = Vector((0.17, -0.07, 0.0))   # closed Sozler lying on the table (camA)
+SOZ_POS = Vector((0.17, -0.03, 0.0))   # closed Sozler lying on the table (camA)
 SOZ_YAW = math.radians(-9)
 
 # ----------------------------------------------------------------------------- node helpers
@@ -1820,7 +1820,7 @@ def build_room(mats):
     objs.append(box("kafes_f3", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, WIN_Z0, WIN_Z0 + fw, kafes, 0.002))
     objs.append(box("kafes_f4", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, WIN_Z1 - fw, WIN_Z1, kafes, 0.002))
     objs.append(box("kafes_mid", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, (WIN_Z0 + WIN_Z1) / 2 - 0.02, (WIN_Z0 + WIN_Z1) / 2 + 0.02, kafes, 0.002))
-    sp = 0.052
+    sp = 0.060
     y0, y1, z0, z1 = WIN_Y0 + fw * 0.6, WIN_Y1 - fw * 0.6, WIN_Z0 + fw * 0.6, WIN_Z1 - fw * 0.6
     for layer, dirv, dx in ((0, (1, 1), -0.011), (1, (1, -1), 0.011)):
         d = Vector(dirv).normalized()
@@ -1830,7 +1830,7 @@ def build_room(mats):
             p = c + nrm * (k * sp)
             seg = clip_segment(p, d, y0, y1, z0, z1)
             if seg and (Vector(seg[1]) - Vector(seg[0])).length > 0.01:
-                objs.append(slat("kafes_s", seg[0], seg[1], 0.011, 0.020, xk + dx, kafes))
+                objs.append(slat("kafes_s", seg[0], seg[1], 0.0095, 0.016, xk + dx, kafes))
     # join small kafes pieces into one object
     ks = [o for o in objs if o.name.startswith("kafes_s")]
     if ks:
@@ -1862,7 +1862,7 @@ def shutter(ctx):
     ob.visible_camera = False
     ob.visible_glossy = False
     ob.visible_transmission = False
-    t0, t1 = 110.00, 112.95
+    t0, t1 = 110.25, 113.10
     for k in range(0, 31):
         t = t0 + (t1 - t0) * k / 30
         u = C.smooth(k / 30) * 0.65 + (k / 30) * 0.35
