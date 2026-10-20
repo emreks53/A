@@ -1,1 +1,1 @@
-sh08: IN_PROGRESS (v2 stills up; hand not final; render time 480 s/frame, optimising)
+sh08: READY_FOR_REVIEW (v3 stills + animatic; render time still over budget: 157 s/frame, optimising)

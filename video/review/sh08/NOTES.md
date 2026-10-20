@@ -1,3 +1,33 @@
+# sh08 — review v3 (Studio S5) — following director notes on v2
+
+Stills (50 %, 16 spp), prefix sh08_v3_: t040.620 (first frame, set unchanged apart from the camera angle),
+t041.550 (reach from the right, hand soft, focus on the apple), t042.300 (grasp, "alırken"), t043.600 (lift,
+apple tilts), t045.800 (push toward the hand edge against the window, focus sliding off), t047.300 ("değil":
+backlit fingers as a warm-red translucent blur against the bright window -> dissolve into sh09's red tissue).
+sh08_animatic.mp4 and sh08_track.json are regenerated for v3 (TRK_hand = wrist).
+
+Changes for v3:
+* Camera re-angled to the front-right so the window/sun sits behind-left of the hand: warm rim light, near side
+  in soft shadow. 100 mm, f/2.4, focus on the apple; motion blur on the reach.
+* Skin darker and more varied (redder knuckles, tan back, paler palm), tendons/veins and knuckle creases back
+  (subtle), plus a small red translucency layer so thin finger edges glow when backlit.
+* Extreme skin macro dropped. New ending from "aslında": push toward the little-finger edge with the window
+  directly behind; focus slides to ~14 cm behind the finger; the translucency ramps up so the frame becomes a
+  glowing red/warm blur. A camera-only bright exterior plane behind the window gives the backlight.
+* Body hair is off in this version: at these distances it is sub-pixel, and it was the largest render cost.
+
+RENDER TIME (measured --final, frames 1069-1070, the heaviest point of the push):
+* with 500 hair strands, 32 spp, 100 % res: 369 s/frame
+* without hair, 24 spp, 100 % res: 157 s/frame (2-frame average including first-frame sync)
+Still over the 90 s ceiling. Next test: 80 % res for the defocused push/glow section (allowed for soft
+material), 20 spp, and a check for denoise blotches on a 100 % crop across 3 frames.
+
+Known issues: the palm still rests on the apple's upper side rather than its flank; finger joints still slightly
+rubbery under close inspection. The backlight and shallow focus now hide most of it.
+
+
+---
+
 # sh08 — review v2 (Studio S5) — work in progress
 
 Stills (50 %, 16 spp), prefix sh08_v2_: t040.620 (first frame, set unchanged), t041.550 (reach from the right,
