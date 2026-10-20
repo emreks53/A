@@ -2,16 +2,22 @@
 """mix.py - final soundtrack of the film.
 
   1. renders every cue of cues.json with sfx.py (level-matched by momentary loudness, faded,
-     panned - from the studios' tracker JSON when available - and placed on the timeline),
+     optionally low-pass swept, LF-shelved, panned - from the tracker JSON in comp/tracks when the
+     cue follows a tracked object - and placed on the timeline),
   2. sends each cue to its environment's reverb (synthetic stereo IRs; SFX only),
   3. processes the narration: 70 Hz high-pass, light split-band de-esser, light RMS
      compression - sample-exact, no timing change,
-  4. ducks the SFX under the voice: 3-band side-chain (the 250 Hz-5 kHz band ducks most, so
-     the voice band stays clean), depth per cue class, look-ahead, smooth attack/release,
+  4. keeps the narration on top in two stages:
+     a. a smooth broadband duck of the SFX per cue class, driven by phrase-level voice activity
+        (look-ahead, 0.3 s hold, ~1 s release: no syllable-rate pumping, same depth in every band),
+     b. a voice-keyed spectral "unmask" (dynamic EQ in 22 third-octave bands): wherever the SFX
+        come within a band-specific target of the voice (13 dB in the 1-5 kHz intelligibility
+        bands, less below/above), only that band of the SFX is cut, only while the voice speaks,
   5. masters voice + SFX to -14 LUFS integrated with a 4x-oversampled true-peak limiter
      (ceiling -1.3 dBTP), and writes 48 kHz / 24-bit stereo WAVs of exactly 125.5 s:
        sfx_stem.wav, voice_proc.wav (same master gain + limiter gain, so they sum to the mix)
-       and final_mix.wav, plus mix_report.json.
+       and final_mix.wav, plus mix_report.json (loudness, per-word band SNR, duck stability,
+       UI-tick sync against comp/sync_points.json).
 
 usage: python3 mix.py [--out DIR] [--only-sfx] [--no-report]
 (DIR defaults to $VIDEO_OUT/audio, else <repo>/video/.out/audio)
@@ -27,7 +33,7 @@ import time
 import numpy as np
 import soundfile as sf
 from scipy import signal
-from scipy.ndimage import minimum_filter1d, uniform_filter1d
+from scipy.ndimage import maximum_filter1d, minimum_filter1d, uniform_filter1d
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VIDEO = os.path.dirname(HERE)
@@ -205,31 +211,43 @@ def make_ir(name):
 _TRACK_CACHE = {}
 
 
-def tracker_x(shot, name, t):
-    """Screen x (0..1) of TRK_<name> at time t, from any tracker JSON the studios exported."""
+def _track_files(shot):
+    """Tracker JSON candidates for a shot, most authoritative first: the comp's tracks (the same
+    files the overlay graphics use), then the studios' render folders and review exports."""
+    c = [os.path.join(VIDEO, "comp", "tracks", f"{shot}.json")]
+    c += sorted(glob.glob(os.path.join(VIDEO, "renders", shot, "*.json")))
+    for root in [os.environ.get("VIDEO_OUT", ""), os.path.join(VIDEO, ".out"), os.path.join(VIDEO, "review", shot)]:
+        if root:
+            c += glob.glob(os.path.join(root, "track", f"{shot}.json")) + glob.glob(os.path.join(root, f"{shot}*.json"))
+    return [p for p in c if os.path.isfile(p)]
+
+
+def tracker_x(shot, name, t, search=6):
+    """Screen x (0..1) of tracker `name` (with or without the TRK_ prefix) at time t (nearest
+    visible frame within +-search frames), or None."""
     if shot not in _TRACK_CACHE:
-        cands = sorted(glob.glob(os.path.join(VIDEO, "renders", shot, "*.json")))
-        for root in [os.environ.get("VIDEO_OUT", ""), os.path.join(VIDEO, ".out"), os.path.join(VIDEO, "review", shot)]:
-            if root:
-                cands += glob.glob(os.path.join(root, "track", f"{shot}.json")) + glob.glob(os.path.join(root, f"{shot}*.json"))
         data = None
-        for p in cands:
+        for p in _track_files(shot):
             try:
                 d = json.load(open(p))
-                if "frames" in d:
-                    data = d
-                    break
             except Exception:
-                pass
+                continue
+            if "frames" in d:
+                data = (d, p)
+                break
         _TRACK_CACHE[shot] = data
-    d = _TRACK_CACHE[shot]
-    if not d:
+    if not _TRACK_CACHE[shot]:
         return None
-    f = str(int(round(t * d.get("fps", 24))))
-    row = d["frames"].get(f)
-    if not row or name not in row or not row[name][3]:
-        return None
-    return row[name][0] / d.get("width", 1080)
+    d, _ = _TRACK_CACHE[shot]
+    f0 = int(round(t * d.get("fps", 24)))
+    for k in sorted(range(-search, search + 1), key=abs):
+        row = d["frames"].get(str(f0 + k))
+        if not row:
+            continue
+        v = row.get(name) or row.get("TRK_" + name) or row.get(name.replace("TRK_", ""))
+        if v and v[3]:
+            return v[0] / d.get("width", 1080)
+    return None
 
 
 # --------------------------------------------------------------------------- cue rendering
@@ -240,8 +258,19 @@ NORM_TYPICAL = {"room_tone", "wind", "underwater", "ocean", "rain", "body_amb", 
 # UI ticks are 2-5 ms clicks: they are levelled by sample peak (lvl = dBFS), not by loudness
 NORM_PEAK = {"ui_tick"}
 SFX_BUS_CEILING = -5.0      # fast look-ahead limiter on the SFX bus only (never ducks the voice)
-# ducking depth (dB) per class for the bands  <250 Hz | 250 Hz-5 kHz | >5 kHz
-DUCK = {"amb": (2.5, 5.0, 3.5), "spot": (1.5, 4.0, 2.5), "sub": (0.5, 2.5, 1.5), "ui": (0.0, 1.5, 1.0)}
+# broadband ducking depth (dB) per class while the narrator speaks (same in every band: the
+# spectral work is done by the unmask stage, so the beds keep their tonal balance)
+DUCK = {"amb": 4.5, "spot": 3.0, "sub": 2.0, "ui": 0.0}
+DUCK_ATTACK, DUCK_HOLD, DUCK_RELEASE, DUCK_LOOK = 0.06, 0.30, 1.0, 0.08
+# low shelf on ambience and spot effects (designed impacts - class "sub" - and cues with
+# "lf_shelf": 0 keep their weight): keeps the low end from piling up under the voice
+LF_SHELF_HZ, LF_SHELF_DB = 60.0, -5.0
+# spectral unmask: third-octave band centres, minimum voice-to-SFX ratio while speaking, max cut
+UM_FC = np.array([100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150,
+                  4000, 5000, 6300, 8000, 10000, 12500], dtype=float)
+UM_TARGET = np.array([0, 4, 4, 4, 6, 6, 6, 9, 9, 9, 13, 13, 13, 13, 13, 13, 13, 13, 10, 10, 0, 0], dtype=float)
+UM_MAXCUT = np.array([0, 9, 9, 9, 9, 9, 9, 12, 12, 12, 20, 20, 20, 20, 20, 20, 20, 20, 14, 14, 6, 6], dtype=float)
+UM_VSMOOTH, UM_SSMOOTH, UM_HOLD, UM_RELEASE = 0.25, 0.12, 0.20, 0.40
 
 
 def render_cues(cues, n_total, log):
@@ -268,6 +297,15 @@ def render_cues(cues, n_total, log):
             if pk > cap:
                 y *= cap / pk
         start = c["t"] - c.get("pre", 0.0)
+        if c.get("lpf"):                       # time-varying low-pass [[t_abs, fc_hz], ...]
+            E = np.asarray(c["lpf"], dtype=float)
+            rel, lf = E[:, 0] - start, np.log(E[:, 1])
+            mag = lambda T, F: sfx.m_lp(F, np.exp(np.interp(T, rel, lf)), 2)
+            y = np.stack([sfx.tv_filter(y[:, ch], mag) for ch in range(2)], 1)
+        shelf = c.get("lf_shelf", LF_SHELF_DB if c["class"] in ("amb", "spot") else 0.0)
+        if shelf:
+            lo = signal.sosfiltfilt(signal.butter(2, LF_SHELF_HZ, "lowpass", fs=SR, output="sos"), y, axis=0)
+            y = y + (db(shelf) - 1.0) * lo
         pan_src = None
         p = c.get("pan")
         if c.get("track"):
@@ -295,30 +333,98 @@ def render_cues(cues, n_total, log):
     return buses, sends, rows
 
 
-def split3(x, f1=250.0, f2=5000.0):
-    lo = signal.sosfiltfilt(signal.butter(4, f1, "lowpass", fs=SR, output="sos"), x, axis=0)
-    rest = x - lo
-    mid = signal.sosfiltfilt(signal.butter(4, f2, "lowpass", fs=SR, output="sos"), rest, axis=0)
-    return lo, mid, rest - mid
+def duck_activity(act, fs_c):
+    """Phrase-level activity for the broadband duck: hold through the gaps between words, then a
+    slow release - the beds settle under a sentence instead of breathing with every syllable."""
+    # centred maximum: bridges gaps shorter than 2 * DUCK_HOLD and settles slightly before a phrase
+    return maximum_filter1d(act, size=int(DUCK_HOLD * fs_c) * 2 + 1, mode="nearest")
 
 
 def duck(buses, act, fs_c, n_total):
     t_s = np.arange(n_total) / SR
     t_c = np.arange(len(act)) / fs_c
-    out = np.zeros((n_total, 2))
+    out = {}
     curves = {}
+    a = duck_activity(act, fs_c)
     for cls, y in buses.items():
         if not np.any(y):
             continue
-        bands = split3(y)
-        for bi, (band, depth) in enumerate(zip(bands, DUCK[cls])):
-            if depth <= 0:
-                out += band
-                continue
-            g = _smooth_gain_db(-depth * act, 0.035, 0.30, fs_c)
-            curves[(cls, bi)] = g
-            out += band * db(np.interp(t_s, t_c, g))[:, None]
+        depth = DUCK[cls]
+        if depth <= 0:
+            out[cls] = y
+            continue
+        g = _smooth_gain_db(-depth * a, DUCK_ATTACK, DUCK_RELEASE, fs_c)
+        curves[cls] = g
+        out[cls] = y * db(np.interp(t_s, t_c, g))[:, None]
     return out, curves
+
+
+def _band_matrix(freqs, fc):
+    """(n_bins, n_bands) 0/1 membership of FFT bins in third-octave bands."""
+    lo, hi = fc * 2 ** (-1 / 6), fc * 2 ** (1 / 6)
+    return ((freqs[:, None] >= lo[None, :]) & (freqs[:, None] < hi[None, :])).astype(np.float64)
+
+
+def unmask(S, vch, act, fs_c, log=print):
+    """Voice-keyed spectral dynamic EQ on the SFX (stereo S) against the voice as heard in each
+    channel (vch).  Per third-octave band b and STFT frame:
+        cut_b = clip((L_voice,b - target_b) - L_sfx,b, -maxcut_b, 0) * voice activity
+    with phrase-smoothed band levels (voice 0.25 s, SFX 0.12 s, centred = look-ahead), a 0.2 s hold
+    (minimum filter) and 0.4 s release, smoothed across neighbouring bands and interpolated over the
+    FFT bins in log-frequency.  Returns (processed S, band-gain matrix dB, frame times)."""
+    hop_s = sfx.HOP / SR
+    V = sfx.stft(vch)
+    T = sfx.frame_times(V.shape[0])
+    M = _band_matrix(sfx.FREQS, UM_FC)
+    PV = (np.abs(V) ** 2) @ M
+    del V
+    XL, XR = sfx.stft(S[:, 0]), sfx.stft(S[:, 1])
+    PS = np.maximum((np.abs(XL) ** 2) @ M, (np.abs(XR) ** 2) @ M)
+    PV = uniform_filter1d(PV, size=max(int(UM_VSMOOTH / hop_s), 1), axis=0, mode="nearest")
+    PS = uniform_filter1d(PS, size=max(int(UM_SSMOOTH / hop_s), 1), axis=0, mode="nearest")
+    LV, LS = 10 * np.log10(PV + 1e-20), 10 * np.log10(PS + 1e-20)
+    need = np.clip(LV - UM_TARGET[None, :] - LS, -UM_MAXCUT[None, :], 0.0)
+    need[:, UM_MAXCUT == 0] = 0.0
+    a = np.interp(T, np.arange(len(act)) / fs_c, act)
+    g = need * a[:, None]
+    g = minimum_filter1d(g, size=max(int(UM_HOLD / hop_s), 1), axis=0, mode="nearest")
+    # asymmetric smoothing: cuts arrive quickly (they are already anticipated by the centred
+    # windows), recover slowly
+    aa, ar = np.exp(-1 / (0.03 / hop_s)), np.exp(-1 / (UM_RELEASE / hop_s))
+    out = np.empty_like(g)
+    yv = np.zeros(g.shape[1])
+    for i in range(g.shape[0]):
+        x = g[i]
+        k = np.where(x < yv, aa, ar)
+        yv = k * yv + (1 - k) * x
+        out[i] = yv
+    g = out
+    g = (0.25 * np.concatenate([g[:, :1], g[:, :-1]], axis=1) + 0.5 * g
+         + 0.25 * np.concatenate([g[:, 1:], g[:, -1:]], axis=1))
+    # band gains -> bins (log-frequency interpolation; below 100 Hz the gain fades out)
+    lf = np.log2(np.maximum(sfx.FREQS, 1.0))
+    W = np.zeros((len(UM_FC), len(sfx.FREQS)))
+    for j in range(len(sfx.FREQS)):
+        x = lf[j]
+        if x <= np.log2(UM_FC[0]):
+            continue
+        k = np.searchsorted(np.log2(UM_FC), x) - 1
+        if k >= len(UM_FC) - 1:
+            W[-1, j] = 1.0
+            continue
+        u = (x - np.log2(UM_FC[k])) / (np.log2(UM_FC[k + 1]) - np.log2(UM_FC[k]))
+        W[k, j], W[k + 1, j] = 1 - u, u
+    G = db(g @ W)
+    yL = sfx.istft(XL * G, len(S))
+    yR = sfx.istft(XR * G, len(S))
+    act_frames = a > 0.5
+    stats = {"frames_voice_pct": round(float(act_frames.mean() * 100), 1)}
+    if act_frames.any():
+        gs = g[act_frames]
+        stats["median_cut_db_by_band"] = {int(f): round(float(np.median(gs[:, i])), 1) for i, f in enumerate(UM_FC)}
+        stats["p95_cut_db_by_band"] = {int(f): round(float(np.percentile(gs[:, i], 5)), 1) for i, f in enumerate(UM_FC)}
+    log(f"  unmask: {stats.get('median_cut_db_by_band')}")
+    return np.stack([yL, yR], 1), g, T, stats
 
 
 # --------------------------------------------------------------------------- mastering
@@ -393,7 +499,13 @@ def main():
     log(f"  voice: {n_voice / SR:.3f}s, {vinfo}")
 
     log("[mix] ducking")
-    sfx_bus, curves = duck(buses, act, fs_c, n_total)
+    ducked, curves = duck(buses, act, fs_c, n_total)
+    ui = ducked.pop("ui", np.zeros((n_total, 2)))
+    pre_um = sum(ducked.values())
+    vch = v * db(-3.0)
+    sfx_bus, um_g, um_T, um_stats = unmask(pre_um, vch, act, fs_c, log)
+    sfx_bus = sfx_bus + ui
+    del pre_um
     # remove sub-sonic energy (inaudible, costs headroom); keep everything from ~30 Hz up
     sfx_bus = signal.sosfiltfilt(signal.butter(2, 28, "highpass", fs=SR, output="sos"), sfx_bus, axis=0)
     g_sfx = tp_limiter(sfx_bus, SFX_BUS_CEILING - 20 * np.log10(db(VOICE_LUFS - TARGET_LUFS)), look=0.001, release=0.05)
