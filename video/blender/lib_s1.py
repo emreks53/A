@@ -1080,3 +1080,230 @@ def mat_leaf(name="Seedling_leaf"):
     nt.links.new(p.outputs[0], ms.inputs[1]); nt.links.new(tr.outputs[0], ms.inputs[2])
     nt.links.new(ms.outputs[0], out.inputs["Surface"])
     return m
+
+
+# --------------------------------------------------------------------------- meadow life (sh13a)
+
+def visible_from_any(p, cam_tests, tan_w, tan_h, margin=1.15, max_dist=1e9, min_dist=0.0):
+    """True if world point p is inside (an enlarged) view frustum of any sampled camera (loc, rot3x3)."""
+    for loc, M in cam_tests:
+        q = M.transposed() @ (p - loc)
+        z = -q.z
+        if z <= min_dist or z > max_dist:
+            continue
+        if abs(q.x / z) < tan_w * margin + 0.3 / z and abs(q.y / z) < tan_h * margin + 0.6 / z:
+            return True
+    return False
+
+
+def mat_simple(name, col, rough=0.5, sss=0.0, trans=0.0, sheen=0.0):
+    m = C.principled(name, base=col, rough=rough, sss=sss, sss_radius=(1, 0.6, 0.3), sss_scale=0.002, sheen=sheen)
+    if trans:
+        _, nt, p = m, m.node_tree, m.node_tree.nodes["Principled BSDF"]
+        out = nt.nodes["Material Output"]
+        tr = node(nt, "ShaderNodeBsdfTranslucent")
+        tr.inputs["Color"].default_value = (*[min(1, c * 1.6) for c in col], 1)
+        ms = node(nt, "ShaderNodeMixShader")
+        ms.inputs[0].default_value = trans
+        nt.links.new(p.outputs[0], ms.inputs[1]); nt.links.new(tr.outputs[0], ms.inputs[2])
+        nt.links.new(ms.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def daisy(name, rng, height, col=None, mats=None, kind="daisy"):
+    """Procedural meadow flower on a stem: 'daisy' (oxeye: white rays, yellow disc), 'poppy' (4 red
+    cupped petals, dark centre), 'cornflower' (blue ragged florets). Local origin at the stem base."""
+    bm = bmesh.new()
+    seg = 14
+    lean = rng.uniform(-0.15, 0.15)
+    bend = rng.uniform(-0.1, 0.1)
+    pts = [Vector((math.sin(lean) * s * height + bend * s * s * height, 0.02 * height * math.sin(s * 3), s * height))
+           for s in [i / seg for i in range(seg + 1)]]
+    tube(bm, pts, [0.0012 * (1 - 0.35 * i / seg) for i in range(seg + 1)], n_around=6, cap_end=False)
+    for f in bm.faces:
+        f.material_index = 0
+    top = pts[-1]
+    tdir = (pts[-1] - pts[-2]).normalized()
+    face = (tdir + Vector((rng.uniform(-0.4, 0.4), rng.uniform(-0.4, 0.4), 0.3))).normalized()
+    R = Vector((0, 0, 1)).rotation_difference(face).to_matrix()
+    if kind == "daisy":
+        rd = rng.uniform(0.016, 0.024)
+        ellipsoid(bm, top + R @ Vector((0, 0, 0.002)), (rd * 0.28, rd * 0.28, rd * 0.12), R, subdiv=2, mat_index=2)
+        n = rng.randint(18, 24)
+        for k in range(n):
+            a = 2 * math.pi * k / n + rng.uniform(-0.05, 0.05)
+            L_ = rd * rng.uniform(0.85, 1.05)
+            w = rd * 0.13
+            droop = rng.uniform(-0.25, 0.05)
+            d = Vector((math.cos(a), math.sin(a), 0))
+            sd = Vector((-math.sin(a), math.cos(a), 0))
+            vs = []
+            for i, s in enumerate((0.22, 0.6, 1.0)):
+                c = d * (L_ * s) + Vector((0, 0, droop * L_ * s * s + 0.0015))
+                ww = w * (0.5 if s == 0.22 else (1.0 if s == 0.6 else 0.55))
+                vs.append((bm.verts.new(top + R @ (c + sd * ww)), bm.verts.new(top + R @ (c - sd * ww))))
+            for i in range(2):
+                f = bm.faces.new((vs[i][0], vs[i][1], vs[i + 1][1], vs[i + 1][0]))
+                f.material_index = 1; f.smooth = True
+    elif kind == "poppy":
+        rd = rng.uniform(0.022, 0.032)
+        ellipsoid(bm, top + R @ Vector((0, 0, 0.004)), (0.004, 0.004, 0.005), R, subdiv=2, mat_index=2)
+        for k in range(4):
+            a = math.pi / 2 * k + rng.uniform(-0.2, 0.2)
+            cupv = rng.uniform(0.5, 0.9)
+            rows = []
+            for i in range(6):
+                s = i / 5
+                ring = []
+                for j in range(7):
+                    u = (j / 6 - 0.5) * 1.9
+                    ang = a + u * 0.75 * (0.3 + s)
+                    r = rd * s
+                    p = Vector((math.cos(ang) * r, math.sin(ang) * r, cupv * rd * s * s + 0.001))
+                    ring.append(bm.verts.new(top + R @ p))
+                rows.append(ring)
+            for i in range(5):
+                for j in range(6):
+                    f = bm.faces.new((rows[i][j], rows[i][j + 1], rows[i + 1][j + 1], rows[i + 1][j]))
+                    f.material_index = 1; f.smooth = True
+    else:  # cornflower
+        rd = rng.uniform(0.012, 0.016)
+        ellipsoid(bm, top, (0.004, 0.004, 0.006), R, subdiv=2, mat_index=0)
+        for k in range(rng.randint(9, 12)):
+            a = rng.uniform(0, 6.28)
+            d = R @ Vector((math.cos(a), math.sin(a), rng.uniform(0.3, 0.8))).normalized()
+            q = Vector((0, 0, 1)).rotation_difference(d).to_matrix()
+            ellipsoid(bm, top + d * rd * 0.6, (rd * 0.22, rd * 0.22, rd * 0.5), q, subdiv=1, mat_index=1, noise_amp=0.3, rng=rng)
+    # a few leaves on the stem
+    for k in range(rng.randint(1, 3)):
+        i = rng.randint(2, seg // 2)
+        a = rng.uniform(0, 6.28)
+        d = Vector((math.cos(a), math.sin(a), 0.7)).normalized()
+        q = Vector((0, 0, 1)).rotation_difference(d).to_matrix()
+        ellipsoid(bm, pts[i] + d * 0.015, (0.004, 0.0012, 0.018), q, subdiv=1, mat_index=0)
+    return bm_to_obj(name, bm, mats, col=col)
+
+
+def butterfly(name, rng, kind="fritillary"):
+    """Procedural butterfly: body + 4 wings (two per side as one hinged object each side).
+    Returns (root, left_wing, right_wing). Wingspan ~4.5 cm. Root faces +Y, wings hinge on local Y axis."""
+    root = C.empty(name)
+    root.empty_display_size = 0.02
+    span = rng.uniform(0.040, 0.050) if kind != "white" else rng.uniform(0.045, 0.055)
+    # body
+    bm = bmesh.new()
+    ellipsoid(bm, (0, 0.004, 0), (0.0018, 0.0035, 0.0018), subdiv=2)
+    ellipsoid(bm, (0, -0.007, -0.0003), (0.0014, 0.0095, 0.0014), subdiv=2)
+    ellipsoid(bm, (0, 0.0085, 0.0002), (0.0013, 0.0013, 0.0013), subdiv=2)
+    for sgn in (1, -1):   # antennae
+        pts = [Vector((sgn * 0.0006 + sgn * 0.004 * s, 0.009 + 0.011 * s, 0.001 + 0.004 * s)) for s in (0, 0.33, 0.66, 1.0)]
+        tube(bm, pts, [0.00012] * 4, n_around=4, cap_end=True)
+    mb = C.principled(name + "_body", base=(0.05, 0.04, 0.03), rough=0.7, sheen=0.6)
+    body = bm_to_obj(name + "_body", bm, [mb])
+    body.parent = root
+    # wing material (UV: x = along span 0..1, y = front(1)..back(0))
+    m, nt, p = C.new_mat(name + "_wing")
+    out = nt.nodes["Material Output"]
+    uv = node(nt, "ShaderNodeUVMap")
+    vor = node(nt, "ShaderNodeTexVoronoi"); vor.inputs["Scale"].default_value = 7.0
+    nt.links.new(uv.outputs[0], vor.inputs["Vector"])
+    sep = node(nt, "ShaderNodeSeparateXYZ"); nt.links.new(uv.outputs[0], sep.inputs[0])
+    if kind == "white":
+        col_a, col_b = (0.85, 0.86, 0.8), (0.05, 0.05, 0.05)
+        spots = math_node(nt, "LESS_THAN", vor.outputs["Distance"], 0.06)
+        tipm = math_node(nt, "GREATER_THAN", sep.outputs[0], 0.86)
+        tipf = math_node(nt, "MULTIPLY", tipm, sep.outputs[1])
+        dark = math_node(nt, "MAXIMUM", math_node(nt, "MULTIPLY", spots, 0.7), tipf)
+    else:
+        col_a, col_b = (0.62, 0.24, 0.03), (0.03, 0.02, 0.015)
+        spots = math_node(nt, "LESS_THAN", vor.outputs["Distance"], 0.13)
+        edge = math_node(nt, "GREATER_THAN", sep.outputs[0], 0.9)
+        base = math_node(nt, "LESS_THAN", sep.outputs[0], 0.12)
+        dark = math_node(nt, "MAXIMUM", math_node(nt, "MAXIMUM", spots, edge), math_node(nt, "MULTIPLY", base, 0.7))
+    mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"
+    nt.links.new(dark, mix.inputs[0])
+    mix.inputs[6].default_value = (*col_a, 1); mix.inputs[7].default_value = (*col_b, 1)
+    nt.links.new(mix.outputs[2], p.inputs["Base Color"])
+    p.inputs["Roughness"].default_value = 0.65
+    p.inputs["Sheen Weight"].default_value = 0.4
+    tr = node(nt, "ShaderNodeBsdfTranslucent"); nt.links.new(mix.outputs[2], tr.inputs["Color"])
+    ms = node(nt, "ShaderNodeMixShader"); ms.inputs[0].default_value = 0.35
+    nt.links.new(p.outputs[0], ms.inputs[1]); nt.links.new(tr.outputs[0], ms.inputs[2])
+    nt.links.new(ms.outputs[0], out.inputs["Surface"])
+    wings = []
+    for sgn in (1, -1):
+        bm = bmesh.new(); uvl = bm.loops.layers.uv.new("UVMap")
+        # forewing (front) and hindwing (back) outlines in the XY plane, hinge on Y axis at x=0
+        for (y0, Lx, Ly, sweep, idx) in ((0.002, span * 0.5, span * 0.30, 0.25, 0), (-0.004, span * 0.36, span * 0.28, -0.35, 1)):
+            n = 14
+            ctr = bm.verts.new((0, y0, 0))
+            ring = []
+            for k in range(n + 1):
+                a = math.pi * k / n          # 0 .. pi around the outline
+                r = 1.0 - 0.08 * math.sin(3 * a)
+                x = math.sin(a) * Lx * r
+                y = y0 + (math.cos(a) * Ly * 0.5 + sweep * x) * (1 if idx == 0 else 1)
+                ring.append(bm.verts.new((sgn * x, y, 0)))
+            for k in range(n):
+                f = bm.faces.new((ctr, ring[k], ring[k + 1]) if sgn > 0 else (ctr, ring[k + 1], ring[k]))
+                f.smooth = True
+                for loop in f.loops:
+                    co = loop.vert.co
+                    loop[uvl].uv = (abs(co.x) / (span * 0.5), (co.y + span * 0.3) / (span * 0.6))
+        w = bm_to_obj(name + ("_wL" if sgn > 0 else "_wR"), bm, [m])
+        w.parent = root
+        wings.append(w)
+    return root, wings[0], wings[1]
+
+
+def bee(name, rng):
+    root = C.empty(name)
+    bm = bmesh.new()
+    ellipsoid(bm, (0, 0.0035, 0), (0.0022, 0.0024, 0.0022), subdiv=2, mat_index=0)              # thorax (fuzzy)
+    ellipsoid(bm, (0, -0.0035, -0.0004), (0.0026, 0.0045, 0.0024), subdiv=3, mat_index=1)       # abdomen
+    ellipsoid(bm, (0, 0.0072, 0), (0.0015, 0.0012, 0.0015), subdiv=2, mat_index=2)              # head
+    m_th = C.principled(name + "_th", base=(0.35, 0.22, 0.08), rough=0.9, sheen=1.0)
+    m_head = C.principled(name + "_hd", base=(0.03, 0.025, 0.02), rough=0.5)
+    m_ab, nt, p = C.new_mat(name + "_ab")
+    tc = node(nt, "ShaderNodeTexCoord")
+    sp = node(nt, "ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Object"], sp.inputs[0])
+    st = math_node(nt, "MULTIPLY", sp.outputs[1], 2 * math.pi / 0.0021)
+    sn = math_node(nt, "SINE", st)
+    mx = nt.nodes.new("ShaderNodeMix"); mx.data_type = "RGBA"
+    nt.links.new(math_node(nt, "GREATER_THAN", sn, 0.1), mx.inputs[0])
+    mx.inputs[6].default_value = (0.03, 0.025, 0.02, 1); mx.inputs[7].default_value = (0.55, 0.36, 0.05, 1)
+    nt.links.new(mx.outputs[2], p.inputs["Base Color"])
+    p.inputs["Roughness"].default_value = 0.6
+    p.inputs["Sheen Weight"].default_value = 0.8
+    b = bm_to_obj(name + "_body", bm, [m_th, m_ab, m_head])
+    b.parent = root
+    # wings: blurred-disc look (they beat at ~230 Hz: always a translucent smear on film)
+    bm = bmesh.new()
+    for sgn in (1, -1):
+        ellipsoid(bm, (sgn * 0.0045, 0.002, 0.0022), (0.0042, 0.0026, 0.0001), Euler((0, sgn * 0.3, 0)).to_matrix(), subdiv=2)
+    mw = C.principled(name + "_wing", base=(0.9, 0.9, 0.9), rough=0.2, alpha=0.18)
+    w = bm_to_obj(name + "_wings", bm, [mw])
+    w.parent = root
+    return root
+
+
+def pappus(name, col=None):
+    """Dandelion seed (pappus): achene + beak + umbrella of fine filaments. ~1.2 cm tall."""
+    bm = bmesh.new()
+    ellipsoid(bm, (0, 0, 0.0), (0.0005, 0.0005, 0.0018), subdiv=1, mat_index=1)
+    tube(bm, [Vector((0, 0, 0.0016)), Vector((0, 0, 0.009))], [0.00008, 0.00006], n_around=3, cap_end=False)
+    top = Vector((0, 0, 0.009))
+    n = 48
+    rng = random.Random(len(name))
+    for k in range(n):
+        a = 2 * math.pi * k / n + rng.uniform(-0.04, 0.04)
+        el = rng.uniform(0.25, 0.55)
+        d = Vector((math.cos(a) * math.cos(el), math.sin(a) * math.cos(el), math.sin(el)))
+        L_ = rng.uniform(0.0055, 0.007)
+        side = Vector((-math.sin(a), math.cos(a), 0)) * 0.000035
+        v0 = bm.verts.new(top + side); v1 = bm.verts.new(top - side)
+        v2 = bm.verts.new(top + d * L_ - side * 0.3 + Vector((0, 0, -0.0006))); v3 = bm.verts.new(top + d * L_ + side * 0.3 + Vector((0, 0, -0.0006)))
+        bm.faces.new((v0, v1, v2, v3))
+    m1 = C.principled(name + "_fil", base=(0.95, 0.93, 0.88), rough=0.4, transmission=0.3)
+    m2 = C.principled(name + "_ach", base=(0.25, 0.15, 0.06), rough=0.6)
+    return bm_to_obj(name, bm, [m1, m2], smooth=False, col=col)
