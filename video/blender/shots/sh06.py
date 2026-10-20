@@ -189,11 +189,31 @@ def build(ctx):
         L.bake(o, frames, "rotation_euler", tumble_rots(cells + 7, rng.uniform(0.4, 1.6), shear, n_frames))
         cells += 1
 
+    # far crowd: cheap low-poly cells 1.8-6 m ahead, fading into the haze (scale cue)
+    far_me = [L.rbc_mesh(f"rbcfar{k}", D=rng.uniform(0.074, 0.082), seed=40 + k, seg=20, nprof=8, wobble=0.04) for k in range(3)]
+    for me in far_me:
+        me.materials.append(m_rbc)
+    nf = 0
+    tries = 0
+    while nf < 420 and tries < 6000:
+        tries += 1
+        r = R_LUMEN * math.sqrt(rng.uniform(0, 0.9)); phi = rng.uniform(0, 2 * math.pi)
+        y0 = rng.uniform(cam_y[0] + 1.8, cam_y[0] + 14.0)
+        pts = flow_track(r, phi, y0, 7000 + tries)
+        rel = [pts[i].y - cam_y[i] for i in range(n_frames)]
+        if min(rel) < 1.6 or min(rel) > 6.5:
+            continue
+        o = L.obj_from_mesh(f"rbcfar_{nf:03d}", far_me[nf % 3])
+        L.bake(o, frames, "location", [tuple(p) for p in pts])
+        L.bake(o, frames, "rotation_euler", tumble_rots(9000 + nf, rng.uniform(0.4, 1.6), 1.0, n_frames))
+        nf += 1
+
     # exit bolus: a packet of cells that reaches the lens on the last beat -> red wipe
     t_wipe = beat0 + 5 * period + 0.02
     i_w = min(range(n_frames), key=lambda i: abs(times[i] - t_wipe))
-    for k in range(46):
-        tgt = rng.uniform(-0.03, 0.18)
+    for k in range(110):
+        # spread along the stream so the packet keeps covering the lens through the dissolve tail
+        tgt = rng.uniform(-0.03, 0.18) + (rng.uniform(0.0, 1.4) if k >= 46 else 0.0)
         ox, oz = rng.uniform(-0.06, 0.06), rng.uniform(-0.09, 0.07)
         # scripted relative to the probe: far upstream, then carried at the lens by the last surge
         rel = [0.0] * n_frames
@@ -217,7 +237,7 @@ def build(ctx):
               for k in range(4)]
     for me in plt_me:
         me.materials.append(m_plt)
-    for k in range(36):
+    for k in range(24):
         r = R_LUMEN * rng.uniform(0.55, 0.9); phi = rng.uniform(0, 2 * math.pi)
         y0 = rng.uniform(cam_y[0] - 0.3, cam_y[0] + 10)
         pts = flow_track(r, phi, y0, 3000 + k)
@@ -256,7 +276,7 @@ def build(ctx):
     for g in range(3):
         bm = bmesh.new()
         rr0, rr1 = [(0.0, 0.12), (0.12, 0.2), (0.2, 0.27)][g]
-        for k in range(260):
+        for k in range(120):
             rr = rng.uniform(rr0, rr1); ph = rng.uniform(0, 6.28)
             c = Vector((rr * math.cos(ph), rng.uniform(-2, 12), rr * math.sin(ph)))
             m = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=rng.uniform(0.0012, 0.003))
@@ -273,14 +293,17 @@ def build(ctx):
         L.bake(o, frames, "location", loc)
 
     # ---------------------------------------------------------------- light (probe light + tunnel glow)
-    key = C.area("probe_key", loc=(0, 0, 0), size=0.12, power=0.8, kelvin_k=4300)
+    key = C.area("probe_key", loc=(0, 0, 0), size=0.15, power=0.4, kelvin_k=4300)
     key.parent = cam; key.location = (0.07, 0.10, 0.02); key.rotation_euler = (math.radians(-12), math.radians(10), 0)
     fill = C.area("probe_fill", loc=(0, 0, 0), size=0.12, power=0.35, kelvin_k=4200)
     fill.parent = cam; fill.location = (-0.12, -0.08, 0.03); fill.rotation_euler = (math.radians(15), math.radians(-18), 0)
-    for k, (dz, pw) in enumerate(((0.9, 3.0), (2.2, 6.0))):
-        pl = C.point_light(f"tunnel{k}", loc=(0, 0, 0), power=pw, radius=0.12, kelvin_k=3600)
-        pl.parent = cam; pl.location = (0.06 if k else -0.05, 0.05 + 0.03 * k, -dz)
+    # light from the depth of the lumen: backlights the cells (glowing translucent rims) and gives
+    # the space depth; kept out of glossy rays so the wet wall shows no streaky hot-spots
+    for k, (dz, pw, dx) in enumerate(((0.9, 2.0, -0.05), (2.2, 5.0, 0.06), (3.6, 16.0, 0.0))):
+        pl = C.point_light(f"tunnel{k}", loc=(0, 0, 0), power=pw, radius=0.12, kelvin_k=3400)
+        pl.parent = cam; pl.location = (dx, 0.05 + 0.03 * k, -dz)
         pl.visible_camera = False
+        pl.visible_glossy = k == 0
     sc.view_settings.exposure = 0.35
 
     th = L.cam_child_empty("TRK_heart", cam, (300, 1260), depth=0.6)

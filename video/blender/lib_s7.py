@@ -172,35 +172,49 @@ def _bump_chain(nt, p, heights, distance=0.002):
     return prev
 
 
-def mat_rbc(name="RBC", fog=None):
-    """Erythrocyte: deep translucent crimson, haemoglobin SSS, wet membrane coat with soft sheen,
-    faint membrane wrinkles, per-cell colour variation."""
+def mat_rbc(name="RBC", fog=None, D=0.078):
+    """Erythrocyte, subsurface-dominant: deep crimson body with red-weighted SSS so thin centre and
+    rims glow when backlit, darker central dimple, broad soft specular (rough ~0.4) with a faint wet
+    sheen, tiny membrane irregularities, per-cell colour variation. No lacquer."""
     m, nt, p = C.new_mat(name)
     p.subsurface_method = SSS_METHOD
     oi = _n(nt, "ShaderNodeObjectInfo")
     ramp = _n(nt, "ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].color = (0.15, 0.005, 0.007, 1)
-    ramp.color_ramp.elements[1].color = (0.25, 0.012, 0.011, 1)
+    ramp.color_ramp.elements[0].color = (0.20, 0.010, 0.012, 1)
+    ramp.color_ramp.elements[1].color = (0.30, 0.018, 0.016, 1)
     nt.links.new(oi.outputs["Random"], ramp.inputs[0])
-    nt.links.new(ramp.outputs[0], p.inputs["Base Color"])
-    p.inputs["Roughness"].default_value = 0.5
-    p.inputs["Subsurface Weight"].default_value = 1.0
-    p.inputs["Subsurface Radius"].default_value = (1.0, 0.10, 0.06)
-    p.inputs["Subsurface Scale"].default_value = 0.012
-    p.inputs["Subsurface Anisotropy"].default_value = 0.6
-    p.inputs["Coat Weight"].default_value = 0.45
-    p.inputs["Coat Roughness"].default_value = 0.16
-    p.inputs["Coat IOR"].default_value = 1.38
-    p.inputs["Sheen Weight"].default_value = 0.0
-    p.inputs["Sheen Tint"].default_value = (1.0, 0.55, 0.5, 1)
-    p.inputs["Sheen Roughness"].default_value = 0.4
+    # darker dimple: radial distance in the disc plane (object XY), 0 at the centre
     tc = _n(nt, "ShaderNodeTexCoord")
-    nz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 38.0, "Detail": 3.0, "Roughness": 0.6})
+    sep = _n(nt, "ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Object"], sep.inputs[0])
+    cxy = _n(nt, "ShaderNodeCombineXYZ")
+    nt.links.new(sep.outputs["X"], cxy.inputs["X"]); nt.links.new(sep.outputs["Y"], cxy.inputs["Y"])
+    ln = _n(nt, "ShaderNodeVectorMath"); ln.operation = "LENGTH"; nt.links.new(cxy.outputs[0], ln.inputs[0])
+    dm = _n(nt, "ShaderNodeMapRange"); dm.interpolation_type = "SMOOTHSTEP"
+    dm.inputs["From Min"].default_value = D * 0.08; dm.inputs["From Max"].default_value = D * 0.30
+    dm.inputs["To Min"].default_value = 0.55; dm.inputs["To Max"].default_value = 1.0
+    nt.links.new(ln.outputs["Value"], dm.inputs["Value"])
+    mul = _n(nt, "ShaderNodeMix"); mul.data_type = "RGBA"; mul.blend_type = "MULTIPLY"; mul.inputs[0].default_value = 1.0
+    nt.links.new(ramp.outputs[0], mul.inputs[6])
+    cc = _n(nt, "ShaderNodeCombineColor")
+    for s_ in ("Red", "Green", "Blue"):
+        nt.links.new(dm.outputs[0], cc.inputs[s_])
+    nt.links.new(cc.outputs[0], mul.inputs[7])
+    nt.links.new(mul.outputs[2], p.inputs["Base Color"])
+    p.inputs["Roughness"].default_value = 0.42
+    p.inputs["Specular IOR Level"].default_value = 0.35
+    p.inputs["Subsurface Weight"].default_value = 1.0
+    p.inputs["Subsurface Radius"].default_value = (1.0, 0.07, 0.045)
+    p.inputs["Subsurface Scale"].default_value = 0.022
+    p.inputs["Subsurface Anisotropy"].default_value = 0.7
+    p.inputs["Coat Weight"].default_value = 0.18
+    p.inputs["Coat Roughness"].default_value = 0.3
+    p.inputs["Coat IOR"].default_value = 1.36
+    p.inputs["Sheen Weight"].default_value = 0.12
+    p.inputs["Sheen Tint"].default_value = (1.0, 0.45, 0.4, 1)
+    p.inputs["Sheen Roughness"].default_value = 0.5
+    nz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 38.0, "Detail": 2.0, "Roughness": 0.6})
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
-    nz2 = _n(nt, "ShaderNodeTexNoise", **{"Scale": 260.0, "Detail": 3.0})
-    nt.links.new(tc.outputs["Object"], nz2.inputs["Vector"])
-    b = _bump_chain(nt, p, [(nz.outputs["Fac"], 0.3)], distance=0.004)
-    nt.links.new(b.outputs[0], p.inputs["Coat Normal"])
+    _bump_chain(nt, p, [(nz.outputs["Fac"], 0.22)], distance=0.004)
     if fog:
         fog_wrap(m, **fog)
     return m
@@ -479,7 +493,7 @@ def path_tube(name, pts, radius_fn, nu=32, store_s=True):
     return me, s_acc
 
 
-def mat_mito(name="Mito", glow=(1.0, 0.45, 0.12), strength=6.0, fog=None, hero=False):
+def mat_mito(name="Mito", glow=(1.0, 0.36, 0.07), strength=4.0, fog=None, hero=False):
     """Mitochondrion outer body: translucent amber membrane with bumpy surface; for non-hero
     mitochondria a cristae-like stripe pattern glows through (cheap); hero mitos get real cristae."""
     m, nt, p = mat_wet_tissue(name, base=(0.55, 0.22, 0.08), sss_radius=(1.0, 0.5, 0.2), sss_scale=0.006,
@@ -490,7 +504,7 @@ def mat_mito(name="Mito", glow=(1.0, 0.45, 0.12), strength=6.0, fog=None, hero=F
     _bump_chain(nt, p, [(nz.outputs["Fac"], 0.15)], distance=0.002)
     # cristae stripes across the long (local Y) axis, wobbly
     wv = _n(nt, "ShaderNodeTexWave"); wv.wave_type = "BANDS"; wv.bands_direction = "Y"
-    wv.inputs["Scale"].default_value = 1.6; wv.inputs["Distortion"].default_value = 6.0
+    wv.inputs["Scale"].default_value = 380.0; wv.inputs["Distortion"].default_value = 5.0
     wv.inputs["Detail"].default_value = 2.0
     nt.links.new(tc.outputs["Object"], wv.inputs["Vector"])
     oi = _n(nt, "ShaderNodeObjectInfo")
@@ -501,8 +515,9 @@ def mat_mito(name="Mito", glow=(1.0, 0.45, 0.12), strength=6.0, fog=None, hero=F
     nt.links.new(tv.outputs[0], mt.inputs[0])
     nt.links.new(mt.outputs[0], comb.inputs["X"]); nt.links.new(oi.outputs["Random"], comb.inputs["Y"])
     nt.links.new(comb.outputs[0], hum.inputs["Vector"])
-    ramp = _n(nt, "ShaderNodeMapRange"); ramp.inputs["From Min"].default_value = 0.55
-    ramp.inputs["From Max"].default_value = 0.95
+    ramp = _n(nt, "ShaderNodeMapRange"); ramp.inputs["From Min"].default_value = 0.25
+    ramp.inputs["From Max"].default_value = 1.0
+    ramp.inputs["To Min"].default_value = 0.15
     nt.links.new(wv.outputs["Fac"], ramp.inputs["Value"])
     mul = _n(nt, "ShaderNodeMath"); mul.operation = "MULTIPLY"
     nt.links.new(ramp.outputs[0], mul.inputs[0]); nt.links.new(hum.outputs["Fac"], mul.inputs[1])
@@ -666,12 +681,12 @@ def store_rest(obj):
     at.data.foreach_set("vector", co)
 
 
-def mat_muscle(name="Muscle", fog=None, sarcomere=0.025):
+def mat_muscle(name="Muscle", fog=None, sarcomere=0.04):
     """Skeletal muscle fibre (sarcolemma seen from outside): deep red SSS body, A/I striation bands
     (period = sarcomere length, read from the 'rest' attribute so they bunch on contraction),
     longitudinal myofibril grain, wet glossy coat, warm glow where contracting."""
     m, nt, p = mat_wet_tissue(name, base=(0.30, 0.035, 0.03), sss_radius=(1.0, 0.3, 0.2), sss_scale=0.04,
-                              rough=0.5, coat=0.85, coat_rough=0.09)
+                              rough=0.55, coat=0.5, coat_rough=0.2)
     at = _n(nt, "ShaderNodeAttribute"); at.attribute_name = "rest"
     ac = _n(nt, "ShaderNodeAttribute"); ac.attribute_name = "contract"
     sep = _n(nt, "ShaderNodeSeparateXYZ"); nt.links.new(at.outputs["Vector"], sep.inputs[0])
@@ -685,7 +700,8 @@ def mat_muscle(name="Muscle", fog=None, sarcomere=0.025):
     nt.links.new(wobble.outputs[0], ph.inputs[0])
     sn = _n(nt, "ShaderNodeMath"); sn.operation = "SINE"; nt.links.new(ph.outputs[0], sn.inputs[0])
     band = _n(nt, "ShaderNodeMapRange"); band.interpolation_type = "SMOOTHSTEP"
-    band.inputs["From Min"].default_value = -0.35; band.inputs["From Max"].default_value = 0.35
+    band.inputs["From Min"].default_value = -0.9; band.inputs["From Max"].default_value = 0.9
+    band.inputs["To Min"].default_value = 0.25; band.inputs["To Max"].default_value = 0.75
     nt.links.new(sn.outputs[0], band.inputs["Value"])
     # myofibril grain: noise stretched along Y
     mp = _n(nt, "ShaderNodeMapping"); mp.inputs["Scale"].default_value = (90.0, 2.0, 90.0)
@@ -822,9 +838,10 @@ def mat_endothelium_fast(name="Endothelium", tile_v=4.0, seed=1):
     m, nt, p = mat_wet_tissue(name, base=(0.36, 0.05, 0.045), sss_radius=(1.0, 0.2, 0.12), sss_scale=0.06,
                               rough=0.5, coat=1.0, coat_rough=0.06)
     p.inputs["Subsurface Weight"].default_value = 0.0      # budget: wall SSS adds cost, invisible under the coat
-    p.inputs["Coat Weight"].default_value = 0.4
-    p.inputs["Coat Tint"].default_value = (0.95, 0.55, 0.5, 1)
+    p.inputs["Coat Weight"].default_value = 0.22
+    p.inputs["Coat Tint"].default_value = (1.0, 0.6, 0.55, 1)
     p.inputs["Specular IOR Level"].default_value = 0.2
+    p.inputs["Roughness"].default_value = 0.55
     uv = _n(nt, "ShaderNodeUVMap"); uv.uv_map = "UVMap"
     tx = _n(nt, "ShaderNodeTexImage"); tx.image = img; tx.interpolation = "Linear"
     nt.links.new(uv.outputs[0], tx.inputs["Vector"])
@@ -834,12 +851,12 @@ def mat_endothelium_fast(name="Endothelium", tile_v=4.0, seed=1):
     nt.links.new(tc.outputs["Object"], fine.inputs["Vector"])
     hsum = _n(nt, "ShaderNodeMath"); hsum.operation = "MULTIPLY_ADD"; hsum.inputs[1].default_value = 0.12
     nt.links.new(fine.outputs["Fac"], hsum.inputs[0]); nt.links.new(sep.outputs[0], hsum.inputs[2])
-    b = _n(nt, "ShaderNodeBump"); b.inputs["Strength"].default_value = 0.55; b.inputs["Distance"].default_value = 0.006
+    b = _n(nt, "ShaderNodeBump"); b.inputs["Strength"].default_value = 0.35; b.inputs["Distance"].default_value = 0.006
     nt.links.new(hsum.outputs[0], b.inputs["Height"])
     nt.links.new(b.outputs[0], p.inputs["Normal"])
     cr = _n(nt, "ShaderNodeValToRGB")
-    cr.color_ramp.elements[0].color = (0.13, 0.012, 0.014, 1)
-    cr.color_ramp.elements[1].color = (0.24, 0.03, 0.026, 1)
+    cr.color_ramp.elements[0].color = (0.30, 0.05, 0.055, 1)
+    cr.color_ramp.elements[1].color = (0.42, 0.08, 0.08, 1)
     nt.links.new(sep.outputs[1], cr.inputs[0])
     # darker borders: multiply by (0.55 + 0.45*height)
     br = _n(nt, "ShaderNodeMapRange"); br.inputs["To Min"].default_value = 0.6
@@ -857,7 +874,7 @@ def mat_endothelium_fast(name="Endothelium", tile_v=4.0, seed=1):
     nt.links.new(mn.outputs[2], p.inputs["Base Color"])
     rn = _n(nt, "ShaderNodeTexNoise", **{"Scale": 6.0, "Detail": 2.0})
     nt.links.new(tc.outputs["Object"], rn.inputs["Vector"])
-    rr = _n(nt, "ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.03; rr.inputs["To Max"].default_value = 0.16
+    rr = _n(nt, "ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.16; rr.inputs["To Max"].default_value = 0.32
     nt.links.new(rn.outputs["Fac"], rr.inputs["Value"])
     nt.links.new(rr.outputs[0], p.inputs["Coat Roughness"])
     fog_wrap(m)
@@ -881,16 +898,15 @@ LEAN = {"max_bounces": 2, "diffuse_bounces": 1, "glossy_bounces": 1, "transmissi
 
 
 def mat_mito_outer():
-    """Hero mitochondrion envelope: double membrane, mostly clear so the glowing cristae read."""
-    m, nt, p = C.new_mat("MitoOuter")
-    p.inputs["Base Color"].default_value = (1.0, 0.75, 0.5, 1)
-    p.inputs["Transmission Weight"].default_value = 0.92
-    p.inputs["Roughness"].default_value = 0.18
-    p.inputs["IOR"].default_value = 1.38
-    p.inputs["Coat Weight"].default_value = 0.6
-    p.inputs["Coat Roughness"].default_value = 0.05
+    """Hero mitochondrion envelope: amber translucent double membrane, partly see-through (alpha,
+    cheap) so the glowing cristae inside read clearly."""
+    m, nt, p = mat_wet_tissue("MitoOuter", base=(0.6, 0.28, 0.1), sss_radius=(1.0, 0.5, 0.2), sss_scale=0.004,
+                              rough=0.3, coat=0.8, coat_rough=0.08)
+    p.inputs["Alpha"].default_value = 0.5
+    p.inputs["Emission Color"].default_value = (1.0, 0.45, 0.12, 1)
+    p.inputs["Emission Strength"].default_value = 0.12
     tc = _n(nt, "ShaderNodeTexCoord")
-    nz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 220.0, "Detail": 4.0})
+    nz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 220.0, "Detail": 3.0})
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
     _bump_chain(nt, p, [(nz.outputs["Fac"], 0.1)], distance=0.0008)
     fog_wrap(m)
@@ -898,7 +914,7 @@ def mat_mito_outer():
 
 
 def mat_cristae():
-    m, nt, p = mat_wet_tissue("Cristae", base=(0.9, 0.45, 0.15), sss_radius=(1, 0.5, 0.2), sss_scale=0.002,
+    m, nt, p = mat_wet_tissue("Cristae", base=(0.55, 0.22, 0.06), sss_radius=(1, 0.5, 0.2), sss_scale=0.002,
                                 rough=0.4, coat=0.3, coat_rough=0.2)
     tv = time_value(nt)
     oi = _n(nt, "ShaderNodeObjectInfo")
@@ -909,7 +925,7 @@ def mat_cristae():
     nt.links.new(oi.outputs["Random"], cb.inputs["Y"])
     nt.links.new(cb.outputs[0], hum.inputs["Vector"])
     s = _n(nt, "ShaderNodeMapRange"); s.inputs["From Min"].default_value = 0.3; s.inputs["From Max"].default_value = 0.7
-    s.inputs["To Min"].default_value = 3.0; s.inputs["To Max"].default_value = 9.0
+    s.inputs["To Min"].default_value = 0.25; s.inputs["To Max"].default_value = 0.8
     nt.links.new(hum.outputs["Fac"], s.inputs["Value"])
     p.inputs["Emission Color"].default_value = (1.0, 0.5, 0.14, 1)
     nt.links.new(s.outputs[0], p.inputs["Emission Strength"])

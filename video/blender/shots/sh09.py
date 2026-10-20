@@ -18,7 +18,7 @@ import lib_s7 as L
 FOG_OUT = dict(color=(0.045, 0.012, 0.010), dist=1.6, strength=1.0, power=1.1)
 HERO_C = Vector((0.47, 0.0, 0.0))      # hero fibre axis (x, -, z)
 R_F = 0.22
-J_Y = 2.15                             # junction position along the hero fibre
+J_Y = 2.75                             # junction position along the hero fibre
 DIVE_Y = 1.86                          # where the probe enters the hero fibre
 
 
@@ -48,7 +48,7 @@ def build(ctx):
     for fi, (fc, frad, is_hero_fasc) in enumerate(fasc):
         # hex-packed fibres inside the fascicle
         pts = []
-        sp = 2 * R_F + 0.025
+        sp = 2 * R_F + 0.05
         for a in range(-4, 5):
             for b in range(-4, 5):
                 p = Vector((a * sp + b * sp * 0.5, 0, b * sp * 0.866))
@@ -62,7 +62,7 @@ def build(ctx):
         for p in pts:
             c = fc + p
             hero = is_hero_fasc and (c - HERO_C).length < 0.01
-            me = L.fibre_mesh(f"fib{k}", radius=R_F * rng.uniform(0.9, 1.05), y0=-3.0, y1=7.0, seed=k,
+            me = L.fibre_mesh(f"fib{k}", radius=R_F * rng.uniform(0.9, 1.0), y0=-3.0, y1=7.0, seed=k,
                               nu=48 if hero else 36, nv=420 if hero else 260)
             o = L.obj_from_mesh(f"fibre_{k:02d}" if not hero else "fibre_hero", me, m_mus_hero if hero else m_mus,
                                 loc=(c.x, 0, c.z))
@@ -71,7 +71,8 @@ def build(ctx):
         # perimysium sheath
         sm = L.tube_mesh(f"sheath{fi}", radius=frad + 0.03, y0=-3, y1=7, nu=96, nv=200, seed=50 + fi, amp=0.03,
                          inward=False)
-        so = L.obj_from_mesh(f"sheath_{fi}", sm, sheath_mat, loc=(fc.x, 0, fc.z))
+        if fc.length > 1.5:
+            so = L.obj_from_mesh(f"sheath_{fi}", sm, sheath_mat, loc=(fc.x, 0, fc.z))
     # contraction: hero + neighbours (delayed), others still
     for o, c, hero in fibres:
         d = (c - HERO_C).length
@@ -85,12 +86,13 @@ def build(ctx):
 
     # ---------------------------------------------------------------- nerve (myelinated motor axon)
     npts = []
+    NZ = -0.17                                # nerve runs along the lower flank of the hero fibre
     for i in range(240):
         u = i / 239
-        y = C.lerp(-1.6, J_Y - 0.05, u)
-        x = C.lerp(-0.02, HERO_C.x - R_F - 0.035, C.smooth(C.remap(y, 0.4, J_Y - 0.1, C.smooth)))
-        z = C.lerp(-0.2, -0.04, C.smooth(C.remap(y, -0.5, J_Y, C.smooth))) + 0.03 * math.sin(y * 2.1)
-        x += 0.025 * math.sin(y * 1.3 + 1)
+        y = C.lerp(-1.4, J_Y - 0.05, u)
+        z = C.lerp(-0.55, NZ, C.smooth(C.remap(y, -0.6, 1.1, C.smooth))) + 0.012 * math.sin(y * 2.1)
+        xs = HERO_C.x - math.sqrt(max(0.0, (R_F + 0.035) ** 2 - (z - HERO_C.z) ** 2))
+        x = C.lerp(0.10, xs, C.smooth(C.remap(y, -0.6, 1.1, C.smooth)))
         npts.append(Vector((x, y, z)))
     internode = 0.55
     s_end_guess = sum((npts[i] - npts[i - 1]).length for i in range(1, len(npts)))
@@ -98,9 +100,9 @@ def build(ctx):
     def nerve_r(s, i):
         x = (s % internode) / internode
         node = min(x, 1 - x) * internode          # distance to nearest node of Ranvier
-        r = 0.032 + 0.030 * C.smooth(node / 0.05)
+        r = 0.022 + 0.020 * C.smooth(node / 0.04)
         if s > s_end_guess - 0.12:                # unmyelinated terminal
-            r = 0.026
+            r = 0.018
         return r
     # resample densely so the nodes are well formed
     dense = []
@@ -116,7 +118,8 @@ def build(ctx):
     m_bout = make_bouton_mat(t_junc)
     for b in range(9):
         a = rng.uniform(-0.9, 0.9)
-        p = Vector((HERO_C.x - R_F * math.cos(a) * 0.98, J_Y + rng.uniform(-0.09, 0.09), HERO_C.z + R_F * math.sin(a) * 0.4 - 0.04))
+        a = math.asin(max(-1, min(1, NZ / R_F))) + rng.uniform(-0.35, 0.35)
+        p = Vector((HERO_C.x - R_F * math.cos(a) * 0.99, J_Y + rng.uniform(-0.09, 0.09), HERO_C.z + R_F * math.sin(a)))
         bo = L.obj_from_mesh(f"bouton{b}", L.blob_mesh(f"bt{b}", radius=rng.uniform(0.016, 0.026), sub=3, seed=200 + b,
                                                        amp=0.2), m_bout, loc=p)
     # impulse light travels with the front (real teal illumination on nearby tissue)
@@ -131,17 +134,18 @@ def build(ctx):
         ipos.append(tuple(dense[idx] + Vector((0, 0, 0.05))))
         on = 1.0 if 0 < s < s_end else 0.0
         flash = math.exp(-max(0, t - t_junc) / 0.25) if t >= t_junc else 0.0
-        ipow.append(4.0 * on + 10.0 * flash)
+        ipow.append(0.5 * on + 1.5 * flash)
     L.bake(imp, frames, "location", ipos)
     L.bake_id(imp.data, frames, "energy", ipow)
-    trk_n = C.empty("TRK_nerve", tuple(dense[int(len(dense) * 0.55)] + Vector((0, 0, 0.06))))
-    trk_f = C.empty("TRK_fiber", (HERO_C.x - R_F * 0.7, J_Y + 0.5, HERO_C.z + R_F * 0.7))
+    i_n = min(range(len(dense)), key=lambda i: abs(dense[i].y - 1.55))
+    trk_n = C.empty("TRK_nerve", tuple(dense[i_n] + Vector((0, 0, 0.03))))
+    trk_f = C.empty("TRK_fiber", (HERO_C.x - R_F * 0.85, 1.75, HERO_C.z + R_F * 0.5))
 
     # ---------------------------------------------------------------- collagen strands in the channel
     m_col = L.mat_wet_tissue("Collagen", base=(0.75, 0.66, 0.58), sss_radius=(1, 0.8, 0.6), sss_scale=0.01,
                              rough=0.45, coat=0.4, coat_rough=0.2)[0]
     L.fog_wrap(m_col)
-    for c_ in range(16):
+    for c_ in range(0):
         y0 = rng.uniform(-0.5, 5.5)
         p0 = Vector((rng.uniform(-0.5, 0.5), y0, rng.uniform(-0.45, 0.5)))
         d = Vector((rng.uniform(-1, 1), rng.uniform(0.6, 2.5), rng.uniform(-0.6, 0.6))).normalized()
@@ -168,13 +172,15 @@ def build(ctx):
     p_b = Vector((0.03, 1.05, 0.02))
     p_c = Vector((entry_x - 0.16, DIVE_Y, -0.02))
     p_d = Vector((entry_x + 0.05, DIVE_Y, -0.02))
-    p_e = Vector((HERO_C.x - 0.16, DIVE_Y, -0.02))     # final: 0.065 from hero mito
+    p_e = Vector((HERO_C.x - 0.0105 - 0.062, DIVE_Y, -0.02))     # final: ~0.06 from the hero mito
     t_a, t_b = ctx.t0 - 0.3, t_huc - 0.05
     t_c = t_huc + 0.55
     t_d = t_huc + 0.85
     t_e = ctx.t1 - 0.6
-    q_fwd = Euler((math.radians(88), 0, 0)).to_quaternion()            # looking +Y, slight down
-    q_side = Euler((0, math.radians(-90), math.radians(-90))).to_quaternion()  # looking +X, up = +Y
+    # looking down the fibres but yawed toward the hero fascicle so bundles cross the frame diagonally
+    q_fwd = Euler((math.radians(82), 0, math.radians(-14))).to_quaternion()
+    # looking +X with the camera's up = world +Y, so myofibrils run vertically in the 9:16 frame
+    q_side = Matrix(((0, 0, -1), (0, 1, 0), (1, 0, 0))).to_quaternion()
     for t in times:
         if t < t_b:
             u = C.remap(t, t_a, t_b, lambda x: x * 0.25 + 0.75 * C.smooth(x))
@@ -215,10 +221,10 @@ def build(ctx):
     fd_, fc_ = [], []
     for t in times:
         u = C.remap(t, t_c + 0.05, t_d + 0.1)
-        fd_.append(C.lerp(1.6, 0.11, u))
+        fd_.append(C.lerp(1.6, 0.3, u))
         w = C.remap(t, t_kas, t_kas + 0.6)
         col = C.lerp((0.045, 0.012, 0.010), (0.018, 0.026, 0.03), w)
-        col = C.lerp(col, (0.010, 0.032, 0.036), u)
+        col = C.lerp(col, (0.012, 0.038, 0.044), u)
         fc_.append(col)
     L.bake_id(fg, frames, 'nodes["dist"].outputs[0].default_value', fd_)
     L.bake_id(fg, frames, 'nodes["color"].outputs[0].default_value', [(*c, 1.0) for c in fc_])
@@ -227,17 +233,21 @@ def build(ctx):
     L.bake_id(w_, frames, f'nodes["{bg.name}"].inputs[0].default_value', [(*c, 1.0) for c in fc_])
 
     # ---------------------------------------------------------------- lights
-    key = C.area("key_amber", size=0.25, power=6.0, kelvin_k=3300)
+    key = C.area("key_amber", size=0.35, power=14.0, kelvin_k=3300)
     key.parent = cam; key.location = (-0.25, 0.3, 0.05); key.rotation_euler = (math.radians(-30), math.radians(-30), 0)
     for i, (p, pw, col) in enumerate(((Vector((0.1, 2.8, 0.45)), 9.0, (0.3, 0.85, 1.0)),
                                       (Vector((-0.35, 4.2, -0.3)), 14.0, (0.35, 0.9, 1.0)),
                                       (Vector((0.25, 1.2, -0.35)), 3.0, (1.0, 0.55, 0.25)))):
         pl = C.point_light(f"rim{i}", loc=tuple(p), power=pw, radius=0.15)
         pl.data.color = col; pl.visible_camera = False
+        pl.data.specular_factor = 0.0       # rims light the SSS, no hard blob reflections
+        pl.visible_glossy = False
     # soft interior light carried by the probe (switched on as we enter)
     il = C.point_light("probe_in", loc=(0, 0, 0), power=0.0, radius=0.01, kelvin_k=4500)
     il.parent = cam; il.location = (0.0, 0.015, 0.0)
-    L.bake_id(il.data, frames, "energy", [C.lerp(0.0, 0.035, C.remap(t, t_c, t_d)) for t in times])
+    il.data.specular_factor = 0.0
+    il.data.color = (0.5, 0.9, 1.0)
+    L.bake_id(il.data, frames, "energy", [C.lerp(0.0, 0.06, C.remap(t, t_c, t_d)) for t in times])
     L.bake_id(key.data, frames, "energy", [C.lerp(6.0, 0.0, C.remap(t, t_c - 0.1, t_d)) for t in times])
     sc.view_settings.exposure = 0.4
 
@@ -296,7 +306,7 @@ def make_nerve_mat(internode, t_imp0, s_end, t_junc):
     nt.links.new(rnd.outputs[0], sn.inputs[0])
     dn = L._n(nt, "ShaderNodeMath"); dn.operation = "SUBTRACT"
     nt.links.new(at.outputs["Fac"], dn.inputs[0]); nt.links.new(sn.outputs[0], dn.inputs[1])
-    g1 = L._n(nt, "ShaderNodeMath"); g1.operation = "DIVIDE"; g1.inputs[1].default_value = 0.045
+    g1 = L._n(nt, "ShaderNodeMath"); g1.operation = "DIVIDE"; g1.inputs[1].default_value = 0.03
     nt.links.new(dn.outputs[0], g1.inputs[0])
     g2 = L._n(nt, "ShaderNodeMath"); g2.operation = "MULTIPLY"; nt.links.new(g1.outputs[0], g2.inputs[0]); nt.links.new(g1.outputs[0], g2.inputs[1])
     g3 = L._n(nt, "ShaderNodeMath"); g3.operation = "MULTIPLY"; g3.inputs[1].default_value = -1.0; nt.links.new(g2.outputs[0], g3.inputs[0])
@@ -316,7 +326,7 @@ def make_nerve_mat(internode, t_imp0, s_end, t_junc):
     # travelling sheath glow around the front
     fr = L._n(nt, "ShaderNodeMath"); fr.operation = "SUBTRACT"
     nt.links.new(at.outputs["Fac"], fr.inputs[0]); nt.links.new(S.outputs[0], fr.inputs[1])
-    fr2 = L._n(nt, "ShaderNodeMath"); fr2.operation = "DIVIDE"; fr2.inputs[1].default_value = 0.18
+    fr2 = L._n(nt, "ShaderNodeMath"); fr2.operation = "DIVIDE"; fr2.inputs[1].default_value = 0.07
     nt.links.new(fr.outputs[0], fr2.inputs[0])
     fr3 = L._n(nt, "ShaderNodeMath"); fr3.operation = "MULTIPLY"; nt.links.new(fr2.outputs[0], fr3.inputs[0]); nt.links.new(fr2.outputs[0], fr3.inputs[1])
     fr4 = L._n(nt, "ShaderNodeMath"); fr4.operation = "MULTIPLY"; fr4.inputs[1].default_value = -1.0; nt.links.new(fr3.outputs[0], fr4.inputs[0])
@@ -324,11 +334,11 @@ def make_nerve_mat(internode, t_imp0, s_end, t_junc):
     act = L._n(nt, "ShaderNodeMath"); act.operation = "LESS_THAN"; act.inputs[1].default_value = s_end + 0.1
     nt.links.new(S.outputs[0], act.inputs[0])
     fr6 = L._n(nt, "ShaderNodeMath"); fr6.operation = "MULTIPLY"; nt.links.new(fr5.outputs[0], fr6.inputs[0]); nt.links.new(act.outputs[0], fr6.inputs[1])
-    tot = L._n(nt, "ShaderNodeMath"); tot.operation = "MULTIPLY_ADD"; tot.inputs[1].default_value = 0.35
+    tot = L._n(nt, "ShaderNodeMath"); tot.operation = "MULTIPLY_ADD"; tot.inputs[1].default_value = 0.12
     nt.links.new(fr6.outputs[0], tot.inputs[0])
     e1s = L._n(nt, "ShaderNodeMath"); e1s.operation = "MULTIPLY"; e1s.inputs[1].default_value = 1.0
     nt.links.new(e1.outputs[0], e1s.inputs[0]); nt.links.new(e1s.outputs[0], tot.inputs[2])
-    st = L._n(nt, "ShaderNodeMath"); st.operation = "MULTIPLY"; st.inputs[1].default_value = 40.0
+    st = L._n(nt, "ShaderNodeMath"); st.operation = "MULTIPLY"; st.inputs[1].default_value = 25.0
     nt.links.new(tot.outputs[0], st.inputs[0])
     p.inputs["Emission Color"].default_value = (0.25, 0.9, 1.0, 1)
     nt.links.new(st.outputs[0], p.inputs["Emission Strength"])
@@ -353,7 +363,7 @@ def make_bouton_mat(t_junc):
     ex = L._n(nt, "ShaderNodeMath"); ex.operation = "EXPONENT"; nt.links.new(dd.outputs[0], ex.inputs[0])
     mm = L._n(nt, "ShaderNodeMath"); mm.operation = "MULTIPLY"
     nt.links.new(on.outputs[0], mm.inputs[0]); nt.links.new(ex.outputs[0], mm.inputs[1])
-    s = L._n(nt, "ShaderNodeMath"); s.operation = "MULTIPLY"; s.inputs[1].default_value = 30.0
+    s = L._n(nt, "ShaderNodeMath"); s.operation = "MULTIPLY"; s.inputs[1].default_value = 10.0
     nt.links.new(mm.outputs[0], s.inputs[0])
     p.inputs["Emission Color"].default_value = (0.3, 0.95, 1.0, 1)
     nt.links.new(s.outputs[0], p.inputs["Emission Strength"])
@@ -381,12 +391,12 @@ def build_interior(rng, ctx):
         for b in range(-14, 15):
             x = HERO_C.x + a * sp + b * sp * 0.5
             z = HERO_C.z + b * sp * 0.866
-            if (Vector((x, 0, z)) - Vector((HERO_C.x, 0, HERO_C.z))).length > R_F - 0.01:
+            if (Vector((x, 0, z)) - Vector((HERO_C.x, 0, HERO_C.z))).length > R_F * 0.82:
                 continue
             if x > HERO_C.x + 0.05:
                 continue
             # keep a pocket for the camera: no fibrils within 0.03 of the path line (x0..final, z=-0.02)
-            if abs(z - pocket_c.z) < 0.03 and x < HERO_C.x - 0.03:
+            if abs(z - pocket_c.z) < 0.03 and x < HERO_C.x + 0.03:
                 continue
             r = rng.uniform(0.0065, 0.0085)
             res = B.ops.create_cone(bm, cap_ends=False, segments=14, radius1=r, radius2=r, depth=0.9)
@@ -412,9 +422,9 @@ def build_interior(rng, ctx):
         for b in range(-14, 15):
             x = HERO_C.x + a * sp + b * sp * 0.5 + sp * 0.5
             z = HERO_C.z + b * sp * 0.866 + sp * 0.29
-            if (Vector((x, 0, z)) - Vector((HERO_C.x, 0, HERO_C.z))).length > R_F - 0.02 or x > HERO_C.x + 0.05:
+            if (Vector((x, 0, z)) - Vector((HERO_C.x, 0, HERO_C.z))).length > R_F * 0.8 or x > HERO_C.x + 0.05:
                 continue
-            if abs(z - pocket_c.z) < 0.035 and x < HERO_C.x - 0.03:
+            if abs(z - pocket_c.z) < 0.04 and x < HERO_C.x + 0.03:
                 continue
             for yy in range(-8, 9):
                 if rng.random() < 0.55:
@@ -427,24 +437,28 @@ def build_interior(rng, ctx):
     hero_pos = [Vector((HERO_C.x - 0.0105, DIVE_Y + 0.004, -0.02)), Vector((HERO_C.x - 0.006, DIVE_Y + 0.034, -0.002)),
                 Vector((HERO_C.x - 0.004, DIVE_Y - 0.03, -0.035))]
     m_out = L.mat_mito_outer()
-    m_cr = L.mat_cristae()
+    m_cr = L.mat_mito("MitoInner", strength=3.5)
     for i, hp in enumerate(hero_pos):
         ln, wd = (0.034, 0.0135) if i == 0 else (0.028, 0.011)
         ob = L.obj_from_mesh(f"heroMito{i}", L.mito_mesh(f"hm{i}", length=ln, width=wd, seed=60 + i, bend=0.1), m_out, loc=hp)
         ob.rotation_euler = (0.0, 0.15 * i, 0.05 * i)
-        cr = L.obj_from_mesh(f"heroCristae{i}", L.cristae_mesh(f"hc{i}", length=ln, width=wd * 0.9, n=12, seed=i), m_cr)
+        # inner membrane: glowing cristae bands seen through the translucent envelope
+        cr = L.obj_from_mesh(f"heroInner{i}", L.mito_mesh(f"hin{i}", length=ln * 0.86, width=wd * 0.78, seed=60 + i, bend=0.1), m_cr)
         cr.parent = ob
-        sol = cr.modifiers.new("solid", "SOLIDIFY"); sol.thickness = 0.0009; sol.offset = 0
         if i == 0:
             t = C.empty("TRK_mito"); t.parent = ob
+            gl = C.point_light("mitoGlow", loc=tuple(hp + Vector((-0.012, 0, 0))), power=0.012, radius=0.006, kelvin_k=2600)
+            gl.data.specular_factor = 0.0; gl.visible_camera = False
     # glycogen granules / ribosome specks in the pocket
     bmg = B.new()
     for k in range(700):
         p = Vector((rng.uniform(x0, HERO_C.x), DIVE_Y + rng.uniform(-0.12, 0.12), rng.uniform(-0.09, 0.05)))
-        r = B.ops.create_icosphere(bmg, subdivisions=1, radius=rng.uniform(0.0006, 0.0013))
+        if abs(p.y - DIVE_Y) < 0.03 and abs(p.z + 0.02) < 0.03:
+            continue
+        r = B.ops.create_icosphere(bmg, subdivisions=2, radius=rng.uniform(0.0003, 0.0007))
         B.ops.translate(bmg, vec=p, verts=r["verts"])
     me = bpy.data.meshes.new("granules"); bmg.to_mesh(me); bmg.free()
-    m_gr = L.mat_wet_tissue("Granule", base=(0.6, 0.45, 0.35), rough=0.3, coat=0.0, sss_scale=0.001)[0]
+    m_gr = L.mat_wet_tissue("Granule", base=(0.25, 0.16, 0.12), rough=0.3, coat=0.0, sss_scale=0.001)[0]
     L.fog_wrap(m_gr)
     L.obj_from_mesh("granules", me, m_gr)
 

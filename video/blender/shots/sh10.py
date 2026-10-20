@@ -56,15 +56,15 @@ def build(ctx):
         o.rotation_euler = (rng.uniform(0, 6.3), rng.uniform(0, 6.3), rng.uniform(0, 6.3))
     # camera starts just above the hero mitochondrion, looking down at it (myofibril-free cell)
     mito_p = hero_c + Vector((-0.35, -0.2, 0.12))
-    m_out = L.mat_mito_outer(); m_cr = L.mat_cristae()
+    m_out = L.mat_mito_outer(); m_cr = L.mat_mito("MitoInner", strength=3.5)
     for i, off in enumerate((Vector((0, 0, 0)), Vector((0.03, 0.016, -0.004)), Vector((-0.028, -0.02, -0.006)))):
         ln, wd = (0.034, 0.0135) if i == 0 else (0.028, 0.011)
         ob = L.obj_from_mesh(f"heroMito{i}", L.mito_mesh(f"hm{i}", length=ln, width=wd, seed=60 + i, bend=0.1), m_out,
                              loc=mito_p + off)
         ob.rotation_euler = (0, 0, 0.3 * i)
-        cr = L.obj_from_mesh(f"heroCristae{i}", L.cristae_mesh(f"hc{i}", length=ln, width=wd * 0.9, n=12, seed=i), m_cr)
+        # inner membrane: glowing cristae bands seen through the translucent envelope
+        cr = L.obj_from_mesh(f"heroInner{i}", L.mito_mesh(f"hin{i}", length=ln * 0.86, width=wd * 0.78, seed=60 + i, bend=0.1), m_cr)
         cr.parent = ob
-        sol = cr.modifiers.new("solid", "SOLIDIFY"); sol.thickness = 0.0009; sol.offset = 0
     # ER-like membrane sheets / granules near the start
     bmg = bmesh.new()
     for k in range(900):
