@@ -236,7 +236,7 @@ def build(ctx):
     fpts, fvidx, frots, fscls = [], [], [], []
     from mathutils import noise as mn
     groups = [list(range(0, 6)), list(range(6, 10)), list(range(10, 13)), list(range(13, 18)), list(range(18, nfl))]
-    gdens = [1.0, 1.4, 0.8, 0.9, 0.5]
+    gdens = [1.0, 0.85, 0.9, 1.0, 0.6]
     for _ in range(46000):
         p = Vector((prng.uniform(-12, 12), prng.uniform(-0.5, 40), 0.0))
         # each species grows in its own drifts/patches, with bare gaps between
@@ -297,7 +297,7 @@ def build(ctx):
     place(trees[1], (-4, 62, 0), 1.6, 1.2)
     # aerial perspective on everything far (camera-ray distance fog toward the warm horizon colour)
     for ms_ in {m_ for o in shr + trees for m_ in o.data.materials}:
-        L.aerial_haze(ms_, color=(1.0, 0.76, 0.56), dist0=220.0, strength=2.6)
+        L.aerial_haze(ms_, color=(1.0, 0.76, 0.56), dist0=700.0, strength=1.3)
 
     # ------------------------------------------------------------------ butterflies
     brng = random.Random(8)
