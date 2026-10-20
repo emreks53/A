@@ -595,7 +595,7 @@ def mat_mito_envelope():
     m, nt, p = mat_wet_tissue("MitoEnvelope", base=(0.55, 0.26, 0.09), sss_radius=(1.0, 0.55, 0.25), sss_scale=0.003,
                               rough=0.32, coat=0.7, coat_rough=0.1)
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.35
-    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.3; al.inputs["To Max"].default_value = 0.9
+    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.55; al.inputs["To Max"].default_value = 0.92
     nt.links.new(lw.outputs["Facing"], al.inputs["Value"])
     nt.links.new(al.outputs[0], p.inputs["Alpha"])
     tc = _n(nt, "ShaderNodeTexCoord")

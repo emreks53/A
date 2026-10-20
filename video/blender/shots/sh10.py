@@ -78,48 +78,12 @@ def build(ctx):
     L.fog_wrap(m_gr)
     L.obj_from_mesh("granules", me, m_gr)
 
-    # ---------------------------------------------------------------- the field
-    m_cell = mat_field_cell(t_bil)
-    variants = []
-    for k in range(5):
-        me = L.blob_mesh(f"cellv{k}", radius=R_CELL, sub=3, seed=300 + k, amp=0.12, freq=1.1, squash=(1, 1, 0.6))
-        me.materials.append(m_cell)
-        o = L.obj_from_mesh(f"cellv{k}", me, loc=(0, 0, -500))
-        o.hide_render = True
-        variants.append(o)
-    vcol = bpy.data.collections.new("cellVariants")
-    for o in variants:
-        for c in o.users_collection:
-            c.objects.unlink(o)
-        vcol.objects.link(o)
-    import numpy as np
-    rs = np.random.RandomState(11)
-    sp = 1.72
-    N = 600
-    ii, jj = np.mgrid[-N // 2:N // 2, -N // 2:N // 2]
-    x = (ii + 0.5 * (jj % 2)) * sp + rs.uniform(-0.35, 0.35, ii.shape)
-    y = jj * sp * 0.866 + rs.uniform(-0.35, 0.35, ii.shape)
-    x = x.ravel(); y = y.ravel()
-    d = np.sqrt(x * x + y * y)
-    keep = d > 1.2                                   # hero cell sits at the origin
-    x, y, d = x[keep], y[keep], d[keep]
-    z = np.array([0.6 * noise.noise(Vector((a * 0.03, b * 0.03, 0.5))) + R_CELL * 0.5 for a, b in zip(x, y)])
-    z = z + rs.uniform(-0.15, 0.15, z.shape)
-    rnd = rs.uniform(0, 1, x.shape)
-    # light-on schedule: the "known" ones nearby one after another, then waves to infinity
-    near = d < 9.0
-    ton = np.where(near, t_bil - 0.06 + (d / 9.0) * 0.55 + rnd * 0.25,
-                   t_bilme - 0.04 + 0.42 * np.log1p(d / 9.0) + 0.06 * np.sin(np.arctan2(y, x) * 5 + d * 0.15) + rnd * 0.35)
-    pm = bpy.data.meshes.new("fieldPts")
-    pm.vertices.add(len(x))
-    pm.vertices.foreach_set("co", np.stack([x, y, z], -1).astype(np.float32).ravel())
-    for nm, arr in (("ton", ton), ("rnd", rnd)):
-        a = pm.attributes.new(nm, "FLOAT", "POINT"); a.data.foreach_set("value", arr.astype(np.float32))
-    pts = L.obj_from_mesh("field", pm)
-    gn = field_gn(vcol)
-    md = pts.modifiers.new("inst", "NODES"); md.node_group = gn
-    print(f"[sh10] field cells: {len(x)}")
-
+    # ---------------------------------------------------------------- the tissue sheet
+    # One continuous surface shaded as a confocal-micrograph honeycomb (Voronoi cells), curving away
+    # over a 2.5 km radius so it recedes to a hazy horizon. Cheaper and more photographic than
+    # instanced spheres: every cell, membrane, nucleus and light-up time comes from the shader.
+    sheet_me = sheet_mesh(size=1800.0, n=420, R=2600.0, z0=R_CELL * 0.62, hole=R_CELL * 0.95)
+    L.obj_from_mesh("tissueSheet", sheet_me, mat_sheet(t_bil, t_bilme))
     # ---------------------------------------------------------------- camera: exponential pull back
     cam = C.camera("cam", lens=35, loc=(0, 0, 1), fstop=60.0, focus=0.05, clip_start=0.002, clip_end=2000)
     cam.data.dof.aperture_blades = 0
@@ -226,94 +190,137 @@ def mat_membrane():
     return m
 
 
-def mat_field_cell(t_bil):
-    """Instanced tissue cell: dark glossy teal body in shadow; when its 'ton' time passes it glows
-    warm amber from within (nucleus-shaped core via facing ratio) and keeps a soft flicker."""
-    m, nt, p = C.new_mat("FieldCell")
-    p.inputs["Base Color"].default_value = (0.05, 0.10, 0.11, 1)
-    p.inputs["Roughness"].default_value = 0.3
-    p.inputs["Coat Weight"].default_value = 0.85
-    p.inputs["Coat Roughness"].default_value = 0.07
+def sheet_mesh(size, n, R, z0, hole):
+    """Square grid, denser near the origin (quadratic spacing), bent down as a sphere cap."""
+    import numpy as np
+    u = np.linspace(-1, 1, n)
+    g = np.sign(u) * (u ** 2) * size / 2
+    xs, ys = np.meshgrid(g, g)
+    zs = z0 - (xs ** 2 + ys ** 2) / (2 * R)
+    verts = np.stack([xs, ys, zs], -1).reshape(-1, 3)
+    faces = []
+    for j in range(n - 1):
+        for i in range(n - 1):
+            a = j * n + i
+            cx, cy = xs[j, i], ys[j, i]
+            if abs(cx) < hole and abs(cy) < hole:
+                continue
+            faces.append((a, a + 1, a + n + 1, a + n))
+    me = bpy.data.meshes.new("sheet")
+    me.from_pydata(verts.tolist(), [], faces)
+    me.update()
+    for p in me.polygons:
+        p.use_smooth = True
+    return me
+
+
+def mat_sheet(t_bil, t_bilme, cell=1.7):
+    """Tissue honeycomb: tightly packed polygonal cells (2-D Voronoi in the sheet plane, varied
+    size), thin bright membranes, darker nucleus, translucent dim blue-grey cytoplasm; cells light
+    from within (warm amber fluorescence) at a per-cell time: near cells one after another from
+    "bildigimiz", the rest in log-distance waves from "bilmedigimiz"."""
+    m, nt, p = C.new_mat("TissueSheet")
+    n_ = lambda k, **kw: L._n(nt, k, **kw)
+    tc = n_("ShaderNodeTexCoord")
+    sc_ = n_("ShaderNodeVectorMath"); sc_.operation = "SCALE"; sc_.inputs[3].default_value = 1.0 / cell
+    nt.links.new(tc.outputs["Object"], sc_.inputs[0])
+    vf = n_("ShaderNodeTexVoronoi"); vf.voronoi_dimensions = "2D"; vf.feature = "F1"
+    vf.inputs["Randomness"].default_value = 0.85
+    nt.links.new(sc_.outputs[0], vf.inputs["Vector"])
+    ve = n_("ShaderNodeTexVoronoi"); ve.voronoi_dimensions = "2D"; ve.feature = "DISTANCE_TO_EDGE"
+    ve.inputs["Randomness"].default_value = 0.85
+    nt.links.new(sc_.outputs[0], ve.inputs["Vector"])
+    # membrane line, nucleus, cell dome
+    mem = n_("ShaderNodeMapRange"); mem.interpolation_type = "SMOOTHSTEP"
+    mem.inputs["From Min"].default_value = 0.0; mem.inputs["From Max"].default_value = 0.05
+    mem.inputs["To Min"].default_value = 1.0; mem.inputs["To Max"].default_value = 0.0
+    nt.links.new(ve.outputs["Distance"], mem.inputs["Value"])
+    nuc = n_("ShaderNodeMapRange"); nuc.interpolation_type = "SMOOTHSTEP"
+    nuc.inputs["From Min"].default_value = 0.13; nuc.inputs["From Max"].default_value = 0.2
+    nuc.inputs["To Min"].default_value = 1.0; nuc.inputs["To Max"].default_value = 0.0
+    nt.links.new(vf.outputs["Distance"], nuc.inputs["Value"])
+    dome = n_("ShaderNodeMapRange"); dome.interpolation_type = "SMOOTHSTEP"
+    dome.inputs["From Min"].default_value = 0.0; dome.inputs["From Max"].default_value = 0.22
+    nt.links.new(ve.outputs["Distance"], dome.inputs["Value"])
+    fine = n_("ShaderNodeTexNoise", **{"Scale": 25.0, "Detail": 4.0})
+    nt.links.new(tc.outputs["Object"], fine.inputs["Vector"])
+    b = L._bump_chain(nt, p, [(dome.outputs[0], 0.6), (nuc.outputs[0], 0.15), (fine.outputs["Fac"], 0.08)], distance=0.12)
+    # base: translucent blue-grey cytoplasm, darker nucleus
+    mx = n_("ShaderNodeMix"); mx.data_type = "RGBA"
+    nt.links.new(nuc.outputs[0], mx.inputs[0])
+    mx.inputs[6].default_value = (0.10, 0.14, 0.17, 1); mx.inputs[7].default_value = (0.035, 0.045, 0.06, 1)
+    nt.links.new(mx.outputs[2], p.inputs["Base Color"])
     p.subsurface_method = L.SSS_METHOD
     p.inputs["Subsurface Weight"].default_value = 1.0
-    p.inputs["Subsurface Radius"].default_value = (1.0, 0.6, 0.35)
-    p.inputs["Subsurface Scale"].default_value = 0.22
-    p.inputs["Coat Weight"].default_value = 0.6
+    p.inputs["Subsurface Radius"].default_value = (0.8, 0.9, 1.0)
+    p.inputs["Subsurface Scale"].default_value = 0.3
+    p.inputs["Roughness"].default_value = 0.35
+    p.inputs["Coat Weight"].default_value = 0.7
     p.inputs["Coat Roughness"].default_value = 0.1
+    # per-cell light-on time from the Voronoi cell centre (texture space -> metres)
+    cpos = n_("ShaderNodeVectorMath"); cpos.operation = "LENGTH"
+    nt.links.new(vf.outputs["Position"], cpos.inputs[0])
+    d = n_("ShaderNodeMath"); d.operation = "MULTIPLY"; d.inputs[1].default_value = cell
+    nt.links.new(cpos.outputs["Value"], d.inputs[0])
+    rnd = n_("ShaderNodeSeparateColor"); nt.links.new(vf.outputs["Color"], rnd.inputs[0])
+    r = rnd.outputs[0]
+    # near: t_bil - 0.06 + d/9*0.55 + r*0.25
+    nA = n_("ShaderNodeMath"); nA.operation = "MULTIPLY_ADD"; nA.inputs[1].default_value = 0.55 / 9.0
+    nA.inputs[2].default_value = t_bil - 0.06; nt.links.new(d.outputs[0], nA.inputs[0])
+    nB = n_("ShaderNodeMath"); nB.operation = "MULTIPLY_ADD"; nB.inputs[1].default_value = 0.25
+    nt.links.new(r, nB.inputs[0]); nt.links.new(nA.outputs[0], nB.inputs[2])
+    # far: t_bilme - 0.04 + 0.42*ln(1 + d/9) + r*0.35
+    f1 = n_("ShaderNodeMath"); f1.operation = "MULTIPLY_ADD"; f1.inputs[1].default_value = 1.0 / 9.0
+    f1.inputs[2].default_value = 1.0; nt.links.new(d.outputs[0], f1.inputs[0])
+    f2 = n_("ShaderNodeMath"); f2.operation = "LOGARITHM"; f2.inputs[1].default_value = math.e
+    nt.links.new(f1.outputs[0], f2.inputs[0])
+    f3 = n_("ShaderNodeMath"); f3.operation = "MULTIPLY_ADD"; f3.inputs[1].default_value = 0.42
+    f3.inputs[2].default_value = t_bilme - 0.04; nt.links.new(f2.outputs[0], f3.inputs[0])
+    f4 = n_("ShaderNodeMath"); f4.operation = "MULTIPLY_ADD"; f4.inputs[1].default_value = 0.35
+    nt.links.new(r, f4.inputs[0]); nt.links.new(f3.outputs[0], f4.inputs[2])
+    isnear = n_("ShaderNodeMath"); isnear.operation = "LESS_THAN"; isnear.inputs[1].default_value = 9.0
+    nt.links.new(d.outputs[0], isnear.inputs[0])
+    ton = n_("ShaderNodeMix"); ton.data_type = "FLOAT"
+    nt.links.new(isnear.outputs[0], ton.inputs[0]); nt.links.new(f4.outputs[0], ton.inputs[2]); nt.links.new(nB.outputs[0], ton.inputs[3])
     tv = L.time_value(nt)
-    at = L._n(nt, "ShaderNodeAttribute"); at.attribute_type = "INSTANCER"; at.attribute_name = "ton"
-    ar = L._n(nt, "ShaderNodeAttribute"); ar.attribute_type = "INSTANCER"; ar.attribute_name = "rnd"
-    d = L._n(nt, "ShaderNodeMath"); d.operation = "SUBTRACT"
-    nt.links.new(tv.outputs[0], d.inputs[0]); nt.links.new(at.outputs["Fac"], d.inputs[1])
-    on = L._n(nt, "ShaderNodeMapRange"); on.interpolation_type = "SMOOTHSTEP"
+    dt_ = n_("ShaderNodeMath"); dt_.operation = "SUBTRACT"
+    nt.links.new(tv.outputs[0], dt_.inputs[0]); nt.links.new(ton.outputs[0], dt_.inputs[1])
+    on = n_("ShaderNodeMapRange"); on.interpolation_type = "SMOOTHSTEP"
     on.inputs["From Min"].default_value = 0.0; on.inputs["From Max"].default_value = 0.35
-    nt.links.new(d.outputs[0], on.inputs["Value"])
-    lw = L._n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.4
-    core = L._n(nt, "ShaderNodeMath"); core.operation = "SUBTRACT"; core.inputs[0].default_value = 1.0
-    nt.links.new(lw.outputs["Facing"], core.inputs[1])
-    core2 = L._n(nt, "ShaderNodeMath"); core2.operation = "POWER"; core2.inputs[1].default_value = 1.6
-    nt.links.new(core.outputs[0], core2.inputs[0])
-    r3 = L._n(nt, "ShaderNodeMath"); r3.operation = "POWER"; r3.inputs[1].default_value = 3.0
-    nt.links.new(ar.outputs["Fac"], r3.inputs[0])
-    flick = L._n(nt, "ShaderNodeMath"); flick.operation = "MULTIPLY_ADD"
-    flick.inputs[1].default_value = 2.4; flick.inputs[2].default_value = 0.25
-    nt.links.new(r3.outputs[0], flick.inputs[0])
-    # nucleus: the very centre glows less (cytoplasm ring around a darker nucleus)
-    nuc = L._n(nt, "ShaderNodeMath"); nuc.operation = "POWER"; nuc.inputs[1].default_value = 14.0
-    nt.links.new(core.outputs[0], nuc.inputs[0])
-    nuc2 = L._n(nt, "ShaderNodeMath"); nuc2.operation = "MULTIPLY_ADD"
-    nuc2.inputs[1].default_value = -0.65; nuc2.inputs[2].default_value = 1.0
-    nt.links.new(nuc.outputs[0], nuc2.inputs[0])
-    core3 = L._n(nt, "ShaderNodeMath"); core3.operation = "MULTIPLY"
-    nt.links.new(core2.outputs[0], core3.inputs[0]); nt.links.new(nuc2.outputs[0], core3.inputs[1])
-    e = L._n(nt, "ShaderNodeMath"); e.operation = "MULTIPLY"
-    nt.links.new(on.outputs[0], e.inputs[0]); nt.links.new(core3.outputs[0], e.inputs[1])
-    e2 = L._n(nt, "ShaderNodeMath"); e2.operation = "MULTIPLY"
-    nt.links.new(e.outputs[0], e2.inputs[0]); nt.links.new(flick.outputs[0], e2.inputs[1])
-    e3 = L._n(nt, "ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 6.0
+    nt.links.new(dt_.outputs[0], on.inputs["Value"])
+    # glow: cytoplasm (not nucleus, not membrane), brightness varies per cell
+    r3 = n_("ShaderNodeMath"); r3.operation = "POWER"; r3.inputs[1].default_value = 2.0
+    nt.links.new(rnd.outputs[1], r3.inputs[0])
+    br = n_("ShaderNodeMath"); br.operation = "MULTIPLY_ADD"; br.inputs[1].default_value = 1.6; br.inputs[2].default_value = 0.35
+    nt.links.new(r3.outputs[0], br.inputs[0])
+    cyt = n_("ShaderNodeMath"); cyt.operation = "MULTIPLY_ADD"; cyt.inputs[1].default_value = -0.75; cyt.inputs[2].default_value = 1.0
+    nt.links.new(nuc.outputs[0], cyt.inputs[0])
+    cyt2 = n_("ShaderNodeMath"); cyt2.operation = "MULTIPLY"
+    nt.links.new(cyt.outputs[0], cyt2.inputs[0]); nt.links.new(dome.outputs[0], cyt2.inputs[1])
+    e1 = n_("ShaderNodeMath"); e1.operation = "MULTIPLY"
+    nt.links.new(on.outputs[0], e1.inputs[0]); nt.links.new(cyt2.outputs[0], e1.inputs[1])
+    e2 = n_("ShaderNodeMath"); e2.operation = "MULTIPLY"
+    nt.links.new(e1.outputs[0], e2.inputs[0]); nt.links.new(br.outputs[0], e2.inputs[1])
+    e3 = n_("ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 5.0
     nt.links.new(e2.outputs[0], e3.inputs[0])
-    p.inputs["Emission Color"].default_value = (1.0, 0.32, 0.06, 1)
-    nt.links.new(e3.outputs[0], p.inputs["Emission Strength"])
-    tc = L._n(nt, "ShaderNodeTexCoord")
-    nz = L._n(nt, "ShaderNodeTexNoise", **{"Scale": 3.0, "Detail": 2.0})
-    nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
-    L._bump_chain(nt, p, [(nz.outputs["Fac"], 0.2)], distance=0.02)
+    # membranes: thin, faintly bright (backlit look), warmer once the cell is lit
+    m1 = n_("ShaderNodeMath"); m1.operation = "MULTIPLY_ADD"; m1.inputs[1].default_value = 1.2; m1.inputs[2].default_value = 0.25
+    nt.links.new(on.outputs[0], m1.inputs[0])
+    m2 = n_("ShaderNodeMath"); m2.operation = "MULTIPLY"
+    nt.links.new(mem.outputs[0], m2.inputs[0]); nt.links.new(m1.outputs[0], m2.inputs[1])
+    ecol = n_("ShaderNodeMix"); ecol.data_type = "RGBA"
+    nt.links.new(on.outputs[0], ecol.inputs[0])
+    ecol.inputs[6].default_value = (0.55, 0.75, 0.85, 1); ecol.inputs[7].default_value = (1.0, 0.62, 0.3, 1)
+    em_c = n_("ShaderNodeEmission"); nt.links.new(ecol.outputs[2], em_c.inputs["Color"]); nt.links.new(m2.outputs[0], em_c.inputs["Strength"])
+    em_a = n_("ShaderNodeEmission"); em_a.inputs["Color"].default_value = (1.0, 0.36, 0.07, 1)
+    nt.links.new(e3.outputs[0], em_a.inputs["Strength"])
+    add1 = n_("ShaderNodeAddShader"); nt.links.new(p.outputs[0], add1.inputs[0]); nt.links.new(em_a.outputs[0], add1.inputs[1])
+    add2 = n_("ShaderNodeAddShader"); nt.links.new(add1.outputs[0], add2.inputs[0]); nt.links.new(em_c.outputs[0], add2.inputs[1])
+    out = [x for x in nt.nodes if x.type == "OUTPUT_MATERIAL"][0]
+    nt.links.new(add2.outputs[0], out.inputs["Surface"])
+    m.cycles.emission_sampling = "NONE"
     L.fog_wrap(m)
     return m
-
-
-def field_gn(vcol):
-    g = bpy.data.node_groups.new("S7_Field", "GeometryNodeTree")
-    g.is_modifier = True
-    g.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
-    g.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
-    n, l = g.nodes, g.links
-    gi = n.new("NodeGroupInput"); go = n.new("NodeGroupOutput")
-    ci = n.new("GeometryNodeCollectionInfo"); ci.inputs["Collection"].default_value = vcol
-    ci.inputs["Separate Children"].default_value = True
-    ci.inputs["Reset Children"].default_value = True
-    ip = n.new("GeometryNodeInstanceOnPoints")
-    ip.inputs["Pick Instance"].default_value = True
-    l.new(gi.outputs[0], ip.inputs["Points"]); l.new(ci.outputs[0], ip.inputs["Instance"])
-    idx = n.new("GeometryNodeInputIndex")
-    l.new(idx.outputs[0], ip.inputs["Instance Index"])
-    rv = n.new("FunctionNodeRandomValue"); rv.data_type = "FLOAT_VECTOR"
-    for sk in rv.inputs:
-        if sk.type == "VECTOR" and sk.name == "Min":
-            sk.default_value = (-0.15, -0.15, 0)
-        if sk.type == "VECTOR" and sk.name == "Max":
-            sk.default_value = (0.15, 0.15, 6.28)
-    l.new([o for o in rv.outputs if o.type == "VECTOR"][0], ip.inputs["Rotation"])
-    rs = n.new("FunctionNodeRandomValue"); rs.data_type = "FLOAT"
-    for sk in rs.inputs:
-        if sk.type == "VALUE" and sk.name == "Min":
-            sk.default_value = 0.98
-        if sk.type == "VALUE" and sk.name == "Max":
-            sk.default_value = 1.2
-    rs.inputs["Seed"].default_value = 3
-    l.new([o for o in rs.outputs if o.type == "VALUE"][0], ip.inputs["Scale"])
-    l.new(ip.outputs[0], go.inputs[0])
-    return g
 
 
 C.run("sh10", build)

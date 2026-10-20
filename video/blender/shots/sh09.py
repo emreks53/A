@@ -244,10 +244,10 @@ def build(ctx):
     fd_, fc_ = [], []
     for t in times:
         u = C.remap(t, t_c + 0.05, t_d + 0.1)
-        fd_.append(C.lerp(1.6, 0.3, u))
+        fd_.append(C.lerp(1.6, 0.14, u))
         w = C.remap(t, t_kas, t_kas + 0.6)
         col = C.lerp((0.045, 0.012, 0.010), (0.018, 0.026, 0.03), w)
-        col = C.lerp(col, (0.034, 0.042, 0.05), u)
+        col = C.lerp(col, (0.07, 0.035, 0.035), u)       # rosy tissue haze: never a void
         fc_.append(col)
     L.bake_id(fg, frames, 'nodes["dist"].outputs[0].default_value', fd_)
     L.bake_id(fg, frames, 'nodes["color"].outputs[0].default_value', [(*c, 1.0) for c in fc_])
@@ -424,7 +424,7 @@ def build_interior(rng, ctx):
             n_.color_ramp.elements[0].color = (0.32, 0.07, 0.07, 1)
             n_.color_ramp.elements[1].color = (0.55, 0.16, 0.14, 1)
     # myofibrils: hex lattice in the X-Z plane (axis Y), only inside the fibre near the entry
-    sp = 0.026
+    sp = 0.0195                      # tightly packed: no empty cytoplasm between myofibrils
     bm = B.new()
     pocket_c = Vector((0, DIVE_Y, -0.02))
     count = 0
@@ -437,9 +437,9 @@ def build_interior(rng, ctx):
             if x > HERO_C.x + 0.05:
                 continue
             # keep a narrow pocket for the probe between the membrane and the hero mitochondrion
-            if abs(z - pocket_c.z) < 0.014 and x < HERO_C.x + 0.03:
+            if abs(z - pocket_c.z) < 0.011 and x < HERO_C.x + 0.03:
                 continue
-            r = rng.uniform(0.0065, 0.0085)
+            r = rng.uniform(0.0064, 0.0076)
             res = B.ops.create_cone(bm, cap_ends=False, segments=14, radius1=r, radius2=r, depth=0.9)
             for v in res["verts"]:
                 v.co = Vector((v.co.x + x, v.co.z + DIVE_Y, v.co.y + z))
@@ -475,7 +475,7 @@ def build_interior(rng, ctx):
                 y = DIVE_Y + yy * 0.025 + rng.uniform(-0.003, 0.003)
                 rot = (rng.uniform(-0.25, 0.25), rng.uniform(0, 6.28), rng.uniform(-0.25, 0.25))
                 L.mito_assembly(f"mito_{n:04d}", (x, y, z), rot, variant=n % 5,
-                                length=0.022 + 0.003 * (n % 5), width=0.0095 + 0.0006 * (n % 3))
+                                length=0.018 + 0.003 * (n % 5), width=0.0072 + 0.0005 * (n % 3))
                 n += 1
     # hero mitochondria with cristae at the end of the pocket
     hero_pos = [Vector((HERO_C.x - 0.0105, DIVE_Y + 0.004, -0.02)), Vector((HERO_C.x - 0.006, DIVE_Y + 0.034, -0.002)),
@@ -490,6 +490,13 @@ def build_interior(rng, ctx):
             t = C.empty("TRK_mito"); t.parent = ob
             gl = C.point_light("mitoGlow", loc=tuple(hp + Vector((-0.012, 0, 0))), power=0.012, radius=0.006, kelvin_k=2600)
             gl.data.specular_factor = 0.0; gl.visible_camera = False; gl.visible_glossy = False
+    # a few elongated myonuclei near the sarcolemma
+    m_nucl = L.mat_wet_tissue("Myonucleus", base=(0.22, 0.12, 0.2), sss_radius=(0.7, 0.5, 1.0), sss_scale=0.004,
+                              rough=0.4, coat=0.4, coat_rough=0.15)[0]
+    L.fog_wrap(m_nucl)
+    for k, (dy, dz) in enumerate(((0.07, 0.03), (-0.08, -0.05), (0.02, -0.07))):
+        nm = L.blob_mesh(f"myonuc{k}", radius=1.0, sub=4, seed=70 + k, amp=0.08, squash=(0.006, 0.03, 0.006))
+        L.obj_from_mesh(f"myonucleus{k}", nm, m_nucl, loc=(x0 + 0.012, DIVE_Y + dy, -0.02 + dz))
     # glycogen granules / ribosome specks in the pocket
     bmg = B.new()
     for k in range(4000):
