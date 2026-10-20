@@ -237,9 +237,9 @@ CLASSES = ("amb", "spot", "sub", "ui")
 # continuous beds are levelled by their typical loudness (70th percentile of momentary loudness);
 # everything else (spot effects, sparse beds such as birds) by its loudest moment
 NORM_TYPICAL = {"room_tone", "wind", "underwater", "ocean", "rain", "body_amb", "blood_flow", "flame"}
-# sample-peak cap per class (dBFS, applied to each cue after levelling) - keeps short transients
-# (ticks, impacts) from ever driving the master limiter
-PEAK_CAP = {"ui": -18.0, "spot": -8.0, "sub": -6.0, "amb": -6.0}
+# UI ticks are 2-5 ms clicks: they are levelled by sample peak (lvl = dBFS), not by loudness
+NORM_PEAK = {"ui_tick"}
+SFX_BUS_CEILING = -5.0      # fast look-ahead limiter on the SFX bus only (never ducks the voice)
 # ducking depth (dB) per class for the bands  <250 Hz | 250 Hz-5 kHz | >5 kHz
 DUCK = {"amb": (2.5, 5.0, 3.5), "spot": (1.5, 4.0, 2.5), "sub": (0.5, 2.5, 1.5), "ui": (0.0, 1.5, 1.0)}
 
@@ -253,18 +253,20 @@ def render_cues(cues, n_total, log):
         gen = sfx.GEN[c["gen"]]
         n = sfx.N(c["dur"])
         y = sfx.fit(gen(c["dur"], sfx.rng_for(c["id"]), **c.get("params", {})).astype(np.float64), n)
-        mode = c.get("norm") or ("p70" if c["gen"] in NORM_TYPICAL else "max")
+        mode = c.get("norm") or ("p70" if c["gen"] in NORM_TYPICAL else "peak" if c["gen"] in NORM_PEAK else "max")
         if mode == "max":
             raw = momentary_max(y)
+        elif mode == "peak":
+            raw = 20 * np.log10(np.abs(y).max() + 1e-12)
         else:
             Lm, tm = momentary(y, 0.4, 0.05)
             keep = (tm >= c.get("fade_in", 0)) & (tm + 0.4 <= c["dur"] - c.get("fade_out", 0))
             raw = float(np.percentile(Lm[keep] if keep.sum() > 4 else Lm, float(mode[1:])))
         y *= db(c["lvl"] - raw)
-        pk = np.abs(y).max()
-        cap = db(c.get("peak_cap", PEAK_CAP[c["class"]]))
-        if pk > cap:
-            y *= cap / pk
+        if c.get("peak_cap") is not None:
+            pk, cap = np.abs(y).max(), db(c["peak_cap"])
+            if pk > cap:
+                y *= cap / pk
         start = c["t"] - c.get("pre", 0.0)
         pan_src = None
         p = c.get("pan")
@@ -394,6 +396,11 @@ def main():
     sfx_bus, curves = duck(buses, act, fs_c, n_total)
     # remove sub-sonic energy (inaudible, costs headroom); keep everything from ~30 Hz up
     sfx_bus = signal.sosfiltfilt(signal.butter(2, 28, "highpass", fs=SR, output="sos"), sfx_bus, axis=0)
+    g_sfx = tp_limiter(sfx_bus, SFX_BUS_CEILING - 20 * np.log10(db(VOICE_LUFS - TARGET_LUFS)), look=0.001, release=0.05)
+    sfx_bus *= g_sfx[:, None]
+    sfx_lim = {"max_gr_db": round(float(-20 * np.log10(g_sfx.min())), 2),
+               "active_pct": round(float((g_sfx < db(-0.5)).mean() * 100), 3)}
+    log(f"  SFX bus limiter: {sfx_lim}")
     vst = np.stack([v, v], 1) * db(-3.0)          # centred dual-mono voice
 
     log("[mix] mastering")
@@ -417,7 +424,7 @@ def main():
     # ------------------------------------------------------------------ measurements
     fin, _ = sf.read(paths["final_mix"], dtype="float64")
     rep = {"files": paths, "samples": len(fin), "seconds": len(fin) / SR, "voice": vinfo,
-           "master_gain_db": round(g_db, 2), "limiter_max_gr_db": round(float(-20 * np.log10(gl.min())), 2),
+           "master_gain_db": round(g_db, 2), "sfx_bus_limiter": sfx_lim, "limiter_max_gr_db": round(float(-20 * np.log10(gl.min())), 2),
            "limiter_active_pct": round(float((gl < db(-0.5)).mean() * 100), 3)}
     grd = -20 * np.log10(gl)
     hot = []
