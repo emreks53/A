@@ -1968,7 +1968,7 @@ def volume_box():
     return ob
 
 
-def build_motes(n=900, seed=7):
+def build_motes(n=1400, seed=7):
     rng = random.Random(seed)
     verts = []
     while len(verts) < n:
@@ -1989,8 +1989,8 @@ def build_motes(n=900, seed=7):
     gi = ng.nodes.new("NodeGroupInput"); go = ng.nodes.new("NodeGroupOutput")
     m2p = ng.nodes.new("GeometryNodeMeshToPoints")
     rnd = ng.nodes.new("FunctionNodeRandomValue"); rnd.data_type = "FLOAT"
-    rnd.inputs["Min"].default_value = 0.00012
-    rnd.inputs["Max"].default_value = 0.00042
+    rnd.inputs["Min"].default_value = 0.00025
+    rnd.inputs["Max"].default_value = 0.00075
     rnd.inputs["Seed"].default_value = 3
     ng.links.new(rnd.outputs["Value"], m2p.inputs["Radius"])
     st = ng.nodes.new("GeometryNodeInputSceneTime")
@@ -2018,9 +2018,9 @@ def build_motes(n=900, seed=7):
     ng.links.new(add.outputs[0], setp.inputs["Offset"])
     smat = ng.nodes.new("GeometryNodeSetMaterial")
     m, nt, out = new_mat("mote")
-    p = principled(nt, **{"Base Color": (0.85, 0.82, 0.76), "Roughness": 0.6})
+    p = principled(nt, **{"Base Color": (0.95, 0.92, 0.86), "Roughness": 0.5})
     tr = NN(nt, "ShaderNodeBsdfTranslucent")
-    tr.inputs["Color"].default_value = (0.9, 0.86, 0.8, 1)
+    tr.inputs["Color"].default_value = (1.0, 0.95, 0.88, 1)
     mx = NN(nt, "ShaderNodeMixShader"); mx.inputs[0].default_value = 0.6
     LK(nt, p.outputs[0], mx.inputs[1]); LK(nt, tr.outputs[0], mx.inputs[2]); LK(nt, mx.outputs[0], out.inputs["Surface"])
     smat.inputs["Material"].default_value = m
@@ -2260,8 +2260,8 @@ def build(ctx):
     zc = 0.15
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
     camC = rig_camera("camC", 50, 2.8, [
-        (115.70, V((0.01, yc - 0.27, 0.125)), V((0.04, yc, zc)), V((0.04, yc, zc))),
-        (117.30, V((0.21, yc - 0.25, 0.130)), V((0.24, yc, zc)), V((0.24, yc, zc))),
+        (115.70, V((0.045, yc - 0.28, 0.128)), V((0.065, yc, zc)), V((0.065, yc, zc))),
+        (117.30, V((0.165, yc - 0.255, 0.132)), V((0.185, yc, zc)), V((0.185, yc, zc))),
     ], 2774, 2818, seed=13)
     camD = rig_camera("camD", 35, 2.8, [
         (117.20, V((0.05, -0.12, 0.40)), V((-0.42, -0.06, 0.30)), V((-0.33, -0.06, 0.25))),
