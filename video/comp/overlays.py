@@ -268,13 +268,13 @@ def make_track(shot, name, fallback, f_lo, f_hi, warn, sig_fine=0.6, sig_label=6
     if x is None:
         x, y = _fallback_xy(fallback, t)
         dep = np.ones_like(x); vis = np.ones_like(x)
-    if safe is not None:
-        if clamp_inset is not None:
-            x, y = soft_clamp_safe(_gauss(x, 1.0), _gauss(y, 1.0), safe, clamp_inset)
-        vis = vis * safe_fade(x, y, safe)
+    if safe is not None and clamp_inset is not None:
+        x, y = soft_clamp_safe(_gauss(x, 1.0), _gauss(y, 1.0), safe, clamp_inset)
     xf, yf = _gauss(x, sig_fine), _gauss(y, sig_fine)
     xs, ys = _gauss(x, sig_label), _gauss(y, sig_label)
     v = np.clip(_gauss(vis, 2.0), 0, 1)
+    if safe is not None:
+        v = v * safe_fade(xf, yf, safe)        # on the drawn position, after smoothing: exactly 0 outside
     v = np.where(v < 0.01, 0, v)
     out = {"f0": int(f_lo), "x": np.round(xf, 1).tolist(), "y": np.round(yf, 1).tolist(),
            "xs": np.round(xs, 1).tolist(), "ys": np.round(ys, 1).tolist(), "v": np.round(v, 3).tolist(), "src": src}
