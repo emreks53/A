@@ -950,10 +950,10 @@ def mat_page_edge(name="page_edge", dark=1.0):
     LK(nt, fl, cmb.inputs[0])
     wn = NN(nt, "ShaderNodeTexWhiteNoise", noise_dimensions="1D")
     LK(nt, fl, wn.inputs["W"])
-    per = maprange(nt, wn.outputs["Value"], 0, 1, 0.86, 1.03)
+    per = maprange(nt, wn.outputs["Value"], 0, 1, 0.80, 1.04)
     band = noise(nt, None, 1.0, 2.0, 0.5, dim="1D")
     LK(nt, math_node(nt, "MULTIPLY", lay, vb=0.06), band.inputs["W"])
-    bandv = maprange(nt, band.outputs[0], 0.30, 0.70, 0.84, 1.06)
+    bandv = maprange(nt, band.outputs[0], 0.30, 0.70, 0.74, 1.08)
     # signatures (16 leaves) leave faint darker seams on the edge
     sig = math_node(nt, "FRACT", math_node(nt, "MULTIPLY", lay, vb=1 / 16))
     sigv = maprange(nt, sig, 0.0, 0.07, 0.86, 1.0)
@@ -2233,7 +2233,7 @@ def build(ctx):
                                        os.path.join(d, "page_%d.png" % (728 - 2 * k)))
     MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.56, 0.37, 0.24), val=0.62, sat=1.15,
                              rough=(0.55, 0.78), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
-                             grain_rot=math.pi / 2, wear=0.35, spec=0.25)
+                             grain_rot=math.pi / 2, wear=0.35, spec=0.15)
     MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7), uvmap=True)
     MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8), uvmap=True)
     MATS["kafes"] = mat_wood("kafes", "dark_wood", tile=0.6, tint=(0.55, 0.45, 0.38), val=0.55, sat=0.6, rough=(0.55, 0.8))
@@ -2259,7 +2259,10 @@ def build(ctx):
     sky_out = bg.inputs["Color"].links[0].from_socket
     lp = wnt.nodes.new("ShaderNodeLightPath")
     mixw = wnt.nodes.new("ShaderNodeMix"); mixw.data_type = "RGBA"
-    wnt.links.new(lp.outputs["Is Camera Ray"], mixw.inputs[0])
+    cam_or_gloss = wnt.nodes.new("ShaderNodeMath"); cam_or_gloss.operation = "MAXIMUM"
+    wnt.links.new(lp.outputs["Is Camera Ray"], cam_or_gloss.inputs[0])
+    wnt.links.new(lp.outputs["Is Glossy Ray"], cam_or_gloss.inputs[1])
+    wnt.links.new(cam_or_gloss.outputs[0], mixw.inputs[0])
     wnt.links.new(sky_out, mixw.inputs[6])
     mixw.inputs[7].default_value = (3.2, 2.9, 2.5, 1.0)
     wnt.links.new(mixw.outputs[2], bg.inputs["Color"])
