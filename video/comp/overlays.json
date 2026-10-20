@@ -140,7 +140,7 @@
   {"id": "co_rbc", "shot": "sh06", "track": "rbc", "primary": "Alyuvar",
    "sync": 32.31, "out": 34.45, "cue": "sh06.callout_rbc", "fallback": [560, 1000]},
   {"id": "co_sun07", "shot": "sh07", "track": "sun", "primary": "Güneş", "secondary": "~150 milyon km",
-   "sync": 39.50, "out": 40.52, "cue": "sh07.callout_sun", "fallback": [540, 962], "prefer": ["dr", "dl"]},
+   "sync": 39.58, "out": 40.55, "cue": "sh07.callout_sun", "fallback": [540, 962], "prefer": ["dr", "dl"]},
   {"id": "co_hand", "shot": "sh08", "track": "hand", "primary": "Bir uzanış",
    "secondary": "onlarca kas · yüz binlerce kas lifi",
    "sync": 42.62, "out": 44.25, "fallback": [[42.0, 800, 560], [43.9, 735, 650], [44.3, 400, 1050]]},

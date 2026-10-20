@@ -385,7 +385,7 @@ function drawColdKeyword(el, t, L) {
         const u = clamp((t - ta) / IN.dur);
         const a = eOutCubic(clamp((t - ta) / IN.fade));
         const blur = (1 - eOutCubic(clamp((t - ta) / (IN.dur * 0.85)))) * IN.blur;
-        const settle = (1 - eOutCubic(clamp((t - tw) / 1.3))) * st.tracking_in * size;
+        const settle = (1 - eOutCubic(clamp((t - tw) / IN.dur))) * st.tracking_in * size;   // fully settled before the bitmap takes over
         const dx = (l.i - (n - 1) / 2) * settle;
         const dy = (1 - eOutExpo(u)) * IN.rise * size;
         P.push({ l, x: l.x + dx, y: l.base + dy, a, blur });
