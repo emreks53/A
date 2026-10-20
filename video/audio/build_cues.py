@@ -256,7 +256,7 @@ s = "sh03"                              # (slate: beats on the transcript times 
 cue("sh03.crust", s, w(s, "yemek"), 1.7, "crust_crackle", -36, pre=0.05, space="room", send=-18,
     fade_in=0.3, fade_out=0.6, params=dict(rate=16, pan=-0.35), ref="yemek (slider past the bread)")
 t = w(s, "içmek") - F
-cue("sh03.pour", s, t, 2.9, "pour", -24, pre=0.1, space="room", send=-13, fade_out=0.2,
+cue("sh03.pour", s, t, 2.9, "pour", -27, pre=0.1, space="room", send=-13, fade_out=0.2,
     params=dict(sync=0.1, stop=1.72, fill0=0.1, fill1=0.72, drips=3, pan=0.1), ref="içmek (water hits the glass)",
     provisional=True, note="re-spot on the sh03 render")
 tick("sh03.callout_water", s, t + 0.7, track={"shot": s, "name": "water"}, pan=0.1, ref="water callout")
@@ -477,7 +477,7 @@ gb = [0.25, 1.1, 1.85, 2.7, 3.45, 4.2]
 cue("sh13a.grass_lens", s, A + gb[0], 4.6, "grass_brush", -27, pre=0.0, space="meadow", send=-18, fade_out=0.3,
     params=dict(times=[x - gb[0] for x in gb], pans=[-0.6, 0.55, -0.35, 0.7, -0.7, 0.4], amps=[0.8, 1.0, 0.7, 0.9, 0.8, 0.6]),
     ref="low glide: grass and flowers brushing past the lens (until the camera rises)")
-cue("sh13a.bee", s, A + 2.2, 2.6, "bee", -38, pre=1.3, space="meadow", send=-16, fade_in=0.2, fade_out=0.3,
+cue("sh13a.bee", s, A + 2.2, 2.6, "bee", -41, pre=1.3, space="meadow", send=-16, fade_in=0.2, fade_out=0.3,
     params=dict(sync=1.3, dist=0.8, pan_from=-0.8, pan_to=0.6, f0=218), ref="a bee crosses, off to the side")
 cue("sh13a.rahim_air", s, t_hr - F, 4.6, "bloom", -30, cls="amb", pre=0.5, space="meadow", send=-16, fade_out=1.0,
     params=dict(sync=0.5, rise=0.5, decay=3.5, bright=0.6, low=0.35),
@@ -492,7 +492,7 @@ for i, (tt, pn) in enumerate(zip(rt, fallback)):
     nm = "abcdefgh"[i]
     tick(f"sh13b.ring_{nm}", s, tt - F, kind="ring", lvl=-18 if i < 7 else -17, pan=pn,
          track={"shot": s, "name": nm}, ref=f"birer birer: tracking ring {i + 1}/8 snaps onto TRK_{nm}")
-cue("sh13b.bee", s, SYNC.get("sh13b.ring_b", rt[1]), 2.2, "bee", -40, pre=0.7, space="meadow", send=-16, fade_in=0.2,
+cue("sh13b.bee", s, SYNC.get("sh13b.ring_b", rt[1]), 2.2, "bee", -42, pre=0.7, space="meadow", send=-16, fade_in=0.2,
     fade_out=0.3, params=dict(sync=0.7, dist=0.55, pan_from=0.6, pan_to=-0.1, f0=226), ref="the bee found by ring b")
 
 # ============================================================== sh14a sunflowers at sunrise
@@ -512,9 +512,11 @@ cue("sh14a.turn", s, t - F, 2.7, "stalks_turn", -27, pre=0.1, space="meadow", se
     params=dict(sync=0.1, length=1.4), ref="görüyormuşçasına (all flower heads turn toward the sun)")
 tick("sh14a.spiral", s, w(s, "hikmetli") - F, kind="link", lvl=-21, track={"shot": s, "name": "spiral"},
      ref="Fibonacci spiral arcs drawn")
-cue("sh14a.allah_air", s, t_allah - F, 2.4, "bloom", -31, cls="amb", pre=0.8, space="meadow", send=-16, fade_out=0.7,
-    params=dict(sync=0.8, rise=0.8, decay=1.6, bright=0.7, low=0.15),
-    ref="Allah: the light grows into a radiant sunrise - a soft breath of light, no impact")
+t_a_end = word(s, "Allah")["e"]
+cue("sh14a.allah_air", s, t_a_end, 2.6, "bloom", -33, cls="amb", pre=1.1, space="meadow", send=-16, fade_out=0.7,
+    params=dict(sync=1.1, rise=1.1, decay=1.8, bright=0.45, low=0.25),
+    ref="Allah: the light grows into a radiant sunrise - a soft, dark breath of light that blooms through the "
+        "word and opens after it; no impact")
 
 # ============================================================== sh14b the covered light
 s = "sh14b"
