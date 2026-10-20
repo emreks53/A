@@ -146,7 +146,7 @@ def _masculinise(o):
             bump += 0.0008 * math.exp(-((p - pip).length / 0.0045) ** 2)
             # extensor tendon from wrist to MCP on the back of the hand
             dt, tt = _seg_dist(p, WRIST + Vector((0, -0.02, 0)), mcp)
-            bump += 0.0006 * math.exp(-(dt / 0.0028) ** 2) * C.smooth(tt / 0.3) * (1 - C.smooth((tt - 0.85) / 0.15))
+            bump += 0.0003 * math.exp(-(dt / 0.0032) ** 2) * C.smooth(tt / 0.3) * (1 - C.smooth((tt - 0.85) / 0.15))
         q = q + n * bump * dors
         v.co = q
     o.data.update()
@@ -360,13 +360,13 @@ def skin_material(hand, nails):
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", net1, -0.55))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", wrinkles, -1.6))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", lumpy, 0.8))
-    h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", vein, 3.0))
+    h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", vein, 1.2))
     bump = _node(nt, "ShaderNodeBump")
     bump.inputs["Strength"].default_value = 1.0
     bump.inputs["Distance"].default_value = 0.00007
     nt.links.new(h, bump.inputs["Height"])
     # ---------------- colour
-    base = (0.40, 0.205, 0.130)
+    base = (0.36, 0.215, 0.150)
     blotch = _noise(nt, R, 45.0, 3.0, 0.6)
     melan = _noise(nt, R, 7.0, 2.0, 0.5)
     col = _mixc(nt, _math(nt, "MULTIPLY", _smoothstep(nt, blotch, 0.42, 0.68), 0.35), base, (0.52, 0.22, 0.165))

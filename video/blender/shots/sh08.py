@@ -283,7 +283,7 @@ def build(ctx):
         set_pose(arm, P_grab); bpy.context.view_layer.update()
         if pen(k) > 0:
             print("[sh08] finger never touches:", k, flush=True)
-            P_grab["curl"][k] = {"thumb": 0.5, "index": 0.95, "middle": 1.05, "ring": 1.15, "little": 1.25}[k]
+            P_grab["curl"][k] = {"thumb": 0.5, "index": 0.62, "middle": 0.72, "ring": 0.85, "little": 0.98}[k]
             continue
         for it in range(14):
             mid = (lo + hi) / 2
