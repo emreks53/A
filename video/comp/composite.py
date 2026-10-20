@@ -311,10 +311,10 @@ class Finisher:
         yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
         nx, ny = (xx + 0.5) / w * 2 - 1, (yy + 0.5) / h * 2 - 1
         v = cfg["vignette"]
-        rnd = v.get("roundness", 0.8)
-        ax = 1.0
-        ay = 1.0 * rnd + (h / w) * (1 - rnd) * 0 + (1 - rnd) * 1.0
-        r = np.sqrt((nx / ax) ** 2 + (ny / ay) ** 2) / math.sqrt(2)
+        rnd = v.get("roundness", 0.5)          # 1 = circular image circle (lens), 0 = follows the frame shape
+        r_e = np.sqrt(nx ** 2 + ny ** 2) / math.sqrt(2)
+        r_c = np.hypot(xx + 0.5 - w / 2, yy + 0.5 - h / 2) / math.hypot(w / 2, h / 2)
+        r = rnd * r_c + (1 - rnd) * r_e
         self.vig = (1 - v["strength"] * np.power(np.clip(r, 0, 1), v["power"]))[..., None].astype(np.float32)
         self.vig3 = np.repeat(self.vig, 3, axis=2)
         ca = cfg["chromatic_aberration"]["pixels_at_corner"] * k
