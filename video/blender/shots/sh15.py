@@ -2315,7 +2315,7 @@ def build(ctx):
         bpy.app.handlers.render_pre.append(_nd)
     if os.environ.get("SH15_MATOVR"):
         bpy.context.view_layer.material_override = mat_simple("ovr", (0.5, 0.5, 0.5), 0.6)
-    ov = {"final_spp": 8, "final_threshold": 0.04, "final_min_spp": 4, "preview_spp": 16,
+    ov = {"final_spp": 5, "final_threshold": 0.05, "final_min_spp": 3, "preview_spp": 16,
           "diffuse_bounces": 2, "glossy_bounces": 2, "transmission_bounces": 2, "transparent_bounces": 6,
           "max_bounces": 6, "clamp_indirect": 2.0, "texture_limit": "8192"}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
