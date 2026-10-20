@@ -262,7 +262,7 @@ cue("sh03.pour", s, t, 2.9, "pour", -24, pre=0.1, space="room", send=-13, fade_o
 tick("sh03.callout_water", s, t + 0.7, track={"shot": s, "name": "water"}, pan=0.1, ref="water callout")
 cue("sh03.jug_set", s, pause_near(12.5), 0.7, "jug_set", -28, pre=0.05, space="room", send=-14,
     params=dict(sync=0.05, pan=0.3), ref="jug set down after the pour, in the pause after 'bütün'", provisional=True)
-t = w(s, "takdim") - F
+t = w(s, "takdim")
 cue("sh03.plate", s, t, 0.95, "plate_slide", -28, pre=0.05, space="room", send=-15,
     params=dict(sync=0.05, length=0.55, pan=0.0), ref="takdim (plate slides toward camera)", provisional=True)
 
@@ -358,7 +358,7 @@ cue("sh08.sleeve", s, P["sh08.enter"] - 0.08, 1.7, "cloth", -28, space="room", s
     ref="PIC f989: hand enters from the top right")
 cue("sh08.touch", s, P["sh08.touch"], 0.3, "grab", -35, pre=0.05, space="room", send=-16, params=dict(sync=0.05, pan=0.05),
     ref="PIC f993: fingertip touches the apple")
-cue("sh08.grab", s, P["sh08.grip"], 0.35, "grab", -28, pre=0.05, space="room", send=-16, params=dict(sync=0.05, pan=0.1),
+cue("sh08.grab", s, P["sh08.grip"], 0.35, "grab", -31, pre=0.05, space="room", send=-16, params=dict(sync=0.05, pan=0.1),
     ref="PIC f1012: fingers close around the apple")
 cue("sh08.lift", s, P["sh08.lift"], 0.45, "lift", -32, pre=0.03, space="room", send=-16, params=dict(sync=0.03, pan=0.1),
     ref="PIC f1022: apple leaves the table (shadow separates)")
@@ -369,8 +369,8 @@ cue("sh08.pulse_in", s, t, B + 4.9 - t, "heartbeat", -26, cls="amb", pre=0.0, sp
     params=dict(anchor=1.0, period=60 / 70, muffle=320, body=0.6,
                 strength=[[0, 0.0], [1.0, 0.2], [B - t - 0.4, 0.55], [B - t + 0.6, 0.8], [B - t + 4.9, 0.6]]),
     ref="aslında: camera pushes along the forearm - the body's pulse rises (runs on under sh09)")
-cue("sh08.into_skin", s, B, 1.4, "whoosh", -24, cls="amb", pre=0.75, space="body", send=-12, fade_out=0.3,
-    params=dict(sync=0.75, f_from=2600, f_peak=1100, f_to=200, pan_from=0.3, pan_to=0.0, bw=1.5, rough=0.4),
+cue("sh08.into_skin", s, B, 1.1, "whoosh", -26, cls="amb", pre=0.45, space="body", send=-12, fade_out=0.3,
+    params=dict(sync=0.45, f_from=2600, f_peak=1100, f_to=200, pan_from=0.3, pan_to=0.0, bw=1.5, rough=0.4),
     ref="push into the skin -> tissue (zoom-through at the cut 47.40, in the pause 47.28-47.94)")
 
 # ============================================================== sh09 nerve, muscle, cell
@@ -431,7 +431,7 @@ cue("sh11.first_drops", s, t_b - F, 1.6, "heavy_drops", -22, pre=0.05, space="ou
     params=dict(times=[0.05, 0.27, 0.42, 0.7, 0.97, 1.12], pans=[0.0, -0.45, 0.35, -0.2, 0.55, -0.6],
                 amps=[1.0, 0.6, 0.8, 0.5, 0.7, 0.45], surface="dust"),
     ref="bütün (first heavy drops hit the dust: crowns, puffs) - checked against the sh11 animatic")
-cue("sh11.trickle", s, t_ay - 0.3, 2.7, "trickle", -29, pre=0.0, space="outdoor", send=-18, fade_in=0.3, fade_out=0.5,
+cue("sh11.trickle", s, t_ay - 0.3, 2.7, "trickle", -32, pre=0.0, space="outdoor", send=-18, fade_in=0.3, fade_out=0.5,
     params=dict(flow=[[0, 0], [0.4, 0.6], [1.2, 1.0], [2.2, 0.8], [2.7, 0.4]], approach=[[0, 0.3], [1.3, 1.0]], pan=0.0),
     ref="ayağımıza (water trickles along the cracks toward camera)")
 cue("sh11.leaf_hits", s, t_ay + 0.5, 1.2, "leaf_hits", -28, pre=0.05, space="outdoor", send=-16,
@@ -550,7 +550,7 @@ cue("sh14c.sand", s, A, B - A, "sand", -24, cls="amb", space="desert", send=-24,
 # ============================================================== sh15 rahle and red books
 s = "sh15"
 A = CUT["sh15"]
-cue("sh15.sunbeam", s, A + 0.2, 3.2, "bloom", -32, cls="amb", pre=0.5, space="room_wood", send=-18, fade_out=0.8,
+cue("sh15.sunbeam", s, A + 0.2, 3.2, "bloom", -34, cls="amb", pre=0.5, space="room_wood", send=-18, fade_out=0.8,
     params=dict(sync=0.5, rise=0.5, decay=2.5, bright=0.55, low=0.3), ref="warm sunbeam sweeps across the room")
 bed("sh15.room", s, A - 0.3, TOTAL, "room_tone", -39, 0.6, 1.8, space="room_wood", send=-40,
     params=dict(warmth=1.2, bright=0.8), ref="quiet old wooden room; fades to silence at the end")

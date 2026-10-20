@@ -271,7 +271,7 @@ LF_SHELF_HZ, LF_SHELF_DB = 60.0, -5.0
 WEQ_FC = np.array([125, 250, 500, 1000, 2000, 4000, 8000], dtype=float)
 WEQ_TARGET = np.array([3, 5, 9, 12, 12, 12, 8], dtype=float)
 WEQ_MAXCUT = np.array([8, 8, 10, 18, 18, 18, 10], dtype=float)
-WEQ_RAMP, WEQ_ITER = 0.12, 3
+WEQ_RAMP, WEQ_ITER, WEQ_OVER = 0.12, 5, 1.3     # ramp (s), refinement passes, step over-correction
 
 
 def render_cues(cues, n_total, log):
@@ -426,7 +426,7 @@ def word_eq(S, vch, v_raw, words, log=print):
             d = np.clip(WEQ_TARGET - snr, 0, None)
             if d.max() > 0.25:
                 short += 1
-                need[i0:i1] = np.minimum(need[i0:i1], -d)
+                need[i0:i1] = np.minimum(need[i0:i1], -d * WEQ_OVER)
         cut = np.maximum(cut + need, -WEQ_MAXCUT[None, :])
         # merge and ramp: hold each word's cut over its span (+ half a ramp), then smooth
         g = minimum_filter1d(cut, size=k_ramp, axis=0, mode="nearest")
@@ -520,8 +520,7 @@ def main():
 
     log("[mix] ducking")
     ducked, curves = duck(buses, act, fs_c, n_total)
-    ui = ducked.pop("ui", np.zeros((n_total, 2)))
-    pre_um = sum(ducked.values())
+    pre_um = sum(ducked.values())        # (UI ticks included: a tick inside a word is carved too)
     vch = v * db(-3.0)
     if a.dump_pre:
         os.makedirs(a.dump_pre, exist_ok=True)
@@ -529,7 +528,6 @@ def main():
             np.save(os.path.join(a.dump_pre, k + ".npy"), x.astype(np.float32))
     import measure
     sfx_bus, um_stats = word_eq(pre_um, vch, v_raw, measure.all_words(), log)
-    sfx_bus = sfx_bus + ui
     del pre_um
     # remove sub-sonic energy (inaudible, costs headroom); keep everything from ~30 Hz up
     sfx_bus = signal.sosfiltfilt(signal.butter(2, 28, "highpass", fs=SR, output="sos"), sfx_bus, axis=0)
