@@ -2568,7 +2568,7 @@
    "gen": "birds",
    "params": {
     "n_birds": 4,
-    "rate": 0.18,
+    "rate": 0.8,
     "dist": [
      0.65,
      1.0
@@ -2623,7 +2623,7 @@
    "send": -20,
    "fade_in": 0.8,
    "fade_out": 0.3,
-   "ref": "dawn calls",
+   "ref": "dawn calls (the narration is dense with key words here, so the few bouts that survive the key-word filter fall in its pauses)",
    "note": "sparse distant calls (FM-sweep syllables), kept off the key words"
   },
   {

@@ -201,10 +201,11 @@ def bed(id, shot, a, b, gen, lvl, fin, fout, params=None, space="outdoor", send=
         params=params, ref=ref, env=env, note=note, **extra)
 
 
-def birds(id, shot, a, b, lvl, fin, fout, space, n_birds=4, fmin=2600, fmax=6200, start=0.6, density=None, ref=""):
+def birds(id, shot, a, b, lvl, fin, fout, space, n_birds=4, fmin=2600, fmax=6200, start=0.6, density=None, ref="",
+          rate=0.18):
     """Distant bird bed: ~0.18 bouts/s, far away (air absorption, ground reflection), dry-ish,
     never on a key word."""
-    p = dict(n_birds=n_birds, rate=0.18, dist=(0.65, 1.0), fmin=fmin, fmax=fmax, start=start,
+    p = dict(n_birds=n_birds, rate=rate, dist=(0.65, 1.0), fmin=fmin, fmax=fmax, start=start,
              avoid=avoid_spans(a, b))
     if density:
         p["density"] = density
@@ -507,7 +508,8 @@ bed("sh14a.field", s, a0, B + 0.08, "wind", -28, 0.8, 0.35, space="meadow", send
                 veg_density=0.8, width=1.0, events=[[stir - a0, 0.6, 0.3]]),
     ref=f"sunrise field, big papery sunflower leaves; the leaves stir in the pause at {stir:.2f}; shadow cuts it at 99.50")
 birds("sh14a.birds", s, a0, B + 0.05, -33, 0.8, 0.3, "meadow", n_birds=4, fmin=2400, fmax=6600, start=0.8,
-      density=[[0, 0.6], [B - a0, 1.5]], ref="dawn calls")
+      density=[[0, 0.6], [B - a0, 1.5]], rate=0.8, ref="dawn calls (the narration is dense with key words here, so the "
+      "few bouts that survive the key-word filter fall in its pauses)")
 t = w(s, "görüyormuşçasına")
 cue("sh14a.turn", s, t - F, 2.7, "stalks_turn", -27, pre=0.1, space="meadow", send=-16, fade_out=0.4,
     params=dict(sync=0.1, length=1.4), ref="görüyormuşçasına (all flower heads turn toward the sun)")

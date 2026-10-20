@@ -10,9 +10,10 @@
   4. keeps the narration on top in two stages:
      a. a smooth broadband duck of the SFX per cue class, driven by phrase-level voice activity
         (look-ahead, 0.3 s hold, ~1 s release: no syllable-rate pumping, same depth in every band),
-     b. a voice-keyed spectral "unmask" (dynamic EQ in 22 third-octave bands): wherever the SFX
-        come within a band-specific target of the voice (13 dB in the 1-5 kHz intelligibility
-        bands, less below/above), only that band of the SFX is cut, only while the voice speaks,
+     b. a word-keyed dynamic EQ on the whole SFX bus: for every narrated word the voice-to-SFX
+        ratio is measured in octave bands (125 Hz-8 kHz) on the word's voiced frames; where it is
+        short of the target (13 dB at 1-4 kHz, less below/above) only that band of the SFX is cut,
+        only for that word (0.25 s ramps, short gaps inside a phrase bridged, refined in 5 passes),
   5. masters voice + SFX to -14 LUFS integrated with a 4x-oversampled true-peak limiter
      (ceiling -1.3 dBTP), and writes 48 kHz / 24-bit stereo WAVs of exactly 125.5 s:
        sfx_stem.wav, voice_proc.wav (same master gain + limiter gain, so they sum to the mix)
@@ -259,13 +260,13 @@ NORM_TYPICAL = {"room_tone", "wind", "underwater", "ocean", "rain", "body_amb", 
 NORM_PEAK = {"ui_tick"}
 SFX_BUS_CEILING = -5.0      # fast look-ahead limiter on the SFX bus only (never ducks the voice)
 # broadband ducking depth (dB) per class while the narrator speaks (same in every band: the
-# spectral work is done by the unmask stage, so the beds keep their tonal balance)
+# spectral work is done by the word-keyed EQ, so the beds keep their tonal balance)
 DUCK = {"amb": 3.5, "spot": 2.5, "sub": 1.5, "ui": 0.0}
-DUCK_ATTACK, DUCK_HOLD, DUCK_RELEASE, DUCK_LOOK = 0.06, 0.30, 1.0, 0.08
+DUCK_ATTACK, DUCK_HOLD, DUCK_RELEASE = 0.06, 0.30, 1.0
 # low shelf on ambience and spot effects (designed impacts - class "sub" - and cues with
 # "lf_shelf": 0 keep their weight): keeps the low end from piling up under the voice
 LF_SHELF_HZ, LF_SHELF_DB = 60.0, -5.0
-# word-keyed dynamic EQ ("unmask"): for every narrated word, the voice-to-SFX ratio is measured in
+# word-keyed dynamic EQ: for every narrated word, the voice-to-SFX ratio is measured in
 # octave bands on the word's voiced frames; where it falls short of the target, only that band of
 # the SFX is cut, only for that word (smooth 0.12 s ramps; neighbouring words merge).
 WEQ_FC = np.array([125, 250, 500, 1000, 2000, 4000, 8000], dtype=float)
@@ -617,7 +618,7 @@ def main():
         r_["voice_lufs_m_max"] = round(momentary_max(seg_v), 1) if a1 > a0 else None
         r_["sfx_lufs_m_max"] = round(momentary_max(sw[a0:a1]), 1) if a1 > a0 else None
     # intelligibility: per-word octave-band voice-to-SFX ratio on voiced frames (the measure the
-    # unmask stage targets), key words, long-term spectra, duck stability, tick sync, tonality
+    # word-keyed EQ targets), key words, long-term spectra, duck stability, tick sync, tonality
     import measure
     words = measure.all_words()
     pts = measure.sync_points()
