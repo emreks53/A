@@ -57,3 +57,21 @@ bubble string over the sunlit bed). This version (stills in this folder): **42.3
   sampling off so they are not lights), swelling on "Allah", fading out by 28.3 s for the close bubble chase.
   Re-measured: 42.6 s (f700), 42.7 s (f636), 26.6 s (f600).
 * Phase A sky in the window is a bit flat; the sun could use more burst.
+
+## Round 1 notes applied (v3)
+1. **Opening:** the surface ripples are 3× finer with more chop (Ocean 2 m tiles plus a 38/m capillary bump), so
+   the blobs became many small glints. Exposure is −2.4 EV while looking up (deep-blue window, sun dominates),
+   and the shafts converge on the sun. *Still improving: more sun dazzle/sparkle.*
+2. **Mid-shot ceiling:** extra haze on the underside of the surface when it is seen at grazing angles (1 − exp
+   with a facing-dependent σ), so the top of frame is soft luminous water instead of a blotchy mirror or stripe.
+3. **Photosynthesis:** 520 static "pearls" (0.25–0.75 mm) cling to leaf tips and edges, concentrated on the hero
+   crown. Bubble strings went from ~20 to ~70 (8 on the hero stem, 1–2 on most clump stems, 0.2–0.55 s periods):
+   about 2000 bubbles in the shot.
+4. **Plant:** desaturated, translucency raised to 55 %, and older/deeper leaves carry a brown algae film with
+   sediment specks. The caustic gobo is sharper and ~1.5× stronger, and the flat sun is reduced by half, so the
+   caustic lines visibly slide over leaves and bed.
+5. **Water:** 1000 particulate specks (was 420) and 40 thinner, varied shafts.
+6. **Render:** ACCURATE denoise prefilter (FAST left grain in defocused bubble bokeh), 12 spp, **80 % resolution**
+   (864×1536; the director allows this for mostly-defocus shots, post upscales).
+   **Measured: 67.2 s/frame** (frames 636–638, the heaviest). I checked a 100 % crop of a defocused area across
+   these 3 frames: clean, no blotches.
