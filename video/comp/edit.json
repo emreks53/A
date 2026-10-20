@@ -1,0 +1,47 @@
+{
+ "_doc": [
+  "Conform & finishing for composite.py. Cut frames come from timing/shots.json (cut_f0 of the incoming shot).",
+  "A transition of N frames centred on the cut covers [cut - N//2 + offset, cut - N//2 + offset + N); both shots",
+  "must have those frames (6 handle frames each side), composite.py checks and clamps.",
+  "Types: cut | dissolve | light (additive bloom-flash crossfade) | colormatch (luma-led dissolve) |",
+  "luma (incoming highlights lead) | zoom (scale-up + radial blur zoom-through) | defocus (rack-focus dissolve) |",
+  "dip (through near-black). 'flash' scales the light dissolve's exposure bloom.",
+  "grade: per-shot trims in scene-linear light, neutral by default: exposure (stops), temp (+ = warmer,",
+  "~mired-like units, 10 = subtle), tint (+ = magenta), sat (1 = neutral), contrast (1 = neutral, pivot 0.18)."
+ ],
+ "version": 1,
+ "cuts": [
+  {"a": "sh01", "b": "sh02", "type": "light", "frames": 12, "flash": 1.0, "why": "sun flare upper right -> window flare"},
+  {"a": "sh02", "b": "sh03", "type": "dissolve", "frames": 6, "why": "continuous tilt/boom down onto the table"},
+  {"a": "sh03", "b": "sh04", "type": "cut", "frames": 0, "why": "graphic match: round bowl -> lone seedling (hard cut, sound cuts here too)"},
+  {"a": "sh04", "b": "sh05", "type": "light", "frames": 6, "flash": 0.55, "why": "match cut on the sun"},
+  {"a": "sh05", "b": "sh06", "type": "dissolve", "frames": 4, "why": "shape match: O2 bubble -> red blood cell"},
+  {"a": "sh06", "b": "sh07", "type": "colormatch", "frames": 12, "why": "warm red flow -> red-orange pre-dawn horizon"},
+  {"a": "sh07", "b": "sh08", "type": "light", "frames": 12, "flash": 0.8, "why": "sun glare -> sunbeam across the table"},
+  {"a": "sh08", "b": "sh09", "type": "zoom", "frames": 10, "why": "push into the skin -> through red muscle tissue"},
+  {"a": "sh09", "b": "sh10", "type": "dissolve", "frames": 6, "why": "inside one cell -> pull back from the same cell"},
+  {"a": "sh10", "b": "sh11", "type": "luma", "frames": 12, "why": "glowing cells become glints -> backlit rain drops"},
+  {"a": "sh11", "b": "sh12", "type": "light", "frames": 12, "flash": 0.7, "why": "tilt up into the bright rain sky -> emerge from cloud"},
+  {"a": "sh12", "b": "sh13a", "type": "dissolve", "frames": 12, "why": "aerial descends toward the meadow -> low glide"},
+  {"a": "sh13a", "b": "sh13b", "type": "dissolve", "frames": 6, "why": "continuous low glide, slowing"},
+  {"a": "sh13b", "b": "sh14a", "type": "defocus", "frames": 12, "why": "seedling dew drop -> focus pull to the sunflower spiral"},
+  {"a": "sh14a", "b": "sh14b", "type": "dissolve", "frames": 6, "why": "shadow sweeps in (the sweep itself is the first beat of sh14b)"},
+  {"a": "sh14b", "b": "sh14c", "type": "dip", "frames": 12, "why": "darkness -> cold grey desert"},
+  {"a": "sh14c", "b": "sh15", "type": "luma", "frames": 10, "why": "lifeless stone -> warm sunbeam (light leads)"}
+ ],
+ "head_fade": {"frames": 10, "from": "black"},
+ "tail_fade": {"frames": 30, "to": "black"},
+ "grade": {
+  "sh01": {}, "sh02": {}, "sh03": {}, "sh04": {}, "sh05": {}, "sh06": {}, "sh07": {}, "sh08": {}, "sh09": {},
+  "sh10": {}, "sh11": {}, "sh12": {}, "sh13a": {}, "sh13b": {}, "sh14a": {}, "sh14b": {}, "sh14c": {}, "sh15": {}
+ },
+ "finish": {
+  "bloom": {"threshold": 0.80, "knee": 0.35, "strength": 0.055, "radii": [10, 36, 90], "weights": [0.5, 0.33, 0.17]},
+  "halation": {"threshold": 0.95, "strength": 0.045, "radius": 7, "tint": [1.0, 0.36, 0.14]},
+  "vignette": {"strength": 0.16, "power": 2.3, "roundness": 0.8},
+  "chromatic_aberration": {"pixels_at_corner": 0.8},
+  "sharpen": {"amount": 0.22, "radius": 0.9},
+  "grain": {"amount": 0.0125, "size": 0.75, "coarse": 0.35, "chroma": 0.22, "on_graphics": 0.55},
+  "legibility": {"threshold": 0.50, "gain": 0.85, "max": 0.36, "pad": 70, "feather": 48}
+ }
+}
