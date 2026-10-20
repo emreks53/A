@@ -506,7 +506,7 @@ def main():
     vch = v * db(-3.0)
     if a.dump_pre:
         os.makedirs(a.dump_pre, exist_ok=True)
-        for k, x in (("pre_um", pre_um), ("ui", ui), ("vch", vch), ("act", act), ("v_raw", v_raw)):
+        for k, x in list(buses.items()) + [("vch", vch), ("act", act), ("v_raw", v_raw)]:
             np.save(os.path.join(a.dump_pre, k + ".npy"), x.astype(np.float32))
     sfx_bus, um_g, um_T, um_stats = unmask(pre_um, vch, act, fs_c, log)
     sfx_bus = sfx_bus + ui
