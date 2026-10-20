@@ -382,7 +382,7 @@ def unmask(S, vch, act, fs_c, log=print):
     PS = np.maximum((np.abs(XL) ** 2) @ M, (np.abs(XR) ** 2) @ M)
     PV = uniform_filter1d(PV, size=max(int(UM_VSMOOTH / hop_s), 1), axis=0, mode="nearest")
     PS = uniform_filter1d(PS, size=max(int(UM_SSMOOTH / hop_s), 1), axis=0, mode="nearest")
-    LV, LS = 10 * np.log10(PV + 1e-20), 10 * np.log10(PS + 1e-20)
+    LV, LS = 10 * np.log10(np.maximum(PV, 0) + 1e-20), 10 * np.log10(np.maximum(PS, 0) + 1e-20)
     need = np.clip(LV - UM_TARGET[None, :] - LS, -UM_MAXCUT[None, :], 0.0)
     need[:, UM_MAXCUT == 0] = 0.0
     a = np.interp(T, np.arange(len(act)) / fs_c, act)
@@ -470,6 +470,7 @@ def main():
     ap.add_argument("--cues", default=os.path.join(HERE, "cues.json"))
     ap.add_argument("--voice", default=os.path.join(HERE, "narration.m4a"))
     ap.add_argument("--no-report", action="store_true")
+    ap.add_argument("--dump-pre", default=None, help="save the ducked SFX buses + voice (npy) for tuning")
     a = ap.parse_args()
     out_dir = a.out or os.path.join(os.environ.get("VIDEO_OUT") or os.path.join(VIDEO, ".out"), "audio")
     os.makedirs(out_dir, exist_ok=True)
@@ -503,6 +504,10 @@ def main():
     ui = ducked.pop("ui", np.zeros((n_total, 2)))
     pre_um = sum(ducked.values())
     vch = v * db(-3.0)
+    if a.dump_pre:
+        os.makedirs(a.dump_pre, exist_ok=True)
+        for k, x in (("pre_um", pre_um), ("ui", ui), ("vch", vch), ("act", act), ("v_raw", v_raw)):
+            np.save(os.path.join(a.dump_pre, k + ".npy"), x.astype(np.float32))
     sfx_bus, um_g, um_T, um_stats = unmask(pre_um, vch, act, fs_c, log)
     sfx_bus = sfx_bus + ui
     del pre_um
