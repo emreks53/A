@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>overlay renderer</title>
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+  canvas { position: absolute; left: 0; display: block; }
+</style>
+</head>
+<body>
+<!-- Two layers, stacked vertically in the page so each can be captured with a clip:
+     #over (top)    straight-alpha graphics composited OVER the plate
+     #add  (below)  additive light (glow / bloom), composited with a screen blend -->
+<canvas id="over"></canvas>
+<canvas id="add"></canvas>
+<script src="overlay.js"></script>
+</body>
+</html>
