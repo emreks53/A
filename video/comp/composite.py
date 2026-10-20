@@ -53,8 +53,7 @@ def lin_to_srgb(x):
 
 
 _LUT16 = srgb_to_lin(np.arange(65536, dtype=np.float32) / 65535.0)
-_ENC_N = 8192
-_ENC = lin_to_srgb(np.linspace(0, 1, _ENC_N + 1, dtype=np.float32))
+_ENC16 = lin_to_srgb(np.arange(65536, dtype=np.float32) / 65535.0)
 
 
 def decode16(u16):
@@ -63,12 +62,9 @@ def decode16(u16):
 
 
 def encode_lin(x):
-    """linear float32 (>=0) -> display float32 [0,1] (LUT with linear interpolation; soft-clipped above 1)."""
-    x = np.clip(x, 0, 1) * _ENC_N
-    i = x.astype(np.int32)
-    np.minimum(i, _ENC_N - 1, out=i)
-    f = x - i
-    return _ENC[i] * (1 - f) + _ENC[i + 1] * f
+    """linear float32 -> display float32 [0,1] via a 16-bit LUT (values above 1 clip)."""
+    q = np.clip(x * 65535.0 + 0.5, 0, 65535).astype(np.uint16)
+    return _ENC16[q]
 
 
 def soft_shoulder(x, start=0.82):
@@ -320,37 +316,40 @@ class Finisher:
         ay = 1.0 * rnd + (h / w) * (1 - rnd) * 0 + (1 - rnd) * 1.0
         r = np.sqrt((nx / ax) ** 2 + (ny / ay) ** 2) / math.sqrt(2)
         self.vig = (1 - v["strength"] * np.power(np.clip(r, 0, 1), v["power"]))[..., None].astype(np.float32)
+        self.vig3 = np.repeat(self.vig, 3, axis=2)
         ca = cfg["chromatic_aberration"]["pixels_at_corner"] * k
         half_diag = math.hypot(w / 2, h / 2)
         self.ca_s = ca / half_diag
         self.grain_cfg = cfg["grain"]
 
     def bloom_halation(self, lin):
+        """Bloom (soft-knee highlights, three radii) + halation (red-orange skirt around the hottest
+        highlights), both extracted and blurred at 1/4 resolution and added back once."""
         c = self.c
         w, h = self.w, self.h
-        y = lin @ LUMA
+        sw, shh = max(4, w // 4), max(4, h // 4)
+        small = cv2.resize(lin, (sw, shh), interpolation=cv2.INTER_AREA)
+        y = small @ LUMA
         b = c["bloom"]
         thr, knee = b["threshold"], b["knee"]
-        # soft-knee threshold on luminance, keep colour
         x = np.clip((y - thr + knee) / (2 * knee), 0, 1)
-        wgt = np.where(y > thr + knee, 1.0, x * x).astype(np.float32)
-        hi = lin * ((np.maximum(y - thr, 0) + knee * wgt * 0.25) / np.maximum(y, 1e-4))[..., None]
-        small = cv2.resize(hi, (w // 4, h // 4), interpolation=cv2.INTER_AREA)
+        soft = np.where(y > thr + knee, y - thr, knee * x * x)
+        hi = small * (soft / np.maximum(y, 1e-4))[..., None]
         acc = np.zeros_like(small)
         for r, wt in zip(b["radii"], b["weights"]):
-            acc += wt * cv2.GaussianBlur(small, (0, 0), r * self.k / 4, borderType=cv2.BORDER_REFLECT)
-        out = lin + b["strength"] * cv2.resize(acc, (w, h), interpolation=cv2.INTER_LINEAR)
+            acc += wt * cv2.GaussianBlur(hi, (0, 0), r * self.k / 4, borderType=cv2.BORDER_REFLECT)
+        acc *= b["strength"]
         ha = c["halation"]
         hl = np.clip(y - ha["threshold"], 0, None)
         if hl.max() > 0:
-            hs = cv2.resize(hl, (w // 2, h // 2), interpolation=cv2.INTER_AREA)
-            hs = cv2.GaussianBlur(hs, (0, 0), ha["radius"] * self.k / 2)
-            hb = cv2.resize(hs, (w, h), interpolation=cv2.INTER_LINEAR)
-            out = out + ha["strength"] * hb[..., None] * np.array(ha["tint"], np.float32)
-        return out
+            hb = cv2.GaussianBlur(hl, (0, 0), max(0.6, ha["radius"] * self.k / 4))
+            acc += (ha["strength"] * hb)[..., None] * np.array(ha["tint"], np.float32)
+        if acc.max() <= 1e-5:
+            return lin
+        return cv2.add(lin, cv2.resize(acc, (w, h), interpolation=cv2.INTER_LINEAR))
 
     def lens(self, lin):
-        out = lin * self.vig
+        out = cv2.multiply(lin, self.vig3)
         if not self.preview and self.ca_s > 0:
             r = scale_about_centre(np.ascontiguousarray(out[..., 0]), 1 + self.ca_s, cv2.BORDER_REPLICATE)
             b = scale_about_centre(np.ascontiguousarray(out[..., 2]), 1 - self.ca_s, cv2.BORDER_REPLICATE)
@@ -362,29 +361,50 @@ class Finisher:
         if s["amount"] <= 0:
             return disp
         bl = cv2.GaussianBlur(disp, (0, 0), s["radius"] * self.k)
-        return disp + s["amount"] * (disp - bl)
+        return cv2.addWeighted(disp, 1 + s["amount"], bl, -s["amount"], 0)
+
+    def _banks(self):
+        if getattr(self, "_mono", None) is not None:
+            return
+        g = self.grain_cfg
+        h, w = self.h, self.w
+        rng = np.random.default_rng(20261020)
+        size = g["size"] * self.k
+        nb = 12
+        self._mono, self._chroma = [], []
+        for _ in range(nb):
+            n = rng.standard_normal((h, w), dtype=np.float32)
+            n = cv2.GaussianBlur(n, (0, 0), max(0.35, size))
+            if g["coarse"] > 0:
+                nc = rng.standard_normal((h // 2, w // 2), dtype=np.float32)
+                nc = cv2.resize(cv2.GaussianBlur(nc, (0, 0), 0.9), (w, h), interpolation=cv2.INTER_LINEAR)
+                n = n / (n.std() + 1e-6) + g["coarse"] * nc / (nc.std() + 1e-6)
+            n = n / (n.std() + 1e-6)
+            self._mono.append(n.astype(np.float16))
+            self._chroma.append(None)
 
     def grain(self, disp, f, gfx_alpha=None):
+        """Fine, animated, luminance-dependent grain. Deterministic per frame: a seeded pick + offset + sign
+        from a bank of pre-filtered fields (strongest in the mid-tones, lighter on graphics)."""
         g = self.grain_cfg
+        self._banks()
         h, w = disp.shape[:2]
-        rng = np.random.default_rng(1_000_003 * (f + 1))
-        size = g["size"] * self.k
-        n = rng.standard_normal((h, w), dtype=np.float32)
-        n = cv2.GaussianBlur(n, (0, 0), max(0.35, size)) * (1.0 / max(0.25, 0.6 * size ** 0.5 + 0.2))
-        if g["coarse"] > 0:
-            nc = rng.standard_normal((h // 2, w // 2), dtype=np.float32)
-            nc = cv2.resize(cv2.GaussianBlur(nc, (0, 0), 0.9), (w, h), interpolation=cv2.INTER_LINEAR)
-            n = (n + g["coarse"] * nc * 1.6) / math.sqrt(1 + g["coarse"] ** 2)
-        y = disp @ LUMA
-        amp = g["amount"] * (0.35 + 2.6 * y * (1 - y) + 0.25 * (1 - y)).astype(np.float32)  # strongest in mids
+        r = np.random.default_rng(7919 * (f + 11))
+        i, j = int(r.integers(len(self._mono))), int(r.integers(len(self._chroma)))
+        dy, dx = int(r.integers(h)), int(r.integers(w))
+        sg = 1.0 if r.random() < 0.5 else -1.0
+        n = np.roll(self._mono[i], (dy, dx), axis=(0, 1)).astype(np.float32)
+        ys = cv2.resize(disp, (w // 2, h // 2), interpolation=cv2.INTER_AREA) @ LUMA
+        amp_s = (g["amount"] * sg) * (0.35 + 2.6 * ys * (1 - ys) + 0.25 * (1 - ys))
+        amp = cv2.resize(amp_s.astype(np.float32), (w, h), interpolation=cv2.INTER_LINEAR)
         if gfx_alpha is not None:
-            amp = amp * (1 - (1 - g["on_graphics"]) * gfx_alpha)
-        out = disp + (n * amp)[..., None]
+            amp *= 1 - (1 - g["on_graphics"]) * gfx_alpha
         if g["chroma"] > 0:
-            ch = rng.standard_normal((h // 4, w // 4, 3), dtype=np.float32)
-            ch = cv2.resize(ch, (w, h), interpolation=cv2.INTER_LINEAR)
-            out = out + ch * (amp * g["chroma"])[..., None]
-        return out
+            n2 = np.roll(self._mono[j], (dx % h, dy % w), axis=(0, 1)).astype(np.float32)
+            noise = cv2.merge([cv2.scaleAdd(n2, g["chroma"], n), n, cv2.scaleAdd(n2, -g["chroma"], n)])
+        else:
+            noise = cv2.merge([n, n, n])
+        return cv2.add(disp, cv2.multiply(noise, cv2.merge([amp, amp, amp])))
 
 
 # ============================================================================================ edit model
@@ -494,8 +514,10 @@ def legibility(disp, boxes, cfg, scale, w, h):
             mask = np.zeros((shh, sw), np.float32)
         m = np.zeros((shh, sw), np.float32)
         pp = lc["pad"] * scale
-        cv2.rectangle(m, (int((x0s - pp) / w * sw), int((y0s - pp * 0.6) / h * shh)),
-                      (int((x1s + pp) / w * sw), int((y1s + pp * 0.6) / h * shh)), 1.0, -1)
+        cx, cy = (x0s + x1s) / 2 / w * sw, (y0s + y1s) / 2 / h * shh
+        ax = ((x1s - x0s) / 2 + pp) / w * sw * 1.08
+        ay = ((y1s - y0s) / 2 + pp * 0.75) / h * shh * 1.08
+        cv2.ellipse(m, (int(round(cx)), int(round(cy))), (max(1, int(ax)), max(1, int(ay))), 0, 0, 360, 1.0, -1)
         m = cv2.GaussianBlur(m, (0, 0), lc["feather"] * scale / 8)
         mask = np.maximum(mask, m * k)
     if mask is None:

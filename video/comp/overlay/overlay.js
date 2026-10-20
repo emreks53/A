@@ -864,12 +864,12 @@ function drawSpiral(el, f, t) {
   // on-screen floret spacing: the pattern is only drawn while florets are big enough to read
   const q1 = mapPt(150, 150 * GA), q2 = mapPt(150 + el.families[0], (150 + el.families[0]) * GA);
   const spacing = Math.hypot(q1[0] - q2[0], q1[1] - q2[1]);
-  const scaleFade = smooth(clamp((spacing - 13) / 14));
+  const scaleFade = smooth(clamp((spacing - 20) / 22));
   const fadeOut = 1 - eInOutCubic(lin(t, el.fade0, el.out));
   const aGlob = p.v * fadeOut * scaleFade * eOutCubic(lin(t, el.t0 - 0.05, el.t0 + 0.3));
   if (aGlob < 0.003) return;
   const famCols = [[255, 212, 138], [255, 244, 222]];
-  const famA = [0.80, 0.58];
+  const famA = [0.66, 0.46];
   const mkGrad = (ctx, col, a) => {
     const R = Math.max(rB[3], 1);
     const g = ctx.createRadialGradient(ctr[0], ctr[1], 0, ctr[0], ctr[1], R);
