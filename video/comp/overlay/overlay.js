@@ -102,14 +102,24 @@ function glyphShadow(ctx, ch, x, y, alpha, sigma, dy, rgb = [0, 0, 0]) {
   ctx.restore();
 }
 
-/** Stroke a path (built by fn(ctx, dx)) with a soft shadow/glow only (shadow trick). */
+/** Soft companion of a stroke WITHOUT Skia shadow blurs (those cost ~bbox area in software):
+ *  - on the additive layer: a sharp emitter stroke; the compositor blooms the whole light layer (multi-scale glow)
+ *  - on the over layer: a dark halo built from two wide, faint strokes (reads as a soft legibility shadow). */
 function strokeGlow(ctx, buildPath, width, rgb, alpha, sigma, dy = 0) {
   if (alpha < 0.003) return;
   if (ctx === X) drewOver = true; else drewAdd = true;
   ctx.save();
-  ctx.shadowColor = rgba(rgb, alpha); ctx.shadowBlur = 2 * sigma * S; ctx.shadowOffsetX = OFF * S; ctx.shadowOffsetY = dy * S;
-  ctx.strokeStyle = '#000'; ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.beginPath(); buildPath(ctx, -OFF); ctx.stroke();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (ctx === A) {
+    ctx.strokeStyle = rgba(rgb, alpha); ctx.lineWidth = width * 1.6;
+    ctx.beginPath(); buildPath(ctx, 0); ctx.stroke();
+  } else {
+    ctx.translate(0, dy);
+    ctx.strokeStyle = rgba(rgb, alpha * 0.30); ctx.lineWidth = width + 2.2 * sigma;
+    ctx.beginPath(); buildPath(ctx, 0); ctx.stroke();
+    ctx.strokeStyle = rgba(rgb, alpha * 0.38); ctx.lineWidth = width + 0.9 * sigma;
+    ctx.beginPath(); buildPath(ctx, 0); ctx.stroke();
+  }
   ctx.restore();
 }
 function strokeSolid(ctx, buildPath, width, rgb, alpha) {
@@ -298,7 +308,7 @@ function drawKeyword(el, t) {
       }
       const gmul = (breathe + boost + swell + p.glowOut);
       setFont(A, fam, wt, sz * p.scl);
-      for (const g of st.glow) glyph(A, p.l.ch, p.x, p.y, g, p.alpha * g[3] * gmul, Math.hypot(g[4], p.blur));
+      for (const g of st.glow) glyph(A, p.l.ch, p.x, p.y, g, p.alpha * g[3] * gmul, p.blur);
     }
     for (const s of seps) glowDot(A, s.x, s.y, s.r * 6, st.glow[0], s.a * 0.35 * breathe);
   }
@@ -605,7 +615,7 @@ function drawCounter(el, f, t) {
         // a short light glint on landing
         const g = Math.exp(-Math.max(0, t - el.land) / 0.35) * (t >= el.land ? 1 : 0);
         setFont(A, pS.family, pS.weight, pS.size * scl);
-        for (const [c, gx] of items) glyph(A, c, gx, y, st.glow, aFin * 0.55 * g, 6);
+        for (const [c, gx] of items) glyph(A, c, gx, y, st.glow, aFin * 0.55 * g, 0);
       }
     },
   };
@@ -671,14 +681,20 @@ function drawECG(el, f, t) {
   const col = [255, 236, 230];
   // baseline hint
   strokeSolid(X, (c, o) => { c.moveTo(gx + o, gy + gh * 0.62); c.lineTo(gx + gw + o, gy + gh * 0.62); }, 1, col, a * 0.10);
-  for (const [p0, p1] of segs) {
-    const fade = Math.pow(1 - clamp(p1[2] / el.sweep_s), 1.3);
+  const NB = 10, buckets = Array.from({ length: NB }, () => []);
+  for (const sg of segs) {
+    const fade = Math.pow(1 - clamp(sg[1][2] / el.sweep_s), 1.3);
+    buckets[Math.min(NB - 1, Math.floor(fade * NB))].push(sg);
+  }
+  buckets.forEach((bk, bi) => {
+    if (!bk.length) return;
+    const fade = (bi + 0.5) / NB;
     const al = a * (0.18 + 0.82 * fade);
-    const build = (c, o) => { c.moveTo(p0[0] + o, p0[1]); c.lineTo(p1[0] + o, p1[1]); };
+    const build = (c, o) => { for (const [p0, p1] of bk) { c.moveTo(p0[0] + o, p0[1]); c.lineTo(p1[0] + o, p1[1]); } };
     strokeGlow(X, build, 2, [0, 0, 0], al * 0.35, 3, 1);
     strokeSolid(X, build, 2, col, al * 0.95);
     strokeGlow(A, build, 2, red, al * 0.55 * fade, 5);
-  }
+  });
   // head
   const hv = ecgAt(el, t);
   const hx = gx + head, hy = gy + gh * 0.62 - hv * gh * 0.78;
@@ -926,7 +942,7 @@ function drawSpiral(el, f, t) {
         const ly = clamp(ctr[1] + Math.sin(ang) * rr + run.capH / 2, TL.safe.y0 + 40, TL.safe.y1);
         drawRunWipe(run, lx, ly, famCols[fi], na, lx + run.w + 40, 1, 30, [0.6, 7, 1]);
         setFont(A, 'Inter', 500, 30);
-        for (const c of run.chars) glyph(A, c.ch, lx + c.x, ly, famCols[fi], na * 0.35, 6);
+        for (const c of run.chars) glyph(A, c.ch, lx + c.x, ly, famCols[fi], na * 0.35, 0);
       }
     }
   });
