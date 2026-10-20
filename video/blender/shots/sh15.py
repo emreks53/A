@@ -2200,8 +2200,14 @@ def build(ctx):
             portal.data.is_portal = True
         except Exception:
             pass
-    volume_box()
-    build_motes()
+    dis = os.environ.get("SH15_DISABLE", "").split(",")
+    if "vol" not in dis:
+        volume_box()
+    if "motes" not in dis:
+        build_motes()
+    if "carve" in dis:
+        for o in [o for o in bpy.data.objects if o.name.endswith("_carve")]:
+            bpy.data.objects.remove(o)
     # ------------------------------------------------ cameras
     V = Vector
     camA = rig_camera("camA", 35, 2.8, [
