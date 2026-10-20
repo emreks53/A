@@ -15,6 +15,7 @@ import common as C
 import lib_s5 as H
 
 SUN_DIR = None
+WIN_C = None
 GRIP_GAP = 0.004
 
 
@@ -29,7 +30,7 @@ def _box(name, loc, dims, mat=None, rot=(0, 0, 0)):
 
 
 def build_set(ctx):
-    global SUN_DIR
+    global SUN_DIR, WIN_C
     sc = bpy.context.scene
     C.world_hdri(C.ph_hdri("lythwood_room", "1k"), strength=0.12, rot_z_deg=40, saturation=0.8, tint=(1.0, 0.93, 0.85))
     # table: worn wood, 1.8 x 1.1 m, top at z=0
@@ -66,6 +67,7 @@ def build_set(ctx):
     target = Vector((0.0, 0.02, 0.05))
     dback = (wx - target.x) / SUN_DIR.x
     win_c = target + SUN_DIR * dback
+    WIN_C = win_c.copy()
     ww, wh = 0.75, 0.95
     wallm = C.principled("WallL", (0.6, 0.55, 0.48), 0.9)
     y0, y1 = win_c.y - ww / 2, win_c.y + ww / 2
@@ -80,6 +82,12 @@ def build_set(ctx):
     # sky light from the window opening (cool fill) + a soft bounce from the room
     C.area("WindowSky", loc=(wx + 0.05, win_c.y, win_c.z), look_at=(0.3, -0.2, 0.0), size=ww, size_y=wh, power=30, kelvin_k=7500)
     C.area("Bounce", loc=(0.9, -0.6, 0.5), look_at=(0, 0, 0.05), size=1.2, power=6, kelvin_k=3600)
+    # bright sunlit exterior seen through the window (camera/glossy only, so room lighting is unchanged)
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(wx - 0.6, win_c.y, win_c.z), rotation=(0, math.radians(90), 0))
+    ext = bpy.context.object; ext.name = "Exterior"; ext.scale = (3.0, 4.0, 1)
+    em = C.principled("ExteriorGlow", (0, 0, 0), 1.0, emission=(1.0, 0.82, 0.6), emission_strength=7.0)
+    C.assign(ext, em)
+    ext.visible_diffuse = False; ext.visible_shadow = False; ext.visible_volume_scatter = False
     # sheer curtain at the window edge breaks up the beam a little (soft moving shadow)
     return sun
 
@@ -379,57 +387,56 @@ def build(ctx):
     def arm_world():
         return arm.matrix_world.copy()
 
-    C0 = Vector((-0.12, -1.06, 0.31))
+    C0 = Vector((0.30, -1.00, 0.255))          # front-right: window/sun behind-left of the hand -> rim light
+    HE_rest = H.JOINTS["little"][1] + Vector((-0.008, 0.002, 0.0))   # little-finger edge: thin, glows red when backlit
     frames = list(range(ctx.f0 - 2, ctx.f1 + 3))
-    sd_v = sd.levels
     for f in frames:
         sc.frame_set(f)
         t = f / C.FPS
         Mw = arm_world()
         wrist_w = Mw @ H.WRIST
-        S_w = Mw @ S_rest
-        N_w = (Mw.to_3x3() @ N_rest).normalized()
+        lb = arm.pose.bones["little_2"]
+        he_w = arm.matrix_world @ lb.head.lerp(lb.tail, 0.5)
         Aw = apple.matrix_world.translation.copy()
-        # phase 1: documentary framing on apple + hand, slow drift right and a gentle tilt with the lift
+        # phase 1: documentary framing on the apple; the hand is soft until contact
         drift = C.remap(t, ctx.t0, t_asl, C.smooth)
-        p1 = C0 + Vector((0.015 * drift, 0.05 * drift, 0.020 * drift))
-        lk1 = Vector((0.004, 0.02, 0.045)).lerp(Aw * 0.75 + wrist_w * 0.25, C.remap(t, t_grab - 0.6, t_grab + 1.2))
-        lk1 = lk1.lerp(Vector((0.0, 0.02, 0.045)), 0.0)
-        f1 = Aw.lerp(wrist_w, 0.25 * C.remap(t, t_grab, t_grab + 1.0))
-        if t < t_grab - 0.6:
-            f1 = Vector((0.0, 0.0, 0.045))
-        elif t < t_grab + 0.2:
-            f1 = Vector((0.0, 0.0, 0.045)).lerp(Aw.lerp(wrist_w, 0.1), C.remap(t, t_grab - 0.6, t_grab + 0.2))
-        # phase 2: glide along the wrist/forearm into macro skin
-        s = C.remap(t, t_asl, t_deg - 0.04, lambda x: C.smooth(x) * 0.7 + max(0.0, min(1.0, x)) * 0.3)
-        fa_dir = (Mw.to_3x3() @ (H.ELBOW - H.WRIST)).normalized()
-        side = N_w.cross(fa_dir).normalized()
-        dist = math.exp(C.lerp(math.log(0.40), math.log(0.066), s))
-        along = C.lerp(-0.055, -0.012, s)
-        offn = N_w * dist * 0.80 + side * dist * (0.35 - 0.25 * s) - fa_dir * dist * 0.30
-        p2 = S_w + fa_dir * along + offn
-        lk2 = S_w + fa_dir * along * (1 - s)
-        # tail end: keep creeping in (-> tissue)
-        creep = C.remap(t, t_deg, ctx.t1 + 0.3, lambda x: max(0.0, min(1.0, x)))
-        p2 = p2 - (p2 - S_w).normalized() * 0.016 * creep
-        b = C.remap(t, t_asl - 0.10, t_asl + 0.9)
+        p1 = C0 + Vector((-0.02 * drift, 0.06 * drift, 0.015 * drift))
+        lk1 = Vector((0.0, 0.02, 0.045)).lerp(Aw * 0.8 + wrist_w * 0.2, C.remap(t, t_grab - 0.4, t_grab + 1.2))
+        f1 = Aw.copy()
+        # phase 2 ("aslında" ->): push toward the hand edge with the bright window directly behind it;
+        # focus slides off toward the window so the backlit skin becomes a warm-red translucent glow
+        s = C.remap(t, t_asl - 0.1, ctx.t1, lambda x: C.smooth(x) * 0.6 + max(0.0, min(1.0, x)) * 0.4)
+        tgt2 = wrist_w.lerp(he_w, 0.35 + 0.65 * C.remap(t, t_asl, ctx.t1))
+        d = (tgt2 - WIN_C).normalized()
+        d = (d + Vector((0, 0, 0.12))).normalized()
+        dist = math.exp(C.lerp(math.log(0.55), math.log(0.105), s))
+        side2 = d.cross(Vector((0, 0, 1))).normalized()
+        p2 = tgt2 + d * dist - side2 * dist * 0.10
+        b = C.remap(t, t_asl - 0.1, t_asl + 1.3)
         pos = p1.lerp(p2, b)
-        look = lk1.lerp(lk2, C.remap(t, t_asl - 0.1, t_asl + 0.7))
-        fpt = f1.lerp(S_w, C.remap(t, t_asl, t_asl + 1.4))
+        look = lk1.lerp(tgt2, C.remap(t, t_asl - 0.1, t_asl + 1.0))
+        fpt = f1.lerp(tgt2 + (WIN_C - tgt2).normalized() * 0.14, C.remap(t, t_asl + 0.6, ctx.t1 - 0.3) ** 1.5)
         cam.location = pos; aim.location = look; foc.location = fpt
         for ob, path in ((cam, "location"), (aim, "location"), (foc, "location")):
             ob.keyframe_insert(path, frame=f)
-        cam.data.dof.aperture_fstop = C.lerp(2.8, 7.1, C.remap(t, t_asl + 0.4, t_deg))
+        cam.data.dof.aperture_fstop = 2.4
         cam.data.dof.keyframe_insert("aperture_fstop", frame=f)
     C.track_to(cam, aim)
     C.handheld(cam, amp_loc=0.0007, amp_rot=0.0, speed=0.4, seed=8)
     C.handheld(aim, amp_loc=0.0006, amp_rot=0.0, speed=0.3, seed=9)
 
+    # backlit red glow builds as the frame dissolves into blur (hand held against the light)
+    for n in skin.node_tree.nodes:
+        if n.bl_idname == "ShaderNodeMixShader" and n.inputs[2].is_linked and n.inputs[2].links[0].from_node.bl_idname == "ShaderNodeBsdfTranslucent":
+            n.inputs[0].default_value = 0.07; n.inputs[0].keyframe_insert("default_value", frame=int(round((t_asl + 1.2) * C.FPS)))
+            n.inputs[0].default_value = 0.45; n.inputs[0].keyframe_insert("default_value", frame=ctx.f1)
     # light dissolve from sh07's glare: open over-exposed, settle by ~40.9 s
     vs = sc.view_settings
     vs.exposure = 2.6; vs.keyframe_insert("exposure", frame=ctx.f0)
     vs.exposure = 1.0; vs.keyframe_insert("exposure", frame=int(round(40.72 * C.FPS)))
     vs.exposure = 0.0; vs.keyframe_insert("exposure", frame=int(round(41.05 * C.FPS)))
+    vs.exposure = 0.0; vs.keyframe_insert("exposure", frame=int(round(t_asl * C.FPS)))
+    vs.exposure = 0.3; vs.keyframe_insert("exposure", frame=ctx.f1)
     sc.frame_set(ctx.f0)
     return {"final_spp": int(os.environ.get("S5_SPP", "32")), "preview_spp": 24, "max_bounces": 4, "diffuse_bounces": 1,
             "glossy_bounces": 1, "transmission_bounces": 4, "transparent_bounces": 8, "final_threshold": 0.03, "texture_limit": "2048", "motion_blur": not os.environ.get("S5_NOMB")}

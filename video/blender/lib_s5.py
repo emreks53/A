@@ -146,7 +146,7 @@ def _masculinise(o):
             bump += 0.0008 * math.exp(-((p - pip).length / 0.0045) ** 2)
             # extensor tendon from wrist to MCP on the back of the hand
             dt, tt = _seg_dist(p, WRIST + Vector((0, -0.02, 0)), mcp)
-            bump += 0.0003 * math.exp(-(dt / 0.0032) ** 2) * C.smooth(tt / 0.3) * (1 - C.smooth((tt - 0.85) / 0.15))
+            bump += 0.0005 * math.exp(-(dt / 0.0030) ** 2) * C.smooth(tt / 0.3) * (1 - C.smooth((tt - 0.85) / 0.15))
         q = q + n * bump * dors
         v.co = q
     o.data.update()
@@ -360,21 +360,21 @@ def skin_material(hand, nails):
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", net1, -0.30))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", wrinkles, -1.6))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", lumpy, 0.8))
-    h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", vein, 1.2))
+    h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", vein, 2.2))
     bump = _node(nt, "ShaderNodeBump")
     bump.inputs["Strength"].default_value = 1.0
     bump.inputs["Distance"].default_value = 0.00007
     nt.links.new(h, bump.inputs["Height"])
     # ---------------- colour
-    base = (0.36, 0.215, 0.150)
+    base = (0.33, 0.185, 0.125)
     blotch = _noise(nt, R, 45.0, 3.0, 0.6)
     melan = _noise(nt, R, 7.0, 2.0, 0.5)
-    col = _mixc(nt, _math(nt, "MULTIPLY", _smoothstep(nt, blotch, 0.42, 0.68), 0.35), base, (0.52, 0.22, 0.165))
+    col = _mixc(nt, _math(nt, "MULTIPLY", _smoothstep(nt, blotch, 0.40, 0.70), 0.5), base, (0.45, 0.19, 0.14))
     col = _mixc(nt, _math(nt, "MULTIPLY", _smoothstep(nt, melan, 0.45, 0.7), 0.35), col, (0.40, 0.235, 0.16))
     col = _mixc(nt, _math(nt, "MULTIPLY", palm, 0.45), col, (0.55, 0.27, 0.19))                # palm lighter, pinker
-    col = _mixc(nt, _math(nt, "MULTIPLY", knuck, 0.55), col, (0.50, 0.20, 0.16))               # red knuckles
+    col = _mixc(nt, _math(nt, "MULTIPLY", knuck, 0.75), col, (0.46, 0.17, 0.13))               # red knuckles
     col = _mixc(nt, _math(nt, "MULTIPLY", tip, 0.45), col, (0.56, 0.21, 0.17))                 # flushed fingertips
-    col = _mixc(nt, _math(nt, "MULTIPLY", vein, 0.30), col, (0.30, 0.25, 0.28))                # bluish veins
+    col = _mixc(nt, _math(nt, "MULTIPLY", vein, 0.40), col, (0.24, 0.20, 0.24))                # bluish veins
     col = _mixc(nt, _math(nt, "MULTIPLY", net1, 0.04), col, (0.36, 0.20, 0.14))                # dirt-free darker furrows
     # crevices (between fingers, knuckle folds, wrist creases) darker and redder; ridges slightly paler
     geo = nt.nodes.new("ShaderNodeNewGeometry")
@@ -447,7 +447,11 @@ def skin_material(hand, nails):
     mix = _node(nt, "ShaderNodeMixShader")
     nt.links.new(nail_mask, mix.inputs[0])
     nt.links.new(skin.outputs[0], mix.inputs[1]); nt.links.new(nail.outputs[0], mix.inputs[2])
-    nt.links.new(mix.outputs[0], out.inputs["Surface"])
+    # thin-part translucency (finger edges glow red against the window); small weight to avoid wax
+    tr = _node(nt, "ShaderNodeBsdfTranslucent"); tr.inputs["Color"].default_value = (0.85, 0.16, 0.07, 1)
+    mt = _node(nt, "ShaderNodeMixShader"); mt.inputs[0].default_value = 0.07
+    nt.links.new(mix.outputs[0], mt.inputs[1]); nt.links.new(tr.outputs[0], mt.inputs[2])
+    nt.links.new(mt.outputs[0], out.inputs["Surface"])
     return m
 
 
