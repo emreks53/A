@@ -259,7 +259,7 @@ def build_elodea(rng, stems):
         bx, by = st["base"]
         z0, z1 = -DEPTH + 0.02, st["tip_z"]
         H = z1 - z0
-        def path(s):
+        def path(s, st=st, bx=bx, by=by, z0=z0, H=H):
             # s in [0,1] from base to tip
             sw = st["sway"]
             x = bx + sw[0] * math.sin(s * 2.2 + st["phase"]) * s + sw[2] * s * s
@@ -545,48 +545,46 @@ def build(ctx):
     cam.rotation_mode = "QUATERNION"
     foc = C.empty("cam_focus", (0, 0, 0)); cam.data.dof.focus_object = foc
     up_dir = refracted_up()
-    t_tilt0, t_tilt1 = t_allah + 0.45, t_oks - 0.25
+    t_tilt0, t_tilt1 = t_allah + 0.45, t_oks - 0.75
+    t_follow = t_oks - 0.12
     def hero_pos(t):
         st = hat(t)
         return st[0] if st else hsrc
     P0 = Vector((0.0, -0.05, -0.78))
-    PB = Vector((0.0, 0.37, -0.91))
+    apex = stems[0]["path"](1.0)
+    PB = apex + Vector((0.004, -0.115, -0.035))          # just below/in front of the hero crown
+    PB2 = apex + Vector((0.002, -0.095, -0.03))          # slow push-in while the bubbles grow
     def pose(t):
-        # A: looking up at the sun through the surface (slow drift), B: tilt down + glide toward the hero apex,
-        # C/D: rise with the hero bubble, close in over it and look down as it rises into the lens.
+        # A: looking up at the sun through the surface (slow drift)
         if t <= t_tilt0:
             u = C.remap(t, ctx.t0 - 0.3, t_tilt0, lambda x: x)
             loc = P0 + Vector((0.0, 0.03 * u, -0.02 * u))
-            tgt = loc + up_dir * 2.0 + Vector((0.0, 0.0, 0.0))
-            return loc, tgt, 0.85
-        if t <= t_tilt1:
+            return loc, loc + up_dir * 2.0, 0.85
+        A_end = P0 + Vector((0.0, 0.03, -0.02))
+        # B: tilt down while gliding to the hero crown, then a slow push-in (bubbles growing on the leaves)
+        if t <= t_follow:
             u = C.remap(t, t_tilt0, t_tilt1, C.smoother)
-            loc = P0 + Vector((0.0, 0.03, -0.02)) + (PB - P0 - Vector((0.0, 0.03, -0.02))) * C.smooth(C.remap(t, t_tilt0 + 0.2, t_tilt1, lambda x: x))
-            look_up = P0 + up_dir * 2.0
-            look_dn = HERO_APEX + Vector((0, 0, -0.01))
-            # rotate the view direction (slerp) rather than lerping target points
-            d0 = (look_up - loc).normalized(); d1 = (look_dn - loc).normalized()
-            q0 = d0.to_track_quat("-Z", "Y"); q1 = d1.to_track_quat("-Z", "Y")
-            q = q0.slerp(q1, u)
-            tgt = loc + q @ Vector((0, 0, -1))
-            fd = C.lerp(0.85, (HERO_APEX - loc).length, C.smooth(u))
-            return loc, tgt, fd
-        # C/D
-        u = C.remap(t, t_tilt1, ctx.t1 + 0.25, lambda x: x)
+            if t <= t_tilt1:
+                loc = A_end.lerp(PB, C.smoother(C.remap(t, t_tilt0 + 0.15, t_tilt1, lambda x: x)))
+            else:
+                loc = PB.lerp(PB2, C.smooth(C.remap(t, t_tilt1, t_follow + 0.6, lambda x: x)))
+            d0 = up_dir; d1 = (hsrc + Vector((0, 0, 0.012)) - loc).normalized()
+            q = d0.to_track_quat("-Z", "Y").slerp(d1.to_track_quat("-Z", "Y"), u)
+            fd = C.lerp(0.85, (hsrc - loc).length, C.smooth(u))
+            return loc, loc + q @ Vector((0, 0, -1)), fd
+        # C/D: rise with the hero bubble; camera swings from slightly below it to slightly above and closes in
         h = hero_pos(t)
-        # camera offset relative to the bubble: from side/above-ish (0.40 m) to straight above (1 cm)
-        k = C.smoother(C.remap(t, t_tilt1, ctx.t1 - 0.02, lambda x: x))
+        k = C.smoother(C.remap(t, t_follow, ctx.t1 - 0.02, lambda x: x))
+        ang = math.radians(C.lerp(-15, 30, k))
+        locB = PB.lerp(PB2, C.smooth(C.remap(t, t_tilt1, t_follow + 0.6, lambda x: x)))
+        d_start = (h - locB).length
+        dist = C.lerp(d_start, 0.0115, k ** 1.25)
         side = Vector((0.0, -1.0, 0.0))
-        ang = math.radians(C.lerp(15, 88, k))           # elevation of the camera above the bubble
-        dist = C.lerp((PB - h).length, 0.0115, k ** 1.4)
         off = (side * math.cos(ang) + Vector((0, 0, 1)) * math.sin(ang)) * dist
         loc = h + off
-        # blend in from the end of B for continuity
-        b = C.smooth(C.remap(t, t_tilt1, t_tilt1 + 0.6, lambda x: x))
-        locB = PB
+        b = C.smooth(C.remap(t, t_follow, t_follow + 0.7, lambda x: x))
         loc = locB.lerp(loc, b)
-        tgtB = HERO_APEX
-        tgt = tgtB.lerp(h, C.smooth(C.remap(t, t_tilt1 - 0.1, t_tilt1 + 0.45, lambda x: x)))
+        tgt = (hsrc + Vector((0, 0, 0.012))).lerp(h, C.smooth(C.remap(t, t_follow - 0.05, t_follow + 0.4, lambda x: x)))
         return loc, tgt, (h - loc).length
     last_q = None
     for f in range(ctx.f0 - 3, ctx.f1 + 4):
@@ -600,7 +598,7 @@ def build(ctx):
         cam.rotation_quaternion = q; last_q = q
         cam.keyframe_insert("location", frame=f); cam.keyframe_insert("rotation_quaternion", frame=f)
         foc.location = loc + d * fd; foc.keyframe_insert("location", frame=f)
-    C.handheld(cam, amp_loc=0.0012, amp_rot=0.0, speed=0.4, seed=5)
+    C.handheld(cam, amp_loc=0.0005, amp_rot=0.0, speed=0.4, seed=5)
 
     sc = bpy.context.scene
     if os.environ.get("S6_DEBUG") == "caustics":

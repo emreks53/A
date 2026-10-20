@@ -7,6 +7,8 @@ while drifting forward 9 m (boat/drone feel, tiny handheld noise). Horizon held 
 ## Stills (50 % res, preview quality)
 | file | t | what it shows |
 |---|---|---|
+| sh07_animatic.mp4 | — | 25 % animatic with narration |
+| sh07.json | — | TRK_sun screen track |
 | sh07_t035.500.png | 35.50 | first frame (handle): deep red-orange pre-dawn sky, dark violet sea reflecting it |
 | sh07_t037.400.png | 37.40 | camera rising; horizon glow brightening where the sun will appear |
 | sh07_t038.920.png | 38.92 | **"güneş" (38.88)** — the sun's rim (a thin sliver) breaks the horizon, first glints run toward camera |
@@ -32,7 +34,11 @@ while drifting forward 9 m (boat/drone feel, tiny handheld noise). Horizon held 
 * TRK_sun parented to the sun disc centre.
 
 ## Render cost
-Measured `--final` frame 955: see bottom line (filled in automatically when measured).
+Measured `--final --from 955 --to 955` (sunrise + full glitter, the heaviest kind of frame): **45.1 s/frame**
+on 4 cores (12 spp + OIDN, adaptive 0.04). Optimisations: near/mid ocean LOD (near patch 60 m wide × 180 m,
+res 16 + chop; mid patch res 8 to 945 m), no deformation blur on the waves (camera motion blur kept), world
+importance sampling off (water is near-specular, the sun is a lamp; saved 11 s with no visible change),
+reduced noise octaves, glossy bounce 1. First measurement before these was 118 s.
 
 ## Known issues / next
 * Thin high cloud streaks at the very top (y < 450) are subtle and slightly "line"-like; improving them.

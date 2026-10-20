@@ -136,7 +136,7 @@ def build(ctx):
         L.aim_sun_lamp(lamp, max(e, 0.0) * 2.0 + 2.2, SUN_AZ)   # lamp a touch higher: crests self-shadow less
         lamp.keyframe_insert("rotation_quaternion", frame=f)
         vis = C.smooth((e + 0.267) / 0.533)          # fraction of disc above horizon (approx)
-        lamp.data.energy = 70.0 * vis ** 1.5
+        lamp.data.energy = 50.0 * vis ** 1.5
         lamp.data.keyframe_insert("energy", frame=f)
 
     # ---------------------------------------------------------------- ocean (near patch dense, mid patch coarse;
@@ -155,7 +155,7 @@ def build(ctx):
         oc.wave_direction = math.radians(-70)
         oc.wave_scale_min = 0.01
         oc.use_normals = True
-        oc.use_foam = True; oc.foam_coverage = 0.25; oc.foam_layer_name = "foam"
+        oc.use_foam = chop; oc.foam_coverage = 0.25; oc.foam_layer_name = "foam"
         oc.random_seed = 11
         oc.depth = 200
         mods = [oc]
@@ -172,11 +172,12 @@ def build(ctx):
             mod.time = ctx.t0 + 100; mod.keyframe_insert("time", frame=100 * 24)
         for fc in C.fcurves(o):
             for k in fc.keyframe_points: k.interpolation = "LINEAR"
+        o.cycles.use_deform_motion = False      # waves barely move in 1/48 s; camera motion blur still applies
         o.location = loc    # tiles grow toward +X/+Y from the first tile centred on the origin
         C.smooth_shade(o)
         return o
-    sea = ocean("Ocean", 16, 3, 3, (-60, 15, 0), True)          # x -90..90, y -15..165
-    mid = ocean("OceanMid", 10, 5, 13, (-120, 195, 0), False)   # x -150..150, y 165..945
+    sea = ocean("Ocean", 16, 1, 3, (0, 15, 0), True)            # x -30..30, y -15..165 (frame is ~±17 m wide there)
+    mid = ocean("OceanMid", 8, 5, 13, (-120, 195, 0), False)   # x -150..150, y 165..945
     # far ocean: big plane beyond the simulated patch, micro-facet roughness carries the glitter
     bpy.ops.mesh.primitive_plane_add(size=1)
     far = bpy.context.object; far.name = "FarSea"
@@ -193,13 +194,13 @@ def build(ctx):
         tc = nt.nodes.new("ShaderNodeTexCoord")
         mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (2.2, 1.0, 1.0)
         nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 7.0
-        nz.inputs["Detail"].default_value = 8; nz.inputs["Roughness"].default_value = 0.6
+        nz.inputs["Detail"].default_value = 4; nz.inputs["Roughness"].default_value = 0.6
         nt.links.new(tc.outputs["Object" if name != "farsea" else "Generated"], mp.inputs[0])
         nt.links.new(mp.outputs[0], nz.inputs[0])
         bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.35
         bp.inputs["Distance"].default_value = 0.03
         nz2 = nt.nodes.new("ShaderNodeTexNoise"); nz2.inputs["Scale"].default_value = 26.0
-        nz2.inputs["Detail"].default_value = 4
+        nz2.inputs["Detail"].default_value = 2
         mp2 = nt.nodes.new("ShaderNodeMapping"); mp2.inputs["Scale"].default_value = (1.0, 2.5, 1.0)
         nt.links.new(tc.outputs["Object" if name != "farsea" else "Generated"], mp2.inputs[0]); nt.links.new(mp2.outputs[0], nz2.inputs[0])
         bp2 = nt.nodes.new("ShaderNodeBump"); bp2.inputs["Strength"].default_value = 0.5
@@ -210,7 +211,7 @@ def build(ctx):
         if foam:
             at = nt.nodes.new("ShaderNodeAttribute"); at.attribute_name = "foam"
             fn = nt.nodes.new("ShaderNodeTexNoise"); fn.inputs["Scale"].default_value = 9
-            fn.inputs["Detail"].default_value = 8
+            fn.inputs["Detail"].default_value = 3
             nt.links.new(tc.outputs["Object"], fn.inputs[0])
             mul = nt.nodes.new("ShaderNodeMath"); mul.operation = "MULTIPLY"
             nt.links.new(at.outputs["Fac"], mul.inputs[0]); nt.links.new(fn.outputs[0], mul.inputs[1])
@@ -237,7 +238,7 @@ def build(ctx):
     mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (1.5, 5.0, 1.0)
     nt.links.new(tc.outputs["Object"], mp.inputs[0])
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 2.5
-    nz.inputs["Detail"].default_value = 12; nz.inputs["Roughness"].default_value = 0.62
+    nz.inputs["Detail"].default_value = 5; nz.inputs["Roughness"].default_value = 0.62
     nz.inputs["Distortion"].default_value = 1.2
     nt.links.new(mp.outputs[0], nz.inputs[0])
     mr = nt.nodes.new("ShaderNodeMapRange")
@@ -300,8 +301,17 @@ def build(ctx):
     g = comp["fog"]
     for t, s in ((ctx.t0 - 0.3, 0.04), (tg, 0.05), (tg + 0.8, 0.07), (39.9, 0.12), (ctx.t1 + 0.25, 0.9)):
         g.inputs["Strength"].default_value = s; g.inputs["Strength"].keyframe_insert("default_value", frame=t * 24)
-    return {"final_spp": 24, "preview_spp": 16, "max_bounces": 4, "diffuse_bounces": 1,
-            "glossy_bounces": 2, "transmission_bounces": 2, "transparent_bounces": 4}
+    prof = os.environ.get("S6_PROF", "")
+    if "nosky" in prof:
+        sky.sky_type = "PREETHAM"
+    # world NEE is useless here (water is near-specular, the sun is a lamp) and costs ~11 s/frame
+    sc.world.cycles.sampling_method = "NONE"
+    if "nocomp" in prof: sc.render.use_compositing = False
+    if "nodof" in prof: cam.data.dof.use_dof = False
+    if "noclouds" in prof: cl.hide_render = True
+    if "nomb" in prof: sc["nomb"] = 1
+    return {"final_spp": 12, "preview_spp": 16, "max_bounces": 2, "diffuse_bounces": 1,
+            "glossy_bounces": 1, "transmission_bounces": 0, "transparent_bounces": 4, "final_threshold": 0.04}
 
 
 C.run("sh07", build)
