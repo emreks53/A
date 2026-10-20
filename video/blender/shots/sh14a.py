@@ -344,7 +344,7 @@ def build(ctx):
     wnt.links.new(sky.outputs[0], tint.inputs[6]); wnt.links.new(tint.outputs[2], bg.inputs[0])
     sun = C.sun(elev_deg=3, azim_deg=0, strength=5.0, kelvin_k=3000, angle_deg=0.6)
     disc_m = C.principled("sun_disc", base=(0, 0, 0), emission=(1.0, 0.62, 0.3), emission_strength=900)
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=17.0, segments=32, ring_count=16)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=30.0, segments=32, ring_count=16)
     sdisc = bpy.context.object; sdisc.name = "sun_disc"
     C.assign(sdisc, disc_m)
     disc_m.cycles.emission_sampling = "NONE"

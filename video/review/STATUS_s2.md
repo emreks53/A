@@ -1,3 +1,3 @@
 # STATUS — studio S2 (branch render-dev-s2)
-sh14a: READY_FOR_REVIEW (round 2; final ≈ 45–68 s/frame, over budget on the turn section — see NOTES)
-sh14b: READY_FOR_REVIEW (round 2; ≈ 36 s/frame)
+sh14a: READY_FOR_REVIEW (round 3; 68 s/frame heaviest)
+sh14b: READY_FOR_REVIEW (round 3; 36.5 s/frame)

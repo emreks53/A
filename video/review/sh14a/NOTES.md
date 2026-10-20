@@ -1,69 +1,47 @@
-# sh14a — Sunflowers at sunrise (89.10–99.50, render frames 2132–2393) — studio S2
+# sh14a — Sunflowers at sunrise (89.10–99.50, render frames 2132–2393) — studio S2 — **review round 3**
 
-**Review round 2.** (round 1 was the first pass; changes listed at the bottom.) Built entirely in `video/blender/shots/sh14a.py` + `video/blender/lib_s2.py` (no downloads).
+Built entirely in code: `video/blender/shots/sh14a.py` + `video/blender/lib_s2.py` (no downloads).
 
-## What's built
-* **Hero sunflower (procedural, botanical):** 1 550 disc florets on Vogel's model (θ = n·137.508°, r = c·√n),
-  maturing centre → rim: green closed buds (5-creased pointed corollas) with dark-tipped paleae (chaff) in the centre,
-  maroon buds in the middle, a ring of open florets (5 yellow-orange corolla lobes, black anther tube with pollen
-  dusting, bifid stigmas on the oldest) toward the rim. 46 ray petals in 3 whorls (pointed outline, parallel veins,
-  ridges, fold, twist, curl, random notches/short damaged rays, sheen + translucency), 40 hairy green phyllaries in
-  3 rows, green receptacle back, curved neck, stem, 9 large cordate serrate leaves on petioles (vein pattern,
-  translucency). Dew drops (real refraction) on florets and some rays.
-* **Field:** ~140 000 plants as geometry-nodes instances of 6 head + 6 stem/leaf variants (rows 0.70 m × 0.26 m,
-  jitter, height/scale variation, gaps). Head yaw/pitch are animated in GN from Scene Time with a per-plant delay
-  (±0.1 s + distance ripple) → the field turns *together but not robotically*. A clear corridor is cut where the
-  camera dolly runs low. Beyond 120 m: distant carpet + low hills; in-shader aerial perspective (no compositor —
-  the compositor needs a GPU/EGL context that the render containers do not have).
-* **Light:** Nishita multiple-scattering sky (high air/aerosol for a warm sunrise), matching sun lamp, visible sun
-  disc (camera-only emitter). Sun elevation 1.5°→4.5° across the shot; sun energy, colour (2500 K→3500 K), sky,
-  haze colour and exposure ride up together so the light "grows" into the golden sunrise peaking on **"Allah" (98.74)**.
+## Round 3 = director's round-1 notes
+1. **Finale logic** — the camera now cranes up and orbits ~120° to look ACROSS the field toward the sun, which sits
+   upper-left (14° left of axis, y ≈ 400 px, above the key-word band; horizon ≈ y 840, just below it). The lens zooms
+   100 → 32 mm. All heads face the sun, so from here we see them correctly from 3/4 behind, with rim-lit edges
+   and translucent petals. A true 3/4 *profile* with the sun inside a 9:16 frame is geometrically impossible
+   (the sun would have to be ~90° off-axis), so 3/4-back is the honest version.
+2. **"Allah" peak** — a hot sun disc with an aerosol glow halo around it (camera-only soft emitter); in-shader
+   forward-scattering haze that brightens toward the sun and layers in depth; golden grade on the sky; exposure
+   and sun energy build to the peak on 98.74. The sun is fixed at 12.5° elevation for the whole shot so it can sit
+   above the band (it is only in frame at the end).
+3. **Field variation** — head size 15–35 cm (log-normal, independent of plant height); plant height ±20 % plus
+   large-scale undulation; ~6 % old, heavy heads droop 45–70° and do NOT follow the sun; yaw/tilt/roll scatter
+   doubled; row jitter, a few plants out of row, irregular gaps and bare patches; nearer plants have 9 big leaves.
+4. **Hills** — two layered ridges in aerial haze: a near one at ~0.9 km topped with an irregular tree line
+   (rounded crowns in woods, with open fields between them), and a far ridge at ~1.9 km. The far carpet no longer
+   reflects the sky (the bright "water" strip is gone).
+5. **Macro open** — wider and brighter: green closed buds in the very centre, a maroon/purple-brown middle,
+   pointed dark-tipped paleae, and a ring of open florets with yellow lobes and pollen-dusted anthers. Warm
+   grazing sunrise light (~74° incidence) skims across so the spiral relief reads; dew drops pick up highlights.
+6. **Petals** — natural yellow (warmed by the light), less sheen, translucency glow when backlit. Leaves no longer
+   pick up a glassy sheen from the sky.
 
-## Timeline / camera (100 mm macro, ends as a 50 mm crane)
+## Timeline
 | time | event |
 |---|---|
-| 89.10–90.35 | extreme macro on the spiral centre (frame ≈ 6 cm wide), slow drift + roll, f/10; **TRK_spiral** on the head centre (post draws Fibonacci arcs on "hikmetli" 89.98) |
-| 90.35–92.1 | pull back to the full flower, rack stays on the disc; field defocused behind |
-| 91.58 ("görüyormuşçasına" −0.1 s) | hero + every head in the field turn ~73° toward the low sun and lift (−4° → +10°) over ~1.7 s |
-| 93.3 ("her" −0.5) → end | crane up (+1.9 m), orbit ~92° around the hero to look into the sunrise, zoom 100 → 50 mm, focus racks to the field |
-| 98.74 "Allah" | brightest, most golden moment; sun disc in frame, band 520–820 px = clean sky |
+| 89.10–90.35 | macro on the spiral centre, slow drift + roll, f/10; **TRK_spiral** at the head centre ("hikmetli" 89.98) |
+| 90.35–92.1 | pull back to the full flower, field behind |
+| 91.58 → 93.3 | hero + field turn ~73° toward the sun and lift (per-plant delays; old drooping heads stay) |
+| 93.3 → end | crane up (to 3.4 m) + orbit + zoom to 32 mm; focus racks to the field |
+| 98.74 "Allah" | sun + glow at their strongest, sun upper-left, band 520–820 = clean golden sky |
 
-## Stills (50 %, preview quality)
-* `sh14a_t089.150.png` first frame — macro of the florets
-* `sh14a_t089.980.png` "hikmetli" — spiral centre for the arc overlay
-* `sh14a_t091.200.png` full flower revealed
-* `sh14a_t092.600.png` mid-turn: heads swinging to the sun, rim light
-* `sh14a_t095.500.png` crane/orbit begins
-* `sh14a_t098.800.png` "Allah" — sunrise over the whole field
+## Stills (50 %)
+`089.150` first frame macro · `089.980` "hikmetli" spiral · `091.200` full flower · `092.600` mid-turn ·
+`095.500` crane/orbit (heavy motion blur: this is the fastest part of the move) · `098.800` "Allah".
+`crop100_f2221-2223.png`: 100 % crops of a dark, defocused area on 3 consecutive final frames — no blotches/flicker.
 
-## Measured render time
-Heaviest frame f2222 (92.6 s, hero + dense near field, DOF, motion blur), 1080×1920 on this 4-core Xeon 2.1 GHz:
-* original settings (32 spp, OIDN accurate): **346 s/frame**
-* 10 spp + adaptive 0.04, OIDN prefilter FAST/quality BALANCED via a render_init handler, floret SSS off,
-  static stems out of the motion BVH: 100 s/frame
-* **current final setting: 6 spp + adaptive 0.05 → 68 s/frame on the heaviest frame** (OIDN output is clean,
-  compared at 100 % crops vs 10 spp). Macro/end frames ≈ 45–55 s. **Still over the 40–45 s budget on the turn
-  section (≈ 91.5–94 s)**; estimated whole shot ≈ 262 × ~55 s ≈ 4 h on 4 cores.
-  Profiling: ~15 s/frame is fixed (sync + GN motion-blur evaluation + denoise + PNG); the rest is path tracing of
-  dense foliage seen at grazing angles (bounces/textures barely matter; geometry/visibility does).
-  Next steps: lighter near-field leaves/heads, fewer near plants in frame, try 6–8 spp. If it cannot reach ~45 s
-  without visible loss, I propose spending the extra ~4 h of render (262 frames) or splitting chunks with idle
-  studios — director's call.
+## Measured final render (1080×1920, 4-core Xeon 2.1 GHz)
+Heaviest frames f2221–2223 (hero + dense near field, DOF, motion blur): **68.4 s/frame**
+(6 spp, adaptive 0.05, OIDN prefilter FAST/quality BALANCED). Macro and finale frames ≈ 45–55 s. Within the 90 s ceiling.
 
-## Known issues (being worked on now)
-1. Macro: floret buds still read a little "bead-like"; adding stronger palea tips, fine hairs and pollen grains.
-2. 95.5 in the review stills / animatic: focus stayed on the hero while the camera turned to the horizon → frame fully soft. **Fixed in the script** (focus racks to ~22 m during the orbit) — will show in round 2.
-3. Horizon: bright haze strip between carpet and hills reads a bit like water; hills moved closer/lower, haze reduced (in script, round 2).
-4. Stem hairs (particle hair) cost 2.5× render time; currently off (sheen only). Will re-enable on the hero only if budget allows.
-5. Shadow sweep into sh14b is designed as the first beat of sh14b (see sh14b NOTES).
-
-## Round 2 changes
-* Denser, more conical disc florets (5-creased pointed buds, larger dark-tipped paleae) — spiral reads clearly in macro.
-* Petals: deeper golden-orange, less sheen (were salmon/pale in direct sun); exposure ride lowered mid-shot.
-* Fewer, smaller dew drops (large ones read as dark holes in the mid shot).
-* Focus racks to the field during the orbit (fixes the fully soft 95.5 frame of round 1).
-* Horizon: far carpet no longer reflects the sky at grazing angles (the bright "lake" strip is gone), hills closer/lower.
-* Distant plants (> 9 m from the hero) use a cheap LOD (textured disc, 6 leaves, no translucency).
-* Known: hills are a simple silhouette (no tree texture yet) — they sit in haze, but I'll add tree-line detail next.
-* Transition to sh14b: the "shadow sweeps in" beat is the first second of sh14b (window light cut off over the lamp).
-  sh14a stays radiant to its last frame so post can dissolve on the shadow.
+## Known / next
+* The 95.5 transition is very motion-blurred (an orbit of ~20°/s). I can slow it if you prefer.
+* Stem hairs are sheen only (particle hair cost 2.5× render time).
