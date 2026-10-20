@@ -38,22 +38,23 @@ def build(ctx):
     # ---------------------------------------------------------------- light: low golden sun, backlit
     path = C.ph_hdri(HDRI, "4k")
     el, u, _, _ = L.hdri_sun(path)
-    L.world_from_hdri(path, strength=1.0)
+    L.world_from_hdri(path, strength=1.0, tint=(1.0, 0.80, 0.56))
     sdir = L.sun_dir_world(el + 3.0, u)            # lamp a touch higher than the disc: light reaches the grass
     # rotate the world so the sun sits behind the subjects (camera looks +Y)
-    want = math.atan2(1.0, 0.25)                    # azimuth of the sun direction we want (from +X)
+    want = math.atan2(1.0, -0.30)                    # azimuth of the sun direction we want (from +X)
     have = math.atan2(sdir.y, sdir.x)
     rot = math.degrees(want - have)
     nt = bpy.context.scene.world.node_tree
     for n in nt.nodes:
         if n.type == "MAPPING":
-            n.inputs["Rotation"].default_value[2] = math.radians(rot)
+            n.inputs["Rotation"].default_value[2] = math.radians(-rot)    # texture lookup rotates the other way
     sdir = L.sun_dir_world(el + 3.0, u, rot)
-    sun = L.sun_from_dir(sdir, 3.2, kelvin_k=3300, angle_deg=0.6)
+    sun = L.sun_from_dir(sdir, 5.0, kelvin_k=2600, angle_deg=0.6)
 
     # ---------------------------------------------------------------- ground + meadow
-    soil = C.principled("S3_meadowsoil", base=(0.10, 0.075, 0.05), rough=0.9)
+    soil = C.principled("S3_meadowsoil", base=(0.07, 0.055, 0.035), rough=0.95)
     bpy.ops.mesh.primitive_plane_add(size=12); g = bpy.context.object; g.data.materials.append(soil)
+    grass_carpet(rnd)
 
     # ---------------------------------------------------------------- the eight subjects
     # Layout is solved in screen space for the "birer birer" hold so the eight subjects are
@@ -71,40 +72,45 @@ def build(ctx):
         ms = [o for o in objs if o.type == "MESH"]
         return max((o.matrix_world @ Vector(c) for o in ms for c in o.bound_box), key=lambda v: v.z)
 
-    def plant_at(name, res, px, py, rot_z, scale, pick=max):
+    def plant_at(name, res, px, py, depth, rot_z, pick=max):
+        """Place a plant variant so its highest point lands on pixel (px,py) at `depth` metres: the
+        plant is scaled to the height that point has above the ground (stays a believable size)."""
         vs = variants(name, res)
         var = pick(vs, key=lambda v: v[2])
-        o = instance(var, (0, 0, 0), rot_z, scale, name="S3_" + name)
+        target = cam_point(M_mid, px, py, depth)
+        sc = max(0.05, target.z) / var[2]
+        o = instance(var, (0, 0, 0), rot_z, sc, name="S3_" + name)
         t = top_point(o)
-        want = ray_z(px, py, t.z)
-        o.matrix_world = Matrix.Translation((want.x - t.x, want.y - t.y, 0)) @ o.matrix_world
+        o.matrix_world = Matrix.Translation((target.x - t.x, target.y - t.y, 0)) @ o.matrix_world
+        print("[sh13b]", name, "scale", round(sc, 3), "height", round(target.z, 3))
         return top_point(o)
 
     # a: flower (dandelion)
-    top = plant_at("dandelion_01", "2k", 330, 960, 0.4, 0.8)
+    top = plant_at("dandelion_01", "2k", 300, 980, 0.45, 0.4)
     trk = {"a": C.empty("TRK_a", tuple(top))}
     # b: bee hovering
     bee = make_bee("bee")
-    bee_path(ctx, bee, cam_point(M_mid, 730, 330, 0.62))
+    bee_path(ctx, bee, cam_point(M_mid, 690, 330, 0.6))
     trk["b"] = C.empty("TRK_b", (0, 0, 0)); trk["b"].parent = bee
     # c: butterfly perched on an orange gazania, wings breathing
-    gtop = plant_at("flower_gazania", "2k", 280, 360, 1.2, 1.0)
+    gpt = cam_point(M_mid, 270, 400, 0.9)
+    gtop = daisy(Vector((gpt.x + 0.01, gpt.y, 0)), gpt.z, rnd)
     bf = make_butterfly("butterfly", ctx)
     bf.location = gtop + Vector((0, 0, 0.002)); bf.rotation_euler = (0, 0, 2.3)
     trk["c"] = C.empty("TRK_c", (0, 0, 0.004)); trk["c"].parent = bf
     # d: ladybug climbing a grass blade
-    lb_base = ray_z(770, 1000, 0.085) - Vector((0.015, 0.003, 0.085))
+    lb_base = ray_z(770, 1000, 0.11) - Vector((0.02, 0.004, 0.11))
     lb, lbtip = ladybug_on_blade(ctx, lb_base)
     trk["d"] = C.empty("TRK_d", (0, 0, 0.002)); trk["d"].parent = lb
     # e: grass seed head (top centre)
-    e_pt = ray_z(540, 250, 0.24)
-    sh_top = seed_head(e_pt - Vector((0.012, 0, 0.24)), rnd)
+    e_pt = cam_point(M_mid, 520, 240, 0.75)
+    sh_top = seed_head(Vector((e_pt.x - 0.012, e_pt.y, 0)), rnd, height=e_pt.z)
     trk["e"] = C.empty("TRK_e", tuple(sh_top))
     # f: snail low left
     sn = make_snail("snail", ctx, ray_z(250, 1360, 0.008) - Vector((0, 0, 0.008)))
     trk["f"] = C.empty("TRK_f", (0, 0, 0.012)); trk["f"].parent = sn
     # g: sapling low right (further back)
-    g_top = plant_at("pine_sapling_small", "1k", 820, 1330, 0.3, 0.16, pick=min)
+    g_top = plant_at("pine_sapling_small", "1k", 850, 460, 1.6, 0.3, pick=max)
     trk["g"] = C.empty("TRK_g", tuple(g_top - Vector((0, 0, 0.02))))
     # h: THE SEEDLING, foreground centre-bottom (healthy, dewy)
     sl = ray_z(540, 1200, 0.045); seed_loc = Vector((sl.x, sl.y, 0.0))
@@ -132,7 +138,7 @@ def build(ctx):
     for tt, e in ((t_goz - 0.2, 0.0), (t_goz + 0.9, 9.0), (t_end + 0.3, 10.0)):
         sb.energy = e; sb.keyframe_insert("energy", frame=tt * C.FPS)
     # the general sun dims a touch as the beam takes over (a cloud edge)
-    for tt, e in ((t_goz - 0.2, 3.2), (t_goz + 0.9, 2.2), (t_end + 0.3, 2.1)):
+    for tt, e in ((t_goz - 0.2, 4.0), (t_goz + 0.9, 2.8), (t_end + 0.3, 2.7)):
         sun.data.energy = e; sun.data.keyframe_insert("energy", frame=tt * C.FPS)
 
     # ---------------------------------------------------------------- camera
@@ -155,7 +161,7 @@ def build(ctx):
         fp = fp.lerp(tipw + (tipw - pos).normalized() * 0.5, pull)
         focus.location = fp; focus.keyframe_insert("location", frame=f)
     C.handheld(cam, amp_loc=0.0006, amp_rot=0.001, speed=0.4)
-    bpy.context.scene.view_settings.exposure = 1.1
+    bpy.context.scene.view_settings.exposure = 0.2
     L.render_tuning(os.environ.get("S3_DQ", "BALANCED"))
     return L.experiment({"final_spp": 16, "final_threshold": 0.04, "preview_spp": 32, "clamp_indirect": 4.0})
 
@@ -208,12 +214,54 @@ def instance(var, loc, rot_z, scale, col=None, name=None):
 
 
 def top_point(o):
+    """Highest actual vertex (world space)."""
     bpy.context.view_layer.update()
-    pts = [o.matrix_world @ Vector(c) for c in o.bound_box]
-    return max(pts, key=lambda v: v.z)
+    mw = o.matrix_world
+    v = max(o.data.vertices, key=lambda v: (mw @ v.co).z)
+    return mw @ v.co
 
 
 # ============================================================================ meadow filler
+
+def grass_carpet(rnd, n=110000):
+    """Dense short grass blades (hair curves) carpeting the view wedge, taller further back."""
+    cv = bpy.data.hair_curves.new("S3_grass")
+    pts, rads = [], []
+    k = 0
+    while k < n:
+        x = rnd.uniform(-2.0, 2.0); y = -0.25 + 4.5 * rnd.random() ** 1.6
+        if abs(x) > 0.35 + 0.5 * max(0.0, y):
+            continue
+        h = rnd.uniform(0.025, 0.07) * (1 + 0.8 * min(1.0, max(0.0, y) / 1.5)) * (0.6 if -0.32 < x < 0.32 and 0.05 < y < 1.25 else 1)
+        lean = Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), 0)) * h * rnd.uniform(0.1, 0.45)
+        b = Vector((x, y, 0))
+        pts += [b, b + lean * 0.15 + Vector((0, 0, h * 0.4)), b + lean * 0.55 + Vector((0, 0, h * 0.78)), b + lean + Vector((0, 0, h))]
+        r = rnd.uniform(0.0005, 0.0009)
+        rads += [r, r * 0.8, r * 0.5, r * 0.08]
+        k += 1
+    cv.add_curves([4] * n)
+    cv.attributes["position"].data.foreach_set("vector", [c for p in pts for c in p])
+    ra = cv.attributes.get("radius") or cv.attributes.new("radius", "FLOAT", "POINT")
+    ra.data.foreach_set("value", rads)
+    m = bpy.data.materials.new("S3_grassblade"); m.use_nodes = True
+    nt = m.node_tree; p = nt.nodes["Principled BSDF"]
+    hi = nt.nodes.new("ShaderNodeHairInfo")
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    nt.links.new(hi.outputs["Random"], ramp.inputs[0])
+    ramp.color_ramp.elements[0].color = (0.10, 0.20, 0.03, 1)
+    ramp.color_ramp.elements[1].color = (0.42, 0.40, 0.12, 1)
+    e = ramp.color_ramp.elements.new(0.6); e.color = (0.20, 0.33, 0.05, 1)
+    nt.links.new(ramp.outputs[0], p.inputs["Base Color"])
+    p.inputs["Roughness"].default_value = 0.45
+    p.inputs["Subsurface Weight"].default_value = 0.0
+    tr = nt.nodes.new("ShaderNodeBsdfTranslucent"); nt.links.new(ramp.outputs[0], tr.inputs["Color"])
+    mx = nt.nodes.new("ShaderNodeMixShader"); mx.inputs[0].default_value = 0.35
+    nt.links.new(p.outputs[0], mx.inputs[1]); nt.links.new(tr.outputs[0], mx.inputs[2])
+    nt.links.new(mx.outputs[0], nt.nodes["Material Output"].inputs["Surface"])
+    cv.materials.append(m)
+    o = bpy.data.objects.new("S3_grass", cv); C.link(o)
+    return o
+
 
 def meadow(rnd, keep_clear):
     """Golden meadow from Poly Haven grass/flower variants: low and sparse in the subject zone,
@@ -406,14 +454,13 @@ def make_butterfly(name, ctx):
 def ladybug_on_blade(ctx, base):
     """A grass blade with a seven-spot ladybird crawling up it."""
     blade_m = mat("S3_blade", (0.18, 0.32, 0.06), 0.45)
-    pts = [base + Vector((0, 0, 0)), base + Vector((0.004, 0.0, 0.05)), base + Vector((0.014, 0.003, 0.10)),
-           base + Vector((0.03, 0.006, 0.13))]
+    pts = [base + Vector((0, 0, 0)), base + Vector((0.004, 0.0, 0.06)), base + Vector((0.016, 0.003, 0.12)),
+           base + Vector((0.034, 0.006, 0.155))]
     pp = L.catmull(pts, 20)
     bm, fr, ln = L.tube_bm(pp, [0.0016 * (1 - i / 21) + 0.0002 for i in range(20)], segs=6)
     for v in bm.verts:
         pass
     blade = L.obj_from_bm("S3_lb_blade", bm, [blade_m])
-    blade.scale = (1, 0.35, 1)
     lb = C.empty("ladybug", (0, 0, 0))
     red = C.principled("S3_lb_red", base=(0.55, 0.02, 0.01), rough=0.12, coat=1.0, coat_rough=0.02)
     # spots via voronoi on elytra
@@ -425,13 +472,13 @@ def ladybug_on_blade(ctx, base):
     mx = nt.nodes.new("ShaderNodeMix"); mx.data_type = "RGBA"; nt.links.new(mr.outputs[0], mx.inputs[0])
     mx.inputs[6].default_value = (0.55, 0.02, 0.01, 1); mx.inputs[7].default_value = (0.01, 0.01, 0.01, 1)
     nt.links.new(mx.outputs[2], p.inputs["Base Color"])
-    shell = ellipsoid("ladybug_shell", (0.0032, 0.0028, 0.0022), m=red); shell.parent = lb; shell.location = (0, 0, 0.0008)
+    shell = ellipsoid("ladybug_shell", (0.0036, 0.0031, 0.0024), m=red); shell.parent = lb; shell.location = (0, 0, 0.0008)
     blk = mat("S3_lb_black", (0.01, 0.01, 0.01), 0.25)
     hd = ellipsoid("ladybug_head", (0.0012, 0.0016, 0.0011), m=blk); hd.parent = lb; hd.location = (0.0029, 0, 0.0004)
     # crawl up the blade during the shot
     for f in range(ctx.f0 - 4, ctx.f1 + 5, 2):
         t = (f - ctx.f0) / (ctx.f1 - ctx.f0)
-        k = 0.45 + 0.25 * t
+        k = 0.62 + 0.18 * t
         i = min(18, int(k * 19)); fr_ = k * 19 - i
         p_ = pp[i].lerp(pp[i + 1], fr_)
         tan = (pp[i + 1] - pp[i]).normalized()
@@ -444,11 +491,12 @@ def ladybug_on_blade(ctx, base):
     return lb, pp[-1]
 
 
-def seed_head(base, rnd):
+def seed_head(base, rnd, height=0.27):
     """Grass stalk with a nodding panicle of spikelets (golden, backlit)."""
     stem_m = mat("S3_sh_stem", (0.42, 0.40, 0.16), 0.5)
     sp_m = C.principled("S3_spikelet", base=(0.62, 0.50, 0.22), rough=0.5, sss=0.3, sss_radius=(1, 0.8, 0.4), sss_scale=0.001)
-    pts = L.catmull([base, base + Vector((0.002, 0.0, 0.12)), base + Vector((0.01, 0.0, 0.22)), base + Vector((0.03, 0.0, 0.27))], 30)
+    k_ = height / 0.27
+    pts = L.catmull([base, base + Vector((0.002, 0.0, 0.12 * k_)), base + Vector((0.01, 0.0, 0.22 * k_)), base + Vector((0.03, 0.0, 0.27 * k_))], 30)
     bm, fr, ln = L.tube_bm(pts, [0.0012 * (1 - 0.6 * i / 29) for i in range(30)], segs=6)
     L.obj_from_bm("S3_seedstalk", bm, [stem_m])
     for i in range(70):
@@ -520,6 +568,42 @@ def make_snail(name, ctx, loc):
         root.location = loc + Vector((math.cos(0.6), math.sin(0.6), 0)) * 0.001 * t
         root.keyframe_insert("location", frame=f)
     return root
+
+
+def daisy(base, height, rnd):
+    """Ox-eye daisy on a slender stalk: white ray florets around a golden disc. Returns the disc top."""
+    stem_m = mat("S3_daisy_stem", (0.16, 0.28, 0.06), 0.5)
+    ray_m = C.principled("S3_daisy_ray", base=(0.85, 0.83, 0.76), rough=0.5, sss=0.25, sss_radius=(1, 1, 0.9), sss_scale=0.001)
+    disc_m = mat("S3_daisy_disc", (0.62, 0.40, 0.04), 0.6)
+    top = base + Vector((0.006, 0.0, height))
+    pts = L.catmull([base, base + Vector((0.001, 0, height * 0.5)), top - Vector((0, 0, 0.004)), top], 24)
+    bm, fr, ln = L.tube_bm(pts, [0.0011 * (1 - 0.4 * i / 23) for i in range(24)], segs=6)
+    L.obj_from_bm("S3_daisy_stalk", bm, [stem_m])
+    b = bmesh.new(); bmesh.ops.create_uvsphere(b, u_segments=16, v_segments=8, radius=1)
+    for v in b.verts:
+        v.co = Vector((v.co.x * 0.0055, v.co.y * 0.0055, max(v.co.z, -0.2) * 0.0028))
+    for f in b.faces:
+        f.smooth = True
+    d = L.obj_from_bm("S3_daisy_disc", b, [disc_m]); d.location = top
+    for i in range(24):
+        a = i / 24 * 2 * math.pi + rnd.uniform(-0.05, 0.05)
+        b = bmesh.new()
+        n = 8
+        vs = []
+        for j in range(n + 1):
+            u = j / n
+            w = 0.0016 * math.sin(math.pi * min(1.0, u * 1.1)) + 0.0002
+            r = 0.005 + u * 0.013
+            droop = -0.004 * u * u
+            c = Vector((math.cos(a) * r, math.sin(a) * r, droop))
+            sd = Vector((-math.sin(a), math.cos(a), 0)) * w
+            vs.append((b.verts.new(c - sd), b.verts.new(c + sd)))
+        for j in range(n):
+            b.faces.new((vs[j][0], vs[j][1], vs[j + 1][1], vs[j + 1][0]))
+        for f in b.faces:
+            f.smooth = True
+        o = L.obj_from_bm(f"S3_daisy_ray{i}", b, [ray_m]); o.location = top + Vector((0, 0, 0.0005))
+    return top + Vector((0, 0, 0.002))
 
 
 def pendant_drop(r):

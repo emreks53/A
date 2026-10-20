@@ -1,3 +1,3 @@
-sh04: READY_FOR_REVIEW (review 1; final render 16 spp + balanced OIDN ≈ 50 s/frame, still optimising)
-sh11: READY_FOR_REVIEW (review 1; render time over budget, optimising)
-sh13b: IN_PROGRESS
+sh04: READY_FOR_REVIEW (review 1; final ≈ 50 s/frame, optimising)
+sh11: READY_FOR_REVIEW (review 1; final ≈ 107 s/frame, optimising)
+sh13b: READY_FOR_REVIEW (review 1; final ≈ 70 s/frame, optimising)
