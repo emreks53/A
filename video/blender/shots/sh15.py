@@ -1107,11 +1107,10 @@ def mat_plaster(name="lime_plaster"):
     v2 = maprange(nt, mid.outputs[0], 0.3, 0.7, 0.975, 1.02)
     col = mixrgb(nt, 1.0, srgb("#E8DECD"), v1, "MULTIPLY")
     col = mixrgb(nt, 1.0, col, v2, "MULTIPLY")
-    grain = noise(nt, tc.outputs["Object"], 700.0, 0.0, 0.5)
     bmp = NN(nt, "ShaderNodeBump")
     bmp.inputs["Strength"].default_value = 0.035
     bmp.inputs["Distance"].default_value = 0.0004
-    LK(nt, math_node(nt, "ADD", grain.outputs[0], math_node(nt, "MULTIPLY", big.outputs[0], vb=6.0)), bmp.inputs["Height"])
+    LK(nt, math_node(nt, "MULTIPLY", big.outputs[0], vb=6.0), bmp.inputs["Height"])
     p = NN(nt, "ShaderNodeBsdfDiffuse")
     LK(nt, col, p.inputs["Color"])
     LK(nt, bmp.outputs[0], p.inputs["Normal"])
