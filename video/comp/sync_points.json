@@ -12,14 +12,14 @@
    "kind": "keyword"
   },
   {
+   "id": "sh02.callout_air",
+   "t": 6.4,
+   "kind": "callout"
+  },
+  {
    "id": "kw_oksijen.OKSİJEN",
    "t": 8.32,
    "kind": "keyword"
-  },
-  {
-   "id": "sh02.callout_air",
-   "t": 8.57,
-   "kind": "callout"
   },
   {
    "id": "kw_yemek_icmek.YEMEK",
@@ -92,7 +92,7 @@
   },
   {
    "id": "sh07.callout_sun",
-   "t": 39.5,
+   "t": 39.58,
    "kind": "callout"
   },
   {
@@ -247,27 +247,27 @@
   },
   {
    "id": "sh13b.ring_d",
-   "t": 86.6983,
+   "t": 86.4783,
    "kind": "ring"
   },
   {
    "id": "sh13b.ring_e",
-   "t": 87.0083,
+   "t": 86.6983,
    "kind": "ring"
   },
   {
    "id": "sh13b.ring_f",
-   "t": 87.3183,
+   "t": 86.8783,
    "kind": "ring"
   },
   {
    "id": "sh13b.ring_g",
-   "t": 87.8183,
+   "t": 87.0583,
    "kind": "ring"
   },
   {
    "id": "sh13b.ring_h",
-   "t": 88.2183,
+   "t": 87.2383,
    "kind": "ring"
   },
   {

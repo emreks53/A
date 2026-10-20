@@ -174,14 +174,17 @@ class Slate:
         self.k = k
 
     def get(self, f):
+        """Linear frame; only the small frame-counter strip is redrawn per frame."""
         from PIL import Image, ImageDraw
-        img = self.base.copy()
-        # tiny frame counter strip (proves the timeline is running)
-        im = Image.fromarray((img[int(1440 * self.k):int(1480 * self.k), :int(600 * self.k)] * 255).astype(np.uint8))
+        if getattr(self, "base_lin", None) is None:
+            self.base_lin = srgb_to_lin(self.base)
+        y0, y1, x1 = int(1440 * self.k), int(1480 * self.k), int(600 * self.k)
+        im = Image.fromarray((self.base[y0:y1, :x1] * 255).astype(np.uint8))
         ImageDraw.Draw(im).text((int(88 * self.k), int(6 * self.k)), f"{f:05d}  ·  {f / FPS:7.3f} s", font=self.font,
                                 fill=(110, 118, 130))
-        img[int(1440 * self.k):int(1480 * self.k), :int(600 * self.k)] = np.asarray(im).astype(np.float32) / 255
-        return srgb_to_lin(img)
+        img = self.base_lin.copy()
+        img[y0:y1, :x1] = srgb_to_lin(np.asarray(im).astype(np.float32) / 255)
+        return img
 
 
 class ShotSource:

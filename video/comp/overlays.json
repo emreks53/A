@@ -132,7 +132,8 @@
 
  "callouts": [
   {"id": "co_air", "shot": "sh02", "track": "air", "primary": "O₂", "secondary": "havanın %21'i",
-   "sync": 8.57, "out": 9.62, "cue": "sh02.callout_air", "fallback": [[7.0, 330, 1060], [9.8, 360, 1010]]},
+   "_doc": "TRK_air rises out of frame after ~8.0 s (camera booms down), so the label identifies the air during 'kendimizden biliyoruz ki her gün' and clears before OKSİJEN lands",
+   "sync": 6.40, "out": 8.15, "cue": "sh02.callout_air", "fallback": [[7.0, 330, 1060], [9.8, 360, 1010]], "prefer": ["dl", "ul"]},
   {"id": "co_water", "shot": "sh03", "track": "water", "primary": "Su", "secondary": "vücudumuzun ~%60'ı",
    "sync": 11.18, "out": 13.35, "cue": "sh03.callout_water", "fallback": [[10.0, 690, 1180], [13.5, 640, 1080]]},
   {"id": "co_bubble", "shot": "sh05", "track": "bubble", "primary": "O₂", "secondary": "fotosentez",
@@ -160,8 +161,8 @@
    "x": 70, "y": 232, "width": 330, "height": 84, "beat_anchor": 31.39, "period": 0.83333,
    "sweep_s": 2.6, "sync": 33.12, "out": 35.55, "cue": "sh06.callout_heart"},
 
-  {"id": "w_cells", "type": "counter", "shot": "sh10", "track": "cells",
-   "_doc": "live count, log-accelerating from 1 cell to ~37 trillion during the pull-back, landing on the tick",
+  {"id": "w_cells", "type": "counter", "shot": "sh10", "track": "cells", "mode": "free", "x": 540, "y": 1175,
+   "_doc": "free-standing live count (TRK_cells is on screen only 54.4-56.1 s), log-accelerating from 1 cell to ~37 trillion during the pull-back, landing on the tick; sits below the key-word band",
    "count_from": 1, "count_to": 37e12, "t0": 52.62, "land": 56.15, "out": 57.90,
    "final": "~37 trilyon", "unit": "hücre", "cue": "sh10.counter", "fallback": [[52.1, 540, 1000], [58.0, 540, 990]],
    "prefer": ["dr", "dl"]},
@@ -182,16 +183,16 @@
    "out": 70.25, "labels": true},
 
   {"id": "w_rings", "type": "rings", "shot": "sh13b",
-   "_doc": "one ring per living thing, landing on the mix's ring ticks (birer, birer, görüp, gözetip, -, idare, ettiğini, gösterir)",
+   "_doc": "one ring per living thing: a-c on the mix's ticks (birer, birer, görüp), then d-h accelerating to 'gözetip'+ while every subject is still in frame (TRK_* leave the safe area at 87.2-87.9 s); the seedling ring lingers",
    "rings": [
     {"track": "a", "land": 85.5583, "fallback": [300, 1010]},
     {"track": "b", "land": 85.9183, "fallback": [770, 900]},
     {"track": "c", "land": 86.2583, "fallback": [420, 1260]},
-    {"track": "d", "land": 86.6983, "fallback": [820, 1200]},
-    {"track": "e", "land": 87.0083, "fallback": [220, 760]},
-    {"track": "f", "land": 87.3183, "fallback": [640, 1400]},
-    {"track": "g", "land": 87.8183, "fallback": [860, 640]},
-    {"track": "h", "land": 88.2183, "fallback": [545, 1110], "final": true}
+    {"track": "d", "land": 86.4783, "fallback": [820, 1200]},
+    {"track": "e", "land": 86.6983, "fallback": [220, 760]},
+    {"track": "f", "land": 86.8783, "fallback": [640, 1400]},
+    {"track": "g", "land": 87.0583, "fallback": [860, 640]},
+    {"track": "h", "land": 87.2383, "fallback": [545, 1110], "final": true}
    ],
    "hold": 1.15, "out": 89.12, "radius": 30},
 
