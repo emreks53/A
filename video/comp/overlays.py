@@ -327,7 +327,7 @@ def resolve(spec_path=None, verbose=True):
             lines.append({"parts": parts})
         el = {"id": k["id"], "type": "keyword", "style": k["style"], "shot": k["shot"], "lines": lines,
               "y": k.get("y", 670)}
-        for opt in ("size", "line_height", "max_width", "tracking"):
+        for opt in ("size", "line_height", "max_width", "tracking", "in"):
             if opt in k:
                 el[opt] = k[opt]
         if "swell" in k:
@@ -582,7 +582,7 @@ def _inv_out_cubic(y):
 def keyword_hold(el, st):
     """Mirror of overlay.js drawKeyword(): the window in which EVERY letter is fully legible (alpha >= 0.9 and
     blur <= 1.5 px), and the moment the first letter starts its exit. -> (t_settled, t_exit, t_unsettle)."""
-    IN, OUT = st["in"], st.get("out")
+    IN, OUT = {**st["in"], **el.get("in", {})}, st.get("out")
     letters = []
     for ln in el["lines"]:
         for p in ln["parts"]:

@@ -272,7 +272,7 @@ function drawKeyword(el, t) {
   const L = keywordLayout(el);
   const st = L.st, size = L.size;
   if (st.dust) return drawColdKeyword(el, t, L);
-  const IN = st.in, OUT = st.out;
+  const IN = el.in ? { ...st.in, ...el.in } : st.in, OUT = st.out;
   const tFirst = Math.min(...L.letters.map(l => l.t));
   const nTot = L.letters.length;
   // short, light exit that starts late (overlays.py checks it starts after the last word has been spoken)

@@ -207,6 +207,9 @@ class ShotSource:
     def get(self, f):
         """Linear float32 frame f (absolute) of this shot."""
         for c in self.chunks:
+            if c.b < f and c.proc is not None:
+                c.close()                     # sequential conform: never keep a finished chunk's decoder alive
+        for c in self.chunks:
             if c.a <= f <= c.b:
                 u = c.read(f)
                 if u is not None:
@@ -449,19 +452,41 @@ class Edit:
         return ("single", self.owner(f))
 
 
+def _disp_luma_pct(lin_small, qs):
+    """Percentiles (display-referred, 0..1) of a small linear image's luma."""
+    y = encode_lin(np.ascontiguousarray(lin_small)) @ LUMA
+    return np.percentile(y, qs)
+
+
 def mix(t, A, B, p, w, h):
     ty = t["type"]
     m = smoothstep(p)
     if ty == "dissolve":
         return A * (1 - m) + B * m
     if ty == "light":
+        # additive bloom-flash crossfade, scaled to the plates: the flash may lift the frame but never turns it
+        # into a featureless white card (display p1 <= ~200/255, median <= ~225/255)
         fl = t.get("flash", 1.0)
         bump = math.sin(math.pi * p) ** 1.4 * fl
-        out = A * (1 - m) + B * m
-        out = out * (1 + 1.25 * bump)
-        glow = down_blur_up(np.clip(out - 0.6, 0, None), 40 * w / 1080, w, h)
-        out = out + glow * 1.1 * bump
-        return soft_shoulder(out, 0.80)
+        base = A * (1 - m) + B * m
+        if bump < 1e-4:
+            return base
+        sw, shh = max(8, w // 8), max(8, h // 8)
+        small = cv2.resize(base, (sw, shh), interpolation=cv2.INTER_AREA)
+
+        def flash(img, g, ww, hh):
+            out = img * (1 + 1.25 * bump * g)
+            glow = down_blur_up(np.clip(out - 0.6, 0, None), 40 * ww / 1080, ww, hh)
+            return soft_shoulder(out + glow * 1.1 * bump * g, 0.80)
+
+        p1_cap, p50_cap = t.get("p1_cap", 0.78), t.get("p50_cap", 0.88)
+        g_ok = 0.0
+        for g in (1.0, 0.75, 0.55, 0.4, 0.28, 0.18, 0.1, 0.05):
+            p1, p50 = _disp_luma_pct(flash(small, g, sw, shh), [1, 50])
+            if p1 <= p1_cap and p50 <= p50_cap:
+                g_ok = g
+                break
+        return flash(base, g_ok, w, h) if g_ok > 0 else base
     if ty in ("colormatch", "luma"):
         lb = (B @ LUMA)
         ref = float(np.median(lb)) + 1e-4
@@ -471,81 +496,88 @@ def mix(t, A, B, p, w, h):
         wgt = np.clip(m + lead * amt * math.sin(math.pi * p), 0, 1)[..., None]
         return A * (1 - wgt) + B * wgt
     if ty == "zoom":
+        # photographic push through the skin: no matte, no geometric edge. A keeps pushing in (scale + radial
+        # blur) and blooms into a warm subsurface-red exposure lift; B arrives out of a heavy defocus (still
+        # moving forward) and sharpens; B's own highlights lead the full-frame crossfade.
         pa = smoothstep(p)
-        Az = radial_blur(A, 1 + 0.55 * p ** 1.7, 0.10 + 0.25 * pa)
-        Bz = radial_blur(B, 0.86 + 0.14 * smoothstep(p), 0.28 * (1 - pa))
-        yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-        r = np.hypot((xx - w / 2) / (w / 2), (yy - h / 2) / (h / 2)) / math.sqrt(2)
-        rad = 1.25 * pa
-        mk = np.clip((rad - r) / 0.25 + 0.5, 0, 1)[..., None] * clamp01(p * 1.6)
-        mk = np.maximum(mk, smoothstep((p - 0.55) / 0.45))
-        return Az * (1 - mk) + Bz * mk
+        k = w / 1080
+        Az = radial_blur(A, 1 + 0.42 * p ** 1.5, 0.05 + 0.22 * pa)
+        Ab = down_blur_up(Az, 6 + 28 * k * pa, w, h)
+        sss = np.array([1.0, 0.50, 0.36], np.float32)                     # light scattered deep in tissue
+        tint = (1 - 0.75 * pa) + 0.75 * pa * sss
+        Az = (Az * (1 - 0.65 * pa) + Ab * 0.65 * pa) * np.float32(2 ** (1.3 * pa)) * tint
+        rb = 34 * k * (1 - smoothstep(min(1.0, p * 1.15))) ** 1.3
+        Bz = disk_defocus(scale_about_centre(B, 0.93 + 0.07 * pa), rb, w, h)
+        Bz = Bz * np.float32(2 ** (0.9 * (1 - pa) * smoothstep(p * 3)))     # arrives slightly over-exposed
+        lb = cv2.resize(Bz, (w // 4, h // 4), interpolation=cv2.INTER_AREA) @ LUMA
+        ref = float(np.median(lb)) + 1e-4
+        lead = cv2.resize(np.clip(np.log2((lb + 1e-4) / ref) * 0.22, -0.3, 0.3).astype(np.float32), (w, h),
+                          interpolation=cv2.INTER_LINEAR)
+        lead = cv2.GaussianBlur(lead, (0, 0), 10 * k)
+        wgt = np.clip(smoothstep((p - 0.12) / 0.76) + lead * math.sin(math.pi * p), 0, 1)[..., None]
+        return soft_shoulder(Az * (1 - wgt) + Bz * wgt, 0.85)
     if ty == "defocus":
         ra = 18 * (w / 1080) * smoothstep(min(1, p * 1.3))
         rb = 18 * (w / 1080) * smoothstep(min(1, (1 - p) * 1.3))
         return disk_defocus(A, ra, w, h) * (1 - m) + disk_defocus(B, rb, w, h) * m
     if ty == "dip":
-        ga = 1 - smoothstep(p / 0.55)
-        gb = smoothstep((p - 0.45) / 0.55)
-        return A * ga + B * gb + 0.004 * (1 - ga - gb if ga + gb < 1 else 0)
+        # through black (no lifted floor): A is gone by p ~ 0.4, a beat of black, then B rises like an exposure
+        ga = (1 - smoothstep(p / 0.4)) ** 2
+        gb = smoothstep((p - 0.5) / 0.5) ** 2
+        return A * np.float32(ga) + B * np.float32(gb)
     return A * (1 - m) + B * m
 
 
 # ============================================================================================ legibility
 def legibility(disp, boxes, cfg, scale, w, h):
-    """Soft local darkening under key words where the plate is bright (measured per frame)."""
+    """Soft, content-aware darkening behind text where the plate is bright. Each pixel is darkened in proportion
+    to its own brightness (k * smoothstep(lo, hi, luma)): dark areas are left alone, so it reads as a natural
+    local exposure falloff rather than a grey band. The region is the text's extent plus ~150 px, feathered;
+    the glyph shadows do the rest."""
     if not boxes:
         return disp
     lc = cfg
     mask = None
     sw, shh = max(8, w // 8), max(8, h // 8)
+    yy = (np.arange(shh, dtype=np.float32) + 0.5) / shh * h
+    xx = (np.arange(sw, dtype=np.float32) + 0.5) / sw * w
     for b in boxes:
         x0, y0, x1, y1, wt = b[:5]
         local = len(b) > 5 and b[5] == 1
         if wt < 0.02:
             continue
-        x0s, y0s, x1s, y1s = [int(v * scale) for v in (x0, y0, x1, y1)]
-        pad = int(30 * scale)
-        xa, ya = max(0, x0s - pad), max(0, y0s - pad)
-        xb, yb = min(w, x1s + pad), min(h, y1s + pad)
+        x0s, y0s, x1s, y1s = [v * scale for v in (x0, y0, x1, y1)]
+        pad = 30 * scale
+        xa, ya = max(0, int(x0s - pad)), max(0, int(y0s - pad))
+        xb, yb = min(w, int(x1s + pad)), min(h, int(y1s + pad))
         if xb <= xa or yb <= ya:
             continue
-        reg = disp[ya:yb:3, xa:xb:3]
-        lum = reg @ LUMA
+        lum = disp[ya:yb:3, xa:xb:3] @ LUMA
         l85 = float(np.percentile(lum, 85))
         k = min(lc["max"], max(0.0, (l85 - lc["threshold"]) * lc["gain"])) * min(1.0, wt)
+        if local:
+            k *= 0.8
         if k <= 0.003:
             continue
-        if mask is None:
-            mask = np.zeros((shh, sw), np.float32)
-        if local:
-            # small labels: soft local ellipse, gentler
-            k *= 0.8
-            m = np.zeros((shh, sw), np.float32)
-            pp = 0.5 * lc["pad"] * scale
-            cv2.ellipse(m, (int(round((x0s + x1s) / 2 / w * sw)), int(round((y0s + y1s) / 2 / h * shh))),
-                        (max(1, int(((x1s - x0s) / 2 + pp) / w * sw)), max(1, int(((y1s - y0s) / 2 + pp) / h * shh))),
-                        0, 0, 360, 1.0, -1)
-            m = cv2.GaussianBlur(m, (0, 0), 0.5 * lc["feather"] * scale / 8)
-            mask = np.maximum(mask, m * k)
-            continue
-        # graduated-ND-like soft band across the frame (reads as natural sky/light falloff, never as a box),
-        # a little stronger toward the text's horizontal extent
-        pp = lc["pad"] * scale
-        yy = (np.arange(shh, dtype=np.float32) + 0.5) / shh * h
-        cy, hy = (y0s + y1s) / 2, (y1s - y0s) / 2 + pp
+        ext = (lc["extent_local"] if local else lc["extent"]) * scale
         fe = lc["feather"] * scale
-        band = 1 / (1 + np.exp(-(hy - np.abs(yy - cy)) / (fe * 0.35)))
-        xx = (np.arange(sw, dtype=np.float32) + 0.5) / sw * w
-        cx, hx = (x0s + x1s) / 2, max(1.0, (x1s - x0s) / 2 + 2 * pp)
-        horiz = 0.55 + 0.45 * np.exp(-0.5 * ((xx - cx) / hx) ** 2)
-        m = band[:, None] * horiz[None, :]
-        mask = np.maximum(mask, m * k)
+        cy, hy = (y0s + y1s) / 2, (y1s - y0s) / 2 + lc["pad"] * scale * (0.5 if local else 1.0)
+        cx, hx = (x0s + x1s) / 2, (x1s - x0s) / 2 + ext
+        my = 1 / (1 + np.exp(-(hy - np.abs(yy - cy)) / (fe * 0.3)))
+        mx = 1 / (1 + np.exp(-(hx - np.abs(xx - cx)) / (fe * 0.3)))
+        m = (my[:, None] * mx[None, :]) * k
+        mask = m if mask is None else np.maximum(mask, m)
     if mask is None:
         return disp
     big = cv2.resize(mask, (w, h), interpolation=cv2.INTER_CUBIC)
-    # darken in linear-ish terms: scale display values (keeps colour)
-    return disp * (1 - big)[..., None]
+    ys, ye = np.where(big.max(1) > 1e-3)[0][[0, -1]]
+    reg = disp[ys:ye + 1]
+    lum = cv2.GaussianBlur(reg @ LUMA, (0, 0), 1.5 * scale + 0.3)
+    lo, hi = lc["luma"]
+    u = np.clip((lum - lo) / (hi - lo), 0, 1)
+    f = 1 - big[ys:ye + 1] * (u * u * (3 - 2 * u))
+    disp[ys:ye + 1] = reg * f[..., None]
+    return disp
 
 
 # ============================================================================================ main loop
@@ -571,10 +603,13 @@ def apply_overlay(disp, paths, w, h, leg_cfg, scale, glow_cfg=None):
     """Legibility darkening, then OVER layer and additive (screen) layer, processed inside their bounding boxes.
     Returns (disp, graphics alpha map or None)."""
     over_p, over_box, add_p, add_box, boxes = paths
+    for q in (over_p, add_p):
+        if q and not os.path.exists(q):
+            raise FileNotFoundError(f"overlay frame listed in the manifest is missing: {q}")
     if boxes:
         disp = legibility(disp, boxes, leg_cfg, scale, w, h)
     gfx = None
-    if over_p and os.path.exists(over_p):
+    if over_p:
         r = _read_rgba(over_p, over_box, w, h)
         if r:
             (x, y, bw, bh), im = r
@@ -584,7 +619,7 @@ def apply_overlay(disp, paths, w, h, leg_cfg, scale, glow_cfg=None):
             disp[y:y + bh, x:x + bw] = o[..., 2::-1] * al + reg * (1 - al)
             gfx = np.zeros((h, w), np.float32)
             gfx[y:y + bh, x:x + bw] = al[..., 0]
-    if add_p and os.path.exists(add_p):
+    if add_p:
         r = _read_rgba(add_p, add_box, w, h)
         if r:
             (x, y, bw, bh), im = r
