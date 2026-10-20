@@ -12,7 +12,7 @@
 4. "hadsiz": field is now ~360 000 instances to the horizon; the camera ends lower (13°) so the
    luminous field fills the lower frame and recedes into a warm haze ("city at night", organic);
    band 520–820 px stays a dark soft void.
-Budget: 12 spp, ACCURATE/BALANCED, blue noise, 80 % res.
+Budget: 12 spp, ACCURATE/BALANCED, blue noise, 80 % res. **Measured 41.0 s/frame (interior, 1256) / 26.9 s/frame (field, 1360).**
 
 Script: `video/blender/shots/sh10.py` (+ shared `video/blender/lib_s7.py`).
 
