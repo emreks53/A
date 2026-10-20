@@ -2249,6 +2249,8 @@ def build(ctx):
         cd = C.camera("dbg", lens=v[6], loc=v[0:3], look_at=v[3:6])
         sc.camera = cd
     sc.view_settings.exposure = -0.3
+    if os.environ.get("SH15_MATOVR"):
+        bpy.context.view_layer.material_override = mat_simple("ovr", (0.5, 0.5, 0.5), 0.6)
     ov = {"final_spp": 32, "preview_spp": 16, "diffuse_bounces": 3, "glossy_bounces": 2,
           "transmission_bounces": 3, "transparent_bounces": 8, "clamp_indirect": 3.0}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
