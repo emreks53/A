@@ -7,7 +7,7 @@ from mathutils import Vector, Matrix, Quaternion
 import common as C
 import lib_s6 as L
 
-SUN_EL, SUN_AZ = 66.0, 0.0          # sun high, toward +Y
+SUN_EL, SUN_AZ = 74.0, 0.0          # sun high, toward +Y (Snell's-window edge just outside the opening frame)
 DEPTH = 1.70                        # pond bottom
 N_W = 1.333
 
@@ -105,7 +105,7 @@ FOG_SIGMA = (1.0, 0.50, 0.44)      # per-metre extinction (red goes first)
 FOG_COL = (0.014, 0.090, 0.080)     # in-scatter radiance the water converges to (teal)
 
 
-def add_fog(mat, glow_gain=1.6, grazing_haze=0.0):
+def add_fog(mat, glow_gain=1.6, grazing_haze=0.0, halo=0.0):
     """Cheap water fog without a volume: blend each shading point toward the in-scatter colour by the
     length of the ray segment that reached it (1 - exp(-sigma * L)). The in-scatter is
     brighter toward the surface and toward the sun (forward scattering)."""
@@ -154,7 +154,27 @@ def add_fog(mat, glow_gain=1.6, grazing_haze=0.0):
     nt.links.new(g.outputs[0], em.inputs["Strength"])
     mx = nt.nodes.new("ShaderNodeMixShader")
     nt.links.new(f.outputs[0], mx.inputs[0]); nt.links.new(src, mx.inputs[1]); nt.links.new(em.outputs[0], mx.inputs[2])
-    nt.links.new(mx.outputs[0], out.inputs["Surface"])
+    final = mx.outputs[0]
+    if halo:
+        # forward-scattering halo around the sun seen from below: hot core + wide soft glow (camera rays only)
+        hsum = None
+        for n_, k_ in ((2500.0, halo * 25.0), (180.0, halo * 1.6), (24.0, halo * 0.12)):
+            pp = nt.nodes.new("ShaderNodeMath"); pp.operation = "POWER"; pp.inputs[1].default_value = n_
+            nt.links.new(cl.outputs[0], pp.inputs[0])
+            kk = nt.nodes.new("ShaderNodeMath"); kk.operation = "MULTIPLY"; kk.inputs[1].default_value = k_
+            nt.links.new(pp.outputs[0], kk.inputs[0])
+            if hsum is None:
+                hsum = kk
+            else:
+                a_ = nt.nodes.new("ShaderNodeMath"); a_.operation = "ADD"
+                nt.links.new(hsum.outputs[0], a_.inputs[0]); nt.links.new(kk.outputs[0], a_.inputs[1]); hsum = a_
+        cam_ = nt.nodes.new("ShaderNodeMath"); cam_.operation = "MULTIPLY"
+        nt.links.new(hsum.outputs[0], cam_.inputs[0]); nt.links.new(lp.outputs["Is Camera Ray"], cam_.inputs[1])
+        he = nt.nodes.new("ShaderNodeEmission"); he.inputs["Color"].default_value = (0.85, 0.97, 1.0, 1)
+        nt.links.new(cam_.outputs[0], he.inputs["Strength"]); he.name = "sun_halo"
+        ad = nt.nodes.new("ShaderNodeAddShader")
+        nt.links.new(final, ad.inputs[0]); nt.links.new(he.outputs[0], ad.inputs[1]); final = ad.outputs[0]
+    nt.links.new(final, out.inputs["Surface"])
 
 # --------------------------------------------------------------------------- water
 
@@ -594,7 +614,7 @@ def t2f_(t):
     return C.t2f(t)
 
 
-def build_shafts(ctx, t_allah, rng, n=40):
+def build_shafts(ctx, t_allah, rng, n=56):
     """Fake god rays: thin soft emissive cylinders along the refracted sun ray, camera-visible only.
     They converge on the sun in perspective when looking up, flicker with the ripples and fade with depth."""
     d_dn = -refracted_up()
@@ -641,7 +661,7 @@ def build_shafts(ctx, t_allah, rng, n=40):
     ad = nt.nodes.new("ShaderNodeAddShader")
     nt.links.new(tr.outputs[0], ad.inputs[0]); nt.links.new(em.outputs[0], ad.inputs[1])
     nt.links.new(ad.outputs[0], out.inputs["Surface"])
-    for t, k in ((ctx.t0 - 0.3, 0.30), (t_allah - 0.1, 0.30), (t_allah + 0.6, 0.48), (25.0, 0.2), (27.5, 0.15), (28.3, 0.0)):
+    for t, k in ((ctx.t0 - 0.3, 1.2), (t_allah - 0.1, 1.2), (t_allah + 0.6, 2.0), (24.9, 0.5), (25.4, 0.2), (27.5, 0.15), (28.3, 0.0)):
         gain.inputs[1].default_value = k; gain.inputs[1].keyframe_insert("default_value", frame=t * 24)
     col = C.collection("Shafts")
     for i in range(n):
@@ -653,7 +673,11 @@ def build_shafts(ctx, t_allah, rng, n=40):
         col.objects.link(o)
         C.smooth_shade(o)
         # top end just under the surface, spread over the area the camera looks through
-        top = Vector((rng.uniform(-1.1, 1.1), rng.uniform(-0.6, 1.6), -0.02))
+        if i < 18:   # around the opening view (looking up), so rays stream down past the lens
+            a_ = rng.uniform(0, 6.283); r_ = rng.uniform(0.06, 0.45)
+            top = Vector((math.cos(a_) * r_, 0.12 + math.sin(a_) * r_, -0.02))
+        else:
+            top = Vector((rng.uniform(-1.1, 1.1), rng.uniform(-0.6, 1.6), -0.02))
         o.rotation_mode = "QUATERNION"
         # local +Z toward the surface so Generated z = 1 is the top end
         o.rotation_quaternion = (-d_dn).to_track_quat("Z", "Y")
@@ -702,6 +726,8 @@ def build(ctx):
         add(rng.uniform(-0.9, 0.9), rng.uniform(0.85, 1.9), rng.uniform(-1.35, -0.75), 0.08)
     for i in range(14):                       # far bed (fog)
         add(rng.uniform(-2.2, 2.2), rng.uniform(2.0, 4.5), rng.uniform(-1.4, -0.6), 0.1)
+    for x, y, tip in ((-0.095, 0.15, -0.47), (0.105, 0.13, -0.50)):
+        add(x, y, tip, 0.03)                  # behind the start position: crowns silhouetted at the bottom edge looking up
     for i in range(3):                        # foreground, close to the lens in the tilt-down
         add(rng.uniform(-0.28, -0.16) if i % 2 else rng.uniform(0.14, 0.24), rng.uniform(0.18, 0.3), rng.uniform(-1.0, -0.8), 0.03)
     leaves, stemso = build_elodea(rng, stems)
@@ -821,11 +847,21 @@ def build(ctx):
     for t, v in ((ctx.t0 - 0.3, 0.32), (t_allah - 0.1, 0.32), (t_allah + 0.5, 0.42), (t_tilt0 + 0.3, 0.3), (t_tilt0 + 1.2, 0.06)):
         g.inputs["Strength"].default_value = v; g.inputs["Strength"].keyframe_insert("default_value", frame=t * 24)
     g.inputs["Threshold"].default_value = 1.0
+    nt_c = sc.compositing_node_group
+    stk = nt_c.nodes.new("CompositorNodeGlare")
+    stk.inputs["Type"].default_value = "Streaks"; stk.inputs["Quality"].default_value = "High"
+    stk.inputs["Threshold"].default_value = 3.0; stk.inputs["Streaks"].default_value = 6
+    stk.inputs["Fade"].default_value = 0.88
+    outn = [n for n in nt_c.nodes if n.bl_idname == "NodeGroupOutput"][0]
+    src_ = outn.inputs[0].links[0].from_socket
+    nt_c.links.new(src_, stk.inputs["Image"]); nt_c.links.new(stk.outputs["Image"], outn.inputs[0])
+    for t, v in ((ctx.t0 - 0.3, 0.10), (t_allah - 0.1, 0.10), (t_allah + 0.5, 0.16), (t_tilt0 + 0.3, 0.08), (t_tilt0 + 1.0, 0.0)):
+        stk.inputs["Strength"].default_value = v; stk.inputs["Strength"].keyframe_insert("default_value", frame=t * 24)
     # ---- render-cost choices (see NOTES): homogeneous water volume (analytic, no ray marching), FAST denoise
     # prefilter, no motion blur on things that move < 1 px per shutter (specks, plants, distant bubbles)
     for m in list(bpy.data.materials):
         if m.name != "shaft":
-            add_fog(m, grazing_haze=2.6 if m.name == "surface" else 0.0)
+            add_fog(m, grazing_haze=2.6 if m.name == "surface" else 0.0, halo=1.0 if m.name == "surface" else 0.0)
     # (denoise prefilter stays ACCURATE: FAST leaves grain in defocused bubble bokeh)
     if ctx.mode == "final" and not ctx.args.res:
         # mostly defocus/haze: director allows 80 % resolution (post upscales) to afford clean bokeh samples
