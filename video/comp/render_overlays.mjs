@@ -1,11 +1,12 @@
 // Render overlay frames with headless Chromium (Playwright).
 //
-//   node render_overlays.mjs --timeline T.json --out DIR --scale 1 --frames 0-99,140-160 [--pages 2]
+//   node render_overlays.mjs --timeline T.json --out DIR --scale 1 --frames 0-99,140-160 [--pages 2] [--log L]
+//   node render_overlays.mjs --timeline T.json --out DIR --layout-report R.json   (ink boxes of every key-word line)
 //
 // For every requested frame that has active elements, writes
 //   DIR/over/ov_00000.png   straight-alpha RGBA (graphics composited OVER the plate), cropped to its content box
 //   DIR/add/ad_00000.png    RGBA whose rgb*alpha is additive light (screen-blended by the compositor)
-// and appends one JSON line per frame to DIR/log.jsonl: {"f":..,"over":0|[x,y,w,h],"add":0|[x,y,w,h],"boxes":[..]}
+// and appends one JSON line per frame to the log (default DIR/log.jsonl): {"f":..,"over":0|[x,y,w,h],"add":0|[x,y,w,h],"boxes":[..]}
 // ([x,y,w,h] = where the cropped PNG sits in the full frame, device pixels; boxes = legibility boxes, layout px)
 // Frames are deterministic functions of the frame number, so pages can split the work in any order.
 import { createRequire } from 'module';
@@ -31,15 +32,26 @@ for (const r of (args.frames || '').split(',').filter(Boolean)) {
   const [a, b] = r.split('-').map(Number);
   for (let f = a; f <= (isNaN(b) ? a : b); f++) frames.push(f);
 }
-fs.mkdirSync(path.join(out, 'over'), { recursive: true });
-fs.mkdirSync(path.join(out, 'add'), { recursive: true });
-const log = fs.createWriteStream(path.join(out, 'log.jsonl'), { flags: 'a' });
-
 const W = Math.round(timeline.W * scale), H = Math.round(timeline.H * scale);
 const browser = await chromium.launch({
   args: ['--force-color-profile=srgb', '--font-render-hinting=none', '--disable-lcd-text', '--allow-file-access-from-files',
          '--disable-gpu', '--hide-scrollbars'],
 });
+
+if (args['layout-report']) {
+  const page = await browser.newPage({ viewport: { width: 64, height: 64 }, deviceScaleFactor: 1 });
+  page.on('pageerror', e => { console.error(`[layout] ${e}`); process.exitCode = 2; });
+  await page.goto(pathToFileURL(path.join(HERE, 'overlay', 'overlay.html')).href);
+  await page.evaluate(([tl, s]) => window.ovInit(tl, s), [timeline, 0.25]);
+  const rep = await page.evaluate(() => window.ovLayoutReport());
+  fs.writeFileSync(args['layout-report'], JSON.stringify(rep));
+  await browser.close();
+  process.exit(process.exitCode || 0);
+}
+
+fs.mkdirSync(path.join(out, 'over'), { recursive: true });
+fs.mkdirSync(path.join(out, 'add'), { recursive: true });
+const log = fs.createWriteStream(args.log || path.join(out, 'log.jsonl'), { flags: 'a' });
 
 async function worker(idx, list) {
   const page = await browser.newPage({ viewport: { width: W, height: 2 * H }, deviceScaleFactor: 1 });
