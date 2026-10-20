@@ -290,7 +290,7 @@ cue("sh12.cloud", s, A + 0.25, 2.2, "whoosh", -26, cls="amb", pre=0.85, space="a
     ref="tilt up into the rain sky -> emerge from cloud into sunlight")
 bed("sh12.altitude", s, A - 0.25, B + 0.45, "wind", -27, 0.6, 0.8, space="aerial", send=-16,
     params=dict(strength=1.0, gustiness=0.3, rate=0.06, bright=1.3, low=0.03, width=1.0,
-                events=[[B - 0.6 - (A - 0.25), 0.45, 0.6]]),
+                events=[[B - 0.6 - (A - 0.25), 0.3, 0.6]]),
     ref="vast open air high above the land; swells as we descend")
 t = w(s, "bir")
 cue("sh12.one_source", s, t - F, 4.2, "sub", -22, cls="sub", pre=0.55, space="aerial", send=-14, fade_out=0.8,
@@ -317,7 +317,7 @@ gb = [0.25, 1.1, 1.85, 2.7, 3.45, 4.2]
 cue("sh13a.grass_lens", s, A + gb[0], 4.6, "grass_brush", -27, pre=0.0, space="meadow", send=-18, fade_out=0.3,
     params=dict(times=[x - gb[0] for x in gb], pans=[-0.6, 0.55, -0.35, 0.7, -0.7, 0.4], amps=[0.8, 1.0, 0.7, 0.9, 0.8, 0.6]),
     ref="low glide: grass and flowers brushing past the lens (until the camera rises)")
-cue("sh13a.bee", s, A + 2.2, 2.6, "bee", -33, pre=1.3, space="meadow", send=-16, fade_in=0.2, fade_out=0.3,
+cue("sh13a.bee", s, A + 2.2, 2.6, "bee", -35, pre=1.3, space="meadow", send=-16, fade_in=0.2, fade_out=0.3,
     params=dict(sync=1.3, dist=0.7, pan_from=-0.8, pan_to=0.6, f0=218), ref="a bee crosses in front of the camera")
 cue("sh13a.rahim_air", s, t_hr - F, 4.6, "bloom", -29, cls="amb", pre=0.5, space="meadow", send=-16, fade_out=1.0,
     params=dict(sync=0.5, rise=0.5, decay=3.5, bright=0.7, low=0.35),
@@ -335,7 +335,7 @@ for i, (tt, pn) in enumerate(zip(rt, fallback)):
     tick(f"sh13b.ring_{nm}", s, tt - F, kind="ring", lvl=-29 if i < 7 else -27, pan=pn,
          track={"shot": s, "name": nm}, provisional=False,
          ref=f"birer birer: tracking ring {i + 1}/8 on TRK_{nm} (lands with the word onsets)")
-cue("sh13b.bee", s, rt[1], 2.2, "bee", -33, pre=0.7, space="meadow", send=-16, fade_in=0.2, fade_out=0.3,
+cue("sh13b.bee", s, rt[1], 2.2, "bee", -35, pre=0.7, space="meadow", send=-16, fade_in=0.2, fade_out=0.3,
     params=dict(sync=0.7, dist=0.45, pan_from=0.6, pan_to=-0.1, f0=226), ref="the bee found by ring b")
 
 # ============================================================== sh14a sunflowers at sunrise

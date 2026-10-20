@@ -1434,12 +1434,14 @@ def gen_bee(dur, rng, sync=None, f0=215.0, dist=0.6, pan_from=-0.8, pan_to=0.8, 
     x = (t - sync) * speed
     r = np.sqrt(x ** 2 + dist ** 2)
     vr = np.gradient(r) * SR
-    f = f0 * (1 + 0.02 * rand_curve(dur, rng, 4.0)(t)) * (1 - vr / 343.0)
-    ph = TWO_PI * np.cumsum(f) / SR
-    pulse = (0.5 + 0.5 * np.cos(ph)) ** 6
+    # wingbeat rate wanders as the bee manoeuvres (+-4 %), plus slow drift
+    f = f0 * (1 + 0.04 * rand_curve(dur, rng, 7.0)(t) + 0.03 * rand_curve(dur, rng, 0.8)(t)) * (1 - vr / 343.0)
+    ph = TWO_PI * np.cumsum(f) / SR + 0.4 * lp(rng.standard_normal(n), 80, 1) * 8
+    pulse = (0.5 + 0.5 * np.cos(ph)) ** 5
     pulse = pulse - pulse.mean()
-    rough = 1 + 0.25 * lp(rng.standard_normal(n), 300, 1) * 3
-    buzz = bp(pulse * rough, 150, 4500, 2)
+    rough = 1 + 0.45 * lp(rng.standard_normal(n), 400, 1) * 3
+    rough *= 1 + 0.2 * rand_curve(dur, rng, 12.0)(t)
+    buzz = bp(pulse * rough, 150, 4500, 2) + 0.12 * bp(rng.standard_normal(n), 300, 3000, 1) * np.std(pulse)
     amp = (dist / r) ** 1.6
     bright = np.clip(dist / r, 0.2, 1)
     buzz = buzz * amp
