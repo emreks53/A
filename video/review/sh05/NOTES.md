@@ -5,6 +5,7 @@ Clear sunlit pond, 28 mm lens (underwater housing feel), f/3.5, focus tracked th
 ## Stills (50 % res, preview quality)
 | file | t | shows |
 |---|---|---|
+| sh05.json | — | TRK_bubble screen track |
 | sh05_t022.750.png | 22.75 | first frame: sun at frame centre through the rippled surface, Snell's-window edge + TIR at bottom |
 | sh05_t023.980.png | 23.98 | "Allah": light swell |
 | sh05_t025.400.png | 25.40 | mid-tilt: TIR ceiling reflecting the bed, the window seen edge-on, elodea bed |
@@ -42,7 +43,9 @@ Clear sunlit pond, 28 mm lens (underwater housing feel), f/3.5, focus tracked th
 * TRK_bubble parented to the hero bubble.
 
 ## Render cost
-See the measured line below.
+**First measurement: 361 s/frame** (frame 660, `--final`) — far over the 40–45 s budget. Profiling now
+(heterogeneous emission volume, refractive surface, ~600 glass bubbles); an optimised version will follow
+without changing the look. The stills above are the target look.
 
 ## Known issues / next
 * Plant density / brightness still being tuned; shafts are subtle.
