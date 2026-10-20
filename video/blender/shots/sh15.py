@@ -843,8 +843,8 @@ def srgb(h):
 # ----------------------------------------------------------------------------- materials
 
 LEATHER_RGB = srgb("#7A141A")
-GOLD_RGB = (0.93, 0.68, 0.33)
-PAPER_RGB = srgb("#EEE4CF")
+GOLD_RGB = (1.0, 0.74, 0.36)
+PAPER_RGB = srgb("#ECDFC4")
 _TEX = {}
 
 
@@ -925,7 +925,7 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     LK(nt, nmix.outputs[1], bump.inputs["Normal"])
     LK(nt, bump.outputs[0], leather.inputs["Normal"])
     gn = noise(nt, geo.outputs["Position"], 900.0, 1.0, 0.6)
-    gr = maprange(nt, gn.outputs[0], 0.3, 0.7, 0.14, 0.30)
+    gr = maprange(nt, gn.outputs[0], 0.3, 0.7, 0.09, 0.22)
     gcol = mixrgb(nt, maprange(nt, gn.outputs[0], 0.3, 0.7, 0.0, 1.0), GOLD_RGB, (0.80, 0.56, 0.25))
     gold = principled(nt, **{"Base Color": gcol, "Metallic": 1.0, "Roughness": gr, "Normal": bump.outputs[0],
                              "Specular Tint": (1.0, 0.9, 0.7)})
@@ -952,8 +952,12 @@ def mat_page_edge(name="page_edge", dark=1.0):
     LK(nt, fl, wn.inputs["W"])
     per = maprange(nt, wn.outputs["Value"], 0, 1, 0.86, 1.03)
     band = noise(nt, None, 1.0, 2.0, 0.5, dim="1D")
-    LK(nt, math_node(nt, "MULTIPLY", lay, vb=0.045), band.inputs["W"])
-    bandv = maprange(nt, band.outputs[0], 0.35, 0.65, 0.93, 1.04)
+    LK(nt, math_node(nt, "MULTIPLY", lay, vb=0.06), band.inputs["W"])
+    bandv = maprange(nt, band.outputs[0], 0.30, 0.70, 0.84, 1.06)
+    # signatures (16 leaves) leave faint darker seams on the edge
+    sig = math_node(nt, "FRACT", math_node(nt, "MULTIPLY", lay, vb=1 / 16))
+    sigv = maprange(nt, sig, 0.0, 0.07, 0.86, 1.0)
+    bandv = math_node(nt, "MULTIPLY", bandv, sigv)
     fr = math_node(nt, "FRACT", lay)
     gap = maprange(nt, math_node(nt, "ABSOLUTE", math_node(nt, "SUBTRACT", fr, vb=0.5)), 0.38, 0.5, 1.0, 0.8)
     dirt = noise(nt, geo.outputs["Position"], 60.0, 1.0, 0.5)
@@ -974,7 +978,7 @@ def _paper_and_ink(nt, mask_out, geo, tone=1.0):
     pn = noise(nt, geo.outputs["Position"], 14.0, 1.0, 0.5)
     tonev = maprange(nt, pn.outputs[0], 0.35, 0.65, 0.95, 1.03)
     paper = mixrgb(nt, 1.0, tuple(c * tone for c in PAPER_RGB), tonev, "MULTIPLY")
-    ink = maprange(nt, mask_out, 0.1, 0.9, 0.0, 0.93)
+    ink = maprange(nt, mask_out, 0.05, 0.75, 0.0, 0.96)
     col = mixrgb(nt, ink, paper, (0.030, 0.027, 0.025))
     rough = maprange(nt, ink, 0, 1, 0.62, 0.42)
     return col, rough, ink
@@ -2172,8 +2176,8 @@ def build(ctx):
     for k in range(4):
         MATS["leaf_%d" % k] = mat_leaf("leaf_%d" % k, os.path.join(d, "page_%d.png" % (727 - 2 * k)),
                                        os.path.join(d, "page_%d.png" % (728 - 2 * k)))
-    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.50, 0.39, 0.31), val=0.60, sat=0.95,
-                             rough=(0.34, 0.58), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
+    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.42, 0.29, 0.20), val=0.55, sat=1.05,
+                             rough=(0.48, 0.70), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
                              grain_rot=math.pi / 2, wear=0.35)
     MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7))
     MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8))
@@ -2248,9 +2252,9 @@ def build(ctx):
     bpy.context.view_layer.update()
     pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
     camB = rig_camera("camB", 40, 2.8, [
-        (113.30, V((-0.09, 0.065, 0.67)), V((-0.46, 0.02, 0.32)), pg + V((0.03, -0.01, -0.01))),
-        (114.45, V((-0.12, 0.062, 0.63)), V((-0.465, 0.024, 0.318)), pg + V((0.01, 0.0, 0.0))),
-        (115.90, V((-0.19, 0.06, 0.56)), V((-0.47, 0.03, 0.31)), pg),
+        (113.30, V((-0.08, 0.12, 0.52)), V((-0.58, 0.0, 0.30)), pg + V((0.03, 0.0, -0.01))),
+        (114.45, V((-0.11, 0.115, 0.505)), V((-0.59, 0.005, 0.30)), pg + V((0.01, 0.0, 0.0))),
+        (115.90, V((-0.17, 0.10, 0.47)), V((-0.61, 0.02, 0.30)), pg),
     ], 2718, 2782, seed=12)
     zc = 0.15
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
@@ -2277,15 +2281,16 @@ def build(ctx):
             sc.timeline_markers.remove(mk)
         cd = C.camera("dbg", lens=v[6], loc=v[0:3], look_at=v[3:6])
         sc.camera = cd
-    sc.view_settings.exposure = -0.3
+    sc.view_settings.exposure = 0.15
     if os.environ.get("SH15_NODENOISE"):
         def _nd(*_):
             bpy.context.scene.cycles.use_denoising = False
         bpy.app.handlers.render_pre.append(_nd)
     if os.environ.get("SH15_MATOVR"):
         bpy.context.view_layer.material_override = mat_simple("ovr", (0.5, 0.5, 0.5), 0.6)
-    ov = {"final_spp": 32, "preview_spp": 16, "diffuse_bounces": 3, "glossy_bounces": 2,
-          "transmission_bounces": 3, "transparent_bounces": 8, "clamp_indirect": 3.0, "texture_limit": "8192"}
+    ov = {"final_spp": 8, "final_threshold": 0.04, "final_min_spp": 4, "preview_spp": 16,
+          "diffuse_bounces": 2, "glossy_bounces": 2, "transmission_bounces": 2, "transparent_bounces": 6,
+          "max_bounces": 6, "clamp_indirect": 2.0, "texture_limit": "8192"}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
     return ov
 
