@@ -256,7 +256,7 @@
     "veg_density": 0.8,
     "width": 0.95
    },
-   "lvl": -27,
+   "lvl": -29,
    "class": "amb",
    "space": "meadow",
    "send": -22,
@@ -394,7 +394,7 @@
     "veg_density": 0.7,
     "width": 0.6
    },
-   "lvl": -32,
+   "lvl": -34,
    "class": "amb",
    "space": "room",
    "send": -12,
@@ -458,7 +458,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -526,7 +526,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -611,7 +611,7 @@
      ]
     ]
    },
-   "lvl": -25,
+   "lvl": -28,
    "class": "amb",
    "space": "desert",
    "send": -24,
@@ -796,7 +796,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -940,7 +940,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -964,7 +964,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -1012,7 +1012,7 @@
    "params": {
     "period": 8.0
    },
-   "lvl": -26,
+   "lvl": -29,
    "class": "amb",
    "space": "outdoor",
    "send": -22,
@@ -1053,7 +1053,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -1104,7 +1104,7 @@
     "veg_density": 0.7,
     "width": 0.6
    },
-   "lvl": -31,
+   "lvl": -33,
    "class": "amb",
    "space": "room",
    "send": -12,
@@ -1251,7 +1251,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -1362,7 +1362,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -1408,7 +1408,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -1507,7 +1507,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -1633,7 +1633,7 @@
      ]
     ]
    },
-   "lvl": -26,
+   "lvl": -28,
    "class": "spot",
    "space": "micro",
    "send": -10,
@@ -1652,7 +1652,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -1780,7 +1780,7 @@
     "leaf": 0.1,
     "water": 0.06
    },
-   "lvl": -28,
+   "lvl": -31,
    "class": "amb",
    "space": "outdoor",
    "send": -20,
@@ -1891,7 +1891,7 @@
     ],
     "pan": 0.0
    },
-   "lvl": -26,
+   "lvl": -29,
    "class": "spot",
    "space": "outdoor",
    "send": -18,
@@ -1923,7 +1923,7 @@
      0.9
     ]
    },
-   "lvl": -26,
+   "lvl": -28,
    "class": "spot",
    "space": "outdoor",
    "send": -16,
@@ -1967,7 +1967,7 @@
     "strength": 1.0,
     "gustiness": 0.3,
     "rate": 0.06,
-    "bright": 1.3,
+    "bright": 1.0,
     "low": 0.03,
     "width": 1.0,
     "events": [
@@ -1978,7 +1978,7 @@
      ]
     ]
    },
-   "lvl": -27,
+   "lvl": -30,
    "class": "amb",
    "space": "aerial",
    "send": -16,
@@ -1997,7 +1997,7 @@
     "sync": 0.02,
     "kind": "link"
    },
-   "lvl": -19,
+   "lvl": -21,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2021,7 +2021,7 @@
     "sync": 0.02,
     "kind": "link"
    },
-   "lvl": -19,
+   "lvl": -21,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2045,7 +2045,7 @@
     "sync": 0.02,
     "kind": "link"
    },
-   "lvl": -19,
+   "lvl": -21,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2069,7 +2069,7 @@
     "sync": 0.02,
     "kind": "link"
    },
-   "lvl": -19,
+   "lvl": -21,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2114,7 +2114,7 @@
     "sync": 0.02,
     "kind": "link"
    },
-   "lvl": -19,
+   "lvl": -21,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2160,7 +2160,7 @@
     "sync": 0.02,
     "kind": "link"
    },
-   "lvl": -19,
+   "lvl": -21,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2239,7 +2239,7 @@
     "rate": 0.09,
     "bright": 0.9,
     "low": 0.03,
-    "veg": 1.3,
+    "veg": 1.0,
     "veg_lo": 1800,
     "veg_hi": 9000,
     "veg_density": 1.2,
@@ -2252,7 +2252,7 @@
      ]
     ]
    },
-   "lvl": -28,
+   "lvl": -30,
    "class": "amb",
    "space": "meadow",
    "send": -20,
@@ -2378,7 +2378,7 @@
     "sync": 0.02,
     "kind": "ring"
    },
-   "lvl": -15,
+   "lvl": -18,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2402,7 +2402,7 @@
     "sync": 0.02,
     "kind": "ring"
    },
-   "lvl": -15,
+   "lvl": -18,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2426,7 +2426,7 @@
     "sync": 0.02,
     "kind": "ring"
    },
-   "lvl": -15,
+   "lvl": -18,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2450,7 +2450,7 @@
     "sync": 0.02,
     "kind": "ring"
    },
-   "lvl": -15,
+   "lvl": -18,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2474,7 +2474,7 @@
     "sync": 0.02,
     "kind": "ring"
    },
-   "lvl": -15,
+   "lvl": -18,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2498,7 +2498,7 @@
     "sync": 0.02,
     "kind": "ring"
    },
-   "lvl": -15,
+   "lvl": -18,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2522,7 +2522,7 @@
     "sync": 0.02,
     "kind": "ring"
    },
-   "lvl": -15,
+   "lvl": -18,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2546,7 +2546,7 @@
     "sync": 0.02,
     "kind": "ring"
    },
-   "lvl": -14,
+   "lvl": -17,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2652,7 +2652,7 @@
      ]
     ]
    },
-   "lvl": -26,
+   "lvl": -28,
    "class": "amb",
    "space": "meadow",
    "send": -20,
@@ -2671,7 +2671,7 @@
     "sync": 0.02,
     "kind": "link"
    },
-   "lvl": -19,
+   "lvl": -21,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
@@ -2964,7 +2964,7 @@
     "veg_density": 0.6,
     "width": 0.6
    },
-   "lvl": -31,
+   "lvl": -33,
    "class": "amb",
    "space": "room_wood",
    "send": -12,
@@ -3103,7 +3103,7 @@
     "sync": 0.02,
     "kind": "callout"
    },
-   "lvl": -17.0,
+   "lvl": -19.0,
    "class": "ui",
    "space": "ui",
    "send": -30.0,
