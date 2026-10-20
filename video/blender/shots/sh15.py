@@ -963,7 +963,7 @@ def mat_page_edge(name="page_edge", dark=1.0):
     dirt = noise(nt, geo.outputs["Position"], 60.0, 1.0, 0.5)
     dirtv = maprange(nt, dirt.outputs[0], 0.4, 0.7, 1.0, 0.9)
     v = math_node(nt, "MULTIPLY", math_node(nt, "MULTIPLY", per, bandv), math_node(nt, "MULTIPLY", gap, dirtv))
-    base = mixrgb(nt, 1.0, tuple(c * 0.90 * dark for c in PAPER_RGB), v, "MULTIPLY")
+    base = mixrgb(nt, 1.0, (0.80 * dark, 0.70 * dark, 0.52 * dark), v, "MULTIPLY")
     bmp = NN(nt, "ShaderNodeBump")
     bmp.inputs["Strength"].default_value = 0.25
     bmp.inputs["Distance"].default_value = 0.00005
@@ -1109,7 +1109,7 @@ def mat_plaster(name="lime_plaster"):
     col = mixrgb(nt, 1.0, col, v2, "MULTIPLY")
     grain = noise(nt, tc.outputs["Object"], 700.0, 0.0, 0.5)
     bmp = NN(nt, "ShaderNodeBump")
-    bmp.inputs["Strength"].default_value = 0.10
+    bmp.inputs["Strength"].default_value = 0.035
     bmp.inputs["Distance"].default_value = 0.0004
     LK(nt, math_node(nt, "ADD", grain.outputs[0], math_node(nt, "MULTIPLY", big.outputs[0], vb=6.0)), bmp.inputs["Height"])
     p = NN(nt, "ShaderNodeBsdfDiffuse")
@@ -1612,11 +1612,20 @@ def integrate(G, theta, ss):
     return pts
 
 
+def cockle(s, y):
+    """Gentle paper waviness (m) of the top pages: grows toward the fore-edge, varies along y."""
+    u = s / OB_L
+    v = y / PAGE_H
+    a = 0.0007 * u ** 1.3
+    return a * (0.6 * math.sin(2 * math.pi * (1.3 * u + 0.15) + 3.1 * v)
+                + 0.4 * math.sin(2 * math.pi * 2.1 * v + 1.7 * u + 0.3))
+
+
 def build_block(half, name, page_img, mat_top, mat_edge, nleaves):
-    NS, NQ = 44, 10
+    NS, NQ, NY = 44, 10, 14
     ss = [0.0015 + (OB_L - 0.0015) * (i / NS) ** 1.25 for i in range(NS + 1)]
     profs = [integrate(half.G, half.theta_fn(q / NQ), ss) for q in range(NQ + 1)]
-    ys = [0.0, PAGE_H]
+    ys = [PAGE_H * j / NY for j in range(NY + 1)]
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
     lay = bm.verts.layers.float.new("layer")
@@ -1625,6 +1634,8 @@ def build_block(half, name, page_img, mat_top, mat_edge, nleaves):
         for q in range(NQ + 1):
             for i in range(NS + 1):
                 x, z = profs[q][i]
+                if q == NQ:
+                    z += cockle(ss[i], y)
                 v = bm.verts.new((x, y, z))
                 v[lay] = q / NQ * nleaves
                 V[(i, q, j)] = v
@@ -1641,17 +1652,20 @@ def build_block(half, name, page_img, mat_top, mat_edge, nleaves):
         u = ss[i] / OB_L
         return u if half.side > 0 else 1 - u
 
+    J = NY
+    for j in range(NY):
+        v0, v1 = ys[j] / PAGE_H, ys[j + 1] / PAGE_H
+        for i in range(NS):
+            face((V[(i, NQ, j)], V[(i + 1, NQ, j)], V[(i + 1, NQ, j + 1)], V[(i, NQ, j + 1)]), 0,
+                 [(us(i), v0), (us(i + 1), v0), (us(i + 1), v1), (us(i), v1)])
+            face((V[(i, 0, j + 1)], V[(i + 1, 0, j + 1)], V[(i + 1, 0, j)], V[(i, 0, j)]), 1)
+        for q in range(NQ):
+            face((V[(NS, q, j)], V[(NS, q, j + 1)], V[(NS, q + 1, j + 1)], V[(NS, q + 1, j)]), 1)
+            face((V[(0, q + 1, j)], V[(0, q + 1, j + 1)], V[(0, q, j + 1)], V[(0, q, j)]), 1)
     for i in range(NS):
-        # top page (q = NQ)
-        face((V[(i, NQ, 0)], V[(i + 1, NQ, 0)], V[(i + 1, NQ, 1)], V[(i, NQ, 1)]), 0,
-             [(us(i), 0), (us(i + 1), 0), (us(i + 1), 1), (us(i), 1)])
-        face((V[(i, 0, 1)], V[(i + 1, 0, 1)], V[(i + 1, 0, 0)], V[(i, 0, 0)]), 1)
         for q in range(NQ):
             face((V[(i, q, 0)], V[(i + 1, q, 0)], V[(i + 1, q + 1, 0)], V[(i, q + 1, 0)]), 1)
-            face((V[(i, q + 1, 1)], V[(i + 1, q + 1, 1)], V[(i + 1, q, 1)], V[(i, q, 1)]), 1)
-    for q in range(NQ):
-        face((V[(NS, q, 0)], V[(NS, q, 1)], V[(NS, q + 1, 1)], V[(NS, q + 1, 0)]), 1)
-        face((V[(0, q + 1, 0)], V[(0, q + 1, 1)], V[(0, q, 1)], V[(0, q, 0)]), 1)
+            face((V[(i, q + 1, J)], V[(i + 1, q + 1, J)], V[(i + 1, q, J)], V[(i, q, J)]), 1)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     ob = bm_to_obj(bm, name, mats=[mat_top, mat_edge], smooth=True, sharp_angle=40)
     return ob, profs
@@ -1687,7 +1701,7 @@ def build_leaves(halfL, halfR, mats_leaf, fps_start, fps_end):
             for y in ys:
                 th = lambda s, y=y: leaf_shape_at(tau, thS(s), thE(s), s, y)
                 row = integrate(halfL.G, th, ss)
-                pts.append([(x, y, z) for (x, z) in row])
+                pts.append([(x, y, z + cockle(s_, y)) for (x, z), s_ in zip(row, ss)])
             return pts
         bm = bmesh.new()
         uv = bm.loops.layers.uv.new("UVMap")
@@ -1985,16 +1999,17 @@ def volume_box():
     return ob
 
 
-def build_motes(n=1400, seed=7):
+def build_motes(n=700, seed=7):
     rng = random.Random(seed)
     verts = []
+    xo = WALL_LEFT_X - WALL_THICK
     while len(verts) < n:
-        x = rng.uniform(-0.92, 0.15); y = rng.uniform(-0.5, 0.36); z = rng.uniform(0.04, 1.25)
-        # keep mostly near the sun beam corridor
+        x = rng.uniform(-0.92, 0.25); y = rng.uniform(-0.45, 0.36); z = rng.uniform(0.04, 1.25)
+        # only inside the sun-beam corridor (traced back to the outer window opening)
         p = Vector((x, y, z))
-        t = (x - (WALL_LEFT_X - 0.2)) / SUN_DIR.x
+        t = (x - xo) / SUN_DIR.x
         q = p - SUN_DIR * t
-        if WIN_Y0 - 0.1 < q.y < WIN_Y1 + 0.1 and WIN_Z0 - 0.15 < q.z < WIN_Z1 + 0.1:
+        if WIN_Y0 + 0.01 < q.y < WIN_Y1 - 0.01 and WIN_Z0 + 0.01 < q.z < WIN_Z1 - 0.01:
             verts.append((x, y, z))
     me = bpy.data.meshes.new("motes")
     me.from_pydata(verts, [], [])
@@ -2006,8 +2021,8 @@ def build_motes(n=1400, seed=7):
     gi = ng.nodes.new("NodeGroupInput"); go = ng.nodes.new("NodeGroupOutput")
     m2p = ng.nodes.new("GeometryNodeMeshToPoints")
     rnd = ng.nodes.new("FunctionNodeRandomValue"); rnd.data_type = "FLOAT"
-    rnd.inputs["Min"].default_value = 0.00025
-    rnd.inputs["Max"].default_value = 0.00075
+    rnd.inputs["Min"].default_value = 0.00035
+    rnd.inputs["Max"].default_value = 0.0011
     rnd.inputs["Seed"].default_value = 3
     ng.links.new(rnd.outputs["Value"], m2p.inputs["Radius"])
     st = ng.nodes.new("GeometryNodeInputSceneTime")
@@ -2194,9 +2209,9 @@ def build(ctx):
     for k in range(4):
         MATS["leaf_%d" % k] = mat_leaf("leaf_%d" % k, os.path.join(d, "page_%d.png" % (727 - 2 * k)),
                                        os.path.join(d, "page_%d.png" % (728 - 2 * k)))
-    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.42, 0.29, 0.20), val=0.55, sat=1.05,
+    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.56, 0.37, 0.24), val=0.62, sat=1.15,
                              rough=(0.55, 0.78), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
-                             grain_rot=math.pi / 2, wear=0.35, spec=0.32)
+                             grain_rot=math.pi / 2, wear=0.35, spec=0.25)
     MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7), uvmap=True)
     MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8), uvmap=True)
     MATS["kafes"] = mat_wood("kafes", "dark_wood", tile=0.6, tint=(0.55, 0.45, 0.38), val=0.55, sat=0.6, rough=(0.55, 0.8))
