@@ -493,7 +493,7 @@ def build(ctx):
     C.assign(gp, gm)
 
     # ------------------------------------------------------------------ pollen motes
-    mo, mmod = L.motes("Pollen", 1000, (-0.06, -0.12, 0.03), (0.12, 0.7, 0.15), random.Random(4),
+    mo, mmod = L.motes("Pollen", 1300, (-0.06, -0.12, 0.03), (0.12, 0.7, 0.15), random.Random(4),
                        r_range=(0.00003, 0.00009), strength=12.0, color=(1.0, 0.68, 0.32), drift=(0.003, -0.002, 0.004), wobble=0.003, clock=clock)
     frames_tau = [(f, W.tau(f / 24.0)) for f in range(ctx.f0 - 2, ctx.f1 + 3)]
     L.key_clock(clock, frames_tau)
