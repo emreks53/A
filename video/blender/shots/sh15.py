@@ -28,7 +28,7 @@ from mathutils.geometry import tessellate_polygon
 
 # ============================================================================ constants
 
-DESIGN_VERSION = "v8"
+DESIGN_VERSION = "v9"
 DESIGN_DIR = os.path.join(C.ASSETS, "sh15_design", DESIGN_VERSION)
 
 FONT_URLS = {
@@ -325,36 +325,27 @@ def _scaled(ring, k, ox=0.0, oy=0.0):
 
 
 def corner_ornament(P, cx, cy, L, sx, sy, lw):
-    """Ottoman corner piece (kosebent): a filled, scalloped quarter-medallion pointing along the
-    diagonal, with a double contour and tooled negative-space palmette / rumi blades."""
-    N = 160
-    ring = [(0.0, 0.0)]
-    for i in range(N + 1):
-        th = (math.pi / 2) * i / N
-        u = abs(th - math.pi / 4) / (math.pi / 4)
-        r = L * (1.0 - 0.40 * u ** 0.85)
-        r *= 1 + 0.045 * math.cos(10 * (th - math.pi / 4))
-        ring.append((r * math.cos(th), r * math.sin(th)))
+    """Gold-tooled corner fan: radiating petals with tooled mid-ribs, a quarter boss, an enclosing
+    arc with pearl dots (a classic Ottoman/European binding corner)."""
     X = lambda pts: _xf(pts, cx, cy, 1, 0, sx, sy)
-    P.poly(X(ring), v=1.0, z=0.000)
-    P.poly(X(_scaled(ring, 0.915)), v=0.0, z=0.001)
-    P.poly(X(_scaled(ring, 0.870)), v=1.0, z=0.002)
-    d = math.pi / 4
-    # negative tooling (z above)
-    pal = leaf_shape(L * 0.40, L * 0.17, 0.0)
-    P.poly(X(_xf(pal, L * 0.16 * math.cos(d), L * 0.16 * math.sin(d), 1, d)), v=0.0, z=0.003)
-    for side in (-1, 1):
-        bl = rumi_blade(L * 0.20 * math.cos(d), L * 0.20 * math.sin(d), L * 0.30, d + side * 0.25,
-                        side * 1.9, L * 0.085)
-        P.poly(X(bl), v=0.0, z=0.003)
-        bl2 = rumi_blade(L * 0.06 * math.cos(d + side * 0.6), L * 0.06 * math.sin(d + side * 0.6), L * 0.48,
-                         d + side * 0.95, side * 0.55, L * 0.05, shrink=0.15)
-        P.poly(X(bl2), v=0.0, z=0.003)
-    P.poly(X([(L * 0.02, L * 0.02), (L * 0.13, L * 0.02), (L * 0.02, L * 0.13)]), v=0.0, z=0.003)
-    for k in (0.62, 0.78):
-        P.disc(*X([(L * k * math.cos(d), L * k * math.sin(d))])[0], L * 0.028, v=0.0).location.z = 0.003
-    # outer hairline contour
-    P.stroke(X([(x * 1.07, y * 1.07) for x, y in ring[1:]]), lw * 0.7, z=0.0)
+    lens = [0.60, 0.80, 0.98, 0.80, 0.60]
+    for k in range(5):
+        a = math.radians(90 * (k + 0.5) / 5)
+        ln = L * lens[k]
+        pet = leaf_shape(ln * 0.80, L * (0.15 if k != 2 else 0.17), 0.0)
+        o = L * 0.17
+        P.poly(X(_xf(pet, o * math.cos(a), o * math.sin(a), 1, a)), v=1.0, z=0.000)
+        rib = [(o * math.cos(a) + t * ln * 0.62 * math.cos(a), o * math.sin(a) + t * ln * 0.62 * math.sin(a)) for t in (0.18, 1.0)]
+        P.stroke(X(rib), lw * 0.45, v=0.0, z=0.001)
+        if k < 4:
+            b = math.radians(90 * (k + 1) / 5)
+            P.disc(*X([(L * 0.70 * math.cos(b), L * 0.70 * math.sin(b))])[0], L * 0.028)
+    quarter = [(0, 0)] + [(L * 0.13 * math.cos(math.radians(t)), L * 0.13 * math.sin(math.radians(t))) for t in range(0, 91, 5)]
+    P.poly(X(quarter), v=1.0, z=0.0)
+    arc = [(L * 1.02 * math.cos(math.radians(t)), L * 1.02 * math.sin(math.radians(t))) for t in range(6, 85, 2)]
+    P.stroke(X(arc), lw * 0.8)
+    for t in (14, 30, 45, 60, 76):
+        P.disc(*X([(L * 1.10 * math.cos(math.radians(t)), L * 1.10 * math.sin(math.radians(t)))])[0], L * 0.022)
 
 
 def flourish(P, cx, cy, width, lw, small=False):
@@ -372,43 +363,34 @@ def flourish(P, cx, cy, width, lw, small=False):
             P.stroke(sp, lw * 0.7)
         P.disc(cx + s * (hw + lw * 1.4), cy, lw * 1.1)
     P.lozenge(cx, cy, 0.0042 if not small else 0.0028, 0.0019 if not small else 0.0013)
-    P.disc(cx, cy, 0.0006 if not small else 0.0004, v=0.0)
+    P.disc(cx, cy, 0.0006 if not small else 0.0004, v=0.0).location.z = 0.004
 
 
 def rosette(P, cx, cy, r, petals=8, lw=0.0004):
     for k in range(petals):
         a = 2 * math.pi * k / petals + math.pi / petals
         P.poly(_xf(leaf_shape(r, r * 0.42, 0.0), cx, cy, 1, a))
-    P.disc(cx, cy, r * 0.22, v=0.0)
-    P.disc(cx, cy, r * 0.12)
+    P.disc(cx, cy, r * 0.22, v=0.0).location.z = 0.004
+    P.disc(cx, cy, r * 0.12).location.z = 0.005
 
 
 def semse(P, cx, cy, rx, ry, lw):
-    """Small almond medallion (semse): scalloped filled outline, double contour, negative palmettes,
-    pendants (salbek) above and below."""
-    N = 200
+    """Small almond medallion: double contour, central rosette, leaves on the axis, pendants."""
+    N = 160
     ring = []
     for i in range(N):
         t = 2 * math.pi * i / N
-        rr = 1 + 0.045 * math.cos(18 * t)
-        sx = math.sin(t)
         sy = math.cos(t)
-        sy = math.copysign(abs(sy) ** 0.9, sy)
-        ring.append((cx + rx * rr * sx, cy + ry * rr * sy))
-    P.poly(ring, v=1.0, z=0.000)
-    P.poly(_scaled(ring, 0.90, cx, cy), v=0.0, z=0.001)
-    P.poly(_scaled(ring, 0.85, cx, cy), v=1.0, z=0.002)
+        sy = math.copysign(abs(sy) ** 0.85, sy)
+        ring.append((cx + rx * math.sin(t), cy + ry * sy))
+    P.stroke(ring, lw * 1.3, closed=True)
+    P.stroke(_scaled(ring, 0.86, cx, cy), lw * 0.55, closed=True)
+    rosette(P, cx, cy, rx * 0.42, 8)
     for s in (-1, 1):
-        P.poly(_xf(leaf_shape(ry * 0.66, rx * 0.40, 0.0), cx, cy, 1, s * math.pi / 2), v=0.0, z=0.003)
-        for side in (-1, 1):
-            bl = rumi_blade(cx, cy + s * ry * 0.05, ry * 0.52, s * math.pi / 2 + side * 0.32, side * s * 1.7,
-                            rx * 0.20)
-            P.poly(bl, v=0.0, z=0.003)
-        P.lozenge(cx, cy + s * (ry * 1.08 + 0.0030), 0.0011, 0.0026)
-        P.disc(cx, cy + s * (ry * 1.08 + 0.0068), 0.0007)
-    P.disc(cx, cy, rx * 0.16, v=0.0).location.z = 0.004
-    P.disc(cx, cy, rx * 0.08, v=1.0).location.z = 0.005
-    P.stroke(_scaled(ring, 1.075, cx, cy), lw * 0.7, closed=True)
+        P.poly(_xf(leaf_shape(ry * 0.36, rx * 0.30, 0.0), cx, cy + s * rx * 0.50, 1, s * math.pi / 2))
+        P.disc(cx + s * rx * 0.58, cy, rx * 0.07)
+        P.lozenge(cx, cy + s * (ry * 1.04 + 0.0028), 0.0010, 0.0024)
+        P.disc(cx, cy + s * (ry * 1.04 + 0.0062), 0.0007)
 
 
 def draw_cover(P, title=True):
@@ -636,12 +618,16 @@ def design_main():
     fonts = {k: bpy.data.fonts.load(font_path(k)) for k in FONT_URLS}
     camd = bpy.data.cameras.new("dc"); camd.type = "ORTHO"
     cam = bpy.data.objects.new("dc", camd); sc.collection.objects.link(cam); sc.camera = cam
-    os.makedirs(DESIGN_DIR, exist_ok=True)
+    only = [x for x in os.environ.get("SH15_DESIGN_ONLY", "").split(",") if x]
+    out_dir = DESIGN_DIR + "_test" if only else DESIGN_DIR
+    os.makedirs(out_dir, exist_ok=True)
     sheets = []
     x0 = 0.0
 
     def new_sheet(name, w_, h_, ppm):
         nonlocal x0
+        if only and name not in only:
+            ppm = 1000
         s = Sheet(name, w_, h_, ppm, x0)
         x0 += w_ + 0.5
         sheets.append(s)
@@ -659,6 +645,8 @@ def design_main():
         draw_page(Painter(s, fonts), num, random.Random(num * 7919), PAGE_W, PAGE_H)
     s = new_sheet("relief", RAHLE_LEN, RAHLE_W, 2600); draw_relief(Painter(s, fonts), RAHLE_LEN, RAHLE_W)
     for s in sheets:
+        if only and s.name not in only:
+            continue
         for c in sc.collection.children:
             c.hide_render = (c != s.col)
         camd.ortho_scale = max(s.w, s.h)
@@ -667,11 +655,12 @@ def design_main():
         sc.render.resolution_x = int(round(s.w * s.ppm))
         sc.render.resolution_y = int(round(s.h * s.ppm))
         sc.render.resolution_percentage = 100
-        sc.render.filepath = os.path.join(DESIGN_DIR, s.name + ".png")
+        sc.render.filepath = os.path.join(out_dir, s.name + ".png")
         t = time.time()
         bpy.ops.render.render(write_still=True)
         print("[sh15-design] %s %dx%d %.1fs" % (s.name, sc.render.resolution_x, sc.render.resolution_y, time.time() - t), flush=True)
-    json.dump({"ok": True, "t": time.time()}, open(os.path.join(DESIGN_DIR, "done.json"), "w"))
+    if not only:
+        json.dump({"ok": True, "t": time.time()}, open(os.path.join(DESIGN_DIR, "done.json"), "w"))
 
 
 def ensure_design():

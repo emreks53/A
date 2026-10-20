@@ -454,7 +454,7 @@ def thump(rng, fc, tau, body_f=None, body=0.5, knock=0.15, dur=None):
         y = y + body * reson(x, body_f, 1.3)
     if knock:
         y = y + knock * lp(x, 700, 2)
-    return y
+    return y / (np.abs(y).max() + 1e-12)        # consistent level: the noise excitation is random
 
 
 # ============================================================================ helpers for beds
@@ -1196,8 +1196,8 @@ def gen_bubble_pass(dur, rng, sync=0.4, r=4.5e-3, pan=0.0):
     n = N(dur)
     t = tvec(n)
     y = np.zeros((n, 2))
-    add_mono(y, bubble(r, rng, xi=0.18, damp=0.7), N(sync - 0.25), pan, 1.0)
-    add_mono(y, bubble(r * 0.8, rng, xi=0.22, damp=0.7), N(sync - 0.02), pan, 0.9)
+    add_mono(y, bubble(r * 1.1, rng, xi=0.18, damp=0.7), N(sync - 0.3), pan, 0.35)
+    add_mono(y, bubble(r, rng, xi=0.22, damp=0.7), N(sync - 0.03), pan, 1.0)
     k = 14
     add_bubbles(y, sync - 0.3 + np.sort(rng.uniform(0, 0.35, k)), powerlaw_radii(rng, k, 0.8e-3, 3e-3, 2.0), rng,
                 pans=pan + 0.3 * rng.standard_normal(k), gain=0.12)
