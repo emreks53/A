@@ -1,5 +1,5 @@
 {"finished": false,
  "jobs": [
-  {"node": "n1", "branch": "render-dev-s1", "shot": "sh01", "from": 0, "to": 65},
-  {"node": "n2", "branch": "render-dev-s1", "shot": "sh01", "from": 66, "to": 131}
+  {"node": "n1", "branch": "render-dev-s1", "ref": "d0f3dda01535a9184f80ef4723311b65185781e9", "shot": "sh01", "from": 0, "to": 65},
+  {"node": "n2", "branch": "render-dev-s1", "ref": "d0f3dda01535a9184f80ef4723311b65185781e9", "shot": "sh01", "from": 66, "to": 131}
  ]}
