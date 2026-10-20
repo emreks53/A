@@ -1098,10 +1098,10 @@ def mat_plaster(name="lime_plaster"):
     nm = NN(nt, "ShaderNodeNormalMap")
     nm.inputs["Strength"].default_value = 0.35
     LK(nt, n.outputs[0], nm.inputs["Color"])
-    tr = noise(nt, tc.outputs["Object"], 5.0, 5.0, 0.62)      # broad trowel undulation
+    tr = noise(nt, tc.outputs["Object"], 2.2, 2.0, 0.45)      # broad, soft trowel undulation
     bmp = NN(nt, "ShaderNodeBump")
-    bmp.inputs["Strength"].default_value = 0.35
-    bmp.inputs["Distance"].default_value = 0.004
+    bmp.inputs["Strength"].default_value = 0.12
+    bmp.inputs["Distance"].default_value = 0.003
     LK(nt, tr.outputs[0], bmp.inputs["Height"])
     LK(nt, nm.outputs[0], bmp.inputs["Normal"])
     rr = maprange(nt, r.outputs[0], 0.2, 0.8, 0.82, 0.96)
@@ -2205,10 +2205,10 @@ def build(ctx):
     # ------------------------------------------------ cameras
     V = Vector
     camA = rig_camera("camA", 35, 2.8, [
-        (109.40, V((0.10, -1.05, 0.86)), V((-0.15, 0.05, 0.07)), V((-0.10, -0.06, 0.10))),
-        (110.80, V((0.10, -0.74, 0.65)), V((-0.04, 0.02, 0.05)), V((0.02, -0.10, 0.05))),
-        (111.96, V((0.085, -0.44, 0.41)), V((0.035, -0.02, 0.02)), V((0.03, -0.10, 0.052))),
-        (113.50, V((0.08, -0.40, 0.38)), V((0.035, -0.015, 0.02)), V((0.03, -0.10, 0.052))),
+        (109.40, V((0.12, -0.92, 0.62)), V((-0.30, 0.0, 0.12)), V((-0.30, -0.06, 0.14))),
+        (110.80, V((0.16, -0.70, 0.55)), V((-0.10, -0.02, 0.07)), V((-0.05, -0.08, 0.07))),
+        (111.96, V((0.14, -0.42, 0.40)), V((0.025, -0.02, 0.02)), V((0.03, -0.10, 0.052))),
+        (113.50, V((0.13, -0.38, 0.375)), V((0.025, -0.015, 0.02)), V((0.03, -0.10, 0.052))),
     ], 2622, 2724, seed=11)
     bpy.context.view_layer.update()
     pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
