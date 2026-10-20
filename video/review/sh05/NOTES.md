@@ -5,6 +5,7 @@ Clear sunlit pond, 28 mm lens (underwater housing feel), f/3.5, focus tracked th
 ## Stills (50 % res, preview quality)
 | file | t | shows |
 |---|---|---|
+| sh05_animatic.mp4 | — | 25 % animatic with narration |
 | sh05.json | — | TRK_bubble screen track |
 | sh05_t022.750.png | 22.75 | first frame: sun at frame centre through the rippled surface, Snell's-window edge + TIR at bottom |
 | sh05_t023.980.png | 23.98 | "Allah": light swell |
