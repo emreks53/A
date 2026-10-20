@@ -1,4 +1,19 @@
-# sh01 — review 1 (studio S1)
+# sh01 — review 2 (studio S1)
+
+## Round 2 changes (director notes 1-6)
+1. Render: 8 spp + OIDN, field deformation blur off, far field thinned, bounces trimmed. Accepted at ~80 s/frame
+   (clean re-measure follows; the 156 s logged for f94-96 ran while a stale job shared the CPU).
+   `flicker_check_f94-96_100pct.png`: 100 % crops of a defocused leaf/background area, 3 consecutive frames: no blotches.
+2. Hero blade: own material - strong yellow-green backlit translucency, deeper parallel veins + midrib crease,
+   lower sky glare (waxy, not paper), saturated, dry tan only in the last ~1.5 % at the very tip.
+3. Drop: a physical solar aureole (forward-scatter glow around the sun, camera/glossy/refraction rays only) gives
+   the bright caustic focus spot in the lower half of the drop and rim glints.
+4. Seedling leaf: brighter lamina, stronger translucency (veins darker in transmission); dew beads now sampled on
+   the surface, irregular sizes, weighted to margins + vein grooves, none in the impact zone.
+5. Exit: blades/flowers cleared from the sun line; focus racks toward infinity during the tilt -> round sun disc
+   with soft halation at upper right (subtle; post halation on top is fine).
+6. Warmer dawn tint, ~2x pollen motes (brighter, amber) through the rack focus.
+
 
 Script: `video/blender/shots/sh01.py` + helpers in `video/blender/lib_s1.py`. Fully procedural + CC0
 (Poly Haven `spruit_sunrise` 4k HDRI, `celandine_01`, `dandelion_01`, `forest_ground_04`).
