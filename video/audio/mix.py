@@ -260,17 +260,18 @@ NORM_PEAK = {"ui_tick"}
 SFX_BUS_CEILING = -5.0      # fast look-ahead limiter on the SFX bus only (never ducks the voice)
 # broadband ducking depth (dB) per class while the narrator speaks (same in every band: the
 # spectral work is done by the unmask stage, so the beds keep their tonal balance)
-DUCK = {"amb": 4.5, "spot": 3.0, "sub": 2.0, "ui": 0.0}
+DUCK = {"amb": 3.5, "spot": 2.5, "sub": 1.5, "ui": 0.0}
 DUCK_ATTACK, DUCK_HOLD, DUCK_RELEASE, DUCK_LOOK = 0.06, 0.30, 1.0, 0.08
 # low shelf on ambience and spot effects (designed impacts - class "sub" - and cues with
 # "lf_shelf": 0 keep their weight): keeps the low end from piling up under the voice
 LF_SHELF_HZ, LF_SHELF_DB = 60.0, -5.0
-# spectral unmask: third-octave band centres, minimum voice-to-SFX ratio while speaking, max cut
-UM_FC = np.array([100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150,
-                  4000, 5000, 6300, 8000, 10000, 12500], dtype=float)
-UM_TARGET = np.array([0, 4, 4, 4, 6, 6, 6, 9, 9, 9, 13, 13, 13, 13, 13, 13, 13, 13, 10, 10, 0, 0], dtype=float)
-UM_MAXCUT = np.array([0, 9, 9, 9, 9, 9, 9, 12, 12, 12, 20, 20, 20, 20, 20, 20, 20, 20, 14, 14, 6, 6], dtype=float)
-UM_VSMOOTH, UM_SSMOOTH, UM_HOLD, UM_RELEASE, UM_BAND_SMOOTH = 0.25, 0.12, 0.20, 0.40, 1
+# word-keyed dynamic EQ ("unmask"): for every narrated word, the voice-to-SFX ratio is measured in
+# octave bands on the word's voiced frames; where it falls short of the target, only that band of
+# the SFX is cut, only for that word (smooth 0.12 s ramps; neighbouring words merge).
+WEQ_FC = np.array([125, 250, 500, 1000, 2000, 4000, 8000], dtype=float)
+WEQ_TARGET = np.array([3, 5, 9, 12, 12, 12, 8], dtype=float)
+WEQ_MAXCUT = np.array([8, 8, 10, 16, 16, 16, 10], dtype=float)
+WEQ_RAMP, WEQ_ITER = 0.12, 3
 
 
 def render_cues(cues, n_total, log):
@@ -359,75 +360,90 @@ def duck(buses, act, fs_c, n_total):
     return out, curves
 
 
-def _band_matrix(freqs, fc):
-    """(n_bins, n_bands) 0/1 membership of FFT bins in third-octave bands."""
-    lo, hi = fc * 2 ** (-1 / 6), fc * 2 ** (1 / 6)
+def _band_matrix(freqs, fc, width_oct):
+    """(n_bins, n_bands) 0/1 membership of FFT bins in bands of width_oct octaves around fc."""
+    lo, hi = fc * 2 ** (-width_oct / 2), fc * 2 ** (width_oct / 2)
     return ((freqs[:, None] >= lo[None, :]) & (freqs[:, None] < hi[None, :])).astype(np.float64)
 
 
-def unmask(S, vch, act, fs_c, log=print):
-    """Voice-keyed spectral dynamic EQ on the SFX (stereo S) against the voice as heard in each
-    channel (vch).  Per third-octave band b and STFT frame:
-        cut_b = clip((L_voice,b - target_b) - L_sfx,b, -maxcut_b, 0) * voice activity
-    with phrase-smoothed band levels (voice 0.25 s, SFX 0.12 s, centred = look-ahead), a 0.2 s hold
-    (minimum filter) and 0.4 s release, smoothed across neighbouring bands and interpolated over the
-    FFT bins in log-frequency.  Returns (processed S, band-gain matrix dB, frame times)."""
+def _band_to_bins(g_band, fc):
+    """Interpolate per-band gains (frames, bands; dB) to FFT bins in log-frequency; the gain fades
+    to 0 dB one octave below the lowest band and stays at the top band's value above it."""
+    lf = np.log2(np.maximum(sfx.FREQS, 1.0))
+    lc = np.log2(fc)
+    W = np.zeros((len(fc), len(lf)))
+    for j, x in enumerate(lf):
+        if x <= lc[0] - 1:
+            continue
+        if x <= lc[0]:
+            W[0, j] = x - (lc[0] - 1)
+            continue
+        if x >= lc[-1]:
+            W[-1, j] = 1.0
+            continue
+        k = int(np.searchsorted(lc, x) - 1)
+        u = (x - lc[k]) / (lc[k + 1] - lc[k])
+        W[k, j], W[k + 1, j] = 1 - u, u
+    return g_band @ W
+
+
+def word_eq(S, vch, v_raw, words, log=print):
+    """Word-keyed dynamic EQ of the SFX (stereo S) against the voice as heard in each channel.
+    Iterates: measure every word's octave-band voice/SFX ratio on its voiced frames (the SFX
+    side pessimistically: the louder channel), cut the shortfall to WEQ_TARGET (<= WEQ_MAXCUT) for
+    the span of the word, merge with neighbours (minimum), ramp in/out over WEQ_RAMP, re-measure."""
     hop_s = sfx.HOP / SR
     V = sfx.stft(vch)
     T = sfx.frame_times(V.shape[0])
-    M = _band_matrix(sfx.FREQS, UM_FC)
+    nfr = len(T)
+    M = _band_matrix(sfx.FREQS, WEQ_FC, 1.0)
     PV = (np.abs(V) ** 2) @ M
     del V
     XL, XR = sfx.stft(S[:, 0]), sfx.stft(S[:, 1])
-    PS = np.maximum((np.abs(XL) ** 2) @ M, (np.abs(XR) ** 2) @ M)
-    PV = uniform_filter1d(PV, size=max(int(UM_VSMOOTH / hop_s), 1), axis=0, mode="nearest")
-    PS = uniform_filter1d(PS, size=max(int(UM_SSMOOTH / hop_s), 1), axis=0, mode="nearest")
-    if UM_BAND_SMOOTH > 1:     # compare voice and SFX over ~octave-wide windows (formant valleys
-        PV = uniform_filter1d(PV, size=UM_BAND_SMOOTH, axis=1, mode="nearest")   # don't count)
-        PS = uniform_filter1d(PS, size=UM_BAND_SMOOTH, axis=1, mode="nearest")
-    LV, LS = 10 * np.log10(np.maximum(PV, 0) + 1e-20), 10 * np.log10(np.maximum(PS, 0) + 1e-20)
-    need = np.clip(LV - UM_TARGET[None, :] - LS, -UM_MAXCUT[None, :], 0.0)
-    need[:, UM_MAXCUT == 0] = 0.0
-    a = np.interp(T, np.arange(len(act)) / fs_c, act)
-    g = need * a[:, None]
-    g = minimum_filter1d(g, size=max(int(UM_HOLD / hop_s), 1), axis=0, mode="nearest")
-    # asymmetric smoothing: cuts arrive quickly (they are already anticipated by the centred
-    # windows), recover slowly
-    aa, ar = np.exp(-1 / (0.03 / hop_s)), np.exp(-1 / (UM_RELEASE / hop_s))
-    out = np.empty_like(g)
-    yv = np.zeros(g.shape[1])
-    for i in range(g.shape[0]):
-        x = g[i]
-        k = np.where(x < yv, aa, ar)
-        yv = k * yv + (1 - k) * x
-        out[i] = yv
-    g = out
-    g = (0.25 * np.concatenate([g[:, :1], g[:, :-1]], axis=1) + 0.5 * g
-         + 0.25 * np.concatenate([g[:, 1:], g[:, -1:]], axis=1))
-    # band gains -> bins (log-frequency interpolation; below 100 Hz the gain fades out)
-    lf = np.log2(np.maximum(sfx.FREQS, 1.0))
-    W = np.zeros((len(UM_FC), len(sfx.FREQS)))
-    for j in range(len(sfx.FREQS)):
-        x = lf[j]
-        if x <= np.log2(UM_FC[0]):
-            continue
-        k = np.searchsorted(np.log2(UM_FC), x) - 1
-        if k >= len(UM_FC) - 1:
-            W[-1, j] = 1.0
-            continue
-        u = (x - np.log2(UM_FC[k])) / (np.log2(UM_FC[k + 1]) - np.log2(UM_FC[k]))
-        W[k, j], W[k + 1, j] = 1 - u, u
-    G = db(g @ W)
+    AL, AR = np.abs(XL) ** 2, np.abs(XR) ** 2
+    # voiced frames (raw narration, 20 ms energy above -32 dBFS - the same mask the QA uses)
+    w = int(0.02 * SR)
+    c = np.concatenate([[0.0], np.cumsum(v_raw ** 2)])
+    e = 10 * np.log10((c[w:] - c[:-w]) / w + 1e-14)
+    idx = np.clip((T * SR).astype(int) - w // 2, 0, len(e) - 1)
+    voiced = e[idx] > -32
+    spans = []
+    for x in words:
+        i0, i1 = np.searchsorted(T, x["s"]), np.searchsorted(T, x["e"])
+        vi = np.arange(i0, i1)[voiced[i0:i1]]
+        if len(vi) * hop_s >= 0.04:
+            spans.append((i0, i1, vi))
+    cut = np.zeros((nfr, len(WEQ_FC)))           # dB <= 0, frame rate
+    G = np.ones((nfr, len(sfx.FREQS)))
+    k_ramp = max(int(WEQ_RAMP / hop_s), 1)
+    for it in range(WEQ_ITER):
+        PSL, PSR = (AL * G ** 2) @ M, (AR * G ** 2) @ M
+        PS = np.maximum(PSL, PSR)
+        need = np.zeros((nfr, len(WEQ_FC)))
+        short = 0
+        for i0, i1, vi in spans:
+            snr = 10 * np.log10(PV[vi].mean(0) / (PS[vi].mean(0) + 1e-20) + 1e-20)
+            d = np.clip(WEQ_TARGET - snr, 0, None)
+            if d.max() > 0.25:
+                short += 1
+                need[i0:i1] = np.minimum(need[i0:i1], -d)
+        cut = np.maximum(cut + need, -WEQ_MAXCUT[None, :])
+        # merge and ramp: hold each word's cut over its span (+ half a ramp), then smooth
+        g = minimum_filter1d(cut, size=k_ramp, axis=0, mode="nearest")
+        g = uniform_filter1d(g, size=k_ramp, axis=0, mode="nearest")
+        G = db(_band_to_bins(g, WEQ_FC))
+        log(f"  word EQ pass {it}: {short} words short of target")
     yL = sfx.istft(XL * G, len(S))
     yR = sfx.istft(XR * G, len(S))
-    act_frames = a > 0.5
-    stats = {"frames_voice_pct": round(float(act_frames.mean() * 100), 1)}
-    if act_frames.any():
-        gs = g[act_frames]
-        stats["median_cut_db_by_band"] = {int(f): round(float(np.median(gs[:, i])), 1) for i, f in enumerate(UM_FC)}
-        stats["p95_cut_db_by_band"] = {int(f): round(float(np.percentile(gs[:, i], 5)), 1) for i, f in enumerate(UM_FC)}
-    log(f"  unmask: {stats.get('median_cut_db_by_band')}")
-    return np.stack([yL, yR], 1), g, T, stats
+    act = np.zeros(nfr, bool)
+    for i0, i1, _ in spans:
+        act[i0:i1] = True
+    stats = {"words": len(spans),
+             "median_cut_db_in_words": {int(f): round(float(np.median(g[act, i])), 1) for i, f in enumerate(WEQ_FC)},
+             "p90_cut_db_in_words": {int(f): round(float(np.percentile(g[act, i], 10)), 1) for i, f in enumerate(WEQ_FC)},
+             "pct_word_frames_cut_gt3db": {int(f): round(float((g[act, i] < -3).mean() * 100), 1) for i, f in enumerate(WEQ_FC)}}
+    log(f"  word EQ: {stats}")
+    return np.stack([yL, yR], 1), stats
 
 
 # --------------------------------------------------------------------------- mastering
@@ -511,7 +527,8 @@ def main():
         os.makedirs(a.dump_pre, exist_ok=True)
         for k, x in list(buses.items()) + [("vch", vch), ("act", act), ("v_raw", v_raw)]:
             np.save(os.path.join(a.dump_pre, k + ".npy"), x.astype(np.float32))
-    sfx_bus, um_g, um_T, um_stats = unmask(pre_um, vch, act, fs_c, log)
+    import measure
+    sfx_bus, um_stats = word_eq(pre_um, vch, v_raw, measure.all_words(), log)
     sfx_bus = sfx_bus + ui
     del pre_um
     # remove sub-sonic energy (inaudible, costs headroom); keep everything from ~30 Hz up
@@ -607,7 +624,7 @@ def main():
     rep["key_words_below_10db_1k_4k"] = [[r["s"], r["w"], r["snr"]] for r in kr if min(r["snr"][2:5]) < 10]
     rep["ltas_voice_minus_sfx_db_during_words"] = measure.ltas(v_out[:, 0], s_out, words)
     rep["duck_stability"] = {cls: measure.duck_stability(g, fs_c) for cls, g in curves.items()}
-    rep["unmask"] = um_stats
+    rep["word_eq"] = um_stats
     rep["tick_sync"] = measure.tick_sync(cues, pts)
     rep["tonal_scan_sfx"] = measure.tonal_scan(s_out)
     rep["cues"] = rows
