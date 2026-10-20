@@ -129,7 +129,7 @@ def build(ctx):
             # follow the drop / leaf plane during the fall (focus puller tracks it)
             pc = drop_center_at(t)
             focus = (pc - loc).dot(fwd) - R1 * 0.4
-        focus += 0.012 * k
+        focus = focus + (2.5 - focus) * (k ** 2.2)      # rack to the sun as we tilt into it
         fstop = 33.0 + (17.0 - 33.0) * C.remap(t, 0.25, 3.3)
         return loc, cam_basis(yaw2, pitch2), focus, fstop
 
@@ -157,10 +157,10 @@ def build(ctx):
     # ------------------------------------------------------------------ light: HDRI + matching sun
     rot = L.hdri_rot_for_sun(HDRI_SUN_TEX, sun_az)
     L.world_hdri_sundisc(C.ph_hdri(HDRI, "4k"), rot_z_deg=rot, sun_dir=SUN_DIR, clamp=14.0, disc_deg=0.53,
-                         disc_radiance=30000.0, disc_color=(1.0, 0.8, 0.55),
-                         tint=(1.0, 0.86, 0.68), saturation=1.1)
+                         disc_radiance=30000.0, disc_color=(1.0, 0.8, 0.55), aureole=(90.0, 0.8),
+                         tint=(1.0, 0.82, 0.60), saturation=1.1)
     sun = C.sun(elev_deg=SUN_ELEV, azim_deg=sun_az + 90, strength=15.0, kelvin_k=2900, angle_deg=0.6)
-    sun.data.color = (1.0, 0.70, 0.34)
+    sun.data.color = (1.0, 0.66, 0.30)
     sun.visible_glossy = False
     sc.view_settings.exposure = 0.55
 
@@ -178,7 +178,7 @@ def build(ctx):
         rise = tp[-1].z
         bpy.data.objects.remove(tmp)
         hb_len *= (P_TIP.z + 0.004) / max(0.01, rise) if rise > 0 else 1.2
-    m_hero = L.mat_grass("HeroGrass", hue_shift=0.01, fresh_tip=True)
+    m_hero = L.mat_grass("HeroGrass", hue_shift=0.01, fresh_tip=True, trans=0.62, vein_bump=0.6, rough=0.3, spec=0.32, sat=1.35, trans_tint=(1.1, 2.3, 0.35))
     hb, hpts = L.grass_blade("HeroBlade", hero_rng, length=hb_len, width=0.0045, lean=0.28, droop=2.25, twist=1.35,
                              dew=9, tip_drop=0.0, mats=(m_hero, m_dew), seg=40, dew_scale=0.9)
     tip_local = hpts[-1]
@@ -331,22 +331,46 @@ def build(ctx):
                 else:
                     kp.interpolation = "LINEAR"
 
-    # dew beads on the seedling leaves (raycast onto the upper surface)
-    for leaf, Lb, cnt in ((leafR, LbR, 9), (leafL, LbL, 12)):
-        for i in range(cnt):
-            for _ in range(20):
-                u = rng.uniform(0.1, 0.9); vv = rng.uniform(-0.4, 0.4)
-                pl = Vector((u * Lb, vv * Lb * 0.5, 0.01))
-                hit, lc, nn, _ = leaf.ray_cast(pl, Vector((0, 0, -1)))
-                if hit and (leaf is not leafR or (lc - loc_l).length > 0.004):
-                    break
-            if not hit:
+    # dew beads on the seedling leaves: sampled on the upper surface, irregular sizes, favouring the margins
+    # and the vein grooves (where water collects), never in the impact zone
+    for leaf, Lb, cnt in ((leafR, LbR, 16), (leafL, LbL, 20)):
+        me = leaf.data
+        uvl = me.uv_layers[0].data
+        cands = []
+        for poly in me.polygons:
+            if poly.normal.z < 0.3:
                 continue
-            r = rng.uniform(0.00012, 0.00045)
-            o = drop_obj(f"LeafDew_{leaf.name}_{i}", 1.0, (24, 12))
+            uvs = [uvl[li].uv for li in poly.loop_indices]
+            u = sum(x[0] for x in uvs) / len(uvs); v = abs(sum(x[1] for x in uvs) / len(uvs) * 2 - 1)
+            w = poly.area * (0.25 + 2.5 * v ** 3 + (0.6 if v < 0.06 else 0.0)) * (1.0 if 0.05 < u < 0.95 else 0.2)
+            cands.append((w, poly))
+        tot = sum(c[0] for c in cands)
+        placed = []
+        tries = 0
+        while len(placed) < cnt and tries < 500:
+            tries += 1
+            x = rng.uniform(0, tot)
+            for w, poly in cands:
+                x -= w
+                if x <= 0:
+                    break
+            vs = [me.vertices[k].co for k in poly.vertices]
+            a_, b_ = rng.random(), rng.random()
+            if a_ + b_ > 1:
+                a_, b_ = 1 - a_, 1 - b_
+            pt = vs[0] + (vs[1] - vs[0]) * a_ + (vs[2] - vs[0]) * b_
+            if leaf is leafR and (pt - loc_l).length < 0.0045:
+                continue
+            r = 0.00008 + 0.0005 * rng.random() ** 2.5
+            if any((pt - q).length < (r + rq) * 1.3 for q, rq in placed):
+                continue
+            placed.append((pt, r))
+            nn = poly.normal
+            o = drop_obj(f"LeafDew_{leaf.name}_{len(placed)}", 1.0, (24, 12))
             o.parent = leaf
-            o.location = lc + nn * r * 0.7
-            o.scale = (r, r, r * 0.8)
+            o.location = pt + nn * (r * 0.62 + 0.00013)
+            sq = rng.uniform(0.7, 0.85)
+            o.scale = (r * rng.uniform(1.0, 1.15), r, r * sq)
             o.rotation_euler = nn.to_track_quat("Z", "Y").to_euler()
 
     # ------------------------------------------------------------------ meadow grass field (instanced)
@@ -408,6 +432,13 @@ def build(ctx):
                 return False
         if blocks_view(poly, subj_dist):
             return False
+        # keep the sun's line of sight clear for the exit (round disc, not a blade-cut blob)
+        for f_ in (118, 124, 128):
+            cl_ = cams[f_][0]
+            for q in poly:
+                dq = q - cl_
+                if 0 < dq.length < 3.0 and dq.normalized().dot(SUN_DIR) > math.cos(math.radians(2.2)):
+                    return False
         pts.append(p); vidx.append(vi); rots.append((rx, ry, rz)); scls.append(s)
         return True
     # near field dense, far field sparser, inside a wedge in front of the camera
@@ -440,9 +471,9 @@ def build(ctx):
             o.hide_render = True; o.hide_viewport = True
         flowers.append(objs)
     frng = random.Random(33)
-    spots = [(0.07, 0.40, "dandelion_01", 0), (-0.06, 0.55, "celandine_01", 0), (0.13, 0.70, "celandine_01", 1),
-             (-0.13, 0.85, "dandelion_01", 1), (0.03, 1.05, "celandine_01", 2), (0.22, 1.25, "dandelion_01", 0),
-             (-0.20, 1.45, "celandine_01", 3), (0.10, 1.8, "dandelion_01", 1), (-0.05, 2.2, "celandine_01", 0),
+    spots = [(-0.09, 0.40, "dandelion_01", 0), (-0.06, 0.55, "celandine_01", 0), (0.13, 0.70, "celandine_01", 1),
+             (-0.13, 0.85, "dandelion_01", 1), (-0.12, 1.05, "celandine_01", 2), (0.22, 1.25, "dandelion_01", 0),
+             (-0.20, 1.45, "celandine_01", 3), (0.30, 1.8, "dandelion_01", 1), (-0.05, 2.2, "celandine_01", 0),
              (0.30, 2.0, "celandine_01", 1), (-0.32, 1.9, "dandelion_01", 0), (0.18, 0.95, "celandine_01", 0)]
     for (x, y, name, k) in spots:
         src = flowers[0 if name.startswith("cel") else 1][k % 5]
@@ -462,8 +493,8 @@ def build(ctx):
     C.assign(gp, gm)
 
     # ------------------------------------------------------------------ pollen motes
-    mo, mmod = L.motes("Pollen", 700, (-0.06, -0.12, 0.03), (0.12, 0.7, 0.15), random.Random(4),
-                       r_range=(0.00003, 0.00009), strength=9.0, drift=(0.003, -0.002, 0.004), wobble=0.003, clock=clock)
+    mo, mmod = L.motes("Pollen", 1300, (-0.06, -0.12, 0.03), (0.12, 0.7, 0.15), random.Random(4),
+                       r_range=(0.00003, 0.00009), strength=12.0, color=(1.0, 0.68, 0.32), drift=(0.003, -0.002, 0.004), wobble=0.003, clock=clock)
     frames_tau = [(f, W.tau(f / 24.0)) for f in range(ctx.f0 - 2, ctx.f1 + 3)]
     L.key_clock(clock, frames_tau)
     mo.cycles.use_motion_blur = False

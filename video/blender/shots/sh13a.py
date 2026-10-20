@@ -17,6 +17,14 @@ LENS = 35.0
 SENSOR = 36.0
 
 
+def hgt(x, y):
+    """Meadow terrain height: flat where the glide happens, gentle swells further out."""
+    from mathutils import noise as mn
+    d = min(1.0, max(0.0, (y - 3.0)) / 25.0 + max(0.0, abs(x) - 6.0) / 30.0)
+    return d * (1.1 * mn.noise(Vector((x * 0.035, y * 0.035, 1.7))) + 0.35 * mn.noise(Vector((x * 0.1, y * 0.1, 4.1)))) + \
+        0.05 * mn.noise(Vector((x * 0.5, y * 0.5, 9.0)))
+
+
 def cam_basis(yaw, pitch, roll=0.0):
     return Euler((math.radians(90 + pitch), math.radians(roll), math.radians(yaw)), "XYZ")
 
@@ -34,7 +42,7 @@ def build(ctx):
         y = 0.55 * (t - T0) - 0.12 * max(0.0, t - T_RISE) * C.remap(t, T_RISE, T_RISE + 3.0)
         x = 0.16 * math.sin((t - T0) * 0.55) - 0.10
         rise = C.remap(t, T_RISE, T_RISE + 3.6, C.smoother)
-        z = 0.30 + 1.15 * rise + 0.012 * math.sin((t - T0) * 1.7)
+        z = hgt(x, y) + 0.30 + 1.15 * rise + 0.012 * math.sin((t - T0) * 1.7)
         pitch = 2.5 - 9.0 * rise
         yaw = -8.0 + 3.0 * math.sin((t - T0) * 0.32) + 7.0 * rise
         roll = 0.6 * math.sin((t - T0) * 0.8)
@@ -68,9 +76,9 @@ def build(ctx):
                       math.sin(math.radians(SUN_ELEV))))
     rot = L.hdri_rot_for_sun(HDRI_SUN_TEX, SUN_AZ)
     L.world_hdri_sundisc(C.ph_hdri(HDRI, "4k"), rot_z_deg=rot, sun_dir=sun_dir, clamp=30.0, disc_deg=0.53,
-                         disc_radiance=6000.0, disc_color=(1.0, 0.72, 0.42), tint=(0.98, 0.78, 0.55), saturation=1.15)
+                         disc_radiance=6000.0, disc_color=(1.0, 0.72, 0.42), tint=(0.98, 0.72, 0.48), saturation=1.2)
     sun = C.sun(elev_deg=SUN_ELEV, azim_deg=SUN_AZ + 90, strength=26.0, kelvin_k=3000, angle_deg=0.6)
-    sun.data.color = (1.0, 0.68, 0.36)
+    sun.data.color = (1.0, 0.62, 0.30)
     sun.visible_glossy = False
     sc.view_settings.exposure = -0.65
 
@@ -98,7 +106,7 @@ def build(ctx):
     nt.links.new(tc.outputs["Object"], nz2.inputs["Vector"])
     patch = L.math_node(nt, "MULTIPLY_ADD", nz2.outputs["Fac"], 1.6, -0.15, clamp=True)
     al2 = L.math_node(nt, "MULTIPLY", alpha, patch)
-    al3 = L.math_node(nt, "MULTIPLY", al2, 0.93)
+    al3 = L.math_node(nt, "MULTIPLY", al2, 0.72)
     nt.links.new(al3, p.inputs["Alpha"])
     p.inputs["Base Color"].default_value = (0.5, 0.5, 0.5, 1)
     C.assign(cl, m)
@@ -116,13 +124,15 @@ def build(ctx):
         for kp in fc.keyframe_points:
             kp.interpolation = "LINEAR"
 
-    # ------------------------------------------------------------------ ground
-    bpy.ops.mesh.primitive_plane_add(size=1.0, location=(0, 40, 0))
-    gp = bpy.context.object
-    gp.scale = (160, 160, 1)
+    # ------------------------------------------------------------------ ground: gently rolling terrain
+    bm = bmesh.new()
+    bmesh.ops.create_grid(bm, x_segments=220, y_segments=220, size=80.0, calc_uvs=True)
+    for v in bm.verts:
+        v.co.y += 40.0
+        v.co.z = hgt(v.co.x, v.co.y)
+    gp = L.bm_to_obj("Ground", bm, [], smooth=True)
     gm = C.mat_from_textures("Ground", C.ph_texture("sparse_grass", "2k"), scale=60.0, base_tint=(0.75, 0.72, 0.5))
     C.assign(gp, gm)
-    # UVs of a primitive plane are 0..1 -> scale=60 tiles ~2.7 m
 
     # ------------------------------------------------------------------ grass variants
     rng = random.Random(1301)
@@ -169,8 +179,9 @@ def build(ctx):
             ptop = p + Vector((0, 0, 0.5))
             if not (visible(p, max_dist=40) or visible(ptop, max_dist=40)):
                 continue
+            p.z = hgt(p.x, p.y) - 0.01
             pts.append(p); vidx.append(prng.randrange(nvar))
-            rots.append((prng.uniform(-0.15, 0.15), prng.uniform(-0.15, 0.15), prng.uniform(0, 6.283)))
+            rots.append((prng.gauss(0.08, 0.16), prng.gauss(0.0, 0.16), prng.uniform(0, 6.283)))
             hn = __import__("mathutils").noise.noise(Vector((p.x * 0.35, p.y * 0.35, 7.7)))
             scls.append(prng.uniform(smin, smax) * (0.85 + 0.5 * hn))
     # Poly Haven grass clumps for body/volume, mid and far
@@ -181,6 +192,7 @@ def build(ctx):
                 continue
             if not (visible(p, max_dist=60) or visible(p + Vector((0, 0, 0.3)), max_dist=60)):
                 continue
+            p.z = hgt(p.x, p.y) - 0.01
             ppts.append(p); pvidx.append(prng.randrange(len(ph_grass)))
             prots.append((0, 0, prng.uniform(0, 6.283))); pscls.append(prng.uniform(1.0, 1.8))
     clock = L.clock_empty()
@@ -222,23 +234,29 @@ def build(ctx):
             k += 1
     nfl = k
     fpts, fvidx, frots, fscls = [], [], [], []
-    for _ in range(26000):
-        p = Vector((prng.uniform(-9, 9), prng.uniform(-0.5, 30), 0.0))
-        # flowers grow in drifts
-        if L.smoothstep(0.25, 0.6, __import__("mathutils").noise.noise(Vector((p.x * 0.25, p.y * 0.25, 3.3))) + 0.5) < prng.random() * 0.9:
+    from mathutils import noise as mn
+    groups = [list(range(0, 6)), list(range(6, 10)), list(range(10, 13)), list(range(13, 18)), list(range(18, nfl))]
+    gdens = [1.0, 1.4, 0.8, 0.9, 0.5]
+    for _ in range(46000):
+        p = Vector((prng.uniform(-12, 12), prng.uniform(-0.5, 40), 0.0))
+        # each species grows in its own drifts/patches, with bare gaps between
+        vals = [mn.noise(Vector((p.x * 0.22, p.y * 0.22, 3.3 + 11.0 * g))) for g in range(len(groups))]
+        g = max(range(len(groups)), key=lambda i: vals[i])
+        if L.smoothstep(0.12, 0.45, vals[g]) * gdens[g] < prng.random():
             continue
         if near_path(p, 0.09):
             continue
         if not visible(p + Vector((0, 0, 0.3)), max_dist=30):
             continue
-        fpts.append(p); fvidx.append(prng.randrange(nfl))
+        p.z = hgt(p.x, p.y) - 0.01
+        fpts.append(p); fvidx.append(prng.choice(groups[g]))
         frots.append((prng.uniform(-0.1, 0.1), prng.uniform(-0.1, 0.1), prng.uniform(0, 6.283))); fscls.append(prng.uniform(1.0, 1.5))
     # flowers that brush past the lens (just off the glide path at lens height)
     for (tt, side) in ((75.0, 1), (76.3, -1), (77.4, 1), (78.4, -1), (79.3, 1)):
         c, M = cams[int(tt * 24)]
         right = M @ Vector((1, 0, 0))
         p = Vector((c.x, c.y, 0)) + Vector((right.x, right.y, 0)).normalized() * (0.10 * side) + (M @ Vector((0, 0, -1))) * 0.45
-        p.z = 0.0
+        p.z = hgt(p.x, p.y)
         fpts.append(p); fvidx.append(prng.randrange(18)); frots.append((0, 0, prng.uniform(0, 6.283))); fscls.append(0.75)
     flf = L.point_cloud("FlowerField", fpts, {"vidx": ("INT", fvidx), "rot": ("FLOAT_VECTOR", frots), "scl": ("FLOAT", fscls)})
     L.gn_instancer(flf, fcol, sway=0.07, sway_scale=0.9, sway_speed=0.4, name="FlowerInst", clock=clock)
@@ -256,7 +274,7 @@ def build(ctx):
     # meadow we look across; the right side stays open toward the sun.
     def place(src, loc, s, sz=1.0):
         o = src.copy(); sc.collection.objects.link(o); o.hide_render = False; o.hide_viewport = False
-        o.location = loc
+        o.location = (loc[0], loc[1], hgt(loc[0], loc[1]) - 0.1)
         o.rotation_euler = (0, 0, trng.uniform(0, 6.28))
         o.scale = (s, s, s * sz)
     for i in range(44):
@@ -271,6 +289,15 @@ def build(ctx):
         place(shr[i % len(shr)], (trng.uniform(-14, -5) - 0.15 * (y - 18), y, 0), trng.uniform(1.1, 2.0))
     for i in range(8):
         place(shr[i % len(shr)], (trng.uniform(4, 30), trng.uniform(40, 90), 0), trng.uniform(1.0, 1.8))
+    # a continuous forest mass behind the edge (fills gaps, depth layers) and two lone meadow trees
+    for i in range(60):
+        place(trees[i % len(trees)], (trng.uniform(-110, 10), trng.uniform(95, 170), 0),
+              trng.uniform(2.6, 4.2) if i % len(trees) == 0 else trng.uniform(1.3, 2.0), trng.uniform(1.0, 1.5))
+    place(trees[0], (16, 46, 0), 3.0, 1.15)
+    place(trees[1], (-4, 62, 0), 1.6, 1.2)
+    # aerial perspective on everything far (camera-ray distance fog toward the warm horizon colour)
+    for ms_ in {m_ for o in shr + trees for m_ in o.data.materials}:
+        L.aerial_haze(ms_, color=(1.0, 0.76, 0.56), dist0=220.0, strength=2.6)
 
     # ------------------------------------------------------------------ butterflies
     brng = random.Random(8)
@@ -314,7 +341,8 @@ def build(ctx):
     # ------------------------------------------------------------------ bees hopping between flowers
     for i in range(7):
         b = L.bee(f"Bee{i}", brng)
-        base = Vector((brng.uniform(-1.2, 1.2), brng.uniform(1.5, 7.0), brng.uniform(0.25, 0.6)))
+        base = Vector((brng.uniform(-0.6, 0.6), brng.uniform(1.4, 3.2) + 0.5 * i, brng.uniform(0.3, 0.5)))
+        b.scale = (1.3, 1.3, 1.3)
         ph = [brng.uniform(0, 6.28) for _ in range(4)]
         for f in range(ctx.f0 - 2, ctx.f1 + 3):
             t = f / 24.0

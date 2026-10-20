@@ -110,7 +110,7 @@ class TimeWarp:
 
 # --------------------------------------------------------------------------- materials
 
-def mat_grass(name="GrassBlade", hue_shift=0.0, dry=0.0, fresh_tip=False):
+def mat_grass(name="GrassBlade", hue_shift=0.0, dry=0.0, fresh_tip=False, trans=0.42, vein_bump=0.25, rough=0.38, spec=0.55, sat=1.0, trans_tint=(1.7, 2.05, 0.55)):
     """Thin backlit grass blade: principled (waxy spec) + translucency, parallel veins, colour breakup
     per instance (Object Info random) and along the blade (UV.x = 0 base .. 1 tip)."""
     m, nt, p = C.new_mat(name)
@@ -127,7 +127,9 @@ def mat_grass(name="GrassBlade", hue_shift=0.0, dry=0.0, fresh_tip=False):
     cr.elements[1].position = 0.55
     cr.elements[1].color = (0.13, 0.26, 0.04, 1)
     e = cr.elements.new(0.95); e.color = (0.17, 0.27, 0.05, 1)
-    e = cr.elements.new(1.0); e.color = (0.32, 0.26, 0.09, 1) if not fresh_tip else (0.15, 0.27, 0.05, 1)
+    if fresh_tip:
+        e = cr.elements.new(0.985); e.color = (0.17, 0.30, 0.05, 1)
+    e = cr.elements.new(1.0); e.color = (0.32, 0.26, 0.09, 1)
     # blade coordinate perturbed by instance random so tips differ
     jit = math_node(nt, "MULTIPLY", oi.outputs["Random"], 0.08, (-1000, 100))
     sx = math_node(nt, "ADD", sep.outputs[0], jit, (-950, 200))
@@ -166,30 +168,35 @@ def mat_grass(name="GrassBlade", hue_shift=0.0, dry=0.0, fresh_tip=False):
         nt.links.new(base, dmix.inputs[6]); dmix.inputs[7].default_value = (0.36, 0.28, 0.12, 1)
         base = dmix.outputs[2]
     nt.links.new(base, p.inputs["Base Color"])
-    p.inputs["Roughness"].default_value = 0.38
-    p.inputs["Specular IOR Level"].default_value = 0.55
+    p.inputs["Roughness"].default_value = rough
+    p.inputs["Specular IOR Level"].default_value = spec
+    hsv.inputs["Saturation"].default_value = sat
     # parallel veins as bump: UV.y across the blade (0..1)
     veins = math_node(nt, "MULTIPLY", sep.outputs[1], 11.0 * math.pi, (-1000, -800))
     vs = math_node(nt, "SINE", veins, None, (-850, -800))
     va = math_node(nt, "ABSOLUTE", vs, None, (-700, -800))
     bump = node(nt, "ShaderNodeBump", (-300, -600))
-    bump.inputs["Strength"].default_value = 0.25
+    bump.inputs["Strength"].default_value = vein_bump
     bump.inputs["Distance"].default_value = 0.00004
-    nt.links.new(va, bump.inputs["Height"])
+    # midrib crease: a groove along the blade centre
+    vc_ = math_node(nt, "SUBTRACT", sep.outputs[1], 0.5)
+    vca = math_node(nt, "ABSOLUTE", vc_)
+    crease = math_node(nt, "MULTIPLY", vca, 6.0, clamp=True)
+    hsum = math_node(nt, "ADD", va, crease)
+    nt.links.new(hsum, bump.inputs["Height"])
     nt.links.new(bump.outputs[0], p.inputs["Normal"])
     # translucency (backlit glow)
     tr = node(nt, "ShaderNodeBsdfTranslucent", (0, -300))
     tmix = nt.nodes.new("ShaderNodeMix"); tmix.data_type = "RGBA"; tmix.blend_type = "MULTIPLY"; tmix.location = (-150, -300)
     tmix.inputs[0].default_value = 1.0
-    nt.links.new(base, tmix.inputs[6]); tmix.inputs[7].default_value = (1.7, 2.05, 0.55, 1)
+    nt.links.new(base, tmix.inputs[6]); tmix.inputs[7].default_value = (*trans_tint, 1)
     nt.links.new(tmix.outputs[2], tr.inputs["Color"])
     nt.links.new(bump.outputs[0], tr.inputs["Normal"])
     ms = node(nt, "ShaderNodeMixShader", (250, 0))
     # translucency only where the camera sees the blade directly; indirect paths treat blades as opaque
     # (visually identical at this scale, saves ~15 % of render time in dense grass)
     lpn = node(nt, "ShaderNodeLightPath", (0, 300))
-    trf = math_node(nt, "MULTIPLY", lpn.outputs["Is Camera Ray"],
-                    0.0 if __import__("os").environ.get("S1_NOTRANS") == "1" else 0.42, (150, 300))
+    trf = math_node(nt, "MULTIPLY", lpn.outputs["Is Camera Ray"], trans, (150, 300))
     nt.links.new(trf, ms.inputs[0])
     nt.links.new(p.outputs[0], ms.inputs[1])
     nt.links.new(tr.outputs[0], ms.inputs[2])
@@ -963,7 +970,7 @@ def diffusion_filter(cam, amount=0.035, rough=0.22, wide_amount=0.012, wide_roug
 
 
 def world_hdri_sundisc(path, rot_z_deg, sun_dir, clamp=14.0, disc_deg=0.53, disc_radiance=2500.0,
-                       disc_color=(1.0, 0.8, 0.55), strength=1.0, tint=(1, 1, 1), saturation=1.0):
+                       disc_color=(1.0, 0.8, 0.55), strength=1.0, tint=(1, 1, 1), saturation=1.0, aureole=None):
     """HDRI with its (over-large, blurred) sun clamped away, plus a crisp physical-size sun disc with limb
     darkening that only camera / glossy / refraction rays see (diffuse light comes from the sun lamp)."""
     bg = C.world_hdri(path, strength=strength, rot_z_deg=rot_z_deg, tint=tint, saturation=saturation)
@@ -989,6 +996,14 @@ def world_hdri_sundisc(path, rot_z_deg, sun_dir, clamp=14.0, disc_deg=0.53, disc
     notdiff = math_node(nt, "SUBTRACT", 1.0, lp.outputs["Is Diffuse Ray"])
     dm = math_node(nt, "MULTIPLY", disc, notdiff)
     dv = math_node(nt, "MULTIPLY", dm, disc_radiance)
+    if aureole:
+        # solar aureole: forward scattering in the dawn haze, radiance ~ peak * exp(-theta/theta0)
+        th = math_node(nt, "DIVIDE", ac, math.radians(aureole[1]))
+        ex = math_node(nt, "MULTIPLY", th, -1.0)
+        au = math_node(nt, "EXPONENT", ex)
+        aum = math_node(nt, "MULTIPLY", au, notdiff)
+        auv = math_node(nt, "MULTIPLY", aum, aureole[0])
+        dv = math_node(nt, "ADD", dv, auv)
     col = nt.nodes.new("ShaderNodeVectorMath"); col.operation = "SCALE"
     col.inputs[0].default_value = disc_color
     nt.links.new(dv, col.inputs["Scale"])
@@ -1046,8 +1061,8 @@ def mat_leaf(name="Seedling_leaf"):
     nz.inputs["Detail"].default_value = 6.0
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
     ramp = node(nt, "ShaderNodeValToRGB", (-650, 300))
-    ramp.color_ramp.elements[0].color = (0.050, 0.16, 0.022, 1)
-    ramp.color_ramp.elements[1].color = (0.095, 0.24, 0.035, 1)
+    ramp.color_ramp.elements[0].color = (0.085, 0.22, 0.028, 1)
+    ramp.color_ramp.elements[1].color = (0.15, 0.31, 0.045, 1)
     nt.links.new(nz.outputs["Fac"], ramp.inputs[0])
     vc = nt.nodes.new("ShaderNodeMix"); vc.data_type = "RGBA"; vc.location = (-350, 300)
     nt.links.new(major, vc.inputs[0])
@@ -1074,14 +1089,14 @@ def mat_leaf(name="Seedling_leaf"):
     # translucency: veins block light
     tdark = math_node(nt, "MULTIPLY_ADD", veins, -0.6, 1.0)
     tcol = nt.nodes.new("ShaderNodeVectorMath"); tcol.operation = "MULTIPLY"; tcol.location = (0, 0)
-    nt.links.new(ramp.outputs[0], tcol.inputs[0]); tcol.inputs[1].default_value = (2.6, 2.6, 1.1)
+    nt.links.new(ramp.outputs[0], tcol.inputs[0]); tcol.inputs[1].default_value = (3.6, 3.4, 1.0)
     tsc = nt.nodes.new("ShaderNodeVectorMath"); tsc.operation = "SCALE"
     nt.links.new(tcol.outputs[0], tsc.inputs[0]); nt.links.new(tdark, tsc.inputs["Scale"])
     tr = node(nt, "ShaderNodeBsdfTranslucent", (300, -150))
     nt.links.new(tsc.outputs[0], tr.inputs["Color"])
     nt.links.new(bump.outputs[0], tr.inputs["Normal"])
     ms = node(nt, "ShaderNodeMixShader", (500, 0))
-    ms.inputs[0].default_value = 0.4
+    ms.inputs[0].default_value = 0.55
     nt.links.new(p.outputs[0], ms.inputs[1]); nt.links.new(tr.outputs[0], ms.inputs[2])
     nt.links.new(ms.outputs[0], out.inputs["Surface"])
     return m
@@ -1315,3 +1330,22 @@ def pappus(name, col=None):
     m1 = C.principled(name + "_fil", base=(0.95, 0.93, 0.88), rough=0.4, transmission=0.3)
     m2 = C.principled(name + "_ach", base=(0.25, 0.15, 0.06), rough=0.6)
     return bm_to_obj(name, bm, [m1, m2], smooth=False, col=col)
+
+
+def aerial_haze(mat, color=(1.0, 0.8, 0.6), dist0=300.0, strength=1.0):
+    """Cheap aerial perspective: blend the surface toward a warm haze emission with camera distance."""
+    nt = mat.node_tree
+    out = next((n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"), None)
+    if out is None or not out.inputs["Surface"].links:
+        return
+    src = out.inputs["Surface"].links[0].from_socket
+    cd = nt.nodes.new("ShaderNodeCameraData")
+    k = math_node(nt, "DIVIDE", cd.outputs["View Distance"], -dist0)
+    e = math_node(nt, "EXPONENT", k)
+    f = math_node(nt, "SUBTRACT", 1.0, e)
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (*color, 1)
+    em.inputs["Strength"].default_value = strength
+    mx = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(f, mx.inputs[0]); nt.links.new(src, mx.inputs[1]); nt.links.new(em.outputs[0], mx.inputs[2])
+    nt.links.new(mx.outputs[0], out.inputs["Surface"])
