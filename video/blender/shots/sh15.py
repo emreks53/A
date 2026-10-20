@@ -697,3 +697,1460 @@ def ensure_design():
 if __name__ == "__main__" and os.environ.get("SH15_DESIGN") == "1":
     design_main()
     sys.exit(0)
+
+
+# ============================================================================ SCENE (main process)
+
+T_CUT_B, T_CUT_C, T_CUT_D, T_CUT_E = C.f2t(2722), C.f2t(2778), C.f2t(2814), C.f2t(2879)
+
+# room layout (table top at z = 0)
+WALL_BACK_Y = 0.40
+WALL_LEFT_X = -0.95
+WALL_THICK = 0.45
+WIN_Y0, WIN_Y1 = -0.62, -0.02
+WIN_Z0, WIN_Z1 = 0.32, 1.42
+TABLE_X0, TABLE_X1, TABLE_Y0 = -0.95, 1.15, -0.58
+FLOOR_Z = -0.74
+SUN_DIR = Vector((0.80, 0.30, -0.52)).normalized()
+SUN_K = 4300
+RAHLE_POS = Vector((-0.21, -0.03, 0.0))
+BETA = math.radians(40)
+RAHLE_TB = 0.016
+SOZ_POS = Vector((0.17, -0.07, 0.0))   # closed Sozler lying on the table (camA)
+SOZ_YAW = math.radians(-9)
+
+# ----------------------------------------------------------------------------- node helpers
+
+def NN(nt, typ, loc=(0, 0), **props):
+    n = nt.nodes.new(typ)
+    n.location = loc
+    for k, v in props.items():
+        setattr(n, k, v)
+    return n
+
+
+def LK(nt, a, b):
+    nt.links.new(a, b)
+
+
+def img_node(nt, path, noncolor=False, vec=None, proj="FLAT", blend=0.0, interp="Linear", ext="REPEAT"):
+    n = nt.nodes.new("ShaderNodeTexImage")
+    n.image = bpy.data.images.load(path, check_existing=True)
+    if noncolor:
+        n.image.colorspace_settings.name = "Non-Color"
+    n.projection = proj
+    n.projection_blend = blend
+    n.interpolation = interp
+    n.extension = ext
+    if vec is not None:
+        LK(nt, vec, n.inputs["Vector"])
+    return n
+
+
+def math_node(nt, op, a=None, b=None, va=None, vb=None, clamp=False):
+    n = nt.nodes.new("ShaderNodeMath")
+    n.operation = op
+    n.use_clamp = clamp
+    if a is not None:
+        LK(nt, a, n.inputs[0])
+    elif va is not None:
+        n.inputs[0].default_value = va
+    if b is not None:
+        LK(nt, b, n.inputs[1])
+    elif vb is not None:
+        n.inputs[1].default_value = vb
+    return n.outputs[0]
+
+
+def maprange(nt, x, a, b, c, d, clamp=True, interp="LINEAR"):
+    n = nt.nodes.new("ShaderNodeMapRange")
+    n.interpolation_type = interp
+    n.clamp = clamp
+    LK(nt, x, n.inputs["Value"])
+    n.inputs["From Min"].default_value = a
+    n.inputs["From Max"].default_value = b
+    n.inputs["To Min"].default_value = c
+    n.inputs["To Max"].default_value = d
+    return n.outputs[0]
+
+
+def mixrgb(nt, fac, a, b, blend="MIX"):
+    n = nt.nodes.new("ShaderNodeMix")
+    n.data_type = "RGBA"
+    n.blend_type = blend
+    if isinstance(fac, (int, float)):
+        n.inputs[0].default_value = fac
+    else:
+        LK(nt, fac, n.inputs[0])
+    for sock, v in ((n.inputs[6], a), (n.inputs[7], b)):
+        if isinstance(v, (tuple, list)):
+            sock.default_value = (*v[:3], 1) if len(v) == 3 else v
+        else:
+            LK(nt, v, sock)
+    return n.outputs[2]
+
+
+def noise(nt, vec, scale, detail=2.0, rough=0.5, dim="3D", w=None):
+    n = nt.nodes.new("ShaderNodeTexNoise")
+    n.noise_dimensions = dim
+    n.inputs["Scale"].default_value = scale
+    n.inputs["Detail"].default_value = detail
+    n.inputs["Roughness"].default_value = rough
+    if vec is not None:
+        LK(nt, vec, n.inputs["Vector"])
+    if w is not None:
+        n.inputs["W"].default_value = w
+    return n
+
+
+def new_mat(name):
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    return m, nt, out
+
+
+def principled(nt, **inputs):
+    p = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    for k, v in inputs.items():
+        sock = p.inputs[k]
+        if isinstance(v, bpy.types.NodeSocket):
+            LK(nt, v, sock)
+        elif isinstance(v, (tuple, list)):
+            sock.default_value = (*v, 1) if len(v) == 3 else v
+        else:
+            sock.default_value = v
+    return p
+
+
+def srgb(h):
+    h = h.lstrip("#")
+    c = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+    return tuple(x / 12.92 if x <= 0.04045 else ((x + 0.055) / 1.055) ** 2.4 for x in c)
+
+
+# ----------------------------------------------------------------------------- materials
+
+LEATHER_RGB = srgb("#7A141A")
+GOLD_RGB = (0.93, 0.68, 0.33)
+PAPER_RGB = srgb("#EEE4CF")
+_TEX = {}
+
+
+def tex(name, res="2k"):
+    if (name, res) not in _TEX:
+        _TEX[(name, res)] = C.ph_texture(name, res)
+    return _TEX[(name, res)]
+
+
+def leather_coll(res="2k"):
+    files = C._ph_files("leather_red_03")
+    u = files["coll1"][res]["jpg"]["url"]
+    return C._curl(u, os.path.join(C.ASSETS, "polyhaven", "tex", "leather_red_03", os.path.basename(u)))
+
+
+def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
+    """Red bonded-leather binding with hot-stamped, slightly debossed gold foil from `mask`."""
+    m, nt, out = new_mat(name)
+    t = tex("leather_red_03")
+    uvl = NN(nt, "ShaderNodeUVMap", uv_map="uvl")
+    mp = NN(nt, "ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (5.5, 5.5, 5.5)          # 1 UV unit = 1 m -> grain tile ~18 cm
+    mp.inputs["Location"].default_value = (seed * 0.37, seed * 0.61, 0)
+    LK(nt, uvl.outputs[0], mp.inputs["Vector"])
+    col = img_node(nt, leather_coll(), vec=mp.outputs[0])
+    rough = img_node(nt, t["rough"], True, vec=mp.outputs[0])
+    nor = img_node(nt, t["nor"], True, vec=mp.outputs[0])
+    lum = NN(nt, "ShaderNodeRGBToBW")
+    LK(nt, col.outputs[0], lum.inputs[0])
+    var = maprange(nt, lum.outputs[0], 0.04, 0.16, 0.78, 1.22)
+    geo = NN(nt, "ShaderNodeNewGeometry")
+    # large-scale tone variation (handling, dye)
+    big = noise(nt, geo.outputs["Position"], 9.0, 3.0, 0.55)
+    bigv = maprange(nt, big.outputs[0], 0.35, 0.65, 0.88, 1.10)
+    base = mixrgb(nt, 1.0, tuple(c * tint for c in LEATHER_RGB), var, "MULTIPLY")
+    base = mixrgb(nt, 1.0, base, bigv, "MULTIPLY")
+    # worn edges: rubbed lighter / browner
+    pt = maprange(nt, geo.outputs["Pointiness"], 0.505, 0.56, 0.0, 1.0)
+    wn = noise(nt, geo.outputs["Position"], 180.0, 4.0, 0.6)
+    wear = math_node(nt, "MULTIPLY", pt, maprange(nt, wn.outputs[0], 0.4, 0.62, 0.15, 1.0))
+    base = mixrgb(nt, wear, base, srgb("#8E3A30"))
+    r = maprange(nt, rough.outputs[0], 0.25, 0.75, 0.36, 0.58)
+    r = math_node(nt, "ADD", r, math_node(nt, "MULTIPLY", wear, vb=0.12))
+    nm = NN(nt, "ShaderNodeNormalMap")
+    nm.inputs["Strength"].default_value = 0.85
+    LK(nt, nor.outputs[0], nm.inputs["Color"])
+    leather = principled(nt, **{"Base Color": base, "Roughness": r, "Normal": nm.outputs[0],
+                                "Specular IOR Level": 0.55, "Coat Weight": 0.18, "Coat Roughness": 0.32,
+                                "Sheen Weight": 0.25, "Sheen Roughness": 0.4, "Sheen Tint": (1.0, 0.75, 0.72)})
+    if not (mask and foil):
+        LK(nt, leather.outputs[0], out.inputs["Surface"])
+        return m
+    uvm = NN(nt, "ShaderNodeUVMap", uv_map=uv_mask)
+    mk = img_node(nt, mask, True, vec=uvm.outputs[0], ext="CLIP", interp="Cubic")
+    # foil breakup: irregular edge + tiny missing specks
+    en = noise(nt, geo.outputs["Position"], 2600.0, 2.0, 0.5)
+    m_e = math_node(nt, "ADD", mk.outputs[0], maprange(nt, en.outputs[0], 0.3, 0.7, -0.16, 0.16))
+    foil_f = maprange(nt, m_e, 0.40, 0.62, 0.0, 1.0, interp="SMOOTHSTEP")
+    sp = noise(nt, geo.outputs["Position"], 1400.0, 1.0, 0.5)
+    holes = maprange(nt, sp.outputs[0], 0.66, 0.70, 0.0, 0.85)
+    foil_f = math_node(nt, "MULTIPLY", foil_f, math_node(nt, "SUBTRACT", va=1.0, b=holes), clamp=True)
+    # deboss: foil areas pressed ~0.12 mm into the leather; grain flattened under the foil
+    bump = NN(nt, "ShaderNodeBump")
+    bump.invert = True
+    bump.inputs["Strength"].default_value = 0.9
+    bump.inputs["Distance"].default_value = 0.00012
+    LK(nt, mk.outputs[0], bump.inputs["Height"])
+    nmix = NN(nt, "ShaderNodeMix")
+    nmix.data_type = "VECTOR"
+    LK(nt, math_node(nt, "MULTIPLY", foil_f, vb=0.75), nmix.inputs[0])
+    LK(nt, nm.outputs[0], nmix.inputs[4])
+    LK(nt, geo.outputs["Normal"], nmix.inputs[5])
+    LK(nt, nmix.outputs[1], bump.inputs["Normal"])
+    LK(nt, bump.outputs[0], leather.inputs["Normal"])
+    gn = noise(nt, geo.outputs["Position"], 900.0, 3.0, 0.6)
+    gr = maprange(nt, gn.outputs[0], 0.3, 0.7, 0.14, 0.30)
+    gcol = mixrgb(nt, maprange(nt, gn.outputs[0], 0.3, 0.7, 0.0, 1.0), GOLD_RGB, (0.80, 0.56, 0.25))
+    gold = principled(nt, **{"Base Color": gcol, "Metallic": 1.0, "Roughness": gr, "Normal": bump.outputs[0],
+                             "Specular Tint": (1.0, 0.9, 0.7)})
+    mix = NN(nt, "ShaderNodeMixShader")
+    LK(nt, foil_f, mix.inputs[0])
+    LK(nt, leather.outputs[0], mix.inputs[1])
+    LK(nt, gold.outputs[0], mix.inputs[2])
+    LK(nt, mix.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def mat_page_edge(name="page_edge", dark=1.0):
+    """Edges of a stacked text block: cream with per-leaf striation (attribute 'layer' = leaf index)."""
+    m, nt, out = new_mat(name)
+    at = NN(nt, "ShaderNodeAttribute", attribute_name="layer")
+    geo = NN(nt, "ShaderNodeNewGeometry")
+    lay = at.outputs["Fac"]
+    fl = math_node(nt, "FLOOR", lay)
+    cmb = NN(nt, "ShaderNodeCombineXYZ")
+    LK(nt, fl, cmb.inputs[0])
+    wn = NN(nt, "ShaderNodeTexWhiteNoise", noise_dimensions="1D")
+    LK(nt, fl, wn.inputs["W"])
+    per = maprange(nt, wn.outputs["Value"], 0, 1, 0.86, 1.03)
+    band = noise(nt, None, 1.0, 2.0, 0.5, dim="1D")
+    LK(nt, math_node(nt, "MULTIPLY", lay, vb=0.045), band.inputs["W"])
+    bandv = maprange(nt, band.outputs[0], 0.35, 0.65, 0.93, 1.04)
+    fr = math_node(nt, "FRACT", lay)
+    gap = maprange(nt, math_node(nt, "ABSOLUTE", math_node(nt, "SUBTRACT", fr, vb=0.5)), 0.38, 0.5, 1.0, 0.8)
+    dirt = noise(nt, geo.outputs["Position"], 60.0, 4.0, 0.6)
+    dirtv = maprange(nt, dirt.outputs[0], 0.4, 0.7, 1.0, 0.9)
+    v = math_node(nt, "MULTIPLY", math_node(nt, "MULTIPLY", per, bandv), math_node(nt, "MULTIPLY", gap, dirtv))
+    base = mixrgb(nt, 1.0, tuple(c * 0.90 * dark for c in PAPER_RGB), v, "MULTIPLY")
+    bmp = NN(nt, "ShaderNodeBump")
+    bmp.inputs["Strength"].default_value = 0.25
+    bmp.inputs["Distance"].default_value = 0.00005
+    LK(nt, math_node(nt, "MULTIPLY", per, gap), bmp.inputs["Height"])
+    p = principled(nt, **{"Base Color": base, "Roughness": 0.78, "Normal": bmp.outputs[0],
+                          "Subsurface Weight": 0.08, "Subsurface Radius": (0.004, 0.003, 0.002), "Subsurface Scale": 0.5})
+    LK(nt, p.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def _paper_and_ink(nt, mask_out, geo, tone=1.0):
+    """Returns (base_color_socket, roughness_socket, ink_factor_socket)."""
+    pn = noise(nt, geo.outputs["Position"], 14.0, 3.0, 0.55)
+    tonev = maprange(nt, pn.outputs[0], 0.35, 0.65, 0.95, 1.03)
+    paper = mixrgb(nt, 1.0, tuple(c * tone for c in PAPER_RGB), tonev, "MULTIPLY")
+    ink = maprange(nt, mask_out, 0.1, 0.9, 0.0, 0.93)
+    col = mixrgb(nt, ink, paper, (0.030, 0.027, 0.025))
+    rough = maprange(nt, ink, 0, 1, 0.62, 0.42)
+    return col, rough, ink
+
+
+def mat_page(name, img, uv="UVMap"):
+    m, nt, out = new_mat(name)
+    geo = NN(nt, "ShaderNodeNewGeometry")
+    uvn = NN(nt, "ShaderNodeUVMap", uv_map=uv)
+    mk = img_node(nt, img, True, vec=uvn.outputs[0], ext="CLIP", interp="Cubic")
+    col, rough, ink = _paper_and_ink(nt, mk.outputs[0], geo)
+    fib = noise(nt, geo.outputs["Position"], 2400.0, 2.0, 0.6)
+    bmp = NN(nt, "ShaderNodeBump")
+    bmp.inputs["Strength"].default_value = 0.06
+    LK(nt, fib.outputs[0], bmp.inputs["Height"])
+    p = principled(nt, **{"Base Color": col, "Roughness": rough, "Normal": bmp.outputs[0],
+                          "Sheen Weight": 0.15, "Sheen Roughness": 0.5})
+    LK(nt, p.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def mat_leaf(name, img_front, img_back):
+    """Single sheet: recto on the front face, verso (mirrored) on the back face, with translucency
+    that lets the other side's print show through when backlit."""
+    m, nt, out = new_mat(name)
+    geo = NN(nt, "ShaderNodeNewGeometry")
+    uvn = NN(nt, "ShaderNodeUVMap", uv_map="UVMap")
+    sep = NN(nt, "ShaderNodeSeparateXYZ")
+    LK(nt, uvn.outputs[0], sep.inputs[0])
+    cmb = NN(nt, "ShaderNodeCombineXYZ")
+    LK(nt, math_node(nt, "SUBTRACT", va=1.0, b=sep.outputs[0]), cmb.inputs[0])
+    LK(nt, sep.outputs[1], cmb.inputs[1])
+    f = img_node(nt, img_front, True, vec=uvn.outputs[0], ext="CLIP", interp="Cubic")
+    b = img_node(nt, img_back, True, vec=cmb.outputs[0], ext="CLIP", interp="Cubic")
+    bf = geo.outputs["Backfacing"]
+    this = NN(nt, "ShaderNodeMix"); this.data_type = "FLOAT"
+    LK(nt, bf, this.inputs[0]); LK(nt, f.outputs[0], this.inputs[2]); LK(nt, b.outputs[0], this.inputs[3])
+    other = NN(nt, "ShaderNodeMix"); other.data_type = "FLOAT"
+    LK(nt, bf, other.inputs[0]); LK(nt, b.outputs[0], other.inputs[2]); LK(nt, f.outputs[0], other.inputs[3])
+    col, rough, ink = _paper_and_ink(nt, this.outputs[0], geo)
+    p = principled(nt, **{"Base Color": col, "Roughness": rough, "Sheen Weight": 0.15})
+    tcol = mixrgb(nt, maprange(nt, other.outputs[0], 0.1, 0.9, 0.0, 0.55), tuple(c * 0.9 for c in PAPER_RGB), (0.1, 0.09, 0.08))
+    tr = NN(nt, "ShaderNodeBsdfTranslucent")
+    LK(nt, tcol, tr.inputs["Color"])
+    mix = NN(nt, "ShaderNodeMixShader")
+    mix.inputs[0].default_value = 0.22
+    LK(nt, p.outputs[0], mix.inputs[1]); LK(nt, tr.outputs[0], mix.inputs[2])
+    LK(nt, mix.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def mat_headband(name="headband"):
+    m, nt, out = new_mat(name)
+    geo = NN(nt, "ShaderNodeNewGeometry")
+    w = NN(nt, "ShaderNodeTexWave")
+    w.wave_type = "BANDS"
+    w.bands_direction = "X"
+    w.inputs["Scale"].default_value = 260.0
+    LK(nt, geo.outputs["Position"], w.inputs["Vector"])
+    col = mixrgb(nt, maprange(nt, w.outputs["Fac"], 0.45, 0.55, 0, 1), srgb("#7E1D20"), srgb("#E3D3A6"))
+    p = principled(nt, **{"Base Color": col, "Roughness": 0.55, "Sheen Weight": 0.6})
+    LK(nt, p.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), relief=None, relief_depth=0.0025,
+             coat=0.0, grain_rot=0.0, uv_relief="uvr", sat=1.0, wear=0.0):
+    m, nt, out = new_mat(name)
+    t = tex(tname)
+    tc = NN(nt, "ShaderNodeTexCoord")
+    mp = NN(nt, "ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (1 / tile, 1 / tile, 1 / tile)
+    mp.inputs["Rotation"].default_value = (0, 0, grain_rot)
+    LK(nt, tc.outputs["Object"], mp.inputs["Vector"])
+    d = img_node(nt, t["diff"], vec=mp.outputs[0], proj="BOX", blend=0.25)
+    r = img_node(nt, t["rough"], True, vec=mp.outputs[0], proj="BOX", blend=0.25)
+    n = img_node(nt, t["nor"], True, vec=mp.outputs[0], proj="BOX", blend=0.25)
+    hsv = NN(nt, "ShaderNodeHueSaturation")
+    hsv.inputs["Saturation"].default_value = sat
+    hsv.inputs["Value"].default_value = val
+    LK(nt, d.outputs[0], hsv.inputs["Color"])
+    col = mixrgb(nt, 1.0, hsv.outputs[0], tint, "MULTIPLY")
+    geo = NN(nt, "ShaderNodeNewGeometry")
+    if wear > 0:
+        pt = maprange(nt, geo.outputs["Pointiness"], 0.51, 0.58, 0.0, wear)
+        col = mixrgb(nt, pt, col, mixrgb(nt, 1.0, col, (1.7, 1.55, 1.4), "MULTIPLY"))
+    nm = NN(nt, "ShaderNodeNormalMap")
+    LK(nt, n.outputs[0], nm.inputs["Color"])
+    normal = nm.outputs[0]
+    if relief:
+        uvr = NN(nt, "ShaderNodeUVMap", uv_map=uv_relief)
+        rimg = img_node(nt, relief, True, vec=uvr.outputs[0], ext="EXTEND", interp="Cubic")
+        bmp = NN(nt, "ShaderNodeBump")
+        bmp.inputs["Strength"].default_value = 1.0
+        bmp.inputs["Distance"].default_value = relief_depth
+        LK(nt, rimg.outputs[0], bmp.inputs["Height"])
+        LK(nt, normal, bmp.inputs["Normal"])
+        normal = bmp.outputs[0]
+        # carved recesses collect dust / darker oil
+        dk = maprange(nt, rimg.outputs[0], 0.25, 0.6, 0.62, 1.0)
+        col = mixrgb(nt, 1.0, col, dk, "MULTIPLY")
+    rr = maprange(nt, r.outputs[0], 0.2, 0.8, rough[0], rough[1])
+    p = principled(nt, **{"Base Color": col, "Roughness": rr, "Normal": normal, "Coat Weight": coat,
+                          "Coat Roughness": 0.25})
+    LK(nt, p.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def mat_plaster(name="lime_plaster"):
+    m, nt, out = new_mat(name)
+    t = tex("beige_wall_001")
+    tc = NN(nt, "ShaderNodeTexCoord")
+    mp = NN(nt, "ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (0.7, 0.7, 0.7)
+    LK(nt, tc.outputs["Object"], mp.inputs["Vector"])
+    d = img_node(nt, t["diff"], vec=mp.outputs[0], proj="BOX", blend=0.3)
+    n = img_node(nt, t["nor"], True, vec=mp.outputs[0], proj="BOX", blend=0.3)
+    r = img_node(nt, t["rough"], True, vec=mp.outputs[0], proj="BOX", blend=0.3)
+    lum = NN(nt, "ShaderNodeRGBToBW")
+    LK(nt, d.outputs[0], lum.inputs[0])
+    v = maprange(nt, lum.outputs[0], 0.35, 0.65, 0.90, 1.06)
+    big = noise(nt, tc.outputs["Object"], 1.6, 4.0, 0.6)
+    bigv = maprange(nt, big.outputs[0], 0.3, 0.7, 0.90, 1.05)
+    col = mixrgb(nt, 1.0, srgb("#E6DCCB"), v, "MULTIPLY")
+    col = mixrgb(nt, 1.0, col, bigv, "MULTIPLY")
+    nm = NN(nt, "ShaderNodeNormalMap")
+    nm.inputs["Strength"].default_value = 1.2
+    LK(nt, n.outputs[0], nm.inputs["Color"])
+    tr = noise(nt, tc.outputs["Object"], 5.0, 5.0, 0.62)      # broad trowel undulation
+    bmp = NN(nt, "ShaderNodeBump")
+    bmp.inputs["Strength"].default_value = 0.35
+    bmp.inputs["Distance"].default_value = 0.004
+    LK(nt, tr.outputs[0], bmp.inputs["Height"])
+    LK(nt, nm.outputs[0], bmp.inputs["Normal"])
+    rr = maprange(nt, r.outputs[0], 0.2, 0.8, 0.82, 0.96)
+    p = principled(nt, **{"Base Color": col, "Roughness": rr, "Normal": bmp.outputs[0]})
+    LK(nt, p.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def mat_simple(name, rgb, rough=0.5, **kw):
+    m, nt, out = new_mat(name)
+    p = principled(nt, **{"Base Color": rgb, "Roughness": rough, **kw})
+    LK(nt, p.outputs[0], out.inputs["Surface"])
+    return m
+
+
+# ----------------------------------------------------------------------------- mesh helpers
+
+def bm_to_obj(bm, name, mats=(), smooth=True, sharp_angle=None):
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    ob = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(ob)
+    for mt in mats:
+        me.materials.append(mt)
+    if smooth:
+        for p in me.polygons:
+            p.use_smooth = True
+        if sharp_angle is not None:
+            try:
+                me.set_sharp_from_angle(angle=math.radians(sharp_angle))
+            except Exception:
+                pass
+    return ob
+
+
+def add_bevel(ob, width, segs=2, angle=40):
+    b = ob.modifiers.new("bevel", "BEVEL")
+    b.width = width
+    b.segments = segs
+    b.limit_method = "ANGLE"
+    b.angle_limit = math.radians(angle)
+    b.harden_normals = False
+    return b
+
+
+def offset_loop(loop, d):
+    """Offset a closed 2D loop by d along its (outward for CCW) normals."""
+    n = len(loop)
+    out = []
+    for i in range(n):
+        a = Vector(loop[i - 1]); b = Vector(loop[i]); c = Vector(loop[(i + 1) % n])
+        t = (c - a)
+        if t.length < 1e-12:
+            t = Vector((1, 0))
+        t.normalize()
+        nrm = Vector((t.y, -t.x))
+        out.append(tuple(b + nrm * d))
+    return out
+
+
+# ----------------------------------------------------------------------------- closed book
+
+def hub_profile(y):
+    h = 0.0
+    for hy in HUBS:
+        x = (y - hy) / (HUB_W / 2)
+        if abs(x) < 1.25:
+            h = max(h, HUB_H * (max(0.0, 1 - x * x) ** 0.6))
+    return h
+
+
+def book_ys():
+    ys = {0.0, BK_H}
+    for k in range(0, 49):
+        ys.add(BK_H * k / 48)
+    for hy in HUBS:
+        for k in range(-8, 9):
+            ys.add(hy + k * HUB_W * 0.08)
+    return sorted(y for y in ys if 0 <= y <= BK_H)
+
+
+def cover_loop(T):
+    """Closed cross-section loop of the cover shell with region tags per point.
+    Returns list of (x, z, tag, is_spine_outer, arc_len_on_spine or None)."""
+    bt = BK_BT
+    W = BK_WF
+    rc = 0.0009
+    g0, g1, gd = 0.0, 0.0062, 0.0011
+    pts = []
+    # back board outer (z=0) from fore-edge to groove
+    pts.append((W - rc, 0.0, "back"))
+    for k in range(1, 6):
+        x = W - rc - (W - rc - g1) * k / 5
+        pts.append((x, 0.0, "back"))
+    # bottom groove
+    for k in range(1, 6):
+        t = k / 6
+        pts.append((g1 - (g1 - g0) * t, gd * math.sin(math.pi * t) ** 1.5, "groove"))
+    # spine outer arc
+    arc = spine_arc_pts(T, 40)
+    for (x, z, a) in arc:
+        pts.append((x, z, "spine", a))
+    # top groove
+    for k in range(1, 6):
+        t = k / 6
+        pts.append((g0 + (g1 - g0) * t, T - gd * math.sin(math.pi * t) ** 1.5, "groove"))
+    # front board outer (z=T)
+    for k in range(0, 6):
+        pts.append((g1 + (W - rc - g1) * k / 5, T, "front"))
+    # fore-edge of front board (rounded)
+    for k in range(1, 5):
+        a = math.pi / 2 * (1 - k / 4)
+        pts.append((W - rc + rc * math.cos(a), T - rc + rc * math.sin(a), "edge"))
+    pts.append((W, T - bt + rc, "edge"))
+    for k in range(1, 4):
+        a = -math.pi / 2 * k / 3
+        pts.append((W - rc + rc * math.cos(a), T - bt + rc + rc * math.sin(a), "edge"))
+    # front board inner face
+    xi = 0.0035
+    for k in range(1, 5):
+        pts.append((W - rc - (W - rc - xi) * k / 4, T - bt, "inner"))
+    # inner spine (hollow back)
+    sd = spine_bulge(T)
+    for k in range(1, 16):
+        t = k / 16
+        ang = math.pi * (1 - t)
+        pts.append((-(sd - 0.0014) * math.sin(ang) * 0.95 + xi * 0.0, T * 0.5 * (1 - math.cos(ang)) * (1 - 2 * bt / T) + bt, "inner"))
+    for k in range(0, 5):
+        pts.append((xi + (W - rc - xi) * k / 4, bt, "inner"))
+    for k in range(1, 4):
+        a = math.pi / 2 * (1 - k / 3)
+        pts.append((W - rc + rc * math.cos(a), bt - rc + rc * math.sin(a), "edge"))
+    pts.append((W, rc, "edge"))
+    for k in range(1, 4):
+        a = -math.pi / 2 * k / 3
+        pts.append((W - rc + rc * math.cos(a), rc + rc * math.sin(a), "edge"))
+    return pts
+
+
+def build_closed_book(name, idx, mats, front_mat_idx=1):
+    """Hardcover with rounded spine, French grooves, raised hubs, squares, page block, headbands.
+    Local frame: x joint->fore-edge, y tail->head, z back->front cover. Returns (root_empty, objs)."""
+    lines, T = BOOKS[idx]
+    loop = cover_loop(T)
+    ys = book_ys()
+    A = spine_arc_len(T)
+    natlas = len(BOOKS)
+    bm = bmesh.new()
+    uvb = bm.loops.layers.uv.new("uvb")
+    uvs = bm.loops.layers.uv.new("uvs")
+    uvl = bm.loops.layers.uv.new("uvl")
+    M = len(loop)
+    # outward 2D normals of the loop for hub displacement
+    pts2 = [(p[0], p[1]) for p in loop]
+    rings = []
+    perim = [0.0]
+    for i in range(1, M + 1):
+        a = pts2[i - 1]; b = pts2[i % M]
+        perim.append(perim[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+    for y in ys:
+        h = hub_profile(y)
+        ring = []
+        for i, p in enumerate(loop):
+            x, z = p[0], p[1]
+            if p[2] == "spine":
+                sd = spine_bulge(T)
+                ang = math.acos(max(-1.0, min(1.0, 1 - 2 * z / T)))
+                # outward normal of the ellipse x=-sd sin(a), z=T/2 (1-cos a)
+                ex, ez = -math.sin(ang) * (T / 2), -math.cos(ang) * sd
+                el = math.hypot(ex, ez) or 1
+                x += h * ex / el
+                z += h * ez / el
+            ring.append(bm.verts.new((x, y, z)))
+        rings.append(ring)
+    bm.verts.ensure_lookup_table()
+    tag_slot = {"back": 2, "front": front_mat_idx, "spine": 3, "groove": 0, "edge": 0, "inner": 0}
+
+    def uv_for(i, y):
+        p = loop[i]
+        u_b = p[0] / BK_WF
+        if p[2] == "back":
+            u_b = p[0] / BK_WF
+        a = p[3] if p[2] == "spine" else (0.0 if p[1] < T / 2 else A)
+        u_s = (idx + 0.5) / natlas + (a - A / 2) / (SPINE_SLOT * natlas)
+        return (u_b, y / BK_H), (u_s, y / BK_H), (perim[i], y)
+
+    for j in range(len(ys) - 1):
+        for i in range(M):
+            i2 = (i + 1) % M
+            f = bm.faces.new((rings[j][i], rings[j][i2], rings[j + 1][i2], rings[j + 1][i]))
+            ta, tb_ = loop[i][2], loop[i2][2]
+            tag = ta if ta == tb_ else ("spine" if "spine" in (ta, tb_) and "groove" not in (ta, tb_) else "groove" if "groove" in (ta, tb_) else ta)
+            if {ta, tb_} == {"back", "groove"} or {ta, tb_} == {"front", "groove"}:
+                tag = "groove"
+            f.material_index = tag_slot[tag]
+            for lp, (ii, jj) in zip(f.loops, ((i, j), (i2, j), (i2, j + 1), (i, j + 1))):
+                a, b, c = uv_for(ii, ys[jj])
+                if ii == 0 and i2 == 0:
+                    pass
+                lp[uvb] = a; lp[uvs] = b; lp[uvl] = c
+                if i2 == 0 and ii == 0 and i == M - 1:
+                    lp[uvl] = (perim[M], ys[jj])
+            if i == M - 1:
+                for lp, jj in zip(f.loops, (j, j, j + 1, j + 1)):
+                    pass
+    # caps
+    for j, sgn in ((0, -1), (len(ys) - 1, 1)):
+        f = bm.faces.new(rings[j] if sgn > 0 else rings[j][::-1])
+        f.material_index = 0
+        for lp in f.loops:
+            co = lp.vert.co
+            lp[uvl] = (co.x, co.z)
+            lp[uvb] = (co.x / BK_WF, co.z)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    shell = bm_to_obj(bm, name + "_cover", mats=mats, smooth=True, sharp_angle=50)
+    add_bevel(shell, 0.00045, 2, 50)
+    # ---- page block
+    sd = spine_bulge(T)
+    z0, z1 = BK_BT + 0.0004, T - BK_BT - 0.0004
+    bm = bmesh.new()
+    lay = bm.verts.layers.float.new("layer")
+    nleaves = (z1 - z0) / 0.000105
+    prof = []
+    N = 24
+    xf_edge = BK_WF - BK_SQ
+    for k in range(N + 1):                     # fore-edge (concave), z ascending
+        t = k / N
+        z = z0 + (z1 - z0) * t
+        prof.append((xf_edge - 0.72 * sd * math.sin(math.pi * t), z))
+    for k in range(N, -1, -1):                 # spine side (convex), z descending
+        t = k / N
+        z = z0 + (z1 - z0) * t
+        prof.append((-(sd - 0.0030) * math.sin(math.pi * t) + 0.0015, z))
+    vr = []
+    for y in (BK_SQ, BK_H - BK_SQ):
+        ring = []
+        for (x, z) in prof:
+            v = bm.verts.new((x, y, z))
+            v[lay] = (z - z0) / (z1 - z0) * nleaves
+            ring.append(v)
+        vr.append(ring)
+    Mp = len(prof)
+    for i in range(Mp):
+        i2 = (i + 1) % Mp
+        bm.faces.new((vr[0][i], vr[0][i2], vr[1][i2], vr[1][i]))
+    bm.faces.new(vr[0][::-1]); bm.faces.new(vr[1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    block = bm_to_obj(bm, name + "_block", mats=[MATS["page_edge"]], smooth=True, sharp_angle=40)
+    add_bevel(block, 0.0004, 1, 50)
+    # ---- headbands (follow the block's spine curve)
+    hbs = []
+    for y in (BK_SQ - 0.0006, BK_H - BK_SQ + 0.0006):
+        cu = bpy.data.curves.new(name + "_hb", "CURVE")
+        cu.dimensions = "3D"
+        cu.bevel_depth = 0.0011
+        cu.bevel_resolution = 2
+        sp = cu.splines.new("POLY")
+        n = 16
+        sp.points.add(n)
+        for k in range(n + 1):
+            t = 0.08 + 0.84 * k / n
+            z = z0 + (z1 - z0) * t
+            sp.points[k].co = (-(sd - 0.0030) * math.sin(math.pi * t) + 0.0028, y, z, 1)
+        ob = bpy.data.objects.new(name + "_hb", cu)
+        bpy.context.scene.collection.objects.link(ob)
+        ob.data.materials.append(MATS["headband"])
+        hbs.append(ob)
+    root = bpy.data.objects.new(name, None)
+    bpy.context.scene.collection.objects.link(root)
+    for ob in [shell, block] + hbs:
+        ob.parent = root
+    return root, [shell, block] + hbs
+
+
+MATS = {}
+
+
+# ----------------------------------------------------------------------------- rahle (carved folding stand)
+
+RAHLE_LU = RAHLE_LEN - RAHLE_LOW          # upper arm length 0.33
+RAHLE_HZ = 0.019                          # hinge zone half length
+RAHLE_LL_EXT = RAHLE_LOW + 0.014
+
+
+def rahle_hinge_z():
+    return RAHLE_LOW * math.sin(BETA) + RAHLE_TB / 2 * math.cos(BETA)
+
+
+def rahle_v0():
+    """Crotch point where the two arms' upper surfaces meet (rahle-local x=0)."""
+    return rahle_hinge_z() + (RAHLE_TB / 2) / math.cos(BETA)
+
+
+def _extrude_outline(bm, outline, t0, t1, uv, uvr_fn):
+    """Extrude a 2D (l, y) polygon between t0 and t1 into bm (ngon caps)."""
+    vb = [bm.verts.new((l, y, t0)) for (l, y) in outline]
+    vt = [bm.verts.new((l, y, t1)) for (l, y) in outline]
+    n = len(outline)
+    faces = []
+    for i in range(n):
+        i2 = (i + 1) % n
+        faces.append(bm.faces.new((vb[i], vb[i2], vt[i2], vt[i])))
+    faces.append(bm.faces.new(vb[::-1]))
+    faces.append(bm.faces.new(vt))
+    for f in faces:
+        for lp in f.loops:
+            lp[uv] = uvr_fn(lp.vert.co)
+    return faces
+
+
+def build_rahle(mat):
+    RW = RAHLE_W
+    tb = RAHLE_TB
+    zh = rahle_hinge_z()
+    objs = []
+    crest = 0.075
+    foot = 0.050
+    arch_h = 0.085
+    nseg = 7
+    seg = RW / nseg
+
+    def uvr_fn(co):
+        return ((co.x + RAHLE_LOW) / RAHLE_LEN, (co.y + RW / 2) / RW)
+
+    for side in (1, -1):
+        bm = bmesh.new()
+        uv = bm.loops.layers.uv.new("uvr")
+        # arm with ogee crest
+        arm = [(RAHLE_HZ, -RW / 2)]
+        N = 28
+        for k in range(N + 1):
+            yy = -RW / 2 + (RW / 2) * k / N
+            x = abs(yy) / (RW / 2)
+            g = (x * x * (3 - 2 * x)) ** 0.72
+            g += 0.05 * math.sin(math.pi * x) ** 2 * math.sin(3 * math.pi * x)
+            arm.append((RAHLE_LU - crest * g, yy))
+        for k in range(N - 1, -1, -1):
+            l, yy = arm[1 + k]
+            arm.append((l, -yy))
+        arm.append((RAHLE_HZ, RW / 2))
+        _extrude_outline(bm, arm, -tb / 2, tb / 2, uv, uvr_fn)
+        # leg with pointed-arch cut-out between two feet
+        leg = [(-RAHLE_HZ, -RW / 2), (-RAHLE_HZ, RW / 2), (-RAHLE_LL_EXT, RW / 2)]
+        y0 = RW / 2 - foot
+        for k in range(N + 1):
+            yy = y0 - (2 * y0) * k / N
+            x = abs(yy) / y0
+            leg.append((-RAHLE_LL_EXT + arch_h * (max(0.0, 1 - x ** 1.7)) ** 0.62, yy))
+        leg.append((-RAHLE_LL_EXT, -RW / 2))
+        _extrude_outline(bm, leg, -tb / 2, tb / 2, uv, uvr_fn)
+        # hinge knuckles: alternate segments for the two boards, rounded barrels
+        for k in range(nseg):
+            if (k % 2 == 0) != (side == 1):
+                continue
+            ya, yb = -RW / 2 + k * seg + 0.0006, -RW / 2 + (k + 1) * seg - 0.0006
+            ring_a, ring_b = [], []
+            M = 28
+            rk = 0.0118
+            for i in range(M):
+                a = 2 * math.pi * i / M
+                l, t = rk * math.cos(a), rk * 0.80 * math.sin(a)
+                ring_a.append(bm.verts.new((l, ya, t)))
+                ring_b.append(bm.verts.new((l, yb, t)))
+            fs = []
+            for i in range(M):
+                i2 = (i + 1) % M
+                fs.append(bm.faces.new((ring_a[i], ring_a[i2], ring_b[i2], ring_b[i])))
+            fs.append(bm.faces.new(ring_a[::-1])); fs.append(bm.faces.new(ring_b))
+            box = [(-RAHLE_HZ - 0.002, ya), (RAHLE_HZ + 0.002, ya), (RAHLE_HZ + 0.002, yb), (-RAHLE_HZ - 0.002, yb)]
+            fs += _extrude_outline(bm, box, -tb / 2, tb / 2, uv, uvr_fn)
+            for f in fs:
+                for lp in f.loops:
+                    lp[uv] = uvr_fn(lp.vert.co)
+        # board rotation: l -> e, y -> Y, t -> e x Y
+        e = Vector((side * math.cos(BETA), 0, math.sin(BETA)))
+        nrm = e.cross(Vector((0, 1, 0)))
+        R = Matrix((e, Vector((0, 1, 0)), nrm)).transposed()
+        # flat feet: slide vertices below the table plane back along the board
+        for v in bm.verts:
+            w = R @ v.co
+            if zh + w.z < 0:
+                l_new = (-zh - v.co.z * nrm.z) / e.z
+                v.co.x = l_new
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        ob = bm_to_obj(bm, "rahle_%s" % ("A" if side > 0 else "B"), mats=[mat], smooth=True, sharp_angle=35)
+        ob.matrix_world = Matrix.Translation(RAHLE_POS + Vector((0, 0, zh))) @ R.to_4x4()
+        add_bevel(ob, 0.0018, 3, 35)
+        objs.append(ob)
+    # wooden hinge pin ends (tiny dowel caps on the outer knuckles)
+    return objs
+
+
+# ----------------------------------------------------------------------------- open book on the rahle
+
+OB_TL = 0.0335      # left half text-block thickness (pages 1..720)
+OB_TR = 0.0034      # right half (721..end)
+OB_GH = 0.020       # gutter anchor height above the crotch
+OB_L = PAGE_W
+OB_DELTA = 0.00011  # thickness of one leaf
+LEAF_T0 = [113.02, 113.26, 113.52, 113.80]
+LEAF_DUR = [0.60, 0.60, 0.62, 0.66]
+
+
+class Half:
+    """Profile family for one half of the open book (side=+1 right, -1 left)."""
+
+    def __init__(self, side, thick, lam):
+        self.side, self.thick, self.lam = side, thick, lam
+        self.V0 = Vector((0.0, rahle_v0()))
+        self.G = self.V0 + Vector((0.0, OB_GH))
+        self.base = BETA if side > 0 else math.pi - BETA
+        n = Vector((-math.sin(BETA), math.cos(BETA))) if side > 0 else Vector((math.sin(BETA), math.cos(BETA)))
+        self.wG = (self.G - self.V0).dot(n)
+
+    def rise(self, A, lam, n=160):
+        ds = OB_L / n
+        return sum(math.sin(A * math.exp(-(i + 0.5) * ds / lam)) * ds for i in range(n))
+
+    def solve(self, target):
+        lam = self.lam
+        for _ in range(6):
+            lo, hi = -1.5, 1.5
+            if self.rise(lo, lam) <= target <= self.rise(hi, lam):
+                break
+            lam *= 1.35
+        for _ in range(50):
+            mid = (lo + hi) / 2
+            if self.rise(mid, lam) < target:
+                lo = mid
+            else:
+                hi = mid
+        return (lo + hi) / 2, lam
+
+    def theta_fn(self, q, extra=0.0):
+        target = BK_BT + q * self.thick - self.wG + extra
+        A, lam = self.solve(target)
+        sgn = 1 if self.side > 0 else -1
+        return lambda s: self.base + sgn * A * math.exp(-s / lam)
+
+
+def integrate(G, theta, ss):
+    """Points along a leaf from anchor G for arc-length samples ss (ascending, ss[0] >= 0)."""
+    pts = []
+    x, z = G.x, G.y
+    s_prev = 0.0
+    sub = 6
+    for s in ss:
+        if s > s_prev:
+            h = (s - s_prev) / sub
+            for k in range(sub):
+                sm = s_prev + (k + 0.5) * h
+                th = theta(sm)
+                x += math.cos(th) * h
+                z += math.sin(th) * h
+        pts.append((x, z))
+        s_prev = s
+    return pts
+
+
+def build_block(half, name, page_img, mat_top, mat_edge, nleaves):
+    NS, NQ = 44, 10
+    ss = [0.0015 + (OB_L - 0.0015) * (i / NS) ** 1.25 for i in range(NS + 1)]
+    profs = [integrate(half.G, half.theta_fn(q / NQ), ss) for q in range(NQ + 1)]
+    ys = [0.0, PAGE_H]
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("UVMap")
+    lay = bm.verts.layers.float.new("layer")
+    V = {}
+    for j, y in enumerate(ys):
+        for q in range(NQ + 1):
+            for i in range(NS + 1):
+                x, z = profs[q][i]
+                v = bm.verts.new((x, y, z))
+                v[lay] = q / NQ * nleaves
+                V[(i, q, j)] = v
+
+    def face(vs, slot, uvs=None):
+        f = bm.faces.new(vs)
+        f.material_index = slot
+        if uvs:
+            for lp, u in zip(f.loops, uvs):
+                lp[uv] = u
+        return f
+
+    def us(i):
+        u = ss[i] / OB_L
+        return u if half.side > 0 else 1 - u
+
+    for i in range(NS):
+        # top page (q = NQ)
+        face((V[(i, NQ, 0)], V[(i + 1, NQ, 0)], V[(i + 1, NQ, 1)], V[(i, NQ, 1)]), 0,
+             [(us(i), 0), (us(i + 1), 0), (us(i + 1), 1), (us(i), 1)])
+        face((V[(i, 0, 1)], V[(i + 1, 0, 1)], V[(i + 1, 0, 0)], V[(i, 0, 0)]), 1)
+        for q in range(NQ):
+            face((V[(i, q, 0)], V[(i + 1, q, 0)], V[(i + 1, q + 1, 0)], V[(i, q + 1, 0)]), 1)
+            face((V[(i, q + 1, 1)], V[(i + 1, q + 1, 1)], V[(i + 1, q, 1)], V[(i, q, 1)]), 1)
+    for q in range(NQ):
+        face((V[(NS, q, 0)], V[(NS, q, 1)], V[(NS, q + 1, 1)], V[(NS, q + 1, 0)]), 1)
+        face((V[(0, q + 1, 0)], V[(0, q + 1, 1)], V[(0, q, 1)], V[(0, q, 0)]), 1)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    ob = bm_to_obj(bm, name, mats=[mat_top, mat_edge], smooth=True, sharp_angle=40)
+    return ob, profs
+
+
+def leaf_shape_at(tau, th_start, th_end, s, y):
+    """Blend of start/end profile angles; the free edge leads while lifting and lags while landing,
+    the head corner leads slightly (diagonal bend), with a little flutter."""
+    u = s / OB_L
+    yy = y / PAGE_H - 0.5
+    b = tau + 0.50 * math.sin(2 * math.pi * tau) * (u - 0.42) + 0.20 * math.sin(math.pi * tau) * yy * u
+    b = max(0.0, min(1.0, b))
+    b = b * b * (3 - 2 * b)
+    th = (1 - b) * th_start + b * th_end
+    th += 0.06 * math.sin(math.pi * tau) * math.sin(2 * math.pi * (1.3 * u - 2.6 * tau)) * u * u
+    return th
+
+
+def build_leaves(halfL, halfR, mats_leaf, fps_start, fps_end):
+    """Four free leaves flipped by the breeze from the left stack onto the right stack (727..721).
+    Shape keys per frame (linear blends -> correct deformation motion blur)."""
+    NS, NY = 36, 14
+    ss = [OB_L * (i / NS) for i in range(NS + 1)]
+    ys = [PAGE_H * j / NY for j in range(NY + 1)]
+    NL = len(LEAF_T0)
+    leaves = []
+    for k in range(NL):
+        thS = halfL.theta_fn(1.0, (NL - k) * OB_DELTA)
+        thE = halfR.theta_fn(1.0, (k + 1) * OB_DELTA)
+        # precompute per-s start/end angles
+        def shape(tau):
+            pts = []
+            for y in ys:
+                th = lambda s, y=y: leaf_shape_at(tau, thS(s), thE(s), s, y)
+                row = integrate(halfL.G, th, ss)
+                pts.append([(x, y, z) for (x, z) in row])
+            return pts
+        bm = bmesh.new()
+        uv = bm.loops.layers.uv.new("UVMap")
+        base = shape(0.0)
+        V = [[bm.verts.new(base[j][i]) for i in range(NS + 1)] for j in range(NY + 1)]
+        for j in range(NY):
+            for i in range(NS):
+                f = bm.faces.new((V[j][i], V[j][i + 1], V[j + 1][i + 1], V[j + 1][i]))
+                for lp, (ii, jj) in zip(f.loops, ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))):
+                    lp[uv] = (ss[ii] / OB_L, ys[jj] / PAGE_H)
+        ob = bm_to_obj(bm, "leaf_%d" % k, mats=[mats_leaf[k]], smooth=True)
+        ob.shape_key_add(name="Basis", from_mix=False)
+        t0, dur = LEAF_T0[k], LEAF_DUR[k]
+        f_a = int(math.floor(t0 * C.FPS))
+        f_b = int(math.ceil((t0 + dur) * C.FPS)) + 1
+        kbs = []
+        for f in range(f_a, f_b + 1):
+            tau = C.smoother((f / C.FPS - t0) / dur)
+            pts = shape(tau)
+            kb = ob.shape_key_add(name="f%05d" % f, from_mix=False)
+            for j in range(NY + 1):
+                for i in range(NS + 1):
+                    kb.data[j * (NS + 1) + i].co = pts[j][i]
+            kbs.append((f, kb))
+        for idx, (f, kb) in enumerate(kbs):
+            last = idx == len(kbs) - 1
+            for ff, val in ((f - 1, 0.0), (f, 1.0)) + (() if last else ((f + 1, 0.0),)):
+                kb.value = val
+                kb.keyframe_insert("value", frame=ff)
+        ad = ob.data.shape_keys.animation_data
+        if ad and ad.action:
+            for fc in C._fcurves(ad.action):
+                for kp in fc.keyframe_points:
+                    kp.interpolation = "LINEAR"
+        leaves.append(ob)
+    return leaves
+
+
+def build_open_book(mats):
+    """Open SOZLER on the rahle (page 729 initially; 4 leaves turn to 721). Rahle-local XZ, spine
+    along +Y, then placed at RAHLE_POS with the tail toward the camera."""
+    halfL = Half(-1, OB_TL, 0.030)
+    halfR = Half(1, OB_TR, 0.012)
+    blkL, profL = build_block(halfL, "ob_blockL", None, mats["page_720"], mats["page_edge"], 720 / 2)
+    blkR, profR = build_block(halfR, "ob_blockR", None, mats["page_729"], mats["page_edge"], 30)
+    objs = [blkL, blkR]
+    # boards lying on the arms + a hollow spine shell under the gutter
+    for side, half in ((1, halfR), (-1, halfL)):
+        e = Vector((side * math.cos(BETA), math.sin(BETA)))
+        n = Vector((-side * math.sin(BETA), math.cos(BETA)))
+        u0, u1 = 0.0115, 0.0115 + BK_WF + 0.0005
+        bm = bmesh.new()
+        uvl = bm.loops.layers.uv.new("uvl")
+        corners = [half.V0 + e * u0, half.V0 + e * u1, half.V0 + e * u1 + n * BK_BT, half.V0 + e * u0 + n * BK_BT]
+        vs = []
+        for y in (-BK_SQ, PAGE_H + BK_SQ):
+            vs.append([bm.verts.new((c.x, y, c.y)) for c in corners])
+        for i in range(4):
+            i2 = (i + 1) % 4
+            bm.faces.new((vs[0][i], vs[0][i2], vs[1][i2], vs[1][i]))
+        bm.faces.new(vs[0][::-1]); bm.faces.new(vs[1])
+        for f in bm.faces:
+            for lp in f.loops:
+                lp[uvl] = (lp.vert.co.x * side + lp.vert.co.z, lp.vert.co.y)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        ob = bm_to_obj(bm, "ob_board_%d" % side, mats=[mats["leather_plain"]], smooth=True, sharp_angle=40)
+        add_bevel(ob, 0.0006, 2, 40)
+        objs.append(ob)
+    # spine shell
+    bm = bmesh.new()
+    uvl = bm.loops.layers.uv.new("uvl")
+    pr = halfR.V0 + Vector((math.cos(BETA), math.sin(BETA))) * 0.0115
+    pl = halfR.V0 + Vector((-math.cos(BETA), math.sin(BETA))) * 0.0115
+    arc = []
+    for k in range(17):
+        t = k / 16
+        p = pl.lerp(pr, t)
+        p = p + Vector((0, -0.0035 * math.sin(math.pi * t) + 0.0012))
+        arc.append(p)
+    rings = []
+    for y in (-BK_SQ + 0.0005, PAGE_H + BK_SQ - 0.0005):
+        rings.append([bm.verts.new((p.x, y, p.y)) for p in arc] + [bm.verts.new((p.x, y, p.y + 0.0015)) for p in arc[::-1]])
+    m = len(rings[0])
+    for i in range(m):
+        i2 = (i + 1) % m
+        bm.faces.new((rings[0][i], rings[0][i2], rings[1][i2], rings[1][i]))
+    bm.faces.new(rings[0][::-1]); bm.faces.new(rings[1])
+    for f in bm.faces:
+        for lp in f.loops:
+            lp[uvl] = (lp.vert.co.x, lp.vert.co.y)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    objs.append(bm_to_obj(bm, "ob_spine", mats=[mats["leather_plain"]], smooth=True))
+    leaves = build_leaves(halfL, halfR, [mats["leaf_%d" % k] for k in range(4)], 0, 0)
+    root = bpy.data.objects.new("open_book", None)
+    bpy.context.scene.collection.objects.link(root)
+    root.location = RAHLE_POS + Vector((0, -PAGE_H / 2, 0))
+    for ob in objs + leaves:
+        ob.parent = root
+    # page-number tracker on the final page (leaf 3 resting on the right stack: recto 721)
+    thE = halfR.theta_fn(1.0, 4 * OB_DELTA)
+    s_num = OB_L * ((PAGE_W - 0.015 - 0.0045) / PAGE_W)
+    p = integrate(halfR.G, thE, [s_num])[0]
+    trk = C.empty("TRK_page", (p[0], PAGE_H - 0.0135 + 0.0015, p[1] + 0.0005))
+    trk.parent = root
+    return root, objs + leaves, halfL, halfR
+
+
+# ----------------------------------------------------------------------------- room
+
+def box(name, x0, x1, y0, y1, z0, z1, mat, bevel=0.0):
+    bm = bmesh.new()
+    vs = [bm.verts.new(c) for c in ((x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0),
+                                     (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1))]
+    for f in ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
+        bm.faces.new([vs[i] for i in f])
+    ob = bm_to_obj(bm, name, mats=[mat], smooth=False)
+    if bevel:
+        add_bevel(ob, bevel, 3, 30)
+        for p in ob.data.polygons:
+            p.use_smooth = True
+        try:
+            ob.data.set_sharp_from_angle(angle=math.radians(30))
+        except Exception:
+            pass
+    return ob
+
+
+def slat(name, p0, p1, width, depth, x, mat):
+    """Wooden lattice slat in the window plane (y,z) between p0 and p1, centred at wall-depth x."""
+    p0, p1 = Vector(p0), Vector(p1)
+    d = (p1 - p0).normalized()
+    nrm = Vector((-d.y, d.x)) * (width / 2)
+    bm = bmesh.new()
+    vs = []
+    for dx in (-depth / 2, depth / 2):
+        for c in (p0 - nrm, p1 - nrm, p1 + nrm, p0 + nrm):
+            vs.append(bm.verts.new((x + dx, c.x, c.y)))
+    for f in ((0, 1, 2, 3), (7, 6, 5, 4), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (3, 7, 4, 0)):
+        bm.faces.new([vs[i] for i in f])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return bm_to_obj(bm, name, mats=[mat], smooth=False)
+
+
+def clip_segment(p, d, y0, y1, z0, z1):
+    """Intersect the infinite line p + t d with the rectangle; returns (a, b) or None."""
+    ts = []
+    for (lo, hi, pi, di) in ((y0, y1, p[0], d[0]), (z0, z1, p[1], d[1])):
+        if abs(di) < 1e-9:
+            if pi < lo or pi > hi:
+                return None
+            continue
+        ta, tb_ = (lo - pi) / di, (hi - pi) / di
+        ts.append((min(ta, tb_), max(ta, tb_)))
+    tmin = max(t[0] for t in ts); tmax = min(t[1] for t in ts)
+    if tmax <= tmin:
+        return None
+    return ((p[0] + d[0] * tmin, p[1] + d[1] * tmin), (p[0] + d[0] * tmax, p[1] + d[1] * tmax))
+
+
+def build_room(mats):
+    pl, wood_tab, floor, kafes = mats["plaster"], mats["table"], mats["floor"], mats["kafes"]
+    xo = WALL_LEFT_X - WALL_THICK
+    objs = []
+    # back wall (with return into the left-wall thickness)
+    objs.append(box("wall_back", xo, 2.6, WALL_BACK_Y, WALL_BACK_Y + 0.3, FLOOR_Z, 2.1, pl))
+    # left wall around the window opening (deep reveal), rounded lime edges
+    objs.append(box("wall_left_lo", xo, WALL_LEFT_X, -3.8, WALL_BACK_Y, FLOOR_Z, WIN_Z0, pl, 0.012))
+    objs.append(box("wall_left_hi", xo, WALL_LEFT_X, -3.8, WALL_BACK_Y, WIN_Z1, 2.1, pl, 0.012))
+    objs.append(box("wall_left_f", xo, WALL_LEFT_X, -3.8, WIN_Y0, WIN_Z0 - 0.01, WIN_Z1 + 0.01, pl, 0.012))
+    objs.append(box("wall_left_b", xo, WALL_LEFT_X, WIN_Y1, WALL_BACK_Y, WIN_Z0 - 0.01, WIN_Z1 + 0.01, pl, 0.012))
+    objs.append(box("wall_right", 2.6, 2.8, -3.8, WALL_BACK_Y + 0.3, FLOOR_Z, 2.1, pl))
+    objs.append(box("wall_front", xo, 2.8, -4.0, -3.8, FLOOR_Z, 2.1, pl))
+    objs.append(box("ceiling", xo, 2.8, -4.0, WALL_BACK_Y + 0.3, 2.1, 2.2, pl))
+    objs.append(box("floor", xo, 2.8, -4.0, WALL_BACK_Y + 0.3, FLOOR_Z - 0.05, FLOOR_Z, floor))
+    # wooden sill board in the window reveal
+    objs.append(box("win_sill", xo + 0.02, WALL_LEFT_X + 0.025, WIN_Y0 - 0.02, WIN_Y1 + 0.02, WIN_Z0 - 0.03, WIN_Z0, mats["kafes"], 0.003))
+    # table (thick old top on an apron and legs)
+    objs.append(box("table_top", TABLE_X0, TABLE_X1, TABLE_Y0, WALL_BACK_Y - 0.002, -0.042, 0.0, wood_tab, 0.004))
+    objs.append(box("table_apron", TABLE_X0 + 0.04, TABLE_X1 - 0.04, TABLE_Y0 + 0.04, WALL_BACK_Y - 0.04, -0.13, -0.042, wood_tab))
+    for (x, y) in ((TABLE_X0 + 0.04, TABLE_Y0 + 0.04), (TABLE_X1 - 0.10, TABLE_Y0 + 0.04)):
+        objs.append(box("table_leg", x, x + 0.06, y, y + 0.06, FLOOR_Z, -0.042, wood_tab, 0.003))
+    # kafes: frame + two layers of diagonal slats
+    xk = xo + 0.09
+    fw = 0.045
+    objs.append(box("kafes_f1", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y0 + fw, WIN_Z0, WIN_Z1, kafes, 0.002))
+    objs.append(box("kafes_f2", xk - 0.03, xk + 0.03, WIN_Y1 - fw, WIN_Y1, WIN_Z0, WIN_Z1, kafes, 0.002))
+    objs.append(box("kafes_f3", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, WIN_Z0, WIN_Z0 + fw, kafes, 0.002))
+    objs.append(box("kafes_f4", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, WIN_Z1 - fw, WIN_Z1, kafes, 0.002))
+    objs.append(box("kafes_mid", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, (WIN_Z0 + WIN_Z1) / 2 - 0.02, (WIN_Z0 + WIN_Z1) / 2 + 0.02, kafes, 0.002))
+    sp = 0.052
+    y0, y1, z0, z1 = WIN_Y0 + fw * 0.6, WIN_Y1 - fw * 0.6, WIN_Z0 + fw * 0.6, WIN_Z1 - fw * 0.6
+    for layer, dirv, dx in ((0, (1, 1), -0.011), (1, (1, -1), 0.011)):
+        d = Vector(dirv).normalized()
+        nrm = Vector((-d.y, d.x))
+        c = Vector(((y0 + y1) / 2, (z0 + z1) / 2))
+        for k in range(-30, 31):
+            p = c + nrm * (k * sp)
+            seg = clip_segment(p, d, y0, y1, z0, z1)
+            if seg and (Vector(seg[1]) - Vector(seg[0])).length > 0.01:
+                objs.append(slat("kafes_s", seg[0], seg[1], 0.011, 0.020, xk + dx, kafes))
+    # join small kafes pieces into one object
+    ks = [o for o in objs if o.name.startswith("kafes_s")]
+    if ks:
+        bpy.ops.object.select_all(action="DESELECT")
+        for o in ks:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = ks[0]
+        bpy.ops.object.join()
+    return objs
+
+
+# ----------------------------------------------------------------------------- lights / atmosphere
+
+def sun_light():
+    d = bpy.data.lights.new("Sun", "SUN")
+    d.energy = 6.5
+    d.color = C.kelvin(SUN_K)
+    d.angle = math.radians(0.53)
+    o = bpy.data.objects.new("Sun", d)
+    bpy.context.scene.collection.objects.link(o)
+    o.rotation_euler = SUN_DIR.to_track_quat("-Z", "Y").to_euler()
+    return o
+
+
+def shutter(ctx):
+    """Unseen roller shutter outside the window: its lower edge rises -> the beam sweeps in."""
+    xo = WALL_LEFT_X - WALL_THICK
+    ob = box("shutter", xo - 0.06, xo - 0.04, WIN_Y0 - 0.25, WIN_Y1 + 0.25, 0.0, 1.5, mat_simple("shutter", (0.05, 0.04, 0.03), 0.8))
+    ob.visible_camera = False
+    ob.visible_glossy = False
+    ob.visible_transmission = False
+    t0, t1 = 110.00, 112.95
+    for k in range(0, 31):
+        t = t0 + (t1 - t0) * k / 30
+        u = C.smooth(k / 30) * 0.65 + (k / 30) * 0.35
+        z = (WIN_Z0 - 0.03) + (WIN_Z1 + 0.06 - (WIN_Z0 - 0.03)) * u
+        ob.location.z = z
+        ob.keyframe_insert("location", index=2, frame=t * C.FPS)
+    C.set_extrapolation(ob, "CONSTANT")
+    return ob
+
+
+def volume_box():
+    ob = box("air", WALL_LEFT_X + 0.003, 1.3, -0.95, WALL_BACK_Y - 0.003, 0.002, 1.55, None)
+    ob.data.materials.clear()
+    m, nt, out = new_mat("air")
+    v = NN(nt, "ShaderNodeVolumePrincipled")
+    v.inputs["Density"].default_value = 0.055
+    v.inputs["Anisotropy"].default_value = 0.45
+    v.inputs["Color"].default_value = (1.0, 0.97, 0.92, 1)
+    LK(nt, v.outputs[0], out.inputs["Volume"])
+    ob.data.materials.append(m)
+    ob.visible_shadow = False
+    return ob
+
+
+def build_motes(n=2600, seed=7):
+    rng = random.Random(seed)
+    verts = []
+    while len(verts) < n:
+        x = rng.uniform(-0.9, 1.0); y = rng.uniform(-0.85, 0.35); z = rng.uniform(0.02, 1.3)
+        # keep mostly near the sun beam corridor
+        p = Vector((x, y, z))
+        t = (x - (WALL_LEFT_X - 0.2)) / SUN_DIR.x
+        q = p - SUN_DIR * t
+        if WIN_Y0 - 0.1 < q.y < WIN_Y1 + 0.1 and WIN_Z0 - 0.15 < q.z < WIN_Z1 + 0.1:
+            verts.append((x, y, z))
+    me = bpy.data.meshes.new("motes")
+    me.from_pydata(verts, [], [])
+    ob = bpy.data.objects.new("motes", me)
+    bpy.context.scene.collection.objects.link(ob)
+    ng = bpy.data.node_groups.new("motes_gn", "GeometryNodeTree")
+    ng.interface.new_socket(name="Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+    ng.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    gi = ng.nodes.new("NodeGroupInput"); go = ng.nodes.new("NodeGroupOutput")
+    m2p = ng.nodes.new("GeometryNodeMeshToPoints")
+    rnd = ng.nodes.new("FunctionNodeRandomValue"); rnd.data_type = "FLOAT"
+    rnd.inputs["Min"].default_value = 0.00012
+    rnd.inputs["Max"].default_value = 0.00042
+    rnd.inputs["Seed"].default_value = 3
+    ng.links.new(rnd.outputs["Value"], m2p.inputs["Radius"])
+    st = ng.nodes.new("GeometryNodeInputSceneTime")
+    pos = ng.nodes.new("GeometryNodeInputPosition")
+    nz = ng.nodes.new("ShaderNodeTexNoise"); nz.noise_dimensions = "4D"
+    nz.inputs["Scale"].default_value = 3.0
+    nz.inputs["Detail"].default_value = 1.0
+    ng.links.new(pos.outputs[0], nz.inputs["Vector"])
+    wmul = ng.nodes.new("ShaderNodeMath"); wmul.operation = "MULTIPLY"; wmul.inputs[1].default_value = 0.06
+    ng.links.new(st.outputs["Seconds"], wmul.inputs[0]); ng.links.new(wmul.outputs[0], nz.inputs["W"])
+    sub = ng.nodes.new("ShaderNodeVectorMath"); sub.operation = "SUBTRACT"
+    sub.inputs[1].default_value = (0.5, 0.5, 0.5)
+    ng.links.new(nz.outputs["Color"], sub.inputs[0])
+    sc = ng.nodes.new("ShaderNodeVectorMath"); sc.operation = "SCALE"; sc.inputs["Scale"].default_value = 0.09
+    ng.links.new(sub.outputs[0], sc.inputs[0])
+    drift = ng.nodes.new("ShaderNodeVectorMath"); drift.operation = "SCALE"
+    drift.inputs[0].default_value = (0.010, 0.003, 0.0015)
+    tsub = ng.nodes.new("ShaderNodeMath"); tsub.operation = "SUBTRACT"; tsub.inputs[1].default_value = 117.0
+    ng.links.new(st.outputs["Seconds"], tsub.inputs[0]); ng.links.new(tsub.outputs[0], drift.inputs["Scale"])
+    add = ng.nodes.new("ShaderNodeVectorMath"); add.operation = "ADD"
+    ng.links.new(sc.outputs[0], add.inputs[0]); ng.links.new(drift.outputs[0], add.inputs[1])
+    setp = ng.nodes.new("GeometryNodeSetPosition")
+    ng.links.new(gi.outputs[0], m2p.inputs["Mesh"])
+    ng.links.new(m2p.outputs[0], setp.inputs["Geometry"])
+    ng.links.new(add.outputs[0], setp.inputs["Offset"])
+    smat = ng.nodes.new("GeometryNodeSetMaterial")
+    m, nt, out = new_mat("mote")
+    p = principled(nt, **{"Base Color": (0.85, 0.82, 0.76), "Roughness": 0.6})
+    tr = NN(nt, "ShaderNodeBsdfTranslucent")
+    tr.inputs["Color"].default_value = (0.9, 0.86, 0.8, 1)
+    mx = NN(nt, "ShaderNodeMixShader"); mx.inputs[0].default_value = 0.6
+    LK(nt, p.outputs[0], mx.inputs[1]); LK(nt, tr.outputs[0], mx.inputs[2]); LK(nt, mx.outputs[0], out.inputs["Surface"])
+    smat.inputs["Material"].default_value = m
+    ng.links.new(setp.outputs[0], smat.inputs["Geometry"])
+    ng.links.new(smat.outputs[0], go.inputs[0])
+    mod = ob.modifiers.new("gn", "NODES")
+    mod.node_group = ng
+    ob.visible_shadow = False
+    return ob
+
+
+# ----------------------------------------------------------------------------- cameras
+
+def _hermite(keys, t, idx):
+    """Cubic Hermite (Catmull-Rom tangents, non-uniform times) of component idx; keys sorted by t."""
+    ts = [k[0] for k in keys]
+    if t <= ts[0]:
+        i = 0
+    elif t >= ts[-1]:
+        i = len(ts) - 2
+    else:
+        i = max(j for j in range(len(ts) - 1) if ts[j] <= t)
+    t0, t1 = ts[i], ts[i + 1]
+    p0, p1 = keys[i][idx], keys[i + 1][idx]
+
+    def tangent(j):
+        if j == 0:
+            return (keys[1][idx] - keys[0][idx]) / (ts[1] - ts[0])
+        if j == len(ts) - 1:
+            return (keys[-1][idx] - keys[-2][idx]) / (ts[-1] - ts[-2])
+        return (keys[j + 1][idx] - keys[j - 1][idx]) / (ts[j + 1] - ts[j - 1])
+    m0, m1 = tangent(i), tangent(i + 1)
+    h = t1 - t0
+    x = (t - t0) / h
+    h00 = 2 * x ** 3 - 3 * x ** 2 + 1; h10 = x ** 3 - 2 * x ** 2 + x
+    h01 = -2 * x ** 3 + 3 * x ** 2; h11 = x ** 3 - x ** 2
+    return h00 * p0 + h10 * h * m0 + h01 * p1 + h11 * h * m1
+
+
+def rig_camera(name, lens, fstop, keys, f_from, f_to, hh=(0.0012, 0.0010), seed=1, sensor=36.0):
+    """keys: list of (t, pos Vector, aim Vector, focus Vector). Keys every frame in [f_from, f_to]."""
+    cam = C.camera(name, lens=lens, loc=tuple(keys[0][1]), look_at=tuple(keys[0][2]), fstop=fstop,
+                   focus=tuple(keys[0][3]), sensor=sensor, clip_start=0.005, clip_end=50)
+    foc = cam.data.dof.focus_object
+    prev = None
+    for f in range(f_from - 2, f_to + 3):
+        t = f / C.FPS
+        pos = Vector([_hermite([(k[0], k[1][i]) for k in keys], t, 1) for i in range(3)])
+        aim = Vector([_hermite([(k[0], k[2][i]) for k in keys], t, 1) for i in range(3)])
+        fp = Vector([_hermite([(k[0], k[3][i]) for k in keys], t, 1) for i in range(3)])
+        cam.location = pos
+        e = (aim - pos).to_track_quat("-Z", "Y").to_euler()
+        if prev is not None:
+            e.make_compatible(prev)
+        prev = e
+        cam.rotation_euler = e
+        cam.keyframe_insert("location", frame=f)
+        cam.keyframe_insert("rotation_euler", frame=f)
+        foc.location = fp
+        foc.keyframe_insert("location", frame=f)
+    for ob in (cam, foc):
+        for fc in C.fcurves(ob):
+            for kp in fc.keyframe_points:
+                kp.interpolation = "LINEAR"
+    C.handheld(cam, amp_loc=hh[0], amp_rot=hh[1], speed=0.3, seed=seed)
+    return cam
+
+
+def key_vis(ob, visible_ranges, f0, f1):
+    """hide_render keyed CONSTANT so the object only renders inside the given frame ranges."""
+    def vis(f):
+        return any(a <= f < b for a, b in visible_ranges)
+    obs = [ob] + [c for c in ob.children_recursive]
+    for o in obs:
+        last = None
+        for f in range(f0 - 3, f1 + 3):
+            v = vis(f)
+            if v != last:
+                o.hide_render = not v
+                o.keyframe_insert("hide_render", frame=f)
+                last = v
+        for fc in C.fcurves(o):
+            if fc.data_path == "hide_render":
+                for kp in fc.keyframe_points:
+                    kp.interpolation = "CONSTANT"
+
+
+# ----------------------------------------------------------------------------- book row
+
+def place_closed(root, loc, yaw=0.0, upright=False, lean=0.0):
+    """upright: spine toward -Y (camera), head up, front cover toward +X."""
+    if upright:
+        # local X (joint->fore) -> +Y, local Y (tail->head) -> +Z, local Z (back->front) -> +X
+        R = Matrix(((0, 0, 1), (1, 0, 0), (0, 1, 0)))
+        root.matrix_world = Matrix.Translation(loc) @ Matrix.Rotation(yaw, 4, "Z") @ Matrix.Rotation(lean, 4, "Y") @ R.to_4x4()
+    else:
+        root.matrix_world = Matrix.Translation(loc) @ Matrix.Rotation(yaw, 4, "Z") @ Matrix.Translation((-BK_WF / 2, -BK_H / 2, 0))
+
+
+def build_row(mats):
+    rng = random.Random(15)
+    x = 0.075
+    roots = []
+    for idx in range(1, len(BOOKS)):
+        lines, T = BOOKS[idx]
+        root, objs = build_closed_book("vol_%02d" % idx, idx, [mats["leather_plain"], mats["cover_plain"], mats["cover_plain"], mats["spine"]])
+        for o in objs:
+            if o.name.endswith("_cover"):
+                for s in range(len(o.data.materials)):
+                    pass
+        y_joint = WALL_BACK_Y - 0.006 - BK_WF + rng.uniform(-0.004, 0.006)
+        yaw = math.radians(rng.uniform(-1.2, 1.2))
+        place_closed(root, Vector((x, y_joint, 0.0)), yaw=yaw, upright=True)
+        roots.append(root)
+        x += T + 0.0012 + rng.uniform(0, 0.0012)
+    # wooden bookend at the right end
+    be = box("bookend", x + 0.002, x + 0.022, WALL_BACK_Y - 0.17, WALL_BACK_Y - 0.02, 0.0, 0.17, mats["rahle"], 0.003)
+    return roots, x
+
+
+# ----------------------------------------------------------------------------- build
+
+def build(ctx):
+    d = ensure_design()
+    sc = bpy.context.scene
+    # ------------------------------------------------ materials
+    MATS["page_edge"] = mat_page_edge()
+    MATS["headband"] = mat_headband()
+    MATS["leather_plain"] = mat_leather("leather_plain", None)
+    MATS["cover_sozler"] = mat_leather("cover_sozler", os.path.join(d, "cover_sozler.png"), "uvb")
+    MATS["cover_plain"] = mat_leather("cover_plain", os.path.join(d, "cover_plain.png"), "uvb")
+    MATS["spine"] = mat_leather("spine", os.path.join(d, "spines.png"), "uvs")
+    for num in (720, 729):
+        MATS["page_%d" % num] = mat_page("page_%d" % num, os.path.join(d, "page_%d.png" % num))
+    for k in range(4):
+        MATS["leaf_%d" % k] = mat_leaf("leaf_%d" % k, os.path.join(d, "page_%d.png" % (727 - 2 * k)),
+                                       os.path.join(d, "page_%d.png" % (728 - 2 * k)))
+    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.62, 0.44, 0.32), val=0.62, sat=1.15,
+                             rough=(0.30, 0.52), relief=os.path.join(d, "relief.png"), coat=0.12, grain_rot=math.pi / 2,
+                             wear=0.35)
+    MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7))
+    MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8))
+    MATS["kafes"] = mat_wood("kafes", "dark_wood", tile=0.6, tint=(0.55, 0.45, 0.38), val=0.55, sat=0.6, rough=(0.55, 0.8))
+    MATS["plaster"] = mat_plaster()
+    # ------------------------------------------------ set
+    build_room(MATS)
+    build_rahle(MATS["rahle"])
+    row, row_end = build_row(MATS)
+    soz, soz_objs = build_closed_book("sozler_closed", 0, [MATS["leather_plain"], MATS["cover_sozler"], MATS["cover_plain"], MATS["spine"]])
+    place_closed(soz, SOZ_POS, yaw=SOZ_YAW)
+    ob_root, ob_objs, halfL, halfR = build_open_book(MATS)
+    # closed Sozler only in camA; open book from camB on
+    key_vis(soz, [(0, 2722)], ctx.f0, ctx.f1)
+    key_vis(ob_root, [(2722, 99999)], ctx.f0, ctx.f1)
+    # ------------------------------------------------ light
+    C.world_sky(sun_elev_deg=math.degrees(math.asin(-SUN_DIR.z)), sun_rot_deg=math.degrees(math.atan2(-SUN_DIR.x, SUN_DIR.y)) + 180,
+                strength=0.35, sun_disc=False, air=1.2, aerosol=1.5)
+    sun = sun_light()
+    # sun brightens on "cok guzel ifadelerle" (thin haze clears)
+    for t, e in ((109.5, 6.0), (117.25, 6.0), (118.9, 8.2), (125.6, 8.2)):
+        sun.data.energy = e
+        sun.data.keyframe_insert("energy", frame=t * C.FPS)
+    shutter(ctx)
+    # cool fill: overcast skylight from a door/window behind camera (front wall)
+    C.area("fill_front", loc=(0.6, -3.6, 1.2), look_at=(0.0, 0.0, 0.2), size=2.0, size_y=1.4, power=55, kelvin_k=7800)
+    C.area("fill_right", loc=(2.5, -0.6, 1.1), look_at=(0.0, 0.0, 0.2), size=1.0, size_y=1.6, power=14, kelvin_k=7200)
+    portal = C.area("portal", loc=(WALL_LEFT_X - 0.02, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2),
+                    look_at=(1.0, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2), size=WIN_Y1 - WIN_Y0, size_y=WIN_Z1 - WIN_Z0, power=0)
+    portal.data.size, portal.data.size_y = WIN_Y1 - WIN_Y0, WIN_Z1 - WIN_Z0
+    try:
+        portal.data.cycles.is_portal = True
+    except Exception:
+        try:
+            portal.data.is_portal = True
+        except Exception:
+            pass
+    volume_box()
+    build_motes()
+    # ------------------------------------------------ cameras
+    V = Vector
+    camA = rig_camera("camA", 35, 2.8, [
+        (109.40, V((0.66, -1.02, 0.60)), V((-0.06, 0.06, 0.12)), V((0.10, -0.05, 0.05))),
+        (110.70, V((0.56, -0.70, 0.48)), V((0.06, 0.00, 0.07)), V((0.15, -0.06, 0.05))),
+        (111.96, V((0.38, -0.40, 0.36)), V((0.165, -0.04, 0.03)), V((0.17, -0.07, 0.052))),
+        (113.50, V((0.335, -0.335, 0.325)), V((0.17, -0.035, 0.03)), V((0.17, -0.07, 0.052))),
+    ], 2622, 2724, seed=11)
+    pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
+    camB = rig_camera("camB", 50, 2.8, [
+        (113.30, V((-0.33, -0.47, 0.58)), V((-0.10, 0.00, 0.21)), pg),
+        (114.45, V((-0.30, -0.40, 0.54)), V((-0.10, 0.01, 0.22)), pg),
+        (115.90, V((-0.25, -0.30, 0.48)), V((-0.095, 0.03, 0.235)), pg),
+    ], 2718, 2782, seed=12)
+    zc = 0.15
+    yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
+    camC = rig_camera("camC", 50, 2.8, [
+        (115.70, V((0.07, yc - 0.27, 0.125)), V((0.10, yc, zc)), V((0.10, yc, zc))),
+        (117.30, V((0.31, yc - 0.25, 0.130)), V((0.34, yc, zc)), V((0.34, yc, zc))),
+    ], 2774, 2818, seed=13)
+    camD = rig_camera("camD", 40, 3.2, [
+        (117.20, V((-0.36, -0.16, 0.52)), V((-0.09, 0.02, 0.22)), pg + V((-0.03, -0.06, -0.01))),
+        (120.05, V((-0.33, -0.10, 0.50)), V((-0.09, 0.03, 0.22)), pg + V((-0.03, -0.05, -0.01))),
+    ], 2810, 2883, seed=14)
+    camE = rig_camera("camE", 32, 4.0, [
+        (119.90, V((0.32, -0.82, 0.64)), V((-0.17, 0.02, 0.22)), V((-0.15, -0.02, 0.24))),
+        (125.60, V((0.235, -0.64, 0.54)), V((-0.165, 0.02, 0.225)), V((-0.15, -0.02, 0.24))),
+    ], 2875, 3014, seed=15)
+    for name, f, cam in (("A", ctx.f0, camA), ("B", 2722, camB), ("C", 2778, camC), ("D", 2814, camD), ("E", 2879, camE)):
+        mk = sc.timeline_markers.new("cam" + name, frame=f)
+        mk.camera = cam
+    sc.camera = camA
+    sc.view_settings.exposure = -0.3
+    return {"final_spp": 32, "preview_spp": 16, "diffuse_bounces": 3, "glossy_bounces": 2,
+            "transmission_bounces": 3, "transparent_bounces": 8, "clamp_indirect": 3.0}
+
+
+if __name__ == "__main__" and os.environ.get("SH15_DESIGN") != "1":
+    C.run("sh15", build)

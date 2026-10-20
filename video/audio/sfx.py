@@ -476,9 +476,9 @@ def gust_curve(dur, rng, rate=0.08, gustiness=0.5, bias=0.0, events=None):
 def _wind_layer(n, rng, g, strength, bright, hollow, low):
     def mag(T, F):
         G = g(T)
-        fc = (220.0 + 1500.0 * G ** 1.4) * bright
+        fc = (300.0 + 1800.0 * G ** 1.4) * bright
         a = (0.12 + G) ** 1.6 * strength
-        body = m_hp(F, 45, 2) * m_lp(F, fc, 2) * m_tilt(F, -1.5, 300)
+        body = m_hp(F, 90 if not hollow else 65, 2) * m_lp(F, fc, 1.5) * m_tilt(F, -0.5, 500)
         rumble = low * (G ** 2) * m_lp(F, 110, 3) * 2.5
         sh = 1.0
         if hollow:
@@ -501,7 +501,7 @@ def gen_room_tone(dur, rng, warmth=1.0, bright=1.0, width=0.7):
     mod = rand_curve(dur, rng, 0.12)
 
     def mag(T, F):
-        return (m_hp(F, 30, 2) * m_tilt(F, -4.0, 150) * m_bump(F, 140, 5 * warmth, 0.9)
+        return (m_hp(F, 45, 2) * m_tilt(F, -3.0, 150) * m_bump(F, 140, 4 * warmth, 0.9)
                 * m_lp(F, 5000 * bright, 1) * db(0.8 * mod(T)))
     return out(ms(shaped_noise(n, mag, rng), shaped_noise(n, mag, rng), width))
 
@@ -591,7 +591,7 @@ def gen_underwater(dur, rng, slosh=0.6, clicks=0.3, depth=1.0, bubbles=0.3):
     return out(y)
 
 
-def gen_ocean(dur, rng, swell=0.55, wash=1.8, lap=1.0, caps=1.0, breeze=0.3, period=8.5):
+def gen_ocean(dur, rng, swell=0.4, wash=2.0, lap=1.0, caps=1.0, breeze=0.3, period=8.5):
     """Open sea, camera low over the water: slow swell mass, broadband wash, whitecap fizz events,
     close lapping with small gurgles, light breeze."""
     n = N(dur)
@@ -790,7 +790,7 @@ def gen_thunder(dur, rng, sync=0.3, dist=1.0, length=3.5):
         i0 = N(t0)
         add_st(y, np.stack([a, b], 1) * g, i0)
     y += 0.05 * hp(lp(y, 900, 2), 300, 2)
-    return out(y)
+    return out(hp(y, 32, 2))
 
 
 # ---------------------------------------------------------------- body / micro world
@@ -1003,7 +1003,7 @@ def gen_flame(dur, rng, muffle_at=None, muffle_len=0.5, muffle_gain=-7.0, muffle
     a = np.clip(1 + 0.35 * fl(t) + 0.2 * fl2(t), 0.2, None)
     x = lp(hp(rng.standard_normal(n), 40, 2), 420, 2) * a
     x += 0.15 * bp(rng.standard_normal(n), 600, 2500, 1) * a ** 2
-    x += 0.5 * click_field(n, rng, 1.2, 1500, 7000, 1.2) * 4
+    x += 0.5 * click_field(n, rng, 0.5, 1200, 5000, 1.0) * 1.5
     y = np.stack([x, x], 1)
     if muffle_at is not None:
         m = smoothstep((t - muffle_at) / muffle_len)
@@ -1171,7 +1171,7 @@ def gen_bubble_streams(dur, rng, streams=6, rate=3.0, r=(0.35e-3, 0.8e-3), hero=
         t = rng.uniform(0, 1.0 / rt)
         while t < dur:
             if rng.uniform() < dens(np.array(t)):
-                b = bubble(r0 * rng.uniform(0.85, 1.15), rng, xi=rng.uniform(0.05, 0.2))
+                b = bubble(r0 * rng.lognormal(0, 0.2), rng, xi=rng.uniform(0.05, 0.2))
                 b = lp(b, 12000 * (1 - 0.6 * d), 1) * 10 ** (-d * 0.9)
                 add_mono(y, b, N(t), p)
             t += rng.gamma(6.0, 1.0 / (6.0 * rt))
@@ -1182,9 +1182,9 @@ def gen_bubble_streams(dur, rng, streams=6, rate=3.0, r=(0.35e-3, 0.8e-3), hero=
         t = hero.get("start", 0.0)
         r0 = hero.get("r", 0.7e-3)
         while t < dur:
-            b = bubble(r0 * rng.uniform(0.9, 1.1), rng, xi=rng.uniform(0.08, 0.2))
-            add_mono(y, b, N(t), p + 0.05 * rng.standard_normal(), g)
-            t += rng.gamma(8.0, 1.0 / (8.0 * rt))
+            b = bubble(r0 * rng.lognormal(0, 0.22), rng, xi=rng.uniform(0.05, 0.22))
+            add_mono(y, b, N(t), p + 0.05 * rng.standard_normal(), g * rng.lognormal(0, 0.3))
+            t += rng.gamma(4.0, 1.0 / (4.0 * rt))
     if muffle:
         y = 0.4 * y + 0.6 * lp(y, muffle, 2)
     return out(y)
@@ -1311,9 +1311,11 @@ def gen_plate_slide(dur, rng, sync=0.05, length=0.55, pan=0.0):
     speed = np.sin(np.pi * u) ** 1.5 * (t >= sync) * (t <= sync + length)
     ex = crackle_env(n, rng, 150 + 1400 * speed, 0.0008, 0.8) * speed
     ex = ex * rng.standard_normal(n)
-    plate = sum(reson(ex, f, q) * a for f, q, a in [(1150, 18, 0.5), (2480, 22, 0.35), (4100, 25, 0.25), (6200, 20, 0.12)])
+    plate = sum(reson(ex, f * rng.uniform(0.95, 1.05), q) * a
+                for f, q, a in [(1150, 7, 0.5), (2480, 8, 0.35), (4100, 8, 0.25), (6200, 7, 0.12)])
+    plate = plate + 0.8 * bp(ex, 900, 7000, 1) * np.std(plate) / (np.std(bp(ex, 900, 7000, 1)) + 1e-12)
     wood = bp(rng.standard_normal(n), 200, 2200, 2) * speed * 0.5
-    y = plate + wood * np.std(plate) / (np.std(wood) + 1e-12) * 0.8
+    y = plate + wood * np.std(plate) / (np.std(wood) + 1e-12) * 1.1
     stop = modal(rng, [180, 420, 1150, 2480], [0.05, 0.04, 0.05, 0.04], [0.6, 0.5, 0.25, 0.15], 0.15) * 0.4
     yy = pan2(y, pan)
     add_mono(yy, stop * np.max(np.abs(y)) / (np.max(np.abs(stop)) + 1e-12) * 0.5, N(sync + length - 0.02), pan)
