@@ -256,7 +256,7 @@ s = "sh03"                              # (slate: beats on the transcript times 
 cue("sh03.crust", s, w(s, "yemek"), 1.7, "crust_crackle", -36, pre=0.05, space="room", send=-18,
     fade_in=0.3, fade_out=0.6, params=dict(rate=16, pan=-0.35), ref="yemek (slider past the bread)")
 t = w(s, "içmek") - F
-cue("sh03.pour", s, t, 2.9, "pour", -27, pre=0.1, space="room", send=-13, fade_out=0.2,
+cue("sh03.pour", s, t, 2.9, "pour", -28.5, pre=0.1, space="room", send=-13, fade_out=0.2,
     params=dict(sync=0.1, stop=1.72, fill0=0.1, fill1=0.72, drips=3, pan=0.1), ref="içmek (water hits the glass)",
     provisional=True, note="re-spot on the sh03 render")
 tick("sh03.callout_water", s, t + 0.7, track={"shot": s, "name": "water"}, pan=0.1, ref="water callout")
@@ -493,7 +493,8 @@ for i, (tt, pn) in enumerate(zip(rt, fallback)):
     tick(f"sh13b.ring_{nm}", s, tt - F, kind="ring", lvl=-18 if i < 7 else -17, pan=pn,
          track={"shot": s, "name": nm}, ref=f"birer birer: tracking ring {i + 1}/8 snaps onto TRK_{nm}")
 cue("sh13b.bee", s, SYNC.get("sh13b.ring_b", rt[1]), 2.2, "bee", -42, pre=0.7, space="meadow", send=-16, fade_in=0.2,
-    fade_out=0.3, params=dict(sync=0.7, dist=0.55, pan_from=0.6, pan_to=-0.1, f0=226), ref="the bee found by ring b")
+    fade_out=0.3, params=dict(sync=0.7, dist=0.55, pan_from=0.2, pan_to=0.45, f0=226),
+    ref="the bee ring b finds, hovering right of centre and drifting right (sh13b animatic f2045-2090)")
 
 # ============================================================== sh14a sunflowers at sunrise
 s = "sh14a"

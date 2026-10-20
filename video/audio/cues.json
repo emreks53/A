@@ -505,7 +505,7 @@
     "drips": 3,
     "pan": 0.1
    },
-   "lvl": -27,
+   "lvl": -28.5,
    "class": "spot",
    "space": "room",
    "send": -13,
@@ -2355,8 +2355,8 @@
    "params": {
     "sync": 0.7,
     "dist": 0.55,
-    "pan_from": 0.6,
-    "pan_to": -0.1,
+    "pan_from": 0.2,
+    "pan_to": 0.45,
     "f0": 226
    },
    "lvl": -42,
@@ -2365,7 +2365,7 @@
    "send": -16,
    "fade_in": 0.2,
    "fade_out": 0.3,
-   "ref": "the bee found by ring b"
+   "ref": "the bee ring b finds, hovering right of centre and drifting right (sh13b animatic f2045-2090)"
   },
   {
    "id": "sh13b.ring_a",
