@@ -10,6 +10,9 @@ Inputs: timing/shots.json (cuts), comp/edit.json (transitions, grades, finishing
 <shot>_<a>_<b>.mp4 (frames a..b inclusive; absolute frame numbers; 10-bit 4:4:4 from farm/render.sh), overlay frames
 from comp/overlays.py (rendered on demand), audio $VIDEO_OUT/audio/final_mix.wav (else audio/narration.m4a).
 Missing render frames are replaced by a slate (dark gradient + shot id + description) so the pipeline always runs.
+A full-quality encode refuses to run unless every UI tick in the mix (mix_report.json next to final_mix.wav) sits on
+its graphic within one frame (--allow-cue-mismatch overrides for tests). The output is bounded by the picture (audio
+padded/trimmed to the frame range) and verified (frame count, stream durations) after encoding.
 
 Processing per output frame (scene-linear float32 unless noted):
   decode (16-bit) -> per-shot grade trims -> transition mix -> bloom + halation -> vignette -> lateral CA
