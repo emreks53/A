@@ -1,3 +1,34 @@
+# sh08 — review v4 (Studio S5) — staging per director notes on v3
+
+Stills, prefix sh08_v4_ (50 %): t040.620 (first frame), t041.400 ("uzanıp": the hand's long shadow slides
+across the sunlit table as the soft, motion-blurred hand enters top-right), t041.700 (reach), t042.300
+("alırken": top grasp), t043.400 (lift, the apple leaves the focus plane, its contact shadow fades),
+t045.800_final / t047.250_final (downscaled FINAL-quality frames: tilt/push to the little-finger edge
+against the window -> deep red-orange translucent glow with a darker core -> dissolve into sh09).
+sh08_v4_final_f1134_80pct.png = one full final frame (80 % res). Animatic and track regenerated (TRK_hand = wrist).
+
+Staging: camera at table level looking toward the window (100 mm, f/2.4, focus held on the apple's table
+position); the hand sits between camera and window, so it is backlit: camera side in soft shadow, warm rim,
+red translucent edges. Exposure is set for the bright table/apple (+2.0 EV opening glare -> -0.6 EV; -1.3 EV
+by the end for a saturated red). Body hair off (sub-pixel at these distances); a raised skin sheen gives the
+faint rim-lit fuzz. Man's hand changes from v2 are kept.
+
+RENDER TIME — measured --final, 80 % res (final_res override in the shot script), 16 spp, 3-frame runs
+including first-frame scene sync:
+* f1014-1016 (grasp):     56.9 s/frame
+* f1098-1100 (push):      63.8 s/frame
+* f1133-1135 (red glow):  70.8 s/frame
+All under the 90 s ceiling. To get there, during the fully defocused push the skin SSS fades out and the
+material crossfades to a cheap translucent-red shader (Cycles skips the zero-weight branch), invisible at
+that blur level. Denoise check: a 100 % crop of the dark glow across f1133-1135 shows fine, even grain and
+no blotches or flicker.
+
+Known limits: up close the finger joints are still slightly rubbery; the backlight and shallow focus keep
+that from reading.
+
+
+---
+
 # sh08 — review v3 (Studio S5) — following director notes on v2
 
 Stills (50 %, 16 spp), prefix sh08_v3_: t040.620 (first frame, set unchanged apart from the camera angle),
