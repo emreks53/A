@@ -86,17 +86,17 @@ def build_lights(ctx, t_allah):
         pw = nt.nodes.new("ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 1.6
         nt.links.new(mr.outputs[0], pw.inputs[0])
         return pw
-    a = web(300.0, 0.6, 0.12, 0.0)
+    a = web(300.0, 0.6, 0.075, 0.0)
     ad = nt.nodes.new("ShaderNodeMath"); ad.operation = "MULTIPLY"; ad.inputs[1].default_value = 1.6
     nt.links.new(a.outputs[0], ad.inputs[0])
     ml = nt.nodes.new("ShaderNodeMath"); ml.operation = "MULTIPLY"; ml.inputs[1].default_value = 1.0
     nt.links.new(ad.outputs[0], ml.inputs[0]); nt.links.new(ml.outputs[0], em.inputs["Strength"])
     for fc in C._fcurves(nt.animation_data.action):
         for k in fc.keyframe_points: k.interpolation = "LINEAR"
-    base = 6.5 * 4 * math.pi * dist * dist / 0.55
+    base = 10.0 * 4 * math.pi * dist * dist / 0.55
     for t, k in ((ctx.t0 - 0.3, 1.0), (t_allah - 0.1, 1.0), (t_allah + 0.5, 1.35), (ctx.t1 + 0.3, 1.3)):
         sp.energy = base * k; sp.keyframe_insert("energy", frame=t * 24)
-    for t, k in ((ctx.t0 - 0.3, 2.4), (t_allah - 0.1, 2.4), (t_allah + 0.5, 3.0), (ctx.t1 + 0.3, 2.9)):
+    for t, k in ((ctx.t0 - 0.3, 1.1), (t_allah - 0.1, 1.1), (t_allah + 0.5, 1.4), (ctx.t1 + 0.3, 1.35)):
         sun.data.energy = k; sun.data.keyframe_insert("energy", frame=t * 24)
     return sun, o
 
@@ -105,7 +105,7 @@ FOG_SIGMA = (1.0, 0.50, 0.44)      # per-metre extinction (red goes first)
 FOG_COL = (0.014, 0.090, 0.080)     # in-scatter radiance the water converges to (teal)
 
 
-def add_fog(mat, glow_gain=1.6):
+def add_fog(mat, glow_gain=1.6, grazing_haze=0.0):
     """Cheap water fog without a volume: blend each shading point toward the in-scatter colour by the
     length of the ray segment that reached it (1 - exp(-sigma * L)). The in-scatter is
     brighter toward the surface and toward the sun (forward scattering)."""
@@ -138,6 +138,14 @@ def add_fog(mat, glow_gain=1.6):
     sig_m = 0.25 * FOG_SIGMA[0] + 0.5 * FOG_SIGMA[1] + 0.25 * FOG_SIGMA[2]
     mlt = nt.nodes.new("ShaderNodeMath"); mlt.operation = "MULTIPLY"; mlt.inputs[1].default_value = -sig_m
     nt.links.new(lp.outputs["Ray Length"], mlt.inputs[0])
+    if grazing_haze > 0:
+        # extra extinction when the surface is seen at a grazing angle (long, scattering paths under it)
+        lw = nt.nodes.new("ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.5
+        gz = nt.nodes.new("ShaderNodeMath"); gz.operation = "POWER"; gz.inputs[1].default_value = 2.0
+        nt.links.new(lw.outputs["Facing"], gz.inputs[0])
+        gk = nt.nodes.new("ShaderNodeMath"); gk.operation = "MULTIPLY_ADD"; gk.inputs[1].default_value = -grazing_haze
+        gk.inputs[2].default_value = -sig_m; nt.links.new(gz.outputs[0], gk.inputs[0])
+        mlt.operation = "MULTIPLY"; nt.links.new(gk.outputs[0], mlt.inputs[1])
     ex = nt.nodes.new("ShaderNodeMath"); ex.operation = "EXPONENT"; nt.links.new(mlt.outputs[0], ex.inputs[0])
     f = nt.nodes.new("ShaderNodeMath"); f.operation = "SUBTRACT"; f.inputs[0].default_value = 1.0
     nt.links.new(ex.outputs[0], f.inputs[1])
@@ -154,16 +162,16 @@ def build_surface(ctx):
     bpy.ops.mesh.primitive_plane_add(size=2)
     s = bpy.context.object; s.name = "Surface"
     oc = s.modifiers.new("Ripples", "OCEAN")
-    oc.resolution = 10; oc.viewport_resolution = 4
-    oc.spatial_size = 3; oc.repeat_x = 3; oc.repeat_y = 3
-    oc.wind_velocity = 1.8; oc.wave_scale = 0.16; oc.choppiness = 0.35; oc.wave_scale_min = 0.0
+    oc.resolution = 11; oc.viewport_resolution = 4
+    oc.spatial_size = 2; oc.repeat_x = 5; oc.repeat_y = 5
+    oc.wind_velocity = 2.4; oc.wave_scale = 0.06; oc.choppiness = 0.9; oc.wave_scale_min = 0.0
     oc.wave_alignment = 0.3; oc.wave_direction = math.radians(30); oc.depth = 2.0; oc.random_seed = 3
     oc.use_normals = True
     oc.time = ctx.t0; oc.keyframe_insert("time", frame=0)
     oc.time = ctx.t0 + 100; oc.keyframe_insert("time", frame=100 * 24)
     for fc in C.fcurves(s):
         for k in fc.keyframe_points: k.interpolation = "LINEAR"
-    s.location = (-3.0, -3.0 + 0.6, 0)
+    s.location = (-4.0, -4.0 + 0.6, 0)
     s.cycles.use_deform_motion = False
     C.smooth_shade(s)
     m, nt, p = C.new_mat("surface"); nt.nodes.remove(p)
@@ -171,13 +179,13 @@ def build_surface(ctx):
     g.inputs["Roughness"].default_value = 0.0
     # capillary ripples on top of the simulated wavelets
     tcs = nt.nodes.new("ShaderNodeTexCoord")
-    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 14.0
+    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 38.0
     nz.inputs["Detail"].default_value = 1
     smp = nt.nodes.new("ShaderNodeMapping")        # drift instead of 4D evolution (much cheaper)
     smp.inputs["Location"].default_value = (0, 0, 0); smp.inputs["Location"].keyframe_insert("default_value", frame=0)
     smp.inputs["Location"].default_value = (2.0, 1.2, 6.0); smp.inputs["Location"].keyframe_insert("default_value", frame=100 * 24)
     nt.links.new(tcs.outputs["Object"], smp.inputs["Vector"]); nt.links.new(smp.outputs[0], nz.inputs["Vector"])
-    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.25; bp.inputs["Distance"].default_value = 0.004
+    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.45; bp.inputs["Distance"].default_value = 0.0025
     nt.links.new(nz.outputs[0], bp.inputs["Height"]); nt.links.new(bp.outputs[0], g.inputs["Normal"])
     nt.links.new(g.outputs[0], nt.nodes["Material Output"].inputs[0])
     C.assign(s, m)
@@ -357,6 +365,7 @@ def build_elodea(rng, stems):
                 if age > 0.95 and rng.random() < 0.06:
                     continue                                # a missing / broken leaf
                 leaf_geom(verts, faces, uvs, p + radial * 0.0008, t, outd, length, width, curl, rng)
+                st.setdefault("leaves", []).append((p + radial * 0.0008, t.copy(), outd, length, width, curl, age))
             rot += math.pi / 4 + rng.uniform(-0.2, 0.2)
             d += 0.0025 + 0.022 * min(1.0, d / 0.18) ** 1.1 * rng.uniform(0.85, 1.15)
             n_whorl += 1
@@ -390,8 +399,8 @@ def leaf_material():
     cell = nt.nodes.new("ShaderNodeTexVoronoi"); cell.inputs["Scale"].default_value = 2200.0
     nt.links.new(tc.outputs["Object"], cell.inputs["Vector"])
     cr = nt.nodes.new("ShaderNodeValToRGB")
-    cr.color_ramp.elements[0].color = (0.14, 0.45, 0.03, 1); cr.color_ramp.elements[1].color = (0.38, 0.66, 0.07, 1)
-    cr.color_ramp.elements.new(0.5).color = (0.22, 0.58, 0.05, 1)
+    cr.color_ramp.elements[0].color = (0.13, 0.36, 0.05, 1); cr.color_ramp.elements[1].color = (0.34, 0.55, 0.12, 1)
+    cr.color_ramp.elements.new(0.5).color = (0.21, 0.47, 0.08, 1)
     nt.links.new(ob.outputs["Fac"], cr.inputs[0])
     vm = nt.nodes.new("ShaderNodeMix"); vm.data_type = "RGBA"; vm.blend_type = "MIX"
     vm.inputs[7].default_value = (0.42, 0.62, 0.20, 1)
@@ -405,7 +414,20 @@ def leaf_material():
     nt.links.new(vm.outputs[2], cm.inputs[6])
     cc = nt.nodes.new("ShaderNodeCombineColor"); nt.links.new(cmr.outputs[0], cc.inputs[0]); nt.links.new(cmr.outputs[0], cc.inputs[1]); nt.links.new(cmr.outputs[0], cc.inputs[2])
     nt.links.new(cc.outputs[0], cm.inputs[7])
-    nt.links.new(cm.outputs[2], p.inputs["Base Color"])
+    # older (deeper) leaves: brownish algae film + sediment specks
+    gz = nt.nodes.new("ShaderNodeNewGeometry")
+    sz = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(gz.outputs["Position"], sz.inputs[0])
+    old = nt.nodes.new("ShaderNodeMapRange"); old.inputs["From Min"].default_value = -1.0
+    old.inputs["From Max"].default_value = -1.45; nt.links.new(sz.outputs["Z"], old.inputs[0])
+    sp = nt.nodes.new("ShaderNodeTexNoise"); sp.inputs["Scale"].default_value = 260.0; sp.inputs["Detail"].default_value = 2
+    nt.links.new(tc.outputs["Object"], sp.inputs["Vector"])
+    spr = nt.nodes.new("ShaderNodeMapRange"); spr.inputs["From Min"].default_value = 0.45; spr.inputs["From Max"].default_value = 0.7
+    nt.links.new(sp.outputs[0], spr.inputs[0])
+    alg = nt.nodes.new("ShaderNodeMath"); alg.operation = "MULTIPLY_ADD"; alg.inputs[2].default_value = 0.0
+    nt.links.new(spr.outputs[0], alg.inputs[0]); nt.links.new(old.outputs[0], alg.inputs[1])
+    am = nt.nodes.new("ShaderNodeMix"); am.data_type = "RGBA"; am.inputs[7].default_value = (0.22, 0.18, 0.07, 1)
+    nt.links.new(alg.outputs[0], am.inputs[0]); nt.links.new(cm.outputs[2], am.inputs[6])
+    nt.links.new(am.outputs[2], p.inputs["Base Color"])
     p.inputs["Roughness"].default_value = 0.32
     p.inputs["Specular IOR Level"].default_value = 0.25       # underwater: small IOR contrast
     p.inputs["Subsurface Weight"].default_value = 0.0
@@ -413,7 +435,7 @@ def leaf_material():
     tcol = nt.nodes.new("ShaderNodeMix"); tcol.data_type = "RGBA"; tcol.blend_type = "MULTIPLY"
     tcol.inputs[0].default_value = 1.0; tcol.inputs[7].default_value = (0.9, 1.25, 0.35, 1)
     nt.links.new(cm.outputs[2], tcol.inputs[6]); nt.links.new(tcol.outputs[2], tr.inputs["Color"])
-    mx = nt.nodes.new("ShaderNodeMixShader"); mx.inputs[0].default_value = 0.42
+    mx = nt.nodes.new("ShaderNodeMixShader"); mx.inputs[0].default_value = 0.55
     nt.links.new(p.outputs[0], mx.inputs[1]); nt.links.new(tr.outputs[0], mx.inputs[2])
     nt.links.new(mx.outputs[0], nt.nodes["Material Output"].inputs[0])
     return m
@@ -453,6 +475,48 @@ def bubble_track(src, t_emit, r, grow, rng, t_end):
         wob = Vector((amp * math.sin(2 * math.pi * fz * dt + ph), amp * math.cos(2 * math.pi * fz * 0.8 * dt + ph), 0))
         return src + Vector((0, 0, r)) + Vector((0, 0, zt)) + wob * min(1, dt / 0.15) + drift * dt, 1.0
     return at
+
+
+def leaf_point(lf, v, u):
+    """Point on a leaf (same parametrisation as leaf_geom): v along 0..1, u across -1..1; plus its normal."""
+    base, axis, out, length, width, curl, age = lf
+    side = axis.cross(out).normalized(); up = out.cross(side).normalized()
+    wv = width * (math.sin(math.pi * min(1.0, v ** 0.75)) ** 0.8) * (1 - 0.15 * v)
+    pt = base + out * (length * v) + up * (curl * length * v * v) + side * (u * wv)
+    return pt, up
+
+
+def build_pearls(stems_sel, rng, mat, n_max=520):
+    """'Pearling': tiny O2 bubbles clinging to leaf tips and edges of the actively photosynthesising crowns."""
+    bpy.ops.mesh.primitive_ico_sphere_add(radius=1.0, subdivisions=2)
+    proto = bpy.context.object; pv = [v.co.copy() for v in proto.data.vertices]
+    pf = [tuple(f.vertices) for f in proto.data.polygons]; bpy.data.objects.remove(proto)
+    verts, faces = [], []
+    pts = []
+    for st in stems_sel:
+        for lf in st.get("leaves", []):
+            hero = st is stems_sel[0]
+            if lf[6] > (0.9 if hero else 0.6) or rng.random() > (0.95 if hero else 0.3):
+                continue
+            k = rng.random()
+            if k < 0.55:
+                v, u = rng.uniform(0.88, 1.0), rng.uniform(-0.2, 0.2)          # at the tip
+            else:
+                v, u = rng.uniform(0.35, 0.85), rng.choice((-1, 1)) * rng.uniform(0.75, 1.0)   # on an edge
+            pt, nrm = leaf_point(lf, v, u)
+            pts.append((pt, nrm))
+    rng.shuffle(pts)
+    for pt, nrm in pts[:n_max]:
+        r = rng.uniform(0.25e-3, 0.75e-3) * (1.6 if rng.random() < 0.08 else 1.0)
+        c = pt + nrm * (r * 0.8 * (1 if rng.random() < 0.5 else -1))
+        b0 = len(verts)
+        verts += [tuple(c + Vector((q.x * r, q.y * r, q.z * r * 0.92))) for q in pv]
+        faces += [tuple(b0 + i for i in f) for f in pf]
+    me = bpy.data.meshes.new("pearls"); me.from_pydata(verts, [], faces); me.update()
+    o = C.link(bpy.data.objects.new("Pearls", me)); C.smooth_shade(o); C.assign(o, mat)
+    o.cycles.use_motion_blur = False
+    print(f"[sh05] pearls: {min(len(pts), n_max)}")
+    return o
 
 
 def build_bubbles(ctx, streams, hero, rng):
@@ -530,7 +594,7 @@ def t2f_(t):
     return C.t2f(t)
 
 
-def build_shafts(ctx, t_allah, rng, n=24):
+def build_shafts(ctx, t_allah, rng, n=40):
     """Fake god rays: thin soft emissive cylinders along the refracted sun ray, camera-visible only.
     They converge on the sun in perspective when looking up, flicker with the ripples and fade with depth."""
     d_dn = -refracted_up()
@@ -577,11 +641,11 @@ def build_shafts(ctx, t_allah, rng, n=24):
     ad = nt.nodes.new("ShaderNodeAddShader")
     nt.links.new(tr.outputs[0], ad.inputs[0]); nt.links.new(em.outputs[0], ad.inputs[1])
     nt.links.new(ad.outputs[0], out.inputs["Surface"])
-    for t, k in ((ctx.t0 - 0.3, 0.16), (t_allah - 0.1, 0.16), (t_allah + 0.6, 0.30), (26.0, 0.24), (27.5, 0.2), (28.3, 0.0)):
+    for t, k in ((ctx.t0 - 0.3, 0.30), (t_allah - 0.1, 0.30), (t_allah + 0.6, 0.48), (25.0, 0.2), (27.5, 0.15), (28.3, 0.0)):
         gain.inputs[1].default_value = k; gain.inputs[1].keyframe_insert("default_value", frame=t * 24)
     col = C.collection("Shafts")
     for i in range(n):
-        r = rng.uniform(0.022, 0.07)
+        r = rng.uniform(0.012, 0.045)
         L = rng.uniform(0.9, 1.7)
         bpy.ops.mesh.primitive_cylinder_add(vertices=10, radius=r, depth=L, end_fill_type="NOTHING")
         o = bpy.context.object; o.name = f"shaft_{i}"
@@ -652,14 +716,16 @@ def build(ctx):
     # ---- O2 bubble streams on leaf tips/axils of the hero clump + midground
     streams = []
     hp = stems[0]["path"]
-    for s, per, rm in ((0.985, 0.34, 0.75e-3), (0.955, 0.42, 0.95e-3), (0.93, 0.5, 0.7e-3), (0.90, 0.38, 1.05e-3)):
+    for s, per, rm in ((0.985, 0.26, 0.6e-3), (0.97, 0.3, 0.75e-3), (0.955, 0.34, 0.95e-3), (0.94, 0.22, 0.55e-3),
+                       (0.93, 0.4, 0.7e-3), (0.91, 0.28, 0.8e-3), (0.90, 0.33, 1.05e-3), (0.88, 0.25, 0.65e-3)):
         p = hp(s); off = Vector((rng.uniform(-0.009, 0.009), rng.uniform(-0.009, 0.009), 0))
         streams.append((p + off, per, rm))
     for st in stems[1:27]:
-        if rng.random() < 0.55:
-            s = rng.uniform(0.86, 0.99)
-            p = st["path"](s) + Vector((rng.uniform(-0.01, 0.01), rng.uniform(-0.01, 0.01), 0))
-            streams.append((p, rng.uniform(0.3, 0.8), rng.uniform(0.6e-3, 1.1e-3)))
+        for _ in range(2 if rng.random() < 0.5 else 1):
+            if rng.random() < 0.8:
+                s = rng.uniform(0.86, 0.99)
+                p = st["path"](s) + Vector((rng.uniform(-0.01, 0.01), rng.uniform(-0.01, 0.01), 0))
+                streams.append((p, rng.uniform(0.2, 0.55), rng.uniform(0.5e-3, 1.0e-3)))
     for st in stems[27:71]:
         if rng.random() < 0.22:
             s = rng.uniform(0.85, 0.99)
@@ -671,10 +737,11 @@ def build(ctx):
     streams.append((hsrc + Vector((0.0015, 0.001, 0)), 0.30, 1.0e-3))   # the hero's own string (follows it up)
     hero = (hsrc, t_oks - 1.6, hr, 1.45)
     hobj, hat = build_bubbles(ctx, streams, hero, rng)
+    build_pearls(stems[:27], rng, bpy.data.materials["o2_bubble"])
     trk = C.empty("TRK_bubble", (0, 0, 0)); trk.parent = hobj
     trk.scale = (1 / 1.0,) * 3
 
-    build_particles(rng, n=420)
+    build_particles(rng, n=1000)
     build_shafts(ctx, t_allah, rng)
 
     # ---- camera
@@ -747,15 +814,18 @@ def build(ctx):
         vm.inputs["Strength"].default_value = 0.0
         print("SURF shadow", bpy.data.objects["Surface"].visible_shadow)
     vs = sc.view_settings
-    for t, ev in ((ctx.t0 - 0.3, -1.6), (t_tilt0, -1.6), (t_tilt0 + 1.2, 0.2), (ctx.t1 + 0.3, 0.3)):
+    for t, ev in ((ctx.t0 - 0.3, -2.4), (t_tilt0, -2.4), (t_tilt0 + 1.3, 0.2), (ctx.t1 + 0.3, 0.3)):
         vs.exposure = ev; vs.keyframe_insert("exposure", frame=t * 24)      # camera exposure follows the tilt
     L.compositor(bloom=0.0, fog=0.06, fog_size=0.8, threshold=1.5)
     # ---- render-cost choices (see NOTES): homogeneous water volume (analytic, no ray marching), FAST denoise
     # prefilter, no motion blur on things that move < 1 px per shutter (specks, plants, distant bubbles)
     for m in list(bpy.data.materials):
         if m.name != "shaft":
-            add_fog(m)
-    bpy.app.handlers.render_init.append(lambda *_: setattr(bpy.context.scene.cycles, "denoising_prefilter", "FAST"))
+            add_fog(m, grazing_haze=2.6 if m.name == "surface" else 0.0)
+    # (denoise prefilter stays ACCURATE: FAST leaves grain in defocused bubble bokeh)
+    if ctx.mode == "final" and not ctx.args.res:
+        # mostly defocus/haze: director allows 80 % resolution (post upscales) to afford clean bokeh samples
+        bpy.app.handlers.render_init.append(lambda *_: setattr(bpy.context.scene.render, "resolution_percentage", 80))
     for o in bpy.data.collections["Specks"].objects: o.cycles.use_motion_blur = False
     for o in (leaves, stemso): o.cycles.use_motion_blur = False
     apex0 = stems[0]["path"](1.0)
@@ -790,7 +860,7 @@ def build(ctx):
     if "noshaft" in prof:
         for o in bpy.data.collections["Shafts"].objects: o.hide_render = True
     if "nobot" in prof: bpy.data.objects["Bottom"].hide_render = True
-    return {"final_spp": 5, "preview_spp": 20, "clamp_direct": 12.0, "max_bounces": 6, "diffuse_bounces": 1, "glossy_bounces": 1,
+    return {"final_spp": 12, "preview_spp": 20, "clamp_direct": 12.0, "max_bounces": 6, "diffuse_bounces": 1, "glossy_bounces": 1,
             "transmission_bounces": 6, "transparent_bounces": 12, "volume_bounces": 0, "volume_step_rate": 8.0,
             "clamp_indirect": 2.5}
 
