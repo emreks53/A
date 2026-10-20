@@ -1332,14 +1332,9 @@ def build_closed_book(name, idx, mats, front_mat_idx=1):
             f.material_index = tag_slot[tag]
             for lp, (ii, jj) in zip(f.loops, ((i, j), (i2, j), (i2, j + 1), (i, j + 1))):
                 a, b, c = uv_for(ii, ys[jj])
-                if ii == 0 and i2 == 0:
-                    pass
                 lp[uvb].uv = a; lp[uvs].uv = b; lp[uvl].uv = c
                 if i2 == 0 and ii == 0 and i == M - 1:
-                    lp[uvl].uv = (perim[M], ys[jj])
-            if i == M - 1:
-                for lp, jj in zip(f.loops, (j, j, j + 1, j + 1)):
-                    pass
+                    lp[uvl].uv = (perim[M], ys[jj])     # close the wrap seam
     # caps
     for j, sgn in ((0, -1), (len(ys) - 1, 1)):
         f = bm.faces.new(rings[j] if sgn > 0 else rings[j][::-1])
@@ -2194,10 +2189,6 @@ def build_row(mats):
     for idx in range(3, len(BOOKS)):
         lines, T = BOOKS[idx]
         root, objs = build_closed_book("vol_%02d" % idx, idx, [mats["leather_plain"], mats["cover_plain"], mats["cover_plain"], mats["spine"]])
-        for o in objs:
-            if o.name.endswith("_cover"):
-                for s in range(len(o.data.materials)):
-                    pass
         y_joint = WALL_BACK_Y - 0.006 - BK_WF + rng.uniform(-0.004, 0.006)
         yaw = math.radians(rng.uniform(-1.2, 1.2))
         place_closed(root, Vector((x, y_joint, 0.0)), yaw=yaw, upright=True)
