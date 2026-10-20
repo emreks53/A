@@ -1,5 +1,24 @@
 # sh06 — inside a blood vessel (30.10–35.70 s) · studio S7
 
+## v2 (director review-1 notes applied)
+1. RBC material is subsurface-dominant: deep crimson, red-weighted SSS (radius 1/0.07/0.045,
+   scale 2.2 µm) so thin centre and rims glow when backlit, darker central dimple (radial mask in
+   the disc plane), broad soft spec (rough 0.42, coat 0.18 @ 0.3), faint sheen, membrane bumps.
+2. Light from the depth: three warm point lights 0.9/2.2/3.6 m down the lumen ride with the
+   probe (the far ones excluded from glossy rays, so no streaks); frontal key halved.
+3. Wall: translucent pink-red, subtle elongated mosaic (bump 0.35), thin soft coat (0.22,
+   rough 0.16–0.32), darker/redder into the depth via the haze; near-lens wall stays defocused.
+4. Denoise: OIDN prefilter ACCURATE (quality BALANCED). 16 spp is clean (top-band crop checked).
+   Measured full-res steady state: 16 spp 116 s/frame, 10 spp 74 s/frame (see budget below).
+   Script currently set to 12 spp pending the director's budget decision.
+5. Far lumen: +420 low-poly cells 1.6–6.5 m ahead fading into the haze.
+6. Red wipe holds to the last render frame (bolus extended to 110 cells streaming past the lens);
+   when the lens passes *through* a cell its interior glows haemoglobin-red (backface emission)
+   instead of going black.
+* v2 stills: t030.150, t031.500 ("kan"), t033.200, t035.350 (bolus), t035.620 (wipe),
+  t035.900 (last render frame, still red).
+
+
 Script: `video/blender/shots/sh06.py` (+ shared `video/blender/lib_s7.py`).
 
 ## Design decisions
@@ -35,7 +54,7 @@ Script: `video/blender/shots/sh06.py` (+ shared `video/blender/lib_s7.py`).
 * `t035.350` the bolus floods in.
 * `t035.620` red wipe (frame fully covered).
 
-## Render budget (measured on this 4-core container)
+## Render budget (v1 numbers; v2 above supersedes)
 * Full-res 1080×1920 single frame `--final --from 756 --to 756`: **~50 s incl. first-frame
   sync/BVH**; steady state in a 48-frame chunk is lower (persistent data). Settings: 6 spp + OIDN,
   2 bounces + fast-GI AO, wall without SSS. Profiling showed ~6.5 s per sample at full res on
@@ -45,5 +64,3 @@ Script: `video/blender/shots/sh06.py` (+ shared `video/blender/lib_s7.py`).
 ## Known issues / next
 * Wall reads slightly tan at grazing angles (wet coat Fresnel); being tuned.
 * Low spp → occasional soft denoise blotches in deep bokeh.
-* Animatic tail (35.70–35.95, dissolve handles): the bolus has already passed and the vessel
-  re-appears; next iteration extends the bolus so the red wipe holds to the last render frame.

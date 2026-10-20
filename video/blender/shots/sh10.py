@@ -44,7 +44,7 @@ def build(ctx):
     mm = [L.mito_mesh(f"mito{k}", length=rng.uniform(0.022, 0.034), width=rng.uniform(0.009, 0.012), seed=k) for k in range(6)]
     for me in mm:
         me.materials.append(m_mito)
-    for k in range(260):
+    for k in range(520):
         while True:
             p = Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(-1, 1)))
             if p.length < 1:
@@ -93,15 +93,16 @@ def build(ctx):
     import numpy as np
     rs = np.random.RandomState(11)
     sp = 1.72
-    N = 260
+    N = 300
     ii, jj = np.mgrid[-N // 2:N // 2, -N // 2:N // 2]
-    x = (ii + 0.5 * (jj % 2)) * sp + rs.uniform(-0.18, 0.18, ii.shape)
-    y = jj * sp * 0.866 + rs.uniform(-0.18, 0.18, ii.shape)
+    x = (ii + 0.5 * (jj % 2)) * sp + rs.uniform(-0.35, 0.35, ii.shape)
+    y = jj * sp * 0.866 + rs.uniform(-0.35, 0.35, ii.shape)
     x = x.ravel(); y = y.ravel()
     d = np.sqrt(x * x + y * y)
     keep = d > 1.2                                   # hero cell sits at the origin
     x, y, d = x[keep], y[keep], d[keep]
-    z = np.array([0.35 * noise.noise(Vector((a * 0.03, b * 0.03, 0.5))) + R_CELL * 0.5 for a, b in zip(x, y)])
+    z = np.array([0.6 * noise.noise(Vector((a * 0.03, b * 0.03, 0.5))) + R_CELL * 0.5 for a, b in zip(x, y)])
+    z = z + rs.uniform(-0.15, 0.15, z.shape)
     rnd = rs.uniform(0, 1, x.shape)
     # light-on schedule: the "known" ones nearby one after another, then waves to infinity
     near = d < 9.0
@@ -122,10 +123,17 @@ def build(ctx):
     cam.data.dof.aperture_blades = 0
     look0 = mito_p
     t_s = ctx.t0 - 0.3
-    t_exit = t_s + 1.35                    # membrane crossing
     locs, rots, foc, fst, fdist = [], [], [], [], []
     prev = None
-    d0, d1 = 0.055, 260.0
+    d0, d1 = 0.062, 130.0
+
+    def dist_at(t):
+        u = C.remap(t, t_s, ctx.t1 + 0.25, lambda v: v)
+        return d0 * (d1 / d0) ** (C.smoother(u) * 0.75 + u * 0.25)
+    # membrane crossing: first time the probe is above the top of the hero cell
+    top = hero_c.z + R_CELL * 0.62 - mito_p.z
+    t_exit = next(t for t in [t_s + i / 240 for i in range(2400)] if dist_at(t) > top * 1.05)
+    print(f"[sh10] membrane crossing at {t_exit:.2f}s")
     for t in times:
         u = C.remap(t, t_s, ctx.t1 + 0.25, lambda v: v)
         # log-distance ease: slow start, accelerating, then a long glide
@@ -133,22 +141,30 @@ def build(ctx):
         dist = d0 * (d1 / d0) ** w
         # direction from target: start straight above (looking down at the mito), lean back to
         # an oblique view so the tissue horizon settles below the key-word band
-        el = C.lerp(88.0, 24.0, C.remap(t, t_s + 0.8, ctx.t1, C.smooth))
+        el = C.lerp(89.5, 24.0, C.remap(t, t_exit - 0.4, ctx.t1, C.smooth))
         az = C.lerp(-60.0, -35.0, C.remap(t, t_s, ctx.t1))
-        tgt = look0.lerp(Vector((0, 0, 0)), C.remap(t, t_s, t_exit + 1.0, C.smooth))
+        tgt = look0.lerp(hero_c, C.remap(t, t_exit - 0.3, t_exit + 1.2, C.smooth))
         dirv = Vector((math.cos(math.radians(el)) * math.cos(math.radians(az)),
                        math.cos(math.radians(el)) * math.sin(math.radians(az)),
                        math.sin(math.radians(el))))
         p = tgt + dirv * dist
         # aim: look at target but tilt up as we rise so the horizon sits at ~y 900 px
-        look = tgt + Vector((0, 0, dist * C.lerp(0.0, 0.42, C.remap(t, t_exit, ctx.t1, C.smooth))))
-        q = (look - p).to_track_quat("-Z", "Y")
+        look = tgt + Vector((0, 0, dist * C.lerp(0.0, 0.62, C.remap(t, t_exit, ctx.t1, C.smooth))))
+        # explicit camera frame: up = world +Y while looking straight down at the mitochondrion
+        # (so it stands vertical in 9:16 as at the end of sh09), blending to world +Z when oblique
+        f = (look - p).normalized()
+        k_up = C.remap(t, t_exit - 0.2, t_exit + 1.6, C.smooth)
+        uh = Vector((0, 1, 0)).lerp(Vector((0, 0, 1)), k_up).normalized()
+        if abs(f.dot(uh)) > 0.98:
+            uh = Vector((0, 1, 0))
+        rt = f.cross(uh).normalized(); up = rt.cross(f).normalized()
+        q = Matrix((rt, up, -f)).transposed().to_quaternion()
         e = q.to_euler("XYZ", prev) if prev else q.to_euler("XYZ")
         prev = e
         locs.append(tuple(p)); rots.append(tuple(e))
         foc.append(max(0.03, (tgt - p).length))
         fst.append(C.lerp(60.0, 8.0, C.remap(t, t_s, t_exit + 0.6)))
-        fdist.append(max(0.11, dist * 1.1))
+        fdist.append(max(0.3, dist * 0.75))
     L.bake(cam, frames, "location", locs)
     L.bake(cam, frames, "rotation_euler", rots)
     L.bake_id(cam.data, frames, "dof.focus_distance", foc)
@@ -164,8 +180,8 @@ def build(ctx):
     C.empty("TRK_cells", tuple(hero_c + Vector((0, 0, R_CELL * 0.4))))
 
     # ---------------------------------------------------------------- light
-    s1 = C.sun(elev_deg=35, azim_deg=130, strength=0.9, kelvin_k=3200, angle_deg=6, name="amberKey")
-    s2 = C.sun(elev_deg=60, azim_deg=-40, strength=0.35, kelvin_k=12000, angle_deg=20, name="tealFill")
+    s1 = C.sun(elev_deg=35, azim_deg=130, strength=1.6, kelvin_k=3200, angle_deg=6, name="amberKey")
+    s2 = C.sun(elev_deg=60, azim_deg=-40, strength=0.8, kelvin_k=12000, angle_deg=20, name="tealFill")
     s2.data.color = (0.45, 0.85, 1.0)
     il = C.point_light("probe", power=0.03, radius=0.01, kelvin_k=4500)
     il.parent = cam; il.location = (0, 0.01, 0)
@@ -182,18 +198,21 @@ def build(ctx):
 
 
 def mat_membrane():
-    """Hero cell plasma membrane: thin translucent glossy film (seen from inside first)."""
+    """Hero cell plasma membrane: thin translucent glossy film; alpha (not transmission) so light
+    reaches the interior and the probe sees the organelles through it from outside."""
     m, nt, p = C.new_mat("Membrane")
-    p.inputs["Base Color"].default_value = (0.55, 0.85, 0.85, 1)
-    p.inputs["Transmission Weight"].default_value = 0.85
-    p.inputs["Roughness"].default_value = 0.2
-    p.inputs["IOR"].default_value = 1.1
-    p.inputs["Coat Weight"].default_value = 0.5
+    p.inputs["Base Color"].default_value = (0.35, 0.6, 0.62, 1)
+    p.inputs["Roughness"].default_value = 0.25
+    p.inputs["Coat Weight"].default_value = 0.6
     p.inputs["Coat Roughness"].default_value = 0.08
     tc = L._n(nt, "ShaderNodeTexCoord")
     nz = L._n(nt, "ShaderNodeTexNoise", **{"Scale": 30.0, "Detail": 4.0})
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
     L._bump_chain(nt, p, [(nz.outputs["Fac"], 0.15)], distance=0.004)
+    lw = L._n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.3
+    al = L._n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.12; al.inputs["To Max"].default_value = 0.7
+    nt.links.new(lw.outputs["Facing"], al.inputs["Value"])
+    nt.links.new(al.outputs[0], p.inputs["Alpha"])
     L.fog_wrap(m)
     return m
 
@@ -202,7 +221,7 @@ def mat_field_cell(t_bil):
     """Instanced tissue cell: dark glossy teal body in shadow; when its 'ton' time passes it glows
     warm amber from within (nucleus-shaped core via facing ratio) and keeps a soft flicker."""
     m, nt, p = C.new_mat("FieldCell")
-    p.inputs["Base Color"].default_value = (0.03, 0.07, 0.08, 1)
+    p.inputs["Base Color"].default_value = (0.07, 0.15, 0.16, 1)
     p.inputs["Roughness"].default_value = 0.35
     p.inputs["Coat Weight"].default_value = 0.6
     p.inputs["Coat Roughness"].default_value = 0.1
@@ -219,16 +238,18 @@ def mat_field_cell(t_bil):
     nt.links.new(lw.outputs["Facing"], core.inputs[1])
     core2 = L._n(nt, "ShaderNodeMath"); core2.operation = "POWER"; core2.inputs[1].default_value = 2.5
     nt.links.new(core.outputs[0], core2.inputs[0])
+    r3 = L._n(nt, "ShaderNodeMath"); r3.operation = "POWER"; r3.inputs[1].default_value = 3.0
+    nt.links.new(ar.outputs["Fac"], r3.inputs[0])
     flick = L._n(nt, "ShaderNodeMath"); flick.operation = "MULTIPLY_ADD"
-    flick.inputs[1].default_value = 0.6; flick.inputs[2].default_value = 0.7
-    nt.links.new(ar.outputs["Fac"], flick.inputs[0])
+    flick.inputs[1].default_value = 2.4; flick.inputs[2].default_value = 0.25
+    nt.links.new(r3.outputs[0], flick.inputs[0])
     e = L._n(nt, "ShaderNodeMath"); e.operation = "MULTIPLY"
     nt.links.new(on.outputs[0], e.inputs[0]); nt.links.new(core2.outputs[0], e.inputs[1])
     e2 = L._n(nt, "ShaderNodeMath"); e2.operation = "MULTIPLY"
     nt.links.new(e.outputs[0], e2.inputs[0]); nt.links.new(flick.outputs[0], e2.inputs[1])
-    e3 = L._n(nt, "ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 7.0
+    e3 = L._n(nt, "ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 2.2
     nt.links.new(e2.outputs[0], e3.inputs[0])
-    p.inputs["Emission Color"].default_value = (1.0, 0.48, 0.14, 1)
+    p.inputs["Emission Color"].default_value = (1.0, 0.36, 0.08, 1)
     nt.links.new(e3.outputs[0], p.inputs["Emission Strength"])
     tc = L._n(nt, "ShaderNodeTexCoord")
     nz = L._n(nt, "ShaderNodeTexNoise", **{"Scale": 3.0, "Detail": 2.0})
@@ -263,9 +284,9 @@ def field_gn(vcol):
     rs = n.new("FunctionNodeRandomValue"); rs.data_type = "FLOAT"
     for sk in rs.inputs:
         if sk.type == "VALUE" and sk.name == "Min":
-            sk.default_value = 0.8
+            sk.default_value = 0.65
         if sk.type == "VALUE" and sk.name == "Max":
-            sk.default_value = 1.1
+            sk.default_value = 1.2
     rs.inputs["Seed"].default_value = 3
     l.new([o for o in rs.outputs if o.type == "VALUE"][0], ip.inputs["Scale"])
     l.new(ip.outputs[0], go.inputs[0])

@@ -215,6 +215,16 @@ def mat_rbc(name="RBC", fog=None, D=0.078):
     nz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 38.0, "Detail": 2.0, "Roughness": 0.6})
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
     _bump_chain(nt, p, [(nz.outputs["Fac"], 0.22)], distance=0.004)
+    # seen from inside (the lens passing through a cell): glowing haemoglobin red, never black
+    out = [n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"][0]
+    geo = _n(nt, "ShaderNodeNewGeometry")
+    em = _n(nt, "ShaderNodeEmission"); em.inputs["Color"].default_value = (0.55, 0.03, 0.02, 1)
+    em.inputs["Strength"].default_value = 0.35
+    mx = _n(nt, "ShaderNodeMixShader")
+    nt.links.new(geo.outputs["Backfacing"], mx.inputs[0])
+    nt.links.new(p.outputs[0], mx.inputs[1]); nt.links.new(em.outputs[0], mx.inputs[2])
+    nt.links.new(mx.outputs[0], out.inputs["Surface"])
+    m.cycles.emission_sampling = "NONE"
     if fog:
         fog_wrap(m, **fog)
     return m
@@ -496,8 +506,8 @@ def path_tube(name, pts, radius_fn, nu=32, store_s=True):
 def mat_mito(name="Mito", glow=(1.0, 0.36, 0.07), strength=4.0, fog=None, hero=False):
     """Mitochondrion outer body: translucent amber membrane with bumpy surface; for non-hero
     mitochondria a cristae-like stripe pattern glows through (cheap); hero mitos get real cristae."""
-    m, nt, p = mat_wet_tissue(name, base=(0.55, 0.22, 0.08), sss_radius=(1.0, 0.5, 0.2), sss_scale=0.006,
-                              rough=0.35, coat=0.8, coat_rough=0.1)
+    m, nt, p = mat_wet_tissue(name, base=(0.32, 0.11, 0.035), sss_radius=(1.0, 0.5, 0.2), sss_scale=0.006,
+                              rough=0.35, coat=0.6, coat_rough=0.12)
     tc = _n(nt, "ShaderNodeTexCoord")
     nz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 160.0, "Detail": 5.0})
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
@@ -526,8 +536,16 @@ def mat_mito(name="Mito", glow=(1.0, 0.36, 0.07), strength=4.0, fog=None, hero=F
     nt.links.new(mul.outputs[0], mul2.inputs[0]); nt.links.new(gain.outputs[0], mul2.inputs[1])
     mul3 = _n(nt, "ShaderNodeMath"); mul3.operation = "MULTIPLY"; mul3.inputs[1].default_value = strength
     nt.links.new(mul2.outputs[0], mul3.inputs[0])
+    # glow from within: strongest where we look through the body, fading to the dark rim (volume read)
+    lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.5
+    core = _n(nt, "ShaderNodeMath"); core.operation = "SUBTRACT"; core.inputs[0].default_value = 1.0
+    nt.links.new(lw.outputs["Facing"], core.inputs[1])
+    core2 = _n(nt, "ShaderNodeMath"); core2.operation = "POWER"; core2.inputs[1].default_value = 1.8
+    nt.links.new(core.outputs[0], core2.inputs[0])
+    mul4 = _n(nt, "ShaderNodeMath"); mul4.operation = "MULTIPLY"
+    nt.links.new(mul3.outputs[0], mul4.inputs[0]); nt.links.new(core2.outputs[0], mul4.inputs[1])
     p.inputs["Emission Color"].default_value = (*glow, 1)
-    nt.links.new(mul3.outputs[0], p.inputs["Emission Strength"])
+    nt.links.new(mul4.outputs[0], p.inputs["Emission Strength"])
     if fog:
         fog_wrap(m, **fog)
     return m

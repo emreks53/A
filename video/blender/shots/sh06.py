@@ -304,13 +304,15 @@ def build(ctx):
         pl.parent = cam; pl.location = (dx, 0.05 + 0.03 * k, -dz)
         pl.visible_camera = False
         pl.visible_glossy = k == 0
-    sc.view_settings.exposure = 0.35
+    sc.view_settings.exposure = 0.5
 
     th = L.cam_child_empty("TRK_heart", cam, (300, 1260), depth=0.6)
 
     sc.world.light_settings.distance = 0.3        # fast-GI AO reach (scene metres)
-    L.budget_denoise()
-    return dict(L.LEAN)
+    L.budget_denoise(prefilter="ACCURATE", quality="BALANCED")
+    ov = dict(L.LEAN)
+    ov.update(final_spp=12, preview_spp=16)
+    return ov
 
 
 C.run("sh06", build)
