@@ -1,5 +1,19 @@
 # sh10 — out of the cell into countless cells (52.10–58.00 s) · studio S7
 
+## v2 (director review-1 notes applied)
+1. Interior matches sh09 v2: translucent double-membrane mitochondria with real 3-D cristae and a
+   faint warm glow, rough-ER lace (branching translucent tubules, kept clear of the probe's
+   path), ~2 500 ribosome/granule specks, haze + DOF layers.
+2. Field: cells tightly packed (scale 0.98–1.2 on a jittered grid, so neighbours press into
+   polygonal contacts), SSS bodies with fine coat sheen, darker nucleus inside each glowing cell.
+3. Lighting-up reads as glow from within: warm amber emission through the translucent body with a
+   darker nucleus core; the amber sun dims as the field ignites so the cells' own light carries
+   the image; waves roll outward (near cells one by one, the rest in log-distance waves).
+4. "hadsiz": field is now ~360 000 instances to the horizon; the camera ends lower (13°) so the
+   luminous field fills the lower frame and recedes into a warm haze ("city at night", organic);
+   band 520–820 px stays a dark soft void.
+Budget: 12 spp, ACCURATE/BALANCED, blue noise, 80 % res.
+
 Script: `video/blender/shots/sh10.py` (+ shared `video/blender/lib_s7.py`).
 
 ## Design decisions

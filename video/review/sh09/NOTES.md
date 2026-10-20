@@ -18,7 +18,9 @@
    cytoplasm haze; DOF layers.
 4. Membrane crossing: sarcolemma carries glycocalyx sheen/fuzz + fine bump.
 5. Same SSS-first material language as sh06 v2.
-Budget rule: 12 spp + OIDN ACCURATE/BALANCED, finals at 80 % res (director-approved fallback).
+Budget: 10 spp + OIDN ACCURATE/BALANCED + blue-noise sampling, finals at 80 % res; interior
+objects only render once the probe reaches the membrane and exterior tissue is hidden once inside
+(both behind the haze). **Measured 52.3 s/frame (exterior, 1166) / 52.9 s/frame (interior, 1236).**
 
 
 Script: `video/blender/shots/sh09.py` (+ shared `video/blender/lib_s7.py`).

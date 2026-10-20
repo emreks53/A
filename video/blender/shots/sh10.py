@@ -61,10 +61,16 @@ def build(ctx):
         L.mito_assembly(f"heroMito{i}", tuple(mito_p + off), (0, 0, 0.3 * i), variant=10 + i, length=ln, width=wd)
     gl = C.point_light("mitoGlow", loc=tuple(mito_p + Vector((0, 0, -0.012))), power=0.012, radius=0.006, kelvin_k=2600)
     gl.visible_camera = False; gl.visible_glossy = False
-    # ER-like membrane sheets / granules near the start
+    # rough-ER lace around the organelles (kept clear of the probe's straight-up path)
+    er = L.er_network("ER", tuple(mito_p + Vector((0, 0, 0.05))), (0.16, 0.16, 0.12), n_walks=420, steps=30,
+                      step=0.0028, seed=4, axis_xy=(mito_p.x, mito_p.y), axis_r=0.045)
+    L.tubes_from_edges(er, radius=0.00035, mat=L.mat_er())
+    # ribosomes / granules near the start
     bmg = bmesh.new()
-    for k in range(900):
-        p = mito_p + Vector((rng.uniform(-0.15, 0.15), rng.uniform(-0.15, 0.15), rng.uniform(-0.1, 0.2)))
+    for k in range(2500):
+        p = mito_p + Vector((rng.uniform(-0.15, 0.15), rng.uniform(-0.15, 0.15), rng.uniform(-0.1, 0.25)))
+        if Vector((p.x - mito_p.x, p.y - mito_p.y)).length < 0.02:
+            continue
         r = bmesh.ops.create_icosphere(bmg, subdivisions=1, radius=rng.uniform(0.0006, 0.0014))
         bmesh.ops.translate(bmg, vec=p, verts=r["verts"])
     me = bpy.data.meshes.new("granules"); bmg.to_mesh(me); bmg.free()
@@ -178,6 +184,8 @@ def build(ctx):
 
     # ---------------------------------------------------------------- light
     s1 = C.sun(elev_deg=35, azim_deg=130, strength=1.6, kelvin_k=3200, angle_deg=6, name="amberKey")
+    # once the field glows, let the cells' own light carry the image (no matte sun-lit look)
+    L.bake_id(s1.data, frames, "energy", [C.lerp(1.6, 0.45, C.remap(t, t_bil - 0.2, t_bilme + 0.6)) for t in times])
     s2 = C.sun(elev_deg=60, azim_deg=-40, strength=0.8, kelvin_k=12000, angle_deg=20, name="tealFill")
     s2.data.color = (0.45, 0.85, 1.0)
     il = C.point_light("probe", power=0.03, radius=0.01, kelvin_k=4500)
@@ -220,7 +228,7 @@ def mat_field_cell(t_bil):
     p.inputs["Base Color"].default_value = (0.08, 0.15, 0.16, 1)
     p.inputs["Roughness"].default_value = 0.38
     p.subsurface_method = L.SSS_METHOD
-    p.inputs["Subsurface Weight"].default_value = 0.6
+    p.inputs["Subsurface Weight"].default_value = 0.85
     p.inputs["Subsurface Radius"].default_value = (1.0, 0.6, 0.35)
     p.inputs["Subsurface Scale"].default_value = 0.08
     p.inputs["Coat Weight"].default_value = 0.6
@@ -255,7 +263,7 @@ def mat_field_cell(t_bil):
     nt.links.new(on.outputs[0], e.inputs[0]); nt.links.new(core3.outputs[0], e.inputs[1])
     e2 = L._n(nt, "ShaderNodeMath"); e2.operation = "MULTIPLY"
     nt.links.new(e.outputs[0], e2.inputs[0]); nt.links.new(flick.outputs[0], e2.inputs[1])
-    e3 = L._n(nt, "ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 2.2
+    e3 = L._n(nt, "ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 3.6
     nt.links.new(e2.outputs[0], e3.inputs[0])
     p.inputs["Emission Color"].default_value = (1.0, 0.32, 0.06, 1)
     nt.links.new(e3.outputs[0], p.inputs["Emission Strength"])

@@ -1053,3 +1053,54 @@ def mat_cristae():
     nt.links.new(s.outputs[0], p.inputs["Emission Strength"])
     fog_wrap(m)
     return m
+
+
+def tubes_from_edges(obj, radius=0.0007, mat=None, res=6):
+    """Turn a mesh made of edges into thin round tubes (geometry nodes mesh->curve->mesh)."""
+    g = bpy.data.node_groups.get(f"S7_Tubes_{radius}")
+    if g is None:
+        g = bpy.data.node_groups.new(f"S7_Tubes_{radius}", "GeometryNodeTree"); g.is_modifier = True
+        g.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+        g.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+        gi = g.nodes.new("NodeGroupInput"); go = g.nodes.new("NodeGroupOutput")
+        m2c = g.nodes.new("GeometryNodeMeshToCurve")
+        cc = g.nodes.new("GeometryNodeCurvePrimitiveCircle"); cc.inputs["Resolution"].default_value = res
+        cc.inputs["Radius"].default_value = radius
+        c2m = g.nodes.new("GeometryNodeCurveToMesh")
+        g.links.new(gi.outputs[0], m2c.inputs["Mesh"]); g.links.new(m2c.outputs[0], c2m.inputs["Curve"])
+        g.links.new(cc.outputs["Curve"], c2m.inputs["Profile Curve"]); g.links.new(c2m.outputs[0], go.inputs[0])
+    md = obj.modifiers.new("tubes", "NODES"); md.node_group = g
+    if mat is not None:
+        obj.data.materials.append(mat)
+    return md
+
+
+def er_network(name, center, extent, n_walks=160, steps=14, step=0.006, seed=0, avoid=None, avoid_r=0.0,
+               axis_xy=None, axis_r=0.0):
+    """Endoplasmic-reticulum-like lace: branching random-walk tubules inside a box."""
+    import bmesh as _bm
+    rng = random.Random(seed)
+    bm = _bm.new()
+    c = Vector(center)
+    for w in range(n_walks):
+        p = c + Vector((rng.uniform(-1, 1) * extent[0], rng.uniform(-1, 1) * extent[1], rng.uniform(-1, 1) * extent[2]))
+        d = Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(-1, 1))).normalized()
+        vp = bm.verts.new(p)
+        for k in range(steps):
+            d = (d + Vector((rng.gauss(0, 0.5), rng.gauss(0, 0.5), rng.gauss(0, 0.5)))).normalized()
+            p = p + d * step
+            if avoid is not None and (p - Vector(avoid)).length < avoid_r:
+                break
+            if axis_xy is not None and math.hypot(p.x - axis_xy[0], p.y - axis_xy[1]) < axis_r:
+                break
+            vn = bm.verts.new(p); bm.edges.new((vp, vn)); vp = vn
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    return obj_from_mesh(name, me)
+
+
+def mat_er():
+    m, nt, p = mat_wet_tissue("ER", base=(0.55, 0.72, 0.7), sss_radius=(0.8, 1, 1), sss_scale=0.002, rough=0.3,
+                              coat=0.6, coat_rough=0.1)
+    p.inputs["Alpha"].default_value = 0.25
+    fog_wrap(m)
+    return m

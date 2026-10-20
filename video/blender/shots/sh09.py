@@ -41,8 +41,7 @@ def build(ctx):
     # fascicle centres around the channel (channel axis = x 0, z 0)
     fasc = [(Vector((0.95, 0, 0.05)), 0.75, True), (Vector((-0.92, 0, 0.12)), 0.72, False),
             (Vector((0.05, 0, -1.02)), 0.78, False), (Vector((-0.2, 0, 1.15)), 0.8, False),
-            (Vector((1.2, 0, -1.25)), 0.7, False), (Vector((-1.3, 0, -1.2)), 0.75, False),
-            (Vector((1.3, 0, 1.3)), 0.7, False)]
+            (Vector((1.2, 0, -1.25)), 0.7, False)]
     sheath_mat = make_sheath_mat()
     k = 0
     for fi, (fc, frad, is_hero_fasc) in enumerate(fasc):
@@ -278,7 +277,7 @@ def build(ctx):
     sc.world.light_settings.distance = 0.2
     L.budget_denoise(prefilter="ACCURATE", quality="BALANCED", final_res=80)
     ov = dict(L.LEAN)
-    ov.update(transmission_bounces=3, transparent_bounces=8, final_spp=12, preview_spp=12)
+    ov.update(transmission_bounces=3, transparent_bounces=6, final_spp=10, preview_spp=12)
     return ov
 
 
