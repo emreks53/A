@@ -973,6 +973,34 @@ def mat_page_edge(name="page_edge", dark=1.0):
     return m
 
 
+def ensure_lo(path, factor=5):
+    """Box-filtered low-res copy of an ink mask (anti-aliased print for distant views)."""
+    lo = path[:-4] + "_lo.png"
+    if not os.path.exists(lo):
+        im = bpy.data.images.load(path)
+        w, h = im.size
+        im.scale(max(8, w // factor), max(8, h // factor))
+        tmp = lo + ".tmp.png"
+        im.filepath_raw = tmp
+        im.file_format = "PNG"
+        im.save()
+        bpy.data.images.remove(im)
+        os.replace(tmp, lo)
+    return lo
+
+
+def mask_lod(nt, path, vec):
+    """Sharp mask close to the camera, pre-filtered mask further away (avoids text aliasing that the
+    denoiser would turn into mottle at low sample counts)."""
+    a = img_node(nt, path, True, vec=vec, ext="CLIP", interp="Linear")
+    b = img_node(nt, ensure_lo(path), True, vec=vec, ext="CLIP", interp="Linear")
+    cd = NN(nt, "ShaderNodeCameraData")
+    f = maprange(nt, cd.outputs["View Distance"], 0.50, 0.75, 0.0, 1.0)
+    mx = NN(nt, "ShaderNodeMix"); mx.data_type = "FLOAT"
+    LK(nt, f, mx.inputs[0]); LK(nt, a.outputs[0], mx.inputs[2]); LK(nt, b.outputs[0], mx.inputs[3])
+    return mx.outputs[0]
+
+
 def _paper_and_ink(nt, mask_out, geo, tone=1.0):
     """Returns (base_color_socket, roughness_socket, ink_factor_socket)."""
     pn = noise(nt, geo.outputs["Position"], 14.0, 1.0, 0.5)
@@ -990,8 +1018,8 @@ def mat_page(name, img, uv="UVMap"):
     m, nt, out = new_mat(name)
     geo = NN(nt, "ShaderNodeNewGeometry")
     uvn = NN(nt, "ShaderNodeUVMap", uv_map=uv)
-    mk = img_node(nt, img, True, vec=uvn.outputs[0], ext="CLIP", interp="Linear")
-    col, rough, ink = _paper_and_ink(nt, mk.outputs[0], geo)
+    mk = mask_lod(nt, img, uvn.outputs[0])
+    col, rough, ink = _paper_and_ink(nt, mk, geo)
     p = principled(nt, **{"Base Color": col, "Roughness": rough})
     LK(nt, p.outputs[0], out.inputs["Surface"])
     return m
@@ -1010,13 +1038,13 @@ def mat_leaf(name, img_front, img_back):
     cmb = NN(nt, "ShaderNodeCombineXYZ")
     LK(nt, math_node(nt, "SUBTRACT", va=1.0, b=sep.outputs[0]), cmb.inputs[0])
     LK(nt, sep.outputs[1], cmb.inputs[1])
-    f = img_node(nt, img_front, True, vec=uvn.outputs[0], ext="CLIP", interp="Linear")
-    b = img_node(nt, img_back, True, vec=cmb.outputs[0], ext="CLIP", interp="Linear")
+    f = mask_lod(nt, img_front, uvn.outputs[0])
+    b = mask_lod(nt, img_back, cmb.outputs[0])
     bf = geo.outputs["Backfacing"]
     this = NN(nt, "ShaderNodeMix"); this.data_type = "FLOAT"
-    LK(nt, bf, this.inputs[0]); LK(nt, f.outputs[0], this.inputs[2]); LK(nt, b.outputs[0], this.inputs[3])
+    LK(nt, bf, this.inputs[0]); LK(nt, f, this.inputs[2]); LK(nt, b, this.inputs[3])
     other = NN(nt, "ShaderNodeMix"); other.data_type = "FLOAT"
-    LK(nt, bf, other.inputs[0]); LK(nt, b.outputs[0], other.inputs[2]); LK(nt, f.outputs[0], other.inputs[3])
+    LK(nt, bf, other.inputs[0]); LK(nt, b, other.inputs[2]); LK(nt, f, other.inputs[3])
     col, rough, ink = _paper_and_ink(nt, this.outputs[0], geo)
     p = principled(nt, **{"Base Color": col, "Roughness": rough})
     tcol = mixrgb(nt, maprange(nt, other.outputs[0], 0.1, 0.9, 0.0, 0.55), tuple(c * 0.9 for c in PAPER_RGB), (0.1, 0.09, 0.08))
@@ -2242,7 +2270,7 @@ def build(ctx):
         sun.data.keyframe_insert("energy", frame=t * C.FPS)
     shutter(ctx)
     # cool fill: overcast skylight from a door/window behind camera (front wall)
-    C.area("fill_front", loc=(0.9, -3.5, 1.3), look_at=(0.0, 0.0, 0.2), size=2.4, size_y=1.6, power=42, kelvin_k=7600)
+    C.area("fill_front", loc=(0.9, -3.5, 1.3), look_at=(0.0, 0.0, 0.2), size=2.4, size_y=1.6, power=42, kelvin_k=5600)
     portal = C.area("portal", loc=(WALL_LEFT_X - 0.02, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2),
                     look_at=(1.0, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2), size=WIN_Y1 - WIN_Y0, size_y=WIN_Z1 - WIN_Z0, power=0)
     portal.data.size, portal.data.size_y = WIN_Y1 - WIN_Y0, WIN_Z1 - WIN_Z0
