@@ -432,6 +432,26 @@ def build(ctx):
         if n.bl_idname == "ShaderNodeMixShader" and n.inputs[2].is_linked and n.inputs[2].links[0].from_node.bl_idname == "ShaderNodeBsdfTranslucent":
             n.inputs[0].default_value = 0.07; n.inputs[0].keyframe_insert("default_value", frame=int(round((t_asl + 1.2) * C.FPS)))
             n.inputs[0].default_value = 0.6; n.inputs[0].keyframe_insert("default_value", frame=ctx.f1)
+    # during the fully defocused push the SSS adds cost but no visible detail: fade it, translucency carries the glow
+    for n in skin.node_tree.nodes:
+        if n.bl_idname == "ShaderNodeBsdfPrincipled" and n.inputs["Subsurface Weight"].default_value > 0.9:
+            sw = n.inputs["Subsurface Weight"]
+            sw.default_value = 1.0; sw.keyframe_insert("default_value", frame=int(round((t_asl + 0.5) * C.FPS)))
+            sw.default_value = 0.0; sw.keyframe_insert("default_value", frame=int(round((t_asl + 1.4) * C.FPS)))
+    # once the hand is a pure defocused glow, crossfade to a cheap shader (Cycles skips the zero-weight branch)
+    snt = skin.node_tree
+    sout = [n for n in snt.nodes if n.bl_idname == "ShaderNodeOutputMaterial"][0]
+    full = sout.inputs["Surface"].links[0].from_socket
+    cheap = snt.nodes.new("ShaderNodeBsdfPrincipled")
+    cheap.inputs["Base Color"].default_value = (0.34, 0.12, 0.07, 1); cheap.inputs["Roughness"].default_value = 0.45
+    ctr = snt.nodes.new("ShaderNodeBsdfTranslucent"); ctr.inputs["Color"].default_value = (0.80, 0.10, 0.035, 1)
+    cmix = snt.nodes.new("ShaderNodeMixShader"); cmix.inputs[0].default_value = 0.55
+    snt.links.new(cheap.outputs[0], cmix.inputs[1]); snt.links.new(ctr.outputs[0], cmix.inputs[2])
+    xf = snt.nodes.new("ShaderNodeMixShader")
+    snt.links.new(full, xf.inputs[1]); snt.links.new(cmix.outputs[0], xf.inputs[2])
+    snt.links.new(xf.outputs[0], sout.inputs["Surface"])
+    xf.inputs[0].default_value = 0.0; xf.inputs[0].keyframe_insert("default_value", frame=int(round((t_asl + 0.7) * C.FPS)))
+    xf.inputs[0].default_value = 1.0; xf.inputs[0].keyframe_insert("default_value", frame=int(round((t_asl + 1.5) * C.FPS)))
     # light dissolve from sh07's glare: open over-exposed, settle by ~40.9 s
     vs = sc.view_settings
     vs.exposure = 2.0; vs.keyframe_insert("exposure", frame=ctx.f0)
