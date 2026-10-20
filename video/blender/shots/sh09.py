@@ -126,7 +126,7 @@ def build(ctx):
     nerve = L.obj_from_mesh("nerve", nme, m_nerve)
     # thin translucent connective sheath around the axon
     sme, _ = L.path_tube("nerveSheath", dense, lambda s_, i: nerve_r(s_, i) * 0.4 + 0.034, nu=28, store_s=False)
-    L.obj_from_mesh("nerveSheath", sme, L.mat_web("Perineurium", alpha_max=0.28, stretch=(60, 4, 60)))
+    L.obj_from_mesh("nerveSheath", sme, L.mat_web("Perineurium", alpha_max=0.4, stretch=(60, 4, 60)))
     # terminal boutons (end plate) on the hero fibre
     m_bout = make_bouton_mat(t_junc)
     for b in range(9):
@@ -247,7 +247,7 @@ def build(ctx):
         fd_.append(C.lerp(1.6, 0.3, u))
         w = C.remap(t, t_kas, t_kas + 0.6)
         col = C.lerp((0.045, 0.012, 0.010), (0.018, 0.026, 0.03), w)
-        col = C.lerp(col, (0.022, 0.05, 0.055), u)
+        col = C.lerp(col, (0.034, 0.042, 0.05), u)
         fc_.append(col)
     L.bake_id(fg, frames, 'nodes["dist"].outputs[0].default_value', fd_)
     L.bake_id(fg, frames, 'nodes["color"].outputs[0].default_value', [(*c, 1.0) for c in fc_])
@@ -312,8 +312,16 @@ def make_sheath_mat():
 def make_nerve_mat(internode, t_imp0, s_end, t_junc):
     """Myelin: glossy creamy-white lamellar sheath (SSS). Impulse: teal emission at the nodes of Ranvier
     lighting one after another (saltatory), with a faint glow travelling along the axon in between."""
-    m, nt, p = L.mat_wet_tissue("Myelin", base=(0.74, 0.62, 0.50), sss_radius=(1.0, 0.8, 0.6), sss_scale=0.03,
-                                rough=0.48, coat=0.35, coat_rough=0.2)
+    m, nt, p = L.mat_wet_tissue("Myelin", base=(0.66, 0.58, 0.52), sss_radius=(1.0, 0.85, 0.7), sss_scale=0.07,
+                                rough=0.62, coat=0.12, coat_rough=0.3)
+    p.inputs["Sheen Weight"].default_value = 0.45
+    p.inputs["Sheen Roughness"].default_value = 0.45
+    tcx = L._n(nt, "ShaderNodeTexCoord")
+    nzx = L._n(nt, "ShaderNodeTexNoise", **{"Scale": 35.0, "Detail": 5.0, "Roughness": 0.6})
+    nt.links.new(tcx.outputs["Object"], nzx.inputs["Vector"])
+    vcx = L._n(nt, "ShaderNodeValToRGB")
+    vcx.color_ramp.elements[0].color = (0.55, 0.47, 0.43, 1); vcx.color_ramp.elements[1].color = (0.72, 0.64, 0.56, 1)
+    nt.links.new(nzx.outputs["Fac"], vcx.inputs[0]); nt.links.new(vcx.outputs[0], p.inputs["Base Color"])
     at = L._n(nt, "ShaderNodeAttribute"); at.attribute_name = "s"
     tv = L.time_value(nt)
     # front position S(t)
@@ -369,7 +377,7 @@ def make_nerve_mat(internode, t_imp0, s_end, t_junc):
     tc = L._n(nt, "ShaderNodeTexCoord")
     nz = L._n(nt, "ShaderNodeTexNoise", **{"Scale": 120.0, "Detail": 5.0})
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
-    L._bump_chain(nt, p, [(nz.outputs["Fac"], 0.12)], distance=0.002)
+    L._bump_chain(nt, p, [(nzx.outputs["Fac"], 0.3), (nz.outputs["Fac"], 0.18)], distance=0.003)
     L.fog_wrap(m)
     return m
 
@@ -405,6 +413,16 @@ def build_interior(rng, ctx):
     import bmesh as B
     x0 = HERO_C.x - R_F + 0.004
     m_myo = L.mat_muscle("Myofibril")
+    for n_ in m_myo.node_tree.nodes:
+        if n_.type == "BSDF_PRINCIPLED":
+            n_.inputs["Subsurface Scale"].default_value = 0.012
+            n_.inputs["Subsurface Radius"].default_value = (1.0, 0.45, 0.35)
+            n_.inputs["Coat Weight"].default_value = 0.4
+            n_.inputs["Sheen Weight"].default_value = 0.5
+            n_.inputs["Sheen Tint"].default_value = (1.0, 0.75, 0.7, 1)
+        if n_.type == "VALTORGB":
+            n_.color_ramp.elements[0].color = (0.32, 0.07, 0.07, 1)
+            n_.color_ramp.elements[1].color = (0.55, 0.16, 0.14, 1)
     # myofibrils: hex lattice in the X-Z plane (axis Y), only inside the fibre near the entry
     sp = 0.026
     bm = B.new()
@@ -474,14 +492,20 @@ def build_interior(rng, ctx):
             gl.data.specular_factor = 0.0; gl.visible_camera = False; gl.visible_glossy = False
     # glycogen granules / ribosome specks in the pocket
     bmg = B.new()
-    for k in range(700):
-        p = Vector((rng.uniform(x0, HERO_C.x), DIVE_Y + rng.uniform(-0.12, 0.12), rng.uniform(-0.09, 0.05)))
-        if abs(p.y - DIVE_Y) < 0.03 and abs(p.z + 0.02) < 0.03:
+    for k in range(4000):
+        p = Vector((rng.uniform(x0, HERO_C.x + 0.12), DIVE_Y + rng.uniform(-0.12, 0.12), rng.uniform(-0.12, 0.08)))
+        if abs(p.y - DIVE_Y) < 0.012 and abs(p.z + 0.02) < 0.012 and p.x < HERO_C.x - 0.012:
             continue
-        r = B.ops.create_icosphere(bmg, subdivisions=2, radius=rng.uniform(0.0003, 0.0007))
+        r = B.ops.create_icosphere(bmg, subdivisions=2, radius=rng.uniform(0.0002, 0.0006))
         B.ops.translate(bmg, vec=p, verts=r["verts"])
     me = bpy.data.meshes.new("granules"); bmg.to_mesh(me); bmg.free()
-    m_gr = L.mat_wet_tissue("Granule", base=(0.25, 0.16, 0.12), rough=0.3, coat=0.0, sss_scale=0.001)[0]
+    m_gr = L.mat_wet_tissue("Granule", base=(0.22, 0.2, 0.2), rough=0.35, coat=0.2, sss_scale=0.001)[0]
+    # out-of-focus foreground organelles framing the final view
+    final_cam_x = HERO_C.x - 0.0105 - 0.062
+    for k, (dy, dz) in enumerate(((0.024, 0.016), (-0.028, -0.012), (0.03, -0.022), (-0.02, 0.02))):
+        L.mito_assembly(f"fgMito{k}", (final_cam_x + 0.022 + 0.006 * k, DIVE_Y + dy, -0.02 + dz),
+                        (rng.uniform(-0.3, 0.3), rng.uniform(0, 6), rng.uniform(-0.3, 0.3)), variant=k % 5,
+                        length=0.022 + 0.003 * (k % 5), width=0.0095)
     L.fog_wrap(m_gr)
     L.obj_from_mesh("granules", me, m_gr)
 

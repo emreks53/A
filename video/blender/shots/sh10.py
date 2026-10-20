@@ -143,7 +143,7 @@ def build(ctx):
         dist = d0 * (d1 / d0) ** w
         # direction from target: start straight above (looking down at the mito), lean back to
         # an oblique view so the tissue horizon settles below the key-word band
-        el = C.lerp(89.5, 13.0, C.remap(t, t_exit - 0.4, ctx.t1, C.smooth))
+        el = C.lerp(89.5, 19.0, C.remap(t, t_exit - 0.4, ctx.t1, C.smooth))
         az = C.lerp(-60.0, -35.0, C.remap(t, t_s, ctx.t1))
         tgt = look0.lerp(hero_c, C.remap(t, t_exit - 0.3, t_exit + 1.2, C.smooth))
         dirv = Vector((math.cos(math.radians(el)) * math.cos(math.radians(az)),
@@ -151,7 +151,7 @@ def build(ctx):
                        math.sin(math.radians(el))))
         p = tgt + dirv * dist
         # aim: look at target but tilt up as we rise so the horizon sits at ~y 900 px
-        look = tgt + Vector((0, 0, dist * C.lerp(0.0, 0.3, C.remap(t, t_exit, ctx.t1, C.smooth))))
+        look = tgt + Vector((0, 0, dist * C.lerp(0.0, 0.16, C.remap(t, t_exit, ctx.t1, C.smooth))))
         # explicit camera frame: up = world +Y while looking straight down at the mitochondrion
         # (so it stands vertical in 9:16 as at the end of sh09), blending to world +Z when oblique
         f = (look - p).normalized()
@@ -185,7 +185,7 @@ def build(ctx):
     # ---------------------------------------------------------------- light
     s1 = C.sun(elev_deg=35, azim_deg=130, strength=1.6, kelvin_k=3200, angle_deg=6, name="amberKey")
     # once the field glows, let the cells' own light carry the image (no matte sun-lit look)
-    L.bake_id(s1.data, frames, "energy", [C.lerp(1.6, 0.45, C.remap(t, t_bil - 0.2, t_bilme + 0.6)) for t in times])
+    L.bake_id(s1.data, frames, "energy", [C.lerp(1.6, 0.18, C.remap(t, t_bil - 0.2, t_bilme + 0.6)) for t in times])
     s2 = C.sun(elev_deg=60, azim_deg=-40, strength=0.8, kelvin_k=12000, angle_deg=20, name="tealFill")
     s2.data.color = (0.45, 0.85, 1.0)
     il = C.point_light("probe", power=0.03, radius=0.01, kelvin_k=4500)
@@ -209,12 +209,17 @@ def mat_membrane():
     p.inputs["Roughness"].default_value = 0.25
     p.inputs["Coat Weight"].default_value = 0.6
     p.inputs["Coat Roughness"].default_value = 0.08
+    p.inputs["Thin Film Thickness"].default_value = 420.0      # lipid-bilayer interference sheen
+    p.inputs["Thin Film IOR"].default_value = 1.45
+    p.inputs["Sheen Weight"].default_value = 0.4
     tc = L._n(nt, "ShaderNodeTexCoord")
     nz = L._n(nt, "ShaderNodeTexNoise", **{"Scale": 30.0, "Detail": 4.0})
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
-    L._bump_chain(nt, p, [(nz.outputs["Fac"], 0.15)], distance=0.004)
+    nf = L._n(nt, "ShaderNodeTexNoise", **{"Scale": 600.0, "Detail": 3.0})
+    nt.links.new(tc.outputs["Object"], nf.inputs["Vector"])
+    L._bump_chain(nt, p, [(nz.outputs["Fac"], 0.2), (nf.outputs["Fac"], 0.12)], distance=0.004)
     lw = L._n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.3
-    al = L._n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.12; al.inputs["To Max"].default_value = 0.7
+    al = L._n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.22; al.inputs["To Max"].default_value = 0.8
     nt.links.new(lw.outputs["Facing"], al.inputs["Value"])
     nt.links.new(al.outputs[0], p.inputs["Alpha"])
     L.fog_wrap(m)
@@ -225,12 +230,14 @@ def mat_field_cell(t_bil):
     """Instanced tissue cell: dark glossy teal body in shadow; when its 'ton' time passes it glows
     warm amber from within (nucleus-shaped core via facing ratio) and keeps a soft flicker."""
     m, nt, p = C.new_mat("FieldCell")
-    p.inputs["Base Color"].default_value = (0.08, 0.15, 0.16, 1)
-    p.inputs["Roughness"].default_value = 0.38
+    p.inputs["Base Color"].default_value = (0.05, 0.10, 0.11, 1)
+    p.inputs["Roughness"].default_value = 0.3
+    p.inputs["Coat Weight"].default_value = 0.85
+    p.inputs["Coat Roughness"].default_value = 0.07
     p.subsurface_method = L.SSS_METHOD
-    p.inputs["Subsurface Weight"].default_value = 0.85
+    p.inputs["Subsurface Weight"].default_value = 1.0
     p.inputs["Subsurface Radius"].default_value = (1.0, 0.6, 0.35)
-    p.inputs["Subsurface Scale"].default_value = 0.08
+    p.inputs["Subsurface Scale"].default_value = 0.22
     p.inputs["Coat Weight"].default_value = 0.6
     p.inputs["Coat Roughness"].default_value = 0.1
     tv = L.time_value(nt)
@@ -263,7 +270,7 @@ def mat_field_cell(t_bil):
     nt.links.new(on.outputs[0], e.inputs[0]); nt.links.new(core3.outputs[0], e.inputs[1])
     e2 = L._n(nt, "ShaderNodeMath"); e2.operation = "MULTIPLY"
     nt.links.new(e.outputs[0], e2.inputs[0]); nt.links.new(flick.outputs[0], e2.inputs[1])
-    e3 = L._n(nt, "ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 3.6
+    e3 = L._n(nt, "ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 6.0
     nt.links.new(e2.outputs[0], e3.inputs[0])
     p.inputs["Emission Color"].default_value = (1.0, 0.32, 0.06, 1)
     nt.links.new(e3.outputs[0], p.inputs["Emission Strength"])

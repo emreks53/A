@@ -1,5 +1,13 @@
 # sh09 — inside the forearm (47.40–52.10 s) · studio S7
 
+## v3 (review-2 notes)
+1. Cell interior: desaturated blue-grey cytoplasm haze with depth gradient; myofibrils are now
+   translucent pink-red SSS bundles with soft banding and a light-catching sheen (no opaque bars);
+   ~4 000 granules at many depths and sizes; out-of-focus mitochondria in the foreground framing
+   the hero.
+2. Nerve: satin/matte organic myelin (rough 0.62, faint coat, sheen), irregular colour/bump
+   texture, deeper SSS for a translucent edge, more visible connective sheath.
+
 ## v2 (director review-1 notes applied)
 1. Fibres: striations now low-contrast banding under the wet surface (bump 0.07, colour
    modulation 0.22, no moiré), glycocalyx fuzz sheen + fine bump; each fibre bordering the channel

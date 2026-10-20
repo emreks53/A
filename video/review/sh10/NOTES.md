@@ -1,5 +1,15 @@
 # sh10 — out of the cell into countless cells (52.10–58.00 s) · studio S7
 
+## v3 (review-2 notes)
+1. Cells: full SSS (scale 0.22) for translucency, darker unlit body, wet micro-specular coat,
+   darker nucleus core inside the glow.
+2. Glow from within: emission ×1.7 and the amber sun dims to 0.18 as the field ignites, so lit cells
+   contrast strongly with the dark ones.
+3. Exit: camera ends at 19° looking slightly down so the field fills the lower two-thirds and
+   recedes to a hazy horizon just below the key-word band (band stays dark).
+4. Membrane crossing: thin-film (lipid bilayer) interference sheen, sheen fuzz and a fine bump
+   texture on the membrane, slightly more opaque, so the pass-through reads.
+
 ## v2 (director review-1 notes applied)
 1. Interior matches sh09 v2: translucent double-membrane mitochondria with real 3-D cristae and a
    faint warm glow, rough-ER lace (branching translucent tubules, kept clear of the probe's
