@@ -116,7 +116,7 @@ def mat_anther():
     return m
 
 
-def mat_ray(name="SF_ray", base=(0.85, 0.40, 0.0)):
+def mat_ray(name="SF_ray", base=(0.92, 0.58, 0.03)):
     """Ray petal: saturated yellow-orange, velvety (sheen), parallel veins from UV, translucent for backlight."""
     m, nt, p = C.new_mat(name)
     out = nt.nodes["Material Output"]
@@ -240,6 +240,7 @@ def mat_green(name, base=(0.05, 0.13, 0.018), rough=0.55, sheen=0.5, trans=0.25,
     _lnk(nt, cur, hs.inputs["Color"])
     _lnk(nt, hs.outputs["Color"], p.inputs["Base Color"])
     p.inputs["Roughness"].default_value = rough
+    p.inputs["Specular IOR Level"].default_value = 0.3     # hairy, matte leaf/stem surfaces: no glassy sky sheen
     p.inputs["Sheen Weight"].default_value = sheen
     p.inputs["Sheen Roughness"].default_value = 0.5
     p.inputs["Sheen Tint"].default_value = (0.85, 1.0, 0.8, 1)
@@ -280,9 +281,9 @@ def _floret_colour(m, rng):
     """Base colour of a floret by radial maturity m (0 centre .. 1 rim)."""
     v = rng.uniform(0.85, 1.12)
     if m < 0.30:
-        c = _lerp3((0.09, 0.16, 0.025), (0.15, 0.15, 0.025), m / 0.30)
+        c = _lerp3((0.07, 0.17, 0.02), (0.13, 0.15, 0.02), m / 0.30)
     elif m < 0.6:
-        c = _lerp3((0.15, 0.15, 0.025), (0.085, 0.032, 0.014), (m - 0.30) / 0.30)
+        c = _lerp3((0.13, 0.15, 0.02), (0.10, 0.025, 0.02), (m - 0.30) / 0.30)
     else:
         c = (0.07, 0.026, 0.012)
     return tuple(min(1, x * v) for x in c)
@@ -365,9 +366,9 @@ def build_disc(name, R=0.075, N=1450, seed=1, seg=10, dome=0.006, detail=2, dew=
             # closed bud: 5 creased lobes meeting at an apex; colour lighter toward apex
             h = c * (1.35 + 0.55 * m) * rng.uniform(0.88, 1.12)
             if m < 0.3:
-                top = _lerp3((0.30, 0.40, 0.07), (0.40, 0.33, 0.05), m / 0.3)
+                top = _lerp3((0.22, 0.42, 0.05), (0.42, 0.36, 0.05), m / 0.3)
             else:
-                top = _lerp3((0.40, 0.33, 0.05), (0.16, 0.06, 0.02), min(1, (m - 0.3) / 0.25))
+                top = _lerp3((0.42, 0.36, 0.05), (0.20, 0.05, 0.035), min(1, (m - 0.3) / 0.25))
             if m > open_start - 0.07:
                 top = _lerp3(top, (0.75, 0.42, 0.03), (m - open_start + 0.07) / 0.07)
             add_ring_strip([(0, a * 0.92, colb, 0), (0.35 * h, 0.97 * a, colb, 0), (0.58 * h, 0.85 * a, _lerp3(colb, top, 0.5), 0),
@@ -817,11 +818,26 @@ def haze_group():
     inv = N.new("ShaderNodeMath"); inv.operation = "SUBTRACT"; inv.inputs[0].default_value = 1.0
     ng.links.new(e2.outputs[0], inv.inputs[1])
     lp = N.new("ShaderNodeLightPath")
-    cap = N.new("ShaderNodeMath"); cap.operation = "MULTIPLY"; cap.inputs[1].default_value = 0.72
+    cap = N.new("ShaderNodeMath"); cap.operation = "MULTIPLY"; cap.inputs[1].default_value = 0.82
     ng.links.new(inv.outputs[0], cap.inputs[0])
     mm = N.new("ShaderNodeMath"); mm.operation = "MULTIPLY"
     ng.links.new(cap.outputs[0], mm.inputs[0]); ng.links.new(lp.outputs["Is Camera Ray"], mm.inputs[1])
-    em = N.new("ShaderNodeEmission"); ng.links.new(col.outputs[0], em.inputs["Color"])
+    # forward scattering: haze glows brighter when looking toward the sun (sun_dir set by the shot)
+    sd = N.new("ShaderNodeCombineXYZ"); sd.name = "sun_dir"
+    geo = N.new("ShaderNodeNewGeometry")
+    neg = N.new("ShaderNodeVectorMath"); neg.operation = "SCALE"; neg.inputs["Scale"].default_value = -1.0
+    ng.links.new(geo.outputs["Incoming"], neg.inputs[0])
+    dt = N.new("ShaderNodeVectorMath"); dt.operation = "DOT_PRODUCT"
+    ng.links.new(neg.outputs[0], dt.inputs[0]); ng.links.new(sd.outputs[0], dt.inputs[1])
+    cl = N.new("ShaderNodeMath"); cl.operation = "MAXIMUM"; cl.inputs[1].default_value = 0.0
+    ng.links.new(dt.outputs["Value"], cl.inputs[0])
+    pw8 = N.new("ShaderNodeMath"); pw8.operation = "POWER"; pw8.inputs[1].default_value = 6.0
+    ng.links.new(cl.outputs[0], pw8.inputs[0])
+    fw = N.new("ShaderNodeMath"); fw.operation = "MULTIPLY_ADD"; fw.inputs[1].default_value = 2.2; fw.inputs[2].default_value = 0.55
+    ng.links.new(pw8.outputs[0], fw.inputs[0])
+    hcm = N.new("ShaderNodeVectorMath"); hcm.operation = "SCALE"
+    ng.links.new(col.outputs[0], hcm.inputs[0]); ng.links.new(fw.outputs[0], hcm.inputs["Scale"])
+    em = N.new("ShaderNodeEmission"); ng.links.new(hcm.outputs[0], em.inputs["Color"])
     ms = N.new("ShaderNodeMixShader")
     ng.links.new(mm.outputs[0], ms.inputs[0]); ng.links.new(gi.outputs[0], ms.inputs[1]); ng.links.new(em.outputs[0], ms.inputs[2])
     ng.links.new(ms.outputs[0], go.inputs[0])

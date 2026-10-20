@@ -12,7 +12,8 @@ import lib_s2 as L
 
 H_HERO = 1.80
 YAW0, YAW1 = math.radians(62), math.radians(135)       # face azimuth before/after the turn
-PITCH0, PITCH1 = math.radians(-4), math.radians(10)     # slightly nodding (pre-dawn) -> lifted to the low sun
+PITCH0, PITCH1 = math.radians(-4), math.radians(15)     # slightly nodding (pre-dawn) -> lifted to the low sun
+SUN_ELEV = 12.5                                         # deg; constant (see NOTES: sun in frame above the key-word band)
 SUN_AZ = math.radians(135)                              # direction to the sun == face direction at yaw 135
 SUN_DIR2 = Vector((-math.sin(SUN_AZ), math.cos(SUN_AZ), 0))
 HC_LOCAL = Vector((0, 0.07, 0.16))                      # disc centre in pivot space
@@ -25,7 +26,7 @@ def head_matrix(pivot, yaw, pitch):
 
 
 def sun_elev(t):
-    return C.lerp(1.5, 4.5, C.remap(t, 89.0, 99.6, lambda x: x))
+    return SUN_ELEV
 
 
 # --------------------------------------------------------------------------- field (geometry nodes)
@@ -119,7 +120,7 @@ def build_field(ctx, mats, hero_xy, t_turn, cam_pts):
     low = [(Vector((c.x, c.y, 0)), c.z) for c in cam_pts]
     for i in range(-nrow, nrow + 1):
         for j in range(-ncol, ncol + 1):
-            p = Vector((hx, hy, 0)) + col_dir * (i * RS + rng.gauss(0, 0.03)) + row_dir * (j * PS + rng.gauss(0, 0.05))
+            p = Vector((hx, hy, 0)) + col_dir * (i * RS + rng.gauss(0, 0.06) + (rng.uniform(-0.3, 0.3) if rng.random() < 0.04 else 0)) + row_dir * (j * PS + rng.gauss(0, 0.07))
             d = (p - Vector((hx, hy, 0)))
             dist = d.length
             if dist > FIELD_R or dist < 0.22:
@@ -127,10 +128,10 @@ def build_field(ctx, mats, hero_xy, t_turn, cam_pts):
             ang = math.degrees(math.atan2(d.y, d.x))
             if dist > 12 and not (-178 < ang < 30):
                 continue
-            if rng.random() < 0.035:
+            if rng.random() < (0.05 + 0.10 * max(0.0, math.sin(p.x * 0.11) * math.cos(p.y * 0.09))):
                 continue
             v = rng.randrange(NV)
-            s = rng.uniform(0.86, 1.14) * (1 + 0.04 * math.sin(p.x * 0.05) + 0.04 * math.cos(p.y * 0.07))
+            s = rng.uniform(0.78, 1.2) * (1 + 0.06 * math.sin(p.x * 0.05) + 0.06 * math.cos(p.y * 0.07))
             if dist < 3.5:
                 s *= C.lerp(0.86, 1.0, dist / 3.5)     # the hero stands a little above its neighbours
             top = tops[v] * s
@@ -149,14 +150,21 @@ def build_field(ctx, mats, hero_xy, t_turn, cam_pts):
             pts_h.append(tuple(hpos))
             jy = rng.gauss(0, math.radians(9))
             A["variant"].append(vv)
-            A["yaw0"].append(YAW0 + jy + rng.gauss(0, math.radians(8)))
-            A["yaw1"].append(SUN_AZ + jy * 0.6)
-            A["pitch0"].append(PITCH0 + rng.gauss(0, math.radians(6)) - math.radians(4))
-            A["pitch1"].append(PITCH1 + rng.gauss(0, math.radians(4)))
-            A["roll"].append(rng.gauss(0, math.radians(5)))
-            A["delay"].append(rng.gauss(0, 0.10) + dist * 0.003)
-            A["dur"].append(rng.uniform(1.5, 2.0))
-            A["scale"].append(s)
+            # head size 15-35 cm (independent of plant height); ~6 % old heavy heads droop and do not follow the sun
+            hs = min(1.35, max(0.6, rng.lognormvariate(0.0, 0.18)))
+            old = rng.random() < 0.06
+            y0 = YAW0 + jy + rng.gauss(0, math.radians(14))
+            A["yaw0"].append(y0)
+            A["yaw1"].append(y0 + rng.gauss(0, 0.1) if old else SUN_AZ + jy * 0.7 + rng.gauss(0, math.radians(5)))
+            p0 = PITCH0 + rng.gauss(0, math.radians(9)) - math.radians(4)
+            if old:
+                p0 = -math.radians(rng.uniform(45, 70))
+            A["pitch0"].append(p0)
+            A["pitch1"].append(p0 if old else PITCH1 + rng.gauss(0, math.radians(7)))
+            A["roll"].append(rng.gauss(0, math.radians(8)))
+            A["delay"].append(rng.gauss(0, 0.12) + dist * 0.003)
+            A["dur"].append(rng.uniform(1.4, 2.1))
+            A["scale"].append(s * hs * (0.85 if old else 1.0))
 
     def pts_obj(name, pts, attrs, coll, turn):
         me = bpy.data.meshes.new(name)
@@ -194,7 +202,7 @@ def build_far(ctx):
     V, F = [], []
     for k in range(seg):
         a = 2 * math.pi * k / seg
-        for r, z in ((FIELD_R - 6, 1.45), (FIELD_R + 30, 1.7), (1500, 1.8)):
+        for r, z in ((FIELD_R - 6, 1.45), (FIELD_R + 30, 1.7), (2100, 1.8)):
             V.append((r * math.cos(a), r * math.sin(a), z))
     for k in range(seg):
         k2 = (k + 1) % seg
@@ -202,22 +210,43 @@ def build_far(ctx):
             F.append((k * 3 + q, k2 * 3 + q, k2 * 3 + q + 1, k * 3 + q + 1))
     far = C.mesh_obj("far_field", V, F)
     C.assign(far, m)
-    # low hills far away (ridge line with tree texture), a few kilometres out
+    # layered low hills: a near ridge (~0.9 km) topped by an irregular tree line, a far ridge (~1.9 km) in haze
     rng = random.Random(9)
-    tm = L.mat_green("hills", base=(0.035, 0.05, 0.02), rough=0.9, sheen=0.0, trans=0.0, veins=False, hair_bump=False)
-    V, F = [], []
-    nA, R0 = 400, 1450
-    for k in range(nA):
-        a = math.radians(-215 + 270 * k / (nA - 1))
-        h = 0.6 * (35 + 30 * math.sin(a * 3.1 + 1) + 18 * math.sin(a * 7.7)) + 4 * math.sin(a * 23) + rng.uniform(-1.5, 1.5)
-        h = max(8, h)
-        V.append((R0 * math.cos(a), R0 * math.sin(a), 0)); V.append((R0 * math.cos(a), R0 * math.sin(a), h))
-        V.append(((R0 + 400) * math.cos(a), (R0 + 400) * math.sin(a), h * 1.4))
-    for k in range(nA - 1):
-        for q in range(2):
-            F.append((k * 3 + q, (k + 1) * 3 + q, (k + 1) * 3 + q + 1, k * 3 + q + 1))
-    hills = C.mesh_obj("hills", V, F)
-    C.assign(hills, tm)
+    tm = L.mat_green("hills", base=(0.03, 0.045, 0.02), rough=1.0, sheen=0.0, trans=0.0, veins=False, hair_bump=False)
+    tm.node_tree.nodes["Principled BSDF"].inputs["Specular IOR Level"].default_value = 0.0
+    for name, R0, amp, base_h, trees in (("ridge_near", 900, 14, 9, True), ("ridge_far", 1900, 40, 25, False)):
+        V, F = [], []
+        nA = 2400 if trees else 500
+        crowns = []
+        xpos = -215 / 57.3 * R0
+        while xpos < 55 / 57.3 * R0:
+            if rng.random() < 0.8:
+                crowns.append((xpos, rng.uniform(4, 9), rng.uniform(7, 15)))
+                xpos += rng.uniform(3, 9)
+            else:
+                xpos += rng.uniform(40, 160)     # open fields between woods
+
+        def crown_h(x):
+            best = 0.0
+            for cx, w, ch in crowns:
+                d = abs(x - cx)
+                if d < w:
+                    best = max(best, ch * math.sqrt(1 - (d / w) ** 2))
+            return best
+        ph = rng.uniform(0, 6)
+        tree_h = 0.0
+        for k in range(nA):
+            a = math.radians(-215 + 270 * k / (nA - 1))
+            h = base_h + amp * (0.5 + 0.5 * math.sin(a * 2.3 + ph)) + amp * 0.35 * math.sin(a * 6.1 + 2 * ph) + 2 * math.sin(a * 17)
+            if trees:
+                h += crown_h(a * R0)
+            V.append((R0 * math.cos(a), R0 * math.sin(a), 0)); V.append((R0 * math.cos(a), R0 * math.sin(a), h))
+            V.append(((R0 + 300) * math.cos(a), (R0 + 300) * math.sin(a), h * 0.9))
+        for k in range(nA - 1):
+            for q in range(2):
+                F.append((k * 3 + q, (k + 1) * 3 + q, (k + 1) * 3 + q + 1, k * 3 + q + 1))
+        hills = C.mesh_obj(name, V, F)
+        C.assign(hills, tm)
 
 
 # --------------------------------------------------------------------------- build
@@ -253,8 +282,11 @@ def build(ctx):
         hp.keyframe_insert("rotation_euler", frame=f)
 
     # ------------------------------------------------------------ camera path (needed before the field: corridor)
-    orbit_total = math.radians(float(os.environ.get("S2_ORBIT", 92)))
     sun_xy = Vector((SUN_DIR2.x, SUN_DIR2.y, 0))
+    D_END = Matrix.Rotation(math.radians(-14), 3, "Z") @ sun_xy
+    LENS_END = 32.0
+    # pitch so the sun lands at y~450 px: tan(half vfov)=18/LENS_END
+    PITCH_END = math.radians(SUN_ELEV) - math.atan(((960 - 450) / 960) * 18 / LENS_END)
 
     def cam_state(t):
         y, p = head_rot(t)
@@ -264,26 +296,30 @@ def build(ctx):
         nf = (M0.to_3x3() @ Vector((0, 1, 0))).normalized()
         upv = (M0.to_3x3() @ Vector((0, 0, 1))).normalized()
         k1 = C.remap(t, 90.35, 92.1, C.smoother)
-        d = C.lerp(0.27, 0.25, C.remap(t, ctx.t0, 90.35, C.smooth)) * (1 - k1) + 2.1 * k1
+        d = C.lerp(0.33, 0.30, C.remap(t, ctx.t0, 90.35, C.smooth)) * (1 - k1) + 2.1 * k1
         d += 0.7 * C.remap(t, 92.0, 94.5, C.smooth)
         tilt = math.radians(C.lerp(14, 8, k1))
         pos = dc0 + nf * d * math.cos(tilt) + upv * d * math.sin(tilt)
         pos.z += 0.25 * k1
-        kr = C.remap(t, t_rise, ctx.t1 + 0.25, C.smoother)
-        rel = Vector((pos.x - pivot.x, pos.y - pivot.y, 0))
-        rel = Matrix.Rotation(-orbit_total * kr, 3, "Z") @ rel
-        rel *= 1 + 0.6 * kr
-        pos = Vector((pivot.x + rel.x, pivot.y + rel.y, pos.z + 1.9 * kr))
         ft = C.remap(t, t_turn - 0.2, t_turn + 1.4, C.smooth)
         target = dc0.lerp(dc, ft)
-        # final aim: toward the sun, just above the horizon
-        horizon_aim = Vector((pivot.x, pivot.y, 0)) + sun_xy * 60 + Vector((0, 0, pos.z + 60 * math.tan(math.radians(-2.0))))
-        ka = C.remap(t, t_rise + 0.2, ctx.t1, C.smoother)
-        aim = target.lerp(horizon_aim, ka)
-        far_focus = pos + (horizon_aim - pos).normalized() * 22.0
-        target = target.lerp(far_focus, C.remap(t, t_rise, t_rise + 1.6, C.smooth))
-        lens = C.lerp(100, 50, C.remap(t, t_rise, 98.9, C.smoother))
-        fst = C.lerp(10, 4.0, k1) + 2.0 * kr
+        # finale: crane up + orbit (~120 deg clockwise) so the camera looks ACROSS the field with the sun
+        # upper-left (14 deg left of axis, 12.5 deg high -> above the key-word band, horizon below it)
+        kr = C.remap(t, t_rise, ctx.t1 + 0.2, C.smoother)
+        rel = Vector((pos.x - pivot.x, pos.y - pivot.y, 0))
+        az0 = math.atan2(rel.y, rel.x)
+        r0 = rel.length
+        az1 = math.atan2(-D_END.y, -D_END.x)
+        daz = (az1 - az0 + math.pi) % (2 * math.pi) - math.pi
+        az = az0 + daz * kr
+        r = C.lerp(r0, 7.0, kr)
+        pos = Vector((pivot.x + r * math.cos(az), pivot.y + r * math.sin(az), C.lerp(pos.z, 3.4, C.remap(t, t_rise - 0.7, t_rise + 2.2, C.smoother))))
+        end_aim = pos + Vector((D_END.x * math.cos(PITCH_END), D_END.y * math.cos(PITCH_END), math.sin(PITCH_END))) * 50
+        aim = target.lerp(end_aim, kr)
+        far_focus = pos + (end_aim - pos).normalized() * 26.0
+        target = target.lerp(far_focus, C.remap(t, t_rise, t_rise + 1.8, C.smooth))
+        lens = C.lerp(100, LENS_END, C.remap(t, t_rise, 98.6, C.smoother))
+        fst = C.lerp(10, 4.0, k1) + 4.0 * kr
         roll = C.lerp(-10, 0, k1) + 5 * C.remap(t, ctx.t0, 91.0, C.smooth)
         return pos, aim, target, lens, fst, roll
 
@@ -299,14 +335,37 @@ def build(ctx):
     C.assign(gnd, C.principled("soil", base=(0.03, 0.026, 0.02), rough=0.95))
 
     # ------------------------------------------------------------ light: sky + sun lamp + visible sun disc
-    sky, bg = C.world_sky(sun_elev_deg=2.0, sun_rot_deg=0, strength=0.2, sun_disc=False, air=1.6, aerosol=4.0)
+    sky, bg = C.world_sky(sun_elev_deg=2.0, sun_rot_deg=0, strength=0.2, sun_disc=False, air=1.8, aerosol=7.0)
     sky.sun_rotation = math.atan2(SUN_DIR2.x, SUN_DIR2.y)
+    # humid sunrise: golden grade on the sky (the physical sky at 12 deg reads too grey under AgX)
+    wnt = bpy.context.scene.world.node_tree
+    tint = wnt.nodes.new("ShaderNodeMix"); tint.data_type = "RGBA"; tint.blend_type = "MULTIPLY"; tint.inputs[0].default_value = 1.0
+    tint.inputs[7].default_value = (1.0, 0.70, 0.40, 1)
+    wnt.links.new(sky.outputs[0], tint.inputs[6]); wnt.links.new(tint.outputs[2], bg.inputs[0])
     sun = C.sun(elev_deg=3, azim_deg=0, strength=5.0, kelvin_k=3000, angle_deg=0.6)
     disc_m = C.principled("sun_disc", base=(0, 0, 0), emission=(1.0, 0.62, 0.3), emission_strength=900)
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=13.0, segments=32, ring_count=16)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=17.0, segments=32, ring_count=16)
     sdisc = bpy.context.object; sdisc.name = "sun_disc"
     C.assign(sdisc, disc_m)
     disc_m.cycles.emission_sampling = "NONE"
+    # aerosol glow / bloom around the sun: camera-only soft emitter (Mie forward scattering seen near the disc)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=330.0, segments=48, ring_count=24)
+    sglow = bpy.context.object; sglow.name = "sun_glow"
+    gm, gnt, gp = C.new_mat("sun_glow"); gnt.nodes.remove(gp)
+    lw = gnt.nodes.new("ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.5
+    iv = gnt.nodes.new("ShaderNodeMath"); iv.operation = "SUBTRACT"; iv.inputs[0].default_value = 1.0
+    gnt.links.new(lw.outputs["Facing"], iv.inputs[1])
+    pw = gnt.nodes.new("ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 4.0
+    gnt.links.new(iv.outputs[0], pw.inputs[0])
+    gem = gnt.nodes.new("ShaderNodeEmission"); gem.name = "glow_em"; gem.inputs["Color"].default_value = (1.0, 0.62, 0.28, 1)
+    gem.inputs["Strength"].default_value = 6.0
+    gtp = gnt.nodes.new("ShaderNodeBsdfTransparent")
+    gad = gnt.nodes.new("ShaderNodeMixShader")
+    gnt.links.new(pw.outputs[0], gad.inputs[0]); gnt.links.new(gtp.outputs[0], gad.inputs[1]); gnt.links.new(gem.outputs[0], gad.inputs[2])
+    gnt.links.new(gad.outputs[0], gnt.nodes["Material Output"].inputs["Surface"])
+    gm.cycles.emission_sampling = "NONE"
+    C.assign(sglow, gm)
+    sglow.visible_diffuse = sglow.visible_glossy = sglow.visible_transmission = sglow.visible_shadow = False
     sdisc.visible_diffuse = sdisc.visible_glossy = sdisc.visible_transmission = sdisc.visible_shadow = False
     sdisc.visible_volume_scatter = False
     for f in range(ctx.f0 - 2, ctx.f1 + 3, 2):
@@ -315,11 +374,11 @@ def build(ctx):
         g = C.remap(t, 89.0, t_allah + 0.1, C.smooth)
         sky.sun_elevation = math.radians(e)
         sky.keyframe_insert("sun_elevation", frame=f)
-        bg.inputs["Strength"].default_value = C.lerp(0.07, 0.10, g)
+        bg.inputs["Strength"].default_value = C.lerp(0.04, 0.05, g)
         bg.inputs["Strength"].keyframe_insert("default_value", frame=f)
         sun.rotation_euler = Euler((math.radians(90 - e), 0, SUN_AZ - math.pi), "XYZ")
         sun.keyframe_insert("rotation_euler", frame=f)
-        sun.data.energy = C.lerp(3.0, 11.0, g)
+        sun.data.energy = C.lerp(3.0, 14.0, g)
         sun.data.keyframe_insert("energy", frame=f)
         sun.data.color = C.kelvin(C.lerp(2500, 3500, g))
         sun.data.keyframe_insert("color", frame=f)
@@ -327,7 +386,11 @@ def build(ctx):
         sdisc.location = (SUN_DIR2.x * dist * math.cos(math.radians(e)), SUN_DIR2.y * dist * math.cos(math.radians(e)),
                           dist * math.sin(math.radians(e)))
         sdisc.keyframe_insert("location", frame=f)
-        disc_m.node_tree.nodes["Principled BSDF"].inputs["Emission Strength"].default_value = C.lerp(500, 1500, g)
+        sglow.location = sdisc.location
+        sglow.keyframe_insert("location", frame=f)
+        gem.inputs["Strength"].default_value = C.lerp(2.5, 8.0, g)
+        gem.inputs["Strength"].keyframe_insert("default_value", frame=f)
+        disc_m.node_tree.nodes["Principled BSDF"].inputs["Emission Strength"].default_value = C.lerp(1500, 4000, g)
         disc_m.node_tree.nodes["Principled BSDF"].inputs["Emission Strength"].keyframe_insert("default_value", frame=f)
 
     # ------------------------------------------------------------ camera
@@ -350,17 +413,21 @@ def build(ctx):
         cam.data.dof.keyframe_insert("aperture_fstop", frame=f)
     C.handheld(cam, amp_loc=0.0005, amp_rot=0.0006, speed=0.4, seed=14)
 
-    for f, ev in ((ctx.f0, 1.1), (C.t2f(92.0), 0.8), (C.t2f(95.0), 0.7), (C.t2f(t_allah), 0.6), (ctx.f1, 0.6)):
+    for f, ev in ((ctx.f0, 1.5), (C.t2f(90.3), 1.3), (C.t2f(92.0), 0.8), (C.t2f(95.0), 0.45), (C.t2f(t_allah), 0.25), (ctx.f1, 0.2)):
         sc.view_settings.exposure = ev
         sc.view_settings.keyframe_insert("exposure", frame=f)
 
     # aerial perspective in-shader (the compositor needs a GPU context, unavailable on the farm)
     hg = L.haze_group()
     for m in bpy.data.materials:
-        if m.name not in ("sun_disc",) and m.node_tree:
+        if m.name not in ("sun_disc", "sun_glow") and m.node_tree:
             L.add_haze(m)
     hc, hd = hg.nodes["haze_col"], hg.nodes["haze_den"]
-    hd.outputs[0].default_value = 0.0016
+    hd.outputs[0].default_value = 0.0024
+    sdn = hg.nodes["sun_dir"]
+    ce = math.cos(math.radians(SUN_ELEV))
+    sdn.inputs[0].default_value, sdn.inputs[1].default_value, sdn.inputs[2].default_value = (
+        SUN_DIR2.x * ce, SUN_DIR2.y * ce, math.sin(math.radians(SUN_ELEV)))
     for f in range(ctx.f0 - 6, ctx.f1 + 7, 6):
         t = f / C.FPS
         g = C.remap(t, 89.0, t_allah + 0.1, C.smooth)
