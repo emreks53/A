@@ -44,7 +44,7 @@
   "sharpen": {"amount": 0.22, "radius": 0.9},
   "grain": {"amount": 0.0105, "size": 0.75, "coarse": 0.35, "chroma": 0.22, "on_graphics": 0.55},
   "overlay_glow": {"sigmas": [2.5, 8, 22], "weights": [0.5, 0.42, 0.3], "core": 0.45},
-  "legibility": {"threshold": 0.46, "gain": 0.85, "max": 0.20, "max_local": 0.32, "pad": 70, "extent": 150,
-                 "extent_local": 50, "softness": 0.2, "luma": [0.45, 0.9]}
+  "legibility": {"threshold": 0.46, "gain": 0.85, "max": 0.16, "max_local": 0.30, "pad": 80, "extent": 200,
+                 "extent_local": 50, "softness": 0.28, "luma": [0.45, 0.9], "texture": 0.07, "flat_floor": 0.35}
  }
 }
