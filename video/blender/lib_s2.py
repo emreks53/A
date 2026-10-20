@@ -116,7 +116,7 @@ def mat_anther():
     return m
 
 
-def mat_ray(name="SF_ray", base=(0.92, 0.58, 0.03)):
+def mat_ray(name="SF_ray", base=(0.66, 0.43, 0.0)):
     """Ray petal: saturated yellow-orange, velvety (sheen), parallel veins from UV, translucent for backlight."""
     m, nt, p = C.new_mat(name)
     out = nt.nodes["Material Output"]
@@ -240,7 +240,7 @@ def mat_green(name, base=(0.05, 0.13, 0.018), rough=0.55, sheen=0.5, trans=0.25,
     _lnk(nt, cur, hs.inputs["Color"])
     _lnk(nt, hs.outputs["Color"], p.inputs["Base Color"])
     p.inputs["Roughness"].default_value = rough
-    p.inputs["Specular IOR Level"].default_value = 0.3     # hairy, matte leaf/stem surfaces: no glassy sky sheen
+    p.inputs["Specular IOR Level"].default_value = 0.12    # hairy, matte leaf/stem surfaces: no glassy sky sheen
     p.inputs["Sheen Weight"].default_value = sheen
     p.inputs["Sheen Roughness"].default_value = 0.5
     p.inputs["Sheen Tint"].default_value = (0.85, 1.0, 0.8, 1)
@@ -259,7 +259,7 @@ def mat_green(name, base=(0.05, 0.13, 0.018), rough=0.55, sheen=0.5, trans=0.25,
     if trans > 0:
         tr = _node(nt, "ShaderNodeBsdfTranslucent", (200, -200))
         tm = _node(nt, "ShaderNodeMix", (50, -200)); tm.data_type = "RGBA"; tm.blend_type = "MULTIPLY"; tm.inputs[0].default_value = 1
-        _lnk(nt, hs.outputs["Color"], tm.inputs[6]); tm.inputs[7].default_value = (1.4, 1.6, 0.6, 1)
+        _lnk(nt, hs.outputs["Color"], tm.inputs[6]); tm.inputs[7].default_value = (0.9, 1.1, 0.35, 1)
         _lnk(nt, tm.outputs[2], tr.inputs["Color"]); _lnk(nt, nrm, tr.inputs["Normal"])
         ms = _node(nt, "ShaderNodeMixShader", (400, 0)); ms.inputs[0].default_value = trans
         _lnk(nt, p.outputs[0], ms.inputs[1]); _lnk(nt, tr.outputs[0], ms.inputs[2])
@@ -581,11 +581,12 @@ class Mats:
         self.floret = mat_floret()
         self.anther = mat_anther()
         self.ray = mat_ray()
-        self.bract = mat_green("SF_bract", base=(0.045, 0.11, 0.016), rough=0.6, sheen=0.7, trans=0.3)
-        self.leaf = mat_green("SF_leaf", base=(0.05, 0.13, 0.014), rough=0.5, sheen=0.15, trans=0.3)
-        self.stem = mat_green("SF_stem", base=(0.05, 0.12, 0.02), rough=0.5, sheen=0.7, trans=0.0, veins=False,
+        self.bract = mat_green("SF_bract", base=(0.045, 0.11, 0.016), rough=0.6, sheen=0.12, trans=0.3)
+        self.leaf = mat_green("SF_leaf", base=(0.05, 0.13, 0.014), rough=0.85, sheen=0.04, trans=0.22)
+        self.leaf.node_tree.nodes["Principled BSDF"].inputs["Specular IOR Level"].default_value = 0.04
+        self.stem = mat_green("SF_stem", base=(0.05, 0.12, 0.02), rough=0.5, sheen=0.12, trans=0.0, veins=False,
                               purple=0.5)
-        self.back = mat_green("SF_back", base=(0.05, 0.11, 0.018), rough=0.6, sheen=0.6, trans=0.0, veins=False)
+        self.back = mat_green("SF_back", base=(0.05, 0.11, 0.018), rough=0.6, sheen=0.1, trans=0.0, veins=False)
         self.dew = mat_dew()
         self.palea = self.floret
 
@@ -796,13 +797,13 @@ def add_hairs(ob, count=3000, length=0.003, mat=None, seed=1):
 
 # --------------------------------------------------------------------------- in-shader aerial perspective (no compositor needed)
 
-def haze_group():
+def haze_group(name="S2_haze", cap_v=0.82):
     """Shared node group: Shader in -> mixes toward a haze emission by camera view distance.
     Inputs keyed once on the group (Color, Density) so every material follows the sunrise."""
-    ng = bpy.data.node_groups.get("S2_haze")
+    ng = bpy.data.node_groups.get(name)
     if ng:
         return ng
-    ng = bpy.data.node_groups.new("S2_haze", "ShaderNodeTree")
+    ng = bpy.data.node_groups.new(name, "ShaderNodeTree")
     ng.interface.new_socket("Shader", in_out="INPUT", socket_type="NodeSocketShader")
     ng.interface.new_socket("Shader", in_out="OUTPUT", socket_type="NodeSocketShader")
     N = ng.nodes
@@ -818,7 +819,7 @@ def haze_group():
     inv = N.new("ShaderNodeMath"); inv.operation = "SUBTRACT"; inv.inputs[0].default_value = 1.0
     ng.links.new(e2.outputs[0], inv.inputs[1])
     lp = N.new("ShaderNodeLightPath")
-    cap = N.new("ShaderNodeMath"); cap.operation = "MULTIPLY"; cap.inputs[1].default_value = 0.82
+    cap = N.new("ShaderNodeMath"); cap.operation = "MULTIPLY"; cap.inputs[1].default_value = cap_v
     ng.links.new(inv.outputs[0], cap.inputs[0])
     mm = N.new("ShaderNodeMath"); mm.operation = "MULTIPLY"
     ng.links.new(cap.outputs[0], mm.inputs[0]); ng.links.new(lp.outputs["Is Camera Ray"], mm.inputs[1])
@@ -844,14 +845,14 @@ def haze_group():
     return ng
 
 
-def add_haze(mat):
+def add_haze(mat, group=None):
     nt = mat.node_tree
     out = nt.nodes["Material Output"]
     if not out.inputs["Surface"].links:
         return
     src = out.inputs["Surface"].links[0].from_socket
     mat.cycles.emission_sampling = "NONE"     # the haze "emission" must not turn every leaf into a mesh light
-    g = nt.nodes.new("ShaderNodeGroup"); g.node_tree = haze_group()
+    g = nt.nodes.new("ShaderNodeGroup"); g.node_tree = group or haze_group()
     nt.links.new(src, g.inputs[0]); nt.links.new(g.outputs[0], out.inputs["Surface"])
 
 

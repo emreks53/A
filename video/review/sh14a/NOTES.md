@@ -45,3 +45,13 @@ Heaviest frames f2221–2223 (hero + dense near field, DOF, motion blur): **68.4
 ## Known / next
 * The 95.5 transition is very motion-blurred (an orbit of ~20°/s). I can slow it if you prefer.
 * Stem hairs are sheen only (particle hair cost 2.5× render time).
+
+## Round 4 (director's round-3 notes)
+1. Petals are now rich golden-yellow (base darker and more saturated, so AgX no longer rolls the sunlit side off to
+   peach/white). The sun is less orange (3300→4200 K) and the sky grade is less sepia, so yellows and greens stay saturated.
+2. White confetti: the flecks were sun glints off leaf/stem/bract surfaces when looking toward the sun. Leaves are
+   now rough and matte (spec 0.04, roughness 0.85), sheen ≤ 0.12 everywhere, backlit leaf translucency tint lower,
+   plus clamp_direct 12 / clamp_indirect 3.
+3. Hills: separate, weaker haze (cap 0.55, darker haze colour) → a darker ridge with form and a tree line inside the haze.
+4. Macro exposure +0.4 EV.
+Stills replaced with round-4 renders. The motion of the shot and the render setup are unchanged (≈ 68 s/frame).

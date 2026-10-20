@@ -33,7 +33,7 @@ def mat_velvet():
     nt.links.new(fz.outputs["Fac"], bm.inputs["Height"]); nt.links.new(bm.outputs["Normal"], p.inputs["Normal"])
     # the weave lets a little warm light through where the lamp is close
     tr = nt.nodes.new("ShaderNodeBsdfTranslucent"); tr.inputs["Color"].default_value = (1.0, 0.35, 0.12, 1)
-    ms = nt.nodes.new("ShaderNodeMixShader"); ms.inputs[0].default_value = 0.003
+    ms = nt.nodes.new("ShaderNodeMixShader"); ms.inputs[0].default_value = 0.0022
     nt.links.new(p.outputs[0], ms.inputs[1]); nt.links.new(tr.outputs[0], ms.inputs[2])
     nt.links.new(ms.outputs[0], out.inputs["Surface"])
     return m
@@ -114,7 +114,12 @@ def build(ctx):
     bb = [flame.matrix_world @ Vector(c) for c in flame.bound_box]
     fc = sum(bb, Vector()) / 8
     print("[sh14b] flame centre", tuple(round(x, 3) for x in fc), flush=True)
-    fl = C.point_light("flame_light", loc=fc, power=70, radius=0.009, kelvin_k=1850)
+    fl = C.point_light("flame_light", loc=fc, power=95, radius=0.009, kelvin_k=1850)
+    # once covered, light bounces around inside the tent and escapes at the hem: a low warm source on the open side
+    tent = C.point_light("tent_bounce", loc=(0.16, -0.06, 0.07), power=0.0, radius=0.06, kelvin_k=1900)
+    for t, pw in ((t_cover - 0.1, 0.0), (t_cover + 0.4, 6.0), (ctx.t1 + 0.3, 7.0)):
+        tent.data.energy = pw
+        C.key(tent.data, "energy", t, None)
     # glow halo inside the glass (camera-only soft emitter: light scattering in the hot glass/air)
     bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=0.034, location=fc + Vector((0, 0, 0.006)))
     halo = bpy.context.object; halo.name = "flame_halo"
@@ -140,7 +145,7 @@ def build(ctx):
     for f in range(ctx.f0 - 4, ctx.f1 + 5):
         t = f / C.FPS
         fk = 1 + 0.06 * math.sin(t * 23.0) + 0.04 * math.sin(t * 37.3 + 1) + 0.03 * math.sin(t * 61.7 + 2)
-        fl.data.energy = 70 * fk; fl.data.keyframe_insert("energy", frame=f)
+        fl.data.energy = 95 * fk; fl.data.keyframe_insert("energy", frame=f)
         flame.scale = (1, 1, 0.96 + 0.05 * (fk - 1) / 0.13)
         flame.keyframe_insert("scale", frame=f)
 
@@ -161,8 +166,8 @@ def build(ctx):
     rim = C.area("room_bounce", loc=(-1.6, -1.2, 1.1), look_at=(0, 0, 0.45), size=1.2, power=4, kelvin_k=2600)
 
     # ------------------------------------------------------------ velvet cloth (sim baked here)
-    nx = 84
-    size = 1.5
+    nx = 96
+    size = 1.9
     verts, faces = [], []
     for j in range(nx + 1):
         for i in range(nx + 1):
@@ -175,7 +180,7 @@ def build(ctx):
     cloth = C.mesh_obj("velvet", verts, faces)
     C.smooth_shade(cloth)
     # starts above the frame, slightly tilted and pre-sagged (as if just let go of)
-    cloth.location = (-0.17, 0.03, 1.15)
+    cloth.location = (-0.36, 0.05, 1.15)
     cloth.rotation_euler = (math.radians(4), math.radians(-16), math.radians(17))
     bpy.context.view_layer.update()
     me = cloth.data
@@ -189,7 +194,7 @@ def build(ctx):
     cs.quality = 10
     cs.mass = 0.9
     cs.air_damping = 4.0
-    cs.tension_stiffness = 40; cs.compression_stiffness = 40; cs.shear_stiffness = 20; cs.bending_stiffness = 4.0
+    cs.tension_stiffness = 40; cs.compression_stiffness = 40; cs.shear_stiffness = 20; cs.bending_stiffness = 1.6
     cs.tension_damping = 8; cs.compression_damping = 8; cs.shear_damping = 8; cs.bending_damping = 0.8
     cc = cmod.collision_settings
     cc.distance_min = 0.004

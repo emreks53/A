@@ -32,6 +32,15 @@
 ## Measured render time
 Heaviest frame f2465 (cloth tenting): 48 spp/accurate denoise = 158 s → now **12 spp + FAST/BALANCED OIDN ≈ 36 s/frame** (10 spp measured 33 s; visually identical to 20 spp). Cloth bake adds ~35 s once per Blender run (per 48-frame chunk).
 
+## Round 4 (director's round-3 notes)
+1. More slack: 1.9 m velvet (was 1.5), softer bending (1.6), thrown further from the left. It catches the chimney,
+   collapses and pools heavily on the table on the left with irregular folds. No clean bell silhouette.
+2. The leak: on the open right/front side the hem stays above the table. A brighter flame (95 W) plus the light
+   bouncing inside the tent (a soft 1900 K source low inside the cloth on the open side, ramping in after
+   "örtmek") spills a wide warm pool across the table. The fold edge on that side glows as a lit seam. Velvet
+   translucency is back down to 0.22 %, so the cloth itself stays near-black elsewhere (rich blacks).
+Stills: 099.3 · 101.5 · 102.38 (örtmek) · 102.7 · 103.6 · 104.4 (last).
+
 ## Round 3 = director's round-1 notes
 1. **The light is the hero** — the chimney is rescaled to natural proportions (~0.22 m glass). The camera is an
    85 mm, f/2.8 slow push, with the lamp at ~45–50 % of frame height. The flame is the model's flame + a 70 W 1850 K

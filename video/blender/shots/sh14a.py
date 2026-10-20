@@ -212,7 +212,7 @@ def build_far(ctx):
     C.assign(far, m)
     # layered low hills: a near ridge (~0.9 km) topped by an irregular tree line, a far ridge (~1.9 km) in haze
     rng = random.Random(9)
-    tm = L.mat_green("hills", base=(0.03, 0.045, 0.02), rough=1.0, sheen=0.0, trans=0.0, veins=False, hair_bump=False)
+    tm = L.mat_green("hills", base=(0.012, 0.02, 0.01), rough=1.0, sheen=0.0, trans=0.0, veins=False, hair_bump=False)
     tm.node_tree.nodes["Principled BSDF"].inputs["Specular IOR Level"].default_value = 0.0
     for name, R0, amp, base_h, trees in (("ridge_near", 900, 14, 9, True), ("ridge_far", 1900, 40, 25, False)):
         V, F = [], []
@@ -340,7 +340,7 @@ def build(ctx):
     # humid sunrise: golden grade on the sky (the physical sky at 12 deg reads too grey under AgX)
     wnt = bpy.context.scene.world.node_tree
     tint = wnt.nodes.new("ShaderNodeMix"); tint.data_type = "RGBA"; tint.blend_type = "MULTIPLY"; tint.inputs[0].default_value = 1.0
-    tint.inputs[7].default_value = (1.0, 0.70, 0.40, 1)
+    tint.inputs[7].default_value = (1.0, 0.80, 0.55, 1)
     wnt.links.new(sky.outputs[0], tint.inputs[6]); wnt.links.new(tint.outputs[2], bg.inputs[0])
     sun = C.sun(elev_deg=3, azim_deg=0, strength=5.0, kelvin_k=3000, angle_deg=0.6)
     disc_m = C.principled("sun_disc", base=(0, 0, 0), emission=(1.0, 0.62, 0.3), emission_strength=900)
@@ -380,7 +380,7 @@ def build(ctx):
         sun.keyframe_insert("rotation_euler", frame=f)
         sun.data.energy = C.lerp(3.0, 14.0, g)
         sun.data.keyframe_insert("energy", frame=f)
-        sun.data.color = C.kelvin(C.lerp(2500, 3500, g))
+        sun.data.color = C.kelvin(C.lerp(3300, 4200, g))
         sun.data.keyframe_insert("color", frame=f)
         dist = 2800
         sdisc.location = (SUN_DIR2.x * dist * math.cos(math.radians(e)), SUN_DIR2.y * dist * math.cos(math.radians(e)),
@@ -413,16 +413,21 @@ def build(ctx):
         cam.data.dof.keyframe_insert("aperture_fstop", frame=f)
     C.handheld(cam, amp_loc=0.0005, amp_rot=0.0006, speed=0.4, seed=14)
 
-    for f, ev in ((ctx.f0, 1.5), (C.t2f(90.3), 1.3), (C.t2f(92.0), 0.8), (C.t2f(95.0), 0.45), (C.t2f(t_allah), 0.25), (ctx.f1, 0.2)):
+    for f, ev in ((ctx.f0, 1.9), (C.t2f(90.3), 1.5), (C.t2f(92.0), 0.15), (C.t2f(95.0), 0.2), (C.t2f(t_allah), 0.25), (ctx.f1, 0.2)):
         sc.view_settings.exposure = ev
         sc.view_settings.keyframe_insert("exposure", frame=f)
 
     # aerial perspective in-shader (the compositor needs a GPU context, unavailable on the farm)
     hg = L.haze_group()
+    hg2 = L.haze_group("S2_haze_hills", 0.55)       # hills keep form + a darker tree line inside the haze
     for m in bpy.data.materials:
         if m.name not in ("sun_disc", "sun_glow") and m.node_tree:
-            L.add_haze(m)
+            L.add_haze(m, hg2 if m.name.startswith("hills") else hg)
     hc, hd = hg.nodes["haze_col"], hg.nodes["haze_den"]
+    hg2.nodes["haze_den"].outputs[0].default_value = 0.0024
+    hg2.nodes["haze_col"].outputs[0].default_value = (0.20, 0.12, 0.07, 1)
+    hg2.nodes["sun_dir"].inputs[0].default_value = SUN_DIR2.x
+    hg2.nodes["sun_dir"].inputs[1].default_value = SUN_DIR2.y
     hd.outputs[0].default_value = 0.0024
     sdn = hg.nodes["sun_dir"]
     ce = math.cos(math.radians(SUN_ELEV))
@@ -433,7 +438,7 @@ def build(ctx):
         g = C.remap(t, 89.0, t_allah + 0.1, C.smooth)
         hc.outputs[0].default_value = (C.lerp(0.16, 0.55, g), C.lerp(0.09, 0.26, g), C.lerp(0.06, 0.10, g), 1)
         hc.outputs[0].keyframe_insert("default_value", frame=f)
-    ov = {"final_spp": 6, "final_threshold": 0.05, "preview_spp": 24, "max_bounces": 6, "transmission_bounces": 6, "texture_limit": "2048"}
+    ov = {"final_spp": 6, "clamp_direct": 12.0, "clamp_indirect": 3.0, "final_threshold": 0.05, "preview_spp": 24, "max_bounces": 6, "transmission_bounces": 6, "texture_limit": "2048"}
     import json as _j
     ov.update(_j.loads(os.environ.get("S2_OV", "{}")))
     L.fast_denoise_handler(*os.environ.get("S2_DN", "FAST,BALANCED").split(","))
