@@ -39,11 +39,15 @@ runs on the same warped clock `tau(t)`; only the camera move is in real time (mo
 * `sh01_t004.400.png` just after impact on the leaf (bead, splash)
 * `sh01_t005.240.png` exit: tilt into the sun, upper right
 
-## Render cost — KNOWN ISSUE (being fixed now)
-Measured `--final` frame 72 at 16 spp: **174 s/frame** on 4 cores → over budget. Causes found so far:
-deformation motion blur on the breeze-animated grass (now disabled for the field only; camera blur kept),
-the dense instanced grass itself dominates (primary + shadow rays). Next: thin the far field, cheaper dew
-on far blades, fewer spp with OIDN (frame is mostly defocus). Will report the new number in review 2.
+## Render cost (updated)
+Measured `--final` (1080x1920, frames 95-96, 4 cores): **~80 s/frame** at final_spp 8 + OIDN (adaptive 0.05,
+bounces 6/1/2/6). The 8-spp denoised frame is clean (drop, leaf and bokeh checked at 100 %).
+Calibration: on this container a trivial HDRI+monkey scene already costs ~2 s per sample-per-pixel at
+full res, so 40 s/frame leaves ~3 spp for anything non-trivial. Profiled the rest: dense near-field grass
+≈ 45 % of per-sample cost, seedling/drops/flowers ≈ 30 %, motes+filter ≈ 13 %, ~15 s/frame fixed
+(GN eval + BVH + 16-bit PNG + denoise). Already cut: field deformation motion blur, far-field density
+(4300 → 1600 blades), emissive mote light sampling, bounces. **Request:** accept ~80 s/frame for this
+132-frame shot (≈ 3 h on one 4-core box), or say "6 spp" and I set ~65 s/frame (slightly softer bokeh noise).
 
 ## Known issues / next
 * render time (above) · hero blade reads a bit pale/flat · seedling stem only partly in frame (macro

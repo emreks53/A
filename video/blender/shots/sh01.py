@@ -410,7 +410,7 @@ def build(ctx):
         pts.append(p); vidx.append(vi); rots.append((rx, ry, rz)); scls.append(s)
         return True
     # near field dense, far field sparser, inside a wedge in front of the camera
-    for (y0, y1, dens, xs) in ((-0.30, 0.02, 1500, 0.16), (0.02, 0.6, 1700, 0.28), (0.6, 1.6, 1000, 0.55), (1.6, 3.5, 650, 1.0)):
+    for (y0, y1, dens, xs) in ((-0.30, 0.02, 1500, 0.16), (0.02, 0.6, 1500, 0.24), (0.6, 1.6, 500, 0.45), (1.6, 3.5, 160, 0.9)):
         area = (y1 - y0) * 2 * xs
         n = int(area * dens)
         for _ in range(n):
@@ -461,7 +461,7 @@ def build(ctx):
     C.assign(gp, gm)
 
     # ------------------------------------------------------------------ pollen motes
-    mo, mmod = L.motes("Pollen", 1400, (-0.06, -0.12, 0.03), (0.12, 0.7, 0.15), random.Random(4),
+    mo, mmod = L.motes("Pollen", 700, (-0.06, -0.12, 0.03), (0.12, 0.7, 0.15), random.Random(4),
                        r_range=(0.00003, 0.00009), strength=9.0, drift=(0.003, -0.002, 0.004), wobble=0.003, clock=clock)
     frames_tau = [(f, W.tau(f / 24.0)) for f in range(ctx.f0 - 2, ctx.f1 + 3)]
     L.key_clock(clock, frames_tau)
@@ -475,8 +475,14 @@ def build(ctx):
         L.diffusion_filter(cam, amount=0.012, rough=0.12, wide_amount=0.002, wide_rough=0.45)
 
     C.stamp_meta(shot="sh01", t_detach=T_DETACH, t_land=T_LAND)
-    ov = {"final_spp": 40, "preview_spp": 32, "transmission_bounces": 10, "max_bounces": 10,
-          "glossy_bounces": 4, "diffuse_bounces": 2, "clamp_indirect": 8.0}
+    for pre in [x for x in os.environ.get("S1_HIDE", "").split(",") if x]:
+        for o in bpy.data.objects:
+            if o.name.startswith(pre):
+                o.hide_render = True
+    if os.environ.get("S1_NODOF") == "1":
+        cam.data.dof.use_dof = False
+    ov = {"final_spp": 8, "final_threshold": 0.05, "preview_spp": 24, "transmission_bounces": 6, "max_bounces": 6,
+          "glossy_bounces": 2, "diffuse_bounces": 1, "transparent_bounces": 6, "clamp_indirect": 6.0}
     for k, v in json.loads(os.environ.get("S1_OV", "{}")).items():
         ov[k] = v
     return ov
