@@ -584,6 +584,24 @@ def main():
         seg_v = v_out[a0:a1]
         r_["voice_lufs_m_max"] = round(momentary_max(seg_v), 1) if a1 > a0 else None
         r_["sfx_lufs_m_max"] = round(momentary_max(sw[a0:a1]), 1) if a1 > a0 else None
+    # intelligibility: per-word octave-band voice-to-SFX ratio on voiced frames (the measure the
+    # unmask stage targets), key words, long-term spectra, duck stability, tick sync, tonality
+    import measure
+    words = measure.all_words()
+    pts = measure.sync_points()
+    wrows = measure.word_band_snr(v_out[:, 0], s_out, v_raw, words)
+    rep["word_band_snr"] = measure.summarize_snr(wrows)
+    kset = {(x["w"], x["s"]) for x in measure.key_words(words, pts)}
+    kr = [r for r in wrows if (r["w"], r["s"]) in kset]
+    rep["key_words_snr_db_250_500_1k_2k_4k_8k"] = [[r["s"], r["w"], r["snr"]] for r in kr]
+    KA = np.array([r["snr"] for r in kr]) if kr else np.zeros((0, 6))
+    rep["key_words_min_snr_db_1k_2k_4k"] = [round(float(KA[:, i].min()), 1) for i in (2, 3, 4)] if len(KA) else None
+    rep["key_words_below_10db_1k_4k"] = [[r["s"], r["w"], r["snr"]] for r in kr if min(r["snr"][2:5]) < 10]
+    rep["ltas_voice_minus_sfx_db_during_words"] = measure.ltas(v_out[:, 0], s_out, words)
+    rep["duck_stability"] = {cls: measure.duck_stability(g, fs_c) for cls, g in curves.items()}
+    rep["unmask"] = um_stats
+    rep["tick_sync"] = measure.tick_sync(cues, pts)
+    rep["tonal_scan_sfx"] = measure.tonal_scan(s_out)
     rep["cues"] = rows
     shots = {}
     for c in cues:
