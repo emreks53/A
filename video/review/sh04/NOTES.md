@@ -32,10 +32,7 @@ Script: `video/blender/shots/sh04.py`, hero + helpers in `video/blender/lib_s3.p
   21.04 ("hiçbirine" 21.24) and is fully stretched at 22.5; focus racks plant → hand.
 
 ## Render time
-`--final`, 4 cores, 2-frame runs (2nd frame = steady state): **frame 471 ≈ 40 s, frame 541 (hand)
-≈ 34 s**, 3.8 GB peak. (Review 1 was 102 s: 32 spp + OIDN HIGH.) Now 16 spp, adaptive threshold 0.04,
-OIDN BALANCED (set in a render_init handler because common.configure_render runs after build), and
-the cracked-earth shader lost a fine-noise bump that cost ~15 % for invisible detail.
+`--final`, 4 cores (steady-state frame): frame 471 ≈ 40 s, hand frame 531 ≈ **30 s**, 3.8 GB peak.
 
 ## Review 3 — director notes addressed
 * HAND: an adult MAN's hand (confirmed): base mesh widened 16 % / thickened 22 % (broad palm, thick

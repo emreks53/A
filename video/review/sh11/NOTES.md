@@ -29,7 +29,7 @@ dots ("snow") there — in stills/final it is streaks. `sh11.json` = `TRK_seedli
 * Sun break on "karşılanıyor": world glow + sun lamp ramp behind the plant (backlight).
 
 ## Render time
-`--final` frame 1501 (steady state, 4 cores): **≈ 51 s/frame** (review 1: 107 s). Rain drops are now a
+`--final` (4 cores, steady state): frame 1501 ≈ 51 s, sun-break frame 1521 **≈ 56 s/frame** (review 1: 107 s). Rain drops are now a
 native Cycles point cloud (one sphere per drop) excluded from shadow/diffuse/glossy rays; the 18 hero
 + 1600 random wet spots are baked once into a 'time-it-gets-wet' float map (one lookup instead of
 ~300 shader nodes); 12 spp + OIDN balanced. Still slightly over the 40–45 target — next is the
