@@ -1,1 +1,5 @@
-{"finished": false, "jobs": []}
+{"finished": false,
+ "jobs": [
+  {"node": "n1", "branch": "render-dev-s1", "shot": "sh01", "from": 0, "to": 65},
+  {"node": "n2", "branch": "render-dev-s1", "shot": "sh01", "from": 66, "to": 131}
+ ]}
