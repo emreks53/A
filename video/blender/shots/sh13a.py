@@ -277,7 +277,8 @@ def build(ctx):
     for i in range(6):
         kind = "white" if i in (2, 5) else "fritillary"
         root, wl, wr = L.butterfly(f"Butterfly{i}", brng, kind)
-        s = 1.0
+        if i == 0:
+            root.scale = (1.4, 1.4, 1.4)
         base = Vector((brng.uniform(-1.0, 1.0), brng.uniform(1.6, 5.5) + (3 if i > 3 else 0), brng.uniform(0.35, 0.9)))
         ph = [brng.uniform(0, 6.28) for _ in range(6)]
         freq = brng.uniform(6.0, 8.0)
@@ -285,17 +286,20 @@ def build(ctx):
         for f in range(ctx.f0 - 2, ctx.f1 + 3):
             t = f / 24.0
             u = t - T0
-            if i == 0:
-                base = Vector((-0.9 + 0.42 * u, 0.55 * u + 1.0, 0.36))
-            pos = base + Vector((0.9 * math.sin(u * 0.45 + ph[0]) * (0.25 if i == 0 else 1) + 0.3 * math.sin(u * 1.3 + ph[1]),
+            pos = base + Vector((0.9 * math.sin(u * 0.45 + ph[0]) + 0.3 * math.sin(u * 1.3 + ph[1]),
                                  0.7 * math.sin(u * 0.35 + ph[2]) + 0.25 * u * math.cos(ph[5]),
                                  0.25 * math.sin(u * 0.9 + ph[3]) + 0.08 * math.sin(u * 3.1 + ph[4])))
+            if i == 0:
+                # hero butterfly: crosses the view left -> right ~1.1 m ahead of the lens, 75.6-77.8 s
+                cl_, cM = cams[min(max(f, ctx.f0), ctx.f1 - 1)]
+                k_ = (t - 75.6) / 2.2
+                pos = cl_ + cM @ Vector((-0.40 + 0.80 * k_ + 0.04 * math.sin(t * 5.0), 0.17 + 0.05 * math.sin(t * 3.3), -1.2))
             if prev is None:
                 prev = pos - Vector((0, 0.01, 0))
             d = pos - prev
             heading = math.atan2(d.y, d.x) - math.pi / 2
             root.location = pos
-            root.rotation_euler = (0.25, 0, heading)
+            root.rotation_euler = (0.25, (-0.6 if i == 0 else 0.0), heading)
             flap = math.radians(10 + 62 * (0.5 + 0.5 * math.sin(2 * math.pi * freq * t + ph[0])))
             wl.rotation_euler = (0, -flap, 0); wr.rotation_euler = (0, flap, 0)
             for o in (root,):

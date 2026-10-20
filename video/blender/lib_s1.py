@@ -1216,7 +1216,7 @@ def butterfly(name, rng, kind="fritillary"):
     nt.links.new(uv.outputs[0], vor.inputs["Vector"])
     sep = node(nt, "ShaderNodeSeparateXYZ"); nt.links.new(uv.outputs[0], sep.inputs[0])
     if kind == "white":
-        col_a, col_b = (0.85, 0.86, 0.8), (0.05, 0.05, 0.05)
+        col_a, col_b = (0.86, 0.84, 0.72), (0.05, 0.05, 0.05)
         spots = math_node(nt, "LESS_THAN", vor.outputs["Distance"], 0.06)
         tipm = math_node(nt, "GREATER_THAN", sep.outputs[0], 0.86)
         tipf = math_node(nt, "MULTIPLY", tipm, sep.outputs[1])
@@ -1241,7 +1241,7 @@ def butterfly(name, rng, kind="fritillary"):
     for sgn in (1, -1):
         bm = bmesh.new(); uvl = bm.loops.layers.uv.new("UVMap")
         # forewing (front) and hindwing (back) outlines in the XY plane, hinge on Y axis at x=0
-        for (y0, Lx, Ly, sweep, idx) in ((0.002, span * 0.5, span * 0.30, 0.25, 0), (-0.004, span * 0.36, span * 0.28, -0.35, 1)):
+        for (y0, Lx, Ly, sweep, idx) in ((0.003, span * 0.5, span * 0.62, 0.30, 0), (-0.006, span * 0.38, span * 0.62, -0.25, 1)):
             n = 14
             ctr = bm.verts.new((0, y0, 0))
             ring = []
@@ -1249,7 +1249,8 @@ def butterfly(name, rng, kind="fritillary"):
                 a = math.pi * k / n          # 0 .. pi around the outline
                 r = 1.0 - 0.08 * math.sin(3 * a)
                 x = math.sin(a) * Lx * r
-                y = y0 + (math.cos(a) * Ly * 0.5 + sweep * x) * (1 if idx == 0 else 1)
+                y = y0 + (math.cos(a) * Ly * 0.5 * (0.55 + 0.45 * math.sin(a)) + sweep * x) if idx == 0 else \
+                    y0 + math.cos(a) * Ly * 0.5 * (0.6 + 0.4 * math.sin(a)) + sweep * x - Ly * 0.25 * math.sin(a)
                 ring.append(bm.verts.new((sgn * x, y, 0)))
             for k in range(n):
                 f = bm.faces.new((ctr, ring[k], ring[k + 1]) if sgn > 0 else (ctr, ring[k + 1], ring[k]))
