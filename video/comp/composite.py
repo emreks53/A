@@ -647,6 +647,52 @@ def audio_source():
     return p if os.path.exists(p) else os.path.join(VIDEO, "audio", "narration.m4a")
 
 
+TICK_KINDS = {"callout", "widget", "counter_land", "ring", "network_node", "spiral"}
+
+
+def check_ticks(audio_path, sync_points):
+    """UI ticks actually rendered into the mix (mix_report.json written by audio/mix.py next to final_mix.wav)
+    vs the moments the graphics land (overlays.resolve sync points). Every tick must sit on its graphic within
+    one frame and every landing graphic must have its tick. -> list of problems (empty = in sync)."""
+    if os.path.basename(audio_path) != "final_mix.wav":
+        return [f"audio is {os.path.basename(audio_path)} (narration only, no sound-design mix): no UI ticks at all"]
+    rp = os.path.join(os.path.dirname(audio_path), "mix_report.json")
+    if not os.path.exists(rp):
+        return [f"{rp} missing: cannot verify that the mix's UI ticks match the graphics"]
+    probs = []
+    if os.path.getmtime(rp) < os.path.getmtime(audio_path) - 60:
+        probs.append("mix_report.json is older than final_mix.wav (the report may not describe this mix)")
+    rep = OV.load_json(rp)
+    ticks = {c["id"]: float(c["t"]) for c in rep.get("cues", []) if c.get("cls") == "ui"}
+    sp = {p["id"]: float(p["t"]) for p in sync_points if p.get("kind") in TICK_KINDS and not isinstance(p["t"], list)}
+    for cid, t in sorted(ticks.items(), key=lambda x: x[1]):
+        if cid not in sp:
+            probs.append(f"tick {cid} at {t:.3f} s has no graphic")
+        elif abs(t - sp[cid]) > 1.0 / FPS + 1e-3:
+            probs.append(f"tick {cid} at {t:.3f} s, graphic lands at {sp[cid]:.3f} s ({t - sp[cid]:+.3f} s)")
+    for gid, t in sorted(sp.items(), key=lambda x: x[1]):
+        if gid not in ticks:
+            probs.append(f"graphic {gid} lands at {t:.3f} s without a tick")
+    cj = os.path.join(VIDEO, "audio", "cues.json")
+    if os.path.exists(cj) and os.path.getmtime(cj) > os.path.getmtime(audio_path) + 1:
+        probs.append("audio/cues.json is newer than final_mix.wav (the mix has not been re-rendered)")
+    return probs
+
+
+def verify_output(path, n_frames):
+    """Frame count (packets, no decode) and stream durations of an encoded file."""
+    r = subprocess.run(["ffprobe", "-v", "error", "-count_packets", "-show_entries",
+                        "stream=codec_type,nb_read_packets,duration", "-of", "json", path],
+                       capture_output=True, text=True, check=True)
+    st = json.loads(r.stdout)["streams"]
+    v = [x for x in st if x["codec_type"] == "video"][0]
+    a = [x for x in st if x["codec_type"] == "audio"]
+    nv = int(v["nb_read_packets"])
+    da = float(a[0]["duration"]) if a else 0.0
+    ok = nv == n_frames and abs(da - n_frames / FPS) < 0.05
+    return ok, nv, float(v.get("duration", 0)), da
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--from", dest="ffrom", type=int, default=0)
@@ -662,6 +708,8 @@ def main():
     ap.add_argument("--audio", default=None)
     ap.add_argument("--crf", type=float, default=None)
     ap.add_argument("--edit", default=os.path.join(HERE, "edit.json"))
+    ap.add_argument("--allow-cue-mismatch", action="store_true",
+                    help="encode a full-quality file even if the mix's UI ticks do not match the graphics")
     a = ap.parse_args()
 
     shots = OV.shots_table()
@@ -674,15 +722,32 @@ def main():
     w, h = int(1080 * scale), int(1920 * scale)
     frames = [int(x) for x in a.stills.split(",")] if a.stills else list(range(f_from, f_to + 1))
 
+    tl = OV.resolve(verbose=True)
+    # the mix's UI ticks must sit on the graphics: a full-quality encode refuses to run otherwise
+    if not a.stills:
+        aud = a.audio or audio_source()
+        probs = check_ticks(aud, tl["sync_points"])
+        if probs:
+            msg = "[composite] UI tick sync problems (audio vs graphics):\n  " + "\n  ".join(probs)
+            if not a.preview and not a.allow_cue_mismatch:
+                print(msg + "\n[composite] refusing to encode the final: rebuild audio/cues.json + final_mix.wav "
+                      "from comp/sync_points.json (or pass --allow-cue-mismatch for a test encode)", file=sys.stderr)
+                sys.exit(3)
+            print(msg, file=sys.stderr)
+        else:
+            print(f"[composite] UI ticks: all in sync with the graphics (±1 frame)", file=sys.stderr)
+
     # overlays (rendered on demand, cached by content hash)
     man = None
     if not a.no_overlays:
         t0 = time.time()
-        man = OV.ensure(min(frames), max(frames), scale, pages=2, frames=frames if a.stills else None, quiet=False)
+        man = OV.ensure(min(frames), max(frames), scale, pages=2, frames=frames if a.stills else None, tl=tl,
+                        quiet=False)
         print(f"[composite] overlays ready ({time.time() - t0:.1f}s)", file=sys.stderr)
 
     fin = Finisher(edit["finish"], w, h, a.preview)
     sources = {}
+    done_sources = {}
 
     def src(shot):
         if shot["id"] not in sources:
@@ -701,13 +766,18 @@ def main():
         aud = a.audio or audio_source()
         crf = a.crf if a.crf is not None else (21 if a.preview else 16)
         preset = "veryfast" if a.preview else "slow"
+        dur = len(frames) / FPS
+        # the output is bounded by the picture: audio shorter than the range (narration.m4a is 124.27 s) is padded
+        # with silence, longer audio is cut; never -shortest (it would truncate the film and break the pipe)
         cmd = ["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{w}x{h}", "-r", str(FPS),
-               "-i", "-", "-ss", f"{f_from / FPS:.6f}", "-t", f"{len(frames) / FPS:.6f}", "-i", aud,
+               "-i", "-", "-ss", f"{f_from / FPS:.6f}", "-t", f"{dur:.6f}", "-i", aud,
                "-map", "0:v", "-map", "1:a",
                "-vf", "scale=out_color_matrix=bt709:out_range=tv:flags=accurate_rnd+full_chroma_int,format=yuv420p",
+               "-af", f"apad=whole_dur={dur:.6f},atrim=0:{dur:.6f}",
                "-c:v", "libx264", "-preset", preset, "-crf", f"{crf:g}", "-profile:v", "high", "-tune", "film",
                "-g", "48", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv",
-               "-c:a", "aac", "-b:a", "320k", "-ar", "48000", "-movflags", "+faststart", "-shortest", out_path]
+               "-c:a", "aac", "-b:a", "320k", "-ar", "48000", "-frames:v", str(len(frames)), "-t", f"{dur:.6f}",
+               "-movflags", "+faststart", out_path]
         enc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     stills_dir = a.stills_dir or os.path.join(OUT, "final", "stills")
     if a.stills:
@@ -718,6 +788,10 @@ def main():
     kinds = {}
     for i, f in enumerate(frames):
         t0 = time.time()
+        if not a.stills:
+            for sid in [k for k, v in sources.items() if v.shot["render_f1"] <= f]:
+                sources[sid].close()
+                done_sources[sid] = sources.pop(sid)
         pl = ed.plan(f)
         if pl[0] == "single":
             sh = pl[1]
@@ -756,7 +830,11 @@ def main():
         q = np.clip(disp * 255 + (np.random.default_rng(f).random(disp.shape[:2], dtype=np.float32)[..., None] - 0.5) * 0.5
                     + 0.5, 0, 255).astype(np.uint8)
         if enc:
-            enc.stdin.write(q.tobytes())
+            try:
+                enc.stdin.write(q.tobytes())
+            except BrokenPipeError:
+                raise RuntimeError(f"[composite] the encoder exited early (code {enc.poll()}) at frame {f} "
+                                   f"({i}/{len(frames)} frames written)")
         else:
             cv2.imwrite(os.path.join(stills_dir, f"frame_{f:05d}.png"), q[..., ::-1])
         tim["out"] += time.time() - t3
@@ -767,10 +845,17 @@ def main():
                   f"out {tim['out'] / (i + 1):.3f})", file=sys.stderr, flush=True)
     for s in sources.values():
         s.close()
+    sources.update(done_sources)
     if enc:
         enc.stdin.close()
-        enc.wait()
-        print(f"[composite] -> {out_path}", file=sys.stderr)
+        rc = enc.wait()
+        if rc != 0:
+            raise RuntimeError(f"[composite] ffmpeg failed with code {rc}: {out_path} is not valid")
+        ok, nv, dv, da = verify_output(out_path, len(frames))
+        print(f"[composite] -> {out_path}  ({nv} video frames, video {dv:.3f} s, audio {da:.3f} s)", file=sys.stderr)
+        if not ok:
+            raise RuntimeError(f"[composite] output check failed: {nv} frames (want {len(frames)}), "
+                               f"audio {da:.3f} s (want {len(frames) / FPS:.3f} s)")
     used = {}
     for s in sources.values():
         for f, k in s.kind.items():
