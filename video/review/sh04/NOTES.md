@@ -1,4 +1,4 @@
-# sh04 — review 2 (studio S3)
+# sh04 — review 3 (studio S3)
 
 Script: `video/blender/shots/sh04.py`, hero + helpers in `video/blender/lib_s3.py`.
 
@@ -8,7 +8,8 @@ Script: `video/blender/shots/sh04.py`, hero + helpers in `video/blender/lib_s3.p
 | sh04_t015.900.png | 15.90 (first frames) | TOP-DOWN on Poly Haven `mud_cracked_dry_03` (4k, true adaptive displacement, 1 m tile); the seedling dead centre (graphic match to sh03's bowl), hard 49° noon sun shadow |
 | sh04_t017.600.png | 17.60 "bizler" | the camera has begun its arc down and around ("canlılar" 16.76 starts it) |
 | sh04_t019.600.png | 19.60 | ground level beside the plant: tiny seedling, backlit (hairs glow), cracked plates, vast hazy noon sky; the lake-bed tree line defocused on the horizon; heat-shimmer sheet over the far ground |
-| sh04_t021.500.png | 21.50 "hiçbirine" | camera tilting up toward the sun, the backlit hand entering from below (still defocused, focus racking to it) |
+| sh04_t021.400.png | 21.40 "hiçbirine" | the camera has already tilted up to the sun (from ~19.9, "edemeyiz"); the man's hand enters from the lower-left frame edge close to the lens, defocused, motion-blurred |
+| sh04_t021.800.png | 21.80 | rising and tilting toward the sun, focus racking onto it |
 | sh04_t022.600.png | 22.60 exit | hand stretched toward the sun at upper centre, fingers stop ~650 px short of it; the gap between fingertips and sun = key-word band ("ELİMİZ YETİŞMİYOR") stays empty sky. Sun at (540, 244) — `TRK_sun` |
 
 `sh04_animatic.mp4` (25 %, every 2nd frame, with narration) and `sh04.json` (`TRK_sun`) included.
@@ -36,7 +37,19 @@ Script: `video/blender/shots/sh04.py`, hero + helpers in `video/blender/lib_s3.p
 OIDN BALANCED (set in a render_init handler because common.configure_render runs after build), and
 the cracked-earth shader lost a fine-noise bump that cost ~15 % for invisible detail.
 
-## Changes since review 1
+## Review 3 — director notes addressed
+* HAND: an adult MAN's hand (confirmed): base mesh widened 16 % / thickened 22 % (broad palm, thick
+  fingers & knuckles), plain short nails, no jewellery, forearm continuing to a blue cotton shirt cuff,
+  dark arm hair on the forearm. Pose: fingers fanned and gently curved (knuckle-pivot deformation),
+  wrist tilts back as it rises, faint tremble while straining. Skin is dark tanned (exposed for the sky
+  behind) with low, rough specular and SSS glow at the finger edges; no sheen.
+* It no longer lurks behind the plant (hidden until it enters) and no longer rises out of the ground:
+  the camera tilts up to the sun first (~19.9 → 21.4, also craning up 8 cm), then the hand enters from
+  the lower frame edge close to the lens with motion blur.
+* Tree line lifted with aerial haze on camera rays (horizon band blended toward pale sky).
+* Sky: cloud remnants removed earlier (smooth clear sky + one distant cloud).
+
+## Changes in review 2
 * seedling: matte, wrinkled, darker cotyledons; stem less lime with streaks; leaf coat/sheen down
   (no more white grazing sheen); much stronger vein contrast; tan soil crumbs.
 * render time into budget (above).

@@ -12,7 +12,8 @@ from mathutils import Vector, Matrix, Euler, noise
 import common as C
 import lib_s3 as L
 
-HDRI = "grasslands_sunset"
+HDRI = "evening_field"          # = sh13a (S1): evening_field 4k, sun ~9.8 deg, ~3000 K
+LENS = 75.0
 
 
 def look_matrix(pos, fwd, up=Vector((0, 0, 1))):
@@ -38,18 +39,19 @@ def build(ctx):
     # ---------------------------------------------------------------- light: low golden sun, backlit
     path = C.ph_hdri(HDRI, "4k")
     el, u, _, _ = L.hdri_sun(path)
-    L.world_from_hdri(path, strength=1.0, tint=(1.0, 0.74, 0.46))
-    sdir = L.sun_dir_world(el + 9.0, u)            # lamp higher than the disc: light reaches into the grass
+    L.world_from_hdri(path, strength=1.0, tint=(1.0, 0.90, 0.76))
+    sdir = L.sun_dir_world(max(el, 9.8), u)
     # rotate the world so the sun sits behind the subjects (camera looks +Y)
-    want = math.atan2(1.0, -0.30)                    # azimuth of the sun direction we want (from +X)
+    want = math.atan2(1.0, -0.36)                    # azimuth of the sun direction we want (from +X)
     have = math.atan2(sdir.y, sdir.x)
     rot = math.degrees(want - have)
     nt = bpy.context.scene.world.node_tree
     for n in nt.nodes:
         if n.type == "MAPPING":
             n.inputs["Rotation"].default_value[2] = math.radians(-rot)    # texture lookup rotates the other way
-    sdir = L.sun_dir_world(el + 9.0, u, rot)
-    sun = L.sun_from_dir(sdir, 6.0, kelvin_k=2500, angle_deg=0.6)
+    sdir = L.sun_dir_world(max(el, 9.8), u, rot)
+    print('[sh13b] hdri sun el', el)
+    sun = L.sun_from_dir(sdir, 5.0, kelvin_k=3000, angle_deg=0.6)
 
     # ---------------------------------------------------------------- ground + meadow
     soil = C.principled("S3_meadowsoil", base=(0.07, 0.055, 0.035), rough=0.95)
@@ -113,13 +115,14 @@ def build(ctx):
     trk["g"] = C.empty("TRK_g", tuple(g_top - Vector((0, 0, 0.02))))
     # h: THE SEEDLING, foreground centre-bottom (healthy, dewy)
     sl = ray_z(540, 1200, 0.045); seed_loc = Vector((sl.x, sl.y, 0.0))
-    sd = L.seedling(loc=tuple(seed_loc), wilt=0.0, wet=0.15, rot_z=0.35)
+    sd = L.seedling(loc=tuple(seed_loc), wilt=0.0, wet=0.0, rot_z=0.35)
     trk["h"] = C.empty("TRK_h", (0, 0, 0)); trk["h"].parent = sd["apex"]
     bpy.context.view_layer.update()
     # macro lens corridor: no blades between the close-up camera and the leaf tip (they would only be
     # huge defocused smears costing render time)
     tip0 = sd["tips"][0].matrix_world.translation.copy()
-    grass_carpet(rnd, corridor=(tip0 + Vector((-0.03, -0.072, 0)), tip0))
+    clear = [(sn.matrix_world.translation, 0.035), (lb_base, 0.02), (seed_loc, 0.04)]
+    grass_carpet(rnd, corridor=(tip0 + Vector((-0.042, -0.10, 0)), tip0), clear=clear)
     meadow(rnd, [(o.matrix_world.translation.x, o.matrix_world.translation.y, 0.05) for o in trk.values()] +
            [(seed_loc.x, seed_loc.y, 0.07)])
     bpy.context.view_layer.update()
@@ -133,20 +136,26 @@ def build(ctx):
         dew.scale = (sc,) * 3; dew.keyframe_insert("scale", frame=tt * C.FPS)
     # sunbeam resting on it: a tight warm spot from the sun direction
     sb = bpy.data.lights.new("S3_sunbeam", "SPOT")
-    sb.spot_size = math.radians(9.0); sb.spot_blend = 0.8; sb.shadow_soft_size = 0.02
+    sb.spot_size = math.radians(5.0); sb.spot_blend = 0.6; sb.shadow_soft_size = 0.02
+    sb.use_shadow = False                    # the beam comes through a gap in the grass: never blocked
     sb.color = C.kelvin(3100)
     beam = bpy.data.objects.new("S3_sunbeam", sb); C.link(beam)
     bdir = (Vector((sdir.x, sdir.y, 0)).normalized() * math.cos(math.radians(24)) + Vector((0, 0, math.sin(math.radians(24))))).normalized()
-    beam.location = tipw + bdir * 0.35
+    bdir = (bdir + Vector((0, 0, 0.9))).normalized()      # through a gap: steeper than the low sun, clears the grass
+    beam.location = tipw + bdir * 0.25
     beam.rotation_euler = (-bdir).to_track_quat("-Z", "Y").to_euler()
-    for tt, e in ((t_goz - 0.2, 0.0), (t_goz + 0.9, 3.5), (t_end + 0.3, 3.7)):
+    for tt, e in ((t_goz - 0.2, 0.0), (t_goz + 0.9, 24.0), (t_end + 0.3, 25.0)):
         sb.energy = e; sb.keyframe_insert("energy", frame=tt * C.FPS)
     # the general sun dims a touch as the beam takes over (a cloud edge)
-    for tt, e in ((t_goz - 0.2, 6.0), (t_goz + 0.9, 4.2), (t_end + 0.3, 4.0)):
+    for tt, e in ((t_goz - 0.2, 5.0), (t_goz + 0.9, 2.4), (t_end + 0.3, 2.3)):   # a cloud edge shades the meadow; the beam stays
         sun.data.energy = e; sun.data.keyframe_insert("energy", frame=tt * C.FPS)
 
+    wbg = [n for n in bpy.context.scene.world.node_tree.nodes if n.type == "BACKGROUND"][0]
+    for tt, e in ((t_goz - 0.2, 1.0), (t_goz + 0.9, 0.7), (t_end + 0.3, 0.68)):
+        wbg.inputs[1].default_value = e; wbg.inputs[1].keyframe_insert("default_value", frame=tt * C.FPS)
+
     # ---------------------------------------------------------------- camera
-    cam = C.camera("cam", lens=50, loc=(0, -0.2, 0.16), fstop=5.6)
+    cam = C.camera("cam", lens=LENS, loc=(0, -0.2, 0.16), fstop=5.6)
     focus = C.empty("cam_focus", (0, 0.5, 0.08)); cam.data.dof.focus_object = focus
     prev = None
     for f in range(ctx.f0 - 2, ctx.f1 + 3):
@@ -171,7 +180,7 @@ def build(ctx):
     return L.experiment({"final_spp": 12, "final_threshold": 0.05, "preview_spp": 32, "clamp_indirect": 4.0})
 
 
-def cam_point(M, px, py, depth, lens=50.0):
+def cam_point(M, px, py, depth, lens=LENS):
     th = math.tan(math.atan(18.0 / lens))
     return M @ Vector(((px - 540) / 960 * th * depth, (960 - py) / 960 * th * depth, -depth))
 
@@ -185,7 +194,7 @@ def cam_pose(ctx, t, tipw):
     wide_target = Vector((0.0, 0.62, 0.08))
     d = 0.0 if tipw is None else C.remap(t, t_goz - 0.05, t_goz + 1.5, C.smoother)
     if tipw is not None:
-        pos = pos.lerp(tipw + Vector((-0.03, -0.072, 0.034)), d)
+        pos = pos.lerp(tipw + Vector((-0.042, -0.10, 0.046)), d)
         aim = wide_target.lerp(tipw + Vector((0.004, 0.006, -0.004)), C.smooth(d)) - pos
     else:
         aim = wide_target - pos
@@ -228,7 +237,7 @@ def top_point(o):
 
 # ============================================================================ meadow filler
 
-def grass_carpet(rnd, n=70000, corridor=None):
+def grass_carpet(rnd, n=70000, corridor=None, clear=()):
     """Dense short grass blades (hair curves) carpeting the view wedge, taller further back."""
     cv = bpy.data.hair_curves.new("S3_grass")
     pts, rads = [], []
@@ -237,13 +246,15 @@ def grass_carpet(rnd, n=70000, corridor=None):
         x = rnd.uniform(-2.0, 2.0); y = -0.25 + 4.5 * rnd.random() ** 1.6
         if abs(x) > 0.35 + 0.5 * max(0.0, y):
             continue
+        if any((Vector((x, y)) - Vector((c.x, c.y))).length < r for c, r in clear):
+            continue
         if corridor:
             a_, b_ = corridor
             ab = Vector((b_.x - a_.x, b_.y - a_.y)); ap = Vector((x - a_.x, y - a_.y))
             t_ = max(0.0, min(1.2, ap.dot(ab) / ab.length_squared))
             if (ap - ab * t_).length < 0.018 + 0.02 * (1 - min(1.0, t_)):
                 continue
-        h = rnd.uniform(0.025, 0.07) * (1 + 0.8 * min(1.0, max(0.0, y) / 1.5)) * (0.6 if -0.32 < x < 0.32 and 0.05 < y < 1.25 else 1)
+        h = rnd.uniform(0.025, 0.07) * (1 + 0.8 * min(1.0, max(0.0, y) / 1.5)) * (1.15 if -0.32 < x < 0.32 and 0.3 < y < 1.25 else 1)
         lean = Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), 0)) * h * rnd.uniform(0.1, 0.45)
         b = Vector((x, y, 0))
         pts += [b, b + lean * 0.15 + Vector((0, 0, h * 0.4)), b + lean * 0.55 + Vector((0, 0, h * 0.78)), b + lean + Vector((0, 0, h))]
@@ -485,9 +496,9 @@ def ladybug_on_blade(ctx, base):
     mx = nt.nodes.new("ShaderNodeMix"); mx.data_type = "RGBA"; nt.links.new(mr.outputs[0], mx.inputs[0])
     mx.inputs[6].default_value = (0.55, 0.02, 0.01, 1); mx.inputs[7].default_value = (0.01, 0.01, 0.01, 1)
     nt.links.new(mx.outputs[2], p.inputs["Base Color"])
-    shell = ellipsoid("ladybug_shell", (0.0036, 0.0031, 0.0024), m=red); shell.parent = lb; shell.location = (0, 0, 0.0008)
+    shell = ellipsoid("ladybug_shell", (0.0046, 0.0040, 0.0031), m=red); shell.parent = lb; shell.location = (0, 0, 0.0008)
     blk = mat("S3_lb_black", (0.01, 0.01, 0.01), 0.25)
-    hd = ellipsoid("ladybug_head", (0.0012, 0.0016, 0.0011), m=blk); hd.parent = lb; hd.location = (0.0029, 0, 0.0004)
+    hd = ellipsoid("ladybug_head", (0.0015, 0.0020, 0.0014), m=blk); hd.parent = lb; hd.location = (0.0037, 0, 0.0005)
     # crawl up the blade during the shot
     for f in range(ctx.f0 - 4, ctx.f1 + 5, 2):
         t = (f - ctx.f0) / (ctx.f1 - ctx.f0)
@@ -575,6 +586,7 @@ def make_snail(name, ctx, loc):
         bm, fr, ln = L.tube_bm(tp, [0.0004, 0.0003, 0.0003, 0.00025, 0.00025, 0.0002, 0.0002, 0.0004], segs=6)
         tn = L.obj_from_bm(name + f"_tent{side}", bm, [body_m]); tn.parent = root
     root.rotation_euler = (0, 0, 0.6)
+    root.scale = (1.5, 1.5, 1.5)
     # slow glide forward
     for f in (ctx.f0 - 4, ctx.f1 + 4):
         t = (f - ctx.f0) / C.FPS

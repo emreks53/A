@@ -1443,7 +1443,7 @@ def wet_earth_baked(info, spots, centre, size, t_soak0, t_soak1, t0, t1, res=204
     newcol = _mix_rgb(nt, col, dark, wet)
     newcol = _mix_rgb(nt, newcol, (0.10, 0.075, 0.06), _math(nt, "MULTIPLY", puddle, 0.6))
     nt.links.new(newcol, p.inputs["Base Color"])
-    rough = _mix_rgb(nt, info["rough"], (0.22, 0.22, 0.22), wet)
+    rough = _mix_rgb(nt, info["rough"], (0.13, 0.13, 0.13), wet)
     rough = _mix_rgb(nt, rough, (0.03, 0.03, 0.03), puddle)
     bw = N.new("ShaderNodeRGBToBW"); nt.links.new(rough, bw.inputs[0])
     nt.links.new(bw.outputs[0], p.inputs["Roughness"])

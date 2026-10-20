@@ -53,6 +53,10 @@ def build(ctx):
     print("[sh11] crack angle", math.degrees(ang), "path pts", len(path), "S", S)
     print("[sh11] path", [(round(p.x - S.x, 3), round(p.y - S.y, 3)) for p in path[::12]])
 
+    near_end = path[-1]
+    leg = Vector((seed_xy.x - near_end.x, seed_xy.y - near_end.y, 0)).normalized()   # camera looks up the crack
+    leg_side = leg.cross(Vector((0, 0, 1))).normalized()
+
     # ---------------------------------------------------------------- sky: dark rain, sun breaking behind
     sun_az = math.atan2(-fwd_h.y, -fwd_h.x) + math.pi        # behind the seedling (camera looks at it)
     sun_el = math.radians(24)
@@ -60,12 +64,12 @@ def build(ctx):
     sdir = (Vector((fwd_h.x, fwd_h.y, 0)) * math.cos(sun_el) + Vector((0, 0, math.sin(sun_el)))).normalized()
     sdir = (sdir + side_h * 0.12).normalized()
     world_rain(ctx, sdir, t_kar)
-    sun = L.sun_from_dir(sdir, 0.0, kelvin_k=5200, angle_deg=1.2)
+    sun = L.sun_from_dir(sdir, 0.0, kelvin_k=4300, angle_deg=1.2)
     for tt, v in ((ctx.t0, 0.0), (t_kar - 0.35, 0.0), (t_kar + 0.25, 4.2), (ctx.t1 + 0.4, 4.6)):
         sun.data.energy = v; sun.data.keyframe_insert("energy", frame=tt * C.FPS)
 
     # ---------------------------------------------------------------- ground
-    em, info = L.mat_cracked_earth(tile=1.0, disp=0.012)
+    em, info = L.mat_cracked_earth(tile=1.0, disp=0.012, tint=(0.80, 0.80, 0.85))   # cool rain light
     hero = []
     for k in range(18):
         tt = t_but - 0.04 + k * 0.17 + rnd.uniform(-0.05, 0.05)
@@ -74,6 +78,13 @@ def build(ctx):
         hero.append((p.x, p.y, tt, rnd.uniform(0.004, 0.009)))
     hero[0] = (seed_xy.x + fwd_h.x * -0.045 + side_h.x * 0.03, seed_xy.y + fwd_h.y * -0.045 + side_h.y * 0.03, t_but - 0.04, 0.0085)
     hero[1] = (seed_xy.x - fwd_h.x * 0.02 - side_h.x * 0.035, seed_xy.y - fwd_h.y * 0.02 - side_h.y * 0.035, t_but + 0.30, 0.007)
+    # the ground-level view: many impacts around the plant, in front of and behind it, rate rising
+    for k in range(46):
+        tt = t_but + 0.8 + (ctx.t1 + 0.2 - t_but - 0.8) * (k / 45) ** 0.85 + rnd.uniform(-0.04, 0.04)
+        d = rnd.uniform(-0.30, 0.15)                      # + toward the camera, - behind the plant
+        lat = rnd.uniform(-1, 1) * (0.012 + 0.28 * abs(d))
+        p = seed_xy - leg * d + leg_side * lat
+        hero.append((p.x, p.y, tt, rnd.uniform(0.003, 0.008)))
     # random rain spots (baked with the hero spots): sparse at first, dense later
     rs = []
     for k in range(1600):
@@ -107,6 +118,7 @@ def build(ctx):
     # ---------------------------------------------------------------- water along the crack
     riv_m = rivulet_material(t_ay - 0.4, t_ay + 0.75, t_kar)
     riv, rlen = L.rivulet("S3_rivulet", path, hf, mat=riv_m)
+    ripples(path, hf, water, rnd, t_ay - 0.4, t_ay + 0.75, t_kar, ctx.t1)
 
     # ---------------------------------------------------------------- impacts: drops, crowns, dust
     dust_m = mat_dust()
@@ -150,7 +162,9 @@ def build(ctx):
         focus.location = T
         focus.keyframe_insert("location", frame=f)
     C.handheld(cam, amp_loc=0.0005, amp_rot=0.0012, speed=0.5)
-    bpy.context.scene.view_settings.exposure = 0.25
+    vs = bpy.context.scene.view_settings
+    for tt, ev in ((ctx.t0, 0.25), (t_kar - 0.3, 0.25), (t_kar + 0.5, -0.45), (ctx.t1 + 0.5, -0.55)):
+        vs.exposure = ev; vs.keyframe_insert("exposure", frame=tt * C.FPS)   # the operator stops down as the sun breaks
     L.render_tuning(os.environ.get("S3_DQ", "BALANCED"))
     return L.experiment({"final_spp": 12, "final_threshold": 0.05, "preview_spp": 32, "clamp_indirect": 4.0,
                          "transmission_bounces": 6})
@@ -188,7 +202,7 @@ def world_rain(ctx, sdir, t_kar):
     g_all = mth("ADD", g, mth("MULTIPLY", mth("MULTIPLY", disc, 400.0), lp.outputs["Is Camera Ray"]))
     g_all = mth("MULTIPLY", g_all, brk.outputs[0])
     # rain darkness: whole sky dims, brightens a little with the break
-    dim = mth("ADD", 0.16, mth("MULTIPLY", brk.outputs[0], 0.30))
+    dim = mth("ADD", 0.16, mth("MULTIPLY", brk.outputs[0], 0.16))
     mixc = nt.nodes.new("ShaderNodeMix"); mixc.data_type = "RGBA"; mixc.blend_type = "MULTIPLY"
     mixc.inputs[0].default_value = 1.0
     nt.links.new(hs.outputs[0], mixc.inputs[6])
@@ -241,6 +255,33 @@ def rivulet_material(t_start, t_seed, t_end):
     nt.links.new(rn.outputs[0], bp.inputs["Height"]); nt.links.new(bp.outputs[0], p.inputs["Normal"])
     nt.links.new(mx.outputs[0], outn.inputs["Surface"])
     return m
+
+
+def ripples(path, hf, water, rnd, t_start, t_seed, t_end, t_last):
+    """Rain rings on the running water: thin expanding water ridges once the front has passed."""
+    import bmesh
+    def arrival(u):
+        if u <= 0.6:
+            return t_start + (t_seed - t_start) * u / 0.6
+        return t_seed + (t_end - t_seed) * (u - 0.6) / 0.43
+    n = len(path)
+    for k in range(22):
+        u = rnd.uniform(0.25, 0.98)
+        p = path[int(u * (n - 1))]
+        t0 = arrival(u) + rnd.uniform(0.08, 1.4)
+        if t0 > t_last:
+            continue
+        b = bmesh.new()
+        bmesh.ops.create_circle(b, cap_ends=False, segments=28, radius=1.0)
+        o = L.obj_from_bm(f"S3_ring{k}", b, [water])
+        sk = o.modifiers.new("Skin", "SKIN")
+        for v in o.data.skin_vertices[0].data:
+            v.radius = (0.03, 0.03)
+        C.subsurf(o, 1, 1)
+        o.location = (p.x, p.y, hf.z(p.x, p.y) + 0.0011)
+        o.scale = (0, 0, 0); o.keyframe_insert("scale", frame=t0 * C.FPS - 1)
+        for dt, r, h in ((0.0, 0.0006, 0.4), (0.12, 0.0022, 0.3), (0.3, 0.0040, 0.15), (0.45, 0.0048, 0.0)):
+            o.scale = (r, r, r * h); o.keyframe_insert("scale", frame=(t0 + dt) * C.FPS)
 
 
 def mat_dust():
@@ -360,8 +401,10 @@ def rain_material(ctx):
     t_kar = ctx.word("karşılanıyor")
     m = C.mat_water("S3_rainwater")
     nt = m.node_tree; p = nt.nodes["Principled BSDF"]
-    p.inputs["Emission Color"].default_value = (0.8, 0.84, 0.9, 1)
-    for tt, val in ((ctx.t0, 0.5), (t_kar - 0.4, 0.6), (t_kar + 0.4, 2.2), (ctx.t1 + 0.5, 2.4)):
+    for tt, col in ((t_kar - 0.4, (0.8, 0.84, 0.9, 1)), (t_kar + 0.4, (1.0, 0.78, 0.45, 1))):
+        p.inputs["Emission Color"].default_value = col
+        p.inputs["Emission Color"].keyframe_insert("default_value", frame=tt * C.FPS)
+    for tt, val in ((ctx.t0, 0.9), (t_kar - 0.4, 1.0), (t_kar + 0.4, 2.6), (ctx.t1 + 0.5, 2.8)):
         p.inputs["Emission Strength"].default_value = val
         p.inputs["Emission Strength"].keyframe_insert("default_value", frame=tt * C.FPS)
     return m
@@ -409,7 +452,9 @@ def rain_card(ctx, centre, fwd_h, width, height, seed, density, t_kar):
     nt.links.new(mul.outputs[0], op.inputs[0])
     for tt, val in ((ctx.t0, 0.22), (t_kar - 0.4, 0.3), (t_kar + 0.4, 0.55), (ctx.t1 + 0.5, 0.6)):
         op.inputs[1].default_value = val; op.inputs[1].keyframe_insert("default_value", frame=tt * C.FPS)
-    em = nt.nodes.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (0.85, 0.88, 0.92, 1)
+    em = nt.nodes.new("ShaderNodeEmission")
+    for tt, col in ((t_kar - 0.4, (0.85, 0.88, 0.92, 1)), (t_kar + 0.4, (1.0, 0.80, 0.50, 1))):
+        em.inputs["Color"].default_value = col; em.inputs["Color"].keyframe_insert("default_value", frame=tt * C.FPS)
     em.inputs["Strength"].default_value = 1.0
     for tt, val in ((ctx.t0, 0.35), (t_kar - 0.4, 0.4), (t_kar + 0.4, 1.6), (ctx.t1 + 0.5, 1.8)):
         em.inputs["Strength"].default_value = val; em.inputs["Strength"].keyframe_insert("default_value", frame=tt * C.FPS)

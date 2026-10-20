@@ -1,4 +1,4 @@
-# sh13b — review 2 (studio S3)
+# sh13b — review 3 (studio S3)
 
 Script: `video/blender/shots/sh13b.py` (+ THE SEEDLING from `lib_s3.py`).
 
@@ -7,7 +7,7 @@ Script: `video/blender/shots/sh13b.py` (+ THE SEEDLING from `lib_s3.py`).
 |---|---|---|
 | sh13b_t084.100.png | 84.10 open | low glide through the golden meadow (continuing sh13a), slowing |
 | sh13b_t085.900.png | 85.90 "birer birer" | the hold for the rings: 8 separated subjects (see layout), key-word band y 520–820 kept to soft grass/sky |
-| sh13b_t087.400.png | 87.40 just after "gözetip" (86.74) | the camera drifting down toward the seedling |
+| sh13b_t087.500.png | 87.50 just after "gözetip" (86.74) | the camera drifting down toward the seedling |
 | sh13b_t088.600.png | 88.60 | macro on the seedling's leaf tip: the single dew drop formed (grows from 86.64 to 88.1), sunbeam spot resting on it |
 | sh13b_t089.250.png | 89.25 exit | focus pull off the drop into the meadow (dissolve to sh14a's sunflower) |
 
@@ -24,7 +24,16 @@ Script: `video/blender/shots/sh13b.py` (+ THE SEEDLING from `lib_s3.py`).
 | TRK_h | THE SEEDLING (parented to its apex) | (540, 1200) |
 Subjects are placed by solving the camera hold pose in screen space, so the spread is guaranteed.
 
-## Light / world
+## Review 3 — director notes addressed
+* MATCHES sh13a: Poly Haven `evening_field` 4k, its sun measured at 9.8° (lamp at 9.8°, 3000 K), placed
+  just out of frame ahead-left so the grass is rim/back-lit; peach-gold sky.
+* 75 mm lens (was 50): subjects ~60–150 px at full res (ladybird and snail also enlarged); stalks now
+  rise out of taller grass instead of bare ground; grass kept clear just around snail/ladybird/seedling.
+* Seedling: no coat/wet here, same lib materials as sh04/sh11.
+* Macro: the meadow dims (a cloud edge: sun 5 → 2.4, sky ×0.7) while a warm sunbeam spot through a gap
+  rests on the leaf tip — the leaf glows warm/translucent with veins, the drop holds a glint.
+
+## Light / world (review 2, superseded above)
 Poly Haven `grasslands_sunset` (sun ~3°) rotated so the sun sits ahead-left, behind the subjects,
 warm-tinted; 2600 K sun lamp. Meadow = 110k hair-curve grass blades + ~900 Poly Haven grass/flower
 variants (each variant re-based individually). NOTE: I don't know sh13a's exact look yet — if the

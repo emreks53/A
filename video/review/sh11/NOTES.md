@@ -1,4 +1,4 @@
-# sh11 — review 2 (studio S3)
+# sh11 — review 3 (studio S3)
 
 Script: `video/blender/shots/sh11.py` (+ `lib_s3.py`: seedling, cracked earth, wet ground, GN particles).
 
@@ -8,9 +8,9 @@ Script: `video/blender/shots/sh11.py` (+ `lib_s3.py`: seedling, cracked earth, w
 | sh11_t058.200.png | 58.20 open | sh04's cracked earth + same seedling (wilting) under a dark rain sky (Poly Haven `overcast_soil`, dimmed/desaturated); first light rain streaks |
 | sh11_t059.000.png | 59.00 just after "bütün" (58.60) | first heavy drops have hit the dust: dark wet spots spreading, crowns/splash droplets, dust grains kicked up; rain thickening |
 | sh11_t061.500.png | 61.50 "ayağımıza" | ground level, the camera looks up the crack that runs to the seedling; muddy water advances along the crack toward the camera; streaks over the backlit sky |
-| sh11_t062.600.png | 62.60 | drops have hit the leaves (bounces) - beads on the leaves/stem; leaves starting to lift; sun disc beginning to break through behind |
+| sh11_t062.400.png | 62.40 | drops have hit the leaves (bounces) - beads on the leaves/stem; leaves starting to lift; sun disc beginning to break through behind |
 | sh11_t063.300.png | 63.30 "karşılanıyor" (62.84) | sun broken through behind: backlit rain glowing, wet ground glistening, seedling upright |
-| sh11_t063.950.png | 63.95 exit | tilted up into the bright rain sky with the sun glow (→ sh12 emerges from cloud into sunlight) |
+| sh11_t063.900.png | 63.90 exit | tilted up into the bright rain sky with the sun glow (→ sh12 emerges from cloud into sunlight) |
 
 `sh11_animatic.mp4`: NOTE the library renders animatics without motion blur, so rain reads as white
 dots ("snow") there — in stills/final it is streaks. `sh11.json` = `TRK_seedling`.
@@ -35,7 +35,16 @@ native Cycles point cloud (one sphere per drop) excluded from shadow/diffuse/glo
 ~300 shader nodes); 12 spp + OIDN balanced. Still slightly over the 40–45 target — next is the
 cracked earth's displacement cost (it is ~35 % of every frame in both sh04 and sh11).
 
-## Changes since review 1
+## Review 3 — director notes addressed
+* Rain felt at ground level: rain streaks brighter (sky-glint term up), +46 impacts in and around the
+  ground-level view (in front of and behind the plant, rate rising to the end) each with crown, splash
+  droplets and a spreading wet spot; 22 rain rings on the running water after the front passes.
+* Cooler, darker opening (earth tinted for rain light).
+* Sun break controlled: sky brightening halved, the "camera" stops down ~0.7 EV through the break
+  (keyed exposure), sun 4300 K, backlit rain streaks/cards turn gold, wet ground glossier (roughness
+  0.13) so it glitters; beads sparkle.
+
+## Changes in review 2
 * camera at ground level now sits on the axis of the crack and a little higher (5 cm), so the water
   visibly runs along the crack TOWARD the lens past the seedling's base (62.6 still); water arrival
   retimed: starts ~60.6, reaches the stem ~61.8, reaches the lens by "karşılanıyor".
