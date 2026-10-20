@@ -219,7 +219,7 @@ def build(ctx):
     C.assign(hand, skin if not os.environ.get("S5_SIMPLESKIN") else C.principled("simple", (0.5, 0.28, 0.19), 0.45))
     hand.data.materials.append(H.hair_material())
     sd = hand.modifiers.new("Subsurf", "SUBSURF"); sd.levels = 0; sd.render_levels = int(os.environ.get("S5_SUBD", "1"))
-    if ctx.mode != "animatic" and not os.environ.get("S5_NOHAIR"):
+    if ctx.mode != "animatic" and os.environ.get("S5_HAIR"):
         H.add_body_hair(hand, count=int(os.environ.get("S5_HAIRN", "500")))
         sc.cycles_curves.shape = os.environ.get("S5_CURVE", "RIBBONS")
     cuff = H.cuff(hand, arm)
@@ -232,7 +232,7 @@ def build(ctx):
     A = Vector(apple.location)
 
     # grasp orientation and pose (solved for contact below)
-    _g = [float(x) for x in os.environ.get("S5_G", "-30,15,0,25").split(",")]
+    _g = [float(x) for x in os.environ.get("S5_G", "52,25,0,15").split(",")]
     G = dict(yaw=_g[0], elev=_g[1], roll=_g[2])
     rot_g = hand_rot(**G)
     P_open = dict(wflex=14.0, wdev=-4.0, curl={"thumb": 0.10, "index": 0.10, "middle": 0.12, "ring": 0.16, "little": 0.22},
@@ -320,11 +320,12 @@ def build(ctx):
 
     lift = Vector((0.010, -0.018, 0.075))
     rot_lift = hand_rot(G["yaw"] - 6, G["elev"] - 4, G["roll"] + 6)
+    AH = Vector((math.cos(math.radians(G["yaw"])), math.sin(math.radians(G["yaw"])), 0.0))   # toward the elbow
     path = [
-        (ctx.t0 - 0.3, W_grab + Vector((0.34, -0.03, 0.050)), hand_rot(G["yaw"] + 6, G["elev"] - 8, G["roll"] - 30)),
-        (t_in - 0.25, W_grab + Vector((0.23, -0.02, 0.045)), hand_rot(G["yaw"] + 5, G["elev"] - 7, G["roll"] - 24)),
-        (t_in + 0.32, W_grab + Vector((0.085, -0.008, 0.036)), hand_rot(G["yaw"] + 3, G["elev"] - 3, G["roll"] - 12)),
-        (t_grab - 0.30, W_grab + Vector((0.016, 0.0, 0.016)), hand_rot(G["yaw"] + 1, G["elev"], G["roll"] - 4)),
+        (ctx.t0 - 0.3, W_grab + AH * 0.30 + Vector((0, 0, 0.26)), hand_rot(G["yaw"] + 6, G["elev"] + 8, G["roll"] - 20)),
+        (t_in - 0.25, W_grab + AH * 0.18 + Vector((0, 0, 0.17)), hand_rot(G["yaw"] + 5, G["elev"] + 6, G["roll"] - 15)),
+        (t_in + 0.32, W_grab + AH * 0.08 + Vector((0, 0, 0.055)), hand_rot(G["yaw"] + 3, G["elev"] + 3, G["roll"] - 8)),
+        (t_grab - 0.30, W_grab + AH * 0.015 + Vector((0, 0, 0.018)), hand_rot(G["yaw"] + 1, G["elev"], G["roll"] - 3)),
         (t_grab - 0.02, W_grab, rot_g),
         (t_grab + 0.16, W_grab + Vector((0.0, 0.0, -0.0015)), rot_g),
         (t_grab + 0.95, W_grab + lift * 0.85, hand_rot(G["yaw"] - 4, G["elev"] - 3, G["roll"] + 4)),
@@ -387,7 +388,8 @@ def build(ctx):
     def arm_world():
         return arm.matrix_world.copy()
 
-    C0 = Vector((0.30, -1.00, 0.255))          # front-right: window/sun behind-left of the hand -> rim light
+    C0 = Vector((0.66, -0.52, 0.085))          # table level, looking toward the window: the hand is backlit
+    A_rest_focus = Vector(apple.location) + Vector((0, 0, 0.01))
     HE_rest = H.JOINTS["little"][1] + Vector((-0.008, 0.002, 0.0))   # little-finger edge: thin, glows red when backlit
     frames = list(range(ctx.f0 - 2, ctx.f1 + 3))
     for f in frames:
@@ -401,8 +403,8 @@ def build(ctx):
         # phase 1: documentary framing on the apple; the hand is soft until contact
         drift = C.remap(t, ctx.t0, t_asl, C.smooth)
         p1 = C0 + Vector((-0.02 * drift, 0.06 * drift, 0.015 * drift))
-        lk1 = Vector((0.0, 0.02, 0.045)).lerp(Aw * 0.8 + wrist_w * 0.2, C.remap(t, t_grab - 0.4, t_grab + 1.2))
-        f1 = Aw.copy()
+        lk1 = Vector((0.0, 0.02, 0.055)).lerp(Aw * 0.6 + wrist_w * 0.4, C.remap(t, t_grab + 0.1, t_asl + 0.8))
+        f1 = A_rest_focus.copy()                 # focus stays on the apple's table position (lift goes soft)
         # phase 2 ("aslında" ->): push toward the hand edge with the bright window directly behind it;
         # focus slides off toward the window so the backlit skin becomes a warm-red translucent glow
         s = C.remap(t, t_asl - 0.1, ctx.t1, lambda x: C.smooth(x) * 0.6 + max(0.0, min(1.0, x)) * 0.4)
@@ -429,17 +431,27 @@ def build(ctx):
     for n in skin.node_tree.nodes:
         if n.bl_idname == "ShaderNodeMixShader" and n.inputs[2].is_linked and n.inputs[2].links[0].from_node.bl_idname == "ShaderNodeBsdfTranslucent":
             n.inputs[0].default_value = 0.07; n.inputs[0].keyframe_insert("default_value", frame=int(round((t_asl + 1.2) * C.FPS)))
-            n.inputs[0].default_value = 0.45; n.inputs[0].keyframe_insert("default_value", frame=ctx.f1)
+            n.inputs[0].default_value = 0.6; n.inputs[0].keyframe_insert("default_value", frame=ctx.f1)
     # light dissolve from sh07's glare: open over-exposed, settle by ~40.9 s
     vs = sc.view_settings
-    vs.exposure = 2.6; vs.keyframe_insert("exposure", frame=ctx.f0)
-    vs.exposure = 1.0; vs.keyframe_insert("exposure", frame=int(round(40.72 * C.FPS)))
-    vs.exposure = 0.0; vs.keyframe_insert("exposure", frame=int(round(41.05 * C.FPS)))
-    vs.exposure = 0.0; vs.keyframe_insert("exposure", frame=int(round(t_asl * C.FPS)))
-    vs.exposure = 0.3; vs.keyframe_insert("exposure", frame=ctx.f1)
+    vs.exposure = 2.0; vs.keyframe_insert("exposure", frame=ctx.f0)
+    vs.exposure = 0.4; vs.keyframe_insert("exposure", frame=int(round(40.72 * C.FPS)))
+    vs.exposure = -0.6; vs.keyframe_insert("exposure", frame=int(round(41.05 * C.FPS)))
+    vs.exposure = -0.6; vs.keyframe_insert("exposure", frame=int(round(t_asl * C.FPS)))
+    vs.exposure = -1.3; vs.keyframe_insert("exposure", frame=ctx.f1)
     sc.frame_set(ctx.f0)
-    return {"final_spp": int(os.environ.get("S5_SPP", "32")), "preview_spp": 24, "max_bounces": 4, "diffuse_bounces": 1,
+    return {"final_spp": int(os.environ.get("S5_SPP", "16")), "final_res": int(os.environ.get("S5_RES", "80")), "preview_spp": 24, "max_bounces": 4, "diffuse_bounces": 1,
             "glossy_bounces": 1, "transmission_bounces": 4, "transparent_bounces": 8, "final_threshold": 0.03, "texture_limit": "2048", "motion_blur": not os.environ.get("S5_NOMB")}
 
 
+_cfg0 = C.configure_render
+
+
+def _cfg(mode, ov):
+    _cfg0(mode, ov)
+    if mode == "final":
+        bpy.context.scene.render.resolution_percentage = ov.get("final_res", 100)
+
+
+C.configure_render = _cfg
 C.run("sh08", build)

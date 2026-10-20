@@ -410,7 +410,7 @@ def skin_material(hand, nails):
     nt.links.new(_math(nt, "MULTIPLY", oily, 0.22), skin.inputs["Coat Weight"])
     skin.inputs["Coat Roughness"].default_value = 0.28
     skin.inputs["Coat IOR"].default_value = 1.45
-    skin.inputs["Sheen Weight"].default_value = 0.12
+    skin.inputs["Sheen Weight"].default_value = 0.3
     skin.inputs["Sheen Roughness"].default_value = 0.45
     skin.inputs["Sheen Tint"].default_value = (0.95, 0.85, 0.8, 1)
     nt.links.new(bump.outputs[0], skin.inputs["Normal"])
@@ -448,7 +448,7 @@ def skin_material(hand, nails):
     nt.links.new(nail_mask, mix.inputs[0])
     nt.links.new(skin.outputs[0], mix.inputs[1]); nt.links.new(nail.outputs[0], mix.inputs[2])
     # thin-part translucency (finger edges glow red against the window); small weight to avoid wax
-    tr = _node(nt, "ShaderNodeBsdfTranslucent"); tr.inputs["Color"].default_value = (0.85, 0.16, 0.07, 1)
+    tr = _node(nt, "ShaderNodeBsdfTranslucent"); tr.inputs["Color"].default_value = (0.80, 0.10, 0.035, 1)
     mt = _node(nt, "ShaderNodeMixShader"); mt.inputs[0].default_value = 0.07
     nt.links.new(mix.outputs[0], mt.inputs[1]); nt.links.new(tr.outputs[0], mt.inputs[2])
     nt.links.new(mt.outputs[0], out.inputs["Surface"])
