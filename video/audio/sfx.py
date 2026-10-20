@@ -1580,14 +1580,14 @@ def gen_ui_tick(dur, rng, sync=0.02, kind="ring", pan=0.0, bright=1.0):
     n = N(dur)
     y = np.zeros((n, 2))
     if kind == "ring":
-        c = sumv(burst(rng, 0.012, 0.0011, attack=0.0002, lo=2400 * bright, hi=9000) * 0.8,
-                 0.35 * burst(rng, 0.02, 0.003, attack=0.0005, lo=500, hi=1400))
+        c = sumv(burst(rng, 0.016, 0.0018, attack=0.0005, lo=2200 * bright, hi=8000) * 0.8,
+                 0.35 * burst(rng, 0.024, 0.004, attack=0.0008, lo=500, hi=1400))
     elif kind == "callout":
-        c = sumv(burst(rng, 0.012, 0.0009, attack=0.0002, lo=2000 * bright, hi=8000) * 0.7,
-                 (burst(rng, 0.012, 0.0008, attack=0.0002, lo=2600 * bright, hi=9000) * 0.45, N(0.022)),
+        c = sumv(burst(rng, 0.014, 0.0015, attack=0.0005, lo=2000 * bright, hi=8000) * 0.7,
+                 (burst(rng, 0.014, 0.0013, attack=0.0005, lo=2600 * bright, hi=8500) * 0.45, N(0.022)),
                  0.3 * burst(rng, 0.02, 0.003, lo=450, hi=1200))
     else:  # link
-        c = burst(rng, 0.01, 0.0008, attack=0.0002, lo=3000 * bright, hi=10000) * 0.6
+        c = burst(rng, 0.014, 0.0014, attack=0.0005, lo=2800 * bright, hi=9000) * 0.6
     add_mono(y, c, N(sync), pan)
     return out(y)
 
