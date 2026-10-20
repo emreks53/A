@@ -1883,7 +1883,12 @@ def build_room(mats):
             p = c + nrm * (k * sp)
             seg = clip_segment(p, d, y0, y1, z0, z1)
             if seg and (Vector(seg[1]) - Vector(seg[0])).length > 0.01:
-                objs.append(slat("kafes_s", seg[0], seg[1], 0.0150, 0.018, xk + dx, kafes))
+                # split into short pieces: tight bounding boxes keep sun shadow rays through the lattice cheap
+                a_, b_ = Vector(seg[0]), Vector(seg[1])
+                npc = max(1, int((b_ - a_).length / 0.035))
+                for q in range(npc):
+                    pa = a_.lerp(b_, q / npc); pb = a_.lerp(b_, (q + 1) / npc)
+                    objs.append(slat("kafes_s", tuple(pa), tuple(pb), 0.0150, 0.018, xk + dx, kafes))
     # join small kafes pieces into one object
     ks = [o for o in objs if o.name.startswith("kafes_s")]
     if ks:
@@ -2222,6 +2227,13 @@ def build(ctx):
         volume_box()
     if "motes" not in dis:
         build_motes()
+    if "portal" in dis:
+        bpy.data.objects.remove(bpy.data.objects["portal"])
+    if "fill" in dis:
+        bpy.data.objects.remove(bpy.data.objects["fill_front"])
+    if "kafes" in dis:
+        for o in [o for o in bpy.data.objects if o.name.startswith("kafes")]:
+            bpy.data.objects.remove(o)
     if "carve" in dis:
         for o in [o for o in bpy.data.objects if o.name.endswith("_carve")]:
             bpy.data.objects.remove(o)
