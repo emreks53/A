@@ -38,8 +38,8 @@ def build(ctx):
     # ---------------------------------------------------------------- light: low golden sun, backlit
     path = C.ph_hdri(HDRI, "4k")
     el, u, _, _ = L.hdri_sun(path)
-    L.world_from_hdri(path, strength=1.0, tint=(1.0, 0.80, 0.56))
-    sdir = L.sun_dir_world(el + 3.0, u)            # lamp a touch higher than the disc: light reaches the grass
+    L.world_from_hdri(path, strength=1.0, tint=(1.0, 0.74, 0.46))
+    sdir = L.sun_dir_world(el + 9.0, u)            # lamp higher than the disc: light reaches into the grass
     # rotate the world so the sun sits behind the subjects (camera looks +Y)
     want = math.atan2(1.0, -0.30)                    # azimuth of the sun direction we want (from +X)
     have = math.atan2(sdir.y, sdir.x)
@@ -48,8 +48,8 @@ def build(ctx):
     for n in nt.nodes:
         if n.type == "MAPPING":
             n.inputs["Rotation"].default_value[2] = math.radians(-rot)    # texture lookup rotates the other way
-    sdir = L.sun_dir_world(el + 3.0, u, rot)
-    sun = L.sun_from_dir(sdir, 5.0, kelvin_k=2600, angle_deg=0.6)
+    sdir = L.sun_dir_world(el + 9.0, u, rot)
+    sun = L.sun_from_dir(sdir, 6.0, kelvin_k=2500, angle_deg=0.6)
 
     # ---------------------------------------------------------------- ground + meadow
     soil = C.principled("S3_meadowsoil", base=(0.07, 0.055, 0.035), rough=0.95)
@@ -130,15 +130,16 @@ def build(ctx):
         dew.scale = (sc,) * 3; dew.keyframe_insert("scale", frame=tt * C.FPS)
     # sunbeam resting on it: a tight warm spot from the sun direction
     sb = bpy.data.lights.new("S3_sunbeam", "SPOT")
-    sb.spot_size = math.radians(4.5); sb.spot_blend = 0.85; sb.shadow_soft_size = 0.02
+    sb.spot_size = math.radians(9.0); sb.spot_blend = 0.8; sb.shadow_soft_size = 0.02
     sb.color = C.kelvin(3100)
     beam = bpy.data.objects.new("S3_sunbeam", sb); C.link(beam)
-    beam.location = tipw + sdir * 1.2
-    beam.rotation_euler = (-sdir).to_track_quat("-Z", "Y").to_euler()
-    for tt, e in ((t_goz - 0.2, 0.0), (t_goz + 0.9, 9.0), (t_end + 0.3, 10.0)):
+    bdir = (Vector((sdir.x, sdir.y, 0)).normalized() * math.cos(math.radians(24)) + Vector((0, 0, math.sin(math.radians(24))))).normalized()
+    beam.location = tipw + bdir * 0.35
+    beam.rotation_euler = (-bdir).to_track_quat("-Z", "Y").to_euler()
+    for tt, e in ((t_goz - 0.2, 0.0), (t_goz + 0.9, 3.5), (t_end + 0.3, 3.7)):
         sb.energy = e; sb.keyframe_insert("energy", frame=tt * C.FPS)
     # the general sun dims a touch as the beam takes over (a cloud edge)
-    for tt, e in ((t_goz - 0.2, 4.0), (t_goz + 0.9, 2.8), (t_end + 0.3, 2.7)):
+    for tt, e in ((t_goz - 0.2, 6.0), (t_goz + 0.9, 4.2), (t_end + 0.3, 4.0)):
         sun.data.energy = e; sun.data.keyframe_insert("energy", frame=tt * C.FPS)
 
     # ---------------------------------------------------------------- camera
@@ -154,16 +155,17 @@ def build(ctx):
             e.make_compatible(prev)
         cam.rotation_euler = e; prev = e.copy()
         cam.keyframe_insert("location", frame=f); cam.keyframe_insert("rotation_euler", frame=f)
-        cam.data.dof.aperture_fstop = C.lerp(5.6, 3.2, d); cam.data.dof.keyframe_insert("aperture_fstop", frame=f)
+        cam.data.dof.aperture_fstop = C.lerp(5.6, 4.5, d); cam.data.dof.keyframe_insert("aperture_fstop", frame=f)
         # focus: middle of the group, then the leaf tip; exit pull to the far background
         fp = Vector((0, 0.55, 0.08)).lerp(tipw, d)
         pull = C.remap(t, t_end - 0.35, t_end + 0.25, C.smooth)
         fp = fp.lerp(tipw + (tipw - pos).normalized() * 0.5, pull)
         focus.location = fp; focus.keyframe_insert("location", frame=f)
     C.handheld(cam, amp_loc=0.0006, amp_rot=0.001, speed=0.4)
-    bpy.context.scene.view_settings.exposure = 0.2
+    bpy.context.scene.view_settings.exposure = -0.15
+    bpy.context.scene.cycles_curves.shape = os.environ.get("S3_CURVES", "RIBBONS")   # flat ribbons: ~2x cheaper
     L.render_tuning(os.environ.get("S3_DQ", "BALANCED"))
-    return L.experiment({"final_spp": 16, "final_threshold": 0.04, "preview_spp": 32, "clamp_indirect": 4.0})
+    return L.experiment({"final_spp": 12, "final_threshold": 0.05, "preview_spp": 32, "clamp_indirect": 4.0})
 
 
 def cam_point(M, px, py, depth, lens=50.0):
@@ -180,8 +182,8 @@ def cam_pose(ctx, t, tipw):
     wide_target = Vector((0.0, 0.62, 0.08))
     d = 0.0 if tipw is None else C.remap(t, t_goz - 0.05, t_goz + 1.5, C.smoother)
     if tipw is not None:
-        pos = pos.lerp(tipw + Vector((-0.04, -0.092, 0.006)), d)
-        aim = wide_target.lerp(tipw + Vector((0, 0, -0.001)), C.smooth(d)) - pos
+        pos = pos.lerp(tipw + Vector((-0.03, -0.072, 0.034)), d)
+        aim = wide_target.lerp(tipw + Vector((0.004, 0.006, -0.004)), C.smooth(d)) - pos
     else:
         aim = wide_target - pos
     return look_matrix(pos, aim), pos, d
@@ -223,7 +225,7 @@ def top_point(o):
 
 # ============================================================================ meadow filler
 
-def grass_carpet(rnd, n=110000):
+def grass_carpet(rnd, n=70000):
     """Dense short grass blades (hair curves) carpeting the view wedge, taller further back."""
     cv = bpy.data.hair_curves.new("S3_grass")
     pts, rads = [], []
@@ -236,7 +238,7 @@ def grass_carpet(rnd, n=110000):
         lean = Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), 0)) * h * rnd.uniform(0.1, 0.45)
         b = Vector((x, y, 0))
         pts += [b, b + lean * 0.15 + Vector((0, 0, h * 0.4)), b + lean * 0.55 + Vector((0, 0, h * 0.78)), b + lean + Vector((0, 0, h))]
-        r = rnd.uniform(0.0005, 0.0009)
+        r = rnd.uniform(0.0006, 0.0011)
         rads += [r, r * 0.8, r * 0.5, r * 0.08]
         k += 1
     cv.add_curves([4] * n)
@@ -287,7 +289,9 @@ def meadow(rnd, keep_clear):
         if any((Vector((x, y)) - Vector(k[:2])).length < k[2] for k in keep_clear):
             continue
         pool = flowers if rnd.random() < 0.07 else grass
-        instance(pool[rnd.randrange(len(pool))], (x, y, 0), rnd.uniform(0, 6.28), sc, col)
+        o = instance(pool[rnd.randrange(len(pool))], (x, y, 0), rnd.uniform(0, 6.28), sc, col)
+        if y > 1.3:
+            o.visible_shadow = False      # far clumps would put the whole set in shade at golden hour
         n += 1
     print("[sh13b] meadow instances", n)
 

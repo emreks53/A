@@ -51,6 +51,7 @@ def build(ctx):
     seed_xy = S + side_h * 0.0035
     seed_xy.z = hf.z(seed_xy.x, seed_xy.y) - 0.0006
     print("[sh11] crack angle", math.degrees(ang), "path pts", len(path), "S", S)
+    print("[sh11] path", [(round(p.x - S.x, 3), round(p.y - S.y, 3)) for p in path[::12]])
 
     # ---------------------------------------------------------------- sky: dark rain, sun breaking behind
     sun_az = math.atan2(-fwd_h.y, -fwd_h.x) + math.pi        # behind the seedling (camera looks at it)
@@ -73,7 +74,14 @@ def build(ctx):
         hero.append((p.x, p.y, tt, rnd.uniform(0.004, 0.009)))
     hero[0] = (seed_xy.x + fwd_h.x * -0.045 + side_h.x * 0.03, seed_xy.y + fwd_h.y * -0.045 + side_h.y * 0.03, t_but - 0.04, 0.0085)
     hero[1] = (seed_xy.x - fwd_h.x * 0.02 - side_h.x * 0.035, seed_xy.y - fwd_h.y * 0.02 - side_h.y * 0.035, t_but + 0.30, 0.007)
-    L.wet_earth(info, hero, t_but + 0.2, t_ay + 2.2, t_ay - 0.6, t_kar + 0.8, ctx.t0 - 0.5, ctx.t1 + 0.5)
+    # random rain spots (baked with the hero spots): sparse at first, dense later
+    rs = []
+    for k in range(1600):
+        u_ = rnd.random() ** 0.6
+        tt = t_but + 0.2 + u_ * (t_ay + 2.2 - t_but - 0.2)
+        x_ = seed_xy.x + rnd.uniform(-0.45, 0.45); y_ = seed_xy.y + rnd.uniform(-0.45, 0.45)
+        rs.append((x_, y_, tt, rnd.uniform(0.003, 0.009)))
+    L.wet_earth_baked(info, hero + rs, (seed_xy.x, seed_xy.y), 0.95, t_ay - 0.6, t_kar + 0.8, ctx.t0 - 0.5, ctx.t1 + 0.5)
     L.ground(mat=em, size=8.0, dicing=2.0)
 
     # ---------------------------------------------------------------- seedling (same plant as sh04)
@@ -97,7 +105,7 @@ def build(ctx):
     stem_beads(sd, water, t_ay + 0.4, rnd)
 
     # ---------------------------------------------------------------- water along the crack
-    riv_m = rivulet_material(t_ay - 0.55, t_kar - 0.05, t_kar + 0.9)
+    riv_m = rivulet_material(t_ay - 0.4, t_ay + 0.75, t_kar)
     riv, rlen = L.rivulet("S3_rivulet", path, hf, mat=riv_m)
 
     # ---------------------------------------------------------------- impacts: drops, crowns, dust
@@ -108,7 +116,7 @@ def build(ctx):
 
     # ---------------------------------------------------------------- rain
     rain(ctx, fwd_h, side_h, seed_xy, water, rnd)
-    for k, dd in enumerate((0.7, 1.4, 2.6, 4.5, 8.0)):
+    for k, dd in enumerate((1.2, 4.5)):
         rain_card(ctx, seed_xy + fwd_h * dd, fwd_h, width=0.6 + dd * 1.4, height=0.3 + dd * 0.9, seed=k,
                   density=0.55 + 0.1 * k, t_kar=t_kar)
 
@@ -116,15 +124,15 @@ def build(ctx):
     T = seed_xy + Vector((0, 0, 0.03))
     near_end = path[-1]
     leg = Vector((seed_xy.x - near_end.x, seed_xy.y - near_end.y, 0)).normalized()   # camera looks up the crack
-    cam = C.camera("cam", lens=40, loc=(0, 0, 1), fstop=2.8)
+    cam = C.camera("cam", lens=40, loc=(0, 0, 1), fstop=4.0)
     focus = C.empty("cam_focus", tuple(T)); cam.data.dof.focus_object = focus
     prev = None
     for f in range(ctx.f0 - 2, ctx.f1 + 3):
         t = f / C.FPS
         s = C.remap(t, t_but + 0.4, t_ay - 0.1, C.smoother)            # descend to ground level
-        dist = C.lerp(0.36, 0.20, s) - 0.02 * C.remap(t, t_ay, ctx.t1, C.smooth)
-        hgt = C.lerp(0.13, 0.024, s)
-        lat = C.lerp(0.05, 0.012, s)
+        dist = C.lerp(0.36, 0.19, s) - 0.02 * C.remap(t, t_ay, ctx.t1, C.smooth)
+        hgt = C.lerp(0.13, 0.05, s)
+        lat = C.lerp(0.05, 0.004, s)
         look_h = fwd_h.lerp(leg, s).normalized()
         pos = T - look_h * dist + side_h * lat
         pos.z = seed_xy.z + hgt
@@ -144,7 +152,7 @@ def build(ctx):
     C.handheld(cam, amp_loc=0.0005, amp_rot=0.0012, speed=0.5)
     bpy.context.scene.view_settings.exposure = 0.25
     L.render_tuning(os.environ.get("S3_DQ", "BALANCED"))
-    return L.experiment({"final_spp": 16, "final_threshold": 0.04, "preview_spp": 32, "clamp_indirect": 4.0,
+    return L.experiment({"final_spp": 12, "final_threshold": 0.05, "preview_spp": 32, "clamp_indirect": 4.0,
                          "transmission_bounces": 6})
 
 
@@ -210,7 +218,7 @@ def rivulet_material(t_start, t_seed, t_end):
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 30
     nt.links.new(uv.outputs[0], nz.inputs["Vector"])
     front = nt.nodes.new("ShaderNodeValue"); front.name = "FRONT"
-    for tt, v in ((t_start - 0.5, -0.05), (t_start, 0.0), (t_seed, 0.62), (t_end, 1.05)):
+    for tt, v in ((t_start - 0.5, -0.05), (t_start, 0.0), (t_seed, 0.6), (t_end, 1.03)):
         front.outputs[0].default_value = v; front.outputs[0].keyframe_insert("default_value", frame=tt * C.FPS)
     a = nt.nodes.new("ShaderNodeMath"); a.operation = "SUBTRACT"
     nt.links.new(front.outputs[0], a.inputs[0])
@@ -313,10 +321,10 @@ def impacts(hero, hf, water, dust_m, drop_tpl, grain_tpl, rnd, t_soak):
             du_t.append(tt + rnd.uniform(0, 0.03)); du_s.append(rnd.uniform(0.00008, 0.0002)); du_zg.append(z - 0.0006)
         crown(hit, tt, water)
     L.particles("S3_splash", sp_p, sp_v, sp_t, sp_s, drop_tpl, mat=water, drag=1.0, gravity=9.81,
-                ground_z=None, zg=sp_zg, life=0.6)
+                ground_z=None, zg=sp_zg, life=0.6, as_points=True)
     if du_p:
         L.particles("S3_dustpuff", du_p, du_v, du_t, du_s, grain_tpl, mat=dust_m, drag=9.0, gravity=1.2,
-                    ground_z=None, zg=du_zg, life=1.2)
+                    ground_z=None, zg=du_zg, life=1.2, as_points=True)
 
 
 def crown(p, tt, mat):
@@ -417,14 +425,14 @@ def rain_card(ctx, centre, fwd_h, width, height, seed, density, t_kar):
 def rain(ctx, fwd_h, side_h, centre, water, rnd):
     """Rain at terminal velocity: each drop is born 2.2 m up at its own time t0 and falls through the
     wedge in front of the camera (constant topology -> real motion-blur streaks)."""
-    tpl = L.template_drop("S3_rain_tpl", stretch=1.0, mat=rain_material(ctx))
+    tpl = L.template_drop("S3_rain_tpl", stretch=1.0, mat=rain_material(ctx), segs=(6, 4))
     p0, vel, t0, size = [], [], [], []
     v = 7.0
     wind = side_h * 0.5
     z_top = 2.2
     t_a, t_b = ctx.t0 - 0.6, ctx.t1 + 0.4
     t_full = ctx.word("bütün") + 0.6
-    n = 60000
+    n = 34000
     for i in range(n):
         tb = rnd.uniform(t_a, t_b)
         # intensity: light at first, heavy from just after "bütün"
@@ -436,9 +444,12 @@ def rain(ctx, fwd_h, side_h, centre, water, rnd):
         p = centre + fwd_h * (fd - 0.22) + side_h * lat - wind * (z_top / v)
         p.z = z_top
         p0.append(p); vel.append(Vector((wind.x, wind.y, -v))); t0.append(tb)
-        size.append(rnd.uniform(0.0007, 0.002))
+        size.append(rnd.uniform(0.0009, 0.0022))
     print("[sh11] rain drops", len(p0))
-    L.particles("S3_rain", p0, vel, t0, size, tpl, mat=tpl.data.materials[0], drag=0.0, gravity=0.0, ground_z=-0.002, life=1.0)
+    o = L.particles("S3_rain", p0, vel, t0, size, tpl, mat=tpl.data.materials[0], drag=0.0, gravity=0.0, ground_z=-0.002, life=1.0,
+                    as_points=True)
+    # rain only needs to be seen (directly and through refraction): skip shadow/diffuse/glossy rays
+    o.visible_shadow = False; o.visible_diffuse = False; o.visible_glossy = False
 
 
 C.run("sh11", build)

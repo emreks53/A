@@ -1,4 +1,4 @@
-# sh13b — review 1 (studio S3)
+# sh13b — review 2 (studio S3)
 
 Script: `video/blender/shots/sh13b.py` (+ THE SEEDLING from `lib_s3.py`).
 
@@ -16,7 +16,7 @@ Script: `video/blender/shots/sh13b.py` (+ THE SEEDLING from `lib_s3.py`).
 |---|---|---|
 | TRK_a | dandelion flower (Poly Haven `dandelion_01`) | (300, 980) |
 | TRK_b | honeybee (procedural: striped abdomen, fuzz, blurred wings), hovering | (690, 330) |
-| TRK_c | small copper butterfly perched on an ox-eye daisy, wings breathing | (270, 390) |
+| TRK_c | small copper butterfly perched on an ox-eye daisy (procedural), wings breathing | (270, 390) |
 | TRK_d | seven-spot ladybird crawling up a grass blade | (770, 1000) |
 | TRK_e | grass seed head (nodding panicle) | (520, 240) |
 | TRK_f | garden snail (spiral shell), gliding | (250, 1360) |
@@ -31,9 +31,14 @@ variants (each variant re-based individually). NOTE: I don't know sh13a's exact 
 director/S-studio for sh13a uses a different HDRI or grade, tell me and I'll match it.
 
 ## Render time
-`--final` (16 spp, OIDN balanced): frame 2061 **~66 s/frame**, frame 2101 **~70 s/frame** — over budget (grass carpet curves + many grass instances); optimising next.
+`--final`, 4 cores, steady-state frame: **2061 (wide hold) ≈ 41 s**, **2121 (macro on the drop) ≈ 58 s** (review 1: 66-70 s). 12 spp + OIDN balanced, curves as ribbons. The macro end is over budget because of the huge defocus over the grass blades in front — next: thin the carpet near the macro framing.
+
+## Changes since review 1
+* fixed HDRI/sun orientation (Mapping rotates the lookup the other way) → the sun really is ahead-left
+  now: warm rim light on every grass tip; far meadow clumps don't cast shadows over the set.
+* warmer 2500 K sun, warm world tint; daisy replaces the oversized gazania; vein contrast up.
+* macro end framing looks down onto the leaf so the venation and the dew drop read together.
 
 ## Known issues / next
-* golden-hour warmth still too weak (looks closer to dusk overcast) → more backlight/rim + warmer sky.
 * insects are small in frame (by design: ring targets); sapling reads weakly against the weeds.
-* the "sunbeam" spot is subtle; want a visible warm beam glow on the leaf.
+* the "sunbeam" is a soft warm spot, not a visible shaft (no volumetrics, by budget).

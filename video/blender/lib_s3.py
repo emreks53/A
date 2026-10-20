@@ -314,7 +314,7 @@ def mat_leaf(name="S3_leaf", veins=None, wilt=0.0, wet=0.0, tone=(0.16, 0.36, 0.
     cells.inputs["Scale"].default_value = 5200.0
     nt.links.new(geo.outputs["Object"], cells.inputs["Vector"])
     tone = tuple(c * (1 - 0.25 * wilt) + d * 0.25 * wilt for c, d in zip(tone, (0.30, 0.33, 0.10)))
-    base = _mix_rgb(nt, tone, (tone[0] * 1.9, tone[1] * 1.45, tone[2] * 1.3), _math(nt, "MULTIPLY", vein, 0.85))
+    base = _mix_rgb(nt, tone, (tone[0] * 2.6, tone[1] * 1.75, tone[2] * 1.6), _math(nt, "MINIMUM", _math(nt, "MULTIPLY", vein, 1.3), 1.0))
     base = _mix_rgb(nt, base, (tone[0] * 1.25, tone[1] * 1.12, tone[2] * 0.9), _maprange(nt, nz2.outputs[0], 0.35, 0.75, 0, 0.35))
     p = nt.nodes.new("ShaderNodeBsdfPrincipled")
     nt.links.new(base, p.inputs["Base Color"])
@@ -326,8 +326,8 @@ def mat_leaf(name="S3_leaf", veins=None, wilt=0.0, wet=0.0, tone=(0.16, 0.36, 0.
     p.inputs["Sheen Roughness"].default_value = 0.4
     p.inputs["Sheen Tint"].default_value = (0.8, 0.9, 0.75, 1)
     # bump: veins sunken on top, bullate puckering in between, cell texture
-    b1 = nt.nodes.new("ShaderNodeBump"); b1.inputs["Strength"].default_value = 0.35
-    b1.inputs["Distance"].default_value = 0.00012
+    b1 = nt.nodes.new("ShaderNodeBump"); b1.inputs["Strength"].default_value = 0.6
+    b1.inputs["Distance"].default_value = 0.00018
     h = _math(nt, "ADD", _math(nt, "MULTIPLY", vein, -1.0), _math(nt, "MULTIPLY", nz.outputs[0], 0.25))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", cells.outputs["Distance"], 0.6))
     nt.links.new(h, b1.inputs["Height"])
@@ -686,14 +686,17 @@ def mat_cracked_earth(name="S3_earth", tile=1.0, disp=0.012, res="4k", tint=(1.0
     rr = _math(nt, "MULTIPLY", rough, 1.05)
     nt.links.new(rr, p.inputs["Roughness"])
     nm = nt.nodes.new("ShaderNodeNormalMap"); nt.links.new(nor, nm.inputs["Color"])
-    b = nt.nodes.new("ShaderNodeBump"); b.inputs["Strength"].default_value = 0.3; b.inputs["Distance"].default_value = 0.0002
-    nt.links.new(fine.outputs[0], b.inputs["Height"]); nt.links.new(nm.outputs[0], b.inputs["Normal"])
-    nt.links.new(b.outputs[0], p.inputs["Normal"])
+    # (a fine-noise bump on top of the normal map cost ~15 % of the frame for invisible detail)
+    nt.links.new(nm.outputs[0], p.inputs["Normal"])
     dn = nt.nodes.new("ShaderNodeDisplacement")
     dn.inputs["Scale"].default_value = disp; dn.inputs["Midlevel"].default_value = 0.55
     nt.links.new(dsp, dn.inputs["Height"])
     nt.links.new(dn.outputs[0], outn.inputs["Displacement"])
     m.displacement_method = os.environ.get("S3_DISPM", "BOTH")
+    if os.environ.get("S3_SIMPLE_EARTH"):
+        for l in list(p.inputs["Normal"].links) + list(p.inputs["Roughness"].links):
+            nt.links.remove(l)
+        p.inputs["Roughness"].default_value = 0.9
     return m, {"col": col, "p": p, "diff": diff, "rough": rr, "disp": dsp, "nt": nt, "wet": wet}
 
 
@@ -1015,7 +1018,7 @@ def heat_haze(loc, size=(3.0, 0.4), rot=(math.radians(90), 0, 0), strength=0.6, 
 #  'size'.  Geometry nodes move every point analytically with scene time: deterministic for any
 #  frame range, constant topology (so Cycles' deformation motion blur turns rain into streaks).
 
-def _gn_group(name, drag, gravity, ground_z, life, inst=None):
+def _gn_group(name, drag, gravity, ground_z, life, inst=None, cull=None, as_points=False):
     ng = bpy.data.node_groups.new(name, "GeometryNodeTree")
     ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
     ng.interface.new_socket("Instance", in_out="INPUT", socket_type="NodeSocketObject")
@@ -1069,7 +1072,20 @@ def _gn_group(name, drag, gravity, ground_z, life, inst=None):
     comb = N.new("ShaderNodeCombineXYZ"); Lk.new(g, comb.inputs["Z"])
     off = vm("ADD", disp, comb.outputs[0])
     sp = N.new("GeometryNodeSetPosition")
-    Lk.new(gi.outputs[0], sp.inputs["Geometry"]); Lk.new(off, sp.inputs["Offset"])
+    src = gi.outputs[0]
+    if cull:
+        # (experimental, currently unused: breaks deformation motion blur in Cycles 5.2 - see NOTES)
+        # drop points that are not alive anywhere near this frame.  The test uses the ROUNDED frame,
+        # so it is identical at shutter open/close (constant topology inside each motion-blur window).
+        fr = m("ROUND", st.outputs["Frame"])
+        tw = m("DIVIDE", fr, float(C.FPS))
+        born = m("LESS_THAN", attr("t0"), m("ADD", tw, 2.0 / C.FPS))
+        gone = m("LESS_THAN", m("ADD", attr("t0"), cull), m("SUBTRACT", tw, 2.0 / C.FPS))
+        keep = m("MULTIPLY", born, m("SUBTRACT", 1.0, gone))
+        dg = N.new("GeometryNodeDeleteGeometry"); dg.domain = "POINT"
+        Lk.new(src, dg.inputs["Geometry"]); Lk.new(m("LESS_THAN", keep, 0.5), dg.inputs["Selection"])
+        src = dg.outputs[0]
+    Lk.new(src, sp.inputs["Geometry"]); Lk.new(off, sp.inputs["Offset"])
     # visibility: alive, above the ground, within life
     pos = N.new("GeometryNodeInputPosition")
     sep = N.new("ShaderNodeSeparateXYZ"); Lk.new(pos.outputs[0], sep.inputs[0])
@@ -1077,6 +1093,16 @@ def _gn_group(name, drag, gravity, ground_z, life, inst=None):
     young = m("LESS_THAN", dt, attr("life") if life is None else life)
     vis = m("MULTIPLY", m("MULTIPLY", alive, above), young)
     sc = m("MULTIPLY", vis, attr("size"))
+    if as_points:
+        # native Cycles point cloud: one sphere primitive per drop (cheap BVH, deformation blur)
+        mp_ = N.new("GeometryNodeMeshToPoints")
+        Lk.new(sp.outputs[0], mp_.inputs["Mesh"]); Lk.new(sc, mp_.inputs["Radius"])
+        sm = N.new("GeometryNodeSetMaterial")
+        Lk.new(mp_.outputs[0], sm.inputs["Geometry"])
+        if inst is not None and inst.data.materials:
+            sm.inputs["Material"].default_value = inst.data.materials[0]
+        Lk.new(sm.outputs[0], go.inputs[0])
+        return ng
     iop = N.new("GeometryNodeInstanceOnPoints")
     Lk.new(sp.outputs[0], iop.inputs["Points"])
     oi = N.new("GeometryNodeObjectInfo"); oi.transform_space = "ORIGINAL"
@@ -1092,7 +1118,7 @@ def _gn_group(name, drag, gravity, ground_z, life, inst=None):
 
 
 def particles(name, p0, vel, t0, size, instance_obj, mat=None, drag=0.0, gravity=9.81, ground_z=-1.0,
-              life=10.0, rot=None, zg=None, lifes=None):
+              life=10.0, rot=None, zg=None, lifes=None, cull=None, as_points=False):
     """Create a GN particle object.  p0/vel: lists of Vector, t0/size: lists of float.
     ground_z/life None -> per-point attributes 'zg'/'life' (lists zg / lifes)."""
     n = len(p0)
@@ -1111,7 +1137,7 @@ def particles(name, p0, vel, t0, size, instance_obj, mat=None, drag=0.0, gravity
         add("life", "FLOAT", lifes, "value")
     o = bpy.data.objects.new(name, me)
     C.link(o)
-    ng = _gn_group(name + "_gn", drag, gravity, ground_z, life, inst=instance_obj)
+    ng = _gn_group(name + "_gn", drag, gravity, ground_z, life, inst=instance_obj, cull=cull, as_points=as_points)
     md = o.modifiers.new("GN", "NODES"); md.node_group = ng
     if mat:
         o.data.materials.append(mat)
@@ -1120,10 +1146,10 @@ def particles(name, p0, vel, t0, size, instance_obj, mat=None, drag=0.0, gravity
     return o
 
 
-def template_drop(name="S3_droptpl", r=1.0, stretch=1.0, mat=None):
+def template_drop(name="S3_droptpl", r=1.0, stretch=1.0, mat=None, segs=(10, 7)):
     """Unit water drop (radius 1 m; scale per point). stretch>1 elongates vertically."""
     b = bmesh.new()
-    bmesh.ops.create_uvsphere(b, u_segments=10, v_segments=7, radius=r)
+    bmesh.ops.create_uvsphere(b, u_segments=segs[0], v_segments=segs[1], radius=r)
     for v in b.verts:
         v.co.z *= stretch
     for f in b.faces:
@@ -1356,3 +1382,69 @@ def render_tuning(denoise_quality=None, prefilter=None):
         if os.environ.get("S3_NODENOISE"):
             c.use_denoising = False
     bpy.app.handlers.render_init.append(_pre)
+
+
+def wet_earth_baked(info, spots, centre, size, t_soak0, t_soak1, t0, t1, res=2048, grow=0.12):
+    """Cheaper rain wetness: the time each texel gets wet (min over all drop spots, each a disc that
+    grows to rmax in `grow` s then creeps to 1.35 rmax over 2.5 s) is baked into a float image once;
+    the shader does one lookup + compare.  spots: [(x, y, t, rmax)].  Plus global soak / crack pools."""
+    big = 999.0
+    tw = np.full((res, res), big, np.float32)
+    px = size / res
+    x0, y0 = centre[0] - size / 2, centre[1] - size / 2
+    for (x, y, ts, r) in spots:
+        R = r * 1.35
+        i0 = max(0, int((x - R - x0) / px)); i1 = min(res, int((x + R - x0) / px) + 2)
+        j0 = max(0, int((y - R - y0) / px)); j1 = min(res, int((y + R - y0) / px) + 2)
+        if i1 <= i0 or j1 <= j0:
+            continue
+        jj, ii = np.mgrid[j0:j1, i0:i1]
+        d = np.hypot(x0 + (ii + 0.5) * px - x, y0 + (jj + 0.5) * px - y)
+        # irregular edge: angular wobble
+        ang = np.arctan2(y0 + (jj + 0.5) * px - y, x0 + (ii + 0.5) * px - x)
+        d = d * (1 + 0.12 * np.sin(ang * 5 + x * 900) + 0.07 * np.sin(ang * 11 + y * 700))
+        t_fast = ts + grow * d / r
+        t_slow = ts + grow + 2.5 * np.clip((d - r) / (0.35 * r), 0, 1)
+        t_hit = np.where(d <= r, t_fast, np.where(d <= R, t_slow, big))
+        tw[j0:j1, i0:i1] = np.minimum(tw[j0:j1, i0:i1], t_hit)
+    tw[0, :] = tw[-1, :] = tw[:, 0] = tw[:, -1] = big
+    im = bpy.data.images.new("S3_wettime", res, res, alpha=False, float_buffer=True, is_data=True)
+    rgba = np.ones((res, res, 4), np.float32); rgba[..., 0] = tw; rgba[..., 1] = tw; rgba[..., 2] = tw
+    im.pixels.foreach_set(rgba.ravel())
+    im.pack()
+    nt = info["nt"]; p = info["p"]; N = nt.nodes
+    T = N.new("ShaderNodeValue"); T.name = "T"
+    T.outputs[0].default_value = t0; T.outputs[0].keyframe_insert("default_value", frame=t0 * C.FPS)
+    T.outputs[0].default_value = t1; T.outputs[0].keyframe_insert("default_value", frame=t1 * C.FPS)
+    soak = N.new("ShaderNodeValue"); soak.name = "SOAK"
+    for tt, v in ((t_soak0, 0.0), (t_soak1, 1.0)):
+        soak.outputs[0].default_value = v; soak.outputs[0].keyframe_insert("default_value", frame=tt * C.FPS)
+    for fc in C._fcurves(nt.animation_data.action):
+        if '"T"' in fc.data_path:
+            for kp in fc.keyframe_points:
+                kp.interpolation = "LINEAR"
+    geo = N.new("ShaderNodeTexCoord")
+    mp = N.new("ShaderNodeMapping")
+    mp.inputs["Location"].default_value = (-x0 / size, -y0 / size, 0)
+    mp.inputs["Scale"].default_value = (1 / size, 1 / size, 1)
+    mp.vector_type = "POINT"
+    # mapping applies scale then location: (p * s) + loc  ->  (p - x0)/size
+    nt.links.new(geo.outputs["Object"], mp.inputs["Vector"])
+    tex = N.new("ShaderNodeTexImage"); tex.image = im; tex.extension = "EXTEND"; tex.interpolation = "Linear"
+    nt.links.new(mp.outputs[0], tex.inputs[0])
+    sepc = N.new("ShaderNodeSeparateColor"); nt.links.new(tex.outputs["Color"], sepc.inputs[0])
+    wet = _maprange(nt, _math(nt, "SUBTRACT", T.outputs[0], sepc.outputs[0]), 0.0, 0.03, 0, 1)
+    sk = soak.outputs[0]
+    crack = _maprange(nt, info["disp"], 0.50, 0.25, 0, 1)
+    wet = _math(nt, "MAXIMUM", wet, _math(nt, "MULTIPLY", sk, 0.85))
+    puddle = _math(nt, "MULTIPLY", _maprange(nt, sk, 0.3, 1.0, 0, 1), crack)
+    col = info["col"]
+    dark = _mix_rgb(nt, col, (0.30, 0.24, 0.20), 1.0, "MULTIPLY")
+    newcol = _mix_rgb(nt, col, dark, wet)
+    newcol = _mix_rgb(nt, newcol, (0.10, 0.075, 0.06), _math(nt, "MULTIPLY", puddle, 0.6))
+    nt.links.new(newcol, p.inputs["Base Color"])
+    rough = _mix_rgb(nt, info["rough"], (0.22, 0.22, 0.22), wet)
+    rough = _mix_rgb(nt, rough, (0.03, 0.03, 0.03), puddle)
+    bw = N.new("ShaderNodeRGBToBW"); nt.links.new(rough, bw.inputs[0])
+    nt.links.new(bw.outputs[0], p.inputs["Roughness"])
+    return {"T": T, "soak": soak}
