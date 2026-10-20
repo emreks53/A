@@ -1,0 +1,1437 @@
+{
+ "fps": 24,
+ "width": 1080,
+ "height": 1920,
+ "total_seconds": 125.5,
+ "total_frames": 3012,
+ "handle_frames": 6,
+ "shots": [
+  {
+   "id": "sh01",
+   "start_s": 0.0,
+   "end_s": 5.24,
+   "cut_f0": 0,
+   "cut_f1": 126,
+   "render_f0": 0,
+   "render_f1": 132,
+   "seconds": 5.24,
+   "desc": "Dawn meadow macro: a dew drop on a grass blade reflects the world; drop falls onto a seedling",
+   "narration": "Bu dünyaya baktığımızda tüm canlıların ihtiyaçlarının karşılandığına şahit oluyoruz",
+   "words": [
+    {
+     "w": "Bu",
+     "s": 0.0,
+     "e": 0.26
+    },
+    {
+     "w": "dünyaya",
+     "s": 0.26,
+     "e": 0.64
+    },
+    {
+     "w": "baktığımızda",
+     "s": 0.64,
+     "e": 1.38
+    },
+    {
+     "w": "tüm",
+     "s": 1.38,
+     "e": 2.14
+    },
+    {
+     "w": "canlıların",
+     "s": 2.14,
+     "e": 2.66
+    },
+    {
+     "w": "ihtiyaçlarının",
+     "s": 2.66,
+     "e": 3.52
+    },
+    {
+     "w": "karşılandığına",
+     "s": 3.52,
+     "e": 4.32
+    },
+    {
+     "w": "şahit",
+     "s": 4.32,
+     "e": 4.78
+    },
+    {
+     "w": "oluyoruz",
+     "s": 4.78,
+     "e": 5.22
+    }
+   ]
+  },
+  {
+   "id": "sh02",
+   "start_s": 5.24,
+   "end_s": 9.64,
+   "cut_f0": 126,
+   "cut_f1": 231,
+   "render_f0": 120,
+   "render_f1": 237,
+   "seconds": 4.4,
+   "desc": "Morning room: sunbeams through a window, curtain breathing in the breeze, dust motes = air we breathe",
+   "narration": "En başta kendimizden biliyoruz ki her gün oksijen ihtiyacımızdan",
+   "words": [
+    {
+     "w": "En",
+     "s": 5.26,
+     "e": 5.92
+    },
+    {
+     "w": "başta",
+     "s": 5.92,
+     "e": 6.26
+    },
+    {
+     "w": "kendimizden",
+     "s": 6.26,
+     "e": 6.86
+    },
+    {
+     "w": "biliyoruz",
+     "s": 6.86,
+     "e": 7.32
+    },
+    {
+     "w": "ki",
+     "s": 7.32,
+     "e": 7.42
+    },
+    {
+     "w": "her",
+     "s": 7.42,
+     "e": 8.02
+    },
+    {
+     "w": "gün",
+     "s": 8.02,
+     "e": 8.32
+    },
+    {
+     "w": "oksijen",
+     "s": 8.32,
+     "e": 8.88
+    },
+    {
+     "w": "ihtiyacımızdan",
+     "s": 8.88,
+     "e": 9.64
+    }
+   ]
+  },
+  {
+   "id": "sh03",
+   "start_s": 9.64,
+   "end_s": 16.0,
+   "cut_f0": 231,
+   "cut_f1": 384,
+   "render_f0": 225,
+   "render_f1": 390,
+   "seconds": 6.36,
+   "desc": "Sofra: bread, fruit, a glass being filled with water - everything laid out as if presented to us",
+   "narration": "yemek ve içmek ihtiyaçlarımıza kadar bütün ihtiyaçlarımız sanki bize takdim ediliyor",
+   "words": [
+    {
+     "w": "yemek",
+     "s": 9.64,
+     "e": 10.3
+    },
+    {
+     "w": "ve",
+     "s": 10.3,
+     "e": 10.52
+    },
+    {
+     "w": "içmek",
+     "s": 10.52,
+     "e": 10.92
+    },
+    {
+     "w": "ihtiyaçlarımıza",
+     "s": 10.92,
+     "e": 11.74
+    },
+    {
+     "w": "kadar",
+     "s": 11.74,
+     "e": 12.0
+    },
+    {
+     "w": "bütün",
+     "s": 12.0,
+     "e": 12.74
+    },
+    {
+     "w": "ihtiyaçlarımız",
+     "s": 12.74,
+     "e": 13.8
+    },
+    {
+     "w": "sanki",
+     "s": 13.8,
+     "e": 14.72
+    },
+    {
+     "w": "bize",
+     "s": 14.72,
+     "e": 14.9
+    },
+    {
+     "w": "takdim",
+     "s": 14.9,
+     "e": 15.38
+    },
+    {
+     "w": "ediliyor",
+     "s": 15.38,
+     "e": 15.78
+    }
+   ]
+  },
+  {
+   "id": "sh04",
+   "start_s": 16.0,
+   "end_s": 22.95,
+   "cut_f0": 384,
+   "cut_f1": 551,
+   "render_f0": 378,
+   "render_f1": 557,
+   "seconds": 6.95,
+   "desc": "Cracked dry earth, lone seedling under a vast sky; a human hand (silhouette) reaches up toward the sun - out of reach",
+   "narration": "Halbuki canlılar da bizler de bu ihtiyaçlarımızı kendimiz elde edemeyiz hiçbirine elimiz yetişmiyor",
+   "words": [
+    {
+     "w": "Halbuki",
+     "s": 16.22,
+     "e": 16.76
+    },
+    {
+     "w": "canlılar",
+     "s": 16.76,
+     "e": 17.44
+    },
+    {
+     "w": "da",
+     "s": 17.44,
+     "e": 17.56
+    },
+    {
+     "w": "bizler",
+     "s": 17.56,
+     "e": 18.48
+    },
+    {
+     "w": "de",
+     "s": 18.48,
+     "e": 18.68
+    },
+    {
+     "w": "bu",
+     "s": 18.68,
+     "e": 18.98
+    },
+    {
+     "w": "ihtiyaçlarımızı",
+     "s": 18.98,
+     "e": 19.68
+    },
+    {
+     "w": "kendimiz",
+     "s": 19.68,
+     "e": 20.18
+    },
+    {
+     "w": "elde",
+     "s": 20.18,
+     "e": 20.56
+    },
+    {
+     "w": "edemeyiz",
+     "s": 20.56,
+     "e": 21.22
+    },
+    {
+     "w": "hiçbirine",
+     "s": 21.24,
+     "e": 21.9
+    },
+    {
+     "w": "elimiz",
+     "s": 21.9,
+     "e": 22.24
+    },
+    {
+     "w": "yetişmiyor",
+     "s": 22.24,
+     "e": 22.86
+    }
+   ]
+  },
+  {
+   "id": "sh05",
+   "start_s": 22.95,
+   "end_s": 30.1,
+   "cut_f0": 551,
+   "cut_f1": 722,
+   "render_f0": 545,
+   "render_f1": 728,
+   "seconds": 7.15,
+   "desc": "Underwater: aquatic plant leaves release streams of oxygen bubbles rising to a sunlit surface",
+   "narration": "Mesela Allah bize oksijeni yaratmasaydı kendimiz oksijenler üretip ihtiyacımızı karşılayamazdık",
+   "words": [
+    {
+     "w": "Mesela",
+     "s": 23.04,
+     "e": 23.96
+    },
+    {
+     "w": "Allah",
+     "s": 23.96,
+     "e": 24.3
+    },
+    {
+     "w": "bize",
+     "s": 24.3,
+     "e": 24.56
+    },
+    {
+     "w": "oksijeni",
+     "s": 24.56,
+     "e": 25.18
+    },
+    {
+     "w": "yaratmasaydı",
+     "s": 25.18,
+     "e": 26.0
+    },
+    {
+     "w": "kendimiz",
+     "s": 26.0,
+     "e": 26.88
+    },
+    {
+     "w": "oksijenler",
+     "s": 26.88,
+     "e": 27.66
+    },
+    {
+     "w": "üretip",
+     "s": 27.66,
+     "e": 28.1
+    },
+    {
+     "w": "ihtiyacımızı",
+     "s": 28.1,
+     "e": 28.92
+    },
+    {
+     "w": "karşılayamazdık",
+     "s": 28.92,
+     "e": 29.9
+    }
+   ]
+  },
+  {
+   "id": "sh06",
+   "start_s": 30.1,
+   "end_s": 35.7,
+   "cut_f0": 722,
+   "cut_f1": 857,
+   "render_f0": 716,
+   "render_f1": 863,
+   "seconds": 5.6,
+   "desc": "Inside a blood vessel: red blood cells flowing in pulses with the heartbeat",
+   "narration": "Ya da vücudumuzda kan her an akıyor ama bize kalsa bunu sağlayamazdık",
+   "words": [
+    {
+     "w": "Ya",
+     "s": 30.18,
+     "e": 30.6
+    },
+    {
+     "w": "da",
+     "s": 30.6,
+     "e": 30.7
+    },
+    {
+     "w": "vücudumuzda",
+     "s": 30.7,
+     "e": 31.5
+    },
+    {
+     "w": "kan",
+     "s": 31.5,
+     "e": 32.02
+    },
+    {
+     "w": "her",
+     "s": 32.02,
+     "e": 32.26
+    },
+    {
+     "w": "an",
+     "s": 32.26,
+     "e": 32.46
+    },
+    {
+     "w": "akıyor",
+     "s": 32.46,
+     "e": 32.82
+    },
+    {
+     "w": "ama",
+     "s": 32.82,
+     "e": 33.52
+    },
+    {
+     "w": "bize",
+     "s": 33.52,
+     "e": 33.88
+    },
+    {
+     "w": "kalsa",
+     "s": 33.88,
+     "e": 34.3
+    },
+    {
+     "w": "bunu",
+     "s": 34.3,
+     "e": 34.5
+    },
+    {
+     "w": "sağlayamazdık",
+     "s": 34.5,
+     "e": 35.48
+    }
+   ]
+  },
+  {
+   "id": "sh07",
+   "start_s": 35.7,
+   "end_s": 40.6,
+   "cut_f0": 857,
+   "cut_f1": 974,
+   "render_f0": 851,
+   "render_f1": 980,
+   "seconds": 4.9,
+   "desc": "Sunrise over the sea: the sun breaks the horizon on the word 'gunes', warm light floods",
+   "narration": "Veya sıcaklık ve ışık ihtiyacımız için kendimize bir güneş üretemezdik",
+   "words": [
+    {
+     "w": "Veya",
+     "s": 35.94,
+     "e": 36.36
+    },
+    {
+     "w": "sıcaklık",
+     "s": 36.36,
+     "e": 36.96
+    },
+    {
+     "w": "ve",
+     "s": 36.96,
+     "e": 37.04
+    },
+    {
+     "w": "ışık",
+     "s": 37.04,
+     "e": 37.36
+    },
+    {
+     "w": "ihtiyacımız",
+     "s": 37.36,
+     "e": 37.88
+    },
+    {
+     "w": "için",
+     "s": 37.88,
+     "e": 38.12
+    },
+    {
+     "w": "kendimize",
+     "s": 38.12,
+     "e": 38.64
+    },
+    {
+     "w": "bir",
+     "s": 38.64,
+     "e": 38.88
+    },
+    {
+     "w": "güneş",
+     "s": 38.88,
+     "e": 39.42
+    },
+    {
+     "w": "üretemezdik",
+     "s": 39.42,
+     "e": 40.28
+    }
+   ]
+  },
+  {
+   "id": "sh08",
+   "start_s": 40.6,
+   "end_s": 47.4,
+   "cut_f0": 974,
+   "cut_f1": 1138,
+   "render_f0": 968,
+   "render_f1": 1144,
+   "seconds": 6.8,
+   "desc": "A real hand reaches across the table and lifts an apple; camera pushes toward the wrist",
+   "narration": "Hatta uzanıp bir şey alırken bile elimizi uzatmak aslında bizim kendi başımıza yapabileceğimiz bir iş değil",
+   "words": [
+    {
+     "w": "Hatta",
+     "s": 40.9,
+     "e": 41.32
+    },
+    {
+     "w": "uzanıp",
+     "s": 41.32,
+     "e": 41.92
+    },
+    {
+     "w": "bir",
+     "s": 41.92,
+     "e": 42.06
+    },
+    {
+     "w": "şey",
+     "s": 42.06,
+     "e": 42.26
+    },
+    {
+     "w": "alırken",
+     "s": 42.26,
+     "e": 42.6
+    },
+    {
+     "w": "bile",
+     "s": 42.6,
+     "e": 42.84
+    },
+    {
+     "w": "elimizi",
+     "s": 42.84,
+     "e": 43.26
+    },
+    {
+     "w": "uzatmak",
+     "s": 43.26,
+     "e": 43.84
+    },
+    {
+     "w": "aslında",
+     "s": 43.84,
+     "e": 44.6
+    },
+    {
+     "w": "bizim",
+     "s": 44.6,
+     "e": 44.98
+    },
+    {
+     "w": "kendi",
+     "s": 44.98,
+     "e": 45.34
+    },
+    {
+     "w": "başımıza",
+     "s": 45.34,
+     "e": 45.82
+    },
+    {
+     "w": "yapabileceğimiz",
+     "s": 45.82,
+     "e": 46.58
+    },
+    {
+     "w": "bir",
+     "s": 46.58,
+     "e": 46.7
+    },
+    {
+     "w": "iş",
+     "s": 46.7,
+     "e": 46.98
+    },
+    {
+     "w": "değil",
+     "s": 46.98,
+     "e": 47.22
+    }
+   ]
+  },
+  {
+   "id": "sh09",
+   "start_s": 47.4,
+   "end_s": 52.1,
+   "cut_f0": 1138,
+   "cut_f1": 1250,
+   "render_f0": 1132,
+   "render_f1": 1256,
+   "seconds": 4.7,
+   "desc": "Inside the arm: nerve impulse races along an axon into muscle fibres; push into a cell, mitochondria",
+   "narration": "O an kaslarda ve hücrelerde ne olup bittiğini bile bilmiyoruz",
+   "words": [
+    {
+     "w": "O",
+     "s": 47.52,
+     "e": 47.94
+    },
+    {
+     "w": "an",
+     "s": 47.94,
+     "e": 48.14
+    },
+    {
+     "w": "kaslarda",
+     "s": 48.14,
+     "e": 48.6
+    },
+    {
+     "w": "ve",
+     "s": 48.6,
+     "e": 48.8
+    },
+    {
+     "w": "hücrelerde",
+     "s": 48.8,
+     "e": 49.34
+    },
+    {
+     "w": "ne",
+     "s": 49.34,
+     "e": 50.16
+    },
+    {
+     "w": "olup",
+     "s": 50.16,
+     "e": 50.42
+    },
+    {
+     "w": "bittiğini",
+     "s": 50.42,
+     "e": 50.86
+    },
+    {
+     "w": "bile",
+     "s": 50.86,
+     "e": 51.04
+    },
+    {
+     "w": "bilmiyoruz",
+     "s": 51.04,
+     "e": 52.02
+    }
+   ]
+  },
+  {
+   "id": "sh10",
+   "start_s": 52.1,
+   "end_s": 58.0,
+   "cut_f0": 1250,
+   "cut_f1": 1392,
+   "render_f0": 1244,
+   "render_f1": 1398,
+   "seconds": 5.9,
+   "desc": "Pull back from one cell to countless cells lighting up one after another - 'hadsiz ihtiyac'",
+   "narration": "Bunlar gibi kendimizin gideremeyeceği bildiğimiz ve bilmediğimiz hadsiz ihtiyaçlarımız var",
+   "words": [
+    {
+     "w": "Bunlar",
+     "s": 52.2,
+     "e": 53.04
+    },
+    {
+     "w": "gibi",
+     "s": 53.04,
+     "e": 53.22
+    },
+    {
+     "w": "kendimizin",
+     "s": 53.22,
+     "e": 53.92
+    },
+    {
+     "w": "gideremeyeceği",
+     "s": 53.92,
+     "e": 54.68
+    },
+    {
+     "w": "bildiğimiz",
+     "s": 54.68,
+     "e": 55.18
+    },
+    {
+     "w": "ve",
+     "s": 55.18,
+     "e": 55.4
+    },
+    {
+     "w": "bilmediğimiz",
+     "s": 55.4,
+     "e": 56.0
+    },
+    {
+     "w": "hadsiz",
+     "s": 56.0,
+     "e": 56.84
+    },
+    {
+     "w": "ihtiyaçlarımız",
+     "s": 56.84,
+     "e": 57.62
+    },
+    {
+     "w": "var",
+     "s": 57.62,
+     "e": 57.94
+    }
+   ]
+  },
+  {
+   "id": "sh11",
+   "start_s": 58.0,
+   "end_s": 63.85,
+   "cut_f0": 1392,
+   "cut_f1": 1532,
+   "render_f0": 1386,
+   "render_f1": 1538,
+   "seconds": 5.85,
+   "desc": "Rain arrives on the cracked earth from sh04; drops reach the seedling, water flows toward camera",
+   "narration": "Ve bütün bu ihtiyaçlar bir şekilde bizim ayağımıza getiriliyor ve karşılanıyor",
+   "words": [
+    {
+     "w": "Ve",
+     "s": 58.06,
+     "e": 58.6
+    },
+    {
+     "w": "bütün",
+     "s": 58.6,
+     "e": 58.92
+    },
+    {
+     "w": "bu",
+     "s": 58.92,
+     "e": 59.14
+    },
+    {
+     "w": "ihtiyaçlar",
+     "s": 59.14,
+     "e": 59.74
+    },
+    {
+     "w": "bir",
+     "s": 60.0,
+     "e": 60.3
+    },
+    {
+     "w": "şekilde",
+     "s": 60.3,
+     "e": 60.68
+    },
+    {
+     "w": "bizim",
+     "s": 60.68,
+     "e": 61.02
+    },
+    {
+     "w": "ayağımıza",
+     "s": 61.02,
+     "e": 61.6
+    },
+    {
+     "w": "getiriliyor",
+     "s": 61.6,
+     "e": 62.1
+    },
+    {
+     "w": "ve",
+     "s": 62.1,
+     "e": 62.84
+    },
+    {
+     "w": "karşılanıyor",
+     "s": 62.84,
+     "e": 63.56
+    }
+   ]
+  },
+  {
+   "id": "sh12",
+   "start_s": 63.85,
+   "end_s": 74.15,
+   "cut_f0": 1532,
+   "cut_f1": 1780,
+   "render_f0": 1526,
+   "render_f1": 1786,
+   "seconds": 10.3,
+   "desc": "Aerial vista: sun, sea, clouds, rain, rivers, forests - one interconnected system; lines converge to one light",
+   "narration": "İşte bütün bu ihtiyaçların karşılanması bir tek yaratıcının var olduğunu ispat eder Çünkü bu ihtiyaçları bilip karşılayabilecek ondan başka olamaz",
+   "words": [
+    {
+     "w": "İşte",
+     "s": 64.14,
+     "e": 64.58
+    },
+    {
+     "w": "bütün",
+     "s": 64.58,
+     "e": 64.86
+    },
+    {
+     "w": "bu",
+     "s": 64.86,
+     "e": 65.06
+    },
+    {
+     "w": "ihtiyaçların",
+     "s": 65.06,
+     "e": 65.62
+    },
+    {
+     "w": "karşılanması",
+     "s": 65.62,
+     "e": 66.58
+    },
+    {
+     "w": "bir",
+     "s": 66.58,
+     "e": 67.28
+    },
+    {
+     "w": "tek",
+     "s": 67.28,
+     "e": 67.58
+    },
+    {
+     "w": "yaratıcının",
+     "s": 67.58,
+     "e": 68.28
+    },
+    {
+     "w": "var",
+     "s": 68.28,
+     "e": 68.56
+    },
+    {
+     "w": "olduğunu",
+     "s": 68.56,
+     "e": 68.9
+    },
+    {
+     "w": "ispat",
+     "s": 68.9,
+     "e": 69.34
+    },
+    {
+     "w": "eder",
+     "s": 69.34,
+     "e": 69.52
+    },
+    {
+     "w": "Çünkü",
+     "s": 69.82,
+     "e": 70.48
+    },
+    {
+     "w": "bu",
+     "s": 70.48,
+     "e": 70.74
+    },
+    {
+     "w": "ihtiyaçları",
+     "s": 70.74,
+     "e": 71.3
+    },
+    {
+     "w": "bilip",
+     "s": 71.3,
+     "e": 71.68
+    },
+    {
+     "w": "karşılayabilecek",
+     "s": 71.68,
+     "e": 72.62
+    },
+    {
+     "w": "ondan",
+     "s": 72.62,
+     "e": 73.14
+    },
+    {
+     "w": "başka",
+     "s": 73.14,
+     "e": 73.56
+    },
+    {
+     "w": "olamaz",
+     "s": 73.56,
+     "e": 74.04
+    }
+   ]
+  },
+  {
+   "id": "sh13a",
+   "start_s": 74.15,
+   "end_s": 84.2,
+   "cut_f0": 1780,
+   "cut_f1": 2021,
+   "render_f0": 1774,
+   "render_f1": 2027,
+   "seconds": 10.05,
+   "desc": "Golden-hour meadow and forest edge teeming with life; warm light blankets everything ('genis sefkat')",
+   "narration": "Bütün dünyadaki bütün canlıların bütün ihtiyaçlarının karşılanması o Haluk Rahim 'in kullarına karşı ne kadar geniş şefkatinin olduğunu",
+   "words": [
+    {
+     "w": "Bütün",
+     "s": 74.28,
+     "e": 75.02
+    },
+    {
+     "w": "dünyadaki",
+     "s": 75.02,
+     "e": 75.5
+    },
+    {
+     "w": "bütün",
+     "s": 75.5,
+     "e": 75.82
+    },
+    {
+     "w": "canlıların",
+     "s": 75.82,
+     "e": 76.42
+    },
+    {
+     "w": "bütün",
+     "s": 76.42,
+     "e": 76.66
+    },
+    {
+     "w": "ihtiyaçlarının",
+     "s": 76.66,
+     "e": 77.5
+    },
+    {
+     "w": "karşılanması",
+     "s": 77.5,
+     "e": 78.44
+    },
+    {
+     "w": "o",
+     "s": 78.44,
+     "e": 79.06
+    },
+    {
+     "w": "Haluk",
+     "s": 79.06,
+     "e": 79.46
+    },
+    {
+     "w": "Rahim",
+     "s": 79.46,
+     "e": 79.84
+    },
+    {
+     "w": "'in",
+     "s": 79.84,
+     "e": 80.06
+    },
+    {
+     "w": "kullarına",
+     "s": 80.06,
+     "e": 80.8
+    },
+    {
+     "w": "karşı",
+     "s": 80.8,
+     "e": 81.18
+    },
+    {
+     "w": "ne",
+     "s": 81.18,
+     "e": 82.04
+    },
+    {
+     "w": "kadar",
+     "s": 82.04,
+     "e": 82.38
+    },
+    {
+     "w": "geniş",
+     "s": 82.38,
+     "e": 82.84
+    },
+    {
+     "w": "şefkatinin",
+     "s": 82.84,
+     "e": 83.38
+    },
+    {
+     "w": "olduğunu",
+     "s": 83.38,
+     "e": 84.0
+    }
+   ]
+  },
+  {
+   "id": "sh13b",
+   "start_s": 84.2,
+   "end_s": 89.1,
+   "cut_f0": 2021,
+   "cut_f1": 2138,
+   "render_f0": 2015,
+   "render_f1": 2144,
+   "seconds": 4.9,
+   "desc": "One by one: tracking rings find individual flowers/insects; camera dives to the single seedling receiving a drop",
+   "narration": "ve her bir kulunu birer birer görüp gözetip idare ettiğini gösterir",
+   "words": [
+    {
+     "w": "ve",
+     "s": 84.3,
+     "e": 84.74
+    },
+    {
+     "w": "her",
+     "s": 84.74,
+     "e": 84.98
+    },
+    {
+     "w": "bir",
+     "s": 84.98,
+     "e": 85.2
+    },
+    {
+     "w": "kulunu",
+     "s": 85.2,
+     "e": 85.6
+    },
+    {
+     "w": "birer",
+     "s": 85.6,
+     "e": 85.96
+    },
+    {
+     "w": "birer",
+     "s": 85.96,
+     "e": 86.3
+    },
+    {
+     "w": "görüp",
+     "s": 86.3,
+     "e": 86.74
+    },
+    {
+     "w": "gözetip",
+     "s": 86.74,
+     "e": 87.36
+    },
+    {
+     "w": "idare",
+     "s": 87.36,
+     "e": 87.86
+    },
+    {
+     "w": "ettiğini",
+     "s": 87.86,
+     "e": 88.26
+    },
+    {
+     "w": "gösterir",
+     "s": 88.26,
+     "e": 88.76
+    }
+   ]
+  },
+  {
+   "id": "sh14a",
+   "start_s": 89.1,
+   "end_s": 99.5,
+   "cut_f0": 2138,
+   "cut_f1": 2388,
+   "render_f0": 2132,
+   "render_f1": 2394,
+   "seconds": 10.4,
+   "desc": "Sunflower: Fibonacci spiral macro (hikmet), heads turning toward the sun as if seeing (goruyormuscasina)",
+   "narration": "Bu hikaye hikmetli şefkatli görüyormuşçasına yapılan fiilleri her şeyi gören her şeye şefkat eden ve her işi hikmetli olan Allah 'a vermeyen",
+   "words": [
+    {
+     "w": "Bu",
+     "s": 89.3,
+     "e": 89.74
+    },
+    {
+     "w": "hikaye",
+     "s": 89.74,
+     "e": 89.98
+    },
+    {
+     "w": "hikmetli",
+     "s": 89.98,
+     "e": 90.36
+    },
+    {
+     "w": "şefkatli",
+     "s": 90.54,
+     "e": 91.6
+    },
+    {
+     "w": "görüyormuşçasına",
+     "s": 91.68,
+     "e": 92.84
+    },
+    {
+     "w": "yapılan",
+     "s": 92.84,
+     "e": 93.2
+    },
+    {
+     "w": "fiilleri",
+     "s": 93.2,
+     "e": 93.82
+    },
+    {
+     "w": "her",
+     "s": 93.82,
+     "e": 94.32
+    },
+    {
+     "w": "şeyi",
+     "s": 94.32,
+     "e": 94.7
+    },
+    {
+     "w": "gören",
+     "s": 94.7,
+     "e": 95.08
+    },
+    {
+     "w": "her",
+     "s": 95.2,
+     "e": 95.88
+    },
+    {
+     "w": "şeye",
+     "s": 95.88,
+     "e": 96.2
+    },
+    {
+     "w": "şefkat",
+     "s": 96.2,
+     "e": 96.62
+    },
+    {
+     "w": "eden",
+     "s": 96.62,
+     "e": 96.82
+    },
+    {
+     "w": "ve",
+     "s": 96.82,
+     "e": 97.42
+    },
+    {
+     "w": "her",
+     "s": 97.42,
+     "e": 97.68
+    },
+    {
+     "w": "işi",
+     "s": 97.68,
+     "e": 97.98
+    },
+    {
+     "w": "hikmetli",
+     "s": 97.98,
+     "e": 98.56
+    },
+    {
+     "w": "olan",
+     "s": 98.56,
+     "e": 98.74
+    },
+    {
+     "w": "Allah",
+     "s": 98.74,
+     "e": 99.18
+    },
+    {
+     "w": "'a",
+     "s": 99.18,
+     "e": 99.34
+    },
+    {
+     "w": "vermeyen",
+     "s": 99.34,
+     "e": 99.8
+    }
+   ]
+  },
+  {
+   "id": "sh14b",
+   "start_s": 99.5,
+   "end_s": 104.2,
+   "cut_f0": 2388,
+   "cut_f1": 2501,
+   "render_f0": 2382,
+   "render_f1": 2507,
+   "seconds": 4.7,
+   "desc": "A heavy dark cloth slowly drapes over a glowing light - trying to cover the truth; light leaks through",
+   "narration": "vermeyen bir cahil inkarcı bu hakikati örtmek için bu işleri",
+   "words": [
+    {
+     "w": "vermeyen",
+     "s": 99.34,
+     "e": 99.8
+    },
+    {
+     "w": "bir",
+     "s": 99.8,
+     "e": 99.94
+    },
+    {
+     "w": "cahil",
+     "s": 99.94,
+     "e": 100.4
+    },
+    {
+     "w": "inkarcı",
+     "s": 100.4,
+     "e": 101.12
+    },
+    {
+     "w": "bu",
+     "s": 101.12,
+     "e": 101.7
+    },
+    {
+     "w": "hakikati",
+     "s": 101.7,
+     "e": 102.38
+    },
+    {
+     "w": "örtmek",
+     "s": 102.38,
+     "e": 102.76
+    },
+    {
+     "w": "için",
+     "s": 102.76,
+     "e": 103.06
+    },
+    {
+     "w": "bu",
+     "s": 103.06,
+     "e": 103.7
+    },
+    {
+     "w": "işleri",
+     "s": 103.7,
+     "e": 104.28
+    }
+   ]
+  },
+  {
+   "id": "sh14c",
+   "start_s": 104.2,
+   "end_s": 109.8,
+   "cut_f0": 2501,
+   "cut_f1": 2635,
+   "render_f0": 2495,
+   "render_f1": 2641,
+   "seconds": 5.6,
+   "desc": "Cold lifeless desert: inert stone, aimless blowing sand, cracked ground under grey sky - 'cansiz, suursuz, sefkatsiz'",
+   "narration": "işleri cansız şuursuz şefkatsiz tabiatla izah edebilir mi",
+   "words": [
+    {
+     "w": "işleri",
+     "s": 103.7,
+     "e": 104.28
+    },
+    {
+     "w": "cansız",
+     "s": 104.28,
+     "e": 105.52
+    },
+    {
+     "w": "şuursuz",
+     "s": 105.62,
+     "e": 106.76
+    },
+    {
+     "w": "şefkatsiz",
+     "s": 106.86,
+     "e": 108.0
+    },
+    {
+     "w": "tabiatla",
+     "s": 108.0,
+     "e": 108.66
+    },
+    {
+     "w": "izah",
+     "s": 108.66,
+     "e": 109.18
+    },
+    {
+     "w": "edebilir",
+     "s": 109.18,
+     "e": 109.54
+    },
+    {
+     "w": "mi",
+     "s": 109.54,
+     "e": 109.68
+    }
+   ]
+  },
+  {
+   "id": "sh15",
+   "start_s": 109.8,
+   "end_s": 125.5,
+   "cut_f0": 2635,
+   "cut_f1": 3012,
+   "render_f0": 2629,
+   "render_f1": 3012,
+   "seconds": 15.7,
+   "desc": "Warm sunbeam on a wooden rahle: red Risale-i Nur volumes; 'Sozler' opens to page 721; other risaleler; final frame",
+   "narration": "Bu latif ve parlak hakikate Sözler kitabının 721 sayfasında ve başka risalelerde çok güzel ifadelerle işaret edilmiştir Bu video da o metni işaret etmeye çalışıyor",
+   "words": [
+    {
+     "w": "Bu",
+     "s": 109.86,
+     "e": 110.54
+    },
+    {
+     "w": "latif",
+     "s": 110.54,
+     "e": 110.92
+    },
+    {
+     "w": "ve",
+     "s": 110.92,
+     "e": 111.0
+    },
+    {
+     "w": "parlak",
+     "s": 111.0,
+     "e": 111.46
+    },
+    {
+     "w": "hakikate",
+     "s": 111.46,
+     "e": 111.96
+    },
+    {
+     "w": "Sözler",
+     "s": 111.96,
+     "e": 113.04
+    },
+    {
+     "w": "kitabının",
+     "s": 113.04,
+     "e": 113.48
+    },
+    {
+     "w": "721",
+     "s": 113.48,
+     "e": 114.14
+    },
+    {
+     "w": "sayfasında",
+     "s": 114.42,
+     "e": 115.08
+    },
+    {
+     "w": "ve",
+     "s": 115.08,
+     "e": 115.98
+    },
+    {
+     "w": "başka",
+     "s": 115.98,
+     "e": 116.3
+    },
+    {
+     "w": "risalelerde",
+     "s": 116.3,
+     "e": 116.78
+    },
+    {
+     "w": "çok",
+     "s": 117.3,
+     "e": 118.18
+    },
+    {
+     "w": "güzel",
+     "s": 118.18,
+     "e": 118.48
+    },
+    {
+     "w": "ifadelerle",
+     "s": 118.48,
+     "e": 119.3
+    },
+    {
+     "w": "işaret",
+     "s": 119.3,
+     "e": 119.76
+    },
+    {
+     "w": "edilmiştir",
+     "s": 119.76,
+     "e": 119.96
+    },
+    {
+     "w": "Bu",
+     "s": 119.98,
+     "e": 120.86
+    },
+    {
+     "w": "video",
+     "s": 120.86,
+     "e": 121.26
+    },
+    {
+     "w": "da",
+     "s": 121.26,
+     "e": 121.44
+    },
+    {
+     "w": "o",
+     "s": 121.44,
+     "e": 121.96
+    },
+    {
+     "w": "metni",
+     "s": 121.96,
+     "e": 122.28
+    },
+    {
+     "w": "işaret",
+     "s": 122.28,
+     "e": 122.72
+    },
+    {
+     "w": "etmeye",
+     "s": 122.72,
+     "e": 123.04
+    },
+    {
+     "w": "çalışıyor",
+     "s": 123.04,
+     "e": 123.46
+    }
+   ]
+  }
+ ]
+}
