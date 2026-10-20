@@ -51,20 +51,11 @@ def background(f, shots, stills, size):
     return np.repeat(g[:, None, :], w, 1).astype(np.float32), f"{s['id']} (no still)"
 
 
-def comp(bg, over_p, add_p, scale, boxes=None):
-    img = bg.copy()
-    if boxes:
-        import composite as CP
-        ed = OV.load_json(os.path.join(OV.HERE, "edit.json"))
-        img = CP.legibility(img, boxes, ed["finish"]["legibility"], scale, img.shape[1], img.shape[0])
-    if over_p:
-        o = np.asarray(Image.open(over_p).convert("RGBA")).astype(np.float32) / 255
-        a = o[..., 3:4]
-        img = o[..., :3] * a + img * (1 - a)
-    if add_p:
-        o = np.asarray(Image.open(add_p).convert("RGBA")).astype(np.float32) / 255
-        L = o[..., :3] * o[..., 3:4]
-        img = 1 - (1 - img) * (1 - L)
+def comp(bg, paths, scale):
+    """Same overlay path as the compositor (legibility darkening, OVER, screen-add), on a display-space bg."""
+    import composite as CP
+    ed = OV.load_json(os.path.join(OV.HERE, "edit.json"))
+    img, _ = CP.apply_overlay(bg.copy(), paths, bg.shape[1], bg.shape[0], ed["finish"]["legibility"], scale)
     return np.clip(img, 0, 1)
 
 
@@ -98,8 +89,7 @@ def main():
     outs = []
     for f in frames:
         bg, desc = background(f, shots, stills, size)
-        op, ad, boxes = OV.frame_paths(man, f)
-        img = comp(bg, op, ad, a.scale, boxes)
+        img = comp(bg, OV.frame_paths(man, f), a.scale)
         im = Image.fromarray((img * 255 + 0.5).astype(np.uint8))
         if a.crop:
             x0, y0, x1, y1 = [int(float(v) * a.scale) for v in a.crop.split(",")]

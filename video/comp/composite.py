@@ -546,27 +546,33 @@ def legibility(disp, boxes, cfg, scale, w, h):
 
 
 # ============================================================================================ main loop
-def _read_rgba(path, w, h):
+def _read_rgba(path, xywh, w, h):
+    """Cropped overlay PNG -> ((x, y, bw, bh) in the output frame, RGBA uint8 trimmed to alpha > 0)."""
     im = cv2.imread(path, cv2.IMREAD_UNCHANGED)
     if im is None:
         return None
-    if im.shape[1] != w:
-        im = cv2.resize(im, (w, h), interpolation=cv2.INTER_AREA)
+    ox, oy = (xywh[0], xywh[1]) if xywh else (0, 0)
     x, y, bw, bh = cv2.boundingRect((im[..., 3] > 0).astype(np.uint8))
     if bw == 0 or bh == 0:
         return None
-    return (x, y, bw, bh), im[y:y + bh, x:x + bw]
+    im = im[y:y + bh, x:x + bw]
+    x, y = x + ox, y + oy
+    # clip to the frame (defensive)
+    x0, y0, x1, y1 = max(0, x), max(0, y), min(w, x + bw), min(h, y + bh)
+    if x1 <= x0 or y1 <= y0:
+        return None
+    return (x0, y0, x1 - x0, y1 - y0), im[y0 - y:y1 - y, x0 - x:x1 - x]
 
 
 def apply_overlay(disp, paths, w, h, leg_cfg, scale):
     """Legibility darkening, then OVER layer and additive (screen) layer, processed inside their bounding boxes.
     Returns (disp, graphics alpha map or None)."""
-    over_p, add_p, boxes = paths
+    over_p, over_box, add_p, add_box, boxes = paths
     if boxes:
         disp = legibility(disp, boxes, leg_cfg, scale, w, h)
     gfx = None
     if over_p and os.path.exists(over_p):
-        r = _read_rgba(over_p, w, h)
+        r = _read_rgba(over_p, over_box, w, h)
         if r:
             (x, y, bw, bh), im = r
             o = im.astype(np.float32) * (1 / 255.0)
@@ -576,7 +582,7 @@ def apply_overlay(disp, paths, w, h, leg_cfg, scale):
             gfx = np.zeros((h, w), np.float32)
             gfx[y:y + bh, x:x + bw] = al[..., 0]
     if add_p and os.path.exists(add_p):
-        r = _read_rgba(add_p, w, h)
+        r = _read_rgba(add_p, add_box, w, h)
         if r:
             (x, y, bw, bh), im = r
             a = im.astype(np.float32) * (1 / 255.0)

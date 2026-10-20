@@ -3,9 +3,10 @@
 //   node render_overlays.mjs --timeline T.json --out DIR --scale 1 --frames 0-99,140-160 [--pages 2]
 //
 // For every requested frame that has active elements, writes
-//   DIR/over/ov_00000.png   straight-alpha RGBA (graphics composited OVER the plate)
+//   DIR/over/ov_00000.png   straight-alpha RGBA (graphics composited OVER the plate), cropped to its content box
 //   DIR/add/ad_00000.png    RGBA whose rgb*alpha is additive light (screen-blended by the compositor)
-// and appends one JSON line per frame to DIR/log.jsonl: {"f":..,"over":0|1,"add":0|1,"boxes":[[x0,y0,x1,y1,w]..]}
+// and appends one JSON line per frame to DIR/log.jsonl: {"f":..,"over":0|[x,y,w,h],"add":0|[x,y,w,h],"boxes":[..]}
+// ([x,y,w,h] = where the cropped PNG sits in the full frame, device pixels; boxes = legibility boxes, layout px)
 // Frames are deterministic functions of the frame number, so pages can split the work in any order.
 import { createRequire } from 'module';
 import fs from 'fs';
@@ -48,9 +49,9 @@ async function worker(idx, list) {
   const probe = await page.evaluate(([tl, s]) => window.ovInit(tl, s), [timeline, scale]);
   if (idx === 0) console.error('[render_overlays] font probe', JSON.stringify(probe));
   const cdp = await page.context().newCDPSession(page);
-  const shot = async (y0) => {
+  const shot = async (y0, box) => {
     const r = await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, captureBeyondViewport: false,
-      clip: { x: 0, y: y0, width: W, height: H, scale: 1 } });
+      clip: { x: box[0], y: y0 + box[1], width: box[2], height: box[3], scale: 1 } });
     return Buffer.from(r.data, 'base64');
   };
   await cdp.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
@@ -60,9 +61,9 @@ async function worker(idx, list) {
     if (!act) { log.write(JSON.stringify({ f, over: 0, add: 0, boxes: [] }) + '\n'); continue; }
     const res = await page.evaluate(fr => window.ovRender(fr), f);
     const tag = String(f).padStart(5, '0');
-    if (res.over) fs.writeFileSync(path.join(out, 'over', `ov_${tag}.png`), await shot(0));
-    if (res.add) fs.writeFileSync(path.join(out, 'add', `ad_${tag}.png`), await shot(H));
-    log.write(JSON.stringify({ f, over: res.over ? 1 : 0, add: res.add ? 1 : 0, boxes: res.boxes }) + '\n');
+    if (res.over) fs.writeFileSync(path.join(out, 'over', `ov_${tag}.png`), await shot(0, res.over));
+    if (res.add) fs.writeFileSync(path.join(out, 'add', `ad_${tag}.png`), await shot(H, res.add));
+    log.write(JSON.stringify({ f, over: res.over || 0, add: res.add || 0, boxes: res.boxes }) + '\n');
     n++;
   }
   await page.close();
