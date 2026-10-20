@@ -25,3 +25,15 @@ Script: `video/blender/shots/sh10.py` (+ shared `video/blender/lib_s7.py`).
 
 ## Budget
 Lean settings (see sh06). Field instances are cheap; the interior is the heavier part.
+
+## Stills (50 %, 12 spp)
+`t052.150` match from sh09 (hero mitochondrion) · `t053.600` rising through the organelles ·
+`t054.300` reaching the membrane · `t054.750` "bildiğimiz": outside the hero cell, first
+neighbours igniting · `t055.500` "bilmediğimiz": the field ignites in waves · `t056.100`
+"hadsiz": uncountable, band dark · `t057.900` exit glints.
+
+## Known issues / next
+* Field cells read a little like matte beige spheres up close (55.5); next pass gives them a
+  translucent membrane + visible nucleus and deeper amber.
+* Interior mitochondria are still slightly graphic (cristae stripe pattern) — will soften.
+* Will carry the sh06 v2 SSS material approach into these cells.
