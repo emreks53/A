@@ -564,28 +564,116 @@ def mito_mesh(name, length=0.03, width=0.011, seed=0, bend=0.15):
 
 
 def cristae_mesh(name, length=0.03, width=0.011, n=11, seed=0):
-    """Inner membrane folds: a stack of wavy shelves across the long axis, sized to sit inside
-    mito_mesh(length, width)."""
+    """Inner-membrane folds (lamellar cristae): smooth, gently undulating shelves across the long
+    axis (local Y), alternately rooted on either side wall and reaching ~75 % across. Solidify it."""
     import bmesh as _bm
     rng = random.Random(seed)
     bm = _bm.new()
     for i in range(n):
-        y = (-0.42 + 0.84 * (i + 0.5) / n) * length
-        rr = width / 2 * 0.86 * math.sqrt(max(0.05, 1 - (y / (length / 2)) ** 2))
-        res = _bm.ops.create_circle(bm, cap_ends=True, segments=24, radius=rr)
-        vs = res["verts"]
-        # shelves span ~70% of the width from alternating sides (lamellar cristae)
+        y0 = (-0.40 + 0.80 * (i + 0.5) / n) * length + rng.uniform(-0.08, 0.08) * length / n
+        rr = width / 2 * 0.84 * math.sqrt(max(0.05, 1 - (y0 / (length / 2)) ** 2))
         side = 1 if i % 2 else -1
-        for v in vs:
-            x, z = v.co.x, v.co.y
-            v.co = Vector((x, y + 0.0012 * math.sin(z / width * 40 + i) + rng.uniform(-0.0003, 0.0003), z * 0.95))
-        cut = [v for v in vs if v.co.x * side > rr * 0.45]
-        for v in cut:
-            v.co.x = side * rr * 0.45
+        g = _bm.ops.create_grid(bm, x_segments=10, y_segments=10, size=1.0)
+        ph = rng.uniform(0, 6.28)
+        for v in g["verts"]:
+            u, w = v.co.x, v.co.y                    # [-1,1]^2 -> disc
+            dx = u * math.sqrt(max(0.0, 1 - w * w / 2)); dz = w * math.sqrt(max(0.0, 1 - u * u / 2))
+            x = side * (rr - (dx + 1) * 0.5 * rr * 1.5)
+            z = dz * rr * 0.92
+            yy = y0 + 0.0011 * math.sin(z / rr * 3.0 + ph) + 0.0007 * math.sin(x / rr * 4.0 + ph * 2)
+            v.co = Vector((x, yy, z))
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me); bm.free()
-    mod_me = me
-    return mod_me
+    for p in me.polygons:
+        p.use_smooth = True
+    return me
+
+
+def mat_mito_envelope():
+    """Translucent double membrane: amber SSS film, more opaque at grazing angles (membrane rim),
+    see-through in the middle so the 3D cristae read."""
+    m, nt, p = mat_wet_tissue("MitoEnvelope", base=(0.55, 0.26, 0.09), sss_radius=(1.0, 0.55, 0.25), sss_scale=0.003,
+                              rough=0.32, coat=0.7, coat_rough=0.1)
+    lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.35
+    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.3; al.inputs["To Max"].default_value = 0.9
+    nt.links.new(lw.outputs["Facing"], al.inputs["Value"])
+    nt.links.new(al.outputs[0], p.inputs["Alpha"])
+    tc = _n(nt, "ShaderNodeTexCoord")
+    nz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 260.0, "Detail": 2.0})
+    nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
+    _bump_chain(nt, p, [(nz.outputs["Fac"], 0.08)], distance=0.0008)
+    fog_wrap(m)
+    return m
+
+
+def mat_cristae_sss():
+    """Cristae folds: warm amber SSS with a faint, slowly humming inner glow (no stripes)."""
+    m, nt, p = mat_wet_tissue("CristaeSSS", base=(0.42, 0.17, 0.05), sss_radius=(1.0, 0.5, 0.2), sss_scale=0.002,
+                              rough=0.45, coat=0.25, coat_rough=0.25)
+    tv = time_value(nt)
+    oi = _n(nt, "ShaderNodeObjectInfo")
+    hum = _n(nt, "ShaderNodeTexNoise", **{"Scale": 1.0, "Detail": 1.0})
+    cb = _n(nt, "ShaderNodeCombineXYZ")
+    mt = _n(nt, "ShaderNodeMath"); mt.operation = "MULTIPLY"; mt.inputs[1].default_value = 2.0
+    nt.links.new(tv.outputs[0], mt.inputs[0]); nt.links.new(mt.outputs[0], cb.inputs["X"])
+    nt.links.new(oi.outputs["Random"], cb.inputs["Y"])
+    nt.links.new(cb.outputs[0], hum.inputs["Vector"])
+    st = _n(nt, "ShaderNodeMapRange"); st.inputs["To Min"].default_value = 0.12; st.inputs["To Max"].default_value = 0.45
+    nt.links.new(hum.outputs["Fac"], st.inputs["Value"])
+    p.inputs["Emission Color"].default_value = (1.0, 0.42, 0.1, 1)
+    nt.links.new(st.outputs[0], p.inputs["Emission Strength"])
+    fog_wrap(m)
+    return m
+
+
+_MITO_CACHE = {}
+
+
+def mito_assembly(name, loc, rot, variant=0, length=0.03, width=0.011):
+    """A mitochondrion = translucent envelope + solidified 3D cristae, sharing meshes per variant."""
+    key = variant
+    if key not in _MITO_CACHE:
+        env = mito_mesh(f"mitoEnv{variant}", length=length, width=width, seed=500 + variant, bend=0.12)
+        env.materials.append(_MITO_CACHE.get("m_env") or _MITO_CACHE.setdefault("m_env", mat_mito_envelope()))
+        cr = cristae_mesh(f"mitoCr{variant}", length=length, width=width, n=int(length / 0.0019), seed=variant)
+        import bmesh as _bm
+        bm = _bm.new(); bm.from_mesh(cr)
+        _bm.ops.solidify(bm, geom=bm.faces[:], thickness=0.00045)
+        bm.to_mesh(cr); bm.free()
+        cr.materials.append(_MITO_CACHE.get("m_cr") or _MITO_CACHE.setdefault("m_cr", mat_cristae_sss()))
+        _MITO_CACHE[key] = (env, cr)
+    env, cr = _MITO_CACHE[key]
+    o = obj_from_mesh(name, env, loc=loc)
+    o.rotation_euler = rot
+    c = obj_from_mesh(name + "_cr", cr)
+    c.parent = o
+    return o
+
+
+def mat_web(name="Web", alpha_max=0.35, stretch=(40, 2.5, 40), tint=(0.86, 0.8, 0.74)):
+    """Wispy connective-tissue film (endomysium / perineurium): fibrous alpha, soft wet sheen."""
+    m, nt, p = C.new_mat(name)
+    p.inputs["Base Color"].default_value = (*tint, 1)
+    p.inputs["Roughness"].default_value = 0.35
+    p.inputs["Sheen Weight"].default_value = 0.4
+    tc = _n(nt, "ShaderNodeTexCoord")
+    mp = _n(nt, "ShaderNodeMapping"); mp.inputs["Scale"].default_value = stretch
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    n1 = _n(nt, "ShaderNodeTexNoise", **{"Scale": 1.0, "Detail": 6.0, "Roughness": 0.65, "Distortion": 0.6})
+    nt.links.new(mp.outputs[0], n1.inputs["Vector"])
+    n2 = _n(nt, "ShaderNodeTexNoise", **{"Scale": 3.0, "Detail": 2.0})
+    nt.links.new(tc.outputs["Object"], n2.inputs["Vector"])
+    a = _n(nt, "ShaderNodeMapRange"); a.interpolation_type = "SMOOTHSTEP"
+    a.inputs["From Min"].default_value = 0.55; a.inputs["From Max"].default_value = 0.75
+    a.inputs["To Max"].default_value = alpha_max
+    nt.links.new(n1.outputs["Fac"], a.inputs["Value"])
+    a2 = _n(nt, "ShaderNodeMath"); a2.operation = "MULTIPLY"
+    nt.links.new(a.outputs[0], a2.inputs[0]); nt.links.new(n2.outputs["Fac"], a2.inputs[1])
+    a3 = _n(nt, "ShaderNodeMath"); a3.operation = "MULTIPLY"; a3.inputs[1].default_value = 1.8
+    nt.links.new(a2.outputs[0], a3.inputs[0])
+    nt.links.new(a3.outputs[0], p.inputs["Alpha"])
+    fog_wrap(m)
+    return m
 
 
 # --------------------------------------------------------------------------- geometry-nodes contraction
@@ -728,26 +816,34 @@ def mat_muscle(name="Muscle", fog=None, sarcomere=0.04):
     nt.links.new(mp.outputs[0], gn_.inputs["Vector"])
     big = _n(nt, "ShaderNodeTexNoise", **{"Scale": 3.0, "Detail": 3.0})
     nt.links.new(at.outputs["Vector"], big.inputs["Vector"])
-    b = _bump_chain(nt, p, [(band.outputs[0], 0.25), (gn_.outputs["Fac"], 0.2), (big.outputs["Fac"], 0.25)],
-                    distance=0.004)
+    fz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 900.0, "Detail": 2.0})
+    nt.links.new(at.outputs["Vector"], fz.inputs["Vector"])
+    b = _bump_chain(nt, p, [(band.outputs[0], 0.07), (gn_.outputs["Fac"], 0.12), (big.outputs["Fac"], 0.25),
+                            (fz.outputs["Fac"], 0.08)], distance=0.004)
+    # glycocalyx: a soft fuzz sheen over the wet membrane
+    p.inputs["Sheen Weight"].default_value = 0.35
+    p.inputs["Sheen Roughness"].default_value = 0.35
+    p.inputs["Sheen Tint"].default_value = (1.0, 0.7, 0.6, 1)
     nt.links.new(b.outputs[0], p.inputs["Coat Normal"])
     # colour: dark A-bands / lighter I-bands, per-fibre variation
     oi = _n(nt, "ShaderNodeObjectInfo")
     cr = _n(nt, "ShaderNodeValToRGB")
     cr.color_ramp.elements[0].color = (0.17, 0.018, 0.02, 1)
     cr.color_ramp.elements[1].color = (0.38, 0.06, 0.045, 1)
-    mx = _n(nt, "ShaderNodeMath"); mx.operation = "MULTIPLY_ADD"; mx.inputs[1].default_value = 0.7
+    mx = _n(nt, "ShaderNodeMath"); mx.operation = "MULTIPLY_ADD"; mx.inputs[1].default_value = 0.22
     nt.links.new(band.outputs[0], mx.inputs[0])
     m2 = _n(nt, "ShaderNodeMath"); m2.operation = "MULTIPLY"; m2.inputs[1].default_value = 0.3
     nt.links.new(oi.outputs["Random"], m2.inputs[0]); nt.links.new(m2.outputs[0], mx.inputs[2])
     nt.links.new(mx.outputs[0], cr.inputs[0])
     nt.links.new(cr.outputs[0], p.inputs["Base Color"])
     # contraction glow (warm amber, inner energy)
-    ce = _n(nt, "ShaderNodeMath"); ce.operation = "MULTIPLY"; ce.inputs[1].default_value = 1.6
+    ce = _n(nt, "ShaderNodeMath"); ce.operation = "MULTIPLY"; ce.inputs[1].default_value = 0.9
     nt.links.new(ac.outputs["Fac"], ce.inputs[0])
     p.inputs["Emission Color"].default_value = (1.0, 0.32, 0.08, 1)
     ce2 = _n(nt, "ShaderNodeMath"); ce2.operation = "MULTIPLY"
-    nt.links.new(ce.outputs[0], ce2.inputs[0]); nt.links.new(band.outputs[0], ce2.inputs[1])
+    bsoft = _n(nt, "ShaderNodeMapRange"); bsoft.inputs["To Min"].default_value = 0.75
+    nt.links.new(band.outputs[0], bsoft.inputs["Value"])
+    nt.links.new(ce.outputs[0], ce2.inputs[0]); nt.links.new(bsoft.outputs[0], ce2.inputs[1])
     nt.links.new(ce2.outputs[0], p.inputs["Emission Strength"])
     if fog:
         fog_wrap(m, **fog)
@@ -899,14 +995,22 @@ def mat_endothelium_fast(name="Endothelium", tile_v=4.0, seed=1):
     return m
 
 
-def budget_denoise(prefilter="FAST", quality="BALANCED"):
+def budget_denoise(prefilter="FAST", quality="BALANCED", final_res=None):
     """common.configure_render() forces OIDN prefilter ACCURATE / quality HIGH for finals, which costs
     ~11 s per 1080x1920 frame on 4 cores (a quarter of the budget). We re-apply cheaper settings at
     render_init (this file only; common.py untouched). Measured: -7 s/frame, no visible difference
     at our noise level."""
     def _h(scene, *_):
+        # blue-noise sampling: removes the faint regular screen-door pattern Sobol leaves at low spp
+        try:
+            scene.cycles.sampling_pattern = "BLUE_NOISE"
+        except Exception:
+            pass
         scene.cycles.denoising_prefilter = prefilter
         scene.cycles.denoising_quality = quality
+        # director-approved budget fallback: finals at reduced resolution (post upscales)
+        if final_res and scene.render.resolution_percentage == 100 and scene.render.image_settings.color_depth == "16":
+            scene.render.resolution_percentage = final_res
     bpy.app.handlers.render_init.append(_h)
 
 

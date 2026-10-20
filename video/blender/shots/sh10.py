@@ -52,19 +52,15 @@ def build(ctx):
         p = Vector((p.x * R_CELL * 0.8, p.y * R_CELL * 0.8, p.z * R_CELL * 0.45)) + hero_c
         if (p - hero_c - Vector((0.12, 0.05, -0.05))).length < 0.33:
             continue
-        o = L.obj_from_mesh(f"mito_{k:03d}", mm[k % 6], loc=p)
-        o.rotation_euler = (rng.uniform(0, 6.3), rng.uniform(0, 6.3), rng.uniform(0, 6.3))
+        L.mito_assembly(f"mito_{k:03d}", tuple(p), (rng.uniform(0, 6.3), rng.uniform(0, 6.3), rng.uniform(0, 6.3)),
+                        variant=k % 5, length=0.022 + 0.003 * (k % 5), width=0.0095 + 0.0006 * (k % 3))
     # camera starts just above the hero mitochondrion, looking down at it (myofibril-free cell)
     mito_p = hero_c + Vector((-0.35, -0.2, 0.12))
-    m_out = L.mat_mito_outer(); m_cr = L.mat_mito("MitoInner", strength=3.5)
     for i, off in enumerate((Vector((0, 0, 0)), Vector((0.03, 0.016, -0.004)), Vector((-0.028, -0.02, -0.006)))):
         ln, wd = (0.034, 0.0135) if i == 0 else (0.028, 0.011)
-        ob = L.obj_from_mesh(f"heroMito{i}", L.mito_mesh(f"hm{i}", length=ln, width=wd, seed=60 + i, bend=0.1), m_out,
-                             loc=mito_p + off)
-        ob.rotation_euler = (0, 0, 0.3 * i)
-        # inner membrane: glowing cristae bands seen through the translucent envelope
-        cr = L.obj_from_mesh(f"heroInner{i}", L.mito_mesh(f"hin{i}", length=ln * 0.86, width=wd * 0.78, seed=60 + i, bend=0.1), m_cr)
-        cr.parent = ob
+        L.mito_assembly(f"heroMito{i}", tuple(mito_p + off), (0, 0, 0.3 * i), variant=10 + i, length=ln, width=wd)
+    gl = C.point_light("mitoGlow", loc=tuple(mito_p + Vector((0, 0, -0.012))), power=0.012, radius=0.006, kelvin_k=2600)
+    gl.visible_camera = False; gl.visible_glossy = False
     # ER-like membrane sheets / granules near the start
     bmg = bmesh.new()
     for k in range(900):
@@ -93,7 +89,7 @@ def build(ctx):
     import numpy as np
     rs = np.random.RandomState(11)
     sp = 1.72
-    N = 300
+    N = 600
     ii, jj = np.mgrid[-N // 2:N // 2, -N // 2:N // 2]
     x = (ii + 0.5 * (jj % 2)) * sp + rs.uniform(-0.35, 0.35, ii.shape)
     y = jj * sp * 0.866 + rs.uniform(-0.35, 0.35, ii.shape)
@@ -141,7 +137,7 @@ def build(ctx):
         dist = d0 * (d1 / d0) ** w
         # direction from target: start straight above (looking down at the mito), lean back to
         # an oblique view so the tissue horizon settles below the key-word band
-        el = C.lerp(89.5, 24.0, C.remap(t, t_exit - 0.4, ctx.t1, C.smooth))
+        el = C.lerp(89.5, 13.0, C.remap(t, t_exit - 0.4, ctx.t1, C.smooth))
         az = C.lerp(-60.0, -35.0, C.remap(t, t_s, ctx.t1))
         tgt = look0.lerp(hero_c, C.remap(t, t_exit - 0.3, t_exit + 1.2, C.smooth))
         dirv = Vector((math.cos(math.radians(el)) * math.cos(math.radians(az)),
@@ -149,7 +145,7 @@ def build(ctx):
                        math.sin(math.radians(el))))
         p = tgt + dirv * dist
         # aim: look at target but tilt up as we rise so the horizon sits at ~y 900 px
-        look = tgt + Vector((0, 0, dist * C.lerp(0.0, 0.62, C.remap(t, t_exit, ctx.t1, C.smooth))))
+        look = tgt + Vector((0, 0, dist * C.lerp(0.0, 0.3, C.remap(t, t_exit, ctx.t1, C.smooth))))
         # explicit camera frame: up = world +Y while looking straight down at the mitochondrion
         # (so it stands vertical in 9:16 as at the end of sh09), blending to world +Z when oblique
         f = (look - p).normalized()
@@ -172,7 +168,8 @@ def build(ctx):
     C.handheld(cam, amp_loc=0.0, amp_rot=0.0015, speed=0.5, seed=10)
     L.bake_id(fg, frames, 'nodes["dist"].outputs[0].default_value', fdist)
     # haze turns from teal cytoplasm to deep blue-black void outside
-    cols = [C.lerp((0.010, 0.032, 0.036), (0.004, 0.010, 0.014), C.remap(t, t_exit - 0.2, t_exit + 1.2)) for t in times]
+    cols = [C.lerp(C.lerp((0.010, 0.032, 0.036), (0.004, 0.010, 0.014), C.remap(t, t_exit - 0.2, t_exit + 1.2)),
+                   (0.022, 0.011, 0.006), C.remap(t, t_bilme, t_had + 1.0)) for t in times]
     L.bake_id(fg, frames, 'nodes["color"].outputs[0].default_value', [(*c, 1) for c in cols])
     bg = [n for n in sc.world.node_tree.nodes if n.type == "BACKGROUND"][0]
     L.bake_id(sc.world.node_tree, frames, f'nodes["{bg.name}"].inputs[0].default_value', [(*c, 1) for c in cols])
@@ -187,10 +184,9 @@ def build(ctx):
     il.parent = cam; il.location = (0, 0.01, 0)
     L.bake_id(il.data, frames, "energy", [C.lerp(0.03, 0.0, C.remap(t, t_exit, t_exit + 0.4)) for t in times])
     sc.view_settings.exposure = 0.3
-    L.budget_denoise()
+    L.budget_denoise(prefilter="ACCURATE", quality="BALANCED", final_res=80)
     ov = dict(L.LEAN)
-    ov["transmission_bounces"] = 3
-    ov["transparent_bounces"] = 6
+    ov.update(transmission_bounces=3, transparent_bounces=8, final_spp=12, preview_spp=12)
     return ov
 
 
@@ -221,8 +217,12 @@ def mat_field_cell(t_bil):
     """Instanced tissue cell: dark glossy teal body in shadow; when its 'ton' time passes it glows
     warm amber from within (nucleus-shaped core via facing ratio) and keeps a soft flicker."""
     m, nt, p = C.new_mat("FieldCell")
-    p.inputs["Base Color"].default_value = (0.07, 0.15, 0.16, 1)
-    p.inputs["Roughness"].default_value = 0.35
+    p.inputs["Base Color"].default_value = (0.08, 0.15, 0.16, 1)
+    p.inputs["Roughness"].default_value = 0.38
+    p.subsurface_method = L.SSS_METHOD
+    p.inputs["Subsurface Weight"].default_value = 0.6
+    p.inputs["Subsurface Radius"].default_value = (1.0, 0.6, 0.35)
+    p.inputs["Subsurface Scale"].default_value = 0.08
     p.inputs["Coat Weight"].default_value = 0.6
     p.inputs["Coat Roughness"].default_value = 0.1
     tv = L.time_value(nt)
@@ -236,20 +236,28 @@ def mat_field_cell(t_bil):
     lw = L._n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.4
     core = L._n(nt, "ShaderNodeMath"); core.operation = "SUBTRACT"; core.inputs[0].default_value = 1.0
     nt.links.new(lw.outputs["Facing"], core.inputs[1])
-    core2 = L._n(nt, "ShaderNodeMath"); core2.operation = "POWER"; core2.inputs[1].default_value = 2.5
+    core2 = L._n(nt, "ShaderNodeMath"); core2.operation = "POWER"; core2.inputs[1].default_value = 1.6
     nt.links.new(core.outputs[0], core2.inputs[0])
     r3 = L._n(nt, "ShaderNodeMath"); r3.operation = "POWER"; r3.inputs[1].default_value = 3.0
     nt.links.new(ar.outputs["Fac"], r3.inputs[0])
     flick = L._n(nt, "ShaderNodeMath"); flick.operation = "MULTIPLY_ADD"
     flick.inputs[1].default_value = 2.4; flick.inputs[2].default_value = 0.25
     nt.links.new(r3.outputs[0], flick.inputs[0])
+    # nucleus: the very centre glows less (cytoplasm ring around a darker nucleus)
+    nuc = L._n(nt, "ShaderNodeMath"); nuc.operation = "POWER"; nuc.inputs[1].default_value = 14.0
+    nt.links.new(core.outputs[0], nuc.inputs[0])
+    nuc2 = L._n(nt, "ShaderNodeMath"); nuc2.operation = "MULTIPLY_ADD"
+    nuc2.inputs[1].default_value = -0.65; nuc2.inputs[2].default_value = 1.0
+    nt.links.new(nuc.outputs[0], nuc2.inputs[0])
+    core3 = L._n(nt, "ShaderNodeMath"); core3.operation = "MULTIPLY"
+    nt.links.new(core2.outputs[0], core3.inputs[0]); nt.links.new(nuc2.outputs[0], core3.inputs[1])
     e = L._n(nt, "ShaderNodeMath"); e.operation = "MULTIPLY"
-    nt.links.new(on.outputs[0], e.inputs[0]); nt.links.new(core2.outputs[0], e.inputs[1])
+    nt.links.new(on.outputs[0], e.inputs[0]); nt.links.new(core3.outputs[0], e.inputs[1])
     e2 = L._n(nt, "ShaderNodeMath"); e2.operation = "MULTIPLY"
     nt.links.new(e.outputs[0], e2.inputs[0]); nt.links.new(flick.outputs[0], e2.inputs[1])
     e3 = L._n(nt, "ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 2.2
     nt.links.new(e2.outputs[0], e3.inputs[0])
-    p.inputs["Emission Color"].default_value = (1.0, 0.36, 0.08, 1)
+    p.inputs["Emission Color"].default_value = (1.0, 0.32, 0.06, 1)
     nt.links.new(e3.outputs[0], p.inputs["Emission Strength"])
     tc = L._n(nt, "ShaderNodeTexCoord")
     nz = L._n(nt, "ShaderNodeTexNoise", **{"Scale": 3.0, "Detail": 2.0})
@@ -284,7 +292,7 @@ def field_gn(vcol):
     rs = n.new("FunctionNodeRandomValue"); rs.data_type = "FLOAT"
     for sk in rs.inputs:
         if sk.type == "VALUE" and sk.name == "Min":
-            sk.default_value = 0.65
+            sk.default_value = 0.98
         if sk.type == "VALUE" and sk.name == "Max":
             sk.default_value = 1.2
     rs.inputs["Seed"].default_value = 3

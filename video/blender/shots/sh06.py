@@ -309,7 +309,7 @@ def build(ctx):
     th = L.cam_child_empty("TRK_heart", cam, (300, 1260), depth=0.6)
 
     sc.world.light_settings.distance = 0.3        # fast-GI AO reach (scene metres)
-    L.budget_denoise(prefilter="ACCURATE", quality="BALANCED")
+    L.budget_denoise(prefilter="ACCURATE", quality="BALANCED", final_res=80)
     ov = dict(L.LEAN)
     ov.update(final_spp=12, preview_spp=16)
     return ov

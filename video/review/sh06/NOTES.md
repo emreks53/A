@@ -1,5 +1,13 @@
 # sh06 — inside a blood vessel (30.10–35.70 s) · studio S7
 
+## v3 (review-2 blocker)
+* Screen-door grid / faint stripes: cause was Cycles' default Sobol pattern at low spp under OIDN.
+  Finals now use `sampling_pattern = BLUE_NOISE` (set in the render_init handler with the denoise
+  settings). Verified on a 100 % crop of the darkest defocused region (top band of 31.50 s),
+  high-pass ×12 contrast, 3 consecutive frames 756–758: no grid, no blotches, temporally stable.
+* Final settings: 12 spp, OIDN prefilter ACCURATE / quality BALANCED, 80 % resolution (864×1536,
+  director-approved fallback, post upscales). **Measured 54.3 s/frame** (3-frame chunk, 4 cores).
+
 ## v2 (director review-1 notes applied)
 1. RBC material is subsurface-dominant: deep crimson, red-weighted SSS (radius 1/0.07/0.045,
    scale 2.2 µm) so thin centre and rims glow when backlit, darker central dimple (radial mask in

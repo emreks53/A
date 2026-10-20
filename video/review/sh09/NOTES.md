@@ -1,5 +1,26 @@
 # sh09 — inside the forearm (47.40–52.10 s) · studio S7
 
+## v2 (director review-1 notes applied)
+1. Fibres: striations now low-contrast banding under the wet surface (bump 0.07, colour
+   modulation 0.22, no moiré), glycocalyx fuzz sheen + fine bump; each fibre bordering the channel
+   wrapped in a wispy semi-transparent endomysium web (fibrous alpha); two capillaries in the
+   grooves between fibres with translucent walls and erythrocytes squeezing through in single
+   file (cup-deformed, slowly moving — sh06 callback); fibre diameter/spacing jitter kept.
+2. Nerve: organic myelinated axon — diameter variation, Schwann-nucleus bulge on every internode,
+   narrow nodes of Ranvier, thin translucent perineurial sheath, SSS myelin (rough 0.48, thin coat)
+   instead of glossy pipe. Teal saltatory impulse kept, with a moving teal light spilling on the
+   tissue (diffuse only).
+3. Cell interior: dense and layered — vertical myofibrils on both sides of a narrow probe pocket,
+   rows of mitochondria packed between them (≈ 1 000, shared meshes), each a translucent double
+   membrane (rim-opaque alpha) with real solidified 3-D lamellar cristae inside and a faint warm
+   humming glow (no stripe texture any more); sarcoplasmic reticulum as a lacy translucent
+   tubular network (rings at Z-lines + longitudinal tubules); glycogen granules; brighter teal
+   cytoplasm haze; DOF layers.
+4. Membrane crossing: sarcolemma carries glycocalyx sheen/fuzz + fine bump.
+5. Same SSS-first material language as sh06 v2.
+Budget rule: 12 spp + OIDN ACCURATE/BALANCED, finals at 80 % res (director-approved fallback).
+
+
 Script: `video/blender/shots/sh09.py` (+ shared `video/blender/lib_s7.py`).
 
 ## Design decisions

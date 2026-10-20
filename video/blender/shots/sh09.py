@@ -73,6 +73,15 @@ def build(ctx):
                          inward=False)
         if fc.length > 1.5:
             so = L.obj_from_mesh(f"sheath_{fi}", sm, sheath_mat, loc=(fc.x, 0, fc.z))
+    # endomysium: wispy collagen web around the fibres bordering the channel
+    m_web = L.mat_web("Endomysium", alpha_max=0.18)
+    for o, c, hero in fibres:
+        if (Vector((c.x, 0, c.z))).length < 0.8:
+            wm = L.tube_mesh(f"web_{o.name}", radius=R_F + 0.014, y0=-3, y1=7, nu=64, nv=160, seed=hash(o.name) % 97,
+                             amp=0.04, inward=False)
+            L.obj_from_mesh(f"web_{o.name}", wm, m_web, loc=(c.x, 0, c.z))
+    build_capillaries(rng, frames, times)
+
     # contraction: hero + neighbours (delayed), others still
     for o, c, hero in fibres:
         d = (c - HERO_C).length
@@ -101,6 +110,8 @@ def build(ctx):
         x = (s % internode) / internode
         node = min(x, 1 - x) * internode          # distance to nearest node of Ranvier
         r = 0.022 + 0.020 * C.smooth(node / 0.04)
+        r *= 1 + 0.06 * noise.noise(Vector((s * 3.0, 0.3, 0.7)))
+        r += 0.007 * math.exp(-((x - 0.42) / 0.06) ** 2)          # Schwann-cell nucleus bulge
         if s > s_end_guess - 0.12:                # unmyelinated terminal
             r = 0.018
         return r
@@ -114,6 +125,9 @@ def build(ctx):
     s_end = s_acc[-1]
     m_nerve = make_nerve_mat(internode, t_imp0, s_end, t_junc)
     nerve = L.obj_from_mesh("nerve", nme, m_nerve)
+    # thin translucent connective sheath around the axon
+    sme, _ = L.path_tube("nerveSheath", dense, lambda s_, i: nerve_r(s_, i) * 0.4 + 0.034, nu=28, store_s=False)
+    L.obj_from_mesh("nerveSheath", sme, L.mat_web("Perineurium", alpha_max=0.28, stretch=(60, 4, 60)))
     # terminal boutons (end plate) on the hero fibre
     m_bout = make_bouton_mat(t_junc)
     for b in range(9):
@@ -159,7 +173,9 @@ def build(ctx):
         L.obj_from_mesh(f"collagen{c_}", me, m_col)
 
     # ---------------------------------------------------------------- inside the hero fibre
+    exterior = set(o for o in bpy.data.objects if o.type == "MESH")
     build_interior(rng, ctx)
+    interior = [o for o in bpy.data.objects if o.type == "MESH" and o not in exterior]
 
     # ---------------------------------------------------------------- camera
     cam = C.camera("cam", lens=35, loc=(0, -0.4, 0), fstop=5.0, focus=0.6, clip_start=0.002, clip_end=40)
@@ -217,6 +233,14 @@ def build(ctx):
     L.bake_id(cam.data, frames, "dof.aperture_fstop", fst)
     C.handheld(cam, amp_loc=0.0008, amp_rot=0.002, speed=0.5, seed=9)
 
+    # budget: interior objects only exist once the probe reaches the membrane, exterior tissue
+    # disappears once we are inside the fibre (both hidden by the haze anyway)
+    f_in = C.t2f(t_c - 0.15); f_out = C.t2f(t_d + 0.2)
+    for o in interior:
+        L.bake(o, [frames[0], f_in], "hide_render", [1.0, 0.0], interp="CONSTANT")
+    for o in exterior:
+        L.bake(o, [frames[0], f_out], "hide_render", [0.0, 1.0], interp="CONSTANT")
+
     # haze: red-brown tissue haze outside -> dense teal cytoplasm inside
     fd_, fc_ = [], []
     for t in times:
@@ -224,7 +248,7 @@ def build(ctx):
         fd_.append(C.lerp(1.6, 0.3, u))
         w = C.remap(t, t_kas, t_kas + 0.6)
         col = C.lerp((0.045, 0.012, 0.010), (0.018, 0.026, 0.03), w)
-        col = C.lerp(col, (0.012, 0.038, 0.044), u)
+        col = C.lerp(col, (0.022, 0.05, 0.055), u)
         fc_.append(col)
     L.bake_id(fg, frames, 'nodes["dist"].outputs[0].default_value', fd_)
     L.bake_id(fg, frames, 'nodes["color"].outputs[0].default_value', [(*c, 1.0) for c in fc_])
@@ -252,9 +276,9 @@ def build(ctx):
     sc.view_settings.exposure = 0.4
 
     sc.world.light_settings.distance = 0.2
-    L.budget_denoise()
+    L.budget_denoise(prefilter="ACCURATE", quality="BALANCED", final_res=80)
     ov = dict(L.LEAN)
-    ov.update(transmission_bounces=3, transparent_bounces=6)
+    ov.update(transmission_bounces=3, transparent_bounces=8, final_spp=12, preview_spp=12)
     return ov
 
 
@@ -289,8 +313,8 @@ def make_sheath_mat():
 def make_nerve_mat(internode, t_imp0, s_end, t_junc):
     """Myelin: glossy creamy-white lamellar sheath (SSS). Impulse: teal emission at the nodes of Ranvier
     lighting one after another (saltatory), with a faint glow travelling along the axon in between."""
-    m, nt, p = L.mat_wet_tissue("Myelin", base=(0.78, 0.70, 0.55), sss_radius=(1.0, 0.85, 0.6), sss_scale=0.02,
-                                rough=0.35, coat=0.9, coat_rough=0.05)
+    m, nt, p = L.mat_wet_tissue("Myelin", base=(0.74, 0.62, 0.50), sss_radius=(1.0, 0.8, 0.6), sss_scale=0.03,
+                                rough=0.48, coat=0.35, coat_rough=0.2)
     at = L._n(nt, "ShaderNodeAttribute"); at.attribute_name = "s"
     tv = L.time_value(nt)
     # front position S(t)
@@ -387,16 +411,16 @@ def build_interior(rng, ctx):
     bm = B.new()
     pocket_c = Vector((0, DIVE_Y, -0.02))
     count = 0
-    for a in range(-14, 15):
-        for b in range(-14, 15):
+    for a in range(-10, 11):
+        for b in range(-10, 11):
             x = HERO_C.x + a * sp + b * sp * 0.5
             z = HERO_C.z + b * sp * 0.866
             if (Vector((x, 0, z)) - Vector((HERO_C.x, 0, HERO_C.z))).length > R_F * 0.82:
                 continue
             if x > HERO_C.x + 0.05:
                 continue
-            # keep a pocket for the camera: no fibrils within 0.03 of the path line (x0..final, z=-0.02)
-            if abs(z - pocket_c.z) < 0.03 and x < HERO_C.x + 0.03:
+            # keep a narrow pocket for the probe between the membrane and the hero mitochondrion
+            if abs(z - pocket_c.z) < 0.014 and x < HERO_C.x + 0.03:
                 continue
             r = rng.uniform(0.0065, 0.0085)
             res = B.ops.create_cone(bm, cap_ends=False, segments=14, radius1=r, radius2=r, depth=0.9)
@@ -424,31 +448,31 @@ def build_interior(rng, ctx):
             z = HERO_C.z + b * sp * 0.866 + sp * 0.29
             if (Vector((x, 0, z)) - Vector((HERO_C.x, 0, HERO_C.z))).length > R_F * 0.8 or x > HERO_C.x + 0.05:
                 continue
-            if abs(z - pocket_c.z) < 0.04 and x < HERO_C.x + 0.03:
+            if abs(z - pocket_c.z) < 0.02 and x < HERO_C.x + 0.01:
                 continue
-            for yy in range(-8, 9):
+            if abs(z - pocket_c.z) > 0.16 or x < HERO_C.x - 0.2:
+                continue                                  # beyond the haze: never seen
+            for yy in range(-6, 7):
                 if rng.random() < 0.55:
                     continue
                 y = DIVE_Y + yy * 0.025 + rng.uniform(-0.003, 0.003)
-                mo = L.obj_from_mesh(f"mito_{n:04d}", mito_meshes[n % 6], loc=(x, y, z))
-                mo.rotation_euler = (rng.uniform(-0.2, 0.2), rng.uniform(0, 6.28), rng.uniform(-0.2, 0.2) + math.pi / 2 * (rng.random() < 0.6))
+                rot = (rng.uniform(-0.25, 0.25), rng.uniform(0, 6.28), rng.uniform(-0.25, 0.25))
+                L.mito_assembly(f"mito_{n:04d}", (x, y, z), rot, variant=n % 5,
+                                length=0.022 + 0.003 * (n % 5), width=0.0095 + 0.0006 * (n % 3))
                 n += 1
     # hero mitochondria with cristae at the end of the pocket
     hero_pos = [Vector((HERO_C.x - 0.0105, DIVE_Y + 0.004, -0.02)), Vector((HERO_C.x - 0.006, DIVE_Y + 0.034, -0.002)),
                 Vector((HERO_C.x - 0.004, DIVE_Y - 0.03, -0.035))]
+    build_sr(rng, pocket_c, sp)
     m_out = L.mat_mito_outer()
     m_cr = L.mat_mito("MitoInner", strength=3.5)
     for i, hp in enumerate(hero_pos):
         ln, wd = (0.034, 0.0135) if i == 0 else (0.028, 0.011)
-        ob = L.obj_from_mesh(f"heroMito{i}", L.mito_mesh(f"hm{i}", length=ln, width=wd, seed=60 + i, bend=0.1), m_out, loc=hp)
-        ob.rotation_euler = (0.0, 0.15 * i, 0.05 * i)
-        # inner membrane: glowing cristae bands seen through the translucent envelope
-        cr = L.obj_from_mesh(f"heroInner{i}", L.mito_mesh(f"hin{i}", length=ln * 0.86, width=wd * 0.78, seed=60 + i, bend=0.1), m_cr)
-        cr.parent = ob
+        ob = L.mito_assembly(f"heroMito{i}", tuple(hp), (0.0, 0.15 * i, 0.05 * i), variant=10 + i, length=ln, width=wd)
         if i == 0:
             t = C.empty("TRK_mito"); t.parent = ob
             gl = C.point_light("mitoGlow", loc=tuple(hp + Vector((-0.012, 0, 0))), power=0.012, radius=0.006, kelvin_k=2600)
-            gl.data.specular_factor = 0.0; gl.visible_camera = False
+            gl.data.specular_factor = 0.0; gl.visible_camera = False; gl.visible_glossy = False
     # glycogen granules / ribosome specks in the pocket
     bmg = B.new()
     for k in range(700):
@@ -461,6 +485,91 @@ def build_interior(rng, ctx):
     m_gr = L.mat_wet_tissue("Granule", base=(0.25, 0.16, 0.12), rough=0.3, coat=0.0, sss_scale=0.001)[0]
     L.fog_wrap(m_gr)
     L.obj_from_mesh("granules", me, m_gr)
+
+
+
+
+def build_capillaries(rng, frames, times):
+    """Two capillaries in the grooves between fibres, translucent walls, RBCs squeezing through in
+    single file (callback to sh06)."""
+    m_cap = L.mat_wet_tissue("CapWall", base=(0.55, 0.22, 0.2), sss_radius=(1, 0.4, 0.3), sss_scale=0.01,
+                             rough=0.35, coat=0.6, coat_rough=0.12)[0]
+    for n_ in m_cap.node_tree.nodes:
+        if n_.type == "BSDF_PRINCIPLED":
+            n_.inputs["Alpha"].default_value = 0.4
+    L.fog_wrap(m_cap)
+    m_rbc = L.mat_rbc("RBC_cap", D=0.056)
+    paths = [(HERO_C.x - R_F * 0.72, HERO_C.z + R_F * 0.72 + 0.03), (-0.24, -0.16)]
+    rbc_me = L.rbc_mesh("rbcCap", D=0.056, seed=3, cup=0.6, wobble=0.03, seg=32, nprof=12)
+    rbc_me.materials.append(m_rbc)
+    for ci, (cx, cz) in enumerate(paths):
+        pts = [Vector((cx + 0.012 * math.sin(y * 1.7 + ci), y, cz + 0.012 * math.cos(y * 1.3 + ci))) for y in
+               [-2.0 + 8.0 * k / 299 for k in range(300)]]
+        me, _ = L.path_tube(f"cap{ci}", pts, lambda s_, i: 0.034, nu=24, store_s=False)
+        L.obj_from_mesh(f"capillary{ci}", me, m_cap)
+        for k in range(26):
+            y0 = -0.5 + k * 0.17 + rng.uniform(-0.03, 0.03)
+            o = L.obj_from_mesh(f"capRBC{ci}_{k}", rbc_me)
+            loc = []
+            for t in times:
+                y = y0 + 0.12 * (t - times[0])
+                loc.append((cx + 0.012 * math.sin(y * 1.7 + ci), y, cz + 0.012 * math.cos(y * 1.3 + ci)))
+            L.bake(o, frames, "location", loc)
+            o.rotation_euler = (math.radians(90) + rng.uniform(-0.2, 0.2), rng.uniform(-0.2, 0.2), rng.uniform(0, 6.28))
+
+
+def build_sr(rng, pocket_c, sp):
+    """Sarcoplasmic reticulum: lacy translucent tubules - rings (triads) around the myofibrils at
+    each Z-line plus wavy longitudinal tubules between rings, near the probe's pocket."""
+    import bmesh as B
+    bm = B.new()
+    for a in range(-6, 7):
+        for b in range(-6, 7):
+            x = HERO_C.x + a * sp + b * sp * 0.5
+            z = HERO_C.z + b * sp * 0.866
+            if abs(z - pocket_c.z) < 0.03 and x < HERO_C.x + 0.03:
+                continue
+            if rng.random() < 0.35:
+                continue
+            if (Vector((x, 0, z)) - pocket_c * Vector((0, 0, 1)) - Vector((HERO_C.x - 0.06, 0, 0))).length > 0.17:
+                continue
+            for k in range(-5, 6):
+                y = DIVE_Y + k * 0.04 + rng.uniform(-0.002, 0.002)
+                if rng.random() < 0.3:
+                    continue
+                r = B.ops.create_circle(bm, segments=16, radius=0.0102)
+                for v in r["verts"]:
+                    v.co = Vector((x + v.co.x * rng.uniform(0.9, 1.1), y + rng.uniform(-0.0015, 0.0015), z + v.co.y * rng.uniform(0.9, 1.1)))
+                if rng.random() < 0.6:
+                    ang = rng.uniform(0, 6.28)
+                    p0 = Vector((x + 0.0105 * math.cos(ang), y, z + 0.0105 * math.sin(ang)))
+                    v_prev = bm.verts.new(p0)
+                    for j in range(1, 9):
+                        pj = p0 + Vector((0.0015 * math.sin(j * 1.3 + ang), 0.04 * j / 8, 0.0015 * math.cos(j * 1.1)))
+                        vj = bm.verts.new(pj); bm.edges.new((v_prev, vj)); v_prev = vj
+    me = bpy.data.meshes.new("SR"); bm.to_mesh(me); bm.free()
+    o = L.obj_from_mesh("SR", me)
+    # edges -> tubes via skin-like geometry nodes: curve conversion with a circle profile
+    g = bpy.data.node_groups.new("S7_Tubes", "GeometryNodeTree"); g.is_modifier = True
+    g.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+    g.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    gi = g.nodes.new("NodeGroupInput"); go = g.nodes.new("NodeGroupOutput")
+    m2c = g.nodes.new("GeometryNodeMeshToCurve")
+    cc = g.nodes.new("GeometryNodeCurvePrimitiveCircle"); cc.inputs["Resolution"].default_value = 6
+    cc.inputs["Radius"].default_value = 0.0006
+    c2m = g.nodes.new("GeometryNodeCurveToMesh")
+    sm = g.nodes.new("GeometryNodeSetMaterial")
+    m_sr = L.mat_wet_tissue("SR", base=(0.6, 0.75, 0.72), sss_radius=(0.8, 1, 1), sss_scale=0.002, rough=0.3,
+                            coat=0.6, coat_rough=0.1)[0]
+    for n_ in m_sr.node_tree.nodes:
+        if n_.type == "BSDF_PRINCIPLED":
+            n_.inputs["Alpha"].default_value = 0.3
+    L.fog_wrap(m_sr)
+    sm.inputs["Material"].default_value = m_sr
+    g.links.new(gi.outputs[0], m2c.inputs["Mesh"]); g.links.new(m2c.outputs[0], c2m.inputs["Curve"])
+    g.links.new(cc.outputs["Curve"], c2m.inputs["Profile Curve"]); g.links.new(c2m.outputs[0], sm.inputs["Geometry"])
+    g.links.new(sm.outputs[0], go.inputs[0])
+    md = o.modifiers.new("tubes", "NODES"); md.node_group = g
 
 
 C.run("sh09", build)
