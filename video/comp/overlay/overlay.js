@@ -572,7 +572,63 @@ function fmtTR(n) {                  // Turkish thousands grouping with dots
   for (let i = 0; i < s.length; i++) { if (i > 0 && (s.length - i) % 3 === 0) out += '.'; out += s[i]; }
   return out;
 }
+/** Free-standing counter: big light tabular numerals, caption below; crossfades to the rounded figure on landing. */
+function drawCounterFree(el, f, t) {
+  if (t < el.t0 - 0.05 || t > el.out) return;
+  const st = TL.styles.callout;
+  const fam = 'Inter Display', wt = 300, size = 66, trk = 0.02;
+  const p = clamp((t - el.t0) / (el.land - el.t0));
+  const L1 = Math.log10(el.count_to), L0 = Math.log10(Math.max(1, el.count_from));
+  const lg = L0 + (L1 - L0) * (0.12 * p + 0.88 * p * p);
+  const val = p >= 1 ? el.count_to : Math.pow(10, lg);
+  const numStr = fmtTR(val);
+  const aIn = eOutCubic(lin(t, el.t0, el.t0 + 0.45)), aOut = 1 - eInOutCubic(lin(t, el.out - 0.4, el.out));
+  const a = aIn * aOut;
+  if (a < 0.003) return;
+  const rise = (1 - eOutCubic(lin(t, el.t0, el.t0 + 0.6))) * 14;
+  const land = clamp((t - el.land) / 0.24);
+  setFont(X, fam, wt, size);
+  const dW = Math.max(...'0123456789'.split('').map(d => X.measureText(d).width)) + trk * size;
+  const dotW = X.measureText('.').width + trk * size;
+  const numW = [...numStr].reduce((s2, c) => s2 + (c === '.' ? dotW : dW), 0) - trk * size;
+  const cx = el.x, base = el.y + rise;
+  const sh = [0.5, 12, 2];
+  const aNum = a * (1 - land);
+  if (aNum > 0.003) {
+    let x = cx - numW / 2;
+    const items = [];
+    for (const c of numStr) { const w = c === '.' ? dotW : dW; items.push([c, x + (w - trk * size - X.measureText(c).width) / 2]); x += w; }
+    for (const [c, gx] of items) glyphShadow(X, c, gx, base, aNum * sh[0], sh[1], sh[2]);
+    for (const [c, gx] of items) glyph(X, c, gx, base, st.color, aNum, 0);
+  }
+  const fin = layoutRun(el.final, fam, wt, size, trk);
+  const aFin = a * land;
+  let capH = fin.capH;
+  if (aFin > 0.003) {
+    const scl = 1 + 0.05 * (1 - eOutCubic(land));
+    const fx = cx - fin.w * scl / 2;
+    setFont(X, fam, wt, size * scl);
+    const items = fin.chars.filter(c => c.ch !== ' ').map(c => [c.ch, fx + c.x * scl]);
+    for (const [c, gx] of items) glyphShadow(X, c, gx, base, aFin * sh[0], sh[1], sh[2]);
+    for (const [c, gx] of items) glyph(X, c, gx, base, st.color, aFin, 0);
+    const g = t >= el.land ? Math.exp(-(t - el.land) / 0.4) : 0;
+    setFont(A, fam, wt, size * scl);
+    for (const [c, gx] of items) glyph(A, c, gx, base, st.glow, aFin * 0.6 * g, 0);
+  }
+  // caption + hairline
+  const unit = layoutRun(el.unit, st.secondary.family, st.secondary.weight, 30, 0.04);
+  const uy = base + 22 + unit.capH + 14;
+  const ua = a * st.secondary.alpha * eOutCubic(lin(t, el.t0 + 0.15, el.t0 + 0.6));
+  const rw = Math.max(numW * (1 - land) + fin.w * land, 120) * 0.42;
+  const ry = base + 22;
+  strokeGlow(X, (c, o) => { c.moveTo(cx - rw / 2 + o, ry); c.lineTo(cx + rw / 2 + o, ry); }, 1.5, [0, 0, 0], ua * 0.6, 4, 1);
+  strokeSolid(X, (c, o) => { c.moveTo(cx - rw / 2 + o, ry); c.lineTo(cx + rw / 2 + o, ry); }, 1.5, st.color, ua * 0.8);
+  drawRunWipe(unit, cx - unit.w / 2, uy, st.color, ua, 1e9, 1, 30, st.text_shadow);
+  BOXES.push([cx - Math.max(numW, fin.w) / 2 - 10, base - capH - 8, cx + Math.max(numW, fin.w) / 2 + 10, uy + 8, 0.7 * a, 1]);
+}
+
 function drawCounter(el, f, t) {
+  if (el.mode === 'free') return drawCounterFree(el, f, t);
   const st = TL.styles.callout;
   const pS = st.primary;
   const p = clamp((t - el.t0) / (el.land - el.t0));

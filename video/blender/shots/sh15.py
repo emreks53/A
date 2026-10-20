@@ -860,8 +860,14 @@ def leather_coll(res="2k"):
     return C._curl(u, os.path.join(C.ASSETS, "polyhaven", "tex", "leather_red_03", os.path.basename(u)))
 
 
+def _simple(kind):
+    return kind in os.environ.get("SH15_SIMPLE", "").split(",")
+
+
 def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     """Red bonded-leather binding with hot-stamped, slightly debossed gold foil from `mask`."""
+    if _simple("leather"):
+        return mat_simple(name, LEATHER_RGB, 0.45)
     m, nt, out = new_mat(name)
     t = tex("leather_red_03")
     uvl = NN(nt, "ShaderNodeUVMap", uv_map="uvl")
@@ -932,6 +938,8 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
 
 
 def mat_page_edge(name="page_edge", dark=1.0):
+    if _simple("edge"):
+        return mat_simple(name, PAPER_RGB, 0.6)
     """Edges of a stacked text block: cream with per-leaf striation (attribute 'layer' = leaf index)."""
     m, nt, out = new_mat(name)
     at = NN(nt, "ShaderNodeAttribute", attribute_name="layer")
@@ -973,6 +981,8 @@ def _paper_and_ink(nt, mask_out, geo, tone=1.0):
 
 
 def mat_page(name, img, uv="UVMap"):
+    if _simple("paper"):
+        return mat_simple(name, PAPER_RGB, 0.6)
     m, nt, out = new_mat(name)
     geo = NN(nt, "ShaderNodeNewGeometry")
     uvn = NN(nt, "ShaderNodeUVMap", uv_map=uv)
@@ -984,6 +994,8 @@ def mat_page(name, img, uv="UVMap"):
 
 
 def mat_leaf(name, img_front, img_back):
+    if _simple("paper"):
+        return mat_simple(name, PAPER_RGB, 0.6)
     """Single sheet: recto on the front face, verso (mirrored) on the back face, with translucency
     that lets the other side's print show through when backlit."""
     m, nt, out = new_mat(name)
@@ -1029,6 +1041,8 @@ def mat_headband(name="headband"):
 
 def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), relief=None, relief_depth=0.0025,
              coat=0.0, grain_rot=0.0, uv_relief="uvr", sat=1.0, wear=0.0):
+    if _simple("wood"):
+        return mat_simple(name, (0.2, 0.12, 0.07), 0.5)
     m, nt, out = new_mat(name)
     t = tex(tname)
     tc = NN(nt, "ShaderNodeTexCoord")
@@ -1073,6 +1087,8 @@ def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), 
 
 
 def mat_plaster(name="lime_plaster"):
+    if _simple("plaster"):
+        return mat_simple(name, (0.7, 0.66, 0.6), 0.9)
     m, nt, out = new_mat(name)
     t = tex("beige_wall_001")
     tc = NN(nt, "ShaderNodeTexCoord")
