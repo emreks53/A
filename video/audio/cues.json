@@ -562,7 +562,7 @@
   {
    "id": "sh03.plate",
    "shot": "sh03",
-   "t": 14.8583,
+   "t": 14.9,
    "pre": 0.05,
    "dur": 0.95,
    "gen": "plate_slide",
@@ -1213,7 +1213,7 @@
     "sync": 0.05,
     "pan": 0.1
    },
-   "lvl": -28,
+   "lvl": -31,
    "class": "spot",
    "space": "room",
    "send": -16,
@@ -1311,11 +1311,11 @@
    "id": "sh08.into_skin",
    "shot": "sh08",
    "t": 47.4,
-   "pre": 0.75,
-   "dur": 1.4,
+   "pre": 0.45,
+   "dur": 1.1,
    "gen": "whoosh",
    "params": {
-    "sync": 0.75,
+    "sync": 0.45,
     "f_from": 2600,
     "f_peak": 1100,
     "f_to": 200,
@@ -1324,7 +1324,7 @@
     "bw": 1.5,
     "rough": 0.4
    },
-   "lvl": -24,
+   "lvl": -26,
    "class": "amb",
    "space": "body",
    "send": -12,
@@ -1891,7 +1891,7 @@
     ],
     "pan": 0.0
    },
-   "lvl": -29,
+   "lvl": -32,
    "class": "spot",
    "space": "outdoor",
    "send": -18,
@@ -2937,7 +2937,7 @@
     "bright": 0.55,
     "low": 0.3
    },
-   "lvl": -32,
+   "lvl": -34,
    "class": "amb",
    "space": "room_wood",
    "send": -18,
