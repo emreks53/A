@@ -196,5 +196,14 @@ tool/ikon_uret.py, tool/ikon/      uygulama simgeleri ve açılış görselleri 
   yayımlayın (iletişim: lugatirisaleinur@gmail.com). Uygulama içindeki metin
   (`lib/src/ui/privacy_page.dart`) bununla aynı tutulmalıdır.
 - **Telif izni:** RNK Neşriyat'ın yazılı izni alınmadan yayımlamayın (yukarıya bakın).
+- **App Store:** metinler ve ekran görüntüleri `store/app-store/` klasöründe.
+- **Destek ve gizlilik sayfaları:** `docs/index.html` (destek/iletişim) ve `docs/gizlilik.html`.
+  GitHub'da Settings > Pages > "Deploy from a branch" ile bu dalın `/docs` klasörü seçilince
+  `https://emreks53.github.io/A/` adresinde yayımlanır. Gizlilik metni değişirse
+  `store/gizlilik-politikasi.md`, `docs/gizlilik.html` ve `lib/src/ui/privacy_page.dart` birlikte güncellenmeli.
+- **Codemagic (Mac olmadan iPhone derlemesi):** `codemagic.yaml` iki iş içerir: `ios-app-store`
+  (derleyip TestFlight'a yükler) ve `android-play` (imzalı AAB). Dosyanın başındaki bir kereye
+  mahsus adımları Codemagic arayüzünde yapın (App Store Connect API anahtarı, dağıtım sertifikası,
+  Android anahtar dosyası, `APP_STORE_APPLE_ID`).
 - iPhone sürümü bu ortamda derlenemedi (macOS/Xcode gerekir); Xcode'da imzalama ekibini
   seçip bir kez derleyip denemek gerekir.

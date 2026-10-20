@@ -49,6 +49,7 @@ app.*.map.json
 
 # Mağaza görselleri üreticisinin ara çıktıları
 /tool/magaza/shots/
+/tool/magaza/shots_ios/
 
 # İmza anahtarları ve şifreleri hiçbir yerde git'e girmesin.
 key.properties

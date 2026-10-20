@@ -11,6 +11,7 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,9 +43,10 @@ final Lugat full = Lugat.fromBytes(
   [File('assets/lugat_ek.jsonl').readAsBytesSync()],
 );
 
-Future<void> start(WidgetTester tester, ThemeMode mode, {List<String> history = const []}) async {
-  tester.view.physicalSize = const Size(1080, 1920);
-  tester.view.devicePixelRatio = 2.625;
+Future<void> start(WidgetTester tester, ThemeMode mode,
+    {List<String> history = const [], Size size = const Size(1080, 1920), double dpr = 2.625}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = dpr;
   addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues({
     'tema': mode.name,
@@ -63,7 +65,8 @@ Future<void> start(WidgetTester tester, ThemeMode mode, {List<String> history = 
   await tester.pumpAndSettle();
 }
 
-Future<void> shot(String name) => expectLater(find.byType(MaterialApp), matchesGoldenFile('shots/$name.png'));
+Future<void> shot(String name, {String dir = 'shots'}) =>
+    expectLater(find.byType(MaterialApp), matchesGoldenFile('$dir/$name.png'));
 
 Future<void> search(WidgetTester tester, String q) async {
   await tester.enterText(find.byKey(const Key('arama-kutusu')), q);
@@ -104,6 +107,35 @@ void main() {
     await shot('06_koyu_tema');
     debugDisableShadows = true;
   });
+
+  // App Store: iPhone 6.9" (1320x2868) ve iPad 13" (2064x2752), iPhone görünümüyle.
+  for (final (device, size, dpr) in [('iphone-6.9', const Size(1320, 2868), 3.0), ('ipad-13', const Size(2064, 2752), 2.0)]) {
+    testWidgets('App Store ekranları $device', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      debugDisableShadows = false;
+      final dir = 'shots_ios/$device';
+      await start(tester, ThemeMode.light,
+          history: ['tecelli', 'inkişaf', 'kâinat', 'hakikat', 'zerre', 'mana-yı harfî'], size: size, dpr: dpr);
+      await search(tester, '');
+      await shot('01_ana_ekran', dir: dir);
+      await search(tester, 'in');
+      await shot('02_ilk_harfler', dir: dir);
+      await open(tester, 'inkişaf');
+      await shot('03_mana', dir: dir);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      await search(tester, 'hakikatlerinden');
+      await shot('04_ekli_kelime', dir: dir);
+      await open(tester, 'hakikat');
+      await shot('05_uzun_mana', dir: dir);
+      await tester.pumpWidget(const SizedBox());
+      await start(tester, ThemeMode.dark, size: size, dpr: dpr);
+      await open(tester, 'tecelli');
+      await shot('06_koyu_tema', dir: dir);
+      debugDisableShadows = true;
+      debugDefaultTargetPlatformOverride = null;
+    });
+  }
 
   testWidgets('öne çıkan görsel', (tester) async {
     tester.view.physicalSize = const Size(1024, 500);

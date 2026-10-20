@@ -1,0 +1,75 @@
+# Codemagic (codemagic.io) — Mac'e gerek kalmadan iPhone sürümünü derleyip App Store
+# Connect'e (TestFlight) yükler; Android sürümünü de imzalı AAB olarak derler.
+#
+# Bir kereye mahsus Codemagic arayüzünde yapılacaklar (README "Codemagic" bölümüne bakın):
+#   1. Teams > Integrations > Developer Portal: App Store Connect API anahtarını
+#      "lugat_asc" adıyla ekleyin.
+#   2. Code signing identities > iOS certificates: "Generate certificate" (Apple Distribution).
+#      Profilleri Codemagic, aşağıdaki ios_signing ayarıyla kendisi alır/oluşturur.
+#   3. Code signing identities > Android keystores: lugat-upload-keystore.jks dosyasını
+#      "lugat_upload" referans adıyla, şifresi ve "upload" takma adıyla yükleyin.
+#   4. APP_STORE_APPLE_ID değişkenine App Store Connect'teki uygulamanın "Apple ID"
+#      numarasını yazın (App Information sayfasında).
+
+workflows:
+  ios-app-store:
+    name: iOS — App Store Connect (TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: lugat_asc
+    environment:
+      flutter: stable
+      xcode: latest # Apple 28 Nisan 2026'dan beri Xcode 26 ve iOS 26 SDK istiyor
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.lugatirisaleinur
+      vars:
+        APP_STORE_APPLE_ID: "0000000000" # App Store Connect > Uygulama > Apple ID
+    scripts:
+      - name: Paketler
+        script: flutter pub get
+      - name: Testler
+        script: flutter test
+      - name: İmza profilleri
+        script: xcode-project use-profiles
+      - name: iOS derlemesi (.ipa)
+        script: |
+          # Yapı numarası App Store Connect'teki son numaradan bir fazla olur.
+          BUILD_NUMBER=$(($(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" || echo 0) + 1))
+          flutter build ipa --release --build-number=$BUILD_NUMBER \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false # incelemeye göndermeyi App Store Connect'te elle yapın
+
+  android-play:
+    name: Android — imzalı AAB
+    instance_type: linux_x2
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      android_signing:
+        - lugat_upload
+    scripts:
+      - name: Paketler
+        script: flutter pub get
+      - name: Testler
+        script: flutter test
+      - name: İmza ayarı
+        script: |
+          cat > "$CM_BUILD_DIR/android/key.properties" <<EOF
+          storeFile=$CM_KEYSTORE_PATH
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          keyPassword=$CM_KEY_PASSWORD
+          EOF
+      - name: Android derlemesi (.aab)
+        script: flutter build appbundle --release
+    artifacts:
+      - build/app/outputs/bundle/release/*.aab
