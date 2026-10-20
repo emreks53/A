@@ -344,8 +344,9 @@ def crackle_env(n, rng, rate, tau=0.004, sigma=0.9, rmax=None):
     return onepole_env(imp, tau) * (tau * SR) ** 0.5
 
 
-def click_field(n, rng, rate, lo, hi, sigma=1.0, order=2, rmax=None):
-    """Dense field of tiny clicks: Poisson impulse train through a band-pass."""
+def click_field(n, rng, rate, lo, hi, sigma=1.0, order=2, rmax=None, clip_q=None):
+    """Dense field of tiny clicks: Poisson impulse train through a band-pass.  clip_q (e.g. 0.99)
+    caps the heavy-tailed grain amplitudes at that quantile so no single grain becomes a click."""
     rate = np.broadcast_to(np.asarray(rate, dtype=float), (n,))
     rmax = rmax or max(rate.max(), 1e-6)
     k = rng.poisson(rmax * n / SR)
@@ -353,7 +354,10 @@ def click_field(n, rng, rate, lo, hi, sigma=1.0, order=2, rmax=None):
     keep = rng.uniform(0, rmax, k) < rate[idx]
     idx = idx[keep]
     imp = np.zeros(n)
-    np.add.at(imp, idx, rng.lognormal(0, sigma, len(idx)) * rng.choice([-1.0, 1.0], len(idx)))
+    amp = rng.lognormal(0, sigma, len(idx))
+    if clip_q is not None and len(amp):
+        amp = np.minimum(amp, np.quantile(amp, clip_q))
+    np.add.at(imp, idx, amp * rng.choice([-1.0, 1.0], len(idx)))
     return bp(imp, lo, hi, order)
 
 
@@ -390,57 +394,92 @@ def add_bubbles(buf, times, radii, rng, pans=0.0, gain=1.0, xi=(0.05, 0.2), damp
         add_mono(buf, b, N(t), pans[i], a)
 
 
-def bird_call(rng, kind, fb):
-    """One natural call (FM chirp model). kinds: tsip, chip, seet, chirp_up, trill, warble, chatter."""
-    def tone(dur, fcurve, env_pow=1.5, h2=0.08, am=0.0):
-        n = max(N(dur), 16)
-        u = np.linspace(0, 1, n)
-        f = fcurve(u)
-        ph = TWO_PI * np.cumsum(f) / SR + rng.uniform(0, TWO_PI)
-        env = np.sin(np.pi * u ** rng.uniform(0.7, 1.0)) ** env_pow
-        if am:
-            env *= 1 + am * np.sin(TWO_PI * rng.uniform(40, 90) * u * dur)
-        return env * (np.sin(ph) + h2 * np.sin(2 * ph + 0.3))
+def _syrinx(rng, dur, fcurve, h2=0.12, h3=0.04, breath=0.25, jit=0.015, attack=0.15, decay_pow=1.8,
+            am=0.0, am_rate=0.0, onset=0.35):
+    """One syllable of a songbird call: a fast FM sweep from the syrinx (instantaneous frequency
+    fcurve(u), u = 0..1) with micro-FM jitter, a weak 2nd/3rd harmonic whose balance drifts (the two
+    sides of the syrinx), breathy narrow-band noise riding on the carrier, an optional fast AM
+    flutter, an asymmetric envelope and a short noisy onset (beak opening)."""
+    n = max(N(dur), 24)
+    u = np.linspace(0.0, 1.0, n)
+    tt = np.arange(n) / SR
+    f = fcurve(u)
+    j = lp(rng.standard_normal(n + 512), 260, 2)[256:256 + n]
+    f = f * (1.0 + jit * j / (np.std(j) + 1e-12))
+    ph = TWO_PI * np.cumsum(f) / SR + rng.uniform(0, TWO_PI)
+    a = max(attack * rng.uniform(0.7, 1.3), 0.03)
+    env = np.where(u < a, (u / a) ** 1.6, np.clip((1 - u) / (1 - a), 0, 1) ** (decay_pow * rng.uniform(0.8, 1.25)))
+    env *= 1.0 + 0.25 * lp(rng.standard_normal(n), 120, 1) * 3
+    env = np.clip(env, 0, None)
+    if am:
+        env = env * (1.0 - am * (0.5 + 0.5 * np.sin(TWO_PI * am_rate * tt + rng.uniform(0, TWO_PI))))
+    k2 = h2 * (1 + 0.6 * lp(rng.standard_normal(n), 60, 1) * 4)
+    y = np.sin(ph) + k2 * np.sin(2 * ph + rng.uniform(0, TWO_PI)) + h3 * np.sin(3 * ph + rng.uniform(0, TWO_PI))
+    br = lp(rng.standard_normal(n), 420, 2)
+    y = y + breath * np.sin(ph + 0.7) * br / (np.std(br) + 1e-12)
+    y = y * env
+    # noisy onset: 2-5 ms band of noise around the starting frequency
+    m = min(N(rng.uniform(0.002, 0.005)), n)
+    nz = reson(rng.standard_normal(m + 64), float(np.clip(f[0], 800, 15000)), 2.5)[:m]
+    y[:m] += onset * nz / (np.abs(nz).max() + 1e-12) * np.linspace(1, 0, m) ** 2
+    return y
 
-    if kind == "tsip":
-        d = rng.uniform(0.025, 0.055)
-        a, b = rng.uniform(1.15, 1.35), rng.uniform(0.75, 0.9)
-        return tone(d, lambda u: fb * (a + (b - a) * u ** 0.8))
-    if kind == "chip":
-        d = rng.uniform(0.018, 0.035)
-        return tone(d, lambda u: fb * (0.92 + 0.25 * np.sin(np.pi * u) - 0.1 * u), env_pow=1.0, h2=0.15)
-    if kind == "seet":
-        d = rng.uniform(0.12, 0.28)
-        s = rng.uniform(-0.08, 0.03)
-        return tone(d, lambda u: fb * (1.0 + s * u), env_pow=1.2, h2=0.03) * 0.7
-    if kind == "chirp_up":
-        d = rng.uniform(0.04, 0.09)
-        a = rng.uniform(0.65, 0.8)
-        return tone(d, lambda u: fb * (a + (1.05 - a) * u ** 1.4), h2=0.12)
-    if kind == "trill":
-        k = rng.integers(5, 12)
-        rate = rng.uniform(16, 26)
-        n = N(k / rate + 0.05)
+
+def bird_call(rng, kind, fb):
+    """One natural call of a small songbird (all syllables are fast FM sweeps, < 0.1 s each, so
+    nothing is a sustained tone). kinds: tsip | chip | chirp_up | trill | chatter | twitter."""
+    if kind == "tsip":        # thin high down-slur
+        d = rng.uniform(0.03, 0.06)
+        a, b = rng.uniform(1.18, 1.38), rng.uniform(0.72, 0.86)
+        p = rng.uniform(0.6, 1.4)
+        return _syrinx(rng, d, lambda u: fb * (a + (b - a) * u ** p), h2=0.08, breath=0.3, attack=0.12)
+    if kind == "chip":        # very short, steep, broadband down-sweep
+        d = rng.uniform(0.012, 0.024)
+        a, b = rng.uniform(1.35, 1.6), rng.uniform(0.62, 0.78)
+        return _syrinx(rng, d, lambda u: fb * (a + (b - a) * u ** 0.7), h2=0.2, h3=0.08, breath=0.35,
+                       attack=0.2, decay_pow=1.3, onset=0.5)
+    if kind == "chirp_up":    # rising slur with a small overshoot and drop at the end
+        d = rng.uniform(0.045, 0.085)
+        a = rng.uniform(0.62, 0.78)
+        return _syrinx(rng, d, lambda u: fb * (a + (1.12 - a) * np.sin(0.5 * np.pi * np.clip(u * 1.15, 0, 1))
+                                               - 0.08 * np.clip(u - 0.85, 0, None) / 0.15),
+                       h2=0.14, breath=0.3, attack=0.35, decay_pow=2.2)
+    if kind == "trill":       # rapid train of down-swept elements, each slightly different
+        k = int(rng.integers(5, 11))
+        rate = rng.uniform(14, 22)
+        n = N(k / rate + 0.06)
         y = np.zeros(n)
-        for j in range(k):
-            c = bird_call(rng, "chip", fb * (1 + 0.025 * rng.standard_normal()) * (1 - 0.01 * j))
-            add = c * (0.6 + 0.4 * np.sin(np.pi * (j + 0.5) / k))
-            i0 = N(j / rate * (1 + 0.04 * rng.standard_normal()))
-            m = min(len(add), n - i0)
-            if m > 0:
-                y[i0:i0 + m] += add[:m]
+        for jx in range(k):
+            fe = fb * (1 + 0.05 * rng.standard_normal()) * (1 - 0.015 * jx)
+            a, b = rng.uniform(1.25, 1.45), rng.uniform(0.7, 0.82)
+            c = _syrinx(rng, rng.uniform(0.014, 0.026), lambda u, fe=fe, a=a, b=b: fe * (a + (b - a) * u),
+                        h2=0.15, breath=0.35, attack=0.2, decay_pow=1.4, onset=0.4)
+            c = c * (0.55 + 0.45 * np.sin(np.pi * (jx + 0.5) / k)) * rng.uniform(0.75, 1.0)
+            i0 = N(jx / rate * (1 + 0.05 * rng.standard_normal()))
+            mm = min(len(c), n - i0)
+            if mm > 0:
+                y[i0:i0 + mm] += c[:mm]
         return y
-    if kind == "warble":
-        d = rng.uniform(0.12, 0.22)
-        fm, dep = rng.uniform(25, 45), rng.uniform(0.06, 0.12)
-        sl = rng.uniform(-0.1, 0.1)
-        return tone(d, lambda u: fb * (1 + sl * u + dep * np.sin(TWO_PI * fm * u * d + rng.uniform(0, 6))), h2=0.1)
-    if kind == "chatter":
-        k = rng.integers(3, 7)
+    if kind == "chatter":     # sparrow-like buzzy 'chirrup' notes: up-down contour, AM flutter, rich
+        k = int(rng.integers(2, 5))
         segs = []
-        for j in range(k):
-            segs.append(bird_call(rng, rng.choice(["chip", "tsip"]), fb * rng.uniform(0.85, 1.15)))
-            segs.append(np.zeros(N(rng.uniform(0.03, 0.07))))
+        for _ in range(k):
+            fe = fb * rng.uniform(0.55, 0.75)
+            d = rng.uniform(0.04, 0.075)
+            pk = rng.uniform(0.3, 0.5)
+            c = _syrinx(rng, d, lambda u, fe=fe, pk=pk: fe * (0.8 + 0.45 * np.exp(-0.5 * ((u - pk) / 0.22) ** 2) - 0.12 * u),
+                        h2=0.35, h3=0.15, breath=0.45, attack=0.25, decay_pow=1.5,
+                        am=rng.uniform(0.35, 0.6), am_rate=rng.uniform(110, 240), onset=0.45)
+            segs.append(c * rng.uniform(0.7, 1.0))
+            segs.append(np.zeros(N(rng.uniform(0.04, 0.09))))
+        return np.concatenate(segs)
+    if kind == "twitter":     # irregular burst of varied short elements (no repeated pitch pattern)
+        k = int(rng.integers(3, 7))
+        segs = []
+        for _ in range(k):
+            sub = ["chip", "tsip", "chirp_up"][int(rng.integers(3))]
+            segs.append(bird_call(rng, sub, fb * rng.uniform(0.8, 1.25)) * rng.uniform(0.5, 1.0))
+            segs.append(np.zeros(N(rng.uniform(0.025, 0.07))))
         return np.concatenate(segs)
     raise ValueError(kind)
 
@@ -527,35 +566,46 @@ def gen_wind(dur, rng, strength=1.0, gustiness=0.6, rate=0.08, bias=0.0, bright=
     return out(y)
 
 
-def gen_birds(dur, rng, n_birds=4, rate=0.2, dist=(0.4, 1.0), fmin=2500.0, fmax=6500.0, kinds=None,
-              width=0.85, bout=(1, 3), start=0.3, density=None):
-    """Sparse, distant natural bird calls. Each bird: own pitch/pan/distance, calls in short
-    irregular bouts of the same call type (no melodic sequences)."""
+def gen_birds(dur, rng, n_birds=4, rate=0.18, dist=(0.6, 1.0), fmin=2500.0, fmax=6500.0, kinds=None,
+              width=0.85, bout=(1, 2), start=0.3, density=None, avoid=None):
+    """Sparse, distant natural bird calls. rate = bouts per second for the whole bed (shared by
+    n_birds birds); each bird has its own call type, pitch, position and distance and calls in short
+    irregular bouts (no melodic sequences).  Distance: level, air absorption (high-frequency loss
+    grows with distance) and a ground reflection (short comb).  avoid: [[t0, t1], ...] (cue-relative)
+    spans in which no call may sound (key words of the narration)."""
     n = N(dur)
     y = np.zeros((n, 2))
-    kinds = kinds or ["tsip", "chip", "seet", "chirp_up", "trill", "warble", "chatter"]
+    kinds = kinds or ["tsip", "chip", "chirp_up", "trill", "chatter", "twitter"]
     dens = bpc(density, 1.0)
-    for b in range(int(n_birds)):
+    av = [(float(a) - 0.12, float(b) + 0.12) for a, b in (avoid or [])]
+    per = rate / max(int(n_birds), 1)
+    for _b in range(int(n_birds)):
         pan = rng.uniform(-width, width)
         d = rng.uniform(*dist)
         fb = np.exp(rng.uniform(np.log(fmin), np.log(fmax)))
         kind = kinds[rng.integers(len(kinds))]
         g = 10 ** (-d * 1.4)
-        cut = 11000 * (1 - 0.65 * d)
-        ts = poisson_times(dur - start - 0.4, lambda t: rate * dens(t), rate * 1.5, rng, start)
+        cut = 12000.0 * (1 - 0.5 * d)
+        gd = N(rng.uniform(0.0008, 0.0030))      # ground reflection delay
+        ts = poisson_times(max(dur - start - 0.4, 0.01), lambda t: per * dens(t), per * 2.0, rng, start)
         last = -9.0
         for t0 in ts:
-            if t0 - last < 1.2:
+            if t0 - last < 1.5:
                 continue
-            last = t0
-            m = rng.integers(bout[0], bout[1] + 1)
-            t = t0
+            m = int(rng.integers(bout[0], bout[1] + 1))
+            calls, t = [], t0
             for _ in range(m):
-                c = bird_call(rng, kind, fb * (1 + 0.02 * rng.standard_normal()))
-                c = lp(c, cut, 2) * g * rng.uniform(0.6, 1.0)
-                add_mono(y, c, N(t), pan + 0.05 * rng.standard_normal())
-                t += len(c) / SR + rng.uniform(0.12, 0.5)
+                c = bird_call(rng, kind, fb * (1 + 0.03 * rng.standard_normal()))
+                calls.append((t, c))
+                t += len(c) / SR + rng.uniform(0.15, 0.55)
+            if any(not (t - 0.0 <= a or t0 >= b) for a, b in av):
+                continue                            # the bout would overlap a key word: skip it
             last = t
+            for tc, c in calls:
+                c = lp(c, cut, 1)
+                c = c - 0.45 * np.concatenate([np.zeros(gd), c[:-gd]])
+                c = c * g * rng.uniform(0.6, 1.0)
+                add_mono(y, c, N(tc), pan + 0.05 * rng.standard_normal())
     return out(y)
 
 
@@ -986,8 +1036,8 @@ def gen_sand(dur, rng, strength=1.0, gustiness=0.7, events=None, threshold=0.35,
     G = np.clip((g(t) - threshold) / (1 - threshold), 0, 1)
     G2 = np.clip((g(t - 0.3) - threshold) / (1 - threshold), 0, 1)
     def layer(Gv):
-        a = click_field(n, rng, 200 + 6000 * Gv, 3500, 14000, 0.7, rmax=6200)
-        b = click_field(n, rng, 5 + 120 * Gv, 1200, 6000, 1.0, rmax=130) * 2.5
+        a = click_field(n, rng, 200 + 6000 * Gv, 3500, 14000, 0.4, rmax=6200, clip_q=0.99)
+        b = click_field(n, rng, 5 + 120 * Gv, 1200, 6000, 0.4, rmax=130, clip_q=0.99)
         h = hp(rng.standard_normal(n), 5000, 2) * Gv * 0.08
         return (a + b) * (Gv ** 0.7) * 0.5 + h
     return out(np.stack([layer(G), layer(G2)], 1) * strength)
@@ -1207,20 +1257,33 @@ def gen_bubble_pass(dur, rng, sync=0.4, r=4.5e-3, pan=0.0):
     return out(lp(y, 5000, 1))
 
 
-def gen_immerse(dur, rng, sync=0.15):
-    """Arriving underwater: muffled 'whoomp' of water closing over, a swirl of bubbles that
-    rises away, low pressure swell."""
+def gen_immerse(dur, rng, sync=0.15, whoomp=0.0, n_bubbles=8, bubble_gain=0.05, swell=0.6, muffle=900.0):
+    """Arriving under water by a cut (not a plunge): a soft low pressure swell that blooms as the
+    sound world goes muffled, and a few distant bubbles rising.  whoomp > 0 adds the 'water closing
+    over the camera' thump of a real plunge (not used when the camera never enters the water)."""
     n = N(dur)
     t = tvec(n)
     y = np.zeros((n, 2))
-    env = (1 - np.exp(-np.clip(t - sync + 0.08, 0, None) / 0.03)) * np.exp(-np.clip(t - sync, 0, None) / 0.35)
-    whoomp = lp(brown(n, rng), 260, 3) * env
-    y += np.stack([whoomp, lp(brown(n, rng), 260, 3) * env], 1)
-    k = 60
-    ts = sync + np.sort(rng.exponential(0.25, k))
-    add_bubbles(y, ts, powerlaw_radii(rng, k, 0.8e-3, 6e-3, 2.0), rng, pans=rng.uniform(-0.8, 0.8, k),
-                gain=0.08, xi=(0.05, 0.22), gains=np.exp(-(ts - sync) / 0.5))
-    return out(lp(y, 2500, 2))
+    if swell:
+        e = np.where(t < sync, smoothstep(np.clip((t - sync + 0.25) / 0.25, 0, 1)),
+                     np.exp(-np.clip(t - sync, 0, None) / 0.45))
+        def mag(T, F):
+            return m_lp(F, muffle, 2) * m_hp(F, 35, 2) * m_tilt(F, -2.0, 200)
+        sw = np.stack([shaped_noise(n, mag, rng), shaped_noise(n, mag, rng)], 1) * e[:, None]
+        y += swell * sw / (np.abs(sw).max() + 1e-12)
+    if whoomp:
+        env = (1 - np.exp(-np.clip(t - sync + 0.08, 0, None) / 0.03)) * np.exp(-np.clip(t - sync, 0, None) / 0.35)
+        wh = np.stack([lp(brown(n, rng), 260, 3) * env, lp(brown(n, rng), 260, 3) * env], 1)
+        y += whoomp * wh / (np.abs(wh).max() + 1e-12)
+    k = int(n_bubbles)
+    if k:
+        ts = sync + 0.1 + np.sort(rng.exponential(0.35, k))
+        bb = np.zeros((n, 2))
+        add_bubbles(bb, ts, powerlaw_radii(rng, k, 1.0e-3, 4e-3, 2.0), rng, pans=rng.uniform(-0.7, 0.7, k),
+                    gain=1.0, xi=(0.05, 0.2), gains=np.exp(-(ts - sync) / 0.6))
+        bb = lp(bb, 2200, 2)
+        y += bubble_gain * 10 * bb / (np.abs(bb).max() + 1e-12) * (np.abs(y).max() if np.any(y) else 0.1)
+    return out(y)
 
 
 def gen_pour(dur, rng, sync=0.05, stop=1.8, fill0=0.1, fill1=0.7, H=0.115, D=0.072, rate=1100.0, pan=0.0,

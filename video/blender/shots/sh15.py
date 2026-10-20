@@ -1996,7 +1996,11 @@ def volume_box():
     m_ = 0.03
     cs = [Vector((xo, y, z)) for (y, z) in ((WIN_Y0 - m_, WIN_Z0 - m_), (WIN_Y1 + m_, WIN_Z0 - m_),
                                              (WIN_Y1 + m_, WIN_Z1 + m_), (WIN_Y0 - m_, WIN_Z1 + m_))]
-    L = 3.2
+    # start the dusty air a little inside the room (keeps the reveal and the wall around the window
+    # free of volume noise)
+    k0 = (WALL_THICK + 0.12) / SUN_DIR.x
+    cs = [c + SUN_DIR * k0 for c in cs]
+    L = 2.8
     bm = bmesh.new()
     a = [bm.verts.new(c) for c in cs]
     b = [bm.verts.new(c + SUN_DIR * L) for c in cs]
@@ -2008,7 +2012,7 @@ def volume_box():
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     m, nt, out = new_mat("air")
     v = NN(nt, "ShaderNodeVolumePrincipled")
-    v.inputs["Density"].default_value = float(os.environ.get("SH15_DENS", "0.35"))
+    v.inputs["Density"].default_value = float(os.environ.get("SH15_DENS", "0.30"))
     v.inputs["Anisotropy"].default_value = 0.62
     v.inputs["Color"].default_value = (1.0, 0.96, 0.90, 1)
     LK(nt, v.outputs[0], out.inputs["Volume"])
@@ -2071,12 +2075,18 @@ def build_motes(n=700, seed=7):
     ng.links.new(m2p.outputs[0], setp.inputs["Geometry"])
     ng.links.new(add.outputs[0], setp.inputs["Offset"])
     smat = ng.nodes.new("GeometryNodeSetMaterial")
+    # additive dust: never occludes (transparent) but adds the light it scatters -> sparkles only
+    # where the sun hits it, invisible in shade
     m, nt, out = new_mat("mote")
-    p = principled(nt, **{"Base Color": (0.40, 0.38, 0.35), "Roughness": 0.5})
+    tp = NN(nt, "ShaderNodeBsdfTransparent")
     tr = NN(nt, "ShaderNodeBsdfTranslucent")
-    tr.inputs["Color"].default_value = (0.55, 0.52, 0.48, 1)
-    mx = NN(nt, "ShaderNodeMixShader"); mx.inputs[0].default_value = 0.6
-    LK(nt, p.outputs[0], mx.inputs[1]); LK(nt, tr.outputs[0], mx.inputs[2]); LK(nt, mx.outputs[0], out.inputs["Surface"])
+    tr.inputs["Color"].default_value = (0.75, 0.70, 0.62, 1)
+    df = NN(nt, "ShaderNodeBsdfDiffuse")
+    df.inputs["Color"].default_value = (0.35, 0.33, 0.30, 1)
+    a1 = NN(nt, "ShaderNodeAddShader"); a2 = NN(nt, "ShaderNodeAddShader")
+    LK(nt, tp.outputs[0], a1.inputs[0]); LK(nt, tr.outputs[0], a1.inputs[1])
+    LK(nt, a1.outputs[0], a2.inputs[0]); LK(nt, df.outputs[0], a2.inputs[1])
+    LK(nt, a2.outputs[0], out.inputs["Surface"])
     smat.inputs["Material"].default_value = m
     ng.links.new(setp.outputs[0], smat.inputs["Geometry"])
     ng.links.new(smat.outputs[0], go.inputs[0])
