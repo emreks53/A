@@ -564,7 +564,7 @@ def _read_rgba(path, xywh, w, h):
     return (x0, y0, x1 - x0, y1 - y0), im[y0 - y:y1 - y, x0 - x:x1 - x]
 
 
-def apply_overlay(disp, paths, w, h, leg_cfg, scale):
+def apply_overlay(disp, paths, w, h, leg_cfg, scale, glow_cfg=None):
     """Legibility darkening, then OVER layer and additive (screen) layer, processed inside their bounding boxes.
     Returns (disp, graphics alpha map or None)."""
     over_p, over_box, add_p, add_box, boxes = paths
@@ -586,9 +586,21 @@ def apply_overlay(disp, paths, w, h, leg_cfg, scale):
         if r:
             (x, y, bw, bh), im = r
             a = im.astype(np.float32) * (1 / 255.0)
-            L = np.clip(a[..., 2::-1] * a[..., 3:4], 0, 1)
-            reg = np.clip(disp[y:y + bh, x:x + bw], 0, 1)
-            disp[y:y + bh, x:x + bw] = 1 - (1 - reg) * (1 - L)
+            L = a[..., 2::-1] * a[..., 3:4]                      # emitted light (premultiplied)
+            g = glow_cfg or {"sigmas": [2.5, 8, 22], "weights": [0.5, 0.42, 0.3], "core": 0.45}
+            m = int(3 * max(g["sigmas"]) * scale) + 2
+            X0, Y0, X1, Y1 = max(0, x - m), max(0, y - m), min(w, x + bw + m), min(h, y + bh + m)
+            pad = np.zeros((Y1 - Y0, X1 - X0, 3), np.float32)
+            pad[y - Y0:y - Y0 + bh, x - X0:x - X0 + bw] = L
+            acc = pad * g["core"]
+            for sg, wt in zip(g["sigmas"], g["weights"]):
+                sg *= scale
+                if sg >= 5:
+                    acc += wt * down_blur_up(pad, sg, pad.shape[1], pad.shape[0])
+                else:
+                    acc += wt * cv2.GaussianBlur(pad, (0, 0), sg)
+            reg = np.clip(disp[Y0:Y1, X0:X1], 0, 1)
+            disp[Y0:Y1, X0:X1] = 1 - (1 - reg) * (1 - np.clip(acc, 0, 1))
     return disp, gfx
 
 
@@ -696,7 +708,8 @@ def main():
         tim["fx"] += t2 - t1
         gfx = None
         if man is not None:
-            disp, gfx = apply_overlay(disp, OV.frame_paths(man, f), w, h, edit["finish"]["legibility"], scale)
+            disp, gfx = apply_overlay(disp, OV.frame_paths(man, f), w, h, edit["finish"]["legibility"], scale,
+                                      edit["finish"].get("overlay_glow"))
         t3 = time.time()
         tim["ov"] += t3 - t2
         if not a.no_finish:

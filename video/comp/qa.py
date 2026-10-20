@@ -55,7 +55,8 @@ def comp(bg, paths, scale):
     """Same overlay path as the compositor (legibility darkening, OVER, screen-add), on a display-space bg."""
     import composite as CP
     ed = OV.load_json(os.path.join(OV.HERE, "edit.json"))
-    img, _ = CP.apply_overlay(bg.copy(), paths, bg.shape[1], bg.shape[0], ed["finish"]["legibility"], scale)
+    img, _ = CP.apply_overlay(bg.copy(), paths, bg.shape[1], bg.shape[0], ed["finish"]["legibility"], scale,
+                              ed["finish"].get("overlay_glow"))
     return np.clip(img, 0, 1)
 
 
