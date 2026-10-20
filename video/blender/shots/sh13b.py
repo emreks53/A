@@ -54,7 +54,6 @@ def build(ctx):
     # ---------------------------------------------------------------- ground + meadow
     soil = C.principled("S3_meadowsoil", base=(0.07, 0.055, 0.035), rough=0.95)
     bpy.ops.mesh.primitive_plane_add(size=12); g = bpy.context.object; g.data.materials.append(soil)
-    grass_carpet(rnd)
 
     # ---------------------------------------------------------------- the eight subjects
     # Layout is solved in screen space for the "birer birer" hold so the eight subjects are
@@ -117,6 +116,10 @@ def build(ctx):
     sd = L.seedling(loc=tuple(seed_loc), wilt=0.0, wet=0.15, rot_z=0.35)
     trk["h"] = C.empty("TRK_h", (0, 0, 0)); trk["h"].parent = sd["apex"]
     bpy.context.view_layer.update()
+    # macro lens corridor: no blades between the close-up camera and the leaf tip (they would only be
+    # huge defocused smears costing render time)
+    tip0 = sd["tips"][0].matrix_world.translation.copy()
+    grass_carpet(rnd, corridor=(tip0 + Vector((-0.03, -0.072, 0)), tip0))
     meadow(rnd, [(o.matrix_world.translation.x, o.matrix_world.translation.y, 0.05) for o in trk.values()] +
            [(seed_loc.x, seed_loc.y, 0.07)])
     bpy.context.view_layer.update()
@@ -225,7 +228,7 @@ def top_point(o):
 
 # ============================================================================ meadow filler
 
-def grass_carpet(rnd, n=70000):
+def grass_carpet(rnd, n=70000, corridor=None):
     """Dense short grass blades (hair curves) carpeting the view wedge, taller further back."""
     cv = bpy.data.hair_curves.new("S3_grass")
     pts, rads = [], []
@@ -234,6 +237,12 @@ def grass_carpet(rnd, n=70000):
         x = rnd.uniform(-2.0, 2.0); y = -0.25 + 4.5 * rnd.random() ** 1.6
         if abs(x) > 0.35 + 0.5 * max(0.0, y):
             continue
+        if corridor:
+            a_, b_ = corridor
+            ab = Vector((b_.x - a_.x, b_.y - a_.y)); ap = Vector((x - a_.x, y - a_.y))
+            t_ = max(0.0, min(1.2, ap.dot(ab) / ab.length_squared))
+            if (ap - ab * t_).length < 0.018 + 0.02 * (1 - min(1.0, t_)):
+                continue
         h = rnd.uniform(0.025, 0.07) * (1 + 0.8 * min(1.0, max(0.0, y) / 1.5)) * (0.6 if -0.32 < x < 0.32 and 0.05 < y < 1.25 else 1)
         lean = Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), 0)) * h * rnd.uniform(0.1, 0.45)
         b = Vector((x, y, 0))
