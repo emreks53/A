@@ -15,7 +15,7 @@ import common as C
 import lib_s5 as H
 
 SUN_DIR = None
-GRIP_GAP = 0.010
+GRIP_GAP = 0.004
 
 
 # --------------------------------------------------------------------------- set
@@ -165,7 +165,7 @@ def arm_matrix(wrist_w, rot3):
     return Matrix.Translation(wrist_w) @ rot3.to_4x4() @ Matrix.Translation(-H.WRIST)
 
 
-CURL_W = {"thumb": (0.45, 0.8, 0.7), "index": (0.85, 1.0, 0.65), "middle": (0.85, 1.0, 0.65),
+CURL_W = {"thumb": (0.25, 0.55, 0.35), "index": (0.85, 1.0, 0.65), "middle": (0.85, 1.0, 0.65),
           "ring": (0.9, 1.0, 0.65), "little": (0.95, 1.0, 0.7)}
 SPREAD = {"thumb": 0.0, "index": -0.06, "middle": 0.0, "ring": 0.05, "little": 0.12}
 
@@ -210,9 +210,9 @@ def build(ctx):
     skin = H.skin_material(hand, nails)
     C.assign(hand, skin if not os.environ.get("S5_SIMPLESKIN") else C.principled("simple", (0.5, 0.28, 0.19), 0.45))
     hand.data.materials.append(H.hair_material())
-    sd = hand.modifiers.new("Subsurf", "SUBSURF"); sd.levels = 0; sd.render_levels = 2
+    sd = hand.modifiers.new("Subsurf", "SUBSURF"); sd.levels = 0; sd.render_levels = int(os.environ.get("S5_SUBD", "1"))
     if ctx.mode != "animatic" and not os.environ.get("S5_NOHAIR"):
-        H.add_body_hair(hand, count=int(os.environ.get("S5_HAIRN", "1200")))
+        H.add_body_hair(hand, count=int(os.environ.get("S5_HAIRN", "500")))
         sc.cycles_curves.shape = os.environ.get("S5_CURVE", "RIBBONS")
     cuff = H.cuff(hand, arm)
 
@@ -224,7 +224,8 @@ def build(ctx):
     A = Vector(apple.location)
 
     # grasp orientation and pose (solved for contact below)
-    G = dict(yaw=14.0, elev=22.0, roll=30.0)
+    _g = [float(x) for x in os.environ.get("S5_G", "-30,15,0,25").split(",")]
+    G = dict(yaw=_g[0], elev=_g[1], roll=_g[2])
     rot_g = hand_rot(**G)
     P_open = dict(wflex=14.0, wdev=-4.0, curl={"thumb": 0.10, "index": 0.10, "middle": 0.12, "ring": 0.16, "little": 0.22},
                   spread=1.6, topp=0.35, tswing=-0.15)
@@ -246,7 +247,7 @@ def build(ctx):
     ap_inv = apple_mesh.matrix_world.inverted()
     rad = {"thumb": (0.0105, 0.0095, 0.0085), "index": (0.0092, 0.0084, 0.0076), "middle": (0.0095, 0.0087, 0.0078),
            "ring": (0.009, 0.0082, 0.0074), "little": (0.0078, 0.0072, 0.0066)}
-    P_grab = dict(wflex=12.0, wdev=-3.0, curl=dict(P_open["curl"]), spread=0.9, topp=0.22, tswing=-0.10)
+    P_grab = dict(wflex=_g[3], wdev=-3.0, curl=dict(P_open["curl"]), spread=0.9, topp=0.22, tswing=-0.10)
     set_pose(arm, P_grab)
     arm.matrix_world = arm_matrix(Vector((0, 0, 0)), rot_g)
     bpy.context.view_layer.update()
@@ -282,7 +283,7 @@ def build(ctx):
         set_pose(arm, P_grab); bpy.context.view_layer.update()
         if pen(k) > 0:
             print("[sh08] finger never touches:", k, flush=True)
-            P_grab["curl"][k] = P_grab["curl"].get("ring", 0.9) * 0.9 + 0.25
+            P_grab["curl"][k] = {"thumb": 0.5, "index": 0.95, "middle": 1.05, "ring": 1.15, "little": 1.25}[k]
             continue
         for it in range(14):
             mid = (lo + hi) / 2
@@ -292,7 +293,7 @@ def build(ctx):
                 lo = mid
             else:
                 hi = mid
-        P_grab["curl"][k] = lo
+        P_grab["curl"][k] = min(lo, 0.75) if k == "thumb" else lo
         print(f"[sh08] contact curl {k}: {lo:.3f}", flush=True)
     set_pose(arm, P_grab)
 
@@ -312,10 +313,10 @@ def build(ctx):
     lift = Vector((0.010, -0.018, 0.075))
     rot_lift = hand_rot(G["yaw"] - 6, G["elev"] - 4, G["roll"] + 6)
     path = [
-        (ctx.t0 - 0.3, W_grab + Vector((0.30, 0.07, 0.10)), hand_rot(G["yaw"] + 16, G["elev"] - 6, G["roll"] - 25)),
-        (t_in - 0.25, W_grab + Vector((0.20, 0.045, 0.075)), hand_rot(G["yaw"] + 12, G["elev"] - 4, G["roll"] - 18)),
-        (t_in + 0.30, W_grab + Vector((0.075, 0.015, 0.040)), hand_rot(G["yaw"] + 5, G["elev"] - 1, G["roll"] - 8)),
-        (t_grab - 0.30, W_grab + Vector((0.012, 0.004, 0.017)), hand_rot(G["yaw"] + 1, G["elev"], G["roll"] - 2)),
+        (ctx.t0 - 0.3, W_grab + Vector((0.34, -0.03, 0.050)), hand_rot(G["yaw"] + 6, G["elev"] - 8, G["roll"] - 30)),
+        (t_in - 0.25, W_grab + Vector((0.23, -0.02, 0.045)), hand_rot(G["yaw"] + 5, G["elev"] - 7, G["roll"] - 24)),
+        (t_in + 0.32, W_grab + Vector((0.085, -0.008, 0.036)), hand_rot(G["yaw"] + 3, G["elev"] - 3, G["roll"] - 12)),
+        (t_grab - 0.30, W_grab + Vector((0.016, 0.0, 0.016)), hand_rot(G["yaw"] + 1, G["elev"], G["roll"] - 4)),
         (t_grab - 0.02, W_grab, rot_g),
         (t_grab + 0.16, W_grab + Vector((0.0, 0.0, -0.0015)), rot_g),
         (t_grab + 0.95, W_grab + lift * 0.85, hand_rot(G["yaw"] - 4, G["elev"] - 3, G["roll"] + 4)),
@@ -378,7 +379,7 @@ def build(ctx):
     def arm_world():
         return arm.matrix_world.copy()
 
-    C0 = Vector((-0.07, -0.80, 0.285))
+    C0 = Vector((-0.12, -1.06, 0.31))
     frames = list(range(ctx.f0 - 2, ctx.f1 + 3))
     sd_v = sd.levels
     for f in frames:
@@ -391,8 +392,8 @@ def build(ctx):
         Aw = apple.matrix_world.translation.copy()
         # phase 1: documentary framing on apple + hand, slow drift right and a gentle tilt with the lift
         drift = C.remap(t, ctx.t0, t_asl, C.smooth)
-        p1 = C0 + Vector((0.035 * drift, 0.05 * drift, 0.012 * drift))
-        lk1 = Vector((0.004, 0.02, 0.045)).lerp(Aw * 0.55 + wrist_w * 0.45, C.remap(t, t_grab - 0.6, t_grab + 1.2))
+        p1 = C0 + Vector((0.015 * drift, 0.05 * drift, 0.020 * drift))
+        lk1 = Vector((0.004, 0.02, 0.045)).lerp(Aw * 0.75 + wrist_w * 0.25, C.remap(t, t_grab - 0.6, t_grab + 1.2))
         lk1 = lk1.lerp(Vector((0.0, 0.02, 0.045)), 0.0)
         f1 = Aw.lerp(wrist_w, 0.25 * C.remap(t, t_grab, t_grab + 1.0))
         if t < t_grab - 0.6:
@@ -400,17 +401,17 @@ def build(ctx):
         elif t < t_grab + 0.2:
             f1 = Vector((0.0, 0.0, 0.045)).lerp(Aw.lerp(wrist_w, 0.1), C.remap(t, t_grab - 0.6, t_grab + 0.2))
         # phase 2: glide along the wrist/forearm into macro skin
-        s = C.remap(t, t_asl, t_deg + 0.05, lambda x: C.smoother(x) * 0.8 + max(0.0, min(1.0, x)) * 0.2)
+        s = C.remap(t, t_asl, t_deg - 0.04, lambda x: C.smooth(x) * 0.7 + max(0.0, min(1.0, x)) * 0.3)
         fa_dir = (Mw.to_3x3() @ (H.ELBOW - H.WRIST)).normalized()
         side = N_w.cross(fa_dir).normalized()
-        dist = C.lerp(0.42, 0.072, s ** 0.85)
+        dist = math.exp(C.lerp(math.log(0.40), math.log(0.066), s))
         along = C.lerp(-0.055, -0.012, s)
         offn = N_w * dist * 0.80 + side * dist * (0.35 - 0.25 * s) - fa_dir * dist * 0.30
         p2 = S_w + fa_dir * along + offn
         lk2 = S_w + fa_dir * along * (1 - s)
         # tail end: keep creeping in (-> tissue)
         creep = C.remap(t, t_deg, ctx.t1 + 0.3, lambda x: max(0.0, min(1.0, x)))
-        p2 = p2 - (p2 - S_w).normalized() * 0.018 * creep
+        p2 = p2 - (p2 - S_w).normalized() * 0.016 * creep
         b = C.remap(t, t_asl - 0.10, t_asl + 0.9)
         pos = p1.lerp(p2, b)
         look = lk1.lerp(lk2, C.remap(t, t_asl - 0.1, t_asl + 0.7))
@@ -430,8 +431,8 @@ def build(ctx):
     vs.exposure = 1.0; vs.keyframe_insert("exposure", frame=int(round(40.72 * C.FPS)))
     vs.exposure = 0.0; vs.keyframe_insert("exposure", frame=int(round(41.05 * C.FPS)))
     sc.frame_set(ctx.f0)
-    return {"final_spp": 32, "preview_spp": 24, "max_bounces": 6, "diffuse_bounces": 2, "glossy_bounces": 2,
-            "transmission_bounces": 6, "texture_limit": "2048"}
+    return {"final_spp": int(os.environ.get("S5_SPP", "32")), "preview_spp": 24, "max_bounces": 4, "diffuse_bounces": 1,
+            "glossy_bounces": 1, "transmission_bounces": 4, "transparent_bounces": 8, "final_threshold": 0.03, "texture_limit": "2048", "motion_blur": not os.environ.get("S5_NOMB")}
 
 
 C.run("sh08", build)

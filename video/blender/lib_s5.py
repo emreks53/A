@@ -105,8 +105,51 @@ def build_hand_mesh(pre_subdiv=1):
         C.apply_modifiers(o)
     for p in o.data.polygons:
         p.use_smooth = True
+    _masculinise(o)
     _rest_attributes(o)
     return o
+
+
+def _masculinise(o):
+    """Adult man's hand: thicker fingers, broader palm, bony knuckles, raised extensor tendons."""
+    segs = []
+    for k in FINGERS:
+        J = JOINTS[k]
+        for i in range(3):
+            segs.append((k, i, J[i], J[i + 1]))
+    pc = Vector((0.012, 0.0, -0.06))
+    for v in o.data.vertices:
+        p = v.co.copy(); n = v.normal.copy()
+        # nearest digit segment
+        best = None
+        for k, i, a, b in segs:
+            d, t = _seg_dist(p, a, b)
+            if best is None or d < best[0]:
+                best = (d, t, k, i, a, b)
+        d, t, k, i, a, b = best
+        q = p.copy()
+        if d < 0.016 and not (k == "thumb" and i == 0) and not (i == 0 and t < 0.25):
+            axis = a + (b - a) * t
+            w = 1.0 if i > 0 or t > 0.45 else C.smooth((t - 0.25) / 0.2)
+            q = axis + (p - axis) * (1.0 + (0.09 if k != "thumb" else 0.05) * w)
+        # broader palm / metacarpal region
+        if -0.105 < p.z < 0.0:
+            wz = C.smooth((p.z + 0.105) / 0.02) * (1 - C.smooth((p.z + 0.005) / 0.01))
+            q.x = q.x + (p.x - pc.x) * 0.06 * wz
+        # dorsal knuckle bumps and tendon ridges
+        dors = max(0.0, -n.y)
+        bump = 0.0
+        for kk in ("index", "middle", "ring", "little"):
+            J = JOINTS[kk]
+            mcp = J[0] + Vector((0, -0.012, 0)); pip = J[1] + Vector((0, -0.008, 0))
+            bump += 0.0011 * math.exp(-((p - mcp).length / 0.0055) ** 2)
+            bump += 0.0008 * math.exp(-((p - pip).length / 0.0045) ** 2)
+            # extensor tendon from wrist to MCP on the back of the hand
+            dt, tt = _seg_dist(p, WRIST + Vector((0, -0.02, 0)), mcp)
+            bump += 0.0006 * math.exp(-(dt / 0.0028) ** 2) * C.smooth(tt / 0.3) * (1 - C.smooth((tt - 0.85) / 0.15))
+        q = q + n * bump * dors
+        v.co = q
+    o.data.update()
 
 
 def _seg_dist(p, a, b):
@@ -144,8 +187,14 @@ def _rest_attributes(o):
         # hair: dorsal forearm and a little on the back of the hand / proximal phalanges
         # concentrated on the dorsal forearm where the macro push lands (cost scales with strand count)
         fa = C.smooth((p.z - 0.01) / 0.03) * (1.0 - C.smooth((p.z - 0.13) / 0.03))
-        hb = C.smooth((p.z + 0.05) / 0.03) * 0.15
-        attrs["hairmask"].data[v.index].value = max(fa * C.smooth((dors - 0.2) / 0.5), hb * dors)
+        hb = C.smooth((p.z + 0.07) / 0.03) * 0.35
+        ph = 0.0
+        for k in ("index", "middle", "ring", "little"):
+            J = JOINTS[k]
+            d, t = _seg_dist(p, J[0], J[1])
+            if d < 0.014 and 0.25 < t < 0.75:
+                ph = max(ph, 0.55)
+        attrs["hairmask"].data[v.index].value = max(fa * C.smooth((dors - 0.2) / 0.5), max(hb, ph) * C.smooth((dors - 0.4) / 0.4))
 
 
 # --------------------------------------------------------------------------- armature
@@ -181,6 +230,9 @@ def build_armature(hand):
     hand.select_set(True); arm.select_set(True)
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.parent_set(type="ARMATURE_AUTO")
+    for md in hand.modifiers:
+        if md.type == "ARMATURE":
+            md.use_deform_preserve_volume = True
     ok = any(g.name == "index_3" for g in hand.vertex_groups)
     print("[s5] bone heat weights:", ok, len(hand.vertex_groups), flush=True)
     for pb in arm.pose.bones:
@@ -285,82 +337,76 @@ def skin_material(hand, nails):
 
     # ---------------- micro relief (heights in arbitrary units, ~1 = 50 microns)
     pores = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, _vor(nt, R, 2600.0), 0.0, 0.22))           # 1 at pore centres
-    pores2 = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, _vor(nt, R, 1300.0), 0.0, 0.16))
     net1 = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, _vor(nt, R, 650.0, "DISTANCE_TO_EDGE"), 0.0, 0.09))
-    net2 = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, _vor(nt, R, 230.0, "DISTANCE_TO_EDGE"), 0.0, 0.06))
     # knuckle wrinkles: bands across the fingers (fingers run along rest Z), wobbly
     wv = nt.nodes.new("ShaderNodeTexWave"); wv.wave_type = "BANDS"; wv.bands_direction = "Z"
     wv.wave_profile = "SIN"
     wv.inputs["Scale"].default_value = 520.0; wv.inputs["Distortion"].default_value = 9.0
-    wv.inputs["Detail"].default_value = 3.0; wv.inputs["Detail Scale"].default_value = 1.6
+    wv.inputs["Detail"].default_value = 1.0; wv.inputs["Detail Scale"].default_value = 1.6
     nt.links.new(R, wv.inputs["Vector"])
     wr = _math(nt, "POWER", wv.outputs["Fac"], 3.0)
     wrinkles = _math(nt, "MULTIPLY", wr, _smoothstep(nt, knuck, 0.15, 0.8))
-    lumpy = _noise(nt, R, 90.0, 6.0, 0.6)
+    lumpy = _noise(nt, R, 90.0, 2.0, 0.6)
     # veins on the back of hand / forearm: stretched cellular edges
     vs = nt.nodes.new("ShaderNodeMapping"); vs.inputs["Scale"].default_value = (1.6, 1.6, 0.45)
     nt.links.new(R, vs.inputs["Vector"])
-    vn = _noise(nt, R, 30.0, 2.0, 0.5, "Color")
-    vmix = nt.nodes.new("ShaderNodeMix"); vmix.data_type = "VECTOR"; vmix.inputs[0].default_value = 0.012
-    nt.links.new(vs.outputs[0], vmix.inputs[4]); nt.links.new(vn, vmix.inputs[5])
-    vedge = _vor(nt, vmix.outputs[1], 26.0, "DISTANCE_TO_EDGE")
-    vein = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, vedge, 0.0, 0.09))
+    vno = _noise(nt, vs.outputs[0], 22.0, 2.0, 0.5)
+    vein = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, _math(nt, "ABSOLUTE", _math(nt, "SUBTRACT", vno, 0.5)), 0.0, 0.035))
     vmask = _math(nt, "MULTIPLY", _smoothstep(nt, dorsal, 0.4, 0.9),
                   _smoothstep(nt, _sep(nt, R, 2), -0.075, -0.03))
     vein = _math(nt, "MULTIPLY", vein, vmask)
-    vein = _math(nt, "MULTIPLY", vein, _smoothstep(nt, _noise(nt, R, 14.0, 2.0), 0.42, 0.62))
 
     h = _math(nt, "MULTIPLY", pores, -0.9)
-    h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", pores2, -0.35))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", net1, -0.55))
-    h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", net2, -0.45))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", wrinkles, -1.6))
     h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", lumpy, 0.8))
-    h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", vein, 6.0))
+    h = _math(nt, "ADD", h, _math(nt, "MULTIPLY", vein, 3.0))
     bump = _node(nt, "ShaderNodeBump")
     bump.inputs["Strength"].default_value = 1.0
-    bump.inputs["Distance"].default_value = 0.00004
+    bump.inputs["Distance"].default_value = 0.00007
     nt.links.new(h, bump.inputs["Height"])
-    # broad bump for the coat (oily layer follows the large forms, not the pores)
-    bump2 = _node(nt, "ShaderNodeBump")
-    bump2.inputs["Strength"].default_value = 1.0; bump2.inputs["Distance"].default_value = 0.00004
-    nt.links.new(_math(nt, "ADD", _math(nt, "MULTIPLY", lumpy, 0.8), _math(nt, "MULTIPLY", wrinkles, -1.2)), bump2.inputs["Height"])
-
     # ---------------- colour
-    base = (0.50, 0.275, 0.185)
-    blotch = _noise(nt, R, 45.0, 5.0, 0.6)
-    melan = _noise(nt, R, 7.0, 3.0, 0.5)
+    base = (0.40, 0.205, 0.130)
+    blotch = _noise(nt, R, 45.0, 3.0, 0.6)
+    melan = _noise(nt, R, 7.0, 2.0, 0.5)
     col = _mixc(nt, _math(nt, "MULTIPLY", _smoothstep(nt, blotch, 0.42, 0.68), 0.35), base, (0.52, 0.22, 0.165))
     col = _mixc(nt, _math(nt, "MULTIPLY", _smoothstep(nt, melan, 0.45, 0.7), 0.35), col, (0.40, 0.235, 0.16))
-    col = _mixc(nt, _math(nt, "MULTIPLY", palm, 0.45), col, (0.60, 0.30, 0.22))                # palm lighter, pinker
+    col = _mixc(nt, _math(nt, "MULTIPLY", palm, 0.45), col, (0.55, 0.27, 0.19))                # palm lighter, pinker
     col = _mixc(nt, _math(nt, "MULTIPLY", knuck, 0.55), col, (0.50, 0.20, 0.16))               # red knuckles
     col = _mixc(nt, _math(nt, "MULTIPLY", tip, 0.45), col, (0.56, 0.21, 0.17))                 # flushed fingertips
     col = _mixc(nt, _math(nt, "MULTIPLY", vein, 0.30), col, (0.30, 0.25, 0.28))                # bluish veins
     col = _mixc(nt, _math(nt, "MULTIPLY", net1, 0.10), col, (0.36, 0.20, 0.14))                # dirt-free darker furrows
+    # crevices (between fingers, knuckle folds, wrist creases) darker and redder; ridges slightly paler
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    crev = _smoothstep(nt, geo.outputs["Pointiness"], 0.5, 0.44)
+    col = _mixc(nt, _math(nt, "MULTIPLY", crev, 0.65), col, (0.26, 0.11, 0.075))
+    ridge = _smoothstep(nt, geo.outputs["Pointiness"], 0.53, 0.6)
+    col = _mixc(nt, _math(nt, "MULTIPLY", ridge, 0.25), col, (0.52, 0.32, 0.22))
     # sparse freckles / tiny moles
-    fr = _vor(nt, R, 60.0)
-    frm = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, fr, 0.03, 0.06))
-    frc = _vor(nt, R, 60.0, out="Color")
-    frs = _sep(nt, frc, 0)
-    frm = _math(nt, "MULTIPLY", frm, _smoothstep(nt, frs, 0.93, 0.94))
+    frn = nt.nodes.new("ShaderNodeTexVoronoi"); frn.inputs["Scale"].default_value = 60.0
+    nt.links.new(R, frn.inputs["Vector"])
+    frm = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, frn.outputs["Distance"], 0.03, 0.06))
+    frm = _math(nt, "MULTIPLY", frm, _smoothstep(nt, _sep(nt, frn.outputs["Color"], 0), 0.93, 0.94))
     col = _mixc(nt, _math(nt, "MULTIPLY", frm, 0.5), col, (0.22, 0.11, 0.07))
 
-    rough = _math(nt, "ADD", 0.40, _math(nt, "MULTIPLY", _noise(nt, R, 220.0, 3.0), 0.18))
+    rough = _math(nt, "ADD", 0.30, _math(nt, "MULTIPLY", _noise(nt, R, 220.0, 1.0), 0.22))
     rough = _math(nt, "ADD", rough, _math(nt, "MULTIPLY", net1, 0.16))
     rough = _math(nt, "ADD", rough, _math(nt, "MULTIPLY", knuck, 0.08))
 
     skin = _node(nt, "ShaderNodeBsdfPrincipled")
-    skin.subsurface_method = "RANDOM_WALK_SKIN"
+    skin.subsurface_method = os.environ.get("S5_SSS", "RANDOM_WALK_SKIN")
     nt.links.new(col, skin.inputs["Base Color"])
     nt.links.new(rough, skin.inputs["Roughness"])
     skin.inputs["Subsurface Weight"].default_value = 1.0
     skin.inputs["Subsurface Radius"].default_value = (1.0, 0.37, 0.19)
-    skin.inputs["Subsurface Scale"].default_value = 0.0032
-    skin.inputs["Subsurface IOR"].default_value = 1.40
-    skin.inputs["Subsurface Anisotropy"].default_value = 0.8
+    skin.inputs["Subsurface Scale"].default_value = 0.0025
+    if "Subsurface IOR" in skin.inputs:
+        skin.inputs["Subsurface IOR"].default_value = 1.40
+    if "Subsurface Anisotropy" in skin.inputs:
+        skin.inputs["Subsurface Anisotropy"].default_value = 0.8
     skin.inputs["IOR"].default_value = 1.42
-    skin.inputs["Specular IOR Level"].default_value = 0.5
-    oily = _smoothstep(nt, _noise(nt, R, 35.0, 3.0), 0.45, 0.75)
+    skin.inputs["Specular IOR Level"].default_value = 0.58
+    oily = _smoothstep(nt, _noise(nt, R, 35.0, 1.0), 0.45, 0.75)
     nt.links.new(_math(nt, "MULTIPLY", oily, 0.22), skin.inputs["Coat Weight"])
     skin.inputs["Coat Roughness"].default_value = 0.28
     skin.inputs["Coat IOR"].default_value = 1.45
@@ -368,49 +414,32 @@ def skin_material(hand, nails):
     skin.inputs["Sheen Roughness"].default_value = 0.45
     skin.inputs["Sheen Tint"].default_value = (0.95, 0.85, 0.8, 1)
     nt.links.new(bump.outputs[0], skin.inputs["Normal"])
-    nt.links.new(bump2.outputs[0], skin.inputs["Coat Normal"])
+    nt.links.new(bump.outputs[0], skin.inputs["Coat Normal"])
 
-    # ---------------- nails (analytic ellipses in rest space)
-    nail_mask = None; lun = None; free = None; cut = None; ridge_v = None
-    for k, (c, u, v, n, half_w) in nails.items():
-        d = nt.nodes.new("ShaderNodeVectorMath"); d.operation = "SUBTRACT"
-        nt.links.new(R, d.inputs[0]); d.inputs[1].default_value = c
-        du = _dot(nt, d.outputs[0], u); dv = _dot(nt, d.outputs[0], v); dn = _dot(nt, d.outputs[0], n)
-        half_l = half_w * 1.25
-        # nail extends from u = -half_l (cuticle) to u = +half_l*1.05 (free edge)
-        eu = _math(nt, "DIVIDE", du, half_l); ev = _math(nt, "DIVIDE", dv, half_w)
-        eu_sq = _math(nt, "POWER", _math(nt, "ABSOLUTE", eu), 2.6)
-        ev_sq = _math(nt, "POWER", _math(nt, "ABSOLUTE", ev), 2.4)
-        r = _math(nt, "ADD", eu_sq, ev_sq)
-        mk = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, r, 0.86, 1.0))
-        mk = _math(nt, "MULTIPLY", mk, _smoothstep(nt, dn, -0.003, -0.0012))
-        # lunula: whitish half moon near the cuticle
-        ln = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, _math(nt, "ADD", _math(nt, "POWER", _math(nt, "ABSOLUTE", _math(nt, "DIVIDE", _math(nt, "ADD", du, half_l * 0.95), half_l * 0.42)), 2.0), _math(nt, "POWER", _math(nt, "ABSOLUTE", _math(nt, "DIVIDE", dv, half_w * 0.62)), 2.0)), 0.8, 1.0))
-        fe = _smoothstep(nt, du, half_l * 0.70, half_l * 0.86)
-        ct = _math(nt, "MULTIPLY", _smoothstep(nt, r, 0.78, 0.98), _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, du, -half_l * 0.3, 0.0)))
-        rv = dv if ridge_v is None else ridge_v
-        nail_mask = mk if nail_mask is None else _math(nt, "MAXIMUM", nail_mask, mk)
-        lmk = _math(nt, "MULTIPLY", ln, mk)
-        lun = lmk if lun is None else _math(nt, "MAXIMUM", lun, lmk)
-        fmk = _math(nt, "MULTIPLY", fe, mk)
-        free = fmk if free is None else _math(nt, "MAXIMUM", free, fmk)
-        cmk = _math(nt, "MULTIPLY", ct, mk)
-        cut = cmk if cut is None else _math(nt, "MAXIMUM", cut, cmk)
-        # longitudinal ridges (bands across v)
-        rw = _math(nt, "SINE", _math(nt, "MULTIPLY", dv, 2 * math.pi / 0.00042))
-        rw = _math(nt, "MULTIPLY", rw, mk)
-        ridge_v = rw if ridge_v is None else _math(nt, "ADD", ridge_v, rw)
+    # ---------------- nails: nearest-nail frame coordinates baked per vertex (u along, v across, n height)
+    bake_nail_attrs(hand, nails)
+    nu = _attr(nt, "nail_u"); nv = _attr(nt, "nail_v"); nn = _attr(nt, "nail_n")
+    r = _math(nt, "ADD", _math(nt, "POWER", _math(nt, "ABSOLUTE", nu), 2.6), _math(nt, "POWER", _math(nt, "ABSOLUTE", nv), 2.4))
+    nail_mask = _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, r, 0.86, 1.0))
+    nail_mask = _math(nt, "MULTIPLY", nail_mask, _smoothstep(nt, nn, -0.003, -0.0012))
+    lr = _math(nt, "ADD", _math(nt, "POWER", _math(nt, "DIVIDE", _math(nt, "ADD", nu, 0.95), 0.42), 2.0),
+               _math(nt, "POWER", _math(nt, "DIVIDE", nv, 0.62), 2.0))
+    lun = _math(nt, "MULTIPLY", _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, lr, 0.8, 1.0)), nail_mask)
+    free = _math(nt, "MULTIPLY", _smoothstep(nt, nu, 0.86, 0.95), nail_mask)
+    cut = _math(nt, "MULTIPLY", _math(nt, "MULTIPLY", _smoothstep(nt, r, 0.78, 0.98),
+                                      _math(nt, "SUBTRACT", 1.0, _smoothstep(nt, nu, -0.3, 0.0))), nail_mask)
+    ridge_v = _math(nt, "MULTIPLY", _math(nt, "SINE", _math(nt, "MULTIPLY", nv, 2 * math.pi * 12.0)), nail_mask)
     nail = _node(nt, "ShaderNodeBsdfPrincipled")
-    ncol = _mixc(nt, lun, (0.62, 0.36, 0.32), (0.80, 0.66, 0.60))
-    ncol = _mixc(nt, free, ncol, (0.86, 0.80, 0.72))
+    ncol = _mixc(nt, _math(nt, "MULTIPLY", lun, 0.6), (0.56, 0.34, 0.28), (0.74, 0.60, 0.52))
+    ncol = _mixc(nt, free, ncol, (0.78, 0.70, 0.60))
     ncol = _mixc(nt, _math(nt, "MULTIPLY", cut, 0.6), ncol, (0.55, 0.36, 0.28))
     nt.links.new(ncol, nail.inputs["Base Color"])
-    nail.inputs["Roughness"].default_value = 0.22
+    nail.inputs["Roughness"].default_value = 0.38
     nail.inputs["Subsurface Weight"].default_value = 0.35
     nail.inputs["Subsurface Radius"].default_value = (1.0, 0.45, 0.3)
     nail.inputs["Subsurface Scale"].default_value = 0.002
-    nail.inputs["Coat Weight"].default_value = 0.8
-    nail.inputs["Coat Roughness"].default_value = 0.08
+    nail.inputs["Coat Weight"].default_value = 0.12
+    nail.inputs["Coat Roughness"].default_value = 0.3
     nbump = _node(nt, "ShaderNodeBump"); nbump.inputs["Distance"].default_value = 0.00001
     nt.links.new(_math(nt, "ADD", _math(nt, "MULTIPLY", ridge_v, 0.6), _math(nt, "MULTIPLY", lumpy, 0.3)), nbump.inputs["Height"])
     nt.links.new(nbump.outputs[0], nail.inputs["Normal"])
@@ -420,6 +449,28 @@ def skin_material(hand, nails):
     nt.links.new(skin.outputs[0], mix.inputs[1]); nt.links.new(nail.outputs[0], mix.inputs[2])
     nt.links.new(mix.outputs[0], out.inputs["Surface"])
     return m
+
+
+def bake_nail_attrs(hand, nails):
+    me = hand.data
+    au = me.attributes.new("nail_u", "FLOAT", "POINT")
+    av = me.attributes.new("nail_v", "FLOAT", "POINT")
+    an = me.attributes.new("nail_n", "FLOAT", "POINT")
+    for vtx in me.vertices:
+        p = vtx.co
+        best = None
+        for k, (c, u, v, n, half_w) in nails.items():
+            dd = (p - c).length
+            if best is None or dd < best[0]:
+                best = (dd, c, u, v, n, half_w)
+        dd, c, u, v, n, half_w = best
+        if dd > 0.03:
+            au.data[vtx.index].value = 9.0; av.data[vtx.index].value = 9.0; an.data[vtx.index].value = -1.0
+            continue
+        q = p - c
+        au.data[vtx.index].value = q.dot(u) / (half_w * 1.25)
+        av.data[vtx.index].value = q.dot(v) / half_w
+        an.data[vtx.index].value = q.dot(n)
 
 
 def _sep(nt, vec, i):
@@ -437,6 +488,14 @@ def hair_material():
     m = bpy.data.materials.new("BodyHair"); m.use_nodes = True
     nt = m.node_tree; nt.nodes.clear()
     out = _node(nt, "ShaderNodeOutputMaterial")
+    if os.environ.get("S5_HAIRSIMPLE", "1") == "1":
+        # cheap hair: dark brown diffuse/glossy mix (strands are thin; Chiang hair was the main render cost)
+        hp = _node(nt, "ShaderNodeBsdfPrincipled")
+        hp.inputs["Base Color"].default_value = (0.045, 0.028, 0.018, 1)
+        hp.inputs["Roughness"].default_value = 0.35
+        hp.inputs["Specular IOR Level"].default_value = 0.6
+        nt.links.new(hp.outputs[0], out.inputs["Surface"])
+        return m
     h = _node(nt, "ShaderNodeBsdfHairPrincipled")
     try:
         h.model = "CHIANG"
@@ -474,10 +533,10 @@ def add_body_hair(hand, count=5000, seed=5):
     p.factor_random = 0.25
     if hasattr(p, "length_random"):
         p.length_random = 0.6
-    p.hair_step = 4
-    p.display_step = 2; p.render_step = 3
+    p.hair_step = 3
+    p.display_step = 2; p.render_step = 2
     p.child_type = "SIMPLE"
-    p.child_percent = 1; p.rendered_child_count = 2
+    p.child_percent = 1; p.rendered_child_count = 1
     p.child_radius = 0.003
     p.roughness_endpoint = 0.0006
     p.roughness_1 = 0.0004; p.roughness_1_size = 0.3
