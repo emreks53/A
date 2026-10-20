@@ -42,6 +42,6 @@
   "chromatic_aberration": {"pixels_at_corner": 0.8},
   "sharpen": {"amount": 0.22, "radius": 0.9},
   "grain": {"amount": 0.0105, "size": 0.75, "coarse": 0.35, "chroma": 0.22, "on_graphics": 0.55},
-  "legibility": {"threshold": 0.52, "gain": 0.7, "max": 0.24, "pad": 60, "feather": 90}
+  "legibility": {"threshold": 0.46, "gain": 0.85, "max": 0.36, "pad": 70, "feather": 110}
  }
 }

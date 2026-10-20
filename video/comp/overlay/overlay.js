@@ -159,12 +159,13 @@ function keywordLayout(el) {
   let lines;
   for (;;) {
     lines = el.lines.map(ln => {
-      const parts = ln.parts.map(p => ({ ...p, text: upperTR(p.text), run: layoutRun(upperTR(p.text), st.family, st.weight, size, st.tracking) }));
+      const trk = el.tracking !== undefined ? el.tracking : st.tracking;
+      const parts = ln.parts.map(p => ({ ...p, text: upperTR(p.text), run: layoutRun(upperTR(p.text), st.family, st.weight, size, trk) }));
       let x = 0; const segs = [];
       parts.forEach((p, k) => {
         if (k > 0) {
           const sep = p.sep === undefined ? '·' : p.sep;
-          if (sep === ' ') { const sp = layoutRun('I I', st.family, st.weight, size, st.tracking); const gap = sp.w - 2 * layoutRun('I', st.family, st.weight, size, st.tracking).w; segs.push({ kind: 'space', x, w: gap }); x += gap; }
+          if (sep === ' ') { const sp = layoutRun('I I', st.family, st.weight, size, trk); const gap = sp.w - 2 * layoutRun('I', st.family, st.weight, size, trk).w; segs.push({ kind: 'space', x, w: gap }); x += gap; }
           else { const gap = (st.sep_gap || 0.5) * size * 2; segs.push({ kind: 'dot', x, w: gap, t: p.t }); x += gap; }
         }
         p.x0 = x; x += p.run.w;
@@ -176,6 +177,11 @@ function keywordLayout(el) {
     size = Math.max(st.min_size, size * Math.max(0.9, maxW / mw * 0.995));
   }
   const capH = layoutRun('H', st.family, st.weight, size, 0).capH;
+  // punctuation that should sit on the cap-height centre in an all-caps setting (no 'case' feature in canvas)
+  X.save(); X.font = fontStr(st.family, st.weight, size);
+  const capsDy = {};
+  for (const ch of ['-', '–', '—']) { const m = X.measureText(ch); capsDy[ch] = -(capH / 2 - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2); }
+  X.restore();
   const yc = el.y || 670;
   const lh = lhEm * size;
   const n = lines.length;
@@ -191,7 +197,7 @@ function keywordLayout(el) {
     const nch = p.run.chars.length;
     p.run.chars.forEach((c, i) => {
       if (c.ch === ' ') return;
-      letters.push({ ch: c.ch, li, pi, i, n: nch, g: g++, x: l.x0 + p.x0 + c.x, base: l.base, t: p.t, part: p, line: l });
+      letters.push({ ch: c.ch, li, pi, i, n: nch, g: g++, x: l.x0 + p.x0 + c.x, base: l.base + (capsDy[c.ch] || 0), t: p.t, part: p, line: l });
     });
   }));
   const r = { st, size, capH, lines, letters, lh, yc };
@@ -542,7 +548,7 @@ function drawCalloutCore(el, f, t, prim, sec, opts = {}) {
     const wipe = lerp(tx - 36, tx + lb.Q.w + 36, prog);
     drawRunWipe(lb.Q, tx - slide, seY, st.color, ta * st.secondary.alpha, wipe, 1, 36, st.text_shadow);
   }
-  if (ta > 0.05) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0.45 * ta]);
+  if (ta > 0.05) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0.6 * ta, 1]);
 }
 
 function drawCallout(el, f, t) { drawCalloutCore(el, f, t, el.primary, el.secondary); }
@@ -678,7 +684,7 @@ function drawECG(el, f, t) {
   const hx = gx + head, hy = gy + gh * 0.62 - hv * gh * 0.78;
   fillCircle(X, hx, hy, 2.6, [255, 255, 255], a);
   glowDot(A, hx, hy, 16, [255, 160, 140], a * 0.8);
-  BOXES.push([x0 - 4, y0, x0 + Math.max(gw, P.w + 30), gy + gh + 4, 0.35 * a]);
+  BOXES.push([x0 - 4, y0, x0 + Math.max(gw, P.w + 30), gy + gh + 4, 0.5 * a, 1]);
 }
 
 // ------------------------------------------------------------------ network (sh12)

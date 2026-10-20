@@ -215,7 +215,7 @@ def resolve(spec_path=None, verbose=True):
             lines.append({"parts": parts})
         el = {"id": k["id"], "type": "keyword", "style": k["style"], "shot": k["shot"], "lines": lines,
               "y": k.get("y", 670)}
-        for opt in ("size", "line_height", "max_width"):
+        for opt in ("size", "line_height", "max_width", "tracking"):
             if opt in k:
                 el[opt] = k[opt]
         if "swell" in k:
