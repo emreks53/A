@@ -41,6 +41,7 @@ importance sampling off (water is near-specular, the sun is a lamp; saved 11 s w
 reduced noise octaves, glossy bounce 1. First measurement before these was 118 s.
 
 ## Known issues / next
-* Thin high cloud streaks at the very top (y < 450) are subtle and slightly "line"-like; improving them.
+* v2: thin high cirrus bands now visible at the top (y < ~450, clear of the GÜNEŞ band); exit glare ramp
+  starts at 40.15 s (was 39.9) so 40.2 s still shows the glitter path before the glare takes over.
 * One large defocused glint occasionally passes in the near foreground (~39.5 s) — physically correct, can
   tame it if the director prefers.

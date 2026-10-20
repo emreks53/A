@@ -53,5 +53,7 @@ cheaper surface ripple bump, fewer far stems. **Measured: 41.1 s/frame** at fram
 bubble string over the sunlit bed). This version (stills in this folder): **42.3 s/frame** at frame 700.
 
 ## Known issues / next
-* Light shafts were lost with the volume; camera-only shaft geometry is being added next (cheap).
+* v2: light shafts are back as 24 soft camera-only emissive cylinders along the refracted sun ray (emission
+  sampling off so they are not lights), swelling on "Allah", fading out by 28.3 s for the close bubble chase.
+  Re-measured: 42.6 s (f700), 42.7 s (f636), 26.6 s (f600).
 * Phase A sky in the window is a bit flat; the sun could use more burst.

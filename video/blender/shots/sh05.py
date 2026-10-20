@@ -142,6 +142,7 @@ def add_fog(mat, glow_gain=1.6):
     f = nt.nodes.new("ShaderNodeMath"); f.operation = "SUBTRACT"; f.inputs[0].default_value = 1.0
     nt.links.new(ex.outputs[0], f.inputs[1])
     em = nt.nodes.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (*FOG_COL, 1)
+    mat.cycles.emission_sampling = "NONE"      # the fog term is not a light source
     nt.links.new(g.outputs[0], em.inputs["Strength"])
     mx = nt.nodes.new("ShaderNodeMixShader")
     nt.links.new(f.outputs[0], mx.inputs[0]); nt.links.new(src, mx.inputs[1]); nt.links.new(em.outputs[0], mx.inputs[2])
@@ -524,6 +525,84 @@ def build_particles(rng, n=700):
             setattr(o, a, False)
 
 
+
+def t2f_(t):
+    return C.t2f(t)
+
+
+def build_shafts(ctx, t_allah, rng, n=24):
+    """Fake god rays: thin soft emissive cylinders along the refracted sun ray, camera-visible only.
+    They converge on the sun in perspective when looking up, flicker with the ripples and fade with depth."""
+    d_dn = -refracted_up()
+    m, nt, p = C.new_mat("shaft"); nt.nodes.remove(p)
+    m.cycles.emission_sampling = "NONE"        # camera-only glow, must not become a sampled mesh light
+    out = nt.nodes["Material Output"]
+    lw = nt.nodes.new("ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.5
+    edge = nt.nodes.new("ShaderNodeMath"); edge.operation = "SUBTRACT"; edge.inputs[0].default_value = 1.0
+    nt.links.new(lw.outputs["Facing"], edge.inputs[1])        # 1 where the cylinder faces the camera
+    soft = nt.nodes.new("ShaderNodeMath"); soft.operation = "POWER"; soft.inputs[1].default_value = 2.5
+    nt.links.new(edge.outputs[0], soft.inputs[0])
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Generated"], sep.inputs[0])
+    # Generated Z: 0 at the bottom end, 1 at the surface end -> brighter near the surface, soft ends
+    fade = nt.nodes.new("ShaderNodeFloatCurve")
+    cv = fade.mapping.curves[0]
+    cv.points[0].location = (0.0, 0.0); cv.points[1].location = (1.0, 0.0)
+    for x, y in ((0.25, 0.25), (0.7, 0.8), (0.93, 1.0)):
+        cv.points.new(x, y)
+    fade.mapping.update()
+    nt.links.new(sep.outputs["Z"], fade.inputs["Value"])
+    ob = nt.nodes.new("ShaderNodeObjectInfo")
+    fl = nt.nodes.new("ShaderNodeTexNoise"); fl.noise_dimensions = "2D"; fl.inputs["Scale"].default_value = 1.0
+    fl.inputs["Detail"].default_value = 1
+    fm = nt.nodes.new("ShaderNodeMapping")
+    fm.inputs["Location"].default_value = (0, 0, 0); fm.inputs["Location"].keyframe_insert("default_value", frame=0)
+    fm.inputs["Location"].default_value = (0, 260.0, 0); fm.inputs["Location"].keyframe_insert("default_value", frame=100 * 24)
+    cmb = nt.nodes.new("ShaderNodeCombineXYZ")
+    rnd = nt.nodes.new("ShaderNodeMath"); rnd.operation = "MULTIPLY"; rnd.inputs[1].default_value = 37.0
+    nt.links.new(ob.outputs["Random"], rnd.inputs[0]); nt.links.new(rnd.outputs[0], cmb.inputs[0])
+    nt.links.new(cmb.outputs[0], fm.inputs[0]); nt.links.new(fm.outputs[0], fl.inputs["Vector"])
+    flk = nt.nodes.new("ShaderNodeMapRange"); flk.inputs["From Min"].default_value = 0.3
+    flk.inputs["From Max"].default_value = 0.7; flk.inputs["To Min"].default_value = 0.0
+    nt.links.new(fl.outputs[0], flk.inputs[0])
+    a1 = nt.nodes.new("ShaderNodeMath"); a1.operation = "MULTIPLY"
+    nt.links.new(soft.outputs[0], a1.inputs[0]); nt.links.new(fade.outputs[0], a1.inputs[1])
+    a2 = nt.nodes.new("ShaderNodeMath"); a2.operation = "MULTIPLY"
+    nt.links.new(a1.outputs[0], a2.inputs[0]); nt.links.new(flk.outputs[0], a2.inputs[1])
+    gain = nt.nodes.new("ShaderNodeMath"); gain.operation = "MULTIPLY"; gain.name = "shaft_gain"
+    nt.links.new(a2.outputs[0], gain.inputs[0])
+    em = nt.nodes.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (0.70, 0.97, 0.92, 1)
+    nt.links.new(gain.outputs[0], em.inputs["Strength"])
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    ad = nt.nodes.new("ShaderNodeAddShader")
+    nt.links.new(tr.outputs[0], ad.inputs[0]); nt.links.new(em.outputs[0], ad.inputs[1])
+    nt.links.new(ad.outputs[0], out.inputs["Surface"])
+    for t, k in ((ctx.t0 - 0.3, 0.16), (t_allah - 0.1, 0.16), (t_allah + 0.6, 0.30), (26.0, 0.24), (27.5, 0.2), (28.3, 0.0)):
+        gain.inputs[1].default_value = k; gain.inputs[1].keyframe_insert("default_value", frame=t * 24)
+    col = C.collection("Shafts")
+    for i in range(n):
+        r = rng.uniform(0.022, 0.07)
+        L = rng.uniform(0.9, 1.7)
+        bpy.ops.mesh.primitive_cylinder_add(vertices=10, radius=r, depth=L, end_fill_type="NOTHING")
+        o = bpy.context.object; o.name = f"shaft_{i}"
+        for c in list(o.users_collection): c.objects.unlink(o)
+        col.objects.link(o)
+        C.smooth_shade(o)
+        # top end just under the surface, spread over the area the camera looks through
+        top = Vector((rng.uniform(-1.1, 1.1), rng.uniform(-0.6, 1.6), -0.02))
+        o.rotation_mode = "QUATERNION"
+        # local +Z toward the surface so Generated z = 1 is the top end
+        o.rotation_quaternion = (-d_dn).to_track_quat("Z", "Y")
+        o.location = top + d_dn * (L / 2)
+        C.assign(o, m)
+        for a in ("visible_diffuse", "visible_glossy", "visible_transmission", "visible_volume_scatter", "visible_shadow"):
+            setattr(o, a, False)
+        o.cycles.use_motion_blur = False
+        # shafts only matter while the view looks across the water column; drop them for the close bubble chase
+        o.hide_render = False; o.keyframe_insert("hide_render", frame=t2f_(28.4))
+        o.hide_render = True; o.keyframe_insert("hide_render", frame=t2f_(28.4) + 1)
+    return m
+
 # --------------------------------------------------------------------------- build
 
 def build(ctx):
@@ -596,6 +675,7 @@ def build(ctx):
     trk.scale = (1 / 1.0,) * 3
 
     build_particles(rng, n=420)
+    build_shafts(ctx, t_allah, rng)
 
     # ---- camera
     cam = C.camera("cam", lens=28, loc=(0, 0, -0.8), fstop=3.5, focus=0.6, clip_start=0.002)
@@ -673,7 +753,8 @@ def build(ctx):
     # ---- render-cost choices (see NOTES): homogeneous water volume (analytic, no ray marching), FAST denoise
     # prefilter, no motion blur on things that move < 1 px per shutter (specks, plants, distant bubbles)
     for m in list(bpy.data.materials):
-        add_fog(m)
+        if m.name != "shaft":
+            add_fog(m)
     bpy.app.handlers.render_init.append(lambda *_: setattr(bpy.context.scene.cycles, "denoising_prefilter", "FAST"))
     for o in bpy.data.collections["Specks"].objects: o.cycles.use_motion_blur = False
     for o in (leaves, stemso): o.cycles.use_motion_blur = False
@@ -706,9 +787,11 @@ def build(ctx):
     if "nosurf" in prof: bpy.data.objects["Surface"].hide_render = True
     if "noplant" in prof:
         bpy.data.objects["ElodeaLeaves"].hide_render = True; bpy.data.objects["ElodeaStems"].hide_render = True
+    if "noshaft" in prof:
+        for o in bpy.data.collections["Shafts"].objects: o.hide_render = True
     if "nobot" in prof: bpy.data.objects["Bottom"].hide_render = True
     return {"final_spp": 5, "preview_spp": 20, "clamp_direct": 12.0, "max_bounces": 6, "diffuse_bounces": 1, "glossy_bounces": 1,
-            "transmission_bounces": 6, "transparent_bounces": 4, "volume_bounces": 0, "volume_step_rate": 8.0,
+            "transmission_bounces": 6, "transparent_bounces": 12, "volume_bounces": 0, "volume_step_rate": 8.0,
             "clamp_indirect": 2.5}
 
 
