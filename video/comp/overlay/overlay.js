@@ -114,10 +114,12 @@ function strokeGlow(ctx, buildPath, width, rgb, alpha, sigma, dy = 0) {
     ctx.strokeStyle = rgba(rgb, alpha); ctx.lineWidth = width * 1.6;
     ctx.beginPath(); buildPath(ctx, 0); ctx.stroke();
   } else {
+    // energy-preserving stand-in for a Gaussian-blurred thin line: same integral of alpha across the line
     ctx.translate(0, dy);
-    ctx.strokeStyle = rgba(rgb, alpha * 0.30); ctx.lineWidth = width + 2.2 * sigma;
+    const w1 = width + 2.4 * sigma, w2 = width + 1.0 * sigma;
+    ctx.strokeStyle = rgba(rgb, alpha * 0.5 * width / w1); ctx.lineWidth = w1;
     ctx.beginPath(); buildPath(ctx, 0); ctx.stroke();
-    ctx.strokeStyle = rgba(rgb, alpha * 0.38); ctx.lineWidth = width + 0.9 * sigma;
+    ctx.strokeStyle = rgba(rgb, alpha * 0.5 * width / w2); ctx.lineWidth = w2;
     ctx.beginPath(); buildPath(ctx, 0); ctx.stroke();
   }
   ctx.restore();
