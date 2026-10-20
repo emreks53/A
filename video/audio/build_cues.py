@@ -337,7 +337,7 @@ for i, (tt, pn) in enumerate(zip(rt, fallback)):
     tick(f"sh13b.ring_{nm}", s, tt - F, kind="ring", lvl=-15 if i < 7 else -14, pan=pn,
          track={"shot": s, "name": nm}, provisional=False,
          ref=f"birer birer: tracking ring {i + 1}/8 on TRK_{nm} (lands with the word onsets)")
-cue("sh13b.bee", s, rt[1], 2.2, "bee", -35, pre=0.7, space="meadow", send=-16, fade_in=0.2, fade_out=0.3,
+cue("sh13b.bee", s, rt[1], 2.2, "bee", -37, pre=0.7, space="meadow", send=-16, fade_in=0.2, fade_out=0.3,
     params=dict(sync=0.7, dist=0.45, pan_from=0.6, pan_to=-0.1, f0=226), ref="the bee found by ring b")
 
 # ============================================================== sh14a sunflowers at sunrise
