@@ -326,10 +326,15 @@ def resolve(spec_path=None, verbose=True):
             wl = max(text_width("37.000.000.000.000", inter_med, cs["primary"]["size"], cs["primary"]["tracking"]),
                      text_width(wd["unit"], inter_reg, cs["secondary"]["size"], 0))
             t0, land, out = clk.t(wd["t0"], shot), float(wd["land"]), float(wd["out"])
-            cand, sx, sy = place(wd["id"], shot, trk, t0, out, wl, True, wd.get("prefer", []))
+            mode = wd.get("mode", "callout")
+            if mode == "callout":
+                cand, sx, sy = place(wd["id"], shot, trk, t0, out, wl, True, wd.get("prefer", []))
+            else:
+                cand, sx, sy = "free", 1, 1
             els.append({"id": wd["id"], "type": "counter", "shot": shot, "t0": t0, "land": land, "out": out,
                         "count_from": wd["count_from"], "count_to": wd["count_to"], "final": wd["final"],
-                        "unit": wd["unit"], "sx": sx, "sy": sy, "side": cand, "trk": trk,
+                        "unit": wd["unit"], "sx": sx, "sy": sy, "side": cand, "trk": trk, "mode": mode,
+                        "x": wd.get("x", 540), "y": wd.get("y", 1175),
                         "f0": int(math.floor((t0 - 0.15) * FPS)), "f1": int(math.ceil(out * FPS)) + 1})
             sync_points.append({"id": wd.get("cue", wd["id"]), "t": land, "kind": "counter_land"})
         elif ty == "network":
