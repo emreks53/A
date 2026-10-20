@@ -28,7 +28,7 @@ from mathutils.geometry import tessellate_polygon
 
 # ============================================================================ constants
 
-DESIGN_VERSION = "v12"
+DESIGN_VERSION = "v13"
 DESIGN_DIR = os.path.join(C.ASSETS, "sh15_design", DESIGN_VERSION)
 
 FONT_URLS = {
@@ -616,7 +616,7 @@ def design_main():
     w.use_nodes = True
     w.node_tree.nodes["Background"].inputs[1].default_value = 0.0
     img = sc.render.image_settings
-    img.file_format = "PNG"; img.color_mode = "BW"; img.color_depth = "16"; img.compression = 30
+    img.file_format = "PNG"; img.color_mode = "BW"; img.color_depth = "8"; img.compression = 30
     fonts = {k: bpy.data.fonts.load(font_path(k)) for k in FONT_URLS}
     camd = bpy.data.cameras.new("dc"); camd.type = "ORTHO"
     cam = bpy.data.objects.new("dc", camd); sc.collection.objects.link(cam); sc.camera = cam
@@ -877,13 +877,13 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     var = maprange(nt, lum.outputs[0], 0.04, 0.16, 0.78, 1.22)
     geo = NN(nt, "ShaderNodeNewGeometry")
     # large-scale tone variation (handling, dye)
-    big = noise(nt, geo.outputs["Position"], 9.0, 3.0, 0.55)
+    big = noise(nt, geo.outputs["Position"], 9.0, 1.0, 0.5)
     bigv = maprange(nt, big.outputs[0], 0.35, 0.65, 0.88, 1.10)
     base = mixrgb(nt, 1.0, tuple(c * tint for c in LEATHER_RGB), var, "MULTIPLY")
     base = mixrgb(nt, 1.0, base, bigv, "MULTIPLY")
     # worn edges: rubbed lighter / browner
     pt = maprange(nt, geo.outputs["Pointiness"], 0.505, 0.56, 0.0, 1.0)
-    wn = noise(nt, geo.outputs["Position"], 180.0, 4.0, 0.6)
+    wn = noise(nt, geo.outputs["Position"], 180.0, 1.0, 0.5)
     wear = math_node(nt, "MULTIPLY", pt, maprange(nt, wn.outputs[0], 0.4, 0.62, 0.15, 1.0))
     base = mixrgb(nt, wear, base, srgb("#8E3A30"))
     r = maprange(nt, rough.outputs[0], 0.25, 0.75, 0.36, 0.58)
@@ -892,18 +892,17 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     nm.inputs["Strength"].default_value = 0.85
     LK(nt, nor.outputs[0], nm.inputs["Color"])
     leather = principled(nt, **{"Base Color": base, "Roughness": r, "Normal": nm.outputs[0],
-                                "Specular IOR Level": 0.55, "Coat Weight": 0.18, "Coat Roughness": 0.32,
-                                "Sheen Weight": 0.25, "Sheen Roughness": 0.4, "Sheen Tint": (1.0, 0.75, 0.72)})
+                                "Specular IOR Level": 0.62})
     if not (mask and foil):
         LK(nt, leather.outputs[0], out.inputs["Surface"])
         return m
     uvm = NN(nt, "ShaderNodeUVMap", uv_map=uv_mask)
     mk = img_node(nt, mask, True, vec=uvm.outputs[0], ext="CLIP", interp="Cubic")
     # foil breakup: irregular edge + tiny missing specks
-    en = noise(nt, geo.outputs["Position"], 2600.0, 2.0, 0.5)
+    en = noise(nt, geo.outputs["Position"], 2600.0, 0.0, 0.5)
     m_e = math_node(nt, "ADD", mk.outputs[0], maprange(nt, en.outputs[0], 0.3, 0.7, -0.16, 0.16))
     foil_f = maprange(nt, m_e, 0.40, 0.62, 0.0, 1.0, interp="SMOOTHSTEP")
-    sp = noise(nt, geo.outputs["Position"], 1400.0, 1.0, 0.5)
+    sp = noise(nt, geo.outputs["Position"], 1400.0, 0.0, 0.5)
     holes = maprange(nt, sp.outputs[0], 0.66, 0.70, 0.0, 0.85)
     foil_f = math_node(nt, "MULTIPLY", foil_f, math_node(nt, "SUBTRACT", va=1.0, b=holes), clamp=True)
     # deboss: foil areas pressed ~0.12 mm into the leather; grain flattened under the foil
@@ -919,7 +918,7 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     LK(nt, geo.outputs["Normal"], nmix.inputs[5])
     LK(nt, nmix.outputs[1], bump.inputs["Normal"])
     LK(nt, bump.outputs[0], leather.inputs["Normal"])
-    gn = noise(nt, geo.outputs["Position"], 900.0, 3.0, 0.6)
+    gn = noise(nt, geo.outputs["Position"], 900.0, 1.0, 0.6)
     gr = maprange(nt, gn.outputs[0], 0.3, 0.7, 0.14, 0.30)
     gcol = mixrgb(nt, maprange(nt, gn.outputs[0], 0.3, 0.7, 0.0, 1.0), GOLD_RGB, (0.80, 0.56, 0.25))
     gold = principled(nt, **{"Base Color": gcol, "Metallic": 1.0, "Roughness": gr, "Normal": bump.outputs[0],
@@ -949,7 +948,7 @@ def mat_page_edge(name="page_edge", dark=1.0):
     bandv = maprange(nt, band.outputs[0], 0.35, 0.65, 0.93, 1.04)
     fr = math_node(nt, "FRACT", lay)
     gap = maprange(nt, math_node(nt, "ABSOLUTE", math_node(nt, "SUBTRACT", fr, vb=0.5)), 0.38, 0.5, 1.0, 0.8)
-    dirt = noise(nt, geo.outputs["Position"], 60.0, 4.0, 0.6)
+    dirt = noise(nt, geo.outputs["Position"], 60.0, 1.0, 0.5)
     dirtv = maprange(nt, dirt.outputs[0], 0.4, 0.7, 1.0, 0.9)
     v = math_node(nt, "MULTIPLY", math_node(nt, "MULTIPLY", per, bandv), math_node(nt, "MULTIPLY", gap, dirtv))
     base = mixrgb(nt, 1.0, tuple(c * 0.90 * dark for c in PAPER_RGB), v, "MULTIPLY")
@@ -957,15 +956,14 @@ def mat_page_edge(name="page_edge", dark=1.0):
     bmp.inputs["Strength"].default_value = 0.25
     bmp.inputs["Distance"].default_value = 0.00005
     LK(nt, math_node(nt, "MULTIPLY", per, gap), bmp.inputs["Height"])
-    p = principled(nt, **{"Base Color": base, "Roughness": 0.78, "Normal": bmp.outputs[0],
-                          "Subsurface Weight": 0.08, "Subsurface Radius": (0.004, 0.003, 0.002), "Subsurface Scale": 0.5})
+    p = principled(nt, **{"Base Color": base, "Roughness": 0.78, "Normal": bmp.outputs[0]})
     LK(nt, p.outputs[0], out.inputs["Surface"])
     return m
 
 
 def _paper_and_ink(nt, mask_out, geo, tone=1.0):
     """Returns (base_color_socket, roughness_socket, ink_factor_socket)."""
-    pn = noise(nt, geo.outputs["Position"], 14.0, 3.0, 0.55)
+    pn = noise(nt, geo.outputs["Position"], 14.0, 1.0, 0.5)
     tonev = maprange(nt, pn.outputs[0], 0.35, 0.65, 0.95, 1.03)
     paper = mixrgb(nt, 1.0, tuple(c * tone for c in PAPER_RGB), tonev, "MULTIPLY")
     ink = maprange(nt, mask_out, 0.1, 0.9, 0.0, 0.93)
@@ -980,12 +978,7 @@ def mat_page(name, img, uv="UVMap"):
     uvn = NN(nt, "ShaderNodeUVMap", uv_map=uv)
     mk = img_node(nt, img, True, vec=uvn.outputs[0], ext="CLIP", interp="Cubic")
     col, rough, ink = _paper_and_ink(nt, mk.outputs[0], geo)
-    fib = noise(nt, geo.outputs["Position"], 2400.0, 2.0, 0.6)
-    bmp = NN(nt, "ShaderNodeBump")
-    bmp.inputs["Strength"].default_value = 0.06
-    LK(nt, fib.outputs[0], bmp.inputs["Height"])
-    p = principled(nt, **{"Base Color": col, "Roughness": rough, "Normal": bmp.outputs[0],
-                          "Sheen Weight": 0.15, "Sheen Roughness": 0.5})
+    p = principled(nt, **{"Base Color": col, "Roughness": rough})
     LK(nt, p.outputs[0], out.inputs["Surface"])
     return m
 
@@ -1009,7 +1002,7 @@ def mat_leaf(name, img_front, img_back):
     other = NN(nt, "ShaderNodeMix"); other.data_type = "FLOAT"
     LK(nt, bf, other.inputs[0]); LK(nt, b.outputs[0], other.inputs[2]); LK(nt, f.outputs[0], other.inputs[3])
     col, rough, ink = _paper_and_ink(nt, this.outputs[0], geo)
-    p = principled(nt, **{"Base Color": col, "Roughness": rough, "Sheen Weight": 0.15})
+    p = principled(nt, **{"Base Color": col, "Roughness": rough})
     tcol = mixrgb(nt, maprange(nt, other.outputs[0], 0.1, 0.9, 0.0, 0.55), tuple(c * 0.9 for c in PAPER_RGB), (0.1, 0.09, 0.08))
     tr = NN(nt, "ShaderNodeBsdfTranslucent")
     LK(nt, tcol, tr.inputs["Color"])
@@ -1044,7 +1037,6 @@ def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), 
     mp.inputs["Rotation"].default_value = (0, 0, grain_rot)
     LK(nt, tc.outputs["Object"], mp.inputs["Vector"])
     d = img_node(nt, t["diff"], vec=mp.outputs[0], proj="BOX", blend=0.25)
-    r = img_node(nt, t["rough"], True, vec=mp.outputs[0], proj="BOX", blend=0.25)
     n = img_node(nt, t["nor"], True, vec=mp.outputs[0], proj="BOX", blend=0.25)
     hsv = NN(nt, "ShaderNodeHueSaturation")
     hsv.inputs["Saturation"].default_value = sat
@@ -1071,7 +1063,9 @@ def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), 
         # carved recesses collect dust / darker oil
         dk = maprange(nt, rimg.outputs[0], 0.15, 0.55, 0.55, 1.0)
         col = mixrgb(nt, 1.0, col, dk, "MULTIPLY")
-    rr = maprange(nt, r.outputs[0], 0.2, 0.8, rough[0], rough[1])
+    lumw = NN(nt, "ShaderNodeRGBToBW")
+    LK(nt, d.outputs[0], lumw.inputs[0])
+    rr = maprange(nt, lumw.outputs[0], 0.5, 0.05, rough[0], rough[1])
     p = principled(nt, **{"Base Color": col, "Roughness": rr, "Normal": normal, "Coat Weight": coat,
                           "Coat Roughness": 0.25})
     LK(nt, p.outputs[0], out.inputs["Surface"])
@@ -1086,26 +1080,14 @@ def mat_plaster(name="lime_plaster"):
     mp.inputs["Scale"].default_value = (0.7, 0.7, 0.7)
     LK(nt, tc.outputs["Object"], mp.inputs["Vector"])
     d = img_node(nt, t["diff"], vec=mp.outputs[0], proj="BOX", blend=0.3)
-    n = img_node(nt, t["nor"], True, vec=mp.outputs[0], proj="BOX", blend=0.3)
-    r = img_node(nt, t["rough"], True, vec=mp.outputs[0], proj="BOX", blend=0.3)
     lum = NN(nt, "ShaderNodeRGBToBW")
     LK(nt, d.outputs[0], lum.inputs[0])
-    v = maprange(nt, lum.outputs[0], 0.35, 0.65, 0.90, 1.06)
-    big = noise(nt, tc.outputs["Object"], 1.6, 4.0, 0.6)
+    v = maprange(nt, lum.outputs[0], 0.35, 0.65, 0.95, 1.03)
+    big = noise(nt, tc.outputs["Object"], 1.6, 2.0, 0.55)
     bigv = maprange(nt, big.outputs[0], 0.3, 0.7, 0.90, 1.05)
     col = mixrgb(nt, 1.0, srgb("#E6DCCB"), v, "MULTIPLY")
     col = mixrgb(nt, 1.0, col, bigv, "MULTIPLY")
-    nm = NN(nt, "ShaderNodeNormalMap")
-    nm.inputs["Strength"].default_value = 0.35
-    LK(nt, n.outputs[0], nm.inputs["Color"])
-    tr = noise(nt, tc.outputs["Object"], 2.2, 2.0, 0.45)      # broad, soft trowel undulation
-    bmp = NN(nt, "ShaderNodeBump")
-    bmp.inputs["Strength"].default_value = 0.12
-    bmp.inputs["Distance"].default_value = 0.003
-    LK(nt, tr.outputs[0], bmp.inputs["Height"])
-    LK(nt, nm.outputs[0], bmp.inputs["Normal"])
-    rr = maprange(nt, r.outputs[0], 0.2, 0.8, 0.82, 0.96)
-    p = principled(nt, **{"Base Color": col, "Roughness": rr, "Normal": bmp.outputs[0]})
+    p = principled(nt, **{"Base Color": col, "Roughness": 0.9})
     LK(nt, p.outputs[0], out.inputs["Surface"])
     return m
 
@@ -1954,11 +1936,11 @@ def volume_box():
     return ob
 
 
-def build_motes(n=2600, seed=7):
+def build_motes(n=900, seed=7):
     rng = random.Random(seed)
     verts = []
     while len(verts) < n:
-        x = rng.uniform(-0.9, 1.0); y = rng.uniform(-0.85, 0.35); z = rng.uniform(0.02, 1.3)
+        x = rng.uniform(-0.92, 0.15); y = rng.uniform(-0.5, 0.36); z = rng.uniform(0.04, 1.25)
         # keep mostly near the sun beam corridor
         p = Vector((x, y, z))
         t = (x - (WALL_LEFT_X - 0.2)) / SUN_DIR.x
@@ -2161,7 +2143,7 @@ def build(ctx):
         MATS["leaf_%d" % k] = mat_leaf("leaf_%d" % k, os.path.join(d, "page_%d.png" % (727 - 2 * k)),
                                        os.path.join(d, "page_%d.png" % (728 - 2 * k)))
     MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.50, 0.39, 0.31), val=0.60, sat=0.95,
-                             rough=(0.30, 0.52), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.12,
+                             rough=(0.34, 0.58), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
                              grain_rot=math.pi / 2, wear=0.35)
     MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7))
     MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8))
@@ -2181,6 +2163,17 @@ def build(ctx):
     # ------------------------------------------------ light
     C.world_sky(sun_elev_deg=math.degrees(math.asin(-SUN_DIR.z)), sun_rot_deg=math.degrees(math.atan2(-SUN_DIR.x, SUN_DIR.y)) + 180,
                 strength=1.6, sun_disc=False, air=1.2, aerosol=1.5)
+    # through the window the bright courtyard/sky is overexposed for an interior exposure: camera rays
+    # see a warm near-white glow, lighting still uses the physical sky
+    wnt = sc.world.node_tree
+    bg = [n for n in wnt.nodes if n.type == "BACKGROUND"][0]
+    sky_out = bg.inputs["Color"].links[0].from_socket
+    lp = wnt.nodes.new("ShaderNodeLightPath")
+    mixw = wnt.nodes.new("ShaderNodeMix"); mixw.data_type = "RGBA"
+    wnt.links.new(lp.outputs["Is Camera Ray"], mixw.inputs[0])
+    wnt.links.new(sky_out, mixw.inputs[6])
+    mixw.inputs[7].default_value = (3.2, 2.9, 2.5, 1.0)
+    wnt.links.new(mixw.outputs[2], bg.inputs["Color"])
     sun = sun_light()
     # sun brightens on "cok guzel ifadelerle" (thin haze clears)
     for t, e in ((109.5, 6.0), (117.25, 6.0), (118.9, 8.2), (125.6, 8.2)):
@@ -2188,8 +2181,7 @@ def build(ctx):
         sun.data.keyframe_insert("energy", frame=t * C.FPS)
     shutter(ctx)
     # cool fill: overcast skylight from a door/window behind camera (front wall)
-    C.area("fill_front", loc=(0.6, -3.6, 1.2), look_at=(0.0, 0.0, 0.2), size=2.0, size_y=1.4, power=30, kelvin_k=7800)
-    C.area("fill_right", loc=(2.5, -0.6, 1.1), look_at=(0.0, 0.0, 0.2), size=1.0, size_y=1.6, power=8, kelvin_k=7200)
+    C.area("fill_front", loc=(0.9, -3.5, 1.3), look_at=(0.0, 0.0, 0.2), size=2.4, size_y=1.6, power=42, kelvin_k=7600)
     portal = C.area("portal", loc=(WALL_LEFT_X - 0.02, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2),
                     look_at=(1.0, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2), size=WIN_Y1 - WIN_Y0, size_y=WIN_Z1 - WIN_Z0, power=0)
     portal.data.size, portal.data.size_y = WIN_Y1 - WIN_Y0, WIN_Z1 - WIN_Z0
@@ -2249,10 +2241,14 @@ def build(ctx):
         cd = C.camera("dbg", lens=v[6], loc=v[0:3], look_at=v[3:6])
         sc.camera = cd
     sc.view_settings.exposure = -0.3
+    if os.environ.get("SH15_NODENOISE"):
+        def _nd(*_):
+            bpy.context.scene.cycles.use_denoising = False
+        bpy.app.handlers.render_pre.append(_nd)
     if os.environ.get("SH15_MATOVR"):
         bpy.context.view_layer.material_override = mat_simple("ovr", (0.5, 0.5, 0.5), 0.6)
     ov = {"final_spp": 32, "preview_spp": 16, "diffuse_bounces": 3, "glossy_bounces": 2,
-          "transmission_bounces": 3, "transparent_bounces": 8, "clamp_indirect": 3.0}
+          "transmission_bounces": 3, "transparent_bounces": 8, "clamp_indirect": 3.0, "texture_limit": "8192"}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
     return ov
 

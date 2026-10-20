@@ -111,7 +111,8 @@ class ChunkReader:
 
     def _start(self):
         self.close()
-        self.proc = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, bufsize=self.w * self.h * 6 * 2)
+        self.proc = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                     bufsize=self.w * self.h * 6 * 2)
         self.next = self.a
 
     def read(self, f):
@@ -121,6 +122,7 @@ class ChunkReader:
         while self.next <= f:
             buf = self.proc.stdout.read(n)
             if len(buf) < n:
+                print(f"[composite] warning: {os.path.basename(self.path)} ended before frame {f}", file=sys.stderr)
                 self.close()
                 return None
             self.next += 1
@@ -453,9 +455,9 @@ def mix(t, A, B, p, w, h):
         fl = t.get("flash", 1.0)
         bump = math.sin(math.pi * p) ** 1.4 * fl
         out = A * (1 - m) + B * m
-        out = out * (1 + 1.6 * bump)
+        out = out * (1 + 1.25 * bump)
         glow = down_blur_up(np.clip(out - 0.6, 0, None), 40 * w / 1080, w, h)
-        out = out + glow * 1.4 * bump
+        out = out + glow * 1.1 * bump
         return soft_shoulder(out, 0.80)
     if ty in ("colormatch", "luma"):
         lb = (B @ LUMA)
