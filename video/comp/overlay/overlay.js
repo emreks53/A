@@ -14,7 +14,7 @@
 'use strict';
 
 let TL = null, S = 1, W = 1080, H = 1920, FPS = 24;
-let cOver, cAdd, X, A;
+let cOver, cAdd, X, A, cKOver, cKAdd, KX, KA;
 const OFF = 6000;                 // offscreen offset for the shadow-blur trick (layout px)
 let drewOver = false, drewAdd = false, BOXES = [], KWBOXES = [];
 const CACHE = new Map();
@@ -482,12 +482,14 @@ function drawColdKeyword(el, t, L) {
       if (alive > 0) {
         B.sctx.putImageData(B.work, 0, 0);
         X.save(); X.setTransform(1, 0, 0, 1, 0, 0); X.globalAlpha = km;
-        X.shadowColor = rgba(shRGB, st.shadow[0]); X.shadowBlur = 2 * st.shadow[1] * S; X.shadowOffsetY = st.shadow[2] * S;
-        X.drawImage(B.scratch, Math.round(B.x0 * S), Math.round(B.y0 * S));
-        if (st.shadow2) {
-          X.shadowColor = rgba(shRGB, st.shadow2[0]); X.shadowBlur = 2 * st.shadow2[1] * S; X.shadowOffsetY = st.shadow2[2] * S;
-          X.drawImage(B.scratch, Math.round(B.x0 * S), Math.round(B.y0 * S));
+        const bx = Math.round(B.x0 * S), by = Math.round(B.y0 * S);
+        for (const sh of [st.shadow, st.shadow2]) {          // shadow-only passes (image drawn off-canvas)
+          if (!sh) continue;
+          X.shadowColor = rgba(shRGB, sh[0]); X.shadowBlur = 2 * sh[1] * S; X.shadowOffsetX = OFF * S; X.shadowOffsetY = sh[2] * S;
+          X.drawImage(B.scratch, bx - OFF * S, by);
         }
+        X.shadowColor = 'rgba(0,0,0,0)'; X.shadowBlur = 0; X.shadowOffsetX = 0; X.shadowOffsetY = 0;
+        X.drawImage(B.scratch, bx, by);
         X.restore(); drewOver = true;
         maxA = Math.max(maxA, Math.min(1, alive / 400) * km);
       }
@@ -517,17 +519,21 @@ function drawColdKeyword(el, t, L) {
 }
 
 // ================================================================== CALLOUTS
+/* Callout choreography (seconds relative to sync = dot lands / UI tick, and to out = fully gone):
+ * ring + dot land, the leader grows out of the ring, the shelf grows from the elbow, the label is wiped on
+ * from the elbow outward right behind the shelf head (never ahead of its line). Text is complete at
+ * sync + 0.36 s and starts leaving at out - 0.22 s (overlays.py callout_legibility mirrors these numbers). */
 function calloutPhases(t, ts, to) {
   const on = (a, b) => eInOutCubic(lin(t, ts + a, ts + b));
   const off = (a, b) => 1 - eInOutCubic(lin(t, to + a, to + b));
   return {
-    ring: on(-0.10, 0.12) * off(-0.11, 0.0),
-    ringR: eOutCubic(lin(t, ts - 0.10, ts + 0.14)),
-    dot: eOutCubic(lin(t, ts - 0.04, ts + 0.06)) * off(-0.07, 0.0),
-    diag: on(0.03, 0.19), diagOff: lin(t, to - 0.17, to - 0.05),
-    shelf: on(0.14, 0.34), shelfOff: lin(t, to - 0.25, to - 0.11),
-    prim: lin(t, ts + 0.17, ts + 0.46), sec: lin(t, ts + 0.27, ts + 0.56),
-    text: off(-0.30, -0.14),
+    ring: on(-0.10, 0.10) * off(-0.10, 0.0),
+    ringR: eOutCubic(lin(t, ts - 0.10, ts + 0.12)),
+    dot: eOutCubic(lin(t, ts - 0.04, ts + 0.05)) * off(-0.06, 0.0),
+    diag: on(0.0, 0.13), diagOff: lin(t, to - 0.14, to - 0.04),
+    shelf: on(0.08, 0.26), shelfOff: lin(t, to - 0.20, to - 0.09),
+    prim: lin(t, ts + 0.10, ts + 0.32), sec: lin(t, ts + 0.15, ts + 0.38),
+    text: off(-0.22, -0.10),
     flash: t >= ts ? Math.exp(-(t - ts) / 0.22) : 0,
   };
 }
@@ -547,7 +553,7 @@ function drawRunWipe(run, x, y, rgb, alpha, wipeX, dir, soft, shadow) {
   for (const c of run.chars) {
     if (c.ch === ' ') continue;
     const gx = x + c.x;
-    const k = dir > 0 ? clamp((wipeX - gx) / soft) : clamp((gx + run.size * 0.5 - wipeX) / soft);
+    const k = dir > 0 ? clamp((wipeX - gx) / soft) : clamp((gx + run.size * 0.55 - wipeX) / soft);
     if (k <= 0) continue;
     items.push([c.ch, gx, k]);
   }
@@ -609,22 +615,28 @@ function drawCalloutCore(el, f, t, prim, sec, opts = {}) {
     premiumStroke(build, st.line, a, st);
     if (ph.shelf < 1) glowDot(A, x1, ey, 9, st.glow, a * 0.5 * (1 - ph.shelf));
   }
-  // labels
+  // labels: wiped on from the elbow outward, gated by the shelf head (the text never runs ahead of its line)
   const ta = ph.text * a;
   const tx = el.sx > 0 ? ex + pad : ex - pad - lb.w;
   const prY = ey - st.text_gap, seY = ey + st.text_gap + capQ;
+  const head = ex + el.sx * shelf * ph.shelf;            // where the growing shelf has got to
+  const SOFT = 36;
+  const wipeAt = (prog, w) => {
+    if (el.sx > 0) return Math.min(lerp(tx - SOFT, tx + w + SOFT, prog), head + SOFT * 0.5);
+    return Math.max(lerp(tx + lb.w + SOFT, tx + lb.w - w - SOFT, prog), head - SOFT * 0.5);
+  };
   if (lb.P && ph.prim > 0 && ta > 0.003) {
     const prog = eOutCubic(ph.prim);
     const slide = (1 - prog) * 10 * el.sx;
-    const wipe = lerp(tx - 36, tx + lb.P.w + 36, prog);
+    const px0 = el.sx > 0 ? tx : tx + lb.w - lb.P.w;     // right-aligned to the elbow on the left side
     if (opts.drawPrimary) opts.drawPrimary(tx - slide, prY, ta, prog);
-    else drawRunWipe(lb.P, tx - slide, prY, st.color, ta, wipe, 1, 36, st.text_shadow);
+    else drawRunWipe(lb.P, px0 - slide, prY, st.color, ta, wipeAt(prog, lb.P.w), el.sx, SOFT, st.text_shadow);
   }
   if (lb.Q && ph.sec > 0 && ta > 0.003) {
     const prog = eOutCubic(ph.sec);
     const slide = (1 - prog) * 8 * el.sx;
-    const wipe = lerp(tx - 36, tx + lb.Q.w + 36, prog);
-    drawRunWipe(lb.Q, tx - slide, seY, st.color, ta * st.secondary.alpha, wipe, 1, 36, st.text_shadow);
+    const qx0 = el.sx > 0 ? tx : tx + lb.w - lb.Q.w;
+    drawRunWipe(lb.Q, qx0 - slide, seY, st.color, ta * st.secondary.alpha, wipeAt(prog, lb.Q.w), el.sx, SOFT, st.text_shadow);
   }
   if (ta > 0.05) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0.6 * ta, 1]);
 }
@@ -652,34 +664,39 @@ function drawCounterFree(el, f, t) {
   const a = aIn * aOut;
   if (a < 0.003) return;
   const rise = (1 - eOutCubic(lin(t, el.t0, el.t0 + 0.6))) * 14;
-  const land = clamp((t - el.land) / 0.24);
+  // landing, in sequence (never a double exposure): on the tick the running number lifts away and fades
+  // (0.12 s), then the rounded figure rises in with a short glint
+  const qOut = clamp((t - el.land) / 0.12), qIn = clamp((t - el.land - 0.10) / 0.30);
+  const land = eOutCubic(qIn);
   setFont(X, fam, wt, size);
   const dW = Math.max(...'0123456789'.split('').map(d => X.measureText(d).width)) + trk * size;
   const dotW = X.measureText('.').width + trk * size;
   const numW = [...numStr].reduce((s2, c) => s2 + (c === '.' ? dotW : dW), 0) - trk * size;
   const cx = el.x, base = el.y + rise;
   const sh = [0.5, 12, 2];
-  const aNum = a * (1 - land);
+  const aNum = a * (1 - eInQuad(qOut));
   if (aNum > 0.003) {
+    const nb = base - 16 * eInQuad(qOut);
     let x = cx - numW / 2;
     const items = [];
     for (const c of numStr) { const w = c === '.' ? dotW : dW; items.push([c, x + (w - trk * size - X.measureText(c).width) / 2]); x += w; }
-    for (const [c, gx] of items) glyphShadow(X, c, gx, base, aNum * sh[0], sh[1], sh[2]);
-    for (const [c, gx] of items) glyph(X, c, gx, base, st.color, aNum, 0);
+    for (const [c, gx] of items) glyphShadow(X, c, gx, nb, aNum * sh[0], Math.hypot(sh[1], 3 * qOut), sh[2]);
+    for (const [c, gx] of items) glyph(X, c, gx, nb, st.color, aNum, 2.5 * qOut);
   }
   const fin = layoutRun(el.final, fam, wt, size, trk);
-  const aFin = a * land;
+  const aFin = a * eOutCubic(clamp(qIn / 0.7));
   let capH = fin.capH;
   if (aFin > 0.003) {
-    const scl = 1 + 0.05 * (1 - eOutCubic(land));
-    const fx = cx - fin.w * scl / 2;
-    setFont(X, fam, wt, size * scl);
-    const items = fin.chars.filter(c => c.ch !== ' ').map(c => [c.ch, fx + c.x * scl]);
-    for (const [c, gx] of items) glyphShadow(X, c, gx, base, aFin * sh[0], sh[1], sh[2]);
-    for (const [c, gx] of items) glyph(X, c, gx, base, st.color, aFin, 0);
-    const g = t >= el.land ? Math.exp(-(t - el.land) / 0.4) : 0;
-    setFont(A, fam, wt, size * scl);
-    for (const [c, gx] of items) glyph(A, c, gx, base, st.glow, aFin * 0.6 * g, 0);
+    const fb = base + 12 * (1 - land);
+    const fx = cx - fin.w / 2;
+    setFont(X, fam, wt, size);
+    const items = fin.chars.filter(c => c.ch !== ' ').map(c => [c.ch, fx + c.x]);
+    const bl = 3 * (1 - eOutCubic(clamp(qIn / 0.6)));
+    for (const [c, gx] of items) glyphShadow(X, c, gx, fb, aFin * sh[0], Math.hypot(sh[1], bl), sh[2]);
+    for (const [c, gx] of items) glyph(X, c, gx, fb, st.color, aFin, bl);
+    const g = t >= el.land + 0.12 ? Math.exp(-(t - el.land - 0.12) / 0.4) : 0;
+    setFont(A, fam, wt, size);
+    for (const [c, gx] of items) glyph(A, c, gx, fb, st.glow, aFin * 0.6 * g, 0);
   }
   // caption + hairline
   const unit = layoutRun(el.unit, st.secondary.family, st.secondary.weight, 30, 0.04);
@@ -908,7 +925,7 @@ function drawNetwork(el, f, t) {
     if (el.labels && n.label) {
       const la = a * eOutCubic(lin(t, n.t_on + 0.05, n.t_on + 0.4)) * (1 - eInOutCubic(lin(t, conv0, conv0 + 0.5)));
       if (la > 0.003) {
-        const run = layoutRun(upperTR(n.label), 'Inter', 600, 20, 0.16);
+        const run = layoutRun(upperTR(n.label), 'Inter', 600, 27, 0.12);
         const side = n.p.x > W / 2 ? -1 : 1;
         const lx = side > 0 ? n.p.x + 18 : n.p.x - 18 - run.w, ly = n.p.y + run.capH / 2;
         drawRunWipe(run, lx, ly, [255, 246, 232], la * 0.9, side > 0 ? lx + run.w + 40 : lx - 40, side, 30, [0.55, 6, 1]);
@@ -1010,7 +1027,9 @@ function drawSpiral(el, f, t) {
   // on-screen floret spacing: the pattern is only drawn while florets are big enough to read
   const q1 = mapPt(150, 150 * GA), q2 = mapPt(150 + el.families[0], (150 + el.families[0]) * GA);
   const spacing = Math.hypot(q1[0] - q2[0], q1[1] - q2[1]);
-  const scaleFade = smooth(clamp((spacing - 20) / 22));
+  // the pattern lives as long as the florets read on screen (it survives well into the camera's pull-back)
+  const ms = el.min_spacing || [8, 16];
+  const scaleFade = smooth(clamp((spacing - ms[0]) / (ms[1] - ms[0])));
   const fadeOut = 1 - eInOutCubic(lin(t, el.fade0, el.out));
   const aGlob = p.v * fadeOut * scaleFade * eOutCubic(lin(t, el.t0 - 0.05, el.t0 + 0.3));
   if (aGlob < 0.003) return;
@@ -1027,8 +1046,8 @@ function drawSpiral(el, f, t) {
   };
   el.families.forEach((F, fi) => {
     let dl = (F * GA) % (2 * Math.PI); if (dl > Math.PI) dl -= 2 * Math.PI;
-    const tStart = fi === 0 ? el.t0 : lerp(el.t0, el.t_mid, 0.55);
-    const grow = eInOutSine(lin(t, tStart, tStart + (el.t_mid - el.t0) + 0.55));
+    const tStart = el.t0 + fi * el.fam_delay;
+    const grow = eInOutSine(lin(t, tStart, tStart + el.grow));
     if (grow <= 0) return;
     const paths = [];
     for (let j = 0; j < F; j++) {
@@ -1048,7 +1067,7 @@ function drawSpiral(el, f, t) {
     }
     if (!paths.length) return;
     const build = (c, o) => { for (const pts of paths) pts.forEach((q, i) => (i ? c.lineTo(q[0] + o, q[1]) : c.moveTo(q[0] + o, q[1]))); };
-    const lw = clamp(spacing / 40, 0.7, 1.15);
+    const lw = clamp(spacing / 40, 0.45, 1.15);       // ~world-space width: thins with the florets
     X.save(); X.lineCap = 'round'; X.lineJoin = 'round';
     X.strokeStyle = mkGrad(X, [0, 0, 0], aGlob * 0.32); X.lineWidth = 3.4 * lw; X.beginPath(); build(X, 0); X.stroke();
     X.strokeStyle = mkGrad(X, famCols[fi], aGlob * famA[fi]); X.lineWidth = (fi === 0 ? 1.8 : 1.4) * lw; X.beginPath(); build(X, 0); X.stroke();
@@ -1057,13 +1076,16 @@ function drawSpiral(el, f, t) {
     A.strokeStyle = mkGrad(A, famCols[fi], aGlob * famA[fi] * 0.5); A.lineWidth = 5 * lw; A.beginPath(); build(A, 0); A.stroke();
     A.restore(); drewAdd = true;
     if (el.numbers) {
-      const na = aGlob * eOutCubic(lin(t, tStart + 0.4, tStart + 0.85));
+      const na = aGlob * eOutCubic(lin(t, tStart + 0.25, tStart + 0.6));
       if (na > 0.003) {
         const run = layoutRun(String(F), 'Inter', 500, 30, 0.02);
-        const ang = fi === 0 ? -0.75 : 2.4;
+        // below the head, clear of the key-word band
+        const ang = (el.num_angles || [1.0, 2.15])[fi];
         const rr = clamp(rB[2] * 1.02, 160, 420);
-        const lx = clamp(ctr[0] + Math.cos(ang) * rr - run.w / 2, TL.safe.x0, TL.safe.x1 - run.w);
-        const ly = clamp(ctr[1] + Math.sin(ang) * rr + run.capH / 2, TL.safe.y0 + 40, TL.safe.y1);
+        const band = [TL.safe.band[0] - 20, TL.safe.band[1] + 40];
+        const lx = clamp(ctr[0] + Math.cos(ang) * rr - run.w / 2, TL.safe.x0 + 10, TL.safe.x1 - 10 - run.w);
+        let ly = clamp(ctr[1] + Math.sin(ang) * rr + run.capH / 2, TL.safe.y0 + 40, TL.safe.y1 - 10);
+        if (ly > band[0] && ly - run.capH < band[1]) ly = band[1] + run.capH;
         drawRunWipe(run, lx, ly, famCols[fi], na, lx + run.w + 40, 1, 30, [0.6, 7, 1]);
         setFont(A, 'Inter', 500, 30);
         for (const c of run.chars) glyph(A, c.ch, lx + c.x, ly, famCols[fi], na * 0.35, 0);
@@ -1111,17 +1133,61 @@ function contentBox(cv) {
   return [bx0, by0, bx1 - bx0, by1 - by0];
 }
 
+/** Knock the graphics layer out under the key words: soft feathered boxes (ink box + ~26 px, 40 px feather)
+ *  painted at 1/8 resolution and scaled up, removed from both layers with destination-out. */
+let KM = null;
+function knockout(ctxs, boxes) {
+  const k = 8, feather = 40, grow = 26;
+  if (!KM) { KM = document.createElement('canvas'); KM.width = Math.ceil(W / k) + 2; KM.height = Math.ceil(H / k) + 2; }
+  const m = KM.getContext('2d');
+  m.setTransform(1, 0, 0, 1, 0, 0); m.clearRect(0, 0, KM.width, KM.height);
+  let any = false;
+  for (const b of boxes) {
+    const a = clamp(b[4]);
+    if (a < 0.01) continue;
+    any = true;
+    m.save();
+    m.shadowColor = `rgba(0,0,0,${a.toFixed(4)})`; m.shadowBlur = (feather * 0.7) / k; m.shadowOffsetX = 4000; m.shadowOffsetY = 0;
+    m.fillStyle = '#000';
+    m.fillRect((b[0] - grow) / k - 4000, (b[1] - grow) / k, (b[2] - b[0] + 2 * grow) / k, (b[3] - b[1] + 2 * grow) / k);
+    m.restore();
+  }
+  if (!any) return;
+  for (const c of ctxs) {
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0);
+    c.globalCompositeOperation = 'destination-out'; c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
+    c.drawImage(KM, 0, 0, KM.width * k * S, KM.height * k * S);
+    c.restore();
+  }
+}
+
 window.ovRender = function (f) {
   const t = f / FPS;
-  X.setTransform(1, 0, 0, 1, 0, 0); X.clearRect(0, 0, cOver.width, cOver.height);
-  A.setTransform(1, 0, 0, 1, 0, 0); A.clearRect(0, 0, cAdd.width, cAdd.height);
+  for (const [c, cv] of [[X, cOver], [A, cAdd], [KX, cKOver], [KA, cKAdd]]) { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height); }
   X.setTransform(S, 0, 0, S, 0, 0); A.setTransform(S, 0, 0, S, 0, 0);
   A.globalCompositeOperation = 'lighter';
-  drewOver = false; drewAdd = false; BOXES = [];
+  drewOver = false; drewAdd = false; BOXES = []; KWBOXES = [];
+  const kws = [], rest = [];
   for (const el of TL.elements) {
     if (f < el.f0 || f >= el.f1) continue;
-    X.save(); A.save();
-    try { DRAW[el.type](el, f, t); } finally { X.restore(); A.restore(); }
+    (el.type === 'keyword' ? kws : rest).push(el);
+  }
+  const draw = el => { X.save(); A.save(); try { DRAW[el.type](el, f, t); } finally { X.restore(); A.restore(); } };
+  // graphics first ...
+  rest.forEach(draw);
+  // ... then the key words, on their own layers, drawn last over a knocked-out hole in the graphics
+  if (kws.length) {
+    const restOver = drewOver, restAdd = drewAdd;
+    const X0 = X, A0 = A;
+    X = KX; A = KA;
+    X.setTransform(S, 0, 0, S, 0, 0); A.setTransform(S, 0, 0, S, 0, 0); A.globalCompositeOperation = 'lighter';
+    drewOver = false; drewAdd = false;
+    try { kws.forEach(draw); } finally { X = X0; A = A0; }
+    const kwOver = drewOver, kwAdd = drewAdd;
+    if (restOver || restAdd) knockout([X, A].filter((c, i) => (i ? restAdd : restOver)), KWBOXES);
+    if (kwOver) { X.save(); X.setTransform(1, 0, 0, 1, 0, 0); X.globalCompositeOperation = 'source-over'; X.drawImage(cKOver, 0, 0); X.restore(); }
+    if (kwAdd) { A.save(); A.setTransform(1, 0, 0, 1, 0, 0); A.globalCompositeOperation = 'lighter'; A.drawImage(cKAdd, 0, 0); A.restore(); }
+    drewOver = restOver || kwOver; drewAdd = restAdd || kwAdd;
   }
   const ob = drewOver ? contentBox(cOver) : null;
   const ab = drewAdd ? contentBox(cAdd) : null;
@@ -1137,11 +1203,15 @@ window.ovInit = async function (timeline, scale) {
   cOver.style.width = cw + 'px'; cOver.style.height = chh + 'px'; cAdd.style.width = cw + 'px'; cAdd.style.height = chh + 'px';
   X = cOver.getContext('2d', { willReadFrequently: false });
   A = cAdd.getContext('2d');
+  // key-word layers (drawn last, over a knocked-out hole in the graphics)
+  cKOver = document.createElement('canvas'); cKAdd = document.createElement('canvas');
+  cKOver.width = cKAdd.width = cw; cKOver.height = cKAdd.height = chh;
+  KX = cKOver.getContext('2d'); KA = cKAdd.getContext('2d');
   for (const [fam, src, wt] of TL.fonts.faces) {
     const ff = new FontFace(fam, `url("${src}")`, { weight: wt });
     await ff.load(); document.fonts.add(ff);
   }
-  const need = [['Inter Display', 600], ['Inter Display', 300], ['Inter Display', 200], ['Inter', 400], ['Inter', 500], ['Inter', 600], ['Cormorant Garamond', 600]];
+  const need = [['Inter Display', 600], ['Inter Display', 400], ['Inter Display', 300], ['Inter Display', 200], ['Inter', 400], ['Inter', 500], ['Inter', 600], ['Cormorant Garamond', 600]];
   for (const [fam, wt] of need) await document.fonts.load(fontStr(fam, wt, 40), 'AİŞĞÇÖÜÎ0123456789₂');
   await document.fonts.ready;
   // sanity: report the resolved fonts (width differs from the generic fallback if the face is real)
