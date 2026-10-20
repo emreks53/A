@@ -1,6 +1,6 @@
 # sh14b — The light covered (99.50–104.20, render frames 2382–2506) — studio S2
 
-**Review round 1.** `video/blender/shots/sh14b.py` (+ `lib_s2.py`). Assets: Poly Haven `vintage_oil_lamp`,
+**Review round 2.** `video/blender/shots/sh14b.py` (+ `lib_s2.py`). Assets: Poly Haven `vintage_oil_lamp`,
 `dark_wood`, `plastered_wall_04` (CC0).
 
 ## Build
@@ -32,8 +32,13 @@
 ## Measured render time
 Heaviest frame f2465 (cloth tenting): 48 spp/accurate denoise = 158 s → now **12 spp + FAST/BALANCED OIDN ≈ 36 s/frame** (10 spp measured 33 s; visually identical to 20 spp). Cloth bake adds ~35 s once per Blender run (per 48-frame chunk).
 
-## Known issues / next round
-1. Final drape hangs asymmetrically (slides to camera-right) — will tune initial offset/friction so it settles
-   centred and spreads on the table, and add a visible light spill from under the hem.
-2. Light leak under the hem is still weak; plan: raise flame light + slightly lift hem gap.
-3. No key words during this shot; whole frame free.
+## Round 2 changes
+* The cloth used to slip through the thin chimney; a render-invisible collision proxy (cylinder + rounded cap
+  over the chimney top) now holds it, so the velvet tents on the lamp and drapes straight down, centred.
+* Velvet now reads as heavy and dark: translucency 0.7 % (enough to glow through the thin, stretched folds near the
+  flame), wine sheen tint, faint 2600 K room bounce from camera-left draws the sheen on the folds. Rich blacks.
+* 12 spp + fast OIDN → ~36 s/frame (within budget).
+
+## Known issues
+1. Light spill from under the hem onto the table is subtle (hem rests close to the table) — can open a gap if wanted.
+2. No key words during this shot; whole frame free.

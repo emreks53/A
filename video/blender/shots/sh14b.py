@@ -20,7 +20,7 @@ def mat_velvet():
     p.inputs["Specular IOR Level"].default_value = 0.25
     p.inputs["Sheen Weight"].default_value = 1.0
     p.inputs["Sheen Roughness"].default_value = 0.32
-    p.inputs["Sheen Tint"].default_value = (0.75, 0.55, 0.55, 1)
+    p.inputs["Sheen Tint"].default_value = (0.55, 0.22, 0.26, 1)
     # pile direction / crush marks: low-freq noise modulating sheen; fibre noise in the bump
     tc = nt.nodes.new("ShaderNodeTexCoord")
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 9; nz.inputs["Detail"].default_value = 3
@@ -33,7 +33,7 @@ def mat_velvet():
     nt.links.new(fz.outputs["Fac"], bm.inputs["Height"]); nt.links.new(bm.outputs["Normal"], p.inputs["Normal"])
     # the weave lets a little warm light through where the lamp is close
     tr = nt.nodes.new("ShaderNodeBsdfTranslucent"); tr.inputs["Color"].default_value = (1.0, 0.35, 0.12, 1)
-    ms = nt.nodes.new("ShaderNodeMixShader"); ms.inputs[0].default_value = 0.16
+    ms = nt.nodes.new("ShaderNodeMixShader"); ms.inputs[0].default_value = 0.007
     nt.links.new(p.outputs[0], ms.inputs[1]); nt.links.new(tr.outputs[0], ms.inputs[2])
     nt.links.new(ms.outputs[0], out.inputs["Surface"])
     return m
@@ -133,8 +133,11 @@ def build(ctx):
         win.data.energy = pw
         C.key(win.data, "energy", t, None)
 
+    # faint motivated bounce from the room (left, behind camera): just enough to draw the velvet sheen on the folds
+    rim = C.area("room_bounce", loc=(-1.6, -1.2, 1.1), look_at=(0, 0, 0.45), size=1.2, power=4, kelvin_k=2600)
+
     # ------------------------------------------------------------ velvet cloth (sim baked here)
-    nx = 72
+    nx = 90
     size = 1.7
     verts, faces = [], []
     for j in range(nx + 1):
@@ -148,8 +151,8 @@ def build(ctx):
     cloth = C.mesh_obj("velvet", verts, faces)
     C.smooth_shade(cloth)
     # starts above the frame, slightly tilted and pre-sagged (as if just let go of)
-    cloth.location = (0.02, 0.03, 1.55)
-    cloth.rotation_euler = (math.radians(2), math.radians(-1.5), math.radians(17))
+    cloth.location = (0.0, 0.0, 1.55)
+    cloth.rotation_euler = (0.0, 0.0, math.radians(17))
     bpy.context.view_layer.update()
     me = cloth.data
     mw = cloth.matrix_world.copy()
@@ -170,17 +173,24 @@ def build(ctx):
     cc.self_friction = 10
     cc.use_self_collision = True
     cc.self_distance_min = 0.003
-    cc.collision_quality = 4
+    cc.collision_quality = 6
     pc = cmod.point_cache
     pc.frame_start = f_drop
     pc.frame_end = ctx.f1 + 4
     C.subsurf(cloth, 1, 2)
     C.assign(cloth, mat_velvet())
-    # collision proxies
-    for o in (lamp, glass, table):
+    # collision proxies: a render-invisible capped cylinder around the thin chimney so the cloth cannot slip through it
+    bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=0.032, depth=0.38, location=(0, 0, 0.61))
+    prox = bpy.context.object; prox.name = "chimney_proxy"
+    bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=0.06, depth=0.025, location=(0, 0, 0.80))
+    cap = bpy.context.object
+    C.bevel(cap, 0.01, 3); C.apply_modifiers(cap)
+    prox = L.join([prox, cap], "chimney_proxy")
+    prox.hide_render = True
+    for o in (lamp, prox, table):
         cm = o.modifiers.new("collision", "COLLISION")
-        o.collision.thickness_outer = 0.004
-        o.collision.cloth_friction = 40
+        o.collision.thickness_outer = 0.008
+        o.collision.cloth_friction = 80
     with bpy.context.temp_override(scene=sc, active_object=cloth, object=cloth, point_cache=pc):
         r = bpy.ops.ptcache.bake(bake=True)
     print("[sh14b] cloth bake", r, flush=True)
@@ -195,7 +205,7 @@ def build(ctx):
         C.key(cam, "location", t, None)
         C.key(cam, "rotation_euler", t, None)
     C.handheld(cam, amp_loc=0.0012, amp_rot=0.001, speed=0.35, seed=21)
-    for t, ev in ((ctx.t0, 0.0), (101.0, 0.35), (102.6, 0.35), (103.6, 0.75), (ctx.t1 + 0.3, 0.8)):
+    for t, ev in ((ctx.t0, 0.0), (101.0, 0.35), (102.6, 0.35), (103.6, 0.55), (ctx.t1 + 0.3, 0.6)):
         sc.view_settings.exposure = ev
         C.key(sc.view_settings, "exposure", t, None)
     ov = {"final_spp": 12, "final_threshold": 0.03, "preview_spp": 32, "clamp_indirect": 4.0}

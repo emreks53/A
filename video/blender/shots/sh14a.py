@@ -188,7 +188,8 @@ def build_far(ctx):
     cr.color_ramp.elements[1].position = 0.55; cr.color_ramp.elements[1].color = (0.03, 0.06, 0.012, 1)
     nt.links.new(vo.outputs["Distance"], cr.inputs["Fac"])
     nt.links.new(cr.outputs["Color"], p.inputs["Base Color"])
-    p.inputs["Roughness"].default_value = 0.8
+    p.inputs["Roughness"].default_value = 1.0
+    p.inputs["Specular IOR Level"].default_value = 0.0   # no grazing sky reflection (read as water)
     seg = 256
     V, F = [], []
     for k in range(seg):
@@ -349,7 +350,7 @@ def build(ctx):
         cam.data.dof.keyframe_insert("aperture_fstop", frame=f)
     C.handheld(cam, amp_loc=0.0005, amp_rot=0.0006, speed=0.4, seed=14)
 
-    for f, ev in ((ctx.f0, 1.1), (C.t2f(92.0), 1.0), (C.t2f(95.0), 0.8), (C.t2f(t_allah), 0.6), (ctx.f1, 0.6)):
+    for f, ev in ((ctx.f0, 1.1), (C.t2f(92.0), 0.8), (C.t2f(95.0), 0.7), (C.t2f(t_allah), 0.6), (ctx.f1, 0.6)):
         sc.view_settings.exposure = ev
         sc.view_settings.keyframe_insert("exposure", frame=f)
 
@@ -365,7 +366,7 @@ def build(ctx):
         g = C.remap(t, 89.0, t_allah + 0.1, C.smooth)
         hc.outputs[0].default_value = (C.lerp(0.16, 0.55, g), C.lerp(0.09, 0.26, g), C.lerp(0.06, 0.10, g), 1)
         hc.outputs[0].keyframe_insert("default_value", frame=f)
-    ov = {"final_spp": 10, "final_threshold": 0.04, "preview_spp": 24, "max_bounces": 6, "transmission_bounces": 6, "texture_limit": "2048"}
+    ov = {"final_spp": 6, "final_threshold": 0.05, "preview_spp": 24, "max_bounces": 6, "transmission_bounces": 6, "texture_limit": "2048"}
     import json as _j
     ov.update(_j.loads(os.environ.get("S2_OV", "{}")))
     L.fast_denoise_handler(*os.environ.get("S2_DN", "FAST,BALANCED").split(","))

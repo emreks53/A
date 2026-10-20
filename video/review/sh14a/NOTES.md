@@ -1,6 +1,6 @@
 # sh14a — Sunflowers at sunrise (89.10–99.50, render frames 2132–2393) — studio S2
 
-**Review round 1 (first pass).** Built entirely in `video/blender/shots/sh14a.py` + `video/blender/lib_s2.py` (no downloads).
+**Review round 2.** (round 1 was the first pass; changes listed at the bottom.) Built entirely in `video/blender/shots/sh14a.py` + `video/blender/lib_s2.py` (no downloads).
 
 ## What's built
 * **Hero sunflower (procedural, botanical):** 1 550 disc florets on Vogel's model (θ = n·137.508°, r = c·√n),
@@ -39,8 +39,11 @@
 ## Measured render time
 Heaviest frame f2222 (92.6 s, hero + dense near field, DOF, motion blur), 1080×1920 on this 4-core Xeon 2.1 GHz:
 * original settings (32 spp, OIDN accurate): **346 s/frame**
-* now (10 spp + adaptive 0.04, OIDN prefilter FAST/quality BALANCED via a render_init handler, floret SSS off,
-  static stems out of the motion BVH): **100 s/frame** — still **over the 40–45 s budget**. Macro frames ≈ 55 s.
+* 10 spp + adaptive 0.04, OIDN prefilter FAST/quality BALANCED via a render_init handler, floret SSS off,
+  static stems out of the motion BVH: 100 s/frame
+* **current final setting: 6 spp + adaptive 0.05 → 68 s/frame on the heaviest frame** (OIDN output is clean,
+  compared at 100 % crops vs 10 spp). Macro/end frames ≈ 45–55 s. **Still over the 40–45 s budget on the turn
+  section (≈ 91.5–94 s)**; estimated whole shot ≈ 262 × ~55 s ≈ 4 h on 4 cores.
   Profiling: ~15 s/frame is fixed (sync + GN motion-blur evaluation + denoise + PNG); the rest is path tracing of
   dense foliage seen at grazing angles (bounces/textures barely matter; geometry/visibility does).
   Next steps: lighter near-field leaves/heads, fewer near plants in frame, try 6–8 spp. If it cannot reach ~45 s
@@ -53,3 +56,14 @@ Heaviest frame f2222 (92.6 s, hero + dense near field, DOF, motion blur), 1080×
 3. Horizon: bright haze strip between carpet and hills reads a bit like water; hills moved closer/lower, haze reduced (in script, round 2).
 4. Stem hairs (particle hair) cost 2.5× render time; currently off (sheen only). Will re-enable on the hero only if budget allows.
 5. Shadow sweep into sh14b is designed as the first beat of sh14b (see sh14b NOTES).
+
+## Round 2 changes
+* Denser, more conical disc florets (5-creased pointed buds, larger dark-tipped paleae) — spiral reads clearly in macro.
+* Petals: deeper golden-orange, less sheen (were salmon/pale in direct sun); exposure ride lowered mid-shot.
+* Fewer, smaller dew drops (large ones read as dark holes in the mid shot).
+* Focus racks to the field during the orbit (fixes the fully soft 95.5 frame of round 1).
+* Horizon: far carpet no longer reflects the sky at grazing angles (the bright "lake" strip is gone), hills closer/lower.
+* Distant plants (> 9 m from the hero) use a cheap LOD (textured disc, 6 leaves, no translucency).
+* Known: hills are a simple silhouette (no tree texture yet) — they sit in haze, but I'll add tree-line detail next.
+* Transition to sh14b: the "shadow sweeps in" beat is the first second of sh14b (window light cut off over the lamp).
+  sh14a stays radiant to its last frame so post can dissolve on the shadow.

@@ -116,7 +116,7 @@ def mat_anther():
     return m
 
 
-def mat_ray(name="SF_ray", base=(1.0, 0.56, 0.015)):
+def mat_ray(name="SF_ray", base=(0.85, 0.40, 0.0)):
     """Ray petal: saturated yellow-orange, velvety (sheen), parallel veins from UV, translucent for backlight."""
     m, nt, p = C.new_mat(name)
     out = nt.nodes["Material Output"]
@@ -153,8 +153,8 @@ def mat_ray(name="SF_ray", base=(1.0, 0.56, 0.015)):
     cm.inputs[6].default_value = (0.35, 0.28, 0.02, 1)
     _lnk(nt, claw.outputs[0], cm.inputs[0]); _lnk(nt, hs.outputs["Color"], cm.inputs[7])
     _lnk(nt, cm.outputs[2], p.inputs["Base Color"])
-    p.inputs["Roughness"].default_value = 0.52
-    p.inputs["Sheen Weight"].default_value = 0.45
+    p.inputs["Roughness"].default_value = 0.55
+    p.inputs["Sheen Weight"].default_value = 0.18
     p.inputs["Sheen Roughness"].default_value = 0.35
     p.inputs["Sheen Tint"].default_value = (1.0, 0.8, 0.4, 1)
     p.inputs["Subsurface Weight"].default_value = 0.0
@@ -449,7 +449,7 @@ def build_disc(name, R=0.075, N=1450, seed=1, seg=10, dome=0.006, detail=2, dew=
                     for q in range(3):
                         i0 = sb + 2 * q
                         F.append((i0, i0 + 1, i0 + 3, i0 + 2)); M.append(0)
-            if rng.random() < 0.06 * dew:
+            if rng.random() < 0.03 * dew:
                 dew_spots.append((T @ Vector((0, 0, h)), T.to_3x3() @ Vector((0, 0, 1)), c))
     ob = _mesh(name, [tuple(v) for v in V], F, mats=M, cols=COL)
     pa = ob.data.attributes.new("Pol", "FLOAT", "POINT")
