@@ -237,6 +237,9 @@ CLASSES = ("amb", "spot", "sub", "ui")
 # continuous beds are levelled by their typical loudness (70th percentile of momentary loudness);
 # everything else (spot effects, sparse beds such as birds) by its loudest moment
 NORM_TYPICAL = {"room_tone", "wind", "underwater", "ocean", "rain", "body_amb", "blood_flow", "flame"}
+# sample-peak cap per class (dBFS, applied to each cue after levelling) - keeps short transients
+# (ticks, impacts) from ever driving the master limiter
+PEAK_CAP = {"ui": -18.0, "spot": -8.0, "sub": -6.0, "amb": -6.0}
 # ducking depth (dB) per class for the bands  <250 Hz | 250 Hz-5 kHz | >5 kHz
 DUCK = {"amb": (2.5, 5.0, 3.5), "spot": (1.5, 4.0, 2.5), "sub": (0.5, 2.5, 1.5), "ui": (0.0, 1.5, 1.0)}
 
@@ -258,6 +261,10 @@ def render_cues(cues, n_total, log):
             keep = (tm >= c.get("fade_in", 0)) & (tm + 0.4 <= c["dur"] - c.get("fade_out", 0))
             raw = float(np.percentile(Lm[keep] if keep.sum() > 4 else Lm, float(mode[1:])))
         y *= db(c["lvl"] - raw)
+        pk = np.abs(y).max()
+        cap = db(c.get("peak_cap", PEAK_CAP[c["class"]]))
+        if pk > cap:
+            y *= cap / pk
         start = c["t"] - c.get("pre", 0.0)
         pan_src = None
         p = c.get("pan")

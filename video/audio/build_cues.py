@@ -16,6 +16,7 @@ Cue fields
   space     reverb space name        send   reverb send (dB, 0 = equal energy)
   fade_in / fade_out  (s, equal-power)        env    optional [[t_abs, dB], ...] gain automation
   pan       optional static re-pan (-1..1)   track  optional {"shot", "name"} -> pan from tracker
+  peak_cap  optional sample-peak cap (dBFS) for the levelled cue (defaults per class in mix.py)
   ref       what the cue is synced to         provisional  true = graphic timing not yet locked
 """
 import json
@@ -65,7 +66,7 @@ def bed(id, shot, a, b, gen, lvl, fin, fout, params=None, space="outdoor", send=
         params=params, ref=ref, env=env, note=note)
 
 
-def tick(id, shot, t, kind="callout", lvl=-30.0, pan=0.0, track=None, provisional=True, ref=""):
+def tick(id, shot, t, kind="callout", lvl=-33.0, pan=0.0, track=None, provisional=True, ref=""):
     cue(id, shot, t, 0.15, "ui_tick", lvl, cls="ui", pre=0.02, space="ui", send=-30.0,
         params=dict(sync=0.02, kind=kind), pan=pan, track=track, provisional=provisional, ref=ref)
 
@@ -299,7 +300,7 @@ cue("sh12.one_air", s, t - F, 3.6, "bloom", -30, cls="amb", pre=0.4, space="aeri
     params=dict(sync=0.4, rise=0.4, decay=3.0, bright=0.8, low=0.2), ref="bir tek")
 for i, (dt, pn, nm) in enumerate([(0.45, 0.0, "sun"), (0.72, -0.55, "sea"), (0.98, 0.45, "cloud"), (1.26, 0.65, "rain"),
                                   (1.52, -0.3, "river"), (1.8, -0.65, "forest")]):
-    tick(f"sh12.link_{nm}", s, t + dt, kind="link", lvl=-34, pan=pn, track={"shot": s, "name": nm},
+    tick(f"sh12.link_{nm}", s, t + dt, kind="link", lvl=-36, pan=pn, track={"shot": s, "name": nm},
          ref="post: glowing line links this element (timing provisional)")
 
 # ============================================================== sh13a/b golden meadow
@@ -332,7 +333,7 @@ rt[4] = round((rt[3] + rt[5]) / 2, 2)
 fallback = [-0.45, 0.5, -0.2, 0.35, -0.55, 0.15, 0.6, 0.0]
 for i, (tt, pn) in enumerate(zip(rt, fallback)):
     nm = "abcdefgh"[i]
-    tick(f"sh13b.ring_{nm}", s, tt - F, kind="ring", lvl=-29 if i < 7 else -27, pan=pn,
+    tick(f"sh13b.ring_{nm}", s, tt - F, kind="ring", lvl=-32 if i < 7 else -30, pan=pn,
          track={"shot": s, "name": nm}, provisional=False,
          ref=f"birer birer: tracking ring {i + 1}/8 on TRK_{nm} (lands with the word onsets)")
 cue("sh13b.bee", s, rt[1], 2.2, "bee", -35, pre=0.7, space="meadow", send=-16, fade_in=0.2, fade_out=0.3,
@@ -352,7 +353,7 @@ bed("sh14a.birds", s, A - 0.4, B + 0.05, "birds", -28, 0.8, 0.3, space="meadow",
 t = w(s, "görüyormuşçasına")
 cue("sh14a.turn", s, t - F, 2.7, "stalks_turn", -27, pre=0.1, space="meadow", send=-16, fade_out=0.4,
     params=dict(sync=0.1, length=1.4), ref="görüyormuşçasına (all flower heads turn toward the sun)")
-tick("sh14a.spiral", s, w(s, "hikmetli") - F, kind="link", lvl=-34, track={"shot": s, "name": "spiral"},
+tick("sh14a.spiral", s, w(s, "hikmetli") - F, kind="link", lvl=-36, track={"shot": s, "name": "spiral"},
      ref="post overlays the Fibonacci spiral arcs (timing provisional)")
 cue("sh14a.allah_sub", s, t_allah - F, 2.6, "sub", -23, cls="sub", pre=0.6, space="meadow", send=-14,
     fade_out=0.7, params=dict(sync=0.6, decay=2.0, body=0.5, pre=0.55),
