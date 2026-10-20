@@ -271,7 +271,9 @@ LF_SHELF_HZ, LF_SHELF_DB = 60.0, -5.0
 WEQ_FC = np.array([125, 250, 500, 1000, 2000, 4000, 8000], dtype=float)
 WEQ_TARGET = np.array([3, 5, 9, 13, 13, 13, 8], dtype=float)
 WEQ_MAXCUT = np.array([8, 8, 10, 24, 24, 24, 12], dtype=float)
-WEQ_RAMP, WEQ_ITER, WEQ_OVER = 0.12, 5, 1.3     # ramp (s), refinement passes, step over-correction
+WEQ_RAMP, WEQ_ITER, WEQ_OVER = 0.16, 5, 1.3     # ramp (s), refinement passes, step over-correction
+WEQ_BRIDGE = 0.45    # gaps between words shorter than this keep the shallower neighbouring cut (no
+                     # word-rate brightening of the beds inside a phrase)
 
 
 def render_cues(cues, n_total, log):
@@ -416,6 +418,8 @@ def word_eq(S, vch, v_raw, words, log=print):
     cut = np.zeros((nfr, len(WEQ_FC)))           # dB <= 0, frame rate
     G = np.ones((nfr, len(sfx.FREQS)))
     k_ramp = max(int(WEQ_RAMP / hop_s), 1)
+    k_bridge = int(WEQ_BRIDGE / hop_s)
+    spans.sort(key=lambda s: s[0])
     for it in range(WEQ_ITER):
         PSL, PSR = (AL * G ** 2) @ M, (AR * G ** 2) @ M
         PS = np.maximum(PSL, PSR)
@@ -428,8 +432,13 @@ def word_eq(S, vch, v_raw, words, log=print):
                 short += 1
                 need[i0:i1] = np.minimum(need[i0:i1], -d * WEQ_OVER)
         cut = np.maximum(cut + need, -WEQ_MAXCUT[None, :])
+        # bridge short gaps inside a phrase with the shallower of the two neighbouring cuts
+        cb = cut.copy()
+        for (_, e0, _), (s1, _, _) in zip(spans[:-1], spans[1:]):
+            if 0 < s1 - e0 <= k_bridge:
+                cb[e0:s1] = np.maximum(cut[e0 - 1], cut[s1])
         # merge and ramp: hold each word's cut over its span (+ half a ramp), then smooth
-        g = minimum_filter1d(cut, size=k_ramp, axis=0, mode="nearest")
+        g = minimum_filter1d(cb, size=k_ramp, axis=0, mode="nearest")
         g = uniform_filter1d(g, size=k_ramp, axis=0, mode="nearest")
         G = db(_band_to_bins(g, WEQ_FC))
         log(f"  word EQ pass {it}: {short} words short of target")
