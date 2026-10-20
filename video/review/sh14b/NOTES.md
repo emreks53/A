@@ -30,7 +30,7 @@
 * `104.400` last frame — draped; light leaking through the folds
 
 ## Measured render time
-*pending* (posted after the sh14a measurement).
+Heaviest frame f2465 (cloth tenting): 48 spp/accurate denoise = 158 s → now **12 spp + FAST/BALANCED OIDN ≈ 36 s/frame** (10 spp measured 33 s; visually identical to 20 spp). Cloth bake adds ~35 s once per Blender run (per 48-frame chunk).
 
 ## Known issues / next round
 1. Final drape hangs asymmetrically (slides to camera-right) — will tune initial offset/friction so it settles

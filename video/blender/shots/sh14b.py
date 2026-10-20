@@ -198,7 +198,11 @@ def build(ctx):
     for t, ev in ((ctx.t0, 0.0), (101.0, 0.35), (102.6, 0.35), (103.6, 0.75), (ctx.t1 + 0.3, 0.8)):
         sc.view_settings.exposure = ev
         C.key(sc.view_settings, "exposure", t, None)
-    return {"final_spp": 48, "preview_spp": 32, "clamp_indirect": 4.0}
+    ov = {"final_spp": 12, "final_threshold": 0.03, "preview_spp": 32, "clamp_indirect": 4.0}
+    L.fast_denoise_handler("FAST", "BALANCED")
+    import json as _j
+    ov.update(_j.loads(os.environ.get("S2_OV", "{}")))
+    return ov
 
 
 C.run("sh14b", build)

@@ -81,7 +81,7 @@ def mat_floret():
     _lnk(nt, a.outputs["Color"], mul.inputs[6]); _lnk(nt, nz.outputs["Color"], mul.inputs[7])
     _lnk(nt, mul.outputs[2], p.inputs["Base Color"])
     p.inputs["Roughness"].default_value = 0.42
-    p.inputs["Subsurface Weight"].default_value = 0.25
+    p.inputs["Subsurface Weight"].default_value = float(__import__("os").environ.get("S2_FSSS", 0.0))
     p.inputs["Subsurface Radius"].default_value = (1.0, 0.6, 0.2)
     p.inputs["Subsurface Scale"].default_value = 0.0008
     p.inputs["Sheen Weight"].default_value = 0.25
@@ -299,6 +299,26 @@ def build_disc(name, R=0.075, N=1450, seed=1, seg=10, dome=0.006, detail=2, dew=
 
     def zs(r):
         return dome * (1 - (r / R) ** 2)
+
+    if detail == 0:
+        # distant LOD: one domed disc, florets reduced to per-vertex colour rings + a floret-scale bump in the shader
+        segs, rings = 40, 10
+        V0, F0, C0 = [(0, 0, dome + 0.6 * c)], [], [_floret_colour(0, rng)]
+        for i in range(1, rings + 1):
+            r = R * i / rings
+            for k in range(segs):
+                a = 2 * math.pi * k / segs
+                V0.append((r * math.cos(a), r * math.sin(a), zs(r) + c * (0.9 + 0.6 * i / rings)))
+                C0.append(_floret_colour(i / rings, rng) if i < rings * 0.7 else (0.10, 0.04, 0.012))
+        for k in range(segs):
+            F0.append((0, 1 + k, 1 + (k + 1) % segs))
+        for i in range(rings - 1):
+            for k in range(segs):
+                a0 = 1 + i * segs + k; b0 = 1 + i * segs + (k + 1) % segs
+                F0.append((a0, b0, b0 + segs, a0 + segs))
+        ob = _mesh(name, V0, F0, cols=C0)
+        pa = ob.data.attributes.new("Pol", "FLOAT", "POINT")
+        return ob, None
 
     def add_ring_strip(rings, closed_top=None, mat=0, colfun=None, crease=0):
         """rings: list of (z, radius, colour). seg segments. Returns indices of rings."""
@@ -568,6 +588,24 @@ class Mats:
         self.dew = mat_dew()
         self.palea = self.floret
 
+    def far(self):
+        """Cheaper copies for the distant LOD: no translucency (paths stop at the first leaf/petal)."""
+        import copy
+        f = copy.copy(self)
+        f.ray = _strip_translucency(self.ray.copy())
+        f.leaf = _strip_translucency(self.leaf.copy())
+        f.bract = _strip_translucency(self.bract.copy())
+        return f
+
+
+def _strip_translucency(m):
+    nt = m.node_tree
+    out = nt.nodes["Material Output"]
+    for n in nt.nodes:
+        if n.bl_idname == "ShaderNodeMixShader" and n.outputs[0].links and n.outputs[0].links[0].to_node == out:
+            n.inputs[0].default_value = 0.0
+    return m
+
 
 def build_head(name, mats, R=0.075, N=1450, seed=1, n_rays=34, detail=2, dew=0, ray_len=0.085):
     """Full capitulum in head-local space (+Z = face). Returns list of objects (joined per material set)."""
@@ -796,5 +834,15 @@ def add_haze(mat):
     if not out.inputs["Surface"].links:
         return
     src = out.inputs["Surface"].links[0].from_socket
+    mat.cycles.emission_sampling = "NONE"     # the haze "emission" must not turn every leaf into a mesh light
     g = nt.nodes.new("ShaderNodeGroup"); g.node_tree = haze_group()
     nt.links.new(src, g.inputs[0]); nt.links.new(g.outputs[0], out.inputs["Surface"])
+
+
+def fast_denoise_handler(prefilter="FAST", quality="BALANCED"):
+    """common.configure_render() forces ACCURATE/HIGH OIDN (~10 s/frame of fixed cost at 1080x1920 on 4 cores).
+    Apply a cheaper but visually equivalent setting at render start (handler runs after configure_render)."""
+    def _h(scene, *_):
+        scene.cycles.denoising_prefilter = prefilter
+        scene.cycles.denoising_quality = quality
+    bpy.app.handlers.render_init.append(_h)

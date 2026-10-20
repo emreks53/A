@@ -17,6 +17,7 @@ SUN_AZ = math.radians(135)                              # direction to the sun =
 SUN_DIR2 = Vector((-math.sin(SUN_AZ), math.cos(SUN_AZ), 0))
 HC_LOCAL = Vector((0, 0.07, 0.16))                      # disc centre in pivot space
 FIELD_R = float(os.environ.get("S2_FIELD_R", 120))
+LOD_NEAR = float(os.environ.get("S2_LODN", 9.0))
 
 
 def head_matrix(pivot, yaw, pitch):
@@ -85,16 +86,23 @@ def build_field(ctx, mats, hero_xy, t_turn, cam_pts):
     hide.children.link(proto_h); hide.children.link(proto_s)
     tops = []
     NV = 6
-    for v in range(NV):
-        parts = L.build_neck_and_head(f"fh{v}", mats, seed=100 + v, detail=1, R=rng.uniform(0.06, 0.085),
-                                      N=rng.choice([700, 800, 900]), n_rays=rng.choice([34, 38, 42]),
-                                      head_scale=1.0)
-        o = L.join(parts, f"fhead{v}")
-        C.move_to_collection(o, proto_h)
-        sp, top = L.build_stem_leaves(f"fs{v}", mats, H=1.6, seed=200 + v, n_leaves=9, detail=1)
-        so = L.join(sp, f"fstem{v}")
-        C.move_to_collection(so, proto_s)
-        tops.append(Vector(top))
+    params = [(rng.uniform(0.06, 0.085), rng.choice([700, 800, 900]), rng.choice([34, 38, 42])) for v in range(NV)]
+    # variants 0..5: near LOD (modelled florets, 9 leaves); 6..11: far LOD (textured disc, 6 leaves)
+    mats_far = mats.far()
+    for lod in (1, 0):
+        mm = mats if lod else mats_far
+        for v in range(NV):
+            idx = v + (0 if lod else NV)
+            R_, N_, nr = params[v]
+            parts = L.build_neck_and_head(f"fh{idx:02d}", mm, seed=100 + v, detail=lod, R=R_, N=N_, n_rays=nr,
+                                          head_scale=1.0)
+            o = L.join(parts, f"fhead{idx:02d}")
+            C.move_to_collection(o, proto_h)
+            sp, top = L.build_stem_leaves(f"fs{idx:02d}", mm, H=1.6, seed=200 + v, n_leaves=9 if lod else 6, detail=1)
+            so = L.join(sp, f"fstem{idx:02d}")
+            C.move_to_collection(so, proto_s)
+            if lod:
+                tops.append(Vector(top))
     hide.hide_render = True
     hide.hide_viewport = True
     pts_h, pts_s = [], []
@@ -134,12 +142,13 @@ def build_field(ctx, mats, hero_xy, t_turn, cam_pts):
                     break
             if blocked:
                 continue
+            vv = v if dist < LOD_NEAR else v + NV
             pts_s.append(tuple(p))
-            S["variant"].append(v); S["yaw0"].append(rng.uniform(0, 6.283)); S["yaw1"].append(0); S["pitch0"].append(0)
+            S["variant"].append(vv); S["yaw0"].append(rng.uniform(0, 6.283)); S["yaw1"].append(0); S["pitch0"].append(0)
             S["pitch1"].append(0); S["roll"].append(0); S["delay"].append(0); S["dur"].append(1); S["scale"].append(s)
             pts_h.append(tuple(hpos))
             jy = rng.gauss(0, math.radians(9))
-            A["variant"].append(v)
+            A["variant"].append(vv)
             A["yaw0"].append(YAW0 + jy + rng.gauss(0, math.radians(8)))
             A["yaw1"].append(SUN_AZ + jy * 0.6)
             A["pitch0"].append(PITCH0 + rng.gauss(0, math.radians(6)) - math.radians(4))
@@ -159,9 +168,12 @@ def build_field(ctx, mats, hero_xy, t_turn, cam_pts):
         bpy.context.scene.collection.objects.link(ob)
         mod = ob.modifiers.new("inst", "NODES")
         mod.node_group = field_gn(name + "_gn", coll, t_turn, turn)
+        if not turn:
+            ob.cycles.use_motion_blur = False   # static stems: keep them out of the (slower) motion BVH
         return ob
     pts_obj("field_heads", pts_h, A, proto_h, True)
-    pts_obj("field_stems", pts_s, S, proto_s, False)
+    if not os.environ.get("S2_NOSTEMS"):
+        pts_obj("field_stems", pts_s, S, proto_s, False)
     print(f"[sh14a] field plants: {len(pts_h)}", flush=True)
 
 
@@ -293,6 +305,7 @@ def build(ctx):
     bpy.ops.mesh.primitive_uv_sphere_add(radius=13.0, segments=32, ring_count=16)
     sdisc = bpy.context.object; sdisc.name = "sun_disc"
     C.assign(sdisc, disc_m)
+    disc_m.cycles.emission_sampling = "NONE"
     sdisc.visible_diffuse = sdisc.visible_glossy = sdisc.visible_transmission = sdisc.visible_shadow = False
     sdisc.visible_volume_scatter = False
     for f in range(ctx.f0 - 2, ctx.f1 + 3, 2):
@@ -352,7 +365,28 @@ def build(ctx):
         g = C.remap(t, 89.0, t_allah + 0.1, C.smooth)
         hc.outputs[0].default_value = (C.lerp(0.16, 0.55, g), C.lerp(0.09, 0.26, g), C.lerp(0.06, 0.10, g), 1)
         hc.outputs[0].keyframe_insert("default_value", frame=f)
-    return {"final_spp": 32, "preview_spp": 24, "max_bounces": 6, "transmission_bounces": 6, "texture_limit": "2048"}
+    ov = {"final_spp": 10, "final_threshold": 0.04, "preview_spp": 24, "max_bounces": 6, "transmission_bounces": 6, "texture_limit": "2048"}
+    import json as _j
+    ov.update(_j.loads(os.environ.get("S2_OV", "{}")))
+    L.fast_denoise_handler(*os.environ.get("S2_DN", "FAST,BALANCED").split(","))
+    if os.environ.get("S2_NODEW"):
+        for o in bpy.data.objects:
+            if "dew" in o.name:
+                o.hide_render = True
+    if os.environ.get("S2_SPLIT"):
+        bpy.context.scene.cycles.debug_use_spatial_splits = True
+    if os.environ.get("S2_THREADS"):
+        bpy.context.scene.render.threads_mode = "FIXED"; bpy.context.scene.render.threads = int(os.environ["S2_THREADS"])
+    if os.environ.get("S2_NODOF"):
+        bpy.context.scene.camera.data.dof.use_dof = False
+    if os.environ.get("S2_NOSKY"):
+        bpy.context.scene.world.node_tree.nodes["Background"].inputs[1].default_value = 0.0
+        bpy.context.scene.world.node_tree.nodes["Background"].inputs[1].driver_remove("default_value") if False else None
+        bpy.context.scene.world.animation_data_clear() if bpy.context.scene.world.animation_data else None
+        bpy.context.scene.world.node_tree.animation_data_clear()
+    if os.environ.get("S2_CLAY"):
+        bpy.context.view_layer.material_override = C.principled("clay", base=(0.5, 0.5, 0.5), rough=0.6)
+    return ov
 
 
 C.run("sh14a", build)

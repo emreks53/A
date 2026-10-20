@@ -37,7 +37,15 @@
 * `sh14a_t098.800.png` "Allah" — sunrise over the whole field
 
 ## Measured render time
-Final s/frame: *pending* (will be measured on the heaviest frame, ~92.6, and posted here). Preview stills at 50 %/24 spp take 40–75 s.
+Heaviest frame f2222 (92.6 s, hero + dense near field, DOF, motion blur), 1080×1920 on this 4-core Xeon 2.1 GHz:
+* original settings (32 spp, OIDN accurate): **346 s/frame**
+* now (10 spp + adaptive 0.04, OIDN prefilter FAST/quality BALANCED via a render_init handler, floret SSS off,
+  static stems out of the motion BVH): **100 s/frame** — still **over the 40–45 s budget**. Macro frames ≈ 55 s.
+  Profiling: ~15 s/frame is fixed (sync + GN motion-blur evaluation + denoise + PNG); the rest is path tracing of
+  dense foliage seen at grazing angles (bounces/textures barely matter; geometry/visibility does).
+  Next steps: lighter near-field leaves/heads, fewer near plants in frame, try 6–8 spp. If it cannot reach ~45 s
+  without visible loss, I propose spending the extra ~4 h of render (262 frames) or splitting chunks with idle
+  studios — director's call.
 
 ## Known issues (being worked on now)
 1. Macro: floret buds still read a little "bead-like"; adding stronger palea tips, fine hairs and pollen grains.
