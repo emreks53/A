@@ -145,7 +145,6 @@ def build(ctx):
     gp = L.bm_to_obj("Ground", bm, [], smooth=True)
     gm = C.mat_from_textures("Ground", C.ph_texture("sparse_grass", "2k"), scale=127.0, base_tint=(0.75, 0.72, 0.5))
     C.assign(gp, gm)
-    L.aerial_haze(gm, color=(1.0, 0.74, 0.52), dist0=420.0, strength=1.4)
 
     # ------------------------------------------------------------------ grass variants
     rng = random.Random(1301)
@@ -279,7 +278,7 @@ def build(ctx):
     # ------------------------------------------------------------------ shrubs + trees at the forest edge
     shr = [o for o in C.ph_model("shrub_02", "1k") if o.type == "MESH"]
     tree_srcs = []
-    for nm in ("island_tree_02", "tree_small_02", "island_tree_01", "searsia_lucida"):
+    for nm in ("island_tree_02", "tree_small_02", "searsia_lucida"):
         objs = [o for o in C.ph_model(nm, "1k") if o.type == "MESH"]
         tree_srcs.append(max(objs, key=lambda o: o.dimensions.z))
         for o in objs:
@@ -306,7 +305,7 @@ def build(ctx):
             a = trng.uniform(0, 6.28); r = rad * math.sqrt(trng.random())
             place(trng.choice(trees), (cx + r * math.cos(a), cy + r * math.sin(a), 0), trng.uniform(7, 21), trng.uniform(0.8, 1.3))
     # deep forest behind (two more layers, larger), increasingly hazy
-    for i in range(70):
+    for i in range(45):
         place(trng.choice(trees), (trng.uniform(-120, 15), trng.uniform(95, 190), 0), trng.uniform(12, 26), trng.uniform(0.9, 1.3))
     for i in range(40):
         y = trng.uniform(18, 70)
@@ -316,7 +315,7 @@ def build(ctx):
     # mid-ground and lone trees in the meadow
     # (sun is low ahead-right: anything right of / in front of the view would throw 60-90 m shadows over
     #  the meadow, so mid-ground trees stand on the left where their shadows fall away)
-    place(trees[3], (-11, 30, 0), 8.0)
+    place(trees[2], (-11, 30, 0), 8.0)
     place(trees[1], (-15, 40, 0), 11.0)
     # aerial perspective on everything far (camera-ray distance fog toward the warm horizon colour)
     for ms_ in {m_ for o in shr + trees for m_ in o.data.materials}:
