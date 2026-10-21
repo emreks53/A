@@ -161,9 +161,9 @@ def build(ctx):
             kp.interpolation = "LINEAR"
     C.handheld(cam, amp_loc=0.0008, amp_rot=0.0, speed=0.3, seed=5)
     S.fast_denoise()
-    S.comp_sunbeams(ctx, cam, beams=False, bloom=0.05, bloom_threshold=4.0)
-    return {"final_spp": 32, "max_bounces": 10, "diffuse_bounces": 2, "glossy_bounces": 2,
-            "transmission_bounces": 10, "transparent_bounces": 8, "clamp_indirect": 4.0}
+    S.perf_settings(light_tree=False, fast_gi=False)
+    return {"final_spp": 12, "final_threshold": 0.05, "max_bounces": 7, "diffuse_bounces": 2,
+            "glossy_bounces": 1, "transmission_bounces": 6, "transparent_bounces": 8, "clamp_indirect": 4.0}
 
 
 C.run("sh03", build)

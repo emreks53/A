@@ -1,4 +1,4 @@
-# sh02 — morning room, window, breathing curtain, dust motes (5.24–9.64 s) — review 1
+# sh02 — morning room, window, breathing curtain, dust motes (5.24–9.64 s) — review 2
 
 Script: `video/blender/shots/sh02.py`, shared set `video/blender/lib_s4.py` (also used by sh03).
 Light rig (for S5/sh08 to match): see `video/review/LIGHT_SETUP_S4.md`.
@@ -33,15 +33,22 @@ The band holds the lower window / curtain at 8.3 and the sill + plaster wall fro
 tilts down — soft, low-detail. If the director prefers darker behind the white text, I can tilt down
 ~0.3 s earlier.
 
-## Render cost (honest)
-Preview stills: ~65 s each at 50 % / 24 spp. Measured full final before the latest light optimisations:
-248 s/frame (4 cores) — **over budget**. Since then: HDRI no longer samples diffuse light (sky fill area
-light instead), OIDN prefilter FAST, bounces trimmed, motes as point cloud, emission-only shafts.
-New full-frame measurement is running next; plan to hit ≤45 s: final_spp 16 + adaptive 0.03, curtain
-subsurf off at render, step-rate tuning. Will report the number in the next push.
+## Render cost (measured, 1080×1920 --final, 4 cores)
+* Review 1 config: 248 s/frame. **Review 2 config: ~97 s/frame** (3-frame run 199–201, 12 spp adaptive 0.05
+  + OIDN; light tree off; diffuse 1 / transmission 8 bounces; the cloth cache is simulated once per Blender
+  launch, ~30 s per 48-frame chunk). Still ~2× over the 40–45 s target. Profile at 12 spp: emission shafts
+  ~25 s, curtain (alpha weave + transparent shadows) ~15 s, motes ~15 s, sofra ~15 s, room GI ~40 s.
+* Things I tried that did not help or hurt the look: shaft card stack (233 s), compositor sun beams
+  (single "saber" streak), fast-GI (room goes black — closed interior). Next: cheaper weave transparency,
+  fewer/bigger motes, shaft volume only where the camera sees it. **Director: if ~95 s/frame is
+  acceptable for sh02 (117 frames ≈ 3.2 h on 4 cores) I can render as is; otherwise I keep cutting.**
+
+## Changes since review 1
+* The table under the window now carries the same sofra as sh03 (bowl, bread, glass, plate) — the
+  boom-down into sh03 is continuous.
+* Lime plaster lighter and smoother (no "granite" read); brighter sky fill; exposure 2.6 → 1.9 settle.
+* Motes kept ≥0.6 m from the lens (no big white discs), cheaper material.
+* Empty glass now renders clear (transmission depth 8).
 
 ## Known issues / next
-* Lime plaster still reads too dark/granite in the shadowed wall areas → lighter, smoother lime wash.
-* A few motes very close to the lens become large white discs → keep the cloud ≥0.4 m from the lens,
-  more motes deeper in the beam.
 * Shafts are subtle when looking into the sun; considering a touch more density near the window.

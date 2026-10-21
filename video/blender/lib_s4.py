@@ -373,6 +373,22 @@ def build_table():
 
 # ----------------------------------------------------------------------------- curtain (cloth sim)
 
+_PENDING_BAKES = []
+
+
+def bake_caches():
+    """Bake every cloth cache LAST in build(): adding objects after a bake marks the cache outdated and
+    Cycles would re-simulate at render time. Deterministic: always the full preroll..f1+2 range."""
+    sc = bpy.context.scene
+    fs, fe = sc.frame_start, sc.frame_end
+    for obj, pc in _PENDING_BAKES:
+        sc.frame_start, sc.frame_end = pc.frame_start, pc.frame_end
+        with bpy.context.temp_override(scene=sc, active_object=obj, object=obj, point_cache=pc):
+            bpy.ops.ptcache.bake(bake=True)
+    sc.frame_start, sc.frame_end = fs, fe
+    _PENDING_BAKES.clear()
+
+
 def build_curtain(ctx, wind_keys, y0=0.30, y1=1.08, drop=1.42, preroll=48, res=(44, 64), seed=3, wall=None):
     """Sheer linen panel on the rod, gathered in soft pleats, cloth-simulated with a wind field whose
     strength follows `wind_keys` [(abs_time, strength)]. Baked inside the script from
@@ -423,7 +439,7 @@ def build_curtain(ctx, wind_keys, y0=0.30, y1=1.08, drop=1.42, preroll=48, res=(
     pc.frame_start = ctx.f0 - preroll
     pc.frame_end = ctx.f1 + 2
     # thickness + soft shading
-    sub = cur.modifiers.new("Sub", "SUBSURF"); sub.levels = 1; sub.render_levels = 1
+    sub = cur.modifiers.new("Sub", "SUBSURF"); sub.levels = 0; sub.render_levels = 0
     if wall is not None:
         wall.modifiers.new("Coll", "COLLISION")
         wall.collision.thickness_outer = 0.005
@@ -443,13 +459,7 @@ def build_curtain(ctx, wind_keys, y0=0.30, y1=1.08, drop=1.42, preroll=48, res=(
     tb.field.strength = 0.25; tb.field.size = 0.35; tb.field.flow = 0.5
     tb.field.seed = seed + 1
     cur.data.materials.append(mat_sheer_linen())
-    # bake (deterministic, independent of the requested render range)
-    sc = bpy.context.scene
-    fs, fe = sc.frame_start, sc.frame_end
-    sc.frame_start, sc.frame_end = pc.frame_start, pc.frame_end
-    with bpy.context.temp_override(scene=sc, active_object=cur, object=cur, point_cache=pc):
-        bpy.ops.ptcache.bake(bake=True)
-    sc.frame_start, sc.frame_end = fs, fe
+    _PENDING_BAKES.append((cur, pc))          # baked by bake_caches() at the very end of build()
     return cur
 
 
@@ -478,8 +488,7 @@ def mat_sheer_linen():
     nt.links.new(nz.outputs["Fac"], add.inputs[0]); nt.links.new(mr.outputs["Result"], add.inputs[2])
     p.inputs["Base Color"].default_value = (0.93, 0.89, 0.80, 1)
     p.inputs["Roughness"].default_value = 0.75
-    p.inputs["Sheen Weight"].default_value = 0.6
-    p.inputs["Sheen Roughness"].default_value = 0.4
+    p.inputs["Sheen Weight"].default_value = 0.0
     p.inputs["Sheen Tint"].default_value = (1.0, 0.96, 0.9, 1)
     p.inputs["Transmission Weight"].default_value = 0.0
     # translucency: mix in a translucent BSDF
@@ -599,6 +608,17 @@ def build_motes(name, bmin, bmax, count=5000, seed=11, r_min=0.00018, r_max=0.00
 
 def mat_mote():
     m, nt, p = C.new_mat("Mote")
+    nt.nodes.remove(p)
+    df = nt.nodes.new("ShaderNodeBsdfDiffuse"); df.inputs["Color"].default_value = (0.8, 0.76, 0.7, 1)
+    trl = nt.nodes.new("ShaderNodeBsdfTranslucent"); trl.inputs["Color"].default_value = (1.0, 0.96, 0.9, 1)
+    mx = nt.nodes.new("ShaderNodeMixShader"); mx.inputs[0].default_value = 0.75
+    nt.links.new(df.outputs[0], mx.inputs[1]); nt.links.new(trl.outputs[0], mx.inputs[2])
+    nt.links.new(mx.outputs[0], nt.nodes["Material Output"].inputs["Surface"])
+    return m
+
+
+def _mat_mote_old():
+    m, nt, p = C.new_mat("MoteOld")
     p.inputs["Base Color"].default_value = (0.8, 0.76, 0.7, 1)
     p.inputs["Roughness"].default_value = 0.4
     p.inputs["Sheen Weight"].default_value = 1.0
@@ -653,12 +673,12 @@ def mat_bread():
     m, nt, p = C.new_mat("BreadCrust")
     tc = nt.nodes.new("ShaderNodeTexCoord")
     L = nt.links.new
-    vor = nt.nodes.new("ShaderNodeTexVoronoi"); vor.feature = "DISTANCE_TO_EDGE"; vor.inputs["Scale"].default_value = 22
+    vor = nt.nodes.new("ShaderNodeTexVoronoi"); vor.feature = "DISTANCE_TO_EDGE"; vor.inputs["Scale"].default_value = 13
     vor.inputs["Randomness"].default_value = 1.0
     nzw = nt.nodes.new("ShaderNodeTexNoise"); nzw.inputs["Scale"].default_value = 30; nzw.inputs["Detail"].default_value = 8
     warp = nt.nodes.new("ShaderNodeVectorMath"); warp.operation = "MULTIPLY_ADD"; warp.inputs[1].default_value = (0.02,) * 3
     L(nzw.outputs["Color"], warp.inputs[0]); L(tc.outputs["Object"], warp.inputs[2]); L(warp.outputs[0], vor.inputs["Vector"])
-    crack = nt.nodes.new("ShaderNodeMapRange"); crack.inputs["From Min"].default_value = 0.0; crack.inputs["From Max"].default_value = 0.06
+    crack = nt.nodes.new("ShaderNodeMapRange"); crack.inputs["From Min"].default_value = 0.0; crack.inputs["From Max"].default_value = 0.022
     L(vor.outputs["Distance"], crack.inputs["Value"])          # 0 in the fissure -> 1 on the crust
     # height-based browning: top of the dome darker, sides golden, near the base pale
     sep = nt.nodes.new("ShaderNodeSeparateXYZ"); L(tc.outputs["Object"], sep.inputs[0])
@@ -670,13 +690,13 @@ def mat_bread():
     L(nz.outputs["Fac"], mixf.inputs[0]); L(hz.outputs["Result"], mixf.inputs[2])
     ramp = nt.nodes.new("ShaderNodeValToRGB")
     cr = ramp.color_ramp
-    cr.elements[0].position = 0.15; cr.elements[0].color = (0.78, 0.50, 0.20, 1)
-    cr.elements[1].position = 0.97; cr.elements[1].color = (0.30, 0.13, 0.04, 1)
-    e = cr.elements.new(0.6); e.color = (0.58, 0.30, 0.09, 1)
+    cr.elements[0].position = 0.15; cr.elements[0].color = (0.55, 0.31, 0.11, 1)
+    cr.elements[1].position = 0.97; cr.elements[1].color = (0.20, 0.08, 0.025, 1)
+    e = cr.elements.new(0.6); e.color = (0.38, 0.18, 0.055, 1)
     L(mixf.outputs[0], ramp.inputs["Fac"])
     inner = nt.nodes.new("ShaderNodeMix"); inner.data_type = "RGBA"
-    inner.inputs[7].default_value = (0.80, 0.62, 0.36, 1)     # fissure: paler, less baked
-    L(crack.outputs["Result"], inner.inputs[0]); L(ramp.outputs["Color"], inner.inputs[7]); inner.inputs[6].default_value = (0.82, 0.64, 0.38, 1)
+    inner.inputs[7].default_value = (0.62, 0.42, 0.20, 1)     # fissure: paler, less baked
+    L(crack.outputs["Result"], inner.inputs[0]); L(ramp.outputs["Color"], inner.inputs[7]); inner.inputs[6].default_value = (0.62, 0.42, 0.20, 1)
     # flour dust patches on the top
     fl = nt.nodes.new("ShaderNodeTexNoise"); fl.inputs["Scale"].default_value = 14; fl.inputs["Detail"].default_value = 10
     fl.inputs["Roughness"].default_value = 0.75
@@ -686,7 +706,7 @@ def mat_bread():
     L(fl.outputs["Fac"], flm.inputs["Value"])
     flh = nt.nodes.new("ShaderNodeMath"); flh.operation = "MULTIPLY"; L(flm.outputs["Result"], flh.inputs[0]); L(hz.outputs["Result"], flh.inputs[1])
     flour = nt.nodes.new("ShaderNodeMix"); flour.data_type = "RGBA"
-    L(flh.outputs[0], flour.inputs[0]); L(inner.outputs[2], flour.inputs[6]); flour.inputs[7].default_value = (0.86, 0.80, 0.70, 1)
+    L(flh.outputs[0], flour.inputs[0]); L(inner.outputs[2], flour.inputs[6]); flour.inputs[7].default_value = (0.70, 0.62, 0.50, 1)
     L(flour.outputs[2], p.inputs["Base Color"])
     p.inputs["Roughness"].default_value = 0.62
     p.inputs["Subsurface Weight"].default_value = 0.15
@@ -892,7 +912,7 @@ def mat_pith():
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 160; nz.inputs["Detail"].default_value = 6
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
     ramp = nt.nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].color = (0.80, 0.64, 0.42, 1); ramp.color_ramp.elements[1].color = (0.95, 0.86, 0.66, 1)
+    ramp.color_ramp.elements[0].color = (0.62, 0.45, 0.26, 1); ramp.color_ramp.elements[1].color = (0.80, 0.66, 0.44, 1)
     nt.links.new(nz.outputs["Fac"], ramp.inputs["Fac"]); nt.links.new(ramp.outputs["Color"], p.inputs["Base Color"])
     p.inputs["Roughness"].default_value = 0.45
     p.inputs["Subsurface Weight"].default_value = 0.5
@@ -958,6 +978,33 @@ def build_open_pomegranate(name="PomOpen", seed=9, n_arils=420):
         if any((p - q).length < 0.0052 for q in pts):
             continue
         pts.append(p)
+    # cream pith membranes between the 7 chambers (thin, slightly wavy walls standing proud of the cut)
+    pith_m = me.materials[1]
+    for k in range(n_ch):
+        a = ch_off + 2 * math.pi * k / n_ch
+        mb = bmesh.new()
+        segs = 10
+        ring = []
+        for j in range(segs + 1):
+            r = 0.004 + (rmax - 0.007) * j / segs
+            wob = 0.0012 * math.sin(j * 1.7 + k)
+            c_, s_ = math.cos(a), math.sin(a)
+            nx_, ny_ = -s_, c_
+            for side in (-1, 1):
+                ring.append(mb.verts.new((r * c_ + nx_ * (wob + side * 0.0005), r * s_ + ny_ * (wob + side * 0.0005),
+                                          zc + 0.0012 - 0.0010 * (j / segs) ** 2)))
+                ring.append(mb.verts.new((r * c_ + nx_ * (wob + side * 0.0007), r * s_ + ny_ * (wob + side * 0.0007),
+                                          zc - 0.004)))
+        vs = ring
+        for j in range(segs):
+            b0 = j * 4; b1 = (j + 1) * 4
+            for (u, v) in ((0, 2), (2, 3), (3, 1), (1, 0)):
+                mb.faces.new((vs[b0 + u], vs[b1 + u], vs[b1 + v], vs[b0 + v]))
+        mme = bpy.data.meshes.new("membrane"); mb.to_mesh(mme); mb.free()
+        mo = C.link(bpy.data.objects.new(f"{name}_membrane", mme))
+        mo.data.materials.append(pith_m)
+        C.smooth_shade(mo)
+        mo.parent = src
     for i, p in enumerate(pts):
         o = bpy.data.objects.new(f"{name}_aril", ame)
         C.link(o)
@@ -1362,11 +1409,14 @@ def build_beam_emission(bmin, bmax, strength=0.03, noise_amp=0.55, curtain_y=Non
         f.inputs[1].default_value = -(1 - curtain_trans); f.inputs[2].default_value = 1.0
         L(cu, f.inputs[0]); inside = mul(inside, f.outputs[0])
     # drifting air density
-    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.noise_dimensions = "4D"
-    nz.inputs["Scale"].default_value = 2.2; nz.inputs["Detail"].default_value = 3.0; nz.inputs["Roughness"].default_value = 0.55
-    L(tc.outputs["Object"], nz.inputs["Vector"])
+    # drifting air density: 3D noise advected by a slow keyed drift (cheaper than 4D)
+    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.noise_dimensions = "3D"
+    nz.inputs["Scale"].default_value = 2.2; nz.inputs["Detail"].default_value = 1.5; nz.inputs["Roughness"].default_value = 0.5
     wv = nt.nodes.new("ShaderNodeValue"); wv.name = "TIME"
-    L(wv.outputs[0], nz.inputs["W"])
+    adv = nt.nodes.new("ShaderNodeVectorMath"); adv.operation = "MULTIPLY_ADD"
+    adv.inputs[1].default_value = (0.35, -0.12, 0.18)
+    L(wv.outputs[0], adv.inputs[0]); L(tc.outputs["Object"], adv.inputs[2])
+    L(adv.outputs[0], nz.inputs["Vector"])
     nm = nt.nodes.new("ShaderNodeMapRange")
     nm.inputs["To Min"].default_value = 1 - noise_amp; nm.inputs["To Max"].default_value = 1 + noise_amp
     L(nz.outputs["Fac"], nm.inputs["Value"])
@@ -1413,6 +1463,22 @@ def _drop_to_table(o, xy, rot=None):
     o.location.z += TABLE_Z - min((o.matrix_world @ Vector(c)).z for c in o.bound_box)
 
 
+SETTLED_FRUIT = [   # output of settle_fruit() for build_sofra(seed=77); set S4_RESETTLE=1 to recompute
+    ('food_apple_01', [[0.212121, -0.260879, -0.941779, 0.415557], [0.455868, -0.826015, 0.331488, -0.543348], [-0.864401, -0.499642, -0.056289, -59.023491], [0.0, 0.0, 0.0, 1.0]]),
+    ('food_apple_01.001', [[0.936275, -0.302458, -0.17863, -0.205891], [0.31082, 0.950255, 0.020155, 0.345263], [0.163648, -0.074393, 0.98371, 0.826156], [0.0, 0.0, 0.0, 1.0]]),
+    ('food_pomegranate_01', [[0.703927, 0.364293, -0.609736, -0.341378], [-0.707644, 0.433496, -0.557962, 0.312029], [0.061057, 0.82424, 0.562939, 0.871936], [0.0, 0.0, 0.0, 1.0]]),
+    ('food_pears_asian_01_a', [[-0.913224, -0.381634, -0.142753, -0.268216], [-0.402067, 0.900833, 0.163834, 0.331475], [0.066072, 0.207014, -0.976105, 0.836887], [0.0, 0.0, 0.0, 1.0]]),
+    ('food_pears_asian_01_b', [[-0.54705, -0.836467, 0.032551, -0.243872], [-0.836987, 0.545923, -0.037694, 0.300644], [0.013759, -0.047865, -0.998759, 0.836794], [0.0, 0.0, 0.0, 1.0]]),
+    ('food_pears_asian_01_c', [[0.020494, 0.607426, 0.794112, -0.138744], [0.224112, -0.776858, 0.588444, 0.321203], [0.974348, 0.165911, -0.152052, 0.850819], [0.0, 0.0, 0.0, 1.0]]),
+    ('food_kiwi_01', [[0.268218, 0.12719, -0.954925, -0.231619], [0.73755, 0.61057, 0.288486, 0.422508], [0.619741, -0.781682, 0.069957, 0.850791], [0.0, 0.0, 0.0, 1.0]]),
+    ('food_kiwi_01.001', [[0.568793, 0.154506, 0.807839, -0.147757], [0.38605, 0.817128, -0.428098, 0.394334], [-0.726251, 0.555365, 0.405129, 0.862562], [0.0, 0.0, 0.0, 1.0]]),
+    ('food_lime_01', [[-0.338829, 0.299896, 0.891772, -0.207819], [0.863388, 0.475727, 0.168062, 0.267489], [-0.373839, 0.82689, -0.420117, 0.830127], [0.0, 0.0, 0.0, 1.0]]),
+    ('food_lime_01.001', [[-0.55149, 0.696957, 0.458378, 0.427212], [-0.742279, -0.159274, -0.650887, 0.140532], [-0.380633, -0.699202, 0.605174, -44.511604], [0.0, 0.0, 0.0, 1.0]]),
+    ('lemon', [[0.327733, -0.469994, 0.819571, -0.291172], [-0.241839, 0.796846, 0.553669, 0.373306], [-0.913294, -0.37966, 0.14749, 0.817489], [0.0, 0.0, 0.0, 1.0]]),
+    ('lemon.001', [[0.259852, -0.92918, 0.262872, -0.27805], [0.919841, 0.155329, -0.360229, 0.263232], [0.293886, 0.335406, 0.895061, 0.828378], [0.0, 0.0, 0.0, 1.0]]),
+]
+
+
 def build_sofra(seed=77):
     """Bowl of rigid-body-settled fruit, round village loaf, clear tumbler (+ water body, empty), tulip tea
     glass, plate with the opened pomegranate, a loose lemon and apple. Returns handles for animation."""
@@ -1449,7 +1515,13 @@ def build_sofra(seed=77):
         r = 0.03 + 0.045 * ((k * 0.37) % 1.0)
         o.location = (bx + r * math.cos(a), by + r * math.sin(a), TZ + 0.13 + 0.075 * k)
         o.rotation_euler = (rng.uniform(-0.6, 0.6), rng.uniform(-0.6, 0.6), rng.uniform(0, 6.28))
-    settle_fruit(bowl, fruit, frames=130)
+    import time as _t, os as _os; _t0 = _t.time()
+    if _os.environ.get("S4_RESETTLE") or len(SETTLED_FRUIT) != len(fruit):
+        settle_fruit(bowl, fruit, frames=130)      # deterministic rigid-body drop (~5 min on 4 cores)
+    else:                                          # frozen result of exactly that simulation
+        for o, (nm, m) in zip(fruit, SETTLED_FRUIT):
+            o.matrix_world = Matrix(m)
+    print(f"[s4] fruit settle {_t.time() - _t0:.1f}s", flush=True)
     for o in list(fruit):                      # anything that escaped the bowl is cleared off the set
         if o.matrix_world.translation.z < TZ - 0.01 or (o.matrix_world.translation.xy - Vector((bx, by))).length > 0.2:
             bpy.data.objects.remove(o); fruit.remove(o)
@@ -1478,7 +1550,9 @@ def build_sofra(seed=77):
         elif o.type == "MESH":
             bpy.data.objects.remove(o)
     plate.location = (0, 0, 0)
+    _t0 = _t.time()
     pom, arils, zc = build_open_pomegranate()
+    print(f"[s4] pomegranate {_t.time() - _t0:.1f}s", flush=True)
     bpy.context.view_layer.update()
     pz = max((plate.matrix_world @ Vector(c)).z for c in plate.bound_box) - 0.004
     pmin = min((pom.matrix_world @ Vector(c)).z for c in pom.bound_box)
@@ -1530,3 +1604,49 @@ def add_water_ripples(mat, centre, t0, t1, amp_keys):
             fc.extrapolation = "LINEAR"
             for kp in fc.keyframe_points:
                 kp.interpolation = "LINEAR"
+
+
+def perf_settings(light_tree=False, fast_gi=False, ao_bounces=1, ao_distance=2.0, adaptive_min=4, volume_max_steps=None):
+    """Render-speed settings that common.configure_render() would overwrite: applied at render init.
+    (Light tree off: with 3 lights it only costs time; fast GI: AO-approximated bounces after the first.)"""
+    bpy.context.scene.world.light_settings.distance = ao_distance
+
+    def _h(*_):
+        c = bpy.context.scene.cycles
+        c.use_light_tree = light_tree
+        c.use_fast_gi = fast_gi
+        c.ao_bounces_render = ao_bounces
+        if c.adaptive_min_samples == 0:
+            c.adaptive_min_samples = adaptive_min
+        if volume_max_steps:
+            c.volume_max_steps = volume_max_steps
+    bpy.app.handlers.render_init.append(_h)
+
+
+def build_beam_cards(x0, x1, y0, y1, z0, z1, n=12, strength=0.009, noise_amp=0.55, curtain_y=None,
+                     curtain_trans=0.55, time_keys=None, color=(1.0, 0.93, 0.80)):
+    """Same analytic shafts as build_beam_emission() but integrated on a stack of camera-only transparent
+    emission cards (x = const) instead of a ray-marched volume: per-card emission = strength * spacing.
+    No light sampling, no marching -> a few seconds per frame instead of ~25."""
+    vol = build_beam_emission((x0, y0, z0), (x1, y1, z1), strength=strength * (x1 - x0) / n, noise_amp=noise_amp,
+                              curtain_y=curtain_y, curtain_trans=curtain_trans, time_keys=time_keys, color=color)
+    m = vol.data.materials[0]
+    nt = m.node_tree
+    out = nt.nodes["Material Output"]
+    em_link = out.inputs["Volume"].links[0]
+    em = em_link.from_node
+    nt.links.remove(em_link)
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    add = nt.nodes.new("ShaderNodeAddShader")
+    nt.links.new(tr.outputs[0], add.inputs[0]); nt.links.new(em.outputs[0], add.inputs[1])
+    nt.links.new(add.outputs[0], out.inputs["Surface"])
+    verts, faces = [], []
+    for i in range(n):
+        x = x0 + (x1 - x0) * (i + 0.5) / n
+        b = len(verts); verts += [(x, y0, z0), (x, y1, z0), (x, y1, z1), (x, y0, z1)]
+        faces.append((b, b + 1, b + 2, b + 3))
+    me = vol.data
+    me.clear_geometry()
+    me.from_pydata(verts, [], faces); me.update()
+    vol.name = "ShaftCards"
+    return vol

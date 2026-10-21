@@ -18,10 +18,10 @@ def build(ctx):
     wind = [(ctx.t0 - 2.2, 20), (ctx.t0 - 1.1, 150), (ctx.t0 + 0.1, 20), (t_ox - 2.1, 25),
             (t_ox - 1.0, 180), (t_ox - 0.15, 360), (t_ox + 0.35, 260), (t_ox + 1.1, 40), (ctx.t1 + 0.4, 20)]
     S.build_curtain(ctx, wind, y0=-0.30, y1=0.36, drop=1.40, wall=None)
-    S.build_beam_emission((-0.99, -1.3, 0.765), (1.2, 1.24, 2.6), strength=0.009, curtain_y=0.36,
+    S.build_beam_emission((-0.99, -1.3, 0.765), (0.20, 1.24, 2.6), strength=0.009, curtain_y=0.36,
                           time_keys=[(ctx.t0 - 1, 0.0), (ctx.t1 + 1, 0.9)])
     gust = [(t_ox - 0.4, 0.0), (t_ox - 0.1, 0.03), (t_ox + 0.6, 0.30), (t_ox + 1.6, 0.50)]
-    S.build_motes("Motes", (-0.97, -0.6, 0.80), (0.12, 1.0, 2.30), count=7000, seed=21, r_min=0.00035, r_max=0.0011,
+    S.build_motes("Motes", (-0.97, -0.6, 0.80), (0.12, 1.0, 2.30), count=4500, seed=21, r_min=0.00035, r_max=0.0011,
                   gust_dir=(1.0, -0.35, -0.25), gust_keys=gust)
     # camera: seated eye height at the table's right end, looking up-left into the window;
     # the sun sits in the open casement at the upper right of frame (match to sh01's flare)
@@ -49,9 +49,10 @@ def build(ctx):
     sc.view_settings.keyframe_insert("exposure", frame=(ctx.t0 + 1.2) * C.FPS)
     C.empty("TRK_air", (-0.25, 0.25, 1.45))
     S.fast_denoise()
-    S.comp_sunbeams(ctx, cam, beams=False)
-    return {"final_spp": 32, "max_bounces": 5, "diffuse_bounces": 2, "glossy_bounces": 1,
-            "transmission_bounces": 4, "volume_bounces": 0, "clamp_indirect": 4.0, "transparent_bounces": 12,
+    S.perf_settings(light_tree=False, fast_gi=False)
+    S.bake_caches()
+    return {"final_spp": 12, "final_threshold": 0.05, "max_bounces": 8, "diffuse_bounces": 1, "glossy_bounces": 1,
+            "transmission_bounces": 8, "volume_bounces": 0, "clamp_indirect": 4.0, "transparent_bounces": 12,
             "volume_step_rate": 4.0}
 
 
