@@ -1789,6 +1789,8 @@ def perf_settings(light_tree=False, fast_gi=False, ao_bounces=1, ao_distance=2.0
             c.adaptive_min_samples = adaptive_min
         if volume_max_steps:
             c.volume_max_steps = volume_max_steps
+        if os.environ.get("S4_NODENOISE"):          # diagnostics only
+            c.use_denoising = False
         r = bpy.context.scene.render
         if final_res_pct != 100 and r.resolution_percentage == 100:   # final renders only (stills run at 50 %)
             r.resolution_percentage = final_res_pct
