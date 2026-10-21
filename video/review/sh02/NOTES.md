@@ -1,65 +1,42 @@
-# sh02 — morning room, window, breathing curtain, dust motes (5.24–9.64 s) — review 3
+# sh02 — morning room, window, breathing curtain, the air made visible (5.24–9.64 s) — review 4
 
-Script: `video/blender/shots/sh02.py`, shared set `video/blender/lib_s4.py` (also used by sh03).
-Light rig (for S5/sh08 to match): see `video/review/LIGHT_SETUP_S4.md`.
+Script `video/blender/shots/sh02.py`; shared set/rig `video/blender/lib_s4.py` (also sh03).
+Light rig for S5/sh08: `video/review/LIGHT_SETUP_S4.md` (updated).
 
-## Stills (50 % res, preview quality)
-| file | t | shows |
-|---|---|---|
-| sh02_t005.000.png | 5.00 (first handle frame) | Seated eye height at the table end, looking up into the deep lime-plaster window. Sun hot spot + blown sky upper right (in the open casement / transom) for the light dissolve from sh01's upper-right flare. Exposure starts +0.8 EV hot and settles (auto-iris feel). |
-| sh02_t006.500.png | 6.50 | Curtain exhaling back toward the glass; slow drift of the camera. |
-| sh02_t008.300.png | 8.30 "oksijen" | Biggest inhale: the sheer linen billows into the room, gust of motes starts toward camera (out-of-focus specks crossing the lens). |
-| sh02_t009.000.png | 9.00 | Tilt/boom down begins; sunlit mullion patterns on the table. |
-| sh02_t009.900.png | 9.90 (last handle frame) | Looking down onto the table under the window — sh03 continues this move down onto the sofra. |
+## Director notes (review 2 REVISE) — point by point
+1. **Shafts**: biased volume (`cycles.volume_biased`, step rate 1.0). Emission shafts ×
+   Henyey-Greenstein forward phase (g 0.6), fading out 10 cm above the table, box trimmed to the sun prism.
+   Strength 0.04 fogged the whole room after the exposure lift, so it is now 0.012 (≈0.04 before the
+   exposure change).
+2. **Motes**: 5 000 warm (3 800 K) emission-only motes, radius 0.5–1.1 mm (≥2 px), lit only inside the
+   sun prism. A separate non-wrapping **gust of 1 000 motes** lifts off the curtain at 8.1 s and streams to
+   0.35–1.4 m in front of the lens by 8.5 s (warm bokeh). It drifts on past the camera and fades out by
+   ~9.4 s.
+3. **Room brightness**: warm 4000 K bounce lights (sun patch facing up + card behind camera), sky fill
+   220 W, clamp_indirect 10, world not importance-sampled. Measured on the stills: no pixels < 0.06,
+   mean 0.52–0.56, walls ≈0.45–0.6 (brighter than the 0.25–0.35 asked for — say if you want it
+   darker).
+4. **Cut continuity**: ONE boom path `lib_s4.BOOM_P/T` (8.6 → 10.45 s) used by both shots. PCHIP
+   interpolation, camera moving down through f236, 28 mm and f/2.8 at the cut (sh03 eases to 35 mm and
+   f/4 by 10.3 s), same handheld seed, same exposure. sh02 f230 and sh03 f230 render identically.
+5. **Curtain**: cloth quality 16, wind ×1.7. Baked once single-threaded (`S4_BAKE_CURTAIN=1 blender -t 1 …
+   sh02.py -- --track`) to `video/renders/sh02/curtain_cloth.pc2`, played back through a Mesh Cache
+   modifier in both shots. The build raises an error if the file is missing.
+6. **TRK_air** is keyed per frame to a fixed screen spot (x 700, y 380) inside the mote cloud, with depth
+   easing 1.6 → 0.9 m. It stays on screen the whole shot.
+7. **Start**: camera z 1.07, sun hot spot upper right. Exposure +1.5 EV on the flare, settling to the
+   room value by 6.2 s. Light compositor bloom.
+8. **Wind**: small breath 5.6–6.9 s; big inhale wind peak 0.3 s earlier (curtain peak ≈8.25–8.35).
+9. **Window paint chips**: fewer, softer, grey-brown.
+10. **Bread**: see sh03.
 
-## What is real / simulated
-* Curtain: real cloth simulation (Blender cloth, 44×64 grid, pinned ring heading, wind field keyed to a
-  breath rhythm ~2 s in / ~2 s out; biggest inhale peaks at 8.17 s so the billow lands on "oksijen").
-  Baked inside the script from render_f0−48 → render_f1+2 (deterministic for any chunk).
-* Dust motes: 6 000 Cycles point-cloud particles, pure function of scene time (4D-noise swirl + drift +
-  keyed gust toward camera at "oksijen") → deterministic, motion-blurred. Shaded by the analytic sun-beam
-  mask, so they only sparkle inside the beam.
-* Light shafts: emission-only volume whose density is the analytic sun-ray projection back onto the real
-  window grid (frame, transom, sash bars, curtain half at ~55 % transmission) × drifting 4D noise. No light
-  sampling → noise-free and cheap; the shadow pattern of the shafts matches the mullion shadows on the table.
-* Sun: HDRI `garden_nook` sun direction measured from the EXR and matched to the sun lamp (25.9° elev).
+## Render (measured, 4 cores)
+* Full res, 12 spp, adaptive min 8, OIDN ACCURATE, biased volume: **124.5 s/frame** (f199–201).
+* As you allowed for haze/defocus shots, **sh02 finals render at 80 %** (864×1536; set in the script via
+  `perf_settings(final_res_pct=80)`; samples not reduced; post upscales). Measured at 80 %: **78.2 s/frame** (f199–201).
+* 100 % crops of a flat defocused area across 3 consecutive final frames: `crops/sh02_crop_f199-201.png`.
+  No blotches or flicker.
 
-## Tracker
-`TRK_air` at (−0.25, 0.25, 1.45) — in the sunbeam between window and table, inside the mote cloud.
-On screen frames 120–217 (to 9.04 s; ~0.7 s past "oksijen"), then it leaves the top of frame as the camera tilts down. Moving it lower is trivial if the callout needs to stay longer.
-
-## Key-word band (y 520–820) at "OKSİJEN" 8.3–9.6
-The band holds the lower window / curtain at 8.3 and the sill + plaster wall from ~8.9 as the camera
-tilts down — soft, low-detail. If the director prefers darker behind the white text, I can tilt down
-~0.3 s earlier.
-
-## Render cost (measured, 1080×1920 --final, 4 cores)
-* Review 1 config: 248 s/frame. **Review 2 config: ~97 s/frame** (3-frame run 199–201, 12 spp adaptive 0.05
-  + OIDN; light tree off; diffuse 1 / transmission 8 bounces; the cloth cache is simulated once per Blender
-  launch, ~30 s per 48-frame chunk). Still ~2× over the 40–45 s target. Profile at 12 spp: emission shafts
-  ~25 s, curtain (alpha weave + transparent shadows) ~15 s, motes ~15 s, sofra ~15 s, room GI ~40 s.
-* Things I tried that did not help or hurt the look: shaft card stack (233 s), compositor sun beams
-  (single "saber" streak), fast-GI (room goes black — closed interior). Next: cheaper weave transparency,
-  fewer/bigger motes, shaft volume only where the camera sees it. **Director: if ~95 s/frame is
-  acceptable for sh02 (117 frames ≈ 3.2 h on 4 cores) I can render as is; otherwise I keep cutting.**
-
-## Changes in review 3
-* Slow dolly-in toward the window during the first 2.5 s (no static head); hotter flare-to-settle
-  exposure on the first frames for the light dissolve from sh01.
-* Dust motes re-done: 6 000 fine specks shaded by the same analytic sun-beam mask as the shafts
-  (emission only, so no shadow rays); most are faint, a few glint as they tumble — they only appear
-  inside the beam. (The first try at this was a "snowstorm" — fixed.)
-* Shaft volume confined to the beam's actual path.
-* Stronger breath: the curtain now visibly lifts into the room on each inhale, biggest at "oksijen".
-* Final cost now ~100 s/frame (HDRI no longer importance-sampled inside the room).
-* Full-res final-renderer sample frame: `sh02_FINALQ_f199.jpg`.
-
-## Changes since review 1
-* The table under the window now carries the same sofra as sh03 (bowl, bread, glass, plate) — the
-  boom-down into sh03 is continuous.
-* Lime plaster lighter and smoother (no "granite" read); brighter sky fill; exposure 2.6 → 1.9 settle.
-* Motes kept ≥0.6 m from the lens (no big white discs), cheaper material.
-* Empty glass now renders clear (transmission depth 8).
-
-## Known issues / next
-* Shafts are subtle when looking into the sun; considering a touch more density near the window.
+## Stills (50 % preview)
+`sh02_t005.000` flare open · `t006.500` small breath · `t008.300` "oksijen" inhale + gust · `t009.000`
+boom down · `t009.600` the cut region (identical to sh03 `t009.600`).

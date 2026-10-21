@@ -1,62 +1,35 @@
-# sh03 — the sofra: bread & fruit, water poured, crane to top-down (9.64–16.00 s) — review 3
+# sh03 — the sofra (9.64–16.00 s) — review 4
 
-Script: `video/blender/shots/sh03.py`; set, props, pour rig in `video/blender/lib_s4.py` (shared with sh02,
-which now carries the same set table so the sh02→sh03 boom-down is continuous).
-Light rig for S5/sh08: `video/review/LIGHT_SETUP_S4.md` (sun from the LEFT of a camera looking +Y).
+Script `video/blender/shots/sh03.py`; set/rig in `video/blender/lib_s4.py` (shared with sh02).
 
-## Beats (all keyed from `ctx.word`)
-| t | beat |
-|---|---|
-| 9.34–9.74 | continues sh02's boom down onto the table (same position/aim at the cut), dropping to slider height |
-| 9.64 "yemek" | low slider along the table's front edge past the village loaf, the plate with the opened pomegranate and the fruit bowl, turning toward the sunlit glass |
-| 10.52 "içmek" | arrives macro (35 mm at ~0.25 m) on the clear tumbler, side/back-lit by the window; the jet hits the bottom at 10.48 (1 frame before the word) |
-| 10.5–11.9 | the pour: ballistic jet (radius thins with speed, Plateau-Rayleigh varicose undulation + wobble), level rises with an ease-out, entrained bubble plume loops down and rises, meniscus at the wall; slow push in |
-| 11.9 | jet tail detaches, the (unseen) pourer lifts the jug away above frame |
-| 12.0 "bütün" | crane up and back revealing the whole table |
-| 14.9 "takdim" | the plate with the opened pomegranate slides toward camera while the crane swings round and settles TOP-DOWN, round fruit bowl at frame centre, window light from frame left (graphic match to sh04) |
+## Director notes (review 2 REVISE) — point by point
+1. **Brightness**: warm 4000 K bounce lights, sky fill 220 W, clamp_indirect 10, exposure lifted, wood
+   saturation −15 %. Measured on stills: sun patches near-white, mean 0.40–0.64, almost nothing < 0.06
+   except the deep window-wall shadow in the top-down (see `lum` numbers in the status message).
+2. **Cut**: same shared boom path as sh02 through 10.45 s (28 mm and f/2.8 at the cut, easing to 35 mm and
+   f/4 by 10.3 s). sh02's curtain (from the shared disk cache), shafts, motes and gust are present and
+   dropped from the render after f250. The camera slides at ≤0.5 m/s.
+3. **Water**: the jet is pure transmission with constant topology (radius mask instead of trim, so it
+   motion-blurs), wobble 0.0025, a splash crown with flung droplets at impact, ripples, meniscus and a dense
+   bubble core under the impact. A glossy/refraction-only strip light behind the glass makes the edges
+   sparkle. The camera now looks across the table toward the bright lime wall. The orange half-loaf was
+   moved off the sight line, so the water no longer reads as tea.
+4. **Bread**: golden-brown crust, no all-over crackle, three slashes with sharp burst "ears", flour only in
+   the cuts (vertex attribute), sheen 0.05. Plus a **half loaf with the open crumb** facing the camera. The
+   whole loaf sits in a sun stripe at 9.4–10.0.
+5. **Abundance**: olives in a small wooden bowl, beyaz peynir on a saucer, a honey jar with a spoon,
+   walnuts, the tea glass on its saucer, the filled tumbler, and a loose lemon and apple, all in the same
+   light. The half loaf, olives, cheese, plate, bowl and glass are inside the top-down.
+6. **Takdim**: 45° oblique hold to 15.2 s. The plate slides 14 cm toward the lens (+X, 14.45 → 15.15 s),
+   then the crane settles top-down by 15.95 s. The plate ends at y ≈ 1330 px.
+7. **Pour hold**: PCHIP (monotone) camera interpolation. One eased push 10.45 → 11.9 s, no dip.
+8. **Pomegranate membranes**: curved, irregular (no straight spokes).
+9. **Top-down end**: up-vector (−1, 0, 0) (window/light at the top, matching sh04). The bowl sits at
+   y ≈ 1060 px so its rim stays below the 520–820 band. The band holds only plain lit table.
+10. **LIGHT_SETUP_S4.md** updated.
 
-## Stills (50 % preview)
-see files `sh03_t*.png` — first frame, slider, pour hit, pour rising, crane, takdim, last frame.
-
-## How things are made
-* Fruit: Poly Haven scans (food_apple_01, food_pomegranate_01, food_pears_asian_01, food_kiwi_01,
-  food_lime_01, lemon) dropped into `wooden_bowl_01` with a rigid-body sim inside the script (deterministic),
-  then frozen.
-* Opened pomegranate: the scanned skin bisected, cut face filled with cream pith, ~400 faceted ruby arils
-  (transmission + volume absorption + clear coat) packed radially in 7 chambers.
-* Bread: procedural round köy ekmeği (lumpy dome, four oven-burst slashes, crackled crust, flour dust).
-* Glass/jug/tea glass: lathed real profiles; glass lets ~85 % of direct light through for shadow rays
-  (Cycles has no caustics) so shadows read as glass shadows, not black.
-* Water: procedural, not a fluid sim (budget): Geometry-Nodes jet (see above), keyed level, bubble plume.
-* Camera: keyed per frame from a smooth spline (no stops at keys), quaternion orientation, tiny handheld.
+## Render (measured, 4 cores, 100 %, 12 spp, adaptive min 8, OIDN ACCURATE)
+* Pour frames 270–272: **56.9 s/frame**. 100 % crops: `crops/sh03_crop_f270-272.png`.
 
 ## Tracker
-`TRK_water` at the glass centre (z = table + 6 cm). On screen frames 248–296 (10.33–12.33 s): the whole pour.
-
-## Render cost (measured, 1080×1920 --final, 4 cores)
-* Pour frames 273–275 (heaviest: glass + water + jet + bubbles in frame): **79.7 s/frame** (12 spp adaptive
-  0.05 + OIDN, light tree off, max 7 / diffuse 2 / transmission 6 bounces). Scene build ~40 s per launch.
-  Fast-GI got it to ~64 s but blackens the room behind the glass, so it is off.
-* Over the 40–45 s target by ~1.8×. **Director: OK to render at ~80 s/frame (165 frames ≈ 3.7 h), or
-  should I trade more (e.g. 8 spp, diffuse 1)?**
-
-## Changes in review 3
-* Bubbles: 1 600 much finer entrained bubbles, slower loop (no motion-blur "grains"), whiter Fresnel rim —
-  reads as the milky plume under a real pour.
-* f/4 (was f/2.8) and focus on the near face of the glass during the macro.
-* Crane re-timed: it keeps rising and swinging until ~15.6 s, then a slow settle/roll to the last frame
-  (no dead frames at the end); top-down still lands with the bowl at frame centre.
-* Full-res final-renderer sample frames: `sh03_FINALQ_f274.jpg` (pour), `sh03_FINALQ_f382.jpg` (last frame).
-* Bread re-shaded (deeper saturated crust, stronger crust bump, no sheen) and moved 10 cm right so the
-  top-down end frame is bowl + plate only; slider still passes right by it at 9.8 s.
-
-## Changes since review 1
-* Water surface: travelling impact rings + chop while pouring (keyed off after the pour).
-* Bubbles: 700 smaller entrained bubbles with a silvery Fresnel rim.
-* Pomegranate: cream pith membranes between the 7 chambers, arils lie radially in the cut face.
-* Bread: deeper-baked crust, finer fissures, less flour (was blowing out pink in the sun).
-* Jug only enters frame from above right before the pour; leaves upward before the crane.
-* Fruit settle is now a frozen table of the deterministic rigid-body result in lib_s4 (build ~40 s).
-
-## Known issues / next
-* Grade still warm/orange in the wood; pushing toward neutral morning.
+`TRK_water` at the glass (table + 6 cm), on screen through the whole pour.
