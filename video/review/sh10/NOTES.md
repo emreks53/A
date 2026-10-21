@@ -1,5 +1,24 @@
 # sh10 — out of the cell into countless cells (52.10–58.00 s) · studio S7
 
+## v6 (review-5 narrow round)
+**Measured (80 %, final settings):** 1291–1293 **35.8 s/frame**, 1303–1305 **28.2 s**, 1386–1388
+**21.0 s** (16 spp), f1250 38.8 s. Crops `crop100_f1291-1293.png`, `crop100_f1303-1305.png`,
+`crop100_f1386-1388.png` (no glint smear at 16 spp → 24 spp not needed).
+Luma 1284–1320 (25 %, every frame): `luma_1284-1320.txt`, `luma_strip_1284-1320.png`;
+**1286–1312: min 26.8/255, max step 14.4 %.** f1250 vs sh09 MAD 1.78 (`pair_f1250_sh09_sh10.png`).
+1. isnear d < 0.6, near_t = t_bil − 0.06 + d·0.5/0.6 + 0.15 r; Scale and far front kept.
+2. 30 % floor only where b < 0.12 or near; others decay to 0 (τ 0.35); glints br × 2.
+3. Interior hidden in one frame at t_exit + 0.25 (with the holed → full sheet swap); film focus
+   t_exit…+0.25; near-alpha 0.002–0.010; myofibrils on the camera path (local x < −0.12) removed.
+   Luma jump at 1305/06 was the camera skimming the dome film (1.3 cm, lumpy mesh) under the
+   teal fill: analytic clearance margin 5 cm (≥ 4 cm to the mesh), teal fill no longer lights the
+   dome (light linking), a dome-only teal twin with a measured weight (`DOME_TEAL_W`), dome fades
+   linearly over 12 frames from t_exit + 0.25, small exposure trims 1292–1296 (≤ 0.45 stop).
+4. Tiles: membrane emission ramp 0–0.06, coat 0.3/rough 0.25, dome bump 0.05, e3 2.2, nuclei soft
+   dark slate 1.5×. 5. Dome sheen 0.15, coat 0.3. 6. Fog Glow off ≤ 1290.
+7. TRK_cells parked 10 m behind the lens before 1306. 8. Dome clearance ≥ 2 cm after exit.
+Note: the near-cell light-up at 1317–1318 is +22 / +30 % (intended beat, outside 1286–1312).
+
 ## v5 (review-4 notes)
 **Measured:** dome/crossing frames 1305–1307 **52.5 s/frame** (8 spp), field 1385–1387 **36.2 s/frame**
 (16 spp); 80 %, ACCURATE/BALANCED, blue noise. 100 % crop 1305–1307: `crop100_f1305-1307.png` (clean).

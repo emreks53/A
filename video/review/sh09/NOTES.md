@@ -1,5 +1,19 @@
 # sh09 — inside the forearm (47.40–52.10 s) · studio S7
 
+## v6 (review-5 final fixes)
+**Measured (80 %, final settings):** crossing 1179–1181 **57.8 s/frame** (8 spp, TB 8); f1250 36.2 s.
+Crop: `crop100_f1179-1181.png`. Luma 1168–1196 (25 %, every frame): `luma_1168-1196.txt`,
+`luma_strip_1168-1196.png` — min 31.4/255, max step 12.9 %.
+1. TB 8; sarcolemma alpha × smoothstep(0.006, 0.05) view distance; measured exposure trims
+   (≤0.85 stop, `EXPO_TRIM` in sh09.py) over 1175 and 1183–1191 smooth the film → interior lift.
+2. SR rings only, base (0.42, 0.26, 0.25), r 0.0003, none within 0.02 of the camera path.
+3. Cristae wobble 0.0003/0.0002, ≤6° tilt per shelf.
+4. Opening: exposure 0.9, haze (0.30, 0.09, 0.05). 5. probe_in (0.8, 0.92, 0.95).
+6. mitoGlow at hero centre, radius 0.003. 7. Amber wave gain 7, width 0.014, origin H−(0, 0.03, 0).
+8. TRK_nerve vis 0 from f1166, TRK_fiber from f1172.
+9. f1250 camera (incl. handheld), fibre_c/r, y_half, interior lights in `INTERIOR_HANDOFF`;
+   sh09/sh10 f1250 MAD **1.78/255** (`../sh10/pair_f1250_sh09_sh10.png`).
+
 ## v5 (review-4 notes)
 **Measured (80 %, 8 spp, ACCURATE/BALANCED, blue noise, transparent bounces 3):** crossing
 1188–1190 **52.6 s/frame**, interior end 1249–1251 **42.2 s/frame** (build ~4 s). 100 % crop of the
