@@ -3050,7 +3050,7 @@ def build(ctx):
         camA.data.lens = ln
         camA.data.keyframe_insert("lens", frame=t * C.FPS)
     # ... and opens up (f/2.8 for the wide room -> f/1.4 on the cover)
-    for t, fs in ((ctx.t0, 2.8), (t_bu + 0.95, 2.2), (t_soz + 0.35, 1.4)):
+    for t, fs in ((ctx.t0, 2.8), (t_bu + 0.95, 2.2), (t_soz + 0.35, float(os.environ.get("SH15_TMP_AFS", "1.4")))):
         camA.data.dof.aperture_fstop = fs
         camA.data.dof.keyframe_insert("aperture_fstop", frame=t * C.FPS)
     sc.frame_set(f_721 + 10)                   # (the tracker is parked below the floor before f_721)
