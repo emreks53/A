@@ -941,7 +941,9 @@ RAHLE_TB = 0.016
 SOZ_POS = Vector((0.30, 0.10, 0.0))    # closed Sozler lying on the table (camA), in the beam
 SOZ_YAW = math.radians(90 - 9)
 B_NEAR = 0.04          # camB leaf flips: focus 4 cm nearer than the page, on the turning leaves (review 2)
-# camE (review 2 item 7): offsets of both position keys (down, camera-left) and of the look-at target (+x, +y)
+# camE (review 2 item 7): offsets of both position keys (down, camera-left) and of the look-at target (+x, +y).
+# Lowering the keys 4 cm hid the row further behind the rahle crest (probe: 2-3 spines >= 3 px wide instead
+# of 3-4); 4 cm UP + 5 cm camera-left + target +3 cm x/y shows 4-5 red spines with their gold beside the crest.
 E_OFS = [float(v) for v in os.environ.get("SH15_E", "-0.04,0.05,0.03,0.03").split(",")]
 
 # ----------------------------------------------------------------------------- node helpers
