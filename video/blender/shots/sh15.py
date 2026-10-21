@@ -32,7 +32,7 @@ from mathutils import Vector, Matrix
 
 # ============================================================================ constants
 
-DESIGN_VERSION = "v14"
+DESIGN_VERSION = "v15"
 DESIGN_DIR = os.path.join(C.ASSETS, "sh15_design", DESIGN_VERSION)
 
 # OFL fonts (Google Fonts static TTFs). Pinned by SHA-256 so every farm node renders identical type;
@@ -575,7 +575,7 @@ def pseudo_arabic_line(P, rng, cx, yb, width, u):
         words.append(L)
         total += L + rng.uniform(0.55, 0.9) * u
     x = cx + total / 2                                    # written right to left
-    lw = 0.17 * u
+    lw = 0.12 * u
     for L in words:
         x0, x1 = x - L, x
         P.stroke([(x1, yb), (x0 + 0.2 * u, yb + rng.uniform(-0.05, 0.05) * u), (x0, yb)], lw)
@@ -584,30 +584,30 @@ def pseudo_arabic_line(P, rng, cx, yb, width, u):
             px = x1 - (i + 0.5) * L / n + rng.uniform(-0.1, 0.1) * u
             r = rng.random()
             if r < 0.30:      # tooth
-                P.stroke([(px, yb), (px + 0.03 * u, yb + 0.55 * u)], 0.15 * u)
+                P.stroke([(px, yb), (px + 0.03 * u, yb + 0.55 * u)], 0.11 * u)
             elif r < 0.48:    # alif / lam
                 h = rng.uniform(1.6, 2.1) * u
-                P.stroke([(px, yb - 0.05 * u), (px - 0.06 * u, yb + h)], 0.19 * u)
+                P.stroke([(px, yb - 0.05 * u), (px - 0.06 * u, yb + h)], 0.14 * u)
             elif r < 0.62:    # loop (waw / mim / ha)
                 rr = 0.27 * u
                 P.stroke([(px + rr * math.cos(a), yb + rr + rr * math.sin(a)) for a in
-                          [2 * math.pi * k / 14 for k in range(15)]], 0.13 * u)
+                          [2 * math.pi * k / 14 for k in range(15)]], 0.10 * u)
             elif r < 0.72 and i == n - 1:   # final bowl (nun / ya)
                 rr = 0.6 * u
                 P.stroke([(px - rr + rr * math.cos(a), yb - rr * 0.8 * math.sin(a) + 0.02 * u) for a in
-                          [math.pi * k / 12 for k in range(13)]], 0.17 * u)
+                          [math.pi * k / 12 for k in range(13)]], 0.12 * u)
             # dots
             q = rng.random()
             if q < 0.35:
                 nd = rng.choice((1, 1, 2, 3))
                 above = rng.random() < 0.6
                 for d in range(nd):
-                    P.disc(px + (d - (nd - 1) / 2) * 0.24 * u, yb + (1.0 if above else -0.55) * u + (0.22 * u if nd == 3 and d == 1 else 0), 0.09 * u, n=10)
+                    P.disc(px + (d - (nd - 1) / 2) * 0.24 * u, yb + (1.0 if above else -0.55) * u + (0.22 * u if nd == 3 and d == 1 else 0), 0.075 * u, n=10)
             # harakat
             hq = rng.random()
             if hq < 0.35:
                 yy = yb + (1.45 if hq < 0.25 else -0.95) * u
-                P.stroke([(px - 0.22 * u, yy - 0.08 * u), (px + 0.22 * u, yy + 0.08 * u)], 0.08 * u)
+                P.stroke([(px - 0.22 * u, yy - 0.08 * u), (px + 0.22 * u, yy + 0.08 * u)], 0.06 * u)
             elif hq < 0.42:   # shadda-like
                 yy = yb + 1.55 * u
                 P.stroke([(px - 0.25 * u, yy + 0.12 * u), (px - 0.12 * u, yy), (px, yy + 0.12 * u), (px + 0.12 * u, yy),
