@@ -2898,6 +2898,10 @@ def build(ctx):
     for t, ln in ((t_bu + 0.95, 35.0), (t_soz + 0.35, 50.0)):
         camA.data.lens = ln
         camA.data.keyframe_insert("lens", frame=t * C.FPS)
+    # ... and opens up (f/2.8 for the wide room -> f/1.4 on the cover)
+    for t, fs in ((ctx.t0, 2.8), (t_bu + 0.95, 2.2), (t_soz + 0.35, 1.4)):
+        camA.data.dof.aperture_fstop = fs
+        camA.data.dof.keyframe_insert("aperture_fstop", frame=t * C.FPS)
     sc.frame_set(fB + 10)
     bpy.context.view_layer.update()
     pg = trk.matrix_world.translation.copy() - V((0.0, 0.0, 0.0005))      # on the paper itself
