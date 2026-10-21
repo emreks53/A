@@ -21,6 +21,14 @@ R_CELL = 0.8
 VOID = (0.004, 0.009, 0.013)
 
 
+
+# measured on 25 % luma strips (v6): weight of the dome-only teal fill, and small exposure trims
+# (stops) where the camera leaves the fibre -> 1286-1312 stays <= 15 % change per frame
+DOME_TEAL_W = {1294: 1.0, 1296: 1.0, 1297: 0.97, 1298: 0.92, 1299: 0.87, 1300: 0.76, 1301: 0.6, 1302: 0.6,
+               1303: 0.64, 1304: 0.73, 1305: 0.47, 1306: 0.30, 1307: 0.27, 1308: 0.28, 1309: 0.33, 1310: 0.38,
+               1312: 0.39}
+EXPO_TRIM = {1291: 0.0, 1292: 0.2, 1293: 0.2, 1294: 0.3, 1295: 0.45, 1296: 0.1}
+
 def build(ctx):
     sc = bpy.context.scene
     t_bil = ctx.word("bildiğimiz")
@@ -89,9 +97,9 @@ def build(ctx):
         k_off = 1.0 - C.remap(t, t_exit - 0.2, t_exit + 0.4, C.smooth)
         off = Mrot @ Vector((0, HO["cam_local"][1], 0)) * k_off      # hand-off framing offset (mito at y~842)
         p = tgt + dirv * dist + off
-        if t > t_exit:                                       # keep >= 2 cm clear of the dome surface
+        if t > t_exit:                                       # keep >= 2 cm clear of the (lumpy) dome mesh: 5 cm analytic margin
             rel = p - hero_c
-            ax = Vector((R_CELL + 0.02, R_CELL + 0.02, R_CELL * 0.62 + 0.02))
+            ax = Vector((R_CELL + 0.05, R_CELL + 0.05, R_CELL * 0.62 + 0.05))
             e = math.sqrt((rel.x / ax.x) ** 2 + (rel.y / ax.y) ** 2 + (rel.z / ax.z) ** 2)
             if e < 1.0:
                 p = hero_c + rel / e
@@ -142,19 +150,21 @@ def build(ctx):
     L.bake_id(fg, frames, 'nodes["color"].outputs[0].default_value', [(*c, 1) for c in fcol])
     bg = [n for n in sc.world.node_tree.nodes if n.type == "BACKGROUND"][0]
     L.bake_id(sc.world.node_tree, frames, f'nodes["{bg.name}"].inputs[0].default_value', [(*c, 1) for c in fcol])
-    L.bake_id(sc, frames, "view_settings.exposure", expo)
+    L.bake_id(sc, frames, "view_settings.exposure", [x + EXPO_TRIM.get(f, 0.0) for x, f in zip(expo, frames)])
 
     # the dome + interior fade to transparent over 12 frames once we are clear, then stop rendering
     # interior: hidden in one frame at t_exit+0.25, behind the dome film (alpha ~0.8 seen from outside)
     f_in0 = C.t2f(t_exit + 0.25)
     for o in inter["objects"]:
         L.bake(o, [frames[0], f_in0], "hide_render", [0.0, 1.0], interp="CONSTANT")
-    f_fade0 = C.t2f(t_exit + 0.45)
-    fade_group_animate([dome], frames, f_fade0, 24, "S7_FadeDome")
+    # the dome fades out as soon as the interior is gone: the camera skims it at 2 cm under the suns
+    # (a lit, defocused film filling the frame would pop the luma)
+    f_fade0 = f_in0
+    fade_group_animate([dome], frames, f_fade0, 12, "S7_FadeDome", ease=False)
     # the dome film only exists from ~0.5 s before the crossing (at f1250 it would sit in the haze
     # behind the myofibrils, which sh09 does not have)
     f_dome0 = C.t2f(t_exit - 0.5)
-    L.bake(dome, [frames[0], f_dome0, f_fade0 + 25], "hide_render", [1.0, 0.0, 1.0], interp="CONSTANT")
+    L.bake(dome, [frames[0], f_dome0, f_fade0 + 25], "hide_render", [1.0, 0.0, 1.0], interp="CONSTANT")  # hidden once faded
     # swap the holed sheet for the full one together with the interior hide (dome film alpha ~0.8)
     L.bake(patch, [frames[0], f_in0], "hide_render", [1.0, 0.0], interp="CONSTANT")
     L.bake(sheet_holed, [frames[0], f_in0], "hide_render", [0.0, 1.0], interp="CONSTANT")
@@ -178,6 +188,27 @@ def build(ctx):
                                           C.lerp(1.0, 0.0, C.remap(t, t_bil - 0.3, 54.6)) for t in times])
     s2 = C.sun(elev_deg=60, azim_deg=-40, strength=0.8, kelvin_k=12000, angle_deg=20, name="tealFill")
     s2.data.color = (0.45, 0.85, 1.0)
+    # the teal fill does not light the dome film: skimmed at a few cm it washed the whole frame teal
+    # (+30-45 % luma at 1305/06); the dome keeps the amber key + haze
+    tx = bpy.data.collections.new("tealExclude"); tx.objects.link(dome)
+    s2.light_linking.receiver_collection = tx
+    tx.collection_objects[0].light_linking.link_state = "EXCLUDE"
+    # ... and a dome-only twin whose weight was measured (25 % luma strips, see NOTES v6) so the skim
+    # past the film reads as one smooth exposure curve, <= 15 % per frame
+    s3 = C.sun(elev_deg=60, azim_deg=-40, strength=0.8, kelvin_k=12000, angle_deg=20, name="tealDome")
+    s3.data.color = s2.data.color
+    ti = bpy.data.collections.new("tealDomeOnly"); ti.objects.link(dome)
+    s3.light_linking.receiver_collection = ti
+    tw = sorted(DOME_TEAL_W.items())
+    def _w(f):
+        if f <= tw[0][0]:
+            return tw[0][1]
+        for (fa, wa), (fb, wb) in zip(tw, tw[1:]):
+            if f <= fb:
+                return C.lerp(wa, wb, (f - fa) / (fb - fa))
+        return tw[-1][1]
+    L.bake_id(s3.data, frames, "energy", [C.lerp(0.0, 1.2, C.remap(t, t_exit - 0.15, t_exit + 0.35, C.smooth)) * _w(f)
+                                          for t, f in zip(times, frames)])
     L.bake_id(s2.data, frames, "energy", [C.lerp(0.0, 1.2, C.remap(t, t_exit - 0.15, t_exit + 0.35, C.smooth)) for t in times])
     PR = HO["probe"]
     il = C.point_light("probe", power=PR["energy"], radius=PR["radius"], kelvin_k=4500)
@@ -208,7 +239,7 @@ def build(ctx):
 # --------------------------------------------------------------------------- helpers
 
 
-def fade_group_animate(objs, frames, f0, n, name="S7_Fade"):
+def fade_group_animate(objs, frames, f0, n, name="S7_Fade", ease=True):
     """Insert a shared fade group (mix-to-transparent) into every material of `objs`; animate 1 -> 0."""
     g = bpy.data.node_groups.new(name, "ShaderNodeTree")
     g.interface.new_socket("Shader", in_out="INPUT", socket_type="NodeSocketShader")
@@ -236,7 +267,8 @@ def fade_group_animate(objs, frames, f0, n, name="S7_Fade"):
         src = out.inputs["Surface"].links[0].from_socket
         gn = nt.nodes.new("ShaderNodeGroup"); gn.node_tree = g
         nt.links.new(src, gn.inputs[0]); nt.links.new(gn.outputs[0], out.inputs["Surface"])
-    vals = [C.smooth(1 - (f - f0) / n) if f >= f0 else 1.0 for f in frames]
+    k = (lambda v: C.smooth(max(0.0, v))) if ease else (lambda v: max(0.0, v))
+    vals = [k(1 - (f - f0) / n) if f >= f0 else 1.0 for f in frames]
     L.bake_id(g, frames, 'nodes["fade"].outputs[0].default_value', vals)
 
 

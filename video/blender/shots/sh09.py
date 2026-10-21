@@ -23,6 +23,12 @@ J_Y = 2.75                             # junction position along the hero fibre
 DIVE_Y = 1.86                          # where the probe enters the hero fibre
 
 
+
+# measured on 25 % luma strips (v6): exposure trims (stops) through the membrane crossing so the
+# dark film -> bright interior reads as one smooth curve, <= 15 % change per frame
+EXPO_TRIM = {1175: 0.22, 1183: 0.22, 1184: 0.58, 1185: 0.75, 1186: 0.85, 1187: 0.49, 1188: 0.33, 1189: 0.2,
+             1190: 0.1, 1191: 0.05}
+
 def build(ctx):
     rng = random.Random(909)
     sc = bpy.context.scene
@@ -288,7 +294,7 @@ def build(ctx):
     w_ = sc.world.node_tree
     bg = [n for n in w_.nodes if n.type == "BACKGROUND"][0]
     L.bake_id(w_, frames, f'nodes["{bg.name}"].inputs[0].default_value', [(*c, 1.0) for c in fc_])
-    L.bake_id(sc, frames, "view_settings.exposure", ex_)
+    L.bake_id(sc, frames, "view_settings.exposure", [x + EXPO_TRIM.get(f, 0.0) for x, f in zip(ex_, frames)])
 
     # trackers: on screen only inside their callout windows (outside: parked far behind the lens)
     t_mito = C.empty("TRK_mito"); t_mito.parent = inter["hero"]
