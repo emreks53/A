@@ -7,6 +7,9 @@
   glow), three elongated myonuclei under the sarcolemma, granules at many depths, out-of-focus
   mitochondria in the foreground, dense rosy tissue haze (never a void). Ends close on one
   mitochondrion between myofibrils.
+* Budget: finals 8 spp (+ ACCURATE/BALANCED, blue noise, 80 % res). **Measured 52.0 s/frame
+  (interior 1236–1238) / 42.0 s/frame (exterior 1166)**; 100 % crop of the top-left (darkest
+  defocused) region checked over 3 consecutive frames: clean, stable.
 
 ## v3 (review-2 notes)
 1. Cell interior: desaturated blue-grey cytoplasm haze with depth gradient; myofibrils are now

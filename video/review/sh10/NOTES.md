@@ -10,7 +10,10 @@
   warm amber from within (cytoplasm, not nucleus), membranes warm up; unlit cells stay dim
   blue-grey. Band y 520–820 stays dark above the horizon.
 * The hero cell we exit is a translucent dome slightly raised out of the sheet.
-* Cheaper than before (no 360 k instances).
+* The hero cell and its contents vanish ~0.5 s after the probe clears the membrane (tiny by then),
+  so the sheet cell beneath takes over — no dark disc in the field.
+* Per-cell brightness is random⁴ (few bright, many dim) so the far field twinkles as glints.
+* Cheaper than before (no 360 k instances): **29.4 s/frame (field) / ≤ 41 s/frame (interior)**.
 
 ## v3 (review-2 notes)
 1. Cells: full SSS (scale 0.22) for translucency, darker unlit body, wet micro-specular coat,
