@@ -114,14 +114,27 @@ def build(ctx):
         foc.append(fd)
         fst.append(C.lerp(HO["fstop"], 8.0, C.remap(t, t_exit - 0.1, t_exit + 0.6)))
         # haze: interior hand-off -> blue-black void, longer and cooling to sh11 grey at the end
-        k_out = C.remap(t, t_exit - 0.1, t_exit + 0.5, C.smooth)
+        k_out = C.remap(t, t_exit - 0.45, t_exit + 0.5, C.smooth)       # haze darkens before the crossing
         k_end = C.remap(t, t_had + 0.6, ctx.t1 + 0.1, C.smooth)
         fdist.append(C.lerp(HO["fog_dist"], max(0.3, dist * 0.75), k_out) * C.lerp(1.0, 3.0, k_end))
         col = C.lerp(HO["fog_color"], VOID, k_out)
         fcol.append(C.lerp(col, (0.022, 0.024, 0.027), k_end))
         expo.append(C.lerp(HO["exposure"], 0.3, k_out))
-    L.bake(cam, frames, "location", locs)
-    L.bake(cam, frames, "rotation_euler", rots)
+    # the camera rides in the interior's local frame (parent rig = M), so its handheld noise acts on
+    # the same local axes as in sh09 -> identical f1250 camera matrix (incl. handheld)
+    rig = C.empty("camRig"); rig.matrix_world = M
+    cam.parent = rig
+    Mi = M.inverted()
+    lloc, lrot = [], []
+    prev_l = Euler(HO["cam_euler_ref"])
+    for p_, e_ in zip(locs, rots):
+        Wm = Matrix.Translation(Vector(p_)) @ Euler(e_).to_matrix().to_4x4()
+        lm = Mi @ Wm
+        lloc.append(tuple(lm.translation))
+        el_ = lm.to_euler("XYZ", prev_l); prev_l = el_
+        lrot.append(tuple(el_))
+    L.bake(cam, frames, "location", lloc)
+    L.bake(cam, frames, "rotation_euler", lrot)
     L.bake_id(cam.data, frames, "dof.focus_distance", foc)
     L.bake_id(cam.data, frames, "dof.aperture_fstop", fst)
     C.handheld(cam, **HO["handheld"])          # same noise as sh09 -> identical f1250 camera matrix
@@ -137,11 +150,14 @@ def build(ctx):
     for o in inter["objects"]:
         L.bake(o, [frames[0], f_in0], "hide_render", [0.0, 1.0], interp="CONSTANT")
     f_fade0 = C.t2f(t_exit + 0.45)
-    fade_group_animate([dome], frames, f_fade0, 12, "S7_FadeDome")
-    L.bake(dome, [frames[0], f_fade0 + 13], "hide_render", [0.0, 1.0], interp="CONSTANT")
-    # swap the holed sheet for the full one while the dome is still opaque over the hole
-    L.bake(patch, [frames[0], f_fade0], "hide_render", [1.0, 0.0], interp="CONSTANT")
-    L.bake(sheet_holed, [frames[0], f_fade0], "hide_render", [0.0, 1.0], interp="CONSTANT")
+    fade_group_animate([dome], frames, f_fade0, 24, "S7_FadeDome")
+    # the dome film only exists from ~0.5 s before the crossing (at f1250 it would sit in the haze
+    # behind the myofibrils, which sh09 does not have)
+    f_dome0 = C.t2f(t_exit - 0.5)
+    L.bake(dome, [frames[0], f_dome0, f_fade0 + 25], "hide_render", [1.0, 0.0, 1.0], interp="CONSTANT")
+    # swap the holed sheet for the full one together with the interior hide (dome film alpha ~0.8)
+    L.bake(patch, [frames[0], f_in0], "hide_render", [1.0, 0.0], interp="CONSTANT")
+    L.bake(sheet_holed, [frames[0], f_in0], "hide_render", [0.0, 1.0], interp="CONSTANT")
 
     # counter tracker: on screen from frame 1306; parked 10 m behind the lens before
     trk = C.empty("TRK_cells", tuple(hero_c + Vector((0, 0, R_CELL * 0.4))))
@@ -157,14 +173,23 @@ def build(ctx):
 
     # ---------------------------------------------------------------- light
     s1 = C.sun(elev_deg=35, azim_deg=130, strength=1.6, kelvin_k=3200, angle_deg=6, name="amberKey")
-    L.bake_id(s1.data, frames, "energy", [C.lerp(1.6, 0.0, C.remap(t, t_bil - 0.3, 54.6)) for t in times])
+    # suns only once outside (no leak into the interior: f1250 must equal sh09)
+    L.bake_id(s1.data, frames, "energy", [C.lerp(0.0, 1.6, C.remap(t, t_exit - 0.15, t_exit + 0.35, C.smooth)) *
+                                          C.lerp(1.0, 0.0, C.remap(t, t_bil - 0.3, 54.6)) for t in times])
     s2 = C.sun(elev_deg=60, azim_deg=-40, strength=0.8, kelvin_k=12000, angle_deg=20, name="tealFill")
     s2.data.color = (0.45, 0.85, 1.0)
+    L.bake_id(s2.data, frames, "energy", [C.lerp(0.0, 1.2, C.remap(t, t_exit - 0.15, t_exit + 0.35, C.smooth)) for t in times])
     PR = HO["probe"]
     il = C.point_light("probe", power=PR["energy"], radius=PR["radius"], kelvin_k=4500)
     il.parent = cam; il.location = PR["offset"]
     il.data.specular_factor = 0.0; il.data.color = PR["color"]
-    L.bake_id(il.data, frames, "energy", [C.lerp(PR["energy"], 0.0, C.remap(t, t_exit - 0.35, t_exit - 0.05)) for t in times])
+    rc = bpy.data.collections.new("probeReceivers")
+    for o in inter["objects"]:
+        for ob_ in [o] + list(o.children):
+            if ob_.name not in rc.objects:
+                rc.objects.link(ob_)
+    il.light_linking.receiver_collection = rc
+    L.bake_id(il.data, frames, "energy", [C.lerp(PR["energy"], 0.0, C.remap(t, t_exit + 0.05, t_exit + 0.45, C.smooth)) for t in times])
 
     add_fog_glow(sc)
     L.budget_denoise(prefilter="ACCURATE", quality="BALANCED", final_res=80)
@@ -264,7 +289,7 @@ def mat_membrane():
     nt.links.new(tc.outputs["Object"], nf.inputs["Vector"])
     L._bump_chain(nt, p, [(nz.outputs["Fac"], 0.2), (nf.outputs["Fac"], 0.12)], distance=0.004)
     lw = L._n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.3
-    al = L._n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.22; al.inputs["To Max"].default_value = 0.8
+    al = L._n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.7; al.inputs["To Max"].default_value = 0.9
     nt.links.new(lw.outputs["Facing"], al.inputs["Value"])
     cd = L._n(nt, "ShaderNodeCameraData")
     near = L._n(nt, "ShaderNodeMapRange"); near.interpolation_type = "SMOOTHSTEP"

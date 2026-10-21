@@ -124,7 +124,7 @@ def build(ctx):
     nme, s_acc = L.path_tube("nerve", dense, nerve_r, nu=28)
     s_end = s_acc[-1]
     # the impulse starts at the first node of Ranvier that is actually in frame at t_imp0
-    u_ = C.remap(t_imp0, ctx.t0 - 0.3, t_huc - 0.05, lambda x: x * 0.25 + 0.75 * C.smooth(x))
+    u_ = C.remap(t_imp0, ctx.t0 - 0.3, t_huc - 0.3, lambda x: x * 0.25 + 0.75 * C.smooth(x))
     cp_ = Vector((0.0, -0.35, 0.06)).lerp(Vector((0.03, 1.05, 0.02)), u_)
     cq_ = Euler((math.radians(82), 0, math.radians(-14))).to_matrix().inverted()
     s_start = 0.0
@@ -214,7 +214,7 @@ def build(ctx):
     p_b = Vector((0.03, 1.05, 0.02))
     p_c = Vector((x_mem - 0.12, DIVE_Y + HO["cam_local"][1], -0.02))
     p_x = Vector((x_mem, DIVE_Y + HO["cam_local"][1], -0.02))
-    t_a, t_b = ctx.t0 - 0.3, t_huc - 0.05
+    t_a, t_b = ctx.t0 - 0.3, t_huc - 0.3          # longer, gentler turn (<=15 %/frame luma change)
     t_c = t_huc + 0.42
     t_e = ctx.t1 + 0.25
     creep = lambda x: 1 - (1 - min(1.0, x)) ** 2.2
@@ -301,8 +301,9 @@ def build(ctx):
         L.bake(e_, frames, "location", locs, interp="CONSTANT")
 
     # ---------------------------------------------------------------- lights
-    key = C.area("key_amber", size=0.35, power=14.0, kelvin_k=3300)
-    key.parent = cam; key.location = (-0.25, 0.3, 0.05); key.rotation_euler = (math.radians(-30), math.radians(-30), 0)
+    # key close to the lens so it can never swing into a fibre during the turn (no light pops)
+    key = C.area("key_amber", size=0.12, power=0.8, kelvin_k=3300)
+    key.parent = cam; key.location = (-0.05, 0.07, 0.01); key.rotation_euler = (math.radians(-20), math.radians(-20), 0)
     for i, (p, pw, col) in enumerate(((Vector((0.1, 2.8, 0.45)), 9.0, (0.3, 0.85, 1.0)),
                                       (Vector((-0.35, 4.2, -0.3)), 14.0, (0.35, 0.9, 1.0)),
                                       (Vector((0.25, 1.2, -0.35)), 3.0, (1.0, 0.55, 0.25)))):
@@ -310,14 +311,15 @@ def build(ctx):
         pl.data.color = col; pl.visible_camera = False
         pl.data.specular_factor = 0.0       # rims light the SSS, no hard blob reflections
         pl.visible_glossy = False
+        L.bake_id(pl.data, frames, "energy", [C.lerp(pw, 0.0, C.remap(t, t_cross - 0.1, t_cross + 0.4, C.smooth)) for t in times])
     # soft interior light carried by the probe (switched on as we enter)
     PR = HO["probe"]
     il = C.point_light("probe_in", loc=(0, 0, 0), power=0.0, radius=PR["radius"], kelvin_k=4500)
     il.parent = cam; il.location = PR["offset"]
     il.data.specular_factor = 0.0
     il.data.color = PR["color"]
-    L.bake_id(il.data, frames, "energy", [C.lerp(0.0, PR["energy"], C.remap(t, t_cross - 0.2, t_cross + 0.2)) for t in times])
-    L.bake_id(key.data, frames, "energy", [C.lerp(6.0, 0.0, C.remap(t, t_c, t_cross + 0.2)) for t in times])
+    L.bake_id(il.data, frames, "energy", [C.lerp(0.0, PR["energy"], C.remap(t, t_cross - 0.45, t_cross + 0.35, C.smooth)) for t in times])
+    L.bake_id(key.data, frames, "energy", [C.lerp(0.8, 0.0, C.remap(t, t_c - 0.3, t_cross - 0.05, C.smooth)) for t in times])
 
     sc.world.light_settings.distance = 0.2
     L.budget_denoise(prefilter="ACCURATE", quality="BALANCED", final_res=80)
@@ -507,7 +509,13 @@ def fade_hero_membrane(m, t0, t1):
     nt.links.new(lw.outputs["Facing"], rim.inputs[0])
     mx = L._n(nt, "ShaderNodeMath"); mx.operation = "MAXIMUM"
     nt.links.new(al.outputs[0], mx.inputs[0]); nt.links.new(rim.outputs[0], mx.inputs[1])
-    nt.links.new(mx.outputs[0], p.inputs["Alpha"])
+    cd = L._n(nt, "ShaderNodeCameraData")
+    near = L._n(nt, "ShaderNodeMapRange"); near.interpolation_type = "SMOOTHSTEP"
+    near.inputs["From Min"].default_value = 0.006; near.inputs["From Max"].default_value = 0.08
+    nt.links.new(cd.outputs["View Distance"], near.inputs["Value"])
+    nm = L._n(nt, "ShaderNodeMath"); nm.operation = "MULTIPLY"
+    nt.links.new(mx.outputs[0], nm.inputs[0]); nt.links.new(near.outputs[0], nm.inputs[1])
+    nt.links.new(nm.outputs[0], p.inputs["Alpha"])
 
 
 C.run("sh09", build)

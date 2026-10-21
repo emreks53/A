@@ -1181,6 +1181,7 @@ INTERIOR_HANDOFF = dict(
     # in both shots so the f1250 camera matrix (incl. handheld) and lighting match exactly
     probe=dict(energy=0.12, color=(0.8, 0.92, 0.95), offset=(0.0, 0.015, 0.0), radius=0.01),
     handheld=dict(amp_loc=0.0004, amp_rot=0.0012, speed=0.5, seed=9),
+    cam_euler_ref=(0.000633, -1.570741, 0.000238),    # sh09 camera Euler at f1250 (local == world axes)
 )
 
 
