@@ -1085,13 +1085,15 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     wn = noise(nt, geo.outputs["Position"], 180.0, 1.0, 0.5)
     wear = math_node(nt, "MULTIPLY", pt, maprange(nt, wn.outputs[0], 0.4, 0.62, 0.15, 1.0))
     base = mixrgb(nt, wear, base, srgb("#8E3A30"))
-    r = maprange(nt, rough.outputs[0], 0.25, 0.75, 0.36, 0.58)
+    r = maprange(nt, rough.outputs[0], 0.25, 0.75, 0.42, 0.64)
     r = math_node(nt, "ADD", r, math_node(nt, "MULTIPLY", wear, vb=0.12))
     nm = NN(nt, "ShaderNodeNormalMap")
     nm.inputs["Strength"].default_value = 0.85
     LK(nt, nor.outputs[0], nm.inputs["Color"])
+    # satin finish: a softer, slightly warm sheen keeps sunlit crimson saturated (a strong white
+    # sheen turned the lit leather salmon-pink)
     leather = principled(nt, **{"Base Color": base, "Roughness": r, "Normal": nm.outputs[0],
-                                "Specular IOR Level": 0.62})
+                                "Specular IOR Level": 0.40, "Specular Tint": (1.0, 0.84, 0.76)})
     if not (mask and foil):
         LK(nt, leather.outputs[0], out.inputs["Surface"])
         return m
@@ -1144,6 +1146,11 @@ def mat_page_edge(name="page_edge", dark=1.0):
     wn = NN(nt, "ShaderNodeTexWhiteNoise", noise_dimensions="1D")
     LK(nt, fl, wn.inputs["W"])
     per = maprange(nt, wn.outputs["Value"], 0, 1, 0.80, 1.04)
+    # one leaf is ~0.1 mm: below a pixel beyond ~0.3 m -> fade the per-leaf terms out with distance
+    # (otherwise they alias into granite-like speckle); the 16-leaf signature seams stay
+    cdd = NN(nt, "ShaderNodeCameraData")
+    near = maprange(nt, cdd.outputs["View Distance"], 0.22, 0.36, 1.0, 0.0)
+    per = math_node(nt, "ADD", math_node(nt, "MULTIPLY", math_node(nt, "SUBTRACT", per, vb=0.92), near), vb=0.92)
     band = noise(nt, None, 1.0, 2.0, 0.5, dim="1D")
     LK(nt, math_node(nt, "MULTIPLY", lay, vb=0.06), band.inputs["W"])
     bandv = maprange(nt, band.outputs[0], 0.30, 0.70, 0.74, 1.08)
@@ -1153,6 +1160,7 @@ def mat_page_edge(name="page_edge", dark=1.0):
     bandv = math_node(nt, "MULTIPLY", bandv, sigv)
     fr = math_node(nt, "FRACT", lay)
     gap = maprange(nt, math_node(nt, "ABSOLUTE", math_node(nt, "SUBTRACT", fr, vb=0.5)), 0.38, 0.5, 1.0, 0.8)
+    gap = math_node(nt, "ADD", math_node(nt, "MULTIPLY", math_node(nt, "SUBTRACT", gap, vb=0.95), near), vb=0.95)
     dirt = noise(nt, geo.outputs["Position"], 60.0, 1.0, 0.5)
     dirtv = maprange(nt, dirt.outputs[0], 0.4, 0.7, 1.0, 0.9)
     v = math_node(nt, "MULTIPLY", math_node(nt, "MULTIPLY", per, bandv), math_node(nt, "MULTIPLY", gap, dirtv))
@@ -1473,7 +1481,6 @@ def build_closed_book(name, idx, mats, front_mat_idx=1):
     loop = cover_loop(T)
     ys = book_ys()
     A = spine_arc_len(T)
-    natlas = len(BOOKS)
     bm = bmesh.new()
     uvb = bm.loops.layers.uv.new("uvb")
     uvs = bm.loops.layers.uv.new("uvs")
@@ -1510,7 +1517,7 @@ def build_closed_book(name, idx, mats, front_mat_idx=1):
         if p[2] == "back":
             u_b = p[0] / BK_WF
         a = p[3] if p[2] == "spine" else (0.0 if p[1] < T / 2 else A)
-        u_s = (idx + 0.5) / natlas + (a - A / 2) / (SPINE_SLOT * natlas)
+        u_s = 0.5 + (a - A / 2) / SPINE_SLOT              # per-book spine tile
         return (u_b, y / BK_H), (u_s, y / BK_H), (perim[i], y)
 
     for j in range(len(ys) - 1):
