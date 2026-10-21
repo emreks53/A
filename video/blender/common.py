@@ -353,6 +353,10 @@ def run(shot_id, build):
         sc.render.filepath = os.path.join(d, f"{shot_id}_#####")
         sc.render.use_overwrite = False      # resumable: skip frames already on disk
         sc.render.use_placeholder = True
+        for f in range(f_from, f_to + 1, sc.frame_step):   # stale 0-byte placeholders of an interrupted run
+            p = os.path.join(d, f"{shot_id}_{f:05d}.png")
+            if os.path.exists(p) and os.path.getsize(p) == 0:
+                os.remove(p)
         stamps = []
         bpy.app.handlers.render_pre.append(lambda *_: stamps.append(time.time()))
         t_r = time.time()
@@ -457,6 +461,9 @@ def human_mesh(obj_name="realistic_hand"):
         z = _curl(HUMAN_BUNDLE_URL, os.path.join(d, "hbm.zip"))
         subprocess.run(["unzip", "-o", "-q", z, "-d", d], check=True)
         blend = glob.glob(os.path.join(d, "**", "human_base_meshes_bundle.blend"), recursive=True)
+    alias = {"realistic_hand": "Hand  - Realistic", "realistic_foot": "Foot - Realistic",
+             "realistic_eye": "Eye - Realistic", "realistic_jaw": "Jaw - Realistic"}
+    obj_name = alias.get(obj_name, obj_name)   # in bundle v1.4.1 the short names are thumbnail cameras
     with bpy.data.libraries.load(blend[0], link=False) as (src, dst):
         dst.objects = [n for n in src.objects if n == obj_name]
     objs = []
