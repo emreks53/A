@@ -3153,39 +3153,67 @@ def build(ctx):
           "diffuse_bounces": 1, "glossy_bounces": 1, "transmission_bounces": 2, "transparent_bounces": 8,
           "max_bounces": 3, "clamp_indirect": 2.0, "texture_limit": "4096",
           # camA (frames < fB): more samples and a tamed gold-foil glint (review 2). The cover hold (from the
-          # "Sozler" cut-in, frame 2687, to the A>B cut) gets 24 spp: the foil glyphs mirror the kafes window
-          # through a 0.09-0.22 roughness lobe, and the motion-compensated change of the subtitle detail
-          # (2700-2702) measured 6.4 % at 10 spp, 7.1 % at 12, 6.3 % at 16, 5.8 % at 20 and 4.5 % at 24.
+          # "Sozler" beat, frame 2687, while the crane is still landing -- it settles at about 2695 -- to the
+          # A>B cut) gets 24 spp: the foil glyphs mirror the kafes window through a 0.09-0.22 roughness lobe,
+          # and the motion-compensated change of the subtitle detail (2700-2702) measured 6.4 % at 10 spp,
+          # 7.1 % at 12, 6.3 % at 16, 5.8 % at 20 and 4.7 % at 24 (24 is above the director's "10 or 12 spp":
+          # needs sign-off; SH15_OV='{"camA_hold_spp": 12}' is the in-spec fallback).
           "camA_spp": 10, "camA_hold_spp": 24, "camA_clamp_direct": 10.0, "camA_filter_glossy": 1.5}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
     static_seed = not os.environ.get("SH15_ANIMSEED")
-    f_hold = int(round(t_soz * C.FPS))              # 2687: the cover is framed on "Sozler"
+    f_hold = int(round(t_soz * C.FPS))              # 2687: the "Sozler" beat (camA crane settles ~2695)
     nodenoise = bool(os.environ.get("SH15_NODENOISE"))
+    # Per-frame render settings are KEYED on the scene (CONSTANT F-curves), like the exposure keys above.
+    # They must not be set from a render handler: with use_persistent_data the render depsgraph keeps its
+    # evaluated copy of the scene between frames, and a value written to the original scene in render_pre does
+    # not reach that copy unless something else (a camera-marker switch) forces a re-copy. Verified failure: a
+    # 2685-2687 chunk rendered 2687 at 10 spp although render_pre had set 24. Keyed values are written into the
+    # evaluated scene by the animation system on every frame, so a frame gets the same settings whatever frame
+    # its chunk starts on. The applied values are read back from the render depsgraph and logged per frame.
+    rs_keys = {}
+    if ctx.mode == "final":
+        rs_keys = {
+            "samples": [(ctx.f0 - 10, ov["camA_spp"]), (f_hold, ov["camA_hold_spp"]), (fB, ov["final_spp"])],
+            "sample_clamp_direct": [(ctx.f0 - 10, ov["camA_clamp_direct"]), (fB, ov.get("clamp_direct", 0.0))],
+            "blur_glossy": [(ctx.f0 - 10, ov["camA_filter_glossy"]), (fB, ov.get("filter_glossy", 1.0))]}
+        rs_keys["adaptive_min_samples"] = list(rs_keys["samples"])
+        if getattr(ctx.args, "spp", None):          # explicit --spp from the command line wins
+            del rs_keys["samples"], rs_keys["adaptive_min_samples"]
+        for path, keys in rs_keys.items():
+            key_const(sc.cycles, path, [(f, int(v) if path.endswith("samples") else float(v)) for f, v in keys])
 
     def _per_frame(*_):
-        """Per-frame render settings, decided only from frame_current (any chunk start renders every frame
-        identically). common.configure_render() turns the animated seed on after build(), so the fixed
-        seed is applied here."""
-        scn = bpy.context.scene
-        cy = scn.cycles
+        """Settings that are constant for the whole shot (so they reach the first frame's evaluated scene and
+        never change inside a chunk). common.configure_render() turns the animated seed on after build(), so
+        the fixed seed is applied here."""
+        cy = bpy.context.scene.cycles
         if static_seed:
             cy.use_animated_seed = False
             # 3 lights only: the light tree costs ~7 % per sample here and buys nothing
             cy.use_light_tree = bool(os.environ.get("SH15_LIGHTTREE"))
         if nodenoise:
             cy.use_denoising = False
-        if ctx.mode == "final":
-            a = scn.frame_current < fB
-            hold = f_hold <= scn.frame_current < fB
-            spp = int(ov["camA_hold_spp"] if hold else ov["camA_spp"] if a else ov["final_spp"])
-            cy.samples = spp
-            cy.adaptive_min_samples = spp
-            cy.sample_clamp_direct = float(ov["camA_clamp_direct"] if a else ov.get("clamp_direct", 0.0))
-            cy.blur_glossy = float(ov["camA_filter_glossy"] if a else ov.get("filter_glossy", 1.0))
-            print("[sh15] frame %d: %s spp=%d clamp_direct=%.1f filter_glossy=%.2f" % (
-                scn.frame_current, "camA hold" if hold else "camA" if a else "B-E", spp, cy.sample_clamp_direct,
-                cy.blur_glossy), flush=True)
     bpy.app.handlers.render_pre.append(_per_frame)
+
+    logged = set()
+
+    def _log_applied(scn, depsgraph=None):
+        """Print the settings the render engine will actually use for this frame: read from the render
+        depsgraph's evaluated scene right after it was evaluated for the frame (before Cycles syncs it)."""
+        if ctx.mode != "final" or depsgraph is None or depsgraph.mode != "RENDER":
+            return
+        se = depsgraph.scene_eval
+        f = se.frame_current
+        if f in logged or abs(se.frame_subframe) > 1e-6:
+            return
+        logged.add(f)
+        cy = se.cycles
+        tag = "camA hold" if f_hold <= f < fB else "camA" if f < fB else "B-E"
+        print("[sh15] frame %d (%s) applied: spp=%d min_spp=%d clamp_direct=%.1f filter_glossy=%.2f "
+              "animated_seed=%d seed=%d light_tree=%d exposure=%.3f" % (
+                  f, tag, cy.samples, cy.adaptive_min_samples, cy.sample_clamp_direct, cy.blur_glossy,
+                  cy.use_animated_seed, cy.seed, cy.use_light_tree, se.view_settings.exposure), flush=True)
+    bpy.app.handlers.frame_change_post.append(_log_applied)
     return ov
 
 
