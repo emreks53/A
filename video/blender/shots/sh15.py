@@ -3177,10 +3177,19 @@ def build(ctx):
             "sample_clamp_direct": [(ctx.f0 - 10, ov["camA_clamp_direct"]), (fB, ov.get("clamp_direct", 0.0))],
             "blur_glossy": [(ctx.f0 - 10, ov["camA_filter_glossy"]), (fB, ov.get("filter_glossy", 1.0))]}
         rs_keys["adaptive_min_samples"] = list(rs_keys["samples"])
+        # A persistent Cycles session does not fully follow a sample-count DROP: after 24 -> 5 spp at the A>B
+        # cut, camB frames in that chunk got a different (equally noisy) sampling pattern than the same frames
+        # rendered fresh (test: chunk 2721-2723 vs fresh 2723 at 25 %: max 30/255; 5 -> 5 across the cut: 0).
+        # tile_size is a session parameter: a changed value makes Cycles rebuild its session from scratch,
+        # exactly as at the start of a render. Every frame is one tile (1080x1920 < 2048), so the value itself
+        # changes nothing in the image; it only forces the clean re-sync at each settings change.
+        t0 = max(sc.cycles.tile_size, 2048)
+        rs_keys["tile_size"] = [(ctx.f0 - 10, t0), (f_hold, t0 + 1), (fB, t0 + 2)]
         if getattr(ctx.args, "spp", None):          # explicit --spp from the command line wins
             del rs_keys["samples"], rs_keys["adaptive_min_samples"]
         for path, keys in rs_keys.items():
-            key_const(sc.cycles, path, [(f, int(v) if path.endswith("samples") else float(v)) for f, v in keys])
+            key_const(sc.cycles, path, [(f, int(v) if path.endswith(("samples", "size")) else float(v))
+                                        for f, v in keys])
 
     def _per_frame(*_):
         """Settings that are constant for the whole shot (so they reach the first frame's evaluated scene and
@@ -3210,9 +3219,10 @@ def build(ctx):
         cy = se.cycles
         tag = "camA hold" if f_hold <= f < fB else "camA" if f < fB else "B-E"
         print("[sh15] frame %d (%s) applied: spp=%d min_spp=%d clamp_direct=%.1f filter_glossy=%.2f "
-              "animated_seed=%d seed=%d light_tree=%d exposure=%.3f" % (
+              "animated_seed=%d seed=%d light_tree=%d tile=%d exposure=%.3f" % (
                   f, tag, cy.samples, cy.adaptive_min_samples, cy.sample_clamp_direct, cy.blur_glossy,
-                  cy.use_animated_seed, cy.seed, cy.use_light_tree, se.view_settings.exposure), flush=True)
+                  cy.use_animated_seed, cy.seed, cy.use_light_tree, cy.tile_size, se.view_settings.exposure),
+              flush=True)
     bpy.app.handlers.frame_change_post.append(_log_applied)
     return ov
 
