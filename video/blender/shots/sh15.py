@@ -3043,7 +3043,7 @@ def build(ctx):
     for t, fs in ((ctx.t0, 2.8), (t_bu + 0.95, 2.2), (t_soz + 0.35, 1.4)):
         camA.data.dof.aperture_fstop = fs
         camA.data.dof.keyframe_insert("aperture_fstop", frame=t * C.FPS)
-    sc.frame_set(fB + 10)
+    sc.frame_set(f_721 + 10)                   # (the tracker is parked below the floor before f_721)
     bpy.context.view_layer.update()
     pg = trk.matrix_world.translation.copy() - V((0.0, 0.0, 0.0005))      # on the paper itself
     sc.frame_set(ctx.f0)
