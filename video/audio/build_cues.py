@@ -189,13 +189,16 @@ PIC = {
     # (sliver at top on f2454), flame half-covered on f2461 and gone on f2462, hem reaches the table f2465
     # (left) to f2465.8 (right), at rest f2466
     "sh14b.shadow": 2397.5, "sh14b.enter": 2453, "sh14b.flame_out": 2461, "sh14b.land": 2465.5,
-    # sh15 animatic (sh15/anim1, 22:20 - shot still in work, re-spot on the final render): hard cut
-    # from the closed cover to the open book at f2721.5; pages land f2728, f2735.5, last page
-    # settles on 721 at f2744 (in the pause after '721')
-    "sh15.open_cut": 2721.5, "sh15.page1": 2728, "sh15.page2": 2735.5, "sh15.page3": 2744,
+    # sh15 final render (out/rf/sh15): roller shutter rises behind the kafes from ~f2637, its lower edge
+    # clears the lattice f2643.5, window fully lit f2654.5; the sun first reaches the table (behind the
+    # rahle) f2653.5 and the lattice beam sweeps toward the camera onto the 'Sözler' cover (~f2676-2682);
+    # hard cut closed cover -> open-book macro (camB) at f2721.5 (last cover frame f2721); 4 leaves flip
+    # left->right: the first is already in its last descent on the cut (flat f2724.5), the others land
+    # flat on the right-hand stack f2730.5, f2737.5 and f2744.5 (721 on top; '721' sharp f2747)
+    "sh15.beam": 2653.5, "sh15.open_cut": 2721.5, "sh15.page1": 2730.5, "sh15.page2": 2737.5, "sh15.page3": 2744.5,
 }
 P = {k: round(v / FPS, 4) for k, v in PIC.items()}
-PIC_PROVISIONAL = {"sh15.open_cut", "sh15.page1", "sh15.page2", "sh15.page3"}
+PIC_PROVISIONAL = set()
 
 # ------------------------------------------------------------------ key words (birds stay off them)
 KEY = measure.key_words(measure.all_words(), _SP)
@@ -298,7 +301,7 @@ tick("sh02.callout_air", s, t_ox + 0.25, track={"shot": s, "name": "air"}, pan=0
 s = "sh03"                              # (picture-spotted on the final render; the jug is never on screen)
 # fade-out (t - pre + 1.1 s) begins as the loaf leaves frame right
 cue("sh03.crust", s, P["sh03.bread_out"] - 1.05, 1.7, "crust_crackle", -36, pre=0.05, space="room", send=-18,
-    fade_in=0.3, fade_out=0.6, params=dict(rate=16, pan=-0.35),
+    fade_in=0.3, fade_out=0.6, params=dict(rate=16, pan=0.6),
     ref="bread passes lower right f207.5-245.5 (PIC, final render), crackle fades as it leaves")
 t = P["sh03.pour"]
 cue("sh03.pour", s, t, 2.9, "pour", -28.5, pre=0.1, space="room", send=-13, fade_out=0.2,
@@ -307,9 +310,12 @@ cue("sh03.pour", s, t, 2.9, "pour", -28.5, pre=0.1, space="room", send=-13, fade
 tick("sh03.callout_water", s, t + 0.7, track={"shot": s, "name": "water"}, pan=0.1, ref="water callout")
 cue("sh03.jug_set", s, pause_near(12.5), 0.7, "jug_set", -28, pre=0.05, space="room", send=-14,
     params=dict(sync=0.05, pan=0.3), ref="jug set down after the pour, in the pause after 'bütün'", provisional=True)
-cue("sh03.plate", s, P["sh03.plate"], 0.95, "plate_slide", -28, pre=0.05, space="room", send=-15,
+wb = w(s, "bize")
+cue("sh03.plate", s, P["sh03.plate"], 0.95, "plate_slide", -32, pre=0.05, space="room", send=-15,
     params=dict(sync=0.05, length=0.69, pan=0.0),
-    ref="PIC f347.5 (final render): plate slides toward camera f347.5-363.6 (stop knock at t + 0.67)")
+    env=[[round(wb + d, 3), g] for d, g in ((-0.10, 0.0), (0.04, -6.0), (0.22, -6.0), (0.34, 0.0))],
+    ref="PIC f347.5 (final render): plate slides toward camera f347.5-363.6 (stop knock at t + 0.67, in the "
+        "voiceless gap of 'takdim'); dipped 6 dB under 'bize', where the slide is fastest")
 
 # ============================================================== sh04 cracked earth, noon
 s = "sh04"
@@ -427,8 +433,9 @@ bed("sh09.body", s, A - 0.2, B + 0.4, "body_amb", -30, 0.4, 0.6, space="body", s
     params=dict(wet=1.0, creaks=0.4), ref="inside the forearm")
 t = P["sh09.impulse"]
 cue("sh09.nerve", s, t, 0.95, "nerve", -24, pre=0.05, space="body", send=-14,
-    params=dict(sync=0.05, n_nodes=9, span=0.42, pan_from=-0.6, pan_to=0.6),
-    ref="PIC f1153 (final render): impulse races node to node")
+    params=dict(sync=0.05, n_nodes=9, span=0.42, pan_from=0.75, pan_to=-0.2),
+    ref="PIC f1153 (final render): impulse races node to node, from the right edge (f1153) up-left to the far "
+        "nodes (f1162)")
 cue("sh09.muscle", s, P["sh09.muscle"], 1.4, "muscle", -25, pre=0.05, space="body", send=-12,
     params=dict(sync=0.05, hold=0.3, release=0.45),
     ref="PIC f1165 (final render): impulse arrives, fibres glow / contract in a ripple")
@@ -488,7 +495,7 @@ cue("sh11.trickle", s, t_ay - 0.3, 2.7, "trickle", -32, pre=0.0, space="outdoor"
 L1 = P["sh11.leaf1"]
 cue("sh11.leaf_hits", s, L1, 1.2, "leaf_hits", -28, pre=0.05, space="outdoor", send=-16,
     params=dict(times=[0.05, round(0.05 + P["sh11.leaf2"] - L1, 4), round(0.05 + P["sh11.leaf3"] - L1, 4)],
-                pans=[0.0, -0.2, 0.15], amps=[1.0, 0.75, 0.9]),
+                pans=[0.0, -0.2, 0.15], amps=[1.0, 0.3, 0.9]),
     ref="PIC f1468.8 / f1479.4 / f1492.1 (final render): drops hit the seedling's leaves (left, right, left), "
         "they bounce")
 
@@ -548,8 +555,8 @@ for i, (tt, pn) in enumerate(zip(rt, fallback)):
          track={"shot": s, "name": nm}, ref=f"birer birer: tracking ring {i + 1}/8 snaps onto TRK_{nm}")
 t_bee = SYNC.get("sh13b.ring_b", rt[1])
 pre_bee = round(t_bee - CUT["sh13b"], 3)          # the bee is on screen from the sh13a->sh13b dissolve
-cue("sh13b.bee", s, t_bee, pre_bee + 1.5, "bee", -42, pre=pre_bee, space="meadow", send=-16, fade_in=0.2,
-    fade_out=0.3, params=dict(sync=pre_bee, dist=0.55, pan_from=0.2, pan_to=0.45, f0=226),
+cue("sh13b.bee", s, t_bee, pre_bee + 1.5, "bee", -44, pre=pre_bee, space="meadow", send=-16, fade_in=0.2,
+    fade_out=0.3, params=dict(sync=pre_bee, dist=0.55, speed=0.35, pan_from=0.1, pan_to=0.3, f0=226),
     ref="bee visible from the sh13a->sh13b dissolve (f2018), flies up-right f2015-2039, hovers right of centre "
         "f2039-2087 (ring b f2062), exits top of frame f2095.5 (final render, comp/tracks TRK_b)")
 
@@ -582,8 +589,8 @@ s = "sh14b"
 A, B = CUT["sh14b"], CUT["sh14c"]
 cue("sh14b.shadow", s, P["sh14b.shadow"], 1.7, "whoosh", -25, cls="amb", pre=0.45, space="dark", send=-10,
     fade_out=0.4,
-    params=dict(sync=0.45, f_from=900, f_peak=420, f_to=110, pan_from=0.7, pan_to=-0.7, bw=1.6, rough=0.4),
-    ref="PIC f2397.5 (final render): shadow sweeps in, darkness (room dims f2389-2414)")
+    params=dict(sync=0.45, f_from=900, f_peak=420, f_to=110, pan_from=-0.6, pan_to=0.6, bw=1.6, rough=0.4),
+    ref="PIC f2397.5 (final render): shadow sweeps in left->right, darkness (room dims f2389-2414)")
 bed("sh14b.dark", s, A - 0.1, B + 0.3, "room_tone", -40, 0.3, 0.6, space="dark", send=-20,
     params=dict(warmth=0.6, bright=0.5, width=0.8), ref="dark space")
 land = P["sh14b.land"]
@@ -613,23 +620,33 @@ cue("sh14c.sand", s, A, B - A, "sand", -24, cls="amb", space="desert", send=-24,
 # ============================================================== sh15 rahle and red books
 s = "sh15"
 A = CUT["sh15"]
-cue("sh15.sunbeam", s, A + 0.2, 3.2, "bloom", -34, cls="amb", pre=0.5, space="room_wood", send=-18, fade_out=0.8,
-    params=dict(sync=0.5, rise=0.5, decay=2.5, bright=0.55, low=0.3), ref="warm sunbeam sweeps across the room")
+cue("sh15.sunbeam", s, P["sh15.beam"], 3.2, "bloom", -35, cls="amb", pre=0.5, space="room_wood", send=-18, fade_out=0.8,
+    params=dict(sync=0.5, rise=0.4, decay=2.5, bright=0.55, low=0.15),
+    ref="PIC f2653.5 (final render): the roller shutter uncovers the kafes window f2643.5-2654.5 and the sun reaches "
+        "the table f2653.5 - the swell rises with the opening, peaks as the beam lands, decays as it sweeps onto "
+        "the 'Sözler' cover (~f2680)")
 bed("sh15.room", s, A - 0.3, TOTAL, "room_tone", -39, 0.6, 1.8, space="room_wood", send=-40,
     params=dict(warmth=1.2, bright=0.8), ref="quiet old wooden room; fades to silence at the end")
 bed("sh15.window_air", s, A - 0.3, TOTAL, "wind", -33, 0.8, 1.8, space="room_wood", send=-12,
     params=dict(strength=1.0, gustiness=0.35, rate=0.08, bright=0.45, low=0.0, veg=1.0, veg_lo=1400, veg_hi=5500,
-                veg_density=0.6, width=0.6), ref="warm air and leaves outside the window")
+                veg_density=0.6, width=0.6),
+    lpf=[[A - 0.3, 800], [round(P["sh15.beam"] - 10 * F, 4), 800], [round(P["sh15.beam"] + F, 4), 20000]],
+    ref="warm air and leaves outside the kafes window - muffled behind the closed roller shutter, opening with it "
+        "(final render f2643.5-2654.5)")
 birds("sh15.window_birds", s, A - 0.3, TOTAL, -36, 0.8, 1.8, "room_wood", n_birds=3, fmin=2600, fmax=6000,
       start=1.0, ref="warm morning outside")
 cue("sh15.book_open", s, P["sh15.open_cut"], 1.0, "book_open", -28, pre=0.32, space="room_wood", send=-14,
-    params=dict(sync=0.32, pan=0.0), provisional=True,
-    ref="PIC f2721.5: cut from the closed 'Sözler' to the open book - spine creak over the cover shot, the cover lands on the cut")
+    params=dict(sync=0.32, pan=0.0),
+    ref="PIC f2721.5 (final render): cut from the closed 'Sözler' cover (last frame f2721) to the open-book macro "
+        "(camB from f2722) - spine creak over the cover shot, the cover lands on the cut; its settle covers the "
+        "first leaf, already descending on the cut and flat at f2724.5")
 for k, nm in enumerate(["page1", "page2", "page3"]):
     L = P[f"sh15.{nm}"]
     cue(f"sh15.{nm}", s, L, 0.65, "page_turn", -30 if k < 2 else -25, pre=0.32, space="room_wood", send=-14,
-        params=dict(sync=0.32 - 0.92 * 0.28, length=0.28, pan=0.15 - 0.1 * k), provisional=True,
-        ref=f"PIC f{PIC['sh15.' + nm]}: page {k + 1}/3 lands" + (" - settles on 721, in the pause before 'sayfasında'" if k == 2 else ""))
+        params=dict(sync=0.32 - 0.92 * 0.28, length=0.28, pan=0.15 - 0.1 * k), pan=0.15,
+        ref=f"PIC f{PIC['sh15.' + nm]} (final render): page {k + 1}/3 (leaf {k + 2}/4) lands flat on the right-hand stack"
+            + (" - 721 on top, on the last syllable of '721' just before 'sayfasında'" if k == 2 else "")
+            + "; static pan: the generator's flip runs right->left, the leaves cross the frame left->right")
 tick("sh15.callout_page", s, w(s, "721") + 1.0, track={"shot": s, "name": "page"}, ref="page-number callout")
 
 CUES.sort(key=lambda c: (c["t"] - c["pre"], c["id"]))

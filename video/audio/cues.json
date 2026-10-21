@@ -48,10 +48,11 @@
   "sh14b.enter": 2453,
   "sh14b.flame_out": 2461,
   "sh14b.land": 2465.5,
+  "sh15.beam": 2653.5,
   "sh15.open_cut": 2721.5,
-  "sh15.page1": 2728,
-  "sh15.page2": 2735.5,
-  "sh15.page3": 2744
+  "sh15.page1": 2730.5,
+  "sh15.page2": 2737.5,
+  "sh15.page3": 2744.5
  },
  "key_word_spans": [
   [
@@ -507,7 +508,7 @@
    "gen": "crust_crackle",
    "params": {
     "rate": 16,
-    "pan": -0.35
+    "pan": 0.6
    },
    "lvl": -36,
    "class": "spot",
@@ -596,13 +597,31 @@
     "length": 0.69,
     "pan": 0.0
    },
-   "lvl": -28,
+   "lvl": -32,
    "class": "spot",
    "space": "room",
    "send": -15,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f347.5 (final render): plate slides toward camera f347.5-363.6 (stop knock at t + 0.67)"
+   "ref": "PIC f347.5 (final render): plate slides toward camera f347.5-363.6 (stop knock at t + 0.67, in the voiceless gap of 'takdim'); dipped 6 dB under 'bize', where the slide is fastest",
+   "env": [
+    [
+     14.62,
+     0.0
+    ],
+    [
+     14.76,
+     -6.0
+    ],
+    [
+     14.94,
+     -6.0
+    ],
+    [
+     15.06,
+     0.0
+    ]
+   ]
   },
   {
    "id": "sh04.wind",
@@ -1410,8 +1429,8 @@
     "sync": 0.05,
     "n_nodes": 9,
     "span": 0.42,
-    "pan_from": -0.6,
-    "pan_to": 0.6
+    "pan_from": 0.75,
+    "pan_to": -0.2
    },
    "lvl": -24,
    "class": "spot",
@@ -1419,7 +1438,7 @@
    "send": -14,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f1153 (final render): impulse races node to node"
+   "ref": "PIC f1153 (final render): impulse races node to node, from the right edge (f1153) up-left to the far nodes (f1162)"
   },
   {
    "id": "sh09.muscle",
@@ -1919,7 +1938,7 @@
     ],
     "amps": [
      1.0,
-     0.75,
+     0.3,
      0.9
     ]
    },
@@ -2355,11 +2374,12 @@
    "params": {
     "sync": 1.718,
     "dist": 0.55,
-    "pan_from": 0.2,
-    "pan_to": 0.45,
+    "speed": 0.35,
+    "pan_from": 0.1,
+    "pan_to": 0.3,
     "f0": 226
    },
-   "lvl": -42,
+   "lvl": -44,
    "class": "spot",
    "space": "meadow",
    "send": -16,
@@ -2776,8 +2796,8 @@
     "f_from": 900,
     "f_peak": 420,
     "f_to": 110,
-    "pan_from": 0.7,
-    "pan_to": -0.7,
+    "pan_from": -0.6,
+    "pan_to": 0.6,
     "bw": 1.6,
     "rough": 0.4
    },
@@ -2787,7 +2807,7 @@
    "send": -10,
    "fade_in": 0.005,
    "fade_out": 0.4,
-   "ref": "PIC f2397.5 (final render): shadow sweeps in, darkness (room dims f2389-2414)"
+   "ref": "PIC f2397.5 (final render): shadow sweeps in left->right, darkness (room dims f2389-2414)"
   },
   {
    "id": "sh14b.cloth",
@@ -2924,28 +2944,6 @@
    "ref": "quiet old wooden room; fades to silence at the end"
   },
   {
-   "id": "sh15.sunbeam",
-   "shot": "sh15",
-   "t": 110.0,
-   "pre": 0.5,
-   "dur": 3.2,
-   "gen": "bloom",
-   "params": {
-    "sync": 0.5,
-    "rise": 0.5,
-    "decay": 2.5,
-    "bright": 0.55,
-    "low": 0.3
-   },
-   "lvl": -34,
-   "class": "amb",
-   "space": "room_wood",
-   "send": -18,
-   "fade_in": 0.005,
-   "fade_out": 0.8,
-   "ref": "warm sunbeam sweeps across the room"
-  },
-  {
    "id": "sh15.window_air",
    "shot": "sh15",
    "t": 109.5,
@@ -2970,7 +2968,21 @@
    "send": -12,
    "fade_in": 0.8,
    "fade_out": 1.8,
-   "ref": "warm air and leaves outside the window"
+   "ref": "warm air and leaves outside the kafes window - muffled behind the closed roller shutter, opening with it (final render f2643.5-2654.5)",
+   "lpf": [
+    [
+     109.5,
+     800
+    ],
+    [
+     110.1458,
+     800
+    ],
+    [
+     110.6042,
+     20000
+    ]
+   ]
   },
   {
    "id": "sh15.window_birds",
@@ -3010,6 +3022,28 @@
    "note": "sparse distant calls (FM-sweep syllables), kept off the key words"
   },
   {
+   "id": "sh15.sunbeam",
+   "shot": "sh15",
+   "t": 110.5625,
+   "pre": 0.5,
+   "dur": 3.2,
+   "gen": "bloom",
+   "params": {
+    "sync": 0.5,
+    "rise": 0.4,
+    "decay": 2.5,
+    "bright": 0.55,
+    "low": 0.15
+   },
+   "lvl": -35,
+   "class": "amb",
+   "space": "room_wood",
+   "send": -18,
+   "fade_in": 0.005,
+   "fade_out": 0.8,
+   "ref": "PIC f2653.5 (final render): the roller shutter uncovers the kafes window f2643.5-2654.5 and the sun reaches the table f2653.5 - the swell rises with the opening, peaks as the beam lands, decays as it sweeps onto the 'Sözler' cover (~f2680)"
+  },
+  {
    "id": "sh15.book_open",
    "shot": "sh15",
    "t": 113.3958,
@@ -3026,13 +3060,12 @@
    "send": -14,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f2721.5: cut from the closed 'Sözler' to the open book - spine creak over the cover shot, the cover lands on the cut",
-   "provisional": true
+   "ref": "PIC f2721.5 (final render): cut from the closed 'Sözler' cover (last frame f2721) to the open-book macro (camB from f2722) - spine creak over the cover shot, the cover lands on the cut; its settle covers the first leaf, already descending on the cut and flat at f2724.5"
   },
   {
    "id": "sh15.page1",
    "shot": "sh15",
-   "t": 113.6667,
+   "t": 113.7708,
    "pre": 0.32,
    "dur": 0.65,
    "gen": "page_turn",
@@ -3047,13 +3080,13 @@
    "send": -14,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f2728: page 1/3 lands",
-   "provisional": true
+   "ref": "PIC f2730.5 (final render): page 1/3 (leaf 2/4) lands flat on the right-hand stack; static pan: the generator's flip runs right->left, the leaves cross the frame left->right",
+   "pan": 0.15
   },
   {
    "id": "sh15.page2",
    "shot": "sh15",
-   "t": 113.9792,
+   "t": 114.0625,
    "pre": 0.32,
    "dur": 0.65,
    "gen": "page_turn",
@@ -3068,13 +3101,13 @@
    "send": -14,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f2735.5: page 2/3 lands",
-   "provisional": true
+   "ref": "PIC f2737.5 (final render): page 2/3 (leaf 3/4) lands flat on the right-hand stack; static pan: the generator's flip runs right->left, the leaves cross the frame left->right",
+   "pan": 0.15
   },
   {
    "id": "sh15.page3",
    "shot": "sh15",
-   "t": 114.3333,
+   "t": 114.3542,
    "pre": 0.32,
    "dur": 0.65,
    "gen": "page_turn",
@@ -3089,8 +3122,8 @@
    "send": -14,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f2744: page 3/3 lands - settles on 721, in the pause before 'sayfasında'",
-   "provisional": true
+   "ref": "PIC f2744.5 (final render): page 3/3 (leaf 4/4) lands flat on the right-hand stack - 721 on top, on the last syllable of '721' just before 'sayfasında'; static pan: the generator's flip runs right->left, the leaves cross the frame left->right",
+   "pan": 0.15
   },
   {
    "id": "sh15.callout_page",
