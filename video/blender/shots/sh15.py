@@ -2733,37 +2733,40 @@ def build(ctx):
         build_motes()
     # ------------------------------------------------ cameras
     V = Vector
-    camA = rig_camera("camA", 32, 2.8, [
-        (ctx.t0 - 0.3, V((0.95, -0.42, 0.78)), V((-0.40, 0.02, 0.24)), V((-0.38, -0.08, 0.20))),
-        (t_soz - 0.9, V((0.78, -0.18, 0.52)), V((0.10, 0.06, 0.04)), V((0.30, 0.10, 0.05))),
-        (t_soz, V((0.62, -0.02, 0.40)), V((0.27, 0.10, 0.0)), V((0.30, 0.10, 0.05))),
-        (fB / C.FPS + 0.2, V((0.58, 0.0, 0.37)), V((0.27, 0.10, 0.0)), V((0.30, 0.10, 0.05))),
+    title = V((0.277, 0.106, 0.053))          # gold "SOZLER" on the closed cover
+    rahle_c = RAHLE_POS + V((0.0, 0.0, 0.20))
+    camA = rig_camera("camA", 35, 1.8, [
+        (ctx.t0 - 0.30, V((0.95, -0.42, 0.78)), V((-0.40, -0.03, 0.24)), rahle_c),
+        (t_bu + 1.05, V((0.80, -0.16, 0.55)), V((-0.06, 0.07, 0.06)), V((0.05, 0.08, 0.05))),
+        (t_soz, V((0.60, 0.109, 0.31)), V((0.164, 0.106, 0.016)), title),
+        (fB / C.FPS + 0.25, V((0.588, 0.111, 0.300)), V((0.160, 0.107, 0.014)), title),
     ], ctx.f0, fB + 6, seed=11, ends=(0.6, 0.3))
-    bpy.context.view_layer.update()
-    pg = trk.matrix_world.translation.copy()
     sc.frame_set(fB + 10)
     bpy.context.view_layer.update()
-    pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
-    camB = rig_camera("camB", 60, 2.8, [
-        (fB / C.FPS - 0.3, pg + V((0.34, -0.30, 0.30)), pg + V((0.02, -0.10, -0.06)), pg + V((0.0, -0.06, -0.03))),
-        (t_sayfa + 0.25, pg + V((0.20, -0.17, 0.16)), pg + V((0.0, -0.02, -0.01)), pg),
-        (fC / C.FPS + 0.3, pg + V((0.185, -0.155, 0.148)), pg + V((0.0, -0.015, -0.008)), pg),
-    ], fB - 6, fC + 6, seed=12, ends=(0.5, 0.4))
+    pg = trk.matrix_world.translation.copy()
+    sc.frame_set(ctx.f0)
+    hd = V((-1.0, 0.0, 0.0))                   # page head direction (up in the macro)
+    wd = V((0.0, math.cos(BETA), math.sin(BETA)))
+    nn = V((0.0, -math.sin(BETA), math.cos(BETA)))
+    pc = pg - hd * 0.103 - wd * 0.06           # right-hand page centre
+    camB = rig_camera("camB", 60, 3.2, [
+        (fB / C.FPS - 0.30, pc + nn * 0.30 - hd * 0.20, pc + hd * 0.03, pc + hd * 0.05, hd),
+        (t_sayfa + 0.30, pg + nn * 0.155 - hd * 0.070 - wd * 0.010, pg + hd * 0.004 - wd * 0.008, pg, hd),
+        (fC / C.FPS + 0.30, pg + nn * 0.147 - hd * 0.066 - wd * 0.012, pg + hd * 0.004 - wd * 0.009, pg, hd),
+    ], fB - 6, fC + 6, seed=12, ends=(0.5, 0.3))
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
-    zc = 0.13
-    xs = ROW_X0 + 0.02
-    camC = rig_camera("camC", 50, 2.8, [
-        (fC / C.FPS - 0.3, V((xs + 0.02, yc - 0.33, 0.13)), V((xs + 0.06, yc, zc)), V((xs + 0.06, yc, zc))),
-        (fD / C.FPS + 0.3, V((xs + 0.09, yc - 0.33, 0.135)), V((xs + 0.13, yc, zc)), V((xs + 0.13, yc, zc))),
-    ], fC - 6, fD + 6, seed=13, ends=(0.3, 0.3))
-    camD = rig_camera("camD", 35, 2.8, [
-        (fD / C.FPS - 0.3, V((0.06, -0.19, 0.41)), V((-0.42, -0.10, 0.30)), V((-0.33, -0.10, 0.25))),
-        (fE / C.FPS + 0.3, V((0.02, -0.04, 0.38)), V((-0.42, -0.08, 0.30)), V((-0.33, -0.08, 0.25))),
-    ], fD - 6, fE + 6, seed=14, ends=(0.4, 0.4))
-    camE = rig_camera("camE", 28, 4.0, [
-        (fE / C.FPS - 0.3, V((0.36, -0.11, 0.61)), V((-0.45, -0.10, 0.36)), V((-0.36, -0.09, 0.25))),
-        (ctx.t1 + 0.3, V((0.20, -0.105, 0.54)), V((-0.45, -0.10, 0.35)), V((-0.36, -0.09, 0.25))),
-    ], fE - 6, ctx.f1 + 2, seed=15, ends=(0.5, 0.0))
+    camC = rig_camera("camC", 50, 4.0, [
+        (fC / C.FPS - 0.30, V((-0.865, yc - 0.44, 0.176)), V((-0.838, yc, 0.158)), V((-0.840, yc, 0.17))),
+        (fD / C.FPS + 0.30, V((-0.825, yc - 0.44, 0.178)), V((-0.798, yc, 0.158)), V((-0.800, yc, 0.17))),
+    ], fC - 6, fD + 6, seed=13, ends=(0.0, 0.0))
+    camD = rig_camera("camD", 40, 2.8, [
+        (fD / C.FPS - 0.30, V((0.04, -0.20, 0.37)), V((-0.42, -0.14, 0.27)), V((-0.36, -0.14, 0.24))),
+        (fE / C.FPS + 0.30, V((-0.02, -0.12, 0.36)), V((-0.42, -0.12, 0.27)), V((-0.36, -0.13, 0.24))),
+    ], fD - 6, fE + 6, seed=14, ends=(0.3, 0.3))
+    camE = rig_camera("camE", 30, 4.0, [
+        (fE / C.FPS - 0.30, V((0.16, -0.50, 0.54)), V((-0.52, 0.0, 0.30)), V((-0.38, -0.12, 0.24))),
+        (ctx.t1 + 0.30, V((0.06, -0.43, 0.50)), V((-0.52, 0.0, 0.30)), V((-0.38, -0.12, 0.24))),
+    ], fE - 6, ctx.f1 + 2, seed=15, ends=(0.4, 0.0))
     for name, f, cam in (("A", ctx.f0, camA), ("B", fB, camB), ("C", fC, camC), ("D", fD, camD), ("E", fE, camE)):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
         mk.camera = cam
