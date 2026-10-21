@@ -70,6 +70,9 @@ def height_field(X, Y):
     ridge = L.ridged(n1, wx / 5200, wy / 5200, 8, gain=0.5, sharp=2.0)
     ero = L.erosion_fbm(n2, wx / 3600, wy / 3600, 8, gain=0.5, k=1.8)
     mountains = (np.clip(ridge, 0, 1) ** 1.35 * 3300 + (ero + 0.3) * 700) * m_mask ** 1.2
+    # fine ridges/gullies on the mountain flanks (reads as eroded rock in the grazing light)
+    mountains += (L.ridged(n2, wx / 700 + 7, wy / 700, 5, gain=0.5, sharp=2.5) - 0.35) * 240 * m_mask ** 1.5
+    mountains += L.erosion_fbm(n1, wx / 260 + 1, wy / 260, 5, k=2.0) * 70 * m_mask
 
     # forested foothills everywhere on land
     hills = (L.erosion_fbm(n2, wx / 1900 + 3.3, wy / 1900 - 1.1, 8, gain=0.52, k=1.4) * 0.5 + 0.42) * 680
@@ -81,14 +84,14 @@ def height_field(X, Y):
     rp = river_path()
     D, T = L.dist_to_polyline(X, Y, rp)
     bed = 160 * (1 - T) ** 1.3 + 1.5
-    rw = 18 + 55 * T                       # river half width (m)
+    rw = (16 + 50 * T) * (1 + 0.75 * L.fbm(n4, T * 22, 3.3, 3))   # river half width (m), irregular
     vw = 160 + 700 * T                     # floodplain half width (m)
     plain = bed + 3 + 10 * np.clip((D - rw) / vw, 0, 1)
     f = sm((D - rw - vw * 0.5) / (vw * 1.6 + 500))
     h = plain * (1 - f) + np.maximum(h, plain) * f
-    chan = sm((D - rw * 0.7) / (rw * 0.6))
+    chan = sm((D - rw * 0.5) / (rw * 1.1))
     h = (bed - 3) * (1 - chan) + h * chan
-    river = 1 - sm((D - rw) / 5.0)
+    river = 1 - sm((D - rw * (0.85 + 0.3 * L.fbm(n1, X / 90, Y / 90, 3))) / 9.0)
 
     h = h * sea_floor + (-25 - 50 * (1 - land)) * (1 - sea_floor)
     rough = (L.fbm(n1, X / 420 + 2.5, Y / 420, 4) * 16 + L.fbm(n1, X / 140 + 0.5, Y / 140, 4) * 7 +
@@ -114,7 +117,7 @@ _HDRI_PATH = {}
 
 
 def hdri_path(ctx_mode):
-    res = "16k" if ctx_mode == "final" else "8k"
+    res = os.environ.get("S8_HRES", "16k" if ctx_mode == "final" else "8k")
     if res not in _HDRI_PATH:
         _HDRI_PATH[res] = C.ph_hdri(HDRI, res, "hdr")
     return _HDRI_PATH[res]
@@ -217,9 +220,9 @@ def terrain_material():
     meadow = nb.attr("meadow")
     river = nb.attr("river")
 
-    n_big = nb.noise(pos, 1 / 900.0, 6, 0.6)
-    n_mid = nb.noise(pos, 1 / 120.0, 6, 0.6)
-    n_fine = nb.noise(pos, 1 / 9.0, 4, 0.6)
+    n_big = nb.noise(pos, 1 / 900.0, 3, 0.6)
+    n_mid = nb.noise(pos, 1 / 120.0, 3, 0.6)
+    n_fine = nb.noise(pos, 1 / 9.0, 2, 0.6)
 
     steep = nb.mapr(nz, 0.86, 0.70)                    # 1 on steep slopes (rock)
     steep = nb.math("ADD", steep, nb.math("MULTIPLY", nb.math("SUBTRACT", n_mid, 0.5), 0.6), clamp=True)
@@ -227,8 +230,8 @@ def terrain_material():
     snow = nb.math("MULTIPLY", snow, nb.mapr(nz, 0.55, 0.75))
     beach = nb.math("MULTIPLY", nb.mapr(hgt, 7, 2.5), nb.mapr(hgt, -8, -1))
 
-    n_clump = nb.noise(pos, 1 / 38.0, 3, 0.55)
-    n_patch = nb.noise(pos, 1 / 300.0, 5, 0.6)
+    n_clump = nb.noise(pos, 1 / 38.0, 2, 0.55)
+    n_patch = nb.noise(pos, 1 / 300.0, 2, 0.6)
     lush = (0.075, 0.135, 0.030)
     lush2 = (0.12, 0.165, 0.045)
     dry = (0.30, 0.245, 0.10)
@@ -249,14 +252,16 @@ def terrain_material():
     wv = nb.n("ShaderNodeTexWave", wave_type="BANDS", bands_direction="Z", wave_profile="SIN")
     wv.inputs["Scale"].default_value = 1 / 70.0
     wv.inputs["Distortion"].default_value = 8.0
-    wv.inputs["Detail"].default_value = 6.0
+    wv.inputs["Detail"].default_value = 2.0
     wv.inputs["Detail Scale"].default_value = 1.5
     nb.l(pos, wv.inputs["Vector"])
     rock = nb.mixc(nb.math("ADD", nb.math("MULTIPLY", wv.outputs["Fac"], 0.6), nb.math("MULTIPLY", n_fine, 0.4)), rock_a, rock_b)
     col = nb.mixc(steep2, col, rock)
     # gravel bars and bare banks along the river, beaches on the coast
     bank = nb.math("MULTIPLY", nb.mapr(river, 0.02, 0.2), nb.mapr(river, 0.6, 0.35))
-    col = nb.mixc(nb.math("MULTIPLY", bank, 0.9), col, (0.36, 0.33, 0.27))
+    bars = nb.math("MULTIPLY", bank, nb.mapr(nb.noise(pos, 1 / 70.0, 3, 0.6), 0.55, 0.65))
+    col = nb.mixc(nb.math("MULTIPLY", bank, 0.35), col, (0.13, 0.12, 0.08))
+    col = nb.mixc(bars, col, (0.40, 0.37, 0.31))
     col = nb.mixc(beach, col, (0.46, 0.41, 0.31))
     col = nb.mixc(snow, col, (0.82, 0.84, 0.88))
     col = nb.mixc(nb.math("MULTIPLY", n_fine, 0.25), col, (0.05, 0.05, 0.04), blend="MULTIPLY")
@@ -302,7 +307,7 @@ def sea_material():
     w.inputs["Detail"].default_value = 4.0
     w.inputs["Detail Scale"].default_value = 2.0
     nb.l(pos, w.inputs["Vector"])
-    chop = nb.noise(pos, 1 / 14.0, 6, 0.62)
+    chop = nb.math("ADD", nb.noise(pos, 1 / 14.0, 6, 0.62), nb.math("MULTIPLY", nb.noise(pos, 1 / 220.0, 3, 0.5), 2.0))
     hh = nb.math("ADD", nb.math("MULTIPLY", w.outputs["Fac"], 0.7), chop)
     bump = nb.n("ShaderNodeBump", inputs={"Strength": 0.7, "Distance": 1.0})
     nb.l(hh, bump.inputs["Height"])
@@ -337,7 +342,7 @@ def cached_field(rows, cols):
     src = inspect.getsource(height_field) + inspect.getsource(river_path) + inspect.getsource(wedge_grid) + \
         inspect.getsource(L) + f"{rows}x{cols}"
     key = hashlib.md5(src.encode()).hexdigest()[:12]
-    d = os.path.join(C.OUT, "cache"); os.makedirs(d, exist_ok=True)
+    d = os.path.join(C.ASSETS, "cache"); os.makedirs(d, exist_ok=True)
     p = os.path.join(d, f"sh12_field_{key}.npz")
     X, Y = wedge_grid(rows, cols, -1200, 62000, 1500, 31, pw=2.1)
     if os.path.exists(p):
@@ -349,7 +354,7 @@ def cached_field(rows, cols):
 
 
 def build_terrain(ctx):
-    rows, cols = (2200, 1500) if ctx.mode == "final" else (1500, 1000)
+    rows, cols = (1900, 1300) if ctx.mode == "final" else (1500, 1000)
     if ctx.mode == "animatic":
         rows, cols = 900, 600
     if os.environ.get("S8_LOWRES"):
@@ -361,7 +366,7 @@ def build_terrain(ctx):
     dhy = np.gradient(h, axis=0) / np.maximum(np.gradient(Y, axis=0), 1e-3)
     dhx = np.gradient(h, axis=1) / np.maximum(np.gradient(X, axis=1), 1e-3)
     slope = np.sqrt(dhx ** 2 + dhy ** 2)
-    forest = np.clip((fn + 0.12) * 4, 0, 1) * sm((1500 - h) / 300) * sm((h - 12) / 30) * sm((D - 90) / 80)
+    forest = np.clip((fn + 0.12) * 4, 0, 1) * sm((1500 - h) / 300) * sm((h - 4) / 20) * sm((D - 45) / 60)
     forest *= sm((0.85 - slope) / 0.25)
     meadow_c = np.exp(-(((X - 1300) / 650) ** 2 + ((Y - 3000) / 750) ** 2))
     meadow = np.clip(meadow_c * 1.6 - 0.1 + 0.3 * L.fbm(n5, X / 300, Y / 300, 3), 0, 1)
@@ -370,7 +375,7 @@ def build_terrain(ctx):
     openm = openm * np.clip(0.5 + 0.9 * L.fbm(n5, X / 700 + 9, Y / 700, 3), 0, 1)
     Z = h - curv(X, Y)
     ob = L.grid_mesh("Terrain", X, Y, Z, {"h": h, "forest": forest, "meadow": meadow, "river": river})
-    C.assign(ob, terrain_material())
+    C.assign(ob, terrain_material() if not os.environ.get("S8_PLAINT") else C.principled("plainT", (0.1, 0.12, 0.05)))
     return ob, (X, Y, Z, forest, rows, cols, openm)
 
 
@@ -390,9 +395,9 @@ def tree_material():
     col = nb.mixc(1.0, c2, tint, blend="MULTIPLY")
     dif = nb.n("ShaderNodeBsdfDiffuse"); nb.l(col, dif.inputs["Color"])
     tr = nb.n("ShaderNodeBsdfTranslucent")
-    tcol = nb.mixc(1.0, col, (2.2, 2.6, 1.2), blend="MULTIPLY")
+    tcol = nb.mixc(1.0, col, (3.2, 3.4, 1.3), blend="MULTIPLY")
     nb.l(tcol, tr.inputs["Color"])
-    mx = nb.n("ShaderNodeMixShader", inputs={0: 0.28})
+    mx = nb.n("ShaderNodeMixShader", inputs={0: 0.45})
     nb.l(dif.outputs[0], mx.inputs[1]); nb.l(tr.outputs[0], mx.inputs[2])
     sh = aerial(nb, mx.outputs[0])[0]
     nb.l(sh, out.inputs["Surface"])
@@ -487,7 +492,7 @@ def build_trees(ctx, grid):
     scale = rs.uniform(12, 26, n) * np.where(con, 1.15, 0.85)
     # lone trees and scrub on the open land (long golden-hour shadows = scale + realism cue)
     extra = []
-    for dens, kind, ymax in ((1 / 2200.0, "lone", 9000), (1 / 300.0, "bush", 6500)):
+    for dens, kind, ymax in ((1 / 4000.0, "lone", 9000), (1 / 250.0, "bush", 6500)):
         half_b = 1500 + (ymax + 1200) * math.tan(math.radians(31))
         m_ = int((ymax + 600) * 2 * half_b * dens)
         if ctx.mode == "animatic" or os.environ.get("S8_LOWRES"):
@@ -501,6 +506,13 @@ def build_trees(ctx, grid):
         if kind == "lone":
             qv = rs.randint(3, 6, mm); qs = rs.uniform(10, 21, mm)
         else:
+            # scrub grows in clumps (hedges, gully lines), not as an even polka-dot pattern
+            nn = L.Noise2(123)
+            cl = L.fbm(nn, qx / 160, qy / 160, 4)
+            keep2 = rs.uniform(0, 1, mm) < np.clip((cl - 0.12) * 4, 0, 1)
+            qx, qy, qz = qx[keep2], qy[keep2], qz[keep2]
+            mm = len(qx)
+        if kind != "lone":
             qv = rs.randint(6, 8, mm); qs = rs.uniform(3, 8, mm)
         extra.append((qx, qy, qz, qv, qs))
     for qx, qy, qz, qv, qs in extra:
@@ -865,9 +877,13 @@ def build(ctx):
     build_world(ctx.mode)
     sun = C.sun(elev_deg=SUN_ELEV, azim_deg=SUN_AZ + 180, strength=float(os.environ.get("S8_SUN", 6.0)), kelvin_k=4300, angle_deg=0.55)
     sun.data.specular_factor = 0.22
+    import time as _t
+    _a = _t.time()
     terrain, grid = build_terrain(ctx)
+    print(f"[sh12] terrain {_t.time() - _a:.1f}s", flush=True); _a = _t.time()
     if not os.environ.get("S8_NOTREES"):
         build_trees(ctx, grid)
+    print(f"[sh12] trees {_t.time() - _a:.1f}s", flush=True); _a = _t.time()
     build_sea()
     sky = build_sky_objects(ctx) if os.environ.get("S8_VOLCLOUDS") else {}
 
@@ -896,10 +912,34 @@ def build(ctx):
     C.empty("TRK_sea", ground_pt(330, 905))
     C.empty("TRK_river", ground_pt(*RIVER_PX))
     C.empty("TRK_forest", ground_pt(790, 1330))
-    sd = Vector((0, math.cos(math.radians(SUN_ELEV)), math.sin(math.radians(SUN_ELEV))))
-    C.empty("TRK_sun", tuple(Vector(sloc) + sd * 150000))
+    # the visible sun (behind the cloud edge in the plate, where the crepuscular rays converge)
+    C.empty("TRK_sun", tuple(screen_point(sloc, srot, 548, 598, 150000)))
     sc.view_settings.exposure = float(os.environ.get("S8_EXP", -1.0))
-    return {"final_spp": 32, "preview_spp": 24, "max_bounces": 4, "diffuse_bounces": 2, "glossy_bounces": 2,
+    # emission here is aerial in-scatter / self-lit cards, never a light source: keep it out of the light
+    # tree (otherwise every terrain/tree triangle is an emitter and the tree is rebuilt each frame)
+    for m in bpy.data.materials:
+        m.cycles.emission_sampling = "NONE"
+    # static geometry: no object/deformation motion blur (camera blur still applies). Without this Cycles
+    # re-evaluates and re-syncs the heavy static geometry at the shutter subframes of every frame.
+    for o in sc.objects:
+        if o.type in ("MESH", "EMPTY", "CURVES", "POINTCLOUD") and not o.name.startswith(("cam", "Veil")):
+            o.cycles.use_motion_blur = False
+    if os.environ.get("S8_STATS"):
+        import time as _tm
+        _last = [None, _tm.time()]
+        def _st(stats):
+            msg = str(stats).split("|")[-1].strip()[:60]
+            key = msg.split(" ")[0] if msg else ""
+            if key != _last[0]:
+                print(f"STAT {_tm.time() - _last[1]:7.2f}s  {msg}", flush=True)
+                _last[0] = key; _last[1] = _tm.time()
+        bpy.app.handlers.render_stats.append(_st)
+    for pre in [x for x in os.environ.get("S8_HIDE", "").split(",") if x]:
+        for o in sc.objects:
+            if o.name.startswith(pre):
+                o.hide_render = True
+    return {"final_spp": int(os.environ.get("S8_FSPP", 8)), "final_threshold": 0.05, "preview_spp": 24,
+            "max_bounces": 3, "diffuse_bounces": 1, "glossy_bounces": 1, "transparent_bounces": 32,
             "transmission_bounces": 2, "texture_limit": "2048"}
 
 

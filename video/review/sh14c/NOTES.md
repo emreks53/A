@@ -1,4 +1,4 @@
-# sh14c — review round 1 (studio S8)
+# sh14c — review round 2 (studio S8)
 
 104.20–109.80 s · render f2495–2640 · "…işleri **cansız**, **şuursuz**, **şefkatsiz** tabiatla **izah edebilir mi**?"
 
@@ -31,11 +31,12 @@
 | sh14c_t108.700.png | "izah": camera has stopped on the stone |
 | sh14c_t109.800.png | last frame (hold) |
 
-(The stills still show a small dry-branch prop at right; it is removed in the animatic and the current script.)
+Round 2: dry-branch prop removed; sand sheets are calm at "cansız", gust on "şuursuz", settle by "izah".
 
 ## Known issues / next round
-* **Render time is over budget**: currently ~140 s/frame at final settings on this 4-core container.
-  Working on it (dropping adaptive subdivision for a fixed displaced patch, fewer sand points, 12–16 spp +
-  OIDN, cheaper ground shader). Will report the measured number.
+* ~~Render time over budget~~ fixed in round 2: adaptive micro-displacement is diced once from a fixed
+  dicing camera, haze emission kept out of the light tree, one sand-sheet layer, 8 spp + OIDN.
+  **Measured final: ~41 s/frame steady state** (f2548–2550 at 1080×1920: 49.6 s first frame, then 41.0 s
+  and 40.7 s). The full-res frame 2549 looks photographic (sand streaks, crack displacement, overcast).
 * Distant ridge line is a bit uniform/CG; will add more variation and more haze layering.
 * Sand sheets can read slightly "painted" at the peak of the gust; will break them up more.

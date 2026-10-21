@@ -87,7 +87,7 @@ def aerial(nb, surface, dist_scale=4200.0, color=(0.56, 0.62, 0.70), strength=1.
 def build_world(mode):
     if os.environ.get("S8_PLAINW"):
         C.world_color((0.6, 0.65, 0.7)); return
-    path = C.ph_hdri("kloofendal_overcast_puresky", "8k" if mode == "final" else "4k", "hdr")
+    path = C.ph_hdri("kloofendal_overcast_puresky", os.environ.get("S8_HRES", "8k" if mode == "final" else "4k"), "hdr")
     w = bpy.context.scene.world
     nt = w.node_tree
     nt.nodes.clear()
@@ -166,7 +166,14 @@ def build_ground(mode):
     sub.subdivision_type = "SIMPLE"
     sub.use_adaptive_subdivision = not os.environ.get("S8_NOADAPT")
     sub.adaptive_space = "PIXEL"
-    sub.adaptive_pixel_size = 3.0
+    sub.adaptive_pixel_size = 2.0
+    # dice once from a fixed viewpoint near the close-up (no re-tessellation while the camera moves)
+    dc = bpy.data.objects.new("dicing_cam", bpy.data.cameras.new("dicing_cam"))
+    bpy.context.scene.collection.objects.link(dc)
+    dc.data.lens = 35; dc.data.sensor_fit = "VERTICAL"; dc.data.sensor_height = 36
+    dc.location = (2.5, -3.6, 0.8)
+    C.point_at(dc, (-0.2, 0.5, 0.4))
+    bpy.context.scene.cycles.dicing_camera = dc
     near.cycles.use_motion_blur = False          # static: camera blur still applies, saves the motion copies
     bpy.context.scene.cycles.offscreen_dicing_scale = 8.0
     near.data.materials.append(mat)
@@ -289,7 +296,7 @@ def sand_sheet_material(name, alpha_gain, scale_along, seed, Gsock_values, gain_
     v.inputs[2].default_value = seed
     nz = nb.n("ShaderNodeTexNoise", noise_dimensions="3D")
     nz.inputs["Scale"].default_value = 1.0
-    nz.inputs["Detail"].default_value = 5.0
+    nz.inputs["Detail"].default_value = 3.0
     nz.inputs["Roughness"].default_value = 0.68
     nz.inputs["Distortion"].default_value = 1.2
     nb.l(v.outputs[0], nz.inputs["Vector"])
@@ -362,7 +369,7 @@ def build(ctx):
     gvals = []
     for fc in C._fcurves(ng.animation_data.action):
         gvals = [(int(kp.co.x), kp.co.y) for kp in fc.keyframe_points]
-    for i, (z, gain, sc_al) in enumerate(((0.028, 0.8, 2.2), (0.07, 0.35, 3.5))):
+    for i, (z, gain, sc_al) in enumerate(((0.03, 0.95, 2.4),)):
         bpy.ops.mesh.primitive_plane_add(size=60, location=(0, 6, z))
         sh = bpy.context.object
         sh.name = f"SandSheet{i}"
@@ -380,12 +387,31 @@ def build(ctx):
     camera_path(ctx, cam, focus)
     C.empty("TRK_stone", (0.0, 0.0, 0.9))
     sc.view_settings.exposure = float(os.environ.get("S8_EXP", -0.6))
+    # emission here is aerial in-scatter / self-lit cards, never a light source: keep it out of the light
+    # tree (otherwise every terrain/tree triangle is an emitter and the tree is rebuilt each frame)
+    for m in bpy.data.materials:
+        m.cycles.emission_sampling = "NONE"
+    # static geometry: no object/deformation motion blur (camera blur still applies). Without this Cycles
+    # re-evaluates and re-syncs the heavy static geometry at the shutter subframes of every frame.
+    for o in sc.objects:
+        if o.type in ("MESH", "EMPTY", "CURVES", "POINTCLOUD") and not o.name.startswith(("cam", "Sand", "cam_target")):
+            o.cycles.use_motion_blur = False
+    if os.environ.get("S8_STATS"):
+        import time as _tm
+        _last = [None, _tm.time()]
+        def _st(stats):
+            msg = str(stats).split("|")[-1].strip()[:60]
+            key = msg.split(" ")[0] if msg else ""
+            if key != _last[0]:
+                print(f"STAT {_tm.time() - _last[1]:7.2f}s  {msg}", flush=True)
+                _last[0] = key; _last[1] = _tm.time()
+        bpy.app.handlers.render_stats.append(_st)
     for pre in [x for x in os.environ.get("S8_HIDE", "").split(",") if x]:
         for o in sc.objects:
             if o.name.startswith(pre):
                 o.hide_render = True
     sc.view_settings.look = "AgX - Base Contrast"
-    return {"final_spp": 20, "final_threshold": 0.035, "preview_spp": 24, "max_bounces": 3, "diffuse_bounces": 1, "glossy_bounces": 1,
+    return {"final_spp": int(os.environ.get("S8_FSPP", 8)), "final_threshold": 0.05, "preview_spp": 24, "max_bounces": 3, "diffuse_bounces": 1, "glossy_bounces": 1,
             "transmission_bounces": 2, "texture_limit": os.environ.get("S8_TL", "4096")}
 
 
