@@ -22,7 +22,7 @@
   {"a": "sh08", "b": "sh09", "type": "zoom", "frames": 10, "why": "push into the skin -> through red muscle tissue"},
   {"a": "sh09", "b": "sh10", "type": "dissolve", "frames": 6, "why": "inside one cell -> pull back from the same cell"},
   {"a": "sh10", "b": "sh11", "type": "luma", "frames": 12, "why": "glowing cells become glints -> backlit rain drops"},
-  {"a": "sh11", "b": "sh12", "type": "light", "frames": 12, "flash": 0.3, "why": "tilt up into the bright rain sky -> emerge from cloud (both plates bright: a gentle flash, cloud texture stays visible)"},
+  {"a": "sh11", "b": "sh12", "type": "light", "frames": 12, "flash": 0.10, "p1_cap": 0.95, "p50_cap": 0.95, "why": "tilt up into the bright rain sky -> emerge from cloud (both plates bright: a gentle flash capped below clipping so the cloud texture stays visible; QA2)"},
   {"a": "sh12", "b": "sh13a", "type": "dissolve", "frames": 12, "why": "aerial descends toward the meadow -> low glide"},
   {"a": "sh13a", "b": "sh13b", "type": "dissolve", "frames": 6, "why": "continuous low glide, slowing"},
   {"a": "sh13b", "b": "sh14a", "type": "defocus", "frames": 12, "radius": 32, "why": "seedling dew drop -> focus pull to the sunflower spiral"},
