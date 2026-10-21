@@ -465,12 +465,25 @@ def build(ctx):
 
 
 _cfg0 = C.configure_render
+# QA g2-2: in the fully defocused red-glow end the denoiser's normal guide is pure lens-sample noise (hand edge vs
+# window across a 4 cm aperture); OIDN keeps it as detail and the field boils (32 spp barely helps). From this frame
+# on (nothing is in focus any more) denoise with colour + albedo only: same cost, smooth field, and closer to a 512 spp
+# reference (the boil also darkened the glow ~1 %). Pure function of the frame, so any chunk start gives the same image.
+GLOW_NO_NORMAL_F = 1104
 
 
 def _cfg(mode, ov):
     _cfg0(mode, ov)
     if mode == "final":
         bpy.context.scene.render.resolution_percentage = ov.get("final_res", 100)
+        base_passes = bpy.context.scene.cycles.denoising_input_passes
+
+        def _glow_denoise(scene, *_):
+            want = "RGB_ALBEDO" if scene.frame_current >= GLOW_NO_NORMAL_F else base_passes
+            if scene.cycles.denoising_input_passes != want:
+                scene.cycles.denoising_input_passes = want
+                scene.update_tag()      # without the tag the render depsgraph keeps the old value
+        bpy.app.handlers.render_pre.append(_glow_denoise)
 
 
 C.configure_render = _cfg
