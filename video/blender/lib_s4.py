@@ -21,14 +21,14 @@ SUN_KELVIN = 5000
 SUN_STRENGTH = 9.0            # W/m^2 (sun lamp, Cycles)
 SUN_ANGLE = 0.9               # deg, slightly larger than the real disc: softer mullion shadows
 HDRI_STRENGTH = 1.0
-SKY_FILL_W = 220.0            # W, window-sized sky fill area light (measured by eye vs the HDRI)
+SKY_FILL_W = 30.0             # W, window-sized sky fill area light (measured by eye vs the HDRI)
 SKY_FILL_K = 7500
 HDRI_CLAMP = 60.0             # the HDRI's own sun is clamped (the sun lamp replaces it)
 EXPOSURE = 0.0                # set per shot
 
 CLOTH_MASS = 0.004
-TABLE_BOUNCE_W = 45.0         # W, warm 4000 K area light lying on the sun patch, emitting up
-ROOM_BOUNCE_W = 90.0          # W, warm card behind the cameras (x = 1.9)
+TABLE_BOUNCE_W = 14.0         # W, warm 4000 K area light lying on the sun patch, emitting up
+ROOM_BOUNCE_W = 22.0          # W, warm card behind the cameras (x = 1.9)
 BOUNCE_K = 4000
 TABLE_Z = 0.76
 WALL_X = -1.0
@@ -97,7 +97,7 @@ def light_rig(exposure=EXPOSURE, sun_strength=SUN_STRENGTH):
     sk.spread = math.radians(160)
     so = bpy.data.objects.new("SkyFill", sk); C.link(so)
     so.location = (WALL_X - WALL_T - 0.02, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2)
-    so.rotation_euler = Euler((0, math.radians(90), 0), "XYZ")     # emits toward +X (into the room)
+    so.rotation_euler = Euler((0, math.radians(-90), 0), "XYZ")    # area lights emit along local -Z -> +X (into the room)
     so.visible_camera = False; so.visible_glossy = False; so.visible_transmission = False
     # a soft bounce from the sunlit garden/ground outside (warm, lower half of the opening)
     gb = bpy.data.lights.new("GroundBounce", "AREA")
@@ -105,16 +105,19 @@ def light_rig(exposure=EXPOSURE, sun_strength=SUN_STRENGTH):
     gb.energy = SKY_FILL_W * 0.35; gb.color = (1.0, 0.86, 0.66)
     go = bpy.data.objects.new("GroundBounce", gb); C.link(go)
     go.location = (WALL_X - WALL_T - 0.03, (WIN_Y0 + WIN_Y1) / 2, WIN_Z0 + 0.25)
-    go.rotation_euler = Euler((0, math.radians(75), 0), "XYZ")
+    go.rotation_euler = Euler((0, math.radians(-105), 0), "XYZ")  # +X and up
     go.visible_camera = False; go.visible_glossy = False; go.visible_transmission = False
     # warm bounce from the sunlit table/sill (lights the walls & ceiling like the real sun patch does) and a
     # soft warm card behind the camera position (the rest of the sunlit room)
-    for nm, sz, loc, rot, pw in (("TableBounce", (0.9, 0.75), (-0.15, 0.05, TABLE_Z + 0.004), (0, 0, 0), TABLE_BOUNCE_W),
-                                 ("RoomBounce", (1.6, 1.2), (1.9, -0.35, 1.35), (0, math.radians(-90), 0), ROOM_BOUNCE_W)):
+    recv = bpy.data.collections.get("BounceReceivers") or bpy.data.collections.new("BounceReceivers")
+    for nm, sz, loc, rot, pw in (("TableBounce", (0.9, 0.75), (-0.15, 0.05, TABLE_Z + 0.02), (math.pi, 0, 0), TABLE_BOUNCE_W),
+                                 ("RoomBounce", (1.6, 1.2), (1.9, -0.35, 1.35), (0, math.radians(90), 0), ROOM_BOUNCE_W)):
         bd = bpy.data.lights.new(nm, "AREA"); bd.shape = "RECTANGLE"; bd.size, bd.size_y = sz
         bd.energy = pw; bd.color = C.kelvin(BOUNCE_K)
         bo = bpy.data.objects.new(nm, bd); C.link(bo); bo.location = loc; bo.rotation_euler = rot
         bo.visible_camera = False; bo.visible_glossy = False; bo.visible_transmission = False
+        if nm == "TableBounce":       # the sun patch only bounces onto walls / ceiling / sill / window / curtain
+            bo.light_linking.receiver_collection = recv
     sc.view_settings.exposure = exposure
     return s
 
@@ -297,6 +300,9 @@ def build_room(detail=True):
     C.smooth_shade(wall); wall.modifiers.new("WN", "WEIGHTED_NORMAL")
     # back / right / front walls, ceiling
     box("WallBack", -1.5, 3.2, BACK_Y, BACK_Y + 0.2, 0, CEIL_Z, plaster)
+    sk = C.principled("SkirtingPaint", base=(0.62, 0.58, 0.52), rough=0.55)
+    box("Skirting", WALL_X, WALL_X + 0.018, -3.6, BACK_Y, 0, 0.11, sk, bevel=0.003)
+    box("Skirting", -1.0, 3.0, BACK_Y - 0.018, BACK_Y, 0, 0.11, sk, bevel=0.003)
     box("WallRight", 3.0, 3.2, -3.6, BACK_Y, 0, CEIL_Z, plaster)
     box("WallFront", -1.5, 3.2, -3.8, -3.6, 0, CEIL_Z, plaster)
     ceil_m = C.principled("Ceiling", base=(0.75, 0.70, 0.62), rough=0.9)
@@ -363,6 +369,12 @@ def build_room(detail=True):
         f = C.link(bpy.data.objects.new("Finial", bpy.data.meshes.new("fin")))
         bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=10, radius=0.017); bm.to_mesh(f.data); bm.free()
         f.location = (WALL_X + 0.07, yy, WIN_Z1 + 0.14); C.smooth_shade(f); C.assign(f, iron)
+    recv = bpy.data.collections.get("BounceReceivers") or bpy.data.collections.new("BounceReceivers")
+    for o in bpy.data.objects:
+        if o.type == "MESH" and o.name.split(".")[0] in ("WallLeft", "WallBack", "WallRight", "WallFront", "Ceiling",
+                                                          "Sill", "Skirting") or o.name.startswith(("Frame", "Transom", "Sash")):
+            if o.name not in recv.objects:
+                recv.objects.link(o)
     return {"wall": wall, "plaster": plaster}
 
 
@@ -476,6 +488,9 @@ def build_curtain(ctx, wind_keys, y0=0.30, y1=1.08, drop=1.42, preroll=48, res=(
     tb.field.strength = 0.25; tb.field.size = 0.35; tb.field.flow = 0.5
     tb.field.seed = seed + 1
     cur.data.materials.append(mat_sheer_linen())
+    recv = bpy.data.collections.get("BounceReceivers")
+    if recv is not None:
+        recv.objects.link(cur)
     _PENDING_BAKES.append((cur, pc))          # (only used when re-baking the disk cache)
     curtain_cache(cur, ctx, preroll)
     return cur
@@ -702,9 +717,9 @@ def mat_bread():
     mixf = nt.nodes.new("ShaderNodeMath"); mixf.operation = "MULTIPLY_ADD"; mixf.inputs[1].default_value = 0.35
     L(nz.outputs["Fac"], mixf.inputs[0]); L(hz.outputs["Result"], mixf.inputs[2])
     ramp = nt.nodes.new("ShaderNodeValToRGB"); cr = ramp.color_ramp
-    cr.elements[0].position = 0.15; cr.elements[0].color = (0.62, 0.36, 0.11, 1)      # golden side
-    cr.elements[1].position = 1.15 if False else 1.0; cr.elements[1].color = (0.30, 0.13, 0.035, 1)   # deep top
-    e = cr.elements.new(0.6); e.color = (0.46, 0.23, 0.06, 1)
+    cr.elements[0].position = 0.15; cr.elements[0].color = (0.46, 0.25, 0.085, 1)     # golden-brown side
+    cr.elements[1].position = 1.15 if False else 1.0; cr.elements[1].color = (0.22, 0.09, 0.025, 1)    # deep top
+    e = cr.elements.new(0.6); e.color = (0.33, 0.16, 0.045, 1)
     L(mixf.outputs[0], ramp.inputs["Fac"])
     fa = nt.nodes.new("ShaderNodeAttribute"); fa.attribute_name = "flour"; fa.attribute_type = "GEOMETRY"
     fn = nt.nodes.new("ShaderNodeTexNoise"); fn.inputs["Scale"].default_value = 90; fn.inputs["Detail"].default_value = 8
@@ -712,10 +727,14 @@ def mat_bread():
     fm = nt.nodes.new("ShaderNodeMath"); fm.operation = "MULTIPLY"; L(fa.outputs["Fac"], fm.inputs[0]); L(fn.outputs["Fac"], fm.inputs[1])
     fm2 = nt.nodes.new("ShaderNodeMapRange"); fm2.inputs["From Min"].default_value = 0.15; fm2.inputs["From Max"].default_value = 0.45
     L(fm.outputs[0], fm2.inputs["Value"])
+    ea = nt.nodes.new("ShaderNodeAttribute"); ea.attribute_name = "ear"; ea.attribute_type = "GEOMETRY"
+    dark = nt.nodes.new("ShaderNodeMix"); dark.data_type = "RGBA"
+    L(ea.outputs["Fac"], dark.inputs[0]); L(ramp.outputs["Color"], dark.inputs[6]); dark.inputs[7].default_value = (0.20, 0.08, 0.02, 1)
     flour = nt.nodes.new("ShaderNodeMix"); flour.data_type = "RGBA"
-    L(fm2.outputs["Result"], flour.inputs[0]); L(ramp.outputs["Color"], flour.inputs[6]); flour.inputs[7].default_value = (0.84, 0.78, 0.68, 1)
+    L(fm2.outputs["Result"], flour.inputs[0]); L(dark.outputs[2], flour.inputs[6]); flour.inputs[7].default_value = (0.84, 0.78, 0.68, 1)
     L(flour.outputs[2], p.inputs["Base Color"])
-    rr = nt.nodes.new("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.5; rr.inputs["To Max"].default_value = 0.9
+    rr = nt.nodes.new("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.85; rr.inputs["To Max"].default_value = 0.95
+    p.inputs["Specular IOR Level"].default_value = 0.25
     L(fm2.outputs["Result"], rr.inputs["Value"]); L(rr.outputs["Result"], p.inputs["Roughness"])
     p.inputs["Sheen Weight"].default_value = 0.05
     p.inputs["Subsurface Weight"].default_value = 0.05
@@ -726,7 +745,7 @@ def mat_bread():
     L(tc.outputs["Object"], fine.inputs["Vector"])
     h = nt.nodes.new("ShaderNodeMath"); h.operation = "MULTIPLY_ADD"; h.inputs[1].default_value = 0.5
     L(fine.outputs["Fac"], h.inputs[0]); L(bl.outputs["Distance"], h.inputs[2])
-    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Distance"].default_value = 0.0015
+    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Distance"].default_value = 0.003
     L(h.outputs[0], bp.inputs["Height"]); L(bp.outputs["Normal"], p.inputs["Normal"])
     return m
 
@@ -761,8 +780,10 @@ def build_bread(loc, radius=0.115, height=0.095, seed=5, rot=0.0, half=False):
     rng = random.Random(seed)
     bm = bmesh.new()
     bmesh.ops.create_uvsphere(bm, u_segments=128, v_segments=64, radius=1.0)
-    slashes = [(rng.uniform(-0.08, 0.08), -0.38 + 0.38 * k + rng.uniform(-0.04, 0.04)) for k in range(3)]
-    flour = {}
+    # ONE long, shallow, lengthwise slash with a sharp burst ear (no parallel cuts)
+    slashes = [(rng.uniform(-0.15, 0.15), rng.uniform(-0.05, 0.05))]
+    fl_layer = bm.verts.layers.float.new("flour")
+    ear_layer = bm.verts.layers.float.new("ear")
     for v in bm.verts:
         x, y, z = v.co
         if z < -0.05:
@@ -770,18 +791,21 @@ def build_bread(loc, radius=0.115, height=0.095, seed=5, rot=0.0, half=False):
         a = math.atan2(y, x)
         lump = 1 + 0.03 * math.sin(3 * a + seed) + 0.018 * math.sin(5 * a + 1.3 * seed)
         x *= lump; y *= lump
-        fl = 0.0
+        fl = 0.0; ear = 0.0
         if z > 0.1:
             for ang, off in slashes:
                 ca, sa = math.cos(ang), math.sin(ang)
                 d = (x * -sa + y * ca) - off          # distance across the slash
                 along = x * ca + y * sa
-                env = math.exp(-(along / 0.62) ** 4) * min(1.0, (z - 0.1) / 0.25)
-                w = 0.055
-                z -= 0.16 * env * math.exp(-(d / w) ** 2)                       # the cut
-                z += 0.06 * env * math.exp(-((d - 1.6 * w) / (0.7 * w)) ** 2)    # the sharp burst "ear"
-                fl = max(fl, env * math.exp(-(d / (1.3 * w)) ** 2))
-        flour[v.index] = fl
+                env = math.exp(-(along / 0.9) ** 6) * min(1.0, (z - 0.1) / 0.25)
+                w = 0.035
+                z -= 0.07 / 0.095 * 0.105 * env * math.exp(-(d / w) ** 2)        # the shallow cut
+                e = env * math.exp(-((d - 1.5 * w) / (0.55 * w)) ** 2)
+                z += 0.045 * e                                                   # the sharp burst "ear"
+                fl = max(fl, env * math.exp(-(d / (1.2 * w)) ** 2))
+                ear = max(ear, e)
+        v[fl_layer] = fl
+        v[ear_layer] = ear
         v.co = (x * radius, y * radius, (z + 0.05) * height / 1.05)
     me = bpy.data.meshes.new("Bread")
     if half:
@@ -791,13 +815,7 @@ def build_bread(loc, radius=0.115, height=0.095, seed=5, rot=0.0, half=False):
         bmesh.ops.holes_fill(bm, edges=edges, sides=0)
         cap = [f for f in bm.faces if f.normal.x > 0.99]
     bm.verts.index_update()
-    bm.to_mesh(me)
-    attr = me.attributes.new("flour", "FLOAT", "POINT")
-    for i, vv in enumerate(me.vertices):
-        attr.data[i].value = flour.get(i, 0.0) if not half else 0.0
-    if half:
-        # vertex order changed by the bisect: recompute flour from position on the half
-        pass
+    bm.to_mesh(me)              # the bmesh float layers become the "flour" / "ear" point attributes
     o = C.link(bpy.data.objects.new("BreadHalf" if half else "Bread", me))
     C.smooth_shade(o)
     tx = bpy.data.textures.new("BreadLump", "CLOUDS"); tx.noise_scale = 0.05
@@ -1276,7 +1294,7 @@ def build_bubbles(name, centre, r_in, count=1600, seed=31):
     bm_ = C.principled(name + "Mat", base=(1, 1, 1), rough=0.0, transmission=1.0, ior=0.75)
     bnt = bm_.node_tree
     gl = bnt.nodes.new("ShaderNodeBsdfGlossy"); gl.inputs["Roughness"].default_value = 0.05
-    gl.inputs["Color"].default_value = (0.95, 0.95, 0.95, 1)
+    gl.inputs["Color"].default_value = (0.6, 0.6, 0.6, 1)
     fr = bnt.nodes.new("ShaderNodeLayerWeight"); fr.inputs["Blend"].default_value = 0.45
     mx = bnt.nodes.new("ShaderNodeMixShader")
     bnt.links.new(fr.outputs["Fresnel"], mx.inputs[0])
@@ -1417,12 +1435,12 @@ def fast_denoise():
 
 # ----------------------------------------------------------------------------- analytic light shafts
 
-def mat_mote_beamlit(curtain_y=0.36, curtain_trans=0.55, gain=1.6, ambient=0.0):
+def mat_mote_beamlit(curtain_y=0.36, curtain_trans=0.55, gain=0.7, ambient=0.0):
     """Dust mote shading without light sampling: a mote glows only where the analytic sun-beam mask
     (same window projection as the shafts) says the sun reaches it; strong forward scatter = bright.
     Emission-only -> no shadow rays per mote."""
     tmp = build_beam_emission((0, 0, 0), (0.01, 0.01, 0.01), strength=1.0, noise_amp=0.0,
-                              curtain_y=curtain_y, curtain_trans=curtain_trans)
+                              curtain_y=curtain_y, curtain_trans=curtain_trans, window_fade=False)
     m = tmp.data.materials[0]
     m.name = "MoteBeamLit"
     nt = m.node_tree
@@ -1458,7 +1476,7 @@ def mat_mote_beamlit(curtain_y=0.36, curtain_trans=0.55, gain=1.6, ambient=0.0):
 
 
 def build_beam_emission(bmin, bmax, strength=0.03, noise_amp=0.55, curtain_y=None, curtain_trans=0.55,
-                        time_keys=None, color=(1.0, 0.93, 0.80)):
+                        time_keys=None, color=(1.0, 0.93, 0.80), window_fade=True):
     """Volumetric sun shafts without light sampling: each point p is traced back along the sun ray to
     the window plane; if it lands in a glazed opening (minus frame, transom, sash bars - i.e. exactly where
     the real sun gets in) it emits. Drifting 4D noise = moving air/dust density. Noise-free and cheap
@@ -1518,9 +1536,18 @@ def build_beam_emission(bmin, bmax, strength=0.03, noise_amp=0.55, curtain_y=Non
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.noise_dimensions = "3D"
     nz.inputs["Scale"].default_value = 2.2; nz.inputs["Detail"].default_value = 1.5; nz.inputs["Roughness"].default_value = 0.5
     wv = nt.nodes.new("ShaderNodeValue"); wv.name = "TIME"
+    # stretch the density 1:4 along the sun direction -> streaky rays instead of blobs
+    pd = nt.nodes.new("ShaderNodeVectorMath"); pd.operation = "DOT_PRODUCT"; pd.inputs[1].default_value = tuple(sd)
+    L(tc.outputs["Object"], pd.inputs[0])
+    pdm = nt.nodes.new("ShaderNodeMath"); pdm.operation = "MULTIPLY"; pdm.inputs[1].default_value = -0.75
+    L(pd.outputs["Value"], pdm.inputs[0])
+    psc = nt.nodes.new("ShaderNodeVectorMath"); psc.operation = "SCALE"; psc.inputs[0].default_value = tuple(sd)
+    L(pdm.outputs[0], psc.inputs["Scale"])
+    pst = nt.nodes.new("ShaderNodeVectorMath"); pst.operation = "ADD"
+    L(tc.outputs["Object"], pst.inputs[0]); L(psc.outputs[0], pst.inputs[1])
     adv = nt.nodes.new("ShaderNodeVectorMath"); adv.operation = "MULTIPLY_ADD"
     adv.inputs[1].default_value = (0.35, -0.12, 0.18)
-    L(wv.outputs[0], adv.inputs[0]); L(tc.outputs["Object"], adv.inputs[2])
+    L(wv.outputs[0], adv.inputs[0]); L(pst.outputs[0], adv.inputs[2])
     L(adv.outputs[0], nz.inputs["Vector"])
     nm = nt.nodes.new("ShaderNodeMapRange")
     nm.inputs["To Min"].default_value = 1 - noise_amp; nm.inputs["To Max"].default_value = 1 + noise_amp
@@ -1544,7 +1571,16 @@ def build_beam_emission(bmin, bmax, strength=0.03, noise_amp=0.55, curtain_y=Non
     fz.inputs["From Min"].default_value = TABLE_Z + 0.01; fz.inputs["From Max"].default_value = TABLE_Z + 0.11
     L(sep.outputs["Z"], fz.inputs["Value"])
     dens = mul(dens, fz.outputs["Result"])
+    if window_fade:     # strongest near the window: 100 % within 0.6 m of the glass, 25 % at 1.5 m
+        dw = nt.nodes.new("ShaderNodeMath"); dw.operation = "MULTIPLY"; dw.inputs[1].default_value = -1.0
+        L(tt.outputs[0], dw.inputs[0])
+        wf = nt.nodes.new("ShaderNodeMapRange"); wf.interpolation_type = "SMOOTHSTEP"
+        wf.inputs["From Min"].default_value = 0.6; wf.inputs["From Max"].default_value = 1.5
+        wf.inputs["To Min"].default_value = 1.0; wf.inputs["To Max"].default_value = 0.25
+        L(dw.outputs[0], wf.inputs["Value"])
+        dens = mul(dens, wf.outputs["Result"])
     st = nt.nodes.new("ShaderNodeMath"); st.operation = "MULTIPLY"; st.inputs[1].default_value = strength
+    st.name = "GAIN"
     L(dens, st.inputs[0])
     em = nt.nodes.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (*color, 1)
     L(st.outputs[0], em.inputs["Strength"])
@@ -1569,12 +1605,12 @@ SOFRA = {
     "bowl": (-0.30, 0.25),
     "glass": (0.02, -0.02),
     "bread": (0.20, 0.13),        # whole loaf, in a sun stripe (seen by the slider at 9.4-10.0)
-    "halfloaf": (0.00, 0.22),     # cut half showing the crumb, inside the top-down (off the glass sight line)
-    "tea": (0.33, 0.30),
-    "plate0": (-0.24, 0.50),      # plate start ...
-    "plate1": (-0.10, 0.41),      # ... slides >=12 cm toward the lens (+X) on "takdim"
+    "halfloaf": (0.12, 0.43),     # cut half showing the crumb, inside the top-down (off the glass sight line)
+    "tea": (0.38, 0.02),
+    "plate0": (-0.17, 0.47),      # plate start ...
+    "plate1": (-0.05, 0.30),      # ... slides ~21 cm toward the lens (+X), ending in the sun, on "takdim"
     "olives": (-0.33, -0.06),
-    "cheese": (0.08, 0.50),
+    "cheese": (0.30, 0.30),
     "honey": (-0.90, 0.06),
     "walnuts": (-0.87, 0.33),
     "lemon": (-0.92, 0.55),
@@ -1660,7 +1696,7 @@ def build_sofra(seed=77):
     app = [o for o in C.ph_model("food_apple_01", "1k") if o.type == "MESH"][0]
     _drop_to_table(app, SOFRA["apple"], (0, 0, 1.3))
     bread = build_bread(Vector((*SOFRA["bread"], TZ)), rot=0.6)
-    build_bread(Vector((*SOFRA["halfloaf"], TZ)), rot=2.2, seed=8, radius=0.105, half=True)
+    build_bread(Vector((*SOFRA["halfloaf"], TZ)), rot=0.3, seed=8, radius=0.105, half=True)
     build_extras()
     gx, gy = SOFRA["glass"]
     glass = build_tumbler((gx, gy, TZ))
@@ -1812,7 +1848,8 @@ def cheap_window_shadows(curtain=None):
 
 # ----------------------------------------------------------------------------- curtain disk cache
 
-CURTAIN_PC2 = os.path.join(C.VIDEO, "renders", "sh02", "curtain_cloth.pc2")
+CURTAIN_PC2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache", "s4_curtain_cloth.pc2")
+CURTAIN_VERTS = 44 * 64
 
 
 def curtain_cache(cur, ctx, preroll):
@@ -1843,6 +1880,10 @@ def curtain_cache(cur, ctx, preroll):
         print(f"[s4] curtain cache written {CURTAIN_PC2} ({len(frames)} frames)", flush=True)
     if not os.path.exists(CURTAIN_PC2):
         raise RuntimeError(f"curtain cache missing: {CURTAIN_PC2} (bake: S4_BAKE_CURTAIN=1 blender -t 1 ... sh02.py -- --track)")
+    with open(CURTAIN_PC2, "rb") as fh:
+        sig, ver, nverts, fst, rate, nsamp = struct.unpack("<12siiffi", fh.read(32))
+    assert sig.startswith(b"POINTCACHE2") and nverts == CURTAIN_VERTS == len(cur.data.vertices), (sig, nverts)
+    assert int(fst) <= f_start and int(fst) + nsamp - 1 >= f_end, (fst, nsamp)
     cur.modifiers.remove(cur.modifiers["Cloth"])
     _PENDING_BAKES.clear()
     mc = cur.modifiers.new("ClothCache", "MESH_CACHE")
@@ -1877,7 +1918,9 @@ def build_extras():
     TZ = TABLE_Z
     rng = random.Random(44)
     # olives
-    ob = [o for o in C.ph_model("wooden_bowl_02", "1k") if o.type == "MESH"][0]
+    cer = C.principled("OliveBowlCeramic", base=(0.78, 0.74, 0.66), rough=0.6, coat=0.15, coat_rough=0.4)
+    ob = lathe("OliveBowl", [(0.0, 0.0), (0.035, 0.0), (0.038, 0.003), (0.052, 0.018), (0.064, 0.042), (0.066, 0.046),
+                             (0.062, 0.046), (0.060, 0.042), (0.048, 0.020), (0.032, 0.008), (0.0, 0.007)], 64, cer)
     _drop_to_table(ob, SOFRA["olives"])
     ox, oy = SOFRA["olives"]
     olive_k = C.principled("OliveBlack", base=(0.035, 0.018, 0.025), rough=0.25, coat=0.6, coat_rough=0.1)
@@ -1904,7 +1947,7 @@ def build_extras():
     p.inputs["Subsurface Scale"].default_value = 0.004
     tcn = nt.nodes.new("ShaderNodeTexCoord"); vn = nt.nodes.new("ShaderNodeTexVoronoi"); vn.inputs["Scale"].default_value = 260
     nt.links.new(tcn.outputs["Object"], vn.inputs["Vector"])
-    bpn = nt.nodes.new("ShaderNodeBump"); bpn.inputs["Distance"].default_value = 0.0008
+    bpn = nt.nodes.new("ShaderNodeBump"); bpn.inputs["Distance"].default_value = 0.0022
     nt.links.new(vn.outputs["Distance"], bpn.inputs["Height"]); nt.links.new(bpn.outputs["Normal"], p.inputs["Normal"])
     for k, (dx, dy, sx, sy, sz, rz) in enumerate(((0.0, 0.0, 0.07, 0.048, 0.026, 0.3), (0.035, -0.03, 0.035, 0.03, 0.016, 1.1))):
         c = box("Cheese", -sx / 2, sx / 2, -sy / 2, sy / 2, 0, sz, cm, bevel=0.003, seg=2)
@@ -1937,7 +1980,7 @@ def build_extras():
     wnt.links.new(wn.outputs["Fac"], wb.inputs["Height"]); wnt.links.new(wb.outputs["Normal"], wp.inputs["Normal"])
     wx, wy = SOFRA["walnuts"]
     for i in range(6):
-        o = _blob("Walnut", 0.016, (1.0, 0.9, 0.95), wm, 10 + i, disp=0.0025, dscale=120)
+        o = _blob("Walnut", 0.016, (1.0, 0.88, 0.95), wm, 10 + i, disp=0.0042, dscale=75, subdiv=4)
         o.location = (wx + rng.uniform(-0.05, 0.05), wy + rng.uniform(-0.05, 0.05), TZ + 0.0145)
         o.rotation_euler = (rng.uniform(0, 3), rng.uniform(0, 3), rng.uniform(0, 6))
 
@@ -1994,7 +2037,7 @@ def build_gust_motes(name, t_go, t_peak, t_end, cam_at, count=1000, seed=55, r_m
     vv = _gn(ng, "ShaderNodeMath", operation="MULTIPLY"); L(vis.outputs["Result"], vv.inputs[0]); L(fo.outputs["Result"], vv.inputs[1])
     rad = _gn(ng, "ShaderNodeMath", operation="MULTIPLY"); L(rr.outputs[0], rad.inputs[0]); L(vv.outputs[0], rad.inputs[1])
     srad = _gn(ng, "GeometryNodeSetPointRadius"); L(sp.outputs[0], srad.inputs["Points"]); L(rad.outputs[0], srad.inputs["Radius"])
-    smat = _gn(ng, "GeometryNodeSetMaterial"); smat.inputs["Material"].default_value = mat_mote_beamlit(gain=2.2, ambient=0.25)
+    smat = _gn(ng, "GeometryNodeSetMaterial"); smat.inputs["Material"].default_value = mat_mote_beamlit(gain=1.0, ambient=0.05)
     L(srad.outputs[0], smat.inputs["Geometry"]); L(smat.outputs[0], out.inputs[0])
     obj.modifiers.new("GN", "NODES").node_group = ng
     key_node_value(ng, "U", [(t_go, 0.0), (t_go + 0.15, 0.06), (t_peak, 1.0), (t_end - 0.5, 1.4), (t_end, 1.5)])
@@ -2126,7 +2169,7 @@ def strip_light(name, loc, size, power, look_at, kelvin_k=5200):
     return o
 
 
-ROOM_EXPOSURE = 0.55
+ROOM_EXPOSURE = 0.9
 RENDER_OV = {"final_spp": 12, "final_min_spp": 8, "final_threshold": 0.05, "max_bounces": 8, "diffuse_bounces": 2,
              "glossy_bounces": 2, "transmission_bounces": 8, "volume_bounces": 0, "clamp_indirect": 10.0,
              "transparent_bounces": 12, "volume_step_rate": 1.0}
@@ -2140,3 +2183,20 @@ def sh02_cam_at(t):
     """Camera frame of sh02's path at t (used by BOTH shots for the gust goals -> identical gust over the cut)."""
     e, g, q, fw, rt, up = camera_frame(SH02_P, SH02_T, SH02_U, t)
     return e, fw, rt, up
+
+
+def frame_bounces(f_a, f_b, glossy=4, transmission=12, max_b=12):
+    """Deeper glossy/transmission paths only for frames f_a..f_b (macro through glass + water)."""
+    from bpy.app.handlers import persistent
+    base = {}
+
+    @persistent
+    def _h(sc, *_):
+        c = sc.cycles
+        if not base:
+            base.update(g=c.glossy_bounces, t=c.transmission_bounces, m=c.max_bounces)
+        if f_a <= sc.frame_current <= f_b:
+            c.glossy_bounces, c.transmission_bounces, c.max_bounces = glossy, transmission, max_b
+        else:
+            c.glossy_bounces, c.transmission_bounces, c.max_bounces = base["g"], base["t"], base["m"]
+    bpy.app.handlers.frame_change_pre.append(_h)

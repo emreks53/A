@@ -16,10 +16,10 @@ G = Vector((GLASS.x, GLASS.y, TZ + 0.075))
 TOP = Vector((BOWL.x - 0.073, BOWL.y, TZ + 1.10))      # bowl at y~1060 px, band 520-820 clear
 
 P3 = S.BOOM_P + [(11.90, (0.235, -0.088, 0.862)), (12.90, (0.55, -0.05, 1.22)), (13.90, (0.48, 0.24, 1.40)),
-                 (15.20, (0.40, 0.25, 1.50)), (15.95, tuple(TOP)), (16.40, tuple(TOP - Vector((0, 0, 0.03))))]
-T3 = S.BOOM_T + [(11.90, tuple(G - Vector((0, 0, 0.003)))), (12.90, (-0.20, 0.20, 0.78)), (13.90, (-0.30, 0.25, 0.76)),
-                 (15.20, (-0.30, 0.25, 0.76)), (15.95, (TOP.x, TOP.y, TZ)), (16.40, (TOP.x, TOP.y, TZ))]
-U3 = [(9.0, (0, 0, 1)), (15.20, (0, 0, 1)), (15.95, (-1, 0, 0)), (16.40, (-1, 0, 0))]
+                 (15.05, (0.40, 0.25, 1.50)), (16.25, tuple(TOP)), (16.60, tuple(TOP - Vector((0, 0, 0.03))))]
+T3 = S.BOOM_T + [(11.90, tuple(G - Vector((0, 0, 0.003)))), (12.90, (-0.20, 0.20, 0.78)), (13.90, (-0.42, 0.25, 0.76)),
+                 (15.05, (-0.42, 0.25, 0.76)), (16.25, (TOP.x, TOP.y, TZ)), (16.60, (TOP.x, TOP.y, TZ))]
+U3 = [(9.0, (0, 0, 1)), (15.05, (0, 0, 1)), (16.0, (-1, 0, 0)), (16.60, (-1, 0, 0))]
 
 
 def build(ctx):
@@ -33,14 +33,22 @@ def build(ctx):
 
     # ---------------------------------------------------------------- sh02's air, carried over the cut
     S.build_curtain(ctx, [], y0=-0.30, y1=0.36, drop=1.40, wall=None)
-    S.build_beam_emission((-0.99, -0.75, 0.765), (0.45, 0.92, 2.42), strength=0.012, curtain_y=0.36,
+    S.build_beam_emission((-0.99, -0.75, 0.765), (0.45, 0.92, 2.42), strength=0.045, curtain_y=0.36,
                           time_keys=[(5.24 - 1, 0.0), (9.64 + 1, 0.9)])
     S.build_motes("Motes", (-0.97, -0.6, 0.80), (0.12, 1.0, 2.30), count=5000, seed=21, r_min=0.0005,
                   r_max=0.0011, material=S.mat_mote_beamlit())
 
-    S.build_gust_motes("GustMotes", 8.10, 8.50, 9.90, S.sh02_cam_at)
-    for o in bpy.data.objects:                         # out of view after ~f250: drop them from the render
-        if o.name.split(".")[0] in ("Curtain", "ShaftVolume", "Motes", "GustMotes"):
+    S.build_gust_motes("GustMotes", 8.00, 8.40, 9.80, S.sh02_cam_at)
+    # the carried-over haze and motes fade out f237-249 (no pop), then leave the render; the curtain stays
+    for m in bpy.data.materials:
+        nd = m.node_tree.nodes.get("GAIN") if m.node_tree else None
+        if nd is not None:
+            v = nd.inputs[1].default_value
+            nd.inputs[1].keyframe_insert("default_value", frame=237)
+            nd.inputs[1].default_value = 0.0
+            nd.inputs[1].keyframe_insert("default_value", frame=249)
+    for o in bpy.data.objects:
+        if o.name.split(".")[0] in ("ShaftVolume", "Motes", "GustMotes"):
             o.hide_render = False; o.keyframe_insert("hide_render", frame=250)
             o.hide_render = True; o.keyframe_insert("hide_render", frame=251)
 
@@ -77,7 +85,14 @@ def build(ctx):
         piv.rotation_euler = (0, math.radians(a), math.radians(-90))
         piv.keyframe_insert("rotation_euler", frame=t * C.FPS)
     t_leave = t_hit - fall_t
-    S.key_node_value(sng, "FRONT", [(t_leave - 0.01, 0.0), (t_hit, 1.0)], interp="LINEAR")
+    S.key_node_value(sng, "FRONT", [(t_leave - 0.01, 0.0), (t_hit, 1.06)], interp="LINEAR")
+    # as the level rises the fall gets shorter: slide the jet origin (and the jug with it) so it keeps landing
+    # exactly on the impact point
+    for f in range(ctx.f0 - 2, ctx.f1 + 3):
+        t = f / C.FPS
+        dy = v0 * (math.sqrt(2 * spout_h / 9.81) - math.sqrt(2 * max(1e-4, spout_h - level(t)) / 9.81))
+        stream.location = spout - Vector((0, dy, 0))
+        stream.keyframe_insert("location", index=1, frame=f)
     S.key_node_value(sng, "TAIL", [(t_end, 0.0), (t_end + 0.2, 1.0)], interp="LINEAR")
     S.key_node_value(sng, "FLOW", [(t_leave, 0.55), (t_leave + 0.12, 1.0), (t_end - 0.25, 1.0), (t_end, 0.45)])
     hk = [(f / C.FPS, spout_h - level(f / C.FPS)) for f in range(ctx.f0 - 2, ctx.f1 + 3, 2)]
@@ -98,8 +113,17 @@ def build(ctx):
     S.add_water_ripples(wm, (impact.x - GLASS.x, impact.y - GLASS.y, 0.1), ctx.t0, ctx.t1,
                         [(t_hit, 0.0), (t_hit + 0.1, 1.0), (t_end, 1.0), (t_end + 0.9, 0.15), (ctx.t1, 0.05)])
     # a bright window-edge strip behind the glass, seen only in reflections/refraction: sparkle on the jet
-    S.strip_light("GlassStrip", (GLASS.x - 0.32, GLASS.y + 0.04, TZ + 0.17), (0.03, 0.34), 35.0,
-                  (GLASS.x, GLASS.y, TZ + 0.12))
+    # ~40 deg off the lens axis, behind the glass; lights ONLY the glass/water/jet (light linking);
+    # off through the cut (f237), on by f246, off again by 12.0 s
+    sl = S.strip_light("GlassStrip", (GLASS.x - 0.295, GLASS.y - 0.125, TZ + 0.17), (0.03, 0.34), 10.0,
+                       (GLASS.x, GLASS.y, TZ + 0.10))
+    rc = bpy.data.collections.new("GlassStripReceivers")
+    for o in bpy.data.objects:
+        if o.type == "MESH" and o.name.split(".")[0] in ("Glass", "GlassWater", "Stream", "Crown", "CrownDrop", "Bubbles", "Jug", "JugHandle"):
+            rc.objects.link(o)
+    sl.light_linking.receiver_collection = rc
+    for f, w in ((237, 0.0), (246, 10.0), (t_butun * C.FPS - 6, 10.0), (t_butun * C.FPS, 0.0)):
+        sl.data.energy = w; sl.data.keyframe_insert("energy", frame=f)
 
     # ---------------------------------------------------------------- takdim: the plate is offered
     pr = so["plate_root"]
@@ -108,15 +132,16 @@ def build(ctx):
 
     # ---------------------------------------------------------------- camera (shared boom, then own path)
     cam = C.camera("cam", lens=28, loc=P3[0][1], fstop=2.8)
-    for t, fs in ((9.95, 2.8), (10.30, 4.0)):          # sh02's f/2.8 at the cut, f/4 for the macro
+    for t, fs in ((9.95, 2.8), (10.30, 5.6), (12.0, 5.6), (12.6, 4.0)):   # f/2.8 at the cut, f/5.6 macro
         cam.data.dof.aperture_fstop = fs; cam.data.dof.keyframe_insert("aperture_fstop", frame=t * C.FPS)
 
     def focus_off(t):          # near face of the glass during the macro
-        return 0.03 * C.remap(t, t_icmek - 0.6, t_icmek - 0.2) * (1 - C.remap(t, t_butun, t_butun + 0.5))
+        return 0.015 * C.remap(t, t_icmek - 0.6, t_icmek - 0.2) * (1 - C.remap(t, t_butun, t_butun + 0.5))
     S.key_camera(cam, ctx, P3, T3, U3, focus_off=focus_off)
     C.handheld(cam, amp_loc=0.0008, amp_rot=0.0, speed=0.3, seed=5)
     S.comp_sunbeams(ctx, cam, beams=False, bloom=0.05, bloom_threshold=3.0)
     S.perf_settings(light_tree=False, fast_gi=False)
+    S.frame_bounces(248, 292, glossy=4, transmission=12, max_b=12)   # the glass/water macro
     return S.RENDER_OV
 
 

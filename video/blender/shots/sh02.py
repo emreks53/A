@@ -20,7 +20,7 @@ def build(ctx):
     wind = [(ctx.t0 - 2.2, 20), (ctx.t0 - 1.1, 260), (ctx.t0 + 0.1, 15), (5.75, 30), (6.25, 210), (6.9, 25),
             (t_ox - 1.3, 300), (t_ox - 0.45, 620), (t_ox + 0.05, 420), (t_ox + 0.8, 40), (ctx.t1 + 0.4, 20)]
     S.build_curtain(ctx, wind, y0=-0.30, y1=0.36, drop=1.40, wall=None)
-    S.build_beam_emission((-0.99, -0.75, 0.765), (0.45, 0.92, 2.42), strength=0.012, curtain_y=0.36,
+    S.build_beam_emission((-0.99, -0.75, 0.765), (0.45, 0.92, 2.42), strength=0.045, curtain_y=0.36,
                           time_keys=[(ctx.t0 - 1, 0.0), (ctx.t1 + 1, 0.9)])
     S.build_motes("Motes", (-0.97, -0.6, 0.80), (0.12, 1.0, 2.30), count=5000, seed=21, r_min=0.0005,
                   r_max=0.0011, material=S.mat_mote_beamlit())
@@ -29,7 +29,7 @@ def build(ctx):
     C.handheld(cam, amp_loc=0.0008, amp_rot=0.0, speed=0.3, seed=5)
 
     cam_at = S.sh02_cam_at
-    S.build_gust_motes("GustMotes", 8.10, 8.50, 9.90, cam_at)
+    S.build_gust_motes("GustMotes", 8.00, 8.40, 9.80, cam_at)
     # exposure: hot on the flare (light dissolve from sh01), settling by 6.2 s; sh03 starts at the same value
     S.exposure_keys([(ctx.t0 - 0.3, S.ROOM_EXPOSURE + 1.5), (ctx.t0 + 0.4, S.ROOM_EXPOSURE + 0.7), (6.2, S.ROOM_EXPOSURE)])
     # TRK_air rides with the gust: fixed screen spot (x 700, y 380) at a depth easing 1.6 m -> 0.9 m
