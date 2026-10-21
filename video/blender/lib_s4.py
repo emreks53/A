@@ -82,6 +82,12 @@ def light_rig(exposure=EXPOSURE, sun_strength=SUN_STRENGTH):
     # than world sampling through a portal on CPU).
     w.cycles_visibility.diffuse = False
     w.cycles_visibility.scatter = False
+    # the world no longer lights the room (fill lights do), so don't importance-sample it as a light:
+    # NEE toward it from inside the room is almost always blocked by the walls (wasted shadow rays)
+    try:
+        w.cycles.sampling_method = "NONE"
+    except Exception:
+        pass
     sk = bpy.data.lights.new("SkyFill", "AREA")
     sk.shape = "RECTANGLE"; sk.size = WIN_Y1 - WIN_Y0; sk.size_y = WIN_Z1 - WIN_Z0
     sk.energy = SKY_FILL_W; sk.color = C.kelvin(SKY_FILL_K)
