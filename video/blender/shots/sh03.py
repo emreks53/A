@@ -119,7 +119,7 @@ def build(ctx):
     C.key(pr, "location", t_takdim + 0.85, (*S.SOFRA["plate1"], TZ))
 
     # ---------------------------------------------------------------- camera (keyed every frame)
-    cam = C.camera("cam", lens=35, loc=(0.6, -0.2, 1.1), fstop=2.8)
+    cam = C.camera("cam", lens=35, loc=(0.6, -0.2, 1.1), fstop=4.0)
     cam.rotation_mode = "QUATERNION"
     cam.data.dof.focus_object = None
     top = BOWL + Vector((0, 0.005, 0.86))
@@ -130,22 +130,22 @@ def build(ctx):
          (t_icmek - 0.05, (-0.505, -0.255, 0.862)),
          (t_icmek + 0.70, (-0.511, -0.244, 0.860)),
          (t_butun - 0.05, (-0.518, -0.232, 0.858)),
-         (t_butun + 1.0, (-0.30, -0.24, 1.55)),
-         (t_takdim - 0.7, (-0.27, 0.02, 1.64)),
-         (t_takdim + 0.6, tuple(top)),
-         (ctx.t1 + 0.4, tuple(top + Vector((0, 0, 0.02))))]
+         (t_butun + 1.0, (-0.40, -0.30, 1.22)),
+         (t_butun + 2.1, (-0.33, -0.12, 1.46)),
+         (t_takdim + 0.75, tuple(top)),
+         (ctx.t1 + 0.4, tuple(top - Vector((0, 0, 0.035))))]
     T = [(ctx.t0 - 0.30, (-0.40, 0.30, 0.68)),
          (t_yemek + 0.10, (0.00, 0.15, 0.80)),
          (t_icmek - 0.45, (-0.30, 0.15, 0.80)),
          (t_icmek - 0.05, tuple(G)),
          (t_icmek + 0.70, tuple(G - Vector((0, 0, 0.002)))),
          (t_butun - 0.05, tuple(G - Vector((0, 0, 0.004)))),
-         (t_butun + 1.0, (-0.24, 0.34, 0.76)),
-         (t_takdim - 0.7, (-0.25, 0.30, TZ)),
-         (t_takdim + 0.6, (BOWL.x, BOWL.y + 0.005, TZ)),
+         (t_butun + 1.0, (-0.28, 0.24, 0.76)),
+         (t_butun + 2.1, (-0.26, 0.30, TZ)),
+         (t_takdim + 0.75, (BOWL.x, BOWL.y + 0.005, TZ)),
          (ctx.t1 + 0.4, (BOWL.x, BOWL.y + 0.005, TZ))]
-    U = [(ctx.t0 - 0.30, (0, 0, 1)), (t_butun + 0.3, (0, 0, 1)), (t_takdim - 0.7, (-0.05, 1, 0.6)),
-         (t_takdim + 0.4, (0, 1, 0)), (ctx.t1 + 0.4, (0, 1, 0))]
+    U = [(ctx.t0 - 0.30, (0, 0, 1)), (t_butun + 0.3, (0, 0, 1)), (t_butun + 2.1, (-0.03, 1, 0.9)),
+         (t_takdim + 0.6, (0, 1, 0)), (ctx.t1 + 0.4, (-0.07, 1, 0))]
     for f in range(ctx.f0 - 3, ctx.f1 + 4):
         t = f / C.FPS
         e = catmull(P, t); g = catmull(T, t); u = curve([(a, b) for a, b in U], t)
@@ -154,7 +154,9 @@ def build(ctx):
         cam.rotation_quaternion = look_quat(e, g, u)
         cam.keyframe_insert("location", frame=f)
         cam.keyframe_insert("rotation_quaternion", frame=f)
-        cam.data.dof.focus_distance = (g - e).length
+        # focus on the near face of the glass during the macro (target is the glass axis)
+        near = 0.03 * C.remap(t, t_icmek - 0.6, t_icmek - 0.2) * (1 - C.remap(t, t_butun, t_butun + 0.5))
+        cam.data.dof.focus_distance = (g - e).length - near
         cam.data.dof.keyframe_insert("focus_distance", frame=f)
     for fc in C.fcurves(cam):
         for kp in fc.keyframe_points:

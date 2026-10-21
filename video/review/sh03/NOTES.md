@@ -1,4 +1,4 @@
-# sh03 — the sofra: bread & fruit, water poured, crane to top-down (9.64–16.00 s) — review 2
+# sh03 — the sofra: bread & fruit, water poured, crane to top-down (9.64–16.00 s) — review 3
 
 Script: `video/blender/shots/sh03.py`; set, props, pour rig in `video/blender/lib_s4.py` (shared with sh02,
 which now carries the same set table so the sh02→sh03 boom-down is continuous).
@@ -39,6 +39,14 @@ see files `sh03_t*.png` — first frame, slider, pour hit, pour rising, crane, t
   Fast-GI got it to ~64 s but blackens the room behind the glass, so it is off.
 * Over the 40–45 s target by ~1.8×. **Director: OK to render at ~80 s/frame (165 frames ≈ 3.7 h), or
   should I trade more (e.g. 8 spp, diffuse 1)?**
+
+## Changes in review 3
+* Bubbles: 1 600 much finer entrained bubbles, slower loop (no motion-blur "grains"), whiter Fresnel rim —
+  reads as the milky plume under a real pour.
+* f/4 (was f/2.8) and focus on the near face of the glass during the macro.
+* Crane re-timed: it keeps rising and swinging until ~15.6 s, then a slow settle/roll to the last frame
+  (no dead frames at the end); top-down still lands with the bowl at frame centre.
+* Full-res sample frame from the final renderer: `sh03_FINALQ_f274.jpg` (pre-bubble-fix).
 
 ## Changes since review 1
 * Water surface: travelling impact rings + chop while pouring (keyed off after the pour).

@@ -1,4 +1,4 @@
-# sh02 — morning room, window, breathing curtain, dust motes (5.24–9.64 s) — review 2
+# sh02 — morning room, window, breathing curtain, dust motes (5.24–9.64 s) — review 3
 
 Script: `video/blender/shots/sh02.py`, shared set `video/blender/lib_s4.py` (also used by sh03).
 Light rig (for S5/sh08 to match): see `video/review/LIGHT_SETUP_S4.md`.
@@ -16,9 +16,9 @@ Light rig (for S5/sh08 to match): see `video/review/LIGHT_SETUP_S4.md`.
 * Curtain: real cloth simulation (Blender cloth, 44×64 grid, pinned ring heading, wind field keyed to a
   breath rhythm ~2 s in / ~2 s out; biggest inhale peaks at 8.17 s so the billow lands on "oksijen").
   Baked inside the script from render_f0−48 → render_f1+2 (deterministic for any chunk).
-* Dust motes: 7 000 Cycles point-cloud particles, pure function of scene time (4D-noise swirl + drift +
-  keyed gust toward camera at "oksijen") → deterministic, motion-blurred. Lit by the real sun, so they
-  only sparkle inside the beam.
+* Dust motes: 6 000 Cycles point-cloud particles, pure function of scene time (4D-noise swirl + drift +
+  keyed gust toward camera at "oksijen") → deterministic, motion-blurred. Shaded by the analytic sun-beam
+  mask, so they only sparkle inside the beam.
 * Light shafts: emission-only volume whose density is the analytic sun-ray projection back onto the real
   window grid (frame, transom, sash bars, curtain half at ~55 % transmission) × drifting 4D noise. No light
   sampling → noise-free and cheap; the shadow pattern of the shafts matches the mullion shadows on the table.
@@ -42,6 +42,15 @@ tilts down — soft, low-detail. If the director prefers darker behind the white
   (single "saber" streak), fast-GI (room goes black — closed interior). Next: cheaper weave transparency,
   fewer/bigger motes, shaft volume only where the camera sees it. **Director: if ~95 s/frame is
   acceptable for sh02 (117 frames ≈ 3.2 h on 4 cores) I can render as is; otherwise I keep cutting.**
+
+## Changes in review 3
+* Slow dolly-in toward the window during the first 2.5 s (no static head); hotter flare-to-settle
+  exposure on the first frames for the light dissolve from sh01.
+* Dust motes re-done: 6 000 fine specks shaded by the same analytic sun-beam mask as the shafts
+  (emission only, so no shadow rays); most are faint, a few glint as they tumble — they only appear
+  inside the beam. (The first try at this was a "snowstorm" — fixed.)
+* Shaft volume confined to the beam's actual path.
+* Full-res final-renderer sample frame: `sh02_FINALQ_f199.jpg` (added shortly after this push).
 
 ## Changes since review 1
 * The table under the window now carries the same sofra as sh03 (bowl, bread, glass, plate) — the

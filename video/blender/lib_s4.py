@@ -514,7 +514,7 @@ def _gn(ng, t, **kw):
 
 def build_motes(name, bmin, bmax, count=5000, seed=11, r_min=0.00018, r_max=0.0006, drift=(0.0, 0.0, 0.004),
                 turb_amp=0.06, turb_freq=1.4, turb_speed=0.18, gust_dir=(1, 0, 0), gust_keys=(), flake_frac=0.3,
-                fade=0.08):
+                fade=0.08, material=None):
     """Real dust motes: tiny lit particles drifting & swirling in a box (wrapped, faded at the box faces so
     wrapping is invisible). Positions are a pure function of scene time -> deterministic, motion blur ok.
     `gust_keys` [(abs_time, offset_m)] = accumulated displacement along gust_dir (per-mote random gain)."""
@@ -590,7 +590,7 @@ def build_motes(name, bmin, bmax, count=5000, seed=11, r_min=0.00018, r_max=0.00
     # Cycles point-cloud spheres (much cheaper than instanced meshes); radius per point
     srad = _gn(ng, "GeometryNodeSetPointRadius")
     L(sp.outputs[0], srad.inputs["Points"]); L(szf.outputs[0], srad.inputs["Radius"])
-    smat = _gn(ng, "GeometryNodeSetMaterial"); smat.inputs["Material"].default_value = mat_mote()
+    smat = _gn(ng, "GeometryNodeSetMaterial"); smat.inputs["Material"].default_value = material or mat_mote()
     L(srad.outputs[0], smat.inputs["Geometry"])
     L(smat.outputs[0], out.inputs[0])
     mod = obj.modifiers.new("GN", "NODES"); mod.node_group = ng
@@ -603,6 +603,8 @@ def build_motes(name, bmin, bmax, count=5000, seed=11, r_min=0.00018, r_max=0.00
             for kp in fc.keyframe_points:
                 kp.interpolation = "BEZIER"; kp.handle_left_type = kp.handle_right_type = "AUTO_CLAMPED"
     obj.visible_shadow = False
+    if material is not None:
+        obj.visible_diffuse = False; obj.visible_glossy = False; obj.visible_transmission = False
     return obj
 
 
@@ -1153,7 +1155,7 @@ def build_stream(name, spout, v0=(0.32, 0.0, 0.0), r0=0.0042, n=96):
     return obj, ng
 
 
-def build_bubbles(name, centre, r_in, count=700, seed=31):
+def build_bubbles(name, centre, r_in, count=1600, seed=31):
     """Entrained air bubbles under the impact point: each loops down then rises; LEVEL (abs z of the
     water surface, object space of the glass base) clips them; FLOW scales the cloud."""
     me = bpy.data.meshes.new(name)
@@ -1164,7 +1166,7 @@ def build_bubbles(name, centre, r_in, count=700, seed=31):
     LEVEL = _val(ng, "LEVEL", 0.05); FLOW = _val(ng, "FLOW", 1.0)
     st = _gn(ng, "GeometryNodeInputSceneTime")
     pts = _gn(ng, "GeometryNodePoints"); pts.inputs["Count"].default_value = count
-    rate = _gn(ng, "FunctionNodeRandomValue", data_type="FLOAT"); rate.inputs["Min"].default_value = 0.9; rate.inputs["Max"].default_value = 2.2
+    rate = _gn(ng, "FunctionNodeRandomValue", data_type="FLOAT"); rate.inputs["Min"].default_value = 0.35; rate.inputs["Max"].default_value = 0.9
     rate.inputs["Seed"].default_value = seed
     phs = _gn(ng, "FunctionNodeRandomValue", data_type="FLOAT"); phs.inputs["Seed"].default_value = seed + 1
     u0 = _gn(ng, "ShaderNodeMath", operation="MULTIPLY_ADD"); L(st.outputs["Seconds"], u0.inputs[0]); L(rate.outputs[0], u0.inputs[1]); L(phs.outputs[0], u0.inputs[2])
@@ -1194,7 +1196,7 @@ def build_bubbles(name, centre, r_in, count=700, seed=31):
     cmb = _gn(ng, "ShaderNodeCombineXYZ"); L(px.outputs[0], cmb.inputs[0]); L(py.outputs[0], cmb.inputs[1]); L(zz.outputs[0], cmb.inputs[2])
     setp = _gn(ng, "GeometryNodeSetPosition"); L(pts.outputs[0], setp.inputs["Geometry"]); L(cmb.outputs[0], setp.inputs["Position"])
     # size: small, shrinks near the end of life; times FLOW (no bubbles when not pouring)
-    bs = _gn(ng, "FunctionNodeRandomValue", data_type="FLOAT"); bs.inputs["Min"].default_value = 0.00012; bs.inputs["Max"].default_value = 0.0007
+    bs = _gn(ng, "FunctionNodeRandomValue", data_type="FLOAT"); bs.inputs["Min"].default_value = 0.00006; bs.inputs["Max"].default_value = 0.00042
     bs.inputs["Seed"].default_value = seed + 5
     life = _gn(ng, "ShaderNodeMath", operation="MULTIPLY"); life.inputs[1].default_value = 6.0; L(one.outputs[0], life.inputs[0])
     lifec = _gn(ng, "ShaderNodeMath", operation="MINIMUM"); lifec.inputs[1].default_value = 1.0; L(life.outputs[0], lifec.inputs[0])
@@ -1212,7 +1214,8 @@ def build_bubbles(name, centre, r_in, count=700, seed=31):
     bm_ = C.principled(name + "Mat", base=(1, 1, 1), rough=0.0, transmission=1.0, ior=0.75)
     bnt = bm_.node_tree
     gl = bnt.nodes.new("ShaderNodeBsdfGlossy"); gl.inputs["Roughness"].default_value = 0.05
-    fr = bnt.nodes.new("ShaderNodeLayerWeight"); fr.inputs["Blend"].default_value = 0.55
+    gl.inputs["Color"].default_value = (0.95, 0.95, 0.95, 1)
+    fr = bnt.nodes.new("ShaderNodeLayerWeight"); fr.inputs["Blend"].default_value = 0.45
     mx = bnt.nodes.new("ShaderNodeMixShader")
     bnt.links.new(fr.outputs["Fresnel"], mx.inputs[0])
     bnt.links.new(bnt.nodes["Principled BSDF"].outputs[0], mx.inputs[1]); bnt.links.new(gl.outputs[0], mx.inputs[2])
@@ -1351,6 +1354,46 @@ def fast_denoise():
 
 
 # ----------------------------------------------------------------------------- analytic light shafts
+
+def mat_mote_beamlit(curtain_y=0.36, curtain_trans=0.55, gain=1.6, ambient=0.0):
+    """Dust mote shading without light sampling: a mote glows only where the analytic sun-beam mask
+    (same window projection as the shafts) says the sun reaches it; strong forward scatter = bright.
+    Emission-only -> no shadow rays per mote."""
+    tmp = build_beam_emission((0, 0, 0), (0.01, 0.01, 0.01), strength=1.0, noise_amp=0.0,
+                              curtain_y=curtain_y, curtain_trans=curtain_trans)
+    m = tmp.data.materials[0]
+    m.name = "MoteBeamLit"
+    nt = m.node_tree
+    out = nt.nodes["Material Output"]
+    lk = out.inputs["Volume"].links[0]
+    em = lk.from_node
+    nt.links.remove(lk)
+    # the mask ran through Object coords of the volume box; motes need world coords
+    tc = [n for n in nt.nodes if n.type == "TEX_COORD"][0]
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    for l in list(nt.links):
+        if l.from_node == tc and l.from_socket.name == "Object":
+            nt.links.new(geo.outputs["Position"], l.to_socket)
+    st = em.inputs["Strength"].links[0].from_node
+    st.inputs[1].default_value = gain
+    # per-mote brightness spread: most dust is faint, a few flakes glint (hash of the mote position)
+    wn = nt.nodes.new("ShaderNodeTexWhiteNoise"); wn.noise_dimensions = "3D"
+    vs = nt.nodes.new("ShaderNodeVectorMath"); vs.operation = "SNAP"; vs.inputs[1].default_value = (0.004, 0.004, 0.004)
+    nt.links.new(geo.outputs["Position"], vs.inputs[0]); nt.links.new(vs.outputs[0], wn.inputs["Vector"])
+    pw = nt.nodes.new("ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 6.0
+    nt.links.new(wn.outputs["Value"], pw.inputs[0])
+    gl = nt.nodes.new("ShaderNodeMath"); gl.operation = "MULTIPLY_ADD"; gl.inputs[1].default_value = 4.0; gl.inputs[2].default_value = 0.12
+    nt.links.new(pw.outputs[0], gl.inputs[0])
+    m2 = nt.nodes.new("ShaderNodeMath"); m2.operation = "MULTIPLY"
+    nt.links.new(st.outputs[0], m2.inputs[0]); nt.links.new(gl.outputs[0], m2.inputs[1])
+    st = m2
+    add = nt.nodes.new("ShaderNodeMath"); add.operation = "ADD"; add.inputs[1].default_value = ambient
+    nt.links.new(st.outputs[0], add.inputs[0]); nt.links.new(add.outputs[0], em.inputs["Strength"])
+    em.inputs["Color"].default_value = (1.0, 0.95, 0.86, 1)
+    nt.links.new(em.outputs[0], out.inputs["Surface"])
+    bpy.data.objects.remove(tmp)
+    return m
+
 
 def build_beam_emission(bmin, bmax, strength=0.03, noise_amp=0.55, curtain_y=None, curtain_trans=0.55,
                         time_keys=None, color=(1.0, 0.93, 0.80)):
@@ -1650,3 +1693,22 @@ def build_beam_cards(x0, x1, y0, y1, z0, z1, n=12, strength=0.009, noise_amp=0.5
     me.from_pydata(verts, [], faces); me.update()
     vol.name = "ShaftCards"
     return vol
+
+
+def cheap_window_shadows(curtain=None):
+    """Speed: (1) window panes don't occlude the sun (real glass passes ~90 %; saves a transparent-shadow
+    shader evaluation on nearly every sunlit shadow ray); (2) the soft sky/ground fill lights are not
+    shadowed by the sheer curtain or panes (shadow linking) - their shadows through it are imperceptible."""
+    for o in bpy.data.objects:
+        if o.type == "MESH" and o.data.materials and o.data.materials[0] and o.data.materials[0].name.startswith("WinGlass"):
+            o.visible_shadow = False
+    if curtain is None:
+        return
+    col = bpy.data.collections.new("FillNoBlock")
+    col.objects.link(curtain)
+    for ln in ("SkyFill", "GroundBounce"):
+        lo = bpy.data.objects.get(ln)
+        if lo:
+            lo.light_linking.blocker_collection = col
+    for co in col.collection_objects:
+        co.light_linking.link_state = "EXCLUDE"
