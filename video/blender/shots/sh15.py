@@ -33,7 +33,7 @@ from mathutils import Vector, Matrix
 
 # ============================================================================ constants
 
-DESIGN_VERSION = "v15"
+DESIGN_VERSION = "v16"
 DESIGN_DIR = os.path.join(C.ASSETS, "sh15_design", DESIGN_VERSION)
 
 # OFL fonts (Google Fonts static TTFs). Pinned by SHA-256 so every farm node renders identical type;
@@ -828,12 +828,16 @@ def design_main():
             continue
         src = os.path.join(out_dir, s.name + ".png")
         if s.name.startswith("body_"):
-            # body print is ALWAYS pre-blurred (sigma 0.6 mm; 1.35 mm for close-ups): lines, word gaps, paragraphs
-            # stay, letters do not -> nothing is legible even inside the focus plane
-            _mask_filter(src, src[:-4] + "_soft.png", sigma=0.00060 * s.ppm, factor=1)
+            # body print is ALWAYS pre-blurred (sigma 1.0 mm; 1.35 mm for close-ups): lines, word gaps, paragraphs
+            # stay, letters do not -> nothing is legible even inside the focus plane (v16: far sigma 0.6 -> 1.0 mm)
+            _mask_filter(src, src[:-4] + "_soft.png", sigma=0.00100 * s.ppm, factor=1)
             _mask_filter(src, src[:-4] + "_xsoft.png", sigma=0.00135 * s.ppm, factor=2)
         elif s.name.startswith("head_"):
             _mask_filter(src, src[:-4] + "_lo.png", sigma=0.0, factor=5)
+        elif s.name.startswith(("cover_", "spine_")):
+            # blurred foil mask (sigma 0.25 mm): mat_leather punches breakup holes only where this is > 0.9,
+            # i.e. inside wide foil areas, never in thin strokes (thin type kept its shape -> no foil boil)
+            _mask_filter(src, src[:-4] + "_blur.png", sigma=0.00025 * s.ppm, factor=2)
     if not only:
         json.dump({"ok": True, "t": time.time()}, open(os.path.join(DESIGN_DIR, "done.json"), "w"))
 
@@ -936,6 +940,8 @@ BETA = math.radians(40)
 RAHLE_TB = 0.016
 SOZ_POS = Vector((0.30, 0.10, 0.0))    # closed Sozler lying on the table (camA), in the beam
 SOZ_YAW = math.radians(90 - 9)
+B_NEAR = 0.04          # camB leaf flips: focus 4 cm nearer than the page, on the turning leaves (review 2)
+E_DROP = 0.04          # camE: both position keys 4 cm lower -> red spines show beside the rahle (review 2)
 
 # ----------------------------------------------------------------------------- node helpers
 
@@ -1055,7 +1061,8 @@ def srgb(h):
 # ----------------------------------------------------------------------------- materials
 
 LEATHER_RGB = srgb("#7A141A")
-GOLD_RGB = (0.96, 0.64, 0.24)
+GOLD_RGB = (0.90, 0.56, 0.16)          # metal leaf, not cream ink (review 2 item 3)
+GOLD_RGB2 = (0.68, 0.40, 0.11)
 PAPER_RGB = srgb("#ECDFC4")
 _TEX = {}
 
@@ -1076,8 +1083,10 @@ def _simple(kind):
     return kind in os.environ.get("SH15_SIMPLE", "").split(",")
 
 
-def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
-    """Red bonded-leather binding with hot-stamped, slightly debossed gold foil from `mask`."""
+def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0, grain=0.0):
+    """Red bonded-leather binding with hot-stamped, slightly debossed gold foil from `mask`.
+    grain > 0 (hero cover only): the pebble grain also goes into albedo and roughness and the normal map is
+    stronger, so it survives the denoiser (shading-only detail is smoothed away at low spp)."""
     if _simple("leather"):
         return mat_simple(name, LEATHER_RGB, 0.45)
     m, nt, out = new_mat(name)
@@ -1108,8 +1117,16 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     r = maprange(nt, rough.outputs[0], 0.25, 0.75, LR0, LR1)
     r = math_node(nt, "ADD", r, math_node(nt, "MULTIPLY", wear, vb=0.12))
     nm = NN(nt, "ShaderNodeNormalMap")
-    nm.inputs["Strength"].default_value = 0.85
+    nm.inputs["Strength"].default_value = 0.85 + 0.65 * grain
     LK(nt, nor.outputs[0], nm.inputs["Color"])
+    if grain > 0:
+        # leather_red_03: one pebble ~10 texels of the 2k map = 0.89 mm at this mapping (5.5/m) ->
+        # ~4.5 px on the cover at 112.3 s (title 80.4 mm = ~410 px). Pebble tops a touch lighter and
+        # glossier, the creases between them darker (albedo + roughness: kept by OIDN)
+        disp = img_node(nt, t["disp"], True, vec=mp.outputs[0])
+        pv = maprange(nt, disp.outputs[0], 0.30, 0.70, 1.0 - 0.16 * grain, 1.0 + 0.10 * grain)
+        base = mixrgb(nt, 1.0, base, pv, "MULTIPLY")
+        r = math_node(nt, "ADD", r, maprange(nt, disp.outputs[0], 0.30, 0.70, 0.08 * grain, -0.06 * grain))
     # satin finish: a softer, slightly warm sheen keeps sunlit crimson saturated (a strong white
     # sheen turned the lit leather salmon-pink)
     leather = principled(nt, **{"Base Color": base, "Roughness": r, "Normal": nm.outputs[0],
@@ -1119,12 +1136,16 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
         return m
     uvm = NN(nt, "ShaderNodeUVMap", uv_map=uv_mask)
     mk = img_node(nt, mask, True, vec=uvm.outputs[0], ext="CLIP", interp="Linear")
-    # foil breakup: irregular edge + tiny missing specks
+    # foil breakup: slightly irregular edge (+-0.05: +-0.16 broke thin type differently every frame) +
+    # tiny missing specks, punched only where the blurred mask is > 0.9 (inside wide foil, never in a
+    # thin stroke or on a glyph edge)
     en = noise(nt, geo.outputs["Position"], 2600.0, 0.0, 0.5)
-    m_e = math_node(nt, "ADD", mk.outputs[0], maprange(nt, en.outputs[0], 0.3, 0.7, -0.16, 0.16))
+    m_e = math_node(nt, "ADD", mk.outputs[0], maprange(nt, en.outputs[0], 0.3, 0.7, -0.05, 0.05))
     foil_f = maprange(nt, m_e, 0.40, 0.62, 0.0, 1.0, interp="SMOOTHSTEP")
+    mkb = img_node(nt, mask[:-4] + "_blur.png", True, vec=uvm.outputs[0], ext="CLIP", interp="Linear")
     sp = noise(nt, geo.outputs["Position"], 1400.0, 0.0, 0.5)
     holes = maprange(nt, sp.outputs[0], 0.66, 0.70, 0.0, 0.85)
+    holes = math_node(nt, "MULTIPLY", holes, maprange(nt, mkb.outputs[0], 0.89, 0.91, 0.0, 1.0))
     foil_f = math_node(nt, "MULTIPLY", foil_f, math_node(nt, "SUBTRACT", va=1.0, b=holes), clamp=True)
     # deboss: foil areas pressed ~0.12 mm into the leather; grain flattened under the foil
     bump = NN(nt, "ShaderNodeBump")
@@ -1141,7 +1162,7 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     LK(nt, bump.outputs[0], leather.inputs["Normal"])
     gn = noise(nt, geo.outputs["Position"], 900.0, 1.0, 0.6)
     gr = maprange(nt, gn.outputs[0], 0.3, 0.7, 0.09, 0.22)
-    gcol = mixrgb(nt, maprange(nt, gn.outputs[0], 0.3, 0.7, 0.0, 1.0), GOLD_RGB, (0.82, 0.52, 0.18))
+    gcol = mixrgb(nt, maprange(nt, gn.outputs[0], 0.3, 0.7, 0.0, 1.0), GOLD_RGB, GOLD_RGB2)
     gold = principled(nt, **{"Base Color": gcol, "Metallic": 1.0, "Roughness": gr, "Normal": bump.outputs[0],
                              "Specular Tint": (1.0, 0.9, 0.7)})
     mix = NN(nt, "ShaderNodeMixShader")
@@ -1227,7 +1248,8 @@ def page_ink(nt, num, uv):
     # blurred print has a lower peak: lift it back to a believable ink density
     lift = maprange(nt, fsoft, 0.0, 1.0, 1.45, 1.0)
     bk = math_node(nt, "MINIMUM", math_node(nt, "MULTIPLY", mx.outputs[0], lift), vb=1.0)
-    bk = maprange(nt, bk, 0.02, 0.62, 0.0, 0.88)
+    # gentle stretch (review 2: 0.02-0.62 -> 0-0.88 turned the blurred lines back into bold word shapes)
+    bk = maprange(nt, bk, 0.0, 0.9, 0.0, 0.8)
     return math_node(nt, "MAXIMUM", head, bk)
 
 
@@ -2798,7 +2820,7 @@ def build(ctx):
     MATS["page_edge"] = mat_page_edge()
     MATS["headband"] = mat_headband()
     MATS["leather_plain"] = mat_leather("leather_plain", None)
-    MATS["cover_sozler"] = mat_leather("cover_sozler", os.path.join(d, "cover_sozler.png"), "uvb")
+    MATS["cover_sozler"] = mat_leather("cover_sozler", os.path.join(d, "cover_sozler.png"), "uvb", grain=1.0)
     MATS["cover_plain"] = mat_leather("cover_plain", os.path.join(d, "cover_plain.png"), "uvb")
     for i in range(len(BOOKS)):
         MATS["spine_%d" % i] = mat_leather("spine_%d" % i, os.path.join(d, "spine_%d.png" % i), "uvs", seed=i * 0.7)
@@ -2824,11 +2846,15 @@ def build(ctx):
     # closed Sozler only in camA; the open book from camB on
     key_vis(soz, [(0, fB)], ctx.f0, ctx.f1)
     key_vis(ob_root, [(fB, 99999)], ctx.f0, ctx.f1)
-    # TRK_page: export_tracks ignores hide_render, so before camB the tracker is parked far below
-    # the floor (CONSTANT) -> its visible flag is 0 while the rahle is empty
+    # TRK_page: export_tracks ignores hide_render, so the tracker is parked far below the floor (CONSTANT)
+    # whenever page 721 is not on screen: camA (empty rahle), camB until the last leaf (recto 721) has
+    # landed, and all of camD (its position there falls in the right-hand UI zone)
     trk = bpy.data.objects["TRK_page"]
     home = trk.location.copy()
-    key_const(trk, "location", [(ctx.f0 - 10, tuple(home + Vector((0, 0, -40)))), (fB, tuple(home))])
+    park = tuple(home + Vector((0, 0, -40)))
+    t_land0, d_land = leaf_times(t_sayfa)[-1], LEAF_DUR[-1]
+    f_721 = next(f for f in range(fB, fC) if C.smoother((f / C.FPS - t_land0) / d_land) >= 0.99)   # 2746
+    key_const(trk, "location", [(ctx.f0 - 10, park), (f_721, tuple(home)), (fD, park), (fE, tuple(home))])
     # ------------------------------------------------ light
     C.world_sky(sun_elev_deg=math.degrees(math.asin(-SUN_DIR.z)), sun_rot_deg=math.degrees(math.atan2(-SUN_DIR.x, SUN_DIR.y)) + 180,
                 strength=1.6, sun_disc=False, air=1.2, aerosol=1.5)
@@ -2916,9 +2942,26 @@ def build(ctx):
         (t_sayfa + 0.30, pg + nn * 0.097 - hd * 0.090 - wd * 0.009, pg + hd * 0.006 - wd * 0.007, pg, hd),
         (fC / C.FPS + 0.30, pg + nn * 0.092 - hd * 0.086 - wd * 0.011, pg + hd * 0.006 - wd * 0.008, pg, hd),
     ], fB - 6, fC + 6, seed=12, ends=(0.5, 0.3))
-    # iris pull during the push-in: at macro distance f/3.2 leaves < 0.5 mm in focus; f/8 keeps the
-    # whole "721" crisp while the body lines still fall off out of focus
-    for t, fs in ((fB / C.FPS, 3.2), (t_sayfa - 0.2, 3.6), (t_sayfa + 0.35, 8.0)):
+    # During the flips the focus sits B_NEAR nearer than the page, on the turning leaves' top corners, at
+    # f/2.8: the page under them (727 ... 723) is never in the focal plane, so its header and body are
+    # equally soft. Rack to "721" between t_sayfa-0.15 and t_sayfa+0.10, then the iris pull to f/8 keeps
+    # the whole number crisp while the body lines fall off (the 721 macro hold is unchanged from 114.95).
+    foc = camB.data.dof.focus_object
+    fcs_c = {(fc.data_path, fc.array_index): fc for fc in C.fcurves(camB)}
+    fcs_f = {fc.array_index: fc for fc in C.fcurves(foc) if fc.data_path == "location"}
+    for f in range(fB - 8, fC + 9):
+        t = f / C.FPS
+        near = 1.0 - C.smooth((t - (t_sayfa - 0.15)) / 0.25)
+        if near <= 0.0:
+            continue
+        fp = V([fcs_f[i].evaluate(f) for i in range(3)])
+        cp = V([fcs_c[("location", i)].evaluate(f) for i in range(3)])
+        foc.location = fp + (cp - fp).normalized() * (B_NEAR * near)
+        foc.keyframe_insert("location", frame=f)
+    for fc in C.fcurves(foc):
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+    for t, fs in ((fB / C.FPS - 0.30, 2.8), (t_sayfa + 0.10, 2.8), (t_sayfa + 0.50, 8.0)):
         camB.data.dof.aperture_fstop = fs
         camB.data.dof.keyframe_insert("aperture_fstop", frame=t * C.FPS)
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
@@ -2931,16 +2974,22 @@ def build(ctx):
         (fE / C.FPS + 0.30, V((-0.02, -0.12, 0.36)), V((-0.42, -0.12, 0.27)), V((-0.36, -0.13, 0.24))),
     ], fD - 6, fE + 6, seed=14, ends=(0.3, 0.3))
     camE = rig_camera("camE", 28, 4.0, [
-        (fE / C.FPS - 0.30, V((0.20, -0.42, 0.56)), V((-0.53, -0.02, 0.30)), V((-0.38, -0.13, 0.24))),
-        (ctx.t1 + 0.30, V((0.09, -0.46, 0.49)), V((-0.52, -0.01, 0.285)), V((-0.38, -0.14, 0.23))),
+        (fE / C.FPS - 0.30, V((0.20, -0.42, 0.56 - E_DROP)), V((-0.53, -0.02, 0.30)), V((-0.38, -0.13, 0.24))),
+        (ctx.t1 + 0.30, V((0.09, -0.46, 0.49 - E_DROP)), V((-0.52, -0.01, 0.285)), V((-0.38, -0.14, 0.23))),
     ], fE - 6, ctx.f1 + 2, seed=15, ends=(0.4, 0.0))
     for name, f, cam in (("A", ctx.f0, camA), ("B", fB, camB), ("C", fC, camC), ("D", fD, camD), ("E", fE, camE)):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
         mk.camera = cam
     sc.camera = camA
     # per-camera exposure (one continuous room: every camera within ~1 stop)
-    EXPO = {"A": 0.85, "B": -0.45, "C": 1.70, "D": -1.05, "E": 0.45}
-    key_const(sc.view_settings, "exposure", [(ctx.f0 - 10, EXPO["A"]), (fB, EXPO["B"]), (fC, EXPO["C"]), (fD, EXPO["D"]), (fE, EXPO["E"])])
+    EXPO = {"A": 0.85, "A2": 0.50, "B": -0.45, "C": 1.70, "D": -1.05, "E": 0.45}
+    # camA: from t_soz-0.3 the exposure rides down to 0.5 over 10 frames (eased, like an operator riding
+    # the iris as the crane lands on the sunlit cover): foil off the AgX shoulder, band patches calmer
+    fx0, nx = int(round((t_soz - 0.3) * C.FPS)), 10
+    ekeys = [(ctx.f0 - 10, EXPO["A"])]
+    ekeys += [(fx0 + i, EXPO["A"] + (EXPO["A2"] - EXPO["A"]) * C.smooth((i + 1) / nx)) for i in range(nx)]
+    ekeys += [(fB, EXPO["B"]), (fC, EXPO["C"]), (fD, EXPO["D"]), (fE, EXPO["E"])]
+    key_const(sc.view_settings, "exposure", ekeys)
     dbg = os.environ.get("SH15_CAM")          # debug view: "px,py,pz,ax,ay,az,lens[,fstop,fx,fy,fz]"
     if dbg:
         v = [float(x) for x in dbg.split(",")]
@@ -2953,23 +3002,40 @@ def build(ctx):
     # denoiser then sees (almost) the same noise realisation frame to frame, so its residual blotches
     # stay put instead of boiling. (common.configure_render() enables the animated seed after build(),
     # so this is applied from a render_pre handler.)
-    def _static_seed(*_):
-        bpy.context.scene.cycles.use_animated_seed = False
-        # 3 lights only: the light tree costs ~7 % per sample here and buys nothing
-        bpy.context.scene.cycles.use_light_tree = bool(os.environ.get("SH15_LIGHTTREE"))
-    if not os.environ.get("SH15_ANIMSEED"):
-        bpy.app.handlers.render_pre.append(_static_seed)
-    if os.environ.get("SH15_NODENOISE"):
-        def _nd(*_):
-            bpy.context.scene.cycles.use_denoising = False
-        bpy.app.handlers.render_pre.append(_nd)
     # Render cost (measured, 4 cores, steady state in a chunk): ~5.5 s per sample at 1080x1920 + ~11 s
     # OIDN (library preset HIGH/ACCURATE) + ~1.5 s sync/save. 5 spp -> ~40 s/frame. The sampling pattern
-    # is the same on every frame (see _static_seed) so the denoised residual does not boil.
+    # is the same on every frame (see _per_frame) so the denoised residual does not boil.
     ov = {"final_spp": 5, "final_threshold": 0.03, "final_min_spp": 5, "preview_spp": 16,
           "diffuse_bounces": 1, "glossy_bounces": 1, "transmission_bounces": 2, "transparent_bounces": 8,
-          "max_bounces": 3, "clamp_indirect": 2.0, "texture_limit": "4096"}
+          "max_bounces": 3, "clamp_indirect": 2.0, "texture_limit": "4096",
+          # camA (the hero cover, frames < fB): more samples and a tamed gold-foil glint (review 2)
+          "camA_spp": 10, "camA_clamp_direct": 10.0, "camA_filter_glossy": 1.5}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
+    static_seed = not os.environ.get("SH15_ANIMSEED")
+    nodenoise = bool(os.environ.get("SH15_NODENOISE"))
+
+    def _per_frame(*_):
+        """Per-frame render settings, decided only from frame_current (any chunk start renders every frame
+        identically). common.configure_render() turns the animated seed on after build(), so the fixed
+        seed is applied here."""
+        scn = bpy.context.scene
+        cy = scn.cycles
+        if static_seed:
+            cy.use_animated_seed = False
+            # 3 lights only: the light tree costs ~7 % per sample here and buys nothing
+            cy.use_light_tree = bool(os.environ.get("SH15_LIGHTTREE"))
+        if nodenoise:
+            cy.use_denoising = False
+        if ctx.mode == "final":
+            a = scn.frame_current < fB
+            spp = int(ov["camA_spp"] if a else ov["final_spp"])
+            cy.samples = spp
+            cy.adaptive_min_samples = spp
+            cy.sample_clamp_direct = float(ov["camA_clamp_direct"] if a else ov.get("clamp_direct", 0.0))
+            cy.blur_glossy = float(ov["camA_filter_glossy"] if a else ov.get("filter_glossy", 1.0))
+            print("[sh15] frame %d: %s spp=%d clamp_direct=%.1f filter_glossy=%.2f" % (
+                scn.frame_current, "camA" if a else "B-E", spp, cy.sample_clamp_direct, cy.blur_glossy), flush=True)
+    bpy.app.handlers.render_pre.append(_per_frame)
     return ov
 
 
