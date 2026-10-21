@@ -2814,9 +2814,21 @@ def build(ctx):
     bg = [n for n in wnt.nodes if n.type == "BACKGROUND"][0]
     sky_out = bg.inputs["Color"].links[0].from_socket
     lp = wnt.nodes.new("ShaderNodeLightPath")
+    # glossy rays: the sky's own luminance but neutral-warm (the window reads warm-white to the camera,
+    # so reflections of it must not turn blue; keeping the physical intensity keeps sunlit leather red)
+    bw = wnt.nodes.new("ShaderNodeRGBToBW")
+    wnt.links.new(sky_out, bw.inputs[0])
+    warm = wnt.nodes.new("ShaderNodeMix"); warm.data_type = "RGBA"; warm.blend_type = "MULTIPLY"
+    warm.inputs[0].default_value = 1.0
+    wnt.links.new(bw.outputs[0], warm.inputs[6])
+    warm.inputs[7].default_value = (1.0, 0.93, 0.84, 1.0)
+    mixg = wnt.nodes.new("ShaderNodeMix"); mixg.data_type = "RGBA"
+    wnt.links.new(lp.outputs["Is Glossy Ray"], mixg.inputs[0])
+    wnt.links.new(sky_out, mixg.inputs[6])
+    wnt.links.new(warm.outputs[2], mixg.inputs[7])
     mixw = wnt.nodes.new("ShaderNodeMix"); mixw.data_type = "RGBA"
     wnt.links.new(lp.outputs["Is Camera Ray"], mixw.inputs[0])
-    wnt.links.new(sky_out, mixw.inputs[6])
+    wnt.links.new(mixg.outputs[2], mixw.inputs[6])
     mixw.inputs[7].default_value = (3.2, 2.9, 2.5, 1.0)
     wnt.links.new(mixw.outputs[2], bg.inputs["Color"])
     sun = sun_light()
@@ -2831,7 +2843,7 @@ def build(ctx):
     haze = [(ctx.t0 - 1.0, 1.0), (t_soz - 0.95, 1.0), (t_soz - 0.30, 0.0), (fD / C.FPS - 0.01, 0.0), (fD / C.FPS, 1.0)]
     key_beam(sh_keys, gain, haze)
     # cool fill: overcast skylight from a door/window behind camera (front wall)
-    C.area("fill_front", loc=(0.9, -3.5, 1.3), look_at=(0.0, 0.0, 0.2), size=2.4, size_y=1.6, power=42, kelvin_k=5600)
+    C.area("fill_front", loc=(0.9, -3.5, 1.3), look_at=(0.0, 0.0, 0.2), size=2.4, size_y=1.6, power=42, kelvin_k=5200)
     portal = C.area("portal", loc=(WALL_LEFT_X - 0.02, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2),
                     look_at=(1.0, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2), size=WIN_Y1 - WIN_Y0, size_y=WIN_Z1 - WIN_Z0, power=0)
     portal.data.size, portal.data.size_y = WIN_Y1 - WIN_Y0, WIN_Z1 - WIN_Z0
