@@ -15,8 +15,8 @@ def build(ctx):
     S.build_sofra()                                    # the set table sh03 continues onto
     t_ox = ctx.word("oksijen")                         # 8.32
     # breath rhythm: ~2 s in / ~2 s out; biggest inhale peaks just before "oksijen"
-    wind = [(ctx.t0 - 2.2, 20), (ctx.t0 - 1.1, 150), (ctx.t0 + 0.1, 20), (t_ox - 2.1, 25),
-            (t_ox - 1.0, 180), (t_ox - 0.15, 360), (t_ox + 0.35, 260), (t_ox + 1.1, 40), (ctx.t1 + 0.4, 20)]
+    wind = [(ctx.t0 - 2.2, 20), (ctx.t0 - 1.1, 260), (ctx.t0 + 0.1, 15), (t_ox - 2.1, 25),
+            (t_ox - 1.0, 300), (t_ox - 0.15, 620), (t_ox + 0.35, 420), (t_ox + 1.1, 40), (ctx.t1 + 0.4, 20)]
     cur = S.build_curtain(ctx, wind, y0=-0.30, y1=0.36, drop=1.40, wall=None)
     S.build_beam_emission((-0.99, -0.75, 0.765), (0.20, 0.92, 2.42), strength=0.009, curtain_y=0.36,
                           time_keys=[(ctx.t0 - 1, 0.0), (ctx.t1 + 1, 0.9)])

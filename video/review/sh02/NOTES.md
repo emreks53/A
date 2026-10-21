@@ -50,7 +50,9 @@ tilts down — soft, low-detail. If the director prefers darker behind the white
   (emission only, so no shadow rays); most are faint, a few glint as they tumble — they only appear
   inside the beam. (The first try at this was a "snowstorm" — fixed.)
 * Shaft volume confined to the beam's actual path.
-* Full-res final-renderer sample frame: `sh02_FINALQ_f199.jpg` (added shortly after this push).
+* Stronger breath: the curtain now visibly lifts into the room on each inhale, biggest at "oksijen".
+* Final cost now ~100 s/frame (HDRI no longer importance-sampled inside the room).
+* Full-res final-renderer sample frame: `sh02_FINALQ_f199.jpg`.
 
 ## Changes since review 1
 * The table under the window now carries the same sofra as sh03 (bowl, bread, glass, plate) — the
