@@ -2621,10 +2621,25 @@ def build_motes(n=380, seed=7, strength=3.0):
     ng.links.new(gi.outputs[0], m2p.inputs["Mesh"])
     ng.links.new(m2p.outputs[0], setp.inputs["Geometry"])
     ng.links.new(add.outputs[0], setp.inputs["Offset"])
+    # tiny real meshes (icospheres) instead of point-cloud primitives: a plain triangle BVH is much
+    # cheaper for every camera ray that passes near the beam
+    ico = ng.nodes.new("GeometryNodeMeshIcoSphere")
+    ico.inputs["Radius"].default_value = 1.0
+    ico.inputs["Subdivisions"].default_value = 1
+    iop = ng.nodes.new("GeometryNodeInstanceOnPoints")
+    ng.links.new(setp.outputs[0], iop.inputs["Points"])
+    ng.links.new(ico.outputs["Mesh"], iop.inputs["Instance"])
+    rad = ng.nodes.new("GeometryNodeInputRadius")
+    sxyz = ng.nodes.new("ShaderNodeCombineXYZ")
+    for i in range(3):
+        ng.links.new(rad.outputs[0], sxyz.inputs[i])
+    ng.links.new(sxyz.outputs[0], iop.inputs["Scale"])
+    real = ng.nodes.new("GeometryNodeRealizeInstances")
+    ng.links.new(iop.outputs[0], real.inputs[0])
     smat = ng.nodes.new("GeometryNodeSetMaterial")
     smat.inputs["Material"].default_value = mat_beam("mote", strength, (1.0, 0.93, 0.80), path_len=False, phase_g=0.62,
                                                      fade_table=False)
-    ng.links.new(setp.outputs[0], smat.inputs["Geometry"])
+    ng.links.new(real.outputs[0], smat.inputs["Geometry"])
     ng.links.new(smat.outputs[0], go.inputs[0])
     mod = ob.modifiers.new("gn", "NODES")
     mod.node_group = ng
