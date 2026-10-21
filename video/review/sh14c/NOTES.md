@@ -33,6 +33,19 @@
 
 Round 2: dry-branch prop removed; sand sheets are calm at "cansız", gust on "şuursuz", settle by "izah".
 
+## Approval fixes (review 4)
+* Far plain: mean-tone blend starts at 12 m (to 45 m) toward a lighter (0.47,0.48,0.50), crack relief fades flat
+  with it, salt fades out 15→60 m — rows now brighten steadily into the haze (row luma at f2573: 163 sky band,
+  then 149 → 127 → 119 … no dark band behind the log).
+* Grains: radius × mapr(distance to camera, 15→10 m) — no far speck clusters (point count unchanged).
+* Pebbles: UV'd icospheres, ±15 % value per pebble (Object Info Random), sunk 15 %.
+* Look-at +0.12 (t_s+0.2) and +0.2 (both wide keys): ridge tips now at y≈850, below the band.
+* TRK_stone on the rock top (z 0.80). Hold and push speed unchanged.
+* Verification in `verify/`: 100 % `final100_f2573.jpg`, `final100_f2610.jpg`, and 3-consecutive 100 % crops
+  `crops100_f2547-2549.jpg`, `crops100_f2581-2583.jpg`, `crops100_f2620-2622.jpg` (12 spp, thr 0.03) — no edge
+  jumping or boil seen. Timing: 2547–49 79.9 s/f, 2581–83 69.9 s/f, 2620–22 ≈73 s/f; single frames incl. sync
+  86–93 s.
+
 ## Round 4 (director notes, review 3)
 * Gust: ribbons stretched ~5:1, cross coordinate warped by slow animated 4D noise (±0.3 m over ~4 m), cut into
   0.5–2 m bursts, grainy edges, finest along-wind detail ≥1 m; boulder wind-shadow (lee, 0.4–3 m downwind)

@@ -107,6 +107,7 @@ def height_field(X, Y):
     D, T, SIDE = L.dist_to_polyline(X, Y, rp, signed=True)
     bed = 160 * (1 - T) ** 1.3 + 1.5
     rw = (16 + 48 * T) * np.exp(2.4 * L.fbm(n4, T * 40, 3.3, 3))   # river half width (m), varies 2-4x
+    rw = rw * (1 + 0.7 * L.fbm(n3, T * 15000 / 450, 8.1, 2))        # +-35 % over 300-600 m
     # curvature sign of the course at the closest point -> inner/outer bank
     tang = np.gradient(rp, axis=0)
     curv_k = np.sign(tang[:-1, 0] * np.diff(tang[:, 1]) - tang[:-1, 1] * np.diff(tang[:, 0]))
@@ -121,7 +122,8 @@ def height_field(X, Y):
     h = (bed - 3) * (1 - chan) + h * chan
     river = 1 - sm((D - rw * (0.85 + 0.3 * L.fbm(n1, X / 90, Y / 90, 3))) / 9.0)
     # gravel/sand bars only on inner bends, partly emerged
-    bar = inner * np.exp(-((D - rw * 0.75) / (rw * 0.45)) ** 2) * sm((L.fbm(n2, X / 120, Y / 120, 3) + 0.1) / 0.3)
+    few = sm((L.fbm(n4, T * 25, 9.7, 2) - 0.12) / 0.08)             # only a few bends get a bar
+    bar = inner * few * np.exp(-((D - rw * 0.7) / (rw * 0.35)) ** 2) * sm((L.fbm(n2, X / 60, Y / 60, 3) - 0.0) / 0.25)
     # three islands splitting the flow
     Ltot = np.sum(np.linalg.norm(np.diff(rp, axis=0), axis=1))
     isl = np.zeros_like(D)
@@ -238,6 +240,14 @@ def aerial(nb, surface_shader, k_inscatter=float(os.environ.get("S8_K", 0.7)), b
     ep = nb.math("EXPONENT", nb.math("MULTIPLY", zp, -1.0 / H))
     ec = nb.math("EXPONENT", nb.math("MULTIPLY", zc, -1.0 / H))
     tau = nb.math("MULTIPLY", nb.math("DIVIDE", nb.math("SUBTRACT", ep, ec), iz), beta * H)
+    # haze thins toward the end of the shot (1/27k -> ~1/38k over the last 1.5 s) as we descend
+    hk = nb.n("ShaderNodeValue")
+    f0, f1 = CLOUD_DRIFT
+    hk.outputs[0].default_value = 1.0
+    hk.outputs[0].keyframe_insert("default_value", frame=f1 - 1.5 * C.FPS)
+    hk.outputs[0].default_value = 27.0 / 38.0
+    hk.outputs[0].keyframe_insert("default_value", frame=f1)
+    tau = nb.math("MULTIPLY", tau, hk.outputs[0])
     trans = nb.math("EXPONENT", nb.math("MULTIPLY", tau, -1.0))
     fac = nb.math("SUBTRACT", 1.0, trans, clamp=True)
     # in-scatter colour: the sky just above the horizon in this azimuth
@@ -353,7 +363,7 @@ def terrain_material():
     lush2 = (0.12, 0.165, 0.045)
     dry = (0.30, 0.245, 0.10)
     gold = (0.46, 0.35, 0.12)
-    forest_c = (0.045, 0.075, 0.03)
+    forest_c = (0.04, 0.085, 0.03)
     rock_a = (0.20, 0.18, 0.16)
     rock_b = (0.10, 0.095, 0.09)
     col = nb.mixc(n_mid, lush, lush2)
@@ -362,7 +372,7 @@ def terrain_material():
     col = nb.mixc(nb.math("MULTIPLY", nb.mapr(hgt, 700, 1500), 0.85), col, (0.17, 0.15, 0.10))
     # meadows green-gold; true gold only on the knolls (high mid-scale noise)
     col = nb.mixc(meadow, col, (0.22, 0.25, 0.07))
-    col = nb.mixc(nb.math("MULTIPLY", meadow, nb.mapr(n_mid, 0.58, 0.72)), col, gold)
+    col = nb.mixc(nb.math("MULTIPLY", meadow, nb.mapr(n_mid, 0.6, 0.75, 0.0, 0.5)), col, (0.30, 0.31, 0.09))
     col = nb.mixc(nb.math("MULTIPLY", forest, nb.mapr(n_fine, 0.25, 0.7, 0.75, 1.0)), col, forest_c)
     # photographic ground structure from real aerial scans (grass/rock/scrub, bare ground)
     mixn = nb.mapr(n_big, 0.4, 0.6)
@@ -384,12 +394,13 @@ def terrain_material():
     # scrub/grass patches clinging to the rock, darker gullies, pale scree fans
     n_veg = nb.noise(pos, 1 / 55.0, 3, 0.6)
     rock = nb.mixc(nb.math("MULTIPLY", nb.mapr(n_veg, 0.48, 0.62), nb.mapr(nz, 0.45, 0.75)), rock, (0.05, 0.075, 0.03))
-    rock = nb.mixc(nb.mapr(nb.noise(pos, 1 / 160.0, 3, 0.6), 0.58, 0.7), rock, (0.30, 0.28, 0.25))
+    rock = nb.mixc(nb.mapr(nb.noise(pos, 1 / 160.0, 3, 0.6), 0.58, 0.7), rock, (0.17, 0.16, 0.14))
     rock = nb.mixc(1.0, rock, nb.mixc(nb.noise(pos, 1 / 25.0, 2, 0.5), (0.6, 0.6, 0.6), (1.3, 1.3, 1.3)), blend="MULTIPLY")
     col = nb.mixc(steep2, col, rock)
     # gravel bars and bare banks along the river, beaches on the coast
     bars = nb.mapr(nb.attr("bar"), 0.25, 0.6)
-    col = nb.mixc(bars, col, (0.38, 0.35, 0.29))
+    barcol = nb.mixc(1.0, (0.13, 0.11, 0.08), aerial_scan(nb, pos, "aerial_ground_rock", 90.0, 23), blend="MULTIPLY")
+    col = nb.mixc(bars, col, barcol)
     col = nb.mixc(beach, col, (0.46, 0.41, 0.31))
     surf = nb.math("MULTIPLY", nb.mapr(hgt, -3.5, -1.2), nb.mapr(hgt, 0.6, -0.4))
     surf = nb.math("MULTIPLY", surf, nb.mapr(nb.noise(pos, 1 / 40.0, 3, 0.6), 0.35, 0.6))
@@ -410,13 +421,13 @@ def terrain_material():
     nb.l(bump.outputs[0], bsdf.inputs["Normal"])
 
     # river water: dark glossy mirror of the sky
-    water = nb.n("ShaderNodeBsdfPrincipled", inputs={"Base Color": (0.012, 0.022, 0.018, 1), "Roughness": 0.09,
+    water = nb.n("ShaderNodeBsdfPrincipled", inputs={"Base Color": (0.025, 0.03, 0.02, 1), "Roughness": 0.09,
                                                       "Specular IOR Level": 0.32, "IOR": 1.333})
-    wb = nb.n("ShaderNodeBump", inputs={"Strength": 0.15, "Distance": 0.2})
+    wb = nb.n("ShaderNodeBump", inputs={"Strength": 0.4, "Distance": 0.2})
     nb.l(nb.noise(pos, 1 / 3.0, 3, 0.5), wb.inputs["Height"])
     nb.l(wb.outputs[0], water.inputs["Normal"])
     mixw = nb.n("ShaderNodeMixShader")
-    nb.l(nb.mapr(nb.noise(pos, 1 / 160.0, 3, 0.6), 0.35, 0.65, 0.04, 0.3), water.inputs["Roughness"])
+    nb.l(nb.mapr(nb.noise(pos, 1 / 40.0, 3, 0.6), 0.35, 0.65, 0.04, 0.3), water.inputs["Roughness"])
     nb.l(nb.math("MULTIPLY", nb.mapr(river, 0.3, 0.7), nb.math("SUBTRACT", 1.0, bars)), mixw.inputs[0])
     nb.l(bsdf.outputs[0], mixw.inputs[1])
     nb.l(water.outputs[0], mixw.inputs[2])
@@ -443,11 +454,19 @@ def sea_material():
     w.inputs["Detail Scale"].default_value = 2.0
     nb.l(pos, w.inputs["Vector"])
     chop = nb.math("ADD", nb.noise(pos, 1 / 14.0, 6, 0.62), nb.math("MULTIPLY", nb.noise(pos, 1 / 220.0, 3, 0.5), 2.0))
+    fine = nb.n("ShaderNodeBump", inputs={"Strength": 0.25, "Distance": 0.2})
+    nb.l(nb.noise(pos, 4.0, 2, 0.5), fine.inputs["Height"])
     hh = nb.math("ADD", nb.math("MULTIPLY", w.outputs["Fac"], 0.7), chop)
     bump = nb.n("ShaderNodeBump", inputs={"Strength": 0.7, "Distance": 1.0})
     nb.l(hh, bump.inputs["Height"])
+    nb.l(fine.outputs[0], bump.inputs["Normal"])
     bsdf = nb.n("ShaderNodeBsdfPrincipled", inputs={"Base Color": (0.004, 0.018, 0.03, 1), "Roughness": 0.13,
-                                                     "IOR": 1.333, "Specular IOR Level": 0.3})
+                                                     "IOR": 1.333, "Specular IOR Level": 0.2})
+    spec_in = bsdf.inputs["Specular IOR Level"]
+    spec_in.default_value = 0.0
+    spec_in.keyframe_insert("default_value", frame=C.t2f(64.75))
+    spec_in.default_value = 0.2
+    spec_in.keyframe_insert("default_value", frame=C.t2f(64.95))
     nb.l(bump.outputs[0], bsdf.inputs["Normal"])
     wind = nb.noise(pos, 1 / 700.0, 5, 0.6)
     nb.l(nb.mapr(wind, 0.35, 0.7, 0.06, 0.22), bsdf.inputs["Roughness"])
@@ -474,8 +493,7 @@ def build_world(mode):
 def cached_field(rows, cols):
     """Height field evaluation is ~1 min; cache it keyed by the generating source code."""
     import hashlib, inspect
-    src = inspect.getsource(height_field) + inspect.getsource(river_path) + inspect.getsource(wedge_grid) + \
-        inspect.getsource(L) + f"{rows}x{cols}"
+    src = open(os.path.abspath(__file__), encoding="utf-8").read() + inspect.getsource(L) + f"{rows}x{cols}"
     key = hashlib.md5(src.encode()).hexdigest()[:12]
     d = os.path.join(C.ASSETS, "cache"); os.makedirs(d, exist_ok=True)
     p = os.path.join(d, f"sh12_field_{key}.npz")
@@ -484,7 +502,9 @@ def cached_field(rows, cols):
         z = np.load(p)
         return X, Y, z["h"], z["river"], z["D"], z["T"], z["land"], z["bar"]
     h, river, D, T, land, bar = height_field(X, Y)
-    np.savez(p, h=h, river=river, D=D, T=T, land=land, bar=bar)
+    tmp = p[:-4] + f".tmp{os.getpid()}.npz"
+    np.savez(tmp, h=h, river=river, D=D, T=T, land=land, bar=bar)
+    os.replace(tmp, p)        # atomic: parallel renders never read a half-written cache
     return X, Y, h, river, D, T, land, bar
 
 
@@ -504,13 +524,13 @@ def build_terrain(ctx):
     forest = np.clip((fn + 0.12) * 4, 0, 1) * sm((1500 - h) / 300) * sm((h - 4) / 20) * sm((D - 30) / 60)
     forest *= sm((0.85 - slope) / 0.25)
     # riparian woodland: a dense, slightly broken belt of trees lining both banks
-    rip = np.exp(-((D - 12) / 9) ** 2) * sm((D - 2) / 3) * np.clip(0.55 + 0.8 * L.fbm(n5, X / 250 + 3, Y / 250, 3), 0, 1)
+    rip = np.exp(-((D - 10) / 10) ** 2) * sm(D / 2.0) * np.clip(0.55 + 0.8 * L.fbm(n5, X / 250 + 3, Y / 250, 3), 0, 1)
     forest = np.maximum(forest, rip * (h > 1.5) * (Y < 12500))
     meadow_c = np.exp(-(((X - MEADOW[0]) / 1050) ** 2 + ((Y - MEADOW[1]) / 850) ** 2))
     meadow = np.clip(meadow_c * 1.6 - 0.1 + 0.3 * L.fbm(n5, X / 300, Y / 300, 3), 0, 1)
     forest = forest * (1 - meadow)
     openm = np.clip(1 - forest * 1.4, 0, 1) * sm((h - 6) / 10) * sm((D - 25) / 30) * sm((0.7 - slope) / 0.2)
-    openm = openm * np.clip(0.5 + 0.9 * L.fbm(n5, X / 700 + 9, Y / 700, 3), 0, 1)
+    openm = openm * np.clip(0.5 + 0.9 * L.fbm(n5, X / 700 + 9, Y / 700, 3), 0, 1) * (1 - meadow)
     Z = h - curv(X, Y)
     ob = L.grid_mesh("Terrain", X, Y, Z, {"h": h, "forest": forest, "meadow": meadow, "river": river, "bar": bar})
     C.assign(ob, terrain_material() if not os.environ.get("S8_PLAINT") else C.principled("plainT", (0.1, 0.12, 0.05)))
@@ -636,7 +656,7 @@ def build_trees(ctx, grid):
     scale = rs.uniform(12, 26, n) * np.where(con, 1.15, 0.85)
     # lone trees and scrub on the open land (long golden-hour shadows = scale + realism cue)
     extra = []
-    for dens, kind, ymax in ((1 / 4000.0, "lone", 9000), (1 / 250.0, "bush", 6500)):
+    for dens, kind, ymax in ((1 / 10000.0 * 3.0, "lone", 9000), (1 / 250.0, "bush", 6500)):
         half_b = 1500 + (ymax + 1200) * math.tan(math.radians(31))
         m_ = int((ymax + 600) * 2 * half_b * dens)
         if ctx.mode == "animatic" or os.environ.get("S8_LOWRES"):
@@ -648,6 +668,11 @@ def build_trees(ctx, grid):
         qz = L.interp_grid(Z, X, Y, qx, qy, *args[2:]) - 0.3
         mm = len(qx)
         if kind == "lone":
+            # lone trees follow drainage lines (ridged-noise valleys), not an even sprinkle
+            dl = L.ridged(L.Noise2(77), qx / 650, qy / 650, 3)
+            k2 = rs.uniform(0, 1, mm) < np.clip((dl - 0.62) * 4, 0, 1)
+            qx, qy, qz = qx[k2], qy[k2], qz[k2]
+            mm = len(qx)
             qv = rs.randint(3, 6, mm); qs = rs.uniform(10, 21, mm)
         else:
             # scrub grows in clumps (hedges, gully lines), not as an even polka-dot pattern
@@ -837,6 +862,13 @@ def build_cloud_shadows(ctx):
     nz.inputs["Roughness"].default_value = 0.55
     nb.l(mp.outputs[0], nz.inputs["Vector"])
     cover = nb.mapr(nz.outputs["Fac"], 0.44, 0.56, 0.0, 0.92)
+    # hole over the meadow's sun-ward projection so the exit meadow stays sunlit
+    sp_ = nb.n("ShaderNodeSeparateXYZ"); nb.l(geo.outputs["Position"], sp_.inputs[0])
+    my = MEADOW[1] + (zc - 60.0) * st
+    dxm = nb.math("DIVIDE", nb.math("SUBTRACT", sp_.outputs[0], MEADOW[0]), 1500.0)
+    dym = nb.math("DIVIDE", nb.math("SUBTRACT", sp_.outputs[1], my), 1300.0 * st)
+    rm = nb.math("ADD", nb.math("MULTIPLY", dxm, dxm), nb.math("MULTIPLY", dym, dym))
+    cover = nb.math("MULTIPLY", cover, nb.mapr(rm, 0.6, 1.0))
     tr = nb.n("ShaderNodeBsdfTransparent")
     df = nb.n("ShaderNodeBsdfDiffuse", inputs={"Color": (0, 0, 0, 1)})
     mx = nb.n("ShaderNodeMixShader")
@@ -875,7 +907,7 @@ def build_sky_objects(ctx):
 def camera_path(ctx, cam):
     t0, t1 = ctx.f0 / C.FPS, ctx.f1 / C.FPS
     t_settle = ctx.word("bir") - 0.1           # settled on 'bir tek'
-    t_exit = ctx.word("çünkü")                # begin pitching down toward the meadow on "Çünkü"
+    t_exit = ctx.word("çünkü") - 0.25         # begin pitching down toward the meadow just before "Çünkü"
     keys = [
         (t0,         (0, -960, 1790), (84.5, 0, 0.0)),
         (64.6,       (0, -800, 1772), (82.0, 0, 0.0)),
@@ -890,8 +922,22 @@ def camera_path(ctx, cam):
     C.key(cam, "rotation_euler", t_settle, 0.0, index=1)
     C.key(cam, "rotation_euler", t_exit, 0.0, index=1)
     C.key(cam, "rotation_euler", t1, math.radians(-2.5), index=1)
-    C.set_extrapolation(cam, "LINEAR")
+    C.set_extrapolation(cam, "CONSTANT")
+    # land the move: flat handles on the last key so the camera decelerates into the cut (<= 3 px/f)
+    for fc in C.fcurves(cam):
+        kps = fc.keyframe_points
+        if len(kps) >= 2:
+            k = kps[-1]
+            k.handle_left_type = "FREE"; k.handle_right_type = "FREE"
+            k.handle_left.y = k.co.y; k.handle_right.y = k.co.y
+            k.handle_left.x = k.co.x - (k.co.x - kps[-2].co.x) * 0.55
     C.handheld(cam, amp_loc=0.5, amp_rot=0.0010, speed=0.3, seed=12)
+    # exposure opens up as we descend onto the sunlit meadow (sh13a is brighter)
+    sc = bpy.context.scene
+    sc.view_settings.exposure = -1.0
+    sc.view_settings.keyframe_insert("exposure", frame=C.t2f(72.4))
+    sc.view_settings.exposure = -0.4
+    sc.view_settings.keyframe_insert("exposure", frame=t1 * C.FPS)
     return t_settle
 
 
@@ -942,7 +988,13 @@ def build_emergence(ctx, cam):
             nb.l(uv, nz.inputs["Vector"])
             a = nb.mapr(nz.outputs["Fac"], 0.42, 0.78)
             camd = nb.n("ShaderNodeCameraData")
-            near = nb.mapr(camd.outputs["View Distance"], 8.0, 25.0)      # never a card wall at the lens
+            near = nb.mapr(camd.outputs["View Distance"], 40.0, 220.0)    # never a card wall at the lens
+            kv = nb.n("ShaderNodeValue")                                     # all wisps thin out together
+            kv.outputs[0].default_value = 1.0
+            kv.outputs[0].keyframe_insert("default_value", frame=C.t2f(64.55))
+            kv.outputs[0].default_value = 0.0
+            kv.outputs[0].keyframe_insert("default_value", frame=C.t2f(64.92))
+            near = nb.math("MULTIPLY", near, kv.outputs[0])
             return nb.math("MULTIPLY", nb.math("MULTIPLY", nb.math("MULTIPLY", a, edge), 0.85), near)
         return fn
 
@@ -1085,7 +1137,7 @@ def build(ctx):
     CLOUD_DRIFT[0], CLOUD_DRIFT[1] = ctx.f0, ctx.f1
     build_world(ctx.mode)
     sun = C.sun(elev_deg=SUN_ELEV, azim_deg=SUN_AZ + 180, strength=float(os.environ.get("S8_SUN", 9.0)), kelvin_k=4300, angle_deg=0.55)
-    sun.data.specular_factor = 0.22
+    sun.data.specular_factor = 0.08
     import time as _t
     _a = _t.time()
     terrain, grid = build_terrain(ctx)
@@ -1132,8 +1184,8 @@ def build(ctx):
         return (None, "")
     # sea: first pixel (scanning outward from x=330, y=905) that really hits the sea surface
     sea_pt, seen = None, set()
-    for sy in (895, 885, 905, 878, 915):
-        for sx in (690, 720, 660, 750, 630, 780, 420, 400):
+    for sy in (840, 850, 860, 870, 880, 895):
+        for sx in (690, 720, 660, 750, 630, 780):
             p_, name = ray_hit(sx, sy)
             seen.add(name)
             if p_ and name.startswith("Sea"):
@@ -1160,17 +1212,24 @@ def build(ctx):
     # forest: the tree (from the scatter) nearest pixel (790,1330) that sits in dense forest
     tp = TREE_PTS[0]
     bestf = None
-    for (tx, ty, tz) in tp[np.random.RandomState(3).choice(len(tp), min(len(tp), 40000), replace=False)]:
+    sub = tp[np.random.RandomState(3).choice(len(tp), min(len(tp), 40000), replace=False)]
+    for (tx, ty, tz) in sub:
         co = world_to_camera_view(sc_, cam, Vector((tx, ty, tz)))
         if co.z <= 0: continue
-        dpx = math.hypot(co.x * 1080 - 790, (1 - co.y) * 1920 - 1330)
-        if bestf is None or dpx < bestf[0]:
+        dpx = math.hypot(co.x * 1080 - 840, (1 - co.y) * 1920 - 1010)
+        if dpx > 60 or (bestf is not None and dpx >= bestf[0]):
+            continue
+        # must stand in a dense stand: >= 25 trees within 80 m
+        nn = np.count_nonzero((tp[:, 0] - tx) ** 2 + (tp[:, 1] - ty) ** 2 < 80 ** 2)
+        if nn >= 25:
             bestf = (dpx, (tx, ty, tz + 15.0))
+    assert bestf, "TRK_forest: no dense stand near (840,1010)"
     C.empty("TRK_forest", bestf[1])
     bpy.context.scene.frame_set(bpy.context.scene.frame_current)
     # the visible sun (behind the cloud edge in the plate, where the crepuscular rays converge)
     C.empty("TRK_sun", tuple(screen_point(sloc, srot, 548, 598, 150000)))
-    sc.view_settings.exposure = float(os.environ.get("S8_EXP", -1.0))
+    if os.environ.get("S8_EXP"):
+        sc.view_settings.exposure = float(os.environ["S8_EXP"])
     # emission here is aerial in-scatter / self-lit cards, never a light source: keep it out of the light
     # tree (otherwise every terrain/tree triangle is an emitter and the tree is rebuilt each frame)
     for m in bpy.data.materials:
