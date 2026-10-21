@@ -1,4 +1,4 @@
-# sh12 — review round 4 (studio S8)
+# sh12 — review round 5 (studio S8)
 
 63.85–74.15 s · render f1526–1785 · "İşte bütün bu ihtiyaçların karşılanması **bir tek** yaratıcının … **ondan başka olamaz**"
 
@@ -49,6 +49,26 @@ curtain under it), TRK_sea, TRK_river, TRK_forest — placed on screen at the se
 * Forest canopy: stronger translucency so backlit crowns glow instead of reading black.
 * Sea: wind patches + wave groups break the sun column up a little.
 * TRK_sun now sits where the rays converge in the plate (x≈548, y≈598 at the settle).
+
+## Round 5 (director notes, review 4)
+* River rebuilt: meanders with drifting amplitude (200–650 m) and wavelength (1.5–2.8 km — the requested
+  0.8–2 km foreshortens into a zigzag from this altitude), a gooseneck loop near Y 4.3 km, a straight reach
+  (Y 9–10.5 km), two tributaries, width from fbm(T·40) (2–4x), three islands, gravel only on inner bends (no
+  bank band), riparian trees from ~2 m off the water, water roughness 0.04–0.3 by noise, oxbow at Y≈4.6 km.
+* Land: meadows green-gold, gold only on knolls; forest_c (0.045,0.075,0.03), lighter deciduous groups; scan
+  layer tiles 0.6–5 km; haze 1/27 k; snow removed.
+* Cloud light: shadow-only cloud layer (2.6 km) + aerial in-scatter scaled by the same projected mask (darker
+  air columns under cloud shadow — the effect that reads when looking into the sun) + mild albedo modulation.
+* Trackers re-picked with checks: TRK_sea must hit the Sea object, TRK_river = closest main-river centreline
+  point to the wanted pixel, TRK_forest = an actual forest tree; build fails if the sea isn't hit.
+* Emergence: cards fade to 0 within 25 m of the lens; veil clears over ~11 frames (64.45→64.92); hotspot moves
+  from sh11's sun (724,1076) to TRK_sun.
+* Exit: pitch-down starts on "Çünkü" (69.82), yaw −12°, ends on the sunlit green-gold meadow (eased).
+* Sea specular 0.3 (bar below clip), denser rain core, final_min_spp 7. Final refuses S8_* overrides.
+* **Final, 100 %, 7 spp (min 7) + OIDN:** f1600–1602 **72.6 s/frame**, f1771–1773 **78.5 s/frame** (incl. the
+  one-time 16k sky load in each 3-frame run). 100 % crops `final100_f1601_crop.jpg`, `final100_f1772_crop.jpg`:
+  no crawl/blotching visible, so 7 spp kept.
+* Known: haze at 1/27 k makes the land quite milky at the exit — happy to go back to ~1/40 k if you prefer.
 
 ## Round 4 (director recipe)
 * Photographic ground: Poly Haven aerial scans `aerial_grass_rock` (55 m and 180 m tilings),

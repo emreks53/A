@@ -1,4 +1,4 @@
-# sh14c — review round 3 (studio S8)
+# sh14c — review round 4 (studio S8)
 
 104.20–109.80 s · render f2495–2640 · "…işleri **cansız**, **şuursuz**, **şefkatsiz** tabiatla **izah edebilir mi**?"
 
@@ -32,6 +32,23 @@
 | sh14c_t109.800.png | last frame (hold) |
 
 Round 2: dry-branch prop removed; sand sheets are calm at "cansız", gust on "şuursuz", settle by "izah".
+
+## Round 4 (director notes, review 3)
+* Gust: ribbons stretched ~5:1, cross coordinate warped by slow animated 4D noise (±0.3 m over ~4 m), cut into
+  0.5–2 m bursts, grainy edges, finest along-wind detail ≥1 m; boulder wind-shadow (lee, 0.4–3 m downwind)
+  clears both sheets and grains; lifted dust = two stacked veil cards (4 cm, 18 cm) faded by view distance
+  (the third card cost ~10 s/frame for no visible gain).
+* Travel integral: dt = 1/240 s, exactly 10 steps per frame from a fixed origin — no 4 Hz surge.
+* Camera: wide ~7.5 m from the stone held 0.3 s with a small slide, 93 % of the return travel done 0.4 s
+  before landing at "izah"−0.05; handheld noise on the look-at target so the hold breathes; look-at raised
+  (horizon lower in the band).
+* Log screened toward weathered pale grey (texture/cracks kept); far plain fades crack albedo/bump to the mean
+  25→60 m, roughness → 1, specular 0.12; sheets fade beyond ~18 m; clip_end 20 km; darker rock ridges, no
+  pale tops, denser haze between layers; AgX Medium High Contrast, exposure −0.75; pebble skirt at the base;
+  tex2 dropped. Final refuses to run if any S8_* variable is set.
+* **Final, 100 %, 12 spp + threshold 0.03** (16 spp measured 115 s/frame in the gust — over the ceiling):
+  f2547–2549 (fastest push / gust) **79.8 s/frame**, f2620–2622 (hold) **65.6 s/frame** (both include the
+  first-frame sync). 100 % crop: `final100_f2548_crop.jpg` — no denoise blotching.
 
 ## Round 3 (director notes)
 * Ending re-staged: after the wide (107.1 s) the camera drifts back in and settles at 108.6 s on a low-angle
