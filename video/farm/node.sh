@@ -12,6 +12,9 @@ cd "$REPO"
 export VIDEO_ASSETS=${VIDEO_ASSETS:-$REPO/video/.assets} VIDEO_OUT=${VIDEO_OUT:-$REPO/video/.out}
 export PUSH_BRANCH=${PUSH_BRANCH:-render-out-$NODE}
 mkdir -p "$VIDEO_OUT/node_done"
+# ONESHOT=1: one-run worker session — exit once this node's assigned jobs are done (or after 2 failures,
+# or when no job shows up for ONESHOT_WAIT seconds) instead of polling until the queue is finished.
+ONESHOT=${ONESHOT:-0}; ONESHOT_WAIT=${ONESHOT_WAIT:-1800}; FAILS=0; T_START=$(date +%s)
 while true; do
   git fetch -q origin render-src 2>/dev/null || { sleep 30; continue; }
   git show origin/render-src:video/farm/jobs.json > "$VIDEO_OUT/jobs.json" 2>/dev/null || echo '{"finished":false,"jobs":[]}' > "$VIDEO_OUT/jobs.json"
@@ -34,9 +37,13 @@ for j in d['jobs']:
       rm -rf "$JOBSRC" && mkdir -p "$JOBSRC" && git archive "$REF" video/blender video/timing video/audio | tar -x -C "$JOBSRC" \
         || { echo "[node $NODE] export failed $REF"; sleep 60; continue; }
     fi
-    if SHOTS_DIR="$JOBSRC/video/blender" bash video/farm/render.sh "$SHOT" "$F" "$T"; then touch "$MARK"; echo "[node $NODE] JOB DONE $SHOT $F-$T"; else echo "[node $NODE] JOB FAILED $SHOT $F-$T"; sleep 60; fi
+    if SHOTS_DIR="$JOBSRC/video/blender" bash video/farm/render.sh "$SHOT" "$F" "$T"; then touch "$MARK"; echo "[node $NODE] JOB DONE $SHOT $F-$T"; else echo "[node $NODE] JOB FAILED $SHOT $F-$T"; FAILS=$((FAILS+1))
+      [ "$ONESHOT" = 1 ] && [ "$FAILS" -ge 2 ] && { echo "[node $NODE] ONESHOT FAILED"; exit 1; }
+      sleep 60; fi
   done
   if [ "$pending" = 0 ]; then
+    [ "$ONESHOT" = 1 ] && [ "${#MY[@]}" -gt 0 ] && { echo "[node $NODE] ONESHOT DONE"; exit 0; }
+    [ "$ONESHOT" = 1 ] && [ $(( $(date +%s) - T_START )) -ge "$ONESHOT_WAIT" ] && { echo "[node $NODE] ONESHOT NO JOBS"; exit 0; }
     [ "$FIN" = 1 ] && { echo "[node $NODE] QUEUE FINISHED"; exit 0; }
     sleep 240
   fi
