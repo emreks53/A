@@ -656,6 +656,42 @@
    "from": 225,
    "to": 247,
    "note": "QA r5: deep bounces from the shot start; one job starting at 225"
+  },
+  {
+   "node": "b50",
+   "branch": "render-jobs",
+   "ref": "a75d5ebe0560be31c9f907afd692a06c02dc3c49",
+   "shot": "sh08",
+   "from": 1091,
+   "to": 1103,
+   "note": "QA r4: albedo-only denoise from 1091; one job starting at 1091"
+  },
+  {
+   "node": "b51",
+   "branch": "render-jobs",
+   "ref": "ba591e81a1abec154bae4b8f92c8e9bdd75f3bbf",
+   "shot": "sh04",
+   "from": 531,
+   "to": 556,
+   "note": "QA r4: forearm continues out of frame"
+  },
+  {
+   "node": "b52",
+   "branch": "render-jobs",
+   "ref": "db5b285a804736bef1749ce9996a4b139d18a65a",
+   "shot": "sh14b",
+   "from": 2382,
+   "to": 2423,
+   "note": "QA r4: real flame core + smooth halo"
+  },
+  {
+   "node": "b53",
+   "branch": "render-jobs",
+   "ref": "db5b285a804736bef1749ce9996a4b139d18a65a",
+   "shot": "sh14b",
+   "from": 2424,
+   "to": 2461,
+   "note": "QA r4: real flame core + smooth halo"
   }
  ]
 }
