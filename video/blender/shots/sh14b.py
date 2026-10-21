@@ -108,8 +108,23 @@ def build(ctx):
         img = [n for n in nt.nodes if n.bl_idname == "ShaderNodeTexImage"]
         col_img = [n for n in img if "diff" in n.image.name.lower()] or img
         nt.links.new(col_img[0].outputs["Color"], p.inputs["Emission Color"])
-        p.inputs["Emission Strength"].default_value = 45.0
+        p.inputs["Emission Strength"].default_value = 16.0
         p.inputs["Base Color"].default_value = (0, 0, 0, 1)
+        # QA g11: a pure emitter (the glTF's base-colour link made it a lit, painted card) with a hot core that falls
+        # off softly: the texture is resampled to 12x12 and read bicubic (the flame is only ~15 px wide on screen), and
+        # its alpha follows the glow so the card edge never shows. Shadow rays still see the opaque card, so the
+        # shadows it throws from its own lights (the light in the room) do not change.
+        for lk in list(p.inputs["Base Color"].links):
+            nt.links.remove(lk)
+        soft = col_img[0].image.copy(); soft.scale(12, 12); soft.pack()
+        col_img[0].image = soft; col_img[0].interpolation = "Cubic"
+        bw = nt.nodes.new("ShaderNodeRGBToBW"); nt.links.new(col_img[0].outputs["Color"], bw.inputs[0])
+        fa = nt.nodes.new("ShaderNodeMapRange"); fa.interpolation_type = "SMOOTHSTEP"
+        fa.inputs[1].default_value = 0.004; fa.inputs[2].default_value = 0.12
+        nt.links.new(bw.outputs[0], fa.inputs[0])
+        sray = nt.nodes.new("ShaderNodeLightPath"); amax = nt.nodes.new("ShaderNodeMath"); amax.operation = "MAXIMUM"
+        nt.links.new(fa.outputs[0], amax.inputs[0]); nt.links.new(sray.outputs["Is Shadow Ray"], amax.inputs[1])
+        nt.links.new(amax.outputs[0], p.inputs["Alpha"])
     fz = flame.matrix_world @ Vector((0, 0, 0))
     bb = [flame.matrix_world @ Vector(c) for c in flame.bound_box]
     fc = sum(bb, Vector()) / 8
@@ -123,6 +138,7 @@ def build(ctx):
     # glow halo inside the glass (camera-only soft emitter: light scattering in the hot glass/air)
     bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=0.034, location=fc + Vector((0, 0, 0.006)))
     halo = bpy.context.object; halo.name = "flame_halo"
+    C.smooth_shade(halo)    # QA g11: flat facets stepped the falloff into 8-12 px bands
     halo.scale.z = 1.35
     hm, hnt, hp = C.new_mat("flame_halo")
     hnt.nodes.remove(hp)
@@ -130,17 +146,22 @@ def build(ctx):
     pw = hnt.nodes.new("ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 5.0
     iv = hnt.nodes.new("ShaderNodeMath"); iv.operation = "SUBTRACT"; iv.inputs[0].default_value = 1.0
     hnt.links.new(lw.outputs["Facing"], iv.inputs[1]); hnt.links.new(iv.outputs[0], pw.inputs[0])
-    em = hnt.nodes.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (1.0, 0.42, 0.10, 1); em.inputs["Strength"].default_value = 0.9
+    em = hnt.nodes.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (1.0, 0.42, 0.10, 1); em.inputs["Strength"].default_value = 0.765
     tp = hnt.nodes.new("ShaderNodeBsdfTransparent")
     ad = hnt.nodes.new("ShaderNodeAddShader")
     mx = hnt.nodes.new("ShaderNodeMixShader")
-    hnt.links.new(pw.outputs[0], mx.inputs[0]); hnt.links.new(tp.outputs[0], mx.inputs[1]); hnt.links.new(em.outputs[0], mx.inputs[2])
+    # additive: scattered light adds to what is behind it (mixing replaced it and hid the flame); 0.765 keeps the glow level
+    hnt.links.new(tp.outputs[0], ad.inputs[0]); hnt.links.new(em.outputs[0], ad.inputs[1])
+    hnt.links.new(pw.outputs[0], mx.inputs[0]); hnt.links.new(tp.outputs[0], mx.inputs[1]); hnt.links.new(ad.outputs[0], mx.inputs[2])
     ad2 = hnt.nodes.new("ShaderNodeAddShader")
     hnt.links.new(mx.outputs[0], hnt.nodes["Material Output"].inputs["Surface"])
     hm.cycles.emission_sampling = "NONE"
     halo.data.materials.append(hm)
     halo.visible_diffuse = halo.visible_glossy = halo.visible_shadow = halo.visible_transmission = False
     fl2 = C.point_light("flame_fill", loc=fc + Vector((0, 0, 0.015)), power=15, radius=0.03, kelvin_k=1700)
+    # QA g11: seen through the chimney glass (transmission rays) the two light spheres were a flat clipped-white
+    # "keyhole" over the flame; hide them from transmission rays only (room, brass and cloth light is unchanged)
+    fl.visible_transmission = fl2.visible_transmission = False
     # flicker: smooth band-limited candle noise (1.1-3.6 Hz, at most about +-0.14 stop), a pure function of the
     # absolute frame, so every render range gets the same keys. Both flame lights, the flame card's glow and the
     # halo ride the same signal. The flame card shadows its own lights, and that shadow changes steeply with the
