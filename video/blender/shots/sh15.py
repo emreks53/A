@@ -2490,7 +2490,8 @@ def mat_beam(name, strength, color, path_len=True, phase_g=0.55, fade_table=True
     (* 1/|cos| path length through a slab for the shaft cards). Never sampled as a light.
     mask_img: pre-computed static mask (UV mapped); then only the shutter term is evaluated live.
     mote: dust-mote sprite (see build_motes): x attribute 'mote_gain' (energy conservation), a soft
-    radial profile 3*mu^4 (unit flux), and the key-word band kept clear while 'band_clear' is 1."""
+    radial profile (n+2)/2 * mu^n with n = MOTE_PROF (unit flux), and the key-word band kept clear while
+    'band_clear' is 1."""
     m, nt, out = new_mat(name)
     try:
         m.cycles.emission_sampling = "NONE"
@@ -2625,8 +2626,14 @@ def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.016):
 
 
 MOTE_R = (0.000010, 0.000040)      # physical mote radius: 20-80 um diameter (review 2 item 5)
-MOTE_PX = float(os.environ.get("SH15_MOTE_PX", "1.0"))   # minimum sprite radius in pixels
-MOTE_PROF = int(os.environ.get("SH15_MOTE_PROF", "4"))     # radial profile (n+2)/2 * mu^n, n = 4/2/0
+# Mote sprite: minimum radius in pixels and radial profile exponent n ((n+2)/2 * mu^n, unit flux).
+# 1 px / mu^4 (revision 3) twinkled: at 5 spp only ~15 camera samples hit an in-focus sprite, so its
+# brightness jumped 33 % (median; up to 80 %) frame to frame on camE, against 3 % in a 64-spp reference
+# (the physical change: beam, phase, push-in), and OIDN, which sees no mote in its albedo/normal guides,
+# removed 40-75 % of each mote. 2.5 px / mu^2: 15 % (max 43 %), 60-93 % of the reference light kept, same
+# peak brightness; in-focus motes are soft ~5 px dots. Defocused motes (lens-cone term) are unchanged.
+MOTE_PX = float(os.environ.get("SH15_MOTE_PX", "2.5"))
+MOTE_PROF = int(os.environ.get("SH15_MOTE_PROF", "2"))
 
 
 def camera_table(sc, cams, f0, f1):
@@ -2656,8 +2663,8 @@ def build_motes(cam_tab, n=380, seed=7, strength=200.0, near=None, band=None):
     Sub-pixel emitters cannot be sampled at 5 spp (a 50 um speck covers ~1 % of a pixel, so it either
     misses every sample or comes out as a 1-px firefly; behind a wide aperture it is hit ~once per frame).
     Each mote is therefore drawn as an energy-conserving sprite: a sphere of radius
-    R = max(r, 1 px footprint, 0.3 x lens-cone cross-section at the mote's depth) whose emission is
-    scaled by (r / R)^2 and shaped 3 mu^4 (unit flux), i.e. the same light a 20-80 um speck sends to the
+    R = max(r, MOTE_PX px footprint, 0.3 x lens-cone cross-section at the mote's depth) whose emission is
+    scaled by (r / R)^2 and shaped 2 mu^2 (unit flux), i.e. the same light a 20-80 um speck sends to the
     lens, spread over what the pixel filter / the bokeh would spread it over anyway."""
     import numpy as np
     rng = np.random.default_rng(seed)
