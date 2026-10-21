@@ -144,6 +144,10 @@ def build(ctx):
     bg = [n for n in sc.world.node_tree.nodes if n.type == "BACKGROUND"][0]
     L.bake_id(sc.world.node_tree, frames, f'nodes["{bg.name}"].inputs[0].default_value', [(*c, 1) for c in cols])
 
+    hero_objs = [o for o in bpy.data.objects if o.type in ("MESH", "LIGHT") and o.name != "tissueSheet"]
+    f_hide = C.t2f(t_exit + 0.55)
+    for o in hero_objs:
+        L.bake(o, [frames[0], f_hide], "hide_render", [0.0, 1.0], interp="CONSTANT")
     C.empty("TRK_cells", tuple(hero_c + Vector((0, 0, R_CELL * 0.4))))
 
     # ---------------------------------------------------------------- light
@@ -289,9 +293,9 @@ def mat_sheet(t_bil, t_bilme, cell=1.7):
     on.inputs["From Min"].default_value = 0.0; on.inputs["From Max"].default_value = 0.35
     nt.links.new(dt_.outputs[0], on.inputs["Value"])
     # glow: cytoplasm (not nucleus, not membrane), brightness varies per cell
-    r3 = n_("ShaderNodeMath"); r3.operation = "POWER"; r3.inputs[1].default_value = 2.0
+    r3 = n_("ShaderNodeMath"); r3.operation = "POWER"; r3.inputs[1].default_value = 4.0
     nt.links.new(rnd.outputs[1], r3.inputs[0])
-    br = n_("ShaderNodeMath"); br.operation = "MULTIPLY_ADD"; br.inputs[1].default_value = 1.6; br.inputs[2].default_value = 0.35
+    br = n_("ShaderNodeMath"); br.operation = "MULTIPLY_ADD"; br.inputs[1].default_value = 3.0; br.inputs[2].default_value = 0.12
     nt.links.new(r3.outputs[0], br.inputs[0])
     cyt = n_("ShaderNodeMath"); cyt.operation = "MULTIPLY_ADD"; cyt.inputs[1].default_value = -0.75; cyt.inputs[2].default_value = 1.0
     nt.links.new(nuc.outputs[0], cyt.inputs[0])

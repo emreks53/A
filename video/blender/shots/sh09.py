@@ -428,8 +428,8 @@ def build_interior(rng, ctx):
     bm = B.new()
     pocket_c = Vector((0, DIVE_Y, -0.02))
     count = 0
-    for a in range(-10, 11):
-        for b in range(-10, 11):
+    for a in range(-8, 9):
+        for b in range(-8, 9):
             x = HERO_C.x + a * sp + b * sp * 0.5
             z = HERO_C.z + b * sp * 0.866
             if (Vector((x, 0, z)) - Vector((HERO_C.x, 0, HERO_C.z))).length > R_F * 0.82:
@@ -467,9 +467,9 @@ def build_interior(rng, ctx):
                 continue
             if abs(z - pocket_c.z) < 0.02 and x < HERO_C.x + 0.01:
                 continue
-            if abs(z - pocket_c.z) > 0.16 or x < HERO_C.x - 0.2:
+            if abs(z - pocket_c.z) > 0.09 or x < HERO_C.x - 0.2 or x > HERO_C.x + 0.06:
                 continue                                  # beyond the haze: never seen
-            for yy in range(-6, 7):
+            for yy in range(-4, 5):
                 if rng.random() < 0.55:
                     continue
                 y = DIVE_Y + yy * 0.025 + rng.uniform(-0.003, 0.003)
