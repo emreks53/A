@@ -2472,10 +2472,12 @@ def _key_beam(ng, channels):
             fc.extrapolation = "CONSTANT"
 
 
-def mat_beam(name, strength, color, path_len=True, phase_g=0.55, fade_table=True, mask_img=None):
+def mat_beam(name, strength, color, path_len=True, phase_g=0.55, fade_table=True, mask_img=None, mote=False):
     """Camera-only additive light: transparent + emission = strength * mask * gain * HG phase
     (* 1/|cos| path length through a slab for the shaft cards). Never sampled as a light.
-    mask_img: pre-computed static mask (UV mapped); then only the shutter term is evaluated live."""
+    mask_img: pre-computed static mask (UV mapped); then only the shutter term is evaluated live.
+    mote: dust-mote sprite (see build_motes): x attribute 'mote_gain' (energy conservation), a soft
+    radial profile 3*mu^4 (unit flux), and the key-word band kept clear while 'band_clear' is 1."""
     m, nt, out = new_mat(name)
     try:
         m.cycles.emission_sampling = "NONE"
@@ -2513,6 +2515,21 @@ def mat_beam(name, strength, color, path_len=True, phase_g=0.55, fade_table=True
         sp = NN(nt, "ShaderNodeSeparateXYZ")
         LK(nt, geo.outputs["Position"], sp.inputs[0])
         val = math_node(nt, "MULTIPLY", val, maprange(nt, sp.outputs[2], 0.0, 0.07, 0.0, 1.0, interp="SMOOTHSTEP"))
+    if mote:
+        at = NN(nt, "ShaderNodeAttribute", attribute_name="mote_gain")
+        val = math_node(nt, "MULTIPLY", val, at.outputs["Fac"])
+        dn = NN(nt, "ShaderNodeVectorMath", operation="DOT_PRODUCT")
+        LK(nt, geo.outputs["Incoming"], dn.inputs[0]); LK(nt, geo.outputs["Normal"], dn.inputs[1])
+        mu2 = math_node(nt, "MULTIPLY", dn.outputs["Value"], dn.outputs["Value"])
+        val = math_node(nt, "MULTIPLY", val, math_node(nt, "MULTIPLY", math_node(nt, "MULTIPLY", mu2, mu2), vb=3.0))
+        # key-word band y 520-820 px (window y 0.573-0.729) kept clear of motes while band_clear = 1
+        tc = NN(nt, "ShaderNodeTexCoord")
+        sw = NN(nt, "ShaderNodeSeparateXYZ")
+        LK(nt, tc.outputs["Window"], sw.inputs[0])
+        inb = math_node(nt, "MINIMUM", maprange(nt, sw.outputs[1], 0.543, 0.583, 0.0, 1.0, interp="SMOOTHSTEP"),
+                        maprange(nt, sw.outputs[1], 0.759, 0.719, 0.0, 1.0, interp="SMOOTHSTEP"))
+        bc = NN(nt, "ShaderNodeValue"); bc.name = bc.label = "band_clear"; bc.outputs[0].default_value = 0.0
+        val = math_node(nt, "MULTIPLY", val, math_node(nt, "SUBTRACT", va=1.0, b=math_node(nt, "MULTIPLY", inb, bc.outputs[0])))
     em = NN(nt, "ShaderNodeEmission")
     em.inputs["Color"].default_value = (*color, 1)
     LK(nt, math_node(nt, "MULTIPLY", val, vb=strength), em.inputs["Strength"])
@@ -2592,77 +2609,176 @@ def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.016):
     return obs
 
 
-def build_motes(n=380, seed=7, strength=3.0):
-    """Dust motes in (and around) the beam corridor: tiny camera-only points that glow only where the
-    analytic beam mask says the sun reaches them (forward-scatter phase), invisible in shade."""
-    rng = random.Random(seed)
-    verts = []
-    tries = 0
-    while len(verts) < n and tries < 200000:
-        tries += 1
-        x = rng.uniform(-0.93, 0.45); y = rng.uniform(-0.50, 0.38); z = rng.uniform(0.03, 1.25)
-        p = Vector((x, y, z))
-        t = (x - XO) / SUN_DIR.x
-        q = p - SUN_DIR * t
-        if WIN_Y0 - 0.06 < q.y < WIN_Y1 + 0.06 and WIN_Z0 - 0.06 < q.z < WIN_Z1 + 0.06:
-            verts.append((x, y, z))
+MOTE_R = (0.000010, 0.000040)      # physical mote radius: 20-80 um diameter (review 2 item 5)
+
+
+def camera_table(sc, cams, f0, f1):
+    """Per-frame state of the marker camera (location, metres-per-pixel at 1 m, aperture diameter, focus
+    distance along the view axis) for f0..f1, read from the evaluated animation."""
+    tab = {}
+    for f in range(f0, f1 + 1):
+        sc.frame_set(f)
+        cam = [c for (fm, c) in cams if fm <= f][-1] if any(fm <= f for fm, _ in cams) else cams[0][1]
+        mw = cam.matrix_world
+        loc = mw.translation.copy()
+        fwd = -(mw.to_3x3() @ Vector((0, 0, 1))).normalized()
+        cd = cam.data
+        fo = cd.dof.focus_object
+        s_f = (fo.matrix_world.translation - loc).dot(fwd) if fo else cd.dof.focus_distance
+        aper = (cd.lens / max(cd.dof.aperture_fstop, 0.5)) * 0.001 if cd.dof.use_dof else 0.0
+        tab[f] = (tuple(loc), cd.sensor_height / C.H / cd.lens, aper, max(s_f, 0.01))
+    return tab
+
+
+def build_motes(cam_tab, n=380, seed=7, strength=40.0, near=None, band=None):
+    """Dust motes: 20-80 um specks scattered with the static sun visibility (beam_mask) as density, so they
+    sit inside the shafts, plus `near` = (count, camera, frame) extra motes 12-40 cm in front of that
+    camera (inside its beam), which the depth of field turns into soft discs. Camera-only emitters that glow
+    only where the analytic beam mask says the sun reaches them (forward-scatter phase).
+
+    Sub-pixel emitters cannot be sampled at 5 spp (a 50 um speck covers ~1 % of a pixel, so it either
+    misses every sample or comes out as a 1-px firefly; behind a wide aperture it is hit ~once per frame).
+    Each mote is therefore drawn as an energy-conserving sprite: a sphere of radius
+    R = max(r, 0.75 px footprint, 0.3 x lens-cone cross-section at the mote's depth) whose emission is
+    scaled by (r / R)^2 and shaped 3 mu^4 (unit flux), i.e. the same light a 20-80 um speck sends to the
+    lens, spread over what the pixel filter / the bokeh would spread it over anyway."""
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    lo = np.array([-0.93, -0.50, 0.03]); hi = np.array([0.45, 0.38, 1.25])
+    pts = np.zeros((0, 3))
+    while len(pts) < n:
+        c = lo + (hi - lo) * rng.random((20000, 3))
+        m = beam_static_np(c)
+        pts = np.concatenate([pts, c[rng.random(len(c)) < m]])[:n]
+    radii = MOTE_R[0] + (MOTE_R[1] - MOTE_R[0]) * rng.random(n)
+    if near:
+        from bpy_extras.object_utils import world_to_camera_view
+        n_near, cam, f_ref = near
+        sc = bpy.context.scene
+        sc.frame_set(f_ref)
+        loc, fwd = cam.matrix_world.translation.copy(), -(cam.matrix_world.to_3x3() @ Vector((0, 0, 1))).normalized()
+        dr = Vector((0.010, 0.003, 0.0015)) * (f_ref / C.FPS - 117.0)       # GN drift at f_ref
+        extra = []
+        tries = 0
+        while len(extra) < n_near and tries < 400000:
+            tries += 1
+            d = 0.12 + 0.28 * rng.random()
+            q = Vector(rng.normal(size=3)).normalized()
+            if q.dot(fwd) < 0.93:
+                continue
+            p = loc + q * d
+            v = world_to_camera_view(sc, cam, p)
+            if not (0.04 < v.x < 0.96 and 0.04 < v.y < 0.96) or (band and band[0] < 1 - v.y < band[1]):
+                continue
+            if beam_static_np(np.array([tuple(p)]))[0] < 0.25:
+                continue
+            extra.append(tuple(p - dr))
+        pts = np.concatenate([pts, np.array(extra).reshape(-1, 3)])
+        radii = np.concatenate([radii, MOTE_R[0] + (MOTE_R[1] - MOTE_R[0]) * rng.random(len(extra))])
     me = bpy.data.meshes.new("motes")
-    me.from_pydata(verts, [], [])
+    me.from_pydata([tuple(p) for p in pts], [], [])
+    at = me.attributes.new("r_phys", "FLOAT", "POINT")
+    at.data.foreach_set("value", radii.astype(np.float32))
     ob = bpy.data.objects.new("motes", me)
     bpy.context.scene.collection.objects.link(ob)
     ng = bpy.data.node_groups.new("motes_gn", "GeometryNodeTree")
     ng.interface.new_socket(name="Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
     ng.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
-    gi = ng.nodes.new("NodeGroupInput"); go = ng.nodes.new("NodeGroupOutput")
-    m2p = ng.nodes.new("GeometryNodeMeshToPoints")
-    rnd = ng.nodes.new("FunctionNodeRandomValue"); rnd.data_type = "FLOAT"
-    rnd.inputs["Min"].default_value = 0.00012
-    rnd.inputs["Max"].default_value = 0.00042
-    rnd.inputs["Seed"].default_value = 3
-    ng.links.new(rnd.outputs["Value"], m2p.inputs["Radius"])
-    st = ng.nodes.new("GeometryNodeInputSceneTime")
-    pos = ng.nodes.new("GeometryNodeInputPosition")
-    nz = ng.nodes.new("ShaderNodeTexNoise"); nz.noise_dimensions = "4D"
+    N = ng.nodes
+    L = ng.links.new
+    gi = N.new("NodeGroupInput"); go = N.new("NodeGroupOutput")
+
+    def mth(op, a, b=None):
+        nd = N.new("ShaderNodeMath"); nd.operation = op
+        for i, v in enumerate((a, b)):
+            if v is None:
+                continue
+            if isinstance(v, (int, float)):
+                nd.inputs[i].default_value = v
+            else:
+                L(v, nd.inputs[i])
+        return nd.outputs[0]
+    m2p = N.new("GeometryNodeMeshToPoints")
+    st = N.new("GeometryNodeInputSceneTime")
+    pos = N.new("GeometryNodeInputPosition")
+    nz = N.new("ShaderNodeTexNoise"); nz.noise_dimensions = "4D"
     nz.inputs["Scale"].default_value = 3.0
     nz.inputs["Detail"].default_value = 1.0
-    ng.links.new(pos.outputs[0], nz.inputs["Vector"])
-    wmul = ng.nodes.new("ShaderNodeMath"); wmul.operation = "MULTIPLY"; wmul.inputs[1].default_value = 0.06
-    ng.links.new(st.outputs["Seconds"], wmul.inputs[0]); ng.links.new(wmul.outputs[0], nz.inputs["W"])
-    sub = ng.nodes.new("ShaderNodeVectorMath"); sub.operation = "SUBTRACT"
+    L(pos.outputs[0], nz.inputs["Vector"])
+    L(mth("MULTIPLY", st.outputs["Seconds"], 0.06), nz.inputs["W"])
+    sub = N.new("ShaderNodeVectorMath"); sub.operation = "SUBTRACT"
     sub.inputs[1].default_value = (0.5, 0.5, 0.5)
-    ng.links.new(nz.outputs["Color"], sub.inputs[0])
-    sc_ = ng.nodes.new("ShaderNodeVectorMath"); sc_.operation = "SCALE"; sc_.inputs["Scale"].default_value = 0.09
-    ng.links.new(sub.outputs[0], sc_.inputs[0])
-    drift = ng.nodes.new("ShaderNodeVectorMath"); drift.operation = "SCALE"
+    L(nz.outputs["Color"], sub.inputs[0])
+    sc_ = N.new("ShaderNodeVectorMath"); sc_.operation = "SCALE"; sc_.inputs["Scale"].default_value = 0.09
+    L(sub.outputs[0], sc_.inputs[0])
+    drift = N.new("ShaderNodeVectorMath"); drift.operation = "SCALE"
     drift.inputs[0].default_value = (0.010, 0.003, 0.0015)
-    tsub = ng.nodes.new("ShaderNodeMath"); tsub.operation = "SUBTRACT"; tsub.inputs[1].default_value = 117.0
-    ng.links.new(st.outputs["Seconds"], tsub.inputs[0]); ng.links.new(tsub.outputs[0], drift.inputs["Scale"])
-    add = ng.nodes.new("ShaderNodeVectorMath"); add.operation = "ADD"
-    ng.links.new(sc_.outputs[0], add.inputs[0]); ng.links.new(drift.outputs[0], add.inputs[1])
-    setp = ng.nodes.new("GeometryNodeSetPosition")
-    ng.links.new(gi.outputs[0], m2p.inputs["Mesh"])
-    ng.links.new(m2p.outputs[0], setp.inputs["Geometry"])
-    ng.links.new(add.outputs[0], setp.inputs["Offset"])
-    # tiny real meshes (icospheres) instead of point-cloud primitives: a plain triangle BVH is much
-    # cheaper for every camera ray that passes near the beam
-    ico = ng.nodes.new("GeometryNodeMeshIcoSphere")
+    L(mth("SUBTRACT", st.outputs["Seconds"], 117.0), drift.inputs["Scale"])
+    add = N.new("ShaderNodeVectorMath"); add.operation = "ADD"
+    L(sc_.outputs[0], add.inputs[0]); L(drift.outputs[0], add.inputs[1])
+    setp = N.new("GeometryNodeSetPosition")
+    L(gi.outputs[0], m2p.inputs["Mesh"])
+    L(m2p.outputs[0], setp.inputs["Geometry"])
+    L(add.outputs[0], setp.inputs["Offset"])
+    # per-frame camera state (keyed below): position, m/px at 1 m, aperture diameter, focus distance
+    vals = {}
+    for k in ("cx", "cy", "cz", "pix", "aper", "sfoc"):
+        v = N.new("ShaderNodeValue"); v.name = v.label = k
+        vals[k] = v
+    cxyz = N.new("ShaderNodeCombineXYZ")
+    for i, k in enumerate(("cx", "cy", "cz")):
+        L(vals[k].outputs[0], cxyz.inputs[i])
+    pos2 = N.new("GeometryNodeInputPosition")
+    dist = N.new("ShaderNodeVectorMath"); dist.operation = "DISTANCE"
+    L(pos2.outputs[0], dist.inputs[0]); L(cxyz.outputs[0], dist.inputs[1])
+    d = dist.outputs["Value"]
+    r_in = N.new("GeometryNodeInputNamedAttribute"); r_in.data_type = "FLOAT"
+    r_in.inputs["Name"].default_value = "r_phys"
+    rp = r_in.outputs["Attribute"]
+    r_px = mth("MULTIPLY", mth("MULTIPLY", d, vals["pix"].outputs[0]), 0.75)
+    cone = mth("DIVIDE", mth("MULTIPLY", vals["aper"].outputs[0], mth("ABSOLUTE", mth("SUBTRACT", d, vals["sfoc"].outputs[0]))),
+               vals["sfoc"].outputs[0])
+    R = mth("MAXIMUM", rp, mth("MAXIMUM", r_px, mth("MULTIPLY", cone, 0.3)))
+    gain = mth("POWER", mth("DIVIDE", rp, R), 2.0)
+    stg = N.new("GeometryNodeStoreNamedAttribute"); stg.data_type = "FLOAT"; stg.domain = "POINT"
+    stg.inputs["Name"].default_value = "mote_gain"
+    L(setp.outputs[0], stg.inputs["Geometry"]); L(gain, stg.inputs["Value"])
+    # tiny real meshes (icospheres): a plain triangle BVH is cheap for every camera ray near the beam
+    ico = N.new("GeometryNodeMeshIcoSphere")
     ico.inputs["Radius"].default_value = 1.0
-    ico.inputs["Subdivisions"].default_value = 1
-    iop = ng.nodes.new("GeometryNodeInstanceOnPoints")
-    ng.links.new(setp.outputs[0], iop.inputs["Points"])
-    ng.links.new(ico.outputs["Mesh"], iop.inputs["Instance"])
-    rad = ng.nodes.new("GeometryNodeInputRadius")
-    sxyz = ng.nodes.new("ShaderNodeCombineXYZ")
+    ico.inputs["Subdivisions"].default_value = 2
+    smooth = N.new("GeometryNodeSetShadeSmooth")
+    L(ico.outputs["Mesh"], smooth.inputs["Geometry"])
+    iop = N.new("GeometryNodeInstanceOnPoints")
+    L(stg.outputs[0], iop.inputs["Points"])
+    L(smooth.outputs[0], iop.inputs["Instance"])
+    sxyz = N.new("ShaderNodeCombineXYZ")
     for i in range(3):
-        ng.links.new(rad.outputs[0], sxyz.inputs[i])
-    ng.links.new(sxyz.outputs[0], iop.inputs["Scale"])
-    real = ng.nodes.new("GeometryNodeRealizeInstances")
-    ng.links.new(iop.outputs[0], real.inputs[0])
-    smat = ng.nodes.new("GeometryNodeSetMaterial")
-    smat.inputs["Material"].default_value = mat_beam("mote", strength, (1.0, 0.93, 0.80), path_len=False, phase_g=0.62,
-                                                     fade_table=False)
-    ng.links.new(real.outputs[0], smat.inputs["Geometry"])
-    ng.links.new(smat.outputs[0], go.inputs[0])
+        L(R, sxyz.inputs[i])
+    L(sxyz.outputs[0], iop.inputs["Scale"])
+    real = N.new("GeometryNodeRealizeInstances")
+    L(iop.outputs[0], real.inputs[0])
+    smat = N.new("GeometryNodeSetMaterial")
+    mmat = mat_beam("mote", strength, (1.0, 0.93, 0.80), path_len=False, phase_g=0.62, fade_table=False, mote=True)
+    smat.inputs["Material"].default_value = mmat
+    L(real.outputs[0], smat.inputs["Geometry"])
+    L(smat.outputs[0], go.inputs[0])
+    for f, (loc, pix, aper, sfoc) in sorted(cam_tab.items()):
+        for k, v in (("cx", loc[0]), ("cy", loc[1]), ("cz", loc[2]), ("pix", pix), ("aper", aper), ("sfoc", sfoc)):
+            vals[k].outputs[0].default_value = v
+            vals[k].outputs[0].keyframe_insert("default_value", frame=f)
+    if band:
+        bcs = mmat.node_tree.nodes["band_clear"].outputs[0]
+        for f, v in ((band[2] - 1, 0.0), (band[2], 1.0), (band[3] + 1, 0.0)):
+            bcs.default_value = v
+            bcs.keyframe_insert("default_value", frame=f)
+    for tree in (ng, mmat.node_tree):
+        ad = tree.animation_data
+        if ad and ad.action:
+            for fc in C._fcurves(ad.action):
+                for kp in fc.keyframe_points:
+                    kp.interpolation = "CONSTANT"
+                fc.extrapolation = "CONSTANT"
     mod = ob.modifiers.new("gn", "NODES")
     mod.node_group = ng
     _camera_only(ob)
@@ -2907,8 +3023,6 @@ def build(ctx):
         # in camA before they are removed, absent in the camB macro and the camC spine slider)
         for ob in build_shafts((-0.80, 0.45, -0.40)):
             key_vis(ob, [(ctx.f0 - 10, int(t_soz * C.FPS - 6)), (fD, 99999)], ctx.f0, ctx.f1)
-    if "motes" not in dis:
-        build_motes(n=int(os.environ.get("SH15_MOTES", "380")))
     # ------------------------------------------------ cameras
     V = Vector
     title = V((0.277, 0.106, 0.053))          # gold "SOZLER" on the closed cover
@@ -2981,6 +3095,18 @@ def build(ctx):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
         mk.camera = cam
     sc.camera = camA
+    if "motes" not in dis:
+        # per-frame camera state for the mote sprites; the near-lens motes float in front of camE; the
+        # key-word band (y 520-820) stays clear of motes from 112.0 to 115.1 s ("SOZLER . 721")
+        cams = [(ctx.f0 - 100, camA), (fB, camB), (fC, camC), (fD, camD), (fE, camE)]
+        t_c = time.time()
+        tab = camera_table(sc, cams, ctx.f0 - 2, ctx.f1 + 2)
+        build_motes(tab, n=int(os.environ.get("SH15_MOTES", "380")),
+                    strength=float(os.environ.get("SH15_MOTE_K", "40")),
+                    near=(int(os.environ.get("SH15_MOTES_NEAR", "40")), camE, (fE + ctx.f1) // 2),
+                    band=(520 / C.H, 820 / C.H, int(round(112.0 * C.FPS)), int(math.floor(115.1 * C.FPS))))
+        sc.frame_set(ctx.f0)
+        print("[sh15] motes + camera table %.1fs" % (time.time() - t_c), flush=True)
     # per-camera exposure (one continuous room: every camera within ~1 stop)
     EXPO = {"A": 0.85, "A2": 0.50, "B": -0.45, "C": 1.70, "D": -1.05, "E": 0.45}
     # camA: from t_soz-0.3 the exposure rides down to 0.5 over 10 frames (eased, like an operator riding
