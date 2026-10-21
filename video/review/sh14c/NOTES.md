@@ -1,4 +1,4 @@
-# sh14c — review round 2 (studio S8)
+# sh14c — review round 3 (studio S8)
 
 104.20–109.80 s · render f2495–2640 · "…işleri **cansız**, **şuursuz**, **şefkatsiz** tabiatla **izah edebilir mi**?"
 
@@ -27,11 +27,21 @@
 | sh14c_t104.200.png | first frame: close-up of the dead stone |
 | sh14c_t104.900.png | "cansız": stone, still air |
 | sh14c_t105.900.png | "şuursuz": gust, sand streams across cracked ground (motion blur) |
-| sh14c_t106.900.png | "şefkatsiz": rising/pulling back, empty cold expanse, dead wood |
-| sh14c_t108.700.png | "izah": camera has stopped on the stone |
+| sh14c_t107.200.png | "şefkatsiz": the wide — empty cold expanse, one large bleached log mid-ground, layered far ridges |
+| sh14c_t108.700.png | "izah": camera has drifted back in and holds a low-angle medium shot of the stone, flat sky above |
 | sh14c_t109.800.png | last frame (hold) |
 
 Round 2: dry-branch prop removed; sand sheets are calm at "cansız", gust on "şuursuz", settle by "izah".
+
+## Round 3 (director notes)
+* Ending re-staged: after the wide (107.1 s) the camera drifts back in and settles at 108.6 s on a low-angle
+  medium shot — stone fills the lower half, flat grey sky above for the "?" in the band — then holds, breathing.
+* Wide: small boulders/stump removed; one large bleached `dead_tree_trunk` (1.9x) reads clearly mid-ground.
+  Three layered ridge lines (≈1.3 km, 3 km, 5+ km) separated by the cold haze. Pale salt-crust patches and
+  large tonal variation break the floor tiling.
+* Gust: thin saltation ribbons hugging the ground (advected with the grain travel curve) + a faint dust veil
+  at ~12 cm; grains still streak with motion blur.
+* **Final measured: ~44 s/frame steady** (f2548–2550: 53.9 s, 43.7 s, 43.9 s).
 
 ## Known issues / next round
 * ~~Render time over budget~~ fixed in round 2: adaptive micro-displacement is diced once from a fixed

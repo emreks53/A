@@ -1,4 +1,4 @@
-# sh12 — review round 3 (studio S8)
+# sh12 — review round 4 (studio S8)
 
 63.85–74.15 s · render f1526–1785 · "İşte bütün bu ihtiyaçların karşılanması **bir tek** yaratıcının … **ondan başka olamaz**"
 
@@ -49,6 +49,19 @@ curtain under it), TRK_sea, TRK_river, TRK_forest — placed on screen at the se
 * Forest canopy: stronger translucency so backlit crowns glow instead of reading black.
 * Sea: wind patches + wave groups break the sun column up a little.
 * TRK_sun now sits where the rays converge in the plate (x≈548, y≈598 at the settle).
+
+## Round 4 (director recipe)
+* Photographic ground: Poly Haven aerial scans `aerial_grass_rock` (55 m and 180 m tilings),
+  `aerial_ground_rock` (70/230 m) and `aerial_rocks_04` (260/860 m on rock) modulate the palette, blended by
+  macro noise so tiling never shows.
+* Sunlit patches vs cloud shadow: real cast shadows from a cloud layer were invisible here (sun 4.8° and in
+  front of the camera, so we see the shade sides). Instead the land and tree crowns are modulated by a
+  cloud-shadow mask projected along the sun direction from a layer at 2.6 km, drifting ~10 m/s: warm raking
+  patches vs cool dim ones, ~40 % in shadow.
+* River: width varies 2–4x, darker less mirror-like water, riparian trees to the banks, an oxbow lake.
+* Forest crowns greener with lighter deciduous groups; faint surf line on the coast; rain curtain kept.
+* **Final measured: ~52 s/frame steady** (f1680–1682: 95.5 s first incl. 16k HDRI load, then 51.8 s, 51.7 s) —
+  within the revised 90 s ceiling / ~60 aim.
 
 ## Round 3 changes
 * **Render time now ~45 s/frame** (7 spp + OIDN; measured f1680–1682 at 1080×1920: 84.6 s first frame incl.
