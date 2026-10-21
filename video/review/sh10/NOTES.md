@@ -1,6 +1,12 @@
 # sh10 — out of the cell into countless cells (52.10–58.00 s) · studio S7
 
 ## v5 (review-4 notes)
+**Measured:** dome/crossing frames 1305–1307 **52.5 s/frame** (8 spp), field 1385–1387 **36.2 s/frame**
+(16 spp); 80 %, ACCURATE/BALANCED, blue noise. 100 % crop 1305–1307: `crop100_f1305-1307.png` (clean).
+Interior contents fade out over 8 frames just after the crossing, the dome over 12 frames later
+(no myofibril "comb" showing through the fading dome).
+Known: ~4 frames around 54.0 s (just outside the membrane, probe light off) go very dark before
+the honeycomb comes up — reads as a dip through the membrane; can lift if preferred.
 1. Opens inside sh09's fibre interior (shared builder, same seeds, materials, haze, exposure);
    frame 1250 is identical to sh09's (hero mito at ~535,844). Old mito cloud / ER / granules gone.
    Interior frames 1244–1310 render at 8 spp like sh09 (frame handler), the field at 16 spp.

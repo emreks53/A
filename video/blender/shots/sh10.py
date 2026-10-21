@@ -125,10 +125,14 @@ def build(ctx):
     L.bake_id(sc, frames, "view_settings.exposure", expo)
 
     # the dome + interior fade to transparent over 12 frames once we are clear, then stop rendering
+    # interior first (just after the crossing, while the membrane is still all we see), dome later
+    f_in0 = C.t2f(t_exit + 0.08)
+    fade_group_animate(inter["objects"], frames, f_in0, 8, "S7_FadeInterior")
+    for o in inter["objects"]:
+        L.bake(o, [frames[0], f_in0 + 9], "hide_render", [0.0, 1.0], interp="CONSTANT")
     f_fade0 = C.t2f(t_exit + 0.45)
-    fade_group_animate(hero_objs, frames, f_fade0, 12)
-    for o in hero_objs:
-        L.bake(o, [frames[0], f_fade0 + 13], "hide_render", [0.0, 1.0], interp="CONSTANT")
+    fade_group_animate([dome], frames, f_fade0, 12, "S7_FadeDome")
+    L.bake(dome, [frames[0], f_fade0 + 13], "hide_render", [0.0, 1.0], interp="CONSTANT")
     # swap the holed sheet for the full one while the dome is still opaque over the hole
     L.bake(patch, [frames[0], f_fade0], "hide_render", [1.0, 0.0], interp="CONSTANT")
     L.bake(sheet_holed, [frames[0], f_fade0], "hide_render", [0.0, 1.0], interp="CONSTANT")
@@ -165,9 +169,9 @@ def build(ctx):
 # --------------------------------------------------------------------------- helpers
 
 
-def fade_group_animate(objs, frames, f0, n):
-    """Insert a shared 'S7_Fade' mix-to-transparent into every material of `objs`; animate 1 -> 0."""
-    g = bpy.data.node_groups.new("S7_Fade", "ShaderNodeTree")
+def fade_group_animate(objs, frames, f0, n, name="S7_Fade"):
+    """Insert a shared fade group (mix-to-transparent) into every material of `objs`; animate 1 -> 0."""
+    g = bpy.data.node_groups.new(name, "ShaderNodeTree")
     g.interface.new_socket("Shader", in_out="INPUT", socket_type="NodeSocketShader")
     g.interface.new_socket("Shader", in_out="OUTPUT", socket_type="NodeSocketShader")
     gi = g.nodes.new("NodeGroupInput"); go = g.nodes.new("NodeGroupOutput")

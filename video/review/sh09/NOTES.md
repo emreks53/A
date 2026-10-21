@@ -1,6 +1,10 @@
 # sh09 — inside the forearm (47.40–52.10 s) · studio S7
 
 ## v5 (review-4 notes)
+**Measured (80 %, 8 spp, ACCURATE/BALANCED, blue noise, transparent bounces 3):** crossing
+1188–1190 **52.6 s/frame**, interior end 1249–1251 **42.2 s/frame** (build ~4 s). 100 % crop of the
+darkest defocused region over 1249–1251: `crop100_f1249-1251.png` (clean, stable). Interior
+mitochondria limited to the ~110 within the haze range (≈ 5 cm around the hero) for budget.
 1. Crossing: the sarcolemma is ray-cast (x = 0.277 at the dive point) and turns translucent
    (alpha 1 → 0.25 over t_huc−0.1 … +0.35 within ±0.3 of DIVE_Y; glycocalyx bump + fresnel rim kept);
    the interior is visible through it from t_huc−0.15; the probe crosses at 49.45 and then creeps
