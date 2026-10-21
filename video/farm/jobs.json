@@ -440,6 +440,24 @@
    "shot": "sh10",
    "from": 1348,
    "to": 1397
+  },
+  {
+   "node": "b28",
+   "branch": "render-dev-s4",
+   "ref": "c50adf3249616d5c8da23266b602b74e39269a08",
+   "shot": "sh03",
+   "from": 248,
+   "to": 262,
+   "note": "re-render: job must start at the frame_bounces boundary (persistent data keeps the chunk-start bounces)"
+  },
+  {
+   "node": "b29",
+   "branch": "render-dev-s4",
+   "ref": "c50adf3249616d5c8da23266b602b74e39269a08",
+   "shot": "sh03",
+   "from": 293,
+   "to": 310,
+   "note": "re-render: job must start at the frame_bounces boundary (persistent data keeps the chunk-start bounces)"
   }
  ]
 }
