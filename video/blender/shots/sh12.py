@@ -26,7 +26,7 @@ HORIZON_DIP = math.radians(1.33)
 CAM0 = Vector((0.0, 0.0, 1700.0))   # reference for curvature
 sm = L.smoother_np
 MODE = ["stills"]
-MEADOW = (700, 2300)
+MEADOW = (560, 1750)
 TERRAIN_GRID = [None] * 5
 TREE_PTS = [None]       # golden meadow the exit descends toward
 
@@ -371,7 +371,7 @@ def terrain_material():
     col = nb.mixc(nb.math("MULTIPLY", nb.mapr(n_patch, 0.55, 0.7), 0.6), col, (0.20, 0.19, 0.07))
     col = nb.mixc(nb.math("MULTIPLY", nb.mapr(hgt, 700, 1500), 0.85), col, (0.17, 0.15, 0.10))
     # meadows green-gold; true gold only on the knolls (high mid-scale noise)
-    col = nb.mixc(meadow, col, (0.22, 0.25, 0.07))
+    col = nb.mixc(meadow, col, (0.20, 0.30, 0.07))
     col = nb.mixc(nb.math("MULTIPLY", meadow, nb.mapr(n_mid, 0.6, 0.75, 0.0, 0.5)), col, (0.30, 0.31, 0.09))
     col = nb.mixc(nb.math("MULTIPLY", forest, nb.mapr(n_fine, 0.25, 0.7, 0.75, 1.0)), col, forest_c)
     # photographic ground structure from real aerial scans (grass/rock/scrub, bare ground)
@@ -936,7 +936,7 @@ def camera_path(ctx, cam):
     sc = bpy.context.scene
     sc.view_settings.exposure = -1.0
     sc.view_settings.keyframe_insert("exposure", frame=C.t2f(72.4))
-    sc.view_settings.exposure = -0.4
+    sc.view_settings.exposure = 0.2
     sc.view_settings.keyframe_insert("exposure", frame=t1 * C.FPS)
     return t_settle
 
@@ -991,9 +991,12 @@ def build_emergence(ctx, cam):
             near = nb.mapr(camd.outputs["View Distance"], 40.0, 220.0)    # never a card wall at the lens
             kv = nb.n("ShaderNodeValue")                                     # all wisps thin out together
             kv.outputs[0].default_value = 1.0
-            kv.outputs[0].keyframe_insert("default_value", frame=C.t2f(64.55))
+            kv.outputs[0].keyframe_insert("default_value", frame=C.t2f(63.9))
             kv.outputs[0].default_value = 0.0
-            kv.outputs[0].keyframe_insert("default_value", frame=C.t2f(64.92))
+            kv.outputs[0].keyframe_insert("default_value", frame=C.t2f(65.1))
+            for fc in C._fcurves(nb.nt.animation_data.action):
+                for kp in fc.keyframe_points:
+                    kp.interpolation = "LINEAR"
             near = nb.math("MULTIPLY", near, kv.outputs[0])
             return nb.math("MULTIPLY", nb.math("MULTIPLY", nb.math("MULTIPLY", a, edge), 0.85), near)
         return fn
@@ -1026,10 +1029,13 @@ def build_emergence(ctx, cam):
         val = nb.n("ShaderNodeValue")
         val.outputs[0].default_value = 1.0
         val.outputs[0].keyframe_insert("default_value", frame=ctx.f0)
-        val.outputs[0].default_value = 0.93
-        val.outputs[0].keyframe_insert("default_value", frame=C.t2f(64.45))
+        val.outputs[0].default_value = 0.97
+        val.outputs[0].keyframe_insert("default_value", frame=C.t2f(63.7))
         val.outputs[0].default_value = 0.0
-        val.outputs[0].keyframe_insert("default_value", frame=C.t2f(64.92))
+        val.outputs[0].keyframe_insert("default_value", frame=C.t2f(65.1))
+        for fc in C._fcurves(nb.nt.animation_data.action):     # even, linear clearing (no luma jump)
+            for kp in fc.keyframe_points:
+                kp.interpolation = "LINEAR"
         # thins out unevenly: noise threshold rises as the veil fades
         thr = nb.math("SUBTRACT", 1.0, val.outputs[0])
         a = nb.math("SUBTRACT", nz.outputs["Fac"], nb.math("MULTIPLY", thr, 1.1))
