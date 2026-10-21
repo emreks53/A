@@ -1171,7 +1171,7 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0, g
     LK(nt, nmix.outputs[1], bump.inputs["Normal"])
     LK(nt, bump.outputs[0], leather.inputs["Normal"])
     gn = noise(nt, geo.outputs["Position"], 900.0, 1.0, 0.6)
-    gr = maprange(nt, gn.outputs[0], 0.3, 0.7, 0.09, 0.22)
+    gr = maprange(nt, gn.outputs[0], 0.3, 0.7, *[float(v) for v in os.environ.get("SH15_TMP_GR", "0.09,0.22").split(",")])
     gcol = mixrgb(nt, maprange(nt, gn.outputs[0], 0.3, 0.7, 0.0, 1.0), GOLD_RGB, GOLD_RGB2)
     gold = principled(nt, **{"Base Color": gcol, "Metallic": 1.0, "Roughness": gr, "Normal": bump.outputs[0],
                              "Specular Tint": (1.0, 0.9, 0.7)})
@@ -3167,6 +3167,8 @@ def build(ctx):
             cy.use_light_tree = bool(os.environ.get("SH15_LIGHTTREE"))
         if nodenoise:
             cy.use_denoising = False
+        if os.environ.get("SH15_TMP_PAT"):
+            cy.sampling_pattern = os.environ["SH15_TMP_PAT"]
         if ctx.mode == "final":
             a = scn.frame_current < fB
             spp = int(ov["camA_spp"] if a else ov["final_spp"])
