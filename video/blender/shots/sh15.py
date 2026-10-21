@@ -1310,7 +1310,11 @@ def mat_wood(name, tname, tile=0.8, tint=(1, 1, 1), val=1.0, rough=(0.35, 0.6), 
     mp = NN(nt, "ShaderNodeMapping")
     mp.inputs["Scale"].default_value = (1 / tile, 1 / tile, 1 / tile)
     mp.inputs["Rotation"].default_value = (0, 0, grain_rot)
-    if uvmap:
+    if uvmap == "object":
+        # planar from object XY (board-local l, y): 2 lookups instead of 6 for box mapping
+        LK(nt, tc.outputs["Object"], mp.inputs["Vector"])
+        proj = "FLAT"
+    elif uvmap:
         LK(nt, tc.outputs["UV"], mp.inputs["Vector"])
         proj = "FLAT"
     else:
@@ -1685,6 +1689,9 @@ def carve_panels(name, M, mat, relief_path, step=0.0013, depth=0.0024):
     for (l0, l1) in RELIEF_PANELS:
         nl = int((l1 - l0) / step); ny = int((y1 - y0) / step)
         for fs in (1, -1):
+            # faces looking down (under the X / under the arms) are never seen by a camera: no carving
+            if (M.to_3x3() @ Vector((0, 0, fs))).z < -0.1:
+                continue
             V = [[bm.verts.new((l0 + (l1 - l0) * i / nl, y0 + (y1 - y0) * j / ny, fs * (tb / 2 + 0.00004)))
                   for j in range(ny + 1)] for i in range(nl + 1)]
             for i in range(nl):
@@ -2370,7 +2377,12 @@ def beam_mask_group(static=True):
     for t_ in terms[1:]:
         acc = G.m("MULTIPLY", acc, t_)
     ng.links.new(acc, go.inputs["Mask"])
-    ng.links.new(gain.outputs[0], go.inputs["Gain"])
+    if static:
+        ng.links.new(gain.outputs[0], go.inputs["Gain"])
+    else:
+        # shaft cards only: an extra 'haze' fader (the shafts fade as camA cranes down onto the cover)
+        hz = nt.new("ShaderNodeValue"); hz.name = hz.label = "haze"; hz.outputs[0].default_value = 1.0
+        ng.links.new(G.m("MULTIPLY", gain.outputs[0], hz.outputs[0]), go.inputs["Gain"])
     return ng
 
 
@@ -2419,13 +2431,13 @@ def beam_static_np(P):
     return m
 
 
-def key_beam(times_shutter, times_gain):
-    for static in (True, False):
-        _key_beam(beam_mask_group(static), times_shutter, times_gain)
+def key_beam(times_shutter, times_gain, times_haze):
+    _key_beam(beam_mask_group(True), (("shutter_z", times_shutter), ("sun_gain", times_gain)))
+    _key_beam(beam_mask_group(False), (("shutter_z", times_shutter), ("sun_gain", times_gain), ("haze", times_haze)))
 
 
-def _key_beam(ng, times_shutter, times_gain):
-    for name, keys in (("shutter_z", times_shutter), ("sun_gain", times_gain)):
+def _key_beam(ng, channels):
+    for name, keys in channels:
         sock = ng.nodes[name].outputs[0]
         for t, v in keys:
             sock.default_value = v
@@ -2490,6 +2502,12 @@ def mat_beam(name, strength, color, path_len=True, phase_g=0.55, fade_table=True
 
 
 def _camera_only(ob):
+    # (static or sub-pixel slow: no motion steps -> a plain BVH, much cheaper to traverse)
+    try:
+        ob.cycles.use_motion_blur = False
+        ob.cycles.use_deform_motion = False
+    except Exception:
+        pass
     ob.visible_shadow = False
     ob.visible_diffuse = False
     ob.visible_glossy = False
@@ -2552,7 +2570,7 @@ def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.016):
     return obs
 
 
-def build_motes(n=480, seed=7, strength=3.0):
+def build_motes(n=380, seed=7, strength=3.0):
     """Dust motes in (and around) the beam corridor: tiny camera-only points that glow only where the
     analytic beam mask says the sun reaches them (forward-scatter phase), invisible in shade."""
     rng = random.Random(seed)
@@ -2766,7 +2784,7 @@ def build(ctx):
         MATS["leaf_%d" % k] = mat_leaf("leaf_%d" % k, 727 - 2 * k, 728 - 2 * k)
     MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.62, 0.38, 0.22), val=0.74, sat=1.25,
                              rough=(0.50, 0.74), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
-                             grain_rot=math.pi / 2, wear=0.35, spec=0.22)
+                             grain_rot=math.pi / 2, wear=0.35, spec=0.22, uvmap="object")
     MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7), uvmap=True)
     MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8), uvmap=True)
     MATS["kafes"] = mat_wood("kafes", "dark_wood", tile=0.6, tint=(0.55, 0.45, 0.38), val=0.55, sat=0.6, rough=(0.55, 0.8))
@@ -2810,7 +2828,8 @@ def build(ctx):
     # (z = 0.30 hides the whole opening from every camera; the sun starts to enter at z ~ 0.55)
     sh_keys = shutter_profile(t_bu, t_soz + 0.65, 0.30, 1.52)
     shutter(sh_keys, MATS["shutter"])
-    key_beam(sh_keys, gain)
+    haze = [(ctx.t0 - 1.0, 1.0), (t_soz - 0.95, 1.0), (t_soz - 0.30, 0.0), (fD / C.FPS - 0.01, 0.0), (fD / C.FPS, 1.0)]
+    key_beam(sh_keys, gain, haze)
     # cool fill: overcast skylight from a door/window behind camera (front wall)
     C.area("fill_front", loc=(0.9, -3.5, 1.3), look_at=(0.0, 0.0, 0.2), size=2.4, size_y=1.6, power=42, kelvin_k=5600)
     portal = C.area("portal", loc=(WALL_LEFT_X - 0.02, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2),
@@ -2822,7 +2841,10 @@ def build(ctx):
         portal.data.is_portal = True
     dis = os.environ.get("SH15_DISABLE", "").split(",")
     if "shafts" not in dis:
-        build_shafts((-0.80, 0.45, -0.40))
+        # the cards cost ~7 % of a sample each: they only exist while they can be seen (faded out
+        # in camA before they are removed, absent in the camB macro and the camC spine slider)
+        for ob in build_shafts((-0.80, 0.45, -0.40)):
+            key_vis(ob, [(ctx.f0 - 10, int(t_soz * C.FPS - 6)), (fD, 99999)], ctx.f0, ctx.f1)
     if "motes" not in dis:
         build_motes()
     # ------------------------------------------------ cameras
