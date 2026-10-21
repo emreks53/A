@@ -195,9 +195,9 @@ def build(ctx):
     print(f"[sh09] sarcolemma at x={x_mem:.3f}")
     HO = L.INTERIOR_HANDOFF
     H = Vector((HERO_C.x - 0.0105, DIVE_Y, -0.02))           # hero mitochondrion (interior origin)
-    wave = dict(t0=ctx.word("olup") - 0.05, speed=0.09, origin=H - Vector((0, 0.06, 0)), axis=(0, 1, 0), width=0.008, gain=3.0)
-    inter = L.build_fibre_interior("interiorRoot", Matrix.Translation(H), fibre_c=(HERO_C.x - H.x, HERO_C.z - H.z),
-                                   fibre_r=HERO_C.x - x_mem, seed=909, cristae_wave=wave)
+    wave = dict(t0=ctx.word("olup") - 0.05, speed=0.09, origin=H - Vector((0, 0.03, 0)), axis=(0, 1, 0), width=0.014, gain=7.0)
+    inter = L.build_fibre_interior("interiorRoot", Matrix.Translation(H), fibre_c=HO["fibre_c"], fibre_r=HO["fibre_r"],
+                                   y_half=HO["y_half"], seed=909, cristae_wave=wave)
     interior = inter["objects"]
     print(f"[sh09] interior: {inter['fibrils']} myofibrils, {inter['mitos']} mitochondria")
 
@@ -260,7 +260,7 @@ def build(ctx):
     L.bake(cam, frames, "rotation_euler", keys_rot)
     L.bake_id(cam.data, frames, "dof.focus_distance", foc)
     L.bake_id(cam.data, frames, "dof.aperture_fstop", fst)
-    C.handheld(cam, amp_loc=0.0004, amp_rot=0.0012, speed=0.5, seed=9)
+    C.handheld(cam, **HO["handheld"])
 
     # sarcolemma turns translucent near the dive point (glycocalyx bump + fresnel rim kept)
     fade_hero_membrane(m_mus_hero, t_huc - 0.1, t_huc + 0.35)
@@ -279,10 +279,10 @@ def build(ctx):
     for t in times:
         u = C.remap(t, t_huc - 0.1, t_cross + 0.3, C.smooth)
         fd_.append(C.lerp(1.6, HO["fog_dist"], u))
-        col = C.lerp((0.30, 0.13, 0.11), (0.045, 0.014, 0.012), C.remap(t, ctx.t0 - 0.25, 47.95, C.smooth))
+        col = C.lerp((0.30, 0.09, 0.05), (0.045, 0.014, 0.012), C.remap(t, ctx.t0 - 0.25, 47.95, C.smooth))
         col = C.lerp(col, HO["fog_color"], u)
         fc_.append(col)
-        ex_.append(C.lerp(1.4, HO["exposure"], C.remap(t, ctx.t0 - 0.25, 47.95, C.smooth)))
+        ex_.append(C.lerp(0.9, HO["exposure"], C.remap(t, ctx.t0 - 0.25, 47.95, C.smooth)))
     L.bake_id(fg, frames, 'nodes["dist"].outputs[0].default_value', fd_)
     L.bake_id(fg, frames, 'nodes["color"].outputs[0].default_value', [(*c, 1.0) for c in fc_])
     w_ = sc.world.node_tree
@@ -292,7 +292,7 @@ def build(ctx):
 
     # trackers: on screen only inside their callout windows (outside: parked far behind the lens)
     t_mito = C.empty("TRK_mito"); t_mito.parent = inter["hero"]
-    for e_, (w0, w1) in ((trk_n, (ctx.t0, 48.7)), (trk_f, (48.45, 48.85)), (t_mito, (49.9, ctx.t1 + 1))):
+    for e_, (w0, w1) in ((trk_n, (ctx.t0 - 1, 1165.5 / C.FPS)), (trk_f, (48.45, 1171.5 / C.FPS)), (t_mito, (49.9, ctx.t1 + 1))):
         base = tuple(e_.location)
         locs = []
         for f in frames:
@@ -311,17 +311,18 @@ def build(ctx):
         pl.data.specular_factor = 0.0       # rims light the SSS, no hard blob reflections
         pl.visible_glossy = False
     # soft interior light carried by the probe (switched on as we enter)
-    il = C.point_light("probe_in", loc=(0, 0, 0), power=0.0, radius=0.01, kelvin_k=4500)
-    il.parent = cam; il.location = (0.0, 0.015, 0.0)
+    PR = HO["probe"]
+    il = C.point_light("probe_in", loc=(0, 0, 0), power=0.0, radius=PR["radius"], kelvin_k=4500)
+    il.parent = cam; il.location = PR["offset"]
     il.data.specular_factor = 0.0
-    il.data.color = (0.5, 0.9, 1.0)
-    L.bake_id(il.data, frames, "energy", [C.lerp(0.0, 0.12, C.remap(t, t_cross - 0.2, t_cross + 0.2)) for t in times])
+    il.data.color = PR["color"]
+    L.bake_id(il.data, frames, "energy", [C.lerp(0.0, PR["energy"], C.remap(t, t_cross - 0.2, t_cross + 0.2)) for t in times])
     L.bake_id(key.data, frames, "energy", [C.lerp(6.0, 0.0, C.remap(t, t_c, t_cross + 0.2)) for t in times])
 
     sc.world.light_settings.distance = 0.2
     L.budget_denoise(prefilter="ACCURATE", quality="BALANCED", final_res=80)
     ov = dict(L.LEAN)
-    ov.update(transmission_bounces=3, transparent_bounces=3, final_spp=8, preview_spp=12)
+    ov.update(transmission_bounces=3, transparent_bounces=8, final_spp=8, preview_spp=12)
     return ov
 
 

@@ -41,7 +41,8 @@ def build(ctx):
     H = hero_c + Vector((-0.55, 0, 0))
     Mrot = Matrix(((1, 0, 0), (0, 0, -1), (0, 1, 0)))       # columns: X, Y(local)->Z, Z(local)->-Y
     M = Matrix.Translation(H) @ Mrot.to_4x4()
-    inter = L.build_fibre_interior("interiorRoot", M, fibre_c=(0.25, 0.0), fibre_r=0.45, seed=909, y_half=0.17)
+    inter = L.build_fibre_interior("interiorRoot", M, fibre_c=HO["fibre_c"], fibre_r=HO["fibre_r"], seed=909,
+                                   y_half=HO["y_half"])
     print(f"[sh10] interior: {inter['fibrils']} myofibrils, {inter['mitos']} mitochondria")
     hero_objs = [dome] + inter["objects"]
     # exit point: ray-cast the dome wall along -X from the hero mitochondrion
@@ -88,6 +89,12 @@ def build(ctx):
         k_off = 1.0 - C.remap(t, t_exit - 0.2, t_exit + 0.4, C.smooth)
         off = Mrot @ Vector((0, HO["cam_local"][1], 0)) * k_off      # hand-off framing offset (mito at y~842)
         p = tgt + dirv * dist + off
+        if t > t_exit:                                       # keep >= 2 cm clear of the dome surface
+            rel = p - hero_c
+            ax = Vector((R_CELL + 0.02, R_CELL + 0.02, R_CELL * 0.62 + 0.02))
+            e = math.sqrt((rel.x / ax.x) ** 2 + (rel.y / ax.y) ** 2 + (rel.z / ax.z) ** 2)
+            if e < 1.0:
+                p = hero_c + rel / e
         look = tgt + off + Vector((0, 0, dist * C.lerp(0.0, 0.13, C.remap(t, t_bil + 0.4, t_set, C.smooth))))
         f = (look - p).normalized()
         rt = f.cross(Vector((0, 0, 1)))
@@ -98,10 +105,10 @@ def build(ctx):
         prev = e
         locs.append(tuple(p)); rots.append(tuple(e))
         # focus: the hero mito, then the membrane film for a few frames as we cross, then the sheet
-        if t < t_exit - 0.2:
+        if t < t_exit:
             fd = dist - 0.0035
-        elif t < t_exit + 0.05:
-            fd = max(0.004, dist - d_wall + 0.002)
+        elif t < t_exit + 0.25:
+            fd = max(0.004, dist - d_wall)                  # the sarcolemma film just in front of the lens
         else:
             fd = max(0.05, (tgt - p).length)
         foc.append(fd)
@@ -117,7 +124,7 @@ def build(ctx):
     L.bake(cam, frames, "rotation_euler", rots)
     L.bake_id(cam.data, frames, "dof.focus_distance", foc)
     L.bake_id(cam.data, frames, "dof.aperture_fstop", fst)
-    C.handheld(cam, amp_loc=0.0, amp_rot=0.0012, speed=0.5, seed=10)
+    C.handheld(cam, **HO["handheld"])          # same noise as sh09 -> identical f1250 camera matrix
     L.bake_id(fg, frames, 'nodes["dist"].outputs[0].default_value', fdist)
     L.bake_id(fg, frames, 'nodes["color"].outputs[0].default_value', [(*c, 1) for c in fcol])
     bg = [n for n in sc.world.node_tree.nodes if n.type == "BACKGROUND"][0]
@@ -125,11 +132,10 @@ def build(ctx):
     L.bake_id(sc, frames, "view_settings.exposure", expo)
 
     # the dome + interior fade to transparent over 12 frames once we are clear, then stop rendering
-    # interior first (just after the crossing, while the membrane is still all we see), dome later
-    f_in0 = C.t2f(t_exit + 0.08)
-    fade_group_animate(inter["objects"], frames, f_in0, 8, "S7_FadeInterior")
+    # interior: hidden in one frame at t_exit+0.25, behind the dome film (alpha ~0.8 seen from outside)
+    f_in0 = C.t2f(t_exit + 0.25)
     for o in inter["objects"]:
-        L.bake(o, [frames[0], f_in0 + 9], "hide_render", [0.0, 1.0], interp="CONSTANT")
+        L.bake(o, [frames[0], f_in0], "hide_render", [0.0, 1.0], interp="CONSTANT")
     f_fade0 = C.t2f(t_exit + 0.45)
     fade_group_animate([dome], frames, f_fade0, 12, "S7_FadeDome")
     L.bake(dome, [frames[0], f_fade0 + 13], "hide_render", [0.0, 1.0], interp="CONSTANT")
@@ -137,27 +143,35 @@ def build(ctx):
     L.bake(patch, [frames[0], f_fade0], "hide_render", [1.0, 0.0], interp="CONSTANT")
     L.bake(sheet_holed, [frames[0], f_fade0], "hide_render", [0.0, 1.0], interp="CONSTANT")
 
-    # counter tracker: on screen from frame 1320 (parked far behind the lens before)
+    # counter tracker: on screen from frame 1306; parked 10 m behind the lens before
     trk = C.empty("TRK_cells", tuple(hero_c + Vector((0, 0, R_CELL * 0.4))))
-    base = tuple(trk.location)
-    L.bake(trk, frames, "location", [base if f >= 1320 else (base[0] + 9000, base[1], base[2]) for f in frames],
-           interp="CONSTANT")
+    base = Vector(trk.location)
+    tl = []
+    for f, lc, rt_ in zip(frames, locs, rots):
+        if f >= 1306:
+            tl.append(tuple(base))
+        else:
+            back = Euler(rt_).to_matrix() @ Vector((0, 0, 1))
+            tl.append(tuple(Vector(lc) + back * 10.0))
+    L.bake(trk, frames, "location", tl, interp="CONSTANT")
 
     # ---------------------------------------------------------------- light
     s1 = C.sun(elev_deg=35, azim_deg=130, strength=1.6, kelvin_k=3200, angle_deg=6, name="amberKey")
     L.bake_id(s1.data, frames, "energy", [C.lerp(1.6, 0.0, C.remap(t, t_bil - 0.3, 54.6)) for t in times])
     s2 = C.sun(elev_deg=60, azim_deg=-40, strength=0.8, kelvin_k=12000, angle_deg=20, name="tealFill")
     s2.data.color = (0.45, 0.85, 1.0)
-    il = C.point_light("probe", power=0.12, radius=0.01, kelvin_k=4500)
-    il.parent = cam; il.location = (0, 0.01, 0)
-    il.data.specular_factor = 0.0; il.data.color = (0.5, 0.9, 1.0)
-    L.bake_id(il.data, frames, "energy", [C.lerp(0.12, 0.0, C.remap(t, t_exit - 0.35, t_exit - 0.05)) for t in times])
+    PR = HO["probe"]
+    il = C.point_light("probe", power=PR["energy"], radius=PR["radius"], kelvin_k=4500)
+    il.parent = cam; il.location = PR["offset"]
+    il.data.specular_factor = 0.0; il.data.color = PR["color"]
+    L.bake_id(il.data, frames, "energy", [C.lerp(PR["energy"], 0.0, C.remap(t, t_exit - 0.35, t_exit - 0.05)) for t in times])
 
     add_fog_glow(sc)
     L.budget_denoise(prefilter="ACCURATE", quality="BALANCED", final_res=80)
 
     # interior frames (to 1310) at 8 spp like sh09, the field at 16 spp
     def _spp(scene, *_):
+        scene.render.use_compositing = scene.frame_current > 1290        # no glare on the interior (f1250 match)
         if scene.render.image_settings.color_depth == "16":
             scene.cycles.samples = 8 if scene.frame_current <= 1310 else 16
     bpy.app.handlers.frame_change_pre.append(_spp)
@@ -238,11 +252,11 @@ def mat_membrane():
     m, nt, p = C.new_mat("Membrane")
     p.inputs["Base Color"].default_value = (0.55, 0.42, 0.42, 1)
     p.inputs["Roughness"].default_value = 0.25
-    p.inputs["Coat Weight"].default_value = 0.6
+    p.inputs["Coat Weight"].default_value = 0.3
     p.inputs["Coat Roughness"].default_value = 0.08
     p.inputs["Thin Film Thickness"].default_value = 420.0
     p.inputs["Thin Film IOR"].default_value = 1.45
-    p.inputs["Sheen Weight"].default_value = 0.4
+    p.inputs["Sheen Weight"].default_value = 0.15
     tc = L._n(nt, "ShaderNodeTexCoord")
     nz = L._n(nt, "ShaderNodeTexNoise", **{"Scale": 30.0, "Detail": 4.0})
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
@@ -254,7 +268,7 @@ def mat_membrane():
     nt.links.new(lw.outputs["Facing"], al.inputs["Value"])
     cd = L._n(nt, "ShaderNodeCameraData")
     near = L._n(nt, "ShaderNodeMapRange"); near.interpolation_type = "SMOOTHSTEP"
-    near.inputs["From Min"].default_value = 0.004; near.inputs["From Max"].default_value = 0.03
+    near.inputs["From Min"].default_value = 0.002; near.inputs["From Max"].default_value = 0.010
     nt.links.new(cd.outputs["View Distance"], near.inputs["Value"])
     a2 = L._n(nt, "ShaderNodeMath"); a2.operation = "MULTIPLY"
     nt.links.new(al.outputs[0], a2.inputs[0]); nt.links.new(near.outputs[0], a2.inputs[1])
@@ -323,7 +337,7 @@ def mat_sheet(t_bil, t_bilme, cell=1.7):
     vf.inputs["Randomness"].default_value = 0.85; lnk(sc_.outputs[0], vf.inputs["Vector"])
     ve = n_("ShaderNodeTexVoronoi"); ve.voronoi_dimensions = "2D"; ve.feature = "DISTANCE_TO_EDGE"
     ve.inputs["Randomness"].default_value = 0.85; lnk(sc_.outputs[0], ve.inputs["Vector"])
-    mem = mapr(ve.outputs["Distance"], 0.0, 0.02, 1.0, 0.0)
+    mem = mapr(ve.outputs["Distance"], 0.0, 0.06, 1.0, 0.0)
     dome = mapr(ve.outputs["Distance"], 0.0, 0.25)
     # peripheral oval nuclei: a finer, stretched Voronoi, kept only in a band just inside the membrane
     mp = n_("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (3.4 / cell, 2.2 / cell, 1.0)
@@ -331,47 +345,52 @@ def mat_sheet(t_bil, t_bilme, cell=1.7):
     lnk(tc.outputs["Object"], mp.inputs["Vector"])
     vn = n_("ShaderNodeTexVoronoi"); vn.voronoi_dimensions = "2D"; vn.feature = "F1"
     lnk(mp.outputs[0], vn.inputs["Vector"])
-    nd = mapr(vn.outputs["Distance"], 0.12, 0.2, 1.0, 0.0)
+    nd = mapr(vn.outputs["Distance"], 0.18, 0.30, 1.0, 0.0)
     band = math_("MULTIPLY", mapr(ve.outputs["Distance"], 0.025, 0.05), mapr(ve.outputs["Distance"], 0.1, 0.16, 1.0, 0.0))
     nsep = n_("ShaderNodeSeparateColor"); lnk(vn.outputs["Color"], nsep.inputs[0])
     ngate = math_("GREATER_THAN", nsep.outputs[0], 0.45)
     nuc = math_("MULTIPLY", math_("MULTIPLY", nd, band), ngate)
     fine = n_("ShaderNodeTexNoise", **{"Scale": 25.0, "Detail": 4.0})
     lnk(tc.outputs["Object"], fine.inputs["Vector"])
-    L._bump_chain(nt, p, [(dome, 0.12), (nuc, 0.1), (fine.outputs["Fac"], 0.02)], distance=0.12)
+    L._bump_chain(nt, p, [(dome, 0.05), (nuc, 0.06), (fine.outputs["Fac"], 0.02)], distance=0.12)
     mx = n_("ShaderNodeMix"); mx.data_type = "RGBA"; lnk(nuc, mx.inputs[0])
-    mx.inputs[6].default_value = (0.15, 0.19, 0.23, 1); mx.inputs[7].default_value = (0.05, 0.055, 0.085, 1)
+    mx.inputs[6].default_value = (0.15, 0.19, 0.23, 1); mx.inputs[7].default_value = (0.07, 0.08, 0.10, 1)
     lnk(mx.outputs[2], p.inputs["Base Color"])
     p.subsurface_method = L.SSS_METHOD
     p.inputs["Subsurface Weight"].default_value = 1.0
     p.inputs["Subsurface Radius"].default_value = (0.8, 0.9, 1.0)
     p.inputs["Subsurface Scale"].default_value = 0.3
     p.inputs["Roughness"].default_value = 0.35
-    p.inputs["Coat Weight"].default_value = 0.7
-    p.inputs["Coat Roughness"].default_value = 0.1
+    p.inputs["Coat Weight"].default_value = 0.3
+    p.inputs["Coat Roughness"].default_value = 0.25
     # per-cell timing from the Voronoi cell centre (texture space -> metres)
     cpos = n_("ShaderNodeVectorMath"); cpos.operation = "LENGTH"; lnk(vf.outputs["Position"], cpos.inputs[0])
     d = math_("MULTIPLY", cpos.outputs["Value"], cell)
     rnd = n_("ShaderNodeSeparateColor"); lnk(vf.outputs["Color"], rnd.inputs[0])
     r, g_, b_ = rnd.outputs[0], rnd.outputs[1], rnd.outputs[2]
-    near_t = math_("MULTIPLY_ADD", r, 0.15, math_("MULTIPLY_ADD", d, 0.5 / 2.9, t_bil - 0.06))
+    near_t = math_("MULTIPLY_ADD", r, 0.15, math_("MULTIPLY_ADD", d, 0.5 / 0.6, t_bil - 0.06))
     far_t = math_("MULTIPLY_ADD", r, 0.10, math_("MULTIPLY_ADD", math_("LOGARITHM", math_("MULTIPLY_ADD", d, 1.0 / 6.0, 1.0), math.e),
                                                   0.30, t_bilme - 0.04))
-    isnear = math_("LESS_THAN", d, 2.9)
+    isnear = math_("LESS_THAN", d, 0.6)
     ton = n_("ShaderNodeMix"); ton.data_type = "FLOAT"
     lnk(isnear, ton.inputs[0]); lnk(far_t, ton.inputs[2]); lnk(near_t, ton.inputs[3])
     tv = L.time_value(nt)
     dt_ = math_("SUBTRACT", tv.outputs[0], ton.outputs[0])
     rise = mapr(dt_, 0.0, 0.15)
-    decay = math_("MULTIPLY_ADD", math_("EXPONENT", math_("DIVIDE", math_("MAXIMUM", dt_, 0.0), -0.25)), 0.7, 0.3)
+    # persistent glints (b < 0.12) and the near set keep a 30 % floor; all others decay to 0 (tau 0.35 s)
+    keep = math_("MAXIMUM", math_("LESS_THAN", b_, 0.12), isnear)
+    ex_ = math_("EXPONENT", math_("DIVIDE", math_("MAXIMUM", dt_, 0.0), -0.35))
+    floor_ = math_("MULTIPLY", keep, 0.3)
+    decay = math_("MULTIPLY_ADD", ex_, math_("SUBTRACT", 1.0, floor_), floor_)
     gate = math_("MAXIMUM", math_("LESS_THAN", b_, 0.35), isnear)          # ~35 % of cells (all near ones)
     on = math_("MULTIPLY", math_("MULTIPLY", rise, decay), gate)
-    br = math_("MULTIPLY_ADD", math_("POWER", g_, 2.0), 1.0, 0.6)          # 0.6 .. 1.6
+    br = math_("MULTIPLY", math_("MULTIPLY_ADD", math_("POWER", g_, 2.0), 1.0, 0.6),          # 0.6 .. 1.6
+               math_("MULTIPLY_ADD", math_("LESS_THAN", b_, 0.12), 1.0, 1.0))                    # glints x2
     gran = n_("ShaderNodeTexNoise", **{"Scale": 40.0, "Detail": 2.0}); lnk(tc.outputs["Object"], gran.inputs["Vector"])
     granular = math_("MULTIPLY_ADD", gran.outputs["Fac"], 0.6, 0.7)
     cyt = math_("MULTIPLY", math_("MULTIPLY_ADD", nuc, -0.85, 1.0), dome)
     e = math_("MULTIPLY", math_("MULTIPLY", math_("MULTIPLY", on, cyt), br), granular)
-    e3 = math_("MULTIPLY", e, 1.3)
+    e3 = math_("MULTIPLY", e, 2.2)
     # membranes: thin, emission only, cool when dark, warm once the cell is lit
     m1 = math_("MULTIPLY_ADD", on, 0.7, 0.18)
     m2 = math_("MULTIPLY", mem, m1)

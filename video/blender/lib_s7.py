@@ -575,12 +575,13 @@ def cristae_mesh(name, length=0.03, width=0.011, n=11, seed=0, bend_seed=None, b
         side = 1 if i % 2 else -1
         g = _bm.ops.create_grid(bm, x_segments=10, y_segments=10, size=1.0)
         ph = rng.uniform(0, 6.28)
+        tilt = math.tan(math.radians(rng.uniform(-6.0, 6.0)))      # near-parallel transverse plates
         for v in g["verts"]:
             u, w = v.co.x, v.co.y                    # [-1,1]^2 -> disc
             dx = u * math.sqrt(max(0.0, 1 - w * w / 2)); dz = w * math.sqrt(max(0.0, 1 - u * u / 2))
             x = side * (rr - (dx + 1) * 0.5 * rr * 1.5)
             z = dz * rr * 0.92
-            yy = y0 + 0.0011 * math.sin(z / rr * 3.0 + ph) + 0.0007 * math.sin(x / rr * 4.0 + ph * 2)
+            yy = y0 + 0.0003 * math.sin(z / rr * 3.0 + ph) + 0.0002 * math.sin(x / rr * 4.0 + ph * 2) + z * tilt
             v.co = Vector((x, yy, z))
     if bend_seed is not None:                      # follow the envelope's bend (same rng draw)
         b = random.Random(bend_seed).uniform(-bend, bend)
@@ -1172,6 +1173,14 @@ INTERIOR_HANDOFF = dict(
     fog_power=1.1,
     exposure=0.4,
     sarcomere=0.024,
+    # builder parameters both shots must use unchanged (sh09 measured fibre_r by ray-cast: 0.193)
+    fibre_c=(0.0105, 0.02),
+    fibre_r=0.193,
+    y_half=0.45,
+    # the probe's interior light (parented to the camera) and the camera's handheld noise: identical
+    # in both shots so the f1250 camera matrix (incl. handheld) and lighting match exactly
+    probe=dict(energy=0.12, color=(0.8, 0.92, 0.95), offset=(0.0, 0.015, 0.0), radius=0.01),
+    handheld=dict(amp_loc=0.0004, amp_rot=0.0012, speed=0.5, seed=9),
 )
 
 
@@ -1261,6 +1270,8 @@ def build_fibre_interior(root_name, matrix, fibre_c=(0.0105, 0.02), fibre_r=0.18
                 continue
             if abs(z) < corridor_hw and x < corridor_x:
                 continue
+            if abs(z) < 0.03 and x < -0.12:
+                continue                                  # clear the probe's approach path
             fib_c.append((x, z)); fib_r.append(rng.uniform(0.0064, 0.0076))
     me = tubes_mesh("myofibrils", fib_c, fib_r, -y_half, y_half)
     o = obj_from_mesh("myofibrils", me, m_myo); o.parent = root
@@ -1291,8 +1302,8 @@ def build_fibre_interior(root_name, matrix, fibre_c=(0.0105, 0.02), fibre_r=0.18
     hero = mito_assembly("heroMito0", (0, 0, 0), (0, 0, 0), variant=10, length=0.024, width=0.007, parent=root, m_cr=m_cr)
     for i, hp in enumerate(((0.004, 0.026, 0.009), (0.005, -0.025, -0.008))):
         mito_assembly(f"heroMito{i + 1}", hp, (0.1 * i, 0.4, 0.1), variant=11 + i, length=0.02, width=0.006, parent=root, m_cr=m_cr)
-    gl = C.point_light("mitoGlow", power=0.02, radius=0.004, kelvin_k=2600)
-    gl.parent = root; gl.location = (-0.006, 0, 0)
+    gl = C.point_light("mitoGlow", power=0.02, radius=0.003, kelvin_k=2600)
+    gl.parent = root; gl.location = (0, 0, 0)
     gl.data.specular_factor = 0.0; gl.visible_camera = False; gl.visible_glossy = False
     # out-of-focus foreground mitochondria inside the end frustum (camera at cam_local, looking +X)
     cx = H["cam_local"][0]
@@ -1324,24 +1335,19 @@ def build_fibre_interior(root_name, matrix, fibre_c=(0.0105, 0.02), fibre_r=0.18
             if rng.random() < 0.35:
                 continue
             y = k * sarc + rng.uniform(-0.001, 0.001)
+            if x < 0.0 and abs(y + 0.0019) < 0.02 and abs(z) < 0.03:
+                continue                                  # no SR within ~2 cm of the camera path
             ring = _bm.ops.create_circle(bm, segments=14, radius=r + 0.0022)
             for v in ring["verts"]:
                 v.co = Vector((x + v.co.x * rng.uniform(0.92, 1.08), y + rng.uniform(-0.0008, 0.0008), z + v.co.y * rng.uniform(0.92, 1.08)))
-            if rng.random() < 0.5:
-                ang = rng.uniform(0, 6.28)
-                p0 = Vector((x + (r + 0.0022) * math.cos(ang), y, z + (r + 0.0022) * math.sin(ang)))
-                vp = bm.verts.new(p0)
-                for j in range(1, 7):
-                    pj = p0 + Vector((0.0008 * math.sin(j * 1.3 + ang), sarc * j / 6, 0.0008 * math.cos(j * 1.1)))
-                    vj = bm.verts.new(pj); bm.edges.new((vp, vj)); vp = vj
     sme = bpy.data.meshes.new("SR"); bm.to_mesh(sme); bm.free()
     so = obj_from_mesh("SR", sme); so.parent = root
-    m_sr = mat_wet_tissue("SR", base=(0.62, 0.66, 0.66), sss_radius=(0.8, 1, 1), sss_scale=0.002, rough=0.35, coat=0.0)[0]
+    m_sr = mat_wet_tissue("SR", base=(0.42, 0.26, 0.25), sss_radius=(0.8, 1, 1), sss_scale=0.002, rough=0.35, coat=0.0)[0]
     for n_ in m_sr.node_tree.nodes:
         if n_.type == "BSDF_PRINCIPLED":
             n_.inputs["Alpha"].default_value = 0.3
     fog_wrap(m_sr)
-    tubes_from_edges(so, radius=0.0005, mat=m_sr)
+    tubes_from_edges(so, radius=0.0003, mat=m_sr)
     # glycogen granules: dark, matte, many depths, only inside the fibre, clear of the corridor
     cs, rs = [], []
     while len(cs) < n_granules:
