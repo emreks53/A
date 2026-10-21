@@ -353,6 +353,10 @@ def run(shot_id, build):
         sc.render.filepath = os.path.join(d, f"{shot_id}_#####")
         sc.render.use_overwrite = False      # resumable: skip frames already on disk
         sc.render.use_placeholder = True
+        for f in range(f_from, f_to + 1, sc.frame_step):   # stale 0-byte placeholders of an interrupted run
+            p = os.path.join(d, f"{shot_id}_{f:05d}.png")
+            if os.path.exists(p) and os.path.getsize(p) == 0:
+                os.remove(p)
         stamps = []
         bpy.app.handlers.render_pre.append(lambda *_: stamps.append(time.time()))
         t_r = time.time()
