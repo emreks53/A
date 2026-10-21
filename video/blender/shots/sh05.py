@@ -77,7 +77,7 @@ def build_lights(ctx, t_allah):
         nt.links.new(wv.outputs[0], mp.inputs[0]); nt.links.new(mp.outputs[0], vo.inputs["Vector"])
         vo.inputs["W"].default_value = 0.0
         vo.inputs["W"].keyframe_insert("default_value", frame=0)
-        vo.inputs["W"].default_value = wspeed * 100
+        vo.inputs["W"].default_value = wspeed * 100 / scale     # Cycles multiplies W by Scale: wspeed = cells/s
         vo.inputs["W"].keyframe_insert("default_value", frame=100 * 24)
         mr = nt.nodes.new("ShaderNodeMapRange"); mr.inputs["From Min"].default_value = 0.0
         mr.inputs["From Max"].default_value = sharp; mr.inputs["To Min"].default_value = 1.0
