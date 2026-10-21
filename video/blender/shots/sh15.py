@@ -941,7 +941,8 @@ RAHLE_TB = 0.016
 SOZ_POS = Vector((0.30, 0.10, 0.0))    # closed Sozler lying on the table (camA), in the beam
 SOZ_YAW = math.radians(90 - 9)
 B_NEAR = 0.04          # camB leaf flips: focus 4 cm nearer than the page, on the turning leaves (review 2)
-E_DROP = 0.04          # camE: both position keys 4 cm lower -> red spines show beside the rahle (review 2)
+# camE (review 2 item 7): offsets of both position keys (down, camera-left) and of the look-at target (+x, +y)
+E_OFS = [float(v) for v in os.environ.get("SH15_E", "0.04,0,0,0").split(",")]
 
 # ----------------------------------------------------------------------------- node helpers
 
@@ -3087,10 +3088,15 @@ def build(ctx):
         (fD / C.FPS - 0.30, V((0.04, -0.20, 0.37)), V((-0.42, -0.14, 0.27)), V((-0.36, -0.14, 0.24))),
         (fE / C.FPS + 0.30, V((-0.02, -0.12, 0.36)), V((-0.42, -0.12, 0.27)), V((-0.36, -0.13, 0.24))),
     ], fD - 6, fE + 6, seed=14, ends=(0.3, 0.3))
-    camE = rig_camera("camE", 28, 4.0, [
-        (fE / C.FPS - 0.30, V((0.20, -0.42, 0.56 - E_DROP)), V((-0.53, -0.02, 0.30)), V((-0.38, -0.13, 0.24))),
-        (ctx.t1 + 0.30, V((0.09, -0.46, 0.49 - E_DROP)), V((-0.52, -0.01, 0.285)), V((-0.38, -0.14, 0.23))),
-    ], fE - 6, ctx.f1 + 2, seed=15, ends=(0.4, 0.0))
+    e_down, e_left, e_ax, e_ay = E_OFS
+    e_keys = []
+    for t, p_, a_, f_ in ((fE / C.FPS - 0.30, V((0.20, -0.42, 0.56)), V((-0.53, -0.02, 0.30)), V((-0.38, -0.13, 0.24))),
+                          (ctx.t1 + 0.30, V((0.09, -0.46, 0.49)), V((-0.52, -0.01, 0.285)), V((-0.38, -0.14, 0.23)))):
+        lv = V((0, 0, 1)).cross(a_ - p_)
+        lv.z = 0.0
+        lv.normalize()                       # camera-left, horizontal
+        e_keys.append((t, p_ + lv * e_left - V((0, 0, e_down)), a_ + V((e_ax, e_ay, 0.0)), f_))
+    camE = rig_camera("camE", 28, 4.0, e_keys, fE - 6, ctx.f1 + 2, seed=15, ends=(0.4, 0.0))
     for name, f, cam in (("A", ctx.f0, camA), ("B", fB, camB), ("C", fC, camC), ("D", fD, camD), ("E", fE, camE)):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
         mk.camera = cam
