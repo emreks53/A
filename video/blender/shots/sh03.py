@@ -143,7 +143,7 @@ def build(ctx):
     S.perf_settings(light_tree=False, fast_gi=False)
     # the glass/water macro; the deep paths stay on until the glass has left the frame (326), so the
     # bounce switch never lands on the hero glass (QA r3: a 292|293 switch popped -8.5 levels on the glass)
-    S.frame_bounces(248, 326, glossy=4, transmission=12, max_b=12)
+    S.frame_bounces(225, 326, glossy=4, transmission=12, max_b=12)   # whole time the glass is on screen (QA r5: no switch on the glass at 247|248)
     return S.RENDER_OV
 
 
