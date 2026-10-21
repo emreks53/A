@@ -506,8 +506,7 @@ def build(ctx):
     gk_veil = tuple((f, g * g) for f, g in gk)            # dust only really lifts in the gust
     layers = ((0.022, 0.95, 1.5, 5.0, False, 1.15),        # ribbons hugging the ground
               (0.04, 0.16, 3.0, 2.5, True, 1.4),            # stacked lifted-dust veil cards
-              (0.15, 0.10, 4.5, 2.0, True, 1.7),
-              (0.40, 0.06, 6.0, 1.6, True, 2.0))
+              (0.18, 0.13, 5.0, 1.8, True, 1.8))
     for i, (z, gain, feat, stretch, veil, tm) in enumerate(layers):
         bpy.ops.mesh.primitive_plane_add(size=44, location=(0, 4, z))
         sh = bpy.context.object
@@ -550,7 +549,7 @@ def build(ctx):
         for o in sc.objects:
             if o.name.startswith(pre):
                 o.hide_render = True
-    return {"final_spp": int(os.environ.get("S8_FSPP", 16)), "final_threshold": 0.03, "preview_spp": 24, "max_bounces": 3, "diffuse_bounces": 1, "glossy_bounces": 1,
+    return {"final_spp": 12, "final_threshold": 0.03, "preview_spp": 24, "max_bounces": 3, "diffuse_bounces": 1, "glossy_bounces": 1,
             "transmission_bounces": 2, "texture_limit": os.environ.get("S8_TL", "4096")}
 
 
