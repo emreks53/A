@@ -566,6 +566,78 @@
    "from": 2466,
    "to": 2506,
    "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b40",
+   "branch": "render-src",
+   "ref": "d5c9b2e5e6dfd55eb1887c7757ecb21619f733b5",
+   "shot": "sh15",
+   "from": 2629,
+   "to": 2686,
+   "note": "sh15 rev 3.1 approved; camA crane, 10 spp"
+  },
+  {
+   "node": "b41",
+   "branch": "render-src",
+   "ref": "d5c9b2e5e6dfd55eb1887c7757ecb21619f733b5",
+   "shot": "sh15",
+   "from": 2687,
+   "to": 2704,
+   "note": "sh15 rev 3.1 approved; cover hold, 24 spp (starts on the settings key)"
+  },
+  {
+   "node": "b42",
+   "branch": "render-src",
+   "ref": "d5c9b2e5e6dfd55eb1887c7757ecb21619f733b5",
+   "shot": "sh15",
+   "from": 2705,
+   "to": 2721,
+   "note": "sh15 rev 3.1 approved; cover hold, 24 spp"
+  },
+  {
+   "node": "b43",
+   "branch": "render-src",
+   "ref": "d5c9b2e5e6dfd55eb1887c7757ecb21619f733b5",
+   "shot": "sh15",
+   "from": 2722,
+   "to": 2777,
+   "note": "sh15 rev 3.1 approved; camB, 5 spp (starts on the settings key)"
+  },
+  {
+   "node": "b44",
+   "branch": "render-src",
+   "ref": "d5c9b2e5e6dfd55eb1887c7757ecb21619f733b5",
+   "shot": "sh15",
+   "from": 2778,
+   "to": 2813,
+   "note": "sh15 rev 3.1 approved; camC"
+  },
+  {
+   "node": "b45",
+   "branch": "render-src",
+   "ref": "d5c9b2e5e6dfd55eb1887c7757ecb21619f733b5",
+   "shot": "sh15",
+   "from": 2814,
+   "to": 2878,
+   "note": "sh15 rev 3.1 approved; camD"
+  },
+  {
+   "node": "b46",
+   "branch": "render-src",
+   "ref": "d5c9b2e5e6dfd55eb1887c7757ecb21619f733b5",
+   "shot": "sh15",
+   "from": 2879,
+   "to": 2944,
+   "note": "sh15 rev 3.1 approved; camE"
+  },
+  {
+   "node": "b47",
+   "branch": "render-src",
+   "ref": "d5c9b2e5e6dfd55eb1887c7757ecb21619f733b5",
+   "shot": "sh15",
+   "from": 2945,
+   "to": 3011,
+   "note": "sh15 rev 3.1 approved; camE"
   }
  ]
 }
