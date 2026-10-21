@@ -63,6 +63,7 @@ def build(ctx):
     t_hand = ctx.word("hiçbirine")
     prev = None
     mats = {}
+    hold_fix = {}
     for f in range(ctx.f0 - 2, ctx.f1 + 3):
         t = f / C.FPS
         s = C.remap(t, t_desc0, t_desc1, C.smoother)
@@ -78,6 +79,7 @@ def build(ctx):
         # aim: at the plant, then (hand) tilting up toward the sun
         aim_plant = (T + Vector((0, 0, 0.012 * s)) - pos).normalized()
         if s < 1e-4:
+            hold_aim = aim_plant
             aim_plant = Vector((0, 0, -1))
         u = C.remap(t, t_hand - 1.3, t_hand + 0.15, C.smoother)   # look up to the sun first, then the hand rises
         pos.z += 0.085 * u                       # the camera rises a little with the reach (room for the arm)
@@ -90,6 +92,8 @@ def build(ctx):
         if abs(fwd.dot(upv)) > 0.999:
             upv = h
         M = look_matrix(pos, fwd, upv)
+        if s < 1e-4:   # rotation taking the straight-down hold onto the plant aim (applied below)
+            hold_fix[f] = (look_matrix(pos, hold_aim, upv).to_3x3() @ M.to_3x3().inverted()).to_euler()
         cam.matrix_world = M
         e = cam.rotation_euler.copy()
         if prev is not None:
@@ -99,6 +103,14 @@ def build(ctx):
         cam.keyframe_insert("location", frame=f)
         cam.keyframe_insert("rotation_euler", frame=f)
         mats[f] = M.copy()
+    # The straight-down hold snapped ~3.5 px onto the plant aim at f400->401.  Aim the hold frames at the
+    # plant too, via a delta rotation that is exactly zero from f400.75 on: f401+ (incl. its shutter-open
+    # motion-blur sample) keep the approved camera untouched.
+    for f, e in hold_fix.items():
+        cam.delta_rotation_euler = e
+        cam.keyframe_insert("delta_rotation_euler", frame=f)
+    cam.delta_rotation_euler = (0, 0, 0)
+    cam.keyframe_insert("delta_rotation_euler", frame=max(hold_fix) + 0.75)
     hand = make_hand(ctx, mats[C.t2f(t_hand + 1.3)])
     for f in range(ctx.f0 - 2, ctx.f1 + 3):
         t = f / C.FPS
@@ -209,7 +221,7 @@ def make_hand(ctx, M):
     t0, t1 = t_hand - 0.12, t_hand + 1.0
     down = (M.to_3x3() @ Vector((0, -1, 0))).normalized()
     toward = (M.to_translation() - wrist).normalized()
-    low = wrist + down * 0.15 + toward * 0.05        # enters from the lower frame edge, close to the lens
+    low = wrist + down * 0.30 + toward * 0.05        # starts fully below the frame edge, close to the lens
     C.key(pivot, "location", ctx.t0, tuple(low))
     # not in the scene before it enters (it would otherwise lurk behind the plant)
     for o_ in [mesh] + list(mesh.children):
@@ -227,6 +239,8 @@ def make_hand(ctx, M):
     # wrist tilts back as the hand rises (reaching), settles stretched
     q1 = R.to_quaternion()
     q0 = (Matrix.Rotation(math.radians(-25), 3, Bw) @ R).to_quaternion()
+    if q0.dot(q1) < 0:                               # same hemisphere: tilt 25 deg, not the long way round
+        q0.negate()
     pivot.rotation_quaternion = q0
     pivot.keyframe_insert("rotation_quaternion", frame=t0 * C.FPS)
     pivot.rotation_quaternion = q1
