@@ -1,4 +1,4 @@
-# sh12 — review round 5 (studio S8)
+# sh12 — review-5 fixes + verification (studio S8)
 
 63.85–74.15 s · render f1526–1785 · "İşte bütün bu ihtiyaçların karşılanması **bir tek** yaratıcının … **ondan başka olamaz**"
 
@@ -49,6 +49,26 @@ curtain under it), TRK_sea, TRK_river, TRK_forest — placed on screen at the se
 * Forest canopy: stronger translucency so backlit crowns glow instead of reading black.
 * Sea: wind patches + wave groups break the sun column up a little.
 * TRK_sun now sits where the rays converge in the plate (x≈548, y≈598 at the settle).
+
+## Review-5 fixes (verification in `verify/`)
+* Emergence: wisps fade with view distance 40→220 m and share a linear alpha key 63.9→65.1; veil clears
+  linearly 63.7→65.1. Lower-half luma f1544–66 is monotonic, max step **9.9/255** (`strip_f1544-1566.jpg`).
+* Exit: pitch-down starts 0.25 s before "Çünkü"; flat last-key handles + constant extrapolation — TRK_river moves
+  **≤1.4 px/f** over f1776–85; exposure −1.0 @72.4 → +0.2 at the cut; haze 1/27k → 1/38k over the last 1.5 s;
+  meadow moved to (560,1750) under the final framing, kept out of cloud shadow, no lone trees inside it,
+  green-gold albedo. **f1780: median luma 98, 81 % of the lower frame G≥R** (`final100_f1780.jpg`,
+  `strip_f1740-1786.jpg`).
+* Near river: bars dark (0.13,0.11,0.08)×aerial_ground_rock, noise-broken, only a few inner bends; water
+  (0.025,0.03,0.02), ripple bump 0.4, 1/40 m roughness patches; ±35 % width over 300–600 m; riparian trees
+  from the waterline (`crop100_f1601.jpg`).
+* Sea: sun specular 0.08, sea Specular 0.2 keyed in 64.75→64.95, 4/m chop bump 0.25.
+* Trackers (settle f1598): sea (690,839) open water, forest (839,1007) dense stand (≥25 trees within 80 m),
+  river (590,1212) on the centreline; build asserts the sea hit / dense stand.
+* Right-peak scree (0.17,0.16,0.14); lone trees −60 % and on drainage lines; forest_c (0.04,0.085,0.03).
+* cached_field keyed by the whole sh12.py + lib_s8.py source, atomic write.
+* **Final 100 %, 7 spp (min 7) + OIDN:** f1600–02 **76.4 s/f**, f1771–73 **84.6 s/f** (incl. the one-time 16k sky
+  load per run); 3-frame 100 % crops `crops100_f1600-1602.jpg`, `crops100_f1771-1773.jpg` — no crawl seen, so
+  7 spp everywhere.
 
 ## Round 5 (director notes, review 4)
 * River rebuilt: meanders with drifting amplitude (200–650 m) and wavelength (1.5–2.8 km — the requested
