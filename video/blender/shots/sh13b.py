@@ -145,6 +145,14 @@ def build(ctx):
     bpy.context.view_layer.update()
     tip = sd["tips"][0]
     tipw = tip.matrix_world.translation.copy()
+    # macro hygiene: no stray scanned grass blade may cross the close-up near the focus plane
+    for o in list(bpy.data.objects):
+        if o.name.startswith("i_") and not o.hide_render:
+            bb = [o.matrix_world @ Vector(c) for c in o.bound_box]
+            lo = Vector([min(v[i] for v in bb) for i in range(3)]); hi = Vector([max(v[i] for v in bb) for i in range(3)])
+            q = Vector([min(max(tipw[i], lo[i]), hi[i]) for i in range(3)])
+            if (q - tipw).length < 0.09:
+                o.hide_render = True
     # dew drop forming at the leaf tip on "gözetip"
     water = C.mat_water("S3_dew")
     dew = L.obj_from_bm("S3_dewdrop", pendant_drop(0.0016), [water])

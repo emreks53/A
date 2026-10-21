@@ -30,7 +30,7 @@ Subjects are placed by solving the camera hold pose in screen space, so the spre
   crawls along a broad weed leaf held up among the grasses; soft out-of-focus grass + one daisy in the
   foreground corners for depth (kept out of the key-word band and the camera path).
 * Richer golden backlight: sun 6.5 (was 5), grass translucency 0.5 → rim on every blade.
-* Macro drop on the leaf tip unchanged (clumps excluded from the seedling's macro framing).
+* Macro drop on the leaf tip unchanged; a stray scanned grass blade that crossed the macro near the focus plane (thin dark line, director check) is removed — any meadow instance within 9 cm of the leaf tip is hidden.
 * Only sh13b.py changed; lib_s3.py (seedling) is identical to the approved commit 1a56381.
 * Render: `--final` steady state frame 2061 ≈ 58 s, macro frame 2121 ≈ 69 s (ceiling 90).
 
