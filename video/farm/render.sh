@@ -34,7 +34,8 @@ while [ "$a" -le "$TO" ]; do
     echo "[render.sh] skip $NAME (already committed)"; a=$((b+1)); continue
   fi
   t0=$(date +%s)
-  blender -b --factory-startup -noaudio --python-exit-code 1 -P "$VIDEO/blender/shots/$SHOT.py" -- --final --from $a --to $b ${RENDER_ARGS:-} \
+  find "$FR" -name "${SHOT}_*.png" -size 0 -delete 2>/dev/null   # stale placeholders from an interrupted run
+  blender -b --factory-startup -noaudio --python-exit-code 1 -P "${SHOTS_DIR:-$VIDEO/blender}/shots/$SHOT.py" -- --final --from $a --to $b ${RENDER_ARGS:-} \
      > "$VIDEO_OUT/render_${SHOT}_$a.log" 2>&1 || { echo "[render.sh] BLENDER FAILED $a-$b (see $VIDEO_OUT/render_${SHOT}_$a.log)"; tail -20 "$VIDEO_OUT/render_${SHOT}_$a.log"; exit 1; }
   # every frame must exist and be non-empty (placeholders are 0 bytes)
   for f in $(seq $a $b); do
