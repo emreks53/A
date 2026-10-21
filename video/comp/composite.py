@@ -533,8 +533,9 @@ def mix(t, A, B, p, w, h):
         lift = 1 + 0.3 * math.sin(math.pi * p)       # a gentle exposure breath as the lens enters the skin
         return soft_shoulder((Az * (1 - wgt) + Bz * wgt) * np.float32(lift), 0.85)
     if ty == "defocus":
-        ra = 18 * (w / 1080) * smoothstep(min(1, p * 1.3))
-        rb = 18 * (w / 1080) * smoothstep(min(1, (1 - p) * 1.3))
+        r = t.get("radius", 18)
+        ra = r * (w / 1080) * smoothstep(min(1, p * 1.3))
+        rb = r * (w / 1080) * smoothstep(min(1, (1 - p) * 1.3))
         return disk_defocus(A, ra, w, h) * (1 - m) + disk_defocus(B, rb, w, h) * m
     if ty == "dip":
         # through black (no lifted floor): A is gone by p ~ 0.4, a beat of black, then B rises like an exposure
