@@ -929,7 +929,7 @@ KAFES_SP = 0.050                                 # slat spacing
 KAFES_SW, KAFES_SD = 0.0150, 0.018               # slat width (in the window plane), depth (along x)
 KAFES_LAYERS = ((0, (1, 1), -0.011), (1, (1, -1), 0.011))
 SHUTTER_X = XO - 0.05                            # roller shutter plane (outside)
-SHUTTER_PITCH, SHUTTER_GAP = 0.042, 0.0012
+SHUTTER_PITCH, SHUTTER_GAP = 0.042, 0.0006
 RAHLE_POS = Vector((-0.38, -0.13, 0.0))   # page-number corner sits in a lattice light patch
 RAHLE_YAW = math.radians(90)          # reader sits at +x, facing the window
 BETA = math.radians(40)
@@ -1237,7 +1237,7 @@ def _paper_and_ink(nt, ink_cov, geo, tone=1.0):
     tonev = maprange(nt, pn.outputs[0], 0.35, 0.65, 0.95, 1.03)
     paper = mixrgb(nt, 1.0, tuple(c * tone for c in PAPER_RGB), tonev, "MULTIPLY")
     ink = maprange(nt, ink_cov, 0.05, 0.75, 0.0, 0.96)
-    col = mixrgb(nt, ink, paper, (0.030, 0.027, 0.025))
+    col = mixrgb(nt, ink, paper, (0.016, 0.014, 0.013))
     rough = maprange(nt, ink, 0, 1, 0.62, 0.42)
     return col, rough, ink
 
@@ -2497,7 +2497,7 @@ def _camera_only(ob):
     ob.visible_volume_scatter = False
 
 
-def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.014):
+def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.010):
     """Light shafts: a few cards that CONTAIN the sun direction (so any pattern on them is a set of
     streaks parallel to the beam), turned toward the main view direction, spread across the beam."""
     s = SUN_DIR
@@ -2527,7 +2527,13 @@ def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.014):
         cols = np.nonzero(coarse.max(axis=0) > 1e-3)[0]
         b0 = -H + 2 * H * max(0, cols[0] - 2) / 512
         b1 = -H + 2 * H * min(512, cols[-1] + 3) / 512
-        msk = sample(b0, b1, NU)
+        msk = sample(b0, b1, NU).reshape(NV, NU)
+        # dust glow integrates the beam over its whole depth: soften the streaks (sigma ~1.2 cm)
+        sig = 0.012 / ((b1 - b0) / NU)
+        r = int(3 * sig)
+        kern = np.exp(-0.5 * (np.arange(-r, r + 1) / sig) ** 2)
+        kern /= kern.sum()
+        msk = np.stack([np.convolve(np.pad(row, r, mode="edge"), kern, mode="valid") for row in msk]).ravel()
         img = bpy.data.images.new("shaftmask_%d" % k, NU, NV, alpha=False, float_buffer=True, is_data=True)
         px = np.zeros((NV * NU, 4), dtype=np.float32)
         px[:, 0] = px[:, 1] = px[:, 2] = msk
@@ -2838,14 +2844,14 @@ def build(ctx):
     nn = V((0.0, -math.sin(BETA), math.cos(BETA)))
     pc = pg - hd * 0.103 - wd * 0.06           # right-hand page centre
     camB = rig_camera("camB", 60, 3.2, [
-        (fB / C.FPS - 0.30, pc + nn * 0.30 - hd * 0.16, pc + hd * 0.085, pc + hd * 0.07, hd),
-        (t_sayfa + 0.30, pg + nn * 0.112 - hd * 0.102 - wd * 0.010, pg + hd * 0.006 - wd * 0.008, pg, hd),
-        (fC / C.FPS + 0.30, pg + nn * 0.106 - hd * 0.097 - wd * 0.012, pg + hd * 0.006 - wd * 0.009, pg, hd),
+        (fB / C.FPS - 0.30, pc + nn * 0.44 - hd * 0.22 + wd * 0.02, pc + hd * 0.085, pc + hd * 0.07, hd),
+        (t_sayfa + 0.30, pg + nn * 0.097 - hd * 0.090 - wd * 0.009, pg + hd * 0.006 - wd * 0.007, pg, hd),
+        (fC / C.FPS + 0.30, pg + nn * 0.092 - hd * 0.086 - wd * 0.011, pg + hd * 0.006 - wd * 0.008, pg, hd),
     ], fB - 6, fC + 6, seed=12, ends=(0.5, 0.3))
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
     camC = rig_camera("camC", 50, 4.0, [
-        (fC / C.FPS - 0.30, V((-0.865, yc - 0.44, 0.176)), V((-0.838, yc, 0.158)), V((-0.840, yc, 0.17))),
-        (fD / C.FPS + 0.30, V((-0.825, yc - 0.44, 0.178)), V((-0.798, yc, 0.158)), V((-0.800, yc, 0.17))),
+        (fC / C.FPS - 0.30, V((-0.765, yc - 0.43, 0.178)), V((-0.842, yc, 0.158)), V((-0.842, yc, 0.17))),
+        (fD / C.FPS + 0.30, V((-0.725, yc - 0.43, 0.180)), V((-0.802, yc, 0.158)), V((-0.802, yc, 0.17))),
     ], fC - 6, fD + 6, seed=13, ends=(0.0, 0.0))
     camD = rig_camera("camD", 40, 2.8, [
         (fD / C.FPS - 0.30, V((0.04, -0.20, 0.37)), V((-0.42, -0.14, 0.27)), V((-0.36, -0.14, 0.24))),
