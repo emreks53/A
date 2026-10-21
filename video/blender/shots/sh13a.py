@@ -77,6 +77,12 @@ def build(ctx):
     rot = L.hdri_rot_for_sun(HDRI_SUN_TEX, SUN_AZ)
     L.world_hdri_sundisc(C.ph_hdri(HDRI, "4k"), rot_z_deg=rot, sun_dir=sun_dir, clamp=30.0, disc_deg=0.53,
                          disc_radiance=6000.0, disc_color=(1.0, 0.72, 0.42), tint=(0.98, 0.72, 0.48), saturation=1.2)
+    # sky warms toward golden-peach near the horizon as the light arrives (glide part unchanged)
+    tint_mix = next(n for n in sc.world.node_tree.nodes if n.type == "MIX" and n.blend_type == "MULTIPLY")
+    for f in range(ctx.f0 - 2, ctx.f1 + 3):
+        w_ = C.remap(f / 24.0, T_RISE + 0.3, T_RISE + 2.8, C.smooth)
+        tint_mix.inputs[7].default_value = (0.98, 0.72 - 0.08 * w_, 0.48 - 0.11 * w_, 1)
+        tint_mix.inputs[7].keyframe_insert("default_value", frame=f)
     sun = C.sun(elev_deg=SUN_ELEV, azim_deg=SUN_AZ + 90, strength=26.0, kelvin_k=3000, angle_deg=0.6)
     sun.data.color = (1.0, 0.62, 0.30)
     sun.visible_glossy = False
@@ -100,7 +106,10 @@ def build(ctx):
     # local y in [-0.5, 0.5]*900 m; edge at local y = 0.45 (-> 45 m inside the far side), ragged by noise
     e = L.math_node(nt, "MULTIPLY_ADD", nz.outputs["Fac"], 0.03, sp.outputs[1])
     a = L.math_node(nt, "SUBTRACT", 0.45, e)
-    alpha = L.math_node(nt, "MULTIPLY", a, 60.0, clamp=True)
+    alpha_n = nt.nodes.new("ShaderNodeMath"); alpha_n.operation = "MULTIPLY"; alpha_n.use_clamp = True
+    nt.links.new(a, alpha_n.inputs[0])
+    alpha = alpha_n.outputs[0]
+    soft_sock = alpha_n.inputs[1]
     # patchy interior (broken cloud) so the shade is dappled, not flat
     nz2 = nt.nodes.new("ShaderNodeTexNoise"); nz2.inputs["Scale"].default_value = 0.06; nz2.inputs["Detail"].default_value = 3
     nt.links.new(tc.outputs["Object"], nz2.inputs["Vector"])
@@ -118,20 +127,23 @@ def build(ctx):
         cl.keyframe_insert("location", frame=f)
     for f in range(ctx.f0 - 2, ctx.f1 + 3):
         t = f / 24.0
-        kk = C.remap(t, T_RISE - 0.1, T_RISE + 2.6, C.smooth)
-        cloud_key(f, 9.0 + 0.25 * (t - T0) - 26.0 * kk)
+        kk = C.remap(t, T_RISE - 0.1, T_RISE + 2.8, C.smooth)
+        cloud_key(f, 9.0 + 0.25 * (t - T0) - 70.0 * kk)
+        # edge softness: 15 m penumbra during the glide (unchanged), widening to a ~90 m soft warm wash
+        soft_sock.default_value = 60.0 + (11.0 - 60.0) * C.remap(t, T_RISE, T_RISE + 1.0, C.smooth)
+        soft_sock.keyframe_insert("default_value", frame=f)
     for fc in C.fcurves(cl):
         for kp in fc.keyframe_points:
             kp.interpolation = "LINEAR"
 
     # ------------------------------------------------------------------ ground: gently rolling terrain
     bm = bmesh.new()
-    bmesh.ops.create_grid(bm, x_segments=220, y_segments=220, size=80.0, calc_uvs=True)
+    bmesh.ops.create_grid(bm, x_segments=240, y_segments=240, size=170.0, calc_uvs=True)
     for v in bm.verts:
-        v.co.y += 40.0
+        v.co.y += 110.0
         v.co.z = hgt(v.co.x, v.co.y)
     gp = L.bm_to_obj("Ground", bm, [], smooth=True)
-    gm = C.mat_from_textures("Ground", C.ph_texture("sparse_grass", "2k"), scale=60.0, base_tint=(0.75, 0.72, 0.5))
+    gm = C.mat_from_textures("Ground", C.ph_texture("sparse_grass", "2k"), scale=127.0, base_tint=(0.75, 0.72, 0.5))
     C.assign(gp, gm)
 
     # ------------------------------------------------------------------ grass variants
@@ -171,7 +183,7 @@ def build(ctx):
                 return True
         return False
     # blades: dense near the glide path, culled to what any camera frame can see
-    for (n, xs, y0, y1, smin, smax) in ((22000, 3.0, -1.0, 9.0, 0.7, 1.25), (9000, 9.0, 9.0, 30.0, 0.9, 1.5)):
+    for (n, xs, y0, y1, smin, smax) in ((17000, 3.0, -1.0, 9.0, 0.75, 1.3), (8000, 9.0, 9.0, 30.0, 0.9, 1.5)):
         for _ in range(n):
             p = Vector((prng.uniform(-xs, xs), prng.uniform(y0, y1), 0.0))
             if near_path(p, 0.03):
@@ -185,7 +197,7 @@ def build(ctx):
             hn = __import__("mathutils").noise.noise(Vector((p.x * 0.35, p.y * 0.35, 7.7)))
             scls.append(prng.uniform(smin, smax) * (0.85 + 0.5 * hn))
     # Poly Haven grass clumps for body/volume, mid and far
-    for (n, xs, y0, y1) in ((6000, 5.0, 0.5, 14.0), (9000, 25.0, 14.0, 45.0)):
+    for (n, xs, y0, y1) in ((5000, 5.0, 0.5, 14.0), (4000, 25.0, 14.0, 45.0)):
         for _ in range(n):
             p = Vector((prng.uniform(-xs, xs), prng.uniform(y0, y1), 0.0))
             if near_path(p, 0.25):
@@ -199,7 +211,7 @@ def build(ctx):
     field = L.point_cloud("MeadowField", pts, {"vidx": ("INT", vidx), "rot": ("FLOAT_VECTOR", rots), "scl": ("FLOAT", scls)})
     L.gn_instancer(field, inst, sway=0.06, sway_scale=0.8, sway_speed=0.35, name="MeadowInst", clock=clock)
     pfield = L.point_cloud("PHField", ppts, {"vidx": ("INT", pvidx), "rot": ("FLOAT_VECTOR", prots), "scl": ("FLOAT", pscls)})
-    L.gn_instancer(pfield, gcol, sway=0.03, sway_scale=0.6, sway_speed=0.35, name="PHInst", clock=clock)
+    L.gn_instancer(pfield, gcol, name="PHInst")   # static: no per-frame rebuild
     for o in (field, pfield):
         o.cycles.use_motion_blur = False
     L.key_clock(clock, [(f, f / 24.0) for f in range(ctx.f0 - 2, ctx.f1 + 3)])
@@ -236,8 +248,8 @@ def build(ctx):
     fpts, fvidx, frots, fscls = [], [], [], []
     from mathutils import noise as mn
     groups = [list(range(0, 6)), list(range(6, 10)), list(range(10, 13)), list(range(13, 18)), list(range(18, nfl))]
-    gdens = [1.0, 1.4, 0.8, 0.9, 0.5]
-    for _ in range(46000):
+    gdens = [1.0, 0.85, 0.9, 1.0, 0.6]
+    for _ in range(36000):
         p = Vector((prng.uniform(-12, 12), prng.uniform(-0.5, 40), 0.0))
         # each species grows in its own drifts/patches, with bare gaps between
         vals = [mn.noise(Vector((p.x * 0.22, p.y * 0.22, 3.3 + 11.0 * g))) for g in range(len(groups))]
@@ -265,39 +277,49 @@ def build(ctx):
 
     # ------------------------------------------------------------------ shrubs + trees at the forest edge
     shr = [o for o in C.ph_model("shrub_02", "1k") if o.type == "MESH"]
-    trees = [o for o in C.ph_model("island_tree_02", "1k") if o.type == "MESH"] + \
-            [o for o in C.ph_model("tree_small_02", "1k") if o.type == "MESH"]
-    for o in shr + trees:
+    tree_srcs = []
+    for nm in ("island_tree_02", "tree_small_02", "searsia_lucida"):
+        objs = [o for o in C.ph_model(nm, "1k") if o.type == "MESH"]
+        tree_srcs.append(max(objs, key=lambda o: o.dimensions.z))
+        for o in objs:
+            o.hide_render = True; o.hide_viewport = True
+    trees = tree_srcs
+    for o in shr:
         o.hide_render = True; o.hide_viewport = True
     trng = random.Random(3)
     # forest edge on the LEFT and far-left: with the sun low ahead-right its long shadows fall away from the
     # meadow we look across; the right side stays open toward the sun.
-    def place(src, loc, s, sz=1.0):
+    def place(src, loc, height, sz=1.0):
         o = src.copy(); sc.collection.objects.link(o); o.hide_render = False; o.hide_viewport = False
         o.location = (loc[0], loc[1], hgt(loc[0], loc[1]) - 0.1)
         o.rotation_euler = (0, 0, trng.uniform(0, 6.28))
-        o.scale = (s, s, s * sz)
-    for i in range(44):
-        y = trng.uniform(24, 95)
-        x = -9 - 0.25 * (y - 24) * trng.uniform(0.2, 1.0) - trng.uniform(0, 25)
-        place(trees[i % len(trees)], (x, y, 0), trng.uniform(2.0, 3.6) if i % len(trees) == 0 else trng.uniform(1.0, 1.6),
-              trng.uniform(1.0, 1.4))
-    for i in range(22):
-        place(trees[i % len(trees)], (trng.uniform(-60, 5), trng.uniform(110, 150), 0), trng.uniform(2.4, 3.8), 1.2)
+        k_ = height / max(0.5, src.dimensions.z)
+        o.scale = (k_ * sz, k_ * sz, k_)
+    # forest edge as irregular clumps of mixed species and heights, with open gaps between clumps
+    for c in range(11):
+        cy = 22 + c * 7.5 + trng.uniform(-3, 3)
+        cx = -10 - 0.3 * (cy - 22) - trng.uniform(0, 14)
+        n = trng.randint(2, 7)
+        rad = trng.uniform(3, 9)
+        for k_ in range(n):
+            a = trng.uniform(0, 6.28); r = rad * math.sqrt(trng.random())
+            place(trng.choice(trees), (cx + r * math.cos(a), cy + r * math.sin(a), 0), trng.uniform(7, 21), trng.uniform(0.8, 1.3))
+    # deep forest behind (two more layers, larger), increasingly hazy
+    for i in range(45):
+        place(trng.choice(trees), (trng.uniform(-120, 15), trng.uniform(95, 190), 0), trng.uniform(12, 26), trng.uniform(0.9, 1.3))
     for i in range(40):
         y = trng.uniform(18, 70)
-        place(shr[i % len(shr)], (trng.uniform(-14, -5) - 0.15 * (y - 18), y, 0), trng.uniform(1.1, 2.0))
+        place(shr[i % len(shr)], (trng.uniform(-14, -5) - 0.15 * (y - 18), y, 0), trng.uniform(1.5, 3.5))
     for i in range(8):
-        place(shr[i % len(shr)], (trng.uniform(4, 30), trng.uniform(40, 90), 0), trng.uniform(1.0, 1.8))
-    # a continuous forest mass behind the edge (fills gaps, depth layers) and two lone meadow trees
-    for i in range(60):
-        place(trees[i % len(trees)], (trng.uniform(-110, 10), trng.uniform(95, 170), 0),
-              trng.uniform(2.6, 4.2) if i % len(trees) == 0 else trng.uniform(1.3, 2.0), trng.uniform(1.0, 1.5))
-    place(trees[0], (16, 46, 0), 3.0, 1.15)
-    place(trees[1], (-4, 62, 0), 1.6, 1.2)
+        place(shr[i % len(shr)], (trng.uniform(4, 30), trng.uniform(40, 90), 0), trng.uniform(1.5, 3.0))
+    # mid-ground and lone trees in the meadow
+    # (sun is low ahead-right: anything right of / in front of the view would throw 60-90 m shadows over
+    #  the meadow, so mid-ground trees stand on the left where their shadows fall away)
+    place(trees[2], (-11, 30, 0), 8.0)
+    place(trees[1], (-15, 40, 0), 11.0)
     # aerial perspective on everything far (camera-ray distance fog toward the warm horizon colour)
     for ms_ in {m_ for o in shr + trees for m_ in o.data.materials}:
-        L.aerial_haze(ms_, color=(1.0, 0.76, 0.56), dist0=220.0, strength=2.6)
+        L.aerial_haze(ms_, color=(1.0, 0.74, 0.52), dist0=420.0, strength=1.4)
 
     # ------------------------------------------------------------------ butterflies
     brng = random.Random(8)
@@ -376,11 +398,23 @@ def build(ctx):
         for o in bpy.data.objects:
             if o.name.startswith(pre):
                 o.hide_render = True
-    ov = {"final_spp": 8, "final_threshold": 0.05, "preview_spp": 24, "transmission_bounces": 4, "max_bounces": 5,
+    ov = {"final_spp": 6, "final_res": 90, "final_threshold": 0.05, "preview_spp": 24, "transmission_bounces": 4, "max_bounces": 5,
           "glossy_bounces": 2, "diffuse_bounces": 1, "transparent_bounces": 8, "clamp_indirect": 6.0}
     for kk, v in json.loads(os.environ.get("S1_OV", "{}")).items():
         ov[kk] = v
     return ov
 
 
+# final-resolution override (director allows < 100 % for defocus-heavy shots; post upscales to 1080x1920).
+# common.configure_render has no such key, so wrap it here (common.py itself is untouched).
+_orig_configure = C.configure_render
+
+
+def _configure(mode, ov):
+    _orig_configure(mode, ov)
+    if mode == "final" and ov.get("final_res"):
+        bpy.context.scene.render.resolution_percentage = int(ov["final_res"])
+
+
+C.configure_render = _configure
 C.run("sh13a", build)
