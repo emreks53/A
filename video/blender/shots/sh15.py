@@ -2534,7 +2534,9 @@ def mat_beam(name, strength, color, path_len=True, phase_g=0.55, fade_table=True
         dn = NN(nt, "ShaderNodeVectorMath", operation="DOT_PRODUCT")
         LK(nt, geo.outputs["Incoming"], dn.inputs[0]); LK(nt, geo.outputs["Normal"], dn.inputs[1])
         mu2 = math_node(nt, "MULTIPLY", dn.outputs["Value"], dn.outputs["Value"])
-        val = math_node(nt, "MULTIPLY", val, math_node(nt, "MULTIPLY", math_node(nt, "MULTIPLY", mu2, mu2), vb=3.0))
+        prof = math_node(nt, "MULTIPLY", mu2, mu2) if MOTE_PROF == 4 else mu2 if MOTE_PROF == 2 else None
+        val = math_node(nt, "MULTIPLY", val, math_node(nt, "MULTIPLY", prof, vb=(MOTE_PROF + 2) / 2.0)) \
+            if prof is not None else val
         # key-word band y 520-820 px (window y 0.573-0.729) kept clear of motes while band_clear = 1
         tc = NN(nt, "ShaderNodeTexCoord")
         sw = NN(nt, "ShaderNodeSeparateXYZ")
@@ -2623,6 +2625,8 @@ def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.016):
 
 
 MOTE_R = (0.000010, 0.000040)      # physical mote radius: 20-80 um diameter (review 2 item 5)
+MOTE_PX = float(os.environ.get("SH15_MOTE_PX", "1.0"))   # minimum sprite radius in pixels
+MOTE_PROF = int(os.environ.get("SH15_MOTE_PROF", "4"))     # radial profile (n+2)/2 * mu^n, n = 4/2/0
 
 
 def camera_table(sc, cams, f0, f1):
@@ -2748,7 +2752,7 @@ def build_motes(cam_tab, n=380, seed=7, strength=200.0, near=None, band=None):
     r_in = N.new("GeometryNodeInputNamedAttribute"); r_in.data_type = "FLOAT"
     r_in.inputs["Name"].default_value = "r_phys"
     rp = r_in.outputs["Attribute"]
-    r_px = mth("MULTIPLY", mth("MULTIPLY", d, vals["pix"].outputs[0]), 1.0)
+    r_px = mth("MULTIPLY", mth("MULTIPLY", d, vals["pix"].outputs[0]), MOTE_PX)
     cone = mth("DIVIDE", mth("MULTIPLY", vals["aper"].outputs[0], mth("ABSOLUTE", mth("SUBTRACT", d, vals["sfoc"].outputs[0]))),
                vals["sfoc"].outputs[0])
     R = mth("MAXIMUM", rp, mth("MAXIMUM", r_px, mth("MULTIPLY", cone, 0.3)))
