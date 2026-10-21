@@ -97,7 +97,7 @@ def height_field(X, Y):
     rough = (L.fbm(n1, X / 420 + 2.5, Y / 420, 4) * 16 + L.fbm(n1, X / 140 + 0.5, Y / 140, 4) * 7 +
              L.fbm(n2, X / 35, Y / 35, 3) * 2.0)
     h = h + rough * np.clip(h / 300, 0.15, 1) * (D > rw * 1.5)
-    return h, river, D, T, land
+    return h, river, D - rw, T, land        # D returned as distance from the river bank
 
 
 def wedge_grid(rows, cols, y0, y1, half0, spread_deg, pw=2.2):
@@ -256,6 +256,11 @@ def terrain_material():
     wv.inputs["Detail Scale"].default_value = 1.5
     nb.l(pos, wv.inputs["Vector"])
     rock = nb.mixc(nb.math("ADD", nb.math("MULTIPLY", wv.outputs["Fac"], 0.6), nb.math("MULTIPLY", n_fine, 0.4)), rock_a, rock_b)
+    # scrub/grass patches clinging to the rock, darker gullies, pale scree fans
+    n_veg = nb.noise(pos, 1 / 55.0, 3, 0.6)
+    rock = nb.mixc(nb.math("MULTIPLY", nb.mapr(n_veg, 0.48, 0.62), nb.mapr(nz, 0.45, 0.75)), rock, (0.05, 0.075, 0.03))
+    rock = nb.mixc(nb.mapr(nb.noise(pos, 1 / 160.0, 3, 0.6), 0.58, 0.7), rock, (0.30, 0.28, 0.25))
+    rock = nb.mixc(1.0, rock, nb.mixc(nb.noise(pos, 1 / 25.0, 2, 0.5), (0.6, 0.6, 0.6), (1.3, 1.3, 1.3)), blend="MULTIPLY")
     col = nb.mixc(steep2, col, rock)
     # gravel bars and bare banks along the river, beaches on the coast
     bank = nb.math("MULTIPLY", nb.mapr(river, 0.02, 0.2), nb.mapr(river, 0.6, 0.35))
@@ -366,12 +371,15 @@ def build_terrain(ctx):
     dhy = np.gradient(h, axis=0) / np.maximum(np.gradient(Y, axis=0), 1e-3)
     dhx = np.gradient(h, axis=1) / np.maximum(np.gradient(X, axis=1), 1e-3)
     slope = np.sqrt(dhx ** 2 + dhy ** 2)
-    forest = np.clip((fn + 0.12) * 4, 0, 1) * sm((1500 - h) / 300) * sm((h - 4) / 20) * sm((D - 45) / 60)
+    forest = np.clip((fn + 0.12) * 4, 0, 1) * sm((1500 - h) / 300) * sm((h - 4) / 20) * sm((D - 30) / 60)
     forest *= sm((0.85 - slope) / 0.25)
+    # riparian woodland: a dense, slightly broken belt of trees lining both banks
+    rip = np.exp(-((D - 22) / 10) ** 2) * sm((D - 9) / 6) * np.clip(0.55 + 0.8 * L.fbm(n5, X / 250 + 3, Y / 250, 3), 0, 1)
+    forest = np.maximum(forest, rip * (h > 1.5) * (Y < 12500))
     meadow_c = np.exp(-(((X - 1300) / 650) ** 2 + ((Y - 3000) / 750) ** 2))
     meadow = np.clip(meadow_c * 1.6 - 0.1 + 0.3 * L.fbm(n5, X / 300, Y / 300, 3), 0, 1)
     forest = forest * (1 - meadow)
-    openm = np.clip(1 - forest * 1.4, 0, 1) * sm((h - 6) / 10) * sm((D - 60) / 40) * sm((0.7 - slope) / 0.2)
+    openm = np.clip(1 - forest * 1.4, 0, 1) * sm((h - 6) / 10) * sm((D - 25) / 30) * sm((0.7 - slope) / 0.2)
     openm = openm * np.clip(0.5 + 0.9 * L.fbm(n5, X / 700 + 9, Y / 700, 3), 0, 1)
     Z = h - curv(X, Y)
     ob = L.grid_mesh("Terrain", X, Y, Z, {"h": h, "forest": forest, "meadow": meadow, "river": river})
@@ -468,7 +476,7 @@ def build_trees(ctx, grid):
     rs = np.random.RandomState(99)
     pts = []
     # bands of distance: density per m^2 falls with distance (far trees are sub-pixel anyway)
-    for (ya, yb, dens) in ((-600, 2500, 1 / 55.0), (2500, 5000, 1 / 75.0), (5000, 8000, 1 / 120.0), (8000, 12500, 1 / 260.0)):
+    for (ya, yb, dens) in ((-600, 2500, 1 / 70.0), (2500, 5000, 1 / 95.0), (5000, 8000, 1 / 150.0), (8000, 12500, 1 / 320.0)):
         half_b = 1500 + (yb + 1200) * math.tan(math.radians(31))
         area = (yb - ya) * 2 * half_b
         n = int(area * dens)
@@ -849,7 +857,7 @@ def rain_card(name, x, y, z0, z1, width, seed, strength):
     neg = nb.n("ShaderNodeVectorMath", operation="SCALE"); neg.inputs["Scale"].default_value = -1.0
     nb.l(geo.outputs["Incoming"], neg.inputs[0])
     col = env_color(nb, neg.outputs[0], MODE[0], image=haze_lut())
-    col = nb.mixc(1.0, col, (0.55, 0.56, 0.60), blend="MULTIPLY")
+    col = nb.mixc(1.0, col, (0.50, 0.51, 0.56), blend="MULTIPLY")
     em = nb.n("ShaderNodeEmission", inputs={"Strength": SKY_STRENGTH})
     nb.l(col, em.inputs["Color"])
     tr = nb.n("ShaderNodeBsdfTransparent")
@@ -895,10 +903,10 @@ def build(ctx):
     sloc, srot = (0, -430, 1730), (78.0, 0, 0.0)
     # rain curtains under the HDRI cloud bases (left bank and the big cumulus on the right)
     for i, (sx, sy_top, w, dist, a) in enumerate(() if os.environ.get("S8_NORAIN") else (
-            (250, 650, 2600, 30000, 0.55), (430, 660, 1200, 32000, 0.4), (880, 590, 3000, 30000, 0.6))):
+            (900, 590, 3600, 30000, 0.95), (980, 575, 1800, 31000, 0.6))):
         p = screen_point(sloc, srot, sx, sy_top, dist)
         rain_card(f"Rain{i}", p.x, p.y, -100 - curv(p.x, p.y), p.z + 200, w, i * 1.7, a)
-        if i == 2:
+        if i == 0:
             C.empty("TRK_rain", (p.x, p.y, (p.z - curv(p.x, p.y)) * 0.45))
     C.empty("TRK_cloud", tuple(screen_point(sloc, srot, 905, 430, 30000)))
     # ground trackers: ray-cast through chosen pixels of the settle frame
@@ -938,7 +946,7 @@ def build(ctx):
         for o in sc.objects:
             if o.name.startswith(pre):
                 o.hide_render = True
-    return {"final_spp": int(os.environ.get("S8_FSPP", 8)), "final_threshold": 0.05, "preview_spp": 24,
+    return {"final_spp": int(os.environ.get("S8_FSPP", 7)), "final_threshold": 0.05, "preview_spp": 24,
             "max_bounces": 3, "diffuse_bounces": 1, "glossy_bounces": 1, "transparent_bounces": 32,
             "transmission_bounces": 2, "texture_limit": "2048"}
 
