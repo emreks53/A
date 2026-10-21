@@ -141,7 +141,9 @@ def build(ctx):
     C.handheld(cam, amp_loc=0.0008, amp_rot=0.0, speed=0.3, seed=5)
     S.comp_sunbeams(ctx, cam, beams=False, bloom=0.05, bloom_threshold=3.0)
     S.perf_settings(light_tree=False, fast_gi=False)
-    S.frame_bounces(248, 292, glossy=4, transmission=12, max_b=12)   # the glass/water macro
+    # the glass/water macro; the deep paths stay on until the glass has left the frame (326), so the
+    # bounce switch never lands on the hero glass (QA r3: a 292|293 switch popped -8.5 levels on the glass)
+    S.frame_bounces(248, 326, glossy=4, transmission=12, max_b=12)
     return S.RENDER_OV
 
 
