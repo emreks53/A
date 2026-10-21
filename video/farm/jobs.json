@@ -692,6 +692,24 @@
    "from": 2424,
    "to": 2461,
    "note": "QA r4: real flame core + smooth halo"
+  },
+  {
+   "node": "b54",
+   "branch": "render-jobs",
+   "ref": "4e8a13db13d9be273c8458a92915e1d36b262429",
+   "shot": "sh03",
+   "from": 225,
+   "to": 236,
+   "note": "backup split of b49 (sh03 225-247 deep bounces, window 225-326 so any start inside is deep)"
+  },
+  {
+   "node": "b55",
+   "branch": "render-jobs",
+   "ref": "4e8a13db13d9be273c8458a92915e1d36b262429",
+   "shot": "sh03",
+   "from": 237,
+   "to": 247,
+   "note": "backup split of b49 (sh03 225-247 deep bounces, window 225-326 so any start inside is deep)"
   }
  ]
 }
