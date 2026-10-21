@@ -241,8 +241,9 @@ def _has_visible_column(d, name):
 def make_track(shot, name, fallback, f_lo, f_hi, warn, sig_fine=0.6, sig_label=6.0, keep_depth=False,
                safe=None, clamp_inset=None):
     """Per-frame screen path for frames [f_lo, f_hi): exact (lightly smoothed) x,y; heavily smoothed xs,ys for
-    labels; soft visibility v (0 when behind the camera, fading out over 60 px before the point leaves the safe
-    area). clamp_inset: instead of fading, the point glides to a stop that many px inside the safe area (for
+    labels; soft visibility v (0 when the tracker is not visible - behind the camera or outside the frame -, fading
+    out over 60 px before the point leaves the safe area). Positions come only from visible samples (held /
+    interpolated across the rest). clamp_inset: instead of fading, the point glides to a stop that many px inside the safe area (for
     diffuse subjects such as air, where a held anchor is still true)."""
     frames = np.arange(f_lo, f_hi)
     t = frames / FPS
