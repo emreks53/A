@@ -1216,8 +1216,8 @@ def page_ink(nt, num, uv):
     LK(nt, sep.outputs[0], hv.inputs[0])
     LK(nt, maprange(nt, sep.outputs[1], 1 - HEAD_H / PAGE_H, 1.0, 0.0, 1.0, clamp=False), hv.inputs[1])
     head = mask_lod(nt, os.path.join(d, "head_%d.png" % num), hv.outputs[0])
-    soft = img_node(nt, os.path.join(d, "body_%d_soft.png" % num), True, vec=uv, ext="CLIP", interp="Cubic")
-    xsoft = img_node(nt, os.path.join(d, "body_%d_xsoft.png" % num), True, vec=uv, ext="CLIP", interp="Cubic")
+    soft = img_node(nt, os.path.join(d, "body_%d_soft.png" % num), True, vec=uv, ext="CLIP", interp="Linear")
+    xsoft = img_node(nt, os.path.join(d, "body_%d_xsoft.png" % num), True, vec=uv, ext="CLIP", interp="Linear")
     # the closer the camera, the stronger the pre-blur (keeps the blur roughly constant on screen, so
     # the body never becomes legible in the macro shots)
     cd = NN(nt, "ShaderNodeCameraData")
@@ -1225,7 +1225,7 @@ def page_ink(nt, num, uv):
     mx = NN(nt, "ShaderNodeMix"); mx.data_type = "FLOAT"
     LK(nt, fsoft, mx.inputs[0]); LK(nt, xsoft.outputs[0], mx.inputs[2]); LK(nt, soft.outputs[0], mx.inputs[3])
     # blurred print has a lower peak: lift it back to a believable ink density
-    lift = maprange(nt, fsoft, 0.0, 1.0, 1.9, 1.0)
+    lift = maprange(nt, fsoft, 0.0, 1.0, 1.45, 1.0)
     bk = math_node(nt, "MINIMUM", math_node(nt, "MULTIPLY", mx.outputs[0], lift), vb=1.0)
     bk = maprange(nt, bk, 0.02, 0.62, 0.0, 0.88)
     return math_node(nt, "MAXIMUM", head, bk)
@@ -1668,7 +1668,7 @@ def _extrude_outline(bm, outline, t0, t1, uv, uvr_fn):
     return faces
 
 
-def carve_panels(name, M, mat, relief_path, step=0.0009, depth=0.0024):
+def carve_panels(name, M, mat, relief_path, step=0.0013, depth=0.0024):
     """Real displaced geometry for the carved panels on both faces of one board (board-local frame
     l, y, t; M = board world matrix)."""
     RW, tb = RAHLE_W, RAHLE_TB
@@ -2497,7 +2497,7 @@ def _camera_only(ob):
     ob.visible_volume_scatter = False
 
 
-def build_shafts(view_dir, n_cards=3, spacing=0.15, strength=0.016):
+def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.014):
     """Light shafts: a few cards that CONTAIN the sun direction (so any pattern on them is a set of
     streaks parallel to the beam), turned toward the main view direction, spread across the beam."""
     s = SUN_DIR
@@ -2546,7 +2546,7 @@ def build_shafts(view_dir, n_cards=3, spacing=0.15, strength=0.016):
     return obs
 
 
-def build_motes(n=650, seed=7, strength=3.0):
+def build_motes(n=480, seed=7, strength=3.0):
     """Dust motes in (and around) the beam corridor: tiny camera-only points that glow only where the
     analytic beam mask says the sun reaches them (forward-scatter phase), invisible in shade."""
     rng = random.Random(seed)
@@ -2758,7 +2758,7 @@ def build(ctx):
         MATS["page_%d" % num] = mat_page("page_%d" % num, num)
     for k in range(4):
         MATS["leaf_%d" % k] = mat_leaf("leaf_%d" % k, 727 - 2 * k, 728 - 2 * k)
-    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.62, 0.38, 0.22), val=0.66, sat=1.25,
+    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.62, 0.38, 0.22), val=0.74, sat=1.25,
                              rough=(0.50, 0.74), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
                              grain_rot=math.pi / 2, wear=0.35, spec=0.22)
     MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7), uvmap=True)
@@ -2839,8 +2839,8 @@ def build(ctx):
     pc = pg - hd * 0.103 - wd * 0.06           # right-hand page centre
     camB = rig_camera("camB", 60, 3.2, [
         (fB / C.FPS - 0.30, pc + nn * 0.30 - hd * 0.20, pc + hd * 0.03, pc + hd * 0.05, hd),
-        (t_sayfa + 0.30, pg + nn * 0.155 - hd * 0.070 - wd * 0.010, pg + hd * 0.004 - wd * 0.008, pg, hd),
-        (fC / C.FPS + 0.30, pg + nn * 0.147 - hd * 0.066 - wd * 0.012, pg + hd * 0.004 - wd * 0.009, pg, hd),
+        (t_sayfa + 0.30, pg + nn * 0.112 - hd * 0.102 - wd * 0.010, pg + hd * 0.006 - wd * 0.008, pg, hd),
+        (fC / C.FPS + 0.30, pg + nn * 0.106 - hd * 0.097 - wd * 0.012, pg + hd * 0.006 - wd * 0.009, pg, hd),
     ], fB - 6, fC + 6, seed=12, ends=(0.5, 0.3))
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
     camC = rig_camera("camC", 50, 4.0, [
@@ -2851,16 +2851,16 @@ def build(ctx):
         (fD / C.FPS - 0.30, V((0.04, -0.20, 0.37)), V((-0.42, -0.14, 0.27)), V((-0.36, -0.14, 0.24))),
         (fE / C.FPS + 0.30, V((-0.02, -0.12, 0.36)), V((-0.42, -0.12, 0.27)), V((-0.36, -0.13, 0.24))),
     ], fD - 6, fE + 6, seed=14, ends=(0.3, 0.3))
-    camE = rig_camera("camE", 30, 4.0, [
-        (fE / C.FPS - 0.30, V((0.16, -0.50, 0.54)), V((-0.52, 0.0, 0.30)), V((-0.38, -0.12, 0.24))),
-        (ctx.t1 + 0.30, V((0.06, -0.43, 0.50)), V((-0.52, 0.0, 0.30)), V((-0.38, -0.12, 0.24))),
+    camE = rig_camera("camE", 28, 4.0, [
+        (fE / C.FPS - 0.30, V((0.20, -0.42, 0.56)), V((-0.53, -0.02, 0.30)), V((-0.38, -0.13, 0.24))),
+        (ctx.t1 + 0.30, V((0.09, -0.46, 0.49)), V((-0.52, -0.01, 0.285)), V((-0.38, -0.14, 0.23))),
     ], fE - 6, ctx.f1 + 2, seed=15, ends=(0.4, 0.0))
     for name, f, cam in (("A", ctx.f0, camA), ("B", fB, camB), ("C", fC, camC), ("D", fD, camD), ("E", fE, camE)):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
         mk.camera = cam
     sc.camera = camA
     # per-camera exposure (one continuous room: every camera within ~1 stop)
-    EXPO = {"A": 0.35, "B": 0.0, "C": 0.45, "D": -0.15, "E": 0.0}
+    EXPO = {"A": 0.65, "B": -0.05, "C": 1.10, "D": -0.50, "E": 0.05}
     key_const(sc.view_settings, "exposure", [(ctx.f0 - 10, EXPO["A"]), (fB, EXPO["B"]), (fC, EXPO["C"]), (fD, EXPO["D"]), (fE, EXPO["E"])])
     dbg = os.environ.get("SH15_CAM")          # debug view: "px,py,pz,ax,ay,az,lens[,fstop,fx,fy,fz]"
     if dbg:
@@ -2876,6 +2876,8 @@ def build(ctx):
     # so this is applied from a render_pre handler.)
     def _static_seed(*_):
         bpy.context.scene.cycles.use_animated_seed = False
+        # 3 lights only: the light tree costs ~7 % per sample here and buys nothing
+        bpy.context.scene.cycles.use_light_tree = bool(os.environ.get("SH15_LIGHTTREE"))
     if not os.environ.get("SH15_ANIMSEED"):
         bpy.app.handlers.render_pre.append(_static_seed)
     if os.environ.get("SH15_NODENOISE"):
