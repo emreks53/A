@@ -647,6 +647,15 @@
    "from": 293,
    "to": 326,
    "note": "QA r3: deep bounces kept to f326 (glass leaves frame); must start at 293 and run as one job"
+  },
+  {
+   "node": "b49",
+   "branch": "render-jobs",
+   "ref": "4e8a13db13d9be273c8458a92915e1d36b262429",
+   "shot": "sh03",
+   "from": 225,
+   "to": 247,
+   "note": "QA r5: deep bounces from the shot start; one job starting at 225"
   }
  ]
 }
