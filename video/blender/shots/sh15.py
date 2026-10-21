@@ -1171,7 +1171,7 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0, g
     LK(nt, nmix.outputs[1], bump.inputs["Normal"])
     LK(nt, bump.outputs[0], leather.inputs["Normal"])
     gn = noise(nt, geo.outputs["Position"], 900.0, 1.0, 0.6)
-    gr = maprange(nt, gn.outputs[0], 0.3, 0.7, *[float(v) for v in os.environ.get("SH15_TMP_GR", "0.09,0.22").split(",")])
+    gr = maprange(nt, gn.outputs[0], 0.3, 0.7, 0.09, 0.22)
     gcol = mixrgb(nt, maprange(nt, gn.outputs[0], 0.3, 0.7, 0.0, 1.0), GOLD_RGB, GOLD_RGB2)
     gold = principled(nt, **{"Base Color": gcol, "Metallic": 1.0, "Roughness": gr, "Normal": bump.outputs[0],
                              "Specular Tint": (1.0, 0.9, 0.7)})
@@ -3050,7 +3050,7 @@ def build(ctx):
         camA.data.lens = ln
         camA.data.keyframe_insert("lens", frame=t * C.FPS)
     # ... and opens up (f/2.8 for the wide room -> f/1.4 on the cover)
-    for t, fs in ((ctx.t0, 2.8), (t_bu + 0.95, 2.2), (t_soz + 0.35, float(os.environ.get("SH15_TMP_AFS", "1.4")))):
+    for t, fs in ((ctx.t0, 2.8), (t_bu + 0.95, 2.2), (t_soz + 0.35, 1.4)):
         camA.data.dof.aperture_fstop = fs
         camA.data.dof.keyframe_insert("aperture_fstop", frame=t * C.FPS)
     sc.frame_set(f_721 + 10)                   # (the tracker is parked below the floor before f_721)
@@ -3149,10 +3149,14 @@ def build(ctx):
     ov = {"final_spp": 5, "final_threshold": 0.03, "final_min_spp": 5, "preview_spp": 16,
           "diffuse_bounces": 1, "glossy_bounces": 1, "transmission_bounces": 2, "transparent_bounces": 8,
           "max_bounces": 3, "clamp_indirect": 2.0, "texture_limit": "4096",
-          # camA (the hero cover, frames < fB): more samples and a tamed gold-foil glint (review 2)
-          "camA_spp": 10, "camA_clamp_direct": 10.0, "camA_filter_glossy": 1.5}
+          # camA (frames < fB): more samples and a tamed gold-foil glint (review 2). The cover hold (from the
+          # "Sozler" cut-in, frame 2687, to the A>B cut) gets 24 spp: the foil glyphs mirror the kafes window
+          # through a 0.09-0.22 roughness lobe, and the motion-compensated change of the subtitle detail
+          # (2700-2702) measured 6.4 % at 10 spp, 7.1 % at 12, 6.3 % at 16, 5.8 % at 20 and 4.5 % at 24.
+          "camA_spp": 10, "camA_hold_spp": 24, "camA_clamp_direct": 10.0, "camA_filter_glossy": 1.5}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
     static_seed = not os.environ.get("SH15_ANIMSEED")
+    f_hold = int(round(t_soz * C.FPS))              # 2687: the cover is framed on "Sozler"
     nodenoise = bool(os.environ.get("SH15_NODENOISE"))
 
     def _per_frame(*_):
@@ -3167,17 +3171,17 @@ def build(ctx):
             cy.use_light_tree = bool(os.environ.get("SH15_LIGHTTREE"))
         if nodenoise:
             cy.use_denoising = False
-        if os.environ.get("SH15_TMP_PAT"):
-            cy.sampling_pattern = os.environ["SH15_TMP_PAT"]
         if ctx.mode == "final":
             a = scn.frame_current < fB
-            spp = int(ov["camA_spp"] if a else ov["final_spp"])
+            hold = f_hold <= scn.frame_current < fB
+            spp = int(ov["camA_hold_spp"] if hold else ov["camA_spp"] if a else ov["final_spp"])
             cy.samples = spp
             cy.adaptive_min_samples = spp
             cy.sample_clamp_direct = float(ov["camA_clamp_direct"] if a else ov.get("clamp_direct", 0.0))
             cy.blur_glossy = float(ov["camA_filter_glossy"] if a else ov.get("filter_glossy", 1.0))
             print("[sh15] frame %d: %s spp=%d clamp_direct=%.1f filter_glossy=%.2f" % (
-                scn.frame_current, "camA" if a else "B-E", spp, cy.sample_clamp_direct, cy.blur_glossy), flush=True)
+                scn.frame_current, "camA hold" if hold else "camA" if a else "B-E", spp, cy.sample_clamp_direct,
+                cy.blur_glossy), flush=True)
     bpy.app.handlers.render_pre.append(_per_frame)
     return ov
 
