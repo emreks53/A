@@ -50,6 +50,15 @@ curtain under it), TRK_sea, TRK_river, TRK_forest — placed on screen at the se
 * Sea: wind patches + wave groups break the sun column up a little.
 * TRK_sun now sits where the rays converge in the plate (x≈548, y≈598 at the settle).
 
+## Approval fix (commit 7b409ab)
+* Straight seam at y≈790–800 through the exit: it was a real 20–40 m terrain step on the medial line between two
+  meander loops (valley floor/plain width were driven by the nearest-point parameter T, which jumps there).
+  Valley shaping now uses world Y (smooth everywhere); the roughness gate near the banks is a smoothstep instead
+  of a hard cut. Meadow: the scan's pale rock/decal patches are clamped so they read as grass.
+* Verify: `verify/final100_f1760.jpg`, `verify/final100_f1780.jpg` (100 %, 7 spp min 7; single-frame runs
+  131–139 s incl. 16k sky load + sync), `verify/strip50_f1740-1786.jpg` (every frame), settle still
+  `sh12_t066.600.png` re-rendered.
+
 ## Review-5 fixes (verification in `verify/`)
 * Emergence: wisps fade with view distance 40→220 m and share a linear alpha key 63.9→65.1; veil clears
   linearly 63.7→65.1. Lower-half luma f1544–66 is monotonic, max step **9.9/255** (`strip_f1544-1566.jpg`).
