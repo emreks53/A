@@ -75,3 +75,15 @@ bubble string over the sunlit bed). This version (stills in this folder): **42.3
    (864×1536; the director allows this for mostly-defocus shots, post upscales).
    **Measured: 67.2 s/frame** (frames 636–638, the heaviest). I checked a 100 % crop of a defocused area across
    these 3 frames: clean, no blotches.
+
+## Opening rework (v4, director note "sh05 v3")
+* Sun elevation is 74°, so the Snell's window fills the opening frame and the dark TIR region is pushed to the
+  bottom edge. Steeper capillary chop makes the sun shatter into many sparkling glints. A forward-scatter halo
+  on the surface (camera rays only: tight hot core + soft glow) and a faint 6-point streak glare keyed to the
+  opening give a hot round core with a soft burst.
+* 18 extra shafts placed around the opening camera, so god rays stream down past the lens and converge on the
+  sun; they intensify on "Allah" (gain ×1.7), then fade before the tilt ends.
+* Two elodea crowns are silhouetted at the bottom edge; the camera passes beside them in the tilt.
+  Particulate specks catch the light.
+* Measured (80 % res, 12 spp, ACCURATE denoise): **39.1 s** (f560, opening) and **67.1 s/frame** (f636–638,
+  heaviest).
