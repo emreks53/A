@@ -1,5 +1,24 @@
 # sh10 — out of the cell into countless cells (52.10–58.00 s) · studio S7
 
+## v5 (review-4 notes)
+1. Opens inside sh09's fibre interior (shared builder, same seeds, materials, haze, exposure);
+   frame 1250 is identical to sh09's (hero mito at ~535,844). Old mito cloud / ER / granules gone.
+   Interior frames 1244–1310 render at 8 spp like sh09 (frame handler), the field at 16 spp.
+2. The sheet under the dome is holed; a full copy replaces it once the dome starts fading (no
+   cyan bars inside, no black hole).
+3. Probe light off over t_exit−0.35…−0.05; the membrane fades when < 3 mm from the lens (no flash
+   / fog wall); focus sits on the film for the crossing frames (bilayer thin-film sheen).
+4. Dome + interior fade to transparent over 12 frames (shared fade group), then stop rendering.
+5. ~35 % of cells light (per-cell gate; the ~10 nearest always), unlit stay blue-grey; void
+   (0.004, 0.009, 0.013); amber key off by 54.6; emission 1.3 × (0.6–1.6), colour (1, 0.40, 0.06);
+   rise 0.15 s, decay to ~30 % (τ 0.25 s); near set within 2.9 m one after another; far front
+   t = t_bilmediğimiz + 0.30 ln(1 + d/6) + 0.10 jitter → an amber ring rolls over dark tissue.
+6. Membranes 0.02 wide, emission only; dome bump 0.12, fine bump 0.02; 1–3 small oval peripheral
+   nuclei per polygon (muscle cross-section); granular glow; compositor Fog Glow (CPU).
+7. Camera elevation/look offsets settle at t_hadsiz − 0.15; band stays dark from 55.95.
+8. Exit: sparse glints, haze 3× longer and cooling to sh11 grey.
+Minor: TRK_cells on screen from frame 1320.
+
 ## v4 (director pivot — tissue honeycomb)
 * The field is now ONE continuous tissue sheet shaded like a confocal micrograph: 2-D Voronoi
   polygonal cells (varied size), thin bright membranes, darker nucleus, translucent dim

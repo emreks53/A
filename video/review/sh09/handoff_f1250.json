@@ -1,0 +1,12 @@
+{
+  "frame": 1250,
+  "source": "lib_s7.INTERIOR_HANDOFF + lib_s7.build_fibre_interior(seed=909) - used by sh09 (end) and sh10 (start)",
+  "interior_frame": "hero mitochondrion at local origin; myofibrils along local +Y; probe looks along local +X",
+  "sh09_world": {"interior_origin": [0.4595, 1.86, -0.02], "local_to_world": "translation only"},
+  "sh10_world": {"interior_origin": [-0.55, 0.0, 0.44], "local_to_world": "X->X, Y->Z, Z->-Y"},
+  "camera_local": [-0.030, -0.0019, 0.0],
+  "lens_mm": 35, "fstop": 16.0, "focus_m": 0.0265,
+  "haze": {"color": [0.070, 0.035, 0.035], "dist": 0.14, "power": 1.1},
+  "exposure": 0.4,
+  "TRK_mito_px": {"sh09": [535.1, 843.7]}
+}

@@ -551,9 +551,9 @@ def mat_mito(name="Mito", glow=(1.0, 0.36, 0.07), strength=4.0, fog=None, hero=F
     return m
 
 
-def mito_mesh(name, length=0.03, width=0.011, seed=0, bend=0.15):
+def mito_mesh(name, length=0.03, width=0.011, seed=0, bend=0.15, lumps=0.06):
     """Elongated, slightly bent and lumpy mitochondrion (local long axis = Y)."""
-    me = blob_mesh(name, radius=1.0, sub=4, seed=seed, amp=0.06, freq=1.3, squash=(width / 2, length / 2, width / 2 * 0.9))
+    me = blob_mesh(name, radius=1.0, sub=4, seed=seed, amp=lumps, freq=1.3, squash=(width / 2, length / 2, width / 2 * 0.9))
     rng = random.Random(seed)
     b = rng.uniform(-bend, bend)
     for v in me.vertices:
@@ -563,7 +563,7 @@ def mito_mesh(name, length=0.03, width=0.011, seed=0, bend=0.15):
     return me
 
 
-def cristae_mesh(name, length=0.03, width=0.011, n=11, seed=0):
+def cristae_mesh(name, length=0.03, width=0.011, n=11, seed=0, bend_seed=None, bend=0.0, rfac=0.75):
     """Inner-membrane folds (lamellar cristae): smooth, gently undulating shelves across the long
     axis (local Y), alternately rooted on either side wall and reaching ~75 % across. Solidify it."""
     import bmesh as _bm
@@ -571,7 +571,7 @@ def cristae_mesh(name, length=0.03, width=0.011, n=11, seed=0):
     bm = _bm.new()
     for i in range(n):
         y0 = (-0.40 + 0.80 * (i + 0.5) / n) * length + rng.uniform(-0.08, 0.08) * length / n
-        rr = width / 2 * 0.84 * math.sqrt(max(0.05, 1 - (y0 / (length / 2)) ** 2))
+        rr = width / 2 * rfac * math.sqrt(max(0.05, 1 - (y0 / (length / 2)) ** 2))
         side = 1 if i % 2 else -1
         g = _bm.ops.create_grid(bm, x_segments=10, y_segments=10, size=1.0)
         ph = rng.uniform(0, 6.28)
@@ -582,6 +582,11 @@ def cristae_mesh(name, length=0.03, width=0.011, n=11, seed=0):
             z = dz * rr * 0.92
             yy = y0 + 0.0011 * math.sin(z / rr * 3.0 + ph) + 0.0007 * math.sin(x / rr * 4.0 + ph * 2)
             v.co = Vector((x, yy, z))
+    if bend_seed is not None:                      # follow the envelope's bend (same rng draw)
+        b = random.Random(bend_seed).uniform(-bend, bend)
+        for v in bm.verts:
+            yn = v.co.y / (length / 2)
+            v.co.x += b * width * (1 - yn * yn)
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me); bm.free()
     for p in me.polygons:
@@ -593,9 +598,9 @@ def mat_mito_envelope():
     """Translucent double membrane: amber SSS film, more opaque at grazing angles (membrane rim),
     see-through in the middle so the 3D cristae read."""
     m, nt, p = mat_wet_tissue("MitoEnvelope", base=(0.55, 0.26, 0.09), sss_radius=(1.0, 0.55, 0.25), sss_scale=0.003,
-                              rough=0.32, coat=0.7, coat_rough=0.1)
+                              rough=0.38, coat=0.0, coat_rough=0.1)
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.35
-    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.55; al.inputs["To Max"].default_value = 0.92
+    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.35; al.inputs["To Max"].default_value = 0.55
     nt.links.new(lw.outputs["Facing"], al.inputs["Value"])
     nt.links.new(al.outputs[0], p.inputs["Alpha"])
     tc = _n(nt, "ShaderNodeTexCoord")
@@ -606,8 +611,10 @@ def mat_mito_envelope():
     return m
 
 
-def mat_cristae_sss():
-    """Cristae folds: warm amber SSS with a faint, slowly humming inner glow (no stripes)."""
+def mat_cristae_sss(wave=None):
+    """Cristae folds: warm amber SSS with a faint, slowly humming inner glow (no stripes).
+    wave = dict(t0, speed, origin (Vector), axis (Vector), width, gain): an amber energy wave
+    travelling along `axis` through the mitochondria (world space)."""
     m, nt, p = mat_wet_tissue("CristaeSSS", base=(0.42, 0.17, 0.05), sss_radius=(1.0, 0.5, 0.2), sss_scale=0.002,
                               rough=0.45, coat=0.25, coat_rough=0.25)
     tv = time_value(nt)
@@ -621,7 +628,29 @@ def mat_cristae_sss():
     st = _n(nt, "ShaderNodeMapRange"); st.inputs["To Min"].default_value = 0.12; st.inputs["To Max"].default_value = 0.45
     nt.links.new(hum.outputs["Fac"], st.inputs["Value"])
     p.inputs["Emission Color"].default_value = (1.0, 0.42, 0.1, 1)
-    nt.links.new(st.outputs[0], p.inputs["Emission Strength"])
+    em = st.outputs[0]
+    if wave:
+        geo = _n(nt, "ShaderNodeNewGeometry")
+        rel = _n(nt, "ShaderNodeVectorMath"); rel.operation = "SUBTRACT"
+        nt.links.new(geo.outputs["Position"], rel.inputs[0]); rel.inputs[1].default_value = tuple(wave["origin"])
+        dp = _n(nt, "ShaderNodeVectorMath"); dp.operation = "DOT_PRODUCT"
+        nt.links.new(rel.outputs[0], dp.inputs[0]); dp.inputs[1].default_value = tuple(wave["axis"])
+        fr = _n(nt, "ShaderNodeMath"); fr.operation = "MULTIPLY_ADD"
+        fr.inputs[1].default_value = wave["speed"]; fr.inputs[2].default_value = -wave["speed"] * wave["t0"]
+        nt.links.new(tv.outputs[0], fr.inputs[0])
+        dd = _n(nt, "ShaderNodeMath"); dd.operation = "SUBTRACT"
+        nt.links.new(dp.outputs["Value"], dd.inputs[0]); nt.links.new(fr.outputs[0], dd.inputs[1])
+        q = _n(nt, "ShaderNodeMath"); q.operation = "DIVIDE"; q.inputs[1].default_value = wave["width"]
+        nt.links.new(dd.outputs[0], q.inputs[0])
+        q2 = _n(nt, "ShaderNodeMath"); q2.operation = "MULTIPLY"; nt.links.new(q.outputs[0], q2.inputs[0]); nt.links.new(q.outputs[0], q2.inputs[1])
+        q3 = _n(nt, "ShaderNodeMath"); q3.operation = "MULTIPLY"; q3.inputs[1].default_value = -1.0; nt.links.new(q2.outputs[0], q3.inputs[0])
+        g = _n(nt, "ShaderNodeMath"); g.operation = "EXPONENT"; nt.links.new(q3.outputs[0], g.inputs[0])
+        g2 = _n(nt, "ShaderNodeMath"); g2.operation = "MULTIPLY_ADD"; g2.inputs[1].default_value = wave["gain"]
+        g2.inputs[2].default_value = 1.0; nt.links.new(g.outputs[0], g2.inputs[0])
+        e2 = _n(nt, "ShaderNodeMath"); e2.operation = "MULTIPLY"
+        nt.links.new(em, e2.inputs[0]); nt.links.new(g2.outputs[0], e2.inputs[1])
+        em = e2.outputs[0]
+    nt.links.new(em, p.inputs["Emission Strength"])
     fog_wrap(m)
     return m
 
@@ -629,21 +658,27 @@ def mat_cristae_sss():
 _MITO_CACHE = {}
 
 
-def mito_assembly(name, loc, rot, variant=0, length=0.03, width=0.011):
-    """A mitochondrion = translucent envelope + solidified 3D cristae, sharing meshes per variant."""
-    key = variant
+def mito_assembly(name, loc, rot, variant=0, length=0.03, width=0.011, parent=None, lumps=0.02, m_cr=None):
+    """A mitochondrion = translucent envelope + solidified 3-D cristae that follow the envelope's
+    bend, sharing meshes per (variant, size)."""
+    key = (variant, round(length, 4), round(width, 4), m_cr.name if m_cr else "")
     if key not in _MITO_CACHE:
-        env = mito_mesh(f"mitoEnv{variant}", length=length, width=width, seed=500 + variant, bend=0.12)
+        tag = f"{variant}_{int(length * 1e4)}_{int(width * 1e4)}"
+        env = mito_mesh(f"mitoEnv{tag}", length=length, width=width, seed=500 + variant, bend=0.12, lumps=lumps)
         env.materials.append(_MITO_CACHE.get("m_env") or _MITO_CACHE.setdefault("m_env", mat_mito_envelope()))
-        cr = cristae_mesh(f"mitoCr{variant}", length=length, width=width, n=int(length / 0.0019), seed=variant)
+        cr = cristae_mesh(f"mitoCr{tag}", length=length, width=width, n=max(5, int(length / 0.0019)), seed=variant,
+                          bend_seed=500 + variant, bend=0.12, rfac=0.75)
         import bmesh as _bm
         bm = _bm.new(); bm.from_mesh(cr)
-        _bm.ops.solidify(bm, geom=bm.faces[:], thickness=0.00045)
+        _bm.ops.solidify(bm, geom=bm.faces[:], thickness=min(0.00045, width * 0.06))
         bm.to_mesh(cr); bm.free()
-        cr.materials.append(_MITO_CACHE.get("m_cr") or _MITO_CACHE.setdefault("m_cr", mat_cristae_sss()))
+        cr.materials.append(m_cr or _MITO_CACHE.get("m_cr") or _MITO_CACHE.setdefault("m_cr", mat_cristae_sss()))
         _MITO_CACHE[key] = (env, cr)
     env, cr = _MITO_CACHE[key]
-    o = obj_from_mesh(name, env, loc=loc)
+    o = obj_from_mesh(name, env)
+    if parent is not None:
+        o.parent = parent
+    o.location = loc
     o.rotation_euler = rot
     c = obj_from_mesh(name + "_cr", cr)
     c.parent = o
@@ -787,12 +822,13 @@ def store_rest(obj):
     at.data.foreach_set("vector", co)
 
 
-def mat_muscle(name="Muscle", fog=None, sarcomere=0.04):
+def mat_muscle(name="Muscle", fog=None, sarcomere=0.04, band_contrast=0.22, zline=0.0, sss_scale=0.04, sheen=0.35,
+               coat=0.5):
     """Skeletal muscle fibre (sarcolemma seen from outside): deep red SSS body, A/I striation bands
     (period = sarcomere length, read from the 'rest' attribute so they bunch on contraction),
     longitudinal myofibril grain, wet glossy coat, warm glow where contracting."""
-    m, nt, p = mat_wet_tissue(name, base=(0.30, 0.035, 0.03), sss_radius=(1.0, 0.3, 0.2), sss_scale=0.04,
-                              rough=0.55, coat=0.5, coat_rough=0.2)
+    m, nt, p = mat_wet_tissue(name, base=(0.30, 0.035, 0.03), sss_radius=(1.0, 0.3, 0.2), sss_scale=sss_scale,
+                              rough=0.55, coat=coat, coat_rough=0.2)
     at = _n(nt, "ShaderNodeAttribute"); at.attribute_name = "rest"
     ac = _n(nt, "ShaderNodeAttribute"); ac.attribute_name = "contract"
     sep = _n(nt, "ShaderNodeSeparateXYZ"); nt.links.new(at.outputs["Vector"], sep.inputs[0])
@@ -821,7 +857,7 @@ def mat_muscle(name="Muscle", fog=None, sarcomere=0.04):
     b = _bump_chain(nt, p, [(band.outputs[0], 0.07), (gn_.outputs["Fac"], 0.12), (big.outputs["Fac"], 0.25),
                             (fz.outputs["Fac"], 0.08)], distance=0.004)
     # glycocalyx: a soft fuzz sheen over the wet membrane
-    p.inputs["Sheen Weight"].default_value = 0.35
+    p.inputs["Sheen Weight"].default_value = sheen
     p.inputs["Sheen Roughness"].default_value = 0.35
     p.inputs["Sheen Tint"].default_value = (1.0, 0.7, 0.6, 1)
     nt.links.new(b.outputs[0], p.inputs["Coat Normal"])
@@ -830,14 +866,31 @@ def mat_muscle(name="Muscle", fog=None, sarcomere=0.04):
     cr = _n(nt, "ShaderNodeValToRGB")
     cr.color_ramp.elements[0].color = (0.17, 0.018, 0.02, 1)
     cr.color_ramp.elements[1].color = (0.38, 0.06, 0.045, 1)
-    mx = _n(nt, "ShaderNodeMath"); mx.operation = "MULTIPLY_ADD"; mx.inputs[1].default_value = 0.22
+    mx = _n(nt, "ShaderNodeMath"); mx.operation = "MULTIPLY_ADD"; mx.inputs[1].default_value = band_contrast
     nt.links.new(band.outputs[0], mx.inputs[0])
     m2 = _n(nt, "ShaderNodeMath"); m2.operation = "MULTIPLY"; m2.inputs[1].default_value = 0.3
     nt.links.new(oi.outputs["Random"], m2.inputs[0]); nt.links.new(m2.outputs[0], mx.inputs[2])
     nt.links.new(mx.outputs[0], cr.inputs[0])
-    nt.links.new(cr.outputs[0], p.inputs["Base Color"])
+    col_out = cr.outputs[0]
+    if zline:
+        # dark Z-lines: sharp peaks of cos(phase) (phase 0 = Z-line)
+        cz = _n(nt, "ShaderNodeMath"); cz.operation = "COSINE"; nt.links.new(ph.outputs[0], cz.inputs[0])
+        cz2 = _n(nt, "ShaderNodeMath"); cz2.operation = "MULTIPLY_ADD"; cz2.inputs[1].default_value = 0.5
+        cz2.inputs[2].default_value = 0.5; nt.links.new(cz.outputs[0], cz2.inputs[0])
+        cz3 = _n(nt, "ShaderNodeMath"); cz3.operation = "POWER"; cz3.inputs[1].default_value = 30.0
+        nt.links.new(cz2.outputs[0], cz3.inputs[0])
+        cz4 = _n(nt, "ShaderNodeMath"); cz4.operation = "MULTIPLY_ADD"; cz4.inputs[1].default_value = -zline
+        cz4.inputs[2].default_value = 1.0; nt.links.new(cz3.outputs[0], cz4.inputs[0])
+        zm = _n(nt, "ShaderNodeMix"); zm.data_type = "RGBA"; zm.blend_type = "MULTIPLY"; zm.inputs[0].default_value = 1.0
+        nt.links.new(col_out, zm.inputs[6])
+        zc = _n(nt, "ShaderNodeCombineColor")
+        for s_ in ("Red", "Green", "Blue"):
+            nt.links.new(cz4.outputs[0], zc.inputs[s_])
+        nt.links.new(zc.outputs[0], zm.inputs[7])
+        col_out = zm.outputs[2]
+    nt.links.new(col_out, p.inputs["Base Color"])
     # contraction glow (warm amber, inner energy)
-    ce = _n(nt, "ShaderNodeMath"); ce.operation = "MULTIPLY"; ce.inputs[1].default_value = 0.9
+    ce = _n(nt, "ShaderNodeMath"); ce.operation = "MULTIPLY"; ce.inputs[1].default_value = 0.3
     nt.links.new(ac.outputs["Fac"], ce.inputs[0])
     p.inputs["Emission Color"].default_value = (1.0, 0.32, 0.08, 1)
     ce2 = _n(nt, "ShaderNodeMath"); ce2.operation = "MULTIPLY"
@@ -1104,3 +1157,203 @@ def mat_er():
     p.inputs["Alpha"].default_value = 0.25
     fog_wrap(m)
     return m
+
+
+# --------------------------------------------------------------------------- shared fibre interior (sh09 end / sh10 start)
+
+# Hand-off state at frame 1250 (cut sh09 -> sh10), in the interior's local frame (hero
+# mitochondrion at the origin, myofibrils along local +Y, camera looking along local +X).
+INTERIOR_HANDOFF = dict(
+    cam_local=(-0.030, -0.0019, 0.0),       # puts the hero mito centre at ~(535, 842) px
+    focus=0.0265,                            # its near envelope
+    fstop=16.0,
+    fog_color=(0.070, 0.035, 0.035),
+    fog_dist=0.14,
+    fog_power=1.1,
+    exposure=0.4,
+    sarcomere=0.024,
+)
+
+
+def _ico_template(sub=1):
+    import bmesh as _bm
+    bm = _bm.new()
+    _bm.ops.create_icosphere(bm, subdivisions=sub, radius=1.0)
+    v = [tuple(x.co) for x in bm.verts]
+    f = [tuple(x.index for x in face.verts) for face in bm.faces]
+    bm.free()
+    return v, f
+
+
+def points_mesh(name, centers, radii, sub=1):
+    """Many tiny spheres in one mesh via numpy + from_pydata (fast build)."""
+    import numpy as np
+    tv, tf = _ico_template(sub)
+    tv = np.array(tv, np.float32); tf = np.array(tf, np.int64)
+    c = np.asarray(centers, np.float32); r = np.asarray(radii, np.float32)
+    verts = (tv[None, :, :] * r[:, None, None] + c[:, None, :]).reshape(-1, 3)
+    faces = (tf[None, :, :] + (np.arange(len(c)) * len(tv))[:, None, None]).reshape(-1, 3)
+    me = bpy.data.meshes.new(name)
+    me.from_pydata(verts.tolist(), [], faces.tolist())
+    me.update()
+    for p in me.polygons:
+        p.use_smooth = True
+    return me
+
+
+def tubes_mesh(name, centers_xz, radii, y0, y1, seg=12):
+    """Open cylinders along local Y (one quad ring per tube) via numpy."""
+    import numpy as np
+    a = np.linspace(0, 2 * np.pi, seg, endpoint=False)
+    ca, sa = np.cos(a), np.sin(a)
+    verts, faces = [], []
+    for k, ((x, z), r) in enumerate(zip(centers_xz, radii)):
+        base = len(verts)
+        for y in (y0, y1):
+            for i in range(seg):
+                verts.append((x + r * ca[i], y, z + r * sa[i]))
+        for i in range(seg):
+            i2 = (i + 1) % seg
+            faces.append((base + i, base + seg + i, base + seg + i2, base + i2))
+    me = bpy.data.meshes.new(name)
+    me.from_pydata(verts, [], faces)
+    me.update()
+    for p in me.polygons:
+        p.use_smooth = True
+    return me
+
+
+def build_fibre_interior(root_name, matrix, fibre_c=(0.0105, 0.02), fibre_r=0.18, seed=909, corridor_x=-0.004,
+                         corridor_hw=0.009, y_half=0.45, n_granules=4000, cristae_wave=None, wall_x=None):
+    """The inside of one skeletal-muscle fibre, built in a LOCAL frame under an empty `root_name`
+    (world = matrix @ local). Local frame: hero mitochondrion at the origin, myofibrils along +Y,
+    the probe looks along +X and arrives through a narrow corridor (x < corridor_x) from the
+    sarcolemma. Shared by sh09 (end) and sh10 (start) so the cut matches exactly.
+    Returns dict(root, objects, hero)."""
+    import numpy as np
+    rng = random.Random(seed)
+    H = INTERIOR_HANDOFF
+    root = bpy.data.objects.new(root_name, None)
+    bpy.context.scene.collection.objects.link(root)
+    root.matrix_world = matrix
+    before = set(bpy.data.objects)
+    fc = Vector((fibre_c[0], 0, fibre_c[1]))
+
+    def inside(x, z, margin=0.0):
+        return (Vector((x, 0, z)) - fc).length < fibre_r - margin
+
+    sarc = H["sarcomere"]
+    # myofibrils: packed hex lattice, translucent softly banded bundles
+    m_myo = mat_muscle("Myofibril", sarcomere=sarc, band_contrast=0.7, zline=0.6, sss_scale=0.005, sheen=0.15, coat=0.0)
+    for n_ in m_myo.node_tree.nodes:
+        if n_.type == "VALTORGB":
+            n_.color_ramp.elements[0].color = (0.30, 0.07, 0.07, 1)
+            n_.color_ramp.elements[1].color = (0.58, 0.18, 0.15, 1)
+    sp = 0.0195
+    # lattice anchored so the origin (hero mitochondrion) sits in a natural gap between 3 myofibrils
+    lat = Vector((-sp * 0.5, 0, -sp * 0.2887))
+    fib_c, fib_r = [], []
+    for a in range(-14, 15):
+        for b in range(-14, 15):
+            x = lat.x + a * sp + b * sp * 0.5
+            z = lat.z + b * sp * 0.866
+            if not inside(x, z, 0.012):
+                continue
+            if abs(z) < corridor_hw and x < corridor_x:
+                continue
+            fib_c.append((x, z)); fib_r.append(rng.uniform(0.0064, 0.0076))
+    me = tubes_mesh("myofibrils", fib_c, fib_r, -y_half, y_half)
+    o = obj_from_mesh("myofibrils", me, m_myo); o.parent = root
+    store_rest(o)
+    # mitochondria: chains in the gaps between myofibrils, centred on the Z-lines
+    m_cr = mat_cristae_sss(wave=cristae_wave)
+    n = 0
+    for a in range(-14, 15):
+        for b in range(-14, 15):
+            x = lat.x + a * sp + b * sp * 0.5 + sp * 0.5
+            z = lat.z + b * sp * 0.866 + sp * 0.2887
+            if not inside(x, z, 0.014):
+                continue
+            if abs(z) < corridor_hw + 0.006 and x < corridor_x + 0.006:
+                continue
+            if abs(z) > 0.08 or x > 0.07:
+                continue                                  # beyond the haze
+            for k in range(-5, 6):
+                if rng.random() < 0.5:
+                    continue
+                y = k * sarc + rng.uniform(-0.0015, 0.0015)
+                if abs(x) < 0.006 and abs(z) < 0.006 and abs(y) < 0.02:
+                    continue                              # the hero sits here
+                mito_assembly(f"mito_{n:04d}", (x, y, z), (rng.uniform(-0.15, 0.15), rng.uniform(0, 6.28), rng.uniform(-0.15, 0.15)),
+                              variant=n % 5, length=0.016, width=0.005, parent=root, m_cr=m_cr)
+                n += 1
+    # hero mitochondrion at the origin + soft warm glow
+    hero = mito_assembly("heroMito0", (0, 0, 0), (0, 0, 0), variant=10, length=0.024, width=0.007, parent=root, m_cr=m_cr)
+    for i, hp in enumerate(((0.004, 0.026, 0.009), (0.005, -0.025, -0.008))):
+        mito_assembly(f"heroMito{i + 1}", hp, (0.1 * i, 0.4, 0.1), variant=11 + i, length=0.02, width=0.006, parent=root, m_cr=m_cr)
+    gl = C.point_light("mitoGlow", power=0.02, radius=0.004, kelvin_k=2600)
+    gl.parent = root; gl.location = (-0.006, 0, 0)
+    gl.data.specular_factor = 0.0; gl.visible_camera = False; gl.visible_glossy = False
+    # out-of-focus foreground mitochondria inside the end frustum (camera at cam_local, looking +X)
+    cx = H["cam_local"][0]
+    for k, (d, sy, sz) in enumerate(((0.018, 0.0088, 0.0049), (0.021, -0.0095, -0.005))):
+        mito_assembly(f"fgMito{k}", (cx + d, sy, sz), (0.2, 0.3 * k, 0.15), variant=k, length=0.016, width=0.005,
+                      parent=root, m_cr=m_cr)
+    # myonuclei: inside the fibre (>= 0.012 from the sarcolemma); one soft at the end-frame edge
+    m_nucl = mat_wet_tissue("Myonucleus", base=(0.20, 0.11, 0.19), sss_radius=(0.7, 0.5, 1.0), sss_scale=0.003,
+                            rough=0.45, coat=0.0)[0]
+    fog_wrap(m_nucl)
+    nuc_pos = [(cx + 0.02, 0.006, 0.0058)]
+    ang0 = math.atan2(-fc.z, -fc.x)
+    for k in range(2):
+        aa = ang0 + (0.5 if k else -0.6)
+        rr = fibre_r - 0.016
+        nuc_pos.append((fc.x + rr * math.cos(aa), (0.05 if k else -0.06), fc.z + rr * math.sin(aa)))
+    for k, pz in enumerate(nuc_pos):
+        nm = blob_mesh(f"myonuc{k}", radius=1.0, sub=4, seed=70 + k, amp=0.06, squash=(0.0035, 0.022, 0.0035))
+        on = obj_from_mesh(f"myonucleus{k}", nm, m_nucl); on.parent = root; on.location = pz
+    # sarcoplasmic reticulum lace: rings at the Z-lines around nearby myofibrils + longitudinal tubules
+    import bmesh as _bm
+    bm = _bm.new()
+    for (x, z), r in zip(fib_c, fib_r):
+        if abs(z) > 0.05 or x > 0.04 or x < -0.12 or rng.random() < 0.4:
+            continue
+        if abs(z) < corridor_hw + 0.012 and x < corridor_x + 0.02:
+            continue
+        for k in range(-4, 5):
+            if rng.random() < 0.35:
+                continue
+            y = k * sarc + rng.uniform(-0.001, 0.001)
+            ring = _bm.ops.create_circle(bm, segments=14, radius=r + 0.0022)
+            for v in ring["verts"]:
+                v.co = Vector((x + v.co.x * rng.uniform(0.92, 1.08), y + rng.uniform(-0.0008, 0.0008), z + v.co.y * rng.uniform(0.92, 1.08)))
+            if rng.random() < 0.5:
+                ang = rng.uniform(0, 6.28)
+                p0 = Vector((x + (r + 0.0022) * math.cos(ang), y, z + (r + 0.0022) * math.sin(ang)))
+                vp = bm.verts.new(p0)
+                for j in range(1, 7):
+                    pj = p0 + Vector((0.0008 * math.sin(j * 1.3 + ang), sarc * j / 6, 0.0008 * math.cos(j * 1.1)))
+                    vj = bm.verts.new(pj); bm.edges.new((vp, vj)); vp = vj
+    sme = bpy.data.meshes.new("SR"); bm.to_mesh(sme); bm.free()
+    so = obj_from_mesh("SR", sme); so.parent = root
+    m_sr = mat_wet_tissue("SR", base=(0.62, 0.66, 0.66), sss_radius=(0.8, 1, 1), sss_scale=0.002, rough=0.35, coat=0.0)[0]
+    for n_ in m_sr.node_tree.nodes:
+        if n_.type == "BSDF_PRINCIPLED":
+            n_.inputs["Alpha"].default_value = 0.3
+    fog_wrap(m_sr)
+    tubes_from_edges(so, radius=0.0005, mat=m_sr)
+    # glycogen granules: dark, matte, many depths, only inside the fibre, clear of the corridor
+    cs, rs = [], []
+    while len(cs) < n_granules:
+        p = (rng.uniform(fc.x - fibre_r, min(0.12, fc.x + fibre_r)), rng.uniform(-0.12, 0.12), rng.uniform(-0.12, 0.1))
+        if not inside(p[0], p[2], 0.012):
+            continue
+        if abs(p[2]) < corridor_hw and abs(p[1]) < corridor_hw and p[0] < -0.004:
+            continue
+        cs.append(p); rs.append(rng.uniform(0.0002, 0.0005))
+    gme = points_mesh("granules", cs, rs)
+    m_gr = mat_wet_tissue("Granule", base=(0.08, 0.07, 0.07), rough=0.7, coat=0.0, sss_scale=0.0005)[0]
+    fog_wrap(m_gr)
+    go = obj_from_mesh("granules", gme, m_gr); go.parent = root
+    objs = [o_ for o_ in bpy.data.objects if o_ not in before and o_.type in ("MESH", "LIGHT")]
+    return dict(root=root, objects=objs, hero=hero, fibrils=len(fib_c), mitos=n)

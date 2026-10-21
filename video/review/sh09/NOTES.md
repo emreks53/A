@@ -1,5 +1,31 @@
 # sh09 — inside the forearm (47.40–52.10 s) · studio S7
 
+## v5 (review-4 notes)
+1. Crossing: the sarcolemma is ray-cast (x = 0.277 at the dive point) and turns translucent
+   (alpha 1 → 0.25 over t_huc−0.1 … +0.35 within ±0.3 of DIVE_Y; glycocalyx bump + fresnel rim kept);
+   the interior is visible through it from t_huc−0.15; the probe crosses at 49.45 and then creeps
+   (no stop) to the hand-off pose; nerve moved to ≥0.15 off the dive path; haze/exposure eased.
+2. Myonuclei and granules are generated only ≥ 0.012 inside the fibre; one nucleus soft at the
+   end-frame edge.
+3. Myofibrils: sarcomere 2.4 µm, band contrast 0.7, dark Z-lines, SSS 0.5 µm, sheen 0.15, no coat;
+   mitochondria sit in rows on the Z-lines.
+4. Hero mito 0.7 µm wide (rows 0.5 µm), lumps 0.02, cristae follow the envelope's bend and stay
+   inside (0.75 r), envelope alpha 0.35–0.55 and no coat; the lattice is anchored so the hero sits
+   in a natural gap with a clear sightline (camera 0.03 away, f/16 at the end); foreground mitos
+   inside the frustum edges.
+5. Hand-off: the whole interior lives in `lib_s7.build_fibre_interior` (same seeds/materials) and
+   `lib_s7.INTERIOR_HANDOFF`; frame 1250 of sh09 and sh10 match exactly (TRK_mito 535,844);
+   `handoff_f1250.json` records camera/haze/exposure.
+6. Endomysium seeds use zlib.crc32 (deterministic across runs).
+7. Build ~4 s (numpy/from_pydata geometry; myofibrils are single-ring tubes, bands in shader).
+8. Impulse starts at the first node actually in frame (t_kas−0.07); node emission 10.
+9. Opening: exposure 1.4 → 0.4 and salmon haze over 1132–1150 (matches sh08's skin push).
+10. Twitch glow 0.3; no teal void at 48.6 (haze stays warm until the dive).
+11. Camera creeps to the last frame; an amber energy wave travels up the mitochondria on
+    "olup bittiğini".
+12. Granules dark/matte; tracker windows: nerve ≤48.7, fibre 48.45–48.85, mito ≥49.9 (outside
+    their window the empties are parked far off-screen, vis = 0).
+
 ## v4 (director pivot — "no empty space")
 * 49.3–52.1: the probe pierces the hero fibre and the frame stays filled with tissue: myofibrils
   packed at 1.95 µm pitch (soft A/I banding, translucent SSS), rows of small mitochondria nestled
