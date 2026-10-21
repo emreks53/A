@@ -28,7 +28,7 @@ import os, sys, math, random, json, subprocess, time, hashlib
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
 import bpy, bmesh
-from mathutils import Vector, Matrix, Euler
+from mathutils import Vector, Matrix
 
 # ============================================================================ constants
 
@@ -684,7 +684,6 @@ def draw_page_body(P, num, rng, W, H):
         free_from = at + nl + 4
 
     def text_block(first_slot, n_lines, indent_first):
-        words = []
         left = n_lines
         paras = []
         while left > 0:
@@ -2662,12 +2661,21 @@ def _hermite(keys, t, idx, ends=(0.0, 0.0)):
     t0, t1 = ts[i], ts[i + 1]
     p0, p1 = keys[i][idx], keys[i + 1][idx]
 
+    def slope(j):
+        return (keys[j + 1][idx] - keys[j][idx]) / (ts[j + 1] - ts[j])
+
     def tangent(j):
         if j == 0:
-            return ends[0] * (keys[1][idx] - keys[0][idx]) / (ts[1] - ts[0])
+            return ends[0] * slope(0)
         if j == len(ts) - 1:
-            return ends[1] * (keys[-1][idx] - keys[-2][idx]) / (ts[-1] - ts[-2])
-        return (keys[j + 1][idx] - keys[j - 1][idx]) / (ts[j + 1] - ts[j - 1])
+            return ends[1] * slope(len(ts) - 2)
+        dl, dr = slope(j - 1), slope(j)
+        if dl * dr <= 0:
+            return 0.0                     # local extremum: stop there, never overshoot
+        m = (keys[j + 1][idx] - keys[j - 1][idx]) / (ts[j + 1] - ts[j - 1])
+        # Fritsch-Carlson limit -> monotone segments (a real rig settles, it does not overshoot)
+        lim = 3.0 * min(abs(dl), abs(dr))
+        return max(-lim, min(lim, m))
     m0, m1 = tangent(i), tangent(i + 1)
     h = t1 - t0
     x = (t - t0) / h
@@ -2880,13 +2888,19 @@ def build(ctx):
     rahle_c = RAHLE_POS + V((0.0, 0.0, 0.20))
     camA = rig_camera("camA", 35, 1.8, [
         (ctx.t0 - 0.30, V((0.95, -0.42, 0.78)), V((-0.40, -0.03, 0.24)), rahle_c),
-        (t_bu + 1.05, V((0.80, -0.16, 0.55)), V((-0.06, 0.07, 0.06)), V((0.05, 0.08, 0.05))),
-        (t_soz, V((0.60, 0.109, 0.31)), V((0.164, 0.106, 0.016)), title),
-        (fB / C.FPS + 0.25, V((0.588, 0.111, 0.300)), V((0.160, 0.107, 0.014)), title),
+        (t_bu + 0.95, V((0.80, -0.16, 0.55)), V((-0.06, 0.07, 0.06)), V((0.05, 0.08, 0.05))),
+        # the cover is framed and readable on "Sozler"; the crane settles over the next ~0.35 s
+        (t_soz + 0.35, V((0.739, 0.110, 0.420)), V((0.041, 0.106, 0.0)), title),
+        (fB / C.FPS + 0.25, V((0.722, 0.112, 0.406)), V((0.037, 0.107, -0.002)), title),
     ], ctx.f0, fB + 6, seed=11, ends=(0.6, 0.3))
+    # the crane ends on a longer focal length (35 -> 50 mm): the sun patches on the table behind the
+    # cover (the key-word band) melt into soft, low-detail bokeh
+    for t, ln in ((t_bu + 0.95, 35.0), (t_soz + 0.35, 50.0)):
+        camA.data.lens = ln
+        camA.data.keyframe_insert("lens", frame=t * C.FPS)
     sc.frame_set(fB + 10)
     bpy.context.view_layer.update()
-    pg = trk.matrix_world.translation.copy()
+    pg = trk.matrix_world.translation.copy() - V((0.0, 0.0, 0.0005))      # on the paper itself
     sc.frame_set(ctx.f0)
     hd = V((-1.0, 0.0, 0.0))                   # page head direction (up in the macro)
     wd = V((0.0, math.cos(BETA), math.sin(BETA)))
@@ -2897,9 +2911,9 @@ def build(ctx):
         (t_sayfa + 0.30, pg + nn * 0.097 - hd * 0.090 - wd * 0.009, pg + hd * 0.006 - wd * 0.007, pg, hd),
         (fC / C.FPS + 0.30, pg + nn * 0.092 - hd * 0.086 - wd * 0.011, pg + hd * 0.006 - wd * 0.008, pg, hd),
     ], fB - 6, fC + 6, seed=12, ends=(0.5, 0.3))
-    # iris pull during the push-in: at macro distance f/3.2 leaves < 0.5 mm in focus; f/6.3 keeps the
+    # iris pull during the push-in: at macro distance f/3.2 leaves < 0.5 mm in focus; f/8 keeps the
     # whole "721" crisp while the body lines still fall off out of focus
-    for t, fs in ((fB / C.FPS, 3.2), (t_sayfa - 0.2, 3.6), (t_sayfa + 0.35, 6.3)):
+    for t, fs in ((fB / C.FPS, 3.2), (t_sayfa - 0.2, 3.6), (t_sayfa + 0.35, 8.0)):
         camB.data.dof.aperture_fstop = fs
         camB.data.dof.keyframe_insert("aperture_fstop", frame=t * C.FPS)
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
