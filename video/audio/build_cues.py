@@ -147,15 +147,48 @@ def graphic_t(cue_id, fallback):
 # ------------------------------------------------------------------ picture-spotted hits
 # film frame numbers (24 fps) read off the shot renders/animatics, frame-by-frame contact sheets.
 PIC = {
-    # sh01 animatic (review/sh01, 22:02): neck pinches f89-90, drop free at f91-92 (satellite
-    # droplet above), touches the leaf between f100 and f101, flattened at f101
-    "sh01.detach": 91.5, "sh01.land": 100.6,
-    # sh08 animatic (review/sh08, 22:06): hand enters top right f989, fingertip touches the apple
-    # f993, grip closes f1011-1013, apple's shadow separates (lift-off) f1022
-    "sh08.enter": 989, "sh08.touch": 993, "sh08.grip": 1012, "sh08.lift": 1022,
-    # sh14b animatic (review/sh14b, 22:25): cloth enters f2453, top of the cloth over the chimney
-    # and the flame gone f2461, hem lands on the table f2463, fully draped f2465
-    "sh14b.enter": 2453, "sh14b.flame_out": 2461, "sh14b.land": 2463,
+    # sh01 final render (out/rf/sh01): drop hangs on the blade tip until f85, gap at f86 (blade springs
+    # back, camera follows the drop) -> lets go f85.5; neck remnant pinches off as a satellite
+    # f88.5-89.5; drop still a sphere above the leaf at f102, fully pancaked at f103 -> lands f102.5
+    "sh01.detach": 85.5, "sh01.land": 102.5,
+    # sh02/sh03 final render (out/rf/sh02, sh03): loaf passes lower right f207.5-245.5 (top edge rises
+    # in at f208, sliver at f245, gone f246); water stream reaches the dry glass bottom f251 (thins from
+    # f286, last of it enters f289.5); plate starts sliding toward the camera f347.5 (still f347, moving
+    # f348), peak speed ~f356, stops ~f363.6
+    "sh03.bread_out": 245.5, "sh03.pour": 251, "sh03.plate": 347.5,
+    # sh04 final render (sh04_00507_00554): fingertips break the bottom edge between f514 (6 px tip)
+    # and f515, hand rises to rest ~f535
+    "sh04.enter": 514.5,
+    # sh05 final render (sh05_00545_00590): camera starts tilting down from the sun f588.5, plants in
+    # view f610-613, streams visible ~f612-620
+    "sh05.tilt": 588.5,
+    # sh08 final render (out/rf/sh08): hand enters top right f982 (first fingertip sliver; clear in
+    # f983); the near (defocused) thumb pad meets the apple's upper-left face f1007.7 (overlaps the
+    # outline in 2D from f1006; contact per the scene geometry, slides down the apple from f1008);
+    # grip closes f1011-1013; apple's bottom leaves the table f1019 (gaps open at both sides on f1019,
+    # clear gap f1021)
+    "sh08.enter": 982, "sh08.touch": 1007.7, "sh08.grip": 1012, "sh08.lift": 1019,
+    # sh09 final render (out/rf/sh09): impulse glow fires on the nearest node f1153, peak f1154, races
+    # up-left to the far nodes by ~f1162; fibre glow (contraction) visible from f1165; camera passes into
+    # the muscle cell (fibre exterior -> pink interior + mitochondria f1183-1186, centre f1184.5)
+    "sh09.impulse": 1153, "sh09.muscle": 1165, "sh09.dive": 1184.5,
+    # sh10 final render (out/rf/sh10): last interior frame f1294, dark membrane haze f1295-1300, cell
+    # field from f1301 (centre of the passage f1297.5); first cell glows f1316 (clear f1317), others
+    # follow one by one to ~f1328
+    "sh10.membrane": 1297.5, "sh10.light1": 1316,
+    # sh11 final render (out/rf/sh11): drops hit the left leaf f1468.8 (leaf already moving in f1469,
+    # pushed down f1470, rebounds f1471-72), the right leaf f1479.4 (still f1479, dip f1480, rebound
+    # f1482), the left leaf again f1492.1 (dip f1493, back up f1494-95)
+    "sh11.leaf1": 1468.8, "sh11.leaf2": 1479.4, "sh11.leaf3": 1492.1,
+    # sh14a final render (sh14a_02198_02245): hero head eases into its turn from ~f2205, on-screen
+    # motion peaks f2218-2222, settled f2236; 2204 = first creak so the stalk field's loud plateau
+    # (sync+8..+25 frames) covers the turn
+    "sh14a.turn": 2204,
+    # sh14b final render (sh14b_02382_02423 / 02424_02465 / 02466_02506): room darkens f2389-2414,
+    # fastest f2397-2398 (half-way f2401, soft sweep left->right / top->bottom); cloth enters f2453-2453.7
+    # (sliver at top on f2454), flame half-covered on f2461 and gone on f2462, hem reaches the table f2465
+    # (left) to f2465.8 (right), at rest f2466
+    "sh14b.shadow": 2397.5, "sh14b.enter": 2453, "sh14b.flame_out": 2461, "sh14b.land": 2465.5,
     # sh15 animatic (sh15/anim1, 22:20 - shot still in work, re-spot on the final render): hard cut
     # from the closed cover to the open book at f2721.5; pages land f2728, f2735.5, last page
     # settles on 721 at f2744 (in the pause after '721')
@@ -237,9 +270,10 @@ bed("sh01.wind", s, 0.0, X12 + 0.4, "wind", -29, 0.35, 0.8, space="meadow", send
 birds("sh01.birds", s, 0.0, X12 + 0.4, -35, 0.5, 0.8, "meadow", n_birds=4, fmin=2800, fmax=6500, start=0.35,
       ref="cut 0.00")
 cue("sh01.drop_detach", s, P["sh01.detach"], 0.7, "drop_detach", -33, pre=0.05, space="outdoor", send=-20,
-    params=dict(sync=0.05, fall=P["sh01.land"] - P["sh01.detach"]), ref="PIC f91.5: drop lets go of the grass tip")
+    params=dict(sync=0.05, fall=P["sh01.land"] - P["sh01.detach"]),
+    ref="PIC f85.5 (final render): drop lets go of the grass tip")
 cue("sh01.drop_leaf", s, P["sh01.land"], 1.1, "drop_on_leaf", -21, pre=0.1, space="outdoor", send=-16,
-    params=dict(sync=0.1, size=1.0, spring=0.4), ref="PIC f100.6: drop lands on the seedling leaf")
+    params=dict(sync=0.1, size=1.0, spring=0.4), ref="PIC f102.5 (final render): drop lands on the seedling leaf")
 cue("sh01.flare_air", s, X12 + 0.05, 2.6, "bloom", -33, cls="amb", pre=0.6, space="outdoor", send=-24,
     fade_out=0.5, params=dict(sync=0.6, rise=0.6, decay=1.8, bright=0.8, low=0.2),
     ref="exit tilt into sun flare / light dissolve (in the pause 5.26-5.90)")
@@ -261,19 +295,21 @@ cue("sh02.curtain", s, A, 6.0, "curtain", -29, cls="spot", space="room", send=-1
     ref="breath rhythm 2s/2s, biggest inhale on 'oksijen'", note="linen curtain + window breeze")
 tick("sh02.callout_air", s, t_ox + 0.25, track={"shot": s, "name": "air"}, pan=0.3, ref="callout O2")
 
-s = "sh03"                              # (slate: beats on the transcript times the studio animates to)
-cue("sh03.crust", s, w(s, "yemek"), 1.7, "crust_crackle", -36, pre=0.05, space="room", send=-18,
-    fade_in=0.3, fade_out=0.6, params=dict(rate=16, pan=-0.35), ref="yemek (slider past the bread)")
-t = w(s, "içmek") - F
+s = "sh03"                              # (picture-spotted on the final render; the jug is never on screen)
+# fade-out (t - pre + 1.1 s) begins as the loaf leaves frame right
+cue("sh03.crust", s, P["sh03.bread_out"] - 1.05, 1.7, "crust_crackle", -36, pre=0.05, space="room", send=-18,
+    fade_in=0.3, fade_out=0.6, params=dict(rate=16, pan=-0.35),
+    ref="bread passes lower right f207.5-245.5 (PIC, final render), crackle fades as it leaves")
+t = P["sh03.pour"]
 cue("sh03.pour", s, t, 2.9, "pour", -28.5, pre=0.1, space="room", send=-13, fade_out=0.2,
-    params=dict(sync=0.1, stop=1.72, fill0=0.1, fill1=0.72, drips=3, pan=0.1), ref="içmek (water hits the glass)",
-    provisional=True, note="re-spot on the sh03 render")
+    params=dict(sync=0.1, stop=1.42, fill0=0.1, fill1=0.72, drips=3, pan=0.1),
+    ref="PIC f251 (final render): stream hits the dry bottom; thins from f286, last of it enters f289.5 (stop)")
 tick("sh03.callout_water", s, t + 0.7, track={"shot": s, "name": "water"}, pan=0.1, ref="water callout")
 cue("sh03.jug_set", s, pause_near(12.5), 0.7, "jug_set", -28, pre=0.05, space="room", send=-14,
     params=dict(sync=0.05, pan=0.3), ref="jug set down after the pour, in the pause after 'bütün'", provisional=True)
-t = w(s, "takdim")
-cue("sh03.plate", s, t, 0.95, "plate_slide", -28, pre=0.05, space="room", send=-15,
-    params=dict(sync=0.05, length=0.55, pan=0.0), ref="takdim (plate slides toward camera)", provisional=True)
+cue("sh03.plate", s, P["sh03.plate"], 0.95, "plate_slide", -28, pre=0.05, space="room", send=-15,
+    params=dict(sync=0.05, length=0.69, pan=0.0),
+    ref="PIC f347.5 (final render): plate slides toward camera f347.5-363.6 (stop knock at t + 0.67)")
 
 # ============================================================== sh04 cracked earth, noon
 s = "sh04"
@@ -287,9 +323,10 @@ bed("sh04.wind", s, A - 0.02, B + 0.35, "wind", -28, 0.04, 0.3, space="desert", 
                    "hand reaches; muffles into the underwater cut")
 bed("sh04.ticks", s, A, B + 0.1, "dry_ticks", -34, 0.1, 0.1, space="desert", send=-24, cls="amb",
     params=dict(rate=2.5), lpf=under, ref="parched ground")
-cue("sh04.sleeve", s, t_reach - 0.15, 1.7, "cloth", -29, pre=0.0, space="desert", send=-22, fade_in=0.05, fade_out=0.3,
+cue("sh04.sleeve", s, P["sh04.enter"] - 0.08, 1.7, "cloth", -29, pre=0.0, space="desert", send=-22, fade_in=0.05,
+    fade_out=0.3,
     params=dict(motion=[[0, 0], [0.25, 0.9], [0.7, 0.55], [1.2, 0.25], [1.7, 0]], fabric="cotton", air=0.6, width=0.3),
-    ref="hiçbirine (hand rises into frame, stretches up)")
+    ref="PIC f514.5 (final render): hand rises into frame from below, stretches up (was: hiçbirine)")
 
 # ============================================================== sh05 underwater
 s = "sh05"
@@ -300,12 +337,13 @@ cue("sh05.immerse", s, A, 1.8, "immerse", -31, cls="amb", pre=0.3, space="underw
 bed("sh05.water", s, A - 0.02, B + 0.25, "underwater", -29, 0.25, 0.45, space="underwater", send=-14,
     params=dict(slosh=0.6, clicks=0.3, bubbles=0.3), ref="cut 22.95 -> shape match 30.10")
 t_ox = w(s, "oksijenler")
-t_b = w(s, "bize")
-cue("sh05.o2_streams", s, t_b, B - t_b, "bubble_streams", -27, pre=0.0, space="underwater",
+t_tl = P["sh05.tilt"]
+cue("sh05.o2_streams", s, t_tl, B - t_tl, "bubble_streams", -27, pre=0.0, space="underwater",
     send=-12, fade_in=0.8, fade_out=0.15,
     params=dict(streams=7, rate=2.5, density=[[0, 0.3], [1.5, 1.0]],
-                hero=dict(pan=0.0, rate=5.0, gain=2.2, start=t_ox - t_b), muffle=6000),
-    ref="camera tilts down to the plants; hero stream from 'oksijenler'")
+                hero=dict(pan=0.0, rate=5.0, gain=2.2, start=t_ox - t_tl), muffle=6000),
+    ref="PIC f588.5 (final render): camera tilts down to the plants (streams fill in as they come into view "
+        "~f612); hero stream from 'oksijenler'")
 tick("sh05.callout_bubble", s, t_ox + 0.2, track={"shot": s, "name": "bubble"}, ref="callout O2 fotosentez")
 cue("sh05.bubble_lens", s, B - 0.08, 0.95, "bubble_pass", -22, pre=0.45, space="underwater", send=-12,
     params=dict(sync=0.45, r=4.5e-3), ref="exit: hero bubble rises into the lens")
@@ -364,13 +402,13 @@ birds("sh08.window_birds", s, A - 0.3, B - 0.2, -36, 0.6, 0.8, "room", n_birds=3
       start=0.5, ref="outside the window")
 cue("sh08.sleeve", s, P["sh08.enter"] - 0.08, 1.7, "cloth", -28, space="room", send=-16, fade_out=0.3,
     params=dict(motion=[[0, 0], [0.25, 0.85], [0.8, 0.6], [1.2, 0.2], [1.7, 0]], fabric="cotton", air=0.5, width=0.3, pan=0.45),
-    ref="PIC f989: hand enters from the top right")
+    ref="PIC f982 (final render): hand enters from the top right")
 cue("sh08.touch", s, P["sh08.touch"], 0.3, "grab", -35, pre=0.05, space="room", send=-16, params=dict(sync=0.05, pan=0.05),
-    ref="PIC f993: fingertip touches the apple")
+    ref="PIC f1007.7 (final render): thumb pad touches the apple")
 cue("sh08.grab", s, P["sh08.grip"], 0.35, "grab", -31, pre=0.05, space="room", send=-16, params=dict(sync=0.05, pan=0.1),
-    ref="PIC f1012: fingers close around the apple")
+    ref="PIC f1012 (final render): fingers close around the apple")
 cue("sh08.lift", s, P["sh08.lift"], 0.45, "lift", -32, pre=0.03, space="room", send=-16, params=dict(sync=0.03, pan=0.1),
-    ref="PIC f1022: apple leaves the table (shadow separates)")
+    ref="PIC f1019 (final render): apple leaves the table (shadow separates)")
 tick("sh08.callout_hand", s, 42.62, pan=0.4, track={"shot": s, "name": "hand"}, ref="callout 'Bir uzanış'")
 t = w(s, "aslında")
 cue("sh08.pulse_in", s, t, B + 4.9 - t, "heartbeat", -26, cls="amb", pre=0.0, space="body", send=-14,
@@ -387,16 +425,18 @@ s = "sh09"
 A, B = CUT["sh09"], CUT["sh10"]
 bed("sh09.body", s, A - 0.2, B + 0.4, "body_amb", -30, 0.4, 0.6, space="body", send=-10,
     params=dict(wet=1.0, creaks=0.4), ref="inside the forearm")
-t = w(s, "kaslarda") - F
+t = P["sh09.impulse"]
 cue("sh09.nerve", s, t, 0.95, "nerve", -24, pre=0.05, space="body", send=-14,
-    params=dict(sync=0.05, n_nodes=9, span=0.42, pan_from=-0.6, pan_to=0.6), ref="kaslarda (impulse races node to node)")
-cue("sh09.muscle", s, t + 0.47, 1.4, "muscle", -25, pre=0.05, space="body", send=-12,
-    params=dict(sync=0.05, hold=0.3, release=0.45), ref="impulse arrives: fibres contract in a ripple")
+    params=dict(sync=0.05, n_nodes=9, span=0.42, pan_from=-0.6, pan_to=0.6),
+    ref="PIC f1153 (final render): impulse races node to node")
+cue("sh09.muscle", s, P["sh09.muscle"], 1.4, "muscle", -25, pre=0.05, space="body", send=-12,
+    params=dict(sync=0.05, hold=0.3, release=0.45),
+    ref="PIC f1165 (final render): impulse arrives, fibres glow / contract in a ripple")
 tick("sh09.callout_nerve", s, t + 0.2, track={"shot": s, "name": "nerve"}, ref="callout Sinir sinyali")
 t = w(s, "hücrelerde")
-cue("sh09.dive", s, t + 0.2, 1.2, "whoosh", -26, cls="amb", pre=0.5, space="body", send=-10, fade_out=0.3,
+cue("sh09.dive", s, P["sh09.dive"], 1.2, "whoosh", -26, cls="amb", pre=0.5, space="body", send=-10, fade_out=0.3,
     params=dict(sync=0.5, f_from=1500, f_peak=650, f_to=180, pan_from=0.0, pan_to=0.0, bw=1.6, rough=0.6),
-    ref="hücrelerde (camera dives into one cell)")
+    ref="PIC f1184.5 (final render): camera dives into one cell")
 tick("sh09.callout_fiber", s, t + 0.1, track={"shot": s, "name": "fiber"}, ref="callout Kas lifi")
 cue("sh09.mito", s, t + 0.5, B + 0.5 - (t + 0.5), "sparkle", -32, cls="amb", space="body", send=-10,
     fade_in=0.8, fade_out=0.5, params=dict(rate=[[0, 15], [1.5, 35]], bright=0.8, far=0.5, width=0.7),
@@ -406,14 +446,16 @@ tick("sh09.callout_mito", s, w(s, "olup") + 0.1, track={"shot": s, "name": "mito
 # ============================================================== sh10 countless cells
 s = "sh10"
 A, B = CUT["sh10"], CUT["sh11"]
-cue("sh10.pullback", s, A + 0.45, 1.3, "whoosh", -25, cls="amb", pre=0.45, space="body", send=-10, fade_out=0.3,
+cue("sh10.pullback", s, P["sh10.membrane"], 1.3, "whoosh", -25, cls="amb", pre=0.45, space="body", send=-10,
+    fade_out=0.3,
     params=dict(sync=0.45, f_from=260, f_peak=1000, f_to=2200, pan_from=0.0, pan_to=0.0, bw=1.8, rough=0.5),
-    ref="pull back out through the membrane")
+    ref="PIC f1297.5 (final render): pull back out through the membrane")
 bed("sh10.field", s, A - 0.2, B + 0.3, "body_amb", -28, 0.6, 0.6, space="micro", send=-10,
     params=dict(wet=0.5, creaks=0.2, depth=1.5), ref="vast field of living cells")
 t1, t2, t3 = w(s, "bildiğimiz"), w(s, "bilmediğimiz"), w(s, "hadsiz")
-cue("sh10.lights_one", s, t1 - F, t2 + 0.8 - (t1 - F), "sparkle", -30, pre=0.0, space="micro", send=-12, fade_out=0.6,
-    params=dict(rate=11.0, bright=1.0, far=0.1, width=0.8), ref="bildiğimiz (cells light up one after another)")
+cue("sh10.lights_one", s, P["sh10.light1"], t2 + 0.8 - P["sh10.light1"], "sparkle", -30, pre=0.0, space="micro",
+    send=-12, fade_out=0.6, params=dict(rate=11.0, bright=1.0, far=0.1, width=0.8),
+    ref="PIC f1316 (final render): cells light up one after another")
 cue("sh10.lights_wave", s, t2 - F, B + 0.35 - (t2 - F), "sparkle", -28, pre=0.0, space="micro", send=-10,
     fade_in=0.4, fade_out=0.5,
     params=dict(rate=[[0, 40], [t3 - t2, 450], [t3 - t2 + 0.8, 900], [B - t2 - 0.5, 700], [B - t2 + 0.35, 250]],
@@ -437,15 +479,18 @@ bed("sh11.rain", s, a0, B + 0.7, "rain", -31, 0.6, 0.8, space="outdoor", send=-2
                 leaf=0.1, water=0.06),
     ref="first drops on 'bütün', heavy at 'ayağımıza', thinning at 'karşılanıyor'")
 cue("sh11.first_drops", s, t_b - F, 1.6, "heavy_drops", -22, pre=0.05, space="outdoor", send=-16,
-    params=dict(times=[0.05, 0.27, 0.42, 0.7, 0.97, 1.12], pans=[0.0, -0.45, 0.35, -0.2, 0.55, -0.6],
+    params=dict(times=[0.05, 0.3833, 0.925, 1.05, 1.2583, 1.3417], pans=[0.0, -0.45, 0.35, -0.2, 0.55, -0.6],
                 amps=[1.0, 0.6, 0.8, 0.5, 0.7, 0.45], surface="dust"),
-    ref="bütün (first heavy drops hit the dust: crowns, puffs) - checked against the sh11 animatic")
+    ref="bütün (first heavy drops hit the dust: crowns at f1406, 1414, 1427, 1430, 1435, 1437 on the final render)")
 cue("sh11.trickle", s, t_ay - 0.3, 2.7, "trickle", -32, pre=0.0, space="outdoor", send=-18, fade_in=0.3, fade_out=0.5,
     params=dict(flow=[[0, 0], [0.4, 0.6], [1.2, 1.0], [2.2, 0.8], [2.7, 0.4]], approach=[[0, 0.3], [1.3, 1.0]], pan=0.0),
     ref="ayağımıza (water trickles along the cracks toward camera)")
-cue("sh11.leaf_hits", s, t_ay + 0.5, 1.2, "leaf_hits", -28, pre=0.05, space="outdoor", send=-16,
-    params=dict(times=[0.05, 0.4, 0.86], pans=[0.0, -0.2, 0.15], amps=[1.0, 0.75, 0.9]),
-    ref="drops hit the seedling's leaves, they bounce")
+L1 = P["sh11.leaf1"]
+cue("sh11.leaf_hits", s, L1, 1.2, "leaf_hits", -28, pre=0.05, space="outdoor", send=-16,
+    params=dict(times=[0.05, round(0.05 + P["sh11.leaf2"] - L1, 4), round(0.05 + P["sh11.leaf3"] - L1, 4)],
+                pans=[0.0, -0.2, 0.15], amps=[1.0, 0.75, 0.9]),
+    ref="PIC f1468.8 / f1479.4 / f1492.1 (final render): drops hit the seedling's leaves (left, right, left), "
+        "they bounce")
 
 # ============================================================== sh12 aerial
 s = "sh12"
@@ -501,9 +546,12 @@ for i, (tt, pn) in enumerate(zip(rt, fallback)):
     nm = "abcdefgh"[i]
     tick(f"sh13b.ring_{nm}", s, tt - F, kind="ring", lvl=-18 if i < 7 else -17, pan=pn,
          track={"shot": s, "name": nm}, ref=f"birer birer: tracking ring {i + 1}/8 snaps onto TRK_{nm}")
-cue("sh13b.bee", s, SYNC.get("sh13b.ring_b", rt[1]), 2.2, "bee", -42, pre=0.7, space="meadow", send=-16, fade_in=0.2,
-    fade_out=0.3, params=dict(sync=0.7, dist=0.55, pan_from=0.2, pan_to=0.45, f0=226),
-    ref="the bee ring b finds, hovering right of centre and drifting right (sh13b animatic f2045-2090)")
+t_bee = SYNC.get("sh13b.ring_b", rt[1])
+pre_bee = round(t_bee - CUT["sh13b"], 3)          # the bee is on screen from the sh13a->sh13b dissolve
+cue("sh13b.bee", s, t_bee, pre_bee + 1.5, "bee", -42, pre=pre_bee, space="meadow", send=-16, fade_in=0.2,
+    fade_out=0.3, params=dict(sync=pre_bee, dist=0.55, pan_from=0.2, pan_to=0.45, f0=226),
+    ref="bee visible from the sh13a->sh13b dissolve (f2018), flies up-right f2015-2039, hovers right of centre "
+        "f2039-2087 (ring b f2062), exits top of frame f2095.5 (final render, comp/tracks TRK_b)")
 
 # ============================================================== sh14a sunflowers at sunrise
 s = "sh14a"
@@ -518,9 +566,9 @@ bed("sh14a.field", s, a0, B + 0.08, "wind", -28, 0.8, 0.35, space="meadow", send
 birds("sh14a.birds", s, a0, B + 0.05, -33, 0.8, 0.3, "meadow", n_birds=4, fmin=2400, fmax=6600, start=0.8,
       density=[[0, 0.6], [B - a0, 1.5]], rate=0.8, ref="dawn calls (the narration is dense with key words here, so the "
       "few bouts that survive the key-word filter fall in its pauses)")
-t = w(s, "görüyormuşçasına")
-cue("sh14a.turn", s, t - F, 2.7, "stalks_turn", -27, pre=0.1, space="meadow", send=-16, fade_out=0.4,
-    params=dict(sync=0.1, length=1.4), ref="görüyormuşçasına (all flower heads turn toward the sun)")
+cue("sh14a.turn", s, P["sh14a.turn"], 2.7, "stalks_turn", -27, pre=0.1, space="meadow", send=-16, fade_out=0.4,
+    params=dict(sync=0.1, length=1.4),
+    ref="PIC f2204 (final render): all flower heads turn toward the sun (görüyormuşçasına)")
 tick("sh14a.spiral", s, w(s, "hikmetli") - F, kind="link", lvl=-21, track={"shot": s, "name": "spiral"},
      ref="Fibonacci spiral arcs drawn")
 t_a_end = word(s, "Allah")["e"]
@@ -532,9 +580,10 @@ cue("sh14a.allah_air", s, t_a_end, 2.6, "bloom", -33, cls="amb", pre=1.1, space=
 # ============================================================== sh14b the covered light
 s = "sh14b"
 A, B = CUT["sh14b"], CUT["sh14c"]
-cue("sh14b.shadow", s, A + 0.05, 1.7, "whoosh", -25, cls="amb", pre=0.45, space="dark", send=-10, fade_out=0.4,
+cue("sh14b.shadow", s, P["sh14b.shadow"], 1.7, "whoosh", -25, cls="amb", pre=0.45, space="dark", send=-10,
+    fade_out=0.4,
     params=dict(sync=0.45, f_from=900, f_peak=420, f_to=110, pan_from=0.7, pan_to=-0.7, bw=1.6, rough=0.4),
-    ref="shadow sweeps in, darkness")
+    ref="PIC f2397.5 (final render): shadow sweeps in, darkness (room dims f2389-2414)")
 bed("sh14b.dark", s, A - 0.1, B + 0.3, "room_tone", -40, 0.3, 0.6, space="dark", send=-20,
     params=dict(warmth=0.6, bright=0.5, width=0.8), ref="dark space")
 land = P["sh14b.land"]
@@ -543,7 +592,8 @@ cue("sh14b.flame", s, A - 0.1, B + 0.3 - (A - 0.1), "flame", -31, pre=0.0, space
     ref="small oil-lamp flame; muffled when the cloth covers the chimney (PIC f2461)")
 cue("sh14b.cloth", s, land, 2.7, "cloth_fall", -22, pre=0.6, space="dark", send=-9, fade_out=0.5,
     params=dict(sync=0.6, fall=land - P["sh14b.enter"] + 0.05, settle=1.4), lf_shelf=0.0,
-    ref="PIC f2453 cloth enters, f2463 hem lands on the table (voice micro-gap 102.60-102.72): heavy velvet drape")
+    ref="PIC f2453 cloth enters, f2465.5 hem lands on the table (final render; örtmek/için boundary): heavy velvet "
+        "drape")
 
 # ============================================================== sh14c cold lifeless desert
 s = "sh14c"

@@ -24,15 +24,30 @@
   "sh15": 109.8
  },
  "picture_spots_frames": {
-  "sh01.detach": 91.5,
-  "sh01.land": 100.6,
-  "sh08.enter": 989,
-  "sh08.touch": 993,
+  "sh01.detach": 85.5,
+  "sh01.land": 102.5,
+  "sh03.bread_out": 245.5,
+  "sh03.pour": 251,
+  "sh03.plate": 347.5,
+  "sh04.enter": 514.5,
+  "sh05.tilt": 588.5,
+  "sh08.enter": 982,
+  "sh08.touch": 1007.7,
   "sh08.grip": 1012,
-  "sh08.lift": 1022,
+  "sh08.lift": 1019,
+  "sh09.impulse": 1153,
+  "sh09.muscle": 1165,
+  "sh09.dive": 1184.5,
+  "sh10.membrane": 1297.5,
+  "sh10.light1": 1316,
+  "sh11.leaf1": 1468.8,
+  "sh11.leaf2": 1479.4,
+  "sh11.leaf3": 1492.1,
+  "sh14a.turn": 2204,
+  "sh14b.shadow": 2397.5,
   "sh14b.enter": 2453,
   "sh14b.flame_out": 2461,
-  "sh14b.land": 2463,
+  "sh14b.land": 2465.5,
   "sh15.open_cut": 2721.5,
   "sh15.page1": 2728,
   "sh15.page2": 2735.5,
@@ -276,13 +291,13 @@
   {
    "id": "sh01.drop_detach",
    "shot": "sh01",
-   "t": 3.8125,
+   "t": 3.5625,
    "pre": 0.05,
    "dur": 0.7,
    "gen": "drop_detach",
    "params": {
     "sync": 0.05,
-    "fall": 0.3792
+    "fall": 0.7083000000000004
    },
    "lvl": -33,
    "class": "spot",
@@ -290,12 +305,12 @@
    "send": -20,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f91.5: drop lets go of the grass tip"
+   "ref": "PIC f85.5 (final render): drop lets go of the grass tip"
   },
   {
    "id": "sh01.drop_leaf",
    "shot": "sh01",
-   "t": 4.1917,
+   "t": 4.2708,
    "pre": 0.1,
    "dur": 1.1,
    "gen": "drop_on_leaf",
@@ -310,7 +325,7 @@
    "send": -16,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f100.6: drop lands on the seedling leaf"
+   "ref": "PIC f102.5 (final render): drop lands on the seedling leaf"
   },
   {
    "id": "sh01.flare_air",
@@ -486,7 +501,7 @@
   {
    "id": "sh03.crust",
    "shot": "sh03",
-   "t": 9.64,
+   "t": 9.1792,
    "pre": 0.05,
    "dur": 1.7,
    "gen": "crust_crackle",
@@ -500,18 +515,18 @@
    "send": -18,
    "fade_in": 0.3,
    "fade_out": 0.6,
-   "ref": "yemek (slider past the bread)"
+   "ref": "bread passes lower right f207.5-245.5 (PIC, final render), crackle fades as it leaves"
   },
   {
    "id": "sh03.pour",
    "shot": "sh03",
-   "t": 10.4783,
+   "t": 10.4583,
    "pre": 0.1,
    "dur": 2.9,
    "gen": "pour",
    "params": {
     "sync": 0.1,
-    "stop": 1.72,
+    "stop": 1.42,
     "fill0": 0.1,
     "fill1": 0.72,
     "drips": 3,
@@ -523,9 +538,7 @@
    "send": -13,
    "fade_in": 0.005,
    "fade_out": 0.2,
-   "ref": "içmek (water hits the glass)",
-   "provisional": true,
-   "note": "re-spot on the sh03 render"
+   "ref": "PIC f251 (final render): stream hits the dry bottom; thins from f286, last of it enters f289.5 (stop)"
   },
   {
    "id": "sh03.callout_water",
@@ -574,13 +587,13 @@
   {
    "id": "sh03.plate",
    "shot": "sh03",
-   "t": 14.9,
+   "t": 14.4792,
    "pre": 0.05,
    "dur": 0.95,
    "gen": "plate_slide",
    "params": {
     "sync": 0.05,
-    "length": 0.55,
+    "length": 0.69,
     "pan": 0.0
    },
    "lvl": -28,
@@ -589,8 +602,7 @@
    "send": -15,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "takdim (plate slides toward camera)",
-   "provisional": true
+   "ref": "PIC f347.5 (final render): plate slides toward camera f347.5-363.6 (stop knock at t + 0.67)"
   },
   {
    "id": "sh04.wind",
@@ -680,7 +692,7 @@
   {
    "id": "sh04.sleeve",
    "shot": "sh04",
-   "t": 21.09,
+   "t": 21.3575,
    "pre": 0.0,
    "dur": 1.7,
    "gen": "cloth",
@@ -717,7 +729,7 @@
    "send": -22,
    "fade_in": 0.05,
    "fade_out": 0.3,
-   "ref": "hiçbirine (hand rises into frame, stretches up)"
+   "ref": "PIC f514.5 (final render): hand rises into frame from below, stretches up (was: hiçbirine)"
   },
   {
    "id": "sh05.immerse",
@@ -764,9 +776,9 @@
   {
    "id": "sh05.o2_streams",
    "shot": "sh05",
-   "t": 24.3,
+   "t": 24.5208,
    "pre": 0.0,
-   "dur": 5.8,
+   "dur": 5.5792,
    "gen": "bubble_streams",
    "params": {
     "streams": 7,
@@ -785,7 +797,7 @@
      "pan": 0.0,
      "rate": 5.0,
      "gain": 2.2,
-     "start": 2.5799999999999983
+     "start": 2.3591999999999977
     },
     "muffle": 6000
    },
@@ -795,7 +807,7 @@
    "send": -12,
    "fade_in": 0.8,
    "fade_out": 0.15,
-   "ref": "camera tilts down to the plants; hero stream from 'oksijenler'"
+   "ref": "PIC f588.5 (final render): camera tilts down to the plants (streams fill in as they come into view ~f612); hero stream from 'oksijenler'"
   },
   {
    "id": "sh05.callout_bubble",
@@ -1155,7 +1167,7 @@
   {
    "id": "sh08.sleeve",
    "shot": "sh08",
-   "t": 41.1283,
+   "t": 40.8367,
    "pre": 0.0,
    "dur": 1.7,
    "gen": "cloth",
@@ -1193,12 +1205,12 @@
    "send": -16,
    "fade_in": 0.005,
    "fade_out": 0.3,
-   "ref": "PIC f989: hand enters from the top right"
+   "ref": "PIC f982 (final render): hand enters from the top right"
   },
   {
    "id": "sh08.touch",
    "shot": "sh08",
-   "t": 41.375,
+   "t": 41.9875,
    "pre": 0.05,
    "dur": 0.3,
    "gen": "grab",
@@ -1212,7 +1224,7 @@
    "send": -16,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f993: fingertip touches the apple"
+   "ref": "PIC f1007.7 (final render): thumb pad touches the apple"
   },
   {
    "id": "sh08.grab",
@@ -1231,12 +1243,12 @@
    "send": -16,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f1012: fingers close around the apple"
+   "ref": "PIC f1012 (final render): fingers close around the apple"
   },
   {
    "id": "sh08.lift",
    "shot": "sh08",
-   "t": 42.5833,
+   "t": 42.4583,
    "pre": 0.03,
    "dur": 0.45,
    "gen": "lift",
@@ -1250,7 +1262,7 @@
    "send": -16,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "PIC f1022: apple leaves the table (shadow separates)"
+   "ref": "PIC f1019 (final render): apple leaves the table (shadow separates)"
   },
   {
    "id": "sh08.callout_hand",
@@ -1390,7 +1402,7 @@
   {
    "id": "sh09.nerve",
    "shot": "sh09",
-   "t": 48.0983,
+   "t": 48.0417,
    "pre": 0.05,
    "dur": 0.95,
    "gen": "nerve",
@@ -1407,12 +1419,32 @@
    "send": -14,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "kaslarda (impulse races node to node)"
+   "ref": "PIC f1153 (final render): impulse races node to node"
+  },
+  {
+   "id": "sh09.muscle",
+   "shot": "sh09",
+   "t": 48.5417,
+   "pre": 0.05,
+   "dur": 1.4,
+   "gen": "muscle",
+   "params": {
+    "sync": 0.05,
+    "hold": 0.3,
+    "release": 0.45
+   },
+   "lvl": -25,
+   "class": "spot",
+   "space": "body",
+   "send": -12,
+   "fade_in": 0.005,
+   "fade_out": 0.02,
+   "ref": "PIC f1165 (final render): impulse arrives, fibres glow / contract in a ripple"
   },
   {
    "id": "sh09.dive",
    "shot": "sh09",
-   "t": 49.0,
+   "t": 49.3542,
    "pre": 0.5,
    "dur": 1.2,
    "gen": "whoosh",
@@ -1432,27 +1464,7 @@
    "send": -10,
    "fade_in": 0.005,
    "fade_out": 0.3,
-   "ref": "hücrelerde (camera dives into one cell)"
-  },
-  {
-   "id": "sh09.muscle",
-   "shot": "sh09",
-   "t": 48.5683,
-   "pre": 0.05,
-   "dur": 1.4,
-   "gen": "muscle",
-   "params": {
-    "sync": 0.05,
-    "hold": 0.3,
-    "release": 0.45
-   },
-   "lvl": -25,
-   "class": "spot",
-   "space": "body",
-   "send": -12,
-   "fade_in": 0.005,
-   "fade_out": 0.02,
-   "ref": "impulse arrives: fibres contract in a ripple"
+   "ref": "PIC f1184.5 (final render): camera dives into one cell"
   },
   {
    "id": "sh09.mito",
@@ -1531,7 +1543,7 @@
   {
    "id": "sh10.pullback",
    "shot": "sh10",
-   "t": 52.55,
+   "t": 54.0625,
    "pre": 0.45,
    "dur": 1.3,
    "gen": "whoosh",
@@ -1551,14 +1563,14 @@
    "send": -10,
    "fade_in": 0.005,
    "fade_out": 0.3,
-   "ref": "pull back out through the membrane"
+   "ref": "PIC f1297.5 (final render): pull back out through the membrane"
   },
   {
    "id": "sh10.lights_one",
    "shot": "sh10",
-   "t": 54.6383,
+   "t": 54.8333,
    "pre": 0.0,
-   "dur": 1.5617,
+   "dur": 1.3667,
    "gen": "sparkle",
    "params": {
     "rate": 11.0,
@@ -1572,7 +1584,7 @@
    "send": -12,
    "fade_in": 0.005,
    "fade_out": 0.6,
-   "ref": "bildiğimiz (cells light up one after another)"
+   "ref": "PIC f1316 (final render): cells light up one after another"
   },
   {
    "id": "sh10.lights_wave",
@@ -1805,11 +1817,11 @@
    "params": {
     "times": [
      0.05,
-     0.27,
-     0.42,
-     0.7,
-     0.97,
-     1.12
+     0.3833,
+     0.925,
+     1.05,
+     1.2583,
+     1.3417
     ],
     "pans": [
      0.0,
@@ -1835,7 +1847,7 @@
    "send": -16,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "bütün (first heavy drops hit the dust: crowns, puffs) - checked against the sh11 animatic"
+   "ref": "bütün (first heavy drops hit the dust: crowns at f1406, 1414, 1427, 1430, 1435, 1437 on the final render)"
   },
   {
    "id": "sh11.trickle",
@@ -1890,15 +1902,15 @@
   {
    "id": "sh11.leaf_hits",
    "shot": "sh11",
-   "t": 61.52,
+   "t": 61.2,
    "pre": 0.05,
    "dur": 1.2,
    "gen": "leaf_hits",
    "params": {
     "times": [
      0.05,
-     0.4,
-     0.86
+     0.4917,
+     1.0208
     ],
     "pans": [
      0.0,
@@ -1917,7 +1929,7 @@
    "send": -16,
    "fade_in": 0.005,
    "fade_out": 0.02,
-   "ref": "drops hit the seedling's leaves, they bounce"
+   "ref": "PIC f1468.8 / f1479.4 / f1492.1 (final render): drops hit the seedling's leaves (left, right, left), they bounce"
   },
   {
    "id": "sh12.cloud",
@@ -2337,11 +2349,11 @@
    "id": "sh13b.bee",
    "shot": "sh13b",
    "t": 85.9183,
-   "pre": 0.7,
-   "dur": 2.2,
+   "pre": 1.718,
+   "dur": 3.218,
    "gen": "bee",
    "params": {
-    "sync": 0.7,
+    "sync": 1.718,
     "dist": 0.55,
     "pan_from": 0.2,
     "pan_to": 0.45,
@@ -2353,7 +2365,7 @@
    "send": -16,
    "fade_in": 0.2,
    "fade_out": 0.3,
-   "ref": "the bee ring b finds, hovering right of centre and drifting right (sh13b animatic f2045-2090)"
+   "ref": "bee visible from the sh13a->sh13b dissolve (f2018), flies up-right f2015-2039, hovers right of centre f2039-2087 (ring b f2062), exits top of frame f2095.5 (final render, comp/tracks TRK_b)"
   },
   {
    "id": "sh13b.ring_a",
@@ -2675,7 +2687,7 @@
   {
    "id": "sh14a.turn",
    "shot": "sh14a",
-   "t": 91.6383,
+   "t": 91.8333,
    "pre": 0.1,
    "dur": 2.7,
    "gen": "stalks_turn",
@@ -2689,7 +2701,7 @@
    "send": -16,
    "fade_in": 0.005,
    "fade_out": 0.4,
-   "ref": "görüyormuşçasına (all flower heads turn toward the sun)"
+   "ref": "PIC f2204 (final render): all flower heads turn toward the sun (görüyormuşçasına)"
   },
   {
    "id": "sh14a.allah_air",
@@ -2712,31 +2724,6 @@
    "fade_in": 0.005,
    "fade_out": 0.7,
    "ref": "Allah: the light grows into a radiant sunrise - a soft, dark breath of light that blooms through the word and opens after it; no impact"
-  },
-  {
-   "id": "sh14b.shadow",
-   "shot": "sh14b",
-   "t": 99.55,
-   "pre": 0.45,
-   "dur": 1.7,
-   "gen": "whoosh",
-   "params": {
-    "sync": 0.45,
-    "f_from": 900,
-    "f_peak": 420,
-    "f_to": 110,
-    "pan_from": 0.7,
-    "pan_to": -0.7,
-    "bw": 1.6,
-    "rough": 0.4
-   },
-   "lvl": -25,
-   "class": "amb",
-   "space": "dark",
-   "send": -10,
-   "fade_in": 0.005,
-   "fade_out": 0.4,
-   "ref": "shadow sweeps in, darkness"
   },
   {
    "id": "sh14b.dark",
@@ -2778,15 +2765,40 @@
    "ref": "small oil-lamp flame; muffled when the cloth covers the chimney (PIC f2461)"
   },
   {
+   "id": "sh14b.shadow",
+   "shot": "sh14b",
+   "t": 99.8958,
+   "pre": 0.45,
+   "dur": 1.7,
+   "gen": "whoosh",
+   "params": {
+    "sync": 0.45,
+    "f_from": 900,
+    "f_peak": 420,
+    "f_to": 110,
+    "pan_from": 0.7,
+    "pan_to": -0.7,
+    "bw": 1.6,
+    "rough": 0.4
+   },
+   "lvl": -25,
+   "class": "amb",
+   "space": "dark",
+   "send": -10,
+   "fade_in": 0.005,
+   "fade_out": 0.4,
+   "ref": "PIC f2397.5 (final render): shadow sweeps in, darkness (room dims f2389-2414)"
+  },
+  {
    "id": "sh14b.cloth",
    "shot": "sh14b",
-   "t": 102.625,
+   "t": 102.7292,
    "pre": 0.6,
    "dur": 2.7,
    "gen": "cloth_fall",
    "params": {
     "sync": 0.6,
-    "fall": 0.46670000000000583,
+    "fall": 0.5709000000000117,
     "settle": 1.4
    },
    "lvl": -22,
@@ -2795,7 +2807,7 @@
    "send": -9,
    "fade_in": 0.005,
    "fade_out": 0.5,
-   "ref": "PIC f2453 cloth enters, f2463 hem lands on the table (voice micro-gap 102.60-102.72): heavy velvet drape",
+   "ref": "PIC f2453 cloth enters, f2465.5 hem lands on the table (final render; örtmek/için boundary): heavy velvet drape",
    "lf_shelf": 0.0
   },
   {
