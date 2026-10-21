@@ -2497,7 +2497,7 @@ def _camera_only(ob):
     ob.visible_volume_scatter = False
 
 
-def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.010):
+def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.016):
     """Light shafts: a few cards that CONTAIN the sun direction (so any pattern on them is a set of
     streaks parallel to the beam), turned toward the main view direction, spread across the beam."""
     s = SUN_DIR
@@ -2848,6 +2848,11 @@ def build(ctx):
         (t_sayfa + 0.30, pg + nn * 0.097 - hd * 0.090 - wd * 0.009, pg + hd * 0.006 - wd * 0.007, pg, hd),
         (fC / C.FPS + 0.30, pg + nn * 0.092 - hd * 0.086 - wd * 0.011, pg + hd * 0.006 - wd * 0.008, pg, hd),
     ], fB - 6, fC + 6, seed=12, ends=(0.5, 0.3))
+    # iris pull during the push-in: at macro distance f/3.2 leaves < 0.5 mm in focus; f/6.3 keeps the
+    # whole "721" crisp while the body lines still fall off out of focus
+    for t, fs in ((fB / C.FPS, 3.2), (t_sayfa - 0.2, 3.6), (t_sayfa + 0.35, 6.3)):
+        camB.data.dof.aperture_fstop = fs
+        camB.data.dof.keyframe_insert("aperture_fstop", frame=t * C.FPS)
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
     camC = rig_camera("camC", 50, 4.0, [
         (fC / C.FPS - 0.30, V((-0.765, yc - 0.43, 0.178)), V((-0.842, yc, 0.158)), V((-0.842, yc, 0.17))),
@@ -2890,7 +2895,7 @@ def build(ctx):
         def _nd(*_):
             bpy.context.scene.cycles.use_denoising = False
         bpy.app.handlers.render_pre.append(_nd)
-    ov = {"final_spp": 12, "final_threshold": 0.03, "final_min_spp": 6, "preview_spp": 16,
+    ov = {"final_spp": 6, "final_threshold": 0.03, "final_min_spp": 4, "preview_spp": 16,
           "diffuse_bounces": 1, "glossy_bounces": 2, "transmission_bounces": 2, "transparent_bounces": 8,
           "max_bounces": 4, "clamp_indirect": 2.0, "texture_limit": "4096"}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
