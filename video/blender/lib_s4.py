@@ -717,9 +717,9 @@ def mat_bread():
     mixf = nt.nodes.new("ShaderNodeMath"); mixf.operation = "MULTIPLY_ADD"; mixf.inputs[1].default_value = 0.35
     L(nz.outputs["Fac"], mixf.inputs[0]); L(hz.outputs["Result"], mixf.inputs[2])
     ramp = nt.nodes.new("ShaderNodeValToRGB"); cr = ramp.color_ramp
-    cr.elements[0].position = 0.15; cr.elements[0].color = (0.46, 0.25, 0.085, 1)     # golden-brown side
-    cr.elements[1].position = 1.15 if False else 1.0; cr.elements[1].color = (0.22, 0.09, 0.025, 1)    # deep top
-    e = cr.elements.new(0.6); e.color = (0.33, 0.16, 0.045, 1)
+    cr.elements[0].position = 0.15; cr.elements[0].color = (0.27, 0.145, 0.055, 1)    # golden-brown side
+    cr.elements[1].position = 1.15 if False else 1.0; cr.elements[1].color = (0.14, 0.06, 0.018, 1)    # deep top
+    e = cr.elements.new(0.6); e.color = (0.20, 0.095, 0.03, 1)
     L(mixf.outputs[0], ramp.inputs["Fac"])
     fa = nt.nodes.new("ShaderNodeAttribute"); fa.attribute_name = "flour"; fa.attribute_type = "GEOMETRY"
     fn = nt.nodes.new("ShaderNodeTexNoise"); fn.inputs["Scale"].default_value = 90; fn.inputs["Detail"].default_value = 8
@@ -730,8 +730,21 @@ def mat_bread():
     ea = nt.nodes.new("ShaderNodeAttribute"); ea.attribute_name = "ear"; ea.attribute_type = "GEOMETRY"
     dark = nt.nodes.new("ShaderNodeMix"); dark.data_type = "RGBA"
     L(ea.outputs["Fac"], dark.inputs[0]); L(ramp.outputs["Color"], dark.inputs[6]); dark.inputs[7].default_value = (0.20, 0.08, 0.02, 1)
+    bz = nt.nodes.new("ShaderNodeMapRange"); bz.inputs["From Min"].default_value = 0.0; bz.inputs["From Max"].default_value = 0.014
+    bz.inputs["To Min"].default_value = 1.0; bz.inputs["To Max"].default_value = 0.0
+    L(sep.outputs["Z"], bz.inputs["Value"])
+    base = nt.nodes.new("ShaderNodeMix"); base.data_type = "RGBA"
+    L(bz.outputs["Result"], base.inputs[0]); L(dark.outputs[2], base.inputs[6]); base.inputs[7].default_value = (0.16, 0.07, 0.02, 1)
+    # a few soft flour patches on the dome (plus the flour in the cut)
+    fp = nt.nodes.new("ShaderNodeTexNoise"); fp.inputs["Scale"].default_value = 11; fp.inputs["Detail"].default_value = 4
+    L(tc.outputs["Object"], fp.inputs["Vector"])
+    fpm = nt.nodes.new("ShaderNodeMapRange"); fpm.inputs["From Min"].default_value = 0.62; fpm.inputs["From Max"].default_value = 0.72
+    fpm.inputs["To Max"].default_value = 0.55
+    L(fp.outputs["Fac"], fpm.inputs["Value"])
+    fph = nt.nodes.new("ShaderNodeMath"); fph.operation = "MULTIPLY"; L(fpm.outputs["Result"], fph.inputs[0]); L(hz.outputs["Result"], fph.inputs[1])
+    fall = nt.nodes.new("ShaderNodeMath"); fall.operation = "MAXIMUM"; L(fm2.outputs["Result"], fall.inputs[0]); L(fph.outputs[0], fall.inputs[1])
     flour = nt.nodes.new("ShaderNodeMix"); flour.data_type = "RGBA"
-    L(fm2.outputs["Result"], flour.inputs[0]); L(dark.outputs[2], flour.inputs[6]); flour.inputs[7].default_value = (0.84, 0.78, 0.68, 1)
+    L(fall.outputs[0], flour.inputs[0]); L(base.outputs[2], flour.inputs[6]); flour.inputs[7].default_value = (0.84, 0.78, 0.68, 1)
     L(flour.outputs[2], p.inputs["Base Color"])
     rr = nt.nodes.new("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.85; rr.inputs["To Max"].default_value = 0.95
     p.inputs["Specular IOR Level"].default_value = 0.25
@@ -739,13 +752,15 @@ def mat_bread():
     p.inputs["Sheen Weight"].default_value = 0.05
     p.inputs["Subsurface Weight"].default_value = 0.05
     p.inputs["Subsurface Radius"].default_value = (1.0, 0.5, 0.25); p.inputs["Subsurface Scale"].default_value = 0.002
-    bl = nt.nodes.new("ShaderNodeTexVoronoi"); bl.inputs["Scale"].default_value = 70
+    bl = nt.nodes.new("ShaderNodeTexVoronoi"); bl.feature = "DISTANCE_TO_EDGE"; bl.inputs["Scale"].default_value = 110
     L(tc.outputs["Object"], bl.inputs["Vector"])
+    blc = nt.nodes.new("ShaderNodeMapRange"); blc.inputs["From Min"].default_value = 0.0; blc.inputs["From Max"].default_value = 0.03
+    L(bl.outputs["Distance"], blc.inputs["Value"])
     fine = nt.nodes.new("ShaderNodeTexNoise"); fine.inputs["Scale"].default_value = 220; fine.inputs["Detail"].default_value = 6
     L(tc.outputs["Object"], fine.inputs["Vector"])
-    h = nt.nodes.new("ShaderNodeMath"); h.operation = "MULTIPLY_ADD"; h.inputs[1].default_value = 0.5
-    L(fine.outputs["Fac"], h.inputs[0]); L(bl.outputs["Distance"], h.inputs[2])
-    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Distance"].default_value = 0.003
+    h = nt.nodes.new("ShaderNodeMath"); h.operation = "MULTIPLY_ADD"; h.inputs[1].default_value = 0.25
+    L(fine.outputs["Fac"], h.inputs[0]); L(blc.outputs["Result"], h.inputs[2])
+    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Distance"].default_value = 0.0006
     L(h.outputs[0], bp.inputs["Height"]); L(bp.outputs["Normal"], p.inputs["Normal"])
     return m
 
@@ -819,7 +834,7 @@ def build_bread(loc, radius=0.115, height=0.095, seed=5, rot=0.0, half=False):
     o = C.link(bpy.data.objects.new("BreadHalf" if half else "Bread", me))
     C.smooth_shade(o)
     tx = bpy.data.textures.new("BreadLump", "CLOUDS"); tx.noise_scale = 0.05
-    dm = o.modifiers.new("Lump", "DISPLACE"); dm.texture = tx; dm.strength = 0.004; dm.mid_level = 0.5
+    dm = o.modifiers.new("Lump", "DISPLACE"); dm.texture = tx; dm.strength = 0.002; dm.mid_level = 0.5
     dm.texture_coords = "OBJECT"
     o.location = loc; o.rotation_euler.z = rot
     C.assign(o, mat_bread())
@@ -1695,7 +1710,7 @@ def build_sofra(seed=77):
     _drop_to_table(lem, SOFRA["lemon"], (math.radians(88), 0, math.radians(30)))
     app = [o for o in C.ph_model("food_apple_01", "1k") if o.type == "MESH"][0]
     _drop_to_table(app, SOFRA["apple"], (0, 0, 1.3))
-    bread = build_bread(Vector((*SOFRA["bread"], TZ)), rot=0.6)
+    bread = build_bread(Vector((*SOFRA["bread"], TZ)), rot=-2.1)   # slash + ear toward the boom/slider camera
     build_bread(Vector((*SOFRA["halfloaf"], TZ)), rot=0.3, seed=8, radius=0.105, half=True)
     build_extras()
     gx, gy = SOFRA["glass"]
