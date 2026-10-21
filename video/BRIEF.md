@@ -19,6 +19,11 @@ counters) explain what we see. The *look* is the opposite of Kurzgesagt's flat s
 > medical/scientific CGI — e.g. high-end documentary micro-photography). No toy look, no plastic,
 > no CG-clean surfaces, no perfect symmetry, no flat lighting.
 
+> **NO WOMEN.** (binding user requirement) No woman or female figure may appear anywhere in the film. The only
+> human element is an adult **man's** hand/forearm (sh04, sh08): broad palm, thick fingers and knuckles,
+> visible tendons/veins, hair on the back of the hand and forearm, short plain nails, no jewellery, a man's
+> shirt cuff. Never anything that reads as a female hand.
+
 There is **no music**. Sound effects only (done in post — but design moments that deserve a sound:
 a drop landing, a bubble popping, a heartbeat pulse, a page turning).
 
