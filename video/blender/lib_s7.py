@@ -1276,9 +1276,9 @@ def build_fibre_interior(root_name, matrix, fibre_c=(0.0105, 0.02), fibre_r=0.18
                 continue
             if abs(z) < corridor_hw + 0.006 and x < corridor_x + 0.006:
                 continue
-            if abs(z) > 0.08 or x > 0.07:
+            if abs(z) > 0.05 or x > 0.045 or x < -0.08:
                 continue                                  # beyond the haze
-            for k in range(-5, 6):
+            for k in range(-3, 4):
                 if rng.random() < 0.5:
                     continue
                 y = k * sarc + rng.uniform(-0.0015, 0.0015)

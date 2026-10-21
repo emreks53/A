@@ -158,7 +158,7 @@ def build(ctx):
             scene.cycles.samples = 8 if scene.frame_current <= 1310 else 16
     bpy.app.handlers.frame_change_pre.append(_spp)
     ov = dict(L.LEAN)
-    ov.update(transmission_bounces=3, transparent_bounces=8, final_spp=8, preview_spp=12)
+    ov.update(transmission_bounces=3, transparent_bounces=3, final_spp=8, preview_spp=12)
     return ov
 
 
