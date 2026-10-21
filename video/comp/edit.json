@@ -28,7 +28,7 @@
   {"a": "sh13b", "b": "sh14a", "type": "defocus", "frames": 12, "radius": 32, "why": "seedling dew drop -> focus pull to the sunflower spiral"},
   {"a": "sh14a", "b": "sh14b", "type": "dissolve", "frames": 6, "why": "shadow sweeps in (the sweep itself is the first beat of sh14b)"},
   {"a": "sh14b", "b": "sh14c", "type": "dip", "frames": 12, "why": "darkness -> cold grey desert (A out by p 0.4, a beat of black, B rises)"},
-  {"a": "sh14c", "b": "sh15", "type": "luma", "frames": 10, "why": "lifeless stone -> warm sunbeam (light leads)"}
+  {"a": "sh14c", "b": "sh15", "type": "dissolve", "frames": 12, "why": "cold lifeless stone -> dark shuttered room; plain dissolve over the 6+6 handle frames 2629-2640 (a luma lead keyed sh15's bright wall first and left a white rahle-shaped matte over 2631-2638)"}
  ],
  "head_fade": {"frames": 10, "from": "black"},
  "tail_fade": {"frames": 30, "to": "black"},
@@ -45,6 +45,7 @@
   "grain": {"amount": 0.0105, "size": 0.75, "coarse": 0.35, "chroma": 0.22, "on_graphics": 0.55},
   "overlay_glow": {"sigmas": [2.5, 8, 22], "weights": [0.5, 0.42, 0.3], "core": 0.45},
   "legibility": {"threshold": 0.46, "gain": 0.85, "max": 0.16, "max_local": 0.30, "pad": 80, "extent": 200,
-                 "extent_local": 50, "softness": 0.28, "luma": [0.45, 0.9], "texture": 0.07, "flat_floor": 0.35}
+                 "extent_local": 50, "softness": 0.28, "luma": [0.45, 0.9], "texture": 0.07, "flat_floor": 0.35,
+                 "scrim": {"extent": 130, "pad": 150, "softness": 0.32}}
  }
 }

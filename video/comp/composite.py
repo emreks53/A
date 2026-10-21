@@ -16,7 +16,8 @@ padded/trimmed to the frame range) and verified (frame count, stream durations) 
 
 Processing per output frame (scene-linear float32 unless noted):
   decode (16-bit) -> per-shot grade trims -> transition mix -> bloom + halation -> vignette -> lateral CA
-  -> display encode -> sharpen -> adaptive legibility under key words -> overlay OVER + additive light (screen)
+  -> display encode -> sharpen -> adaptive legibility under key words (+ optional per-keyword scrim floor)
+  -> overlay OVER + additive light (screen)
   -> luminance-dependent animated grain (deterministic per frame) -> 8-bit -> x264 (High, yuv420p, BT.709 tags).
 """
 import argparse
@@ -550,17 +551,31 @@ def legibility(disp, boxes, cfg, scale, w, h):
     """Soft, content-aware darkening behind text where the plate is bright. Each pixel is darkened in proportion
     to its own brightness (k * smoothstep(lo, hi, luma)): dark areas are left alone, so it reads as a natural
     local exposure falloff rather than a grey band. The region is the text's extent plus ~150 px, feathered;
-    the glyph shadows do the rest."""
+    the glyph shadows do the rest.
+    Scrim: a key-word box [x0, y0, x1, y1, w, 0, s] (overlays.json keyword "scrim") adds a soft elliptical
+    vignette of strength s behind the line that is NOT luma-gated (it steadies a strobing or mid-tone background)
+    and acts as a floor on the darkening: each pixel gets max(legibility darkening, scrim)."""
     if not boxes:
         return disp
     lc = cfg
     mask = None
+    scrim = None
     sw, shh = max(8, w // 8), max(8, h // 8)
     yy = (np.arange(shh, dtype=np.float32) + 0.5) / shh * h
     xx = (np.arange(sw, dtype=np.float32) + 0.5) / sw * w
     for b in boxes:
         x0, y0, x1, y1, wt = b[:5]
         local = len(b) > 5 and b[5] == 1
+        ks = float(b[6]) if len(b) > 6 and not local else 0.0
+        if ks > 0.003:
+            sc = {"extent": 130, "pad": 150, "softness": 0.32, **lc.get("scrim", {})}
+            cxs, cys = (x0 + x1) / 2 * scale, (y0 + y1) / 2 * scale
+            rxs = ((x1 - x0) / 2 + sc["extent"]) * scale
+            rys = ((y1 - y0) / 2 + sc["pad"]) * scale
+            r = np.sqrt(((xx[None, :] - cxs) / rxs) ** 2 + ((yy[:, None] - cys) / rys) ** 2)
+            # logistic falloff normalised to exactly ks at the centre: no edge, no plateau corners
+            sm = (ks * (1 + math.exp(-1 / sc["softness"])) / (1 + np.exp((r - 1) / sc["softness"]))).astype(np.float32)
+            scrim = sm if scrim is None else np.maximum(scrim, sm)
         if wt < 0.02:
             continue
         x0s, y0s, x1s, y1s = [v * scale for v in (x0, y0, x1, y1)]
@@ -588,15 +603,27 @@ def legibility(disp, boxes, cfg, scale, w, h):
         r = np.sqrt(((xx[None, :] - cx) / rx) ** 2 + ((yy[:, None] - cy) / ry) ** 2)
         m = k / (1 + np.exp((r - 1) / lc["softness"]))
         mask = m if mask is None else np.maximum(mask, m)
-    if mask is None:
+    if mask is None and scrim is None:
         return disp
-    big = cv2.resize(mask, (w, h), interpolation=cv2.INTER_CUBIC)
-    ys, ye = np.where(big.max(1) > 1e-3)[0][[0, -1]]
+    big = cv2.resize(mask, (w, h), interpolation=cv2.INTER_CUBIC) if mask is not None else None
+    sbig = cv2.resize(scrim, (w, h), interpolation=cv2.INTER_CUBIC) if scrim is not None else None
+    rows = np.zeros(h, bool)
+    for m_ in (big, sbig):
+        if m_ is not None:
+            rows |= m_.max(1) > 1e-3
+    if not rows.any():
+        return disp
+    ys, ye = np.where(rows)[0][[0, -1]]
     reg = disp[ys:ye + 1]
-    lum = cv2.GaussianBlur(reg @ LUMA, (0, 0), 1.5 * scale + 0.3)
-    lo, hi = lc["luma"]
-    u = np.clip((lum - lo) / (hi - lo), 0, 1)
-    f = 1 - big[ys:ye + 1] * (u * u * (3 - 2 * u))
+    dk = 0.0
+    if big is not None:
+        lum = cv2.GaussianBlur(reg @ LUMA, (0, 0), 1.5 * scale + 0.3)
+        lo, hi = lc["luma"]
+        u = np.clip((lum - lo) / (hi - lo), 0, 1)
+        dk = big[ys:ye + 1] * (u * u * (3 - 2 * u))
+    if sbig is not None:
+        dk = np.maximum(dk, np.clip(sbig[ys:ye + 1], 0, 1))
+    f = 1 - dk
     disp[ys:ye + 1] = reg * f[..., None]
     return disp
 

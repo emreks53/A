@@ -231,6 +231,13 @@ def safe_fade(x, y, safe, fade=60.0):
     return u * u * (3 - 2 * u)
 
 
+def _has_visible_column(d, name):
+    """True when the tracker's 4th column (visible) carries information: present on every sample of the file and
+    set (> 0.5) on at least one of them."""
+    rows = [r[name] for r in d.get("frames", {}).values() if r.get(name) is not None]
+    return bool(rows) and all(len(r) >= 4 for r in rows) and any(r[3] > 0.5 for r in rows)
+
+
 def make_track(shot, name, fallback, f_lo, f_hi, warn, sig_fine=0.6, sig_label=6.0, keep_depth=False,
                safe=None, clamp_inset=None):
     """Per-frame screen path for frames [f_lo, f_hi): exact (lightly smoothed) x,y; heavily smoothed xs,ys for
@@ -248,11 +255,19 @@ def make_track(shot, name, fallback, f_lo, f_hi, warn, sig_fine=0.6, sig_label=6
         if any(r is not None for r in rows):
             src = "track"
             have = np.array([r is not None for r in rows])
-            arr = np.array([r if r is not None else [np.nan, np.nan, -1, 0] for r in rows], float)
+            arr = np.array([(list(r) + [1.0])[:4] if r is not None else [np.nan, np.nan, -1, 0] for r in rows], float)
             x, y, dep, vis = arr[:, 0], arr[:, 1], arr[:, 2], arr[:, 3]
-            valid = have & (dep > 0) & (np.abs(x) < 3e4) & (np.abs(y) < 3e4)
+            in_front = have & (dep > 0) & (np.abs(x) < 3e4) & (np.abs(y) < 3e4)
+            valid = in_front.copy()
+            # column 4 = visible (export_tracks: in front of the camera AND inside the frame). Samples that are not
+            # visible never feed the interpolation or the label smoothing: an off-screen tracker may be parked
+            # anywhere (TRK_page sits below the floor / under the leaves while its camera is not live). Trackers
+            # without a meaningful visible column (missing, or never set in the whole file) keep the depth rule.
+            if _has_visible_column(d, name):
+                valid &= vis > 0.5
             if not valid.any():
-                warn(f"{shot}/TRK_{name}: never in front of the camera in frames {f_lo}-{f_hi - 1}")
+                warn(f"{shot}/TRK_{name}: never visible (in front of the camera, inside the frame) in frames "
+                     f"{f_lo}-{f_hi - 1}")
                 valid[:] = False
             if valid.any():
                 idx = np.where(valid)[0]
@@ -260,7 +275,9 @@ def make_track(shot, name, fallback, f_lo, f_hi, warn, sig_fine=0.6, sig_label=6
                 dep = np.interp(np.arange(len(dep)), idx, dep[idx])
             else:
                 fx, fy = _fallback_xy(fallback, t); x, y, dep = fx, fy, np.ones_like(fx)
-            vis = np.where(valid, 1.0, 0.0)
+            # a clamped anchor is held inside the safe area by design (it glides to a stop at the last visible
+            # position instead of fading), so leaving the frame does not hide it; only going behind the camera does
+            vis = np.where(in_front if clamp_inset is not None else valid, 1.0, 0.0)
         else:
             warn(f"{shot}: tracker TRK_{name} missing in tracks/{shot}.json -> fallback")
     elif fallback is not None:
@@ -333,6 +350,14 @@ def resolve(spec_path=None, verbose=True):
         if "swell" in k:
             el["swell"] = {"t": clk.t(k["swell"]["at"], k["shot"]), "gain": k["swell"].get("gain", 0.8),
                            "dur": k["swell"].get("dur", 1.0)}
+        if "scrim" in k:
+            # soft dark vignette behind the line(s), a floor on the compositor's legibility darkening (composite.py
+            # legibility()); overlay.js eases it over 'fade' s inside [from, to] and gates it with the word's alpha
+            sc = k["scrim"]
+            el["scrim"] = {"from": clk.t(sc["from"], k["shot"]), "to": clk.t(sc["to"], k["shot"]),
+                           "k": float(sc.get("k", 0.35)), "fade": float(sc.get("fade", 0.15))}
+            if "dust" in st:
+                warn(f"{k['id']}: 'scrim' is not drawn for crumbling (dust) words")
         cut_t = sh[k["shot"]]["end_s"]
         if "dust" in st:
             # crumbling words have no exit: everything (letters and every dust grain) is gone by the cut

@@ -9,6 +9,8 @@
  * API (called by render_overlays.mjs):
  *   await window.ovInit(timeline, scale)        -> loads fonts, sizes canvases (1080*scale x 1920*scale)
  *   window.ovRender(frame)                      -> {over: bool, add: bool, boxes: [[x0,y0,x1,y1,w], ...]}
+ *     boxes: legibility boxes for the compositor; [.., w, 1] = a callout label (local darkening),
+ *     [.., w, 0, s] = a key-word line with a scrim of strength s (a floor on the darkening behind it)
  * Coordinates everywhere are in the 1080x1920 layout space; `S` maps them to device pixels.
  */
 'use strict';
@@ -368,10 +370,19 @@ function drawKeyword(el, t) {
     for (const s of seps) glowDot(A, s.x, s.y, s.r * 6, st.glow[0], s.a * 0.35 * breathe);
   }
   // legibility boxes for the compositor + knock-out boxes (graphics never cross a key word)
+  // optional scrim (overlays.json "scrim": {from, to, k}): a soft dark vignette behind the line, k at full
+  // strength, easing in/out over 'fade' s inside [from, to] and never stronger than the line itself is visible
+  let scr = 0;
+  if (el.scrim) {
+    const sc = el.scrim, fd = sc.fade || 0.15;
+    scr = sc.k * smooth(lin(t, sc.from, sc.from + fd)) * (1 - smooth(lin(t, sc.to - fd, sc.to)));
+  }
   for (const [ln, b] of boxLines) {
     const y0 = cy + ((ln.cy - L.capH * 0.5) - cy) * k, y1 = cy + ((ln.cy + L.capH * 0.5) - cy) * k;
     const x0 = cx + (ln.x0 - cx) * k, x1 = cx + (ln.x0 + ln.w - cx) * k;
-    BOXES.push([x0, y0, x1, y1, b.a * (st.legibility || 1)]);
+    const box = [x0, y0, x1, y1, b.a * (st.legibility || 1)];
+    if (scr * b.a > 0.001) box.push(0, scr * Math.min(1, b.a));
+    BOXES.push(box);
     KWBOXES.push([cx + (ln.ink[0] - cx) * k, cy + (ln.ink[1] - cy) * k, cx + (ln.ink[2] - cx) * k, cy + (ln.ink[3] - cy) * k, b.a]);
   }
 }
@@ -1191,7 +1202,8 @@ window.ovRender = function (f) {
   }
   const ob = drewOver ? contentBox(cOver) : null;
   const ab = drewAdd ? contentBox(cAdd) : null;
-  return { over: ob, add: ab, boxes: BOXES.map(b => b.map(v => Math.round(v * 10) / 10)) };
+  // (the scrim strength, index 6, keeps 3 decimals so its fades stay smooth)
+  return { over: ob, add: ab, boxes: BOXES.map(b => b.map((v, i) => (i === 6 ? Math.round(v * 1000) / 1000 : Math.round(v * 10) / 10))) };
 };
 
 window.ovInit = async function (timeline, scale) {
