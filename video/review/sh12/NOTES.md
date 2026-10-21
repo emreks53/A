@@ -1,4 +1,4 @@
-# sh12 — review round 2 (studio S8)
+# sh12 — review round 3 (studio S8)
 
 63.85–74.15 s · render f1526–1785 · "İşte bütün bu ihtiyaçların karşılanması **bir tek** yaratıcının … **ondan başka olamaz**"
 
@@ -50,9 +50,17 @@ curtain under it), TRK_sea, TRK_river, TRK_forest — placed on screen at the se
 * Sea: wind patches + wave groups break the sun column up a little.
 * TRK_sun now sits where the rays converge in the plate (x≈548, y≈598 at the settle).
 
+## Round 3 changes
+* **Render time now ~45 s/frame** (7 spp + OIDN; measured f1680–1682 at 1080×1920: 84.6 s first frame incl.
+  one-time 16k HDRI importance map, then 44.7 s and 45.4 s). Tree instances trimmed to ~410 k.
+* Riparian woodland lines both river banks (shadows fall across the water) — the river no longer reads as a
+  road. Pale gravel bars on some bends.
+* One clear rain curtain hangs from the big cumulus at right (TRK_rain); the faint left ones were removed.
+* Mountain flanks: scrub patches, scree fans and darker gullies so the shadowed faces have texture.
+* Fixed a transparency-depth bug that showed rectangular card edges in the cloud emergence (round-2 stills).
+
 ## Known issues / next round (already working on them)
 * Land still reads CG in places: meadows too uniform (need grass/shrub/patch texture + micro relief so the
   grazing sun makes texture), mountain flanks too smooth, forest canopy too black/uniform at the edges.
 * Sun reflection on the sea is a too-clean vertical bar; will become a broken glitter path.
-* Rain curtains under the far clouds are too faint (barely visible) — will be strengthened.
 * Veil at the start reads a bit like fog; will add more cloud structure/brightness gradient.
