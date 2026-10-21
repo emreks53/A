@@ -638,6 +638,15 @@
    "from": 2945,
    "to": 3011,
    "note": "sh15 rev 3.1 approved; camE"
+  },
+  {
+   "node": "b48",
+   "branch": "render-jobs",
+   "ref": "afd894aba2c248bd497d0511cc25eda90a51e1e4",
+   "shot": "sh03",
+   "from": 293,
+   "to": 326,
+   "note": "QA r3: deep bounces kept to f326 (glass leaves frame); must start at 293 and run as one job"
   }
  ]
 }
