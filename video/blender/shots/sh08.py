@@ -469,7 +469,8 @@ _cfg0 = C.configure_render
 # window across a 4 cm aperture); OIDN keeps it as detail and the field boils (32 spp barely helps). From this frame
 # on (nothing is in focus any more) denoise with colour + albedo only: same cost, smooth field, and closer to a 512 spp
 # reference (the boil also darkened the glow ~1 %). Pure function of the frame, so any chunk start gives the same image.
-GLOW_NO_NORMAL_F = 1104
+# QA g10-1: switch at 1091, not 1104 (1091-1103 boiled as well); 1089-1090 keep the normal guide for the apple rim.
+GLOW_NO_NORMAL_F = 1091
 
 
 def _cfg(mode, ov):
