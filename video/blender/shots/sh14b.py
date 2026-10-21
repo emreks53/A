@@ -141,13 +141,25 @@ def build(ctx):
     halo.data.materials.append(hm)
     halo.visible_diffuse = halo.visible_glossy = halo.visible_shadow = halo.visible_transmission = False
     fl2 = C.point_light("flame_fill", loc=fc + Vector((0, 0, 0.015)), power=15, radius=0.03, kelvin_k=1700)
-    # flicker
+    # flicker: smooth band-limited candle noise (1.1-3.6 Hz, at most about +-0.14 stop), a pure function of the
+    # absolute frame, so every render range gets the same keys. Both flame lights, the flame card's glow and the
+    # halo ride the same signal. The flame card shadows its own lights, and that shadow changes steeply with the
+    # card's height (it is scaled about the lamp base, so scaling slides it over the light: per-frame height noise
+    # made the room strobe). So the height is held at the approved look. Once the cloth hides the flame, it settles
+    # to the taller flame of the approved covered look, choked of draft.
+    flk = ((1.13, 0.035, 0.4), (1.87, 0.028, 2.1), (2.71, 0.020, 4.0), (3.64, 0.012, 5.3))   # (Hz, amplitude, phase)
+    glow = [em.inputs["Strength"]] + [m.node_tree.nodes["Principled BSDF"].inputs["Emission Strength"] for m in flame.data.materials]
+    glow0 = [s.default_value for s in glow]
     for f in range(ctx.f0 - 4, ctx.f1 + 5):
         t = f / C.FPS
-        fk = 1 + 0.06 * math.sin(t * 23.0) + 0.04 * math.sin(t * 37.3 + 1) + 0.03 * math.sin(t * 61.7 + 2)
+        fk = 1 + sum(a * math.sin(2 * math.pi * hz * t + ph) for hz, a, ph in flk)
         fl.data.energy = 95 * fk; fl.data.keyframe_insert("energy", frame=f)
-        flame.scale = (1, 1, 0.96 + 0.05 * (fk - 1) / 0.13)
-        flame.keyframe_insert("scale", frame=f)
+        fl2.data.energy = 15 * fk; fl2.data.keyframe_insert("energy", frame=f)
+        for s, v0 in zip(glow, glow0):
+            s.default_value = v0 * fk; s.keyframe_insert("default_value", frame=f)
+    for t, sz in ((ctx.t0 - 0.3, 0.94), (t_cover + 0.25, 0.94), (t_cover + 1.0, 0.985), (ctx.t1 + 0.3, 0.985)):
+        flame.scale = (1, 1, sz)
+        C.key(flame, "scale", t, None)
 
     # ------------------------------------------------------------ "shadow sweeps in": daylight from the right is cut off
     win = C.area("daylight", loc=(1.6, -0.6, 1.4), look_at=(0, 0.6, 0.3), size=0.9, size_y=1.4, power=900, kelvin_k=3600)

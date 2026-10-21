@@ -19,6 +19,7 @@ SUN_DIR2 = Vector((-math.sin(SUN_AZ), math.cos(SUN_AZ), 0))
 HC_LOCAL = Vector((0, 0.07, 0.16))                      # disc centre in pivot space
 FIELD_R = float(os.environ.get("S2_FIELD_R", 120))
 LOD_NEAR = float(os.environ.get("S2_LODN", 9.0))
+FOCUS_MIN = 0.14                                        # m; min. Cycles focus distance (approved dips: 0.143-0.18)
 
 
 def head_matrix(pivot, yaw, pitch):
@@ -399,18 +400,34 @@ def build(ctx):
     cam.data.dof.use_dof = True
     cam.data.dof.aperture_blades = 7
     cam.data.dof.focus_object = foc
+    prev_rot, floored = None, []
     for f in frames:
         pos, aim, target, lens, fst, roll = cam_state(f / C.FPS)
         cam.location = pos
         C.point_at(cam, aim, roll_deg=roll)
+        # keep the Euler keys continuous: point_at wraps yaw at +-180 deg (f2270->2271), and the motion-blur
+        # shutter would interpolate that as a ~360 deg spin (ghosted frames 2270-2271). Same orientation per frame.
+        e = cam.rotation_euler.copy()
+        if prev_rot is not None:
+            e.make_compatible(prev_rot)
+        cam.rotation_euler = e
+        prev_rot = e.copy()
         cam.keyframe_insert("location", frame=f)
         cam.keyframe_insert("rotation_euler", frame=f)
+        # Cycles focuses at |dot(view axis, cam - focus)|. While the focus target swings toward the far field it
+        # crosses the lens plane (0.04 m at f2253: the frame washed out to a flat gradient), so floor that distance.
+        vz = e.to_matrix().col[2]
+        dproj = vz.dot(pos - target)
+        if abs(dproj) < FOCUS_MIN:
+            target = target + vz * (dproj - math.copysign(FOCUS_MIN, dproj))
+            floored.append(f)
         foc.location = target
         foc.keyframe_insert("location", frame=f)
         cam.data.lens = lens
         cam.data.keyframe_insert("lens", frame=f)
         cam.data.dof.aperture_fstop = fst
         cam.data.dof.keyframe_insert("aperture_fstop", frame=f)
+    print(f"[sh14a] focus floor {FOCUS_MIN} m applied at frames {floored}", flush=True)
     C.handheld(cam, amp_loc=0.0005, amp_rot=0.0006, speed=0.4, seed=14)
 
     for f, ev in ((ctx.f0, 1.9), (C.t2f(90.3), 1.5), (C.t2f(92.0), 0.15), (C.t2f(95.0), 0.2), (C.t2f(t_allah), 0.25), (ctx.f1, 0.2)):
