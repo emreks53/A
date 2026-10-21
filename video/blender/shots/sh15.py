@@ -1118,19 +1118,28 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0, g
     r = maprange(nt, rough.outputs[0], 0.25, 0.75, LR0, LR1)
     r = math_node(nt, "ADD", r, math_node(nt, "MULTIPLY", wear, vb=0.12))
     nm = NN(nt, "ShaderNodeNormalMap")
-    nm.inputs["Strength"].default_value = 0.85 + 0.65 * grain
+    nm.inputs["Strength"].default_value = 0.85
     LK(nt, nor.outputs[0], nm.inputs["Color"])
+    lnorm = nm.outputs[0]
     if grain > 0:
-        # leather_red_03: one pebble ~10 texels of the 2k map = 0.89 mm at this mapping (5.5/m) ->
-        # ~4.5 px on the cover at 112.3 s (title 80.4 mm = ~410 px). Pebble tops a touch lighter and
-        # glossier, the creases between them darker (albedo + roughness: kept by OIDN)
+        # leather_red_03's normal map is almost flat (std 0.007) and its colour variation is clamped by
+        # `var` above, so the grain never showed. One pebble is ~10 texels of the 2k maps = 0.89 mm at this
+        # mapping (5.5/m) -> ~4.5 px on the cover at 112.3 s (title 80.4 mm = ~410 px). The displacement
+        # map (p5-p95 0.38-0.55) drives it instead: crease darkening in albedo, glossier pebble tops, and
+        # a real ~70 um pebble relief (bump) that catches the raking sun.
         disp = img_node(nt, t["disp"], True, vec=mp.outputs[0])
-        pv = maprange(nt, disp.outputs[0], 0.30, 0.70, 1.0 - 0.16 * grain, 1.0 + 0.10 * grain)
+        pv = maprange(nt, disp.outputs[0], 0.37, 0.56, 1.0 - 0.20 * grain, 1.0 + 0.10 * grain)
         base = mixrgb(nt, 1.0, base, pv, "MULTIPLY")
-        r = math_node(nt, "ADD", r, maprange(nt, disp.outputs[0], 0.30, 0.70, 0.08 * grain, -0.06 * grain))
+        r = math_node(nt, "ADD", r, maprange(nt, disp.outputs[0], 0.37, 0.56, 0.10 * grain, -0.08 * grain))
+        gb = NN(nt, "ShaderNodeBump")
+        gb.inputs["Strength"].default_value = 1.0
+        gb.inputs["Distance"].default_value = 0.00007 * grain
+        LK(nt, disp.outputs[0], gb.inputs["Height"])
+        LK(nt, nm.outputs[0], gb.inputs["Normal"])
+        lnorm = gb.outputs[0]
     # satin finish: a softer, slightly warm sheen keeps sunlit crimson saturated (a strong white
     # sheen turned the lit leather salmon-pink)
-    leather = principled(nt, **{"Base Color": base, "Roughness": r, "Normal": nm.outputs[0],
+    leather = principled(nt, **{"Base Color": base, "Roughness": r, "Normal": lnorm,
                                 "Specular IOR Level": LSPEC, "Specular Tint": (1.0, 0.72, 0.58)})
     if not (mask and foil):
         LK(nt, leather.outputs[0], out.inputs["Surface"])
@@ -1157,7 +1166,7 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0, g
     nmix = NN(nt, "ShaderNodeMix")
     nmix.data_type = "VECTOR"
     LK(nt, math_node(nt, "MULTIPLY", foil_f, vb=0.75), nmix.inputs[0])
-    LK(nt, nm.outputs[0], nmix.inputs[4])
+    LK(nt, lnorm, nmix.inputs[4])
     LK(nt, geo.outputs["Normal"], nmix.inputs[5])
     LK(nt, nmix.outputs[1], bump.inputs["Normal"])
     LK(nt, bump.outputs[0], leather.inputs["Normal"])
@@ -2631,7 +2640,7 @@ def camera_table(sc, cams, f0, f1):
     return tab
 
 
-def build_motes(cam_tab, n=380, seed=7, strength=40.0, near=None, band=None):
+def build_motes(cam_tab, n=380, seed=7, strength=200.0, near=None, band=None):
     """Dust motes: 20-80 um specks scattered with the static sun visibility (beam_mask) as density, so they
     sit inside the shafts, plus `near` = (count, camera, frame) extra motes 12-40 cm in front of that
     camera (inside its beam), which the depth of field turns into soft discs. Camera-only emitters that glow
@@ -2640,7 +2649,7 @@ def build_motes(cam_tab, n=380, seed=7, strength=40.0, near=None, band=None):
     Sub-pixel emitters cannot be sampled at 5 spp (a 50 um speck covers ~1 % of a pixel, so it either
     misses every sample or comes out as a 1-px firefly; behind a wide aperture it is hit ~once per frame).
     Each mote is therefore drawn as an energy-conserving sprite: a sphere of radius
-    R = max(r, 0.75 px footprint, 0.3 x lens-cone cross-section at the mote's depth) whose emission is
+    R = max(r, 1 px footprint, 0.3 x lens-cone cross-section at the mote's depth) whose emission is
     scaled by (r / R)^2 and shaped 3 mu^4 (unit flux), i.e. the same light a 20-80 um speck sends to the
     lens, spread over what the pixel filter / the bokeh would spread it over anyway."""
     import numpy as np
@@ -2736,7 +2745,7 @@ def build_motes(cam_tab, n=380, seed=7, strength=40.0, near=None, band=None):
     r_in = N.new("GeometryNodeInputNamedAttribute"); r_in.data_type = "FLOAT"
     r_in.inputs["Name"].default_value = "r_phys"
     rp = r_in.outputs["Attribute"]
-    r_px = mth("MULTIPLY", mth("MULTIPLY", d, vals["pix"].outputs[0]), 0.75)
+    r_px = mth("MULTIPLY", mth("MULTIPLY", d, vals["pix"].outputs[0]), 1.0)
     cone = mth("DIVIDE", mth("MULTIPLY", vals["aper"].outputs[0], mth("ABSOLUTE", mth("SUBTRACT", d, vals["sfoc"].outputs[0]))),
                vals["sfoc"].outputs[0])
     R = mth("MAXIMUM", rp, mth("MAXIMUM", r_px, mth("MULTIPLY", cone, 0.3)))
@@ -3108,7 +3117,7 @@ def build(ctx):
         t_c = time.time()
         tab = camera_table(sc, cams, ctx.f0 - 2, ctx.f1 + 2)
         build_motes(tab, n=int(os.environ.get("SH15_MOTES", "380")),
-                    strength=float(os.environ.get("SH15_MOTE_K", "40")),
+                    strength=float(os.environ.get("SH15_MOTE_K", "200")),
                     near=(int(os.environ.get("SH15_MOTES_NEAR", "40")), camE, (fE + ctx.f1) // 2),
                     band=(520 / C.H, 820 / C.H, int(round(112.0 * C.FPS)), int(math.floor(115.1 * C.FPS))))
         sc.frame_set(ctx.f0)
