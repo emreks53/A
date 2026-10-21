@@ -273,13 +273,31 @@ def forearm_and_cuff(mesh, wrist_local, tip_local, skin):
     import lib_s3 as L
     up = (wrist_local - tip_local).normalized()          # local direction from fingers to elbow
     w0 = wrist_local - up * 0.012
-    pts = [w0 + up * (0.30 * i / 11) for i in range(12)]
-    rad = [0.029 + 0.010 * (i / 11) for i in range(12)]
-    bm, fr, ln = L.tube_bm(pts, rad, segs=20, seed=5, wobble=0.02)
-    for v in bm.verts:
-        v.co.y *= 0.82                                   # forearm is oval
+    # The base mesh ends in a capped wrist stub, and a narrower tube below it read as a mannequin lip.
+    # Grow the forearm out of the stub's own cross-section instead (see _forearm_rings).
+    rings, surf, cen, (e1, e2) = _forearm_rings(mesh, wrist_local, up)
+    bm = bmesh.new()
+    vr = [[bm.verts.new(p) for p in ring] for ring in rings]
+    for r0, r1 in zip(vr, vr[1:]):
+        for k in range(len(r0)):
+            k1 = (k + 1) % len(r0)
+            bm.faces.new((r0[k], r0[k1], r1[k1], r1[k]))
+    bm.faces.new(vr[0][::-1]); bm.faces.new(vr[-1])
+    for f in bm.faces:
+        f.smooth = True
+    bm.normal_update()
     arm = L.obj_from_bm("S3_forearm", bm, [skin]); arm.parent = mesh
     C.subsurf(arm, 1, 2)
+    # One closed skin: two overlapping SSS solids leave a dark line where the forearm leaves the wrist.
+    # Bake hand (multires + subsurf, render levels) and forearm into one mesh by an exact boolean union.
+    for o in (mesh, arm):
+        for m in o.modifiers:
+            m.levels = m.render_levels
+    bo = mesh.modifiers.new("Fuse", "BOOLEAN"); bo.operation = "UNION"; bo.solver = "EXACT"; bo.object = arm
+    fused = bpy.data.meshes.new_from_object(mesh.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    mesh.modifiers.clear()
+    mesh.data = fused
+    bpy.data.objects.remove(arm)
     cloth = bpy.data.materials.new("S3_cuff"); cloth.use_nodes = True
     nt = cloth.node_tree; p = nt.nodes["Principled BSDF"]
     p.inputs["Base Color"].default_value = (0.20, 0.28, 0.42, 1)     # blue cotton shirt
@@ -289,9 +307,9 @@ def forearm_and_cuff(mesh, wrist_local, tip_local, skin):
     wv.inputs["Scale"].default_value = 900; nt.links.new(tc.outputs["Object"], wv.inputs["Vector"])
     b = nt.nodes.new("ShaderNodeBump"); b.inputs["Strength"].default_value = 0.15
     nt.links.new(wv.outputs["Fac"], b.inputs["Height"]); nt.links.new(b.outputs[0], p.inputs["Normal"])
-    c0 = wrist_local + up * 0.07
+    c0 = wrist_local + up * 0.07 + cen                   # (off frame) around the forearm's axis
     cpts = [c0 + up * (0.2 * i / 7) for i in range(8)]
-    crad = [0.047 + 0.004 * math.sin(i) for i in range(8)]
+    crad = [0.050 + 0.004 * math.sin(i) for i in range(8)]
     bm, fr, ln = L.tube_bm(cpts, crad, segs=24, seed=9, wobble=0.06, cap=False)
     for v in bm.verts:
         v.co.y *= 0.85
@@ -312,10 +330,8 @@ def forearm_and_cuff(mesh, wrist_local, tip_local, skin):
         if i < 520:                        # forearm (below the cuff)
             t = rnd.uniform(0.0, 0.075)
             a = rnd.uniform(-1.3, 1.3) + math.pi * (0.5 if PALM_SIGN > 0 else -0.5) * -1
-            r = 0.029 + 0.010 * t / 0.3
-            centre = w0 + up * t
-            n_ = Vector((math.cos(a), math.sin(a) * 0.82, 0))
-            root = centre + n_ * r
+            n_ = e1 * math.cos(a) + e2 * math.sin(a)
+            root = surf((w0 - wrist_local).dot(up) + t, a) - n_ * 0.0003     # on the forearm's skin
         else:                              # back of the hand
             root = Vector((rnd.uniform(-0.035, 0.05), -0.014 * PALM_SIGN * 1.22, rnd.uniform(-0.10, 0.02)))
             n_ = Vector((0, -PALM_SIGN, 0))
@@ -327,6 +343,62 @@ def forearm_and_cuff(mesh, wrist_local, tip_local, skin):
     ra.data.foreach_set("value", [0.000012, 0.000009, 0.000004] * n)
     cv.materials.append(hm)
     ho = bpy.data.objects.new("S3_armhair", cv); C.link(ho); ho.parent = mesh
+
+
+def _forearm_rings(mesh, wrist_local, up, n=64):
+    """Rings of a forearm grown out of the hand mesh's capped wrist stub (mesh-local).  The stub's
+    render-level surface is ray-cast around its axis: the forearm starts 1.2 mm inside it, emerges
+    tangentially just before the cap rounds off (so the cap is enclosed and no mesh end is visible),
+    then eases from the wrist's section to a smooth one and widens gently toward the elbow (off frame).
+    Also returns surf(h, a): the forearm surface point h m past the wrist end at angle a."""
+    from mathutils.bvhtree import BVHTree
+    sub = mesh.modifiers["Smooth"]; lv = sub.levels
+    sub.levels = sub.render_levels
+    ev = mesh.evaluated_get(bpy.context.evaluated_depsgraph_get()); me = ev.to_mesh()
+    bvh = BVHTree.FromPolygons([v.co.copy() for v in me.vertices], [p.vertices[:] for p in me.polygons])
+    ev.to_mesh_clear(); sub.levels = lv
+    e1 = (Vector((1, 0, 0)) - up * up.x).normalized(); e2 = up.cross(e1)
+    ang = [2 * math.pi * k / n for k in range(n)]
+    dirs = [e1 * math.cos(a) + e2 * math.sin(a) for a in ang]
+
+    def section(h, c):
+        o = wrist_local + up * h + c
+        return [bvh.ray_cast(o, d)[3] or 0.0 for d in dirs]
+    hs = [-0.040 + 0.002 * i for i in range(21)]
+    mr = [sum(section(h, Vector())) for h in hs]
+    h_c = hs[mr.index(max(mr))] - 0.002                  # widest wrist section, before the cap rounds off
+    pts = [d * r for d, r in zip(dirs, section(h_c, Vector()))]
+    cen = (e1 * (max(p.dot(e1) for p in pts) + min(p.dot(e1) for p in pts)) +
+           e2 * (max(p.dot(e2) for p in pts) + min(p.dot(e2) for p in pts))) * 0.5
+    Rc = section(h_c, cen)
+    slope = [max(-0.2, min(0.2, (a - b) / 0.008)) for a, b in zip(Rc, section(h_c - 0.008, cen))]
+    co = [(sum(r * math.cos(m * a) for r, a in zip(Rc, ang)) * (1 if m == 0 else 2) / n,
+           sum(r * math.sin(m * a) for r, a in zip(Rc, ang)) * 2 / n) for m in range(4)]
+    Rl = [sum(c * math.cos(m * a) + s_ * math.sin(m * a) for m, (c, s_) in enumerate(co)) for a in ang]
+    PAD = 0.0005
+
+    def r_out(u, k):                                     # u = h - h_c >= 0; k: fractional angle index
+        k0 = int(k) % n; k1 = (k0 + 1) % n; w = k - int(k)
+        f = lambda X: X[k0] * (1 - w) + X[k1] * w
+        return (f(Rc) + (f(Rl) - f(Rc)) * C.smooth(u / 0.08)          # tendon detail fades out
+                + f(slope) * 0.02 * (1 - math.exp(-u / 0.02))        # the wrist's flare eases out
+                + 0.004 * C.smooth(u / 0.22) + PAD)                  # widening toward the elbow
+    h_s = h_c - 0.03
+    heights = [h_s + 0.003 * i for i in range(10)] + [h_c + 0.003 * i for i in range(16)] + \
+              [h_c + u for u in (0.06, 0.08, 0.10, 0.13, 0.16, 0.20, 0.24, 0.30)]
+    rings = []
+    for h in heights:
+        if h < h_c - 1e-9:                               # inside the stub, then emerging from its skin
+            dl = -0.0012 + (0.0012 + PAD) * C.smooth((h - h_s) / (h_c - h_s))
+            R = [r + dl for r in section(h, cen)]
+        else:
+            R = [r_out(h - h_c, k) for k in range(n)]
+        rings.append([wrist_local + up * h + cen + d * r for d, r in zip(dirs, R)])
+
+    def surf(h, a):
+        d = e1 * math.cos(a) + e2 * math.sin(a)
+        return wrist_local + up * h + cen + d * r_out(max(0.0, h - h_c), (a / (2 * math.pi) * n) % n)
+    return rings, surf, cen, (e1, e2)
 
 
 def spread_fingers(mesh, knuckle_z=-0.112, amount=0.17):
