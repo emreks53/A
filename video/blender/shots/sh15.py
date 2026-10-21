@@ -7,16 +7,17 @@ the shutter rolls up and a warm low sun beam sweeps in from the window across th
 carved walnut rahle, the closed red "SOZLER" volume and the row of red Risale-i Nur volumes standing
 against the side wall (canonical order, with the gap where SOZLER was taken out).
 
-Camera plan (timeline markers, every cut derived from the narration with ctx.word):
-  camA  ..."721"-1.5f   wide -> crane down onto the closed SOZLER cover ("Sozler"); the cover ends in
-                        the lower half so the key-word band stays dark, defocused table.
-  camB  ..."baska"-1.5f the book lies open on the rahle; a breeze riffles 4 leaves back (727..721);
-                        the camera pushes in to a close-up of the page number "721".
-  camC  ..."cok"-1.5f   slow eased slider along the spines of the other volumes.
-  camD  ..."Bu"(2)-1f   back on the open page; the sun brightens ("cok guzel ifadelerle").
-  camE  ...end          final 3/4 composition: open Sozler on the rahle in the beam, slow push-in.
+Camera plan (timeline markers; each cut = start of the word - 1.5 frames, all from ctx.word):
+  camA  until "721"     wide -> crane (35->50 mm, f/2.8->1.4) down onto the closed SOZLER cover,
+                        framed on "Sozler"; the cover ends in the lower half so the key-word band holds
+                        only soft out-of-focus sun patches on the dark table.
+  camB  until "baska"   upright macro on the right-hand page: 4 leaves flip in (727..721), the last lands
+                        on "sayfasinda"; push-in (iris pull to f/8) to the page number "721".
+  camC  until "cok"     slow eased slider along the spines of the other volumes (<= 8 px/frame).
+  camD  until "Bu"(2)   back on the open spread; the sun brightens ("cok guzel ifadelerle").
+  camE  until the end   final 3/4 composition: open Sozler on the rahle in the beam, slow push-in.
 
-Light shafts and dust motes are NOT volumes: they are camera-only emission cards / points whose
+Light shafts and dust motes are NOT volumes: they are camera-only emission cards / tiny meshes whose
 brightness is the analytic sun visibility through the wall opening, the shutter and the kafes
 lattice (node group "beam_mask"), so they are exact, noise-free and cheap.
 
