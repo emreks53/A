@@ -2873,7 +2873,7 @@ def build(ctx):
         for ob in build_shafts((-0.80, 0.45, -0.40)):
             key_vis(ob, [(ctx.f0 - 10, int(t_soz * C.FPS - 6)), (fD, 99999)], ctx.f0, ctx.f1)
     if "motes" not in dis:
-        build_motes()
+        build_motes(n=int(os.environ.get("SH15_MOTES", "380")))
     # ------------------------------------------------ cameras
     V = Vector
     title = V((0.277, 0.106, 0.053))          # gold "SOZLER" on the closed cover
@@ -2944,9 +2944,12 @@ def build(ctx):
         def _nd(*_):
             bpy.context.scene.cycles.use_denoising = False
         bpy.app.handlers.render_pre.append(_nd)
-    ov = {"final_spp": 6, "final_threshold": 0.03, "final_min_spp": 4, "preview_spp": 16,
-          "diffuse_bounces": 1, "glossy_bounces": 2, "transmission_bounces": 2, "transparent_bounces": 8,
-          "max_bounces": 4, "clamp_indirect": 2.0, "texture_limit": "4096"}
+    # Render cost (measured, 4 cores, steady state in a chunk): ~5.5 s per sample at 1080x1920 + ~11 s
+    # OIDN (library preset HIGH/ACCURATE) + ~1.5 s sync/save. 5 spp -> ~40 s/frame. The sampling pattern
+    # is the same on every frame (see _static_seed) so the denoised residual does not boil.
+    ov = {"final_spp": 5, "final_threshold": 0.03, "final_min_spp": 5, "preview_spp": 16,
+          "diffuse_bounces": 1, "glossy_bounces": 1, "transmission_bounces": 2, "transparent_bounces": 8,
+          "max_bounces": 3, "clamp_indirect": 2.0, "texture_limit": "4096"}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
     return ov
 
