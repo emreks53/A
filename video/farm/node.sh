@@ -27,8 +27,14 @@ for j in d['jobs']:
     [ -e "$MARK" ] && continue
     pending=1
     echo "[node $NODE] job $BR $SHOT $F-$T"
-    git fetch -q origin "$BR" && git checkout -q "$REF" -- video/blender || { echo "[node $NODE] fetch failed $BR"; sleep 60; continue; }
-    if bash video/farm/render.sh "$SHOT" "$F" "$T"; then touch "$MARK"; echo "[node $NODE] JOB DONE $SHOT $F-$T"; else echo "[node $NODE] JOB FAILED $SHOT $F-$T"; sleep 60; fi
+    # job sources are exported to a scratch dir: the node's working tree is never modified
+    JOBSRC="$VIDEO_OUT/jobsrc/${REF//\//_}"
+    if [ ! -f "$JOBSRC/video/blender/common.py" ]; then
+      git fetch -q origin "$BR" || { echo "[node $NODE] fetch failed $BR"; sleep 60; continue; }
+      rm -rf "$JOBSRC" && mkdir -p "$JOBSRC" && git archive "$REF" video/blender video/timing video/audio | tar -x -C "$JOBSRC" \
+        || { echo "[node $NODE] export failed $REF"; sleep 60; continue; }
+    fi
+    if SHOTS_DIR="$JOBSRC/video/blender" bash video/farm/render.sh "$SHOT" "$F" "$T"; then touch "$MARK"; echo "[node $NODE] JOB DONE $SHOT $F-$T"; else echo "[node $NODE] JOB FAILED $SHOT $F-$T"; sleep 60; fi
   done
   if [ "$pending" = 0 ]; then
     [ "$FIN" = 1 ] && { echo "[node $NODE] QUEUE FINISHED"; exit 0; }
