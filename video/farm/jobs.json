@@ -290,14 +290,6 @@
    "to": 158
   },
   {
-   "node": "b08",
-   "branch": "render-dev-s4",
-   "ref": "c50adf3249616d5c8da23266b602b74e39269a08",
-   "shot": "sh02",
-   "from": 159,
-   "to": 197
-  },
-  {
    "node": "b09",
    "branch": "render-dev-s4",
    "ref": "c50adf3249616d5c8da23266b602b74e39269a08",
@@ -376,6 +368,30 @@
    "shot": "sh12",
    "from": 1766,
    "to": 1785
+  },
+  {
+   "node": "b19",
+   "branch": "render-dev-s4",
+   "ref": "c50adf3249616d5c8da23266b602b74e39269a08",
+   "shot": "sh02",
+   "from": 159,
+   "to": 171
+  },
+  {
+   "node": "b20",
+   "branch": "render-dev-s4",
+   "ref": "c50adf3249616d5c8da23266b602b74e39269a08",
+   "shot": "sh02",
+   "from": 172,
+   "to": 184
+  },
+  {
+   "node": "b21",
+   "branch": "render-dev-s4",
+   "ref": "c50adf3249616d5c8da23266b602b74e39269a08",
+   "shot": "sh02",
+   "from": 185,
+   "to": 197
   }
  ]
 }
