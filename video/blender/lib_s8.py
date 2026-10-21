@@ -116,7 +116,7 @@ def catmull(points, samples_per_seg=24):
     return np.array(out)
 
 
-def dist_to_polyline(px, py, poly, chunk=200000):
+def dist_to_polyline(px, py, poly, chunk=200000, signed=False):
     """Distance from each point to polyline + the polyline parameter (0..1) of the closest point."""
     a = poly[:-1]
     b = poly[1:]
@@ -129,6 +129,7 @@ def dist_to_polyline(px, py, poly, chunk=200000):
     flat_y = py.ravel()
     D = np.empty_like(flat_x)
     T = np.empty_like(flat_x)
+    S = np.empty_like(flat_x)
     for s in range(0, flat_x.size, chunk):
         X = flat_x[s:s + chunk, None]
         Y = flat_y[s:s + chunk, None]
@@ -140,6 +141,11 @@ def dist_to_polyline(px, py, poly, chunk=200000):
         j = np.argmin(d2, axis=1)
         D[s:s + chunk] = np.sqrt(d2[np.arange(len(j)), j])
         T[s:s + chunk] = (cum[j] + t[np.arange(len(j)), j] * seglen[j]) / total
+        if signed:   # +1 left of the direction of travel, -1 right
+            cr = ab[j, 0] * (Y[:, 0] - a[j, 1]) - ab[j, 1] * (X[:, 0] - a[j, 0])
+            S[s:s + chunk] = np.sign(cr)
+    if signed:
+        return D.reshape(px.shape), T.reshape(px.shape), S.reshape(px.shape)
     return D.reshape(px.shape), T.reshape(px.shape)
 
 
