@@ -458,6 +458,114 @@
    "from": 293,
    "to": 310,
    "note": "re-render: job must start at the frame_bounces boundary (persistent data keeps the chunk-start bounces)"
+  },
+  {
+   "node": "b30",
+   "branch": "render-jobs",
+   "ref": "780bf1fe96d21cccdb60d19b3cb3dadc36227c68",
+   "shot": "sh04",
+   "from": 378,
+   "to": 400,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b30",
+   "branch": "render-jobs",
+   "ref": "780bf1fe96d21cccdb60d19b3cb3dadc36227c68",
+   "shot": "sh04",
+   "from": 507,
+   "to": 554,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b31",
+   "branch": "render-jobs",
+   "ref": "7f50ea01a4d06b61bcc86ddbd7dcd983b9fe9352",
+   "shot": "sh05",
+   "from": 545,
+   "to": 590,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b32",
+   "branch": "render-jobs",
+   "ref": "7f50ea01a4d06b61bcc86ddbd7dcd983b9fe9352",
+   "shot": "sh05",
+   "from": 591,
+   "to": 636,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b33",
+   "branch": "render-jobs",
+   "ref": "7f50ea01a4d06b61bcc86ddbd7dcd983b9fe9352",
+   "shot": "sh05",
+   "from": 637,
+   "to": 682,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b34",
+   "branch": "render-jobs",
+   "ref": "7f50ea01a4d06b61bcc86ddbd7dcd983b9fe9352",
+   "shot": "sh05",
+   "from": 683,
+   "to": 727,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b35",
+   "branch": "render-jobs",
+   "ref": "6d6fa77e642adbff0029a1528743b7a8e70f0f57",
+   "shot": "sh08",
+   "from": 1104,
+   "to": 1143,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b36",
+   "branch": "render-jobs",
+   "ref": "53b6f455c73f11f39054fae4dbf291e1b7ca542d",
+   "shot": "sh14a",
+   "from": 2253,
+   "to": 2253,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b36",
+   "branch": "render-jobs",
+   "ref": "53b6f455c73f11f39054fae4dbf291e1b7ca542d",
+   "shot": "sh14a",
+   "from": 2266,
+   "to": 2275,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b37",
+   "branch": "render-jobs",
+   "ref": "53b6f455c73f11f39054fae4dbf291e1b7ca542d",
+   "shot": "sh14b",
+   "from": 2382,
+   "to": 2423,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b38",
+   "branch": "render-jobs",
+   "ref": "53b6f455c73f11f39054fae4dbf291e1b7ca542d",
+   "shot": "sh14b",
+   "from": 2424,
+   "to": 2465,
+   "note": "approved-shot fix re-render"
+  },
+  {
+   "node": "b39",
+   "branch": "render-jobs",
+   "ref": "53b6f455c73f11f39054fae4dbf291e1b7ca542d",
+   "shot": "sh14b",
+   "from": 2466,
+   "to": 2506,
+   "note": "approved-shot fix re-render"
   }
  ]
 }
