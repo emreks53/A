@@ -828,9 +828,10 @@ def design_main():
             continue
         src = os.path.join(out_dir, s.name + ".png")
         if s.name.startswith("body_"):
-            # body print is ALWAYS pre-blurred (sigma 0.68 mm): lines, word gaps and paragraph shapes
+            # body print is ALWAYS pre-blurred (sigma 0.6 mm; 1.35 mm for close-ups): lines, word gaps, paragraphs
             # stay, letters do not -> nothing is legible even inside the focus plane
-            _mask_filter(src, src[:-4] + "_soft.png", sigma=0.00068 * s.ppm, factor=1)
+            _mask_filter(src, src[:-4] + "_soft.png", sigma=0.00060 * s.ppm, factor=1)
+            _mask_filter(src, src[:-4] + "_xsoft.png", sigma=0.00135 * s.ppm, factor=2)
         elif s.name.startswith("head_"):
             _mask_filter(src, src[:-4] + "_lo.png", sigma=0.0, factor=5)
     if not only:
@@ -929,7 +930,7 @@ KAFES_SW, KAFES_SD = 0.0150, 0.018               # slat width (in the window pla
 KAFES_LAYERS = ((0, (1, 1), -0.011), (1, (1, -1), 0.011))
 SHUTTER_X = XO - 0.05                            # roller shutter plane (outside)
 SHUTTER_PITCH, SHUTTER_GAP = 0.042, 0.0012
-RAHLE_POS = Vector((-0.38, -0.10, 0.0))
+RAHLE_POS = Vector((-0.38, -0.13, 0.0))   # page-number corner sits in a lattice light patch
 RAHLE_YAW = math.radians(90)          # reader sits at +x, facing the window
 BETA = math.radians(40)
 RAHLE_TB = 0.016
@@ -1215,9 +1216,18 @@ def page_ink(nt, num, uv):
     LK(nt, sep.outputs[0], hv.inputs[0])
     LK(nt, maprange(nt, sep.outputs[1], 1 - HEAD_H / PAGE_H, 1.0, 0.0, 1.0, clamp=False), hv.inputs[1])
     head = mask_lod(nt, os.path.join(d, "head_%d.png" % num), hv.outputs[0])
-    body = img_node(nt, os.path.join(d, "body_%d_soft.png" % num), True, vec=uv, ext="CLIP", interp="Cubic")
+    soft = img_node(nt, os.path.join(d, "body_%d_soft.png" % num), True, vec=uv, ext="CLIP", interp="Cubic")
+    xsoft = img_node(nt, os.path.join(d, "body_%d_xsoft.png" % num), True, vec=uv, ext="CLIP", interp="Cubic")
+    # the closer the camera, the stronger the pre-blur (keeps the blur roughly constant on screen, so
+    # the body never becomes legible in the macro shots)
+    cd = NN(nt, "ShaderNodeCameraData")
+    fsoft = maprange(nt, cd.outputs["View Distance"], 0.22, 0.42, 0.0, 1.0)
+    mx = NN(nt, "ShaderNodeMix"); mx.data_type = "FLOAT"
+    LK(nt, fsoft, mx.inputs[0]); LK(nt, xsoft.outputs[0], mx.inputs[2]); LK(nt, soft.outputs[0], mx.inputs[3])
     # blurred print has a lower peak: lift it back to a believable ink density
-    bk = maprange(nt, body.outputs[0], 0.02, 0.62, 0.0, 0.88)
+    lift = maprange(nt, fsoft, 0.0, 1.0, 1.9, 1.0)
+    bk = math_node(nt, "MINIMUM", math_node(nt, "MULTIPLY", mx.outputs[0], lift), vb=1.0)
+    bk = maprange(nt, bk, 0.02, 0.62, 0.0, 0.88)
     return math_node(nt, "MAXIMUM", head, bk)
 
 
