@@ -2838,7 +2838,7 @@ def build(ctx):
     nn = V((0.0, -math.sin(BETA), math.cos(BETA)))
     pc = pg - hd * 0.103 - wd * 0.06           # right-hand page centre
     camB = rig_camera("camB", 60, 3.2, [
-        (fB / C.FPS - 0.30, pc + nn * 0.30 - hd * 0.20, pc + hd * 0.03, pc + hd * 0.05, hd),
+        (fB / C.FPS - 0.30, pc + nn * 0.30 - hd * 0.16, pc + hd * 0.085, pc + hd * 0.07, hd),
         (t_sayfa + 0.30, pg + nn * 0.112 - hd * 0.102 - wd * 0.010, pg + hd * 0.006 - wd * 0.008, pg, hd),
         (fC / C.FPS + 0.30, pg + nn * 0.106 - hd * 0.097 - wd * 0.012, pg + hd * 0.006 - wd * 0.009, pg, hd),
     ], fB - 6, fC + 6, seed=12, ends=(0.5, 0.3))
