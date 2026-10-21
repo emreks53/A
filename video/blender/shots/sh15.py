@@ -2934,7 +2934,7 @@ def build(ctx):
         mk.camera = cam
     sc.camera = camA
     # per-camera exposure (one continuous room: every camera within ~1 stop)
-    EXPO = {"A": 0.65, "B": -0.05, "C": 1.10, "D": -0.50, "E": 0.05}
+    EXPO = {"A": 0.85, "B": -0.45, "C": 1.70, "D": -1.05, "E": 0.45}
     key_const(sc.view_settings, "exposure", [(ctx.f0 - 10, EXPO["A"]), (fB, EXPO["B"]), (fC, EXPO["C"]), (fD, EXPO["D"]), (fE, EXPO["E"])])
     dbg = os.environ.get("SH15_CAM")          # debug view: "px,py,pz,ax,ay,az,lens[,fstop,fx,fy,fz]"
     if dbg:
