@@ -1,4 +1,4 @@
-# sh12 — review round 1 (studio S8)
+# sh12 — review round 2 (studio S8)
 
 63.85–74.15 s · render f1526–1785 · "İşte bütün bu ihtiyaçların karşılanması **bir tek** yaratıcının … **ondan başka olamaz**"
 
@@ -36,10 +36,23 @@
 Trackers (`sh12.json`): TRK_sun (sun behind the cloud edge), TRK_cloud (big cumulus right), TRK_rain (rain
 curtain under it), TRK_sea, TRK_river, TRK_forest — placed on screen at the settle so they are well separated.
 
+## Round 2 changes
+* Render time fixed: the aerial-haze Emission made every terrain/tree triangle a light-tree emitter
+  (tree rebuilt every frame, 25 s). Emission sampling is now off for those materials; static objects have no
+  object motion blur (camera blur unchanged); 8 spp + OIDN, terrain grid 1900×1300.
+  **Measured final: ~51 s/frame steady state** in a chunk (1080×1920, 4 cores; frames 1598–1600: 90 s for the
+  first frame incl. 16k HDRI importance map, then 50.6 s and 51.6 s). Slightly over the 45 s target; I will
+  trim further (tree instance count) if you want it under 45.
+* Terrain: finer ridges/gullies on the mountain flanks, mid-scale relief so the grazing sun draws texture,
+  lone trees and clumped scrub on the open land (long golden-hour shadows), richer meadow/dry-grass palette,
+  forest reaching down to the river banks, irregular river width with pale gravel bars.
+* Forest canopy: stronger translucency so backlit crowns glow instead of reading black.
+* Sea: wind patches + wave groups break the sun column up a little.
+* TRK_sun now sits where the rays converge in the plate (x≈548, y≈598 at the settle).
+
 ## Known issues / next round (already working on them)
 * Land still reads CG in places: meadows too uniform (need grass/shrub/patch texture + micro relief so the
   grazing sun makes texture), mountain flanks too smooth, forest canopy too black/uniform at the edges.
 * Sun reflection on the sea is a too-clean vertical bar; will become a broken glitter path.
 * Rain curtains under the far clouds are too faint (barely visible) — will be strengthened.
 * Veil at the start reads a bit like fog; will add more cloud structure/brightness gradient.
-* Render time: final s/frame not yet measured (previews ~45 s at 50 % / 16 spp); will report next round.
