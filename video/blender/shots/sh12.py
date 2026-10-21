@@ -105,7 +105,10 @@ def height_field(X, Y):
     # river valley carve (flat floodplain, terraces up to the hills)
     rp = river_path()
     D, T, SIDE = L.dist_to_polyline(X, Y, rp, signed=True)
-    bed = 160 * (1 - T) ** 1.3 + 1.5
+    # valley-scale quantities depend on world Y (smooth everywhere), not on the nearest-point parameter T,
+    # which jumps across the medial line between two meander loops and used to leave a straight terrain step
+    Tn = np.clip((Y + 1500) / 15000.0, 0, 1)
+    bed = 160 * (1 - Tn) ** 1.3 + 1.5
     rw = (16 + 48 * T) * np.exp(2.4 * L.fbm(n4, T * 40, 3.3, 3))   # river half width (m), varies 2-4x
     rw = rw * (1 + 0.7 * L.fbm(n3, T * 15000 / 450, 8.1, 2))        # +-35 % over 300-600 m
     # curvature sign of the course at the closest point -> inner/outer bank
@@ -114,9 +117,10 @@ def height_field(X, Y):
     curv_k = np.convolve(curv_k, np.ones(9) / 9, mode="same")
     kk = np.interp(T, np.linspace(0, 1, len(curv_k)), curv_k)
     inner = (SIDE * kk) > 0.25
-    vw = 160 + 700 * T                     # floodplain half width (m)
-    plain = bed + 3 + 10 * np.clip((D - rw) / vw, 0, 1)
-    f = sm((D - rw - vw * 0.5) / (vw * 1.6 + 500))
+    vw = 160 + 700 * Tn                    # floodplain half width (m)
+    rwv = 16 + 48 * Tn                     # smooth width for the valley shaping
+    plain = bed + 3 + 10 * np.clip((D - rwv) / vw, 0, 1)
+    f = sm((D - rwv - vw * 0.5) / (vw * 1.6 + 500))
     h = plain * (1 - f) + np.maximum(h, plain) * f
     chan = sm((D - rw * 0.5) / (rw * 1.1))
     h = (bed - 3) * (1 - chan) + h * chan
@@ -154,7 +158,7 @@ def height_field(X, Y):
     h = h * sea_floor + (-25 - 50 * (1 - land)) * (1 - sea_floor)
     rough = (L.fbm(n1, X / 420 + 2.5, Y / 420, 4) * 16 + L.fbm(n1, X / 140 + 0.5, Y / 140, 4) * 7 +
              L.fbm(n2, X / 35, Y / 35, 3) * 2.0)
-    h = h + rough * np.clip(h / 300, 0.15, 1) * (D > rw * 1.5)
+    h = h + rough * np.clip(h / 300, 0.15, 1) * sm((D - rw) / (rw + 20.0))
     # D returned as distance from the nearest bank (main river or tributary)
     return h, river, np.minimum(D - rw, tribD), T, land, bar
 
@@ -380,6 +384,8 @@ def terrain_material():
     d_scan = scan_mix(nb, pos, "aerial_ground_rock", 900.0, mixn)
     scan = nb.mixc(nb.mapr(n_patch, 0.45, 0.65), g_scan, d_scan)
     scan = nb.mixc(0.25, scan, (1, 1, 1))
+    # in the meadow, clamp the scan's pale rock/decal patches so they read as grass, not paper scraps
+    scan = nb.mixc(meadow, scan, nb.mixc(1.0, scan, (1.02, 1.02, 1.02), blend="DARKEN"))
     col = nb.mixc(1.0, col, scan, blend="MULTIPLY")
     # stratified rock on steep ground; mountains get rock/scree earlier
     steep2 = nb.math("ADD", steep, nb.math("MULTIPLY", nb.mapr(hgt, 600, 1500), nb.mapr(nz, 0.95, 0.82)), clamp=True)
@@ -1232,6 +1238,21 @@ def build(ctx):
     assert bestf, "TRK_forest: no dense stand near (840,1010)"
     C.empty("TRK_forest", bestf[1])
     bpy.context.scene.frame_set(bpy.context.scene.frame_current)
+    if os.environ.get("S8_PROBE"):          # debug: what lies under given pixels at a given frame
+        f, pts = os.environ["S8_PROBE"].split(":")
+        bpy.context.scene.frame_set(int(f)); bpy.context.view_layer.update()
+        dg2 = bpy.context.evaluated_depsgraph_get()
+        mw = cam.matrix_world
+        fpx = 26.0 / 36.0 * 1920
+        for pp in pts.split(";"):
+            sx, sy = map(float, pp.split(","))
+            d = (mw.to_3x3() @ Vector(((sx - 540) / fpx, -(sy - 960) / fpx, -1.0))).normalized()
+            o = mw.translation.copy()
+            for _ in range(8):
+                hit, loc, nrm, idx, obj, mtx = bpy.context.scene.ray_cast(dg2, o, d)
+                if not hit or obj.name.startswith(("Terrain", "Sea", "Trees")): break
+                o = loc + d * 0.5
+            print("PROBE", pp, obj.name if hit else None, tuple(round(v, 1) for v in loc), flush=True)
     # the visible sun (behind the cloud edge in the plate, where the crepuscular rays converge)
     C.empty("TRK_sun", tuple(screen_point(sloc, srot, 548, 598, 150000)))
     if os.environ.get("S8_EXP"):
