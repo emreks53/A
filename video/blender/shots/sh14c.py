@@ -140,6 +140,11 @@ def ground_material(tex, tex2):
     nb.l(col, hsv.inputs["Color"])
     col = nb.mixc(1.0, hsv.outputs[0], COLD, blend="MULTIPLY")
     # pale dusty patches (fine sand settled in hollows)
+    # large-scale tonal variation: pale salt-crust patches, darker damp-looking hollows
+    salt = nb.mapr(nb.noise(pos, 1 / 14.0, 3, 0.6), 0.52, 0.66)
+    col = nb.mixc(nb.math("MULTIPLY", salt, 0.55), col, (0.60, 0.62, 0.65))
+    tone = nb.noise(pos, 1 / 70.0, 2, 0.5)
+    col = nb.mixc(1.0, col, nb.mixc(tone, (0.82, 0.83, 0.85), (1.12, 1.12, 1.12)), blend="MULTIPLY")
     dust = nb.mapr(nb.noise(pos, 0.6, 2, 0.6), 0.5, 0.75)
     col = nb.mixc(nb.math("MULTIPLY", dust, 0.45), col, (0.42, 0.43, 0.44))
     bsdf = nb.n("ShaderNodeBsdfPrincipled", inputs={"Specular IOR Level": 0.35})
@@ -180,12 +185,18 @@ def build_ground(mode):
     C.smooth_shade(near)
     # far field: gentle undulating desert floor out to the horizon (no displacement needed)
     n = L.Noise2(5)
-    xs = np.linspace(-3000, 3000, 400)
-    ys = np.linspace(-500, 6000, 420)
+    xs = np.linspace(-6000, 6000, 640)
+    ys = np.linspace(-500, 9000, 560)
     X, Y = np.meshgrid(xs, ys)
     R = np.sqrt(X ** 2 + (Y - 10) ** 2)
-    Z = (L.fbm(n, X / 900, Y / 900, 5) + 0.35) * 6 * L.smoother_np((R - 60) / 600) + \
-        L.ridged(n, X / 1500 + 3, Y / 1500, 5) ** 3 * 190 * L.smoother_np((Y - 1500) / 1800)
+    sm_ = L.smoother_np
+    band = lambda y0, y1: sm_((Y - y0) / 300) * sm_((y1 - Y) / 400)
+    n2 = L.Noise2(9)
+    # three layered ridge lines at increasing distance (separated by the cold haze)
+    Z = (L.fbm(n, X / 900, Y / 900, 5) + 0.35) * 6 * sm_((R - 60) / 600) + \
+        np.clip(L.ridged(n2, X / 500, Y / 500 + 2, 5) - 0.25, 0, 1) ** 1.6 * 70 * band(900, 1700) + \
+        np.clip(L.ridged(n, X / 900 + 3, Y / 900, 6) - 0.2, 0, 1) ** 1.8 * 170 * band(2300, 3800) + \
+        np.clip(L.ridged(n2, X / 1600 + 7, Y / 1600, 6) - 0.1, 0, 1) ** 2.0 * 380 * sm_((Y - 4800) / 900)
     near_mask = L.smoother_np((np.maximum(np.abs(X) - 22, np.abs(Y - 10) - 22)) / 40)
     Z = Z * near_mask - 0.03 - (X ** 2 + Y ** 2) / (2 * 6.371e6)
     far = L.grid_mesh("GroundFar", X, Y, Z)
@@ -273,7 +284,7 @@ def build_sand(ctx, gust_t):
     return ob
 
 
-def sand_sheet_material(name, alpha_gain, scale_along, seed, Gsock_values, gain_keys=()):
+def sand_sheet_material(name, alpha_gain, scale_along, seed, Gsock_values, gain_keys=(), cross=14.0, lo=0.5, hi=0.68):
     """Streams of sand gliding over the surface ('sand snakes'): horizontal card, alpha from noise
     stretched along the wind and advected with the same travel curve as the grains."""
     m = bpy.data.materials.new(name)
@@ -292,7 +303,7 @@ def sand_sheet_material(name, alpha_gain, scale_along, seed, Gsock_values, gain_
     c = nb.math("ADD", nb.math("MULTIPLY", sep.outputs[0], -WIND.y), nb.math("MULTIPLY", sep.outputs[1], WIND.x))
     a = nb.math("SUBTRACT", a, G.outputs[0])
     v = nb.n("ShaderNodeCombineXYZ")
-    nb.l(nb.math("MULTIPLY", a, 1.6 / scale_along), v.inputs[0]); nb.l(nb.math("MULTIPLY", c, 5.0 / scale_along), v.inputs[1])
+    nb.l(nb.math("MULTIPLY", a, 0.6 / scale_along), v.inputs[0]); nb.l(nb.math("MULTIPLY", c, cross / scale_along), v.inputs[1])
     v.inputs[2].default_value = seed
     nz = nb.n("ShaderNodeTexNoise", noise_dimensions="3D")
     nz.inputs["Scale"].default_value = 1.0
@@ -304,7 +315,7 @@ def sand_sheet_material(name, alpha_gain, scale_along, seed, Gsock_values, gain_
     for f, g in gain_keys:
         gk.outputs[0].default_value = g
         gk.outputs[0].keyframe_insert("default_value", frame=f)
-    al = nb.math("MULTIPLY", nb.mapr(nz.outputs["Fac"], 0.45, 0.75), alpha_gain * 0.75)
+    al = nb.math("MULTIPLY", nb.mapr(nz.outputs["Fac"], lo, hi), alpha_gain * 0.75)
     al = nb.math("MULTIPLY", al, gk.outputs[0])
     # fade with distance from the camera area so the card edges never show
     rr = nb.n("ShaderNodeVectorMath", operation="LENGTH"); nb.l(pos, rr.inputs[0])
@@ -330,9 +341,10 @@ def camera_path(ctx, cam, focus):
         (t0 - 0.3, (2.55, -2.75, 0.62), (0.05, 0.1, 0.78)),
         (t_c + 0.9, (2.35, -3.25, 0.70), (0.0, 0.1, 0.74)),
         (t_s + 0.2, (2.55, -4.4, 0.9), (-0.5, 0.5, 0.5)),
-        (t_f + 0.3, (3.9, -8.6, 1.9), (-1.0, 3.0, 0.6)),
-        (t_i - 0.05, (4.7, -11.6, 2.6), (-0.35, 2.0, 0.75)),
-        (t1 + 0.3, (4.69, -11.62, 2.6), (-0.35, 2.0, 0.75)),
+        (t_f + 0.25, (3.9, -8.6, 1.9), (-1.0, 3.0, 0.6)),
+        # drift back in: low-angle medium shot of the stone, held for "izah edebilir mi"
+        (t_i - 0.05, (1.75, -2.75, 0.40), (0.0, 0.1, 0.92)),
+        (t1 + 0.3, (1.73, -2.72, 0.40), (0.0, 0.1, 0.92)),
     ]
     tgt = C.empty("cam_target", keys[0][2])
     for t, loc, look in keys:
@@ -343,6 +355,7 @@ def camera_path(ctx, cam, focus):
     C.key(focus, "location", t_s - 0.2, (0.0, -0.3, 0.6))
     C.key(focus, "location", t_s + 0.6, (0.6, -2.0, 0.2))
     C.key(focus, "location", t_f + 0.2, (0.0, 0.0, 0.7))
+    C.key(focus, "location", t_i - 0.05, (0.0, -0.2, 0.6))
     C.key(focus, "location", t1, (0.0, 0.0, 0.7))
     C.handheld(cam, amp_loc=0.004, amp_rot=0.0015, speed=0.4, seed=4)
 
@@ -354,12 +367,10 @@ def build(ctx):
     build_ground(ctx.mode)
     res = "4k" if ctx.mode == "final" else "2k"
     hero = import_model("namaqualand_boulder_03", res, loc=(0, 0, 0), rot_z=math.radians(25), scale=0.62, sink=0.05)
-    import_model("namaqualand_boulder_05", "1k", loc=(-3.2, 4.5, 0), rot_z=1.1, scale=0.8, sink=0.04)
-    import_model("namaqualand_boulder_06", "1k", loc=(5.5, 9.0, 0), rot_z=2.0, scale=0.7, sink=0.04)
-    import_model("namaqualand_boulder_05", "1k", loc=(-14, 30, 0), rot_z=0.4, scale=1.3, sink=0.06)
+
     wres = "2k" if ctx.mode == "final" else "1k"
-    import_model("dead_tree_trunk", wres, loc=(-3.6, 5.5, 0), rot_z=0.35, scale=1.0, sat=0.12, value=0.95, sink=0.07)
-    import_model("tree_stump_02", wres, loc=(7.5, 17.0, 0), rot_z=1.3, scale=1.0, sat=0.12, value=0.9, sink=0.05)
+    # one large bleached dead trunk in the mid-ground, readable in the wide
+    import_model("dead_tree_trunk", wres, loc=(-3.4, 5.8, 0), rot_z=0.5, scale=1.9, sat=0.06, value=3.0, sink=0.12)
     gust_t = ctx.word("şuursuz") - 0.08
     sand = build_sand(ctx, gust_t)
     if os.environ.get("S8_NOSAND"):
@@ -369,11 +380,11 @@ def build(ctx):
     gvals = []
     for fc in C._fcurves(ng.animation_data.action):
         gvals = [(int(kp.co.x), kp.co.y) for kp in fc.keyframe_points]
-    for i, (z, gain, sc_al) in enumerate(((0.03, 0.95, 2.4),)):
+    for i, (z, gain, sc_al, cross, lo, hi) in enumerate(((0.025, 0.9, 2.4, 14.0, 0.5, 0.68), (0.12, 0.22, 6.0, 3.0, 0.45, 0.75))):
         bpy.ops.mesh.primitive_plane_add(size=60, location=(0, 6, z))
         sh = bpy.context.object
         sh.name = f"SandSheet{i}"
-        sh.data.materials.append(sand_sheet_material(f"SandSheet{i}_m", gain, sc_al, i * 4.1, gvals,
+        sh.data.materials.append(sand_sheet_material(f"SandSheet{i}_m", gain, sc_al, i * 4.1, gvals, cross=cross, lo=lo, hi=hi,
             gain_keys=((ctx.f0, 0.22), (C.t2f(gust_t - 0.25), 0.3), (C.t2f(gust_t + 0.5), 1.0),
                        (C.t2f(gust_t + 1.6), 0.75), (C.t2f(ctx.word("izah")), 0.4), (ctx.f1, 0.35))))
         sh.visible_shadow = False
