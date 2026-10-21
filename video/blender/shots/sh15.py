@@ -668,34 +668,46 @@ def draw_page_body(P, num, rng, W, H):
     pitch = line_pitch(P, "ebg_reg", size)
     has_note = rng.random() < 0.6
     bottom_body = bottom + (0.020 if has_note else 0.0)
-    y = H - top - 0.0045                      # first baseline
-    y_end = bottom_body + 0.003
-    n_ar = rng.choice((0, 1, 1, 2)) if num != 720 else 1
-    first = True
-    while y - pitch > y_end:
-        if n_ar > 0 and not first and rng.random() < 0.5:
-            # Arabic quotation: 1-2 centred lines, a little larger, with air around them
-            u = 0.0021
-            nl = rng.choice((1, 1, 2))
-            y -= pitch * 0.35
-            for _ in range(nl):
-                if y - 1.4 * pitch < y_end:
-                    break
-                y -= pitch * 0.55
-                pseudo_arabic_line(P, rng, (x0 + x1) / 2, y, tw * rng.uniform(0.55, 0.92), u)
-                y -= pitch * 0.85
-            y -= pitch * 0.45
-            n_ar -= 1
-            continue
-        n_lines = rng.randint(3, 9)
-        h = min(n_lines * pitch, y - y_end + pitch * 0.4)
-        nl_fit = int((h + 1e-9) / pitch)
-        if nl_fit < 1:
+    y0 = H - top - 0.0045                     # first baseline
+    n_total = int((y0 - (bottom_body + 0.003)) / pitch) + 1
+    # where the Arabic quotations go (in line slots): each takes 2 or 3 slots
+    quotes = []
+    n_ar = 1 if num in (720, 721) else rng.choice((0, 1, 1, 2))
+    free_from = 2
+    for _ in range(n_ar):
+        lo, hi = free_from + 1, n_total - 6
+        if hi <= lo:
             break
-        paras = ["    " + pseudo_text(rng, rng.randint(25, 70)) for _ in range(3)]
-        P.textbox("\n".join(paras), "ebg_reg", size, x0, y, tw, nl_fit * pitch - pitch * 0.5, line=1.0)
-        y -= nl_fit * pitch
-        first = False
+        at = rng.randint(lo, min(hi, lo + n_total // 2))
+        nl = rng.choice((1, 1, 2))
+        quotes.append((at, nl))
+        free_from = at + nl + 4
+
+    def text_block(first_slot, n_lines, indent_first):
+        words = []
+        left = n_lines
+        paras = []
+        while left > 0:
+            plen = min(left, rng.randint(5, 14))
+            # generous word count: the box truncates the overflow, a short block would leave blank lines
+            paras.append(("    " if (paras or indent_first) else "") + pseudo_text(rng, int(plen * 19)))
+            left -= plen
+        yb = y0 - first_slot * pitch
+        P.textbox("\n".join(paras), "ebg_reg", size, x0, yb, tw, (n_lines + 0.9) * pitch, line=1.0)
+
+    slot = 0
+    for at, nl in quotes:
+        if at > slot:
+            text_block(slot, at - slot, slot > 0)
+        # quotation: nl Arabic lines centred in (nl + 1) slots
+        lead = 1.45                              # Arabic is set larger, with more leading
+        span = nl * lead + 0.9
+        for i in range(nl):
+            yb = y0 - (at + 0.45 + 0.85 + i * lead) * pitch
+            pseudo_arabic_line(P, rng, (x0 + x1) / 2, yb, tw * rng.uniform(0.55, 0.92), 0.0027)
+        slot = at + span
+    if slot < n_total - 0.5:
+        text_block(slot, int(n_total - slot), True)
     if has_note:
         ny = bottom + 0.0185
         P.rect(x0, ny, x0 + tw * 0.28, ny + 0.0003)
@@ -816,9 +828,9 @@ def design_main():
             continue
         src = os.path.join(out_dir, s.name + ".png")
         if s.name.startswith("body_"):
-            # body print is ALWAYS pre-blurred (sigma 0.42 mm): lines, word gaps and paragraph shapes
+            # body print is ALWAYS pre-blurred (sigma 0.68 mm): lines, word gaps and paragraph shapes
             # stay, letters do not -> nothing is legible even inside the focus plane
-            _mask_filter(src, src[:-4] + "_soft.png", sigma=0.00042 * s.ppm, factor=1)
+            _mask_filter(src, src[:-4] + "_soft.png", sigma=0.00068 * s.ppm, factor=1)
         elif s.name.startswith("head_"):
             _mask_filter(src, src[:-4] + "_lo.png", sigma=0.0, factor=5)
     if not only:
@@ -909,14 +921,20 @@ TABLE_X0, TABLE_X1, TABLE_Y0 = -0.95, 1.15, -0.58
 FLOOR_Z = -0.74
 SUN_DIR = Vector((0.84, 0.16, -0.52)).normalized()
 SUN_K = 3900
-RAHLE_POS = Vector((-0.38, -0.06, 0.0))
+XO = WALL_LEFT_X - WALL_THICK                    # outer face of the window wall
+KAFES_X = XO + 0.09
+KAFES_FW = 0.045                                 # kafes frame member width
+KAFES_SP = 0.050                                 # slat spacing
+KAFES_SW, KAFES_SD = 0.0150, 0.018               # slat width (in the window plane), depth (along x)
+KAFES_LAYERS = ((0, (1, 1), -0.011), (1, (1, -1), 0.011))
+SHUTTER_X = XO - 0.05                            # roller shutter plane (outside)
+SHUTTER_PITCH, SHUTTER_GAP = 0.042, 0.0012
+RAHLE_POS = Vector((-0.38, -0.10, 0.0))
 RAHLE_YAW = math.radians(90)          # reader sits at +x, facing the window
 BETA = math.radians(40)
 RAHLE_TB = 0.016
-SOZ_POS = Vector((0.06, -0.07, 0.0))   # closed Sozler lying on the table (camA)
+SOZ_POS = Vector((0.30, 0.10, 0.0))    # closed Sozler lying on the table (camA), in the beam
 SOZ_YAW = math.radians(90 - 9)
-STACK_POS = Vector((-0.58, 0.21, 0.0))
-STACK_YAW = math.radians(90 - 7)
 
 # ----------------------------------------------------------------------------- node helpers
 
@@ -1085,7 +1103,8 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     wn = noise(nt, geo.outputs["Position"], 180.0, 1.0, 0.5)
     wear = math_node(nt, "MULTIPLY", pt, maprange(nt, wn.outputs[0], 0.4, 0.62, 0.15, 1.0))
     base = mixrgb(nt, wear, base, srgb("#8E3A30"))
-    r = maprange(nt, rough.outputs[0], 0.25, 0.75, 0.42, 0.64)
+    LSPEC, LR0, LR1 = [float(x) for x in os.environ.get("SH15_LEATHER", "0.20,0.48,0.70").split(",")]
+    r = maprange(nt, rough.outputs[0], 0.25, 0.75, LR0, LR1)
     r = math_node(nt, "ADD", r, math_node(nt, "MULTIPLY", wear, vb=0.12))
     nm = NN(nt, "ShaderNodeNormalMap")
     nm.inputs["Strength"].default_value = 0.85
@@ -1093,7 +1112,7 @@ def mat_leather(name, mask=None, uv_mask="uvb", foil=True, tint=1.0, seed=0.0):
     # satin finish: a softer, slightly warm sheen keeps sunlit crimson saturated (a strong white
     # sheen turned the lit leather salmon-pink)
     leather = principled(nt, **{"Base Color": base, "Roughness": r, "Normal": nm.outputs[0],
-                                "Specular IOR Level": 0.40, "Specular Tint": (1.0, 0.84, 0.76)})
+                                "Specular IOR Level": LSPEC, "Specular Tint": (1.0, 0.72, 0.58)})
     if not (mask and foil):
         LK(nt, leather.outputs[0], out.inputs["Surface"])
         return m
@@ -1768,8 +1787,12 @@ OB_TR = 0.0034      # right half (721..end)
 OB_GH = 0.020       # gutter anchor height above the crotch
 OB_L = PAGE_W
 OB_DELTA = 0.00011  # thickness of one leaf
-LEAF_T0 = [113.02, 113.26, 113.52, 113.80]
 LEAF_DUR = [0.60, 0.60, 0.62, 0.66]
+LEAF_LEAD = [1.40, 1.16, 0.90, 0.62]   # leaf k starts this long before "sayfasinda"; the last lands on it
+
+
+def leaf_times(t_sayfa):
+    return [t_sayfa - d for d in LEAF_LEAD]
 
 
 class Half:
@@ -1900,13 +1923,13 @@ def leaf_shape_at(tau, th_start, th_end, s, y):
     return th
 
 
-def build_leaves(halfL, halfR, mats_leaf, fps_start, fps_end):
+def build_leaves(halfL, halfR, mats_leaf, t0s):
     """Four free leaves flipped by the breeze from the left stack onto the right stack (727..721).
     Shape keys per frame (linear blends -> correct deformation motion blur)."""
     NS, NY = 36, 14
     ss = [OB_L * (i / NS) for i in range(NS + 1)]
     ys = [PAGE_H * j / NY for j in range(NY + 1)]
-    NL = len(LEAF_T0)
+    NL = len(t0s)
     leaves = []
     for k in range(NL):
         thS = halfL.theta_fn(1.0, (NL - k) * OB_DELTA)
@@ -1930,7 +1953,7 @@ def build_leaves(halfL, halfR, mats_leaf, fps_start, fps_end):
                     lp[uv].uv = (ss[ii] / OB_L, ys[jj] / PAGE_H)
         ob = bm_to_obj(bm, "leaf_%d" % k, mats=[mats_leaf[k]], smooth=True)
         ob.shape_key_add(name="Basis", from_mix=False)
-        t0, dur = LEAF_T0[k], LEAF_DUR[k]
+        t0, dur = t0s[k], LEAF_DUR[k]
         f_a = int(math.floor(t0 * C.FPS))
         f_b = int(math.ceil((t0 + dur) * C.FPS)) + 1
         kbs = []
@@ -1956,7 +1979,7 @@ def build_leaves(halfL, halfR, mats_leaf, fps_start, fps_end):
     return leaves
 
 
-def build_open_book(mats):
+def build_open_book(mats, t0s):
     """Open SOZLER on the rahle (page 729 initially; 4 leaves turn to 721). Rahle-local XZ, spine
     along +Y, then placed at RAHLE_POS with the tail toward the camera."""
     halfL = Half(-1, OB_TL, 0.030)
@@ -2010,7 +2033,7 @@ def build_open_book(mats):
             lp[uvl].uv = (lp.vert.co.x, lp.vert.co.y)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     objs.append(bm_to_obj(bm, "ob_spine", mats=[mats["leather_plain"]], smooth=True))
-    leaves = build_leaves(halfL, halfR, [mats["leaf_%d" % k] for k in range(4)], 0, 0)
+    leaves = build_leaves(halfL, halfR, [mats["leaf_%d" % k] for k in range(4)], t0s)
     root = bpy.data.objects.new("open_book", None)
     bpy.context.scene.collection.objects.link(root)
     root.matrix_world = Matrix.Translation(RAHLE_POS) @ Matrix.Rotation(RAHLE_YAW, 4, "Z") @ Matrix.Translation((0, -PAGE_H / 2, 0))
@@ -2020,7 +2043,7 @@ def build_open_book(mats):
     thE = halfR.theta_fn(1.0, 4 * OB_DELTA)
     s_num = OB_L * ((PAGE_W - 0.015 - 0.0045) / PAGE_W)
     p = integrate(halfR.G, thE, [s_num])[0]
-    trk = C.empty("TRK_page", (p[0], PAGE_H - 0.0135 + 0.0015, p[1] + 0.0005))
+    trk = C.empty("TRK_page", (p[0], PAGE_H - HEAD_Y + 0.0015, p[1] + 0.0005))
     trk.parent = root
     return root, objs + leaves, halfL, halfR
 
@@ -2118,16 +2141,16 @@ def build_room(mats):
     for (x, y) in ((TABLE_X0 + 0.04, TABLE_Y0 + 0.04), (TABLE_X1 - 0.10, TABLE_Y0 + 0.04)):
         objs.append(box("table_leg", x, x + 0.06, y, y + 0.06, FLOOR_Z, -0.042, wood_tab, 0.003))
     # kafes: frame + two layers of diagonal slats
-    xk = xo + 0.09
-    fw = 0.045
+    xk = KAFES_X
+    fw = KAFES_FW
     objs.append(box("kafes_f1", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y0 + fw, WIN_Z0, WIN_Z1, kafes, 0.002))
     objs.append(box("kafes_f2", xk - 0.03, xk + 0.03, WIN_Y1 - fw, WIN_Y1, WIN_Z0, WIN_Z1, kafes, 0.002))
     objs.append(box("kafes_f3", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, WIN_Z0, WIN_Z0 + fw, kafes, 0.002))
     objs.append(box("kafes_f4", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, WIN_Z1 - fw, WIN_Z1, kafes, 0.002))
     objs.append(box("kafes_mid", xk - 0.03, xk + 0.03, WIN_Y0, WIN_Y1, (WIN_Z0 + WIN_Z1) / 2 - 0.02, (WIN_Z0 + WIN_Z1) / 2 + 0.02, kafes, 0.002))
-    sp = 0.050
+    sp = KAFES_SP
     y0, y1, z0, z1 = WIN_Y0 + fw * 0.6, WIN_Y1 - fw * 0.6, WIN_Z0 + fw * 0.6, WIN_Z1 - fw * 0.6
-    for layer, dirv, dx in ((0, (1, 1), -0.011), (1, (1, -1), 0.011)):
+    for layer, dirv, dx in KAFES_LAYERS:
         d = Vector(dirv).normalized()
         nrm = Vector((-d.y, d.x))
         c = Vector(((y0 + y1) / 2, (z0 + z1) / 2))
@@ -2140,7 +2163,7 @@ def build_room(mats):
                 npc = max(1, int((b_ - a_).length / 0.035))
                 for q in range(npc):
                     pa = a_.lerp(b_, q / npc); pb = a_.lerp(b_, (q + 1) / npc)
-                    objs.append(slat("kafes_s", tuple(pa), tuple(pb), 0.0150, 0.018, xk + dx, kafes))
+                    objs.append(slat("kafes_s", tuple(pa), tuple(pb), KAFES_SW, KAFES_SD, xk + dx, kafes))
     # join small kafes pieces into one object
     ks = [o for o in objs if o.name.startswith("kafes_s")]
     if ks:
@@ -2165,71 +2188,279 @@ def sun_light():
     return o
 
 
-def shutter(ctx):
-    """Unseen roller shutter outside the window: its lower edge rises -> the beam sweeps in."""
-    xo = WALL_LEFT_X - WALL_THICK
-    ob = box("shutter", xo - 0.06, xo - 0.04, WIN_Y0 - 0.25, WIN_Y1 + 0.25, 0.0, 1.5, mat_simple("shutter", (0.05, 0.04, 0.03), 0.8))
-    ob.visible_camera = False
-    ob.visible_glossy = False
-    ob.visible_transmission = False
-    t0, t1 = 109.50, 112.50
-    for k in range(0, 31):
-        t = t0 + (t1 - t0) * k / 30
-        u = C.smooth(k / 30) * 0.65 + (k / 30) * 0.35
-        z = (WIN_Z0 - 0.03) + (WIN_Z1 + 0.06 - (WIN_Z0 - 0.03)) * u
-        ob.location.z = z
-        ob.keyframe_insert("location", index=2, frame=t * C.FPS)
-    C.set_extrapolation(ob, "CONSTANT")
-    return ob
+def shutter_profile(t0, t1, z0, z1, acc=0.45, dec=0.6, n=48):
+    """Roller-shutter travel: eased start (acc s), steady pull, eased stop (dec s). Returns (t, z) keys."""
+    def vel(t):
+        if t < t0 or t > t1:
+            return 0.0
+        a = C.smooth((t - t0) / acc) if acc > 0 else 1.0
+        b = C.smooth((t1 - t) / dec) if dec > 0 else 1.0
+        return min(a, b)
+    ts = [t0 + (t1 - t0) * k / (n * 8) for k in range(n * 8 + 1)]
+    acc_ = [0.0]
+    for i in range(1, len(ts)):
+        acc_.append(acc_[-1] + 0.5 * (vel(ts[i]) + vel(ts[i - 1])) * (ts[i] - ts[i - 1]))
+    tot = acc_[-1]
+    return [(ts[i], z0 + (z1 - z0) * acc_[i] / tot) for i in range(0, len(ts), 8)]
 
 
-def volume_box():
-    """Dusty air only inside the sun-beam corridor: the window opening (outer face) swept along the
-    sun direction. Homogeneous scatter, does not shadow (the beam is not dimmed by its own dust)."""
-    xo = WALL_LEFT_X - WALL_THICK - 0.01
-    m_ = 0.03
-    cs = [Vector((xo, y, z)) for (y, z) in ((WIN_Y0 - m_, WIN_Z0 - m_), (WIN_Y1 + m_, WIN_Z0 - m_),
-                                             (WIN_Y1 + m_, WIN_Z1 + m_), (WIN_Y0 - m_, WIN_Z1 + m_))]
-    # start the dusty air a little inside the room (keeps the reveal and the wall around the window
-    # free of volume noise)
-    k0 = (WALL_THICK + 0.12) / SUN_DIR.x
-    cs = [c + SUN_DIR * k0 for c in cs]
-    L = 2.8
+def shutter(times, mat):
+    """Wooden roller shutter outside the window (seen through the kafes). It rolls up: its lower edge
+    rises, so the beam enters from the bottom of the window and sweeps across the table toward the
+    camera. Thin slits between the slats leak faint light while it is down.
+    times: list of (t, edge_z) keys."""
+    root = bpy.data.objects.new("shutter", None)
+    bpy.context.scene.collection.objects.link(root)
     bm = bmesh.new()
-    a = [bm.verts.new(c) for c in cs]
-    b = [bm.verts.new(c + SUN_DIR * L) for c in cs]
-    for f in ((0, 1, 2, 3),):
-        bm.faces.new([a[i] for i in f][::-1]); bm.faces.new([b[i] for i in f])
-    for i in range(4):
-        i2 = (i + 1) % 4
-        bm.faces.new((a[i], a[i2], b[i2], b[i]))
+    n = int(1.6 / SHUTTER_PITCH)
+    for k in range(n):
+        z0 = k * SHUTTER_PITCH + (0.0 if k == 0 else SHUTTER_GAP)
+        z1 = (k + 1) * SHUTTER_PITCH
+        bulge = 0.004
+        # each slat: a shallow convex profile (inner face toward the room = +x)
+        prof = [(-0.009, z0), (-0.004 + bulge * 0.3, z0), (0.0 + bulge, (z0 + z1) / 2), (-0.004 + bulge * 0.3, z1), (-0.009, z1)]
+        vs = []
+        for y in (WIN_Y0 - 0.12, WIN_Y1 + 0.12):
+            vs.append([bm.verts.new((SHUTTER_X + x, y, z)) for (x, z) in prof])
+        m_ = len(prof)
+        for i in range(m_):
+            i2 = (i + 1) % m_
+            bm.faces.new((vs[0][i], vs[0][i2], vs[1][i2], vs[1][i]))
+        bm.faces.new(vs[0][::-1]); bm.faces.new(vs[1])
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    m, nt, out = new_mat("air")
-    v = NN(nt, "ShaderNodeVolumePrincipled")
-    v.inputs["Density"].default_value = float(os.environ.get("SH15_DENS", "0.30"))
-    v.inputs["Anisotropy"].default_value = 0.62
-    v.inputs["Color"].default_value = (1.0, 0.96, 0.90, 1)
-    LK(nt, v.outputs[0], out.inputs["Volume"])
-    ob = bm_to_obj(bm, "air", mats=[m], smooth=False)
+    ob = bm_to_obj(bm, "shutter_slats", mats=[mat], smooth=True, sharp_angle=50)
+    ob.parent = root
+    for t, z in times:
+        root.location.z = z
+        root.keyframe_insert("location", index=2, frame=t * C.FPS)
+    for fc in C.fcurves(root):
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+        fc.extrapolation = "CONSTANT"
+    return root
+
+
+# ------------------------------------------------------------------ analytic sun visibility ("beam mask")
+
+class _NG:
+    """Tiny helper to build math in a shader node group."""
+
+    def __init__(self, nt):
+        self.nt = nt
+
+    def m(self, op, a, b=None, c=None, clamp=False):
+        n = self.nt.nodes.new("ShaderNodeMath")
+        n.operation = op
+        n.use_clamp = clamp
+        for i, v in enumerate((a, b, c)):
+            if v is None:
+                continue
+            if isinstance(v, (int, float)):
+                n.inputs[i].default_value = v
+            else:
+                self.nt.links.new(v, n.inputs[i])
+        return n.outputs[0]
+
+    def step(self, v, edge, soft, rising=True):
+        """smoothstep 0->1 across `edge` (+-soft); rising=False gives 1->0."""
+        n = self.nt.nodes.new("ShaderNodeMapRange")
+        n.interpolation_type = "SMOOTHSTEP"
+        n.clamp = True
+        self.nt.links.new(v, n.inputs["Value"])
+        lo = self.m("SUBTRACT", edge, soft) if not isinstance(edge, (int, float)) else self.m("SUBTRACT", edge, soft)
+        hi = self.m("ADD", edge, soft)
+        self.nt.links.new(lo, n.inputs["From Min"])
+        self.nt.links.new(hi, n.inputs["From Max"])
+        n.inputs["To Min"].default_value = 0.0 if rising else 1.0
+        n.inputs["To Max"].default_value = 1.0 if rising else 0.0
+        return n.outputs[0]
+
+
+def beam_mask_group():
+    """Node group: world Position -> sun visibility (0..1) through shutter, wall opening, kafes frame
+    and both lattice layers, with a penumbra that grows with distance (sun 0.53 deg). Matches the
+    geometry built in build_room()/shutter(). Two animated values inside: 'shutter_z', 'sun_gain'."""
+    ng = bpy.data.node_groups.get("beam_mask")
+    if ng:
+        return ng
+    ng = bpy.data.node_groups.new("beam_mask", "ShaderNodeTree")
+    ng.interface.new_socket(name="Position", in_out="INPUT", socket_type="NodeSocketVector")
+    ng.interface.new_socket(name="Mask", in_out="OUTPUT", socket_type="NodeSocketFloat")
+    ng.interface.new_socket(name="Gain", in_out="OUTPUT", socket_type="NodeSocketFloat")
+    nt = ng.nodes
+    gi = nt.new("NodeGroupInput"); go = nt.new("NodeGroupOutput")
+    G = _NG(ng)
+    sep = nt.new("ShaderNodeSeparateXYZ")
+    ng.links.new(gi.outputs["Position"], sep.inputs[0])
+    px, py, pz = sep.outputs[0], sep.outputs[1], sep.outputs[2]
+    sz = nt.new("ShaderNodeValue"); sz.name = sz.label = "shutter_z"; sz.outputs[0].default_value = 2.0
+    gain = nt.new("ShaderNodeValue"); gain.name = gain.label = "sun_gain"; gain.outputs[0].default_value = 1.0
+    S = SUN_DIR
+    ky, kz = S.y / S.x, S.z / S.x
+
+    def proj(xp):
+        """(y', z') where the ray toward the sun crosses the plane x = xp."""
+        dx = G.m("SUBTRACT", px, xp)
+        return G.m("MULTIPLY_ADD", dx, -ky, py), G.m("MULTIPLY_ADD", dx, -kz, pz)
+    # penumbra half width from the distance to the kafes (sun disc 0.53 deg) + 0.4 mm
+    dist = G.m("DIVIDE", G.m("SUBTRACT", px, KAFES_X), S.x)
+    pen = G.m("MULTIPLY_ADD", dist, 0.5 * math.radians(0.53), 0.0004)
+    terms = []
+    # wall opening (outer face and inner face incl. sill / pervaz)
+    for xp, checks in ((XO, ("y0", "z1")), (WALL_LEFT_X + 0.03, ("y1", "z0")), (XO + 0.001, ("y1", "z0")),
+                       (WALL_LEFT_X + 0.002, ("y0", "z1"))):
+        yy, zz = proj(xp)
+        for c in checks:
+            if c == "y0":
+                terms.append(G.step(yy, WIN_Y0, pen, True))
+            elif c == "y1":
+                terms.append(G.step(yy, WIN_Y1, pen, False))
+            elif c == "z0":
+                terms.append(G.step(zz, WIN_Z0, pen, True))
+            elif c == "z1":
+                terms.append(G.step(zz, WIN_Z1, pen, False))
+    # kafes frame (6 cm deep) + middle rail, checked on both faces
+    zmid = (WIN_Z0 + WIN_Z1) / 2
+    for xp in (KAFES_X - 0.03, KAFES_X + 0.03):
+        yy, zz = proj(xp)
+        terms.append(G.step(yy, WIN_Y0 + KAFES_FW, pen, True))
+        terms.append(G.step(yy, WIN_Y1 - KAFES_FW, pen, False))
+        terms.append(G.step(zz, WIN_Z0 + KAFES_FW, pen, True))
+        terms.append(G.step(zz, WIN_Z1 - KAFES_FW, pen, False))
+        terms.append(G.step(G.m("ABSOLUTE", G.m("SUBTRACT", zz, zmid)), 0.02, pen, True))
+    # lattice layers: distance to the nearest slat centre line vs. the slat's shadow half width
+    fw = KAFES_FW
+    cy = (WIN_Y0 + fw * 0.6 + WIN_Y1 - fw * 0.6) / 2
+    cz = (WIN_Z0 + fw * 0.6 + WIN_Z1 - fw * 0.6) / 2
+    for layer, dirv, dxl in KAFES_LAYERS:
+        d = Vector(dirv).normalized()
+        nrm = Vector((-d.y, d.x))
+        slope = (S.y * nrm.x + S.z * nrm.y) / S.x            # lateral drift per metre of slat depth
+        hw = 0.5 * (KAFES_SW + KAFES_SD * abs(slope))
+        yy, zz = proj(KAFES_X + dxl)
+        w = G.m("MULTIPLY_ADD", G.m("SUBTRACT", yy, cy), nrm.x / KAFES_SP,
+                G.m("MULTIPLY", G.m("SUBTRACT", zz, cz), nrm.y / KAFES_SP))
+        f = G.m("MULTIPLY", G.m("ABSOLUTE", G.m("SUBTRACT", G.m("FRACT", G.m("ADD", w, 0.5)), 0.5)), KAFES_SP)
+        terms.append(G.step(f, hw, pen, True))
+    # roller shutter: open below its lower edge; faint light through the slat slits above it
+    yy, zz = proj(SHUTTER_X)
+    rel = G.m("SUBTRACT", zz, sz.outputs[0])
+    below = G.step(rel, 0.0, pen, False)
+    dd = G.m("MULTIPLY", G.m("ABSOLUTE", G.m("SUBTRACT", G.m("FRACT", G.m("DIVIDE", rel, SHUTTER_PITCH)), 0.5)), 1.0)
+    # gap centre lines sit at fract == 0 -> distance |fract - 0.5| close to 0.5
+    dgap = G.m("MULTIPLY", G.m("SUBTRACT", 0.5, dd), SHUTTER_PITCH)
+    slit = G.step(dgap, G.m("MULTIPLY_ADD", pen, 0.6, SHUTTER_GAP * 0.5), G.m("MULTIPLY", pen, 0.6), False)
+    slit_e = G.m("DIVIDE", SHUTTER_GAP, G.m("ADD", G.m("MULTIPLY", pen, 2.0), SHUTTER_GAP))
+    sh = G.m("MAXIMUM", below, G.m("MULTIPLY", slit, slit_e))
+    terms.append(sh)
+    acc = terms[0]
+    for t_ in terms[1:]:
+        acc = G.m("MULTIPLY", acc, t_)
+    ng.links.new(acc, go.inputs["Mask"])
+    ng.links.new(gain.outputs[0], go.inputs["Gain"])
+    return ng
+
+
+def key_beam(times_shutter, times_gain):
+    ng = beam_mask_group()
+    for name, keys in (("shutter_z", times_shutter), ("sun_gain", times_gain)):
+        sock = ng.nodes[name].outputs[0]
+        for t, v in keys:
+            sock.default_value = v
+            sock.keyframe_insert("default_value", frame=t * C.FPS)
+    ad = ng.animation_data
+    if ad and ad.action:
+        for fc in C._fcurves(ad.action):
+            for kp in fc.keyframe_points:
+                kp.interpolation = "LINEAR"
+            fc.extrapolation = "CONSTANT"
+
+
+def mat_beam(name, strength, color, path_len=True, phase_g=0.55, fade_table=True):
+    """Camera-only additive light: transparent + emission = strength * mask * gain * HG phase
+    (* 1/|cos| path length through a slab for the shaft cards). Never sampled as a light."""
+    m, nt, out = new_mat(name)
+    try:
+        m.cycles.emission_sampling = "NONE"
+    except Exception:
+        pass
+    geo = NN(nt, "ShaderNodeNewGeometry")
+    g = nt.nodes.new("ShaderNodeGroup")
+    g.node_tree = beam_mask_group()
+    LK(nt, geo.outputs["Position"], g.inputs["Position"])
+    val = math_node(nt, "MULTIPLY", g.outputs["Mask"], g.outputs["Gain"])
+    # Henyey-Greenstein phase toward the camera (bright when looking toward the sun)
+    dp = NN(nt, "ShaderNodeVectorMath", operation="DOT_PRODUCT")
+    LK(nt, geo.outputs["Incoming"], dp.inputs[0])
+    dp.inputs[1].default_value = tuple(SUN_DIR)
+    cos_t = dp.outputs["Value"]
+    gg = phase_g
+    # HG(cos) = (1 - g^2) / (1 + g^2 - 2 g cos)^1.5
+    base_ = math_node(nt, "ADD", math_node(nt, "MULTIPLY", cos_t, vb=-2 * gg), vb=1 + gg * gg)
+    hg = math_node(nt, "DIVIDE", va=(1 - gg * gg), b=math_node(nt, "POWER", base_, vb=1.5))
+    val = math_node(nt, "MULTIPLY", val, hg)
+    if path_len:
+        dn = NN(nt, "ShaderNodeVectorMath", operation="DOT_PRODUCT")
+        LK(nt, geo.outputs["Incoming"], dn.inputs[0]); LK(nt, geo.outputs["Normal"], dn.inputs[1])
+        inv = math_node(nt, "DIVIDE", va=1.0, b=math_node(nt, "MAXIMUM", math_node(nt, "ABSOLUTE", dn.outputs["Value"]), vb=0.25))
+        val = math_node(nt, "MULTIPLY", val, inv)
+    if fade_table:
+        sp = NN(nt, "ShaderNodeSeparateXYZ")
+        LK(nt, geo.outputs["Position"], sp.inputs[0])
+        val = math_node(nt, "MULTIPLY", val, maprange(nt, sp.outputs[2], 0.0, 0.07, 0.0, 1.0, interp="SMOOTHSTEP"))
+    em = NN(nt, "ShaderNodeEmission")
+    em.inputs["Color"].default_value = (*color, 1)
+    LK(nt, math_node(nt, "MULTIPLY", val, vb=strength), em.inputs["Strength"])
+    tp = NN(nt, "ShaderNodeBsdfTransparent")
+    add = NN(nt, "ShaderNodeAddShader")
+    LK(nt, tp.outputs[0], add.inputs[0]); LK(nt, em.outputs[0], add.inputs[1])
+    LK(nt, add.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def _camera_only(ob):
     ob.visible_shadow = False
-    # only camera rays see the dusty air (indirect contribution is negligible, but costly)
     ob.visible_diffuse = False
     ob.visible_glossy = False
     ob.visible_transmission = False
-    return ob
+    ob.visible_volume_scatter = False
 
 
-def build_motes(n=700, seed=7):
+def build_shafts(view_dir, n_cards=4, spacing=0.11, strength=0.012):
+    """Light shafts: a few cards that CONTAIN the sun direction (so any pattern on them is a set of
+    streaks parallel to the beam), turned toward the main view direction, spread across the beam."""
+    s = SUN_DIR
+    v = Vector(view_dir).normalized()
+    n = (v - v.dot(s) * s).normalized()
+    u = n.cross(s).normalized()
+    c0 = Vector((WALL_LEFT_X + 0.04, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2))
+    mat = mat_beam("shaft", strength, C.kelvin(SUN_K))
+    obs = []
+    for k in range(n_cards):
+        off = (k - (n_cards - 1) / 2) * spacing
+        cc = c0 + n * off
+        L0, L1, H = -0.02, 2.4, 0.95
+        corners = [cc + s * L0 - u * H, cc + s * L1 - u * H, cc + s * L1 + u * H, cc + s * L0 + u * H]
+        ob = C.mesh_obj("shaft_%d" % k, [tuple(c) for c in corners], [(0, 1, 2, 3)])
+        ob.data.materials.append(mat)
+        _camera_only(ob)
+        obs.append(ob)
+    return obs
+
+
+def build_motes(n=650, seed=7, strength=3.0):
+    """Dust motes in (and around) the beam corridor: tiny camera-only points that glow only where the
+    analytic beam mask says the sun reaches them (forward-scatter phase), invisible in shade."""
     rng = random.Random(seed)
     verts = []
-    xo = WALL_LEFT_X - WALL_THICK
-    while len(verts) < n:
-        x = rng.uniform(-0.92, 0.25); y = rng.uniform(-0.45, 0.36); z = rng.uniform(0.04, 1.25)
-        # only inside the sun-beam corridor (traced back to the outer window opening)
+    tries = 0
+    while len(verts) < n and tries < 200000:
+        tries += 1
+        x = rng.uniform(-0.93, 0.45); y = rng.uniform(-0.50, 0.38); z = rng.uniform(0.03, 1.25)
         p = Vector((x, y, z))
-        t = (x - xo) / SUN_DIR.x
+        t = (x - XO) / SUN_DIR.x
         q = p - SUN_DIR * t
-        if WIN_Y0 + 0.01 < q.y < WIN_Y1 - 0.01 and WIN_Z0 + 0.01 < q.z < WIN_Z1 - 0.01:
+        if WIN_Y0 - 0.06 < q.y < WIN_Y1 + 0.06 and WIN_Z0 - 0.06 < q.z < WIN_Z1 + 0.06:
             verts.append((x, y, z))
     me = bpy.data.meshes.new("motes")
     me.from_pydata(verts, [], [])
@@ -2241,8 +2472,8 @@ def build_motes(n=700, seed=7):
     gi = ng.nodes.new("NodeGroupInput"); go = ng.nodes.new("NodeGroupOutput")
     m2p = ng.nodes.new("GeometryNodeMeshToPoints")
     rnd = ng.nodes.new("FunctionNodeRandomValue"); rnd.data_type = "FLOAT"
-    rnd.inputs["Min"].default_value = 0.00035
-    rnd.inputs["Max"].default_value = 0.0011
+    rnd.inputs["Min"].default_value = 0.00012
+    rnd.inputs["Max"].default_value = 0.00042
     rnd.inputs["Seed"].default_value = 3
     ng.links.new(rnd.outputs["Value"], m2p.inputs["Radius"])
     st = ng.nodes.new("GeometryNodeInputSceneTime")
@@ -2256,52 +2487,39 @@ def build_motes(n=700, seed=7):
     sub = ng.nodes.new("ShaderNodeVectorMath"); sub.operation = "SUBTRACT"
     sub.inputs[1].default_value = (0.5, 0.5, 0.5)
     ng.links.new(nz.outputs["Color"], sub.inputs[0])
-    sc = ng.nodes.new("ShaderNodeVectorMath"); sc.operation = "SCALE"; sc.inputs["Scale"].default_value = 0.09
-    ng.links.new(sub.outputs[0], sc.inputs[0])
+    sc_ = ng.nodes.new("ShaderNodeVectorMath"); sc_.operation = "SCALE"; sc_.inputs["Scale"].default_value = 0.09
+    ng.links.new(sub.outputs[0], sc_.inputs[0])
     drift = ng.nodes.new("ShaderNodeVectorMath"); drift.operation = "SCALE"
     drift.inputs[0].default_value = (0.010, 0.003, 0.0015)
     tsub = ng.nodes.new("ShaderNodeMath"); tsub.operation = "SUBTRACT"; tsub.inputs[1].default_value = 117.0
     ng.links.new(st.outputs["Seconds"], tsub.inputs[0]); ng.links.new(tsub.outputs[0], drift.inputs["Scale"])
     add = ng.nodes.new("ShaderNodeVectorMath"); add.operation = "ADD"
-    ng.links.new(sc.outputs[0], add.inputs[0]); ng.links.new(drift.outputs[0], add.inputs[1])
+    ng.links.new(sc_.outputs[0], add.inputs[0]); ng.links.new(drift.outputs[0], add.inputs[1])
     setp = ng.nodes.new("GeometryNodeSetPosition")
     ng.links.new(gi.outputs[0], m2p.inputs["Mesh"])
     ng.links.new(m2p.outputs[0], setp.inputs["Geometry"])
     ng.links.new(add.outputs[0], setp.inputs["Offset"])
     smat = ng.nodes.new("GeometryNodeSetMaterial")
-    # additive dust: never occludes (transparent) but adds the light it scatters -> sparkles only
-    # where the sun hits it, invisible in shade
-    m, nt, out = new_mat("mote")
-    tp = NN(nt, "ShaderNodeBsdfTransparent")
-    tr = NN(nt, "ShaderNodeBsdfTranslucent")
-    tr.inputs["Color"].default_value = (0.75, 0.70, 0.62, 1)
-    df = NN(nt, "ShaderNodeBsdfDiffuse")
-    df.inputs["Color"].default_value = (0.35, 0.33, 0.30, 1)
-    a1 = NN(nt, "ShaderNodeAddShader"); a2 = NN(nt, "ShaderNodeAddShader")
-    LK(nt, tp.outputs[0], a1.inputs[0]); LK(nt, tr.outputs[0], a1.inputs[1])
-    LK(nt, a1.outputs[0], a2.inputs[0]); LK(nt, df.outputs[0], a2.inputs[1])
-    LK(nt, a2.outputs[0], out.inputs["Surface"])
-    smat.inputs["Material"].default_value = m
+    smat.inputs["Material"].default_value = mat_beam("mote", strength, (1.0, 0.93, 0.80), path_len=False, phase_g=0.62,
+                                                     fade_table=False)
     ng.links.new(setp.outputs[0], smat.inputs["Geometry"])
     ng.links.new(smat.outputs[0], go.inputs[0])
     mod = ob.modifiers.new("gn", "NODES")
     mod.node_group = ng
-    ob.visible_shadow = False
-    ob.visible_diffuse = False
-    ob.visible_glossy = False
-    ob.visible_transmission = False
+    _camera_only(ob)
     return ob
 
 
 # ----------------------------------------------------------------------------- cameras
 
-def _hermite(keys, t, idx):
-    """Cubic Hermite (Catmull-Rom tangents, non-uniform times) of component idx; keys sorted by t."""
+def _hermite(keys, t, idx, ends=(0.0, 0.0)):
+    """Cubic Hermite (Catmull-Rom tangents, non-uniform times) of component idx; keys sorted by t.
+    ends = multipliers of the first/last key's tangent (0 = ease in / ease out, 1 = keep moving)."""
     ts = [k[0] for k in keys]
     if t <= ts[0]:
-        i = 0
+        return keys[0][idx]
     elif t >= ts[-1]:
-        i = len(ts) - 2
+        return keys[-1][idx]
     else:
         i = max(j for j in range(len(ts) - 1) if ts[j] <= t)
     t0, t1 = ts[i], ts[i + 1]
@@ -2309,9 +2527,9 @@ def _hermite(keys, t, idx):
 
     def tangent(j):
         if j == 0:
-            return (keys[1][idx] - keys[0][idx]) / (ts[1] - ts[0])
+            return ends[0] * (keys[1][idx] - keys[0][idx]) / (ts[1] - ts[0])
         if j == len(ts) - 1:
-            return (keys[-1][idx] - keys[-2][idx]) / (ts[-1] - ts[-2])
+            return ends[1] * (keys[-1][idx] - keys[-2][idx]) / (ts[-1] - ts[-2])
         return (keys[j + 1][idx] - keys[j - 1][idx]) / (ts[j + 1] - ts[j - 1])
     m0, m1 = tangent(i), tangent(i + 1)
     h = t1 - t0
@@ -2321,19 +2539,26 @@ def _hermite(keys, t, idx):
     return h00 * p0 + h10 * h * m0 + h01 * p1 + h11 * h * m1
 
 
-def rig_camera(name, lens, fstop, keys, f_from, f_to, hh=(0.0012, 0.0010), seed=1, sensor=36.0):
-    """keys: list of (t, pos Vector, aim Vector, focus Vector). Keys every frame in [f_from, f_to]."""
+def rig_camera(name, lens, fstop, keys, f_from, f_to, hh=(0.0012, 0.0010), seed=1, sensor=36.0, ends=(0.0, 0.0)):
+    """keys: list of (t, pos Vector, aim Vector, focus Vector). Keys every frame in [f_from, f_to].
+    Moves are cubic Hermite splines; `ends` controls the ease at the first/last key."""
     cam = C.camera(name, lens=lens, loc=tuple(keys[0][1]), look_at=tuple(keys[0][2]), fstop=fstop,
                    focus=tuple(keys[0][3]), sensor=sensor, clip_start=0.005, clip_end=50)
     foc = cam.data.dof.focus_object
     prev = None
     for f in range(f_from - 2, f_to + 3):
         t = f / C.FPS
-        pos = Vector([_hermite([(k[0], k[1][i]) for k in keys], t, 1) for i in range(3)])
-        aim = Vector([_hermite([(k[0], k[2][i]) for k in keys], t, 1) for i in range(3)])
-        fp = Vector([_hermite([(k[0], k[3][i]) for k in keys], t, 1) for i in range(3)])
+        pos = Vector([_hermite([(k[0], k[1][i]) for k in keys], t, 1, ends) for i in range(3)])
+        aim = Vector([_hermite([(k[0], k[2][i]) for k in keys], t, 1, ends) for i in range(3)])
+        fp = Vector([_hermite([(k[0], k[3][i]) for k in keys], t, 1, ends) for i in range(3)])
         cam.location = pos
-        e = (aim - pos).to_track_quat("-Z", "Y").to_euler()
+        if len(keys[0]) > 4:          # explicit up vector (e.g. 'page head is up' for the macro)
+            up = Vector([_hermite([(k[0], k[4][i]) for k in keys], t, 1, ends) for i in range(3)])
+            fwd = (aim - pos).normalized()
+            right = fwd.cross(up).normalized()
+            e = Matrix((right, right.cross(fwd), -fwd)).transposed().to_euler()
+        else:
+            e = (aim - pos).to_track_quat("-Z", "Y").to_euler()
         if prev is not None:
             e.make_compatible(prev)
         prev = e
@@ -2381,97 +2606,107 @@ def place_closed(root, loc, yaw=0.0, upright=False, lean=0.0):
         root.matrix_world = Matrix.Translation(loc) @ Matrix.Rotation(yaw, 4, "Z") @ Matrix.Translation((-BK_WF / 2, -BK_H / 2, 0))
 
 
+ROW_X0 = -0.875        # first standing volume (MEKTUBAT); the SOZLER slot next to the wall is empty
+
+
 def build_row(mats):
+    """The other volumes standing on the table against the side wall, canonical order from the window
+    corner, with the empty slot where SOZLER was taken out to be read."""
     rng = random.Random(15)
-    x = 0.0
+    x = ROW_X0
     roots = []
-    for idx in range(3, len(BOOKS)):
+    for idx in range(1, len(BOOKS)):
         lines, T = BOOKS[idx]
-        root, objs = build_closed_book("vol_%02d" % idx, idx, [mats["leather_plain"], mats["cover_plain"], mats["cover_plain"], mats["spine"]])
+        root, objs = build_closed_book("vol_%02d" % idx, idx, [mats["leather_plain"], mats["cover_plain"], mats["cover_plain"],
+                                                                mats["spine_%d" % idx]])
         y_joint = WALL_BACK_Y - 0.006 - BK_WF + rng.uniform(-0.004, 0.006)
         yaw = math.radians(rng.uniform(-1.2, 1.2))
         place_closed(root, Vector((x, y_joint, 0.0)), yaw=yaw, upright=True)
         roots.append(root)
         x += T + 0.0012 + rng.uniform(0, 0.0012)
     # wooden bookend at the right end
-    be = box("bookend", x + 0.002, x + 0.022, WALL_BACK_Y - 0.17, WALL_BACK_Y - 0.02, 0.0, 0.17, mats["rahle"], 0.003)
+    box("bookend", x + 0.002, x + 0.020, WALL_BACK_Y - 0.17, WALL_BACK_Y - 0.02, 0.0, 0.17, mats["rahle"], 0.003)
     return roots, x
-
-
-def build_stack(mats):
-    """MEKTUBAT lying on LEM'ALAR beside the rahle (spines toward the rahle, heads toward the window)."""
-    roots = []
-    z = 0.0
-    for k, (idx, dyaw, dxy) in enumerate(((2, 0.0, (0.0, 0.0)), (1, math.radians(-6), (0.006, -0.004)))):
-        cover = mats["cover_mektubat"] if idx == 1 else mats["cover_plain"]
-        root, objs = build_closed_book("stack_%d" % idx, idx, [mats["leather_plain"], cover, mats["cover_plain"], mats["spine"]])
-        T = BOOKS[idx][1]
-        loc = STACK_POS + Vector((dxy[0], dxy[1], z))
-        root.matrix_world = Matrix.Translation(loc) @ Matrix.Rotation(STACK_YAW + dyaw, 4, "Z") @ Matrix.Translation((-BK_WF / 2, -BK_H / 2, 0))
-        z += T
-        roots.append(root)
-    return roots
 
 
 # ----------------------------------------------------------------------------- build
 
+def cut_frame(t_word, lead=1.5):
+    """Cut frame for a word: the picture leads the ear by ~1.5 frames."""
+    return int(round(t_word * C.FPS - lead))
+
+
+def key_const(ob, path, keys, index=-1):
+    for f, v in keys:
+        C.key(ob, path, None, v, index=index, interp="CONSTANT", frame=f)
+
+
 def build(ctx):
     d = ensure_design()
     sc = bpy.context.scene
+    W_ = ctx.word
+    t_bu, t_soz, t_721, t_sayfa = W_("Bu"), W_("Sözler"), W_("721"), W_("sayfasında")
+    t_baska, t_cok, t_bu2 = W_("başka"), W_("çok"), W_("Bu", 1)
+    fB, fC, fD, fE = cut_frame(t_721), cut_frame(t_baska), cut_frame(t_cok), cut_frame(t_bu2)
     # ------------------------------------------------ materials
     MATS["page_edge"] = mat_page_edge()
     MATS["headband"] = mat_headband()
     MATS["leather_plain"] = mat_leather("leather_plain", None)
     MATS["cover_sozler"] = mat_leather("cover_sozler", os.path.join(d, "cover_sozler.png"), "uvb")
     MATS["cover_plain"] = mat_leather("cover_plain", os.path.join(d, "cover_plain.png"), "uvb")
-    MATS["cover_mektubat"] = mat_leather("cover_mektubat", os.path.join(d, "cover_mektubat.png"), "uvb")
-    MATS["spine"] = mat_leather("spine", os.path.join(d, "spines.png"), "uvs")
+    for i in range(len(BOOKS)):
+        MATS["spine_%d" % i] = mat_leather("spine_%d" % i, os.path.join(d, "spine_%d.png" % i), "uvs", seed=i * 0.7)
     for num in (720, 729):
-        MATS["page_%d" % num] = mat_page("page_%d" % num, os.path.join(d, "page_%d.png" % num))
+        MATS["page_%d" % num] = mat_page("page_%d" % num, num)
     for k in range(4):
-        MATS["leaf_%d" % k] = mat_leaf("leaf_%d" % k, os.path.join(d, "page_%d.png" % (727 - 2 * k)),
-                                       os.path.join(d, "page_%d.png" % (728 - 2 * k)))
-    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.56, 0.37, 0.24), val=0.62, sat=1.15,
-                             rough=(0.55, 0.78), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
-                             grain_rot=math.pi / 2, wear=0.35, spec=0.15)
+        MATS["leaf_%d" % k] = mat_leaf("leaf_%d" % k, 727 - 2 * k, 728 - 2 * k)
+    MATS["rahle"] = mat_wood("walnut", "walnut_veneer", tile=0.45, tint=(0.62, 0.38, 0.22), val=0.66, sat=1.25,
+                             rough=(0.50, 0.74), relief=os.path.join(d, "relief.png"), relief_depth=0.0, coat=0.0,
+                             grain_rot=math.pi / 2, wear=0.35, spec=0.22)
     MATS["table"] = mat_wood("table", "wood_table_worn", tile=1.1, tint=(0.80, 0.72, 0.64), val=0.85, rough=(0.38, 0.7), uvmap=True)
     MATS["floor"] = mat_wood("floor", "old_wood_floor", tile=2.0, tint=(0.8, 0.75, 0.7), val=0.8, rough=(0.5, 0.8), uvmap=True)
     MATS["kafes"] = mat_wood("kafes", "dark_wood", tile=0.6, tint=(0.55, 0.45, 0.38), val=0.55, sat=0.6, rough=(0.55, 0.8))
+    MATS["shutter"] = mat_wood("shutter_wood", "dark_wood", tile=0.5, tint=(0.42, 0.36, 0.31), val=0.50, sat=0.5, rough=(0.6, 0.85))
     MATS["plaster"] = mat_plaster()
     # ------------------------------------------------ set
     build_room(MATS)
     build_rahle(MATS["rahle"], os.path.join(d, "relief.png"))
-    row, row_end = build_row(MATS)
-    build_stack(MATS)
-    soz, soz_objs = build_closed_book("sozler_closed", 0, [MATS["leather_plain"], MATS["cover_sozler"], MATS["cover_plain"], MATS["spine"]])
+    build_row(MATS)
+    soz, soz_objs = build_closed_book("sozler_closed", 0, [MATS["leather_plain"], MATS["cover_sozler"], MATS["cover_plain"], MATS["spine_0"]])
     place_closed(soz, SOZ_POS, yaw=SOZ_YAW)
-    ob_root, ob_objs, halfL, halfR = build_open_book(MATS)
-    # closed Sozler only in camA; open book from camB on
-    key_vis(soz, [(0, 2722)], ctx.f0, ctx.f1)
-    key_vis(ob_root, [(2722, 99999)], ctx.f0, ctx.f1)
+    ob_root, ob_objs, halfL, halfR = build_open_book(MATS, leaf_times(t_sayfa))
+    # closed Sozler only in camA; the open book from camB on
+    key_vis(soz, [(0, fB)], ctx.f0, ctx.f1)
+    key_vis(ob_root, [(fB, 99999)], ctx.f0, ctx.f1)
+    # TRK_page: export_tracks ignores hide_render, so before camB the tracker is parked far below
+    # the floor (CONSTANT) -> its visible flag is 0 while the rahle is empty
+    trk = bpy.data.objects["TRK_page"]
+    home = trk.location.copy()
+    key_const(trk, "location", [(ctx.f0 - 10, tuple(home + Vector((0, 0, -40)))), (fB, tuple(home))])
     # ------------------------------------------------ light
     C.world_sky(sun_elev_deg=math.degrees(math.asin(-SUN_DIR.z)), sun_rot_deg=math.degrees(math.atan2(-SUN_DIR.x, SUN_DIR.y)) + 180,
                 strength=1.6, sun_disc=False, air=1.2, aerosol=1.5)
-    # through the window the bright courtyard/sky is overexposed for an interior exposure: camera rays
-    # see a warm near-white glow, lighting still uses the physical sky
+    # through the window the bright courtyard/sky is overexposed for an interior exposure: CAMERA rays
+    # see a warm near-white glow; lighting and reflections use the physical sky
     wnt = sc.world.node_tree
     bg = [n for n in wnt.nodes if n.type == "BACKGROUND"][0]
     sky_out = bg.inputs["Color"].links[0].from_socket
     lp = wnt.nodes.new("ShaderNodeLightPath")
     mixw = wnt.nodes.new("ShaderNodeMix"); mixw.data_type = "RGBA"
-    cam_or_gloss = wnt.nodes.new("ShaderNodeMath"); cam_or_gloss.operation = "MAXIMUM"
-    wnt.links.new(lp.outputs["Is Camera Ray"], cam_or_gloss.inputs[0])
-    wnt.links.new(lp.outputs["Is Glossy Ray"], cam_or_gloss.inputs[1])
-    wnt.links.new(cam_or_gloss.outputs[0], mixw.inputs[0])
+    wnt.links.new(lp.outputs["Is Camera Ray"], mixw.inputs[0])
     wnt.links.new(sky_out, mixw.inputs[6])
     mixw.inputs[7].default_value = (3.2, 2.9, 2.5, 1.0)
     wnt.links.new(mixw.outputs[2], bg.inputs["Color"])
     sun = sun_light()
-    # sun brightens on "cok guzel ifadelerle" (thin haze clears)
-    for t, e in ((109.5, 5.4), (117.25, 5.4), (119.0, 8.4), (125.6, 8.4)):
-        sun.data.energy = e
+    gain = [(t_bu - 1.0, 1.0), (t_cok, 1.0), (t_cok + 1.75, 8.4 / 5.4), (ctx.t1 + 1.0, 8.4 / 5.4)]
+    for t, g in gain:
+        sun.data.energy = 5.4 * g
         sun.data.keyframe_insert("energy", frame=t * C.FPS)
-    shutter(ctx)
+    # roller shutter: lower edge from below the opening to fully open, eased ("Bu" ... "Sozler")
+    # (z = 0.30 hides the whole opening from every camera; the sun starts to enter at z ~ 0.55)
+    sh_keys = shutter_profile(t_bu, t_soz + 0.65, 0.30, 1.52)
+    shutter(sh_keys, MATS["shutter"])
+    key_beam(sh_keys, gain)
     # cool fill: overcast skylight from a door/window behind camera (front wall)
     C.area("fill_front", loc=(0.9, -3.5, 1.3), look_at=(0.0, 0.0, 0.2), size=2.4, size_y=1.6, power=42, kelvin_k=5600)
     portal = C.area("portal", loc=(WALL_LEFT_X - 0.02, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2),
@@ -2480,75 +2715,67 @@ def build(ctx):
     try:
         portal.data.cycles.is_portal = True
     except Exception:
-        try:
-            portal.data.is_portal = True
-        except Exception:
-            pass
+        portal.data.is_portal = True
     dis = os.environ.get("SH15_DISABLE", "").split(",")
-    if "vol" not in dis:
-        volume_box()
+    if "shafts" not in dis:
+        build_shafts((-0.80, 0.45, -0.40))
     if "motes" not in dis:
         build_motes()
-    if "portal" in dis:
-        bpy.data.objects.remove(bpy.data.objects["portal"])
-    if "fill" in dis:
-        bpy.data.objects.remove(bpy.data.objects["fill_front"])
-    if "kafes" in dis:
-        for o in [o for o in bpy.data.objects if o.name.startswith("kafes")]:
-            bpy.data.objects.remove(o)
-    if "carve" in dis:
-        for o in [o for o in bpy.data.objects if o.name.endswith("_carve")]:
-            bpy.data.objects.remove(o)
     # ------------------------------------------------ cameras
     V = Vector
     camA = rig_camera("camA", 32, 2.8, [
-        (109.40, V((0.66, -0.20, 0.65)), V((-0.36, -0.05, 0.22)), V((-0.36, -0.05, 0.22))),
-        (110.70, V((0.50, -0.16, 0.52)), V((-0.22, -0.06, 0.15)), V((-0.10, -0.06, 0.12))),
-        (111.96, V((0.29, -0.085, 0.34)), V((0.0, -0.07, 0.028)), V((0.06, -0.07, 0.052))),
-        (113.50, V((0.265, -0.08, 0.315)), V((0.0, -0.07, 0.025)), V((0.06, -0.07, 0.052))),
-    ], 2622, 2724, seed=11)
+        (ctx.t0 - 0.3, V((0.95, -0.42, 0.78)), V((-0.40, 0.02, 0.24)), V((-0.38, -0.08, 0.20))),
+        (t_soz - 0.9, V((0.78, -0.18, 0.52)), V((0.10, 0.06, 0.04)), V((0.30, 0.10, 0.05))),
+        (t_soz, V((0.62, -0.02, 0.40)), V((0.27, 0.10, 0.0)), V((0.30, 0.10, 0.05))),
+        (fB / C.FPS + 0.2, V((0.58, 0.0, 0.37)), V((0.27, 0.10, 0.0)), V((0.30, 0.10, 0.05))),
+    ], ctx.f0, fB + 6, seed=11, ends=(0.6, 0.3))
+    bpy.context.view_layer.update()
+    pg = trk.matrix_world.translation.copy()
+    sc.frame_set(fB + 10)
     bpy.context.view_layer.update()
     pg = bpy.data.objects["TRK_page"].matrix_world.translation.copy()
-    camB = rig_camera("camB", 40, 2.8, [
-        (113.30, V((-0.11, -0.37, 0.56)), V((-0.50, 0.08, 0.25)), pg + V((0.03, -0.02, -0.01))),
-        (114.45, V((-0.14, -0.33, 0.54)), V((-0.505, 0.08, 0.25)), pg + V((0.01, 0.0, 0.0))),
-        (115.90, V((-0.22, -0.25, 0.50)), V((-0.51, 0.08, 0.255)), pg),
-    ], 2718, 2782, seed=12)
-    zc = 0.15
+    camB = rig_camera("camB", 60, 2.8, [
+        (fB / C.FPS - 0.3, pg + V((0.34, -0.30, 0.30)), pg + V((0.02, -0.10, -0.06)), pg + V((0.0, -0.06, -0.03))),
+        (t_sayfa + 0.25, pg + V((0.20, -0.17, 0.16)), pg + V((0.0, -0.02, -0.01)), pg),
+        (fC / C.FPS + 0.3, pg + V((0.185, -0.155, 0.148)), pg + V((0.0, -0.015, -0.008)), pg),
+    ], fB - 6, fC + 6, seed=12, ends=(0.5, 0.4))
     yc = WALL_BACK_Y - 0.006 - BK_WF - 0.012
+    zc = 0.13
+    xs = ROW_X0 + 0.02
     camC = rig_camera("camC", 50, 2.8, [
-        (115.70, V((0.045, yc - 0.28, 0.128)), V((0.065, yc, zc)), V((0.065, yc, zc))),
-        (117.30, V((0.165, yc - 0.255, 0.132)), V((0.185, yc, zc)), V((0.185, yc, zc))),
-    ], 2774, 2818, seed=13)
+        (fC / C.FPS - 0.3, V((xs + 0.02, yc - 0.33, 0.13)), V((xs + 0.06, yc, zc)), V((xs + 0.06, yc, zc))),
+        (fD / C.FPS + 0.3, V((xs + 0.09, yc - 0.33, 0.135)), V((xs + 0.13, yc, zc)), V((xs + 0.13, yc, zc))),
+    ], fC - 6, fD + 6, seed=13, ends=(0.3, 0.3))
     camD = rig_camera("camD", 35, 2.8, [
-        (117.20, V((0.06, -0.15, 0.41)), V((-0.42, -0.06, 0.30)), V((-0.33, -0.06, 0.25))),
-        (120.05, V((0.02, 0.0, 0.38)), V((-0.42, -0.04, 0.30)), V((-0.33, -0.04, 0.25))),
-    ], 2810, 2883, seed=14)
+        (fD / C.FPS - 0.3, V((0.06, -0.19, 0.41)), V((-0.42, -0.10, 0.30)), V((-0.33, -0.10, 0.25))),
+        (fE / C.FPS + 0.3, V((0.02, -0.04, 0.38)), V((-0.42, -0.08, 0.30)), V((-0.33, -0.08, 0.25))),
+    ], fD - 6, fE + 6, seed=14, ends=(0.4, 0.4))
     camE = rig_camera("camE", 28, 4.0, [
-        (119.90, V((0.36, -0.07, 0.61)), V((-0.45, -0.06, 0.36)), V((-0.36, -0.05, 0.25))),
-        (125.60, V((0.20, -0.065, 0.54)), V((-0.45, -0.06, 0.35)), V((-0.36, -0.05, 0.25))),
-    ], 2875, 3014, seed=15)
-    for name, f, cam in (("A", ctx.f0, camA), ("B", 2722, camB), ("C", 2778, camC), ("D", 2814, camD), ("E", 2879, camE)):
+        (fE / C.FPS - 0.3, V((0.36, -0.11, 0.61)), V((-0.45, -0.10, 0.36)), V((-0.36, -0.09, 0.25))),
+        (ctx.t1 + 0.3, V((0.20, -0.105, 0.54)), V((-0.45, -0.10, 0.35)), V((-0.36, -0.09, 0.25))),
+    ], fE - 6, ctx.f1 + 2, seed=15, ends=(0.5, 0.0))
+    for name, f, cam in (("A", ctx.f0, camA), ("B", fB, camB), ("C", fC, camC), ("D", fD, camD), ("E", fE, camE)):
         mk = sc.timeline_markers.new("cam" + name, frame=f)
         mk.camera = cam
     sc.camera = camA
-    dbg = os.environ.get("SH15_CAM")          # debug view: "px,py,pz,ax,ay,az,lens"
+    # per-camera exposure (one continuous room: every camera within ~1 stop)
+    EXPO = {"A": 0.35, "B": 0.0, "C": 0.45, "D": -0.15, "E": 0.0}
+    key_const(sc.view_settings, "exposure", [(ctx.f0 - 10, EXPO["A"]), (fB, EXPO["B"]), (fC, EXPO["C"]), (fD, EXPO["D"]), (fE, EXPO["E"])])
+    dbg = os.environ.get("SH15_CAM")          # debug view: "px,py,pz,ax,ay,az,lens[,fstop,fx,fy,fz]"
     if dbg:
         v = [float(x) for x in dbg.split(",")]
         for mk in list(sc.timeline_markers):
             sc.timeline_markers.remove(mk)
-        cd = C.camera("dbg", lens=v[6], loc=v[0:3], look_at=v[3:6])
+        cd = C.camera("dbg", lens=v[6], loc=v[0:3], look_at=v[3:6], fstop=v[7] if len(v) > 7 else None,
+                      focus=tuple(v[8:11]) if len(v) > 10 else None)
         sc.camera = cd
-    sc.view_settings.exposure = 0.15
     if os.environ.get("SH15_NODENOISE"):
         def _nd(*_):
             bpy.context.scene.cycles.use_denoising = False
         bpy.app.handlers.render_pre.append(_nd)
-    if os.environ.get("SH15_MATOVR"):
-        bpy.context.view_layer.material_override = mat_simple("ovr", (0.5, 0.5, 0.5), 0.6)
-    ov = {"final_spp": 5, "final_threshold": 0.05, "final_min_spp": 3, "preview_spp": 16,
-          "diffuse_bounces": 1, "glossy_bounces": 2, "transmission_bounces": 2, "transparent_bounces": 4,
-          "max_bounces": 4, "clamp_indirect": 2.0, "texture_limit": "8192"}
+    ov = {"final_spp": 12, "final_threshold": 0.03, "final_min_spp": 6, "preview_spp": 16,
+          "diffuse_bounces": 1, "glossy_bounces": 2, "transmission_bounces": 2, "transparent_bounces": 8,
+          "max_bounces": 4, "clamp_indirect": 2.0, "texture_limit": "4096"}
     ov.update(json.loads(os.environ.get("SH15_OV", "{}")))
     return ov
 
