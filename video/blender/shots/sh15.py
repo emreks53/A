@@ -942,7 +942,7 @@ SOZ_POS = Vector((0.30, 0.10, 0.0))    # closed Sozler lying on the table (camA)
 SOZ_YAW = math.radians(90 - 9)
 B_NEAR = 0.04          # camB leaf flips: focus 4 cm nearer than the page, on the turning leaves (review 2)
 # camE (review 2 item 7): offsets of both position keys (down, camera-left) and of the look-at target (+x, +y)
-E_OFS = [float(v) for v in os.environ.get("SH15_E", "0.04,0,0,0").split(",")]
+E_OFS = [float(v) for v in os.environ.get("SH15_E", "-0.04,0.05,0.03,0.03").split(",")]
 
 # ----------------------------------------------------------------------------- node helpers
 
