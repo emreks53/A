@@ -152,6 +152,8 @@ def ground_material(tex, tex2):
     gpos_ = nb.n("ShaderNodeNewGeometry")
     zsep = nb.n("ShaderNodeSeparateXYZ"); nb.l(gpos_.outputs["Position"], zsep.inputs[0])
     salt = nb.math("MULTIPLY", salt, nb.mapr(zsep.outputs[2], 25.0, 4.0))     # no pale salt on the ridges
+    camd0 = nb.n("ShaderNodeCameraData")
+    salt = nb.math("MULTIPLY", salt, nb.mapr(camd0.outputs["View Distance"], 60.0, 15.0))   # no streaky far salt
     col = nb.mixc(nb.mapr(zsep.outputs[2], 15.0, 150.0, 0.0, 0.45), col, (0.13, 0.14, 0.16))   # darker rock ridges
     col = nb.mixc(nb.math("MULTIPLY", salt, 0.55), col, (0.60, 0.62, 0.65))
     tone = nb.noise(pos, 1 / 70.0, 2, 0.5)
@@ -160,7 +162,7 @@ def ground_material(tex, tex2):
     col = nb.mixc(nb.math("MULTIPLY", dust, 0.45), col, (0.42, 0.43, 0.44))
     camd = nb.n("ShaderNodeCameraData")
     far = nb.mapr(camd.outputs["View Distance"], 25.0, 60.0)
-    col = nb.mixc(nb.math("MULTIPLY", far, 0.85), col, (0.30, 0.315, 0.345))
+    col = nb.mixc(nb.math("MULTIPLY", far, 0.85), col, (0.40, 0.41, 0.43))
     bsdf = nb.n("ShaderNodeBsdfPrincipled", inputs={"Specular IOR Level": 0.12})
     nb.l(col, bsdf.inputs["Base Color"])
     r = img(tex["rough"], v1, True)
@@ -278,7 +280,12 @@ def build_sand(ctx, gust_t):
     sepp = nb.n("ShaderNodeSeparateXYZ"); nb.l(pos_n.outputs[0], sepp.inputs[0])
     lee = lee_mask(nb, sepp.outputs[0], sepp.outputs[1])
     nb.l(sp.outputs[0], m2p.inputs["Mesh"])
-    nb.l(nb.math("MULTIPLY", na("rad"), nb.math("SUBTRACT", 1.0, nb.math("MULTIPLY", lee, 0.92))), m2p.inputs["Radius"])
+    cami = nb.n("GeometryNodeObjectInfo"); cami.name = "CamInfo"
+    dcam = nb.n("ShaderNodeVectorMath", operation="DISTANCE")
+    nb.l(pos_n.outputs[0], dcam.inputs[0]); nb.l(cami.outputs["Location"], dcam.inputs[1])
+    rfade = nb.mapr(dcam.outputs["Value"], 15.0, 10.0)
+    rad_ = nb.math("MULTIPLY", na("rad"), nb.math("SUBTRACT", 1.0, nb.math("MULTIPLY", lee, 0.92)))
+    nb.l(nb.math("MULTIPLY", rad_, rfade), m2p.inputs["Radius"])
     sm = nb.n("GeometryNodeSetMaterial")
     sm.inputs["Material"].default_value = sand_material()
     nb.l(m2p.outputs[0], sm.inputs["Geometry"])
@@ -402,10 +409,25 @@ def build_pebbles(hero, n=130, seed=17):
     import bmesh
     rs = random.Random(seed)
     mat = hero[0].data.materials[0] if hero and hero[0].data.materials else None
+    pmat = None
+    if mat:   # copy of the granite with +-15 % value per pebble
+        pmat = mat.copy(); pmat.name = "PebbleGranite"
+        nt = pmat.node_tree
+        for pr in [n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"]:
+            inp = pr.inputs["Base Color"]
+            if inp.links:
+                src = inp.links[0].from_socket
+                oi = nt.nodes.new("ShaderNodeObjectInfo")
+                mr = nt.nodes.new("ShaderNodeMapRange"); mr.inputs[3].default_value = 0.85; mr.inputs[4].default_value = 1.15
+                nt.links.new(oi.outputs["Random"], mr.inputs[0])
+                mx = nt.nodes.new("ShaderNodeMix"); mx.data_type = "RGBA"; mx.blend_type = "MULTIPLY"
+                mx.inputs[0].default_value = 1.0
+                nt.links.new(src, mx.inputs[6]); nt.links.new(mr.outputs[0], mx.inputs[7])
+                nt.links.new(mx.outputs[2], inp)
     meshes = []
     for k in range(5):
         bm = bmesh.new()
-        bmesh.ops.create_icosphere(bm, subdivisions=2, radius=1.0)
+        bmesh.ops.create_icosphere(bm, subdivisions=2, radius=1.0, calc_uvs=True)
         for v in bm.verts:
             d = v.co.normalized()
             f = 1 + 0.22 * math.sin(d.x * 3 + k) * math.cos(d.y * 4 - k) + rs.uniform(-0.08, 0.08)
@@ -415,8 +437,8 @@ def build_pebbles(hero, n=130, seed=17):
         bm.to_mesh(me); bm.free()
         for poly in me.polygons:
             poly.use_smooth = True
-        if mat:
-            me.materials.append(mat)
+        if pmat:
+            me.materials.append(pmat)
         meshes.append(me)
     rot = math.radians(25)
     hx, hy = 0.78, 0.98                      # boulder footprint half-extents (local)
@@ -428,7 +450,7 @@ def build_pebbles(hero, n=130, seed=17):
         y = lx * math.sin(rot) + ly * math.cos(rot)
         sz = rs.uniform(0.007, 0.02) if rs.random() < 0.85 else rs.uniform(0.02, 0.045)
         ob = bpy.data.objects.new(f"Pebble{i}", meshes[i % 5])
-        ob.location = (x, y, sz * 0.12)
+        ob.location = (x, y, -sz * 0.15)
         ob.scale = (sz * rs.uniform(0.8, 1.3), sz * rs.uniform(0.8, 1.3), sz)
         ob.rotation_euler = (rs.uniform(-0.3, 0.3), rs.uniform(-0.3, 0.3), rs.uniform(0, 6.28))
         bpy.context.scene.collection.objects.link(ob)
@@ -446,10 +468,10 @@ def camera_path(ctx, cam, focus):
     keys = [
         (t0 - 0.3, (2.55, -2.75, 0.62), (0.05, 0.1, 0.78)),
         (t_c + 0.9, (2.35, -3.25, 0.70), (0.0, 0.1, 0.74)),
-        (t_s + 0.2, (2.55, -4.4, 0.9), (-0.5, 0.5, 0.65)),
+        (t_s + 0.2, (2.55, -4.4, 0.9), (-0.5, 0.5, 0.77)),
         # the wide (~7.5 m from the stone), held 0.3 s with a small slide
-        (t_f + 0.2, (3.25, -6.75, 1.7), (-1.0, 3.0, 1.25)),
-        (t_f + 0.5, (3.05, -6.65, 1.66), (-0.9, 2.9, 1.25)),
+        (t_f + 0.2, (3.25, -6.75, 1.7), (-1.0, 3.0, 1.45)),
+        (t_f + 0.5, (3.05, -6.65, 1.66), (-0.9, 2.9, 1.45)),
     ]
     land_loc, land_tgt = (1.75, -2.75, 0.40), (0.0, 0.1, 0.92)
     sl, st_ = keys[-1][1], keys[-1][2]
@@ -524,7 +546,8 @@ def build(ctx):
     cam.data.clip_end = 20000.0
     focus = C.focus_empty(cam)
     camera_path(ctx, cam, focus)
-    C.empty("TRK_stone", (0.0, 0.0, 0.9))
+    C.empty("TRK_stone", (0.0, 0.0, 0.80))
+    sand.modifiers["motion"].node_group.nodes["CamInfo"].inputs["Object"].default_value = cam
     sc.view_settings.exposure = float(os.environ.get("S8_EXP", -0.75))
     # emission here is aerial in-scatter / self-lit cards, never a light source: keep it out of the light
     # tree (otherwise every terrain/tree triangle is an emitter and the tree is rebuilt each frame)

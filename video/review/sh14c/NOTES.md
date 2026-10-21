@@ -4,7 +4,7 @@
 
 ## Decisions
 * Flat overcast plate: CC0 Poly Haven `kloofendal_overcast_puresky`, desaturated to 25 % and pushed blue;
-  every albedo (ground, rocks, wood) is desaturated to ~30 % and cooled. AgX Base Contrast, exposure −0.6.
+  every albedo (ground, rocks, wood) is desaturated to ~30 % and cooled. AgX Medium High Contrast, exposure −0.75.
   No warm value anywhere.
 * Ground: CC0 `mud_cracked_dry_riverbed_002` (2 m tile, two rotated tilings blended against repetition)
   with true micro-displacement near camera; far plain gently undulating with low hazy ridges on the horizon
