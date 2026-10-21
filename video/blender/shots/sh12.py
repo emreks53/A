@@ -84,7 +84,7 @@ def height_field(X, Y):
     rp = river_path()
     D, T = L.dist_to_polyline(X, Y, rp)
     bed = 160 * (1 - T) ** 1.3 + 1.5
-    rw = (16 + 50 * T) * (1 + 0.75 * L.fbm(n4, T * 22, 3.3, 3))   # river half width (m), irregular
+    rw = (16 + 50 * T) * np.exp(2.6 * L.fbm(n4, T * 14, 3.3, 3))   # river half width (m), varies 2-4x
     vw = 160 + 700 * T                     # floodplain half width (m)
     plain = bed + 3 + 10 * np.clip((D - rw) / vw, 0, 1)
     f = sm((D - rw - vw * 0.5) / (vw * 1.6 + 500))
@@ -93,6 +93,13 @@ def height_field(X, Y):
     h = (bed - 3) * (1 - chan) + h * chan
     river = 1 - sm((D - rw * (0.85 + 0.3 * L.fbm(n1, X / 90, Y / 90, 3))) / 9.0)
 
+    # an oxbow lake (cut-off meander) beside the river on the floodplain
+    ang = np.arctan2(Y - 8350, X - 1650)
+    ro = np.abs(np.sqrt((X - 1650) ** 2 + (Y - 8350) ** 2) - 420)
+    arc = sm((np.cos(ang - 0.4) + 0.35) / 0.5)
+    ox = (1 - sm((ro - 22) / 8)) * arc
+    h = np.where(ox > 0.01, h * (1 - ox) + (bed - 2.5) * ox, h)
+    river = np.maximum(river, (1 - sm((ro - 18) / 7)) * arc)
     h = h * sea_floor + (-25 - 50 * (1 - land)) * (1 - sea_floor)
     rough = (L.fbm(n1, X / 420 + 2.5, Y / 420, 4) * 16 + L.fbm(n1, X / 140 + 0.5, Y / 140, 4) * 7 +
              L.fbm(n2, X / 35, Y / 35, 3) * 2.0)
@@ -201,6 +208,64 @@ def aerial(nb, surface_shader, k_inscatter=float(os.environ.get("S8_K", 0.7)), b
     return mix.outputs[0], fac
 
 
+_TEXMEAN = {}
+
+
+def aerial_scan(nb, pos, name, tile, rot_deg=0.0, res="2k"):
+    """Poly Haven aerial photo scan (CC0) mapped in world XY at `tile` metres, returned normalised to a
+    mean of 1 so it modulates our palette (photographic structure, art-directed colour)."""
+    tex = C.ph_texture(name, res)
+    img = bpy.data.images.load(tex["diff"], check_existing=True)
+    if name not in _TEXMEAN:
+        px = np.empty(img.size[0] * img.size[1] * 4, np.float32)
+        img.pixels.foreach_get(px)
+        _TEXMEAN[name] = px.reshape(-1, 4)[::7, :3].mean(0)
+    mp = nb.n("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (1 / tile, 1 / tile, 1 / tile)
+    mp.inputs["Rotation"].default_value[2] = math.radians(rot_deg)
+    nb.l(pos, mp.inputs["Vector"])
+    t = nb.n("ShaderNodeTexImage")
+    t.image = img
+    nb.l(mp.outputs[0], t.inputs["Vector"])
+    mean = _TEXMEAN[name]
+    norm = nb.mixc(1.0, t.outputs["Color"], tuple(float(1 / max(1e-3, v)) for v in mean), blend="MULTIPLY")
+    return norm
+
+
+def scan_mix(nb, pos, name, tile, mixnoise):
+    """Two tilings (different scale/rotation) blended by a macro noise so repetition never shows."""
+    return nb.mixc(mixnoise, aerial_scan(nb, pos, name, tile, 0), aerial_scan(nb, pos, name, tile * 3.3, 37))
+
+
+CLOUD_DRIFT = [0.0, 0.0]   # (frame0, frame1) set in build
+
+
+def cloud_light(nb, pos):
+    """Cloud-shadow mask for the shading point: project it along the sun direction onto a cloud layer at
+    2.6 km and sample a drifting noise there (1 = sunlit patch, 0 = under a cloud shadow)."""
+    st = 1 / math.tan(math.radians(SUN_ELEV))
+    sep = nb.n("ShaderNodeSeparateXYZ"); nb.l(pos, sep.inputs[0])
+    qy = nb.math("ADD", sep.outputs[1], nb.math("MULTIPLY", nb.math("SUBTRACT", 2600.0, sep.outputs[2]), st))
+    v = nb.n("ShaderNodeCombineXYZ")
+    drift = nb.n("ShaderNodeValue")
+    f0, f1 = CLOUD_DRIFT
+    drift.outputs[0].default_value = 0.0
+    drift.outputs[0].keyframe_insert("default_value", frame=f0)
+    drift.outputs[0].default_value = -10.0 * (f1 - f0) / C.FPS
+    drift.outputs[0].keyframe_insert("default_value", frame=f1)
+    for fc in C._fcurves(nb.nt.animation_data.action):
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+    nb.l(nb.math("MULTIPLY", nb.math("ADD", sep.outputs[0], drift.outputs[0]), 1 / 1700.0), v.inputs[0])
+    nb.l(nb.math("MULTIPLY", qy, 1 / (1700.0 * st)), v.inputs[1])
+    nz = nb.n("ShaderNodeTexNoise", noise_dimensions="3D")
+    nz.inputs["Scale"].default_value = 1.0
+    nz.inputs["Detail"].default_value = 3.0
+    nz.inputs["Roughness"].default_value = 0.55
+    nb.l(v.outputs[0], nz.inputs["Vector"])
+    return nb.mapr(nz.outputs["Fac"], 0.56, 0.44)
+
+
 def terrain_material():
     m = bpy.data.materials.new("Terrain")
     m.use_nodes = True
@@ -245,8 +310,13 @@ def terrain_material():
     col = nb.mixc(nb.math("MULTIPLY", nb.mapr(hgt, 700, 1500), 0.85), col, (0.17, 0.15, 0.10))
     col = nb.mixc(meadow, col, gold)
     col = nb.mixc(nb.math("MULTIPLY", forest, nb.mapr(n_fine, 0.25, 0.7, 0.75, 1.0)), col, forest_c)
-    # clumpy value variation (grass tussocks, shrubs, bare patches)
-    col = nb.mixc(1.0, col, nb.mixc(n_clump, (0.72, 0.72, 0.72), (1.2, 1.18, 1.1)), blend="MULTIPLY")
+    # photographic ground structure from real aerial scans (grass/rock/scrub, bare ground)
+    mixn = nb.mapr(n_big, 0.4, 0.6)
+    g_scan = scan_mix(nb, pos, "aerial_grass_rock", 55.0, mixn)
+    d_scan = scan_mix(nb, pos, "aerial_ground_rock", 70.0, mixn)
+    scan = nb.mixc(nb.mapr(n_patch, 0.45, 0.65), g_scan, d_scan)
+    scan = nb.mixc(0.25, scan, (1, 1, 1))
+    col = nb.mixc(1.0, col, scan, blend="MULTIPLY")
     # stratified rock on steep ground; mountains get rock/scree earlier
     steep2 = nb.math("ADD", steep, nb.math("MULTIPLY", nb.mapr(hgt, 600, 1500), nb.mapr(nz, 0.95, 0.82)), clamp=True)
     wv = nb.n("ShaderNodeTexWave", wave_type="BANDS", bands_direction="Z", wave_profile="SIN")
@@ -256,6 +326,7 @@ def terrain_material():
     wv.inputs["Detail Scale"].default_value = 1.5
     nb.l(pos, wv.inputs["Vector"])
     rock = nb.mixc(nb.math("ADD", nb.math("MULTIPLY", wv.outputs["Fac"], 0.6), nb.math("MULTIPLY", n_fine, 0.4)), rock_a, rock_b)
+    rock = nb.mixc(1.0, rock, scan_mix(nb, pos, "aerial_rocks_04", 260.0, mixn), blend="MULTIPLY")
     # scrub/grass patches clinging to the rock, darker gullies, pale scree fans
     n_veg = nb.noise(pos, 1 / 55.0, 3, 0.6)
     rock = nb.mixc(nb.math("MULTIPLY", nb.mapr(n_veg, 0.48, 0.62), nb.mapr(nz, 0.45, 0.75)), rock, (0.05, 0.075, 0.03))
@@ -268,8 +339,14 @@ def terrain_material():
     col = nb.mixc(nb.math("MULTIPLY", bank, 0.35), col, (0.13, 0.12, 0.08))
     col = nb.mixc(bars, col, (0.40, 0.37, 0.31))
     col = nb.mixc(beach, col, (0.46, 0.41, 0.31))
+    surf = nb.math("MULTIPLY", nb.mapr(hgt, -3.5, -1.2), nb.mapr(hgt, 0.6, -0.4))
+    surf = nb.math("MULTIPLY", surf, nb.mapr(nb.noise(pos, 1 / 40.0, 3, 0.6), 0.35, 0.6))
+    col = nb.mixc(surf, col, (0.75, 0.76, 0.76))
     col = nb.mixc(snow, col, (0.82, 0.84, 0.88))
     col = nb.mixc(nb.math("MULTIPLY", n_fine, 0.25), col, (0.05, 0.05, 0.04), blend="MULTIPLY")
+    # sunlit patches (warm raking light) vs. cloud shadow (cool, dimmer)
+    lit = cloud_light(nb, pos)
+    col = nb.mixc(1.0, col, nb.mixc(lit, (0.55, 0.60, 0.70), (1.30, 1.12, 0.85)), blend="MULTIPLY")
 
     bsdf = nb.n("ShaderNodeBsdfPrincipled")
     nb.l(col, bsdf.inputs["Base Color"])
@@ -281,8 +358,8 @@ def terrain_material():
     nb.l(bump.outputs[0], bsdf.inputs["Normal"])
 
     # river water: dark glossy mirror of the sky
-    water = nb.n("ShaderNodeBsdfPrincipled", inputs={"Base Color": (0.01, 0.02, 0.02, 1), "Roughness": 0.03,
-                                                      "Specular IOR Level": 0.5, "IOR": 1.333})
+    water = nb.n("ShaderNodeBsdfPrincipled", inputs={"Base Color": (0.012, 0.022, 0.018, 1), "Roughness": 0.09,
+                                                      "Specular IOR Level": 0.32, "IOR": 1.333})
     wb = nb.n("ShaderNodeBump", inputs={"Strength": 0.15, "Distance": 0.2})
     nb.l(nb.noise(pos, 1 / 3.0, 3, 0.5), wb.inputs["Height"])
     nb.l(wb.outputs[0], water.inputs["Normal"])
@@ -397,10 +474,13 @@ def tree_material():
     oi = nb.n("ShaderNodeObjectInfo")
     geo = nb.n("ShaderNodeNewGeometry")
     rnd = oi.outputs["Random"]
-    c1 = nb.mixc(rnd, (0.035, 0.065, 0.022), (0.075, 0.105, 0.030))
+    grp = nb.mapr(nb.noise(geo.outputs["Position"], 1 / 180.0, 2, 0.5), 0.45, 0.62)
+    c1 = nb.mixc(rnd, (0.045, 0.080, 0.026), (0.085, 0.125, 0.034))
+    c1 = nb.mixc(grp, c1, (0.13, 0.16, 0.045))
     c2 = nb.mixc(nb.mapr(rnd, 0.8, 1.0), c1, (0.09, 0.085, 0.03))      # a few yellowing crowns
     tint = nb.mixc(nb.noise(geo.outputs["Position"], 1 / 3.0, 3, 0.5), (0.7, 0.7, 0.7), (1.15, 1.15, 1.15), blend="MULTIPLY")
     col = nb.mixc(1.0, c2, tint, blend="MULTIPLY")
+    col = nb.mixc(1.0, col, nb.mixc(cloud_light(nb, geo.outputs["Position"]), (0.6, 0.65, 0.75), (1.3, 1.15, 0.85)), blend="MULTIPLY")
     dif = nb.n("ShaderNodeBsdfDiffuse"); nb.l(col, dif.inputs["Color"])
     tr = nb.n("ShaderNodeBsdfTranslucent")
     tcol = nb.mixc(1.0, col, (3.2, 3.4, 1.3), blend="MULTIPLY")
@@ -672,6 +752,49 @@ def rain_shaft(name, top, bottom_z, radius, lean=(0.0, 0.0), dens=1 / 2500.0, se
     return ob
 
 
+def build_cloud_shadows(ctx):
+    """Invisible layer that only blocks the sun: soft, slowly drifting cloud shadows on the land.
+    The sun is 4.8 deg high, so a layer at 2.6 km projects ~30 km toward the camera; the noise is
+    stretched along Y by 1/tan(elev) so the shadows land as roundish 1-3 km patches."""
+    zc = 2600.0
+    st = 1 / math.tan(math.radians(SUN_ELEV))
+    ob = plane("CloudShadow", 70000, 60000, (0, 45000, zc), (0, 0, 0))
+    m = bpy.data.materials.new("CloudShadow_m")
+    m.use_nodes = True
+    nt = m.node_tree; nt.nodes.clear(); nb = L.NB(nt)
+    out = nb.n("ShaderNodeOutputMaterial")
+    geo = nb.n("ShaderNodeNewGeometry")
+    mp = nb.n("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (1 / 1700.0, 1 / (1700.0 * st), 1.0)
+    nb.l(geo.outputs["Position"], mp.inputs["Vector"])
+    # slow drift (wind ~10 m/s across the view)
+    mp.inputs["Location"].default_value[0] = 0.0
+    mp.inputs["Location"].keyframe_insert("default_value", index=0, frame=ctx.f0)
+    mp.inputs["Location"].default_value[0] = -10.0 * (ctx.f1 - ctx.f0) / C.FPS / 1700.0
+    mp.inputs["Location"].keyframe_insert("default_value", index=0, frame=ctx.f1)
+    for fc in C._fcurves(nt.animation_data.action):
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+    nz = nb.n("ShaderNodeTexNoise", noise_dimensions="3D")
+    nz.inputs["Scale"].default_value = 1.0
+    nz.inputs["Detail"].default_value = 4.0
+    nz.inputs["Roughness"].default_value = 0.55
+    nb.l(mp.outputs[0], nz.inputs["Vector"])
+    cover = nb.mapr(nz.outputs["Fac"], 0.44, 0.56, 0.0, 0.92)
+    tr = nb.n("ShaderNodeBsdfTransparent")
+    df = nb.n("ShaderNodeBsdfDiffuse", inputs={"Color": (0, 0, 0, 1)})
+    mx = nb.n("ShaderNodeMixShader")
+    nb.l(cover, mx.inputs[0]); nb.l(tr.outputs[0], mx.inputs[1]); nb.l(df.outputs[0], mx.inputs[2])
+    nb.l(mx.outputs[0], out.inputs["Surface"])
+    ob.data.materials.append(m)
+    ob.visible_camera = False
+    ob.visible_diffuse = False
+    ob.visible_glossy = False
+    ob.visible_transmission = False
+    ob.visible_volume_scatter = False
+    return ob
+
+
 def build_sky_objects(ctx):
     objs = {}
     # distant cumulus congestus over the sea, left and right of the sun, with rain curtains
@@ -882,8 +1005,9 @@ def screen_point(cam_loc, cam_rot_deg, sx, sy, dist, lens=26.0):
 def build(ctx):
     sc = bpy.context.scene
     MODE[0] = ctx.mode
+    CLOUD_DRIFT[0], CLOUD_DRIFT[1] = ctx.f0, ctx.f1
     build_world(ctx.mode)
-    sun = C.sun(elev_deg=SUN_ELEV, azim_deg=SUN_AZ + 180, strength=float(os.environ.get("S8_SUN", 6.0)), kelvin_k=4300, angle_deg=0.55)
+    sun = C.sun(elev_deg=SUN_ELEV, azim_deg=SUN_AZ + 180, strength=float(os.environ.get("S8_SUN", 9.0)), kelvin_k=4300, angle_deg=0.55)
     sun.data.specular_factor = 0.22
     import time as _t
     _a = _t.time()
