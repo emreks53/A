@@ -667,13 +667,13 @@
    "note": "QA r4: albedo-only denoise from 1091; one job starting at 1091"
   },
   {
-   "node": "b51",
+   "node": "b56",
    "branch": "render-jobs",
    "ref": "ba591e81a1abec154bae4b8f92c8e9bdd75f3bbf",
    "shot": "sh04",
    "from": 531,
    "to": 556,
-   "note": "QA r4: forearm continues out of frame"
+   "note": "QA r4: forearm continues out of frame; reassigned from b51 (that session never started)"
   },
   {
    "node": "b52",
