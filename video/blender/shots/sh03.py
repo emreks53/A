@@ -60,7 +60,7 @@ def catmull(keys, t):
 
 def build(ctx):
     sc = bpy.context.scene
-    S.light_rig(exposure=1.7)
+    S.light_rig(exposure=1.9)
     S.build_room()
     S.build_table()
     t_yemek, t_icmek, t_butun, t_takdim = ctx.word("yemek"), ctx.word("içmek"), ctx.word("bütün"), ctx.word("takdim")
@@ -135,7 +135,7 @@ def build(ctx):
          (t_takdim + 0.75, tuple(top)),
          (ctx.t1 + 0.4, tuple(top - Vector((0, 0, 0.035))))]
     T = [(ctx.t0 - 0.30, (-0.40, 0.30, 0.68)),
-         (t_yemek + 0.10, (0.00, 0.15, 0.80)),
+         (t_yemek + 0.10, (0.09, 0.13, 0.80)),
          (t_icmek - 0.45, (-0.30, 0.15, 0.80)),
          (t_icmek - 0.05, tuple(G)),
          (t_icmek + 0.70, tuple(G - Vector((0, 0, 0.002)))),

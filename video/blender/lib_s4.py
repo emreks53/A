@@ -692,13 +692,13 @@ def mat_bread():
     L(nz.outputs["Fac"], mixf.inputs[0]); L(hz.outputs["Result"], mixf.inputs[2])
     ramp = nt.nodes.new("ShaderNodeValToRGB")
     cr = ramp.color_ramp
-    cr.elements[0].position = 0.15; cr.elements[0].color = (0.55, 0.31, 0.11, 1)
-    cr.elements[1].position = 0.97; cr.elements[1].color = (0.20, 0.08, 0.025, 1)
-    e = cr.elements.new(0.6); e.color = (0.38, 0.18, 0.055, 1)
+    cr.elements[0].position = 0.15; cr.elements[0].color = (0.42, 0.18, 0.035, 1)
+    cr.elements[1].position = 0.97; cr.elements[1].color = (0.11, 0.035, 0.007, 1)
+    e = cr.elements.new(0.6); e.color = (0.26, 0.095, 0.018, 1)
     L(mixf.outputs[0], ramp.inputs["Fac"])
     inner = nt.nodes.new("ShaderNodeMix"); inner.data_type = "RGBA"
-    inner.inputs[7].default_value = (0.62, 0.42, 0.20, 1)     # fissure: paler, less baked
-    L(crack.outputs["Result"], inner.inputs[0]); L(ramp.outputs["Color"], inner.inputs[7]); inner.inputs[6].default_value = (0.62, 0.42, 0.20, 1)
+    inner.inputs[7].default_value = (0.55, 0.32, 0.10, 1)     # fissure: paler, less baked
+    L(crack.outputs["Result"], inner.inputs[0]); L(ramp.outputs["Color"], inner.inputs[7]); inner.inputs[6].default_value = (0.55, 0.32, 0.10, 1)
     # flour dust patches on the top
     fl = nt.nodes.new("ShaderNodeTexNoise"); fl.inputs["Scale"].default_value = 14; fl.inputs["Detail"].default_value = 10
     fl.inputs["Roughness"].default_value = 0.75
@@ -710,17 +710,18 @@ def mat_bread():
     flour = nt.nodes.new("ShaderNodeMix"); flour.data_type = "RGBA"
     L(flh.outputs[0], flour.inputs[0]); L(inner.outputs[2], flour.inputs[6]); flour.inputs[7].default_value = (0.70, 0.62, 0.50, 1)
     L(flour.outputs[2], p.inputs["Base Color"])
-    p.inputs["Roughness"].default_value = 0.62
-    p.inputs["Subsurface Weight"].default_value = 0.15
-    p.inputs["Subsurface Radius"].default_value = (1.0, 0.6, 0.3)
-    p.inputs["Subsurface Scale"].default_value = 0.004
-    p.inputs["Sheen Weight"].default_value = 0.3
+    p.inputs["Roughness"].default_value = 0.55
+    p.inputs["Subsurface Weight"].default_value = 0.05
+    p.inputs["Subsurface Radius"].default_value = (1.0, 0.5, 0.25)
+    p.inputs["Subsurface Scale"].default_value = 0.002
+    p.inputs["Sheen Weight"].default_value = 0.0
     # bump: fissures + fine blistered crust
-    fine = nt.nodes.new("ShaderNodeTexNoise"); fine.inputs["Scale"].default_value = 260; fine.inputs["Detail"].default_value = 4
+    fine = nt.nodes.new("ShaderNodeTexNoise"); fine.inputs["Scale"].default_value = 140; fine.inputs["Detail"].default_value = 8
+    fine.inputs["Roughness"].default_value = 0.7
     L(tc.outputs["Object"], fine.inputs["Vector"])
-    h = nt.nodes.new("ShaderNodeMath"); h.operation = "MULTIPLY_ADD"; h.inputs[1].default_value = 0.25
+    h = nt.nodes.new("ShaderNodeMath"); h.operation = "MULTIPLY_ADD"; h.inputs[1].default_value = 0.6
     L(fine.outputs["Fac"], h.inputs[0]); L(crack.outputs["Result"], h.inputs[2])
-    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Distance"].default_value = 0.0025; bp.inputs["Strength"].default_value = 1.0
+    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Distance"].default_value = 0.004; bp.inputs["Strength"].default_value = 1.0
     L(h.outputs[0], bp.inputs["Height"]); L(bp.outputs["Normal"], p.inputs["Normal"])
     return m
 
@@ -1488,7 +1489,7 @@ def build_beam_emission(bmin, bmax, strength=0.03, noise_amp=0.55, curtain_y=Non
 SOFRA = {
     "bowl": (-0.25, 0.33),
     "glass": (-0.53, -0.01),
-    "bread": (0.03, 0.12),
+    "bread": (0.13, 0.10),
     "tea": (0.10, 0.47),
     "plate0": (-0.08, 0.125),     # plate start ...
     "plate1": (-0.245, 0.065),    # ... slides toward camera on "takdim"

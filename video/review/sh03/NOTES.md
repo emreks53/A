@@ -46,7 +46,9 @@ see files `sh03_t*.png` — first frame, slider, pour hit, pour rising, crane, t
 * f/4 (was f/2.8) and focus on the near face of the glass during the macro.
 * Crane re-timed: it keeps rising and swinging until ~15.6 s, then a slow settle/roll to the last frame
   (no dead frames at the end); top-down still lands with the bowl at frame centre.
-* Full-res sample frame from the final renderer: `sh03_FINALQ_f274.jpg` (pre-bubble-fix).
+* Full-res final-renderer sample frames: `sh03_FINALQ_f274.jpg` (pour), `sh03_FINALQ_f382.jpg` (last frame).
+* Bread re-shaded (deeper saturated crust, stronger crust bump, no sheen) and moved 10 cm right so the
+  top-down end frame is bowl + plate only; slider still passes right by it at 9.8 s.
 
 ## Changes since review 1
 * Water surface: travelling impact rings + chop while pouring (keyed off after the pour).
