@@ -2286,14 +2286,17 @@ class _NG:
         return n.outputs[0]
 
 
-def beam_mask_group():
+def beam_mask_group(static=True):
     """Node group: world Position -> sun visibility (0..1) through shutter, wall opening, kafes frame
     and both lattice layers, with a penumbra that grows with distance (sun 0.53 deg). Matches the
-    geometry built in build_room()/shutter(). Two animated values inside: 'shutter_z', 'sun_gain'."""
-    ng = bpy.data.node_groups.get("beam_mask")
+    geometry built in build_room()/shutter() (and beam_static_np()). Two animated values inside:
+    'shutter_z', 'sun_gain'. static=False -> only the (cheap) shutter term, for the shaft cards whose
+    static part is pre-computed into a texture."""
+    gname = "beam_mask" if static else "beam_shutter"
+    ng = bpy.data.node_groups.get(gname)
     if ng:
         return ng
-    ng = bpy.data.node_groups.new("beam_mask", "ShaderNodeTree")
+    ng = bpy.data.node_groups.new(gname, "ShaderNodeTree")
     ng.interface.new_socket(name="Position", in_out="INPUT", socket_type="NodeSocketVector")
     ng.interface.new_socket(name="Mask", in_out="OUTPUT", socket_type="NodeSocketFloat")
     ng.interface.new_socket(name="Gain", in_out="OUTPUT", socket_type="NodeSocketFloat")
@@ -2317,8 +2320,8 @@ def beam_mask_group():
     pen = G.m("MULTIPLY_ADD", dist, 0.5 * math.radians(0.53), 0.0004)
     terms = []
     # wall opening (outer face and inner face incl. sill / pervaz)
-    for xp, checks in ((XO, ("y0", "z1")), (WALL_LEFT_X + 0.03, ("y1", "z0")), (XO + 0.001, ("y1", "z0")),
-                       (WALL_LEFT_X + 0.002, ("y0", "z1"))):
+    for xp, checks in ([] if not static else  ((XO, ("y0", "z1")), (WALL_LEFT_X + 0.03, ("y1", "z0")), (XO + 0.001, ("y1", "z0")),
+                       (WALL_LEFT_X + 0.002, ("y0", "z1")))):
         yy, zz = proj(xp)
         for c in checks:
             if c == "y0":
@@ -2331,7 +2334,7 @@ def beam_mask_group():
                 terms.append(G.step(zz, WIN_Z1, pen, False))
     # kafes frame (6 cm deep) + middle rail, checked on both faces
     zmid = (WIN_Z0 + WIN_Z1) / 2
-    for xp in (KAFES_X - 0.03, KAFES_X + 0.03):
+    for xp in ((KAFES_X - 0.03, KAFES_X + 0.03) if static else ()):
         yy, zz = proj(xp)
         terms.append(G.step(yy, WIN_Y0 + KAFES_FW, pen, True))
         terms.append(G.step(yy, WIN_Y1 - KAFES_FW, pen, False))
@@ -2342,7 +2345,7 @@ def beam_mask_group():
     fw = KAFES_FW
     cy = (WIN_Y0 + fw * 0.6 + WIN_Y1 - fw * 0.6) / 2
     cz = (WIN_Z0 + fw * 0.6 + WIN_Z1 - fw * 0.6) / 2
-    for layer, dirv, dxl in KAFES_LAYERS:
+    for layer, dirv, dxl in (KAFES_LAYERS if static else ()):
         d = Vector(dirv).normalized()
         nrm = Vector((-d.y, d.x))
         slope = (S.y * nrm.x + S.z * nrm.y) / S.x            # lateral drift per metre of slat depth
@@ -2371,8 +2374,57 @@ def beam_mask_group():
     return ng
 
 
+def beam_static_np(P):
+    """numpy twin of the static part of beam_mask_group() (wall opening, kafes frame, lattice) for
+    points P (N x 3). Used to pre-compute the shaft-card textures."""
+    import numpy as np
+    S = SUN_DIR
+    ky, kz = S.y / S.x, S.z / S.x
+    px, py, pz = P[:, 0], P[:, 1], P[:, 2]
+
+    def proj(xp):
+        dx = px - xp
+        return py - ky * dx, pz - kz * dx
+
+    def step(v, e, w, rising=True):
+        t = np.clip((v - (e - w)) / (2 * w), 0.0, 1.0)
+        t = t * t * (3 - 2 * t)
+        return t if rising else 1 - t
+    pen = (px - KAFES_X) / S.x * (0.5 * math.radians(0.53)) + 0.0004
+    m = np.ones(len(px))
+    for xp, checks in ((XO, ("y0", "z1")), (WALL_LEFT_X + 0.03, ("y1", "z0")), (XO + 0.001, ("y1", "z0")),
+                       (WALL_LEFT_X + 0.002, ("y0", "z1"))):
+        yy, zz = proj(xp)
+        for c in checks:
+            m *= {"y0": lambda: step(yy, WIN_Y0, pen, True), "y1": lambda: step(yy, WIN_Y1, pen, False),
+                  "z0": lambda: step(zz, WIN_Z0, pen, True), "z1": lambda: step(zz, WIN_Z1, pen, False)}[c]()
+    zmid = (WIN_Z0 + WIN_Z1) / 2
+    for xp in (KAFES_X - 0.03, KAFES_X + 0.03):
+        yy, zz = proj(xp)
+        m *= step(yy, WIN_Y0 + KAFES_FW, pen) * step(yy, WIN_Y1 - KAFES_FW, pen, False)
+        m *= step(zz, WIN_Z0 + KAFES_FW, pen) * step(zz, WIN_Z1 - KAFES_FW, pen, False)
+        m *= step(np.abs(zz - zmid), 0.02, pen)
+    fw = KAFES_FW
+    cy = (WIN_Y0 + fw * 0.6 + WIN_Y1 - fw * 0.6) / 2
+    cz = (WIN_Z0 + fw * 0.6 + WIN_Z1 - fw * 0.6) / 2
+    for layer, dirv, dxl in KAFES_LAYERS:
+        d = Vector(dirv).normalized()
+        nrm = Vector((-d.y, d.x))
+        slope = (S.y * nrm.x + S.z * nrm.y) / S.x
+        hw = 0.5 * (KAFES_SW + KAFES_SD * abs(slope))
+        yy, zz = proj(KAFES_X + dxl)
+        w = (yy - cy) * nrm.x / KAFES_SP + (zz - cz) * nrm.y / KAFES_SP
+        f = np.abs(np.mod(w + 0.5, 1.0) - 0.5) * KAFES_SP
+        m *= step(f, hw, pen)
+    return m
+
+
 def key_beam(times_shutter, times_gain):
-    ng = beam_mask_group()
+    for static in (True, False):
+        _key_beam(beam_mask_group(static), times_shutter, times_gain)
+
+
+def _key_beam(ng, times_shutter, times_gain):
     for name, keys in (("shutter_z", times_shutter), ("sun_gain", times_gain)):
         sock = ng.nodes[name].outputs[0]
         for t, v in keys:
@@ -2386,9 +2438,10 @@ def key_beam(times_shutter, times_gain):
             fc.extrapolation = "CONSTANT"
 
 
-def mat_beam(name, strength, color, path_len=True, phase_g=0.55, fade_table=True):
+def mat_beam(name, strength, color, path_len=True, phase_g=0.55, fade_table=True, mask_img=None):
     """Camera-only additive light: transparent + emission = strength * mask * gain * HG phase
-    (* 1/|cos| path length through a slab for the shaft cards). Never sampled as a light."""
+    (* 1/|cos| path length through a slab for the shaft cards). Never sampled as a light.
+    mask_img: pre-computed static mask (UV mapped); then only the shutter term is evaluated live."""
     m, nt, out = new_mat(name)
     try:
         m.cycles.emission_sampling = "NONE"
@@ -2396,9 +2449,17 @@ def mat_beam(name, strength, color, path_len=True, phase_g=0.55, fade_table=True
         pass
     geo = NN(nt, "ShaderNodeNewGeometry")
     g = nt.nodes.new("ShaderNodeGroup")
-    g.node_tree = beam_mask_group()
+    g.node_tree = beam_mask_group(static=mask_img is None)
     LK(nt, geo.outputs["Position"], g.inputs["Position"])
     val = math_node(nt, "MULTIPLY", g.outputs["Mask"], g.outputs["Gain"])
+    if mask_img is not None:
+        tx = NN(nt, "ShaderNodeTexImage")
+        tx.image = mask_img
+        tx.interpolation = "Linear"
+        tx.extension = "EXTEND"
+        uvn = NN(nt, "ShaderNodeUVMap", uv_map="UVMap")
+        LK(nt, uvn.outputs[0], tx.inputs["Vector"])
+        val = math_node(nt, "MULTIPLY", val, tx.outputs["Color"])
     # Henyey-Greenstein phase toward the camera (bright when looking toward the sun)
     dp = NN(nt, "ShaderNodeVectorMath", operation="DOT_PRODUCT")
     LK(nt, geo.outputs["Incoming"], dp.inputs[0])
@@ -2436,22 +2497,49 @@ def _camera_only(ob):
     ob.visible_volume_scatter = False
 
 
-def build_shafts(view_dir, n_cards=4, spacing=0.11, strength=0.012):
+def build_shafts(view_dir, n_cards=3, spacing=0.15, strength=0.016):
     """Light shafts: a few cards that CONTAIN the sun direction (so any pattern on them is a set of
     streaks parallel to the beam), turned toward the main view direction, spread across the beam."""
     s = SUN_DIR
     v = Vector(view_dir).normalized()
     n = (v - v.dot(s) * s).normalized()
     u = n.cross(s).normalized()
+    import numpy as np
     c0 = Vector((WALL_LEFT_X + 0.04, (WIN_Y0 + WIN_Y1) / 2, (WIN_Z0 + WIN_Z1) / 2))
-    mat = mat_beam("shaft", strength, C.kelvin(SUN_K))
     obs = []
+    L0, L1, H = -0.02, 2.4, 0.95
+    NU, NV = 2048, 48
     for k in range(n_cards):
         off = (k - (n_cards - 1) / 2) * spacing
         cc = c0 + n * off
-        L0, L1, H = -0.02, 2.4, 0.95
-        corners = [cc + s * L0 - u * H, cc + s * L1 - u * H, cc + s * L1 + u * H, cc + s * L0 + u * H]
+        # static sun visibility on this card -> float texture (constant along the sun direction except
+        # for the growing penumbra, so 48 rows along the beam are plenty)
+        def sample(b0, b1, nu):
+            uu = (np.arange(nu) + 0.5) / nu
+            vv = (np.arange(NV) + 0.5) / NV
+            U, Vv = np.meshgrid(uu, vv)
+            a = L0 + (L1 - L0) * Vv.ravel()
+            b = b0 + (b1 - b0) * U.ravel()
+            P = np.stack([cc[i] + s[i] * a + u[i] * b for i in range(3)], axis=1)
+            return beam_static_np(P).astype(np.float32)
+        # trim the card to the lit corridor: camera rays that miss the beam never touch a card
+        coarse = sample(-H, H, 512).reshape(NV, 512)
+        cols = np.nonzero(coarse.max(axis=0) > 1e-3)[0]
+        b0 = -H + 2 * H * max(0, cols[0] - 2) / 512
+        b1 = -H + 2 * H * min(512, cols[-1] + 3) / 512
+        msk = sample(b0, b1, NU)
+        img = bpy.data.images.new("shaftmask_%d" % k, NU, NV, alpha=False, float_buffer=True, is_data=True)
+        px = np.zeros((NV * NU, 4), dtype=np.float32)
+        px[:, 0] = px[:, 1] = px[:, 2] = msk
+        px[:, 3] = 1.0
+        img.pixels.foreach_set(px.ravel())
+        img.update()
+        mat = mat_beam("shaft_%d" % k, strength, C.kelvin(SUN_K), mask_img=img)
+        corners = [cc + s * L0 + u * b0, cc + s * L1 + u * b0, cc + s * L1 + u * b1, cc + s * L0 + u * b1]
         ob = C.mesh_obj("shaft_%d" % k, [tuple(c) for c in corners], [(0, 1, 2, 3)])
+        uvl = ob.data.uv_layers.new(name="UVMap")
+        for li, (uv_u, uv_v) in enumerate(((0, 0), (0, 1), (1, 1), (1, 0))):
+            uvl.data[li].uv = (uv_u, uv_v)
         ob.data.materials.append(mat)
         _camera_only(ob)
         obs.append(ob)
@@ -2782,6 +2870,14 @@ def build(ctx):
         cd = C.camera("dbg", lens=v[6], loc=v[0:3], look_at=v[3:6], fstop=v[7] if len(v) > 7 else None,
                       focus=tuple(v[8:11]) if len(v) > 10 else None)
         sc.camera = cd
+    # temporal stability: the same sampling pattern on every frame. With slow camera moves the
+    # denoiser then sees (almost) the same noise realisation frame to frame, so its residual blotches
+    # stay put instead of boiling. (common.configure_render() enables the animated seed after build(),
+    # so this is applied from a render_pre handler.)
+    def _static_seed(*_):
+        bpy.context.scene.cycles.use_animated_seed = False
+    if not os.environ.get("SH15_ANIMSEED"):
+        bpy.app.handlers.render_pre.append(_static_seed)
     if os.environ.get("SH15_NODENOISE"):
         def _nd(*_):
             bpy.context.scene.cycles.use_denoising = False
