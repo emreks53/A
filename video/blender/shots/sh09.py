@@ -277,7 +277,7 @@ def build(ctx):
     sc.world.light_settings.distance = 0.2
     L.budget_denoise(prefilter="ACCURATE", quality="BALANCED", final_res=80)
     ov = dict(L.LEAN)
-    ov.update(transmission_bounces=3, transparent_bounces=6, final_spp=10, preview_spp=12)
+    ov.update(transmission_bounces=3, transparent_bounces=6, final_spp=8, preview_spp=12)
     return ov
 
 
