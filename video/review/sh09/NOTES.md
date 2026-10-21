@@ -1,5 +1,13 @@
 # sh09 — inside the forearm (47.40–52.10 s) · studio S7
 
+## v4 (director pivot — "no empty space")
+* 49.3–52.1: the probe pierces the hero fibre and the frame stays filled with tissue: myofibrils
+  packed at 1.95 µm pitch (soft A/I banding, translucent SSS), rows of small mitochondria nestled
+  between them (envelopes 55–92 % opaque so cristae read as soft internal layering, warm faint
+  glow), three elongated myonuclei under the sarcolemma, granules at many depths, out-of-focus
+  mitochondria in the foreground, dense rosy tissue haze (never a void). Ends close on one
+  mitochondrion between myofibrils.
+
 ## v3 (review-2 notes)
 1. Cell interior: desaturated blue-grey cytoplasm haze with depth gradient; myofibrils are now
    translucent pink-red SSS bundles with soft banding and a light-catching sheen (no opaque bars);

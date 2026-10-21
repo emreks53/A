@@ -1,5 +1,17 @@
 # sh10 — out of the cell into countless cells (52.10–58.00 s) · studio S7
 
+## v4 (director pivot — tissue honeycomb)
+* The field is now ONE continuous tissue sheet shaded like a confocal micrograph: 2-D Voronoi
+  polygonal cells (varied size), thin bright membranes, darker nucleus, translucent dim
+  blue-grey SSS cytoplasm, wet coat, per-cell dome bump; the sheet curves away (2.6 km radius) to a
+  hazy horizon. No instanced spheres on black.
+* Light-up is computed per cell in the shader from the Voronoi cell centre: near cells one after
+  another from "bildiğimiz", the rest in log-distance waves from "bilmediğimiz"; lit cells glow
+  warm amber from within (cytoplasm, not nucleus), membranes warm up; unlit cells stay dim
+  blue-grey. Band y 520–820 stays dark above the horizon.
+* The hero cell we exit is a translucent dome slightly raised out of the sheet.
+* Cheaper than before (no 360 k instances).
+
 ## v3 (review-2 notes)
 1. Cells: full SSS (scale 0.22) for translucency, darker unlit body, wet micro-specular coat,
    darker nucleus core inside the glow.

@@ -82,7 +82,7 @@ def build(ctx):
     # One continuous surface shaded as a confocal-micrograph honeycomb (Voronoi cells), curving away
     # over a 2.5 km radius so it recedes to a hazy horizon. Cheaper and more photographic than
     # instanced spheres: every cell, membrane, nucleus and light-up time comes from the shader.
-    sheet_me = sheet_mesh(size=1800.0, n=420, R=2600.0, z0=R_CELL * 0.62, hole=R_CELL * 0.95)
+    sheet_me = sheet_mesh(size=1800.0, n=420, R=2600.0, z0=R_CELL * 0.5, hole=0.0)
     L.obj_from_mesh("tissueSheet", sheet_me, mat_sheet(t_bil, t_bilme))
     # ---------------------------------------------------------------- camera: exponential pull back
     cam = C.camera("cam", lens=35, loc=(0, 0, 1), fstop=60.0, focus=0.05, clip_start=0.002, clip_end=2000)
@@ -203,7 +203,7 @@ def sheet_mesh(size, n, R, z0, hole):
         for i in range(n - 1):
             a = j * n + i
             cx, cy = xs[j, i], ys[j, i]
-            if abs(cx) < hole and abs(cy) < hole:
+            if hole and abs(cx) < hole and abs(cy) < hole:
                 continue
             faces.append((a, a + 1, a + n + 1, a + n))
     me = bpy.data.meshes.new("sheet")
@@ -301,10 +301,10 @@ def mat_sheet(t_bil, t_bilme, cell=1.7):
     nt.links.new(on.outputs[0], e1.inputs[0]); nt.links.new(cyt2.outputs[0], e1.inputs[1])
     e2 = n_("ShaderNodeMath"); e2.operation = "MULTIPLY"
     nt.links.new(e1.outputs[0], e2.inputs[0]); nt.links.new(br.outputs[0], e2.inputs[1])
-    e3 = n_("ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 5.0
+    e3 = n_("ShaderNodeMath"); e3.operation = "MULTIPLY"; e3.inputs[1].default_value = 3.2
     nt.links.new(e2.outputs[0], e3.inputs[0])
     # membranes: thin, faintly bright (backlit look), warmer once the cell is lit
-    m1 = n_("ShaderNodeMath"); m1.operation = "MULTIPLY_ADD"; m1.inputs[1].default_value = 1.2; m1.inputs[2].default_value = 0.25
+    m1 = n_("ShaderNodeMath"); m1.operation = "MULTIPLY_ADD"; m1.inputs[1].default_value = 0.8; m1.inputs[2].default_value = 0.25
     nt.links.new(on.outputs[0], m1.inputs[0])
     m2 = n_("ShaderNodeMath"); m2.operation = "MULTIPLY"
     nt.links.new(mem.outputs[0], m2.inputs[0]); nt.links.new(m1.outputs[0], m2.inputs[1])
