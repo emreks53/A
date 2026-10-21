@@ -1,4 +1,15 @@
-# sh13a — review 2 (studio S1)
+# sh13a — review 3 (studio S1)
+
+## Round 3 (reveal only, 80.2-84.2 s; glide 74-80 s untouched by construction)
+1. Treeline: irregular clumps (2-7 trees, 7-21 m, three Poly Haven species) with open gaps, two deeper hazier
+   forest layers (95-190 m), two mid-ground trees on the left. (Mid-ground trees right of / in front of the view
+   were tried and removed: with the sun 9.8° ahead-right they throw 60-90 m shadows across the whole reveal.)
+2. Light: after "Halık" the cloud-shadow edge widens from ~15 m to a ~90 m soft penumbra and sweeps past the
+   camera -> a broad warm wash; the foreground is fully lit by ~81.8 s.
+3. Sky: HDRI tint warms toward golden-peach near the horizon as the light arrives (animated, glide unchanged).
+4. Terrain extended under the far forest (no flat band at the horizon).
+Render: **84.7 s/frame** measured on frame 1990 at 90 % res (972x1728), 6 spp.
+
 
 ## Round 2 changes (director notes 1-4)
 1. Golden hour: sun 9.8° just out of frame right-ahead (back/side light, rim glow on blades, seed heads, flowers),
