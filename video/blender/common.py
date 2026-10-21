@@ -457,9 +457,6 @@ def human_mesh(obj_name="realistic_hand"):
         z = _curl(HUMAN_BUNDLE_URL, os.path.join(d, "hbm.zip"))
         subprocess.run(["unzip", "-o", "-q", z, "-d", d], check=True)
         blend = glob.glob(os.path.join(d, "**", "human_base_meshes_bundle.blend"), recursive=True)
-    alias = {"realistic_hand": "Hand  - Realistic", "realistic_foot": "Foot - Realistic",
-             "realistic_eye": "Eye - Realistic", "realistic_jaw": "Jaw - Realistic"}
-    obj_name = alias.get(obj_name, obj_name)   # in bundle v1.4.1 the short names are thumbnail cameras
     with bpy.data.libraries.load(blend[0], link=False) as (src, dst):
         dst.objects = [n for n in src.objects if n == obj_name]
     objs = []
