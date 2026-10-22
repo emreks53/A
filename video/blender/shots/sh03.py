@@ -25,6 +25,11 @@ U3 = [(9.0, (0, 0, 1)), (15.05, (0, 0, 1)), (16.0, (-1, 0, 0)), (16.60, (-1, 0, 
 def build(ctx):
     S.light_rig(exposure=S.ROOM_EXPOSURE)
     S.build_room()
+    # QA r6 (c): the sill top 3 mm higher closes the pure-black slot under it (sh03 only; sh02 keeps lib_s4's sill)
+    sill = bpy.data.objects["Sill"]
+    for v in sill.data.vertices:
+        if v.co.z > S.WIN_Z0 - 0.01:
+            v.co.z += 0.003
     S.build_table()
     t_yemek, t_icmek, t_butun, t_takdim = ctx.word("yemek"), ctx.word("içmek"), ctx.word("bütün"), ctx.word("takdim")
     so = S.build_sofra()
@@ -33,7 +38,8 @@ def build(ctx):
     r_in = S.inner_radius(0.05)
 
     # ---------------------------------------------------------------- sh02's air, carried over the cut
-    S.build_curtain(ctx, [], y0=-0.30, y1=0.36, drop=1.40, wall=None)
+    cur = S.build_curtain(ctx, [], y0=-0.30, y1=0.36, drop=1.40, wall=None)
+    cur.modifiers["Sub"].levels = 1; cur.modifiers["Sub"].render_levels = 2    # QA r6 (d): no saw-toothed hem
     S.build_beam_emission((-0.99, -0.75, 0.765), (0.45, 0.92, 2.42), strength=0.045, curtain_y=0.36,
                           time_keys=[(5.24 - 1, 0.0), (9.64 + 1, 0.9)])
     S.build_motes("Motes", (-0.97, -0.6, 0.80), (0.12, 1.0, 2.30), count=5000, seed=21, r_min=0.0005,
@@ -61,9 +67,47 @@ def build(ctx):
     def level(t):
         x = C.remap(t, t_hit, t_end + 0.15, lambda v: 1 - (1 - min(1.0, max(0.0, v))) ** 1.6)
         return lvl1 * x
+    # QA r6 (a): the lathe profile follows the glass wall at FULL height; scaled down in z its rim stood
+    # 2-3 mm outside the inner wall. A GN pass shifts each ring radially to the wall at its real height:
+    # glass z = 0.0092 + z*SZ (SZ = scale.z, keyed), wall slope (r_top - r_bot)/h, ring offsets kept
+    wng = bpy.data.node_groups.new("GlassWaterClamp", "GeometryNodeTree")
+    wng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+    wng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    gi = S._gn(wng, "NodeGroupInput"); go = S._gn(wng, "NodeGroupOutput"); L = wng.links.new
+    SZ = S._val(wng, "SZ", 1.0)
+    ps = S._gn(wng, "GeometryNodeInputPosition")
+    sep = S._gn(wng, "ShaderNodeSeparateXYZ"); L(ps.outputs[0], sep.inputs[0])
+    slope = (0.037 - 0.031) / 0.115
+
+    def mth(op, a, b):
+        n = S._gn(wng, "ShaderNodeMath", operation=op)
+        for i, x in enumerate((a, b)):
+            if isinstance(x, (int, float)):
+                n.inputs[i].default_value = x
+            else:
+                L(x, n.inputs[i])
+        return n.outputs[0]
+    zsz = mth("MULTIPLY", sep.outputs["Z"], SZ.outputs[0])
+    dz = mth("SUBTRACT", mth("ADD", zsz, 0.0092), mth("ADD", sep.outputs["Z"], 0.009))
+    d = mth("SUBTRACT", mth("MULTIPLY", dz, slope), 0.0003 + 0.00005)      # profile had +0.3 mm; land 0.05 mm inside
+    rr = S._gn(wng, "ShaderNodeVectorMath", operation="LENGTH")
+    cxy = S._gn(wng, "ShaderNodeCombineXYZ"); L(sep.outputs["X"], cxy.inputs[0]); L(sep.outputs["Y"], cxy.inputs[1])
+    L(cxy.outputs[0], rr.inputs[0])
+    k = mth("DIVIDE", mth("MAXIMUM", mth("ADD", rr.outputs["Value"], d), 0.0), mth("MAXIMUM", rr.outputs["Value"], 1e-6))
+    kv = S._gn(wng, "ShaderNodeCombineXYZ"); L(k, kv.inputs[0]); L(k, kv.inputs[1]); kv.inputs[2].default_value = 1.0
+    np_ = S._gn(wng, "ShaderNodeVectorMath", operation="MULTIPLY"); L(ps.outputs[0], np_.inputs[0]); L(kv.outputs[0], np_.inputs[1])
+    sp = S._gn(wng, "GeometryNodeSetPosition"); L(gi.outputs[0], sp.inputs["Geometry"]); L(np_.outputs[0], sp.inputs["Position"])
+    L(sp.outputs[0], go.inputs[0])
+    water.modifiers.new("Clamp", "NODES").node_group = wng
+    szk = []
     for f in range(ctx.f0 - 2, ctx.f1 + 3):
-        water.scale = (1, 1, max(0.002, level(f / C.FPS) / 0.1))
+        sz = max(0.002, level(f / C.FPS) / 0.1)
+        water.scale = (1, 1, sz)
         water.keyframe_insert("scale", index=2, frame=f)
+        szk.append((f / C.FPS, sz))
+    S.key_node_value(wng, "SZ", szk, interp="LINEAR")
+    water.hide_render = True; water.keyframe_insert("hide_render", frame=251)     # no pre-pour disc
+    water.hide_render = False; water.keyframe_insert("hide_render", frame=252)
     jug, jw = S.build_glass_jug((0, 0, 0))
     bpy.data.objects.remove(jw)              # the jug body stays above frame while pouring
     tip_local = Vector((0.0485 * 1.55 + 0.004, 0.0, 0.2325 + 0.012))
@@ -130,6 +174,10 @@ def build(ctx):
     pr = so["plate_root"]
     C.key(pr, "location", t_takdim - 0.45, (*S.SOFRA["plate0"], TZ))
     C.key(pr, "location", t_takdim + 0.25, (*S.SOFRA["plate1"], TZ))
+    # QA r6 (e): a shorter shutter while the plate slides so the arils stay crisp on 'takdim'
+    sc = bpy.context.scene
+    for f, sh in ((346, 0.5), (351, 0.2), (361, 0.2), (366, 0.5)):
+        sc.render.motion_blur_shutter = sh; sc.keyframe_insert("render.motion_blur_shutter", frame=f)
 
     # ---------------------------------------------------------------- camera (shared boom, then own path)
     cam = C.camera("cam", lens=28, loc=P3[0][1], fstop=2.8)
@@ -142,9 +190,9 @@ def build(ctx):
     C.handheld(cam, amp_loc=0.0008, amp_rot=0.0, speed=0.3, seed=5)
     S.comp_sunbeams(ctx, cam, beams=False, bloom=0.05, bloom_threshold=3.0)
     S.perf_settings(light_tree=False, fast_gi=False)
-    # the glass/water macro; the deep paths stay on until the glass has left the frame (326), so the
-    # bounce switch never lands on the hero glass (QA r3: a 292|293 switch popped -8.5 levels on the glass)
-    S.frame_bounces(225, 326, glossy=4, transmission=12, max_b=12)   # whole time the glass is on screen (QA r5: no switch on the glass at 247|248)
+    # the glass/water macro; the deep paths stay on for the whole shot, so no bounce switch lands on any
+    # glass (QA r3: 292|293 popped the hero glass; QA r6: 326|327 popped the back tea glass)
+    S.frame_bounces(225, 389, glossy=4, transmission=12, max_b=12)   # whole time the glass is on screen (QA r5: no switch on the glass at 247|248)
     return S.RENDER_OV
 
 
