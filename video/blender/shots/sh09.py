@@ -44,6 +44,8 @@ def wet_fascicles(m):
             e0, e1 = n.color_ramp.elements
             e0.position, e1.position = 0.22, 0.52
             e0.color = (0.11, 0.012, 0.016, 1); e1.color = (0.46, 0.085, 0.06, 1)
+        elif n.type == "MATH" and n.operation == "MULTIPLY_ADD" and abs(n.inputs[1].default_value - 0.02) < 1e-6:
+            n.inputs[1].default_value = 0.075                 # band waviness: irregular, not ruler-straight
         elif n.type == "BUMP" and abs(n.inputs["Strength"].default_value - 0.07) < 1e-4:
             n.inputs["Strength"].default_value = 0.22         # band relief catches the wet highlights
 
