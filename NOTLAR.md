@@ -110,6 +110,15 @@ formu doğrulaması, üst menünün kaydırmada titrememesi denendi. Bulunup dü
 - Kurumsal Yönetim Komitesi notu ve "Kaynak" satırı kullanıcı isteğiyle kaldırıldı (2026-10-22b-komiteler-sade.py).
 - Yönetim Kurulu ve Üst Yönetim sayfası: kurul üyeleri kararla aynı, değişmedi; karar üst yönetimi kapsamıyor.
 
+## 22.10.2026 alan adı bağlandı
+
+- DNS Birtek'te kaldı (NS birtekhost). www.idealistgyo.com → CNAME idealistgyo.pages.dev (Pages özel alan adı, Cloudflare
+  sertifikası). idealistgyo.com (kök) A 31.210.88.103: Birtek sunucusu yolu koruyarak https://www.idealistgyo.com'a 301.
+- Denendi: eski adresler zincirle yeni sayfalara gidiyor (ör. /tr.php?HaberDuyurular&id=11… → 2 yönlendirme → 200);
+  kanonik, sitemap ve robots www alan adıyla. E-posta (MX/mail A/SPF) Birtek'te, değişmedi.
+- Kalan: Google Search Console (alan adı doğrulama + sitemap + ana sayfa için dizine ekleme isteği; arama sonucundaki
+  logo bundan sonra güncellenir), Resend alan adı doğrulaması (Birtek DNS'ine TXT/MX kayıtları) ve IL_FROM/PANEL_FROM.
+
 ## Kullanıcı kararları (özet)
 
 - Hero: "Ülkemize faydalı, prestijli gayrimenkul projelerini ideal şekilde gerçekleştirmek." / EN "…in an ideal way."
