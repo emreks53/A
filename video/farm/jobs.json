@@ -1151,6 +1151,42 @@
    "from": 370,
    "to": 389,
    "note": "final round 2: water inside the glass, no bounce switch, sill +3mm shape key, curtain subdiv from 262, plate sub-frame slide (fix 500a9c5); whole shot"
+  },
+  {
+   "node": "b108",
+   "branch": "render-fix-sh07",
+   "ref": "8e9e519e45a1bdf1f9317381bab1b0adebff47ab",
+   "shot": "sh07",
+   "from": 851,
+   "to": 883,
+   "note": "final round 2: no sun-disc glint 903-907 (SeamCatcher), OceanMid sway breaks the fan (fix 8e9e519 on da9e92d); whole 851-979"
+  },
+  {
+   "node": "b109",
+   "branch": "render-fix-sh07",
+   "ref": "8e9e519e45a1bdf1f9317381bab1b0adebff47ab",
+   "shot": "sh07",
+   "from": 884,
+   "to": 916,
+   "note": "final round 2: no sun-disc glint 903-907 (SeamCatcher), OceanMid sway breaks the fan (fix 8e9e519 on da9e92d); whole 851-979"
+  },
+  {
+   "node": "b110",
+   "branch": "render-fix-sh07",
+   "ref": "8e9e519e45a1bdf1f9317381bab1b0adebff47ab",
+   "shot": "sh07",
+   "from": 917,
+   "to": 948,
+   "note": "final round 2: no sun-disc glint 903-907 (SeamCatcher), OceanMid sway breaks the fan (fix 8e9e519 on da9e92d); whole 851-979"
+  },
+  {
+   "node": "b111",
+   "branch": "render-fix-sh07",
+   "ref": "8e9e519e45a1bdf1f9317381bab1b0adebff47ab",
+   "shot": "sh07",
+   "from": 949,
+   "to": 979,
+   "note": "final round 2: no sun-disc glint 903-907 (SeamCatcher), OceanMid sway breaks the fan (fix 8e9e519 on da9e92d); whole 851-979"
   }
  ]
 }
