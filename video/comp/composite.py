@@ -554,7 +554,8 @@ def legibility(disp, boxes, cfg, scale, w, h):
     the glyph shadows do the rest.
     Scrim: a key-word box [x0, y0, x1, y1, w, 0, s] (overlays.json keyword "scrim") adds a soft elliptical
     vignette of strength s behind the line that is NOT luma-gated (it steadies a strobing or mid-tone background)
-    and acts as a floor on the darkening: each pixel gets max(legibility darkening, scrim)."""
+    and acts as a floor on the darkening: each pixel gets max(legibility darkening, scrim).
+    [x0, y0, x1, y1, w, 0, s, 1, soft] = a 'rect' scrim: flat s over the box, smoothstep to 0 over 'soft' px."""
     if not boxes:
         return disp
     lc = cfg
@@ -567,7 +568,16 @@ def legibility(disp, boxes, cfg, scale, w, h):
         x0, y0, x1, y1, wt = b[:5]
         local = len(b) > 5 and b[5] == 1
         ks = float(b[6]) if len(b) > 6 and not local else 0.0
-        if ks > 0.003:
+        if ks > 0.003 and len(b) > 8 and int(b[7]) == 1:
+            # 'rect' scrim [.., s, 1, soft]: flat ks over the box (which may run off-frame, e.g. the whole sky),
+            # smoothstep falloff over 'soft' layout px outside it - a graduated shade, not a vignette
+            soft = max(1.0, float(b[8])) * scale
+            dx = np.maximum(np.maximum(x0 * scale - xx, xx - x1 * scale), 0)
+            dy = np.maximum(np.maximum(y0 * scale - yy, yy - y1 * scale), 0)
+            u = np.clip(1 - np.sqrt(dx[None, :] ** 2 + dy[:, None] ** 2) / soft, 0, 1)
+            sm = (ks * u * u * (3 - 2 * u)).astype(np.float32)
+            scrim = sm if scrim is None else np.maximum(scrim, sm)
+        elif ks > 0.003:
             sc = {"extent": 130, "pad": 150, "softness": 0.32, **lc.get("scrim", {})}
             cxs, cys = (x0 + x1) / 2 * scale, (y0 + y1) / 2 * scale
             rxs = ((x1 - x0) / 2 + sc["extent"]) * scale

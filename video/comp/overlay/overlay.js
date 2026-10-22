@@ -270,6 +270,20 @@ window.ovLayoutReport = function () {
   return { keywords: out };
 };
 
+/** Scrim strength at t (overlays.json keyword "scrim": {from, to, k, fade, fade_out}): k at full strength, easing
+ *  in over 'fade' s after 'from' and out over 'fade_out' s (default 'fade') before 'to'. */
+function scrimAt(sc, t) {
+  if (!sc) return 0;
+  const fi = sc.fade || 0.15, fo = sc.fade_out != null ? sc.fade_out : fi;
+  return sc.k * smooth(lin(t, sc.from, sc.from + fi)) * (1 - smooth(lin(t, sc.to - fo, sc.to)));
+}
+/** The scrim's legibility box: [x0, y0, x1, y1, 0, 0, s] (+ [shape, soft] for a 'rect' scrim, composite.py). */
+function scrimBox(sc, bb, s) {
+  const b = [bb[0], bb[1], bb[2], bb[3], 0, 0, s];
+  if (sc.shape === 'rect') b.push(1, sc.soft || 160);
+  return b;
+}
+
 function drawKeyword(el, t) {
   const L = keywordLayout(el);
   const st = L.st, size = L.size;
@@ -337,11 +351,11 @@ function drawKeyword(el, t) {
     const sx = cx + ((ln.x0 + sg.x + sg.w / 2) - cx) * k, sy = cy + (ln.cy - cy) * k;
     seps.push({ x: sx, y: sy, a, r: 0.052 * sz * (0.6 + 0.4 * eOutCubic(clamp((t - ta) / 0.3))) });
   }
-  // pass 1: legibility shadows
+  // pass 1: legibility shadows (per-keyword 'shadow' / 'shadow2' override the style's)
   const shRGB = st.shadow_rgb || [0, 0, 0];
+  const sh = el.shadow || st.shadow, sh2 = el.shadow2 || st.shadow2;
   for (const p of P) {
     setFont(X, fam, wt, sz * p.scl);
-    const sh = st.shadow, sh2 = st.shadow2;
     glyphShadow(X, p.l.ch, p.x, p.y, p.alpha * sh[0], Math.hypot(sh[1], p.blur), sh[2], shRGB);
     glyphShadow(X, p.l.ch, p.x, p.y, p.alpha * sh2[0], Math.hypot(sh2[1], p.blur), sh2[2], shRGB);
   }
@@ -371,12 +385,8 @@ function drawKeyword(el, t) {
   }
   // legibility boxes for the compositor + knock-out boxes (graphics never cross a key word)
   // optional scrim (overlays.json "scrim": {from, to, k}): a soft dark vignette behind the line, k at full
-  // strength, easing in/out over 'fade' s inside [from, to] and never stronger than the line itself is visible
-  let scr = 0;
-  if (el.scrim) {
-    const sc = el.scrim, fd = sc.fade || 0.15;
-    scr = sc.k * smooth(lin(t, sc.from, sc.from + fd)) * (1 - smooth(lin(t, sc.to - fd, sc.to)));
-  }
+  // strength, easing in/out inside [from, to] (scrimAt) and never stronger than the line itself is visible
+  const scr = scrimAt(el.scrim, t);
   for (const [ln, b] of boxLines) {
     const y0 = cy + ((ln.cy - L.capH * 0.5) - cy) * k, y1 = cy + ((ln.cy + L.capH * 0.5) - cy) * k;
     const x0 = cx + (ln.x0 - cx) * k, x1 = cx + (ln.x0 + ln.w - cx) * k;
@@ -443,16 +453,17 @@ function drawColdKeyword(el, t, L) {
   const st = L.st, size = L.size, IN = st.in, ds = st.dust;
   const fam = st.family, wt = st.weight;
   const shRGB = st.shadow_rgb || [0, 0, 0];
+  // optional scrim (as drawKeyword), but ONE steady box for the whole block (all lines), gated by whichever line
+  // is visible: per-line scrims would drag a dark patch down the flat sky as each word arrives and crumbles.
+  // 'gate': false = not gated by the words at all: a steady shade over [from, to] (e.g. a darker sky from the
+  // dip into the shot to the dissolve out of it), so it never appears or moves with a word
+  const scr = scrimAt(el.scrim, t);
+  const ungated = el.scrim && el.scrim.gate === false;
+  if (ungated && scr > 0.001) BOXES.push(scrimBox(el.scrim, el.scrim.box, scr));
   // everything (letters and every grain) is gone by the cut: a gentle fade over the last 0.35 s
   const km = el.kill != null ? 1 - smooth(clamp((t - (el.kill - 0.35)) / 0.35)) : 1;
   if (km < 0.003) return;
-  // optional scrim (as drawKeyword), but ONE steady box for the whole block (all lines), gated by whichever line
-  // is visible: per-line scrims would drag a dark patch down the flat sky as each word arrives and crumbles
-  let scr = 0, allA = 0;
-  if (el.scrim) {
-    const sc = el.scrim, fd = sc.fade || 0.15;
-    scr = sc.k * smooth(lin(t, sc.from, sc.from + fd)) * (1 - smooth(lin(t, sc.to - fd, sc.to)));
-  }
+  let allA = 0;
   for (const line of L.lines) {
     const tw = line.parts[0].t;
     if (t < tw) continue;
@@ -535,13 +546,13 @@ function drawColdKeyword(el, t, L) {
       KWBOXES.push([...line.ink.slice(0, 4), maxA]);
     }
   }
-  if (scr * allA > 0.001) {
+  if (!ungated && scr * allA > 0.001) {
     // 'box' (layout px) pins the scrim to a fixed region, so two elements (the cold words, then the '?') share
     // one steady patch of shade instead of handing over between two differently placed ones
     const ls = L.lines;
     const bb = el.scrim.box || [Math.min(...ls.map(l => l.x0)), ls[0].cy - L.capH / 2,
       Math.max(...ls.map(l => l.x0 + l.w)), ls[ls.length - 1].cy + L.capH / 2];
-    BOXES.push([bb[0], bb[1], bb[2], bb[3], 0, 0, scr * Math.min(1, allA)]);
+    BOXES.push(scrimBox(el.scrim, bb, scr * Math.min(1, allA)));
   }
 }
 
@@ -667,10 +678,14 @@ function drawCalloutCore(el, f, t, prim, sec, opts = {}) {
     const qx0 = el.sx > 0 ? tx : tx + lb.w - lb.Q.w;
     drawRunWipe(lb.Q, qx0 - slide, seY, st.color, ta * secA, wipeAt(prog, lb.Q.w), el.sx, SOFT, txtSh);
   }
-  if (ta > 0.05) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0.6 * ta, 1]);
   // optional per-callout scrim (overlays.json callout "scrim": k): a soft, NOT luma-gated vignette behind the label
-  // for a label on a flat bright plate (the luma-gated local darkening backs off on flat backgrounds)
-  if (el.scrim && ta * el.scrim > 0.001) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0, 0, el.scrim * ta]);
+  // for a label on a flat bright plate (the luma-gated local darkening backs off on flat backgrounds). A callout
+  // with a scrim eases the scrim AND its local box in with the label reveal (sync + 0.10 .. 0.52 s) and out over
+  // the last 0.31 s (across the text exit, out - 0.22 .. - 0.10), so the darkening never pops on or off in a frame
+  let bw = ta;
+  if (el.scrim) bw = a * eInOutCubic(lin(t, ts + 0.10, ts + 0.52)) * (1 - smooth(lin(t, to - 0.31, to)));
+  if (bw > 0.05) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0.6 * bw, 1]);
+  if (el.scrim && bw * el.scrim > 0.001) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0, 0, el.scrim * bw]);
 }
 
 function drawCallout(el, f, t) { drawCalloutCore(el, f, t, el.primary, el.secondary); }
@@ -952,13 +967,18 @@ function drawNetwork(el, f, t) {
     let a = aOut * n.p.v;
     if (n.name === el.center && !el.converge.center_line) a *= 1 - conv;   // (legacy: the source became the light)
     if (a < 0.003) continue;
-    const r = 9 * (0.6 + 0.4 * k) * (1 - 0.35 * conv);
+    // 'center_node' (the sun): it stays a named provision node through the convergence, under the light it points
+    // to: full-size ring (the other rings shrink 35 %), its label kept, and its own small warm glow
+    const keep = el.center_node && n.name === el.center ? el.center_node : null;
+    const r = 9 * (0.6 + 0.4 * k) * (keep && keep.ring ? 1 : 1 - 0.35 * conv);
     const build = (c, o) => c.arc(n.p.x + o, n.p.y, r, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2 * 0.999);
     premiumStroke(build, 1.8, a, { ...st, color: warm, glow: [...gold, 0.4, 5] }, 1 + flash);
     fillCircle(X, n.p.x, n.p.y, 2.8 * k, [255, 255, 255], a);
     glowDot(A, n.p.x, n.p.y, 18 + 14 * flash, gold, a * (0.3 + 0.6 * flash));
+    if (keep && keep.glow) glowDot(A, n.p.x, n.p.y, keep.glow[0], [255, 214, 160], a * k * keep.glow[1]);
     if (el.labels && n.label) {
-      const la = a * eOutCubic(lin(t, n.t_on + 0.05, n.t_on + 0.4)) * (1 - eInOutCubic(lin(t, conv0, conv0 + 0.5)));
+      const lf = keep && keep.label ? 1 : 1 - eInOutCubic(lin(t, conv0, conv0 + 0.5));
+      const la = a * eOutCubic(lin(t, n.t_on + 0.05, n.t_on + 0.4)) * lf;
       if (la > 0.003) {
         const run = layoutRun(upperTR(n.label), 'Inter', 600, 27, 0.12);
         const side = n.p.x > W / 2 ? -1 : 1;
@@ -975,8 +995,10 @@ function drawNetwork(el, f, t) {
     const breathe = 1 + 0.08 * Math.sin(2 * Math.PI * (t - tl) / 3.2);
     const a = aOut * k;
     const G = (el.light && el.light.glow) || 120, RR = (el.light && el.light.ring) || 150;
-    glowDot(A, Cp[0], Cp[1], G * breathe + G * flash, gold, a * (0.30 + 0.35 * flash));
-    glowDot(A, Cp[0], Cp[1], 42 * breathe + 30 * flash, [255, 236, 200], a * (0.7 + 0.3 * flash));
+    // the 'tek' flash: outer glow grows by FL[0] * G, the core by FL[1] px (light.flash; legacy [1, 30])
+    const FL = (el.light && el.light.flash) || [1, 30];
+    glowDot(A, Cp[0], Cp[1], G * breathe + FL[0] * G * flash, gold, a * (0.30 + 0.35 * flash));
+    glowDot(A, Cp[0], Cp[1], 42 * breathe + FL[1] * flash, [255, 236, 200], a * (0.7 + 0.3 * flash));
     fillCircle(X, Cp[0], Cp[1], 3.6 * k, [255, 255, 255], a);
     // one expanding ring of light at the moment of 'tek'
     if (t >= tl && t < tl + 1.2) {

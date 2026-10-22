@@ -366,7 +366,7 @@ def resolve(spec_path=None, verbose=True):
             lines.append({"parts": parts})
         el = {"id": k["id"], "type": "keyword", "style": k["style"], "shot": k["shot"], "lines": lines,
               "y": k.get("y", 670)}
-        for opt in ("size", "line_height", "max_width", "tracking", "in"):
+        for opt in ("size", "line_height", "max_width", "tracking", "in", "shadow", "shadow2"):
             if opt in k:
                 el[opt] = k[opt]
         if "swell" in k:
@@ -378,8 +378,18 @@ def resolve(spec_path=None, verbose=True):
             sc = k["scrim"]
             el["scrim"] = {"from": clk.t(sc["from"], k["shot"]), "to": clk.t(sc["to"], k["shot"]),
                            "k": float(sc.get("k", 0.35)), "fade": float(sc.get("fade", 0.15))}
+            if "fade_out" in sc:
+                el["scrim"]["fade_out"] = float(sc["fade_out"])      # e.g. a hard stop on the cut
             if "box" in sc:
                 el["scrim"]["box"] = [float(v) for v in sc["box"]]     # fixed scrim region (crumbling words)
+            if sc.get("shape") == "rect":
+                # flat shade over the box (it may run off-frame, e.g. the whole sky) with a 'soft' px falloff
+                # outside it (composite.py legibility(), shape 1) instead of the elliptical vignette
+                el["scrim"]["shape"], el["scrim"]["soft"] = "rect", float(sc.get("soft", 160))
+            if sc.get("gate", True) is False:
+                # not gated by the words: a steady shade over [from, to] (needs a fixed 'box')
+                assert "box" in sc, f"{k['id']}: an ungated scrim needs a fixed 'box'"
+                el["scrim"]["gate"] = False
         cut_t = sh[k["shot"]]["end_s"]
         if "dust" in st:
             # crumbling words have no exit: everything (letters and every dust grain) is gone by the cut (or by
@@ -391,6 +401,8 @@ def resolve(spec_path=None, verbose=True):
             el["out"] = float(k["out"])
             t_end = el["out"]
         el["f0"] = int(math.floor(tmin * FPS)) - 1
+        if el.get("scrim", {}).get("gate") is False:
+            el["f0"] = min(el["f0"], int(math.floor(el["scrim"]["from"] * FPS)) - 1)
         el["f1"] = int(math.ceil(t_end * FPS)) + 2
         els.append(el)
         kw_checks.append({"el": el, "st": st, "last_word": last_word, "cut": cut_t, "carry": k.get("carry")})
@@ -563,8 +575,10 @@ def resolve(spec_path=None, verbose=True):
                         "converge": {"t0": c0, "dur": conv["dur"], "stagger": conv["stagger"],
                                      "to_offset": conv.get("to_offset", [0, 0]),
                                      "center_line": bool(conv.get("center_line", False))},
+                        "center_node": wd.get("center_node"),
                         "light": {"glow": float(wd["light"].get("glow", 120)),
-                                  "ring": float(wd["light"].get("ring", 150))},
+                                  "ring": float(wd["light"].get("ring", 150)),
+                                  "flash": [float(v) for v in wd["light"].get("flash", [1.0, 30.0])]},
                         "light_t": light_t, "out": out,
                         "f0": int(math.floor((d0 - 0.1) * FPS)), "f1": int(math.ceil(out * FPS)) + 1})
             sync_points.append({"id": "sh12.converge", "t": c0, "kind": "network"})
