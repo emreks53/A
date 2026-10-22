@@ -764,6 +764,60 @@
    "from": 1216,
    "to": 1255,
    "note": "final round: volumetric mitochondria, readable fascicles (fix 9dcb88f)"
+  },
+  {
+   "node": "b65",
+   "branch": "render-fix-sh03",
+   "ref": "c25357a2fddcc14994f0ff2180c817d94d9ba1eb",
+   "shot": "sh03",
+   "from": 225,
+   "to": 246,
+   "note": "final round: clear water jet + real pomegranate (fix c25357a); jobs start on their first frame"
+  },
+  {
+   "node": "b66",
+   "branch": "render-fix-sh03",
+   "ref": "c25357a2fddcc14994f0ff2180c817d94d9ba1eb",
+   "shot": "sh03",
+   "from": 247,
+   "to": 269,
+   "note": "final round: clear water jet + real pomegranate (fix c25357a); jobs start on their first frame"
+  },
+  {
+   "node": "b67",
+   "branch": "render-fix-sh03",
+   "ref": "c25357a2fddcc14994f0ff2180c817d94d9ba1eb",
+   "shot": "sh03",
+   "from": 270,
+   "to": 292,
+   "note": "final round: clear water jet + real pomegranate (fix c25357a); jobs start on their first frame"
+  },
+  {
+   "node": "b68",
+   "branch": "render-fix-sh03",
+   "ref": "c25357a2fddcc14994f0ff2180c817d94d9ba1eb",
+   "shot": "sh03",
+   "from": 293,
+   "to": 326,
+   "note": "final round: clear water jet + real pomegranate (fix c25357a); jobs start on their first frame"
+  },
+  {
+   "node": "b69",
+   "branch": "render-fix-sh03",
+   "ref": "c25357a2fddcc14994f0ff2180c817d94d9ba1eb",
+   "shot": "sh03",
+   "from": 327,
+   "to": 358,
+   "note": "final round: clear water jet + real pomegranate (fix c25357a); jobs start on their first frame"
+  },
+  {
+   "node": "b70",
+   "branch": "render-fix-sh03",
+   "ref": "c25357a2fddcc14994f0ff2180c817d94d9ba1eb",
+   "shot": "sh03",
+   "from": 359,
+   "to": 389,
+   "note": "final round: clear water jet + real pomegranate (fix c25357a); jobs start on their first frame"
   }
  ]
 }
