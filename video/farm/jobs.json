@@ -962,6 +962,42 @@
    "from": 1758,
    "to": 1785,
    "note": "final round: real-aerial valley floor, clumped scrub/copses, ground micro-structure, haze (fix 9273247); whole shot"
+  },
+  {
+   "node": "b87",
+   "branch": "render-fix-sh13a",
+   "ref": "bd990b209be146f36efb74cf8bd7555ed35ab1ee",
+   "shot": "sh13a",
+   "from": 1896,
+   "to": 1928,
+   "note": "final round: meadow to the treeline, real tree haze/bark, warm gain on the beat (fix bd990b2); 1895 and earlier unchanged"
+  },
+  {
+   "node": "b88",
+   "branch": "render-fix-sh13a",
+   "ref": "bd990b209be146f36efb74cf8bd7555ed35ab1ee",
+   "shot": "sh13a",
+   "from": 1929,
+   "to": 1961,
+   "note": "final round: meadow to the treeline, real tree haze/bark, warm gain on the beat (fix bd990b2); 1895 and earlier unchanged"
+  },
+  {
+   "node": "b89",
+   "branch": "render-fix-sh13a",
+   "ref": "bd990b209be146f36efb74cf8bd7555ed35ab1ee",
+   "shot": "sh13a",
+   "from": 1962,
+   "to": 1994,
+   "note": "final round: meadow to the treeline, real tree haze/bark, warm gain on the beat (fix bd990b2); 1895 and earlier unchanged"
+  },
+  {
+   "node": "b90",
+   "branch": "render-fix-sh13a",
+   "ref": "bd990b209be146f36efb74cf8bd7555ed35ab1ee",
+   "shot": "sh13a",
+   "from": 1995,
+   "to": 2026,
+   "note": "final round: meadow to the treeline, real tree haze/bark, warm gain on the beat (fix bd990b2); 1895 and earlier unchanged"
   }
  ]
 }
