@@ -1,6 +1,6 @@
 # fix-sh09 round 3
 
-The fix commit is 67f3496. It changes `lib_s7.py`, by additions only, and `sh09.py`. The re-render range is 1174-1255.
+The fix commit is b50ccbe (round 3b), which builds on 67f3496. It changes `lib_s7.py`, by additions only, and `sh09.py`. The re-render range is 1174-1255.
 
 ## What changed
 * **Shared code:** the interior upgrade now lives in lib_s7 as new functions. `upgrade_interior_s9(inter, wave, frames)` covers the bean bodies, cristae, membranes, T-tubules, the HERO_NUDGE offsets and the hero matrix-glow key (HERO_KEY, absolute frames 1215-1240). sh10 calls the same function right after `build_fibre_interior()`, so the f1250 cut matches by construction. No existing lib_s7 function changed, so sh06 is untouched.
@@ -11,32 +11,40 @@ The fix commit is 67f3496. It changes `lib_s7.py`, by additions only, and `sh09.
   * Parameters: yspan 0.24, radius 0.64 x the half-width, te clamped at 0.95.
   * Spacing and reach are irregular, with a slight bow in the screen plane. Every term sits inside each fold's y-extent, and neighbouring extents are disjoint, so folds can never cross. Mesh check: 32 pairs, 0 overlaps.
   * They are soft and slightly translucent.
-* **Clearance:** HERO_NUDGE is re-tuned (heroMito1, heroMito2, fgMito0). None of the 112 bodies has a vertex inside a myofibril.
+* **Clearance:** HERO_NUDGE is re-tuned (heroMito1, heroMito2, fgMito0). None of the 112 bodie## Round 3b (independent verifier findings on 67f3496)
+* **Measurement:** the gate masks are now the hero's exact projected silhouette (its faces rasterised from the scene), not a colour mask. The colour mask clipped the body edge and merged it with the overlapping body.
+* **Colour:**
+  * The outer membrane's face-on alpha is 0.55, with a darker, redder base.
+  * The matrix and rim emission is (1, .42, .05), and the hero's end emission is 8.
+  * Specular is 0.25, and the cristae coat is 0.05.
+* **Foreground pair:** it gets its own faint membrane (alpha 0.15) and dim folds (an object-level material), so its folds no longer read as "bread-roll" spots. fgMito0, the out-of-focus body that sat over the hero's top, is moved up and right, still clear of the fibrils. heroMito1's y nudge is reverted.
+* **Folds:** softer and more translucent, with per-fold thickness and reach variation, and a bow of 0.012 so no fold curls into a hook.
 
-## Gates (full-quality frames)
+## Gates (final frames of b50ccbe, full quality, 864x1536, measured on the hero silhouette)
+| Frame | H | S | V | R>=254 px | Ridges touching a fold | Box band contrast |
+|---|---|---|---|---|---|---|
+| 1248 | 25.3 | 82% | 69% | 0 | 0 | 8.0% |
+| 1250 | 25.5 | 81% | 69% | 0 | 0 | 8.2% |
+| 1255 | 25.4 | 80% | 70% | 0 | 0 | 9.1% |
+| 1244 | 25.1 | 84% | 66% | 0 | 0 | 6.8% |
+| 1236 | 24.2 | 84% | 56% | 0 | 0 | 9.0% |
+| 1210/1214/1220 | 22-25 | - | - | 0 | 0 | 13-19% |
 
-**Centre, colour and folds:**
+* **Ridges:** the only long vertical ridges are the body's silhouette rim.
+* **Foreground glints:** no high-pass blob above +10 on the foreground bodies. The only amber high-pass lines above 10 are fibril edges.
+* **Midline:** at f1250 it lies on TRK_mito (428, 675 at 864 px). The verifier measured 428.5 against 430.5 for the farm frame.
+* **Overlay:** the real co_mito overlay lands centred on the body at 1213-1243.
+* **Checks:**
 
-| Frame | Midline x | R>=254 px | H / S / V | Box band contrast |
-|---|---|---|---|---|
-| 1250 | 455 (farm 456) | 380 | 26.6 / 73% / 69% | 8.0% |
-| 1255 | 456 | 398 | 26.4 / 72% / 70% | 7.6% |
-| 1244 | 447 | 46 | 26.5 / 73% / 68% | 7.4% |
-| 1236 | 432 | 0 | 25.3 / 76% / 58% | 7.7% |
+  | Check | Result |
+  |---|---|
+  | Folds (mesh check) | 32 pairs, 0 overlaps |
+  | Clearance | 0 of the 112 bodies has a vertex inside a myofibril |
+  | Join | 1173 is 0.40/255 from the farm frame |
+  | Determinism | 1229-1231 vs 1230-1231: bit-identical frames 1230 and 1231 |
+  | Cost | 50-55 s/frame on 4 cores (61 s at f1173) |
 
-At 7a82374 the f1250 values were midline 491, 44.9k px at R>=254, and H 18.
-
-**Crossing ridges:** at 1210, 1214, 1220, 1236, 1244, 1250 and 1255, the number of vertical ridges (>8 luma after a 12 px Gaussian high-pass, >20 px long) that touch a fold dash is 0 in every frame. The remaining vertical ridges are the body's silhouette rim.
-
-**Foreground tip glints:** at most +10. The only high-pass blobs above +10 in the left third of the frame lie on the hero's own rim.
-
-**TRK_mito at f1250:** (535, 844) in 1080 coordinates, which is (428, 675) at 864 px wide, on the body. The real co_mito overlay (comp/overlays.py with this track) is composited over 1213-1243 and lands centred on the body.
-
-**Join and hand-off:** 1173 is 0.39/255 from the farm frame, so the join is invisible. sh10's farm f1250 still differs by 16.2/255, but that frame shows the old mitochondria look. Once sh10 calls `upgrade_interior_s9`, both shots render the same interior.
-
-**Determinism:** 1229-1231 and 1230-1231 give bit-identical frames 1230 and 1231.
-
-**Cost:** 53-63 s/frame on 4 cores (final settings, 80% resolution).
+ (final settings, 80% resolution).
 
 ## Files
 * `phone_strip_1210-1255_step5.jpg`
