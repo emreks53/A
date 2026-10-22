@@ -2306,9 +2306,9 @@ def shutter(times, mat):
     for k in range(n):
         z0 = k * SHUTTER_PITCH + (0.0 if k == 0 else SHUTTER_GAP)
         z1 = (k + 1) * SHUTTER_PITCH
-        bulge = 0.004
-        # each slat: a shallow convex profile (inner face toward the room = +x)
-        prof = [(-0.009, z0), (-0.004 + bulge * 0.3, z0), (0.0 + bulge, (z0 + z1) / 2), (-0.004 + bulge * 0.3, z1), (-0.009, z1)]
+        # each slat: a flat board, flush with its neighbours (fix-sh15: the convex slats caught a highlight
+        # band per slat, seen through the vertical kafes slats as a grid of grey dashes in camA)
+        prof = [(-0.009, z0), (0.0, z0), (0.0, z1), (-0.009, z1)]
         vs = []
         for y in (WIN_Y0 - 0.12, WIN_Y1 + 0.12):
             vs.append([bm.verts.new((SHUTTER_X + x, y, z)) for (x, z) in prof])
@@ -2635,8 +2635,10 @@ def build_shafts(view_dir, n_cards=2, spacing=0.22, strength=0.016):
         b0 = -H + 2 * H * max(0, cols[0] - 2) / 512
         b1 = -H + 2 * H * min(512, cols[-1] + 3) / 512
         msk = sample(b0, b1, NU).reshape(NV, NU)
-        # dust glow integrates the beam over its whole depth: soften the streaks (sigma ~1.2 cm)
-        sig = 0.012 / ((b1 - b0) / NU)
+        # dust glow integrates the beam over its whole depth: soften the streaks. fix-sh15: sigma 1.2 -> 3 cm;
+        # behind the vertical slats the streaks were sheets of light whose diagonal bands crossed the window
+        # slats and the jamb in camE; at 3 cm the 5 cm slat period averages out into one soft beam
+        sig = 0.030 / ((b1 - b0) / NU)
         r = int(3 * sig)
         kern = np.exp(-0.5 * (np.arange(-r, r + 1) / sig) ** 2)
         kern /= kern.sum()
