@@ -538,7 +538,7 @@ def man_skin(skin):
                 n.inputs[2].links[0].from_node.bl_idname == "ShaderNodeBsdfTranslucent":
             n.inputs[0].default_value = 0.035
         if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and abs(n.inputs[1].default_value + 0.30) < 1e-6:
-            n.inputs[1].default_value = -0.12      # skin-line groove depth (relinked to the wave grooves below)
+            n.inputs[1].default_value = -0.025     # skin-line groove depth (relinked to the wave grooves below)
         if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and abs(n.inputs[1].default_value + 0.9) < 1e-6:
             n.inputs[1].default_value = 0.0        # pores live in the albedo only: a bump pit gave bright bead rims
     # pores and fine creases also in the albedo: from f1091 OIDN runs colour+albedo only (GLOW_NO_NORMAL_F) and
@@ -551,14 +551,14 @@ def man_skin(skin):
     # line or a hair (lib_s5's cellular net drew crisp polygon edges, X and V shapes at macro)
     R0 = H._attr(nt, "rest", "Vector")
     wvl = nt.nodes.new("ShaderNodeTexWave"); wvl.wave_type = "BANDS"; wvl.bands_direction = "X"; wvl.wave_profile = "SIN"
-    wvl.inputs["Scale"].default_value = 1300.0; wvl.inputs["Distortion"].default_value = 3.5
+    wvl.inputs["Scale"].default_value = 950.0; wvl.inputs["Distortion"].default_value = 1.6
     wvl.inputs["Detail"].default_value = 1.0; wvl.inputs["Detail Scale"].default_value = 1.2
     nt.links.new(R0, wvl.inputs["Vector"])
-    crease = H._smoothstep(nt, wvl.outputs["Fac"], 0.80, 0.98)          # narrow, soft-edged grooves
+    crease = H._smoothstep(nt, wvl.outputs["Fac"], 0.70, 0.98)          # narrow, soft-edged grooves
     for n in list(nt.nodes):                                            # the cellular net's height -> the grooves
-        if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and abs(n.inputs[1].default_value + 0.12) < 1e-6:
+        if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and abs(n.inputs[1].default_value + 0.025) < 1e-6:
             nt.links.new(crease, n.inputs[0])
-    dark = H._math(nt, "ADD", H._math(nt, "MULTIPLY", pore, 0.30), H._math(nt, "MULTIPLY", crease, 0.06))
+    dark = H._math(nt, "ADD", H._math(nt, "MULTIPLY", pore, 0.30), H._math(nt, "MULTIPLY", crease, 0.03))
     col2 = H._mixc(nt, dark, col, (0.17, 0.085, 0.06))
     # 2-6 mm mottling (a real dorsum is never one flat tone): darker and paler patches, plus darker knuckle creases
     R = H._attr(nt, "rest", "Vector")
