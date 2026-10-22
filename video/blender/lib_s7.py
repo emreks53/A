@@ -1375,7 +1375,7 @@ def build_fibre_interior(root_name, matrix, fibre_c=(0.0105, 0.02), fibre_r=0.18
 # inner boundary membrane, folded 3-D cristae) and soft translucent tubular T-tubules.
 
 
-MITO_VOL = dict(emit=8.0, emit_small=140.0, absorb=80.0, rim=0.10)   # hero / smaller chain bodies
+MITO_VOL = dict(emit=8.0, emit_small=140.0, absorb=80.0, rim=0.45)   # hero / smaller chain bodies
 
 
 # lib_s7 puts heroMito1/2 (and a sliver of fgMito0) inside myofibrils (the old alpha decals glowed through the
@@ -1394,7 +1394,7 @@ def upgrade_interior(inter, wave):
     for n_ in m_cr_fg.node_tree.nodes:
         if n_.type == "BSDF_PRINCIPLED":
             n_.inputs["Alpha"].default_value = 0.06                  # out of focus and near: folds all but invisible
-        elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 0.8) < 1e-6:
+        elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 2.4) < 1e-6:
             n_.inputs["To Min"].default_value = 0.0; n_.inputs["To Max"].default_value = 0.05
     m_in = mat_mito_inner_s9(MITO_VOL["emit_small"], "MitoInnerS9")        # the chains
     m_in_hero = mat_mito_inner_s9(MITO_VOL["emit"], "MitoInnerS9Hero")    # hero variants (10-12)
@@ -1421,8 +1421,6 @@ def upgrade_interior(inter, wave):
                     in_cache[nm + "_fgenv"].materials[0] = m_out_fg
                 inner = in_cache[nm + "_fg"]
                 o.data = in_cache[nm + "_fgenv"]
-                if o.name == "fgMito1":               # tilt in the screen plane: never an upright body rising from the frame edge
-                    o.rotation_euler.x -= math.radians(22)
             c = obj_from_mesh(o.name + "_in", inner); c.parent = o
             new.append(c)
             # glowing translucent organelle: no hard shadow from the inner glow light onto the fibrils
@@ -1666,13 +1664,13 @@ def mat_cristae_s9(wave):
     p.inputs["Base Color"].default_value = (0.44, 0.17, 0.03, 1)    # saturated amber folds (never cream)
     p.inputs["Emission Color"].default_value = (1.0, 0.40, 0.04, 1)
     p.inputs["Roughness"].default_value = 0.6
-    p.inputs["Alpha"].default_value = 0.75                           # soft, translucent internal folds
+    p.inputs["Alpha"].default_value = 0.95                           # soft internal folds, clearly visible
     p.inputs["Coat Weight"].default_value = 0.05                     # no glossy edge that could streak
     p.inputs["Coat Roughness"].default_value = 0.5
     p.inputs["Specular IOR Level"].default_value = 0.25
     src = p.inputs["Emission Strength"].links[0].from_socket
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.4
-    sh = _n(nt, "ShaderNodeMapRange"); sh.inputs["To Min"].default_value = 0.1; sh.inputs["To Max"].default_value = 0.8
+    sh = _n(nt, "ShaderNodeMapRange"); sh.inputs["To Min"].default_value = 0.25; sh.inputs["To Max"].default_value = 2.4
     nt.links.new(lw.outputs["Facing"], sh.inputs["Value"])
     mm = _n(nt, "ShaderNodeMath"); mm.operation = "MULTIPLY"
     nt.links.new(src, mm.inputs[0]); nt.links.new(sh.outputs[0], mm.inputs[1])
@@ -1703,6 +1701,9 @@ def soft_ttubules(so):
                 break
             loop.append(cur); seen.add(cur)
         pts = [Vector(me.vertices[i].co) for i in loop]
+        cc = sum(pts, Vector()) / len(pts)
+        if any(math.hypot(cc.x - fx, cc.z - fz) < 0.004 for fx, fz in _CLEARED):
+            continue                                       # its myofibril was cleared for the rolled hero
         # smooth the per-vertex jitter (radius and y) around the loop, keeping the ring's size
         c = sum(pts, Vector()) / len(pts)
         rad = [Vector((q.x - c.x, 0, q.z - c.z)).length for q in pts]
@@ -1764,11 +1765,68 @@ def mat_ttubule():
 
 
 HERO_KEY = dict(f0=1215, f1=1240)      # hero matrix glow: chain-bright while small, deep amber at the cut
+# Director round 4: the hero lies DIAGONALLY on screen (classic textbook mitochondrion), rolled about
+# the view axis (local X; screen right = +Z) around its own centre, so TRK_mito / the callout stay put.
+# The near out-of-focus pair is rolled to stay roughly parallel.
+ROLL = dict(hero=-30.0, fg=-30.0)
+NUCLEUS_SHIFT = (0.0, 0.0, 0.006)       # near out-of-focus myonucleus moves right: the hero's low end stays visible
+_CLEARED = []                           # (x, z) of myofibrils removed around the rolled hero
+
+
+def _roll_and_clear(inter):
+    """Roll the hero (and the fg pair), then remove the myofibril tubes and chain mitochondria the
+    rolled hero would intersect (the lib packs it in a narrow gap between vertical fibrils)."""
+    _CLEARED.clear()
+    for o in inter["objects"]:
+        if o.name == "myonucleus0":
+            o.location += Vector(NUCLEUS_SHIFT)
+    hero = inter["hero"]
+    hero.rotation_euler.x += math.radians(ROLL["hero"])
+    for o in inter["objects"]:
+        if o.name in ("fgMito0", "fgMito1"):
+            o.rotation_euler.x += math.radians(ROLL["fg"])
+    th = math.radians(ROLL["hero"])
+    L, Wd = 0.024, 0.007                                   # hero size (build_fibre_interior: variant 10)
+
+    def seg_dist(x, z):                                     # distance in the X-Z plane to the hero's rolled axis
+        return math.hypot(x, max(0.0, abs(z) - abs(L / 2 * math.sin(th))))
+    fib = next(o for o in inter["objects"] if o.name == "myofibrils")
+    me = fib.data
+    per = 24                                                # tubes_mesh: 2 rings x 12 verts per tube
+    kill = set()
+    for k in range(len(me.vertices) // per):
+        vs = [me.vertices[k * per + i].co for i in range(per)]
+        cx = sum(v.x for v in vs) / per; cz = sum(v.z for v in vs) / per
+        r = max(math.hypot(v.x - cx, v.z - cz) for v in vs)
+        if seg_dist(cx, cz) < r + Wd * 0.62:
+            kill.update(range(k * per, k * per + per)); _CLEARED.append((cx, cz))
+    if kill:
+        bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
+        bmesh.ops.delete(bm, geom=[bm.verts[i] for i in sorted(kill)], context="VERTS")
+        bm.to_mesh(me); bm.free(); me.update()
+    # chain mitochondria the rolled hero would touch (axis-to-axis distance, sampled)
+    bpy.context.view_layer.update()
+    hm = hero.matrix_local
+    hax = [hm @ Vector((0.0, L / 2 * t / 8, 0.0)) for t in range(-8, 9)]
+    gone = 0
+    for o in list(inter["objects"]):
+        if o.type != "MESH" or not o.name.startswith("mito_") or o.parent is not hero.parent:
+            continue
+        om = o.matrix_local
+        oax = [om @ Vector((0.0, 0.008 * t / 4, 0.0)) for t in range(-4, 5)]
+        if min((p1 - p2).length for p1 in hax for p2 in oax) < Wd / 2 + 0.0025 + 0.0012:
+            for c in list(o.children):
+                if c in inter["objects"]:
+                    inter["objects"].remove(c)
+                bpy.data.objects.remove(c)
+            inter["objects"].remove(o); bpy.data.objects.remove(o); gone += 1
+    print(f"[lib_s7] hero rolled {ROLL['hero']} deg: cleared {len(_CLEARED)} myofibrils, {gone} chain mitochondria")
 
 
 def upgrade_interior_s9(inter, wave, frames):
     """Volumetric double-membrane bean mitochondria, inner-fold cristae, soft T-tubules, plus the
     hero matrix-glow key (absolute frames; identical in sh09 and sh10). Returns the new objects."""
+    _roll_and_clear(inter)
     new = upgrade_interior(inter, wave)
     mh = bpy.data.materials["MitoInnerS9Hero"]
     bake_id(mh.node_tree, frames, 'nodes["matrix_emit"].inputs[1].default_value',
