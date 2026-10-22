@@ -80,3 +80,6 @@ Portföy toplam değeri ve net aktif değer gibi rakamlar **son faaliyet raporun
 > **22.10.2026 (kullanıcı isteği):** Alt bilgi ve iletişim adres satırı "Kısıklı Mah. Hanım Seti Sok No:38 Üsküdar / İstanbul" →
 > "Kısıklı Mah. Hanımseti Sok. No:38 Üsküdar / İstanbul" (sokak adı şirket belgelerindeki bitişik yazımla; "Sok." noktalı).
 > Belge ve haber metinlerindeki adresler eski kayıt olarak değişmedi (`araclar/degisiklikler/2026-10-22c-adres.py`).
+
+> **22.10.2026 (kullanıcı isteği):** Telefonda en alta esnek kaydırmada alt bilginin altında açık zemin görünüyordu; sayfanın
+> alt yarısında kök zemin alt bilgi rengine (#16191d) döner (`araclar/degisiklikler/2026-10-22d-alt-kaydirma.py`).
