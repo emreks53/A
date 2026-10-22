@@ -21,7 +21,7 @@
  ],
  "version": 1,
  "cuts": [
-  {"a": "sh01", "b": "sh02", "type": "light", "frames": 12, "flash": 1.0, "why": "sun flare upper right -> window flare"},
+  {"a": "sh01", "b": "sh02", "type": "light", "frames": 12, "flash": 1.0, "p50_cap": 0.89, "why": "sun flare upper right -> window flare"},
   {"a": "sh02", "b": "sh03", "type": "dissolve", "frames": 6, "why": "continuous tilt/boom down onto the table"},
   {"a": "sh03", "b": "sh04", "type": "cut", "frames": 0, "why": "graphic match: round bowl -> lone seedling (hard cut, sound cuts here too)"},
   {"a": "sh04", "b": "sh05", "type": "cut", "frames": 0, "why": "hard cut: the suns do not line up (sh04 sun high, sh05 sun low in the palm); a light dissolve put the sun in the reaching hand"},
