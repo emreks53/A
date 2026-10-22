@@ -680,11 +680,11 @@ function drawCalloutCore(el, f, t, prim, sec, opts = {}) {
   }
   // optional per-callout scrim (overlays.json callout "scrim": k): a soft, NOT luma-gated vignette behind the label
   // for a label on a flat bright plate (the luma-gated local darkening backs off on flat backgrounds). A callout
-  // with a scrim eases the scrim AND its local box in with the ring + label reveal (smoothstep over sync + 0.02 ..
-  // 0.52 s; the label wipes on over sync + 0.10 .. 0.38) and out over the last 0.31 s (across the text exit,
+  // with a scrim eases the scrim AND its local box in with the ring + label reveal (smoothstep over sync - 0.04 ..
+  // 0.46 s; the label wipes on over sync + 0.10 .. 0.38) and out over the last 0.31 s (across the text exit,
   // out - 0.22 .. - 0.10), so the darkening never pops on or off in a frame
   let bw = ta;
-  if (el.scrim) bw = a * smooth(lin(t, ts + 0.02, ts + 0.52)) * (1 - smooth(lin(t, to - 0.31, to)));
+  if (el.scrim) bw = a * smooth(lin(t, ts - 0.04, ts + 0.46)) * (1 - smooth(lin(t, to - 0.31, to)));
   if (bw > 0.05) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0.6 * bw, 1]);
   if (el.scrim && bw * el.scrim > 0.001) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0, 0, el.scrim * bw]);
 }
