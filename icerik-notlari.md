@@ -83,3 +83,4 @@ Portföy toplam değeri ve net aktif değer gibi rakamlar **son faaliyet raporun
 
 > **22.10.2026 (kullanıcı isteği):** Telefonda en alta esnek kaydırmada alt bilginin altında açık zemin görünüyordu; sayfanın
 > alt yarısında kök zemin alt bilgi rengine (#16191d) döner (`araclar/degisiklikler/2026-10-22d-alt-kaydirma.py`).
+> iPhone'da betik işe yaramadı; yerine kalıcı CSS: kök zemin koyu, belgenin üstünde açık şerit (`2026-10-22e-alt-zemin-css.py`).
