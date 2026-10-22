@@ -1,6 +1,6 @@
 # fix-sh09 round 3
 
-The fix commit is b50ccbe (round 3b), which builds on 67f3496. It changes `lib_s7.py`, by additions only, and `sh09.py`. The re-render range is 1174-1255.
+The fix commit is dfb1df1 (round 3c), which builds on b50ccbe and 67f3496. It changes `lib_s7.py`, by additions only, and `sh09.py`. The re-render range is 1174-1255.
 
 ## What changed
 * **Shared code:** the interior upgrade now lives in lib_s7 as new functions. `upgrade_interior_s9(inter, wave, frames)` covers the bean bodies, cristae, membranes, T-tubules, the HERO_NUDGE offsets and the hero matrix-glow key (HERO_KEY, absolute frames 1215-1240). sh10 calls the same function right after `build_fibre_interior()`, so the f1250 cut matches by construction. No existing lib_s7 function changed, so sh06 is untouched.
@@ -20,31 +20,32 @@ The fix commit is b50ccbe (round 3b), which builds on 67f3496. It changes `lib_s
 * **Foreground pair:** it gets its own faint membrane (alpha 0.15) and dim folds (an object-level material), so its folds no longer read as "bread-roll" spots. fgMito0, the out-of-focus body that sat over the hero's top, is moved up and right, still clear of the fibrils. heroMito1's y nudge is reverted.
 * **Folds:** softer and more translucent, with per-fold thickness and reach variation, and a bow of 0.012 so no fold curls into a hook.
 
-## Gates (final frames of b50ccbe, full quality, 864x1536, measured on the hero silhouette)
-| Frame | H | S | V | R>=254 px | Ridges touching a fold | Box band contrast |
-|---|---|---|---|---|---|---|
-| 1248 | 25.3 | 82% | 69% | 0 | 0 | 8.0% |
-| 1250 | 25.5 | 81% | 69% | 0 | 0 | 8.2% |
-| 1255 | 25.4 | 80% | 70% | 0 | 0 | 9.1% |
-| 1244 | 25.1 | 84% | 66% | 0 | 0 | 6.8% |
-| 1236 | 24.2 | 84% | 56% | 0 | 0 | 9.0% |
-| 1210/1214/1220 | 22-25 | - | - | 0 | 0 | 13-19% |
+## Round 3c (second verifier pass, on b50ccbe)
+* **Folds:** they are placed by a random partition of the span, with every gap at least the no-crossing minimum. Tilt, undulation and bow are smaller, so about 6 folds fit on the hero. Alpha is 0.75 and the glow is softer. The result is irregular, soft inner membranes rather than evenly spaced slashes.
+* **Foreground pair:** its folds are nearly invisible (alpha 0.06, near-zero glow), so no oval spots remain.
 
-* **Ridges:** the only long vertical ridges are the body's silhouette rim.
-* **Foreground glints:** no high-pass blob above +10 on the foreground bodies. The only amber high-pass lines above 10 are fibril edges.
-* **Midline:** at f1250 it lies on TRK_mito (428, 675 at 864 px). The verifier measured 428.5 against 430.5 for the farm frame.
+## Gates (final frames of dfb1df1, full quality, 864x1536, on the exact projected hero silhouette)
+| Frame | H | S | V | R>=254 px | Ridges touching a fold | Box band contrast | fg glint (own silhouette) |
+|---|---|---|---|---|---|---|---|
+| 1248 | 25.6 | 82% | 68% | 0 | 0 | 7.3% | +6.3 |
+| 1250 | 25.6 | 81% | 69% | 0 | 0 | 7.0% | +7.0 |
+| 1255 | 25.6 | 80% | 70% | 0 | 0 | 7.6% | +4.7 |
+| 1244 | 25.3 | 83% | 66% | 0 | 0 | 7.0% | +5.7 |
+| 1236 | 24.3 | 83% | 56% | 0 | 0 | 4.9% | +7.4 |
+| 1210/1214/1220 | 22-25 | - | - | 0 | 0 | 13-19% | +10 to +14 |
+
+* **Foreground glint at 1210-1220:** the foreground pair is out of focus close to the camera, and its projected silhouette spans x 256-647. The peaks above +10 there are rims of the bodies behind it, seen through the faint veil (for example heroMito2 at x 287-306), not glints on the foreground bodies.
+* **Midline:** at f1250 it lies on TRK_mito (428, 675 at 864 px). The verifier measured 427-428.5 against 430.5 for the farm frame.
 * **Overlay:** the real co_mito overlay lands centred on the body at 1213-1243.
 * **Checks:**
 
   | Check | Result |
   |---|---|
-  | Folds (mesh check) | 32 pairs, 0 overlaps |
+  | Folds (mesh check) | 35 pairs, 0 overlaps |
   | Clearance | 0 of the 112 bodies has a vertex inside a myofibril |
   | Join | 1173 is 0.40/255 from the farm frame |
   | Determinism | 1229-1231 vs 1230-1231: bit-identical frames 1230 and 1231 |
-  | Cost | 50-55 s/frame on 4 cores (61 s at f1173) |
-
- (final settings, 80% resolution).
+  | Cost | 49-55 s/frame on 4 cores (58 s at f1173) |
 
 ## Files
 * `phone_strip_1210-1255_step5.jpg`
