@@ -137,7 +137,18 @@ def add_fog(mat, glow_gain=1.6, grazing_haze=0.0, halo=0.0):
     # colour shift (distant things go blue-green, red is lost first)
     sig_m = 0.25 * FOG_SIGMA[0] + 0.5 * FOG_SIGMA[1] + 0.25 * FOG_SIGMA[2]
     mlt = nt.nodes.new("ShaderNodeMath"); mlt.operation = "MULTIPLY"; mlt.inputs[1].default_value = -sig_m
-    nt.links.new(lp.outputs["Ray Length"], mlt.inputs[0])
+    # a camera ray that passed through a (transparent) fake light shaft restarts its Ray Length at the shaft:
+    # use the true camera distance there, or everything behind a shaft loses its fog and reads as a dark streak.
+    # (factor is exactly 0 on every other path, so those keep the plain Ray Length)
+    cd = nt.nodes.new("ShaderNodeCameraData")
+    td = nt.nodes.new("ShaderNodeMath"); td.operation = "GREATER_THAN"; td.inputs[1].default_value = 0.5
+    nt.links.new(lp.outputs["Transparent Depth"], td.inputs[0])
+    tdc = nt.nodes.new("ShaderNodeMath"); tdc.operation = "MULTIPLY"
+    nt.links.new(td.outputs[0], tdc.inputs[0]); nt.links.new(lp.outputs["Is Camera Ray"], tdc.inputs[1])
+    rlen = nt.nodes.new("ShaderNodeMix"); rlen.data_type = "FLOAT"
+    nt.links.new(tdc.outputs[0], rlen.inputs["Factor"])
+    nt.links.new(lp.outputs["Ray Length"], rlen.inputs["A"]); nt.links.new(cd.outputs["View Distance"], rlen.inputs["B"])
+    nt.links.new(rlen.outputs["Result"], mlt.inputs[0])
     if grazing_haze > 0:
         # extra extinction when the surface is seen at a grazing angle (long, scattering paths under it)
         lw = nt.nodes.new("ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.5
@@ -178,6 +189,9 @@ def add_fog(mat, glow_gain=1.6, grazing_haze=0.0, halo=0.0):
 
 # --------------------------------------------------------------------------- water
 
+TIR_VEIL = 4.0      # in-scatter veil over the total-internal-reflection patches in the look-up
+
+
 def build_surface(ctx):
     bpy.ops.mesh.primitive_plane_add(size=2)
     s = bpy.context.object; s.name = "Surface"
@@ -207,7 +221,48 @@ def build_surface(ctx):
     nt.links.new(tcs.outputs["Object"], smp.inputs["Vector"]); nt.links.new(smp.outputs[0], nz.inputs["Vector"])
     bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 1.0; bp.inputs["Distance"].default_value = 0.008
     nt.links.new(nz.outputs[0], bp.inputs["Height"]); nt.links.new(bp.outputs[0], g.inputs["Normal"])
-    nt.links.new(g.outputs[0], nt.nodes["Material Output"].inputs[0])
+    # look-up only: the edge of Snell's window blends gradually into a slightly rough total internal
+    # reflection (soft graded dark patches instead of hard ink-blots). Keyed back to the plain glass during the
+    # tilt down, so the rest of the shot renders exactly as before (a zero-weight closure is skipped).
+    gm = nt.nodes.new("ShaderNodeVectorMath"); gm.operation = "DOT_PRODUCT"
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    nt.links.new(bp.outputs[0], gm.inputs[0]); nt.links.new(geo.outputs["Incoming"], gm.inputs[1])
+    ca = nt.nodes.new("ShaderNodeMath"); ca.operation = "ABSOLUTE"; nt.links.new(gm.outputs["Value"], ca.inputs[0])
+    win = nt.nodes.new("ShaderNodeMapRange"); win.interpolation_type = "SMOOTHSTEP"
+    win.inputs["From Min"].default_value = 0.662; win.inputs["From Max"].default_value = 0.69   # critical cos = 0.661
+    nt.links.new(ca.outputs[0], win.inputs[0])
+    rf = nt.nodes.new("ShaderNodeBsdfRefraction"); rf.inputs["IOR"].default_value = N_W; rf.inputs["Roughness"].default_value = 0.0
+    gl = nt.nodes.new("ShaderNodeBsdfGlossy"); gl.inputs["Roughness"].default_value = 0.14
+    for b in (rf, gl): nt.links.new(bp.outputs[0], b.inputs["Normal"])
+    soft = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(win.outputs[0], soft.inputs[0]); nt.links.new(gl.outputs[0], soft.inputs[1]); nt.links.new(rf.outputs[0], soft.inputs[2])
+    # the reflected patches are veiled by light scattered in the water between lens and surface (brighter
+    # toward the sun): graded, never ink-black
+    d_up = refracted_up()
+    vd = nt.nodes.new("ShaderNodeVectorMath"); vd.operation = "DOT_PRODUCT"; vd.inputs[1].default_value = -d_up
+    nt.links.new(geo.outputs["Incoming"], vd.inputs[0])          # = cos(view ray, sun direction)
+    vg = nt.nodes.new("ShaderNodeMapRange"); vg.interpolation_type = "SMOOTHSTEP"
+    vg.inputs["From Min"].default_value = 0.6; vg.inputs["From Max"].default_value = 1.0
+    vg.inputs["To Min"].default_value = 0.35; vg.inputs["To Max"].default_value = 1.0
+    nt.links.new(vd.outputs["Value"], vg.inputs[0])
+    refl = nt.nodes.new("ShaderNodeMath"); refl.operation = "SUBTRACT"; refl.inputs[0].default_value = 1.0
+    nt.links.new(win.outputs[0], refl.inputs[1])
+    vlp = nt.nodes.new("ShaderNodeLightPath")
+    vm1 = nt.nodes.new("ShaderNodeMath"); vm1.operation = "MULTIPLY"
+    nt.links.new(refl.outputs[0], vm1.inputs[0]); nt.links.new(vg.outputs[0], vm1.inputs[1])
+    vm2 = nt.nodes.new("ShaderNodeMath"); vm2.operation = "MULTIPLY"
+    nt.links.new(vm1.outputs[0], vm2.inputs[0]); nt.links.new(vlp.outputs["Is Camera Ray"], vm2.inputs[1])
+    vm3 = nt.nodes.new("ShaderNodeMath"); vm3.operation = "MULTIPLY"; vm3.inputs[1].default_value = TIR_VEIL
+    nt.links.new(vm2.outputs[0], vm3.inputs[0])
+    vem = nt.nodes.new("ShaderNodeEmission"); vem.inputs["Color"].default_value = (0.20, 0.42, 0.62, 1)
+    nt.links.new(vm3.outputs[0], vem.inputs["Strength"])
+    vad = nt.nodes.new("ShaderNodeAddShader")
+    nt.links.new(soft.outputs[0], vad.inputs[0]); nt.links.new(vem.outputs[0], vad.inputs[1])
+    wsel = nt.nodes.new("ShaderNodeMixShader"); wsel.name = "soft_tir"
+    nt.links.new(g.outputs[0], wsel.inputs[1]); nt.links.new(vad.outputs[0], wsel.inputs[2])
+    for f, v in ((0, 1.0), (600, 1.0), (640, 0.0)):
+        wsel.inputs[0].default_value = v; wsel.inputs[0].keyframe_insert("default_value", frame=f)
+    nt.links.new(wsel.outputs[0], nt.nodes["Material Output"].inputs[0])
     C.assign(s, m)
     s.visible_shadow = False
     s.visible_diffuse = False        # diffuse bounces see the sky directly (cheaper, same look)
@@ -614,28 +669,57 @@ def t2f_(t):
     return C.t2f(t)
 
 
+RAY_GAIN = 0.15     # look-up rays are seen against the bright window (many broad, overlapping wedges)
+N_RAYS = 44
+
+
 def build_shafts(ctx, t_allah, rng, n=56):
-    """Fake god rays: thin soft emissive cylinders along the refracted sun ray, camera-visible only.
-    They converge on the sun in perspective when looking up, flicker with the ripples and fade with depth."""
-    d_dn = -refracted_up()
+    """Fake god rays: soft emissive cones along the refracted sun ray, camera-visible only.
+    Two families (object property "ray"): look-up rays (ray=1) are many broad faint wedges that start near the sun's
+    point on the surface and end in front of the lens, so they fan out from the sun disc in the opening look-up; column
+    shafts (ray=0) taper and fade with depth and shimmer with the caustics in the plant section."""
+    d_up = refracted_up(); d_dn = -d_up
     m, nt, p = C.new_mat("shaft"); nt.nodes.remove(p)
     m.cycles.emission_sampling = "NONE"        # camera-only glow, must not become a sampled mesh light
     out = nt.nodes["Material Output"]
-    lw = nt.nodes.new("ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.5
-    edge = nt.nodes.new("ShaderNodeMath"); edge.operation = "SUBTRACT"; edge.inputs[0].default_value = 1.0
-    nt.links.new(lw.outputs["Facing"], edge.inputs[1])        # 1 where the cylinder faces the camera
-    soft = nt.nodes.new("ShaderNodeMath"); soft.operation = "POWER"; soft.inputs[1].default_value = 2.5
-    nt.links.new(edge.outputs[0], soft.inputs[0])
+    # cross profile: |N . V_perp| with V_perp = view ray minus its component along the shaft axis, so the
+    # profile stays soft (and non-zero) even when a ray is seen nearly end-on in the look-up
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    ax = nt.nodes.new("ShaderNodeVectorTransform"); ax.vector_type = "VECTOR"
+    ax.convert_from = "OBJECT"; ax.convert_to = "WORLD"; ax.inputs[0].default_value = (0, 0, 1)
+    axn = nt.nodes.new("ShaderNodeVectorMath"); axn.operation = "NORMALIZE"; nt.links.new(ax.outputs[0], axn.inputs[0])
+    va = nt.nodes.new("ShaderNodeVectorMath"); va.operation = "DOT_PRODUCT"
+    nt.links.new(geo.outputs["Incoming"], va.inputs[0]); nt.links.new(axn.outputs[0], va.inputs[1])
+    vs_ = nt.nodes.new("ShaderNodeVectorMath"); vs_.operation = "SCALE"
+    nt.links.new(axn.outputs[0], vs_.inputs[0]); nt.links.new(va.outputs["Value"], vs_.inputs["Scale"])
+    vp = nt.nodes.new("ShaderNodeVectorMath"); vp.operation = "SUBTRACT"
+    nt.links.new(geo.outputs["Incoming"], vp.inputs[0]); nt.links.new(vs_.outputs[0], vp.inputs[1])
+    vpn = nt.nodes.new("ShaderNodeVectorMath"); vpn.operation = "NORMALIZE"; nt.links.new(vp.outputs[0], vpn.inputs[0])
+    nd = nt.nodes.new("ShaderNodeVectorMath"); nd.operation = "DOT_PRODUCT"
+    nt.links.new(geo.outputs["Normal"], nd.inputs[0]); nt.links.new(vpn.outputs[0], nd.inputs[1])
+    edge = nt.nodes.new("ShaderNodeMath"); edge.operation = "ABSOLUTE"
+    nt.links.new(nd.outputs["Value"], edge.inputs[0])            # 1 on the shaft's centre line, 0 at its sides
+    soft = nt.nodes.new("ShaderNodeMath"); soft.operation = "POWER"; soft.inputs[1].default_value = 4.0
+    nt.links.new(edge.outputs[0], soft.inputs[0])             # gaussian-like cross profile, no hard sides
     tc = nt.nodes.new("ShaderNodeTexCoord")
     sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Generated"], sep.inputs[0])
-    # Generated Z: 0 at the bottom end, 1 at the surface end -> brighter near the surface, soft ends
-    fade = nt.nodes.new("ShaderNodeFloatCurve")
-    cv = fade.mapping.curves[0]
-    cv.points[0].location = (0.0, 0.0); cv.points[1].location = (1.0, 0.0)
-    for x, y in ((0.25, 0.25), (0.7, 0.8), (0.93, 1.0)):
-        cv.points.new(x, y)
-    fade.mapping.update()
-    nt.links.new(sep.outputs["Z"], fade.inputs["Value"])
+    kind = nt.nodes.new("ShaderNodeAttribute"); kind.attribute_type = "OBJECT"; kind.attribute_name = "ray"
+    def curve(pts):
+        fc_ = nt.nodes.new("ShaderNodeFloatCurve")
+        cv = fc_.mapping.curves[0]
+        cv.points[0].location = pts[0]; cv.points[1].location = pts[-1]
+        for xy in pts[1:-1]:
+            cv.points.new(*xy)
+        fc_.mapping.update()
+        nt.links.new(sep.outputs["Z"], fc_.inputs["Value"])
+        return fc_
+    # Generated Z: 0 at the deep end, 1 at the surface end. Column shafts lose light and contrast with depth
+    # (near-exponential), look-up rays fade out before the lens and dissolve into the sun glare
+    fade_col = curve([(0.0, 0.0), (0.2, 0.03), (0.45, 0.16), (0.72, 0.5), (0.9, 0.9), (0.96, 1.0), (1.0, 0.0)])
+    fade_ray = curve([(0.0, 0.0), (0.12, 0.75), (0.3, 1.0), (0.55, 0.65), (0.78, 0.2), (1.0, 0.0)])
+    fmix = nt.nodes.new("ShaderNodeMix"); fmix.data_type = "FLOAT"
+    nt.links.new(kind.outputs["Fac"], fmix.inputs["Factor"])
+    nt.links.new(fade_col.outputs[0], fmix.inputs["A"]); nt.links.new(fade_ray.outputs[0], fmix.inputs["B"])
     ob = nt.nodes.new("ShaderNodeObjectInfo")
     fl = nt.nodes.new("ShaderNodeTexNoise"); fl.noise_dimensions = "2D"; fl.inputs["Scale"].default_value = 1.0
     fl.inputs["Detail"].default_value = 1
@@ -649,12 +733,43 @@ def build_shafts(ctx, t_allah, rng, n=56):
     flk = nt.nodes.new("ShaderNodeMapRange"); flk.inputs["From Min"].default_value = 0.3
     flk.inputs["From Max"].default_value = 0.7; flk.inputs["To Min"].default_value = 0.0
     nt.links.new(fl.outputs[0], flk.inputs[0])
+    # shimmer: the focusing ripple cells (caustic web: ~0.6 cells/s) drift over the shaft, so its brightness
+    # varies along its length and wanders down it
+    sm = nt.nodes.new("ShaderNodeMapping")
+    sm.inputs["Location"].default_value = (0, 0, 0); sm.inputs["Location"].keyframe_insert("default_value", frame=0)
+    sm.inputs["Location"].default_value = (0, -100 * 0.6, 0); sm.inputs["Location"].keyframe_insert("default_value", frame=100 * 24)
+    smc = nt.nodes.new("ShaderNodeCombineXYZ")
+    nt.links.new(rnd.outputs[0], smc.inputs[0])
+    zs = nt.nodes.new("ShaderNodeMath"); zs.operation = "MULTIPLY"; zs.inputs[1].default_value = 3.0
+    nt.links.new(sep.outputs["Z"], zs.inputs[0]); nt.links.new(zs.outputs[0], smc.inputs[1])
+    nt.links.new(smc.outputs[0], sm.inputs[0])
+    sn = nt.nodes.new("ShaderNodeTexNoise"); sn.noise_dimensions = "2D"; sn.inputs["Scale"].default_value = 1.0
+    sn.inputs["Detail"].default_value = 1
+    nt.links.new(sm.outputs[0], sn.inputs["Vector"])
+    snr = nt.nodes.new("ShaderNodeMapRange"); snr.inputs["From Min"].default_value = 0.35
+    snr.inputs["From Max"].default_value = 0.65; snr.inputs["To Min"].default_value = 0.35
+    nt.links.new(sn.outputs[0], snr.inputs[0])
     a1 = nt.nodes.new("ShaderNodeMath"); a1.operation = "MULTIPLY"
-    nt.links.new(soft.outputs[0], a1.inputs[0]); nt.links.new(fade.outputs[0], a1.inputs[1])
+    nt.links.new(soft.outputs[0], a1.inputs[0]); nt.links.new(fmix.outputs[0], a1.inputs[1])
     a2 = nt.nodes.new("ShaderNodeMath"); a2.operation = "MULTIPLY"
     nt.links.new(a1.outputs[0], a2.inputs[0]); nt.links.new(flk.outputs[0], a2.inputs[1])
+    a3 = nt.nodes.new("ShaderNodeMath"); a3.operation = "MULTIPLY"
+    nt.links.new(a2.outputs[0], a3.inputs[0]); nt.links.new(snr.outputs[0], a3.inputs[1])
+    kg = nt.nodes.new("ShaderNodeMapRange"); kg.inputs["To Min"].default_value = 1.0; kg.inputs["To Max"].default_value = RAY_GAIN
+    nt.links.new(kind.outputs["Fac"], kg.inputs[0])
+    # the look-up rays end just in front of the lens: once the tilt down starts they would swing past it as
+    # broad bars, so they fade out during the first part of the tilt
+    t_tilt0 = t_allah + 0.45
+    # (the global shaft gain swells on "Allah"; the look-up rays only follow part of it, then fade)
+    for t, k in ((ctx.t0 - 0.3, RAY_GAIN), (t_allah - 0.1, RAY_GAIN), (t_tilt0, RAY_GAIN * 0.7), (t_tilt0 + 0.3, 0.0)):
+        kg.inputs["To Max"].default_value = k; kg.inputs["To Max"].keyframe_insert("default_value", frame=t * 24)
+    a4 = nt.nodes.new("ShaderNodeMath"); a4.operation = "MULTIPLY"
+    nt.links.new(a3.outputs[0], a4.inputs[0]); nt.links.new(kg.outputs[0], a4.inputs[1])
+    bri = nt.nodes.new("ShaderNodeAttribute"); bri.attribute_type = "OBJECT"; bri.attribute_name = "bri"
+    a5 = nt.nodes.new("ShaderNodeMath"); a5.operation = "MULTIPLY"
+    nt.links.new(a4.outputs[0], a5.inputs[0]); nt.links.new(bri.outputs["Fac"], a5.inputs[1])
     gain = nt.nodes.new("ShaderNodeMath"); gain.operation = "MULTIPLY"; gain.name = "shaft_gain"
-    nt.links.new(a2.outputs[0], gain.inputs[0])
+    nt.links.new(a5.outputs[0], gain.inputs[0])
     em = nt.nodes.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (0.70, 0.97, 0.92, 1)
     nt.links.new(gain.outputs[0], em.inputs["Strength"])
     tr = nt.nodes.new("ShaderNodeBsdfTransparent")
@@ -664,20 +779,38 @@ def build_shafts(ctx, t_allah, rng, n=56):
     for t, k in ((ctx.t0 - 0.3, 1.2), (t_allah - 0.1, 1.2), (t_allah + 0.6, 2.0), (24.9, 0.5), (25.4, 0.2), (27.5, 0.15), (28.3, 0.0)):
         gain.inputs[1].default_value = k; gain.inputs[1].keyframe_insert("default_value", frame=t * 24)
     col = C.collection("Shafts")
+    # opening camera (mid look-up) and the point where its axis meets the surface (= the sun's position)
+    cam_a = Vector((0.0, -0.035, -0.79))
+    e1 = Vector((1.0, 0.0, 0.0)); e2 = d_up.cross(e1).normalized()
+    rr = random.Random(5051)     # look-up rays: own stream (the column shafts keep their layout)
+    specs = []
+    for k in range(N_RAYS):
+        # lateral offset from the lens axis -> on screen the ray radiates from the sun
+        a_ = rr.uniform(0, 6.283); r_ = 0.02 + 0.14 * rr.random() ** 1.2
+        q = cam_a + (e1 * math.cos(a_) + e2 * math.sin(a_)) * r_
+        top = q + d_up * ((-0.02 - q.z) / d_up.z)
+        zt = (top - cam_a).dot(d_up)
+        # deep end in front of the lens, some past the frame edge, some mid-frame (focal length ~1507 px)
+        zb = max(0.06, r_ * 1507.0 / rr.uniform(450.0, 1300.0))
+        # wedge: 12-30 px wide at the sun end, 200-420 px at the outer end
+        r = zt * rr.uniform(6.0, 15.0) / 1507.0; rb = zb * rr.uniform(100.0, 210.0) / 1507.0
+        specs.append((f"ray_{k}", 1.0, rr.uniform(0.3, 1.0), top, zt - zb, r, rb))
     for i in range(n):
-        r = rng.uniform(0.012, 0.045)
-        L = rng.uniform(0.9, 1.7)
-        bpy.ops.mesh.primitive_cylinder_add(vertices=10, radius=r, depth=L, end_fill_type="NOTHING")
-        o = bpy.context.object; o.name = f"shaft_{i}"
+        if i < 18:   # (former look-up slots: draws kept so the column shafts below stay where they were)
+            for _ in range(4): rng.random()
+            continue
+        r = rng.uniform(0.03, 0.07); rb = r * 0.3
+        L = rng.uniform(0.7, 1.4)
+        top = Vector((rng.uniform(-1.1, 1.1), rng.uniform(-0.6, 1.6), -0.02))
+        specs.append((f"shaft_{i}", 0.0, 1.0, top, L, r, rb))
+    for name, kind_, bri_, top, L, r, rb in specs:
+        # cone: radius1 at the deep end (-Z), radius2 at the surface end (+Z)
+        bpy.ops.mesh.primitive_cone_add(vertices=12, radius1=rb, radius2=r, depth=L, end_fill_type="NOTHING")
+        o = bpy.context.object; o.name = name
+        o["ray"] = kind_; o["bri"] = bri_
         for c in list(o.users_collection): c.objects.unlink(o)
         col.objects.link(o)
         C.smooth_shade(o)
-        # top end just under the surface, spread over the area the camera looks through
-        if i < 18:   # around the opening view (looking up), so rays stream down past the lens
-            a_ = rng.uniform(0, 6.283); r_ = rng.uniform(0.06, 0.45)
-            top = Vector((math.cos(a_) * r_, 0.12 + math.sin(a_) * r_, -0.02))
-        else:
-            top = Vector((rng.uniform(-1.1, 1.1), rng.uniform(-0.6, 1.6), -0.02))
         o.rotation_mode = "QUATERNION"
         # local +Z toward the surface so Generated z = 1 is the top end
         o.rotation_quaternion = (-d_dn).to_track_quat("Z", "Y")
@@ -690,6 +823,44 @@ def build_shafts(ctx, t_allah, rng, n=56):
         o.hide_render = False; o.keyframe_insert("hide_render", frame=t2f_(28.4))
         o.hide_render = True; o.keyframe_insert("hide_render", frame=t2f_(28.4) + 1)
     return m
+
+
+def cull_shafts(ctx, cam, f_from, f_to, x_max=0.2):
+    """Remove water-column shafts that pass through the left edge of the plant-section frames (there a pale
+    vertical bar crosses the bright ripple patch of the surface and reads as a cross-like silhouette) or that
+    pass within 0.3 m of the lens."""
+    from bpy_extras.object_utils import world_to_camera_view
+    sc = bpy.context.scene
+    objs = [o for o in bpy.data.collections["Shafts"].objects if o.get("ray", 0.0) < 0.5]
+    hit = set()
+    for f in range(f_from, f_to + 1, 2):
+        sc.frame_set(f)
+        for o in objs:
+            if o.name in hit:
+                continue
+            mw = o.matrix_world
+            zs = [v.co.z for v in o.data.vertices]; z0, z1 = min(zs), max(zs)
+            for k in range(9):
+                pc = world_to_camera_view(sc, cam, mw @ Vector((0, 0, z0 + (z1 - z0) * (0.25 + 0.75 * k / 8))))
+                if pc.z > 0 and 0.0 <= pc.y <= 1.0 and -0.05 <= pc.x <= x_max:
+                    hit.add(o.name); break
+    # ... and the ones that pass close to the lens anywhere in the shot (they would read as broad posts)
+    for f in range(ctx.f0, t2f_(28.4) + 1, 2):
+        sc.frame_set(f)
+        cp = cam.matrix_world.translation
+        for o in objs:
+            if o.name in hit:
+                continue
+            mw = o.matrix_world
+            zs = [v.co.z for v in o.data.vertices]
+            a, b = mw @ Vector((0, 0, min(zs))), mw @ Vector((0, 0, max(zs)))
+            u = max(0.0, min(1.0, (cp - a).dot(b - a) / (b - a).length_squared))
+            if (a + (b - a) * u - cp).length < 0.3:
+                hit.add(o.name)
+    sc.frame_set(ctx.f0)
+    for nm in sorted(hit):
+        bpy.data.objects.remove(bpy.data.objects[nm])
+    print(f"[sh05] culled shafts {sorted(hit)}")
 
 # --------------------------------------------------------------------------- build
 
@@ -829,6 +1000,7 @@ def build(ctx):
         cam.keyframe_insert("location", frame=f); cam.keyframe_insert("rotation_quaternion", frame=f)
         foc.location = loc + d * fd; foc.keyframe_insert("location", frame=f)
     C.handheld(cam, amp_loc=0.0005, amp_rot=0.0, speed=0.4, seed=5)
+    cull_shafts(ctx, cam, 600, 645)
 
     sc = bpy.context.scene
     if os.environ.get("S6_DEBUG") == "caustics":
@@ -901,7 +1073,7 @@ def build(ctx):
         for o in bpy.data.collections["Shafts"].objects: o.hide_render = True
     if "nobot" in prof: bpy.data.objects["Bottom"].hide_render = True
     return {"final_spp": 12, "preview_spp": 20, "clamp_direct": 12.0, "max_bounces": 6, "diffuse_bounces": 1, "glossy_bounces": 1,
-            "transmission_bounces": 6, "transparent_bounces": 12, "volume_bounces": 0, "volume_step_rate": 8.0,
+            "transmission_bounces": 6, "transparent_bounces": 64, "volume_bounces": 0, "volume_step_rate": 8.0,
             "clamp_indirect": 2.5}
 
 
