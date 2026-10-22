@@ -28,7 +28,8 @@ T_RACK = T_HER - 0.32                                   # far-focus rack start (
 T_END = 99.65                                           # orbit settles (dissolve handle)
 Z_TOP = 3.8                                             # m; crane height over the canopy (heads <= 2.2 m)
 SUN_DIP = float(os.environ.get("S2_DIP", 0.5))         # sun lamp eased off over the down-sun reveal 2242-2300
-SUN_WHITE = 600.0                                       # K added to the sun from 2270-2296 on
+SKY_K = 0.40                                            # warm-sky lift over the compassion line 2278-2340
+SKY_WARM = (1.0, 0.66, 0.36, 1)                         # richer sky tint over that line (2280-2340), then the SU tint
 T_SUNUP = (98.40, 99.30)                                # 'Allah': the light swells into a golden sunrise
 
 
@@ -394,7 +395,7 @@ def build(ctx):
               haze=(0.80, 0.55, 0.20, 1), glare_deg=32.0, core=50.0, core_deg=1.1, wash=0.4, wash_pow=2.5,
               glare_col=(1.0, 0.70, 0.40, 1))
     SU.update(__import__("json").loads(os.environ.get("S2_SU", "{}")))
-    print(f"[sh14a] SUN_DIP {SUN_DIP}  SUN_WHITE {SUN_WHITE}  SU {SU}", flush=True)
+    print(f"[sh14a] SUN_DIP {SUN_DIP}  SKY_K {SKY_K}  SKY_WARM {SKY_WARM}  SU {SU}", flush=True)
     sky, bg = C.world_sky(sun_elev_deg=2.0, sun_rot_deg=0, strength=0.2, sun_disc=False, air=1.8, aerosol=7.0)
     sky.sun_rotation = math.atan2(SUN_DIR2.x, SUN_DIR2.y)
     # humid sunrise: golden grade on the sky (the physical sky at 12 deg reads too grey under AgX)
@@ -435,19 +436,22 @@ def build(ctx):
         g2 = C.remap(t, *T_SUNUP, C.smooth)
         sky.sun_elevation = math.radians(e)
         sky.keyframe_insert("sun_elevation", frame=f)
-        bg.inputs["Strength"].default_value = C.lerp(0.04, 0.05, g) * (1 + SU["sky"] * g2)
+        # 'her şeye şefkat eden' (2296+): the sky carries the lift (warmer, a touch brighter) - never the sun/film,
+        # which bleach the front-lit rays to daisy-cream
+        sky_up = C.remap(f, 2278, 2296, C.smooth) - C.remap(f, 2320, 2340, C.smooth)
+        bg.inputs["Strength"].default_value = C.lerp(0.04, 0.05, g) * (1 + SU["sky"] * g2) * (1 + SKY_K * sky_up)
         bg.inputs["Strength"].keyframe_insert("default_value", frame=f)
-        tint.inputs[7].default_value = C.lerp((1.0, 0.80, 0.55, 1), SU["tint"], g2)
+        t_c = C.lerp(C.lerp((1.0, 0.80, 0.55, 1), SU["tint"], C.remap(f, 2280, 2300, C.smooth)), SU["tint"], g2)
+        tint.inputs[7].default_value = C.lerp(t_c, SKY_WARM, C.remap(f, 2280, 2300, C.smooth) - C.remap(f, 2320, 2340, C.smooth))
         tint.inputs[7].keyframe_insert("default_value", frame=f)
         sun.rotation_euler = Euler((math.radians(90 - e), 0, SUN_AZ - math.pi), "XYZ")
         sun.keyframe_insert("rotation_euler", frame=f)
         # v2 reveal looks down-sun onto front-lit heads: AgX washes the sunlit rays to cream -> ease the sun off
-        # (the shade is opened by the Film exposure below), back to full once the camera turns across the light
-        dim = 1 - SUN_DIP * (C.remap(f, 2242, 2256, C.smooth) - C.remap(f, 2278, 2300, C.smooth))
+        # (the shade is opened by the Film exposure below), back to full only as the Film lift rolls off
+        dim = 1 - SUN_DIP * (C.remap(f, 2242, 2256, C.smooth) - C.remap(f, 2296, 2326, C.smooth))
         sun.data.energy = (C.lerp(3.0, 14.0, g) + SU["sun"] * g2) * dim
         sun.data.keyframe_insert("energy", frame=f)
-        # the climbing sun whitens a little as it comes back (keeps the re-lit rays yellow, not peach, 2286-2300)
-        sun.data.color = C.kelvin(C.lerp(C.lerp(3300, 4200, g) + SUN_WHITE * C.remap(f, 2270, 2296, C.smooth), SU["kelvin"], g2))
+        sun.data.color = C.kelvin(C.lerp(C.lerp(3300, 4200, g), SU["kelvin"], g2))
         sun.data.keyframe_insert("color", frame=f)
         dist = 2800
         sdisc.location = (SUN_DIR2.x * dist * math.cos(math.radians(e)), SUN_DIR2.y * dist * math.cos(math.radians(e)),
@@ -563,6 +567,11 @@ def build(ctx):
     for f, fe in ((2242, 1.0), (2258, FILM_LIFT), (2300, FILM_LIFT), (2336, 1.0)):
         sc.cycles.film_exposure = fe
         sc.cycles.keyframe_insert("film_exposure", frame=f)
+    fc_e = next(fc for fc in C.fcurves(sun.data) if fc.data_path == "energy")
+    fc_f = next(fc for fc in C.fcurves(sc) if fc.data_path == "cycles.film_exposure")
+    se = [(f, fc_e.evaluate(f) * fc_f.evaluate(f)) for f in range(2280, 2394, 2)]
+    print("[sh14a] sun x film: " + " ".join(f"{f}:{v:.1f}" for f, v in se if f in (2290, 2296, 2300, 2310, 2320)) +
+          f"  max>2310 {max(v for f, v in se if f > 2310):.1f}", flush=True)
 
     # aerial perspective in-shader (the compositor needs a GPU context, unavailable on the farm)
     hg = L.haze_group()
