@@ -59,3 +59,13 @@ f1047 (731,349), f1056 (706,543). It is verified by overlay on f1000/1030/1066.
 * phone390_before_after.jpg: 1000/1030/1066/1110/1138
 * 100 % crops: f1000, f1030 (before/after), f1066, f1110, f1138 (before/after)
 * table_vs_sh03_f360.jpg
+
+## Round 3 (client rule change: only prominent cross symbols are banned, natural crossings are fine)
+Hair, skin lines and everything else stay as in f3f3514. The only change is the white plastic streak at the grasp
+around f1030:
+* skin specular and coat are damped toward grazing angles, and the sheen is off;
+* the apple peel is +0.22 rougher, so its highlight between the fingers is soft.
+
+See f1030_streak_before_after_100pct.jpg. f1128 changes by less than 3 % in brightness. f1030 rendered from a job
+start of 1029 and of 1030 is identical (max 3e-5). Cost is unchanged (f1030 59 s, f1128 56 s render). The tracker is
+unchanged.
