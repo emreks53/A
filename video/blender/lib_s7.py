@@ -1375,13 +1375,13 @@ def build_fibre_interior(root_name, matrix, fibre_c=(0.0105, 0.02), fibre_r=0.18
 # inner boundary membrane, folded 3-D cristae) and soft translucent tubular T-tubules.
 
 
-MITO_VOL = dict(emit=11.0, emit_small=140.0, absorb=80.0, rim=0.15)   # hero / smaller chain bodies
+MITO_VOL = dict(emit=8.0, emit_small=140.0, absorb=80.0, rim=0.10)   # hero / smaller chain bodies
 
 
 # lib_s7 puts heroMito1/2 (and a sliver of fgMito0) inside myofibrils (the old alpha decals glowed through the
 # fibril; the volumetric bodies read as dark ghosts there). Smallest offsets (local units) that clear
 # the fibrils, found by an inside-mesh test; neither body is in frame at the f1250 hand-off.
-HERO_NUDGE = {"heroMito1": (0.003, 0.0, -0.0045), "heroMito2": (-0.005, 0.0, -0.002), "fgMito0": (0.0, 0.0, -0.001)}
+HERO_NUDGE = {"heroMito1": (0.003, 0.0, -0.0045), "heroMito2": (-0.005, 0.0, -0.002), "fgMito0": (0.002, 0.007, 0.0025)}
 
 
 def upgrade_interior(inter, wave):
@@ -1389,6 +1389,13 @@ def upgrade_interior(inter, wave):
     hierarchy, so the hand-off framing is unchanged). Returns the new (inner-membrane) objects."""
     import re
     m_out, m_cr = mat_mito_outer_s9(), mat_cristae_s9(wave)
+    m_out_fg = mat_mito_outer_s9(0.15, "MitoOuterS9Fg")      # the out-of-focus near pair: a faint veil, never a solid blob
+    m_cr_fg = m_cr.copy(); m_cr_fg.name = "CristaeS9Fg"
+    for n_ in m_cr_fg.node_tree.nodes:
+        if n_.type == "BSDF_PRINCIPLED":
+            n_.inputs["Alpha"].default_value = 0.35
+        elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 0.95) < 1e-6:
+            n_.inputs["To Min"].default_value = 0.05; n_.inputs["To Max"].default_value = 0.3
     m_in = mat_mito_inner_s9(MITO_VOL["emit_small"], "MitoInnerS9")        # the chains
     m_in_hero = mat_mito_inner_s9(MITO_VOL["emit"], "MitoInnerS9Hero")    # hero variants (10-12)
     new, cr_cache, in_cache = [], {}, {}
@@ -1410,7 +1417,10 @@ def upgrade_interior(inter, wave):
                 if nm + "_fg" not in in_cache:
                     in_cache[nm + "_fg"] = inner.copy()
                     in_cache[nm + "_fg"].materials[0] = m_in_hero
+                    in_cache[nm + "_fgenv"] = o.data.copy()
+                    in_cache[nm + "_fgenv"].materials[0] = m_out_fg
                 inner = in_cache[nm + "_fg"]
+                o.data = in_cache[nm + "_fgenv"]
                 if o.name == "fgMito1":               # tilt in the screen plane: never an upright body rising from the frame edge
                     o.rotation_euler.x -= math.radians(22)
             c = obj_from_mesh(o.name + "_in", inner); c.parent = o
@@ -1427,6 +1437,9 @@ def upgrade_interior(inter, wave):
                 cr_cache[nm] = me
             o.data = cr_cache[nm]
             o.visible_shadow = o.name == "heroMito0_cr"
+            if o.name.startswith("fgMito"):          # near out-of-focus pair: faint folds, never bright spots
+                o.material_slots[0].link = "OBJECT"
+                o.material_slots[0].material = m_cr_fg
         elif o.name == "SR":
             soft_ttubules(o)
     return new
@@ -1520,7 +1533,7 @@ def mito_bean(name, length, width, seed=0, nu=40, nv=56):
     return me
 
 
-CRISTAE = dict(rad=0.64, yspan=0.24, amp=0.022, cup=0.018, tilt=5.0, bow=0.02, reach=(0.46, 0.68), reach_end=0.46)
+CRISTAE = dict(rad=0.64, yspan=0.24, amp=0.022, cup=0.018, tilt=5.0, bow=0.012, reach=(0.34, 0.68), reach_end=0.42)
 
 
 def cristae_folded(name, length, width, seed=0):
@@ -1572,7 +1585,8 @@ def cristae_folded(name, length, width, seed=0):
                 row.append((x, yy, zc + zl))
             pts.append(row)
         # a closed sac of thickness th (two layers +-th/2 in y, rim stitched; rounded by smooth shading)
-        lay = [[[bm.verts.new((x, y + sg * th / 2 * (0.35 if js == NS or ja in (0, NA) else 1.0), z))
+        thi = th * rng.uniform(0.6, 1.0)                         # folds differ in thickness (never thicker than ext allows)
+        lay = [[[bm.verts.new((x, y + sg * thi / 2 * (0.35 if js == NS or ja in (0, NA) else 1.0), z))
                  for ja, (x, y, z) in enumerate(row)] for js, row in enumerate(pts)] for sg in (1, -1)]
         for js in range(NS):
             for ja in range(NA):
@@ -1591,22 +1605,23 @@ def cristae_folded(name, length, width, seed=0):
     return me
 
 
-def mat_mito_outer_s9():
+def mat_mito_outer_s9(face_alpha=0.55, name="MitoOuterS9"):
     """Outer mitochondrial membrane: glossy wet amber film with SSS; nearly clear face-on and dense
     at the silhouette (a membrane seen edge-on), so the body reads as a translucent volume."""
-    m, nt, p = mat_wet_tissue("MitoOuterS9", base=(0.28, 0.115, 0.014), sss_radius=(1.0, 0.55, 0.25),
+    m, nt, p = mat_wet_tissue(name, base=(0.22, 0.074, 0.010), sss_radius=(1.0, 0.55, 0.25),
                                 sss_scale=0.0025, rough=0.5, coat=0.08, coat_rough=0.5)
+    p.inputs["Specular IOR Level"].default_value = 0.25          # no tip glints on the near bodies
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.3
     pw = _n(nt, "ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 1.6
     nt.links.new(lw.outputs["Facing"], pw.inputs[0])
-    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.40; al.inputs["To Max"].default_value = 0.92
+    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = face_alpha; al.inputs["To Max"].default_value = 0.92
     nt.links.new(pw.outputs[0], al.inputs["Value"]); nt.links.new(al.outputs[0], p.inputs["Alpha"])
     tc = _n(nt, "ShaderNodeTexCoord")
     nz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 420.0, "Detail": 3.0})
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
     _bump_chain(nt, p, [(nz.outputs["Fac"], 0.06)], distance=0.0004)
     # the matrix glow shines through the membrane where it is seen edge-on (luminous rim, not an outline)
-    p.inputs["Emission Color"].default_value = (1.0, 0.50, 0.05, 1)
+    p.inputs["Emission Color"].default_value = (1.0, 0.42, 0.05, 1)
     em = _n(nt, "ShaderNodeMath"); em.operation = "MULTIPLY"; em.inputs[1].default_value = MITO_VOL["rim"]
     nt.links.new(pw.outputs[0], em.inputs[0]); nt.links.new(em.outputs[0], p.inputs["Emission Strength"])
     fog_wrap(m)
@@ -1627,7 +1642,7 @@ def mat_mito_inner_s9(emit, name):
     # grows with the thickness looked through, so the body is brightest in its core and falls off to
     # the rims like a real translucent volume; the cristae inside shadow it
     out = [n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"][0]
-    ve = _n(nt, "ShaderNodeEmission"); ve.name = "matrix_emit"; ve.inputs["Color"].default_value = (1.0, 0.50, 0.05, 1)
+    ve = _n(nt, "ShaderNodeEmission"); ve.name = "matrix_emit"; ve.inputs["Color"].default_value = (1.0, 0.42, 0.05, 1)
     ve.inputs["Strength"].default_value = emit
     va = _n(nt, "ShaderNodeVolumeAbsorption"); va.inputs["Color"].default_value = (0.78, 0.32, 0.05, 1)
     va.inputs["Density"].default_value = MITO_VOL["absorb"]
@@ -1647,12 +1662,13 @@ def mat_cristae_s9(wave):
     p.inputs["Base Color"].default_value = (0.44, 0.17, 0.03, 1)    # saturated amber folds (never cream)
     p.inputs["Emission Color"].default_value = (1.0, 0.40, 0.04, 1)
     p.inputs["Roughness"].default_value = 0.6
-    p.inputs["Alpha"].default_value = 0.95                           # soft internal folds (barely translucent)
-    p.inputs["Coat Weight"].default_value = 0.5
-    p.inputs["Coat Roughness"].default_value = 0.12
+    p.inputs["Alpha"].default_value = 0.8                            # soft, translucent internal folds
+    p.inputs["Coat Weight"].default_value = 0.05                     # no glossy edge that could streak
+    p.inputs["Coat Roughness"].default_value = 0.5
+    p.inputs["Specular IOR Level"].default_value = 0.25
     src = p.inputs["Emission Strength"].links[0].from_socket
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.4
-    sh = _n(nt, "ShaderNodeMapRange"); sh.inputs["To Min"].default_value = 0.2; sh.inputs["To Max"].default_value = 1.5
+    sh = _n(nt, "ShaderNodeMapRange"); sh.inputs["To Min"].default_value = 0.15; sh.inputs["To Max"].default_value = 0.95
     nt.links.new(lw.outputs["Facing"], sh.inputs["Value"])
     mm = _n(nt, "ShaderNodeMath"); mm.operation = "MULTIPLY"
     nt.links.new(src, mm.inputs[0]); nt.links.new(sh.outputs[0], mm.inputs[1])
