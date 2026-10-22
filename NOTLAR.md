@@ -102,6 +102,13 @@ formu doğrulaması, üst menünün kaydırmada titrememesi denendi. Bulunup dü
 - EN sayfalarda Türkçe kalan uzun metinler ve belge adları `lang="tr"` ile işaretlendi (ekran okuyucu doğru
   okusun; panelden eklenen Türkçe adlı belgeler de).
 
+## 22.10.2026 komiteler (araclar/degisiklikler/2026-10-22-komiteler.py)
+
+- Kurumsal > Yönetim Kurulu Komiteleri, 05.10.2026 tarihli 2026/19 sayılı YK kararına göre güncellendi (Didar Sevdil
+  Yıldırım çıktı; Denetim ve Riskin Erken Saptanması komitelerinin başkanı Metin ÖZAKTAN; Kurumsal Yönetim Komitesine
+  Yusuf ŞİMŞEK; Riskin Erken Saptanması Komitesi üyesi Eyüp EKŞİ). TR/EN sayfa ve arama verisi.
+- Yönetim Kurulu ve Üst Yönetim sayfası: kurul üyeleri kararla aynı, değişmedi; karar üst yönetimi kapsamıyor.
+
 ## Kullanıcı kararları (özet)
 
 - Hero: "Ülkemize faydalı, prestijli gayrimenkul projelerini ideal şekilde gerçekleştirmek." / EN "…in an ideal way."
