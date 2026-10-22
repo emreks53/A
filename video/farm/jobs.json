@@ -1376,6 +1376,15 @@
    "from": 90,
    "to": 119,
    "note": "final round 3 (re-queue of b122, container restarted): grass/stalk dew clear, sh01-only (fix 74b8ce9)"
+  },
+  {
+   "node": "b133",
+   "branch": "render-fix-sh03",
+   "ref": "5064de10666226a6f4e6da4d7c8798d726525e35",
+   "shot": "sh03",
+   "from": 329,
+   "to": 349,
+   "note": "final round 3 (re-queue of b129, container restarted): spoon hidden, curtain keys 247/248 (fix 5064de1)"
   }
  ]
 }
