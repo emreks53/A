@@ -1,0 +1,7 @@
+sh14a_02290.png sky25=116.13 sky8_S=0.29 sky8_hue=30.10 sky8_GgtB=True mean=48.30 field_mean=22.26 field_med=12.99 pet_hue=37.71 pet_sat=0.79 peach=0.08 pet_n=6380 cream=0.00 tr_RB=56.42 sky_Y=144.59
+sh14a_02296.png sky25=135.77 sky8_S=0.29 sky8_hue=32.25 sky8_GgtB=True mean=53.74 field_mean=22.44 field_med=13.99 pet_hue=37.31 pet_sat=0.80 peach=0.13 pet_n=5029 cream=0.00 tr_RB=59.48 sky_Y=158.78
+sh14a_02300.png sky25=147.02 sky8_S=0.28 sky8_hue=33.27 sky8_GgtB=True mean=57.31 field_mean=22.70 field_med=14.63 pet_hue=37.11 pet_sat=0.81 peach=0.10 pet_n=3265 cream=0.00 tr_RB=57.74 sky_Y=161.67
+sh14a_02310.png sky25=164.23 sky8_S=0.26 sky8_hue=34.48 sky8_GgtB=True mean=68.28 field_mean=27.81 field_med=17.20 pet_hue=38.19 pet_sat=0.95 peach=0.05 pet_n=3997 cream=0.00 tr_RB=54.01 sky_Y=164.28
+sh14a_02320.png sky25=165.69 sky8_S=0.27 sky8_hue=34.23 sky8_GgtB=True mean=77.18 field_mean=32.22 field_med=19.17 pet_hue=39.98 pet_sat=0.97 peach=0.02 pet_n=6929 cream=0.00 tr_RB=56.72 sky_Y=162.94
+sh14a_02384.png sky25=214.23 sky8_S=0.21 sky8_hue=30.24 sky8_GgtB=True mean=128.68 field_mean=69.58 field_med=50.22 pet_hue=38.10 pet_sat=0.94 peach=0.01 pet_n=17960 cream=0.24 tr_RB=56.18 sky_Y=208.68
+sh14a_02393.png sky25=212.93 sky8_S=0.21 sky8_hue=30.31 sky8_GgtB=True mean=127.53 field_mean=68.56 field_med=48.60 pet_hue=38.08 pet_sat=0.93 peach=0.02 pet_n=17715 cream=0.23 tr_RB=56.13 sky_Y=207.44

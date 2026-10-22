@@ -115,3 +115,37 @@ Frame mean (25% sweeps of 2256-2344 at step 2 and 2348-2393 at step 4) peaks at 
 **Full-quality render time** (4 cores): 53-54 s/frame at 2296, 42-44 s/frame at 2384 and 2393.
 
 **Evidence image:** `r3_compassion_allah.jpg`
+
+## Round 4 (director notes): fix fd913f0db1935d8fae02a6bf5b616eb413ffb4b8
+In r3, several front-lit heads at the left edge bleached to cream "daisies" over 2286-2310. The cause was sun x film reaching 16-17.5, plus SUN_WHITE.
+
+**Changes:**
+- The sun dip now recovers over 2296-2326.
+- SUN_WHITE is removed.
+- Sun x film is now 8.2 @2290, 8.5 @2296, 9.1 @2300 and 12.3 @2310, with a max of 14.5 after that. The build log prints these values.
+- The lift on 'her şeye şefkat eden' now comes from the sky:
+  - The tint moves from the base to the SU tint over 2280-2300.
+  - Over 2280-2340 the tint is a richer SKY_WARM (1,.66,.36). With k = .25 and the SU tint alone, the sky8 saturation was only .23-.24.
+  - bg strength is multiplied by (1 + 0.40 * sky_up(2278-2340)). k = .40 is the allowed maximum, needed for the 2296 mean floor.
+
+**'Allah' is locked:** a curve dump shows all 44 animated curves equal 337ae85 over 2384-2393. The 50% stills are identical to r3 (mean 128.68 / 127.53).
+
+**Pass checks** (my metric script; 50% stills in `r4_metrics.txt`):
+
+| Check | Frames | Result |
+|---|---|---|
+| Cream / lit S / lit hue / peach | 2290, 2296, 2300, 2310 (50%) | 0 / .79-.95 / 37.1-38.2 / ≤ .13 |
+| Cream / peach / sat (25% sweep) | 2286-2312 | ≤ .001 / ≤ .15 / ≥ .78 |
+| Lit hue (25% sweep) | 2286-2312 | ≥ 37.1, except **36.94 at 2298** (about 860-px sample) |
+| Mean / field / sky25 / sky8 S / sky8 hue / G>B | 2296 | 53.7 / 22.4 / 136 / .29 / 32.3 / yes |
+| Mean / field / sky25 / sky8 S / sky8 hue / G>B | 2300 | 57.3 / 22.7 / 147 / .28 / 33.3 / yes |
+| Largest drop between sweep frames | 2256-2393 | -0.92% |
+| Luma peak | sweep | 2376 (130.8) |
+
+**Determinism:** 2309-2310 vs 2310 alone: 0 px differ.
+
+**Full-quality render time** (4 cores): about 46-47 s/frame at 2310. The rest is unchanged from r3.
+
+**Evidence images:**
+- `r2_r3_r4_2290-2310.jpg`: phone-size side-by-side at 2290, 2296, 2300 and 2310.
+- `r2_r3_r4_2296_leftedge.jpg`: left-edge heads at 2296.
