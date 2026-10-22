@@ -522,9 +522,11 @@ def _prune_macro(nt, frame):
             sw.default_value = 1.0; sw.keyframe_insert("default_value", frame=SSS_OFF_F - 1)
             sw.default_value = 0.0; sw.keyframe_insert("default_value", frame=SSS_OFF_F)
             out.append((sw, 1.0))
-    for fc in C.fcurves(nt):
-        for kp in fc.keyframe_points:
-            kp.interpolation = "CONSTANT"
+    steps = {frame - 1, frame, SSS_OFF_F - 1, SSS_OFF_F}
+    for fc in C.fcurves(nt):                      # these switches are steps (other keyed ramps are left alone)
+        if all(round(kp.co.x) in steps for kp in fc.keyframe_points):
+            for kp in fc.keyframe_points:
+                kp.interpolation = "CONSTANT"
     return len(out)
 
 
@@ -537,13 +539,23 @@ def man_skin(skin):
             b = tuple(round(x, 2) for x in n.inputs[7].default_value[:3])
             if b == (0.56, 0.21, 0.17):            # flushed fingertips
                 n.inputs[7].default_value = (0.40, 0.205, 0.145, 1)
-            elif b == (0.78, 0.70, 0.60):          # nail free edge: trimmed short, barely visible
-                n.inputs[7].default_value = (0.60, 0.44, 0.36, 1)
+            elif b == (0.78, 0.70, 0.60):          # nail free edge: trimmed short, a thin pale rim
+                n.inputs[7].default_value = (0.70, 0.60, 0.52, 1)
             elif b == (0.74, 0.60, 0.52):          # lunula
                 n.inputs[7].default_value = (0.64, 0.46, 0.39, 1)
         if n.bl_idname == "ShaderNodeMixShader" and n.inputs[2].is_linked and \
                 n.inputs[2].links[0].from_node.bl_idname == "ShaderNodeBsdfTranslucent":
             n.inputs[0].default_value = 0.035
+        # nails: a crisp plate edge (was a soft 14 % falloff that read as a pale blurred pad), a glossier keratin plate
+        if n.bl_idname == "ShaderNodeMapRange" and abs(n.inputs[1].default_value - 0.86) < 1e-6 \
+                and abs(n.inputs[2].default_value - 1.0) < 1e-6:
+            n.inputs[1].default_value = 0.955
+        if n.bl_idname == "ShaderNodeMapRange" and abs(n.inputs[1].default_value - 0.78) < 1e-6 \
+                and abs(n.inputs[2].default_value - 0.98) < 1e-6:
+            n.inputs[1].default_value = 0.90; n.inputs[2].default_value = 0.985     # cuticle / side-wall line
+        if n.bl_idname == "ShaderNodeBsdfPrincipled" and abs(n.inputs["Subsurface Weight"].default_value - 0.35) < 1e-6:
+            n.inputs["Roughness"].default_value = 0.30
+            n.inputs["Specular IOR Level"].default_value = 0.6
         if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and abs(n.inputs[1].default_value + 0.30) < 1e-6:
             n.inputs[1].default_value = -0.12      # skin-line groove depth (relinked to the wave grooves below)
         if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and abs(n.inputs[1].default_value + 0.9) < 1e-6:
@@ -599,7 +611,27 @@ def man_skin(skin):
     sk.inputs["Sheen Weight"].default_value = 0.0
     sk.inputs["Coat Roughness"].default_value = 0.42
     lw = nt.nodes.new("ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.5
-    graze = H._math(nt, "SUBTRACT", 1.0, H._math(nt, "MULTIPLY", H._smoothstep(nt, lw.outputs["Facing"], 0.55, 0.95), 0.75))
+    graze_old = H._math(nt, "SUBTRACT", 1.0, H._math(nt, "MULTIPLY", H._smoothstep(nt, lw.outputs["Facing"], 0.55, 0.95), 0.75))
+    # round 4: that ramp bottomed out at 0.25, so the thumb/finger silhouettes against the apple kept a grey-lilac
+    # specular rim (f1005-1068): the spec and coat now fade out completely toward grazing. Keyed so that from
+    # GLOW_NO_NORMAL_F on the old ramp is used and the already-rendered 1091-1143 chunks stay exactly reproducible.
+    graze_new = H._math(nt, "SUBTRACT", 1.0, H._smoothstep(nt, lw.outputs["Facing"], 0.45, 0.85))
+    gk = nt.nodes.new("ShaderNodeMath"); gk.operation = "MULTIPLY"; gk.inputs[0].default_value = 1.0
+    gm = nt.nodes.new("ShaderNodeMix"); gm.data_type = "FLOAT"; gm.clamp_factor = True
+    nt.links.new(gk.outputs[0], gm.inputs[0]); nt.links.new(graze_new, gm.inputs[2]); nt.links.new(graze_old, gm.inputs[3])
+    graze = gm.outputs[0]
+    # eased back over the same frames as the hand's window light (HANDSKY_*): from f1084 the skin is exactly the
+    # previous shader, so the 1090|1091 join into the rendered chunks is unchanged
+    ct = sk.inputs["Coat Tint"]                                         # warm, skin-oil coat (not a white varnish)
+    for fr, k, tint in ((HANDSKY_WARM_END, 0.0, (0.85, 0.60, 0.45, 1.0)), (HANDSKY_COOL_F, 1.0, (1.0, 1.0, 1.0, 1.0))):
+        gk.inputs[1].default_value = k; gk.inputs[1].keyframe_insert("default_value", frame=fr)
+        ct.default_value = tint; ct.keyframe_insert("default_value", frame=fr)
+    for fc in C.fcurves(nt):
+        if fc.data_path.startswith(("nodes[\"" + gk.name + "\"]", "nodes[\"" + sk.name + "\"].inputs[" + str(list(sk.inputs).index(ct)))):
+            fc.extrapolation = "CONSTANT"
+            for kp in fc.keyframe_points:
+                kp.interpolation = "BEZIER"; kp.handle_left_type = kp.handle_right_type = "AUTO_CLAMPED"
+            fc.update()
     sk.inputs["Specular IOR Level"].default_value = 1.0
     nt.links.new(H._math(nt, "MULTIPLY", graze, 0.58), sk.inputs["Specular IOR Level"])
     cwl = sk.inputs["Coat Weight"].links[0].from_socket
@@ -865,6 +897,36 @@ def build(ctx):
     fc.keyframe_points.insert(GLOW_NO_NORMAL_F - 1, v0)
     fc.keyframe_points.insert(GLOW_NO_NORMAL_F, v1 + MACRO_EV)
     fc.update()
+    # round 4: the cool 7500 K window-sky fill grazed the thumb/finger silhouettes against the apple and drew a grey-lilac
+    # rim (f1005-1068). The hand mesh gets its own copy of that light (light linking; the room and the hair keep the
+    # original): warmer and dimmer while the fingers hold the apple, then eased back (HANDSKY_*).
+    ws = bpy.data.objects["WindowSky"]
+    handset = [sc.objects["Hand"]]
+    ex = bpy.data.collections.new("WindowSkyNotHand")
+    for o in handset:
+        ex.objects.link(o)
+    for co in ex.collection_objects:
+        co.light_linking.link_state = "EXCLUDE"
+    ws.light_linking.receiver_collection = ex
+    wh = ws.copy(); wh.data = ws.data.copy(); wh.name = "WindowSkyHand"; sc.collection.objects.link(wh)
+    inc = bpy.data.collections.new("WindowSkyHandOnly")
+    for o in handset:
+        inc.objects.link(o)
+    wh.light_linking.receiver_collection = inc
+    # warm while the fingers are on the apple; eased back to the original colour as the camera leaves the hand, so from
+    # f1084 on (the forearm close-up into the 1090|1091 join and the rendered 1091+ chunks) it lights exactly as before
+    _k, _pw = 5000, 0.3                 # a warmer, dimmer window on the hand: no grey grazing rim, tone kept
+    p0 = wh.data.energy
+    wh.data.color = C.kelvin(_k); wh.data.energy = p0 * _pw
+    wh.data.keyframe_insert("color", frame=ctx.f0); wh.data.keyframe_insert("energy", frame=ctx.f0)
+    wh.data.keyframe_insert("color", frame=HANDSKY_WARM_END); wh.data.keyframe_insert("energy", frame=HANDSKY_WARM_END)
+    wh.data.color = C.kelvin(7500); wh.data.energy = p0
+    wh.data.keyframe_insert("color", frame=HANDSKY_COOL_F); wh.data.keyframe_insert("energy", frame=HANDSKY_COOL_F)
+    for fc in C.fcurves(wh.data):
+        fc.extrapolation = "CONSTANT"
+        for kp in fc.keyframe_points:
+            kp.interpolation = "BEZIER"; kp.handle_left_type = kp.handle_right_type = "AUTO_CLAMPED"
+        fc.update()
     sc.frame_set(ctx.f0)
     return {"final_spp": int(os.environ.get("S5_SPP", "16")), "final_res": int(os.environ.get("S5_RES", "80")), "preview_spp": 24, "max_bounces": 4, "diffuse_bounces": 1,
             "glossy_bounces": 1, "transmission_bounces": 4, "transparent_bounces": 8, "final_threshold": 0.03, "texture_limit": "2048", "motion_blur": not os.environ.get("S5_NOMB"),
@@ -881,6 +943,8 @@ GLOW_NO_NORMAL_F = 1091
 # fix-sh08: from here only forearm skin is in frame (no knuckles, nails, thin edges): the knuckle/nail/translucency
 # shader branches are pruned with keyed constants (render budget; any job start is exact)
 MACRO_F = 1080
+HANDSKY_WARM_END = 1068           # the hand's own window-sky copy: warm (no grey thumb rim) up to here ...
+HANDSKY_COOL_F = 1084             # ... and back to the original 7500 K from here (unchanged 1090|1091 join)
 SSS_OFF_F = 1068
 
 
