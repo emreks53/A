@@ -1295,6 +1295,78 @@
    "from": 120,
    "to": 131,
    "note": "final round 3: grass/stalk dew reads as clear water (no dark cores f43-70), sh01-only (fix 74b8ce9 on d22d09c); whole shot"
+  },
+  {
+   "node": "b124",
+   "branch": "render-fix-sh03",
+   "ref": "5064de10666226a6f4e6da4d7c8798d726525e35",
+   "shot": "sh03",
+   "from": 225,
+   "to": 244,
+   "note": "final round 3: spoon hidden (no cross on the honey jar), curtain subdiv at 247/248 (no table-shadow step at 262), window rails inset 1 mm (fix 5064de1 on 500a9c5); whole shot"
+  },
+  {
+   "node": "b125",
+   "branch": "render-fix-sh03",
+   "ref": "5064de10666226a6f4e6da4d7c8798d726525e35",
+   "shot": "sh03",
+   "from": 245,
+   "to": 265,
+   "note": "final round 3: spoon hidden (no cross on the honey jar), curtain subdiv at 247/248 (no table-shadow step at 262), window rails inset 1 mm (fix 5064de1 on 500a9c5); whole shot"
+  },
+  {
+   "node": "b126",
+   "branch": "render-fix-sh03",
+   "ref": "5064de10666226a6f4e6da4d7c8798d726525e35",
+   "shot": "sh03",
+   "from": 266,
+   "to": 286,
+   "note": "final round 3: spoon hidden (no cross on the honey jar), curtain subdiv at 247/248 (no table-shadow step at 262), window rails inset 1 mm (fix 5064de1 on 500a9c5); whole shot"
+  },
+  {
+   "node": "b127",
+   "branch": "render-fix-sh03",
+   "ref": "5064de10666226a6f4e6da4d7c8798d726525e35",
+   "shot": "sh03",
+   "from": 287,
+   "to": 307,
+   "note": "final round 3: spoon hidden (no cross on the honey jar), curtain subdiv at 247/248 (no table-shadow step at 262), window rails inset 1 mm (fix 5064de1 on 500a9c5); whole shot"
+  },
+  {
+   "node": "b128",
+   "branch": "render-fix-sh03",
+   "ref": "5064de10666226a6f4e6da4d7c8798d726525e35",
+   "shot": "sh03",
+   "from": 308,
+   "to": 328,
+   "note": "final round 3: spoon hidden (no cross on the honey jar), curtain subdiv at 247/248 (no table-shadow step at 262), window rails inset 1 mm (fix 5064de1 on 500a9c5); whole shot"
+  },
+  {
+   "node": "b129",
+   "branch": "render-fix-sh03",
+   "ref": "5064de10666226a6f4e6da4d7c8798d726525e35",
+   "shot": "sh03",
+   "from": 329,
+   "to": 349,
+   "note": "final round 3: spoon hidden (no cross on the honey jar), curtain subdiv at 247/248 (no table-shadow step at 262), window rails inset 1 mm (fix 5064de1 on 500a9c5); whole shot"
+  },
+  {
+   "node": "b130",
+   "branch": "render-fix-sh03",
+   "ref": "5064de10666226a6f4e6da4d7c8798d726525e35",
+   "shot": "sh03",
+   "from": 350,
+   "to": 369,
+   "note": "final round 3: spoon hidden (no cross on the honey jar), curtain subdiv at 247/248 (no table-shadow step at 262), window rails inset 1 mm (fix 5064de1 on 500a9c5); whole shot"
+  },
+  {
+   "node": "b131",
+   "branch": "render-fix-sh03",
+   "ref": "5064de10666226a6f4e6da4d7c8798d726525e35",
+   "shot": "sh03",
+   "from": 370,
+   "to": 389,
+   "note": "final round 3: spoon hidden (no cross on the honey jar), curtain subdiv at 247/248 (no table-shadow step at 262), window rails inset 1 mm (fix 5064de1 on 500a9c5); whole shot"
   }
  ]
 }
