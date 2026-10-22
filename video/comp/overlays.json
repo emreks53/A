@@ -217,7 +217,7 @@
    "sync": 48.20, "out": 49.00, "cue": "sh09.callout_fiber", "fallback": [700, 1180], "prefer": ["dl", "dr"]},
   {"id": "co_mito", "shot": "sh09", "track": "mito", "primary": "Mitokondri", "secondary": "hücrenin enerji santrali",
    "secondary_weight": 500, "secondary_alpha": 1.0, "text_shadow": [0.8, 10, 1.5], "scrim": 0.2,
-   "_doc": "on the bright lavender cristae (f1240 open background luminance ~0.34): opaque Medium secondary line, the co_air shadow and a soft 20 % scrim behind the label lift both lines to >= 3:1 (secondary 2.0 -> 3.6 at f1240)",
+   "_doc": "look C (a82b349): the label sits over the hero's teal rim / crista tips and the pink myofibrils (f1240 plate luminance ~0.19 median, 0.32 p90); the co_air shadow, a soft 20 % scrim and an opaque Medium secondary give primary ~7.4:1 (p90 >= 5.6) and secondary ~6.3:1 (p90 >= 4.8); without them the secondary drops to 2.4:1 p90, so all three stay",
    "sync": 50.26, "out": 52.00, "cue": "sh09.callout_mito", "fallback": [[50.0, 560, 1010], [52.2, 545, 990]]},
   {"id": "co_page", "shot": "sh15", "track": "page", "primary": "Risale-i Nur Külliyatı",
    "_doc": "adds what the title does not say (the collection this volume belongs to) instead of repeating SÖZLER · 721; anchored on the 721 page number (TRK_page is visible 2746-2781, camB), the label holds upper-left of it and is gone before the camC cut at 2782 (115.92 s), where the page leaves the frame",
