@@ -1,6 +1,6 @@
 # fix-sh14a — finale 2240-2393
 
-Fix commit: 127b1071d57b05acc701c1f8a607ba58b36df5e9 (only `video/blender/shots/sh14a.py`).
+Fix commit: d712709e710ad897b2c52d5761449be32067357a (only `video/blender/shots/sh14a.py`; supersedes 127b107).
 
 ## s5-1 'her şeyi gören' (f2262-2286)
 - Frames before 2240 are untouched. The v1 camera path is kept exactly for t < 2240/24, and the
@@ -13,7 +13,10 @@ Fix commit: 127b1071d57b05acc701c1f8a607ba58b36df5e9 (only `video/blender/shots/
      length, so screen speed stays constant at about 30 px/frame (180° shutter, so blur is about 15 px).
   3. **Focus rack**, after the lift. Focus distance (log) goes from the hero to 26 m over f2255-2267.
      v1 lerped the focus point instead, which swept the focus plane through the lens.
-- A separate keyed Film-exposure curve opens about 2/3 stop over the shaded-canopy span (2242-2300).
+- Director round: the down-sun reveal front-lit the rays and AgX washed them to cream. The sun lamp is now eased to 50%
+  over 2242-2310 and a separate keyed Film-exposure curve lifts 1.5x over 2242-2300 (highlights down, shade up).
+  Petals stay golden-yellow, matching 2230/2355. The light-green centre at 2262 is the hero head's young florets,
+  the same look as the approved macro.
 - Sharpness (Laplacian variance, quarter res, verifier's measurement), old → new:
 
   | Frame | Old | New |
@@ -31,7 +34,7 @@ Fix commit: 127b1071d57b05acc701c1f8a607ba58b36df5e9 (only `video/blender/shots/
   except strength). Its profile is a Lorentzian bloom plus a broad warm veil over the field.
 - **Sky.** It turns a deeper, more saturated gold. A brighter sky goes cream under AgX.
 - **Sun lamp and haze.** The sun lamp gets warmer and stronger, the haze turns golden, and view
-  exposure goes +0.07 after the 'Allah' key. Every swell term is zero before f2358.
+  exposure goes +0.07 after the 'Allah' key. The sky tint was softened so the far side of the sky reads as lens veil. Every swell term is zero before f2358.
 - **Mean luma** (0-255), measured on 50% test renders of the final settings:
 
   | Frame | Mean luma |
@@ -46,6 +49,7 @@ Fix commit: 127b1071d57b05acc701c1f8a607ba58b36df5e9 (only `video/blender/shots/
 
 ## Proof
 - **Determinism.**
+  - 2255-2256 vs 2256 (with the round-2 keys): 0 px differ.
   - 2261-2263 vs 2262-2263: 0 px differ.
   - 2257-2258 vs 2258: 0 px differ.
   - Verifier, 2361-2362 vs 2362: 0 px differ.
@@ -61,8 +65,7 @@ Fix commit: 127b1071d57b05acc701c1f8a607ba58b36df5e9 (only `video/blender/shots/
   | 2340-2392 | 30-31 |
 
 - **Files.**
-  - `reveal_2256-2286_before_after.jpg`: the NEW 2286 panel was rendered before the Film-exposure key,
-    so the final is slightly brighter.
+  - `reveal_2256-2300_before_after.jpg`
   - `sunrise_before_after.jpg`
   - `her_2262_crop100.jpg`
   - `sliver_2370_crop100.jpg`
