@@ -1861,8 +1861,8 @@ HERO_KEY = dict(f0=1215, f1=1240)      # hero matrix glow: chain-bright while sm
 # the view axis (local X; screen right = +Z) around its own centre, so TRK_mito / the callout stay put.
 # The near out-of-focus pair is rolled to stay roughly parallel.
 ROLL = dict(hero=-30.0, fg=-30.0)
-NUCLEUS_SHIFT = (0.0, 0.0, 0.012)
-GLOW_SCALE = 0.6       # near out-of-focus myonucleus moves right: the hero's low end stays visible
+NUCLEUS_SHIFT = (0.0, 0.0, 0.012)       # near out-of-focus myonucleus moves right: the hero's low end stays visible
+GLOW_SCALE = 0.45                       # the folds no longer shadow the inner glow light: keep it soft (no hot spot)
 # the corridor-edge fibril in front of the hero's low end (it cut 2-21 % of it at 1205-1220): a
 # little thinner and moved right, its T-tubule rings with it (removing it would uncover rings)
 PILLAR = dict(xz=(-0.0195, 0.0113), dz=0.0025, r=0.0058)
