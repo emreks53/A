@@ -108,18 +108,23 @@ def build(ctx):
     prev = None
 
     def warp(t):
-        # the membrane resists: just through it (6-10 mm off the film) the probe nearly pauses for
-        # 1295-1298 (6 % speed), then catches up with its path by t_exit + 0.36 - the film fills the
-        # lens in focus without a radial zoom smear, and nothing after ~1303 is retimed
-        a = t_exit + 0.012
+        # the membrane resists: just through it (~7 mm off the film) the probe holds completely still
+        # for 1295-1299 (no motion blur: the film fills the lens in focus), then eases back onto its
+        # path by t_exit + 0.45 (cubic Hermite: zero speed out of the hold, path speed at the end)
+        a, h, t1 = t_exit + 0.012, 0.19, t_exit + 0.45
         if t <= a:
             return t
-        return C.lerp(a + 0.06 * (t - a), t, C.remap(t, a + 0.16, t_exit + 0.36, C.smooth))
+        if t <= a + h:
+            return a
+        if t >= t1:
+            return t
+        u = (t - a - h) / (t1 - a - h)
+        return a + (t1 - a) * (3 * u * u - 2 * u ** 3) + (t1 - a - h) * (u ** 3 - u * u)
     for tr in times:
         t = warp(tr)
         # once through the membrane the probe backs off faster (x up to 2.6) so the field is revealed
         # instead of the camera skimming the hero cell; the boost bleeds off by "hadsiz" (monotonic)
-        boost = 2.5 * C.remap(t, t_exit + 0.12, t_exit + 0.35, C.smooth) * (1.0 - C.remap(t, t_exit + 0.35, t_had, C.smooth))
+        boost = 2.5 * C.remap(tr, t_exit + 0.3, t_exit + 0.8, C.smooth) * (1.0 - C.remap(tr, t_exit + 0.8, t_had, C.smooth))
         dist = dist_at(t) * (1.0 + boost)
         # elevation: level inside, rising to look down on the field, then settling low
         el = C.lerp(0.0, 52.0, C.remap(t, t_exit + 0.05, t_exit + 0.75, C.smooth))
@@ -159,12 +164,15 @@ def build(ctx):
         # focus: the hero mito, then the membrane film while it fills the lens, then the field
         if tr < t_exit + 0.03:                             # 1295: still on the interior, seen through the veil
             fd = dist - 0.0035
-        elif tr < t_exit + 0.2:
-            fd = max(0.004, filmd[-1])                      # the sarcolemma film just in front of the lens
         else:
-            # the top of the tissue (cell domes) along the view axis, then the hero position
-            fz = (p.z - (Z0 + 0.3)) / max(1e-3, -f.z) if f.z < -0.05 else 1e9
-            fd = max(0.05, min(fz, (tgt - p).length * 1.3))
+            # the sarcolemma film just in front of the lens, then (1300-1304) over to the field: the top
+            # of the cell domes along the view axis (only when the camera is above that plane)
+            fz = (p.z - (Z0 + 0.3)) / -f.z if f.z < -0.05 else -1.0
+            fld = min(fz, (tgt - p).length * 1.3) if fz > 0.05 else (tgt - p).length * 1.3
+            oc = ray_ellipsoid(p, f, Vector((0, 0, Z0)), Vector((0.52, 0.52, 0.32)))   # the cell under the hero
+            if oc is not None and oc > 0.03:
+                fld = min(fld, oc)
+            fd = C.lerp(max(0.004, filmd[-1]), max(0.05, fld), C.remap(tr * C.FPS, 1299.5, 1304, C.smooth))
         foc.append(fd)
         fst.append(C.lerp(HO["fstop"], 8.0, C.remap(t, t_exit - 0.1, t_exit + 1.0)))
         # haze: interior hand-off -> blue-black tissue haze outside (long enough that the field is
@@ -191,6 +199,8 @@ def build(ctx):
         lrot.append(tuple(el_))
     L.bake(cam, frames, "location", lloc)
     L.bake(cam, frames, "rotation_euler", lrot)
+    # smooth the hand-over between focus targets through the reveal (3-frame mean, 1300-1312)
+    foc = [sum(foc[i - 1:i + 2]) / 3 if 1300 <= f <= 1312 else fv for i, (f, fv) in enumerate(zip(frames, foc))]
     L.bake_id(cam.data, frames, "dof.focus_distance", foc)
     L.bake_id(cam.data, frames, "dof.aperture_fstop", fst)
     C.handheld(cam, **HO["handheld"])          # same noise as sh09 -> identical f1250 camera matrix
@@ -226,7 +236,7 @@ def build(ctx):
     for o in inter["objects"]:
         L.bake(o, [frames[0], f_in0], "hide_render", [0.0, 1.0], interp="CONSTANT")
     # the dome film falls away (fades to transparent) over 7 frames, then stops rendering
-    fade_group_animate([dome], frames, f_in0, 6, "S7_FadeDome", ease=True)
+    fade_group_animate([dome], frames, f_in0 + 1, 3, "S7_FadeDome", ease=True)
     # the film right at the lens (1295, ~6 mm) is a thin veil over the interior, opaque from 1297
     L.bake_id(m_mem.node_tree, frames, 'nodes["veil"].outputs[0].default_value',
               [{1295: 0.5, 1296: 0.85}.get(f, 1.0) for f in frames], interp="CONSTANT")
@@ -305,24 +315,8 @@ def build(ctx):
     if ctx.mode == "final":
         L.bake_id(sc, frames, "cycles.samples", [8 if f <= 1308 else 16 for f in frames],
                   interp="CONSTANT")
-    # glare only outside (from f_in0 = 1298). Neither compositor F-curves nor frame-handler edits of
-    # the compositor tree reach the compositor during an animation render, so the glare is set once
-    # per job from its start frame: off for jobs starting before 1298, on from 1298 (a job boundary;
-    # the farm split must start a job exactly on 1298)
-    tree = sc.compositing_node_group
-    f_job = ctx.args.ffrom if ctx.args.ffrom is not None else (ctx.f0 if ctx.mode == "final" else 1298)
-    for n in (tree.nodes if tree else []):
-        if n.bl_idname == "CompositorNodeGlare":
-            n.inputs["Strength"].default_value = 0.6 if f_job >= 1298 else 0.0
-    print(f"[sh10] job starts at f{f_job}: glare {'on' if f_job >= 1298 else 'off'}")
-
-    def _gs(scene):
-        t_ = scene.compositing_node_group
-        g_ = [n for n in t_.nodes if n.bl_idname == "CompositorNodeGlare"] if t_ else []
-        return round(g_[0].inputs["Strength"].default_value, 2) if g_ else None
-
     def _log(scene, *_):
-        print(f"[sh10] f{scene.frame_current} spp={scene.cycles.samples} glare={_gs(scene)}", flush=True)
+        print(f"[sh10] f{scene.frame_current} spp={scene.cycles.samples}", flush=True)
     bpy.app.handlers.render_pre.append(_log)
     ov = dict(L.LEAN)
     ov.update(transmission_bounces=3, transparent_bounces=8, final_spp=8, preview_spp=12)   # = sh09 (f1250 match)
@@ -333,6 +327,19 @@ FILM_E = 0.03
 FILM_W = {}
 
 # --------------------------------------------------------------------------- the field
+
+
+def ray_ellipsoid(o, d, c, ax):
+    """Distance along unit ray (o, d) to an axis-aligned ellipsoid (centre c, semi-axes ax), or None."""
+    oo = Vector(((o.x - c.x) / ax.x, (o.y - c.y) / ax.y, (o.z - c.z) / ax.z))
+    dd = Vector((d.x / ax.x, d.y / ax.y, d.z / ax.z))
+    A, B, Cc = dd.dot(dd), 2 * oo.dot(dd), oo.dot(oo) - 1.0
+    disc = B * B - 4 * A * Cc
+    if disc < 0:
+        return None
+    t0 = (-B - math.sqrt(disc)) / (2 * A)
+    return t0 if t0 > 0 else None
+
 
 
 def field_layout(frames, locs, rots, fdist, t_had):
@@ -440,11 +447,12 @@ def field_layout(frames, locs, rots, fdist, t_had):
         rot[i] = tuple(qn.to_euler("XYZ"))
     cells = dict(co=np.stack([P[:, 0], P[:, 1], z - 0.02], 1), rot=rot,
                  scl=np.stack([sr, sr, sh], 1), var=var, ton=t_on, amp=amp, flo=flo, rnd=rr, nbA=nbA, nbB=nbB)
-    # the cell under the hero dome: smaller so it sits inside the hero's film, first to light up
+    # the cell under the hero dome: small (r 0.52) so it sits well inside the hero's film and the camera
+    # leaving the film has ~25 cm of air in front of it; first to light up
     o_nb = np.zeros((1, 4, 3), np.float32); o_nb[:, :, 2] = 1e4
     oB = np.zeros((1, 4, 3), np.float32)
     origin = dict(co=np.array([[0.0, 0.0, Z0 - 0.02]]), rot=np.zeros((1, 3), np.float32),
-                  scl=np.array([[0.74, 0.74, 0.95]]), var=np.array([3]), ton=np.array([F_ON0 / C.FPS]),
+                  scl=np.array([[0.55, 0.55, 0.8]]), var=np.array([3]), ton=np.array([F_ON0 / C.FPS]),
                   amp=np.array([1.3]), flo=np.array([0.3]), rnd=np.array([0.5]), nbA=o_nb, nbB=oB)
     # the neighbours of the origin cell see it light first
     for i in np.argsort(r)[:8]:
@@ -660,11 +668,17 @@ def mat_cells():
     p.subsurface_method = L.SSS_METHOD
     p.inputs["Subsurface Weight"].default_value = 1.0
     p.inputs["Subsurface Radius"].default_value = (0.55, 0.8, 1.0)
-    p.inputs["Subsurface Scale"].default_value = 0.22
-    p.inputs["Roughness"].default_value = 0.45
-    p.inputs["Coat Weight"].default_value = 0.22
-    p.inputs["Coat Roughness"].default_value = 0.22
-    L._bump_chain(nt, p, [(gran, 0.25), (fn.outputs["Fac"], 0.15), (nucm, 0.1)], distance=0.03)
+    p.inputs["Subsurface Scale"].default_value = 0.3
+    p.inputs["Roughness"].default_value = 0.55
+    p.inputs["Specular IOR Level"].default_value = 0.3
+    p.inputs["Coat Weight"].default_value = 0.08
+    p.inputs["Coat Roughness"].default_value = 0.3
+    # membrane surface: soft folds + a fine microvillus stipple (not a smooth glossy dome)
+    mf = B.n("ShaderNodeTexNoise", **{"Scale": 28.0, "Detail": 5.0, "Distortion": 0.5}); B.ln(tc.outputs["Object"], mf.inputs["Vector"])
+    mv = B.n("ShaderNodeTexVoronoi", **{"Scale": 140.0, "Randomness": 1.0}); mv.voronoi_dimensions = "3D"
+    B.ln(tc.outputs["Object"], mv.inputs["Vector"])
+    stip = B.mapr(mv.outputs["Distance"], 0.1, 0.45, 1.0, 0.0)
+    L._bump_chain(nt, p, [(gran, 0.25), (fn.outputs["Fac"], 0.15), (nucm, 0.1), (mf.outputs["Fac"], 0.35), (stip, 0.2)], distance=0.03)
     # own glow
     on = B.m("MULTIPLY", _on(B, t, B.attr("ton"), B.attr("flo")), B.attr("amp"))
     body = B.m("MULTIPLY_ADD", B.m("POWER", B.m("SUBTRACT", 1.0, facing), 1.5), 0.85, 0.15)
@@ -1166,6 +1180,13 @@ def add_fog_glow(sc):
                         gl.inputs[k_].default_value = v_
                     except Exception:
                         pass
+        # glare only outside the fibre: strength = 0.6 * (frame > 1297.5), from the compositor's own
+        # frame (stateless: identical for any job start frame)
+        st = tree.nodes.new("CompositorNodeSceneTime")
+        gt = tree.nodes.new("ShaderNodeMath"); gt.operation = "GREATER_THAN"; gt.inputs[1].default_value = 1297.5
+        ml = tree.nodes.new("ShaderNodeMath"); ml.operation = "MULTIPLY"; ml.inputs[1].default_value = 0.6
+        tree.links.new(st.outputs["Frame"], gt.inputs[0]); tree.links.new(gt.outputs[0], ml.inputs[0])
+        tree.links.new(ml.outputs[0], gl.inputs["Strength"])
         go = tree.nodes.new("NodeGroupOutput")
         tree.links.new(rl.outputs["Image"], gl.inputs["Image"])
         tree.links.new(gl.outputs["Image"], go.inputs[0])
