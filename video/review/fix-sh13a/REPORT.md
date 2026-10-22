@@ -76,8 +76,11 @@ Any job may start on any frame.
   | 2016 | 0.051 / 0.047 | 0.000 / 0.019 |
 
   - Every 6th frame from 1958 to 2026, plus 1959, 1960, 1990 and 2016: the dark dip is ≤ 0.002 throughout.
-  - The remaining pale bump of 0.016-0.023 at y≈668 is the horizon sky seen under the darker hedge canopy.
-    It is soft and irregular, not a straight line (see the 100% crops).
+  - A pale bump of +0.016-0.023 remains at y≈668-677, and it is straight: the verifier flags it in 10-11 of
+    12 bands across the frame width. It is where the hazy sky meets flat ground at the horizon, seen under the
+    darker hedge canopy. There is no dark partner and no overshoot, and it is weaker and less consistent than
+    the old line (69-73% of columns, signal-to-noise 0.5-0.8, against 1.4-1.5 before). At 100% and at phone
+    size it reads as a natural horizon.
 - **Identity:**
   - Frames 1940-1944 rendered with 43ab22a vs bd990b2 on the same host: max raw difference 0.0016,
     blurred 0.0003. Not bit-identical (float noise from the extra nodes), but invisible.
@@ -96,5 +99,11 @@ Any job may start on any frame.
   round 1's, so there is no extra cost.
 - **Evidence:** `r2_<f>_{before,after}_hedgebase_100pct.jpg` and `r2_<f>_phone390_before_after.jpg`
   for f1960, f1990 and f2016.
+- **Independent verifier: PASS WITH NOTES.**
+  - It reproduced identity, the dip and determinism. It also checked frames 1946-1948 (inside the fade) and
+    2021, and found no shimmer and no z-fighting at the grid edge.
+  - Note 1: the pale bump above is straight, though soft.
+  - Note 2: the HDRI's orange shrub band behind the hedge bases fades out over 1944-1948 as the fade runs
+    (smooth, no pop). The background loses that feature within about a sixth of a second. Judge it in motion.
 - **Re-render:** 1944-2026 in 3 jobs: 1944-1971, 1972-1999, 2000-2026. Any job may start on any frame.
 
