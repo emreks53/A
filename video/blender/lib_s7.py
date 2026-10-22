@@ -1375,13 +1375,14 @@ def build_fibre_interior(root_name, matrix, fibre_c=(0.0105, 0.02), fibre_r=0.18
 # inner boundary membrane, folded 3-D cristae) and soft translucent tubular T-tubules.
 
 
-MITO_VOL = dict(emit=6.5, emit_small=140.0, absorb=80.0, rim=0.45)   # hero / smaller chain bodies
+MITO_VOL = dict(emit=3.5, emit_small=140.0, absorb=80.0, rim=0.40)   # hero / smaller chain bodies
 
 
 # lib_s7 puts heroMito1/2 (and a sliver of fgMito0) inside myofibrils (the old alpha decals glowed through the
 # fibril; the volumetric bodies read as dark ghosts there). Smallest offsets (local units) that clear
 # the fibrils, found by an inside-mesh test; neither body is in frame at the f1250 hand-off.
-HERO_NUDGE = {"heroMito1": (0.003, 0.0, -0.0045), "heroMito2": (-0.005, 0.0, -0.002), "fgMito0": (0.002, 0.007, 0.0025)}
+HERO_NUDGE = {"heroMito1": (0.003, 0.0, -0.0045), "heroMito2": (-0.005, 0.0, -0.002), "fgMito0": (0.002, 0.007, 0.0025),
+              "fgMito1": (0.0, 0.0, -0.004)}
 
 
 def upgrade_interior(inter, wave):
@@ -1389,7 +1390,7 @@ def upgrade_interior(inter, wave):
     hierarchy, so the hand-off framing is unchanged). Returns the new (inner-membrane) objects."""
     import re
     m_out, m_cr = mat_mito_outer_s9(), mat_cristae_s9(wave)
-    m_out_fg = mat_mito_outer_s9(0.15, "MitoOuterS9Fg")      # the out-of-focus near pair: a faint veil, never a solid blob
+    m_out_fg = mat_mito_outer_s9(0.08, "MitoOuterS9Fg")      # the out-of-focus near pair: a faint veil, never a solid blob
     m_cr_fg = m_cr.copy(); m_cr_fg.name = "CristaeS9Fg"
     for n_ in m_cr_fg.node_tree.nodes:
         if n_.type == "BSDF_PRINCIPLED":
@@ -1397,7 +1398,15 @@ def upgrade_interior(inter, wave):
         elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
             n_.inputs["To Min"].default_value = 0.0; n_.inputs["To Max"].default_value = 0.05
     m_in = mat_mito_inner_s9(MITO_VOL["emit_small"], "MitoInnerS9")        # the chains
-    m_in_hero = mat_mito_inner_s9(MITO_VOL["emit"], "MitoInnerS9Hero", rim=0.35 * MITO_VOL["rim"])    # hero variants (10-12)
+    m_in_hero = mat_mito_inner_s9(MITO_VOL["emit"], "MitoInnerS9Hero", rim=0.7 * MITO_VOL["rim"])
+    # hero folds: darker ridges seen against the glowing matrix (inner membranes), not bright slashes
+    m_cr_hero = m_cr.copy(); m_cr_hero.name = "CristaeS9Hero"
+    for n_ in m_cr_hero.node_tree.nodes:
+        if n_.type == "BSDF_PRINCIPLED":
+            n_.inputs["Base Color"].default_value = (0.30, 0.10, 0.02, 1)
+            n_.inputs["Alpha"].default_value = 0.9
+        elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
+            n_.inputs["To Min"].default_value = 0.1; n_.inputs["To Max"].default_value = 2.6    # hero variants (10-12)
     new, cr_cache, in_cache = [], {}, {}
     for o in list(inter["objects"]):
         if o.type != "MESH":
@@ -1410,7 +1419,7 @@ def upgrade_interior(inter, wave):
                 env = mito_bean(nm + "_s9", length=l_ / 1e4 * (HERO_SHAPE["length"] if hero_ else 1.0), width=w_ / 1e4,
                                 seed=v, bend=HERO_SHAPE["bend"] if hero_ else None)
                 env.materials.append(m_out)
-                in_cache[nm] = (env, inner_shell(env, m_in_hero if v >= 10 else m_in))
+                in_cache[nm] = (env, inner_shell(env, m_in_hero if v >= 10 else m_in, gap=0.11 if hero_ else 0.075))
             o.data = in_cache[nm][0]
             inner = in_cache[nm][1]
             if o.name in HERO_NUDGE:                 # lib places these two inside myofibrils: move into the gap
@@ -1438,7 +1447,10 @@ def upgrade_interior(inter, wave):
                 me.materials.append(m_cr)
                 cr_cache[nm] = me
             o.data = cr_cache[nm]
-            o.visible_shadow = o.name == "heroMito0_cr"
+            o.visible_shadow = False                 # folds never shadow the inner glow (no lit box between them)
+            if o.name == "heroMito0_cr":
+                o.material_slots[0].link = "OBJECT"
+                o.material_slots[0].material = m_cr_hero
             if o.name.startswith("fgMito"):          # near out-of-focus pair: faint folds, never bright spots
                 o.material_slots[0].link = "OBJECT"
                 o.material_slots[0].material = m_cr_fg
@@ -1538,8 +1550,8 @@ def mito_bean(name, length, width, seed=0, nu=40, nv=56, bend=None):
 
 
 HERO_SHAPE = dict(length=0.82, bend=0.09)    # round 5: the hero ~2.8:1, gentler bend (env + cristae)
-CRISTAE_HERO = dict(rad=0.80, yspan=0.35, amp=0.016, cup=0.012, tilt=3.0, bow=0.003, reach=(0.40, 0.66),
-                    reach_end=0.40, th=0.0003, pack=2.3)  # folds rooted on the inner membrane, ~9 alternating
+CRISTAE_HERO = dict(rad=0.83, yspan=0.35, amp=0.016, cup=0.012, tilt=3.0, bow=0.003, reach=(0.45, 0.72),
+                    reach_end=0.45, th=0.0002, pack=2.3)  # folds rooted on the inner membrane, ~9 alternating
 CRISTAE = dict(rad=0.64, yspan=0.24, amp=0.016, cup=0.012, tilt=3.0, bow=0.008, reach=(0.34, 0.68), reach_end=0.42)
 
 
@@ -1786,7 +1798,8 @@ HERO_KEY = dict(f0=1215, f1=1240)      # hero matrix glow: chain-bright while sm
 # the view axis (local X; screen right = +Z) around its own centre, so TRK_mito / the callout stay put.
 # The near out-of-focus pair is rolled to stay roughly parallel.
 ROLL = dict(hero=-30.0, fg=-30.0)
-NUCLEUS_SHIFT = (0.0, 0.0, 0.006)       # near out-of-focus myonucleus moves right: the hero's low end stays visible
+NUCLEUS_SHIFT = (0.0, 0.0, 0.012)
+GLOW_SCALE = 0.6       # near out-of-focus myonucleus moves right: the hero's low end stays visible
 # the corridor-edge fibril in front of the hero's low end (it cut 2-21 % of it at 1205-1220): a
 # little thinner and moved right, its T-tubule rings with it (removing it would uncover rings)
 PILLAR = dict(xz=(-0.0195, 0.0113), dz=0.0025, r=0.0058)
@@ -1861,6 +1874,9 @@ def upgrade_interior_s9(inter, wave, frames):
     hero matrix-glow key (absolute frames; identical in sh09 and sh10). Returns the new objects."""
     _roll_and_clear(inter)
     new = upgrade_interior(inter, wave)
+    gl = bpy.data.objects.get("mitoGlow")
+    if gl is not None:                                  # the folds no longer shadow it: a softer inner glow
+        gl.data.energy *= GLOW_SCALE
     fib = next(o for o in inter["objects"] if o.name == "myofibrils")
     print(f"[lib_s7] {len(fib.data.vertices) // 24} myofibrils kept, {len(_CLEARED)} cleared, "
           f"{_RINGS_DROPPED[0]} T-tubule rings dropped")
