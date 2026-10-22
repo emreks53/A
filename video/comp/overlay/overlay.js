@@ -595,8 +595,12 @@ function calloutPhases(t, ts, to) {
 function labelBlock(prim, sec, secWeight) {
   const st = TL.styles.callout;
   const P = prim ? layoutRun(prim, st.primary.family, st.primary.weight, st.primary.size, st.primary.tracking) : null;
-  const Q = sec ? layoutRun(sec, st.secondary.family, secWeight || st.secondary.weight, st.secondary.size, st.secondary.tracking) : null;
-  return { P, Q, w: Math.max(P ? P.w : 0, Q ? Q.w : 0) };
+  // a secondary holding '\n' is set as stacked lines under the rule, 'line_height' x size apart (default 1.3; overlays.py
+  // place / glide mirror the block height), each aligned to the elbow like the primary: a narrower label
+  const QL = sec ? sec.split('\n').map(s => layoutRun(s, st.secondary.family, secWeight || st.secondary.weight, st.secondary.size, st.secondary.tracking)) : [];
+  const Q = QL.length ? QL[0] : null;
+  const lhQ = (st.secondary.line_height || 1.3) * st.secondary.size;
+  return { P, Q, QL, lhQ, w: Math.max(P ? P.w : 0, ...QL.map(q => q.w)) };
 }
 
 /** Draw a run with a soft left-to-right (or right-to-left) wipe; x is the run's left edge. */
@@ -629,7 +633,8 @@ function drawCalloutCore(el, f, t, prim, sec, opts = {}) {
   const pad = st.pad;
   const shelf = lb.w + 2 * pad;
   const capP = lb.P ? lb.P.capH : 0, capQ = lb.Q ? lb.Q.capH : 0;
-  const hAbove = st.text_gap + capP + 6, hBelow = lb.Q ? st.text_gap + capQ + 10 : 6;
+  const dQ = lb.QL && lb.QL.length > 1 ? (lb.QL.length - 1) * lb.lhQ : 0;   // stacked secondary lines
+  const hAbove = st.text_gap + capP + 6, hBelow = lb.Q ? st.text_gap + capQ + 10 + dQ : 6;
   const Ld = (el.leader || st.leader) * 0.7071;
   let ex = p.xs + el.sx * Ld, ey = p.ys + el.sy * Ld;
   const sf = TL.safe;
@@ -691,8 +696,10 @@ function drawCalloutCore(el, f, t, prim, sec, opts = {}) {
   if (lb.Q && ph.sec > 0 && ta > 0.003) {
     const prog = eOutCubic(ph.sec);
     const slide = (1 - prog) * 8 * el.sx;
-    const qx0 = el.sx > 0 ? tx : tx + lb.w - lb.Q.w;
-    drawRunWipe(lb.Q, qx0 - slide, seY, st.color, ta * secA, wipeAt(prog, lb.Q.w), el.sx, SOFT, txtSh);
+    (lb.QL || [lb.Q]).forEach((q, i) => {
+      const qx0 = el.sx > 0 ? tx : tx + lb.w - q.w;
+      drawRunWipe(q, qx0 - slide, seY + i * (lb.lhQ || 0), st.color, ta * secA, wipeAt(prog, q.w), el.sx, SOFT, txtSh);
+    });
   }
   // optional per-callout scrim (overlays.json callout "scrim": k): a soft, NOT luma-gated vignette behind the label
   // for a label on a flat bright plate (the luma-gated local darkening backs off on flat backgrounds). A callout
@@ -701,8 +708,8 @@ function drawCalloutCore(el, f, t, prim, sec, opts = {}) {
   // out - 0.22 .. - 0.10), so the darkening never pops on or off in a frame
   let bw = ta;
   if (el.scrim) bw = a * smooth(lin(t, ts - 0.04, ts + 0.46)) * (1 - smooth(lin(t, to - 0.31, to)));
-  if (bw > 0.05) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0.6 * bw, 1]);
-  if (el.scrim && bw * el.scrim > 0.001) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0, 0, el.scrim * bw]);
+  if (bw > 0.05) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + dQ + 6 : prY + 6, 0.6 * bw, 1]);
+  if (el.scrim && bw * el.scrim > 0.001) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + dQ + 6 : prY + 6, 0, 0, el.scrim * bw]);
 }
 
 function drawCallout(el, f, t) { drawCalloutCore(el, f, t, el.primary, el.secondary); }

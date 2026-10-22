@@ -562,11 +562,19 @@ def resolve(spec_path=None, verbose=True):
     # ---------------- callouts (+ counter use the same placement)
     placed = []   # (frames array, boxes array) of placed labels
 
-    def place(cid, shot, trk, t_on, t_off, wlab, has_sec, prefer, leader=None):
+    def h_sec(n_sec):
+        """Label height below the rule for n_sec secondary lines (overlay.js drawCalloutCore hBelow: a secondary with
+        '\n' stacks its lines 'line_height' x size apart, default 1.3)."""
+        sc = cs["secondary"]
+        if not n_sec:
+            return 6
+        return cs["text_gap"] + sc["size"] * 0.73 + 10 + (int(n_sec) - 1) * sc.get("line_height", 1.3) * sc["size"]
+
+    def place(cid, shot, trk, t_on, t_off, wlab, n_sec, prefer, leader=None):
         L = (leader or cs["leader"]) * 0.7071
         shelf = wlab + 2 * cs["pad"]
         h_above = cs["text_gap"] + cs["primary"]["size"] * 0.73 + 6
-        h_below = (cs["text_gap"] + cs["secondary"]["size"] * 0.73 + 10) if has_sec else 6
+        h_below = h_sec(n_sec)
         f_a, f_b = int(t_on * FPS), int(t_off * FPS)
         i0, i1 = f_a - trk["f0"], f_b - trk["f0"]
         xs = np.array(trk["xs"][max(0, i0):max(1, i1)]); ys = np.array(trk["ys"][max(0, i0):max(1, i1)])
@@ -622,6 +630,29 @@ def resolve(spec_path=None, verbose=True):
         out["ys"] = np.round(cy + k * (ys - cy), 1).tolist()
         return out
 
+    def glide(trk, sx, sy, wlab, n_sec, leader, m):
+        """Label path (xs, ys) whose label box glides to a stop at the safe edge over its last m px (_soft_floor:
+        identity farther in, C1 at m) instead of meeting overlay.js's hard clamp, which stops the label dead and
+        later restarts it at full speed in one frame. Same label box as place()."""
+        L = (leader or cs["leader"]) * 0.7071
+        shelf = wlab + 2 * cs["pad"]
+        h_above = cs["text_gap"] + cs["primary"]["size"] * 0.73 + 6
+        h_below = h_sec(n_sec)
+        sf = spec["safe"]
+        xs0, ys0 = np.array(trk["xs"], float), np.array(trk["ys"], float)
+        bx0 = xs0 + sx * L - (0 if sx > 0 else shelf)
+        bx0 = sf["x0"] + _soft_floor(bx0 - sf["x0"], m)
+        bx0 = sf["x1"] - shelf - _soft_floor(sf["x1"] - shelf - bx0, m)
+        by0 = ys0 + sy * L - h_above
+        by0 = sf["y0"] + _soft_floor(by0 - sf["y0"], m)
+        by0 = sf["y1"] - h_above - h_below - _soft_floor(sf["y1"] - h_above - h_below - by0, m)
+        xs = bx0 + (0 if sx > 0 else shelf) - sx * L
+        ys = by0 + h_above - sy * L
+        out = dict(trk)
+        out["xs"] = np.where(np.abs(xs - xs0) > 0.05, np.round(xs, 1), xs0).tolist()
+        out["ys"] = np.where(np.abs(ys - ys0) > 0.05, np.round(ys, 1), ys0).tolist()
+        return out
+
     for c in spec["callouts"]:
         if c.get("enabled", True) is False:
             continue
@@ -633,10 +664,14 @@ def resolve(spec_path=None, verbose=True):
         # per-callout secondary line overrides (a label on a bright plate): alpha / weight / shadow
         sec_wt = int(c.get("secondary_weight", cs["secondary"]["weight"]))
         sec_font = inter_med if sec_wt >= 500 else inter_reg
-        wl = max(text_width(c["primary"], inter_med, cs["primary"]["size"], cs["primary"]["tracking"]),
-                 text_width(c.get("secondary", ""), sec_font, cs["secondary"]["size"], cs["secondary"]["tracking"]))
-        cand, sx, sy = place(c["id"], c["shot"], trk, ts, to, wl, bool(c.get("secondary")), c.get("prefer", []),
+        # a secondary holding '\n' is set as stacked lines (overlay.js labelBlock): the label is as wide as its widest line
+        sec_lines = c["secondary"].split("\n") if c.get("secondary") else []
+        wl = max([text_width(c["primary"], inter_med, cs["primary"]["size"], cs["primary"]["tracking"])] +
+                 [text_width(s, sec_font, cs["secondary"]["size"], cs["secondary"]["tracking"]) for s in sec_lines])
+        cand, sx, sy = place(c["id"], c["shot"], trk, ts, to, wl, len(sec_lines), c.get("prefer", []),
                              c.get("leader"))
+        if c.get("label_glide"):
+            trk = glide(trk, sx, sy, wl, len(sec_lines), c.get("leader"), float(c["label_glide"]))
         i0, i1 = int(ts * FPS) - f_lo, int(to * FPS) - f_lo
         vmean = float(np.mean(trk["v"][max(0, i0):max(1, i1)])) if i1 > i0 else 0
         if vmean < 0.8:

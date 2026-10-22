@@ -11,6 +11,12 @@
   "~mired-like units, 10 = subtle), tint (+ = magenta), sat (1 = neutral), contrast (1 = neutral, pivot 0.18);",
   "head {exposure, hold, frames}: an incoming-shot head exposure ramp - 'exposure' stops from the shot's first frame on",
   "screen (incl. its incoming transition) for 'hold' frames, then eased to 0 over the next 'frames' frames.",
+  "keys [{f0, f1, gain: [r, g, b]}, ...]: colour keys, per-channel gains in linear light applied to the plate before the",
+  "other trims (absolute frames): full gain at f0, eased (smoothstep) to none at f1 (w = 1 - smoothstep((f - f0) / (f1 - f0)),",
+  "gain 1 + w * (gain - 1)); no effect before f0 or from f1 on. For a colour step inside a shot (a render setting that",
+  "changes at a chunk boundary): the gain puts the first frame of the new chunk on the colour trend of the frames before",
+  "it, and the ease spreads the step over f0..f1. Tune on the composited --no-overlays stills (CIELAB D65 of the frame's mean colour",
+  "at f0 vs the linear trend of the 5 frames before it, within 0.7 dE); re-tune whenever either side of the seam is re-rendered.",
   "sh14b head: the 6-frame sh14a->sh14b dissolve (2385-2390) rose 126 -> 155 mean luma Y' (+23 %) where the brief wants",
   "a darkening shadow sweep; -0.7 EV held over 2385-2392 and eased out over 2393-2404 still let the FINAL mix rise +12.6 %",
   "(116 -> 131, 2384-2388: the incoming lit table lifts the dark field, and the HER SEYI scrim was released with the words",
@@ -42,7 +48,10 @@
  "head_fade": {"frames": 10, "from": "black"},
  "tail_fade": {"frames": 30, "to": "black"},
  "grade": {
-  "sh01": {}, "sh02": {}, "sh03": {}, "sh04": {}, "sh05": {}, "sh06": {}, "sh07": {}, "sh08": {}, "sh09": {},
+  "sh01": {}, "sh02": {}, "sh03": {}, "sh04": {}, "sh05": {}, "sh06": {}, "sh07": {},
+  "sh08": {"keys": [{"f0": 1091, "f1": 1115, "gain": [1.04, 1.0, 0.946]}],
+           "_doc": "the macro chunk 1091-1120 renders with diffuse_bounces 0 (1 before; MACRO_EV corrects exposure only): at 1091 the comp turned cooler and greyer (whole-frame Lab vs the 1086-1090 trend: dE 1.74, da -0.82, db -1.51) and stayed so. The key warms 1091 back onto the trend (dE 0.03) and eases out by 1115. Gains measured on the rf_n14 renders; 968-1090 will be re-rendered (thumb skin shader): re-tune then"},
+  "sh09": {},
   "sh10": {}, "sh11": {}, "sh12": {}, "sh13a": {}, "sh13b": {}, "sh14a": {}, "sh14b": {"head": {"exposure": -1.6, "hold": 8, "frames": 20}}, "sh14c": {}, "sh15": {}
  },
  "finish": {

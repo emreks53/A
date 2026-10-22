@@ -15,7 +15,7 @@ its graphic within one frame (--allow-cue-mismatch overrides for tests). The out
 padded/trimmed to the frame range) and verified (frame count, stream durations) after encoding.
 
 Processing per output frame (scene-linear float32 unless noted):
-  decode (16-bit) -> per-shot grade trims (+ optional incoming-shot head exposure ramp) -> transition mix -> bloom + halation -> vignette -> lateral CA
+  decode (16-bit) -> per-shot grade: colour keys, trims (+ optional incoming-shot head exposure ramp) -> transition mix -> bloom + halation -> vignette -> lateral CA
   -> display encode -> sharpen -> adaptive legibility under key words (+ optional per-keyword scrim floor)
   -> overlay OVER + additive light (screen)
   -> luminance-dependent animated grain (deterministic per frame) -> 8-bit -> x264 (High, yuv420p, BT.709 tags).
@@ -245,11 +245,38 @@ class ShotSource:
 
 
 # ============================================================================================ grading / FX
-def grade(img, g, ev=0.0):
-    """Per-shot trims (edit.json grade.<shot>); 'ev' = extra exposure (stops) for this frame (head_ev)."""
+def key_gains(g, f):
+    """Per-channel linear gains of the colour keys (edit.json grade.<shot>.keys) at absolute frame f, or None when
+    no key acts there. A key {"f0", "f1", "gain": [r, g, b]} has weight w = 1 at f0 easing (smoothstep) to 0 at f1
+    (w = 0 before f0 and from f1 on); its effective gain is 1 + w * (gain - 1). Several keys multiply."""
+    if f is None or not g or not g.get("keys"):
+        return None
+    acc = None
+    for k in g["keys"]:
+        f0, f1 = int(k["f0"]), int(k["f1"])
+        if f < f0 or f >= f1:
+            continue
+        w = 1.0 - smoothstep((f - f0) / max(1, f1 - f0))
+        gk = 1.0 + w * (np.asarray(k["gain"], np.float64) - 1.0)
+        acc = gk if acc is None else acc * gk
+    return None if acc is None else acc.astype(np.float32)
+
+
+def grade(img, g, ev=0.0, f=None):
+    """Per-shot trims (edit.json grade.<shot>); 'ev' = extra exposure (stops) for this frame (head_ev); 'f' = absolute
+    frame (for the colour keys).
+    keys [{"f0", "f1", "gain": [r, g, b]}, ...]: per-channel gains in linear light that ease out from full strength at
+    f0 to none at f1 (key_gains) - a plate-match correction for a colour step inside a shot (a render setting that
+    changes at a chunk boundary). Applied FIRST, on the decoded plate: gains commute with exposure / temp / tint
+    (also per-channel gains), and preceding the non-linear trims (contrast, sat) means those reshape both sides of
+    the seam alike, so the key stays a match of the plates whatever look the shot gets. Without keys (or outside
+    [f0, f1)) the output is bit-identical to a grade without them."""
     if not g:
         return img
     out = img
+    kg = key_gains(g, f)
+    if kg is not None:
+        out = out * kg
     if g.get("exposure") or ev:
         out = out * np.float32(2 ** (g.get("exposure", 0) + ev))
     if g.get("temp") or g.get("tint"):
@@ -895,13 +922,13 @@ def main():
         pl = ed.plan(f)
         if pl[0] == "single":
             sh = pl[1]
-            img = grade(src(sh).get(f), grades.get(sh["id"]), ed.head_ev(grades.get(sh["id"]), sh["id"], f))
+            img = grade(src(sh).get(f), grades.get(sh["id"]), ed.head_ev(grades.get(sh["id"]), sh["id"], f), f)
             kinds[sh["id"]] = src(sh).kind.get(f)
             t1 = time.time()
         else:
             _, A, B, p, tr = pl
-            ia = grade(src(A).get(f), grades.get(A["id"]), ed.head_ev(grades.get(A["id"]), A["id"], f))
-            ib = grade(src(B).get(f), grades.get(B["id"]), ed.head_ev(grades.get(B["id"]), B["id"], f))
+            ia = grade(src(A).get(f), grades.get(A["id"]), ed.head_ev(grades.get(A["id"]), A["id"], f), f)
+            ib = grade(src(B).get(f), grades.get(B["id"]), ed.head_ev(grades.get(B["id"]), B["id"], f), f)
             t1 = time.time()
             img = mix(tr, ia, ib, p, w, h)
         tim["src"] += t1 - t0
