@@ -298,6 +298,7 @@ def forearm_and_cuff(mesh, wrist_local, tip_local, skin):
     mesh.modifiers.clear()
     mesh.data = fused
     bpy.data.objects.remove(arm)
+    _man_detail(mesh)
     cloth = bpy.data.materials.new("S3_cuff"); cloth.use_nodes = True
     nt = cloth.node_tree; p = nt.nodes["Principled BSDF"]
     p.inputs["Base Color"].default_value = (0.20, 0.28, 0.42, 1)     # blue cotton shirt
@@ -316,33 +317,209 @@ def forearm_and_cuff(mesh, wrist_local, tip_local, skin):
     cuff = L.obj_from_bm("S3_cuff", bm, [cloth]); cuff.parent = mesh
     sol = cuff.modifiers.new("Solid", "SOLIDIFY"); sol.thickness = 0.0025
     C.subsurf(cuff, 1, 2)
-    # arm/hand hair: on the back (-palm side) of forearm and hand dorsum
-    hm = bpy.data.materials.new("S3_armhair"); hm.use_nodes = True
-    hp = hm.node_tree.nodes["Principled BSDF"]
-    hp.inputs["Base Color"].default_value = (0.05, 0.032, 0.02, 1); hp.inputs["Roughness"].default_value = 0.6
-    hp.inputs["Transmission Weight"].default_value = 0.0
-    rnd = random.Random(77)
+    _body_hair(mesh, c0)
+
+
+# Mesh-local landmarks of the fused hand (base mesh widened, fanned, curled; -y = back of the hand,
+# toward the camera; +z = toward the elbow).  Finger columns are split at the webs.
+FINGER_X = (-0.028, 0.005, 0.038)                # pinky | ring | middle | index
+KNUCKLES = ((-0.047, -0.106), (-0.008, -0.108), (0.018, -0.108), (0.057, -0.106))   # (x, z) MCP
+THUMB = ((0.062, -0.050), (0.106, -0.112))       # base -> tip
+
+
+def _smoothstep(a, b, x):
+    import numpy as np
+    t = np.clip((x - a) / (b - a), 0.0, 1.0)
+    return t * t * (3 - 2 * t)
+
+
+def _seg_dist(px, pz, a, b):
+    """Distance in the x-z plane from points to segment a-b, and the fraction t along it."""
+    import numpy as np
+    ax, az = a; bx, bz = b
+    dx, dz = bx - ax, bz - az
+    t = np.clip(((px - ax) * dx + (pz - az) * dz) / (dx * dx + dz * dz), 0.0, 1.0)
+    return np.hypot(px - ax - t * dx, pz - az - t * dz), t
+
+
+def _man_detail(mesh):
+    """What makes it read as an adult man's hand (fused hand + forearm, mesh-local): fingers and thumb
+    thickened ~13 % (blunt, not tapering), bony MCP knuckles, extensor tendons fanning over the back of
+    the hand, a few raised veins on the hand and the forearm (also on its silhouette edges), low flat
+    square nail plates.  Writes two attributes for the skin shader: 'crease_u' (signed distance to the
+    nearest finger joint / the dorsal wrist line) with weight 'crease_w', and 'nail'."""
+    import numpy as np
+    sub = mesh.modifiers.new("Dense", "SUBSURF"); sub.levels = sub.render_levels = 1
+    me = bpy.data.meshes.new_from_object(mesh.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    mesh.modifiers.clear()
+    mesh.data = me
+    nv = len(me.vertices)
+    co = np.empty(nv * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3)
+    no = np.empty(nv * 3); me.vertices.foreach_get("normal", no); no = no.reshape(-1, 3)
+    x, y, z = co[:, 0], co[:, 1], co[:, 2]
+    dors = _smoothstep(-0.05, -0.55, no[:, 1])        # faces the back of the hand (-y)
+    KZ = -0.112
+    fid = np.digitize(x, FINGER_X)                  # 0 pinky .. 3 index
+    (tbx, tbz), (ttx, ttz) = THUMB
+    th_t = ((x - tbx) * (ttx - tbx) + (z - tbz) * (ttz - tbz)) / ((ttx - tbx) ** 2 + (ttz - tbz) ** 2)
+    w_th = _smoothstep(0.30, 0.55, th_t) * _smoothstep(0.060, 0.072, x)
+    w_fi = _smoothstep(KZ + 0.006, KZ - 0.016, z) * (x < 0.084)
+    # thicker, blunter fingers and thumb; fingertips keep their reach (the tips enter frame at f515-516)
+    disp = 0.0013 * np.maximum(w_fi * (1 - _smoothstep(0.35, 0.8, -no[:, 2])), w_th)
+    # knuckles, tendons (back of the hand only)
+    for (kx, kz) in KNUCKLES:
+        r2 = (x - kx) ** 2 + (z - kz) ** 2
+        disp += 0.0013 * np.exp(-r2 / 0.0050 ** 2) * dors
+        d, t = _seg_dist(x, z, (0.010 + 0.25 * (kx - 0.010), -0.012), (kx, kz + 0.004))
+        disp += 0.0007 * np.exp(-(d / 0.0022) ** 2) * np.sin(np.pi * t) ** 0.6 * dors * (z > KZ)
+    # veins: dorsal venous arch over the hand, rising onto the forearm (back and both edges)
+    veins = [[(-0.040, -0.088), (-0.030, -0.060), (-0.022, -0.030), (-0.026, 0.000), (-0.022, 0.040), (-0.028, 0.110)],
+             [(-0.030, -0.060), (-0.008, -0.068), (0.016, -0.062), (0.034, -0.050)],
+             [(0.046, -0.088), (0.040, -0.062), (0.034, -0.050), (0.030, -0.020), (0.026, 0.010), (0.016, 0.050), (0.020, 0.120)],
+             [(0.006, -0.090), (0.004, -0.066)]]
+    vd = np.full(nv, 1.0)
+    for v in veins:
+        for a, b in zip(v, v[1:]):
+            vd = np.minimum(vd, _seg_dist(x, z, a, b)[0])
+    disp += 0.00065 * np.exp(-(vd / 0.0024) ** 2) * dors * (z > KZ + 0.012)
+    # forearm edges (the silhouette): two veins winding along the radial and ulnar borders
+    fa = z > 0.004
+    if fa.any():
+        bins = np.round(z / 0.003).astype(int)
+        cxs = {}; cys = {}
+        for bi in np.unique(bins[fa]):
+            m = fa & (bins == bi)
+            cxs[bi] = x[m].mean(); cys[bi] = y[m].mean()
+        cx = np.array([cxs.get(b, 0.0) for b in bins]); cy = np.array([cys.get(b, 0.0) for b in bins])
+        phi = np.arctan2(x - cx, -(y - cy))          # 0 = back of the forearm, +-pi/2 = its edges
+        rr = np.hypot(x - cx, y - cy)
+        for p0, amp, k in ((1.30, 0.16, 37.0), (-1.38, 0.12, 29.0)):
+            dphi = phi - (p0 + amp * np.sin(z * k + 0.7))
+            disp += 0.0006 * np.exp(-((rr * dphi) / 0.0024) ** 2) * fa * _smoothstep(0.004, 0.02, z)
+    # nails: per finger, a flat plate on the back of the last phalanx, square free edge just past the tip
+    nail = np.zeros(nv)
+    tips = []
+    for i in range(4):
+        m = (fid == i) & (z < KZ - 0.02) & (x < 0.084)
+        k = np.argmin(np.where(m, z, 1.0)); tips.append(co[k])
+    k = np.argmax(np.where(w_th > 0.5, th_t, -1.0)); tips.append(co[k])
+    crease_u = np.zeros(nv); crease_w = np.zeros(nv)
+    for i, tip in enumerate(tips):
+        if i < 4:
+            kx, kz = KNUCKLES[i]
+            m = (fid == i) & (z < KZ + 0.004) & (x < 0.084)
+            base = np.array([kx, tip[1], kz])
+        else:
+            m = w_th > 0.01
+            base = np.array([THUMB[0][0], tip[1], THUMB[0][1]])
+        near = m & (np.linalg.norm(co - tip, axis=1) < 0.022) & (np.linalg.norm(co - tip, axis=1) > 0.012)
+        c12 = co[near].mean(0) if near.any() else base
+        ax_ = (tip - c12) / np.linalg.norm(tip - c12)         # distal direction of the last phalanx
+        side = np.cross(ax_, [0.0, 1.0, 0.0]); side /= np.linalg.norm(side)
+        dv = np.cross(side, ax_); dv = -dv if dv[1] > 0 else dv     # dorsal direction of this phalanx
+        rel = co - tip
+        s = -(rel @ ax_)                                  # distance back from the tip
+        lat = np.abs(rel @ side)
+        nd = _smoothstep(0.25, 0.6, no @ dv)
+        hw = 0.0050 if i < 4 else 0.0058
+        nl = 0.0105 if i < 4 else 0.0115
+        nail_i = (_smoothstep(0.0006, 0.0016, s) * (1 - _smoothstep(nl - 0.0012, nl, s))
+                  * (1 - _smoothstep(hw - 0.0009, hw, lat)) * nd * m)
+        nail = np.maximum(nail, nail_i)
+        # dorsal joint creases (MCP, PIP, DIP)
+        L_ = np.linalg.norm(tip - base)
+        u = (co - base) @ ((tip - base) / L_)
+        joints = np.array([0.0, 0.47, 0.78]) * L_ if i < 4 else np.array([0.0, 0.52]) * L_
+        jd = u[:, None] - joints[None, :]
+        j = np.argmin(np.abs(jd), axis=1)
+        cu = jd[np.arange(nv), j]
+        cw = np.exp(-(cu / 0.0028) ** 2) * dors * m * (1 - nail_i)
+        sel = cw > crease_w
+        crease_u[sel] = cu[sel]; crease_w[sel] = cw[sel]
+    # dorsal wrist wrinkles (the wrist is extended)
+    cw = np.exp(-((z - 0.004) / 0.007) ** 2) * dors
+    sel = cw > crease_w
+    crease_u[sel] = (z - 0.004)[sel]; crease_w[sel] = cw[sel]
+    disp += 0.00025 * nail
+    co += no * disp[:, None]
+    me.vertices.foreach_set("co", co.ravel())
+    for name, val in (("crease_u", crease_u), ("crease_w", crease_w), ("nail", nail)):
+        a = me.attributes.new(name, "FLOAT", "POINT")
+        a.data.foreach_set("value", val.astype(np.float32))
+    me.update()
+
+
+def _body_hair(mesh, cuff_c0):
+    """A man's body hair, sampled on the fused skin (mesh-local): dense on the forearm (back and both
+    edges, sparse on the inner side) up to the cuff, sparser on the back of the hand, a few short ones
+    on the first finger segments.  Hairs lie distally and toward the little finger, lifted 20-50 deg
+    off the skin, so on the silhouette they stand out as a fringe that the backlight rim-lights."""
+    import numpy as np
+    me = mesh.data
+    me.calc_loop_triangles()
+    nt = len(me.loop_triangles)
+    tri = np.empty(nt * 3, dtype=np.int64); me.loop_triangles.foreach_get("vertices", tri); tri = tri.reshape(-1, 3)
+    area = np.empty(nt); me.loop_triangles.foreach_get("area", area)
+    nrm = np.empty(nt * 3); me.loop_triangles.foreach_get("normal", nrm); nrm = nrm.reshape(-1, 3)
+    co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3)
+    cen = co[tri].mean(1)
+    x, z = cen[:, 0], cen[:, 2]
+    zc = cuff_c0.z - 0.004
+    back = _smoothstep(0.9, -0.3, nrm[:, 1])          # back + edges of the forearm / hand
+    # density per m^2 of skin (mesh-local units)
+    dens = (np.where((z > 0.0) & (z < zc), 1.0, 0.0) * (0.30 + 0.70 * back) * 1.9e5
+            + np.where((z > -0.098) & (z <= 0.0), 1.0, 0.0) * _smoothstep(0.85, -0.3, nrm[:, 1]) * 1.0e5
+            + np.where((z > -0.142) & (z <= -0.098) & (x < 0.084), 1.0, 0.0) * _smoothstep(0.5, -0.5, nrm[:, 1]) * 0.45e5)
+    lam = dens * area
+    rnd = np.random.default_rng(4077)
+    cnt = rnd.poisson(lam)
+    ti = np.repeat(np.arange(nt), cnt)
+    n = len(ti)
+    r1 = np.sqrt(rnd.random(n)); r2 = rnd.random(n)
+    a, b, c = co[tri[ti, 0]], co[tri[ti, 1]], co[tri[ti, 2]]
+    root = a * (1 - r1)[:, None] + b * (r1 * (1 - r2))[:, None] + c * (r1 * r2)[:, None]
+    nn = nrm[ti]
+    zr = root[:, 2]
+    on_arm = zr > 0.0
+    # lay direction: distal (-z), slanted toward the little-finger side (-x), jittered
+    lay = np.stack([-0.35 + rnd.normal(0, 0.45, n), np.zeros(n), -np.ones(n)], 1)
+    lay -= nn * (lay * nn).sum(1)[:, None]
+    lay /= np.linalg.norm(lay, axis=1)[:, None] + 1e-9
+    lift = np.radians(rnd.uniform(20, 50, n))
+    d = lay * np.cos(lift)[:, None] + nn * np.sin(lift)[:, None]
+    L_ = np.where(on_arm, rnd.uniform(0.0045, 0.0075, n),
+                  np.where(zr > -0.098, rnd.uniform(0.0032, 0.0058, n), rnd.uniform(0.0020, 0.0036, n)))
+    curl = np.cross(d, nn); curl *= rnd.uniform(-0.25, 0.25, n)[:, None]
+    pts = []
+    for k, f in enumerate((0.0, 0.33, 0.67, 1.0)):
+        # bends back toward the skin and sideways a little along its length
+        pts.append(root - nn * 0.00012 * (k == 0) + (d * f + curl * f * f - nn * 0.18 * f * f) * L_[:, None])
+    P = np.stack(pts, 1)
     cv = bpy.data.hair_curves.new("S3_armhair")
-    n = 520
-    cv.add_curves([3] * n)
-    pos = []
-    for i in range(n):
-        if i < 520:                        # forearm (below the cuff)
-            t = rnd.uniform(0.0, 0.075)
-            a = rnd.uniform(-1.3, 1.3) + math.pi * (0.5 if PALM_SIGN > 0 else -0.5) * -1
-            n_ = e1 * math.cos(a) + e2 * math.sin(a)
-            root = surf((w0 - wrist_local).dot(up) + t, a) - n_ * 0.0003     # on the forearm's skin
-        else:                              # back of the hand
-            root = Vector((rnd.uniform(-0.035, 0.05), -0.014 * PALM_SIGN * 1.22, rnd.uniform(-0.10, 0.02)))
-            n_ = Vector((0, -PALM_SIGN, 0))
-        d = (n_ * 0.45 + up * 0.9).normalized()
-        L_ = rnd.uniform(0.003, 0.007)
-        pos += [root, root + d * L_ * 0.5 + n_ * L_ * 0.08, root + d * L_]
-    cv.attributes["position"].data.foreach_set("vector", [c for q in pos for c in q])
+    cv.add_curves([4] * n)
+    cv.attributes["position"].data.foreach_set("vector", P.ravel().astype(np.float32))
     ra = cv.attributes.get("radius") or cv.attributes.new("radius", "FLOAT", "POINT")
-    ra.data.foreach_set("value", [0.000012, 0.000009, 0.000004] * n)
+    rr = np.where(on_arm, 0.000036, 0.000030)[:, None] * np.array([[1.0, 0.85, 0.6, 0.25]])
+    ra.data.foreach_set("value", rr.ravel().astype(np.float32))
+    hm = bpy.data.materials.new("S3_armhair"); hm.use_nodes = True
+    ntr = hm.node_tree
+    ntr.nodes.remove(ntr.nodes["Principled BSDF"])
+    hb = ntr.nodes.new("ShaderNodeBsdfHairPrincipled")
+    hb.parametrization = "MELANIN"
+    hb.inputs["Melanin"].default_value = 0.30
+    hb.inputs["Melanin Redness"].default_value = 0.65
+    hb.inputs["Roughness"].default_value = 0.35
+    hb.inputs["Radial Roughness"].default_value = 0.45
+    hb.inputs["Coat"].default_value = 0.0
+    # thin keratin glows where the sun is behind it (wide forward scatter, which the fibre model's
+    # narrow transmission lobe misses at this sun/camera angle)
+    tr = ntr.nodes.new("ShaderNodeBsdfTranslucent"); tr.inputs["Color"].default_value = (0.90, 0.62, 0.36, 1)
+    mx = ntr.nodes.new("ShaderNodeMixShader"); mx.inputs["Fac"].default_value = 0.65
+    ntr.links.new(hb.outputs[0], mx.inputs[1]); ntr.links.new(tr.outputs[0], mx.inputs[2])
+    ntr.links.new(mx.outputs[0], ntr.nodes["Material Output"].inputs["Surface"])
     cv.materials.append(hm)
     ho = bpy.data.objects.new("S3_armhair", cv); C.link(ho); ho.parent = mesh
+    print(f"[sh04] body hair: {n} strands", flush=True)
 
 
 def _forearm_rings(mesh, wrist_local, up, n=64):
@@ -430,15 +607,41 @@ def mat_skin():
     nt.links.new(geo.outputs["Object"], vor.inputs["Vector"])
     p.inputs["Base Color"].default_value = (0.17, 0.095, 0.062, 1)    # a man's sun-tanned skin, exposed for the sky behind
     p.inputs["Subsurface Weight"].default_value = 1.0
-    p.inputs["Subsurface Radius"].default_value = (1.0, 0.33, 0.14)
-    p.inputs["Subsurface Scale"].default_value = 0.0024
+    # backlit: a wider, warmer scatter so the whole thin rim of each finger glows orange-red (not just
+    # nail-shaped caps at the tips)
+    p.inputs["Subsurface Radius"].default_value = (1.0, 0.42, 0.20)
+    p.inputs["Subsurface Scale"].default_value = 0.0040
     p.inputs["Roughness"].default_value = 0.62
     p.inputs["Specular IOR Level"].default_value = 0.28
     p.inputs["Sheen Weight"].default_value = 0.0
     b = nt.nodes.new("ShaderNodeBump"); b.inputs["Strength"].default_value = 0.25; b.inputs["Distance"].default_value = 0.0002
     mx = nt.nodes.new("ShaderNodeMath"); mx.operation = "ADD"
     nt.links.new(nz.outputs[0], mx.inputs[0]); nt.links.new(vor.outputs["Distance"], mx.inputs[1])
-    nt.links.new(mx.outputs[0], b.inputs["Height"]); nt.links.new(b.outputs[0], p.inputs["Normal"])
+    nt.links.new(mx.outputs[0], b.inputs["Height"])
+    # dorsal joint/wrist wrinkles: fine transverse folds around each crease line ('crease_u', see _man_detail)
+    au = nt.nodes.new("ShaderNodeAttribute"); au.attribute_name = "crease_u"
+    aw = nt.nodes.new("ShaderNodeAttribute"); aw.attribute_name = "crease_w"
+    an = nt.nodes.new("ShaderNodeAttribute"); an.attribute_name = "nail"
+    wn = nt.nodes.new("ShaderNodeTexNoise"); wn.inputs["Scale"].default_value = 160
+    nt.links.new(geo.outputs["Object"], wn.inputs["Vector"])
+    ph = nt.nodes.new("ShaderNodeMath"); ph.operation = "MULTIPLY_ADD"; ph.inputs[1].default_value = 2 * math.pi / 0.0011
+    nt.links.new(au.outputs["Fac"], ph.inputs[0]); nt.links.new(wn.outputs[0], ph.inputs[2])
+    sn = nt.nodes.new("ShaderNodeMath"); sn.operation = "SINE"; nt.links.new(ph.outputs[0], sn.inputs[0])
+    sq = nt.nodes.new("ShaderNodeMath"); sq.operation = "ABSOLUTE"; nt.links.new(sn.outputs[0], sq.inputs[0])
+    hw = nt.nodes.new("ShaderNodeMath"); hw.operation = "MULTIPLY"
+    nt.links.new(sq.outputs[0], hw.inputs[0]); nt.links.new(aw.outputs["Fac"], hw.inputs[1])
+    b2 = nt.nodes.new("ShaderNodeBump"); b2.inputs["Strength"].default_value = 0.9; b2.inputs["Distance"].default_value = 0.00035
+    nt.links.new(hw.outputs[0], b2.inputs["Height"]); nt.links.new(b.outputs[0], b2.inputs["Normal"])
+    nt.links.new(b2.outputs[0], p.inputs["Normal"])
+    # nails: a slightly smoother, paler, less translucent plate (no pale glinting tip)
+    for sock, skin_v, nail_v in (("Roughness", 0.62, 0.56), ("Subsurface Weight", 1.0, 0.7)):
+        mr = nt.nodes.new("ShaderNodeMapRange"); nt.links.new(an.outputs["Fac"], mr.inputs["Value"])
+        mr.inputs["To Min"].default_value = skin_v; mr.inputs["To Max"].default_value = nail_v
+        nt.links.new(mr.outputs[0], p.inputs[sock])
+    mc = nt.nodes.new("ShaderNodeMix"); mc.data_type = "RGBA"
+    nt.links.new(an.outputs["Fac"], mc.inputs[0])
+    mc.inputs[6].default_value = (0.17, 0.095, 0.062, 1); mc.inputs[7].default_value = (0.20, 0.125, 0.095, 1)
+    nt.links.new(mc.outputs[2], p.inputs["Base Color"])
     return m
 
 
