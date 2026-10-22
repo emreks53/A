@@ -353,7 +353,7 @@ def body_hair(hand, arm):
     x, z = cen[:, 0], cen[:, 2]
     zc = CUFF_Z0 - 0.004
     back = _smoothstep_np(0.9, -0.3, nrm[:, 1])           # back + edges (rest -Y = back of the hand)
-    dens = (np.where((z > 0.0) & (z < zc), 1.0, 0.0) * (0.30 + 0.70 * back) * 1.2e5
+    dens = (np.where((z > 0.0) & (z < zc), 1.0, 0.0) * (0.30 + 0.70 * back) * 1.5e5
             + np.where((z > -0.098) & (z <= 0.0), 1.0, 0.0) * _smoothstep_np(0.85, -0.3, nrm[:, 1]) * 1.0e5
             + np.where((z > -0.142) & (z <= -0.098) & (x > -0.05) & (x < 0.04), 1.0, 0.0)
             * _smoothstep_np(0.5, -0.5, nrm[:, 1]) * 0.8e5)
@@ -378,13 +378,13 @@ def body_hair(hand, arm):
     ang = np.radians(rnd.uniform(-8.0, 8.0, n))
     lay = lay * np.cos(ang)[:, None] + side * np.sin(ang)[:, None]
     dors = _smoothstep_np(0.55, 0.85, -nn[:, 1])                 # 1 on the back of the forearm / hand
-    lift = np.radians(np.where(on_arm, 4.0 + (1 - dors) * 14.0, 8.0 + (1 - dors) * 12.0) + rnd.uniform(0, 4.0, n))
+    lift = np.radians(np.where(on_arm, 4.0 + (1 - dors) * 22.0, 18.0 + (1 - dors) * 14.0) + rnd.uniform(0, 4.0, n))
     d = lay * np.cos(lift)[:, None] + nn * np.sin(lift)[:, None]
     L_ = np.where(on_arm, rnd.uniform(0.010, 0.015, n), np.where(on_hand, rnd.uniform(0.008, 0.012, n),
                                                                  rnd.uniform(0.003, 0.005, n)))
     P = np.stack([root - nn * 0.00012 * (k == 0) + (d * f - nn * 0.10 * f * f * np.sin(lift)[:, None]) * L_[:, None]
                   for k, f in enumerate((0.0, 0.33, 0.67, 1.0))], 1)
-    R = np.where(on_arm, 0.000044, 0.000055)[:, None] * np.array([[1.0, 0.85, 0.6, 0.25]])
+    R = np.where(on_arm, 0.000050, 0.000055)[:, None] * np.array([[1.0, 0.85, 0.6, 0.25]])
     # bone per strand: forearm / hand / nearest proximal phalanx
     fing = ("index", "middle", "ring", "little")
     fx = np.array([H.JOINTS[k][0].x for k in fing])
@@ -397,7 +397,7 @@ def body_hair(hand, arm):
     # the window light rims the fringe. (The Chiang fibre model cost ~30 s/frame in the close-ups.)
     hi = ntr.nodes.new("ShaderNodeHairInfo")
     pb = ntr.nodes.new("ShaderNodeBsdfPrincipled"); pb.inputs["Roughness"].default_value = 0.38
-    pc = H._mixc(ntr, hi.outputs["Intercept"], (0.075, 0.045, 0.026), (0.32, 0.21, 0.12))
+    pc = H._mixc(ntr, hi.outputs["Intercept"], (0.05, 0.03, 0.018), (0.30, 0.19, 0.11))
     ntr.links.new(pc, pb.inputs["Base Color"])
     tr = ntr.nodes.new("ShaderNodeBsdfTranslucent")
     ntr.links.new(H._mixc(ntr, hi.outputs["Intercept"], (0.30, 0.17, 0.08), (0.80, 0.55, 0.30)), tr.inputs["Color"])
@@ -547,10 +547,10 @@ def man_skin(skin):
     col = sk.inputs["Base Color"].links[0].from_socket
     vor = {round(n.inputs["Scale"].default_value): n for n in nt.nodes if n.bl_idname == "ShaderNodeTexVoronoi"}
     pore = H._math(nt, "SUBTRACT", 1.0, H._smoothstep(nt, vor[2600].outputs["Distance"], 0.0, 0.16))      # reuse lib cells
-    # skin lines: one dominant direction (Langer lines run around the forearm) as soft wavy grooves that never cross
-    # (lib_s5's cellular net drew crisp polygon edges, X and V shapes at macro); secondary texture stays in the noise
+    # skin lines: soft wavy grooves in ONE direction, along the arm like the combed hair, so no line ever crosses another
+    # line or a hair (lib_s5's cellular net drew crisp polygon edges, X and V shapes at macro)
     R0 = H._attr(nt, "rest", "Vector")
-    wvl = nt.nodes.new("ShaderNodeTexWave"); wvl.wave_type = "BANDS"; wvl.bands_direction = "Z"; wvl.wave_profile = "SIN"
+    wvl = nt.nodes.new("ShaderNodeTexWave"); wvl.wave_type = "BANDS"; wvl.bands_direction = "X"; wvl.wave_profile = "SIN"
     wvl.inputs["Scale"].default_value = 1300.0; wvl.inputs["Distortion"].default_value = 3.5
     wvl.inputs["Detail"].default_value = 1.0; wvl.inputs["Detail Scale"].default_value = 1.2
     nt.links.new(R0, wvl.inputs["Vector"])
