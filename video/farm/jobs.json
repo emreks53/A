@@ -1187,6 +1187,15 @@
    "from": 949,
    "to": 979,
    "note": "final round 2: no sun-disc glint 903-907 (SeamCatcher), OceanMid sway breaks the fan (fix 8e9e519 on da9e92d); whole 851-979"
+  },
+  {
+   "node": "b112",
+   "branch": "render-fix-sh14a",
+   "ref": "169621321df3e4d2ed1c5aef885ad7ff7eeaf026",
+   "shot": "sh14a",
+   "from": 2280,
+   "to": 2319,
+   "note": "final round 4b: short sun dip 2282-2294 for the front-lit left heads (fix 1696213 on fd913f0); replaces b92 only"
   }
  ]
 }
