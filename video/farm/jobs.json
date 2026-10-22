@@ -1646,6 +1646,42 @@
    "from": 1229,
    "to": 1255,
    "note": "r6 look C (a82b349)"
+  },
+  {
+   "node": "b163",
+   "branch": "render-fix-sh10",
+   "ref": "b1ac91e7bb3f658c3ec808ccbd71e274a139109d",
+   "shot": "sh10",
+   "from": 1244,
+   "to": 1279,
+   "note": "r6 sh09 look C interior (b1ac91e)"
+  },
+  {
+   "node": "b164",
+   "branch": "render-fix-sh10",
+   "ref": "b1ac91e7bb3f658c3ec808ccbd71e274a139109d",
+   "shot": "sh10",
+   "from": 1280,
+   "to": 1307,
+   "note": "r6 sh09 look C interior (b1ac91e)"
+  },
+  {
+   "node": "b165",
+   "branch": "render-fix-sh10",
+   "ref": "b1ac91e7bb3f658c3ec808ccbd71e274a139109d",
+   "shot": "sh10",
+   "from": 1308,
+   "to": 1352,
+   "note": "r6 sh09 look C interior (b1ac91e)"
+  },
+  {
+   "node": "b166",
+   "branch": "render-fix-sh10",
+   "ref": "b1ac91e7bb3f658c3ec808ccbd71e274a139109d",
+   "shot": "sh10",
+   "from": 1353,
+   "to": 1397,
+   "note": "r6 sh09 look C interior (b1ac91e)"
   }
  ]
 }
