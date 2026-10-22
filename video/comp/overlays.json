@@ -232,7 +232,7 @@
    "_doc": "free-standing live count (TRK_cells is on screen only 54.4-56.1 s), log-accelerating from 1 cell to ~37 trillion during the pull-back, landing on the tick; sits below the key-word band",
    "count_from": 1, "count_to": 37e12, "t0": 52.62, "land": 56.15, "out": 57.90,
    "final": "~37 trilyon", "unit": "hücre", "cue": "sh10.counter",
-   "family": "Inter Display NX", "_doc_family": "HARD RULE no cross shape: Inter's 4 runs its bar past the stem (a '+', arms 27/9/34/14 px at 66 px, 31 frames of the count); the count uses Inter Display Light with that spur cut off at the stem (overlays.py font_inter_nx: the bar meets the stem from the left, a T); its t (and every Inter t / f / f.i, overlays.py CUT_LEFT_BAR: the 66 px Light t of '~37 trilyon' was a '+', arms 7.9/9.2/11/30 px) loses the crossbar's left arm; everything else Inter's own", "fallback": [[52.1, 540, 1000], [58.0, 540, 990]],
+   "family": "Inter Display", "_doc_family": "stock Inter Display Light (the patched Inter Display NX - 4 without its spur, t / f without the crossbar's left arm - is withdrawn: letters and digits are not crosses)", "fallback": [[52.1, 540, 1000], [58.0, 540, 990]],
    "prefer": ["dr", "dl"]},
 
   {"id": "w_network", "type": "network", "shot": "sh12",

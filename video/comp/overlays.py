@@ -117,6 +117,8 @@ def font_cormorant():
 
 
 NX_SRC = "InterDisplay-Light.otf"
+# WITHDRAWN (client: letters and digits are not crosses; cut strokes read as typos): resolve() no longer loads the
+# patched faces below - the overlays use stock Inter / Inter Display. The helpers are kept, unused. Former rule:
 # HARD RULE no cross shape, at any size: Inter's lowercase t and f (and f.i, its calt form before an i, e.g. 'lifi') are
 # daggers - the crossbar runs through the stem and out on both sides, four arms. Every Inter face that sets lowercase
 # (the callouts' Inter Regular / Medium / SemiBold, the counter's Inter Display NX) gets the crossbar's LEFT arm cut off at
@@ -824,12 +826,9 @@ def resolve(spec_path=None, verbose=True):
             raise ValueError(f"unknown widget type {ty}")
 
     corm = font_cormorant()
-    nx = font_inter_nx()
-    itf = fonts_inter_tf()
-    # the patched 'Inter' faces (t / f without the crossbar's left arm) shadow the system family for every weight used
-    faces = ([["Cormorant Garamond", "file://" + corm, "300 700"], ["Inter Display NX", "file://" + nx, "300"]]
-             + [["Inter", "file://" + p, wt] for p, wt in itf])
-    font_files = [corm, nx] + [p for p, _ in itf] + [os.path.join(INTER_DIR, n) for n in INTER_FILES]
+    # stock Inter / Inter Display glyphs everywhere (the patched faces of font_inter_nx / fonts_inter_tf are withdrawn)
+    faces = [["Cormorant Garamond", "file://" + corm, "300 700"]]
+    font_files = [corm] + [os.path.join(INTER_DIR, n) for n in INTER_FILES]
     tl = {"W": W, "H": H, "fps": FPS, "safe": spec["safe"], "styles": styles,
           "fonts": {"faces": faces, "sha256": {os.path.basename(p): _sha_cached(p) for p in font_files}},
           "elements": els, "sync_points": sorted(sync_points, key=lambda s: s["t"] if isinstance(s["t"], float) else s["t"][0])}
