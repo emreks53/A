@@ -510,6 +510,12 @@ def make_bouton_mat(t_junc):
 MITO_VOL = dict(emit=22.0, emit_small=140.0, absorb=80.0, rim=0.25)   # hero / smaller chain bodies
 
 
+# lib_s7 puts heroMito1/2 almost entirely inside myofibrils (the old alpha decals glowed through the
+# fibril; the volumetric bodies read as dark ghosts there). Smallest offsets (local units) that clear
+# the fibrils, found by an inside-mesh test; neither body is in frame at the f1250 hand-off.
+HERO_NUDGE = {"heroMito1": (0.002, 0.0, -0.006), "heroMito2": (-0.005, 0.0, -0.002)}
+
+
 def upgrade_interior(inter, wave):
     """Swap materials / meshes of the interior built by lib_s7 (same objects, transforms and
     hierarchy, so the hand-off framing is unchanged). Returns the new (inner-membrane) objects."""
@@ -529,8 +535,22 @@ def upgrade_interior(inter, wave):
                 env.materials.append(m_out)
                 in_cache[nm] = (env, inner_shell(env, m_in_hero if v >= 10 else m_in))
             o.data = in_cache[nm][0]
-            c = L.obj_from_mesh(o.name + "_in", in_cache[nm][1]); c.parent = o
+            inner = in_cache[nm][1]
+            if o.name in HERO_NUDGE:                 # lib places these two inside myofibrils: move into the gap
+                o.location += Vector(HERO_NUDGE[o.name])
+            if o.name.startswith("fgMito"):          # the out-of-focus foreground pair: deep amber like the hero
+                if nm + "_fg" not in in_cache:
+                    in_cache[nm + "_fg"] = inner.copy()
+                    in_cache[nm + "_fg"].materials[0] = m_in_hero
+                inner = in_cache[nm + "_fg"]
+                if o.name == "fgMito1":               # tilt in the screen plane: never an upright body rising from the frame edge
+                    o.rotation_euler.x -= math.radians(22)
+            c = L.obj_from_mesh(o.name + "_in", inner); c.parent = o
             new.append(c)
+            # glowing translucent organelle: no hard shadow from the inner glow light onto the fibrils
+            # (the hero itself, which holds that light, keeps its shadows: it dims its own glow)
+            for x_ in (o, c):
+                x_.visible_shadow = o.name == "heroMito0"
         elif nm.startswith("mitoCr"):
             if nm not in cr_cache:
                 v, l_, w_ = (int(x) for x in re.match(r"mitoCr(\d+)_(\d+)_(\d+)", nm).groups())
@@ -538,6 +558,7 @@ def upgrade_interior(inter, wave):
                 me.materials.append(m_cr)
                 cr_cache[nm] = me
             o.data = cr_cache[nm]
+            o.visible_shadow = o.name == "heroMito0_cr"
         elif o.name == "SR":
             soft_ttubules(o)
     return new
@@ -557,7 +578,7 @@ def inner_shell(env, mat, gap=0.075):
 # Mitochondrion shape (round 2): an asymmetric bean, never a symmetric pointed spindle.
 # Local frame as lib_s7: long axis Y; the bend and the flatter flank are in the X-Z plane along Z
 # (for the hero, whose rotation is zero, Z is the screen's horizontal, so the bean reads on screen).
-BEAN = dict(p=3.0, bend=0.11, flat=0.68, depth=0.92, taper=0.08)
+BEAN = dict(p=3.0, bend=0.16, flat=0.68, depth=0.92, taper=0.08)
 
 
 def bean_centre(t, width):
@@ -683,7 +704,7 @@ def mat_mito_outer_s9():
     """Outer mitochondrial membrane: glossy wet amber film with SSS; nearly clear face-on and dense
     at the silhouette (a membrane seen edge-on), so the body reads as a translucent volume."""
     m, nt, p = L.mat_wet_tissue("MitoOuterS9", base=(0.34, 0.09, 0.02), sss_radius=(1.0, 0.55, 0.25),
-                                sss_scale=0.0025, rough=0.32, coat=1.0, coat_rough=0.05)
+                                sss_scale=0.0025, rough=0.32, coat=0.6, coat_rough=0.14)
     lw = L._n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.3
     pw = L._n(nt, "ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 1.6
     nt.links.new(lw.outputs["Facing"], pw.inputs[0])
