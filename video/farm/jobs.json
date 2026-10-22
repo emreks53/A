@@ -881,6 +881,87 @@
    "from": 651,
    "to": 682,
    "note": "final round: shafts radiate from the sun, taper/shimmer, no cross; soft TIR (fix f122abd)"
+  },
+  {
+   "node": "b78",
+   "branch": "render-fix-sh12",
+   "ref": "92732473ed24f6d3922ed9408231caf83b200d39",
+   "shot": "sh12",
+   "from": 1526,
+   "to": 1554,
+   "note": "final round: real-aerial valley floor, clumped scrub/copses, ground micro-structure, haze (fix 9273247); whole shot"
+  },
+  {
+   "node": "b79",
+   "branch": "render-fix-sh12",
+   "ref": "92732473ed24f6d3922ed9408231caf83b200d39",
+   "shot": "sh12",
+   "from": 1555,
+   "to": 1583,
+   "note": "final round: real-aerial valley floor, clumped scrub/copses, ground micro-structure, haze (fix 9273247); whole shot"
+  },
+  {
+   "node": "b80",
+   "branch": "render-fix-sh12",
+   "ref": "92732473ed24f6d3922ed9408231caf83b200d39",
+   "shot": "sh12",
+   "from": 1584,
+   "to": 1612,
+   "note": "final round: real-aerial valley floor, clumped scrub/copses, ground micro-structure, haze (fix 9273247); whole shot"
+  },
+  {
+   "node": "b81",
+   "branch": "render-fix-sh12",
+   "ref": "92732473ed24f6d3922ed9408231caf83b200d39",
+   "shot": "sh12",
+   "from": 1613,
+   "to": 1641,
+   "note": "final round: real-aerial valley floor, clumped scrub/copses, ground micro-structure, haze (fix 9273247); whole shot"
+  },
+  {
+   "node": "b82",
+   "branch": "render-fix-sh12",
+   "ref": "92732473ed24f6d3922ed9408231caf83b200d39",
+   "shot": "sh12",
+   "from": 1642,
+   "to": 1670,
+   "note": "final round: real-aerial valley floor, clumped scrub/copses, ground micro-structure, haze (fix 9273247); whole shot"
+  },
+  {
+   "node": "b83",
+   "branch": "render-fix-sh12",
+   "ref": "92732473ed24f6d3922ed9408231caf83b200d39",
+   "shot": "sh12",
+   "from": 1671,
+   "to": 1699,
+   "note": "final round: real-aerial valley floor, clumped scrub/copses, ground micro-structure, haze (fix 9273247); whole shot"
+  },
+  {
+   "node": "b84",
+   "branch": "render-fix-sh12",
+   "ref": "92732473ed24f6d3922ed9408231caf83b200d39",
+   "shot": "sh12",
+   "from": 1700,
+   "to": 1728,
+   "note": "final round: real-aerial valley floor, clumped scrub/copses, ground micro-structure, haze (fix 9273247); whole shot"
+  },
+  {
+   "node": "b85",
+   "branch": "render-fix-sh12",
+   "ref": "92732473ed24f6d3922ed9408231caf83b200d39",
+   "shot": "sh12",
+   "from": 1729,
+   "to": 1757,
+   "note": "final round: real-aerial valley floor, clumped scrub/copses, ground micro-structure, haze (fix 9273247); whole shot"
+  },
+  {
+   "node": "b86",
+   "branch": "render-fix-sh12",
+   "ref": "92732473ed24f6d3922ed9408231caf83b200d39",
+   "shot": "sh12",
+   "from": 1758,
+   "to": 1785,
+   "note": "final round: real-aerial valley floor, clumped scrub/copses, ground micro-structure, haze (fix 9273247); whole shot"
   }
  ]
 }
