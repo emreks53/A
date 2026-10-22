@@ -1196,6 +1196,33 @@
    "from": 2280,
    "to": 2319,
    "note": "final round 4b: short sun dip 2282-2294 for the front-lit left heads (fix 1696213 on fd913f0); replaces b92 only"
+  },
+  {
+   "node": "b113",
+   "branch": "render-fix-sh13a",
+   "ref": "43ab22aef553a40c6b9a356fb4dab7ca4573778f",
+   "shot": "sh13a",
+   "from": 1944,
+   "to": 1971,
+   "note": "final round 2: ground and haze out to the horizon, no straight line at the hedge base (fix 43ab22a on bd990b2); keyed in 1944-1952, 1943 and earlier kept"
+  },
+  {
+   "node": "b114",
+   "branch": "render-fix-sh13a",
+   "ref": "43ab22aef553a40c6b9a356fb4dab7ca4573778f",
+   "shot": "sh13a",
+   "from": 1972,
+   "to": 1999,
+   "note": "final round 2: ground and haze out to the horizon, no straight line at the hedge base (fix 43ab22a on bd990b2); keyed in 1944-1952, 1943 and earlier kept"
+  },
+  {
+   "node": "b115",
+   "branch": "render-fix-sh13a",
+   "ref": "43ab22aef553a40c6b9a356fb4dab7ca4573778f",
+   "shot": "sh13a",
+   "from": 2000,
+   "to": 2026,
+   "note": "final round 2: ground and haze out to the horizon, no straight line at the hedge base (fix 43ab22a on bd990b2); keyed in 1944-1952, 1943 and earlier kept"
   }
  ]
 }
