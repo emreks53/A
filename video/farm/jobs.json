@@ -998,6 +998,42 @@
    "from": 1995,
    "to": 2026,
    "note": "final round: meadow to the treeline, real tree haze/bark, warm gain on the beat (fix bd990b2); 1895 and earlier unchanged"
+  },
+  {
+   "node": "b91",
+   "branch": "render-fix-sh14a",
+   "ref": "fd913f0db1935d8fae02a6bf5b616eb413ffb4b8",
+   "shot": "sh14a",
+   "from": 2240,
+   "to": 2279,
+   "note": "final round 4: no daisy heads under 'her seye sefkat eden', warm sky; 'Allah' keys locked = 337ae85 (fix fd913f0); 2198-2239 unchanged"
+  },
+  {
+   "node": "b92",
+   "branch": "render-fix-sh14a",
+   "ref": "fd913f0db1935d8fae02a6bf5b616eb413ffb4b8",
+   "shot": "sh14a",
+   "from": 2280,
+   "to": 2319,
+   "note": "final round 4: no daisy heads under 'her seye sefkat eden', warm sky; 'Allah' keys locked = 337ae85 (fix fd913f0); 2198-2239 unchanged"
+  },
+  {
+   "node": "b93",
+   "branch": "render-fix-sh14a",
+   "ref": "fd913f0db1935d8fae02a6bf5b616eb413ffb4b8",
+   "shot": "sh14a",
+   "from": 2320,
+   "to": 2359,
+   "note": "final round 4: no daisy heads under 'her seye sefkat eden', warm sky; 'Allah' keys locked = 337ae85 (fix fd913f0); 2198-2239 unchanged"
+  },
+  {
+   "node": "b94",
+   "branch": "render-fix-sh14a",
+   "ref": "fd913f0db1935d8fae02a6bf5b616eb413ffb4b8",
+   "shot": "sh14a",
+   "from": 2360,
+   "to": 2393,
+   "note": "final round 4: no daisy heads under 'her seye sefkat eden', warm sky; 'Allah' keys locked = 337ae85 (fix fd913f0); 2198-2239 unchanged"
   }
  ]
 }
