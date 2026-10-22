@@ -1410,7 +1410,7 @@ def upgrade_interior(inter, wave):
             n_.inputs["Base Color"].default_value = (*LOOK["cr_hero"], 1)
             n_.inputs["Alpha"].default_value = 0.95
         elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
-            n_.inputs["To Min"].default_value = 0.3; n_.inputs["To Max"].default_value = 2.8
+            n_.inputs["To Min"].default_value = 0.3; n_.inputs["To Max"].default_value = 2.4
     for n_ in m_cr.node_tree.nodes:                  # chains: dim folds, never bright "bread score" slits
         if n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
             n_.inputs["To Max"].default_value = MITO_VOL["cr_chain"]
@@ -1570,8 +1570,8 @@ MITO_LOOKS = {
               matrix=(1.0, 0.39, 0.05), absorb=(0.80, 0.30, 0.25), cr=(0.55, 0.22, 0.05), cr_em=(1.0, 0.45, 0.08),
               cr_hero=(0.50, 0.20, 0.05), face=0.38, mscale=1.0, rim_k=1.2),
     "C": dict(outer=(0.05, 0.20, 0.22), rim=(0.35, 0.90, 1.0), inner=(0.60, 0.40, 0.12), irim=(1.0, 0.55, 0.15),
-              matrix=(1.0, 0.45, 0.06), absorb=(0.55, 0.60, 0.55), cr=(0.55, 0.25, 0.05), cr_em=(1.0, 0.50, 0.08),
-              cr_hero=(0.50, 0.22, 0.05), face=0.30, mscale=1.0, rim_k=1.1),
+              matrix=(1.0, 0.45, 0.06), absorb=(0.85, 0.55, 0.22), cr=(0.55, 0.25, 0.05), cr_em=(1.0, 0.42, 0.04),
+              cr_hero=(0.55, 0.20, 0.03), face=0.20, mscale=1.0, rim_k=1.1),
 }
 MITO_LOOK = os.environ.get("S7_LOOK", "C")         # director round 6 pick: C, teal glass over amber
 LOOK = MITO_LOOKS[MITO_LOOK]
