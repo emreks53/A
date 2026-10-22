@@ -115,10 +115,5 @@ Investment Companies"). Durum: ☐
 
 ## 13. Yönetim Kurulu Komiteleri sayfası (22.10.2026)
 
-Kullanıcının gönderdiği 05.10.2026 tarihli ve 2026/19 sayılı Yönetim Kurulu Kararı'na (Komiteler Görev Dağılımı) göre
-komite üyeleri güncellendi (`araclar/degisiklikler/2026-10-22-komiteler.py`). Yeni metinler:
-
-| Metin | Durum |
-|-------|-------|
-| "(Aday Gösterme Komitesi ve Ücret Komitesi görevleri dahil)" — Kurumsal Yönetim Komitesi başlığı altında (karardan) | ☐ |
-| "Kaynak: 05.10.2026 tarihli ve 2026/19 sayılı Yönetim Kurulu Kararı. Komite başkan ve üyeleri, yönetim kurulundaki görev süreleri ile sınırlı olmak üzere seçilmiştir." | ☐ |
+05.10.2026 tarihli 2026/19 sayılı YK kararına göre komite üyeleri güncellendi. Eklenen not ve kaynak satırı kullanıcı
+isteğiyle aynı gün kaldırıldı; sayfada yeni metin yok.

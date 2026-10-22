@@ -107,6 +107,7 @@ formu doğrulaması, üst menünün kaydırmada titrememesi denendi. Bulunup dü
 - Kurumsal > Yönetim Kurulu Komiteleri, 05.10.2026 tarihli 2026/19 sayılı YK kararına göre güncellendi (Didar Sevdil
   Yıldırım çıktı; Denetim ve Riskin Erken Saptanması komitelerinin başkanı Metin ÖZAKTAN; Kurumsal Yönetim Komitesine
   Yusuf ŞİMŞEK; Riskin Erken Saptanması Komitesi üyesi Eyüp EKŞİ). TR/EN sayfa ve arama verisi.
+- Kurumsal Yönetim Komitesi notu ve "Kaynak" satırı kullanıcı isteğiyle kaldırıldı (2026-10-22b-komiteler-sade.py).
 - Yönetim Kurulu ve Üst Yönetim sayfası: kurul üyeleri kararla aynı, değişmedi; karar üst yönetimi kapsamıyor.
 
 ## Kullanıcı kararları (özet)
