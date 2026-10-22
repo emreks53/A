@@ -202,6 +202,8 @@ def build(ctx):
     resid = drop_obj("TipBead", 1.0, (32, 16))
     sat = drop_obj("Satellite", 1.0, (24, 12))
     sess = drop_obj("SessileDrop", 1.0)
+    # the residual bead left on the blade tip rides with the blade (recoil + sway): keyed in the blade's frame
+    resid.parent = hb
     sess.parent = leafR
     sess_loc = loc_l.copy()
     sess_n = nrm_l.normalized()
@@ -271,7 +273,7 @@ def build(ctx):
             drop.scale = (r * sxy, r * sxy, r * sz)
             drop.rotation_euler = (0, 0, 0)
             vis_key(drop, f, True); vis_key(sess, f, False); vis_key(resid, f, False); vis_key(sat, f, False)
-            resid.location = P_TIP; resid.scale = (R0 * 0.4,) * 3
+            resid.location = tip_local; resid.scale = (R0 * 0.4,) * 3
             sat.location = P_TIP; sat.scale = (0.0003,) * 3
         elif tau < TAU_L:
             dt = tau - TAU_D
@@ -282,7 +284,7 @@ def build(ctx):
             vis_key(drop, f, True); vis_key(sess, f, False)
             # residual bead on the blade tip and a satellite droplet a few ms behind
             vis_key(resid, f, True)
-            resid.location = P_TIP + Vector((0, 0, -0.00052))
+            resid.location = tip_local + Vector((0, 0, -0.00052))
             resid.scale = (0.00055, 0.00055, 0.0006)
             ds = max(0.0, dt - 0.0045)
             vis_key(sat, f, True)
@@ -341,7 +343,14 @@ def build(ctx):
 
     # dew beads on the seedling leaves: sampled on the upper surface, irregular sizes, favouring the margins
     # and the vein grooves (where water collects), never in the impact zone
+    from mathutils.bvhtree import BVHTree
     for leaf, Lb, cnt in ((leafR, LbR, 16), (leafL, LbL, 20)):
+        # top skin of the rendered leaf (solidify + render-level subsurf): beads must not cut into it, or the
+        # water/leaf intersection renders as a dark lower half
+        sub_ = leaf.modifiers["sub"]; lv = sub_.levels; sub_.levels = sub_.render_levels
+        dg = bpy.context.evaluated_depsgraph_get()
+        leaf_bvh = BVHTree.FromObject(leaf, dg)
+        sub_.levels = lv
         me = leaf.data
         uvl = me.uv_layers[0].data
         cands = []
@@ -376,10 +385,22 @@ def build(ctx):
             nn = poly.normal
             o = drop_obj(f"LeafDew_{leaf.name}_{len(placed)}", 1.0, (24, 12))
             o.parent = leaf
-            o.location = pt + nn * (r * 0.62 + 0.00013)
             sq = rng.uniform(0.7, 0.85)
+            hit_p, hit_n, _, _ = leaf_bvh.ray_cast(pt + nn * 0.002, -nn)
+            if hit_p is None:
+                hit_p, hit_n = pt + nn * 0.000125, nn
+            if hit_n.dot(nn) < 0:
+                hit_n = -hit_n
+            nn = hit_n.normalized()
+            o.location = hit_p + nn * (r * sq + 0.00001)
             o.scale = (r * rng.uniform(1.0, 1.15), r, r * sq)
             o.rotation_euler = nn.to_track_quat("Z", "Y").to_euler()
+            # the leaf curves under the bead's footprint: lift it until no part is below the surface (+5 um)
+            Mb = Matrix.LocRotScale(o.location, o.rotation_euler, o.scale)
+            low = min((lambda q: (q - leaf_bvh.find_nearest(q)[0]).dot(leaf_bvh.find_nearest(q)[1]))(Mb @ v.co)
+                      for v in o.data.vertices)
+            if low < 0.000005:
+                o.location = o.location + nn * (0.000005 - low)
 
     # ------------------------------------------------------------------ meadow grass field (instanced)
     inst = L.hidden_collection("GrassVariants")
