@@ -14,6 +14,14 @@ HDRI_SUN_TEX = Vector((-0.7603, 0.6269, 0.1702)).normalized()
 SUN_ELEV = math.degrees(math.asin(HDRI_SUN_TEX.z))     # 9.8 deg
 SUN_AZ = 64.0                                          # ahead-right (26 deg) of the camera, which looks +Y = 90 deg
 LENS = 35.0
+# one aerial perspective for everything beyond the near meadow (ground, grass, trees, shrubs)
+HAZE_COL = (1.0, 0.76, 0.50)
+HAZE_D0 = 450.0
+HAZE_K = 1.0
+SUN_GAIN_STOPS = 0.6
+SUN_GAIN2_STOPS = 0.6
+SKY_GAIN_STOPS = 0.4
+BARK_K = 0.35
 SENSOR = 36.0
 
 
@@ -23,6 +31,93 @@ def hgt(x, y):
     d = min(1.0, max(0.0, (y - 3.0)) / 25.0 + max(0.0, abs(x) - 6.0) / 30.0)
     return d * (1.1 * mn.noise(Vector((x * 0.035, y * 0.035, 1.7))) + 0.35 * mn.noise(Vector((x * 0.1, y * 0.1, 4.1)))) + \
         0.05 * mn.noise(Vector((x * 0.5, y * 0.5, 9.0)))
+
+
+def _haze_f(nt, dist0):
+    cd = nt.nodes.new("ShaderNodeCameraData")
+    return L.math_node(nt, "SUBTRACT", 1.0, L.math_node(nt, "EXPONENT", L.math_node(nt, "DIVIDE", cd.outputs["View Distance"], -dist0)))
+
+
+def _mix(nt, fac, a, b):
+    mx = nt.nodes.new("ShaderNodeMixShader")
+    if isinstance(fac, float):
+        mx.inputs[0].default_value = fac
+    else:
+        nt.links.new(fac, mx.inputs[0])
+    nt.links.new(a, mx.inputs[1]); nt.links.new(b, mx.inputs[2])
+    return mx
+
+
+def aerial_haze(mat, color, dist0, strength, legacy=False, bark=None):
+    """Aerial perspective that respects alpha cut-outs. (lib_s1.aerial_haze mixes an opaque emission over the
+    whole surface, which turned the leaf cards into grey fog boxes and the dark bark into pale 'ghost' trunks.)
+    New look: albedo-corrected copy of the surface, hazed by 1-e^(-d/d0), THEN cut out by the leaf alpha.
+    Returns the mix node whose factor blends old (legacy lib haze, or no haze) -> new; the caller keys it,
+    so frames before the light beat render exactly as before."""
+    nt = mat.node_tree
+    out = next((n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"), None)
+    if out is None or not out.inputs["Surface"].links:
+        return None
+    src = out.inputs["Surface"].links[0].from_socket
+    p = src.node
+    assert p.type == "BSDF_PRINCIPLED", (mat.name, p.type)
+    p2 = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    p2.distribution = p.distribution; p2.subsurface_method = p.subsurface_method
+    alpha = None
+    for k, inp in enumerate(p.inputs):
+        if inp.links:
+            if inp.name == "Alpha":
+                alpha = inp.links[0].from_socket
+                continue
+            nt.links.new(inp.links[0].from_socket, p2.inputs[k])
+        elif hasattr(inp, "default_value") and inp.name != "Alpha":
+            p2.inputs[k].default_value = inp.default_value
+    if bark is not None and alpha is None and p2.inputs["Base Color"].links:
+        mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"; mix.blend_type = "MULTIPLY"
+        mix.inputs[0].default_value = 1.0
+        nt.links.new(p2.inputs["Base Color"].links[0].from_socket, mix.inputs[6]); mix.inputs[7].default_value = (*bark, 1)
+        nt.links.new(mix.outputs[2], p2.inputs["Base Color"])
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (*color, 1); em.inputs["Strength"].default_value = strength
+    new = _mix(nt, _haze_f(nt, dist0), p2.outputs[0], em.outputs[0]).outputs[0]
+    if alpha is not None:
+        tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+        new = _mix(nt, alpha, tr.outputs[0], new).outputs[0]
+    old = src
+    if legacy:   # exactly lib_s1.aerial_haze(color=(1.0, 0.74, 0.52), dist0=420, strength=1.4), as rendered before
+        em0 = nt.nodes.new("ShaderNodeEmission")
+        em0.inputs["Color"].default_value = (1.0, 0.74, 0.52, 1); em0.inputs["Strength"].default_value = 1.4
+        old = _mix(nt, _haze_f(nt, 420.0), src, em0.outputs[0]).outputs[0]
+    blend = _mix(nt, 0.0, old, new)
+    nt.links.new(blend.outputs[0], out.inputs["Surface"])
+    return blend
+
+
+def far_copy(src, name, col, mat_map):
+    """Copy of src with its own mesh and material copies (mat_map: original -> copy, shared across copies),
+    so the far additions can fade in without touching the materials of the original scene."""
+    o = src.copy(); o.data = src.data.copy(); o.name = name
+    for i, m_ in enumerate(o.data.materials):
+        if m_ is not None:
+            if m_ not in mat_map:
+                mat_map[m_] = m_.copy()
+            o.data.materials[i] = mat_map[m_]
+    for c in list(o.users_collection):
+        c.objects.unlink(o)
+    col.objects.link(o)
+    return o
+
+
+def fade_in(mat):
+    """Wrap the surface in a mix with a Transparent BSDF; returns the mix (factor 1 = fully transparent)."""
+    nt = mat.node_tree
+    out = next((n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"), None)
+    if out is None or not out.inputs["Surface"].links:
+        return None
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    mx = _mix(nt, 1.0, out.inputs["Surface"].links[0].from_socket, tr.outputs[0])
+    nt.links.new(mx.outputs[0], out.inputs["Surface"])
+    return mx
 
 
 def cam_basis(yaw, pitch, roll=0.0):
@@ -81,12 +176,27 @@ def build(ctx):
     tint_mix = next(n for n in sc.world.node_tree.nodes if n.type == "MIX" and n.blend_type == "MULTIPLY")
     for f in range(ctx.f0 - 2, ctx.f1 + 3):
         w_ = C.remap(f / 24.0, T_RISE + 0.3, T_RISE + 2.8, C.smooth)
-        tint_mix.inputs[7].default_value = (0.98, 0.72 - 0.08 * w_, 0.48 - 0.11 * w_, 1)
+        tint_mix.inputs[7].default_value = (0.98, 0.72 - 0.03 * w_, 0.48 - 0.16 * w_, 1)
         tint_mix.inputs[7].keyframe_insert("default_value", frame=f)
     sun = C.sun(elev_deg=SUN_ELEV, azim_deg=SUN_AZ + 90, strength=26.0, kelvin_k=3000, angle_deg=0.6)
     sun.data.color = (1.0, 0.62, 0.30)
     sun.visible_glossy = False
     sc.view_settings.exposure = -0.65
+    # the beat: on "Halik-i Rahim ... genis sefkat" (79.0 -> 81.0 s) the meadow gains ~+0.5 stop of warm
+    # golden light as the camera rises (keyed per frame -> identical for any job start frame)
+    # and keeps it while the rise finishes (to 82.6 s), so the frame never sinks as the view tilts onto the field
+    T_GOLD0, T_GOLD1, T_GOLD2 = 79.0, 81.0, 82.6
+    sun_e0 = sun.data.energy
+    bg = next(n for n in sc.world.node_tree.nodes if n.type == "BACKGROUND")
+    bg_s0 = bg.inputs["Strength"].default_value
+    for f in range(ctx.f0 - 2, ctx.f1 + 3):
+        g_ = C.remap(f / 24.0, T_GOLD0, T_GOLD1, C.smooth)
+        g2 = C.remap(f / 24.0, T_GOLD1, T_GOLD2, C.smooth)
+        sun.data.energy = sun_e0 * (2.0 ** (SUN_GAIN_STOPS * g_ + SUN_GAIN2_STOPS * g2))
+        sun.data.color = (1.0, 0.62 + 0.04 * g_, 0.30 - 0.03 * g_)
+        sun.data.keyframe_insert("energy", frame=f); sun.data.keyframe_insert("color", frame=f)
+        bg.inputs["Strength"].default_value = bg_s0 * (2.0 ** (SKY_GAIN_STOPS * C.remap(f / 24.0, T_GOLD0, T_GOLD2, C.smooth)))
+        bg.inputs["Strength"].keyframe_insert("default_value", frame=f)
 
     # cloud-shadow blocker: only casts shadows. Its soft, ragged edge sweeps from 9 m ahead to behind
     # the camera between "Halık" and "kullarına" -> warm light rolls over the whole meadow.
@@ -207,15 +317,38 @@ def build(ctx):
             p.z = hgt(p.x, p.y) - 0.01
             ppts.append(p); pvidx.append(prng.randrange(len(ph_grass)))
             prots.append((0, 0, prng.uniform(0, 6.283))); pscls.append(prng.uniform(1.0, 1.8))
+    # far meadow: grass carried all the way to the trunks of the forest edge (no bare strip / straight edge).
+    # Own point cloud + material copies: it peeks over the near grass during the glide too, so it fades in
+    # with the light (79.0 -> 80.4 s) and every frame before the beat stays exactly as rendered.
+    far_mats = {}
+    qpts, qvidx, qrots, qscls = [], [], [], []
+    frng_ = random.Random(1345)
+    for (n, xs, y0, y1, md, s0, s1) in ((14000, 60.0, 45.0, 110.0, 160, 1.3, 2.2), (12000, 130.0, 110.0, 200.0, 240, 1.6, 2.6)):
+        for _ in range(n):
+            p = Vector((frng_.uniform(-xs, xs * 0.5), frng_.uniform(y0, y1), 0.0))
+            if not (visible(p, max_dist=md) or visible(p + Vector((0, 0, 0.5)), max_dist=md)):
+                continue
+            p.z = hgt(p.x, p.y) - 0.02
+            qpts.append(p); qvidx.append(frng_.randrange(len(ph_grass)))
+            qrots.append((0, 0, frng_.uniform(0, 6.283))); qscls.append(frng_.uniform(s0, s1))
+    gcol_far = L.hidden_collection("PHGrassFar")
+    for o in list(gcol.objects):          # same order as the near collection -> same vidx mapping
+        far_copy(o, "q" + o.name[1:], gcol_far, far_mats)
     clock = L.clock_empty()
     field = L.point_cloud("MeadowField", pts, {"vidx": ("INT", vidx), "rot": ("FLOAT_VECTOR", rots), "scl": ("FLOAT", scls)})
     L.gn_instancer(field, inst, sway=0.06, sway_scale=0.8, sway_speed=0.35, name="MeadowInst", clock=clock)
     pfield = L.point_cloud("PHField", ppts, {"vidx": ("INT", pvidx), "rot": ("FLOAT_VECTOR", prots), "scl": ("FLOAT", pscls)})
     L.gn_instancer(pfield, gcol, name="PHInst")   # static: no per-frame rebuild
-    for o in (field, pfield):
+    qfield = L.point_cloud("PHFarField", qpts, {"vidx": ("INT", qvidx), "rot": ("FLOAT_VECTOR", qrots), "scl": ("FLOAT", qscls)})
+    L.gn_instancer(qfield, gcol_far, name="PHFarInst")
+    # the same far grass with the shared (non-fading) materials, used once the fade is complete: a Transparent
+    # BSDF makes every shadow ray evaluate the shader, which costs ~6 s/frame for the rest of the shot
+    qfield_o = L.point_cloud("PHFarFieldO", qpts, {"vidx": ("INT", qvidx), "rot": ("FLOAT_VECTOR", qrots), "scl": ("FLOAT", qscls)})
+    L.gn_instancer(qfield_o, gcol, name="PHFarInstO")
+    for o in (field, pfield, qfield, qfield_o):
         o.cycles.use_motion_blur = False
     L.key_clock(clock, [(f, f / 24.0) for f in range(ctx.f0 - 2, ctx.f1 + 3)])
-    print(f"[sh13a] blades {len(pts)}  clumps {len(ppts)}")
+    print(f"[sh13a] blades {len(pts)}  clumps {len(ppts)}  far clumps {len(qpts)}")
 
     # ------------------------------------------------------------------ wildflowers of many kinds
     fcol = L.hidden_collection("Flowers")
@@ -263,6 +396,20 @@ def build(ctx):
         p.z = hgt(p.x, p.y) - 0.01
         fpts.append(p); fvidx.append(prng.choice(groups[g]))
         frots.append((prng.uniform(-0.1, 0.1), prng.uniform(-0.1, 0.1), prng.uniform(0, 6.283))); fscls.append(prng.uniform(1.0, 1.5))
+    # far drifts of the same species out to the forest edge (own RNG: the near lists stay identical)
+    gpts, gvidx, grots, gscls = [], [], [], []
+    frng2 = random.Random(1346)
+    for _ in range(30000):
+        p = Vector((frng2.uniform(-60, 30), frng2.uniform(40, 120), 0.0))
+        vals = [mn.noise(Vector((p.x * 0.09, p.y * 0.09, 3.3 + 11.0 * g))) for g in range(len(groups))]
+        g = max(range(len(groups)), key=lambda i: vals[i])
+        if L.smoothstep(0.10, 0.40, vals[g]) * gdens[g] < frng2.random():
+            continue
+        if not visible(p + Vector((0, 0, 0.3)), max_dist=130):
+            continue
+        p.z = hgt(p.x, p.y) - 0.01
+        gpts.append(p); gvidx.append(frng2.choice(groups[g]))
+        grots.append((0, 0, frng2.uniform(0, 6.283))); gscls.append(frng2.uniform(1.4, 2.0))
     # flowers that brush past the lens (just off the glide path at lens height)
     for (tt, side) in ((75.0, 1), (76.3, -1), (77.4, 1), (78.4, -1), (79.3, 1)):
         c, M = cams[int(tt * 24)]
@@ -273,7 +420,16 @@ def build(ctx):
     flf = L.point_cloud("FlowerField", fpts, {"vidx": ("INT", fvidx), "rot": ("FLOAT_VECTOR", frots), "scl": ("FLOAT", fscls)})
     L.gn_instancer(flf, fcol, sway=0.07, sway_scale=0.9, sway_speed=0.4, name="FlowerInst", clock=clock)
     flf.cycles.use_motion_blur = False
-    print(f"[sh13a] flowers {len(fpts)}")
+    fcol_far = L.hidden_collection("FlowersFar")
+    for o in list(fcol.objects):
+        far_copy(o, "g" + o.name[1:], fcol_far, far_mats)
+    glf = L.point_cloud("FlowerFarField", gpts, {"vidx": ("INT", gvidx), "rot": ("FLOAT_VECTOR", grots), "scl": ("FLOAT", gscls)})
+    L.gn_instancer(glf, fcol_far, name="FlowerFarInst")
+    glf.cycles.use_motion_blur = False
+    glf_o = L.point_cloud("FlowerFarFieldO", gpts, {"vidx": ("INT", gvidx), "rot": ("FLOAT_VECTOR", grots), "scl": ("FLOAT", gscls)})
+    L.gn_instancer(glf_o, fcol, name="FlowerFarInstO")
+    glf_o.cycles.use_motion_blur = False
+    print(f"[sh13a] flowers {len(fpts)}  far flowers {len(gpts)}")
 
     # ------------------------------------------------------------------ shrubs + trees at the forest edge
     shr = [o for o in C.ph_model("shrub_02", "1k") if o.type == "MESH"]
@@ -317,9 +473,67 @@ def build(ctx):
     #  the meadow, so mid-ground trees stand on the left where their shadows fall away)
     place(trees[2], (-11, 30, 0), 8.0)
     place(trees[1], (-15, 40, 0), 11.0)
+    # far hedgerow across the open right side, on the far rim of the meadow: an irregular, hazy line of shrubs
+    # and small trees instead of a ruler-straight meadow/sky edge (own RNG: the placements above are unchanged)
+    hrng = random.Random(1347)
+    hcol = L.hidden_collection("HedgeSrc")
+    hsrc = {}
+    far_objs = [qfield, glf]          # fading copies: only during the fade (f1897-1929)
+    far_objs_o = [qfield_o, glf_o]    # plain copies: from f1930 on (fade complete -> identical look)
+    def place_far(src, x, y, height, sz):
+        if src.name not in hsrc:
+            hsrc[src.name] = far_copy(src, "h_" + src.name, hcol, far_mats)
+        rz = hrng.uniform(0, 6.28)
+        k_ = height / max(0.5, src.dimensions.z)
+        for s_, lst in ((hsrc[src.name], far_objs), (src, far_objs_o)):
+            o = s_.copy(); sc.collection.objects.link(o); o.hide_render = False; o.hide_viewport = False
+            o.location = (x, y, hgt(x, y) - 0.15)
+            o.rotation_euler = (0, 0, rz)
+            o.scale = (k_ * sz, k_ * sz, k_)
+            lst.append(o)
+    for i in range(70):
+        x = hrng.uniform(-5, 95); y = hrng.uniform(180, 194)
+        if hrng.random() < 0.3:
+            place_far(hrng.choice(trees), x, y, hrng.uniform(6, 13), hrng.uniform(0.9, 1.3))
+        else:
+            place_far(shr[i % len(shr)], x, y, hrng.uniform(2.5, 5.5), hrng.uniform(1.2, 2.0))
     # aerial perspective on everything far (camera-ray distance fog toward the warm horizon colour)
-    for ms_ in {m_ for o in shr + trees for m_ in o.data.materials}:
-        L.aerial_haze(ms_, color=(1.0, 0.74, 0.52), dist0=420.0, strength=1.4)
+    # one uniform, lighter haze over field, shrubs and trees; tree bark brought to a real albedo (it read
+    # chalky against the low backlight). It settles in as the light arrives (79.0 -> 80.4 s, keyed), so the
+    # glide before the beat is unchanged.
+    tree_m = {m_ for o in trees for m_ in o.data.materials}
+    blends = []
+    for ms_ in sorted(tree_m | {m_ for o in shr for m_ in o.data.materials}, key=lambda m_: m_.name):
+        blends.append(aerial_haze(ms_, HAZE_COL, HAZE_D0, HAZE_K, legacy=True,
+                                  bark=(BARK_K, BARK_K * 0.9, BARK_K * 0.8) if ms_ in tree_m else None))
+    for ms_ in sorted({m_ for o in ph_grass for m_ in o.data.materials} | {gm}, key=lambda m_: m_.name):
+        blends.append(aerial_haze(ms_, HAZE_COL, HAZE_D0, HAZE_K))
+    # far additions (own material copies): same haze/bark, then faded in from fully transparent
+    fades = []
+    for m0, m1 in sorted(far_mats.items(), key=lambda kv: kv[1].name):
+        if m0 in tree_m or m0 in {m_ for o in shr + ph_grass for m_ in o.data.materials}:
+            b_ = aerial_haze(m1, HAZE_COL, HAZE_D0, HAZE_K, bark=(BARK_K, BARK_K * 0.9, BARK_K * 0.8) if m0 in tree_m else None)
+            if b_ is not None:
+                b_.inputs[0].default_value = 1.0
+        fades.append(fade_in(m1))
+    for f in range(ctx.f0 - 2, ctx.f1 + 3):
+        k_ = C.remap(f / 24.0, 79.0, 80.4, C.smooth)
+        for b_ in blends:
+            if b_ is not None:
+                b_.inputs[0].default_value = k_
+                b_.inputs[0].keyframe_insert("default_value", frame=f)
+        for d_ in fades:
+            if d_ is not None:
+                d_.inputs[0].default_value = 1.0 - k_
+                d_.inputs[0].keyframe_insert("default_value", frame=f)
+        # even fully transparent, their surfaces use up transparent bounces and change the glide frames:
+        # the far additions only exist from f1897 (still ~0 % opaque there, so nothing pops)
+        for o in far_objs:
+            o.hide_render = not (0.0 < k_ < 1.0)
+            o.keyframe_insert("hide_render", frame=f)
+        for o in far_objs_o:
+            o.hide_render = k_ < 1.0
+            o.keyframe_insert("hide_render", frame=f)
 
     # ------------------------------------------------------------------ butterflies
     brng = random.Random(8)
