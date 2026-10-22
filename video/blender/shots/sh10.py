@@ -37,6 +37,10 @@ F_WAVE = 1327.0         # the amber front starts rolling from f1327
 LOOK_CT = (1300.0, 1302.0, 1312.0, 1322.0)   # aim at the exit cell: ease in, hold, ease out (frames)
 K_GLOW = 1.5            # emission inside a lit cell (x amplitude 0.6-1.6, glints x2)
 K_SPILL = 0.35          # warm spill on a neighbour's flank per lit neighbour
+# lit-cell look (director lookdev 1336, variant A): core = radial mask of the cell body (object space,
+# inner..outer fraction of the footprint radius), glow strength k (x amplitude),
+# cap = max emission (amber, never peach-white), halo = perinuclear glow, rim = cool teal edge
+LOOK = dict(core=(0.15, 0.85), k=1.2, cap=1.0, halo=0.10, nuc=0.31, rim=0.30, flank=0.3)   # director pick: A (+tweaks)
 
 # small exposure trims (stops) around the crossing (measured on luma strips)
 EXPO_TRIM = {}
@@ -108,7 +112,7 @@ def build(ctx):
     locs, rots, foc, fst, fdist, fcol, expo, fpow, filmd = [], [], [], [], [], [], [], [], []
     prev = None
 
-    F_HOLD1 = 1301.5                                   # the probe holds still until the film has gone
+    F_HOLD1 = 1302.5                                   # the probe holds still until the film has (nearly) gone
 
     def warp(t):
         # the membrane resists: just through it (~7 mm off the film) the probe holds completely still
@@ -134,7 +138,8 @@ def build(ctx):
         boost = 2.5 * C.remap(tr, t_exit + 0.35, t_exit + 0.85, C.smooth) * (1.0 - C.remap(tr, t_exit + 0.85, t_had, C.smooth))
         dist = dist_at(t) * (1.0 + boost)
         # elevation: level inside, rising to look down on the field, then settling low
-        el = C.lerp(0.0, 52.0, C.remap(t, t_exit + 0.05, t_exit + 0.75, C.smooth))
+        # (on the real clock, after the hold, <= 3 deg/frame: no whip while the exit cell is close)
+        el = C.lerp(0.0, 52.0, C.remap(tr, F_HOLD1 / C.FPS, F_HOLD1 / C.FPS + 1.15, C.smooth))
         el = C.lerp(el, 17.0, C.remap(t, t_bil + 0.4, t_set, C.smooth))
         az = C.lerp(180.0, 205.0, C.remap(t, t_exit, t_set, C.smooth))
         tgt = H.lerp(hero_c, C.remap(t, t_exit, t_exit + 1.0, C.smooth))
@@ -190,13 +195,13 @@ def build(ctx):
         fr_ = tr * C.FPS
         if fr_ < 1295.5:                                   # 1295: still on the interior, seen through the veil
             fd = dist - 0.0035
-        elif fr_ < 1300.5:
-            fd = max(0.004, filmd[-1])
         else:
-            oc = ray_ellipsoid(p, f, Vector((0, 0, Z0)), Vector((0.52, 0.52, 0.32)))   # the cell under the hero
+            # rack focus film -> exit cell over 1299-1302 (as the film fades), then the analytic hit
+            oc = ray_ellipsoid(p, f, Vector((0, 0, Z0)), Vector((0.56, 0.56, 0.32)))   # the cell under the hero
             fz = (p.z - (Z0 + 0.3)) / -f.z if f.z < -0.05 else -1.0
-            fd = oc if oc is not None else (min(fz, (tgt - p).length * 1.3) if fz > 0.05 else (tgt - p).length * 1.3)
-            fd = max(0.05, fd)
+            fc_ = oc if oc is not None else (min(fz, (tgt - p).length * 1.3) if fz > 0.05 else (tgt - p).length * 1.3)
+            w_ = C.remap(fr_, 1299.0, 1302.0, lambda v: max(0.0, min(1.0, v)))       # linear in diopters: each layer
+            fd = 1.0 / C.lerp(1.0 / max(0.004, filmd[-1]), 1.0 / max(0.05, fc_), w_)  # blurs in step with its fade
         foc.append(fd)
         fst.append(C.lerp(HO["fstop"], 8.0, C.remap(t, t_exit - 0.1, t_exit + 1.0)))
         # haze: interior hand-off -> blue-black tissue haze outside (long enough that the field is
@@ -246,24 +251,53 @@ def build(ctx):
     m_base = mat_base()
     base_holed = L.obj_from_mesh("tissueBase", sheet_mesh(size=2*RMAX, n=480, hole=R_CELL * 1.1), m_base)
     base_full = L.obj_from_mesh("tissueBaseFull", sheet_mesh(size=2*RMAX, n=480, hole=0.0), m_base)
-    # inside the fibre the field sits far beyond the haze: it only exists from shortly before the crossing
-    for o in (field, base_holed):
-        L.bake(o, [frames[0], F_FIELD0, f_in0], "hide_render", [1.0, 0.0, 0.0], interp="CONSTANT")
-    # the cell under the hero dome and the unholed base replace the dome as it falls away
-    L.bake(origin, [frames[0], f_in0], "hide_render", [1.0, 0.0], interp="CONSTANT")
-    L.bake(base_full, [frames[0], f_in0], "hide_render", [1.0, 0.0], interp="CONSTANT")
-    L.bake(base_holed, [frames[0], F_FIELD0, f_in0], "hide_render", [1.0, 0.0, 1.0], interp="CONSTANT")
+    # Visibility changes are done by PARKING objects 10 km below the scene (constant location keys at
+    # half frames, so no motion-blur shutter straddles a jump), never by hide_render: the set of
+    # objects Cycles sees never changes, so a job renders bit-identically whatever its start frame.
+    PARK = Vector((0, 0, -1.0e4))
 
-    # interior: hidden in one frame behind the membrane film once the film fills the lens
-    for o in inter["objects"]:
-        L.bake(o, [frames[0], f_in0], "hide_render", [0.0, 1.0], interp="CONSTANT")
-    # the dome film falls away (fades to transparent) over 7 frames, then stops rendering
-    fade_group_animate([dome], frames, 1299.3, 1.7, "S7_FadeDome", ease=False)   # 1299: 1, 1300: 0.59, 1301: 0
-    # the film right at the lens (1295, ~6 mm) is a thin veil over the interior, opaque from 1297
-    L.bake_id(m_mem.node_tree, frames, 'nodes["veil"].outputs[0].default_value',
-              [{1295: 0.5, 1296: 0.85}.get(f, 1.0) for f in frames], interp="CONSTANT")
+    def park(o, keys):
+        """keys: [(frame, parked?)] from the first frame on; switches happen at frame - 0.5."""
+        base = Vector(o.location)
+        fr = [frames[0] - 1] + [f - 0.5 for f, _ in keys[1:]]
+        L.bake(o, fr, "location", [tuple(base + PARK) if pk else tuple(base) for _, pk in keys], interp="CONSTANT")
     f_dome0 = C.t2f(t_exit - 0.5)
-    L.bake(dome, [frames[0], f_dome0, f_in0 + 10], "hide_render", [1.0, 0.0, 1.0], interp="CONSTANT")
+    # inside the fibre the field sits far beyond the haze: it only exists from shortly before the crossing
+    park(field, [(frames[0], True), (F_FIELD0, False)])
+    park(base_holed, [(frames[0], True), (F_FIELD0, False), (f_in0, True)])
+    # the cell under the hero dome and the unholed base replace the dome as it falls away
+    park(origin, [(frames[0], True), (f_in0, False)])
+    park(base_full, [(frames[0], True), (f_in0, False)])
+    # interior: gone in one frame behind the membrane film once the film fills the lens (the whole
+    # interior hangs under its root empty)
+    park(inter["root"], [(frames[0], False), (f_in0, True)])
+    # the dome film falls away (fades to transparent) 1299-1303, then is parked
+    # from 1300 (fading, racked out of focus) a bump-free twin of the film takes over (the relief is
+    # invisible there and the bump graph is the most expensive part of those frames)
+    dome2 = bpy.data.objects.new("heroCellFade", dome.data.copy()); sc.collection.objects.link(dome2)
+    dome2.location = dome.location
+    m_cheap = m_mem.copy(); m_cheap.name = "MembraneFade"
+    for n_ in m_cheap.node_tree.nodes:
+        if n_.type == "BSDF_PRINCIPLED":
+            for k_ in ("Normal", "Coat Normal"):
+                for l_ in list(n_.inputs[k_].links):
+                    m_cheap.node_tree.links.remove(l_)
+            n_.inputs["Coat Weight"].default_value = 0.0; n_.inputs["Thin Film Thickness"].default_value = 0.0
+            n_.inputs["Sheen Weight"].default_value = 0.0
+    dome2.data.materials[0] = m_cheap
+    fade_group_animate([dome, dome2], frames, 1298, 5, "S7_FadeDome", ease=False)   # 1299 .8, 1300 .6, 1301 .4, 1302 .2, 1303 0
+    park(dome, [(frames[0], True), (f_dome0, False), (1300, True)])
+    park(dome2, [(frames[0], True), (1300, False), (f_in0 + 10, True)])
+    # once racked out of focus and fading (from 1300) the film drops its coat / thin film / sheen
+    # (cost: the frames behind a half-transparent film are the most expensive of the shot)
+    pm = [n_ for n_ in m_mem.node_tree.nodes if n_.type == "BSDF_PRINCIPLED"][0]
+    for nm_, v_ in (("Coat Weight", 0.5), ("Thin Film Thickness", 420.0), ("Sheen Weight", 0.2)):
+        si = [i.name for i in pm.inputs].index(nm_)
+        L.bake_id(m_mem.node_tree, frames, f'nodes["{pm.name}"].inputs[{si}].default_value',
+                  [v_ if f < 1300 else 0.0 for f in frames], interp="CONSTANT")
+    # the film right at the lens is a veil ramping in over 1293-1296 (.2/.4/.65/.85), opaque from 1297
+    L.bake_id(m_mem.node_tree, frames, 'nodes["veil"].outputs[0].default_value',
+              [{1293: 0.2, 1294: 0.4, 1295: 0.65, 1296: 0.85}.get(f, 1.0) for f in frames], interp="CONSTANT")
 
     # counter tracker: on screen from frame 1306; parked 10 m behind the lens before
     trk = C.empty("TRK_cells", tuple(hero_c + Vector((0, 0, R_CELL * 0.4))))
@@ -285,12 +319,13 @@ def build(ctx):
     s2 = C.sun(elev_deg=60, azim_deg=-40, strength=0.8, kelvin_k=12000, angle_deg=20, name="tealFill")
     s2.data.color = (0.45, 0.85, 1.0)
     # the teal fill lights the dome film through a separate, measured twin (light linking)
-    tx = bpy.data.collections.new("tealExclude"); tx.objects.link(dome)
+    tx = bpy.data.collections.new("tealExclude"); tx.objects.link(dome); tx.objects.link(dome2)
     s2.light_linking.receiver_collection = tx
-    tx.collection_objects[0].light_linking.link_state = "EXCLUDE"
+    for co_ in tx.collection_objects:
+        co_.light_linking.link_state = "EXCLUDE"
     s3 = C.sun(elev_deg=60, azim_deg=-40, strength=0.8, kelvin_k=12000, angle_deg=20, name="tealDome")
     s3.data.color = s2.data.color
-    ti = bpy.data.collections.new("tealDomeOnly"); ti.objects.link(dome)
+    ti = bpy.data.collections.new("tealDomeOnly"); ti.objects.link(dome); ti.objects.link(dome2)
     s3.light_linking.receiver_collection = ti
     tw = sorted(DOME_TEAL_W.items())
 
@@ -303,7 +338,8 @@ def build(ctx):
         return tw[-1][1]
     L.bake_id(s3.data, frames, "energy", [C.lerp(0.0, 1.2, C.remap(t, t_exit - 0.15, t_exit + 0.35, C.smooth)) * _w(f)
                                           for t, f in zip(times, frames)])
-    L.bake_id(s2.data, frames, "energy", [C.lerp(0.0, 1.2, C.remap(t, t_exit - 0.15, t_exit + 0.35, C.smooth)) for t in times])
+    # (the cells only: full by 1299 so the exit cell carries structure through the film crossfade)
+    L.bake_id(s2.data, frames, "energy", [C.lerp(0.0, 1.2, C.remap(t, t_exit - 0.15, t_exit + 0.18, C.smooth)) for t in times])
     PR = HO["probe"]
     il = C.point_light("probe", power=PR["energy"], radius=PR["radius"], kelvin_k=4500)
     il.parent = cam; il.location = PR["offset"]
@@ -322,12 +358,12 @@ def build(ctx):
     # off-axis (6 cm right, 5 cm up, behind the lens) so the film relief is lit at a grazing angle and
     # evenly (no hot spot on the film); per-frame weights measured on luma strips (FILM_W)
     fl_.parent = cam; fl_.location = (0.06, 0.05, 0.02); fl_.data.color = (1.0, 0.86, 0.8)
-    rf = bpy.data.collections.new("filmReceivers"); rf.objects.link(dome)
+    rf = bpy.data.collections.new("filmReceivers"); rf.objects.link(dome); rf.objects.link(dome2)
     fl_.light_linking.receiver_collection = rf
     # energy follows the lamp-to-film distance squared (even exposure while the film recedes)
     L.bake_id(fl_.data, frames, "energy", [FILM_E * FILM_W.get(f, 1.0) * min(1.5, ((fd_ + 0.08) / 0.1) ** 2) *
                                            C.remap(t, t_exit - 0.06, t_exit, C.smooth) *
-                                           (1.0 - C.remap(t, t_exit + 0.17, t_exit + 0.45, C.smooth)) for t, f, fd_ in zip(times, frames, filmd)])
+                                           (1.0 - C.remap(f, 1302.0, 1304.0, C.smooth)) for t, f, fd_ in zip(times, frames, filmd)])
 
     add_fog_glow(sc)
     L.budget_denoise(prefilter="ACCURATE", quality="BALANCED", final_res=80)
@@ -338,7 +374,8 @@ def build(ctx):
         L.bake_id(sc, frames, "cycles.samples", [8 if f <= 1308 else 16 for f in frames],
                   interp="CONSTANT")
     def _log(scene, *_):
-        print(f"[sh10] f{scene.frame_current} spp={scene.cycles.samples}", flush=True)
+        import time as _t
+        print(f"[sh10] f{scene.frame_current} spp={scene.cycles.samples} t={_t.time():.1f}", flush=True)
     bpy.app.handlers.render_pre.append(_log)
     ov = dict(L.LEAN)
     ov.update(transmission_bounces=3, transparent_bounces=8, final_spp=8, preview_spp=12)   # = sh09 (f1250 match)
@@ -432,6 +469,18 @@ def field_layout(frames, locs, rots, fdist, t_had):
         k_ = 1.0 + 0.12 * noise.noise(Vector((P[i, 0] / 22.0, P[i, 1] / 22.0, 9.1)))
         sr[i] *= k_; sh[i] *= k_
 
+    # close the moat around the (small) exit cell: first-ring cells reach in to touch it, unless the
+    # enlarged footprint would come within 15 cm of the camera's path over the crossing/reveal
+    path_xy = [(lc[0], lc[1]) for f, lc in zip(frames, locs) if 1290 <= f <= 1330]
+    for i in np.nonzero(r < 2.8)[0]:
+        need = (r[i] - 0.55 * R_DOME + 0.10) / R_DOME
+        if need <= sr[i]:
+            continue
+        rad = R_DOME * need + 0.15
+        if any((P[i, 0] - x) ** 2 + (P[i, 1] - y) ** 2 < rad * rad for x, y in path_xy):
+            continue
+        sh[i] *= min(1.2, need / sr[i]); sr[i] = need
+
     # clearance: no cell may come within 8 cm of the lens (the camera skims the field at 1295-1320)
     cam_pts = [Vector(lc) for f, lc in zip(frames, locs) if F_FIELD0 <= f <= 1330]
     for i in np.nonzero(r < 4.5)[0]:
@@ -490,7 +539,8 @@ def cell_mesh(name, seed):
     rng = random.Random(seed)
     ph = [rng.uniform(0, 2 * math.pi) for _ in range(4)]
     k_hex = rng.uniform(0.35, 0.75); r_hex = rng.uniform(0, math.pi / 3)
-    nx, ny = rng.uniform(-0.28, 0.28) * R_DOME, rng.uniform(-0.28, 0.28) * R_DOME
+    a_n, r_n = rng.uniform(0, 2 * math.pi), rng.uniform(0.15, 0.35) * R_DOME   # nucleus off the apex
+    nx, ny = r_n * math.cos(a_n), r_n * math.sin(a_n)
     nr, ns = 13, 64
 
     def rad(th):
@@ -669,17 +719,18 @@ def mat_cells():
     nx, ny, nr = B.sep(nuc)
     rnd = B.attr("rnd")
     dx = B.m("SUBTRACT", ox, nx); dy = B.m("SUBTRACT", oy, ny)
-    dn = B.m("DIVIDE", B.m("SQRT", B.m("ADD", B.m("MULTIPLY", dx, dx), B.m("MULTIPLY", B.m("MULTIPLY", dy, dy), 1.5))), nr)
+    dn = B.m("DIVIDE", B.m("SQRT", B.m("ADD", B.m("MULTIPLY", dx, dx), B.m("MULTIPLY", B.m("MULTIPLY", dy, dy), 1.9))), nr)
+    nn = B.n("ShaderNodeTexNoise", **{"Scale": 7.0, "Detail": 1.0}); B.ln(tc.outputs["Object"], nn.inputs["Vector"])
+    dn = B.m("MULTIPLY_ADD", B.m("SUBTRACT", nn.outputs["Fac"], 0.5), 0.45, dn)      # oval (1.38), soft irregular edge
     top = B.mapr(oz, 0.12, 0.3)
     nucm = B.m("MULTIPLY", B.mapr(dn, 0.4, 1.15, 1.0, 0.0), top)
-    nucl = B.m("MULTIPLY", B.mapr(dn, 0.0, 0.3, 1.0, 0.0), top)          # nucleolus
     # per-cell offset of the cytoplasm textures (no two cells share the same mottling)
     cvo = B.n("ShaderNodeCombineXYZ"); B.ln(B.m("MULTIPLY", rnd, 37.0), cvo.inputs[0]); B.ln(B.m("MULTIPLY", rnd, 23.0), cvo.inputs[1])
     ovec = B.n("ShaderNodeVectorMath"); ovec.operation = "ADD"; B.ln(tc.outputs["Object"], ovec.inputs[0]); B.ln(cvo.outputs[0], ovec.inputs[1])
     gv = B.n("ShaderNodeTexVoronoi", **{"Scale": 30.0, "Randomness": 1.0}); gv.voronoi_dimensions = "3D"
     B.ln(ovec.outputs[0], gv.inputs["Vector"])
     gran = B.m("MULTIPLY", B.mapr(gv.outputs["Distance"], 0.06, 0.2, 1.0, 0.0), B.m("GREATER_THAN", B.sep(gv.outputs["Color"])[0], 0.35))
-    fn = B.n("ShaderNodeTexNoise", **{"Scale": 9.0, "Detail": 3.0}); B.ln(ovec.outputs[0], fn.inputs["Vector"])
+    fn = B.n("ShaderNodeTexNoise", **{"Scale": 9.0, "Detail": 2.0}); B.ln(ovec.outputs[0], fn.inputs["Vector"])
     B.ln(B.m("MULTIPLY_ADD", rnd, 6.0, 6.0), fn.inputs["Scale"])                # 6-12: coarser / finer mottling per cell
     lw = B.n("ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.35
     facing = lw.outputs["Facing"]
@@ -687,9 +738,8 @@ def mat_cells():
     # albedo
     cyt = B.mix(rnd, (0.12, 0.17, 0.195, 1), (0.15, 0.195, 0.215, 1))
     col = B.mix(rim, cyt, (0.24, 0.31, 0.34, 1))
-    col = B.mix(B.m("MULTIPLY", nucm, 0.6), col, (0.10, 0.10, 0.14, 1))
-    col = B.mix(B.m("MULTIPLY", nucl, 0.4), col, (0.07, 0.065, 0.09, 1))
-    col = B.mix(B.m("MULTIPLY", gran, 0.3), col, (0.22, 0.26, 0.27, 1))
+    col = B.mix(B.m("MULTIPLY", nucm, 0.42), col, (0.10, 0.10, 0.14, 1))           # no nucleolus dot (no concentric marks)
+    col = B.mix(B.m("MULTIPLY", gran, 0.45), col, (0.24, 0.29, 0.30, 1))
     B.ln(col, p.inputs["Base Color"])
     p.subsurface_method = L.SSS_METHOD
     p.inputs["Subsurface Weight"].default_value = 1.0
@@ -700,20 +750,32 @@ def mat_cells():
     p.inputs["Coat Weight"].default_value = 0.08
     p.inputs["Coat Roughness"].default_value = 0.3
     # membrane surface: soft folds + a fine microvillus stipple (not a smooth glossy dome)
-    mf = B.n("ShaderNodeTexNoise", **{"Scale": 28.0, "Detail": 5.0, "Distortion": 0.5}); B.ln(tc.outputs["Object"], mf.inputs["Vector"])
+    mf = B.n("ShaderNodeTexNoise", **{"Scale": 28.0, "Detail": 2.0, "Distortion": 0.5}); B.ln(tc.outputs["Object"], mf.inputs["Vector"])
     mv = B.n("ShaderNodeTexVoronoi", **{"Scale": 140.0, "Randomness": 1.0}); mv.voronoi_dimensions = "3D"
     B.ln(tc.outputs["Object"], mv.inputs["Vector"])
     stip = B.mapr(mv.outputs["Distance"], 0.1, 0.45, 1.0, 0.0)
-    L._bump_chain(nt, p, [(gran, 0.25), (fn.outputs["Fac"], 0.15), (nucm, 0.1), (mf.outputs["Fac"], 0.35), (stip, 0.2)], distance=0.03)
-    # own glow
+    # (bump inputs kept cheap: every bump re-evaluates its height graph; the nucleus bulge is in the mesh)
+    L._bump_chain(nt, p, [(gran, 0.25), (fn.outputs["Fac"], 0.15), (mf.outputs["Fac"], 0.35), (stip, 0.2)], distance=0.03)
+    # own glow: a translucent teal body lit from its core - the amber light concentrates in the thick
+    # centre, the nucleus is a defined darker body with a soft bright halo, fine bright granules,
+    # the membrane edge stays cool teal; capped so it never burns to peach-white
     on = B.m("MULTIPLY", _on(B, t, B.attr("ton"), B.attr("flo")), B.attr("amp"))
-    body = B.m("MULTIPLY_ADD", B.m("POWER", B.m("SUBTRACT", 1.0, facing), 1.5), 0.85, 0.15)
-    body = B.m("MULTIPLY", body, B.m("MULTIPLY_ADD", nucm, -0.6, 1.0))
-    body = B.m("MULTIPLY", body, B.m("MULTIPLY_ADD", gran, 0.3, B.m("MULTIPLY_ADD", fn.outputs["Fac"], 0.9, 0.55)))
-    glow = B.m("MULTIPLY", B.m("MULTIPLY", on, body), K_GLOW)
-    glow = B.m("MULTIPLY_ADD", B.m("MULTIPLY", on, rim), 1.1, glow)          # translucent rim lit from inside
-    mrim = B.mapr(facing, 0.72, 0.95)                                            # the membrane itself, edge-on
-    glow = B.m("MULTIPLY_ADD", B.m("MULTIPLY", on, mrim), 1.6, glow)
+    rxy = B.m("DIVIDE", B.m("SQRT", B.m("ADD", B.m("MULTIPLY", ox, ox), B.m("MULTIPLY", oy, oy))), R_DOME)
+    core = B.mapr(rxy, LOOK["core"][0], LOOK["core"][1], 1.0, 0.0)               # thick centre glows, flanks stay teal
+    nuc_d = B.m("MULTIPLY", B.mapr(dn, 0.6, 1.05, 1.0, 0.0), top)                # nucleus: a soft darker body
+    halo = B.m("MULTIPLY", B.m("MULTIPLY", B.mapr(dn, 0.8, 1.2), B.mapr(dn, 1.3, 2.3, 1.0, 0.0)), top)
+    gfine = B.n("ShaderNodeTexVoronoi", **{"Scale": 70.0, "Randomness": 1.0}); gfine.voronoi_dimensions = "3D"
+    B.ln(ovec.outputs[0], gfine.inputs["Vector"])
+    specks = B.m("MULTIPLY", B.mapr(gfine.outputs["Distance"], 0.05, 0.16, 1.0, 0.0), B.m("GREATER_THAN", B.sep(gfine.outputs["Color"])[1], 0.55))
+    body = B.m("MULTIPLY", core, B.m("MULTIPLY_ADD", nuc_d, -LOOK["nuc"], 1.0))
+    body = B.m("MULTIPLY_ADD", B.m("MULTIPLY", halo, core), LOOK["halo"], body)
+    body = B.m("MULTIPLY", body, B.m("MULTIPLY_ADD", specks, 0.5, B.m("MULTIPLY_ADD", fn.outputs["Fac"], 0.3, 0.85)))
+    glow = B.m("MINIMUM", B.m("MULTIPLY", B.m("MULTIPLY", on, body), LOOK["k"]), LOOK["cap"])
+    glow = B.m("MULTIPLY_ADD", B.m("MULTIPLY", B.m("MULTIPLY", B.m("MINIMUM", on, 1.0), specks), B.m("SUBTRACT", 1.0, core)), LOOK["flank"], glow)   # granules on the lit flanks
+    # wet sheen grows as the cell lights
+    B.ln(B.m("MULTIPLY_ADD", B.m("MINIMUM", on, 1.0), 0.16, 0.04), p.inputs["Coat Weight"])
+    p.inputs["Coat Roughness"].default_value = 0.28              # subtle, broad sheen: no thin glint lines
+    tealrim = B.m("MULTIPLY", B.m("MULTIPLY", B.m("MINIMUM", on, 1.0), B.mapr(facing, 0.55, 0.95)), LOOK["rim"])
     # spill from lit neighbours onto the flank facing them (lower flank more)
     geo = B.n("ShaderNodeNewGeometry")
     gx, gy, gz = B.sep(geo.outputs["Normal"])
@@ -727,9 +789,10 @@ def mat_cells():
         s_k = B.m("MULTIPLY", _on(B, t, a_t, b_f), w)
         sp = s_k if sp is None else B.m("ADD", sp, s_k)
     spill = B.m("MULTIPLY", B.m("MULTIPLY", sp, low), K_SPILL)
-    ecol = B.mix(B.m("DIVIDE", spill, B.m("ADD", B.m("ADD", spill, glow), 1e-4)), (1.0, 0.27, 0.035, 1), (1.0, 0.26, 0.035, 1))
+    warm = B.m("ADD", glow, spill)
+    ecol = B.mix(B.m("DIVIDE", tealrim, B.m("ADD", B.m("ADD", warm, tealrim), 1e-4)), (1.0, 0.30, 0.045, 1), (0.25, 0.62, 0.70, 1))
     B.ln(ecol, p.inputs["Emission Color"])
-    B.ln(B.m("ADD", glow, spill), p.inputs["Emission Strength"])
+    B.ln(B.m("ADD", warm, tealrim), p.inputs["Emission Strength"])
     L.fog_wrap(m)                           # also sets emission_sampling NONE (spill is shaded, not sampled)
     return m
 
@@ -742,17 +805,8 @@ def mat_base():
     nz = B.n("ShaderNodeTexNoise", **{"Scale": 3.0, "Detail": 6.0, "Distortion": 0.6}); B.ln(tc.outputs["Object"], nz.inputs["Vector"])
     col = B.mix(nz.outputs["Fac"], (0.03, 0.04, 0.05, 1), (0.06, 0.075, 0.085, 1))
     B.ln(col, p.inputs["Base Color"])
-    # warm light pooling between the cells where they glow: the local lit fraction follows the same
-    # schedule as the cells (the first cells around the origin, then the log-distance wave)
-    t = L.time_value(nt).outputs[0]
-    ox, oy, _ = B.sep(tc.outputs["Object"])
-    r = B.m("SQRT", B.m("ADD", B.m("MULTIPLY", ox, ox), B.m("MULTIPLY", oy, oy)))
-    near = B.m("MULTIPLY", _on(B, t, (F_ON0 + 1.0) / C.FPS, 0.3), B.mapr(r, 5.0, 1.5))
-    tw = B.m("MULTIPLY_ADD", B.m("LOGARITHM", B.m("MULTIPLY_ADD", r, 1.0 / 6.0, 1.0), math.e), 0.30, F_WAVE / C.FPS + 0.05)
-    wave = B.m("MULTIPLY", _on(B, t, tw, 0.25), 0.35)
-    pool = B.m("MULTIPLY", B.m("MAXIMUM", near, wave), B.m("MULTIPLY_ADD", nz.outputs["Fac"], 0.8, 0.6))
-    p.inputs["Emission Color"].default_value = (1.0, 0.3, 0.05, 1)
-    B.ln(B.m("MULTIPLY", pool, 0.45), p.inputs["Emission Strength"])
+    # (no emissive light pool: the glow between the cells comes from the cells' own spill)
+
     p.inputs["Roughness"].default_value = 0.45
     p.inputs["Coat Weight"].default_value = 0.2
     L._bump_chain(nt, p, [(nz.outputs["Fac"], 0.2)], distance=0.05)
