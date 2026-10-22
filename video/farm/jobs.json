@@ -1448,6 +1448,132 @@
    "from": 225,
    "to": 247,
    "note": "QA r8: rails inset from 225 (no 247 key), spoon hidden (fix ca649ba); head only, 248+ unchanged (bit-identical)"
+  },
+  {
+   "node": "b141",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2629,
+   "to": 2647,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b142",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2648,
+   "to": 2667,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b143",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2668,
+   "to": 2686,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b144",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2687,
+   "to": 2698,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b145",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2699,
+   "to": 2710,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b146",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2711,
+   "to": 2721,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b147",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2722,
+   "to": 2749,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b148",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2750,
+   "to": 2777,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b149",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2778,
+   "to": 2813,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b150",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2814,
+   "to": 2845,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b151",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2846,
+   "to": 2878,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b152",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2879,
+   "to": 2922,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b153",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2923,
+   "to": 2966,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b154",
+   "branch": "render-fix-sh15",
+   "ref": "c5857be5f0a161dfdd46f9a0d527b9faf86ea26b",
+   "shot": "sh15",
+   "from": 2967,
+   "to": 3011,
+   "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
   }
  ]
 }
