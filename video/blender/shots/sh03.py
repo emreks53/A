@@ -181,11 +181,12 @@ def build(ctx):
     C.key(pr, "location", t_takdim + 0.25, (*S.SOFRA["plate1"], TZ))
     # QA r6 (e): the arils smeared into a 'blood orange' on 'takdim'. Cycles takes the shutter once per render
     # job (keyed or handler-set values are ignored), so instead the plate + pomegranate render without motion
-    # blur for the slide itself (f348-363); at both switch frames the plate is (nearly) at rest
+    # blur from the slide start (f348, plate at rest, 1.5 px/frame) to the end of the shot: switching back on
+    # at 364 (crane still moving ~10 px/frame) stepped the aril sharpness for one frame
     for o in [pr] + list(pr.children_recursive):
         if o.type != "MESH":
             continue
-        for f, on in ((347, True), (348, False), (363, False), (364, True)):
+        for f, on in ((347, True), (348, False)):
             o.cycles.use_motion_blur = on; o.keyframe_insert("cycles.use_motion_blur", frame=f)
 
     # ---------------------------------------------------------------- camera (shared boom, then own path)
