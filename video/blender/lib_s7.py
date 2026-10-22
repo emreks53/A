@@ -1398,15 +1398,16 @@ def upgrade_interior(inter, wave):
         elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
             n_.inputs["To Min"].default_value = 0.0; n_.inputs["To Max"].default_value = 0.05
     m_in = mat_mito_inner_s9(MITO_VOL["emit_small"], "MitoInnerS9")        # the chains
-    m_in_hero = mat_mito_inner_s9(MITO_VOL["emit"], "MitoInnerS9Hero", rim=0.7 * MITO_VOL["rim"])
+    m_in_hero = mat_mito_inner_s9(MITO_VOL["emit"], "MitoInnerS9Hero", rim=2.0 * MITO_VOL["rim"])
     # hero folds: darker ridges seen against the glowing matrix (inner membranes), not bright slashes
     m_cr_hero = m_cr.copy(); m_cr_hero.name = "CristaeS9Hero"
+    _shelf_shading(m_cr_hero)
     for n_ in m_cr_hero.node_tree.nodes:
         if n_.type == "BSDF_PRINCIPLED":
             n_.inputs["Base Color"].default_value = (*LOOK["cr_hero"], 1)
             n_.inputs["Alpha"].default_value = 0.95
         elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
-            n_.inputs["To Min"].default_value = 0.1; n_.inputs["To Max"].default_value = 1.4
+            n_.inputs["To Min"].default_value = 0.3; n_.inputs["To Max"].default_value = 2.8
     new, cr_cache, in_cache = [], {}, {}
     for o in list(inter["objects"]):
         if o.type != "MESH":
@@ -1566,10 +1567,10 @@ MITO_LOOKS = {
               matrix=(1.0, 0.45, 0.06), absorb=(0.55, 0.60, 0.55), cr=(0.55, 0.25, 0.05), cr_em=(1.0, 0.50, 0.08),
               cr_hero=(0.50, 0.22, 0.05), face=0.30, mscale=1.0, rim_k=1.1),
 }
-MITO_LOOK = os.environ.get("S7_LOOK", "amber")
+MITO_LOOK = os.environ.get("S7_LOOK", "C")         # director round 6 pick: C, teal glass over amber
 LOOK = MITO_LOOKS[MITO_LOOK]
 HERO_SHAPE = dict(length=0.82, bend=0.09)    # round 5: the hero ~2.8:1, gentler bend (env + cristae)
-CRISTAE_HERO = dict(rad=0.83, yspan=0.37, amp=0.012, cup=0.008, tilt=2.0, bow=0.012, reach=(0.40, 0.85),
+CRISTAE_HERO = dict(rad=0.88, root_depth=0.45, yspan=0.37, amp=0.012, cup=0.008, tilt=2.0, bow=0.012, reach=(0.40, 0.85),
                     reach_end=0.42, th=0.00042, pack=2.15, wave=0.03, periods=(1.0, 2.0), fork=0.03, fork_p=0.4)
 # round 6: folded membranes, not slash marks - rounded tongues rooted on the inner membrane, alternating
 # sides, sinuous along their length (1-2 periods), irregular reach (40-85 %) and spacing, some bent
@@ -1628,7 +1629,7 @@ def cristae_folded(name, length, width, seed=0, K=None, bend=None):
                 zl = side * (Rs - d)                                  # local z (from the centre line)
                 Rz = R if zl > 0 else R * BEAN["flat"]
                 chord = math.sqrt(max(0.0, Rz * Rz - zl * zl)) * BEAN["depth"]
-                x = a * max(chord * 0.92, R * 0.15)
+                x = a * max(chord * 0.92, R * K.get("root_depth", 0.15) * (1 - sfr) ** 2, R * 0.15)  # deep root: a visible join
                 yy = (y0 + amp * math.sin(x / R * 2.6 + ph1) * (0.4 + 0.6 * sfr)
                       + 0.45 * amp * math.sin(sfr * 5.0 + ph2) * abs(a) + cu * sfr * sfr + tilt * x
                       + bw * (zl / R) ** 2
@@ -1667,7 +1668,7 @@ def mat_mito_outer_s9(face_alpha=None, name="MitoOuterS9"):
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.3
     pw = _n(nt, "ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 1.6
     nt.links.new(lw.outputs["Facing"], pw.inputs[0])
-    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = face_alpha; al.inputs["To Max"].default_value = 0.75
+    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = face_alpha; al.inputs["To Max"].default_value = 0.55
     nt.links.new(pw.outputs[0], al.inputs["Value"]); nt.links.new(al.outputs[0], p.inputs["Alpha"])
     tc = _n(nt, "ShaderNodeTexCoord")
     nz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 420.0, "Detail": 3.0})
@@ -1688,7 +1689,7 @@ def mat_mito_inner_s9(emit, name, rim=0.0):
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.25
     pw = _n(nt, "ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 2.2
     nt.links.new(lw.outputs["Facing"], pw.inputs[0])
-    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.05; al.inputs["To Max"].default_value = 0.45
+    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.05; al.inputs["To Max"].default_value = 0.8
     nt.links.new(pw.outputs[0], al.inputs["Value"]); nt.links.new(al.outputs[0], p.inputs["Alpha"])
     if rim:                                               # a faint inner-membrane line inside the outer rim
         p.inputs["Emission Color"].default_value = (*LOOK["irim"], 1)
@@ -1707,6 +1708,38 @@ def mat_mito_inner_s9(emit, name, rim=0.0):
     nt.links.new(ve.outputs[0], ad.inputs[0]); nt.links.new(va.outputs[0], ad.inputs[1])
     nt.links.new(ad.outputs[0], out.inputs["Volume"])
     return m
+
+
+def _shelf_shading(m):
+    """A fold reads as a thick membrane shelf: its +Y face (object space, towards the next fold up)
+    carries the glow as a lit edge, its -Y face falls into shadow."""
+    nt = m.node_tree
+    p = [n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"][0]
+    src = p.inputs["Emission Strength"].links[0].from_socket
+    tc = _n(nt, "ShaderNodeTexCoord")
+    sep = _n(nt, "ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Normal"], sep.inputs[0])
+    lit = _n(nt, "ShaderNodeMapRange"); lit.inputs["From Min"].default_value = -1.0
+    lit.inputs["To Min"].default_value = 0.08; lit.inputs["To Max"].default_value = 1.6
+    nt.links.new(sep.outputs["Y"], lit.inputs["Value"])
+    mm = _n(nt, "ShaderNodeMath"); mm.operation = "MULTIPLY"
+    nt.links.new(src, mm.inputs[0]); nt.links.new(lit.outputs[0], mm.inputs[1])
+    # brighter towards the wall the fold grows from (object |z| ~ the hero's inner membrane): the root
+    # reads as a continuous join with the inner membrane, never a floating dash
+    sz = _n(nt, "ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Object"], sz.inputs[0])
+    az = _n(nt, "ShaderNodeMath"); az.operation = "ABSOLUTE"; nt.links.new(sz.outputs["Z"], az.inputs[0])
+    rt = _n(nt, "ShaderNodeMapRange"); rt.inputs["From Min"].default_value = 0.0012; rt.inputs["From Max"].default_value = 0.0030
+    rt.inputs["To Min"].default_value = 1.0; rt.inputs["To Max"].default_value = 2.4
+    nt.links.new(az.outputs[0], rt.inputs["Value"])
+    m2 = _n(nt, "ShaderNodeMath"); m2.operation = "MULTIPLY"
+    nt.links.new(mm.outputs[0], m2.inputs[0]); nt.links.new(rt.outputs[0], m2.inputs[1])
+    nt.links.new(m2.outputs[0], p.inputs["Emission Strength"])
+    cb = _n(nt, "ShaderNodeMix"); cb.data_type = "RGBA"; cb.inputs[0].default_value = 0.0
+    dk = _n(nt, "ShaderNodeMapRange"); dk.inputs["From Min"].default_value = -1.0
+    dk.inputs["To Min"].default_value = 0.85; dk.inputs["To Max"].default_value = 0.0
+    nt.links.new(sep.outputs["Y"], dk.inputs["Value"]); nt.links.new(dk.outputs[0], cb.inputs[0])
+    cb.inputs[6].default_value = p.inputs["Base Color"].default_value[:]
+    cb.inputs[7].default_value = (0.02, 0.012, 0.01, 1)                 # the shadowed side
+    nt.links.new(cb.outputs[2], p.inputs["Base Color"])
 
 
 def mat_cristae_s9(wave):
