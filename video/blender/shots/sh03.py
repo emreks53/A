@@ -183,11 +183,25 @@ def build(ctx):
     pr = so["plate_root"]
     C.key(pr, "location", t_takdim - 0.45, (*S.SOFRA["plate0"], TZ))
     C.key(pr, "location", t_takdim + 0.25, (*S.SOFRA["plate1"], TZ))
-    # QA r6 (e): a shorter shutter while the plate slides so the arils do not smear on 'takdim'
-    sc = bpy.context.scene
-    for f, sh in ((346, 0.5), (351, 0.2), (361, 0.2), (366, 0.5)):
-        sc.render.motion_blur_shutter = sh; sc.keyframe_insert("render.motion_blur_shutter", frame=f)
-    shut_fc = [fc for fc in C._fcurves(sc.animation_data.action) if "motion_blur_shutter" in fc.data_path][0]
+    # QA r6 (e): the arils smeared on 'takdim'. Cycles takes the shutter once per render job, so it cannot be
+    # ramped deterministically; instead the plate's slide is re-keyed so it passes every whole frame exactly
+    # where it did, but moves at k x speed inside each frame's shutter window (f +- 0.25): blur as from a
+    # shutter of 0.5k for the plate only. k: 1 at 346 -> 0.4 over 351-361 -> 1 at 366
+    fcs = [fc for fc in C._fcurves(pr.animation_data.action) if fc.data_path == "location"]
+    path = lambda t: [fc.evaluate(t) for fc in sorted(fcs, key=lambda c: c.array_index)]
+    samples = []
+    for n in range(340, 373):
+        k = 1.0 - 0.6 * C.remap(n, 346, 351) * (1 - C.remap(n, 361, 366))
+        for dt in (-0.25, 0.0, 0.25):
+            samples.append((n + dt, path(n + k * dt)))
+    for fc in fcs:
+        while fc.keyframe_points:
+            fc.keyframe_points.remove(fc.keyframe_points[0])
+    for t, loc in samples:
+        pr.location = loc; pr.keyframe_insert("location", frame=t)
+    for fc in fcs:
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
 
     # ---------------------------------------------------------------- camera (shared boom, then own path)
     cam = C.camera("cam", lens=28, loc=P3[0][1], fstop=2.8)
@@ -203,10 +217,7 @@ def build(ctx):
     # the glass/water macro; the deep paths stay on for the whole shot, so no bounce switch lands on any
     # glass (QA r3: 292|293 popped the hero glass; QA r6: 326|327 popped the back tea glass)
     S.frame_bounces(225, 389, glossy=4, transmission=12, max_b=12)
-    # Cycles takes the keyed shutter from the 2nd frame of a job on; the job's first frame uses the stored
-    # value, so store the keyed value at the job's start frame (same result for any chunk start)
-    f_start = ctx.f0 if getattr(ctx.args, "ffrom", None) is None else ctx.args.ffrom
-    return dict(S.RENDER_OV, shutter=shut_fc.evaluate(f_start))
+    return S.RENDER_OV
 
 
 C.run("sh03", build)
