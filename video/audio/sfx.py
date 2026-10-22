@@ -1558,7 +1558,9 @@ def gen_dry_ticks(dur, rng, rate=3.0, width=0.8):
     y = np.zeros((n, 2))
     for tt in poisson_times(dur, lambda x: rate + 0 * x, rate, rng):
         c = burst(rng, 0.006, rng.uniform(0.0004, 0.0012), lo=2500, hi=11000)
-        add_mono(y, c, N(tt), rng.uniform(-width, width), rng.lognormal(0, 0.6))
+        # gain capped at 1.3 (+2.3 dB): an uncapped lognormal tail put +10-14 dB clicks into the words (review s2-1);
+        # min() draws no extra random numbers, so every other tick is unchanged
+        add_mono(y, c, N(tt), rng.uniform(-width, width), min(rng.lognormal(0, 0.6), 1.3))
     return out(y)
 
 

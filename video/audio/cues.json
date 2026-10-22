@@ -30,6 +30,7 @@
   "sh03.pour": 251,
   "sh03.plate": 347.5,
   "sh04.enter": 514.5,
+  "sh04.ground_out": 507,
   "sh05.tilt": 588.5,
   "sh08.enter": 982,
   "sh08.touch": 1007.7,
@@ -692,7 +693,25 @@
    "send": -24,
    "fade_in": 0.1,
    "fade_out": 0.1,
-   "ref": "parched ground",
+   "ref": "parched ground: fades out (0.5 s, equal-power-like) as the soil leaves the frame (PIC f507, final render) - no ticks in the pause before the hand or inside 'hiçbirine' (review s2-1); ended by 'env', not by a shorter dur, so the generator draws the same ticks as before",
+   "env": [
+    [
+     20.625,
+     0.0
+    ],
+    [
+     20.875,
+     -3.0
+    ],
+    [
+     21.0,
+     -9.0
+    ],
+    [
+     21.125,
+     -80.0
+    ]
+   ],
    "lpf": [
     [
      22.7,
@@ -2486,7 +2505,7 @@
   {
    "id": "sh13b.ring_e",
    "shot": "sh13b",
-   "t": 86.6983,
+   "t": 86.7317,
    "pre": 0.02,
    "dur": 0.15,
    "gen": "ui_tick",
@@ -2510,7 +2529,7 @@
   {
    "id": "sh13b.ring_f",
    "shot": "sh13b",
-   "t": 86.8783,
+   "t": 86.985,
    "pre": 0.02,
    "dur": 0.15,
    "gen": "ui_tick",
@@ -2529,30 +2548,6 @@
    "track": {
     "shot": "sh13b",
     "name": "f"
-   }
-  },
-  {
-   "id": "sh13b.ring_g",
-   "shot": "sh13b",
-   "t": 87.0583,
-   "pre": 0.02,
-   "dur": 0.15,
-   "gen": "ui_tick",
-   "params": {
-    "sync": 0.02,
-    "kind": "ring"
-   },
-   "lvl": -18,
-   "class": "ui",
-   "space": "ui",
-   "send": -30.0,
-   "fade_in": 0.005,
-   "fade_out": 0.02,
-   "ref": "birer birer: tracking ring 7/8 snaps onto TRK_g [graphic: comp/sync_points.json]",
-   "pan": 0.6,
-   "track": {
-    "shot": "sh13b",
-    "name": "g"
    }
   },
   {

@@ -24,7 +24,7 @@
   {"a": "sh10", "b": "sh11", "type": "luma", "frames": 12, "why": "glowing cells become glints -> backlit rain drops"},
   {"a": "sh11", "b": "sh12", "type": "light", "frames": 12, "flash": 0.10, "p1_cap": 0.95, "p50_cap": 0.95, "why": "tilt up into the bright rain sky -> emerge from cloud (both plates bright: a gentle flash capped below clipping so the cloud texture stays visible; QA2)"},
   {"a": "sh12", "b": "sh13a", "type": "dissolve", "frames": 12, "why": "aerial descends toward the meadow -> low glide"},
-  {"a": "sh13a", "b": "sh13b", "type": "dissolve", "frames": 6, "why": "continuous low glide, slowing"},
+  {"a": "sh13a", "b": "sh13b", "type": "dissolve", "frames": 12, "why": "continuous low glide, slowing: a 12-frame dissolve over the full 6+6 handles (2015-2026) softens the raised-wide -> low-macro jump (review s5-8)"},
   {"a": "sh13b", "b": "sh14a", "type": "defocus", "frames": 12, "radius": 32, "why": "seedling dew drop -> focus pull to the sunflower spiral"},
   {"a": "sh14a", "b": "sh14b", "type": "dissolve", "frames": 6, "why": "shadow sweeps in (the sweep itself is the first beat of sh14b)"},
   {"a": "sh14b", "b": "sh14c", "type": "dip", "frames": 12, "why": "darkness -> cold grey desert (A out by p 0.4, a beat of black, B rises)"},

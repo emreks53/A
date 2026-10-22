@@ -446,6 +446,13 @@ function drawColdKeyword(el, t, L) {
   // everything (letters and every grain) is gone by the cut: a gentle fade over the last 0.35 s
   const km = el.kill != null ? 1 - smooth(clamp((t - (el.kill - 0.35)) / 0.35)) : 1;
   if (km < 0.003) return;
+  // optional scrim (as drawKeyword), but ONE steady box for the whole block (all lines), gated by whichever line
+  // is visible: per-line scrims would drag a dark patch down the flat sky as each word arrives and crumbles
+  let scr = 0, allA = 0;
+  if (el.scrim) {
+    const sc = el.scrim, fd = sc.fade || 0.15;
+    scr = sc.k * smooth(lin(t, sc.from, sc.from + fd)) * (1 - smooth(lin(t, sc.to - fd, sc.to)));
+  }
   for (const line of L.lines) {
     const tw = line.parts[0].t;
     if (t < tw) continue;
@@ -524,8 +531,17 @@ function drawColdKeyword(el, t, L) {
     }
     if (maxA > 0) {
       BOXES.push([line.x0, line.cy - L.capH / 2, line.x0 + line.w, line.cy + L.capH / 2, maxA * (st.legibility || 1)]);
+      allA = Math.max(allA, maxA);
       KWBOXES.push([...line.ink.slice(0, 4), maxA]);
     }
+  }
+  if (scr * allA > 0.001) {
+    // 'box' (layout px) pins the scrim to a fixed region, so two elements (the cold words, then the '?') share
+    // one steady patch of shade instead of handing over between two differently placed ones
+    const ls = L.lines;
+    const bb = el.scrim.box || [Math.min(...ls.map(l => l.x0)), ls[0].cy - L.capH / 2,
+      Math.max(...ls.map(l => l.x0 + l.w)), ls[ls.length - 1].cy + L.capH / 2];
+    BOXES.push([bb[0], bb[1], bb[2], bb[3], 0, 0, scr * Math.min(1, allA)]);
   }
 }
 
@@ -549,10 +565,10 @@ function calloutPhases(t, ts, to) {
   };
 }
 
-function labelBlock(prim, sec) {
+function labelBlock(prim, sec, secWeight) {
   const st = TL.styles.callout;
   const P = prim ? layoutRun(prim, st.primary.family, st.primary.weight, st.primary.size, st.primary.tracking) : null;
-  const Q = sec ? layoutRun(sec, st.secondary.family, st.secondary.weight, st.secondary.size, st.secondary.tracking) : null;
+  const Q = sec ? layoutRun(sec, st.secondary.family, secWeight || st.secondary.weight, st.secondary.size, st.secondary.tracking) : null;
   return { P, Q, w: Math.max(P ? P.w : 0, Q ? Q.w : 0) };
 }
 
@@ -580,7 +596,9 @@ function drawCalloutCore(el, f, t, prim, sec, opts = {}) {
   const p = tk(el.trk, f);
   const vis = p.v;
   if (vis < 0.003) return;
-  const lb = opts.block || labelBlock(prim, sec);
+  const lb = opts.block || labelBlock(prim, sec, el.secondary_weight);
+  const secA = el.secondary_alpha !== undefined ? el.secondary_alpha : st.secondary.alpha;   // per-callout overrides
+  const txtSh = el.text_shadow || st.text_shadow;
   const pad = st.pad;
   const shelf = lb.w + 2 * pad;
   const capP = lb.P ? lb.P.capH : 0, capQ = lb.Q ? lb.Q.capH : 0;
@@ -641,15 +659,18 @@ function drawCalloutCore(el, f, t, prim, sec, opts = {}) {
     const slide = (1 - prog) * 10 * el.sx;
     const px0 = el.sx > 0 ? tx : tx + lb.w - lb.P.w;     // right-aligned to the elbow on the left side
     if (opts.drawPrimary) opts.drawPrimary(tx - slide, prY, ta, prog);
-    else drawRunWipe(lb.P, px0 - slide, prY, st.color, ta, wipeAt(prog, lb.P.w), el.sx, SOFT, st.text_shadow);
+    else drawRunWipe(lb.P, px0 - slide, prY, st.color, ta, wipeAt(prog, lb.P.w), el.sx, SOFT, txtSh);
   }
   if (lb.Q && ph.sec > 0 && ta > 0.003) {
     const prog = eOutCubic(ph.sec);
     const slide = (1 - prog) * 8 * el.sx;
     const qx0 = el.sx > 0 ? tx : tx + lb.w - lb.Q.w;
-    drawRunWipe(lb.Q, qx0 - slide, seY, st.color, ta * st.secondary.alpha, wipeAt(prog, lb.Q.w), el.sx, SOFT, st.text_shadow);
+    drawRunWipe(lb.Q, qx0 - slide, seY, st.color, ta * secA, wipeAt(prog, lb.Q.w), el.sx, SOFT, txtSh);
   }
   if (ta > 0.05) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0.6 * ta, 1]);
+  // optional per-callout scrim (overlays.json callout "scrim": k): a soft, NOT luma-gated vignette behind the label
+  // for a label on a flat bright plate (the luma-gated local darkening backs off on flat backgrounds)
+  if (el.scrim && ta * el.scrim > 0.001) BOXES.push([tx - 6, prY - capP - 4, tx + lb.w + 6, lb.Q ? seY + 6 : prY + 6, 0, 0, el.scrim * ta]);
 }
 
 function drawCallout(el, f, t) { drawCalloutCore(el, f, t, el.primary, el.secondary); }
@@ -866,7 +887,10 @@ function drawNetwork(el, f, t) {
   const nodes = el.nodes.map(n => ({ ...n, p: tk(n.trk, f) }));
   const byName = Object.fromEntries(nodes.map(n => [n.name, n]));
   const C = byName[el.center].p;
-  const Cp = [C.x, C.y];
+  // the point of light the lines converge on: offset from the centre node (above the sun, between it and the
+  // words), so the sun stays one of the provisions pointing up to the One light rather than being the light
+  const off = el.converge.to_offset || [0, 0];
+  const Cp = [C.x + off[0], C.y + off[1]];
   const conv0 = el.converge.t0, cdur = el.converge.dur, cstag = el.converge.stagger;
   const warm = [255, 240, 214], gold = [255, 206, 140];
   const lineW = 2;
@@ -926,7 +950,7 @@ function drawNetwork(el, f, t) {
     const flash = t >= n.t_on ? Math.exp(-(t - n.t_on) / 0.25) : 0;
     const conv = eInOutCubic(lin(t, conv0, conv0 + cdur + cstag * 5));
     let a = aOut * n.p.v;
-    if (n.name === el.center) a *= 1 - conv;          // the source becomes the light point
+    if (n.name === el.center && !el.converge.center_line) a *= 1 - conv;   // (legacy: the source became the light)
     if (a < 0.003) continue;
     const r = 9 * (0.6 + 0.4 * k) * (1 - 0.35 * conv);
     const build = (c, o) => c.arc(n.p.x + o, n.p.y, r, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2 * 0.999);
@@ -950,13 +974,14 @@ function drawNetwork(el, f, t) {
     const flash = t >= tl ? Math.exp(-(t - tl) / 0.45) : 0;
     const breathe = 1 + 0.08 * Math.sin(2 * Math.PI * (t - tl) / 3.2);
     const a = aOut * k;
-    glowDot(A, Cp[0], Cp[1], 120 * breathe + 120 * flash, gold, a * (0.30 + 0.35 * flash));
+    const G = (el.light && el.light.glow) || 120, RR = (el.light && el.light.ring) || 150;
+    glowDot(A, Cp[0], Cp[1], G * breathe + G * flash, gold, a * (0.30 + 0.35 * flash));
     glowDot(A, Cp[0], Cp[1], 42 * breathe + 30 * flash, [255, 236, 200], a * (0.7 + 0.3 * flash));
     fillCircle(X, Cp[0], Cp[1], 3.6 * k, [255, 255, 255], a);
     // one expanding ring of light at the moment of 'tek'
     if (t >= tl && t < tl + 1.2) {
       const q = (t - tl) / 1.2;
-      const rr = 18 + 150 * eOutCubic(q);
+      const rr = 18 + RR * eOutCubic(q);
       const build = (c, o) => c.arc(Cp[0] + o, Cp[1], rr, 0, Math.PI * 2);
       strokeSolid(A, build, 2, gold, a * 0.55 * (1 - q) * (1 - q));
       strokeGlow(A, build, 2, gold, a * 0.35 * (1 - q), 6);

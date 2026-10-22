@@ -158,6 +158,11 @@ class Clock:
             return None
         if isinstance(spec, (int, float)):
             return float(spec)
+        if "abs" in spec:
+            # absolute time that still names its narrated word (the transcript start often includes the pause
+            # before the word): the word ref keeps the hold / exit checks and the sync sheet's key-word identity
+            self.word(spec.get("shot", shot), spec["word"], spec.get("nth", 0))
+            return float(spec["abs"])
         w = self.word(spec.get("shot", shot), spec["word"], spec.get("nth", 0))
         return round(w["s"] - spec.get("lead", self.lead) + spec.get("plus", 0.0), 4)
 
@@ -239,18 +244,30 @@ def _has_visible_column(d, name):
 
 
 def make_track(shot, name, fallback, f_lo, f_hi, warn, sig_fine=0.6, sig_label=6.0, keep_depth=False,
-               safe=None, clamp_inset=None):
+               safe=None, clamp_inset=None, path=None, offset=None):
     """Per-frame screen path for frames [f_lo, f_hi): exact (lightly smoothed) x,y; heavily smoothed xs,ys for
     labels; soft visibility v (0 when the tracker is not visible - behind the camera or outside the frame -, fading
     out over 60 px before the point leaves the safe area). Positions come only from visible samples (held /
     interpolated across the rest). clamp_inset: instead of fading, the point glides to a stop that many px inside the safe area (for
-    diffuse subjects such as air, where a held anchor is still true)."""
+    diffuse subjects such as air, where a held anchor is still true).
+    path: a measured screen path ([x, y] or keys [[t, x, y], ...]) used INSTEAD of the tracker (when the exported
+    tracker misses its subject); offset: [dx, dy] or keys [[t, dx, dy], ...] added to the tracker / fallback path
+    (an anchor that must sit beside the tracked point, or a tracker parked a constant distance off its subject)."""
     frames = np.arange(f_lo, f_hi)
     t = frames / FPS
-    d = track_file(shot)
+    d = None if path is not None else track_file(shot)
     src = "fallback"
     x = y = dep = vis = None
-    if d is not None:
+    if path is not None:
+        if isinstance(path[0], (int, float)):
+            x, y = np.full_like(t, path[0]), np.full_like(t, path[1])
+        else:                                   # measured samples: linear (no easing stops between keys)
+            ks = sorted(path)
+            x = np.interp(t, [k[0] for k in ks], [k[1] for k in ks])
+            y = np.interp(t, [k[0] for k in ks], [k[2] for k in ks])
+        dep = np.ones_like(x); vis = np.ones_like(x)
+        src = "path"
+    elif d is not None:
         fr = d.get("frames", {})
         rows = [fr.get(str(f), {}).get(name) for f in frames]
         if any(r is not None for r in rows):
@@ -286,6 +303,10 @@ def make_track(shot, name, fallback, f_lo, f_hi, warn, sig_fine=0.6, sig_label=6
     if x is None:
         x, y = _fallback_xy(fallback, t)
         dep = np.ones_like(x); vis = np.ones_like(x)
+    if offset is not None:
+        ox, oy = _fallback_xy(offset, t)
+        x, y = x + ox, y + oy
+        src += "+offset"
     if safe is not None and clamp_inset is not None:
         x, y = soft_clamp_safe(_gauss(x, 1.0), _gauss(y, 1.0), safe, clamp_inset)
     xf, yf = _gauss(x, sig_fine), _gauss(y, sig_fine)
@@ -357,11 +378,12 @@ def resolve(spec_path=None, verbose=True):
             sc = k["scrim"]
             el["scrim"] = {"from": clk.t(sc["from"], k["shot"]), "to": clk.t(sc["to"], k["shot"]),
                            "k": float(sc.get("k", 0.35)), "fade": float(sc.get("fade", 0.15))}
-            if "dust" in st:
-                warn(f"{k['id']}: 'scrim' is not drawn for crumbling (dust) words")
+            if "box" in sc:
+                el["scrim"]["box"] = [float(v) for v in sc["box"]]     # fixed scrim region (crumbling words)
         cut_t = sh[k["shot"]]["end_s"]
         if "dust" in st:
-            # crumbling words have no exit: everything (letters and every dust grain) is gone by the cut
+            # crumbling words have no exit: everything (letters and every dust grain) is gone by the cut (or by
+            # 'kill', e.g. the end of the dissolve that leaves the shot)
             el["out"] = None
             el["kill"] = float(k.get("kill", cut_t))
             t_end = el["kill"]
@@ -375,9 +397,18 @@ def resolve(spec_path=None, verbose=True):
         size = k.get("size", st["size"])
         hgt = len(lines) * size * k.get("line_height", st["line_height"])
         kw_boxes.append((tmin, t_end, 90, el["y"] - hgt / 2 - 10, 990, el["y"] + hgt / 2 + 10))
-        for l in lines:
-            for p in l["parts"]:
-                sync_points.append({"id": f"{k['id']}.{p['text']}", "t": round(p["t"] + clk.lead, 3), "kind": "keyword"})
+        for ln, l in zip(k["lines"], lines):
+            for ps, p in zip(ln, l["parts"]):
+                # key-word points: t = the narrated word's transcript start (+ lead - lead) for word-ref'd parts, so
+                # the mix / QA keep identifying the spoken key word (audio/measure.py key_words); a part set
+                # absolutely ({"word": .., "abs": t}) also records when its text lands ('lands')
+                wr = clk.ref(ps["at"], k["shot"])
+                if wr is not None and isinstance(ps["at"], dict) and "abs" in ps["at"]:
+                    pt = {"id": f"{k['id']}.{p['text']}", "t": round(wr["s"], 3), "kind": "keyword",
+                          "lands": round(p["t"] + clk.lead, 3)}
+                else:
+                    pt = {"id": f"{k['id']}.{p['text']}", "t": round(p["t"] + clk.lead, 3), "kind": "keyword"}
+                sync_points.append(pt)
 
     # ---------------- callouts (+ counter use the same placement)
     placed = []   # (frames array, boxes array) of placed labels
@@ -448,10 +479,13 @@ def resolve(spec_path=None, verbose=True):
         f_lo, f_hi = rng_of(c["shot"])
         ts, to = float(c["sync"]), float(c["out"])
         trk = make_track(c["shot"], c["track"], c.get("fallback"), f_lo, f_hi, warn, safe=spec["safe"],
-                         clamp_inset=c.get("clamp"))
+                         clamp_inset=c.get("clamp"), offset=c.get("anchor_offset"))
         trk = follow(trk, ts, to, float(c.get("follow", 1.0)))
+        # per-callout secondary line overrides (a label on a bright plate): alpha / weight / shadow
+        sec_wt = int(c.get("secondary_weight", cs["secondary"]["weight"]))
+        sec_font = inter_med if sec_wt >= 500 else inter_reg
         wl = max(text_width(c["primary"], inter_med, cs["primary"]["size"], cs["primary"]["tracking"]),
-                 text_width(c.get("secondary", ""), inter_reg, cs["secondary"]["size"], cs["secondary"]["tracking"]))
+                 text_width(c.get("secondary", ""), sec_font, cs["secondary"]["size"], cs["secondary"]["tracking"]))
         cand, sx, sy = place(c["id"], c["shot"], trk, ts, to, wl, bool(c.get("secondary")), c.get("prefer", []),
                              c.get("leader"))
         i0, i1 = int(ts * FPS) - f_lo, int(to * FPS) - f_lo
@@ -463,6 +497,9 @@ def resolve(spec_path=None, verbose=True):
               "trk": trk, "f0": int(math.floor((ts - 0.15) * FPS)), "f1": int(math.ceil(to * FPS)) + 1}
         if "leader" in c:
             el["leader"] = c["leader"]
+        for opt in ("secondary_alpha", "secondary_weight", "text_shadow", "scrim"):
+            if opt in c:
+                el[opt] = c[opt]
         els.append(el)
         sync_points.append({"id": c.get("cue", c["id"]), "t": ts, "kind": "callout"})
         callout_checks.append(el)
@@ -506,7 +543,8 @@ def resolve(spec_path=None, verbose=True):
             step = (d1 - d0 - seg) / max(1, ne - 1)
             edges = [{"a": names[k], "b": names[k + 1], "t0": round(d0 + k * step, 3),
                       "t1": round(d0 + k * step + seg, 3)} for k in range(ne)]
-            edges[0]["collapse"] = True
+            if not wd["converge"].get("center_line", False):
+                edges[0]["collapse"] = True     # (legacy: the centre node's own edge folded into the light)
             out = float(wd["out"])
             nodes = []
             for i, n in enumerate(wd["nodes"]):
@@ -518,9 +556,15 @@ def resolve(spec_path=None, verbose=True):
             conv = wd["converge"]
             c0 = clk.t(conv["t0"], shot)
             light_t = clk.t(wd["light"]["at"], shot)
+            # the lines converge on a point of light 'to_offset' px from the centre node (above the sun, not into
+            # it: the sun stays one of the provisions, with its own rising line); 'glow' = outer light radius px
             els.append({"id": wd["id"], "type": "network", "shot": shot, "nodes": nodes, "edges": edges,
                         "center": names[0], "extra": names[-1], "labels": wd.get("labels", True),
-                        "converge": {"t0": c0, "dur": conv["dur"], "stagger": conv["stagger"]},
+                        "converge": {"t0": c0, "dur": conv["dur"], "stagger": conv["stagger"],
+                                     "to_offset": conv.get("to_offset", [0, 0]),
+                                     "center_line": bool(conv.get("center_line", False))},
+                        "light": {"glow": float(wd["light"].get("glow", 120)),
+                                  "ring": float(wd["light"].get("ring", 150))},
                         "light_t": light_t, "out": out,
                         "f0": int(math.floor((d0 - 0.1) * FPS)), "f1": int(math.ceil(out * FPS)) + 1})
             sync_points.append({"id": "sh12.converge", "t": c0, "kind": "network"})
@@ -528,9 +572,15 @@ def resolve(spec_path=None, verbose=True):
         elif ty == "rings":
             rings = []
             for i, r in enumerate(wd["rings"]):
+                if r.get("enabled", True) is False:
+                    continue
                 land = float(r["land"]) if not isinstance(r["land"], dict) else clk.t(r["land"], shot)
                 ro = float(wd["out"]) if r.get("final") else min(float(wd["out"]), land + wd["hold"])
-                trk = make_track(shot, r["track"], r.get("fallback"), f_lo, f_hi, warn, safe=spec["safe"])
+                if "out" in r:
+                    ro = min(ro, float(r["out"]))         # e.g. gone before its subject leaves the frame
+                # per-ring 'path' (measured subject path, replaces the tracker) / 'offset' (added to it)
+                trk = make_track(shot, r["track"], r.get("fallback"), f_lo, f_hi, warn, safe=spec["safe"],
+                                 path=r.get("path"), offset=r.get("offset"))
                 if "then" in r:
                     # hand the ring over to a second target (e.g. the seedling -> its dew drop as the camera
                     # moves in): position and visibility blend over 'dur' seconds from 'at'
@@ -896,7 +946,9 @@ def main():
         with open(sp, "w", encoding="utf-8") as fh:
             json.dump({"doc": "Moments where overlay graphics land (absolute s). Generated by comp/overlays.py --resolve; "
                               "the sound mix's UI ticks (audio/cues.json, ids sh*.callout_* / link_* / ring_*) must "
-                              "match (composite.py refuses to encode the final otherwise).",
+                              "match (composite.py refuses to encode the final otherwise). Key-word points name the "
+                              "narrated word (t = its transcript start, used to find the key words in the mix); a "
+                              "part set apart from its word also gives the moment its text lands ('lands').",
                        "points": tl["sync_points"]}, fh, ensure_ascii=False, indent=1)
         print("->", p, "and", sp)
     if a.render:

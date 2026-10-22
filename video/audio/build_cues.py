@@ -157,8 +157,9 @@ PIC = {
     # f348), peak speed ~f356, stops ~f363.6
     "sh03.bread_out": 245.5, "sh03.pour": 251, "sh03.plate": 347.5,
     # sh04 final render (sh04_00507_00554): fingertips break the bottom edge between f514 (6 px tip)
-    # and f515, hand rises to rest ~f535
-    "sh04.enter": 514.5,
+    # and f515, hand rises to rest ~f535; the tilt up from the ground: the cracked soil slides down out of frame
+    # f494-507 (last warm soil rows at the bottom edge f506-508), then only sky and the far treeline
+    "sh04.enter": 514.5, "sh04.ground_out": 507,
     # sh05 final render (sh05_00545_00590): camera starts tilting down from the sun f588.5, plants in
     # view f610-613, streams visible ~f612-620
     "sh05.tilt": 588.5,
@@ -327,8 +328,13 @@ bed("sh04.wind", s, A - 0.02, B + 0.35, "wind", -28, 0.04, 0.3, space="desert", 
                 veg_density=0.35, width=1.0, events=[[0.25, 0.8, 0.3], [t_reach + 0.4 - A, -0.9, 0.9]]),
     lpf=under, ref="hard cut 16.00 (dry gust on the cut, in the pause before 'Halbuki'); wind falls away as the "
                    "hand reaches; muffles into the underwater cut")
+t_go = P["sh04.ground_out"]
 bed("sh04.ticks", s, A, B + 0.1, "dry_ticks", -34, 0.1, 0.1, space="desert", send=-24, cls="amb",
-    params=dict(rate=2.5), lpf=under, ref="parched ground")
+    params=dict(rate=2.5), lpf=under,
+    env=[[round(t_go - 0.5, 3), 0.0], [round(t_go - 0.25, 3), -3.0], [round(t_go - 0.125, 3), -9.0], [round(t_go, 3), -80.0]],
+    ref="parched ground: fades out (0.5 s, equal-power-like) as the soil leaves the frame (PIC f507, final render) - "
+        "no ticks in the pause before the hand or inside 'hiçbirine' (review s2-1); ended by 'env', not by a shorter "
+        "dur, so the generator draws the same ticks as before")
 cue("sh04.sleeve", s, P["sh04.enter"] - 0.08, 1.7, "cloth", -29, pre=0.0, space="desert", send=-22, fade_in=0.05,
     fade_out=0.3,
     params=dict(motion=[[0, 0], [0.25, 0.9], [0.7, 0.55], [1.2, 0.25], [1.7, 0]], fabric="cotton", air=0.6, width=0.3),
