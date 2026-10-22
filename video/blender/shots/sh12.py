@@ -18,6 +18,7 @@ SUN_ELEV = 4.8             # degrees (matches the sun in the HDRI)
 SUN_AZ = 0.0               # sun straight ahead (+Y)
 HAZE_BETA = 1.0 / float(os.environ.get("S8_HAZE", 27000))  # sea-level haze extinction (1/m)
 HAZE_H = 1500.0            # scale height of the haze (m)
+HAZE_DESCENT = 1.45        # haze multiplier reached at the end of the descent
 SKY_STRENGTH = float(os.environ.get("S8_SKY", 1.0))
 HDRI = "kloppenheim_06_puresky"
 HDRI_SUN_U = 0.6035          # equirect u of the sun in the HDRI
@@ -29,6 +30,7 @@ MODE = ["stills"]
 MEADOW = (560, 1750)
 TERRAIN_GRID = [None] * 5
 TREE_PTS = [None]       # golden meadow the exit descends toward
+SCRUB_M = [None]        # where valley-floor scrub may grow
 
 
 def curv(x, y):
@@ -244,12 +246,12 @@ def aerial(nb, surface_shader, k_inscatter=float(os.environ.get("S8_K", 0.7)), b
     ep = nb.math("EXPONENT", nb.math("MULTIPLY", zp, -1.0 / H))
     ec = nb.math("EXPONENT", nb.math("MULTIPLY", zc, -1.0 / H))
     tau = nb.math("MULTIPLY", nb.math("DIVIDE", nb.math("SUBTRACT", ep, ec), iz), beta * H)
-    # haze thins toward the end of the shot (1/27k -> ~1/38k over the last 1.5 s) as we descend
+    # a little more haze over the descent onto the valley floor (from frame 1718 on; earlier frames unchanged)
     hk = nb.n("ShaderNodeValue")
     f0, f1 = CLOUD_DRIFT
     hk.outputs[0].default_value = 1.0
-    hk.outputs[0].keyframe_insert("default_value", frame=f1 - 1.5 * C.FPS)
-    hk.outputs[0].default_value = 27.0 / 38.0
+    hk.outputs[0].keyframe_insert("default_value", frame=1718)
+    hk.outputs[0].default_value = HAZE_DESCENT
     hk.outputs[0].keyframe_insert("default_value", frame=f1)
     tau = nb.math("MULTIPLY", tau, hk.outputs[0])
     trans = nb.math("EXPONENT", nb.math("MULTIPLY", tau, -1.0))
@@ -387,6 +389,19 @@ def terrain_material():
     # in the meadow, clamp the scan's pale rock/decal patches so they read as grass, not paper scraps
     scan = nb.mixc(meadow, scan, nb.mixc(1.0, scan, (1.02, 1.02, 1.02), blend="DARKEN"))
     col = nb.mixc(1.0, col, scan, blend="MULTIPLY")
+    # near-ground grass/scrub micro-structure: tussock clumps, scrub speckle and fresh/dry patches at the
+    # 2-40 m scale a 1.5 km aerial resolves; faded out with view distance (sub-pixel there anyway)
+    camd = nb.n("ShaderNodeCameraData")
+    lod = nb.math("MULTIPLY", nb.mapr(camd.outputs["View Distance"], 5200.0, 2800.0), nb.math("SUBTRACT", 1.0, forest))
+    tus = nb.mapr(nb.noise(pos, 1 / 4.5, 4, 0.62), 0.38, 0.66)        # grass tussocks / bare gaps
+    n_sp = nb.noise(pos, 1 / 6.0, 3, 0.6)
+    speck = nb.math("MULTIPLY", nb.mapr(n_sp, 0.60, 0.68), nb.mapr(nb.noise(pos, 1 / 70.0, 3, 0.6), 0.42, 0.6))
+    n_pt = nb.noise(pos, 1 / 26.0, 4, 0.65)
+    gm = nb.mixc(n_pt, (0.80, 0.90, 0.78), (1.16, 1.08, 0.90))
+    gm = nb.mixc(nb.mapr(n_clump, 0.35, 0.65), gm, nb.mixc(1.0, gm, (0.85, 0.92, 0.82), blend="MULTIPLY"))
+    gm = nb.mixc(1.0, gm, nb.mixc(tus, (0.74, 0.80, 0.74), (1.12, 1.10, 1.0)), blend="MULTIPLY")
+    gm = nb.mixc(speck, gm, (0.30, 0.36, 0.26))
+    col = nb.mixc(lod, col, nb.mixc(1.0, col, gm, blend="MULTIPLY"))
     # stratified rock on steep ground; mountains get rock/scree earlier
     steep2 = nb.math("ADD", steep, nb.math("MULTIPLY", nb.mapr(hgt, 600, 1500), nb.mapr(nz, 0.95, 0.82)), clamp=True)
     wv = nb.n("ShaderNodeTexWave", wave_type="BANDS", bands_direction="Z", wave_profile="SIN")
@@ -423,6 +438,8 @@ def terrain_material():
     nb.l(rough, bsdf.inputs["Roughness"])
     bump = nb.n("ShaderNodeBump", inputs={"Strength": 0.6, "Distance": 2.0})
     bh = nb.math("ADD", nb.math("MULTIPLY", n_fine, 1.0), nb.math("MULTIPLY", forest, nb.noise(pos, 1 / 6.0, 2, 0.5)))
+    micro = nb.math("ADD", nb.math("MULTIPLY", tus, 0.25), nb.math("MULTIPLY", speck, 0.5))
+    bh = nb.math("ADD", bh, nb.math("MULTIPLY", micro, lod))
     nb.l(bh, bump.inputs["Height"])
     nb.l(bump.outputs[0], bsdf.inputs["Normal"])
 
@@ -536,7 +553,9 @@ def build_terrain(ctx):
     meadow = np.clip(meadow_c * 1.6 - 0.1 + 0.3 * L.fbm(n5, X / 300, Y / 300, 3), 0, 1)
     forest = forest * (1 - meadow)
     openm = np.clip(1 - forest * 1.4, 0, 1) * sm((h - 6) / 10) * sm((D - 25) / 30) * sm((0.7 - slope) / 0.2)
-    openm = openm * np.clip(0.5 + 0.9 * L.fbm(n5, X / 700 + 9, Y / 700, 3), 0, 1) * (1 - meadow)
+    openm = openm * np.clip(0.5 + 0.9 * L.fbm(n5, X / 700 + 9, Y / 700, 3), 0, 1)
+    SCRUB_M[0] = openm * (1 - 0.75 * sm((meadow_c - 0.7) / 0.25))      # scrub may enter the meadow fringe
+    openm = openm * (1 - meadow)
     Z = h - curv(X, Y)
     ob = L.grid_mesh("Terrain", X, Y, Z, {"h": h, "forest": forest, "meadow": meadow, "river": river, "bar": bar})
     C.assign(ob, terrain_material() if not os.environ.get("S8_PLAINT") else C.principled("plainT", (0.1, 0.12, 0.05)))
@@ -544,8 +563,8 @@ def build_terrain(ctx):
     return ob, (X, Y, Z, forest, rows, cols, openm)
 
 
-def tree_material():
-    m = bpy.data.materials.new("TreeCrown")
+def tree_material(name="TreeCrown", trans=0.45, tmul=(3.2, 3.4, 1.3), dark=1.0):
+    m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
     nt.nodes.clear()
@@ -560,25 +579,27 @@ def tree_material():
     c2 = nb.mixc(nb.mapr(rnd, 0.8, 1.0), c1, (0.09, 0.085, 0.03))      # a few yellowing crowns
     tint = nb.mixc(nb.noise(geo.outputs["Position"], 1 / 3.0, 3, 0.5), (0.7, 0.7, 0.7), (1.15, 1.15, 1.15), blend="MULTIPLY")
     col = nb.mixc(1.0, c2, tint, blend="MULTIPLY")
+    if dark != 1.0:
+        col = nb.mixc(1.0, col, (dark, dark, dark), blend="MULTIPLY")
     tlit = cloud_light(nb, geo.outputs["Position"])
     col = nb.mixc(1.0, col, nb.mixc(tlit, (0.72, 0.76, 0.84), (1.15, 1.1, 0.92)), blend="MULTIPLY")
     dif = nb.n("ShaderNodeBsdfDiffuse"); nb.l(col, dif.inputs["Color"])
     tr = nb.n("ShaderNodeBsdfTranslucent")
-    tcol = nb.mixc(1.0, col, (3.2, 3.4, 1.3), blend="MULTIPLY")
+    tcol = nb.mixc(1.0, col, tmul, blend="MULTIPLY")
     nb.l(tcol, tr.inputs["Color"])
-    mx = nb.n("ShaderNodeMixShader", inputs={0: 0.45})
+    mx = nb.n("ShaderNodeMixShader", inputs={0: trans})
     nb.l(dif.outputs[0], mx.inputs[1]); nb.l(tr.outputs[0], mx.inputs[2])
     sh = aerial(nb, mx.outputs[0], lit=tlit)[0]
     nb.l(sh, out.inputs["Surface"])
     return m
 
 
-def make_tree_variants(seed=5):
+def make_tree_variants(seed=5, name="TreeVariants", mat=None):
     """Low-poly conifers and broadleaf crowns, unit-ish size (height ~1), origin at the base."""
     import bmesh
     rnd = random.Random(seed)
-    col = bpy.data.collections.new("TreeVariants")      # not linked to the scene: instancing source only
-    mat = tree_material()
+    col = bpy.data.collections.new(name)      # not linked to the scene: instancing source only
+    mat = mat or tree_material()
     objs = []
     for k in range(8):
         bm = bmesh.new()
@@ -704,7 +725,76 @@ def build_trees(ctx, grid):
     me.update()
     ob = bpy.data.objects.new("Trees", me)
     bpy.context.scene.collection.objects.link(ob)
-    col = make_tree_variants()
+    scatter_instances(ob, make_tree_variants())
+    print(f"[sh12] trees: {n}", flush=True)
+    build_scrub(ctx, grid, extra[0])
+    return ob
+
+
+def build_scrub(ctx, grid, lone):
+    """Valley floor the camera descends onto: copses around the lone trees and dense clumped scrub /
+    young trees (hedges, gully lines, thickets), so nothing reads as isolated sprites. Own RNG, so the
+    trees above (and the trackers that use them) are unchanged."""
+    X, Y, Z, forest, rows, cols, openm = grid
+    args = (-1200, 62000, 2.1, rows, cols, 1500, 31)
+    rs = np.random.RandomState(1207)
+    low = ctx.mode == "animatic" or os.environ.get("S8_LOWRES")
+    P = []      # (x, y, var, scale)
+    # copses: each lone tree becomes the edge of a small stand of trees with scrub underneath
+    lx, ly = lone[0], lone[1]
+    for i in range(len(lx)):
+        if ly[i] > 8000:
+            continue
+        nt_, nb_ = rs.poisson(12), rs.poisson(30)
+        r = rs.uniform(6, 14)
+        P.append((lx[i] + rs.normal(0, r, nt_), ly[i] + rs.normal(0, r * 0.8, nt_), rs.randint(3, 6, nt_), rs.uniform(7, 19, nt_)))
+        P.append((lx[i] + rs.normal(0, r * 1.5, nb_), ly[i] + rs.normal(0, r * 1.2, nb_), rs.randint(6, 8, nb_), rs.uniform(2.5, 6, nb_)))
+    # thickets and hedge-like scrub lines: clump centres, each a tight elongated cluster of overlapping
+    # bushes that merges into one dark mass with one shared shadow (plus a few young trees)
+    half_b = 1500 + (7000 + 1200) * math.tan(math.radians(31))
+    nc = int(7600 * 2 * half_b / 5000.0)
+    if low:
+        nc //= 6
+    cx = rs.uniform(-half_b, half_b, nc); cy = rs.uniform(-600, 7000, nc)
+    cl = L.fbm(L.Noise2(131), cx / 400, cy / 400, 3)
+    ck = rs.uniform(0, 1, nc) < np.clip((cl + 0.15) * 2.5, 0, 1) * np.where(cy < 4000, 1.0, 0.5)
+    cx, cy = cx[ck], cy[ck]
+    for i in range(len(cx)):
+        nb_ = rs.poisson(rs.uniform(40, 80)); nt_ = rs.poisson(2.5)
+        r = rs.uniform(3, 8); el = rs.uniform(1, 3); a_ = rs.uniform(0, np.pi)
+        for cnt, kind in ((nb_, 0), (nt_, 1)):
+            u = rs.normal(0, r * el, cnt); v = rs.normal(0, r, cnt)
+            x = cx[i] + u * math.cos(a_) - v * math.sin(a_); y = cy[i] + u * math.sin(a_) + v * math.cos(a_)
+            if kind == 0:
+                P.append((x, y, rs.randint(6, 8, cnt), rs.uniform(3.0, 7.0, cnt)))
+            else:
+                P.append((x, y, rs.randint(3, 6, cnt), rs.uniform(6, 13, cnt)))
+    px = np.concatenate([p[0] for p in P]); py = np.concatenate([p[1] for p in P])
+    var = np.concatenate([p[2] for p in P]); scale = np.concatenate([p[3] for p in P])
+    # only on open grassland / meadow fringe / forest edges, never in the river or on steep rock
+    om = L.interp_grid(SCRUB_M[0], X, Y, px, py, *args)
+    fm = L.interp_grid(forest, X, Y, px, py, *args)
+    k = (om * 1.5 + fm * 0.6) > rs.uniform(0.1, 0.9, len(px))
+    px, py, var, scale = px[k], py[k], var[k], scale[k]
+    pz = L.interp_grid(Z, X, Y, px, py, *args) - np.where(var >= 6, 0.25, 0.6)
+    n = len(px)
+    rot = rs.uniform(0, 2 * np.pi, n)
+    me = bpy.data.meshes.new("ScrubPts")
+    me.vertices.add(n)
+    me.vertices.foreach_set("co", np.stack([px, py, pz], 1).astype(np.float32).ravel())
+    for name, arr, typ in (("tscale", scale, "FLOAT"), ("trot", rot, "FLOAT"), ("tvar", var, "INT")):
+        a = me.attributes.new(name, typ, "POINT")
+        a.data.foreach_set("value", arr.astype(np.float32 if typ == "FLOAT" else np.int32))
+    me.update()
+    ob = bpy.data.objects.new("Scrub", me)
+    bpy.context.scene.collection.objects.link(ob)
+    mat = tree_material("ScrubCrown", trans=0.3, tmul=(2.2, 2.4, 1.0), dark=0.8)
+    scatter_instances(ob, make_tree_variants(name="ScrubVariants", mat=mat))
+    print(f"[sh12] scrub: {n}", flush=True)
+    return ob
+
+
+def scatter_instances(ob, col):
     ng = bpy.data.node_groups.new("TreeScatter", "GeometryNodeTree")
     ng.interface.new_socket(name="Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
     ng.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
@@ -729,8 +819,6 @@ def build_trees(ctx, grid):
     nb.l(iop.outputs[0], go.inputs[0])
     mod = ob.modifiers.new("scatter", "NODES")
     mod.node_group = ng
-    print(f"[sh12] trees: {n}", flush=True)
-    return ob
 
 
 def build_sea():
