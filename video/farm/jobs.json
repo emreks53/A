@@ -728,6 +728,15 @@
    "from": 949,
    "to": 979,
    "note": "final round: near sea reads as water (fix da9e92d)"
+  },
+  {
+   "node": "b61",
+   "branch": "render-fix-hand4",
+   "ref": "980f9b448cad59f37416f2a761653b02703a83c5",
+   "shot": "sh04",
+   "from": 509,
+   "to": 556,
+   "note": "final round: adult man's hand (fix 980f9b4), one job starting at 509"
   }
  ]
 }
