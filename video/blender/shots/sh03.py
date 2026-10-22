@@ -35,6 +35,21 @@ def build(ctx):
             v.co.z += 0.003
     for f, w in ((252, 0.0), (272, 1.0)):
         sk.value = w; sk.keyframe_insert("value", frame=f)
+    # QA r7 (c): the rails (FrameB/T, Transom, sash bottom/top rails) shared coplanar faces with the stiles and
+    # rendered pure-black corner blocks; set their faces 1 mm back on both sides (sh03 only). Switched on inside
+    # the fast push-in (247|248, with the curtain) so the sh02->sh03 dissolve still matches sh02
+    for o in bpy.data.objects:
+        nm = o.name.split(".")[0]
+        if o.type == "MESH" and (nm in ("FrameB", "FrameT", "Transom") or (nm.startswith("Sash") and nm[-2:] in ("_b", "_t"))):
+            xs = [v.co.x for v in o.data.vertices]; x0, x1 = min(xs), max(xs)
+            o.shape_key_add(name="Basis"); ik = o.shape_key_add(name="Inset1mm")
+            for v in ik.data:
+                v.co.x = x0 + 0.001 + (v.co.x - x0) * (x1 - x0 - 0.002) / (x1 - x0)
+            for f, w in ((247, 0.0), (248, 1.0)):
+                ik.value = w; ik.keyframe_insert("value", frame=f)
+            for fc in C._fcurves(o.data.shape_keys.animation_data.action):
+                for kp in fc.keyframe_points:
+                    kp.interpolation = "CONSTANT"
     S.build_table()
     t_yemek, t_icmek, t_butun, t_takdim = ctx.word("yemek"), ctx.word("içmek"), ctx.word("bütün"), ctx.word("takdim")
     so = S.build_sofra()
