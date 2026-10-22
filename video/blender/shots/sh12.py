@@ -485,12 +485,16 @@ def sea_material():
     nb.l(fine.outputs[0], bump.inputs["Normal"])
     bsdf = nb.n("ShaderNodeBsdfPrincipled", inputs={"Base Color": (0.004, 0.018, 0.03, 1), "Roughness": 0.13,
                                                      "IOR": 1.333, "Specular IOR Level": 0.2})
-    # water from the first frame: a faint sun glint under the veil (the glint core saturates at any level
-    # above ~1e-3, its visible range is ~1e-6..1e-3), then it swells in geometric steps to full strength on
-    # the link_sea beat (64.88 s = f1557); exactly 0.2 from f1560 (frames from 1560 on are unchanged)
+    # water from the first frame: a faint sun glint under the veil. The glint saturates at any level above
+    # ~1e-3 and is most sensitive between 1e-4 and 1e-3, so it swells at a quarter decade per frame from 1e-5
+    # to 1e-3, fully on at the link_sea beat (64.88 s = f1557), then (saturated, invisible) up to exactly 0.2
+    # at f1560 - frames from 1560 on are unchanged
     spec_in = bsdf.inputs["Specular IOR Level"]
-    for f in range(1552, 1561):
-        spec_in.default_value = 3e-5 * (0.2 / 3e-5) ** ((f - 1552) / 8.0) if f < 1560 else 0.2
+    for f in range(1549, 1561):
+        if f <= 1557:
+            spec_in.default_value = 1e-5 * 100.0 ** ((f - 1549) / 8.0)
+        else:
+            spec_in.default_value = 1e-3 * 200.0 ** ((f - 1557) / 3.0) if f < 1560 else 0.2
         spec_in.keyframe_insert("default_value", frame=f)
     for fc in C._fcurves(nt.animation_data.action):
         for kp in fc.keyframe_points:
