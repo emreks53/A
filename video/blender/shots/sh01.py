@@ -233,6 +233,9 @@ def build(ctx):
         return amp * math.exp(-damp * tau_rel) * math.cos(2 * math.pi * freq * tau_rel)
 
     contact_offset = lambda sz, r: r * sz
+    # the bead rests ON the leaf: sinking it into the leaf mesh makes the water/leaf intersection disc render
+    # black (impact frame f103: black elliptical hole; settling f104-110: dark blob in its lower half)
+    SESS_GAP = 0.00002
     for f in range(ctx.f0 - 2, ctx.f1 + 3):
         t = f / 24.0
         tau = W.tau(t)
@@ -252,6 +255,11 @@ def build(ctx):
         hb.keyframe_insert("rotation_euler", frame=f)
         hb.keyframe_insert("location", frame=f)
         bpy.context.view_layer.update() if False else None
+        # hidden sessile bead waits in its impact pose (never at the 1 m mesh scale: with centred motion
+        # blur the impact frame would otherwise interpolate from that giant sphere -> black hole on f103)
+        sz0 = 0.78 - 0.36
+        sess.location = sess_loc + sess_n * (R1 * sz0 + SESS_GAP)
+        sess.scale = (R1 / math.sqrt(sz0), R1 / math.sqrt(sz0) * 0.97, R1 * sz0)
         if tau <= TAU_D:
             neck = C.remap(t, T_DETACH - 0.10, T_DETACH, C.ease_in)
             sz = 1.06 + 0.24 * neck
@@ -287,7 +295,7 @@ def build(ctx):
             sz = 0.78 - 0.36 * math.exp(-160 * dt) * math.cos(2 * math.pi * 75.0 * dt)
             sz = max(0.38, sz)
             sxy = 1.0 / math.sqrt(sz)
-            sess.location = sess_loc + sess_n * (R1 * sz * 0.92)
+            sess.location = sess_loc + sess_n * (R1 * sz + SESS_GAP)
             sess.scale = (R1 * sxy, R1 * sxy * 0.97, R1 * sz)
             ds = dt + (tau - TAU_D) * 0 - 0.0045 + t_fall
             ds = (tau - TAU_D) - 0.0045
