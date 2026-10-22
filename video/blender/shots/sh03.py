@@ -44,7 +44,11 @@ def build(ctx):
 
     # ---------------------------------------------------------------- sh02's air, carried over the cut
     cur = S.build_curtain(ctx, [], y0=-0.30, y1=0.36, drop=1.40, wall=None)
-    cur.modifiers["Sub"].levels = 1; cur.modifiers["Sub"].render_levels = 2    # QA r6 (d): no saw-toothed hem
+    # QA r6 (d): subdivide the curtain (no saw-toothed hem f371-383). It stays as sh02 renders it through the
+    # f228-233 dissolve and switches during the defocused glass macro (f262)
+    sub = cur.modifiers["Sub"]; sub.levels = 1
+    for f, lv in ((261, 0), (262, 2)):
+        sub.render_levels = lv; sub.keyframe_insert("render_levels", frame=f)
     S.build_beam_emission((-0.99, -0.75, 0.765), (0.45, 0.92, 2.42), strength=0.045, curtain_y=0.36,
                           time_keys=[(5.24 - 1, 0.0), (9.64 + 1, 0.9)])
     S.build_motes("Motes", (-0.97, -0.6, 0.80), (0.12, 1.0, 2.30), count=5000, seed=21, r_min=0.0005,
@@ -179,15 +183,11 @@ def build(ctx):
     pr = so["plate_root"]
     C.key(pr, "location", t_takdim - 0.45, (*S.SOFRA["plate0"], TZ))
     C.key(pr, "location", t_takdim + 0.25, (*S.SOFRA["plate1"], TZ))
-    # QA r6 (e): the arils smeared into a 'blood orange' on 'takdim'. Cycles takes the shutter once per render
-    # job (keyed or handler-set values are ignored), so instead the plate + pomegranate render without motion
-    # blur from the slide start (f348, plate at rest, 1.5 px/frame) to the end of the shot: switching back on
-    # at 364 (crane still moving ~10 px/frame) stepped the aril sharpness for one frame
-    for o in [pr] + list(pr.children_recursive):
-        if o.type != "MESH":
-            continue
-        for f, on in ((347, True), (348, False)):
-            o.cycles.use_motion_blur = on; o.keyframe_insert("cycles.use_motion_blur", frame=f)
+    # QA r6 (e): a shorter shutter while the plate slides so the arils do not smear on 'takdim'
+    sc = bpy.context.scene
+    for f, sh in ((346, 0.5), (351, 0.2), (361, 0.2), (366, 0.5)):
+        sc.render.motion_blur_shutter = sh; sc.keyframe_insert("render.motion_blur_shutter", frame=f)
+    shut_fc = [fc for fc in C._fcurves(sc.animation_data.action) if "motion_blur_shutter" in fc.data_path][0]
 
     # ---------------------------------------------------------------- camera (shared boom, then own path)
     cam = C.camera("cam", lens=28, loc=P3[0][1], fstop=2.8)
@@ -202,8 +202,11 @@ def build(ctx):
     S.perf_settings(light_tree=False, fast_gi=False)
     # the glass/water macro; the deep paths stay on for the whole shot, so no bounce switch lands on any
     # glass (QA r3: 292|293 popped the hero glass; QA r6: 326|327 popped the back tea glass)
-    S.frame_bounces(225, 389, glossy=4, transmission=12, max_b=12)   # whole time the glass is on screen (QA r5: no switch on the glass at 247|248)
-    return S.RENDER_OV
+    S.frame_bounces(225, 389, glossy=4, transmission=12, max_b=12)
+    # Cycles takes the keyed shutter from the 2nd frame of a job on; the job's first frame uses the stored
+    # value, so store the keyed value at the job's start frame (same result for any chunk start)
+    f_start = ctx.f0 if getattr(ctx.args, "ffrom", None) is None else ctx.args.ffrom
+    return dict(S.RENDER_OV, shutter=shut_fc.evaluate(f_start))
 
 
 C.run("sh03", build)
