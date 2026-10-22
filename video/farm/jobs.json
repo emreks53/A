@@ -854,6 +854,33 @@
    "from": 103,
    "to": 124,
    "note": "final round: drop rests on the leaf, no black impact hole (fix 265890c)"
+  },
+  {
+   "node": "b75",
+   "branch": "render-fix-sh05",
+   "ref": "f122abd9e812efa96fbe2457922d74b70b0bfe56",
+   "shot": "sh05",
+   "from": 545,
+   "to": 604,
+   "note": "final round: shafts radiate from the sun, taper/shimmer, no cross; soft TIR (fix f122abd)"
+  },
+  {
+   "node": "b76",
+   "branch": "render-fix-sh05",
+   "ref": "f122abd9e812efa96fbe2457922d74b70b0bfe56",
+   "shot": "sh05",
+   "from": 605,
+   "to": 650,
+   "note": "final round: shafts radiate from the sun, taper/shimmer, no cross; soft TIR (fix f122abd)"
+  },
+  {
+   "node": "b77",
+   "branch": "render-fix-sh05",
+   "ref": "f122abd9e812efa96fbe2457922d74b70b0bfe56",
+   "shot": "sh05",
+   "from": 651,
+   "to": 682,
+   "note": "final round: shafts radiate from the sun, taper/shimmer, no cross; soft TIR (fix f122abd)"
   }
  ]
 }
