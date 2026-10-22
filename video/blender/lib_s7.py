@@ -1393,9 +1393,9 @@ def upgrade_interior(inter, wave):
     m_cr_fg = m_cr.copy(); m_cr_fg.name = "CristaeS9Fg"
     for n_ in m_cr_fg.node_tree.nodes:
         if n_.type == "BSDF_PRINCIPLED":
-            n_.inputs["Alpha"].default_value = 0.35
-        elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 0.95) < 1e-6:
-            n_.inputs["To Min"].default_value = 0.05; n_.inputs["To Max"].default_value = 0.3
+            n_.inputs["Alpha"].default_value = 0.06                  # out of focus and near: folds all but invisible
+        elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 0.8) < 1e-6:
+            n_.inputs["To Min"].default_value = 0.0; n_.inputs["To Max"].default_value = 0.05
     m_in = mat_mito_inner_s9(MITO_VOL["emit_small"], "MitoInnerS9")        # the chains
     m_in_hero = mat_mito_inner_s9(MITO_VOL["emit"], "MitoInnerS9Hero")    # hero variants (10-12)
     new, cr_cache, in_cache = [], {}, {}
@@ -1533,7 +1533,7 @@ def mito_bean(name, length, width, seed=0, nu=40, nv=56):
     return me
 
 
-CRISTAE = dict(rad=0.64, yspan=0.24, amp=0.022, cup=0.018, tilt=5.0, bow=0.012, reach=(0.34, 0.68), reach_end=0.42)
+CRISTAE = dict(rad=0.64, yspan=0.24, amp=0.016, cup=0.012, tilt=3.0, bow=0.008, reach=(0.34, 0.68), reach_end=0.42)
 
 
 def cristae_folded(name, length, width, seed=0):
@@ -1550,13 +1550,17 @@ def cristae_folded(name, length, width, seed=0):
     bow = K["bow"] * width                                       # gentle curvature in the screen plane
     ext = 1.45 * amp + cup + bow + math.tan(math.radians(K["tilt"])) * R0 * BEAN["depth"] + th   # half y-extent
     span = 2 * K["yspan"] * length
-    n = max(3, int(span / (2.3 * ext)) + 1)
-    step = span / (n - 1)
-    jit = max(0.0, (step - 2.1 * ext) / 2)                       # irregular spacing, never touching
+    gmin = 2.15 * ext                                            # neighbours' y-extents never touch
+    n = max(3, int(span / (2.6 * ext)) + 1)
+    w_ = [rng.uniform(0.2, 1.0) for _ in range(n - 1)]
+    slack = max(0.0, span - (n - 1) * gmin)
+    ys_ = [-K["yspan"] * length]
+    for wk in w_:                                                # irregular gaps (random partition of the slack)
+        ys_.append(ys_[-1] + gmin + slack * wk / sum(w_))
     bm = bmesh.new()
     NS, NA = 14, 12
     for i in range(n):
-        y0 = -K["yspan"] * length + i * step + rng.uniform(-jit, jit)
+        y0 = ys_[i]
         t0 = y0 / (length / 2)
         te = min(0.95, (abs(y0) + ext) / (length / 2))           # narrowest point over the extent
         R = K["rad"] * bean_radius(te, width)
@@ -1662,13 +1666,13 @@ def mat_cristae_s9(wave):
     p.inputs["Base Color"].default_value = (0.44, 0.17, 0.03, 1)    # saturated amber folds (never cream)
     p.inputs["Emission Color"].default_value = (1.0, 0.40, 0.04, 1)
     p.inputs["Roughness"].default_value = 0.6
-    p.inputs["Alpha"].default_value = 0.8                            # soft, translucent internal folds
+    p.inputs["Alpha"].default_value = 0.75                           # soft, translucent internal folds
     p.inputs["Coat Weight"].default_value = 0.05                     # no glossy edge that could streak
     p.inputs["Coat Roughness"].default_value = 0.5
     p.inputs["Specular IOR Level"].default_value = 0.25
     src = p.inputs["Emission Strength"].links[0].from_socket
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.4
-    sh = _n(nt, "ShaderNodeMapRange"); sh.inputs["To Min"].default_value = 0.15; sh.inputs["To Max"].default_value = 0.95
+    sh = _n(nt, "ShaderNodeMapRange"); sh.inputs["To Min"].default_value = 0.1; sh.inputs["To Max"].default_value = 0.8
     nt.links.new(lw.outputs["Facing"], sh.inputs["Value"])
     mm = _n(nt, "ShaderNodeMath"); mm.operation = "MULTIPLY"
     nt.links.new(src, mm.inputs[0]); nt.links.new(sh.outputs[0], mm.inputs[1])
