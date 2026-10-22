@@ -1574,6 +1574,51 @@
    "from": 2967,
    "to": 3011,
    "note": "no-cross round: vertical-slat kafes (stripes not grid), semse vertical row, 5-petal blossoms, vine-scroll carving, rahle V on end frames (fix c5857be); whole shot, job starts = first frames"
+  },
+  {
+   "node": "b155",
+   "branch": "render-fix-sh08",
+   "ref": "0338842f9159e402d38941fb2917ad0058ca00d6",
+   "shot": "sh08",
+   "from": 968,
+   "to": 1010,
+   "note": "round 3: adult man's hand with real hair, sh03 table, natural skin + sharp forearm macro, no grasp streak (fix 0338842); whole shot, fresh nodes"
+  },
+  {
+   "node": "b156",
+   "branch": "render-fix-sh08",
+   "ref": "0338842f9159e402d38941fb2917ad0058ca00d6",
+   "shot": "sh08",
+   "from": 1011,
+   "to": 1050,
+   "note": "round 3: adult man's hand with real hair, sh03 table, natural skin + sharp forearm macro, no grasp streak (fix 0338842); whole shot, fresh nodes"
+  },
+  {
+   "node": "b157",
+   "branch": "render-fix-sh08",
+   "ref": "0338842f9159e402d38941fb2917ad0058ca00d6",
+   "shot": "sh08",
+   "from": 1051,
+   "to": 1090,
+   "note": "round 3: adult man's hand with real hair, sh03 table, natural skin + sharp forearm macro, no grasp streak (fix 0338842); whole shot, fresh nodes"
+  },
+  {
+   "node": "b158",
+   "branch": "render-fix-sh08",
+   "ref": "0338842f9159e402d38941fb2917ad0058ca00d6",
+   "shot": "sh08",
+   "from": 1091,
+   "to": 1120,
+   "note": "round 3: adult man's hand with real hair, sh03 table, natural skin + sharp forearm macro, no grasp streak (fix 0338842); whole shot, fresh nodes"
+  },
+  {
+   "node": "b159",
+   "branch": "render-fix-sh08",
+   "ref": "0338842f9159e402d38941fb2917ad0058ca00d6",
+   "shot": "sh08",
+   "from": 1121,
+   "to": 1143,
+   "note": "round 3: adult man's hand with real hair, sh03 table, natural skin + sharp forearm macro, no grasp streak (fix 0338842); whole shot, fresh nodes"
   }
  ]
 }
