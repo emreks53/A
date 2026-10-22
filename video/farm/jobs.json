@@ -692,6 +692,42 @@
    "from": 2424,
    "to": 2461,
    "note": "QA r4: real flame core + smooth halo"
+  },
+  {
+   "node": "b57",
+   "branch": "render-fix-sh07",
+   "ref": "da9e92d2c93c3495bac440a03cb573ea45084cf0",
+   "shot": "sh07",
+   "from": 851,
+   "to": 883,
+   "note": "final round: near sea reads as water (fix da9e92d)"
+  },
+  {
+   "node": "b58",
+   "branch": "render-fix-sh07",
+   "ref": "da9e92d2c93c3495bac440a03cb573ea45084cf0",
+   "shot": "sh07",
+   "from": 884,
+   "to": 916,
+   "note": "final round: near sea reads as water (fix da9e92d)"
+  },
+  {
+   "node": "b59",
+   "branch": "render-fix-sh07",
+   "ref": "da9e92d2c93c3495bac440a03cb573ea45084cf0",
+   "shot": "sh07",
+   "from": 917,
+   "to": 948,
+   "note": "final round: near sea reads as water (fix da9e92d)"
+  },
+  {
+   "node": "b60",
+   "branch": "render-fix-sh07",
+   "ref": "da9e92d2c93c3495bac440a03cb573ea45084cf0",
+   "shot": "sh07",
+   "from": 949,
+   "to": 979,
+   "note": "final round: near sea reads as water (fix da9e92d)"
   }
  ]
 }
