@@ -38,6 +38,9 @@ def build(ctx):
     S.build_table()
     t_yemek, t_icmek, t_butun, t_takdim = ctx.word("yemek"), ctx.word("içmek"), ctx.word("bütün"), ctx.word("takdim")
     so = S.build_sofra()
+    # QA r7 (hard rule): the honey spoon's handle above the jar rim read as an upright cross -> no spoon in sh03
+    for n in ("SpoonBowl", "SpoonHandle"):
+        bpy.data.objects[n].hide_render = True
     so["pom"] = S.replace_open_pomegranate(so["pom"])     # fix s1-3: real cut face (sh02 keeps build_sofra as is)
     water = so["water"]
     r_in = S.inner_radius(0.05)
@@ -45,9 +48,10 @@ def build(ctx):
     # ---------------------------------------------------------------- sh02's air, carried over the cut
     cur = S.build_curtain(ctx, [], y0=-0.30, y1=0.36, drop=1.40, wall=None)
     # QA r6 (d): subdivide the curtain (no saw-toothed hem f371-383). It stays as sh02 renders it through the
-    # f228-233 dissolve and switches during the defocused glass macro (f262)
+    # f228-233 dissolve and switches inside the fast push-in (f248; QA r7: a switch in the locked-off macro
+    # stepped the curtain's sun-shadow on the table)
     sub = cur.modifiers["Sub"]; sub.levels = 1
-    for f, lv in ((261, 0), (262, 2)):
+    for f, lv in ((247, 0), (248, 2)):
         sub.render_levels = lv; sub.keyframe_insert("render_levels", frame=f)
     S.build_beam_emission((-0.99, -0.75, 0.765), (0.45, 0.92, 2.42), strength=0.045, curtain_y=0.36,
                           time_keys=[(5.24 - 1, 0.0), (9.64 + 1, 0.9)])
