@@ -70,3 +70,48 @@ Fix commit: d712709e710ad897b2c52d5761449be32067357a (only `video/blender/shots/
   - `her_2262_crop100.jpg`
   - `sliver_2370_crop100.jpg`
   - `seam_2240_crop100.jpg`
+
+## Round 3 (director notes) — fix 337ae851d5d011ca012e42fd74f975e5c9f97afe
+The final look is baked into the code defaults; no env overrides are needed. The build log prints SUN_DIP, SUN_WHITE, FILM_LIFT and SU.
+
+**Swell SU values:**
+
+| Key | Value |
+|---|---|
+| sun | +0.5 |
+| kelvin | 3800 |
+| haze | (.80,.55,.20) |
+| glare_col | (1,.70,.40) |
+| wash | 0.4 |
+| tint | (1,.72,.45) |
+
+The sun and wash were lowered further than the director's suggested values (sun 7, wash 1.4) to meet the field-mean range. All other values are as specified.
+
+**Film exposure keys:** 1.0 at 2242, 1.5 over 2258-2300, 1.0 at 2336.
+
+**Sun lamp:** the sun dip recovers over 2278-2300. The sun also whitens by +600 K over 2270-2296; without this, petals at 2286-2298 read peach 0.20-0.24.
+
+**Metrics** (`r3_metrics.txt`, 50% final spp; my own metric script):
+
+| Frames | Measure | Result |
+|---|---|---|
+| 2384 / 2393 | lit-petal hue | 38.1 |
+| 2384 / 2393 | lit-petal sat | .94 / .93 |
+| 2384 / 2393 | peach share | .01 / .02 |
+| 2384 / 2393 | top-right sky R-B | 56 |
+| 2384 / 2393 | field mean | 69.6 / 68.6 |
+| 2384 / 2393 | frame mean | 128.7 / 127.5 |
+| 2296 / 2300 | frame mean | 57.8 / 61.1 |
+| 2296 / 2300 | field mean | 28.0 / 28.7 |
+| 2296 / 2300 | sky | 149 / 153 |
+| 2256-2312 (25% sweep) | peach | ≤ .13 |
+| 2256-2312 (25% sweep) | hue | ≥ 38.4 |
+| 2256-2312 (25% sweep) | cream | ≤ .026 |
+
+Frame mean (25% sweeps of 2256-2344 at step 2 and 2348-2393 at step 4) peaks at about 131 over 2372-2380. The largest drop between sampled frames is 1.02%.
+
+**Determinism:** 2383-2384 vs 2384 alone: 0 px differ.
+
+**Full-quality render time** (4 cores): 53-54 s/frame at 2296, 42-44 s/frame at 2384 and 2393.
+
+**Evidence image:** `r3_compassion_allah.jpg`

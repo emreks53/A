@@ -1,0 +1,6 @@
+sh14a_02296.png mean=57.78 field_mean=28.01 field_med=14.50 pet_hue=46.10 pet_sat=0.71 peach=0.10 pet_n=10759 cream=0.03 tr_RB=41.76 sky_Y=149.00
+sh14a_02300.png mean=61.09 field_mean=28.66 field_med=15.35 pet_hue=48.96 pet_sat=0.78 peach=0.04 pet_n=8822 cream=0.03 tr_RB=38.65 sky_Y=152.72
+sh14a_02362.png mean=124.80 field_mean=58.88 field_med=41.29 pet_hue=41.50 pet_sat=0.94 peach=0.01 pet_n=19027 cream=0.13 tr_RB=44.74 sky_Y=211.28
+sh14a_02378.png mean=130.65 field_mean=70.07 field_med=52.45 pet_hue=38.84 pet_sat=0.94 peach=0.01 pet_n=18025 cream=0.23 tr_RB=54.76 sky_Y=212.29
+sh14a_02384.png mean=128.68 field_mean=69.58 field_med=50.23 pet_hue=38.11 pet_sat=0.94 peach=0.01 pet_n=17961 cream=0.24 tr_RB=56.18 sky_Y=208.68
+sh14a_02393.png mean=127.53 field_mean=68.56 field_med=48.60 pet_hue=38.08 pet_sat=0.93 peach=0.02 pet_n=17712 cream=0.23 tr_RB=56.13 sky_Y=207.44
