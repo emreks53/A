@@ -845,6 +845,15 @@
    "from": 343,
    "to": 358,
    "note": "final round, 327-358 split after two container restarts (b69, b71): clear water jet + real pomegranate (fix c25357a); both start at/after the 326|327 bounce switch"
+  },
+  {
+   "node": "b74",
+   "branch": "render-fix-sh01",
+   "ref": "265890c16bb1d7abe974ae68e31f05cc3f8912f8",
+   "shot": "sh01",
+   "from": 103,
+   "to": 124,
+   "note": "final round: drop rests on the leaf, no black impact hole (fix 265890c)"
   }
  ]
 }
