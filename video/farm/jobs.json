@@ -737,6 +737,33 @@
    "from": 509,
    "to": 556,
    "note": "final round: adult man's hand (fix 980f9b4), one job starting at 509"
+  },
+  {
+   "node": "b62",
+   "branch": "render-fix-sh09",
+   "ref": "9dcb88fb53a9e2f867d2c592eaa3ef39f065e41d",
+   "shot": "sh09",
+   "from": 1132,
+   "to": 1173,
+   "note": "final round: volumetric mitochondria, readable fascicles (fix 9dcb88f)"
+  },
+  {
+   "node": "b63",
+   "branch": "render-fix-sh09",
+   "ref": "9dcb88fb53a9e2f867d2c592eaa3ef39f065e41d",
+   "shot": "sh09",
+   "from": 1174,
+   "to": 1215,
+   "note": "final round: volumetric mitochondria, readable fascicles (fix 9dcb88f)"
+  },
+  {
+   "node": "b64",
+   "branch": "render-fix-sh09",
+   "ref": "9dcb88fb53a9e2f867d2c592eaa3ef39f065e41d",
+   "shot": "sh09",
+   "from": 1216,
+   "to": 1255,
+   "note": "final round: volumetric mitochondria, readable fascicles (fix 9dcb88f)"
   }
  ]
 }
