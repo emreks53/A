@@ -169,7 +169,7 @@
  "callouts": [
   {"id": "co_air", "shot": "sh02", "track": "air", "primary": "O₂", "secondary": "havanın %21'i",
    "secondary_alpha": 1.0, "secondary_weight": 500, "text_shadow": [0.8, 10, 1.5], "scrim": 0.32,
-   "_doc2": "label on the flat, bright sheer curtain: opaque Medium secondary line, a firmer shadow and a soft 32 % scrim behind the label (contrast >= 2.5:1); the scrim and the label's local box ease in with the label reveal (sync + 0.10..0.52 s) and out over the last 0.31 s, never popping on in a frame (overlay.js drawCalloutCore)",
+   "_doc2": "label on the flat, bright sheer curtain: opaque Medium secondary line, a firmer shadow and a soft 32 % scrim behind the label (contrast >= 2.5:1); the scrim and the label's local box ease in with the ring + label reveal (smoothstep, sync + 0.02..0.52 s) and out over the last 0.31 s, never popping on in a frame (overlay.js drawCalloutCore)",
    "_doc": "lands right after 'oksijen' (8.38 = the mix tick); TRK_air rises out of the frame as the camera booms down, so the anchor glides to a stop inside the safe area (the air is everywhere; a held anchor is still true). out 9.73: the text holds 0.80 s and is gone at 9.63 with OKSİJEN, before YEMEK lands (9.64); only the ring retracts through the sh02->sh03 dissolve (f228-233)",
    "sync": 8.38, "out": 9.73, "cue": "sh02.callout_air", "clamp": 70, "fallback": [[7.0, 330, 1060], [9.8, 360, 1010]],
    "prefer": ["dl", "ul"]},
@@ -226,7 +226,7 @@
    ],
    "draw": {"t0": {"word": "bütün"}, "t1": 66.42, "seg_dur": 0.36},
    "converge": {"t0": {"word": "bir"}, "dur": 0.72, "stagger": 0.05, "to_offset": [0, -93], "center_line": true},
-   "center_node": {"ring": true, "label": true, "glow": [30, 0.45]},
+   "center_node": {"ring": true, "label": true, "label_side": -1, "glow": [30, 0.45]},
    "light": {"at": {"word": "tek"}, "glow": 70, "flash": [0.5, 10]},
    "out": 70.25, "labels": true},
 
