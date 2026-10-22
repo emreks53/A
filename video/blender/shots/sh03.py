@@ -25,11 +25,16 @@ U3 = [(9.0, (0, 0, 1)), (15.05, (0, 0, 1)), (16.0, (-1, 0, 0)), (16.60, (-1, 0, 
 def build(ctx):
     S.light_rig(exposure=S.ROOM_EXPOSURE)
     S.build_room()
-    # QA r6 (c): the sill top 3 mm higher closes the pure-black slot under it (sh03 only; sh02 keeps lib_s4's sill)
+    # QA r6 (c): the sill top 3 mm higher closes the pure-black slot under it (f300-370). sh03 only, and it
+    # rises during the defocused glass macro (f252-272) so the sh02->sh03 dissolve still matches sh02's sill
     sill = bpy.data.objects["Sill"]
-    for v in sill.data.vertices:
+    sill.shape_key_add(name="Basis")
+    sk = sill.shape_key_add(name="Raise3mm")
+    for v in sk.data:
         if v.co.z > S.WIN_Z0 - 0.01:
             v.co.z += 0.003
+    for f, w in ((252, 0.0), (272, 1.0)):
+        sk.value = w; sk.keyframe_insert("value", frame=f)
     S.build_table()
     t_yemek, t_icmek, t_butun, t_takdim = ctx.word("yemek"), ctx.word("içmek"), ctx.word("bütün"), ctx.word("takdim")
     so = S.build_sofra()
@@ -174,10 +179,14 @@ def build(ctx):
     pr = so["plate_root"]
     C.key(pr, "location", t_takdim - 0.45, (*S.SOFRA["plate0"], TZ))
     C.key(pr, "location", t_takdim + 0.25, (*S.SOFRA["plate1"], TZ))
-    # QA r6 (e): a shorter shutter while the plate slides so the arils stay crisp on 'takdim'
-    sc = bpy.context.scene
-    for f, sh in ((346, 0.5), (351, 0.2), (361, 0.2), (366, 0.5)):
-        sc.render.motion_blur_shutter = sh; sc.keyframe_insert("render.motion_blur_shutter", frame=f)
+    # QA r6 (e): the arils smeared into a 'blood orange' on 'takdim'. Cycles takes the shutter once per render
+    # job (keyed or handler-set values are ignored), so instead the plate + pomegranate render without motion
+    # blur for the slide itself (f348-363); at both switch frames the plate is (nearly) at rest
+    for o in [pr] + list(pr.children_recursive):
+        if o.type != "MESH":
+            continue
+        for f, on in ((347, True), (348, False), (363, False), (364, True)):
+            o.cycles.use_motion_blur = on; o.keyframe_insert("cycles.use_motion_blur", frame=f)
 
     # ---------------------------------------------------------------- camera (shared boom, then own path)
     cam = C.camera("cam", lens=28, loc=P3[0][1], fstop=2.8)
