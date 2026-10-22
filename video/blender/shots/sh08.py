@@ -131,6 +131,19 @@ def place_apple():
     objs = C.ph_model("food_apple_01", "1k")
     meshes = [o for o in objs if o.type == "MESH"]
     ap = meshes[0]
+    # the scan's waxy peel threw a hard white streak between the fingers at the grasp (f1030): a touch rougher
+    for ms in ap.material_slots:
+        if ms.material and ms.material.node_tree:
+            for n in ms.material.node_tree.nodes:
+                if n.bl_idname == "ShaderNodeBsdfPrincipled":
+                    r = n.inputs["Roughness"]
+                    if r.is_linked:
+                        mr = ms.material.node_tree.nodes.new("ShaderNodeMath"); mr.operation = "MULTIPLY_ADD"
+                        mr.inputs[1].default_value = 1.0; mr.inputs[2].default_value = 0.22; mr.use_clamp = True
+                        ms.material.node_tree.links.new(r.links[0].from_socket, mr.inputs[0])
+                        ms.material.node_tree.links.new(mr.outputs[0], r)
+                    else:
+                        r.default_value = min(1.0, r.default_value + 0.22)
     for o in objs:
         if o.parent is None and o is not ap and o.type == "EMPTY":
             pass
@@ -353,7 +366,7 @@ def body_hair(hand, arm):
     x, z = cen[:, 0], cen[:, 2]
     zc = CUFF_Z0 - 0.004
     back = _smoothstep_np(0.9, -0.3, nrm[:, 1])           # back + edges (rest -Y = back of the hand)
-    dens = (np.where((z > 0.0) & (z < zc), 1.0, 0.0) * (0.30 + 0.70 * back) * 1.5e5
+    dens = (np.where((z > 0.0) & (z < zc), 1.0, 0.0) * (0.30 + 0.70 * back) * 1.7e5
             + np.where((z > -0.098) & (z <= 0.0), 1.0, 0.0) * _smoothstep_np(0.85, -0.3, nrm[:, 1]) * 1.0e5
             + np.where((z > -0.142) & (z <= -0.098) & (x > -0.05) & (x < 0.04), 1.0, 0.0)
             * _smoothstep_np(0.5, -0.5, nrm[:, 1]) * 0.8e5)
@@ -368,21 +381,15 @@ def body_hair(hand, arm):
     zr = root[:, 2]
     on_arm = zr > 0.0
     on_hand = (zr > -0.098) & ~on_arm
-    # combed to ONE flow direction (hair lies along its tract, distally down the arm/hand): the axial direction in the
-    # skin's tangent plane, spread +-8 deg, lying almost flat on the back of the forearm (so the camera never sees
-    # hairs or their shadows cross); a little more lift on the forearm sides gives the silhouette its rim-lit fringe
-    lay = np.tile(np.array([0.0, 0.0, -1.0]), (n, 1))
+    lay = np.stack([-0.35 + rnd.normal(0, 0.45, n), np.zeros(n), -np.ones(n)], 1)
     lay -= nn * (lay * nn).sum(1)[:, None]
     lay /= np.linalg.norm(lay, axis=1)[:, None] + 1e-9
-    side = np.cross(nn, lay)
-    ang = np.radians(rnd.uniform(-8.0, 8.0, n))
-    lay = lay * np.cos(ang)[:, None] + side * np.sin(ang)[:, None]
-    dors = _smoothstep_np(0.55, 0.85, -nn[:, 1])                 # 1 on the back of the forearm / hand
-    lift = np.radians(np.where(on_arm, 4.0 + (1 - dors) * 22.0, 18.0 + (1 - dors) * 14.0) + rnd.uniform(0, 4.0, n))
+    lift = np.radians(np.where(on_arm, rnd.uniform(12, 35, n), rnd.uniform(20, 45, n)))
     d = lay * np.cos(lift)[:, None] + nn * np.sin(lift)[:, None]
     L_ = np.where(on_arm, rnd.uniform(0.010, 0.015, n), np.where(on_hand, rnd.uniform(0.008, 0.012, n),
                                                                  rnd.uniform(0.003, 0.005, n)))
-    P = np.stack([root - nn * 0.00012 * (k == 0) + (d * f - nn * 0.10 * f * f * np.sin(lift)[:, None]) * L_[:, None]
+    curl = np.cross(d, nn) * rnd.uniform(-0.25, 0.25, n)[:, None]
+    P = np.stack([root - nn * 0.00012 * (k == 0) + (d * f + curl * f * f - nn * 0.22 * f * f) * L_[:, None]
                   for k, f in enumerate((0.0, 0.33, 0.67, 1.0))], 1)
     R = np.where(on_arm, 0.000050, 0.000055)[:, None] * np.array([[1.0, 0.85, 0.6, 0.25]])
     # bone per strand: forearm / hand / nearest proximal phalanx
@@ -397,7 +404,7 @@ def body_hair(hand, arm):
     # the window light rims the fringe. (The Chiang fibre model cost ~30 s/frame in the close-ups.)
     hi = ntr.nodes.new("ShaderNodeHairInfo")
     pb = ntr.nodes.new("ShaderNodeBsdfPrincipled"); pb.inputs["Roughness"].default_value = 0.38
-    pc = H._mixc(ntr, hi.outputs["Intercept"], (0.05, 0.03, 0.018), (0.30, 0.19, 0.11))
+    pc = H._mixc(ntr, hi.outputs["Intercept"], (0.075, 0.045, 0.026), (0.32, 0.21, 0.12))
     ntr.links.new(pc, pb.inputs["Base Color"])
     tr = ntr.nodes.new("ShaderNodeBsdfTranslucent")
     ntr.links.new(H._mixc(ntr, hi.outputs["Intercept"], (0.30, 0.17, 0.08), (0.80, 0.55, 0.30)), tr.inputs["Color"])
@@ -538,7 +545,7 @@ def man_skin(skin):
                 n.inputs[2].links[0].from_node.bl_idname == "ShaderNodeBsdfTranslucent":
             n.inputs[0].default_value = 0.035
         if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and abs(n.inputs[1].default_value + 0.30) < 1e-6:
-            n.inputs[1].default_value = -0.025     # skin-line groove depth (relinked to the wave grooves below)
+            n.inputs[1].default_value = -0.12      # skin-line groove depth (relinked to the wave grooves below)
         if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and abs(n.inputs[1].default_value + 0.9) < 1e-6:
             n.inputs[1].default_value = 0.0        # pores live in the albedo only: a bump pit gave bright bead rims
     # pores and fine creases also in the albedo: from f1091 OIDN runs colour+albedo only (GLOW_NO_NORMAL_F) and
@@ -547,18 +554,18 @@ def man_skin(skin):
     col = sk.inputs["Base Color"].links[0].from_socket
     vor = {round(n.inputs["Scale"].default_value): n for n in nt.nodes if n.bl_idname == "ShaderNodeTexVoronoi"}
     pore = H._math(nt, "SUBTRACT", 1.0, H._smoothstep(nt, vor[2600].outputs["Distance"], 0.0, 0.16))      # reuse lib cells
-    # skin lines: soft wavy grooves in ONE direction, along the arm like the combed hair, so no line ever crosses another
-    # line or a hair (lib_s5's cellular net drew crisp polygon edges, X and V shapes at macro)
+    # skin lines: one dominant direction (Langer lines run around the forearm) as soft wavy grooves that never cross
+    # (lib_s5's cellular net drew crisp polygon edges, X and V shapes at macro); secondary texture stays in the noise
     R0 = H._attr(nt, "rest", "Vector")
-    wvl = nt.nodes.new("ShaderNodeTexWave"); wvl.wave_type = "BANDS"; wvl.bands_direction = "X"; wvl.wave_profile = "SIN"
-    wvl.inputs["Scale"].default_value = 950.0; wvl.inputs["Distortion"].default_value = 1.6
+    wvl = nt.nodes.new("ShaderNodeTexWave"); wvl.wave_type = "BANDS"; wvl.bands_direction = "Z"; wvl.wave_profile = "SIN"
+    wvl.inputs["Scale"].default_value = 1300.0; wvl.inputs["Distortion"].default_value = 3.5
     wvl.inputs["Detail"].default_value = 1.0; wvl.inputs["Detail Scale"].default_value = 1.2
     nt.links.new(R0, wvl.inputs["Vector"])
-    crease = H._smoothstep(nt, wvl.outputs["Fac"], 0.70, 0.98)          # narrow, soft-edged grooves
+    crease = H._smoothstep(nt, wvl.outputs["Fac"], 0.80, 0.98)          # narrow, soft-edged grooves
     for n in list(nt.nodes):                                            # the cellular net's height -> the grooves
-        if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and abs(n.inputs[1].default_value + 0.025) < 1e-6:
+        if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and abs(n.inputs[1].default_value + 0.12) < 1e-6:
             nt.links.new(crease, n.inputs[0])
-    dark = H._math(nt, "ADD", H._math(nt, "MULTIPLY", pore, 0.30), H._math(nt, "MULTIPLY", crease, 0.03))
+    dark = H._math(nt, "ADD", H._math(nt, "MULTIPLY", pore, 0.30), H._math(nt, "MULTIPLY", crease, 0.06))
     col2 = H._mixc(nt, dark, col, (0.17, 0.085, 0.06))
     # 2-6 mm mottling (a real dorsum is never one flat tone): darker and paler patches, plus darker knuckle creases
     R = H._attr(nt, "rest", "Vector")
@@ -587,9 +594,16 @@ def man_skin(skin):
                  sk.inputs["Coat Weight"])
     # macro: deeper pores/creases and a tighter scatter radius so the surface reads sharp at ~17 um/pixel
     sk.inputs["Subsurface Scale"].default_value = 0.0012
-    # grazing sheen + a tight coat drew a white plastic streak along the thumb edge at the apple contact (f1030)
-    sk.inputs["Sheen Weight"].default_value = 0.12
+    # grazing specular (Fresnel) mirrored the pale wall as a white plastic rim along the finger edges at the apple
+    # contact (f1030): damp the specular and the coat toward grazing, and calm the sheen
+    sk.inputs["Sheen Weight"].default_value = 0.0
     sk.inputs["Coat Roughness"].default_value = 0.42
+    lw = nt.nodes.new("ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.5
+    graze = H._math(nt, "SUBTRACT", 1.0, H._math(nt, "MULTIPLY", H._smoothstep(nt, lw.outputs["Facing"], 0.55, 0.95), 0.75))
+    sk.inputs["Specular IOR Level"].default_value = 1.0
+    nt.links.new(H._math(nt, "MULTIPLY", graze, 0.58), sk.inputs["Specular IOR Level"])
+    cwl = sk.inputs["Coat Weight"].links[0].from_socket
+    nt.links.new(H._math(nt, "MULTIPLY", cwl, graze), sk.inputs["Coat Weight"])
     for n in nt.nodes:
         if n.bl_idname == "ShaderNodeBump" and abs(n.inputs["Distance"].default_value - 0.00007) < 1e-9:
             n.inputs["Distance"].default_value = 0.00012
@@ -851,13 +865,6 @@ def build(ctx):
     fc.keyframe_points.insert(GLOW_NO_NORMAL_F - 1, v0)
     fc.keyframe_points.insert(GLOW_NO_NORMAL_F, v1 + MACRO_EV)
     fc.update()
-    # the hard sun drew each hair's shadow as a crisp second line across the other hairs at macro: the hair is left out
-    # of the sun's shadow blockers (shadow linking); the soft window/sky lights still shade under it
-    blk = bpy.data.collections.new("SunShadowBlockers")
-    for ob in sc.objects:
-        if not ob.name.startswith("ManHair_") and ob.type == "MESH":
-            blk.objects.link(ob)
-    sun.light_linking.blocker_collection = blk
     sc.frame_set(ctx.f0)
     return {"final_spp": int(os.environ.get("S5_SPP", "16")), "final_res": int(os.environ.get("S5_RES", "80")), "preview_spp": 24, "max_bounces": 4, "diffuse_bounces": 1,
             "glossy_bounces": 1, "transmission_bounces": 4, "transparent_bounces": 8, "final_threshold": 0.03, "texture_limit": "2048", "motion_blur": not os.environ.get("S5_NOMB"),
