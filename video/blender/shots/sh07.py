@@ -183,6 +183,31 @@ def build(ctx):
         return o
     sea = ocean("Ocean", 16, 1, 3, (0, 15, 0), True)            # x -30..30, y -15..165 (frame is ~±17 m wide there)
     mid = ocean("OceanMid", 8, 5, 13, (-120, 195, 0), False)   # x -150..150, y 165..945
+    # the 60 m tile repeats 13x along y, so every line of constant x met the same waves over and over and
+    # the mid sea showed a fan of rays converging on the horizon centre. A smooth sideways sway of the mesh
+    # (0 at the near seam, +-A, slope <= 2*pi*A/P) breaks that alignment without any seam.
+    A_W, P_W = 30.0, 640.0
+    ng = bpy.data.node_groups.new("mid_sway", "GeometryNodeTree")
+    ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+    ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    gi = ng.nodes.new("NodeGroupInput"); go = ng.nodes.new("NodeGroupOutput")
+    sp = ng.nodes.new("GeometryNodeSetPosition"); pos = ng.nodes.new("GeometryNodeInputPosition")
+    sxyz = ng.nodes.new("ShaderNodeSeparateXYZ"); ng.links.new(pos.outputs[0], sxyz.inputs[0])
+    m1 = ng.nodes.new("ShaderNodeMath"); m1.operation = "MULTIPLY_ADD"     # 2*pi*(y_local + 30) / P
+    m1.inputs[1].default_value = 2 * math.pi / P_W; m1.inputs[2].default_value = 30 * 2 * math.pi / P_W
+    ng.links.new(sxyz.outputs["Y"], m1.inputs[0])
+    m2 = ng.nodes.new("ShaderNodeMath"); m2.operation = "SINE"; ng.links.new(m1.outputs[0], m2.inputs[0])
+    m3 = ng.nodes.new("ShaderNodeMath"); m3.operation = "MULTIPLY"; m3.inputs[1].default_value = A_W
+    ng.links.new(m2.outputs[0], m3.inputs[0])
+    cxyz = ng.nodes.new("ShaderNodeCombineXYZ"); ng.links.new(m3.outputs[0], cxyz.inputs["X"])
+    ng.links.new(gi.outputs[0], sp.inputs["Geometry"]); ng.links.new(cxyz.outputs[0], sp.inputs["Offset"])
+    ng.links.new(sp.outputs[0], go.inputs[0])
+    gm = mid.modifiers.new("Sway", "NODES"); gm.node_group = ng
+    # dark-water catcher under the patches: rays through the hairline cracks at the near/mid seam (y 165 m)
+    # used to reach the sun-disc proxy below the horizon (a clipped dash at f903-907); now they find water
+    bpy.ops.mesh.primitive_plane_add(size=1)
+    catcher = bpy.context.object; catcher.name = "SeamCatcher"
+    catcher.scale = (800, 2000, 1); catcher.location = (0, 1100, -3.0)
     # far ocean: big plane beyond the simulated patch, micro-facet roughness carries the glitter
     bpy.ops.mesh.primitive_plane_add(size=1)
     far = bpy.context.object; far.name = "FarSea"
@@ -298,6 +323,7 @@ def build(ctx):
         return m
     C.assign(sea, water_mat("sea")); C.assign(mid, sea.data.materials[0])
     C.assign(far, water_mat("farsea", foam=False, rough=0.06))
+    C.assign(catcher, far.data.materials[0])
 
     # ---------------------------------------------------------------- clouds (emissive cards, metre-scale noise)
     def cloud_mat(name, scale_m, stretch, thr, base_col, sun_col, sil=1.0, zfade=None):
