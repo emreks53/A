@@ -4,17 +4,20 @@
   {
    "id": "kw_ihtiyaclar.İHTİYAÇLAR",
    "t": 2.66,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 2.54
   },
   {
    "id": "kw_ihtiyaclar.KARŞILANIYOR",
    "t": 3.52,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 3.37
   },
   {
    "id": "kw_oksijen.OKSİJEN",
    "t": 8.32,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 8.19
   },
   {
    "id": "sh02.callout_air",
@@ -30,7 +33,8 @@
   {
    "id": "kw_yemek_icmek.İÇMEK",
    "t": 10.52,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 10.38
   },
   {
    "id": "sh03.callout_water",
@@ -40,22 +44,26 @@
   {
    "id": "kw_takdim.TAKDİM",
    "t": 14.9,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 14.88
   },
   {
    "id": "kw_takdim.EDİLİYOR",
    "t": 15.38,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 15.34
   },
   {
    "id": "kw_elimiz.ELİMİZ",
    "t": 21.9,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 21.8
   },
   {
    "id": "kw_elimiz.YETİŞMİYOR",
    "t": 22.24,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 22.15
   },
   {
    "id": "sh05.callout_bubble",
@@ -65,7 +73,8 @@
   {
    "id": "kw_kan.KAN",
    "t": 31.5,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 31.78
   },
   {
    "id": "sh06.callout_rbc",
@@ -114,7 +123,8 @@
   {
    "id": "kw_hadsiz.HADSİZ",
    "t": 56.0,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 55.9
   },
   {
    "id": "sh10.counter",
@@ -124,17 +134,20 @@
   {
    "id": "kw_hadsiz.İHTİYAÇ",
    "t": 56.84,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 56.74
   },
   {
    "id": "kw_ayagimiza.AYAĞIMIZA",
    "t": 61.02,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 60.93
   },
   {
    "id": "kw_ayagimiza.GETİRİLİYOR",
    "t": 61.6,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 61.35
   },
   {
    "id": "sh12.link_sun",
@@ -174,7 +187,8 @@
   {
    "id": "kw_bir_tek.BİR",
    "t": 66.58,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 66.52
   },
   {
    "id": "sh12.one_light",
@@ -184,22 +198,26 @@
   {
    "id": "kw_bir_tek.TEK",
    "t": 67.28,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 67.03
   },
   {
    "id": "kw_bir_tek.YARATICI",
    "t": 67.58,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 67.28
   },
   {
    "id": "kw_ondan.ONDAN",
    "t": 72.62,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 72.93
   },
   {
    "id": "kw_ondan.BAŞKA",
    "t": 73.14,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 73.35
   },
   {
    "id": "kw_ondan.OLAMAZ",
@@ -209,17 +227,20 @@
   {
    "id": "kw_halik.HÂLIK-I",
    "t": 79.06,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 78.79
   },
   {
    "id": "kw_halik.RAHÎM",
    "t": 79.46,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 79.28
   },
   {
    "id": "kw_sefkat.ŞEFKAT",
    "t": 82.84,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 82.54
   },
   {
    "id": "sh13b.ring_a",
@@ -229,7 +250,8 @@
   {
    "id": "kw_birer.BİRER",
    "t": 85.6,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 85.5
   },
   {
    "id": "sh13b.ring_b",
@@ -239,7 +261,8 @@
   {
    "id": "kw_birer.BİRER",
    "t": 85.96,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 85.89
   },
   {
    "id": "sh13b.ring_c",
@@ -274,7 +297,8 @@
   {
    "id": "kw_hikmetli.HİKMETLİ",
    "t": 89.98,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 89.49
   },
   {
    "id": "kw_hikmetli.ŞEFKATLİ",
@@ -290,18 +314,19 @@
    "id": "kw_her_seyi.HER ŞEYİ GÖREN",
    "t": 93.82,
    "kind": "keyword",
-   "lands": 93.91
+   "lands": 94.02
   },
   {
    "id": "kw_her_seyi.HER ŞEYE ŞEFKAT EDEN",
    "t": 95.2,
    "kind": "keyword",
-   "lands": 95.36
+   "lands": 95.46
   },
   {
    "id": "kw_her_seyi.HER İŞİ HİKMETLİ",
    "t": 97.42,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 97.24
   },
   {
    "id": "kw_cold.CANSIZ",
@@ -317,22 +342,26 @@
   {
    "id": "kw_cold.ŞEFKATSİZ",
    "t": 106.86,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 106.9
   },
   {
    "id": "kw_question.?",
    "t": 108.66,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 108.79
   },
   {
    "id": "kw_sozler.SÖZLER",
-   "t": 112.66,
-   "kind": "keyword"
+   "t": 111.96,
+   "kind": "keyword",
+   "lands": 112.36
   },
   {
    "id": "kw_sozler.721",
    "t": 113.48,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 113.45
   },
   {
    "id": "sh15.callout_page",

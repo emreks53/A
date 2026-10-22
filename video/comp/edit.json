@@ -8,7 +8,16 @@
   "dip (through black). 'flash' scales the light dissolve's exposure bloom; the bloom is further capped per frame",
   "so the mix keeps texture (display p1 <= p1_cap 0.78, median <= p50_cap 0.88).",
   "grade: per-shot trims in scene-linear light, neutral by default: exposure (stops), temp (+ = warmer,",
-  "~mired-like units, 10 = subtle), tint (+ = magenta), sat (1 = neutral), contrast (1 = neutral, pivot 0.18)."
+  "~mired-like units, 10 = subtle), tint (+ = magenta), sat (1 = neutral), contrast (1 = neutral, pivot 0.18);",
+  "head {exposure, hold, frames}: an incoming-shot head exposure ramp - 'exposure' stops from the shot's first frame on",
+  "screen (incl. its incoming transition) for 'hold' frames, then eased to 0 over the next 'frames' frames.",
+  "sh14b head: the 6-frame sh14a->sh14b dissolve (2385-2390) rose 126 -> 155 mean luma Y' (+23 %) where the brief wants",
+  "a darkening shadow sweep; -0.7 EV held over 2385-2392 and eased out over 2393-2404 still let the FINAL mix rise +12.6 %",
+  "(116 -> 131, 2384-2388: the incoming lit table lifts the dark field, and the HER SEYI scrim was released with the words",
+  "in the same frames). Now -1.6 EV held over 2385-2392, eased out over 2393-2412 (and the scrim leaves with sh14a, see",
+  "overlays.json kw_her_seyi): the final mix falls from 2384 on (114.2 -> 113.8 -> 113.3 -> 109.9 -> 104.5 -> 100.6 -> 94.0",
+  "at 2390) and keeps falling every frame to 2418; the lamp glow keeps its contrast to the wall (p99.5 / median 1.30-2.99,",
+  "as before or higher) and frames from 2413 on are unchanged."
  ],
  "version": 1,
  "cuts": [
@@ -34,7 +43,7 @@
  "tail_fade": {"frames": 30, "to": "black"},
  "grade": {
   "sh01": {}, "sh02": {}, "sh03": {}, "sh04": {}, "sh05": {}, "sh06": {}, "sh07": {}, "sh08": {}, "sh09": {},
-  "sh10": {}, "sh11": {}, "sh12": {}, "sh13a": {}, "sh13b": {}, "sh14a": {}, "sh14b": {}, "sh14c": {}, "sh15": {}
+  "sh10": {}, "sh11": {}, "sh12": {}, "sh13a": {}, "sh13b": {}, "sh14a": {}, "sh14b": {"head": {"exposure": -1.6, "hold": 8, "frames": 20}}, "sh14c": {}, "sh15": {}
  },
  "finish": {
   "bloom": {"threshold": 0.80, "knee": 0.35, "strength": 0.055, "radii": [10, 36, 90], "weights": [0.5, 0.33, 0.17]},

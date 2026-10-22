@@ -10,7 +10,9 @@
  *   await window.ovInit(timeline, scale)        -> loads fonts, sizes canvases (1080*scale x 1920*scale)
  *   window.ovRender(frame)                      -> {over: bool, add: bool, boxes: [[x0,y0,x1,y1,w], ...]}
  *     boxes: legibility boxes for the compositor; [.., w, 1] = a callout label (local darkening),
- *     [.., w, 0, s] = a key-word line with a scrim of strength s (a floor on the darkening behind it)
+ *     [.., w, 0, s] = a key-word line with a scrim of strength s (a floor on the darkening behind it);
+ *     [.., w, 0, s, 2, pad, softness*100] = the same with the keyword's own scrim shape; [.., w, 0, s, 1, soft] = 'rect';
+ *     [.., w, 0, s, 2, pad, softness*100, g0*100, g1*100, tr*100, tg*100, tb*100] = that shape as a 'warm' scrim
  * Coordinates everywhere are in the 1080x1920 layout space; `S` maps them to device pixels.
  */
 'use strict';
@@ -385,15 +387,29 @@ function drawKeyword(el, t) {
   }
   // legibility boxes for the compositor + knock-out boxes (graphics never cross a key word)
   // optional scrim (overlays.json "scrim": {from, to, k}): a soft dark vignette behind the line, k at full
-  // strength, easing in/out inside [from, to] (scrimAt) and never stronger than the line itself is visible
+  // strength, easing in/out inside [from, to] (scrimAt) and never stronger than the line itself is visible;
+  // a keyword's own scrim shape ("pad", "softness") rides on the box as [.., 2, pad, softness*100] (composite.py)
   const scr = scrimAt(el.scrim, t);
-  for (const [ln, b] of boxLines) {
+  // scrim 'gate_exit' false: gated by the words on the way in only - once their exit starts the scrim holds behind every
+  // line (letters fading or not) and leaves on its own fade_out before 'to' (e.g. with the outgoing shot of a dissolve,
+  // so releasing it never brightens the mix)
+  const holdScr = !!(el.scrim && el.scrim.gate_exit === false && t >= te0);
+  const lineBoxes = holdScr ? new Map(L.lines.map(ln => [ln, boxLines.get(ln) || { a: 0 }])) : boxLines;
+  for (const [ln, b] of lineBoxes) {
     const y0 = cy + ((ln.cy - L.capH * 0.5) - cy) * k, y1 = cy + ((ln.cy + L.capH * 0.5) - cy) * k;
     const x0 = cx + (ln.x0 - cx) * k, x1 = cx + (ln.x0 + ln.w - cx) * k;
     const box = [x0, y0, x1, y1, b.a * (st.legibility || 1)];
-    if (scr * b.a > 0.001) box.push(0, scr * Math.min(1, b.a));
+    const sa = holdScr ? 1 : Math.min(1, b.a);
+    if (scr * sa > 0.001) {
+      box.push(0, scr * sa);
+      if (el.scrim.pad != null) {
+        box.push(2, el.scrim.pad, Math.round(el.scrim.softness * 100));
+        // 'warm' look (composite.py): luma gate [g0, g1] (display luma) + per-channel tint, x100
+        if (el.scrim.warm) box.push(...el.scrim.warm.map(v => Math.round(v * 100)));
+      }
+    }
     BOXES.push(box);
-    KWBOXES.push([cx + (ln.ink[0] - cx) * k, cy + (ln.ink[1] - cy) * k, cx + (ln.ink[2] - cx) * k, cy + (ln.ink[3] - cy) * k, b.a]);
+    if (b.a > 0) KWBOXES.push([cx + (ln.ink[0] - cx) * k, cy + (ln.ink[1] - cy) * k, cx + (ln.ink[2] - cx) * k, cy + (ln.ink[3] - cy) * k, b.a]);
   }
 }
 
@@ -702,7 +718,9 @@ function fmtTR(n) {                  // Turkish thousands grouping with dots
 function drawCounterFree(el, f, t) {
   if (t < el.t0 - 0.05 || t > el.out) return;
   const st = TL.styles.callout;
-  const fam = 'Inter Display', wt = 300, size = 66, trk = 0.02;
+  // el.family: 'Inter Display NX' = Inter Display Light with a '4' whose bar stops at the stem and a t / f without the
+  // crossbar's left arm (overlays.py font_inter_nx)
+  const fam = el.family || 'Inter Display', wt = 300, size = 66, trk = 0.02;
   const p = clamp((t - el.t0) / (el.land - el.t0));
   const L1 = Math.log10(el.count_to), L0 = Math.log10(Math.max(1, el.count_from));
   const lg = L0 + (L1 - L0) * (0.12 * p + 0.88 * p * p);
@@ -812,14 +830,16 @@ function drawCounter(el, f, t) {
 }
 
 // ------------------------------------------------------------------ ECG corner widget (sh06)
-function ecgWave(tau) {             // tau = seconds relative to an R peak; amplitude ~[-0.3, 1]
+// sAmp: the S wave (default -0.26). The narrow R spike's down-stroke runs on below the baseline into the S trough; with
+// the S trough >= 8 px deep the spike reads as a vertical stroke through the baseline, a '+' (HARD RULE: no cross shape)
+function ecgWave(tau, sAmp = -0.26) {  // tau = seconds relative to an R peak; amplitude ~[-0.3, 1]
   const g = (m, s, a) => a * Math.exp(-0.5 * Math.pow((tau - m) / s, 2));
-  return g(-0.19, 0.028, 0.11) + g(-0.032, 0.009, -0.10) + g(0, 0.0105, 1.0) + g(0.027, 0.011, -0.26) + g(0.24, 0.048, 0.25) + g(0.40, 0.03, 0.02);
+  return g(-0.19, 0.028, 0.11) + g(-0.032, 0.009, -0.10) + g(0, 0.0105, 1.0) + g(0.027, 0.011, sAmp) + g(0.24, 0.048, 0.25) + g(0.40, 0.03, 0.02);
 }
 function ecgAt(el, tt) {
   const k = Math.round((tt - el.beat_anchor) / el.period);
   let v = 0;
-  for (let j = k - 1; j <= k + 1; j++) v += ecgWave(tt - (el.beat_anchor + j * el.period));
+  for (let j = k - 1; j <= k + 1; j++) v += ecgWave(tt - (el.beat_anchor + j * el.period), el.s_wave != null ? el.s_wave : -0.26);
   return v;
 }
 function drawECG(el, f, t) {
@@ -868,8 +888,12 @@ function drawECG(el, f, t) {
     segs.push([pts[i - 1], pts[i]]);
   }
   const col = [255, 236, 230];
-  // baseline hint
-  strokeSolid(X, (c, o) => { c.moveTo(gx + o, gy + gh * 0.62); c.lineTo(gx + gw + o, gy + gh * 0.62); }, 1, col, a * 0.10);
+  // baseline hint: only ahead of the head (past the erase gap), where no trace has been drawn yet - under the trace
+  // the QRS up/down strokes crossed it at ~90 deg (HARD RULE: no cross shape); once the sweep wraps there is none
+  if (wraps === 0) {
+    const bx0 = gx + head + 0.12 * speed;
+    if (bx0 < gx + gw - 2) strokeSolid(X, (c, o) => { c.moveTo(bx0 + o, gy + gh * 0.62); c.lineTo(gx + gw + o, gy + gh * 0.62); }, 1, col, a * 0.10);
+  }
   const NB = 10, buckets = Array.from({ length: NB }, () => []);
   for (const sg of segs) {
     const fade = Math.pow(1 - clamp(sg[1][2] / el.sweep_s), 1.3);
@@ -895,6 +919,31 @@ function drawECG(el, f, t) {
 // ------------------------------------------------------------------ network (sh12)
 function bezQ(a, c, b, u) { const v = 1 - u; return [v * v * a[0] + 2 * v * u * c[0] + u * u * b[0], v * v * a[1] + 2 * v * u * c[1] + u * u * b[1]]; }
 function polyPath(pts) { return (c, o) => { pts.forEach((p, i) => (i ? c.lineTo(p[0] + o, p[1]) : c.moveTo(p[0] + o, p[1]))); }; }
+/** The parts of a polyline outside every disc [x, y, R] (exact boundary points), as a list of sub-polylines. */
+function clipOutDiscs(pts, discs) {
+  if (!discs.length) return [pts];
+  const inside = p => discs.some(d => (p[0] - d[0]) ** 2 + (p[1] - d[1]) ** 2 < d[2] * d[2]);
+  const cross = (p, q) => {                 // first boundary crossing on p -> q (p, q on opposite sides of some disc)
+    let best = 1;
+    for (const [x, y, R] of discs) {
+      const dx = q[0] - p[0], dy = q[1] - p[1], fx = p[0] - x, fy = p[1] - y;
+      const A = dx * dx + dy * dy, B = 2 * (fx * dx + fy * dy), C = fx * fx + fy * fy - R * R, D = B * B - 4 * A * C;
+      if (A < 1e-9 || D < 0) continue;
+      for (const u of [(-B - Math.sqrt(D)) / (2 * A), (-B + Math.sqrt(D)) / (2 * A)]) if (u > 1e-6 && u < best) best = u;
+    }
+    return [p[0] + (q[0] - p[0]) * best, p[1] + (q[1] - p[1]) * best];
+  };
+  const subs = []; let cur = null;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i], pin = inside(p);
+    if (!pin) {
+      if (!cur) { cur = i > 0 ? [cross(p, pts[i - 1])] : []; subs.push(cur); }
+      cur.push(p);
+    } else if (cur) { cur.push(cross(pts[i - 1], p)); cur = null; }
+  }
+  return subs.filter(sp => sp.length > 1 && Math.hypot(sp[sp.length - 1][0] - sp[0][0], sp[sp.length - 1][1] - sp[0][1]) > 0.5);
+}
+function multiPath(subs) { return (c, o) => { for (const pts of subs) pts.forEach((p, i) => (i ? c.lineTo(p[0] + o, p[1]) : c.moveTo(p[0] + o, p[1]))); }; }
 
 function drawNetwork(el, f, t) {
   const st = TL.styles.callout;
@@ -911,6 +960,22 @@ function drawNetwork(el, f, t) {
   const warm = [255, 240, 214], gold = [255, 206, 140];
   const lineW = 2;
   const chainFade = 1;
+  // node_cut discs [x, y, R]: R = the node ring's outer edge + node_cut gap, for every ring drawn this frame (same radius
+  // as the ring below); the lines are trimmed to them in the geometry (and cut out of the layers again before the rings)
+  const cutDiscs = [];
+  if (el.node_cut != null) {
+    const conv = eInOutCubic(lin(t, conv0, conv0 + cdur + cstag * 5));
+    for (const n of nodes) {
+      if (t < n.t_on - 0.08) continue;
+      let a = aOut * n.p.v;
+      if (n.name === el.center && !el.converge.center_line) a *= 1 - conv;
+      if (a < 0.003) continue;
+      const keep = el.center_node && n.name === el.center ? el.center_node : null;
+      const k = eOutCubic(lin(t, n.t_on - 0.08, n.t_on + 0.22));
+      const r = 9 * (0.6 + 0.4 * k) * (keep && keep.ring ? 1 : 1 - 0.35 * conv);
+      cutDiscs.push([n.p.x, n.p.y, r + 0.9 + el.node_cut]);
+    }
+  }
   // edges
   el.edges.forEach((e, k) => {
     const A0 = byName[e.a].p, B0 = byName[e.b].p;
@@ -925,16 +990,25 @@ function drawNetwork(el, f, t) {
     // converge target: from this edge's start node straight up and into the light
     const b1 = Cp;
     const c1 = [a[0] + (Cp[0] - a[0]) * 0.12, Cp[1] + (a[1] - Cp[1]) * 0.42];
-    const b = [lerp(b0[0], b1[0], m), lerp(b0[1], b1[1], m)];
-    const c = [lerp(c0[0], c1[0], m), lerp(c0[1], c1[1], m)];
+    // converge.retract (edges named by their start node): instead of swinging its far end across the frame to the
+    // light, which would sweep it through another provision's rising line (a moving X), the edge first draws back
+    // into its own node along its own curve (m < 0.5), then grows out of it along its rising path into the light
+    const rt = !!(el.converge.retract && el.converge.retract.includes(e.a));
+    const grow = rt && m >= 0.5;
+    const b = rt ? (grow ? b1 : b0) : [lerp(b0[0], b1[0], m), lerp(b0[1], b1[1], m)];
+    const c = rt ? (grow ? c1 : c0) : [lerp(c0[0], c1[0], m), lerp(c0[1], c1[1], m)];
+    const ud = rt ? (grow ? 2 * m - 1 : u * (1 - 2 * m)) : u;      // drawn fraction of the curve a -> b
     let alpha = aOut * Math.min(A0.v, lerp(B0.v, 1, m));
     if (e.collapse) alpha *= 1 - smooth(m);
-    if (alpha < 0.003) return;
+    if (alpha < 0.003 || ud <= 0) return;
     const N = 48, pts = [];
-    for (let i = 0; i <= N; i++) { const uu = (i / N) * u; pts.push(bezQ(a, c, b, uu)); }
-    premiumStroke(polyPath(pts), lineW, alpha * chainFade, { ...st, color: warm, glow: [...gold, 0.45, 6] }, 1);
+    for (let i = 0; i <= N; i++) { const uu = (i / N) * ud; pts.push(bezQ(a, c, b, uu)); }
+    const vis = clipOutDiscs(pts, cutDiscs);
+    if (vis.length) premiumStroke(multiPath(vis), lineW, alpha * chainFade, { ...st, color: warm, glow: [...gold, 0.45, 6] }, 1);
     // spark at the drawing head
     if (u > 0 && u < 1) { const hp = pts[pts.length - 1]; glowDot(A, hp[0], hp[1], 22, gold, alpha * 0.9); fillCircle(X, hp[0], hp[1], 2.4, [255, 255, 255], alpha); }
+    // a retracted edge regrowing toward the light leads with a glow, like the extra rising line
+    if (grow && m < 1) { const hp = pts[pts.length - 1]; glowDot(A, hp[0], hp[1], 22, gold, alpha * 0.9); }
     // light pulses travelling into the source after the convergence
     if (m >= 1 && !e.collapse) {
       const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -955,8 +1029,45 @@ function drawNetwork(el, f, t) {
       const a = [n.x, n.y], c1 = [a[0] + (Cp[0] - a[0]) * 0.12, Cp[1] + (a[1] - Cp[1]) * 0.42];
       const pts = []; for (let i = 0; i <= 48; i++) pts.push(bezQ(a, c1, Cp, (i / 48) * m));
       const alpha = aOut * n.v;
-      premiumStroke(polyPath(pts), lineW, alpha, { ...st, color: warm, glow: [...gold, 0.45, 6] }, 1);
+      const vis = clipOutDiscs(pts, cutDiscs);
+      if (vis.length) premiumStroke(multiPath(vis), lineW, alpha, { ...st, color: warm, glow: [...gold, 0.45, 6] }, 1);
       if (m < 1) { const hp = pts[pts.length - 1]; glowDot(A, hp[0], hp[1], 22, gold, alpha * 0.9); }
+    }
+  }
+  // 'label_knockout' [grow, feather] px: the lines are cut out under each node label (after all lines, before the
+  // node rings, glows and labels are drawn), so a line passing a label stops at its edge instead of crossing it
+  if (el.labels && el.label_knockout) {
+    const [kg, kf] = el.label_knockout;
+    for (const n of nodes) {
+      if (!n.label || t < n.t_on - 0.08) continue;
+      const conv = eInOutCubic(lin(t, conv0, conv0 + cdur + cstag * 5));
+      let a = aOut * n.p.v;
+      if (n.name === el.center && !el.converge.center_line) a *= 1 - conv;
+      const keep = el.center_node && n.name === el.center ? el.center_node : null;
+      const lf = keep && keep.label ? 1 : 1 - eInOutCubic(lin(t, conv0, conv0 + 0.5));
+      const la = a * eOutCubic(lin(t, n.t_on + 0.05, n.t_on + 0.4)) * lf;
+      if (la < 0.003) continue;
+      const run = layoutRun(upperTR(n.label), 'Inter', 600, 27, 0.12);
+      const side = keep && keep.label_side ? keep.label_side : (n.p.x > W / 2 ? -1 : 1);
+      const lx = side > 0 ? n.p.x + 18 : n.p.x - 18 - run.w, ly = n.p.y + run.capH / 2;
+      for (const c of [X, A]) {
+        c.save(); c.globalCompositeOperation = 'destination-out'; c.filter = `blur(${kf}px)`;
+        // full cut for as long as the label has any alpha (a cut that scaled with the label's alpha let the line
+        // show through the fading letters, an X through ORMAN's 'M' at f1596 / f1604-1605)
+        c.fillStyle = 'rgba(0,0,0,1)';
+        c.fillRect(lx - kg, ly - run.capH - kg, run.w + 2 * kg, run.capH + 2 * kg);
+        c.restore();
+      }
+    }
+  }
+  // 'node_cut' gap px (HARD RULE: no ring/line crossing): every line is cut out inside each drawn node ring, out to
+  // the ring's outer edge + gap (after all lines and the label knock-outs, before the rings, dots and glows), so a
+  // line stops just short of its node ring, like a callout leader (st.ring + st.gap), never running into or through it
+  for (const [x, y, R] of cutDiscs) {
+    for (const c of [X, A]) {
+      c.save(); c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000';
+      c.beginPath(); c.arc(x, y, R, 0, Math.PI * 2); c.fill();
+      c.restore();
     }
   }
   // nodes: ring + dot + small caps label when the line reaches them
@@ -984,7 +1095,8 @@ function drawNetwork(el, f, t) {
         const run = layoutRun(upperTR(n.label), 'Inter', 600, 27, 0.12);
         const side = keep && keep.label_side ? keep.label_side : (n.p.x > W / 2 ? -1 : 1);   // the sun's label never flips
         const lx = side > 0 ? n.p.x + 18 : n.p.x - 18 - run.w, ly = n.p.y + run.capH / 2;
-        drawRunWipe(run, lx, ly, [255, 246, 232], la * 0.9, side > 0 ? lx + run.w + 40 : lx - 40, side, 30, [0.55, 6, 1]);
+        drawRunWipe(run, lx, ly, [255, 246, 232], la * (keep && keep.label_alpha || 0.9), side > 0 ? lx + run.w + 40 : lx - 40, side, 30, (keep && keep.label_shadow) || [0.55, 6, 1]);
+        if (keep && keep.label_scrim && la * keep.label_scrim > 0.001) BOXES.push([lx - 6, ly - run.capH - 4, lx + run.w + 6, ly + 6, 0, 0, keep.label_scrim * la]);
       }
     }
   }
@@ -995,14 +1107,15 @@ function drawNetwork(el, f, t) {
     const flash = t >= tl ? Math.exp(-(t - tl) / 0.45) : 0;
     const breathe = 1 + 0.08 * Math.sin(2 * Math.PI * (t - tl) / 3.2);
     const a = aOut * k;
-    const G = (el.light && el.light.glow) || 120, RR = (el.light && el.light.ring) || 150;
+    // light.ring 0: no stroked ring (an expanding ring would cross every rising line at right angles)
+    const G = (el.light && el.light.glow) || 120, RR = el.light && el.light.ring != null ? el.light.ring : 150;
     // the 'tek' flash: outer glow grows by FL[0] * G, the core by FL[1] px (light.flash; legacy [1, 30])
     const FL = (el.light && el.light.flash) || [1, 30];
     glowDot(A, Cp[0], Cp[1], G * breathe + FL[0] * G * flash, gold, a * (0.30 + 0.35 * flash));
     glowDot(A, Cp[0], Cp[1], 42 * breathe + FL[1] * flash, [255, 236, 200], a * (0.7 + 0.3 * flash));
     fillCircle(X, Cp[0], Cp[1], 3.6 * k, [255, 255, 255], a);
     // one expanding ring of light at the moment of 'tek'
-    if (t >= tl && t < tl + 1.2) {
+    if (RR > 0 && t >= tl && t < tl + 1.2) {
       const q = (t - tl) / 1.2;
       const rr = 18 + RR * eOutCubic(q);
       const build = (c, o) => c.arc(Cp[0] + o, Cp[1], rr, 0, Math.PI * 2);
@@ -1030,17 +1143,9 @@ function drawRings(el, f, t) {
     const rot = -Math.PI / 2 + (1 - eOutCubic(lin(t, tl - 0.18, tl + 0.25))) * 0.9;
     const build = (c, o) => c.arc(p.x + o, p.y, r, rot, rot + k * (1 - off * 0.0) * Math.PI * 2 * 0.999);
     premiumStroke(build, 2, a, st, 1 + 1.6 * flash);
-    // four tiny ticks lock in (rotate + slide in) as the ring lands
-    const tk4 = eOutCubic(lin(t, tl - 0.02, tl + 0.2));
-    if (tk4 > 0.002) {
-      const trot = (1 - tk4) * 0.6 + Math.PI / 4;
-      for (let q = 0; q < 4; q++) {
-        const ang = trot + q * Math.PI / 2;
-        const r1 = r + 5 + (1 - tk4) * 8, r2 = r1 + 7;
-        const bt = (c, o) => { c.moveTo(p.x + o + Math.cos(ang) * r1, p.y + Math.sin(ang) * r1); c.lineTo(p.x + o + Math.cos(ang) * r2, p.y + Math.sin(ang) * r2); };
-        premiumStroke(bt, 2, a * tk4, st);
-      }
-    }
+    // no lock-in ticks (HARD RULE no cross shape): the four 45-degree ticks around the ring read as an implied X /
+    // crosshair, and the expanding ping below crossed each of them at right angles; the ring lands on its arc, flash
+    // and ping alone
     // a soft 'found it' ping
     if (t >= tl && t < tl + 0.55) {
       const q = (t - tl) / 0.55;
@@ -1055,7 +1160,12 @@ function drawRings(el, f, t) {
 /* Parastichies of Vogel's model: florets n = j + m*F (family F, arm j) sit at angle j*GA + m*delta_F with
    delta_F = F*GA (mod 2pi) small, so each arm is the smooth curve n(s) = j + s*F, th(s) = j*GA + s*delta_F,
    r(s) = c*sqrt(n(s)) passing exactly through its florets. With tracks/sh14a_disc.json the curve is projected
-   through the shot's own camera + head transform (exact matchmove); otherwise centred on TRK_spiral. */
+   through the shot's own camera + head transform (exact matchmove); otherwise centred on TRK_spiral.
+   HARD RULE: two families on screen together cross everywhere (a lattice of X's), so they are never drawn together:
+   el.fam_t[k] = [draw start, fade-out start, gone] (overlays.py: family k+1 starts only once family k is gone; the
+   last family has [start, null, null] and leaves with the widget, fade0 -> out). Each family keeps its own look. */
+const SPIRAL_LOOK = { 21: { rgb: [255, 212, 138], a: 0.66, w: 1.8 }, 34: { rgb: [255, 244, 222], a: 0.46, w: 1.4 } };
+const SPIRAL_LOOK_IDX = [SPIRAL_LOOK[21], SPIRAL_LOOK[34]];
 function drawSpiral(el, f, t) {
   if (t < el.t0 - 0.05 || t > el.out) return;
   const p = tk(el.trk, f);
@@ -1083,17 +1193,18 @@ function drawSpiral(el, f, t) {
   const nA = el.n_band ? el.n_band : [34, 70, 250, 430];
   const rOf = n => { let acc = 0; for (let k = 0; k < 6; k++) { const q = mapPt(n, k * 1.047 + 0.3); acc += Math.hypot(q[0] - ctr[0], q[1] - ctr[1]); } return acc / 6; };
   const rB = nA.map(rOf);
-  // on-screen floret spacing: the pattern is only drawn while florets are big enough to read
-  const q1 = mapPt(150, 150 * GA), q2 = mapPt(150 + el.families[0], (150 + el.families[0]) * GA);
+  // on-screen floret spacing: the pattern is only drawn while florets are big enough to read (measured on the
+  // n -> n + spacing_F step, so the pattern's life does not depend on which families are drawn)
+  const sF = el.spacing_F || el.families[0];
+  const q1 = mapPt(150, 150 * GA), q2 = mapPt(150 + sF, (150 + sF) * GA);
   const spacing = Math.hypot(q1[0] - q2[0], q1[1] - q2[1]);
   // the pattern lives as long as the florets read on screen (it survives well into the camera's pull-back)
   const ms = el.min_spacing || [8, 16];
   const scaleFade = smooth(clamp((spacing - ms[0]) / (ms[1] - ms[0])));
   const fadeOut = 1 - eInOutCubic(lin(t, el.fade0, el.out));
-  const aGlob = p.v * fadeOut * scaleFade * eOutCubic(lin(t, el.t0 - 0.05, el.t0 + 0.3));
+  const aBase = p.v * fadeOut * scaleFade;
+  const aGlob = aBase * eOutCubic(lin(t, el.t0 - 0.05, el.t0 + 0.3));
   if (aGlob < 0.003) return;
-  const famCols = [[255, 212, 138], [255, 244, 222]];
-  const famA = [0.66, 0.46];
   const mkGrad = (ctx, col, a) => {
     const R = Math.max(rB[3], 1);
     const g = ctx.createRadialGradient(ctr[0], ctr[1], 0, ctr[0], ctr[1], R);
@@ -1105,7 +1216,14 @@ function drawSpiral(el, f, t) {
   };
   el.families.forEach((F, fi) => {
     let dl = (F * GA) % (2 * Math.PI); if (dl > Math.PI) dl -= 2 * Math.PI;
-    const tStart = el.t0 + fi * el.fam_delay;
+    // no schedule (a timeline from an older resolver): one family only, never two at once
+    const ft = el.fam_t ? el.fam_t[fi] : (fi === 0 ? [el.t0, null, null] : null);
+    if (!ft) return;
+    const tStart = ft[0];
+    const famOut = ft[1] != null ? 1 - eInOutCubic(lin(t, ft[1], ft[2])) : 1;
+    const aF = aBase * famOut * eOutCubic(lin(t, tStart - 0.05, tStart + 0.3));
+    if (aF < 0.003) return;
+    const look = SPIRAL_LOOK[F] || SPIRAL_LOOK_IDX[fi % 2];
     const grow = eInOutSine(lin(t, tStart, tStart + el.grow));
     if (grow <= 0) return;
     const paths = [];
@@ -1128,26 +1246,27 @@ function drawSpiral(el, f, t) {
     const build = (c, o) => { for (const pts of paths) pts.forEach((q, i) => (i ? c.lineTo(q[0] + o, q[1]) : c.moveTo(q[0] + o, q[1]))); };
     const lw = clamp(spacing / 40, 0.45, 1.15);       // ~world-space width: thins with the florets
     X.save(); X.lineCap = 'round'; X.lineJoin = 'round';
-    X.strokeStyle = mkGrad(X, [0, 0, 0], aGlob * 0.32); X.lineWidth = 3.4 * lw; X.beginPath(); build(X, 0); X.stroke();
-    X.strokeStyle = mkGrad(X, famCols[fi], aGlob * famA[fi]); X.lineWidth = (fi === 0 ? 1.8 : 1.4) * lw; X.beginPath(); build(X, 0); X.stroke();
+    X.strokeStyle = mkGrad(X, [0, 0, 0], aF * 0.32); X.lineWidth = 3.4 * lw; X.beginPath(); build(X, 0); X.stroke();
+    X.strokeStyle = mkGrad(X, look.rgb, aF * look.a); X.lineWidth = look.w * lw; X.beginPath(); build(X, 0); X.stroke();
     X.restore(); drewOver = true;
     A.save(); A.lineCap = 'round';
-    A.strokeStyle = mkGrad(A, famCols[fi], aGlob * famA[fi] * 0.5); A.lineWidth = 5 * lw; A.beginPath(); build(A, 0); A.stroke();
+    A.strokeStyle = mkGrad(A, look.rgb, aF * look.a * 0.5); A.lineWidth = 5 * lw; A.beginPath(); build(A, 0); A.stroke();
     A.restore(); drewAdd = true;
     if (el.numbers) {
-      const na = aGlob * eOutCubic(lin(t, tStart + 0.25, tStart + 0.6));
+      const na = aF * eOutCubic(lin(t, tStart + 0.25, tStart + 0.6));
       if (na > 0.003) {
         const run = layoutRun(String(F), 'Inter', 500, 30, 0.02);
         // below the head, clear of the key-word band
-        const ang = (el.num_angles || [1.0, 2.15])[fi];
+        const NA = el.num_angles || [1.0, 2.15];
+        const ang = Array.isArray(NA) ? NA[fi] : NA[String(F)];
         const rr = clamp(rB[2] * 1.02, 160, 420);
         const band = [TL.safe.band[0] - 20, TL.safe.band[1] + 40];
         const lx = clamp(ctr[0] + Math.cos(ang) * rr - run.w / 2, TL.safe.x0 + 10, TL.safe.x1 - 10 - run.w);
         let ly = clamp(ctr[1] + Math.sin(ang) * rr + run.capH / 2, TL.safe.y0 + 40, TL.safe.y1 - 10);
         if (ly > band[0] && ly - run.capH < band[1]) ly = band[1] + run.capH;
-        drawRunWipe(run, lx, ly, famCols[fi], na, lx + run.w + 40, 1, 30, [0.6, 7, 1]);
+        drawRunWipe(run, lx, ly, look.rgb, na, lx + run.w + 40, 1, 30, [0.6, 7, 1]);
         setFont(A, 'Inter', 500, 30);
-        for (const c of run.chars) glyph(A, c.ch, lx + c.x, ly, famCols[fi], na * 0.35, 0);
+        for (const c of run.chars) glyph(A, c.ch, lx + c.x, ly, look.rgb, na * 0.35, 0);
       }
     }
   });

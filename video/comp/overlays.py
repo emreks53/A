@@ -116,6 +116,120 @@ def font_cormorant():
     return q
 
 
+NX_SRC = "InterDisplay-Light.otf"
+# HARD RULE no cross shape, at any size: Inter's lowercase t and f (and f.i, its calt form before an i, e.g. 'lifi') are
+# daggers - the crossbar runs through the stem and out on both sides, four arms. Every Inter face that sets lowercase
+# (the callouts' Inter Regular / Medium / SemiBold, the counter's Inter Display NX) gets the crossbar's LEFT arm cut off at
+# the stem, the same way as the 4's spur: the bar leaves the stem to the right only (a T junction, the hook keeps the
+# letter). Advance widths, kerning and every other glyph are Inter's own, so no layout moves.
+CUT_LEFT_BAR = ("t", "f", "f.i")
+# family 'Inter' (callout labels, the counter's unit, the ECG labels, the network's labels): the system faces are shadowed
+# by these patched copies (overlay.js loads them as FontFaces of the family 'Inter' for every weight the renderer uses)
+INTER_TF = [("Inter-Regular.otf", "400"), ("Inter-Medium.otf", "500"), ("Inter-SemiBold.otf", "600")]
+
+
+def _outline(f, name):
+    from fontTools.pens.recordingPen import RecordingPen
+    rp = RecordingPen(); f.getGlyphSet()[name].draw(rp)
+    return rp.value
+
+
+def _set_outline(f, name, rec):
+    """Replace a CFF glyph's charstring by the recorded outline (hints dropped; advance width kept, LSB = new xMin)."""
+    from fontTools.pens.t2CharStringPen import T2CharStringPen
+    cff = f["CFF "].cff
+    cs = cff.topDictIndex[0].CharStrings
+    priv = cs[name].private
+    width = f["hmtx"].metrics[name][0]
+    pen = T2CharStringPen(width - getattr(priv, "nominalWidthX", 0), None)
+    for op, args in rec:
+        getattr(pen, op)(*args)
+    cs[name] = pen.getCharString(private=priv, globalSubrs=cff.GlobalSubrs)
+    f["hmtx"].metrics[name] = (width, int(min(p[0] for _, a in rec for p in a)))
+
+
+def _cut_four_spur(f, src):
+    """'4': drop the spur's two outline points at xmax (the bar then meets the stem from the left). Returns the stem's
+    right edge (the glyph's new xmax)."""
+    rec = _outline(f, "four")
+    xs = [p[0] for op, args in rec for p in args]
+    xmax = max(xs)
+    stem_r = max(x for x in xs if x < xmax)          # the stem's right edge: the spur runs from it out to xmax
+    keep = [(op, args) for op, args in rec if not (op == "lineTo" and args[0][0] == xmax)]
+    if len(keep) != len(rec) - 2 or any(op not in ("moveTo", "lineTo", "closePath") for op, _ in keep):
+        raise RuntimeError(f"{src}: unexpected '4' outline, not patched: {rec}")
+    _set_outline(f, "four", keep)
+    return stem_r
+
+
+def _cut_left_bar(f, name, src):
+    """t / f / f.i: drop the crossbar's left end - the two consecutive lineTo points at the glyph's minimum x, between two
+    points on the stem's left edge (same x) at the bar's top and bottom. Returns the stem's left edge (the new xMin)."""
+    rec = _outline(f, name)
+    xmin = min(p[0] for _, a in rec for p in a)
+    hits = [i for i, (op, a) in enumerate(rec) if a and any(p[0] == xmin for p in a)]
+    ok = (len(hits) == 2 and hits[1] == hits[0] + 1 and 0 < hits[0] and hits[1] + 1 < len(rec)
+          and all(rec[i][0] == "lineTo" for i in (hits[0] - 1, hits[0], hits[1], hits[1] + 1)))
+    if ok:
+        (px, py), (ax, ay), (bx, by), (nx, ny) = (rec[i][1][0] for i in (hits[0] - 1, hits[0], hits[1], hits[1] + 1))
+        ok = px == nx > xmin and py == ay and ny == by and ax == bx == xmin
+    if not ok:
+        raise RuntimeError(f"{src}: unexpected '{name}' outline, not patched: {rec}")
+    _set_outline(f, name, rec[:hits[0]] + rec[hits[1] + 1:])
+    return px
+
+
+def _build_patched(src, q, four=False, names=None):
+    """Patch src (CFF) into q: the 4's spur (four) and the left crossbar arm of CUT_LEFT_BAR; verify by re-reading."""
+    from fontTools.ttLib import TTFont
+    f = TTFont(src)
+    want, widths = {}, {}
+    if four:
+        want["four"] = ("xmax", _cut_four_spur(f, src)); widths["four"] = f["hmtx"].metrics["four"][0]
+    for n in CUT_LEFT_BAR:
+        want[n] = ("xmin", _cut_left_bar(f, n, src)); widths[n] = f["hmtx"].metrics[n][0]
+    for nid, val in (names or ()):
+        f["name"].setName(val, nid, 3, 1, 0x409)
+    f.save(q + ".part")
+    chk = TTFont(q + ".part")
+    for n, (side, edge) in want.items():
+        rq = _outline(chk, n)
+        xs = [p[0] for _, a in rq for p in a]
+        got = max(xs) if side == "xmax" else min(xs)
+        if got != edge or chk["hmtx"].metrics[n][0] != widths[n]:
+            raise RuntimeError(f"{q}: '{n}' patch did not take: {rq}")
+    os.replace(q + ".part", q)
+    return q
+
+
+def font_inter_nx():
+    """Inter Display Light whose '4' has its bar stop at the stem (family 'Inter Display NX', for the w_cells count).
+    HARD RULE no cross shape: Inter's 4 runs its bar ~0.11 em on past the stem, a '+' junction whose four arms are all
+    >= 8 px at the counter's 66 px (27/9/34/14 px); its open form (cv02/ss01) keeps that spur. Only the spur's two
+    outline points are removed from the CFF charstring (the bar then meets the stem from the left, a T); the t and f of
+    '~37 trilyon' lose their crossbar's left arm (CUT_LEFT_BAR: the 66 px Light t was a '+', arms 7.9/9.2/11/30 px);
+    advance widths, kerning and every other glyph are Inter's own. Built once into $VIDEO_ASSETS/fonts. Returns the path."""
+    src = os.path.join(INTER_DIR, NX_SRC)
+    d = os.path.join(ASSETS, "fonts"); os.makedirs(d, exist_ok=True)
+    q = os.path.join(d, f"InterDisplay-Light-nx4tf-{_sha_cached(src)[:12]}.otf")
+    if os.path.exists(q):
+        return q
+    return _build_patched(src, q, four=True, names=((1, "Inter Display NX"), (16, "Inter Display NX"),
+                                                    (4, "Inter Display NX Light"), (6, "InterDisplayNX-Light")))
+
+
+def fonts_inter_tf():
+    """The family 'Inter' faces with the t / f crossbar's left arm cut (CUT_LEFT_BAR), [(path, weight)]. Built once into
+    $VIDEO_ASSETS/fonts."""
+    d = os.path.join(ASSETS, "fonts"); os.makedirs(d, exist_ok=True)
+    out = []
+    for fn, wt in INTER_TF:
+        src = os.path.join(INTER_DIR, fn)
+        q = os.path.join(d, f"{fn[:-4]}-tf-{_sha_cached(src)[:12]}.otf")
+        out.append((q if os.path.exists(q) else _build_patched(src, q), wt))
+    return out
+
+
 _FT = {}
 
 
@@ -338,6 +452,7 @@ def resolve(spec_path=None, verbose=True):
     inter_reg = os.path.join(INTER_DIR, "Inter-Regular.otf")
     sync_points = []
     callout_checks = []
+    spiral_checks = []
 
     def rng_of(shot):
         s = sh[shot]
@@ -380,6 +495,26 @@ def resolve(spec_path=None, verbose=True):
                            "k": float(sc.get("k", 0.35)), "fade": float(sc.get("fade", 0.15))}
             if "fade_out" in sc:
                 el["scrim"]["fade_out"] = float(sc["fade_out"])      # e.g. a hard stop on the cut
+            if sc.get("gate_exit", True) is False:
+                # gated by the words on the way in only: through their exit the scrim holds and leaves on its own
+                # fade_out before 'to' (overlay.js drawKeyword), e.g. with the outgoing shot of a dissolve
+                assert float(sc["to"]) <= float(k["out"]) + 1e-6, f"{k['id']}: a gate_exit scrim must end by 'out'"
+                el["scrim"]["gate_exit"] = False
+            if "pad" in sc or "softness" in sc:
+                # per-keyword elliptical shape (composite.py legibility(), shape 2): its own vertical 'pad' (layout px)
+                # and logistic 'softness' instead of edit.json finish.legibility.scrim (global: other scrims keep it)
+                assert "pad" in sc and "softness" in sc, f"{k['id']}: a per-keyword scrim shape needs 'pad' and 'softness'"
+                assert sc.get("shape") != "rect", f"{k['id']}: 'pad'/'softness' shape the elliptical scrim, not a 'rect'"
+                el["scrim"]["pad"], el["scrim"]["softness"] = float(sc["pad"]), float(sc["softness"])
+                if "warm" in sc:
+                    # 'warm' {gate: [g0, g1], tint: [r, g, b]}: the scrim darkens only the bright sky (display luma
+                    # g0 -> g1; dark ground is left alone) and deepens it to amber (per-channel strengths, normalised to
+                    # unit luminance weight, so the legibility it buys is the plain scrim's) - composite.py legibility()
+                    g0, g1 = (float(v) for v in sc["warm"]["gate"])
+                    tr, tg, tb = (float(v) for v in sc["warm"]["tint"])
+                    n = 0.2126 * tr + 0.7152 * tg + 0.0722 * tb
+                    assert 0 <= g0 < g1 <= 1 and n > 0, f"{k['id']}: bad scrim 'warm' {sc['warm']}"
+                    el["scrim"]["warm"] = [g0, g1, round(tr / n, 2), round(tg / n, 2), round(tb / n, 2)]
             if "box" in sc:
                 el["scrim"]["box"] = [float(v) for v in sc["box"]]     # fixed scrim region (crumbling words)
             if sc.get("shape") == "rect":
@@ -524,6 +659,8 @@ def resolve(spec_path=None, verbose=True):
         if ty == "ecg":
             el = {k: wd[k] for k in ("id", "primary", "secondary", "x", "y", "width", "height", "beat_anchor",
                                       "period", "sweep_s")}
+            if wd.get("s_wave") is not None:
+                el["s_wave"] = float(wd["s_wave"])        # S-wave amplitude (overlay.js ecgWave; default -0.26)
             el.update(type="ecg", shot=shot, sync=float(wd["sync"]), out=float(wd["out"]),
                       f0=int(math.floor(wd["sync"] * FPS)) - 1, f1=int(math.ceil(wd["out"] * FPS)) + 1)
             els.append(el)
@@ -544,7 +681,7 @@ def resolve(spec_path=None, verbose=True):
             els.append({"id": wd["id"], "type": "counter", "shot": shot, "t0": t0, "land": land, "out": out,
                         "count_from": wd["count_from"], "count_to": wd["count_to"], "final": wd["final"],
                         "unit": wd["unit"], "sx": sx, "sy": sy, "side": cand, "trk": trk, "mode": mode,
-                        "x": wd.get("x", 540), "y": wd.get("y", 1175),
+                        "x": wd.get("x", 540), "y": wd.get("y", 1175), "family": wd.get("family"),
                         "f0": int(math.floor((t0 - 0.15) * FPS)), "f1": int(math.ceil(out * FPS)) + 1})
             sync_points.append({"id": wd.get("cue", wd["id"]), "t": land, "kind": "counter_land"})
         elif ty == "network":
@@ -561,21 +698,43 @@ def resolve(spec_path=None, verbose=True):
             nodes = []
             for i, n in enumerate(wd["nodes"]):
                 t_on = d0 if i == 0 else edges[i - 1]["t1"]
+                # 'offset' [dx, dy]: the node sits that far from its tracker (TRK_river is on the lower branch of the
+                # river's bend; the node is set on the bend's apex, so no line reaching or leaving it crosses the river)
                 nodes.append({"name": n["track"], "label": n.get("label"), "t_on": round(t_on, 3),
                               "trk": make_track(shot, n["track"], n.get("fallback"), f_lo, f_hi, warn,
-                                                safe=spec["safe"])})
+                                                safe=spec["safe"], offset=n.get("offset"))})
                 sync_points.append({"id": f"sh12.link_{n['track']}", "t": round(t_on, 3), "kind": "network_node"})
             conv = wd["converge"]
             c0 = clk.t(conv["t0"], shot)
             light_t = clk.t(wd["light"]["at"], shot)
+            retract = [str(n) for n in conv.get("retract", [])]
+            bad = [n for n in retract if n not in names[:-1]]
+            if bad:
+                raise ValueError(f"{wd['id']}: converge.retract names no edge start node: {bad} (edges start at {names[:-1]})")
+            # 'track_check': the network's offsets were set on one tracker export; a stale comp/tracks/<shot>.json
+            # (e.g. one carried by an older farm branch) must stop the resolve instead of silently moving the nodes
+            tc = wd.get("track_check")
+            if tc:
+                f_chk = int(tc["f"])
+                for nd in nodes:
+                    if nd["name"] not in tc["at"]:
+                        continue
+                    trk, (ex, ey) = nd["trk"], tc["at"][nd["name"]]
+                    i = f_chk - trk["f0"]
+                    gx, gy = (trk["x"][i], trk["y"][i]) if 0 <= i < len(trk["x"]) else (float("nan"), float("nan"))
+                    if not (math.hypot(gx - ex, gy - ey) <= float(tc.get("tol", 10))):
+                        raise AssertionError(f"{wd['id']}: TRK_{nd['name']} at f{f_chk} is ({gx}, {gy}) [{trk['src']}], "
+                                             f"the spec was set on ({ex}, {ey}): comp/tracks/{shot}.json is not the "
+                                             f"approved export ({tc.get('export', '?')})")
             # the lines converge on a point of light 'to_offset' px from the centre node (above the sun, not into
             # it: the sun stays one of the provisions, with its own rising line); 'glow' = outer light radius px
             els.append({"id": wd["id"], "type": "network", "shot": shot, "nodes": nodes, "edges": edges,
                         "center": names[0], "extra": names[-1], "labels": wd.get("labels", True),
                         "converge": {"t0": c0, "dur": conv["dur"], "stagger": conv["stagger"],
                                      "to_offset": conv.get("to_offset", [0, 0]),
-                                     "center_line": bool(conv.get("center_line", False))},
-                        "center_node": wd.get("center_node"),
+                                     "center_line": bool(conv.get("center_line", False)), "retract": retract},
+                        "center_node": wd.get("center_node"), "label_knockout": wd.get("label_knockout"),
+                        "node_cut": wd.get("node_cut"),
                         "light": {"glow": float(wd["light"].get("glow", 120)),
                                   "ring": float(wd["light"].get("ring", 150)),
                                   "flash": [float(v) for v in wd["light"].get("flash", [1.0, 30.0])]},
@@ -617,13 +776,39 @@ def resolve(spec_path=None, verbose=True):
             trk = make_track(shot, wd["track"], wd.get("fallback"), f_lo, f_hi, warn, sig_fine=0.8, keep_depth=True,
                              safe=spec["safe"])
             t0 = clk.t(wd["t0"], shot)
-            el = {"id": wd["id"], "type": "spiral", "shot": shot, "trk": trk, "families": wd["families"],
+            fams = [int(F) for F in wd["families"]]
+            grow, fade0, out = float(wd.get("grow", 0.42)), float(wd["fade0"]), float(wd["out"])
+            # HARD RULE: two parastichy families on screen together cross each other everywhere (a lattice of X's),
+            # so families are never drawn together: with more than one family a 'sequence' {hold, fade} draws them one
+            # after another (family k+1 starts only once family k has fully faded out); the last family leaves with
+            # the widget (fade0 -> out). fam_t[k] = [draw start, fade-out start, gone] (None, None: the widget's fade)
+            seq = wd.get("sequence")
+            if len(fams) > 1 and not seq:
+                raise ValueError(f"{wd['id']}: families {fams} drawn together would cross as a lattice of X's: "
+                                 f"give a 'sequence' {{hold, fade}} (one family after the other) or draw one family")
+            fam_t, ts = [], t0
+            for i, F in enumerate(fams):
+                if i < len(fams) - 1:
+                    o0 = ts + grow + float(seq["hold"])
+                    o1 = o0 + float(seq["fade"])
+                    if o1 > fade0:
+                        raise ValueError(f"{wd['id']}: family {F} is still fading out at {o1:.2f} s, after the "
+                                         f"widget's fade0 {fade0:.2f} s: no room for the next family")
+                    fam_t.append([round(ts, 4), round(o0, 4), round(o1, 4)])
+                    ts = o1
+                else:
+                    fam_t.append([round(ts, 4), None, None])
+            for a_, b_ in zip(fam_t, fam_t[1:]):
+                assert b_[0] >= a_[2], f"{wd['id']}: families overlap on screen ({fam_t})"
+            # 'spacing_F': the floret step (n -> n + F) whose on-screen length drives min_spacing and the line width
+            # (default: the first family); 'num_angles': per family ({"21": a, "34": b}) or a list in family order
+            el = {"id": wd["id"], "type": "spiral", "shot": shot, "trk": trk, "families": fams, "fam_t": fam_t,
                   "n_max": wd["n_max"], "k_px_m": wd["k_px_m"], "rot_deg": wd.get("rot_deg", 0.0),
-                  "t0": t0, "grow": float(wd.get("grow", 0.42)), "fam_delay": float(wd.get("fam_delay", 0.12)),
+                  "t0": t0, "grow": grow, "spacing_F": int(wd.get("spacing_F", fams[0])),
                   "min_spacing": wd.get("min_spacing", [8, 16]),
-                  "fade0": float(wd["fade0"]), "out": float(wd["out"]),
+                  "fade0": fade0, "out": out,
                   "numbers": wd.get("numbers", True), "num_angles": wd.get("num_angles", [1.0, 2.15]),
-                  "f0": int(math.floor((t0 - 0.1) * FPS)), "f1": int(math.ceil(float(wd["out"]) * FPS)) + 1}
+                  "f0": int(math.floor((t0 - 0.1) * FPS)), "f1": int(math.ceil(out * FPS)) + 1}
             pj = os.path.join(HERE, "tracks", f"{shot}_disc.json")
             if os.path.exists(pj):
                 pd = load_json(pj)
@@ -633,17 +818,23 @@ def resolve(spec_path=None, verbose=True):
             else:
                 warn(f"{shot}: no tracks/{shot}_disc.json -> spiral uses TRK_{wd['track']} + depth scale (approximate phase)")
             els.append(el)
+            spiral_checks.append((el, float(wd.get("min_hold", 0.6))))
             sync_points.append({"id": "sh14a.spiral", "t": t0, "kind": "spiral"})
         else:
             raise ValueError(f"unknown widget type {ty}")
 
     corm = font_cormorant()
-    faces = [["Cormorant Garamond", "file://" + corm, "300 700"]]
-    font_files = [corm] + [os.path.join(INTER_DIR, n) for n in INTER_FILES]
+    nx = font_inter_nx()
+    itf = fonts_inter_tf()
+    # the patched 'Inter' faces (t / f without the crossbar's left arm) shadow the system family for every weight used
+    faces = ([["Cormorant Garamond", "file://" + corm, "300 700"], ["Inter Display NX", "file://" + nx, "300"]]
+             + [["Inter", "file://" + p, wt] for p, wt in itf])
+    font_files = [corm, nx] + [p for p, _ in itf] + [os.path.join(INTER_DIR, n) for n in INTER_FILES]
     tl = {"W": W, "H": H, "fps": FPS, "safe": spec["safe"], "styles": styles,
           "fonts": {"faces": faces, "sha256": {os.path.basename(p): _sha_cached(p) for p in font_files}},
           "elements": els, "sync_points": sorted(sync_points, key=lambda s: s["t"] if isinstance(s["t"], float) else s["t"][0])}
-    tl["checks"] = keyword_checks(kw_checks, els, warn) + callout_legibility(callout_checks, warn)
+    tl["checks"] = (keyword_checks(kw_checks, els, warn) + callout_legibility(callout_checks, warn)
+                    + [r for el, need in spiral_checks for r in spiral_holds(el, need, warn)])
     if verbose:
         for w in warnings:
             print("[overlays] note:", w, file=sys.stderr)
@@ -745,6 +936,60 @@ def callout_legibility(cos, warn):
         rows.append({"id": e["id"], "legible": round(leg, 3)})
         if leg < 1.0:
             warn(f"{e['id']}: label fully legible for only {leg:.2f} s")
+    return rows
+
+
+def _spiral_spacing(el, f):
+    """Mirror of overlay.js drawSpiral(): on-screen length of the floret step n=150 -> 150 + spacing_F at frame f, and
+    the tracker's visibility there."""
+    trk = el["trk"]
+    i = int(min(max(f - trk["f0"], 0), len(trk["x"]) - 1))
+    x, y, v, d = trk["x"][i], trk["y"][i], trk["v"][i], (trk["d"][i] if "d" in trk else 1.0)
+    pr = el.get("proj")
+    m = pr["m"][f - pr["f0"]] if pr and 0 <= f - pr["f0"] < len(pr["m"]) else None
+    c_px, rot = el["k_px_m"] / max(1e-4, d), math.radians(el.get("rot_deg") or 0.0)
+
+    def mp(n, th):
+        if m is not None:
+            r = pr["c"] * math.sqrt(n)
+            lx, ly, lz = r * math.cos(th), r * math.sin(th), (pr.get("dome") or 0) * (1 - (r / pr["R"]) ** 2)
+            hw = m[8] * lx + m[9] * ly + m[10] * lz + m[11]
+            return (m[0] * lx + m[1] * ly + m[2] * lz + m[3]) / hw, (m[4] * lx + m[5] * ly + m[6] * lz + m[7]) / hw
+        r = c_px * math.sqrt(n)
+        return x + r * math.cos(th + rot), y + r * math.sin(th + rot)
+    ga = math.radians(137.50776405)
+    sf = el["spacing_F"]
+    (ax, ay), (bx, by) = mp(150, 150 * ga), mp(150 + sf, (150 + sf) * ga)
+    return math.hypot(ax - bx, ay - by), v
+
+
+def spiral_holds(el, need, warn):
+    """Per spiral family: the window in which it is FULLY drawn at full strength (mirror of overlay.js drawSpiral():
+    grown and faded in, tracker visible, floret spacing >= min_spacing[1], before its own / the widget's fade-out,
+    all alpha terms >= 0.95). Note when shorter than 'need' s (a family must be readable)."""
+    ss = lambda x: x * x * (3 - 2 * x)
+    io_cubic = lambda x: 4 * x ** 3 if x < 0.5 else 1 - (-2 * x + 2) ** 3 / 2
+    lin = lambda t, a, b: min(1.0, max(0.0, (t - a) / (b - a))) if b > a else float(t >= b)
+    ms = el["min_spacing"]
+    rows = []
+    for F, (ts, o0, o1) in zip(el["families"], el["fam_t"]):
+        t_full = ts + max(el["grow"], 0.3)
+        f, n = int(math.ceil(t_full * FPS - 1e-9)), 0
+        while f < el["f1"]:
+            t = f / FPS
+            sp, v = _spiral_spacing(el, f)
+            a = v * ss(min(1.0, max(0.0, (sp - ms[0]) / (ms[1] - ms[0])))) * (1 - io_cubic(lin(t, el["fade0"], el["out"])))
+            if o0 is not None:
+                a *= 1 - io_cubic(lin(t, o0, o1))
+            if a < 0.95:
+                break
+            n += 1
+            f += 1
+        hold = n / FPS
+        rows.append({"id": el["id"], "family": F, "draw": ts, "full": [round(t_full, 3), round(t_full + hold, 3)],
+                     "hold": round(hold, 3), "gone": o1 if o1 is not None else el["out"]})
+        if hold < need - 1e-6:
+            warn(f"{el['id']}: family {F} fully drawn only {hold:.2f} s ({n} frames from {t_full:.2f} s; need {need:.1f} s)")
     return rows
 
 
@@ -946,7 +1191,10 @@ def main():
             print(f"{e['id']:16s} {e['type']:8s} f{e['f0']:5d}-{e['f1']:5d}  {extra}")
         print("\nkey-word holds (settled = every letter alpha >= 0.9 and blur <= 1.5 px):")
         for r in tl["checks"]:
-            if "settled" in r:
+            if "family" in r:
+                print(f"  {r['id']:15s} family {r['family']} drawn from {r['draw']:.2f}, fully drawn "
+                      f"{r['full'][0]:.2f}-{r['full'][1]:.2f} (hold {r['hold']:.2f} s), gone by {r['gone']:.2f}")
+            elif "settled" in r:
                 if "hold" in r:
                     print(f"  {r['id']:15s} settled {r['settled']:7.2f}  exit {r['exit']:7.2f} (spoken end "
                           f"{r.get('spoken_end', float('nan')):6.2f})  out {r['out']:7.2f}  hold {r['hold']:5.2f} s"

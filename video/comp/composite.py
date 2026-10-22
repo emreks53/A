@@ -15,7 +15,7 @@ its graphic within one frame (--allow-cue-mismatch overrides for tests). The out
 padded/trimmed to the frame range) and verified (frame count, stream durations) after encoding.
 
 Processing per output frame (scene-linear float32 unless noted):
-  decode (16-bit) -> per-shot grade trims -> transition mix -> bloom + halation -> vignette -> lateral CA
+  decode (16-bit) -> per-shot grade trims (+ optional incoming-shot head exposure ramp) -> transition mix -> bloom + halation -> vignette -> lateral CA
   -> display encode -> sharpen -> adaptive legibility under key words (+ optional per-keyword scrim floor)
   -> overlay OVER + additive light (screen)
   -> luminance-dependent animated grain (deterministic per frame) -> 8-bit -> x264 (High, yuv420p, BT.709 tags).
@@ -245,12 +245,13 @@ class ShotSource:
 
 
 # ============================================================================================ grading / FX
-def grade(img, g):
+def grade(img, g, ev=0.0):
+    """Per-shot trims (edit.json grade.<shot>); 'ev' = extra exposure (stops) for this frame (head_ev)."""
     if not g:
         return img
     out = img
-    if g.get("exposure"):
-        out = out * np.float32(2 ** g["exposure"])
+    if g.get("exposure") or ev:
+        out = out * np.float32(2 ** (g.get("exposure", 0) + ev))
     if g.get("temp") or g.get("tint"):
         t, ti = g.get("temp", 0) / 100.0, g.get("tint", 0) / 100.0
         gains = np.array([1 + 0.5 * t + 0.25 * ti, 1 - 0.5 * ti, 1 - 0.5 * t + 0.25 * ti], np.float32)
@@ -449,6 +450,24 @@ class Edit:
             if e > s:
                 self.trans.append({**c, "s": s, "e": e, "cut": cut})
 
+    def first_frame(self, sid):
+        """First frame the shot is on screen: the start of its incoming transition, else its cut."""
+        for t in self.trans:
+            if t["b"] == sid:
+                return t["s"]
+        return self.by[sid]["cut_f0"]
+
+    def head_ev(self, g, sid, f):
+        """Incoming-shot head exposure ramp (edit.json grade.<shot>.head {exposure, hold, frames}): 'exposure' stops
+        from the shot's first frame on screen (incl. its incoming transition) for 'hold' frames, then eased
+        (smoothstep) to 0 over the next 'frames' frames; 0 from first_frame + hold + frames - 1 on."""
+        hd = (g or {}).get("head")
+        if not hd:
+            return 0.0
+        hold, n = int(hd.get("hold", 0)), max(1, int(hd.get("frames", 12)))
+        u = (f - self.first_frame(sid) - (hold - 1)) / n
+        return float(hd["exposure"]) * (1 - smoothstep(u))
+
     def owner(self, f):
         for s in self.shots:
             if s["cut_f0"] <= f < s["cut_f1"]:
@@ -554,13 +573,20 @@ def legibility(disp, boxes, cfg, scale, w, h):
     the glyph shadows do the rest.
     Scrim: a key-word box [x0, y0, x1, y1, w, 0, s] (overlays.json keyword "scrim") adds a soft elliptical
     vignette of strength s behind the line that is NOT luma-gated (it steadies a strobing or mid-tone background)
-    and acts as a floor on the darkening: each pixel gets max(legibility darkening, scrim).
+    and acts as a floor on the darkening: each pixel gets max(legibility darkening, scrim). Its shape is
+    edit.json finish.legibility.scrim (extent, pad, softness), unless the box carries the keyword's own:
+    [x0, y0, x1, y1, w, 0, s, 2, pad, softness*100] = an elliptical scrim with this pad / softness (the rest global).
+    [x0, y0, x1, y1, w, 0, s, 2, pad, softness*100, g0*100, g1*100, tr*100, tg*100, tb*100] = the same shape as a
+    'warm' scrim: luma-gated (it eases in as the plate's display luma rises from g0 to g1, so dark ground - a field, a
+    hedge line - is left alone and only the bright sky darkens) and tinted (per-channel strengths tr/tg/tb x s, unit
+    luminance weight: a pale sky deepens to amber instead of going taupe-grey).
     [x0, y0, x1, y1, w, 0, s, 1, soft] = a 'rect' scrim: flat s over the box, smoothstep to 0 over 'soft' px."""
     if not boxes:
         return disp
     lc = cfg
     mask = None
     scrim = None
+    scrim_w, wlook = None, None         # 'warm' scrims (shape 2 + luma gate + tint) and their [g0, g1, tr, tg, tb]
     sw, shh = max(8, w // 8), max(8, h // 8)
     yy = (np.arange(shh, dtype=np.float32) + 0.5) / shh * h
     xx = (np.arange(sw, dtype=np.float32) + 0.5) / sw * w
@@ -579,12 +605,19 @@ def legibility(disp, boxes, cfg, scale, w, h):
             scrim = sm if scrim is None else np.maximum(scrim, sm)
         elif ks > 0.003:
             sc = {"extent": 130, "pad": 150, "softness": 0.32, **lc.get("scrim", {})}
+            if len(b) > 9 and int(b[7]) == 2:
+                # the keyword's own scrim shape [.., s, 2, pad, softness*100] (overlays.json keyword scrim pad/softness)
+                sc = {**sc, "pad": float(b[8]), "softness": float(b[9]) / 100}
             cxs, cys = (x0 + x1) / 2 * scale, (y0 + y1) / 2 * scale
             rxs = ((x1 - x0) / 2 + sc["extent"]) * scale
             rys = ((y1 - y0) / 2 + sc["pad"]) * scale
             r = np.sqrt(((xx[None, :] - cxs) / rxs) ** 2 + ((yy[:, None] - cys) / rys) ** 2)
             # logistic falloff normalised to exactly ks at the centre: no edge, no plateau corners
             sm = (ks * (1 + math.exp(-1 / sc["softness"])) / (1 + np.exp((r - 1) / sc["softness"]))).astype(np.float32)
+            if len(b) > 14 and int(b[7]) == 2:
+                scrim_w = sm if scrim_w is None else np.maximum(scrim_w, sm)
+                wlook = [float(v) / 100 for v in b[10:15]]
+                continue
             scrim = sm if scrim is None else np.maximum(scrim, sm)
         if wt < 0.02:
             continue
@@ -613,12 +646,13 @@ def legibility(disp, boxes, cfg, scale, w, h):
         r = np.sqrt(((xx[None, :] - cx) / rx) ** 2 + ((yy[:, None] - cy) / ry) ** 2)
         m = k / (1 + np.exp((r - 1) / lc["softness"]))
         mask = m if mask is None else np.maximum(mask, m)
-    if mask is None and scrim is None:
+    if mask is None and scrim is None and scrim_w is None:
         return disp
     big = cv2.resize(mask, (w, h), interpolation=cv2.INTER_CUBIC) if mask is not None else None
     sbig = cv2.resize(scrim, (w, h), interpolation=cv2.INTER_CUBIC) if scrim is not None else None
+    wbig = cv2.resize(scrim_w, (w, h), interpolation=cv2.INTER_CUBIC) if scrim_w is not None else None
     rows = np.zeros(h, bool)
-    for m_ in (big, sbig):
+    for m_ in (big, sbig, wbig):
         if m_ is not None:
             rows |= m_.max(1) > 1e-3
     if not rows.any():
@@ -633,6 +667,14 @@ def legibility(disp, boxes, cfg, scale, w, h):
         dk = big[ys:ye + 1] * (u * u * (3 - 2 * u))
     if sbig is not None:
         dk = np.maximum(dk, np.clip(sbig[ys:ye + 1], 0, 1))
+    if wbig is not None:
+        g0, g1, tint = wlook[0], wlook[1], np.array(wlook[2:5], np.float32)
+        lp = cv2.GaussianBlur(reg @ LUMA, (0, 0), 2.0 * scale + 0.3)
+        u = np.clip((lp - g0) / max(1e-3, g1 - g0), 0, 1)
+        dw = np.clip(wbig[ys:ye + 1], 0, 1) * (u * u * (3 - 2 * u))
+        dk3 = np.maximum(np.asarray(dk, np.float32)[..., None] if np.ndim(dk) else np.float32(dk), dw[..., None] * tint)
+        disp[ys:ye + 1] = reg * np.clip(1 - dk3, 0, 1)
+        return disp
     f = 1 - dk
     disp[ys:ye + 1] = reg * f[..., None]
     return disp
@@ -853,13 +895,13 @@ def main():
         pl = ed.plan(f)
         if pl[0] == "single":
             sh = pl[1]
-            img = grade(src(sh).get(f), grades.get(sh["id"]))
+            img = grade(src(sh).get(f), grades.get(sh["id"]), ed.head_ev(grades.get(sh["id"]), sh["id"], f))
             kinds[sh["id"]] = src(sh).kind.get(f)
             t1 = time.time()
         else:
             _, A, B, p, tr = pl
-            ia = grade(src(A).get(f), grades.get(A["id"]))
-            ib = grade(src(B).get(f), grades.get(B["id"]))
+            ia = grade(src(A).get(f), grades.get(A["id"]), ed.head_ev(grades.get(A["id"]), A["id"], f))
+            ib = grade(src(B).get(f), grades.get(B["id"]), ed.head_ev(grades.get(B["id"]), B["id"], f))
             t1 = time.time()
             img = mix(tr, ia, ib, p, w, h)
         tim["src"] += t1 - t0
