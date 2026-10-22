@@ -1439,6 +1439,15 @@
    "from": 220,
    "to": 236,
    "note": "QA r8: no honey spoon, window rails inset 1 mm (fix ca649ba); whole sh02, first run on farm scripts 1c57fa9"
+  },
+  {
+   "node": "b140",
+   "branch": "render-fix-sh03",
+   "ref": "ca649ba29b110e5098fe4bd60ce890cab63ac0d5",
+   "shot": "sh03",
+   "from": 225,
+   "to": 247,
+   "note": "QA r8: rails inset from 225 (no 247 key), spoon hidden (fix ca649ba); head only, 248+ unchanged (bit-identical)"
   }
  ]
 }
