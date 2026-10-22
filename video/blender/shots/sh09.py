@@ -235,6 +235,11 @@ def build(ctx):
     inter = L.build_fibre_interior("interiorRoot", Matrix.Translation(H), fibre_c=HO["fibre_c"], fibre_r=HO["fibre_r"],
                                    y_half=HO["y_half"], seed=909, cristae_wave=wave)
     interior = inter["objects"] + upgrade_interior(inter, wave)
+    # hero matrix glow: as bright as the chains while small in frame, easing down as it fills the
+    # frame (deep amber, not skin-tan, at the f1250 hand-off)
+    mh = bpy.data.materials["MitoInnerS9Hero"]
+    L.bake_id(mh.node_tree, frames, 'nodes["matrix_emit"].inputs[1].default_value',
+              [C.lerp(MITO_VOL["emit_small"], MITO_VOL["emit"], C.remap(f, 1215, 1240, C.smooth)) for f in frames])
     print(f"[sh09] interior: {inter['fibrils']} myofibrils, {inter['mitos']} mitochondria")
 
     # ---------------------------------------------------------------- camera
@@ -502,14 +507,16 @@ def make_bouton_mat(t_junc):
 # inner boundary membrane, folded 3-D cristae) and soft translucent tubular T-tubules.
 
 
-MITO_VOL = dict(emit=110.0, absorb=35.0, rim=0.35)
+MITO_VOL = dict(emit=22.0, emit_small=140.0, absorb=80.0, rim=0.25)   # hero / smaller chain bodies
 
 
 def upgrade_interior(inter, wave):
     """Swap materials / meshes of the interior built by lib_s7 (same objects, transforms and
     hierarchy, so the hand-off framing is unchanged). Returns the new (inner-membrane) objects."""
     import re
-    m_out, m_in, m_cr = mat_mito_outer_s9(), mat_mito_inner_s9(), mat_cristae_s9(wave)
+    m_out, m_cr = mat_mito_outer_s9(), mat_cristae_s9(wave)
+    m_in = mat_mito_inner_s9(MITO_VOL["emit_small"], "MitoInnerS9")        # the chains
+    m_in_hero = mat_mito_inner_s9(MITO_VOL["emit"], "MitoInnerS9Hero")    # hero variants (10-12)
     new, cr_cache, in_cache = [], {}, {}
     for o in list(inter["objects"]):
         if o.type != "MESH":
@@ -517,14 +524,17 @@ def upgrade_interior(inter, wave):
         nm = o.data.name
         if nm.startswith("mitoEnv"):
             if nm not in in_cache:
-                o.data.materials[0] = m_out
-                in_cache[nm] = inner_shell(o.data, m_in)
-            c = L.obj_from_mesh(o.name + "_in", in_cache[nm]); c.parent = o
+                v, l_, w_ = (int(x) for x in re.match(r"mitoEnv(\d+)_(\d+)_(\d+)", nm).groups())
+                env = mito_bean(nm + "_s9", length=l_ / 1e4, width=w_ / 1e4, seed=v)
+                env.materials.append(m_out)
+                in_cache[nm] = (env, inner_shell(env, m_in_hero if v >= 10 else m_in))
+            o.data = in_cache[nm][0]
+            c = L.obj_from_mesh(o.name + "_in", in_cache[nm][1]); c.parent = o
             new.append(c)
         elif nm.startswith("mitoCr"):
             if nm not in cr_cache:
                 v, l_, w_ = (int(x) for x in re.match(r"mitoCr(\d+)_(\d+)_(\d+)", nm).groups())
-                me = cristae_folded(nm + "_s9", length=l_ / 1e4, width=w_ / 1e4, seed=v, bend_seed=500 + v, bend=0.12)
+                me = cristae_folded(nm + "_s9", length=l_ / 1e4, width=w_ / 1e4, seed=v)
                 me.materials.append(m_cr)
                 cr_cache[nm] = me
             o.data = cr_cache[nm]
@@ -544,47 +554,124 @@ def inner_shell(env, mat, gap=0.075):
     return me
 
 
-def cristae_folded(name, length, width, seed=0, bend_seed=None, bend=0.12):
-    """Lamellar cristae as folded 3-D sacs: each a rounded tongue rooted on the inner membrane,
-    cupped and undulating (folds in two directions), alternating sides, with a thick rounded rim."""
+# Mitochondrion shape (round 2): an asymmetric bean, never a symmetric pointed spindle.
+# Local frame as lib_s7: long axis Y; the bend and the flatter flank are in the X-Z plane along Z
+# (for the hero, whose rotation is zero, Z is the screen's horizontal, so the bean reads on screen).
+BEAN = dict(p=3.0, bend=0.11, flat=0.68, depth=0.92, taper=0.08)
+
+
+def bean_centre(t, width):
+    """Centre-line offset (z) at t = y / (L/2): a gentle ~13 deg banana bend."""
+    return BEAN["bend"] * width * (1 - t * t)
+
+
+def bean_radius(t, width):
+    """Superellipse profile (p=3): blunt, rounded ends."""
+    return width / 2 * (1 + BEAN["taper"] * t) * max(0.0, 1 - abs(t) ** BEAN["p"]) ** (1 / BEAN["p"])
+
+
+def mito_bean(name, length, width, seed=0, nu=40, nv=56):
+    """Envelope: blunt-ended, slightly bent bean with one flatter flank (-Z, the concave side) and
+    faint organic lumps. Same length/width as the lib mesh it replaces (framing unchanged)."""
+    off = Vector((seed * 3.1, seed * 1.7, 11.0))
+    q = 2.0 / BEAN["p"]
+    verts, faces = [], []
+    verts.append((0.0, -length / 2, bean_centre(-1, width)))
+    for j in range(1, nv):
+        ph = math.pi * j / nv
+        c_ = -math.cos(ph)
+        t = math.copysign(abs(c_) ** q, c_)
+        r = width / 2 * (1 + BEAN["taper"] * t) * math.sin(ph) ** q      # one end a little fuller
+        zc = bean_centre(t, width)
+        for i in range(nu):
+            a = 2 * math.pi * i / nu
+            ca, sa = math.cos(a), math.sin(a)
+            lump = 1 + 0.035 * noise.noise(Vector((ca * 1.3, t * 1.6, sa * 1.3)) + off)
+            x = r * BEAN["depth"] * ca * lump
+            z = zc + r * sa * (1.0 if sa > 0 else BEAN["flat"] - 0.06 * (1 - t * t)) * lump   # kidney flank
+            verts.append((x, t * length / 2, z))
+    verts.append((0.0, length / 2, bean_centre(1, width)))
+    for i in range(nu):
+        faces.append((0, 1 + (i + 1) % nu, 1 + i))
+    for j in range(nv - 2):
+        b0, b1 = 1 + j * nu, 1 + (j + 1) * nu
+        for i in range(nu):
+            faces.append((b0 + i, b0 + (i + 1) % nu, b1 + (i + 1) % nu, b1 + i))
+    top = len(verts) - 1; bl = 1 + (nv - 2) * nu
+    for i in range(nu):
+        faces.append((bl + i, bl + (i + 1) % nu, top))
+    me = bpy.data.meshes.new(name)
+    me.from_pydata(verts, [], faces)
+    bm = bmesh.new(); bm.from_mesh(me)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])        # outward, for the inner shell offset
+    bm.to_mesh(me); bm.free()
+    me.update()
+    for p_ in me.polygons:
+        p_.use_smooth = True
+    return me
+
+
+CRISTAE = dict(rad=0.70, yspan=0.30, amp=0.025, cup=0.02, tilt=5.0, reach=(0.52, 0.68), reach_end=0.48)
+
+
+def cristae_folded(name, length, width, seed=0):
+    """Cristae = INNER folds seen through the membranes: rounded tongues rooted alternately on the
+    two side walls (+Z / -Z) inside 0.70 x the local half-width, each reaching at most ~60 % across
+    (the outermost ones <= 0.48), so no fold ever spans the body as a ring or collar. Folds
+    undulate and tilt in depth only (X), and the y-extents of neighbours are disjoint by
+    construction, so two cristae can never cross."""
+    K = CRISTAE
     rng = random.Random(1000 + seed)
-    n = max(5, int(length / 0.0021))
+    th = min(0.00042, width * 0.06)
+    amp, cup = K["amp"] * width, K["cup"] * width
+    R0 = K["rad"] * width / 2
+    ext = 1.45 * amp + cup + math.tan(math.radians(K["tilt"])) * R0 * BEAN["depth"] + th   # half y-extent
+    span = 2 * K["yspan"] * length
+    n = max(3, int(span / (2.3 * ext)) + 1)
+    step = span / (n - 1)
+    jit = max(0.0, (step - 2.15 * ext) / 2)
     bm = bmesh.new()
-    NS, NA = 16, 14
-    th = min(0.00055, width * 0.075)
+    NS, NA = 14, 12
     for i in range(n):
-        y0 = (-0.40 + 0.80 * (i + 0.5) / n) * length + rng.uniform(-0.12, 0.12) * length / n
-        R = width / 2 * 0.84 * math.sqrt(max(0.05, 1 - (y0 / (length / 2)) ** 2))
+        y0 = -K["yspan"] * length + i * step + rng.uniform(-jit, jit)
+        t0 = y0 / (length / 2)
+        te = (abs(y0) + ext) / (length / 2)                      # narrowest point over the extent
+        R = K["rad"] * bean_radius(min(1.0, te), width)
+        zc = bean_centre(t0, width)
         side = 1 if (i + seed) % 2 else -1
-        reach = rng.uniform(0.62, 0.86)
+        Rs = R * (1.0 if side > 0 else BEAN["flat"])            # the root wall
+        reach = K["reach_end"] if i in (0, n - 1) else rng.uniform(*K["reach"])
         ph1, ph2 = rng.uniform(0, 6.28), rng.uniform(0, 6.28)
-        amp = rng.uniform(0.055, 0.085) * width
-        cup = rng.uniform(-0.6, 0.6) * width * 0.12
-        tilt = math.tan(math.radians(rng.uniform(-24, 24)))
-        grid = []
+        tilt = math.tan(math.radians(rng.uniform(-K["tilt"], K["tilt"])))
+        cu = rng.uniform(-1, 1) * cup
+        pts = []
         for js in range(NS + 1):
             sfr = js / NS
             row = []
             for ja in range(NA + 1):
                 a = -1 + 2 * ja / NA
-                xr = R - sfr * reach * 2 * R * (1 - 0.32 * a * a)          # rounded free edge
-                x = side * xr
-                chord = math.sqrt(max(0.0, R * R - x * x))
-                z = a * max(chord * 0.94, R * 0.18 * (1 - sfr))
-                yy = (y0 + amp * math.sin(z / R * 2.4 + ph1) * (0.35 + 0.65 * sfr)
-                      + 0.45 * amp * math.sin(sfr * 6.0 + a * 1.7 + ph2) + cup * sfr * sfr + tilt * z)
-                row.append(bm.verts.new((x, yy, z)))
-            grid.append(row)
+                d = sfr * reach * 2 * R * (1 - 0.30 * a * a)          # distance from the root wall
+                zl = side * (Rs - d)                                  # local z (from the centre line)
+                Rz = R if zl > 0 else R * BEAN["flat"]
+                chord = math.sqrt(max(0.0, Rz * Rz - zl * zl)) * BEAN["depth"]
+                x = a * max(chord * 0.92, R * 0.15)
+                yy = (y0 + amp * math.sin(x / R * 2.6 + ph1) * (0.4 + 0.6 * sfr)
+                      + 0.45 * amp * math.sin(sfr * 5.0 + ph2) * abs(a) + cu * sfr * sfr + tilt * x)
+                row.append((x, yy, zc + zl))
+            pts.append(row)
+        # a closed sac of thickness th (two layers +-th/2 in y, rim stitched; rounded by smooth shading)
+        lay = [[[bm.verts.new((x, y + sg * th / 2 * (0.35 if js == NS or ja in (0, NA) else 1.0), z))
+                 for ja, (x, y, z) in enumerate(row)] for js, row in enumerate(pts)] for sg in (1, -1)]
         for js in range(NS):
             for ja in range(NA):
-                bm.faces.new((grid[js][ja], grid[js + 1][ja], grid[js + 1][ja + 1], grid[js][ja + 1]))
+                bm.faces.new((lay[0][js][ja], lay[0][js + 1][ja], lay[0][js + 1][ja + 1], lay[0][js][ja + 1]))
+                bm.faces.new((lay[1][js][ja + 1], lay[1][js + 1][ja + 1], lay[1][js + 1][ja], lay[1][js][ja]))
+        rim = ([(js, 0) for js in range(NS + 1)] + [(NS, ja) for ja in range(1, NA + 1)]
+               + [(js, NA) for js in range(NS - 1, -1, -1)] + [(0, ja) for ja in range(NA - 1, 0, -1)])
+        for k in range(len(rim)):
+            (j0, a0), (j1, a1) = rim[k], rim[(k + 1) % len(rim)]
+            bm.faces.new((lay[0][j0][a0], lay[0][j1][a1], lay[1][j1][a1], lay[1][j0][a0]))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-    bmesh.ops.solidify(bm, geom=bm.faces[:], thickness=th)
-    if bend_seed is not None:                      # follow the envelope's bend (same rng draw as lib)
-        b = random.Random(bend_seed).uniform(-bend, bend)
-        for v in bm.verts:
-            yn = v.co.y / (length / 2)
-            v.co.x += b * width * (1 - yn * yn)
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me); bm.free()
     for p in me.polygons:
@@ -595,28 +682,28 @@ def cristae_folded(name, length, width, seed=0, bend_seed=None, bend=0.12):
 def mat_mito_outer_s9():
     """Outer mitochondrial membrane: glossy wet amber film with SSS; nearly clear face-on and dense
     at the silhouette (a membrane seen edge-on), so the body reads as a translucent volume."""
-    m, nt, p = L.mat_wet_tissue("MitoOuterS9", base=(0.62, 0.30, 0.11), sss_radius=(1.0, 0.55, 0.25),
+    m, nt, p = L.mat_wet_tissue("MitoOuterS9", base=(0.34, 0.09, 0.02), sss_radius=(1.0, 0.55, 0.25),
                                 sss_scale=0.0025, rough=0.32, coat=1.0, coat_rough=0.05)
     lw = L._n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.3
     pw = L._n(nt, "ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 1.6
     nt.links.new(lw.outputs["Facing"], pw.inputs[0])
-    al = L._n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.10; al.inputs["To Max"].default_value = 0.92
+    al = L._n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.20; al.inputs["To Max"].default_value = 0.92
     nt.links.new(pw.outputs[0], al.inputs["Value"]); nt.links.new(al.outputs[0], p.inputs["Alpha"])
     tc = L._n(nt, "ShaderNodeTexCoord")
     nz = L._n(nt, "ShaderNodeTexNoise", **{"Scale": 420.0, "Detail": 3.0})
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
     L._bump_chain(nt, p, [(nz.outputs["Fac"], 0.06)], distance=0.0004)
     # the matrix glow shines through the membrane where it is seen edge-on (luminous rim, not an outline)
-    p.inputs["Emission Color"].default_value = (1.0, 0.5, 0.17, 1)
+    p.inputs["Emission Color"].default_value = (1.0, 0.36, 0.08, 1)
     em = L._n(nt, "ShaderNodeMath"); em.operation = "MULTIPLY"; em.inputs[1].default_value = MITO_VOL["rim"]
     nt.links.new(pw.outputs[0], em.inputs[0]); nt.links.new(em.outputs[0], p.inputs["Emission Strength"])
     L.fog_wrap(m)
     return m
 
 
-def mat_mito_inner_s9():
+def mat_mito_inner_s9(emit, name):
     """Inner boundary membrane: thinner, warmer, mostly clear (second rim inside the first)."""
-    m, nt, p = L.mat_wet_tissue("MitoInnerS9", base=(0.72, 0.36, 0.12), sss_radius=(1.0, 0.5, 0.2),
+    m, nt, p = L.mat_wet_tissue(name, base=(0.70, 0.28, 0.08), sss_radius=(1.0, 0.5, 0.2),
                                 sss_scale=0.0015, rough=0.4, coat=0.3, coat_rough=0.15)
     lw = L._n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.25
     pw = L._n(nt, "ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 2.2
@@ -628,9 +715,9 @@ def mat_mito_inner_s9():
     # grows with the thickness looked through, so the body is brightest in its core and falls off to
     # the rims like a real translucent volume; the cristae inside shadow it
     out = [n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"][0]
-    ve = L._n(nt, "ShaderNodeEmission"); ve.inputs["Color"].default_value = (1.0, 0.46, 0.13, 1)
-    ve.inputs["Strength"].default_value = MITO_VOL["emit"]
-    va = L._n(nt, "ShaderNodeVolumeAbsorption"); va.inputs["Color"].default_value = (0.85, 0.55, 0.35, 1)
+    ve = L._n(nt, "ShaderNodeEmission"); ve.name = "matrix_emit"; ve.inputs["Color"].default_value = (1.0, 0.36, 0.08, 1)
+    ve.inputs["Strength"].default_value = emit
+    va = L._n(nt, "ShaderNodeVolumeAbsorption"); va.inputs["Color"].default_value = (0.75, 0.22, 0.06, 1)
     va.inputs["Density"].default_value = MITO_VOL["absorb"]
     ad = L._n(nt, "ShaderNodeAddShader")
     nt.links.new(ve.outputs[0], ad.inputs[0]); nt.links.new(va.outputs[0], ad.inputs[1])
@@ -645,12 +732,13 @@ def mat_cristae_s9(wave):
     m.name = "CristaeS9"
     nt = m.node_tree
     p = [n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"][0]
-    p.inputs["Base Color"].default_value = (0.50, 0.20, 0.05, 1)
+    p.inputs["Base Color"].default_value = (0.42, 0.12, 0.025, 1)   # saturated amber folds (never cream)
+    p.inputs["Emission Color"].default_value = (1.0, 0.30, 0.05, 1)
     p.inputs["Coat Weight"].default_value = 0.5
     p.inputs["Coat Roughness"].default_value = 0.12
     src = p.inputs["Emission Strength"].links[0].from_socket
     lw = L._n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.4
-    sh = L._n(nt, "ShaderNodeMapRange"); sh.inputs["To Min"].default_value = 0.25; sh.inputs["To Max"].default_value = 1.3
+    sh = L._n(nt, "ShaderNodeMapRange"); sh.inputs["To Min"].default_value = 0.15; sh.inputs["To Max"].default_value = 1.1
     nt.links.new(lw.outputs["Facing"], sh.inputs["Value"])
     mm = L._n(nt, "ShaderNodeMath"); mm.operation = "MULTIPLY"
     nt.links.new(src, mm.inputs[0]); nt.links.new(sh.outputs[0], mm.inputs[1])
