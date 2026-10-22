@@ -28,6 +28,7 @@ def build(ctx):
     S.build_table()
     t_yemek, t_icmek, t_butun, t_takdim = ctx.word("yemek"), ctx.word("içmek"), ctx.word("bütün"), ctx.word("takdim")
     so = S.build_sofra()
+    so["pom"] = S.replace_open_pomegranate(so["pom"])     # fix s1-3: real cut face (sh02 keeps build_sofra as is)
     water = so["water"]
     r_in = S.inner_radius(0.05)
 

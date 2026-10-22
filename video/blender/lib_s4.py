@@ -1105,6 +1105,220 @@ def build_open_pomegranate(name="PomOpen", seed=9, n_arils=420):
     return src, arils, zc
 
 
+def mat_aril_v2():
+    """Pomegranate aril (sh03 fix): glossy, translucent ruby juice sac - light scatters through it."""
+    m, nt, p = C.new_mat("ArilV2")
+    p.inputs["Roughness"].default_value = 0.05
+    p.inputs["IOR"].default_value = 1.35
+    p.inputs["Transmission Weight"].default_value = 0.2
+    p.inputs["Subsurface Weight"].default_value = 1.0
+    p.inputs["Subsurface Radius"].default_value = (1.0, 0.10, 0.12)
+    p.inputs["Subsurface Scale"].default_value = 0.004
+    p.inputs["Coat Weight"].default_value = 1.0
+    p.inputs["Coat Roughness"].default_value = 0.03
+    # per-aril colour variation (deep garnet .. bright ruby)
+    oi = nt.nodes.new("ShaderNodeObjectInfo")
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].color = (0.46, 0.012, 0.035, 1)
+    ramp.color_ramp.elements[1].color = (0.85, 0.050, 0.090, 1)
+    nt.links.new(oi.outputs["Random"], ramp.inputs["Fac"])
+    nt.links.new(ramp.outputs["Color"], p.inputs["Base Color"])
+    return m
+
+
+def mat_rind_flesh():
+    """Cut pomegranate rind and pith membranes: pale cream-yellow, waxy, slightly translucent."""
+    m, nt, p = C.new_mat("RindFlesh")
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 140; nz.inputs["Detail"].default_value = 6
+    nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].color = (0.60, 0.44, 0.24, 1); ramp.color_ramp.elements[1].color = (0.78, 0.64, 0.40, 1)
+    nt.links.new(nz.outputs["Fac"], ramp.inputs["Fac"]); nt.links.new(ramp.outputs["Color"], p.inputs["Base Color"])
+    p.inputs["Roughness"].default_value = 0.42
+    p.inputs["Subsurface Weight"].default_value = 0.4
+    p.inputs["Subsurface Radius"].default_value = (1.0, 0.75, 0.45)
+    p.inputs["Subsurface Scale"].default_value = 0.002
+    bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Distance"].default_value = 0.0004
+    nt.links.new(nz.outputs["Fac"], bp.inputs["Height"]); nt.links.new(bp.outputs["Normal"], p.inputs["Normal"])
+    return m
+
+
+def build_open_pomegranate_v2(name="PomOpen", seed=9):
+    """Half a pomegranate cut across (sh03 fix): a 5 mm cream rind wall at the rim, the chamber floor
+    sunk below it and packed with rounded, slightly faceted ruby arils that bulge just proud of the cut,
+    seven cream pith membranes between the chambers. Every aril stays inside the cut outline."""
+    rng = random.Random(seed)
+    src = [o for o in C.ph_model("food_pomegranate_01", "1k") if o.type == "MESH"][0]
+    src.name = name
+    me = src.data
+    bm = bmesh.new(); bm.from_mesh(me)
+    zs = [v.co.z for v in bm.verts]
+    zc = (min(zs) + max(zs)) * 0.5 - 0.004
+    bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, zc),
+                           plane_no=(0, 0, 1), clear_outer=True)
+    rim = [(v.co.x, v.co.y) for v in bm.verts if abs(v.co.z - zc) < 1e-5]
+    bm.to_mesh(me); bm.free()
+    # cut outline R(angle) about its centre (the scan is split at UV seams, so no clean loop to fill)
+    cx = sum(p[0] for p in rim) / len(rim); cy = sum(p[1] for p in rim) / len(rim)
+    nb = 180
+    R = [0.0] * nb
+    for x, y in rim:
+        k = int(((math.atan2(y - cy, x - cx)) % (2 * math.pi)) / (2 * math.pi) * nb) % nb
+        R[k] = max(R[k], math.hypot(x - cx, y - cy))
+    for _ in range(4):                                                     # fill empty bins
+        R = [R[k] if R[k] > 0 else max(R[k - 1], R[(k + 1) % nb]) for k in range(nb)]
+    z_floor = zc - 0.0035
+    rind_m = mat_rind_flesh()
+    floor_m = C.principled("ChamberFloor", base=(0.16, 0.008, 0.014), rough=0.3)
+    skin_m = C.principled("CutSkinEdge", base=(0.42, 0.05, 0.04), rough=0.4)
+    # the cut face: 5 mm cream rind band at the rim, a step down to the chamber floor
+    cb = bmesh.new()
+    r0, rs, r1, r2 = [], [], [], []
+    for k in range(nb):
+        a = 2 * math.pi * (k + 0.5) / nb; c_, s_ = math.cos(a), math.sin(a)
+        Ro = R[k] * 0.998; Ri = R[k] - 0.005; Rs = R[k] - 0.0009
+        r0.append(cb.verts.new((cx + Ro * c_, cy + Ro * s_, zc)))
+        rs.append(cb.verts.new((cx + Rs * c_, cy + Rs * s_, zc)))
+        r1.append(cb.verts.new((cx + Ri * c_, cy + Ri * s_, zc)))
+        r2.append(cb.verts.new((cx + Ri * c_, cy + Ri * s_, z_floor)))
+    ctr = cb.verts.new((cx, cy, z_floor))
+    for k in range(nb):
+        k1 = (k + 1) % nb
+        cb.faces.new((r0[k], r0[k1], rs[k1], rs[k])).material_index = 2
+        cb.faces.new((rs[k], rs[k1], r1[k1], r1[k])).material_index = 0
+        cb.faces.new((r1[k], r1[k1], r2[k1], r2[k])).material_index = 0
+        cb.faces.new((r2[k], r2[k1], ctr)).material_index = 1
+    bmesh.ops.recalc_face_normals(cb, faces=cb.faces[:])
+    for f in cb.faces:                                                     # the cut faces look up
+        if f.material_index in (0, 2) and f.normal.z < -0.5:
+            f.normal_flip()
+        if f.material_index == 1 and f.normal.z < 0:
+            f.normal_flip()
+    cme = bpy.data.meshes.new("cutface"); cb.to_mesh(cme); cb.free()
+    cme.materials.append(rind_m); cme.materials.append(floor_m); cme.materials.append(skin_m)
+    cf = C.link(bpy.data.objects.new(f"{name}_cutface", cme)); cf.parent = src
+    R = [min(R[k - 1], R[k], R[(k + 1) % nb]) for k in range(nb)]          # conservative for placement
+
+    def r_at(a):
+        return R[int((a % (2 * math.pi)) / (2 * math.pi) * nb) % nb]
+    # pith membranes: 7 slightly irregular, wavy walls from a small central core to the rind
+    n_ch = 7
+    ch_off = rng.uniform(0, 2 * math.pi)
+    ang = [ch_off + 2 * math.pi * (k + rng.uniform(-0.18, 0.18)) / n_ch for k in range(n_ch)]
+    pith_m = rind_m
+    mem_lines = []
+    for k, a in enumerate(ang):
+        mb = bmesh.new(); segs = 14; vs = []
+        r_end = r_at(a) - 0.0035
+        pts = []
+        for j in range(segs + 1):
+            u = j / segs
+            r = 0.0035 + (r_end - 0.0035) * u
+            wob = (0.0034 * math.sin(u * 4.2 + k * 1.7) + 0.0016 * math.sin(u * 10.0 + 2.3 * k)) * min(1.0, 3 * u)
+            c_, s_ = math.cos(a), math.sin(a)
+            px, py = cx + r * c_ - s_ * wob, cy + r * s_ + c_ * wob
+            pts.append((px, py))
+            hw = 0.0009 + 0.0003 * math.sin(u * 7 + k)
+            for side in (-1, 1):
+                vs.append(mb.verts.new((px - s_ * side * hw, py + c_ * side * hw, zc - 0.0011 - 0.0004 * u)))
+                vs.append(mb.verts.new((px - s_ * side * hw * 1.4, py + c_ * side * hw * 1.4, z_floor - 0.0005)))
+        for j in range(segs):
+            b0 = j * 4; b1 = (j + 1) * 4
+            for (u_, v_) in ((0, 2), (2, 3), (3, 1), (1, 0)):
+                mb.faces.new((vs[b0 + u_], vs[b1 + u_], vs[b1 + v_], vs[b0 + v_]))
+        mme = bpy.data.meshes.new("membrane"); mb.to_mesh(mme); mb.free()
+        mo = C.link(bpy.data.objects.new(f"{name}_membrane", mme))
+        mo.data.materials.append(pith_m); C.smooth_shade(mo); mo.parent = src
+        mem_lines.append(pts)
+    core = bpy.data.meshes.new("pithcore"); cb = bmesh.new()
+    bmesh.ops.create_cone(cb, cap_ends=True, segments=24, radius1=0.0045, radius2=0.004, depth=0.003)
+    cb.to_mesh(core); cb.free()
+    co_ = C.link(bpy.data.objects.new(f"{name}_core", core)); co_.data.materials.append(pith_m)
+    co_.location = (cx, cy, zc - 0.0027); co_.parent = src
+    # aril meshes: rounded kernels flattened where neighbours pressed on them (a few soft facets)
+    variants = []
+    for vi in range(6):
+        ab = bmesh.new(); bmesh.ops.create_icosphere(ab, subdivisions=3, radius=1.0)
+        planes = [Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1) * 0.6)).normalized() for _ in range(6)]
+        dist = [rng.uniform(0.78, 0.9) for _ in planes]
+        for v in ab.verts:
+            for n_, d_ in zip(planes, dist):
+                h = v.co.dot(n_)
+                if h > d_:
+                    v.co -= n_ * (h - d_) * 0.85
+        ame = bpy.data.meshes.new(f"arilv{vi}"); ab.to_mesh(ame); ab.free()
+        for poly in ame.polygons:
+            poly.use_smooth = True
+        ame.materials.append(None)
+        variants.append(ame)
+    am = mat_aril_v2()
+    for ame in variants:
+        ame.materials[0] = am
+
+    def seg_dist(p, a, b):
+        ax, ay = a; bx, by = b; px, py = p
+        dx, dy = bx - ax, by - ay
+        t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / max(1e-12, dx * dx + dy * dy)))
+        return math.hypot(px - ax - t * dx, py - ay - t * dy)
+    cell = 0.005
+    grid = {}
+
+    def near(p, d):
+        gx, gy = int(math.floor(p[0] / cell)), int(math.floor(p[1] / cell))
+        for i_ in (gx - 1, gx, gx + 1):
+            for j_ in (gy - 1, gy, gy + 1):
+                for q in grid.get((i_, j_), ()):
+                    if (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 < d * d:
+                        return True
+        return False
+
+    def add(p):
+        grid.setdefault((int(math.floor(p[0] / cell)), int(math.floor(p[1] / cell))), []).append(p)
+
+    def scatter(n_try, d, margin, r_min, avoid_mem):
+        out = []
+        for _ in range(n_try):
+            a = rng.uniform(0, 2 * math.pi)
+            rr = math.sqrt(rng.uniform(0.0, 1.0)) * r_at(a)
+            if rr > r_at(a) - 0.005 - margin or rr < r_min:
+                continue
+            p = (cx + rr * math.cos(a), cy + rr * math.sin(a))
+            if near(p, d):
+                continue
+            if avoid_mem and any(seg_dist(p, ln[j], ln[j + 1]) < 0.0017 for ln in mem_lines for j in range(len(ln) - 1)):
+                continue
+            add(p); out.append(p)
+        return out
+    pts = scatter(120000, 0.0050, 0.0027, 0.0065, True)
+    n_top = len(pts)
+    pts += scatter(40000, 0.0036, 0.0022, 0.0055, False)       # a deeper layer seen through the gaps
+    arils = []
+    for i, p in enumerate(pts):
+        o = C.link(bpy.data.objects.new(f"{name}_aril", variants[i % len(variants)]))
+        sx = rng.uniform(0.0029, 0.0033); sy = rng.uniform(0.0026, 0.0030); sz = rng.uniform(0.0032, 0.0040)
+        o.scale = (sx, sy, sz)
+        o.rotation_euler = Euler((rng.uniform(-0.5, 0.5), rng.uniform(-0.5, 0.5), rng.uniform(0, 2 * math.pi)), "XYZ")
+        top = zc + rng.uniform(0.0006, 0.0018) if i < n_top else zc - rng.uniform(0.0008, 0.0016)
+        o.location = (p[0], p[1], top - sz)
+        o.parent = src
+        arils.append(o)
+    print(f"[s4] pomegranate v2: {len(arils)} arils", flush=True)
+    return src, arils, zc
+
+
+def replace_open_pomegranate(old):
+    """Swap the pomegranate built by build_sofra for the v2 build, keeping its exact placement."""
+    new, arils, zc = build_open_pomegranate_v2()
+    new.parent = old.parent
+    new.matrix_parent_inverse = old.matrix_parent_inverse.copy()
+    new.location = old.location.copy(); new.rotation_euler = old.rotation_euler.copy(); new.scale = old.scale.copy()
+    for o in list(old.children_recursive) + [old]:
+        bpy.data.objects.remove(o)
+    new.name = "PomOpen"
+    return new
+
+
 def settle_fruit(bowl, fruit, frames=110):
     """Drop fruit into the bowl with a rigid-body sim, then freeze the final transforms (deterministic)."""
     sc = bpy.context.scene
@@ -1243,9 +1457,13 @@ def build_stream(name, spout, v0=(0.32, 0.0, 0.0), r0=0.0042, n=96):
         rin = _gn(ng, "GeometryNodeInputRadius")          # radius stored before the trim
         L(rin.outputs[0], c2m.inputs["Scale"])
     shs = _gn(ng, "GeometryNodeSetShadeSmooth"); L(c2m.outputs[0], shs.inputs["Geometry"])
-    L(shs.outputs[0], out.inputs[0])
+    # the generated mesh carries no material slots of its own: set the water material in the tree
+    wm = mat_water_s4(name + "Mat", absorb=(0.97, 0.99, 0.985))
+    smat = _gn(ng, "GeometryNodeSetMaterial"); smat.inputs["Material"].default_value = wm
+    L(shs.outputs[0], smat.inputs["Geometry"])
+    L(smat.outputs[0], out.inputs[0])
     obj.modifiers.new("GN", "NODES").node_group = ng
-    C.assign(obj, mat_water_s4(name + "Mat", absorb=(0.97, 0.99, 0.985)))
+    C.assign(obj, wm)
     return obj, ng
 
 
