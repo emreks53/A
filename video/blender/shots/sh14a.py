@@ -449,7 +449,7 @@ def build(ctx):
         # v2 reveal looks down-sun onto front-lit heads: AgX washes the sunlit rays to cream -> ease the sun off
         # (the shade is opened by the Film exposure below), back to full only as the Film lift rolls off
         dim = 1 - SUN_DIP * (C.remap(f, 2242, 2256, C.smooth) - C.remap(f, 2296, 2326, C.smooth))
-        sun.data.energy = (C.lerp(3.0, 14.0, g) + SU["sun"] * g2) * dim
+        sun.data.energy = (C.lerp(3.0, 14.0, g) + SU["sun"] * g2) * dim * (1 - 0.15 * (C.remap(f, 2282, 2286, C.smooth) - C.remap(f, 2290, 2294, C.smooth)))
         sun.data.keyframe_insert("energy", frame=f)
         sun.data.color = C.kelvin(C.lerp(C.lerp(3300, 4200, g), SU["kelvin"], g2))
         sun.data.keyframe_insert("color", frame=f)
