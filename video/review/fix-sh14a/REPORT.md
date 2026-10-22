@@ -149,3 +149,31 @@ In r3, several front-lit heads at the left edge bleached to cream "daisies" over
 **Evidence images:**
 - `r2_r3_r4_2290-2310.jpg`: phone-size side-by-side at 2290, 2296, 2300 and 2310.
 - `r2_r3_r4_2296_leftedge.jpg`: left-edge heads at 2296.
+
+## Round 4b: fix 169621321df3e4d2ed1c5aef885ad7ff7eeaf026
+**Change.** The only change is the sun energy. It is multiplied by
+`1 - 0.15*(remap(f,2282,2286) - remap(f,2290,2294))`.
+- This is the director's line with each edge moved in by one key. The director's version was (2280,2286)-(2290,2296). With it, the auto-handle ripple reached 0.206% at 2279 and 0.222% at 2297, over the 0.2% limit.
+- Sun x film is 7.0 at 2290. Values from 2296 on are unchanged: 8.5, 9.1, 12.3, max 14.5.
+
+**Curve dump vs fd913f0, 2240-2393:**
+- Only `Sun:energy` differs.
+- The 15% plateau holds at 2286-2290.
+- The ripple is 0.055% at 2279 and 0.096% at 2297. It is 0.015% or less at 2277 and below, and at 2299 and above.
+
+**Frame identity:**
+- 2320 is bit-identical (AE 0).
+- 2279 is not bit-identical: max difference 2.2/255. Any change in light strength reshuffles the Cycles sampling noise. The farm keeps the fd913f0 chunk 2240-2279, so the 2279→2280 seam stays at noise level.
+
+**50% stills** (`r4b_metrics.txt`, my metric):
+
+| Frames | Lit S | Lit hue | Peach | Cream |
+|---|---|---|---|---|
+| 2286-2290 | .81-.82 (fd913f0: .78-.79) | 38.2 | ≤ .05 | 0 |
+| 2292-2294 | .79 | | ≤ .13 | 0 |
+
+Mean luma rises 41.7 → 52.2 across 2286-2294.
+
+**Re-render:** 2280-2319 only.
+
+**Evidence image:** `r4b_lefthird_2286-2294.jpg` (left third, fd913f0 vs r4b).
