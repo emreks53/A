@@ -27,6 +27,7 @@ T_ORB = T_FIX + 0.52                                    # orbit start (after the
 T_RACK = T_HER - 0.32                                   # far-focus rack start (after the lift): the field reads on 'her'
 T_END = 99.65                                           # orbit settles (dissolve handle)
 Z_TOP = 3.8                                             # m; crane height over the canopy (heads <= 2.2 m)
+SUN_DIP = float(os.environ.get("S2_DIP", 0.5))         # sun lamp eased off over the down-sun reveal 2242-2310
 T_SUNUP = (98.40, 99.30)                                # 'Allah': the light swells into a golden sunrise
 
 
@@ -388,7 +389,7 @@ def build(ctx):
     # ------------------------------------------------------------ light: sky + sun lamp + visible sun disc
     # sunrise swell on 'Allah' (added on top of the slow g ramp; all zero before T_SUNUP)
     # (deeper, more saturated sky; the lens bloom + veil carry the radiance - AgX greys out a brighter sky)
-    SU = dict(sky=-0.1, tint=(1.0, 0.46, 0.09, 1), sun=18.0, kelvin=3200, glow=-6.0, disc=4000.0,
+    SU = dict(sky=-0.1, tint=(1.0, 0.52, 0.16, 1), sun=18.0, kelvin=3200, glow=-6.0, disc=4000.0,
               haze=(0.80, 0.40, 0.12, 1), glare_deg=32.0, core=50.0, core_deg=1.1, wash=2.4, wash_pow=2.5,
               glare_col=(1.0, 0.40, 0.07, 1))
     SU.update(__import__("json").loads(os.environ.get("S2_SU", "{}")))
@@ -438,7 +439,10 @@ def build(ctx):
         tint.inputs[7].keyframe_insert("default_value", frame=f)
         sun.rotation_euler = Euler((math.radians(90 - e), 0, SUN_AZ - math.pi), "XYZ")
         sun.keyframe_insert("rotation_euler", frame=f)
-        sun.data.energy = C.lerp(3.0, 14.0, g) + SU["sun"] * g2
+        # v2 reveal looks down-sun onto front-lit heads: AgX washes the sunlit rays to cream -> ease the sun off
+        # (the shade is opened by the Film exposure below), back to full once the camera turns across the light
+        dim = 1 - SUN_DIP * (C.remap(f, 2242, 2256, C.smooth) - C.remap(f, 2278, 2310, C.smooth))
+        sun.data.energy = (C.lerp(3.0, 14.0, g) + SU["sun"] * g2) * dim
         sun.data.keyframe_insert("energy", frame=f)
         sun.data.color = C.kelvin(C.lerp(C.lerp(3300, 4200, g), SU["kelvin"], g2))
         sun.data.keyframe_insert("color", frame=f)
@@ -551,7 +555,8 @@ def build(ctx):
         sc.view_settings.keyframe_insert("exposure", frame=f)
     # v2: the lift looks down into the shaded canopy -> the operator opens up ~2/3 stop, then rides it back as the
     # bright sky enters (separate Film exposure curve, so the approved view-exposure keys before f2240 stay as they are)
-    for f, fe in ((2242, 1.0), (2258, 1.6), (2268, 1.6), (2300, 1.0)):
+    FILM_LIFT = float(os.environ.get("S2_LIFT", 1.5))
+    for f, fe in ((2242, 1.0), (2258, FILM_LIFT), (2268, FILM_LIFT), (2300, 1.0)):
         sc.cycles.film_exposure = fe
         sc.cycles.keyframe_insert("film_exposure", frame=f)
 
