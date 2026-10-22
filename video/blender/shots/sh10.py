@@ -25,7 +25,7 @@ VOID = (0.006, 0.011, 0.015)
 
 # the field
 S_CELL = 1.7            # cell spacing (170 um fibres)
-R_DOME = 0.95           # footprint radius before the per-cell scale (neighbours press together)
+R_DOME = 1.02           # footprint radius before the per-cell scale (neighbours press together, edge to edge)
 H_DOME = 0.40           # dome height above the sheet
 Z0 = R_CELL * 0.5       # sheet level at the hero cell
 RC = 2600.0             # global curvature of the sheet
@@ -34,6 +34,7 @@ N_VAR = 16              # cell mesh variants
 F_FIELD0 = 1283         # field exists from here (fully hazed inside the fibre before)
 F_ON0 = 1316.0          # the cell we came out of starts glowing -> clearly lit at f1317
 F_WAVE = 1327.0         # the amber front starts rolling from f1327
+LOOK_CT = (1300.0, 1302.0, 1312.0, 1322.0)   # aim at the exit cell: ease in, hold, ease out (frames)
 K_GLOW = 1.5            # emission inside a lit cell (x amplitude 0.6-1.6, glints x2)
 K_SPILL = 0.35          # warm spill on a neighbour's flank per lit neighbour
 
@@ -107,11 +108,15 @@ def build(ctx):
     locs, rots, foc, fst, fdist, fcol, expo, fpow, filmd = [], [], [], [], [], [], [], [], []
     prev = None
 
+    F_HOLD1 = 1301.5                                   # the probe holds still until the film has gone
+
     def warp(t):
         # the membrane resists: just through it (~7 mm off the film) the probe holds completely still
-        # for 1295-1299 (no motion blur: the film fills the lens in focus), then eases back onto its
-        # path by t_exit + 0.45 (cubic Hermite: zero speed out of the hold, path speed at the end)
-        a, h, t1 = t_exit + 0.012, 0.19, t_exit + 0.45
+        # 1295.0-1301.5 (no motion blur: the film fills the lens in focus 1296-1299 and fades out
+        # 1299-1301 while nothing moves), then eases back onto its path by t_exit + 0.6 (cubic
+        # Hermite: zero speed out of the hold, path speed at the end)
+        a, t1 = t_exit + 0.012, t_exit + 0.6
+        h = F_HOLD1 / C.FPS - a
         if t <= a:
             return t
         if t <= a + h:
@@ -120,11 +125,13 @@ def build(ctx):
             return t
         u = (t - a - h) / (t1 - a - h)
         return a + (t1 - a) * (3 * u * u - 2 * u ** 3) + (t1 - a - h) * (u ** 3 - u * u)
-    for tr in times:
+    CT = Vector(hero_c)                                # centre of the cell under the hero (= the path's own target)
+
+    def pose(tr):
         t = warp(tr)
-        # once through the membrane the probe backs off faster (x up to 2.6) so the field is revealed
+        # once out of the hold the probe backs off faster (x up to 3.5) so the field is revealed
         # instead of the camera skimming the hero cell; the boost bleeds off by "hadsiz" (monotonic)
-        boost = 2.5 * C.remap(tr, t_exit + 0.3, t_exit + 0.8, C.smooth) * (1.0 - C.remap(tr, t_exit + 0.8, t_had, C.smooth))
+        boost = 2.5 * C.remap(tr, t_exit + 0.35, t_exit + 0.85, C.smooth) * (1.0 - C.remap(tr, t_exit + 0.85, t_had, C.smooth))
         dist = dist_at(t) * (1.0 + boost)
         # elevation: level inside, rising to look down on the field, then settling low
         el = C.lerp(0.0, 52.0, C.remap(t, t_exit + 0.05, t_exit + 0.75, C.smooth))
@@ -147,32 +154,49 @@ def build(ctx):
             if e < 1.0:
                 p = p.lerp(hero_c + rel / e, w_cl)
         look = tgt + off + Vector((0, 0, dist * C.lerp(0.0, 0.13, C.remap(t, t_bil + 0.4, t_set, C.smooth))))
-        f = (look - p).normalized()
+        # through the reveal the lens stays on the exit cell's centre (one steady pull-back, no nod),
+        # handing back to the path's framing before the first light
+        fr_ = tr * C.FPS
+        w_ct = C.remap(fr_, LOOK_CT[0], LOOK_CT[1], C.smooth) * (1.0 - C.remap(fr_, LOOK_CT[2], LOOK_CT[3], C.smooth))
+        look = look.lerp(CT, w_ct)
+        return t, dist, tgt, p, (look - p).normalized()
+
+    def orient(f, prev):
         rt = f.cross(Vector((0, 0, 1)))
         rt = rt.normalized() if rt.length > 1e-6 else Vector((0, -1, 0))
         up = rt.cross(f).normalized()
         q = Matrix((rt, up, -f)).transposed().to_quaternion()
-        e = q.to_euler("XYZ", prev) if prev else q.to_euler("XYZ")
-        prev = e
-        locs.append(tuple(p)); rots.append(tuple(e))
+        return q.to_euler("XYZ", prev) if prev else q.to_euler("XYZ")
+    # camera keys: whole frames, plus quarter frames through the hold / catch-up so the motion-blur
+    # shutter samples follow warp() exactly (no blending toward the next whole-frame key)
+    cfr = sorted(set(frames) | {f + k / 4 for f in range(1293, 1312) for k in (1, 2, 3)})
+    clocs, crots = [], []
+    for fc in cfr:
+        _, _, _, p, f = pose(fc / C.FPS)
+        prev = orient(f, prev)
+        clocs.append(tuple(p)); crots.append(tuple(prev))
+    for tr in times:
+        t, dist, tgt, p, f = pose(tr)
+        k_ = cfr.index(round(tr * C.FPS))
+        locs.append(clocs[k_]); rots.append(crots[k_])
         # real distance to the film along the view axis (for focus and the film lamp)
         fdh = None
         if t_exit <= t < t_exit + 0.5:
             hit_, loc2, _, _ = dome.ray_cast(p - hero_c, f)
             fdh = (loc2 + hero_c - p).length if hit_ else None
         filmd.append(fdh if fdh else max(0.0, dist - d_wall))
-        # focus: the hero mito, then the membrane film while it fills the lens, then the field
-        if tr < t_exit + 0.03:                             # 1295: still on the interior, seen through the veil
+        # focus: the hero mito, then the membrane film while it fills the lens and fades (1296-1300),
+        # then straight on the exit cell (analytic ray hit), then the dome tops / hero position
+        fr_ = tr * C.FPS
+        if fr_ < 1295.5:                                   # 1295: still on the interior, seen through the veil
             fd = dist - 0.0035
+        elif fr_ < 1300.5:
+            fd = max(0.004, filmd[-1])
         else:
-            # the sarcolemma film just in front of the lens, then (1300-1304) over to the field: the top
-            # of the cell domes along the view axis (only when the camera is above that plane)
-            fz = (p.z - (Z0 + 0.3)) / -f.z if f.z < -0.05 else -1.0
-            fld = min(fz, (tgt - p).length * 1.3) if fz > 0.05 else (tgt - p).length * 1.3
             oc = ray_ellipsoid(p, f, Vector((0, 0, Z0)), Vector((0.52, 0.52, 0.32)))   # the cell under the hero
-            if oc is not None and oc > 0.03:
-                fld = min(fld, oc)
-            fd = C.lerp(max(0.004, filmd[-1]), max(0.05, fld), C.remap(tr * C.FPS, 1299.5, 1304, C.smooth))
+            fz = (p.z - (Z0 + 0.3)) / -f.z if f.z < -0.05 else -1.0
+            fd = oc if oc is not None else (min(fz, (tgt - p).length * 1.3) if fz > 0.05 else (tgt - p).length * 1.3)
+            fd = max(0.05, fd)
         foc.append(fd)
         fst.append(C.lerp(HO["fstop"], 8.0, C.remap(t, t_exit - 0.1, t_exit + 1.0)))
         # haze: interior hand-off -> blue-black tissue haze outside (long enough that the field is
@@ -191,16 +215,14 @@ def build(ctx):
     Mi = M.inverted()
     lloc, lrot = [], []
     prev_l = Euler(HO["cam_euler_ref"])
-    for p_, e_ in zip(locs, rots):
+    for p_, e_ in zip(clocs, crots):
         Wm = Matrix.Translation(Vector(p_)) @ Euler(e_).to_matrix().to_4x4()
         lm = Mi @ Wm
         lloc.append(tuple(lm.translation))
         el_ = lm.to_euler("XYZ", prev_l); prev_l = el_
         lrot.append(tuple(el_))
-    L.bake(cam, frames, "location", lloc)
-    L.bake(cam, frames, "rotation_euler", lrot)
-    # smooth the hand-over between focus targets through the reveal (3-frame mean, 1300-1312)
-    foc = [sum(foc[i - 1:i + 2]) / 3 if 1300 <= f <= 1312 else fv for i, (f, fv) in enumerate(zip(frames, foc))]
+    L.bake(cam, cfr, "location", lloc)
+    L.bake(cam, cfr, "rotation_euler", lrot)
     L.bake_id(cam.data, frames, "dof.focus_distance", foc)
     L.bake_id(cam.data, frames, "dof.aperture_fstop", fst)
     C.handheld(cam, **HO["handheld"])          # same noise as sh09 -> identical f1250 camera matrix
@@ -236,7 +258,7 @@ def build(ctx):
     for o in inter["objects"]:
         L.bake(o, [frames[0], f_in0], "hide_render", [0.0, 1.0], interp="CONSTANT")
     # the dome film falls away (fades to transparent) over 7 frames, then stops rendering
-    fade_group_animate([dome], frames, f_in0 + 1, 3, "S7_FadeDome", ease=True)
+    fade_group_animate([dome], frames, 1299.3, 1.7, "S7_FadeDome", ease=False)   # 1299: 1, 1300: 0.59, 1301: 0
     # the film right at the lens (1295, ~6 mm) is a thin veil over the interior, opaque from 1297
     L.bake_id(m_mem.node_tree, frames, 'nodes["veil"].outputs[0].default_value',
               [{1295: 0.5, 1296: 0.85}.get(f, 1.0) for f in frames], interp="CONSTANT")
@@ -354,7 +376,7 @@ def field_layout(frames, locs, rots, fdist, t_had):
     ii, jj = np.meshgrid(np.arange(-N, N + 1), np.arange(-N, N + 1), indexing="ij")
     ii = ii.ravel(); jj = jj.ravel()
     P = ii[:, None] * a1[None] + jj[:, None] * a2[None]
-    P = P + rng.uniform(-1, 1, P.shape) * S_CELL * 0.2
+    P = P + rng.uniform(-1, 1, P.shape) * S_CELL * 0.15
     R7 = rng.uniform(0, 1, (len(P), 7)).astype(np.float32)
     org = (ii == 0) & (jj == 0)
     P[org] = 0.0
@@ -407,7 +429,7 @@ def field_layout(frames, locs, rots, fdist, t_had):
 
     # regional size variation (patches of larger / smaller cells) breaks the lattice regularity
     for i in range(n):
-        k_ = 1.0 + 0.2 * noise.noise(Vector((P[i, 0] / 22.0, P[i, 1] / 22.0, 9.1)))
+        k_ = 1.0 + 0.12 * noise.noise(Vector((P[i, 0] / 22.0, P[i, 1] / 22.0, 9.1)))
         sr[i] *= k_; sh[i] *= k_
 
     # clearance: no cell may come within 8 cm of the lens (the camera skims the field at 1295-1320)
@@ -651,10 +673,14 @@ def mat_cells():
     top = B.mapr(oz, 0.12, 0.3)
     nucm = B.m("MULTIPLY", B.mapr(dn, 0.4, 1.15, 1.0, 0.0), top)
     nucl = B.m("MULTIPLY", B.mapr(dn, 0.0, 0.3, 1.0, 0.0), top)          # nucleolus
+    # per-cell offset of the cytoplasm textures (no two cells share the same mottling)
+    cvo = B.n("ShaderNodeCombineXYZ"); B.ln(B.m("MULTIPLY", rnd, 37.0), cvo.inputs[0]); B.ln(B.m("MULTIPLY", rnd, 23.0), cvo.inputs[1])
+    ovec = B.n("ShaderNodeVectorMath"); ovec.operation = "ADD"; B.ln(tc.outputs["Object"], ovec.inputs[0]); B.ln(cvo.outputs[0], ovec.inputs[1])
     gv = B.n("ShaderNodeTexVoronoi", **{"Scale": 30.0, "Randomness": 1.0}); gv.voronoi_dimensions = "3D"
-    B.ln(tc.outputs["Object"], gv.inputs["Vector"])
+    B.ln(ovec.outputs[0], gv.inputs["Vector"])
     gran = B.m("MULTIPLY", B.mapr(gv.outputs["Distance"], 0.06, 0.2, 1.0, 0.0), B.m("GREATER_THAN", B.sep(gv.outputs["Color"])[0], 0.35))
-    fn = B.n("ShaderNodeTexNoise", **{"Scale": 9.0, "Detail": 3.0}); B.ln(tc.outputs["Object"], fn.inputs["Vector"])
+    fn = B.n("ShaderNodeTexNoise", **{"Scale": 9.0, "Detail": 3.0}); B.ln(ovec.outputs[0], fn.inputs["Vector"])
+    B.ln(B.m("MULTIPLY_ADD", rnd, 6.0, 6.0), fn.inputs["Scale"])                # 6-12: coarser / finer mottling per cell
     lw = B.n("ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.35
     facing = lw.outputs["Facing"]
     rim = B.m("POWER", facing, 2.0)
@@ -686,6 +712,8 @@ def mat_cells():
     body = B.m("MULTIPLY", body, B.m("MULTIPLY_ADD", gran, 0.3, B.m("MULTIPLY_ADD", fn.outputs["Fac"], 0.9, 0.55)))
     glow = B.m("MULTIPLY", B.m("MULTIPLY", on, body), K_GLOW)
     glow = B.m("MULTIPLY_ADD", B.m("MULTIPLY", on, rim), 1.1, glow)          # translucent rim lit from inside
+    mrim = B.mapr(facing, 0.72, 0.95)                                            # the membrane itself, edge-on
+    glow = B.m("MULTIPLY_ADD", B.m("MULTIPLY", on, mrim), 1.6, glow)
     # spill from lit neighbours onto the flank facing them (lower flank more)
     geo = B.n("ShaderNodeNewGeometry")
     gx, gy, gz = B.sep(geo.outputs["Normal"])
