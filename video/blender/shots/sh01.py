@@ -27,6 +27,118 @@ def cam_dir(yaw, pitch):
     return (Euler((math.radians(90 + pitch), 0, math.radians(yaw)), "XYZ").to_matrix() @ Vector((0, 0, -1))).normalized()
 
 
+def grass_blade(name, rng, length, width, lean, droop, twist, dew=0, tip_drop=0.0, col=None, mats=(), seg=22,
+                dew_scale=1.0):
+    """sh01 copy of lib_s1.grass_blade (same geometry and rng draws; lib_s1 is shared with other shots) whose dew
+    beads rest ON the blade: the lib version sinks them through the blade sheet, and the blade inside a bead
+    renders as a dark core (beads read as black balls / insects)."""
+    import bmesh
+    from mathutils.bvhtree import BVHTree
+    bm = bmesh.new()
+    uvl = bm.loops.layers.uv.new("UVMap")
+    pts = [Vector((0, 0, 0))]
+    ds = length / seg
+    angs = []
+    for i in range(seg + 1):
+        s = i / seg
+        a = lean + droop * s ** 1.6
+        angs.append(a)
+        if i:
+            pa = angs[i - 1]
+            pts.append(pts[-1] + Vector((math.sin(pa), 0, math.cos(pa))) * ds)
+    ph = rng.uniform(0, 6.28)
+    for i, p in enumerate(pts):
+        s = i / seg
+        p.y += 0.04 * length * math.sin(ph + s * 3.0) * s
+    rows = []
+    across = (-1.0, -0.5, 0.0, 0.5, 1.0)
+    for i, p in enumerate(pts):
+        s = i / seg
+        t = (pts[min(seg, i + 1)] - pts[max(0, i - 1)]).normalized()
+        lat = Vector((0, 1, 0))
+        lat = (lat - t * lat.dot(t)).normalized()
+        q = Quaternion(t, twist * s)
+        lat = q @ lat
+        nrm = t.cross(lat).normalized()
+        if nrm.z < 0:
+            nrm = -nrm
+        w = width * min(1.0, (1 - s) / 0.28) ** 0.85 * (0.75 + 0.25 * min(1.0, s / 0.12))
+        if i == seg:
+            w = width * 0.02
+        row = []
+        for v in across:
+            fold = 0.22 * abs(v) * w
+            row.append(bm.verts.new(p + lat * (v * w) + nrm * fold))
+        rows.append((row, p, t, lat, nrm, w))
+    for i in range(seg):
+        for k in range(len(across) - 1):
+            f = bm.faces.new((rows[i][0][k], rows[i][0][k + 1], rows[i + 1][0][k + 1], rows[i + 1][0][k]))
+            f.material_index = 0
+            f.smooth = True
+            for loop, (uu, vv) in zip(f.loops, ((i / seg, k / 4), (i / seg, (k + 1) / 4), ((i + 1) / seg, (k + 1) / 4),
+                                                 ((i + 1) / seg, k / 4))):
+                loop[uvl].uv = (uu, vv)
+    blade_bvh = BVHTree.FromBMesh(bm) if dew else None
+    sph = bmesh.new(); bmesh.ops.create_icosphere(sph, subdivisions=2, radius=1.0)
+    unit = [v.co.copy() for v in sph.verts]; sph.free()
+    for _ in range(dew):
+        s = rng.uniform(0.18, 0.93)
+        i = int(s * seg)
+        row, p, t, lat, nrm, w = rows[i]
+        v = rng.uniform(-0.55, 0.55)
+        r = (rng.random() ** 2.2) * 0.0011 * dew_scale + 0.00012
+        r = min(r, w * 0.9)
+        radii = (r, r * 1.05, r * 0.78)
+        rot = Matrix((lat, t, nrm)).transposed()
+        c = p + lat * (v * w) + nrm * (0.22 * abs(v) * w + radii[2] + 0.00001)
+        # lift until no part of the bead is below the (keeled, curving) blade sheet (+10 um)
+        low = 1.0
+        for d in unit:
+            qv = rot @ Vector((d.x * radii[0], d.y * radii[1], d.z * radii[2])) + c
+            hit, hn, _, _ = blade_bvh.find_nearest(qv)
+            if hit is None:
+                continue
+            sd = (qv - hit).dot(hn if hn.dot(nrm) >= 0 else -hn)
+            low = min(low, sd)
+        if low < 0.00001:
+            c = c + nrm * (0.00001 - low)
+        L.ellipsoid(bm, c, radii, rot, subdiv=2, mat_index=1)
+    if tip_drop > 0:
+        row, p, t, lat, nrm, w = rows[-1]
+        c = p + Vector((0, 0, -tip_drop * 0.8)) + t * tip_drop * 0.2
+        L.ellipsoid(bm, c, (tip_drop, tip_drop, tip_drop * 1.08), subdiv=3, mat_index=1)
+    o = L.bm_to_obj(name, bm, mats, smooth=True, col=col)
+    return o, [r[1] for r in rows]
+
+
+def grass_translucency_through_drops(m):
+    """lib_s1.mat_grass gates translucency by Is Camera Ray only, so a blade seen THROUGH a dew bead renders opaque
+    and dark. sh01 copy: max(Is Camera Ray, Is Transmission Ray out of grass dew) * trans."""
+    nt = m.node_tree
+    for n in nt.nodes:
+        if n.bl_idname == "ShaderNodeMath" and n.operation == "MULTIPLY" and n.inputs[0].links and \
+                n.inputs[0].links[0].from_node.bl_idname == "ShaderNodeLightPath" and \
+                n.inputs[0].links[0].from_socket.name == "Is Camera Ray":
+            lp = n.inputs[0].links[0].from_node
+            # only rays that went in and out of a drop (transmission depth >= 2); the lens diffusion filter's
+            # single refraction (depth 1) keeps the old opaque look, so the grade of the shot is unchanged
+            dd = nt.nodes.new("ShaderNodeMath"); dd.operation = "GREATER_THAN"; dd.inputs[1].default_value = 1.5
+            nt.links.new(lp.outputs["Transmission Depth"], dd.inputs[0])
+            # ... and only behind GRASS dew: its refraction is very slightly rough (non-singular), while the hero drop
+            # and the leaf dew are perfectly smooth (singular) and keep their approved look
+            ns = nt.nodes.new("ShaderNodeMath"); ns.operation = "SUBTRACT"; ns.inputs[0].default_value = 1.0
+            nt.links.new(lp.outputs["Is Singular Ray"], ns.inputs[1])
+            t0 = nt.nodes.new("ShaderNodeMath"); t0.operation = "MULTIPLY"
+            nt.links.new(lp.outputs["Is Transmission Ray"], t0.inputs[0]); nt.links.new(dd.outputs[0], t0.inputs[1])
+            tt = nt.nodes.new("ShaderNodeMath"); tt.operation = "MULTIPLY"
+            nt.links.new(t0.outputs[0], tt.inputs[0]); nt.links.new(ns.outputs[0], tt.inputs[1])
+            mx = nt.nodes.new("ShaderNodeMath"); mx.operation = "MAXIMUM"
+            nt.links.new(lp.outputs["Is Camera Ray"], mx.inputs[0]); nt.links.new(tt.outputs[0], mx.inputs[1])
+            nt.links.new(mx.outputs[0], n.inputs[0])
+            return True
+    raise RuntimeError("translucency gate not found in " + m.name)
+
+
 def build(ctx):
     sc = bpy.context.scene
     rng = random.Random(101)
@@ -168,18 +280,25 @@ def build(ctx):
     m_grass = L.mat_grass("GrassBlade")
     m_grass_dry = L.mat_grass("GrassBladeDry", dry=0.35)
     m_dew = L.mat_dew()
+    # grass/stalk dew only (LeafDew, HeroDrop and TipBead use "HeroDrop"): an imperceptible roughness makes its
+    # refraction non-singular, which is how the grass shader recognises rays coming out of grass dew
+    m_dew.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.02
     m_seed = L.mat_grass("SeedHead", hue_shift=-0.02, dry=0.6)
+    for m_ in (m_grass, m_grass_dry, m_seed):
+        grass_translucency_through_drops(m_)
+    # (the hero blade's material is patched too, below)
     hero_rng = random.Random(5)
     # find the blade length that puts its root just below the soil when the tip is at P_TIP
     hb_len = 0.15
     for _ in range(3):
-        tmp, tp = L.grass_blade("tmp", random.Random(5), length=hb_len, width=0.0036, lean=0.28, droop=2.25, twist=1.35,
+        tmp, tp = grass_blade("tmp", random.Random(5), length=hb_len, width=0.0036, lean=0.28, droop=2.25, twist=1.35,
                                 dew=0, seg=40)
         rise = tp[-1].z
         bpy.data.objects.remove(tmp)
         hb_len *= (P_TIP.z + 0.004) / max(0.01, rise) if rise > 0 else 1.2
     m_hero = L.mat_grass("HeroGrass", hue_shift=0.01, fresh_tip=True, trans=0.62, vein_bump=0.6, rough=0.3, spec=0.32, sat=1.35, trans_tint=(1.1, 2.3, 0.35))
-    hb, hpts = L.grass_blade("HeroBlade", hero_rng, length=hb_len, width=0.0045, lean=0.28, droop=2.25, twist=1.35,
+    grass_translucency_through_drops(m_hero)
+    hb, hpts = grass_blade("HeroBlade", hero_rng, length=hb_len, width=0.0045, lean=0.28, droop=2.25, twist=1.35,
                              dew=9, tip_drop=0.0, mats=(m_hero, m_dew), seg=40, dew_scale=0.9)
     tip_local = hpts[-1]
     # rotate the blade so it arcs from the back-left toward the drop, then put its tip at P_TIP
@@ -408,7 +527,7 @@ def build(ctx):
     variants = []
     for i in range(22):
         length = vrng.uniform(0.07, 0.34)
-        o, pts = L.grass_blade(f"g{i:02d}", vrng, length=length, width=vrng.uniform(0.0022, 0.0048),
+        o, pts = grass_blade(f"g{i:02d}", vrng, length=length, width=vrng.uniform(0.0022, 0.0048),
                                lean=vrng.uniform(0.03, 0.45), droop=vrng.uniform(0.15, 1.7), twist=vrng.uniform(-1.2, 1.2),
                                dew=vrng.randint(5, 16) * (0 if os.environ.get("S1_NODEW") == "1" else 1), tip_drop=(vrng.uniform(0.0005, 0.0012) if vrng.random() < 0.5 else 0.0),
                                col=inst, mats=((m_grass if vrng.random() < 0.8 else m_grass_dry), m_dew), seg=20)
