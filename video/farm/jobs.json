@@ -818,6 +818,15 @@
    "from": 359,
    "to": 389,
    "note": "final round: clear water jet + real pomegranate (fix c25357a); jobs start on their first frame"
+  },
+  {
+   "node": "b71",
+   "branch": "render-fix-sh03",
+   "ref": "c25357a2fddcc14994f0ff2180c817d94d9ba1eb",
+   "shot": "sh03",
+   "from": 327,
+   "to": 358,
+   "note": "final round re-run of b69 (container restart): clear water jet + real pomegranate (fix c25357a); starts on 327 (bounce switch 326|327)"
   }
  ]
 }
