@@ -1223,6 +1223,33 @@
    "from": 2000,
    "to": 2026,
    "note": "final round 2: ground and haze out to the horizon, no straight line at the hedge base (fix 43ab22a on bd990b2); keyed in 1944-1952, 1943 and earlier kept"
+  },
+  {
+   "node": "b116",
+   "branch": "render-fix-sh12",
+   "ref": "d1e001f6710fe42e148924f525a4814332580d9a",
+   "shot": "sh12",
+   "from": 1526,
+   "to": 1537,
+   "note": "final round 3: sea reads as water from the first frame, glint swells on the link_sea tick (fix d1e001f on 9273247); 1560+ bit-identical, kept"
+  },
+  {
+   "node": "b117",
+   "branch": "render-fix-sh12",
+   "ref": "d1e001f6710fe42e148924f525a4814332580d9a",
+   "shot": "sh12",
+   "from": 1538,
+   "to": 1548,
+   "note": "final round 3: sea reads as water from the first frame, glint swells on the link_sea tick (fix d1e001f on 9273247); 1560+ bit-identical, kept"
+  },
+  {
+   "node": "b118",
+   "branch": "render-fix-sh12",
+   "ref": "d1e001f6710fe42e148924f525a4814332580d9a",
+   "shot": "sh12",
+   "from": 1549,
+   "to": 1559,
+   "note": "final round 3: sea reads as water from the first frame, glint swells on the link_sea tick (fix d1e001f on 9273247); 1560+ bit-identical, kept"
   }
  ]
 }
