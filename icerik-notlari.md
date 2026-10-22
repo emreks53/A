@@ -85,3 +85,4 @@ Portföy toplam değeri ve net aktif değer gibi rakamlar **son faaliyet raporun
 > alt yarısında kök zemin alt bilgi rengine (#16191d) döner (`araclar/degisiklikler/2026-10-22d-alt-kaydirma.py`).
 > iPhone'da betik işe yaramadı; yerine kalıcı CSS: kök zemin koyu, belgenin üstünde açık şerit (`2026-10-22e-alt-zemin-css.py`).
 > Yine olmadı: tema rengi (theme-color) de sayfanın alt yarısında koyuya döner (`2026-10-22f-tema-rengi.py`).
+> Kullanıcı vazgeçti; üç deneme geri alındı, sayfalar önceki hâlinde (`2026-10-22g-alt-zemin-geri.py`).
