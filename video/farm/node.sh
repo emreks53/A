@@ -26,18 +26,19 @@ for j in d['jobs']:
   pending=0
   for line in "${MY[@]}"; do
     read BR SHOT F T REF <<< "$line"
-    MARK="$VIDEO_OUT/node_done/${SHOT}_${F}_${T}"
+    RK=${REF//\//_}   # sources, frames (render.sh JOB_REF) and done-marker are keyed by the job's ref
+    MARK="$VIDEO_OUT/node_done/${SHOT}_${F}_${T}@$RK"
     [ -e "$MARK" ] && continue
     pending=1
     echo "[node $NODE] job $BR $SHOT $F-$T"
     # job sources are exported to a scratch dir: the node's working tree is never modified
-    JOBSRC="$VIDEO_OUT/jobsrc/${REF//\//_}"
+    JOBSRC="$VIDEO_OUT/jobsrc/$RK"
     if [ ! -f "$JOBSRC/video/blender/common.py" ]; then
       git fetch -q origin "$BR" || { echo "[node $NODE] fetch failed $BR"; sleep 60; continue; }
       rm -rf "$JOBSRC" && mkdir -p "$JOBSRC" && git archive "$REF" video/blender video/timing video/audio | tar -x -C "$JOBSRC" \
         || { echo "[node $NODE] export failed $REF"; sleep 60; continue; }
     fi
-    if SHOTS_DIR="$JOBSRC/video/blender" bash video/farm/render.sh "$SHOT" "$F" "$T"; then touch "$MARK"; echo "[node $NODE] JOB DONE $SHOT $F-$T"; else echo "[node $NODE] JOB FAILED $SHOT $F-$T"; FAILS=$((FAILS+1))
+    if JOB_REF="$RK" SHOTS_DIR="$JOBSRC/video/blender" bash video/farm/render.sh "$SHOT" "$F" "$T"; then touch "$MARK"; echo "[node $NODE] JOB DONE $SHOT $F-$T"; else echo "[node $NODE] JOB FAILED $SHOT $F-$T"; FAILS=$((FAILS+1))
       [ "$ONESHOT" = 1 ] && [ "$FAILS" -ge 2 ] && { echo "[node $NODE] ONESHOT FAILED"; exit 1; }
       sleep 60; fi
   done
