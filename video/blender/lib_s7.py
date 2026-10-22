@@ -1406,7 +1406,7 @@ def upgrade_interior(inter, wave):
             n_.inputs["Base Color"].default_value = (*LOOK["cr_hero"], 1)
             n_.inputs["Alpha"].default_value = 0.95
         elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
-            n_.inputs["To Min"].default_value = 0.1; n_.inputs["To Max"].default_value = 2.6    # hero variants (10-12)
+            n_.inputs["To Min"].default_value = 0.1; n_.inputs["To Max"].default_value = 1.4
     new, cr_cache, in_cache = [], {}, {}
     for o in list(inter["objects"]):
         if o.type != "MESH":
@@ -1667,7 +1667,7 @@ def mat_mito_outer_s9(face_alpha=None, name="MitoOuterS9"):
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.3
     pw = _n(nt, "ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 1.6
     nt.links.new(lw.outputs["Facing"], pw.inputs[0])
-    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = face_alpha; al.inputs["To Max"].default_value = 0.92
+    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = face_alpha; al.inputs["To Max"].default_value = 0.75
     nt.links.new(pw.outputs[0], al.inputs["Value"]); nt.links.new(al.outputs[0], p.inputs["Alpha"])
     tc = _n(nt, "ShaderNodeTexCoord")
     nz = _n(nt, "ShaderNodeTexNoise", **{"Scale": 420.0, "Detail": 3.0})
@@ -1688,7 +1688,7 @@ def mat_mito_inner_s9(emit, name, rim=0.0):
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.25
     pw = _n(nt, "ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 2.2
     nt.links.new(lw.outputs["Facing"], pw.inputs[0])
-    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.05; al.inputs["To Max"].default_value = 0.7
+    al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.05; al.inputs["To Max"].default_value = 0.45
     nt.links.new(pw.outputs[0], al.inputs["Value"]); nt.links.new(al.outputs[0], p.inputs["Alpha"])
     if rim:                                               # a faint inner-membrane line inside the outer rim
         p.inputs["Emission Color"].default_value = (*LOOK["irim"], 1)
