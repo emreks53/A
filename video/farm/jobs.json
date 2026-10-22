@@ -1079,6 +1079,78 @@
    "from": 120,
    "to": 131,
    "note": "final round 2: LeafDew beads rest on the leaf, residual bead clings to the blade tip (fix d22d09c on 265890c); whole shot"
+  },
+  {
+   "node": "b100",
+   "branch": "render-fix-sh03",
+   "ref": "500a9c5db9affa686832e8ef67bd2c73fb11da7e",
+   "shot": "sh03",
+   "from": 225,
+   "to": 244,
+   "note": "final round 2: water inside the glass, no bounce switch, sill +3mm shape key, curtain subdiv from 262, plate sub-frame slide (fix 500a9c5); whole shot"
+  },
+  {
+   "node": "b101",
+   "branch": "render-fix-sh03",
+   "ref": "500a9c5db9affa686832e8ef67bd2c73fb11da7e",
+   "shot": "sh03",
+   "from": 245,
+   "to": 265,
+   "note": "final round 2: water inside the glass, no bounce switch, sill +3mm shape key, curtain subdiv from 262, plate sub-frame slide (fix 500a9c5); whole shot"
+  },
+  {
+   "node": "b102",
+   "branch": "render-fix-sh03",
+   "ref": "500a9c5db9affa686832e8ef67bd2c73fb11da7e",
+   "shot": "sh03",
+   "from": 266,
+   "to": 286,
+   "note": "final round 2: water inside the glass, no bounce switch, sill +3mm shape key, curtain subdiv from 262, plate sub-frame slide (fix 500a9c5); whole shot"
+  },
+  {
+   "node": "b103",
+   "branch": "render-fix-sh03",
+   "ref": "500a9c5db9affa686832e8ef67bd2c73fb11da7e",
+   "shot": "sh03",
+   "from": 287,
+   "to": 307,
+   "note": "final round 2: water inside the glass, no bounce switch, sill +3mm shape key, curtain subdiv from 262, plate sub-frame slide (fix 500a9c5); whole shot"
+  },
+  {
+   "node": "b104",
+   "branch": "render-fix-sh03",
+   "ref": "500a9c5db9affa686832e8ef67bd2c73fb11da7e",
+   "shot": "sh03",
+   "from": 308,
+   "to": 328,
+   "note": "final round 2: water inside the glass, no bounce switch, sill +3mm shape key, curtain subdiv from 262, plate sub-frame slide (fix 500a9c5); whole shot"
+  },
+  {
+   "node": "b105",
+   "branch": "render-fix-sh03",
+   "ref": "500a9c5db9affa686832e8ef67bd2c73fb11da7e",
+   "shot": "sh03",
+   "from": 329,
+   "to": 349,
+   "note": "final round 2: water inside the glass, no bounce switch, sill +3mm shape key, curtain subdiv from 262, plate sub-frame slide (fix 500a9c5); whole shot"
+  },
+  {
+   "node": "b106",
+   "branch": "render-fix-sh03",
+   "ref": "500a9c5db9affa686832e8ef67bd2c73fb11da7e",
+   "shot": "sh03",
+   "from": 350,
+   "to": 369,
+   "note": "final round 2: water inside the glass, no bounce switch, sill +3mm shape key, curtain subdiv from 262, plate sub-frame slide (fix 500a9c5); whole shot"
+  },
+  {
+   "node": "b107",
+   "branch": "render-fix-sh03",
+   "ref": "500a9c5db9affa686832e8ef67bd2c73fb11da7e",
+   "shot": "sh03",
+   "from": 370,
+   "to": 389,
+   "note": "final round 2: water inside the glass, no bounce switch, sill +3mm shape key, curtain subdiv from 262, plate sub-frame slide (fix 500a9c5); whole shot"
   }
  ]
 }
