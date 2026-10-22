@@ -1034,6 +1034,51 @@
    "from": 2360,
    "to": 2393,
    "note": "final round 4: no daisy heads under 'her seye sefkat eden', warm sky; 'Allah' keys locked = 337ae85 (fix fd913f0); 2198-2239 unchanged"
+  },
+  {
+   "node": "b95",
+   "branch": "render-fix-sh01",
+   "ref": "d22d09cfb3b8e4c4dce47cec3af5052a19762390",
+   "shot": "sh01",
+   "from": 0,
+   "to": 29,
+   "note": "final round 2: LeafDew beads rest on the leaf, residual bead clings to the blade tip (fix d22d09c on 265890c); whole shot"
+  },
+  {
+   "node": "b96",
+   "branch": "render-fix-sh01",
+   "ref": "d22d09cfb3b8e4c4dce47cec3af5052a19762390",
+   "shot": "sh01",
+   "from": 30,
+   "to": 59,
+   "note": "final round 2: LeafDew beads rest on the leaf, residual bead clings to the blade tip (fix d22d09c on 265890c); whole shot"
+  },
+  {
+   "node": "b97",
+   "branch": "render-fix-sh01",
+   "ref": "d22d09cfb3b8e4c4dce47cec3af5052a19762390",
+   "shot": "sh01",
+   "from": 60,
+   "to": 89,
+   "note": "final round 2: LeafDew beads rest on the leaf, residual bead clings to the blade tip (fix d22d09c on 265890c); whole shot"
+  },
+  {
+   "node": "b98",
+   "branch": "render-fix-sh01",
+   "ref": "d22d09cfb3b8e4c4dce47cec3af5052a19762390",
+   "shot": "sh01",
+   "from": 90,
+   "to": 119,
+   "note": "final round 2: LeafDew beads rest on the leaf, residual bead clings to the blade tip (fix d22d09c on 265890c); whole shot"
+  },
+  {
+   "node": "b99",
+   "branch": "render-fix-sh01",
+   "ref": "d22d09cfb3b8e4c4dce47cec3af5052a19762390",
+   "shot": "sh01",
+   "from": 120,
+   "to": 131,
+   "note": "final round 2: LeafDew beads rest on the leaf, residual bead clings to the blade tip (fix d22d09c on 265890c); whole shot"
   }
  ]
 }
