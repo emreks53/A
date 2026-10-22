@@ -1375,7 +1375,8 @@ def build_fibre_interior(root_name, matrix, fibre_c=(0.0105, 0.02), fibre_r=0.18
 # inner boundary membrane, folded 3-D cristae) and soft translucent tubular T-tubules.
 
 
-MITO_VOL = dict(emit=3.5, emit_small=140.0, absorb=80.0, rim=0.40)   # hero / smaller chain bodies
+MITO_VOL = dict(emit=7.0, emit_small=55.0, absorb=80.0, rim=0.40, rim_hero=3.0, face_chain=0.42, cr_chain=2.2,
+                emit_fg=4.0)   # hero / smaller chain bodies
 
 
 # lib_s7 puts heroMito1/2 (and a sliver of fgMito0) inside myofibrils (the old alpha decals glowed through the
@@ -1398,7 +1399,9 @@ def upgrade_interior(inter, wave):
         elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
             n_.inputs["To Min"].default_value = 0.0; n_.inputs["To Max"].default_value = 0.05
     m_in = mat_mito_inner_s9(MITO_VOL["emit_small"], "MitoInnerS9")        # the chains
-    m_in_hero = mat_mito_inner_s9(MITO_VOL["emit"], "MitoInnerS9Hero", rim=2.0 * MITO_VOL["rim"])
+    m_in_hero = mat_mito_inner_s9(MITO_VOL["emit"], "MitoInnerS9Hero", rim=MITO_VOL["rim_hero"] * MITO_VOL["rim"])
+    m_in_fg = mat_mito_inner_s9(MITO_VOL["emit_fg"], "MitoInnerS9Fg")      # near pair: teal veil, dim amber, unkeyed
+    m_out_ch = mat_mito_outer_s9(MITO_VOL["face_chain"], "MitoOuterS9Ch")  # chains: the teal film must read over the glow
     # hero folds: darker ridges seen against the glowing matrix (inner membranes), not bright slashes
     m_cr_hero = m_cr.copy(); m_cr_hero.name = "CristaeS9Hero"
     _shelf_shading(m_cr_hero)
@@ -1408,6 +1411,9 @@ def upgrade_interior(inter, wave):
             n_.inputs["Alpha"].default_value = 0.95
         elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
             n_.inputs["To Min"].default_value = 0.3; n_.inputs["To Max"].default_value = 2.8
+    for n_ in m_cr.node_tree.nodes:                  # chains: dim folds, never bright "bread score" slits
+        if n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
+            n_.inputs["To Max"].default_value = MITO_VOL["cr_chain"]
     new, cr_cache, in_cache = [], {}, {}
     for o in list(inter["objects"]):
         if o.type != "MESH":
@@ -1419,16 +1425,16 @@ def upgrade_interior(inter, wave):
                 hero_ = v == 10
                 env = mito_bean(nm + "_s9", length=l_ / 1e4 * (HERO_SHAPE["length"] if hero_ else 1.0), width=w_ / 1e4,
                                 seed=v, bend=HERO_SHAPE["bend"] if hero_ else None)
-                env.materials.append(m_out)
+                env.materials.append(m_out if v >= 10 else m_out_ch)
                 in_cache[nm] = (env, inner_shell(env, m_in_hero if v >= 10 else m_in, gap=0.11 if hero_ else 0.075))
             o.data = in_cache[nm][0]
             inner = in_cache[nm][1]
             if o.name in HERO_NUDGE:                 # lib places these two inside myofibrils: move into the gap
                 o.location += Vector(HERO_NUDGE[o.name])
-            if o.name.startswith("fgMito"):          # the out-of-focus foreground pair: deep amber like the hero
+            if o.name.startswith("fgMito"):          # the out-of-focus foreground pair: teal veil, dim amber
                 if nm + "_fg" not in in_cache:
                     in_cache[nm + "_fg"] = inner.copy()
-                    in_cache[nm + "_fg"].materials[0] = m_in_hero
+                    in_cache[nm + "_fg"].materials[0] = m_in_fg
                     in_cache[nm + "_fgenv"] = o.data.copy()
                     in_cache[nm + "_fgenv"].materials[0] = m_out_fg
                 inner = in_cache[nm + "_fg"]
@@ -1570,11 +1576,11 @@ MITO_LOOKS = {
 MITO_LOOK = os.environ.get("S7_LOOK", "C")         # director round 6 pick: C, teal glass over amber
 LOOK = MITO_LOOKS[MITO_LOOK]
 HERO_SHAPE = dict(length=0.82, bend=0.09)    # round 5: the hero ~2.8:1, gentler bend (env + cristae)
-CRISTAE_HERO = dict(rad=0.88, root_depth=0.45, yspan=0.37, amp=0.012, cup=0.008, tilt=2.0, bow=0.012, reach=(0.40, 0.85),
-                    reach_end=0.42, th=0.00042, pack=2.15, wave=0.03, periods=(1.0, 2.0), fork=0.03, fork_p=0.4)
+CRISTAE_HERO = dict(rad=0.88, root_depth=0.45, yspan=0.37, amp=0.012, cup=0.008, tilt=2.0, bow=0.012, reach=(0.75, 0.95),
+                    reach_end=0.70, th=0.00070, pack=1.50, gap=1.35, wave=0.03, periods=(1.0, 2.0), fork=0.03, fork_p=0.4)
 # round 6: folded membranes, not slash marks - rounded tongues rooted on the inner membrane, alternating
 # sides, sinuous along their length (1-2 periods), irregular reach (40-85 %) and spacing, some bent
-# or Y-forked at the tip, thick enough to shade; every neighbour pair keeps disjoint y-extents  # folds rooted on the inner membrane, ~9 alternating
+# or Y-forked at the tip, thick enough to shade (6c: longer, thicker, denser; natural crossings allowed)
 CRISTAE = dict(rad=0.64, yspan=0.24, amp=0.016, cup=0.012, tilt=3.0, bow=0.008, reach=(0.34, 0.68), reach_end=0.42)
 
 
@@ -1595,7 +1601,7 @@ def cristae_folded(name, length, width, seed=0, K=None, bend=None):
     ext = (1.45 * amp + cup + bow + math.tan(math.radians(K["tilt"])) * R0 * BEAN["depth"] + th
            + wav + fk)                                           # half y-extent (every term bounded)
     span = 2 * K["yspan"] * length
-    gmin = 2.15 * ext                                            # neighbours' y-extents never touch
+    gmin = K.get("gap", 2.15) * ext                              # neighbours' spacing (natural crossings allowed)
     n = max(3, int(span / (K.get("pack", 2.6) * ext)) + 1)
     w_ = [rng.uniform(0.2, 1.0) for _ in range(n - 1)]
     slack = max(0.0, span - (n - 1) * gmin)
