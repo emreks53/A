@@ -161,6 +161,10 @@ def build(ctx):
         oc.depth = 200
         mods = [oc]
         if chop:
+            # the 0.23 m FFT grid read as flat facets (and the chop below aliased on it): smooth it to
+            # ~6 cm before the short wind waves are displaced, so the near reflections curve like water
+            ss = o.modifiers.new("Smooth", "SUBSURF")
+            ss.levels = 0; ss.render_levels = 2; ss.quality = 1
             ch = o.modifiers.new("Chop", "OCEAN")          # short wind waves riding on the swell
             ch.geometry_mode = "DISPLACE"
             ch.resolution = 11; ch.viewport_resolution = 4
@@ -229,6 +233,38 @@ def build(ctx):
             nt.links.new(stx.outputs[0], bpx.inputs["Strength"])
             nt.links.new(nzx.outputs[0], bpx.inputs["Height"]); nt.links.new(cur, bpx.inputs["Normal"])
             cur = bpx.outputs[0]
+        if name == "sea":
+            # pre-dawn: without the sun the sub-pixel ripple octaves above only blur the sky mirror into a
+            # matte sheen, so the near water uses smooth swell ripples + resolvable capillaries instead and
+            # crossfades (keyed) to the glitter ripples just before the rim breaks the horizon
+            ocd = tc.outputs["Object"]
+            pre = None
+            for sc_, an_, dd_, st_, fade in ((3.0, (1.0, 2.5, 1.0), 0.03, 0.15, False),
+                                             (28.0, (1.0, 3.0, 1.0), 0.004, 0.3, True)):
+                mpx = nt.nodes.new("ShaderNodeMapping"); mpx.inputs["Scale"].default_value = an_
+                nt.links.new(ocd, mpx.inputs[0])
+                nzx = nt.nodes.new("ShaderNodeTexNoise"); nzx.inputs["Scale"].default_value = sc_
+                nzx.inputs["Detail"].default_value = 1.0; nzx.inputs["Roughness"].default_value = 0.5
+                nt.links.new(mpx.outputs[0], nzx.inputs[0])
+                bpx = nt.nodes.new("ShaderNodeBump"); bpx.inputs["Distance"].default_value = dd_
+                if fade:
+                    stx = nt.nodes.new("ShaderNodeMath"); stx.operation = "MULTIPLY"; stx.inputs[1].default_value = st_
+                    nt.links.new(near.outputs[0], stx.inputs[0]); nt.links.new(stx.outputs[0], bpx.inputs["Strength"])
+                else:
+                    bpx.inputs["Strength"].default_value = st_
+                nt.links.new(nzx.outputs[0], bpx.inputs["Height"])
+                if pre is not None: nt.links.new(pre, bpx.inputs["Normal"])
+                pre = bpx.outputs[0]
+            xf = nt.nodes.new("ShaderNodeValue"); xf.name = "dawn_ripples"
+            for f, v in ((930, 0.0), (938, 1.0)):
+                xf.outputs[0].default_value = v; xf.outputs[0].keyframe_insert("default_value", frame=f)
+            for fc in C._fcurves(nt.animation_data.action):
+                for k in fc.keyframe_points: k.interpolation = "LINEAR"
+            mxn = nt.nodes.new("ShaderNodeMix"); mxn.data_type = "VECTOR"
+            nt.links.new(xf.outputs[0], mxn.inputs[0])
+            nt.links.new(pre, mxn.inputs[4]); nt.links.new(cur, mxn.inputs[5])
+            nrm = nt.nodes.new("ShaderNodeVectorMath"); nrm.operation = "NORMALIZE"
+            nt.links.new(mxn.outputs[1], nrm.inputs[0]); cur = nrm.outputs[0]
         nt.links.new(cur, p.inputs["Normal"])
         sl = nt.nodes.new("ShaderNodeTexNoise"); sl.inputs["Scale"].default_value = 0.035
         sl.inputs["Detail"].default_value = 2
