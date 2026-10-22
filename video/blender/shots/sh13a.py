@@ -527,13 +527,141 @@ def build(ctx):
                 d_.inputs[0].default_value = 1.0 - k_
                 d_.inputs[0].keyframe_insert("default_value", frame=f)
         # even fully transparent, their surfaces use up transparent bounces and change the glide frames:
-        # the far additions only exist from f1897 (still ~0 % opaque there, so nothing pops)
+        # the far additions only exist from f1897. (Measured on the farm render: at f1897 ~1650 px around
+        # render y850-910 step darker, band -0.011, about 40 % of their final value - the transparent-bounce
+        # limit, not the fade; invisible at phone size.)
         for o in far_objs:
             o.hide_render = not (0.0 < k_ < 1.0)
             o.keyframe_insert("hide_render", frame=f)
         for o in far_objs_o:
             o.hide_render = k_ < 1.0
             o.keyframe_insert("hide_render", frame=f)
+
+    # ------------------------------------------------------------------ ground out to the horizon
+    # The ground grid ends ~280 m out; past it, rays between the hedge bases met the HDRI's unhazed dark
+    # field band -> a ruler-straight dark line under the hedgerow. A far ring of the same hazed ground runs
+    # out to ~3 km (fine 2 m quads near the grid so it cannot poke through it, coarse beyond). It comes in
+    # over f1944-1952 (fading copy f1945-1951, plain copy from f1952), so frames up to 1944 are unchanged.
+    GX0, GX1, GY0, GY1 = -170.0, 170.0, -60.0, 280.0       # the original ground grid (create_grid size = half-extent)
+
+    def ground_ring(name, x0, x1, y0, y1, nx, ny, hole, dz):
+        bm_ = bmesh.new()
+        uvl = bm_.loops.layers.uv.new("UVMap")
+        vs = [[bm_.verts.new((x0 + (x1 - x0) * i / nx, y0 + (y1 - y0) * j / ny, 0.0)) for i in range(nx + 1)] for j in range(ny + 1)]
+        for row in vs:
+            for v in row:
+                v.co.z = hgt(v.co.x, v.co.y) - dz
+        for j in range(ny):
+            for i in range(nx):
+                q = (vs[j][i], vs[j][i + 1], vs[j + 1][i + 1], vs[j + 1][i])
+                cx = sum(v.co.x for v in q) / 4; cy = sum(v.co.y for v in q) / 4
+                if hole[0] < cx < hole[1] and hole[2] < cy < hole[3]:
+                    continue
+                fc = bm_.faces.new(q)
+                for lp in fc.loops:   # same texel density as the original grid (UV 0..1 over its 340 m)
+                    lp[uvl].uv = ((lp.vert.co.x - GX0) / 340.0, (lp.vert.co.y - GY0) / 340.0)
+        return L.bm_to_obj(name, bm_, [], smooth=True)
+    rings = [ground_ring("GroundRingNear", -500.0, 500.0, -100.0, 800.0, 500, 450, (GX0 + 1.0, GX1 - 1.0, GY0 + 1.0, GY1 - 1.0), 0.06),
+             ground_ring("GroundRingFar", -3000.0, 3000.0, -400.0, 3000.0, 200, 113, (-500.0, 500.0, -100.0, 800.0), 0.6)]
+    # ... and below +1.6 deg the sky is looked up at +1.6 deg (the HDRI's own unhazed field and bush band is
+    # replaced by the sky just above it), while the ring's in-scatter turns from the standard haze (300 m)
+    # into that same sky radiance (1.2 km): far ground, horizon and sky meet without any line
+    RAISE_Z = math.sin(math.radians(1.6))
+    wnt = sc.world.node_tree
+    w_map = next(n for n in wnt.nodes if n.type == "MAPPING")
+    w_env = next(n for n in wnt.nodes if n.type == "TEX_ENVIRONMENT")
+    w_hsv = next(n for n in wnt.nodes if n.type == "HUE_SAT")
+
+    def raised(nt_, vec):
+        sp_ = nt_.nodes.new("ShaderNodeSeparateXYZ"); nt_.links.new(vec, sp_.inputs[0])
+        cb_ = nt_.nodes.new("ShaderNodeCombineXYZ")
+        nt_.links.new(sp_.outputs[0], cb_.inputs[0]); nt_.links.new(sp_.outputs[1], cb_.inputs[1])
+        nt_.links.new(L.math_node(nt_, "MAXIMUM", sp_.outputs[2], RAISE_Z), cb_.inputs[2])
+        nm_ = nt_.nodes.new("ShaderNodeVectorMath"); nm_.operation = "NORMALIZE"
+        nt_.links.new(cb_.outputs[0], nm_.inputs[0])
+        return nm_.outputs[0]
+    w_gen = w_map.inputs["Vector"].links[0].from_socket
+    w_vmix = wnt.nodes.new("ShaderNodeMix"); w_vmix.data_type = "VECTOR"
+    w_vmix.inputs[0].default_value = 0.0
+    wnt.links.new(w_gen, w_vmix.inputs[4]); wnt.links.new(raised(wnt, w_gen), w_vmix.inputs[5])
+    wnt.links.new(w_vmix.outputs[1], w_map.inputs["Vector"])
+
+    # ring material: gm's hazed ground, in-scatter -> world radiance of the raised view direction
+    gm_ring = gm.copy(); gm_ring.name = "GroundRing"
+    rnt = gm_ring.node_tree
+    if rnt.animation_data and rnt.animation_data.action:
+        rnt.animation_data.action = rnt.animation_data.action.copy()
+    r_em = next(n for n in rnt.nodes if n.type == "EMISSION" and all(abs(n.inputs["Color"].default_value[i] - HAZE_COL[i]) < 1e-5 for i in range(3)))
+    geo = rnt.nodes.new("ShaderNodeNewGeometry")
+    neg = rnt.nodes.new("ShaderNodeVectorMath"); neg.operation = "SCALE"; neg.inputs["Scale"].default_value = -1.0
+    rnt.links.new(geo.outputs["Incoming"], neg.inputs[0])
+    r_map = rnt.nodes.new("ShaderNodeMapping"); r_map.vector_type = w_map.vector_type
+    r_map.inputs["Rotation"].default_value = w_map.inputs["Rotation"].default_value
+    rnt.links.new(raised(rnt, neg.outputs[0]), r_map.inputs["Vector"])
+    r_env = rnt.nodes.new("ShaderNodeTexEnvironment"); r_env.image = w_env.image
+    r_env.interpolation = w_env.interpolation; r_env.projection = w_env.projection
+    rnt.links.new(r_map.outputs["Vector"], r_env.inputs["Vector"])
+    r_hsv = rnt.nodes.new("ShaderNodeHueSaturation")
+    for k_ in ("Hue", "Saturation", "Value", "Fac"):
+        r_hsv.inputs[k_].default_value = w_hsv.inputs[k_].default_value
+    rnt.links.new(r_env.outputs["Color"], r_hsv.inputs["Color"])
+    r_tint = rnt.nodes.new("ShaderNodeMix"); r_tint.data_type = "RGBA"; r_tint.blend_type = "MULTIPLY"
+    r_tint.inputs[0].default_value = 1.0
+    rnt.links.new(r_hsv.outputs["Color"], r_tint.inputs[6])
+    r_str = rnt.nodes.new("ShaderNodeVectorMath"); r_str.operation = "SCALE"
+    rnt.links.new(r_tint.outputs[2], r_str.inputs[0])
+    cdr = rnt.nodes.new("ShaderNodeCameraData")
+    r_mr = rnt.nodes.new("ShaderNodeMapRange"); r_mr.interpolation_type = "SMOOTHSTEP"; r_mr.clamp = True
+    rnt.links.new(cdr.outputs["View Distance"], r_mr.inputs["Value"])
+    r_mr.inputs["From Min"].default_value = 300.0; r_mr.inputs["From Max"].default_value = 1200.0
+    r_col = rnt.nodes.new("ShaderNodeMix"); r_col.data_type = "RGBA"
+    rnt.links.new(r_mr.outputs["Result"], r_col.inputs[0])
+    r_col.inputs[6].default_value = (*(c_ * HAZE_K for c_ in HAZE_COL), 1)
+    rnt.links.new(r_str.outputs[0], r_col.inputs[7])
+    rnt.links.new(r_col.outputs[2], r_em.inputs["Color"])
+    r_em.inputs["Strength"].default_value = 1.0
+    # beyond ~400 m (it only shows past the 200 m grass tops, i.e. > ~350 m) the ring melts fully into that
+    # sky radiance: no pale or dark strip can form where the far ground meets the horizon
+    r_out = next(n for n in rnt.nodes if n.type == "OUTPUT_MATERIAL")
+    r_sky = rnt.nodes.new("ShaderNodeEmission"); rnt.links.new(r_str.outputs[0], r_sky.inputs["Color"])
+    r_mr2 = rnt.nodes.new("ShaderNodeMapRange"); r_mr2.interpolation_type = "SMOOTHSTEP"; r_mr2.clamp = True
+    rnt.links.new(cdr.outputs["View Distance"], r_mr2.inputs["Value"])
+    r_mr2.inputs["From Min"].default_value = 290.0; r_mr2.inputs["From Max"].default_value = 420.0
+    rnt.links.new(_mix(rnt, r_mr2.outputs["Result"], r_out.inputs["Surface"].links[0].from_socket, r_sky.outputs[0]).outputs[0],
+                  r_out.inputs["Surface"])
+    gm_fade = gm_ring.copy(); gm_fade.name = "GroundRingFade"
+    if gm_fade.node_tree.animation_data and gm_fade.node_tree.animation_data.action:
+        gm_fade.node_tree.animation_data.action = gm_fade.node_tree.animation_data.action.copy()
+    ring_fade = fade_in(gm_fade)
+    ring_tint = [next(n for n in m_.node_tree.nodes if n.name == r_tint.name) for m_ in (gm_ring, gm_fade)]
+    ring_str = [next(n for n in m_.node_tree.nodes if n.name == r_str.name) for m_ in (gm_ring, gm_fade)]
+    ring_objs_f, ring_objs_o = [], []
+    for r_ in rings:
+        o2 = r_.copy(); o2.data = r_.data.copy(); sc.collection.objects.link(o2)
+        C.assign(r_, gm_ring); C.assign(o2, gm_fade)
+        ring_objs_o.append(r_); ring_objs_f.append(o2)
+    for f in range(ctx.f0 - 2, ctx.f1 + 3):
+        k2 = C.remap(f, 1944, 1952, C.smooth)
+        w_vmix.inputs[0].default_value = k2
+        w_vmix.inputs[0].keyframe_insert("default_value", frame=f)
+        st_ = bg_s0 * (2.0 ** (SKY_GAIN_STOPS * C.remap(f / 24.0, T_GOLD0, T_GOLD2, C.smooth)))
+        w_ = C.remap(f / 24.0, T_RISE + 0.3, T_RISE + 2.8, C.smooth)       # = the world tint keys above
+        for n_ in ring_tint:
+            n_.inputs[7].default_value = (0.98, 0.72 - 0.03 * w_, 0.48 - 0.16 * w_, 1)
+            n_.inputs[7].keyframe_insert("default_value", frame=f)
+        for n_ in ring_str:
+            n_.inputs["Scale"].default_value = st_
+            n_.inputs["Scale"].keyframe_insert("default_value", frame=f)
+        ring_fade.inputs[0].default_value = 1.0 - k2
+        ring_fade.inputs[0].keyframe_insert("default_value", frame=f)
+        for o in ring_objs_f:
+            o.hide_render = not (0.0 < k2 < 1.0)
+            o.keyframe_insert("hide_render", frame=f)
+        for o in ring_objs_o:
+            o.hide_render = k2 < 1.0
+            o.keyframe_insert("hide_render", frame=f)
+    for o in rings + ring_objs_f:
+        o.cycles.use_motion_blur = False
 
     # ------------------------------------------------------------------ butterflies
     brng = random.Random(8)
