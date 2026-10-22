@@ -1367,6 +1367,15 @@
    "from": 370,
    "to": 389,
    "note": "final round 3: spoon hidden (no cross on the honey jar), curtain subdiv at 247/248 (no table-shadow step at 262), window rails inset 1 mm (fix 5064de1 on 500a9c5); whole shot"
+  },
+  {
+   "node": "b132",
+   "branch": "render-fix-sh01",
+   "ref": "74b8ce904ee981ce0284fb00144f8c9ffbb63914",
+   "shot": "sh01",
+   "from": 90,
+   "to": 119,
+   "note": "final round 3 (re-queue of b122, container restarted): grass/stalk dew clear, sh01-only (fix 74b8ce9)"
   }
  ]
 }
