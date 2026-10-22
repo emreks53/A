@@ -69,3 +69,36 @@ around f1030:
 See f1030_streak_before_after_100pct.jpg. f1128 changes by less than 3 % in brightness. f1030 rendered from a job
 start of 1029 and of 1030 is identical (max 3e-5). Cost is unchanged (f1030 59 s, f1128 56 s render). The tracker is
 unchanged.
+
+## Round 4: grey/lilac rim on the thumb and fingers against the apple (f1005-1068)
+**Cause** (each candidate tested on f1030):
+* turning off specular+coat, translucency, SSS, the hair, the nail branch or the denoiser left the rim in place;
+* a flat emission material removed it, so it is shading, not geometry;
+* turning off the WindowSky light alone removed it. The cool 7500 K window fill grazes the finger silhouettes.
+
+**Fix** (`419af57`):
+* The hand mesh gets its own copy of the window light via light linking. The room and the hair keep the original.
+  The copy is 5000 K at 0.3x power through f1068, then eases back to the original over f1068-1084.
+* Skin specular and coat fade out fully at grazing, with a warm coat tint, eased back over the same frames.
+* Nails: a crisp plate edge, a cuticle line, roughness 0.3.
+
+**Gates:**
+1. Thumb edge saturation at f1030 (50 % render, three rows across the edge): before 0.34/0.26/0.10, after
+   0.74/0.62/0.47, against nearby skin 0.56. There is no grey/lilac halo at f1030 or f1066 (crops r4_f1030_*,
+   r4_f1066_*). One row is still about 15 % under the skin value.
+2. f1000 (forearm against the wall): frame dE 0.54 vs 0338842. The hand is a little warmer; the wall and table are
+   unchanged.
+3. The male read is unchanged (r4_phone390_*).
+4. Deterministic: runs started at 1067 vs 1068 and at 1076 vs 1077 (mid-ramp) are identical (max 2.4e-5). No
+   geometry or animation changed, so event frames are unchanged.
+5. The join is unchanged. Mean Lab, new = old (0338842):
+
+   | frame | L | a | b | dE |
+   |---|---|---|---|---|
+   | 1088 | 37.70 | 15.01 | 20.73 | 0.00 |
+   | 1089 | 37.87 | 15.35 | 21.07 | 0.00 |
+   | 1090 | 38.01 | 15.68 | 21.39 | 0.00 |
+
+6. Other skin: frame dE vs 0338842 is 0.87 at f1010, 0.78 at f1030 and 1.08 at f1066 (the hand is slightly warmer).
+
+**Cost:** 1009-1011 at 53 s/frame, 1049-1051 at 52, 1076-1077 at 62, 1088-1090 at 61, plus ~50 s build per job.
