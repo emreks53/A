@@ -15,6 +15,8 @@ def build(ctx):
     S.build_room()
     S.build_table()
     S.build_sofra()                                    # the set table sh03 continues onto
+    S.hide_honey_spoon()                               # QA r8: no cross shape on the honey jar (as in sh03)
+    S.inset_window_rails()                             # QA r8: no pure-black window corner blocks (as in sh03)
     t_ox = ctx.word("oksijen")                         # 8.32
     # breath rhythm: a small breath 5.6-6.9 s, then the big inhale peaking 8.25-8.35 ("oksijen")
     wind = [(ctx.t0 - 2.2, 20), (ctx.t0 - 1.1, 260), (ctx.t0 + 0.1, 15), (5.75, 30), (6.25, 210), (6.9, 25),

@@ -2222,6 +2222,23 @@ def build_extras():
 
 # ----------------------------------------------------------------------------- the "oksijen" gust of motes
 
+def hide_honey_spoon():
+    """No spoon in the honey jar: its handle above the rim read as a small upright cross (QA r7/r8)."""
+    for n in ("SpoonBowl", "SpoonHandle"):
+        bpy.data.objects[n].hide_render = True
+
+
+def inset_window_rails(depth=0.001):
+    """The rails (FrameB/T, Transom, sash _b/_t) shared coplanar faces with the stiles and rendered pure-black
+    corner blocks: set their front and back faces `depth` back (QA r7/r8)."""
+    for o in bpy.data.objects:
+        nm = o.name.split(".")[0]
+        if o.type == "MESH" and (nm in ("FrameB", "FrameT", "Transom") or (nm.startswith("Sash") and nm[-2:] in ("_b", "_t"))):
+            xs = [v.co.x for v in o.data.vertices]; x0, x1 = min(xs), max(xs)
+            for v in o.data.vertices:
+                v.co.x = x0 + depth + (v.co.x - x0) * (x1 - x0 - 2 * depth) / (x1 - x0)
+
+
 def build_gust_motes(name, t_go, t_peak, t_end, cam_at, count=1000, seed=55, r_min=0.0005, r_max=0.0013):
     """Non-wrapping cloud of dust blown off the curtain toward the lens: each mote travels from a blob at the
     curtain to a point 0.35-1.4 m in front of the camera (at t_peak), eased, then drifts on past it.
