@@ -1403,8 +1403,8 @@ def upgrade_interior(inter, wave):
     m_cr_hero = m_cr.copy(); m_cr_hero.name = "CristaeS9Hero"
     for n_ in m_cr_hero.node_tree.nodes:
         if n_.type == "BSDF_PRINCIPLED":
-            n_.inputs["Base Color"].default_value = (0.30, 0.10, 0.02, 1)
-            n_.inputs["Alpha"].default_value = 0.9
+            n_.inputs["Base Color"].default_value = (*LOOK["cr_hero"], 1)
+            n_.inputs["Alpha"].default_value = 0.95
         elif n_.type == "MAP_RANGE" and abs(n_.inputs["To Max"].default_value - 5.4) < 1e-6:
             n_.inputs["To Min"].default_value = 0.1; n_.inputs["To Max"].default_value = 2.6    # hero variants (10-12)
     new, cr_cache, in_cache = [], {}, {}
@@ -1549,9 +1549,31 @@ def mito_bean(name, length, width, seed=0, nu=40, nv=56, bend=None):
     return me
 
 
+# director round 6: colour looks (all mitochondria). "amber" = rounds 2-5 (reads as baked bread);
+# A salmon/red-orange glassy, B berry membrane over a warm interior, C teal glass over amber (the
+# film's teal/amber micro-world palette). S7_LOOK env var selects one for look-dev only.
+MITO_LOOKS = {
+    "amber": dict(outer=(0.19, 0.064, 0.009), rim=(1.0, 0.34, 0.05), inner=(0.70, 0.30, 0.06), irim=(1.0, 0.36, 0.05),
+                  matrix=(1.0, 0.39, 0.05), absorb=(0.78, 0.32, 0.05), cr=(0.44, 0.17, 0.03), cr_em=(1.0, 0.40, 0.04),
+                  cr_hero=(0.30, 0.10, 0.02), face=0.55, mscale=1.0, rim_k=1.0),
+    "A": dict(outer=(0.40, 0.12, 0.075), rim=(1.0, 0.40, 0.28), inner=(0.85, 0.42, 0.32), irim=(1.0, 0.48, 0.36),
+              matrix=(0.85, 0.26, 0.15), absorb=(0.85, 0.40, 0.30), cr=(0.80, 0.42, 0.30), cr_em=(1.0, 0.55, 0.40),
+              cr_hero=(0.78, 0.40, 0.29), face=0.32, mscale=0.7, rim_k=1.3),
+    "B": dict(outer=(0.42, 0.06, 0.20), rim=(1.0, 0.28, 0.62), inner=(0.70, 0.30, 0.10), irim=(1.0, 0.40, 0.25),
+              matrix=(1.0, 0.39, 0.05), absorb=(0.80, 0.30, 0.25), cr=(0.55, 0.22, 0.05), cr_em=(1.0, 0.45, 0.08),
+              cr_hero=(0.50, 0.20, 0.05), face=0.38, mscale=1.0, rim_k=1.2),
+    "C": dict(outer=(0.05, 0.20, 0.22), rim=(0.35, 0.90, 1.0), inner=(0.60, 0.40, 0.12), irim=(1.0, 0.55, 0.15),
+              matrix=(1.0, 0.45, 0.06), absorb=(0.55, 0.60, 0.55), cr=(0.55, 0.25, 0.05), cr_em=(1.0, 0.50, 0.08),
+              cr_hero=(0.50, 0.22, 0.05), face=0.30, mscale=1.0, rim_k=1.1),
+}
+MITO_LOOK = os.environ.get("S7_LOOK", "amber")
+LOOK = MITO_LOOKS[MITO_LOOK]
 HERO_SHAPE = dict(length=0.82, bend=0.09)    # round 5: the hero ~2.8:1, gentler bend (env + cristae)
-CRISTAE_HERO = dict(rad=0.83, yspan=0.35, amp=0.016, cup=0.012, tilt=3.0, bow=0.003, reach=(0.45, 0.72),
-                    reach_end=0.45, th=0.0002, pack=2.3)  # folds rooted on the inner membrane, ~9 alternating
+CRISTAE_HERO = dict(rad=0.83, yspan=0.37, amp=0.012, cup=0.008, tilt=2.0, bow=0.012, reach=(0.40, 0.85),
+                    reach_end=0.42, th=0.00042, pack=2.15, wave=0.03, periods=(1.0, 2.0), fork=0.03, fork_p=0.4)
+# round 6: folded membranes, not slash marks - rounded tongues rooted on the inner membrane, alternating
+# sides, sinuous along their length (1-2 periods), irregular reach (40-85 %) and spacing, some bent
+# or Y-forked at the tip, thick enough to shade; every neighbour pair keeps disjoint y-extents  # folds rooted on the inner membrane, ~9 alternating
 CRISTAE = dict(rad=0.64, yspan=0.24, amp=0.016, cup=0.012, tilt=3.0, bow=0.008, reach=(0.34, 0.68), reach_end=0.42)
 
 
@@ -1567,7 +1589,10 @@ def cristae_folded(name, length, width, seed=0, K=None, bend=None):
     amp, cup = K["amp"] * width, K["cup"] * width
     R0 = K["rad"] * width / 2
     bow = K["bow"] * width                                       # gentle curvature in the screen plane
-    ext = 1.45 * amp + cup + bow + math.tan(math.radians(K["tilt"])) * R0 * BEAN["depth"] + th   # half y-extent
+    wav = K.get("wave", 0.0) * width                             # sinuous along the fold's length
+    fk = K.get("fork", 0.0) * width                              # Y-fork opening at some tips
+    ext = (1.45 * amp + cup + bow + math.tan(math.radians(K["tilt"])) * R0 * BEAN["depth"] + th
+           + wav + fk)                                           # half y-extent (every term bounded)
     span = 2 * K["yspan"] * length
     gmin = 2.15 * ext                                            # neighbours' y-extents never touch
     n = max(3, int(span / (K.get("pack", 2.6) * ext)) + 1)
@@ -1591,6 +1616,8 @@ def cristae_folded(name, length, width, seed=0, K=None, bend=None):
         tilt = math.tan(math.radians(rng.uniform(-K["tilt"], K["tilt"])))
         cu = rng.uniform(-1, 1) * cup
         bw = rng.uniform(-1, 1) * bow
+        per = rng.uniform(*K.get("periods", (1.0, 1.0))); ph3 = rng.uniform(0, 6.28)
+        fki = fk * (1 if rng.random() < K.get("fork_p", 0.0) else 0)
         pts = []
         for js in range(NS + 1):
             sfr = js / NS
@@ -1604,7 +1631,9 @@ def cristae_folded(name, length, width, seed=0, K=None, bend=None):
                 x = a * max(chord * 0.92, R * 0.15)
                 yy = (y0 + amp * math.sin(x / R * 2.6 + ph1) * (0.4 + 0.6 * sfr)
                       + 0.45 * amp * math.sin(sfr * 5.0 + ph2) * abs(a) + cu * sfr * sfr + tilt * x
-                      + bw * (zl / R) ** 2)
+                      + bw * (zl / R) ** 2
+                      + wav * math.sin(sfr * math.pi * per + ph3)                    # sinuous along the length
+                      + fki * (1 if a >= 0 else -1) * min(1.0, abs(a) * 3) * max(0.0, (sfr - 0.62) / 0.38) ** 1.5)
                 row.append((x, yy, zc + zl))
             pts.append(row)
         # a closed sac of thickness th (two layers +-th/2 in y, rim stitched; rounded by smooth shading)
@@ -1628,10 +1657,11 @@ def cristae_folded(name, length, width, seed=0, K=None, bend=None):
     return me
 
 
-def mat_mito_outer_s9(face_alpha=0.55, name="MitoOuterS9"):
+def mat_mito_outer_s9(face_alpha=None, name="MitoOuterS9"):
     """Outer mitochondrial membrane: glossy wet amber film with SSS; nearly clear face-on and dense
     at the silhouette (a membrane seen edge-on), so the body reads as a translucent volume."""
-    m, nt, p = mat_wet_tissue(name, base=(0.19, 0.064, 0.009), sss_radius=(1.0, 0.55, 0.25),
+    face_alpha = LOOK["face"] if face_alpha is None else face_alpha
+    m, nt, p = mat_wet_tissue(name, base=LOOK["outer"], sss_radius=(1.0, 0.55, 0.25),
                                 sss_scale=0.0025, rough=0.5, coat=0.08, coat_rough=0.5)
     p.inputs["Specular IOR Level"].default_value = 0.25          # no tip glints on the near bodies
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.3
@@ -1644,8 +1674,8 @@ def mat_mito_outer_s9(face_alpha=0.55, name="MitoOuterS9"):
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
     _bump_chain(nt, p, [(nz.outputs["Fac"], 0.06)], distance=0.0004)
     # the matrix glow shines through the membrane where it is seen edge-on (luminous rim, not an outline)
-    p.inputs["Emission Color"].default_value = (1.0, 0.34, 0.05, 1)
-    em = _n(nt, "ShaderNodeMath"); em.operation = "MULTIPLY"; em.inputs[1].default_value = MITO_VOL["rim"]
+    p.inputs["Emission Color"].default_value = (*LOOK["rim"], 1)
+    em = _n(nt, "ShaderNodeMath"); em.operation = "MULTIPLY"; em.inputs[1].default_value = MITO_VOL["rim"] * LOOK["rim_k"]
     nt.links.new(pw.outputs[0], em.inputs[0]); nt.links.new(em.outputs[0], p.inputs["Emission Strength"])
     fog_wrap(m)
     return m
@@ -1653,7 +1683,7 @@ def mat_mito_outer_s9(face_alpha=0.55, name="MitoOuterS9"):
 
 def mat_mito_inner_s9(emit, name, rim=0.0):
     """Inner boundary membrane: thinner, warmer, mostly clear (second rim inside the first)."""
-    m, nt, p = mat_wet_tissue(name, base=(0.70, 0.30, 0.06), sss_radius=(1.0, 0.5, 0.2),
+    m, nt, p = mat_wet_tissue(name, base=LOOK["inner"], sss_radius=(1.0, 0.5, 0.2),
                                 sss_scale=0.0015, rough=0.55, coat=0.05, coat_rough=0.5)
     lw = _n(nt, "ShaderNodeLayerWeight"); lw.inputs["Blend"].default_value = 0.25
     pw = _n(nt, "ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 2.2
@@ -1661,7 +1691,7 @@ def mat_mito_inner_s9(emit, name, rim=0.0):
     al = _n(nt, "ShaderNodeMapRange"); al.inputs["To Min"].default_value = 0.05; al.inputs["To Max"].default_value = 0.7
     nt.links.new(pw.outputs[0], al.inputs["Value"]); nt.links.new(al.outputs[0], p.inputs["Alpha"])
     if rim:                                               # a faint inner-membrane line inside the outer rim
-        p.inputs["Emission Color"].default_value = (1.0, 0.36, 0.05, 1)
+        p.inputs["Emission Color"].default_value = (*LOOK["irim"], 1)
         em = _n(nt, "ShaderNodeMath"); em.operation = "MULTIPLY"; em.inputs[1].default_value = rim
         nt.links.new(pw.outputs[0], em.inputs[0]); nt.links.new(em.outputs[0], p.inputs["Emission Strength"])
     fog_wrap(m)
@@ -1669,9 +1699,9 @@ def mat_mito_inner_s9(emit, name, rim=0.0):
     # grows with the thickness looked through, so the body is brightest in its core and falls off to
     # the rims like a real translucent volume; the cristae inside shadow it
     out = [n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"][0]
-    ve = _n(nt, "ShaderNodeEmission"); ve.name = "matrix_emit"; ve.inputs["Color"].default_value = (1.0, 0.39, 0.05, 1)
+    ve = _n(nt, "ShaderNodeEmission"); ve.name = "matrix_emit"; ve.inputs["Color"].default_value = (*LOOK["matrix"], 1)
     ve.inputs["Strength"].default_value = emit
-    va = _n(nt, "ShaderNodeVolumeAbsorption"); va.inputs["Color"].default_value = (0.78, 0.32, 0.05, 1)
+    va = _n(nt, "ShaderNodeVolumeAbsorption"); va.inputs["Color"].default_value = (*LOOK["absorb"], 1)
     va.inputs["Density"].default_value = MITO_VOL["absorb"]
     ad = _n(nt, "ShaderNodeAddShader")
     nt.links.new(ve.outputs[0], ad.inputs[0]); nt.links.new(va.outputs[0], ad.inputs[1])
@@ -1686,8 +1716,8 @@ def mat_cristae_s9(wave):
     m.name = "CristaeS9"
     nt = m.node_tree
     p = [n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"][0]
-    p.inputs["Base Color"].default_value = (0.44, 0.17, 0.03, 1)    # saturated amber folds (never cream)
-    p.inputs["Emission Color"].default_value = (1.0, 0.40, 0.04, 1)
+    p.inputs["Base Color"].default_value = (*LOOK["cr"], 1)
+    p.inputs["Emission Color"].default_value = (*LOOK["cr_em"], 1)
     p.inputs["Roughness"].default_value = 0.6
     p.inputs["Alpha"].default_value = 0.95                           # soft internal folds, clearly visible
     p.inputs["Coat Weight"].default_value = 0.05                     # no glossy edge that could streak
@@ -1882,6 +1912,6 @@ def upgrade_interior_s9(inter, wave, frames):
           f"{_RINGS_DROPPED[0]} T-tubule rings dropped")
     mh = bpy.data.materials["MitoInnerS9Hero"]
     bake_id(mh.node_tree, frames, 'nodes["matrix_emit"].inputs[1].default_value',
-            [C.lerp(MITO_VOL["emit_small"], MITO_VOL["emit"], C.remap(f, HERO_KEY["f0"], HERO_KEY["f1"], C.smooth))
+            [LOOK["mscale"] * C.lerp(MITO_VOL["emit_small"], MITO_VOL["emit"], C.remap(f, HERO_KEY["f0"], HERO_KEY["f1"], C.smooth))
              for f in frames])
     return new
