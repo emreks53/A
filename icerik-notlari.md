@@ -77,3 +77,6 @@ Portföy toplam değeri ve net aktif değer gibi rakamlar **son faaliyet raporun
 | D4 | Mali Tablo / Dipnot belgeleri `<select>` seçicisiyle veriliyor (bağlantı yok); 92 TR + 92 EN adres ayrıca tespit edilip indirildi. | — |
 | D5 | Uzantılar: pdf 471, xls 53, xlsx 12, doc 12, docx 2 (adres bazında). Aynen korunur. | — |
 | D6 | 55 benzersiz dosyanın yılı sayfa bağlamından çıkarılamadı (ör. 2010 halka arz ekleri, tarihsiz genel kurul davet/tutanakları, komite esasları); manifestte `yil: ""`, klasör `tarihsiz/`. | ☐ |
+> **22.10.2026 (kullanıcı isteği):** Alt bilgi ve iletişim adres satırı "Kısıklı Mah. Hanım Seti Sok No:38 Üsküdar / İstanbul" →
+> "Kısıklı Mah. Hanımseti Sok. No:38 Üsküdar / İstanbul" (sokak adı şirket belgelerindeki bitişik yazımla; "Sok." noktalı).
+> Belge ve haber metinlerindeki adresler eski kayıt olarak değişmedi (`araclar/degisiklikler/2026-10-22c-adres.py`).
