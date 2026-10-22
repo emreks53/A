@@ -1,0 +1,6 @@
+f1247: MAD 5.17  60px-block mean|d| 3.70 max 30.75  signed RGB [2.65, 2.77, 2.64]  lowpass NCC 0.9872  mean RGB sh09 [134.5, 87.7, 79.9] sh10 [137.2, 90.5, 82.5]
+f1248: MAD 3.70  60px-block mean|d| 2.55 max 23.63  signed RGB [1.84, 1.92, 1.85]  lowpass NCC 0.9940  mean RGB sh09 [135.2, 88.5, 80.7] sh10 [137.1, 90.5, 82.6]
+f1249: MAD 2.50  60px-block mean|d| 1.57 max 8.65  signed RGB [1.28, 1.2, 1.13]  lowpass NCC 0.9983  mean RGB sh09 [135.9, 89.4, 81.5] sh10 [137.1, 90.6, 82.7]
+f1250: MAD 1.78  60px-block mean|d| 1.00 max 6.71  signed RGB [0.81, 0.48, 0.44]  lowpass NCC 0.9994  mean RGB sh09 [136.1, 90.0, 82.1] sh10 [137.0, 90.5, 82.6]
+f1251: MAD 5.02  60px-block mean|d| 3.33 max 30.95  signed RGB [-1.05, -1.96, -1.93]  lowpass NCC 0.9853  mean RGB sh09 [136.7, 90.5, 82.6] sh10 [135.6, 88.5, 80.7]
+f1252: MAD 8.69  60px-block mean|d| 6.52 max 59.79  signed RGB [-3.03, -4.54, -4.44]  lowpass NCC 0.9597  mean RGB sh09 [136.8, 90.8, 82.9] sh10 [133.8, 86.3, 78.5]
