@@ -1,6 +1,6 @@
 # sh10 round 7: no push-to-pull snap in the 1247-1252 dissolve
 
-**Farm commit:** `4887b7b84281b9cefe29cbf0338c189d77d43db3` on `render-fix-sh10`. Only `sh10.py` changed, on top of b1ac91e.
+**Farm commit:** `4887b7b84281b9cefe29cbf0338c189d77d43db3` on `render-fix-sh10`. Only `sh10.py` changed vs the round-6 evidence commit f9d1e4d (code-wise vs b1ac91e). Its comment says −0.52 %/f at 1252 and zero speed "just before 1253"; the measured values are −0.60 %/f instantaneous and zero at ≈1253.5 (comment only, no effect on output).
 
 ## Fix
 The change is to the camera distance only.
@@ -19,7 +19,7 @@ The change is to the camera distance only.
 3. **Composite 1246-1262 with the 6-frame dissolve** (`composite_1246-1262_dissolve_1247-1252.jpg`, 100 % crops at 1248/1250/1251): **one outline**, no ghost rim.
    - Measured scale change per frame (+ = growing): 1247 +1.46, 1250 +1.03, 1252 +0.64, 1253 +0.24, 1254 −0.32, 1256 −1.44, 1258 −2.27, 1260 −3.01, 1262 −3.59.
    - The scale is monotonic after 1253. The largest step is **0.57 %/f**, the peak is **3.59 %/f** and the largest |dY| is **3.4 px** (`measure_scale_1247-1262.json`).
-4. **Join (16-bit, new vs b1ac91e code):** f1288 is seed-level (max 5/65535, MAD 0.0002/255), because the shutter reaches back to the changed key at 1287. f1289 and f1290 are **bit-identical**. Every camera, focus and fstop key from 1288 on is identical.
+4. **Join (16-bit, new vs b1ac91e code):** f1288 is seed-level (max 1292/65535 = 5/255, mean 10.8/65535 = 0.042/255, measured as true 16-bit by the verifier), because the shutter reaches back to the changed key at 1287. f1289 and f1290 are **bit-identical**. Every camera, focus and fstop key from 1288 on is identical.
 5. **Any start:** 1255 and 1256 started at 1255 are bit-identical to the run started at 1246.
 6. **TRK** (`round7/sh10_track.json`, TRK_cells 1244-1397, re-exported from 4887b7b): identical to round 5. TRK_cells is on the optical axis and hidden before 1288, so a pure dolly along that axis leaves it in place.
 
@@ -27,3 +27,10 @@ The change is to the camera distance only.
 - **Re-render: 1244-1288** (1288 only seed-level). Frames 1289 onward match b1ac91e bit for bit.
 - **Split:** 1244-1279 (36 frames × ~53-58 s ≈ 33 min) and 1280-1288 (9 frames, ≈ 9 min). Use 1280-1307 instead if the farm wants the old chunking (28 frames ≈ 33 min).
 - **Measured in-run cost:** 1246-1262 at 50.6-65 s/f.
+
+## Independent verification (subagent, true 16-bit PNG decode)
+1. PASS: only sh10.py code changed; `dist_at` and `t_exit` are untouched. `d09` matches sh09's keys to ≤3e-8.
+2. PASS: all keys from 1288 are identical. The largest speed step is 0.605 %/f between keys (1253→1254). The highest speed before 1288 is 5.8937 %/f, against 5.8939 at 1288.
+3. PASS: 1289 and 1290 are 0-px identical, and the any-start frames 1255 and 1256 are 0-px identical. f1250 MAD is 1.7354.
+   - It also corrected my f1288 figure, which came from an 8-bit read (fixed above).
+4. PASS: one outline and continuous motion. There is no woman, text, logo or prominent cross.
