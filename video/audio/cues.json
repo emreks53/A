@@ -39,8 +39,9 @@
   "sh09.impulse": 1153,
   "sh09.muscle": 1165,
   "sh09.dive": 1184.5,
-  "sh10.membrane": 1297.5,
-  "sh10.light1": 1316,
+  "sh10.membrane": 1297.7,
+  "sh10.light1": 1317,
+  "sh10.wave": 1352,
   "sh11.leaf1": 1468.8,
   "sh11.leaf2": 1479.4,
   "sh11.leaf3": 1492.1,
@@ -1581,7 +1582,7 @@
   {
    "id": "sh10.pullback",
    "shot": "sh10",
-   "t": 54.0625,
+   "t": 54.0708,
    "pre": 0.45,
    "dur": 1.3,
    "gen": "whoosh",
@@ -1601,14 +1602,14 @@
    "send": -10,
    "fade_in": 0.005,
    "fade_out": 0.3,
-   "ref": "PIC f1297.5 (final render): pull back out through the membrane"
+   "ref": "PIC f1297.7 (final render b1ac91e): pull back out through the membrane (veil closes f1294.8, membrane f1296-1299, rack f1300-1301, outside f1302)"
   },
   {
    "id": "sh10.lights_one",
    "shot": "sh10",
-   "t": 54.8333,
+   "t": 54.875,
    "pre": 0.0,
-   "dur": 1.3667,
+   "dur": 1.325,
    "gen": "sparkle",
    "params": {
     "rate": 11.0,
@@ -1622,7 +1623,7 @@
    "send": -12,
    "fade_in": 0.005,
    "fade_out": 0.6,
-   "ref": "PIC f1316 (final render): cells light up one after another"
+   "ref": "PIC f1317 (final render b1ac91e): the hero cell lights, its neighbours follow f1319-1325, single new lights to ~f1349"
   },
   {
    "id": "sh10.lights_wave",
@@ -1638,15 +1639,15 @@
       40
      ],
      [
-      0.6000000000000014,
+      0.974966666666667,
       450
      ],
      [
-      1.4000000000000015,
+      1.774966666666667,
       900
      ],
      [
-      2.1000000000000014,
+      2.474966666666667,
       700
      ],
      [
@@ -1677,7 +1678,7 @@
    "send": -10,
    "fade_in": 0.4,
    "fade_out": 0.5,
-   "ref": "bilmediğimiz -> hadsiz: waves of tiny lights to infinity"
+   "ref": "bilmediğimiz -> hadsiz: waves of tiny lights to infinity; 450 grains/s on PIC f1352 (final render b1ac91e: lit cells start coming up in the near field), 900 at +0.8 s (f1371: ~95 lit cells, doubling every ~0.5 s to the end of the shot), easing to 700 over the next 0.7 s (f1388) as before, then thinning to 250 by 0.35 s after the cut (luma transition into sh11)"
   },
   {
    "id": "sh10.counter",

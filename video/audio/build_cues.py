@@ -171,12 +171,27 @@ PIC = {
     "sh08.enter": 982, "sh08.touch": 1007.7, "sh08.grip": 1012, "sh08.lift": 1019,
     # sh09 final render (out/rf/sh09): impulse glow fires on the nearest node f1153, peak f1154, races
     # up-left to the far nodes by ~f1162; fibre glow (contraction) visible from f1165; camera passes into
-    # the muscle cell (fibre exterior -> pink interior + mitochondria f1183-1186, centre f1184.5)
+    # the muscle cell (fibre exterior -> pink interior + mitochondria f1183-1186, centre f1184.5).
+    # Re-checked on the final plates (1132-1173 unchanged; 1174-1255 = r6 look C a82b349, same camera):
+    # p99.5 luminance 0.24 -> 0.58 -> 0.96 at f1152-1154 (impulse unchanged), mean luminance lowest
+    # f1164-1165 and rising from f1166 (muscle unchanged); dive: still the f1183-1186 transition, its
+    # half-way points b* (orange fibre 38 -> pink interior 12) f1183.3, myofibril stripes (|dx|/|dy|
+    # 1.8 -> 3.1) f1184.3, sharpness f1185.0 (mean f1184.2), interior sharp from f1186 -> kept at the
+    # centre of the transition, f1184.5 (0.3 frame from the mean; the dive whoosh has a 0.5 s pre-roll)
     "sh09.impulse": 1153, "sh09.muscle": 1165, "sh09.dive": 1184.5,
-    # sh10 final render (out/rf/sh10): last interior frame f1294, dark membrane haze f1295-1300, cell
-    # field from f1301 (centre of the passage f1297.5); first cell glows f1316 (clear f1317), others
-    # follow one by one to ~f1328
-    "sh10.membrane": 1297.5, "sh10.light1": 1316,
+    # sh10 final render (b1ac91e): interior clear to f1294, seen through the closing membrane veil on
+    # f1295 (myofibril stripe contrast down to 26 %), membrane surface in focus f1296-1299, soft rack
+    # f1300-1301 (no structure in focus), exterior cell surface sharp from f1302, then the pull-back over
+    # the cell field.  Passage: interior -> membrane half-way f1294.8 (stripe contrast f1294.7, a* f1294.9),
+    # membrane -> exterior half-way f1300.6 (film weight f1300.5, a* f1300.8, rack centre f1300.5)
+    # -> centre f1297.7.  The hero cell (TRK_cells) is dark on f1316 and lit on f1317 (dome-top p90
+    # luminance 0.024 -> 0.112 -> 0.272 -> 0.307 on f1316-1319, amber R-B -0.14 -> +0.26 -> +0.45); its
+    # neighbours and the ring behind it follow f1319-1325 (glow peak f1324-1325), then the lit cluster recedes
+    # with single new lights every 2-3 frames to ~f1349; the wave: from f1352 lit cells come up into the
+    # near field (the first rises in at the bottom edge on f1352, clear f1353), from ~f1360 the field of
+    # tiny lights densifies to the end (visible lit cells 25 on f1351, 45 f1360, 87 f1370, 213 f1380,
+    # 488 f1397: doubling every ~0.4-0.6 s)
+    "sh10.membrane": 1297.7, "sh10.light1": 1317, "sh10.wave": 1352,
     # sh11 final render (out/rf/sh11): drops hit the left leaf f1468.8 (leaf already moving in f1469,
     # pushed down f1470, rebounds f1471-72), the right leaf f1479.4 (still f1479, dip f1480, rebound
     # f1482), the left leaf again f1492.1 (dip f1493, back up f1494-95)
@@ -462,18 +477,24 @@ A, B = CUT["sh10"], CUT["sh11"]
 cue("sh10.pullback", s, P["sh10.membrane"], 1.3, "whoosh", -25, cls="amb", pre=0.45, space="body", send=-10,
     fade_out=0.3,
     params=dict(sync=0.45, f_from=260, f_peak=1000, f_to=2200, pan_from=0.0, pan_to=0.0, bw=1.8, rough=0.5),
-    ref="PIC f1297.5 (final render): pull back out through the membrane")
+    ref="PIC f1297.7 (final render b1ac91e): pull back out through the membrane (veil closes f1294.8, "
+        "membrane f1296-1299, rack f1300-1301, outside f1302)")
 bed("sh10.field", s, A - 0.2, B + 0.3, "body_amb", -28, 0.6, 0.6, space="micro", send=-10,
     params=dict(wet=0.5, creaks=0.2, depth=1.5), ref="vast field of living cells")
 t1, t2, t3 = w(s, "bildiğimiz"), w(s, "bilmediğimiz"), w(s, "hadsiz")
 cue("sh10.lights_one", s, P["sh10.light1"], t2 + 0.8 - P["sh10.light1"], "sparkle", -30, pre=0.0, space="micro",
     send=-12, fade_out=0.6, params=dict(rate=11.0, bright=1.0, far=0.1, width=0.8),
-    ref="PIC f1316 (final render): cells light up one after another")
+    ref="PIC f1317 (final render b1ac91e): the hero cell lights, its neighbours follow f1319-1325, single "
+        "new lights to ~f1349")
+tw = P["sh10.wave"] - (t2 - F)           # picture wave, cue-relative
 cue("sh10.lights_wave", s, t2 - F, B + 0.35 - (t2 - F), "sparkle", -28, pre=0.0, space="micro", send=-10,
     fade_in=0.4, fade_out=0.5,
-    params=dict(rate=[[0, 40], [t3 - t2, 450], [t3 - t2 + 0.8, 900], [B - t2 - 0.5, 700], [B - t2 + 0.35, 250]],
+    params=dict(rate=[[0, 40], [tw, 450], [tw + 0.8, 900], [tw + 1.5, 700], [B - t2 + 0.35, 250]],
                 bright=0.9, far=0.75, sweep=[[0, -0.9], [t3 - t2 + 0.6, 0.9], [B - t2, 0.0]]),
-    ref="bilmediğimiz -> hadsiz: waves of tiny lights to infinity")
+    ref="bilmediğimiz -> hadsiz: waves of tiny lights to infinity; 450 grains/s on PIC f1352 (final render "
+        "b1ac91e: lit cells start coming up in the near field), 900 at +0.8 s (f1371: ~95 lit cells, doubling every "
+        "~0.5 s to the end of the shot), easing to 700 over the next 0.7 s (f1388) as before, then thinning to "
+        "250 by 0.35 s after the cut (luma transition into sh11)")
 tick("sh10.counter", s, t3 + 0.15, track={"shot": s, "name": "cells"}, ref="counter ~37 trilyon hücre lands")
 
 # ============================================================== sh11 rain on the seedling
