@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Kenz</title>
+    <meta name="description" content="Güneşten daha parlak ve cennet gibi güzel ve saadet-i ebediye gibi şirin hakikatler." />
+    <meta name="theme-color" content="#5AA2EC" />
+    <meta name="color-scheme" content="light" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Kenz" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Kenz" />
+    <meta property="og:description" content="Güneşten daha parlak ve cennet gibi güzel ve saadet-i ebediye gibi şirin hakikatler." />
+    <meta property="og:image" content="https://emreks53.github.io/A/og-image.png" />
+    <link rel="icon" href="icons/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  </head>
+  <body>
+    <div class="app" id="app">
+      <picture class="bg" aria-hidden="true">
+        <source
+          media="(min-aspect-ratio: 3/5)"
+          type="image/avif"
+          srcset="/src/assets/bg/bg-wide-1280.avif 1280w, /src/assets/bg/bg-wide-2560.avif 2560w"
+          sizes="max(100vw, 139vh)"
+        />
+        <source
+          media="(min-aspect-ratio: 3/5)"
+          type="image/webp"
+          srcset="/src/assets/bg/bg-wide-1280.webp 1280w, /src/assets/bg/bg-wide-2560.webp 2560w"
+          sizes="max(100vw, 139vh)"
+        />
+        <source
+          media="(min-aspect-ratio: 3/5)"
+          srcset="/src/assets/bg/bg-wide-1280.jpg 1280w, /src/assets/bg/bg-wide-2560.jpg 2560w"
+          sizes="max(100vw, 139vh)"
+        />
+        <source
+          type="image/avif"
+          srcset="/src/assets/bg/bg-portrait-854.avif 854w, /src/assets/bg/bg-portrait-1708.avif 1708w"
+          sizes="max(100vw, 46.4vh)"
+        />
+        <source
+          type="image/webp"
+          srcset="/src/assets/bg/bg-portrait-854.webp 854w, /src/assets/bg/bg-portrait-1708.webp 1708w"
+          sizes="max(100vw, 46.4vh)"
+        />
+        <img
+          class="bg__img"
+          src="/src/assets/bg/bg-portrait-854.jpg"
+          srcset="/src/assets/bg/bg-portrait-854.jpg 854w, /src/assets/bg/bg-portrait-1708.jpg 1708w"
+          sizes="max(100vw, 46.4vh)"
+          alt=""
+          decoding="async"
+          fetchpriority="high"
+        />
+      </picture>
+
+      <main class="views">
+        <section class="view view--kenz" id="view-kenz" data-view="kenz" aria-label="Kenz">
+          <h1 class="visually-hidden">Kenz</h1>
+          <p class="quote">
+            <span class="quote__line">Güneşten daha parlak</span>
+            <span class="quote__line">ve cennet gibi güzel</span>
+            <span class="quote__line">ve saadet-i ebediye gibi</span>
+            <span class="quote__line">şirin hakikatler</span>
+          </p>
+        </section>
+
+        <section class="view view--page" id="view-oku" data-view="oku" aria-label="Oku" hidden>
+          <h1 class="page__title">Oku</h1>
+          <p class="page__text">Okuma bölümü hazırlanıyor.</p>
+        </section>
+
+        <section class="view view--page" id="view-gunes" data-view="gunes" aria-label="Güneş" hidden>
+          <h1 class="page__title">Güneş</h1>
+          <p class="page__text">Bu bölüm hazırlanıyor.</p>
+        </section>
+      </main>
+
+      <nav class="tabbar" aria-label="Ana menü">
+        <span class="tabbar__pill" aria-hidden="true"></span>
+        <a class="tab tab--oku" href="#/oku" data-tab="oku">
+          <img class="tab__icon tab__icon--globe" src="/src/assets/icons/globe.webp" alt="" width="96" height="96" />
+          <span class="tab__label">Oku</span>
+        </a>
+        <a class="tab tab--kenz" href="#/kenz" data-tab="kenz" aria-current="page">
+          <img class="tab__icon tab__icon--kenz" src="/src/assets/icons/kenz.svg" alt="" width="834" height="907" />
+          <span class="tab__label">Kenz</span>
+        </a>
+        <a class="tab tab--gunes" href="#/gunes" data-tab="gunes">
+          <img class="tab__icon tab__icon--sun" src="/src/assets/icons/sun.svg" alt="" width="84" height="84" />
+          <span class="tab__label">Güneş</span>
+        </a>
+      </nav>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

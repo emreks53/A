@@ -1,0 +1,33 @@
+{
+  "name": "kenz",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Kenz — mobil uygulama ve web sitesi",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test:visual": "node scripts/compare-mockup.mjs",
+    "assets:native": "capacitor-assets generate --ios --android --iconBackgroundColor '#FCC805' --iconBackgroundColorDark '#FCC805' --splashBackgroundColor '#FCC805' --splashBackgroundColorDark '#FCC805'",
+    "cap:sync": "npm run build && cap sync",
+    "android:apk": "npm run build && cap sync android && cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.3",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0",
+    "workbox-build": "^7.4.1",
+    "workbox-window": "^7.4.1"
+  }
+}
