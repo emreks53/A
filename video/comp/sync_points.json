@@ -103,7 +103,8 @@
   {
    "id": "kw_gunes.GÜNEŞ",
    "t": 38.88,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 38.78
   },
   {
    "id": "sh08.callout_hand",
@@ -308,7 +309,8 @@
   {
    "id": "kw_hikmetli.GÖRÜYORMUŞÇASINA",
    "t": 91.68,
-   "kind": "keyword"
+   "kind": "keyword",
+   "lands": 91.36
   },
   {
    "id": "kw_her_seyi.HER ŞEYİ GÖREN",
