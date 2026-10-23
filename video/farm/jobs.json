@@ -1727,6 +1727,15 @@
    "from": 1280,
    "to": 1307,
    "note": "r7 head ease (4887b7b)"
+  },
+  {
+   "node": "b172",
+   "branch": "render-fix-sh10",
+   "ref": "4887b7b84281b9cefe29cbf0338c189d77d43db3",
+   "shot": "sh10",
+   "from": 1280,
+   "to": 1307,
+   "note": "r7 head ease (4887b7b), requeue of b171 (container restart)"
   }
  ]
 }
