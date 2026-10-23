@@ -1709,6 +1709,24 @@
    "from": 1051,
    "to": 1090,
    "note": "r4 thumb rim fix (419af57)"
+  },
+  {
+   "node": "b170",
+   "branch": "render-fix-sh10",
+   "ref": "4887b7b84281b9cefe29cbf0338c189d77d43db3",
+   "shot": "sh10",
+   "from": 1244,
+   "to": 1279,
+   "note": "r7 head ease (4887b7b)"
+  },
+  {
+   "node": "b171",
+   "branch": "render-fix-sh10",
+   "ref": "4887b7b84281b9cefe29cbf0338c189d77d43db3",
+   "shot": "sh10",
+   "from": 1280,
+   "to": 1307,
+   "note": "r7 head ease (4887b7b)"
   }
  ]
 }
