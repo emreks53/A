@@ -50,7 +50,7 @@
  "grade": {
   "sh01": {}, "sh02": {}, "sh03": {}, "sh04": {}, "sh05": {}, "sh06": {}, "sh07": {},
   "sh08": {"keys": [{"f0": 1091, "f1": 1115, "gain": [1.04, 1.0, 0.946]}],
-           "_doc": "the macro chunk 1091-1120 renders with diffuse_bounces 0 (1 before; MACRO_EV corrects exposure only): at 1091 the comp turned cooler and greyer (whole-frame Lab vs the 1086-1090 trend: dE 1.74, da -0.82, db -1.51) and stayed so. The key warms 1091 back onto the trend (dE 0.03) and eases out by 1115. Gains measured on the rf_n14 renders; 968-1090 will be re-rendered (thumb skin shader): re-tune then"},
+           "_doc": "the macro chunk 1091-1120 renders with diffuse_bounces 0 (1 before; MACRO_EV corrects exposure only): at 1091 the comp turned cooler and greyer (whole-frame Lab vs the 1086-1090 trend: dE 1.74, da -0.82, db -1.51) and stayed so. The key warms 1091 back onto the trend (dE 0.03) and eases out by 1115. Gains measured on the r3 renders (rf_n14); re-checked on r4 (419af57, 968-1090 re-rendered for the thumb rim): 1084-1090 = r3 within 0.04 dE, 1091 off the 1086-1090 trend by 0.04 dE (frame-mean colour) / 0.45 (mean Lab) as with r3, so no re-tune"},
   "sh09": {},
   "sh10": {}, "sh11": {}, "sh12": {}, "sh13a": {}, "sh13b": {}, "sh14a": {}, "sh14b": {"head": {"exposure": -1.6, "hold": 8, "frames": 20}}, "sh14c": {}, "sh15": {}
  },
