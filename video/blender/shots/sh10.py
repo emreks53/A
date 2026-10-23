@@ -106,6 +106,36 @@ def build(ctx):
     t_exit = next(t_s + i / 240 for i in range(2400) if dist_at(t_s + i / 240) > d_wall)
     print(f"[sh10] membrane crossing at {t_exit:.3f}s (f{t_exit * C.FPS:.2f})")
     t_set = t_had - 0.15                                 # framing settled for "HADSIZ"
+
+    # camera distance only (dist_at, t_exit and everything keyed on them stay as they are):
+    # through the 1247-1252 dissolve the probe keeps sh09's own creep (sh09.py: local x = QX +
+    # (hand-off x - QX) * creep / creep(f1250), QX = x_mem - H.x by ray-cast, = -0.1821183), so both
+    # shots push in together; then its log-distance speed rises monotonically from sh09's (-0.52 %/f
+    # at 1252, through 0 just before 1253) to the path's own speed at 1288, where it rejoins dist_at
+    # (value and speed), without ever moving faster than the path does there
+    t_c9, t_e9, QX = 49.45, C.shot_info("sh09")["end_s"] + 0.25, -0.1821183
+    creep = lambda x: 1 - (1 - min(1.0, max(0.0, x))) ** 2.2
+    u9 = creep((t_s - t_c9) / (t_e9 - t_c9))
+
+    def d09(t):
+        return -(QX + (-d0 - QX) * creep((t - t_c9) / (t_e9 - t_c9)) / u9)
+    tA, tR = 1252 / C.FPS, 1288 / C.FPS
+    T_ = tR - tA
+    LA, LR = math.log(d09(tA)), math.log(dist_at(tR))
+    vA = (LA - math.log(d09(tA - 1e-4))) / 1e-4
+    vR = (math.log(dist_at(tR + 1e-4)) - LR) / 1e-4
+    k_ = ((LR - LA) / T_ - vA) / (vR - vA)
+    n_ = 1.0 / (1.0 - k_) - 1.0
+
+    def dist_cam(t):
+        if t <= tA:
+            return d09(t)
+        if t >= tR:
+            return dist_at(t)
+        s = (t - tA) / T_
+        return math.exp(LA + T_ * (vA * s + (vR - vA) * (s - (1 - (1 - s) ** (n_ + 1)) / (n_ + 1))))
+    print(f"[sh10] camera: sh09 creep to f1252 ({vA / C.FPS * 100:+.2f} %/f), ease to the path at f1288 "
+          f"({vR / C.FPS * 100:+.2f} %/f, n={n_:.2f}, start accel {(vR - vA) * n_ / T_ / C.FPS ** 2 * 100:.2f} %/f2)")
     locs, rots, foc, fst, fdist, fcol, expo, fpow, filmd = [], [], [], [], [], [], [], [], []
     prev = None
 
@@ -133,7 +163,7 @@ def build(ctx):
         # once out of the hold the probe backs off faster (x up to 3.5) so the field is revealed
         # instead of the camera skimming the hero cell; the boost bleeds off by "hadsiz" (monotonic)
         boost = 2.5 * C.remap(tr, t_exit + 0.35, t_exit + 0.85, C.smooth) * (1.0 - C.remap(tr, t_exit + 0.85, t_had, C.smooth))
-        dist = dist_at(t) * (1.0 + boost)
+        dist = dist_cam(t) * (1.0 + boost)
         # elevation: level inside, rising to look down on the field, then settling low
         # (on the real clock, after the hold, <= 3 deg/frame: no whip while the exit cell is close)
         el = C.lerp(0.0, 52.0, C.remap(tr, F_HOLD1 / C.FPS, F_HOLD1 / C.FPS + 1.15, C.smooth))
