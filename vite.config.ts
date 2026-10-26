@@ -1,7 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { okuKatalog } from './vite/oku-katalog.ts';
+import { okuVideolar } from './vite/oku-videolar.ts';
 
 export default defineConfig({
   // Göreli taban: aynı derleme GitHub Pages alt yolunda (/A/) ve Capacitor içinde çalışır.
@@ -14,7 +14,7 @@ export default defineConfig({
     assetsInlineLimit: 0,
   },
   plugins: [
-    okuKatalog(),
+    okuVideolar(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
@@ -39,10 +39,12 @@ export default defineConfig({
       },
       workbox: {
         // Arka plan görsellerinin yalnızca tarayıcının seçtiği sürümü indirilir; onlar çalışma anında önbelleğe alınır.
-        // Lügat (lugat/lugat.jsonl) ve bölümler çevrimdışı okuma için baştan önbelleğe alınır.
-        globPatterns: ['**/*.{html,js,css,woff2,svg,ico,png,webp,jsonl}'],
+        // Videolar (videolar/*.mp4) büyük olduğu için önbelleğe alınmaz, akarak oynar.
+        globPatterns: ['**/*.{html,js,css,woff2,svg,ico,png,webp}'],
         globIgnores: ['**/bg-*'],
         navigateFallback: 'index.html',
+        // Paylaşım sayfaları (v/<id>/) kendi önizleme etiketleriyle açılmalı
+        navigateFallbackDenylist: [/\/v\//],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => /\/bg-[\w-]+\.(?:avif|webp|jpg)$/.test(url.pathname),
@@ -50,6 +52,14 @@ export default defineConfig({
             options: {
               cacheName: 'kenz-backgrounds',
               expiration: { maxEntries: 8 },
+            },
+          },
+          {
+            urlPattern: ({ url }) => /\/videolar\/[\w-]+\.jpg$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'kenz-kapaklar',
+              expiration: { maxEntries: 60 },
             },
           },
         ],

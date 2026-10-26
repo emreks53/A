@@ -2,15 +2,15 @@ export type Sekme = 'oku' | 'kenz' | 'gunes';
 
 export interface Rota {
   sekme: Sekme;
-  kitap?: string;
-  bolum?: string;
+  /** Oku akışında açılacak video (#/oku/<id>) */
+  video?: string;
 }
 
 const SEKMELER: readonly string[] = ['oku', 'kenz', 'gunes'];
 
-/** "#/oku/sozler/birinci-soz" → { sekme: 'oku', kitap: 'sozler', bolum: 'birinci-soz' } */
+/** "#/oku/sevgi-ve-guzellik" → { sekme: 'oku', video: 'sevgi-ve-guzellik' } */
 export function rotaCoz(hash: string): Rota {
-  const [sekme, kitap, bolum] = hash
+  const [sekme, video] = hash
     .replace(/^#\/?/, '')
     .split('/')
     .map((p) => {
@@ -21,10 +21,19 @@ export function rotaCoz(hash: string): Rota {
       }
     });
   if (!SEKMELER.includes(sekme)) return { sekme: 'kenz' };
-  if (sekme !== 'oku' || !kitap) return { sekme: sekme as Sekme };
-  return bolum ? { sekme, kitap, bolum } : { sekme, kitap };
+  if (sekme !== 'oku' || !video) return { sekme: sekme as Sekme };
+  return { sekme, video };
 }
 
 export function rotaHash(r: Rota): string {
-  return '#/' + [r.sekme, r.kitap, r.kitap ? r.bolum : undefined].filter(Boolean).map((p) => encodeURIComponent(p!)).join('/');
+  return '#/' + [r.sekme, r.video].filter(Boolean).map((p) => encodeURIComponent(p!)).join('/');
+}
+
+/** Paylaşım bağlantısından ("…/v/<id>/") video kimliği; uygulama bu bağlantıyla açılınca kullanılır */
+export function paylasimdanVideo(adres: string): string | undefined {
+  try {
+    return new URL(adres).pathname.match(/\/v\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?(?:index\.html)?$/)?.[1];
+  } catch {
+    return undefined;
+  }
 }

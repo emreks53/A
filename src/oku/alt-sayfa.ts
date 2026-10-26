@@ -1,16 +1,14 @@
-// Ekranın altından açılan sayfa (kelime manası, dipnot, okuma ayarları).
-// modal: arkası yarı saydam perdeyle kapanır, odak sayfada kalır (ayarlar).
-// modal değil: metin görünür ve dokunulabilir kalır; başka bir kelimeye dokununca içerik değişir (kelime, dipnot).
+// Ekranın altından açılan sayfa (Menba).
+// modal: arkası yarı saydam perdeyle kapanır, odak sayfada kalır.
+// modal değil: arkadaki ekran dokunulabilir kalır.
 
 export interface AltSayfaSecenek {
   baslik: string;
-  /** Başlık ekranda gizli kalsın mı (ör. kelime sayfasında başlık içerikte büyük yazılır) */
+  /** Başlık ekranda gizli kalsın mı (yalnız ekran okuyucular için) */
   baslikGizli?: boolean;
   icerik: Node;
   modal?: boolean;
   sinif?: string;
-  /** Okuma teması (gunduz / sepya / gece); verilmezse kitaplığın krem rengi */
-  tema?: string;
   kapaninca?: () => void;
 }
 
@@ -43,7 +41,6 @@ export function altSayfaAc(s: AltSayfaSecenek): AltSayfa {
   const baslikId = `alt-sayfa-baslik-${++sayac}`;
   sayfa.setAttribute('aria-labelledby', baslikId);
   sayfa.tabIndex = -1;
-  if (s.tema) sayfa.dataset.tema = s.tema;
 
   const tutamak = document.createElement('div');
   tutamak.className = 'alt-sayfa__tutamak';

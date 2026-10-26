@@ -1,9 +1,11 @@
-// Oku bölümünü gerçek tarayıcıda baştan sona dener (derlenmiş dist/ üzerinde).
-// Kullanım: npm run build && npm run test:oku   (Playwright + Chromium gerekir)
+// Oku akışını gerçek tarayıcıda baştan sona dener (derlenmiş dist/ üzerinde).
+// Kullanım: npm run build && npm run test:oku          (Playwright + Chromium gerekir)
+//           node scripts/oku-test.mjs --ekran <klasör>  (ayrıca her adımın ekran görüntüsünü kaydeder)
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, stat } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
 
 const require = createRequire(import.meta.url);
@@ -14,239 +16,228 @@ try {
   playwright = createRequire('/opt/node-tools/node_modules/')('playwright');
 }
 
+const ekranIndex = process.argv.indexOf('--ekran');
+const ekranKlasoru = ekranIndex > 0 ? resolve(process.argv[ekranIndex + 1]) : null;
+if (ekranKlasoru) await mkdir(ekranKlasoru, { recursive: true });
+
 const root = resolve('dist');
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.json': 'application/json', '.jsonl': 'application/jsonl', '.webmanifest': 'application/manifest+json' };
+const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json' };
+// GitHub Pages'teki gibi /A/ alt yolundan, video için bayt aralığı (Range) desteğiyle sunar.
 const server = createServer(async (req, res) => {
   const tam = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   if (!tam.startsWith('/A/')) return res.writeHead(404).end();
   const path = tam.slice(2);
   const file = join(root, path.endsWith('/') ? path + 'index.html' : path);
   try {
-    const body = await readFile(file);
-    res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' });
-    res.end(body);
+    const { size } = await stat(file);
+    const type = types[extname(file)] ?? 'application/octet-stream';
+    const aralik = req.headers.range?.match(/bytes=(\d*)-(\d*)/);
+    if (aralik) {
+      const bas = aralik[1] ? Number(aralik[1]) : size - Number(aralik[2]);
+      const son = aralik[1] && aralik[2] ? Math.min(Number(aralik[2]), size - 1) : size - 1;
+      res.writeHead(206, { 'content-type': type, 'content-range': `bytes ${bas}-${son}/${size}`, 'accept-ranges': 'bytes', 'content-length': son - bas + 1 });
+      createReadStream(file, { start: bas, end: son }).pipe(res);
+    } else {
+      res.writeHead(200, { 'content-type': type, 'accept-ranges': 'bytes', 'content-length': size });
+      if (req.method === 'HEAD') res.end();
+      else res.end(await readFile(file));
+    }
   } catch {
     res.writeHead(404).end();
   }
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
-// GitHub Pages'teki gibi alt yolda çalıştığını da sınamak için /A/ altından sunulur.
 const base = `http://127.0.0.1:${server.address().port}/A/`;
 
-const browser = await playwright.chromium.launch();
+const browser = await playwright.chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
 const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base.replace(/\/A\/$/, '') });
 const page = await context.newPage();
 const hatalar = [];
 page.on('pageerror', (e) => hatalar.push(String(e)));
-page.on('console', (m) => m.type() === 'error' && hatalar.push(m.text()));
+page.on('console', (m) => m.type() === 'error' && !m.text().startsWith('Failed to load resource') && hatalar.push(m.text()));
+page.on('response', (r) => r.status() >= 400 && hatalar.push(`${r.status()} ${new URL(r.url()).pathname}`));
 
 let gecen = 0;
+let sira = 0;
 async function adim(ad, fn) {
   try {
     await fn();
     gecen++;
     console.log(`  ✓ ${ad}`);
+    if (ekranKlasoru) await page.screenshot({ path: join(ekranKlasoru, `${String(++sira).padStart(2, '0')}.png`) });
   } catch (e) {
     console.error(`  ✗ ${ad}\n    ${e.message.split('\n').join('\n    ')}`);
-    await page.screenshot({ path: `oku-test-hata.png` }).catch(() => {});
+    await page.screenshot({ path: 'oku-test-hata.png' }).catch(() => {});
     await browser.close();
     server.close();
     process.exit(1);
   }
 }
 
-/** Metinde geçen kelimenin ortasına dokunur. */
-async function kelimeyeDokun(kelime, sira = 0) {
-  const nokta = await page.evaluate(
-    ([k, s]) => {
-      const kok = document.querySelector('.okuyucu-metin');
-      const w = document.createTreeWalker(kok, NodeFilter.SHOW_TEXT);
-      let bulunan = 0;
-      for (let n = w.nextNode(); n; n = w.nextNode()) {
-        let i = -1;
-        while ((i = n.data.indexOf(k, i + 1)) >= 0) {
-          if (bulunan++ < s) continue;
-          const r = document.createRange();
-          r.setStart(n, i + Math.floor(k.length / 2));
-          r.setEnd(n, i + Math.floor(k.length / 2) + 1);
-          r.startContainer.parentElement.scrollIntoView({ block: 'center' });
-          const b = r.getBoundingClientRect();
-          return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
-        }
-      }
-      return null;
-    },
-    [kelime, sira],
-  );
-  assert.ok(nokta, `"${kelime}" metinde bulunamadı`);
-  await page.waitForTimeout(150);
-  await page.mouse.click(nokta.x, nokta.y);
-}
+const aktif = () => page.evaluate(() => document.querySelector('.reel[data-aktif]')?.dataset.id);
+const oynuyor = (id) =>
+  page.waitForFunction((i) => {
+    const v = document.querySelector(`.reel[data-id="${i}"] video`);
+    return v && !v.paused && v.currentTime > 0.3;
+  }, id);
+const duruyor = (id) => page.evaluate((i) => document.querySelector(`.reel[data-id="${i}"] video`).paused, id);
 
-async function sayfaMetni() {
+console.log('Oku akışı');
+
+await adim('ana ekran açılışta video indirmez', async () => {
+  await page.goto(base);
+  await page.waitForSelector('.quote');
+  await page.waitForTimeout(400);
+  const kaynaklar = await page.evaluate(() => Array.from(document.querySelectorAll('.reel video'), (v) => v.getAttribute('src')));
+  assert.deepEqual(kaynaklar, [null, null]);
+});
+
+await adim('Oku sekmesi ilk videoyu sesli oynatır', async () => {
+  await page.locator('.tab--oku').click();
+  await oynuyor('sevgi-ve-guzellik');
+  assert.equal(await aktif(), 'sevgi-ve-guzellik');
+  assert.equal(new URL(page.url()).hash, '#/oku/sevgi-ve-guzellik');
+  assert.equal(await page.locator('.reel[data-id="sevgi-ve-guzellik"] video').evaluate((v) => v.muted), false);
+});
+
+await adim('ekranda yalnız iki düğme var: Neşret ve Menba', async () => {
+  const adlar = await page.locator('.reel[data-aktif] button').evaluateAll((b) => b.map((x) => x.textContent.trim()));
+  assert.deepEqual(adlar, ['Neşret', 'Menba']);
+});
+
+await adim('videoya dokununca durur, yeniden dokununca sürer', async () => {
+  const sahne = await page.locator('.reel[data-aktif] .reel__sahne').boundingBox();
+  await page.mouse.click(sahne.x + sahne.width / 2, sahne.y + sahne.height / 2);
+  await page.waitForFunction(() => document.querySelector('.reel[data-aktif] video').paused);
+  assert.equal(await page.locator('.reel[data-aktif]').getAttribute('data-durum'), 'durdu');
+  await page.mouse.click(sahne.x + sahne.width / 2, sahne.y + sahne.height / 2);
+  await page.waitForFunction(() => !document.querySelector('.reel[data-aktif] video').paused);
+});
+
+await adim('yukarı kaydırınca sonraki video gelir ve oynar; önceki durur', async () => {
+  await page.locator('.akis').evaluate((a) => a.scrollTo({ top: a.clientHeight }));
+  await oynuyor('ahlak-mucizesi');
+  assert.equal(await aktif(), 'ahlak-mucizesi');
+  assert.equal(await duruyor('sevgi-ve-guzellik'), true);
+  assert.equal(new URL(page.url()).hash, '#/oku/ahlak-mucizesi');
+});
+
+await adim('geri kaydırınca önceki video baştan başlar', async () => {
+  await page.locator('.akis').evaluate((a) => a.scrollTo({ top: 0 }));
+  await page.waitForFunction(() => document.querySelector('.reel[data-aktif]')?.dataset.id === 'sevgi-ve-guzellik');
+  const t = await page.locator('.reel[data-id="sevgi-ve-guzellik"] video').evaluate((v) => v.currentTime);
+  assert.ok(t < 2, `currentTime ${t}`);
+  await oynuyor('sevgi-ve-guzellik');
+  assert.equal(await duruyor('ahlak-mucizesi'), true);
+});
+
+await adim("Menba kaynağı gösterir (Lem'alar, 64. sayfa) ve künyeyi içerir", async () => {
+  await page.locator('.reel[data-aktif] .reel__dugme--menba').click();
   await page.waitForSelector('.alt-sayfa.acik');
-  await page.waitForFunction(() => !document.querySelector('.alt-sayfa.acik .madde__durum')?.textContent?.includes('açılıyor'));
-  return page.locator('.alt-sayfa.acik .alt-sayfa__govde').innerText();
-}
-
-const kaydirmaOrani = () =>
-  page.evaluate(() => {
-    const k = document.querySelector('.okuyucu-kaydirma');
-    return k.scrollTop / (k.scrollHeight - k.clientHeight);
-  });
-
-console.log('Oku bölümü');
-await page.goto(base + '#/oku');
-
-await adim('kitaplık örnek kitabı listeler', async () => {
-  await page.waitForSelector('.kitap-karti');
-  assert.match(await page.locator('.kitap-karti').first().innerText(), /Örnek Kitap/);
-  assert.equal(await page.locator('.tab--oku').getAttribute('aria-current'), 'page');
-});
-
-await adim('kitaba dokununca bölümler açılır', async () => {
-  await page.locator('.kitap-karti').first().click();
-  await page.waitForSelector('.bolum-satiri');
-  assert.equal(await page.locator('.bolum-satiri').count(), 2);
-  assert.equal(new URL(page.url()).hash, '#/oku/ornek');
-});
-
-await adim('bölüm açılır, alt menü gizlenir', async () => {
-  await page.locator('.bolum-satiri').first().click();
-  await page.waitForSelector('.okuyucu-metin h1');
-  assert.equal(await page.locator('.okuyucu-metin h1').innerText(), 'Okuma Ekranı');
-  await page.waitForTimeout(450);
-  assert.equal(await page.locator('.tabbar').evaluate((e) => getComputedStyle(e).pointerEvents), 'none');
-  assert.equal(await page.locator('.metin__p--ar').getAttribute('dir'), 'rtl');
-});
-
-await adim('ekli kelimeye dokununca kökünün manası açılır', async () => {
-  await kelimeyeDokun('kudretinin');
-  const metin = await sayfaMetni();
-  assert.match(metin, /^kudret\b/m, metin);
-  assert.match(metin, /Güç/);
-});
-
-await adim('başka kelimeye dokununca sayfa yenilenir; terkip tanınır', async () => {
-  await kelimeyeDokun('mana-yı');
-  const metin = await sayfaMetni();
-  assert.match(metin, /mana-yı harfî/, metin);
-  assert.equal(await page.locator('.alt-sayfa').count(), 1);
-});
-
-await adim('boşluğa dokununca sayfa kapanır', async () => {
-  const k = await page.locator('.okuyucu-metin').boundingBox();
-  await page.mouse.click(k.x + 4, k.y + k.height / 3);
-  await page.waitForFunction(() => !document.querySelector('.alt-sayfa.acik'));
-});
-
-await adim('dipnot işareti dipnotu açar', async () => {
-  await page.locator('a[data-dipnot]').first().scrollIntoViewIfNeeded();
-  await page.locator('a[data-dipnot]').first().click();
-  const metin = await sayfaMetni();
-  assert.match(metin, /Dipnotlar böyle görünür/);
+  const metin = await page.locator('.alt-sayfa.acik').innerText();
+  assert.match(metin, /Lem'alar/);
+  assert.match(metin, /64\. sayfa/);
+  assert.match(await page.locator('.alt-sayfa.acik .menba__kunye').innerText(), /Görüntü künyesi/);
+  assert.equal(await page.locator('.alt-sayfa.acik .menba__kunye li').count(), 4);
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('.alt-sayfa.acik'));
 });
 
-await adim('boşluğa dokununca gizlenen üst çubuk geri gelir', async () => {
-  await page.waitForFunction(() => document.querySelector('.oku-ekran--okuma').classList.contains('ust-gizli'));
-  const k = await page.locator('.okuyucu-metin').boundingBox();
-  await page.mouse.click(k.x + 4, 420);
-  await page.waitForFunction(() => !document.querySelector('.oku-ekran--okuma').classList.contains('ust-gizli'));
-  await page.waitForTimeout(350);
-});
-
-await adim('okuma ayarları uygulanır ve saklanır', async () => {
-  await page.locator('.okuyucu-ust__aa').click();
-  await page.waitForSelector('.alt-sayfa--ayarlar.acik');
-  const once = await page.locator('.okuyucu-metin').evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
-  await page.locator('.ayar__boyut-dugme--buyuk').click();
-  const sonra = await page.locator('.okuyucu-metin').evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
-  assert.ok(sonra > once, `${once} → ${sonra}`);
-  await page.locator('.ayar__secim--tema [data-deger="gece"]').click();
-  assert.equal(await page.locator('.oku-ekran--okuma').getAttribute('data-tema'), 'gece');
-  assert.equal(await page.locator('.alt-sayfa--ayarlar').getAttribute('data-tema'), 'gece');
-  await page.locator('.alt-sayfa__kapat').click();
-  await page.reload();
-  await page.waitForSelector('.okuyucu-metin h1');
-  assert.equal(await page.locator('.oku-ekran--okuma').getAttribute('data-tema'), 'gece');
-  await page.evaluate(() => localStorage.removeItem('kenz.oku.ayarlar'));
-});
-
-await adim('kalınan yer yeniden açılışta hatırlanır', async () => {
-  await page.goto(base + '#/oku/ornek/okuma-uzerine');
-  await page.waitForSelector('.okuyucu-metin h1');
+await adim('Neşret paylaşım bağlantısını verir (paylaşım menüsü yoksa kopyalar)', async () => {
   await page.evaluate(() => {
-    const k = document.querySelector('.okuyucu-kaydirma');
-    k.scrollTop = (k.scrollHeight - k.clientHeight) * 0.5;
+    // Masaüstü Chromium'da paylaşım menüsü yok; kopyalama yolunu sınarız
+    Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
   });
-  await page.waitForTimeout(900);
-  const once = await kaydirmaOrani();
-  await page.reload();
-  await page.waitForSelector('.okuyucu-metin h1');
-  await page.waitForTimeout(400);
-  const sonra = await kaydirmaOrani();
-  assert.ok(Math.abs(sonra - once) < 0.03, `${once} → ${sonra}`);
+  await page.locator('.reel[data-aktif] .reel__dugme--nesret').click();
+  await page.waitForSelector('.akis__bildirim.gorunur');
+  assert.equal(await page.locator('.akis__bildirim').innerText(), 'Bağlantı kopyalandı');
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'https://emreks53.github.io/A/v/sevgi-ve-guzellik/');
 });
 
-await adim('kitaplıkta "kaldığın yerden" kartı', async () => {
-  await page.goto(base + '#/oku');
-  await page.waitForSelector('.devam-karti');
-  assert.match(await page.locator('.devam-karti').innerText(), /Okuma Üzerine Notlar/);
+await adim('paylaşım menüsü varsa bağlantı onunla gönderilir', async () => {
+  await page.evaluate(() => {
+    window.__paylasilan = null;
+    Object.defineProperty(navigator, 'share', { value: async (d) => (window.__paylasilan = d), configurable: true });
+  });
+  await page.locator('.akis').evaluate((a) => a.scrollTo({ top: a.clientHeight }));
+  await page.waitForFunction(() => document.querySelector('.reel[data-aktif]')?.dataset.id === 'ahlak-mucizesi');
+  await page.locator('.reel[data-aktif] .reel__dugme--nesret').click();
+  await page.waitForFunction(() => window.__paylasilan);
+  assert.deepEqual(await page.evaluate(() => window.__paylasilan), {
+    title: "Ahlâk Mu'cizesi",
+    text: "Ahlâk Mu'cizesi",
+    url: 'https://emreks53.github.io/A/v/ahlak-mucizesi/',
+  });
 });
 
-await adim('geri düğmesi tarayıcı geçmişiyle aynı yolu izler', async () => {
-  await page.locator('.devam-karti').click();
-  await page.waitForSelector('.okuyucu-metin h1');
-  await page.locator('.okuyucu-ust__geri').click();
-  await page.waitForSelector('.bolum-satiri');
-  assert.equal(new URL(page.url()).hash, '#/oku/ornek');
-  await page.goBack();
-  await page.waitForSelector('.okuyucu-metin h1');
+await adim('Menba: Mektubat, 195. sayfa · Sözler, 19. Söz', async () => {
+  await page.locator('.reel[data-aktif] .reel__dugme--menba').click();
+  await page.waitForSelector('.alt-sayfa.acik');
+  const kaynaklar = await page.locator('.alt-sayfa.acik .menba__kaynak').evaluateAll((l) => l.map((x) => x.innerText.replace(/\s+/g, ' ')));
+  assert.deepEqual(kaynaklar, ['Mektubat 195. sayfa', 'Sözler 19. Söz']);
+  await page.locator('.alt-sayfa.acik .alt-sayfa__kapat').click();
+  await page.waitForFunction(() => !document.querySelector('.alt-sayfa.acik'));
 });
 
-await adim('sonraki bölüm geçmişe eklenmeden açılır', async () => {
-  await page.goto(base + '#/oku/ornek');
-  await page.locator('.bolum-satiri').first().click();
-  await page.waitForSelector('.okuyucu-metin h1');
-  await page.locator('.okuyucu-gecis__bag--sonraki').click();
-  await page.waitForFunction(() => document.querySelector('.okuyucu-metin h1')?.textContent === 'Okuma Üzerine Notlar');
-  await page.goBack();
-  await page.waitForSelector('.bolum-satiri');
+await adim('ilerleme çizgisine dokununca videoda o yere gidilir', async () => {
+  const c = await page.locator('.reel[data-aktif] .reel__ilerleme').boundingBox();
+  await page.mouse.click(c.x + c.width / 2, c.y + c.height / 2);
+  const oran = await page.locator('.reel[data-aktif] video').evaluate((v) => v.currentTime / v.duration);
+  assert.ok(Math.abs(oran - 0.5) < 0.05, `oran ${oran}`);
 });
 
-await adim('sekmeler arası geçişte Oku kaldığı ekranı korur', async () => {
-  await page.locator('.bolum-satiri').nth(1).click();
-  await page.waitForSelector('.okuyucu-metin h1');
-  await page.goto(base + '#/kenz');
-  assert.equal(await page.locator('.quote').isVisible(), true);
+await adim('başka sekmeye geçince durur, dönünce aynı videoda sürer', async () => {
+  await page.locator('.tab--kenz').click();
+  await page.waitForTimeout(200);
+  assert.equal(await duruyor('ahlak-mucizesi'), true);
   await page.locator('.tab--oku').click();
-  await page.waitForSelector('.okuyucu-metin h1');
-  assert.equal(new URL(page.url()).hash, '#/oku/ornek/okuma-uzerine');
+  await oynuyor('ahlak-mucizesi');
+  assert.equal(new URL(page.url()).hash, '#/oku/ahlak-mucizesi');
 });
 
-await adim('bitmiş bölüm yeniden açılıp kapatılınca "okundu" kalır', async () => {
-  await page.evaluate(() => {
-    const k = document.querySelector('.okuyucu-kaydirma');
-    k.scrollTop = k.scrollHeight;
-  });
-  await page.waitForTimeout(900);
-  await page.goto(base + '#/oku/ornek');
-  await page.waitForSelector('.bolum-satiri');
-  assert.equal(await page.locator('.bolum-satiri').nth(1).locator('.bolum-satiri__durum--bitti').count(), 1);
-  await page.locator('.bolum-satiri').nth(1).click();
-  await page.waitForSelector('.okuyucu-metin h1');
-  await page.waitForTimeout(700);
-  assert.ok((await kaydirmaOrani()) < 0.05, 'bitmiş bölüm baştan açılmalı');
-  await page.locator('.okuyucu-ust__geri').click();
-  await page.waitForSelector('.bolum-satiri');
-  assert.equal(await page.locator('.bolum-satiri').nth(1).locator('.bolum-satiri__durum--bitti').count(), 1);
+await adim('klavyeyle ↑/↓ video değişir', async () => {
+  await page.keyboard.press('ArrowUp');
+  await page.waitForFunction(() => document.querySelector('.reel[data-aktif]')?.dataset.id === 'sevgi-ve-guzellik');
+  await page.keyboard.press('ArrowDown');
+  await page.waitForFunction(() => document.querySelector('.reel[data-aktif]')?.dataset.id === 'ahlak-mucizesi');
 });
 
-await adim('bilinmeyen bölüm adresi çökmez', async () => {
-  await page.goto(base + '#/oku/ornek/yok-boyle');
-  await page.waitForSelector('.oku-ekran--bos');
+await adim('paylaşım bağlantısı videoyu açar (önizleme etiketleriyle)', async () => {
+  const yanit = await page.request.get(base + 'v/ahlak-mucizesi/');
+  const html = await yanit.text();
+  assert.match(html, /<meta property="og:title" content="Ahlâk Mu&#39;cizesi" \/>/);
+  assert.match(html, /og:image" content="https:\/\/emreks53\.github\.io\/A\/videolar\/ahlak-mucizesi-onizleme\.jpg"/);
+  await page.goto(base + 'v/ahlak-mucizesi/');
+  await page.waitForURL(/#\/oku\/ahlak-mucizesi$/);
+  await oynuyor('ahlak-mucizesi');
+  assert.equal(await page.locator('.tab--oku').getAttribute('aria-current'), 'page');
+});
+
+await adim('sesli oynatmaya izin vermeyen tarayıcıda sessiz başlar, dokununca ses açılır', async () => {
+  const b2 = await playwright.chromium.launch({ args: ['--autoplay-policy=document-user-activation-required'] });
+  const p2 = await (await b2.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
+  try {
+    await p2.goto(base + '#/oku/sevgi-ve-guzellik');
+    await p2.waitForSelector('.akis__ses-ipucu:not([hidden])');
+    await p2.waitForFunction(() => {
+      const v = document.querySelector('.reel[data-aktif] video');
+      return v.muted && !v.paused;
+    });
+    await p2.locator('.akis__ses-ipucu').click();
+    await p2.waitForFunction(() => {
+      const v = document.querySelector('.reel[data-aktif] video');
+      return !v.muted && !v.paused;
+    });
+    assert.equal(await p2.locator('.akis__ses-ipucu').isHidden(), true);
+  } finally {
+    await b2.close();
+  }
+});
+
+await adim('bilinmeyen video adresi ilk videoyu açar, çökmez', async () => {
+  await page.goto(base + '#/oku/boyle-bir-video-yok');
+  await page.waitForFunction(() => document.querySelector('.reel[data-aktif]'));
 });
 
 await adim('konsolda hata yok', async () => {

@@ -16,72 +16,101 @@ src/main.ts                Sekme yönlendirme (#/oku, #/kenz, #/gunes), Capacito
 src/styles.css             Tüm ölçüler (390 × 841 referans ekrana göre, --u ile ölçeklenir)
 src/assets/bg/             Temizlenmiş arka plan (dikey + geniş ekran; AVIF / WebP / JPG)
 src/assets/icons/          Dünya (Oku), düğüm (Kenz) ve güneş (Güneş) ikonları
-src/assets/fonts/          Tinos Bold Italic (alıntı), Encode Sans Bold (menü), Lora (okuma), Amiri (Arapça) — kendi sunucumuzdan
-src/oku/                   Oku sekmesi: kitaplık, bölümler, okuma ekranı, lügat (src/oku/lugat/)
-content/oku/               Oku sekmesindeki kitaplar (Markdown); aşağıdaki "Oku: kitap ekleme" bölümüne bakın
-public/lugat/lugat.jsonl   Lügat-ı Risale-i Nur'un temel lügatı (11.905 madde); okurken dokunulan kelimenin manası
-vite/oku-katalog.ts        content/oku klasörünü derleme anında tarayıp kitap listesini üreten Vite eklentisi
+src/assets/fonts/          Tinos Bold Italic (alıntı) ve Encode Sans Bold (menü) — kendi sunucumuzdan
+src/oku/                   Oku sekmesi: dikey video akışı (akis.ts), Neşret (nesret.ts), Menba (menba.ts)
+content/oku/videolar.json  Oku akışındaki videolar, sırasıyla; aşağıdaki "Oku: video ekleme" bölümüne bakın
+public/videolar/           Videolar (720×1280 H.264), kapak ve paylaşım önizleme görselleri
+vite/oku-videolar.ts       Video listesini denetleyen ve her video için paylaşım sayfasını (v/<id>/) üreten eklenti
 public/icons/              Favicon, PWA ve Apple simgeleri (sarı logo)
 resources/                 Android/iOS simge ve açılış ekranı kaynakları (sarı logo)
 android/, ios/             Capacitor yerel projeleri
 design/                    Tasarım kaynakları ve vektör logo (logo.svg, knot.svg)
 scripts/compare-mockup.mjs Ana ekranın tasarımla karşılaştırma ekran görüntüsü
-scripts/oku-test.mjs       Oku sekmesini gerçek tarayıcıda baştan sona deneyen test
+scripts/oku-test.mjs       Oku akışını gerçek tarayıcıda baştan sona deneyen test
 ```
 
-Sekmeler: **Kenz** ana ekrandır (tasarımdaki görünüm). **Oku** okuma bölümüdür (aşağıda). **Güneş** sekmesi
-aynı görsel dilde hazır, içeriği eklenmeyi bekliyor (`index.html` içindeki `view-gunes` bölümü).
+Sekmeler: **Kenz** ana ekrandır (tasarımdaki görünüm). **Oku** kâinat kitabını "okumak" için kısa video
+akışıdır (aşağıda). **Güneş** sekmesi aynı görsel dilde hazır, içeriği eklenmeyi bekliyor (`index.html` içindeki
+`view-gunes` bölümü).
 
 ## Oku sekmesi
 
-- **Kitaplık** (`#/oku`): kitaplar ve "Kaldığın yerden devam et" kartı (bölüm bittiyse sıradaki bölüm).
-- **Bölümler** (`#/oku/<kitap>`): her bölümün okuma süresi ve ne kadarının okunduğu.
-- **Okuma ekranı** (`#/oku/<kitap>/<bölüm>`): alt menü gizlenir, aşağı kaydırınca üst çubuk da çekilir
-  (yukarı kaydırınca ya da boşluğa dokununca geri gelir). Bölüm sonunda önceki/sonraki bölüme geçiş.
-  - **Kelimeye dokununca manası** ekranın altında açılır; ekli kelimenin kökü ("kudretinin" → kudret) ve
-    birleşik ifadeler ("mana-yı harfî") Lügat-ı Risale-i Nur uygulamasının arama kurallarıyla bulunur
-    (`src/oku/lugat/`, Dart kodunun TypeScript karşılığı). "Bakınız" ve diğer adaylar dokunulabilir.
-  - **Dipnot** işaretine dokununca dipnot aynı yerde açılır; bölüm sonunda bütün dipnotlar listelenir.
-  - **Aa**: yazı boyutu (6 adım), satır aralığı (dar / normal / geniş), tema (gündüz / sepya / gece).
-  - Kalınan yer (paragraf düzeyinde) ve ayarlar cihazda saklanır; internet gerekmez (lügat ve bölümler
-    PWA önbelleğinde, telefon uygulamasında zaten içeride).
-- Android geri tuşu önce açık sayfayı kapatır, sonra uygulama içinde geri gider.
+Instagram Reels gibi tam ekran dikey video akışı (`#/oku/<video>`):
 
-### Oku: kitap ekleme
+- Yukarı/aşağı kaydırınca sonraki/önceki video ekrana oturur ve kendiliğinden, sesli oynar; önceki durur.
+  Geri dönülen video baştan başlar. Videoya dokununca durur / sürer; alttaki ince çizgiyle videoda ileri geri
+  gidilir. Masaüstünde ↑/↓ video değiştirir, boşluk durdurur.
+- Ekranda **yalnız iki düğme** vardır:
+  - **Neşret** — videonun bağlantısını telefonun paylaşım menüsüyle gönderir (WhatsApp, Instagram, …).
+    Bağlantı `https://emreks53.github.io/A/v/<video>/` biçimindedir; mesajlaşma uygulamaları önizlemeyi o
+    videonun görseli ve adıyla çizer, bağlantıyı açan kişi doğrudan o videoya gelir. Paylaşım menüsü olmayan
+    tarayıcıda bağlantı panoya kopyalanır.
+  - **Menba** — videonun Risale-i Nur'daki kaynağı (ör. *Lem'alar, 64. sayfa*) ve varsa görüntü künyesi
+    (CC BY 4.0 lisanslı görüntülerin zorunlu atıfları burada).
+- Başka sekmeye geçince ya da uygulama arka plana alınınca video durur; dönünce kaldığı yerden sürer.
+  Ana ekrandayken hiçbir video indirilmez.
+- Tarayıcı sesli otomatik oynatmaya izin vermezse (bazı mobil tarayıcılar) video sessiz başlar ve
+  "Sesi açmak için dokunun" yazısı çıkar. Telefon uygulamasında videolar doğrudan sesli başlar.
+- Videoların alt bandına (%72–82) altyazı gömülüdür (YouTube Shorts düzeni); düğmeler bu yüzden altyazının
+  üstünde, sağ kenardaki boş bölgededir.
 
-Her kitap `content/oku/` altında bir klasördür; klasör adı adreste görünür (küçük harf, rakam, tire):
+### Oku: video ekleme
 
-```
-content/oku/sozler/
-  kitap.json               {"baslik": "Sözler", "altbaslik": "…", "sira": 1}
-  01-birinci-soz.md        bölümler dosya adı sırasıyla; baştaki numara adrese girmez (#/oku/sozler/birinci-soz)
-  02-ikinci-soz.md
-```
+1. Videoyu 720×1280'e sıkıştırıp `public/videolar/` altına koyun (hızlı başlaması için `+faststart`):
 
-Bölüm dosyası yalın Markdown'dır; ilk satırı bölüm başlığıdır:
+   ```bash
+   ffmpeg -i kaynak.mp4 -vf "scale=720:1280:flags=lanczos,format=yuv420p" -c:v libx264 -preset slow \
+     -profile:v high -crf 23 -maxrate 2500k -bufsize 5000k -g 48 -c:a aac -b:a 128k -movflags +faststart \
+     public/videolar/yeni-video.mp4
+   ffmpeg -ss 0.5 -i public/videolar/yeni-video.mp4 -frames:v 1 -q:v 4 public/videolar/yeni-video-kapak.jpg
+   ffmpeg -ss 6 -i public/videolar/yeni-video.mp4 -frames:v 1 -q:v 3 public/videolar/yeni-video-onizleme.jpg
+   ```
 
-```markdown
-# Birinci Söz
+2. `content/oku/videolar.json` listesine ekleyin (sıra akıştaki sıradır):
 
-بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ        ← Arapça paragraf kendiliğinden sağdan sola, ortalı ve Amiri yazı tipiyle
+   ```json
+   {
+     "id": "yeni-video",
+     "baslik": "Videonun adı",
+     "video": "videolar/yeni-video.mp4",
+     "kapak": "videolar/yeni-video-kapak.jpg",
+     "onizleme": "videolar/yeni-video-onizleme.jpg",
+     "menba": [{ "eser": "Sözler", "yer": "19. Söz" }],
+     "kunye": ["İsteğe bağlı: lisansın gerektirdiği atıflar"]
+   }
+   ```
 
-Paragraflar boş satırla ayrılır. **kalın**, *italik*, dipnot işareti[^1].
+   `id` paylaşım bağlantısında görünür (küçük harf, rakam, tire). Eksik dosya, tekrar eden `id` ya da boş
+   `menba` derlemeyi anlaşılır bir hatayla durdurur. `kapak` video yüklenirken görünen ilk kare, `onizleme`
+   paylaşılan bağlantının önizleme görselidir.
 
-## Ara başlık
+Şimdilik videolar uygulamayla birlikte gelir (iki video ≈ 70 MB). Video sayısı artınca bir video barındırma
+hizmetine (Cloudflare Stream, Bunny vb.) taşınmalı; `video` alanına tam adres yazılabilecek şekilde
+genişletilir.
 
-> Alıntı
+### Paylaşılan bağlantının uygulamada açılması
 
----                                       ← ayraç
+- **Web sitesi:** `main` dalı GitHub Pages'te yayınlanınca bağlantılar hemen çalışır (önizleme + videoya
+  yönlendirme). Pages yalnız `main` dalından yayınlanır.
+- **Android uygulaması:** `AndroidManifest.xml` `…/A/v/` bağlantılarını uygulamaya bağlar; uygulama açılınca
+  ilgili videoya gider (`appUrlOpen`). Android'in bağlantıyı tarayıcı yerine doğrudan uygulamada açması için
+  alan adının **kökünde** `https://emreks53.github.io/.well-known/assetlinks.json` dosyası olmalı (bu dosya
+  `emreks53/emreks53.github.io` deposuna ya da kendi alan adınızın köküne konur) ve içinde uygulamanın imza
+  anahtarının SHA-256 parmak izi bulunmalı:
 
-Şiir gibi satır kırmak için satır sonuna ters bölü\
-konur.
+  ```json
+  [{ "relation": ["delegate_permission/common.handle_all_urls"],
+     "target": { "namespace": "android_app", "package_name": "app.kenz.mobile",
+                 "sha256_cert_fingerprints": ["<yükleme anahtarının SHA-256 parmak izi>"] } }]
+  ```
 
-[^1]: Dipnot metni.
-```
-
-Eksik `kitap.json`, başlıksız bölüm ya da aynı adlı iki bölüm derlemeyi anlaşılır bir hatayla durdurur.
-`content/oku/ornek/` okuma ekranını tanıtan örnek kitaptır (`"ornek": true`, kitaplıkta "Örnek" rozetiyle);
-gerçek metinler eklenince silinebilir.
+  CI'daki hata ayıklama APK'sı her derlemede farklı anahtarla imzalandığından bu doğrulama ancak sabit bir
+  yükleme anahtarıyla (Play Store sürümü) yapılabilir. Doğrulama yokken bağlantı web sitesinde açılır.
+- **iPhone uygulaması:** Xcode'da *Associated Domains* yeteneğine `applinks:emreks53.github.io` eklenmeli ve
+  alan adının kökünde `.well-known/apple-app-site-association` dosyası (Apple ekip kimliğiyle) bulunmalı.
+  Uygulama tarafındaki yönlendirme hazırdır.
+- Alan adı değişirse `content/oku/videolar.json` içindeki `site` ve `AndroidManifest.xml` içindeki `host` /
+  `pathPrefix` birlikte değiştirilir.
 
 ## Geliştirme
 
@@ -90,8 +119,8 @@ npm install
 npm run dev          # http://localhost:5173
 npm run build        # dist/ klasörüne üretim derlemesi
 npm run test:visual  # derlemeyi tasarım ölçüsünde (854 × 1842) ekran görüntüsü olarak alır
-npm test             # birim testleri (Markdown, katalog, rota, lügat araması)
-npm run test:oku     # derlemeyi gerçek tarayıcıda dener: kitaplık → bölüm → kelime → ayarlar → kalınan yer
+npm test             # birim testleri (video listesi, paylaşım sayfası, yönlendirme)
+npm run test:oku     # derlemeyi gerçek tarayıcıda dener: akış, kaydırma, durdurma, Neşret, Menba, paylaşım bağlantısı
 ```
 
 ## Web sitesi (GitHub Pages)
@@ -134,7 +163,6 @@ npm run assets:native
 ## Notlar
 
 - Uygulama kimliği `app.kenz.mobile`, adı `Kenz` (`capacitor.config.ts`). Mağazaya göndermeden önce değiştirebilirsiniz.
-- Alıntı yazı tipi Tinos (Apache 2.0), menü yazı tipi Encode Sans (OFL), okuma yazı tipi Lora (OFL), Arapça
-  yazı tipi Amiri (OFL); hepsi uygulamayla birlikte gelir.
-- Lügat verisi Lügat-ı Risale-i Nur uygulamasının `assets/lugat.jsonl` dosyasıdır (manaların kaynağı ve
-  telif notu o uygulamanın README'sinde).
+- Alıntı yazı tipi Tinos (Apache 2.0), menü yazı tipi Encode Sans (OFL); ikisi de uygulamayla birlikte gelir.
+- Videolar: *Sevgi ve Güzellik* (`video` dalı) ve *Ahlâk Mu'cizesi* v2.3 (`claude/prophet-character-video-wnuefu` dalı);
+  kaynakları ve lisansları o dallarda.
