@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dev-dist/
+*.log
+.DS_Store
+coverage/
+test-results/
+playwright-report/
+.vscode/*
+!.vscode/extensions.json
+oku-test-hata.png
