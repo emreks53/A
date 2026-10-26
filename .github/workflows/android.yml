@@ -23,6 +23,10 @@ jobs:
           node-version: 22
           cache: npm
       - uses: android-actions/setup-android@v3
+        with:
+          # Varsayılan "tools platform-tools"; yeni cmdline-tools'ta "tools" paketi yok ve kurulum düşüyor.
+          # Derleme için gereken platform ve build-tools'u Gradle kendisi indirir.
+          packages: platform-tools
       - run: npm ci
       - run: npm run build
       - run: npx cap sync android
