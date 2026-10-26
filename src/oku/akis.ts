@@ -19,8 +19,11 @@ const NESRET_SVG =
 const MENBA_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 const OYNAT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></svg>';
-const SES_SVG =
+const SESSIZ_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5Z" fill="currentColor"/><path d="M15.5 9.5l5 5m0-5-5 5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
+
+/** Odak bir videodan ötekine geçerken aynı denetime taşınır */
+const DENETIMLER = ['reel__video', 'reel__ilerleme', 'reel__dugme--nesret', 'reel__dugme--menba'];
 
 interface Oge {
   v: Video;
@@ -29,10 +32,12 @@ interface Oge {
   dolu: HTMLElement;
   cubuk: HTMLElement;
   durum: HTMLElement;
-  /** Kullanıcı dokunup durdurdu: sekmeye dönünce kendiliğinden başlamaz */
+  /** Kullanıcı durdurdu (dokunarak, klavyeyle ya da kulaklık/medya tuşuyla): kendiliğinden başlamaz */
   elleDurdu: boolean;
   /** Başka videoya geçildi: geri gelince baştan başlar */
   ayrildi: boolean;
+  /** Bir sonraki "pause" olayı uygulamanın kendi durdurmasından geliyor (kullanıcının durdurması sayılmaz) */
+  uygulamaDurdurdu: boolean;
 }
 
 export interface Akis {
@@ -48,15 +53,15 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
   akis.setAttribute('role', 'feed');
   akis.setAttribute('aria-label', 'Oku: videolar');
   const baslik = el('h1', 'akis__baslik', 'Oku');
-  const sesIpucu = el('button', 'akis__ses-ipucu');
-  sesIpucu.type = 'button';
-  sesIpucu.hidden = true;
-  sesIpucu.innerHTML = SES_SVG;
-  sesIpucu.append(el('span', undefined, 'Sesi açmak için dokunun'));
+  // Ses kapalıyken sağ üstte küçük bir gösterge; düğme değildir (dokunuş videoya geçer ve sesi açar).
+  const sessiz = el('div', 'akis__sessiz');
+  sessiz.setAttribute('aria-hidden', 'true');
+  sessiz.hidden = true;
+  sessiz.innerHTML = SESSIZ_SVG;
   const bildirim = el('div', 'akis__bildirim');
   bildirim.setAttribute('role', 'status');
   bildirim.setAttribute('aria-live', 'polite');
-  kok.append(akis, baslik, sesIpucu, bildirim);
+  kok.append(akis, baslik, sessiz, bildirim);
 
   let etkin = false;
   let aktif = 0;
@@ -81,15 +86,19 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     video.preload = 'none';
     video.poster = import.meta.env.BASE_URL + v.kapak;
     video.disableRemotePlayback = true;
-    video.setAttribute('aria-label', v.baslik);
+    // Görünür bir düğme eklemeden klavye ve ekran okuyucuyla da durdurulabilsin
+    video.tabIndex = 0;
+    video.setAttribute('role', 'button');
 
     const karartma = el('div', 'reel__karartma');
     karartma.setAttribute('aria-hidden', 'true');
     const durum = el('div', 'reel__durum');
     durum.setAttribute('aria-hidden', 'true');
 
+    // Başlık üstte, "Oku"nun altında: videoların alt bandında altyazı gömülü.
+    const baslikEl = el('h2', 'reel__baslik', v.baslik);
+
     const alt = el('div', 'reel__alt');
-    alt.append(el('h2', 'reel__baslik', v.baslik));
     const cubuk = el('div', 'reel__ilerleme');
     cubuk.setAttribute('role', 'slider');
     cubuk.setAttribute('aria-label', 'Videoda konum');
@@ -115,11 +124,11 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     menbaD.setAttribute('aria-haspopup', 'dialog');
     dugmeler.append(nesretD, menbaD);
 
-    sahne.append(video, karartma, durum, alt, dugmeler);
+    sahne.append(video, karartma, durum, baslikEl, alt, dugmeler);
     art.append(sahne);
     akis.append(art);
 
-    const oge: Oge = { v, kok: art, video, dolu, cubuk, durum, elleDurdu: false, ayrildi: false };
+    const oge: Oge = { v, kok: art, video, dolu, cubuk, durum, elleDurdu: false, ayrildi: false, uygulamaDurdurdu: false };
 
     nesretD.addEventListener('click', async () => {
       const sonuc = await nesret(v);
@@ -130,42 +139,63 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
       altSayfaAc({ baslik: 'Menba', icerik: menbaIcerik(v), modal: true, sinif: 'alt-sayfa--menba' });
     });
 
-    // Videoya dokunmak: ses kapalı zorlanmışsa sesi açar, değilse durdurur / sürdürür.
-    sahne.addEventListener('click', (e) => {
-      if ((e.target as Element).closest('button, .reel__ilerleme')) return;
+    // Videoya dokunmak (ya da odaklıyken Enter): hata varsa yeniden dener, ses kapalı zorlanmışsa sesi açar,
+    // değilse durdurur / sürdürür.
+    const dokun = () => {
       if (ogeler[aktif] !== oge) return;
       if (art.dataset.durum === 'hata') {
         oge.elleDurdu = false;
-        video.load();
         void oynat(oge);
-        return;
-      }
-      if (zorlaSessiz) {
-        sesiAc();
-        return;
-      }
-      durdurSurdur(oge);
+      } else if (zorlaSessiz) sesiAc();
+      else durdurSurdur(oge);
+    };
+    sahne.addEventListener('click', (e) => {
+      if ((e.target as Element).closest('button, .reel__ilerleme')) return;
+      dokun();
+    });
+    video.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      dokun();
     });
 
-    video.addEventListener('play', () => durumGoster(oge));
-    video.addEventListener('pause', () => durumGoster(oge));
-    video.addEventListener('playing', () => durumGoster(oge));
+    video.addEventListener('play', () => {
+      oge.elleDurdu = false;
+      durumGoster(oge);
+    });
+    video.addEventListener('pause', () => {
+      // Uygulamanın kendi durdurmaları dışındaki her durdurma (kulaklık, medya tuşu, bildirim denetimleri)
+      // kullanıcının durdurması sayılır; video kendiliğinden yeniden başlamaz.
+      if (!oge.uygulamaDurdurdu && etkin && ogeler[aktif] === oge && document.visibilityState === 'visible') oge.elleDurdu = true;
+      oge.uygulamaDurdurdu = false;
+      durumGoster(oge);
+    });
+    video.addEventListener('playing', () => {
+      durumGoster(oge);
+      // Dışarıdan (medya tuşuyla) başlatılan oynatmada da ilerleme çizgisi yürüsün; görünmeyen video oynamasın.
+      if (ogeler[aktif] === oge && etkin) dongu();
+      else durdur(oge);
+    });
     video.addEventListener('waiting', () => durumGoster(oge, 'bekliyor'));
-    video.addEventListener('error', () => durumGoster(oge, 'hata'));
+    video.addEventListener('error', () => {
+      durumGoster(oge, 'hata');
+      if (ogeler[aktif] === oge && etkin) bildir('Video açılamadı. Yeniden denemek için videoya dokunun.');
+    });
     video.addEventListener('loadedmetadata', () => cubukGuncelle(oge));
     video.addEventListener('timeupdate', () => {
       if (video.paused) cubukGuncelle(oge);
     });
 
     ilerlemeSurukle(oge);
+    durumGoster(oge);
     return oge;
   });
 
-  function bildir(metin: string): void {
+  function bildir(metin: string, sure = 2200): void {
     bildirim.textContent = metin;
     bildirim.classList.add('gorunur');
     window.clearTimeout(Number(bildirim.dataset.zaman));
-    bildirim.dataset.zaman = String(window.setTimeout(() => bildirim.classList.remove('gorunur'), 2200));
+    bildirim.dataset.zaman = String(window.setTimeout(() => bildirim.classList.remove('gorunur'), sure));
   }
 
   function durumGoster(o: Oge, ozel?: 'bekliyor' | 'hata'): void {
@@ -178,6 +208,8 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     if (hal === 'durdu') o.durum.innerHTML = OYNAT_SVG;
     else if (hal === 'hata') o.durum.textContent = 'Video açılamadı. Yeniden denemek için dokunun.';
     else o.durum.replaceChildren();
+    const ne = hal === 'hata' ? 'yeniden dene' : zorlaSessiz ? 'sesi aç' : v.paused ? 'oynat' : 'durdur';
+    v.setAttribute('aria-label', `${o.v.baslik}: ${ne}`);
   }
 
   function cubukGuncelle(o: Oge): void {
@@ -207,9 +239,18 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     }
   }
 
+  /** Uygulamanın kendi durdurması (sekme değişimi, kaydırma, arka plan); kullanıcının durdurması sayılmaz. */
+  function durdur(o: Oge): void {
+    if (o.video.paused) return;
+    o.uygulamaDurdurdu = true;
+    o.video.pause();
+  }
+
   async function oynat(o: Oge): Promise<void> {
     const v = o.video;
     if (!v.getAttribute('src')) hazirla(ogeler.indexOf(o));
+    // Önceden yüklenirken (ör. ağ kısa süre gidince) hata almış video yeniden yüklenir.
+    if (v.error) v.load();
     v.muted = zorlaSessiz;
     try {
       await v.play();
@@ -217,12 +258,14 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
       if ((e as DOMException)?.name !== 'NotAllowedError' || v.muted) return;
       // Tarayıcı sesli otomatik oynatmaya izin vermedi: sessiz oynat, dokununca ses açılsın.
       zorlaSessiz = true;
-      sesIpucu.hidden = false;
+      sessiz.hidden = false;
+      bildir('Sesi açmak için videoya dokunun', 3500);
       v.muted = true;
       await v.play().catch(() => undefined);
+      durumGoster(o);
     }
-    if (ogeler[aktif] === o && etkin) dongu();
-    else v.pause();
+    // Oynatma başlarken kullanıcı başka videoya ya da sekmeye geçtiyse durdur.
+    if (ogeler[aktif] !== o || !etkin) durdur(o);
   }
 
   function durdurSurdur(o: Oge): void {
@@ -238,18 +281,22 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
 
   function sesiAc(): void {
     zorlaSessiz = false;
-    sesIpucu.hidden = true;
+    sessiz.hidden = true;
+    bildirim.classList.remove('gorunur');
     for (const o of ogeler) o.video.muted = false;
     const o = ogeler[aktif];
     if (o.video.paused) void oynat(o);
+    durumGoster(o);
   }
-  sesIpucu.addEventListener('click', sesiAc);
 
   function aktifYap(i: number): void {
     if (i < 0 || i >= ogeler.length) return;
     const onceki = ogeler[aktif];
+    let odak: string | undefined;
     if (i !== aktif) {
-      onceki.video.pause();
+      const a = document.activeElement;
+      if (a instanceof HTMLElement && onceki.kok.contains(a)) odak = DENETIMLER.find((s) => a.classList.contains(s));
+      durdur(onceki);
       onceki.ayrildi = true;
       onceki.elleDurdu = false;
       durumGoster(onceki);
@@ -257,6 +304,8 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     }
     const o = ogeler[i];
     for (const x of ogeler) x.kok.toggleAttribute('data-aktif', x === o);
+    // Klavyeyle video değişince odak yeni videonun aynı denetimine geçer (eski, görünmeyen videoda kalmaz).
+    if (odak) o.kok.querySelector<HTMLElement>(`.${odak}`)?.focus({ preventScroll: true });
     // Sekme gizliyken (ana ekrandayken) ne video indirilir ne de adres değişir.
     if (!etkin) return;
     hazirla(i);
@@ -301,7 +350,8 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
       e.preventDefault();
       git(aktif - 1);
-    } else if (e.key === ' ' && !hedef.closest('button, a, [role="slider"]')) {
+    } else if (e.key === ' ' && !hedef.closest('button, summary')) {
+      // Boşluk düğmeleri çalıştırır; başka her yerde (bağlantı, ilerleme çizgisi, video) durdurur / sürdürür.
       e.preventDefault();
       if (zorlaSessiz) sesiAc();
       else durdurSurdur(ogeler[aktif]);
@@ -312,7 +362,7 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
   document.addEventListener('visibilitychange', () => {
     const o = ogeler[aktif];
     if (!etkin || !o) return;
-    if (document.visibilityState === 'hidden') o.video.pause();
+    if (document.visibilityState === 'hidden') durdur(o);
     else if (!o.elleDurdu) void oynat(o);
   });
 
@@ -347,13 +397,16 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     };
     c.addEventListener('pointerup', bitir);
     c.addEventListener('pointercancel', bitir);
+    // Kaydırıcı tuşları (ARIA): →/↑ 5 sn ileri, ←/↓ 5 sn geri, Home/End baş/son. Akışın ↑/↓ tuşlarına geçmez.
     c.addEventListener('keydown', (e) => {
       const v = o.video;
-      if (!(v.duration > 0)) return;
-      const adim = e.key === 'ArrowRight' ? 5 : e.key === 'ArrowLeft' ? -5 : 0;
-      if (!adim) return;
+      const adimlar: Record<string, number> = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5 };
+      const adim = adimlar[e.key];
+      if (adim === undefined && e.key !== 'Home' && e.key !== 'End') return;
       e.preventDefault();
-      v.currentTime = Math.max(0, Math.min(v.duration, v.currentTime + adim));
+      e.stopPropagation();
+      if (ogeler[aktif] !== o || acikSayfa() || !(v.duration > 0)) return;
+      v.currentTime = e.key === 'Home' ? 0 : e.key === 'End' ? Math.max(0, v.duration - 0.5) : Math.max(0, Math.min(v.duration, v.currentTime + adim));
       cubukGuncelle(o);
     });
   }
@@ -371,7 +424,7 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     ayril() {
       etkin = false;
       cancelAnimationFrame(cerceve);
-      for (const o of ogeler) o.video.pause();
+      for (const o of ogeler) durdur(o);
     },
     aktifVideo() {
       return ogeler[aktif].v.id;

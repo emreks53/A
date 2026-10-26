@@ -1,4 +1,4 @@
-// "Menba": videonun Risale-i Nur'daki kaynağı ve (varsa) görüntü künyesi.
+// "Menba": videonun Risale-i Nur'daki kaynağı ve (varsa) görüntü ve ses künyesi.
 import type { Video } from './ortak';
 
 function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, metin?: string): HTMLElementTagNameMap[K] {
@@ -23,7 +23,7 @@ export function menbaIcerik(v: Video): HTMLElement {
 
   if (v.kunye?.length) {
     const ayrinti = el('details', 'menba__kunye');
-    ayrinti.append(el('summary', undefined, 'Görüntü künyesi'));
+    ayrinti.append(el('summary', undefined, 'Görüntü ve ses künyesi'));
     const ul = el('ul');
     for (const satir of v.kunye) ul.append(el('li', undefined, satir));
     ayrinti.append(ul);

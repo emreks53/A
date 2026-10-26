@@ -101,9 +101,20 @@ await adim('Oku sekmesi ilk videoyu sesli oynatır', async () => {
   assert.equal(await page.locator('.reel[data-id="sevgi-ve-guzellik"] video').evaluate((v) => v.muted), false);
 });
 
+/** Oku görünümünde ekranda görünen bütün <button> öğeleri */
+const gorunenDugmeler = (p) =>
+  p.evaluate(() =>
+    Array.from(document.querySelectorAll('#view-oku button'))
+      .filter((b) => {
+        const r = b.getBoundingClientRect();
+        const s = getComputedStyle(b);
+        return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && s.visibility !== 'hidden' && s.display !== 'none';
+      })
+      .map((b) => b.textContent.trim()),
+  );
+
 await adim('ekranda yalnız iki düğme var: Neşret ve Menba', async () => {
-  const adlar = await page.locator('.reel[data-aktif] button').evaluateAll((b) => b.map((x) => x.textContent.trim()));
-  assert.deepEqual(adlar, ['Neşret', 'Menba']);
+  assert.deepEqual(await gorunenDugmeler(page), ['Neşret', 'Menba']);
 });
 
 await adim('videoya dokununca durur, yeniden dokununca sürer', async () => {
@@ -138,8 +149,21 @@ await adim("Menba kaynağı gösterir (Lem'alar, 64. sayfa) ve künyeyi içerir"
   const metin = await page.locator('.alt-sayfa.acik').innerText();
   assert.match(metin, /Lem'alar/);
   assert.match(metin, /64\. sayfa/);
-  assert.match(await page.locator('.alt-sayfa.acik .menba__kunye').innerText(), /Görüntü künyesi/);
+  assert.match(await page.locator('.alt-sayfa.acik .menba__kunye').innerText(), /Görüntü ve ses künyesi/);
   assert.equal(await page.locator('.alt-sayfa.acik .menba__kunye li').count(), 4);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('.alt-sayfa.acik'));
+});
+
+await adim('Menba açıkken Tab odağı pencerenin içinde tutar', async () => {
+  await page.locator('.reel[data-aktif] .reel__dugme--menba').click();
+  await page.waitForSelector('.alt-sayfa.acik');
+  const odaklar = [];
+  for (let i = 0; i < 5; i++) {
+    await page.keyboard.press('Tab');
+    odaklar.push(await page.evaluate(() => (document.activeElement.closest('.alt-sayfa') ? document.activeElement.tagName : 'DIŞARI')));
+  }
+  assert.ok(!odaklar.includes('DIŞARI'), odaklar.join(','));
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('.alt-sayfa.acik'));
 });
@@ -171,6 +195,22 @@ await adim('paylaşım menüsü varsa bağlantı onunla gönderilir', async () =
   });
 });
 
+await adim('Neşret\'e çift dokunuş tek paylaşım açar', async () => {
+  await page.evaluate(() => {
+    window.__paylasimSayisi = 0;
+    Object.defineProperty(navigator, 'share', {
+      value: () => {
+        window.__paylasimSayisi++;
+        return new Promise((r) => setTimeout(r, 400));
+      },
+      configurable: true,
+    });
+  });
+  await page.locator('.reel[data-aktif] .reel__dugme--nesret').dblclick();
+  await page.waitForTimeout(600);
+  assert.equal(await page.evaluate(() => window.__paylasimSayisi), 1);
+});
+
 await adim('Menba: Mektubat, 195. sayfa · Sözler, 19. Söz', async () => {
   await page.locator('.reel[data-aktif] .reel__dugme--menba').click();
   await page.waitForSelector('.alt-sayfa.acik');
@@ -196,11 +236,46 @@ await adim('başka sekmeye geçince durur, dönünce aynı videoda sürer', asyn
   assert.equal(new URL(page.url()).hash, '#/oku/ahlak-mucizesi');
 });
 
-await adim('klavyeyle ↑/↓ video değişir', async () => {
+await adim('klavyeyle ↑/↓ video değişir, odak yeni videoya geçer', async () => {
+  await page.locator('.reel[data-aktif] .reel__dugme--nesret').focus();
   await page.keyboard.press('ArrowUp');
   await page.waitForFunction(() => document.querySelector('.reel[data-aktif]')?.dataset.id === 'sevgi-ve-guzellik');
+  assert.equal(await page.evaluate(() => document.activeElement.closest('.reel')?.dataset.id), 'sevgi-ve-guzellik');
+  assert.ok(await page.evaluate(() => document.activeElement.classList.contains('reel__dugme--nesret')));
   await page.keyboard.press('ArrowDown');
   await page.waitForFunction(() => document.querySelector('.reel[data-aktif]')?.dataset.id === 'ahlak-mucizesi');
+  assert.equal(await page.evaluate(() => document.activeElement.closest('.reel')?.dataset.id), 'ahlak-mucizesi');
+});
+
+await adim('ilerleme çizgisi odaklıyken boşluk durdurur (video değiştirmez), ←/→ ileri geri sarar', async () => {
+  await page.locator('.reel[data-aktif] .reel__ilerleme').focus();
+  await page.keyboard.press(' ');
+  await page.waitForTimeout(300);
+  assert.equal(await aktif(), 'ahlak-mucizesi');
+  assert.equal(await duruyor('ahlak-mucizesi'), true);
+  const t0 = await page.locator('.reel[data-aktif] video').evaluate((v) => v.currentTime);
+  await page.keyboard.press('ArrowRight');
+  const t1 = await page.locator('.reel[data-aktif] video').evaluate((v) => v.currentTime);
+  assert.ok(Math.abs(t1 - t0 - 5) < 0.6, `${t0} → ${t1}`);
+  await page.keyboard.press('ArrowUp');
+  assert.equal(await aktif(), 'ahlak-mucizesi', 'kaydırıcıda ↑ video değiştirmemeli');
+  await page.keyboard.press(' ');
+  await oynuyor('ahlak-mucizesi');
+});
+
+await adim('medya tuşuyla durdurma kullanıcının durdurması sayılır; medya tuşuyla oynatınca çizgi yürür', async () => {
+  await page.locator('.reel[data-aktif] video').evaluate((v) => v.pause());
+  await page.waitForFunction(() => document.querySelector('.reel[data-aktif]').dataset.durum === 'durdu');
+  // Sekmeden çıkıp dönünce kendiliğinden başlamamalı
+  await page.locator('.tab--kenz').click();
+  await page.locator('.tab--oku').click();
+  await page.waitForTimeout(500);
+  assert.equal(await duruyor('ahlak-mucizesi'), true);
+  await page.locator('.reel[data-aktif] video').evaluate((v) => v.play());
+  const olc = () => page.locator('.reel[data-aktif] .reel__ilerleme-dolu').evaluate((e) => e.style.transform);
+  const a = await olc();
+  await page.waitForTimeout(1200);
+  assert.notEqual(await olc(), a);
 });
 
 await adim('paylaşım bağlantısı videoyu açar (önizleme etiketleriyle)', async () => {
@@ -218,20 +293,45 @@ await adim('sesli oynatmaya izin vermeyen tarayıcıda sessiz başlar, dokununca
   const b2 = await playwright.chromium.launch({ args: ['--autoplay-policy=document-user-activation-required'] });
   const p2 = await (await b2.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
   try {
-    await p2.goto(base + '#/oku/sevgi-ve-guzellik');
-    await p2.waitForSelector('.akis__ses-ipucu:not([hidden])');
+    await p2.goto(base + 'v/sevgi-ve-guzellik/');
+    await p2.waitForSelector('.akis__sessiz:not([hidden])');
     await p2.waitForFunction(() => {
       const v = document.querySelector('.reel[data-aktif] video');
       return v.muted && !v.paused;
     });
-    await p2.locator('.akis__ses-ipucu').click();
+    assert.match(await p2.locator('.akis__bildirim').innerText(), /Sesi açmak için videoya dokunun/);
+    // Bu durumda da ekranda yalnız iki düğme var
+    assert.deepEqual(await gorunenDugmeler(p2), ['Neşret', 'Menba']);
+    const sahne = await p2.locator('.reel[data-aktif] .reel__sahne').boundingBox();
+    await p2.mouse.click(sahne.x + sahne.width / 2, sahne.y + sahne.height / 2);
     await p2.waitForFunction(() => {
       const v = document.querySelector('.reel[data-aktif] video');
       return !v.muted && !v.paused;
     });
-    assert.equal(await p2.locator('.akis__ses-ipucu').isHidden(), true);
+    assert.equal(await p2.locator('.akis__sessiz').isHidden(), true);
   } finally {
     await b2.close();
+  }
+});
+
+await adim('önceden yüklenirken hata alan video kaydırınca yeniden yüklenip oynar', async () => {
+  const b3 = await playwright.chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+  const c3 = await b3.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const p3 = await c3.newPage();
+  try {
+    let engelle = true;
+    await p3.route('**/ahlak-mucizesi.mp4', (r) => (engelle ? r.abort() : r.continue()));
+    await p3.goto(base + '#/oku/sevgi-ve-guzellik');
+    await p3.waitForFunction(() => document.querySelector('.reel[data-id="ahlak-mucizesi"] video').error);
+    engelle = false;
+    await p3.locator('.akis').evaluate((a) => a.scrollTo({ top: a.clientHeight }));
+    await p3.waitForFunction(() => {
+      const v = document.querySelector('.reel[data-id="ahlak-mucizesi"] video');
+      return !v.paused && v.currentTime > 0.3 && !v.error;
+    });
+    assert.equal(await p3.locator('.reel[data-id="ahlak-mucizesi"]').getAttribute('data-durum'), '');
+  } finally {
+    await b3.close();
   }
 });
 

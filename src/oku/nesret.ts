@@ -29,7 +29,20 @@ async function kopyala(metin: string): Promise<boolean> {
   }
 }
 
+/** Paylaşım menüsü açıkken (ör. çift dokunuşta) ikinci istek yok sayılır */
+let paylasiliyor = false;
+
 export async function nesret(v: Video): Promise<NesretSonucu> {
+  if (paylasiliyor) return 'vazgecildi';
+  paylasiliyor = true;
+  try {
+    return await paylas(v);
+  } finally {
+    paylasiliyor = false;
+  }
+}
+
+async function paylas(v: Video): Promise<NesretSonucu> {
   const url = paylasimAdresi(site, v.id);
   if (Capacitor.isNativePlatform()) {
     try {
@@ -37,8 +50,8 @@ export async function nesret(v: Video): Promise<NesretSonucu> {
       await Share.share({ title: v.baslik, text: v.baslik, url, dialogTitle: 'Neşret' });
       return 'paylasildi';
     } catch (e) {
-      // Kullanıcı menüyü kapatınca da hata döner
-      return /cancel/i.test(String((e as Error)?.message ?? e)) ? 'vazgecildi' : (await kopyala(url)) ? 'kopyalandi' : 'olmadi';
+      // Kullanıcı menüyü kapatınca ya da menü zaten açıkken de hata döner
+      return /cancel|in progress/i.test(String((e as Error)?.message ?? e)) ? 'vazgecildi' : (await kopyala(url)) ? 'kopyalandi' : 'olmadi';
     }
   }
   if (typeof navigator.share === 'function') {
@@ -46,7 +59,8 @@ export async function nesret(v: Video): Promise<NesretSonucu> {
       await navigator.share({ title: v.baslik, text: v.baslik, url });
       return 'paylasildi';
     } catch (e) {
-      if ((e as DOMException)?.name === 'AbortError') return 'vazgecildi';
+      const ad = (e as DOMException)?.name;
+      if (ad === 'AbortError' || ad === 'InvalidStateError') return 'vazgecildi';
     }
   }
   return (await kopyala(url)) ? 'kopyalandi' : 'olmadi';

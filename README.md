@@ -39,20 +39,25 @@ Instagram Reels gibi tam ekran dikey video akışı (`#/oku/<video>`):
 
 - Yukarı/aşağı kaydırınca sonraki/önceki video ekrana oturur ve kendiliğinden, sesli oynar; önceki durur.
   Geri dönülen video baştan başlar. Videoya dokununca durur / sürer; alttaki ince çizgiyle videoda ileri geri
-  gidilir. Masaüstünde ↑/↓ video değiştirir, boşluk durdurur.
+  gidilir. Kulaklık ya da medya tuşuyla durdurulan video kendiliğinden yeniden başlamaz.
 - Ekranda **yalnız iki düğme** vardır:
   - **Neşret** — videonun bağlantısını telefonun paylaşım menüsüyle gönderir (WhatsApp, Instagram, …).
     Bağlantı `https://emreks53.github.io/A/v/<video>/` biçimindedir; mesajlaşma uygulamaları önizlemeyi o
     videonun görseli ve adıyla çizer, bağlantıyı açan kişi doğrudan o videoya gelir. Paylaşım menüsü olmayan
     tarayıcıda bağlantı panoya kopyalanır.
-  - **Menba** — videonun Risale-i Nur'daki kaynağı (ör. *Lem'alar, 64. sayfa*) ve varsa görüntü künyesi
+  - **Menba** — videonun Risale-i Nur'daki kaynağı (ör. *Lem'alar, 64. sayfa*) ve varsa görüntü ve ses künyesi
     (CC BY 4.0 lisanslı görüntülerin zorunlu atıfları burada).
 - Başka sekmeye geçince ya da uygulama arka plana alınınca video durur; dönünce kaldığı yerden sürer.
   Ana ekrandayken hiçbir video indirilmez.
-- Tarayıcı sesli otomatik oynatmaya izin vermezse (bazı mobil tarayıcılar) video sessiz başlar ve
-  "Sesi açmak için dokunun" yazısı çıkar. Telefon uygulamasında videolar doğrudan sesli başlar.
-- Videoların alt bandına (%72–82) altyazı gömülüdür (YouTube Shorts düzeni); düğmeler bu yüzden altyazının
-  üstünde, sağ kenardaki boş bölgededir.
+- Tarayıcı sesli otomatik oynatmaya izin vermezse (bazı mobil tarayıcılar) video sessiz başlar; sağ üstte
+  küçük bir "ses kapalı" göstergesi ve kısa bir "Sesi açmak için videoya dokunun" bildirimi çıkar (düğme
+  değildir; videoya dokunmak sesi açar). Telefon uygulamasında videolar doğrudan sesli başlar.
+- Videoların alt bandına (%72–82) altyazı, üst kısmına sahne yazıları gömülüdür (YouTube Shorts düzeni).
+  Bu yüzden videonun adı "Oku"nun altında yalnız video ekrana gelirken birkaç saniye görünür (Menba'da da
+  yazar); düğmeler altyazının üstünde, sağ kenardaki boş bölgededir; altta yalnız ince ilerleme
+  çizgisi vardır (yatay telefonda o da gizlenir).
+- Klavye ve ekran okuyucu: video odaklanabilir (Enter / boşluk durdurur, sürdürür), ilerleme çizgisi
+  kaydırıcıdır (←/→ 5 sn), ↑/↓ ya da PageUp/PageDown video değiştirir.
 
 ### Oku: video ekleme
 
@@ -104,6 +109,9 @@ genişletilir.
                  "sha256_cert_fingerprints": ["<yükleme anahtarının SHA-256 parmak izi>"] } }]
   ```
 
+  GitHub Pages varsayılan Jekyll derlemesi nokta ile başlayan klasörleri yayınlamaz: o depoya boş bir
+  `.nojekyll` dosyası (ya da `_config.yml` içine `include: [".well-known"]`) eklenmeli ve
+  `curl -sI https://emreks53.github.io/.well-known/assetlinks.json` 200 dönmeli (yönlendirmesiz).
   CI'daki hata ayıklama APK'sı her derlemede farklı anahtarla imzalandığından bu doğrulama ancak sabit bir
   yükleme anahtarıyla (Play Store sürümü) yapılabilir. Doğrulama yokken bağlantı web sitesinde açılır.
 - **iPhone uygulaması:** Xcode'da *Associated Domains* yeteneğine `applinks:emreks53.github.io` eklenmeli ve

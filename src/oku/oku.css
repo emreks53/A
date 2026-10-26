@@ -89,6 +89,10 @@
   height: 100%;
   object-fit: cover;
   background: #05070d;
+  outline: none;
+}
+.reel__video:focus-visible {
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.85);
 }
 .reel__karartma {
   position: absolute;
@@ -164,23 +168,49 @@
   }
 }
 
-/* altta: başlık ve ilerleme çizgisi */
+/* üstte, "Oku"nun altında: videonun adı. Videoların alt bandında altyazı, üstünde de sahne yazıları olduğu için
+   ad yalnız video ekrana gelirken birkaç saniye görünür (videoların ilk saniyelerinde üst bölge boştur). */
+.reel__baslik {
+  position: absolute;
+  top: calc(var(--safe-top) + 50px);
+  left: 56px;
+  right: 56px;
+  margin: 0;
+  overflow: hidden;
+  color: #fff;
+  font-family: var(--yazi-arayuz);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-shadow: var(--video-golge);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.reel[data-aktif] .reel__baslik {
+  animation: reel-baslik 3.4s ease forwards;
+}
+@keyframes reel-baslik {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  10%,
+  80% {
+    opacity: 1;
+  }
+}
+
+/* altta: ince ilerleme çizgisi (altyazıların altında, alt menünün hemen üstünde) */
 .reel__alt {
   position: absolute;
   left: 16px;
   right: 16px;
-  bottom: calc(var(--menu-ust) + 6px);
-}
-.reel__baslik {
-  max-width: 100%;
-  margin: 0 0 6px;
-  color: #fff;
-  font-family: var(--yazi-baslik);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 21px;
-  line-height: 1.15;
-  text-shadow: var(--video-golge);
+  bottom: calc(var(--menu-ust) + 4px);
 }
 .reel__ilerleme {
   position: relative;
@@ -225,6 +255,13 @@
 .reel__ilerleme:focus-visible {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
   border-radius: 8px;
+}
+
+/* Yatay telefon ya da kısa pencerede alt menü ile altyazı bandı arasında yer kalmaz: çizgi gizlenir. */
+@media (min-aspect-ratio: 3/5) and (max-height: 720px) {
+  .reel__alt {
+    display: none;
+  }
 }
 
 /* sağda: yalnız iki düğme. Videolar YouTube Shorts düzenine göre hazırlandı: altyazılar karenin %72-82
@@ -275,43 +312,35 @@
   text-shadow: var(--video-golge);
 }
 
-/* sesli oynatmaya izin verilmeyen tarayıcılarda */
-.akis__ses-ipucu {
+/* sesli oynatmaya izin verilmeyen tarayıcılarda: ses kapalı göstergesi (düğme değil; dokunuş videoya geçer) */
+.akis__sessiz {
   position: absolute;
   z-index: 3;
-  top: calc(var(--safe-top) + 58px);
-  left: 50%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  margin: 0;
-  padding: 0 16px 0 12px;
-  border: 0;
-  border-radius: 20px;
-  background: rgba(0, 0, 0, 0.5);
+  top: calc(var(--safe-top) + 10px);
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
   color: #fff;
-  font-family: var(--yazi-arayuz);
-  font-weight: 700;
-  font-size: 14px;
-  white-space: nowrap;
-  transform: translateX(-50%);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  cursor: pointer;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
-.akis__ses-ipucu[hidden] {
+.akis__sessiz[hidden] {
   display: none;
 }
-.akis__ses-ipucu svg {
-  width: 22px;
-  height: 22px;
+.akis__sessiz svg {
+  width: 20px;
+  height: 20px;
 }
 .akis__bildirim {
   position: absolute;
   z-index: 3;
   left: 50%;
-  top: calc(var(--safe-top) + 58px);
+  top: calc(var(--safe-top) + 84px);
   padding: 10px 18px;
   border-radius: 20px;
   background: rgba(252, 250, 245, 0.96);

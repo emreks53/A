@@ -101,9 +101,14 @@ export function altSayfaAc(s: AltSayfaSecenek): AltSayfa {
       e.preventDefault();
       kapat();
     } else if (e.key === 'Tab' && s.modal) {
+      // Kapalı <details> içindekiler (kendi <summary>'si dışında) ve görünmeyenler odak alamaz.
       const odaklanabilir = Array.from(
-        sayfa.querySelectorAll<HTMLElement>('button, [href], input, [tabindex]:not([tabindex="-1"])'),
-      ).filter((x) => !x.hasAttribute('disabled'));
+        sayfa.querySelectorAll<HTMLElement>('button, [href], input, summary, [tabindex]:not([tabindex="-1"])'),
+      ).filter((x) => {
+        const kapali = x.closest('details:not([open])');
+        const gizli = kapali && !(x.tagName === 'SUMMARY' && x.parentElement === kapali);
+        return !gizli && !x.hasAttribute('disabled') && x.getClientRects().length > 0;
+      });
       if (!odaklanabilir.length) return;
       const ilk = odaklanabilir[0];
       const son = odaklanabilir[odaklanabilir.length - 1];
