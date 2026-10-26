@@ -3,6 +3,7 @@
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "vite-plugin-pwa/client"],
     "strict": true,
@@ -13,5 +14,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "vite.config.ts", "capacitor.config.ts"]
+  "include": ["src", "vite", "vite.config.ts", "capacitor.config.ts"]
 }

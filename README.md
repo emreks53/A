@@ -16,16 +16,72 @@ src/main.ts                Sekme yönlendirme (#/oku, #/kenz, #/gunes), Capacito
 src/styles.css             Tüm ölçüler (390 × 841 referans ekrana göre, --u ile ölçeklenir)
 src/assets/bg/             Temizlenmiş arka plan (dikey + geniş ekran; AVIF / WebP / JPG)
 src/assets/icons/          Dünya (Oku), düğüm (Kenz) ve güneş (Güneş) ikonları
-src/assets/fonts/          Tinos Bold Italic (alıntı) ve Encode Sans Bold (menü) — kendi sunucumuzdan
+src/assets/fonts/          Tinos Bold Italic (alıntı), Encode Sans Bold (menü), Lora (okuma), Amiri (Arapça) — kendi sunucumuzdan
+src/oku/                   Oku sekmesi: kitaplık, bölümler, okuma ekranı, lügat (src/oku/lugat/)
+content/oku/               Oku sekmesindeki kitaplar (Markdown); aşağıdaki "Oku: kitap ekleme" bölümüne bakın
+public/lugat/lugat.jsonl   Lügat-ı Risale-i Nur'un temel lügatı (11.905 madde); okurken dokunulan kelimenin manası
+vite/oku-katalog.ts        content/oku klasörünü derleme anında tarayıp kitap listesini üreten Vite eklentisi
 public/icons/              Favicon, PWA ve Apple simgeleri (sarı logo)
 resources/                 Android/iOS simge ve açılış ekranı kaynakları (sarı logo)
 android/, ios/             Capacitor yerel projeleri
 design/                    Tasarım kaynakları ve vektör logo (logo.svg, knot.svg)
 scripts/compare-mockup.mjs Ana ekranın tasarımla karşılaştırma ekran görüntüsü
+scripts/oku-test.mjs       Oku sekmesini gerçek tarayıcıda baştan sona deneyen test
 ```
 
-Sekmeler: **Kenz** ana ekrandır (tasarımdaki görünüm). **Oku** ve **Güneş** sekmeleri aynı görsel dilde
-hazır, içerikleri eklenmeyi bekliyor (`index.html` içindeki `view-oku` ve `view-gunes` bölümleri).
+Sekmeler: **Kenz** ana ekrandır (tasarımdaki görünüm). **Oku** okuma bölümüdür (aşağıda). **Güneş** sekmesi
+aynı görsel dilde hazır, içeriği eklenmeyi bekliyor (`index.html` içindeki `view-gunes` bölümü).
+
+## Oku sekmesi
+
+- **Kitaplık** (`#/oku`): kitaplar ve "Kaldığın yerden devam et" kartı (bölüm bittiyse sıradaki bölüm).
+- **Bölümler** (`#/oku/<kitap>`): her bölümün okuma süresi ve ne kadarının okunduğu.
+- **Okuma ekranı** (`#/oku/<kitap>/<bölüm>`): alt menü gizlenir, aşağı kaydırınca üst çubuk da çekilir
+  (yukarı kaydırınca ya da boşluğa dokununca geri gelir). Bölüm sonunda önceki/sonraki bölüme geçiş.
+  - **Kelimeye dokununca manası** ekranın altında açılır; ekli kelimenin kökü ("kudretinin" → kudret) ve
+    birleşik ifadeler ("mana-yı harfî") Lügat-ı Risale-i Nur uygulamasının arama kurallarıyla bulunur
+    (`src/oku/lugat/`, Dart kodunun TypeScript karşılığı). "Bakınız" ve diğer adaylar dokunulabilir.
+  - **Dipnot** işaretine dokununca dipnot aynı yerde açılır; bölüm sonunda bütün dipnotlar listelenir.
+  - **Aa**: yazı boyutu (6 adım), satır aralığı (dar / normal / geniş), tema (gündüz / sepya / gece).
+  - Kalınan yer (paragraf düzeyinde) ve ayarlar cihazda saklanır; internet gerekmez (lügat ve bölümler
+    PWA önbelleğinde, telefon uygulamasında zaten içeride).
+- Android geri tuşu önce açık sayfayı kapatır, sonra uygulama içinde geri gider.
+
+### Oku: kitap ekleme
+
+Her kitap `content/oku/` altında bir klasördür; klasör adı adreste görünür (küçük harf, rakam, tire):
+
+```
+content/oku/sozler/
+  kitap.json               {"baslik": "Sözler", "altbaslik": "…", "sira": 1}
+  01-birinci-soz.md        bölümler dosya adı sırasıyla; baştaki numara adrese girmez (#/oku/sozler/birinci-soz)
+  02-ikinci-soz.md
+```
+
+Bölüm dosyası yalın Markdown'dır; ilk satırı bölüm başlığıdır:
+
+```markdown
+# Birinci Söz
+
+بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ        ← Arapça paragraf kendiliğinden sağdan sola, ortalı ve Amiri yazı tipiyle
+
+Paragraflar boş satırla ayrılır. **kalın**, *italik*, dipnot işareti[^1].
+
+## Ara başlık
+
+> Alıntı
+
+---                                       ← ayraç
+
+Şiir gibi satır kırmak için satır sonuna ters bölü\
+konur.
+
+[^1]: Dipnot metni.
+```
+
+Eksik `kitap.json`, başlıksız bölüm ya da aynı adlı iki bölüm derlemeyi anlaşılır bir hatayla durdurur.
+`content/oku/ornek/` okuma ekranını tanıtan örnek kitaptır (`"ornek": true`, kitaplıkta "Örnek" rozetiyle);
+gerçek metinler eklenince silinebilir.
 
 ## Geliştirme
 
@@ -34,6 +90,8 @@ npm install
 npm run dev          # http://localhost:5173
 npm run build        # dist/ klasörüne üretim derlemesi
 npm run test:visual  # derlemeyi tasarım ölçüsünde (854 × 1842) ekran görüntüsü olarak alır
+npm test             # birim testleri (Markdown, katalog, rota, lügat araması)
+npm run test:oku     # derlemeyi gerçek tarayıcıda dener: kitaplık → bölüm → kelime → ayarlar → kalınan yer
 ```
 
 ## Web sitesi (GitHub Pages)
@@ -76,4 +134,7 @@ npm run assets:native
 ## Notlar
 
 - Uygulama kimliği `app.kenz.mobile`, adı `Kenz` (`capacitor.config.ts`). Mağazaya göndermeden önce değiştirebilirsiniz.
-- Alıntı yazı tipi Tinos (Apache 2.0), menü yazı tipi Encode Sans (OFL); ikisi de uygulamayla birlikte gelir.
+- Alıntı yazı tipi Tinos (Apache 2.0), menü yazı tipi Encode Sans (OFL), okuma yazı tipi Lora (OFL), Arapça
+  yazı tipi Amiri (OFL); hepsi uygulamayla birlikte gelir.
+- Lügat verisi Lügat-ı Risale-i Nur uygulamasının `assets/lugat.jsonl` dosyasıdır (manaların kaynağı ve
+  telif notu o uygulamanın README'sinde).

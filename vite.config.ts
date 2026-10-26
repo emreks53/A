@@ -1,14 +1,20 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { okuKatalog } from './vite/oku-katalog.ts';
 
 export default defineConfig({
   // Göreli taban: aynı derleme GitHub Pages alt yolunda (/A/) ve Capacitor içinde çalışır.
   base: './',
+  test: {
+    include: ['src/**/*.test.ts', 'vite/**/*.test.ts'],
+  },
   build: {
     target: 'es2020',
     assetsInlineLimit: 0,
   },
   plugins: [
+    okuKatalog(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
@@ -33,7 +39,8 @@ export default defineConfig({
       },
       workbox: {
         // Arka plan görsellerinin yalnızca tarayıcının seçtiği sürümü indirilir; onlar çalışma anında önbelleğe alınır.
-        globPatterns: ['**/*.{html,js,css,woff2,svg,ico,png,webp}'],
+        // Lügat (lugat/lugat.jsonl) ve bölümler çevrimdışı okuma için baştan önbelleğe alınır.
+        globPatterns: ['**/*.{html,js,css,woff2,svg,ico,png,webp,jsonl}'],
         globIgnores: ['**/bg-*'],
         navigateFallback: 'index.html',
         runtimeCaching: [
