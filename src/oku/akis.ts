@@ -14,8 +14,9 @@ function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, me
   return e;
 }
 
+// Neşret: ortada nur parıltısı, çevresine saçılan ışınlar (neşretmek: yaymak). Güneş sekmesinin diskli güneşinden ayrı.
 const NESRET_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 3.2 10.4 13.7M21.5 3.2l-6.9 18-4.2-7.5-7.6-4.1 18.7-6.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.6c.55 2.45 1.95 3.85 4.4 4.4-2.45.55-3.85 1.95-4.4 4.4-.55-2.45-1.95-3.85-4.4-4.4 2.45-.55 3.85-1.95 4.4-4.4Z" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>';
 const MENBA_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 const OYNAT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></svg>';
