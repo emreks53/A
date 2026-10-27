@@ -1,4 +1,5 @@
 // Ekranın altından açılan sayfa (Menba).
+// Üstteki tutamak kapatma düğmesidir: dokununca ya da aşağı sürükleyince kapanır (Escape ve perde de kapatır).
 // modal: arkası yarı saydam perdeyle kapanır, odak sayfada kalır.
 // modal değil: arkadaki ekran dokunulabilir kalır.
 
@@ -42,9 +43,10 @@ export function altSayfaAc(s: AltSayfaSecenek): AltSayfa {
   sayfa.setAttribute('aria-labelledby', baslikId);
   sayfa.tabIndex = -1;
 
-  const tutamak = document.createElement('div');
+  const tutamak = document.createElement('button');
+  tutamak.type = 'button';
   tutamak.className = 'alt-sayfa__tutamak';
-  tutamak.setAttribute('aria-hidden', 'true');
+  tutamak.setAttribute('aria-label', 'Kapat');
 
   const ust = document.createElement('div');
   ust.className = 'alt-sayfa__ust';
@@ -52,13 +54,7 @@ export function altSayfaAc(s: AltSayfaSecenek): AltSayfa {
   baslik.className = 'alt-sayfa__baslik' + (s.baslikGizli ? ' visually-hidden' : '');
   baslik.id = baslikId;
   baslik.textContent = s.baslik;
-  const kapatDugme = document.createElement('button');
-  kapatDugme.type = 'button';
-  kapatDugme.className = 'alt-sayfa__kapat';
-  kapatDugme.setAttribute('aria-label', 'Kapat');
-  kapatDugme.innerHTML =
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
-  ust.append(baslik, kapatDugme);
+  ust.append(baslik);
 
   const govde = document.createElement('div');
   govde.className = 'alt-sayfa__govde';
@@ -122,22 +118,27 @@ export function altSayfaAc(s: AltSayfaSecenek): AltSayfa {
     }
   };
   document.addEventListener('keydown', tus, true);
-  kapatDugme.addEventListener('click', kapat);
+  tutamak.addEventListener('click', () => {
+    // Sürükleyip bırakmanın ardından gelen tıklama sayılmaz (sürükleme kendisi karar verir).
+    if (!suruklendi) kapat();
+  });
   perde?.addEventListener('click', kapat);
 
   // Tutamaktan ya da başlıktan aşağı sürükleyince kapanır.
   let baslangic: number | null = null;
   let fark = 0;
+  let suruklendi = false;
   const surukBasla = (e: PointerEvent) => {
-    if ((e.target as Element).closest('button')) return;
     baslangic = e.clientY;
     fark = 0;
+    suruklendi = false;
     sayfa.style.transition = 'none';
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
   const suruk = (e: PointerEvent) => {
     if (baslangic === null) return;
     fark = Math.max(0, e.clientY - baslangic);
+    if (fark > 6) suruklendi = true;
     sayfa.style.transform = `translateY(${fark}px)`;
   };
   const surukBit = () => {
@@ -147,7 +148,7 @@ export function altSayfaAc(s: AltSayfaSecenek): AltSayfa {
     sayfa.style.transform = '';
     if (fark > Math.min(120, sayfa.offsetHeight / 3)) kapat();
   };
-  for (const tut of [tutamak, ust]) {
+  for (const tut of [tutamak, ust] as HTMLElement[]) {
     tut.addEventListener('pointerdown', surukBasla);
     tut.addEventListener('pointermove', suruk);
     tut.addEventListener('pointerup', surukBit);

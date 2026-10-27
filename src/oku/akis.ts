@@ -1,11 +1,11 @@
 // Oku sekmesi: kâinat kitabını "okumak" için dikey kısa video akışı (Reels gibi).
 // Yukarı/aşağı kaydırınca bir sonraki video tam ekran gelir ve kendiliğinden oynar. Ekranda yalnız iki düğme
 // vardır: Neşret (paylaşım bağlantısı) ve Menba (Risale-i Nur'daki kaynak).
-import { videolar } from 'virtual:oku-videolar';
+import { konular, videolar } from 'virtual:oku-videolar';
 import { altSayfaAc, acikSayfa } from './alt-sayfa';
 import { menbaIcerik } from './menba';
 import { nesret } from './nesret';
-import type { Video } from './ortak';
+import { tipografik, type Video } from './ortak';
 
 function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, metin?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(etiket);
@@ -16,7 +16,7 @@ function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, me
 
 // Neşret: ortada nur parıltısı, çevresine saçılan ışınlar (neşretmek: yaymak). Güneş sekmesinin diskli güneşinden ayrı.
 const NESRET_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.6c.55 2.45 1.95 3.85 4.4 4.4-2.45.55-3.85 1.95-4.4 4.4-.55-2.45-1.95-3.85-4.4-4.4 2.45-.55 3.85-1.95 4.4-4.4Z" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.6c.55 2.45 1.95 3.85 4.4 4.4-2.45.55-3.85 1.95-4.4 4.4-.55-2.45-1.95-3.85-4.4-4.4 2.45-.55 3.85-1.95 4.4-4.4Z" fill="#FFE0A0"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>';
 const MENBA_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 const OYNAT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></svg>';
@@ -31,6 +31,7 @@ interface Oge {
   kok: HTMLElement;
   video: HTMLVideoElement;
   dolu: HTMLElement;
+  uc: HTMLElement;
   cubuk: HTMLElement;
   durum: HTMLElement;
   /** Kullanıcı durdurdu (dokunarak, klavyeyle ya da kulaklık/medya tuşuyla): kendiliğinden başlamaz */
@@ -54,11 +55,18 @@ export interface AkisSecenek {
   adresDegisti(id: string): void;
   /** Oku'dan çık (Escape); sağa kaydırma ve telefonun geri tuşu da aynı yere gider */
   cik(): void;
+  /** Çıkış ipucu gösterildi (ekran hafifçe sağa itilip altındaki sekme gösterilir) */
+  ipucuGosterildi?(): void;
+}
+
+export interface AkisIpucu {
+  /** Kullanıcı sağa kaydırmaya başladı: ipucu kalkar */
+  ipucuGizle(): void;
 }
 
 const IPUCU_ANAHTARI = 'nuruhakikat.oku.kaydirIpucu';
 
-export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek): Akis {
+export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterildi }: AkisSecenek): Akis & AkisIpucu {
   const akis = el('div', 'akis');
   akis.setAttribute('role', 'feed');
   akis.setAttribute('aria-label', 'Oku: videolar');
@@ -72,20 +80,30 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek)
   const bildirim = el('div', 'akis__bildirim');
   bildirim.setAttribute('role', 'status');
   bildirim.setAttribute('aria-live', 'polite');
-  kok.append(akis, baslik, sessiz, bildirim);
+  // Çıkış düğmesi olmadığı için ilk açılışta bir kez: soldan sağa akan bir ışık izi ve kısa yazı.
+  const ipucu = el('div', 'akis__ipucu');
+  ipucu.setAttribute('role', 'status');
+  const ipucuIz = el('span', 'akis__ipucu-iz');
+  ipucuIz.setAttribute('aria-hidden', 'true');
+  const ipucuYazi = el('span', 'akis__ipucu-yazi');
+  ipucu.append(ipucuIz, ipucuYazi);
+  kok.append(akis, baslik, sessiz, bildirim, ipucu);
 
   let etkin = false;
   let aktif = 0;
   /** Tarayıcı sesli oynatmaya izin vermediyse true: videolar sessiz oynar, ilk dokunuş sesi açar */
   let zorlaSessiz = false;
   let cerceve = 0;
+  let ipucuZamanlayici = 0;
+
+  const konuAdi = new Map(konular.map((k) => [k.id, tipografik(k.baslik)]));
 
   const ogeler: Oge[] = videolar.map((v, i) => {
     const art = el('article', 'reel');
     art.dataset.id = v.id;
     art.setAttribute('aria-posinset', String(i + 1));
     art.setAttribute('aria-setsize', String(videolar.length));
-    art.setAttribute('aria-label', v.baslik);
+    art.setAttribute('aria-label', tipografik(v.baslik));
     // CSS değişkenindeki göreli adres stil dosyasına göre çözülür; bu yüzden tam adres verilir.
     art.style.setProperty('--kapak', `url("${new URL(import.meta.env.BASE_URL + v.kapak, document.baseURI).href}")`);
 
@@ -106,8 +124,15 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek)
     const durum = el('div', 'reel__durum');
     durum.setAttribute('aria-hidden', 'true');
 
-    // Başlık üstte, "Oku"nun altında: videoların alt bandında altyazı gömülü.
-    const baslikEl = el('h2', 'reel__baslik', v.baslik);
+    // Ad ve konu üstte, ekranın boş üst bandında: videoların alt bandında altyazı gömülü.
+    const ust = el('div', 'reel__ust');
+    const konu = konuAdi.get(v.konu);
+    if (konu) {
+      const k = el('p', 'reel__konu', konu);
+      k.setAttribute('aria-hidden', 'true');
+      ust.append(k);
+    }
+    ust.append(el('h2', 'reel__baslik', tipografik(v.baslik)));
 
     const alt = el('div', 'reel__alt');
     const cubuk = el('div', 'reel__ilerleme');
@@ -118,7 +143,9 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek)
     cubuk.setAttribute('aria-valuenow', '0');
     cubuk.tabIndex = 0;
     const dolu = el('span', 'reel__ilerleme-dolu');
-    cubuk.append(dolu);
+    // Dolu kısmın ucunda parlayan nokta
+    const uc = el('span', 'reel__ilerleme-uc');
+    cubuk.append(dolu, uc);
     alt.append(cubuk);
 
     const dugmeler = el('div', 'reel__dugmeler');
@@ -135,11 +162,11 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek)
     menbaD.setAttribute('aria-haspopup', 'dialog');
     dugmeler.append(nesretD, menbaD);
 
-    sahne.append(video, karartma, durum, baslikEl, alt, dugmeler);
+    sahne.append(video, karartma, durum, ust, alt, dugmeler);
     art.append(sahne);
     akis.append(art);
 
-    const oge: Oge = { v, kok: art, video, dolu, cubuk, durum, elleDurdu: false, ayrildi: false, uygulamaDurdurdu: false };
+    const oge: Oge = { v, kok: art, video, dolu, uc, cubuk, durum, elleDurdu: false, ayrildi: false, uygulamaDurdurdu: false };
 
     nesretD.addEventListener('click', async () => {
       const sonuc = await nesret(v);
@@ -147,7 +174,16 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek)
       else if (sonuc === 'olmadi') bildir('Bağlantı paylaşılamadı');
     });
     menbaD.addEventListener('click', () => {
-      altSayfaAc({ baslik: 'Menba', icerik: menbaIcerik(v), modal: true, sinif: 'alt-sayfa--menba' });
+      // Sayfa açıkken videonun üstündeki yazılar ve düğmeler çekilir.
+      kok.dataset.sayfa = '';
+      ipucuGizle();
+      altSayfaAc({
+        baslik: 'Menba',
+        icerik: menbaIcerik(v),
+        modal: true,
+        sinif: 'alt-sayfa--menba',
+        kapaninca: () => delete kok.dataset.sayfa,
+      });
     });
 
     // Videoya dokunmak (ya da odaklıyken Enter): hata varsa yeniden dener, ses kapalı zorlanmışsa sesi açar,
@@ -209,6 +245,19 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek)
     bildirim.dataset.zaman = String(window.setTimeout(() => bildirim.classList.remove('gorunur'), sure));
   }
 
+  function ipucuGoster(): void {
+    ipucuYazi.textContent = 'Çıkmak için sağa kaydırın';
+    ipucu.classList.add('gorunur');
+    ipucuGosterildi?.();
+    window.clearTimeout(ipucuZamanlayici);
+    ipucuZamanlayici = window.setTimeout(ipucuGizle, 4200);
+  }
+
+  function ipucuGizle(): void {
+    window.clearTimeout(ipucuZamanlayici);
+    ipucu.classList.remove('gorunur');
+  }
+
   function durumGoster(o: Oge, ozel?: 'bekliyor' | 'hata'): void {
     const v = o.video;
     let hal = '';
@@ -227,6 +276,7 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek)
     const v = o.video;
     const oran = v.duration > 0 ? v.currentTime / v.duration : 0;
     o.dolu.style.transform = `scaleX(${oran})`;
+    o.uc.style.transform = `translateX(${(oran * 100).toFixed(3)}%)`;
     o.cubuk.setAttribute('aria-valuenow', String(Math.round(oran * 100)));
     o.cubuk.setAttribute('aria-valuetext', `${Math.floor(v.currentTime / 60)}:${String(Math.floor(v.currentTime % 60)).padStart(2, '0')}`);
   }
@@ -428,11 +478,12 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek)
   return {
     goster(videoId) {
       etkin = true;
-      // Çıkış düğmesi olmadığı için ilk açılışta bir kez nasıl çıkılacağı söylenir.
+      // Çıkış düğmesi olmadığı için ilk açılışta bir kez nasıl çıkılacağı gösterilir.
       try {
         if (!localStorage.getItem(IPUCU_ANAHTARI)) {
           localStorage.setItem(IPUCU_ANAHTARI, '1');
-          window.setTimeout(() => etkin && bildir('Çıkmak için sağa kaydırın', 3200), 900);
+          window.clearTimeout(ipucuZamanlayici);
+          ipucuZamanlayici = window.setTimeout(() => etkin && !acikSayfa() && ipucuGoster(), 1200);
         }
       } catch {
         // depolama kapalıysa ipucu gösterilmez
@@ -446,11 +497,13 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek)
     },
     ayril() {
       etkin = false;
+      ipucuGizle();
       cancelAnimationFrame(cerceve);
       for (const o of ogeler) durdur(o);
     },
     aktifVideo() {
       return ogeler[aktif].v.id;
     },
+    ipucuGizle,
   };
 }

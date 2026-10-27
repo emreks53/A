@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { menbaYazisi, paylasimAdresi, sureYazisi } from '../src/oku/ortak';
+import { menbaYazisi, paylasimAdresi, sureYazisi, tipografik } from '../src/oku/ortak';
 import { akisOku, mp4Suresi, paylasimSayfasi } from './oku-videolar';
 
 const kok = resolve(__dirname, '..');
@@ -122,6 +122,14 @@ describe('sureYazisi', () => {
     expect(sureYazisi(134)).toBe('2:14');
     expect(sureYazisi(125.7)).toBe('2:06');
     expect(sureYazisi(9)).toBe('0:09');
+  });
+});
+
+describe('tipografik', () => {
+  it('ekranda düz kesme işareti yerine tipografik olanı', () => {
+    expect(tipografik("Ahlâk Mu'cizesi")).toBe('Ahlâk Mu’cizesi');
+    expect(tipografik("Lem'alar, 64. sayfa")).toBe('Lem’alar, 64. sayfa');
+    expect(tipografik('Sözler')).toBe('Sözler');
   });
 });
 

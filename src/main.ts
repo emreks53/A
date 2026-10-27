@@ -1,6 +1,8 @@
 import './styles.css';
 import './oku/oku.css';
+import './kenz/kenz.css';
 import { Capacitor } from '@capacitor/core';
+import { kenzBaslat } from './kenz/kenz';
 import { acikSayfa } from './oku/alt-sayfa';
 import { akisBaslat } from './oku/akis';
 import { sagaKaydirCik } from './oku/kaydir-cik';
@@ -25,6 +27,8 @@ function okudanCik(): void {
   else location.replace(`#/${okuOncesi}`);
 }
 
+const kenz = kenzBaslat(document.getElementById('view-kenz')!);
+
 // Akışta video değişince adres de değişir (#/oku/<id>); geçmişe yeni kayıt eklenmez.
 const akis = akisBaslat(okuGorunumu, {
   adresDegisti(id) {
@@ -32,15 +36,17 @@ const akis = akisBaslat(okuGorunumu, {
     if (location.hash !== hash) history.replaceState(history.state, '', hash);
   },
   cik: okudanCik,
+  ipucuGosterildi: () => kaydir.durt(),
 });
 
 okuGorunumu.addEventListener('animationend', (e) => {
   if (e.target === okuGorunumu) delete app.dataset.gecis;
 });
 
-sagaKaydirCik(okuGorunumu, {
+const kaydir = sagaKaydirCik(okuGorunumu, {
   alttaki: () => views.find((v) => v.dataset.view === okuOncesi) ?? null,
   cik: okudanCik,
+  basladi: () => akis.ipucuGizle(),
 });
 
 function show(r: Rota, icerden = false): void {
@@ -66,8 +72,10 @@ function show(r: Rota, icerden = false): void {
 window.addEventListener('hashchange', () => show(rotaCoz(location.hash), true));
 for (const link of links) {
   link.addEventListener('click', (e) => {
-    // Açık sekmeye yeniden dokunmak geçmişe kayıt eklemesin
-    if (link.dataset.tab === aktif) e.preventDefault();
+    // Açık sekmeye yeniden dokunmak geçmişe kayıt eklemesin; Kenz'de en başa döner.
+    if (link.dataset.tab !== aktif) return;
+    e.preventDefault();
+    if (aktif === 'kenz') kenz.basaDon();
   });
 }
 show(rotaCoz(location.hash));

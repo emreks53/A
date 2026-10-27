@@ -46,3 +46,8 @@ export function sureYazisi(saniye: number): string {
 export function paylasimAdresi(site: string, id: string): string {
   return `${site}v/${id}/`;
 }
+
+/** Ekranda düz kesme işareti yerine tipografik olanı: "Lem'alar" → "Lem’alar" (veride düz kalır) */
+export function tipografik(metin: string): string {
+  return metin.replace(/'/g, '’');
+}

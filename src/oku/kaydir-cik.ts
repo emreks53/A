@@ -7,18 +7,31 @@ export interface KaydirCikSecenek {
   /** Sürüklerken altında görünecek ekran (dönülecek sekme) */
   alttaki(): HTMLElement | null;
   cik(): void;
+  /** Sağa sürükleme başladı */
+  basladi?(): void;
+}
+
+export interface KaydirCik {
+  /** İpucu: ekranı bir an 12 px sağa itip altındaki sekmeyi gösterir, sonra yerine döner */
+  durt(): void;
 }
 
 const ESIK = 12;
 
-export function sagaKaydirCik(kok: HTMLElement, s: KaydirCikSecenek): void {
+export function sagaKaydirCik(kok: HTMLElement, s: KaydirCikSecenek): KaydirCik {
   let bas: { x: number; y: number; t: number; id: number } | null = null;
   let yatay = false;
   let dx = 0;
   let alt: HTMLElement | null = null;
   let tiklamayiYut = false;
+  let durtme = 0;
 
   const azaltilmis = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const durtmeyiBirak = () => {
+    window.clearTimeout(durtme);
+    kok.classList.remove('durtulen');
+  };
 
   const temizle = () => {
     kok.classList.remove('suruklenen', 'cikiyor');
@@ -47,7 +60,9 @@ export function sagaKaydirCik(kok: HTMLElement, s: KaydirCikSecenek): void {
       }
       if (mx < ESIK || mx < Math.abs(my) * 1.3) return;
       yatay = true;
-      alt = s.alttaki();
+      durtmeyiBirak();
+      s.basladi?.();
+      alt ??= s.alttaki();
       alt?.setAttribute('data-alttan', '');
       kok.classList.add('suruklenen');
       try {
@@ -94,6 +109,22 @@ export function sagaKaydirCik(kok: HTMLElement, s: KaydirCikSecenek): void {
   kok.addEventListener('pointerup', bitir);
   kok.addEventListener('pointercancel', bitir);
 
+  function durt(): void {
+    if (azaltilmis() || bas || kok.classList.contains('cikiyor')) return;
+    alt = s.alttaki();
+    alt?.setAttribute('data-alttan', '');
+    kok.classList.add('durtulen');
+    kok.style.transform = 'translate3d(12px, 0, 0)';
+    durtme = window.setTimeout(() => {
+      kok.style.transform = '';
+      durtme = window.setTimeout(() => {
+        kok.classList.remove('durtulen');
+        alt?.removeAttribute('data-alttan');
+        alt = null;
+      }, 520);
+    }, 1000);
+  }
+
   // Sürükleme biterken parmağın kalktığı yerdeki "tıklama" videoyu durdurmasın.
   kok.addEventListener(
     'click',
@@ -104,4 +135,6 @@ export function sagaKaydirCik(kok: HTMLElement, s: KaydirCikSecenek): void {
     },
     true,
   );
+
+  return { durt };
 }

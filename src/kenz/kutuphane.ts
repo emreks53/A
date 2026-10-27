@@ -1,6 +1,11 @@
 // Kenz: videolar konu konu. Her konu bir bölümdür; karta dokununca video Oku'da (tam ekran akışta) açılır.
+// Tek videolu konuda geniş kart, birden çok videoda yatay kaydırılan raf.
 import { konular, videolar } from 'virtual:oku-videolar';
-import { menbaYazisi, sureYazisi, type Konu, type Video } from '../oku/ortak';
+import { menbaYazisi, sureYazisi, tipografik, type Konu, type Video } from '../oku/ortak';
+
+const KITAP_SVG =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+const OYNAT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></svg>';
 
 function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, metin?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(etiket);
@@ -16,11 +21,8 @@ export function konuGruplari(): { konu: Konu; videolar: Video[] }[] {
     .filter((g) => g.videolar.length > 0);
 }
 
-function kart(v: Video): HTMLElement {
-  const a = el('a', 'kart');
-  a.href = `#/oku/${v.id}`;
-  a.setAttribute('aria-label', `${v.baslik}, ${sureYazisi(v.sure)}. Menba: ${menbaYazisi(v.menba)}`);
-  const resim = el('span', 'kart__resim');
+function kapak(v: Video): HTMLElement {
+  const kutu = el('span', 'kart__poster');
   const img = el('img', 'kart__img');
   img.src = import.meta.env.BASE_URL + v.onizleme;
   img.alt = '';
@@ -28,44 +30,81 @@ function kart(v: Video): HTMLElement {
   img.decoding = 'async';
   img.width = 720;
   img.height = 1280;
-  const sure = el('span', 'kart__sure', sureYazisi(v.sure));
-  sure.setAttribute('aria-hidden', 'true');
-  resim.append(img, sure);
-  const yazi = el('span', 'kart__yazi');
-  yazi.setAttribute('aria-hidden', 'true');
-  yazi.append(el('span', 'kart__baslik', v.baslik), el('span', 'kart__menba', menbaYazisi(v.menba)));
-  a.append(resim, yazi);
+  const sure = el('span', 'kart__sure');
+  sure.innerHTML = OYNAT_SVG;
+  sure.append(sureYazisi(v.sure));
+  kutu.append(img, sure);
+  return kutu;
+}
+
+function kaynak(m: Video['menba'][number]): HTMLElement {
+  const satir = el('span', 'kart__kaynak');
+  satir.innerHTML = KITAP_SVG;
+  satir.append(tipografik(m.yer ? `${m.eser}, ${m.yer}` : m.eser));
+  return satir;
+}
+
+function kart(v: Video, genis: boolean): HTMLAnchorElement {
+  const a = el('a', `kart ${genis ? 'kart--genis' : 'kart--dar'}`);
+  a.href = `#/oku/${v.id}`;
+  a.dataset.video = v.id;
+  // Kartın tamamı tek bağlantıdır; ekran okuyucu tek cümle duyar.
+  a.setAttribute('aria-label', `${tipografik(v.baslik)}, ${sureYazisi(v.sure)}. Menba: ${tipografik(menbaYazisi(v.menba))}`);
+  const ad = el('span', 'kart__ad', tipografik(v.baslik));
+  if (!genis) {
+    a.append(kapak(v), ad, kaynak(v.menba[0]));
+  } else {
+    const metin = el('span', 'kart__metin');
+    const alt = el('span', 'kart__alt');
+    const izle = el('span', 'izle');
+    izle.innerHTML = OYNAT_SVG;
+    alt.append(izle, el('span', 'izle__ad', 'İzle'));
+    metin.append(ad, el('span', 'kart__etiket', 'Menba'), ...v.menba.map(kaynak), alt);
+    a.append(kapak(v), metin);
+  }
+  for (const c of a.children) c.setAttribute('aria-hidden', 'true');
   return a;
+}
+
+function sus(): HTMLElement {
+  const s = el('div', 'sus');
+  s.setAttribute('aria-hidden', 'true');
+  s.append(el('i', 'dugum'));
+  return s;
 }
 
 export function kutuphaneCiz(): HTMLElement {
   const kok = el('div', 'kutuphane');
-  kok.setAttribute('aria-labelledby', 'kutuphane-baslik');
-  const ust = el('div', 'kutuphane__ust');
-  const baslik = el('h2', 'kutuphane__baslik', 'Konular');
+  kok.id = 'kutuphane';
+  const baslik = el('h2', 'kutuphane__baslik visually-hidden', 'Konular');
   baslik.id = 'kutuphane-baslik';
-  const sayi = el('p', 'kutuphane__sayi', `${videolar.length} video`);
-  ust.append(baslik, sayi);
-  kok.append(ust);
+  baslik.tabIndex = -1;
+  kok.setAttribute('role', 'region');
+  kok.setAttribute('aria-labelledby', baslik.id);
+  kok.append(sus(), baslik);
 
   for (const { konu, videolar: liste } of konuGruplari()) {
     const bolum = el('section', 'konu');
     bolum.id = `konu-${konu.id}`;
-    const bolumBaslik = el('h3', 'konu__baslik', konu.baslik);
-    bolumBaslik.id = `konu-${konu.id}-baslik`;
-    bolum.setAttribute('aria-labelledby', bolumBaslik.id);
-    const ustSatir = el('div', 'konu__ust');
-    ustSatir.append(bolumBaslik, el('span', 'konu__sayi', `${liste.length} video`));
-    bolum.append(ustSatir);
-    if (konu.aciklama) bolum.append(el('p', 'konu__aciklama', konu.aciklama));
-    const izgara = el('ul', 'konu__kartlar');
+    const bas = el('div', 'konu__bas');
+    const ad = el('h3', 'konu__ad', tipografik(konu.baslik));
+    ad.id = `konu-${konu.id}-baslik`;
+    bolum.setAttribute('aria-labelledby', ad.id);
+    bas.append(ad, el('span', 'konu__sayi', `${liste.length} video`));
+    bolum.append(bas);
+    const raf = el('ul', liste.length > 1 ? 'raf raf--cok' : 'raf');
     for (const v of liste) {
-      const li = el('li', 'konu__oge');
-      li.append(kart(v));
-      izgara.append(li);
+      const li = el('li');
+      li.append(kart(v, liste.length === 1));
+      raf.append(li);
     }
-    bolum.append(izgara);
+    bolum.append(raf);
     kok.append(bolum);
   }
+
+  const son = el('div', 'son');
+  son.setAttribute('aria-hidden', 'true');
+  son.append(sus(), el('p', 'son__ad', 'Nur-u Hakikat'));
+  kok.append(son);
   return kok;
 }

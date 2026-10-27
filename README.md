@@ -16,8 +16,9 @@ src/main.ts                Sekme yönlendirme (#/oku, #/kenz, #/gunes), Capacito
 src/styles.css             Tüm ölçüler (390 × 841 referans ekrana göre, --u ile ölçeklenir)
 src/assets/bg/             Temizlenmiş arka plan (dikey + geniş ekran; AVIF / WebP / JPG)
 src/assets/icons/          Dünya (Oku), düğüm (Kenz) ve güneş (Güneş) ikonları
-src/assets/fonts/          Tinos Bold Italic (alıntı) ve Encode Sans Bold (menü) — kendi sunucumuzdan
-src/oku/                   Oku sekmesi: dikey video akışı (akis.ts), Neşret (nesret.ts), Menba (menba.ts)
+src/assets/fonts/          Tinos Bold Italic (alıntı, başlıklar) ve Encode Sans 500/600/700 (arayüz) — kendi sunucumuzdan
+src/kenz/                  Kenz sekmesi: konu konu video kütüphanesi (kutuphane.ts), kaydırma etkileri (kenz.ts), Güneş
+src/oku/                   Oku sekmesi: dikey video akışı (akis.ts), sağa kaydırıp çıkma (kaydir-cik.ts), Neşret, Menba
 content/oku/videolar.json  Oku akışındaki videolar, sırasıyla; aşağıdaki "Oku: video ekleme" bölümüne bakın
 public/videolar/           Videolar (720×1280 H.264), kapak ve paylaşım önizleme görselleri
 vite/oku-videolar.ts       Video listesini denetleyen ve her video için paylaşım sayfasını (v/<id>/) üreten eklenti
@@ -29,13 +30,35 @@ scripts/compare-mockup.mjs Ana ekranın tasarımla karşılaştırma ekran gör�
 scripts/oku-test.mjs       Oku akışını gerçek tarayıcıda baştan sona deneyen test
 ```
 
-Sekmeler: **Kenz** ana ekrandır (tasarımdaki görünüm). **Oku** kâinat kitabını "okumak" için kısa video
-akışıdır (aşağıda). **Güneş** sekmesi aynı görsel dilde hazır, içeriği eklenmeyi bekliyor (`index.html` içindeki
-`view-gunes` bölümü).
+Sekmeler: **Kenz** ana ekrandır (tasarımdaki görünüm); aşağı kaydırınca videolar konu konu sıralanır.
+**Oku** kâinat kitabını "okumak" için tam ekran kısa video akışıdır (aşağıda). **Güneş** şimdilik aynı sahnede
+şafak vakti bir "yakında" ekranıdır; içeriği gelince `index.html` içindeki `view-gunes` bölümüne eklenir.
+
+## Kenz sekmesi
+
+- Açılışta ana ekran tasarımdaki gibidir: üstte küçük **NUR-U HAKİKAT** yazısı, ortada alıntı, menünün üstünde
+  **Konular · 2** kapsülü (dokununca kütüphaneye kayar).
+- Aşağı kaydırınca sahne ufka doğru yaklaşır, gök koyulaşıp hafifçe bulanıklaşır, alıntı söner ve üstte
+  *Nur-u Hakikat* markası kalır. Videolar konu başlıkları altında kartlar hâlinde sıralanır: kapak, süre,
+  Menba ve **İzle**. Karta dokununca video Oku'da açılır; sağa kaydırınca kütüphanede aynı yere dönülür.
+- Bir konuda tek video varsa geniş kart, birden çok video varsa yana kaydırılan bir raf gösterilir.
+- Kenz sekmesine yeniden dokunmak en başa döndürür. Hareketi azaltma ayarı açıksa yakınlaşma ve bulanıklık
+  yapılmaz, yalnız gök koyulaşır.
+- Konular `content/oku/videolar.json` içindeki `konular` listesinden gelir (sıra Kenz'deki sıradır); videosu
+  olmayan konu gösterilmez. Konu eklemek ya da adını değiştirmek için bu listeyi düzenleyin:
+
+  ```json
+  "konular": [
+    { "id": "muhabbet", "baslik": "Muhabbet" },
+    { "id": "nubuvvet", "baslik": "Nübüvvet" }
+  ]
+  ```
 
 ## Oku sekmesi
 
-Instagram Reels gibi tam ekran dikey video akışı (`#/oku/<video>`):
+Instagram Reels gibi tam ekran dikey video akışı (`#/oku/<video>`). Oku açıkken alt menü yoktur; çıkmak için
+ekran **sağa kaydırılır** (parmağı izler, altından dönülecek sekme görünür), telefonun geri tuşu ya da
+klavyede Escape de çıkarır. İlk açılışta bir kez "Çıkmak için sağa kaydırın" ipucu gösterilir.
 
 - Yukarı/aşağı kaydırınca sonraki/önceki video ekrana oturur ve kendiliğinden, sesli oynar; önceki durur.
   Geri dönülen video baştan başlar. Videoya dokununca durur / sürer; alttaki ince çizgiyle videoda ileri geri
@@ -45,17 +68,18 @@ Instagram Reels gibi tam ekran dikey video akışı (`#/oku/<video>`):
     Bağlantı `https://emreks53.github.io/A/v/<video>/` biçimindedir; mesajlaşma uygulamaları önizlemeyi o
     videonun görseli ve adıyla çizer, bağlantıyı açan kişi doğrudan o videoya gelir. Paylaşım menüsü olmayan
     tarayıcıda bağlantı panoya kopyalanır.
-  - **Menba** — videonun Risale-i Nur'daki kaynağı (ör. *Lem'alar, 64. sayfa*) ve varsa görüntü ve ses künyesi
-    (CC BY 4.0 lisanslı görüntülerin zorunlu atıfları burada).
+  - **Menba** — videonun Risale-i Nur'daki kaynağı (ör. *Lem’alar, 64. sayfa*) ve varsa görüntü ve ses künyesi
+    (CC BY 4.0 lisanslı görüntülerin zorunlu atıfları burada). Sayfa üstteki tutamağa dokunarak, aşağı
+    sürükleyerek ya da arkasına dokunarak kapanır.
 - Başka sekmeye geçince ya da uygulama arka plana alınınca video durur; dönünce kaldığı yerden sürer.
   Ana ekrandayken hiçbir video indirilmez.
 - Tarayıcı sesli otomatik oynatmaya izin vermezse (bazı mobil tarayıcılar) video sessiz başlar; sağ üstte
   küçük bir "ses kapalı" göstergesi ve kısa bir "Sesi açmak için videoya dokunun" bildirimi çıkar (düğme
   değildir; videoya dokunmak sesi açar). Telefon uygulamasında videolar doğrudan sesli başlar.
-- Videoların alt bandına (%72–82) altyazı, üst kısmına sahne yazıları gömülüdür (YouTube Shorts düzeni).
-  Bu yüzden videonun adı "Oku"nun altında yalnız video ekrana gelirken birkaç saniye görünür (Menba'da da
-  yazar); düğmeler altyazının üstünde, sağ kenardaki boş bölgededir; altta yalnız ince ilerleme
-  çizgisi vardır (yatay telefonda o da gizlenir).
+- Videoların alt bandına (%72–82) altyazı, ortasına sahne yazıları gömülüdür (YouTube Shorts düzeni).
+  Bu yüzden konu ve videonun adı üstte, yalnız video ekrana gelirken birkaç saniye ve video durdurulunca
+  görünür (Menba'da da yazar); düğmeler altyazının üstünde, sağ kenardaki boş bölgededir; altta yalnız ince
+  ilerleme çizgisi vardır.
 - Klavye ve ekran okuyucu: video odaklanabilir (Enter / boşluk durdurur, sürdürür), ilerleme çizgisi
   kaydırıcıdır (←/→ 5 sn), ↑/↓ ya da PageUp/PageDown video değiştirir.
 
@@ -71,12 +95,14 @@ Instagram Reels gibi tam ekran dikey video akışı (`#/oku/<video>`):
    ffmpeg -ss 6 -i public/videolar/yeni-video.mp4 -frames:v 1 -q:v 3 public/videolar/yeni-video-onizleme.jpg
    ```
 
-2. `content/oku/videolar.json` listesine ekleyin (sıra akıştaki sıradır):
+2. `content/oku/videolar.json` listesine ekleyin (sıra akıştaki sıradır; `konu`, `konular` listesindeki bir
+   `id` olmalı):
 
    ```json
    {
      "id": "yeni-video",
      "baslik": "Videonun adı",
+     "konu": "muhabbet",
      "video": "videolar/yeni-video.mp4",
      "kapak": "videolar/yeni-video-kapak.jpg",
      "onizleme": "videolar/yeni-video-onizleme.jpg",
@@ -85,8 +111,8 @@ Instagram Reels gibi tam ekran dikey video akışı (`#/oku/<video>`):
    }
    ```
 
-   `id` paylaşım bağlantısında görünür (küçük harf, rakam, tire). Eksik dosya, tekrar eden `id` ya da boş
-   `menba` derlemeyi anlaşılır bir hatayla durdurur. `kapak` video yüklenirken görünen ilk kare, `onizleme`
+   `id` paylaşım bağlantısında görünür (küçük harf, rakam, tire). Eksik dosya, tekrar eden `id`, bilinmeyen
+   `konu` ya da boş `menba` derlemeyi anlaşılır bir hatayla durdurur. Kartlardaki süre video dosyasından okunur. `kapak` video yüklenirken görünen ilk kare, `onizleme`
    paylaşılan bağlantının önizleme görselidir.
 
 Şimdilik videolar uygulamayla birlikte gelir (iki video ≈ 70 MB). Video sayısı artınca bir video barındırma
