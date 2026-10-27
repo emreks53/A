@@ -19,6 +19,9 @@ let aktif: Sekme | null = null;
 let okuyaIcerdenGelindi = false;
 /** Oku'dan çıkınca dönülecek sekme */
 let okuOncesi: Exclude<Sekme, 'oku'> = 'kenz';
+/** Oku açılırken odaktaki öğe (ör. dokunulan Kenz kartı): çıkınca odak ona döner */
+let okuOncesiOdak: HTMLElement | null = null;
+const azaltilmisHareket = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 /** Oku tam ekrandır; çıkış sağa kaydırma, telefonun geri tuşu ya da Escape ile olur. */
 function okudanCik(): void {
@@ -51,15 +54,22 @@ const kaydir = sagaKaydirCik(okuGorunumu, {
 
 function show(r: Rota, icerden = false): void {
   const sekme = r.sekme;
+  const okudanDonus = aktif === 'oku' && sekme !== 'oku';
   if (sekme === 'oku' && aktif !== 'oku') {
     okuyaIcerdenGelindi = icerden && aktif !== null;
     if (aktif) okuOncesi = aktif;
-    if (okuyaIcerdenGelindi) app.dataset.gecis = 'oku-gir';
+    const odak = document.activeElement;
+    okuOncesiOdak = odak instanceof HTMLElement && odak !== document.body ? odak : null;
+    if (okuyaIcerdenGelindi && !azaltilmisHareket.matches) app.dataset.gecis = 'oku-gir';
   }
-  if (aktif === 'oku' && sekme !== 'oku') akis.ayril();
+  if (okudanDonus) akis.ayril();
   aktif = sekme;
   app.dataset.sekme = sekme;
+  // Arka plan, görünen ekrana göre: Oku'dayken (sağa kaydırınca altından görünecek) dönülecek sekmeninki.
+  app.dataset.zemin = sekme === 'oku' ? okuOncesi : sekme;
   tabbar.dataset.active = sekme;
+  // Oku tam ekrandır: gizli alt menü ne odak alır ne de ekran okuyucuya görünür.
+  tabbar.inert = sekme === 'oku';
   for (const link of links) {
     if (link.dataset.tab === sekme) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
@@ -67,6 +77,11 @@ function show(r: Rota, icerden = false): void {
   for (const view of views) view.hidden = view.dataset.view !== sekme;
   acikSayfa()?.kapat();
   if (sekme === 'oku') akis.goster(r.video);
+  else if (okudanDonus && okuOncesiOdak?.isConnected && !okuGorunumu.contains(okuOncesiOdak)) {
+    // Klavye ve ekran okuyucu kullanıcısı kaldığı yere (açtığı karta) döner.
+    okuOncesiOdak.focus({ preventScroll: true });
+    okuOncesiOdak = null;
+  }
 }
 
 window.addEventListener('hashchange', () => show(rotaCoz(location.hash), true));
@@ -83,7 +98,10 @@ show(rotaCoz(location.hash));
 /** Paylaşılan bağlantıyla (…/v/<id>/) uygulama açılınca o videoya git */
 function baglantiylaAc(adres: string | undefined): void {
   const id = adres ? paylasimdanVideo(adres) : undefined;
-  if (id) location.hash = `#/oku/${id}`;
+  if (!id) return;
+  // Oku zaten açıksa geçmişe yeni kayıt eklenmez; yoksa çıkış önceki videoya döner, Oku kapanmazdı.
+  if (aktif === 'oku') location.replace(`#/oku/${id}`);
+  else location.hash = `#/oku/${id}`;
 }
 
 async function setupNative(): Promise<void> {

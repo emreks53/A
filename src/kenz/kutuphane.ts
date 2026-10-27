@@ -92,6 +92,12 @@ export function kutuphaneCiz(): HTMLElement {
     bolum.setAttribute('aria-labelledby', ad.id);
     bas.append(ad, el('span', 'konu__sayi', `${liste.length} video`));
     bolum.append(bas);
+    if (konu.aciklama) {
+      const aciklama = el('p', 'konu__aciklama', tipografik(konu.aciklama));
+      aciklama.id = `konu-${konu.id}-aciklama`;
+      bolum.setAttribute('aria-describedby', aciklama.id);
+      bolum.append(aciklama);
+    }
     const raf = el('ul', liste.length > 1 ? 'raf raf--cok' : 'raf');
     for (const v of liste) {
       const li = el('li');

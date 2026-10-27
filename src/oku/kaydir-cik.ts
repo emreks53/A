@@ -25,11 +25,14 @@ export function sagaKaydirCik(kok: HTMLElement, s: KaydirCikSecenek): KaydirCik 
   let alt: HTMLElement | null = null;
   let tiklamayiYut = false;
   let durtme = 0;
+  /** Yarım kalan sürüklemeden sonra alttaki ekranı gizleme zamanlayıcısı */
+  let geriAlma = 0;
 
   const azaltilmis = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const durtmeyiBirak = () => {
     window.clearTimeout(durtme);
+    window.clearTimeout(geriAlma);
     kok.classList.remove('durtulen');
   };
 
@@ -92,7 +95,7 @@ export function sagaKaydirCik(kok: HTMLElement, s: KaydirCikSecenek): KaydirCik 
         alt = null;
       };
       if (azaltilmis()) geriAl();
-      else setTimeout(geriAl, 300);
+      else geriAlma = window.setTimeout(geriAl, 300);
       return;
     }
     kok.classList.add('cikiyor');
@@ -111,6 +114,7 @@ export function sagaKaydirCik(kok: HTMLElement, s: KaydirCikSecenek): KaydirCik 
 
   function durt(): void {
     if (azaltilmis() || bas || kok.classList.contains('cikiyor')) return;
+    window.clearTimeout(geriAlma);
     alt = s.alttaki();
     alt?.setAttribute('data-alttan', '');
     kok.classList.add('durtulen');

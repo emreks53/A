@@ -108,6 +108,8 @@
   aspect-ratio: 9 / 16;
   max-width: 100%;
   margin: 0 auto;
+  /* başlık sahnenin genişliğine göre ölçeklenir (yatay telefonda sahne dardır) */
+  container-type: inline-size;
 }
 .reel__video {
   position: absolute;
@@ -209,6 +211,8 @@
   top: calc(var(--safe-top) + 10px);
   left: 56px;
   right: 56px;
+  left: clamp(12px, 14.4cqi, 56px);
+  right: clamp(12px, 14.4cqi, 56px);
   text-align: center;
   opacity: 0;
   transition: opacity 0.6s ease;
@@ -257,6 +261,7 @@
   font-style: italic;
   font-weight: 700;
   font-size: 23px;
+  font-size: clamp(16px, 5.9cqi, 23px);
   line-height: 1.15;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -264,10 +269,11 @@
     0 1px 2px rgba(0, 0, 0, 0.55),
     0 0 16px rgba(0, 0, 0, 0.45);
 }
-.reel[data-aktif] .reel__ust {
+/* Oku her açıldığında (ve her video ekrana geldiğinde) yeniden başlar; gizliyken oynayıp bitmez. */
+.app[data-sekme='oku'] .reel[data-aktif] .reel__ust {
   animation: reel-baslik 3.6s ease forwards;
 }
-.reel[data-durum='durdu'] .reel__ust {
+.app[data-sekme='oku'] .reel[data-durum='durdu'] .reel__ust {
   opacity: 1;
   animation: none;
   transition-duration: 0.25s;
@@ -488,6 +494,15 @@
 .akis__ipucu.gorunur {
   opacity: 1;
 }
+/* dokunmatik olmayan ekranda (Escape yazar): ışık izi yok, ortada */
+.akis__ipucu--tus {
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.akis__ipucu--tus .akis__ipucu-iz {
+  display: none;
+}
 .akis__ipucu-iz {
   position: relative;
   flex: none;
@@ -541,12 +556,44 @@
 .reel__dugmeler {
   transition: opacity 0.2s ease;
 }
-.view--oku[data-sayfa] .reel__ust,
+.app[data-sekme='oku'] .view--oku[data-sayfa] .reel__ust,
 .view--oku[data-sayfa] .reel__alt,
 .view--oku[data-sayfa] .reel__dugmeler,
 .view--oku[data-sayfa] .akis__ipucu {
   opacity: 0;
   animation: none;
+}
+
+/* klavye ve ekran okuyucu için çıkış: görünmez; yalnız klavyeyle odaklanınca sol üstte belirir */
+.akis__cik {
+  position: absolute;
+  z-index: 4;
+  top: calc(var(--safe-top) + 10px);
+  left: 12px;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.akis__cik:focus-visible {
+  width: auto;
+  height: 44px;
+  margin: 0;
+  padding: 0 18px;
+  overflow: visible;
+  clip: auto;
+  border-radius: 22px;
+  background: rgba(252, 250, 245, 0.96);
+  color: var(--murekkep);
+  font-family: var(--yazi-arayuz);
+  font-weight: 700;
+  font-size: 14px;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 /* ---------- alt sayfa (Menba) ---------- */
@@ -790,8 +837,17 @@
 @media (prefers-reduced-motion: reduce) {
   .alt-sayfa,
   .alt-perde,
-  .reel__dugme {
+  .reel__dugme,
+  .tabbar,
+  .view--oku,
+  .view--oku:not(.suruklenen):not(.cikiyor),
+  .view--oku.cikiyor,
+  .view--oku.durtulen:not(.suruklenen):not(.cikiyor) {
     transition: none;
+  }
+  .app[data-gecis='oku-gir'] .view--oku,
+  .akis__ipucu.gorunur .akis__ipucu-iz {
+    animation: none;
   }
   .reel[data-durum] .reel__durum,
   .reel[data-durum='bekliyor'] .reel__durum::before {

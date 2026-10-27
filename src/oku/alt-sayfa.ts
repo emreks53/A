@@ -118,9 +118,12 @@ export function altSayfaAc(s: AltSayfaSecenek): AltSayfa {
     }
   };
   document.addEventListener('keydown', tus, true);
-  tutamak.addEventListener('click', () => {
-    // Sürükleyip bırakmanın ardından gelen tıklama sayılmaz (sürükleme kendisi karar verir).
-    if (!suruklendi) kapat();
+  tutamak.addEventListener('click', (e) => {
+    // Sürükleyip bırakmanın ardından gelen tıklama sayılmaz (sürükleme kendisi karar verir);
+    // klavyeyle (Enter / boşluk, e.detail 0) her zaman kapatır.
+    const yut = suruklendi && e.detail !== 0;
+    suruklendi = false;
+    if (!yut) kapat();
   });
   perde?.addEventListener('click', kapat);
 

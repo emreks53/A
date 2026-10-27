@@ -36,8 +36,8 @@ Sekmeler: **Kenz** ana ekrandır (tasarımdaki görünüm); aşağı kaydırınc
 
 ## Kenz sekmesi
 
-- Açılışta ana ekran tasarımdaki gibidir: üstte küçük **NUR-U HAKİKAT** yazısı, ortada alıntı, menünün üstünde
-  **Konular · 2** kapsülü (dokununca kütüphaneye kayar).
+- Açılışta ana ekran tasarımdaki görünümdür; tasarıma yalnız üstte küçük **NUR-U HAKİKAT** yazısı ve menünün
+  üstünde **Konular · 2** kapsülü (dokununca kütüphaneye kayar) eklendi.
 - Aşağı kaydırınca sahne ufka doğru yaklaşır, gök koyulaşıp hafifçe bulanıklaşır, alıntı söner ve üstte
   *Nur-u Hakikat* markası kalır. Videolar konu başlıkları altında kartlar hâlinde sıralanır: kapak, süre,
   Menba ve **İzle**. Karta dokununca video Oku'da açılır; sağa kaydırınca kütüphanede aynı yere dönülür.
@@ -45,12 +45,13 @@ Sekmeler: **Kenz** ana ekrandır (tasarımdaki görünüm); aşağı kaydırınc
 - Kenz sekmesine yeniden dokunmak en başa döndürür. Hareketi azaltma ayarı açıksa yakınlaşma ve bulanıklık
   yapılmaz, yalnız gök koyulaşır.
 - Konular `content/oku/videolar.json` içindeki `konular` listesinden gelir (sıra Kenz'deki sıradır); videosu
-  olmayan konu gösterilmez. Konu eklemek ya da adını değiştirmek için bu listeyi düzenleyin:
+  olmayan konu gösterilmez. Konu eklemek ya da adını değiştirmek için bu listeyi düzenleyin (`aciklama`
+  isteğe bağlıdır; başlığın altında kısa bir satır olarak görünür):
 
   ```json
   "konular": [
     { "id": "muhabbet", "baslik": "Muhabbet" },
-    { "id": "nubuvvet", "baslik": "Nübüvvet" }
+    { "id": "nubuvvet", "baslik": "Nübüvvet", "aciklama": "İsteğe bağlı kısa açıklama" }
   ]
   ```
 
@@ -58,7 +59,9 @@ Sekmeler: **Kenz** ana ekrandır (tasarımdaki görünüm); aşağı kaydırınc
 
 Instagram Reels gibi tam ekran dikey video akışı (`#/oku/<video>`). Oku açıkken alt menü yoktur; çıkmak için
 ekran **sağa kaydırılır** (parmağı izler, altından dönülecek sekme görünür), telefonun geri tuşu ya da
-klavyede Escape de çıkarır. İlk açılışta bir kez "Çıkmak için sağa kaydırın" ipucu gösterilir.
+klavyede Escape de çıkarır. İlk açılışta bir kez "Çıkmak için sağa kaydırın" ipucu gösterilir (fareli
+bilgisayarda "Çıkmak için Esc tuşuna basın"). Ekran okuyucu ve klavye için görünmez bir "Oku’dan çık" düğmesi
+vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görünmez.
 
 - Yukarı/aşağı kaydırınca sonraki/önceki video ekrana oturur ve kendiliğinden, sesli oynar; önceki durur.
   Geri dönülen video baştan başlar. Videoya dokununca durur / sürer; alttaki ince çizgiyle videoda ileri geri

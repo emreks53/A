@@ -87,7 +87,12 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
   ipucuIz.setAttribute('aria-hidden', 'true');
   const ipucuYazi = el('span', 'akis__ipucu-yazi');
   ipucu.append(ipucuIz, ipucuYazi);
-  kok.append(akis, baslik, sessiz, bildirim, ipucu);
+  // Klavye ve ekran okuyucu için çıkış: ekranda görünmez, yalnız klavyeyle odaklanınca belirir
+  // (dokunmatikte çıkış sağa kaydırmak, telefonun geri tuşu; klavyede Escape).
+  const cikis = el('button', 'akis__cik', 'Oku’dan çık');
+  cikis.type = 'button';
+  cikis.addEventListener('click', () => cik());
+  kok.append(cikis, akis, baslik, sessiz, bildirim, ipucu);
 
   let etkin = false;
   let aktif = 0;
@@ -246,16 +251,28 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
   }
 
   function ipucuGoster(): void {
-    ipucuYazi.textContent = 'Çıkmak için sağa kaydırın';
+    // Görüldü sayılması gösterildiği anda: açılır açılmaz Menba'ya dokunan ya da çıkan kullanıcı ipucunu kaçırmaz.
+    try {
+      localStorage.setItem(IPUCU_ANAHTARI, '1');
+    } catch {
+      // depolama kapalıysa her açılışta gösterilir
+    }
+    // Fareyle sürükleyerek çıkılmaz; dokunmatik olmayan ekranda Escape söylenir.
+    const dokunmatik = window.matchMedia('(pointer: coarse)').matches;
+    ipucuYazi.textContent = dokunmatik ? 'Çıkmak için sağa kaydırın' : 'Çıkmak için Esc tuşuna basın';
+    ipucu.classList.toggle('akis__ipucu--tus', !dokunmatik);
     ipucu.classList.add('gorunur');
-    ipucuGosterildi?.();
+    if (dokunmatik) ipucuGosterildi?.();
     window.clearTimeout(ipucuZamanlayici);
     ipucuZamanlayici = window.setTimeout(ipucuGizle, 4200);
   }
 
   function ipucuGizle(): void {
     window.clearTimeout(ipucuZamanlayici);
+    if (!ipucu.classList.contains('gorunur')) return;
     ipucu.classList.remove('gorunur');
+    // Söndükten sonra yazı da kalkar; ekran okuyucu eski bir yönergeyi bulmasın.
+    ipucuZamanlayici = window.setTimeout(() => (ipucuYazi.textContent = ''), 450);
   }
 
   function durumGoster(o: Oge, ozel?: 'bekliyor' | 'hata'): void {
@@ -481,7 +498,6 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
       // Çıkış düğmesi olmadığı için ilk açılışta bir kez nasıl çıkılacağı gösterilir.
       try {
         if (!localStorage.getItem(IPUCU_ANAHTARI)) {
-          localStorage.setItem(IPUCU_ANAHTARI, '1');
           window.clearTimeout(ipucuZamanlayici);
           ipucuZamanlayici = window.setTimeout(() => etkin && !acikSayfa() && ipucuGoster(), 1200);
         }
@@ -494,6 +510,9 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
         akis.scrollTop = hedef * akis.clientHeight;
       }
       aktifYap(hedef);
+      // Odak Oku'nun dışında kaldıysa (gizlenen Kenz kartında ya da sayfada) açılan videoya geçer;
+      // yoksa ilk Tab akışın başındaki videoya gider, açılan video durur.
+      if (!kok.contains(document.activeElement)) ogeler[hedef].video.focus({ preventScroll: true });
     },
     ayril() {
       etkin = false;
