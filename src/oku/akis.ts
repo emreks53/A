@@ -1,11 +1,11 @@
 // Oku sekmesi: kâinat kitabını "okumak" için dikey kısa video akışı (Reels gibi).
 // Yukarı/aşağı kaydırınca bir sonraki video tam ekran gelir ve kendiliğinden oynar. Ekranda yalnız iki düğme
 // vardır: Neşret (paylaşım bağlantısı) ve Menba (Risale-i Nur'daki kaynak).
-import { videolar } from 'virtual:oku-videolar';
+import { konular, videolar } from 'virtual:oku-videolar';
 import { altSayfaAc, acikSayfa } from './alt-sayfa';
 import { menbaIcerik } from './menba';
 import { nesret } from './nesret';
-import type { Video } from './ortak';
+import { tipografik, type Video } from './ortak';
 
 function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, metin?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(etiket);
@@ -16,7 +16,7 @@ function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, me
 
 // Neşret: ortada nur parıltısı, çevresine saçılan ışınlar (neşretmek: yaymak). Güneş sekmesinin diskli güneşinden ayrı.
 const NESRET_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.6c.55 2.45 1.95 3.85 4.4 4.4-2.45.55-3.85 1.95-4.4 4.4-.55-2.45-1.95-3.85-4.4-4.4 2.45-.55 3.85-1.95 4.4-4.4Z" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.6c.55 2.45 1.95 3.85 4.4 4.4-2.45.55-3.85 1.95-4.4 4.4-.55-2.45-1.95-3.85-4.4-4.4 2.45-.55 3.85-1.95 4.4-4.4Z" fill="#FFE0A0"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>';
 const MENBA_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 const OYNAT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></svg>';
@@ -31,6 +31,7 @@ interface Oge {
   kok: HTMLElement;
   video: HTMLVideoElement;
   dolu: HTMLElement;
+  uc: HTMLElement;
   cubuk: HTMLElement;
   durum: HTMLElement;
   /** Kullanıcı durdurdu (dokunarak, klavyeyle ya da kulaklık/medya tuşuyla): kendiliğinden başlamaz */
@@ -49,11 +50,28 @@ export interface Akis {
   aktifVideo(): string;
 }
 
-export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void): Akis {
+export interface AkisSecenek {
+  /** Akışta video değişti (adres #/oku/<id> olur) */
+  adresDegisti(id: string): void;
+  /** Oku'dan çık (Escape); sağa kaydırma ve telefonun geri tuşu da aynı yere gider */
+  cik(): void;
+  /** Çıkış ipucu gösterildi (ekran hafifçe sağa itilip altındaki sekme gösterilir) */
+  ipucuGosterildi?(): void;
+}
+
+export interface AkisIpucu {
+  /** Kullanıcı sağa kaydırmaya başladı: ipucu kalkar */
+  ipucuGizle(): void;
+}
+
+const IPUCU_ANAHTARI = 'nuruhakikat.oku.kaydirIpucu';
+
+export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterildi }: AkisSecenek): Akis & AkisIpucu {
   const akis = el('div', 'akis');
   akis.setAttribute('role', 'feed');
   akis.setAttribute('aria-label', 'Oku: videolar');
-  const baslik = el('h1', 'akis__baslik', 'Oku');
+  // Oku tam ekrandır: başlık yalnız ekran okuyucular içindir.
+  const baslik = el('h1', 'visually-hidden', 'Oku');
   // Ses kapalıyken sağ üstte küçük bir gösterge; düğme değildir (dokunuş videoya geçer ve sesi açar).
   const sessiz = el('div', 'akis__sessiz');
   sessiz.setAttribute('aria-hidden', 'true');
@@ -62,20 +80,35 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
   const bildirim = el('div', 'akis__bildirim');
   bildirim.setAttribute('role', 'status');
   bildirim.setAttribute('aria-live', 'polite');
-  kok.append(akis, baslik, sessiz, bildirim);
+  // Çıkış düğmesi olmadığı için ilk açılışta bir kez: soldan sağa akan bir ışık izi ve kısa yazı.
+  const ipucu = el('div', 'akis__ipucu');
+  ipucu.setAttribute('role', 'status');
+  const ipucuIz = el('span', 'akis__ipucu-iz');
+  ipucuIz.setAttribute('aria-hidden', 'true');
+  const ipucuYazi = el('span', 'akis__ipucu-yazi');
+  ipucu.append(ipucuIz, ipucuYazi);
+  // Klavye ve ekran okuyucu için çıkış: ekranda görünmez, yalnız klavyeyle odaklanınca belirir
+  // (dokunmatikte çıkış sağa kaydırmak, telefonun geri tuşu; klavyede Escape).
+  const cikis = el('button', 'akis__cik', 'Oku’dan çık');
+  cikis.type = 'button';
+  cikis.addEventListener('click', () => cik());
+  kok.append(cikis, akis, baslik, sessiz, bildirim, ipucu);
 
   let etkin = false;
   let aktif = 0;
   /** Tarayıcı sesli oynatmaya izin vermediyse true: videolar sessiz oynar, ilk dokunuş sesi açar */
   let zorlaSessiz = false;
   let cerceve = 0;
+  let ipucuZamanlayici = 0;
+
+  const konuAdi = new Map(konular.map((k) => [k.id, tipografik(k.baslik)]));
 
   const ogeler: Oge[] = videolar.map((v, i) => {
     const art = el('article', 'reel');
     art.dataset.id = v.id;
     art.setAttribute('aria-posinset', String(i + 1));
     art.setAttribute('aria-setsize', String(videolar.length));
-    art.setAttribute('aria-label', v.baslik);
+    art.setAttribute('aria-label', tipografik(v.baslik));
     // CSS değişkenindeki göreli adres stil dosyasına göre çözülür; bu yüzden tam adres verilir.
     art.style.setProperty('--kapak', `url("${new URL(import.meta.env.BASE_URL + v.kapak, document.baseURI).href}")`);
 
@@ -96,8 +129,15 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     const durum = el('div', 'reel__durum');
     durum.setAttribute('aria-hidden', 'true');
 
-    // Başlık üstte, "Oku"nun altında: videoların alt bandında altyazı gömülü.
-    const baslikEl = el('h2', 'reel__baslik', v.baslik);
+    // Ad ve konu üstte, ekranın boş üst bandında: videoların alt bandında altyazı gömülü.
+    const ust = el('div', 'reel__ust');
+    const konu = konuAdi.get(v.konu);
+    if (konu) {
+      const k = el('p', 'reel__konu', konu);
+      k.setAttribute('aria-hidden', 'true');
+      ust.append(k);
+    }
+    ust.append(el('h2', 'reel__baslik', tipografik(v.baslik)));
 
     const alt = el('div', 'reel__alt');
     const cubuk = el('div', 'reel__ilerleme');
@@ -108,7 +148,9 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     cubuk.setAttribute('aria-valuenow', '0');
     cubuk.tabIndex = 0;
     const dolu = el('span', 'reel__ilerleme-dolu');
-    cubuk.append(dolu);
+    // Dolu kısmın ucunda parlayan nokta
+    const uc = el('span', 'reel__ilerleme-uc');
+    cubuk.append(dolu, uc);
     alt.append(cubuk);
 
     const dugmeler = el('div', 'reel__dugmeler');
@@ -125,11 +167,11 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     menbaD.setAttribute('aria-haspopup', 'dialog');
     dugmeler.append(nesretD, menbaD);
 
-    sahne.append(video, karartma, durum, baslikEl, alt, dugmeler);
+    sahne.append(video, karartma, durum, ust, alt, dugmeler);
     art.append(sahne);
     akis.append(art);
 
-    const oge: Oge = { v, kok: art, video, dolu, cubuk, durum, elleDurdu: false, ayrildi: false, uygulamaDurdurdu: false };
+    const oge: Oge = { v, kok: art, video, dolu, uc, cubuk, durum, elleDurdu: false, ayrildi: false, uygulamaDurdurdu: false };
 
     nesretD.addEventListener('click', async () => {
       const sonuc = await nesret(v);
@@ -137,7 +179,16 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
       else if (sonuc === 'olmadi') bildir('Bağlantı paylaşılamadı');
     });
     menbaD.addEventListener('click', () => {
-      altSayfaAc({ baslik: 'Menba', icerik: menbaIcerik(v), modal: true, sinif: 'alt-sayfa--menba' });
+      // Sayfa açıkken videonun üstündeki yazılar ve düğmeler çekilir.
+      kok.dataset.sayfa = '';
+      ipucuGizle();
+      altSayfaAc({
+        baslik: 'Menba',
+        icerik: menbaIcerik(v),
+        modal: true,
+        sinif: 'alt-sayfa--menba',
+        kapaninca: () => delete kok.dataset.sayfa,
+      });
     });
 
     // Videoya dokunmak (ya da odaklıyken Enter): hata varsa yeniden dener, ses kapalı zorlanmışsa sesi açar,
@@ -199,6 +250,35 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     bildirim.dataset.zaman = String(window.setTimeout(() => bildirim.classList.remove('gorunur'), sure));
   }
 
+  function ipucuGoster(): void {
+    // Görüldü sayılması gösterildiği anda: açılır açılmaz Menba'ya dokunan ya da çıkan kullanıcı ipucunu kaçırmaz.
+    try {
+      localStorage.setItem(IPUCU_ANAHTARI, '1');
+    } catch {
+      // depolama kapalıysa her açılışta gösterilir
+    }
+    // Fareyle sürükleyerek çıkılmaz; dokunmatik olmayan ekranda Escape söylenir.
+    const dokunmatik = window.matchMedia('(pointer: coarse)').matches;
+    ipucuYazi.textContent = dokunmatik ? 'Çıkmak için sağa kaydırın' : 'Çıkmak için Esc tuşuna basın';
+    ipucu.classList.toggle('akis__ipucu--tus', !dokunmatik);
+    ipucu.classList.add('gorunur');
+    if (dokunmatik) ipucuGosterildi?.();
+    window.clearTimeout(ipucuZamanlayici);
+    ipucuZamanlayici = window.setTimeout(ipucuGizle, 4200);
+  }
+
+  function ipucuGizle(): void {
+    window.clearTimeout(ipucuZamanlayici);
+    if (!ipucu.classList.contains('gorunur')) {
+      // zaten söndü (ya da hiç gösterilmedi): bekleyen yazı temizliği iptal edilmiş olabilir, şimdi temizle
+      ipucuYazi.textContent = '';
+      return;
+    }
+    ipucu.classList.remove('gorunur');
+    // Söndükten sonra yazı da kalkar; ekran okuyucu eski bir yönergeyi bulmasın.
+    ipucuZamanlayici = window.setTimeout(() => (ipucuYazi.textContent = ''), 450);
+  }
+
   function durumGoster(o: Oge, ozel?: 'bekliyor' | 'hata'): void {
     const v = o.video;
     let hal = '';
@@ -217,6 +297,7 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     const v = o.video;
     const oran = v.duration > 0 ? v.currentTime / v.duration : 0;
     o.dolu.style.transform = `scaleX(${oran})`;
+    o.uc.style.transform = `translateX(${(oran * 100).toFixed(3)}%)`;
     o.cubuk.setAttribute('aria-valuenow', String(Math.round(oran * 100)));
     o.cubuk.setAttribute('aria-valuetext', `${Math.floor(v.currentTime / 60)}:${String(Math.floor(v.currentTime % 60)).padStart(2, '0')}`);
   }
@@ -340,12 +421,15 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  // Klavye (masaüstü): ↑/↓ video değiştirir, boşluk durdurur.
+  // Klavye (masaüstü): ↑/↓ video değiştirir, boşluk durdurur, Escape çıkar.
   document.addEventListener('keydown', (e) => {
-    if (!etkin || acikSayfa() || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (!etkin || e.defaultPrevented || acikSayfa() || e.altKey || e.ctrlKey || e.metaKey) return;
     const hedef = e.target as Element;
     if (hedef.closest('input, textarea, [contenteditable]')) return;
-    if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      cik();
+    } else if (e.key === 'ArrowDown' || e.key === 'PageDown') {
       e.preventDefault();
       git(aktif + 1);
     } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
@@ -415,20 +499,34 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
   return {
     goster(videoId) {
       etkin = true;
+      // Çıkış düğmesi olmadığı için ilk açılışta bir kez nasıl çıkılacağı gösterilir.
+      try {
+        if (!localStorage.getItem(IPUCU_ANAHTARI)) {
+          window.clearTimeout(ipucuZamanlayici);
+          ipucuZamanlayici = window.setTimeout(() => etkin && !acikSayfa() && ipucuGoster(), 1200);
+        }
+      } catch {
+        // depolama kapalıysa ipucu gösterilmez
+      }
       const i = videoId ? ogeler.findIndex((o) => o.v.id === videoId) : -1;
       const hedef = i >= 0 ? i : aktif;
       if (hedef !== aktif || Math.abs(akis.scrollTop - hedef * akis.clientHeight) > 2) {
         akis.scrollTop = hedef * akis.clientHeight;
       }
       aktifYap(hedef);
+      // Odak Oku'nun dışında kaldıysa (gizlenen Kenz kartında ya da sayfada) açılan videoya geçer;
+      // yoksa ilk Tab akışın başındaki videoya gider, açılan video durur.
+      if (!kok.contains(document.activeElement)) ogeler[hedef].video.focus({ preventScroll: true });
     },
     ayril() {
       etkin = false;
+      ipucuGizle();
       cancelAnimationFrame(cerceve);
       for (const o of ogeler) durdur(o);
     },
     aktifVideo() {
       return ogeler[aktif].v.id;
     },
+    ipucuGizle,
   };
 }

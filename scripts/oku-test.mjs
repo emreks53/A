@@ -83,12 +83,26 @@ const oynuyor = (id) =>
   }, id);
 const duruyor = (id) => page.evaluate((i) => document.querySelector(`.reel[data-id="${i}"] video`).paused, id);
 
+/** Gerçek dokunmatik sürükleme (CDP): x1'den x2'ye, y sabit */
+async function surukle(p, x1, x2, y, adimSayisi = 8) {
+  const cdp = await p.context().newCDPSession(p);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x1, y }] });
+  for (let i = 1; i <= adimSayisi; i++) {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x1 + ((x2 - x1) * i) / adimSayisi, y }] });
+    await p.waitForTimeout(16);
+  }
+  return {
+    birak: () => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }),
+  };
+}
+
 console.log('Oku akışı');
 
 await adim('ana ekran açılışta video indirmez', async () => {
   await page.goto(base);
   await page.waitForSelector('.quote');
-  await page.waitForTimeout(400);
+  // Oku'yu birkaç saniye sonra aç: Oku gizliyken başlığın gösterimi oynayıp bitmemeli (sonraki adım bakar).
+  await page.waitForTimeout(4000);
   const kaynaklar = await page.evaluate(() => Array.from(document.querySelectorAll('.reel video'), (v) => v.getAttribute('src')));
   assert.deepEqual(kaynaklar, [null, null]);
 });
@@ -108,10 +122,34 @@ const gorunenDugmeler = (p) =>
       .filter((b) => {
         const r = b.getBoundingClientRect();
         const s = getComputedStyle(b);
-        return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && s.visibility !== 'hidden' && s.display !== 'none';
+        // (görünmez, yalnız klavyeyle odaklanınca beliren "Oku'dan çık" 1 px'liktir; sayılmaz)
+        return r.width > 2 && r.height > 2 && r.bottom > 0 && r.top < innerHeight && s.visibility !== 'hidden' && s.display !== 'none';
       })
       .map((b) => b.textContent.trim()),
   );
+
+await adim('Oku tam ekran: alt menü ve "Oku" yazısı görünmez; ilk açılışta kaydırma ipucu', async () => {
+  await page.waitForTimeout(450);
+  const menu = await page.locator('.tabbar').evaluate((e) => ({ op: getComputedStyle(e).opacity, pe: getComputedStyle(e).pointerEvents, ust: e.getBoundingClientRect().top }));
+  assert.equal(menu.pe, 'none');
+  assert.equal(Number(menu.op), 0);
+  assert.ok(menu.ust >= 844, `alt menü ekranda: ${menu.ust}`);
+  const gorunurOku = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('#view-oku *')).some((e) => e.childElementCount === 0 && e.textContent.trim() === 'Oku' && e.getBoundingClientRect().width > 2),
+  );
+  assert.equal(gorunurOku, false, '"Oku" yazısı ekranda');
+  // Gizli alt menü odak almaz, ekran okuyucuya da görünmez
+  assert.equal(await page.locator('.tabbar').evaluate((e) => e.inert), true);
+  // Konu ve videonun adı üstte görünür (Oku'nun ilk açılışında da)
+  await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('.reel[data-aktif] .reel__ust')).opacity) > 0.9);
+  assert.equal(await page.locator('.reel[data-aktif] .reel__baslik').innerText(), 'Sevgi ve Güzellik');
+  await page.waitForFunction(() => document.querySelector('.akis__ipucu.gorunur')?.textContent === 'Çıkmak için sağa kaydırın');
+  // İpucuyla birlikte ekran bir an sağa itilir, altından Kenz görünür.
+  await page.waitForFunction(() => document.getElementById('view-oku').classList.contains('durtulen'));
+  assert.equal(await page.locator('#view-kenz').getAttribute('data-alttan'), '');
+  await page.waitForFunction(() => !document.getElementById('view-oku').classList.contains('durtulen'));
+  assert.equal(await page.locator('#view-kenz').getAttribute('data-alttan'), null);
+});
 
 await adim('ekranda yalnız iki düğme var: Neşret ve Menba', async () => {
   assert.deepEqual(await gorunenDugmeler(page), ['Neşret', 'Menba']);
@@ -147,9 +185,13 @@ await adim("Menba kaynağı gösterir (Lem'alar, 64. sayfa) ve künyeyi içerir"
   await page.locator('.reel[data-aktif] .reel__dugme--menba').click();
   await page.waitForSelector('.alt-sayfa.acik');
   const metin = await page.locator('.alt-sayfa.acik').innerText();
-  assert.match(metin, /Lem'alar/);
+  assert.match(metin, /Sevgi ve Güzellik/);
+  assert.match(metin, /Lem’alar/);
   assert.match(metin, /64\. sayfa/);
-  assert.match(await page.locator('.alt-sayfa.acik .menba__kunye').innerText(), /Görüntü ve ses künyesi/);
+  assert.match(await page.locator('.alt-sayfa.acik .menba__kunye').innerText(), /Görüntü ve ses künyesi\s*4 kayıt/);
+  // Menba açıkken videonun üstündeki düğmeler çekilir
+  await page.waitForTimeout(300);
+  assert.equal(await page.locator('.reel[data-aktif] .reel__dugmeler').evaluate((e) => getComputedStyle(e).opacity), '0');
   assert.equal(await page.locator('.alt-sayfa.acik .menba__kunye li').count(), 4);
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('.alt-sayfa.acik'));
@@ -214,10 +256,17 @@ await adim('Neşret\'e çift dokunuş tek paylaşım açar', async () => {
 await adim('Menba: Mektubat, 195. sayfa · Sözler, 19. Söz', async () => {
   await page.locator('.reel[data-aktif] .reel__dugme--menba').click();
   await page.waitForSelector('.alt-sayfa.acik');
-  const kaynaklar = await page.locator('.alt-sayfa.acik .menba__kaynak').evaluateAll((l) => l.map((x) => x.innerText.replace(/\s+/g, ' ')));
+  const kaynaklar = await page
+    .locator('.alt-sayfa.acik .menba__kaynak')
+    .evaluateAll((l) => l.map((x) => `${x.querySelector('.menba__eser').textContent} ${x.querySelector('.menba__yer').textContent}`));
   assert.deepEqual(kaynaklar, ['Mektubat 195. sayfa', 'Sözler 19. Söz']);
-  await page.locator('.alt-sayfa.acik .alt-sayfa__kapat').click();
+  // Künyesi olmayan videoda künye satırı yok
+  assert.equal(await page.locator('.alt-sayfa.acik .menba__kunye').count(), 0);
+  // Tutamak kapatma düğmesidir
+  await page.locator('.alt-sayfa.acik .alt-sayfa__tutamak').click();
   await page.waitForFunction(() => !document.querySelector('.alt-sayfa.acik'));
+  await page.waitForTimeout(300);
+  assert.equal(await page.locator('.reel[data-aktif] .reel__dugmeler').evaluate((e) => getComputedStyle(e).opacity), '1');
 });
 
 await adim('ilerleme çizgisine dokununca videoda o yere gidilir', async () => {
@@ -227,13 +276,35 @@ await adim('ilerleme çizgisine dokununca videoda o yere gidilir', async () => {
   assert.ok(Math.abs(oran - 0.5) < 0.05, `oran ${oran}`);
 });
 
-await adim('başka sekmeye geçince durur, dönünce aynı videoda sürer', async () => {
-  await page.locator('.tab--kenz').click();
+await adim('Escape ile Oku\'dan çıkılır (Kenz\'e dönülür), Oku\'ya dönünce aynı video sürer', async () => {
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
   await page.waitForTimeout(200);
   assert.equal(await duruyor('ahlak-mucizesi'), true);
   await page.locator('.tab--oku').click();
   await oynuyor('ahlak-mucizesi');
   assert.equal(new URL(page.url()).hash, '#/oku/ahlak-mucizesi');
+});
+
+await adim('az sürükleyince yerine döner; sağa çekince Oku kapanır, altından Kenz görünür', async () => {
+  await page.waitForTimeout(500); // Oku sağdan kayarak açılırken (0,36 sn) değil, yerine oturunca
+  const az = await surukle(page, 40, 110, 420);
+  assert.equal(await page.locator('#view-kenz').getAttribute('data-alttan'), '');
+  await az.birak();
+  await page.waitForTimeout(500);
+  assert.equal(new URL(page.url()).hash, '#/oku/ahlak-mucizesi');
+  assert.equal(await page.locator('#view-kenz').getAttribute('data-alttan'), null);
+  assert.equal(await duruyor('ahlak-mucizesi'), false, 'kısa sürükleme videoyu durdurmamalı');
+  const cok = await surukle(page, 40, 320, 420);
+  const kayma = await page.locator('#view-oku').evaluate((e) => new DOMMatrix(getComputedStyle(e).transform).m41);
+  assert.ok(kayma > 200, `ekran parmağı izlemeli: ${kayma}`);
+  await cok.birak();
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  await page.waitForTimeout(400);
+  assert.equal(await duruyor('ahlak-mucizesi'), true);
+  assert.equal(await page.locator('#view-oku').evaluate((e) => e.style.transform), '');
+  await page.locator('.tab--oku').click();
+  await oynuyor('ahlak-mucizesi');
 });
 
 await adim('klavyeyle ↑/↓ video değişir, odak yeni videoya geçer', async () => {
@@ -266,8 +337,9 @@ await adim('ilerleme çizgisi odaklıyken boşluk durdurur (video değiştirmez)
 await adim('medya tuşuyla durdurma kullanıcının durdurması sayılır; medya tuşuyla oynatınca çizgi yürür', async () => {
   await page.locator('.reel[data-aktif] video').evaluate((v) => v.pause());
   await page.waitForFunction(() => document.querySelector('.reel[data-aktif]').dataset.durum === 'durdu');
-  // Sekmeden çıkıp dönünce kendiliğinden başlamamalı
-  await page.locator('.tab--kenz').click();
+  // Oku'dan çıkıp dönünce kendiliğinden başlamamalı
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
   await page.locator('.tab--oku').click();
   await page.waitForTimeout(500);
   assert.equal(await duruyor('ahlak-mucizesi'), true);
@@ -287,6 +359,10 @@ await adim('paylaşım bağlantısı videoyu açar (önizleme etiketleriyle)', a
   await page.waitForURL(/#\/oku\/ahlak-mucizesi$/);
   await oynuyor('ahlak-mucizesi');
   assert.equal(await page.locator('.tab--oku').getAttribute('aria-current'), 'page');
+  // Bağlantıyla doğrudan açılınca çıkış Kenz'e gider; odak gizli Oku'da kalmaz
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  assert.equal(await page.evaluate(() => !!document.activeElement?.closest('#view-oku')), false);
 });
 
 await adim('sesli oynatmaya izin vermeyen tarayıcıda sessiz başlar, dokununca ses açılır', async () => {
@@ -338,6 +414,141 @@ await adim('önceden yüklenirken hata alan video kaydırınca yeniden yüklenip
 await adim('bilinmeyen video adresi ilk videoyu açar, çökmez', async () => {
   await page.goto(base + '#/oku/boyle-bir-video-yok');
   await page.waitForFunction(() => document.querySelector('.reel[data-aktif]'));
+});
+
+console.log('Kenz');
+
+await adim('Kenz: açılışta alıntı ve "Konular · 2"; videolar konu konu', async () => {
+  await page.goto(base + '#/kenz');
+  await page.waitForSelector('.konu');
+  assert.equal((await page.locator('.cagri').innerText()).replace(/\s+/g, ' ').trim(), '✦ Konular · 2');
+  assert.deepEqual(await page.locator('.konu__ad').allTextContents(), ['Muhabbet', 'Nübüvvet']);
+  const kartlar = await page.locator('.konu').evaluateAll((l) =>
+    l.map((k) => Array.from(k.querySelectorAll('a.kart'), (a) => [a.getAttribute('href'), a.getAttribute('aria-label')])),
+  );
+  assert.deepEqual(kartlar, [
+    [['#/oku/sevgi-ve-guzellik', 'Sevgi ve Güzellik, 2:14. Menba: Lem’alar, 64. sayfa']],
+    [['#/oku/ahlak-mucizesi', 'Ahlâk Mu’cizesi, 2:06. Menba: Mektubat, 195. sayfa · Sözler, 19. Söz']],
+  ]);
+  // Kütüphane açılışta ekranın altında; alıntı görünür
+  const ilk = await page.locator('.konu').first().boundingBox();
+  assert.ok(ilk.y >= 844, `kütüphane açılışta görünmemeli: ${ilk.y}`);
+});
+
+await adim('"Konular" kütüphaneye kaydırır; üstte marka kalır, alıntı söner', async () => {
+  await page.locator('.cagri').click();
+  // yumuşak kaydırma bitene kadar (yarım saniye yerinde durana dek) bekle
+  await page.waitForFunction(() => {
+    const k = document.querySelector('.kenz');
+    const y = k.scrollTop;
+    return new Promise((r) => setTimeout(() => r(y > 0 && k.scrollTop === y), 500));
+  });
+  const marka = await page.locator('.marka-dar').boundingBox();
+  const baslik = await page.locator('.konu__ad').first().boundingBox();
+  // (iki konuda kütüphane kısa olduğundan kaydırma biraz erken biter)
+  assert.ok(baslik.y > marka.y + marka.height && baslik.y < marka.y + marka.height + 80, `başlık markanın altında olmalı: ${baslik.y}`);
+  assert.equal(await page.locator('.kenz__ust').evaluate((e) => Number(getComputedStyle(e).opacity)), 1);
+  assert.equal(await page.locator('.quote').evaluate((e) => Number(getComputedStyle(e).opacity)), 0);
+  assert.equal(await page.locator('.cagri').evaluate((e) => e.inert), true);
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 'kutuphane-baslik');
+});
+
+await adim('menünün yanındaki/altındaki saydam bantta görünmeyen karta dokunulmaz; kaydırma oradan da başlar', async () => {
+  // Bir kart menünün altına girecek kadar kaydır
+  await page.locator('.kenz').evaluate((k) => (k.scrollTop = 250));
+  await page.waitForTimeout(300);
+  const noktalar = await page.evaluate(() => {
+    const m = document.querySelector('.tabbar').getBoundingClientRect();
+    return [
+      [195, Math.round((m.bottom + innerHeight) / 2)],
+      [Math.floor(m.left) - 1, Math.round(m.top + 30)], // menünün solundaki 2-3 px'lik aralık
+    ];
+  });
+  for (const [x, y] of noktalar) {
+    assert.ok(
+      await page.evaluate(([x, y]) => document.elementsFromPoint(x, y).some((e) => e.closest('.kart')), [x, y]),
+      `(${x},${y}) altında kart yok; deneme anlamsız`,
+    );
+    await page.touchscreen.tap(x, y);
+    await page.waitForTimeout(250);
+    assert.equal(new URL(page.url()).hash, '#/kenz', `(${x},${y}) görünmeyen kartı açtı`);
+    assert.equal(await page.evaluate(() => !!document.activeElement?.closest('.kart')), false, 'görünmeyen kart odak aldı');
+  }
+  // Menünün yanından başlayan dokunuşla kaydırma çalışır
+  const once = await page.locator('.kenz').evaluate((k) => k.scrollTop);
+  const [x, y] = noktalar[1];
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  for (let i = 1; i <= 8; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y - i * 40 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page.waitForTimeout(600);
+  const sonra = await page.locator('.kenz').evaluate((k) => k.scrollTop);
+  assert.ok(sonra > once + 100, `kaydırma olmadı: ${once} → ${sonra}`);
+  // Kütüphaneye geri (sonraki adım buradan sürer)
+  await page.locator('.kenz').evaluate((k) => (k.scrollTop = k.scrollHeight));
+  await page.waitForTimeout(300);
+});
+
+await adim('karta dokununca video Oku\'da açılır; sağa kaydırınca kütüphanede aynı yere dönülür', async () => {
+  const y = await page.locator('.kenz').evaluate((k) => k.scrollTop);
+  await page.locator('a.kart[data-video="ahlak-mucizesi"]').click();
+  await page.waitForURL(/#\/oku\/ahlak-mucizesi$/);
+  await oynuyor('ahlak-mucizesi');
+  await page.waitForTimeout(500);
+  const cek = await surukle(page, 40, 320, 420);
+  await cek.birak();
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  assert.equal(new URL(page.url()).hash, '#/kenz');
+  assert.equal(await page.locator('.kenz').evaluate((k) => k.scrollTop), y);
+  assert.equal(await duruyor('ahlak-mucizesi'), true);
+});
+
+await adim('klavyeyle: kartta Enter videoyu açar, odak videoya geçer; Escape karta geri getirir', async () => {
+  await page.locator('a.kart[data-video="sevgi-ve-guzellik"]').focus();
+  await page.keyboard.press('Enter');
+  await page.waitForURL(/#\/oku\/sevgi-ve-guzellik$/);
+  await oynuyor('sevgi-ve-guzellik');
+  assert.equal(await page.evaluate(() => document.activeElement?.closest('.reel')?.dataset.id), 'sevgi-ve-guzellik');
+  await page.keyboard.press('Tab');
+  await page.waitForTimeout(300);
+  // Tab akışı başa kaydırmaz: hâlâ aynı video
+  assert.equal(await aktif(), 'sevgi-ve-guzellik');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  assert.equal(await page.evaluate(() => document.activeElement?.dataset.video), 'sevgi-ve-guzellik');
+});
+
+await adim('Kenz sekmesine yeniden dokununca en başa döner', async () => {
+  await page.locator('.tab--kenz').click();
+  await page.waitForFunction(() => document.querySelector('.kenz').scrollTop === 0);
+  await page.waitForTimeout(300);
+  assert.equal(await page.locator('.quote').evaluate((e) => Number(getComputedStyle(e).opacity)), 1);
+  assert.equal(await page.locator('.cagri').evaluate((e) => e.inert), false);
+});
+
+await adim('Güneş: "yakında" ekranı', async () => {
+  await page.locator('.tab--gunes').click();
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'gunes');
+  assert.equal((await page.locator('#view-gunes').innerText()).replace(/\s+/g, ' ').trim(), 'YAKINDA Güneş Bu bölüm özenle hazırlanıyor.');
+  assert.equal(await page.locator('.tab--gunes').getAttribute('aria-current'), 'page');
+});
+
+await adim('dokunmatik olmayan ekranda ipucu Escape\'i söyler; görünmez "Oku\'dan çık" klavyeyle çıkarır', async () => {
+  const c2 = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  try {
+    const p2 = await c2.newPage();
+    await p2.goto(base + '#/kenz');
+    await p2.waitForSelector('.konu');
+    await p2.locator('.tab--oku').click();
+    await p2.waitForFunction(() => document.querySelector('.akis__ipucu.gorunur')?.textContent === 'Çıkmak için Esc tuşuna basın');
+    // Ekranda yine yalnız iki düğme
+    assert.deepEqual(await gorunenDugmeler(p2), ['Neşret', 'Menba']);
+    await p2.locator('.akis__cik').focus();
+    await p2.keyboard.press('Enter');
+    await p2.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  } finally {
+    await c2.close();
+  }
 });
 
 await adim('konsolda hata yok', async () => {

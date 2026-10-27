@@ -1,13 +1,20 @@
 {
   "site": "https://emreks53.github.io/A/",
+  "konular": [
+    { "id": "muhabbet", "baslik": "Muhabbet" },
+    { "id": "nubuvvet", "baslik": "Nübüvvet" }
+  ],
   "videolar": [
     {
       "id": "sevgi-ve-guzellik",
       "baslik": "Sevgi ve Güzellik",
+      "konu": "muhabbet",
       "video": "videolar/sevgi-ve-guzellik.mp4",
       "kapak": "videolar/sevgi-ve-guzellik-kapak.jpg",
       "onizleme": "videolar/sevgi-ve-guzellik-onizleme.jpg",
-      "menba": [{ "eser": "Lem'alar", "yer": "64. sayfa" }],
+      "menba": [
+        { "eser": "Lem'alar", "yer": "64. sayfa" }
+      ],
       "kunye": [
         "Samanyolu (Paranal): ESO/B. Tafreshi — CC BY 4.0",
         "Girdap Galaksisi M51: ESA/Webb, NASA & CSA, the FEAST JWST team, The Hubble Heritage Team, WIYN/NOIRLab/NSF/AURA, Digitized Sky Survey 2, M. Bartmann (ESA/Webb), A. Pedrini, A. Adamo, S. Beckwith, K. Rhode, M. Young, E. Slawik, N. Risinger, M. Zamani — CC BY 4.0",
@@ -18,6 +25,7 @@
     {
       "id": "ahlak-mucizesi",
       "baslik": "Ahlâk Mu'cizesi",
+      "konu": "nubuvvet",
       "video": "videolar/ahlak-mucizesi.mp4",
       "kapak": "videolar/ahlak-mucizesi-kapak.jpg",
       "onizleme": "videolar/ahlak-mucizesi-onizleme.jpg",

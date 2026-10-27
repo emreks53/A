@@ -1,13 +1,10 @@
 /*
  * Oku sekmesi: tam ekran dikey video akışı (Reels gibi). Videolar yukarı/aşağı kaydırılır, her biri ekrana
- * oturur. Kenz'in alt menüsü ana ekrandaki gibi videonun üstünde yüzer; başlık, ilerleme çizgisi ve iki düğme
- * (Neşret, Menba) menünün üstünde kalır.
+ * oturur. Alt menü yoktur; ekranda yalnız iki düğme (Neşret, Menba), üstte birkaç saniye videonun adı ve altta
+ * ince ilerleme çizgisi vardır. Çıkış sağa kaydırarak.
  */
 
 :root {
-  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
-  /* alt menünün üst kenarı (ekranın altından) */
-  --menu-ust: calc(18.95 * var(--u) + 81.3 * var(--u) + var(--safe-bottom));
   --krem-ust: #fcfaf5;
   --krem-alt: #fbf7ef;
   --murekkep: #0e1f4d;
@@ -17,10 +14,59 @@
   --yazi-arayuz: 'Encode Sans', 'Segoe UI', 'Open Sans', Roboto, sans-serif;
   --yazi-baslik: 'Tinos', 'Times New Roman', Times, serif;
   --video-golge: 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 12px rgba(0, 0, 0, 0.35);
+  --nur: #ffe4a8;
 }
 
 .view--oku {
+  z-index: 2;
   background: #05070d;
+}
+
+/* ---------- tam ekran: Oku açıkken alt menü yok; çıkış sağa kaydırarak ---------- */
+.tabbar {
+  transition:
+    transform 0.35s cubic-bezier(0.3, 0.7, 0.2, 1),
+    opacity 0.25s ease;
+}
+.app[data-sekme='oku'] .tabbar {
+  transform: translateY(calc(100% + 40px + var(--safe-bottom)));
+  opacity: 0;
+  pointer-events: none;
+}
+/* Uygulamanın içinden açılınca sağdan gelir (çıkarken sağa gider). */
+.app[data-gecis='oku-gir'] .view--oku {
+  animation: oku-gir 0.36s cubic-bezier(0.2, 0.75, 0.2, 1);
+}
+@keyframes oku-gir {
+  from {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+.view--oku.suruklenen,
+.view--oku.cikiyor {
+  box-shadow: -24px 0 48px rgba(0, 0, 0, 0.35);
+}
+.view--oku.suruklenen {
+  transition: none;
+}
+/* ilk açılıştaki ipucu: ekran bir an sağa kayar, altından dönülecek sekme görünür */
+.view--oku.durtulen:not(.suruklenen):not(.cikiyor) {
+  box-shadow: -18px 0 36px rgba(0, 0, 0, 0.3);
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.view--oku.cikiyor {
+  transition: transform 0.22s cubic-bezier(0.3, 0.6, 0.3, 1);
+}
+.view--oku:not(.suruklenen):not(.cikiyor) {
+  transition:
+    opacity 0.35s ease,
+    transform 0.28s cubic-bezier(0.2, 0.75, 0.2, 1);
+}
+/* Sürüklerken altından dönülecek ekran görünür. */
+.view[hidden][data-alttan] {
+  visibility: visible;
+  opacity: 1;
+  transition: none;
 }
 
 /* ---------- akış ---------- */
@@ -33,30 +79,11 @@
   overscroll-behavior: contain;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  /* dikey kaydırma tarayıcıda; yatay sürükleme Oku'dan çıkış için bizde */
+  touch-action: pan-y;
 }
 .akis::-webkit-scrollbar {
   display: none;
-}
-.akis__baslik {
-  position: absolute;
-  z-index: 3;
-  top: calc(var(--safe-top) + 12px);
-  left: 0;
-  right: 0;
-  margin: 0;
-  color: #fff;
-  font-family: var(--yazi-baslik);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 30px;
-  line-height: 1;
-  text-align: center;
-  text-shadow:
-    0 0 8px var(--quote-shadow-near),
-    0 0 24px var(--quote-shadow-far),
-    0 1px 3px rgba(0, 0, 0, 0.35);
-  transform: scaleY(1.11);
-  pointer-events: none;
 }
 
 .reel {
@@ -81,6 +108,8 @@
   aspect-ratio: 9 / 16;
   max-width: 100%;
   margin: 0 auto;
+  /* başlık sahnenin genişliğine göre ölçeklenir (yatay telefonda sahne dardır) */
+  container-type: inline-size;
 }
 .reel__video {
   position: absolute;
@@ -97,9 +126,15 @@
 .reel__karartma {
   position: absolute;
   inset: 0;
+  /* üstte durum çubuğu için hafif, altta ilerleme çizgisi için; altyazı bandı (%72-82) karartılmaz */
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.32) 0, rgba(0, 0, 0, 0) calc(var(--safe-top) + 90px)),
-    linear-gradient(0deg, rgba(0, 0, 0, 0.55) 0, rgba(0, 0, 0, 0.18) calc(var(--menu-ust) + 120px), rgba(0, 0, 0, 0) 58%);
+    linear-gradient(180deg, rgba(2, 6, 20, 0.35) 0, rgba(2, 6, 20, 0) calc(var(--safe-top) + 64px)),
+    linear-gradient(
+      0deg,
+      rgba(2, 6, 20, 0.6) 0,
+      rgba(2, 6, 20, 0.26) calc(var(--safe-bottom) + 56px),
+      rgba(2, 6, 20, 0) min(calc(var(--safe-bottom) + 116px), 18%)
+    );
   pointer-events: none;
 }
 
@@ -168,53 +203,104 @@
   }
 }
 
-/* üstte, "Oku"nun altında: videonun adı. Videoların alt bandında altyazı, üstünde de sahne yazıları olduğu için
-   ad yalnız video ekrana gelirken birkaç saniye görünür (videoların ilk saniyelerinde üst bölge boştur). */
-.reel__baslik {
+/* üstte, ekranın boş üst bandında: konu ve videonun adı. Videoların alt bandında altyazı, ortasında da sahne
+   yazıları olduğu için ad yalnız video ekrana gelirken birkaç saniye ve video durdurulunca görünür. */
+.reel__ust {
   position: absolute;
-  top: calc(var(--safe-top) + 50px);
+  isolation: isolate;
+  top: calc(var(--safe-top) + 10px);
   left: 56px;
   right: 56px;
+  left: clamp(12px, 14.4cqi, 56px);
+  right: clamp(12px, 14.4cqi, 56px);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+/* ad görünürken üst kenar biraz daha koyulaşır */
+.reel__ust::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: calc(-10px - var(--safe-top));
+  left: -56px;
+  right: -56px;
+  height: calc(var(--safe-top) + 130px);
+  background: linear-gradient(180deg, rgba(2, 6, 20, 0.32), rgba(2, 6, 20, 0));
+}
+.reel__konu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 0 0 6px;
+  color: var(--nur);
+  font-family: var(--yazi-arayuz);
+  font-weight: 700;
+  font-size: 10.5px;
+  line-height: 1;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.reel__konu::before,
+.reel__konu::after {
+  content: '';
+  flex: none;
+  width: 18px;
+  height: 1px;
+  background: rgba(255, 228, 168, 0.6);
+}
+.reel__baslik {
   margin: 0;
   overflow: hidden;
   color: #fff;
-  font-family: var(--yazi-arayuz);
+  font-family: var(--yazi-baslik);
+  font-style: italic;
   font-weight: 700;
-  font-size: 14px;
-  line-height: 1.3;
-  letter-spacing: 0.02em;
-  text-align: center;
+  font-size: 23px;
+  font-size: clamp(16px, 5.9cqi, 23px);
+  line-height: 1.15;
   white-space: nowrap;
   text-overflow: ellipsis;
-  text-shadow: var(--video-golge);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.55),
+    0 0 16px rgba(0, 0, 0, 0.45);
 }
-.reel[data-aktif] .reel__baslik {
-  animation: reel-baslik 3.4s ease forwards;
+/* Oku her açıldığında (ve her video ekrana geldiğinde) yeniden başlar; gizliyken oynayıp bitmez. */
+.app[data-sekme='oku'] .reel[data-aktif] .reel__ust {
+  animation: reel-baslik 3.6s ease forwards;
+}
+.app[data-sekme='oku'] .reel[data-durum='durdu'] .reel__ust {
+  opacity: 1;
+  animation: none;
+  transition-duration: 0.25s;
 }
 @keyframes reel-baslik {
-  0%,
+  0% {
+    opacity: 0;
+  }
+  9%,
+  82% {
+    opacity: 1;
+  }
   100% {
     opacity: 0;
   }
-  10%,
-  80% {
-    opacity: 1;
-  }
 }
 
-/* altta: ince ilerleme çizgisi (altyazıların altında, alt menünün hemen üstünde) */
+/* altta: ince ilerleme çizgisi; dokunma alanı 44 px, telefonun ev çubuğundan uzakta */
 .reel__alt {
   position: absolute;
   left: 16px;
   right: 16px;
-  bottom: calc(var(--menu-ust) + 4px);
+  bottom: var(--safe-bottom);
 }
 .reel__ilerleme {
   position: relative;
-  height: 22px;
+  height: 44px;
   margin: 0 -4px;
   padding: 0 4px;
   cursor: pointer;
@@ -228,52 +314,76 @@
   left: 4px;
   right: 4px;
   top: 50%;
-  height: 3px;
-  margin-top: -1.5px;
+  height: 2.5px;
+  margin-top: -1.25px;
   border-radius: 2px;
   transition:
     height 0.15s ease,
     margin-top 0.15s ease;
 }
 .reel__ilerleme::before {
-  background: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.24);
 }
 .reel__ilerleme-dolu {
-  background: #fff;
+  background: linear-gradient(90deg, rgba(255, 228, 168, 0.75), #fff3d6);
+  box-shadow: 0 0 6px rgba(255, 228, 168, 0.45);
   transform: scaleX(0);
   transform-origin: 0 50%;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.25);
+}
+/* ucu: çizgi kadar geniş bir kutu, dolu oran kadar sağa kayar; nokta kutunun sol kenarında */
+.reel__ilerleme-uc {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 50%;
+  height: 0;
+  pointer-events: none;
+}
+.reel__ilerleme-uc::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff8e6;
+  box-shadow:
+    0 0 6px 1px rgba(255, 228, 168, 0.9),
+    0 0 14px rgba(255, 228, 168, 0.5);
 }
 .reel__ilerleme.suruklenen::before,
 .reel__ilerleme.suruklenen .reel__ilerleme-dolu,
 .reel__ilerleme:focus-visible::before,
 .reel__ilerleme:focus-visible .reel__ilerleme-dolu {
-  height: 6px;
-  margin-top: -3px;
-  border-radius: 3px;
+  height: 4px;
+  margin-top: -2px;
 }
 .reel__ilerleme:focus-visible {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
-  border-radius: 8px;
-}
-
-/* Yatay telefon ya da kısa pencerede alt menü ile altyazı bandı arasında yer kalmaz: çizgi gizlenir. */
-@media (min-aspect-ratio: 3/5) and (max-height: 720px) {
-  .reel__alt {
-    display: none;
-  }
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
 }
 
 /* sağda: yalnız iki düğme. Videolar YouTube Shorts düzenine göre hazırlandı: altyazılar karenin %72-82
    bandında, sağ kenarın %52-70 arası ise düğmeler için boş. Düğmeler bu yüzden altyazının üstünde durur. */
 .reel__dugmeler {
   position: absolute;
+  isolation: isolate;
   right: 8px;
-  bottom: max(31%, calc(var(--menu-ust) + 34px));
+  bottom: max(31%, calc(var(--safe-bottom) + 130px));
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
+}
+/* parlak karelerde de beyaz simgeler seçilsin: arkalarında hafif, yumuşak bir gölge */
+.reel__dugmeler::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -36px -18px -36px -34px;
+  background: radial-gradient(closest-side, rgba(2, 6, 20, 0.26), rgba(2, 6, 20, 0));
+  pointer-events: none;
 }
 .reel__dugme {
   display: flex;
@@ -307,7 +417,7 @@
 .reel__dugme-ad {
   font-family: var(--yazi-arayuz);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 1;
   text-shadow: var(--video-golge);
 }
@@ -340,7 +450,7 @@
   position: absolute;
   z-index: 3;
   left: 50%;
-  top: calc(var(--safe-top) + 84px);
+  top: calc(var(--safe-top) + 72px);
   padding: 10px 18px;
   border-radius: 20px;
   background: rgba(252, 250, 245, 0.96);
@@ -362,12 +472,136 @@
   transform: translate(-50%, 0);
 }
 
+/* çıkış ipucu: soldan sağa akan ışık izi + yazı; dokunulmaz (düğme değildir) */
+.akis__ipucu {
+  position: absolute;
+  z-index: 3;
+  left: 20px;
+  bottom: calc(var(--safe-bottom) + 56px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  font-family: var(--yazi-arayuz);
+  font-weight: 600;
+  font-size: 13.5px;
+  line-height: 1;
+  text-shadow: var(--video-golge);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.akis__ipucu.gorunur {
+  opacity: 1;
+}
+/* dokunmatik olmayan ekranda (Escape yazar): ışık izi yok, ortada */
+.akis__ipucu--tus {
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.akis__ipucu--tus .akis__ipucu-iz {
+  display: none;
+}
+.akis__ipucu-iz {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 12px;
+}
+.akis__ipucu-iz::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 5px;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, rgba(255, 228, 168, 0), rgba(255, 228, 168, 0.95));
+}
+.akis__ipucu-iz::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff8e6;
+  box-shadow:
+    0 0 8px 2px rgba(255, 228, 168, 0.85),
+    0 0 18px rgba(255, 228, 168, 0.5);
+}
+.akis__ipucu.gorunur .akis__ipucu-iz {
+  animation: ipucu-ak 1.6s cubic-bezier(0.3, 0.6, 0.3, 1) 0.2s 2;
+}
+@keyframes ipucu-ak {
+  0% {
+    transform: translateX(-8px);
+    opacity: 0.4;
+  }
+  60% {
+    transform: translateX(6px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(6px);
+    opacity: 0;
+  }
+}
+
+/* Menba açıkken videonun üstündeki her şey çekilir */
+.reel__alt,
+.reel__dugmeler {
+  transition: opacity 0.2s ease;
+}
+.app[data-sekme='oku'] .view--oku[data-sayfa] .reel__ust,
+.view--oku[data-sayfa] .reel__alt,
+.view--oku[data-sayfa] .reel__dugmeler,
+.view--oku[data-sayfa] .akis__ipucu {
+  opacity: 0;
+  animation: none;
+}
+
+/* klavye ve ekran okuyucu için çıkış: görünmez; yalnız klavyeyle odaklanınca sol üstte belirir */
+.akis__cik {
+  position: absolute;
+  z-index: 4;
+  top: calc(var(--safe-top) + 10px);
+  left: 12px;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.akis__cik:focus-visible {
+  width: auto;
+  height: 44px;
+  margin: 0;
+  padding: 0 18px;
+  overflow: visible;
+  clip: auto;
+  border-radius: 22px;
+  background: rgba(252, 250, 245, 0.96);
+  color: var(--murekkep);
+  font-family: var(--yazi-arayuz);
+  font-weight: 700;
+  font-size: 14px;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
 /* ---------- alt sayfa (Menba) ---------- */
 .alt-perde {
   position: absolute;
   inset: 0;
   z-index: 20;
-  background: rgba(0, 0, 0, 0.22);
+  background: rgba(4, 7, 18, 0.5);
   opacity: 0;
   transition: opacity 0.25s ease;
 }
@@ -383,12 +617,14 @@
   display: flex;
   flex-direction: column;
   max-width: 560px;
-  max-height: min(70%, 600px);
+  max-height: min(78%, 640px);
   margin: 0 auto;
-  border-radius: 26px 26px 0 0;
+  border-radius: 28px 28px 0 0;
   background: linear-gradient(180deg, var(--krem-ust), var(--krem-alt));
   color: var(--murekkep);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 -12px 40px rgba(0, 0, 0, 0.35);
   transform: translateY(105%);
   transition: transform 0.32s cubic-bezier(0.25, 0.8, 0.25, 1);
   outline: none;
@@ -400,139 +636,198 @@
 .alt-perde:not(.acik) {
   pointer-events: none;
 }
+/* tutamak: kapatma düğmesi (görünen çizgi 40 x 5, dokunma alanı 44 px) */
 .alt-sayfa__tutamak {
+  position: relative;
   flex: none;
+  align-self: center;
+  width: 88px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.alt-sayfa__tutamak::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 9px;
   width: 40px;
   height: 5px;
-  margin: 8px auto 0;
+  margin-left: -20px;
   border-radius: 3px;
-  background: rgba(14, 31, 77, 0.16);
+  background: rgba(2, 32, 100, 0.18);
+}
+.alt-sayfa__tutamak::after {
+  content: '';
+  position: absolute;
+  inset: -8px 0 -8px;
+}
+.alt-sayfa__tutamak:focus-visible {
+  outline: 2px solid var(--altin);
+  outline-offset: -2px;
 }
 .alt-sayfa__ust {
-  display: flex;
-  align-items: center;
   flex: none;
-  min-height: 44px;
-  padding: 0 6px 0 22px;
+  padding: 6px 22px 0;
   touch-action: none;
 }
 .alt-sayfa__baslik {
-  flex: 1;
   margin: 0;
   color: var(--altin);
   font-family: var(--yazi-arayuz);
   font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-}
-.alt-sayfa__kapat {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--soluk);
-  cursor: pointer;
-}
-.alt-sayfa__kapat:active {
-  background: rgba(14, 31, 77, 0.06);
-}
-.alt-sayfa__kapat:focus-visible {
-  outline: 2px solid var(--altin);
-}
-.alt-sayfa__kapat svg {
-  width: 22px;
-  height: 22px;
 }
 .alt-sayfa__govde {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0 22px calc(24px + var(--safe-bottom));
+  padding: 0 22px calc(14px + var(--safe-bottom));
 }
 
 .menba__video {
-  margin: 0 0 14px;
-  color: var(--soluk);
-  font-family: var(--yazi-arayuz);
+  margin: 8px 0 0;
+  color: var(--oku);
+  font-family: var(--yazi-baslik);
+  font-style: italic;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 25px;
+  line-height: 1.2;
 }
 .menba__liste {
-  margin: 0;
+  margin: 18px 0 0;
   padding: 0;
   list-style: none;
 }
 .menba__kaynak {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  padding: 14px 18px;
-  border-radius: 20px;
-  background: linear-gradient(180deg, #fef6e3, #fcf1d8);
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px 18px 18px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, var(--pill-top), var(--pill-mid) 55%, var(--pill-bottom));
+  box-shadow: inset 0 0 0 1px rgba(142, 84, 10, 0.12);
 }
 .menba__kaynak + .menba__kaynak {
   margin-top: 10px;
 }
+.menba__simge {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--altin);
+}
+.menba__simge svg {
+  width: 28px;
+  height: 28px;
+}
+.menba__metin {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.menba__kulliyat {
+  color: var(--soluk);
+  font-family: var(--yazi-arayuz);
+  font-weight: 600;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
 .menba__eser {
+  margin-top: 6px;
+  color: var(--oku);
   font-family: var(--yazi-baslik);
   font-style: italic;
   font-weight: 700;
-  font-size: 28px;
-  line-height: 1.15;
+  font-size: 32px;
+  line-height: 1.06;
+}
+.menba__kaynak + .menba__kaynak .menba__eser {
+  font-size: 26px;
 }
 .menba__yer {
+  margin-top: 4px;
   color: var(--altin);
   font-family: var(--yazi-arayuz);
   font-weight: 700;
-  font-size: 16px;
-}
-.menba__kulliyat {
-  margin: 10px 4px 0;
-  color: var(--soluk);
-  font-family: var(--yazi-arayuz);
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 15px;
+  line-height: 1.2;
 }
 .menba__kunye {
-  margin-top: 20px;
-  padding-top: 14px;
-  border-top: 1px solid var(--cizgi);
+  margin-top: 18px;
+  border-top: 1px solid var(--hairline);
   color: var(--soluk);
-  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--yazi-arayuz);
+  font-weight: 500;
   font-size: 13px;
   line-height: 1.5;
 }
-.menba__kunye summary {
-  padding: 10px 0;
-  color: var(--murekkep);
-  font-family: var(--yazi-arayuz);
-  font-weight: 700;
-  font-size: 14px;
+.menba__kunye-ozet {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  list-style: none;
   cursor: pointer;
 }
-.menba__kunye summary:focus-visible {
+.menba__kunye-ozet::-webkit-details-marker {
+  display: none;
+}
+.menba__kunye-ozet:focus-visible {
   outline: 2px solid var(--altin);
-  border-radius: 6px;
+  border-radius: 8px;
+}
+.menba__kunye-ad {
+  flex: 1;
+  color: var(--oku);
+  font-weight: 600;
+  font-size: 15px;
+}
+.menba__kunye-sayi {
+  color: var(--soluk);
+  font-weight: 600;
+  font-size: 13px;
+}
+.menba__kunye-ok {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: var(--soluk);
+  transition: transform 0.2s ease;
+}
+.menba__kunye-ok svg {
+  width: 20px;
+  height: 20px;
+}
+.menba__kunye[open] .menba__kunye-ok {
+  transform: rotate(180deg);
 }
 .menba__kunye ul {
-  margin: 6px 0 0;
+  margin: 0;
   padding-left: 18px;
 }
 .menba__kunye li + li {
   margin-top: 6px;
 }
 .menba__lisans {
-  margin: 10px 0 0;
+  margin: 10px 0 4px;
 }
 .menba__lisans a {
   color: var(--altin);
@@ -542,8 +837,17 @@
 @media (prefers-reduced-motion: reduce) {
   .alt-sayfa,
   .alt-perde,
-  .reel__dugme {
+  .reel__dugme,
+  .tabbar,
+  .view--oku,
+  .view--oku:not(.suruklenen):not(.cikiyor),
+  .view--oku.cikiyor,
+  .view--oku.durtulen:not(.suruklenen):not(.cikiyor) {
     transition: none;
+  }
+  .app[data-gecis='oku-gir'] .view--oku,
+  .akis__ipucu.gorunur .akis__ipucu-iz {
+    animation: none;
   }
   .reel[data-durum] .reel__durum,
   .reel[data-durum='bekliyor'] .reel__durum::before {

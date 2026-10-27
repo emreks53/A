@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Kenz</title>
+    <title>Nur-u Hakikat</title>
     <meta name="description" content="Güneşten daha parlak ve cennet gibi güzel ve saadet-i ebediye gibi şirin hakikatler." />
     <meta name="theme-color" content="#5AA2EC" />
     <meta name="color-scheme" content="light" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Kenz" />
+    <meta name="apple-mobile-web-app-title" content="Nur-u Hakikat" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Kenz" />
+    <meta property="og:title" content="Nur-u Hakikat" />
     <meta property="og:description" content="Güneşten daha parlak ve cennet gibi güzel ve saadet-i ebediye gibi şirin hakikatler." />
     <meta property="og:image" content="https://emreks53.github.io/A/og-image.png" />
     <link rel="icon" href="icons/favicon.ico" sizes="48x48" />
@@ -59,23 +59,57 @@
           fetchpriority="high"
         />
       </picture>
+      <div class="bg-perde" aria-hidden="true"></div>
 
       <main class="views">
         <section class="view view--kenz" id="view-kenz" data-view="kenz" aria-label="Kenz">
-          <h1 class="visually-hidden">Kenz</h1>
-          <p class="quote">
-            <span class="quote__line">Güneşten daha parlak</span>
-            <span class="quote__line">ve cennet gibi güzel</span>
-            <span class="quote__line">ve saadet-i ebediye gibi</span>
-            <span class="quote__line">şirin hakikatler</span>
-          </p>
+          <div class="kenz" id="kenz-kaydirma">
+            <header class="kahraman">
+              <h1 class="visually-hidden" tabindex="-1">Nur-u Hakikat</h1>
+              <p class="marka" aria-hidden="true">Nur-u Hakikat</p>
+              <p class="quote">
+                <span class="quote__line">Güneşten daha parlak</span>
+                <span class="quote__line">ve cennet gibi güzel</span>
+                <span class="quote__line">ve saadet-i ebediye gibi</span>
+                <span class="quote__line">şirin hakikatler</span>
+              </p>
+              <button class="cagri" type="button" aria-controls="kutuphane">
+                <span class="cagri__yildiz" aria-hidden="true">✦</span>
+                <span class="cagri__ad">Konular</span>
+                <span class="cagri__sayi"></span>
+                <svg class="cagri__ok" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+            </header>
+          </div>
+          <div class="kenz__ust" aria-hidden="true">
+            <p class="marka-dar"><i class="dugum"></i><span>Nur-u Hakikat</span></p>
+          </div>
         </section>
 
         <section class="view view--oku" id="view-oku" data-view="oku" aria-label="Oku" hidden></section>
 
-        <section class="view view--page" id="view-gunes" data-view="gunes" aria-label="Güneş" hidden>
-          <h1 class="page__title">Güneş</h1>
-          <p class="page__text">Bu bölüm hazırlanıyor.</p>
+        <section class="view view--gunes" id="view-gunes" data-view="gunes" aria-label="Güneş" hidden>
+          <div class="safak" aria-hidden="true"></div>
+          <div class="gunes">
+            <svg class="gunes__simge" viewBox="0 0 84 84" aria-hidden="true">
+              <defs>
+                <radialGradient id="gunes-disk" cx="0.42" cy="0.38" r="0.7">
+                  <stop offset="0" stop-color="#FFE4B0" />
+                  <stop offset="1" stop-color="#F3B866" />
+                </radialGradient>
+              </defs>
+              <g stroke="#FFD99A" stroke-width="4.2" stroke-linecap="round" opacity=".95">
+                <path d="M42 13.85V4.4M42 70.15v9.45M13.85 42H4.4M70.15 42h9.45M22.09 22.09l-6.68-6.68M61.91 22.09l6.68-6.68M22.09 61.91l-6.68 6.68M61.91 61.91l6.68 6.68" />
+              </g>
+              <circle cx="42" cy="42" r="21.4" fill="url(#gunes-disk)" />
+            </svg>
+            <p class="gunes__etiket">Yakında</p>
+            <h1 class="gunes__ad" tabindex="-1">Güneş</h1>
+            <span class="gunes__cizgi" aria-hidden="true"></span>
+            <p class="gunes__alt">Bu bölüm özenle hazırlanıyor.</p>
+          </div>
         </section>
       </main>
 

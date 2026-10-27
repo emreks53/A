@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.kenz.mobile',
-  appName: 'Kenz',
+  appId: 'com.nuruhakikat.app',
+  appName: 'Nur-u Hakikat',
   webDir: 'dist',
   backgroundColor: '#5AA2EC',
   plugins: {

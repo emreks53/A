@@ -1,4 +1,4 @@
-package app.kenz.mobile;
+package com.nuruhakikat.app;
 
 import com.getcapacitor.BridgeActivity;
 

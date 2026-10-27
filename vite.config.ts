@@ -20,8 +20,8 @@ export default defineConfig({
       injectRegister: false,
       includeAssets: ['icons/*', 'og-image.png'],
       manifest: {
-        name: 'Kenz',
-        short_name: 'Kenz',
+        name: 'Nur-u Hakikat',
+        short_name: 'Nur-u Hakikat',
         description: 'Güneşten daha parlak ve cennet gibi güzel ve saadet-i ebediye gibi şirin hakikatler.',
         lang: 'tr',
         dir: 'ltr',
@@ -50,7 +50,7 @@ export default defineConfig({
             urlPattern: ({ url }) => /\/bg-[\w-]+\.(?:avif|webp|jpg)$/.test(url.pathname),
             handler: 'CacheFirst',
             options: {
-              cacheName: 'kenz-backgrounds',
+              cacheName: 'nuruhakikat-arka-plan',
               expiration: { maxEntries: 8 },
             },
           },
@@ -58,7 +58,7 @@ export default defineConfig({
             urlPattern: ({ url }) => /\/videolar\/[\w-]+\.jpg$/.test(url.pathname),
             handler: 'CacheFirst',
             options: {
-              cacheName: 'kenz-kapaklar',
+              cacheName: 'nuruhakikat-kapaklar',
               expiration: { maxEntries: 60 },
             },
           },

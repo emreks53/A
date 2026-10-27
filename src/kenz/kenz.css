@@ -1,0 +1,701 @@
+/*
+ * Kenz: gökyüzü sahnesi. Açılışta ana ekran (alıntı) tasarımdaki gibidir; aşağı kaydırınca sahne ufka doğru
+ * yaklaşır, gök koyulaşır ve videolar konu konu sıralanır. Güneş: aynı sahnede şafak ("yakında").
+ */
+
+/* ---------- sahne: gökyüzü fotoğrafı + kaydırınca koyulaşan perde ---------- */
+.bg__img {
+  transform-origin: 50% 73%; /* ufuk çizgisi */
+  transition:
+    transform 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
+    filter 0.45s ease;
+}
+/* Kaydırırken sahne parmağı gecikmesiz izler; bulanıklık bir kez yumuşakça gelir. */
+.bg__img.anlik {
+  transition: filter 0.45s ease;
+}
+.bg__img.derin {
+  filter: blur(2.5px) saturate(1.08);
+}
+.bg-perde {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(12, 46, 120, 0.44) 0, rgba(14, 52, 128, 0.26) 45%, rgba(18, 46, 30, 0.26) 100%);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+.bg-perde.anlik {
+  transition: none;
+}
+.app[data-zemin='gunes'] .bg__img {
+  transform: none !important;
+  filter: brightness(0.62) saturate(0.75) contrast(1.05);
+}
+.app[data-zemin='gunes'] .bg-perde {
+  opacity: 0 !important;
+}
+
+/* ---------- kaydırma alanı ---------- */
+.kenz {
+  position: absolute;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.kenz::-webkit-scrollbar {
+  display: none;
+}
+/* Kaydırmaya başlayınca içerik menünün arkasına girerken söner; kütüphanedeyken üstte markanın altında da.
+   Maske yalnız görünüşü değiştirir; tamamen saydam bantları aşağıdaki kalkanlar kapatır. */
+.kenz.kaydi-alt {
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - var(--menu-ust) - 26px), transparent calc(100% - var(--menu-ust) + 6px));
+  mask-image: linear-gradient(180deg, #000 calc(100% - var(--menu-ust) - 26px), transparent calc(100% - var(--menu-ust) + 6px));
+}
+.kenz.kaydi-alt.kaydi {
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    transparent calc(var(--safe-top) + 22px),
+    #000 calc(var(--safe-top) + 52px),
+    #000 calc(100% - var(--menu-ust) - 26px),
+    transparent calc(100% - var(--menu-ust) + 6px)
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    transparent calc(var(--safe-top) + 22px),
+    #000 calc(var(--safe-top) + 52px),
+    #000 calc(100% - var(--menu-ust) - 26px),
+    transparent calc(100% - var(--menu-ust) + 6px)
+  );
+}
+
+/* Kalkanlar: maskenin tamamen saydam bantlarında görünmeyen kartların üstünde durur (dokunuş, fare, menü
+   onlara gider). Kaydırma alanının içinde ve yapışkan oldukları için kaydırma oradan da başlar; yer kaplamazlar. */
+.kenz__kalkan {
+  position: sticky;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+}
+.kenz__kalkan--ust {
+  top: 0;
+  height: calc(var(--safe-top) + 22px);
+  margin-bottom: calc(-1 * (var(--safe-top) + 22px));
+}
+.kenz__kalkan--alt {
+  bottom: 0;
+  height: calc(var(--menu-ust) - 6px);
+  margin-top: calc(-1 * (var(--menu-ust) - 6px));
+}
+.kenz.kaydi-alt .kenz__kalkan--alt,
+.kenz.kaydi .kenz__kalkan--ust {
+  pointer-events: auto;
+}
+
+/* ---------- kahraman: açılış ekranı ---------- */
+.kahraman {
+  position: relative;
+  height: 100%;
+}
+.marka {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--safe-top) + 15px);
+  margin: 0;
+  color: var(--oku);
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: calc(11.5 * var(--u));
+  line-height: 1;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-align: center;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* kütüphaneye çağrı: menünün üstünde yüzen koyu cam kapsül */
+.cagri {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--menu-ust) + 18px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  margin: 0;
+  padding: 0 12px 0 16px;
+  border: 0;
+  border-radius: 22px;
+  background: rgba(6, 28, 78, 0.62);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 10px 26px -10px rgba(4, 20, 60, 0.6);
+  color: #fff;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 14.5px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translateX(-50%);
+  transition: transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.cagri:active {
+  transform: translateX(-50%) scale(0.96);
+}
+.cagri:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+.cagri__yildiz {
+  color: #ffe0a0;
+  font-size: 13px;
+  text-shadow: 0 0 8px rgba(255, 214, 140, 0.8);
+}
+.cagri__sayi {
+  color: #ffe4a8;
+}
+.cagri__ok {
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  animation: cagri-ok 1.3s ease-in-out 1.6s 1;
+}
+@keyframes cagri-ok {
+  0%,
+  40%,
+  100% {
+    transform: none;
+  }
+  20%,
+  60% {
+    transform: translateY(3px);
+  }
+}
+
+/* ---------- üst şerit: kahraman kaydırılınca marka üstte kalır ---------- */
+.kenz__ust {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--safe-top) + 81px);
+  background: linear-gradient(180deg, rgba(14, 50, 124, 0.42), rgba(14, 50, 124, 0));
+  opacity: 0;
+  pointer-events: none;
+}
+.marka-dar {
+  position: absolute;
+  top: calc(var(--safe-top) + 7px);
+  left: 0;
+  right: 0;
+  height: 32px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #fff;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1;
+  text-shadow: var(--gok-hale);
+}
+.marka-dar span {
+  transform: scaleY(1.08);
+}
+
+/* marka imi (Kenz düğümü) */
+.dugum {
+  display: inline-block;
+  flex: none;
+  width: 15px;
+  height: 16.3px;
+  background: currentColor;
+  -webkit-mask: url('../assets/icons/kenz.svg') center / contain no-repeat;
+  mask: url('../assets/icons/kenz.svg') center / contain no-repeat;
+}
+
+/* ---------- kütüphane ---------- */
+.kutuphane {
+  position: relative;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 26px 0 calc(var(--menu-ust) + 36px);
+}
+.kutuphane__baslik {
+  outline: none;
+}
+
+/* kahramandan kütüphaneye geçiş süsü: düğüm, iki yanda sönen ince çizgiler */
+.sus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 0 0 26px;
+  color: rgba(255, 255, 255, 0.95);
+  /* düğümün kendi maskesi gölgesini kırptığı için gölge süsün tamamına */
+  filter: drop-shadow(0 1px 2px rgba(6, 34, 92, 0.35)) drop-shadow(0 0 10px rgba(40, 148, 225, 0.45));
+}
+.sus::before,
+.sus::after {
+  content: '';
+  width: 64px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.85));
+}
+.sus::after {
+  background: linear-gradient(270deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.85));
+}
+.sus .dugum {
+  width: 18px;
+  height: 19.6px;
+}
+
+.konu + .konu {
+  margin-top: 34px;
+}
+.konu__bas {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 13px;
+  padding: 0 20px;
+}
+.konu__ad {
+  min-width: 0;
+  margin: 0;
+  color: #fff;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 31px;
+  line-height: 1.05;
+  text-shadow:
+    0 1px 2px rgba(6, 34, 92, 0.5),
+    0 0 16px rgba(6, 40, 110, 0.45),
+    0 0 34px rgba(40, 148, 225, 0.5);
+  transform: scaleY(1.11);
+  transform-origin: 0 100%;
+}
+.konu__aciklama {
+  margin: -4px 20px 13px;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.45;
+  text-shadow: 0 1px 2px rgba(6, 34, 92, 0.55);
+}
+.konu__sayi {
+  flex: none;
+  margin-bottom: 2px;
+  padding: 5px 11px;
+  border-radius: 13px;
+  background: rgba(252, 250, 245, 0.92);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8),
+    0 4px 12px -6px rgba(10, 48, 110, 0.35);
+  color: var(--kenz);
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 12.5px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.raf {
+  margin: 0;
+  padding: 0 16px;
+  list-style: none;
+}
+/* birden çok video: yatay raf, üçüncü kart kenardan görünür */
+.raf--cok {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 16px;
+  scrollbar-width: none;
+  /* kartların gölgesi kırpılmasın */
+  margin: -14px 0 -22px;
+  padding-top: 14px;
+  padding-bottom: 22px;
+}
+.raf--cok::-webkit-scrollbar {
+  display: none;
+}
+.raf--cok > li {
+  flex: 0 0 min(160px, calc((100vw - 56px) / 2.25));
+  /* uzun kaynak satırı kartı genişletmesin (satır üç noktayla kısalır) */
+  min-width: 0;
+  scroll-snap-align: start;
+}
+/* farede yana kaydırmak için ince çubuk (dokunmatikte gizli) */
+@media (hover: hover) and (pointer: fine) {
+  .raf--cok {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.65) transparent;
+  }
+  .raf--cok::-webkit-scrollbar {
+    display: block;
+    height: 6px;
+  }
+  .raf--cok::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.65);
+  }
+}
+
+/* ---------- video kartı ---------- */
+.kart {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  padding: 8px;
+  border-radius: 26px;
+  background: var(--kart);
+  box-shadow:
+    var(--kart-kenar),
+    var(--yuzen-golge);
+  color: var(--oku);
+  text-decoration: none;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+.kart:active {
+  transform: scale(0.98);
+  box-shadow:
+    var(--kart-kenar),
+    0 8px 18px -10px rgba(10, 48, 110, 0.4);
+}
+.kart:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+.kart__poster {
+  position: relative;
+  flex: none;
+  align-self: flex-start;
+  display: block;
+  width: 104px;
+  aspect-ratio: 9 / 16;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #1b2236;
+}
+.kart__poster::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.kart__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kart__sure {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px 0 8px;
+  border-radius: 12px;
+  background: rgba(5, 8, 20, 0.55);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 12.5px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.kart__sure svg {
+  width: 9px;
+  height: 9px;
+}
+.kart__metin {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 8px 4px 16px;
+}
+.kart__ad {
+  display: block;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.12;
+  color: var(--oku);
+}
+.kart__etiket {
+  display: block;
+  margin: 14px 0 6px;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 10.5px;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.kart__kaynak {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: var(--kenz);
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 13.5px;
+  line-height: 1.3;
+}
+.kart__kaynak + .kart__kaynak {
+  margin-top: 5px;
+}
+.kart__kaynak svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+.kart__alt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 14px;
+}
+.izle {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--oku);
+  color: #fff;
+  box-shadow: 0 6px 14px -6px rgba(2, 32, 100, 0.6);
+}
+.izle svg {
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+}
+.izle__ad {
+  color: var(--oku);
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* rafta dar kart: dikey kapak, altında ad ve ilk kaynak */
+.kart--dar {
+  flex-direction: column;
+  padding: 6px;
+  border-radius: 22px;
+}
+.kart--dar .kart__poster {
+  width: 100%;
+  border-radius: 16px;
+}
+.kart--dar .kart__ad {
+  display: -webkit-box;
+  margin: 9px 4px 0;
+  overflow: hidden;
+  font-size: 18px;
+  line-height: 1.15;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.kart--dar .kart__kaynak {
+  display: block;
+  margin: 5px 4px 4px;
+  overflow: hidden;
+  font-size: 12.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.kart--dar .kart__kaynak svg {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin: 0 5px 0 0;
+  vertical-align: -2px;
+}
+
+/* kütüphanenin sonu */
+.son {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 46px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+}
+.son .sus {
+  margin: 0;
+}
+.son__ad {
+  margin: 0;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(6, 34, 92, 0.45);
+}
+
+/* geniş ekran: tek videolu kartta daha büyük kapak */
+@media (min-width: 600px) {
+  .kart--genis .kart__poster {
+    width: 124px;
+  }
+  .kart--genis .kart__metin {
+    padding: 14px 12px 6px 22px;
+  }
+  .kart--genis .kart__ad {
+    font-size: 27px;
+  }
+}
+
+/* ---------- Güneş: şafak, güneş henüz doğmadı ---------- */
+.view--gunes {
+  overflow: hidden;
+}
+.safak {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(320px 170px at 50% 73.5%, rgba(255, 196, 120, 0.85), rgba(255, 170, 96, 0.35) 45%, rgba(255, 150, 90, 0) 75%),
+    radial-gradient(620px 300px at 50% 76%, rgba(255, 140, 90, 0.4), rgba(255, 140, 90, 0) 70%),
+    linear-gradient(
+      180deg,
+      rgba(10, 18, 58, 0.92) 0%,
+      rgba(26, 34, 100, 0.8) 34%,
+      rgba(84, 62, 130, 0.55) 58%,
+      rgba(220, 130, 110, 0.38) 71%,
+      rgba(18, 22, 50, 0.55) 80%,
+      rgba(10, 12, 32, 0.78) 100%
+    );
+}
+.safak::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 45% 0;
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 14%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1px 1px at 27% 9%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.4px 1.4px at 41% 21%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 63% 7%, rgba(255, 255, 255, 0.65), transparent),
+    radial-gradient(1.3px 1.3px at 78% 16%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1px 1px at 90% 27%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 8% 33%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1.2px 1.2px at 55% 31%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 84% 41%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 20% 46%, rgba(255, 255, 255, 0.4), transparent);
+}
+.gunes {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: max(34%, calc(var(--safe-top) + 128px));
+  color: #fff;
+  text-align: center;
+  transform: translateY(-50%);
+}
+.gunes__simge {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 26px;
+  overflow: visible;
+  filter: drop-shadow(0 0 22px rgba(255, 210, 140, 0.45));
+}
+.gunes__etiket {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  color: #ffd9a3;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  text-transform: uppercase;
+}
+.gunes__etiket::before,
+.gunes__etiket::after {
+  content: '';
+  width: 18px;
+  height: 1px;
+  background: rgba(255, 217, 163, 0.6);
+}
+.gunes__ad {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 52px;
+  line-height: 1;
+  text-shadow:
+    0 0 24px rgba(255, 190, 120, 0.25),
+    0 2px 6px rgba(0, 0, 20, 0.35);
+  transform: scaleY(1.11);
+}
+.gunes__cizgi {
+  display: block;
+  width: 72px;
+  height: 1.5px;
+  margin: 24px auto 0;
+  background: linear-gradient(90deg, rgba(255, 217, 163, 0), #ffd9a3, rgba(255, 217, 163, 0));
+}
+.gunes__alt {
+  max-width: 280px;
+  margin: 20px auto 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg__img,
+  .bg-perde,
+  .kart,
+  .cagri {
+    transition: none;
+  }
+  .cagri__ok {
+    animation: none;
+  }
+}
