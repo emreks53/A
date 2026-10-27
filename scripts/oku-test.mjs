@@ -465,10 +465,14 @@ await adim('menünün yanındaki/altındaki saydam bantta görünmeyen karta dok
     ];
   });
   for (const [x, y] of noktalar) {
-    assert.ok(await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('.kart'), [x, y]), `(${x},${y}) altında kart yok; deneme anlamsız`);
+    assert.ok(
+      await page.evaluate(([x, y]) => document.elementsFromPoint(x, y).some((e) => e.closest('.kart')), [x, y]),
+      `(${x},${y}) altında kart yok; deneme anlamsız`,
+    );
     await page.touchscreen.tap(x, y);
     await page.waitForTimeout(250);
     assert.equal(new URL(page.url()).hash, '#/kenz', `(${x},${y}) görünmeyen kartı açtı`);
+    assert.equal(await page.evaluate(() => !!document.activeElement?.closest('.kart')), false, 'görünmeyen kart odak aldı');
   }
   // Menünün yanından başlayan dokunuşla kaydırma çalışır
   const once = await page.locator('.kenz').evaluate((k) => k.scrollTop);

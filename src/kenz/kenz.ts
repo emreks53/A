@@ -21,7 +21,17 @@ export function kenzBaslat(gorunum: HTMLElement): Kenz {
   const azalt = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const kutuphane = kutuphaneCiz();
-  kaydirma.append(kutuphane);
+  // Maske yalnız görünüşü değiştirir: tamamen saydam bantlardaki (menünün yanı/altı, üstte markanın üstü)
+  // görünmeyen kartlar dokunuş, fare ve menü almasın diye o bantlara saydam kalkanlar konur. Kaydırma alanının
+  // içinde oldukları için kaydırma oradan da başlar.
+  const kalkan = (yer: string) => {
+    const k = document.createElement('div');
+    k.className = `kenz__kalkan kenz__kalkan--${yer}`;
+    k.setAttribute('aria-hidden', 'true');
+    return k;
+  };
+  kaydirma.prepend(kalkan('ust'));
+  kaydirma.append(kutuphane, kalkan('alt'));
   cagri.querySelector('.cagri__sayi')!.textContent = `· ${konuGruplari().length}`;
 
   let cerceve = 0;
@@ -80,23 +90,6 @@ export function kenzBaslat(gorunum: HTMLElement): Kenz {
     kaydirma.scrollTo({ top: Math.max(0, hedef), behavior: azalt.matches ? 'auto' : 'smooth' });
     kutuphane.querySelector<HTMLElement>('.kutuphane__baslik')?.focus({ preventScroll: true });
   });
-
-  // Maske yalnız görünüşü değiştirir: menünün yanında/altında ya da üstteki markanın üstünde tamamen saydam
-  // kalan bir karta dokunuş onu açmasın. (Kaydırma bu bantlardan da başlayabilsin diye dokunuş alanı kesilmez.)
-  const menu = document.querySelector<HTMLElement>('.tabbar');
-  kaydirma.addEventListener(
-    'click',
-    (e) => {
-      if (e.detail === 0 || !kaydirma.classList.contains('kaydi-alt')) return; // klavyeyle etkinleştirme
-      const altSinir = (menu?.getBoundingClientRect().top ?? innerHeight) + 6;
-      const ustSinir = kaydirma.classList.contains('kaydi') ? markaDar.getBoundingClientRect().top + 15 : -Infinity;
-      if (e.clientY > altSinir || e.clientY < ustSinir) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    },
-    true,
-  );
 
   guncelle();
 

@@ -50,7 +50,7 @@
   display: none;
 }
 /* Kaydırmaya başlayınca içerik menünün arkasına girerken söner; kütüphanedeyken üstte markanın altında da.
-   Maske yalnız görünüşü değiştirir; tamamen saydam bantlardaki dokunuşu kenz.ts yutar (kaydırma oradan da başlar). */
+   Maske yalnız görünüşü değiştirir; tamamen saydam bantları aşağıdaki kalkanlar kapatır. */
 .kenz.kaydi-alt {
   -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - var(--menu-ust) - 26px), transparent calc(100% - var(--menu-ust) + 6px));
   mask-image: linear-gradient(180deg, #000 calc(100% - var(--menu-ust) - 26px), transparent calc(100% - var(--menu-ust) + 6px));
@@ -72,6 +72,29 @@
     #000 calc(100% - var(--menu-ust) - 26px),
     transparent calc(100% - var(--menu-ust) + 6px)
   );
+}
+
+/* Kalkanlar: maskenin tamamen saydam bantlarında görünmeyen kartların üstünde durur (dokunuş, fare, menü
+   onlara gider). Kaydırma alanının içinde ve yapışkan oldukları için kaydırma oradan da başlar; yer kaplamazlar. */
+.kenz__kalkan {
+  position: sticky;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+}
+.kenz__kalkan--ust {
+  top: 0;
+  height: calc(var(--safe-top) + 22px);
+  margin-bottom: calc(-1 * (var(--safe-top) + 22px));
+}
+.kenz__kalkan--alt {
+  bottom: 0;
+  height: calc(var(--menu-ust) - 6px);
+  margin-top: calc(-1 * (var(--menu-ust) - 6px));
+}
+.kenz.kaydi-alt .kenz__kalkan--alt,
+.kenz.kaydi .kenz__kalkan--ust {
+  pointer-events: auto;
 }
 
 /* ---------- kahraman: açılış ekranı ---------- */
