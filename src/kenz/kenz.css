@@ -50,14 +50,12 @@
   display: none;
 }
 /* Kaydırmaya başlayınca içerik menünün arkasına girerken söner; kütüphanedeyken üstte markanın altında da.
-   Maske yalnız görünüşü değiştirir: tamamen saydam bantlar clip-path ile kesilir ki görünmeyen karta dokunulmasın. */
+   Maske yalnız görünüşü değiştirir; tamamen saydam bantlardaki dokunuşu kenz.ts yutar (kaydırma oradan da başlar). */
 .kenz.kaydi-alt {
-  clip-path: inset(0 0 calc(var(--menu-ust) - 6px) 0);
   -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - var(--menu-ust) - 26px), transparent calc(100% - var(--menu-ust) + 6px));
   mask-image: linear-gradient(180deg, #000 calc(100% - var(--menu-ust) - 26px), transparent calc(100% - var(--menu-ust) + 6px));
 }
 .kenz.kaydi-alt.kaydi {
-  clip-path: inset(calc(var(--safe-top) + 22px) 0 calc(var(--menu-ust) - 6px) 0);
   -webkit-mask-image: linear-gradient(
     180deg,
     transparent 0,
@@ -319,6 +317,8 @@
 }
 .raf--cok > li {
   flex: 0 0 min(160px, calc((100vw - 56px) / 2.25));
+  /* uzun kaynak satırı kartı genişletmesin (satır üç noktayla kısalır) */
+  min-width: 0;
   scroll-snap-align: start;
 }
 /* farede yana kaydırmak için ince çubuk (dokunmatikte gizli) */

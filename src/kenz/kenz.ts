@@ -81,6 +81,23 @@ export function kenzBaslat(gorunum: HTMLElement): Kenz {
     kutuphane.querySelector<HTMLElement>('.kutuphane__baslik')?.focus({ preventScroll: true });
   });
 
+  // Maske yalnız görünüşü değiştirir: menünün yanında/altında ya da üstteki markanın üstünde tamamen saydam
+  // kalan bir karta dokunuş onu açmasın. (Kaydırma bu bantlardan da başlayabilsin diye dokunuş alanı kesilmez.)
+  const menu = document.querySelector<HTMLElement>('.tabbar');
+  kaydirma.addEventListener(
+    'click',
+    (e) => {
+      if (e.detail === 0 || !kaydirma.classList.contains('kaydi-alt')) return; // klavyeyle etkinleştirme
+      const altSinir = (menu?.getBoundingClientRect().top ?? innerHeight) + 6;
+      const ustSinir = kaydirma.classList.contains('kaydi') ? markaDar.getBoundingClientRect().top + 15 : -Infinity;
+      if (e.clientY > altSinir || e.clientY < ustSinir) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    },
+    true,
+  );
+
   guncelle();
 
   return {

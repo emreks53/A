@@ -269,7 +269,11 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
 
   function ipucuGizle(): void {
     window.clearTimeout(ipucuZamanlayici);
-    if (!ipucu.classList.contains('gorunur')) return;
+    if (!ipucu.classList.contains('gorunur')) {
+      // zaten söndü (ya da hiç gösterilmedi): bekleyen yazı temizliği iptal edilmiş olabilir, şimdi temizle
+      ipucuYazi.textContent = '';
+      return;
+    }
     ipucu.classList.remove('gorunur');
     // Söndükten sonra yazı da kalkar; ekran okuyucu eski bir yönergeyi bulmasın.
     ipucuZamanlayici = window.setTimeout(() => (ipucuYazi.textContent = ''), 450);

@@ -359,9 +359,10 @@ await adim('paylaşım bağlantısı videoyu açar (önizleme etiketleriyle)', a
   await page.waitForURL(/#\/oku\/ahlak-mucizesi$/);
   await oynuyor('ahlak-mucizesi');
   assert.equal(await page.locator('.tab--oku').getAttribute('aria-current'), 'page');
-  // Bağlantıyla doğrudan açılınca çıkış Kenz'e gider
+  // Bağlantıyla doğrudan açılınca çıkış Kenz'e gider; odak gizli Oku'da kalmaz
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  assert.equal(await page.evaluate(() => !!document.activeElement?.closest('#view-oku')), false);
 });
 
 await adim('sesli oynatmaya izin vermeyen tarayıcıda sessiz başlar, dokununca ses açılır', async () => {
@@ -450,15 +451,38 @@ await adim('"Konular" kütüphaneye kaydırır; üstte marka kalır, alıntı s�
   assert.equal(await page.locator('.quote').evaluate((e) => Number(getComputedStyle(e).opacity)), 0);
   assert.equal(await page.locator('.cagri').evaluate((e) => e.inert), true);
   assert.equal(await page.evaluate(() => document.activeElement?.id), 'kutuphane-baslik');
-  // Menünün altındaki saydam bantta görünmeyen karta dokunulamaz
-  const altBant = await page.evaluate(() => {
+});
+
+await adim('menünün yanındaki/altındaki saydam bantta görünmeyen karta dokunulmaz; kaydırma oradan da başlar', async () => {
+  // Bir kart menünün altına girecek kadar kaydır
+  await page.locator('.kenz').evaluate((k) => (k.scrollTop = 250));
+  await page.waitForTimeout(300);
+  const noktalar = await page.evaluate(() => {
     const m = document.querySelector('.tabbar').getBoundingClientRect();
-    return [195, (m.bottom + innerHeight) / 2, 8, m.top + 20, innerWidth - 8, m.top + 20].reduce(
-      (a, _, i, d) => (i % 2 ? a : [...a, !!document.elementFromPoint(d[i], d[i + 1])?.closest('.kart')]),
-      [],
-    );
+    return [
+      [195, Math.round((m.bottom + innerHeight) / 2)],
+      [Math.floor(m.left) - 1, Math.round(m.top + 30)], // menünün solundaki 2-3 px'lik aralık
+    ];
   });
-  assert.deepEqual(altBant, [false, false, false]);
+  for (const [x, y] of noktalar) {
+    assert.ok(await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('.kart'), [x, y]), `(${x},${y}) altında kart yok; deneme anlamsız`);
+    await page.touchscreen.tap(x, y);
+    await page.waitForTimeout(250);
+    assert.equal(new URL(page.url()).hash, '#/kenz', `(${x},${y}) görünmeyen kartı açtı`);
+  }
+  // Menünün yanından başlayan dokunuşla kaydırma çalışır
+  const once = await page.locator('.kenz').evaluate((k) => k.scrollTop);
+  const [x, y] = noktalar[1];
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  for (let i = 1; i <= 8; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y - i * 40 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page.waitForTimeout(600);
+  const sonra = await page.locator('.kenz').evaluate((k) => k.scrollTop);
+  assert.ok(sonra > once + 100, `kaydırma olmadı: ${once} → ${sonra}`);
+  // Kütüphaneye geri (sonraki adım buradan sürer)
+  await page.locator('.kenz').evaluate((k) => (k.scrollTop = k.scrollHeight));
+  await page.waitForTimeout(300);
 });
 
 await adim('karta dokununca video Oku\'da açılır; sağa kaydırınca kütüphanede aynı yere dönülür', async () => {

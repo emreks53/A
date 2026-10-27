@@ -77,11 +77,18 @@ function show(r: Rota, icerden = false): void {
   for (const view of views) view.hidden = view.dataset.view !== sekme;
   acikSayfa()?.kapat();
   if (sekme === 'oku') akis.goster(r.video);
-  else if (okudanDonus && okuOncesiOdak?.isConnected && !okuGorunumu.contains(okuOncesiOdak)) {
-    // Klavye ve ekran okuyucu kullanıcısı kaldığı yere (açtığı karta) döner.
-    okuOncesiOdak.focus({ preventScroll: true });
-    okuOncesiOdak = null;
-  }
+  else if (okudanDonus) odagiGeriVer(sekme);
+}
+
+/** Oku'dan dönünce odak kaldığı yere (açılan karta) ya da dönülen ekranın başlığına gelir; gizli Oku'da kalmaz. */
+function odagiGeriVer(sekme: Sekme): void {
+  const hedef =
+    okuOncesiOdak?.isConnected && !okuGorunumu.contains(okuOncesiOdak)
+      ? okuOncesiOdak
+      : views.find((v) => v.dataset.view === sekme)?.querySelector<HTMLElement>('h1');
+  okuOncesiOdak = null;
+  if (hedef) hedef.focus({ preventScroll: true });
+  else if (okuGorunumu.contains(document.activeElement)) (document.activeElement as HTMLElement).blur();
 }
 
 window.addEventListener('hashchange', () => show(rotaCoz(location.hash), true));
