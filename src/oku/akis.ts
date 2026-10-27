@@ -49,11 +49,21 @@ export interface Akis {
   aktifVideo(): string;
 }
 
-export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void): Akis {
+export interface AkisSecenek {
+  /** Akışta video değişti (adres #/oku/<id> olur) */
+  adresDegisti(id: string): void;
+  /** Oku'dan çık (Escape); sağa kaydırma ve telefonun geri tuşu da aynı yere gider */
+  cik(): void;
+}
+
+const IPUCU_ANAHTARI = 'nuruhakikat.oku.kaydirIpucu';
+
+export function akisBaslat(kok: HTMLElement, { adresDegisti, cik }: AkisSecenek): Akis {
   const akis = el('div', 'akis');
   akis.setAttribute('role', 'feed');
   akis.setAttribute('aria-label', 'Oku: videolar');
-  const baslik = el('h1', 'akis__baslik', 'Oku');
+  // Oku tam ekrandır: başlık yalnız ekran okuyucular içindir.
+  const baslik = el('h1', 'visually-hidden', 'Oku');
   // Ses kapalıyken sağ üstte küçük bir gösterge; düğme değildir (dokunuş videoya geçer ve sesi açar).
   const sessiz = el('div', 'akis__sessiz');
   sessiz.setAttribute('aria-hidden', 'true');
@@ -340,12 +350,15 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  // Klavye (masaüstü): ↑/↓ video değiştirir, boşluk durdurur.
+  // Klavye (masaüstü): ↑/↓ video değiştirir, boşluk durdurur, Escape çıkar.
   document.addEventListener('keydown', (e) => {
-    if (!etkin || acikSayfa() || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (!etkin || e.defaultPrevented || acikSayfa() || e.altKey || e.ctrlKey || e.metaKey) return;
     const hedef = e.target as Element;
     if (hedef.closest('input, textarea, [contenteditable]')) return;
-    if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      cik();
+    } else if (e.key === 'ArrowDown' || e.key === 'PageDown') {
       e.preventDefault();
       git(aktif + 1);
     } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
@@ -415,6 +428,15 @@ export function akisBaslat(kok: HTMLElement, adresDegisti: (id: string) => void)
   return {
     goster(videoId) {
       etkin = true;
+      // Çıkış düğmesi olmadığı için ilk açılışta bir kez nasıl çıkılacağı söylenir.
+      try {
+        if (!localStorage.getItem(IPUCU_ANAHTARI)) {
+          localStorage.setItem(IPUCU_ANAHTARI, '1');
+          window.setTimeout(() => etkin && bildir('Çıkmak için sağa kaydırın', 3200), 900);
+        }
+      } catch {
+        // depolama kapalıysa ipucu gösterilmez
+      }
       const i = videoId ? ogeler.findIndex((o) => o.v.id === videoId) : -1;
       const hedef = i >= 0 ? i : aktif;
       if (hedef !== aktif || Math.abs(akis.scrollTop - hedef * akis.clientHeight) > 2) {

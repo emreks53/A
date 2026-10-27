@@ -20,7 +20,53 @@
 }
 
 .view--oku {
+  z-index: 2;
   background: #05070d;
+}
+
+/* ---------- tam ekran: Oku açıkken alt menü yok; çıkış sağa kaydırarak ---------- */
+.tabbar {
+  transition:
+    transform 0.35s cubic-bezier(0.3, 0.7, 0.2, 1),
+    opacity 0.25s ease;
+}
+.app[data-sekme='oku'] {
+  --menu-ust: var(--safe-bottom);
+}
+.app[data-sekme='oku'] .tabbar {
+  transform: translateY(calc(100% + 40px + var(--safe-bottom)));
+  opacity: 0;
+  pointer-events: none;
+}
+/* Uygulamanın içinden açılınca sağdan gelir (çıkarken sağa gider). */
+.app[data-gecis='oku-gir'] .view--oku {
+  animation: oku-gir 0.36s cubic-bezier(0.2, 0.75, 0.2, 1);
+}
+@keyframes oku-gir {
+  from {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+.view--oku.suruklenen,
+.view--oku.cikiyor {
+  box-shadow: -24px 0 48px rgba(0, 0, 0, 0.35);
+}
+.view--oku.suruklenen {
+  transition: none;
+}
+.view--oku.cikiyor {
+  transition: transform 0.22s cubic-bezier(0.3, 0.6, 0.3, 1);
+}
+.view--oku:not(.suruklenen):not(.cikiyor) {
+  transition:
+    opacity 0.35s ease,
+    transform 0.28s cubic-bezier(0.2, 0.75, 0.2, 1);
+}
+/* Sürüklerken altından dönülecek ekran görünür. */
+.view[hidden][data-alttan] {
+  visibility: visible;
+  opacity: 1;
+  transition: none;
 }
 
 /* ---------- akış ---------- */
@@ -33,30 +79,11 @@
   overscroll-behavior: contain;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  /* dikey kaydırma tarayıcıda; yatay sürükleme Oku'dan çıkış için bizde */
+  touch-action: pan-y;
 }
 .akis::-webkit-scrollbar {
   display: none;
-}
-.akis__baslik {
-  position: absolute;
-  z-index: 3;
-  top: calc(var(--safe-top) + 12px);
-  left: 0;
-  right: 0;
-  margin: 0;
-  color: #fff;
-  font-family: var(--yazi-baslik);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 30px;
-  line-height: 1;
-  text-align: center;
-  text-shadow:
-    0 0 8px var(--quote-shadow-near),
-    0 0 24px var(--quote-shadow-far),
-    0 1px 3px rgba(0, 0, 0, 0.35);
-  transform: scaleY(1.11);
-  pointer-events: none;
 }
 
 .reel {
@@ -172,7 +199,7 @@
    ad yalnız video ekrana gelirken birkaç saniye görünür (videoların ilk saniyelerinde üst bölge boştur). */
 .reel__baslik {
   position: absolute;
-  top: calc(var(--safe-top) + 50px);
+  top: calc(var(--safe-top) + 16px);
   left: 56px;
   right: 56px;
   margin: 0;
@@ -210,7 +237,7 @@
   position: absolute;
   left: 16px;
   right: 16px;
-  bottom: calc(var(--menu-ust) + 4px);
+  bottom: calc(var(--menu-ust) + 8px);
 }
 .reel__ilerleme {
   position: relative;
@@ -255,13 +282,6 @@
 .reel__ilerleme:focus-visible {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
   border-radius: 8px;
-}
-
-/* Yatay telefon ya da kısa pencerede alt menü ile altyazı bandı arasında yer kalmaz: çizgi gizlenir. */
-@media (min-aspect-ratio: 3/5) and (max-height: 720px) {
-  .reel__alt {
-    display: none;
-  }
 }
 
 /* sağda: yalnız iki düğme. Videolar YouTube Shorts düzenine göre hazırlandı: altyazılar karenin %72-82
@@ -340,7 +360,7 @@
   position: absolute;
   z-index: 3;
   left: 50%;
-  top: calc(var(--safe-top) + 84px);
+  top: calc(var(--safe-top) + 52px);
   padding: 10px 18px;
   border-radius: 20px;
   background: rgba(252, 250, 245, 0.96);

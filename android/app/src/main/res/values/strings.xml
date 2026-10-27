@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Kenz</string>
-    <string name="title_activity_main">Kenz</string>
-    <string name="package_name">app.kenz.mobile</string>
-    <string name="custom_url_scheme">app.kenz.mobile</string>
+    <string name="app_name">Nur-u Hakikat</string>
+    <string name="title_activity_main">Nur-u Hakikat</string>
+    <string name="package_name">com.nuruhakikat.app</string>
+    <string name="custom_url_scheme">com.nuruhakikat.app</string>
 </resources>

@@ -2,7 +2,7 @@
   "name": "kenz",
   "private": true,
   "version": "1.0.0",
-  "description": "Kenz — mobil uygulama ve web sitesi",
+  "description": "Nur-u Hakikat — mobil uygulama ve web sitesi",
   "type": "module",
   "scripts": {
     "dev": "vite",

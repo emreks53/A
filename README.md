@@ -1,4 +1,4 @@
-# Kenz
+# Nur-u Hakikat
 
 Tek kod tabanından çıkan **web sitesi** ve **mobil uygulama** (Android + iOS).
 Ana ekran, `design/mockup-ana-ekran.png` tasarımıyla birebir örtüşecek şekilde ölçülerek kurulmuştur;
@@ -105,7 +105,7 @@ genişletilir.
 
   ```json
   [{ "relation": ["delegate_permission/common.handle_all_urls"],
-     "target": { "namespace": "android_app", "package_name": "app.kenz.mobile",
+     "target": { "namespace": "android_app", "package_name": "com.nuruhakikat.app",
                  "sha256_cert_fingerprints": ["<yükleme anahtarının SHA-256 parmak izi>"] } }]
   ```
 
@@ -170,7 +170,8 @@ npm run assets:native
 
 ## Notlar
 
-- Uygulama kimliği `app.kenz.mobile`, adı `Kenz` (`capacitor.config.ts`). Mağazaya göndermeden önce değiştirebilirsiniz.
+- Uygulama kimliği `com.nuruhakikat.app`, adı `Nur-u Hakikat` (`capacitor.config.ts`, Android `build.gradle` /
+  `strings.xml`, iOS proje dosyası). Mağazaya ilk gönderimden sonra kimlik değiştirilemez.
 - Alıntı yazı tipi Tinos (Apache 2.0), menü yazı tipi Encode Sans (OFL); ikisi de uygulamayla birlikte gelir.
 - Videolar: *Sevgi ve Güzellik* (`video` dalı) ve *Ahlâk Mu'cizesi* v2.3 (`claude/prophet-character-video-wnuefu` dalı);
   kaynakları ve lisansları o dallarda.
