@@ -1,8 +1,8 @@
-// "Menba": videonun Risale-i Nur'daki kaynağı ve (varsa) görüntü ve ses künyesi.
+// "Menba": videonun kaynağı. Üstte büyük Kur'an-ı Kerim, altında Risale-i Nur eserleri dizili (videonun geçtiği
+// eser öne çıkar); altında eser, bölüm, (varsa) kısım ve sayfa, üç etiket ve (varsa) görüntü ve ses künyesi.
+import { menbaCizimi } from './menba-cizim';
 import { tipografik, type Video } from './ortak';
 
-const KITAP_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 const OK_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -15,31 +15,37 @@ function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, me
 
 export function menbaIcerik(v: Video): HTMLElement {
   const kok = el('div', 'menba');
-  kok.append(el('p', 'menba__video', tipografik(v.baslik)));
+  kok.append(menbaCizimi(v.kitap));
 
-  const liste = el('ul', 'menba__liste');
-  for (const m of v.menba) {
-    const li = el('li', 'menba__kaynak');
-    const simge = el('span', 'menba__simge');
-    simge.innerHTML = KITAP_SVG;
-    const metin = el('span', 'menba__metin');
-    metin.append(el('span', 'menba__kulliyat', 'Risale-i Nur Külliyatı'), el('span', 'menba__eser', tipografik(m.eser)));
-    if (m.yer) metin.append(el('span', 'menba__yer', m.yer));
-    li.append(simge, metin);
-    liste.append(li);
+  const kaynak = el('div', 'menba__kaynak');
+  const eser = el('p', 'menba__eser');
+  eser.append(el('span', undefined, tipografik(v.kitap)));
+  const yer = el('ul', 'menba__yer');
+  yer.setAttribute('aria-label', 'Geçtiği yer');
+  for (const [parca, sinif] of [
+    [v.bolum, undefined],
+    [v.kisim, undefined],
+    [v.sayfa ? `${v.sayfa}. sayfa` : undefined, 'menba__sayfa'],
+  ] as const) {
+    if (parca) yer.append(el('li', sinif, tipografik(parca)));
   }
-  kok.append(liste);
+  kaynak.append(eser, yer);
+
+  const etiketler = el('ul', 'menba__etiketler');
+  etiketler.setAttribute('aria-label', 'Konular');
+  for (const e of v.etiketler) etiketler.append(el('li', 'etiket', tipografik(`#${e}`)));
+  kaynak.append(etiketler);
+  kok.append(kaynak);
 
   if (v.kunye?.length) {
     const ayrinti = el('details', 'menba__kunye');
     const ozet = el('summary', 'menba__kunye-ozet');
-    const sayi = el('span', 'menba__kunye-sayi', `${v.kunye.length} kayıt`);
     const ok = el('span', 'menba__kunye-ok');
     ok.innerHTML = OK_SVG;
-    ozet.append(el('span', 'menba__kunye-ad', 'Görüntü ve ses künyesi'), sayi, ok);
+    ozet.append(el('span', 'menba__kunye-ad', 'Görüntü ve ses künyesi'), el('span', 'menba__kunye-sayi', `${v.kunye.length} kayıt`), ok);
     ayrinti.append(ozet);
     const ul = el('ul');
-    for (const satir of v.kunye) ul.append(el('li', undefined, satir));
+    for (const satir of v.kunye) ul.append(el('li', undefined, tipografik(satir)));
     ayrinti.append(ul);
     if (v.kunye.some((s) => s.includes('CC BY 4.0'))) {
       const p = el('p', 'menba__lisans');

@@ -1,101 +1,42 @@
-// Kenz ekranı: açılışta alıntı; aşağı kaydırınca gök koyulaşır, sahne ufka yaklaşır ve konular gelir.
-// Kaydırmaya bağlı her şey yalnız transform / opacity ile, kare başına bir kez güncellenir.
-import { konuGruplari, kutuphaneCiz } from './kutuphane';
+// Kenz ekranı: Risale-i Nur'dan videolar, geçtiği kitap ve bölüme göre ("gece kütüphanesi").
+import { kutuphaneCiz } from './kutuphane';
 
-export interface Kenz {
-  /** Kenz sekmesine yeniden dokunulunca en başa döner */
-  basaDon(): void;
-}
+/** Nur-u Hakikat düğümü, yalnız çizgi (başlıkta ve sonda) */
+const DUGUM_SVG =
+  '<svg class="dugum" viewBox="0 0 32 32" aria-hidden="true"><path d="M14.556 13.5A5.3 5.3 0 1 1 17.444 13.5A5.3 5.3 0 1 1 18.887 16A5.3 5.3 0 1 1 17.444 18.5A5.3 5.3 0 1 1 14.556 18.5A5.3 5.3 0 1 1 13.113 16A5.3 5.3 0 1 1 14.556 13.5Z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="16" r="1.69" fill="currentColor"/></svg>';
 
-const sinirla = (x: number) => Math.min(1, Math.max(0, x));
-
-export function kenzBaslat(gorunum: HTMLElement): Kenz {
+export function kenzBaslat(gorunum: HTMLElement): void {
   const kaydirma = gorunum.querySelector<HTMLElement>('.kenz')!;
-  const kahraman = gorunum.querySelector<HTMLElement>('.kahraman')!;
-  const yazilar = Array.from(kahraman.querySelectorAll<HTMLElement>('.marka, .quote'));
-  const cagri = kahraman.querySelector<HTMLButtonElement>('.cagri')!;
-  const ust = gorunum.querySelector<HTMLElement>('.kenz__ust')!;
-  const markaDar = ust.querySelector<HTMLElement>('.marka-dar')!;
-  const sahne = document.querySelector<HTMLElement>('.bg__img');
-  const perde = document.querySelector<HTMLElement>('.bg-perde');
-  const azalt = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-  const kutuphane = kutuphaneCiz();
-  // Maske yalnız görünüşü değiştirir: tamamen saydam bantlardaki (menünün yanı/altı, üstte markanın üstü)
-  // görünmeyen kartlar dokunuş, fare ve menü almasın diye o bantlara saydam kalkanlar konur. Kaydırma alanının
-  // içinde oldukları için kaydırma oradan da başlar.
+  const bas = document.createElement('header');
+  bas.className = 'kenz__bas';
+  const baslik = document.createElement('h1');
+  baslik.className = 'kenz__baslik';
+  baslik.id = 'kenz-baslik';
+  baslik.tabIndex = -1;
+  baslik.innerHTML = DUGUM_SVG;
+  const ad = document.createElement('span');
+  ad.textContent = 'Kenz';
+  baslik.append(ad);
+  const alt = document.createElement('p');
+  alt.className = 'kenz__alt';
+  alt.textContent = 'Risale-i Nur’dan okumalar, eser eser.';
+  bas.append(baslik, alt);
+  const son = document.createElement('div');
+  son.className = 'kenz__son';
+  son.setAttribute('aria-hidden', 'true');
+  son.innerHTML = DUGUM_SVG;
+  // Altta menünün arkası ve yanları, üstte durum çubuğunun altı düz gece rengidir; orada görünmeyen kartlar
+  // dokunuş ve fare almasın diye o bantlara saydam kalkanlar konur. Kaydırma alanının içinde yapışkan
+  // oldukları için kaydırma oradan da başlar; yer kaplamazlar.
   const kalkan = (yer: string) => {
     const k = document.createElement('div');
     k.className = `kenz__kalkan kenz__kalkan--${yer}`;
     k.setAttribute('aria-hidden', 'true');
     return k;
   };
-  kaydirma.prepend(kalkan('ust'));
-  kaydirma.append(kutuphane, kalkan('alt'));
-  cagri.querySelector('.cagri__sayi')!.textContent = `· ${konuGruplari().length}`;
-
-  let cerceve = 0;
-  let anlikZamanlayici = 0;
-
-  function guncelle(): void {
-    cerceve = 0;
-    const h = kaydirma.clientHeight || 1;
-    const y = Math.max(0, kaydirma.scrollTop);
-    // p: sahnenin derinleşmesi (ekranın %60'ında tamam); kahraman yazıları ilk %40'ta söner.
-    const p = sinirla(y / (0.6 * h));
-    const yazi = 1 - sinirla(y / (0.4 * h));
-    const cagriGor = 1 - sinirla(y / (0.18 * h));
-    if (sahne) {
-      sahne.style.transform =
-        azalt.matches || p === 0 ? '' : `translate3d(0, ${(-2.5 * p).toFixed(3)}%, 0) scale(${(1 + 0.16 * p).toFixed(4)})`;
-      sahne.classList.toggle('derin', !azalt.matches && p > 0.6);
-    }
-    if (perde) perde.style.opacity = p.toFixed(3);
-    for (const e of yazilar) e.style.opacity = yazi.toFixed(3);
-    cagri.style.opacity = cagriGor.toFixed(3);
-    // Görünmez olan çağrı dokunuşu ve odağı almaz.
-    cagri.inert = cagriGor < 0.05;
-    ust.style.opacity = sinirla((y - 0.3 * h) / (0.2 * h)).toFixed(3);
-    kaydirma.classList.toggle('kaydi-alt', y > 0.04 * h);
-    kaydirma.classList.toggle('kaydi', y > 0.35 * h);
-  }
-
-  kaydirma.addEventListener(
-    'scroll',
-    () => {
-      // Kaydırırken sahne geçişsiz izler; durunca sekme değişimindeki yumuşak geçiş geri gelir.
-      sahne?.classList.add('anlik');
-      perde?.classList.add('anlik');
-      window.clearTimeout(anlikZamanlayici);
-      anlikZamanlayici = window.setTimeout(() => {
-        sahne?.classList.remove('anlik');
-        perde?.classList.remove('anlik');
-      }, 180);
-      if (!cerceve) cerceve = requestAnimationFrame(guncelle);
-    },
-    { passive: true },
-  );
-  new ResizeObserver(() => {
-    if (!cerceve) cerceve = requestAnimationFrame(guncelle);
-  }).observe(kaydirma);
-  azalt.addEventListener('change', guncelle);
-
-  // "Konular": ilk konunun başlığı üstteki markanın hemen altına gelecek kadar kaydırır.
-  cagri.addEventListener('click', () => {
-    const ilk = kutuphane.querySelector<HTMLElement>('.konu');
-    if (!ilk) return;
-    const kutu = kaydirma.getBoundingClientRect();
-    const pay = markaDar.getBoundingClientRect().bottom - kutu.top + 16;
-    const hedef = kaydirma.scrollTop + ilk.getBoundingClientRect().top - kutu.top - pay;
-    kaydirma.scrollTo({ top: Math.max(0, hedef), behavior: azalt.matches ? 'auto' : 'smooth' });
-    kutuphane.querySelector<HTMLElement>('.kutuphane__baslik')?.focus({ preventScroll: true });
-  });
-
-  guncelle();
-
-  return {
-    basaDon() {
-      kaydirma.scrollTo({ top: 0, behavior: azalt.matches ? 'auto' : 'smooth' });
-    },
-  };
+  // (kalkanlar kaydırma alanının iç boşluğuna göre değil kenarına göre dursun diye iç boşluk ayrı kaptadır)
+  const ic = document.createElement('div');
+  ic.className = 'kenz__ic';
+  ic.append(bas, kutuphaneCiz(), son);
+  kaydirma.append(kalkan('ust'), ic, kalkan('alt'));
 }

@@ -6,7 +6,7 @@ import { kenzBaslat } from './kenz/kenz';
 import { acikSayfa } from './oku/alt-sayfa';
 import { akisBaslat } from './oku/akis';
 import { sagaKaydirCik } from './oku/kaydir-cik';
-import { paylasimdanVideo, rotaCoz, type Rota, type Sekme } from './rota';
+import { paylasimdanVideo, rotaCoz, rotaHash, type Rota, type Sekme } from './rota';
 
 const app = document.getElementById('app')!;
 const tabbar = document.querySelector<HTMLElement>('.tabbar')!;
@@ -17,8 +17,30 @@ const okuGorunumu = document.getElementById('view-oku')!;
 let aktif: Sekme | null = null;
 /** Oku'ya uygulamanın içinden (başka sekmeden) gelindi: çıkınca geçmişte bir adım geri gidilir. */
 let okuyaIcerdenGelindi = false;
-/** Oku'dan çıkınca dönülecek sekme */
-let okuOncesi: Exclude<Sekme, 'oku'> = 'kenz';
+/** Oku'dan çıkınca dönülecek ekran */
+let okuOncesi: Exclude<Sekme, 'oku'> = 'ana';
+/** Açık sekmeye (Kenz, Güneş) ana ekrandan gelindi: ana ekrana dönmek geçmişte bir adım geri gitmektir. */
+let anadanGelindi = false;
+
+/** Geçmiş kaydında saklanan: kaydın sırası ve bu ekrana uygulamanın içinden hangi ekrandan gelindi. Sayfa yeniden
+ *  yüklense de (uygulama güncellenince, Android sekmeyi bellekten atınca) kalır; çıkışlar yine doğru ekrana döner. */
+interface GecmisDurumu {
+  sira?: number;
+  onceki?: Exclude<Sekme, 'oku'>;
+}
+/** Görünen kaydın sırası: bir sonraki kayda (yeni kayıt ya da tarayıcının İleri tuşu) gelindiğini anlamak için */
+let aktifSira = 0;
+const gecmisDurumu = (): GecmisDurumu => (history.state && typeof history.state === 'object' ? history.state : {});
+
+/** Adresi geçmişe kayıt eklemeden ve geçmiş kaydındaki bilgiyi koruyarak değiştirir (yeni ekran eskisinin yerine
+ *  geçer: nereden gelindiği değişmez) */
+function yerineGec(hash: string): void {
+  history.replaceState(history.state, '', hash);
+  show(rotaCoz(location.hash), true, true);
+}
+/** Tarayıcının üst çubuğu ekranın rengini alsın */
+const TEMA: Record<Sekme, string> = { ana: '#5AA2EC', kenz: '#0C1A40', gunes: '#141A46', oku: '#000000' };
+const temaRengi = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
 /** Oku açılırken odaktaki öğe (ör. dokunulan Kenz kartı): çıkınca odak ona döner */
 let okuOncesiOdak: HTMLElement | null = null;
 const azaltilmisHareket = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -27,10 +49,21 @@ const azaltilmisHareket = window.matchMedia('(prefers-reduced-motion: reduce)');
 function okudanCik(): void {
   if (aktif !== 'oku') return;
   if (okuyaIcerdenGelindi) history.back();
-  else location.replace(`#/${okuOncesi}`);
+  else yerineGec(rotaHash({ sekme: okuOncesi }));
 }
 
-const kenz = kenzBaslat(document.getElementById('view-kenz')!);
+/** Kenz ve Güneş'ten ana ekrana (açık sekmeye yeniden dokununca ya da geri tuşuyla) */
+function anaEkranaDon(): void {
+  if (anadanGelindi) history.back();
+  else yerineGec('#/');
+}
+
+kenzBaslat(document.getElementById('view-kenz')!);
+
+// Klavyeyle gezilirken (Tab, oklar …) videonun odak çerçevesi görünür; dokunuş ya da fareyle kalkar.
+const KLAVYE_TUSLARI = new Set(['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Enter']);
+document.addEventListener('keydown', (e) => KLAVYE_TUSLARI.has(e.key) && (document.documentElement.dataset.klavye = ''), true);
+document.addEventListener('pointerdown', () => delete document.documentElement.dataset.klavye, true);
 
 // Akışta video değişince adres de değişir (#/oku/<id>); geçmişe yeni kayıt eklenmez.
 const akis = akisBaslat(okuGorunumu, {
@@ -52,26 +85,39 @@ const kaydir = sagaKaydirCik(okuGorunumu, {
   basladi: () => akis.ipucuGizle(),
 });
 
-function show(r: Rota, icerden = false): void {
+function show(r: Rota, icerden = false, yerine = false): void {
   const sekme = r.sekme;
   const okudanDonus = aktif === 'oku' && sekme !== 'oku';
+  // Bir sonraki kayda gelindiyse (yeni kayıt: dokunuş ya da adres çubuğu; ya da İleri tuşu) bırakılan ekran, nereden
+  // gelindiği olarak kayda yazılır. Geri gidilen, birkaç adım atlanan ya da yeniden yüklenen kayıtta önceden yazılmış
+  // olan okunur. Her kayıt ilk görüldüğünde sırasını alır.
+  const durum = gecmisDurumu();
+  const sira = durum.sira ?? (aktif === null ? 0 : aktifSira + 1);
+  let { onceki } = durum;
+  const sonraki = icerden && !yerine && aktif !== null && sira === aktifSira + 1;
+  if (sonraki) onceki = aktif && aktif !== 'oku' && aktif !== sekme && sekme !== 'ana' ? aktif : undefined;
+  if (durum.sira !== sira || durum.onceki !== onceki) history.replaceState({ ...durum, sira, onceki }, '');
+  aktifSira = sira;
   if (sekme === 'oku' && aktif !== 'oku') {
-    okuyaIcerdenGelindi = icerden && aktif !== null;
-    if (aktif) okuOncesi = aktif;
+    okuyaIcerdenGelindi = onceki !== undefined;
+    okuOncesi = onceki ?? aktif ?? 'ana';
     const odak = document.activeElement;
     okuOncesiOdak = odak instanceof HTMLElement && odak !== document.body ? odak : null;
-    if (okuyaIcerdenGelindi && !azaltilmisHareket.matches) app.dataset.gecis = 'oku-gir';
+    if (okuyaIcerdenGelindi && aktif !== null && !azaltilmisHareket.matches) app.dataset.gecis = 'oku-gir';
   }
   if (okudanDonus) akis.ayril();
+  if (sekme === 'kenz' || sekme === 'gunes') anadanGelindi = onceki === 'ana';
   aktif = sekme;
   app.dataset.sekme = sekme;
-  // Arka plan, görünen ekrana göre: Oku'dayken (sağa kaydırınca altından görünecek) dönülecek sekmeninki.
-  app.dataset.zemin = sekme === 'oku' ? okuOncesi : sekme;
-  tabbar.dataset.active = sekme;
-  // Oku tam ekrandır: gizli alt menü ne odak alır ne de ekran okuyucuya görünür.
+  // Görünen ekran: Oku'dayken (sağa kaydırınca altından görünecek olan) dönülecek ekran. Arka plan ve alt menünün
+  // seçili sekmesi ona göredir; ana ekranda hiçbir sekme seçili değildir.
+  const gorunen = sekme === 'oku' ? okuOncesi : sekme;
+  app.dataset.zemin = gorunen;
+  temaRengi?.setAttribute('content', TEMA[sekme]);
+  // Oku tam ekrandır: örtülen alt menü ne odak alır ne de ekran okuyucuya görünür.
   tabbar.inert = sekme === 'oku';
   for (const link of links) {
-    if (link.dataset.tab === sekme) link.setAttribute('aria-current', 'page');
+    if (link.dataset.tab === gorunen) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   }
   for (const view of views) view.hidden = view.dataset.view !== sekme;
@@ -94,10 +140,20 @@ function odagiGeriVer(sekme: Sekme): void {
 window.addEventListener('hashchange', () => show(rotaCoz(location.hash), true));
 for (const link of links) {
   link.addEventListener('click', (e) => {
-    // Açık sekmeye yeniden dokunmak geçmişe kayıt eklemesin; Kenz'de en başa döner.
-    if (link.dataset.tab !== aktif) return;
-    e.preventDefault();
-    if (aktif === 'kenz') kenz.basaDon();
+    // Ctrl/Cmd/Shift ile tıklama tarayıcıya kalır (yeni sekmede açar)
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    const hedef = link.dataset.tab as Sekme;
+    // Açık sekmeye yeniden dokunmak ana ekrana döndürür.
+    if (hedef === aktif) {
+      e.preventDefault();
+      anaEkranaDon();
+      return;
+    }
+    // Kenz ile Güneş arasında geçiş geçmişe kayıt eklemez: geri tuşu hep ana ekrana döner.
+    if ((aktif === 'kenz' || aktif === 'gunes') && hedef !== 'oku') {
+      e.preventDefault();
+      yerineGec(link.getAttribute('href')!);
+    }
   });
 }
 show(rotaCoz(location.hash));
@@ -107,7 +163,7 @@ function baglantiylaAc(adres: string | undefined): void {
   const id = adres ? paylasimdanVideo(adres) : undefined;
   if (!id) return;
   // Oku zaten açıksa geçmişe yeni kayıt eklenmez; yoksa çıkış önceki videoya döner, Oku kapanmazdı.
-  if (aktif === 'oku') location.replace(`#/oku/${id}`);
+  if (aktif === 'oku') yerineGec(`#/oku/${id}`);
   else location.hash = `#/oku/${id}`;
 }
 
@@ -117,12 +173,12 @@ async function setupNative(): Promise<void> {
     import('@capacitor/splash-screen'),
     import('@capacitor/app'),
   ]);
-  // Android geri tuşu: önce açık sayfayı kapatır, Oku'dan çıkar, sonra geri gider; en başta uygulamadan çıkar.
-  await App.addListener('backButton', ({ canGoBack }) => {
+  // Android geri tuşu: önce açık sayfayı kapatır, Oku'dan çıkar, sekmeden ana ekrana döner; ana ekranda uygulamadan çıkar.
+  await App.addListener('backButton', () => {
     const sayfa = acikSayfa();
     if (sayfa) sayfa.kapat();
     else if (aktif === 'oku') okudanCik();
-    else if (canGoBack) history.back();
+    else if (aktif !== 'ana') anaEkranaDon();
     else void App.exitApp();
   }).catch(() => undefined);
   await App.addListener('appUrlOpen', ({ url }) => baglantiylaAc(url)).catch(() => undefined);

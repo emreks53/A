@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { menbaYazisi, paylasimAdresi, sureYazisi, tipografik } from '../src/oku/ortak';
+import { etiketYazisi, menbaYazisi, paylasimAdresi, sureYazisi, tipografik } from '../src/oku/ortak';
 import { akisOku, mp4Suresi, paylasimSayfasi } from './oku-videolar';
 
 const kok = resolve(__dirname, '..');
@@ -46,18 +46,18 @@ function gecici(json: unknown, dosyalar: string[] = []): { json: string; pub: st
   return { json: join(d, 'videolar.json'), pub };
 }
 
-const KONULAR = [{ id: 'k', baslik: 'Konu' }];
 const ornek = (ek: Record<string, unknown> = {}) => ({
   id: 'bir',
-  baslik: 'Bir',
-  konu: 'k',
+  baslik: "On Dokuzuncu Söz'den",
+  kitap: 'Sözler',
+  bolum: 'On Dokuzuncu Söz',
+  etiketler: ['nübüvvet', 'muhabbet', 'tefekkür'],
   video: 'v/bir.mp4',
   kapak: 'v/bir.jpg',
   onizleme: 'v/bir-o.jpg',
-  menba: [{ eser: 'Sözler', yer: '19. Söz' }],
   ...ek,
 });
-const liste = (videolar: unknown[], ek: Record<string, unknown> = {}) => ({ site: 'https://ornek.com/', konular: KONULAR, videolar, ...ek });
+const liste = (videolar: unknown[], ek: Record<string, unknown> = {}) => ({ site: 'https://ornek.com/', videolar, ...ek });
 const DOSYALAR = ['v/bir.mp4', 'v/bir.jpg', 'v/bir-o.jpg'];
 
 describe('mp4Suresi', () => {
@@ -68,11 +68,13 @@ describe('mp4Suresi', () => {
     expect(mp4Suresi(yaz('b.mp4', kucukMp4(126, 1)))).toBe(126);
     expect(mp4Suresi(yaz('c.mp4', kucukMp4(9, 0, true)))).toBe(9);
     expect(mp4Suresi(yaz('d.mp4', Buffer.from('mp4 değil')))).toBeNull();
+    // süresi yazılmamış (parçalı, empty_moov) MP4: kartta 0:00 görünmesin, derleme dursun
+    expect(mp4Suresi(yaz('e.mp4', kucukMp4(0)))).toBeNull();
   });
 
   it('gerçek videoların süresi', () => {
-    expect(Math.round(mp4Suresi(join(kok, 'public/videolar/sevgi-ve-guzellik.mp4'))!)).toBe(134);
-    expect(Math.round(mp4Suresi(join(kok, 'public/videolar/ahlak-mucizesi.mp4'))!)).toBe(126);
+    expect(Math.round(mp4Suresi(join(kok, 'public/videolar/fenler-haliki-tanittirir.mp4'))!)).toBe(125);
+    expect(Math.round(mp4Suresi(join(kok, 'public/videolar/ihlas.mp4'))!)).toBe(119);
   });
 });
 
@@ -80,17 +82,15 @@ describe('akisOku', () => {
   it('gerçek video listesini okur', () => {
     const akis = akisOku(join(kok, 'content/oku/videolar.json'), join(kok, 'public'));
     expect(akis.site).toBe('https://emreks53.github.io/A/');
-    expect(akis.konular.map((k) => k.baslik)).toEqual(['Muhabbet', 'Nübüvvet']);
-    expect(akis.videolar.map((v) => [v.id, v.baslik, v.konu, sureYazisi(v.sure), menbaYazisi(v.menba)])).toEqual([
-      ['sevgi-ve-guzellik', 'Sevgi ve Güzellik', 'muhabbet', '2:14', "Lem'alar, 64. sayfa"],
-      ['ahlak-mucizesi', "Ahlâk Mu'cizesi", 'nubuvvet', '2:06', 'Mektubat, 195. sayfa · Sözler, 19. Söz'],
+    expect(akis.videolar.map((v) => [v.id, v.baslik, v.kitap, v.bolum, sureYazisi(v.sure), menbaYazisi(v), etiketYazisi(v.etiketler)])).toEqual([
+      ['fenler-haliki-tanittirir', "On Birinci Şuâ'dan", 'Şuâlar', 'On Birinci Şuâ', '2:05', 'Şuâlar, On Birinci Şuâ, Altıncı Mesele, 203. sayfa', '#fenler #marifetullah #tefekkür'],
+      ['ihlas', "On Yedinci Lem'a'dan", "Lem'alar", "On Yedinci Lem'a", '1:59', "Lem'alar, On Yedinci Lem'a, 154. sayfa", '#ihlas #muhabbet #kurtuluş'],
     ]);
-    expect(akis.videolar[0].kunye?.some((k) => k.includes('CC BY 4.0'))).toBe(true);
   });
 
   it('geçerli bir listeyi kabul eder; süreyi dosyadan okur', () => {
-    const { json, pub } = gecici(liste([ornek()]), DOSYALAR);
-    expect(akisOku(json, pub)).toEqual({ site: 'https://ornek.com/', konular: KONULAR, videolar: [{ ...ornek(), sure: 75 }] });
+    const { json, pub } = gecici(liste([ornek({ kisim: 'Birinci Makam', sayfa: 201 })]), DOSYALAR);
+    expect(akisOku(json, pub)).toEqual({ site: 'https://ornek.com/', videolar: [{ ...ornek(), kisim: 'Birinci Makam', sayfa: 201, sure: 75 }] });
   });
 
   it('hatalı listede anlaşılır hata verir', () => {
@@ -102,18 +102,26 @@ describe('akisOku', () => {
     expect(dene(liste([ornek()], { site: 'http://ornek.com/' }))).toThrow(/"site"/);
     expect(dene(liste([ornek()], { site: 'https://ornek.com' }))).toThrow(/"site"/);
     expect(dene(liste([]))).toThrow(/"videolar"/);
-    expect(dene(liste([ornek()], { konular: [] }))).toThrow(/"konular"/);
-    expect(dene(liste([ornek()], { konular: [{ id: 'k', baslik: 'A' }, { id: 'k', baslik: 'B' }] }))).toThrow(/iki kez tanımlanmış/);
-    expect(dene(liste([ornek()], { konular: [{ id: 'k' }] }))).toThrow(/konular\[0\]\.baslik/);
-    expect(dene(liste([ornek({ konu: 'yok' })]))).toThrow(/\.konu/);
     expect(dene(liste([ornek({ id: 'Büyük Harf' })]))).toThrow(/\.id/);
     expect(dene(liste([ornek(), ornek()]))).toThrow(/iki kez kullanılmış/);
+    expect(dene(liste([ornek({ baslik: ' ' })]))).toThrow(/\.baslik/);
+    expect(dene(liste([ornek({ kitap: 'Bilinmeyen Kitap' })]))).toThrow(/\.kitap Risale-i Nur Külliyatı/);
+    expect(dene(liste([ornek({ bolum: undefined })]))).toThrow(/\.bolum/);
+    expect(dene(liste([ornek({ kisim: 3 })]))).toThrow(/\.kisim/);
+    expect(dene(liste([ornek({ sayfa: 0 })]))).toThrow(/\.sayfa/);
+    expect(dene(liste([ornek({ sayfa: '12' })]))).toThrow(/\.sayfa/);
+    expect(dene(liste([ornek({ etiketler: ['a', 'b'] })]))).toThrow(/tam üç etiket/);
+    expect(dene(liste([ornek({ etiketler: ['#ihlas', 'b', 'c'] })]))).toThrow(/"#" olmadan/);
+    expect(dene(liste([ornek({ etiketler: ['İhlas', 'b', 'c'] })]))).toThrow(/küçük harfle/);
+    expect(dene(liste([ornek({ etiketler: ['iki kelime', 'b', 'c'] })]))).toThrow(/boşluksuz/);
+    expect(dene(liste([ornek({ etiketler: ['a', 'a', 'c'] })]))).toThrow(/farklı olmalı/);
     expect(dene(liste([ornek()]), ['v/bir.mp4', 'v/bir.jpg'])).toThrow(/public\/v\/bir-o\.jpg bulunamadı/);
     expect(dene(liste([ornek({ video: '../dis.mp4' })]))).toThrow(/\.video/);
     expect(dene(liste([ornek({ video: 'v/bir.jpg' })]))).toThrow(/geçerli bir MP4 değil/);
-    expect(dene(liste([ornek({ menba: [] })]))).toThrow(/menba/);
-    expect(dene(liste([ornek({ menba: [{ yer: '1' }] })]))).toThrow(/eser/);
     expect(dene(liste([ornek({ kunye: [1] })]))).toThrow(/kunye/);
+    // paylaşım sayfasındaki adreslerde ve çevrimdışı önbellekte sorun çıkaracak dosya adları
+    expect(dene(liste([ornek({ onizleme: 'v/bir önizleme.jpg' })]))).toThrow(/yalnız küçük harf/);
+    expect(dene(liste([ornek({ kapak: 'v/Bir.jpg' })]))).toThrow(/yalnız küçük harf/);
   });
 });
 
@@ -122,6 +130,14 @@ describe('sureYazisi', () => {
     expect(sureYazisi(134)).toBe('2:14');
     expect(sureYazisi(125.7)).toBe('2:06');
     expect(sureYazisi(9)).toBe('0:09');
+  });
+});
+
+describe('etiketYazisi / menbaYazisi', () => {
+  it('etiketleri ve kaynağı yazar', () => {
+    expect(etiketYazisi(['ihlas', 'muhabbet', 'kurtuluş'])).toBe('#ihlas #muhabbet #kurtuluş');
+    expect(menbaYazisi({ kitap: 'Sözler', bolum: 'On Dokuzuncu Söz' })).toBe('Sözler, On Dokuzuncu Söz');
+    expect(menbaYazisi({ kitap: 'Şuâlar', bolum: 'On Birinci Şuâ', kisim: 'Altıncı Mesele', sayfa: 203 })).toBe('Şuâlar, On Birinci Şuâ, Altıncı Mesele, 203. sayfa');
   });
 });
 
@@ -134,7 +150,7 @@ describe('tipografik', () => {
 });
 
 describe('paylaşım sayfası', () => {
-  const v = { ...ornek({ baslik: 'Ahlâk "Mu\'cizesi" <b>' }), id: 'ahlak', sure: 126 } as Parameters<typeof paylasimSayfasi>[1];
+  const v = { ...ornek({ baslik: 'Ahlâk "Mu\'cizesi" <b>', sayfa: 230 }), id: 'ahlak', sure: 126 } as Parameters<typeof paylasimSayfasi>[1];
   const html = paylasimSayfasi('https://ornek.com/A/', v);
 
   it('önizleme etiketleri tam adreslerle', () => {
@@ -142,11 +158,11 @@ describe('paylaşım sayfası', () => {
     expect(html).toContain('<link rel="canonical" href="https://ornek.com/A/v/ahlak/" />');
     expect(html).toContain('<meta property="og:image" content="https://ornek.com/A/v/bir-o.jpg" />');
     expect(html).toContain('<meta property="og:video" content="https://ornek.com/A/v/bir.mp4" />');
-    expect(html).toContain('Menba: Sözler, 19. Söz');
+    expect(html).toContain('Menba: Sözler, On Dokuzuncu Söz, 230. sayfa · #nübüvvet #muhabbet #tefekkür');
   });
 
   it('başlıktaki özel karakterler kaçırılır', () => {
-    expect(html).toContain('<title>Ahlâk &quot;Mu&#39;cizesi&quot; &lt;b&gt; · Nur-u Hakikat</title>');
+    expect(html).toContain('<title>Ahlâk &quot;Mu’cizesi&quot; &lt;b&gt; · Nur-u Hakikat</title>');
     expect(html).not.toContain('<b>');
   });
 

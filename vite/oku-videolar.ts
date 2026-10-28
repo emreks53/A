@@ -5,9 +5,9 @@
 import { closeSync, existsSync, openSync, readFileSync, readSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Plugin, ViteDevServer } from 'vite';
-import { menbaYazisi, paylasimAdresi, type Konu, type Menba, type Video } from '../src/oku/ortak.ts';
+import { etiketYazisi, KULLIYAT, menbaYazisi, paylasimAdresi, tipografik, type Video } from '../src/oku/ortak.ts';
 
-export type { Konu, Menba, Video };
+export type { Video };
 
 const SANAL = 'virtual:oku-videolar';
 const COZULMUS = '\0' + SANAL;
@@ -16,8 +16,6 @@ const KIMLIK = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export interface Akis {
   /** Sitenin kök adresi, "/" ile biter; paylaşım bağlantıları buna göre kurulur */
   site: string;
-  /** Kenz'deki bölümler, sırasıyla */
-  konular: Konu[];
   videolar: Video[];
 }
 
@@ -67,7 +65,9 @@ export function mp4Suresi(yol: string): number | null {
     const surum = b.readUInt8(0);
     const olcek = surum === 1 ? b.readUInt32BE(20) : b.readUInt32BE(12);
     const sure = surum === 1 ? Number(b.readBigUInt64BE(24)) : b.readUInt32BE(16);
-    return olcek > 0 ? sure / olcek : null;
+    // Süresi yazılmamış (parçalı, ör. empty_moov) MP4'te süre 0 ya da "bilinmiyor"dur: geçerli sayılmaz.
+    const bilinmiyor = sure === 0 || (surum === 0 && sure === 0xffffffff);
+    return olcek > 0 && !bilinmiyor ? sure / olcek : null;
   } finally {
     closeSync(fd);
   }
@@ -80,60 +80,55 @@ export function akisOku(jsonYolu: string, publicDizini: string): Akis {
   } catch (e) {
     hata(jsonYolu, `okunamadı ya da geçerli JSON değil (${(e as Error).message})`);
   }
-  const a = ham as { site?: unknown; konular?: unknown; videolar?: unknown };
+  const a = ham as { site?: unknown; videolar?: unknown };
   if (!metin(a.site) || !/^https:\/\/[^\s]+\/$/.test(a.site)) hata(jsonYolu, '"site" https:// ile başlayıp "/" ile biten bir adres olmalı');
-  if (!Array.isArray(a.konular) || !a.konular.length) hata(jsonYolu, '"konular" boş olmayan bir liste olmalı');
   if (!Array.isArray(a.videolar) || !a.videolar.length) hata(jsonYolu, '"videolar" boş olmayan bir liste olmalı');
-
-  const konuKimlikleri = new Set<string>();
-  const konular = a.konular.map((x, i): Konu => {
-    const k = x as Record<string, unknown>;
-    const yer = `konular[${i}]`;
-    if (!metin(k.id) || !KIMLIK.test(k.id)) hata(jsonYolu, `${yer}.id küçük harf, rakam ve tireden oluşmalı (ör. "muhabbet")`);
-    if (konuKimlikleri.has(k.id)) hata(jsonYolu, `"${k.id}" konusu iki kez tanımlanmış`);
-    konuKimlikleri.add(k.id);
-    if (!metin(k.baslik)) hata(jsonYolu, `${yer}.baslik gerekli`);
-    if (k.aciklama !== undefined && !metin(k.aciklama)) hata(jsonYolu, `${yer}.aciklama metin olmalı`);
-    return { id: k.id, baslik: k.baslik.trim(), ...(metin(k.aciklama) ? { aciklama: k.aciklama.trim() } : {}) };
-  });
+  const kitaplar: readonly string[] = KULLIYAT;
 
   const kimlikler = new Set<string>();
   const videolar = a.videolar.map((x, i): Video => {
     const v = x as Record<string, unknown>;
     const yer = `videolar[${i}]`;
-    if (!metin(v.id) || !KIMLIK.test(v.id)) hata(jsonYolu, `${yer}.id küçük harf, rakam ve tireden oluşmalı (ör. "sevgi-ve-guzellik")`);
+    if (!metin(v.id) || !KIMLIK.test(v.id)) hata(jsonYolu, `${yer}.id küçük harf, rakam ve tireden oluşmalı (ör. "ihlas")`);
     if (kimlikler.has(v.id)) hata(jsonYolu, `"${v.id}" kimliği iki kez kullanılmış`);
     kimlikler.add(v.id);
-    if (!metin(v.baslik)) hata(jsonYolu, `${yer}.baslik gerekli`);
-    if (!metin(v.konu) || !konuKimlikleri.has(v.konu)) hata(jsonYolu, `${yer}.konu "konular" listesindeki bir kimlik olmalı`);
+    if (!metin(v.baslik)) hata(jsonYolu, `${yer}.baslik gerekli (geçtiği yer, ör. "On Yedinci Lem'a'dan")`);
+    if (!metin(v.kitap) || !kitaplar.includes(v.kitap)) hata(jsonYolu, `${yer}.kitap Risale-i Nur Külliyatı'ndan biri olmalı: ${KULLIYAT.join(', ')}`);
+    if (!metin(v.bolum)) hata(jsonYolu, `${yer}.bolum gerekli (kitaptaki bölüm, ör. "On Yedinci Lem'a")`);
+    if (v.kisim !== undefined && !metin(v.kisim)) hata(jsonYolu, `${yer}.kisim metin olmalı (ör. "Altıncı Mesele")`);
+    if (v.sayfa !== undefined && !(Number.isInteger(v.sayfa) && (v.sayfa as number) > 0)) hata(jsonYolu, `${yer}.sayfa pozitif bir tam sayı olmalı`);
+    const et = v.etiketler;
+    if (!Array.isArray(et) || et.length !== 3) hata(jsonYolu, `${yer}.etiketler tam üç etiket olmalı (ör. ["ihlas", "muhabbet", "kurtuluş"])`);
+    for (const e of et) {
+      if (!metin(e) || /[#\s]/.test(e) || e !== e.toLocaleLowerCase('tr')) hata(jsonYolu, `${yer}.etiketler: "${String(e)}" küçük harfle, boşluksuz ve "#" olmadan yazılmalı`);
+    }
+    if (new Set(et).size !== 3) hata(jsonYolu, `${yer}.etiketler birbirinden farklı olmalı`);
     for (const alan of ['video', 'kapak', 'onizleme'] as const) {
       const yol = v[alan];
       if (!metin(yol) || yol.startsWith('/') || yol.includes('..')) hata(jsonYolu, `${yer}.${alan} public/ altına göre bir yol olmalı`);
+      // (paylaşım sayfasındaki adreslerde ve çevrimdışı önbellekte sorun çıkmasın: yalnız güvenli karakterler)
+      if (!/^[a-z0-9][a-z0-9._/-]*$/.test(yol)) hata(jsonYolu, `${yer}.${alan}: "${yol}" yalnız küçük harf, rakam, "-", "_", "." ve "/" içermeli`);
       if (!existsSync(resolve(publicDizini, yol))) hata(jsonYolu, `${yer}.${alan}: public/${yol} bulunamadı`);
     }
-    if (!Array.isArray(v.menba) || !v.menba.length) hata(jsonYolu, `${yer}.menba en az bir kaynak içermeli`);
-    const menba = v.menba.map((m, j): Menba => {
-      const k = m as Record<string, unknown>;
-      if (!metin(k.eser)) hata(jsonYolu, `${yer}.menba[${j}].eser gerekli`);
-      if (k.yer !== undefined && !metin(k.yer)) hata(jsonYolu, `${yer}.menba[${j}].yer metin olmalı`);
-      return { eser: k.eser.trim(), ...(metin(k.yer) ? { yer: k.yer.trim() } : {}) };
-    });
     if (v.kunye !== undefined && (!Array.isArray(v.kunye) || !v.kunye.every(metin))) hata(jsonYolu, `${yer}.kunye metinlerden oluşan bir liste olmalı`);
     const sure = mp4Suresi(resolve(publicDizini, v.video as string));
-    if (sure === null) hata(jsonYolu, `${yer}.video: public/${v.video} geçerli bir MP4 değil (süre okunamadı)`);
+    if (sure === null) hata(jsonYolu, `${yer}.video: public/${v.video} geçerli bir MP4 değil ya da süresi yazılmamış (ffmpeg -movflags +faststart ile yeniden yazın)`);
     return {
       id: v.id,
       baslik: v.baslik.trim(),
-      konu: v.konu,
+      kitap: v.kitap,
+      bolum: v.bolum.trim(),
+      ...(metin(v.kisim) ? { kisim: v.kisim.trim() } : {}),
+      ...(v.sayfa !== undefined ? { sayfa: v.sayfa as number } : {}),
+      etiketler: et as string[],
       sure: Math.round(sure * 10) / 10,
       video: v.video as string,
       kapak: v.kapak as string,
       onizleme: v.onizleme as string,
-      menba,
       ...(Array.isArray(v.kunye) && v.kunye.length ? { kunye: v.kunye as string[] } : {}),
     };
   });
-  return { site: a.site, konular, videolar };
+  return { site: a.site, videolar };
 }
 
 function kacir(s: string): string {
@@ -144,14 +139,15 @@ function kacir(s: string): string {
 export function paylasimSayfasi(site: string, v: Video): string {
   const adres = paylasimAdresi(site, v.id);
   const hedef = `../../#/oku/${v.id}`;
-  const aciklama = `Nur-u Hakikat'te izleyin. Menba: ${menbaYazisi(v.menba)}`;
+  const aciklama = tipografik(`Nur-u Hakikat'te izleyin. Menba: ${menbaYazisi(v)} · ${etiketYazisi(v.etiketler)}`);
+  const baslik = tipografik(v.baslik);
   const m = (ozellik: string, deger: string) => `    <meta property="${ozellik}" content="${kacir(deger)}" />`;
   return `<!doctype html>
 <html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${kacir(v.baslik)} · Nur-u Hakikat</title>
+    <title>${kacir(baslik)} · Nur-u Hakikat</title>
     <meta name="description" content="${kacir(aciklama)}" />
     <meta name="theme-color" content="#5AA2EC" />
     <link rel="canonical" href="${kacir(adres)}" />
@@ -160,13 +156,13 @@ ${[
   m('og:type', 'video.other'),
   m('og:site_name', 'Nur-u Hakikat'),
   m('og:locale', 'tr_TR'),
-  m('og:title', v.baslik),
+  m('og:title', baslik),
   m('og:description', aciklama),
   m('og:url', adres),
   m('og:image', site + v.onizleme),
   m('og:image:width', '720'),
   m('og:image:height', '1280'),
-  m('og:image:alt', v.baslik),
+  m('og:image:alt', baslik),
   m('og:video', site + v.video),
   m('og:video:secure_url', site + v.video),
   m('og:video:type', 'video/mp4'),
@@ -174,13 +170,13 @@ ${[
   m('og:video:height', '1280'),
 ].join('\n')}
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${kacir(v.baslik)}" />
+    <meta name="twitter:title" content="${kacir(baslik)}" />
     <meta name="twitter:image" content="${kacir(site + v.onizleme)}" />
     <meta http-equiv="refresh" content="0; url=${kacir(hedef)}" />
     <script>location.replace(${JSON.stringify(hedef)});</script>
   </head>
   <body>
-    <p><a href="${kacir(hedef)}">${kacir(v.baslik)} videosunu Nur-u Hakikat'te izleyin</a></p>
+    <p><a href="${kacir(hedef)}">${kacir(baslik)}: Nur-u Hakikat’te izleyin</a></p>
   </body>
 </html>
 `;
@@ -205,7 +201,6 @@ export function okuVideolar(dosya = 'content/oku/videolar.json'): Plugin {
       const akis = akisOku(yol(), publicDizini);
       return [
         `export const site = ${JSON.stringify(akis.site)};`,
-        `export const konular = ${JSON.stringify(akis.konular)};`,
         `export const videolar = ${JSON.stringify(akis.videolar)};`,
         '',
       ].join('\n');

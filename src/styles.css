@@ -1,7 +1,7 @@
 /*
- * Kenz — ana ekran tasarımı (design/mockup-ana-ekran.png) birebir uyacak şekilde ölçülmüştür.
- * Tüm ölçüler 390 x 841.2 CSS piksellik referans ekrana göredir ve --u ile ölçeklenir:
- * referans ekranda --u = 1px. Ölçüm ayrıntıları: design/OLCULER.md
+ * Ana ekran (design/mockup-ana-ekran.png tasarımına göre ölçülmüştür) ve alt menü.
+ * Ölçüler 390 px genişliğe göredir ve --u ile ölçeklenir (390 x 844'lük telefonda --u = 1px).
+ * Ölçüm ayrıntıları: design/OLCULER.md
  */
 
 @font-face {
@@ -103,8 +103,9 @@
   --serif: 'Tinos', 'Times New Roman', Times, serif;
   --sans: 'Encode Sans', 'Segoe UI', 'Open Sans', Roboto, sans-serif;
 
-  /* 1 referans pikselin bu ekrandaki karşılığı */
-  --u: min(calc(100vw / 390), calc(100vh / 841.2));
+  /* 1 referans pikselin bu ekrandaki karşılığı. Dikeyde boy 640 px'e göre sınırlanır: telefon tarayıcısında adres
+     ve araç çubukları ekranı kısalttığında menü ve söz küçülmez (390 x 844'lük telefonda yine 1 px). */
+  --u: min(calc(100vw / 390), calc(100vh / 640));
   --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
   /* alt menünün ekranın altına uzaklığı: güvenli alanın 6 px üstü, en az tasarımdaki 18.95 px */
@@ -112,28 +113,24 @@
   /* alt menünün üst kenarı (ekranın altından) */
   --menu-ust: calc(var(--menu-alt) + 81.3 * var(--u));
 
-  /* sekme merkezlerinin çubuk merkezine göre yatay konumu */
-  --tab-oku: -106;
-  --tab-kenz: 0.9;
-  --tab-gunes: 109.4;
-
   /* alıntının ince konum ayarı (referans px) */
   --quote-dx: 1.2;
   --quote-dy: -2.28;
 }
 @supports (height: 100dvh) {
   :root {
-    --u: min(calc(100vw / 390), calc(100dvh / 841.2));
+    --u: min(calc(100vw / 390), calc(100dvh / 640));
   }
 }
 /* Yatay / geniş ekranlarda (tablet, masaüstü, yatay telefon) kompozisyon biraz daha büyük ölçeklenir. */
-@media (min-aspect-ratio: 3/5) {
+/* (yatay telefonda menü ve yazıları okunamayacak kadar küçülmesin: en az 0,82) */
+@media (min-aspect-ratio: 4/5) {
   :root {
-    --u: min(calc(100vw / 390), calc(100vh / 700));
+    --u: max(0.82px, min(calc(100vw / 390), calc(100vh / 700)));
   }
   @supports (height: 100dvh) {
     :root {
-      --u: min(calc(100vw / 390), calc(100dvh / 700));
+      --u: max(0.82px, min(calc(100vw / 390), calc(100dvh / 700)));
     }
   }
 }
@@ -161,7 +158,8 @@ body {
 }
 
 /* yalnız programla odaklanan başlıklar (Oku'dan dönüşte) çerçeve çizmez */
-h1[tabindex='-1']:focus {
+h1[tabindex='-1']:focus,
+h2[tabindex='-1']:focus {
   outline: none;
 }
 
@@ -248,126 +246,93 @@ h1[tabindex='-1']:focus {
   display: block;
 }
 
-/* ---------- alt menü ---------- */
+/* ---------- alt menü: yüzen krem kapsül, üç eşit sekme ---------- */
 .tabbar {
   position: absolute;
   left: 50%;
   bottom: var(--menu-alt);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   width: calc(352.2 * var(--u));
   height: calc(81.3 * var(--u));
   margin-left: calc(-176.1 * var(--u));
   border-radius: calc(25.1 * var(--u));
   background: linear-gradient(180deg, var(--bar-top), var(--bar-bottom));
   box-shadow:
-    inset 0 calc(0.6 * var(--u)) 0 rgba(255, 255, 255, 0.9),
-    0 0 calc(0.8 * var(--u)) rgba(40, 60, 20, 0.12);
+    0 0 0 0.5px rgba(2, 32, 100, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(2, 32, 100, 0.035),
+    0 1px 2px rgba(2, 24, 72, 0.08),
+    0 calc(16 * var(--u)) calc(34 * var(--u)) calc(-14 * var(--u)) rgba(2, 24, 72, 0.45);
   user-select: none;
   -webkit-user-select: none;
 }
 
-.tabbar__pill {
-  position: absolute;
-  top: calc(2.28 * var(--u));
-  left: calc(50% + (var(--pill-x, var(--tab-kenz)) - 50) * var(--u));
-  width: calc(100 * var(--u));
-  height: calc(76.7 * var(--u));
-  border-radius: calc(21.9 * var(--u));
-  background: linear-gradient(180deg, var(--pill-top) 0%, var(--pill-mid) 55%, var(--pill-bottom) 100%);
-  transition: left 0.35s cubic-bezier(0.3, 0.7, 0.2, 1);
-}
-.tabbar[data-active='oku'] {
-  --pill-x: var(--tab-oku);
-}
-.tabbar[data-active='gunes'] {
-  --pill-x: var(--tab-gunes);
-}
-
 .tab {
-  position: absolute;
-  top: 0;
+  position: relative;
+  display: block;
   height: 100%;
-  width: calc(100 * var(--u));
-  left: calc(50% + (var(--tab-x) - 50) * var(--u));
-  border-radius: calc(21.9 * var(--u));
+  border-radius: calc(19.1 * var(--u));
+  color: var(--oku);
   text-decoration: none;
   outline: none;
   -webkit-touch-callout: none;
 }
-.tab:focus-visible {
-  box-shadow: 0 0 0 calc(2 * var(--u)) rgba(2, 32, 100, 0.55);
+/* seçili sekme: kapsülle eş merkezli (6 px içte) altın tülü yüzey; ana ekranda hiçbiri seçili değildir */
+.tab::before {
+  content: '';
+  position: absolute;
+  inset: calc(6 * var(--u)) calc(6.2 * var(--u));
+  border-radius: calc(19.1 * var(--u));
+  background: linear-gradient(180deg, #fcf4e0 0%, #f8eacb 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(196, 138, 39, 0.17),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 1px 1px rgba(150, 100, 20, 0.06);
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
-.tab--oku {
-  --tab-x: var(--tab-oku);
+.tab[aria-current='page']::before {
+  opacity: 1;
 }
-.tab--kenz {
-  --tab-x: var(--tab-kenz);
-}
-.tab--gunes {
-  --tab-x: var(--tab-gunes);
+.tab:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: calc(4 * var(--u));
+  border-radius: calc(21 * var(--u));
+  box-shadow: 0 0 0 2px rgba(2, 32, 100, 0.55);
 }
 
 .tab__icon {
   position: absolute;
   left: 50%;
+  top: calc(13 * var(--u));
   display: block;
-  pointer-events: none;
-  filter: drop-shadow(0 0 calc(0.6 * var(--u)) rgba(255, 255, 255, 0.95));
-}
-.tab__icon--globe {
-  top: calc(9.04 * var(--u));
   width: calc(32 * var(--u));
   height: calc(32 * var(--u));
   margin-left: calc(-16 * var(--u));
-}
-.tab__icon--kenz {
-  filter: drop-shadow(0 0 calc(1.4 * var(--u)) rgba(255, 255, 255, 0.95));
-  top: calc(14.12 * var(--u));
-  width: calc(30.95 * var(--u));
-  height: calc(33.66 * var(--u));
-  margin-left: calc(-15.475 * var(--u));
-}
-.tab__icon--sun {
-  top: calc(10.45 * var(--u));
-  width: calc(37.4 * var(--u));
-  height: calc(37.4 * var(--u));
-  margin-left: calc((-18.7 + 0.09) * var(--u));
+  pointer-events: none;
 }
 
 .tab__label {
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(48.74 * var(--u));
-  transform: translateX(calc(var(--label-dx, 0) * var(--u)));
+  top: calc(50 * var(--u));
+  color: var(--oku);
   font-family: 'Encode Sans', 'Segoe UI', 'Open Sans', Roboto, sans-serif;
   font-weight: 700;
-  font-size: calc(15.53 * var(--u));
-  line-height: 1;
+  font-size: calc(14 * var(--u));
+  line-height: calc(16 * var(--u));
+  letter-spacing: 0.01em;
   text-align: center;
   white-space: nowrap;
-  filter: drop-shadow(0 0 calc(0.6 * var(--u)) rgba(255, 255, 255, 0.95));
-}
-.tab--oku .tab__label {
-  --label-dx: -0.68;
-  color: var(--oku);
-}
-.tab--kenz .tab__label {
-  --label-dx: 0.23;
-  color: var(--kenz);
-}
-.tab--gunes .tab__label {
-  --label-dx: -0.68;
-  color: var(--gunes-bottom);
-  background: linear-gradient(180deg, var(--gunes-top) 15%, var(--gunes-bottom) 70%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .view,
   .view[hidden],
-  .tabbar__pill {
+  .tab::before {
     transition: none;
   }
 }
