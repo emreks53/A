@@ -18,6 +18,14 @@ export const KULLIYAT = [
   'İman ve Küfür Muvâzeneleri',
 ] as const;
 
+/** Cilt renkleri: Kenz'deki kitap sırtı ve Menba rafındaki kitap aynı renktedir (Külliyat sırasıyla döner). */
+const CILTLER = ['#22336A', '#6A2330', '#1F4A3B', '#5A3720', '#1B4656', '#46295A'];
+
+export function ciltRengi(kitap: string): string {
+  const i = (KULLIYAT as readonly string[]).indexOf(kitap);
+  return CILTLER[Math.max(0, i) % CILTLER.length];
+}
+
 export interface Video {
   id: string;
   /** Geçtiği yer: ör. "On Yedinci Lem'a'dan" */
@@ -45,6 +53,11 @@ export interface Video {
 /** "Lem'alar, On Yedinci Lem'a, 154. sayfa" (kısım varsa bölümden sonra) */
 export function menbaYazisi(v: Pick<Video, 'kitap' | 'bolum' | 'kisim' | 'sayfa'>): string {
   return [v.kitap, v.bolum, v.kisim, v.sayfa ? `${v.sayfa}. sayfa` : undefined].filter(Boolean).join(', ');
+}
+
+/** Reels'in altındaki küçük yazı: "On Yedinci Lem’a", "On Birinci Şuâ · Altıncı Mesele" */
+export function reelKaynagi(v: Pick<Video, 'bolum' | 'kisim'>): string {
+  return tipografik(v.kisim ? `${v.bolum} · ${v.kisim}` : v.bolum);
 }
 
 /** ["ihlas", "muhabbet"] → "#ihlas #muhabbet" */

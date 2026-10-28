@@ -22,7 +22,7 @@ let okuOncesi: Exclude<Sekme, 'oku'> = 'ana';
 /** Açık sekmeye (Kenz, Güneş) ana ekrandan gelindi: ana ekrana dönmek geçmişte bir adım geri gitmektir. */
 let anadanGelindi = false;
 /** Tarayıcının üst çubuğu ekranın rengini alsın */
-const TEMA: Record<Sekme, string> = { ana: '#5AA2EC', kenz: '#0B1630', gunes: '#141A46', oku: '#000000' };
+const TEMA: Record<Sekme, string> = { ana: '#5AA2EC', kenz: '#0C1A40', gunes: '#141A46', oku: '#000000' };
 const temaRengi = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
 /** Oku açılırken odaktaki öğe (ör. dokunulan Kenz kartı): çıkınca odak ona döner */
 let okuOncesiOdak: HTMLElement | null = null;

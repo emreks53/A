@@ -18,23 +18,24 @@ export function menbaIcerik(v: Video): HTMLElement {
   kok.append(menbaCizimi(v.kitap));
 
   const kaynak = el('div', 'menba__kaynak');
-  kaynak.append(el('p', 'menba__kulliyat', 'Risale-i Nur Külliyatı'), el('p', 'menba__eser', tipografik(v.kitap)));
-  const yer = el('p', 'menba__yer');
-  yer.append(el('span', 'menba__bolum', tipografik(v.bolum)));
-  for (const parca of [v.kisim, v.sayfa ? `${v.sayfa}. sayfa` : undefined]) {
-    if (parca) yer.append(el('span', 'menba__ayrac', ' · '), el('span', undefined, tipografik(parca)));
+  const eser = el('p', 'menba__eser');
+  eser.append(el('span', undefined, tipografik(v.kitap)));
+  const yer = el('ul', 'menba__yer');
+  yer.setAttribute('aria-label', 'Geçtiği yer');
+  for (const [parca, sinif] of [
+    [v.bolum, undefined],
+    [v.kisim, undefined],
+    [v.sayfa ? `${v.sayfa}. sayfa` : undefined, 'menba__sayfa'],
+  ] as const) {
+    if (parca) yer.append(el('li', sinif, tipografik(parca)));
   }
-  kaynak.append(yer);
-  kok.append(kaynak);
+  kaynak.append(eser, yer);
 
-  const etiketler = el('p', 'menba__etiketler');
-  etiketler.setAttribute('aria-label', `Konular: ${v.etiketler.join(', ')}`);
-  for (const e of v.etiketler) {
-    const s = el('span', 'etiket', `#${e}`);
-    s.setAttribute('aria-hidden', 'true');
-    etiketler.append(s);
-  }
-  kok.append(etiketler);
+  const etiketler = el('ul', 'menba__etiketler');
+  etiketler.setAttribute('aria-label', 'Konular');
+  for (const e of v.etiketler) etiketler.append(el('li', 'etiket', `#${e}`));
+  kaynak.append(etiketler);
+  kok.append(kaynak);
 
   if (v.kunye?.length) {
     const ayrinti = el('details', 'menba__kunye');

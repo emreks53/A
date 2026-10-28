@@ -1,7 +1,7 @@
 /*
  * Oku sekmesi: tam ekran dikey video akışı (Reels gibi). Videolar yukarı/aşağı kaydırılır, her biri ekrana
- * oturur. Alt menü yoktur; ekranda yalnız iki düğme (Neşret, Menba), üstte birkaç saniye videonun adı ve altta
- * ince ilerleme çizgisi vardır. Çıkış sağa kaydırarak.
+ * oturur. Alt menü yoktur, ekranın üstünde yazı yoktur; yalnız iki düğme (Neşret, Menba), altta çok küçük
+ * geçtiği yer, sağ altta soluk Nur-u Hakikat imi ve Instagram'daki gibi ince ilerleme çizgisi. Çıkış sağa kaydırarak.
  */
 
 :root {
@@ -115,14 +115,14 @@
 .reel__karartma {
   position: absolute;
   inset: 0;
-  /* üstte durum çubuğu için hafif, altta ilerleme çizgisi için; altyazı bandı (%72-82) karartılmaz */
+  /* üstte durum çubuğu için hafif, altta kaynak yazısı ve ilerleme çizgisi için; altyazı bandı karartılmaz */
   background:
     linear-gradient(180deg, rgba(2, 6, 20, 0.35) 0, rgba(2, 6, 20, 0) calc(var(--safe-top) + 64px)),
     linear-gradient(
       0deg,
-      rgba(2, 6, 20, 0.6) 0,
-      rgba(2, 6, 20, 0.26) calc(var(--safe-bottom) + 56px),
-      rgba(2, 6, 20, 0) min(calc(var(--safe-bottom) + 116px), 18%)
+      rgba(0, 0, 0, 0.5) 0,
+      rgba(0, 0, 0, 0.22) calc(var(--safe-bottom) + 40px),
+      rgba(0, 0, 0, 0) calc(var(--safe-bottom) + 96px)
     );
   pointer-events: none;
 }
@@ -196,29 +196,29 @@
 .reel__kaynak {
   position: absolute;
   left: 14px;
-  right: 64px;
-  bottom: calc(var(--safe-bottom) + 14px);
+  right: 56px;
+  bottom: calc(var(--safe-bottom) + 13px);
   margin: 0;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(255, 255, 255, 0.82);
   font-family: var(--yazi-arayuz);
   font-weight: 600;
-  font-size: 11.5px;
-  line-height: 1.2;
+  font-size: 11px;
+  line-height: 14px;
   letter-spacing: 0.02em;
   white-space: nowrap;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
   pointer-events: none;
 }
 .reel__damga {
   position: absolute;
   right: 14px;
   bottom: calc(var(--safe-bottom) + 11px);
-  width: 20px;
-  height: 20px;
-  opacity: 0.42;
-  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45));
+  width: 18px;
+  height: 18px;
+  opacity: 0.4;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
@@ -298,11 +298,12 @@
 .reel__zaman {
   position: absolute;
   left: 50%;
-  bottom: 40px;
+  bottom: 28px;
   color: #fff;
   font-family: var(--yazi-arayuz);
   font-weight: 700;
   font-size: 15px;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   white-space: nowrap;
@@ -314,19 +315,24 @@
 .reel[data-sarma] .reel__zaman {
   opacity: 1;
 }
-/* sararken alttaki küçük yazı ve im çekilir */
+.reel__zaman-toplam {
+  color: rgba(255, 255, 255, 0.64);
+}
+/* sararken alttaki küçük yazı, im ve düğmeler çekilir */
 .reel[data-sarma] .reel__kaynak,
-.reel[data-sarma] .reel__damga {
+.reel[data-sarma] .reel__damga,
+.reel[data-sarma] .reel__dugmeler {
   opacity: 0;
+  transition-duration: 0.15s;
 }
 
-/* sağda: yalnız iki düğme. Videolar YouTube Shorts düzenine göre hazırlandı: altyazılar karenin %72-82
-   bandında, sağ kenarın %52-70 arası ise düğmeler için boş. Düğmeler bu yüzden altyazının üstünde durur. */
+/* sağda: yalnız iki düğme. Videoların altyazıları karenin %64-82 bandında; düğmeler bu yüzden en az %38
+   yukarıda, altyazının üstünde durur. */
 .reel__dugmeler {
   position: absolute;
   isolation: isolate;
   right: 8px;
-  bottom: max(31%, calc(var(--safe-bottom) + 130px));
+  bottom: max(38%, calc(var(--safe-bottom) + 130px));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -654,84 +660,134 @@
   padding: 0 22px calc(14px + var(--safe-bottom));
 }
 
-.menba__video {
-  margin: 8px 0 0;
-  color: var(--oku);
+/* Menba: gece kütüphanesinin koyu sayfası; nur içinde rahlede Kur'an-ı Kerim, altında rafta Külliyat */
+.alt-sayfa--menba {
+  max-height: calc(100% - var(--safe-top) - 24px);
+  background:
+    radial-gradient(420px 300px at 50% 120px, rgba(232, 190, 110, 0.1), rgba(232, 190, 110, 0) 70%),
+    linear-gradient(180deg, #0e1c43 0%, #0a1534 50%, #081028 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 190, 0.16),
+    inset 0 0 0 1px rgba(232, 194, 122, 0.08),
+    0 -18px 50px rgba(0, 0, 0, 0.5);
+  color: #f7eedc;
+}
+.alt-perde:has(+ .alt-sayfa--menba) {
+  background: rgba(3, 6, 16, 0.58);
+}
+.alt-sayfa--menba .alt-sayfa__tutamak {
+  height: 26px;
+}
+.alt-sayfa--menba .alt-sayfa__tutamak::before {
+  background: rgba(255, 255, 255, 0.26);
+}
+.alt-sayfa--menba .alt-sayfa__tutamak:focus-visible {
+  outline-color: #e8c27a;
+}
+.alt-sayfa--menba .alt-sayfa__ust {
+  padding: 2px 22px 0;
+}
+.alt-sayfa--menba .alt-sayfa__baslik {
+  color: #e8c27a;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  text-align: center;
+}
+.alt-sayfa--menba .alt-sayfa__govde {
+  padding: 0 0 calc(18px + var(--safe-bottom));
+  scrollbar-width: none;
+}
+.alt-sayfa--menba .alt-sayfa__govde::-webkit-scrollbar {
+  display: none;
+}
+
+.menba__cizim {
+  margin-top: 6px;
+}
+.menba-sahne {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(458px, 56vh);
+}
+@supports (height: 1svh) {
+  .menba-sahne {
+    max-height: min(458px, 56svh);
+  }
+}
+.menba__kaynak {
+  margin: 14px 24px 0;
+  text-align: center;
+}
+.menba__eser {
+  margin: 0;
+  color: #fbf3e2;
   font-family: var(--yazi-baslik);
   font-style: italic;
   font-weight: 700;
-  font-size: 25px;
-  line-height: 1.2;
+  font-size: 31px;
+  line-height: 1.05;
 }
-.menba__liste {
-  margin: 18px 0 0;
+.menba__eser span {
+  display: inline-block;
+  transform: scaleY(1.08);
+}
+.menba__yer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  color: #f3d79b;
+  font-family: var(--yazi-arayuz);
+  font-weight: 600;
+  font-size: 14.5px;
+  line-height: 1.3;
+}
+.menba__yer li + li::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin: 0 10px 2px 0;
+  transform: rotate(45deg);
+  background: rgba(232, 194, 122, 0.6);
+}
+.menba__sayfa {
+  color: rgba(240, 228, 204, 0.62);
+  font-weight: 500;
+}
+.menba__etiketler {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 16px 0 0;
   padding: 0;
   list-style: none;
 }
-.menba__kaynak {
-  display: flex;
+.menba__etiketler .etiket {
+  display: inline-flex;
   align-items: center;
-  gap: 16px;
-  padding: 18px 20px 18px 18px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, var(--pill-top), var(--pill-mid) 55%, var(--pill-bottom));
-  box-shadow: inset 0 0 0 1px rgba(142, 84, 10, 0.12);
-}
-.menba__kaynak + .menba__kaynak {
-  margin-top: 10px;
-}
-.menba__simge {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.7);
-  color: var(--altin);
-}
-.menba__simge svg {
-  width: 28px;
-  height: 28px;
-}
-.menba__metin {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.menba__kulliyat {
-  color: var(--soluk);
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 15px;
+  background: rgba(232, 194, 122, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(232, 194, 122, 0.22);
+  color: #efd49c;
   font-family: var(--yazi-arayuz);
   font-weight: 600;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-.menba__eser {
-  margin-top: 6px;
-  color: var(--oku);
-  font-family: var(--yazi-baslik);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 32px;
-  line-height: 1.06;
-}
-.menba__kaynak + .menba__kaynak .menba__eser {
-  font-size: 26px;
-}
-.menba__yer {
-  margin-top: 4px;
-  color: var(--altin);
-  font-family: var(--yazi-arayuz);
-  font-weight: 700;
-  font-size: 15px;
-  line-height: 1.2;
+  white-space: nowrap;
 }
 .menba__kunye {
-  margin-top: 18px;
-  border-top: 1px solid var(--hairline);
-  color: var(--soluk);
+  margin: 22px 24px 0;
+  border-top: 1px solid rgba(232, 194, 122, 0.14);
+  color: rgba(240, 228, 204, 0.62);
   font-family: var(--yazi-arayuz);
   font-weight: 500;
   font-size: 13px;
@@ -749,38 +805,39 @@
   display: none;
 }
 .menba__kunye-ozet:focus-visible {
-  outline: 2px solid var(--altin);
+  outline: 2px solid #e8c27a;
   border-radius: 8px;
 }
 .menba__kunye-ad {
   flex: 1;
-  color: var(--oku);
+  color: #f7eedc;
   font-weight: 600;
   font-size: 15px;
 }
 .menba__kunye-sayi {
-  color: var(--soluk);
-  font-weight: 600;
   font-size: 13px;
 }
 .menba__kunye-ok {
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
-  color: var(--soluk);
+  width: 18px;
+  height: 18px;
+  color: #e8c27a;
   transition: transform 0.2s ease;
 }
 .menba__kunye-ok svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 .menba__kunye[open] .menba__kunye-ok {
   transform: rotate(180deg);
 }
 .menba__kunye ul {
   margin: 0;
-  padding-left: 18px;
+  padding: 12px 16px 12px 32px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 0 0 1px rgba(232, 194, 122, 0.14);
 }
 .menba__kunye li + li {
   margin-top: 6px;
@@ -789,7 +846,7 @@
   margin: 10px 0 4px;
 }
 .menba__lisans a {
-  color: var(--altin);
+  color: #e8c27a;
   font-weight: 600;
 }
 

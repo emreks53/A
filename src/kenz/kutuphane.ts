@@ -1,7 +1,7 @@
 // Kenz: videolar geçtiği Risale-i Nur kitabına, kitapta da bölümüne göre gruplanır.
 // Kitaplar Külliyat sırasıyla, bölümler ve videolar listedeki sırayla gelir. Karta dokununca video Oku'da açılır.
 import { videolar } from 'virtual:oku-videolar';
-import { etiketYazisi, KULLIYAT, sureYazisi, tipografik, type Video } from '../oku/ortak';
+import { ciltRengi, etiketYazisi, KULLIYAT, sureYazisi, tipografik, type Video } from '../oku/ortak';
 
 export interface BolumGrubu {
   bolum: string;
@@ -46,7 +46,9 @@ const kimlik = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
-const OYNAT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></svg>';
+const OYNAT_SVG = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1.2v7.6L8.6 5 2 1.2Z" fill="currentColor"/></svg>';
+const KITAP_SVG =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 
 /** Kartın erişilebilir adı: "On Yedinci Lem’a’dan, 1:59. Lem’alar, 154. sayfa. #ihlas #muhabbet #kurtuluş" */
 export function kartEtiketi(v: Video): string {
@@ -54,12 +56,17 @@ export function kartEtiketi(v: Video): string {
   return tipografik(`${v.baslik}, ${sureYazisi(v.sure)}. ${yer}. ${etiketYazisi(v.etiketler)}`);
 }
 
+/** Kartın alt satırı: "Altıncı Mesele · 203. sayfa" ya da "154. sayfa" */
+export function kartYeri(v: Pick<Video, 'kisim' | 'sayfa'>): string {
+  return tipografik([v.kisim, v.sayfa ? `${v.sayfa}. sayfa` : undefined].filter(Boolean).join(' · '));
+}
+
 function kart(v: Video): HTMLAnchorElement {
   const a = el('a', 'kart');
   a.href = `#/oku/${v.id}`;
   a.dataset.video = v.id;
   a.setAttribute('aria-label', kartEtiketi(v));
-  const kapak = el('span', 'kart__kapak');
+  const afis = el('span', 'kart__afis');
   const img = el('img', 'kart__img');
   img.src = import.meta.env.BASE_URL + v.onizleme;
   img.alt = '';
@@ -70,36 +77,84 @@ function kart(v: Video): HTMLAnchorElement {
   const sure = el('span', 'kart__sure');
   sure.innerHTML = OYNAT_SVG;
   sure.append(sureYazisi(v.sure));
-  kapak.append(img, sure);
+  afis.append(img, sure);
   const metin = el('span', 'kart__metin');
   metin.append(el('span', 'kart__ad', tipografik(v.baslik)));
-  const yer = [v.kisim, v.sayfa ? `${v.sayfa}. sayfa` : undefined].filter(Boolean).join(' · ');
-  if (yer) metin.append(el('span', 'kart__yer', tipografik(yer)));
+  const yer = kartYeri(v);
+  if (yer) {
+    const y = el('span', 'kart__yer');
+    y.innerHTML = KITAP_SVG;
+    y.append(yer);
+    metin.append(y);
+  }
   const etiketler = el('span', 'kart__etiketler');
   for (const e of v.etiketler) etiketler.append(el('span', 'etiket', `#${e}`));
   metin.append(etiketler);
-  a.append(kapak, metin);
+  a.append(afis, metin);
   for (const c of a.children) c.setAttribute('aria-hidden', 'true');
   return a;
 }
 
+/** Üç ve daha çok kitap olunca başta kitap fihristi: dokununca o kitaba kayar */
+function fihrist(gruplar: KitapGrubu[], liste: Video[]): HTMLElement {
+  const nav = el('nav', 'fihrist');
+  nav.setAttribute('aria-label', 'Kitaplar');
+  const ul = el('ul', 'fihrist__liste');
+  for (const { kitap } of gruplar) {
+    const li = el('li');
+    const d = el('button', 'fihrist__kitap');
+    d.type = 'button';
+    d.style.setProperty('--cilt', ciltRengi(kitap));
+    const sayi = liste.filter((v) => v.kitap === kitap).length;
+    d.setAttribute('aria-label', `${tipografik(kitap)}, ${sayi} video`);
+    const sirt = el('i');
+    sirt.setAttribute('aria-hidden', 'true');
+    const ad = el('span', undefined, tipografik(kitap));
+    ad.setAttribute('aria-hidden', 'true');
+    const s = el('b', undefined, String(sayi));
+    s.setAttribute('aria-hidden', 'true');
+    d.append(sirt, ad, s);
+    d.addEventListener('click', () => {
+      const hedef = document.getElementById(`kitap-${kimlik(kitap)}`);
+      if (!hedef) return;
+      const azalt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      hedef.scrollIntoView({ behavior: azalt ? 'auto' : 'smooth', block: 'start' });
+      hedef.querySelector<HTMLElement>('.kitap__ad')?.focus({ preventScroll: true });
+    });
+    li.append(d);
+    ul.append(li);
+  }
+  nav.append(ul);
+  return nav;
+}
+
 export function kutuphaneCiz(liste: Video[] = videolar): HTMLElement {
   const kok = el('div', 'kutuphane');
-  for (const { kitap, bolumler } of kitapGruplari(liste)) {
+  const gruplar = kitapGruplari(liste);
+  if (gruplar.length >= 3) kok.append(fihrist(gruplar, liste));
+  for (const { kitap, bolumler } of gruplar) {
     const bolum = el('section', 'kitap');
     const id = `kitap-${kimlik(kitap)}`;
     bolum.id = id;
-    const ad = el('h2', 'kitap__ad', tipografik(kitap));
+    bolum.style.setProperty('--cilt', ciltRengi(kitap));
+    const ad = el('h2', 'kitap__ad');
+    ad.append(el('span', undefined, tipografik(kitap)));
     ad.id = `${id}-ad`;
+    ad.tabIndex = -1;
     bolum.setAttribute('aria-labelledby', ad.id);
     const sayi = liste.filter((v) => v.kitap === kitap).length;
     const ust = el('div', 'kitap__ust');
-    ust.append(ad, el('span', 'kitap__sayi', `${sayi} video`));
+    const sirt = el('span', 'kitap__sirt');
+    sirt.setAttribute('aria-hidden', 'true');
+    ust.append(sirt, ad, el('span', 'kitap__sayi', bolumler.length > 1 ? `${bolumler.length} bölüm · ${sayi} video` : `${sayi} video`));
     bolum.append(ust);
     for (const b of bolumler) {
       const kisim = el('section', 'bolum');
       const bid = `${id}-${kimlik(b.bolum)}`;
-      const bad = el('h3', 'bolum__ad', tipografik(b.bolum));
+      const bad = el('h3', 'bolum__ad');
+      bad.lang = 'tr';
+      bad.append(el('span', undefined, tipografik(b.bolum)));
+      if (b.videolar.length > 1) bad.append(el('small', undefined, `${b.videolar.length} video`));
       bad.id = bid;
       kisim.setAttribute('aria-labelledby', bid);
       kisim.append(bad);

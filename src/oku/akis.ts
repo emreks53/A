@@ -6,7 +6,7 @@ import damgaAdresi from '../assets/icons/dugum-beyaz.svg';
 import { altSayfaAc, acikSayfa } from './alt-sayfa';
 import { menbaIcerik } from './menba';
 import { nesret } from './nesret';
-import { sureYazisi, tipografik, type Video } from './ortak';
+import { reelKaynagi, sureYazisi, tipografik, type Video } from './ortak';
 
 function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, metin?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(etiket);
@@ -133,7 +133,7 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
     // Ekranın üstünde yazı yoktur. En altta çok küçük, videonun geçtiği yer ("On Yedinci Lem’a") ve sağ altta
     // soluk Nur-u Hakikat imi; ikisi de dokunulmaz (dokunuş videoya geçer).
     const baslikEl = el('h2', 'visually-hidden', tipografik(v.baslik));
-    const kaynak = el('p', 'reel__kaynak', tipografik(v.bolum));
+    const kaynak = el('p', 'reel__kaynak', reelKaynagi(v));
     kaynak.setAttribute('aria-hidden', 'true');
     const damga = el('img', 'reel__damga');
     damga.src = damgaAdresi;
@@ -294,7 +294,7 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
     else if (hal === 'hata') o.durum.textContent = 'Video açılamadı. Yeniden denemek için dokunun.';
     else o.durum.replaceChildren();
     const ne = hal === 'hata' ? 'yeniden dene' : zorlaSessiz ? 'sesi aç' : v.paused ? 'oynat' : 'durdur';
-    v.setAttribute('aria-label', `${o.v.baslik}: ${ne}`);
+    v.setAttribute('aria-label', `${tipografik(o.v.baslik)}: ${ne}`);
   }
 
   function cubukGuncelle(o: Oge): void {
@@ -305,7 +305,10 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
     o.cubuk.setAttribute('aria-valuenow', String(Math.round(oran * 100)));
     const simdi = sureYazisi(Math.floor(v.currentTime));
     o.cubuk.setAttribute('aria-valuetext', simdi);
-    if (o.cubuk.classList.contains('suruklenen')) o.zaman.textContent = `${simdi} / ${sureYazisi(v.duration > 0 ? v.duration : o.v.sure)}`;
+    if (o.cubuk.classList.contains('suruklenen')) {
+      const toplam = el('span', 'reel__zaman-toplam', ` / ${sureYazisi(v.duration > 0 ? v.duration : o.v.sure)}`);
+      o.zaman.replaceChildren(simdi, toplam);
+    }
   }
 
   function dongu(): void {
