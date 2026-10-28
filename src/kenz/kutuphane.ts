@@ -21,7 +21,8 @@ export function kitapGruplari(liste: Video[] = videolar): KitapGrubu[] {
   return kitaplar.map((kitap) => {
     const bolumler: BolumGrubu[] = [];
     for (const v of liste.filter((x) => x.kitap === kitap)) {
-      let g = bolumler.find((b) => b.bolum === v.bolum);
+      // (yazımı ufak farklı aynı bölüm, ör. düz ya da tipografik kesme işaretiyle, ayrı başlık olmasın)
+      let g = bolumler.find((b) => kimlik(b.bolum) === kimlik(v.bolum));
       if (!g) bolumler.push((g = { bolum: v.bolum, kisimlar: [], videolar: [] }));
       g.videolar.push(v);
       if (v.kisim && !g.kisimlar.includes(v.kisim)) g.kisimlar.push(v.kisim);
@@ -88,7 +89,7 @@ function kart(v: Video): HTMLAnchorElement {
     metin.append(y);
   }
   const etiketler = el('span', 'kart__etiketler');
-  for (const e of v.etiketler) etiketler.append(el('span', 'etiket', `#${e}`));
+  for (const e of v.etiketler) etiketler.append(el('span', 'etiket', tipografik(`#${e}`)));
   metin.append(etiketler);
   a.append(afis, metin);
   for (const c of a.children) c.setAttribute('aria-hidden', 'true');

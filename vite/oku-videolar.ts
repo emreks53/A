@@ -65,7 +65,9 @@ export function mp4Suresi(yol: string): number | null {
     const surum = b.readUInt8(0);
     const olcek = surum === 1 ? b.readUInt32BE(20) : b.readUInt32BE(12);
     const sure = surum === 1 ? Number(b.readBigUInt64BE(24)) : b.readUInt32BE(16);
-    return olcek > 0 ? sure / olcek : null;
+    // Süresi yazılmamış (parçalı, ör. empty_moov) MP4'te süre 0 ya da "bilinmiyor"dur: geçerli sayılmaz.
+    const bilinmiyor = sure === 0 || (surum === 0 && sure === 0xffffffff);
+    return olcek > 0 && !bilinmiyor ? sure / olcek : null;
   } finally {
     closeSync(fd);
   }
@@ -104,11 +106,13 @@ export function akisOku(jsonYolu: string, publicDizini: string): Akis {
     for (const alan of ['video', 'kapak', 'onizleme'] as const) {
       const yol = v[alan];
       if (!metin(yol) || yol.startsWith('/') || yol.includes('..')) hata(jsonYolu, `${yer}.${alan} public/ altına göre bir yol olmalı`);
+      // (paylaşım sayfasındaki adreslerde ve çevrimdışı önbellekte sorun çıkmasın: yalnız güvenli karakterler)
+      if (!/^[a-z0-9][a-z0-9._/-]*$/.test(yol)) hata(jsonYolu, `${yer}.${alan}: "${yol}" yalnız küçük harf, rakam, "-", "_", "." ve "/" içermeli`);
       if (!existsSync(resolve(publicDizini, yol))) hata(jsonYolu, `${yer}.${alan}: public/${yol} bulunamadı`);
     }
     if (v.kunye !== undefined && (!Array.isArray(v.kunye) || !v.kunye.every(metin))) hata(jsonYolu, `${yer}.kunye metinlerden oluşan bir liste olmalı`);
     const sure = mp4Suresi(resolve(publicDizini, v.video as string));
-    if (sure === null) hata(jsonYolu, `${yer}.video: public/${v.video} geçerli bir MP4 değil (süre okunamadı)`);
+    if (sure === null) hata(jsonYolu, `${yer}.video: public/${v.video} geçerli bir MP4 değil ya da süresi yazılmamış (ffmpeg -movflags +faststart ile yeniden yazın)`);
     return {
       id: v.id,
       baslik: v.baslik.trim(),
@@ -172,7 +176,7 @@ ${[
     <script>location.replace(${JSON.stringify(hedef)});</script>
   </head>
   <body>
-    <p><a href="${kacir(hedef)}">${kacir(baslik)}: Nur-u Hakikat'te izleyin</a></p>
+    <p><a href="${kacir(hedef)}">${kacir(baslik)}: Nur-u Hakikat’te izleyin</a></p>
   </body>
 </html>
 `;

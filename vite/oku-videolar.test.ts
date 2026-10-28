@@ -68,6 +68,8 @@ describe('mp4Suresi', () => {
     expect(mp4Suresi(yaz('b.mp4', kucukMp4(126, 1)))).toBe(126);
     expect(mp4Suresi(yaz('c.mp4', kucukMp4(9, 0, true)))).toBe(9);
     expect(mp4Suresi(yaz('d.mp4', Buffer.from('mp4 değil')))).toBeNull();
+    // süresi yazılmamış (parçalı, empty_moov) MP4: kartta 0:00 görünmesin, derleme dursun
+    expect(mp4Suresi(yaz('e.mp4', kucukMp4(0)))).toBeNull();
   });
 
   it('gerçek videoların süresi', () => {
@@ -117,6 +119,9 @@ describe('akisOku', () => {
     expect(dene(liste([ornek({ video: '../dis.mp4' })]))).toThrow(/\.video/);
     expect(dene(liste([ornek({ video: 'v/bir.jpg' })]))).toThrow(/geçerli bir MP4 değil/);
     expect(dene(liste([ornek({ kunye: [1] })]))).toThrow(/kunye/);
+    // paylaşım sayfasındaki adreslerde ve çevrimdışı önbellekte sorun çıkaracak dosya adları
+    expect(dene(liste([ornek({ onizleme: 'v/bir önizleme.jpg' })]))).toThrow(/yalnız küçük harf/);
+    expect(dene(liste([ornek({ kapak: 'v/Bir.jpg' })]))).toThrow(/yalnız küçük harf/);
   });
 });
 

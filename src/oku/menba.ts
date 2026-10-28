@@ -33,7 +33,7 @@ export function menbaIcerik(v: Video): HTMLElement {
 
   const etiketler = el('ul', 'menba__etiketler');
   etiketler.setAttribute('aria-label', 'Konular');
-  for (const e of v.etiketler) etiketler.append(el('li', 'etiket', `#${e}`));
+  for (const e of v.etiketler) etiketler.append(el('li', 'etiket', tipografik(`#${e}`)));
   kaynak.append(etiketler);
   kok.append(kaynak);
 
@@ -45,7 +45,7 @@ export function menbaIcerik(v: Video): HTMLElement {
     ozet.append(el('span', 'menba__kunye-ad', 'Görüntü ve ses künyesi'), el('span', 'menba__kunye-sayi', `${v.kunye.length} kayıt`), ok);
     ayrinti.append(ozet);
     const ul = el('ul');
-    for (const satir of v.kunye) ul.append(el('li', undefined, satir));
+    for (const satir of v.kunye) ul.append(el('li', undefined, tipografik(satir)));
     ayrinti.append(ul);
     if (v.kunye.some((s) => s.includes('CC BY 4.0'))) {
       const p = el('p', 'menba__lisans');

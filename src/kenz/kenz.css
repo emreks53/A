@@ -3,9 +3,19 @@
  * fotoğrafında şafak ("yakında").
  */
 
-/* Güneş'te (ve Oku Güneş'ten açıldıysa altında görünen Güneş'te) fotoğraf şafağa göre koyulaşır. */
+/* Güneş'te (ve Oku Güneş'ten açıldıysa altında görünen Güneş'te) fotoğraf şafağa göre koyulaşır. Kenz'de
+   (ve Oku Kenz'den açıldıysa) gündüz fotoğrafı hiç görünmez: geçişlerde gece ekranının ardından gökyüzü sızmaz. */
 .bg__img {
   transition: filter 0.45s ease;
+}
+.bg {
+  transition: opacity 0.35s ease;
+}
+.app[data-zemin='kenz'] {
+  background: #070f28;
+}
+.app[data-zemin='kenz'] .bg {
+  opacity: 0;
 }
 .app[data-zemin='gunes'] .bg__img {
   filter: brightness(0.62) saturate(0.75) contrast(1.05);
@@ -51,6 +61,8 @@
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* klavyeyle gezerken odaklanan kart menünün ya da üst perdenin altında kalmasın */
+  scroll-padding: calc(var(--safe-top) + 16px) 0 calc(var(--menu-ust) + 12px);
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -139,11 +151,12 @@
 }
 
 /* kitap fihristi (üç ve daha çok kitap olunca): dokununca o kitaba kayar */
+/* (kaydırılan şeritlerde odak çerçevesi kesilmesin diye üstte ve altta 4 px boşluk) */
 .fihrist__liste {
   display: flex;
   gap: 8px;
-  margin: 20px 0 0;
-  padding: 0 20px;
+  margin: 16px 0 -4px;
+  padding: 4px 20px;
   overflow-x: auto;
   scrollbar-width: none;
   list-style: none;
@@ -324,6 +337,8 @@
 }
 .kart__afis {
   position: relative;
+  /* süre rozeti afişin kendi katmanında kalır, üst ve alt perdenin üstüne çıkmaz */
+  isolation: isolate;
   flex: none;
   width: 84px;
   aspect-ratio: 9 / 16;
@@ -455,7 +470,8 @@
 .bolum__videolar--raf {
   display: flex;
   gap: 12px;
-  padding: 0 16px 4px;
+  margin-top: -4px;
+  padding: 4px 16px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -635,6 +651,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .bg,
   .bg__img,
   .kart {
     transition: none;

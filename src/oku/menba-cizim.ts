@@ -250,8 +250,8 @@ export function menbaSvgIcerigi(eser: string, p: string): string {
       o.push(`<path d="M${f(bx + 2)} ${f(yy)}H${f(bx + W2 - 2)}" stroke="#F0CD84" stroke-width=".9"/>`);
     }
     o.push(`<path d="M${f(bx + W2 / 2)} ${f(by + 16)}l2.6 2.6l-2.6 2.6l-2.6-2.6Z" fill="#F3D08A"/>`);
-    // uzun adlar sırta sığsın diye yazı biraz küçülür
-    const boy = Math.min(12, (H2 - 34) / (on.ad.length * 0.52));
+    // uzun adlar sırta, üstteki ◆ ile alttaki altın bant arasına sığsın diye yazı küçülür (8-12)
+    const boy = Math.max(8, Math.min(12, (H2 - 40) / (on.ad.length * 0.56)));
     o.push(`<text transform="translate(${f(bx + W2 / 2 + 4)} ${f(by + H2 / 2 + 4)}) rotate(-90)" text-anchor="middle" font-family="Tinos, serif" font-style="italic" font-weight="700" font-size="${f(boy)}" fill="#FBE3A8">${on.ad}</text>`);
   }
   // ceviz raf tahtası

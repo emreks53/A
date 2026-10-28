@@ -497,7 +497,8 @@ await adim('paylaşım bağlantısı videoyu açar (önizleme etiketleriyle)', a
   await page.goto(base + 'v/ihlas/');
   await page.waitForURL(/#\/oku\/ihlas$/);
   await oynuyor(I);
-  assert.equal(await page.locator('.tab--oku').getAttribute('aria-current'), 'page');
+  // Bağlantıyla doğrudan açılınca altında ana ekran vardır: alt menüde hiçbir sekme seçili değildir
+  assert.equal(await page.locator('.tab[aria-current]').count(), 0);
   // Bağlantıyla doğrudan açılınca çıkış ana ekrana gider; odak gizli Oku'da kalmaz
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'ana');
@@ -515,6 +516,9 @@ await adim('sesli oynatmaya izin vermeyen tarayıcıda sessiz başlar, dokununca
       return v.muted && !v.paused;
     });
     assert.match(await p2.locator('.akis__bildirim').innerText(), /Sesi açmak için videoya dokunun/);
+    // bildirim de ekranın üstünde değil, altta çıkar
+    const bildirim = await p2.locator('.akis__bildirim').boundingBox();
+    assert.ok(bildirim.y > 844 * 0.6, `bildirim üstte: ${bildirim.y}`);
     // Bu durumda da ekranda yalnız iki düğme var
     assert.deepEqual(await gorunenDugmeler(p2), ['Neşret', 'Menba']);
     const sahne = await p2.locator('.reel[data-aktif] .reel__sahne').boundingBox();
@@ -693,6 +697,13 @@ await adim('karta dokununca video Oku\'da açılır; sağa kaydırınca altında
   const y = await page.locator('.kenz').evaluate((k) => k.scrollTop);
   await page.locator('a.kart[data-video="ihlas"]').click();
   await page.waitForURL(/#\/oku\/ihlas$/);
+  // Oku sağdan gelirken altta Kenz sönmez, ardında gündüz fotoğrafı görünmez
+  const gecis = await page.evaluate(() => ({
+    kenz: getComputedStyle(document.getElementById('view-kenz')).opacity,
+    foto: getComputedStyle(document.querySelector('.bg')).opacity,
+    secili: document.querySelector('.tab[aria-current]')?.dataset.tab,
+  }));
+  assert.deepEqual(gecis, { kenz: '1', foto: '0', secili: 'kenz' });
   await oynuyor(I);
   await page.waitForTimeout(500);
   const cek = await surukle(page, 40, 320, 420);
@@ -719,12 +730,44 @@ await adim('klavyeyle: kartta Enter videoyu açar, odak videoya geçer; Escape k
   assert.equal(await page.evaluate(() => document.activeElement?.dataset.video), F);
 });
 
+await adim('Oku\'dan geri tuşuyla dönünce Kenz bir anda yerindedir (sönükten belirmez)', async () => {
+  await page.locator('a.kart[data-video="ihlas"]').click();
+  await oynuyor(I);
+  await page.waitForTimeout(450);
+  await page.evaluate(() => history.back());
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  assert.equal(await page.locator('#view-kenz').evaluate((e) => getComputedStyle(e).opacity), '1');
+  assert.equal(await page.locator('.bg').evaluate((e) => getComputedStyle(e).opacity), '0');
+});
+
 await adim('açık sekmeye yeniden dokununca ana ekrana dönülür', async () => {
   await page.locator('.tab--kenz').click();
   await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'ana');
   assert.ok(['', '#/'].includes(new URL(page.url()).hash));
   assert.equal(await page.locator('.tab[aria-current]').count(), 0);
   assert.equal(await temaRengi(), '#5AA2EC');
+});
+
+await adim('sayfa yeniden yüklense de (uygulama güncellenince) çıkışlar geldiği ekrana döner', async () => {
+  await page.goto(base);
+  await page.waitForSelector('.quote');
+  await page.locator('.tab--kenz').click();
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  await page.locator('a.kart[data-video="ihlas"]').click();
+  await oynuyor(I);
+  await page.reload();
+  await oynuyor(I);
+  assert.equal(await page.evaluate(() => document.getElementById('app').dataset.zemin), 'kenz');
+  assert.equal(await page.locator('.tab[aria-current]').getAttribute('data-tab'), 'kenz');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  assert.equal(new URL(page.url()).hash, '#/kenz');
+  // Kenz'de yeniden yükle, Kenz'e yeniden dokun: geçmişteki ana ekran kaydına dönülür (fazladan kayıt yok)
+  await page.reload();
+  await page.waitForSelector('.kart');
+  await page.locator('.tab--kenz').click();
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'ana');
+  assert.equal(new URL(page.url()).hash, '');
 });
 
 await adim('Güneş: "yakında" ekranı; Kenz ile Güneş arası geçiş geçmişe yazılmaz, geri ana ekrana döner', async () => {

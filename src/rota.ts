@@ -9,7 +9,7 @@ export interface Rota {
 
 const SEKMELER: readonly string[] = ['ana', 'oku', 'kenz', 'gunes'];
 
-/** "#/oku/sevgi-ve-guzellik" → { sekme: 'oku', video: 'sevgi-ve-guzellik' } */
+/** "#/oku/ihlas" → { sekme: 'oku', video: 'ihlas' } */
 export function rotaCoz(hash: string): Rota {
   const [sekme, video] = hash
     .replace(/^#\/?/, '')

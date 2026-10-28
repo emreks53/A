@@ -53,8 +53,18 @@
     opacity 0.35s ease,
     transform 0.28s cubic-bezier(0.2, 0.75, 0.2, 1);
 }
-/* Sürüklerken altından dönülecek ekran görünür. */
-.view[hidden][data-alttan] {
+/* Sağdan gelirken Oku yalnız kayar, sönükten belirmez. */
+.app[data-gecis='oku-gir'] .view--oku {
+  transition: none;
+}
+/* Oku açılırken ve açıkken altındaki ekran sönmez (gece ekranının ardından gökyüzü görünmesin); Oku yerine
+   oturunca gizlenir. Oku'dan dönünce de yeniden belirmesi gerekmez. */
+.app[data-sekme='oku'] .view[hidden]:not(.view--oku) {
+  opacity: 1;
+  transition: visibility 0s linear 0.36s;
+}
+/* Sürüklerken altından dönülecek ekran görünür (yalnız Oku açıkken). */
+.app[data-sekme='oku'] .view[hidden][data-alttan] {
   visibility: visible;
   opacity: 1;
   transition: none;
@@ -98,6 +108,30 @@
     width: auto;
     max-width: 100%;
     aspect-ratio: 9 / 16;
+  }
+}
+/* geniş ekranda ses göstergesi, bildirim ve çıkış ipucu da 9:16 sütunun içinde durur */
+@media (min-aspect-ratio: 3/4) {
+  .akis__sessiz {
+    right: calc(50% - 28.125vh + 12px);
+  }
+  .akis__bildirim {
+    max-width: calc(56.25vh - 24px);
+    white-space: normal;
+    text-align: center;
+  }
+  .akis__ipucu:not(.akis__ipucu--tus) {
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  @supports (height: 1dvh) {
+    .akis__sessiz {
+      right: calc(50% - 28.125dvh + 12px);
+    }
+    .akis__bildirim {
+      max-width: calc(56.25dvh - 24px);
+    }
   }
 }
 .reel__video {
@@ -266,11 +300,12 @@
   height: 0;
   pointer-events: none;
 }
+/* (çizgi ekranın en altındadır: daire çizginin üstüne oturur, kenarda kesilmez) */
 .reel__ilerleme-uc::before {
   content: '';
   position: absolute;
   left: -6px;
-  top: -6px;
+  top: -10px;
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -408,11 +443,12 @@
   width: 20px;
   height: 20px;
 }
+/* bildirim (ör. "Bağlantı kopyalandı"): ekranın üstünde yazı olmasın diye altta, çıkış ipucunun üstünde */
 .akis__bildirim {
   position: absolute;
   z-index: 3;
   left: 50%;
-  top: calc(var(--safe-top) + 72px);
+  bottom: calc(var(--safe-bottom) + 92px);
   padding: 10px 18px;
   border-radius: 20px;
   background: rgba(252, 250, 245, 0.96);
@@ -423,7 +459,7 @@
   white-space: nowrap;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
   opacity: 0;
-  transform: translate(-50%, -8px);
+  transform: translate(-50%, 8px);
   transition:
     opacity 0.2s ease,
     transform 0.2s ease;
@@ -759,6 +795,15 @@
 .menba__sayfa {
   color: rgba(240, 228, 204, 0.62);
   font-weight: 500;
+}
+/* çok dar ekranda sayfa kendi satırına iner (satır başında ayraç kalmasın) */
+@media (max-width: 359px) {
+  .menba__yer .menba__sayfa {
+    flex-basis: 100%;
+  }
+  .menba__yer .menba__sayfa::before {
+    display: none;
+  }
 }
 .menba__etiketler {
   display: flex;

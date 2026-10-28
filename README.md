@@ -221,7 +221,8 @@ npm run assets:native
   `claude/kurzgesagt-style-turkish-video-2on8vi` dalı) ve *On Yedinci Lem'a'dan* (ihlas;
   `claude/kurzgesagt-style-video-p5a1gi` dalı). Kaynakları ve lisansları o dallarda; künyesi Menba'da.
 - Telefon tarayıcısı: ölçü birimi dikeyde boy 640 px'e göre sınırlanır (`--u`), adres ve araç çubukları ekranı
-  kısalttığında menü ve alıntı küçülmez. Geniş arka plana 4/5 oranında geçilir; telefon tarayıcısında yanlarda
-  bulanık bant çıkmaz. Arka plan fotoğrafının menünün altında kalan, bozuk (elle doldurulmuş) ön planı yeniden
+  kısalttığında menü ve alıntı küçülmez. Geniş arka plana 4/5 oranında geçilir; dikey telefonda hep dikey
+  fotoğraf kullanılır. Geniş arka planın (yatay telefon, tablet, masaüstü) iki yanı fotoğrafın aynı yükseklikteki
+  keskin parçalarından doku dikişiyle örülmüştür; yanlarda bulanık bant yoktur. Arka plan fotoğrafının menünün altında kalan, bozuk (elle doldurulmuş) ön planı yeniden
   kuruldu (çimen dokusu perspektifle uzatılıp alan derinliğiyle bulanıklaştırıldı); hiçbir ekran oranında
   bozuk bölge görünmez. Reels videosu dar ekranlarda kenardan kenara, geniş ekranlarda ortada 9:16'dır.

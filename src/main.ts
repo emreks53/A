@@ -21,6 +21,20 @@ let okuyaIcerdenGelindi = false;
 let okuOncesi: Exclude<Sekme, 'oku'> = 'ana';
 /** Açık sekmeye (Kenz, Güneş) ana ekrandan gelindi: ana ekrana dönmek geçmişte bir adım geri gitmektir. */
 let anadanGelindi = false;
+
+/** Geçmiş kaydında saklanan: bu ekrana uygulamanın içinden hangi ekrandan gelindi. Sayfa yeniden yüklense de
+ *  (uygulama güncellenince, Android sekmeyi bellekten atınca) kalır; çıkışlar yine doğru ekrana döner. */
+interface GecmisDurumu {
+  onceki?: Exclude<Sekme, 'oku'>;
+}
+const gecmisDurumu = (): GecmisDurumu => (history.state && typeof history.state === 'object' ? history.state : {});
+
+/** Adresi geçmişe kayıt eklemeden ve geçmiş kaydındaki bilgiyi koruyarak değiştirir (yeni ekran eskisinin yerine
+ *  geçer: nereden gelindiği değişmez) */
+function yerineGec(hash: string): void {
+  history.replaceState(history.state, '', hash);
+  show(rotaCoz(location.hash), true, true);
+}
 /** Tarayıcının üst çubuğu ekranın rengini alsın */
 const TEMA: Record<Sekme, string> = { ana: '#5AA2EC', kenz: '#0C1A40', gunes: '#141A46', oku: '#000000' };
 const temaRengi = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -63,31 +77,36 @@ const kaydir = sagaKaydirCik(okuGorunumu, {
   basladi: () => akis.ipucuGizle(),
 });
 
-function show(r: Rota, icerden = false): void {
+function show(r: Rota, icerden = false, yerine = false): void {
   const sekme = r.sekme;
   const okudanDonus = aktif === 'oku' && sekme !== 'oku';
+  // Uygulamanın içinden yeni bir kayda gelindiyse nereden gelindiği kayda yazılır; geri/ileri gidilen ya da yeniden
+  // yüklenen kayıtta önceden yazılmış olan okunur.
+  let { onceki } = gecmisDurumu();
+  if (icerden && !yerine && onceki === undefined && sekme !== 'ana' && aktif !== null && aktif !== 'oku' && aktif !== sekme) {
+    onceki = aktif;
+    history.replaceState({ ...gecmisDurumu(), onceki }, '');
+  }
   if (sekme === 'oku' && aktif !== 'oku') {
-    okuyaIcerdenGelindi = icerden && aktif !== null;
-    if (aktif) okuOncesi = aktif;
+    okuyaIcerdenGelindi = onceki !== undefined;
+    okuOncesi = onceki ?? aktif ?? 'ana';
     const odak = document.activeElement;
     okuOncesiOdak = odak instanceof HTMLElement && odak !== document.body ? odak : null;
-    if (okuyaIcerdenGelindi && !azaltilmisHareket.matches) app.dataset.gecis = 'oku-gir';
+    if (okuyaIcerdenGelindi && aktif !== null && !azaltilmisHareket.matches) app.dataset.gecis = 'oku-gir';
   }
   if (okudanDonus) akis.ayril();
-  if (sekme === 'ana') anadanGelindi = false;
-  else if ((sekme === 'kenz' || sekme === 'gunes') && aktif === 'ana') anadanGelindi = icerden;
+  if (sekme === 'kenz' || sekme === 'gunes') anadanGelindi = onceki === 'ana';
   aktif = sekme;
   app.dataset.sekme = sekme;
-  // Arka plan, görünen ekrana göre: Oku'dayken (sağa kaydırınca altından görünecek) dönülecek ekranınki.
-  app.dataset.zemin = sekme === 'oku' ? okuOncesi : sekme;
-  // Ana ekranda hiçbir sekme seçili görünmez.
-  if (sekme === 'ana') delete tabbar.dataset.active;
-  else tabbar.dataset.active = sekme;
+  // Görünen ekran: Oku'dayken (sağa kaydırınca altından görünecek olan) dönülecek ekran. Arka plan ve alt menünün
+  // seçili sekmesi ona göredir; ana ekranda hiçbir sekme seçili değildir.
+  const gorunen = sekme === 'oku' ? okuOncesi : sekme;
+  app.dataset.zemin = gorunen;
   temaRengi?.setAttribute('content', TEMA[sekme]);
-  // Oku tam ekrandır: gizli alt menü ne odak alır ne de ekran okuyucuya görünür.
+  // Oku tam ekrandır: örtülen alt menü ne odak alır ne de ekran okuyucuya görünür.
   tabbar.inert = sekme === 'oku';
   for (const link of links) {
-    if (link.dataset.tab === sekme) link.setAttribute('aria-current', 'page');
+    if (link.dataset.tab === gorunen) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   }
   for (const view of views) view.hidden = view.dataset.view !== sekme;
@@ -110,6 +129,8 @@ function odagiGeriVer(sekme: Sekme): void {
 window.addEventListener('hashchange', () => show(rotaCoz(location.hash), true));
 for (const link of links) {
   link.addEventListener('click', (e) => {
+    // Ctrl/Cmd/Shift ile tıklama tarayıcıya kalır (yeni sekmede açar)
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
     const hedef = link.dataset.tab as Sekme;
     // Açık sekmeye yeniden dokunmak ana ekrana döndürür.
     if (hedef === aktif) {
@@ -120,7 +141,7 @@ for (const link of links) {
     // Kenz ile Güneş arasında geçiş geçmişe kayıt eklemez: geri tuşu hep ana ekrana döner.
     if ((aktif === 'kenz' || aktif === 'gunes') && hedef !== 'oku') {
       e.preventDefault();
-      location.replace(link.getAttribute('href')!);
+      yerineGec(link.getAttribute('href')!);
     }
   });
 }
@@ -131,7 +152,7 @@ function baglantiylaAc(adres: string | undefined): void {
   const id = adres ? paylasimdanVideo(adres) : undefined;
   if (!id) return;
   // Oku zaten açıksa geçmişe yeni kayıt eklenmez; yoksa çıkış önceki videoya döner, Oku kapanmazdı.
-  if (aktif === 'oku') location.replace(`#/oku/${id}`);
+  if (aktif === 'oku') yerineGec(`#/oku/${id}`);
   else location.hash = `#/oku/${id}`;
 }
 
