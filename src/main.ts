@@ -6,7 +6,7 @@ import { kenzBaslat } from './kenz/kenz';
 import { acikSayfa } from './oku/alt-sayfa';
 import { akisBaslat } from './oku/akis';
 import { sagaKaydirCik } from './oku/kaydir-cik';
-import { paylasimdanVideo, rotaCoz, type Rota, type Sekme } from './rota';
+import { paylasimdanVideo, rotaCoz, rotaHash, type Rota, type Sekme } from './rota';
 
 const app = document.getElementById('app')!;
 const tabbar = document.querySelector<HTMLElement>('.tabbar')!;
@@ -17,8 +17,13 @@ const okuGorunumu = document.getElementById('view-oku')!;
 let aktif: Sekme | null = null;
 /** Oku'ya uygulamanın içinden (başka sekmeden) gelindi: çıkınca geçmişte bir adım geri gidilir. */
 let okuyaIcerdenGelindi = false;
-/** Oku'dan çıkınca dönülecek sekme */
-let okuOncesi: Exclude<Sekme, 'oku'> = 'kenz';
+/** Oku'dan çıkınca dönülecek ekran */
+let okuOncesi: Exclude<Sekme, 'oku'> = 'ana';
+/** Açık sekmeye (Kenz, Güneş) ana ekrandan gelindi: ana ekrana dönmek geçmişte bir adım geri gitmektir. */
+let anadanGelindi = false;
+/** Tarayıcının üst çubuğu ekranın rengini alsın */
+const TEMA: Record<Sekme, string> = { ana: '#5AA2EC', kenz: '#0B1630', gunes: '#141A46', oku: '#000000' };
+const temaRengi = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
 /** Oku açılırken odaktaki öğe (ör. dokunulan Kenz kartı): çıkınca odak ona döner */
 let okuOncesiOdak: HTMLElement | null = null;
 const azaltilmisHareket = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -27,10 +32,16 @@ const azaltilmisHareket = window.matchMedia('(prefers-reduced-motion: reduce)');
 function okudanCik(): void {
   if (aktif !== 'oku') return;
   if (okuyaIcerdenGelindi) history.back();
-  else location.replace(`#/${okuOncesi}`);
+  else location.replace(rotaHash({ sekme: okuOncesi }));
 }
 
-const kenz = kenzBaslat(document.getElementById('view-kenz')!);
+/** Kenz ve Güneş'ten ana ekrana (açık sekmeye yeniden dokununca ya da geri tuşuyla) */
+function anaEkranaDon(): void {
+  if (anadanGelindi) history.back();
+  else location.replace('#/');
+}
+
+kenzBaslat(document.getElementById('view-kenz')!);
 
 // Akışta video değişince adres de değişir (#/oku/<id>); geçmişe yeni kayıt eklenmez.
 const akis = akisBaslat(okuGorunumu, {
@@ -63,11 +74,16 @@ function show(r: Rota, icerden = false): void {
     if (okuyaIcerdenGelindi && !azaltilmisHareket.matches) app.dataset.gecis = 'oku-gir';
   }
   if (okudanDonus) akis.ayril();
+  if (sekme === 'ana') anadanGelindi = false;
+  else if ((sekme === 'kenz' || sekme === 'gunes') && aktif === 'ana') anadanGelindi = icerden;
   aktif = sekme;
   app.dataset.sekme = sekme;
-  // Arka plan, görünen ekrana göre: Oku'dayken (sağa kaydırınca altından görünecek) dönülecek sekmeninki.
+  // Arka plan, görünen ekrana göre: Oku'dayken (sağa kaydırınca altından görünecek) dönülecek ekranınki.
   app.dataset.zemin = sekme === 'oku' ? okuOncesi : sekme;
-  tabbar.dataset.active = sekme;
+  // Ana ekranda hiçbir sekme seçili görünmez.
+  if (sekme === 'ana') delete tabbar.dataset.active;
+  else tabbar.dataset.active = sekme;
+  temaRengi?.setAttribute('content', TEMA[sekme]);
   // Oku tam ekrandır: gizli alt menü ne odak alır ne de ekran okuyucuya görünür.
   tabbar.inert = sekme === 'oku';
   for (const link of links) {
@@ -94,10 +110,18 @@ function odagiGeriVer(sekme: Sekme): void {
 window.addEventListener('hashchange', () => show(rotaCoz(location.hash), true));
 for (const link of links) {
   link.addEventListener('click', (e) => {
-    // Açık sekmeye yeniden dokunmak geçmişe kayıt eklemesin; Kenz'de en başa döner.
-    if (link.dataset.tab !== aktif) return;
-    e.preventDefault();
-    if (aktif === 'kenz') kenz.basaDon();
+    const hedef = link.dataset.tab as Sekme;
+    // Açık sekmeye yeniden dokunmak ana ekrana döndürür.
+    if (hedef === aktif) {
+      e.preventDefault();
+      anaEkranaDon();
+      return;
+    }
+    // Kenz ile Güneş arasında geçiş geçmişe kayıt eklemez: geri tuşu hep ana ekrana döner.
+    if ((aktif === 'kenz' || aktif === 'gunes') && hedef !== 'oku') {
+      e.preventDefault();
+      location.replace(link.getAttribute('href')!);
+    }
   });
 }
 show(rotaCoz(location.hash));
@@ -117,12 +141,12 @@ async function setupNative(): Promise<void> {
     import('@capacitor/splash-screen'),
     import('@capacitor/app'),
   ]);
-  // Android geri tuşu: önce açık sayfayı kapatır, Oku'dan çıkar, sonra geri gider; en başta uygulamadan çıkar.
-  await App.addListener('backButton', ({ canGoBack }) => {
+  // Android geri tuşu: önce açık sayfayı kapatır, Oku'dan çıkar, sekmeden ana ekrana döner; ana ekranda uygulamadan çıkar.
+  await App.addListener('backButton', () => {
     const sayfa = acikSayfa();
     if (sayfa) sayfa.kapat();
     else if (aktif === 'oku') okudanCik();
-    else if (canGoBack) history.back();
+    else if (aktif !== 'ana') anaEkranaDon();
     else void App.exitApp();
   }).catch(() => undefined);
   await App.addListener('appUrlOpen', ({ url }) => baglantiylaAc(url)).catch(() => undefined);

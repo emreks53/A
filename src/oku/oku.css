@@ -22,17 +22,8 @@
   background: #05070d;
 }
 
-/* ---------- tam ekran: Oku açıkken alt menü yok; çıkış sağa kaydırarak ---------- */
-.tabbar {
-  transition:
-    transform 0.35s cubic-bezier(0.3, 0.7, 0.2, 1),
-    opacity 0.25s ease;
-}
-.app[data-sekme='oku'] .tabbar {
-  transform: translateY(calc(100% + 40px + var(--safe-bottom)));
-  opacity: 0;
-  pointer-events: none;
-}
+/* ---------- tam ekran: Oku ekranı alt menünün de üstünü örter (menü inert); çıkış sağa kaydırarak ----------
+   Menü yerinden oynamaz: sağa kaydırınca altta görünen ekranda menü yerindedir. */
 /* Uygulamanın içinden açılınca sağdan gelir (çıkarken sağa gider). */
 .app[data-gecis='oku-gir'] .view--oku {
   animation: oku-gir 0.36s cubic-bezier(0.2, 0.75, 0.2, 1);
@@ -92,24 +83,22 @@
   overflow: hidden;
   scroll-snap-align: start;
   scroll-snap-stop: always;
-  background: #05070d;
+  background: #000;
 }
-/* Geniş ekranlarda videonun iki yanı kapak görselinin bulanık hâliyle dolar. */
-.reel::before {
-  content: '';
-  position: absolute;
-  inset: -48px;
-  background: var(--kapak) 50% 50% / cover no-repeat;
-  filter: blur(32px) brightness(0.5) saturate(1.2);
-}
+/* Telefonda video ekranı kenardan kenara kaplar (Reels gibi; üstten/alttan birkaç piksel kırpılır, yanlarda
+   bulanık bant olmaz). Geniş ekranda (tablet yatay, masaüstü) 9:16 sütun ortalanır, iki yan siyahtır. */
 .reel__sahne {
   position: relative;
+  width: 100%;
   height: 100%;
-  aspect-ratio: 9 / 16;
-  max-width: 100%;
   margin: 0 auto;
-  /* başlık sahnenin genişliğine göre ölçeklenir (yatay telefonda sahne dardır) */
-  container-type: inline-size;
+}
+@media (min-aspect-ratio: 3/4) {
+  .reel__sahne {
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: 9 / 16;
+  }
 }
 .reel__video {
   position: absolute;
@@ -203,106 +192,49 @@
   }
 }
 
-/* üstte, ekranın boş üst bandında: konu ve videonun adı. Videoların alt bandında altyazı, ortasında da sahne
-   yazıları olduğu için ad yalnız video ekrana gelirken birkaç saniye ve video durdurulunca görünür. */
-.reel__ust {
+/* ---------- altta: geçtiği yer (çok küçük) ve Nur-u Hakikat imi (soluk); ekranın üstünde yazı yoktur ---------- */
+.reel__kaynak {
   position: absolute;
-  isolation: isolate;
-  top: calc(var(--safe-top) + 10px);
-  left: 56px;
-  right: 56px;
-  left: clamp(12px, 14.4cqi, 56px);
-  right: clamp(12px, 14.4cqi, 56px);
-  text-align: center;
-  opacity: 0;
-  transition: opacity 0.6s ease;
-  pointer-events: none;
-}
-/* ad görünürken üst kenar biraz daha koyulaşır */
-.reel__ust::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  top: calc(-10px - var(--safe-top));
-  left: -56px;
-  right: -56px;
-  height: calc(var(--safe-top) + 130px);
-  background: linear-gradient(180deg, rgba(2, 6, 20, 0.32), rgba(2, 6, 20, 0));
-}
-.reel__konu {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  margin: 0 0 6px;
-  color: var(--nur);
-  font-family: var(--yazi-arayuz);
-  font-weight: 700;
-  font-size: 10.5px;
-  line-height: 1;
-  letter-spacing: 0.26em;
-  text-indent: 0.26em;
-  text-transform: uppercase;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
-}
-.reel__konu::before,
-.reel__konu::after {
-  content: '';
-  flex: none;
-  width: 18px;
-  height: 1px;
-  background: rgba(255, 228, 168, 0.6);
-}
-.reel__baslik {
+  left: 14px;
+  right: 64px;
+  bottom: calc(var(--safe-bottom) + 14px);
   margin: 0;
   overflow: hidden;
-  color: #fff;
-  font-family: var(--yazi-baslik);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 23px;
-  font-size: clamp(16px, 5.9cqi, 23px);
-  line-height: 1.15;
+  color: rgba(255, 255, 255, 0.86);
+  font-family: var(--yazi-arayuz);
+  font-weight: 600;
+  font-size: 11.5px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
   white-space: nowrap;
   text-overflow: ellipsis;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.55),
-    0 0 16px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
 }
-/* Oku her açıldığında (ve her video ekrana geldiğinde) yeniden başlar; gizliyken oynayıp bitmez. */
-.app[data-sekme='oku'] .reel[data-aktif] .reel__ust {
-  animation: reel-baslik 3.6s ease forwards;
-}
-.app[data-sekme='oku'] .reel[data-durum='durdu'] .reel__ust {
-  opacity: 1;
-  animation: none;
-  transition-duration: 0.25s;
-}
-@keyframes reel-baslik {
-  0% {
-    opacity: 0;
-  }
-  9%,
-  82% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+.reel__damga {
+  position: absolute;
+  right: 14px;
+  bottom: calc(var(--safe-bottom) + 11px);
+  width: 20px;
+  height: 20px;
+  opacity: 0.42;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-/* altta: ince ilerleme çizgisi; dokunma alanı 44 px, telefonun ev çubuğundan uzakta */
+/* altta: ilerleme çizgisi, Instagram Reels'teki gibi: kenardan kenara, 2 px, parlamasız, uçsuz. Dokunma alanı
+   çizginin üstünde 24 px; sürüklerken çizgi kalınlaşır, beyaz tutamak ve zaman ("0:42 / 2:05") görünür. */
 .reel__alt {
   position: absolute;
-  left: 16px;
-  right: 16px;
+  left: 0;
+  right: 0;
   bottom: var(--safe-bottom);
 }
 .reel__ilerleme {
   position: relative;
-  height: 44px;
-  margin: 0 -4px;
-  padding: 0 4px;
+  height: 24px;
   cursor: pointer;
   touch-action: none;
   outline: none;
@@ -311,57 +243,81 @@
 .reel__ilerleme-dolu {
   content: '';
   position: absolute;
-  left: 4px;
-  right: 4px;
-  top: 50%;
-  height: 2.5px;
-  margin-top: -1.25px;
-  border-radius: 2px;
-  transition:
-    height 0.15s ease,
-    margin-top 0.15s ease;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  transition: height 0.12s ease;
 }
 .reel__ilerleme::before {
-  background: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.3);
 }
 .reel__ilerleme-dolu {
-  background: linear-gradient(90deg, rgba(255, 228, 168, 0.75), #fff3d6);
-  box-shadow: 0 0 6px rgba(255, 228, 168, 0.45);
+  background: #fff;
   transform: scaleX(0);
   transform-origin: 0 50%;
 }
-/* ucu: çizgi kadar geniş bir kutu, dolu oran kadar sağa kayar; nokta kutunun sol kenarında */
+/* tutamak: çizgi kadar geniş bir kutu dolu oran kadar sağa kayar; daire kutunun sol kenarında */
 .reel__ilerleme-uc {
   position: absolute;
-  left: 4px;
-  right: 4px;
-  top: 50%;
+  left: 0;
+  right: 0;
+  bottom: 2px;
   height: 0;
   pointer-events: none;
 }
 .reel__ilerleme-uc::before {
   content: '';
   position: absolute;
-  left: -2px;
-  top: -2px;
-  width: 4px;
-  height: 4px;
+  left: -6px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #fff8e6;
-  box-shadow:
-    0 0 6px 1px rgba(255, 228, 168, 0.9),
-    0 0 14px rgba(255, 228, 168, 0.5);
+  background: #fff;
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
 }
 .reel__ilerleme.suruklenen::before,
 .reel__ilerleme.suruklenen .reel__ilerleme-dolu,
 .reel__ilerleme:focus-visible::before,
 .reel__ilerleme:focus-visible .reel__ilerleme-dolu {
   height: 4px;
-  margin-top: -2px;
+}
+.reel__ilerleme.suruklenen .reel__ilerleme-uc::before,
+.reel__ilerleme:focus-visible .reel__ilerleme-uc::before {
+  opacity: 1;
+  transform: none;
 }
 .reel__ilerleme:focus-visible {
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7);
-  border-radius: 10px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+}
+.reel__zaman {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  color: #fff;
+  font-family: var(--yazi-arayuz);
+  font-weight: 700;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  pointer-events: none;
+}
+.reel[data-sarma] .reel__zaman {
+  opacity: 1;
+}
+/* sararken alttaki küçük yazı ve im çekilir */
+.reel[data-sarma] .reel__kaynak,
+.reel[data-sarma] .reel__damga {
+  opacity: 0;
 }
 
 /* sağda: yalnız iki düğme. Videolar YouTube Shorts düzenine göre hazırlandı: altyazılar karenin %72-82
@@ -553,12 +509,15 @@
 
 /* Menba açıkken videonun üstündeki her şey çekilir */
 .reel__alt,
-.reel__dugmeler {
+.reel__dugmeler,
+.reel__kaynak,
+.reel__damga {
   transition: opacity 0.2s ease;
 }
-.app[data-sekme='oku'] .view--oku[data-sayfa] .reel__ust,
 .view--oku[data-sayfa] .reel__alt,
 .view--oku[data-sayfa] .reel__dugmeler,
+.view--oku[data-sayfa] .reel__kaynak,
+.view--oku[data-sayfa] .reel__damga,
 .view--oku[data-sayfa] .akis__ipucu {
   opacity: 0;
   animation: none;
@@ -838,7 +797,6 @@
   .alt-sayfa,
   .alt-perde,
   .reel__dugme,
-  .tabbar,
   .view--oku,
   .view--oku:not(.suruklenen):not(.cikiyor),
   .view--oku.cikiyor,

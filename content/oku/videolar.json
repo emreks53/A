@@ -1,38 +1,32 @@
 {
   "site": "https://emreks53.github.io/A/",
-  "konular": [
-    { "id": "muhabbet", "baslik": "Muhabbet" },
-    { "id": "nubuvvet", "baslik": "Nübüvvet" }
-  ],
   "videolar": [
     {
-      "id": "sevgi-ve-guzellik",
-      "baslik": "Sevgi ve Güzellik",
-      "konu": "muhabbet",
-      "video": "videolar/sevgi-ve-guzellik.mp4",
-      "kapak": "videolar/sevgi-ve-guzellik-kapak.jpg",
-      "onizleme": "videolar/sevgi-ve-guzellik-onizleme.jpg",
-      "menba": [
-        { "eser": "Lem'alar", "yer": "64. sayfa" }
-      ],
+      "id": "fenler-haliki-tanittirir",
+      "baslik": "On Birinci Şuâ'dan",
+      "kitap": "Şuâlar",
+      "bolum": "On Birinci Şuâ",
+      "kisim": "Altıncı Mesele",
+      "sayfa": 203,
+      "etiketler": ["fenler", "marifetullah", "tefekkür"],
+      "video": "videolar/fenler-haliki-tanittirir.mp4",
+      "kapak": "videolar/fenler-haliki-tanittirir-kapak.jpg",
+      "onizleme": "videolar/fenler-haliki-tanittirir-onizleme.jpg",
       "kunye": [
-        "Samanyolu (Paranal): ESO/B. Tafreshi — CC BY 4.0",
-        "Girdap Galaksisi M51: ESA/Webb, NASA & CSA, the FEAST JWST team, The Hubble Heritage Team, WIYN/NOIRLab/NSF/AURA, Digitized Sky Survey 2, M. Bartmann (ESA/Webb), A. Pedrini, A. Adamo, S. Beckwith, K. Rhode, M. Young, E. Slawik, N. Risinger, M. Zamani — CC BY 4.0",
-        "Uzaydan Dünya (ISS): NASA/JSC — kamu malı (NASA'nın onayı ima edilmez)",
-        "Diğer görüntüler: Pexels ve Mixkit lisanslı gerçek çekimler. Ses efektleri: Mixkit. Yapay zekâ ile üretilmiş görüntü yoktur."
+        "3B modeller, HDRI'lar ve dokular: Poly Haven (CC0)",
+        "Dünya görüntüleri: NASA Blue Marble ve GEBCO (kamu malı)"
       ]
     },
     {
-      "id": "ahlak-mucizesi",
-      "baslik": "Ahlâk Mu'cizesi",
-      "konu": "nubuvvet",
-      "video": "videolar/ahlak-mucizesi.mp4",
-      "kapak": "videolar/ahlak-mucizesi-kapak.jpg",
-      "onizleme": "videolar/ahlak-mucizesi-onizleme.jpg",
-      "menba": [
-        { "eser": "Mektubat", "yer": "195. sayfa" },
-        { "eser": "Sözler", "yer": "19. Söz" }
-      ]
+      "id": "ihlas",
+      "baslik": "On Yedinci Lem'a'dan",
+      "kitap": "Lem'alar",
+      "bolum": "On Yedinci Lem'a",
+      "sayfa": 154,
+      "etiketler": ["ihlas", "muhabbet", "kurtuluş"],
+      "video": "videolar/ihlas.mp4",
+      "kapak": "videolar/ihlas-kapak.jpg",
+      "onizleme": "videolar/ihlas-onizleme.jpg"
     }
   ]
 }

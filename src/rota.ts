@@ -1,4 +1,5 @@
-export type Sekme = 'oku' | 'kenz' | 'gunes';
+/** "ana" giriş ekranıdır (gökyüzü ve alıntı); diğerleri alt menüdeki sekmeler. */
+export type Sekme = 'ana' | 'oku' | 'kenz' | 'gunes';
 
 export interface Rota {
   sekme: Sekme;
@@ -6,7 +7,7 @@ export interface Rota {
   video?: string;
 }
 
-const SEKMELER: readonly string[] = ['oku', 'kenz', 'gunes'];
+const SEKMELER: readonly string[] = ['ana', 'oku', 'kenz', 'gunes'];
 
 /** "#/oku/sevgi-ve-guzellik" → { sekme: 'oku', video: 'sevgi-ve-guzellik' } */
 export function rotaCoz(hash: string): Rota {
@@ -20,12 +21,13 @@ export function rotaCoz(hash: string): Rota {
         return p;
       }
     });
-  if (!SEKMELER.includes(sekme)) return { sekme: 'kenz' };
+  if (!SEKMELER.includes(sekme)) return { sekme: 'ana' };
   if (sekme !== 'oku' || !video) return { sekme: sekme as Sekme };
   return { sekme, video };
 }
 
 export function rotaHash(r: Rota): string {
+  if (r.sekme === 'ana') return '#/';
   return '#/' + [r.sekme, r.video].filter(Boolean).map((p) => encodeURIComponent(p!)).join('/');
 }
 

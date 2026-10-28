@@ -1,11 +1,12 @@
 // Oku sekmesi: kâinat kitabını "okumak" için dikey kısa video akışı (Reels gibi).
 // Yukarı/aşağı kaydırınca bir sonraki video tam ekran gelir ve kendiliğinden oynar. Ekranda yalnız iki düğme
 // vardır: Neşret (paylaşım bağlantısı) ve Menba (Risale-i Nur'daki kaynak).
-import { konular, videolar } from 'virtual:oku-videolar';
+import { videolar } from 'virtual:oku-videolar';
+import damgaAdresi from '../assets/icons/dugum-beyaz.svg';
 import { altSayfaAc, acikSayfa } from './alt-sayfa';
 import { menbaIcerik } from './menba';
 import { nesret } from './nesret';
-import { tipografik, type Video } from './ortak';
+import { sureYazisi, tipografik, type Video } from './ortak';
 
 function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, metin?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(etiket);
@@ -32,6 +33,7 @@ interface Oge {
   video: HTMLVideoElement;
   dolu: HTMLElement;
   uc: HTMLElement;
+  zaman: HTMLElement;
   cubuk: HTMLElement;
   durum: HTMLElement;
   /** Kullanıcı durdurdu (dokunarak, klavyeyle ya da kulaklık/medya tuşuyla): kendiliğinden başlamaz */
@@ -101,7 +103,6 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
   let cerceve = 0;
   let ipucuZamanlayici = 0;
 
-  const konuAdi = new Map(konular.map((k) => [k.id, tipografik(k.baslik)]));
 
   const ogeler: Oge[] = videolar.map((v, i) => {
     const art = el('article', 'reel');
@@ -129,15 +130,16 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
     const durum = el('div', 'reel__durum');
     durum.setAttribute('aria-hidden', 'true');
 
-    // Ad ve konu üstte, ekranın boş üst bandında: videoların alt bandında altyazı gömülü.
-    const ust = el('div', 'reel__ust');
-    const konu = konuAdi.get(v.konu);
-    if (konu) {
-      const k = el('p', 'reel__konu', konu);
-      k.setAttribute('aria-hidden', 'true');
-      ust.append(k);
-    }
-    ust.append(el('h2', 'reel__baslik', tipografik(v.baslik)));
+    // Ekranın üstünde yazı yoktur. En altta çok küçük, videonun geçtiği yer ("On Yedinci Lem’a") ve sağ altta
+    // soluk Nur-u Hakikat imi; ikisi de dokunulmaz (dokunuş videoya geçer).
+    const baslikEl = el('h2', 'visually-hidden', tipografik(v.baslik));
+    const kaynak = el('p', 'reel__kaynak', tipografik(v.bolum));
+    kaynak.setAttribute('aria-hidden', 'true');
+    const damga = el('img', 'reel__damga');
+    damga.src = damgaAdresi;
+    damga.alt = '';
+    damga.setAttribute('aria-hidden', 'true');
+    damga.draggable = false;
 
     const alt = el('div', 'reel__alt');
     const cubuk = el('div', 'reel__ilerleme');
@@ -148,30 +150,32 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
     cubuk.setAttribute('aria-valuenow', '0');
     cubuk.tabIndex = 0;
     const dolu = el('span', 'reel__ilerleme-dolu');
-    // Dolu kısmın ucunda parlayan nokta
+    // Sürüklerken görünen tutamak ve zaman ("0:42 / 2:05")
     const uc = el('span', 'reel__ilerleme-uc');
+    const zaman = el('span', 'reel__zaman');
+    zaman.setAttribute('aria-hidden', 'true');
     cubuk.append(dolu, uc);
-    alt.append(cubuk);
+    alt.append(zaman, cubuk);
 
     const dugmeler = el('div', 'reel__dugmeler');
     const nesretD = el('button', 'reel__dugme reel__dugme--nesret');
     nesretD.type = 'button';
     nesretD.innerHTML = NESRET_SVG;
     nesretD.append(el('span', 'reel__dugme-ad', 'Neşret'));
-    nesretD.setAttribute('aria-label', `Neşret: ${v.baslik} bağlantısını paylaş`);
+    nesretD.setAttribute('aria-label', `Neşret: ${tipografik(v.baslik)} bağlantısını paylaş`);
     const menbaD = el('button', 'reel__dugme reel__dugme--menba');
     menbaD.type = 'button';
     menbaD.innerHTML = MENBA_SVG;
     menbaD.append(el('span', 'reel__dugme-ad', 'Menba'));
-    menbaD.setAttribute('aria-label', `Menba: ${v.baslik} videosunun kaynağı`);
+    menbaD.setAttribute('aria-label', `Menba: ${tipografik(v.baslik)} videosunun kaynağı`);
     menbaD.setAttribute('aria-haspopup', 'dialog');
     dugmeler.append(nesretD, menbaD);
 
-    sahne.append(video, karartma, durum, ust, alt, dugmeler);
+    sahne.append(video, karartma, durum, baslikEl, kaynak, damga, alt, dugmeler);
     art.append(sahne);
     akis.append(art);
 
-    const oge: Oge = { v, kok: art, video, dolu, uc, cubuk, durum, elleDurdu: false, ayrildi: false, uygulamaDurdurdu: false };
+    const oge: Oge = { v, kok: art, video, dolu, uc, zaman, cubuk, durum, elleDurdu: false, ayrildi: false, uygulamaDurdurdu: false };
 
     nesretD.addEventListener('click', async () => {
       const sonuc = await nesret(v);
@@ -299,7 +303,9 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
     o.dolu.style.transform = `scaleX(${oran})`;
     o.uc.style.transform = `translateX(${(oran * 100).toFixed(3)}%)`;
     o.cubuk.setAttribute('aria-valuenow', String(Math.round(oran * 100)));
-    o.cubuk.setAttribute('aria-valuetext', `${Math.floor(v.currentTime / 60)}:${String(Math.floor(v.currentTime % 60)).padStart(2, '0')}`);
+    const simdi = sureYazisi(Math.floor(v.currentTime));
+    o.cubuk.setAttribute('aria-valuetext', simdi);
+    if (o.cubuk.classList.contains('suruklenen')) o.zaman.textContent = `${simdi} / ${sureYazisi(v.duration > 0 ? v.duration : o.v.sure)}`;
   }
 
   function dongu(): void {
@@ -473,12 +479,14 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
       surukleniyor = true;
       c.setPointerCapture(e.pointerId);
       c.classList.add('suruklenen');
+      o.kok.dataset.sarma = '';
       konumla(e.clientX);
     });
     c.addEventListener('pointermove', (e) => surukleniyor && konumla(e.clientX));
     const bitir = () => {
       surukleniyor = false;
       c.classList.remove('suruklenen');
+      delete o.kok.dataset.sarma;
     };
     c.addEventListener('pointerup', bitir);
     c.addEventListener('pointercancel', bitir);

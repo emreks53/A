@@ -23,19 +23,19 @@
     <div class="app" id="app">
       <picture class="bg" aria-hidden="true">
         <source
-          media="(min-aspect-ratio: 3/5)"
+          media="(min-aspect-ratio: 4/5)"
           type="image/avif"
           srcset="/src/assets/bg/bg-wide-1280.avif 1280w, /src/assets/bg/bg-wide-2560.avif 2560w"
           sizes="max(100vw, 139vh)"
         />
         <source
-          media="(min-aspect-ratio: 3/5)"
+          media="(min-aspect-ratio: 4/5)"
           type="image/webp"
           srcset="/src/assets/bg/bg-wide-1280.webp 1280w, /src/assets/bg/bg-wide-2560.webp 2560w"
           sizes="max(100vw, 139vh)"
         />
         <source
-          media="(min-aspect-ratio: 3/5)"
+          media="(min-aspect-ratio: 4/5)"
           srcset="/src/assets/bg/bg-wide-1280.jpg 1280w, /src/assets/bg/bg-wide-2560.jpg 2560w"
           sizes="max(100vw, 139vh)"
         />
@@ -59,33 +59,20 @@
           fetchpriority="high"
         />
       </picture>
-      <div class="bg-perde" aria-hidden="true"></div>
 
       <main class="views">
-        <section class="view view--kenz" id="view-kenz" data-view="kenz" aria-label="Kenz">
-          <div class="kenz" id="kenz-kaydirma">
-            <header class="kahraman">
-              <h1 class="visually-hidden" tabindex="-1">Nur-u Hakikat</h1>
-              <p class="marka" aria-hidden="true">Nur-u Hakikat</p>
-              <p class="quote">
-                <span class="quote__line">Güneşten daha parlak</span>
-                <span class="quote__line">ve cennet gibi güzel</span>
-                <span class="quote__line">ve saadet-i ebediye gibi</span>
-                <span class="quote__line">şirin hakikatler</span>
-              </p>
-              <button class="cagri" type="button" aria-controls="kutuphane">
-                <span class="cagri__yildiz" aria-hidden="true">✦</span>
-                <span class="cagri__ad">Konular</span>
-                <span class="cagri__sayi"></span>
-                <svg class="cagri__ok" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </button>
-            </header>
-          </div>
-          <div class="kenz__ust" aria-hidden="true">
-            <p class="marka-dar"><i class="dugum"></i><span>Nur-u Hakikat</span></p>
-          </div>
+        <section class="view view--ana" id="view-ana" data-view="ana" aria-label="Nur-u Hakikat">
+          <h1 class="visually-hidden" tabindex="-1">Nur-u Hakikat</h1>
+          <p class="quote">
+            <span class="quote__line">Güneşten daha parlak</span>
+            <span class="quote__line">ve cennet gibi güzel</span>
+            <span class="quote__line">ve saadet-i ebediye gibi</span>
+            <span class="quote__line">şirin hakikatler</span>
+          </p>
+        </section>
+
+        <section class="view view--kenz" id="view-kenz" data-view="kenz" aria-labelledby="kenz-baslik" hidden>
+          <div class="kenz" id="kenz-kaydirma"></div>
         </section>
 
         <section class="view view--oku" id="view-oku" data-view="oku" aria-label="Oku" hidden></section>
@@ -119,7 +106,7 @@
           <img class="tab__icon tab__icon--globe" src="/src/assets/icons/globe.webp" alt="" width="96" height="96" />
           <span class="tab__label">Oku</span>
         </a>
-        <a class="tab tab--kenz" href="#/kenz" data-tab="kenz" aria-current="page">
+        <a class="tab tab--kenz" href="#/kenz" data-tab="kenz">
           <img class="tab__icon tab__icon--kenz" src="/src/assets/icons/kenz.svg" alt="" width="834" height="907" />
           <span class="tab__label">Kenz</span>
         </a>

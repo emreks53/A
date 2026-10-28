@@ -127,7 +127,7 @@
   }
 }
 /* Yatay / geniş ekranlarda (tablet, masaüstü, yatay telefon) kompozisyon biraz daha büyük ölçeklenir. */
-@media (min-aspect-ratio: 3/5) {
+@media (min-aspect-ratio: 4/5) {
   :root {
     --u: min(calc(100vw / 390), calc(100vh / 700));
   }
@@ -278,6 +278,11 @@ h1[tabindex='-1']:focus {
 .tabbar[data-active='oku'] {
   --pill-x: var(--tab-oku);
 }
+/* Ana ekranda hiçbir sekme seçili değildir. */
+.tabbar:not([data-active]) .tabbar__pill {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
 .tabbar[data-active='gunes'] {
   --pill-x: var(--tab-gunes);
 }
@@ -353,7 +358,7 @@ h1[tabindex='-1']:focus {
 }
 .tab--kenz .tab__label {
   --label-dx: 0.23;
-  color: var(--kenz);
+  color: var(--oku);
 }
 .tab--gunes .tab__label {
   --label-dx: -0.68;
