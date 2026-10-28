@@ -123,13 +123,14 @@
   }
 }
 /* Yatay / geniş ekranlarda (tablet, masaüstü, yatay telefon) kompozisyon biraz daha büyük ölçeklenir. */
+/* (yatay telefonda menü ve yazıları okunamayacak kadar küçülmesin: en az 0,82) */
 @media (min-aspect-ratio: 4/5) {
   :root {
-    --u: min(calc(100vw / 390), calc(100vh / 700));
+    --u: max(0.82px, min(calc(100vw / 390), calc(100vh / 700)));
   }
   @supports (height: 100dvh) {
     :root {
-      --u: min(calc(100vw / 390), calc(100dvh / 700));
+      --u: max(0.82px, min(calc(100vw / 390), calc(100dvh / 700)));
     }
   }
 }

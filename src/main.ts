@@ -22,11 +22,14 @@ let okuOncesi: Exclude<Sekme, 'oku'> = 'ana';
 /** Açık sekmeye (Kenz, Güneş) ana ekrandan gelindi: ana ekrana dönmek geçmişte bir adım geri gitmektir. */
 let anadanGelindi = false;
 
-/** Geçmiş kaydında saklanan: bu ekrana uygulamanın içinden hangi ekrandan gelindi. Sayfa yeniden yüklense de
- *  (uygulama güncellenince, Android sekmeyi bellekten atınca) kalır; çıkışlar yine doğru ekrana döner. */
+/** Geçmiş kaydında saklanan: kaydın sırası ve bu ekrana uygulamanın içinden hangi ekrandan gelindi. Sayfa yeniden
+ *  yüklense de (uygulama güncellenince, Android sekmeyi bellekten atınca) kalır; çıkışlar yine doğru ekrana döner. */
 interface GecmisDurumu {
+  sira?: number;
   onceki?: Exclude<Sekme, 'oku'>;
 }
+/** Görünen kaydın sırası: bir sonraki kayda (yeni kayıt ya da tarayıcının İleri tuşu) gelindiğini anlamak için */
+let aktifSira = 0;
 const gecmisDurumu = (): GecmisDurumu => (history.state && typeof history.state === 'object' ? history.state : {});
 
 /** Adresi geçmişe kayıt eklemeden ve geçmiş kaydındaki bilgiyi koruyarak değiştirir (yeni ekran eskisinin yerine
@@ -46,16 +49,21 @@ const azaltilmisHareket = window.matchMedia('(prefers-reduced-motion: reduce)');
 function okudanCik(): void {
   if (aktif !== 'oku') return;
   if (okuyaIcerdenGelindi) history.back();
-  else location.replace(rotaHash({ sekme: okuOncesi }));
+  else yerineGec(rotaHash({ sekme: okuOncesi }));
 }
 
 /** Kenz ve Güneş'ten ana ekrana (açık sekmeye yeniden dokununca ya da geri tuşuyla) */
 function anaEkranaDon(): void {
   if (anadanGelindi) history.back();
-  else location.replace('#/');
+  else yerineGec('#/');
 }
 
 kenzBaslat(document.getElementById('view-kenz')!);
+
+// Klavyeyle gezilirken (Tab, oklar …) videonun odak çerçevesi görünür; dokunuş ya da fareyle kalkar.
+const KLAVYE_TUSLARI = new Set(['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Enter']);
+document.addEventListener('keydown', (e) => KLAVYE_TUSLARI.has(e.key) && (document.documentElement.dataset.klavye = ''), true);
+document.addEventListener('pointerdown', () => delete document.documentElement.dataset.klavye, true);
 
 // Akışta video değişince adres de değişir (#/oku/<id>); geçmişe yeni kayıt eklenmez.
 const akis = akisBaslat(okuGorunumu, {
@@ -80,13 +88,16 @@ const kaydir = sagaKaydirCik(okuGorunumu, {
 function show(r: Rota, icerden = false, yerine = false): void {
   const sekme = r.sekme;
   const okudanDonus = aktif === 'oku' && sekme !== 'oku';
-  // Uygulamanın içinden yeni bir kayda gelindiyse nereden gelindiği kayda yazılır; geri/ileri gidilen ya da yeniden
-  // yüklenen kayıtta önceden yazılmış olan okunur.
-  let { onceki } = gecmisDurumu();
-  if (icerden && !yerine && onceki === undefined && sekme !== 'ana' && aktif !== null && aktif !== 'oku' && aktif !== sekme) {
-    onceki = aktif;
-    history.replaceState({ ...gecmisDurumu(), onceki }, '');
-  }
+  // Bir sonraki kayda gelindiyse (yeni kayıt: dokunuş ya da adres çubuğu; ya da İleri tuşu) bırakılan ekran, nereden
+  // gelindiği olarak kayda yazılır. Geri gidilen, birkaç adım atlanan ya da yeniden yüklenen kayıtta önceden yazılmış
+  // olan okunur. Her kayıt ilk görüldüğünde sırasını alır.
+  const durum = gecmisDurumu();
+  const sira = durum.sira ?? (aktif === null ? 0 : aktifSira + 1);
+  let { onceki } = durum;
+  const sonraki = icerden && !yerine && aktif !== null && sira === aktifSira + 1;
+  if (sonraki) onceki = aktif && aktif !== 'oku' && aktif !== sekme && sekme !== 'ana' ? aktif : undefined;
+  if (durum.sira !== sira || durum.onceki !== onceki) history.replaceState({ ...durum, sira, onceki }, '');
+  aktifSira = sira;
   if (sekme === 'oku' && aktif !== 'oku') {
     okuyaIcerdenGelindi = onceki !== undefined;
     okuOncesi = onceki ?? aktif ?? 'ana';

@@ -528,6 +528,19 @@ await adim('sesli oynatmaya izin vermeyen tarayıcıda sessiz başlar, dokununca
       return !v.muted && !v.paused;
     });
     assert.equal(await p2.locator('.akis__sessiz').isHidden(), true);
+    // yatay telefonda da ses göstergesi ve bildirim videonun 9:16 sütununun içinde
+    const p3 = await (await b2.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true })).newPage();
+    await p3.goto(base + `v/${F}/`);
+    await p3.waitForSelector('.akis__sessiz:not([hidden])');
+    await p3.waitForSelector('.akis__bildirim.gorunur');
+    const yatay = await p3.evaluate(() => {
+      const sutun = document.querySelector('.reel[data-aktif] .reel__sahne').getBoundingClientRect();
+      const ses = document.querySelector('.akis__sessiz').getBoundingClientRect();
+      const b = document.querySelector('.akis__bildirim');
+      const br = b.getBoundingClientRect();
+      return { ses: ses.left >= sutun.left && ses.right <= sutun.right, bildirim: br.left >= sutun.left - 0.5 && br.right <= sutun.right + 0.5, tasma: b.scrollWidth - b.clientWidth };
+    });
+    assert.deepEqual(yatay, { ses: true, bildirim: true, tasma: 0 });
   } finally {
     await b2.close();
   }
@@ -768,6 +781,39 @@ await adim('sayfa yeniden yüklense de (uygulama güncellenince) çıkışlar ge
   await page.locator('.tab--kenz').click();
   await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'ana');
   assert.equal(new URL(page.url()).hash, '');
+});
+
+await adim('İleri tuşuyla Oku\'ya dönülünce bırakılan ekran altta görünür, çıkış oraya gider', async () => {
+  await page.goto(base);
+  await page.waitForSelector('.quote');
+  await page.locator('.tab--kenz').click();
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  await page.locator('a.kart[data-video="ihlas"]').click();
+  await oynuyor(I);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  await page.locator('.tab--gunes').click();
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'gunes');
+  await page.goForward();
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'oku');
+  assert.equal(await page.evaluate(() => document.getElementById('app').dataset.zemin), 'gunes');
+  assert.equal(await page.locator('.tab[aria-current]').getAttribute('data-tab'), 'gunes');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'gunes');
+  assert.equal(new URL(page.url()).hash, '#/gunes');
+});
+
+await adim('adres çubuğuna yazılan adresten geri gelince açık sekmeye dokunmak uygulamadan çıkarmaz', async () => {
+  await page.goto('about:blank');
+  await page.goto(base + '#/kenz');
+  await page.waitForSelector('.kart');
+  await page.evaluate(() => (location.hash = '#/'));
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'ana');
+  await page.goBack();
+  await page.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  await page.locator('.tab--kenz').click();
+  await page.waitForFunction(() => document.getElementById('app')?.dataset.sekme === 'ana');
+  assert.ok(page.url().startsWith(base), `uygulamadan çıkıldı: ${page.url()}`);
 });
 
 await adim('Güneş: "yakında" ekranı; Kenz ile Güneş arası geçiş geçmişe yazılmaz, geri ana ekrana döner', async () => {

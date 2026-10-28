@@ -110,30 +110,6 @@
     aspect-ratio: 9 / 16;
   }
 }
-/* geniş ekranda ses göstergesi, bildirim ve çıkış ipucu da 9:16 sütunun içinde durur */
-@media (min-aspect-ratio: 3/4) {
-  .akis__sessiz {
-    right: calc(50% - 28.125vh + 12px);
-  }
-  .akis__bildirim {
-    max-width: calc(56.25vh - 24px);
-    white-space: normal;
-    text-align: center;
-  }
-  .akis__ipucu:not(.akis__ipucu--tus) {
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-  }
-  @supports (height: 1dvh) {
-    .akis__sessiz {
-      right: calc(50% - 28.125dvh + 12px);
-    }
-    .akis__bildirim {
-      max-width: calc(56.25dvh - 24px);
-    }
-  }
-}
 .reel__video {
   position: absolute;
   inset: 0;
@@ -143,8 +119,13 @@
   background: #05070d;
   outline: none;
 }
+/* odak çerçevesi videonun üstünde ve yalnız klavyeyle gezilirken (Oku açılınca video programla odaklanır) */
 .reel__video:focus-visible {
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.85);
+  outline: none;
+}
+:root[data-klavye] .reel__video:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.85);
+  outline-offset: -3px;
 }
 .reel__karartma {
   position: absolute;
@@ -292,10 +273,11 @@
   transform-origin: 0 50%;
 }
 /* tutamak: çizgi kadar geniş bir kutu dolu oran kadar sağa kayar; daire kutunun sol kenarında */
+/* (tutamak iki uçta da ekranın içinde kalsın diye yolu 6 px içeriden) */
 .reel__ilerleme-uc {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 6px;
+  right: 6px;
   bottom: 2px;
   height: 0;
   pointer-events: none;
@@ -468,6 +450,32 @@
 .akis__bildirim.gorunur {
   opacity: 1;
   transform: translate(-50%, 0);
+}
+
+/* geniş ekranda ses göstergesi, bildirim ve çıkış ipucu da 9:16 sütunun içinde durur (temel kurallardan sonra
+   gelmeli: seçicileri aynı ağırlıkta) */
+@media (min-aspect-ratio: 3/4) {
+  .akis__sessiz {
+    right: calc(50% - 28.125vh + 12px);
+  }
+  .akis__bildirim {
+    max-width: calc(56.25vh - 24px);
+    white-space: normal;
+    text-align: center;
+  }
+  .akis__ipucu:not(.akis__ipucu--tus) {
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  @supports (height: 1dvh) {
+    .akis__sessiz {
+      right: calc(50% - 28.125dvh + 12px);
+    }
+    .akis__bildirim {
+      max-width: calc(56.25dvh - 24px);
+    }
+  }
 }
 
 /* çıkış ipucu: soldan sağa akan ışık izi + yazı; dokunulmaz (düğme değildir) */

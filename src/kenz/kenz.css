@@ -14,8 +14,15 @@
 .app[data-zemin='kenz'] {
   background: #070f28;
 }
+.app[data-zemin='gunes'] {
+  background: #0b1338;
+}
 .app[data-zemin='kenz'] .bg {
   opacity: 0;
+}
+/* (Kenz'de de koyulaşmış kalır: Kenz'den Güneş'e geçerken fotoğraf parlak belirmez) */
+.app[data-zemin='kenz'] .bg__img {
+  filter: brightness(0.62) saturate(0.75) contrast(1.05);
 }
 .app[data-zemin='gunes'] .bg__img {
   filter: brightness(0.62) saturate(0.75) contrast(1.05);
