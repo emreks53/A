@@ -25,5 +25,18 @@ export function kenzBaslat(gorunum: HTMLElement): void {
   son.className = 'kenz__son';
   son.setAttribute('aria-hidden', 'true');
   son.innerHTML = DUGUM_SVG;
-  kaydirma.append(bas, kutuphaneCiz(), son);
+  // Altta menünün arkası ve yanları, üstte durum çubuğunun altı düz gece rengidir; orada görünmeyen kartlar
+  // dokunuş ve fare almasın diye o bantlara saydam kalkanlar konur. Kaydırma alanının içinde yapışkan
+  // oldukları için kaydırma oradan da başlar; yer kaplamazlar.
+  const kalkan = (yer: string) => {
+    const k = document.createElement('div');
+    k.className = `kenz__kalkan kenz__kalkan--${yer}`;
+    k.setAttribute('aria-hidden', 'true');
+    return k;
+  };
+  // (kalkanlar kaydırma alanının iç boşluğuna göre değil kenarına göre dursun diye iç boşluk ayrı kaptadır)
+  const ic = document.createElement('div');
+  ic.className = 'kenz__ic';
+  ic.append(bas, kutuphaneCiz(), son);
+  kaydirma.append(kalkan('ust'), ic, kalkan('alt'));
 }

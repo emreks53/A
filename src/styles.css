@@ -1,7 +1,7 @@
 /*
- * Kenz — ana ekran tasarımı (design/mockup-ana-ekran.png) birebir uyacak şekilde ölçülmüştür.
- * Tüm ölçüler 390 x 841.2 CSS piksellik referans ekrana göredir ve --u ile ölçeklenir:
- * referans ekranda --u = 1px. Ölçüm ayrıntıları: design/OLCULER.md
+ * Ana ekran (design/mockup-ana-ekran.png tasarımına göre ölçülmüştür) ve alt menü.
+ * Ölçüler 390 px genişliğe göredir ve --u ile ölçeklenir (390 x 844'lük telefonda --u = 1px).
+ * Ölçüm ayrıntıları: design/OLCULER.md
  */
 
 @font-face {

@@ -2,7 +2,7 @@
 // Bağlantı sitenin v/<id>/ sayfasıdır: önizlemesi o videonun görseli ve adıyla çıkar, açınca video başlar.
 import { Capacitor } from '@capacitor/core';
 import { site } from 'virtual:oku-videolar';
-import { paylasimAdresi, type Video } from './ortak';
+import { paylasimAdresi, tipografik, type Video } from './ortak';
 
 export type NesretSonucu = 'paylasildi' | 'kopyalandi' | 'vazgecildi' | 'olmadi';
 
@@ -47,7 +47,7 @@ async function paylas(v: Video): Promise<NesretSonucu> {
   if (Capacitor.isNativePlatform()) {
     try {
       const { Share } = await import('@capacitor/share');
-      await Share.share({ title: v.baslik, text: v.baslik, url, dialogTitle: 'Neşret' });
+      await Share.share({ title: tipografik(v.baslik), text: tipografik(v.baslik), url, dialogTitle: 'Neşret' });
       return 'paylasildi';
     } catch (e) {
       // Kullanıcı menüyü kapatınca ya da menü zaten açıkken de hata döner
@@ -56,7 +56,7 @@ async function paylas(v: Video): Promise<NesretSonucu> {
   }
   if (typeof navigator.share === 'function') {
     try {
-      await navigator.share({ title: v.baslik, text: v.baslik, url });
+      await navigator.share({ title: tipografik(v.baslik), text: tipografik(v.baslik), url });
       return 'paylasildi';
     } catch (e) {
       const ad = (e as DOMException)?.name;
