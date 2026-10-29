@@ -67,7 +67,10 @@ dokunulmaz); altında ceviz rafta Risale-i Nur Külliyatı'nın 14 eseri Külliy
 Lem’alar, … İman ve Küfür Muvâzeneleri). Arka plan ana ekranın gökyüzü fotoğrafıdır; ufku rahlenin hizasına gelir.
 
 - Her eser büyük bir cilt sırtıdır (Menba rafıyla aynı renkler, altın şeritler, dikey ad); dokunma alanı en az
-  44 × 44 px (354 px'ten dar ekranlarda sırtlar daralır, raf ekrana sığar). PDF'i henüz eklenmemiş eser soluk görünür ve "yakında" yazar; dokunulmaz.
+  44 × 44 px (354 px'ten dar ekranlarda sırtlar daralır, raf ekrana sığar).
+- PDF'i okuyucuda olmayan eser, listede bağlantısı varsa yayınevinin sitesindeki kitap sayfasına gider (şimdi
+  RNK Neşriyat, `rnk.com.tr`; tarayıcıda yeni sekmede, telefon uygulamasında sistem tarayıcısında açılır; rafın
+  altındaki not bunu söyler). Ne PDF'i ne bağlantısı olan eser soluk görünür ve "yakında" yazar; dokunulmaz.
 - En son okunan kitap için rafın altında **Kaldığın yer** kartı çıkar (kitap, bölüm, sayfa); dokununca
   okuyucu o sayfada açılır.
 - Kitaba dokununca cilt raftan çekilir, dönüp kapağını gösterir, kapak açılır ve okuyucu tam ekran açılır
@@ -107,7 +110,9 @@ dosya olur; eskisi silinmez, telefona kurulmuş eski uygulamalar onu okumayı s�
   "icindekiler": [{ "baslik": "On Yedinci Lem’a", "sayfa": 151 }, { "baslik": "Birinci Nota", "sayfa": 152, "derinlik": 1 }] }
 ```
 
-`pdf` bir `https://` adresi de olabilir (sunucu CORS izni vermelidir). Liste derlemede denetlenir: bilinmeyen
+`pdf` bir `https://` adresi de olabilir (sunucu CORS izni vermelidir). PDF'i olmayan eserlerin dışarıdaki
+sayfaları listenin `baglanti` alanındadır: `{ "ad": "RNK Neşriyat", "adresler": { "Sözler": "https://rnk.com.tr/sozler/", … } }`
+(PDF'i eklenen eser bağlantısı olsa da okuyucuda açılır). Liste derlemede denetlenir: bilinmeyen
 eser, olmayan ya da PDF olmayan dosya, sayfa sayısını aşan içindekiler derlemeyi durdurur. PDF'ler sitede
 yayınlanır; mobil uygulamaya konmaz (paket küçük kalır), uygulama onları siteden okur: sitenin sunucusu bayt
 aralığı istediği için yalnız açılan sayfaların parçaları iner (başka kaynaktaki PDF için de, sunucu `Range`

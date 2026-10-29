@@ -896,7 +896,7 @@ const cizildi = (p = page) =>
   });
 const ESERLER = ['Sözler', 'Mektubat', 'Lem’alar', 'Şuâlar', 'İşârâtü’l-İ’câz', 'Mesnevî-i Nûriye', 'Asâ-yı Mûsâ', 'Barla Lâhikası', 'Kastamonu Lâhikası', 'Emirdağ Lâhikası', 'Sikke-i Tasdîk-i Gaybî', 'Tarihçe-i Hayat', 'Muhâkemat', 'İman ve Küfür Muvâzeneleri'];
 
-await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), altında 14 eser Külliyat sırasıyla; PDF\'i olan açılır, olmayan "yakında"; Kenz ile Güneş arası geçiş geçmişe yazılmaz', async () => {
+await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), altında 14 eser Külliyat sırasıyla; PDF\'i olan okuyucuda, olmayan RNK Neşriyat\'ın sitesinde açılır, ikisi de yoksa "yakında"; Kenz ile Güneş arası geçiş geçmişe yazılmaz', async () => {
   await page.locator('.tab--kenz').click();
   await sekmeOlsun('kenz');
   await page.locator('.tab--gunes').click();
@@ -905,17 +905,46 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
   const raf = await page.evaluate(() =>
     Array.from(document.querySelectorAll('#view-gunes .cilt'), (e) => {
       const r = e.getBoundingClientRect();
-      return { ad: e.getAttribute('aria-label') ?? e.querySelector('.visually-hidden').textContent.replace(/, yakında$/, ''), etiket: e.tagName, href: e.getAttribute('href'), yakinda: e.classList.contains('cilt--yakinda'), w: r.width, h: r.height };
+      const etiket = e.getAttribute('aria-label') ?? e.querySelector('.visually-hidden').textContent;
+      return { ad: etiket.replace(/, (yakında|RNK Neşriyat sitesinde açılır)$/, ''), etiket: e.tagName, href: e.getAttribute('href'), hedef: e.getAttribute('target'), rel: e.getAttribute('rel'), dis: e.classList.contains('cilt--dis'), yakinda: e.classList.contains('cilt--yakinda'), w: r.width, h: r.height };
     }),
   );
   assert.deepEqual(raf.map((s) => s.ad), ESERLER);
-  assert.deepEqual(raf.filter((s) => !s.yakinda).map((s) => [s.ad, s.href]), [['Sözler', '#/gunes/sozler'], ['Lem’alar', '#/gunes/lemalar'], ['Şuâlar', '#/gunes/sualar']]);
+  assert.deepEqual(raf.filter((s) => !s.yakinda && !s.dis).map((s) => [s.ad, s.href]), [['Sözler', '#/gunes/sozler'], ['Lem’alar', '#/gunes/lemalar'], ['Şuâlar', '#/gunes/sualar']]);
+  // PDF'i olmayanlar yayınevinin kitap sayfasına (yeni sekmede); deneme listesinde Muhâkemat'ın adresi yok
+  assert.deepEqual(
+    raf.filter((s) => s.dis).map((s) => [s.ad, s.href, s.hedef, s.rel]),
+    [
+      ['Mektubat', 'https://rnk.com.tr/mektubat/', '_blank', 'noopener'],
+      ['İşârâtü’l-İ’câz', 'https://rnk.com.tr/isaratul-icaz/', '_blank', 'noopener'],
+      ['Mesnevî-i Nûriye', 'https://rnk.com.tr/mesnevi-i-nuriye/', '_blank', 'noopener'],
+      ['Asâ-yı Mûsâ', 'https://rnk.com.tr/asa-yi-musa/', '_blank', 'noopener'],
+      ['Barla Lâhikası', 'https://rnk.com.tr/barla-lahikasi/', '_blank', 'noopener'],
+      ['Kastamonu Lâhikası', 'https://rnk.com.tr/kastamonu-lahikasi/', '_blank', 'noopener'],
+      ['Emirdağ Lâhikası', 'https://rnk.com.tr/emirdag-lahikasi/', '_blank', 'noopener'],
+      ['Sikke-i Tasdîk-i Gaybî', 'https://rnk.com.tr/sikke-i-tasdik-i-gaybi/', '_blank', 'noopener'],
+      ['Tarihçe-i Hayat', 'https://rnk.com.tr/tarihce-i-hayat/', '_blank', 'noopener'],
+      ['İman ve Küfür Muvâzeneleri', 'https://rnk.com.tr/iman-ve-kufur-muvazeneleri/', '_blank', 'noopener'],
+    ],
+  );
+  assert.deepEqual(raf.filter((s) => s.yakinda).map((s) => s.ad), ['Muhâkemat']);
   for (const s of raf) {
     assert.ok(s.w >= 44 && s.h >= 44, `${s.ad} dokunma alanı ${s.w}×${s.h}`);
     assert.equal(s.etiket, s.yakinda ? 'SPAN' : 'A');
   }
-  // "yakında" eserler ekran okuyucuya da söylenir
-  assert.equal(await page.locator('#view-gunes .cilt--yakinda .visually-hidden').first().textContent(), 'Mektubat, yakında');
+  // ekran okuyucu nerede açılacağını da duyar
+  assert.equal(await page.locator('#view-gunes .cilt[data-kitap="mektubat"]').getAttribute('aria-label'), 'Mektubat, RNK Neşriyat sitesinde açılır');
+  assert.equal(await page.locator('#view-gunes .cilt--yakinda .visually-hidden').first().textContent(), 'Muhâkemat, yakında');
+  assert.equal((await page.locator('#view-gunes .gunes__not').innerText()).trim(), 'Okuyucuda olmayan kitaplar RNK Neşriyat sitesinde açılır');
+  // dokununca RNK'nın kitap sayfası yeni sekmede açılır; uygulama yerinde kalır
+  await context.route('https://rnk.com.tr/**', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<title>Mektubat - Rnk Neşriyat</title>' }));
+  const [sekmeRnk] = await Promise.all([context.waitForEvent('page'), page.locator('#view-gunes .cilt[data-kitap="mektubat"]').click()]);
+  await sekmeRnk.waitForLoadState();
+  assert.equal(sekmeRnk.url(), 'https://rnk.com.tr/mektubat/');
+  await sekmeRnk.close();
+  assert.equal(await sekme(), 'gunes');
+  assert.equal(hash(), '#/gunes');
+  assert.equal(await page.locator('.acilis').count(), 0);
   // Kur'an-ı Kerim yalnız süstür: ne bağlantı ne düğme; üstüne dokunulunca bir şey olmaz
   const mushaf = page.locator('#view-gunes .gunes__sahne');
   assert.equal(await mushaf.getAttribute('aria-hidden'), 'true');

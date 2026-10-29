@@ -77,6 +77,21 @@ describe('rafOku', () => {
     expect(dene({ kitaplar: [ornek({ icindekiler: [{ baslik: 'A', sayfa: 0 }] })] })).toThrow(/sayfa/);
     expect(dene({ kitaplar: [ornek({ sayfaSayisi: 10, icindekiler: [{ baslik: 'A', sayfa: 11 }] })] })).toThrow(/aşıyor/);
     expect(dene({ kitaplar: [ornek({ icindekiler: [{ baslik: 'A', sayfa: 1, derinlik: 5 }] })] })).toThrow(/derinlik/);
+    expect(dene({ baglanti: { adresler: {} }, kitaplar: [] })).toThrow(/baglanti\.ad/);
+    expect(dene({ baglanti: { ad: 'RNK', adresler: { Bilinmeyen: 'https://a.b/' } }, kitaplar: [] })).toThrow(/bir eser değil/);
+    expect(dene({ baglanti: { ad: 'RNK', adresler: { Sözler: 'http://a.b/' } }, kitaplar: [] })).toThrow(/https/);
+  });
+
+  it('PDF\'i olmayan kitapların dış adresleri (yayınevinin kitap sayfası) okunur', () => {
+    const { json, pub } = gecici({ baglanti: { ad: ' RNK Neşriyat ', adresler: { Sözler: 'https://rnk.com.tr/sozler/' } }, kitaplar: [] });
+    expect(rafOku(json, pub).baglanti).toEqual({ ad: 'RNK Neşriyat', adresler: { Sözler: 'https://rnk.com.tr/sozler/' } });
+    const g = gecici({ kitaplar: [] });
+    expect(rafOku(g.json, g.pub).baglanti).toBeNull();
+    // gerçek listede 14 eserin hepsinin RNK Neşriyat adresi var
+    const raf = rafOku(join(kok, 'content/kitaplar/kitaplar.json'), join(kok, 'public'));
+    expect(raf.baglanti?.ad).toBe('RNK Neşriyat');
+    expect(Object.keys(raf.baglanti?.adresler ?? {})).toHaveLength(14);
+    for (const adres of Object.values(raf.baglanti?.adresler ?? {})) expect(adres).toMatch(/^https:\/\/rnk\.com\.tr\/[a-z-]+\/$/);
   });
 });
 

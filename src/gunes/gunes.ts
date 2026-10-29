@@ -1,7 +1,10 @@
 // Güneş: Risale-i Nur Külliyatı'nın kütüphanesi. Şafak vakti: güneş, rahledeki Kur'an-ı Kerim'in ardından doğar
 // (Kur'an yalnız süstür, dokunulmaz); altında ceviz rafta 14 cilt (7 + 7), her biri en az 44 px'lik bir bağlantı.
-// PDF'i eklenmemiş cilt soluktur, "yakında" kuşağı taşır. En son okunan kitap için rafın altında "Kaldığın yer".
-import { kitaplar } from 'virtual:kitaplar';
+// PDF'i eklenmiş kitap okuyucuda açılır; PDF'i olmayan kitap, listede dış adresi varsa o sitede (RNK Neşriyat'ın
+// kitap sayfası; sitede yeni sekmede, telefon uygulamasında tarayıcıda) açılır; ikisi de yoksa cilt soluktur, "yakında"
+// kuşağı taşır. En son okunan kitap için rafın altında "Kaldığın yer".
+import { Capacitor } from '@capacitor/core';
+import { baglanti, kitaplar } from 'virtual:kitaplar';
 import { RENKLER } from '../oku/menba-cizim';
 import { KULLIYAT, tipografik } from '../oku/ortak';
 import { basiliSayfa, bolumBul, kitapKimligi, type Kitap } from './ortak';
@@ -28,6 +31,9 @@ const SIRTLAR: Record<string, { g: number; b: number; fs: number; k: number; sat
 
 const KITAP_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+
+const DIS_SVG =
+  '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5H3.5v9h9V10M9 3h4v4M13 3 7.5 8.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 // Ana ekranın gökyüzü fotoğrafı (aynı dosyalar: önbellekten gelir)
 const FOTO = import.meta.glob<string>('../assets/bg/*.{avif,webp,jpg}', { eager: true, query: '?url', import: 'default' });
@@ -87,11 +93,12 @@ function zeminKur(): HTMLElement {
   return zemin;
 }
 
-function ciltKur(ad: string, kitap: Kitap | undefined): HTMLLIElement {
+function ciltKur(ad: string, kitap: Kitap | undefined, dis: string | undefined): HTMLLIElement {
   const s = SIRTLAR[ad];
   const li = el('li');
   li.style.setProperty('--g', String(s.g));
-  const cilt = el(kitap ? 'a' : 'span', `cilt${kitap ? '' : ' cilt--yakinda'}`);
+  const acilir = kitap || dis;
+  const cilt = el(acilir ? 'a' : 'span', `cilt${kitap ? '' : dis ? ' cilt--dis' : ' cilt--yakinda'}`);
   cilt.dataset.kitap = kitapKimligi(ad);
   cilt.style.setProperty('--cilt', ciltRenkleri(ad)[0]);
   cilt.style.setProperty('--b', String(s.b));
@@ -111,6 +118,16 @@ function ciltKur(ad: string, kitap: Kitap | undefined): HTMLLIElement {
     const a = cilt as HTMLAnchorElement;
     a.href = `#/gunes/${kitap.kimlik}`;
     a.setAttribute('aria-label', tipografik(ad));
+    cilt.append(deri);
+  } else if (dis) {
+    // yayınevinin kitap sayfası: sitede yeni sekmede; telefon uygulamasında (Capacitor) dış adres tarayıcıda açılır
+    const a = cilt as HTMLAnchorElement;
+    a.href = dis;
+    if (!Capacitor.isNativePlatform()) {
+      a.target = '_blank';
+      a.rel = 'noopener';
+    }
+    a.setAttribute('aria-label', `${tipografik(ad)}, ${baglanti?.ad} sitesinde açılır`);
     cilt.append(deri);
   } else {
     // ekran okuyucu tam adı ve durumu duyar; görünen sırt ve kuşak gizli
@@ -141,7 +158,7 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
     const ul = el('ul', 'gunes__kitaplar');
     ul.setAttribute('aria-label', i === 0 ? 'Üst raf' : 'Alt raf');
     for (const ad of adlar) {
-      const li = ciltKur(ad, kitaplar.find((k) => k.kitap === ad));
+      const li = ciltKur(ad, kitaplar.find((k) => k.kitap === ad), baglanti?.adresler[ad]);
       ciltler.set(kitapKimligi(ad), li.firstElementChild as HTMLElement);
       ul.append(li);
     }
@@ -153,7 +170,19 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
 
   const bosluk = el('div', 'gunes__bosluk');
   bosluk.setAttribute('aria-hidden', 'true');
-  ic.append(sahne, baslik, raflar, bosluk);
+  ic.append(sahne, baslik, raflar);
+  // dış sitede açılan kitaplar varsa rafın altında söylenir
+  const disaAcilan = KULLIYAT.filter((ad) => !kitaplar.some((k) => k.kitap === ad) && baglanti?.adresler[ad]);
+  if (baglanti && disaAcilan.length) {
+    const not = el('p', 'gunes__not');
+    const yazi = el('span');
+    yazi.append(disaAcilan.length === KULLIYAT.length ? 'Kitaplar ' : 'Okuyucuda olmayan kitaplar ', el('b', undefined, baglanti.ad), ' sitesinde açılır');
+    const ok = el('span', 'gunes__not-ok');
+    ok.innerHTML = DIS_SVG;
+    not.append(yazi, ok);
+    ic.append(not);
+  }
+  ic.append(bosluk);
   kitaplik.append(ic);
   gorunum.replaceChildren(zeminKur(), kitaplik);
 
