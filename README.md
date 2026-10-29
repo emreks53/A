@@ -67,7 +67,7 @@ dokunulmaz); altında ceviz rafta Risale-i Nur Külliyatı'nın 14 eseri Külliy
 Lem’alar, … İman ve Küfür Muvâzeneleri). Arka plan ana ekranın gökyüzü fotoğrafıdır; ufku rahlenin hizasına gelir.
 
 - Her eser büyük bir cilt sırtıdır (Menba rafıyla aynı renkler, altın şeritler, dikey ad); dokunma alanı en az
-  44 × 44 px. PDF'i henüz eklenmemiş eser soluk görünür ve "yakında" yazar; dokunulmaz.
+  44 × 44 px (354 px'ten dar ekranlarda sırtlar daralır, raf ekrana sığar). PDF'i henüz eklenmemiş eser soluk görünür ve "yakında" yazar; dokunulmaz.
 - En son okunan kitap için rafın altında **Kaldığın yer** kartı çıkar (kitap, bölüm, sayfa); dokununca
   okuyucu o sayfada açılır.
 - Kitaba dokununca cilt raftan çekilir, dönüp kapağını gösterir, kapak açılır ve okuyucu tam ekran açılır
@@ -96,20 +96,24 @@ Lem’alar, … İman ve Küfür Muvâzeneleri). Arka plan ana ekranın gökyüz
 node scripts/kitap-ekle.mjs "Lem'alar" ~/indirilenler/lemalar.pdf --sayfa-farki 4
 ```
 
-PDF `public/kitaplar/lemalar.pdf` olarak kopyalanır; sayfa sayısı ve PDF'in kendi içindekiler listesi (varsa)
+PDF `public/kitaplar/lemalar-<içerik özeti>.pdf` olarak kopyalanır (kitap başka bir baskıyla güncellenince yeni bir
+dosya olur; eskisi silinmez, telefona kurulmuş eski uygulamalar onu okumayı sürdürür); sayfa sayısı ve PDF'in kendi içindekiler listesi (varsa)
 `content/kitaplar/kitaplar.json`'a yazılır. `--sayfa-farki`: basılı 1. sayfadan önceki numarasız sayfaların
 (kapak, önsöz …) sayısı; adreslerdeki ve içindekilerdeki sayfa numaraları basılı numaradır (videolardaki
 *154. sayfa* ile aynı baskıya göre). PDF'te içindekiler yoksa listede elle yazılabilir:
 
 ```json
-{ "kitap": "Lem'alar", "pdf": "kitaplar/lemalar.pdf", "sayfaSayisi": 480, "sayfaFarki": 4,
+{ "kitap": "Lem'alar", "pdf": "kitaplar/lemalar-3f9a0c21d4.pdf", "sayfaSayisi": 480, "sayfaFarki": 4,
   "icindekiler": [{ "baslik": "On Yedinci Lem’a", "sayfa": 151 }, { "baslik": "Birinci Nota", "sayfa": 152, "derinlik": 1 }] }
 ```
 
 `pdf` bir `https://` adresi de olabilir (sunucu CORS izni vermelidir). Liste derlemede denetlenir: bilinmeyen
 eser, olmayan ya da PDF olmayan dosya, sayfa sayısını aşan içindekiler derlemeyi durdurur. PDF'ler sitede
-yayınlanır; mobil uygulamaya konmaz (paket küçük kalır), uygulama onları siteden okur. Okuyucu (pdf.js) ilk
-kitap açılınca yüklenir ve önbelleğe alınır.
+yayınlanır; mobil uygulamaya konmaz (paket küçük kalır), uygulama onları siteden okur: sitenin sunucusu bayt
+aralığı istediği için yalnız açılan sayfaların parçaları iner (başka kaynaktaki PDF için de, sunucu `Range`
+isteğine 206 ile yanıt veriyorsa). Okuyucu (pdf.js) ilk kitap açılınca yüklenir ve önbelleğe alınır; eski
+tarayıcılar (iOS 15+) için eksik JavaScript özellikleri tamamlanır. Kalınan yer hangi PDF dosyasında
+kalındığıyla birlikte saklanır (dosya değişince eski sayfa numarası kullanılmaz).
 
 ## Oku sekmesi
 

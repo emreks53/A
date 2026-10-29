@@ -169,8 +169,9 @@ function show(r: Rota, icerden = false, yerine = false): void {
   if (okudanDonus) akis.ayril();
   if (sekme === 'kitap' && aktif !== 'kitap') {
     kitabaIcerdenGelindi = onceki !== undefined;
+    // (Oku'dan, "Bu sayfanın videosu"ndan dönülüyorsa kitabın açıldığı yer korunur; odak gizli videoda kalmaz)
     const odak = document.activeElement;
-    kitapOncesiOdak = odak instanceof HTMLElement && odak !== document.body ? odak : null;
+    kitapOncesiOdak = odak instanceof HTMLElement && odak !== document.body && !okuGorunumu.contains(odak) ? odak : aktif === 'oku' ? kitapOncesiOdak : null;
   }
   if (kitaptanDonus) okuyucu.ayril(sekme === 'oku');
   if (sekme === 'kenz' || sekme === 'gunes') anadanGelindi = onceki === 'ana';
@@ -195,7 +196,8 @@ function show(r: Rota, icerden = false, yerine = false): void {
   else if (sekme === 'kitap' && acilacakKitap) okuyucu.ac(acilacakKitap, r.sayfa);
   else if (okudanDonus) odagiGeriVer(sekme);
   else if (kitaptanDonus) {
-    const hedef = kitapOncesiOdak?.isConnected && !kitapGorunumu.contains(kitapOncesiOdak) ? kitapOncesiOdak : null;
+    const hedef =
+      kitapOncesiOdak?.isConnected && !kitapGorunumu.contains(kitapOncesiOdak) && !kitapOncesiOdak.closest('.view[hidden]') ? kitapOncesiOdak : null;
     kitapOncesiOdak = null;
     (hedef ?? views.find((v) => v.dataset.view === sekme)?.querySelector<HTMLElement>('h1'))?.focus({ preventScroll: true });
   }

@@ -7,12 +7,30 @@
       "sayfaSayisi": 37,
       "sayfaFarki": 1,
       "icindekiler": [
-        { "baslik": "Birinci Bölüm", "sayfa": 1 },
-        { "baslik": "İkinci Bölüm", "sayfa": 7 },
-        { "baslik": "Üçüncü Bölüm", "sayfa": 13 },
-        { "baslik": "Dördüncü Bölüm", "sayfa": 19 },
-        { "baslik": "Beşinci Bölüm", "sayfa": 25 },
-        { "baslik": "Altıncı Bölüm", "sayfa": 31 }
+        {
+          "baslik": "Birinci Bölüm",
+          "sayfa": 1
+        },
+        {
+          "baslik": "İkinci Bölüm",
+          "sayfa": 7
+        },
+        {
+          "baslik": "Üçüncü Bölüm",
+          "sayfa": 13
+        },
+        {
+          "baslik": "Dördüncü Bölüm",
+          "sayfa": 19
+        },
+        {
+          "baslik": "Beşinci Bölüm",
+          "sayfa": 25
+        },
+        {
+          "baslik": "Altıncı Bölüm",
+          "sayfa": 31
+        }
       ]
     },
     {
@@ -21,6 +39,18 @@
       "sayfaSayisi": 37,
       "sayfaFarki": 1,
       "icindekiler": []
+    },
+    {
+      "kitap": "Şuâlar",
+      "pdf": "https://kitap.deneme/buyuk.pdf",
+      "sayfaSayisi": 210,
+      "sayfaFarki": 0,
+      "icindekiler": [
+        {
+          "baslik": "On Birinci Şuâ",
+          "sayfa": 190
+        }
+      ]
     }
   ]
 }

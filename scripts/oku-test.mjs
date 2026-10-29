@@ -29,12 +29,59 @@ if (!process.argv.includes('--derleme')) {
   const { build } = await import('vite');
   await build({ logLevel: 'warn', build: { outDir: root, emptyOutDir: true } });
 }
-/** Örnek kitap PDF'i: deneme listesindeki https://kitap.deneme/… adresi buradan verilir */
+/** Örnek kitap PDF'leri: deneme listesindeki https://kitap.deneme/… adresleri buradan verilir (Risale metni
+ *  değildir). buyuk.pdf (210 sayfa, ~1 MB) her çalıştırmada üretilir: büyük kitabın parça parça indirildiği denenir. */
 const ornekPdf = await readFile(resolve('scripts/fixtures/ornek-kitap.pdf'));
-const kitapYolu = async (ctx) =>
-  ctx.route('https://kitap.deneme/**', (r) =>
-    r.fulfill({ status: 200, body: ornekPdf, headers: { 'content-type': 'application/pdf', 'access-control-allow-origin': '*' } }),
-  );
+const buyukPdf = await (async () => {
+  const b = await playwright.chromium.launch();
+  try {
+    const p = await b.newPage();
+    await p.setContent('<!doctype html><meta charset="utf-8"><body></body>');
+    // her sayfada farklı bir gürültü resmi (PDF'te ayrı nesne): dosya parça boyunun çok üstünde olsun
+    await p.evaluate(() => {
+      const css = document.createElement('style');
+      css.textContent = '@page{size:148mm 210mm;margin:16mm}section{page-break-after:always;font:12pt serif}img{width:60mm;height:30mm;display:block;margin-top:8mm}';
+      document.head.append(css);
+      const t = document.createElement('canvas');
+      t.width = 96;
+      t.height = 48;
+      const c = t.getContext('2d');
+      for (let i = 1; i <= 210; i++) {
+        const v = c.createImageData(96, 48);
+        for (let j = 0; j < v.data.length; j++) v.data[j] = (Math.sin(i * 7919 + j * 104729) * 1e4) & 255;
+        c.putImageData(v, 0, 0);
+        const s = document.createElement('section');
+        s.innerHTML = `<h2>Örnek sayfa ${i}</h2><p>Okuyucu denemesi (Risale-i Nur metni değildir).</p><img src="${t.toDataURL('image/png')}">`;
+        document.body.append(s);
+      }
+    });
+    return await p.pdf({ width: '148mm', height: '210mm' });
+  } finally {
+    await b.close();
+  }
+})();
+/** kitap.deneme sunucusu (GitHub Pages gibi): bayt aralığı ister, CORS izni verir ama Accept-Ranges'i göstermez,
+ *  ön denetim isteğine 405 döner. Gönderilen baytlar sayılır. */
+const kitapSunucusu = { bayt: 0, aralik: 0 };
+const kitapYolu = async (ctx, { gecikme = 0, hata = null } = {}) =>
+  ctx.route('https://kitap.deneme/**', async (r) => {
+    const req = r.request();
+    if (gecikme) await new Promise((t) => setTimeout(t, gecikme));
+    if (hata) return hata(r);
+    const veri = req.url().endsWith('/buyuk.pdf') ? buyukPdf : ornekPdf;
+    const cors = { 'access-control-allow-origin': '*' };
+    if (req.method() === 'OPTIONS') return r.fulfill({ status: 405, headers: cors, body: '' });
+    const aralik = req.headers().range?.match(/^bytes=(\d+)-(\d+)?$/);
+    if (req.method() === 'GET' && aralik) {
+      const bas = Number(aralik[1]);
+      const son = Math.min(aralik[2] ? Number(aralik[2]) : veri.length - 1, veri.length - 1);
+      kitapSunucusu.aralik++;
+      kitapSunucusu.bayt += son - bas + 1;
+      return r.fulfill({ status: 206, body: veri.subarray(bas, son + 1), headers: { ...cors, 'content-type': 'application/pdf', 'content-range': `bytes ${bas}-${son}/${veri.length}`, 'accept-ranges': 'bytes' } });
+    }
+    if (req.method() === 'GET') kitapSunucusu.bayt += veri.length;
+    return r.fulfill({ status: 200, body: veri, headers: { ...cors, 'content-type': 'application/pdf', 'accept-ranges': 'bytes' } });
+  });
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json' };
 // GitHub Pages'teki gibi /A/ alt yolundan, video için bayt aralığı (Range) desteğiyle sunar.
 const server = createServer(async (req, res) => {
@@ -862,7 +909,7 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
     }),
   );
   assert.deepEqual(raf.map((s) => s.ad), ESERLER);
-  assert.deepEqual(raf.filter((s) => !s.yakinda).map((s) => [s.ad, s.href]), [['Sözler', '#/gunes/sozler'], ['Lem’alar', '#/gunes/lemalar']]);
+  assert.deepEqual(raf.filter((s) => !s.yakinda).map((s) => [s.ad, s.href]), [['Sözler', '#/gunes/sozler'], ['Lem’alar', '#/gunes/lemalar'], ['Şuâlar', '#/gunes/sualar']]);
   for (const s of raf) {
     assert.ok(s.w >= 44 && s.h >= 44, `${s.ad} dokunma alanı ${s.w}×${s.h}`);
     assert.equal(s.etiket, s.yakinda ? 'SPAN' : 'A');
@@ -879,7 +926,7 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
   assert.equal(await sekme(), 'gunes');
   assert.equal(await page.locator('#view-gunes h1').innerText(), 'RİSALE-İ NUR KÜLLİYATI');
   // Hiçbir şey okunmamışken "kaldığın yer" yok; her şey ekrana sığar (kaydırma yok)
-  assert.equal(await page.locator('#view-gunes .gunes__devam').count(), 0);
+  assert.equal(await page.locator('#view-gunes .gunes__devam:not([hidden])').count(), 0);
   const sigar = await page.evaluate(() => {
     const son = document.querySelector('#view-gunes li:last-child .cilt').getBoundingClientRect();
     return son.bottom <= document.querySelector('.tabbar').getBoundingClientRect().top;
@@ -932,12 +979,24 @@ await adim('sayfa çevirme: sağ kenara dokunmak, ok tuşları ve yana kaydırma
   await page.mouse.click(20, 420);
   await hashOlsun('#/gunes/lemalar/1');
   assert.equal(await page.evaluate(() => history.length), uzunluk);
+  // ekran okuyucu: sayfanın yazısı (görünmez) ve sayfa duyurusu
+  await cizildi();
+  await page.waitForFunction(() => document.querySelector('.okuyucu__yuva[data-i="1"] .okuyucu__metin')?.textContent.includes('denemek için hazırlanmış'));
+  assert.equal(await page.locator('.okuyucu__yuva[data-i="1"] .okuyucu__sayfa').getAttribute('aria-label'), 'Sayfa 1');
+  assert.equal(await page.locator('.okuyucu > p[aria-live]').textContent(), 'Sayfa 1 / 36');
 });
 
 await adim('dokunarak sayfa çevrilince çubuklar çekilir (gizliyken odak almaz); ortaya dokunmak gösterir ve gizler', async () => {
   // (önceki adımın son dokunuşu sayfa çevirdi)
   await page.waitForFunction(() => !document.querySelector('.okuyucu').hasAttribute('data-arayuz'));
-  assert.equal(await page.locator('.okuyucu__ust').evaluate((e) => e.inert), true);
+  await page.waitForTimeout(400);
+  assert.equal(await opaklik('.okuyucu__ust'), 0);
+  // gizli çubuklar erişilebilir kalır: odak gelince görünür
+  assert.equal(await page.locator('.okuyucu__ust').evaluate((e) => e.inert), false);
+  await page.locator('.okuyucu__kapat').focus();
+  await page.waitForTimeout(400);
+  assert.equal(await opaklik('.okuyucu__ust'), 1);
+  await page.locator('.okuyucu__iz').focus();
   await page.waitForTimeout(400);
   assert.equal(await opaklik('.okuyucu__ust'), 0);
   await page.mouse.click(195, 420);
@@ -1020,9 +1079,10 @@ await adim('kapatınca Güneş\'e dönülür, odak kitapta; "kaldığın yer" ka
   await cizildi();
   assert.equal(hash(), '#/gunes/lemalar/20');
   assert.equal(await page.locator('.okuyucu').getAttribute('data-tema'), 'gece');
-  // geri tuşu Güneş'e döner
+  // geri tuşu Güneş'e döner; odak karta (yerinde güncellenir)
   await page.goBack();
   await sekmeOlsun('gunes');
+  assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('gunes__devam')), true);
   // cilde dokununca kalınan yerden açılır, bir an "Kaldığın yerden" bildirimi; "Baştan aç" kapağa gider
   await page.locator('#view-gunes .cilt[data-kitap="lemalar"]').click();
   await sekmeOlsun('kitap');
@@ -1114,6 +1174,22 @@ await adim('yatay geniş ekranda iki sayfa yan yana; kapak tek', async () => {
     await p2.keyboard.press('ArrowRight');
     await hashOlsun('#/gunes/sozler/3', p2);
     assert.equal(await sayfaNo(p2), '3–4 / 36');
+    // döndürünce (tek sayfaya geçince) okunan sayfada kalınır, geri dönünce de
+    await p2.setViewportSize({ width: 800, height: 1100 });
+    await p2.waitForFunction(() => !document.querySelector('.okuyucu').hasAttribute('data-cift'));
+    await cizildi(p2);
+    assert.equal(await sayfaNo(p2), '3 / 36');
+    assert.equal(hash(p2), '#/gunes/sozler/3');
+    await p2.keyboard.press('ArrowRight');
+    await hashOlsun('#/gunes/sozler/4', p2);
+    await p2.setViewportSize({ width: 1280, height: 800 });
+    await p2.waitForFunction(() => document.querySelector('.okuyucu').hasAttribute('data-cift'));
+    assert.equal(await sayfaNo(p2), '3–4 / 36');
+    await p2.setViewportSize({ width: 800, height: 1100 });
+    await p2.waitForFunction(() => !document.querySelector('.okuyucu').hasAttribute('data-cift'));
+    assert.equal(await sayfaNo(p2), '4 / 36');
+    await p2.setViewportSize({ width: 1280, height: 800 });
+    await p2.waitForFunction(() => document.querySelector('.okuyucu').hasAttribute('data-cift'));
     await p2.keyboard.press('Home');
     await hashOlsun('#/gunes/sozler', p2);
     assert.equal(await p2.locator('.okuyucu__yuva[data-i="0"] .okuyucu__sayfa').count(), 1);
@@ -1162,19 +1238,98 @@ await adim('telefon tarayıcısında (360 x 640) raf ve kart menünün üstüne 
 await adim('PDF indirilemezse "Kitap açılamadı" ve "Yeniden dene"; yeniden deneyince açılır', async () => {
   const c2 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   try {
-    let izin = false;
-    await c2.route('https://kitap.deneme/**', (r) =>
-      izin ? r.fulfill({ status: 200, body: ornekPdf, headers: { 'content-type': 'application/pdf', 'access-control-allow-origin': '*' } }) : r.abort('internetdisconnected'),
-    );
+    let durum = 'kopuk';
+    // (sonra eklenen yol önce bakar: hata yoksa asıl sunucuya düşer)
+    await kitapYolu(c2);
+    await kitapYolu(c2, { hata: (r) => (durum === 'kopuk' ? r.abort('internetdisconnected') : durum === 'yok' ? r.fulfill({ status: 404, body: '' }) : r.fallback()) });
     const p2 = await c2.newPage();
     p2.on('pageerror', (e) => hatalar.push(String(e)));
     await p2.goto(base + '#/gunes/lemalar/3');
     await p2.waitForSelector('.okuyucu__yeniden');
     assert.match(await p2.locator('.okuyucu__durum').innerText(), /Kitap açılamadı/);
-    izin = true;
+    assert.equal(await p2.locator('.okuyucu__durum').getAttribute('role'), 'status');
+    // odak "Yeniden dene"de: Enter ile denenir
+    assert.equal(await p2.evaluate(() => document.activeElement?.className), 'okuyucu__yeniden');
+    durum = 'yok';
+    await p2.keyboard.press('Enter');
+    await p2.waitForFunction(() => document.querySelector('.okuyucu__durum')?.innerText.includes('Bu kitabın dosyası bulunamadı'));
+    durum = 'var';
     await p2.locator('.okuyucu__yeniden').click();
     await cizildi(p2);
     assert.equal(await sayfaNo(p2), '3 / 36');
+  } finally {
+    await c2.close();
+  }
+});
+
+await adim('büyük kitap parça parça iner (sunucu Accept-Ranges göstermese de); "Bu sayfanın videosu" Oku\'da açar, çıkınca aynı sayfaya dönülür', async () => {
+  const c2 = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  try {
+    await kitapYolu(c2);
+    const p2 = await c2.newPage();
+    p2.on('pageerror', (e) => hatalar.push(String(e)));
+    const once = { ...kitapSunucusu };
+    await p2.goto(base + '#/gunes/sualar/203');
+    await sekmeOlsun('kitap', p2);
+    await cizildi(p2);
+    assert.equal(await sayfaNo(p2), '203 / 210');
+    assert.equal(await p2.locator('.okuyucu__bolum').innerText(), 'On Birinci Şuâ');
+    const inen = kitapSunucusu.bayt - once.bayt;
+    assert.ok(kitapSunucusu.aralik > once.aralik, 'aralık isteği yok');
+    assert.ok(inen < buyukPdf.length / 2, `kitabın çoğu indi: ${inen} / ${buyukPdf.length}`);
+    // bu sayfada geçen video
+    const video = p2.locator('.okuyucu__video');
+    await video.waitFor();
+    assert.match(await video.innerText(), /^Bu sayfanın videosu\s*· \d+:\d\d$/);
+    assert.match(await video.getAttribute('aria-label'), /^Bu sayfanın videosu: On Birinci Şuâ’dan, \d+:\d\d$/);
+    await p2.keyboard.press('ArrowRight');
+    await hashOlsun('#/gunes/sualar/204', p2);
+    assert.equal(await video.isHidden(), true);
+    await p2.keyboard.press('ArrowLeft');
+    await hashOlsun('#/gunes/sualar/203', p2);
+    await video.click();
+    await sekmeOlsun('oku', p2);
+    assert.equal(hash(p2), `#/oku/${F}`);
+    // Oku'dan çıkınca kitaba (aynı sayfa, çizili) dönülür
+    await p2.keyboard.press('Escape');
+    await sekmeOlsun('kitap', p2);
+    assert.equal(hash(p2), '#/gunes/sualar/203');
+    assert.equal(await p2.locator('.okuyucu__yuva[data-i="202"] .okuyucu__sayfa').getAttribute('data-cizildi'), '');
+  } finally {
+    await c2.close();
+  }
+});
+
+await adim('kitap yüklenirken çıkılırsa indirme bırakılır, kalınan yer bozulmaz; başka kitap açılınca öncekinin yeri korunur', async () => {
+  const c2 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  try {
+    await kitapYolu(c2, { gecikme: 1500 });
+    const p2 = await c2.newPage();
+    p2.on('pageerror', (e) => hatalar.push(String(e)));
+    await p2.goto(base + '#/gunes');
+    await p2.evaluate(() => localStorage.setItem('nuruhakikat.gunes.yer', JSON.stringify({ lemalar: { sayfa: 5, zaman: 1 }, sozler: { sayfa: 21, zaman: 2 } })));
+    await p2.evaluate(() => (location.hash = '#/gunes/lemalar/20'));
+    await sekmeOlsun('kitap', p2);
+    // yüklenirken odak okuyucuda: Escape kapatır
+    await p2.waitForTimeout(300);
+    assert.equal(await p2.evaluate(() => !!document.activeElement?.closest('#view-kitap')), true);
+    await p2.keyboard.press('Escape');
+    await sekmeOlsun('gunes', p2);
+    await p2.waitForTimeout(2500);
+    const yer = await p2.evaluate(() => JSON.parse(localStorage.getItem('nuruhakikat.gunes.yer')));
+    assert.equal(yer.lemalar.sayfa, 5);
+    assert.equal(await p2.locator('#view-kitap .okuyucu__sayfa canvas').count(), 0);
+    // önce Lem'alar okunup kapatılır, sonra Sözler: Sözler'in yeri (21) korunur, oradan açılır
+    await p2.evaluate(() => (location.hash = '#/gunes/lemalar/9'));
+    await cizildi(p2);
+    await p2.keyboard.press('Escape');
+    await sekmeOlsun('gunes', p2);
+    await p2.evaluate(() => (location.hash = '#/gunes/sozler'));
+    await p2.waitForTimeout(600);
+    assert.equal((await p2.evaluate(() => JSON.parse(localStorage.getItem('nuruhakikat.gunes.yer')))).sozler.sayfa, 21);
+    await cizildi(p2);
+    assert.equal(await sayfaNo(p2), '20 / 36');
+    await p2.waitForSelector('.okuyucu__bildirim:not([hidden])');
   } finally {
     await c2.close();
   }

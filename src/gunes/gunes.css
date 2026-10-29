@@ -71,6 +71,10 @@
 .okuyucu__iz::-webkit-scrollbar {
   display: none;
 }
+.okuyucu__iz:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: -4px;
+}
 /* (okuyucu__olcu: açılış geçişi için yuvanın ölçüsü; görünmez) */
 .okuyucu__yuva,
 .okuyucu__olcu {
@@ -256,6 +260,12 @@
   transform: translateY(100%);
   opacity: 0;
 }
+/* gizli çubuğa klavyeyle ya da ekran okuyucuyla gelinince görünür */
+.okuyucu:not([data-arayuz]) .okuyucu__ust:focus-within,
+.okuyucu:not([data-arayuz]) .okuyucu__alt:focus-within {
+  transform: none;
+  opacity: 1;
+}
 .okuyucu__dugme {
   display: grid;
   place-items: center;
@@ -392,7 +402,7 @@
   display: none;
 }
 .okuyucu__video small {
-  color: rgba(116, 72, 14, 0.7);
+  color: #74480e;
   font-weight: 500;
   font-size: 12px;
 }
@@ -416,7 +426,7 @@
   color: #efd49c;
 }
 .okuyucu[data-tema='gece'] .okuyucu__video small {
-  color: rgba(239, 212, 156, 0.7);
+  color: #efd49c;
 }
 .okuyucu[data-tema='gece'] .okuyucu__video-ikon {
   background: linear-gradient(180deg, #f3d79b, #d8a64c);
@@ -527,6 +537,16 @@
 }
 .okuyucu__kaydirici:focus-visible::-moz-range-thumb {
   box-shadow: 0 0 0 3px var(--vurgu);
+}
+.okuyucu[data-tema='gece'] .okuyucu__kaydirici:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 3px var(--vurgu-acik),
+    0 0 14px rgba(232, 194, 122, 0.45);
+}
+.okuyucu[data-tema='gece'] .okuyucu__kaydirici:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 0 0 3px var(--vurgu-acik),
+    0 0 14px rgba(232, 194, 122, 0.45);
 }
 .okuyucu__onizleme {
   position: absolute;
@@ -1082,6 +1102,10 @@
   text-indent: 0.24em;
   text-transform: uppercase;
   white-space: nowrap;
+  /* ufkun parıltısının üstünde de okunsun */
+  text-shadow:
+    0 1px 2px rgba(20, 10, 0, 0.85),
+    0 0 10px rgba(20, 10, 0, 0.65);
   outline: none;
 }
 .gunes__etiket::before,
@@ -1305,6 +1329,9 @@ a.cilt:active {
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
+.gunes__devam[hidden] {
+  display: none;
+}
 .gunes__devam:focus-visible {
   outline: 2px solid var(--nur-acik);
   outline-offset: 2px;
@@ -1457,6 +1484,22 @@ a.cilt:active {
     gap: 2px;
     padding-left: 5px;
     padding-right: 5px;
+  }
+}
+/* çok dar ekranlar (320 px'lik telefonlar büyük yazı/ekran ölçüsüyle, katlanır telefonun dış ekranı): yedi sırt
+   44 px'e sığmaz; sırtlar daralır (320 px'te ≈ 36 px), raf ekrana sığar */
+@media (max-width: 353.98px) {
+  .gunes__ic {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .gunes__kitaplar {
+    gap: 1px;
+    padding-left: 3px;
+    padding-right: 3px;
+  }
+  .gunes__kitaplar > li {
+    min-width: 0;
   }
 }
 /* alçak ekranlar (tarayıcı çubukları açık, 640-720 px): sahne biraz küçülür, sırtlar uzun kalır; sırttaki

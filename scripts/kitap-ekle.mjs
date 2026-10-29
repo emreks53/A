@@ -1,9 +1,12 @@
 // Güneş'e kitap ekler ya da günceller:
 //   node scripts/kitap-ekle.mjs "Lem'alar" ~/indirilenler/lemalar.pdf [--sayfa-farki 4]
-// PDF'i public/kitaplar/<kimlik>.pdf olarak kopyalar; sayfa sayısını ve PDF'in kendi içindekiler listesini
-// (varsa) okuyup content/kitaplar/kitaplar.json'a yazar. --sayfa-farki: basılı 1. sayfadan önceki numarasız
-// sayfaların sayısı (kapak, önsöz …); içindekilerdeki sayfa numaraları basılı numaraya göre yazılır.
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+// PDF'i public/kitaplar/<kimlik>-<içerik özeti>.pdf olarak kopyalar; sayfa sayısını ve PDF'in kendi içindekiler
+// listesini (varsa) okuyup content/kitaplar/kitaplar.json'a yazar. --sayfa-farki: basılı 1. sayfadan önceki
+// numarasız sayfaların sayısı (kapak, önsöz …); içindekilerdeki sayfa numaraları basılı numaraya göre yazılır.
+// Dosya adı içeriğe göredir: kitap başka bir baskıyla güncellenince yeni bir dosya olur, eskisi sitede kalır.
+// Telefona kurulmuş eski uygulamalar (sayfa farkı ve içindekiler içlerinde) kendi dosyalarını okumayı sürdürür.
+import { createHash } from 'node:crypto';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const KULLIYAT = [
@@ -72,9 +75,10 @@ const gez = async (ogeler, derinlik) => {
 };
 await gez(await belge.getOutline(), 0);
 
-const yol = `kitaplar/${kimlik(kitap)}.pdf`;
+const ozet = createHash('sha256').update(veri).digest('hex').slice(0, 10);
+const yol = `kitaplar/${kimlik(kitap)}-${ozet}.pdf`;
 mkdirSync(resolve('public/kitaplar'), { recursive: true });
-copyFileSync(kaynakPdf, resolve('public', yol));
+if (!existsSync(resolve('public', yol))) copyFileSync(kaynakPdf, resolve('public', yol));
 
 const listeYolu = resolve('content/kitaplar/kitaplar.json');
 const liste = JSON.parse(readFileSync(listeYolu, 'utf8'));
@@ -91,4 +95,7 @@ liste.kitaplar = liste.kitaplar.filter((k) => k.kitap !== kitap).concat(kayit);
 liste.kitaplar.sort((a, b) => KULLIYAT.indexOf(a.kitap) - KULLIYAT.indexOf(b.kitap));
 writeFileSync(listeYolu, JSON.stringify(liste, null, 2) + '\n');
 console.log(`${kitap}: public/${yol}, ${belge.numPages} sayfa, içindekiler ${kayit.icindekiler.length} başlık`);
+if (onceki && onceki.pdf !== yol && !/^https:/.test(onceki.pdf)) {
+  console.log(`(önceki dosya public/${onceki.pdf} silinmedi: eski uygulama sürümleri onu okur)`);
+}
 await gorev.destroy();

@@ -6,7 +6,7 @@ import { videolar } from 'virtual:oku-videolar';
 import { acikSayfa, altSayfaAc } from '../oku/alt-sayfa';
 import { sureYazisi, tipografik } from '../oku/ortak';
 import { basiliSayfa, bolumBul, pdfSayfasi, sayfaninVideosu, type IcindekilerOgesi, type Kitap } from './ortak';
-import { kitapYukle, pdfIcindekiler, sayfaCiz, type Cizim, type KitapYukleme, type PDFDocumentProxy } from './pdf';
+import { hataNedeni, kitapYukle, pdfIcindekiler, sayfaCiz, type Cizim, type HataNedeni, type KitapYukleme, type PDFDocumentProxy, type PDFPageProxy } from './pdf';
 import { kalinanYer, yeriKaydet } from './yer';
 
 export type Tema = 'gunduz' | 'sepya' | 'gece';
@@ -39,6 +39,13 @@ export interface Okuyucu {
   /** Kâğıdın bu temadaki rengi (açılış geçişi için) */
   kagitRengi(): string;
 }
+
+const HATA_YAZISI: Record<HataNedeni, string> = {
+  ag: 'Kitap açılamadı. İnternet bağlantınızı denetleyip yeniden deneyin.',
+  yok: 'Bu kitabın dosyası bulunamadı.',
+  bozuk: 'Kitap dosyası okunamadı.',
+  cihaz: 'Okuyucu bu cihazda açılamadı. Tarayıcınızı ya da cihazınızın yazılımını güncelleyip yeniden deneyin.',
+};
 
 const ZEMIN: Record<Tema, string> = { gunduz: '#EBE7E0', sepya: '#E9DEC7', gece: '#0A1534' };
 const KAGIT: Record<Tema, string> = { gunduz: '#FFFFFF', sepya: '#F6EEDC', gece: '#0F1A3A' };
@@ -132,7 +139,6 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
   const satir = el('div', 'okuyucu__satir');
   const konum = el('div', 'okuyucu__konum');
   const sayfaNo = el('p', 'okuyucu__sayfa-no');
-  sayfaNo.setAttribute('aria-live', 'polite');
   const yuzde = el('span', 'okuyucu__yuzde');
   yuzde.setAttribute('aria-hidden', 'true');
   konum.append(sayfaNo, yuzde);
@@ -160,9 +166,13 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
   bildirim.hidden = true;
 
   const durum = el('div', 'okuyucu__durum');
+  durum.setAttribute('role', 'status');
   durum.hidden = true;
+  // sayfa değişince ekran okuyucuya söylenir (çubuklar gizliyken de)
+  const duyuru = el('p', 'visually-hidden');
+  duyuru.setAttribute('aria-live', 'polite');
 
-  kok.append(baslik, iz, yakin, ust, bildirim, alt, durum);
+  kok.append(baslik, iz, yakin, ust, bildirim, alt, durum, duyuru);
   gorunum.append(kok);
 
   // ---------- durum ----------
@@ -182,14 +192,16 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
   let ornekOran = 1.414;
   const cizimler = new Map<number, { tuval: HTMLCanvasElement; olcek: number; cizim: Cizim | null; bitti: boolean }>();
   let oturum = 0;
+  /** Okuyucu ekranda mı (çıkılınca sıradaki çizimler yapılmaz) */
+  let acik = false;
+  /** Okunan PDF sayfası: kalınan yer ve adres buna göre (iki sayfa yan yanayken sağdaki de olabilir; döndürünce
+   *  bu sayfada kalınır) */
+  let okunan = 1;
   /** Açılırken istenen basılı sayfa (yeniden denerken) */
   let istenenSayfa: number | undefined;
 
-  const arayuzGoster = (goster: boolean) => {
-    kok.toggleAttribute('data-arayuz', goster);
-    ust.inert = !goster;
-    alt.inert = !goster;
-  };
+  // Çubuklar gizlenince de erişilebilir kalır: ekran okuyucu ya da Tab ile ulaşılınca yeniden görünür (CSS)
+  const arayuzGoster = (goster: boolean) => kok.toggleAttribute('data-arayuz', goster);
 
   function temaUygula(t: Tema): void {
     tema = t;
@@ -202,7 +214,7 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
     s.temaDegisti?.(ZEMIN[t]);
   }
 
-  function durumGoster(tur: 'yukleniyor' | 'hata' | null, oran?: number): void {
+  function durumGoster(tur: 'yukleniyor' | 'hata' | null, oran?: number, neden: HataNedeni = 'ag'): void {
     durum.hidden = tur === null;
     kok.dataset.durum = tur ?? '';
     if (tur === 'yukleniyor') {
@@ -222,10 +234,12 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
           const k = kitap;
           kitap = null;
           // hiç açılamadıysa istenen sayfa (adresteki) yeniden istenir
-          ac(k, toplam ? (basiliSayfa(k, mevcut) ?? undefined) : istenenSayfa);
+          ac(k, gruplar.length ? (basiliSayfa(k, okunan) ?? undefined) : istenenSayfa);
         }
       });
-      durum.replaceChildren(el('p', 'okuyucu__durum-yazi', 'Kitap açılamadı. İnternet bağlantınızı denetleyip yeniden deneyin.'), yeniden);
+      durum.replaceChildren(el('p', 'okuyucu__durum-yazi', HATA_YAZISI[neden]), yeniden);
+      const odak = document.activeElement;
+      if (!odak || odak === document.body || kok.contains(odak)) yeniden.focus({ preventScroll: true });
     }
   }
 
@@ -252,7 +266,7 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
       for (const n of g) {
         const sayfa = el('div', 'okuyucu__sayfa');
         sayfa.dataset.sayfa = String(n);
-        sayfa.setAttribute('role', 'img');
+        sayfa.setAttribute('role', 'group');
         sayfa.setAttribute('aria-label', kitap ? `Sayfa ${sayfaYazisi(kitap, n)}` : `Sayfa ${n}`);
         // iki sayfa yan yana: ortada cilt gölgesi
         if (g.length > 1) sayfa.append(el('span', 'okuyucu__cilt-golge'));
@@ -261,6 +275,7 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
       return yuva;
     });
     iz.replaceChildren(...yuvalar);
+    duzenGenisligi = iz.clientWidth;
     kok.toggleAttribute('data-cift', cift);
     olculeriUygula();
     centikleriKur();
@@ -303,12 +318,20 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
     const b = belge;
     if (!b) return;
     const benim = oturum;
-    kuyruk = kuyruk.then(async () => {
-      if (benim !== oturum || !belge) return;
+    const gecerli = () => benim === oturum && belge === b && acik;
+    // (sıra her kitapta yeniden başlar; bir sayfa alınamazsa sıra tıkanmaz, o sayfa sonra yeniden denenir)
+    kuyruk = kuyruk
+      .then(async () => {
+      if (!gecerli()) return;
       const g = grupBul(n);
       if (Math.abs(g - gIndeks) > 2) return; // bu arada uzaklaşıldı
-      const sayfa = await b.getPage(n);
-      if (benim !== oturum) return;
+      let sayfa: PDFPageProxy;
+      try {
+        sayfa = await b.getPage(n);
+      } catch {
+        return;
+      }
+      if (!gecerli()) return;
       const vp = sayfa.getViewport({ scale: 1 });
       if (!olcu.has(n)) {
         olcu.set(n, { w: vp.width, h: vp.height });
@@ -326,6 +349,7 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
       const kutu = yuvalar[g]?.querySelector<HTMLElement>(`[data-sayfa="${n}"]`);
       if (!kutu) return;
       const tuval = var_?.tuval ?? el('canvas', 'okuyucu__tuval');
+      tuval.setAttribute('aria-hidden', 'true');
       if (!tuval.isConnected) kutu.append(tuval);
       const kayit = { tuval, olcek, cizim: null as Cizim | null, bitti: false };
       cizimler.set(n, kayit);
@@ -339,7 +363,26 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
       } finally {
         kayit.cizim = null;
       }
-    });
+      if (kayit.bitti) void metniEkle(sayfa, kutu, gecerli);
+    })
+      .catch(() => undefined);
+  }
+
+  /** Sayfanın yazısı ekran okuyucular için (görünmez; çizilen sayfa basıldığı gibi kalır). Taranmış (yazısız)
+   *  sayfada yalnız "Sayfa N" okunur. */
+  async function metniEkle(sayfa: PDFPageProxy, kutu: HTMLElement, gecerli: () => boolean): Promise<void> {
+    if (kutu.querySelector('.okuyucu__metin')) return;
+    try {
+      const icerik = await sayfa.getTextContent();
+      if (!gecerli() || kutu.querySelector('.okuyucu__metin')) return;
+      const yazi = icerik.items
+        .map((o) => ('str' in o ? o.str + (o.hasEOL ? '\n' : '') : ''))
+        .join('')
+        .trim();
+      if (yazi) kutu.append(el('p', 'okuyucu__metin visually-hidden', yazi));
+    } catch {
+      // yazı alınamadı: yalnız sayfa adı okunur
+    }
   }
 
   function cizimleriGuncelle(): void {
@@ -361,32 +404,47 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
   // ---------- gezinme ----------
   let kayitZamanlayici = 0;
 
-  function gorunenDegisti(yeniG: number): void {
-    if (!kitap) return;
+  /** Ekrandaki açılış değişti. capa: okunan sayfa (verilmezse açılışta zaten varsa o, yoksa ilk sayfası) */
+  function gorunenDegisti(yeniG: number, capa?: number): void {
+    if (!kitap || !gruplar.length) return;
     gIndeks = Math.max(0, Math.min(gruplar.length - 1, yeniG));
-    mevcut = gruplar[gIndeks]?.[0] ?? 1;
-    if (!bildirim.hidden && mevcut !== bildirimSayfasi) bildirimGizle();
+    const grup = gruplar[gIndeks];
+    okunan = capa !== undefined && grup.includes(capa) ? capa : grup.includes(okunan) ? okunan : grup[0];
+    mevcut = grup[0];
+    if (!bildirim.hidden && !grup.includes(bildirimSayfasi)) bildirimGizle();
     arayuzuGuncelle();
     cizimleriGuncelle();
     clearTimeout(kayitZamanlayici);
+    // (okuyucu kapalıyken, ör. pencere boyu değişince, kalınan yer yeniden yazılmaz)
+    if (!acik) return;
     const k = kitap;
-    const n = mevcut;
+    const n = okunan;
     kayitZamanlayici = window.setTimeout(() => {
-      yeriKaydet(k.kimlik, n);
+      yeriKaydet(k.kimlik, n, k.pdf);
       s.adresDegisti(k, basiliSayfa(k, n));
     }, 250);
   }
 
   function git(n: number, yumusak = true): void {
-    const g = grupBul(Math.max(1, Math.min(toplam, n)));
+    if (!gruplar.length) return;
+    // (kullanıcının gezinmesi: düzen oturuyor diye geri alınmaz)
+    duzenSonu = 0;
+    okunan = Math.max(1, Math.min(toplam, n));
+    const g = grupBul(okunan);
     const azalt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     iz.scrollTo({ left: g * iz.clientWidth, behavior: yumusak && !azalt ? 'smooth' : 'auto' });
-    if (!yumusak || azalt) gorunenDegisti(g);
+    if (!yumusak || azalt) gorunenDegisti(g, okunan);
   }
-  const ileri = () => git((gruplar[gIndeks + 1] ?? gruplar[gIndeks])[0]);
-  const geri = () => git((gruplar[gIndeks - 1] ?? gruplar[gIndeks])[0]);
+  const ileri = () => gruplar.length && git((gruplar[gIndeks + 1] ?? gruplar[gIndeks])[0]);
+  const geri = () => gruplar.length && git((gruplar[gIndeks - 1] ?? gruplar[gIndeks])[0]);
 
   let kaydirmaCercevesi = 0;
+  /** Bu zamana dek gelen kaydırmalar düzenin oturmasıdır (boyut değişti, tarayıcı yakalama noktasını kendince
+   *  seçebilir), kullanıcının değil: okunan açılışa geri dönülür */
+  let duzenSonu = 0;
+  /** Düzenin kurulduğu genişlik: boyut değişip düzen henüz yeniden kurulmadan gelen kaydırma (tarayıcı eski düzende
+   *  yeni bir yakalama noktasına kaydırır) yok sayılır; düzeni boyut gözlemcisi kurar */
+  let duzenGenisligi = 0;
   iz.addEventListener(
     'scroll',
     () => {
@@ -394,6 +452,11 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
       kaydirmaCercevesi = requestAnimationFrame(() => {
         kaydirmaCercevesi = 0;
         const w = iz.clientWidth || 1;
+        if (w !== duzenGenisligi) return;
+        if (performance.now() < duzenSonu) {
+          if (Math.abs(iz.scrollLeft - gIndeks * w) > 1) iz.scrollTo({ left: gIndeks * w, behavior: 'auto' });
+          return;
+        }
         const g = Math.round(iz.scrollLeft / w);
         if (g === gIndeks) return;
         gorunenDegisti(g);
@@ -424,6 +487,7 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
     const bolum = bolumBul({ sayfaFarki: k.sayfaFarki, icindekiler }, mevcut);
     bolumAdi.textContent = bolum ? tipografik(bolum.baslik) : '';
     iz.setAttribute('aria-label', `${tipografik(k.kitap)}, sayfa ${yazi}`);
+    duyuru.textContent = `Sayfa ${yazi} / ${son ?? toplam}`;
     // bu sayfada geçen video (Oku'da açılır)
     const v = sayfaninVideosu(videolar, k.kitap, sayfalar.map((n) => basiliSayfa(k, n)));
     videoD.hidden = !v;
@@ -457,6 +521,8 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
   let bildirimSayfasi = 0;
   function bildirimGizle(): void {
     clearTimeout(bildirimZamanlayici);
+    // odak bildirimdeyse okuyucuya geçer (gövdeye düşmesin)
+    if (bildirim.contains(document.activeElement)) iz.focus({ preventScroll: true });
     bildirim.hidden = true;
   }
   function kaldiginYerBildir(n: number): void {
@@ -473,7 +539,11 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
     bildirim.hidden = false;
     bildirimSayfasi = n;
     clearTimeout(bildirimZamanlayici);
-    bildirimZamanlayici = window.setTimeout(bildirimGizle, 4500);
+    // odak bildirimdeyken (klavye, ekran okuyucu) kendiliğinden kapanmaz
+    const sure = () => {
+      bildirimZamanlayici = window.setTimeout(() => (bildirim.contains(document.activeElement) ? sure() : bildirimGizle()), 4500);
+    };
+    sure();
   }
 
   // ---------- dokunuş: sayfa çevirme, arayüz, yakınlaşma ----------
@@ -668,7 +738,7 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
     if (e.key === 'Escape') {
       if (!yakin.hidden) yakinKapat();
       else s.kapat();
-    } else if (!yakin.hidden) kullanildi = false;
+    } else if (!yakin.hidden || !gruplar.length) kullanildi = false;
     else if (e.key === 'ArrowRight' || e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey)) ileri();
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || (e.key === ' ' && e.shiftKey)) geri();
     else if (e.key === 'Home') git(1);
@@ -693,7 +763,7 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
   });
 
   icindekilerD.addEventListener('click', () => {
-    if (!kitap) return;
+    if (!kitap || !gruplar.length) return;
     const k = kitap;
     const icerik = el('div', 'icindekiler');
     const ustBilgi = el('div', 'icindekiler__ust');
@@ -787,9 +857,10 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
 
   // ---------- boyut değişince ----------
   new ResizeObserver(() => {
-    if (!kitap || !toplam) return;
+    if (!kitap || !toplam || !gruplar.length) return;
+    // okunan sayfada kalınır (tek ↔ iki sayfa geçişinde de)
+    const n = okunan;
     const yeniCift = ciftMi();
-    const n = mevcut;
     if (yeniCift !== cift) {
       cift = yeniCift;
       gruplariKur();
@@ -797,22 +868,24 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
       olculeriUygula();
       for (const c of cizimler.values()) c.olcek = -1; // yeni ölçekte yeniden çizilsin
     }
-    gIndeks = grupBul(n);
-    mevcut = gruplar[gIndeks]?.[0] ?? n;
-    iz.scrollTo({ left: gIndeks * iz.clientWidth, behavior: 'auto' });
-    arayuzuGuncelle();
-    cizimleriGuncelle();
+    const g = grupBul(n);
+    duzenGenisligi = iz.clientWidth;
+    duzenSonu = performance.now() + 400;
+    iz.scrollTo({ left: g * iz.clientWidth, behavior: 'auto' });
+    gorunenDegisti(g, n);
+    requestAnimationFrame(() => iz.scrollTo({ left: gIndeks * iz.clientWidth, behavior: 'auto' }));
     if (!yakin.hidden) yakinKapat();
   }).observe(iz);
 
   // ---------- açma / kapama ----------
   function ac(k: Kitap, basili?: number): void {
-    if (kitap?.kimlik === k.kimlik && belge) {
+    acik = true;
+    if (kitap?.kimlik === k.kimlik && belge && gruplar.length) {
       if (basili) git(pdfSayfasi(k, basili, toplam), false);
       else {
         // raftan yeniden açıldı: kalınan yerden
-        const n = Math.min(kalinanYer(k.kimlik)?.sayfa ?? mevcut, toplam);
-        if (n !== mevcut) git(n, false);
+        const n = Math.min(kalinanYer(k.kimlik, k.pdf)?.sayfa ?? okunan, toplam);
+        git(n, false);
         if (n > 1) kaldiginYerBildir(n);
       }
       iz.focus({ preventScroll: true });
@@ -824,6 +897,14 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
     belge = null;
     kitap = k;
     toplam = 0;
+    // önceki kitabın düzeni bırakılır (boşalan izin kaydırma olayı eski düzenle kalınan yeri yazmasın)
+    clearTimeout(kayitZamanlayici);
+    gruplar = [];
+    yuvalar = [];
+    gIndeks = 0;
+    mevcut = 1;
+    okunan = 1;
+    kuyruk = Promise.resolve();
     olcu.clear();
     cizimler.clear();
     iz.replaceChildren();
@@ -839,11 +920,14 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
     bildirimGizle();
     arayuzGoster(true);
     durumGoster('yukleniyor');
+    // odak okuyucuda: yüklenirken de Escape kapatır, durum ekran okuyucuya söylenir
+    baslik.focus({ preventScroll: true });
     s.temaDegisti?.(ZEMIN[tema]);
     const benim = oturum;
     const y = kitapYukle(k.pdf);
     yukleme = y;
-    y.ilerleme((oran) => benim === oturum && durumGoster('yukleniyor', oran));
+    // (ilerleme yalnız kitap açılana dek; sonra sayfaların parçaları inerken de gelir)
+    y.ilerleme((oran) => benim === oturum && !belge && durumGoster('yukleniyor', oran));
     y.belge
       .then(async (b) => {
         if (benim !== oturum) return;
@@ -863,29 +947,42 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
         cift = ciftMi();
         gruplariKur();
         durumGoster(null);
-        const hedef = basili ? pdfSayfasi(k, basili, toplam) : Math.min(kalinanYer(k.kimlik)?.sayfa ?? 1, toplam);
-        if (!basili && hedef > 1) kaldiginYerBildir(hedef);
+        const hedef = basili ? pdfSayfasi(k, basili, toplam) : Math.min(kalinanYer(k.kimlik, k.pdf)?.sayfa ?? 1, toplam);
+        okunan = hedef;
         gIndeks = grupBul(hedef);
         mevcut = gruplar[gIndeks]?.[0] ?? 1;
+        // bu arada okuyucudan çıkıldıysa burada kalır; yeniden açılınca yerine gidilir
+        if (!acik) return;
+        if (!basili && hedef > 1) kaldiginYerBildir(hedef);
         // düzen oturduktan sonra yerine kaydır
         requestAnimationFrame(() => {
-          if (benim !== oturum) return;
+          if (benim !== oturum || !acik) return;
           iz.scrollTo({ left: gIndeks * iz.clientWidth, behavior: 'auto' });
-          gorunenDegisti(gIndeks);
+          gorunenDegisti(gIndeks, hedef);
           iz.focus({ preventScroll: true });
         });
       })
       .catch((e) => {
         if (benim !== oturum || (e as DOMException)?.name === 'AbortError') return;
-        durumGoster('hata');
+        durumGoster('hata', undefined, hataNedeni(e));
       });
   }
 
   function ayril(gorunenKalsin = false): void {
+    acik = false;
     clearTimeout(kayitZamanlayici);
     clearTimeout(tekZamanlayici);
     bildirimGizle();
-    if (kitap && toplam) yeriKaydet(kitap.kimlik, mevcut);
+    if (!belge) {
+      // kitap daha açılmadan çıkıldı: indirme bırakılır (sonradan gelip kalınan yeri bozmasın, gizli okuyucuya
+      // çizilmesin); yeniden açılınca baştan yüklenir
+      oturum++;
+      yukleme?.iptal();
+      yukleme = null;
+      kitap = null;
+      return;
+    }
+    if (kitap && gruplar.length) yeriKaydet(kitap.kimlik, okunan, kitap.pdf);
     yakinKapat();
     const kalan = gorunenKalsin ? new Set(gruplar[gIndeks] ?? []) : new Set<number>();
     for (const [n, c] of cizimler) {

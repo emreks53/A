@@ -157,14 +157,17 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
   kitaplik.append(ic);
   gorunum.replaceChildren(zeminKur(), kitaplik);
 
-  let devam: HTMLAnchorElement | null = null;
+  // "Kaldığın yer" kartı tek bir öğedir, yerinde güncellenir (kitap kapanınca odak ona döner)
+  const devam = el('a', 'gunes__devam');
+  devam.hidden = true;
+  ic.append(devam);
   let kurdeleli: HTMLElement | null = null;
 
   function yenile(): void {
     const son = sonOkunan();
     const k = son && kitaplar.find((x) => x.kimlik === son.kimlik);
-    devam?.remove();
-    devam = null;
+    const yer = k && kalinanYer(k.kimlik, k.pdf);
+    devam.hidden = !yer;
     if (kurdeleli) {
       kurdeleli.classList.remove('cilt--kaldigin');
       kurdeleli.querySelector('.cilt__kurdele')?.remove();
@@ -172,8 +175,7 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
       if (ad) kurdeleli.setAttribute('aria-label', tipografik(ad));
       kurdeleli = null;
     }
-    if (!son || !k) return;
-    const yer = kalinanYer(k.kimlik)!;
+    if (!k || !yer) return;
     const basili = basiliSayfa(k, yer.sayfa);
     const bolum = bolumBul(k, yer.sayfa);
     const yerYazisi = [bolum ? tipografik(bolum.baslik) : '', basili ? `${basili}. sayfa` : ''].filter(Boolean);
@@ -189,7 +191,7 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
       kurdeleli = cilt;
     }
 
-    const a = el('a', 'gunes__devam');
+    const a = devam;
     a.href = `#/gunes/${k.kimlik}${basili ? `/${basili}` : ''}`;
     a.dataset.kitap = k.kimlik;
     const oran = k.sayfaSayisi ? Math.min(1, yer.sayfa / k.sayfaSayisi) : 0;
@@ -211,15 +213,13 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
     const dugme = el('span', 'gunes__devam-dugme');
     dugme.innerHTML = KITAP_SVG;
     for (const c of [kapak, metin, dugme]) c.setAttribute('aria-hidden', 'true');
-    a.append(kapak, metin, dugme);
+    a.replaceChildren(kapak, metin, dugme);
     if (oran) {
       const ilerleme = el('span', 'gunes__devam-ilerleme');
       ilerleme.style.setProperty('--o', oran.toFixed(3));
       ilerleme.setAttribute('aria-hidden', 'true');
       a.append(ilerleme);
     }
-    ic.append(a);
-    devam = a;
   }
 
   // Kitaba dokununca: (hareket azaltılmamışsa) cilt raftan çekilip açılır, sonra okuyucu
