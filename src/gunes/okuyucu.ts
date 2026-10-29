@@ -40,6 +40,8 @@ export interface Okuyucu {
   kagitRengi(): string;
 }
 
+const ZAMAN_ASIMI = 'zaman aşımı';
+
 const HATA_YAZISI: Record<HataNedeni, string> = {
   ag: 'Kitap açılamadı. İnternet bağlantınızı denetleyip yeniden deneyin.',
   yok: 'Bu kitabın dosyası bulunamadı.',
@@ -200,8 +202,12 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
   /** Açılırken istenen basılı sayfa (yeniden denerken) */
   let istenenSayfa: number | undefined;
 
-  // Çubuklar gizlenince de erişilebilir kalır: ekran okuyucu ya da Tab ile ulaşılınca yeniden görünür (CSS)
-  const arayuzGoster = (goster: boolean) => kok.toggleAttribute('data-arayuz', goster);
+  // Çubuklar gizlenince de erişilebilir kalır: ekran okuyucu ya da Tab ile ulaşılınca yeniden görünür (CSS). Gizlenirken
+  // odak çubuktaysa (ör. kapanan alt sayfa odağı açan düğmeye geri verdi) okuyucuya geçer, çubuk takılı kalmaz.
+  const arayuzGoster = (goster: boolean) => {
+    if (!goster && (ust.contains(document.activeElement) || alt.contains(document.activeElement))) iz.focus({ preventScroll: true });
+    kok.toggleAttribute('data-arayuz', goster);
+  };
 
   function temaUygula(t: Tema): void {
     tema = t;
@@ -214,17 +220,26 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
     s.temaDegisti?.(ZEMIN[t]);
   }
 
+  /** Yükleme yüzdesi (ekran okuyucuya her yüzde söylenmez: canlı bölgenin dışında, gizli) */
+  let yuzdeYazisi: HTMLElement | null = null;
+
   function durumGoster(tur: 'yukleniyor' | 'hata' | null, oran?: number, neden: HataNedeni = 'ag'): void {
+    const yuzde = oran === undefined ? '' : ` %${Math.round(oran * 100)}`;
+    if (tur === 'yukleniyor' && kok.dataset.durum === 'yukleniyor' && !durum.hidden && yuzdeYazisi?.isConnected) {
+      if (yuzdeYazisi.textContent !== yuzde) yuzdeYazisi.textContent = yuzde;
+      return;
+    }
     durum.hidden = tur === null;
     kok.dataset.durum = tur ?? '';
     if (tur === 'yukleniyor') {
-      const yuzde = oran === undefined ? '' : ` %${Math.round(oran * 100)}`;
       // sayfanın duracağı yerde boş bir kâğıt (açılış geçişi buraya iner)
       const k = tahminiSayfaKutusu(ornekOran);
       const iskelet = el('div', 'okuyucu__iskelet');
       Object.assign(iskelet.style, { left: `${k.x}px`, top: `${k.y}px`, width: `${k.w}px`, height: `${k.h}px` });
       const yazi = el('p', 'okuyucu__durum-yazi');
-      yazi.append(el('span', 'okuyucu__yukleniyor', ''), `Kitap açılıyor${yuzde}`);
+      yuzdeYazisi = el('span', undefined, yuzde);
+      yuzdeYazisi.setAttribute('aria-hidden', 'true');
+      yazi.append(el('span', 'okuyucu__yukleniyor', ''), 'Kitap açılıyor', yuzdeYazisi);
       durum.replaceChildren(iskelet, yazi);
     } else if (tur === 'hata') {
       const yeniden = el('button', 'okuyucu__yeniden', 'Yeniden dene');
@@ -313,6 +328,12 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
 
   // ---------- çizim ----------
   let kuyruk: Promise<void> = Promise.resolve();
+  /** Bir sayfanın alınması ya da çizilmesi bundan uzun sürerse (parçası inmiyor) sıra onu beklemez */
+  const sinirli = <T,>(s_: Promise<T>): Promise<T> => {
+    let t = 0;
+    const sure = new Promise<never>((_, red) => (t = window.setTimeout(() => red(new Error(ZAMAN_ASIMI)), 20_000)));
+    return Promise.race([s_, sure]).finally(() => clearTimeout(t));
+  };
 
   function ciz(n: number): void {
     const b = belge;
@@ -327,8 +348,9 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
       if (Math.abs(g - gIndeks) > 2) return; // bu arada uzaklaşıldı
       let sayfa: PDFPageProxy;
       try {
-        sayfa = await b.getPage(n);
+        sayfa = await sinirli(b.getPage(n));
       } catch {
+        yenidenDene();
         return;
       }
       if (!gecerli()) return;
@@ -355,11 +377,13 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
       cizimler.set(n, kayit);
       kayit.cizim = sayfaCiz(sayfa, tuval, olcek);
       try {
-        await kayit.cizim.bitti;
+        await sinirli(kayit.cizim.bitti);
         kayit.bitti = true;
         kutu.dataset.cizildi = '';
-      } catch {
-        // iptal edildi
+      } catch (e) {
+        // iptal edildi ya da sayfanın parçası henüz inmedi (bağlantı): sıra tıkanmasın, sonra yeniden denenir
+        kayit.cizim?.iptal();
+        if ((e as Error)?.message === ZAMAN_ASIMI) yenidenDene();
       } finally {
         kayit.cizim = null;
       }
@@ -367,6 +391,14 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
     })
       .catch(() => undefined);
   }
+
+  /** Bir sayfa (bağlantı yüzünden) çizilemediyse bir süre sonra görünen sayfalar yeniden istenir */
+  let yenidenZamanlayici = 0;
+  function yenidenDene(): void {
+    clearTimeout(yenidenZamanlayici);
+    yenidenZamanlayici = window.setTimeout(() => acik && belge && cizimleriGuncelle(), 4000);
+  }
+  window.addEventListener('online', () => acik && belge && cizimleriGuncelle());
 
   /** Sayfanın yazısı ekran okuyucular için (görünmez; çizilen sayfa basıldığı gibi kalır). Taranmış (yazısız)
    *  sayfada yalnız "Sayfa N" okunur. */

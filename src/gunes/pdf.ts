@@ -48,7 +48,8 @@ export function hataNedeni(e: unknown): HataNedeni {
   const mesaj = String(h.message ?? '');
   if (h.name === 'InvalidPDFException' || h.name === 'FormatError') return 'bozuk';
   if (h.missing || h.status === 404) return 'yok';
-  if (h.name === 'ResponseException' || /fetch|network|load failed|internet|offline|aborted/i.test(mesaj)) return 'ag';
+  // (WebKit ve Firefox, okuyucu dosyaları inemeyince "module script failed" / "dynamically imported module" der)
+  if (h.name === 'ResponseException' || /fetch|network|load failed|internet|offline|aborted|importing a module script failed|dynamically imported module/i.test(mesaj)) return 'ag';
   // eksik bir özellik ya da çözülemeyen sözdizimi (eski tarayıcı)
   if (e instanceof TypeError || e instanceof SyntaxError || e instanceof ReferenceError) return 'cihaz';
   if (/is not a function|is not defined|is not a constructor|undefined is not|Unexpected token|SyntaxError|TypeError/i.test(mesaj)) return 'cihaz';
@@ -58,11 +59,36 @@ export function hataNedeni(e: unknown): HataNedeni {
 /** Bayt aralığı parçası (pdf.js'in istediği ölçü) */
 const PARCA = 1 << 18;
 
-/** Başka kaynaktaki PDF (telefon uygulamasında sitedeki PDF'ler; listede https:// adresi): tarayıcı "Accept-Ranges"
- *  başlığını göstermediği için (GitHub Pages izin vermez) pdf.js bayt aralığını kendisi bulamaz ve dosyanın
- *  tamamını indirmeden ilk sayfayı açamaz. Burada uzunluk (HEAD, Content-Length her kaynaktan okunur) ve ilk parça
- *  alınır; sunucu aralık isteğine 206 ile yanıt veriyorsa pdf.js parçaları bizden ister. Olmazsa null (düz yükleme). */
-async function aralikTasiyici(m: PdfJs, adres: string, sinyal: AbortSignal): Promise<InstanceType<PdfJs['PDFDataRangeTransport']> | null> {
+const bekle = (ms: number, sinyal: AbortSignal) =>
+  new Promise<void>((tamam) => {
+    const t = setTimeout(tamam, ms);
+    sinyal.addEventListener('abort', () => (clearTimeout(t), tamam()), { once: true });
+  });
+/** Bağlantı yokken (navigator.onLine) gelene dek bekler */
+const baglantiyiBekle = (sinyal: AbortSignal) =>
+  navigator.onLine
+    ? Promise.resolve()
+    : new Promise<void>((tamam) => {
+        const bitti = () => (removeEventListener('online', bitti), tamam());
+        addEventListener('online', bitti);
+        sinyal.addEventListener('abort', bitti, { once: true });
+      });
+
+/** Kitabın parçaları bizim üzerimizden iner (pdf.js istedikçe):
+ *  - Başka kaynaktaki PDF'te (telefon uygulamasında sitedeki PDF'ler; listede https:// adresi) tarayıcı
+ *    "Accept-Ranges" başlığını göstermez (GitHub Pages izin vermez); pdf.js bayt aralığını kendisi bulamaz ve dosyanın
+ *    tamamını indirmeden ilk sayfayı açamazdı.
+ *  - pdf.js inemeyen bir parçayı bir daha istemez: bağlantı bir an koparsa o sayfalar hiç çizilmezdi. Burada her parça
+ *    inene dek (bağlantı yokken gelmesi beklenerek) yeniden denenir. Dördüncü denemede `hata` çağrılır (kitap daha
+ *    açılmadıysa okuyucu "Yeniden dene" gösterir); denemeler kitap kapanana dek sürer.
+ *  Uzunluk HEAD ile (Content-Length her kaynaktan okunur), ilk parça bir aralık isteğiyle alınır; sunucu 206 ile yanıt
+ *  vermiyorsa null (pdf.js'in kendi yüklemesi). */
+async function aralikTasiyici(
+  m: PdfJs,
+  adres: string,
+  sinyal: AbortSignal,
+  hata: (e: unknown) => void,
+): Promise<InstanceType<PdfJs['PDFDataRangeTransport']> | null> {
   try {
     const bas = await fetch(adres, { method: 'HEAD', signal: sinyal });
     const uzunluk = Number(bas.headers.get('content-length'));
@@ -77,14 +103,19 @@ async function aralikTasiyici(m: PdfJs, adres: string, sinyal: AbortSignal): Pro
     if (ilkVeri.length !== PARCA || new TextDecoder().decode(ilkVeri.subarray(0, 5)) !== '%PDF-') return null;
     const parcaAl = async (bas_: number, son: number): Promise<Uint8Array> => {
       for (let deneme = 0; ; deneme++) {
+        await baglantiyiBekle(sinyal);
+        if (sinyal.aborted) throw new DOMException('İptal', 'AbortError');
         try {
           const r = await fetch(adres, { headers: { Range: `bytes=${bas_}-${son - 1}` }, signal: sinyal });
-          if (r.status !== 206) throw new Error(`Aralık yanıtı ${r.status}`);
+          if (r.status !== 206) {
+            void r.body?.cancel();
+            throw Object.assign(new Error(`Aralık yanıtı ${r.status}`), { status: r.status });
+          }
           return new Uint8Array(await r.arrayBuffer());
         } catch (e) {
-          // bağlantı kopukluğu: birkaç kez yeniden denenir
-          if (sinyal.aborted || deneme >= 3) throw e;
-          await new Promise((t) => setTimeout(t, 1000 * 2 ** deneme));
+          if (sinyal.aborted) throw e;
+          if (deneme === 3) hata(e);
+          await bekle(1000 * 2 ** Math.min(deneme, 3), sinyal);
         }
       }
     };
@@ -92,7 +123,7 @@ async function aralikTasiyici(m: PdfJs, adres: string, sinyal: AbortSignal): Pro
       requestDataRange(bas_: number, son: number): void {
         parcaAl(bas_, son).then(
           (veri) => !sinyal.aborted && this.onDataRange(bas_, veri),
-          () => undefined,
+          () => undefined, // (yalnız kitap kapanınca)
         );
       }
     }
@@ -107,10 +138,13 @@ export function kitapYukle(pdf: string): KitapYukleme {
   let gorev: PDFDocumentLoadingTask | null = null;
   let dinleyici: ((oran: number) => void) | null = null;
   const iptalci = new AbortController();
+  // parçalar uzun süre inemezse kitap açılırken hata verilir (açıldıktan sonra bunun etkisi yoktur)
+  let aktarimHatasiVer: (e: unknown) => void = () => undefined;
+  const aktarimHatasi = new Promise<never>((_, red) => (aktarimHatasiVer = red));
+  aktarimHatasi.catch(() => undefined);
   const belge = pdfjs().then(async (m) => {
     const adres = pdfAdresi(pdf);
-    const baskaKaynak = Capacitor.isNativePlatform() || new URL(adres).origin !== location.origin;
-    const tasiyici = baskaKaynak ? await aralikTasiyici(m, adres, iptalci.signal) : null;
+    const tasiyici = await aralikTasiyici(m, adres, iptalci.signal, (e) => aktarimHatasiVer(e));
     if (iptalci.signal.aborted) throw new DOMException('İptal', 'AbortError');
     gorev = m.getDocument({
       ...(tasiyici ? { range: tasiyici } : { url: adres }),
@@ -128,7 +162,7 @@ export function kitapYukle(pdf: string): KitapYukleme {
     gorev.onProgress = ({ loaded, total }: { loaded: number; total: number }) => {
       if (total > 0) dinleyici?.(Math.min(1, loaded / total));
     };
-    return gorev.promise;
+    return Promise.race([gorev.promise, aktarimHatasi]);
   });
   return {
     belge,

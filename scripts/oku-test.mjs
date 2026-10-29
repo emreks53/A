@@ -1295,6 +1295,16 @@ await adim('büyük kitap parça parça iner (sunucu Accept-Ranges göstermese d
     await sekmeOlsun('kitap', p2);
     assert.equal(hash(p2), '#/gunes/sualar/203');
     assert.equal(await p2.locator('.okuyucu__yuva[data-i="202"] .okuyucu__sayfa').getAttribute('data-cizildi'), '');
+    // bağlantı bir an koparken başka sayfaya gidilir: bağlantı gelince sayfa yine çizilir (parçalar yeniden istenir)
+    let kopuk = true;
+    await kitapYolu(c2, { hata: (r) => (kopuk ? r.abort('internetdisconnected') : r.fallback()) });
+    await p2.evaluate(() => (location.hash = '#/gunes/sualar/120'));
+    await hashOlsun('#/gunes/sualar/120', p2);
+    await p2.waitForTimeout(2500);
+    assert.equal(await p2.locator('.okuyucu__yuva[data-i="119"] .okuyucu__sayfa').getAttribute('data-cizildi'), null);
+    kopuk = false;
+    await cizildi(p2);
+    assert.equal(await sayfaNo(p2), '120 / 210');
   } finally {
     await c2.close();
   }

@@ -6,7 +6,7 @@ import { RENKLER } from '../oku/menba-cizim';
 import { KULLIYAT, tipografik } from '../oku/ortak';
 import { basiliSayfa, bolumBul, kitapKimligi, type Kitap } from './ortak';
 import sahneSvg from './sahne.svg?raw';
-import { kalinanYer, sonOkunan } from './yer';
+import { sonOkunan } from './yer';
 
 /** Raftaki sırt: genişlik payı (g), boy oranı (b), yazı boyu (fs), yazı boyu / satır uzunluğu (k), satırlar */
 const SIRTLAR: Record<string, { g: number; b: number; fs: number; k: number; satirlar: string[] }> = {
@@ -164,9 +164,9 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
   let kurdeleli: HTMLElement | null = null;
 
   function yenile(): void {
-    const son = sonOkunan();
+    const son = sonOkunan(kitaplar);
     const k = son && kitaplar.find((x) => x.kimlik === son.kimlik);
-    const yer = k && kalinanYer(k.kimlik, k.pdf);
+    const yer = son?.yer;
     devam.hidden = !yer;
     if (kurdeleli) {
       kurdeleli.classList.remove('cilt--kaldigin');

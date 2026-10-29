@@ -30,11 +30,13 @@ export function kalinanYer(kimlik: string, pdf?: string): KalinanYer | null {
   return gecerli(y, pdf) ? y : null;
 }
 
-/** En son okunan kitap (rafta öne çıkar) */
-export function sonOkunan(): { kimlik: string; yer: KalinanYer } | null {
+/** Listedeki kitaplardan en son okunanı (rafta öne çıkar); yalnız şimdiki dosyasında kalınan yerler sayılır */
+export function sonOkunan(kitaplar: readonly { kimlik: string; pdf?: string }[]): { kimlik: string; yer: KalinanYer } | null {
+  const h = hepsi();
   let son: { kimlik: string; yer: KalinanYer } | null = null;
-  for (const [kimlik, yer] of Object.entries(hepsi())) {
-    if (gecerli(yer) && (!son || yer.zaman > son.yer.zaman)) son = { kimlik, yer };
+  for (const { kimlik, pdf } of kitaplar) {
+    const yer = h[kimlik];
+    if (gecerli(yer, pdf) && (!son || yer.zaman > son.yer.zaman)) son = { kimlik, yer };
   }
   return son;
 }
