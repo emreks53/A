@@ -813,7 +813,7 @@
     display: none;
   }
 }
-/* "Kitapta oku": kaynağı Güneş'te, kitabın kendisinde o sayfada açar */
+/* "Kitapta oku": kaynağı Güneş'te, kitabın kendisinde o sayfada açar (PDF'i yoksa yayınevinin okuma sitesinde) */
 .menba__oku {
   display: inline-flex;
   align-items: center;
@@ -857,6 +857,21 @@
   color: rgba(29, 20, 6, 0.72);
   font-weight: 600;
   font-size: 14px;
+}
+/* dış sitede açılır */
+.menba__oku--dis {
+  padding-right: 16px;
+}
+.menba__oku-dis {
+  display: grid;
+  width: 13px;
+  height: 13px;
+  margin-left: -3px;
+  color: rgba(29, 20, 6, 0.62);
+}
+.menba__oku-dis svg {
+  width: 100%;
+  height: 100%;
 }
 .menba__etiketler {
   display: flex;

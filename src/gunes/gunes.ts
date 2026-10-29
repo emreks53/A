@@ -1,13 +1,13 @@
 // Güneş: Risale-i Nur Külliyatı'nın kütüphanesi. Şafak vakti: güneş, rahledeki Kur'an-ı Kerim'in ardından doğar
 // (Kur'an yalnız süstür, dokunulmaz); altında ceviz rafta 14 cilt (7 + 7), her biri en az 44 px'lik bir bağlantı.
 // PDF'i eklenmiş kitap okuyucuda açılır; PDF'i olmayan kitap, listede dış adresi varsa o sitede (RNK Neşriyat'ın
-// kitap sayfası; sitede yeni sekmede, telefon uygulamasında tarayıcıda) açılır; ikisi de yoksa cilt soluktur, "yakında"
-// kuşağı taşır. En son okunan kitap için rafın altında "Kaldığın yer".
+// okuma sitesi rnk.tr; sitede yeni sekmede, telefon uygulamasında tarayıcıda) açılır; ikisi de yoksa cilt soluktur,
+// "yakında" kuşağı taşır. En son okunan kitap için rafın altında "Kaldığın yer".
 import { Capacitor } from '@capacitor/core';
 import { baglanti, kitaplar } from 'virtual:kitaplar';
 import { RENKLER } from '../oku/menba-cizim';
 import { KULLIYAT, tipografik } from '../oku/ortak';
-import { basiliSayfa, bolumBul, kitapKimligi, type Kitap } from './ortak';
+import { basiliSayfa, bolumBul, disAdres, kitapKimligi, type Kitap } from './ortak';
 import sahneSvg from './sahne.svg?raw';
 import { sonOkunan } from './yer';
 
@@ -120,7 +120,7 @@ function ciltKur(ad: string, kitap: Kitap | undefined, dis: string | undefined):
     a.setAttribute('aria-label', tipografik(ad));
     cilt.append(deri);
   } else if (dis) {
-    // yayınevinin kitap sayfası: sitede yeni sekmede; telefon uygulamasında (Capacitor) dış adres tarayıcıda açılır
+    // kitap yayınevinin okuma sitesinde: sitede yeni sekmede; telefon uygulamasında (Capacitor) dış adres tarayıcıda açılır
     const a = cilt as HTMLAnchorElement;
     a.href = dis;
     if (!Capacitor.isNativePlatform()) {
@@ -158,7 +158,7 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
     const ul = el('ul', 'gunes__kitaplar');
     ul.setAttribute('aria-label', i === 0 ? 'Üst raf' : 'Alt raf');
     for (const ad of adlar) {
-      const li = ciltKur(ad, kitaplar.find((k) => k.kitap === ad), baglanti?.adresler[ad]);
+      const li = ciltKur(ad, kitaplar.find((k) => k.kitap === ad), disAdres(baglanti, ad));
       ciltler.set(kitapKimligi(ad), li.firstElementChild as HTMLElement);
       ul.append(li);
     }
@@ -172,7 +172,7 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
   bosluk.setAttribute('aria-hidden', 'true');
   ic.append(sahne, baslik, raflar);
   // dış sitede açılan kitaplar varsa rafın altında söylenir
-  const disaAcilan = KULLIYAT.filter((ad) => !kitaplar.some((k) => k.kitap === ad) && baglanti?.adresler[ad]);
+  const disaAcilan = KULLIYAT.filter((ad) => !kitaplar.some((k) => k.kitap === ad) && disAdres(baglanti, ad));
   if (baglanti && disaAcilan.length) {
     const not = el('p', 'gunes__not');
     const yazi = el('span');

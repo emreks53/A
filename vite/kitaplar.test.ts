@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { basiliSayfa, bolumBul, kitapKimligi, pdfSayfasi, sayfaninVideosu } from '../src/gunes/ortak';
+import { basiliSayfa, bolumBul, disAdres, kitapKimligi, pdfSayfasi, sayfaninVideosu } from '../src/gunes/ortak';
 import { rafOku } from './kitaplar';
 
 const kok = resolve(__dirname, '..');
@@ -80,22 +80,39 @@ describe('rafOku', () => {
     expect(dene({ baglanti: { adresler: {} }, kitaplar: [] })).toThrow(/baglanti\.ad/);
     expect(dene({ baglanti: { ad: 'RNK', adresler: { Bilinmeyen: 'https://a.b/' } }, kitaplar: [] })).toThrow(/bir eser değil/);
     expect(dene({ baglanti: { ad: 'RNK', adresler: { Sözler: 'http://a.b/' } }, kitaplar: [] })).toThrow(/https/);
+    expect(dene({ baglanti: { ad: 'RNK', sayfaParametresi: '', adresler: {} }, kitaplar: [] })).toThrow(/sayfaParametresi/);
+    expect(dene({ baglanti: { ad: 'RNK', sayfaParametresi: 'p&x', adresler: {} }, kitaplar: [] })).toThrow(/sayfaParametresi/);
+    expect(dene({ baglanti: { ad: 'RNK', sayfaParametresi: 3, adresler: {} }, kitaplar: [] })).toThrow(/sayfaParametresi/);
   });
 
-  it('PDF\'i olmayan kitapların dış adresleri (yayınevinin kitap sayfası) okunur', () => {
-    const { json, pub } = gecici({ baglanti: { ad: ' RNK Neşriyat ', adresler: { Sözler: 'https://rnk.com.tr/sozler/' } }, kitaplar: [] });
-    expect(rafOku(json, pub).baglanti).toEqual({ ad: 'RNK Neşriyat', adresler: { Sözler: 'https://rnk.com.tr/sozler/' } });
+  it('PDF\'i olmayan kitapların dış adresleri (yayınevinin okuma sitesi) okunur', () => {
+    const { json, pub } = gecici({ baglanti: { ad: ' RNK Neşriyat ', adresler: { Sözler: 'https://rnk.tr/r?s=tr&b=sozler' } }, kitaplar: [] });
+    expect(rafOku(json, pub).baglanti).toEqual({ ad: 'RNK Neşriyat', adresler: { Sözler: 'https://rnk.tr/r?s=tr&b=sozler' } });
+    const s = gecici({ baglanti: { ad: 'RNK', sayfaParametresi: 'p', adresler: {} }, kitaplar: [] });
+    expect(rafOku(s.json, s.pub).baglanti).toEqual({ ad: 'RNK', sayfaParametresi: 'p', adresler: {} });
     const g = gecici({ kitaplar: [] });
     expect(rafOku(g.json, g.pub).baglanti).toBeNull();
-    // gerçek listede 14 eserin hepsinin RNK Neşriyat adresi var
+    // gerçek listede 14 eserin hepsi RNK Neşriyat'ın okuma sitesinde (rnk.tr), sayfasıyla açılabilir
     const raf = rafOku(join(kok, 'content/kitaplar/kitaplar.json'), join(kok, 'public'));
     expect(raf.baglanti?.ad).toBe('RNK Neşriyat');
+    expect(raf.baglanti?.sayfaParametresi).toBe('p');
     expect(Object.keys(raf.baglanti?.adresler ?? {})).toHaveLength(14);
-    for (const adres of Object.values(raf.baglanti?.adresler ?? {})) expect(adres).toMatch(/^https:\/\/rnk\.com\.tr\/[a-z-]+\/$/);
+    for (const adres of Object.values(raf.baglanti?.adresler ?? {})) expect(adres).toMatch(/^https:\/\/rnk\.tr\/r\?s=tr&b=[a-z0-9]+$/);
+    expect(raf.baglanti?.adresler["Emirdağ Lâhikası"]).toBe('https://rnk.tr/r?s=tr&b=emirdag1');
   });
 });
 
 describe('Güneş yardımcıları', () => {
+  it('dış adres: kitabın adresi; sayfa verilirse site destekliyorsa o sayfada', () => {
+    const b = { ad: 'RNK', sayfaParametresi: 'p', adresler: { Şuâlar: 'https://rnk.tr/r?s=tr&b=sualar' } };
+    expect(disAdres(b, 'Şuâlar')).toBe('https://rnk.tr/r?s=tr&b=sualar');
+    expect(disAdres(b, 'Şuâlar', 203)).toBe('https://rnk.tr/r?s=tr&b=sualar&p=203');
+    expect(disAdres({ ...b, adresler: { Şuâlar: 'https://rnk.tr/r?s=tr&b=sualar&p=1' } }, 'Şuâlar', 203)).toBe('https://rnk.tr/r?s=tr&b=sualar&p=203');
+    expect(disAdres({ ad: 'RNK', adresler: b.adresler }, 'Şuâlar', 203)).toBe('https://rnk.tr/r?s=tr&b=sualar');
+    expect(disAdres(b, 'Sözler', 5)).toBeUndefined();
+    expect(disAdres(null, 'Şuâlar', 203)).toBeUndefined();
+  });
+
   it('kitap kimliği adreste sade yazılır', () => {
     expect(kitapKimligi("Lem'alar")).toBe('lemalar');
     expect(kitapKimligi("İşârâtü'l-İ'câz")).toBe('isaratul-icaz');

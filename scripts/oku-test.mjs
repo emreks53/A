@@ -1,9 +1,10 @@
 // Uygulamayı (ana ekran, Oku akışı, Kenz, Güneş ve okuyucu) gerçek tarayıcıda baştan sona dener.
 // Önce dist-test/ altına deneme derlemesi yapar: kitap listesi scripts/fixtures/kitaplar.json (örnek PDF; Risale
-// metni değildir), gerisi uygulamanın kendisi.
+// metni değildir), gerisi uygulamanın kendisi. dist-test-gercek/ altına da gerçek kitap listesiyle derler (PDF'siz:
+// kitaplar RNK Neşriyat'ın okuma sitesinde açılır).
 // Kullanım: npm run test:oku                            (Playwright + Chromium gerekir)
 //           node scripts/oku-test.mjs --ekran <klasör>  (ayrıca her adımın ekran görüntüsünü kaydeder)
-//           node scripts/oku-test.mjs --derleme       (deneme derlemesini atlar; dist-test/ hazırsa)
+//           node scripts/oku-test.mjs --derleme       (deneme derlemelerini atlar; dist-test/ ve dist-test-gercek/ hazırsa)
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
@@ -24,10 +25,13 @@ const ekranKlasoru = ekranIndex > 0 ? resolve(process.argv[ekranIndex + 1]) : nu
 if (ekranKlasoru) await mkdir(ekranKlasoru, { recursive: true });
 
 const root = resolve('dist-test');
+const rootGercek = resolve('dist-test-gercek');
 if (!process.argv.includes('--derleme')) {
-  process.env.KITAPLAR_JSON = 'scripts/fixtures/kitaplar.json';
   const { build } = await import('vite');
+  process.env.KITAPLAR_JSON = 'scripts/fixtures/kitaplar.json';
   await build({ logLevel: 'warn', build: { outDir: root, emptyOutDir: true } });
+  delete process.env.KITAPLAR_JSON;
+  await build({ logLevel: 'warn', build: { outDir: rootGercek, emptyOutDir: true } });
 }
 /** Örnek kitap PDF'leri: deneme listesindeki https://kitap.deneme/… adresleri buradan verilir (Risale metni
  *  değildir). buyuk.pdf (210 sayfa, ~1 MB) her çalıştırmada üretilir: büyük kitabın parça parça indirildiği denenir. */
@@ -83,12 +87,15 @@ const kitapYolu = async (ctx, { gecikme = 0, hata = null } = {}) =>
     return r.fulfill({ status: 200, body: veri, headers: { ...cors, 'content-type': 'application/pdf', 'accept-ranges': 'bytes' } });
   });
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json' };
-// GitHub Pages'teki gibi /A/ alt yolundan, video için bayt aralığı (Range) desteğiyle sunar.
+// GitHub Pages'teki gibi /A/ alt yolundan (gerçek kitap listesiyle derleme /G/ yolundan), video için bayt aralığı
+// (Range) desteğiyle sunar.
+const kokler = { '/A/': root, '/G/': rootGercek };
 const server = createServer(async (req, res) => {
   const tam = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-  if (!tam.startsWith('/A/')) return res.writeHead(404).end();
+  const kok = kokler[tam.slice(0, 3)];
+  if (!kok) return res.writeHead(404).end();
   const path = tam.slice(2);
-  const file = join(root, path.endsWith('/') ? path + 'index.html' : path);
+  const file = join(kok, path.endsWith('/') ? path + 'index.html' : path);
   try {
     const { size } = await stat(file);
     const type = types[extname(file)] ?? 'application/octet-stream';
@@ -109,6 +116,7 @@ const server = createServer(async (req, res) => {
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${server.address().port}/A/`;
+const baseGercek = base.replace(/\/A\/$/, '/G/');
 
 const browser = await playwright.chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
 const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
@@ -911,20 +919,20 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
   );
   assert.deepEqual(raf.map((s) => s.ad), ESERLER);
   assert.deepEqual(raf.filter((s) => !s.yakinda && !s.dis).map((s) => [s.ad, s.href]), [['Sözler', '#/gunes/sozler'], ['Lem’alar', '#/gunes/lemalar'], ['Şuâlar', '#/gunes/sualar']]);
-  // PDF'i olmayanlar yayınevinin kitap sayfasına (yeni sekmede); deneme listesinde Muhâkemat'ın adresi yok
+  // PDF'i olmayanlar yayınevinin okuma sitesinde (yeni sekmede); deneme listesinde Muhâkemat'ın adresi yok
   assert.deepEqual(
     raf.filter((s) => s.dis).map((s) => [s.ad, s.href, s.hedef, s.rel]),
     [
-      ['Mektubat', 'https://rnk.com.tr/mektubat/', '_blank', 'noopener'],
-      ['İşârâtü’l-İ’câz', 'https://rnk.com.tr/isaratul-icaz/', '_blank', 'noopener'],
-      ['Mesnevî-i Nûriye', 'https://rnk.com.tr/mesnevi-i-nuriye/', '_blank', 'noopener'],
-      ['Asâ-yı Mûsâ', 'https://rnk.com.tr/asa-yi-musa/', '_blank', 'noopener'],
-      ['Barla Lâhikası', 'https://rnk.com.tr/barla-lahikasi/', '_blank', 'noopener'],
-      ['Kastamonu Lâhikası', 'https://rnk.com.tr/kastamonu-lahikasi/', '_blank', 'noopener'],
-      ['Emirdağ Lâhikası', 'https://rnk.com.tr/emirdag-lahikasi/', '_blank', 'noopener'],
-      ['Sikke-i Tasdîk-i Gaybî', 'https://rnk.com.tr/sikke-i-tasdik-i-gaybi/', '_blank', 'noopener'],
-      ['Tarihçe-i Hayat', 'https://rnk.com.tr/tarihce-i-hayat/', '_blank', 'noopener'],
-      ['İman ve Küfür Muvâzeneleri', 'https://rnk.com.tr/iman-ve-kufur-muvazeneleri/', '_blank', 'noopener'],
+      ['Mektubat', 'https://rnk.tr/r?s=tr&b=mektubat', '_blank', 'noopener'],
+      ['İşârâtü’l-İ’câz', 'https://rnk.tr/r?s=tr&b=isarat', '_blank', 'noopener'],
+      ['Mesnevî-i Nûriye', 'https://rnk.tr/r?s=tr&b=mesnevi', '_blank', 'noopener'],
+      ['Asâ-yı Mûsâ', 'https://rnk.tr/r?s=tr&b=asamusa', '_blank', 'noopener'],
+      ['Barla Lâhikası', 'https://rnk.tr/r?s=tr&b=barla', '_blank', 'noopener'],
+      ['Kastamonu Lâhikası', 'https://rnk.tr/r?s=tr&b=kastamonu', '_blank', 'noopener'],
+      ['Emirdağ Lâhikası', 'https://rnk.tr/r?s=tr&b=emirdag1', '_blank', 'noopener'],
+      ['Sikke-i Tasdîk-i Gaybî', 'https://rnk.tr/r?s=tr&b=sikke', '_blank', 'noopener'],
+      ['Tarihçe-i Hayat', 'https://rnk.tr/r?s=tr&b=tarihce', '_blank', 'noopener'],
+      ['İman ve Küfür Muvâzeneleri', 'https://rnk.tr/r?s=tr&b=imankufur', '_blank', 'noopener'],
     ],
   );
   assert.deepEqual(raf.filter((s) => s.yakinda).map((s) => s.ad), ['Muhâkemat']);
@@ -936,11 +944,11 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
   assert.equal(await page.locator('#view-gunes .cilt[data-kitap="mektubat"]').getAttribute('aria-label'), 'Mektubat, RNK Neşriyat sitesinde açılır');
   assert.equal(await page.locator('#view-gunes .cilt--yakinda .visually-hidden').first().textContent(), 'Muhâkemat, yakında');
   assert.equal((await page.locator('#view-gunes .gunes__not').innerText()).trim(), 'Okuyucuda olmayan kitaplar RNK Neşriyat sitesinde açılır');
-  // dokununca RNK'nın kitap sayfası yeni sekmede açılır; uygulama yerinde kalır
-  await context.route('https://rnk.com.tr/**', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<title>Mektubat - Rnk Neşriyat</title>' }));
+  // dokununca kitap RNK'nın okuma sitesinde yeni sekmede açılır; uygulama yerinde kalır
+  await context.route(/^https:\/\/rnk\.tr\//, (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<title>Risale-i Nur</title>' }));
   const [sekmeRnk] = await Promise.all([context.waitForEvent('page'), page.locator('#view-gunes .cilt[data-kitap="mektubat"]').click()]);
   await sekmeRnk.waitForLoadState();
-  assert.equal(sekmeRnk.url(), 'https://rnk.com.tr/mektubat/');
+  assert.equal(sekmeRnk.url(), 'https://rnk.tr/r?s=tr&b=mektubat');
   await sekmeRnk.close();
   assert.equal(await sekme(), 'gunes');
   assert.equal(hash(), '#/gunes');
@@ -1388,6 +1396,54 @@ await adim('masaüstünde: kütüphane ortada bir sütun; ipucu Escape\'i söyle
     await p2.locator('.akis__cik').focus();
     await p2.keyboard.press('Enter');
     await p2.waitForFunction(() => document.getElementById('app').dataset.sekme === 'kenz');
+  } finally {
+    await c2.close();
+  }
+});
+
+await adim('gerçek kitap listesiyle (PDF yok): 14 eser RNK Neşriyat\'ın okuma sitesinde (rnk.tr) açılır, 360 × 640\'ta raf ve not sığar; Menba\'da "Kitapta oku" kitabı orada videonun sayfasında yeni sekmede açar', async () => {
+  const c2 = await browser.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
+  try {
+    await c2.route(/^https:\/\/rnk\.tr\//, (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<title>Risale-i Nur</title>' }));
+    const p2 = await c2.newPage();
+    p2.on('pageerror', (e) => hatalar.push(String(e)));
+    p2.on('response', (r) => r.status() >= 400 && hatalar.push(`${r.status()} ${r.url()}`));
+    await p2.goto(baseGercek + '#/gunes');
+    await p2.waitForSelector('#view-gunes .cilt');
+    const raf = await p2.evaluate(() =>
+      Array.from(document.querySelectorAll('#view-gunes .cilt'), (e) => [e.getAttribute('aria-label'), e.getAttribute('href'), e.getAttribute('target'), e.className]),
+    );
+    const KIMLIK = ['sozler', 'mektubat', 'lemalar', 'sualar', 'isarat', 'mesnevi', 'asamusa', 'barla', 'kastamonu', 'emirdag1', 'sikke', 'tarihce', 'muhakemat', 'imankufur'];
+    assert.deepEqual(raf, ESERLER.map((ad, i) => [`${ad}, RNK Neşriyat sitesinde açılır`, `https://rnk.tr/r?s=tr&b=${KIMLIK[i]}`, '_blank', 'cilt cilt--dis']));
+    assert.equal((await p2.locator('#view-gunes .gunes__not').innerText()).trim(), 'Kitaplar RNK Neşriyat sitesinde açılır');
+    const olcu = await p2.evaluate(() => {
+      const menu = document.querySelector('.tabbar').getBoundingClientRect().top;
+      const ciltler = Array.from(document.querySelectorAll('#view-gunes .cilt'), (c) => c.getBoundingClientRect());
+      const not = document.querySelector('#view-gunes .gunes__not').getBoundingClientRect();
+      return { menu, enDar: Math.min(...ciltler.map((r) => r.width)), notUst: not.top, notAlt: not.bottom, enAlt: Math.max(...ciltler.map((r) => r.bottom)), kaydirma: document.querySelector('.gunes').scrollHeight - innerHeight };
+    });
+    assert.ok(olcu.enDar >= 44 && olcu.enAlt <= olcu.notUst && olcu.notAlt <= olcu.menu && olcu.kaydirma <= 0, JSON.stringify(olcu));
+    // Menba: Şuâlar'ın PDF'i yok; "Kitapta oku" RNK'nın okuma sitesinde videonun sayfasını (203) açar
+    await p2.goto(baseGercek + `#/oku/${F}`);
+    await p2.waitForSelector('.reel[data-aktif]');
+    await p2.locator('.reel[data-aktif] .reel__dugme--menba').click();
+    await p2.waitForSelector('.alt-sayfa.acik');
+    const oku = p2.locator('.alt-sayfa.acik .menba__oku');
+    assert.equal(await oku.getAttribute('href'), 'https://rnk.tr/r?s=tr&b=sualar&p=203');
+    assert.equal(await oku.getAttribute('target'), '_blank');
+    assert.equal(await oku.getAttribute('rel'), 'noopener');
+    assert.equal(await oku.getAttribute('aria-label'), 'Kitapta oku: Şuâlar, 203. sayfa, RNK Neşriyat sitesinde açılır');
+    assert.equal(await oku.locator('.menba__oku-dis svg').count(), 1);
+    const b = await oku.boundingBox();
+    assert.ok(b.height >= 44 && b.x >= 0 && b.x + b.width <= 360, JSON.stringify(b));
+    const [yeni] = await Promise.all([c2.waitForEvent('page'), oku.click()]);
+    await yeni.waitForLoadState();
+    assert.equal(yeni.url(), 'https://rnk.tr/r?s=tr&b=sualar&p=203');
+    await yeni.close();
+    // uygulama yerinde kalır: Oku'da, aynı video, Menba açık
+    assert.equal(await p2.evaluate(() => document.getElementById('app').dataset.sekme), 'oku');
+    assert.equal(new URL(p2.url()).hash, `#/oku/${F}`);
+    assert.equal(await p2.locator('.alt-sayfa.acik').count(), 1);
   } finally {
     await c2.close();
   }

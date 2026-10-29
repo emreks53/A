@@ -68,9 +68,9 @@ Lem’alar, … İman ve Küfür Muvâzeneleri). Arka plan ana ekranın gökyüz
 
 - Her eser büyük bir cilt sırtıdır (Menba rafıyla aynı renkler, altın şeritler, dikey ad); dokunma alanı en az
   44 × 44 px (354 px'ten dar ekranlarda sırtlar daralır, raf ekrana sığar).
-- PDF'i okuyucuda olmayan eser, listede bağlantısı varsa yayınevinin sitesindeki kitap sayfasına gider (şimdi
-  RNK Neşriyat, `rnk.com.tr`; tarayıcıda yeni sekmede, telefon uygulamasında sistem tarayıcısında açılır; rafın
-  altındaki not bunu söyler). Ne PDF'i ne bağlantısı olan eser soluk görünür ve "yakında" yazar; dokunulmaz.
+- PDF'i okuyucuda olmayan eser, listede bağlantısı varsa yayınevinin okuma sitesinde açılır (şimdi RNK Neşriyat'ın
+  okuma sitesi `rnk.tr`; tarayıcıda yeni sekmede, telefon uygulamasında sistem tarayıcısında; rafın altındaki not
+  bunu söyler). Ne PDF'i ne bağlantısı olan eser soluk görünür ve "yakında" yazar; dokunulmaz.
 - En son okunan kitap için rafın altında **Kaldığın yer** kartı çıkar (kitap, bölüm, sayfa); dokununca
   okuyucu o sayfada açılır.
 - Kitaba dokununca cilt raftan çekilir, dönüp kapağını gösterir, kapak açılır ve okuyucu tam ekran açılır
@@ -91,7 +91,8 @@ Lem’alar, … İman ve Küfür Muvâzeneleri). Arka plan ana ekranın gökyüz
   - Sayfalar cihazın piksel yoğunluğunda çizilir; yalnız görünen sayfa ve iki yanı çizili tutulur. PDF
     sunucusu bayt aralığını destekliyorsa büyük kitabın yalnız açılan sayfaları indirilir.
 - Menba'da videonun geçtiği kitabın PDF'i varsa **Kitapta oku** düğmesi çıkar: kitap videonun sayfasında
-  açılır, kapatınca aynı videoya dönülür.
+  açılır, kapatınca aynı videoya dönülür. PDF'i yoksa düğme kitabı okuma sitesinde (`rnk.tr`) videonun sayfasında
+  açar (videolardaki sayfa numaraları RNK baskısınındır).
 
 ### Güneş: kitap ekleme
 
@@ -110,9 +111,16 @@ dosya olur; eskisi silinmez, telefona kurulmuş eski uygulamalar onu okumayı s�
   "icindekiler": [{ "baslik": "On Yedinci Lem’a", "sayfa": 151 }, { "baslik": "Birinci Nota", "sayfa": 152, "derinlik": 1 }] }
 ```
 
-`pdf` bir `https://` adresi de olabilir (sunucu CORS izni vermelidir). PDF'i olmayan eserlerin dışarıdaki
-sayfaları listenin `baglanti` alanındadır: `{ "ad": "RNK Neşriyat", "adresler": { "Sözler": "https://rnk.com.tr/sozler/", … } }`
-(PDF'i eklenen eser bağlantısı olsa da okuyucuda açılır). Liste derlemede denetlenir: bilinmeyen
+`pdf` bir `https://` adresi de olabilir (sunucu CORS izni vermelidir). PDF'i olmayan eserlerin dış adresleri
+listenin `baglanti` alanındadır:
+
+```json
+"baglanti": { "ad": "RNK Neşriyat", "sayfaParametresi": "p",
+  "adresler": { "Sözler": "https://rnk.tr/r?s=tr&b=sozler", "Emirdağ Lâhikası": "https://rnk.tr/r?s=tr&b=emirdag1" } }
+```
+
+`sayfaParametresi` verilirse sayfaya bağlantı adrese o parametreyle eklenir (Menba'daki *Kitapta oku*:
+`…&b=sualar&p=203`). PDF'i eklenen eser, bağlantısı olsa da okuyucuda açılır. Liste derlemede denetlenir: bilinmeyen
 eser, olmayan ya da PDF olmayan dosya, sayfa sayısını aşan içindekiler derlemeyi durdurur. PDF'ler sitede
 yayınlanır; mobil uygulamaya konmaz (paket küçük kalır), uygulama onları siteden okur: sitenin sunucusu bayt
 aralığı istediği için yalnız açılan sayfaların parçaları iner (başka kaynaktaki PDF için de, sunucu `Range`

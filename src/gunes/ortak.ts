@@ -24,6 +24,25 @@ export interface Kitap {
   icindekiler: IcindekilerOgesi[];
 }
 
+/** PDF'i olmayan kitapların dış sitedeki adresleri (ör. RNK Neşriyat'ın okuma sitesi rnk.tr) */
+export interface Baglanti {
+  /** Sitenin adı (rafta ve ekran okuyucuda söylenir) */
+  ad: string;
+  /** Adreste basılı sayfa numarasını taşıyan parametre (ör. "p": …&p=203); yoksa kitap sayfasız açılır */
+  sayfaParametresi?: string;
+  /** Eser adı → kitabın https adresi */
+  adresler: Record<string, string>;
+}
+
+/** Kitabın dış sitedeki adresi (yoksa undefined); sayfa verilirse ve site destekliyorsa o basılı sayfada */
+export function disAdres(b: Baglanti | null, kitap: string, sayfa?: number): string | undefined {
+  const adres = b?.adresler[kitap];
+  if (!b?.sayfaParametresi || !adres || !sayfa) return adres;
+  const u = new URL(adres);
+  u.searchParams.set(b.sayfaParametresi, String(sayfa));
+  return u.href;
+}
+
 /** "Lem'alar" → "lemalar", "İşârâtü'l-İ'câz" → "isaratul-icaz" */
 export function kitapKimligi(ad: string): string {
   return kimlikYap(ad.replace(/['’]/g, ''));

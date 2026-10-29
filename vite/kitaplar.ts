@@ -1,13 +1,13 @@
 // Güneş'teki kitaplar: content/kitaplar/kitaplar.json derleme anında denetlenir ve "virtual:kitaplar" modülü olarak
 // uygulamaya verilir. PDF'ler public/kitaplar/ altında (ya da bir https adresinde) durur. PDF'i olmayan kitap için
-// "baglanti" bir dış adres verebilir (ör. yayınevinin kitap sayfası): rafta ona dokununca o sayfa açılır; ikisi de
-// yoksa kitap "yakında" görünür. Ayrıca pdf.js'nin yardımcı dosyaları (yazı tipleri, karakter eşlemleri, görüntü
+// "baglanti" bir dış adres verebilir (ör. RNK Neşriyat'ın okuma sitesi): rafta ona dokununca kitap orada açılır;
+// ikisi de yoksa kitap "yakında" görünür. Ayrıca pdf.js'nin yardımcı dosyaları (yazı tipleri, karakter eşlemleri, görüntü
 // çözücüler) derlemeye pdfjs/ altında kopyalanır.
 import { existsSync, openSync, readFileSync, readSync, closeSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Plugin, ViteDevServer } from 'vite';
 import { KULLIYAT } from '../src/oku/ortak.ts';
-import { kitapKimligi, type IcindekilerOgesi, type Kitap } from '../src/gunes/ortak.ts';
+import { kitapKimligi, type Baglanti, type IcindekilerOgesi, type Kitap } from '../src/gunes/ortak.ts';
 
 export type { Kitap };
 
@@ -15,14 +15,6 @@ const SANAL = 'virtual:kitaplar';
 const COZULMUS = '\0' + SANAL;
 /** pdf.js'nin çalışma anında indirdiği yardımcı dosyaların klasörleri (node_modules/pdfjs-dist altında) */
 const PDFJS_KLASORLERI = ['cmaps', 'standard_fonts', 'wasm', 'iccs'] as const;
-
-/** PDF'i olmayan kitapların dış adresleri (ör. RNK Neşriyat'ın kitap sayfaları) */
-export interface Baglanti {
-  /** Sitenin adı (rafta ve ekran okuyucuda söylenir) */
-  ad: string;
-  /** Eser adı → https adresi */
-  adresler: Record<string, string>;
-}
 
 export interface Raf {
   kaynak: string;
@@ -122,6 +114,9 @@ function baglantiOku(jsonYolu: string, ham: unknown): Baglanti | null {
   const b = ham as Record<string, unknown>;
   if (!b || typeof b !== 'object' || !metin(b.ad)) hata(jsonYolu, '"baglanti.ad" (sitenin adı) gerekli');
   if (!b.adresler || typeof b.adresler !== 'object' || Array.isArray(b.adresler)) hata(jsonYolu, '"baglanti.adresler" eser adı → adres olmalı');
+  const { sayfaParametresi } = b;
+  if (sayfaParametresi !== undefined && (typeof sayfaParametresi !== 'string' || !/^[A-Za-z][\w-]*$/.test(sayfaParametresi)))
+    hata(jsonYolu, '"baglanti.sayfaParametresi" adresteki sayfa parametresinin adı olmalı (ör. "p")');
   const adresler: Record<string, string> = {};
   for (const [eser, adres] of Object.entries(b.adresler as Record<string, unknown>)) {
     if (!(KULLIYAT as readonly string[]).includes(eser)) hata(jsonYolu, `baglanti.adresler: "${eser}" Risale-i Nur Külliyatı'ndan bir eser değil`);
@@ -134,7 +129,7 @@ function baglantiOku(jsonYolu: string, ham: unknown): Baglanti | null {
     if (!gecerli) hata(jsonYolu, `baglanti.adresler["${eser}"] bir https adresi olmalı`);
     adresler[eser] = adres as string;
   }
-  return { ad: b.ad.trim(), adresler };
+  return { ad: b.ad.trim(), ...(sayfaParametresi ? { sayfaParametresi } : {}), adresler };
 }
 
 /** pdf.js yardımcı dosyalarının listesi: [derlemedeki yol, diskteki yol] */

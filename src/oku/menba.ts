@@ -1,6 +1,9 @@
 // "Menba": videonun kaynağı. Üstte büyük Kur'an-ı Kerim, altında Risale-i Nur eserleri dizili (videonun geçtiği
-// eser öne çıkar); altında eser, bölüm, (varsa) kısım ve sayfa, üç etiket ve (varsa) görüntü ve ses künyesi.
-import { kitaplar } from 'virtual:kitaplar';
+// eser öne çıkar); altında eser, bölüm, (varsa) kısım ve sayfa, "Kitapta oku", üç etiket ve (varsa) görüntü ve ses
+// künyesi.
+import { Capacitor } from '@capacitor/core';
+import { baglanti, kitaplar } from 'virtual:kitaplar';
+import { disAdres } from '../gunes/ortak';
 import { menbaCizimi } from './menba-cizim';
 import { tipografik, type Video } from './ortak';
 
@@ -9,6 +12,9 @@ const OK_SVG =
 
 const KITAP_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.6C10.2 5.3 7.6 4.8 4 5v13c3.6-.2 6.2.3 8 1.6 1.8-1.3 4.4-1.8 8-1.6V5c-3.6-.2-6.2.3-8 1.6Zm0 0v13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>';
+
+const DIS_SVG =
+  '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5H3.5v9h9V10M9 3h4v4M13 3 7.5 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, metin?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(etiket);
@@ -35,15 +41,31 @@ export function menbaIcerik(v: Video): HTMLElement {
   }
   kaynak.append(eser, yer);
 
-  // Kitabın PDF'i Güneş'te varsa: kaynağı kitabın kendisinde, o sayfada açar
+  // Kitabın PDF'i Güneş'te varsa: kaynağı kitabın kendisinde, o sayfada açar. Yoksa ve kitabın dış adresi varsa
+  // (RNK Neşriyat'ın okuma sitesi): kitabı orada, site destekliyorsa o sayfada açar (sitede yeni sekmede, telefon
+  // uygulamasında tarayıcıda).
   const kitap = kitaplar.find((k) => k.kitap === v.kitap);
-  if (kitap) {
-    const oku = el('a', 'menba__oku');
-    oku.href = `#/gunes/${kitap.kimlik}${v.sayfa ? `/${v.sayfa}` : ''}`;
+  const dis = kitap ? undefined : disAdres(baglanti, v.kitap, v.sayfa);
+  if (kitap || dis) {
+    const oku = el('a', `menba__oku${dis ? ' menba__oku--dis' : ''}`);
     const simge = el('span', 'menba__oku-simge');
     simge.innerHTML = KITAP_SVG;
     oku.append(simge, el('span', 'menba__oku-ad', 'Kitapta oku'), el('span', 'menba__oku-yer', v.sayfa ? `${v.sayfa}. sayfa` : tipografik(v.kitap)));
-    oku.setAttribute('aria-label', `Kitapta oku: ${tipografik(v.kitap)}${v.sayfa ? `, ${v.sayfa}. sayfa` : ''}`);
+    const etiket = `Kitapta oku: ${tipografik(v.kitap)}${v.sayfa ? `, ${v.sayfa}. sayfa` : ''}`;
+    if (kitap) {
+      oku.href = `#/gunes/${kitap.kimlik}${v.sayfa ? `/${v.sayfa}` : ''}`;
+      oku.setAttribute('aria-label', etiket);
+    } else if (dis) {
+      oku.href = dis;
+      if (!Capacitor.isNativePlatform()) {
+        oku.target = '_blank';
+        oku.rel = 'noopener';
+      }
+      const ok = el('span', 'menba__oku-dis');
+      ok.innerHTML = DIS_SVG;
+      oku.append(ok);
+      oku.setAttribute('aria-label', `${etiket}, ${baglanti?.ad} sitesinde açılır`);
+    }
     kaynak.append(oku);
   }
 

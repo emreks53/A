@@ -2,21 +2,22 @@
   "kaynak": "Nurun Bekçisi (nurunbekcisi.com) halka açık PDF'leri",
   "baglanti": {
     "ad": "RNK Neşriyat",
+    "sayfaParametresi": "p",
     "adresler": {
-      "Sözler": "https://rnk.com.tr/sozler/",
-      "Mektubat": "https://rnk.com.tr/mektubat/",
-      "Lem'alar": "https://rnk.com.tr/lemalar/",
-      "Şuâlar": "https://rnk.com.tr/sualar/",
-      "İşârâtü'l-İ'câz": "https://rnk.com.tr/isaratul-icaz/",
-      "Mesnevî-i Nûriye": "https://rnk.com.tr/mesnevi-i-nuriye/",
-      "Asâ-yı Mûsâ": "https://rnk.com.tr/asa-yi-musa/",
-      "Barla Lâhikası": "https://rnk.com.tr/barla-lahikasi/",
-      "Kastamonu Lâhikası": "https://rnk.com.tr/kastamonu-lahikasi/",
-      "Emirdağ Lâhikası": "https://rnk.com.tr/emirdag-lahikasi/",
-      "Sikke-i Tasdîk-i Gaybî": "https://rnk.com.tr/sikke-i-tasdik-i-gaybi/",
-      "Tarihçe-i Hayat": "https://rnk.com.tr/tarihce-i-hayat/",
-      "Muhâkemat": "https://rnk.com.tr/muhakemat/",
-      "İman ve Küfür Muvâzeneleri": "https://rnk.com.tr/iman-ve-kufur-muvazeneleri/"
+      "Sözler": "https://rnk.tr/r?s=tr&b=sozler",
+      "Mektubat": "https://rnk.tr/r?s=tr&b=mektubat",
+      "Lem'alar": "https://rnk.tr/r?s=tr&b=lemalar",
+      "Şuâlar": "https://rnk.tr/r?s=tr&b=sualar",
+      "İşârâtü'l-İ'câz": "https://rnk.tr/r?s=tr&b=isarat",
+      "Mesnevî-i Nûriye": "https://rnk.tr/r?s=tr&b=mesnevi",
+      "Asâ-yı Mûsâ": "https://rnk.tr/r?s=tr&b=asamusa",
+      "Barla Lâhikası": "https://rnk.tr/r?s=tr&b=barla",
+      "Kastamonu Lâhikası": "https://rnk.tr/r?s=tr&b=kastamonu",
+      "Emirdağ Lâhikası": "https://rnk.tr/r?s=tr&b=emirdag1",
+      "Sikke-i Tasdîk-i Gaybî": "https://rnk.tr/r?s=tr&b=sikke",
+      "Tarihçe-i Hayat": "https://rnk.tr/r?s=tr&b=tarihce",
+      "Muhâkemat": "https://rnk.tr/r?s=tr&b=muhakemat",
+      "İman ve Küfür Muvâzeneleri": "https://rnk.tr/r?s=tr&b=imankufur"
     }
   },
   "kitaplar": []
