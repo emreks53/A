@@ -1,0 +1,75 @@
+{
+  "kaynak": "Uçtan uca deneme (örnek PDF, Risale metni değildir)",
+  "baglanti": {
+    "ad": "RNK Neşriyat",
+    "sayfaParametresi": "p",
+    "adresler": {
+      "Sözler": "https://rnk.tr/r?s=tr&b=sozler",
+      "Mektubat": "https://rnk.tr/r?s=tr&b=mektubat",
+      "Lem'alar": "https://rnk.tr/r?s=tr&b=lemalar",
+      "Şuâlar": "https://rnk.tr/r?s=tr&b=sualar",
+      "İşârâtü'l-İ'câz": "https://rnk.tr/r?s=tr&b=isarat",
+      "Mesnevî-i Nûriye": "https://rnk.tr/r?s=tr&b=mesnevi",
+      "Asâ-yı Mûsâ": "https://rnk.tr/r?s=tr&b=asamusa",
+      "Barla Lâhikası": "https://rnk.tr/r?s=tr&b=barla",
+      "Kastamonu Lâhikası": "https://rnk.tr/r?s=tr&b=kastamonu",
+      "Emirdağ Lâhikası": "https://rnk.tr/r?s=tr&b=emirdag1",
+      "Sikke-i Tasdîk-i Gaybî": "https://rnk.tr/r?s=tr&b=sikke",
+      "Tarihçe-i Hayat": "https://rnk.tr/r?s=tr&b=tarihce",
+      "İman ve Küfür Muvâzeneleri": "https://rnk.tr/r?s=tr&b=imankufur"
+    }
+  },
+  "kitaplar": [
+    {
+      "kitap": "Lem'alar",
+      "pdf": "https://kitap.deneme/ornek-kitap.pdf",
+      "sayfaSayisi": 37,
+      "sayfaFarki": 1,
+      "icindekiler": [
+        {
+          "baslik": "Birinci Bölüm",
+          "sayfa": 1
+        },
+        {
+          "baslik": "İkinci Bölüm",
+          "sayfa": 7
+        },
+        {
+          "baslik": "Üçüncü Bölüm",
+          "sayfa": 13
+        },
+        {
+          "baslik": "Dördüncü Bölüm",
+          "sayfa": 19
+        },
+        {
+          "baslik": "Beşinci Bölüm",
+          "sayfa": 25
+        },
+        {
+          "baslik": "Altıncı Bölüm",
+          "sayfa": 31
+        }
+      ]
+    },
+    {
+      "kitap": "Sözler",
+      "pdf": "https://kitap.deneme/ornek-kitap.pdf",
+      "sayfaSayisi": 37,
+      "sayfaFarki": 1,
+      "icindekiler": []
+    },
+    {
+      "kitap": "Şuâlar",
+      "pdf": "https://kitap.deneme/buyuk.pdf",
+      "sayfaSayisi": 210,
+      "sayfaFarki": 0,
+      "icindekiler": [
+        {
+          "baslik": "On Birinci Şuâ",
+          "sayfa": 190
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 // Kenz: videolar geçtiği Risale-i Nur kitabına, kitapta da bölümüne göre gruplanır.
 // Kitaplar Külliyat sırasıyla, bölümler ve videolar listedeki sırayla gelir. Karta dokununca video Oku'da açılır.
 import { videolar } from 'virtual:oku-videolar';
-import { ciltRengi, etiketYazisi, KULLIYAT, sureYazisi, tipografik, type Video } from '../oku/ortak';
+import { ciltRengi, etiketYazisi, kimlikYap, KULLIYAT, sureYazisi, tipografik, type Video } from '../oku/ortak';
 
 export interface BolumGrubu {
   bolum: string;
@@ -38,14 +38,7 @@ function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, me
   return e;
 }
 
-const kimlik = (s: string) =>
-  s
-    .toLocaleLowerCase('tr')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/ı/g, 'i')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+const kimlik = kimlikYap;
 
 const OYNAT_SVG = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1.2v7.6L8.6 5 2 1.2Z" fill="currentColor"/></svg>';
 const KITAP_SVG =

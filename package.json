@@ -11,8 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test:visual": "node scripts/compare-mockup.mjs",
     "assets:native": "capacitor-assets generate --ios --android --iconBackgroundColor '#FCC805' --iconBackgroundColorDark '#FCC805' --splashBackgroundColor '#FCC805' --splashBackgroundColorDark '#FCC805'",
-    "cap:sync": "npm run build && cap sync",
-    "android:apk": "npm run build && cap sync android && cd android && ./gradlew assembleDebug",
+    "cap:sync": "npm run build && node scripts/yerel-paket.mjs && cap sync",
+    "android:apk": "npm run build && node scripts/yerel-paket.mjs && cap sync android && cd android && ./gradlew assembleDebug",
     "test": "vitest run",
     "test:oku": "node scripts/oku-test.mjs"
   },
@@ -23,7 +23,9 @@
     "@capacitor/ios": "^8.5.3",
     "@capacitor/share": "^8.0.3",
     "@capacitor/splash-screen": "^8.0.2",
-    "@capacitor/status-bar": "^8.0.4"
+    "@capacitor/status-bar": "^8.0.4",
+    "core-js": "^3.51.0",
+    "pdfjs-dist": "^6.4.299"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",

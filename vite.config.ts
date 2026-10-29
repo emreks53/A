@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { kitaplarEklentisi } from './vite/kitaplar.ts';
 import { okuVideolar } from './vite/oku-videolar.ts';
 
 export default defineConfig({
@@ -15,6 +16,7 @@ export default defineConfig({
   },
   plugins: [
     okuVideolar(),
+    kitaplarEklentisi(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
@@ -41,7 +43,8 @@ export default defineConfig({
         // Arka plan görsellerinin yalnızca tarayıcının seçtiği sürümü indirilir; onlar çalışma anında önbelleğe alınır.
         // Videolar (videolar/*.mp4) büyük olduğu için önbelleğe alınmaz, akarak oynar.
         globPatterns: ['**/*.{html,js,css,woff2,svg,ico,png,webp}'],
-        globIgnores: ['**/bg-*'],
+        // Kitap PDF'leri ve okuyucunun (pdf.js) dosyaları yalnız bir kitap açılınca indirilir.
+        globIgnores: ['**/bg-*', '**/kitaplar/**', '**/pdfjs/**', '**/assets/pdf-*', '**/assets/pdf.worker*', '**/assets/okuyucu-*'],
         navigateFallback: 'index.html',
         // Paylaşım sayfaları (v/<id>/) kendi önizleme etiketleriyle açılmalı
         navigateFallbackDenylist: [/\/v\//],
@@ -52,6 +55,14 @@ export default defineConfig({
             options: {
               cacheName: 'nuruhakikat-arka-plan',
               expiration: { maxEntries: 8 },
+            },
+          },
+          {
+            urlPattern: ({ url }) => /\/(?:pdfjs\/|assets\/(?:pdf|okuyucu)[\w.-]*\.m?js$)/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'nuruhakikat-okuyucu',
+              expiration: { maxEntries: 200 },
             },
           },
           {

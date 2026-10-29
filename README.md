@@ -12,29 +12,34 @@ uygulama simgesi `design/logo-kaynak.png` sarı logodur.
 
 ```
 index.html                 Uygulama iskeleti (arka plan, alıntı, ekranlar, alt menü)
-src/main.ts                Yönlendirme (#/ ana ekran, #/oku, #/kenz, #/gunes), geri tuşu, Capacitor ve PWA kurulumu
+src/main.ts                Yönlendirme (#/ ana ekran, #/oku, #/kenz, #/gunes, #/gunes/<kitap>/<sayfa>), geri tuşu, Capacitor ve PWA kurulumu
 src/styles.css             Ana ekran ve alt menü ölçüleri (390 genişliğe göre, --u ile ölçeklenir)
 src/assets/bg/             Temizlenmiş arka plan (dikey + geniş ekran; AVIF / WebP / JPG)
 src/assets/icons/          Dünya (Oku), düğüm (Kenz) ve güneş (Güneş) simgeleri; videolardaki soluk im
 src/assets/fonts/          Tinos Bold Italic (alıntı, başlıklar) ve Encode Sans 500/600/700 (arayüz) — kendi sunucumuzdan
-src/kenz/                  Kenz ekranı: kitap kitap video kütüphanesi (kutuphane.ts, kenz.ts); Güneş ekranı
+src/kenz/                  Kenz ekranı: kitap kitap video kütüphanesi (kutuphane.ts, kenz.ts)
+src/gunes/                 Güneş: Risale-i Nur kütüphanesi (gunes.ts) ve PDF okuyucu (okuyucu.ts, pdf.ts: pdf.js)
 src/oku/                   Oku: dikey video akışı (akis.ts), sağa kaydırıp çıkma (kaydir-cik.ts), Neşret, Menba
                            (menba.ts; Kur'an-ı Kerim ve Külliyat rafı çizimi menba-cizim.ts)
 content/oku/videolar.json  Oku akışındaki videolar, sırasıyla; aşağıdaki "Oku: video ekleme" bölümüne bakın
 public/videolar/           Videolar (720×1280 H.264), kapak ve paylaşım önizleme görselleri
+content/kitaplar/kitaplar.json  Güneş'te okunabilen kitaplar (PDF, sayfa farkı, içindekiler); "Güneş: kitap ekleme"
+public/kitaplar/           Kitapların PDF'leri (<kimlik>.pdf)
+vite/kitaplar.ts           Kitap listesini denetleyen, pdf.js yazı tipi/cmap dosyalarını derlemeye koyan eklenti
 vite/oku-videolar.ts       Video listesini denetleyen ve her video için paylaşım sayfasını (v/<id>/) üreten eklenti
 public/icons/              Favicon, PWA ve Apple simgeleri (sarı logo)
 resources/                 Android/iOS simge ve açılış ekranı kaynakları (sarı logo)
 android/, ios/             Capacitor yerel projeleri
 design/                    Tasarım kaynakları ve vektör logo (logo.svg, knot.svg)
 scripts/compare-mockup.mjs Ana ekranın tasarımla karşılaştırma ekran görüntüsü
-scripts/oku-test.mjs       Uygulamayı (ana ekran, Oku, Kenz, Güneş) gerçek tarayıcıda baştan sona deneyen test
+scripts/oku-test.mjs       Uygulamayı (ana ekran, Oku, Kenz, Güneş, okuyucu) gerçek tarayıcıda baştan sona deneyen test
+scripts/kitap-ekle.mjs     Güneş'e kitap ekler: PDF'i kopyalar, sayfa sayısını ve içindekileri listeye yazar
 ```
 
 Açılış **ana ekrandır** (`#/`): yalnız gökyüzü, alıntı ve alt menü; üstte yazı yoktur, hiçbir sekme seçili
 değildir. Alt menüdeki üç sekme ayrı ekranlar açar: **Oku** kâinat kitabını "okumak" için tam ekran kısa video
-akışıdır, **Kenz** Risale-i Nur'dan videoların kütüphanesidir, **Güneş** şimdilik şafak vakti bir "yakında"
-ekranıdır (içeriği gelince `index.html` içindeki `view-gunes` bölümüne eklenir).
+akışıdır, **Kenz** Risale-i Nur'dan videoların kütüphanesidir, **Güneş** Risale-i Nur Külliyatı'nın kendisidir:
+kitaba dokununca dijital okuyucuda açılır.
 
 Açık sekmeye yeniden dokunmak, telefonun geri tuşu ya da tarayıcının geri düğmesi ana ekrana döndürür. Kenz ile
 Güneş arasında geçmek geçmişe kayıt eklemez (geri hep ana ekrana gider); ana ekranda geri tuşu uygulamadan çıkar.
@@ -55,6 +60,74 @@ kitapta da **bölümüne** göre gruplanır.
 - Menünün arkası ve altı hep düz gece rengidir; oradaki görünmeyen kartlara dokunulmaz (saydam kalkanlar),
   kaydırma oradan da başlar. Geniş ekranda kütüphane ortada 600 px'lik bir sütundur.
 
+## Güneş
+
+Menba'daki gibi: şafak vakti, güneş rahledeki büyük Kur’an-ı Kerim'in ardından doğar (Kur'an yalnız süstür,
+dokunulmaz); altında ceviz rafta Risale-i Nur Külliyatı'nın 14 eseri Külliyat sırasıyla (Sözler, Mektubat,
+Lem’alar, … İman ve Küfür Muvâzeneleri). Arka plan ana ekranın gökyüzü fotoğrafıdır; ufku rahlenin hizasına gelir.
+
+- Her eser büyük bir cilt sırtıdır (Menba rafıyla aynı renkler, altın şeritler, dikey ad); dokunma alanı en az
+  44 × 44 px (354 px'ten dar ekranlarda sırtlar daralır, raf ekrana sığar).
+- PDF'i okuyucuda olmayan eser, listede bağlantısı varsa yayınevinin okuma sitesinde açılır (şimdi RNK Neşriyat'ın
+  okuma sitesi `rnk.tr`; tarayıcıda yeni sekmede, telefon uygulamasında sistem tarayıcısında; rafın altındaki not
+  bunu söyler). Ne PDF'i ne bağlantısı olan eser soluk görünür ve "yakında" yazar; dokunulmaz.
+- En son okunan kitap için rafın altında **Kaldığın yer** kartı çıkar (kitap, bölüm, sayfa); dokununca
+  okuyucu o sayfada açılır.
+- Kitaba dokununca cilt raftan çekilir, dönüp kapağını gösterir, kapak açılır ve okuyucu tam ekran açılır
+  (`#/gunes/<kitap>/<sayfa>`; alt menü yoktur). Hareket azaltılmışsa geçiş oynatılmaz. Sayfalar PDF'te basıldığı
+  gibi gösterilir, metne dokunulmaz.
+  - Yana kaydırmak, kenarlara dokunmak ya da ok tuşları sayfa çevirir; ortaya dokunmak üst ve alt çubuğu
+    gizler/gösterir (dokunarak sayfa çevrilince çubuklar kendiliğinden çekilir, klavyeyle gezilirken açık kalır).
+    İki parmakla ya da çift dokunuşla yakınlaşılır.
+  - Üstte kapat, kitap ve bölüm adı, **İçindekiler** (bölümler, bulunulan bölüm, "Sayfaya git") ve **Sayfa
+    görünümü** (Gündüz: sayfanın kendi renkleri; Sepya: sıcak kâğıt, kahve mürekkep; Gece: lacivert kâğıt, krem
+    yazı; seçim hatırlanır; renkler yalnız ekranda değişir). Altta sayfa göstergesi (*154 / 480 · %32*),
+    bölüm başları çentikli kaydırıcı ve sayfada geçen bir video varsa **Bu sayfanın videosu** (Oku'da açılır,
+    çıkınca kitaba dönülür).
+  - Kitap kalınan yerden açılınca bir an *Kaldığın yerden: 154. sayfa · Baştan aç* bildirimi çıkar.
+  - Yatay geniş ekranda (tablet, masaüstü) iki sayfa yan yana açılır; kapak tektir.
+  - Sayfa değişince adres de değişir (geçmişe kayıt eklenmez); kalınan yer bu cihazda hatırlanır. Kapat,
+    Escape ya da geri tuşu açıldığı yere (Güneş rafı ya da Menba) döner.
+  - Sayfalar cihazın piksel yoğunluğunda çizilir; yalnız görünen sayfa ve iki yanı çizili tutulur. PDF
+    sunucusu bayt aralığını destekliyorsa büyük kitabın yalnız açılan sayfaları indirilir.
+- Menba'da videonun geçtiği kitabın PDF'i varsa **Kitapta oku** düğmesi çıkar: kitap videonun sayfasında
+  açılır, kapatınca aynı videoya dönülür. PDF'i yoksa düğme kitabı okuma sitesinde (`rnk.tr`) videonun sayfasında
+  açar (videolardaki sayfa numaraları RNK baskısınındır).
+
+### Güneş: kitap ekleme
+
+```bash
+node scripts/kitap-ekle.mjs "Lem'alar" ~/indirilenler/lemalar.pdf --sayfa-farki 4
+```
+
+PDF `public/kitaplar/lemalar-<içerik özeti>.pdf` olarak kopyalanır (kitap başka bir baskıyla güncellenince yeni bir
+dosya olur; eskisi silinmez, telefona kurulmuş eski uygulamalar onu okumayı sürdürür); sayfa sayısı ve PDF'in kendi içindekiler listesi (varsa)
+`content/kitaplar/kitaplar.json`'a yazılır. `--sayfa-farki`: basılı 1. sayfadan önceki numarasız sayfaların
+(kapak, önsöz …) sayısı; adreslerdeki ve içindekilerdeki sayfa numaraları basılı numaradır (videolardaki
+*154. sayfa* ile aynı baskıya göre). PDF'te içindekiler yoksa listede elle yazılabilir:
+
+```json
+{ "kitap": "Lem'alar", "pdf": "kitaplar/lemalar-3f9a0c21d4.pdf", "sayfaSayisi": 480, "sayfaFarki": 4,
+  "icindekiler": [{ "baslik": "On Yedinci Lem’a", "sayfa": 151 }, { "baslik": "Birinci Nota", "sayfa": 152, "derinlik": 1 }] }
+```
+
+`pdf` bir `https://` adresi de olabilir (sunucu CORS izni vermelidir). PDF'i olmayan eserlerin dış adresleri
+listenin `baglanti` alanındadır:
+
+```json
+"baglanti": { "ad": "RNK Neşriyat", "sayfaParametresi": "p",
+  "adresler": { "Sözler": "https://rnk.tr/r?s=tr&b=sozler", "Emirdağ Lâhikası": "https://rnk.tr/r?s=tr&b=emirdag1" } }
+```
+
+`sayfaParametresi` verilirse sayfaya bağlantı adrese o parametreyle eklenir (Menba'daki *Kitapta oku*:
+`…&b=sualar&p=203`). PDF'i eklenen eser, bağlantısı olsa da okuyucuda açılır. Liste derlemede denetlenir: bilinmeyen
+eser, olmayan ya da PDF olmayan dosya, sayfa sayısını aşan içindekiler derlemeyi durdurur. PDF'ler sitede
+yayınlanır; mobil uygulamaya konmaz (paket küçük kalır), uygulama onları siteden okur: sitenin sunucusu bayt
+aralığı istediği için yalnız açılan sayfaların parçaları iner (başka kaynaktaki PDF için de, sunucu `Range`
+isteğine 206 ile yanıt veriyorsa). Okuyucu (pdf.js) ilk kitap açılınca yüklenir ve önbelleğe alınır; eski
+tarayıcılar (iOS 15+) için eksik JavaScript özellikleri tamamlanır. Kalınan yer hangi PDF dosyasında
+kalındığıyla birlikte saklanır (dosya değişince eski sayfa numarası kullanılmaz).
+
 ## Oku sekmesi
 
 Instagram Reels gibi tam ekran dikey video akışı (`#/oku/<video>`). Oku açıkken alt menü yoktur (Oku ekranı
@@ -74,8 +147,9 @@ vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görün
     tarayıcıda bağlantı panoya kopyalanır.
   - **Menba** — videonun kaynağı: nur içinde, rahle üzerinde büyük bir Kur’an-ı Kerim; altında rafta Risale-i
     Nur Külliyatı'nın on dört eseri dizili, videonun geçtiği eser raftan öne çekilmiş ve aydınlanmış. Altında
-    eser, bölüm, (varsa) kısım ve sayfa (*Şuâlar · On Birinci Şuâ · Altıncı Mesele · 203. sayfa*), üç etiket
-    ve varsa görüntü ve ses künyesi (lisansın gerektirdiği atıflar). Sayfa üstteki tutamağa dokunarak, aşağı
+    eser, bölüm, (varsa) kısım ve sayfa (*Şuâlar · On Birinci Şuâ · Altıncı Mesele · 203. sayfa*), **Kitapta
+    oku** (kitabı o sayfada açar: PDF'i varsa Güneş'in okuyucusunda, yoksa RNK Neşriyat'ın okuma sitesinde), üç
+    etiket ve varsa görüntü ve ses künyesi (lisansın gerektirdiği atıflar). Sayfa üstteki tutamağa dokunarak, aşağı
     sürükleyerek ya da arkasına dokunarak kapanır.
 - Başka sekmeye geçince ya da uygulama arka plana alınınca video durur; dönünce kaldığı yerden sürer.
   Ana ekrandayken hiçbir video indirilmez.
@@ -171,8 +245,9 @@ npm install
 npm run dev          # http://localhost:5173
 npm run build        # dist/ klasörüne üretim derlemesi
 npm run test:visual  # derlemeyi tasarım ölçüsünde (854 × 1842) ekran görüntüsü olarak alır
-npm test             # birim testleri (video listesi, paylaşım sayfası, yönlendirme)
-npm run test:oku     # derlemeyi gerçek tarayıcıda dener: ana ekran, Oku akışı, Neşret, Menba, Kenz, Güneş, geri dönüşler
+npm test             # birim testleri (video ve kitap listesi, paylaşım sayfası, yönlendirme)
+npm run test:oku     # deneme derlemesi yapıp gerçek tarayıcıda dener: ana ekran, Oku, Neşret, Menba, Kenz, Güneş,
+                     # okuyucu (örnek PDF: scripts/fixtures/; Risale metni değildir), geri dönüşler
 ```
 
 ## Web sitesi (GitHub Pages)

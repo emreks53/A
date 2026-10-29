@@ -1,0 +1,24 @@
+{
+  "kaynak": "Nurun Bekçisi (nurunbekcisi.com) halka açık PDF'leri",
+  "baglanti": {
+    "ad": "RNK Neşriyat",
+    "sayfaParametresi": "p",
+    "adresler": {
+      "Sözler": "https://rnk.tr/r?s=tr&b=sozler",
+      "Mektubat": "https://rnk.tr/r?s=tr&b=mektubat",
+      "Lem'alar": "https://rnk.tr/r?s=tr&b=lemalar",
+      "Şuâlar": "https://rnk.tr/r?s=tr&b=sualar",
+      "İşârâtü'l-İ'câz": "https://rnk.tr/r?s=tr&b=isarat",
+      "Mesnevî-i Nûriye": "https://rnk.tr/r?s=tr&b=mesnevi",
+      "Asâ-yı Mûsâ": "https://rnk.tr/r?s=tr&b=asamusa",
+      "Barla Lâhikası": "https://rnk.tr/r?s=tr&b=barla",
+      "Kastamonu Lâhikası": "https://rnk.tr/r?s=tr&b=kastamonu",
+      "Emirdağ Lâhikası": "https://rnk.tr/r?s=tr&b=emirdag1",
+      "Sikke-i Tasdîk-i Gaybî": "https://rnk.tr/r?s=tr&b=sikke",
+      "Tarihçe-i Hayat": "https://rnk.tr/r?s=tr&b=tarihce",
+      "Muhâkemat": "https://rnk.tr/r?s=tr&b=muhakemat",
+      "İman ve Küfür Muvâzeneleri": "https://rnk.tr/r?s=tr&b=imankufur"
+    }
+  },
+  "kitaplar": []
+}

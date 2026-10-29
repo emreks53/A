@@ -94,7 +94,7 @@ const CILTLER: { sirt: string; ad: string; w: number; h: number }[] = [
 ];
 
 /** Cilt renkleri (orta, koyu, açık); kitaplar Külliyat sırasıyla bunları döner (Kenz'deki sırtlarla aynı) */
-const RENKLER: [string, string, string][] = [
+export const RENKLER: [string, string, string][] = [
   ['#22336A', '#15204A', '#2E4282'],
   ['#6A2330', '#4A1520', '#83303E'],
   ['#1F4A3B', '#133226', '#2A5E4C'],
@@ -104,7 +104,7 @@ const RENKLER: [string, string, string][] = [
 ];
 
 /** Çizimin SVG içeriği. p: bu çizime özgü kimlik öneki (sayfada birden çok çizim olabilir). */
-export function menbaSvgIcerigi(eser: string, p: string): string {
+export function menbaSvgIcerigi(eser: string, p: string, secenek: { raf?: boolean } = {}): string {
   const o: string[] = [];
   const secili = (KULLIYAT as readonly string[]).indexOf(eser);
 
@@ -209,7 +209,8 @@ export function menbaSvgIcerigi(eser: string, p: string): string {
   o.push(`<circle cx="195" cy="270" r="3.4" fill="url(#${p}-altin)"/>`);
   o.push('<circle cx="195" cy="286" r="2.1" fill="#C79B5E"/>');
 
-  // raf
+  // raf (Güneş'te raf ayrıca, dokunulabilir kitaplarla çizilir)
+  if (secenek.raf === false) return o.join('');
   const SH = 440;
   o.push(`<text x="195" y="338" text-anchor="middle" font-family="Encode Sans, sans-serif" font-weight="600" font-size="8" letter-spacing="1.9" fill="#E8C27A" fill-opacity=".55">RİSALE-İ NUR KÜLLİYATI</text>`);
   o.push(`<rect x="16" y="348" width="358" height="${SH - 348}" rx="6" fill="#030714" fill-opacity=".30"/>`);
