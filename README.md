@@ -147,8 +147,9 @@ vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görün
     tarayıcıda bağlantı panoya kopyalanır.
   - **Menba** — videonun kaynağı: nur içinde, rahle üzerinde büyük bir Kur’an-ı Kerim; altında rafta Risale-i
     Nur Külliyatı'nın on dört eseri dizili, videonun geçtiği eser raftan öne çekilmiş ve aydınlanmış. Altında
-    eser, bölüm, (varsa) kısım ve sayfa (*Şuâlar · On Birinci Şuâ · Altıncı Mesele · 203. sayfa*), üç etiket
-    ve varsa görüntü ve ses künyesi (lisansın gerektirdiği atıflar). Sayfa üstteki tutamağa dokunarak, aşağı
+    eser, bölüm, (varsa) kısım ve sayfa (*Şuâlar · On Birinci Şuâ · Altıncı Mesele · 203. sayfa*), **Kitapta
+    oku** (kitabı o sayfada açar: PDF'i varsa Güneş'in okuyucusunda, yoksa RNK Neşriyat'ın okuma sitesinde), üç
+    etiket ve varsa görüntü ve ses künyesi (lisansın gerektirdiği atıflar). Sayfa üstteki tutamağa dokunarak, aşağı
     sürükleyerek ya da arkasına dokunarak kapanır.
 - Başka sekmeye geçince ya da uygulama arka plana alınınca video durur; dönünce kaldığı yerden sürer.
   Ana ekrandayken hiçbir video indirilmez.
