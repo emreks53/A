@@ -62,19 +62,26 @@ kitapta da **bölümüne** göre gruplanır.
 
 ## Güneş
 
-Menba'daki gibi: üstte rahlede büyük Kur’an-ı Kerim (yalnız süstür, dokunulmaz), altında rafta Risale-i Nur
-Külliyatı'nın 14 eseri Külliyat sırasıyla (Sözler, Mektubat, Lem’alar, … İman ve Küfür Muvâzeneleri).
+Menba'daki gibi: şafak vakti, güneş rahledeki büyük Kur’an-ı Kerim'in ardından doğar (Kur'an yalnız süstür,
+dokunulmaz); altında ceviz rafta Risale-i Nur Külliyatı'nın 14 eseri Külliyat sırasıyla (Sözler, Mektubat,
+Lem’alar, … İman ve Küfür Muvâzeneleri). Arka plan ana ekranın gökyüzü fotoğrafıdır; ufku rahlenin hizasına gelir.
 
 - Her eser büyük bir cilt sırtıdır (Menba rafıyla aynı renkler, altın şeritler, dikey ad); dokunma alanı en az
   44 × 44 px. PDF'i henüz eklenmemiş eser soluk görünür ve "yakında" yazar; dokunulmaz.
 - En son okunan kitap için rafın altında **Kaldığın yer** kartı çıkar (kitap, bölüm, sayfa); dokununca
   okuyucu o sayfada açılır.
-- Kitaba dokununca okuyucu tam ekran açılır (`#/gunes/<kitap>/<sayfa>`; alt menü yoktur). Sayfalar PDF'te
-  basıldığı gibi gösterilir, metne dokunulmaz.
+- Kitaba dokununca cilt raftan çekilir, dönüp kapağını gösterir, kapak açılır ve okuyucu tam ekran açılır
+  (`#/gunes/<kitap>/<sayfa>`; alt menü yoktur). Hareket azaltılmışsa geçiş oynatılmaz. Sayfalar PDF'te basıldığı
+  gibi gösterilir, metne dokunulmaz.
   - Yana kaydırmak, kenarlara dokunmak ya da ok tuşları sayfa çevirir; ortaya dokunmak üst ve alt çubuğu
-    gizler/gösterir. İki parmakla ya da çift dokunuşla yakınlaşılır.
-  - Üstte kapat, kitap ve bölüm adı, **İçindekiler** (bölümler, bulunulan bölüm, "Sayfaya git") ve
-    **Görünüm** (Gündüz, Sepya, Gece; seçim hatırlanır). Altta sayfa göstergesi (*154 / 480*) ve kaydırıcı.
+    gizler/gösterir (dokunarak sayfa çevrilince çubuklar kendiliğinden çekilir, klavyeyle gezilirken açık kalır).
+    İki parmakla ya da çift dokunuşla yakınlaşılır.
+  - Üstte kapat, kitap ve bölüm adı, **İçindekiler** (bölümler, bulunulan bölüm, "Sayfaya git") ve **Sayfa
+    görünümü** (Gündüz: sayfanın kendi renkleri; Sepya: sıcak kâğıt, kahve mürekkep; Gece: lacivert kâğıt, krem
+    yazı; seçim hatırlanır; renkler yalnız ekranda değişir). Altta sayfa göstergesi (*154 / 480 · %32*),
+    bölüm başları çentikli kaydırıcı ve sayfada geçen bir video varsa **Bu sayfanın videosu** (Oku'da açılır,
+    çıkınca kitaba dönülür).
+  - Kitap kalınan yerden açılınca bir an *Kaldığın yerden: 154. sayfa · Baştan aç* bildirimi çıkar.
   - Yatay geniş ekranda (tablet, masaüstü) iki sayfa yan yana açılır; kapak tektir.
   - Sayfa değişince adres de değişir (geçmişe kayıt eklenmez); kalınan yer bu cihazda hatırlanır. Kapat,
     Escape ya da geri tuşu açıldığı yere (Güneş rafı ya da Menba) döner.

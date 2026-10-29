@@ -172,7 +172,7 @@ function show(r: Rota, icerden = false, yerine = false): void {
     const odak = document.activeElement;
     kitapOncesiOdak = odak instanceof HTMLElement && odak !== document.body ? odak : null;
   }
-  if (kitaptanDonus) okuyucu.ayril();
+  if (kitaptanDonus) okuyucu.ayril(sekme === 'oku');
   if (sekme === 'kenz' || sekme === 'gunes') anadanGelindi = onceki === 'ana';
   if (sekme === 'gunes' && aktif !== 'gunes') gunes.yenile();
   aktif = sekme;

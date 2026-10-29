@@ -29,8 +29,9 @@ export interface OkuyucuSecenek {
 export interface Okuyucu {
   /** Kitabı açar (zaten açıksa verilen sayfaya gider). basili yoksa kalınan yerden. */
   ac(kitap: Kitap, basili?: number): void;
-  /** Okuyucudan çıkılırken: yer kaydedilir, çizimler bırakılır */
-  ayril(): void;
+  /** Okuyucudan çıkılırken: yer kaydedilir, çizimler bırakılır (gorunenKalsin: açık sayfanınki kalır; okuyucudan
+   *  Oku'ya geçilince sağa kaydırırken altta sayfa görünsün) */
+  ayril(gorunenKalsin?: boolean): void;
   /** Açık bir iç katman (yakınlaştırma) varsa kapatır; kapattıysa true (geri tuşu için) */
   geriAl(): boolean;
   /** Okuyucunun zemin rengi (tarayıcı çubuğu için) */
@@ -880,19 +881,21 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
       });
   }
 
-  function ayril(): void {
+  function ayril(gorunenKalsin = false): void {
     clearTimeout(kayitZamanlayici);
     clearTimeout(tekZamanlayici);
     bildirimGizle();
     if (kitap && toplam) yeriKaydet(kitap.kimlik, mevcut);
     yakinKapat();
-    for (const c of cizimler.values()) {
+    const kalan = gorunenKalsin ? new Set(gruplar[gIndeks] ?? []) : new Set<number>();
+    for (const [n, c] of cizimler) {
+      if (kalan.has(n) && c.bitti) continue;
       c.cizim?.iptal();
       c.tuval.width = c.tuval.height = 0;
       c.tuval.remove();
+      yuvalar[grupBul(n)]?.querySelector(`[data-sayfa="${n}"]`)?.removeAttribute('data-cizildi');
+      cizimler.delete(n);
     }
-    cizimler.clear();
-    for (const y of yuvalar) for (const s_ of y.children) (s_ as HTMLElement).removeAttribute('data-cizildi');
   }
 
   return {
