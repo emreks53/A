@@ -89,21 +89,41 @@ async function aralikTasiyici(
   sinyal: AbortSignal,
   hata: (e: unknown) => void,
 ): Promise<InstanceType<PdfJs['PDFDataRangeTransport']> | null> {
+  // (bir anlık kopukluk yüzünden pdf.js'in yeniden denemeyen yüklemesine düşülmesin: ağ hatası birkaç kez denenir)
+  const dene = async <T,>(f: () => Promise<T>): Promise<T> => {
+    for (let i = 0; ; i++) {
+      try {
+        return await f();
+      } catch (e) {
+        // (çevrimdışıysa beklenmez: düz yüklemeye düşülür, okuyucu hemen bağlantı hatasını gösterir)
+        if (sinyal.aborted || i >= 2 || !navigator.onLine) throw e;
+        await bekle(500 * 2 ** i, sinyal);
+      }
+    }
+  };
   try {
-    const bas = await fetch(adres, { method: 'HEAD', signal: sinyal });
+    const bas = await dene(() => fetch(adres, { method: 'HEAD', signal: sinyal }));
     const uzunluk = Number(bas.headers.get('content-length'));
     if (!bas.ok || !Number.isInteger(uzunluk) || uzunluk <= 2 * PARCA) return null;
-    const ilk = await fetch(adres, { headers: { Range: `bytes=0-${PARCA - 1}` }, signal: sinyal });
-    if (ilk.status !== 206) {
-      void ilk.body?.cancel();
-      return null;
-    }
-    const ilkVeri = new Uint8Array(await ilk.arrayBuffer());
+    const ilkVeri = await dene(async () => {
+      const ilk = await fetch(adres, { headers: { Range: `bytes=0-${PARCA - 1}` }, signal: sinyal });
+      if (ilk.status !== 206) {
+        void ilk.body?.cancel();
+        return null;
+      }
+      return new Uint8Array(await ilk.arrayBuffer());
+    });
+    if (!ilkVeri) return null;
     // (sıkıştırılmış ya da başka bir yanıt: düz yüklemeye dön)
     if (ilkVeri.length !== PARCA || new TextDecoder().decode(ilkVeri.subarray(0, 5)) !== '%PDF-') return null;
     const parcaAl = async (bas_: number, son: number): Promise<Uint8Array> => {
       for (let deneme = 0; ; deneme++) {
-        await baglantiyiBekle(sinyal);
+        if (!navigator.onLine) {
+          // bağlantı yokken beklenir; kitap daha açılmadıysa birkaç saniye sonra okuyucu bunu söyler
+          const t = setTimeout(() => hata(new Error('offline')), 4000);
+          await baglantiyiBekle(sinyal);
+          clearTimeout(t);
+        }
         if (sinyal.aborted) throw new DOMException('İptal', 'AbortError');
         try {
           const r = await fetch(adres, { headers: { Range: `bytes=${bas_}-${son - 1}` }, signal: sinyal });
@@ -162,7 +182,12 @@ export function kitapYukle(pdf: string): KitapYukleme {
     gorev.onProgress = ({ loaded, total }: { loaded: number; total: number }) => {
       if (total > 0) dinleyici?.(Math.min(1, loaded / total));
     };
-    return Promise.race([gorev.promise, aktarimHatasi]);
+    // açılamadıysa yükleme bırakılır (bağlantı sonra gelince geç kalan ilerleme hata ekranını ezmesin)
+    return Promise.race([gorev.promise, aktarimHatasi]).catch((e) => {
+      iptalci.abort();
+      void gorev?.destroy();
+      throw e;
+    });
   });
   return {
     belge,

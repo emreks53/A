@@ -225,7 +225,8 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
 
   function durumGoster(tur: 'yukleniyor' | 'hata' | null, oran?: number, neden: HataNedeni = 'ag'): void {
     const yuzde = oran === undefined ? '' : ` %${Math.round(oran * 100)}`;
-    if (tur === 'yukleniyor' && kok.dataset.durum === 'yukleniyor' && !durum.hidden && yuzdeYazisi?.isConnected) {
+    // (yalnız ilerleme: açılış her seferinde kâğıdı yeniden yerleştirir)
+    if (tur === 'yukleniyor' && oran !== undefined && kok.dataset.durum === 'yukleniyor' && !durum.hidden && yuzdeYazisi?.isConnected) {
       if (yuzdeYazisi.textContent !== yuzde) yuzdeYazisi.textContent = yuzde;
       return;
     }
@@ -900,6 +901,12 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
 
   // ---------- boyut değişince ----------
   new ResizeObserver(() => {
+    // yüklenirken boş kâğıt yeni ölçüye göre yerleşir
+    const iskelet = kok.dataset.durum === 'yukleniyor' ? durum.querySelector<HTMLElement>('.okuyucu__iskelet') : null;
+    if (iskelet) {
+      const k = tahminiSayfaKutusu(ornekOran);
+      Object.assign(iskelet.style, { left: `${k.x}px`, top: `${k.y}px`, width: `${k.w}px`, height: `${k.h}px` });
+    }
     if (!kitap || !toplam || !gruplar.length) return;
     // okunan sayfada kalınır (tek ↔ iki sayfa geçişinde de)
     const n = okunan;
@@ -970,7 +977,7 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
     const y = kitapYukle(k.pdf);
     yukleme = y;
     // (ilerleme yalnız kitap açılana dek; sonra sayfaların parçaları inerken de gelir)
-    y.ilerleme((oran) => benim === oturum && !belge && durumGoster('yukleniyor', oran));
+    y.ilerleme((oran) => benim === oturum && !belge && kok.dataset.durum === 'yukleniyor' && durumGoster('yukleniyor', oran));
     y.belge
       .then(async (b) => {
         if (benim !== oturum) return;
@@ -1007,6 +1014,7 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
       })
       .catch((e) => {
         if (benim !== oturum || (e as DOMException)?.name === 'AbortError') return;
+        yukleme?.iptal();
         durumGoster('hata', undefined, hataNedeni(e));
       });
   }
