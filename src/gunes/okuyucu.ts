@@ -662,12 +662,22 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
   let arayuzOnceden = true;
   let yakinCizim: Cizim | null = null;
 
+  /** Yakınlaşma isteğinin sırası: sayfa beklenirken yakınlaşma ya da okuyucu kapanırsa istek geçersiz olur */
+  let yakinIstek = 0;
+
   async function yakinAc(n: number, oran: number, fx: number, fy: number): Promise<void> {
     if (!belge) return;
     const b = belge;
+    const benim = ++yakinIstek;
+    let sayfa: PDFPageProxy;
+    try {
+      sayfa = await b.getPage(n);
+    } catch {
+      return;
+    }
+    if (benim !== yakinIstek || !acik || belge !== b) return;
     yakinSayfa = n;
     yakinOran = Math.max(1.2, Math.min(5, oran));
-    const sayfa = await b.getPage(n);
     const { olcek, w, h } = sigdirOlcu(n);
     const olcek2 = olcek * yakinOran;
     if (yakin.hidden) arayuzOnceden = kok.hasAttribute('data-arayuz');
@@ -692,6 +702,7 @@ export function okuyucuBaslat(gorunum: HTMLElement, s: OkuyucuSecenek): Okuyucu 
   }
 
   function yakinKapat(): void {
+    yakinIstek++;
     if (yakin.hidden) return;
     yakinCizim?.iptal();
     yakinCizim = null;
