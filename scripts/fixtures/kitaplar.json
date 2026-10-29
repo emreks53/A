@@ -1,0 +1,26 @@
+{
+  "kaynak": "Uçtan uca deneme (örnek PDF, Risale metni değildir)",
+  "kitaplar": [
+    {
+      "kitap": "Lem'alar",
+      "pdf": "https://kitap.deneme/ornek-kitap.pdf",
+      "sayfaSayisi": 37,
+      "sayfaFarki": 1,
+      "icindekiler": [
+        { "baslik": "Birinci Bölüm", "sayfa": 1 },
+        { "baslik": "İkinci Bölüm", "sayfa": 7 },
+        { "baslik": "Üçüncü Bölüm", "sayfa": 13 },
+        { "baslik": "Dördüncü Bölüm", "sayfa": 19 },
+        { "baslik": "Beşinci Bölüm", "sayfa": 25 },
+        { "baslik": "Altıncı Bölüm", "sayfa": 31 }
+      ]
+    },
+    {
+      "kitap": "Sözler",
+      "pdf": "https://kitap.deneme/ornek-kitap.pdf",
+      "sayfaSayisi": 37,
+      "sayfaFarki": 1,
+      "icindekiler": []
+    }
+  ]
+}

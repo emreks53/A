@@ -1,6 +1,5 @@
 /*
- * Kenz: Risale-i Nur'dan videolar, geçtiği kitap ve bölüme göre (ayrı ekran). Güneş: aynı gökyüzü
- * fotoğrafında şafak ("yakında").
+ * Kenz: Risale-i Nur'dan videolar, geçtiği kitap ve bölüme göre (ayrı ekran). (Güneş: src/gunes/gunes.css)
  */
 
 /* Güneş'te (ve Oku Güneş'ten açıldıysa altında görünen Güneş'te) fotoğraf şafağa göre koyulaşır. Kenz'de
@@ -551,110 +550,6 @@
 .kenz__son .dugum {
   width: 22px;
   height: 22px;
-}
-
-/* ---------- Güneş: şafak, güneş henüz doğmadı ---------- */
-.view--gunes {
-  overflow: hidden;
-}
-.safak {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(320px 170px at 50% 73.5%, rgba(255, 196, 120, 0.85), rgba(255, 170, 96, 0.35) 45%, rgba(255, 150, 90, 0) 75%),
-    radial-gradient(620px 300px at 50% 76%, rgba(255, 140, 90, 0.4), rgba(255, 140, 90, 0) 70%),
-    linear-gradient(
-      180deg,
-      rgba(10, 18, 58, 0.92) 0%,
-      rgba(26, 34, 100, 0.8) 34%,
-      rgba(84, 62, 130, 0.55) 58%,
-      rgba(220, 130, 110, 0.38) 71%,
-      rgba(18, 22, 50, 0.55) 80%,
-      rgba(10, 12, 32, 0.78) 100%
-    );
-}
-.safak::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 45% 0;
-  background-image:
-    radial-gradient(1.2px 1.2px at 12% 14%, rgba(255, 255, 255, 0.85), transparent),
-    radial-gradient(1px 1px at 27% 9%, rgba(255, 255, 255, 0.7), transparent),
-    radial-gradient(1.4px 1.4px at 41% 21%, rgba(255, 255, 255, 0.8), transparent),
-    radial-gradient(1px 1px at 63% 7%, rgba(255, 255, 255, 0.65), transparent),
-    radial-gradient(1.3px 1.3px at 78% 16%, rgba(255, 255, 255, 0.85), transparent),
-    radial-gradient(1px 1px at 90% 27%, rgba(255, 255, 255, 0.6), transparent),
-    radial-gradient(1px 1px at 8% 33%, rgba(255, 255, 255, 0.55), transparent),
-    radial-gradient(1.2px 1.2px at 55% 31%, rgba(255, 255, 255, 0.6), transparent),
-    radial-gradient(1px 1px at 84% 41%, rgba(255, 255, 255, 0.45), transparent),
-    radial-gradient(1px 1px at 20% 46%, rgba(255, 255, 255, 0.4), transparent);
-}
-.gunes {
-  position: absolute;
-  left: 24px;
-  right: 24px;
-  top: max(34%, calc(var(--safe-top) + 128px));
-  color: #fff;
-  text-align: center;
-  transform: translateY(-50%);
-}
-.gunes__simge {
-  display: block;
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 26px;
-  overflow: visible;
-  filter: drop-shadow(0 0 22px rgba(255, 210, 140, 0.45));
-}
-.gunes__etiket {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin: 0 0 14px;
-  color: #ffd9a3;
-  font-family: var(--sans);
-  font-weight: 600;
-  font-size: 12px;
-  line-height: 1;
-  letter-spacing: 0.24em;
-  text-indent: 0.24em;
-  text-transform: uppercase;
-}
-.gunes__etiket::before,
-.gunes__etiket::after {
-  content: '';
-  width: 18px;
-  height: 1px;
-  background: rgba(255, 217, 163, 0.6);
-}
-.gunes__ad {
-  margin: 0;
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 52px;
-  line-height: 1;
-  text-shadow:
-    0 0 24px rgba(255, 190, 120, 0.25),
-    0 2px 6px rgba(0, 0, 20, 0.35);
-  transform: scaleY(1.11);
-}
-.gunes__cizgi {
-  display: block;
-  width: 72px;
-  height: 1.5px;
-  margin: 24px auto 0;
-  background: linear-gradient(90deg, rgba(255, 217, 163, 0), #ffd9a3, rgba(255, 217, 163, 0));
-}
-.gunes__alt {
-  max-width: 280px;
-  margin: 20px auto 0;
-  color: rgba(255, 255, 255, 0.88);
-  font-family: var(--sans);
-  font-weight: 500;
-  font-size: 15px;
-  line-height: 1.55;
 }
 
 @media (prefers-reduced-motion: reduce) {

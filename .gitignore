@@ -9,3 +9,4 @@ playwright-report/
 .vscode/*
 !.vscode/extensions.json
 oku-test-hata.png
+dist-test

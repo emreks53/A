@@ -12,29 +12,34 @@ uygulama simgesi `design/logo-kaynak.png` sarı logodur.
 
 ```
 index.html                 Uygulama iskeleti (arka plan, alıntı, ekranlar, alt menü)
-src/main.ts                Yönlendirme (#/ ana ekran, #/oku, #/kenz, #/gunes), geri tuşu, Capacitor ve PWA kurulumu
+src/main.ts                Yönlendirme (#/ ana ekran, #/oku, #/kenz, #/gunes, #/gunes/<kitap>/<sayfa>), geri tuşu, Capacitor ve PWA kurulumu
 src/styles.css             Ana ekran ve alt menü ölçüleri (390 genişliğe göre, --u ile ölçeklenir)
 src/assets/bg/             Temizlenmiş arka plan (dikey + geniş ekran; AVIF / WebP / JPG)
 src/assets/icons/          Dünya (Oku), düğüm (Kenz) ve güneş (Güneş) simgeleri; videolardaki soluk im
 src/assets/fonts/          Tinos Bold Italic (alıntı, başlıklar) ve Encode Sans 500/600/700 (arayüz) — kendi sunucumuzdan
-src/kenz/                  Kenz ekranı: kitap kitap video kütüphanesi (kutuphane.ts, kenz.ts); Güneş ekranı
+src/kenz/                  Kenz ekranı: kitap kitap video kütüphanesi (kutuphane.ts, kenz.ts)
+src/gunes/                 Güneş: Risale-i Nur kütüphanesi (gunes.ts) ve PDF okuyucu (okuyucu.ts, pdf.ts: pdf.js)
 src/oku/                   Oku: dikey video akışı (akis.ts), sağa kaydırıp çıkma (kaydir-cik.ts), Neşret, Menba
                            (menba.ts; Kur'an-ı Kerim ve Külliyat rafı çizimi menba-cizim.ts)
 content/oku/videolar.json  Oku akışındaki videolar, sırasıyla; aşağıdaki "Oku: video ekleme" bölümüne bakın
 public/videolar/           Videolar (720×1280 H.264), kapak ve paylaşım önizleme görselleri
+content/kitaplar/kitaplar.json  Güneş'te okunabilen kitaplar (PDF, sayfa farkı, içindekiler); "Güneş: kitap ekleme"
+public/kitaplar/           Kitapların PDF'leri (<kimlik>.pdf)
+vite/kitaplar.ts           Kitap listesini denetleyen, pdf.js yazı tipi/cmap dosyalarını derlemeye koyan eklenti
 vite/oku-videolar.ts       Video listesini denetleyen ve her video için paylaşım sayfasını (v/<id>/) üreten eklenti
 public/icons/              Favicon, PWA ve Apple simgeleri (sarı logo)
 resources/                 Android/iOS simge ve açılış ekranı kaynakları (sarı logo)
 android/, ios/             Capacitor yerel projeleri
 design/                    Tasarım kaynakları ve vektör logo (logo.svg, knot.svg)
 scripts/compare-mockup.mjs Ana ekranın tasarımla karşılaştırma ekran görüntüsü
-scripts/oku-test.mjs       Uygulamayı (ana ekran, Oku, Kenz, Güneş) gerçek tarayıcıda baştan sona deneyen test
+scripts/oku-test.mjs       Uygulamayı (ana ekran, Oku, Kenz, Güneş, okuyucu) gerçek tarayıcıda baştan sona deneyen test
+scripts/kitap-ekle.mjs     Güneş'e kitap ekler: PDF'i kopyalar, sayfa sayısını ve içindekileri listeye yazar
 ```
 
 Açılış **ana ekrandır** (`#/`): yalnız gökyüzü, alıntı ve alt menü; üstte yazı yoktur, hiçbir sekme seçili
 değildir. Alt menüdeki üç sekme ayrı ekranlar açar: **Oku** kâinat kitabını "okumak" için tam ekran kısa video
-akışıdır, **Kenz** Risale-i Nur'dan videoların kütüphanesidir, **Güneş** şimdilik şafak vakti bir "yakında"
-ekranıdır (içeriği gelince `index.html` içindeki `view-gunes` bölümüne eklenir).
+akışıdır, **Kenz** Risale-i Nur'dan videoların kütüphanesidir, **Güneş** Risale-i Nur Külliyatı'nın kendisidir:
+kitaba dokununca dijital okuyucuda açılır.
 
 Açık sekmeye yeniden dokunmak, telefonun geri tuşu ya da tarayıcının geri düğmesi ana ekrana döndürür. Kenz ile
 Güneş arasında geçmek geçmişe kayıt eklemez (geri hep ana ekrana gider); ana ekranda geri tuşu uygulamadan çıkar.
@@ -54,6 +59,50 @@ kitapta da **bölümüne** göre gruplanır.
   daha çok kitap olunca başta kitap fihristi çıkar (dokununca o kitaba kayar).
 - Menünün arkası ve altı hep düz gece rengidir; oradaki görünmeyen kartlara dokunulmaz (saydam kalkanlar),
   kaydırma oradan da başlar. Geniş ekranda kütüphane ortada 600 px'lik bir sütundur.
+
+## Güneş
+
+Menba'daki gibi: üstte rahlede büyük Kur’an-ı Kerim (yalnız süstür, dokunulmaz), altında rafta Risale-i Nur
+Külliyatı'nın 14 eseri Külliyat sırasıyla (Sözler, Mektubat, Lem’alar, … İman ve Küfür Muvâzeneleri).
+
+- Her eser büyük bir cilt sırtıdır (Menba rafıyla aynı renkler, altın şeritler, dikey ad); dokunma alanı en az
+  44 × 44 px. PDF'i henüz eklenmemiş eser soluk görünür ve "yakında" yazar; dokunulmaz.
+- En son okunan kitap için rafın altında **Kaldığın yer** kartı çıkar (kitap, bölüm, sayfa); dokununca
+  okuyucu o sayfada açılır.
+- Kitaba dokununca okuyucu tam ekran açılır (`#/gunes/<kitap>/<sayfa>`; alt menü yoktur). Sayfalar PDF'te
+  basıldığı gibi gösterilir, metne dokunulmaz.
+  - Yana kaydırmak, kenarlara dokunmak ya da ok tuşları sayfa çevirir; ortaya dokunmak üst ve alt çubuğu
+    gizler/gösterir. İki parmakla ya da çift dokunuşla yakınlaşılır.
+  - Üstte kapat, kitap ve bölüm adı, **İçindekiler** (bölümler, bulunulan bölüm, "Sayfaya git") ve
+    **Görünüm** (Gündüz, Sepya, Gece; seçim hatırlanır). Altta sayfa göstergesi (*154 / 480*) ve kaydırıcı.
+  - Yatay geniş ekranda (tablet, masaüstü) iki sayfa yan yana açılır; kapak tektir.
+  - Sayfa değişince adres de değişir (geçmişe kayıt eklenmez); kalınan yer bu cihazda hatırlanır. Kapat,
+    Escape ya da geri tuşu açıldığı yere (Güneş rafı ya da Menba) döner.
+  - Sayfalar cihazın piksel yoğunluğunda çizilir; yalnız görünen sayfa ve iki yanı çizili tutulur. PDF
+    sunucusu bayt aralığını destekliyorsa büyük kitabın yalnız açılan sayfaları indirilir.
+- Menba'da videonun geçtiği kitabın PDF'i varsa **Kitapta oku** düğmesi çıkar: kitap videonun sayfasında
+  açılır, kapatınca aynı videoya dönülür.
+
+### Güneş: kitap ekleme
+
+```bash
+node scripts/kitap-ekle.mjs "Lem'alar" ~/indirilenler/lemalar.pdf --sayfa-farki 4
+```
+
+PDF `public/kitaplar/lemalar.pdf` olarak kopyalanır; sayfa sayısı ve PDF'in kendi içindekiler listesi (varsa)
+`content/kitaplar/kitaplar.json`'a yazılır. `--sayfa-farki`: basılı 1. sayfadan önceki numarasız sayfaların
+(kapak, önsöz …) sayısı; adreslerdeki ve içindekilerdeki sayfa numaraları basılı numaradır (videolardaki
+*154. sayfa* ile aynı baskıya göre). PDF'te içindekiler yoksa listede elle yazılabilir:
+
+```json
+{ "kitap": "Lem'alar", "pdf": "kitaplar/lemalar.pdf", "sayfaSayisi": 480, "sayfaFarki": 4,
+  "icindekiler": [{ "baslik": "On Yedinci Lem’a", "sayfa": 151 }, { "baslik": "Birinci Nota", "sayfa": 152, "derinlik": 1 }] }
+```
+
+`pdf` bir `https://` adresi de olabilir (sunucu CORS izni vermelidir). Liste derlemede denetlenir: bilinmeyen
+eser, olmayan ya da PDF olmayan dosya, sayfa sayısını aşan içindekiler derlemeyi durdurur. PDF'ler sitede
+yayınlanır; mobil uygulamaya konmaz (paket küçük kalır), uygulama onları siteden okur. Okuyucu (pdf.js) ilk
+kitap açılınca yüklenir ve önbelleğe alınır.
 
 ## Oku sekmesi
 
@@ -171,8 +220,9 @@ npm install
 npm run dev          # http://localhost:5173
 npm run build        # dist/ klasörüne üretim derlemesi
 npm run test:visual  # derlemeyi tasarım ölçüsünde (854 × 1842) ekran görüntüsü olarak alır
-npm test             # birim testleri (video listesi, paylaşım sayfası, yönlendirme)
-npm run test:oku     # derlemeyi gerçek tarayıcıda dener: ana ekran, Oku akışı, Neşret, Menba, Kenz, Güneş, geri dönüşler
+npm test             # birim testleri (video ve kitap listesi, paylaşım sayfası, yönlendirme)
+npm run test:oku     # deneme derlemesi yapıp gerçek tarayıcıda dener: ana ekran, Oku, Neşret, Menba, Kenz, Güneş,
+                     # okuyucu (örnek PDF: scripts/fixtures/; Risale metni değildir), geri dönüşler
 ```
 
 ## Web sitesi (GitHub Pages)

@@ -813,6 +813,51 @@
     display: none;
   }
 }
+/* "Kitapta oku": kaynağı Güneş'te, kitabın kendisinde o sayfada açar */
+.menba__oku {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  margin: 16px 0 0;
+  padding: 0 20px 0 16px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #f6dc9b 0%, #e2b764 55%, #c9973f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 225, 0.7),
+    inset 0 -1px 0 rgba(120, 78, 18, 0.35),
+    0 8px 22px rgba(0, 0, 0, 0.38);
+  color: #1d1406;
+  font-family: var(--yazi-arayuz);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.menba__oku:active {
+  transform: scale(0.97);
+}
+.menba__oku:focus-visible {
+  outline: 2px solid #f7eedc;
+  outline-offset: 3px;
+}
+.menba__oku-simge {
+  display: grid;
+  width: 21px;
+  height: 21px;
+}
+.menba__oku-simge svg {
+  width: 100%;
+  height: 100%;
+}
+.menba__oku-yer {
+  padding-left: 9px;
+  border-left: 1px solid rgba(29, 20, 6, 0.25);
+  color: rgba(29, 20, 6, 0.72);
+  font-weight: 600;
+  font-size: 14px;
+}
 .menba__etiketler {
   display: flex;
   flex-wrap: wrap;

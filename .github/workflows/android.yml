@@ -29,6 +29,7 @@ jobs:
           packages: platform-tools
       - run: npm ci
       - run: npm run build
+      - run: node scripts/yerel-paket.mjs
       - run: npx cap sync android
       - name: Debug APK derle
         working-directory: android
