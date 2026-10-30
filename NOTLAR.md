@@ -116,6 +116,7 @@ formu doğrulaması, üst menünün kaydırmada titrememesi denendi. Bulunup dü
   sertifikası). idealistgyo.com (kök) A 31.210.88.103: Birtek sunucusu yolu koruyarak https://www.idealistgyo.com'a 301.
 - Denendi: eski adresler zincirle yeni sayfalara gidiyor (ör. /tr.php?HaberDuyurular&id=11… → 2 yönlendirme → 200);
   kanonik, sitemap ve robots www alan adıyla. E-posta (MX/mail A/SPF) Birtek'te, değişmedi.
+- 30.10.2026: Search Console doğrulama etiketi ana sayfada (`2026-10-30-search-console.py`; kaldırılmamalı).
 - Kalan: Google Search Console (alan adı doğrulama + sitemap + ana sayfa için dizine ekleme isteği; arama sonucundaki
   logo bundan sonra güncellenir), Resend alan adı doğrulaması (Birtek DNS'ine TXT/MX kayıtları) ve IL_FROM/PANEL_FROM.
 
