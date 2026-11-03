@@ -165,7 +165,7 @@ void main() {
                     const SizedBox(height: 14),
                     Container(width: 64, height: 3, color: Palette.goldLight),
                     const SizedBox(height: 18),
-                    Text('Okurken karşılaştığınız kelimenin\nmanası, ilk harflerini yazınca.',
+                    Text('Okurken karşılaştığımız kelimelerin\nmanasını hızlı ve kolayca\nkesintisiz öğrenmek',
                         style: theme.textTheme.titleLarge?.copyWith(color: Colors.white.withValues(alpha: 0.88), fontWeight: FontWeight.w400, fontSize: 28, height: 1.35)),
                   ],
                 ),
