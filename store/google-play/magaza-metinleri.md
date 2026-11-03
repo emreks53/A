@@ -65,8 +65,8 @@ Görseller `tool/magaza/` altındaki araçla yeniden üretilebilir.
 
 ## Uygulama içeriği
 
-**Gizlilik politikası:** `store/gizlilik-politikasi.md` metni herkese açık bir web sayfasında
-yayımlanmalı ve adresi buraya girilmelidir (Play bunu her uygulama için ister). Aynı metin
+**Gizlilik politikası URL'si** (Play bunu her uygulama için ister):
+`https://docs.google.com/document/d/1NGHnM7aEKmVe2LKOXdBuV6OVVG1jsYfw4NKXGTvRC-k/view` Aynı metin
 uygulamada Ayarlar > Gizlilik politikası'nda da gösterilir.
 
 **İletişim e-postası** (Mağaza ayarları > Mağaza girişi iletişim bilgileri):

@@ -25,8 +25,8 @@ risale,nur,lügat,lugat,osmanlıca,sözlük,said,nursi,külliyat,kelime,mana,ara
 ```
 
 **Kategori:** Referans (ikincil: Kitaplar)
-**Destek URL'si:** `https://emreks53.github.io/A/` (GitHub Pages açıldıktan sonra)
-**Gizlilik politikası URL'si:** `https://emreks53.github.io/A/gizlilik.html`
+**Destek URL'si:** `https://docs.google.com/document/d/1OcVicDLRee1VFMuW4rDw2LPC65EQUznU0C4TP5IJMVM/view`
+**Gizlilik politikası URL'si:** `https://docs.google.com/document/d/1NGHnM7aEKmVe2LKOXdBuV6OVVG1jsYfw4NKXGTvRC-k/view`
 **Telif hakkı:** `2026 Lügat-ı Risale-i Nur`
 **Yaş derecelendirmesi:** anketin bütün cevapları "Yok" → 4+
 **Uygulama Gizliliği:** "Veri toplanmıyor" (Data Not Collected)

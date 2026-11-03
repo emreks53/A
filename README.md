@@ -197,10 +197,11 @@ tool/ikon_uret.py, tool/ikon/      uygulama simgeleri ve açılış görselleri 
   (`lib/src/ui/privacy_page.dart`) bununla aynı tutulmalıdır.
 - **Telif izni:** RNK Neşriyat'ın yazılı izni alınmadan yayımlamayın (yukarıya bakın).
 - **App Store:** metinler ve ekran görüntüleri `store/app-store/` klasöründe.
-- **Destek ve gizlilik sayfaları:** `docs/index.html` (destek/iletişim) ve `docs/gizlilik.html`.
-  GitHub'da Settings > Pages > "Deploy from a branch" ile bu dalın `/docs` klasörü seçilince
-  `https://emreks53.github.io/A/` adresinde yayımlanır. Gizlilik metni değişirse
-  `store/gizlilik-politikasi.md`, `docs/gizlilik.html` ve `lib/src/ui/privacy_page.dart` birlikte güncellenmeli.
+- **Destek ve gizlilik sayfaları:** Google Drive'da herkese açık iki belge olarak yayımlandı:
+  [gizlilik politikası](https://docs.google.com/document/d/1NGHnM7aEKmVe2LKOXdBuV6OVVG1jsYfw4NKXGTvRC-k/view) ve [destek/iletişim](https://docs.google.com/document/d/1OcVicDLRee1VFMuW4rDw2LPC65EQUznU0C4TP5IJMVM/view). (Bu deponun GitHub Pages adresi
+  başka bir siteye ait olduğu için kullanılmıyor; `docs/` klasörü aynı metinlerin HTML hâlidir.)
+  Gizlilik metni değişirse `store/gizlilik-politikasi.md`, Drive'daki belge, `docs/gizlilik.html`
+  ve `lib/src/ui/privacy_page.dart` birlikte güncellenmeli.
 - **Codemagic (Mac olmadan iPhone derlemesi):** `codemagic.yaml` iki iş içerir: `ios-app-store`
   (derleyip TestFlight'a yükler) ve `android-play` (imzalı AAB). Dosyanın başındaki bir kereye
   mahsus adımları Codemagic arayüzünde yapın (App Store Connect API anahtarı, dağıtım sertifikası,
