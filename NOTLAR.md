@@ -117,6 +117,7 @@ formu doğrulaması, üst menünün kaydırmada titrememesi denendi. Bulunup dü
 - Denendi: eski adresler zincirle yeni sayfalara gidiyor (ör. /tr.php?HaberDuyurular&id=11… → 2 yönlendirme → 200);
   kanonik, sitemap ve robots www alan adıyla. E-posta (MX/mail A/SPF) Birtek'te, değişmedi.
 - 30.10.2026: Search Console doğrulama etiketi ana sayfada (`2026-10-30-search-console.py`; kaldırılmamalı).
+- 03.11.2026: Google simgeyi hâlâ eski gösteriyordu; simge yeni adreste: /favicon-192.png (`2026-11-03-favicon-192.py`).
 - Kalan: Google Search Console (alan adı doğrulama + sitemap + ana sayfa için dizine ekleme isteği; arama sonucundaki
   logo bundan sonra güncellenir), Resend alan adı doğrulaması (Birtek DNS'ine TXT/MX kayıtları) ve IL_FROM/PANEL_FROM.
 
