@@ -3,25 +3,30 @@
  *                           olduğu halde müddeti kısa, ömrü azdır."
  * -----------------------------------------------------------------------------
  * PLAN (world = page px; SC = star/window centre (540,760); RW = window radius 420)
- *  Part 1 parchment: gradient #F7EEDC→#EBD9BB + fibre sprite (identical to F's end) · footnote Star8 r40.
+ *  Part 1 parchment (identical to F's last frames): gradient + fibres + double-rule page frame · Star8 r40.
  *   28.85 Star8 OPENS r40→420 (outBack), girih extensions grow · footnote rule draws x140→940 @ y1180
- *   29.40 interior turns into a recessed window: walnut shutters with gold girih + the star's inner geometry,
- *         gold bevel frame (16-gon union of the two squares) · 30.18 click → shutters slide apart, warm light
- *         spills onto the page · niche = dark velvet jewel-box with warm top light
+ *   29.36 interior becomes a recessed window: walnut shutters (gold girih + the star's inner geometry, same
+ *         lines as A.star8 open=1) grow radially from the centre; gold bevel frame (16-gon = union of the two
+ *         squares) · 30.18 click → shutters slide apart, light slit, warm light spills onto the page
+ *   niche = dark velvet jewel-box with warm top light and drifting motes
  *   30.79 six masterpieces pop (0.08 s): sapphire butterfly, peacock feather, snowflake / nautilus, cut
  *         pomegranate, tulip · 31.37 gold halos + tiny Star8 seals · cam 1.05→1.1 drifting to the butterfly
- *  Part 2 macro (signature #4): 32.10–33.40 log zoom Z 1.1→40 into the butterfly forewing, locked to screen
- *   (540,700). Layers by zoom: gallery → iridescent scale shingles (3 mip tiles, ridges in the big one,
- *   circular "lens" mask) → girih tessellation (A.girih iridescent) fading in Z 16–32 · 32.64 light sweeps
- *   the girih lines · 33.23 relief rises + central rosette blooms · 34.10 hue wave + glints (bloom .7) ·
- *   34.49–35.13 fast reverse to the gallery; frost creeps in from the left (#DDEFFF/#A8D4F5/#6E9CC9).
- *  Part 3: 35.45 push to the snowflake → melts to a droplet → mist wisps; butterfly scatters into glitter,
- *   tulip drops petals, pomegranate seeds dull · 36.41–36.79 halos shrink to a dot and blink out (peacock
- *   last, on "azdır") · each item leaves a ghost outline (local helper: silhouette → eroded edge + glow).
- *   37.17 pull back · 37.25 gold girih grille draws in the window · 37.42–37.80 we fly forward through the
- *   window: grille → walnut kafes (A.lattice, 2→14 px, blurred L5, centre opening), page darkens to the
- *   bazaar (#241634/#4A2A45/#6E3B3B), vitrine arch x140–940 y300–1150 behind, ghosts fly to shelf slots.
- *  Gloss 32.07–34.16: macro view is a circular lens field (falls off before the band) + soft scrim ≤0.2.
+ *  Part 2 macro (signature #4): 32.08–33.40 log zoom Z 1.1→40 (+ slow creep to 34.49) into the butterfly's
+ *   forewing, locked to screen (540,700). Layers by zoom: gallery → iridescent scale shingles (3 mip tiles,
+ *   ridges in the big one, masked by the wing itself) → girih tessellation (A.girih iridescent, own circular
+ *   lens mask) fading in Z 15–30 · 32.60 "sanatı": light runs along the scale ridges · 33.23 relief rises +
+ *   central rosette blooms + rings of light sweep out · 34.10 hue wave + glints (bloom .72) ·
+ *   34.49–35.13 fast reverse to the gallery; frost creeps in from the left (#DDEFFF/#A8D4F5/#6E9CC9 + crystals).
+ *  Part 3: 35.42 push toward the snowflake → melts to a droplet → mist wisps; butterfly scatters into glitter,
+ *   tulip droops and drops petals, pomegranate seeds dull · 36.27–36.79 halos shrink to a dot and blink out
+ *   (peacock last, on "azdır") · each item leaves a ghost outline (local helper: silhouette → eroded edge
+ *   + glow, 'lighter') · 37.12 slight pull back · 37.22 gold girih grille in the window · 37.28 the page falls
+ *   into the bazaar's evening (#241634/#4A2A45/#6E3B3B) while the H vitrine (same A.archGate w1000 h970 @
+ *   (540,1150) as H) appears inside the window · 37.42–37.80 we fly forward THROUGH the window (z ×2.6): grille
+ *   → walnut kafes (2→14 px, blurred, opening in the centre) passing the camera; ghosts glide to H's hand-off
+ *   points (H_numune ITEMS[].g at 37.60) and follow H's own path toward the shelves.
+ *  Gloss 32.07–34.16: lower page in shadow before the zoom covers it; macro view is a circular lens field that
+ *   falls off before the band + soft scrim ≤0.22.
  * ========================================================================== */
 (function () {
   'use strict';
@@ -336,7 +341,7 @@
         if (fk > 0) {
           const edge = lerp(-260, 1500, ez.inOutSine(fk));
           E.layer(ctx, (l) => {
-      fresh(l, false);
+            fresh(l, false);
             l.fillStyle = E.lin(l, 0, 0, 0, H, [[0, '#DDEFFF'], [0.55, '#A8D4F5'], [1, '#6E9CC9']]); l.fillRect(0, 0, W, H);
             l.save(); applyCam(l, c); l.globalAlpha = 0.85; l.drawImage(SP.frost, 540 - 600, 960 - 1050); l.restore();
             l.globalCompositeOperation = 'destination-in';
@@ -427,7 +432,7 @@
         const sweep = t < 33.2 ? clamp((t - 32.62) / 0.6) : clamp(((t - 33.25) % 0.75) / 0.75) * (t < 34.0 ? 1 : 0);
         const scl = cell / 100, sw = sweep > 0 && sweep < 1 ? sweep * 900 / (1800 * scl) : undefined;
         E.layer(ctx, (l) => {
-      fresh(l, false);
+          fresh(l, false);
           l.translate(c.sx, c.sy); l.rotate(c.rot + 0.2); l.scale(scl, scl);
           A.girih(l, { cx: 0, cy: 0, r: 1800, cell: 100, lineW: 3.4, hue, relief, sweep: sw, glow: 0.55 });
           l.setTransform(1, 0, 0, 1, 0, 0); l.globalCompositeOperation = 'destination-in';
@@ -548,7 +553,7 @@
     l.fillStyle = E.lin(l, 0, 0, 0, H, [[0, '#241634'], [0.5, '#4A2A45'], [1, '#6E3B3B']]); l.fillRect(0, 0, W, H);
     l.fillStyle = E.rad(l, 540, 720, 0, 760, [[0, '#FFAE42', 0.18], [1, '#FFAE42', 0]]); l.fillRect(0, 0, W, H);
     l.fillStyle = E.rad(l, 540, 760, 40, 470, [[0, '#FFE9B8', 0.95], [0.45, '#FFBE6A', 0.6], [1, '#6E3B3B', 0]]); l.fillRect(140, 300, 800, 850);
-    E.at(l, 540, 1150, 1, 0, (cc) => A.archGate(cc, { t, w: 800, h: 850, lattice: false, back: null }));
+    E.at(l, 540, 1150, 1, 0, (cc) => A.archGate(cc, { t, w: 1000, h: 970, lattice: false, back: null }));   // = H_numune vitrine (opening x141–939, apex y300)
     for (const [x, y] of [[300, 190], [540, 150], [780, 190]]) { l.fillStyle = E.rad(l, x, y, 0, 160, [[0, '#FFE3A3', 0.55], [0.3, '#FFAE42', 0.22], [1, '#FFAE42', 0]]); l.fillRect(x - 160, y - 160, 320, 320); }
     l.strokeStyle = 'rgba(201,154,74,0.75)'; l.lineWidth = 6; for (const y of [620, 840, 1060]) { l.beginPath(); l.moveTo(200, y); l.lineTo(880, y); l.stroke(); }
   }
@@ -556,12 +561,21 @@
   function drawEnd(ctx, t, c, endK) {
     const ek = P(t, 37.64, 37.8, 'inOutSine') * 0.6;
     if (ek > 0) { ctx.save(); ctx.globalAlpha = ek; drawBazaar(ctx, t); ctx.restore(); }
-    // ghosts flying to the shelves
-    const fly = ez.inOutCubic(clamp((t - 37.42) / 0.36));
+    // ghosts fly to H's hand-off points (H_numune ITEMS[].g at 37.60), then follow H's own path to the shelves
+    const HG = [[277, 589, 1.96], [540, 587, 1.27], [803, 589, 1.79], [277, 843, 1.59], [540, 843, 1.68], [803, 843, 1.51]];
+    const HEND = [[310, 610], [540, 610], [770, 610], [310, 1060], [540, 1060], [770, 835]];
     for (let i = 0; i < ITEMS.length; i++) {
-      const it = ITEMS[i], p0 = toScreen(c, it.x, it.y), p1 = SLOTS[i];
-      const x = lerp(p0[0], p1[0], fly), y = lerp(p0[1], p1[1], fly), s = lerp(c.z, 0.55, fly);
-      drawGhost(ctx, i, x, y, s, 0.6 * (1 - 0.3 * fly) * sm((t - 37.42) / 0.08));
+      const it = ITEMS[i], g = HG[i];
+      let x, y, sc;
+      if (t < 37.6) {
+        const k1 = ez.inOutCubic(clamp((t - 37.42) / 0.18)), p0 = toScreen(c, it.x, it.y);
+        x = lerp(p0[0], g[0], k1); y = lerp(p0[1], g[1], k1); sc = lerp(c.z, 0.91, k1);
+      } else {
+        const k = ez.inOutCubic(clamp((t - 37.6) / 0.6)), e = HEND[i], cx = (g[0] + e[0]) / 2, cy = (g[1] + e[1]) / 2 - 24;
+        x = (1 - k) * (1 - k) * g[0] + 2 * (1 - k) * k * cx + k * k * e[0]; y = (1 - k) * (1 - k) * g[1] + 2 * (1 - k) * k * cy + k * k * e[1];
+        sc = 0.91 * lerp(g[2], 1, k) / g[2] * lerp(1.05, 1.0, ez.outCubic(clamp((t - 37.6) / 0.35))) / 1.05;
+      }
+      drawGhost(ctx, i, x, y, sc, 0.62 * (0.86 + 0.14 * Math.sin(t * 9 + i * 1.7)) * sm((t - 37.42) / 0.08));
     }
     drawLattice(ctx, t, c);
   }

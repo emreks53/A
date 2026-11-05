@@ -15,8 +15,12 @@
  *                 rose wilts (0→0.85), stem droops, fallen petals settle on the soil.
  *  10.46 "elem"   cold ripple ring on the ground from the base, head bows, dew drop gathers at the tip.
  *  10.84 "verir"  dew drop falls onto the hero petal; the petal falls, camera tracks it (locked (540,880)).
- *  11.20–11.80    world dissolves into D's plum; a warm side-light shaft sweeps up past the petal; petal
- *                 (with the dew) morphs (128-pt) into the honey drop r 26 #FFB547/#FFE7A0; dim bowl rim rises.
+ *  11.00–11.80    world defocuses and dissolves into D's plum; a warm side light (D's key) sweeps up past the
+ *                 petal; the tear is absorbed; petal settles to D's start pose (petalSilhouette(92), rot −0.55)
+ *                 and morphs 11.50–11.80 (128 pts, morphEase) into the honey drop r 26 #FFB547/#FFE7A0 at
+ *                 (540,880) — same timing/shape/colours as D, so the default fade is seamless.  The bowl
+ *                 rises exactly like D's (1100 px/s, rim centre ≈1325 at 11.80, 72 % veil).
+ *  Grade: soft-light #FFB38A@0.12 → #6A3D8A@0.15, rising to 0.22 at night.  Post: vignette 0.26 → 0.42.
  * ========================================================================== */
 (function () {
   'use strict';
@@ -342,6 +346,6 @@
     id: 'C_gul_firak', t0: 6.40, t1: 11.80,
     async setup() { W.build(); if (!W.SPR.mote) W.makeSprites(); pickHero(); },
     post: (t) => (t <= T_HAND ? W.postB(t) : postC(t)),
-    draw(ctx, t) { if (t <= T_HAND) W.frameB(ctx, t); else frameC(ctx, t); },
+    draw(ctx, t) { t = clamp(t, 6.40, 11.80); if (t <= T_HAND) W.frameB(ctx, t); else frameC(ctx, t); },
   });
 })();

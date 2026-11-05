@@ -5,15 +5,20 @@
  *  Layers (depth p, E.parallax-style):  L0 sky gradient (screen) · sun+glow+rays p.04 · clouds p.08 ·
  *    hills p.15/.25/.45/.70 (cypress, round trees, tiny blossom dots that pop in the wave) ·
  *    L3 meadow/path/grass/flowers p1 (split at the rose base y=1150: back | HERO ROSE | front) ·
- *    hoopoe branch p1.15 (enters from the left, hoopoe at ≈(250,700)) · L5 blurred foreground stems p1.9.
+ *    hoopoe branch p1.15 (enters from the left, hoopoe at ≈(250,700)) · L5 blurred foreground stems p1.9
+ *    (corner framing, kept below the gloss band) + screen-space stroll clumps driven by the dolly.
  *  Camera = optical zoom (zo about a screen point) ∘ parallax dolly {x,y,z}; handheld drift always on.
+ *  DOF: back / front / near groups rendered into half-res blurred layers (rack focus, closing DOF at the end).
+ *  Grade: soft-light #FFB38A @0.12 (colour script); post bloom 0.75 → 0.30, vignette 0.20 → 0.26.
  *  2.30  zo 2.2 on the sun (= A's page glow at screen centre), cream glow #FFF6E6 condenses into the sun.
- *  2.44  BLOOM WAVE: soft light ring leaves the sun; hill blossoms, then ~260 flowers pop by distance
- *        (delay = d/1400·0.9 s) with pollen puffs.  2.68 hero rose blooms.  2.80 hoopoe crest fans.
+ *  2.44  BLOOM WAVE: a soft light ring with a glittering front leaves the sun; hill blossoms and tree
+ *        blossoms, then ~300 flowers pop by distance (delay = d/1400·0.9 s) with pollen puffs.
+ *        2.62 hero rose blooms (bud → open).  2.80 hoopoe crest fans (outBack), settles 3.10.
  *        Pull-back 2.30→3.60 (outQuint), meadow/fg zoom faster than the sky (parallax), fg stems slide in.
- *  3.62  "yalnız": rack focus (everything but the rose → 6 px), push-in z 1→1.25 on the rose.
- *  4.00  "telezzüz": bee lands (dip-and-bounce), golden sweetness pulse, 3 fragrance ribbons.
- *  4.64  "tenezzüh": lateral stroll dolly x +320 (fg passes fast), 3 butterflies lead the way.
+ *  3.62  "yalnız": rack focus (everything but the rose → 6 px), push-in z 1→1.45 on the rose.
+ *  4.00  "telezzüz": bee lands (dip-and-bounce), golden sweetness pulse (heart glow + ring + glints),
+ *        3 tapered fragrance ribbons rise and dissolve.
+ *  4.64  "tenezzüh": lateral stroll dolly x +330 (fg clumps whip past in the foot band), 3 butterflies lead.
  *  5.58  "değil": time-scale → 0.1 (butterflies, pollen, sway hang), one white ripple from the rose,
  *        −10 % saturation.  5.95 time resumes.
  *  5.95–6.70  swing back + push to the rose (z 2.6, rose at screen (540,820), R 260); sun sinks behind
@@ -501,7 +506,7 @@
   const BFL = [
     { pat: 'sapphire', base: [800, 880], ph: 0.3, size: 36, t0: 2.95 },
     { pat: 'monarch', base: [300, 980], ph: 1.7, size: 33, t0: 3.15 },
-    { pat: 'swallowtail', base: [900, 1100], ph: 3.1, size: 38, t0: 3.35 },
+    { pat: 'swallowtail', base: [900, 1050], ph: 3.1, size: 38, t0: 3.35 },
   ];
   function bflyPos(b, i, t, ttw) {
     const app = E.p(t, b.t0, b.t0 + 0.9, 'outCubic');
@@ -603,63 +608,65 @@
   /* ---------------- the scene ---------------- */
   const postB = (t) => ({ bloom: lerp(0.75, 0.3, E.p(t, 2.3, 3.2)), vignette: lerp(0.2, 0.26, E.p(t, 5.95, 6.7)), grain: 0.045 });
   function frameB(ctx, t) {
-      const c = camB(t), ttw = tw(t), dusk = duskB(t), P = palAt(dusk, 0), wave = t - TW, dof = dofB(t);
-      const sunX = SUN0[0], sunY = sunYB(t);
-      const bloom = E.p(t, 2.62, 3.15, 'outCubic');
-      const bee = beeState(t, ttw);
-      const roseOpt = {
-        t: ttw, bloom, rose: {},
-      };
-      const tip = roseTip(ttw);
-      const roseHead = (wx, wy) => { const ca = Math.cos(tip.angle), sa = Math.sin(tip.angle); return [ROSE_BASE[0] + tip.x + wx * ca - wy * sa, ROSE_BASE[1] + tip.y + wx * sa + wy * ca]; };
-      drawWorld(ctx, {
-        cam: c, P, t: ttw, tc: ttw, sunX, sunY, sunA: 1, wave, dof, tint: dusk * 0.85, dusk, bandDim: glossK(t), birds: E.p(t, 2.6, 3.0) * (1 - dusk),
-        onRose: (ctx2) => {
-          // warm halo behind the rose while it is "tasted"
-          const pulse = E.env(t, 3.96, 6.0, 0.25, 1.2) * (0.5 - 0.2 * E.p(t, 4.25, 4.8));
-          const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R));
-          if (pulse > 0.01) S.light(ctx2, hx, hy, 340 * zoomAt(c, 1), '#FFD98A', pulse);
-          drawRose(ctx2, c, Object.assign(roseOpt, { onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
-          sweetPulse(ctx2, hx, hy, zoomAt(c, 1), t, 3.98);
-          ribbons(ctx2, hx, hy - 20, ttw, 3.98, zoomAt(c, 1) * 0.8, 1 - E.p(t, 5.9, 6.5), 3, 1.6);
-        },
-        branch: (l) => drawBranch(l, c, t, ttw),
+    const c = camB(t), ttw = tw(t), dusk = duskB(t), P = palAt(dusk, 0), wave = t - TW, dof = dofB(t);
+    const sunX = SUN0[0], sunY = sunYB(t);
+    const bloom = E.p(t, 2.62, 3.15, 'outCubic');
+    const bee = beeState(t, ttw);
+    const roseOpt = {
+      t: ttw, bloom, rose: {},
+    };
+    const tip = roseTip(ttw);
+    const roseHead = (wx, wy) => { const ca = Math.cos(tip.angle), sa = Math.sin(tip.angle); return [ROSE_BASE[0] + tip.x + wx * ca - wy * sa, ROSE_BASE[1] + tip.y + wx * sa + wy * ca]; };
+    drawWorld(ctx, {
+      cam: c, P, t: ttw, tc: ttw, sunX, sunY, sunA: 1, wave, dof, tint: dusk * 0.85, dusk, bandDim: glossK(t), birds: E.p(t, 2.6, 3.0) * (1 - dusk),
+      onRose: (ctx2) => {
+        // warm halo behind the rose while it is "tasted"
+        const pulse = E.env(t, 3.96, 6.0, 0.25, 1.2) * (0.5 - 0.2 * E.p(t, 4.25, 4.8));
+        const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R));
+        if (pulse > 0.01) S.light(ctx2, hx, hy, 340 * zoomAt(c, 1), '#FFD98A', pulse);
+        drawRose(ctx2, c, Object.assign(roseOpt, { onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
+        sweetPulse(ctx2, hx, hy, zoomAt(c, 1), t, 3.98);
+        ribbons(ctx2, hx, hy - 20, ttw, 3.98, zoomAt(c, 1) * 0.8, 1 - E.p(t, 5.9, 6.5), 3, 1.6);
+      },
+      branch: (l) => drawBranch(l, c, t, ttw),
+    });
+    // butterflies (sharp, above the front layer); they fade where they dip into the gloss band
+    const gk = glossK(t);
+    lay(ctx, c, 1.05, () => {
+      BFL.forEach((b, i) => {
+        if (t < b.t0) return;
+        const [x, y] = bflyPos(b, i, t, ttw), q = bflyPos(b, i, t + 0.05, tw(t + 0.05));
+        const sy = toScreen(c, 1.05, x, y)[1], inBand = sm((sy - 1190) / 60) * (1 - sm((sy - 1574) / 60));
+        ctx.save(); ctx.globalAlpha *= 1 - 0.7 * gk * inBand;
+        E.at(ctx, x, y, 1, Math.cos(Math.atan2(q[1] - y, q[0] - x)) * 0.35, () => A.butterfly(ctx, { size: b.size, t: ttw, pattern: b.pat, phase: b.ph, hz: 4.2 }));
+        ctx.restore();
       });
-      // butterflies (sharp, above front layer), hidden in the band when gloss active
-      const gk = glossK(t);
-      lay(ctx, c, 1.05, () => {
-        BFL.forEach((b, i) => {
-          if (t < b.t0) return;
-          const [x, y] = bflyPos(b, i, t, ttw);
-          const heading = Math.atan2(bflyPos(b, i, t + 0.05, tw(t + 0.05))[1] - y, bflyPos(b, i, t + 0.05, tw(t + 0.05))[0] - x);
-          E.at(ctx, x, y, 1, Math.cos(heading) * 0.35, () => A.butterfly(ctx, { size: b.size, t: ttw, pattern: b.pat, phase: b.ph, hz: 4.2 }));
-        });
-      });
-      drawPollen(ctx, c, ttw, 0.75, gk);
-      // "değil": ripple from the rose + saturation dip
-      const rp = (t - 5.56) / 1.25;
-      if (rp > 0 && rp < 1) {
-        const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R)), r = 30 + E.ease.outCubic(rp) * 1500, a = 0.35 * (1 - rp) * sm(rp * 10);
-        ctx.save(); ctx.strokeStyle = css('#FFFFFF', a * 0.35); ctx.lineWidth = 14; ctx.beginPath(); ctx.arc(hx, hy, r, 0, TAU); ctx.stroke();
-        ctx.strokeStyle = css('#FFFFFF', a); ctx.lineWidth = 2.2; ctx.stroke(); ctx.restore();
-      }
-      const sat = E.env(t, 5.52, 6.08, 0.15, 0.18);
-      if (sat > 0.01) { ctx.save(); ctx.globalCompositeOperation = 'saturation'; ctx.globalAlpha = 0.12 * sat; ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, 1080, 1920); ctx.restore(); }
-      grade(ctx, '#FFB38A', 0.12);
-      // emergence from A's page glow: cream glow condenses into the sun
-      const ge = 1 - E.p(t, 2.30, 2.78, 'inOutSine');
-      if (ge > 0.001) {
-        const [sx, sy] = toScreen(c, 0.04, sunX, sunY), R = lerp(160, 2300, Math.pow(ge, 1.4)), F = 520 + 900 * ge;
-        ctx.save(); ctx.fillStyle = RG(ctx, sx, sy, 0, R + F, [[0, '#FFFFFF', 1], [Math.min(0.5, R / (R + F) * 0.4), '#FFF6E6', 1], [R / (R + F), '#FFF6E6', Math.min(1, ge * 1.6)], [1, '#FFF6E6', 0]]);
-        ctx.fillRect(0, 0, 1080, 1920); ctx.restore();
-      }
-      bandScrim(ctx, gk * (1 - 0.4 * dusk), ge > 0.05 ? E.mix('#0A1E1C', '#4A3020', ge) : '#0A1E1C');
+    });
+    drawPollen(ctx, c, ttw, 0.75, gk);
+    // "değil": ripple from the rose + saturation dip
+    const rp = (t - 5.56) / 1.25;
+    if (rp > 0 && rp < 1) {
+      const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R)), r = 30 + E.ease.outCubic(rp) * 1500, a = 0.35 * (1 - rp) * sm(rp * 10);
+      ctx.save(); ctx.strokeStyle = css('#FFFFFF', a * 0.35); ctx.lineWidth = 14; ctx.beginPath(); ctx.arc(hx, hy, r, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = css('#FFFFFF', a); ctx.lineWidth = 2.2; ctx.stroke(); ctx.restore();
+    }
+    const sat = E.env(t, 5.52, 6.08, 0.15, 0.18);
+    if (sat > 0.01) { ctx.save(); ctx.globalCompositeOperation = 'saturation'; ctx.globalAlpha = 0.12 * sat; ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, 1080, 1920); ctx.restore(); }
+    grade(ctx, '#FFB38A', 0.12);
+    // emergence from A's page glow: cream glow condenses into the sun
+    const ge = 1 - E.p(t, 2.30, 2.78, 'inOutSine');
+    if (ge > 0.001) {
+      const [sx, sy] = toScreen(c, 0.04, sunX, sunY), R = lerp(160, 2300, Math.pow(ge, 1.4)), F = 520 + 900 * ge;
+      ctx.save(); ctx.fillStyle = RG(ctx, sx, sy, 0, R + F, [[0, '#FFFFFF', 1], [Math.min(0.5, R / (R + F) * 0.4), '#FFF6E6', 1], [R / (R + F), '#FFF6E6', Math.min(1, ge * 1.6)], [1, '#FFF6E6', 0]]);
+      ctx.fillRect(0, 0, 1080, 1920); ctx.restore();
+    }
+    bandScrim(ctx, gk * (1 - 0.4 * dusk) * (1 - ge));
   }
   Object.assign(window.BCW, { frameB, postB, glossK, drawPollen, dofB, drawBranch, grade, sweetPulse });
   E.scene({
     id: 'B_bahce', t0: 2.30, t1: 6.70,
     async setup() { build(); if (!SPR.mote) makeSprites(); },
     post: postB,
-    draw(ctx, t) { frameB(ctx, t); },
+    draw(ctx, t) { frameB(ctx, clamp(t, 2.30, 6.70)); },
   });
 })();

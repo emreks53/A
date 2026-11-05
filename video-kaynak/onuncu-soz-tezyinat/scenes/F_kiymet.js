@@ -9,15 +9,17 @@
  *      8 star-tile jewel medallions on an orbit
  *  L4  facet glints, ruby shed, fuse sparks · L5 near bokeh (p 1.6, big + soft)
  *  Camera: tilt-up parallax on the lift (bg moves down 150·p), push 1→1.08, dive z 1.08→12 with roll 8°.
- *  22.30 ember rises 772→760 and sharpens circle→hexagon, orange→ruby (E handoff: (540,760) r34, BG 60%)
- *  22.88 flash + shock ring; the 6 hex facets fly apart and the gem HeroRose unfolds (outBack)
+ *  22.30 ember follows E's exact path (≈(602,755) → (540,760) by 22.47), r 27→34, circle→hexagon with E's
+ *        facet shading, orange→ruby (E handoff: (540,760) r34, BG ≈60%)
+ *  22.88 flash + shock ring; the 6 hex facets fly apart and the gem HeroRose R180 unfolds (outBack)
  *  23.40 gold plinth rises from below the frame, contact bounce at 23.8
  *  23.90 lift RC 760→600 (inOutCubic + tiny overshoot) · god rays + spotlight bloom in
  *  24.72 golden life-ring r300 draws clockwise · 25.22 burns 360°→50° with an ember head + sparks,
  *        ruby facets shed from the petal tips · 25.62 settle, remnant fades
  *  26.03 8 medallions pop (0.06 s stagger) from the rose to orbit r350 (0.06 rad/s) + gold octagram
- *  27.05 orbit accelerates and tightens into a bright lens ring; the gem rose spins into a ruby iris that
- *        opens on ivory light · 27.15–28.40 dive (inCubic → outExpo), roll +8°
+ *  27.05 orbit accelerates and tightens into a bright lens ring; the gem rose swells, spins and (behind a
+ *        sparkle) becomes an 8-petal ruby iris whose blades rotate open on ivory light with the footnote star
+ *        geometry glimpsed inside · 27.15–28.40 dive (inCubic → outExpo), roll +8°
  *  27.45–28.00 16-wedge kaleidoscope (mirrored), masked to a soft circle r≈520 @ (540,760)
  *  27.90–28.30 ivory flood from the centre (band last) → 28.15 parchment fibres + footnote Star8 r40 @
  *        (540,760), open 0 (G handoff; parchment/star code is identical in G_hasiye.js)

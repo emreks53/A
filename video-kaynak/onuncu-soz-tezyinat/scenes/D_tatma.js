@@ -12,8 +12,9 @@
  *   L4  light shaft from the upper right + dust in it ('lighter')
  *   L5  foreground: blurred dark vessel rim + honey bokeh, parallax 1.6
  *  Camera: the fall (drop locked at (540,880), world scrolls up ~1100 px/s, decelerates)
- *   → lands 12.27 + spring overshoot 12 px + tiny shake → crane up & push in 13.30–14.30
- *   (ry 110→220, zoom 1→1.12, pool kept near frame centre) → pull back + crane down
+ *   → lands 12.27 + spring overshoot 12 px + tiny shake → slow push 12.6–13.3 → crane up
+ *   13.30–14.30 (ry 110→200; the widening bowl itself grows ×1.27 so camera zoom stays ≈1 and
+ *   the rim stays inside the frame; reflection fades, floor petals rise into view) → pull back + crane down
  *   15.0–16.0 to the 3/4 view (screen rx 330, rim (540,780), foot y1000)
  *   → 15.90+: MORPH bowl+reflection → hourglass, drawn by E_omur (DE.drawE) so that both
  *   scenes produce identical frames over the 16.10–16.30 overlap.

@@ -427,7 +427,7 @@
     const fams = ['600 40px "Cormorant Garamond"', '500 40px "Cormorant Garamond"', '700 40px "Cormorant Garamond"', 'italic 500 40px "Cormorant Garamond"', '400 40px Amiri', '700 40px Amiri', '40px "Amiri Quran"', '600 40px Cinzel'];
     await Promise.all(fams.map((f) => document.fonts.load(f, 'AaŞşİıĞğÖöÜüÇçâîû الرحمن')));
     E.scenes.sort((a, b) => a.t0 - b.t0);
-    for (const s of E.scenes) if (s.setup) await s.setup();
+    for (const s of E.scenes) if (s.setup) { try { await s.setup(); } catch (err) { console.error('setup error', s.id, err && err.stack || err); s.draw = () => { throw err; }; } }
     E.ready = true;
   };
 

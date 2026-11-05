@@ -12,14 +12,15 @@
  *   L4  floating sand motes ('lighter'), kandil light flood + long teal-violet shadows
  *   L5  blurred foreground motes / dark blobs, parallax 1.5
  *  Camera (world→screen, E.drift breathing always on):
- *   16.30 neck (540,1000), zoom 1 → 16.55–17.70 hourglass to the left third (zoom 1.12)
- *   → 18.72–19.60 pan right + zoom out (1.02): hourglass (320,1000), kandil (780,880)
- *   → 20.60–21.60 slow push-in (1.08) → 21.98–22.50 tilt up after the rising ember.
+ *   16.30 neck (540,1000), zoom 1 → 16.50–17.45 push in on the top bulb (zoom 1.45) so the
+ *   miniature life reads on a phone → 18.66–19.62 pan right + zoom out (1.02): hourglass on the
+ *   left third (320,1000), kandil (≈815,880) → 19.62–21.60 slow push-in (1.08) → 21.98–22.50 tilt
+ *   up after the rising ember.
  *  Beats
  *   15.90–16.45 MORPH (also drawn for D through DE.drawE): glass outline draws around the bowl +
  *     reflection, the reflection turns solid, silhouette lerps (128 pts) to the hourglass,
  *     palette plum→teal, hanging motes pour in as sand, four glide to the neck = first grains
- *   16.56 "Çünkü" sand flows · 17.06 "ya onun" mini rose (R≈19) sprouts, butterfly arrives ·
+ *   16.56 "Çünkü" sand flows · 17.06 "ya onun" mini rose (R 31) sprouts, butterfly arrives ·
  *   17.92 "ömrü kısa" sand rush (flow 2), rose blooms & withers in 0.5 s, butterfly dissolves into
  *     particles that fall through the neck · 18.88 "senin" kandil lights (outBack), warm flood,
  *     long shadows · 19.32–20.0 oil drops, flame shrinks 30%, top bulb empties at 19.97 ·
