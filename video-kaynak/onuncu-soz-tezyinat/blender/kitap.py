@@ -210,10 +210,12 @@ class NB:
         return o
 
 # ------------------------------------------------------------------ malzemeler
-COVER_LIN = (0.42, 0.026, 0.058)
+COVER_LIN = (0.25, 0.0112, 0.0325)
 if COVER_RGB:
     COVER_LIN = tuple(float(c) for c in COVER_RGB.split(','))
 GOLD_LIN = (0.96, 0.70, 0.36)
+LSPEC = arg('--spec', 0.06, float)
+LROUGH = arg('--lrough', 0.72, float)
 
 LEATHER_BAKED = os.path.join(TEX, 'deri_doku.png')
 CEVIZ_COL = os.path.join(TEX, 'ceviz_renk.png')
@@ -254,7 +256,7 @@ def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
     b.link(base, hsv.inputs['Color']); b.link(cvar, hsv.inputs['Value'])
     hsv.inputs['Saturation'].default_value = 1.0
     leather_col = hsv.outputs['Color']
-    rough = b.math('ADD', 0.58, b.math('MULTIPLY', crease, 0.12))
+    rough = b.math('ADD', LROUGH, b.math('MULTIPLY', crease, 0.12))
     rough = b.math('ADD', rough, b.math('MULTIPLY', b.math('SUBTRACT', n1f, 0.5), 0.12))
     # --- maske
     fac = None; hmask = None
@@ -295,8 +297,8 @@ def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
         h = b.math('MULTIPLY', grain_h, 0.10)
     nrm = b.bump(h, 1.0, 0.001)
     leather = b.principled(**{'Base Color': leather_col, 'Roughness': rough, 'Normal': nrm,
-                              'Coat Weight': 0.04, 'Coat Roughness': 0.5, 'Sheen Weight': 0.05,
-                              'Sheen Roughness': 0.5, 'Specular IOR Level': 0.16})
+                              'Coat Weight': 0.04 * LSPEC / 0.16, 'Coat Roughness': 0.5, 'Sheen Weight': 0.05,
+                              'Sheen Roughness': 0.5, 'Specular IOR Level': LSPEC})
     if fac is None:
         b.out(leather.outputs[0]); return m
     gold = b.principled(**{'Base Color': gold_col, 'Metallic': 1.0, 'Roughness': gold_r, 'Normal': nrm})
@@ -846,7 +848,7 @@ def build():
     MATS['kapital'] = mat_headband('kapitalbent')
     MATS['kurdele'] = mat_ribbon('kurdele')
     MATS['ceviz'] = mat_walnut_img('ceviz') if os.path.exists(CEVIZ_DAT) else mat_walnut('ceviz')
-    MATS['toz'] = mat_simple('toz', (0.9, 0.85, 0.75), 0.6, (1.0, 0.86, 0.62), 0.22)
+    MATS['toz'] = mat_simple('toz', (0.95, 0.9, 0.8), 0.5, (1.0, 0.86, 0.62), 0.03)
     MATS['duvar'] = mat_simple('duvar', (0.035, 0.022, 0.015), 0.9)
 
     # --- masa
@@ -904,7 +906,7 @@ def build():
         vols.append(e)
     # sola dogru biraz yatik son cilt
     # --- toz
-    dz = dust('toz', (-0.10, -0.20, 0.06), (0.30, 0.22, 0.42), 80, 7)
+    dz = dust('toz', (-0.18, -0.12, 0.07), (0.22, 0.30, 0.45), 90, 7)
 
     # --- isiklar
     def area(name, loc, tgt, size, energy, color, shape='DISK', spread=None, size_y=None):
@@ -931,6 +933,13 @@ def build():
     vrc = bpy.data.collections.new('cilt_alici')
     vrc.children.link(vcoll); vrc.objects.link(book['spine'])
     vl.light_linking.receiver_collection = vrc
+    # on dolgu: yalniz kitaba (sayfa kenarlari / sirt golgede kapkara kalmasin)
+    fr = area('on_dolgu', (0.02, -0.95, 0.30), (0.08, 0.0, 0.02), 0.9, 0.5, (0.95, 0.93, 1.0), 'DISK')
+    frc = bpy.data.collections.new('on_dolgu_alici')
+    for k in ('right', 'left', 'spine', 'front', 'back', 'joint_f', 'joint_b'):
+        frc.objects.link(book[k])
+    frc.objects.link(rib)
+    fr.light_linking.receiver_collection = frc
     # sayfa isigi (parlama icin cevreye sicak isik)
     glowL = bpy.data.lights.new('sayfa_isik', 'POINT'); glowL.shadow_soft_size = 0.05
     glowL.energy = 0.0; glowL.color = (1.0, 0.80, 0.55)
@@ -1030,9 +1039,9 @@ def anim_intro(S):
             if fc.data_path == 'hide_render':
                 for kp in fc.keyframe_points: kp.interpolation = 'CONSTANT'
     # parlama
-    key_glow(0, 0.0, S); key_glow(30, 0.0, S); key_glow(37, 0.025, S); key_glow(52, 0.04, S)
-    key_glow(62, 0.09, S); key_glow(68, 0.30, S); key_glow(72, 0.9, S); key_glow(75, 1.9, S); key_glow(78, 3.2, S)
-    key_glow(80, 4.6, S)
+    key_glow(0, 0.0, S); key_glow(30, 0.0, S); key_glow(37, 0.02, S); key_glow(52, 0.025, S)
+    key_glow(62, 0.04, S); key_glow(67, 0.10, S); key_glow(70, 0.32, S); key_glow(73, 0.9, S); key_glow(76, 2.0, S)
+    key_glow(78, 2.9, S); key_glow(80, 3.8, S)
     set_interp(MATS['s81'].node_tree); set_interp(S['glowL'])
     # kamera
     cam, aim, foc = S['cam'], S['aim'], S['foc']
@@ -1041,8 +1050,9 @@ def anim_intro(S):
     key_cam(cam, aim, foc, 0, (0.078, -0.014, 0.030), 21.0, 58.0, 0.70, cover_c, 7.1)
     key_cam(cam, aim, foc, 10, (0.078, -0.014, 0.030), 20.0, 58.5, 0.685, cover_c, 7.1)
     key_cam(cam, aim, foc, 37, (0.060, 0.000, 0.030), 12.0, 63.0, 0.64, (0.08, 0.0, zr), 6.3)
-    key_cam(cam, aim, foc, 60, (tx[0], tx[1] - 0.002, zr), 3.0, 77.0, 0.44, (tx[0], tx[1], zr), 7.1)
-    key_cam(cam, aim, foc, 80, (tx[0], tx[1] - 0.004, zr), 0.0, 82.0, 0.335, (tx[0], tx[1], zr), 8.0)
+    key_cam(cam, aim, foc, 58, (tx[0], tx[1] - 0.002, zr), 3.0, 77.0, 0.45, (tx[0], tx[1], zr), 7.1)
+    key_cam(cam, aim, foc, 69, (tx[0], tx[1] - 0.004, zr), 0.8, 81.0, 0.35, (tx[0], tx[1], zr), 8.0)
+    key_cam(cam, aim, foc, 80, (0.085, -0.004, zr), 0.0, 84.0, 0.265, (0.085, 0.0, zr), 8.0)
     for ob in (cam, aim, foc):
         set_interp(ob)
     set_interp(cam.data)
@@ -1062,15 +1072,16 @@ def anim_outro(S):
     key_sk(rsk, 0, 1.0); key_sk(rsk, 30, 1.0); key_sk(rsk, 68, 0.0)
     key_sk(S['lsk'], 0, 1.0); key_sk(S['lsk'], 28, 1.0); key_sk(S['lsk'], 38, 0.0)
     set_interp(book['right'].data.shape_keys); set_interp(book['left'].data.shape_keys)
-    key_glow(0, 4.5, S); key_glow(5, 2.4, S); key_glow(12, 0.9, S); key_glow(20, 0.3, S); key_glow(32, 0.06, S)
+    key_glow(0, 3.8, S); key_glow(5, 2.2, S); key_glow(10, 0.9, S); key_glow(15, 0.3, S); key_glow(21, 0.08, S)
+    key_glow(30, 0.025, S)
     key_glow(48, 0.0, S)
     set_interp(MATS['s81'].node_tree); set_interp(S['glowL'])
     cam, aim, foc = S['cam'], S['aim'], S['foc']
     tx = TEXT_C
     cover_c = (0.088, 0.0, T)
     fin_t = (0.080, -0.078, 0.012)
-    key_cam(cam, aim, foc, 0, (tx[0], tx[1] - 0.004, zr), 0.0, 82.0, 0.335, (tx[0], tx[1], zr), 8.0)
-    key_cam(cam, aim, foc, 18, (tx[0], tx[1] - 0.006, zr), -2.0, 79.0, 0.37, (tx[0], tx[1], zr), 7.1)
+    key_cam(cam, aim, foc, 0, (0.085, -0.004, zr), 0.0, 84.0, 0.265, (0.085, 0.0, zr), 8.0)
+    key_cam(cam, aim, foc, 18, (tx[0], tx[1] - 0.006, zr), -1.5, 80.0, 0.35, (tx[0], tx[1], zr), 7.1)
     key_cam(cam, aim, foc, 48, (0.070, -0.040, 0.025), -14.0, 56.0, 0.55, (0.08, 0.0, 0.035), 5.0)
     key_cam(cam, aim, foc, 78, fin_t, -26.0, 33.0, 0.70, cover_c, 3.2)
     key_cam(cam, aim, foc, 129, (fin_t[0] + 0.004, fin_t[1], fin_t[2]), -24.3, 32.2, 0.675, cover_c, 3.2)
@@ -1087,8 +1098,9 @@ def setup_hero(S):
         lf.hide_render = True
     S['pivot'].rotation_euler = (0, 0, 0)
     cam, aim, foc = S['cam'], S['aim'], S['foc']
-    cam.location = sph((0.082, -0.050, 0.018), -24.0, 36.0, 0.66)
-    aim.location = (0.082, -0.050, 0.018)
+    ht = (0.090, -0.012, 0.030)
+    cam.location = sph(ht, -19.0, 37.0, 0.67)
+    aim.location = ht
     foc.location = (0.088, -0.01, T)
     cam.data.dof.aperture_fstop = 3.2
 
@@ -1101,16 +1113,17 @@ def render_setup(S, samples):
     cy.device = 'CPU'
     cy.samples = samples
     cy.use_adaptive_sampling = True
-    cy.adaptive_threshold = 0.025
+    cy.adaptive_threshold = 0.035
     cy.adaptive_min_samples = 0
     cy.use_denoising = True
     cy.denoiser = 'OPENIMAGEDENOISE'
     cy.denoising_input_passes = 'RGB_ALBEDO_NORMAL'
+    DNQ = arg('--dnq', 'BALANCED')
     try:
-        cy.denoising_prefilter = 'ACCURATE'
-        cy.denoising_quality = 'HIGH'
-    except Exception:
-        pass
+        cy.denoising_prefilter = 'ACCURATE' if DNQ == 'HIGH' else 'FAST'
+        cy.denoising_quality = DNQ
+    except Exception as e:
+        print('denoise opt', e)
     cy.max_bounces = 6; cy.diffuse_bounces = 2; cy.glossy_bounces = 3
     cy.transmission_bounces = 2; cy.transparent_max_bounces = 4; cy.volume_bounces = 0
     cy.caustics_reflective = False; cy.caustics_refractive = False
