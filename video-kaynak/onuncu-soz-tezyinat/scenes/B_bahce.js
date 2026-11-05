@@ -467,7 +467,6 @@
 
   /* fragrance ribbons: tapered curling ribbons that rise and dissolve, from (x,y) screen */
   function ribbons(ctx, x, y, t, t0, s, alpha, seed = 3, life = 1.9) {
-    if (window.NORIB) return;
     if (alpha <= 0.01) return;
     ctx.save(); ctx.lineCap = 'round';
     for (let r = 0; r < 3; r++) {
