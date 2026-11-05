@@ -8,7 +8,7 @@
   const url = (i) => `out/blender/outro/${String(Math.max(0, Math.min(N - 1, i))).padStart(4, '0')}.png`;
   const GOLD = '#FFD98A', HALO = '#FFB547';
   // kapak üzerindeki iniş noktası (son karelerde kapak başlığı; Blender kareleri gelince ayarlanır)
-  const LAND = [540, 720];
+  const LAND = [424, 708]; // son karelerde kapak madalyonunun merkezi (Blender outro 0102)
 
   function mote(ctx, x, y, r, a) {
     if (a <= 0.01) return;
@@ -67,7 +67,7 @@
       S.dust(ctx, t, { n: 40, seed: 21, col: '#FFE2B0', rMin: 1.2, rMax: 3.2, speed: 12, alpha: 0.35 });
       // sekiz altın zerre: sayfalardan çıkar, sarmal çizerek kapağa iner, her biri küçük bir parıltıyla emilir
       for (let k = 0; k < 8; k++) {
-        const t0 = 69.0 + k * 0.06, land = 69.6 + k * 0.12;
+        const t0 = 69.25 + k * 0.05, land = 70.0 + k * 0.08;
         const a = E.p(t, t0, t0 + 0.25) * (1 - E.p(t, land, land + 0.12));
         const u = E.p(t, t0, land, 'inOutSine');
         const ang = (k / 8) * E.TAU + u * 2.4;

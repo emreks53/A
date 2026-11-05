@@ -8,6 +8,8 @@ import numpy as np
 from scipy import signal
 
 SR = 48000
+# Genel efekt kazancı: efektlerin en yüksek anlık yüksekliği konuşmanın ~17 LU altında kalacak şekilde ayarlandı
+SFX_GAIN_DB = 12.0
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'out', 'ses'); os.makedirs(OUT, exist_ok=True)
 DUR = json.loads(open(os.path.join(ROOT, 'engine', 'timing.js')).read().split('=', 1)[1].rstrip().rstrip(';'))['duration']
@@ -193,7 +195,7 @@ def main():
     voice = np.zeros((N, 2)); voice[: len(v)] = v[:N]
     # sese göre seviye: efekt dB'leri konuşmanın tepe değerine göre
     vpk = np.max(np.abs(voice)) + 1e-9
-    sfx *= vpk
+    sfx *= vpk * db(SFX_GAIN_DB)
     # konuşma zarfı (50 ms RMS) → 6 dB bastırma (yumuşak)
     mono = np.mean(voice, 1) ** 2; w = int(0.05 * SR); rms = np.sqrt(np.convolve(mono, np.ones(w) / w, 'same'))
     act = np.clip((20 * np.log10(rms / vpk + 1e-9) + 42) / 12, 0, 1)
