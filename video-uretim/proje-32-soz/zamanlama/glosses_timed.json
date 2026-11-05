@@ -1,0 +1,596 @@
+[
+{
+"anchor": "celil",
+"gloss": "yüce",
+"wi": 2,
+"t": 1.3,
+"we": 1.6,
+"phrase": 0,
+"pend": 2.5
+},
+{
+"anchor": "uluhiyetiyle",
+"gloss": "ilahlığıyla",
+"wi": 3,
+"t": 1.74,
+"we": 2.5,
+"phrase": 0,
+"pend": 2.5
+},
+{
+"anchor": "cemil",
+"gloss": "güzel",
+"wi": 4,
+"t": 3.14,
+"we": 3.44,
+"phrase": 1,
+"pend": 4.181
+},
+{
+"anchor": "kebir",
+"gloss": "büyük",
+"wi": 6,
+"t": 4.841,
+"we": 5.141,
+"phrase": 2,
+"pend": 5.961
+},
+{
+"anchor": "rububiyetiyle",
+"gloss": "terbiye ediciliğiyle",
+"wi": 7,
+"t": 5.221,
+"we": 5.961,
+"phrase": 2,
+"pend": 5.961
+},
+{
+"anchor": "kerîm",
+"gloss": "cömert",
+"wi": 8,
+"t": 6.681,
+"we": 6.961,
+"phrase": 3,
+"pend": 7.701
+},
+{
+"anchor": "re'fetiyle",
+"gloss": "şefkatiyle",
+"wi": 9,
+"t": 7.061,
+"we": 7.701,
+"phrase": 3,
+"pend": 7.701
+},
+{
+"anchor": "azîm",
+"gloss": "çok büyük",
+"wi": 10,
+"t": 8.381,
+"we": 8.641,
+"phrase": 4,
+"pend": 9.381
+},
+{
+"anchor": "latîf",
+"gloss": "ince",
+"wi": 12,
+"t": 10.061,
+"we": 10.381,
+"phrase": 5,
+"pend": 11.081
+},
+{
+"anchor": "havas",
+"gloss": "duyular",
+"wi": 20,
+"t": 14.182,
+"we": 14.482,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "cevarih",
+"gloss": "azalar",
+"wi": 26,
+"t": 16.602,
+"we": 17.022,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "cihazat",
+"gloss": "cihazlar",
+"wi": 28,
+"t": 17.202,
+"we": 17.702,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "muhtelif",
+"gloss": "farklı farklı",
+"wi": 31,
+"t": 18.742,
+"we": 19.162,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "âlât",
+"gloss": "aletler",
+"wi": 34,
+"t": 19.863,
+"we": 20.223,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "mütenevvi",
+"gloss": "çeşitli",
+"wi": 37,
+"t": 21.223,
+"we": 21.683,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "letaif",
+"gloss": "duygular",
+"wi": 38,
+"t": 21.803,
+"we": 22.203,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "teçhiz",
+"gloss": "donatma",
+"wi": 42,
+"t": 23.803,
+"we": 24.223,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "tezyin",
+"gloss": "süslemiştir",
+"wi": 44,
+"t": 24.423,
+"we": 24.803,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "mütenevvi",
+"gloss": "çeşitli",
+"wi": 48,
+"t": 26.523,
+"we": 27.023,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "âlât",
+"gloss": "aletler",
+"wi": 52,
+"t": 27.844,
+"we": 28.164,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "enva-ı",
+"gloss": "nimetinin çeşitlerini",
+"wi": 55,
+"t": 29.564,
+"we": 29.904,
+"phrase": 6,
+"pend": 30.444
+},
+{
+"anchor": "aksam-ı",
+"gloss": "ihsanlarının kısımlarını",
+"wi": 57,
+"t": 31.004,
+"we": 31.444,
+"phrase": 7,
+"pend": 32.284
+},
+{
+"anchor": "tabakat-ı",
+"gloss": "rahmetinin tabakalarını",
+"wi": 59,
+"t": 32.984,
+"we": 33.524,
+"phrase": 8,
+"pend": 34.044
+},
+{
+"anchor": "ihsas",
+"gloss": "hissettirsin",
+"wi": 63,
+"t": 35.305,
+"we": 35.745,
+"phrase": 9,
+"pend": 36.105
+},
+{
+"anchor": "esmasının",
+"gloss": "isimlerinin",
+"wi": 72,
+"t": 41.345,
+"we": 41.925,
+"phrase": 13,
+"pend": 43.726
+},
+{
+"anchor": "enva-ı",
+"gloss": "tecellilerinin çeşitlerini",
+"wi": 74,
+"t": 42.545,
+"we": 42.885,
+"phrase": 13,
+"pend": 43.726
+},
+{
+"anchor": "âlât",
+"gloss": "aletler",
+"wi": 78,
+"t": 45.186,
+"we": 45.546,
+"phrase": 14,
+"pend": 46.366
+},
+{
+"anchor": "kesretli",
+"gloss": "çok sayıdaki",
+"wi": 87,
+"t": 50.666,
+"we": 51.147,
+"phrase": 17,
+"pend": 54.767
+},
+{
+"anchor": "âlât",
+"gloss": "aletler",
+"wi": 88,
+"t": 51.287,
+"we": 51.587,
+"phrase": 17,
+"pend": 54.767
+},
+{
+"anchor": "cihazatın",
+"gloss": "cihazların",
+"wi": 90,
+"t": 51.747,
+"we": 52.387,
+"phrase": 17,
+"pend": 54.767
+},
+{
+"anchor": "ubudiyeti",
+"gloss": "kulluğu",
+"wi": 96,
+"t": 55.127,
+"we": 55.587,
+"phrase": 18,
+"pend": 57.887
+},
+{
+"anchor": "elemi",
+"gloss": "acısı",
+"wi": 102,
+"t": 58.287,
+"we": 58.627,
+"phrase": 19,
+"pend": 58.627
+},
+{
+"anchor": "mükâfatı",
+"gloss": "karşılık olarak verilen ödülü",
+"wi": 105,
+"t": 60.088,
+"we": 60.688,
+"phrase": 20,
+"pend": 61.028
+},
+{
+"anchor": "suretlerdeki",
+"gloss": "görüntülerdeki",
+"wi": 109,
+"t": 63.188,
+"we": 63.868,
+"phrase": 22,
+"pend": 69.209
+},
+{
+"anchor": "âlem-i",
+"gloss": "görülen şeyler âleminde",
+"wi": 112,
+"t": 65.388,
+"we": 65.708,
+"phrase": 22,
+"pend": 69.209
+},
+{
+"anchor": "mu'cizat-ı",
+"gloss": "kudret mucizelerinin",
+"wi": 115,
+"t": 66.889,
+"we": 67.429,
+"phrase": 22,
+"pend": 69.209
+},
+{
+"anchor": "envaını",
+"gloss": "çeşitlerini",
+"wi": 117,
+"t": 67.989,
+"we": 68.409,
+"phrase": 22,
+"pend": 69.209
+},
+{
+"anchor": "temaşa",
+"gloss": "seyreder",
+"wi": 118,
+"t": 68.449,
+"we": 68.869,
+"phrase": 22,
+"pend": 69.209
+},
+{
+"anchor": "nazar-ı",
+"gloss": "ibret bakışıyla",
+"wi": 121,
+"t": 70.809,
+"we": 71.149,
+"phrase": 24,
+"pend": 72.829
+},
+{
+"anchor": "Sâni'ine",
+"gloss": "Sanatkarına",
+"wi": 123,
+"t": 71.789,
+"we": 72.229,
+"phrase": 24,
+"pend": 72.829
+},
+{
+"anchor": "Nazara",
+"gloss": "görmeye",
+"wi": 125,
+"t": 73.629,
+"we": 73.909,
+"phrase": 25,
+"pend": 75.75
+},
+{
+"anchor": "elem",
+"gloss": "acı",
+"wi": 129,
+"t": 74.97,
+"we": 75.17,
+"phrase": 25,
+"pend": 75.75
+},
+{
+"anchor": "hâcet",
+"gloss": "gerek",
+"wi": 132,
+"t": 76.43,
+"we": 76.77,
+"phrase": 26,
+"pend": 76.97
+},
+{
+"anchor": "sadâların",
+"gloss": "seslerin",
+"wi": 136,
+"t": 79.45,
+"we": 79.99,
+"phrase": 28,
+"pend": 80.73
+},
+{
+"anchor": "envalarını",
+"gloss": "çeşitlerini",
+"wi": 137,
+"t": 80.09,
+"we": 80.73,
+"phrase": 28,
+"pend": 80.73
+},
+{
+"anchor": "mesmuat",
+"gloss": "işitilen şeyler",
+"wi": 141,
+"t": 82.911,
+"we": 83.331,
+"phrase": 29,
+"pend": 86.131
+},
+{
+"anchor": "Cenab-ı",
+"gloss": "Allah'ın",
+"wi": 143,
+"t": 83.891,
+"we": 84.231,
+"phrase": 29,
+"pend": 86.131
+},
+{
+"anchor": "letaif-i",
+"gloss": "rahmetinin latifliklerini",
+"wi": 145,
+"t": 84.651,
+"we": 85.091,
+"phrase": 29,
+"pend": 86.131
+},
+{
+"anchor": "ubudiyet",
+"gloss": "kulluk",
+"wi": 150,
+"t": 87.551,
+"we": 87.991,
+"phrase": 30,
+"pend": 87.991
+},
+{
+"anchor": "mükâfatı",
+"gloss": "karşılık olarak verilen ödülü",
+"wi": 157,
+"t": 90.172,
+"we": 90.732,
+"phrase": 32,
+"pend": 90.912
+},
+{
+"anchor": "kuvve-i",
+"gloss": "koku alma duyusu",
+"wi": 160,
+"t": 92.892,
+"we": 93.232,
+"phrase": 33,
+"pend": 93.692
+},
+{
+"anchor": "taifesindeki",
+"gloss": "topluluğundaki",
+"wi": 163,
+"t": 94.432,
+"we": 95.112,
+"phrase": 34,
+"pend": 96.552
+},
+{
+"anchor": "letaif-i",
+"gloss": "rahmetin latifliklerini",
+"wi": 164,
+"t": 95.192,
+"we": 95.612,
+"phrase": 34,
+"pend": 96.552
+},
+{
+"anchor": "vazife-i",
+"gloss": "şükür vazifesi",
+"wi": 170,
+"t": 98.133,
+"we": 98.513,
+"phrase": 35,
+"pend": 99.273
+},
+{
+"anchor": "kuvve-i",
+"gloss": "tat alma duyusu",
+"wi": 181,
+"t": 104.473,
+"we": 104.833,
+"phrase": 38,
+"pend": 105.273
+},
+{
+"anchor": "mat'umatın",
+"gloss": "yiyeceklerin",
+"wi": 184,
+"t": 106.034,
+"we": 106.634,
+"phrase": 39,
+"pend": 111.794
+},
+{
+"anchor": "ezvakını",
+"gloss": "zevklerini",
+"wi": 185,
+"t": 106.714,
+"we": 107.194,
+"phrase": 39,
+"pend": 111.794
+},
+{
+"anchor": "mütenevvi",
+"gloss": "çeşitli",
+"wi": 188,
+"t": 108.614,
+"we": 109.054,
+"phrase": 39,
+"pend": 111.794
+},
+{
+"anchor": "şükr-ü",
+"gloss": "manevi şükür",
+"wi": 190,
+"t": 109.354,
+"we": 109.634,
+"phrase": 39,
+"pend": 111.794
+},
+{
+"anchor": "cihazat-ı",
+"gloss": "insana ait cihazların",
+"wi": 198,
+"t": 112.914,
+"we": 113.454,
+"phrase": 40,
+"pend": 120.575
+},
+{
+"anchor": "letaifin",
+"gloss": "ince manevi duyguların",
+"wi": 210,
+"t": 118.195,
+"we": 118.735,
+"phrase": 40,
+"pend": 120.575
+},
+{
+"anchor": "elemleri",
+"gloss": "acıları",
+"wi": 217,
+"t": 121.636,
+"we": 122.036,
+"phrase": 41,
+"pend": 122.396
+},
+{
+"anchor": "Cenab-ı",
+"gloss": "Allah",
+"wi": 220,
+"t": 123.996,
+"we": 124.376,
+"phrase": 42,
+"pend": 125.596
+},
+{
+"anchor": "Hakîm-i",
+"gloss": "sonsuz hikmet sahibi olan Allah",
+"wi": 223,
+"t": 124.856,
+"we": 125.216,
+"phrase": 42,
+"pend": 125.596
+},
+{
+"anchor": "istihdam",
+"gloss": "hizmet ettirdiği",
+"wi": 227,
+"t": 127.036,
+"we": 127.516,
+"phrase": 43,
+"pend": 132.617
+},
+{
+"anchor": "cihazatın",
+"gloss": "cihazların",
+"wi": 230,
+"t": 128.016,
+"we": 128.696,
+"phrase": 43,
+"pend": 132.617
+}
+]
