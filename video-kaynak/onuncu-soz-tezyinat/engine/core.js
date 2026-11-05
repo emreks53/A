@@ -103,6 +103,7 @@
   E.rgb = (c) => {
     if (Array.isArray(c)) return c;
     if (hexCache.has(c)) return hexCache.get(c);
+    if (c.startsWith('rgb')) { const m = c.match(/[\d.]+/g).slice(0, 3).map(Number); hexCache.set(c, m); return m; }
     let h = c.replace('#', '');
     if (h.length === 3) h = h.split('').map((x) => x + x).join('');
     const v = [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
