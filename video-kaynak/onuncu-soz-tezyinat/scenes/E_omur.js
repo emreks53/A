@@ -52,7 +52,7 @@
   /* ------------------------------------------------------------------ camera */
   function camE(t) {
     let x = 540, y = 966.67, z = 1.2;                                       // 16.30: neck (540,1000), bowl-sized glass
-    const a = pp(t, 16.5, 17.35, 'inOutCubic'); y = lerp(y, 915, a); z = lerp(z, 1.8, a);           // big, centred: mini-life reads
+    const a = pp(t, 16.3, 17.25, 'inOutCubic'); y = lerp(y, 915, a); z = lerp(z, 1.8, a);           // big, centred: mini-life reads
     const b = pp(t, 18.66, 19.62, 'inOutCubic'); x = lerp(x, 749.6, b); y = lerp(y, 978, b); z = lerp(z, 1.145, b); // hourglass L, kandil R
     const c = pp(t, 19.7, 21.4, 'inOutSine'); x = lerp(x, 760, c); y = lerp(y, 990, c); z = lerp(z, 1.2, c);       // bowl large, kandil close
     const d = pp(t, 21.98, 22.5, 'inOutSine'); y = lerp(y, 850, d);

@@ -13,10 +13,11 @@
  *          FG · blurred walnut counter rising into the foot band in the wide shots (lantern reflections)
  *          L5 screen · kafes lattice rushing past 37.60–38.03 (covers ~85 % of the frame at 37.60)
  *  CAMERA (log-zoom keys) 37.6 z1.04 → 37.88 z1 (contract framing) → 38.86 z1.08 settle larger & lower →
- *          38.86–39.95 push in to the rose jar z2.15 + RACK FOCUS (neighbours blur 0→7 px) → 40.12–41.5
- *          pull back & tilt up z2.2→0.5: the far plane, the sky and the originals are revealed → 41.5–43.07 wide
- *          hold with lateral drift → 43.07–44.45 push to a medium shot z0.82 (filaments, prisms) →
- *          46.0–47.7 continuous tilt up 1400 + zoom →1.3 through soft cloud banks into a radiant sky.
+ *          38.86–39.95 push in to the rose jar z2.55 + RACK FOCUS (neighbours blur 0→10 px) → 40.12–41.05
+ *          pull back & tilt up z2.62→0.5: the far plane, the sky and the originals are revealed (settled above
+ *          the band before the gloss) → 41.05–43.07 wide hold with lateral drift → 43.07–44.45 push to a medium
+ *          shot z0.82 (filaments, prisms) → 46.0–47.7 continuous tilt up 1750 (zoom →1.3 from 46.3) through
+ *          soft cloud banks that swallow the rooftops, into a radiant sky.
  *          Handheld drift (x 6·sin .37t + 3·sin .71t, y 4·sin .29t…, roll .18°) is always on.
  *  BEATS   37.60 lattice rush · ghosts (G's six + rose/carnation/cherries) fly to their shelves
  *          38.36+0.07·rank ghost fills in bottom→top, glass dome set down + bounce, tag swings · 38.84 spec
@@ -46,10 +47,10 @@
 
   /* ---------------- camera (log-zoom keyframes) ---------------- */
   const KZ = [[37.6, 1.04], [37.88, 1.0, 'outCubic'], [38.86, 1.08, 'inOutSine'], [39.95, 2.55, 'inOutCubic'], [40.12, 2.62, 'linear'],
-    [41.5, 0.5, 'inOutCubic'], [43.07, 0.52, 'linear'], [44.45, 0.82, 'inOutCubic'], [45.95, 0.845, 'linear']];
+    [41.05, 0.5, 'inOutCubic'], [43.07, 0.525, 'linear'], [44.45, 0.82, 'inOutCubic'], [45.95, 0.845, 'linear']];
   const KY = [[37.6, 960], [37.88, 960], [38.86, 905, 'inOutSine'], [39.95, 868, 'inOutCubic'], [40.12, 866, 'linear'],
-    [41.5, 652, 'inOutCubic'], [43.07, 656, 'linear'], [44.45, 830, 'inOutCubic'], [45.95, 832, 'linear']];
-  const KX = [[37.6, 540], [41.5, 540], [43.07, 560, 'inOutSine'], [44.45, 540, 'inOutSine']];
+    [41.05, 652, 'inOutCubic'], [43.07, 658, 'linear'], [44.45, 830, 'inOutCubic'], [45.95, 832, 'linear']];
+  const KX = [[37.6, 540], [41.05, 540], [43.07, 562, 'inOutSine'], [44.45, 540, 'inOutSine']];
   function key(K, t, log) {
     if (t <= K[0][0]) return K[0][1];
     for (let i = 1; i < K.length; i++) if (t <= K[i][0]) {
@@ -66,7 +67,7 @@
     const x = key(KX, t) + 6 * Math.sin(0.37 * t) + 3 * Math.sin(0.71 * t + 2);
     return { x, y, zoom: z, rot: (0.18 * PI / 180) * Math.sin(0.21 * t), tilt };
   }
-  const focusBlur = (t) => 7 * pp(t, 39.05, 39.75, 'inOutSine') * (1 - pp(t, 40.12, 40.42, 'inOutSine'));
+  const focusBlur = (t) => 10 * pp(t, 39.05, 39.75, 'inOutSine') * (1 - pp(t, 40.12, 40.42, 'inOutSine'));
   const tiltBlur = (t) => 4 * Math.pow(Math.sin(PI * clamp((t - 46.3) / 0.95)), 2);
   const lp = (cam, p) => ({ cx: 540 + (cam.x - 540) * p, cy: 960 + (cam.y - 960) * p, z: 1 + (cam.zoom - 1) * p, r: cam.rot * p });
   function scr(L, x, y) {
@@ -208,6 +209,8 @@
       x.fillStyle = '#24141C'; x.fillRect(-405, -40, 42, 90); x.fillStyle = '#3E2836'; x.fillRect(-412, -48, 56, 12);
       x.fillStyle = E.lin(x, -560, 0, -70, 0, [[0, '#2A1810'], [0.5, '#3A2218'], [1, '#22140C']]); x.fillRect(-560, 330, 490, 820);
       x.fillStyle = 'rgba(10,4,4,0.55)'; for (let px = -560; px < -70; px += 24) x.fillRect(px, 330, 2, 820);
+      for (let px = -536; px < -70; px += 48) { x.fillStyle = E.lin(x, 0, 330, 0, 1150, [[0, '#FFB070', 0.05], [0.5, '#FFB070', 0.22], [1, '#FFB070', 0.06]]); x.fillRect(px, 330, 2, 820); }
+      x.fillStyle = E.rad(x, -315, 1150, 0, 300, [[0, '#FFA060', 0.16], [1, '#FFA060', 0]]); x.fillRect(-615, 850, 600, 300);
       x.fillStyle = '#1A100C'; for (const y of [440, 760, 1060]) x.fillRect(-560, y, 490, 9);
       x.fillStyle = 'rgba(201,154,74,0.5)'; for (const y of [440, 760, 1060]) for (let px = -548; px < -70; px += 48) { x.beginPath(); x.arc(px, y + 4.5, 2.2, 0, TAU); x.fill(); }
       x.fillStyle = '#4A2E1E'; x.fillRect(-575, 308, 520, 24); x.fillStyle = 'rgba(201,154,74,0.55)'; x.fillRect(-575, 328, 520, 2);
@@ -302,18 +305,48 @@
 
   /* foreground walnut counter (screen units, pre-blurred) with lantern & window reflections */
   function buildCounter() {
-    const w = 1320, h = 560, b = E.canvas(w, h), x = b.x;
-    x.fillStyle = E.lin(x, 0, 0, 0, 74, [[0, '#4A2A1C'], [0.5, '#3A2016'], [1, '#2A140C']]); x.fillRect(0, 0, w, 74);
+    const w = 1320, h = 600, b = E.canvas(w, h), x = b.x, top = 120;
+    // polished walnut top reflecting the lit shop and the lanterns
+    x.fillStyle = E.lin(x, 0, top, 0, top + 80, [[0, '#5A3424'], [0.45, '#3E2216'], [1, '#2A140C']]); x.fillRect(0, top, w, 80);
     x.globalCompositeOperation = 'lighter';
-    x.save(); x.translate(660, 26); x.scale(1, 0.09); x.fillStyle = E.rad(x, 0, 0, 0, 560, [[0, '#FFB070', 0.32], [1, '#FFB070', 0]]); x.fillRect(-560, -560, 1120, 1120); x.restore();
-    for (const sx of [482, 650, 818]) { x.save(); x.translate(sx, 34); x.scale(0.18, 1); x.fillStyle = E.rad(x, 0, 0, 0, 60, [[0, '#FFD09A', 0.45], [1, '#FFD09A', 0]]); x.fillRect(-60, -60, 120, 120); x.restore(); }
+    x.save(); x.translate(660, top + 30); x.scale(1, 0.1); x.fillStyle = E.rad(x, 0, 0, 0, 520, [[0, '#FFB070', 0.42], [0.5, '#E07858', 0.16], [1, '#E07858', 0]]); x.fillRect(-520, -520, 1040, 1040); x.restore();
+    for (const sx of [482, 650, 818]) { x.save(); x.translate(sx, top + 38); x.scale(0.16, 1); x.fillStyle = E.rad(x, 0, 0, 0, 70, [[0, '#FFD09A', 0.55], [1, '#FFD09A', 0]]); x.fillRect(-70, -70, 140, 140); x.restore(); }
     x.globalCompositeOperation = 'source-over';
-    x.fillStyle = 'rgba(255,214,170,0.45)'; x.fillRect(0, 70, w, 2.5);
-    x.fillStyle = E.lin(x, 0, 74, 0, h, [[0, '#2A160E'], [0.4, '#1E0E08'], [1, '#100604']]); x.fillRect(0, 74, w, h - 74);
-    x.fillStyle = BRASS(x, 0, w, 0.8); x.fillRect(0, 84, w, 4);
-    for (let px = 40; px < w; px += 230) { x.strokeStyle = 'rgba(255,200,150,0.12)'; x.lineWidth = 3; x.strokeRect(px, 120, 190, 300); x.strokeStyle = 'rgba(0,0,0,0.35)'; x.strokeRect(px + 4, 124, 190, 300); }
-    const o = E.canvas(w, h); o.x.filter = 'blur(6px)'; o.x.drawImage(b.c, 0, 0);
-    SP.counter = o.c;
+    x.fillStyle = 'rgba(255,214,170,0.5)'; x.fillRect(0, top + 76, w, 2.5);
+    // front face: carved panels
+    x.fillStyle = E.lin(x, 0, top + 80, 0, h, [[0, '#3A2014'], [0.35, '#2A160E'], [1, '#120806']]); x.fillRect(0, top + 80, w, h - top - 80);
+    x.fillStyle = BRASS(x, 0, w, 0.85); x.fillRect(0, top + 90, w, 4);
+    for (let px = 30; px < w; px += 210) {
+      x.fillStyle = E.lin(x, 0, top + 120, 0, top + 420, [[0, '#4A2A1A'], [1, '#22100A']]); x.fillRect(px, top + 120, 180, 300);
+      x.strokeStyle = 'rgba(255,200,150,0.18)'; x.lineWidth = 3; x.strokeRect(px, top + 120, 180, 300);
+      x.save(); x.translate(px + 90, top + 270); x.fillStyle = 'rgba(201,154,74,0.55)'; x.fill(S.starPath(14, 8, 0.6, PI / 8)); x.restore();
+    }
+    // a brass tray with two tulip-shaped tea glasses (left) and a brass ibrik (right)
+    const tray = (cx, cy) => {
+      x.fillStyle = BRASS(x, cx - 120, cx + 120); x.beginPath(); x.ellipse(cx, cy, 120, 22, 0, 0, TAU); x.fill();
+      x.fillStyle = 'rgba(40,20,8,0.45)'; x.beginPath(); x.ellipse(cx, cy - 2, 104, 16, 0, 0, TAU); x.fill();
+      for (const gx of [cx - 42, cx + 38]) {
+        const g = new Path2D(); g.moveTo(gx - 22, cy - 112); g.bezierCurveTo(gx - 24, cy - 70, gx - 8, cy - 64, gx - 10, cy - 40); g.bezierCurveTo(gx - 16, cy - 20, gx - 20, cy - 12, gx - 18, cy - 4);
+        g.lineTo(gx + 18, cy - 4); g.bezierCurveTo(gx + 20, cy - 12, gx + 16, cy - 20, gx + 10, cy - 40); g.bezierCurveTo(gx + 8, cy - 64, gx + 24, cy - 70, gx + 22, cy - 112); g.closePath();
+        x.fillStyle = E.lin(x, 0, cy - 100, 0, cy, [[0, '#E08A3A'], [0.5, '#B0461C'], [1, '#6A2410']]); x.fill(g);
+        x.fillStyle = 'rgba(255,240,220,0.25)'; x.fillRect(gx - 22, cy - 112, 44, 10);
+        x.fillStyle = 'rgba(255,230,190,0.55)'; x.fillRect(gx - 14, cy - 96, 4, 48);
+        x.fillStyle = BRASS(x, gx - 24, gx + 24); x.beginPath(); x.ellipse(gx, cy - 4, 24, 6, 0, 0, TAU); x.fill();
+      }
+    };
+    tray(220, top + 50);
+    const ib = (cx, cy) => {
+      const p = new Path2D(); p.moveTo(cx - 16, cy - 150); p.bezierCurveTo(cx - 20, cy - 110, cx - 60, cy - 90, cx - 60, cy - 40); p.bezierCurveTo(cx - 60, cy - 8, cx - 30, cy, cx, cy);
+      p.bezierCurveTo(cx + 30, cy, cx + 60, cy - 8, cx + 60, cy - 40); p.bezierCurveTo(cx + 60, cy - 90, cx + 20, cy - 110, cx + 16, cy - 150); p.closePath();
+      x.fillStyle = BRASS(x, cx - 60, cx + 60); x.fill(p);
+      x.strokeStyle = BRASS(x, cx - 60, cx + 120); x.lineWidth = 9; x.lineCap = 'round';
+      x.beginPath(); x.moveTo(cx + 52, cy - 60); x.quadraticCurveTo(cx + 110, cy - 90, cx + 120, cy - 150); x.stroke();
+      x.beginPath(); x.moveTo(cx - 50, cy - 40); x.quadraticCurveTo(cx - 100, cy - 70, cx - 40, cy - 120); x.stroke();
+      x.fillStyle = BRASS(x, cx - 24, cx + 24); x.beginPath(); x.ellipse(cx, cy - 152, 24, 8, 0, 0, TAU); x.fill();
+    };
+    ib(1100, top + 56);
+    const o = E.canvas(w, h); o.x.filter = 'blur(7px)'; o.x.drawImage(b.c, 0, 0);
+    SP.counter = { c: o.c, top };
   }
 
   /* soft dusk cloud banks with warm rim light (pre-blurred, half res) */
@@ -836,7 +869,7 @@
       const st = T_FIL + 0.05 * f.k, dr = E.ease.outCubic(clamp((t - st) / 0.42));
       if (dr <= 0) continue;
       const G = filPts(f, t, L3, cam);
-      const inA = lerp(0.72, 1, focus) * fade * (1 - 0.6 * pp(t, 45.4, 45.95, 'inOutSine'));
+      const inA = lerp(0.72, 1, focus) * fade * (1 - 0.82 * pp(t, 45.4, 45.95, 'inOutSine'));
       A.filament(ctx, G.pts, { t: t + f.k * 0.3, draw: dr, w: lerp(2.5, 1.5, focus) * Math.min(1, 0.6 + L3.z * 0.5), halo: lerp(9, 7, focus), col: '#FFE3A3', flow: 70, alpha: inA, head: dr < 1 });
       if (t > f.ta && t < f.ta + 0.6) A.sparks(ctx, t, { x: G.Hs[0], y: G.Hs[1], t0: f.ta, n: 10, seed: 50 + f.k, col: '#FFE3A3', speed: 170, life: 0.5, gravity: 140, size: 1.5 });
       if (t > f.ta - 0.05 && t < f.ta + 0.35) S.sparkle(ctx, G.Hs[0], G.Hs[1], 13 * E.env(t, f.ta - 0.05, f.ta + 0.35, 0.05, 0.3), 1, '#FFF6E0', t * 2);
@@ -939,7 +972,7 @@
     const top = 1600 + 380 * sm((cam.zoom - 0.52) / 0.9) + 2200 * cam.tilt;
     if (top >= H) return;
     const x = -120 + (540 - cam.x) * 0.6;
-    ctx.drawImage(SP.counter, x, top);
+    ctx.drawImage(SP.counter.c, x, top - SP.counter.top);
   }
   function drawLatticeFG(ctx, t) {
     if (t > 38.05) return;
