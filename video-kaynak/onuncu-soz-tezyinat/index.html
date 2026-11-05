@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Onuncu Söz · Tezyinat</title>
+<link rel="stylesheet" href="fonts/fonts.local.css">
+<style>html,body{margin:0;padding:0;background:#000;overflow:hidden}canvas{display:block;width:1080px;height:1920px}</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="engine/timing.js"></script>
+<script src="engine/core.js"></script>
+<script src="engine/shapes.js"></script>
+<script src="engine/assets_flora.js"></script>
+<script src="engine/assets_objects.js"></script>
+<!-- Sahneler: her dosya kendi zaman penceresini E.scene(...) ile kaydeder -->
+<script src="scenes/A_kitap_giris.js"></script>
+<script src="scenes/B_bahce.js"></script>
+<script src="scenes/C_gul_firak.js"></script>
+<script src="scenes/D_tatma.js"></script>
+<script src="scenes/E_omur.js"></script>
+<script src="scenes/F_kiymet.js"></script>
+<script src="scenes/G_hasiye.js"></script>
+<script src="scenes/H_numune.js"></script>
+<script src="scenes/I_cennet.js"></script>
+<script src="scenes/J_gayeler.js"></script>
+<script src="scenes/K_kitap_kapanis.js"></script>
+<script src="scenes/gecisler.js"></script>
+<script>E.init().catch(e => { console.error(e); window.INIT_ERROR = String(e && e.stack || e); });</script>
+</body>
+</html>
