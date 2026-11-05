@@ -1155,6 +1155,12 @@ def render_setup(S, samples):
     r.motion_blur_shutter = 0.5
     r.image_settings.file_format = 'PNG'; r.image_settings.color_mode = 'RGB'; r.image_settings.color_depth = '8'
     r.film_transparent = False
+    BORDER = arg('--border', None)   # "x0,y0,x1,y1" piksel (1080x1920, ust-sol orijin) - test icin bolge render
+    if BORDER:
+        x0, y0, x1, y1 = [float(v) for v in BORDER.split(',')]
+        r.use_border = True; r.use_crop_to_border = True
+        r.border_min_x, r.border_max_x = x0 / 1080, x1 / 1080
+        r.border_min_y, r.border_max_y = 1 - y1 / 1920, 1 - y0 / 1920
     vs = sc.view_settings
     vs.view_transform = 'AgX'
     try:
