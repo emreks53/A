@@ -359,7 +359,7 @@
   let glossBuf = null, lumBuf = null;
   /** alt yazı bandının ortalama parlaklığı (0..1): parlak zeminde yazı koyu kahveye döner */
   function bandLuma(ctx) {
-    if (!lumBuf) lumBuf = E.canvas(48, 16);
+    if (!lumBuf) { const c = document.createElement('canvas'); c.width = 48; c.height = 16; lumBuf = { c, x: c.getContext('2d', { willReadFrequently: true }) }; }
     const x = lumBuf.x; x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'copy'; x.filter = 'none'; x.globalAlpha = 1;
     x.drawImage(ctx.canvas, 140, G.y - 120, 800, 200, 0, 0, 48, 16);
     const d = x.getImageData(0, 0, 48, 16).data; let s = 0;
