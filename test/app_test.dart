@@ -159,7 +159,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Ekran kapanmaz'), findsOneWidget);
-    expect(find.text('Bildirim gizleme (iPhone)'), findsOneWidget);
+    expect(find.text('Bildirim gizleme (iPhone ve iPad)'), findsOneWidget);
     expect(find.byKey(const Key('odak-anahtari')), findsNothing);
   });
 
@@ -419,6 +419,36 @@ void main() {
     expect(find.text('Toplanan veriler'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Sorularınız için: lugatirisaleinur@gmail.com'), 200);
     expect(find.text('Sorularınız için: lugatirisaleinur@gmail.com'), findsOneWidget);
+  });
+
+  test('iPhone/iPad gizlilik metninde başka platform adı geçmez (App Store 2.3.10)', () {
+    final apple = PrivacyPage.sectionsFor(isAndroid: false).map((s) => '${s.$1} ${s.$2}').join('\n');
+    for (final word in ['Android', 'Google', 'Play', 'Rahatsız Etmeyin']) {
+      expect(apple, isNot(contains(word)), reason: word);
+    }
+    expect(apple, contains('Toplanan veriler'));
+    expect(apple, contains('Sorularınız için: ${PrivacyPage.contactEmail}'));
+
+    final android = PrivacyPage.sectionsFor(isAndroid: true).map((s) => s.$2).join('\n');
+    expect(android, contains('Rahatsız Etmeyin erişimi (isteğe bağlı, Android)'));
+  });
+
+  testWidgets('iPhone/iPad arayüzünde Android geçmez, odak simgesi çizili değil', (tester) async {
+    await startApp(tester);
+    expect(find.byIcon(Icons.do_not_disturb_off_outlined), findsNothing);
+    expect(find.byIcon(Icons.do_not_disturb_on_outlined), findsOneWidget);
+    expect(find.textContaining('Android'), findsNothing);
+
+    await tester.tap(find.byTooltip('Ayarlar'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Gizlilik politikası'), 200);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Android'), findsNothing);
+    await tester.tap(find.text('Gizlilik politikası'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Sorularınız için: lugatirisaleinur@gmail.com'), 200);
+    expect(find.textContaining('Android'), findsNothing);
+    expect(find.textContaining('Google'), findsNothing);
   });
 
   testWidgets('büyük yazıda arama çubuğu düğmeleri sıkışmaz', (tester) async {

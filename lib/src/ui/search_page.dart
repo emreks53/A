@@ -307,7 +307,7 @@ class _SearchPageState extends State<SearchPage> {
             : null)
         : (!controller.iosFocusTipDismissed
             ? _Notice(
-                text: 'iPhone’da okurken bildirimleri susturmak için bir kereye mahsus '
+                text: 'iPhone ve iPad’de okurken bildirimleri susturmak için bir kereye mahsus '
                     'kısa bir Kestirmeler kurulumu gerekiyor.',
                 dismissLabel: 'Tamam',
                 onDismiss: controller.dismissIosFocusTip,
@@ -410,7 +410,9 @@ class _FocusIndicator extends StatelessWidget {
     const active = Palette.goldLight;
     final (IconData icon, Color? color, String tip) = !status.supported
         ? (
-            Icons.do_not_disturb_off_outlined,
+            // iPhone/iPad'de odak modu Kestirmeler'le kurulur; çizili simge
+            // bozuk bir özellik gibi görünmesin.
+            isAndroid ? Icons.do_not_disturb_off_outlined : Icons.do_not_disturb_on_outlined,
             null,
             isAndroid ? 'Bu telefonda bildirimler uygulamadan gizlenemiyor' : 'Odak modu kurulumu',
           )

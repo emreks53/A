@@ -34,7 +34,7 @@ class SettingsPage extends StatelessWidget {
                   const ListTile(
                     leading: Icon(Icons.light_mode_outlined),
                     title: Text('Ekran kapanmaz'),
-                    subtitle: Text('Uygulama açıkken telefon kendiliğinden uyku moduna geçmez.'),
+                    subtitle: Text('Uygulama açıkken telefon ya da tablet kendiliğinden uyku moduna geçmez.'),
                   ),
                   if (controller.isAndroid)
                     ..._androidFocus(context, controller)
@@ -107,7 +107,7 @@ class SettingsPage extends StatelessWidget {
               '\n\nManaların neredeyse tamamı RNK Neşriyat’ın Risale-i Nur lügatından (rnk.tr) '
               'alınmıştır. O lügatta bulunmayan az sayıdaki kelimenin manası ayrıca hazırlanmıştır.'
               '\n\nUygulama internet kullanmaz ve hiçbir kişisel veri toplamaz; son bakılanlar ve '
-              'kaydedilenler telefonunuzda saklanır, geliştiriciye ya da üçüncü taraflara gönderilmez.',
+              'kaydedilenler cihazınızda saklanır, geliştiriciye ya da üçüncü taraflara gönderilmez.',
               style: theme.textTheme.bodyMedium,
             ),
           ),
@@ -227,7 +227,7 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-/// iPhone'da uygulamalar "Rahatsız Etme"yi kendileri açamaz. Bunun yerine
+/// iPhone ve iPad'de uygulamalar "Rahatsız Etme"yi kendileri açamaz. Bunun yerine
 /// Kestirmeler uygulamasıyla, Lügat açılınca odak modunu açan ve kapanınca
 /// kapatan bir otomasyon kurulabilir.
 class _IosFocusHelp extends StatelessWidget {
@@ -251,8 +251,8 @@ class _IosFocusHelp extends StatelessWidget {
     return ExpansionTile(
       initiallyExpanded: initiallyExpanded,
       leading: const Icon(Icons.do_not_disturb_on_outlined),
-      title: const Text('Bildirim gizleme (iPhone)'),
-      subtitle: const Text('iPhone’da uygulamalar “Rahatsız Etme”yi kendi başlarına açamaz. '
+      title: const Text('Bildirim gizleme (iPhone ve iPad)'),
+      subtitle: const Text('iPhone ve iPad’de uygulamalar “Rahatsız Etme”yi kendi başlarına açamaz. '
           'Bir kereye mahsus kuracağınız bir otomasyonla aynı sonucu alabilirsiniz.'),
       childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       expandedCrossAxisAlignment: CrossAxisAlignment.start,

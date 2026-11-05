@@ -194,7 +194,11 @@ tool/ikon_uret.py, tool/ikon/      uygulama simgeleri ve açılış görselleri 
   etmez.
 - **Gizlilik politikası:** `store/gizlilik-politikasi.md` metnini herkese açık bir web sayfasında
   yayımlayın (iletişim: lugatirisaleinur@gmail.com). Uygulama içindeki metin
-  (`lib/src/ui/privacy_page.dart`) bununla aynı tutulmalıdır.
+  (`lib/src/ui/privacy_page.dart`) Android'de bununla aynı tutulmalıdır; iPhone/iPad'de yalnızca
+  Android'e özgü cümleler çıkarılmış hâli gösterilir (App Store kuralı 2.3.10).
+- **iOS gizlilik bildirimi:** `ios/Runner/PrivacyInfo.xcprivacy` takip ve veri toplama olmadığını,
+  UserDefaults (CA92.1) ve dosya zaman damgası (C617.1, wakelock_plus'ın getirdiği
+  package_info_plus için) kullanımını beyan eder. Yeni bir eklenti eklenirse gözden geçirin.
 - **Telif izni:** RNK Neşriyat'ın yazılı izni alınmadan yayımlamayın (yukarıya bakın).
 - **App Store:** metinler ve ekran görüntüleri `store/app-store/` klasöründe.
 - **Destek ve gizlilik sayfaları:** Google Drive'da herkese açık iki belge olarak yayımlandı:
@@ -203,8 +207,26 @@ tool/ikon_uret.py, tool/ikon/      uygulama simgeleri ve açılış görselleri 
   Gizlilik metni değişirse `store/gizlilik-politikasi.md`, Drive'daki belge, `docs/gizlilik.html`
   ve `lib/src/ui/privacy_page.dart` birlikte güncellenmeli.
 - **Codemagic (Mac olmadan iPhone derlemesi):** `codemagic.yaml` iki iş içerir: `ios-app-store`
-  (derleyip TestFlight'a yükler) ve `android-play` (imzalı AAB). Dosyanın başındaki bir kereye
-  mahsus adımları Codemagic arayüzünde yapın (App Store Connect API anahtarı, dağıtım sertifikası,
-  Android anahtar dosyası, `APP_STORE_APPLE_ID`).
-- iPhone sürümü bu ortamda derlenemedi (macOS/Xcode gerekir); Xcode'da imzalama ekibini
-  seçip bir kez derleyip denemek gerekir.
+  (derleyip TestFlight'a yükler) ve `android-play` (imzalı AAB). İkisi de kişisel hesaptaki
+  ücretsiz macOS M2 makinesinde çalışır (ayda 500 dakika; Team hesabında ücretsiz dakika yoktur).
+  Bir kereye mahsus hazırlık (dosyanın başında da yazılı):
+  1. Apple Developer: Identifiers'ta `com.lugatirisaleinur` App ID'sini kaydedin; App Store
+     Connect'te bu paket kimliğiyle uygulama kaydını oluşturun; Kullanıcılar ve Erişim >
+     Entegrasyonlar > App Store Connect API'de **App Manager** yetkili bir ekip anahtarı
+     oluşturup `.p8` dosyasını indirin (bir kez indirilebilir), Issuer ID ve Key ID'yi not edin.
+  2. Codemagic (Personal Account > Settings): Integrations > Developer Portal'a anahtarı tam
+     olarak `lugat_asc` adıyla ekleyin. Code signing identities > iOS certificates > Generate
+     certificate (Apple Distribution); çıkan `.p12` ve şifresi yalnızca bir kez gösterilir:
+     indirip saklayın, sonra aynı sekmeden şifresiyle geri yükleyin.
+  3. developer.apple.com > Profiles'ta bu sertifikayla bir **App Store Connect** dağıtım profili
+     oluşturun; Codemagic > iOS provisioning profiles > Fetch profiles ile içeri alın. Codemagic
+     profili kendisi oluşturmaz.
+  4. Android için Android keystores'a `lugat-upload-keystore.jks` dosyasını takma ad `upload`,
+     referans adı `lugat_upload` ile yükleyin.
+
+  Derlemeyi "Start new build"de `claude/lugat-risale-nur-uygulamasi` dalını seçerek başlatın
+  (`main` dalı başka bir projedir). iOS yapı numarası App Store Connect'teki son yapıdan
+  kendiliğinden bir fazla verilir; uygulamanın kimliği paket kimliğinden bulunur, elle numara
+  girmek gerekmez. Yapı TestFlight'ta iç testçilere (kendi Apple hesabınız) incelemesiz açılır.
+- iPhone sürümü bu ortamda derlenemez (macOS/Xcode gerekir); ilk derleme Codemagic'te yapılıp
+  TestFlight'ta gerçek iPhone ve iPad'de denenmeli.

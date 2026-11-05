@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'app.dart';
 import 'widgets.dart';
 
-/// Gizlilik politikası. Metin, mağazada yayımlanan store/gizlilik-politikasi.md
-/// ile aynıdır; biri değişirse öteki de güncellenmeli.
+/// Gizlilik politikası. Android'deki metin, mağazada yayımlanan
+/// store/gizlilik-politikasi.md ile aynıdır; biri değişirse öteki de
+/// güncellenmeli. iPhone/iPad'de yalnızca Android'e özgü cümleler çıkarılır
+/// (App Store başka bir platformun adının geçmesini istemiyor).
 class PrivacyPage extends StatelessWidget {
   const PrivacyPage({super.key});
 
@@ -11,19 +14,12 @@ class PrivacyPage extends StatelessWidget {
   static const developerName = 'Lügat-ı Risale-i Nur';
   static const contactEmail = 'lugatirisaleinur@gmail.com';
 
-  static const sections = <(String, String)>[
-    (
-      '',
-      'Lügat-ı Risale-i Nur, Risale-i Nur okurken karşılaşılan Osmanlıca kelimelerin manasını '
-          'göstermek için hazırlanmış bir lügat uygulamasıdır.\n\n'
-          'Geliştirici: $developerName',
-    ),
-    (
-      'Toplanan veriler',
-      'Uygulama hiçbir kişisel veri toplamaz, bir sunucuya göndermez ve üçüncü taraflarla '
-          'paylaşmaz. Uygulama internet bağlantısı kullanmaz; reklam, analiz ya da hata raporlama '
-          'hizmeti içermez.',
-    ),
+  /// Platforma göre bölümler: (başlık, metin).
+  static List<(String, String)> sectionsFor({required bool isAndroid}) => isAndroid ? _android : _apple;
+
+  static const _android = <(String, String)>[
+    _tanitim,
+    _toplananVeriler,
     (
       'Cihazda saklanan bilgiler',
       'Son bakılan kelimeler, kaydedilen kelimeler ve tema, yazı boyutu, odak modu gibi ayarlar '
@@ -45,17 +41,61 @@ class PrivacyPage extends StatelessWidget {
           'gönderilmez.\n\n'
           'Ekranı açık tutma: Uygulama açıkken ekranın kendiliğinden kapanmaması içindir.',
     ),
-    (
-      'Çocuklar',
-      'Uygulama çocuklardan bilerek veri toplamaz; zaten hiçbir kullanıcıdan veri toplamaz.',
-    ),
-    ('Değişiklikler', 'Bu politika değişirse güncel metin aynı adreste ve uygulamanın yeni sürümünde yayımlanır.'),
-    ('İletişim', 'Sorularınız için: $contactEmail'),
+    _cocuklar,
+    _degisiklikler,
+    _iletisim,
   ];
+
+  static const _apple = <(String, String)>[
+    _tanitim,
+    _toplananVeriler,
+    (
+      'Cihazda saklanan bilgiler',
+      'Son bakılan kelimeler, kaydedilen kelimeler ve tema, yazı boyutu gibi ayarlar yalnızca '
+          'kullanıcının kendi cihazında, uygulamanın kendi alanında tutulur; geliştiriciye ya da '
+          'üçüncü taraflara gönderilmez. (Cihazın iCloud yedeklemesi açıksa bu yedeğe dahil '
+          'olabilir.) Bu bilgiler, kullanıcı silene ya da uygulama kaldırılana kadar tutulur.\n\n'
+          'Son bakılanlar uygulamanın Ayarlar ekranından, kaydedilen kelimeler Kaydedilenler '
+          'ekranından silinebilir. Bütün bu bilgiler uygulama kaldırıldığında cihazdan silinir. '
+          'iCloud yedeklemesi açıksa yedekteki kopya, iCloud yedekleme ayarlarından silinene kadar '
+          'kalabilir ve uygulama yeniden yüklendiğinde geri gelebilir.',
+    ),
+    (
+      'İzinler',
+      'Uygulama hiçbir özel izin istemez.\n\n'
+          'Ekranı açık tutma: Uygulama açıkken ekranın kendiliğinden kapanmaması içindir.',
+    ),
+    _cocuklar,
+    _degisiklikler,
+    _iletisim,
+  ];
+
+  static const _tanitim = (
+    '',
+    'Lügat-ı Risale-i Nur, Risale-i Nur okurken karşılaşılan Osmanlıca kelimelerin manasını '
+        'göstermek için hazırlanmış bir lügat uygulamasıdır.\n\n'
+        'Geliştirici: $developerName',
+  );
+  static const _toplananVeriler = (
+    'Toplanan veriler',
+    'Uygulama hiçbir kişisel veri toplamaz, bir sunucuya göndermez ve üçüncü taraflarla '
+        'paylaşmaz. Uygulama internet bağlantısı kullanmaz; reklam, analiz ya da hata raporlama '
+        'hizmeti içermez.',
+  );
+  static const _cocuklar = (
+    'Çocuklar',
+    'Uygulama çocuklardan bilerek veri toplamaz; zaten hiçbir kullanıcıdan veri toplamaz.',
+  );
+  static const _degisiklikler = (
+    'Değişiklikler',
+    'Bu politika değişirse güncel metin aynı adreste ve uygulamanın yeni sürümünde yayımlanır.',
+  );
+  static const _iletisim = ('İletişim', 'Sorularınız için: $contactEmail');
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final sections = sectionsFor(isAndroid: AppScope.of(context).isAndroid);
     return Scaffold(
       appBar: AppBar(title: const Text('Gizlilik politikası')),
       body: SelectionArea(

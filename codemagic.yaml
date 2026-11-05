@@ -1,32 +1,44 @@
-# Codemagic (codemagic.io) — Mac'e gerek kalmadan iPhone sürümünü derleyip App Store
+# Codemagic (codemagic.io) — Mac'e gerek kalmadan iPhone/iPad sürümünü derleyip App Store
 # Connect'e (TestFlight) yükler; Android sürümünü de imzalı AAB olarak derler.
 #
-# Bir kereye mahsus Codemagic arayüzünde yapılacaklar (README "Codemagic" bölümüne bakın):
-#   1. Teams > Integrations > Developer Portal: App Store Connect API anahtarını
-#      "lugat_asc" adıyla ekleyin.
-#   2. Code signing identities > iOS certificates: "Generate certificate" (Apple Distribution).
-#      Profilleri Codemagic, aşağıdaki ios_signing ayarıyla kendisi alır/oluşturur.
-#   3. Code signing identities > Android keystores: lugat-upload-keystore.jks dosyasını
-#      "lugat_upload" referans adıyla, şifresi ve "upload" takma adıyla yükleyin.
-#   4. APP_STORE_APPLE_ID değişkenine App Store Connect'teki uygulamanın "Apple ID"
-#      numarasını yazın (App Information sayfasında).
+# Ücretsiz kullanım: yalnızca "Personal Account" (kişisel hesap) altında, ayda 500 dakika
+# macOS M2 makinesi. Team (ekip) oluşturmayın; ekipte ücretsiz dakika yoktur.
+#
+# Bir kereye mahsus hazırlık (ayrıntılar README "Codemagic" bölümünde):
+#   Apple tarafı (tarayıcıdan):
+#     a. developer.apple.com > Identifiers > (+) > App ID: com.lugatirisaleinur
+#     b. App Store Connect > Uygulamalar > (+) Yeni Uygulama (paket kimliği com.lugatirisaleinur)
+#     c. App Store Connect > Kullanıcılar ve Erişim > Entegrasyonlar > App Store Connect API >
+#        Ekip Anahtarı (App Manager); .p8 dosyasını indirin, Issuer ID ve Key ID'yi not edin.
+#   Codemagic tarafı (Personal Account > Settings):
+#     1. Integrations > Developer Portal: API anahtarını tam olarak "lugat_asc" adıyla ekleyin.
+#     2. codemagic.yaml settings > Code signing identities > iOS certificates >
+#        Generate certificate (Apple Distribution). Çıkan .p12'yi ve şifresini HEMEN indirip
+#        saklayın, sonra aynı .p12'yi aynı sekmeden şifresiyle geri yükleyin.
+#     3. developer.apple.com > Profiles > (+) > App Store Connect > com.lugatirisaleinur >
+#        2. adımdaki sertifika. Sonra Codemagic > iOS provisioning profiles > Fetch profiles ile
+#        bu profili içeri alın. (Codemagic profili kendisi oluşturmaz; yalnızca hazır olanı alır.)
+#     4. (Android için) Android keystores: lugat-upload-keystore.jks, takma ad "upload",
+#        referans adı "lugat_upload".
+#   Derleme: Start new build > dal: claude/lugat-risale-nur-uygulamasi > iş akışı seçin.
+#   (main dalı başka bir projedir; bu dosya yalnızca bu dalda vardır.)
 
 workflows:
   ios-app-store:
     name: iOS — App Store Connect (TestFlight)
-    instance_type: mac_mini_m2
+    instance_type: mac_mini_m2 # kişisel hesapta ücretsiz olan tek makine
     max_build_duration: 60
     integrations:
       app_store_connect: lugat_asc
     environment:
-      flutter: stable
-      xcode: latest # Apple 28 Nisan 2026'dan beri Xcode 26 ve iOS 26 SDK istiyor
-      cocoapods: default
+      flutter: 3.47.9 # testlerin geçtiği sürüm; kendiliğinden değişmesin
+      # Apple 28 Nisan 2026'dan beri Xcode 26 / iOS 26 SDK istiyor (Nisan 2027'den
+      # itibaren iOS 27 SDK). 26.6, Codemagic'in varsayılan ve denenmiş sürümü.
+      xcode: "26.6"
+      cocoapods: default # proje Swift Package Manager kullanıyor; gerekirse yedek
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.lugatirisaleinur
-      vars:
-        APP_STORE_APPLE_ID: "0000000000" # App Store Connect > Uygulama > Apple ID
     scripts:
       - name: Paketler
         script: flutter pub get
@@ -36,24 +48,48 @@ workflows:
         script: xcode-project use-profiles
       - name: iOS derlemesi (.ipa)
         script: |
-          # Yapı numarası App Store Connect'teki son numaradan bir fazla olur.
-          BUILD_NUMBER=$(($(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" || echo 0) + 1))
-          flutter build ipa --release --build-number=$BUILD_NUMBER \
+          # Uygulamanın App Store Connect kimliği paket kimliğinden bulunur; elle
+          # numara girmeye gerek yok.
+          APP_ID=$(app-store-connect apps list \
+              --bundle-id-identifier com.lugatirisaleinur --strict-match-identifier --json \
+            | python3 -c 'import json,sys
+          try:
+              apps = json.load(sys.stdin)
+          except ValueError:
+              apps = []
+          print(apps[0]["id"] if apps else "")')
+          if [ -z "$APP_ID" ]; then
+            echo "App Store Connect'te com.lugatirisaleinur paket kimlikli uygulama bulunamadı."
+            echo "Önce App Store Connect'te uygulama kaydını oluşturun ve lugat_asc anahtarını kontrol edin."
+            exit 1
+          fi
+          # Yapı numarası: TestFlight ve App Store'daki en yüksek numaranın bir fazlası
+          # (hiç yapı yoksa 1).
+          LATEST=$(app-store-connect get-latest-build-number "$APP_ID") || {
+            echo "Son yapı numarası App Store Connect'ten alınamadı."
+            exit 1
+          }
+          NEXT_BUILD=$(( ${LATEST:-0} + 1 ))
+          echo "App Store Connect uygulama kimliği: $APP_ID — yapı numarası: $NEXT_BUILD"
+          flutter build ipa --release --build-number=$NEXT_BUILD \
             --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
+        # İç test (kendi iPhone/iPad'iniz) için TestFlight incelemesi gerekmez.
+        submit_to_testflight: false
         submit_to_app_store: false # incelemeye göndermeyi App Store Connect'te elle yapın
 
   android-play:
     name: Android — imzalı AAB
-    instance_type: linux_x2
+    # Linux makinelerinde ücretsiz dakika yok; kişisel hesapta ücretsiz olan M2'de derlenir.
+    instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
-      flutter: stable
+      flutter: 3.47.9
       android_signing:
         - lugat_upload
     scripts:
@@ -69,7 +105,11 @@ workflows:
           keyAlias=$CM_KEY_ALIAS
           keyPassword=$CM_KEY_PASSWORD
           EOF
+      - name: Bellek ayarı
+        # M2 makinesinde 8 GB bellek var; Gradle'a 8 GB ayırmak derlemeyi düşürebilir.
+        script: perl -pi -e 's/-Xmx8G/-Xmx4G/' android/gradle.properties
       - name: Android derlemesi (.aab)
+        # Sürüm kodu pubspec.yaml'daki +N'dir; her Play yüklemesinden önce artırın.
         script: flutter build appbundle --release
     artifacts:
       - build/app/outputs/bundle/release/*.aab
