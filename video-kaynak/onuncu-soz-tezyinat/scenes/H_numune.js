@@ -210,15 +210,25 @@
     SP.street = spriteWorld(-20, 1240, 1120, 800, 1.0, (x) => {
       x.fillStyle = E.lin(x, 0, 1240, 0, 2040, [[0, '#24151F'], [0.4, '#2A1A26'], [1, '#1A0E17']]); x.fillRect(-20, 1240, 1120, 800);
       x.fillStyle = '#3A2434'; x.fillRect(-20, 1248, 1120, 10); x.fillStyle = 'rgba(255,210,180,0.10)'; x.fillRect(-20, 1248, 1120, 2);
-      let y = 1262, row = 0;
+      x.fillStyle = '#170C14'; x.fillRect(-20, 1258, 1120, 790);
+      let y = 1260, row = 0;
       const rng = E.rng(4711);
       while (y < 2050) {
-        const rh = 13 + (y - 1262) * 0.045, sw = rh * 1.7;
-        for (let cx = -30 + (row % 2) * sw * 0.5; cx < 1120; cx += sw) {
-          const w = sw * (0.82 + rng() * 0.12), h = rh * (0.78 + rng() * 0.12), v = rng();
-          const base = v < 0.33 ? '#36202F' : v < 0.66 ? '#3E2537' : '#311C2B';
-          x.fillStyle = base; x.beginPath(); x.ellipse(cx + sw / 2, y + rh / 2, w / 2, h / 2, 0, 0, TAU); x.fill();
-          x.fillStyle = 'rgba(255,190,150,0.07)'; x.beginPath(); x.ellipse(cx + sw / 2 - w * 0.06, y + rh / 2 - h * 0.18, w * 0.36, h * 0.22, 0, 0, TAU); x.fill();
+        const rh = 11 + (y - 1260) * 0.052, gap = Math.max(1.5, rh * 0.13);
+        let cx = -30 - rng() * rh * 1.6;
+        while (cx < 1120) {
+          const w = rh * (1.25 + rng() * 1.1), h = rh - gap, yy = y + gap * 0.5 + (rng() - 0.5) * gap * 0.6;
+          const v = rng(), base = v < 0.3 ? '#2E1B29' : v < 0.65 ? '#36212F' : v < 0.9 ? '#3E2636' : '#46293A';
+          const r = Math.min(h * 0.45, w * 0.3), j = () => (rng() - 0.5) * h * 0.18;
+          x.beginPath();
+          x.moveTo(cx + r, yy + j()); x.lineTo(cx + w - gap - r, yy + j()); x.quadraticCurveTo(cx + w - gap, yy, cx + w - gap + j() * 0.5, yy + r);
+          x.lineTo(cx + w - gap + j() * 0.5, yy + h - r); x.quadraticCurveTo(cx + w - gap, yy + h, cx + w - gap - r, yy + h + j() * 0.4);
+          x.lineTo(cx + r, yy + h + j() * 0.4); x.quadraticCurveTo(cx, yy + h, cx + j() * 0.5, yy + h - r); x.lineTo(cx + j() * 0.5, yy + r); x.quadraticCurveTo(cx, yy, cx + r, yy); x.closePath();
+          x.fillStyle = E.lin(x, 0, yy, 0, yy + h, [[0, E.shade(base, 0.1)], [0.5, base], [1, E.shade(base, -0.25)]]); x.fill();
+          x.strokeStyle = 'rgba(255,196,160,' + (0.05 + rng() * 0.07).toFixed(3) + ')'; x.lineWidth = Math.max(1, rh * 0.07);
+          x.beginPath(); x.moveTo(cx + r, yy + 1); x.lineTo(cx + w - gap - r, yy + 1); x.stroke();
+          if (rng() < 0.18) { x.fillStyle = 'rgba(255,214,180,0.06)'; x.beginPath(); x.ellipse(cx + w * 0.45, yy + h * 0.35, w * 0.25, h * 0.14, 0, 0, TAU); x.fill(); }
+          cx += w;
         }
         y += rh; row++;
       }
@@ -819,20 +829,23 @@
     });
   }
   /* wet cobbles: blurred mirror of the lit shop front in two puddles (foot band only, never in the gloss band) */
+  let PUD = null;
   function drawPuddles(ctx, t, L3) {
     const yl = scr(L3, 540, 1252)[1];
     if (yl > H - 40) return;
+    if (!PUD) PUD = E.canvas(W / 2, H / 2);
+    const m = PUD.x; m.setTransform(1, 0, 0, 1, 0, 0); m.clearRect(0, 0, W / 2, H / 2); m.setTransform(0.5, 0, 0, 0.5, 0, 0);
+    inL(m, L3, (c) => {
+      for (const [x, y, rx, ry, a] of [[300, 1640, 300, 58, 1], [800, 1700, 270, 52, 0.9], [560, 1590, 150, 22, 0.6]]) {
+        c.save(); c.translate(x + 6 * Math.sin(t * 0.4 + x), y); c.scale(1, ry / rx);
+        c.fillStyle = E.rad(c, 0, 0, rx * 0.3, rx, [[0, '#000', a], [1, '#000', 0]]); c.beginPath(); c.arc(0, 0, rx, 0, TAU); c.fill();
+        c.restore();
+      }
+    });
     E.layer(ctx, (l) => {
       l.save(); l.translate(0, 2 * yl); l.scale(1, -1); l.drawImage(ctx.canvas, 0, 0, W, H); l.restore();
-      l.globalCompositeOperation = 'destination-in';
-      inL(l, L3, (c) => {
-        for (const [x, y, rx, ry, a] of [[300, 1640, 300, 58, 1], [800, 1700, 270, 52, 0.9], [560, 1590, 150, 22, 0.6]]) {
-          c.save(); c.translate(x + 6 * Math.sin(t * 0.4 + x), y); c.scale(1, ry / rx);
-          c.fillStyle = E.rad(c, 0, 0, rx * 0.35, rx, [[0, '#000', a], [1, '#000', 0]]); c.beginPath(); c.arc(0, 0, rx, 0, TAU); c.fill();
-          c.restore();
-        }
-      });
-    }, { lo: true, blur: 3, alpha: 0.5 });
+      l.save(); l.setTransform(1, 0, 0, 1, 0, 0); l.globalCompositeOperation = 'destination-in'; l.drawImage(PUD.c, 0, 0); l.restore();
+    }, { lo: true, blur: 3, alpha: 0.42 });
   }
 
   /* dev profiler (only when window.__HPROF is set) */

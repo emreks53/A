@@ -30,6 +30,8 @@
   const P = (t, a, b, e) => E.p(t, a, b, e || 'inOutCubic');
   const T0 = 22.3, T1 = 28.7, R = 180, CX = 540;
   const SP = {};
+  /** pooled layer buffers may carry a stale clip from elsewhere: start every layer from a clean state */
+  const fresh = (l, lo) => { if (l.reset) { l.reset(); if (lo) l.setTransform(0.5, 0, 0, 0.5, 0, 0); } };
 
   /* ======================= shared with G_hasiye (keep identical) ======================= */
   function camDrift(t) { return { x: 3 * Math.sin(0.37 * t) + 2 * E.noise(t * 0.3, 41), y: 2 * Math.sin(0.29 * t + 1) + 2 * E.noise(t * 0.3, 43), r: 0.0026 * Math.sin(0.21 * t) }; }
@@ -333,6 +335,7 @@
     if (k <= 0.005) return;
     const m = ctx.getTransform();
     E.layer(ctx, (l) => {
+      fresh(l, true);
       l.setTransform(m.a / 2, m.b / 2, m.c / 2, m.d / 2, m.e / 2, m.f / 2);
       const topW = 110, botW = 780, y0 = ybot - 1500;
       l.fillStyle = E.lin(l, x - botW / 2, 0, x + botW / 2, 0, [[0, '#FFE9A8', 0], [0.28, '#FFE9A8', 0.35], [0.5, '#FFF4D6', 1], [0.72, '#FFE9A8', 0.35], [1, '#FFE9A8', 0]]);

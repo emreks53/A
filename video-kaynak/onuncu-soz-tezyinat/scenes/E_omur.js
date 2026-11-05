@@ -38,11 +38,11 @@
   const PAL = { top: '#0E2433', mid: '#17485A', bot: '#2D6E74', rim: '#7FE0D2', glass: '#CFF3FF', sand: '#F2C46B', sandHi: '#FFE29A', flame: '#FFB34D', night: '#05101A' };
   const FPAL = ['#160F38', '#34206B', '#5E2C86'];
   const NECK = [540, 1000];                    // hourglass neck (world)
-  const KAN = { x: 1005, y: 979, size: 230 };   // kandil foot (world)
+  const KAN = { x: 1025, y: 979, size: 230 };   // kandil foot (world)
   const STAND_B = 1225;                         // stand base (world)
   const HZ = 1040;                              // horizon (world)
-  const BOWL_S = 210 / 330;                     // final bowl scale (asset units → world)
-  const BOWL_FOOT = [756, 1150];                // final bowl foot (world)
+  const BOWL_S = 215 / 330;                     // final bowl scale (asset units → world)
+  const BOWL_FOOT = [730, 1150];                // final bowl foot (world)
   const WICK = [KAN.x, KAN.y - 170 * (KAN.size / 200)];
   let SPR = null;
 
@@ -291,13 +291,13 @@
       E.at(l, rp[0], rp[1], s, 0, (c) => {
         A.iznikBowl(c, bowlEOpts(t));
         // the thin layer of sand (≈10 %)
-        const sA = pp(t, 20.75, 21.05), irx = 320.76, iry = 106.9, yo = 55, cy = yo * (1 - Q10 * Q10);
+        const SQ = Q10 * 0.9, sA = pp(t, 20.75, 21.05), irx = 320.76, iry = 106.9, yo = 55, cy = yo * (1 - SQ * SQ);
         if (sA > 0.01) {
           c.save(); c.globalAlpha *= sA;
-          c.fillStyle = E.lin(c, -Q10 * irx, 0, Q10 * irx, 0, [[0, '#B88438'], [0.4, PAL.sand], [0.7, PAL.sandHi], [1, '#C8913E']]);
-          c.beginPath(); c.ellipse(0, cy, Q10 * irx, Q10 * iry, 0, 0, TAU); c.fill();
+          c.fillStyle = E.lin(c, -SQ * irx, 0, SQ * irx, 0, [[0, '#B88438'], [0.4, PAL.sand], [0.7, PAL.sandHi], [1, '#C8913E']]);
+          c.beginPath(); c.ellipse(0, cy, SQ * irx, SQ * iry, 0, 0, TAU); c.fill();
           c.fillStyle = 'rgba(120,70,20,0.35)';
-          for (let i = 0; i < 22; i++) { const a = E.hash(i, 701) * TAU, q = Math.sqrt(E.hash(i, 702)) * 0.9; c.beginPath(); c.arc(Math.cos(a) * q * Q10 * irx, cy + Math.sin(a) * q * Q10 * iry, 1.6, 0, TAU); c.fill(); }
+          for (let i = 0; i < 22; i++) { const a = E.hash(i, 701) * TAU, q = Math.sqrt(E.hash(i, 702)) * 0.9; c.beginPath(); c.arc(Math.cos(a) * q * SQ * irx, cy + Math.sin(a) * q * SQ * iry, 1.6, 0, TAU); c.fill(); }
           c.restore();
         }
       });
@@ -307,13 +307,14 @@
     const gk = pp(t, 20.98, 21.16, 'linear');
     if (gk > 0 && t < 21.9) {
       const q = Q10 * ease.outBack(gk, 2.4) + 0.02, yo = 55 * s, irx = 320.76 * s, iry = 106.9 * s;
-      const ga = (0.55 + 0.6 * E.env(t, 21.12, 21.4, 0.03, 0.25)) * (1 - pp(t, 21.4, 21.85)) * alpha;
+      const ga = (0.6 + 0.4 * E.env(t, 21.12, 21.42, 0.03, 0.25)) * (1 - pp(t, 21.42, 21.85)) * alpha;
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
-      ctx.strokeStyle = E.rgba(PAL.glass, 0.5 * ga); ctx.lineWidth = 2.2 * cam.z;
-      ctx.beginPath(); ctx.ellipse(rp[0], rp[1] + yo * (1 - q * q), q * irx, Math.max(0.5, q * iry), 0, 0, TAU); ctx.stroke();
-      ctx.strokeStyle = E.rgba(PAL.glass, 0.14 * ga); ctx.lineWidth = 8 * cam.z; ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(rp[0], rp[1] + yo * (1 - q * q), q * irx, Math.max(0.5, q * iry), 0, 0, TAU);
+      ctx.strokeStyle = E.rgba(PAL.glass, 0.16 * ga); ctx.lineWidth = 12 * cam.z; ctx.stroke();
+      ctx.strokeStyle = E.rgba(PAL.glass, 0.4 * ga); ctx.lineWidth = 4.5 * cam.z; ctx.stroke();
+      ctx.strokeStyle = E.rgba('#FFFFFF', 0.85 * ga); ctx.lineWidth = 1.6 * cam.z; ctx.stroke();
       // faint "full" mark at the rim: everything above the ring stays empty
-      const fa = E.env(t, 21.1, 21.7, 0.08, 0.4) * 0.25 * alpha;
+      const fa = E.env(t, 21.06, 21.7, 0.1, 0.35) * 0.45 * alpha;
       ctx.setLineDash([3 * cam.z, 9 * cam.z]); ctx.strokeStyle = E.rgba(PAL.glass, fa); ctx.lineWidth = 1.6 * cam.z;
       ctx.beginPath(); ctx.ellipse(rp[0], rp[1], irx * 0.985, iry * 0.985, 0, 0, TAU); ctx.stroke();
       ctx.restore();

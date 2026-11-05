@@ -195,7 +195,7 @@
     E.layer(ctx, (l) => {
       l.fillStyle = css('#FFB37A'); A.fillShape(l, pts);
       l.globalCompositeOperation = 'destination-out'; A.fillShape(l, pts.map((p) => [p[0] - off, p[1] + off * 0.35]));
-    }, { lo: true, blur: 3, op: 'screen', alpha: a });
+    }, { lo: true, blur: 3, op: 'lighter', alpha: 0.8 * a });
     // warm wash on the right half of the head
     const [cx, cy] = W.toScreen(c, 1, ...hx.toWorld(0, -0.16 * W.ROSE_R));
     ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = RG(ctx, cx + 230, cy + 40, 0, 330, [[0, '#FFB37A', 0.75 * a], [1, '#FFB37A', 0]]); ctx.fillRect(cx - 200, cy - 400, 800, 800); ctx.restore();
@@ -241,7 +241,7 @@
           onHead: (hctx) => { if (t < 8.28) W.drawBee(hctx, { fly: 0, off: [0, 0], flip: true, rot: 0.06 * Math.sin(ttw * 2) }, null, ttw); },
         });
         rimLight(ctx2, c, hx, rimA);
-        W.ribbons(ctx2, heart[0], heart[1] - 30, ttw, 7.80, z / 2.6 * 0.95, 0.8, 5, 1.0);
+        W.ribbons(ctx2, heart[0], heart[1] - 30, ttw, 7.80, z / 2.6 * 0.95, 0.75, 5, 0.85);
       },
       fg: false,
     });

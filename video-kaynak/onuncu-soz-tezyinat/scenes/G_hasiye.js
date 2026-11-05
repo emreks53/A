@@ -30,6 +30,8 @@
   const P = (t, a, b, e) => E.p(t, a, b, e || 'inOutCubic');
   const T0 = 28.5, T1 = 37.8, SCX = 540, SCY = 760, RW = 420;
   const SP = {};
+  /** pooled layer buffers may carry a stale clip from elsewhere: start every layer from a clean state */
+  const fresh = (l, lo) => { if (l.reset) { l.reset(); if (lo) l.setTransform(0.5, 0, 0, 0.5, 0, 0); } };
 
   /* ======================= shared with F_kiymet (keep identical) ======================= */
   function camDrift(t) { return { x: 3 * Math.sin(0.37 * t) + 2 * E.noise(t * 0.3, 41), y: 2 * Math.sin(0.29 * t + 1) + 2 * E.noise(t * 0.3, 43), r: 0.0026 * Math.sin(0.21 * t) }; }
@@ -255,6 +257,7 @@
     const lv = SP.tiles, lz = lg(c.z);
     const pick = s < 36 ? [[0, 1]] : s < 46 ? [[0, 1 - (s - 36) / 10], [1, (s - 36) / 10]] : s < 104 ? [[1, 1]] : s < 122 ? [[1, 1 - (s - 104) / 18], [2, (s - 104) / 18]] : [[2, 1]];
     E.layer(ctx, (l) => {
+      fresh(l, false);
       for (const [li, w] of pick) {
         if (w <= 0.01) continue;
         const tile = lv[li], k = s / tile.pw;
@@ -281,6 +284,7 @@
       const wm = 1 - sm((lz - lg(22)) / (lg(34) - lg(22)));
       if (wm > 0.01) {
         E.layer(l, (b) => {
+          fresh(b, false);
           if (wm < 1) { b.fillStyle = E.rgba('#000', 1 - wm); b.fillRect(0, 0, W, H); }
           b.save(); applyCam(b, c); drawItem(b, 0, t, { flap: 1, bobK: 1 - c.mf }); b.restore();
         }, { op: 'destination-in' });
@@ -319,6 +323,7 @@
         if (fk > 0) {
           const edge = lerp(-260, 1500, ez.inOutSine(fk));
           E.layer(ctx, (l) => {
+      fresh(l, false);
             l.fillStyle = E.lin(l, 0, 0, 0, H, [[0, '#DDEFFF'], [0.55, '#A8D4F5'], [1, '#6E9CC9']]); l.fillRect(0, 0, W, H);
             l.save(); applyCam(l, c); l.globalAlpha = 0.85; l.drawImage(SP.frost, 540 - 600, 960 - 1050); l.restore();
             l.globalCompositeOperation = 'destination-in';
@@ -375,7 +380,9 @@
             } };
             if (rev < 1) {
               const m = h.getTransform();
-              E.layer(h, (l) => { l.setTransform(m); l.clip(starPath(0)); drawSh(l); const rr = lerp(10, RW * 1.25, rev); l.globalCompositeOperation = 'destination-in'; l.fillStyle = E.rad(l, SCX, SCY, rr * 0.7, rr, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(SCX - RW - 20, SCY - RW - 20, 2 * RW + 40, 2 * RW + 40); });
+              const rr = lerp(10, RW * 1.25, ez.inOutSine(rev));
+              E.layer(h, (l) => { fresh(l, false); l.save(); l.setTransform(m); l.clip(starPath(0)); drawSh(l); l.globalCompositeOperation = 'destination-in'; l.fillStyle = E.rad(l, SCX, SCY, rr * 0.86, rr, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(SCX - RW - 20, SCY - RW - 20, 2 * RW + 40, 2 * RW + 40); l.restore(); });
+              h.save(); h.clip(starPath(0)); h.globalCompositeOperation = 'lighter'; h.strokeStyle = E.rgba('#FFE7B0', 0.5 * (1 - rev)); h.lineWidth = 10; h.beginPath(); h.arc(SCX, SCY, rr * 0.93, 0, TAU); h.stroke(); h.strokeStyle = E.rgba('#FFF6E0', 0.8 * (1 - rev)); h.lineWidth = 2; h.stroke(); h.restore();
             } else drawSh(h);
             if (shutK > 0) { h.globalCompositeOperation = 'lighter'; const gw = Math.max(2, off * 2); h.fillStyle = E.lin(h, SCX - gw / 2 - 30, 0, SCX + gw / 2 + 30, 0, [[0, '#FFE7B0', 0], [0.5, '#FFF6E0', 0.75 * (1 - shutK * 0.7)], [1, '#FFE7B0', 0]]); h.fillRect(SCX - gw / 2 - 30, SCY - RW, gw + 60, 2 * RW); }
           }
@@ -401,6 +408,7 @@
         const sweep = t < 33.2 ? clamp((t - 32.62) / 0.6) : clamp(((t - 33.25) % 0.75) / 0.75) * (t < 34.0 ? 1 : 0);
         const scl = cell / 100, sw = sweep > 0 && sweep < 1 ? sweep * 900 / (1800 * scl) : undefined;
         E.layer(ctx, (l) => {
+      fresh(l, false);
           l.translate(c.sx, c.sy); l.rotate(c.rot + 0.2); l.scale(scl, scl);
           A.girih(l, { cx: 0, cy: 0, r: 1800, cell: 100, lineW: 3.4, hue, relief, sweep: sw, glow: 0.55 });
           l.setTransform(1, 0, 0, 1, 0, 0); l.globalCompositeOperation = 'destination-in';
@@ -501,6 +509,7 @@
     const rush = clamp((t - 37.42) / 0.38), re = ez.inCubic(rush);
     const col = E.hexOf(E.mix('#D8B26E', '#5A3A24', P(t, 37.4, 37.66))), lw = lerp(2, 5.8, re), lo = rush > 0.02, pc = toScreen(c, SCX, SCY);
     E.layer(ctx, (l) => {
+      fresh(l, lo);
       l.save(); applyCam(l, c);
       l.clip(starPath(0));
       const half = RW;
