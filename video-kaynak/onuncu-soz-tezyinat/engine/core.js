@@ -356,7 +356,16 @@
     y: 1376, size: 74, lineH: 84, size2: 66, lineH2: 78, maxW: 900, font: '"Cormorant Garamond"', weight: 600,
     color: '#FFF8EC', inDur: 0.42, outDur: 0.36,
   });
-  let glossBuf = null;
+  let glossBuf = null, lumBuf = null;
+  /** alt yazı bandının ortalama parlaklığı (0..1): parlak zeminde yazı koyu kahveye döner */
+  function bandLuma(ctx) {
+    if (!lumBuf) lumBuf = E.canvas(48, 16);
+    const x = lumBuf.x; x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'copy'; x.filter = 'none'; x.globalAlpha = 1;
+    x.drawImage(ctx.canvas, 140, G.y - 120, 800, 200, 0, 0, 48, 16);
+    const d = x.getImageData(0, 0, 48, 16).data; let s = 0;
+    for (let i = 0; i < d.length; i += 4) s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+    return s / (d.length / 4) / 255;
+  }
   function wrapLines(x, text, maxW) {
     const words = text.split(' '), lines = []; let cur = '';
     for (const w of words) { const tryS = cur ? cur + ' ' + w : w; if (x.measureText(tryS).width > maxW && cur) { lines.push(cur); cur = w; } else cur = tryS; }
@@ -386,8 +395,9 @@
     b.letterSpacing = `${(1.2 + track).toFixed(2)}px`;
     const lines = multi ? g.text.split('\n') : wrapLines(b, g.text, G.maxW);
     const n = lines.length, baseY = 210 - ((n - 1) * lineH) / 2 + size * 0.32;
-    // ana yazı (fildişi), ince sıcak altın parıltı süpürmesi ile
-    b.fillStyle = G.color;
+    // ana yazı (fildişi; çok parlak zeminde derin sıcak kahve), ince sıcak altın parıltı süpürmesi ile
+    const dark = E.smooth(E.remap(bandLuma(ctx), 0.73, 0.79, 0, 1));
+    b.fillStyle = E.mix(G.color, '#3A2316', dark);
     lines.forEach((ln, i) => b.fillText(ln, W / 2, baseY + i * lineH));
     const sweep = clamp((t - g.in - 0.05) / 0.95);
     if (sweep > 0 && sweep < 1) {
@@ -400,9 +410,16 @@
     const top = G.y - 210 + dy;
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
     // okunabilirlik: geniş yumuşak gölge + dar gölge (kutu yok)
-    ctx.globalAlpha = a * 0.62; ctx.filter = `blur(${(16 + blur).toFixed(1)}px) brightness(0)`; ctx.drawImage(glossBuf.c, 0, top + 4);
-    ctx.globalAlpha = a * 0.55; ctx.filter = `blur(${(3 + blur).toFixed(1)}px) brightness(0)`; ctx.drawImage(glossBuf.c, 0, top + 2);
-    ctx.globalAlpha = a * 0.35; ctx.filter = `blur(${(10 + blur).toFixed(1)}px)`; ctx.globalCompositeOperation = 'screen'; ctx.drawImage(glossBuf.c, 0, top);
+    const lightPass = dark < 0.999, darkPass = dark > 0.001;
+    if (lightPass) {
+      ctx.globalAlpha = a * 0.62 * (1 - dark); ctx.filter = `blur(${(16 + blur).toFixed(1)}px) brightness(0)`; ctx.drawImage(glossBuf.c, 0, top + 4);
+      ctx.globalAlpha = a * 0.55 * (1 - dark); ctx.filter = `blur(${(3 + blur).toFixed(1)}px) brightness(0)`; ctx.drawImage(glossBuf.c, 0, top + 2);
+      ctx.globalAlpha = a * 0.35 * (1 - dark); ctx.filter = `blur(${(10 + blur).toFixed(1)}px)`; ctx.globalCompositeOperation = 'screen'; ctx.drawImage(glossBuf.c, 0, top);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    if (darkPass) { // parlak zeminde: yazının çevresinde yumuşak açık hale (kutu değil)
+      ctx.globalAlpha = a * 0.7 * dark; ctx.filter = `blur(${(14 + blur).toFixed(1)}px) brightness(0) invert(1)`; ctx.drawImage(glossBuf.c, 0, top + 2);
+    }
     ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = a; ctx.filter = blur > 0.4 ? `blur(${blur.toFixed(1)}px)` : 'none';
     ctx.drawImage(glossBuf.c, 0, top);
     ctx.restore();

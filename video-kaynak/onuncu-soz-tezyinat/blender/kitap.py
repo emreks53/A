@@ -213,7 +213,12 @@ class NB:
 COVER_LIN = (0.25, 0.0112, 0.0325)
 if COVER_RGB:
     COVER_LIN = tuple(float(c) for c in COVER_RGB.split(','))
-GOLD_LIN = (0.96, 0.70, 0.36)
+# varak: doygun sicak altin (#D4AF37 / #C9A24A civari okunacak sekilde); kenar (F82) tinti da altin
+GOLD_LIN = (0.80, 0.50, 0.095)
+GOLD_HI = (0.88, 0.60, 0.15)
+GOLD_OCHRE = (0.36, 0.19, 0.03)
+GOLD_EDGE = (0.95, 0.66, 0.20)
+GOLD_ROUGH = (arg('--grmin', 0.24, float), arg('--grmax', 0.40, float))
 LSPEC = arg('--spec', 0.06, float)
 LROUGH = arg('--lrough', 0.72, float)
 
@@ -273,6 +278,8 @@ def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
             hmask = hb.outputs['Color']
         else:
             hmask = mk.outputs['Color']
+        # kabartma duvarlari / cukurlar: keskin maske - bulanik maske > 0 -> koyu okr
+        recess = b.maprange(b.math('SUBTRACT', mk.outputs['Color'], hmask), 0.02, 0.45, 0.0, 1.0)
         # yalniz dis yuzeyde
         if mode == 'obj':
             sep = b.new('ShaderNodeSeparateXYZ'); b.link(tc.outputs['Normal'], sep.inputs[0])
@@ -286,9 +293,14 @@ def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
         fac = mval
     # --- altin
     brush = b.noise(b.mapping(obj, scale=(40.0, 1.0, 40.0)), 1800.0, 2.0, 0.6)
-    gold_r = b.maprange(brush.outputs['Fac'], 0.3, 0.7, 0.17, 0.29)
+    glint = b.noise(obj, 260.0, 2.0, 0.5)
+    gold_r = b.maprange(brush.outputs['Fac'], 0.3, 0.7, GOLD_ROUGH[0], GOLD_ROUGH[1])
+    gold_r = b.math('SUBTRACT', gold_r, b.maprange(glint.outputs['Fac'], 0.55, 0.75, 0.0, 0.08))
     gnoise = b.noise(obj, 180.0, 2.0, 0.5)
-    gold_col = b.mixc(b.maprange(gnoise.outputs['Fac'], 0.35, 0.65, 0.0, 1.0), GOLD_LIN, (1.0, 0.78, 0.46))
+    gold_col = b.mixc(b.maprange(gnoise.outputs['Fac'], 0.35, 0.65, 0.0, 1.0), GOLD_LIN, GOLD_HI)
+    if mask_img is not None:
+        gold_col = b.mixc(b.math('MULTIPLY', recess, 0.85), gold_col, GOLD_OCHRE)
+        gold_r = b.math('ADD', gold_r, b.math('MULTIPLY', recess, 0.12))
     # --- yukseklik
     if fac is not None:
         g_h = b.math('MULTIPLY', grain_h, b.math('SUBTRACT', 1.0, b.math('MULTIPLY', fac, 0.85)))
@@ -301,7 +313,8 @@ def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
                               'Sheen Roughness': 0.5, 'Specular IOR Level': LSPEC})
     if fac is None:
         b.out(leather.outputs[0]); return m
-    gold = b.principled(**{'Base Color': gold_col, 'Metallic': 1.0, 'Roughness': gold_r, 'Normal': nrm})
+    gold = b.principled(**{'Base Color': gold_col, 'Metallic': 1.0, 'Roughness': gold_r, 'Normal': nrm,
+                           'Specular Tint': GOLD_EDGE})
     mix = b.new('ShaderNodeMixShader')
     b.link(fac, mix.inputs[0]); b.link(leather.outputs[0], mix.inputs[1]); b.link(gold.outputs[0], mix.inputs[2])
     b.out(mix.outputs[0])

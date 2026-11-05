@@ -19,9 +19,12 @@
  *  Camera: start tilted up (plate +250 px) so the sun sits ON the far hill crest at (540,1020) = I's
  *    handoff; 61.9–62.9 tilt down into the garden while the sun clears the hills (no sinking);
  *    zoom .93→1.0 push-in; 64.6–65.95 slow tilt up after the petals (≤~140 px/s while the gloss is up),
- *    66.0–66.36 whip up ("Başka"), 66.27–66.62 swoop down: the ground plane (Mode-7 strips of the plan
- *    sprite, banked −0.3 rad) rises from below, wiping over the side view while it pitches 14°→90°
- *    (66.38–66.98); then plan zoom 1→.45 (67.0–67.9) and the final push .45→3.0 (68.0–68.5, inCubic).
+ *    66.0–66.28 rise ("Başka"), 66.28–66.98 crane-over with ONE pinhole camera (pitch −17°→90°, height
+ *    330→1500, forward position solved so the garden glides monotonically to (540,800)): sky, sun and
+ *    originals ride up with the horizon, near layers drop out under the lens, the ground (tiled meadow +
+ *    plan texture in perspective strips, distance haze, standing trees/flowers) feathers into the hills;
+ *    golden bloom + bokeh carry the eye. Then plan zoom 1→.45 (67.0–67.9) over a deep-emerald / dawn-violet
+ *    surround (outer girih field blurred & dimmed) and the final push .45→3.0 (68.0–68.5, inCubic).
  *
  *  Beats
  *    61.60–61.90  I→J cross-fade: sun disc (540,1020) r70 on the horizon, faint ivory wash fading out.
