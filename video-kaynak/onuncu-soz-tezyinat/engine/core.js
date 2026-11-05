@@ -448,10 +448,28 @@
     E.ready = true;
   };
 
+  /**
+   * Hareket bulanıklığı: hızlı hareketli karelerde n alt kare (180° deklanşör) çizilip ortalanır.
+   * Yalnız render aracı çağırır (tools/hareket-bulanikligi.py → out/mb.json).
+   */
+  let accBuf = null;
+  E.renderFrameMB = async (i, n = 4, shutter = 0.5) => {
+    if (!accBuf) accBuf = E.canvas(W, H);
+    const a = accBuf.x; a.setTransform(1, 0, 0, 1, 0, 0); a.filter = 'none'; a.globalCompositeOperation = 'source-over';
+    for (let k = 0; k < n; k++) {
+      const t = (i + shutter * ((k + 0.5) / n - 0.5)) / FPS;
+      await E.renderFrame(i, t);
+      a.globalAlpha = 1 / (k + 1); a.drawImage(mainCtx.canvas, 0, 0);
+    }
+    mainCtx.setTransform(1, 0, 0, 1, 0, 0); mainCtx.globalAlpha = 1; mainCtx.globalCompositeOperation = 'copy'; mainCtx.filter = 'none';
+    mainCtx.drawImage(accBuf.c, 0, 0); mainCtx.globalCompositeOperation = 'source-over';
+    return true;
+  };
+
   /** i. kareyi çizer (async: gerekli görselleri yükler) */
   E.renderFrame = async (i, tOverride) => {
     const t = tOverride === undefined ? i / FPS : tOverride;
-    const frame = tOverride === undefined ? i : Math.round(t * FPS);
+    const frame = i;
     const act = E.activeScenes(t);
     // görsel ön yükleme
     const urls = [];
