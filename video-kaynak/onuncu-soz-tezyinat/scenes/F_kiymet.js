@@ -59,6 +59,22 @@
     const ox = (w - 1080) / 2, oy = (h - 1920) / 2;
     x.strokeStyle = 'rgba(168,116,42,0.34)'; x.lineWidth = 1.6; x.strokeRect(ox + 58, oy + 58, 1080 - 116, 1920 - 116);
     x.strokeStyle = 'rgba(168,116,42,0.22)'; x.lineWidth = 0.9; x.strokeRect(ox + 68, oy + 68, 1080 - 136, 1920 - 136);
+    // greeked text (grey line texture, no letters) laid out like the book page: main block, then the footnote
+    const gr = E.rng(4417), tx0 = ox + 128, tx1 = ox + 1080 - 128, clear = (gx, gw, gy) => Math.abs(gy - (oy + 760)) < 104 && gx < ox + 690 && gx + gw > ox + 390;
+    const line = (gy, hh, al, endF, indent) => {
+      let gx = tx0 + (indent ? 46 : 0); const end = tx0 + (tx1 - tx0) * endF;
+      while (gx < end - 8) {
+        const gw = Math.min(end - gx, 16 + gr() * 74);
+        if (gw > 6 && !clear(gx, gw, gy)) { x.fillStyle = `rgba(92,70,52,${(al * (0.8 + 0.4 * gr())).toFixed(3)})`; x.beginPath(); x.roundRect(gx, gy - hh / 2, gw, hh, hh / 2); x.fill(); }
+        gx += gw + 9 + gr() * 4;
+      }
+    };
+    let para = 0;
+    for (let gy = oy + 156; gy <= oy + 1136; gy += 43) {
+      const last = para > 4 + gr() * 4; line(gy, 9, 0.15, last ? 0.3 + 0.45 * gr() : 1, para === 0); para = last ? 0 : para + 1;
+    }
+    x.strokeStyle = 'rgba(90,42,47,0.2)'; x.lineWidth = 1; x.beginPath(); x.moveTo(tx0, oy + 1180); x.lineTo(tx0 + 250, oy + 1180); x.stroke();
+    for (let k = 0; k < 7; k++) line(oy + 1218 + k * 33, 7, 0.13, k === 6 ? 0.42 : 1, k === 0);
     return cv.c;
   }
   /** parchment page: gradient (screen) + fibres (world, under the current transform). */
@@ -74,16 +90,16 @@
     if (a <= 0) return;
     const pulse = 1 + 0.07 * Math.sin(t * 2.4);
     ctx.save(); ctx.globalAlpha *= a;
-    ctx.fillStyle = E.rad(ctx, x, y, 0, r * 3.6 * pulse, [[0, '#FFE7B0', 0.8], [0.35, '#FFE7B0', 0.34], [1, '#FFE7B0', 0]]);
+    ctx.fillStyle = E.rad(ctx, x, y, 0, r * 3.6 * pulse, [[0, '#FFE7B0', 0.9], [0.35, '#FFDC94', 0.42], [1, '#FFE7B0', 0]]);
     ctx.fillRect(x - r * 4, y - r * 4, r * 8, r * 8);
-    E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, glow: 0.7, col: '#D8B26E' }));
+    E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, glow: 0.7, lineW: r * 0.045, col: '#C69A42' }));
     ctx.restore();
   }
   function footMotes(ctx, t, x, y, a = 1) {
     if (a <= 0) return;
     ctx.save();
     for (let i = 0; i < 7; i++) {
-      const ang = i * 0.9 + t * (0.18 + 0.05 * (i % 3)), rr = 64 + 26 * i + 10 * Math.sin(t * 0.7 + i), px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr * 0.8 - 6 * Math.sin(t + i);
+      const ang = i * 0.9 + t * (0.18 + 0.05 * (i % 3)), rr = 96 + 22 * i + 10 * Math.sin(t * 0.7 + i), px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr * 0.8 - 6 * Math.sin(t + i);
       const tw = 0.5 + 0.5 * Math.sin(t * 2.1 + i * 1.7);
       ctx.globalAlpha = a * (0.25 + 0.4 * tw);
       ctx.fillStyle = E.rad(ctx, px, py, 0, 7, [[0, '#FFF4D2', 1], [0.4, '#E8C27A', 0.7], [1, '#E8C27A', 0]]); ctx.fillRect(px - 7, py - 7, 14, 14);
@@ -114,15 +130,25 @@
     const u = clamp((t - 27.15) / 1.25), e = u < 0.55 ? 0.42 * ez.inCubic(u / 0.55) : 0.42 + 0.58 * ez.outExpo((u - 0.55) / 0.45);
     return Math.pow(12 / 1.08, e);
   }
+  /** close framing: push in on the ruby after the E handoff (z 1→1.6 ⇒ rose R180 ≈ 288 px), small push on
+   *  "müddeti", ease back to ≈1.38 so the medallion orbit fills the width, then the dive. */
+  function zBase(t) { return (1 + 0.6 * P(t, 22.42, 22.98, 'inOutSine')) * (1 + 0.05 * P(t, 24.79, 25.84)) * lerp(1, 0.82, P(t, 25.85, 26.45)); }
   function camF(t) {
     const d = camDrift(t), rcy = roseCY(t), dv = P(t, 27.3, 27.95);
-    const z = lerp(0.975, 1, P(t, 22.3, 23.5, 'outCubic')) * (1 + 0.08 * P(t, 24.79, 25.84)) * diveZ(t);
-    return { fx: CX, fy: rcy, sx: CX + d.x * (1 - dv), sy: lerp(rcy, 760, dv) + d.y * (1 - dv), z, rot: d.r + (8 * PI / 180) * P(t, 27.15, 28.4), tilt: 150 * liftE(t), rcy };
+    let sy = lerp(760, 720, P(t, 22.5, 23.1));
+    sy = lerp(sy, 600, P(t, 23.9, 24.7)); sy = lerp(sy, 640, P(t, 25.85, 26.45)); sy = lerp(sy, 760, dv);
+    const zb = zBase(t);
+    return { fx: CX, fy: rcy, sx: CX + d.x * (1 - dv), sy: sy + d.y * (1 - dv), z: zb * diveZ(t), zb, rot: d.r + (8 * PI / 180) * P(t, 27.15, 28.4), rcy, lift: liftE(t) };
   }
-  function applyCam(ctx, c, p) { // p = parallax depth (1 = hero)
+  /** parallax rig: p = depth (0 static … 1 hero … >1 foreground); the hero's focus point (fx,fy) sits at (sx,sy) */
+  function applyCam(ctx, c, p) {
     const z = 1 + (c.z - 1) * p;
-    ctx.translate(c.sx, c.sy + (p === 1 ? 0 : c.tilt * p)); ctx.rotate(c.rot * p); ctx.scale(z, z); ctx.translate(-c.fx, -c.fy);
+    const cx = c.fx - (c.sx - 540) / c.z, cy = c.fy - (c.sy - 960) / c.z;
+    const fx = 540 + (cx - 540) * p + (c.sx - 540) / z, fy = 960 + (cy - 960) * p + (c.sy - 960) / z;
+    ctx.translate(c.sx, c.sy); ctx.rotate(c.rot * p); ctx.scale(z, z); ctx.translate(-fx, -fy);
   }
+  const FY = 960;   // lacquered floor plane (hero coords)
+  const toScr = (c, x, y) => [c.sx + (x - c.fx) * c.z, c.sy + (y - c.fy) * c.z];
 
   /* ------------------------------ sprites ------------------------------ */
   function makeBokeh(col) {
@@ -133,8 +159,8 @@
   }
   function makeDome() {
     const s = 1500, cv = E.canvas(s, s), x = cv.x;
-    A.girih(x, { cx: s / 2, cy: s / 2, r: 720, cell: 150, lineW: 3.2, col: '#B8862E', vector: true });
-    const b = E.canvas(s, s); b.x.filter = 'blur(3px)'; b.x.drawImage(cv.c, 0, 0);
+    A.girih(x, { cx: s / 2, cy: s / 2, r: 720, cell: 150, lineW: 3.6, col: '#B8862E', relief: 0.7, vector: true });
+    const b = E.canvas(s, s); b.x.filter = 'blur(1.2px)'; b.x.drawImage(cv.c, 0, 0);
     return b.c;
   }
   function makePlinth() {
@@ -196,8 +222,6 @@
     // top surface (very thin, seen from slightly below) + ruby light pool
     x.fillStyle = E.lin(x, 0, -6, 0, 6, [[0, '#B8862E'], [1, '#FFE9A8']]); x.beginPath(); x.ellipse(0, 4, 152, 6, 0, PI, TAU); x.fill();
     // fade into violet mist at the bottom
-    x.globalCompositeOperation = 'destination-out';
-    x.fillStyle = E.lin(x, 0, 250, 0, 640, [[0, '#000', 0], [0.55, '#000', 0.8], [1, '#000', 1]]); x.fillRect(-200, 240, 400, 600);
     return { c: cv.c, sc, ax: w / 2, ay: 12 };
   }
   function makeMist() {
@@ -205,6 +229,42 @@
     x.filter = 'blur(18px)';
     for (let i = 0; i < 30; i++) { const px = 120 + rnd() * 1160, py = 200 + rnd() * 240, rx = 90 + rnd() * 200, ry = 40 + rnd() * 70; x.fillStyle = E.rad(x, px, py, 0, rx, [[0, ['#7A44B0', '#5E2C86', '#9A6AD8', '#6E3AA0'][i % 4], 0.22 + rnd() * 0.14], [1, '#5E2C86', 0]]); x.save(); x.translate(px, py); x.scale(1, ry / rx); x.translate(-px, -py); x.beginPath(); x.arc(px, py, rx, 0, TAU); x.fill(); x.restore(); }
     return cv.c;
+  }
+  /** velvet drapery (left side; mirrored for the right): folds compress at the tie-back, gold braid, tassel */
+  function makeDrape() {
+    const w = 420, h = 2200, cv = E.canvas(w, h), x = cv.x;
+    const edge = (y) => (y < 820 ? lerp(330, 150, ez.inOutSine(y / 820)) : lerp(150, 250, ez.outCubic((y - 820) / (h - 820))));
+    const N = 7;
+    for (let y = 0; y < h; y += 8) {
+      const ew = edge(y), g = x.createLinearGradient(0, 0, ew, 0);
+      for (let k = 0; k <= N * 2; k++) { const f = k / (N * 2), c = k % 2 ? (k % 4 === 1 ? '#7A2A5E' : '#6A2252') : '#1E0820'; g.addColorStop(f, c); }
+      x.fillStyle = g; x.fillRect(0, y, ew, 9);
+    }
+    // soft vertical sheen + shading toward the outer edge and the floor
+    x.globalCompositeOperation = 'source-atop';
+    x.fillStyle = E.lin(x, 0, 0, w, 0, [[0, '#08020C', 0.65], [0.5, '#08020C', 0.1], [1, '#08020C', 0]]); x.fillRect(0, 0, w, h);
+    x.fillStyle = E.lin(x, 0, 0, 0, h, [[0, '#08020C', 0.35], [0.3, '#08020C', 0], [0.8, '#08020C', 0.2], [1, '#08020C', 0.6]]); x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'source-over';
+    // gold braid along the inner edge + rim light
+    x.beginPath(); for (let y = 0; y <= h; y += 10) { const ex = edge(y); y ? x.lineTo(ex, y) : x.moveTo(ex, y); }
+    x.strokeStyle = 'rgba(255,140,190,0.35)'; x.lineWidth = 10; x.stroke();
+    x.strokeStyle = '#8A5A1E'; x.lineWidth = 6; x.stroke(); x.strokeStyle = '#FFCF5A'; x.lineWidth = 3.2; x.stroke(); x.strokeStyle = 'rgba(255,248,214,0.85)'; x.lineWidth = 1; x.stroke();
+    // tie-back rope + tassel
+    x.lineCap = 'round'; x.strokeStyle = '#C8922A'; x.lineWidth = 9; x.beginPath(); x.moveTo(0, 800); x.quadraticCurveTo(90, 846, 158, 820); x.stroke();
+    x.strokeStyle = 'rgba(255,240,190,0.7)'; x.lineWidth = 2.5; x.stroke();
+    x.fillStyle = E.lin(x, 150, 820, 190, 960, [[0, '#FFE9A8'], [0.5, '#C8922A'], [1, '#6E4414']]);
+    x.beginPath(); x.moveTo(160, 822); x.quadraticCurveTo(196, 900, 184, 960); x.lineTo(140, 960); x.quadraticCurveTo(132, 900, 160, 822); x.fill();
+    x.strokeStyle = 'rgba(110,64,16,0.6)'; x.lineWidth = 1; for (let k = 0; k < 7; k++) { x.beginPath(); x.moveTo(146 + k * 6, 900); x.lineTo(144 + k * 6.4, 958); x.stroke(); }
+    x.fillStyle = '#FFE08A'; x.beginPath(); x.arc(161, 826, 9, 0, TAU); x.fill();
+    return cv.c;
+  }
+  function makeHexBokeh(col) {
+    return S.sprite('F_hex|' + col, 160, 160, (x) => {
+      x.filter = 'blur(5px)';
+      const p = new Path2D(); for (let k = 0; k < 6; k++) { const a = k * TAU / 6 + 0.3; k ? p.lineTo(80 + Math.cos(a) * 62, 80 + Math.sin(a) * 62) : p.moveTo(80 + Math.cos(a) * 62, 80 + Math.sin(a) * 62); } p.closePath();
+      x.fillStyle = E.rad(x, 70, 70, 0, 70, [[0, col, 0.35], [0.8, col, 0.5], [1, col, 0.75]]); x.fill(p);
+      x.strokeStyle = E.rgba(col, 0.8); x.lineWidth = 3; x.stroke(p);
+    });
   }
   function hoopoeFeather(x) {
     x.save(); x.rotate(0.35);
@@ -259,7 +319,8 @@
   function initBokeh() {
     const rnd = E.rng(5521);
     const add = (n, p, r0, r1, a0, a1) => { for (let i = 0; i < n; i++) BOKEH.push({ p, x: -200 + rnd() * 1480, y: -300 + rnd() * 2500, r: lerp(r0, r1, rnd()), a: lerp(a0, a1, rnd()), col: JEWEL[(rnd() * JEWEL.length) | 0], sp: 6 + rnd() * 18, ph: rnd() * 10 }); };
-    add(26, 0.3, 4, 12, 0.25, 0.55); add(14, 0.6, 9, 22, 0.16, 0.3); add(8, 1.6, 38, 90, 0.07, 0.14);
+    add(26, 0.3, 4, 12, 0.25, 0.55); add(14, 0.6, 9, 22, 0.16, 0.3);
+    for (let i = 0; i < 10; i++) BOKEH.push({ p: 1.7, x: i % 2 ? 860 + rnd() * 420 : -200 + rnd() * 420, y: -300 + rnd() * 2500, r: lerp(50, 120, rnd()), a: lerp(0.1, 0.2, rnd()), col: ['#FF3D6E', '#FFCF5A', '#B47CFF', '#FF8AA8'][i % 4], sp: 14 + rnd() * 16, ph: rnd() * 10, hex: true });
   }
   function bandGuard(t) { return P(t, 25.85, 26.1, 'inOutSine') * (1 - P(t, 28.15, 28.4, 'inOutSine')); }
   function drawBokeh(ctx, t, c, layerSel, vis) {
@@ -273,7 +334,7 @@
       const inBand = sy > 1180 && sy < 1620 ? 1 : 0;
       const tw = 0.75 + 0.25 * Math.sin(t * 1.3 + b.ph * 3);
       ctx.globalAlpha = b.a * tw * vis * (1 - 0.7 * g * inBand);
-      const spr = makeBokeh(b.col);
+      const spr = b.hex ? makeHexBokeh(b.col) : makeBokeh(b.col);
       ctx.drawImage(spr, xx - b.r, yy - b.r, b.r * 2, b.r * 2);
       ctx.restore();
     }
@@ -299,7 +360,7 @@
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = E.rad(ctx, 0, 0, 0, r * 4.2, [[0, E.mix('#FF7A3D', '#FF3D6E', ruby), 0.55 * (1 - unfold)], [0.3, E.mix('#FF7A3D', '#B0103E', ruby), 0.2 * (1 - unfold)], [1, '#5E2C86', 0]]);
     ctx.fillRect(-r * 4.2, -r * 4.2, r * 8.4, r * 8.4); ctx.restore();
-    if (unfold < 1) S.light(ctx, 0, 0, (r * (10 - 5 * ruby) + 50) * (1 - unfold * 0.5), E.mix('#FF7A3D', '#FF3D6E', ruby), (0.55 - 0.3 * ruby) * (1 - unfold));
+    if (unfold < 1) S.light(ctx, 0, 0, (r * (10 - 3 * ruby) + 60) * (1 - unfold * 0.5), E.mix('#FF7A3D', '#FF3D6E', ruby), (0.55 - 0.3 * ruby) * (1 - unfold));
     if (unfold <= 0) {
       const pts = hexPts(r, morph);
       ctx.fillStyle = E.rad(ctx, -r * 0.2, -r * 0.3, 0, r * 1.1, [[0, E.mix('#FFF4C2', '#FF8AA8', ruby)], [0.45, E.mix('#FFB34D', '#FF3D6E', ruby)], [1, E.mix('#FF7A3D', '#B0103E', ruby)]]);
@@ -358,11 +419,11 @@
       l.fillStyle = E.rad(l, x, ybot - 160, 0, 360, [[0, '#FFE9A8', 0.5], [1, '#FFE9A8', 0]]); l.fillRect(x - 400, ybot - 560, 800, 800);
       l.globalCompositeOperation = 'destination-in';
       l.fillStyle = E.lin(l, 0, y0, 0, ybot + 200, [[0, '#000', 0.25], [0.55, '#000', 1], [0.85, '#000', 0.6], [1, '#000', 0]]); l.fillRect(x - 600, y0 - 100, 1200, ybot - y0 + 400);
-    }, { lo: true, blur: 14, alpha: 0.24 * k, op: 'lighter' });
+    }, { lo: true, blur: 14, alpha: 0.3 * k, op: 'lighter' });
   }
 
   function drawLifeRing(ctx, t, cx, cy) {
-    const rr = 300;
+    const rr = 280;
     const dk = ez.outCubic(clamp((t - 24.72) / 0.42));
     if (dk <= 0) return;
     const bk = clamp((t - 25.22) / 0.5), be = ez.inOutSine(bk);
@@ -486,6 +547,93 @@
     ctx.restore();
   }
 
+  /* --- treasury environment --- */
+  function drawWall(ctx, t, c, rayK, vis) {
+    const dome = SP.dome;
+    const place = (g) => { applyCam(g, c, 0.45); g.translate(CX, FY - 500); g.rotate(t * 0.008); g.scale(1.5, 1.5); g.drawImage(dome, -dome.width / 2, -dome.height / 2); };
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.1 * vis; place(ctx); ctx.restore();
+    if (rayK > 0.01) {
+      const rs = toScr(c, CX, c.rcy), spin = t * 0.05;
+      E.layer(ctx, (l) => {
+        fresh(l, false); l.save(); place(l); l.restore();
+        const g = l.createConicGradient(spin, rs[0], rs[1]), w0 = 0.07 / TAU * 2.6;
+        for (let i = 0; i < 12; i++) { const f = i / 12, w = (i % 2 ? 0.045 : 0.07) / TAU * 2.6; g.addColorStop(Math.max(0, f - w), 'rgba(0,0,0,0)'); g.addColorStop(f, 'rgba(0,0,0,1)'); g.addColorStop(f + w, 'rgba(0,0,0,0)'); }
+        g.addColorStop(1 - w0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+        l.globalCompositeOperation = 'destination-in'; l.fillStyle = g; l.fillRect(0, 0, W, H);
+        l.fillStyle = E.rad(l, rs[0], rs[1], 120, 950, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(0, 0, W, H);
+        l.globalCompositeOperation = 'source-atop'; l.fillStyle = 'rgba(255,196,96,0.55)'; l.fillRect(0, 0, W, H);
+      }, { op: 'screen', alpha: 0.42 * rayK * vis });
+    }
+  }
+  function drawDrapes(ctx, t, c, a) {
+    if (a <= 0.003) return;
+    const dr = SP.drape, out = (c.zb - 1) * 45 + (c.z / c.zb - 1) * 140, dy = -70 + 60 * c.lift, k = 0.86;
+    for (const side of [-1, 1]) {
+      ctx.save(); ctx.globalAlpha *= a;
+      if (side < 0) ctx.translate(-60 - out, dy); else { ctx.translate(W + 60 + out, dy); ctx.scale(-1, 1); }
+      ctx.transform(1, 0, 0.014 * Math.sin(t * 0.6 + side * 1.3), 1, 0, 0);
+      ctx.drawImage(dr, 0, 0, dr.width * k, dr.height * k);
+      ctx.restore();
+    }
+  }
+  function drawFloor(h, t, gem) {
+    h.fillStyle = E.lin(h, 0, FY - 2, 0, FY + 900, [[0, '#3E2270'], [0.035, '#24123F'], [0.3, '#130926'], [1, '#07030E']]);
+    h.fillRect(-3000, FY - 2, 7000, 5000);
+    // inlaid gold lines in perspective (polished treasury floor)
+    h.save(); h.lineWidth = 1.6;
+    h.strokeStyle = E.lin(h, 0, FY, 0, FY + 700, [[0, '#C8922A', 0.04], [0.25, '#C8922A', 0.16], [1, '#C8922A', 0.05]]);
+    h.beginPath(); for (let k = -10; k <= 10; k++) { h.moveTo(CX + k * 34, FY); h.lineTo(CX + k * 520, FY + 1300); }
+    for (let i = 0; i < 9; i++) { const yy = FY + 10 * Math.pow(1.62, i); h.moveTo(-3000, yy); h.lineTo(4000, yy); } h.stroke();
+    h.restore();
+    h.save(); h.globalCompositeOperation = 'lighter';
+    h.fillStyle = E.lin(h, 0, FY - 46, 0, FY + 26, [[0, '#7A44B0', 0], [0.65, '#A070E0', 0.3], [1, '#7A44B0', 0]]); h.fillRect(-3000, FY - 46, 7000, 72);
+    h.translate(CX, FY + 26); h.scale(1, 0.2); h.fillStyle = E.rad(h, 0, 0, 0, 420, [[0, '#FF3D6E', 0.32 * gem], [0.5, '#B47CFF', 0.12 * gem], [1, '#B47CFF', 0]]); h.fillRect(-440, -440, 880, 880);
+    h.restore();
+  }
+  function makeFgGem(c1, c2, c3, n) {
+    const cv = E.canvas(260, 200), x = cv.x, cx = 130, cy = 110, rx = 110, ry = 70;
+    const P2 = []; for (let k = 0; k < n; k++) { const a = -PI / 2 + k * TAU / n; P2.push([cx + Math.cos(a) * rx, cy + Math.sin(a) * ry]); }
+    const tbl = P2.map((q) => [cx + (q[0] - cx) * 0.5, cy - 14 + (q[1] - cy) * 0.45]);
+    for (let k = 0; k < n; k++) { const j = (k + 1) % n, sh = 0.5 + 0.5 * Math.cos(-PI / 2 + (k + 0.5) * TAU / n + 2.3); x.fillStyle = E.mix(c3, c1, sh); x.beginPath(); x.moveTo(P2[k][0], P2[k][1]); x.lineTo(P2[j][0], P2[j][1]); x.lineTo(tbl[j][0], tbl[j][1]); x.lineTo(tbl[k][0], tbl[k][1]); x.closePath(); x.fill(); }
+    x.fillStyle = E.rad(x, cx - 20, cy - 30, 0, 70, [[0, '#FFFFFF'], [0.3, c1], [1, c2]]); x.beginPath(); tbl.forEach((q, i) => (i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1]))); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,0.45)'; x.lineWidth = 2; x.stroke();
+    return cv.c;
+  }
+  function drawFgGems(ctx, t, c, a) {
+    if (a <= 0.003) return;
+    const fyS = toScr(c, CX, FY)[1], out = (c.z / c.zb - 1) * 400;
+    E.layer(ctx, (l) => {
+      fresh(l, true);
+      SP.fg.forEach((g, i) => {
+        const [x0, y0, s, rot] = [[40, 1850, 1.6, -0.2], [1030, 1790, 1.35, 0.25], [230, 2010, 1.2, 0.1], [860, 2030, 1.7, -0.1]][i];
+        const x = x0 + (x0 < 540 ? -out : out) + 6 * Math.sin(t * 0.4 + i), y = y0 + out * 0.6 + (fyS - 1150) * 0.3;
+        l.save(); l.translate(x, y); l.rotate(rot); l.scale(s, s); l.drawImage(g, -130, -110); l.restore();
+        l.save(); l.globalCompositeOperation = 'lighter'; l.globalAlpha = 0.5 + 0.5 * Math.sin(t * 1.7 + i * 2); l.fillStyle = E.rad(l, x - 30, y - 40, 0, 60, [[0, '#FFFFFF', 0.6], [1, '#FFFFFF', 0]]); l.fillRect(x - 90, y - 100, 120, 120); l.restore();
+      });
+      l.globalCompositeOperation = 'source-atop'; l.fillStyle = 'rgba(14,6,26,0.35)'; l.fillRect(0, 0, W, H);
+    }, { lo: true, blur: 11, alpha: 0.8 * a });
+  }
+  function spotMotes(h, t, x, ytop, ybot, k) {
+    if (k <= 0.01) return;
+    h.save(); h.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 28; i++) {
+      const u = ((E.hash(i, 81) + t * (0.02 + 0.02 * E.hash(i, 82))) % 1), y = lerp(ytop, ybot, u), hw = lerp(60, 380, u) * 0.8;
+      const px = x + (E.hash(i, 83) * 2 - 1) * hw + 14 * Math.sin(t * 0.7 + i), tw = 0.5 + 0.5 * Math.sin(t * 2.3 + i * 1.9);
+      h.globalAlpha = k * tw * 0.7 * Math.sin(PI * u); h.fillStyle = E.rad(h, px, y, 0, 4, [[0, '#FFF4D6', 1], [1, '#FFE9A8', 0]]); h.fillRect(px - 4, y - 4, 8, 8);
+    }
+    h.restore();
+  }
+  function drawReflection(ctx, c, draws, alpha) {
+    const fyS = toScr(c, CX, FY)[1];
+    if (alpha <= 0.003 || fyS > H + 10) return;
+    E.layer(ctx, (l) => {
+      fresh(l, true);
+      l.save(); applyCam(l, c, 1); l.beginPath(); l.rect(-3000, FY, 7000, 5000); l.clip(); l.translate(0, 2 * FY); l.scale(1, -1); draws(l); l.restore();
+      l.setTransform(0.5, 0, 0, 0.5, 0, 0); l.globalCompositeOperation = 'destination-in';
+      l.fillStyle = E.lin(l, 0, fyS, 0, fyS + 430, [[0, '#000', 0.9], [1, '#000', 0]]); l.fillRect(0, 0, W, H);
+    }, { lo: true, blur: 3, alpha });
+  }
+
   /* --- kaleidoscope (16 mirrored wedges of 22.5°) --- */
   let KA = null, KB = null;
   function kaleido(ctx, t, k) {
@@ -527,7 +675,9 @@
       SP.plinth = makePlinth();
       SP.mist = makeMist();
       SP.med = []; for (let i = 0; i < 8; i++) SP.med.push(makeMedallion(i));
-      JEWEL.forEach(makeBokeh);
+      JEWEL.forEach(makeBokeh); ['#FF3D6E', '#FFCF5A', '#B47CFF', '#FF8AA8'].forEach(makeHexBokeh);
+      SP.drape = makeDrape();
+      SP.fg = [makeFgGem('#FF8AA8', '#FF3D6E', '#7A0828', 8), makeFgGem('#7AF0C8', '#2EE6A6', '#0A5A40', 6), makeFgGem('#9CC4FF', '#4C8DFF', '#142A6A', 8), makeFgGem('#FFF0B0', '#FFCF5A', '#7A5010', 6)];
       initBokeh();
       SP.sil = A.heroRoseSilhouette(R, 1, { variant: 'gem' });
     },
@@ -544,25 +694,23 @@
       const vis = bgK * (1 - P(t, 27.8, 28.05));
       const hero = (fn) => { ctx.save(); applyCam(ctx, c, 1); fn(ctx); ctx.restore(); };
 
-      /* L0 background */
+      /* L0 back wall of the treasury (violet lacquer) + glow behind the gem */
       const top = E.mix(E.mix('#05101A', '#160F38', bgK), '#FFE9C8', warm * 0.8), mid = E.mix(E.mix('#05101A', '#34206B', bgK), '#FFF1DA', warm * 0.8), bot = E.mix(E.mix('#05101A', '#5E2C86', bgK), '#FFE2C0', warm * 0.8);
       ctx.fillStyle = E.lin(ctx, 0, 0, 0, H, [[0, top], [0.55, mid], [1, bot]]); ctx.fillRect(0, 0, W, H);
-      ctx.save(); applyCam(ctx, c, 0.15);
-      ctx.fillStyle = E.rad(ctx, CX, rcy, 0, 900, [[0, '#8A4FFF', 0.3 * bgK * (1 - warm)], [0.45, '#5E2C86', 0.16 * bgK], [1, '#5E2C86', 0]]); ctx.fillRect(-600, -600, W + 1200, H + 1200);
-      ctx.restore();
+      { const rs = toScr(c, CX, rcy); ctx.fillStyle = E.rad(ctx, rs[0], rs[1], 0, 820, [[0, '#8A4FFF', 0.34 * bgK * (1 - warm)], [0.45, '#5E2C86', 0.17 * bgK], [1, '#5E2C86', 0]]); ctx.fillRect(0, 0, W, H); }
 
-      /* L1 far dome girih + bokeh */
-      ctx.save(); applyCam(ctx, c, 0.25); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.11 * vis;
-      ctx.translate(CX, rcy + 40); ctx.rotate(t * 0.02); ctx.scale(1.25, 1.25); ctx.drawImage(SP.dome, -SP.dome.width / 2, -SP.dome.height / 2); ctx.restore();
-      drawBokeh(ctx, t, c, (p) => p < 1, vis);
-
-      /* L2 spotlight + god rays */
+      /* L1 carved girih wall catching the god-rays · far bokeh · velvet drapes */
       const spotK = P(t, 23.3, 24.3) * vis, rayK = P(t, 23.95, 24.6) * vis * (1 - 0.5 * P(t, 27.05, 27.5));
-      hero((h) => { drawSpot(h, t, CX, rcy + 420, spotK); drawRays(h, t, CX, rcy, rayK); });
+      drawWall(ctx, t, c, Math.max(rayK, 0.35 * P(t, 22.6, 23.2) * vis), vis);
+      drawBokeh(ctx, t, c, (p) => p < 1, vis);
+      drawDrapes(ctx, t, c, bgK * (1 - P(t, 27.4, 27.75)));
+
+      /* L2 spotlight (volumetric, with motes) + god rays */
+      hero((h) => { drawSpot(h, t, CX, FY, spotK); spotMotes(h, t, CX, rcy - 900, FY, spotK); drawRays(h, t, CX, rcy, rayK); });
 
       /* L2.5 octagram + lens ring + ornaments (behind & around) */
       const orbA = 0.06 * (t - 26.0) + 1.1 * ez.inCubic(clamp((t - 27.0) / 0.9));
-      const rOrb = lerp(350, 305, P(t, 27.02, 27.45));
+      const rOrb = lerp(300, 262, P(t, 27.02, 27.45));
       const octK = P(t, 26.12, 26.75, 'outCubic'), lens = P(t, 27.0, 27.3), ornOut = 1 - P(t, 27.55, 27.85);
       hero((h) => {
         if (octK > 0) {
@@ -576,23 +724,43 @@
         }
       });
 
-      /* L3 hero: plinth, gem, rose, iris */
+      /* L3 hero: lacquered floor + reflections, plinth rising out of the floor, gem, rose, iris */
+      const pk = P(t, 23.4, 23.84, 'outCubic');
+      const py = t < 23.84 ? lerp(FY + 8, baseRCY(23.84) + 0.36 * R, pk) : baseRCY(t) + 0.36 * R + (t < 24.04 ? 7 * Math.sin(PI * clamp((t - 23.84) / 0.2)) : 0);
+      const envA = 1 - P(t, 27.5, 27.8);
+      const gRose = (h) => {
+        const gA = clamp((t - 22.86) / 0.12) * (1 - P(t, 27.06, 27.24, 'linear'));
+        if (gA <= 0) return;
+        const g = ez.outBack(clamp((t - 22.86) / 0.58), 1.5), sc = lerp(0.22, 1, g);
+        const bloom = lerp(0.12, 1, ez.outCubic(clamp((t - 22.86) / 0.75)));
+        const spin = 0.6 * ez.inCubic(clamp((t - 26.95) / 0.35)), swell = 1 + 0.14 * P(t, 26.95, 27.24);
+        h.save(); h.globalAlpha *= gA;
+        E.at(h, CX, rcy + 0.16 * R * sc * swell, sc * swell, spin, (cc) => A.heroRose(cc, { R, bloom, variant: 'gem', t, tilt: 0.85 }));
+        h.restore();
+        return sc;
+      };
+      const gPlinth = (h) => {
+        if (pk <= 0) return;
+        const pl = SP.plinth, PS = 0.86;
+        h.save(); h.beginPath(); h.rect(-3000, -3000, 7000, 3000 + FY); h.clip();
+        h.drawImage(pl.c, CX - pl.ax * PS, py - pl.ay * PS, pl.c.width / pl.sc * PS, pl.c.height / pl.sc * PS);
+        h.globalCompositeOperation = 'lighter';
+        h.fillStyle = E.rad(h, CX, py + 4, 0, 130, [[0, '#FF3D6E', 0.32 * P(t, 23.75, 24.0)], [1, '#FF3D6E', 0]]); h.fillRect(CX - 140, py - 60, 280, 140);
+        h.restore();
+      };
+      hero((h) => { h.save(); h.globalAlpha *= envA; drawFloor(h, t, bgK); h.restore(); });
+      drawReflection(ctx, c, (l) => { gPlinth(l); gRose(l); }, 0.34 * envA * bgK);
       hero((h) => {
-        // plinth
-        const pTarget = baseRCY(t) + 0.36 * R + (roseCY(t) - baseRCY(t)) * 0.0;
-        const pk = P(t, 23.4, 23.84, 'outCubic');
-        const py = t < 23.84 ? lerp(2020, baseRCY(23.84) + 0.36 * R, pk) : pTarget + (t < 24.04 ? 7 * Math.sin(PI * clamp((t - 23.84) / 0.2)) : 0);
-        if (pk > 0) {
-          const pl = SP.plinth;
-          h.save(); h.globalAlpha *= 1 - P(t, 27.5, 27.8);
-          // ruby light pool on the capital
-          const PS = 0.86; h.drawImage(pl.c, CX - pl.ax * PS, py - pl.ay * PS, pl.c.width / pl.sc * PS, pl.c.height / pl.sc * PS);
-          h.globalCompositeOperation = 'lighter';
-          h.fillStyle = E.rad(h, CX, py + 4, 0, 130, [[0, '#FF3D6E', 0.32 * P(t, 23.75, 24.0)], [1, '#FF3D6E', 0]]); h.fillRect(CX - 140, py - 60, 280, 140);
-          h.globalCompositeOperation = 'source-over';
-          for (const [dx, sp, al] of [[0, 9, 0.85], [260, -6, 0.6]]) { const mx = ((dx + t * sp) % 700 + 700) % 700 - 350; h.globalAlpha = al * (1 - P(t, 27.5, 27.8)); h.drawImage(SP.mist, CX - 700 + mx * 0.3, py + 300 - (al < 0.7 ? 60 : 0), 1400, 600); }
-          h.restore();
-        }
+        h.save(); h.globalAlpha *= envA;
+        gPlinth(h);
+        // emergence: light ring on the floor around the rising plinth
+        const er = E.env(t, 23.36, 24.3, 0.12, 0.5);
+        if (er > 0) { h.save(); h.globalCompositeOperation = 'lighter'; h.translate(CX, FY); h.scale(1, 0.16); h.strokeStyle = E.rgba('#FFCF5A', 0.55 * er); h.lineWidth = 14; h.beginPath(); h.arc(0, 0, 150 + 120 * P(t, 23.36, 24.3, 'outCubic'), 0, TAU); h.stroke(); h.restore(); }
+        // low haze on the floor
+        h.globalAlpha *= 0.5; for (const [dx, sp] of [[0, 9], [260, -6]]) { const mx = ((dx + t * sp) % 700 + 700) % 700 - 350; h.drawImage(SP.mist, CX - 700 + mx * 0.3, FY - 330, 1400, 600); }
+        h.restore();
+      });
+      hero((h) => {
         // gem (E handoff) → unfolds
         const morph = A.morphEase(clamp((t - 22.34) / 0.12), 0.08), unfold = clamp((t - 22.86) / 0.36);
         const ep = t < 22.47 ? emberPos(t) : [CX, rcy], gr = lerp(6.5, 34, ez.outCubic(clamp((t - 22.2) / 0.27)));
@@ -604,21 +772,12 @@
           S.sparkle(h, CX, rcy, 150 * fl, fl, '#FFF4E8', 0.3);
           h.save(); h.globalCompositeOperation = 'lighter'; h.strokeStyle = E.rgba('#FFE9A8', 0.6 * (1 - u)); h.lineWidth = 3 + 6 * (1 - u); h.beginPath(); h.arc(CX, rcy, 40 + 360 * ez.outCubic(u), 0, TAU); h.stroke(); h.restore();
         }
-        // gem rose
-        const gA = clamp((t - 22.86) / 0.12) * (1 - P(t, 27.06, 27.24, 'linear'));
-        if (gA > 0) {
-          const g = ez.outBack(clamp((t - 22.86) / 0.58), 1.5), sc = lerp(0.22, 1, g);
-          const bloom = lerp(0.12, 1, ez.outCubic(clamp((t - 22.86) / 0.75)));
-          const spin = 0.6 * ez.inCubic(clamp((t - 26.95) / 0.35));
-          const swell = 1 + 0.14 * P(t, 26.95, 27.24);
-          h.save(); h.globalAlpha *= gA;
-          E.at(h, CX, rcy + 0.16 * R * sc * swell, sc * swell, spin, (cc) => A.heroRose(cc, { R, bloom, variant: 'gem', t, tilt: 0.85 }));
-          h.restore();
-          // facet glints
-          if (sc > 0.7) {
-            const pts = []; for (let i = 0; i < 128; i += 11) { const p = SP.sil[i]; pts.push([CX + p[0] * 0.78 * sc, rcy + 0.16 * R * sc + p[1] * 0.78 * sc]); }
-            h.save(); h.globalAlpha *= gA; A.glints(h, t, { pts, seed: 4, r: 13, col: '#FFFFFF', period: 1.5, duty: 0.32 }); h.restore();
-          }
+        // gem rose + facet glints
+        const rsc = gRose(h);
+        if (rsc > 0.7) {
+          const gA = 1 - P(t, 27.06, 27.24, 'linear');
+          const pts = []; for (let i = 0; i < 128; i += 11) { const p = SP.sil[i]; pts.push([CX + p[0] * 0.78 * rsc, rcy + 0.16 * R * rsc + p[1] * 0.78 * rsc]); }
+          h.save(); h.globalAlpha *= gA; A.glints(h, t, { pts, seed: 4, r: 13, col: '#FFFFFF', period: 1.5, duty: 0.32 }); h.restore();
         }
         // iris
         const irA = P(t, 27.05, 27.2, 'linear');
@@ -634,7 +793,7 @@
         for (let i = 0; i < 8; i++) {
           const pk = clamp((t - (26.03 + i * 0.06)) / 0.45);
           if (pk <= 0) continue;
-          const s = ez.outBack(pk, 1.7) * lerp(1, 0.82, lens), rr = lerp(170, rOrb, ez.outCubic(pk));
+          const s = ez.outBack(pk, 1.7) * lerp(0.8, 0.68, lens), rr = lerp(150, rOrb, ez.outCubic(pk));
           const a = -PI / 2 + i * PI / 4 + orbA;
           const x = CX + Math.cos(a) * rr, y = rcy + Math.sin(a) * rr + 3 * Math.sin(t * 1.7 + i);
           const m = SP.med[i], dw = (m.size * s);
@@ -648,7 +807,8 @@
         }
       });
 
-      /* L5 near bokeh */
+      /* L5 near: jewels lying on the floor close to the lens (blurred) + facet bokeh */
+      drawFgGems(ctx, t, c, bgK * (1 - P(t, 27.35, 27.7)) * (1 - 0.45 * bandGuard(t)));
       drawBokeh(ctx, t, c, (p) => p > 1, vis);
 
       /* dive: kaleidoscope + ivory flood */
@@ -659,6 +819,9 @@
         const rr = lerp(80, 1700, ez.inOutSine(fl2));
         ctx.save(); ctx.fillStyle = E.rad(ctx, 540, 760, rr * 0.45, rr, [[0, '#FFF6E6', 1], [1, '#FFF6E6', 0]]); ctx.fillRect(0, 0, W, H); ctx.restore();
       }
+      // the dive's light must not wash the gloss band while 'süslemeler' is still up (≤27.93): soft violet shade
+      const bsh = P(t, 27.66, 27.8, 'inOutSine') * (1 - P(t, 27.97, 28.18, 'inOutSine'));
+      if (bsh > 0) { ctx.fillStyle = E.lin(ctx, 0, 980, 0, H, [[0, '#2A1446', 0], [0.4, '#2A1446', 0.5 * bsh], [1, '#1A0C2E', 0.62 * bsh]]); ctx.fillRect(0, 980, W, H - 980); }
       // band scrim during the gloss (violet, feathered)
       const g = bandGuard(t) * (1 - warm);
       if (g > 0) { ctx.save(); ctx.translate(540, 1400); ctx.scale(1, 220 / 640); ctx.fillStyle = E.rad(ctx, 0, 0, 0, 640, [[0, '#0A0618', 0.2 * g], [1, '#0A0618', 0]]); ctx.fillRect(-640, -640, 1280, 1280); ctx.restore(); }
@@ -670,7 +833,7 @@
         drawParchment(ctx, SP.parch, (cx) => { cx.translate(540 + d.x, 760 + d.y); cx.rotate(d.r); cx.translate(-540, -760); }, pa);
         const sa = P(t, 28.2, 28.5, 'outCubic');
         ctx.save(); ctx.translate(540 + d.x, 760 + d.y); ctx.rotate(d.r); ctx.translate(-540, -760);
-        E.at(ctx, 540, 760, lerp(0.6, 1, ez.outBack(sa)), 0, (cc) => drawFootStar(cc, t, 0, 0, 40, sa * pa));
+        E.at(ctx, 540, 760, lerp(0.6, 1, ez.outBack(sa)), 0, (cc) => drawFootStar(cc, t, 0, 0, 60, sa * pa));
         footMotes(ctx, t, 540, 760, sa * pa);
         ctx.restore();
       }

@@ -52,20 +52,24 @@
     const sy = scrollY(t);
     const cIn = pp(t, 13.30, 14.30, 'inOutCubic'), cOut = pp(t, 15.0, 16.0, 'inOutCubic');
     const crane = cIn * (1 - cOut);
-    const z = lerp(lerp(1 + 0.025 * pp(t, 12.6, 13.3, 'inOutSine'), 0.98, cIn), 0.787, cOut);
+    // after the landing the camera dollies in on the bowl (pivot = the drop, so nothing before 12.12 changes)
+    const Zd = lerp(1, 1.3, pp(t, 12.12, 13.05, 'inOutSine')) * (1 + 0.025 * pp(t, 13.0, 13.3, 'inOutSine'));
+    const z = lerp(lerp(Zd, 1.18, cIn), 0.945, cOut);
     const tilt = 0.105 * ease.outBack(pp(t, 11.95, 12.45, 'linear'), 1.3) * (1 - cOut);
     const widen = pp(t, 13.70, 14.22, 'inOutCubic');
     const bump = 1 + 0.03 * Math.sin(PI * cl((t - 13.92) / 0.42)) * (t > 13.92 ? 1 : 0);
-    const fcBase = lerp(lerp(850, 872, cIn), 830, cOut);
     const dr = E.drift(t, 4, 0.3, 11);
     const sh = t > T.land ? Math.exp(-(t - T.land) * 11) : 0;
     const shx = E.noise(t * 38, 5) * 4 * sh, shy = E.noise(t * 41, 6) * 3 * sh;
-    return { sy, crane, z: z * bump, tilt, widen, fcY: fcBase + sy + dr.y + shy, x: 540 + dr.x + shx, cOut };
+    const fcFall = 880 + (850 + sy + dr.y + shy - 880) * Zd + 64 * pp(t, 12.3, 13.05, 'inOutSine');
+    // crane: pool near frame centre · morph: bowl foot exactly on E's hourglass neck (540,1000)
+    const fcY = lerp(lerp(fcFall, 1000 + dr.y, cIn), 795.7 + dr.y, cOut);
+    return { sy, crane, z: z * bump, tilt, widen, fcY, x: 540 + dr.x + shx, cOut };
   }
   /** bowl geometry on screen (mirrors A.iznikBowl's internal maths) */
   function bowlGeo(c) {
     const rx = 330 * (1 + 0.27 * c.widen);
-    const ry0 = (110 + 90 * c.crane) * (1 + 0.27 * c.widen);
+    const ry0 = (110 + 120 * c.crane) * (1 + 0.27 * c.widen);
     const ry = Math.min(rx * 0.97, ry0 + rx * Math.sin(c.tilt) * 0.9);
     const depth = 220 * (1 + 0.3 * c.widen);
     const th = rx * 0.028, irx = rx - th, iry = ry * (irx / rx), yo = ry * 0.5, s = ry / rx;
@@ -146,15 +150,11 @@
   const FGP = 200; // padding so blurred edges never get clipped when the sprite slides
   function makeFG() { // bottom foreground strip: blurred dark vessel rim at bottom-left + honey bokeh
     const c = E.canvas(W + FGP * 2, 900), x = c.x;
-    x.translate(FGP, 0); x.filter = 'blur(16px)';
-    x.fillStyle = '#12081A'; x.beginPath(); x.ellipse(70, 640, 330, 300, -0.25, 0, TAU); x.fill();
-    x.fillStyle = 'rgba(255,150,100,0.10)'; x.beginPath(); x.ellipse(60, 650, 300, 280, -0.25, 0, TAU); x.fill();
-    x.fillStyle = '#12081A'; x.beginPath(); x.ellipse(1080, 760, 260, 200, 0.3, 0, TAU); x.fill();
-    x.filter = 'blur(9px)';
-    const bk = [[330, 520, 46, 0.22], [420, 610, 28, 0.18], [860, 470, 38, 0.16], [960, 590, 22, 0.2]];
+    x.translate(FGP, 0); x.filter = 'blur(9px)';
+    const bk = [[330, 520, 46, 0.22], [420, 610, 28, 0.18], [860, 470, 38, 0.16], [960, 590, 22, 0.2], [120, 420, 34, 0.14], [640, 700, 52, 0.12]];
     for (const [bx, by, br, ba] of bk) { x.fillStyle = E.rad(x, bx, by, 0, br, [[0, '#FFB547', ba * 0.6], [0.85, '#FFB547', ba], [1, '#FFB547', 0]]); x.beginPath(); x.arc(bx, by, br, 0, TAU); x.fill(); }
     // fallen rose petals lying on the gloss near the lens (C callback), out of focus, with faint mirror
-    const PET = [[170, 610, 150, 0.4, 0.55, 7], [360, 700, 120, -0.6, 0.7, 9], [790, 640, 135, 2.3, 0.6, 7], [960, 560, 100, 1.2, 0.75, 6]];
+    const PET = [[150, 620, 160, 0.4, 0.55, 8], [380, 720, 125, -0.6, 0.7, 10], [790, 650, 145, 2.3, 0.6, 8], [960, 540, 105, 1.2, 0.75, 6], [560, 590, 90, 3.6, 0.5, 5]];
     for (const [px, py, pr, rot, wl, bl] of PET) {
       x.save(); x.filter = `blur(${bl}px)`; x.translate(px, py); x.scale(1, 0.55);
       x.globalAlpha = 0.85; A.heroPetal(x, { R: pr, rot, wilt: wl, t: 0 });
@@ -178,6 +178,49 @@
     x.fillStyle = g; x.beginPath(); x.moveTo(470, -40); x.lineTo(620, -40); x.lineTo(330, 600); x.lineTo(150, 600); x.closePath(); x.fill();
     return c.c;
   }
+
+  /* ------------------------------------------------------------------ glazed çini floor (shared with E)
+   * Exact perspective via thin horizontal bands, each filled with the repeating tile pattern under a
+   * band-local affine (u scale = F/Z, v scale = dy/dZ). Depth of field = pre-blurred pattern variants. */
+  const FL = { F: 1400, back: 380 };
+  const TS = 256; let TILE = null;
+  function makeTile() {
+    const c = E.canvas(TS, TS), x = c.x, S = TS, q = S / 2;
+    x.fillStyle = '#F4EEE2'; x.fillRect(0, 0, S, S);
+    const petal = (cx, cy, r, n, w, col, rot = 0) => { x.fillStyle = col; for (let k = 0; k < n; k++) { const a = rot + (k / n) * TAU; x.beginPath(); x.ellipse(cx + Math.cos(a) * r * 0.55, cy + Math.sin(a) * r * 0.55, r * 0.5, r * w, a, 0, TAU); x.fill(); } };
+    for (const [cx, cy] of [[0, 0], [S, 0], [0, S], [S, S]]) { petal(cx, cy, S * 0.2, 8, 0.2, '#2A9A8E', PI / 8); x.fillStyle = '#D9473A'; x.beginPath(); x.arc(cx, cy, S * 0.06, 0, TAU); x.fill(); }
+    // saz leaves on the diagonals
+    for (let k = 0; k < 4; k++) { const a = PI / 4 + (k * PI) / 2; x.save(); x.translate(q + Math.cos(a) * S * 0.3, q + Math.sin(a) * S * 0.3); x.rotate(a); x.fillStyle = '#4FA3E0'; x.beginPath(); x.ellipse(0, 0, S * 0.11, S * 0.035, 0, 0, TAU); x.fill(); x.restore(); }
+    petal(q, q, S * 0.3, 8, 0.17, '#1F5FA8'); petal(q, q, S * 0.17, 8, 0.2, '#3CC6C0', PI / 8);
+    x.fillStyle = '#D9473A'; x.beginPath(); x.arc(q, q, S * 0.06, 0, TAU); x.fill();
+    x.strokeStyle = '#1F5FA8'; x.lineWidth = S * 0.018; x.strokeRect(S * 0.05, S * 0.05, S * 0.9, S * 0.9);
+    x.strokeStyle = '#6A5A62'; x.lineWidth = 3; x.strokeRect(0, 0, S, S);
+    const out = [c.c];
+    for (const bl of [4, 10]) { // seamless blur: blur a 3×3 mosaic, keep the centre
+      const m = E.canvas(S * 3, S * 3); for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) m.x.drawImage(c.c, i * S, j * S);
+      const o = E.canvas(S, S); o.x.filter = `blur(${bl}px)`; o.x.drawImage(m.c, -S, -S); out.push(o.c);
+    }
+    return out;
+  }
+  const patCache = new WeakMap();
+  DE.tileFloor = (ctx, o) => {
+    if (!TILE) TILE = makeTile();
+    let pats = patCache.get(ctx); if (!pats) { pats = TILE.map((c) => ctx.createPattern(c, 'repeat')); patCache.set(ctx, pats); }
+    const band = o.band || 5; // draws OPAQUE (crossfades between blur variants); fade it with a layer
+    ctx.save();
+    for (let y = o.y0; y < o.y1; y += band) {
+      const yc = y + band / 2; if (yc <= o.hzT + 1) continue;
+      const Z = (o.F * o.hc) / (yc - o.hzT), a = (o.F / Z) * (o.T / TS), d = ((o.F * o.hc) / (Z * Z)) * (o.T / TS);
+      const e = o.cx - (o.xo * o.F) / Z, vc = ((o.zo - Z) * TS) / o.T, f = yc - d * vc;
+      const b = o.blur ? cl(o.blur(yc), 0, 2) : 0, b0 = Math.min(1, Math.floor(b)), w = b - b0;
+      for (const [k, al] of [[b0, 1], [b0 + 1, w]]) {
+        if (al < 0.01) continue;
+        const p = pats[k]; p.setTransform(new DOMMatrix([a, 0, 0, d, e, f]));
+        ctx.globalAlpha = al; ctx.fillStyle = p; ctx.fillRect(o.x0, y, o.x1 - o.x0, band + 0.75);
+      }
+    }
+    ctx.restore();
+  };
 
   /* ------------------------------------------------------------------ drop */
   const silCache = new Map();
@@ -222,7 +265,9 @@
     const top = E.mix(NIGHT[0], PAL.top, nk), mid = E.mix(NIGHT[1], PAL.mid, nk), bot = E.mix(NIGHT[2], PAL.bot, nk);
     // horizon (wall/ledge line): just behind the bowl foot, parallax 0.85, rises with the crane
     const zp = 1 + (g.z - 1) * 0.85;
-    const hz = 1000 + (g.footY - 1000) * 0.85 - c.crane * 330 * g.z - 6 * zp;
+    const hzOld = 1000 + (g.footY - 1000) * 0.85 - c.crane * 330 * g.z - 6 * zp;
+    const Zc = FL.F / g.z, hzP = g.footY - FL.F * g.s * FL.back / (Zc + FL.back); // ledge back edge, true perspective
+    const hz = lerp(hzOld, hzP, pp(t, 12.12, 12.9, 'inOutSine'));
     ctx.fillStyle = E.lin(ctx, 0, hz - 1100, 0, hz, [[0, top], [0.6, mid], [1, bot]]);
     ctx.fillRect(0, 0, W, H);
     // warm key from the right
@@ -246,6 +291,20 @@
     // ledge / glossy floor below the horizon
     ctx.fillStyle = E.lin(ctx, 0, hz, 0, hz + 700, [[0, '#2B1431', 0.85], [0.12, PAL.floor, 0.9], [1, '#0E0714', 0.96]]);
     ctx.fillRect(0, hz, W, H - hz + 2);
+    // glazed çini platform in perspective (revealed by the key light), blurred toward the lens
+    const ta = pp(t, 11.97, 12.5, 'inOutSine');
+    if (ta > 0.01) {
+      E.layer(ctx, (l) => {
+        l.beginPath(); l.rect(0, hz, W, H - hz); l.clip();
+        DE.tileFloor(l, { cx: g.x, hzT: g.footY - FL.F * g.s, F: FL.F, hc: g.s * Zc, y0: Math.floor(hz), y1: H, T: 140, xo: 70, zo: Zc + 70,
+          x0: 0, x1: W, band: 5, blur: (y) => cl((y - g.footY - 260) / 300, 0, 2) });
+      }, { alpha: 0.2 * ta });
+      ctx.save(); ctx.beginPath(); ctx.rect(0, hz, W, H - hz); ctx.clip();
+      // dark plum glaze: deeper toward the lens and the sides, so the tiles stay a whisper under the gloss
+      ctx.fillStyle = E.lin(ctx, 0, hz, 0, H, [[0, '#2B1431', 0.55], [0.35, '#1C1024', 0.28], [1, '#0E0714', 0.55]]); ctx.fillRect(0, hz, W, H - hz);
+      ctx.fillStyle = E.lin(ctx, 0, 0, W, 0, [[0, '#0E0714', 0.5], [0.3, '#0E0714', 0], [0.7, '#0E0714', 0], [1, '#0E0714', 0.35]]); ctx.fillRect(0, hz, W, H - hz);
+      ctx.restore();
+    }
     ctx.save(); ctx.translate(g.x, hz); ctx.scale(zp, zp); ctx.globalAlpha *= 0.85 * lerp(0.5, 1, kk);
     ctx.drawImage(SPR.niche, 0, NS.top, NS.w, NS.bot, -540, 0, NS.w, NS.bot); ctx.restore();
     // ledge edge highlight + key glare on the gloss
@@ -376,7 +435,7 @@
   function bowlOpts(t, c) {
     const lit = 1 - pp(t, 14.88, 15.45, 'inOutSine');
     return {
-      t, rx: 330, ry: 110 + 90 * c.crane, depth: 220, tilt: c.tilt, widen: c.widen,
+      t, rx: 330, ry: 110 + 120 * c.crane, depth: 220, tilt: c.tilt, widen: c.widen,
       lit, litRadius: 120 * pp(t, T.land, T.land + 0.75, 'outCubic'),
       dim: 0.5 * pp(t, 14.88, 15.5), honey: Math.max(0, honeyR(t)), reflection: true, rimCol: '#B9A6FF',
     };
@@ -458,7 +517,7 @@
   }
   /** L5 foreground (parallax 1.6) */
   function drawFG(ctx, t, g, mult = 1) {
-    const fgy = 1250 + (g.footY - 1000) * 1.6 - g.c.crane * 330 + E.noise(t * 0.2, 91) * 10;
+    const fgy = 1250 + g.c.sy * 1.6 - 110 * pp(t, 12.3, 13.05, 'inOutSine') - g.c.crane * 300 + 40 * g.c.cOut + E.noise(t * 0.2, 91) * 10;
     if (fgy < H && mult > 0.005) { ctx.save(); ctx.globalAlpha *= 0.95 * mult; ctx.drawImage(SPR.fg, -FGP + E.noise(t * 0.17, 92) * 14, fgy); ctx.restore(); }
   }
   /** grade: soft-light #FF8A5C @ 0.08 (+ a touch more once the key is on) */

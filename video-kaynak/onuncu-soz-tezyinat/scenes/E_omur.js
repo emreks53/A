@@ -39,21 +39,23 @@
   const PAL = { top: '#0E2433', mid: '#17485A', bot: '#2D6E74', rim: '#7FE0D2', glass: '#CFF3FF', sand: '#F2C46B', sandHi: '#FFE29A', flame: '#FFB34D', night: '#05101A' };
   const FPAL = ['#160F38', '#34206B', '#5E2C86'];
   const NECK = [540, 1000];                    // hourglass neck (world)
-  const KAN = { x: 1025, y: 979, size: 230 };   // kandil foot (world)
-  const STAND_B = 1225;                         // stand base (world)
-  const HZ = 1040;                              // horizon (world)
-  const BOWL_S = 215 / 330;                     // final bowl scale (asset units → world)
-  const BOWL_FOOT = [730, 1150];                // final bowl foot (world)
+  const KAN = { x: 990, y: 1183.5, size: 420 }; // kandil foot (world) — "you", a co-hero beside the hourglass
+  const KS = 1.8;                               // stand scale (stand art is authored small)
+  const STAND_B = 1353.5;                       // stand base on the floor (world)
+  const HZ = 1040;                              // floor/wall line (world)
+  const BOWL_S = 340 / 330;                     // final bowl scale (asset units → world): rx ≈ 408 px on screen
+  const BOWL_FOOT = [702, 1480];                // final bowl foot (world): in front of the kandil, which stands behind its right side
+  const EMBER_F = [819, 876];                   // F_kiymet's ember path starts here (screen) — matched from 22.25
   const WICK = [KAN.x, KAN.y - 170 * (KAN.size / 200)];
   let SPR = null;
 
   /* ------------------------------------------------------------------ camera */
   function camE(t) {
-    let x = 540, y = 960, z = 1;
-    const a = pp(t, 16.5, 17.45, 'inOutCubic'); x = lerp(x, 580, a); y = lerp(y, 925, a); z = lerp(z, 1.45, a);
-    const b = pp(t, 18.66, 19.62, 'inOutCubic'); x = lerp(x, 756, b); y = lerp(y, 964, b); z = lerp(z, 1.02, b);
-    const c = pp(t, 19.62, 21.6, 'inOutSine'); z = lerp(z, 1.08, c);
-    const d = pp(t, 21.98, 22.5, 'inOutSine'); y = lerp(y, 830, d);
+    let x = 540, y = 966.67, z = 1.2;                                       // 16.30: neck (540,1000), bowl-sized glass
+    const a = pp(t, 16.5, 17.35, 'inOutCubic'); y = lerp(y, 915, a); z = lerp(z, 1.8, a);           // big, centred: mini-life reads
+    const b = pp(t, 18.66, 19.62, 'inOutCubic'); x = lerp(x, 749.6, b); y = lerp(y, 978, b); z = lerp(z, 1.145, b); // hourglass L, kandil R
+    const c = pp(t, 19.7, 21.4, 'inOutSine'); x = lerp(x, 760, c); y = lerp(y, 990, c); z = lerp(z, 1.2, c);       // bowl large, kandil close
+    const d = pp(t, 21.98, 22.5, 'inOutSine'); y = lerp(y, 850, d);
     const dr = E.drift(t, 4, 0.3, 11);
     return { x, y, z, ox: dr.x, oy: dr.y };
   }
@@ -124,10 +126,7 @@
   const FGP = 260; // fg sprite padding (no clipped blur edges when it slides)
   function fgSpr() {
     const c = E.canvas(W + FGP * 2, 820), x = c.x;
-    x.translate(FGP, 0); x.filter = 'blur(18px)';
-    x.fillStyle = '#04121A'; x.beginPath(); x.ellipse(-30, 700, 300, 260, 0.2, 0, TAU); x.fill();
-    x.beginPath(); x.ellipse(1120, 640, 280, 300, -0.3, 0, TAU); x.fill();
-    x.filter = 'blur(8px)';
+    x.translate(FGP, 0); x.filter = 'blur(8px)';
     for (const [bx, by, br, ba, col] of [[250, 560, 30, 0.2, '#F2C46B'], [930, 430, 40, 0.13, '#7FE0D2'], [120, 380, 20, 0.16, '#F2C46B'], [780, 640, 24, 0.15, '#F2C46B']]) {
       x.fillStyle = E.rad(x, bx, by, 0, br, [[0, col, ba * 0.5], [0.85, col, ba], [1, col, 0]]); x.beginPath(); x.arc(bx, by, br, 0, TAU); x.fill();
     }
@@ -162,9 +161,17 @@
       S.drawSprite(ctx, b.gold ? SPR.bokG : SPR.bokC, px, py, b.s * (1 + (cam.z - 1) * 0.3), 0, 0.55 + 0.3 * Math.sin(t * 0.9 + b.ph));
     }
     ctx.restore();
-    // glossy floor below the horizon
+    // glossy floor below the horizon: glazed çini tiles in true perspective under a deep teal glaze
     ctx.fillStyle = E.lin(ctx, 0, hz, 0, H, [[0, '#215B64'], [0.06, '#163F49'], [0.5, '#0B2730'], [1, '#05141A']]);
     ctx.fillRect(0, hz, W, H - hz);
+    const wx0 = cam.x - (540 + 40) / cam.z, wx1 = cam.x + (540 + 40) / cam.z, wyB = cam.y + (960 + 20) / cam.z;
+    E.layer(ctx, (l) => {
+      l.setTransform(cam.z, 0, 0, cam.z, 540 + cam.ox - cam.x * cam.z, 960 + cam.oy - cam.y * cam.z);
+      l.beginPath(); l.rect(wx0, HZ, wx1 - wx0, wyB - HZ); l.clip();
+      DE.tileFloor(l, { cx: 700, hzT: 600, F: 1400, hc: 746, y0: HZ, y1: wyB, T: 150, xo: 75, zo: 0, x0: wx0, x1: wx1, band: 5 / cam.z,
+        blur: (y) => cl((y - 1400) / 260, 0, 2) });
+    }, { alpha: 0.17 });
+    ctx.fillStyle = E.lin(ctx, 0, hz, 0, H, [[0, '#123A44', 0.45], [0.35, '#0B2730', 0.2], [1, '#04121A', 0.5]]); ctx.fillRect(0, hz, W, H - hz);
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = E.lin(ctx, 0, hz - 3, 0, hz + 5, [[0, PAL.rim, 0], [0.5, PAL.rim, 0.14], [1, PAL.rim, 0]]); ctx.fillRect(0, hz - 3, W, 8);
     ctx.translate(bl[0], hz + 30 * cam.z); ctx.scale(1, 0.12);
@@ -198,8 +205,8 @@
   }
   let STAND = null;
   function drawStand(ctx, warm) {
-    if (!STAND) STAND = standPath(0, 0, STAND_B - KAN.y);
-    const hgt = STAND_B - KAN.y;
+    const hgt = (STAND_B - KAN.y) / KS;
+    if (!STAND) STAND = standPath(0, 0, hgt);
     ctx.fillStyle = E.lin(ctx, -54, 0, 54, 0, [[0, '#0A1A1E'], [0.28, '#3A2A22'], [0.56, '#7A5634'], [0.8, '#2E1E16'], [1, '#0A0E10']]); ctx.fill(STAND);
     ctx.save(); ctx.clip(STAND);
     ctx.fillStyle = E.lin(ctx, -54, 0, -18, 0, [[0, PAL.rim, 0.4], [1, PAL.rim, 0]]); ctx.fillRect(-54, 0, 40, hgt);
@@ -218,7 +225,7 @@
     const gut = 1 - 0.72 * pp(t, 21.25, 21.47, 'inQuad');
     const jit = 1 + (0.06 + 0.18 * pp(t, 19.3, 20.0) + 0.3 * pp(t, 21.1, 21.45)) * E.noise(t * 14, 31);
     return {
-      t, size: KAN.size, lit, flame: Math.max(0, pop * shrink * gut * jit), oil: lerp(0.85, 0.22, pp(t, 19.3, 20.05, 'inOutSine')),
+      t, size: KAN.size, lit, flame: Math.max(0, pop * shrink * gut * jit), oil: lerp(0.9, 0.12, pp(t, 19.25, 20.1, 'inOutSine')),
       ember: pp(t, 21.42, 21.64, 'inOutSine') * (1 - pp(t, 21.9, 22.05)), lightR: 380,
     };
   }
@@ -233,7 +240,7 @@
     if (grow > 0.01 && sink < 0.99) {
       const bloom = pp(t, 17.84, 18.1, 'outCubic'), wilt = pp(t, 18.08, 18.4, 'inOutSine');
       const bx = lerp(-G.X(yL) * 0.16, 0, sink), by = lerp(yL + 1, -G.nr * 0.5, ease.inQuad(sink));
-      const L = 44 * grow * (1 - 0.25 * wilt), lean = 0.12 * Math.sin(t * 2.1) + 0.5 * wilt - 0.08;
+      const L = 50 * grow * (1 - 0.25 * wilt), lean = 0.12 * Math.sin(t * 2.1) + 0.5 * wilt - 0.08;
       const tip = [bx + Math.sin(lean) * L, by - Math.cos(lean) * L];
       ctx.save(); ctx.globalAlpha *= 1 - sink; ctx.translate(bx, by); ctx.scale(1 - 0.6 * sink, 1 - 0.6 * sink); ctx.translate(-bx, -by);
       ctx.strokeStyle = E.mix('#3E9A62', '#7A7440', wilt); ctx.lineWidth = 2.8; ctx.lineCap = 'round';
@@ -244,7 +251,7 @@
         const lx = lerp(bx, tip[0], u), ly = lerp(by, tip[1], u);
         ctx.save(); ctx.translate(lx, ly); ctx.rotate(sd * (0.9 + 0.5 * wilt) + lean); ctx.beginPath(); ctx.ellipse(sd * 8, 0, 8.5 * grow, 3.4 * grow, 0, 0, TAU); ctx.fill(); ctx.restore();
       }
-      E.at(ctx, tip[0], tip[1], Math.min(1, grow), lean, (c) => A.heroRose(c, { R: 31, variant: 'mini', bloom: lerp(0.12, 1, bloom), wilt, t, tilt: 0.7 }));
+      E.at(ctx, tip[0], tip[1], Math.min(1, grow), lean, (c) => A.heroRose(c, { R: 40, variant: 'mini', bloom: lerp(0.12, 1, bloom), wilt, t, tilt: 0.7 }));
       ctx.restore();
       // falling petals while withering
       if (wilt > 0.3) for (let i = 0; i < 4; i++) {
@@ -260,7 +267,7 @@
       const hw = Math.max(20, G.X(yL - 56) - 22);
       const x = lerp(-hw - 30, 0, bIn) + Math.sin(t * 1.9) * hw * 0.55, y = yL - 58 - 9 * Math.sin(t * 3.1) - 30 * (1 - bIn);
       ctx.save(); ctx.globalAlpha *= bIn * (1 - bOut);
-      E.at(ctx, x, y, 1, 0.25 * Math.sin(t * 1.9 + 1.2), (c) => A.butterfly(c, { size: 19, t, pattern: 'pearl', hz: 6.5, sheen: 1 }));
+      E.at(ctx, x, y, 1, 0.25 * Math.sin(t * 1.9 + 1.2), (c) => A.butterfly(c, { size: 24, t, pattern: 'pearl', hz: 6.5, sheen: 1 }));
       S.light(ctx, x, y, 34, '#CFF6FF', 0.3);
       ctx.restore();
     }
@@ -315,8 +322,8 @@
       ctx.strokeStyle = E.rgba(PAL.glass, 0.4 * ga); ctx.lineWidth = 4.5 * cam.z; ctx.stroke();
       ctx.strokeStyle = E.rgba('#FFFFFF', 0.85 * ga); ctx.lineWidth = 1.6 * cam.z; ctx.stroke();
       // faint "full" mark at the rim: everything above the ring stays empty
-      const fa = E.env(t, 21.06, 21.7, 0.1, 0.35) * 0.45 * alpha;
-      ctx.setLineDash([3 * cam.z, 9 * cam.z]); ctx.strokeStyle = E.rgba(PAL.glass, fa); ctx.lineWidth = 1.6 * cam.z;
+      const fa = E.env(t, 21.06, 21.7, 0.1, 0.35) * 0.7 * alpha;
+      ctx.setLineDash([4 * cam.z, 10 * cam.z]); ctx.strokeStyle = E.rgba(PAL.glass, fa); ctx.lineWidth = 2.2 * cam.z;
       ctx.beginPath(); ctx.ellipse(rp[0], rp[1], irx * 0.985, iry * 0.985, 0, 0, TAU); ctx.stroke();
       ctx.restore();
     }
@@ -403,10 +410,10 @@
     const hs = toS(cam, pos[0], pos[1]);
     // warm pool of kandil light on the glossy floor (the long shadow cuts through it)
     if (flameK > 0.02) {
-      const kb = toS(cam, KAN.x - 120, STAND_B + 10);
-      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(kb[0], kb[1]); ctx.scale(1, 0.2);
-      ctx.fillStyle = E.rad(ctx, 0, 0, 0, 820 * cam.z, [[0, '#FFB34D', 0.34 * flameK], [0.45, '#FF9A3A', 0.12 * flameK], [1, '#FF9A3A', 0]]);
-      ctx.fillRect(-820 * cam.z, -820 * cam.z, 1640 * cam.z, 1640 * cam.z); ctx.restore();
+      const kb = toS(cam, KAN.x - 200, STAND_B + 30);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(kb[0], kb[1]); ctx.scale(1, 0.26);
+      ctx.fillStyle = E.rad(ctx, 0, 0, 0, 1000 * cam.z, [[0, '#FFB34D', 0.55 * flameK], [0.4, '#FF9A3A', 0.22 * flameK], [1, '#FF9A3A', 0]]);
+      ctx.fillRect(-1000 * cam.z, -1000 * cam.z, 2000 * cam.z, 2000 * cam.z); ctx.restore();
     }
     // long teal-violet shadow thrown by the kandil across the floor
     if (flameK > 0.02 && uk < 0.98) {
@@ -426,15 +433,19 @@
       ctx.fillStyle = E.rad(ctx, cs[0], cs[1], 0, 300 * cam.z, [[0, '#020A0E', 0.55], [1, '#020A0E', 0]]);
       ctx.translate(cs[0], cs[1]); ctx.scale(1, 0.14); ctx.beginPath(); ctx.arc(0, 0, 300 * cam.z, 0, TAU); ctx.fill(); ctx.restore();
       const ks = toS(cam, KAN.x, STAND_B);
-      ctx.save(); ctx.globalAlpha *= m * kanA; ctx.fillStyle = E.rad(ctx, ks[0], ks[1], 0, 90 * cam.z, [[0, '#020A0E', 0.6], [1, '#020A0E', 0]]);
-      ctx.translate(ks[0], ks[1]); ctx.scale(1, 0.18); ctx.beginPath(); ctx.arc(0, 0, 90 * cam.z, 0, TAU); ctx.fill(); ctx.restore();
+      ctx.save(); ctx.globalAlpha *= m * kanA; ctx.fillStyle = E.rad(ctx, ks[0], ks[1], 0, 150 * cam.z, [[0, '#020A0E', 0.6], [1, '#020A0E', 0]]);
+      ctx.translate(ks[0], ks[1]); ctx.scale(1, 0.18); ctx.beginPath(); ctx.arc(0, 0, 150 * cam.z, 0, TAU); ctx.fill(); ctx.restore();
     }
     // ---------- kandil on its stand (dark & unlit until "senin"; emerges as the camera pans) ----------
     if (m * kanA > 0.01) {
       const kVeil = lerp(0.84, 0.6, pp(t, 18.6, 19.0)) * (1 - litK) + 0.25 * pp(t, 21.4, 21.8);
       E.layer(ctx, (l) => {
-        camAt(l, cam, KAN.x, STAND_B, 1, (cc) => { cc.save(); cc.scale(1, -0.6); cc.globalAlpha = 0.18; drawStand(cc, 0); cc.restore(); });
-        camAt(l, cam, KAN.x, KAN.y, 1, (cc) => drawStand(cc, flameK));
+        const kb = toS(cam, KAN.x, STAND_B)[1];
+        l.save(); l.globalAlpha = 0.16; l.translate(0, 2 * kb); l.scale(1, -1); // mirror in the glazed floor
+        camAt(l, cam, KAN.x, KAN.y, KS, (cc) => drawStand(cc, flameK));
+        camAt(l, cam, KAN.x, KAN.y, 1, (cc) => A.kandil(cc, Object.assign({}, ko, { light: false })));
+        l.restore();
+        camAt(l, cam, KAN.x, KAN.y, KS, (cc) => drawStand(cc, flameK));
         camAt(l, cam, KAN.x, KAN.y, 1, (cc) => A.kandil(cc, Object.assign({}, ko, { light: false })));
         if (kVeil > 0.005) { l.globalCompositeOperation = 'source-atop'; l.fillStyle = `rgba(4,18,26,${kVeil.toFixed(3)})`; l.fillRect(0, 0, W, H); }
       }, { alpha: m * kanA });
@@ -444,7 +455,7 @@
     if (morph) {
       const k = A.morphEase(pp(t, 16.08, 16.3, 'linear'), 0.07);
       const hp = toS(cam, NECK[0], NECK[1]);
-      const P = A.lerpShape(bowlSilD(c), hgSil(st.h, st.w), k).map(([x, y]) => [x + hp[0], y + hp[1]]);
+      const P = A.lerpShape(bowlSilD(c), hgSil(st.h, st.w).map(([x, y]) => [x * cam.z, y * cam.z]), k).map(([x, y]) => [x + hp[0], y + hp[1]]);
       const path = A.shapePath(P, false);
       // porcelain bowl (+ its reflection turning solid), squeezed by the glass outline
       const bA = 1 - pp(t, 16.12, 16.34, 'inOutSine');
@@ -534,13 +545,13 @@
     const wick = toS(cam, WICK[0], WICK[1]);
     if (flameK > 0.01) {
       const fl = flameK * (0.94 + 0.06 * E.noise(t * 11, 4));
-      S.light(ctx, wick[0], wick[1] - 20, 420 * cam.z * lerp(0.4, 1, ease.outCubic(cl(ko.lit * ko.flame))), '#FFB34D', 0.42 * fl);
+      S.light(ctx, wick[0], wick[1] - 30, 640 * cam.z * lerp(0.4, 1, ease.outCubic(cl(ko.lit * ko.flame))), '#FFB34D', 0.42 * fl);
       ctx.save(); ctx.globalCompositeOperation = 'screen';
       ctx.fillStyle = E.lin(ctx, W, 0, 300, 0, [[0, '#FFB34D', 0.24 * fl], [1, '#FFB34D', 0]]); ctx.fillRect(0, 0, W, H); ctx.restore();
     }
     // ignition "fwoomp": a soft warm burst as the kandil catches ("senin")
     const ig = E.env(t, 18.86, 19.3, 0.05, 0.36);
-    if (ig > 0.01) { S.light(ctx, wick[0], wick[1] - 10, 300 * cam.z, '#FFD58A', 0.55 * ig); S.sparkle(ctx, wick[0], wick[1] - 18 * cam.z, 70 * cam.z * ig, ig, '#FFF4D6', 0.1); }
+    if (ig > 0.01) { S.light(ctx, wick[0], wick[1] - 20, 420 * cam.z, '#FFD58A', 0.55 * ig); S.sparkle(ctx, wick[0], wick[1] - 34 * cam.z, 110 * cam.z * ig, ig, '#FFF4D6', 0.1); }
     // ---------- front layers ----------
     if (morph) DE.drawShaftD(ctx, t, g, 1 - m);
     drawDust(ctx, t, cam, m * (1 - 0.6 * pp(t, 21.4, 21.8)));
@@ -576,8 +587,9 @@
     if (ea > 0.003) {
       const u = pp(t, 21.95, 22.47, 'linear'), e = ease.inOutSine(u);
       const tx = 540 + 26 * Math.sin(u * PI * 2.4) * (1 - u) * Math.min(1, u * 4), ty = 760 - 70 * Math.sin(PI * u) * (1 - u * 0.4);
-      const x = lerp(wick[0], tx, e), y = lerp(wick[1], ty, e);
-      const r = lerp(6 * cam.z * (0.92 + 0.08 * E.noise(t * 3, 7)), 34, ease.outCubic(pp(t, 22.2, 22.47, 'linear')));
+      const fb = pp(t, 21.95, 22.25, 'inOutSine'), p0x = lerp(wick[0], EMBER_F[0], fb), p0y = lerp(wick[1], EMBER_F[1], fb);
+      const x = lerp(p0x, tx, e), y = lerp(p0y, ty, e);
+      const r = lerp(11 * (0.92 + 0.08 * E.noise(t * 3, 7)), 34, ease.outCubic(pp(t, 22.2, 22.47, 'linear')));
       const gk = pp(t, 22.34, 22.46, 'linear');
       const vb = pp(t, 22.24, 22.5, 'outCubic'); // violet bloom behind the gem
       if (vb > 0.002) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = E.rad(ctx, x, y, 0, 560 * vb + 40, [[0, '#7A44B8', 0.5 * vb], [0.3, FPAL[2], 0.4 * vb], [1, FPAL[2], 0]]); ctx.fillRect(0, 0, W, H); ctx.restore(); }

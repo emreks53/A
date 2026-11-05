@@ -215,11 +215,14 @@ if COVER_RGB:
     COVER_LIN = tuple(float(c) for c in COVER_RGB.split(','))
 # varak: doygun sicak altin (#D4AF37 / #C9A24A civari okunacak sekilde); kenar (F82) tinti da altin
 KEYSIZE = arg('--keysize', 0.42, float)
-GOLD_LIN = (0.80, 0.50, 0.095)
-GOLD_HI = (0.88, 0.60, 0.15)
+GOLD_LIN = (0.80, 0.45, 0.015)
+GOLD_HI = (0.86, 0.53, 0.035)
+GOLD_KD = arg('--gkd', 0.32, float)   # yaygin (govde) altin katmani olcegi
+GOLD_KM = arg('--gkm', 0.24, float)   # metalik yansima katmani olcegi
+GOLD_MIX = arg('--gmix', 0.5, float)  # metalik pay
 GOLD_OCHRE = (0.36, 0.19, 0.03)
-GOLD_EDGE = (0.95, 0.66, 0.20)
-GOLD_ROUGH = (arg('--grmin', 0.24, float), arg('--grmax', 0.40, float))
+GOLD_EDGE = (0.95, 0.62, 0.14)
+GOLD_ROUGH = (arg('--grmin', 0.22, float), arg('--grmax', 0.36, float))
 LSPEC = arg('--spec', 0.06, float)
 LROUGH = arg('--lrough', 0.72, float)
 
@@ -314,8 +317,17 @@ def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
                               'Sheen Roughness': 0.5, 'Specular IOR Level': LSPEC})
     if fac is None:
         b.out(leather.outputs[0]); return m
-    gold = b.principled(**{'Base Color': gold_col, 'Metallic': 1.0, 'Roughness': gold_r, 'Normal': nrm,
+    # AgX parlak metal yansimasini kreme ceviriyor: varak = yaygin sicak altin govde + kisilmis metal parilti
+    g_d = b.mixc(1.0, gold_col, (GOLD_KD, GOLD_KD, GOLD_KD), 'MULTIPLY')
+    g_m = b.mixc(1.0, gold_col, (GOLD_KM, GOLD_KM, GOLD_KM), 'MULTIPLY')
+    gdiff = b.principled(**{'Base Color': g_d, 'Metallic': 0.0, 'Roughness': 0.55, 'Normal': nrm,
+                            'Specular IOR Level': 0.0})
+    gmet = b.principled(**{'Base Color': g_m, 'Metallic': 1.0, 'Roughness': gold_r, 'Normal': nrm,
                            'Specular Tint': GOLD_EDGE})
+    gm = b.new('ShaderNodeMixShader'); gm.inputs[0].default_value = GOLD_MIX
+    b.link(gdiff.outputs[0], gm.inputs[1]); b.link(gmet.outputs[0], gm.inputs[2])
+    class _G: pass
+    gold = _G(); gold.outputs = gm.outputs
     mix = b.new('ShaderNodeMixShader')
     b.link(fac, mix.inputs[0]); b.link(leather.outputs[0], mix.inputs[1]); b.link(gold.outputs[0], mix.inputs[2])
     b.out(mix.outputs[0])

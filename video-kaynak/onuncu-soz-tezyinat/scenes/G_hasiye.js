@@ -62,6 +62,22 @@
     const ox = (w - 1080) / 2, oy = (h - 1920) / 2;
     x.strokeStyle = 'rgba(168,116,42,0.34)'; x.lineWidth = 1.6; x.strokeRect(ox + 58, oy + 58, 1080 - 116, 1920 - 116);
     x.strokeStyle = 'rgba(168,116,42,0.22)'; x.lineWidth = 0.9; x.strokeRect(ox + 68, oy + 68, 1080 - 136, 1920 - 136);
+    // greeked text (grey line texture, no letters) laid out like the book page: main block, then the footnote
+    const gr = E.rng(4417), tx0 = ox + 128, tx1 = ox + 1080 - 128, clear = (gx, gw, gy) => Math.abs(gy - (oy + 760)) < 104 && gx < ox + 690 && gx + gw > ox + 390;
+    const line = (gy, hh, al, endF, indent) => {
+      let gx = tx0 + (indent ? 46 : 0); const end = tx0 + (tx1 - tx0) * endF;
+      while (gx < end - 8) {
+        const gw = Math.min(end - gx, 16 + gr() * 74);
+        if (gw > 6 && !clear(gx, gw, gy)) { x.fillStyle = `rgba(92,70,52,${(al * (0.8 + 0.4 * gr())).toFixed(3)})`; x.beginPath(); x.roundRect(gx, gy - hh / 2, gw, hh, hh / 2); x.fill(); }
+        gx += gw + 9 + gr() * 4;
+      }
+    };
+    let para = 0;
+    for (let gy = oy + 156; gy <= oy + 1136; gy += 43) {
+      const last = para > 4 + gr() * 4; line(gy, 9, 0.15, last ? 0.3 + 0.45 * gr() : 1, para === 0); para = last ? 0 : para + 1;
+    }
+    x.strokeStyle = 'rgba(90,42,47,0.2)'; x.lineWidth = 1; x.beginPath(); x.moveTo(tx0, oy + 1180); x.lineTo(tx0 + 250, oy + 1180); x.stroke();
+    for (let k = 0; k < 7; k++) line(oy + 1218 + k * 33, 7, 0.13, k === 6 ? 0.42 : 1, k === 0);
     return cv.c;
   }
   /** parchment page: gradient (screen) + fibres (world, under the current transform). */
@@ -77,16 +93,16 @@
     if (a <= 0) return;
     const pulse = 1 + 0.07 * Math.sin(t * 2.4);
     ctx.save(); ctx.globalAlpha *= a;
-    ctx.fillStyle = E.rad(ctx, x, y, 0, r * 3.6 * pulse, [[0, '#FFE7B0', 0.8], [0.35, '#FFE7B0', 0.34], [1, '#FFE7B0', 0]]);
+    ctx.fillStyle = E.rad(ctx, x, y, 0, r * 3.6 * pulse, [[0, '#FFE7B0', 0.9], [0.35, '#FFDC94', 0.42], [1, '#FFE7B0', 0]]);
     ctx.fillRect(x - r * 4, y - r * 4, r * 8, r * 8);
-    E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, glow: 0.7, col: '#D8B26E' }));
+    E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, glow: 0.7, lineW: r * 0.045, col: '#C69A42' }));
     ctx.restore();
   }
   function footMotes(ctx, t, x, y, a = 1) {
     if (a <= 0) return;
     ctx.save();
     for (let i = 0; i < 7; i++) {
-      const ang = i * 0.9 + t * (0.18 + 0.05 * (i % 3)), rr = 64 + 26 * i + 10 * Math.sin(t * 0.7 + i), px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr * 0.8 - 6 * Math.sin(t + i);
+      const ang = i * 0.9 + t * (0.18 + 0.05 * (i % 3)), rr = 96 + 22 * i + 10 * Math.sin(t * 0.7 + i), px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr * 0.8 - 6 * Math.sin(t + i);
       const tw = 0.5 + 0.5 * Math.sin(t * 2.1 + i * 1.7);
       ctx.globalAlpha = a * (0.25 + 0.4 * tw);
       ctx.fillStyle = E.rad(ctx, px, py, 0, 7, [[0, '#FFF4D2', 1], [0.4, '#E8C27A', 0.7], [1, '#E8C27A', 0]]); ctx.fillRect(px - 7, py - 7, 14, 14);
@@ -336,17 +352,18 @@
       /* ---- page ---- */
       if (macroBG < 1) {
         drawParchment(ctx, SP.parch, (cx) => applyCam(cx, c));
-        // frost creeping from the left (34.6 →)
+        // frost creeping in from the left (34.6 →): only the edges and corners, crystals as wisps
         const fk = clamp((t - 34.55) / 2.0);
         if (fk > 0) {
-          const edge = lerp(-260, 1500, ez.inOutSine(fk));
+          const e = ez.inOutSine(fk);
           E.layer(ctx, (l) => {
             fresh(l, false);
-            l.fillStyle = E.lin(l, 0, 0, 0, H, [[0, '#DDEFFF'], [0.55, '#A8D4F5'], [1, '#6E9CC9']]); l.fillRect(0, 0, W, H);
-            l.save(); applyCam(l, c); l.globalAlpha = 0.85; l.drawImage(SP.frost, 540 - 600, 960 - 1050); l.restore();
+            l.globalAlpha = 0.55; l.fillStyle = E.lin(l, 0, 0, 0, H, [[0, '#DDEFFF'], [0.55, '#A8D4F5'], [1, '#6E9CC9']]); l.fillRect(0, 0, W, H);
+            l.globalAlpha = 1; l.save(); applyCam(l, c); l.drawImage(SP.frost, 540 - 600, 960 - 1050); l.restore();
             l.globalCompositeOperation = 'destination-in';
-            l.fillStyle = E.lin(l, edge - 360, 0, edge, 0, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(0, 0, W, H);
-          }, { alpha: 0.88 });
+            const cxm = lerp(1500, 640, e), ri = lerp(1400, 480, e);
+            l.save(); l.translate(cxm, 900); l.scale(1, 1.75); l.fillStyle = E.rad(l, 0, 0, ri, ri + 320, [[0, '#000', 0], [1, '#000', 1]]); l.fillRect(-3000, -3000, 6000, 6000); l.restore();
+          }, { alpha: 0.92 });
         }
         // evening falls on the page (bazaar palette)
         const dk = P(t, 37.28, 37.62, 'inOutSine');
@@ -360,7 +377,7 @@
       }
 
       /* ---- window world ---- */
-      const openK = clamp((t - 28.85) / 0.8), rS = 40 + (RW - 40) * ez.outBack(openK, 1.1), oS = P(t, 28.88, 29.5);
+      const openK = clamp((t - 28.85) / 0.8), rS = 60 + (RW - 60) * ez.outBack(openK, 1.1), oS = P(t, 28.88, 29.5);
       const winK = P(t, 29.36, 29.8, 'inOutSine');        // niche / frame appear (shutters reveal radially)
       const shutK = clamp((t - 30.18) / 0.6), shutE = ez.inOutCubic(shutK) - 0.012 * Math.sin(PI * clamp((t - 30.1) / 0.1));
       const vis = 1 - sm((lz - lg(9)) / (lg(16) - lg(9)));   // world visibility during macro
@@ -376,11 +393,11 @@
         }
         // the star (opening) — before the niche covers its interior
         footMotes(h, t, SCX, SCY, 1 - P(t, 28.85, 29.3));
-        if (t < 28.85) drawFootStar(h, t, SCX, SCY, 40, 1);
+        if (t < 28.85) drawFootStar(h, t, SCX, SCY, 60, 1);
         else {
           const glow = 1 - P(t, 29.0, 29.6);
           h.fillStyle = E.rad(h, SCX, SCY, 0, rS * 1.6, [[0, '#FFE7B0', 0.55 * glow], [1, '#FFE7B0', 0]]); h.fillRect(SCX - rS * 1.7, SCY - rS * 1.7, rS * 3.4, rS * 3.4);
-          h.save(); h.globalAlpha *= 1 - P(t, 37.25, 37.55); E.at(h, SCX, SCY, 1, 0, (cc) => star8a(cc, { r: rS, open: oS, draw: 1, glow: 0.7 * (1 - winK * 0.6), lineW: lerp(1.5, 3.2, oS), col: E.hexOf(E.mix('#D8B26E', '#B08030', oS)) })); h.restore();
+          h.save(); h.globalAlpha *= 1 - P(t, 37.25, 37.55); E.at(h, SCX, SCY, 1, 0, (cc) => star8a(cc, { r: rS, open: oS, draw: 1, glow: 0.7 * (1 - winK * 0.6), lineW: lerp(2.7, 3.2, oS), col: E.hexOf(E.mix('#C69A42', '#B08030', oS)) })); h.restore();
         }
         if (winK > 0) {
           const clip = starPath(0);
