@@ -295,6 +295,14 @@
     lay(ctx, c, 0.08, () => {
       for (const cl of g.clouds) { const x = ((cl.x0 + o.tc * cl.v) % 2600 + 2600) % 2600 - 800; ctx.save(); ctx.translate(x, cl.y); ctx.globalAlpha = cl.a * (o.cloudA === undefined ? 1 : o.cloudA); puffCloud(ctx, cl.w, P, cl.seed); ctx.restore(); }
     });
+    if (o.birds > 0.01) lay(ctx, c, 0.12, () => {
+      ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = css(mx(ramp(P.sky, 400), '#4A3A44', 0.55), 0.8 * o.birds);
+      for (let i = 0; i < 4; i++) {
+        const x = 1180 - ((o.t * (22 + 6 * i) + i * 330) % 1700), y = 300 + 70 * i + 14 * Math.sin(o.t * 0.7 + i * 2), sz = 7 + 2 * (i % 2), fl = Math.sin(o.t * (7 + i) + i * 1.7);
+        ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x - sz, y - fl * sz * 0.5); ctx.quadraticCurveTo(x - sz * 0.45, y - sz * 0.25, x, y); ctx.quadraticCurveTo(x + sz * 0.45, y - sz * 0.25, x + sz, y - fl * sz * 0.5); ctx.stroke();
+      }
+      ctx.restore();
+    });
     g.hills.forEach((hl, li) => lay(ctx, c, STRATA[li][4], () => {
       const base = hl.base, amp = hl.amp, col = mx(P.hills[li], ramp(P.sky, base), P.haze[li]);
       ctx.fillStyle = LG(ctx, 0, base - amp, 0, base + 420, [[0, lt(col, 0.1)], [0.3, col], [1, dk(col, 0.18)]]); ctx.fill(hl.hp);
@@ -462,7 +470,7 @@
   }
   function drawBee(ctx, st, tip, ttw) {
     if (!st) return;
-    E.at(ctx, BEE_SPOT[0] + st.off[0], BEE_SPOT[1] + st.off[1], 1, st.rot - (tip ? 0 : 0), () => A.bee(ctx, { size: 40, t: ttw, flip: st.flip, hover: st.fly > 0.3 }));
+    E.at(ctx, BEE_SPOT[0] + st.off[0], BEE_SPOT[1] + st.off[1], 1, st.rot - (tip ? 0 : 0), () => A.bee(ctx, { size: 46, t: ttw, flip: st.flip, hover: st.fly > 0.3 }));
   }
 
   /* fragrance ribbons: tapered curling ribbons that rise and dissolve, from (x,y) screen */
@@ -521,6 +529,23 @@
     }
   }
 
+  /** golden sweetness pulse at the rose heart (screen x,y; s = screen scale of the rose, t0 = accent) */
+  function sweetPulse(ctx, x, y, s, t, t0) {
+    const age = t - t0; if (age < -0.05 || age > 1.6) return;
+    const k = clamp(age / 1.2), glow = E.env(t, t0 - 0.05, t0 + 1.6, 0.18, 0.9) * lerp(0.6, 0.35, sm((age - 0.2) / 0.4));
+    S.light(ctx, x, y, 120 * s, '#FFD98A', glow);
+    S.light(ctx, x, y, 34 * s, '#FFF4D0', glow * 0.8);
+    if (age > 0 && age < 1.2) {
+      const r = (30 + 200 * E.ease.outCubic(k)) * s, a = 0.42 * (1 - k) * sm(age * 8);
+      ctx.save(); ctx.strokeStyle = css('#FFD98A', a * 0.4); ctx.lineWidth = 10 * s; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = css('#FFF0C0', a); ctx.lineWidth = 2 * s; ctx.stroke(); ctx.restore();
+      for (let i = 0; i < 7; i++) { const aa = (i / 7) * TAU + 0.4, d = r * (0.75 + 0.3 * H(i, 61)); S.sparkle(ctx, x + Math.cos(aa) * d, y + Math.sin(aa) * d * 0.8, (5 + 4 * H(i, 62)) * s, (1 - k) * 0.9, '#FFF4C8', aa); }
+    }
+  }
+  function grade(ctx, col, a) {
+    if (a <= 0.003) return;
+    ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = a; ctx.fillStyle = col; ctx.fillRect(0, 0, 1080, 1920); ctx.restore();
+  }
   function bandScrim(ctx, k, dark = '#0A1E1C') {
     if (k <= 0.01) return;
     ctx.save(); ctx.translate(540, 1400); ctx.scale(1, 220 / 640);
@@ -557,6 +582,24 @@
 
   window.BCW = { PAL, palAt, applyCam, toScreen, zoomAt, drift, lay, tw, build, drawWorld, drawFar, drawMeadow, drawFlowers, meadowTint, drawRose, roseTip, drawBee, beeState, ribbons, bandScrim, glossK, makeSprites, SPR, ROSE_BASE, ROSE_R, SUN0, HZ, TOP, camB, sunYB, duskB, mx, css, lt, dk, LG, RG, BEE_SPOT };
 
+  /** hoopoe branch (p 1.15) entering from the left; hoopoe at ≈(250,700) */
+  function drawBranch(l, c, t, ttw) {
+    const fade = 1 - E.p(t, 6.1, 6.6, 'inOutSine');
+    if (fade <= 0.003) return;
+    l.save(); l.globalAlpha *= fade;
+    lay(l, c, 1.15, () => {
+      const sw = Math.sin(ttw * 1.1) * 0.012;
+      l.save(); l.translate(-80, 690); l.rotate(sw); l.translate(80, -690);
+      l.drawImage(SPR.branch, -60, 690 - 140 - 118 + 20, 500, 260);
+      // crest fans at 2.80 (outBack inside the asset), settles 3.10
+      const fan = E.p(t, 2.78, 3.1, 'outCubic') * (1 - 0.35 * E.p(t, 3.6, 4.2)) + 0.25 * E.env(t, 4.0, 4.9, 0.2, 0.3);
+      const pose = 0.12 * E.env(t, 3.05, 3.5, 0.15, 0.25);
+      E.at(l, 252, 692, 1, 0, () => A.hoopoe(l, { size: 56, t: ttw, fan, pose: t > 3.9 && t < 4.6 ? 'look' : pose }));
+      l.restore();
+    });
+    l.restore();
+  }
+
   /* ---------------- the scene ---------------- */
   const postB = (t) => ({ bloom: lerp(0.75, 0.3, E.p(t, 2.3, 3.2)), vignette: lerp(0.2, 0.26, E.p(t, 5.95, 6.7)), grain: 0.045 });
   function frameB(ctx, t) {
@@ -570,27 +613,17 @@
       const tip = roseTip(ttw);
       const roseHead = (wx, wy) => { const ca = Math.cos(tip.angle), sa = Math.sin(tip.angle); return [ROSE_BASE[0] + tip.x + wx * ca - wy * sa, ROSE_BASE[1] + tip.y + wx * sa + wy * ca]; };
       drawWorld(ctx, {
-        cam: c, P, t: ttw, tc: ttw, sunX, sunY, sunA: 1, wave, dof, tint: dusk * 0.85, dusk, bandDim: glossK(t),
+        cam: c, P, t: ttw, tc: ttw, sunX, sunY, sunA: 1, wave, dof, tint: dusk * 0.85, dusk, bandDim: glossK(t), birds: E.p(t, 2.6, 3.0) * (1 - dusk),
         onRose: (ctx2) => {
-          // golden sweetness pulse behind the rose
-          const pulse = E.env(t, 3.96, 6.0, 0.25, 1.2) * (0.6 - 0.25 * E.p(t, 4.25, 4.8));
+          // warm halo behind the rose while it is "tasted"
+          const pulse = E.env(t, 3.96, 6.0, 0.25, 1.2) * (0.5 - 0.2 * E.p(t, 4.25, 4.8));
           const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R));
           if (pulse > 0.01) S.light(ctx2, hx, hy, 340 * zoomAt(c, 1), '#FFD98A', pulse);
           drawRose(ctx2, c, Object.assign(roseOpt, { onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
+          sweetPulse(ctx2, hx, hy, zoomAt(c, 1), t, 3.98);
           ribbons(ctx2, hx, hy - 20, ttw, 3.98, zoomAt(c, 1) * 0.8, 1 - E.p(t, 5.9, 6.5), 3, 1.6);
         },
-        branch: (l) => {
-          lay(l, c, 1.15, () => {
-            const sw = Math.sin(ttw * 1.1) * 0.012;
-            l.save(); l.translate(-80, 690); l.rotate(sw); l.translate(80, -690);
-            l.drawImage(SPR.branch, -60 - 0, 690 - 140 - 118 + 20, 500, 260);
-            // hoopoe at (250,700): crest fans at 2.80, settles 3.10
-            const fan = E.p(t, 2.78, 3.1, 'outCubic') * (1 - 0.35 * E.p(t, 3.6, 4.2)) + 0.25 * E.env(t, 4.0, 4.9, 0.2, 0.3);
-            const pose = 0.12 * E.env(t, 3.05, 3.5, 0.15, 0.25);
-            E.at(l, 252, 692, 1, 0, () => A.hoopoe(l, { size: 56, t: ttw, fan, pose: t > 3.9 && t < 4.6 ? 'look' : pose }));
-            l.restore();
-          });
-        },
+        branch: (l) => drawBranch(l, c, t, ttw),
       });
       // butterflies (sharp, above front layer), hidden in the band when gloss active
       const gk = glossK(t);
@@ -612,7 +645,7 @@
       }
       const sat = E.env(t, 5.52, 6.08, 0.15, 0.18);
       if (sat > 0.01) { ctx.save(); ctx.globalCompositeOperation = 'saturation'; ctx.globalAlpha = 0.12 * sat; ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, 1080, 1920); ctx.restore(); }
-      bandScrim(ctx, gk * (1 - 0.4 * dusk));
+      grade(ctx, '#FFB38A', 0.12);
       // emergence from A's page glow: cream glow condenses into the sun
       const ge = 1 - E.p(t, 2.30, 2.78, 'inOutSine');
       if (ge > 0.001) {
@@ -620,8 +653,9 @@
         ctx.save(); ctx.fillStyle = RG(ctx, sx, sy, 0, R + F, [[0, '#FFFFFF', 1], [Math.min(0.5, R / (R + F) * 0.4), '#FFF6E6', 1], [R / (R + F), '#FFF6E6', Math.min(1, ge * 1.6)], [1, '#FFF6E6', 0]]);
         ctx.fillRect(0, 0, 1080, 1920); ctx.restore();
       }
+      bandScrim(ctx, gk * (1 - 0.4 * dusk), ge > 0.05 ? E.mix('#0A1E1C', '#4A3020', ge) : '#0A1E1C');
   }
-  Object.assign(window.BCW, { frameB, postB, glossK, drawPollen, dofB });
+  Object.assign(window.BCW, { frameB, postB, glossK, drawPollen, dofB, drawBranch, grade, sweetPulse });
   E.scene({
     id: 'B_bahce', t0: 2.30, t1: 6.70,
     async setup() { build(); if (!SPR.mote) makeSprites(); },

@@ -2,34 +2,41 @@
  * H_numune · 37.60–47.80 · "samples; images of other things; they turn the customers' gazes to their originals"
  * -----------------------------------------------------------------------------
  * PLAN (world = L3 coords; at the rest camera (540,960) zoom 1 → world == screen)
- *  Layers  L0 sky p.05 (plum gradient #241634→#4A2A45→#6E3B3B, faint stars revealed by the final tilt)
- *          L1 far p.30 (luminous haze behind the vitrine's open back glass, mist, motes, the 9 ORIGINALS)
- *          L3 facade p1 (plum masonry wall, wooden eave + tiled roof, A.archGate vitrine: frame x40–1040,
- *             opening x141–939 apex y300 base y1150; A.lattice tympanum y300–460 + rail/valance; 2 shelves + sill;
- *             9 A.bellJar samples; stone plinth; cobbled street in band/foot)
- *          L4 p1.4 (3 A.hangingLantern, pierced light dots) · L5 screen (kafes lattice rushing past, 37.6–38.03)
- *  Grid    cols x 310/540/770, jar bases y 705/925/1145 (content centres ≈ 620/840/1060)
- *          R1 butterfly | peacock | snowflake · R2 carnation | ROSE | tulip · R3 nautilus | pomegranate | cherries
- *          (G's 3×2 gallery ghosts land straight below their G cells; rose/carnation/cherries are new)
- *  ORIGINALS: each = the SAME asset drawing, scaled ×3–7, turned into a luminous silhouette (offscreen →
- *          'source-in' #FFF6E0, eroded contour, luminance tint, blurred #FFD27A halo); the rose uses
- *          A.heroRose 'outline'. They sit concentric behind their own jar (aligned at t≈41.6) so the sample
- *          reads as the original's image; parallax separates them in the final tilt (they are far & immense).
- *  Beats   37.60–38.03 lattice (star-shaped kafes hole) rushes past, camera settles 1.05→1.0, ghosts fly to shelves
- *          38.36+0.07·rank (rank = distance from centre) ghost fills in bottom→top, dome drops & bounces, tag swings
- *          38.84–39.34 specular band sweeps L→R across all jars · 39.0/39.25/39.5 lanterns ignite
- *          38.03–39.7 push in 1.0→1.1
- *          40.12 originals bloom out of their samples (scale .45→1, alpha →.25, soft) · 40.80 dotted radial
- *          projection lines sample-contour → original-contour (dash 4/8, flowing) · 41.39–42.07 lines solidify,
- *          originals .25→.40 · 40.15–42.07 tilt up 55 px · 42.07–43.07 originals breathe, lanterns sway
- *          43.40–43.95 12 gaze filaments enter from L/R edges at y 980–1180, land on jars (glow + sparks)
- *          44.08 filaments narrow & focus · 44.76 jar glass = prism → 4-hair spectrum
- *          45.33 all spectra turn upward at once (spring .6 s), recombine to gold, reach the original's crown,
- *          originals ignite (.40→.85, bloom↑) · 45.95+ beams rise from the originals to one point high above
- *          46.0–48.2 tilt up 1400 + zoom 1.12→1.3 (vitrine slides out, originals revealed above the roofline)
- *          46.85–47.35 luminous A.archGate forms where the beams converge, centred (540,520)
- *          47.42–47.80 pass through the gate: arch scales past the frame, white bloom #FFFDF7
- *  Band    glosses 40.79–42.67 / 44.03–45.91: band = dark plinth/street, faint scrim, filaments never below 1182
+ *  Layers  L0 sky p.05 (plum #1A0F28→#241634→#4A2A45→#6E3B3B, faint stars revealed by the final tilt)
+ *          L1 far p.25 (rose-amber luminous haze behind the vitrine's open back glass, mist, sourceless shafts,
+ *             motes, and the 9 ORIGINALS)
+ *          L3 facade p1 (plum almaşık masonry, tiled roof + eave with corbels at y −58…136, A.archGate vitrine
+ *             w1000 h970: frame x40–1040, OPENING x141–939, apex y300, base y1150; A.lattice tympanum y300–460 +
+ *             rail + lambrequin valance; 2 shelves + sill; 9 A.bellJar samples; stone plinth; perspective setts
+ *             with wet puddle reflections in the foot band)
+ *          L4 p1.15 (3 A.hangingLantern + pierced light dots) · L5 screen (kafes lattice with a star-shaped hole
+ *             rushing past 37.6–38.03, rhyming with G's star window)
+ *  Grid    cols x 310/540/770, jar bases y 705/925/1145 (sample centres ≈ 610/835/1060)
+ *          R1 butterfly(sapphire) | peacock | snowflake · R2 carnation | ROSE | tulip · R3 nautilus | pomegranate |
+ *          cherries. G's six ghosts start exactly where G leaves them at 37.60; rose/carnation/cherries are new.
+ *  ORIGINALS = the SAME asset art, scaled ×3–7 and turned into a luminous LINE DRAWING (offscreen render →
+ *          Sobel edges of luminance·alpha → #FFF6E0 lines + glow, 'source-in' #FFD27A halo, faint fill); the rose
+ *          adds A.heroRose 'outline'. Each sits concentric behind its own jar (aligned at t 41.6) so the sample
+ *          reads as its image; parallax separates them in the final tilt (they are far and immense).
+ *  Beats   37.60–38.03 lattice rushes past, camera settles 1.05→1.0, ghosts fly to their shelves
+ *          38.36+0.07·rank (rank = distance from the rose) ghost fills in bottom→top, glass dome set down 42 px
+ *          with a spring bounce, tag swings once · 38.84–39.34 specular band sweeps L→R · 39.0/39.25/39.5 lanterns
+ *          ignite (flicker) · 38.03–39.7 push in 1.0→1.1
+ *          40.12 originals bloom out of their samples (scale .42→1, alpha →.25, soft) · 40.74 samples pulse ·
+ *          40.80 dotted radial projection lines sample-contour → original-contour (dash 4/8, flowing out)
+ *          41.39–42.07 lines solidify, originals .25→.40 and turn crisp · 40.15–42.07 tilt up 55 px
+ *          42.07–43.07 originals breathe ±1.5 %, lanterns sway, mist drifts
+ *          43.38–43.97 12 gaze filaments enter from the L/R edges at y 980–1180 (never below 1182), land on the
+ *          jars (glow + spark burst) · 44.06 filaments narrow 2.5→1.5 px and brighten · 44.76 each jar's glass
+ *          = prism: the gaze crosses the sample and leaves as a 4-hair spectrum
+ *          45.33 all spectra turn upward at once (spring .6 s), recombine to gold and land on the original's
+ *          shoulder · 45.58 originals ignite (.40→.72, bloom↑, realm glow) · 45.92+ gold beams rise from each
+ *          original's crown to one point high above
+ *          46.00–47.75 big tilt up 1400 + zoom 1.12→1.3 (vitrine & roof slide out, originals revealed in the sky)
+ *          46.80–47.40 the luminous gate (A.archGate line drawing + portal light) traces on from its apex where
+ *          the beams converge and settles centred (540,520) · 47.42–47.80 pass through: the gate scales past the
+ *          frame, opening → white, full #FFFDF7 bloom by 47.80 (I starts with its own 0.9 whiteout)
+ *  Band    glosses 40.79–42.67 / 44.03–45.91: band = dark plinth/street (reflections dimmed), scrim ≤ 0.2
  * ========================================================================== */
 (function () {
   'use strict';
@@ -499,6 +506,10 @@
         c.fillStyle = E.rad(c, 540, 760, 0, 860, [[0, '#F7C49A', 0.46 * hz], [0.3, '#D88A7A', 0.32 * hz], [0.62, '#8A4660', 0.18], [1, '#4A2A45', 0]]);
         c.fillRect(-300, -700, 1680, 2600);
         c.globalCompositeOperation = 'lighter';
+        if (ign > 0) {   // the ignited originals light their own realm (seen above the roofline in the tilt)
+          c.fillStyle = E.rad(c, 540, 820, 0, 980, [[0, '#FFC9A0', 0.26 * ign], [0.5, '#E98A86', 0.12 * ign], [1, '#E98A86', 0]]);
+          c.fillRect(-440, -160, 1960, 1960);
+        }
         for (let i = 0; i < 5; i++) {     // slow mist bands
           const mx = 540 + 260 * Math.sin(t * 0.06 + i * 1.7), my = 380 + i * 190 + 18 * Math.sin(t * 0.11 + i);
           c.save(); c.translate(mx, my); c.scale(1, 0.12);
@@ -506,8 +517,9 @@
           c.restore();
         }
         for (let i = 0; i < 5; i++) {     // sourceless shafts falling through the lattice
-          const x0 = 300 + i * 120 + 14 * Math.sin(t * 0.3 + i * 2), a = 0.05 + 0.03 * Math.sin(t * 0.7 + i * 1.3);
-          c.fillStyle = E.lin(c, 0, 300, 0, 1160, [[0, '#FFE6C0', a * (1 + ign)], [1, '#FFE6C0', 0]]);
+          const x0 = 300 + i * 120 + 14 * Math.sin(t * 0.3 + i * 2), a = (0.05 + 0.03 * Math.sin(t * 0.7 + i * 1.3)) * (1 + ign) * (1 - cam.tilt);
+          if (a <= 0.002) continue;
+          c.fillStyle = E.lin(c, 0, 300, 0, 1160, [[0, '#FFE6C0', 0], [0.12, '#FFE6C0', a], [1, '#FFE6C0', 0]]);
           c.beginPath(); c.moveTo(x0 - 22, 300); c.lineTo(x0 + 22, 300); c.lineTo(x0 + 70 - i * 18, 1160); c.lineTo(x0 - 10 - i * 18, 1160); c.closePath(); c.fill();
         }
         S.dust(c, t, { n: 34, seed: 811, x: 120, y: 240, w: 840, h: 980, col: '#FFE3B0', rMin: 0.8, rMax: 2.2, speed: 7, alpha: 0.55 });
@@ -848,14 +860,6 @@
     }, { lo: true, blur: 3, alpha: 0.42 });
   }
 
-  /* dev profiler (only when window.__HPROF is set) */
-  let PRt = 0;
-  function PR(ctx, name) {
-    if (!window.__HPROF) return;
-    ctx.getImageData(0, 0, 1, 1);
-    const n = performance.now(); if (name) window.__HPROF[name] = (window.__HPROF[name] || 0) + n - PRt; PRt = n;
-  }
-
   /* ---------------- scene ---------------- */
   E.scene({
     id: 'H_numune', t0: T0, t1: T1,
@@ -871,36 +875,37 @@
     draw(ctx, t) {
       t = clamp(t, T0, T1);
       const cam = camAt(t), L1 = lp(cam, PF), L3 = lp(cam, 1);
-      PR(ctx, null); drawSky(ctx, t, cam); PR(ctx, 'sky');
-      drawFar(ctx, t, cam); PR(ctx, 'far');
+      drawSky(ctx, t, cam);
+      drawFar(ctx, t, cam);
       // facade, street, shelves
       inL(ctx, L3, (c) => { drawSpr(c, SP.street); drawSpr(c, SP.facade); });
-      drawStreetLight(ctx, t, L3); PR(ctx, 'facade');
+      drawStreetLight(ctx, t, L3);
       inL(ctx, L3, (c) => {
         drawSpr(c, SP.shelves);
         for (const it of ITEMS) drawJar(c, it, t, jarState(it, t), jarGlow(it, t));
       });
-      PR(ctx, 'jars'); drawGhosts(ctx, t, L3);
+      drawGhosts(ctx, t, L3);
       inL(ctx, L3, (c) => drawSpr(c, SP.frame));
       {   // focus: deepen the outer facade so the lit vitrine carries the eye
         const fc = scr(L3, 540, 760);
         ctx.save(); ctx.translate(fc[0], fc[1]); ctx.scale(1, 1.35);
-        ctx.fillStyle = E.rad(ctx, 0, 0, 380 * L3.z, 980 * L3.z, [[0, '#0C0410', 0], [1, '#0C0410', 0.5]]); ctx.fillRect(-1400, -1400, 2800, 2800);
+        const fa = 0.5 * (1 - cam.tilt);
+        if (fa > 0.004) { ctx.fillStyle = E.rad(ctx, 0, 0, 380 * L3.z, 980 * L3.z, [[0, '#0C0410', 0], [1, '#0C0410', fa]]); ctx.fillRect(-4000, -4000, 8000, 8000); }
         ctx.restore();
       }
-      lanternLight(ctx, t, cam); PR(ctx, 'frame');
-      drawPuddles(ctx, t, L3); PR(ctx, 'puddle');
+      lanternLight(ctx, t, cam);
+      drawPuddles(ctx, t, L3);
       // sample pulse on "suretleri"
       const pulse = E.env(t, 40.74, 41.5, 0.12, 0.5);
       if (pulse > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const it of ITEMS) { const p = scr(L3, ...itemWorld(it)); S.light(ctx, p[0], p[1], 80 * L3.z, '#FFE3A3', 0.35 * pulse); } ctx.restore(); }
-      drawProjection(ctx, t, L1, L3); PR(ctx, 'proj');
-      drawGazes(ctx, t, L1, L3); PR(ctx, 'gaze');
+      drawProjection(ctx, t, L1, L3);
+      drawGazes(ctx, t, L1, L3);
       drawRise(ctx, t, cam, L1);
-      PR(ctx, 'rise'); drawLanterns(ctx, t, cam); PR(ctx, 'lantern');
+      drawLanterns(ctx, t, cam);
       // drifting motes in the lantern light
       inL(ctx, lp(cam, 1.2), (c) => S.dust(c, t, { n: 26, seed: 377, x: 60, y: 100, w: 960, h: 1080, col: '#FFD9A0', rMin: 0.9, rMax: 2.4, speed: 9, alpha: 0.35 * pp(t, 39.0, 39.8) }));
-      PR(ctx, 'dust'); drawGate(ctx, t, cam); PR(ctx, 'gate');
-      drawLatticeFG(ctx, t); PR(ctx, 'lattice');
+      drawGate(ctx, t, cam);
+      drawLatticeFG(ctx, t);
       // band guard scrim + grade
       if (E.glossActive(t)) {
         ctx.save(); ctx.translate(540, 1400); ctx.scale(1, 220 / 640);

@@ -51,7 +51,7 @@
     const sy = scrollY(t);
     const cIn = pp(t, 13.30, 14.30, 'inOutCubic'), cOut = pp(t, 15.0, 16.0, 'inOutCubic');
     const crane = cIn * (1 - cOut);
-    const z = lerp(lerp(1, 0.98, cIn), 0.787, cOut);
+    const z = lerp(lerp(1 + 0.025 * pp(t, 12.6, 13.3, 'inOutSine'), 0.98, cIn), 0.787, cOut);
     const tilt = 0.105 * ease.outBack(pp(t, 11.95, 12.45, 'linear'), 1.3) * (1 - cOut);
     const widen = pp(t, 13.70, 14.22, 'inOutCubic');
     const bump = 1 + 0.03 * Math.sin(PI * cl((t - 13.92) / 0.42)) * (t > 13.92 ? 1 : 0);
@@ -152,6 +152,14 @@
     x.filter = 'blur(9px)';
     const bk = [[330, 520, 46, 0.22], [420, 610, 28, 0.18], [860, 470, 38, 0.16], [960, 590, 22, 0.2]];
     for (const [bx, by, br, ba] of bk) { x.fillStyle = E.rad(x, bx, by, 0, br, [[0, '#FFB547', ba * 0.6], [0.85, '#FFB547', ba], [1, '#FFB547', 0]]); x.beginPath(); x.arc(bx, by, br, 0, TAU); x.fill(); }
+    // fallen rose petals lying on the gloss near the lens (C callback), out of focus, with faint mirror
+    const PET = [[170, 610, 150, 0.4, 0.55, 7], [360, 700, 120, -0.6, 0.7, 9], [790, 640, 135, 2.3, 0.6, 7], [960, 560, 100, 1.2, 0.75, 6]];
+    for (const [px, py, pr, rot, wl, bl] of PET) {
+      x.save(); x.filter = `blur(${bl}px)`; x.translate(px, py); x.scale(1, 0.55);
+      x.globalAlpha = 0.85; A.heroPetal(x, { R: pr, rot, wilt: wl, t: 0 });
+      x.restore();
+      x.save(); x.filter = `blur(${bl + 5}px)`; x.translate(px, py + pr * 0.32); x.scale(1, -0.3); x.globalAlpha = 0.22; A.heroPetal(x, { R: pr, rot, wilt: wl, t: 0 }); x.restore();
+    }
     return c.c;
   }
   function makeStreak() { // vertical soft honey streak (motion blur ghost), fades upward
@@ -449,7 +457,7 @@
   }
   /** L5 foreground (parallax 1.6) */
   function drawFG(ctx, t, g, mult = 1) {
-    const fgy = 1250 + (g.footY - 1000) * 1.6 + g.c.crane * 260 + E.noise(t * 0.2, 91) * 10;
+    const fgy = 1250 + (g.footY - 1000) * 1.6 - g.c.crane * 330 + E.noise(t * 0.2, 91) * 10;
     if (fgy < H && mult > 0.005) { ctx.save(); ctx.globalAlpha *= 0.95 * mult; ctx.drawImage(SPR.fg, -FGP + E.noise(t * 0.17, 92) * 14, fgy); ctx.restore(); }
   }
   /** grade: soft-light #FF8A5C @ 0.08 (+ a touch more once the key is on) */

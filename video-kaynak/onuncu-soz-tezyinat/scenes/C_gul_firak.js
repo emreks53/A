@@ -152,12 +152,13 @@
 
   /* ---------------- ground shadow (sundial) ---------------- */
   function sundial(l, c, t, hx, night) {
-    const day = 1 - sm((night - 0.5) / 0.4);
+    const day = (1 - sm((night - 0.5) / 0.4)) * E.p(t, T_HAND, 7.25, 'inOutSine');
     const [bx0, by0] = W.toScreen(c, 1, W.ROSE_BASE[0], W.ROSE_BASE[1]), zz = W.zoomAt(c, 1);
     // warm low-sun light pooled on the meadow around the rose (makes the shadow readable)
     if (day > 0.01) { l.save(); l.globalCompositeOperation = 'screen'; l.translate(bx0 + 40 * zz, by0); l.scale(1, 0.3); l.fillStyle = RG(l, 0, 0, 0, 260 * zz, [[0, '#FFB37A', 0.34 * day], [0.6, '#FF9D7A', 0.12 * day], [1, '#FF9D7A', 0]]); l.fillRect(-300 * zz, -300 * zz, 600 * zz, 600 * zz); l.restore(); }
     // contact soil under the stem (#2A1E2E) with a dark core
-    l.save(); l.translate(bx0, by0 + 4 * zz); l.scale(1, 0.32); l.fillStyle = RG(l, 0, 0, 0, 46 * zz, [[0, '#1C1420', 0.85], [0.5, '#2A1E2E', 0.6], [1, '#2A1E2E', 0]]); l.fillRect(-50 * zz, -50 * zz, 100 * zz, 100 * zz); l.restore();
+    const gin = E.p(t, T_HAND, 7.25, 'inOutSine');
+    l.save(); l.translate(bx0, by0 + 4 * zz); l.scale(1, 0.32); l.fillStyle = RG(l, 0, 0, 0, 46 * zz, [[0, '#1C1420', 0.85 * gin], [0.5, '#2A1E2E', 0.6 * gin], [1, '#2A1E2E', 0]]); l.fillRect(-50 * zz, -50 * zz, 100 * zz, 100 * zz); l.restore();
     const a = 0.62 * day;
     if (a <= 0.01) return;
     const th = -1.2 + 0.7 * E.p(t, 7.3, 7.86, 'inOutSine') + 6 * PI * E.p(t, 9.78, 10.44, 'inCubic');
@@ -176,10 +177,11 @@
   const FALLEN = [[492, 1160, 0.4, 1], [596, 1166, -0.6, -1], [452, 1176, 1.9, 1], [632, 1156, 2.6, 1], [548, 1182, -1.2, -1]];
   function fallen(l, c, t, ttw) {
     W.lay(l, c, 1, () => {
+      const fo = 1 - E.p(t, 10.95, 11.25, 'inOutSine'); if (fo <= 0) return;
       FALLEN.forEach(([x, y, r, fl], i) => {
         const t0 = 9.9 + i * 0.1, e = E.p(t, t0, t0 + 0.28, 'outCubic');
         if (e <= 0) return;
-        l.save(); l.translate(x, y - (1 - e) * 26); l.scale(1, lerp(0.8, 0.5, e)); l.globalAlpha = sm(e * 2);
+        l.save(); l.translate(x, y - (1 - e) * 26); l.scale(1, lerp(0.8, 0.5, e)); l.globalAlpha = sm(e * 2) * fo;
         A.heroPetal(l, { R: 46, t: ttw, wilt: 0.75, rot: r + (1 - e) * 0.8, flip: fl });
         l.restore();
       });
@@ -190,12 +192,12 @@
   function rimLight(ctx, c, hx, a) {
     if (a <= 0.01) return;
     const sil = A.heroRoseSilhouette(W.ROSE_R, 1);
-    const pts = sil.map((p) => W.toScreen(c, 1, ...hx.toWorld(p[0] * 1.012, p[1] * 1.012)));
+    const pts = sil.map((p) => W.toScreen(c, 1, ...hx.toWorld(p[0] * 0.995, p[1] * 0.995)));
     const z = W.zoomAt(c, 1), off = 0.075 * W.ROSE_R * z;
     E.layer(ctx, (l) => {
-      l.fillStyle = css('#FFB37A'); A.fillShape(l, pts);
+      l.fillStyle = css('#FFA868'); A.fillShape(l, pts);
       l.globalCompositeOperation = 'destination-out'; A.fillShape(l, pts.map((p) => [p[0] - off, p[1] + off * 0.35]));
-    }, { lo: true, blur: 3, op: 'lighter', alpha: 0.8 * a });
+    }, { lo: true, blur: 5, op: 'lighter', alpha: 0.72 * a });
     // warm wash on the right half of the head
     const [cx, cy] = W.toScreen(c, 1, ...hx.toWorld(0, -0.16 * W.ROSE_R));
     ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = RG(ctx, cx + 230, cy + 40, 0, 330, [[0, '#FFB37A', 0.75 * a], [1, '#FFB37A', 0]]); ctx.fillRect(cx - 200, cy - 400, 800, 800); ctx.restore();
@@ -224,7 +226,7 @@
     const rimA = E.p(t, 6.98, 7.3, 'outCubic') * (1 - E.p(t, 9.0, 9.4, 'inOutSine'));
     const head = (x, y) => W.toScreen(c, 1, ...hx.toWorld(x, y));
     const heart = head(0, -0.18 * W.ROSE_R);
-    const dofBack = lerp(3.5, 5, E.p(t, 7, 9)) , dofFront = 9 + 3 * E.p(t, 10.8, 11.4);
+    const fallBlur = E.p(t, 10.9, 11.35, 'inOutSine'), dofBack = lerp(3.5, 5, E.p(t, 7, 9)) + 7 * fallBlur, dofFront = 9 + 9 * fallBlur;
     W.drawWorld(ctx, {
       cam: c, P, t: ttw, tc, sunX: W.SUN0[0], sunY, sunA, wave: 99, dusk: 1, tint: lerp(0.85, 1, night),
       dof: { back: dofBack, front: dofFront, near: 6 }, stars: night * night, cloudA: 1 - 0.4 * night,
@@ -241,6 +243,7 @@
           onHead: (hctx) => { if (t < 8.28) W.drawBee(hctx, { fly: 0, off: [0, 0], flip: true, rot: 0.06 * Math.sin(ttw * 2) }, null, ttw); },
         });
         rimLight(ctx2, c, hx, rimA);
+        W.sweetPulse(ctx2, heart[0], heart[1], z / 2.6 * 1.4, t, 7.78);
         W.ribbons(ctx2, heart[0], heart[1] - 30, ttw, 7.80, z / 2.6 * 0.95, 0.75, 5, 0.85);
       },
       fg: false,
@@ -249,7 +252,7 @@
     if (t >= 8.28 && t < 9.4) {
       const sp = head(W.BEE_SPOT[0], W.BEE_SPOT[1]), u = t - 8.28;
       const x = sp[0] + 900 * E.p(t, 8.4, 9.1, 'inQuad') + Math.sin(u * 9) * 6, y = sp[1] - 70 * E.p(t, 8.28, 8.5, 'outCubic') - 220 * E.p(t, 8.45, 9.1, 'inOutSine') + Math.sin(u * 13) * 4;
-      E.at(ctx, x, y, z, -0.12 * E.p(t, 8.4, 8.7), () => A.bee(ctx, { size: 40, t: ttw, flip: t < 8.36, hover: true }));
+      E.at(ctx, x, y, z, -0.12 * E.p(t, 8.4, 8.7), () => A.bee(ctx, { size: 46, t: ttw, flip: t < 8.36, hover: true }));
     }
     // attachment filaments (screen space: they run to "you", beyond the frame)
     filaments(ctx, t, heart);
@@ -330,6 +333,7 @@
       } else drawDrop(ctx, hp.x, hp.y, DROP_R, mk, t);
     }
     if (dew) dewDraw(ctx, dew.x, dew.y, dew.r * (1 - 0.5 * E.p(t, 11.3, 11.48)), 1 - E.p(t, 11.32, 11.48), dew.st);
+    W.grade(ctx, E.mix('#FFB38A', '#6A3D8A', E.p(t, T_HAND, 7.6, 'inOutSine')), lerp(0.12, 0.15, E.p(t, T_HAND, 7.6)) + 0.07 * E.p(t, 9.6, 10.6) - 0.2 * fallK);
     W.bandScrim(ctx, gk * (1 - fallK * 0.5), '#120E22');
   }
 

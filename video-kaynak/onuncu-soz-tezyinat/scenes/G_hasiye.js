@@ -34,6 +34,8 @@
   const fresh = (l, lo) => { if (l.reset) { l.reset(); if (lo) l.setTransform(0.5, 0, 0, 0.5, 0, 0); } };
 
   /* ======================= shared with F_kiymet (keep identical) ======================= */
+  /** A.star8 whose glow respects the caller's globalAlpha (the asset sets glow alpha absolutely) */
+  function star8a(ctx, o) { const ga = ctx.globalAlpha; ctx.save(); ctx.globalAlpha = 1; A.star8(ctx, Object.assign({}, o, { alpha: (o.alpha === undefined ? 1 : o.alpha) * ga })); ctx.restore(); }
   function camDrift(t) { return { x: 3 * Math.sin(0.37 * t) + 2 * E.noise(t * 0.3, 41), y: 2 * Math.sin(0.29 * t + 1) + 2 * E.noise(t * 0.3, 43), r: 0.0026 * Math.sin(0.21 * t) }; }
   function makeParchment() {
     const w = 1340, h = 2300, cv = E.canvas(w, h), x = cv.x, rnd = E.rng(9137);
@@ -72,7 +74,18 @@
     ctx.save(); ctx.globalAlpha *= a;
     ctx.fillStyle = E.rad(ctx, x, y, 0, r * 3.6 * pulse, [[0, '#FFE7B0', 0.8], [0.35, '#FFE7B0', 0.34], [1, '#FFE7B0', 0]]);
     ctx.fillRect(x - r * 4, y - r * 4, r * 8, r * 8);
-    E.at(ctx, x, y, 1, 0, (c) => A.star8(c, { r, open: 0, draw: 1, glow: 0.7, col: '#D8B26E' }));
+    E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, glow: 0.7, col: '#D8B26E' }));
+    ctx.restore();
+  }
+  function footMotes(ctx, t, x, y, a = 1) {
+    if (a <= 0) return;
+    ctx.save();
+    for (let i = 0; i < 7; i++) {
+      const ang = i * 0.9 + t * (0.18 + 0.05 * (i % 3)), rr = 64 + 26 * i + 10 * Math.sin(t * 0.7 + i), px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr * 0.8 - 6 * Math.sin(t + i);
+      const tw = 0.5 + 0.5 * Math.sin(t * 2.1 + i * 1.7);
+      ctx.globalAlpha = a * (0.25 + 0.4 * tw);
+      ctx.fillStyle = E.rad(ctx, px, py, 0, 7, [[0, '#FFF4D2', 1], [0.4, '#E8C27A', 0.7], [1, '#E8C27A', 0]]); ctx.fillRect(px - 7, py - 7, 14, 14);
+    }
     ctx.restore();
   }
   /* ===================================================================================== */
@@ -333,6 +346,9 @@
         // evening falls on the page (bazaar palette)
         const dk = P(t, 37.28, 37.62, 'inOutSine');
         if (dk > 0) { ctx.save(); ctx.globalAlpha = dk; ctx.fillStyle = E.lin(ctx, 0, 0, 0, H, [[0, '#241634'], [0.5, '#4A2A45'], [1, '#6E3B3B']]); ctx.fillRect(0, 0, W, H); ctx.restore(); }
+        // the lower page falls into shadow while the gloss is up (band stays mid-toned)
+        const gs = P(t, 31.85, 32.12, 'inOutSine') * (1 - P(t, 34.4, 34.7, 'inOutSine'));
+        if (gs > 0) { ctx.fillStyle = E.lin(ctx, 0, 980, 0, H, [[0, '#3A2618', 0], [0.42, '#3A2618', 0.4 * gs], [1, '#3A2618', 0.5 * gs]]); ctx.fillRect(0, 980, W, H - 980); }
         // footnote rule
         const rk = P(t, 28.93, 29.6, 'outCubic');
         if (rk > 0) world((h) => { h.strokeStyle = E.rgba('#5A2A2F', 0.4); h.lineWidth = 1.2; h.beginPath(); h.moveTo(540 - 400 * rk, 1180); h.lineTo(540 + 400 * rk, 1180); h.stroke(); });
@@ -354,11 +370,12 @@
           h.restore();
         }
         // the star (opening) — before the niche covers its interior
+        footMotes(h, t, SCX, SCY, 1 - P(t, 28.85, 29.3));
         if (t < 28.85) drawFootStar(h, t, SCX, SCY, 40, 1);
         else {
           const glow = 1 - P(t, 29.0, 29.6);
           h.fillStyle = E.rad(h, SCX, SCY, 0, rS * 1.6, [[0, '#FFE7B0', 0.55 * glow], [1, '#FFE7B0', 0]]); h.fillRect(SCX - rS * 1.7, SCY - rS * 1.7, rS * 3.4, rS * 3.4);
-          h.save(); h.globalAlpha *= 1 - P(t, 37.25, 37.55); E.at(h, SCX, SCY, 1, 0, (cc) => A.star8(cc, { r: rS, open: oS, draw: 1, glow: 0.7 * (1 - winK * 0.6), lineW: lerp(1.5, 3.2, oS), col: E.hexOf(E.mix('#D8B26E', '#B08030', oS)) })); h.restore();
+          h.save(); h.globalAlpha *= 1 - P(t, 37.25, 37.55); E.at(h, SCX, SCY, 1, 0, (cc) => star8a(cc, { r: rS, open: oS, draw: 1, glow: 0.7 * (1 - winK * 0.6), lineW: lerp(1.5, 3.2, oS), col: E.hexOf(E.mix('#D8B26E', '#B08030', oS)) })); h.restore();
         }
         if (winK > 0) {
           const clip = starPath(0);
@@ -371,6 +388,8 @@
           // items, halos, seals
           h.save(); h.clip(clip);
           drawGallery(h, t, c);
+          // dust motes drifting in the niche's warm light
+          if (shutK > 0) { h.save(); h.globalCompositeOperation = 'lighter'; for (let i = 0; i < 16; i++) { const px = SCX - 330 + E.hash(i, 61) * 660 + 18 * Math.sin(t * 0.5 + i), py = SCY + 340 - ((E.hash(i, 62) * 680 + t * (10 + 8 * E.hash(i, 63))) % 680), tw = 0.5 + 0.5 * Math.sin(t * 1.7 + i * 2.1); h.globalAlpha = 0.5 * tw * P(t, 30.3, 30.9) * (1 - P(t, 36.6, 37.2)); h.fillStyle = E.rad(h, px, py, 0, 5, [[0, '#FFE7B0', 1], [1, '#FFE7B0', 0]]); h.fillRect(px - 5, py - 5, 10, 10); } h.restore(); }
           // shutters
           if (shutK < 1) {
             const sh = SP.shut, off = shutE * (RW + 20), rev = P(t, 29.36, 29.95, 'inOutSine');
@@ -474,10 +493,10 @@
       }
       // seal
       const sk = hk0 * (1 - clamp((t - it.out + 0.05) / 0.15));
-      if (sk > 0.01) E.at(h, it.x + 66, it.y - 62, sk, 0, (cc) => A.star8(cc, { r: 11, open: 0.6, draw: 1, glow: 0.6, lineW: 1.5, col: '#D8B26E', fill: 'rgba(216,178,110,0.35)' }));
+      if (sk > 0.01) E.at(h, it.x + 66, it.y - 62, sk, 0, (cc) => star8a(cc, { r: 11, open: 0.6, draw: 1, glow: 0.6, lineW: 1.5, col: '#D8B26E', fill: 'rgba(216,178,110,0.35)' }));
       // ghost
       const ga = 0.6 * sm((t - it.out) / 0.3) * (1 - sm((t - 37.42) / 0.08));
-      if (ga > 0) drawGhost(h, i, it.x, it.y, 1, ga * (0.9 + 0.1 * Math.sin(t * 3 + i)));
+      if (ga > 0) drawGhost(h, i, it.x, it.y, 1, ga * (it.k === 'snow' ? 0.62 : 1) * (0.9 + 0.1 * Math.sin(t * 3 + i)));
     }
     // decay particles
     decay(h, t);

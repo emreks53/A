@@ -49,9 +49,9 @@
   /* ------------------------------------------------------------------ camera */
   function camE(t) {
     let x = 540, y = 960, z = 1;
-    const a = pp(t, 16.5, 17.45, 'inOutCubic'); x = lerp(x, 600, a); y = lerp(y, 925, a); z = lerp(z, 1.45, a);
+    const a = pp(t, 16.5, 17.45, 'inOutCubic'); x = lerp(x, 580, a); y = lerp(y, 925, a); z = lerp(z, 1.45, a);
     const b = pp(t, 18.66, 19.62, 'inOutCubic'); x = lerp(x, 756, b); y = lerp(y, 964, b); z = lerp(z, 1.02, b);
-    const c = pp(t, 20.6, 21.6, 'inOutSine'); z = lerp(z, 1.08, c);
+    const c = pp(t, 19.62, 21.6, 'inOutSine'); z = lerp(z, 1.08, c);
     const d = pp(t, 21.98, 22.5, 'inOutSine'); y = lerp(y, 830, d);
     const dr = E.drift(t, 4, 0.3, 11);
     return { x, y, z, ox: dr.x, oy: dr.y };
@@ -148,7 +148,7 @@
     // time rings (dashed, slowly turning)
     const rc = toS(cam, hp[0], hp[1]);
     ctx.save(); ctx.lineCap = 'round';
-    [[470, 0.075, 1, [3, 22]], [575, 0.06, -0.7, [40, 26]], [700, 0.05, 0.45, [2, 30]]].forEach(([r, a, sp, dash], i) => {
+    [[470, 0.13, 1, [3, 22]], [575, 0.1, -0.7, [40, 26]], [700, 0.08, 0.45, [2, 30]]].forEach(([r, a, sp, dash], i) => {
       ctx.setLineDash(dash.map((d) => d * cam.z)); ctx.lineDashOffset = t * 18 * sp;
       ctx.strokeStyle = E.rgba(PAL.rim, a * o.ringA); ctx.lineWidth = (i === 1 ? 2 : 1.6) * cam.z;
       ctx.beginPath(); ctx.arc(rc[0], rc[1], r * cam.z, 0, TAU); ctx.stroke();
@@ -393,6 +393,7 @@
     const uk = unK(t), pos = objPos(t), litK = pp(t, 18.86, 19.05);
     const ko = kandilOpts(t);
     const flameK = ko.lit * (1 - ko.ember) * cl(ko.flame, 0, 1.3);
+    const kanA = pp(t, 18.3, 18.8, 'inOutSine');
     // ---------- environment (D's plum stage dissolving into the teal room) ----------
     if (m < 0.999) DE.drawStageD(ctx, t, g);
     const envO = { hp: pos, ringA: m * (1 - pp(t, 20.6, 21.5)) };
@@ -424,18 +425,18 @@
       ctx.fillStyle = E.rad(ctx, cs[0], cs[1], 0, 300 * cam.z, [[0, '#020A0E', 0.55], [1, '#020A0E', 0]]);
       ctx.translate(cs[0], cs[1]); ctx.scale(1, 0.14); ctx.beginPath(); ctx.arc(0, 0, 300 * cam.z, 0, TAU); ctx.fill(); ctx.restore();
       const ks = toS(cam, KAN.x, STAND_B);
-      ctx.save(); ctx.globalAlpha *= m; ctx.fillStyle = E.rad(ctx, ks[0], ks[1], 0, 90 * cam.z, [[0, '#020A0E', 0.6], [1, '#020A0E', 0]]);
+      ctx.save(); ctx.globalAlpha *= m * kanA; ctx.fillStyle = E.rad(ctx, ks[0], ks[1], 0, 90 * cam.z, [[0, '#020A0E', 0.6], [1, '#020A0E', 0]]);
       ctx.translate(ks[0], ks[1]); ctx.scale(1, 0.18); ctx.beginPath(); ctx.arc(0, 0, 90 * cam.z, 0, TAU); ctx.fill(); ctx.restore();
     }
-    // ---------- kandil on its stand (dark & unlit until "senin") ----------
-    if (m > 0.01) {
+    // ---------- kandil on its stand (dark & unlit until "senin"; emerges as the camera pans) ----------
+    if (m * kanA > 0.01) {
       const kVeil = lerp(0.84, 0.6, pp(t, 18.6, 19.0)) * (1 - litK) + 0.25 * pp(t, 21.4, 21.8);
       E.layer(ctx, (l) => {
         camAt(l, cam, KAN.x, STAND_B, 1, (cc) => { cc.save(); cc.scale(1, -0.6); cc.globalAlpha = 0.18; drawStand(cc, 0); cc.restore(); });
         camAt(l, cam, KAN.x, KAN.y, 1, (cc) => drawStand(cc, flameK));
         camAt(l, cam, KAN.x, KAN.y, 1, (cc) => A.kandil(cc, Object.assign({}, ko, { light: false })));
         if (kVeil > 0.005) { l.globalCompositeOperation = 'source-atop'; l.fillStyle = `rgba(4,18,26,${kVeil.toFixed(3)})`; l.fillRect(0, 0, W, H); }
-      }, { alpha: m });
+      }, { alpha: m * kanA });
     }
     // ---------- hourglass ----------
     const hgO = { t, h: st.h, w: st.w, sandTop: st.sT, sandBottom: st.sB, flow: st.flow };
@@ -490,14 +491,15 @@
       const P = uk > 0.001 ? A.lerpShape(Ph, bowlSilE(), uk) : Ph;
       const Ps = P.map(([x, y]) => [hs[0] + x * cam.z, hs[1] + y * cam.z]);
       const path = A.shapePath(Ps, false);
-      const hA = 1 - pp(t, 20.66, 20.98, 'inOutSine');
-      if (uk < 0.01) { // faint reflection of the hourglass in the glossy floor
+      const hA = 1 - pp(t, 20.62, 20.9, 'inOutSine');
+      const rfl = 0.13 * (1 - pp(t, 20.6, 20.78, 'inOutSine'));
+      if (rfl > 0.003) { // faint reflection of the hourglass in the glossy floor (fades as it un-morphs)
         const fy = toS(cam, 0, pos[1] + st.h / 2 + 0.2 * st.w * 0.54)[1];
-        ctx.save(); ctx.globalAlpha *= 0.13; ctx.translate(0, 2 * fy); ctx.scale(1, -1);
+        ctx.save(); ctx.globalAlpha *= rfl; ctx.translate(0, 2 * fy); ctx.scale(1, -1);
         E.at(ctx, hs[0], hs[1], cam.z, 0, (cc) => A.hourglass(cc, Object.assign({}, hgO, { flow: 0 }))); ctx.restore();
       }
       if (t < 16.75) neckGlints(ctx, t, DE.bowlGeo(DE.camD(t)), toS(cam, NECK[0], NECK[1]), cam);
-      ctx.save(); if (uk > 0.001) ctx.clip(path); ctx.globalAlpha *= hA;
+      ctx.save(); ctx.globalAlpha *= hA; // (not clipped: the wooden frame dissolves around the morphing glass)
       E.at(ctx, hs[0], hs[1], cam.z, 0, (cc) => { A.hourglass(cc, hgO); drawMiniLife(cc, t, G); });
       ctx.restore();
       if (flameK > 0.02 && hA > 0.02) { // warm kandil light on the glass (right edge)
@@ -535,6 +537,9 @@
       ctx.save(); ctx.globalCompositeOperation = 'screen';
       ctx.fillStyle = E.lin(ctx, W, 0, 300, 0, [[0, '#FFB34D', 0.24 * fl], [1, '#FFB34D', 0]]); ctx.fillRect(0, 0, W, H); ctx.restore();
     }
+    // ignition "fwoomp": a soft warm burst as the kandil catches ("senin")
+    const ig = E.env(t, 18.86, 19.3, 0.05, 0.36);
+    if (ig > 0.01) { S.light(ctx, wick[0], wick[1] - 10, 300 * cam.z, '#FFD58A', 0.55 * ig); S.sparkle(ctx, wick[0], wick[1] - 18 * cam.z, 70 * cam.z * ig, ig, '#FFF4D6', 0.1); }
     // ---------- front layers ----------
     if (morph) DE.drawShaftD(ctx, t, g, 1 - m);
     drawDust(ctx, t, cam, m * (1 - 0.6 * pp(t, 21.4, 21.8)));

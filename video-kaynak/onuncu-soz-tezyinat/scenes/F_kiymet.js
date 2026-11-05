@@ -34,6 +34,8 @@
   const fresh = (l, lo) => { if (l.reset) { l.reset(); if (lo) l.setTransform(0.5, 0, 0, 0.5, 0, 0); } };
 
   /* ======================= shared with G_hasiye (keep identical) ======================= */
+  /** A.star8 whose glow respects the caller's globalAlpha (the asset sets glow alpha absolutely) */
+  function star8a(ctx, o) { const ga = ctx.globalAlpha; ctx.save(); ctx.globalAlpha = 1; A.star8(ctx, Object.assign({}, o, { alpha: (o.alpha === undefined ? 1 : o.alpha) * ga })); ctx.restore(); }
   function camDrift(t) { return { x: 3 * Math.sin(0.37 * t) + 2 * E.noise(t * 0.3, 41), y: 2 * Math.sin(0.29 * t + 1) + 2 * E.noise(t * 0.3, 43), r: 0.0026 * Math.sin(0.21 * t) }; }
   function makeParchment() {
     const w = 1340, h = 2300, cv = E.canvas(w, h), x = cv.x, rnd = E.rng(9137);
@@ -72,7 +74,18 @@
     ctx.save(); ctx.globalAlpha *= a;
     ctx.fillStyle = E.rad(ctx, x, y, 0, r * 3.6 * pulse, [[0, '#FFE7B0', 0.8], [0.35, '#FFE7B0', 0.34], [1, '#FFE7B0', 0]]);
     ctx.fillRect(x - r * 4, y - r * 4, r * 8, r * 8);
-    E.at(ctx, x, y, 1, 0, (c) => A.star8(c, { r, open: 0, draw: 1, glow: 0.7, col: '#D8B26E' }));
+    E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, glow: 0.7, col: '#D8B26E' }));
+    ctx.restore();
+  }
+  function footMotes(ctx, t, x, y, a = 1) {
+    if (a <= 0) return;
+    ctx.save();
+    for (let i = 0; i < 7; i++) {
+      const ang = i * 0.9 + t * (0.18 + 0.05 * (i % 3)), rr = 64 + 26 * i + 10 * Math.sin(t * 0.7 + i), px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr * 0.8 - 6 * Math.sin(t + i);
+      const tw = 0.5 + 0.5 * Math.sin(t * 2.1 + i * 1.7);
+      ctx.globalAlpha = a * (0.25 + 0.4 * tw);
+      ctx.fillStyle = E.rad(ctx, px, py, 0, 7, [[0, '#FFF4D2', 1], [0.4, '#E8C27A', 0.7], [1, '#E8C27A', 0]]); ctx.fillRect(px - 7, py - 7, 14, 14);
+    }
     ctx.restore();
   }
   /* ===================================================================================== */
@@ -434,9 +447,9 @@
       ctx.fillStyle = E.rad(ctx, 0, 0, 0, Math.max(2, a * 1.1), [[0, '#FFFFFF'], [0.45, '#FFF8EA'], [1, '#FFDDB0']]);
       ctx.beginPath(); ctx.arc(0, 0, a * 1.15, 0, TAU); ctx.fill();
       ctx.globalAlpha *= 0.85 * sm(open * 2);
-      A.star8(ctx, { r: a * 0.62, open: 1, draw: 1, glow: 0.4, rot: -t * 0.7, lineW: Math.max(1.2, a * 0.018), col: '#D8B26E' });
+      star8a(ctx, { r: a * 0.62, open: 1, draw: 1, glow: 0.4, rot: -t * 0.7, lineW: Math.max(1.2, a * 0.018), col: '#D8B26E' });
       ctx.globalAlpha *= 0.6;
-      A.star8(ctx, { r: a * 0.28, open: 0, draw: 1, rot: t * 0.9, lineW: Math.max(1, a * 0.012), col: '#D8B26E' });
+      star8a(ctx, { r: a * 0.28, open: 0, draw: 1, rot: t * 0.9, lineW: Math.max(1, a * 0.012), col: '#D8B26E' });
       ctx.strokeStyle = 'rgba(216,178,110,0.55)'; ctx.lineWidth = Math.max(1, a * 0.01);
       for (const k of [0.82, 0.95]) { ctx.beginPath(); ctx.arc(0, 0, a * k, 0, TAU); ctx.stroke(); }
       ctx.restore();
@@ -529,8 +542,6 @@
       const vis = bgK * (1 - P(t, 27.8, 28.05));
       const hero = (fn) => { ctx.save(); applyCam(ctx, c, 1); fn(ctx); ctx.restore(); };
 
-      const PF = window.__prof ? ((n) => { ctx.getImageData(0, 0, 1, 1); const nw = performance.now(); window.__prof[n] = (window.__prof[n] || 0) + nw - (window.__pt || nw); window.__pt = nw; }) : () => {};
-      PF('start');
       /* L0 background */
       const top = E.mix(E.mix('#05101A', '#160F38', bgK), '#FFE9C8', warm * 0.8), mid = E.mix(E.mix('#05101A', '#34206B', bgK), '#FFF1DA', warm * 0.8), bot = E.mix(E.mix('#05101A', '#5E2C86', bgK), '#FFE2C0', warm * 0.8);
       ctx.fillStyle = E.lin(ctx, 0, 0, 0, H, [[0, top], [0.55, mid], [1, bot]]); ctx.fillRect(0, 0, W, H);
@@ -538,18 +549,15 @@
       ctx.fillStyle = E.rad(ctx, CX, rcy, 0, 900, [[0, '#8A4FFF', 0.3 * bgK * (1 - warm)], [0.45, '#5E2C86', 0.16 * bgK], [1, '#5E2C86', 0]]); ctx.fillRect(-600, -600, W + 1200, H + 1200);
       ctx.restore();
 
-      PF('bg');
       /* L1 far dome girih + bokeh */
       ctx.save(); applyCam(ctx, c, 0.25); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.11 * vis;
       ctx.translate(CX, rcy + 40); ctx.rotate(t * 0.02); ctx.scale(1.25, 1.25); ctx.drawImage(SP.dome, -SP.dome.width / 2, -SP.dome.height / 2); ctx.restore();
       drawBokeh(ctx, t, c, (p) => p < 1, vis);
 
-      PF('far');
       /* L2 spotlight + god rays */
       const spotK = P(t, 23.3, 24.3) * vis, rayK = P(t, 23.95, 24.6) * vis * (1 - 0.5 * P(t, 27.05, 27.5));
       hero((h) => { drawSpot(h, t, CX, rcy + 420, spotK); drawRays(h, t, CX, rcy, rayK); });
 
-      PF('spotrays');
       /* L2.5 octagram + lens ring + ornaments (behind & around) */
       const orbA = 0.06 * (t - 26.0) + 1.1 * ez.inCubic(clamp((t - 27.0) / 0.9));
       const rOrb = lerp(350, 305, P(t, 27.02, 27.45));
@@ -557,7 +565,7 @@
       hero((h) => {
         if (octK > 0) {
           h.save(); h.globalAlpha *= (0.55 - 0.35 * lens) * ornOut;
-          E.at(h, CX, rcy, 1, 0, (cc) => A.star8(cc, { r: rOrb, open: 0, draw: octK, girih: false, glow: 0.5, lineW: 2.2, rot: orbA }));
+          E.at(h, CX, rcy, 1, 0, (cc) => star8a(cc, { r: rOrb, open: 0, draw: octK, girih: false, glow: 0.5, lineW: 2.2, rot: orbA }));
           h.restore();
           h.save(); h.globalAlpha *= octK * ornOut; h.beginPath(); h.arc(CX, rcy, rOrb, 0, TAU);
           h.globalCompositeOperation = 'lighter'; h.strokeStyle = E.rgba('#FFCF5A', 0.08 + 0.25 * lens); h.lineWidth = 10 + 18 * lens; h.stroke();
@@ -566,7 +574,6 @@
         }
       });
 
-      PF('oct');
       /* L3 hero: plinth, gem, rose, iris */
       hero((h) => {
         // plinth
@@ -639,11 +646,9 @@
         }
       });
 
-      PF('hero');
       /* L5 near bokeh */
       drawBokeh(ctx, t, c, (p) => p > 1, vis);
 
-      PF('near');
       /* dive: kaleidoscope + ivory flood */
       const kk = E.env(t, 27.4, 28.0, 0.1, 0.16);
       if (kk > 0) kaleido(ctx, t, kk);
@@ -652,12 +657,10 @@
         const rr = lerp(80, 1700, ez.inOutSine(fl2));
         ctx.save(); ctx.fillStyle = E.rad(ctx, 540, 760, rr * 0.45, rr, [[0, '#FFF6E6', 1], [1, '#FFF6E6', 0]]); ctx.fillRect(0, 0, W, H); ctx.restore();
       }
-      PF('dive');
       // band scrim during the gloss (violet, feathered)
       const g = bandGuard(t) * (1 - warm);
       if (g > 0) { ctx.save(); ctx.translate(540, 1400); ctx.scale(1, 220 / 640); ctx.fillStyle = E.rad(ctx, 0, 0, 0, 640, [[0, '#0A0618', 0.2 * g], [1, '#0A0618', 0]]); ctx.fillRect(-640, -640, 1280, 1280); ctx.restore(); }
 
-      PF('scrim');
       /* G handoff: parchment + footnote star */
       const pa = P(t, 28.12, 28.42, 'inOutSine');
       if (pa > 0) {
@@ -666,6 +669,7 @@
         const sa = P(t, 28.2, 28.5, 'outCubic');
         ctx.save(); ctx.translate(540 + d.x, 760 + d.y); ctx.rotate(d.r); ctx.translate(-540, -760);
         E.at(ctx, 540, 760, lerp(0.6, 1, ez.outBack(sa)), 0, (cc) => drawFootStar(cc, t, 0, 0, 40, sa * pa));
+        footMotes(ctx, t, 540, 760, sa * pa);
         ctx.restore();
       }
     },
