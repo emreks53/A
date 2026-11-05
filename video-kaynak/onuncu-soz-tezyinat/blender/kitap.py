@@ -214,6 +214,7 @@ COVER_LIN = (0.25, 0.0112, 0.0325)
 if COVER_RGB:
     COVER_LIN = tuple(float(c) for c in COVER_RGB.split(','))
 # varak: doygun sicak altin (#D4AF37 / #C9A24A civari okunacak sekilde); kenar (F82) tinti da altin
+KEYSIZE = arg('--keysize', 0.42, float)
 GOLD_LIN = (0.80, 0.50, 0.095)
 GOLD_HI = (0.88, 0.60, 0.15)
 GOLD_OCHRE = (0.36, 0.19, 0.03)
@@ -932,7 +933,7 @@ def build():
         o.rotation_euler = d.to_track_quat('-Z', 'Y').to_euler()
         o.visible_camera = False
         return o
-    key = area('anahtar', (-0.50, 0.40, 0.80), (0.12, 0.06, 0.0), 0.42, 3.0, (1.0, 0.88, 0.78), 'DISK', 28)
+    key = area('anahtar', (-0.50, 0.40, 0.80), (0.12, 0.06, 0.0), KEYSIZE, 3.0, (1.0, 0.88, 0.78), 'DISK', 28)
     fill = area('dolgu', (0.95, -0.55, 0.45), (0.08, 0.0, 0.03), 1.1, 0.35, (0.72, 0.82, 1.0), 'DISK')
     rim = area('kontur', (0.35, 0.85, 0.30), (0.08, 0.0, 0.03), 0.5, 2.5, (1.0, 0.86, 0.70), 'DISK', 70)
     back = area('arka', (0.3, 1.3, 0.9), (0.3, 1.6, 0.4), 1.0, 1.2, (1.0, 0.75, 0.5), 'DISK', 90)
