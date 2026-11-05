@@ -215,14 +215,21 @@ if COVER_RGB:
     COVER_LIN = tuple(float(c) for c in COVER_RGB.split(','))
 GOLD_LIN = (0.96, 0.70, 0.36)
 
-def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
-    """Acik asil kirmizi deri/buckram + altin varak (maske ile)."""
-    m = bpy.data.materials.new(name)
-    b = NB(m)
-    tc = b.texco()
-    obj = tc.outputs['Object']
-    # --- deri grenli doku
-    v1 = b.voronoi(b.mapping(obj, scale=(1, 1, 1)), 1100.0, 'DISTANCE_TO_EDGE')
+LEATHER_BAKED = os.path.join(TEX, 'deri_doku.png')
+CEVIZ_COL = os.path.join(TEX, 'ceviz_renk.png')
+CEVIZ_DAT = os.path.join(TEX, 'ceviz_veri.png')
+BAKE = bool(arg('--bake', False))
+
+def leather_grain(b, obj, bake=False):
+    """(crease, height, colornoise) soketleri. Pisirilmis doku: R=kirisik G=(h+0.6)/1.1 B=renk gurultusu."""
+    if not bake and os.path.exists(LEATHER_BAKED):
+        vec = b.mapping(obj, loc=(0.006 / 0.18, 0.5, 0.0), scale=(1 / 0.18, 1 / 0.24, 1 / 0.18))
+        t = b.image(load_img('deri_doku.png', True), vec, 'Linear', 'REPEAT')
+        t.projection = 'BOX'; t.projection_blend = 0.2
+        sep = b.new('ShaderNodeSeparateColor'); b.link(t.outputs['Color'], sep.inputs[0])
+        h = b.math('SUBTRACT', b.math('MULTIPLY', sep.outputs[1], 1.1), 0.6)
+        return sep.outputs[0], h, sep.outputs[2]
+    v1 = b.voronoi(obj, 1100.0, 'DISTANCE_TO_EDGE')
     crease = b.maprange(v1.outputs['Distance'], 0.0, 0.10, 1.0, 0.0)       # 1 = kirisik
     v2 = b.voronoi(obj, 420.0, 'F1')
     pebble = b.maprange(v2.outputs['Distance'], 0.0, 0.8, 1.0, 0.0)
@@ -230,15 +237,25 @@ def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
     n2 = b.noise(obj, 2600.0, 2.0, 0.5)
     grain_h = b.math('ADD', b.math('MULTIPLY', crease, -0.6), b.math('MULTIPLY', pebble, 0.25))
     grain_h = b.math('ADD', grain_h, b.math('MULTIPLY', n2.outputs['Fac'], 0.25))
+    return crease, grain_h, n1.outputs['Fac']
+
+def mat_leather(name, mask_img=None, blur_img=None, mode=None, obj_map=None):
+    """Acik asil kirmizi deri/buckram + altin varak (maske ile)."""
+    m = bpy.data.materials.new(name)
+    b = NB(m)
+    tc = b.texco()
+    obj = tc.outputs['Object']
+    # --- deri grenli doku (pisirilmis doku varsa onu kullan: cok daha hizli)
+    crease, grain_h, n1f = leather_grain(b, obj, bake=False)
     # --- renk
     base = b.mixc(b.math('MULTIPLY', crease, 0.55), COVER_LIN, tuple(c * 0.72 for c in COVER_LIN))
-    cvar = b.maprange(n1.outputs['Fac'], 0.3, 0.7, 0.93, 1.06)
+    cvar = b.maprange(n1f, 0.3, 0.7, 0.93, 1.06)
     hsv = b.new('ShaderNodeHueSaturation')
     b.link(base, hsv.inputs['Color']); b.link(cvar, hsv.inputs['Value'])
     hsv.inputs['Saturation'].default_value = 1.0
     leather_col = hsv.outputs['Color']
     rough = b.math('ADD', 0.58, b.math('MULTIPLY', crease, 0.12))
-    rough = b.math('ADD', rough, b.math('MULTIPLY', b.math('SUBTRACT', n1.outputs['Fac'], 0.5), 0.12))
+    rough = b.math('ADD', rough, b.math('MULTIPLY', b.math('SUBTRACT', n1f, 0.5), 0.12))
     # --- maske
     fac = None; hmask = None
     if mask_img is not None:
@@ -359,7 +376,21 @@ def mat_ribbon(name):
     b.out(p.outputs[0])
     return m
 
-def mat_walnut(name):
+def mat_walnut_img(name):
+    m = bpy.data.materials.new(name)
+    b = NB(m)
+    uv = b.texco().outputs['UV']
+    c = b.image(load_img('ceviz_renk.png'), uv, 'Linear')
+    d = b.image(load_img('ceviz_veri.png', True), uv, 'Linear')
+    sep = b.new('ShaderNodeSeparateColor'); b.link(d.outputs['Color'], sep.inputs[0])
+    nrm = b.bump(sep.outputs[0], 0.25, 0.0005)
+    rough = b.maprange(sep.outputs[1], 0.3, 0.7, 0.30, 0.48)
+    p = b.principled(**{'Base Color': c.outputs['Color'], 'Roughness': rough, 'Normal': nrm,
+                        'Coat Weight': 0.35, 'Coat Roughness': 0.24, 'Specular IOR Level': 0.4})
+    b.out(p.outputs[0])
+    return m
+
+def mat_walnut(name, bake=None):
     m = bpy.data.materials.new(name)
     b = NB(m)
     obj = b.texco().outputs['Object']
@@ -391,6 +422,15 @@ def mat_walnut(name):
     col = b.new('ShaderNodeHueSaturation'); b.link(ramp.outputs['Color'], col.inputs['Color'])
     b.link(b.maprange(fine.outputs['Fac'], 0.3, 0.7, 0.85, 1.12), col.inputs['Value'])
     h = b.math('ADD', b.math('MULTIPLY', pores.outputs['Fac'], 0.6), b.math('MULTIPLY', wave.outputs['Fac'], 0.25))
+    if bake:
+        em = b.new('ShaderNodeEmission')
+        if bake == 'col':
+            b.link(col.outputs['Color'], em.inputs['Color'])
+        else:
+            cc = b.new('ShaderNodeCombineColor'); b.link(h, cc.inputs[0]); b.link(fine.outputs['Fac'], cc.inputs[1])
+            b.link(cc.outputs[0], em.inputs['Color'])
+        b.out(em.outputs[0])
+        return m
     nrm = b.bump(h, 0.25, 0.0005)
     rough = b.maprange(fine.outputs['Fac'], 0.3, 0.7, 0.30, 0.48)
     p = b.principled(**{'Base Color': col.outputs['Color'], 'Roughness': rough, 'Normal': nrm,
@@ -805,7 +845,7 @@ def build():
     MATS['yaprak'] = mat_page('yaprak', load_img('yaprak.png'), mirror_back=True)
     MATS['kapital'] = mat_headband('kapitalbent')
     MATS['kurdele'] = mat_ribbon('kurdele')
-    MATS['ceviz'] = mat_walnut('ceviz')
+    MATS['ceviz'] = mat_walnut_img('ceviz') if os.path.exists(CEVIZ_DAT) else mat_walnut('ceviz')
     MATS['toz'] = mat_simple('toz', (0.9, 0.85, 0.75), 0.6, (1.0, 0.86, 0.62), 0.22)
     MATS['duvar'] = mat_simple('duvar', (0.035, 0.022, 0.015), 0.9)
 
@@ -1128,6 +1168,45 @@ def report_bbox(S, f):
     pg = [(x, y, z) for x in (0.019, 0.142) for y in (HP/2 - 0.031, -HP/2 + 0.024) for z in (S['book']['zr'],)]
     print(f'[bbox] f{f} kitap {proj(box)} | metin {proj(pg)}', flush=True)
 
+# ------------------------------------------------------------------ pisirme (bir kez)
+def bake_all(res_desk=8192):
+    clean()
+    sc = bpy.context.scene
+    sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'; sc.cycles.samples = 1
+    sc.render.threads_mode = 'FIXED'; sc.render.threads = THREADS
+    def do_bake(ob, mat, w, h, path, noncolor):
+        ob.data.materials.clear(); ob.data.materials.append(mat)
+        img = bpy.data.images.new(os.path.basename(path), w, h, alpha=False, float_buffer=False)
+        if noncolor:
+            img.colorspace_settings.name = 'Non-Color'
+        nd = mat.node_tree.nodes.new('ShaderNodeTexImage'); nd.image = img
+        mat.node_tree.nodes.active = nd
+        for o in sc.objects: o.select_set(False)
+        ob.select_set(True); bpy.context.view_layer.objects.active = ob
+        t0 = time.time()
+        bpy.ops.object.bake(type='EMIT', margin=2)
+        img.filepath_raw = path; img.file_format = 'PNG'; img.save()
+        print(f'[bake] {path} {w}x{h} {time.time()-t0:.1f}s', flush=True)
+    # masa
+    bpy.ops.mesh.primitive_plane_add(size=1.0, location=(0.1, 0.35, 0.0))
+    desk = bpy.context.active_object; desk.scale = (2.4, 2.5, 1.0)
+    bpy.ops.object.transform_apply(scale=True)
+    do_bake(desk, mat_walnut('ceviz_c', 'col'), res_desk, res_desk, CEVIZ_COL, False)
+    do_bake(desk, mat_walnut('ceviz_d', 'dat'), res_desk, res_desk, CEVIZ_DAT, True)
+    # deri: 0.18 x 0.24 m duzlem, nesne koordinatlari render ile ayni
+    x0, x1, y0, y1 = -0.006, 0.174, -0.12, 0.12
+    ob = mesh_obj('deri_bake', [(x0, y0, 0), (x1, y0, 0), (x1, y1, 0), (x0, y1, 0)], [(0, 1, 2, 3)])
+    uvl = ob.data.uv_layers.new(name='UVMap')
+    for li, uv in zip(range(4), [(0, 0), (1, 0), (1, 1), (0, 1)]):
+        uvl.data[li].uv = uv
+    m = bpy.data.materials.new('deri_b'); b = NB(m)
+    crease, gh, n1f = leather_grain(b, b.texco().outputs['Object'], bake=True)
+    cc = b.new('ShaderNodeCombineColor')
+    b.link(crease, cc.inputs[0]); b.link(b.math('DIVIDE', b.math('ADD', gh, 0.6), 1.1), cc.inputs[1])
+    b.link(n1f, cc.inputs[2])
+    em = b.new('ShaderNodeEmission'); b.link(cc.outputs[0], em.inputs['Color']); b.out(em.outputs[0])
+    do_bake(ob, m, 2400, 3200, LEATHER_BAKED, True)
+
 # ------------------------------------------------------------------ main
 def main():
     t0 = time.time()
@@ -1172,4 +1251,7 @@ def main():
         bpy.ops.render.render(write_still=True)
     print(f'[kitap] done {time.time()-t0:.1f}s')
 
-main()
+if BAKE:
+    bake_all()
+else:
+    main()

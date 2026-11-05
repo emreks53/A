@@ -38,8 +38,11 @@
  *     col / lw / glow:   outline variant only: stroke colour (#FFF6E0), line width in SCREEN px (2), glow 0..1 (1).
  *     seed: 0            petal arrangement seed.
  *  })
- *  Origin = receptacle (where the stem attaches); the visible head centre sits ≈ (0, −0.12R) when open.
- *  A.heroRoseSilhouette(R, bloom=1, {variant, tilt}) → Array(128) of [x,y] in the same local coords,
+ *  Origin = receptacle (where the stem attaches). Open head bbox ≈ x ±0.89R, y −0.78R…+0.46R (visual centre
+ *  ≈ (0, −0.16R)); bud bbox ≈ x ±0.25R, y −0.63R…+0.1R. The innermost ring is replaced by a crescent spiral heart
+ *  once open. Cost (Chromium sw): R260 ≈ 28 ms, R100 ≈ 10 ms, gem R180 ≈ 3 ms, paradise R420 ≈ 50 ms,
+ *  outline R260 ≈ 12 ms, mini ≈ 0.6 ms. For many small static roses, pre-render them into S.sprite yourself.
+ *  A.heroRoseSilhouette(R, bloom=1, {variant, tilt}) → Array(128) of [x,y] in the same local coords (wilt 0, rot 0),
  *     index 0 = top-most point, clockwise on screen. Cached. Use for morphs / match cuts.
  *  A.heroPetal(ctx, {R, t, wilt, flip: 1 (−1 = back side), rot, variant}) → one loose outer petal
  *     (same size as the rose's outer petals) centred on its centroid.
@@ -91,6 +94,7 @@
  *     cypress/round trees, meadow + grass, winding path, flowers, foreground leaves) mapped to
  *     [cx−540·scale, cx+540·scale]×[cy−960·scale, cy+960·scale]. Returns {horizon, sun:{x,y,r}, rose:{x,y,R}}
  *     in plate coords.  It paints the whole rect: clip first when using it inside a jar.
+ *     Cost: full plate ≈ 60–85 ms (B/J, incl. 180 sprite flowers), mini ≈ 10 ms.
  *
  * Debug showcases (never in the film): E.scene 'X_flora' (t0 9000) and 'X_flora_garden' (t0 9100).
  * ========================================================================== */
