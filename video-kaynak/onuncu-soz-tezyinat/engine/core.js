@@ -154,7 +154,7 @@
   function acquire(kind) {
     const list = pool[kind], d = kind === 'full' ? pool.depthF++ : pool.depthH++;
     if (!list[d]) list[d] = kind === 'full' ? E.canvas(W, H) : E.canvas(W / 2, H / 2);
-    const b = list[d]; b.x.setTransform(1, 0, 0, 1, 0, 0); b.x.globalAlpha = 1; b.x.globalCompositeOperation = 'source-over'; b.x.filter = 'none';
+    const b = list[d]; if (b.x.reset) b.x.reset(); b.x.setTransform(1, 0, 0, 1, 0, 0); b.x.globalAlpha = 1; b.x.globalCompositeOperation = 'source-over'; b.x.filter = 'none';
     b.x.clearRect(0, 0, b.w, b.h); return b;
   }
   function release(kind) { if (kind === 'full') pool.depthF--; else pool.depthH--; }

@@ -1114,20 +1114,20 @@
     ctx.globalCompositeOperation = 'source-over';
     // far range, then the green hill silhouette with a gold rim
     const far = (x) => 1006 + 16 * Math.sin(x * 0.005 + 1) + 8 * Math.sin(x * 0.017), near = (x) => 1052 + 30 * Math.sin(x * 0.0042 + 2.2) + 12 * Math.sin(x * 0.013);
-    ctx.fillStyle = path3('#FFF3DE', '#EBBE9C', E.mix('#FFF3DE', '#B08A86', 0.88), dK);
+    ctx.fillStyle = path3('#FFF3DE', '#F0C6B4', E.mix('#FFF3DE', '#B08A86', 0.88), dK);
     ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 24) ctx.lineTo(x, far(x)); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = E.lin(ctx, 0, 1020, 0, H, [[0, path3('#FFF0D8', '#D9A57E', '#3F7F6E', dK)], [0.35, path3('#FFEDD2', '#B98E70', '#2C5E58', dK)], [1, path3('#FFEACB', '#8C735E', '#163838', dK)]]);
+    ctx.fillStyle = E.lin(ctx, 0, 1020, 0, H, [[0, path3('#FFF0D8', '#A9D2B9', '#3F7F6E', dK)], [0.35, path3('#FFEDD2', '#86B8A2', '#2C5E58', dK)], [1, path3('#FFEACB', '#5E8E80', '#163838', dK)]]);
     ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 24) ctx.lineTo(x, near(x)); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = E.rgba('#FFD98A', 0.85 * dK); ctx.lineWidth = 3; ctx.beginPath(); for (let x = 0; x <= W; x += 24) (x ? ctx.lineTo(x, near(x)) : ctx.moveTo(x, near(x))); ctx.stroke();
     ctx.restore();
     // the footnote star: rosette folds into the star8, which glows on, descends and becomes the sun
     const [rx, ry, rz] = toScreen(cam, 1, ROSE.x, ROSE.y);
     const c = P(t, 60.6, 61.15, 'inOutCubic'), dsc = P(t, 61.15, 61.72, 'inOutCubic'), mo = P(t, 61.32, 61.74, 'inOutCubic');
-    const RS = 58, r = lerp(600 * rz, RS, c), cx0 = lerp(rx, 540, c), sx = cx0, sy = lerp(ry, 1020, dsc);
+    const RS = 64, r = lerp(600 * rz, RS, c), cx0 = lerp(rx, 540, c), sx = cx0, sy = lerp(ry, 1020, dsc);
     if (c < 0.98) { ctx.save(); ctx.translate(cx0, ry); ctx.globalAlpha = wK * (1 - sm(c * 1.5)); A.rosetteFlower(ctx, { r, fill: 1, t, col: '#F2B44A', core: '#FFF4D6', alpha: 0.95 }); ctx.restore(); }
     const sa = sm(c * 2.2);
     if (sa > 0) {
-      const R = lerp(r, 70, mo), gr = lerp(Math.max(r * 2.4, 170), 300, mo);
+      const R = lerp(r, 70, mo), gr = lerp(Math.max(r * 2.4, 230), 300, mo);
       // warm halo that reads on the white field as well as on the dawn sky
       ctx.save();
       ctx.fillStyle = E.rad(ctx, sx, sy, 0, gr * 1.15, [[0, '#FFD98A', 0.42 * sa], [0.45, '#FFD98A', 0.18 * sa], [1, '#FFD98A', 0]]); ctx.fillRect(sx - gr * 1.2, sy - gr * 1.2, gr * 2.4, gr * 2.4);

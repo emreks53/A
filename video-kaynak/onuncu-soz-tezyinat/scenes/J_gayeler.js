@@ -860,15 +860,15 @@
     const grow = P(t, 67.02, 67.95, 'inOutSine');
     if (grow > 0) {
       const M = lerp(500, 3700, grow), m = ctx.getTransform(), R1 = 700, R2 = 1550, fa = Math.min(1, grow * 2.5);
-      const field = (l, scl) => {
+      const field = (l, scl, fills) => {
         l.setTransform(m.a * scl, m.b * scl, m.c * scl, m.d * scl, m.e * scl, m.f * scl);
-        A.girih(l, { r: 3700, cell: CELL, lineW: 3.6, draw: 1, glow: 0.8, t, fill: 'rgba(60,175,125,0.32)', fill2: 'rgba(110,200,235,0.26)' });
+        A.girih(l, { r: 3700, cell: CELL, lineW: 3.6, draw: 1, glow: 0.8, t, fill: fills ? 'rgba(60,175,125,0.32)' : undefined, fill2: fills ? 'rgba(110,200,235,0.26)' : undefined });
         l.globalCompositeOperation = 'destination-in';
         l.fillStyle = E.rad(l, 0, 0, 0, M, [[0, '#000', 1], [0.8, '#000', 1], [1, '#000', 0]]); l.fillRect(-M, -M, M * 2, M * 2);
         l.globalCompositeOperation = 'destination-out'; l.fillStyle = '#000'; l.fill(pathOf(starOutline(STAR_R - 6)));
       };
-      if (M > R1) E.layer(ctx, (l) => { field(l, 0.5); l.fillStyle = E.rad(l, 0, 0, R1 * 0.8, R2, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(-M, -M, M * 2, M * 2); }, { lo: true, blur: 7, alpha: fa * 0.5 });
-      E.layer(ctx, (l) => { field(l, 1); l.globalCompositeOperation = 'destination-in'; l.fillStyle = E.rad(l, 0, 0, R1 * 0.8, R2, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(-M, -M, M * 2, M * 2); }, { alpha: fa });
+      if (M > R1) E.layer(ctx, (l) => { field(l, 0.5, false); l.fillStyle = E.rad(l, 0, 0, R1 * 0.8, R2, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(-M, -M, M * 2, M * 2); }, { lo: true, blur: 7, alpha: fa * 0.5 });
+      E.layer(ctx, (l) => { field(l, 1, true); l.globalCompositeOperation = 'destination-in'; l.fillStyle = E.rad(l, 0, 0, R1 * 0.8, R2, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(-M, -M, M * 2, M * 2); }, { alpha: fa });
     }
     planWater(ctx, t);
     planOverlays(ctx, t, v);
@@ -979,7 +979,7 @@
         ctx.fillStyle = E.rad(ctx, 540, Math.max(-300, sy), 0, 1150, [[0, '#FFF1D8', 0.72 * ga], [0.35, '#FFD9A0', 0.34 * ga], [1, '#E58A78', 0]]); ctx.fillRect(0, 0, E.W, E.H);
         ctx.restore();
         drawCraneMotes(ctx, t);
-      } else {
+      } else if (t < 68.3) { // from 68.30 the ivory flare covers everything
         drawPlanTop(ctx, t, planView(t));
         warmSurround(ctx, 0.6);
       }
