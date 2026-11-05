@@ -177,10 +177,10 @@
   function fallen(l, c, t, ttw) {
     W.lay(l, c, 1, () => {
       FALLEN.forEach(([x, y, r, fl], i) => {
-        const t0 = 9.92 + i * 0.09, e = E.p(t, t0, t0 + 0.16, 'inQuad');
+        const t0 = 9.9 + i * 0.1, e = E.p(t, t0, t0 + 0.28, 'outCubic');
         if (e <= 0) return;
-        l.save(); l.translate(x, y - (1 - e) * 240); l.scale(1, lerp(1, 0.5, e)); l.globalAlpha = sm(e * 3);
-        A.heroPetal(l, { R: 46, t: ttw, wilt: 0.75, rot: r + (1 - e) * 2, flip: fl });
+        l.save(); l.translate(x, y - (1 - e) * 26); l.scale(1, lerp(0.8, 0.5, e)); l.globalAlpha = sm(e * 2);
+        A.heroPetal(l, { R: 46, t: ttw, wilt: 0.75, rot: r + (1 - e) * 0.8, flip: fl });
         l.restore();
       });
     });

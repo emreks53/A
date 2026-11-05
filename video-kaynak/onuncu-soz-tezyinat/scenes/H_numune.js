@@ -214,10 +214,10 @@
       let y = 1260, row = 0;
       const rng = E.rng(4711);
       while (y < 2050) {
-        const rh = 11 + (y - 1260) * 0.052, gap = Math.max(1.5, rh * 0.13);
-        let cx = -30 - rng() * rh * 1.6;
+        const rh = 6.5 + (y - 1260) * 0.058, gap = Math.max(1.3, rh * 0.14), sc = 1 + (y - 1260) / 640;
+        let cx = -30 - rng() * 30 * sc;
         while (cx < 1120) {
-          const w = rh * (1.25 + rng() * 1.1), h = rh - gap, yy = y + gap * 0.5 + (rng() - 0.5) * gap * 0.6;
+          const w = sc * (24 + rng() * 22), h = rh - gap, yy = y + gap * 0.5 + (rng() - 0.5) * gap * 0.6;
           const v = rng(), base = v < 0.3 ? '#2E1B29' : v < 0.65 ? '#36212F' : v < 0.9 ? '#3E2636' : '#46293A';
           const r = Math.min(h * 0.45, w * 0.3), j = () => (rng() - 0.5) * h * 0.18;
           x.beginPath();
@@ -882,6 +882,12 @@
       });
       PR(ctx, 'jars'); drawGhosts(ctx, t, L3);
       inL(ctx, L3, (c) => drawSpr(c, SP.frame));
+      {   // focus: deepen the outer facade so the lit vitrine carries the eye
+        const fc = scr(L3, 540, 760);
+        ctx.save(); ctx.translate(fc[0], fc[1]); ctx.scale(1, 1.35);
+        ctx.fillStyle = E.rad(ctx, 0, 0, 380 * L3.z, 980 * L3.z, [[0, '#0C0410', 0], [1, '#0C0410', 0.5]]); ctx.fillRect(-1400, -1400, 2800, 2800);
+        ctx.restore();
+      }
       lanternLight(ctx, t, cam); PR(ctx, 'frame');
       drawPuddles(ctx, t, L3); PR(ctx, 'puddle');
       // sample pulse on "suretleri"
