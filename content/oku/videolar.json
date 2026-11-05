@@ -27,6 +27,17 @@
       "video": "videolar/ihlas.mp4",
       "kapak": "videolar/ihlas-kapak.jpg",
       "onizleme": "videolar/ihlas-onizleme.jpg"
+    },
+    {
+      "id": "tezyinat",
+      "baslik": "Onuncu Söz'den",
+      "kitap": "Sözler",
+      "bolum": "Onuncu Söz",
+      "sayfa": 81,
+      "etiketler": ["tezyinat", "cennet", "şükür"],
+      "video": "videolar/tezyinat.mp4",
+      "kapak": "videolar/tezyinat-kapak.jpg",
+      "onizleme": "videolar/tezyinat-onizleme.jpg"
     }
   ]
 }

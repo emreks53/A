@@ -75,6 +75,7 @@ describe('mp4Suresi', () => {
   it('gerçek videoların süresi', () => {
     expect(Math.round(mp4Suresi(join(kok, 'public/videolar/fenler-haliki-tanittirir.mp4'))!)).toBe(125);
     expect(Math.round(mp4Suresi(join(kok, 'public/videolar/ihlas.mp4'))!)).toBe(119);
+    expect(Math.round(mp4Suresi(join(kok, 'public/videolar/tezyinat.mp4'))!)).toBe(72);
   });
 });
 
@@ -85,6 +86,7 @@ describe('akisOku', () => {
     expect(akis.videolar.map((v) => [v.id, v.baslik, v.kitap, v.bolum, sureYazisi(v.sure), menbaYazisi(v), etiketYazisi(v.etiketler)])).toEqual([
       ['fenler-haliki-tanittirir', "On Birinci Şuâ'dan", 'Şuâlar', 'On Birinci Şuâ', '2:05', 'Şuâlar, On Birinci Şuâ, Altıncı Mesele, 203. sayfa', '#fenler #marifetullah #tefekkür'],
       ['ihlas', "On Yedinci Lem'a'dan", "Lem'alar", "On Yedinci Lem'a", '1:59', "Lem'alar, On Yedinci Lem'a, 154. sayfa", '#ihlas #muhabbet #kurtuluş'],
+      ['tezyinat', "Onuncu Söz'den", 'Sözler', 'Onuncu Söz', '1:12', 'Sözler, Onuncu Söz, 81. sayfa', '#tezyinat #cennet #şükür'],
     ]);
   });
 

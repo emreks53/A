@@ -193,7 +193,7 @@ await adim('ana ekran: yalnız gökyüzü, söz ve alt menü; üstte yazı yok, 
   // Oku'yu birkaç saniye sonra aç: gizli Oku hiçbir şey oynatmamalı.
   await page.waitForTimeout(3000);
   const kaynaklar = await page.evaluate(() => Array.from(document.querySelectorAll('.reel video'), (v) => v.getAttribute('src')));
-  assert.deepEqual(kaynaklar, [null, null]);
+  assert.deepEqual(kaynaklar, [null, null, null]);
   const yazilar = await gorunenYazilar(page, '#view-ana');
   assert.deepEqual(
     yazilar.map((y) => y.yazi),
@@ -697,6 +697,22 @@ await adim('Kenz ayrı ekran: gece kütüphanesi; videolar kitap kitap, kitapta 
   );
   assert.deepEqual(kitaplar, [
     {
+      ad: 'Sözler',
+      sayi: '1 video',
+      cilt: '#22336A',
+      bolumler: [
+        {
+          ad: 'Onuncu Söz',
+          buyuk: 'uppercase',
+          dil: 'tr',
+          kartlar: [['#/oku/tezyinat', 'Onuncu Söz’den, 1:12. Sözler, 81. sayfa. #tezyinat #cennet #şükür']],
+          yer: ['81. sayfa'],
+          sure: ['1:12'],
+          etiket: [['#tezyinat #cennet #şükür', 1]],
+        },
+      ],
+    },
+    {
       ad: 'Lem’alar',
       sayi: '1 video',
       cilt: '#1F4A3B',
@@ -729,8 +745,8 @@ await adim('Kenz ayrı ekran: gece kütüphanesi; videolar kitap kitap, kitapta 
       ],
     },
   ]);
-  // İki kitapta kitap fihristi yok (üç ve daha çok kitapta çıkar)
-  assert.equal(await page.locator('.fihrist').count(), 0);
+  // Üç kitapta kitap fihristi çıkar (üç ve daha çok kitapta)
+  assert.equal(await page.locator('.fihrist').count(), 1);
 });
 
 await adim('menünün altındaki ve yanındaki koyu bantta görünmeyen karta dokunulmaz; kaydırma oradan da başlar', async () => {

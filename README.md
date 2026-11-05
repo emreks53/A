@@ -207,7 +207,7 @@ vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görün
      okunur. `kapak` video yüklenirken görünen ilk kare, `onizleme` Kenz kartının ve paylaşılan bağlantının
      önizleme görselidir.
 
-Şimdilik videolar uygulamayla birlikte gelir (iki video ≈ 59 MB). Video sayısı artınca bir video barındırma
+Şimdilik videolar uygulamayla birlikte gelir (üç video ≈ 79 MB). Video sayısı artınca bir video barındırma
 hizmetine (Cloudflare Stream, Bunny vb.) taşınmalı; `video` alanına tam adres yazılabilecek şekilde
 genişletilir.
 
@@ -295,6 +295,9 @@ npm run assets:native
 - Videolar `emreks53/B` deposundan: *On Birinci Şuâ'dan* (Altıncı Mesele, fenler Hâlık'ı tanıttırır;
   `claude/kurzgesagt-style-turkish-video-2on8vi` dalı) ve *On Yedinci Lem'a'dan* (ihlas;
   `claude/kurzgesagt-style-video-p5a1gi` dalı). Kaynakları ve lisansları o dallarda; künyesi Menba'da.
+- *Onuncu Söz'den* (tezyinat, 81. sayfa) videosunun kaynağı bu depoda: `video-kaynak/onuncu-soz-tezyinat/`
+  (ses hizalaması, Canvas sahneleri, Blender kitabı, ses efektleri; nasıl yeniden üretileceği oradaki README'de).
+  YouTube Shorts için 1080×1920 kopyası `video-kaynak/onuncu-soz-tezyinat/cikti/` altında.
 - Telefon tarayıcısı: ölçü birimi dikeyde boy 640 px'e göre sınırlanır (`--u`), adres ve araç çubukları ekranı
   kısalttığında menü ve alıntı küçülmez. Geniş arka plana 4/5 oranında geçilir; dikey telefonda hep dikey
   fotoğraf kullanılır. Geniş arka planın (yatay telefon, tablet, masaüstü) iki yanı fotoğrafın aynı yükseklikteki
