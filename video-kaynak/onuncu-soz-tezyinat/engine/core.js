@@ -395,10 +395,10 @@
     b.letterSpacing = `${(1.2 + track).toFixed(2)}px`;
     const lines = multi ? g.text.split('\n') : wrapLines(b, g.text, G.maxW);
     const n = lines.length, baseY = 210 - ((n - 1) * lineH) / 2 + size * 0.32;
-    // ana yazı (fildişi; çok parlak zeminde derin sıcak kahve), ince sıcak altın parıltı süpürmesi ile
-    const dark = E.smooth(E.remap(bandLuma(ctx), 0.60, 0.66, 0, 1));
-    b.fillStyle = E.mix(G.color, '#3A2316', dark);
+    // ana yazı her zaman fildişi (renk değiştirme yok), ince sıcak altın parıltı süpürmesi ile
+    b.fillStyle = G.color;
     lines.forEach((ln, i) => b.fillText(ln, W / 2, baseY + i * lineH));
+    let tw = 0; lines.forEach((ln) => { tw = Math.max(tw, b.measureText(ln).width); });
     const sweep = clamp((t - g.in - 0.05) / 0.95);
     if (sweep > 0 && sweep < 1) {
       b.globalCompositeOperation = 'source-atop';
@@ -408,18 +408,22 @@
       b.fillStyle = gr; b.fillRect(0, 0, W, 420); b.globalCompositeOperation = 'source-over';
     }
     const top = G.y - 210 + dy;
+    // okunabilirlik: zeminin parlaklığıyla SÜREKLİ (eşiksiz) artan, kenarları tamamen yumuşak bir gölge halesi.
+    // Kutu değildir; parlaklık yavaş değiştiği için titremez. Koyu zeminde neredeyse hiç görünmez.
+    const L = bandLuma(ctx), k = clamp((L - 0.38) / 0.4);
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-    // okunabilirlik: geniş yumuşak gölge + dar gölge (kutu yok)
-    const lightPass = dark < 0.999, darkPass = dark > 0.001;
-    if (lightPass) {
-      ctx.globalAlpha = a * 0.62 * (1 - dark); ctx.filter = `blur(${(16 + blur).toFixed(1)}px) brightness(0)`; ctx.drawImage(glossBuf.c, 0, top + 4);
-      ctx.globalAlpha = a * 0.55 * (1 - dark); ctx.filter = `blur(${(3 + blur).toFixed(1)}px) brightness(0)`; ctx.drawImage(glossBuf.c, 0, top + 2);
-      ctx.globalAlpha = a * 0.35 * (1 - dark); ctx.filter = `blur(${(10 + blur).toFixed(1)}px)`; ctx.globalCompositeOperation = 'screen'; ctx.drawImage(glossBuf.c, 0, top);
-      ctx.globalCompositeOperation = 'source-over';
+    if (k > 0.001) {
+      const cy = G.y - 22 + dy, rx = tw / 2 + 170, ry = 70 + n * 44;
+      ctx.globalAlpha = a * 0.5 * k; ctx.translate(W / 2, cy); ctx.scale(rx / ry, 1);
+      const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, ry);
+      sg.addColorStop(0, 'rgba(20,12,8,1)'); sg.addColorStop(0.55, 'rgba(20,12,8,0.6)'); sg.addColorStop(1, 'rgba(20,12,8,0)');
+      ctx.fillStyle = sg; ctx.fillRect(-ry, -ry, ry * 2, ry * 2);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
-    if (darkPass) { // parlak zeminde: yazının çevresinde yumuşak açık hale (kutu değil)
-      ctx.globalAlpha = a * 0.7 * dark; ctx.filter = `blur(${(14 + blur).toFixed(1)}px) brightness(0) invert(1)`; ctx.drawImage(glossBuf.c, 0, top + 2);
-    }
+    // geniş yumuşak gölge + dar gölge
+    ctx.globalAlpha = a * (0.62 + 0.3 * k); ctx.filter = `blur(${(16 + blur).toFixed(1)}px) brightness(0)`; ctx.drawImage(glossBuf.c, 0, top + 4);
+    ctx.globalAlpha = a * (0.55 + 0.35 * k); ctx.filter = `blur(${(3 + blur).toFixed(1)}px) brightness(0)`; ctx.drawImage(glossBuf.c, 0, top + 2);
+    ctx.globalAlpha = a * 0.35 * (1 - k); ctx.filter = `blur(${(10 + blur).toFixed(1)}px)`; ctx.globalCompositeOperation = 'screen'; ctx.drawImage(glossBuf.c, 0, top);
     ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = a; ctx.filter = blur > 0.4 ? `blur(${blur.toFixed(1)}px)` : 'none';
     ctx.drawImage(glossBuf.c, 0, top);
     ctx.restore();

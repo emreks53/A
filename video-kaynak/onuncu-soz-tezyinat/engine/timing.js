@@ -917,7 +917,7 @@ window.TIMING = {
    "ws": 26.165,
    "we": 26.746,
    "in": 26.085,
-   "out": 27.935
+   "out": 27.05
   },
   {
    "src": "dekaik-ı sanatı",
@@ -941,7 +941,7 @@ window.TIMING = {
    "ws": 44.109,
    "we": 44.709,
    "in": 44.029,
-   "out": 45.914
+   "out": 45.4
   },
   {
    "src": "tezyinat",

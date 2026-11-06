@@ -1,5 +1,5 @@
 """Ardışık kare farklarından hızlı hareketli kareleri bulur → out/mb.json {kare: alt_kare_sayısı}.
-Önce normal render (out/kareler), sonra: python3 tools/hareket-bulanikligi.py && node tools/render.mjs --mb out/mb.json --only-mb"""
+Önce hareket bulanıklığı OLMADAN normal render (out/kareler), sonra: python3 tools/hareket-bulanikligi.py && node tools/render.mjs --mb out/mb.json --only-mb"""
 import json, os
 import numpy as np
 from PIL import Image
@@ -14,6 +14,8 @@ for f in fs:
 mb = {}
 for i in diff:
     m = max(diff.get(i, 0), diff.get(i + 1, 0))
-    if m > 8: mb[i] = int(min(16, max(3, round(m / 3.2))))
+    # Az alt kare "hayalet kopya" üretir: ya hiç bulanıklık yok ya da bol alt kare (yumuşak geçişli)
+    if m > 14: mb[i] = int(min(32, max(16, round(m * 1.1))))
+    elif m > 10: mb[i] = 10
 json.dump(mb, open(os.path.join(D, 'out', 'mb.json'), 'w'))
 print(len(mb), 'kare hareket bulanıklığı alacak; toplam alt kare', sum(mb.values()))

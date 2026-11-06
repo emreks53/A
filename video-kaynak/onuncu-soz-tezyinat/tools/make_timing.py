@@ -49,11 +49,12 @@ for src, mean in GLOSS:
 for g in gl:
     g['in'] = round(g['ws'] - 0.08, 3)
 OUT_FADE = 0.28   # engine/core.js: E.gloss.outDur — bir sonraki alt yazı, öncekinin silinmesi bitmeden başlamaz
-SINIR = {'elem': 11.30}   # "acı": yükselen kâse alt yazı bandına girmeden kaybolsun (C→D devri)
+SINIR = {'elem': 11.30, ('tezyinat', 1): 27.05, 'nazarlarını': 45.40}  # (kelime, kaçıncı geçiş) ya da kelime   # "acı": yükselen kâse alt yazı bandına girmeden kaybolsun (C→D devri)
 for k, g in enumerate(gl):
     nxt = gl[k + 1]['in'] if k + 1 < len(gl) else 1e9
     want = max(g['we'] + 1.05, g['in'] + 1.5 + 0.035 * len(g['text']))  # okunabilirlik
-    want = min(want, SINIR.get(g['src'], 1e9))
+    nth = sum(1 for x in gl[:k] if x['src'] == g['src'])
+    want = min(want, SINIR.get((g['src'], nth), SINIR.get(g['src'], 1e9)))
     g['out'] = round(min(want, nxt - OUT_FADE - 0.04), 3)
 
 END_VOICE = words[-1]['e']
