@@ -3,8 +3,7 @@
  * -------------------------------------------------------------------------------------
  * PLAN (1080×1920 · no gloss in E · darkest frame of the film at ≈21.8)
  *  Layers, back → front
- *   L0  teal wall #0E2433→#17485A→#2D6E74 + soft backlight behind the hourglass; faint dashed
- *       "time rings" turning slowly around it (no numerals)
+ *   L0  teal wall #0E2433→#17485A→#2D6E74 + soft backlight behind the hourglass
  *   L1  far bokeh (cyan / sand-gold), parallax 0.3
  *   L2  glossy dark teal floor (horizon ≈ y1040 = D's surface line), horizon sheen
  *   L3  HERO: hourglass (A.hourglass) with mini rose + butterfly in the top bulb;

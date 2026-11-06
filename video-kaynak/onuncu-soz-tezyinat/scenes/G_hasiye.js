@@ -516,7 +516,7 @@
     const halo = (it, k) => {
       if (k <= 0) return;
       h.save(); h.globalCompositeOperation = 'lighter';
-      h.fillStyle = E.rad(h, it.x, it.y, 0, 112 * k, [[0, '#FFD98A', 0.2 * k], [0.6, '#FFC870', 0.08 * k], [1, '#FFC870', 0]]); h.fillRect(it.x - 116, it.y - 116, 232, 232);
+      const hr = 112 * k + 1; h.fillStyle = E.rad(h, it.x, it.y, 0, hr, [[0, '#FFD98A', 0.2 * k], [0.6, '#FFC870', 0.08 * k], [1, '#FFC870', 0]]); h.fillRect(it.x - hr, it.y - hr, 2 * hr, 2 * hr);
       h.restore();
       h.save(); h.globalAlpha *= Math.min(1, k * 1.5); h.strokeStyle = E.rgba('#FFD98A', 0.65); h.lineWidth = 1.5; h.beginPath(); h.arc(it.x, it.y, 98 * k, 0, TAU); h.stroke(); h.restore();
     };

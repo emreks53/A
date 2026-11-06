@@ -6,8 +6,8 @@
  *   L0  plum wall #2A1633→#4A2346→#6E3448 (lerps in from C's night 11.50–11.80) + warm key
  *       blob from the right #FF9D5C (ramps at "Sana")
  *   L1  far bokeh (two distant warm lamps), parallax 0.35
- *   L2  Ottoman niche: pointed arch, raised frame, faint çini rosettes, lit left jamb —
- *       pre-blurred sprite (depth of field) + its mirror in the glossy ledge #1C1024
+ *   L2  warm plum wall with a glazed çini dado and soft drapery at the sides (no arch / niche),
+ *       pre-blurred sprite (depth of field) + its mirror in the glossy çini floor
  *   L3  HERO: Iznik bowl (A.iznikBowl), honey drop / splash / pool, craving motes, wisps
  *   L4  light shaft from the upper right + dust in it ('lighter')
  *   L5  foreground: blurred dark vessel rim + honey bokeh, parallax 1.6
