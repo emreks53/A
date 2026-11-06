@@ -49,8 +49,10 @@
   /* ---------------- key world positions (hero layer p 1) ---------------- */
   const ROSE = { x: 740, y: 540, R: 290 };            // visual centre of the paradise rose
   const RUG_X = (i) => 740 + (i - 3) * 132;          // 7 seccades
-  const RUG_Y = 1000, KAN_Y = 962, PLINTH_Y = 905, PLINTH_TOP = 881;
-  const JAR = { w: 250, h: 375, wx: 372, wy: 650, p: 1.35, ROFF: 0.42 };   // ROFF: mini-rose centre height (×h) above base
+  const RUG_Y = 1000, KAN_Y = 962, PLINTH_Y = 905, PLINTH_TOP = 866;
+  const RUGS = [...Array(7)].map((_, i) => [236 + i * 74, 1046 - i * 16.5]);   // front-left → back, facing up-left (away from the bounties)
+  const RUG_ROT = -0.36;
+  const JAR = { w: 250, h: 375, wx: 372, wy: 650, p: 1.35, ROFF: 0.42, ROX: -40 };   // ROX: rose sits left of the jar axis   // ROFF: mini-rose centre height (×h) above base
   const MINI = 0.12;
 
   /* ======================= CAMERA ======================= */
@@ -689,12 +691,14 @@
       return { c: b.c, ax: cx, ay: by, w, h };
     };
     SP.table = mk(true); SP.plinth = (() => {
-      const w = 220, h = 90, b = E.canvas(w, h), x = b.x, cx = w / 2, by = h - 4;
-      x.fillStyle = 'rgba(40,30,20,0.2)'; x.beginPath(); x.ellipse(cx, by - 2, 86, 10, 0, 0, TAU); x.fill();
-      x.fillStyle = LG(x, cx - 80, 0, cx + 80, 0, [[0, '#FFFFFF'], [0.5, '#F4EBDD'], [1, '#C9B89A']]); x.fillRect(cx - 74, by - 30, 148, 30);
-      x.fillStyle = C.gold; x.fillRect(cx - 80, by - 34, 160, 6); x.fillRect(cx - 76, by - 6, 152, 4);
-      for (let i = 0; i < 4; i++) { const p = new Path2D(); archPath(p, cx - 54 + i * 36, by - 8, 16, 18); x.fillStyle = 'rgba(176,150,112,0.4)'; x.fill(p); x.strokeStyle = E.rgba(C.gold, 0.85); x.lineWidth = 1.2; x.stroke(p); }
-      x.fillStyle = LG(x, 0, by - 40, 0, by - 30, [[0, '#FFFFFF'], [1, '#EFE4D2']]); x.beginPath(); x.ellipse(cx, by - 34, 80, 9, 0, 0, TAU); x.fill();
+      // round marble pedestal with gold rings (top at by − 39)
+      const w = 220, h = 70, b = E.canvas(w, h), x = b.x, cx = w / 2, by = h - 4;
+      x.fillStyle = 'rgba(40,30,20,0.22)'; x.beginPath(); x.ellipse(cx, by - 1, 70, 8, 0, 0, TAU); x.fill();
+      const body = new Path2D(); body.moveTo(cx - 76, by - 36); body.bezierCurveTo(cx - 70, by - 22, cx - 40, by - 20, cx - 44, by - 6); body.lineTo(cx - 60, by); body.lineTo(cx + 60, by); body.lineTo(cx + 44, by - 6); body.bezierCurveTo(cx + 40, by - 20, cx + 70, by - 22, cx + 76, by - 36); body.closePath();
+      x.fillStyle = LG(x, cx - 76, 0, cx + 76, 0, [[0, '#FFFFFF'], [0.45, '#F2E9DA'], [1, '#B8A688']]); x.fill(body);
+      x.fillStyle = LG(x, cx - 76, 0, cx + 76, 0, [[0, C.goldL], [0.5, C.gold], [1, C.goldD]]); x.fillRect(cx - 46, by - 13, 92, 4); x.fillRect(cx - 62, by - 4, 124, 3);
+      x.beginPath(); x.ellipse(cx, by - 37, 78, 10, 0, 0, TAU); x.fill();
+      x.fillStyle = LG(x, 0, by - 46, 0, by - 34, [[0, '#FFFFFF'], [1, '#EDE2CF']]); x.beginPath(); x.ellipse(cx, by - 39, 74, 8.5, 0, 0, TAU); x.fill();
       return { c: b.c, ax: cx, ay: by, w, h };
     })();
   }
@@ -857,13 +861,14 @@
     });
   }
   function drawPlaces(ctx, t, st) {
-    // seccades
-    for (let i = 0; i < 7; i++) {
+    // seccades: a quiet angled row on the left, drawn back → front
+    for (let i = 6; i >= 0; i--) {
       const t0 = 54.6 + i * 0.09, a = P(t, t0 - 0.12, t0 + 0.05, 'outCubic');
       if (a <= 0) continue;
       const un = P(t, t0, t0 + 0.55, 'inOutCubic');
       ctx.save(); ctx.globalAlpha = a;
-      ctx.translate(RUG_X(i), RUG_Y); ctx.scale(1.08, 0.56); A.seccade(ctx, { w: 104, h: 196, unroll: un, palette: [0, 1, 2, 0, 1, 2, 0][i], persp: 0.7, t });
+      ctx.translate(RUGS[i][0], RUGS[i][1]); ctx.scale(1, 0.56); ctx.rotate(RUG_ROT); ctx.scale(0.58, 0.58);
+      A.seccade(ctx, { w: 104, h: 196, unroll: un, palette: [0, 1, 2, 0, 1, 2, 0][i], persp: 0.12, t });
       ctx.restore();
     }
     // plinth + tables (appear at "hazırladığı")
@@ -872,36 +877,53 @@
       const draw = (spr, x, y, s, k) => { ctx.save(); ctx.translate(x, y); ctx.scale(s * k, s * k); ctx.globalAlpha = clamp(k * 1.5); ctx.drawImage(spr.c, -spr.ax, -spr.ay); ctx.restore(); };
       draw(SP.table, RUG_X(1) + 66, PLINTH_Y + 2, 0.62, clamp(tb * 1.05));
       draw(SP.table, RUG_X(4) + 66, PLINTH_Y + 2, 0.62, clamp(tb * 1.05 - 0.05));
-      draw(SP.plinth, ROSE.x, PLINTH_Y, 0.7, clamp(tb));
+      draw(SP.plinth, ROSE.x, PLINTH_Y, 1, clamp(tb));
     }
     // iznik bowl on the plinth: overflowing (answers "doyurmaz")
     const bw = st.bowl;
     if (bw > 0) {
-      const sc = 0.42;
+      const sc = 0.36;
       ctx.save(); ctx.globalAlpha = clamp(bw * 1.6);
       if (bw < 1) S.light(ctx, ROSE.x, PLINTH_TOP - 50, 200, '#FFF4D8', 0.8 * (1 - bw), 'screen');
-      E.at(ctx, ROSE.x, PLINTH_TOP - 220 * sc, sc * (0.85 + 0.15 * E.ease.outBack(clamp(bw * 1.4))), 0, () => A.iznikBowl(ctx, { t, overflow: st.overflow, honey: 0, shadow: false, lit: 1, tilt: 0.2 }));
+      E.at(ctx, ROSE.x, PLINTH_TOP - 220 * sc, sc * (0.85 + 0.15 * E.ease.outBack(clamp(bw * 1.4))), 0, () => A.iznikBowl(ctx, { t, overflow: 0.62 * st.overflow, honey: 0, shadow: false, lit: 1, tilt: 0.2 }));
       ctx.restore();
-      if (st.overflow > 0.3) {
-        // honey-light trickles down the plinth and pools on the marble
-        const k = clamp((st.overflow - 0.3) / 0.5);
-        ctx.save(); ctx.globalCompositeOperation = 'lighter';
-        ctx.fillStyle = E.rad(ctx, ROSE.x, PLINTH_Y + 6, 0, 120, [[0, '#FFC15E', 0.55 * k], [1, '#FFC15E', 0]]);
-        ctx.save(); ctx.translate(ROSE.x, PLINTH_Y + 6); ctx.scale(1, 0.25); ctx.beginPath(); ctx.arc(0, 0, 120, 0, TAU); ctx.restore(); ctx.fill();
-        ctx.strokeStyle = E.rgba('#FFD27A', 0.8 * k); ctx.lineWidth = 3; ctx.setLineDash([6, 8]); ctx.lineDashOffset = -t * 60;
-        for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(ROSE.x + s * 50, PLINTH_TOP + 2); ctx.lineTo(ROSE.x + s * 52, PLINTH_Y + 2); ctx.stroke(); }
-        ctx.setLineDash([]); ctx.restore();
+      if (st.overflow > 0.15) {
+        // continuous honey streams: over the rim, down the pedestal, a rill across the marble into the pool
+        const k = clamp((st.overflow - 0.15) / 0.6), rx = 119 * 0.36 / 0.42 * 0.42 / 0.36 * 0.36 * 330 / 119;
+        const streams = [[-0.8, 0], [-0.3, 0.12], [0.3, 0.06], [0.8, 0.18]];
+        ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        for (const [u, d] of streams) {
+          const kk = clamp(k * 1.4 - d); if (kk <= 0) continue;
+          const x0 = ROSE.x + u * rx * 0.98, y0 = PLINTH_TOP - 220 * 0.36 + 30 * 0.36 * Math.sqrt(1 - u * u) * 0.0, pts = [[x0, y0], [x0 + u * 8, y0 + 34], [ROSE.x + u * 70, PLINTH_TOP - 4], [ROSE.x + u * 62, PLINTH_Y - 6], [ROSE.x + u * 44, PLINTH_Y + 6]];
+          const n = Math.max(2, Math.round(pts.length * kk)), seg = pts.slice(0, n);
+          const pth = new Path2D(); A.crPath(pth, seg, false);
+          ctx.strokeStyle = 'rgba(255,181,71,0.35)'; ctx.lineWidth = 9; ctx.stroke(pth);
+          ctx.strokeStyle = '#FFB547'; ctx.lineWidth = 4.2; ctx.stroke(pth);
+          ctx.strokeStyle = '#FFE7A0'; ctx.lineWidth = 1.8; ctx.stroke(pth);
+          ctx.setLineDash([3, 7]); ctx.lineDashOffset = -t * 70; ctx.strokeStyle = 'rgba(255,253,240,0.95)'; ctx.lineWidth = 1.2; ctx.stroke(pth); ctx.setLineDash([]);
+        }
+        // the rill runs forward across the marble and spills into the pool (the river)
+        const kr = clamp(k * 1.6 - 0.5);
+        if (kr > 0) {
+          const y1 = lerp(PLINTH_Y + 8, 1092, kr), rill = new Path2D(); rill.moveTo(ROSE.x, PLINTH_Y + 8); rill.bezierCurveTo(ROSE.x + 10, PLINTH_Y + 50, ROSE.x - 8, 1010, ROSE.x, y1);
+          ctx.strokeStyle = 'rgba(255,181,71,0.4)'; ctx.lineWidth = 10; ctx.stroke(rill); ctx.strokeStyle = '#FFC15E'; ctx.lineWidth = 4.5; ctx.stroke(rill);
+          ctx.setLineDash([4, 9]); ctx.lineDashOffset = -t * 80; ctx.strokeStyle = 'rgba(255,250,230,0.95)'; ctx.lineWidth = 1.5; ctx.stroke(rill); ctx.setLineDash([]);
+        }
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = E.rad(ctx, ROSE.x, PLINTH_Y + 8, 0, 110, [[0, '#FFC15E', 0.45 * k], [1, '#FFC15E', 0]]);
+        ctx.save(); ctx.translate(ROSE.x, PLINTH_Y + 8); ctx.scale(1, 0.24); ctx.beginPath(); ctx.arc(0, 0, 110, 0, TAU); ctx.restore(); ctx.fill();
+        ctx.restore();
       }
     }
-    // kandils (lit forever)
-    for (let i = 0; i < 7; i++) {
+    // kandils (lit forever) stand beside the rugs, in the gaps of the row — not at the sajda end
+    for (let i = 6; i >= 0; i--) {
       const ta = 54.95 + i * 0.05, a = P(t, ta, ta + 0.25, 'outCubic');
       if (a <= 0) continue;
-      const tl = 55.13 + i * 0.07, lit = P(t, tl, tl + 0.32, 'outBack');
+      const tl = 55.13 + i * 0.07, lit = P(t, tl, tl + 0.32, 'outBack'), kx = RUGS[i][0] + 38, ky = RUGS[i][1] + 4;
       ctx.save(); ctx.globalAlpha = a;
-      E.at(ctx, RUG_X(i), KAN_Y, 0.3, 0, () => A.kandil(ctx, { size: 200, lit, oil: 0.75, lightR: 300, t: t + i * 0.37 }));
+      E.at(ctx, kx, ky, 0.22, 0, () => A.kandil(ctx, { size: 200, lit, oil: 0.75, lightR: 260, t: t + i * 0.37 }));
       ctx.restore();
-      if (lit > 0 && lit < 1.2 && t < tl + 0.45) A.sparks(ctx, t, { x: RUG_X(i), y: KAN_Y - 54, t0: tl, n: 8, seed: 970 + i, col: '#FFE3A3', speed: 110, life: 0.45, gravity: -60, size: 1.6 });
+      if (lit > 0 && lit < 1.2 && t < tl + 0.45) A.sparks(ctx, t, { x: kx, y: ky - 40, t0: tl, n: 8, seed: 970 + i, col: '#FFE3A3', speed: 90, life: 0.45, gravity: -60, size: 1.5 });
     }
   }
   /** star8 outline (two squares) as a path, for the soft halo band under A.star8 */
@@ -957,9 +979,9 @@
     const rot = (0.025 * Math.sin(t * 1.3) - 0.06 * (1 - fi)) * (1 - g);
     return { x, y, s, rot, on: t > 49.5 };
   }
-  function jarContent(ctx, t, withRose) {
+  function jarContent(ctx, t, roseK, stemK) {
     // the earthly garden in miniature (B palette), bloom-wave replays at "o çeşit tezyinat"
-    A.garden(ctx, t, { palette: 'mini', scale: 0.19, cx: 0, cy: -170, wave: (t - 50.08) * 1.25, rose: false, flowers: 90 });
+    A.garden(ctx, t, { palette: 'mini', scale: 0.25, cx: 165, cy: -205, sunX: 300, sunY: 640, wave: (t - 50.08) * 1.25, rose: false, flowers: 120, span: [-260, 640] });
     // tiny glints as the miniature bloom-wave passes (callback to B's signature wave)
     if (t > 50.35 && t < 51.6) {
       for (let i = 0; i < 14; i++) {
@@ -968,22 +990,25 @@
         S.sparkle(ctx, px, py, 7 * Math.sin(PI * a / 0.45), 1, '#FFF6D8');
       }
     }
-    if (withRose) {
-      const R = ROSE.R * MINI, oy = -JAR.h * JAR.ROFF + JAR.h * 0.075 - SIL.cy * MINI, ox = -SIL.cx * MINI;
+    const R = ROSE.R * MINI, oy = -JAR.h * JAR.ROFF + JAR.h * 0.075 - SIL.cy * MINI, ox = JAR.ROX - SIL.cx * MINI;
+    if (stemK > 0.01) {
       const tip = A.stemTip({ len: -oy - 4, t, sway: 0.4 });
-      E.at(ctx, ox - tip.x, 0, 1, 0, () => A.stem(ctx, { len: -oy - 4, t, sway: 0.4, leaves: 2, thorns: 2, width: 3.2 }));
-      E.at(ctx, ox, oy, 1, 0, () => A.heroRose(ctx, { R, bloom: 0.72 + 0.28 * P(t, 50.4, 51.0, 'outBack'), variant: 'mini', t }));
+      ctx.save(); ctx.globalAlpha *= stemK; E.at(ctx, ox - tip.x, 0, 1, 0, () => A.stem(ctx, { len: -oy - 4, t, sway: 0.4, leaves: 2, thorns: 2, width: 3.2 })); ctx.restore();
     }
+    if (roseK > 0.01) E.at(ctx, ox, oy, 1, 0, () => A.heroRose(ctx, { R, bloom: 0.72 + 0.28 * P(t, 50.4, 51.0, 'outBack'), variant: 'mini', t }));
+    // foreground flowers overlap the stem base / meadow edge
+    const FL = [[-104, -6, 'tulip', 17], [-70, -3, 'daisy', 14], [-22, -5, 'carnation', 16], [8, -2, 'daisy', 13], [44, -6, 'tulip', 18], [86, -3, 'lily', 15], [-52, -1, 'hyacinth', 14]];
+    for (let i = 0; i < FL.length; i++) { const f = FL[i]; ctx.save(); ctx.globalAlpha *= stemK; A.drawFlower(ctx, f[2], f[0], f[1], f[3], { pop: clamp(((t - 50.08) * 1.25 - 0.1 * i) / 0.5), rot: 0.05 * Math.sin(1.3 * t + i) }); ctx.restore(); }
   }
   function drawJar(ctx, t, cam, st) {
     const J = jarAt(t, cam); if (!J.on) return J;
     const dis = st.dissolve;   // glass → sparkles
     if (dis < 1) {
-      ctx.save(); ctx.translate(J.x, J.y); ctx.rotate(J.rot); ctx.scale(J.s, J.s); ctx.translate(0, JAR.h * JAR.ROFF);
+      ctx.save(); ctx.translate(J.x, J.y); ctx.rotate(J.rot); ctx.scale(J.s, J.s); ctx.translate(-JAR.ROX, JAR.h * JAR.ROFF);
       ctx.globalAlpha = 1 - E.ease.inCubic(dis);
       // soft floating halo under the jar
       S.light(ctx, 0, -JAR.h * 0.35, JAR.w * 1.1, '#FFF6DE', 0.35, 'screen');
-      A.bellJar(ctx, { w: JAR.w, h: JAR.h, t, tag: true, spec: st.jarSpec, content: (c) => { if (st.contentFade < 1) { c.globalAlpha *= 1 - st.contentFade; jarContent(c, t, st.grow <= 0); } } });
+      A.bellJar(ctx, { w: JAR.w, h: JAR.h, t, tag: true, spec: st.jarSpec, content: (c) => { if (st.contentFade < 1) { c.globalAlpha *= 1 - st.contentFade; jarContent(c, t, st.grow <= 0 ? 1 : 0, 1 - P(t, 57.1, 57.36, 'inOutSine')); } } });
       if (st.rainK > 0.05) A.glints(ctx, t, { pts: SIL.jar.filter((_, i) => i % 3 === 0), seed: 980, r: 9, period: 0.9, duty: 0.3 * st.rainK, alpha: 0.95 });
       ctx.restore();
     }
@@ -992,7 +1017,7 @@
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       SIL.jar.forEach((p, i) => {
         const d0 = hs(i, 990) * 0.35, age = dis - d0; if (age <= 0 || age > 1) return;
-        const px = J.x + (p[0] + (hs(i, 991) - 0.5) * 60 * age) * J.s, py = J.y + (p[1] + JAR.h * JAR.ROFF - 90 * age - 30 * age * age) * J.s;
+        const px = J.x + (p[0] - JAR.ROX + (hs(i, 991) - 0.5) * 60 * age) * J.s, py = J.y + (p[1] + JAR.h * JAR.ROFF - 90 * age - 30 * age * age) * J.s;
         S.sparkle(ctx, px, py, (5 + 7 * hs(i, 992)) * Math.sin(PI * age), 1, i % 2 ? '#FFFFFF' : '#FFE7A8', age * 2);
       });
       ctx.restore();
@@ -1004,10 +1029,12 @@
     const g = st.grow; if (g <= 0 || g >= 1.6) return;
     const [rx, ry, rz] = toScreen(cam, 1, ROSE.x, ROSE.y);
     const k = A.morphEase(clamp(g), 0.05), s = lerp(MINI, 1, k);
-    const fade = 1 - sm(clamp((k - 0.62) / 0.38)), mP = sm(clamp((k - 0.02) / 0.5));
+    const fade = 1 - sm(clamp((k - 0.62) / 0.38)), mP = sm(clamp((k - 0.1) / 0.5));
     if (fade > 0.01) {
       ctx.save(); ctx.translate(rx, ry); ctx.scale(rz * s, rz * s); ctx.translate(-SIL.cx, -SIL.cy);
-      if (mP < 0.99) { ctx.globalAlpha = fade * (1 - mP); A.heroRose(ctx, { R: ROSE.R, bloom: 1, variant: s * ROSE.R * rz < 40 ? 'mini' : 'normal', t }); }
+      const mN = sm(clamp((s - 0.13) / 0.12));
+      if (mP < 0.99 && mN < 0.99) { ctx.globalAlpha = fade * (1 - mP) * (1 - mN); A.heroRose(ctx, { R: ROSE.R, bloom: 1, variant: 'mini', t }); }
+      if (mP < 0.99 && mN > 0.01) { ctx.globalAlpha = fade * (1 - mP) * mN; A.heroRose(ctx, { R: ROSE.R, bloom: 1, variant: 'normal', t }); }
       if (mP > 0.01) { ctx.globalAlpha = fade * mP; A.heroRose(ctx, { R: ROSE.R, bloom: 1, variant: 'paradise', t }); }
       ctx.restore();
     }
@@ -1173,7 +1200,7 @@
     st.jarSpec = clamp((t - 57.0) / 0.45);
     st.grow = (t - 57.12) / 0.62;
     st.dissolve = clamp((t - 57.16) / 0.5) + Math.max(0, (t - 57.66) / 0.5) * 0.4;
-    st.contentFade = P(t, 57.1, 57.42, 'inOutSine');
+    st.contentFade = P(t, 57.12, 57.5, 'inOutSine');
     st.r1 = P(t, 57.88, 58.35, 'outCubic');
     st.r2 = P(t, 59.15, 59.55, 'outCubic');
     st.lock = E.ease.outBack(clamp((t - 59.15) / 0.3), 2.2);

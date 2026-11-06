@@ -124,8 +124,9 @@
   const JEWEL = ['#FFCF5A', '#2EE6A6', '#4C8DFF', '#B47CFF', '#FF3D6E', '#FFE9A8'];
 
   /* ------------------------------ camera ------------------------------ */
-  function liftE(t) { const k = clamp((t - 23.9) / 0.8); return ez.inOutCubic(k) + 0.05 * Math.sin(PI * clamp((k - 0.55) / 0.45)); }
-  function baseRCY(t) { return 760 - 160 * liftE(t); }
+  /* 'yüksek' (24.005): the lift starts 3 frames early with a quick, eased rise (outQuad) and a small overshoot */
+  function liftE(t) { const k = clamp((t - 23.9) / 0.85); return (1 - (1 - k) * (1 - k)) + 0.045 * Math.sin(PI * clamp((k - 0.6) / 0.4)); }
+  function baseRCY(t) { return 760 - 230 * liftE(t); }
   /* E's ember path (matches E_omur: wick ≈ (819,876) → (540,760) by 22.47) */
   function emberPos(t) {
     const u = clamp((t - 21.95) / 0.52), e = ez.inOutSine(u);
@@ -134,7 +135,7 @@
   }
   function roseCY(t) {
     const bob = 5 * Math.sin(t * 2.2) * P(t, 22.5, 23.0) * (1 - P(t, 23.5, 23.82));
-    const nudge = -7 * Math.sin(PI * clamp((t - 23.78) / 0.26)) * (t > 23.78 ? 1 : 0);
+    const nudge = -6 * Math.sin(PI * clamp((t - 23.76) / 0.14)) * (t > 23.76 ? 1 : 0);
     return baseRCY(t) + bob + nudge;
   }
   function diveZ(t) {
@@ -148,7 +149,7 @@
   function camF(t) {
     const d = camDrift(t), rcy = roseCY(t), dv = P(t, 27.3, 27.95);
     let sy = lerp(760, 720, P(t, 22.5, 23.1));
-    sy = lerp(sy, 600, P(t, 23.9, 24.7)); sy = lerp(sy, 640, P(t, 25.85, 26.45)); sy = lerp(sy, 760, dv);
+    sy = lerp(sy, 600, clamp(liftE(t))); sy = lerp(sy, 640, P(t, 25.85, 26.45)); sy = lerp(sy, 760, dv);
     const zb = zBase(t);
     return { fx: CX, fy: rcy, sx: CX + d.x * (1 - dv), sy: sy + d.y * (1 - dv), z: zb * diveZ(t), zb, rot: d.r + (8 * PI / 180) * P(t, 27.15, 28.4), rcy, lift: liftE(t) };
   }
@@ -178,34 +179,34 @@
   function makePlinth() {
     const sc = 1.5, w = 380, h = 800, cv = E.canvas(w * sc, h * sc), x = cv.x;
     x.scale(sc, sc); x.translate(w / 2, 12);
-    const shaftG = (a = 1) => E.lin(x, -92, 0, 92, 0, [[0, '#5A3610', a], [0.1, '#9A6A26', a], [0.3, '#FFCF5A', a], [0.45, '#FFF3C4', a], [0.56, '#FFD772', a], [0.78, '#B8862E', a], [1, '#4A2C0C', a]]);
+    const shaftG = (a = 1) => E.lin(x, -92, 0, 92, 0, [[0, '#5A3408', a], [0.1, '#A87412', a], [0.3, '#FFC83A', a], [0.45, '#FFF0B0', a], [0.56, '#FFCF48', a], [0.78, '#B8800E', a], [1, '#4A2A04', a]]);
     // shaft (slight entasis), three facets
     const shaft = new Path2D(); shaft.moveTo(-84, 92); shaft.lineTo(84, 92); shaft.lineTo(92, 790); shaft.lineTo(-92, 790); shaft.closePath();
     x.fillStyle = shaftG(); x.fill(shaft);
     x.save(); x.clip(shaft);
-    x.fillStyle = 'rgba(40,16,40,0.28)'; x.beginPath(); x.moveTo(-84, 92); x.lineTo(-40, 92); x.lineTo(-43, 790); x.lineTo(-92, 790); x.closePath(); x.fill();
-    x.fillStyle = 'rgba(40,16,40,0.14)'; x.beginPath(); x.moveTo(40, 92); x.lineTo(84, 92); x.lineTo(92, 790); x.lineTo(43, 790); x.closePath(); x.fill();
-    x.strokeStyle = 'rgba(255,243,196,0.55)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(-40, 92); x.lineTo(-43, 790); x.moveTo(40, 92); x.lineTo(43, 790); x.stroke();
-    // engraved arabesque (mirrored rumi scrolls + palmettes) on the centre face, punched-dot borders
-    const motif = (p, oy) => {
-      for (const g of [-1, 1]) {
-        p.moveTo(0, oy + 104); p.bezierCurveTo(g * 30, oy + 94, g * 36, oy + 54, g * 18, oy + 42);
-        p.bezierCurveTo(g * 6, oy + 34, g * 9, oy + 21, g * 19, oy + 24); p.bezierCurveTo(g * 27, oy + 27, g * 24, oy + 39, g * 15, oy + 36);
-        p.moveTo(g * 27, oy + 76); p.quadraticCurveTo(g * 33, oy + 92, g * 24, oy + 100);
-        p.moveTo(g * 30, oy + 64); p.bezierCurveTo(g * 36, oy + 62, g * 34, oy + 52, g * 29, oy + 50);
-      }
-      p.moveTo(0, oy + 46); p.bezierCurveTo(-11, oy + 36, -9, oy + 16, 0, oy + 6); p.bezierCurveTo(9, oy + 16, 11, oy + 36, 0, oy + 46);
-      p.moveTo(0, oy + 40); p.lineTo(0, oy + 14);
-    };
-    const eng = new Path2D(); for (let k = 0; k < 5; k++) motif(eng, 132 + k * 108);
-    for (const [dx, col, lw] of [[0.9, 'rgba(255,248,214,0.75)', 1.1], [0, 'rgba(110,64,16,0.8)', 1.7]]) {
+    x.fillStyle = 'rgba(70,36,4,0.26)'; x.beginPath(); x.moveTo(-84, 92); x.lineTo(-40, 92); x.lineTo(-43, 790); x.lineTo(-92, 790); x.closePath(); x.fill();
+    x.fillStyle = 'rgba(70,36,4,0.12)'; x.beginPath(); x.moveTo(40, 92); x.lineTo(84, 92); x.lineTo(92, 790); x.lineTo(43, 790); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(255,246,206,0.6)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(-40, 92); x.lineTo(-43, 790); x.moveTo(40, 92); x.lineTo(43, 790); x.stroke();
+    // engraved OPEN running rumi vine: one wavy stem, leaves and tendrils ALTERNATE sides (never mirrored,
+    // never closing into a loop), punched-dot borders
+    const eng = new Path2D(), stemX = (y) => 9 * Math.sin(y / 34);
+    eng.moveTo(stemX(100), 100); for (let y = 104; y <= 700; y += 4) eng.lineTo(stemX(y), y);
+    for (let k = 0, y = 118; y < 690; k++, y += 36) {
+      const g = k % 2 ? 1 : -1, bx = stemX(y);
+      // pointed saz leaf, open at the base, leaning upward and outward
+      eng.moveTo(bx, y); eng.quadraticCurveTo(bx + g * 14, y - 4, bx + g * 25, y - 15); eng.moveTo(bx, y); eng.quadraticCurveTo(bx + g * 8, y - 13, bx + g * 25, y - 15);
+      // tendril curling the other way, an open half-spiral
+      const ty = y + 18, tb = stemX(ty);
+      eng.moveTo(tb, ty); eng.bezierCurveTo(tb - g * 12, ty + 2, tb - g * 22, ty + 10, tb - g * 20, ty + 20); eng.quadraticCurveTo(tb - g * 18, ty + 26, tb - g * 13, ty + 24);
+    }
+    for (const [dx, col, lw] of [[0.9, 'rgba(255,248,214,0.8)', 1.1], [0, 'rgba(110,64,16,0.85)', 1.7]]) {
       x.save(); x.translate(-dx, -dx); x.strokeStyle = col; x.lineWidth = lw; x.lineCap = 'round'; x.lineJoin = 'round'; x.stroke(eng); x.restore();
     }
     for (let y = 104; y < 700; y += 9) for (const bx of [-37, 37]) { x.fillStyle = 'rgba(110,64,16,0.6)'; x.beginPath(); x.arc(bx, y, 1.3, 0, TAU); x.fill(); x.fillStyle = 'rgba(255,248,214,0.6)'; x.beginPath(); x.arc(bx - 0.6, y - 0.6, 0.7, 0, TAU); x.fill(); }
-    // specular streak + ruby reflection near the top
-    x.fillStyle = E.lin(x, -30, 0, -14, 0, [[0, 'rgba(255,255,240,0)'], [0.5, 'rgba(255,255,240,0.35)'], [1, 'rgba(255,255,240,0)']]); x.fillRect(-30, 92, 16, 700);
-    x.fillStyle = E.lin(x, 0, 92, 0, 260, [[0, 'rgba(255,61,110,0.32)'], [1, 'rgba(255,61,110,0)']]); x.fillRect(-92, 92, 184, 170);
-    x.fillStyle = E.lin(x, 0, 92, 0, 120, [[0, 'rgba(30,8,30,0.45)'], [1, 'rgba(30,8,30,0)']]); x.fillRect(-92, 92, 184, 30);
+    // strong specular streaks (polished gold), soft occlusion under the neck
+    x.fillStyle = E.lin(x, -32, 0, -12, 0, [[0, 'rgba(255,255,236,0)'], [0.5, 'rgba(255,255,236,0.55)'], [1, 'rgba(255,255,236,0)']]); x.fillRect(-32, 92, 20, 700);
+    x.fillStyle = E.lin(x, 52, 0, 62, 0, [[0, 'rgba(255,240,190,0)'], [0.5, 'rgba(255,240,190,0.3)'], [1, 'rgba(255,240,190,0)']]); x.fillRect(52, 92, 10, 700);
+    x.fillStyle = E.lin(x, 0, 92, 0, 120, [[0, 'rgba(60,30,4,0.45)'], [1, 'rgba(60,30,4,0)']]); x.fillRect(-92, 92, 184, 30);
     // horizontal rings on the shaft
     for (const y of [124, 300, 520]) {
       x.fillStyle = E.lin(x, 0, y - 6, 0, y + 6, [[0, '#FFF3C4'], [0.5, '#B8862E'], [1, '#6E4414']]); x.fillRect(-92, y - 4, 184, 8);
@@ -245,7 +246,7 @@
   /** velvet drapery (left side; mirrored for the right): folds compress at the tie-back, gold braid, tassel */
   function makeDrape() {
     const w = 420, h = 2200, cv = E.canvas(w, h), x = cv.x;
-    const edge = (y) => (y < 820 ? lerp(330, 150, ez.inOutSine(y / 820)) : lerp(150, 250, ez.outCubic((y - 820) / (h - 820))));
+    const edge = (y) => (y < 1220 ? lerp(300, 140, ez.inOutSine(y / 1220)) : lerp(140, 240, ez.outCubic((y - 1220) / (h - 1220))));
     const N = 7;
     for (let y = 0; y < h; y += 8) {
       const ew = edge(y), g = x.createLinearGradient(0, 0, ew, 0);
@@ -262,6 +263,7 @@
     x.strokeStyle = 'rgba(255,140,190,0.35)'; x.lineWidth = 10; x.stroke();
     x.strokeStyle = '#8A5A1E'; x.lineWidth = 6; x.stroke(); x.strokeStyle = '#FFCF5A'; x.lineWidth = 3.2; x.stroke(); x.strokeStyle = 'rgba(255,248,214,0.85)'; x.lineWidth = 1; x.stroke();
     // tie-back rope + tassel
+    x.translate(-10, 400);
     x.lineCap = 'round'; x.strokeStyle = '#C8922A'; x.lineWidth = 9; x.beginPath(); x.moveTo(0, 800); x.quadraticCurveTo(90, 846, 158, 820); x.stroke();
     x.strokeStyle = 'rgba(255,240,190,0.7)'; x.lineWidth = 2.5; x.stroke();
     x.fillStyle = E.lin(x, 150, 820, 190, 960, [[0, '#FFE9A8'], [0.5, '#C8922A'], [1, '#6E4414']]);
@@ -331,7 +333,7 @@
   function initBokeh() {
     const rnd = E.rng(5521);
     const add = (n, p, r0, r1, a0, a1) => { for (let i = 0; i < n; i++) BOKEH.push({ p, x: -200 + rnd() * 1480, y: -300 + rnd() * 2500, r: lerp(r0, r1, rnd()), a: lerp(a0, a1, rnd()), col: JEWEL[(rnd() * JEWEL.length) | 0], sp: 6 + rnd() * 18, ph: rnd() * 10 }); };
-    add(26, 0.3, 4, 12, 0.25, 0.55); add(14, 0.6, 9, 22, 0.16, 0.3);
+    add(10, 0.3, 18, 34, 0.08, 0.16); add(8, 0.6, 22, 40, 0.07, 0.13);
     for (let i = 0; i < 10; i++) BOKEH.push({ p: 1.7, x: i % 2 ? 860 + rnd() * 420 : -200 + rnd() * 420, y: -300 + rnd() * 2500, r: lerp(50, 120, rnd()), a: lerp(0.1, 0.2, rnd()), col: ['#FF3D6E', '#FFCF5A', '#B47CFF', '#FF8AA8'][i % 4], sp: 14 + rnd() * 16, ph: rnd() * 10, hex: true });
   }
   function bandGuard(t) { return P(t, 25.85, 26.1, 'inOutSine') * (1 - P(t, 28.15, 28.4, 'inOutSine')); }
@@ -414,7 +416,7 @@
     const spin = t * 0.05;
     for (let i = 0; i < 12; i++) {
       const a = spin + (i / 12) * TAU, L = (i % 2 ? 640 : 900) * (0.85 + 0.15 * Math.sin(t * 0.9 + i * 1.7)), w = i % 2 ? 0.045 : 0.07;
-      ctx.fillStyle = E.rad(ctx, x, y, 60, L, [[0, '#FFE9A8', 0.2 * k], [0.5, '#FFE9A8', 0.08 * k], [1, '#FFE9A8', 0]]);
+      ctx.fillStyle = E.rad(ctx, x, y, 60, L, [[0, '#FFE9A8', 0.12 * k], [0.5, '#FFE9A8', 0.045 * k], [1, '#FFE9A8', 0]]);
       ctx.beginPath(); ctx.moveTo(x + Math.cos(a - w * 0.3) * 60, y + Math.sin(a - w * 0.3) * 60); ctx.lineTo(x + Math.cos(a - w) * L, y + Math.sin(a - w) * L); ctx.lineTo(x + Math.cos(a + w) * L, y + Math.sin(a + w) * L); ctx.lineTo(x + Math.cos(a + w * 0.3) * 60, y + Math.sin(a + w * 0.3) * 60); ctx.closePath(); ctx.fill();
     }
     ctx.restore();
@@ -563,7 +565,7 @@
   function drawWall(ctx, t, c, rayK, vis) {
     const dome = SP.dome;
     const place = (g) => { applyCam(g, c, 0.45); g.translate(CX, FY - 500); g.rotate(t * 0.008); g.scale(1.5, 1.5); g.drawImage(dome, -dome.width / 2, -dome.height / 2); };
-    ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.1 * vis; place(ctx); ctx.restore();
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.07 * vis; place(ctx); ctx.restore();
     if (rayK > 0.01) {
       const rs = toScr(c, CX, c.rcy), spin = t * 0.05;
       E.layer(ctx, (l) => {
@@ -574,12 +576,12 @@
         l.globalCompositeOperation = 'destination-in'; l.fillStyle = g; l.fillRect(0, 0, W, H);
         l.fillStyle = E.rad(l, rs[0], rs[1], 120, 950, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(0, 0, W, H);
         l.globalCompositeOperation = 'source-atop'; l.fillStyle = 'rgba(255,196,96,0.55)'; l.fillRect(0, 0, W, H);
-      }, { op: 'screen', alpha: 0.42 * rayK * vis });
+      }, { op: 'screen', alpha: 0.2 * rayK * vis });
     }
   }
   function drawDrapes(ctx, t, c, a) {
     if (a <= 0.003) return;
-    const dr = SP.drape, out = (c.zb - 1) * 45 + (c.z / c.zb - 1) * 140, dy = -70 + 60 * c.lift, k = 0.86;
+    const dr = SP.drape, out = (c.zb - 1) * 45 + 95 * P(t, 25.8, 26.35) + (c.z / c.zb - 1) * 140, dy = -70 + 60 * c.lift, k = 0.86;
     for (const side of [-1, 1]) {
       ctx.save(); ctx.globalAlpha *= a;
       if (side < 0) ctx.translate(-60 - out, dy); else { ctx.translate(W + 60 + out, dy); ctx.scale(-1, 1); }
@@ -712,13 +714,12 @@
       { const rs = toScr(c, CX, rcy); ctx.fillStyle = E.rad(ctx, rs[0], rs[1], 0, 820, [[0, '#8A4FFF', 0.34 * bgK * (1 - warm)], [0.45, '#5E2C86', 0.17 * bgK], [1, '#5E2C86', 0]]); ctx.fillRect(0, 0, W, H); }
 
       /* L1 carved girih wall catching the god-rays · far bokeh · velvet drapes */
-      const spotK = P(t, 23.3, 24.3) * vis, rayK = P(t, 23.95, 24.6) * vis * (1 - 0.5 * P(t, 27.05, 27.5));
+      const spotK = P(t, 23.3, 24.1) * vis, rayK = P(t, 23.88, 24.25, 'outCubic') * vis * (1 - 0.5 * P(t, 27.05, 27.5));
       drawWall(ctx, t, c, Math.max(rayK, 0.35 * P(t, 22.6, 23.2) * vis), vis);
       drawBokeh(ctx, t, c, (p) => p < 1, vis);
-      drawDrapes(ctx, t, c, bgK * (1 - P(t, 27.4, 27.75)));
-
-      /* L2 spotlight (volumetric, with motes) + god rays */
+      /* L2 spotlight (volumetric, with motes) + god rays — behind the drapes */
       hero((h) => { drawSpot(h, t, CX, FY, spotK); spotMotes(h, t, CX, rcy - 900, FY, spotK); drawRays(h, t, CX, rcy, rayK); });
+      drawDrapes(ctx, t, c, bgK * (1 - P(t, 27.4, 27.75)));
 
       /* L2.5 octagram + lens ring + ornaments (behind & around) */
       const orbA = 0.06 * (t - 26.0) + 1.1 * ez.inCubic(clamp((t - 27.0) / 0.9));
@@ -738,7 +739,7 @@
 
       /* L3 hero: lacquered floor + reflections, plinth rising out of the floor, gem, rose, iris */
       const pk = P(t, 23.4, 23.84, 'outCubic');
-      const py = t < 23.84 ? lerp(FY + 8, baseRCY(23.84) + 0.36 * R, pk) : baseRCY(t) + 0.36 * R + (t < 24.04 ? 7 * Math.sin(PI * clamp((t - 23.84) / 0.2)) : 0);
+      const py = t < 23.84 ? lerp(FY + 8, baseRCY(23.84) + 0.36 * R, pk) : baseRCY(t) + 0.36 * R;
       const envA = 1 - P(t, 27.5, 27.8);
       const gRose = (h) => {
         const gA = clamp((t - 22.86) / 0.12) * (1 - P(t, 27.06, 27.24, 'linear'));
@@ -753,11 +754,11 @@
       };
       const gPlinth = (h) => {
         if (pk <= 0) return;
-        const pl = SP.plinth, PS = 0.86;
+        const pl = SP.plinth, PS = 0.78;
         h.save(); h.beginPath(); h.rect(-3000, -3000, 7000, 3000 + FY); h.clip();
         h.drawImage(pl.c, CX - pl.ax * PS, py - pl.ay * PS, pl.c.width / pl.sc * PS, pl.c.height / pl.sc * PS);
         h.globalCompositeOperation = 'lighter';
-        h.fillStyle = E.rad(h, CX, py + 4, 0, 130, [[0, '#FF3D6E', 0.32 * P(t, 23.75, 24.0)], [1, '#FF3D6E', 0]]); h.fillRect(CX - 140, py - 60, 280, 140);
+        h.fillStyle = E.rad(h, CX, py + 4, 0, 130, [[0, '#FF5A84', 0.1 * P(t, 23.75, 24.0)], [1, '#FF5A84', 0]]); h.fillRect(CX - 140, py - 60, 280, 140);
         h.restore();
       };
       hero((h) => { h.save(); h.globalAlpha *= envA; drawFloor(h, t, bgK); h.restore(); });
