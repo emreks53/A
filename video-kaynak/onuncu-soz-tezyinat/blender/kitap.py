@@ -1114,7 +1114,10 @@ def build():
     kmc.objects.link(desk)
     key.light_linking.receiver_collection = kmc
     try:
-        kmc.collection_objects[desk.name].light_linking.link_state = 'EXCLUDE'
+        for i_, o_ in enumerate(kmc.objects):
+            if o_ == desk:
+                kmc.collection_objects[i_].light_linking.link_state = 'EXCLUDE'
+        print('[isik] anahtar: masa haric =', [c.light_linking.link_state for c in kmc.collection_objects])
     except Exception as e:
         print('light-link exclude', e)
     keyd = area('anahtar_masa', (-0.50, 0.40, 0.80), (0.12, 0.06, 0.0), KEYSIZE, 3.0 * DESK_KEY, (1.0, 0.88, 0.78), 'DISK', 28)

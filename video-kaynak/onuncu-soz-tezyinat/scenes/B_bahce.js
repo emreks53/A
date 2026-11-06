@@ -722,7 +722,7 @@
         const pulse = E.env(t, 3.96, 6.0, 0.25, 1.2) * (0.5 - 0.2 * E.p(t, 4.25, 4.8));
         const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R));
         if (pulse > 0.01) S.light(ctx2, hx, hy, 340 * zoomAt(c, 1), '#FFD98A', pulse);
-        roseLayered(ctx2, c, Object.assign(roseOpt, { P, band: glossK(t), bandDark: 1 - (1 - E.p(t, 2.30, 2.52, 'outQuad')), stemGrade: 0.45 * dusk, rim: dusk, rimCol: '#FFB37A', gradeCol: '#6A3D8A', gradeA: 0.1 * dusk, onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
+        roseLayered(ctx2, c, Object.assign(roseOpt, { P, bandDark: E.p(t, 2.5, 2.85, 'inOutSine'), band: glossK(t) * E.p(t, 2.42, 2.7, 'inOutSine'), stemGrade: 0.45 * dusk, rim: dusk, rimCol: '#FFB37A', gradeCol: '#6A3D8A', gradeA: 0.1 * dusk, onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
         sweetPulse(ctx2, hx, hy, zoomAt(c, 1), t, 3.98);
         ribbons(ctx2, hx, hy, t, 3.98, zoomAt(c, 1) * 0.9);
       },
