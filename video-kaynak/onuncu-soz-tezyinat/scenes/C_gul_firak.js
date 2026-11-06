@@ -75,9 +75,9 @@
       return { i: p.i, path: p.path, B: p.B, T: p.T, M: p.M, outline: A.resample(P, 128) };
     });
     let best = -1e9; for (const p of RING) { const sc = p.M[0] + 0.6 * p.M[1]; if (sc > best) { best = sc; HERO = p; } }
-    RING.forEach((p, n) => { ORDER[p.i] = p === HERO ? 1 : [0, 2, 3, 4][n % 4] * 0.035 + (n > 3 ? 0.02 : 0); });
+    let n = 0; RING.forEach((p) => { ORDER[p.i] = p === HERO ? 0.035 : [0, 0.07, 0.105, 0.14, 0.16][n++]; });
   }
-  const startOf = (i) => T_DETACH + (ORDER[i] || 0) * (ORDER[i] === 1 ? 0.035 : 1);
+  const startOf = (i) => T_DETACH + (ORDER[i] || 0);
   const detFn = (t) => (i, k) => (k === 0 && t >= startOf(i) ? 1 : 0);
   /** shade a petal outline (local coords, base→tip gradient); night 0..1 desaturates, rim colour/alpha */
   function petalPaint(ctx, path, B, T, o) {
@@ -100,7 +100,7 @@
       const Ms = W.toScreen(c, 1, ...hx.toWorld(p.M[0], p.M[1]));
       const dir = -2.25 + (H(p.i, 3) - 0.5) * 0.9, dist = 1450 * Math.pow(tau, 1.35);
       const x = Ms[0] + Math.cos(dir) * dist + Math.sin(tau * PI * 2.2 + p.i) * 40 * tau, y = Ms[1] + Math.sin(dir) * dist - Math.sin(tau * PI) * 30;
-      const rot = hx.ang + (H(p.i, 5) - 0.5) * 3.2 * tau + 0.25 * Math.sin(tau * 7 + p.i) * tau;
+      const rot = hx.ang + c.rot + (H(p.i, 5) - 0.5) * 3.2 * tau + 0.25 * Math.sin(tau * 7 + p.i) * tau;
       let flip = Math.cos(tau * PI * (1.6 + H(p.i, 2) * 1.4)); if (Math.abs(flip) < 0.12) flip = 0.12 * Math.sign(flip || 1);
       const sc = z * hx.br * (1 + 0.25 * tau);
       ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(sc * flip, sc); ctx.translate(-p.M[0], -p.M[1]);
@@ -117,7 +117,7 @@
     const hv = [HOVER[0] + c.sx + 14 * Math.sin(ttw * 0.9) + 6 * Math.sin(ttw * 2.1), HOVER[1] + c.sy + 10 * Math.sin(ttw * 1.3 + 1)];
     const u = E.p(t, st, 10.15, 'inOutCubic');
     let x = lerp(sp[0], hv[0], u) + Math.sin(u * PI) * 60, y = lerp(sp[1], hv[1], u) + Math.sin(u * PI) * 40;
-    let rot = lerp(hx.ang, 0.35 + 0.18 * Math.sin(ttw * 0.8), u), flip = lerp(1, 0.78 + 0.22 * Math.cos(ttw * 1.1), u) * Math.cos(Math.sin(u * PI) * 1.2);
+    let rot = lerp(hx.ang + c.rot, 0.35 + 0.18 * Math.sin(ttw * 0.8), u), flip = lerp(1, 0.78 + 0.22 * Math.cos(ttw * 1.1), u) * Math.cos(Math.sin(u * PI) * 1.2);
     let sc = z * hx.br * lerp(1, 0.82, u);
     // tear lands (10.97): small dip; fall (camera follows): to the lock point, flutter, settle to D's pose
     const hit = t - 10.97; if (hit > 0) y += 12 * Math.exp(-hit * 7) * Math.sin(hit * 18);
@@ -151,6 +151,9 @@
     if (hs.mk > 0) { // D's k=0 drop colours (petal still)
       ctx.save(); ctx.globalAlpha *= hs.mk; const r = DROP_R;
       ctx.fillStyle = E.rad(ctx, -r * 0.28, r * 0.25, 0, r * 1.7, [[0, '#FFD1DC'], [0.32, '#F7A3B5'], [0.68, '#F28BA0'], [1, '#C2185B']]); A.fillShape(ctx, pts);
+      ctx.save(); ctx.beginPath(); ctx.rect(r * 0.15, -r * 3, r * 2, r * 6); ctx.clip(); ctx.strokeStyle = 'rgba(255,244,214,0.75)'; ctx.lineWidth = Math.max(1.2, r * 0.08); A.strokeShape(ctx, pts); ctx.restore();
+      ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.ellipse(-r * 0.4, -r * 0.05, r * 0.13, r * 0.33, 0.32, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.beginPath(); ctx.arc(-r * 0.22, -r * 0.55, r * 0.07, 0, TAU); ctx.fill();
       ctx.restore();
     }
     ctx.restore();
@@ -329,6 +332,7 @@
     if (hs && !heroBehind) {
       const warm = E.p(t, 11.15, 11.45, 'inOutSine');
       S.light(ctx, hs.x, hs.y, 150, mx('#8E84C8', '#FFB06A', warm), (0.1 + 0.18 * warm) * (1 - E.p(t, 11.5, 11.6)));
+      if (t < 11.5 && hs.mk > 0) S.light(ctx, DROP[0], DROP[1] + DROP_R * 0.2, DROP_R * 5.2, '#FFB547', 0.08 * hs.mk);
       const mk = E.p(t, 11.5, 11.8, 'linear');
       if (t < 11.5) hpts = drawHero(ctx, hs, night, warm);
       else drawDrop(ctx, DROP[0], DROP[1], DROP_R, mk, t);
@@ -339,7 +343,7 @@
       const r = 7 * z * dg;
       if (t < 10.84) { const lo = headLowest(t, ttw, c, hx); dewDraw(ctx, lo[0], lo[1] + r * 0.95, r, 1, 1 + 0.14 * Math.sin(t * 20) * dg); }
       else {
-        const lo = headLowest(10.84, W.tw(10.84), camC(10.84, headXf(10.84, W.tw(10.84))), headXf(10.84, W.tw(10.84)));
+        const lo = headLowest(t, ttw, c, hx);
         const pts = hpts || heroPts(hs); let top = pts[0], bot = pts[0];
         for (const q of pts) { if (q[1] < top[1]) top = q; if (q[1] > bot[1]) bot = q; }
         const land = [hs.x + top[0] * 0.4, hs.y + top[1] * 0.4 - r * 0.6], hang = [hs.x + bot[0], hs.y + bot[1] + r * 1.05];

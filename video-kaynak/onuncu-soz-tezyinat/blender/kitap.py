@@ -818,7 +818,7 @@ def ramp_curve(th, xs0, zl0, Q, margin=0.0025):
     up = Vector((-0.08, 1.0)).normalized()
     tau = ((J - Q).normalized() * (1 - k) + up * k).normalized()
     a, b_ = L * (0.38 + 0.55 * k), L * 0.42
-    polys = [joint_top(th), SPINE_TOP] if th > 165 else None   # yalniz kapak yataya yakinken anlamli
+    polys = [joint_top(th), SPINE_TOP] if th > 185 else None   # yalniz kapak yataya yakinken anlamli
     clr = None
     for it in range(30):
         P1 = Q + tau * a
@@ -1059,7 +1059,7 @@ def build():
         H = Vector((GUT_X, book['zr'] + 0.00008 * (k + 1) - GD))
         for i, v in enumerate(lf.data.vertices):
             W, Nn = page80_face(TH_OPEN, book['xsp'](book['zl0']), book['zl0'], book['zr'], v.co.x)
-            W = W + Nn * (0.0005 + 0.0002 * k)
+            W = W + Nn * (0.0011 + 0.0003 * k)
             loc = rot2(-TH_OPEN, W - H)
             kk.data[i].co = (loc.x, v.co.y, loc.y)
         sd = lf.modifiers.new('bukum', 'SIMPLE_DEFORM'); sd.deform_method = 'BEND'; sd.deform_axis = 'Y'
@@ -1224,7 +1224,7 @@ def anim_intro(S):
     for o in S['vcoll'].all_objects:
         o.hide_render = True
     # yapraklar (kapaktan biraz geri kalarak ucusur, s.80'in altina konar)
-    timings = [(16, 28, 40), (19, 32, 44), (22, 36, 48)]
+    timings = [(16, 29, 46), (19, 33, 48), (22, 37, 50)]   # konma: kapak oturduktan sonra (f45.5+)
     for (lp, lf, sd), (fa, fm, fl) in zip(S['leaves'], timings):
         for f, th, bend in ((0, 0, 0), (fa, 0, 0), (fa + 4, 22, 20), (fm, 100, 34), (fm + 5, 160, -12),
                             (fl, TH_OPEN, 0)):

@@ -428,7 +428,7 @@
     const spin = t * 0.05;
     for (let i = 0; i < 12; i++) {
       const a = spin + (i / 12) * TAU, L = (i % 2 ? 640 : 900) * (0.85 + 0.15 * Math.sin(t * 0.9 + i * 1.7)), w = i % 2 ? 0.045 : 0.07;
-      ctx.fillStyle = E.rad(ctx, x, y, 60, L, [[0, '#FFE9A8', 0.12 * k], [0.5, '#FFE9A8', 0.045 * k], [1, '#FFE9A8', 0]]);
+      ctx.fillStyle = E.rad(ctx, x, y, 60, L, [[0, '#FFE9A8', 0.09 * k], [0.5, '#FFE9A8', 0.035 * k], [1, '#FFE9A8', 0]]);
       ctx.beginPath(); ctx.moveTo(x + Math.cos(a - w * 0.3) * 60, y + Math.sin(a - w * 0.3) * 60); ctx.lineTo(x + Math.cos(a - w) * L, y + Math.sin(a - w) * L); ctx.lineTo(x + Math.cos(a + w) * L, y + Math.sin(a + w) * L); ctx.lineTo(x + Math.cos(a + w * 0.3) * 60, y + Math.sin(a + w * 0.3) * 60); ctx.closePath(); ctx.fill();
     }
     ctx.restore();
@@ -526,7 +526,7 @@
   function drawWall(ctx, t, c, rayK, vis) {
     const dome = SP.dome;
     const place = (g) => { applyCam(g, c, 0.45); g.translate(CX, FY - 500); g.rotate(t * 0.008); g.scale(1.5, 1.5); g.drawImage(dome, -dome.width / 2, -dome.height / 2); };
-    ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.07 * vis; place(ctx); ctx.restore();
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.05 * vis; place(ctx); ctx.restore();
     if (rayK > 0.01) {
       const rs = toScr(c, CX, c.rcy), spin = t * 0.05;
       E.layer(ctx, (l) => {
@@ -537,7 +537,7 @@
         l.globalCompositeOperation = 'destination-in'; l.fillStyle = g; l.fillRect(0, 0, W, H);
         l.fillStyle = E.rad(l, rs[0], rs[1], 120, 950, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(0, 0, W, H);
         l.globalCompositeOperation = 'source-atop'; l.fillStyle = 'rgba(255,196,96,0.55)'; l.fillRect(0, 0, W, H);
-      }, { op: 'screen', alpha: 0.2 * rayK * vis });
+      }, { op: 'screen', alpha: 0.1 * rayK * vis });
     }
   }
   function drawDrapes(ctx, t, c, a) {
@@ -691,7 +691,7 @@
       drawWall(ctx, t, c, Math.max(rayK, 0.35 * P(t, 22.6, 23.2) * vis), vis);
       drawBokeh(ctx, t, c, (p) => p < 1, vis);
       /* L2 spotlight (volumetric, with motes) + god rays — behind the drapes */
-      hero((h) => { drawSpot(h, t, CX, FY, spotK); spotMotes(h, t, CX, rcy - 900, FY, spotK); drawRays(h, t, CX, rcy, rayK); });
+      hero((h) => { drawSpot(h, t, CX, FY, spotK); drawRays(h, t, CX, rcy, rayK); });
       drawDrapes(ctx, t, c, bgK * (1 - P(t, 27.4, 27.75)));
 
       /* L2.5 octagram + lens ring + ornaments (behind & around) */
