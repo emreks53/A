@@ -127,12 +127,12 @@
   /* 'yüksek' (24.005): the lift starts 3 frames early with a quick, eased rise (outQuad) and a small overshoot */
   function liftE(t) { const k = clamp((t - 23.9) / 0.85); return (1 - (1 - k) * (1 - k)) + 0.045 * Math.sin(PI * clamp((k - 0.6) / 0.4)); }
   function baseRCY(t) { return 760 - 230 * liftE(t); }
-  /* E's ember path (matches E_omur: wick ≈ (819,876) → (540,760) by 22.47) */
+  /* E's ember path (matches E_omur exactly: hangs at (548,915) at 22.12, rises straight up to (540,760) by 22.47) */
   function emberPos(t) {
-    const u = clamp((t - 21.95) / 0.52), e = ez.inOutSine(u);
-    const tx = 540 + 26 * Math.sin(u * PI * 2.4) * (1 - u) * Math.min(1, u * 4), ty = 760 - 70 * Math.sin(PI * u) * (1 - u * 0.4);
-    return [lerp(819, tx, e), lerp(876, ty, e)];
+    const e = ez.inOutSine(clamp((t - 22.12) / 0.35));
+    return [lerp(548, 540, e) + 6 * Math.sin(e * PI * 1.5) * (1 - e), lerp(915, 760, e)];
   }
+  const emberR = (t) => lerp(11 * (0.92 + 0.08 * E.noise(t * 3, 7)), 34, ez.outCubic(clamp((t - 22.2) / 0.27)));
   function roseCY(t) {
     const bob = 5 * Math.sin(t * 2.2) * P(t, 22.5, 23.0) * (1 - P(t, 23.5, 23.82));
     const nudge = -6 * Math.sin(PI * clamp((t - 23.76) / 0.14)) * (t > 23.76 ? 1 : 0);
@@ -145,13 +145,14 @@
   }
   /** close framing: push in on the ruby after the E handoff (z 1→1.6 ⇒ rose R180 ≈ 288 px), small push on
    *  "müddeti", ease back to ≈1.38 so the medallion orbit fills the width, then the dive. */
-  function zBase(t) { return (1 + 0.6 * P(t, 22.42, 22.98, 'inOutSine')) * (1 + 0.05 * P(t, 24.79, 25.84)) * lerp(1, 0.82, P(t, 25.85, 26.45)); }
+  function zBase(t) { return (1 + 0.6 * P(t, 22.47, 23.02, 'inOutSine')) * (1 + 0.05 * P(t, 24.79, 25.84)) * lerp(1, 0.82, P(t, 25.85, 26.45)); }
   function camF(t) {
     const d = camDrift(t), rcy = roseCY(t), dv = P(t, 27.3, 27.95);
     let sy = lerp(760, 720, P(t, 22.5, 23.1));
     sy = lerp(sy, 600, clamp(liftE(t))); sy = lerp(sy, 640, P(t, 25.85, 26.45)); sy = lerp(sy, 760, dv);
     const zb = zBase(t);
-    return { fx: CX, fy: rcy, sx: CX + d.x * (1 - dv), sy: sy + d.y * (1 - dv), z: zb * diveZ(t), zb, rot: d.r + (8 * PI / 180) * P(t, 27.15, 28.4), rcy, lift: liftE(t) };
+    const dk = P(t, 22.47, 23.0) * (1 - dv);   // no drift at the E handoff: hero coords == screen coords there
+    return { fx: CX, fy: rcy, sx: CX + d.x * dk, sy: sy + d.y * dk, z: zb * diveZ(t), zb, rot: d.r * dk + (8 * PI / 180) * P(t, 27.15, 28.4), rcy, lift: liftE(t) };
   }
   /** parallax rig: p = depth (0 static … 1 hero … >1 foreground); the hero's focus point (fx,fy) sits at (sx,sy) */
   function applyCam(ctx, c, p) {
@@ -750,7 +751,7 @@
       hero((h) => {
         // gem (E handoff) → unfolds
         const morph = A.morphEase(clamp((t - 22.34) / 0.12), 0.08), unfold = clamp((t - 22.86) / 0.36);
-        const ep = t < 22.47 ? emberPos(t) : [CX, rcy], gr = lerp(6.5, 34, ez.outCubic(clamp((t - 22.2) / 0.27)));
+        const ep = t < 22.47 ? emberPos(t) : [CX, rcy], gr = emberR(t);
         drawGem(h, t, ep[0], ep[1], gr, morph, unfold, 1);
         // flash
         const fl = E.env(t, 22.84, 23.3, 0.05, 0.38);
