@@ -414,10 +414,10 @@
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (k > 0.001) {
       const cy = G.y - 22 + dy, rx = tw / 2 + 170, ry = 70 + n * 44;
-      ctx.globalAlpha = a * 0.5 * k; ctx.translate(W / 2, cy); ctx.scale(rx / ry, 1);
-      const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, ry);
-      sg.addColorStop(0, 'rgba(20,12,8,1)'); sg.addColorStop(0.55, 'rgba(20,12,8,0.6)'); sg.addColorStop(1, 'rgba(20,12,8,0)');
-      ctx.fillStyle = sg; ctx.fillRect(-ry, -ry, ry * 2, ry * 2);
+      ctx.globalAlpha = a * 0.36 * k; ctx.translate(W / 2, cy); ctx.scale(rx / ry, 1);
+      const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, ry * 1.25);
+      sg.addColorStop(0, 'rgba(34,22,12,1)'); sg.addColorStop(0.4, 'rgba(34,22,12,0.7)'); sg.addColorStop(0.75, 'rgba(34,22,12,0.25)'); sg.addColorStop(1, 'rgba(34,22,12,0)');
+      ctx.fillStyle = sg; ctx.fillRect(-ry * 1.25, -ry * 1.25, ry * 2.5, ry * 2.5);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
     // geniş yumuşak gölge + dar gölge
