@@ -818,7 +818,7 @@ def ramp_curve(th, xs0, zl0, Q, margin=0.0025):
     up = Vector((-0.08, 1.0)).normalized()
     tau = ((J - Q).normalized() * (1 - k) + up * k).normalized()
     a, b_ = L * (0.38 + 0.55 * k), L * 0.42
-    polys = [joint_top(th), SPINE_TOP] if th > 95 else None
+    polys = [joint_top(th), SPINE_TOP] if th > 165 else None   # yalniz kapak yataya yakinken anlamli
     clr = None
     for it in range(30):
         P1 = Q + tau * a
@@ -831,9 +831,9 @@ def ramp_curve(th, xs0, zl0, Q, margin=0.0025):
                     zt = poly_z(poly, c.x)
                     if zt is not None:
                         clr = min(clr, c.y - zt)
-        if clr >= margin:
+        if clr >= margin or a > 2.2 * L:
             break
-        a *= 1.12
+        a *= 1.08
     return Q, P1, P2, J, d, clr
 
 _PATHS = {}
