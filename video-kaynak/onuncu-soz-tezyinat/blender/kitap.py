@@ -353,7 +353,7 @@ def mat_page_edge(name):
     b.out(p.outputs[0])
     return m
 
-def mat_page(name, img, glow=False, two_sided_img=None, mirror_back=False):
+def mat_page(name, img, glow=False, two_sided_img=None, mirror_back=False, back_img=None):
     m = bpy.data.materials.new(name)
     b = NB(m)
     tc = b.texco()
@@ -365,9 +365,13 @@ def mat_page(name, img, glow=False, two_sided_img=None, mirror_back=False):
         cmb = b.new('ShaderNodeCombineXYZ'); b.link(u2, cmb.inputs[0]); b.link(sep.outputs['Y'], cmb.inputs[1])
         uv = cmb.outputs[0]
     t = b.image(img, uv, 'Cubic' if glow else 'Linear')
+    col_out = t.outputs['Color']
+    if back_img is not None:
+        tb = b.image(back_img, uv, 'Linear')
+        col_out = b.mixc(geo.outputs['Backfacing'], t.outputs['Color'], tb.outputs['Color'])
     fib = b.noise(tc.outputs['Object'], 3500.0, 2.0, 0.6)
     nrm = b.bump(fib.outputs['Fac'], 0.04, 0.0002)
-    kw = {'Base Color': t.outputs['Color'], 'Roughness': 0.74, 'Normal': nrm, 'Specular IOR Level': 0.35}
+    kw = {'Base Color': col_out, 'Roughness': 0.74, 'Normal': nrm, 'Specular IOR Level': 0.35}
     if glow:
         g = b.val(0.0, 'GLOW')
         kw['Emission Color'] = (1.0, 0.70, 0.40)
@@ -687,6 +691,8 @@ def build_book(prefix, Tk, spine_mask, spine_blur=None, bands_mm=PRM['bands'], m
     # sirt
     sp = spine_shell(prefix + 'sirt', Tk, SB, bands_mm, coll)
     sp.data.materials.append(mat_leather(prefix + 'sirt_mat', spine_mask, spine_blur, 'uv'))
+    sp.data.materials.append(MATS['astar'])          # ic yuz: kagit astar (hollow back), deri degil
+    sp.modifiers['kalinlik'].material_offset = 1
     # on kapak (kapak maskesi)
     fb = rounded_board(prefix + 'on_karton', JW, XF, -HB / 2, HB / 2, Tk - BT, Tk, coll=coll)
     if main:
@@ -736,24 +742,166 @@ def build_book(prefix, Tk, spine_mask, spine_blur=None, bands_mm=PRM['bands'], m
     parts['gutter_pt'] = Vector((xg0 + 0.0012, 0.0, zr - Gd + 0.0004))
     return parts
 
-def left_gutter_key(lb, pivot, th, gutter_pt, xsp, zl0):
-    """Sol blok: tam acik pozda sirt kenarini olugun icine dogru indir."""
-    R = Matrix.Rotation(-math.radians(th), 3, 'Y')
-    Rin = R.inverted()
-    P = Vector((0.0, 0.0, PIVOT_Z))
-    S_loc = Vector((xsp(zl0), 0.0, zl0))
-    S = P + R @ (S_loc - P)
+# ---- acilis geometrisi: kapak acisi, oluk, sol blok rampasi -------------------------------
+GD = 0.0052          # sag blok oluk derinligi (build_book ile ayni)
+GUT_X = 0.0031       # oluk cizgisi: sol blogun sirt ucu burada sag sayfanin sirt kenarina biner (~1.2 mm bindirme)
+RAMP_U0 = 0.026      # sol sayfanin olukta kivrilan bolumu (m)
+RAMP_ANGLES = [30.0, 60.0, 90.0, 120.0, 150.0, 172.0, TH_OPEN]
+
+def ease_arrive(t, k=0.9):
+    """0->1: yavas baslar, sifir olmayan hizla varir (k<1) -> agir, 'tok' oturma."""
+    t = min(1.0, max(0.0, t))
+    return (1 - math.cos(math.pi * t * k)) / (1 - math.cos(math.pi * k))
+
+INTRO_OPEN = (10.5, 37.5)      # 0.35 s -> 1.25 s
+def theta_intro(f):
+    f0, f1 = INTRO_OPEN
+    if f <= f0: return 0.0
+    if f <= f1: return TH_OPEN * ease_arrive(((f - f0) / (f1 - f0)) ** 1.12)
+    if f <= f1 + 8: return TH_OPEN - 1.3 * math.sin(math.pi * (f - f1) / 8)   # yumusak oturma
+    return TH_OPEN
+
+OUTRO_CLOSE = (28.0, 70.0)     # kapak f70'te kapanir (ilk temas = ses), f76'da tamamen oturur
+OUTRO_LAND = 70
+def theta_outro(f):
+    f0, f1 = OUTRO_CLOSE
+    if f <= f0: return TH_OPEN
+    if f <= f1: return TH_OPEN * (1 - ease_arrive((f - f0) / (f1 - f0)))
+    if f <= f1 + 6: return 0.9 * math.sin(math.pi * (f - f1) / 6)          # kucuk sekme
+    return 0.0
+
+def rval(th):
+    """Sag blogun oluk egrisi anahtari (kapak acisina bagli)."""
+    return smoothstep(10.0, 160.0, th)
+
+def rot2(th, v):
+    c, s_ = math.cos(math.radians(th)), math.sin(math.radians(th))
+    return Vector((v.x * c - v.y * s_, v.x * s_ + v.y * c))
+
+def bez(p0, p1, p2, p3, t):
+    u = 1 - t
+    return p0 * u ** 3 + p1 * (3 * u * u * t) + p2 * (3 * u * t * t) + p3 * t ** 3
+
+def bezd(p0, p1, p2, p3, t):
+    u = 1 - t
+    return (p1 - p0) * (3 * u * u) + (p2 - p1) * (6 * u * t) + (p3 - p2) * (3 * t * t)
+
+def joint_top(th):
+    """Donmus kapak (mafsal + karton) ic yuzunun (x,z) polyline'i: acikken ustte kalan yuz."""
+    P = Vector((0.0, PIVOT_Z))
+    zl = (T - BT) - PIVOT_Z
+    return [P + rot2(th, Vector((i * 0.001, zl))) for i in range(0, 40)]
+
+# sirt kabugunun ust kismi (dis yuz + bant kabarikligi payi), sabit: rampa bunun da ustunden gecmeli
+SPINE_TOP = [Vector((-0.0055 * math.sin(math.pi * (0.5 + 0.5 * i / 30)) - 0.0012, (0.5 + 0.5 * i / 30) * T + 0.0004))
+             for i in range(31)] + [Vector((0.0015, T + 0.0004))]
+
+def poly_z(poly, x):
+    best = None
+    for a, b_ in zip(poly, poly[1:]):
+        lo, hi = min(a.x, b_.x), max(a.x, b_.x)
+        if lo <= x <= hi and hi - lo > 1e-9:
+            t = (x - a.x) / (b_.x - a.x)
+            z = a.y + (b_.y - a.y) * t
+            best = z if best is None else max(best, z)
+    return best
+
+def ramp_curve(th, xs0, zl0, Q, margin=0.0025):
+    """Sol sayfa (s.80) yuzunun olukta izledigi egri: Q'dan baslar, mafsali/kartonu asarak rijit
+    yuzeye J'de teget baglanir. Donmus kapagin ustunde en az `margin` kalacak sekilde yukseltilir."""
+    P = Vector((0.0, PIVOT_Z))
+    A = P + rot2(th, Vector((xs0, zl0)) - P)
+    d = rot2(th, Vector((1.0, 0.0)))
+    J = A + d * RAMP_U0
+    L = (J - Q).length
+    k = smoothstep(90.0, TH_OPEN, th)
+    up = Vector((-0.08, 1.0)).normalized()
+    tau = ((J - Q).normalized() * (1 - k) + up * k).normalized()
+    a, b_ = L * (0.38 + 0.55 * k), L * 0.42
+    polys = [joint_top(th), SPINE_TOP] if th > 95 else None
+    clr = None
+    for it in range(30):
+        P1 = Q + tau * a
+        P2 = J - d * b_
+        clr = 1.0
+        if polys:
+            for i in range(81):
+                c = bez(Q, P1, P2, J, i / 80)
+                for poly in polys:
+                    zt = poly_z(poly, c.x)
+                    if zt is not None:
+                        clr = min(clr, c.y - zt)
+        if clr >= margin:
+            break
+        a *= 1.12
+    return Q, P1, P2, J, d, clr
+
+_PATHS = {}
+def ramp_path(th, xs0, zl0, zr):
+    """Kagit boyu korunur: sirttan kagit uzerinde u kadar uzaktaki nokta, olukta Q'dan baslayan egri +
+    rijit (karton ustu) dogru boyunca yay-uzunlugu u olan yere duser. Doner: at(u) -> (nokta, blok-ici normal)."""
+    key = round(th, 4)
+    if key in _PATHS:
+        return _PATHS[key]
+    Q = Vector((GUT_X, zr - 0.0004 - GD * rval(th)))
+    Qc, P1, P2, J, d, clr = ramp_curve(th, xs0, zl0, Q)
+    n = 240
+    pts = [bez(Qc, P1, P2, J, i / n) for i in range(n + 1)]
+    cum = [0.0]
+    for i in range(1, n + 1):
+        cum.append(cum[-1] + (pts[i] - pts[i - 1]).length)
+    Lb = cum[-1]
+    import bisect
+    def at(u):
+        u = max(0.0, u)
+        if u >= Lb:
+            return J + d * (u - Lb), Vector((-d.y, d.x))
+        i = max(1, bisect.bisect_left(cum, u))
+        t = (u - cum[i - 1]) / max(1e-12, cum[i] - cum[i - 1])
+        sp = (i - 1 + t) / n
+        D = bezd(Qc, P1, P2, J, sp).normalized()
+        return bez(Qc, P1, P2, J, sp), Vector((-D.y, D.x))
+    _PATHS[key] = (at, clr, Lb)
+    return _PATHS[key]
+
+def left_ramp_keys(lb, xsp, zl0, z1, zr):
+    """Sol blok icin aciya bagli duzeltici sekil anahtarlari. Sayfalar oluktan kalkip mafsalin uzerinden
+    karton ustune biner (kagit boyu korunarak): karsilikli sayfalar arasinda deri/sirt asla gorunmez."""
     lb.shape_key_add(name='Basis')
-    sk = lb.shape_key_add(name='oluk', from_mix=False)
-    Lg = 0.040
-    for i, v in enumerate(lb.data.vertices):
-        c = v.co
-        wgt = (1 - smoothstep(xsp(zl0), xsp(zl0) + Lg, c.x)) ** 2
-        dW = (gutter_pt - S) * wgt
-        dW.y = 0.0
-        dl = Rin @ dW
-        sk.data[i].co = c + dl
-    return sk
+    P = Vector((0.0, PIVOT_Z))
+    xs0 = xsp(zl0)
+    keys = []
+    for th in RAMP_ANGLES:
+        at, clr, Lb = ramp_path(th, xs0, zl0, zr)
+        print(f'[rampa] th={th:.1f} aciklik={clr*1000:.2f}mm egri={Lb*1000:.1f}mm', flush=True)
+        sk = lb.shape_key_add(name=f'rampa_{th:.0f}', from_mix=False)
+        for i, v in enumerate(lb.data.vertices):
+            c = v.co
+            u = c.x - xsp(c.z)
+            C, N = at(u)
+            thin = 0.70 + 0.30 * smoothstep(0.0, RAMP_U0, u)   # cilt dibinde sayfalar sikisik
+            w = C + N * ((c.z - zl0) * thin)
+            loc = P + rot2(-th, w - P)
+            sk.data[i].co = (loc.x, c.y, loc.y)
+        keys.append((th, sk))
+    return keys
+
+def ramp_weights(th):
+    angs = [0.0] + RAMP_ANGLES
+    th = min(max(th, 0.0), TH_OPEN)
+    w = {a: 0.0 for a in RAMP_ANGLES}
+    for a0, a1 in zip(angs, angs[1:]):
+        if a0 <= th <= a1:
+            t = (th - a0) / (a1 - a0) if a1 > a0 else 1.0
+            if a0 > 0: w[a0] = 1 - t
+            w[a1] = t
+            break
+    return w
+
+def page80_face(th, xs0, zl0, zr, u):
+    """Acik pozda s.80 yuzunde, kagit uzerinde sirttan u uzakliktaki nokta ve blok-ici normal (dunya x,z)."""
+    at, _, _ = ramp_path(th, xs0, zl0, zr)
+    return at(u)
 
 def leaf_obj(name, k, coll=None):
     LW = 0.1605
@@ -868,9 +1016,10 @@ def build():
     MATS['kapak'] = mat_leather('kapak', load_img('kapak_maske.png', True), load_img('kapak_maske_blur.png', True),
                                 'obj', obj_map)
     MATS['kenar'] = mat_page_edge('sayfa_kenar')
+    MATS['astar'] = mat_simple('sirt_astar', (0.42, 0.34, 0.24), 0.85)
     MATS['s81'] = mat_page('sayfa81', load_img('sayfa81.png'), glow=True)
     MATS['s80'] = mat_page('sayfa80', load_img('sayfa80.png'))
-    MATS['yaprak'] = mat_page('yaprak', load_img('yaprak.png'), mirror_back=True)
+    MATS['yaprak'] = mat_page('yaprak', load_img('yaprak.png'), mirror_back=True, back_img=load_img('yaprak_arka.png'))
     MATS['kapital'] = mat_headband('kapitalbent')
     MATS['kurdele'] = mat_ribbon('kurdele')
     MATS['ceviz'] = mat_walnut_img('ceviz') if os.path.exists(CEVIZ_DAT) else mat_walnut('ceviz')
@@ -893,17 +1042,26 @@ def build():
     pivot = empty('mentese', (0.0, 0.0, PIVOT_Z))
     for k in ('front', 'joint_f', 'left'):
         parent_keep(book[k], pivot)
-    lsk = left_gutter_key(book['left'], pivot, TH_OPEN, book['gutter_pt'], book['xsp'], book['zl0'])
+    lsk = left_ramp_keys(book['left'], book['xsp'], book['zl0'], book['z1'], book['zr'])
     rib = ribbon('kurdele'); rib.data.materials.append(MATS['kurdele'])
     # ucusan yapraklar
     leaves = []
     for k in range(3):
         pz = book['zr'] + 0.00008 * (k + 1)
-        lp = empty(f'yaprak_mentese{k}', (book['xsp'](book['zr']) + 0.0012, 0.0, pz))
+        lp = empty(f'yaprak_mentese{k}', (GUT_X, 0.0, pz))
         lf = leaf_obj(f'yaprak{k}', k)
         lf.location = lp.location
         lf.data.materials.append(MATS['yaprak'])
         parent_keep(lf, lp)
+        # konma sekli: tam acik pozda s.80 yuzunun hemen altinda (blok icinde) -> konunca gorunmez
+        lf.shape_key_add(name='Basis')
+        kk = lf.shape_key_add(name='konma', from_mix=False)
+        H = Vector((GUT_X, book['zr'] + 0.00008 * (k + 1) - GD))
+        for i, v in enumerate(lf.data.vertices):
+            W, Nn = page80_face(TH_OPEN, book['xsp'](book['zl0']), book['zl0'], book['zr'], v.co.x)
+            W = W + Nn * (0.0005 + 0.0002 * k)
+            loc = rot2(-TH_OPEN, W - H)
+            kk.data[i].co = (loc.x, v.co.y, loc.y)
         sd = lf.modifiers.new('bukum', 'SIMPLE_DEFORM'); sd.deform_method = 'BEND'; sd.deform_axis = 'Y'
         sd.origin = lp
         sd.angle = 0.0
@@ -1031,39 +1189,57 @@ def sweep_path(S, cam_pos, f0, f1, p_start, p_end, dist=0.7, energy=55.0):
 
 TEXT_C = (0.0835, -0.004, 0.0)
 
+def set_interp_path(idblock, prefix, kind):
+    ad = idblock.animation_data
+    if not ad or not ad.action:
+        return
+    for fc in ad.action.fcurves:
+        if fc.data_path.startswith(prefix):
+            for kp in fc.keyframe_points:
+                kp.interpolation = kind
+
+def apply_book_anim(S, theta_fn, n):
+    """Kapak acisi, sag sayfa olugu, sol blok rampa agirliklari ve yaprak menteseleri: her kare, dogrusal."""
+    book = S['book']; piv = S['pivot']
+    rsk = book['right'].data.shape_keys.key_blocks['acik']
+    for f in range(-2, n + 3):
+        th = theta_fn(f)
+        piv.rotation_euler = (0.0, -math.radians(th), 0.0); piv.keyframe_insert('rotation_euler', frame=f)
+        rsk.value = rval(th); rsk.keyframe_insert('value', frame=f)
+        w = ramp_weights(th)
+        for a, sk in S['lsk']:
+            sk.value = w[a]; sk.keyframe_insert('value', frame=f)
+        for k, (lp, lf, sd) in enumerate(S['leaves']):
+            lp.location = (GUT_X, 0.0, book['zr'] + 0.00008 * (k + 1) - GD * rval(th))
+            lp.keyframe_insert('location', frame=f)
+    set_interp(piv, 'LINEAR')
+    set_interp(book['right'].data.shape_keys, 'LINEAR'); set_interp(book['left'].data.shape_keys, 'LINEAR')
+    for lp, lf, sd in S['leaves']:
+        set_interp_path(lp, 'location', 'LINEAR')
+
 def anim_intro(S):
     sc = S['sc']; sc.frame_start = 0; sc.frame_end = INTRO_N - 1
     book = S['book']
     zr = book['zr']
     for o in S['vcoll'].all_objects:
         o.hide_render = True
-    # kapak acilisi 0.35s -> 1.25s  (kare 10.5 -> 37.5)
-    key_open(S, 0, 0.0); key_open(S, 10, 0.0)
-    key_open(S, 37, TH_OPEN); key_open(S, 40, TH_OPEN - 1.6); key_open(S, 44, TH_OPEN)
-    set_interp(S['pivot'])
-    rsk = book['right'].data.shape_keys.key_blocks['acik']
-    key_sk(rsk, 12, 0.0); key_sk(rsk, 36, 1.0)
-    key_sk(S['lsk'], 26, 0.0); key_sk(S['lsk'], 37, 1.0)
-    set_interp(book['right'].data.shape_keys); set_interp(book['left'].data.shape_keys)
-    # yapraklar
-    timings = [(15, 27, 41), (18, 31, 45), (21, 35, 49)]
+    # yapraklar (kapaktan biraz geri kalarak ucusur, s.80'in altina konar)
+    timings = [(16, 28, 40), (19, 32, 44), (22, 36, 48)]
     for (lp, lf, sd), (fa, fm, fl) in zip(S['leaves'], timings):
-        th_end = TH_OPEN - 4.0
-        for f, th, bend in ((0, 0, 0), (fa, 0, 0), (fa + 4, 18, 22), (fm, 95, 38), (fm + 5, 150, -10),
-                            (fl - 3, th_end - 6, -26), (fl, th_end, -4)):
+        for f, th, bend in ((0, 0, 0), (fa, 0, 0), (fa + 4, 22, 20), (fm, 100, 34), (fm + 5, 160, -12),
+                            (fl, TH_OPEN, 0)):
             lp.rotation_euler = (0.0, -math.radians(th), 0.0); lp.keyframe_insert('rotation_euler', frame=f)
             sd.angle = math.radians(bend); sd.keyframe_insert('angle', frame=f)
-        g = book['gutter_pt']
-        p0 = lp.location.copy()
-        lp.keyframe_insert('location', frame=12)
-        lp.location = (g.x, 0.0, g.z + 0.0002 * (S['leaves'].index((lp, lf, sd)) + 1))
-        lp.keyframe_insert('location', frame=36)
+        kk = lf.data.shape_keys.key_blocks['konma']
+        key_sk(kk, 0, 0.0); key_sk(kk, fl - 5, 0.0); key_sk(kk, fl, 1.0)
         lf.hide_render = False; lf.keyframe_insert('hide_render', frame=0)
         lf.hide_render = True; lf.keyframe_insert('hide_render', frame=fl + 1)
-        set_interp(lp); set_interp(lf)
+        set_interp(lp); set_interp(lf); set_interp(lf.data.shape_keys)
         for fc in lf.animation_data.action.fcurves:
             if fc.data_path == 'hide_render':
                 for kp in fc.keyframe_points: kp.interpolation = 'CONSTANT'
+    # kapak acilisi 0.35s -> 1.25s: agir, yavas baslayan, yumusak oturan (her kare anahtar)
+    apply_book_anim(S, theta_intro, INTRO_N)
     # parlama
     key_glow(0, 0.0, S); key_glow(30, 0.0, S); key_glow(37, 0.02, S); key_glow(52, 0.025, S)
     key_glow(62, 0.04, S); key_glow(67, 0.10, S); key_glow(70, 0.32, S); key_glow(73, 0.9, S); key_glow(76, 2.0, S)
@@ -1091,13 +1267,8 @@ def anim_outro(S):
     book = S['book']; zr = book['zr']
     for lp, lf, sd in S['leaves']:
         lf.hide_render = True
-    # kapak kapanisi (eased)  kare 28 -> 72
-    key_open(S, 0, TH_OPEN); key_open(S, 28, TH_OPEN); key_open(S, 72, 0.0)
-    set_interp(S['pivot'])
-    rsk = book['right'].data.shape_keys.key_blocks['acik']
-    key_sk(rsk, 0, 1.0); key_sk(rsk, 30, 1.0); key_sk(rsk, 68, 0.0)
-    key_sk(S['lsk'], 0, 1.0); key_sk(S['lsk'], 28, 1.0); key_sk(S['lsk'], 38, 0.0)
-    set_interp(book['right'].data.shape_keys); set_interp(book['left'].data.shape_keys)
+    # kapak kapanisi f28 -> f70 (ilk temas f70), kucuk sekme f76'da biter
+    apply_book_anim(S, theta_outro, OUTRO_N)
     key_glow(0, 3.8, S); key_glow(5, 2.2, S); key_glow(10, 0.9, S); key_glow(15, 0.3, S); key_glow(21, 0.08, S)
     key_glow(30, 0.025, S)
     key_glow(48, 0.0, S)
@@ -1165,7 +1336,7 @@ def render_setup(S, samples):
     if 'nodn' in PROF: cy.use_denoising = False
     if 'lowb' in PROF:
         cy.max_bounces = 3; cy.diffuse_bounces = 1; cy.glossy_bounces = 1; cy.transparent_max_bounces = 2
-    r.motion_blur_shutter = 0.5
+    r.motion_blur_shutter = 0.2
     r.image_settings.file_format = 'PNG'; r.image_settings.color_mode = 'RGB'; r.image_settings.color_depth = '8'
     r.film_transparent = False
     BORDER = arg('--border', None)   # "x0,y0,x1,y1" piksel (1080x1920, ust-sol orijin) - test icin bolge render
@@ -1212,6 +1383,18 @@ def report_bbox(S, f):
     box = [(x, y, z) for x in (-0.006, XF) for y in (-HB/2, HB/2) for z in (0, T)]
     pg = [(x, y, z) for x in (0.019, 0.142) for y in (HP/2 - 0.031, -HP/2 + 0.024) for z in (S['book']['zr'],)]
     print(f'[bbox] f{f} kitap {proj(box)} | metin {proj(pg)}', flush=True)
+    # kapak madalyonu (semse) merkezi ve uclari (kapali kitap icin anlamli)
+    mx, my = JW + 0.0815, HB / 2 - 0.111
+    def px(p):
+        c = world_to_camera_view(sc, cam, Vector(p)); return (c.x * 1080, (1 - c.y) * 1920)
+    cc = px((mx, my, T)); tips = [px((mx, my + 0.063, T)), px((mx, my - 0.063, T)), px((mx - 0.039, my, T)), px((mx + 0.039, my, T))]
+    vt = []
+    for e in S['vols']:
+        for xl in (0.0, XF):
+            for zl in (0.0, 0.03):
+                vt.append(px(e.matrix_world @ Vector((xl, HB / 2, zl)))[1])
+    print(f'[madalyon] f{f} merkez=({cc[0]:.0f},{cc[1]:.0f}) ust={tips[0][0]:.0f},{tips[0][1]:.0f} alt={tips[1][0]:.0f},{tips[1][1]:.0f} '
+          f'sol={tips[2][0]:.0f},{tips[2][1]:.0f} sag={tips[3][0]:.0f},{tips[3][1]:.0f} | cilt_ust_y_min={min(vt):.0f}', flush=True)
 
 # ------------------------------------------------------------------ pisirme (bir kez)
 def bake_all(res_desk=8192):

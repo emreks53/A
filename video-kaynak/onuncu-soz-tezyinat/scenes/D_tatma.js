@@ -44,9 +44,9 @@
   /** how far (screen px) the bowl world still sits below its rest position */
   function scrollY(t) {
     if (t < 11.8) return 530 + (11.8 - t) * 1100;
-    if (t < T.land) return herm(530, -1100, 30, -420, T.land - 11.8, (t - 11.8) / (T.land - 11.8));
-    const tau = t - T.land, w = 14, z = 0.4, wd = w * Math.sqrt(1 - z * z), A = 30, B = (-420 + z * w * A) / wd;
-    return Math.exp(-z * w * tau) * (A * Math.cos(wd * tau) + B * Math.sin(wd * tau));
+    if (t < T.land) return herm(530, -1100, 140, -160, T.land - 11.8, (t - 11.8) / (T.land - 11.8));
+    const tau = t - T.land; // settle + a small impact bounce
+    return 140 * (1 - E.smoother(tau / 0.85)) - 10 * Math.sin(tau * 16) * Math.exp(-tau * 7);
   }
   function camD(t) {
     const sy = scrollY(t);
@@ -54,7 +54,7 @@
     const crane = cIn * (1 - cOut);
     // after the landing the camera dollies in on the bowl (pivot = the drop, so nothing before 12.12 changes)
     const Zd = lerp(1, 1.3, pp(t, 12.12, 13.05, 'inOutSine')) * (1 + 0.025 * pp(t, 13.0, 13.3, 'inOutSine'));
-    const z = lerp(lerp(Zd, 1.18, cIn), 0.945, cOut);
+    const z = lerp(lerp(Zd, 1.07, cIn), 0.945, cOut);
     const tilt = 0.105 * ease.outBack(pp(t, 11.95, 12.45, 'linear'), 1.3) * (1 - cOut);
     const widen = pp(t, 13.70, 14.22, 'inOutCubic');
     const bump = 1 + 0.03 * Math.sin(PI * cl((t - 13.92) / 0.42)) * (t > 13.92 ? 1 : 0);
@@ -91,48 +91,36 @@
     p.bezierCurveTo(cx + hw * 0.42, yApex + hh * 0.16, x1, ySpring - hh * 0.58, x1, ySpring);
     p.lineTo(x1, yBase); p.closePath();
   }
-  // niche sprite: local coords x 0..1080 (centre 540), horizon at y=0, art above (−930..0) and mirror below
-  const NS = { w: 1080, top: 1000, bot: 520 };
-  function makeNiche() {
-    const art = E.canvas(NS.w, NS.top), a = art.x;
-    a.translate(0, NS.top);
-    const outer = new Path2D(); archPath(outer, 112, 968, -520, -930, 0);
-    const frame = new Path2D(); archPath(frame, 140, 940, -510, -892, 0);
-    const recess = new Path2D(); archPath(recess, 176, 904, -498, -846, 0);
-    // raised frame band
-    a.fillStyle = E.lin(a, 0, -930, 0, 0, [[0, '#5B2B4E', 0.55], [1, '#7A3A52', 0.5]]); a.fill(outer);
-    a.fillStyle = E.lin(a, 0, -900, 0, 0, [[0, '#3A1B3C'], [1, '#4E2340']]); a.fill(frame);
-    // fine double moulding lines
-    a.lineWidth = 2.2; a.strokeStyle = 'rgba(214,160,128,0.22)'; a.stroke(outer);
-    a.lineWidth = 1.4; a.strokeStyle = 'rgba(214,160,128,0.16)'; a.stroke(frame);
-    // recess
-    a.fillStyle = E.lin(a, 0, -846, 0, 0, [[0, '#170A1F'], [0.55, '#21102B'], [1, '#2E1636']]); a.fill(recess);
-    a.save(); a.clip(recess);
-    // faint çini rosettes (staggered grid) — tile relief in shadow
-    for (let row = 0; row < 12; row++) for (let col = 0; col < 9; col++) {
-      const x = 176 + col * 92 + (row % 2 ? 46 : 0), y = -830 + row * 76;
-      a.save(); a.translate(x, y);
-      a.fillStyle = 'rgba(70,52,110,0.32)';
-      for (let k = 0; k < 8; k++) { const an = (k / 8) * TAU; a.beginPath(); a.ellipse(Math.cos(an) * 11, Math.sin(an) * 11, 8, 4, an, 0, TAU); a.fill(); }
-      a.fillStyle = 'rgba(150,70,80,0.30)'; a.beginPath(); a.arc(0, 0, 5, 0, TAU); a.fill();
-      a.strokeStyle = 'rgba(70,52,110,0.18)'; a.lineWidth = 1.5; a.beginPath(); a.moveTo(-46, 38); a.lineTo(0, 0); a.lineTo(46, 38); a.stroke();
-      a.restore();
-    }
-    // light from the right: lit LEFT inner jamb, shadowed right jamb, falloff toward the top
-    a.fillStyle = E.lin(a, 176, 0, 262, 0, [[0, '#B25A54', 0.55], [0.35, '#8A3E4C', 0.25], [1, '#8A3E4C', 0]]); a.fillRect(176, -900, 120, 900);
-    a.fillStyle = E.lin(a, 904, 0, 790, 0, [[0, '#0C0412', 0.75], [1, '#0C0412', 0]]); a.fillRect(780, -900, 124, 900);
-    a.fillStyle = E.lin(a, 0, -846, 0, -560, [[0, '#0C0412', 0.6], [1, '#0C0412', 0]]); a.fillRect(0, -900, NS.w, 360);
-    a.fillStyle = E.lin(a, 0, -140, 0, 0, [[0, '#FF9D5C', 0], [1, '#FF9D5C', 0.10]]); a.fillRect(0, -140, NS.w, 140);
-    a.restore();
-    // warm edge where the frame catches the key light (right side of the outer band)
-    a.save(); a.clip(outer); a.globalCompositeOperation = 'lighter';
-    a.fillStyle = E.lin(a, 760, 0, 968, 0, [[0, '#FF9D5C', 0], [1, '#FF9D5C', 0.20]]); a.fillRect(760, -930, 220, 930); a.restore();
-    // assemble with depth-of-field blur + mirror
-    const spr = E.canvas(NS.w, NS.top + NS.bot), s = spr.x;
-    s.filter = 'blur(2.2px)'; s.drawImage(art.c, 0, 0); s.filter = 'none';
-    s.save(); s.translate(0, NS.top * 2); s.scale(1, -1); s.globalAlpha = 0.32; s.filter = 'blur(7px)'; s.drawImage(art.c, 0, 0); s.restore();
-    s.globalCompositeOperation = 'destination-out';
-    s.fillStyle = E.lin(s, 0, NS.top, 0, NS.top + NS.bot, [[0, '#000', 0], [0.55, '#000', 0.75], [1, '#000', 1]]); s.fillRect(0, NS.top, NS.w, NS.bot);
+  // wall sprite (no arch): glazed çini dado + soft drapery at the sides; local x = screen x at zoom 1, floor line y = 0
+  const WS = { x0: -340, w: 1760, top: 2100, bot: 520 }; // tall enough to cover the whole fall (wall line ≤ y1750)
+  function makeWall() {
+    if (!TILE) TILE = makeTile();
+    const art = E.canvas(WS.w, WS.top), a = art.x;
+    a.translate(-WS.x0, WS.top);
+    // dado of glazed tiles under a dark plum glaze, with a cobalt moulding on top
+    const pat = a.createPattern(TILE[0], 'repeat'); pat.setTransform(new DOMMatrix([150 / 256, 0, 0, 150 / 256, 0, -20]));
+    a.fillStyle = pat; a.fillRect(WS.x0, -320, WS.w, 320);
+    a.fillStyle = E.lin(a, 0, -320, 0, 0, [[0, '#2A1232', 0.62], [1, '#1A0A20', 0.72]]); a.fillRect(WS.x0, -320, WS.w, 320);
+    a.fillStyle = 'rgba(28,54,104,0.75)'; a.fillRect(WS.x0, -346, WS.w, 26);
+    a.fillStyle = 'rgba(255,196,150,0.22)'; a.fillRect(WS.x0, -348, WS.w, 2.5);
+    a.fillStyle = 'rgba(10,4,14,0.35)'; a.fillRect(WS.x0, -320, WS.w, 6);
+    // soft drapery framing both sides (vertical folds)
+    const fold = (x0, x1, n, flip) => {
+      for (let k = 0; k < n; k++) {
+        const fx0 = lerp(x0, x1, k / n), fx1 = lerp(x0, x1, (k + 1) / n), dk = flip ? (n - k) / n : (k + 1) / n;
+        a.fillStyle = E.lin(a, fx0, 0, fx1, 0, [[0, '#1E0A24', 0.9], [0.45, E.mix('#3A1638', '#6A2E4C', dk * 0.8), 0.9], [1, '#1E0A24', 0.9]]);
+        a.fillRect(fx0, -WS.top, fx1 - fx0 + 1, WS.top);
+      }
+    };
+    fold(WS.x0, 230, 6, false); fold(850, WS.x0 + WS.w, 6, true);
+    a.globalCompositeOperation = 'destination-out'; // feather the very top (never a hard edge)
+    a.fillStyle = E.lin(a, 0, -WS.top, 0, -WS.top + 320, [[0, '#000', 1], [1, '#000', 0]]); a.fillRect(WS.x0, -WS.top, WS.w, 320);
+    a.globalCompositeOperation = 'source-over';
+    const spr = E.canvas(WS.w, WS.top + WS.bot), sx = spr.x;
+    sx.filter = 'blur(2.5px)'; sx.drawImage(art.c, 0, 0); sx.filter = 'none';
+    sx.save(); sx.translate(0, WS.top * 2); sx.scale(1, -1); sx.globalAlpha = 0.3; sx.filter = 'blur(8px)'; sx.drawImage(art.c, 0, 0); sx.restore();
+    sx.globalCompositeOperation = 'destination-out';
+    sx.fillStyle = E.lin(sx, 0, WS.top, 0, WS.top + WS.bot, [[0, '#000', 0], [0.55, '#000', 0.75], [1, '#000', 1]]); sx.fillRect(0, WS.top, WS.w, WS.bot);
     return spr.c;
   }
   function makeGlow(r, col, core) {
@@ -163,21 +151,15 @@
     }
     return c.c;
   }
-  function makeStreak() { // vertical soft honey streak (motion blur ghost), fades upward
-    const c = E.canvas(44, 190), x = c.x;
-    x.filter = 'blur(5px)';
-    x.fillStyle = E.lin(x, 0, 0, 0, 190, [[0, '#FFB547', 0], [0.7, '#FFB547', 0.35], [1, '#FFE7A0', 0.9]]);
-    x.beginPath(); x.moveTo(22, 6); x.quadraticCurveTo(34, 150, 22, 184); x.quadraticCurveTo(10, 150, 22, 6); x.fill();
+  function makeShaft() { // soft diagonal light beam, lo-res; covers screen x −200..1700, y −700..1900
+    const c = E.canvas(950, 1300), x = c.x;
+    x.scale(0.5, 0.5); x.translate(200, 700); x.filter = 'blur(36px)';
+    const g = x.createLinearGradient(1400, -700, 480, 1200);
+    g.addColorStop(0, 'rgba(255,170,110,0.9)'); g.addColorStop(0.45, 'rgba(255,165,105,0.7)'); g.addColorStop(0.8, 'rgba(255,160,100,0.25)'); g.addColorStop(1, 'rgba(255,160,100,0)');
+    x.fillStyle = g; x.beginPath(); x.moveTo(1250, -760); x.lineTo(1580, -760); x.lineTo(660, 1200); x.lineTo(300, 1200); x.closePath(); x.fill();
     return c.c;
   }
-  function makeShaft() { // soft diagonal light beam, lo-res
-    const c = E.canvas(540, 960), x = c.x;
-    x.filter = 'blur(18px)';
-    const g = x.createLinearGradient(520, 0, 230, 560);
-    g.addColorStop(0, 'rgba(255,170,110,0.9)'); g.addColorStop(0.55, 'rgba(255,160,100,0.35)'); g.addColorStop(1, 'rgba(255,160,100,0)');
-    x.fillStyle = g; x.beginPath(); x.moveTo(470, -40); x.lineTo(620, -40); x.lineTo(330, 600); x.lineTo(150, 600); x.closePath(); x.fill();
-    return c.c;
-  }
+
 
   /* ------------------------------------------------------------------ glazed çini floor (shared with E)
    * Exact perspective via thin horizontal bands, each filled with the repeating tile pattern under a
@@ -225,6 +207,8 @@
   /* ------------------------------------------------------------------ drop */
   const silCache = new Map();
   const tearSil = (r) => { const k = Math.round(r * 4) / 4; let s = silCache.get('t' + k); if (!s) { s = A.teardropSilhouette(k); silCache.set('t' + k, s); } return s; };
+  let ROUND = null;
+  const roundSil = (r) => { if (!ROUND) { ROUND = A.resample(A.circlePts(1, 128).map(([x, y]) => [x, y * 1.08 + (y < 0 ? y * y * -0.35 : 0) + 0.12]), 128); } return ROUND.map(([x, y]) => [x * r * 1.02, y * r]); };
   let PETAL = null;
   function petalSil() { // C's hero petal, roughly as it reaches the warm light (tilted, ≈110 px)
     if (!PETAL) { const P = A.petalSilhouette(92), ca = Math.cos(-0.55), sa = Math.sin(-0.55); PETAL = A.resample(P.map(([x, y]) => [x * ca - y * sa, x * sa + y * ca]), 128); }
@@ -232,19 +216,22 @@
   }
   /** honey drop (point up). k: 0 = still C's petal colour/shape, 1 = drop. sq: squash (+ wide) */
   function drawDrop(ctx, x, y, r, o = {}) {
-    const k = o.k === undefined ? 1 : o.k, t = o.t || 0, sq = o.sq || 0, a = o.alpha === undefined ? 1 : o.alpha;
-    const pts = k >= 1 ? tearSil(r) : A.lerpShape(petalSil(), tearSil(r), A.morphEase(k));
+    const k = o.k === undefined ? 1 : o.k, t = o.t || 0, sq = o.sq || 0, a = o.alpha === undefined ? 1 : o.alpha, hk = o.honey || 0, st = o.stretch || 0;
+    let pts = k >= 1 ? tearSil(r) : A.lerpShape(petalSil(), tearSil(r), A.morphEase(k));
+    if (hk > 0.001) pts = A.lerpShape(pts, roundSil(r), 0.55 * hk); // honey: a heavy rounded drop, not a flame
     const wob = 0.045 * Math.sin(t * TAU * 5.5) * (o.wob === undefined ? 1 : o.wob);
-    const sx = (1 + wob) * (1 + sq), syy = (1 - wob) / (1 + sq * 0.8);
+    const sx = (1 + wob) * (1 + sq) * (1 - 0.07 * st), syy = (1 - wob) / (1 + sq * 0.8) * (1 + 0.18 * st);
     ctx.save(); ctx.globalAlpha *= a;
-    S.light(ctx, x, y + r * 0.2, r * 5.2, '#FFB547', 0.30 * k + 0.08);
+    S.light(ctx, x, y + r * 0.2, r * (5.2 - 2.4 * hk), '#FFB547', (0.30 * k + 0.08) * (1 - 0.8 * hk));
     ctx.translate(x, y); ctx.scale(sx, syy);
-    const c0 = E.mix('#FFD1DC', '#FFF1C0', k), c1 = E.mix('#F7A3B5', PAL.honeyHi, k), c2 = E.mix('#F28BA0', PAL.honey, k), c3 = E.mix('#C2185B', '#D07A16', k);
-    ctx.fillStyle = E.rad(ctx, -r * 0.28, r * 0.25, 0, r * 1.7, [[0, c0], [0.32, c1], [0.68, c2], [1, c3]]);
+    // C's petal→drop colours, then thick amber honey: dark core, light transmitted at the rim
+    const c0 = E.mix(E.mix('#FFD1DC', '#FFF1C0', k), '#A04A0C', hk), c1 = E.mix(E.mix('#F7A3B5', PAL.honeyHi, k), '#D27A1C', hk);
+    const c2 = E.mix(E.mix('#F28BA0', PAL.honey, k), '#F0A63E', hk), c3 = E.mix(E.mix('#C2185B', '#D07A16', k), '#FFD27A', hk);
+    ctx.fillStyle = E.rad(ctx, -r * 0.28 * (1 - hk), r * 0.25, 0, r * 1.7 - r * 0.35 * hk, [[0, c0], [0.32, c1], [0.68, c2], [1, c3]]);
     A.fillShape(ctx, pts);
     // inner glow (honey is translucent, lit from within by the key)
     ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = E.rad(ctx, r * 0.1, r * 0.35, 0, r * 0.9, [[0, PAL.honeyHi, 0.55 * k], [1, PAL.honeyHi, 0]]);
+    ctx.fillStyle = E.rad(ctx, r * 0.1, r * 0.35, 0, r * 0.9, [[0, PAL.honeyHi, 0.55 * k * (1 - 0.75 * hk)], [1, PAL.honeyHi, 0]]);
     ctx.beginPath(); ctx.arc(r * 0.1, r * 0.35, r * 0.9, 0, TAU); ctx.fill();
     ctx.globalCompositeOperation = 'source-over';
     // warm rim light on the right edge
@@ -283,10 +270,10 @@
       S.drawSprite(ctx, kind ? SPR.bokR : SPR.bokA, bx + E.noise(t * 0.2, i) * 12, by + fy, s, 0, al);
     });
     ctx.restore();
-    // niche (sprite: horizon at sprite y = NS.top)
+    // wall: çini dado + drapery (sprite: floor line at sprite y = WS.top)
     ctx.save(); ctx.translate(g.x, hz); ctx.scale(zp, zp);
     ctx.globalAlpha *= lerp(0.35, 1, nk) * lerp(0.75, 1, kk);
-    ctx.drawImage(SPR.niche, -540, -NS.top);
+    ctx.drawImage(SPR.wall, WS.x0 - 540, -WS.top);
     ctx.restore();
     // ledge / glossy floor below the horizon
     ctx.fillStyle = E.lin(ctx, 0, hz, 0, hz + 700, [[0, '#2B1431', 0.85], [0.12, PAL.floor, 0.9], [1, '#0E0714', 0.96]]);
@@ -306,7 +293,7 @@
       ctx.restore();
     }
     ctx.save(); ctx.translate(g.x, hz); ctx.scale(zp, zp); ctx.globalAlpha *= 0.85 * lerp(0.5, 1, kk);
-    ctx.drawImage(SPR.niche, 0, NS.top, NS.w, NS.bot, -540, 0, NS.w, NS.bot); ctx.restore();
+    ctx.drawImage(SPR.wall, 0, WS.top, WS.w, WS.bot, WS.x0 - 540, 0, WS.w, WS.bot); ctx.restore();
     // ledge edge highlight + key glare on the gloss
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = E.lin(ctx, 0, hz - 2, 0, hz + 3, [[0, '#FFB38A', 0], [0.5, '#FFB38A', 0.16 * kk], [1, '#FFB38A', 0]]); ctx.fillRect(0, hz - 2, W, 5);
@@ -320,8 +307,8 @@
   /* ------------------------------------------------------------------ craving motes */
   const MOTES = [];
   for (let i = 0; i < 60; i++) MOTES.push({
-    a0: E.hash(i, 301) * TAU, q0: 1.05 + 0.95 * E.hash(i, 302), h0: 60 + 300 * E.hash(i, 303), w: 1.0 + 0.6 * E.hash(i, 304),
-    ta: 13.22 + 0.42 * E.hash(i, 305), sz: 0.55 + 0.6 * E.hash(i, 306), tw: E.hash(i, 307),
+    a0: E.hash(i, 301) * TAU, q0: 0.95 + 0.5 * E.hash(i, 302), h0: 40 + 170 * E.hash(i, 303), w: 0.35 + 0.25 * E.hash(i, 304),
+    ta: 13.22 + 1.0 * E.hash(i, 305), dur: 1.2 + 0.5 * E.hash(i, 308), sz: 0.55 + 0.5 * E.hash(i, 306), tw: E.hash(i, 307),
   });
   DE.MOTES = MOTES;
   const tauEff = (t) => (t < 14.52 ? t - 13.22 : 1.30 + 0.14 * (cl((t - 14.52) / 0.14) - 0.5 * cl((t - 14.52) / 0.14) ** 2));
@@ -329,8 +316,9 @@
   function moteState(i, t) {
     const m = MOTES[i], te = tauEff(t) - (m.ta - 13.22);
     if (te <= 0) return null;
-    const q = m.q0 * Math.exp(-0.42 * te) + 0.14, an = m.a0 - m.w * te, h = m.h0 * Math.exp(-0.5 * te);
-    return { px: Math.cos(an) * q, py: Math.sin(an) * q, h, te, fade: cl(te / 0.3) };
+    const u = te / m.dur; if (u >= 1) return null; // absorbed by the honey
+    const q = lerp(m.q0, 0.04, ease.inOutSine(u)), an = m.a0 - m.w * TAU * u, h = m.h0 * Math.pow(1 - u, 1.6);
+    return { px: Math.cos(an) * q, py: Math.sin(an) * q, h, te, u, fade: cl(te / 0.2) * (u > 0.85 ? (1 - u) / 0.15 : 1) };
   }
   DE.moteState = moteState;
   function drawMotes(ctx, t, g, o = {}) {
@@ -351,14 +339,14 @@
       const spd = t < 14.52 ? 1 : 1 - cl((t - 14.52) / 0.14);
       if (spd > 0.02 && gi < 0.05) { // curved spiral trail (tapered)
         let prev = [x, y];
-        for (let j = 1; j <= 7; j++) {
-          const s2 = moteState(i, t - j * 0.045 * spd); if (!s2) break;
-          const q2 = g.map(s2.px, s2.py, s2.h), k = 1 - j / 8;
-          ctx.strokeStyle = E.rgba('#FFD27A', 0.42 * a * k); ctx.lineWidth = 2.8 * m.sz * g.z * k + 0.4;
+        for (let j = 1; j <= 3; j++) {
+          const s2 = moteState(i, t - j * 0.016 * spd); if (!s2) break;
+          const q2 = g.map(s2.px, s2.py, s2.h), k = 1 - j / 4;
+          ctx.strokeStyle = E.rgba('#FFD27A', 0.2 * a * k); ctx.lineWidth = 9 * m.sz * g.z * k + 0.5;
           ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(q2[0], q2[1]); ctx.stroke(); prev = q2;
         }
       }
-      S.drawSprite(ctx, SPR.mote, x, y, m.sz * g.z * 0.62, 0, a);
+      S.drawSprite(ctx, SPR.mote, x, y, m.sz * g.z * 0.85, 0, a);
     }
     ctx.restore();
   }
@@ -429,7 +417,7 @@
   /* ------------------------------------------------------------------ bowl */
   function honeyR(t) {
     const grow = ease.outBack(pp(t, T.land, T.land + 0.38, 'linear'), 1.4);
-    const evap = pp(t, 14.88, 15.36, 'inCubic');
+    const evap = pp(t, 14.88, 15.3, 'inOutSine');
     return 40 * grow * (1 - evap) + (grow > 0 && evap < 1 ? 1.4 * Math.sin(t * 7.3) * (1 - evap) : 0);
   }
   function bowlOpts(t, c) {
@@ -443,8 +431,8 @@
   /** bowl + its reflection. veil: darken the bowl only (pre-key); the reflection fades while craning */
   function drawBowl(ctx, t, g, extra) {
     const o = Object.assign(bowlOpts(t, g.c), extra || {});
-    const veil = (extra && extra.veil !== undefined) ? extra.veil : 0.72 * (1 - pp(t, 11.97, 12.5, 'inOutSine'));
-    const rf = cl(g.c.crane * 1.4);
+    const veil = (extra && extra.veil !== undefined) ? extra.veil : lerp(0.72, 0.38, pp(t, 11.6, 11.95)) * (1 - pp(t, 11.97, 12.5, 'inOutSine'));
+    const rf = 0; // keep the glossy reflection through the crane
     if (veil < 0.005 && rf < 0.005) { E.at(ctx, g.x, g.rimY, g.z, 0, (c) => A.iznikBowl(c, o)); return; }
     E.layer(ctx, (l) => {
       E.at(l, g.x, g.rimY, g.z, 0, (c) => A.iznikBowl(c, o));
@@ -480,20 +468,20 @@
         if (age <= 0 || age > life) continue;
         const an = E.hash(i, 93) * TAU, rr = 34 * Math.sqrt(E.hash(i, 94)), dir = Math.cos(an) * (0.5 + 0.9 * E.hash(i, 95));
         const ox = fc[0] + Math.cos(an) * rr * z, oy = fc[1] + Math.sin(an) * rr * g.s * z;
-        const rise = (620 + 380 * E.hash(i, 96)) * z, ph = E.hash(i, 97) * TAU, cu = (26 + 34 * E.hash(i, 98)) * z;
-        const P = (u) => [ox + dir * 240 * z * u * u + Math.sin(u * 8 + ph) * cu * Math.min(1, u * 3), oy - rise * u * (1 - 0.3 * u)];
+        const rise = (420 + 240 * E.hash(i, 96)) * z, ph = E.hash(i, 97) * TAU, cu = (20 + 24 * E.hash(i, 98)) * z;
+        const P = (u) => [ox + dir * 420 * z * u + Math.sin(u * 8 + ph) * cu * Math.min(1, u * 3), oy - rise * u * (1 - 0.3 * u)];
         const k = age / life, tail = Math.min(age, 0.36), al = Math.pow(1 - k, 1.2) * Math.min(1, age * 7);
         let prev = P(age - tail);
         for (let j = 1; j <= 12; j++) {
           const u = age - tail + (tail * j) / 12, q = P(u), w = j / 12;
-          if (pass === 0) { c.strokeStyle = E.rgba('#EE9A2E', 0.42 * al * w); c.lineWidth = 13 * z * (0.5 + w) * (1 + k); }
-          else { c.strokeStyle = E.rgba('#FFE7A0', 0.9 * al * w); c.lineWidth = 2.6 * z * (0.4 + w); }
+          if (pass === 0) { c.strokeStyle = E.rgba('#FFF0CC', 0.2 * al * w); c.lineWidth = 26 * z * (0.5 + w) * (1 + 1.5 * k); }
+          else { c.strokeStyle = E.rgba('#FFF4DC', 0.12 * al * w); c.lineWidth = 3 * z * (0.4 + w); }
           c.beginPath(); c.moveTo(prev[0], prev[1]); c.lineTo(q[0], q[1]); c.stroke(); prev = q;
         }
       }
     };
-    E.layer(ctx, (l) => ribbons(l, 0), { lo: true, blur: 7, alpha: 0.95 });
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ribbons(ctx, 1); ctx.restore();
+    E.layer(ctx, (l) => ribbons(l, 0), { lo: true, blur: 14, alpha: 0.9, op: 'screen' });
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; ribbons(ctx, 1); ctx.restore();
   }
 
   /* ------------------------------------------------------------------ light shaft + dust */
@@ -502,15 +490,15 @@
     if (a < 0.01) return;
     const oy = (g.footY - 1000) * 0.6 - g.c.crane * 200;
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha *= a * (0.9 + 0.1 * Math.sin(t * 0.8));
-    ctx.drawImage(SPR.shaft, 0, oy, W, H); ctx.restore();
+    ctx.drawImage(SPR.shaft, -200, oy - 700, 1900, 2600); ctx.restore();
     // dust motes drifting inside the beam
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < 34; i++) {
       const u = (E.hash(i, 71) + t * 0.018 * (0.5 + E.hash(i, 72))) % 1, v = E.hash(i, 73) - 0.5;
       const bx = lerp(1000, 430, u) + v * lerp(150, 330, u) + E.noise(t * 0.3 + i, 74) * 18;
       const by = lerp(0, 1150, u) + oy + E.noise(t * 0.25 + i, 75) * 22;
-      if (E.glossActive(t) && by > 1180 && by < 1620) continue;
-      const al = a * 3.2 * (0.4 + 0.6 * E.osc(t, 1.7 + E.hash(i, 76) * 2, E.hash(i, 77))) * Math.sin(PI * u);
+      const bgk = by > 1180 && by < 1620 ? 1 - 0.85 * bandG(t) : 1;
+      const al = bgk * a * 3.2 * (0.4 + 0.6 * E.osc(t, 1.7 + E.hash(i, 76) * 2, E.hash(i, 77))) * Math.sin(PI * u);
       S.drawSprite(ctx, SPR.dust, bx, by, 0.25 + 0.35 * E.hash(i, 78), 0, al);
     }
     ctx.restore();
@@ -525,23 +513,26 @@
     ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = E.rgba('#FF8A5C', (0.08 + 0.04 * key(t)) * mult); ctx.fillRect(0, 0, W, H); ctx.restore();
   }
   DE.drawShaftD = (ctx, t, g, mult) => drawShaft(ctx, t, g, key(t), mult); DE.drawFGD = drawFG; DE.gradeD = gradeD;
-  /** fall speed streaks (world rushing up past the camera) */
-  function drawSpeed(ctx, t) {
-    if (t > T.land) return;
-    const v = Math.abs(scrollY(t + 0.01) - scrollY(t)) / 0.01; if (v < 60) return;
-    const k = cl(v / 1300), band = E.glossActive(t);
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
-    for (let i = 0; i < 26; i++) {
-      const x = 40 + E.hash(i, 81) * 1000, len = (60 + 140 * E.hash(i, 82)) * k;
-      const y = ((E.hash(i, 83) * 2200 - scrollY(t) * (0.8 + 0.9 * E.hash(i, 84))) % 2200 + 2200) % 2200 - 140;
-      if (band && y > 1150 && y < 1640) continue;
-      if (Math.abs(x - 540) < 70 && y > 700 && y < 1000) continue;
-      const al = (0.05 + 0.1 * E.hash(i, 85)) * k;
-      ctx.strokeStyle = E.lin(ctx, 0, y, 0, y + len, [[0, '#FFD7B0', 0], [0.5, '#FFD7B0', al], [1, '#FFD7B0', 0]]);
-      ctx.lineWidth = 1.5 + 2.5 * E.hash(i, 86); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + len); ctx.stroke();
+  /** fall: soft round warm motes rising past the camera (no thin lines) */
+  function drawFallMotes(ctx, t) {
+    if (t > T.land + 0.35) return;
+    const v = Math.abs(scrollY(t + 0.01) - scrollY(t)) / 0.01, k = cl(v / 1100) * (1 - pp(t, T.land, T.land + 0.35));
+    if (k < 0.02) return;
+    const sy = scrollY(t), bg = bandG(t);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 16; i++) {
+      const par = 0.5 + 0.9 * E.hash(i, 81), x = 40 + E.hash(i, 82) * 1000 + E.noise(t * 0.5 + i, 83) * 20;
+      const y = ((E.hash(i, 84) * 2300 + sy * par) % 2300 + 2300) % 2300 - 190;
+      if (Math.abs(x - 540) < 70 && y > 760 && y < 1060) continue;
+      const ba = y > 1180 && y < 1620 ? 1 - 0.85 * bg : 1;
+      ctx.save(); ctx.translate(x, y); ctx.scale(1, 1 + 0.5 * k);
+      S.drawSprite(ctx, SPR.dust, 0, 0, 0.6 + 1.0 * E.hash(i, 85), 0, 0.3 * k * ba * (0.5 + 0.5 * E.hash(i, 86)));
+      ctx.restore();
     }
     ctx.restore();
   }
+  /** smooth band-guard envelope (0..1) around every gloss cue */
+  const bandG = (t) => { let g = 0; if (window.TIMING) for (const q of TIMING.glosses) g = Math.max(g, Math.min(pp(t, q.in - 0.35, q.in - 0.1, 'inOutSine'), 1 - pp(t, q.out + 0.35, q.out + 0.6, 'inOutSine'))); return g; };
 
   /* ------------------------------------------------------------------ main */
   function drawD(ctx, t) {
@@ -550,7 +541,7 @@
     // the bowl (plus its own glossy reflection)
     drawBowl(ctx, t, g);
     // pre-key darkness: the room is lit only by the falling honey drop until "Sana"
-    const dark = 0.30 * (1 - pp(t, 11.97, 12.6, 'inOutSine'));
+    const dark = lerp(0.30, 0.1, pp(t, 11.6, 11.95)) * (1 - pp(t, 11.97, 12.6, 'inOutSine'));
     if (dark > 0.005) { ctx.fillStyle = `rgba(16,6,22,${dark.toFixed(3)})`; ctx.fillRect(0, 0, W, H); }
     drawPoolLife(ctx, t, g);
     // hollow rings after "doyurmaz" (run out from the floor to the rim)
@@ -569,29 +560,22 @@
     if (t > 14.86 && t < 15.8) drawVapor(ctx, t, g);
     drawSplash(ctx, t, g);
     drawMotes(ctx, t, g);
-    // the falling drop (locked at (540,880) until it lands)
+    // the falling drop: locked at (540,880) through C's handoff, then it visibly falls into the bowl
     if (t < T.land + 0.03) {
-      const k = pp(t, 11.5, 11.8, 'linear');
-      const v = Math.abs(scrollY(t + 0.01) - scrollY(t)) / 0.01;
+      const k = pp(t, 11.5, 11.8, 'linear'), hk = pp(t, 11.6, 11.95, 'inOutSine'), uf = pp(t, 11.8, T.land, 'linear');
+      const yLand = camD(T.land).fcY, yd = lerp(880, yLand, ease.inQuad(uf));
       const sqz = t > T.land - 0.02 ? ease.inQuad(cl((t - (T.land - 0.02)) / 0.05)) : 0;
-      const dx = (c.x - 540) * pp(t, 11.8, T.land, 'inOutSine'), dy = 0;
-      // fall trail
-      if (v > 50) { // soft motion-blur streak above the drop
-        const L = cl(v / 1300);
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.5 * k * L;
-        ctx.drawImage(SPR.streak, 540 + dx - 22, 880 - 26 - 190 * (0.5 + 0.5 * L), 44, 190 * (0.5 + 0.5 * L)); ctx.restore();
-      }
-      // warm glow the drop throws on whatever lies below it
-      S.light(ctx, 540 + dx, 900 + dy, 320, '#FFB547', 0.16 * k);
-      drawDrop(ctx, 540 + dx, 880 + dy - sqz * 10, 26, { k, t, sq: sqz * 0.9, alpha: 1 - sqz, wob: k });
+      const dx = (c.x - 540) * pp(t, 11.8, T.land, 'inOutSine') + 5 * Math.sin(t * 5.2) * hk * (1 - uf);
+      S.light(ctx, 540 + dx, yd + 20, 320, '#FFB547', 0.16 * k * (1 - hk));
+      drawDrop(ctx, 540 + dx, yd - sqz * 10, 26, { k, t, sq: sqz * 0.9, alpha: 1 - sqz, wob: k, honey: hk, stretch: hk * (0.45 + 0.55 * uf) });
     }
     drawShaft(ctx, t, g, kk);
-    drawSpeed(ctx, t);
+    drawFallMotes(ctx, t);
     drawFG(ctx, t, g);
     gradeD(ctx, t);
     // band guard while the 'acı' gloss is up: soft feathered darkening (no box)
-    const bg = 1 - pp(t, 12.1, 12.5, 'inOutSine');
-    if (bg > 0.01 && E.glossActive(t)) {
+    const bg = bandG(t);
+    if (bg > 0.01) {
       ctx.save(); ctx.translate(540, 1400); ctx.scale(1, 0.36);
       ctx.fillStyle = E.rad(ctx, 0, 0, 0, 640, [[0, '#080612', 0.24 * bg], [0.7, '#080612', 0.12 * bg], [1, '#080612', 0]]);
       ctx.fillRect(-640, -640, 1280, 1280); ctx.restore();
@@ -603,7 +587,7 @@
     id: 'D_tatma', t0: 11.5, t1: 16.3,
     async setup() {
       SPR = {
-        niche: makeNiche(), fg: makeFG(), shaft: makeShaft(), streak: makeStreak(),
+        wall: makeWall(), fg: makeFG(), shaft: makeShaft(),
         mote: makeGlow(24, '#FFC46A', '#FFF6D8'), dust: makeGlow(14, '#FFC9A0', '#FFF0DC'),
         bokA: makeBokeh(46, '#FFB27A'), bokR: makeBokeh(34, '#E8728A'),
       };

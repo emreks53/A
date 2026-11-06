@@ -112,7 +112,7 @@
   }
 
   /* ---------------- static world geometry ---------------- */
-  const HZ = 1000, TOP = HZ + 30, X0 = -1300, X1 = 2400, ROSE_BASE = [540, 1150], ROSE_R = 100, SUN0 = [760, 520];
+  const HZ = 1000, TOP = HZ + 30, X0 = -1300, X1 = 2400, ROSE_BASE = [600, 1205], ROSE_R = 100, STEM_LEN = 360, SUN0 = [760, 520], WV = 2200;
   const STRATA = [[HZ - 175, 62, 0.0036, 1.3, 0.15], [HZ - 110, 52, 0.0052, 4.1, 0.25], [HZ - 45, 48, 0.0046, 2.2, 0.45], [HZ + 22, 30, 0.0064, 5.7, 0.7]];
   const hillY = (x, base, amp, f, sd) => base - amp * (0.6 * Math.sin(x * f + sd) + 0.3 * Math.sin(x * f * 2.3 + sd * 1.7) + 0.12 * Math.sin(x * f * 5.1 + sd * 3.1));
   const STEMK = { tulip: 1.55, carnation: 1.6, lily: 1.5, lavender: 1.0, daisy: 1.7, hyacinth: 0.85 };
@@ -172,9 +172,9 @@
       let x = -520 + H(i, 102) * 2300;
       const [px, pw] = pathX(y); if (Math.abs(x - px) < pw * 0.62 + 10) x = px + Math.sign(x - px || 1) * (pw * 0.62 + 10 + H(i, 103) * 60);
       // keep a little clearing around the hero stem so the rose reads
-      if (Math.abs(x - 540) < 40 && y < 1150 && y > 1060) x += (x < 540 ? -1 : 1) * 60;
+      if (Math.abs(x - ROSE_BASE[0]) < 46 && y < ROSE_BASE[1] + 10 && y > ROSE_BASE[1] - 120) x += (x < ROSE_BASE[0] ? -1 : 1) * 70;
       const size = lerp(9, 52, d) * (0.85 + 0.3 * H(i, 104)), type = FTYPES[Math.floor(H(i, 105) * FTYPES.length)];
-      const delay = (Math.hypot(x - SUN0[0], y - SUN0[1]) / 1400) * 0.9;
+      const delay = Math.hypot(x - SUN0[0], y - SUN0[1]) / WV;
       fl.push({ x, y, d, i, size, type, delay, puff: H(i, 106) < 0.4, hy: y - size * (STEMK[type] + 0.55) });
     }
     fl.sort((a, b) => a.y - b.y);
@@ -291,8 +291,8 @@
       }
     });
     // bloom-wave light ring (soft) travelling from the sun
-    if (o.wave > 0 && o.wave < 1.4) {
-      const [wx, wy] = toScreen(c, 0.3, SUN0[0], SUN0[1]), rr = (o.wave / 0.9) * 1400 * zoomAt(c, 0.5), a = 0.32 * (1 - sm(o.wave / 1.3));
+    if (o.wave > 0 && o.wave < 0.95) {
+      const [wx, wy] = toScreen(c, 0.3, SUN0[0], SUN0[1]), rr = o.wave * WV * zoomAt(c, 0.5), a = 0.32 * (1 - sm(o.wave / 0.9));
       ctx.save(); ctx.globalCompositeOperation = 'screen';
       ctx.fillStyle = RG(ctx, wx, wy, Math.max(0, rr - 160), rr + 60, [[0, '#FFF6E0', 0], [0.7, '#FFF6E0', a], [1, '#FFF6E0', 0]]); ctx.fillRect(0, 0, 1080, 1920); ctx.restore();
       o.ringS = { wx, wy, rr, a };
@@ -317,13 +317,13 @@
       ctx.restore();
       for (const tr of hl.trees) {
         if (tr[0] === 'c') cypress(ctx, tr[1], tr[2], tr[3], tr[4], li === 1 ? mx(col, P.cyp, 0.35) : P.cyp, li === 1 ? lt(col, 0.2) : P.treeL, sunRight);
-        else { const b = o.wave === undefined ? 1 : clamp((o.wave - (Math.hypot(tr[1] - SUN0[0], tr[2] - SUN0[1]) / 1400) * 0.9) / 0.4); roundTree(ctx, tr[1], tr[2], tr[3], P.tree, P.treeL, sunRight, b * (1 - (o.dusk || 0))); }
+        else { const b = o.wave === undefined ? 1 : clamp((o.wave - Math.hypot(tr[1] - SUN0[0], tr[2] - SUN0[1]) / WV) / 0.35); roundTree(ctx, tr[1], tr[2], tr[3], P.tree, P.treeL, sunRight, b * (1 - (o.dusk || 0))); }
       }
       // blossom dots
       if (hl.dots.length && o.wave > 0) {
         const hz = mx(col, ramp(P.sky, base), 0.25);
         for (const [x, y, r, bc] of hl.dots) {
-          const pop = clamp((o.wave - (Math.hypot(x - SUN0[0], y - SUN0[1]) / 1400) * 0.9) / 0.35); if (pop <= 0) continue;
+          const pop = clamp((o.wave - Math.hypot(x - SUN0[0], y - SUN0[1]) / WV) / 0.3); if (pop <= 0) continue;
           const s = pop < 0.6 ? 1.3 * E.ease.outCubic(pop / 0.6) : 1.3 - 0.3 * sm((pop - 0.6) / 0.4);
           ctx.fillStyle = css(mx(bc, hz, 0.12 + 0.1 * (3 - li) + 0.6 * (o.dusk || 0))); ctx.beginPath(); ctx.arc(x, y, r * s, 0, TAU); ctx.fill();
           if (li === 3 && (o.dusk || 0) < 0.5) { ctx.fillStyle = css('#FFFFFF', 0.5); ctx.beginPath(); ctx.arc(x - r * 0.3, y - r * 0.3, r * s * 0.35, 0, TAU); ctx.fill(); }
@@ -332,7 +332,7 @@
       if (li < 3) { const hzc = ramp(P.sky, HZ); ctx.fillStyle = LG(ctx, 0, base + 10, 0, base + 130, [[0, hzc, 0], [1, hzc, 0.18 + 0.08 * (2 - li)]]); ctx.fillRect(X0, base + 10, X1 - X0, 120); }
     }));
     if (o.ringS) {
-      const { wx, wy, rr } = o.ringS, a = 1 - sm(o.wave / 1.25), yLand = toScreen(c, 0.15, 540, STRATA[0][0] - 30)[1];
+      const { wx, wy, rr } = o.ringS, a = 1 - sm(o.wave / 0.85), yLand = toScreen(c, 0.15, 540, STRATA[0][0] - 30)[1];
       for (let i = 0; i < 64; i++) {
         const ang = PI * 0.15 + (i / 63) * PI * 1.25 + (H(i, 401) - 0.5) * 0.05, rj = rr - 40 + 80 * H(i, 402);
         const x = wx + Math.cos(ang) * rj, y = wy + Math.sin(ang) * rj;
@@ -352,7 +352,7 @@
   function drawFlowers(ctx, list, o) {
     const wave = o.wave, t = o.t, pal = 'B';
     for (const f of list) {
-      const pop = wave === undefined ? 1 : clamp((wave - f.delay) / 0.5);
+      const pop = wave === undefined ? 1 : clamp((wave - f.delay) / 0.42);
       if (pop <= 0) continue;
       const rot = 0.05 * Math.sin(1.3 * t + f.x * 0.01) + 0.02 * Math.sin(2.7 * t + f.i);
       A.drawFlower(ctx, f.type, f.x, f.y, f.size, { pop, rot, palette: pal });
@@ -400,17 +400,118 @@
     ctx.fillStyle = LG(ctx, 0, y0 - 220 * zoomAt(c, 1), 0, y0 + 40, [[0, '#FFFFFF'], [1, P.tint]]); ctx.fillRect(-200, y0 - 230 * zoomAt(c, 1), 1480, 2400);
     ctx.restore();
   }
-  function roseTip(t, o = {}) { return A.stemTip({ len: 330, t, wilt: o.wilt || 0, bend: o.bend || 0 }); }
+  /* ---- hero stem (local helper: gentle S-curve, taper, graded colours, rim light, varied leaves) ---- */
+  function stemGeom(o) {
+    const len = o.len || STEM_LEN, t = o.t || 0, w = clamp(o.wilt || 0), N = 32;
+    const sway = 0.026 * Math.sin(1.3 * t) + 0.011 * Math.sin(2.7 * t + 1.3);
+    const pts = [[0, 0, 0]]; let x = 0, y = 0;
+    for (let i = 1; i <= N; i++) {
+      const s2 = i / N;
+      const a = 0.11 * Math.sin(s2 * TAU + 0.6) * (1 - 0.35 * s2) + (o.bend || 0) * Math.pow(s2, 1.6) * 1.3 + w * 0.62 * Math.pow(s2, 2.2) + sway * Math.pow(s2, 1.3) * 1.4;
+      x += (Math.sin(a) * len) / N; y -= (Math.cos(a) * len) / N; pts.push([x, y, a]);
+    }
+    return { pts, tip: { x, y, angle: pts[N][2] } };
+  }
+  const stemAt = (pts, s2) => { const f = s2 * (pts.length - 1), i = Math.min(pts.length - 2, Math.floor(f)), k = f - i, a = pts[i], b = pts[i + 1]; return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; };
+  function leaflet(ctx, len, wid, col) {
+    const p = new Path2D(), n = 12, L = [], Rr = [];
+    for (let i = 0; i <= n; i++) { const u = i / n, wv = Math.pow(Math.sin(PI * Math.pow(u, 0.85)), 0.85) * wid, tooth = u > 0.15 && u < 0.92 ? (i % 2 ? 0.09 : -0.03) * wid : 0; L.push([-(wv + tooth), -u * len]); Rr.push([wv + tooth, -u * len]); }
+    p.moveTo(0, 0); for (const q of L) p.lineTo(q[0], q[1]); for (let i = Rr.length - 1; i >= 0; i--) p.lineTo(Rr[i][0], Rr[i][1]); p.closePath();
+    ctx.fillStyle = LG(ctx, -wid, 0, wid, -len * 0.4, [[0, lt(col, 0.18)], [0.5, col], [1, dk(col, 0.32)]]); ctx.fill(p);
+    ctx.save(); ctx.clip(p); ctx.fillStyle = css(dk(col, 0.5), 0.25); ctx.fillRect(0, -len * 1.1, wid * 1.5, len * 1.2); ctx.restore();
+    ctx.strokeStyle = css(lt(col, 0.4), 0.5); ctx.lineWidth = Math.max(0.6, wid * 0.08); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, -len * 0.05); ctx.quadraticCurveTo(wid * 0.06, -len * 0.5, 0, -len * 0.9); ctx.stroke();
+  }
+  /** draws the stem from the origin upward; o: {t, wilt, bend, P, gk (grade toward palette leaf 0..1), rim (0..1), rimCol} → tip */
+  function drawStem(ctx, o) {
+    const sg = stemGeom(o), pts = sg.pts, len = o.len || STEM_LEN, t = o.t || 0, w = clamp(o.wilt || 0), gk = o.gk || 0, P = o.P || PAL.B;
+    const G2 = (c) => mx(mx(c, '#7A7040', w * 0.55), P.leaf, gk);
+    const cL = G2('#6CBF78'), cM = G2('#3A9157'), cD = G2('#1C5A3C');
+    const w0 = 11, w1 = 4.2, wAt = (s2) => lerp(w0, w1, Math.pow(s2, 0.8));
+    // thorns
+    for (let j = 0; j < 5; j++) {
+      const s2 = 0.12 + j * 0.16 + H(j, 51) * 0.05, side = j % 2 ? 1 : -1, q = stemAt(pts, s2), a = q[2], wv = wAt(s2) * 0.5, nx = Math.cos(a) * side, ny = Math.sin(a) * side, tx = Math.sin(a), ty = -Math.cos(a), L = wAt(s2) * 0.95;
+      const bx = q[0] + nx * wv * 0.8, by = q[1] + ny * wv * 0.8;
+      ctx.fillStyle = css(mx(cD, '#7A4A3A', 0.5));
+      ctx.beginPath(); ctx.moveTo(bx + tx * L * 0.5, by + ty * L * 0.5); ctx.quadraticCurveTo(bx + nx * L * 0.5, by + ny * L * 0.5, bx + nx * L - tx * L * 0.45, by + ny * L - ty * L * 0.45); ctx.quadraticCurveTo(bx + nx * L * 0.2, by + ny * L * 0.2, bx - tx * L * 0.35, by - ty * L * 0.35); ctx.closePath(); ctx.fill();
+    }
+    const Lp = [], Rp = [];
+    for (let i = 0; i < pts.length; i++) { const s2 = i / (pts.length - 1), [x, y, a] = pts[i], ww = wAt(s2) / 2; Lp.push([x - Math.cos(a) * ww, y - Math.sin(a) * ww]); Rp.push([x + Math.cos(a) * ww, y + Math.sin(a) * ww]); }
+    const body = new Path2D(); body.moveTo(Lp[0][0], Lp[0][1]); for (const q of Lp) body.lineTo(q[0], q[1]); for (let i = Rp.length - 1; i >= 0; i--) body.lineTo(Rp[i][0], Rp[i][1]); body.closePath();
+    const m = pts[16], ma = m[2];
+    ctx.fillStyle = LG(ctx, m[0] - Math.cos(ma) * 6, m[1] - Math.sin(ma) * 6, m[0] + Math.cos(ma) * 6, m[1] + Math.sin(ma) * 6, [[0, cL], [0.35, cM], [1, cD]]); ctx.fill(body);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = css(lt(cL, 0.3), 0.45); ctx.lineWidth = 1.4; ctx.beginPath(); Lp.forEach((q, i) => { const r = pts[i]; const x = lerp(r[0], q[0], 0.55), y = lerp(r[1], q[1], 0.55); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke();
+    if ((o.rim || 0) > 0.01) { ctx.strokeStyle = css(o.rimCol || '#FFB37A', 0.75 * o.rim); ctx.lineWidth = 1.8; ctx.beginPath(); Rp.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.stroke(); }
+    // compound leaves (varied)
+    const LV = [[0.3, -1, 1.0, 0.95, 5], [0.52, 1, 1.18, 1.05, 5], [0.74, -1, 0.78, 0.82, 3]];
+    LV.forEach(([s2, side, sz, ang0, nl], j) => {
+      const q = stemAt(pts, s2), fl = 0.07 * Math.sin(t * 2.1 + j * 2) + 0.035 * Math.sin(t * 3.7 + j) + w * 0.55 * side;
+      const ang = q[2] + side * (ang0 + fl), pl = len * 0.11 * sz, lw = len * 0.036 * sz, ll = len * 0.1 * sz;
+      const lc = j === 1 ? G2('#3FA36B') : j === 2 ? G2('#4AAE70') : G2('#349A5F');
+      ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(ang);
+      ctx.strokeStyle = css(cM); ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(side * pl * 0.1, -pl * 0.5, 0, -pl); ctx.stroke();
+      const lfs = nl === 5 ? [[0.32, -0.9, 0.62], [0.32, 0.9, 0.62], [0.66, -0.8, 0.8], [0.66, 0.8, 0.8], [1, 0, 1]] : [[0.55, -0.85, 0.8], [0.55, 0.85, 0.8], [1, 0, 1]];
+      for (const [f, a2, szz] of lfs) { ctx.save(); ctx.translate(0, -pl * f); ctx.rotate(a2 + fl * 0.6); leaflet(ctx, ll * szz, lw * szz, lc); if ((o.rim || 0) > 0.01 && a2 >= 0) { ctx.strokeStyle = css(o.rimCol || '#FFB37A', 0.35 * o.rim); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(lw * szz * 0.9, -ll * szz * 0.3); ctx.quadraticCurveTo(lw * szz, -ll * szz * 0.7, 0, -ll * szz); ctx.stroke(); } ctx.restore(); }
+      ctx.restore();
+    });
+    return sg.tip;
+  }
+  function roseTip(t, o = {}) { return stemGeom({ t, wilt: o.wilt || 0, bend: o.bend || 0 }).tip; }
+  const HEAD0 = (() => { const tp = stemGeom({ t: 0 }).tip; return [ROSE_BASE[0] + tp.x, ROSE_BASE[1] + tp.y]; })();
+  /** contact shadow + soil + grass/leaf tuft at the rose base (world coords, origin = base) */
+  function baseBack(ctx, P) {
+    ctx.fillStyle = RG(ctx, 6, 4, 0, 62, [[0, dk(P.meadow[3], 0.3), 0.6], [0.55, P.meadow[3], 0.35], [1, P.meadow[3], 0]]);
+    ctx.save(); ctx.scale(1, 0.28); ctx.beginPath(); ctx.arc(6, 14, 62, 0, TAU); ctx.fill(); ctx.restore();
+    ctx.fillStyle = css(dk(P.meadow[3], 0.15)); ctx.beginPath(); ctx.ellipse(0, 3, 16, 5, 0, 0, TAU); ctx.fill();
+  }
+  function baseFront(ctx, P, t) {
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 16; i++) {
+      const x = (H(i, 901) - 0.5) * 70, h = 18 + 30 * H(i, 902), lean = (H(i, 903) - 0.5) * h * 0.9 + Math.sin(t * 1.4 + i) * h * 0.08;
+      ctx.strokeStyle = css(i % 3 ? P.grassD : P.grassL, 0.9); ctx.lineWidth = 2 + 1.6 * H(i, 904);
+      ctx.beginPath(); ctx.moveTo(x, 4); ctx.quadraticCurveTo(x + lean * 0.3, 4 - h * 0.6, x + lean, 4 - h); ctx.stroke();
+    }
+    for (const [x, a, l, wd] of [[-16, -0.9, 30, 10], [14, 0.8, 26, 9], [-4, -0.2, 22, 8]]) { ctx.save(); ctx.translate(x, 5); ctx.rotate(a + Math.sin(t * 1.2 + x) * 0.04); leaflet(ctx, l, wd, mx(P.grassL, P.meadow[1], 0.4)); ctx.restore(); }
+  }
   function drawRose(ctx, c, o) {
+    const P = o.P || PAL.B;
     lay(ctx, c, 1, () => {
       ctx.translate(ROSE_BASE[0], ROSE_BASE[1]);
-      const sopt = { len: 330, t: o.t, leaves: 2, thorns: 4, width: 9, wilt: o.stemWilt === undefined ? o.wilt || 0 : o.stemWilt, bend: o.bend || 0 };
-      const tip = A.stem(ctx, sopt);
+      baseBack(ctx, P);
+      const tip = drawStem(ctx, { t: o.t, wilt: o.stemWilt === undefined ? o.wilt || 0 : o.stemWilt, bend: o.bend || 0, P, gk: o.stemGrade || 0, rim: o.rim || 0, rimCol: o.rimCol });
       E.at(ctx, tip.x, tip.y, 1, tip.angle + (o.bow || 0), () => {
         A.heroRose(ctx, Object.assign({ R: ROSE_R, bloom: o.bloom === undefined ? 1 : o.bloom, t: o.t, wilt: o.wilt || 0 }, o.rose || {}));
         if (o.onHead) o.onHead(ctx, tip);
       });
+      baseFront(ctx, P, o.t);
     });
+  }
+  /* rose rendered into its own layer: night/dusk grade, wilt browning, and a smooth darken + blur inside the gloss band */
+  let RL = null, BL = null;
+  const BAND = [1150, 1229, 1574, 1650];
+  function roseLayered(ctx, c, o) {
+    if (!RL) { RL = E.canvas(1080, 1920); BL = E.canvas(540, 960); }
+    const x = RL.x; x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.filter = 'none'; x.clearRect(0, 0, 1080, 1920);
+    if (o.behind) o.behind(x);
+    drawRose(x, c, o);
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    if ((o.gradeA || 0) > 0.003) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = css(o.gradeCol, o.gradeA); x.fillRect(0, 0, 1080, 1920); }
+    if ((o.brown || 0) > 0.01 && o.headS) {
+      const [hx, hy, hr] = o.headS; x.globalCompositeOperation = 'source-atop';
+      x.fillStyle = RG(x, hx, hy, 0, hr, [[0, '#4A2A2A', 0], [0.42, '#4A2A2A', 0.05 * o.brown], [0.8, '#5A3424', 0.42 * o.brown], [1, '#3A2418', 0.55 * o.brown]]); x.fillRect(0, 0, 1080, 1920);
+    }
+    const m = clamp(o.band || 0);
+    if (m > 0.01) {
+      const f1 = (BAND[1] - BAND[0]) / (BAND[3] - BAND[0]), f2 = (BAND[2] - BAND[0]) / (BAND[3] - BAND[0]);
+      const dark = dk((o.P || PAL.B).meadow[3], 0.25), mask = (g, k, col, a) => LG(g, 0, BAND[0] * k, 0, BAND[3] * k, [[0, col, 0], [f1, col, a], [f2, col, a], [1, col, 0]]);
+      x.globalCompositeOperation = 'source-atop'; x.fillStyle = mask(x, 1, dark, 0.55 * m * (o.bandDark === undefined ? 1 : o.bandDark)); x.fillRect(0, 0, 1080, 1920);
+      const b = BL.x; b.setTransform(1, 0, 0, 1, 0, 0); b.globalCompositeOperation = 'copy'; b.filter = 'blur(3px)'; b.drawImage(RL.c, 0, 0, 540, 960); b.filter = 'none';
+      b.globalCompositeOperation = 'destination-in'; b.fillStyle = mask(b, 0.5, '#000000', m); b.fillRect(0, 0, 540, 960);
+      x.globalCompositeOperation = 'destination-out'; x.fillStyle = mask(x, 1, '#000000', m); x.fillRect(0, 0, 1080, 1920);
+      x.globalCompositeOperation = 'source-over';
+      ctx.drawImage(RL.c, 0, 0); ctx.drawImage(BL.c, 0, 0, 1080, 1920);
+    } else { x.globalCompositeOperation = 'source-over'; ctx.drawImage(RL.c, 0, 0); }
   }
   function drawFg(ctx, c, t, P, kDark) {
     lay(ctx, c, 1.9, () => {
@@ -422,9 +523,9 @@
       }
     });
     // stroll clumps: screen-space L5 elements driven by the dolly (pass fast through the foot band, below the gloss band)
-    const dx = (c.x - 540) * 2.8, dz = Math.max(0, zoomAt(c, 1) - 1.3) * 700;
+    const dx = (c.stroll || 0) * 2.6, dz = Math.max(0, zoomAt(c, 1) - 1.3) * 700;
     if (dx > 1) {
-      for (const [bx, sc, spr, by] of [[1290, 0.92, SPR.fgM, 1965], [1660, 1.1, SPR.fgR, 2360], [2080, 0.95, SPR.fgM, 1975]]) {
+      for (const [bx, sc, spr, by] of [[1180, 0.92, SPR.fgM, 1965], [1480, 1.1, SPR.fgR, 2360], [1780, 0.95, SPR.fgM, 1975]]) {
         const x = bx - dx; if (x < -500 || x > 1600) continue;
         ctx.save(); ctx.translate(x, by + dz); ctx.rotate(Math.sin(t * 0.9 + bx) * 0.015); ctx.scale(sc, sc); ctx.drawImage(spr, -spr.width / 2, -spr.height); ctx.restore();
       }
@@ -433,31 +534,33 @@
   }
 
   /* ---------------- B timeline ---------------- */
-  const T0 = 2.30, TW = 2.44;
+  const T0 = 2.30, TW = 2.36;
   function camB(t) {
     const d = drift(t);
-    const c = { x: 540, y: 960, z: 1, zo: 1, ox: 540, oy: 960, rot: d.rot, sx: d.sx, sy: d.sy };
+    const c = { x: 540, y: 960, z: 1, zo: 1, ox: 540, oy: 960, rot: d.rot, sx: d.sx, sy: d.sy, stroll: 0 };
     // 1) optical pull-back from the sun (A's glow) + dolly parallax rush
-    const k1 = E.p(t, T0, 3.7, 'outCubic');
+    const k1 = E.p(t, T0, 3.85, 'outCubic');
     c.zo = lerp(2.2, 1, k1); c.z = lerp(1.38, 1, k1);
     c.ox = lerp(SUN0[0] + 6, 540, k1); c.oy = lerp(SUN0[1] + 20, 960, k1);
-    // 2) push-in on the rose (rose ≈ screen (540,830))
-    const k2 = E.p(t, 3.56, 4.5, 'inOutCubic'), k3 = E.p(t, 4.6, 5.42, 'inOutCubic');
-    const z2 = lerp(1, 1.45, k2) * lerp(1, 0.86, k3); c.z *= z2; c.y = lerp(960, 820 + 120 / z2, k2);
-    // 3) stroll dolly
-    const k4 = E.p(t, 5.95, 6.70, 'inOutCubic');
-    c.x += 330 * k3 * (1 - k4);
-    c.y += 14 * Math.sin(E.p(t, 4.6, 5.42, 'linear') * PI * 2) * (1 - k4);
-    // 4) swing back + push to the rose: rose (540,820) at R 260
-    if (k4 > 0) { const zA = c.z, zB = 2.6; c.z = lerp(zA, zB, k4); c.y = lerp(c.y, 820 + 140 / zB, k4); }
+    if (t < 3.5) return c;
+    // 2) push-in on the rose head (log zoom; head → screen (575,735) so the base stays above the gloss band)
+    // 3) slow stroll dolly (+240 world), 4) eased log-zoom push to the handoff (head (540,820), z 2.6)
+    const k2 = E.p(t, 3.5, 4.6, 'inOutCubic'), k3 = E.p(t, 4.5, 5.55, 'inOutCubic'), k4 = E.p(t, 5.5, 6.7, 'inOutSine');
+    const creep = 1;
+    const z0 = c.z, z1 = z0 * Math.exp(Math.log(1.4) * k2) * creep;
+    const S0 = [540 + (HEAD0[0] - 540) * z0, 960 + (HEAD0[1] - 960) * z0];
+    const stroll = 220 * k3, bob = 10 * Math.sin(E.p(t, 4.5, 5.55, 'linear') * TAU);
+    const Sx1 = lerp(S0[0], 575, k2) - stroll * z1, Sy1 = lerp(S0[1], 735, k2) - bob * z1;
+    const z = z1 * Math.pow(2.6 / z1, k4), Sx = lerp(Sx1, 540, k4), Sy = lerp(Sy1, 820, k4);
+    c.z = z; c.x = HEAD0[0] - (Sx - 540) / z; c.y = HEAD0[1] - (Sy - 960) / z; c.stroll = stroll * (1 - k4);
     return c;
   }
-  const sunYB = (t) => lerp(SUN0[1], 930, E.p(t, 5.95, 6.70, 'inOutSine'));
-  const duskB = (t) => E.p(t, 6.0, 6.70, 'inOutSine');
+  const sunYB = (t) => lerp(SUN0[1], 930, E.p(t, 5.85, 6.70, 'inOutSine'));
+  const duskB = (t) => E.p(t, 5.95, 6.70, 'inOutSine');
   /** DOF blur (px) of back group / front group */
   function dofB(t) {
     const r = E.p(t, 3.56, 3.95, 'outCubic') * (1 - E.p(t, 4.55, 4.95, 'inOutSine'));
-    const f = E.p(t, 5.95, 6.70, 'inOutSine');
+    const f = E.p(t, 5.6, 6.70, 'inOutSine');
     return { back: 6 * r + 3.5 * f, front: Math.max(2.2 * E.p(t, 2.5, 2.9), 6 * r + 9 * f), near: 5 * r + 6 * f };
   }
 
@@ -478,25 +581,18 @@
     E.at(ctx, BEE_SPOT[0] + st.off[0], BEE_SPOT[1] + st.off[1], 1, st.rot - (tip ? 0 : 0), () => A.bee(ctx, { size: 46, t: ttw, flip: st.flip, hover: st.fly > 0.3 }));
   }
 
-  /* fragrance ribbons: tapered curling ribbons that rise and dissolve, from (x,y) screen */
-  function ribbons(ctx, x, y, t, t0, s, alpha, seed = 3, life = 1.9) {
-    if (alpha <= 0.01) return;
-    ctx.save(); ctx.lineCap = 'round';
+  /* fragrance ribbons: three short warm curls that unwind from the heart and dissolve (≤0.6 s), screen space */
+  function ribbons(ctx, x, y, t, t0, s, alpha = 1) {
+    if (alpha <= 0.01 || t < t0 || t > t0 + 0.8) return;
+    ctx.save(); ctx.lineCap = 'round'; ctx.globalCompositeOperation = 'screen';
     for (let r = 0; r < 3; r++) {
-      const age = t - t0 - r * 0.2; if (age <= 0 || age >= life) continue;
-      const k = age / life, a = alpha * sm(age / 0.25) * (1 - sm((k - 0.5) / 0.5));
-      if (a <= 0.01) continue;
-      const ph = r * 2.1 + seed, dir = r - 1, uh = Math.min(1, k * 1.3), ut = Math.max(0, uh - 0.55), n = 24, pts = [];
-      for (let j = 0; j <= n; j++) {
-        const u = ut + ((uh - ut) * j) / n, rise = u * 470 * s, curl = (26 + 70 * u) * s;
-        pts.push([x + dir * 80 * s * u + Math.sin(u * 6.5 + ph + age * 1.7) * curl, y - 10 * s - rise]);
-      }
-      for (let pass = 0; pass < 2; pass++) {
-        for (let j = 1; j <= n; j++) {
-          const w = 5.5 * s * Math.sin((j / n) * PI);
-          ctx.strokeStyle = pass ? css('#FFF2F7', a * 0.9) : css('#FF9EC4', a * 0.3); ctx.lineWidth = Math.max(0.6, pass ? w : w * 2.8);
-          ctx.beginPath(); ctx.moveTo(pts[j - 1][0], pts[j - 1][1]); ctx.lineTo(pts[j][0], pts[j][1]); ctx.stroke();
-        }
+      const age = t - t0 - r * 0.07, life = 0.6; if (age <= 0 || age >= life) continue;
+      const k = age / life, a = alpha * Math.pow(Math.sin(PI * k), 1.3);
+      const a0 = [-2.5, -1.6, -0.7][r], uh = Math.min(1, 0.2 + k * 1.1), ut = Math.max(0, uh - 0.55), n = 18, pts = [];
+      for (let j = 0; j <= n; j++) { const u = ut + ((uh - ut) * j) / n, ang = a0 + u * 2.4 * (r === 1 ? -1 : 1), R = (26 + 64 * u) * s; pts.push([x + Math.cos(ang) * R, y + Math.sin(ang) * R * 0.75 - u * 46 * s]); }
+      for (const [col, wk, al] of [['#FFB98A', 3.2, 0.16], ['#FFE6CC', 1.1, 0.5]]) {
+        ctx.strokeStyle = css(col, a * al);
+        for (let j = 1; j <= n; j++) { ctx.lineWidth = Math.max(0.5, 3.4 * s * wk * Math.sin((j / n) * PI)); ctx.beginPath(); ctx.moveTo(pts[j - 1][0], pts[j - 1][1]); ctx.lineTo(pts[j][0], pts[j][1]); ctx.stroke(); }
       }
     }
     ctx.restore();
@@ -510,7 +606,7 @@
   ];
   function bflyPos(b, i, t, ttw) {
     const app = E.p(t, b.t0, b.t0 + 0.9, 'outCubic');
-    const lead = 320 * E.p(t, 4.55, 5.5, 'inOutSine') + 140 * E.p(ttw, 5.6, 6.0, 'linear') + 1000 * E.p(t, 5.95, 6.55, 'inQuad');
+    const lead = 240 * E.p(t, 4.5, 5.5, 'inOutSine') + 120 * E.p(ttw, 5.6, 6.0, 'linear') + 1000 * E.p(t, 5.85, 6.5, 'inQuad');
     const x = b.base[0] + E.noise(ttw * 0.55 + i * 7, 11) * 120 + lead * (1.05 + 0.12 * i) + (1 - app) * (i === 1 ? -500 : 520);
     const y = b.base[1] + E.noise(ttw * 0.7 + i * 3, 12) * 70 + Math.sin(ttw * 3.1 + b.ph) * 14 - (1 - app) * 180 - 60 * E.p(t, 4.6, 5.4) ;
     return [x, y];
@@ -534,6 +630,7 @@
     }
   }
 
+  const addSt = (g, st) => { for (const q of st) g.addColorStop(q[0], css(q[1], q[2])); return g; };
   /** golden sweetness pulse at the rose heart (screen x,y; s = screen scale of the rose, t0 = accent) */
   function sweetPulse(ctx, x, y, s, t, t0) {
     const age = t - t0; if (age < -0.05 || age > 1.6) return;
@@ -541,9 +638,9 @@
     S.light(ctx, x, y, 120 * s, '#FFD98A', glow);
     S.light(ctx, x, y, 34 * s, '#FFF4D0', glow * 0.8);
     if (age > 0 && age < 1.2) {
-      const r = (30 + 200 * E.ease.outCubic(k)) * s, a = 0.42 * (1 - k) * sm(age * 8);
-      ctx.save(); ctx.strokeStyle = css('#FFD98A', a * 0.4); ctx.lineWidth = 10 * s; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke();
-      ctx.strokeStyle = css('#FFF0C0', a); ctx.lineWidth = 2 * s; ctx.stroke(); ctx.restore();
+      const r = (30 + 200 * E.ease.outCubic(k)) * s, a = 0.36 * (1 - k) * sm(age * 8), wR = (26 + 30 * k) * s, r0 = Math.max(0, r - wR), r1 = r + wR;
+      ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = addSt(ctx.createRadialGradient(x, y, r0, x, y, r1), [[0, '#FFE2A0', 0], [0.5, '#FFE2A0', a], [1, '#FFE2A0', 0]]);
+      ctx.beginPath(); ctx.arc(x, y, r1, 0, TAU); ctx.fill(); ctx.restore();
       for (let i = 0; i < 7; i++) { const aa = (i / 7) * TAU + 0.4, d = r * (0.75 + 0.3 * H(i, 61)); S.sparkle(ctx, x + Math.cos(aa) * d, y + Math.sin(aa) * d * 0.8, (5 + 4 * H(i, 62)) * s, (1 - k) * 0.9, '#FFF4C8', aa); }
     }
   }
@@ -610,7 +707,7 @@
   function frameB(ctx, t) {
     const c = camB(t), ttw = tw(t), dusk = duskB(t), P = palAt(dusk, 0), wave = t - TW, dof = dofB(t);
     const sunX = SUN0[0], sunY = sunYB(t);
-    const bloom = E.p(t, 2.62, 3.15, 'outCubic');
+    const bloom = E.p(t, 2.44, 2.98, 'outCubic');
     const bee = beeState(t, ttw);
     const roseOpt = {
       t: ttw, bloom, rose: {},
@@ -624,9 +721,9 @@
         const pulse = E.env(t, 3.96, 6.0, 0.25, 1.2) * (0.5 - 0.2 * E.p(t, 4.25, 4.8));
         const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R));
         if (pulse > 0.01) S.light(ctx2, hx, hy, 340 * zoomAt(c, 1), '#FFD98A', pulse);
-        drawRose(ctx2, c, Object.assign(roseOpt, { onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
+        roseLayered(ctx2, c, Object.assign(roseOpt, { P, band: glossK(t), bandDark: 1 - (1 - E.p(t, 2.30, 2.52, 'outQuad')), stemGrade: 0.45 * dusk, rim: dusk, rimCol: '#FFB37A', gradeCol: '#6A3D8A', gradeA: 0.1 * dusk, onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
         sweetPulse(ctx2, hx, hy, zoomAt(c, 1), t, 3.98);
-        ribbons(ctx2, hx, hy - 20, ttw, 3.98, zoomAt(c, 1) * 0.8, 1 - E.p(t, 5.9, 6.5), 3, 1.6);
+        ribbons(ctx2, hx, hy, t, 3.98, zoomAt(c, 1) * 0.9);
       },
       branch: (l) => drawBranch(l, c, t, ttw),
     });
@@ -644,17 +741,18 @@
     });
     drawPollen(ctx, c, ttw, 0.75, gk);
     // "değil": ripple from the rose + saturation dip
-    const rp = (t - 5.56) / 1.25;
+    const rp = (t - 5.56) / 1.5;
     if (rp > 0 && rp < 1) {
-      const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R)), r = 30 + E.ease.outCubic(rp) * 1500, a = 0.35 * (1 - rp) * sm(rp * 10);
-      ctx.save(); ctx.strokeStyle = css('#FFFFFF', a * 0.35); ctx.lineWidth = 14; ctx.beginPath(); ctx.arc(hx, hy, r, 0, TAU); ctx.stroke();
-      ctx.strokeStyle = css('#FFFFFF', a); ctx.lineWidth = 2.2; ctx.stroke(); ctx.restore();
+      const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R)), r = 40 + E.ease.outCubic(rp) * 1100, a = 0.5 * Math.pow(1 - rp, 1.2) * sm(rp * 12);
+      ctx.save(); ctx.globalCompositeOperation = 'screen';
+      for (const [rr, w2, al] of [[r, 38, 0.55], [r * 0.82, 26, 0.3]]) { const r0 = Math.max(0, rr - w2), r1 = rr + w2; ctx.fillStyle = addSt(ctx.createRadialGradient(hx, hy, r0, hx, hy, r1), [[0, '#FFFFFF', 0], [0.5, '#FFFFFF', a * al], [1, '#FFFFFF', 0]]); ctx.beginPath(); ctx.arc(hx, hy, r1, 0, TAU); ctx.fill(); }
+      ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = css('#FFFFFF', a * 0.7); ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(hx, hy, r, 0, TAU); ctx.stroke(); ctx.restore();
     }
     const sat = E.env(t, 5.52, 6.08, 0.15, 0.18);
-    if (sat > 0.01) { ctx.save(); ctx.globalCompositeOperation = 'saturation'; ctx.globalAlpha = 0.12 * sat; ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, 1080, 1920); ctx.restore(); }
+    if (sat > 0.01) { ctx.save(); ctx.globalCompositeOperation = 'saturation'; ctx.globalAlpha = 0.1 * sat; ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, 1080, 1920); ctx.restore(); }
     grade(ctx, '#FFB38A', 0.12);
     // emergence from A's page glow: cream glow condenses into the sun
-    const ge = 1 - E.p(t, 2.30, 2.78, 'inOutSine');
+    const ge = 1 - E.p(t, 2.30, 2.52, 'outQuad');
     if (ge > 0.001) {
       const [sx, sy] = toScreen(c, 0.04, sunX, sunY), R = lerp(160, 2300, Math.pow(ge, 1.4)), F = 520 + 900 * ge;
       ctx.save(); ctx.fillStyle = RG(ctx, sx, sy, 0, R + F, [[0, '#FFFFFF', 1], [Math.min(0.5, R / (R + F) * 0.4), '#FFF6E6', 1], [R / (R + F), '#FFF6E6', Math.min(1, ge * 1.6)], [1, '#FFF6E6', 0]]);
@@ -662,7 +760,7 @@
     }
     bandScrim(ctx, gk * (1 - 0.4 * dusk) * (1 - ge));
   }
-  Object.assign(window.BCW, { frameB, postB, glossK, drawPollen, dofB, drawBranch, grade, sweetPulse });
+  Object.assign(window.BCW, { frameB, postB, glossK, drawPollen, dofB, drawBranch, grade, sweetPulse, roseLayered, stemGeom, HEAD0, STEM_LEN, addSt });
   E.scene({
     id: 'B_bahce', t0: 2.30, t1: 6.70,
     async setup() { build(); if (!SPR.mote) makeSprites(); },

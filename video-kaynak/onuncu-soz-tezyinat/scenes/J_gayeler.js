@@ -139,11 +139,16 @@
     return { line: out.c, glow: glow.c, fill: fill.c, w, h, ax, ay, pts };
   }
   function pomTreeArt(x) {
-    // trunk
+    // tapered trunk with root flare and tapered branches (filled shapes → clean organic outline)
+    const limb = (x0, y0, x1, y1, w0, w1, bend) => {
+      const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy), nx = -dy / l, ny = dx / l, mx = (x0 + x1) / 2 + nx * bend, my = (y0 + y1) / 2 + ny * bend;
+      x.beginPath(); x.moveTo(x0 + nx * w0, y0 + ny * w0); x.quadraticCurveTo(mx + nx * (w0 + w1) / 2, my + ny * (w0 + w1) / 2, x1 + nx * w1, y1 + ny * w1);
+      x.lineTo(x1 - nx * w1, y1 - ny * w1); x.quadraticCurveTo(mx - nx * (w0 + w1) / 2, my - ny * (w0 + w1) / 2, x0 - nx * w0, y0 - ny * w0); x.closePath(); x.fill();
+    };
     x.fillStyle = '#6B4A32';
-    x.beginPath(); x.moveTo(-14, 0); x.bezierCurveTo(-10, -60, -26, -110, -8, -150); x.lineTo(8, -150); x.bezierCurveTo(22, -110, 12, -60, 14, 0); x.closePath(); x.fill();
-    x.lineWidth = 9; x.strokeStyle = '#6B4A32'; x.lineCap = 'round';
-    x.beginPath(); x.moveTo(-4, -120); x.quadraticCurveTo(-50, -150, -80, -190); x.moveTo(4, -125); x.quadraticCurveTo(50, -150, 86, -200); x.moveTo(0, -145); x.lineTo(4, -215); x.stroke();
+    x.beginPath(); x.moveTo(-34, 0); x.quadraticCurveTo(-14, -8, -12, -40); x.bezierCurveTo(-10, -80, -20, -110, -6, -150); x.lineTo(6, -150);
+    x.bezierCurveTo(16, -110, 10, -80, 12, -40); x.quadraticCurveTo(14, -8, 36, 0); x.closePath(); x.fill();
+    limb(-4, -112, -88, -196, 8, 2.5, -14); limb(3, -120, 92, -206, 8, 2.5, 14); limb(0, -140, 6, -228, 6, 2, 6); limb(-50, -160, -112, -170, 4, 1.5, -6); limb(50, -165, 118, -178, 4, 1.5, 6);
     // canopy as lobed crown
     const lobes = [[0, -240, 92], [-90, -215, 70], [90, -220, 72], [-130, -165, 52], [130, -170, 54], [-55, -290, 62], [60, -292, 64], [0, -175, 70]];
     x.fillStyle = '#3FA36B';
@@ -353,7 +358,7 @@
     SPR.bb = bb;
   }
   function drawCraneMotes(ctx, t) {
-    const a = E.env(t, CR0, CR1, 0.2, 0.3); if (a <= 0) return;
+    const a = E.env(t, 66.25, CR1, 0.25, 0.3); if (a <= 0) return;
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < 22; i++) { // soft warm bokeh drifting up past the lens as the camera pitches down
       const sp = 380 + H(i, 401) * 520, x0 = H(i, 402) * E.W, y = ((((H(i, 403) * 2300 - (t - CR0) * sp) % 2300) + 2300) % 2300) - 190;
@@ -361,6 +366,49 @@
       ctx.fillStyle = E.rad(ctx, x, y, 0, r, [[0, '#FFF1D0', al], [0.6, '#FFD9A0', al * 0.45], [1, '#FFD9A0', 0]]); ctx.fillRect(x - r, y - r, r * 2, r * 2);
     }
     ctx.restore();
+  }
+
+  /** the 7 "gayeler" rosettes: one Rub el Hizb girih tile (same geometry family as the garden), 7 saturated tints */
+  const ROS_SAT = ['#FF2F6B', '#FFC233', '#22CDB8', '#9F5CFF', '#1FBFF2', '#FF6A1A', '#1FB873'];
+  const ROS_R = 225;
+  const ROS_POS = (() => {
+    const out = [];
+    for (let k = 0; k < 7; k++) {
+      const a = -PI / 2 + (k * TAU) / 7; let best = null;
+      for (let i = -9; i <= 9; i++) for (let j = -9; j <= 9; j++) {
+        const x = i * CELL, y = j * CELL, r = Math.hypot(x, y); if (r < 700 || r > 880) continue;
+        const d = Math.atan2(y, x) - a, da = Math.abs(Math.atan2(Math.sin(d), Math.cos(d))), sc = da * 700 + Math.abs(r - 790) * 0.6;
+        if (!best || sc < best[2]) best = [x, y, sc];
+      }
+      out.push([best[0], best[1]]);
+    }
+    return out;
+  })();
+  function buildRosettes() {
+    const R = ROS_R, size = Math.ceil(R * 2.3), cell = 75;
+    SPR.ros = ROS_SAT.map((col) => {
+      const c = E.canvas(size, size), x = c.x; x.translate(size / 2, size / 2);
+      const star = pathOf(starOutline(R)), deep = E.mix(col, '#0C241E', 0.72);
+      x.save(); x.clip(star);
+      x.fillStyle = E.rad(x, 0, 0, 0, R, [[0, E.mix(col, '#0C241E', 0.5)], [1, deep]]); x.fillRect(-R, -R, R * 2, R * 2);
+      const edges = new Path2D();
+      for (let i = -4; i <= 4; i++) for (let j = -4; j <= 4; j++) {
+        const o = polyStar(i * cell, j * cell, 8, cell / 2, 0, GANG), q = polyStar((i + 0.5) * cell, (j + 0.5) * cell, 4, cell * (0.5 - 0.5 / Math.SQRT2) * Math.SQRT2, PI / 4, GANG);
+        const d = Math.hypot(i, j);
+        x.fillStyle = d < 0.5 ? E.mix(col, '#FFFFFF', 0.55) : E.mix(col, '#FFFFFF', 0.12 * Math.max(0, 2 - d)); x.fill(pathOf(o.map((p) => [i * cell + (p[0] - i * cell) * 0.86, j * cell + (p[1] - j * cell) * 0.86])));
+        x.fillStyle = E.mix(col, '#FFF6E0', 0.5); x.fill(pathOf(q.map((p) => [(i + 0.5) * cell + (p[0] - (i + 0.5) * cell) * 0.7, (j + 0.5) * cell + (p[1] - (j + 0.5) * cell) * 0.7])));
+        edges.addPath(pathOf(o)); edges.addPath(pathOf(q));
+      }
+      x.lineJoin = 'round';
+      x.strokeStyle = 'rgba(40,22,6,0.55)'; x.lineWidth = 6; x.stroke(edges);
+      x.strokeStyle = '#E2B65C'; x.lineWidth = 3.4; x.stroke(edges);
+      x.strokeStyle = 'rgba(255,246,216,0.8)'; x.lineWidth = 1.1; x.stroke(edges);
+      x.restore();
+      x.strokeStyle = 'rgba(40,22,6,0.6)'; x.lineWidth = 13; x.stroke(star);
+      x.strokeStyle = E.lin(x, -R, -R, R, R, [[0, '#A8742A'], [0.3, '#FFE4A0'], [0.55, '#D9A548'], [0.8, '#FFF2C8'], [1, '#C88E34']]); x.lineWidth = 8; x.stroke(star);
+      x.strokeStyle = 'rgba(255,248,224,0.85)'; x.lineWidth = 1.6; x.stroke(pathOf(starOutline(R - 9)));
+      return c.c;
+    });
   }
 
   function buildMisc() {
@@ -401,6 +449,48 @@
     ctx.clip(p);
   }
 
+  /** A.garden's clouds have hard clipped bases: repaint the sky band above the hills (same gradient,
+   *  glow and rays) and draw our own soft, opaque, layered dawn clouds; feathered at plate y 740–790 */
+  const CLOUDS = [[-120, 385, 0.72, 6, 0], [700, 418, 0.82, 4, 1], [260, 600, 1.0, 5, 2], [920, 668, 0.95, 7, 3], [40, 712, 1.15, 3, 4]];
+  function repaintSky(ctx, t, cs, gSunY) {
+    const y0 = toS(cs, 0, 740, 0.08)[1], y1 = toS(cs, 0, 792, 0.08)[1];
+    if (y0 < -50) return;
+    E.layer(ctx, (l) => {
+      l.save(); l.translate(cs.cx - 540, cs.cy - 960);
+      l.fillStyle = E.lin(l, 0, 0, 0, 1920, SKY.map((q) => [q[0] / 1920, q[1]])); l.fillRect(-2000, -2000, 5080, 5920);
+      l.restore();
+      const g = toS(cs, 540, gSunY, 0.04);
+      l.globalCompositeOperation = 'screen';
+      l.fillStyle = E.rad(l, g[0], g[1], 0, 820 * g[2], [[0, '#FFD98A', 0.6], [0.22, '#FFD98A', 0.22], [1, '#FFD98A', 0]]); l.fillRect(0, 0, E.W, E.H);
+      S.rays(l, g[0], g[1], { n: 9, len: 1300, angle: PI / 2, spread: 2.4, col: '#FFD98A', alpha: 0.035, t, width: 0.03 });
+      l.globalCompositeOperation = 'source-over';
+      for (const [cx, cy, sc, sp, si] of CLOUDS) {
+        const spr = SPR.clouds[si], q = toS(cs, ((cx + t * sp + 400) % 1900) - 400, cy, 0.08), w = spr.width * sc * q[2] * 0.5, h = spr.height * sc * q[2] * 0.5;
+        l.drawImage(spr, q[0] - w / 2, q[1] - h * 0.86, w, h);
+      }
+      l.globalCompositeOperation = 'destination-in';
+      l.fillStyle = E.lin(l, 0, y0, 0, y1, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(0, 0, E.W, E.H);
+    });
+  }
+  function buildClouds() {
+    SPR.clouds = [];
+    for (let k = 0; k < 5; k++) {
+      const w = 900, h = 380, c = E.canvas(w, h), x = c.x, n = 5 + (k % 3), base = h * 0.8;
+      const body = new Path2D();
+      for (let i = 0; i < n; i++) {
+        const f = (i + 0.5) / n, r = h * (0.2 + 0.24 * Math.sin(f * PI)) * (0.8 + 0.35 * H(i, 700 + k));
+        body.moveTo(w * 0.12 + f * w * 0.76 + r, base - r * 0.7); body.arc(w * 0.12 + f * w * 0.76, base - r * 0.7, r, 0, TAU);
+      }
+      body.moveTo(w * 0.9, base); body.ellipse(w / 2, base - h * 0.05, w * 0.4, h * 0.12, 0, 0, TAU);
+      x.fillStyle = E.lin(x, 0, h * 0.1, 0, base + h * 0.1, [[0, '#B47A9E'], [0.45, '#E6A0A0'], [0.8, '#FFC9A8'], [1, '#FFE0BE']]); x.fill(body);
+      // sunlit underside rim + soft irregular base (alpha erosion), then a light blur for soft edges
+      x.save(); x.clip(body); x.globalCompositeOperation = 'screen'; x.fillStyle = E.lin(x, 0, base - h * 0.16, 0, base + h * 0.1, [[0, '#FFE7C8', 0], [1, '#FFE7C8', 0.7]]); x.fillRect(0, 0, w, h); x.restore();
+      x.globalCompositeOperation = 'destination-out';
+      for (let i = 0; i < 9; i++) { const ex = w * (0.12 + 0.76 * H(i, 720 + k)), er = 40 + H(i, 730 + k) * 70; x.fillStyle = E.rad(x, ex, base + h * 0.12, 0, er, [[0, '#000', 0.9], [1, '#000', 0]]); x.fillRect(ex - er, base + h * 0.12 - er, er * 2, er * 2); }
+      x.fillStyle = E.lin(x, 0, base - h * 0.06, 0, base + h * 0.14, [[0, '#000', 0], [1, '#000', 1]]); x.fillRect(0, base - h * 0.06, w, h);
+      const out = E.canvas(w, h); out.x.filter = 'blur(2.5px)'; out.x.drawImage(c.c, 0, 0); SPR.clouds.push(out.c);
+    }
+  }
   function drawSun(ctx, t, cs, sun, g) {
     const { x, y, r } = sun;
     // atmospheric bloom that bleeds over the crests
@@ -701,6 +791,7 @@
       return 1.7 * b * hold * swing;
     };
     A.garden(ctx, t, { palette: 'J', cx: cs.cx, cy: cs.cy, cam: cs.cam, sunX: 540, sunY: gSunY, bow: bowFn, fg: false, flowers: 180, span: [-200, 1280] });
+    repaintSky(ctx, t, cs, gSunY);
     drawSun(ctx, t, cs, sun, g);
     // originals + ribbon
     const kO = P(t, W.usul - 0.1, W.usul + 0.55, 'inOutSine'), ribF = P(t, 63.75, 64.65, 'inOutSine');
@@ -715,7 +806,15 @@
     drawGratitudeWave(ctx, t, cs, g);
     // near layers: during the crane they drop out under the camera (instead of riding up with the sky)
     const nearLayers = (c) => {
-      const rosePos = drawRose(c, t, cs, Math.min(1, bowFn(380, 1080) / 1.6));
+      let rosePos;
+      if (g > 0.002) {
+        const m = c.getTransform();
+        E.layer(c, (l) => {
+          l.setTransform(m); rosePos = drawRose(l, t, cs, Math.min(1, bowFn(380, 1080) / 1.6));
+          l.setTransform(1, 0, 0, 1, 0, 0); l.globalCompositeOperation = 'destination-out';
+          l.fillStyle = E.lin(l, 0, 1170, 0, 1640, [[0, '#000', 0], [0.2, '#000', g], [0.85, '#000', g], [1, '#000', 0]]); l.fillRect(0, 1170, E.W, 470);
+        });
+      } else rosePos = drawRose(c, t, cs, Math.min(1, bowFn(380, 1080) / 1.6));
       drawHoopoe(c, t, cs);
       drawButterflies(c, t, cs, rg, g);
       drawRosePetals(c, t, cs, rg, rosePos, g);
@@ -725,12 +824,22 @@
     };
     if (!crane) nearLayers(ctx);
     else {
-      const na = 1 - sm(crane.k / 0.3);
-      if (na > 0.01) { const m = ctx.getTransform(); E.layer(ctx, (l) => { l.setTransform(m); l.translate(0, -crane.dy + 520 * crane.k * crane.k + 160 * crane.k); nearLayers(l); }, { alpha: na }); }
+      const na = 1 - crane.k;
+      if (na > 0.01) { const m = ctx.getTransform(); E.layer(ctx, (l) => { l.setTransform(m); nearLayers(l); }, { alpha: na }); }
     }
     drawRisers(ctx, t, cs, rg, g);
     // grade + band scrim
     ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = E.rgba('#FF9A6A', 0.12); ctx.fillRect(0, 0, E.W, E.H); ctx.restore();
+    if (g > 0.002) {
+      // calm the subtitle line: soften the meadow detail behind it, then a feathered dusky ellipse
+      const cv = ctx.canvas;
+      E.layer(ctx, (l) => {
+        l.drawImage(cv, 0, 0); l.globalCompositeOperation = 'destination-in';
+        l.fillStyle = E.lin(l, 0, 1200, 0, 1600, [[0, '#000', 0], [0.25, '#000', 1], [0.75, '#000', 1], [1, '#000', 0]]); l.fillRect(0, 0, E.W, E.H);
+      }, { lo: true, blur: 9, alpha: 0.9 * g });
+      ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.translate(540, 1385); ctx.scale(1, 0.3);
+      ctx.fillStyle = E.rad(ctx, 0, 0, 0, 600, [[0, '#4A3E5C', 0.6 * g], [0.6, '#4A3E5C', 0.4 * g], [1, '#4A3E5C', 0]]); ctx.fillRect(-600, -600, 1200, 1200); ctx.restore();
+    }
     if (g > 0) {
       ctx.save(); ctx.globalCompositeOperation = 'multiply';
       ctx.fillStyle = E.lin(ctx, 0, 1100, 0, 1760, [[0, '#6E5C80', 0], [0.22, '#6E5C80', 0.42 * g], [0.72, '#6E5C80', 0.42 * g], [1, '#6E5C80', 0]]); ctx.fillRect(0, 1100, E.W, 660);
@@ -749,14 +858,11 @@
    * horizon for the first half of the move.
    * ============================================================================= */
   const ROS_COLS = ['#FF4F7B', '#FFB547', '#7FE0D2', '#B47CFF', '#6FF0FF', '#FFAE42', '#2FBF7F'];
-  const CR0 = 66.28, CR1 = 66.98, FOC = 1500;
-  let HS = null;
-  function sideHorizon(cs) { return toS(cs, 540, HZ + 30 + 14 * Math.sin(540 * 0.004 + 1) + 8 * Math.sin(540 * 0.011), 1)[1]; }
+  const CR0 = 66.15, CR1 = 67.0, FOC = 1500;
   function craneCam(t) {
-    if (HS === null) HS = sideHorizon(camAt(CR0));
-    const u = clamp((t - CR0) / (CR1 - CR0)), e = E.ease.inOutSine(u);
-    const cy0 = lerp(960, 800, e), phi = lerp(Math.atan((960 - HS) / FOC), PI / 2, e);
-    const h = lerp(330, 1500, Math.pow(e, 0.8)), gy = lerp(1640, 800, e);
+    const u = clamp((t - CR0) / (CR1 - CR0)), e = E.ease.outCubic(u);
+    const cy0 = lerp(880, 800, e), phi = lerp((62 * PI) / 180, PI / 2, e);
+    const h = lerp(1300, 1500, e), gy = lerp(1000, 800, e);
     const q = (cy0 - gy) / FOC, sp = Math.sin(phi), cp = Math.cos(phi);
     const c = (-h * (cp + q * sp)) / (sp - q * cp);
     return { u, e, phi, h, c, cy0, sp, cp, H: cp > 1e-5 ? cy0 - (FOC * sp) / cp : -1e9 };
@@ -871,8 +977,8 @@
         l.fillStyle = E.rad(l, 0, 0, 0, M, [[0, '#000', 1], [0.8, '#000', 1], [1, '#000', 0]]); l.fillRect(-M, -M, M * 2, M * 2);
         l.globalCompositeOperation = 'destination-out'; l.fillStyle = '#000'; l.fill(pathOf(starOutline(STAR_R - 6)));
       };
-      if (M > R1) E.layer(ctx, (l) => { field(l, 0.5, false); l.fillStyle = E.rad(l, 0, 0, R1 * 0.8, R2, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(-M, -M, M * 2, M * 2); }, { lo: true, blur: 7, alpha: fa * 0.5 });
-      E.layer(ctx, (l) => { field(l, 1, true); l.globalCompositeOperation = 'destination-in'; l.fillStyle = E.rad(l, 0, 0, R1 * 0.8, R2, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(-M, -M, M * 2, M * 2); }, { alpha: fa });
+      if (M > R1 && t < 68.27) E.layer(ctx, (l) => { field(l, 0.5, false); l.fillStyle = E.rad(l, 0, 0, R1 * 0.8, R2, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(-M, -M, M * 2, M * 2); }, { lo: true, blur: 7, alpha: fa * 0.5 });
+      E.layer(ctx, (l) => { field(l, 1, t < 68.32); l.globalCompositeOperation = 'destination-in'; l.fillStyle = E.rad(l, 0, 0, R1 * 0.8, R2, [[0, '#000', 1], [1, '#000', 0]]); l.fillRect(-M, -M, M * 2, M * 2); }, { alpha: fa });
     }
     planWater(ctx, t);
     planOverlays(ctx, t, v);
@@ -894,52 +1000,49 @@
     // ring of 7 rosettes ("gayeler"), each on a soft dark cushion so it reads against the field
     const conv = P(t, 67.94, 68.2, 'inOutSine');
     for (let i = 0; i < 7; i++) {
-      const fi = P(t, W.gayeler - 0.1 + i * 0.055, W.gayeler - 0.1 + i * 0.055 + 0.55, 'linear');
+      const fi = P(t, W.gayeler - 0.15 + i * 0.03, W.gayeler - 0.15 + i * 0.03 + 0.42, 'outCubic');
       if (fi <= 0) continue;
-      const a = -PI / 2 + (i * TAU) / 7 - v.rot * 0.5, rho = 790 * (1 - conv);
-      const sc = 1 - 0.75 * conv, al = 1 - conv * conv;
+      const [px, py] = ROS_POS[i], k = 1 - conv, sc = (0.55 + 0.45 * E.ease.outBack(fi, 1.4)) * (1 - 0.75 * conv), al = fi * (1 - conv * conv), spr = SPR.ros[i];
+      const a = Math.atan2(py, px), rho = Math.hypot(px, py) * k;
       E.at(ctx, Math.cos(a) * rho, Math.sin(a) * rho, sc, 0, () => {
-        ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = E.rad(ctx, 0, 0, 120, 420, [[0, '#1E3A30', 0.6 * fi * al], [1, '#1E3A30', 0]]); ctx.fillRect(-420, -420, 840, 840); ctx.restore();
-        S.light(ctx, 0, 0, 380, ROS_COLS[i], 0.35 * fi * al);
-        A.rosetteFlower(ctx, { r: 235, fill: fi, t: t + i, col: ROS_COLS[i], core: E.hexOf(E.mix(ROS_COLS[i], '#FFFFFF', 0.72)), lighter: false, alpha: al });
+        ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = E.rad(ctx, 0, 0, ROS_R * 0.6, ROS_R * 1.7, [[0, '#14302A', 0.55 * al], [1, '#14302A', 0]]); ctx.fillRect(-ROS_R * 1.7, -ROS_R * 1.7, ROS_R * 3.4, ROS_R * 3.4); ctx.restore();
+        S.light(ctx, 0, 0, ROS_R * 1.5, ROS_SAT[i], 0.16 * al);
+        ctx.globalAlpha = al; ctx.drawImage(spr, -spr.width / 2, -spr.height / 2);
       });
       if (conv > 0 && conv < 1) { // light trail toward the centre
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = E.rgba(ROS_COLS[i], 0.5 * (1 - conv)); ctx.lineWidth = 30 * (1 - conv); ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(Math.cos(a) * rho, Math.sin(a) * rho); ctx.lineTo(Math.cos(a) * Math.min(790, rho + 420), Math.sin(a) * Math.min(790, rho + 420)); ctx.stroke(); ctx.restore();
+        const R0 = Math.hypot(px, py);
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = E.rgba(ROS_SAT[i], 0.4 * (1 - conv)); ctx.lineWidth = 26 * (1 - conv); ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(Math.cos(a) * rho, Math.sin(a) * rho); ctx.lineTo(Math.cos(a) * Math.min(R0, rho + 420), Math.sin(a) * Math.min(R0, rho + 420)); ctx.stroke(); ctx.restore();
       }
     }
   }
+  /** J→K: the centre flares over ~10 frames (inOutCubic) into a translucent ivory veil; the push-in keeps
+   *  running underneath and gold arcs relax into 14 faint ink text lines (reverse of A) */
   function drawFlare(ctx, t) {
-    const pre = P(t, 67.92, 68.08, 'inQuad'), kf = P(t, 68.06, 68.26, 'inQuad');
+    const pre = P(t, 67.88, 68.1, 'inOutSine'), v = P(t, 68.0, 68.37, 'inOutSine');
     if (pre <= 0) return;
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = E.rad(ctx, 540, 800, 0, 260 + 900 * kf, [[0, '#FFFFFF', 0.6 * pre], [1, '#FFE7B0', 0]]); ctx.fillRect(0, 0, E.W, E.H);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = E.rad(ctx, 540, 800, 0, 280 + 600 * v, [[0, '#FFFFFF', 0.5 * pre * (1 - 0.6 * v)], [1, '#FFE7B0', 0]]); ctx.fillRect(0, 0, E.W, E.H);
     ctx.globalCompositeOperation = 'source-over';
-    if (kf > 0) {
-      const R = 40 + 2100 * kf;
-      ctx.fillStyle = E.rad(ctx, 540, 800, 0, R, [[0, '#FFFFFF', 1], [0.35, '#FFF6E6', 1], [0.8, '#FFF6E6', 0.85 * Math.min(1, kf * 3)], [1, '#FFF6E6', 0]]); ctx.fillRect(0, 0, E.W, E.H);
+    if (v > 0) {
+      const R = 1000 + 500 * v;
+      ctx.fillStyle = E.rad(ctx, 540, 800, 0, R, [[0, '#FFFFFF', 0.86 * v], [0.4, '#FFF6E6', 0.8 * v], [1, '#FFF6E6', 0.74 * v]]); ctx.fillRect(0, 0, E.W, E.H);
     }
     ctx.restore();
   }
   function drawIvoryEnd(ctx, t) {
-    const k = P(t, 68.2, 68.3);
-    if (k <= 0) return;
-    ctx.save(); ctx.globalAlpha = k;
-    ctx.fillStyle = E.rad(ctx, 540, 820, 0, 1300, [[0, '#FFFFFF'], [0.4, '#FFF8EC'], [1, '#FFF6E6']]); ctx.fillRect(0, 0, E.W, E.H);
-    ctx.restore();
-    // gold rosette arcs relaxing into 14 faint ink lines (reverse of A's ink → stems)
-    const m = P(t, 68.28, 68.6, 'inOutSine'), a = P(t, 68.22, 68.36) * (0.32 - 0.04 * m);
-    if (a <= 0) return;
+    const a = P(t, 68.15, 68.32, 'inOutSine') * (0.42 - 0.12 * P(t, 68.35, 68.6)), m = P(t, 68.28, 68.56, 'inOutCubic');
+    if (a <= 0.003) return;
     ctx.save(); ctx.lineCap = 'round';
     for (let i = 0; i < 14; i++) {
       const y = 482 + i * 52, x0 = 190, x1 = i === 13 ? 640 : 890, side = y < 820 ? -1 : 1, amp = (90 + 30 * Math.abs(y - 820) / 340) * (1 - m);
+      const grow = P(t, 68.15 + Math.abs(i - 6.5) * 0.008, 68.3 + Math.abs(i - 6.5) * 0.008, 'outCubic');
       ctx.beginPath();
       for (let s = 0; s <= 24; s++) {
-        const x = lerp(x0, x1, s / 24), q = (x - 540) / 360, yy = y + side * amp * (1 - q * q) - side * amp * 0.5;
+        const x = lerp(540 + (x0 - 540) * grow, 540 + (x1 - 540) * grow, s / 24), q = (x - 540) / 360, yy = y + side * amp * (1 - q * q) - side * amp * 0.5;
         s ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy);
       }
-      ctx.strokeStyle = E.mix('#D8B26E', '#5A2A2F', m, a); ctx.lineWidth = lerp(2, 3, m); ctx.stroke();
+      ctx.strokeStyle = E.mix('#C9962E', '#5A2A2F', m, a); ctx.lineWidth = lerp(2.4, 3, m); ctx.stroke();
     }
     ctx.restore();
   }
@@ -951,39 +1054,55 @@
     id: 'J_gayeler', t0: 61.6, t1: 68.6,
     async setup() {
       buildMisc();
+      buildClouds();
+      buildRosettes();
       buildMeadow();
       buildBillboards();
       buildPlan();
       SPR.gTree = ghostFrom(420, 420, 210, 400, (x) => pomTreeArt(x));
-      SPR.gBowl = ghostFrom(330, 300, 165, 92, (x) => A.iznikBowl(x, { rx: 120, ry: 40, depth: 82, overflow: 0.85, t: 0, shadow: false }));
+      SPR.gBowl = ghostFrom(340, 320, 170, 92, (x) => {
+        A.iznikBowl(x, { rx: 120, ry: 40, depth: 82, t: 0, shadow: false, honey: 60 });
+        // long, thin honey-light streams pouring over the rim, fading as they fall
+        for (const [sx, sy, len, bend, w] of [[-118, 2, 175, -58, 5], [119, 6, 140, 62, 4.5], [34, 38, 110, 22, 3.5]]) {
+          x.save(); x.lineCap = 'round';
+          const g = x.createLinearGradient(0, sy, 0, sy + len); g.addColorStop(0, 'rgba(255,193,94,1)'); g.addColorStop(0.45, 'rgba(255,193,94,0.5)'); g.addColorStop(0.8, 'rgba(255,193,94,0)');
+          x.strokeStyle = g;
+          for (let k = 0; k < 3; k++) { x.lineWidth = w * (1 - k * 0.3); x.beginPath(); x.moveTo(sx, sy); x.quadraticCurveTo(sx + bend * 1.1, sy + len * 0.2, sx + bend * 1.3, sy + len * (1 - k * 0.2)); x.stroke(); }
+          x.restore();
+        }
+      });
       const rc = E.canvas(620, 560); rc.x.translate(310, 360);
       A.heroRose(rc.x, { R: ORIG.rose[2], bloom: 1, t: 0, variant: 'outline', col: '#FFF6E0', lw: 2.2, glow: 1 });
       SPR.gRose = { c: rc.c, ax: 310, ay: 360 };
     },
     post: (t) => {
       const fin = P(t, 66.3, 66.9), fl = P(t, 68.0, 68.3);
-      return { bloom: lerp(lerp(0.42, 0.55, fin), 0.6, fl) + 0.12 * E.env(t, 64.5, 66.4, 0.3, 0.8), vignette: lerp(lerp(0.26, 0.15, fin), 0.03, fl), grain: lerp(0.05, 0.02, fl) };
+      return { bloom: lerp(lerp(0.42, 0.55, fin) - 0.15 * E.env(t, 67.4, 68.05, 0.2, 0.1), 0.6, fl) + 0.12 * E.env(t, 64.5, 66.4, 0.3, 0.8), vignette: lerp(lerp(0.26, 0.15, fin), 0.03, fl), grain: lerp(0.05, 0.02, fl) };
     },
     draw(ctx, T) {
       const t = clamp(T, 61.6, 68.599);
-      if (t < CR0) {
+      if (t < 66.0) {
         drawSide(ctx, t);
         // ivory wash continuing I's whiteout
         const iw = 0.24 * (1 - P(t, 61.62, 62.35, 'inOutSine'));
         if (iw > 0) { ctx.fillStyle = E.rgba('#FFF6E6', iw); ctx.fillRect(0, 0, E.W, E.H); }
       } else if (t < CR1) {
-        // crane-over: sky & sun (side view, everything at infinity) ride up with the horizon while the
-        // ground plane slides under the camera
-        const cc = craneCam(t), dy = cc.H - HS;
-        if (cc.H > -80) { ctx.save(); ctx.translate(0, dy); drawSide(ctx, t, { dy, k: cc.u }); ctx.restore(); }
-        drawGround(ctx, t, cc, P(t, CR0, CR0 + 0.16, 'inOutSine'));
-        warmSurround(ctx, 0.6 * P(t, 66.6, CR1, 'inOutSine'));
-        const sy = sunAt(t, camAt(t)).y + dy, ga = E.env(t, CR0, CR1, 0.2, 0.4);
-        ctx.save(); ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = E.rad(ctx, 540, Math.max(-300, sy), 0, 1150, [[0, '#FFF1D8', 0.72 * ga], [0.35, '#FFD9A0', 0.34 * ga], [1, '#E58A78', 0]]); ctx.fillRect(0, 0, E.W, E.H);
-        ctx.restore();
+        // crane-over as a soft dissolve: the side view pitches gently (≤ ~25 px/frame) and fades into
+        // golden light; the ground plane emerges from it already decelerating (≤ ~16 px/frame) and
+        // settles top-down at 67.0
+        const sdy = -200 * P(t, 66.0, 66.8, 'inOutCubic'), sy = Math.max(220, sunAt(t, camAt(t)).y + sdy);
+        const veil = (a) => { if (a <= 0.003) return; ctx.fillStyle = E.rad(ctx, 540, sy, 0, 1500, [[0, '#FFF1DC', a], [0.45, '#F8D6B4', a], [1, '#EAB79C', a]]); ctx.fillRect(0, 0, E.W, E.H); };
+        // 1) the side view pitches gently and goes into warm light
+        if (t < 66.62) { ctx.save(); ctx.translate(0, sdy); drawSide(ctx, t, { dy: sdy, k: P(t, 66.1, 66.42, 'inOutSine') }); ctx.restore(); veil(0.9 * P(t, 66.2, 66.56, 'inOutSine')); }
+        // 2) the ground plane emerges from the light, already decelerating, and settles top-down at 67.0
+        const aP = P(t, 66.5, 66.66, 'inOutSine');
+        if (aP > 0.002) {
+          drawGround(ctx, t, craneCam(t), aP);
+          warmSurround(ctx, 0.6 * P(t, 66.6, CR1, 'inOutSine'));
+          veil(0.9 * (1 - P(t, 66.56, 66.97, 'inOutSine')) * aP);
+        }
         drawCraneMotes(ctx, t);
-      } else if (t < 68.3) { // from 68.30 the ivory flare covers everything
+      } else {
         drawPlanTop(ctx, t, planView(t));
         warmSurround(ctx, 0.6);
       }

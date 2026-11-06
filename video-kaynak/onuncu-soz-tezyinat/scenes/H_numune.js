@@ -12,24 +12,21 @@
  *             tiled roofs, plinth, perspective setts with puddles reflecting the lit shop
  *          FG · blurred walnut counter rising into the foot band in the wide shots (lantern reflections)
  *          L5 screen · kafes lattice rushing past 37.60–38.03 (covers ~85 % of the frame at 37.60)
- *  CAMERA (log-zoom keys) 37.6 z1.04 → 37.88 z1 (contract framing) → 38.86 z1.08 settle larger & lower →
- *          38.86–39.95 push in to the rose jar z2.55 + RACK FOCUS (neighbours blur 0→10 px) → 40.12–41.05
- *          pull back & tilt up z2.62→0.5: the far plane, the sky and the originals are revealed (settled above
- *          the band before the gloss) → 41.05–43.07 wide hold with lateral drift → 43.07–44.45 push to a medium
- *          shot z0.82 (filaments, prisms) → 46.0–47.7 continuous tilt up 1750 (zoom →1.3 from 46.3) through
- *          soft cloud banks that swallow the rooftops, into a radiant sky.
- *          Handheld drift (x 6·sin .37t + 3·sin .71t, y 4·sin .29t…, roll .18°) is always on.
- *  BEATS   37.60 lattice rush · ghosts (G's six + rose/carnation/cherries) fly to their shelves
- *          38.36+0.07·rank ghost fills in bottom→top, glass dome set down + bounce, tag swings · 38.84 spec
- *          sweep · 39.0/.25/.5 lanterns ignite · 40.12 originals fade in (first seen as giant petals glowing
- *          behind the little rose jar) · 40.80 dotted projection lines (heroes only, 14 lines) from each sample's
- *          contour to its original's · 41.39 lines solidify, originals brighten · 42.07 breathe
- *          43.38 12 gaze filaments from the L/R frame edges (y 980–1180) land on the jars · 44.06 focus ·
- *          44.76 prism → 4-hair spectrum · 45.33 spectra turn up (spring), recombine to gold and shoot up to
- *          each sample's own original in the sky · 45.58 originals ignite · 45.92+ beams rise from the
- *          originals to one point · 46.8 luminous gate traces on, centred (540,520), framed by the originals ·
- *          47.42–47.80 fly through the gate into #FFFDF7.
- *  Band    glosses 40.79–42.67 / 44.03–45.91: band shows plinth + dark wet setts, scrim ≤ 0.2.
+ *  CAMERA (log-zoom keys) 37.6 z1.03 → 37.88 z1 (contract framing) → 38.86 z1.08 settle → 38.86–39.6 push in
+ *          to the rose jar z2.05, framed low + RACK FOCUS → 39.66–40.95 eased pull-back to the wide hold z0.6
+ *          (shop low, originals uncropped in y 160–590, plinth under the gloss line) → hold to 45.9 with lateral
+ *          sway (z 0.6→0.62) → 45.9–47.9 tilt up 2200 at constant zoom through opaque clouds coming from above.
+ *  BEATS   37.60 crisp walnut kafes with a straight-edged star frame (continues G's push) scaling past the edges ·
+ *          38.36+0.07·rank ghosts fill in, domes set down, tags swing (new ghosts only appear after the flights) ·
+ *          38.84 spec sweep · 39.0/.25/.5 lanterns · 39.7 originals appear huge behind the back glass and rise
+ *          into the sky as the camera pulls back · 40.80 projection lines (heroes, only onto visible originals) ·
+ *          41.39 solidify · 43.38 12 gaze filaments from the L/R edges (y 980–1180) · 44.06 focus · 44.76 prism:
+ *          a 4-colour ribbon rises from each jar's knob along its own lane (never across a jar above) ·
+ *          45.30–45.95 each gaze filament MORPHS (outCubic) into its jar's beam: knob → lane → its own original,
+ *          which ignites where the beam lands · 45.95+ beams rise from the originals to the meeting point ·
+ *          46.85 the gate traces on (pointed arch bright, frame at 25 %), originals fade to ≤ 0.2 ·
+ *          47.42–47.80 fly through the arch (vertical-gradient fill) into #FFFDF7.
+ *  Band    smooth gloss envelope (no booleans): band shows plinth + dark wet setts, scrim ≤ 0.2.
  * ========================================================================== */
 (function () {
   'use strict';
@@ -40,17 +37,17 @@
 
   /* ---------------- timing ---------------- */
   const T_LAND0 = 38.36, T_SPEC = 38.84, T_LANT = [39.0, 39.25, 39.5];
-  const T_ORIG = 40.12, T_LINES = 40.8, T_SOLID = 41.39, T_SOLID1 = 42.07;
-  const T_FIL = 43.38, T_FOCUS = 44.06, T_PRISM = 44.76, T_TURN = 45.33;
-  const T_TILT0 = 46.0, T_TILT1 = 47.7, T_GATE = 46.8, T_PASS = 47.42;
-  const PF = 0.25, PS = 0.6, TILT = 1750;     // TILT: world units the camera rises in the final move                  // far plane (originals) / distant skyline parallax
+  const T_ORIG = 39.7, T_LINES = 40.8, T_SOLID = 41.39, T_SOLID1 = 42.07;
+  const T_FIL = 43.38, T_FOCUS = 44.06, T_PRISM = 44.76, T_TURN = 45.3, T_BEND = 0.65;
+  const T_TILT0 = 45.9, T_TILT1 = 47.9, T_GATE = 46.85, T_PASS = 47.42;
+  const PF = 0.25, PS = 0.6, TILT = 2200;     // far plane / distant skyline parallax; TILT = world units of the final rise
 
   /* ---------------- camera (log-zoom keyframes) ---------------- */
-  const KZ = [[37.6, 1.04], [37.88, 1.0, 'outCubic'], [38.86, 1.08, 'inOutSine'], [39.95, 2.55, 'inOutCubic'], [40.12, 2.62, 'linear'],
-    [41.05, 0.5, 'inOutCubic'], [43.07, 0.525, 'linear'], [44.45, 0.82, 'inOutCubic'], [45.95, 0.845, 'linear']];
-  const KY = [[37.6, 960], [37.88, 960], [38.86, 905, 'inOutSine'], [39.95, 868, 'inOutCubic'], [40.12, 866, 'linear'],
-    [41.05, 652, 'inOutCubic'], [43.07, 658, 'linear'], [44.45, 830, 'inOutCubic'], [45.95, 832, 'linear']];
-  const KX = [[37.6, 540], [41.05, 540], [43.07, 562, 'inOutSine'], [44.45, 540, 'inOutSine']];
+  const KZ = [[37.6, 1.03], [37.88, 1.0, 'outCubic'], [38.86, 1.08, 'inOutSine'], [39.6, 2.05, 'inOutCubic'], [39.66, 2.06, 'linear'],
+    [40.95, 0.6, 'inOutSine'], [43.07, 0.61, 'linear'], [44.45, 0.62, 'inOutSine'], [45.9, 0.62, 'linear']];
+  const KY = [[37.6, 960], [37.88, 960], [38.86, 905, 'inOutSine'], [39.6, 818, 'inOutCubic'], [39.66, 818, 'linear'],
+    [40.95, 651, 'inOutSine'], [43.07, 653, 'linear'], [44.45, 655, 'inOutSine'], [45.9, 655, 'linear']];
+  const KX = [[37.6, 540], [40.95, 540], [42.0, 556, 'inOutSine'], [43.07, 528, 'inOutSine'], [44.45, 548, 'inOutSine'], [45.9, 540, 'inOutSine']];
   function key(K, t, log) {
     if (t <= K[0][0]) return K[0][1];
     for (let i = 1; i < K.length; i++) if (t <= K[i][0]) {
@@ -61,14 +58,19 @@
   }
   function camAt(t) {
     const tilt = pp(t, T_TILT0, T_TILT1, 'inOutCubic');
-    const z = Math.exp(lerp(Math.log(key(KZ, t, true)), Math.log(1.3), pp(t, 46.3, T_TILT1, 'inOutCubic')));
-    let y = key(KY, t) + 14 * E.env(t, 45.62, 46.3, 0.3, 0.38) - TILT * tilt;
-    y += 4 * Math.sin(0.29 * t + 1) + 2 * Math.sin(0.83 * t);
+    const z = key(KZ, t, true);                                   // zoom held during the rise
+    const y = key(KY, t) - TILT * tilt + 4 * Math.sin(0.29 * t + 1) + 2 * Math.sin(0.83 * t);
     const x = key(KX, t) + 6 * Math.sin(0.37 * t) + 3 * Math.sin(0.71 * t + 2);
     return { x, y, zoom: z, rot: (0.18 * PI / 180) * Math.sin(0.21 * t), tilt };
   }
-  const focusBlur = (t) => 10 * pp(t, 39.05, 39.75, 'inOutSine') * (1 - pp(t, 40.12, 40.42, 'inOutSine'));
-  const tiltBlur = (t) => 4 * Math.pow(Math.sin(PI * clamp((t - 46.3) / 0.95)), 2);
+  const focusBlur = (t) => 10 * pp(t, 39.0, 39.45, 'inOutSine') * (1 - pp(t, 39.62, 39.95, 'inOutSine'));
+  /* smooth gloss envelope (never a boolean): ramps over [in−.35, in−.1] and [out+.35, out+.6] */
+  function glossK(t) {
+    if (!window.TIMING) return 0;
+    let k = 0;
+    for (const g of TIMING.glosses) k = Math.max(k, sm((t - (g.in - 0.35)) / 0.25) * (1 - sm((t - (g.out + 0.35)) / 0.25)));
+    return k;
+  }
   const lp = (cam, p) => ({ cx: 540 + (cam.x - 540) * p, cy: 960 + (cam.y - 960) * p, z: 1 + (cam.zoom - 1) * p, r: cam.rot * p });
   function scr(L, x, y) {
     let dx = (x - L.cx) * L.z, dy = (y - L.cy) * L.z;
@@ -112,27 +114,27 @@
   });
   /* OL = the original's layout at the WIDE reference shot (screen x, y, max size px, rot, hero) */
   const ITEMS = [
-    { key: 'butterfly', r: 0, c: 0, g: [277, 589, 1.96], stand: 'rod', rod: 66, OL: [215, 250, 470, -0.16, 1],
+    { key: 'butterfly', r: 0, c: 0, g: [277, 589, 1.96], stand: 'rod', rod: 66, OL: [170, 255, 270, -0.16, 1],
       art: (x, t, pose) => E.at(x, 0, -82, 1, -0.05, () => A.butterfly(x, { size: 31, t: pose ? 0 : t, pattern: 'sapphire', flap: pose ? 0.96 : 0.9 + 0.08 * Math.sin(t * 1.25) })) },
-    { key: 'peacock', r: 0, c: 1, g: [540, 587, 1.27], stand: 'cup', OL: [1005, 200, 380, 0.2, 0],
+    { key: 'peacock', r: 0, c: 1, g: [540, 587, 1.27], stand: 'cup', OL: [405, 150, 120, 0.15, 0],
       art: (x, t, pose) => E.at(x, 0, -9, 1, 0.07, () => A.peacockFeather(x, { len: 128, t: pose ? 0 : t, sway: pose ? 0 : 0.5 })) },
-    { key: 'snowflake', r: 0, c: 2, g: [803, 589, 1.79], stand: 'rod', rod: 50, OL: [800, 95, 210, 0, 0],
+    { key: 'snowflake', r: 0, c: 2, g: [803, 589, 1.79], stand: 'rod', rod: 50, OL: [725, 150, 90, 0, 0],
       art: (x, t, pose) => E.at(x, 0, -84, 1, 0, () => A.snowflake(x, { r: 33, t: pose ? 0 : t })) },
-    { key: 'carnation', r: 1, c: 0, g: null, stand: 'vase', OL: [45, 430, 320, -0.12, 0],
+    { key: 'carnation', r: 1, c: 0, g: null, stand: 'vase', OL: [52, 515, 125, -0.1, 0],
       art: (x, t, pose) => E.at(x, 0, -24, 1, 0, () => A.flowerSet(x, { type: 'carnation', size: 29, stem: 62, t: pose ? 0 : t, sway: pose ? 0 : 0.45, phase: 1.3 })) },
-    { key: 'rose', r: 1, c: 1, g: null, stand: 'vase', OL: [540, 660, 920, 0, 1],
+    { key: 'rose', r: 1, c: 1, g: null, stand: 'vase', OL: [540, 385, 530, 0, 1],
       art: (x, t, pose) => E.at(x, 0, -24, 1, 0, () => {
         const tip = A.stem(x, Object.assign({}, ROSE_STEM, { t: pose ? 0 : t, sway: pose ? 0 : ROSE_STEM.sway }));
         E.at(x, tip.x, tip.y, 1, tip.angle, () => A.heroRose(x, { R: 27, bloom: 1, t: pose ? 0 : t }));
       }),
       oart: (x, t, pose) => roseHead(x, t, pose) },
-    { key: 'tulip', r: 1, c: 2, g: [803, 843, 1.51], stand: 'vase', OL: [885, 400, 640, 0.04, 1],
+    { key: 'tulip', r: 1, c: 2, g: [803, 843, 1.51], stand: 'vase', OL: [935, 355, 370, 0.04, 1],
       art: (x, t, pose) => E.at(x, 0, -24, 1, 0, () => A.flowerSet(x, { type: 'tulip', size: 31, stem: 60, t: pose ? 0 : t, sway: pose ? 0 : 0.45, phase: 2.1 })) },
-    { key: 'nautilus', r: 2, c: 0, g: [277, 843, 1.59], stand: 'dish', OL: [290, 85, 200, -0.2, 0],
+    { key: 'nautilus', r: 2, c: 0, g: [277, 843, 1.59], stand: 'dish', OL: [290, 122, 80, -0.2, 0],
       art: (x, t, pose) => E.at(x, 0, -47, 1, pose ? 0 : 0.02 * Math.sin(t * 0.7), () => A.nautilus(x, { r: 36 })) },
-    { key: 'pomegranate', r: 2, c: 1, g: [540, 843, 1.68], stand: 'dish', OL: [170, 475, 390, 0.08, 1],
+    { key: 'pomegranate', r: 2, c: 1, g: [540, 843, 1.68], stand: 'dish', OL: [238, 510, 170, 0.08, 1],
       art: (x, t, pose) => E.at(x, 0, -40, 1, 0, () => A.pomegranate(x, { r: 31, t: pose ? 0 : t })) },
-    { key: 'cherries', r: 2, c: 2, g: null, stand: 'dish', OL: [1030, 625, 230, 0.1, 0],
+    { key: 'cherries', r: 2, c: 2, g: null, stand: 'dish', OL: [1012, 125, 85, 0.1, 0],
       art: (x, t, pose) => E.at(x, 0, -54, 1, pose ? 0 : 0.03 * Math.sin(t * 0.9 + 1), () => A.cherries(x, { size: 74 })) },
   ];
   ITEMS.forEach((it, i) => { it.i = i; it.jx = COLX[it.c]; it.jy = ROWY[it.r]; it.fy = it.jy - JBH; it.d = Math.hypot(it.c - 1, (it.r - 1) * 0.95); it.hero = it.OL[4]; });
@@ -148,7 +150,11 @@
     [-1, 'rose', 1112], [1, 'rose', 1104], [-1, 'nautilus', 1150], [1, 'cherries', 1158],
     [-1, 'peacock', 1030], [1, 'peacock', 1022], [-1, 'pomegranate', 1172], [1, 'pomegranate', 1166],
   ].map((f, k) => ({ side: f[0], it: byKey[f[1]], ey: f[2], k, ta: T_FIL + 0.05 * k + 0.42 }));
-  const HAIR = ['#FF6F91', '#FFD27A', '#6FF0FF', '#B48CFF'], HAIR_D = [-0.27, -0.09, 0.09, 0.27];
+  const HAIR = ['#FF6F91', '#FFD27A', '#6FF0FF', '#B48CFF'], HAIR_D = [-1.5, -0.5, 0.5, 1.5];
+  /* lanes (world x) through the vitrine so no beam ever crosses a jar above it; target contour angle on the original */
+  const LANE = { butterfly: 310, peacock: 540, snowflake: 770, carnation: 222, rose: 642, tulip: 858, nautilus: 412, pomegranate: 442, cherries: 672 };
+  const AIM = { butterfly: 0.3 * PI, rose: 0.5 * PI, tulip: 0.5 * PI, pomegranate: 0.05 * PI };
+  FILS.forEach((f) => { f.primary = !FILS.some((g) => g.it === f.it && g.k < f.k); });
 
   /* lanterns hang from our eave (L3) */
   const LANTS = [{ x: 205, y: 140, size: 100, ph: 0.0 }, { x: 540, y: 140, size: 108, ph: 1.9 }, { x: 875, y: 140, size: 100, ph: 3.7 }];
@@ -237,28 +243,29 @@
     });
     // street (perspective setts) world y 1240..2640
     SP.street = spriteWorld(-620, 1240, 2320, 1400, 0.8, (x) => {
-      x.fillStyle = '#170C14'; x.fillRect(-620, 1240, 2320, 1400);
+      x.fillStyle = '#150A12'; x.fillRect(-620, 1240, 2320, 1400);
       x.fillStyle = '#3A2434'; x.fillRect(-620, 1248, 2320, 10); x.fillStyle = 'rgba(255,210,180,0.10)'; x.fillRect(-620, 1248, 2320, 2);
-      let y = 1260;
+      const VX = 540, sc = (v) => 0.42 + (v - 1258) / 640;           // ground → screen-x scale (perspective)
       const rng = E.rng(4711);
-      while (y < 2650) {
-        const rh = 6.5 + (y - 1260) * 0.058, gap = Math.max(1.3, rh * 0.14), sc = 1 + (y - 1260) / 640;
-        let cx = -640 - rng() * 30 * sc;
-        while (cx < 1720) {
-          const w = sc * (24 + rng() * 22), h = rh - gap, yy = y + gap * 0.5 + (rng() - 0.5) * gap * 0.6;
-          const v = rng(), base = v < 0.3 ? '#2E1B29' : v < 0.65 ? '#36212F' : v < 0.9 ? '#3E2636' : '#46293A';
-          const r = Math.min(h * 0.45, w * 0.3), j = () => (rng() - 0.5) * h * 0.18;
-          x.beginPath();
-          x.moveTo(cx + r, yy + j()); x.lineTo(cx + w - gap - r, yy + j()); x.quadraticCurveTo(cx + w - gap, yy, cx + w - gap + j() * 0.5, yy + r);
-          x.lineTo(cx + w - gap + j() * 0.5, yy + h - r); x.quadraticCurveTo(cx + w - gap, yy + h, cx + w - gap - r, yy + h + j() * 0.4);
-          x.lineTo(cx + r, yy + h + j() * 0.4); x.quadraticCurveTo(cx, yy + h, cx + j() * 0.5, yy + h - r); x.lineTo(cx + j() * 0.5, yy + r); x.quadraticCurveTo(cx, yy, cx + r, yy); x.closePath();
-          x.fillStyle = E.lin(x, 0, yy, 0, yy + h, [[0, E.shade(base, 0.1)], [0.5, base], [1, E.shade(base, -0.25)]]); x.fill();
-          x.strokeStyle = 'rgba(255,196,160,' + (0.05 + rng() * 0.07).toFixed(3) + ')'; x.lineWidth = Math.max(1, rh * 0.07);
-          x.beginPath(); x.moveTo(cx + r, yy + 1); x.lineTo(cx + w - gap - r, yy + 1); x.stroke();
-          if (rng() < 0.18) { x.fillStyle = 'rgba(255,214,180,0.06)'; x.beginPath(); x.ellipse(cx + w * 0.45, yy + h * 0.35, w * 0.25, h * 0.14, 0, 0, TAU); x.fill(); }
-          cx += w;
+      let v = 1260;
+      while (v < 2650) {
+        const s0 = sc(v), rh = 9 * s0, v1 = v + rh, s1 = sc(v1), gap = Math.max(1.2, rh * 0.12);
+        let u = VX - 1300 / s0 - rng() * 60;
+        while (VX + (u - VX) * s0 < 1720) {
+          const bw = 46 + rng() * 34, u1 = u + bw;
+          const xa0 = VX + (u - VX) * s0, xb0 = VX + (u1 - VX) * s0 - gap, xa1 = VX + (u - VX) * s1, xb1 = VX + (u1 - VX) * s1 - gap;
+          const y0 = v + gap * 0.5, y1 = v1 - gap * 0.5, rv = rng(), base = rv < 0.3 ? '#2E1B29' : rv < 0.65 ? '#36212F' : rv < 0.9 ? '#3E2636' : '#46293A';
+          const r = Math.min((y1 - y0) * 0.4, (xb0 - xa0) * 0.25);
+          x.beginPath(); x.moveTo(xa0 + r, y0); x.lineTo(xb0 - r, y0); x.quadraticCurveTo(xb0, y0, xb0 + (xb1 - xb0) * 0.3, y0 + r);
+          x.lineTo(xb1, y1 - r); x.quadraticCurveTo(xb1, y1, xb1 - r, y1); x.lineTo(xa1 + r, y1); x.quadraticCurveTo(xa1, y1, xa1, y1 - r);
+          x.lineTo(xa0 + (xa1 - xa0) * 0.3, y0 + r); x.quadraticCurveTo(xa0, y0, xa0 + r, y0); x.closePath();
+          x.fillStyle = E.lin(x, 0, y0, 0, y1, [[0, E.shade(base, 0.12)], [0.55, base], [1, E.shade(base, -0.3)]]); x.fill();
+          x.strokeStyle = 'rgba(255,200,165,' + (0.06 + rng() * 0.08).toFixed(3) + ')'; x.lineWidth = Math.max(1, rh * 0.09);
+          x.beginPath(); x.moveTo(xa0 + r, y0 + 1); x.lineTo(xb0 - r, y0 + 1); x.stroke();
+          if (rng() < 0.22) { x.fillStyle = 'rgba(255,214,180,0.09)'; x.beginPath(); x.ellipse((xa0 + xb0) / 2, y0 + (y1 - y0) * 0.35, (xb0 - xa0) * 0.3, (y1 - y0) * 0.16, 0, 0, TAU); x.fill(); }
+          u = u1;
         }
-        y += rh;
+        v = v1;
       }
     });
   }
@@ -310,7 +317,7 @@
     x.fillStyle = E.lin(x, 0, top, 0, top + 80, [[0, '#5A3424'], [0.45, '#3E2216'], [1, '#2A140C']]); x.fillRect(0, top, w, 80);
     x.globalCompositeOperation = 'lighter';
     x.save(); x.translate(660, top + 30); x.scale(1, 0.1); x.fillStyle = E.rad(x, 0, 0, 0, 520, [[0, '#FFB070', 0.42], [0.5, '#E07858', 0.16], [1, '#E07858', 0]]); x.fillRect(-520, -520, 1040, 1040); x.restore();
-    for (const sx of [482, 650, 818]) { x.save(); x.translate(sx, top + 38); x.scale(0.16, 1); x.fillStyle = E.rad(x, 0, 0, 0, 70, [[0, '#FFD09A', 0.55], [1, '#FFD09A', 0]]); x.fillRect(-70, -70, 140, 140); x.restore(); }
+    for (const sx of [482, 650, 818]) { x.save(); x.translate(sx, top + 40); x.scale(1, 0.16); x.fillStyle = E.rad(x, 0, 0, 0, 70, [[0, '#FFD09A', 0.4], [1, '#FFD09A', 0]]); x.fillRect(-70, -70, 140, 140); x.restore(); }
     x.globalCompositeOperation = 'source-over';
     x.fillStyle = 'rgba(255,214,170,0.5)'; x.fillRect(0, top + 76, w, 2.5);
     // front face: carved panels
@@ -323,29 +330,36 @@
     }
     // a brass tray with two tulip-shaped tea glasses (left) and a brass ibrik (right)
     const tray = (cx, cy) => {
-      x.fillStyle = BRASS(x, cx - 120, cx + 120); x.beginPath(); x.ellipse(cx, cy, 120, 22, 0, 0, TAU); x.fill();
-      x.fillStyle = 'rgba(40,20,8,0.45)'; x.beginPath(); x.ellipse(cx, cy - 2, 104, 16, 0, 0, TAU); x.fill();
-      for (const gx of [cx - 42, cx + 38]) {
-        const g = new Path2D(); g.moveTo(gx - 22, cy - 112); g.bezierCurveTo(gx - 24, cy - 70, gx - 8, cy - 64, gx - 10, cy - 40); g.bezierCurveTo(gx - 16, cy - 20, gx - 20, cy - 12, gx - 18, cy - 4);
-        g.lineTo(gx + 18, cy - 4); g.bezierCurveTo(gx + 20, cy - 12, gx + 16, cy - 20, gx + 10, cy - 40); g.bezierCurveTo(gx + 8, cy - 64, gx + 24, cy - 70, gx + 22, cy - 112); g.closePath();
-        x.fillStyle = E.lin(x, 0, cy - 100, 0, cy, [[0, '#E08A3A'], [0.5, '#B0461C'], [1, '#6A2410']]); x.fill(g);
-        x.fillStyle = 'rgba(255,240,220,0.25)'; x.fillRect(gx - 22, cy - 112, 44, 10);
-        x.fillStyle = 'rgba(255,230,190,0.55)'; x.fillRect(gx - 14, cy - 96, 4, 48);
-        x.fillStyle = BRASS(x, gx - 24, gx + 24); x.beginPath(); x.ellipse(gx, cy - 4, 24, 6, 0, 0, TAU); x.fill();
+      x.fillStyle = BRASS(x, cx - 130, cx + 130); x.beginPath(); x.ellipse(cx, cy, 130, 24, 0, 0, TAU); x.fill();
+      x.fillStyle = 'rgba(40,20,8,0.45)'; x.beginPath(); x.ellipse(cx, cy - 2, 112, 17, 0, 0, TAU); x.fill();
+      for (const gx of [cx - 48, cx + 44]) {
+        const gy = cy - 10;
+        x.fillStyle = '#F4EEE4'; x.beginPath(); x.ellipse(gx, gy, 38, 9, 0, 0, TAU); x.fill();          // saucer
+        x.strokeStyle = 'rgba(200,150,60,0.9)'; x.lineWidth = 2; x.beginPath(); x.ellipse(gx, gy, 38, 9, 0, 0, TAU); x.stroke();
+        const g = new Path2D(), hT = 92;                                                                 // ince belli: rim, waist, round bowl
+        g.moveTo(gx - 19, gy - hT); g.bezierCurveTo(gx - 19, gy - hT + 26, gx - 8, gy - hT + 34, gx - 8, gy - 52);
+        g.bezierCurveTo(gx - 8, gy - 40, gx - 17, gy - 30, gx - 17, gy - 16); g.bezierCurveTo(gx - 17, gy - 6, gx - 10, gy - 3, gx, gy - 3);
+        g.bezierCurveTo(gx + 10, gy - 3, gx + 17, gy - 6, gx + 17, gy - 16); g.bezierCurveTo(gx + 17, gy - 30, gx + 8, gy - 40, gx + 8, gy - 52);
+        g.bezierCurveTo(gx + 8, gy - hT + 34, gx + 19, gy - hT + 26, gx + 19, gy - hT); g.closePath();
+        x.fillStyle = 'rgba(255,240,225,0.18)'; x.fill(g);
+        x.save(); x.clip(g); x.fillStyle = E.lin(x, 0, gy - 78, 0, gy, [[0, '#E8873A'], [0.5, '#B8461A'], [1, '#7A2A10']]); x.fillRect(gx - 22, gy - 76, 44, 76); x.restore();
+        x.strokeStyle = 'rgba(255,245,230,0.55)'; x.lineWidth = 1.5; x.stroke(g);
+        x.fillStyle = 'rgba(255,240,220,0.6)'; x.fillRect(gx - 13, gy - 84, 3, 26); x.fillRect(gx - 12, gy - 34, 3, 16);
       }
     };
-    tray(220, top + 50);
-    const ib = (cx, cy) => {
-      const p = new Path2D(); p.moveTo(cx - 16, cy - 150); p.bezierCurveTo(cx - 20, cy - 110, cx - 60, cy - 90, cx - 60, cy - 40); p.bezierCurveTo(cx - 60, cy - 8, cx - 30, cy, cx, cy);
-      p.bezierCurveTo(cx + 30, cy, cx + 60, cy - 8, cx + 60, cy - 40); p.bezierCurveTo(cx + 60, cy - 90, cx + 20, cy - 110, cx + 16, cy - 150); p.closePath();
-      x.fillStyle = BRASS(x, cx - 60, cx + 60); x.fill(p);
-      x.strokeStyle = BRASS(x, cx - 60, cx + 120); x.lineWidth = 9; x.lineCap = 'round';
-      x.beginPath(); x.moveTo(cx + 52, cy - 60); x.quadraticCurveTo(cx + 110, cy - 90, cx + 120, cy - 150); x.stroke();
-      x.beginPath(); x.moveTo(cx - 50, cy - 40); x.quadraticCurveTo(cx - 100, cy - 70, cx - 40, cy - 120); x.stroke();
-      x.fillStyle = BRASS(x, cx - 24, cx + 24); x.beginPath(); x.ellipse(cx, cy - 152, 24, 8, 0, 0, TAU); x.fill();
+    tray(230, top + 52);
+    const ib = (cx, cy) => {      // brass ibrik, spout toward the centre
+      const p = new Path2D(); p.moveTo(cx - 14, cy - 140); p.bezierCurveTo(cx - 18, cy - 100, cx - 54, cy - 84, cx - 54, cy - 38); p.bezierCurveTo(cx - 54, cy - 8, cx - 28, cy, cx, cy);
+      p.bezierCurveTo(cx + 28, cy, cx + 54, cy - 8, cx + 54, cy - 38); p.bezierCurveTo(cx + 54, cy - 84, cx + 18, cy - 100, cx + 14, cy - 140); p.closePath();
+      x.fillStyle = BRASS(x, cx - 54, cx + 54); x.fill(p);
+      x.strokeStyle = BRASS(x, cx - 120, cx + 60); x.lineWidth = 8; x.lineCap = 'round';
+      x.beginPath(); x.moveTo(cx - 46, cy - 56); x.quadraticCurveTo(cx - 96, cy - 84, cx - 104, cy - 138); x.stroke();
+      x.beginPath(); x.moveTo(cx + 46, cy - 36); x.quadraticCurveTo(cx + 92, cy - 66, cx + 36, cy - 112); x.stroke();
+      x.fillStyle = BRASS(x, cx - 22, cx + 22); x.beginPath(); x.ellipse(cx, cy - 142, 22, 7, 0, 0, TAU); x.fill();
+      x.fillStyle = 'rgba(255,240,200,0.5)'; x.fillRect(cx - 34, cy - 80, 5, 48);
     };
-    ib(1100, top + 56);
-    const o = E.canvas(w, h); o.x.filter = 'blur(7px)'; o.x.drawImage(b.c, 0, 0);
+    ib(1000, top + 56);
+    const o = E.canvas(w, h); o.x.filter = 'blur(3px)'; o.x.drawImage(b.c, 0, 0);
     SP.counter = { c: o.c, top };
   }
 
@@ -546,46 +560,44 @@
 
   /* cloud banks for the final tilt: placed by (layer p, time, screen x/y at that time, scale, alpha, sprite) */
   const CLOUDS = [
-    { p: 0.5, t: 47.4, x: 250, y: 1080, s: 1.15, a: 0.9, i: 0, back: true },
-    { p: 0.5, t: 47.4, x: 900, y: 1180, s: 1.05, a: 0.85, i: 1, back: true },
-    { p: 0.62, t: 47.2, x: 560, y: 980, s: 1.35, a: 0.7, i: 2, back: true },
-    { p: 1.3, t: 46.95, x: 300, y: 860, s: 1.25, a: 0.62, i: 1, back: false, blur: 1 },
-    { p: 1.45, t: 47.12, x: 840, y: 700, s: 1.45, a: 0.58, i: 0, back: false, blur: 1 },
-    { p: 1.0, t: 47.45, x: 380, y: 1620, s: 1.9, a: 0.95, i: 2, back: false, low: true },
-    { p: 1.0, t: 47.45, x: 900, y: 1700, s: 1.7, a: 0.95, i: 1, back: false, low: true },
+    { p: 0.92, t: 47.3, x: 250, y: 1060, s: 1.25, a: 1, i: 0 },
+    { p: 0.92, t: 47.3, x: 860, y: 1130, s: 1.2, a: 1, i: 1 },
+    { p: 0.95, t: 47.3, x: 540, y: 1320, s: 1.6, a: 1, i: 2 },
+    { p: 0.8, t: 47.3, x: 140, y: 820, s: 0.8, a: 1, i: 1 },
+    { p: 0.8, t: 47.3, x: 960, y: 860, s: 0.75, a: 1, i: 2 },
   ];
   function setupPlacements() {
     for (const c of CLOUDS) { const L = lp(camAt(c.t), c.p); c.W = unscr(L, c.x, c.y); c.ws = c.s / L.z; }
-    const Lw = lp(camAt(42.3), PS); SP.skyW = unscr(Lw, -1100, 585); SP.skyS = 1 / Lw.z;
+    const Lw = lp(camAt(42.3), PS); SP.skyW = unscr(Lw, -1100, 640); SP.skyS = 1 / Lw.z;
   }
 
   /* ---------------- per-frame helpers ---------------- */
   function itemWorld(it) { return [it.jx + it.cl[0], it.fy + it.cl[1]]; }
+  /* the originals rise from behind the vitrine (seen through its back glass) into the sky as the camera pulls back */
+  const riseY = (t) => 620 * (1 - E.ease.inOutSine(clamp((t - T_ORIG) / 1.25)));
+  const oPos = (it, t) => [it.O[0], it.O[1] + riseY(t)];
   function origBreath(it, t) { return 1 + 0.015 * Math.sin(t * TAU / 3.2 + it.i * 0.9); }
-  function ignite(it, t) { return pp(t, 45.58 + it.rank * 0.022, 45.95 + it.rank * 0.022, 'outCubic'); }
+  function ignite(it, t) { return pp(t, T_TURN + T_BEND * 0.8, T_TURN + T_BEND + 0.3, 'outCubic'); }
   function origAlpha(it, t) {
-    const a0 = 0.4 * pp(t, T_ORIG + it.rank * 0.03, T_ORIG + 0.8 + it.rank * 0.03, 'inOutSine');
+    const a0 = 0.4 * pp(t, T_ORIG + it.rank * 0.02, T_ORIG + 0.45 + it.rank * 0.02, 'inOutSine');
     const a1 = 0.14 * pp(t, T_SOLID, T_SOLID1, 'inOutSine');
-    const endDim = 1 - 0.4 * pp(t, 46.6, 47.3, 'inOutSine');            // let the gate carry the end
-    return (a0 + a1 + 0.26 * ignite(it, t)) * (it.hero ? 1 : 0.45) * endDim;
+    const endDim = 1 - 0.8 * pp(t, 46.75, 47.2, 'inOutSine');           // ≤ 0.2 while the gate forms
+    return (a0 + a1 + 0.26 * ignite(it, t)) * (it.hero ? 1 : 0.62) * endDim;
   }
   /* far-world point on the original's contour at screen angle a */
   function origPt(it, t, a) {
-    const r = it.polarAt(a - it.orot) * it.M / RES * origBreath(it, t);
-    return [it.O[0] + Math.cos(a) * r, it.O[1] + Math.sin(a) * r];
+    const r = it.polarAt(a - it.orot) * it.M / RES * origBreath(it, t), O = oPos(it, t);
+    return [O[0] + Math.cos(a) * r, O[1] + Math.sin(a) * r];
   }
 
   function gateState(t, cam) {
-    const pRef = E.ease.inOutCubic((47.4 - T_TILT0) / (T_TILT1 - T_TILT0));
-    const y = 520 + (cam.tilt - pRef) * 1000;
-    const s = 0.9 + 0.12 * cam.tilt;
-    const pass = E.ease.inCubic(clamp((t - T_PASS) / (T1 - T_PASS)));
-    const sp = s * (1 + 6.5 * pass);
-    const oc = [540, y + (-GT.h / 2 + 30) * s];
-    const org = [540, y + (GT.h / 2) * s];
-    return { s: sp, pass, oc, org: [oc[0] + (org[0] - oc[0]) * (sp / s), oc[1] + (org[1] - oc[1]) * (sp / s)], G: [oc[0], oc[1] - 40 * s] };
+    // the beams' meeting point descends into view with the rise, then the gate forms there, fixed (apex ≥ y 250)
+    const s0 = 0.86, pass = E.ease.inCubic(clamp((t - T_PASS) / (T1 - T_PASS))), sp = s0 * (1 + 6.5 * pass);
+    const oc = [540, lerp(-280, 520, E.ease.outCubic(clamp((t - 45.95) / 0.95)))];
+    const openC = -GT.h + GT.w * 0.075 * 1.6;                    // opening apex (local); opening centre = apexY / 2
+    const org = [oc[0], oc[1] - (openC / 2) * sp];
+    return { s: sp, pass, oc, org, G: oc };
   }
-
   /* ---------------- drawing: background ---------------- */
   function drawSky(ctx, t, cam) {
     inL(ctx, lp(cam, 0.05), (c) => {
@@ -621,7 +633,8 @@
     const a = origAlpha(it, t); if (a <= 0.003) return;
     const o = it.orig, s = origBreath(it, t) / RES;
     c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = Math.min(1, a);
-    c.translate(it.O[0], it.O[1]); c.rotate(it.orot); c.scale(s, s);
+    const O = oPos(it, t);
+    c.translate(O[0], O[1]); c.rotate(it.orot); c.scale(s, s);
     c.drawImage(o.c, -o.w / 2, -o.h / 2);
     c.restore();
   }
@@ -640,24 +653,18 @@
       c.restore();
     });
   }
-  function drawClouds(ctx, t, cam, back) {
-    const tl = cam.tilt;
-    const vis = sm((tl - 0.04) / 0.25);
+  function drawClouds(ctx, t, cam) {
+    const vis = sm((cam.tilt - 0.02) / 0.15);
     if (vis <= 0.003) return;
     for (const cl of CLOUDS) {
-      if (cl.back !== back) continue;
-      const L = lp(cam, cl.p), spr = SP.clouds[cl.i], drift = 30 * Math.sin(t * 0.3 + cl.i);
-      const a = cl.a * vis * (back || cl.low ? 1 : 1 - sm((tl - 0.86) / 0.12));
-      if (a <= 0.003) continue;
+      const L = lp(cam, cl.p), spr = SP.clouds[cl.i], drift = 24 * Math.sin(t * 0.3 + cl.i);
       inL(ctx, L, (c) => {
-        c.save(); c.globalAlpha = a; c.translate(cl.W[0] + drift, cl.W[1]); c.scale(cl.ws, cl.ws);
-        if (cl.blur) c.filter = 'blur(4px)';
+        c.save(); c.globalAlpha = cl.a * vis; c.translate(cl.W[0] + drift, cl.W[1]); c.scale(cl.ws, cl.ws);
         c.drawImage(spr.c, -spr.w / 2, -spr.h * 0.62, spr.w, spr.h);
         c.restore();
       });
     }
   }
-
   /* ---------------- drawing: the shop ---------------- */
   function sampleContent(it, t, fill) {
     return (c) => {
@@ -724,7 +731,7 @@
         x = (1 - k) * (1 - k) * it.g[0] + 2 * (1 - k) * k * c[0] + k * k * end[0];
         y = (1 - k) * (1 - k) * it.g[1] + 2 * (1 - k) * k * c[1] + k * k * end[1];
         s *= lerp(it.g[2], 1, k); a = 0.62;
-      } else { a = 0.62 * pp(t, 37.72, 38.12, 'outCubic'); s *= lerp(0.82, 1, pp(t, 37.72, 38.2, 'outCubic')); }
+      } else { a = 0.62 * pp(t, 38.04, 38.3, 'outCubic'); s *= lerp(0.85, 1, pp(t, 38.04, 38.32, 'outCubic')); }
       a *= 0.86 + 0.14 * Math.sin(t * 9 + it.i * 1.7);
       a *= 1 - E.ease.inCubic(fillK);
       a += 0.6 * E.env(t, it.tLand - 0.04, it.tLand + 0.2, 0.06, 0.14) * (1 - fillK);
@@ -754,7 +761,7 @@
     ctx.restore();
   }
   function drawStreetLight(ctx, t, L3) {
-    const g = E.glossActive(t) ? 0.8 : 1, lit = pp(t, 39.0, 39.8);
+    const g = 1 - 0.2 * glossK(t), lit = pp(t, 39.0, 39.8);
     inL(ctx, L3, (c) => {
       c.save(); c.globalCompositeOperation = 'lighter';
       const p = new Path2D(); p.moveTo(150, 1262); p.lineTo(930, 1262); p.lineTo(1300, 2300); p.lineTo(-220, 2300); p.closePath();
@@ -763,7 +770,9 @@
         const sh = 0.85 + 0.15 * Math.sin(t * 2.1 + x * 0.05);
         c.save(); c.translate(x, 1272); c.scale(w / 100, 1);
         c.fillStyle = E.lin(c, 0, 0, 0, 700, [[0, col, a0 * sh], [0.5, col, a0 * 0.4 * sh], [1, col, 0]]);
-        c.beginPath(); c.moveTo(-100, 0); c.lineTo(100, 0); c.lineTo(60, 700); c.lineTo(-60, 700); c.closePath(); c.fill(); c.restore();
+        c.beginPath(); c.moveTo(-100, 0); c.lineTo(100, 0); c.lineTo(60, 700); c.lineTo(-60, 700); c.closePath(); c.fill();
+        c.fillStyle = E.lin(c, 0, 0, 0, 520, [[0, col, a0 * 1.6 * sh], [1, col, 0]]);
+        c.beginPath(); c.moveTo(-14, 0); c.lineTo(14, 0); c.lineTo(8, 520); c.lineTo(-8, 520); c.closePath(); c.fill(); c.restore();
       };
       for (const x of COLX) refl(x, 62, 0.08 * g, '#FFD9B0');
       for (const ln of LANTS) refl(ln.x, 26, 0.1 * g * lit, '#FFB050');
@@ -818,15 +827,16 @@
     const solid = pp(t, T_SOLID, T_SOLID1, 'inOutSine');
     const alpha = lerp(0.45, 0.6, solid) * (1 - 0.55 * pp(t, 43.05, 43.6, 'inOutSine')) * (1 - pp(t, 44.6, 45.25, 'inOutSine'));
     if (alpha <= 0.003) return;
-    const gap = lerp(9, 0, solid);
+    const gap = lerp(9, 0, solid), roofY = scr(L3, 540, 0)[1] - 6;
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
     let n = 0;
     for (const key in PLINES) {
       const it = byKey[key], C = itemWorld(it);
       PLINES[key].forEach((an, k) => {
+        const rs = it.polarAt(an), a = scr(L3, C[0] + Math.cos(an) * rs, C[1] + Math.sin(an) * rs), b = scr(L1, ...origPt(it, t, an));
+        if (b[1] > roofY || b[0] < 8 || b[0] > W - 8) return;           // only lines that land on a visible original
         const dr = E.ease.outCubic(clamp((t - T_LINES - n++ * 0.03) / 0.5));
         if (dr <= 0) return;
-        const rs = it.polarAt(an), a = scr(L3, C[0] + Math.cos(an) * rs, C[1] + Math.sin(an) * rs), b = scr(L1, ...origPt(it, t, an));
         const ex = lerp(a[0], b[0], dr), ey = lerp(a[1], b[1], dr);
         ctx.setLineDash([]); ctx.strokeStyle = E.rgba('#FFE3A3', alpha * 0.18); ctx.lineWidth = 5;
         ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(ex, ey); ctx.stroke();
@@ -852,68 +862,78 @@
   function filPts(f, t, L3, cam) {
     const it = f.it, C = itemWorld(it), Cs = scr(L3, C[0], C[1]), z = L3.z;
     const Es = [f.side < 0 ? -40 : W + 40, f.ey + TILT * cam.tilt * z];
-    const Hs = [Cs[0] + f.side * JRW * 0.9 * z, Cs[1] + 6 * z];
-    const wv = 7 * Math.sin(t * 1.6 + f.k * 1.3);
-    const lim = 1182 + TILT * cam.tilt * z;
+    // bottom-row jars are hit high on the dome so nothing reaches the gloss band
+    const hy = it.r === 2 ? scr(L3, 0, it.jy - JH * 0.62)[1] : Cs[1] + 6 * z;
+    const Hs = [Cs[0] + f.side * JRW * 0.88 * z, hy];
+    const wv = 7 * Math.sin(t * 1.6 + f.k * 1.3), lim = 1182 + TILT * cam.tilt * z;
     const m1 = [lerp(Es[0], Hs[0], 0.34), Math.min(lim, lerp(Es[1], Hs[1], 0.34) + 24 + wv)];
     const m2 = [lerp(Es[0], Hs[0], 0.7), Math.min(lim, lerp(Es[1], Hs[1], 0.7) + 10 - wv * 0.5)];
-    return { pts: [Es, m1, m2, Hs], Hs, Xs: [Cs[0] - f.side * JRW * 0.9 * z, Cs[1] + 6 * z], Cs, z };
+    return { pts: [Es, m1, m2, Hs], Hs, Cs, z };
+  }
+  /* the up-beam: jar knob → own lane → above the vitrine → a point ON the sample's own original */
+  function beamRoute(it, t, L1, L3) {
+    const lx = LANE[it.key], top = it.jy - JH - 6;
+    const J0 = scr(L3, it.jx, top);
+    const J1 = it.r === 0 ? scr(L3, lx, top - 70) : scr(L3, lx, top - 16);
+    const J2 = scr(L3, lx, 470), J3 = scr(L3, lx, 300);
+    const Oc = scr(L1, ...oPos(it, t));
+    const aim = AIM[it.key] !== undefined ? AIM[it.key] : Math.atan2(J3[1] - Oc[1], J3[0] - Oc[0]);
+    const T = scr(L1, ...origPt(it, t, aim));
+    const S4 = [lerp(J3[0], T[0], 0.35), lerp(J3[1], T[1], 0.55)];
+    return { pts: [J0, J1, J2, J3, S4, T], T };
   }
   function drawGazes(ctx, t, cam, L1, L3) {
     if (t < T_FIL) return;
     const focus = pp(t, T_FOCUS, T_FOCUS + 0.35, 'inOutSine');
-    const fade = 1 - pp(t, 46.5, 47.3, 'inOutSine');
+    const fade = 1 - pp(t, 46.55, 47.25, 'inOutSine');
     if (fade <= 0) return;
-    const turnRaw = clamp((t - T_TURN) / 0.6), turn = turnRaw <= 0 ? 0 : E.ease.spring(turnRaw), kc = clamp(turn);
+    const kb = E.ease.outCubic(clamp((t - T_TURN) / T_BEND));            // the visible 0.65 s bend
     for (const f of FILS) {
       const st = T_FIL + 0.05 * f.k, dr = E.ease.outCubic(clamp((t - st) / 0.42));
       if (dr <= 0) continue;
-      const G = filPts(f, t, L3, cam);
-      const inA = lerp(0.72, 1, focus) * fade * (1 - 0.82 * pp(t, 45.4, 45.95, 'inOutSine'));
-      A.filament(ctx, G.pts, { t: t + f.k * 0.3, draw: dr, w: lerp(2.5, 1.5, focus) * Math.min(1, 0.6 + L3.z * 0.5), halo: lerp(9, 7, focus), col: '#FFE3A3', flow: 70, alpha: inA, head: dr < 1 });
-      if (t > f.ta && t < f.ta + 0.6) A.sparks(ctx, t, { x: G.Hs[0], y: G.Hs[1], t0: f.ta, n: 10, seed: 50 + f.k, col: '#FFE3A3', speed: 170, life: 0.5, gravity: 140, size: 1.5 });
-      if (t > f.ta - 0.05 && t < f.ta + 0.35) S.sparkle(ctx, G.Hs[0], G.Hs[1], 13 * E.env(t, f.ta - 0.05, f.ta + 0.35, 0.05, 0.3), 1, '#FFF6E0', t * 2);
-      const thr = pp(t, T_PRISM + f.k * 0.006, T_PRISM + 0.12 + f.k * 0.006, 'outCubic');
-      if (thr <= 0) continue;
-      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
-      ctx.strokeStyle = E.rgba('#FFFFFF', 0.75 * fade * (1 - 0.6 * kc)); ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(G.Hs[0], G.Hs[1]); ctx.lineTo(lerp(G.Hs[0], G.Xs[0], thr), lerp(G.Hs[1], G.Xs[1], thr)); ctx.stroke();
-      ctx.restore();
-      const fan = pp(t, T_PRISM + 0.1, T_PRISM + 0.45, 'outCubic');
-      if (fan <= 0) continue;
-      const th0 = f.side < 0 ? 0 : PI, dth = f.side < 0 ? -PI / 2 : PI / 2, X = G.Xs;
-      // target: the point of the sample's own original that faces the jar
-      const Oc = scr(L1, f.it.O[0], f.it.O[1]), aim = Math.atan2(G.Cs[1] - Oc[1], G.Cs[0] - Oc[0]);
-      const tgt = scr(L1, ...origPt(f.it, t, aim));
-      const Lf = 132 * G.z * fan, L2 = Math.hypot(tgt[0] - X[0], tgt[1] - X[1]), Lc = lerp(Lf, L2, kc);
-      const hairA = (1 - sm(clamp((turnRaw - 0.45) / 0.4))) * fade;
-      for (let h = 0; h < 4; h++) {
-        if (hairA <= 0.003) break;
-        const th = th0 + HAIR_D[h] * (1 - kc) + dth * turn;
-        const P1 = [X[0] + Math.cos(th0 + dth * turn) * Lc * 0.4, X[1] + Math.sin(th0 + dth * turn) * Lc * 0.4];
-        let P2 = [X[0] + Math.cos(th) * Lc, X[1] + Math.sin(th) * Lc];
-        P2 = [lerp(P2[0], tgt[0], kc * kc), lerp(P2[1], tgt[1], kc * kc)];
-        hair(ctx, X, P1, P2, E.mix(HAIR[h], '#FFD27A', kc), 0.95 * hairA, t + h * 0.21);
+      const G = filPts(f, t, L3, cam), it = f.it, hero = it.hero;
+      const R = t >= T_PRISM ? beamRoute(it, t, L1, L3) : null;
+      // prism: from the knob a widening 4-colour ribbon rises along the jar's own lane
+      const fan = pp(t, T_PRISM, T_PRISM + 0.4, 'outCubic') * (1 - sm((t - T_TURN - 0.15) / 0.45));
+      if (R && f.primary && fan > 0.003) {
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        for (let h = 0; h < 4; h++) {
+          const off = (q) => [R.pts[q][0] + HAIR_D[h] * [0, 5, 11, 19][q] * (1 - kb), R.pts[q][1]];
+          const pl = A.sampleCurve([off(0), off(1), off(2), off(3)], 24), n = Math.max(2, Math.round(pl.length * fan));
+          const path = new Path2D(); pl.slice(0, n).forEach((q, i) => (i ? path.lineTo(q[0], q[1]) : path.moveTo(q[0], q[1])));
+          ctx.strokeStyle = E.rgba(HAIR[h], 0.25 * fade); ctx.lineWidth = 6; ctx.stroke(path);
+          ctx.strokeStyle = E.rgba(HAIR[h], 0.9 * fade); ctx.lineWidth = 1.8; ctx.stroke(path);
+        }
+        ctx.restore();
       }
-      if (kc > 0.3) {
-        const P1 = [X[0], X[1] - Math.min(L2 * 0.4, 260)];
-        const goldA = sm((turnRaw - 0.3) / 0.45) * fade * (f.it.hero ? 1 : 0.75);
-        A.filament(ctx, [X, P1, tgt], { t, w: f.it.hero ? 2 : 1.4, halo: 10, col: '#FFD27A', flow: 90, draw: clamp(kc * 1.05), alpha: goldA, head: kc < 0.98 });
+      if (t < T_TURN || !R) {
+        const inA = lerp(0.72, 1, focus) * fade;
+        A.filament(ctx, G.pts, { t: t + f.k * 0.3, draw: dr, w: lerp(2.5, 1.5, focus) * Math.min(1, 0.6 + L3.z * 0.5), halo: lerp(9, 7, focus), col: '#FFE3A3', flow: 70, alpha: inA, head: dr < 1 });
+        if (t > f.ta && t < f.ta + 0.6) A.sparks(ctx, t, { x: G.Hs[0], y: G.Hs[1], t0: f.ta, n: 10, seed: 50 + f.k, col: '#FFE3A3', speed: 170, life: 0.5, gravity: 140, size: 1.5 });
+        if (t > f.ta - 0.05 && t < f.ta + 0.35) S.sparkle(ctx, G.Hs[0], G.Hs[1], 13 * E.env(t, f.ta - 0.05, f.ta + 0.35, 0.05, 0.3), 1, '#FFF6E0', t * 2);
+        continue;
+      }
+      // MORPH: the gaze filament itself swings up — anchored at the jar, its far end travels from the street to the original
+      const pl = A.sampleCurve(G.pts, 40), Fr = [1, 0.8, 0.6, 0.4, 0.2, 0].map((u) => pl[Math.round(u * (pl.length - 1))]).reverse();
+      const pts = Fr.map((q, i) => [lerp(q[0], R.pts[i][0], kb), lerp(q[1], R.pts[i][1], kb)]);
+      const a = (f.primary ? 1 : 1 - kb) * fade * (hero ? 1 : 0.7);
+      A.filament(ctx, pts, { t, w: lerp(1.5, hero ? 2.3 : 1.4, kb), halo: hero ? 11 : 7, col: E.hexOf(E.mix('#FFE3A3', '#FFD27A', kb)), flow: 90, alpha: a, head: false });
+      if (f.primary && kb < 0.98) S.sparkle(ctx, pts[5][0], pts[5][1], 10, 0.9 * fade, '#FFF6E0', t * 3);
+      if (f.primary) {   // the beam lands ON its original as it ignites
+        const hit = E.env(t, T_TURN + T_BEND * 0.75, T_TURN + T_BEND + 0.6, 0.12, 0.45);
+        if (hit > 0) { S.light(ctx, R.T[0], R.T[1], hero ? 120 : 70, '#FFE7B0', 0.7 * hit); S.sparkle(ctx, R.T[0], R.T[1], (hero ? 18 : 11) * hit, 1, '#FFFFFF', t); }
       }
     }
   }
   function drawRise(ctx, t, cam, L1) {
-    if (t < 45.9) return;
-    const gs = gateState(t, cam), G = gs.G;
-    const fade = 1 - pp(t, 47.45, 47.75);
+    if (t < T_TURN + T_BEND) return;
+    const G = gateState(t, cam).G, fade = 1 - pp(t, 47.45, 47.75);
     for (const it of ITEMS) {
-      const dr = E.ease.inOutSine(clamp((t - 45.92 - it.rank * 0.035) / 0.95));
+      const dr = E.ease.inOutSine(clamp((t - T_TURN - T_BEND - it.rank * 0.035) / 0.95));
       if (dr <= 0) continue;
-      const Oc = scr(L1, it.O[0], it.O[1]), aim = Math.atan2(G[1] - Oc[1], G[0] - Oc[0]);
-      const c = scr(L1, ...origPt(it, t, aim));
-      const m1 = [lerp(c[0], G[0], 0.2), c[1] - 160], m2 = [lerp(c[0], G[0], 0.62), lerp(c[1], G[1], 0.62)];
-      A.filament(ctx, [c, m1, m2, G], { t, w: it.hero ? 2.2 : 1.3, halo: it.hero ? 11 : 6, col: '#FFD27A', flow: 120, draw: dr, alpha: (it.hero ? 0.95 : 0.6) * fade, head: dr < 1 });
-      if (t > 45.62 && t < 46.4) S.light(ctx, c[0], c[1], it.hero ? 130 : 70, '#FFE7B0', 0.5 * E.env(t, 45.62 + it.rank * 0.022, 46.4, 0.08, 0.4));
+      const c = scr(L1, ...origPt(it, t, -PI / 2));
+      const m1 = [lerp(c[0], G[0], 0.15), c[1] - 120], m2 = [lerp(c[0], G[0], 0.65), lerp(c[1], G[1], 0.6)];
+      A.filament(ctx, [c, m1, m2, G], { t, w: it.hero ? 2.1 : 1.2, halo: it.hero ? 10 : 6, col: '#FFD27A', flow: 120, draw: dr, alpha: (it.hero ? 0.9 : 0.5) * fade, head: dr < 1 });
     }
   }
   function gateHalves() {
@@ -940,30 +960,33 @@
   function drawGate(ctx, t, cam) {
     const gs = gateState(t, cam), G = gs.G, s = gs.s;
     const conv = pp(t, 46.5, 46.95, 'inOutSine');
-    const trace = pp(t, T_GATE, T_GATE + 0.4, 'inOutSine'), body = pp(t, T_GATE + 0.18, T_GATE + 0.6, 'outCubic');
+    const trace = pp(t, T_GATE, T_GATE + 0.42, 'inOutSine'), body = pp(t, T_GATE + 0.18, T_GATE + 0.6, 'outCubic');
     if (conv > 0) {
       S.light(ctx, G[0], G[1], 700, '#FFC890', 0.12 * conv + 0.06 * body);
       S.light(ctx, G[0], G[1], 150, '#FFF6E0', 0.55 * conv * (1 - 0.8 * body));
     }
     if (trace <= 0) return;
     if (!GATE_H) GATE_H = gateHalves();
-    const g = SP.gate;
+    const g = SP.gate, ap = GG.apexY;
     ctx.save(); ctx.translate(gs.org[0], gs.org[1]); ctx.scale(s, s);
     ctx.globalCompositeOperation = 'lighter';
     if (body > 0) {
-      ctx.globalAlpha = body;
-      ctx.fillStyle = E.lin(ctx, 0, -GT.h, 0, 0, [[0, '#FFFFFF', 0.32], [0.45, '#FFF0D0', 0.16], [1, '#FFD9A0', 0.06]]); ctx.fill(SP.gateOpen);
-      ctx.globalAlpha = 0.32 * body; ctx.drawImage(g.glow, -g.ox, -g.oy, g.w, g.h);
-      ctx.globalAlpha = body; ctx.drawImage(g.c, -g.ox, -g.oy, g.w, g.h);
+      // portal light: bright under the apex, fading out toward the threshold (no hard bottom edge)
+      ctx.globalAlpha = body; ctx.fillStyle = E.lin(ctx, 0, ap, 0, 0, [[0, '#FFFFFF', 0.42], [0.5, '#FFF0D0', 0.16], [1, '#FFD9A0', 0]]); ctx.fill(SP.gateOpen);
+      ctx.globalAlpha = 0.25 * body; ctx.drawImage(g.c, -g.ox, -g.oy, g.w, g.h);        // the frame stays a whisper
     }
     ctx.globalAlpha = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    for (const hp of GATE_H) {
+    GATE_H.forEach((hp, i) => {
+      const k = i < 2 ? 1 : 0.25;                                    // pointed arch bright, outer box faint
       ctx.setLineDash([hp.len * trace, hp.len + 10]);
-      ctx.strokeStyle = E.rgba('#FFE7B0', 0.16); ctx.lineWidth = 16 / s; ctx.stroke(hp.p);
-      ctx.strokeStyle = E.rgba('#FFF6E0', 0.9); ctx.lineWidth = 3 / s; ctx.stroke(hp.p);
-    }
+      ctx.strokeStyle = E.rgba('#FFE7B0', 0.2 * k); ctx.lineWidth = 22 / s; ctx.stroke(hp.p);
+      ctx.strokeStyle = E.rgba('#FFF6E0', 0.95 * k); ctx.lineWidth = 3.2 / s; ctx.stroke(hp.p);
+    });
     ctx.setLineDash([]);
-    if (gs.pass > 0) { ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = Math.min(1, Math.pow(gs.pass, 0.6)); ctx.fillStyle = '#FFFDF7'; ctx.fill(SP.gateOpen); }
+    if (gs.pass > 0) {
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = Math.min(1, Math.pow(gs.pass, 0.6));
+      ctx.fillStyle = E.lin(ctx, 0, ap, 0, 0, [[0, '#FFFDF7', 1], [0.7, '#FFFDF7', 0.85], [1, '#FFFDF7', 0.4]]); ctx.fill(SP.gateOpen);
+    }
     ctx.restore();
     const fl = E.ease.inQuad(pp(t, 47.38, T1, 'linear'));
     if (fl > 0) { ctx.save(); ctx.fillStyle = E.rgba('#FFFDF7', 0.95 * fl); ctx.fillRect(0, 0, W, H); ctx.restore(); }
@@ -975,23 +998,27 @@
     ctx.drawImage(SP.counter.c, x, top - SP.counter.top);
   }
   function drawLatticeFG(ctx, t) {
-    if (t > 38.05) return;
-    const k = clamp((t - T0) / (38.05 - T0));
-    const s = 0.9 * Math.exp(4.9 * (t - T0));
-    const a = 1 - pp(t, 37.88, 38.04, 'inQuad');
+    // continues G's push through the star window: a crisp walnut kafes with a straight-edged star frame scaling past the edges
+    if (t > 37.99) return;
+    const R = 500 * Math.exp(5.2 * (t - T0)), s = R / 500;
+    const a = 1 - pp(t, 37.82, 37.97, 'inQuad');
     if (a <= 0.003) return;
     E.layer(ctx, (l) => {
-      l.save(); l.translate(540, 780); l.scale(s, s); l.rotate(0.03 * (1 - k));
-      A.lattice(l, { w: 1500, h: 2600, cell: 74, lineW: 12.5, stroke: '#24140C' });
-      l.globalCompositeOperation = 'destination-out'; l.fillStyle = '#000';
-      l.fill(S.starPath(330, 8, 0.8, PI / 8));
+      const star = new Path2D(); star.addPath(S.starPath(R, 8, 0.82, PI / 8), new DOMMatrix().translate(540, 760));
+      const outer = new Path2D(); outer.rect(-300, -300, W + 600, H + 600); outer.addPath(star);
+      l.save(); l.clip(outer, 'evenodd');
+      l.save(); l.translate(540, 760); l.scale(s, s);
+      A.lattice(l, { w: (W + 700) / s, h: (H + 900) / s, cell: 78, lineW: 14, stroke: '#4A2E1C' });
       l.restore();
       l.globalCompositeOperation = 'source-atop';
-      l.fillStyle = E.rad(l, 540, 800, 300 * s, 700 * s, [[0, '#E0905A', 0.18], [1, '#E0905A', 0]]); l.fillRect(0, 0, W, H);
-      l.fillStyle = 'rgba(20,8,14,0.3)'; l.fillRect(0, 0, W, H);
-    }, { lo: true, blur: lerp(2, 15, E.ease.inCubic(k)), alpha: a });
+      l.fillStyle = E.rad(l, 540, 760, R * 0.9, R * 1.9, [[0, '#E0905A', 0.22], [1, '#E0905A', 0]]); l.fillRect(0, 0, W, H);
+      l.restore();
+      l.lineJoin = 'miter';
+      l.strokeStyle = '#2E1A10'; l.lineWidth = 40 * s; l.stroke(star);
+      l.strokeStyle = E.lin(l, 0, 760 - R, 0, 760 + R, [[0, '#8E6444'], [0.5, '#6E4A32'], [1, '#4A2E1C']]); l.lineWidth = 26 * s; l.stroke(star);
+      l.strokeStyle = 'rgba(232,194,122,0.85)'; l.lineWidth = Math.max(1.5, 3 * s); l.stroke(star);
+    }, { lo: true, blur: lerp(0.8, 3.5, pp(t, T0, 37.95, 'inQuad')), alpha: a });
   }
-
   /* ---------------- scene ---------------- */
   E.scene({
     id: 'H_numune', t0: T0, t1: T1,
@@ -1007,14 +1034,14 @@
     draw(ctx, t) {
       t = clamp(t, T0, T1);
       const cam = camAt(t), L1 = lp(cam, PF), L3 = lp(cam, 1);
-      const fb = focusBlur(t), mb = tiltBlur(t), roseApart = fb > 0.3;
+      const fb = focusBlur(t), roseApart = fb > 0.3;
       drawSky(ctx, t, cam);
       drawFar(ctx, t, cam);
       drawSkyline(ctx, t, cam);
-      drawClouds(ctx, t, cam, true);
+      drawClouds(ctx, t, cam);
       drawShop(ctx, t, cam, roseApart);
       // depth of field: rack focus onto the rose jar / softness during the fast tilt
-      const blur = Math.max(fb, mb);
+      const blur = fb;
       if (blur > 0.3) E.layer(ctx, (l) => l.drawImage(ctx.canvas, 0, 0, W, H), { lo: true, blur });
       if (roseApart) inL(ctx, L3, (c) => drawJar(c, ROSE, t, jarState(ROSE, t), jarGlow(ROSE, t)));
       const pulse = E.env(t, 40.74, 41.5, 0.12, 0.5);
@@ -1023,14 +1050,14 @@
       drawGazes(ctx, t, cam, L1, L3);
       drawRadiance(ctx, t, cam);
       drawRise(ctx, t, cam, L1);
-      drawClouds(ctx, t, cam, false);
       inL(ctx, lp(cam, 1.1), (c) => S.dust(c, t, { n: 30, seed: 377, x: -200, y: 0, w: 1480, h: 1250, col: '#FFD9A0', rMin: 0.9, rMax: 2.4, speed: 9, alpha: 0.32 * pp(t, 39.0, 39.8) }));
       drawCounter(ctx, t, cam);
       drawGate(ctx, t, cam);
       drawLatticeFG(ctx, t);
-      if (E.glossActive(t)) {
+      const gk = glossK(t);
+      if (gk > 0.002) {
         ctx.save(); ctx.translate(540, 1400); ctx.scale(1, 220 / 640);
-        ctx.fillStyle = E.rad(ctx, 0, 0, 0, 640, [[0, '#080612', 0.2], [1, '#080612', 0]]); ctx.fillRect(-640, -640, 1280, 1280);
+        ctx.fillStyle = E.rad(ctx, 0, 0, 0, 640, [[0, '#080612', 0.2 * gk], [1, '#080612', 0]]); ctx.fillRect(-640, -640, 1280, 1280);
         ctx.restore();
       }
       ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.1; ctx.fillStyle = '#FF9A4A'; ctx.fillRect(0, 0, W, H); ctx.restore();

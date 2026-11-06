@@ -6,8 +6,8 @@ Uretir (blender/tex/):
   sirt_maske.png       sirt altin maskesi (yay boyunca u, yukseklik v)
   cilt_sirt_*.png      arka plandaki diger ciltlerin sirt maskeleri
   sayfa81.png          sag sayfa (s. 81) - krem kagit + murekkep
-  sayfa80.png          sol sayfa (s. 80) - "greeked" satirlar
-  yaprak.png           ucusan yapraklar icin greeked sayfa
+  sayfa80.png          sol sayfa (s. 80) - ayni pasajdan (s.81 metni + Hasiye) gercek harfler, bulanik kalacak
+  yaprak.png / yaprak_arka.png   ucusan yapraklarin on/arka yuzu - ayni pasajdan gercek harfler
   params.json          kitap.py'nin kullandigi olculer
 
 HTML/SVG -> Chromium (Playwright, cek.mjs) ile PNG; sonra numpy ile islenir.
@@ -293,7 +293,7 @@ def spine_svg(width_mm, title_lines, sub_lines=None, auth_lines=None, title_size
 BODY = ("Hem anlarsın ki şu dünyadaki tezyinat, yalnız telezzüz veya tenezzüh için değil. "
         "Çünkü bir zaman lezzet verse, firakıyla birçok zaman elem verir. Sana tattırır, iştihanı "
         "açar fakat doyurmaz. Çünkü ya onun ömrü kısa, ya senin ömrün kısadır. Doymaya kâfi değil. "
-        "Demek kıymeti yüksek, müddeti kısa olan şu tezyinat; ibret içindir,(Hâşiye) şükür içindir, "
+        "Demek kıymeti yüksek, müddeti kısa olan şu tezyinat; ibret içindir, (Hâşiye) şükür içindir, "
         "usûl-ü daimîsine teşvik içindir. Başka gayet ulvi gayeler içindir.")
 FOOT_HEAD = "Hâşiye:"
 FOOT = ("Evet, madem her şeyin kıymeti ve dekaik-ı sanatı gayet yüksek ve güzel olduğu halde "
@@ -370,15 +370,24 @@ def greek_par(rng, nwords):
     return ' '.join(ws)
 
 
-def greek_html(body_pt, inner_left, pno, header, seed):
-    rng = random.Random(seed)
+def passage_paras(start):
+    """Sayfa doldurma metni: YALNIZ musterinin verdigi pasaj (s.81 govdesi + Hasiye metni), farkli bir
+    noktadan baslayip tekrar eder; boylece satir kirilimlari s.81 ile ayni gorunmez."""
+    seq = [BODY, FOOT, BODY, FOOT, BODY]
+    full = '\n'.join(seq)
+    i = full.find(start)
+    text = full[i:] if i >= 0 else full
+    return [p for p in text.split('\n') if p.strip()]
+
+
+def greek_html(body_pt, inner_left, pno, header, start):
     css = page_css(inner_left=inner_left)
     pno_side = (f'right:{M_OUT}mm' if inner_left else f'left:{M_OUT}mm')
     lh = 1.64 * body_pt * 0.3528  # mm
-    avail = PAGE_H - M_BOT - M_TOP
-    # iki paragraf + bir dipnotsuz tam sayfa
-    paras = [greek_par(rng, 78), greek_par(rng, 120), greek_par(rng, 60)]
-    body = ''.join(f'<p style="margin:0;text-indent:7mm">{p}</p>' for p in paras)
+    nlines = int((PAGE_H - M_BOT - M_TOP) / lh)
+    avail = nlines * lh  # tam satir sayisi: alt satir yarim kesilmesin
+    paras = passage_paras(start)
+    body = ''.join(f'<p style="margin:0;text-indent:{0 if k == 0 else 7}mm">{p}</p>' for k, p in enumerate(paras))
     return f"""<!doctype html><html lang="tr"><head><meta charset="utf-8"><style>{css}
 #body{{font-size:{body_pt}pt;height:{avail}mm;overflow:hidden;}}</style></head>
 <body><div id="pg">
@@ -497,10 +506,12 @@ def main():
             body_pt = float(line.split('body_pt=')[1].split()[0])
     print('body_pt', body_pt)
     jobs2 = [
-        dict(html=write('sayfa80.html', greek_html(body_pt, False, '80', 'SÖZLER', 11)),
-             out=os.path.join(WORK, 'sayfa80.png'), w=PAGE_W * PX_MM, h=PAGE_H * PX_MM, dsf=1.8, transparent=True),
-        dict(html=write('yaprak.html', greek_html(body_pt, True, '', 'ONUNCU SÖZ', 23)),
-             out=os.path.join(WORK, 'yaprak.png'), w=PAGE_W * PX_MM, h=PAGE_H * PX_MM, dsf=1.4, transparent=True),
+        dict(html=write('sayfa80.html', greek_html(body_pt, False, '80', 'SÖZLER', 'nazarlarını, asıllarına')),
+             out=os.path.join(WORK, 'sayfa80.png'), w=PAGE_W * PX_MM, h=PAGE_H * PX_MM, dsf=2.2, transparent=True),
+        dict(html=write('yaprak.html', greek_html(body_pt, True, '79', 'ONUNCU SÖZ', 'Çünkü ya onun ömrü')),
+             out=os.path.join(WORK, 'yaprak.png'), w=PAGE_W * PX_MM, h=PAGE_H * PX_MM, dsf=1.6, transparent=True),
+        dict(html=write('yaprak_arka.html', greek_html(body_pt, False, '78', 'SÖZLER', 'başka şeylerin suretleri')),
+             out=os.path.join(WORK, 'yaprak_arka.png'), w=PAGE_W * PX_MM, h=PAGE_H * PX_MM, dsf=1.6, transparent=True),
     ]
     run_jobs(jobs2)
 
@@ -516,11 +527,11 @@ def main():
     w, h = ink81.size
     pap = paper(h, w, 7)
     save_rgb(compose_ink(pap, os.path.join(WORK, 'sayfa81.png'), seed=5), os.path.join(TEX, 'sayfa81.png'))
-    for nm, sd in (('sayfa80', 9), ('yaprak', 13)):
+    for nm, sd in (('sayfa80', 9), ('yaprak', 13), ('yaprak_arka', 17)):
         im = Image.open(os.path.join(WORK, nm + '.png'))
         w2, h2 = im.size
         pap2 = paper(h2, w2, sd)
-        save_rgb(compose_ink(pap2, os.path.join(WORK, nm + '.png'), ink=(70, 64, 58), seed=sd, strength=0.55),
+        save_rgb(compose_ink(pap2, os.path.join(WORK, nm + '.png'), seed=sd),
                  os.path.join(TEX, nm + '.png'))
     params = dict(board_w=BOARD_W, board_h=BOARD_H, spine_arc=SPINE_ARC, page_w=PAGE_W, page_h=PAGE_H,
                   bands=BANDS, body_pt=body_pt,
