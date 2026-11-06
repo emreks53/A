@@ -1,15 +1,12 @@
 /* A_kitap_giris (0.00–2.70) — Blender'da render edilmiş gerçekçi Risale-i Nur "Sözler" cildi (out/blender/intro/NNNN.png, 81 kare)
  * üzerine canvas atmosferi: sıcak ışık huzmesi, toz zerreleri ve ilk saniyenin "kanca"sı olan altın zerre:
- *  0.10 yaldızlı başlıktan bir altın zerre yükselir → "Hem" (0.42) parlar → "anlarsın" (0.56) sekiz zerreye bölünüp
- *  sekiz köşeli yıldız (hâşiye yıldızının habercisi) kurar ve döner → "ki" (1.06) açılan kapağın arasına, sayfaya süzülür.
+ *  sayfa kenarlarından birkaç yumuşak altın zerre yükselir; kapak açılırken sayfaya doğru sarmal çizip ışığa karışır.
  * B'ye geçiş: Blender'ın son kareleri krem ışığa doğru beyazlar; gecisler.js 'light' geçişi 2.30–2.70.
  */
 (function () {
   const N = 81;
   const url = (i) => `out/blender/intro/${String(Math.max(0, Math.min(N - 1, i))).padStart(4, '0')}.png`;
   const GOLD = '#FFD98A', HALO = '#FFB547';
-  // altın zerrenin yolu (ekran px): kapak başlığından (≈580,880) yükselip yıldız merkezine (≈560,760)
-  const startP = [580, 900], starC = [560, 760];
 
   function mote(ctx, x, y, r, a) {
     if (a <= 0.01) return;
@@ -42,38 +39,25 @@
       // toz zerreleri (huzmede daha görünür)
       S.dust(ctx, t, { n: 46, seed: 11, col: '#FFE2B0', rMin: 1.2, rMax: 3.4, speed: 14, alpha: 0.42 * (1 - E.p(t, 2.0, 2.6)) });
 
-      // --- altın zerre kancası ---
-      const rise = E.p(t, 0.10, 0.50, 'outCubic');
-      const split = E.p(t, 0.52, 0.86, 'outBack');
-      const dive = E.p(t, 1.02, 1.55, 'inCubic');
-      const appear = E.p(t, 0.06, 0.22, 'outQuad') * (1 - E.p(t, 1.45, 1.62));
-      if (appear > 0) {
-        const cx = E.lerp(startP[0], starC[0], rise) + Math.sin(t * 5) * 6 * (1 - split);
-        const cy = E.lerp(startP[1], starC[1], rise) + E.noise(t * 1.3, 4) * 6;
-        const bright = 1 + 0.45 * E.env(t, 0.38, 0.75, 0.08, 0.3);
-        if (split <= 0.001) mote(ctx, cx, cy, 4.2 * bright, appear);
-        else {
-          // 8 zerre: yıldız köşeleri (r 70) etrafında döner; sonra sayfaya doğru (≈ 640,1020) sarmal dalış
-          const R = 72 * split * (1 - dive * 0.85), rot = E.p(t, 0.56, 1.2, 'inOutSine') * Math.PI / 4 + dive * 2.2;
-          const tx = 640, ty = 1030;
-          const pts = [];
-          for (let k = 0; k < 8; k++) {
-            const a = rot + (k / 8) * E.TAU - Math.PI / 2;
-            const x = E.lerp(cx + Math.cos(a) * R, tx + Math.cos(a) * 20 * (1 - dive), dive);
-            const y = E.lerp(cy + Math.sin(a) * R, ty + Math.sin(a) * 10 * (1 - dive), dive);
-            pts.push([x, y]);
-          }
-          // ince ışık çizgileri: iki kare (sekiz köşeli yıldız)
-          const la = appear * split * (1 - dive) * 0.55;
-          if (la > 0.01) {
-            ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = E.rgba(GOLD, la); ctx.lineWidth = 1.6;
-            for (const off of [0, 1]) { ctx.beginPath(); for (let k = 0; k < 4; k++) { const p = pts[(off + k * 2) % 8]; k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); } ctx.closePath(); ctx.stroke(); }
-            ctx.restore();
-          }
-          pts.forEach((p, k) => mote(ctx, p[0], p[1], (2.6 + 0.8 * bright) * (1 - dive * 0.5), appear * (0.75 + 0.25 * Math.sin(t * 9 + k))));
-          if (dive > 0.85) S.light(ctx, tx, ty, 160, '#FFE3A1', (dive - 0.85) * 3 * 0.5);
-        }
+      // --- altın zerreler: sayfa kenarlarından yumuşakça yükselir, kapak açılırken sayfaya doğru süzülüp kaybolur ---
+      // (çizgi, düğüm, sekiz köşeli yıldız YOK; başlığın üstüne konmaz; her şey 8+ karede belirir/kaybolur)
+      const N = 9, tx = 640, ty = 1040;
+      for (let k = 0; k < N; k++) {
+        const born = 0.12 + k * 0.06, a0 = E.p(t, born, born + 0.35, 'outQuad');
+        const dive = E.p(t, 0.95 + k * 0.035, 1.75 + k * 0.03, 'inOutSine');
+        const gone = 1 - E.p(t, 1.55 + k * 0.03, 1.85 + k * 0.03);
+        const alpha = a0 * gone;
+        if (alpha <= 0.01) continue;
+        // başlangıç: kitabın alt/yan yaldızlı sayfa kenarları boyunca (başlığın uzağında)
+        const sx = E.lerp(250, 860, E.hash(k, 31)), sy = E.lerp(1180, 1330, E.hash(k, 32));
+        const rise = E.p(t, born, born + 1.2, 'outCubic');
+        const fx = sx + E.noise(t * 0.8 + k, 33) * 40, fy = sy - rise * E.lerp(120, 260, E.hash(k, 34));
+        const ang = (k / N) * E.TAU + dive * 2.6, R = 90 * (1 - dive);
+        const x = E.lerp(fx, tx + Math.cos(ang) * R, dive), y = E.lerp(fy, ty + Math.sin(ang) * R * 0.55, dive);
+        mote(ctx, x, y, E.lerp(2.2, 3.6, E.hash(k, 35)) * (1 - dive * 0.4), alpha * (0.7 + 0.3 * Math.sin(t * 6 + k)));
       }
+      const sink = E.env(t, 1.45, 2.1, 0.25, 0.4);
+      if (sink > 0) S.light(ctx, tx, ty, 220, '#FFE3A1', sink * 0.35);
       // son: sayfa ışığı (Blender beyazlığına yumuşak sıcaklık)
       const w = E.p(t, 2.15, 2.7, 'inQuad');
       if (w > 0) { ctx.save(); ctx.globalAlpha = w * 0.85; ctx.fillStyle = E.rad(ctx, 540, 960, 0, 1300, [[0, '#FFFFFF'], [0.5, '#FFF6E6'], [1, '#FFE9C8']]); ctx.fillRect(0, 0, E.W, E.H); ctx.restore(); }

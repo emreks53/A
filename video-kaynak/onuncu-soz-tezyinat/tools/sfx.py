@@ -47,12 +47,14 @@ def sweep_filter(x, f0, f1, q=1.2, steps=48):
         y = bp(x[s:e], lo, hi); w = np.hanning(len(y)); out[s:e] += y * w
     return out
 def stereo(x, pan=0.0, width=0.0, seed=0):
-    """pan −1..1 (sabit ya da dizi), width: hafif dekorelasyon"""
+    """pan −1..1 (sabit ya da dizi). Kanal gecikmesi YOK (mono uyumu: tarak filtresi oluşmaz).
+    width yok sayılır; geniş ortam sesleri iki ayrı gürültüyle stereo2() kullanır."""
     pan = np.broadcast_to(np.asarray(pan, dtype=float), x.shape)
-    l = x * np.cos((pan + 1) * np.pi / 4); r = x * np.sin((pan + 1) * np.pi / 4)
-    if width > 0:
-        d = int(0.0007 * SR * width) + 1; r = np.concatenate([np.zeros(d), r[:-d]]) * 0.9 + r * 0.1
-    return np.stack([l, r], 1)
+    return np.stack([x * np.cos((pan + 1) * np.pi / 4), x * np.sin((pan + 1) * np.pi / 4)], 1)
+def stereo2(xl, xr):
+    """iki bağımsız gerçekleşme → doğal genişlik, mono toplamda faz iptali yok"""
+    n = min(len(xl), len(xr)); m = max(np.max(np.abs(xl[:n])), np.max(np.abs(xr[:n]))) + 1e-12
+    return np.stack([xl[:n] / m, xr[:n] / m], 1) * 0.7071
 
 # ---------- ses tipleri (hepsi tepe ~1.0'a göre normalize; seviye cue'dan gelir) ----------
 def s_whoosh(d=0.8, f0=300, f1=2500, seed=1, pan0=-0.4, pan1=0.4, a=0.45):
@@ -99,10 +101,12 @@ def s_snaps(d=0.5, n=6, seed=9):
         g = bp(r.standard_normal(L), 1500, 6000) * expdec(L, 0.006) + 0.5 * bp(r.standard_normal(L), 300, 900) * expdec(L, 0.01)
         out[st:st + L] += stereo(norm(g) * r.uniform(0.6, 1), r.uniform(-0.6, 0.6))
     return norm(out)
-def s_wind(d=2.0, seed=10, f=900, mod=0.35):
+def _wind1(d, seed, f, mod):
     n = int(d * SR); tt = t_axis(d); x = lp(pink(d, seed), f)
     am = 0.6 + 0.4 * np.sin(2 * np.pi * mod * tt + rng(seed).uniform(0, 6)) * np.sin(2 * np.pi * mod * 0.37 * tt + 1)
-    return stereo(norm(x * am * env_ar(n, d * 0.35, d * 0.45, 1.5)), np.sin(2 * np.pi * 0.2 * tt) * 0.4, 1.0)
+    return x * am * env_ar(n, d * 0.35, d * 0.45, 1.5)
+def s_wind(d=2.0, seed=10, f=900, mod=0.35):
+    return stereo2(_wind1(d, seed, f, mod), _wind1(d, seed + 777, f, mod * 1.13))
 def s_drop(f0=1100, f1=2600, d=0.16, seed=11):
     tt = t_axis(d); f = f0 + (f1 - f0) * (1 - np.exp(-tt / 0.02)); x = np.sin(2 * np.pi * np.cumsum(f) / SR) * expdec(len(tt), 0.035)
     return stereo(norm(x), 0.1)
@@ -156,18 +160,22 @@ def s_lark(d=0.6, seed=23):
         f = r.uniform(3000, 4200) + 900 * np.sin(2 * np.pi * r.uniform(30, 60) * tt); x = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * tt / tt[-1])
         out[st:st + L] += x * r.uniform(0.5, 1)
     return stereo(norm(out), 0.6)
-def s_water(d=10.0, seed=24):
+def _water1(d, seed):
     n = int(d * SR); r = rng(seed); x = bp(white(d, seed), 400, 3500)
     am = np.abs(signal.lfilter([1], [1, -0.995], r.standard_normal(n))) ; am = am / (am.max() + 1e-9)
-    x = x * (0.3 + am) + 0.3 * lp(brown(d, seed), 300)
-    return stereo(norm(x * env_ar(n, 1.0, 1.5, 1)), np.sin(2 * np.pi * 0.07 * t_axis(d)) * 0.3, 1.0)
-def s_rain(d=2.5, seed=25):
-    n = int(d * SR); r = rng(seed); g = (r.random(n) < 0.004) * r.standard_normal(n)
-    x = hp(white(d, seed), 4500) * 0.5 + hp(signal.lfilter([1], [1, -0.4], g), 3000)
-    return stereo(norm(x * env_ar(n, 0.5, 0.8, 1)), 0, 1.0)
-def s_room(d=4.0, seed=26):
-    n = int(d * SR); x = lp(brown(d, seed), 250) + 0.1 * bp(pink(d, seed), 400, 1200)
-    return stereo(norm(x * env_ar(n, 0.8, 1.2, 1)), 0, 1.0)
+    return (x * (0.3 + am) + 0.3 * lp(brown(d, seed), 300)) * env_ar(n, 1.0, 1.5, 1)
+def s_water(d=10.0, seed=24): return stereo2(_water1(d, seed), _water1(d, seed + 777))
+def _rain1(d, seed):
+    """seyrek, yumuşak damlacıklar + orta bantta hafif yağmur dokusu (tıslama değil)"""
+    n = int(d * SR); r = rng(seed); x = 0.35 * bp(pink(d, seed), 700, 4500)
+    for _ in range(int(d * 70)):
+        st = r.integers(0, n - 2000); L = r.integers(300, 1400)
+        x[st:st + L] += bp(r.standard_normal(L), r.uniform(1500, 2800), r.uniform(3200, 5200)) * expdec(L, r.uniform(0.002, 0.006)) * r.uniform(0.3, 1.0)
+    return x * env_ar(n, 0.5, 0.8, 1)
+def s_rain(d=2.5, seed=25): return stereo2(_rain1(d, seed), _rain1(d, seed + 777))
+def _room1(d, seed):
+    n = int(d * SR); return (lp(brown(d, seed), 250) + 0.1 * bp(pink(d, seed), 400, 1200)) * env_ar(n, 0.8, 1.2, 1)
+def s_room(d=4.0, seed=26): return stereo2(_room1(d, seed), _room1(d, seed + 777))
 def s_creak(d=0.5, seed=27):
     tt = t_axis(d); n = len(tt); r = rng(seed); pulses = np.zeros(n)
     rate = 60 + 40 * np.sin(np.pi * tt / d); ph = np.cumsum(rate) / SR; idx = np.where(np.diff(np.floor(ph)) > 0)[0]
@@ -176,6 +184,23 @@ def s_creak(d=0.5, seed=27):
 def s_flutter(d=0.6, seed=28):
     n = int(d * SR); tt = t_axis(d); x = bp(white(d, seed), 800, 5000) * (0.4 + 0.6 * np.abs(np.sin(2 * np.pi * 18 * tt * (1 - 0.5 * tt / d))))
     return stereo(norm(x * env_ar(n, 0.04, 0.35, 1.3)), 0, 0.6)
+
+def s_tiks(d=0.5, n=8, seed=80, lo=2000, hi=6000):
+    """tonsuz, çok kısa gürültü tıkırtıları (çan/melodi değil)"""
+    out = np.zeros((int(d * SR) + SR // 10, 2)); r = rng(seed)
+    for i in range(n):
+        st = int((i / max(1, n - 1)) * d * SR * r.uniform(0.85, 1.0)); L = int(r.uniform(0.005, 0.01) * SR)
+        g = bp(r.standard_normal(L), lo * r.uniform(0.9, 1.2), hi) * expdec(L, r.uniform(0.0015, 0.003))
+        out[st:st + L] += stereo(norm(g) * r.uniform(0.45, 1.0), r.uniform(-0.5, 0.5))
+    return norm(out)
+def s_plop(d=0.22, seed=81):
+    """yoğun bal damlası: alçak geçirilmiş gürültü 'plop' (perde kayması yok)"""
+    n = int(d * SR); x = lp(white(d, seed), 700, 4) * env_ar(n, 0.004, 0.0, 1) * expdec(n, 0.045)
+    x += 0.4 * bp(white(d, seed + 1), 900, 2200) * expdec(n, 0.012)
+    return stereo(norm(x), 0)
+def s_drip(d=0.12, seed=82):
+    n = int(d * SR); x = bp(white(d, seed), 1200, 3000) * env_ar(n, 0.002, 0.0, 1) * expdec(n, 0.018)
+    return stereo(norm(x), 0.1)
 
 TYPES = {k[2:]: v for k, v in globals().items() if k.startswith('s_')}
 
@@ -187,7 +212,9 @@ def main():
     sfx = np.zeros((N, 2))
     for c in CUES:
         t0, typ, gdb = c['t'], c['type'], c['db']; prm = c.get('p', {})
-        y = TYPES[typ](**prm)
+        y = TYPES[typ](**prm).copy()
+        fi, fo = min(len(y), int(0.002 * SR)), min(len(y), int(0.012 * SR))
+        y[:fi] *= np.linspace(0, 1, fi)[:, None]; y[len(y) - fo:] *= np.linspace(1, 0, fo)[:, None]   # tık/kesik olmasın
         i = int(t0 * SR); j = min(N, i + len(y)); sfx[i:j] += y[: j - i] * db(gdb)
     # konuşma: ham ses
     v, sr = sf.read(os.path.join(OUT, 'ses_48k.wav'))
@@ -202,6 +229,10 @@ def main():
     act = signal.lfilter([0.002], [1, -0.998], act) / 1.0; act = np.clip(act * 1.2, 0, 1)
     duck = db(-6 * act)[:, None]
     sfx = hp(sfx.T, 110).T * duck
+    sfx = lp(lp(sfx.T, 8500), 8500).T   # yumuşaklık: 8,5 kHz üstü yok (tıslama olmasın)
+    # sürekli, duyulmayacak kadar kısık oda tonu (dijital sıfır sessizlikler olmasın) ≈ −62 dBFS
+    bed = stereo2(_room1(DUR + 1, 99), _room1(DUR + 1, 199)); bed = bed / (np.sqrt(np.mean(bed ** 2)) + 1e-12) * db(-62)
+    sfx[: len(bed)] += bed[: N]
     sf.write(os.path.join(OUT, 'sfx.wav'), sfx.astype(np.float32), SR, subtype='FLOAT')
     mix = voice + sfx
     sf.write(os.path.join(OUT, 'miks_ham.wav'), mix.astype(np.float32), SR, subtype='FLOAT')

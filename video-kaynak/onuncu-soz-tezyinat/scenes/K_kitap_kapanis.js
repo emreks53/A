@@ -48,7 +48,13 @@
       ctx.font = 'italic 500 50px "Cormorant Garamond"'; ctx.letterSpacing = `${(1 + (1 - k2) * 6).toFixed(1)}px`;
       ctx.shadowColor = 'rgba(18,8,4,0.75)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 2;
       ctx.globalAlpha = k2; ctx.filter = k2 < 1 ? `blur(${((1 - k2) * 5).toFixed(1)}px)` : 'none';
-      ctx.fillStyle = '#F4DCCB'; ctx.fillText('Sözler · Onuncu Söz · 81. Sayfa', E.W / 2, 1470 + (1 - k2) * 10);
+      ctx.fillStyle = '#F4DCCB';
+      // Cormorant'ın eski stil rakamlarında "81" → "8ı" gibi okunuyordu: rakamlar hizalı (lining) Cinzel ile
+      const segs = [['Sözler · Onuncu Söz · ', 'italic 500 50px "Cormorant Garamond"'], ['81', '500 41px Cinzel'], ['. Sayfa', 'italic 500 50px "Cormorant Garamond"']];
+      let tw = 0; const ws = segs.map(([tx, f]) => { ctx.font = f; const w = ctx.measureText(tx).width; tw += w; return w; });
+      let x0 = E.W / 2 - tw / 2; ctx.textAlign = 'left';
+      segs.forEach(([tx, f], i) => { ctx.font = f; ctx.fillText(tx, x0, 1470 + (1 - k2) * 10); x0 += ws[i]; });
+      ctx.textAlign = 'center';
     }
     ctx.restore();
   }

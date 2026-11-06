@@ -62,39 +62,51 @@
     const ox = (w - 1080) / 2, oy = (h - 1920) / 2;
     x.strokeStyle = 'rgba(168,116,42,0.34)'; x.lineWidth = 1.6; x.strokeRect(ox + 58, oy + 58, 1080 - 116, 1920 - 116);
     x.strokeStyle = 'rgba(168,116,42,0.22)'; x.lineWidth = 0.9; x.strokeRect(ox + 68, oy + 68, 1080 - 136, 1920 - 136);
-    // greeked text (grey line texture, no letters) laid out like the book page: main block, then the footnote
-    const gr = E.rng(4417), tx0 = ox + 128, tx1 = ox + 1080 - 128, clear = (gx, gw, gy) => Math.abs(gy - (oy + 760)) < 104 && gx < ox + 690 && gx + gw > ox + 390;
-    const line = (gy, hh, al, endF, indent) => {
+    // greeked text on its own (fadeable) layer: thin, slightly irregular ink strokes with square ends, softly
+    // out of focus; no letters. Main block, a short footnote rule, the footnote lines.
+    const tc = E.canvas(w, h), tx = tc.x, gr = E.rng(4417), tx0 = ox + 128, tx1 = ox + 1080 - 128;
+    const clear = (gx, gw, gy) => Math.abs(gy - (oy + 760)) < 104 && gx < ox + 690 && gx + gw > ox + 390;
+    tx.lineCap = 'butt';
+    const line = (gy, lw, al, endF, indent) => {
       let gx = tx0 + (indent ? 46 : 0); const end = tx0 + (tx1 - tx0) * endF;
       while (gx < end - 8) {
-        const gw = Math.min(end - gx, 16 + gr() * 74);
-        if (gw > 6 && !clear(gx, gw, gy)) { x.fillStyle = `rgba(92,70,52,${(al * (0.8 + 0.4 * gr())).toFixed(3)})`; x.beginPath(); x.roundRect(gx, gy - hh / 2, gw, hh, hh / 2); x.fill(); }
-        gx += gw + 9 + gr() * 4;
+        const gw = Math.min(end - gx, gr() < 0.25 ? 10 + gr() * 18 : 26 + gr() * 80);
+        if (gw > 5 && !clear(gx, gw, gy)) {
+          tx.strokeStyle = `rgba(78,56,40,${(al * (0.7 + 0.5 * gr())).toFixed(3)})`; tx.lineWidth = lw * (0.75 + 0.5 * gr());
+          const j0 = (gr() - 0.5) * 1.6, j1 = (gr() - 0.5) * 1.6, jm = (gr() - 0.5) * 1.4;
+          tx.beginPath(); tx.moveTo(gx, gy + j0); tx.quadraticCurveTo(gx + gw / 2, gy + jm, gx + gw, gy + j1); tx.stroke();
+        }
+        gx += gw + 8 + gr() * 6;
       }
     };
     let para = 0;
     for (let gy = oy + 156; gy <= oy + 1136; gy += 43) {
-      const last = para > 4 + gr() * 4; line(gy, 9, 0.15, last ? 0.3 + 0.45 * gr() : 1, para === 0); para = last ? 0 : para + 1;
+      const last = para > 4 + gr() * 4; line(gy, 3.2, 0.12, last ? 0.3 + 0.45 * gr() : 1, para === 0); para = last ? 0 : para + 1;
     }
-    x.strokeStyle = 'rgba(90,42,47,0.2)'; x.lineWidth = 1; x.beginPath(); x.moveTo(tx0, oy + 1180); x.lineTo(tx0 + 250, oy + 1180); x.stroke();
-    for (let k = 0; k < 7; k++) line(oy + 1218 + k * 33, 7, 0.13, k === 6 ? 0.42 : 1, k === 0);
-    return cv.c;
+    tx.strokeStyle = 'rgba(90,42,47,0.2)'; tx.lineWidth = 1; tx.beginPath(); tx.moveTo(tx0, oy + 1180); tx.lineTo(tx0 + 250, oy + 1180); tx.stroke();
+    for (let k = 0; k < 7; k++) line(oy + 1218 + k * 33, 2.4, 0.1, k === 6 ? 0.42 : 1, k === 0);
+    const tb = E.canvas(w, h); tb.x.filter = 'blur(0.9px)'; tb.x.drawImage(tc.c, 0, 0);
+    return { c: cv.c, txt: tb.c };
   }
-  /** parchment page: gradient (screen) + fibres (world, under the current transform). */
-  function drawParchment(ctx, spr, applyWorld, a = 1) {
+  /** parchment page: gradient (screen) + fibres and text (world, under the current transform). */
+  function drawParchment(ctx, spr, applyWorld, a = 1, textA = 1) {
     if (a <= 0) return;
     ctx.save(); ctx.globalAlpha *= a;
     ctx.fillStyle = E.lin(ctx, 0, 0, 0, H, [[0, '#F7EEDC'], [0.6, '#F1E3C9'], [1, '#EBD9BB']]); ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = E.rad(ctx, 540, 760, 0, 980, [[0, '#FFFAF0', 0.6], [0.55, '#FFF6E6', 0.22], [1, '#FFF6E6', 0]]); ctx.fillRect(0, 0, W, H);
-    ctx.save(); applyWorld(ctx); ctx.drawImage(spr, 540 - spr.width / 2, 960 - spr.height / 2); ctx.restore();
+    ctx.save(); applyWorld(ctx); ctx.drawImage(spr.c, 540 - spr.c.width / 2, 960 - spr.c.height / 2);
+    if (textA > 0) { ctx.globalAlpha *= textA; ctx.drawImage(spr.txt, 540 - spr.c.width / 2, 960 - spr.c.height / 2); }
+    ctx.restore();
     ctx.restore();
   }
+  /** the slow page push used across the F/G seam (identical in both scenes) */
+  function seamZoom(t) { return 1 + 0.03 * E.p(t, 28.1, 29.0, 'inOutSine'); }
   function drawFootStar(ctx, t, x, y, r, a = 1) {
     if (a <= 0) return;
-    const pulse = 1 + 0.07 * Math.sin(t * 2.4);
+    const pulse = 1 + 0.12 * Math.sin(t * 3.1);
     ctx.save(); ctx.globalAlpha *= a;
-    ctx.fillStyle = E.rad(ctx, x, y, 0, r * 3.6 * pulse, [[0, '#FFE7B0', 0.9], [0.35, '#FFDC94', 0.42], [1, '#FFE7B0', 0]]);
-    ctx.fillRect(x - r * 4, y - r * 4, r * 8, r * 8);
+    ctx.fillStyle = E.rad(ctx, x, y, 0, r * 3.6 * pulse, [[0, '#FFE7B0', 0.9], [0.35, '#FFDC94', 0.42 + 0.08 * Math.sin(t * 3.1)], [1, '#FFE7B0', 0]]);
+    ctx.fillRect(x - r * 4.4, y - r * 4.4, r * 8.8, r * 8.8);
     E.at(ctx, x, y, 1, 0, (c) => star8a(c, { r, open: 0, draw: 1, glow: 0.7, lineW: r * 0.045, col: '#C69A42' }));
     ctx.restore();
   }

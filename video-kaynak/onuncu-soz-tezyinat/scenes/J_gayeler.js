@@ -64,9 +64,9 @@
 
   /* ---------------- camera ---------------- */
   function camAt(t) {
-    const delta = 250 * (1 - P(t, 61.9, 62.9, 'inOutCubic'));
+    const delta = 190 * (1 - P(t, 61.9, 62.9, 'inOutCubic'));
     // tilt up after the petals (≤ ~140 px/s while the gloss is up), whip up, then pitch down (crane-over)
-    const T = 120 * P(t, 64.62, 65.95, 'inOutSine') + 150 * P(t, 66.0, 66.28, 'inOutSine'); // then the crane camera takes over
+    const T = 120 * P(t, 64.62, 65.95, 'inOutSine'); // then the crane camera takes over
     const zoom = 0.93 + 0.07 * P(t, 61.9, 63.4, 'outCubic') + 0.035 * P(t, 63.4, 65.4, 'inOutSine');
     return { cx: 540, cy: 960 + delta + 0.25 * T, cam: { x: 540 + 3 * Math.sin(0.37 * t), y: 960 - 0.75 * T + 2 * Math.sin(0.29 * t + 1), zoom }, T, delta };
   }
@@ -81,8 +81,9 @@
   }
   function sunAt(t, cs) {
     const crest = toS(cs, 540, 834, 0.15)[1];
-    const rise = 72 * P(t, 61.98, 63.3, 'inOutSine') + 24 * P(t, 63.3, 66.0, 'inOutSine');
-    return { x: toS(cs, 540, 0, 0.04)[0], y: crest - 66 - rise, r: 70 + 7 * P(t, 62.0, 63.6) };
+    // offset above the crest only ever grows → the sun rises out of the hills, never sinks
+    const rise = lerp(4, 138, P(t, 61.92, 63.3, 'inOutSine')) + 24 * P(t, 63.3, 66.0, 'inOutSine');
+    return { x: toS(cs, 540, 0, 0.04)[0], y: crest - rise, r: 70 + 7 * P(t, 62.0, 63.6) };
   }
   const glossK = (t) => {
     let g = 0;
@@ -416,14 +417,13 @@
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = E.rad(ctx, x - r * 0.28, y - r * 0.3, 0, r * 1.02, [[0, '#FFFFFF'], [0.55, '#FFF8E6'], [0.85, '#FFF4D6'], [1, '#FFE2AE']]);
     ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
-    // thin haze bands across the low sun (fade as it climbs)
-    const hb = 1 - P(t, 62.1, 63.2);
-    if (hb > 0) {
-      ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.clip();
-      for (let i = 0; i < 3; i++) { const yy = y + r * (0.15 + i * 0.27) + Math.sin(t * 0.8 + i) * 3; ctx.fillStyle = E.rgba('#E89A86', (0.35 - i * 0.07) * hb); ctx.fillRect(x - r, yy, r * 2, 5 + i * 3); }
-      ctx.restore();
-    }
     ctx.restore();
+    // soft full-width horizon haze over the low sun (fades as it climbs)
+    const hb = 1 - P(t, 62.0, 63.2);
+    if (hb > 0) {
+      const cy = toS(cs, 540, 834, 0.15)[1];
+      ctx.save(); ctx.fillStyle = E.lin(ctx, 0, cy - 70, 0, cy + 30, [[0, '#F4B496', 0], [0.6, '#F4B496', 0.38 * hb], [1, '#F4B496', 0.15 * hb]]); ctx.fillRect(0, cy - 70, E.W, 100); ctx.restore();
+    }
   }
 
   function drawMosque(ctx, t, cs) {
@@ -433,11 +433,12 @@
     for (let x = 560; x <= 1060; x += 20) { const q = toS(cs, x, HZ + 30 + 14 * Math.sin(x * 0.004 + 1) + 8 * Math.sin(x * 0.011), 1); if (!f0) { f0 = q; mp.moveTo(q[0], q[1]); } else mp.lineTo(q[0], q[1]); }
     mp.lineTo(toS(cs, 1060, 0, 1)[0], -2000); mp.lineTo(f0[0], -2000); mp.closePath(); ctx.clip(mp);
     layerXf(ctx, cs, 0.45);
-    const MY = 1046;
+    const MY = 1033, MW = 290, u = MW / 700;
     const rim = P(t, W.sukur - 0.25, W.sukur + 0.5, 'inOutSine');
-    E.at(ctx, 806, MY, 1, 0, () => A.mosque(ctx, { w: 220, col: E.mix('#2A2140', skyAt(930), 0.14), dome: '#3E8E5E', rim, sun: -1, lights: lerp(0.32, 0.12, P(t, 62.4, 64.5)), rimCol: '#FFC98F', t }));
+    ctx.globalAlpha *= 1 - P(t, 65.7, 66.1, 'inOutSine');
+    E.at(ctx, 800, MY, 1, 0, () => A.mosque(ctx, { w: MW, col: E.mix('#2A2140', skyAt(930), 0.05), dome: '#3E9A60', rim, sun: -1, lights: lerp(0.35, 0.15, P(t, 62.4, 64.5)), rimCol: '#FFD9A0', t }));
     // first light touching the dome
-    if (rim > 0) S.light(ctx, 806 + 70 * 220 / 700 - 4, MY - 46 * 220 / 700 - 40 * 220 / 700, 46, '#FFE7B0', 0.35 * rim * (0.85 + 0.15 * Math.sin(t * 3)));
+    if (rim > 0) S.light(ctx, 800 + 70 * u - 4, MY - 46 * u - 40 * u, 60, '#FFE7B0', 0.5 * rim * (0.85 + 0.15 * Math.sin(t * 3)));
     ctx.restore();
   }
 
