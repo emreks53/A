@@ -877,7 +877,7 @@ window.TIMING = {
    "ws": 2.501,
    "we": 3.021,
    "in": 2.421,
-   "out": 3.901
+   "out": 3.681
   },
   {
    "src": "telezzüz",
@@ -885,7 +885,7 @@ window.TIMING = {
    "ws": 4.081,
    "we": 4.581,
    "in": 4.001,
-   "out": 4.721
+   "out": 4.501
   },
   {
    "src": "tenezzüh",
@@ -901,7 +901,7 @@ window.TIMING = {
    "ws": 9.182,
    "we": 9.722,
    "in": 9.102,
-   "out": 10.362
+   "out": 10.142
   },
   {
    "src": "elem",
@@ -909,7 +909,7 @@ window.TIMING = {
    "ws": 10.542,
    "we": 10.782,
    "in": 10.462,
-   "out": 12.067
+   "out": 11.3
   },
   {
    "src": "tezyinat",
@@ -949,7 +949,7 @@ window.TIMING = {
    "ws": 50.791,
    "we": 51.331,
    "in": 50.711,
-   "out": 51.891
+   "out": 51.671
   },
   {
    "src": "Rahman-ı Rahîm'in",
@@ -957,7 +957,7 @@ window.TIMING = {
    "ws": 52.071,
    "we": 52.931,
    "in": 51.991,
-   "out": 54.572
+   "out": 54.352
   },
   {
    "src": "ibadına",
@@ -965,7 +965,7 @@ window.TIMING = {
    "ws": 54.752,
    "we": 55.152,
    "in": 54.672,
-   "out": 56.072
+   "out": 55.852
   },
   {
    "src": "niam-ı cennetin",

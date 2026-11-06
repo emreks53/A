@@ -354,7 +354,7 @@
   /* ---------------- anlam alt yazıları (gloss) ---------------- */
   const G = (E.gloss = {
     y: 1376, size: 74, lineH: 84, size2: 66, lineH2: 78, maxW: 900, font: '"Cormorant Garamond"', weight: 600,
-    color: '#FFF8EC', inDur: 0.42, outDur: 0.36,
+    color: '#FFF8EC', inDur: 0.42, outDur: 0.28,
   });
   let glossBuf = null, lumBuf = null;
   /** alt yazı bandının ortalama parlaklığı (0..1): parlak zeminde yazı koyu kahveye döner */
@@ -396,7 +396,7 @@
     const lines = multi ? g.text.split('\n') : wrapLines(b, g.text, G.maxW);
     const n = lines.length, baseY = 210 - ((n - 1) * lineH) / 2 + size * 0.32;
     // ana yazı (fildişi; çok parlak zeminde derin sıcak kahve), ince sıcak altın parıltı süpürmesi ile
-    const dark = E.smooth(E.remap(bandLuma(ctx), 0.73, 0.79, 0, 1));
+    const dark = E.smooth(E.remap(bandLuma(ctx), 0.60, 0.66, 0, 1));
     b.fillStyle = E.mix(G.color, '#3A2316', dark);
     lines.forEach((ln, i) => b.fillText(ln, W / 2, baseY + i * lineH));
     const sweep = clamp((t - g.in - 0.05) / 0.95);
