@@ -15,6 +15,8 @@ echo "$(date +%T) outro done rc=$?" >> "$LOG"
 rm -rf "$OUT/intro"
 $B -b -t 3 -P kitap.py -- --shot intro --anim --samples "$SAMPLES" > "$OUT/blender_intro.out" 2>&1
 echo "$(date +%T) intro done rc=$?" >> "$LOG"
-$B -b -t 3 -P kitap.py -- --shot hero --still --samples 96 --dnq HIGH > "$OUT/blender_hero.out" 2>&1
-echo "$(date +%T) hero done rc=$?" >> "$LOG"
+if [ "${HERO:-1}" = "1" ]; then
+  $B -b -t 3 -P kitap.py -- --shot hero --still --samples 96 --dnq HIGH > "$OUT/blender_hero.out" 2>&1
+  echo "$(date +%T) hero done rc=$?" >> "$LOG"
+fi
 echo "$(date +%T) ALL DONE" >> "$LOG"

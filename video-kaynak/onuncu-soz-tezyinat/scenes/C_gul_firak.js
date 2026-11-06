@@ -35,7 +35,7 @@
   /* ---------------- timing curves ---------------- */
   const nightC = (t) => 0.22 * E.p(t, T_HAND, 9.7, 'inOutSine') + 0.78 * E.p(t, 9.78, 10.44, 'inOutSine');
   const wiltC = (t) => 0.85 * E.p(t, 9.78, 10.44, 'inOutSine');
-  const fallZ = (t) => Math.exp(Math.log(1.8) * E.p(t, 10.9, 11.6, 'inOutSine'));
+  const fallZ = (t) => Math.exp(Math.log(1.6) * E.p(t, 10.9, 11.6, 'inOutSine'));
 
   /* ---------------- head transform ---------------- */
   function headXf(t, ttw) {
@@ -272,7 +272,7 @@
       onRose: (ctx2) => {
         W.roseLayered(ctx2, c, {
           t: ttw, bloom: 1, wilt: hx.wilt, stemWilt: hx.stemWilt, bend: hx.bend, bow: hx.bow, P,
-          band: gk, stemGrade: lerp(0.45, 0.75, night) + 0.15 * E.p(t, T_HAND, 7.5) * (1 - night), rim: lerp(1, 0.6, night), rimCol: mx('#FFB37A', '#8EA6E8', night),
+          band: gk, stemGrade: lerp(0.68, 0.8, night), rim: lerp(1, 0.6, night), rimCol: mx('#FFB37A', '#8EA6E8', night),
           gradeCol: mx('#6A3D8A', '#1E2246', night), gradeA: 0.1 + 0.22 * night, brown: hx.wilt / 0.85, headS: [headC[0], headC[1], W.ROSE_R * z * 0.95],
           rose: { detach: detFn(t), detachDist: 14, heroIndex: 99 },
           onHead: (hctx) => { if (t < 8.28) W.drawBee(hctx, { fly: 0, off: [0, 0], flip: true, rot: 0.06 * Math.sin(ttw * 2) }, null, ttw); },

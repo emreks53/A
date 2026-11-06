@@ -10,20 +10,23 @@
  *  Camera = optical zoom (zo about a screen point) ∘ parallax dolly {x,y,z}; handheld drift always on.
  *  DOF: back / front / near groups rendered into half-res blurred layers (rack focus, closing DOF at the end).
  *  Grade: soft-light #FFB38A @0.12 (colour script); post bloom 0.75 → 0.30, vignette 0.20 → 0.26.
- *  2.30  zo 2.2 on the sun (= A's page glow at screen centre), cream glow #FFF6E6 condenses into the sun.
- *  2.44  BLOOM WAVE: a soft light ring with a glittering front leaves the sun; hill blossoms and tree
- *        blossoms, then ~300 flowers pop by distance (delay = d/1400·0.9 s) with pollen puffs.
- *        2.62 hero rose blooms (bud → open).  2.80 hoopoe crest fans (outBack), settles 3.10.
+ *  2.30  zo 2.2 on the sun (= A's page glow at screen centre), cream glow #FFF6E6 condenses into the sun
+ *        by 2.52 (legible under A→B's light transition).  Hero rose planted beside the path at (600,1205)
+ *        in a grass tuft with soil + contact shadow; own S-curved, tapered, graded stem (local helper).
+ *  2.36  BLOOM WAVE: a soft light ring with a glittering front leaves the sun; hill and tree blossoms,
+ *        then ~300 flowers pop by distance (delay = d/2200 s, so they pop while "tezyinat" is spoken).
+ *        2.44 hero rose blooms (bud → open).  2.80 hoopoe crest fans (outBack), settles 3.10.
  *        Pull-back 2.30→3.60 (outQuint), meadow/fg zoom faster than the sky (parallax), fg stems slide in.
- *  3.62  "yalnız": rack focus (everything but the rose → 6 px), push-in z 1→1.45 on the rose.
+ *  3.62  "yalnız": rack focus (everything but the rose → 6 px), eased log-zoom push-in 1→1.4 on the head.
  *  4.00  "telezzüz": bee lands (dip-and-bounce), golden sweetness pulse (heart glow + ring + glints),
- *        3 tapered fragrance ribbons rise and dissolve.
- *  4.64  "tenezzüh": lateral stroll dolly x +330 (fg clumps whip past in the foot band), 3 butterflies lead.
+ *        three short warm fragrance curls at the heart (≤0.6 s).
+ *  4.64  "tenezzüh": slow lateral stroll x +220 (4.50–5.55), fg clumps pass in the foot band, butterflies lead.
  *  5.58  "değil": time-scale → 0.1 (butterflies, pollen, sway hang), one white ripple from the rose,
  *        −10 % saturation.  5.95 time resumes.
- *  5.95–6.70  swing back + push to the rose (z 2.6, rose at screen (540,820), R 260); sun sinks behind
+ *  5.50–6.70  slow log-zoom push (creeps through the freeze) to the handoff (head (540,820), R 260); sun sinks behind
  *        the far hills (y 520→930) and the plate lerps to C's dusk palette; DOF closes on the rose.
- *  Gloss band (1229–1574): meadow (mid/dark green) + feathered scrim (≤0.22) while E.glossActive.
+ *  Gloss band (1229–1574): front flowers dimmed, path darkened, feathered scrim (≤0.22); the rose layer
+ *        (stem/leaves/tuft) is darkened + blurred inside y 1150–1650 with a smooth gloss envelope (roseLayered).
  *  window.BCW exports the world so C_gul_firak draws the identical frame in the 6.40–6.70 overlap.
  * ========================================================================== */
 (function () {
@@ -441,7 +444,7 @@
     const m = pts[16], ma = m[2];
     ctx.fillStyle = LG(ctx, m[0] - Math.cos(ma) * 6, m[1] - Math.sin(ma) * 6, m[0] + Math.cos(ma) * 6, m[1] + Math.sin(ma) * 6, [[0, cL], [0.35, cM], [1, cD]]); ctx.fill(body);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.strokeStyle = css(lt(cL, 0.3), 0.45); ctx.lineWidth = 1.4; ctx.beginPath(); Lp.forEach((q, i) => { const r = pts[i]; const x = lerp(r[0], q[0], 0.55), y = lerp(r[1], q[1], 0.55); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke();
+    ctx.strokeStyle = css(lt(cL, 0.2), 0.25); ctx.lineWidth = 1.2; ctx.beginPath(); Lp.forEach((q, i) => { const r = pts[i]; const x = lerp(r[0], q[0], 0.55), y = lerp(r[1], q[1], 0.55); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke();
     if ((o.rim || 0) > 0.01) { ctx.strokeStyle = css(o.rimCol || '#FFB37A', 0.75 * o.rim); ctx.lineWidth = 1.8; ctx.beginPath(); Rp.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.stroke(); }
     // compound leaves (varied)
     const LV = [[0.3, -1, 1.0, 0.95, 5], [0.52, 1, 1.18, 1.05, 5], [0.74, -1, 0.78, 0.82, 3]];
@@ -722,7 +725,7 @@
         const pulse = E.env(t, 3.96, 6.0, 0.25, 1.2) * (0.5 - 0.2 * E.p(t, 4.25, 4.8));
         const [hx, hy] = toScreen(c, 1, ...roseHead(0, -0.2 * ROSE_R));
         if (pulse > 0.01) S.light(ctx2, hx, hy, 340 * zoomAt(c, 1), '#FFD98A', pulse);
-        roseLayered(ctx2, c, Object.assign(roseOpt, { P, bandDark: E.p(t, 2.5, 2.85, 'inOutSine'), band: glossK(t) * E.p(t, 2.42, 2.7, 'inOutSine'), stemGrade: 0.45 * dusk, rim: dusk, rimCol: '#FFB37A', gradeCol: '#6A3D8A', gradeA: 0.1 * dusk, onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
+        roseLayered(ctx2, c, Object.assign(roseOpt, { P, bandDark: E.p(t, 2.5, 2.85, 'inOutSine'), band: glossK(t) * E.p(t, 2.42, 2.7, 'inOutSine'), stemGrade: 0.68 * dusk, rim: dusk, rimCol: '#FFB37A', gradeCol: '#6A3D8A', gradeA: 0.1 * dusk, onHead: (hctx) => drawBee(hctx, bee, tip, ttw) }));
         sweetPulse(ctx2, hx, hy, zoomAt(c, 1), t, 3.98);
         ribbons(ctx2, hx, hy, t, 3.98, zoomAt(c, 1) * 0.9);
       },

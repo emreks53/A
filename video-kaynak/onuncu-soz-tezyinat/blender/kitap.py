@@ -217,9 +217,9 @@ if COVER_RGB:
 KEYSIZE = arg('--keysize', 0.42, float)
 DESK_KEY = arg('--deskkey', 0.55, float)
 FIN = arg('--fin', None)   # 'tx,ty,tz,az,el,dist' outro son kamera (ayar icin)
-FIN_CAM = tuple(float(v) for v in FIN.split(',')) if FIN else (0.080, -0.040, 0.020, -22.0, 27.0, 0.92)
-FIN_FSTOP = arg('--finf', 3.5, float)
-VOL_BACK = arg('--volback', 0.30, float)
+FIN_CAM = tuple(float(v) for v in FIN.split(',')) if FIN else (0.080, -0.030, 0.010, -21.0, 30.0, 1.04)
+FIN_FSTOP = arg('--finf', 2.8, float)
+VOL_BACK = arg('--volback', 0.22, float)
 VOL_SIDE = arg('--volside', 0.045, float)
 GOLD_LIN = (0.80, 0.45, 0.015)
 GOLD_HI = (0.86, 0.53, 0.035)
@@ -1109,22 +1109,18 @@ def build():
         o.visible_camera = False
         return o
     key = area('anahtar', (-0.50, 0.40, 0.80), (0.12, 0.06, 0.0), KEYSIZE, 3.0, (1.0, 0.88, 0.78), 'DISK', 28)
-    # masa sicak noktasi: ana anahtar masayi aydinlatmaz; masaya ayni isik ~%55 guçle (kitap isigi degismez)
-    kmc = bpy.data.collections.new('anahtar_haric')
-    kmc.objects.link(desk)
-    key.light_linking.receiver_collection = kmc
-    try:
-        for i_, o_ in enumerate(kmc.objects):
-            if o_ == desk:
-                kmc.collection_objects[i_].light_linking.link_state = 'EXCLUDE'
-        print('[isik] anahtar: masa haric =', [c.light_linking.link_state for c in kmc.collection_objects])
-    except Exception as e:
-        print('light-link exclude', e)
-    keyd = area('anahtar_masa', (-0.50, 0.40, 0.80), (0.12, 0.06, 0.0), KEYSIZE, 3.0 * DESK_KEY, (1.0, 0.88, 0.78), 'DISK', 28)
-    kdc = bpy.data.collections.new('anahtar_masa_alici'); kdc.objects.link(desk)
-    keyd.light_linking.receiver_collection = kdc
     fill = area('dolgu', (0.95, -0.55, 0.45), (0.08, 0.0, 0.03), 1.1, 0.35, (0.72, 0.82, 1.0), 'DISK')
     rim = area('kontur', (0.35, 0.85, 0.30), (0.08, 0.0, 0.03), 0.5, 2.5, (1.0, 0.86, 0.70), 'DISK', 70)
+    # kontur isigi yalniz kitaplara: masada kitabin arkasinda parlak bir havuz (sicak nokta) birakmasin
+    rmc = bpy.data.collections.new('kontur_alici')
+    for k_ in ('right', 'left', 'spine', 'front', 'back', 'joint_f', 'joint_b'):
+        rmc.objects.link(book[k_])
+    for o_ in sc.objects:
+        if o_.name.startswith('kapitalbent') or o_.name.startswith('yaprak'):
+            if o_.name not in rmc.objects: rmc.objects.link(o_)
+    rmc.objects.link(rib)
+    rmc.children.link(vcoll)
+    rim.light_linking.receiver_collection = rmc
     back = area('arka', (0.3, 1.3, 0.9), (0.3, 1.6, 0.4), 1.0, 1.2, (1.0, 0.75, 0.5), 'DISK', 90)
     sweep = area('parilti', (0, 0, 1), (0.08, 0, 0.04), 0.9, 0.0, (1.0, 0.9, 0.75), 'RECTANGLE', None, 0.035)
     for o in (sweep,):
@@ -1467,6 +1463,9 @@ def main():
     if SAMPLES:
         samples = SAMPLES
     render_setup(S, samples)
+    for nm in [x for x in str(arg('--off', '') or '').split(',') if x]:
+        bpy.data.objects[nm].data.energy = 0.0
+        print('[off]', nm)
     print(f'[kitap] build {time.time()-t0:.1f}s  shot={SHOT} th_open={TH_OPEN:.2f} samples={samples} pct={PCT}')
     if SAVE:
         bpy.ops.wm.save_as_mainfile(filepath=SAVE)
