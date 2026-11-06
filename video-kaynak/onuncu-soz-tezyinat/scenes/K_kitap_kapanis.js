@@ -7,8 +7,11 @@
   const N = 130, T0 = 68.10;
   const url = (i) => `out/blender/outro/${String(Math.max(0, Math.min(N - 1, i))).padStart(4, '0')}.png`;
   const GOLD = '#FFD98A', HALO = '#FFB547';
-  // kapak üzerindeki iniş noktası (son karelerde kapak başlığı; Blender kareleri gelince ayarlanır)
-  const LAND = [424, 708]; // son karelerde kapak madalyonunun merkezi (Blender outro 0102)
+  // Blender outro: kapak f70'te (70.433 s) masaya değer, f76'da (70.633 s) durur; f78–f129 arası kamera hafifçe kayar.
+  // Madalyon (son kare f129): merkez (520,831); uçlar sol (423,847) sağ (614,816) üst (469,765) alt (576,904).
+  const MU = [95.5, -15.5], MV = [53.5, 69.5];          // madalyon elipsinin yarı eksenleri (görüntüde)
+  const center = (t) => { const d = 1 - E.p(t, 70.70, 72.40, 'inOutSine'); return [520 + 6 * d, 831 + 2 * d]; };
+  const rim = (t, th, sc) => { const c = center(t); return [c[0] + (Math.cos(th) * MU[0] + Math.sin(th) * MV[0]) * sc, c[1] + (Math.cos(th) * MU[1] + Math.sin(th) * MV[1]) * sc]; };
 
   function mote(ctx, x, y, r, a) {
     if (a <= 0.01) return;
@@ -21,7 +24,7 @@
   }
 
   function card(ctx, t) {
-    const k1 = E.p(t, 70.15, 70.95, 'outCubic'), k2 = E.p(t, 70.45, 71.25, 'outCubic'), kl = E.p(t, 70.35, 71.0, 'inOutCubic');
+    const k1 = E.p(t, 70.70, 71.45, 'outCubic'), k2 = E.p(t, 70.95, 71.70, 'outCubic'), kl = E.p(t, 70.85, 71.50, 'inOutCubic');
     if (k1 <= 0) return;
     ctx.save();
     // okunabilirlik: altta çok yumuşak koyulaşma (kutu değil)
@@ -71,17 +74,18 @@
       const w = 1 - E.p(t, 68.15, 68.9, 'outQuad');
       if (w > 0) { ctx.save(); ctx.globalAlpha = w * 0.8; ctx.fillStyle = E.rad(ctx, 540, 800, 0, 1300, [[0, '#FFFFFF'], [0.5, '#FFF6E6'], [1, '#FFE9C8']]); ctx.fillRect(0, 0, E.W, E.H); ctx.restore(); }
       S.dust(ctx, t, { n: 40, seed: 21, col: '#FFE2B0', rMin: 1.2, rMax: 3.2, speed: 12, alpha: 0.35 });
-      // sekiz altın zerre: sayfalardan çıkar, sarmal çizerek kapağa iner, her biri küçük bir parıltıyla emilir
+      // sekiz altın zerre: kapak kapanırken ışıktan süzülür, sarmal çizerek madalyonun çerçevesine (başlığa değil) iner,
+      // kapak durduktan sonra (70.72 s'den itibaren) her biri küçük bir parıltıyla emilir
       for (let k = 0; k < 8; k++) {
-        const t0 = 69.25 + k * 0.05, land = 70.0 + k * 0.08;
+        const t0 = 69.95 + k * 0.04, land = 70.72 + k * 0.07, th = (k / 8) * E.TAU + 0.3;
         const a = E.p(t, t0, t0 + 0.25) * (1 - E.p(t, land, land + 0.12));
         const u = E.p(t, t0, land, 'inOutSine');
-        const ang = (k / 8) * E.TAU + u * 2.4;
-        const R = 260 * (1 - u) + 6;
-        const x = LAND[0] + Math.cos(ang) * R, y = LAND[1] + Math.sin(ang) * R * 0.6 - (1 - u) * 120;
-        if (a > 0) mote(ctx, x, y, 3.2, a);
+        if (a > 0.01) {
+          const q = rim(t, th - (1 - u) * 1.4, 1 + 2.4 * (1 - u));
+          mote(ctx, q[0], q[1] - (1 - u) * 140, 3.0, a);
+        }
         const fl = E.env(t, land - 0.02, land + 0.22, 0.04, 0.16);
-        if (fl > 0) S.sparkle(ctx, LAND[0] + Math.cos(ang) * 6, LAND[1] + Math.sin(ang) * 4, 16 * fl, fl * 0.9, '#FFF1C8', 0.3);
+        if (fl > 0) { const q = rim(t, th, 1); S.sparkle(ctx, q[0], q[1], 14 * fl, fl * 0.85, '#FFF1C8', 0.3); }
       }
       card(ctx, t);
     },

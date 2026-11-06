@@ -1072,7 +1072,7 @@ def build():
         H = Vector((GUT_X, book['zr'] + 0.00008 * (k + 1) - GD))
         for i, v in enumerate(lf.data.vertices):
             W, Nn = page80_face(TH_OPEN, book['xsp'](book['zl0']), book['zl0'], book['zr'], v.co.x)
-            W = W - Nn * (0.00012 + 0.00006 * k)   # s.80 yuzunun hemen ustu; arka yuz = s.80 dokusu
+            W = W - Nn * (0.00020 + 0.00012 * k)   # s.80 yuzunun hemen ustu; arka yuz = s.80 dokusu
             loc = rot2(-TH_OPEN, W - H)
             kk.data[i].co = (loc.x, v.co.y, loc.y)
         sd = lf.modifiers.new('bukum', 'SIMPLE_DEFORM'); sd.deform_method = 'BEND'; sd.deform_axis = 'Y'
@@ -1249,12 +1249,14 @@ def anim_intro(S):
     # yapraklar (kapaktan biraz geri kalarak ucusur, s.80'in altina konar)
     timings = [(16, 29, 46), (19, 33, 48), (22, 37, 50)]   # konma: kapak oturduktan sonra (f45.5+)
     for (lp, lf, sd), (fa, fm, fl) in zip(S['leaves'], timings):
-        for f, th, bend in ((0, 0, 0), (fa, 0, 0), (fa + 4, 22, 20), (fm, 100, 34), (fm + 5, 160, -12),
+        # yaprak yuksekteyken (100-160 derece) konma sekline girer, sonra o sekille yukaridan inip s.80'e oturur:
+        # sayfanin icinden gecmez (cift yazi / hayalet yok)
+        for f, th, bend in ((0, 0, 0), (fa, 0, 0), (fa + 4, 22, 20), (fm, 100, 30), (fm + 5, 160, 0),
                             (fl, TH_OPEN, 0)):
             lp.rotation_euler = (0.0, -math.radians(th), 0.0); lp.keyframe_insert('rotation_euler', frame=f)
             sd.angle = math.radians(bend); sd.keyframe_insert('angle', frame=f)
         kk = lf.data.shape_keys.key_blocks['konma']
-        key_sk(kk, 0, 0.0); key_sk(kk, fl - 5, 0.0); key_sk(kk, fl, 1.0)
+        key_sk(kk, 0, 0.0); key_sk(kk, fm, 0.0); key_sk(kk, fm + 5, 1.0)
         lf.hide_render = False; lf.keyframe_insert('hide_render', frame=0)
         lf.hide_render = True; lf.keyframe_insert('hide_render', frame=fl + 1)
         set_interp(lp); set_interp(lf); set_interp(lf.data.shape_keys)
