@@ -818,6 +818,14 @@ def ramp_curve(th, xs0, zl0, Q, margin=0.0025):
     P = Vector((0.0, PIVOT_Z))
     A = P + rot2(th, Vector((xs0, zl0)) - P)
     d = rot2(th, Vector((1.0, 0.0)))
+    if th < 185:
+        # hareket sirasinda: kagit oluktan kisa yoldan kartonun mentese ucuna gider ve kartona yapisik ilerler
+        # (kemer yok -> alttan karton ic yuzu gorunmez)
+        J = A + d * 0.006
+        L = (J - Q).length
+        tau = (J - Q).normalized()
+        P1 = Q + tau * (L * 0.35); P2 = J - d * (L * 0.35)
+        return Q, P1, P2, J, d, 1.0
     J = A + d * RAMP_U0
     L = (J - Q).length
     k = smoothstep(90.0, TH_OPEN, th)
@@ -1483,6 +1491,8 @@ def main():
         d = os.path.join(OUT, SHOT)
         os.makedirs(d, exist_ok=True)
         sc.render.filepath = os.path.join(d, '####')
+        if arg('--start', None) is not None:
+            sc.frame_start = int(arg('--start', 0, int))
         state = {'t': time.time()}
         def post(scene, *a):
             now = time.time()
