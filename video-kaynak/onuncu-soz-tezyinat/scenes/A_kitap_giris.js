@@ -1,7 +1,8 @@
 /* A_kitap_giris (0.00–2.70) — Blender'da render edilmiş gerçekçi Risale-i Nur "Sözler" cildi (out/blender/intro/NNNN.png, 81 kare)
  * üzerine canvas atmosferi: sıcak ışık huzmesi, toz zerreleri ve ilk saniyenin "kanca"sı olan altın zerre:
  *  sayfa kenarlarından birkaç yumuşak altın zerre yükselir; kapak açılırken sayfaya doğru sarmal çizip ışığa karışır.
- * B'ye geçiş: Blender'ın son kareleri krem ışığa doğru beyazlar; gecisler.js 'light' geçişi 2.30–2.70.
+ * B'ye geçiş: 1.80'den itibaren krem ışığa beyazlar; gecisler.js 'light' geçişi 2.10–2.50 (tepe 2.30),
+ *  böylece "tezyinat" (2.50) söylenirken bahçe görünür ve ilk altyazı beyaz parlamanın üstüne düşmez.
  */
 (function () {
   const N = 81;
@@ -21,7 +22,7 @@
   E.scene({
     id: 'A_kitap_giris', t0: 0.0, t1: 2.7,
     prepare(t) { const i = Math.round(t * 30); return [url(i), url(i + 1)]; },
-    post: (t) => ({ bloom: 0.22 + 0.3 * E.p(t, 1.6, 2.6), vignette: 0.22, grain: 0.035 }),
+    post: (t) => ({ bloom: 0.22 + 0.3 * E.p(t, 1.4, 2.3), vignette: 0.22, grain: 0.035 }),
     draw(ctx, t) {
       const i = Math.round(t * 30), img = E.img(url(i));
       if (img) ctx.drawImage(img, 0, 0, E.W, E.H);
@@ -37,7 +38,7 @@
         ctx.restore();
       }
       // toz zerreleri (huzmede daha görünür)
-      S.dust(ctx, t, { n: 46, seed: 11, col: '#FFE2B0', rMin: 1.2, rMax: 3.4, speed: 14, alpha: 0.42 * (1 - E.p(t, 2.0, 2.6)) });
+      S.dust(ctx, t, { n: 46, seed: 11, col: '#FFE2B0', rMin: 1.2, rMax: 3.4, speed: 14, alpha: 0.42 * (1 - E.p(t, 1.8, 2.3)) });
 
       // --- altın zerreler: sayfa kenarlarından yumuşakça yükselir, kapak açılırken sayfaya doğru süzülüp kaybolur ---
       // (çizgi, düğüm, sekiz köşeli yıldız YOK; başlığın üstüne konmaz; her şey 8+ karede belirir/kaybolur)
@@ -59,7 +60,7 @@
       const sink = E.env(t, 1.45, 2.1, 0.25, 0.4);
       if (sink > 0) S.light(ctx, tx, ty, 220, '#FFE3A1', sink * 0.35);
       // son: sayfa ışığı (Blender beyazlığına yumuşak sıcaklık)
-      const w = E.p(t, 2.15, 2.7, 'inQuad');
+      const w = E.p(t, 1.80, 2.30, 'inQuad');
       if (w > 0) { ctx.save(); ctx.globalAlpha = w * 0.85; ctx.fillStyle = E.rad(ctx, 540, 960, 0, 1300, [[0, '#FFFFFF'], [0.5, '#FFF6E6'], [1, '#FFE9C8']]); ctx.fillRect(0, 0, E.W, E.H); ctx.restore(); }
     },
   });

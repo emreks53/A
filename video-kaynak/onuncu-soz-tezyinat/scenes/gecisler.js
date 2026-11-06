@@ -1,5 +1,5 @@
 /* Sahneler arası geçişler (entegrasyon). Tanımsız örtüşmelerde varsayılan: örtüşme boyunca yumuşak çapraz geçiş. */
-E.transition({ from: 'A_kitap_giris', to: 'B_bahce', at: 2.30, dur: 0.40, type: 'light', x: 540, y: 960, color: '#FFF6E6' });
+E.transition({ from: 'A_kitap_giris', to: 'B_bahce', at: 2.10, dur: 0.40, type: 'light', x: 540, y: 960, color: '#FFF6E6' });
 E.transition({ from: 'B_bahce', to: 'C_gul_firak', at: 6.40, dur: 0.034, type: 'cut' });
 E.transition({ from: 'C_gul_firak', to: 'D_tatma', at: 11.50, dur: 0.30, type: 'fade' });
 E.transition({ from: 'D_tatma', to: 'E_omur', at: 16.10, dur: 0.20, type: 'fade' });
