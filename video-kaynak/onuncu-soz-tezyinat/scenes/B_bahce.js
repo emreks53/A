@@ -467,12 +467,13 @@
   }
   function baseFront(ctx, P, t) {
     ctx.lineCap = 'round';
-    for (let i = 0; i < 16; i++) {
-      const x = (H(i, 901) - 0.5) * 70, h = 18 + 30 * H(i, 902), lean = (H(i, 903) - 0.5) * h * 0.9 + Math.sin(t * 1.4 + i) * h * 0.08;
-      ctx.strokeStyle = css(i % 3 ? P.grassD : P.grassL, 0.9); ctx.lineWidth = 2 + 1.6 * H(i, 904);
-      ctx.beginPath(); ctx.moveTo(x, 4); ctx.quadraticCurveTo(x + lean * 0.3, 4 - h * 0.6, x + lean, 4 - h); ctx.stroke();
+    const gD = mx(P.grassD, P.meadow[1], 0.35), gL = mx(P.grassL, P.meadow[1], 0.45);
+    for (const [x, a, l, wd] of [[-18, -1.0, 24, 7], [16, 0.9, 21, 6.5]]) { ctx.save(); ctx.translate(x, 5); ctx.rotate(a + Math.sin(t * 1.2 + x) * 0.04); leaflet(ctx, l, wd, mx(P.leaf, gL, 0.4)); ctx.restore(); }
+    for (let i = 0; i < 26; i++) {
+      const x = (H(i, 901) - 0.5) * 78, h = 12 + 28 * H(i, 902) * (1 - Math.abs(x) / 70), lean = (H(i, 903) - 0.5) * h * 0.8 + Math.sin(t * 1.4 + i) * h * 0.08;
+      ctx.strokeStyle = css(i % 3 ? gD : gL, 0.85); ctx.lineWidth = 0.9 + 0.8 * H(i, 904);
+      ctx.beginPath(); ctx.moveTo(x, 5); ctx.quadraticCurveTo(x + lean * 0.3, 5 - h * 0.6, x + lean, 5 - h); ctx.stroke();
     }
-    for (const [x, a, l, wd] of [[-16, -0.9, 30, 10], [14, 0.8, 26, 9], [-4, -0.2, 22, 8]]) { ctx.save(); ctx.translate(x, 5); ctx.rotate(a + Math.sin(t * 1.2 + x) * 0.04); leaflet(ctx, l, wd, mx(P.grassL, P.meadow[1], 0.4)); ctx.restore(); }
   }
   function drawRose(ctx, c, o) {
     const P = o.P || PAL.B;

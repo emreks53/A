@@ -215,6 +215,12 @@ if COVER_RGB:
     COVER_LIN = tuple(float(c) for c in COVER_RGB.split(','))
 # varak: doygun sicak altin (#D4AF37 / #C9A24A civari okunacak sekilde); kenar (F82) tinti da altin
 KEYSIZE = arg('--keysize', 0.42, float)
+DESK_KEY = arg('--deskkey', 0.55, float)
+FIN = arg('--fin', None)   # 'tx,ty,tz,az,el,dist' outro son kamera (ayar icin)
+FIN_CAM = tuple(float(v) for v in FIN.split(',')) if FIN else (0.080, -0.040, 0.020, -22.0, 27.0, 0.92)
+FIN_FSTOP = arg('--finf', 3.5, float)
+VOL_BACK = arg('--volback', 0.30, float)
+VOL_SIDE = arg('--volside', 0.045, float)
 GOLD_LIN = (0.80, 0.45, 0.015)
 GOLD_HI = (0.86, 0.53, 0.035)
 GOLD_KD = arg('--gkd', 0.32, float)   # yaygin (govde) altin katmani olcegi
@@ -903,12 +909,11 @@ def page80_face(th, xs0, zl0, zr, u):
     at, _, _ = ramp_path(th, xs0, zl0, zr)
     return at(u)
 
-def leaf_obj(name, k, coll=None):
-    LW = 0.1605
+def leaf_obj(name, k, LW=0.1605, coll=None):
     nx, nyy = 48, 4
     verts, faces, uvs = [], [], []
     for j in range(nyy + 1):
-        y = -HP / 2 + 0.0006 + (HP - 0.0012) * j / nyy
+        y = -HP / 2 + HP * j / nyy
         for i in range(nx + 1):
             x = LW * i / nx
             verts.append((x, y, 0.0))
@@ -1019,7 +1024,7 @@ def build():
     MATS['astar'] = mat_simple('sirt_astar', (0.42, 0.34, 0.24), 0.85)
     MATS['s81'] = mat_page('sayfa81', load_img('sayfa81.png'), glow=True)
     MATS['s80'] = mat_page('sayfa80', load_img('sayfa80.png'))
-    MATS['yaprak'] = mat_page('yaprak', load_img('yaprak.png'), mirror_back=True, back_img=load_img('yaprak_arka.png'))
+    MATS['yaprak'] = mat_page('yaprak', load_img('yaprak.png'), mirror_back=True, back_img=load_img('sayfa80.png'))
     MATS['kapital'] = mat_headband('kapitalbent')
     MATS['kurdele'] = mat_ribbon('kurdele')
     MATS['ceviz'] = mat_walnut_img('ceviz') if os.path.exists(CEVIZ_DAT) else mat_walnut('ceviz')
@@ -1049,7 +1054,7 @@ def build():
     for k in range(3):
         pz = book['zr'] + 0.00008 * (k + 1)
         lp = empty(f'yaprak_mentese{k}', (GUT_X, 0.0, pz))
-        lf = leaf_obj(f'yaprak{k}', k)
+        lf = leaf_obj(f'yaprak{k}', k, book['xfo'](book['zl0']) - book['xsp'](book['zl0']))
         lf.location = lp.location
         lf.data.materials.append(MATS['yaprak'])
         parent_keep(lf, lp)
@@ -1059,7 +1064,7 @@ def build():
         H = Vector((GUT_X, book['zr'] + 0.00008 * (k + 1) - GD))
         for i, v in enumerate(lf.data.vertices):
             W, Nn = page80_face(TH_OPEN, book['xsp'](book['zl0']), book['zl0'], book['zr'], v.co.x)
-            W = W + Nn * (0.0011 + 0.0003 * k)
+            W = W - Nn * (0.00012 + 0.00006 * k)   # s.80 yuzunun hemen ustu; arka yuz = s.80 dokusu
             loc = rot2(-TH_OPEN, W - H)
             kk.data[i].co = (loc.x, v.co.y, loc.y)
         sd = lf.modifiers.new('bukum', 'SIMPLE_DEFORM'); sd.deform_method = 'BEND'; sd.deform_axis = 'Y'
@@ -1070,10 +1075,10 @@ def build():
     # --- diger ciltler (arka plan)
     vols = []
     vcoll = bpy.data.collections.new('ciltler'); sc.collection.children.link(vcoll)
-    v_az = -26.0
+    v_az = FIN_CAM[3]
     vdir = Vector((-math.sin(math.radians(v_az)), math.cos(math.radians(v_az)), 0.0))
     row = Vector((vdir.y, -vdir.x, 0.0))
-    origin = Vector((0.085, 0.0, 0.0)) + vdir * 0.34 - row * 0.040
+    origin = Vector((0.085, 0.0, 0.0)) + vdir * VOL_BACK - row * VOL_SIDE
     cur = 0.0
     for k, vinfo in enumerate(PRM['volumes']):
         tk = vinfo['thick'] / 1000.0
@@ -1104,6 +1109,17 @@ def build():
         o.visible_camera = False
         return o
     key = area('anahtar', (-0.50, 0.40, 0.80), (0.12, 0.06, 0.0), KEYSIZE, 3.0, (1.0, 0.88, 0.78), 'DISK', 28)
+    # masa sicak noktasi: ana anahtar masayi aydinlatmaz; masaya ayni isik ~%55 guçle (kitap isigi degismez)
+    kmc = bpy.data.collections.new('anahtar_haric')
+    kmc.objects.link(desk)
+    key.light_linking.receiver_collection = kmc
+    try:
+        kmc.collection_objects[desk.name].light_linking.link_state = 'EXCLUDE'
+    except Exception as e:
+        print('light-link exclude', e)
+    keyd = area('anahtar_masa', (-0.50, 0.40, 0.80), (0.12, 0.06, 0.0), KEYSIZE, 3.0 * DESK_KEY, (1.0, 0.88, 0.78), 'DISK', 28)
+    kdc = bpy.data.collections.new('anahtar_masa_alici'); kdc.objects.link(desk)
+    keyd.light_linking.receiver_collection = kdc
     fill = area('dolgu', (0.95, -0.55, 0.45), (0.08, 0.0, 0.03), 1.1, 0.35, (0.72, 0.82, 1.0), 'DISK')
     rim = area('kontur', (0.35, 0.85, 0.30), (0.08, 0.0, 0.03), 0.5, 2.5, (1.0, 0.86, 0.70), 'DISK', 70)
     back = area('arka', (0.3, 1.3, 0.9), (0.3, 1.6, 0.4), 1.0, 1.2, (1.0, 0.75, 0.5), 'DISK', 90)
@@ -1276,17 +1292,17 @@ def anim_outro(S):
     cam, aim, foc = S['cam'], S['aim'], S['foc']
     tx = TEXT_C
     cover_c = (0.088, 0.0, T)
-    fin_t = (0.080, -0.078, 0.012)
+    fin_t = FIN_CAM[:3]; f_az, f_el, f_d = FIN_CAM[3:]
     key_cam(cam, aim, foc, 0, (0.085, -0.004, zr), 0.0, 84.0, 0.265, (0.085, 0.0, zr), 8.0)
     key_cam(cam, aim, foc, 18, (tx[0], tx[1] - 0.006, zr), -1.5, 80.0, 0.35, (tx[0], tx[1], zr), 7.1)
     key_cam(cam, aim, foc, 48, (0.070, -0.040, 0.025), -14.0, 56.0, 0.55, (0.08, 0.0, 0.035), 5.0)
-    key_cam(cam, aim, foc, 78, fin_t, -26.0, 33.0, 0.70, cover_c, 3.2)
-    key_cam(cam, aim, foc, 129, (fin_t[0] + 0.004, fin_t[1], fin_t[2]), -24.3, 32.2, 0.675, cover_c, 3.2)
+    key_cam(cam, aim, foc, 78, fin_t, f_az, f_el, f_d, cover_c, FIN_FSTOP)
+    key_cam(cam, aim, foc, 129, (fin_t[0] + 0.003, fin_t[1], fin_t[2]), f_az + 1.5, f_el - 0.6, f_d * 0.97, cover_c, FIN_FSTOP)
     for ob in (cam, aim, foc):
         set_interp(ob)
     set_interp(cam.data)
     # kapandiktan sonra baslikta yumusak parilti
-    cp = sph(fin_t, -25.0, 32.6, 0.69)
+    cp = sph(fin_t, f_az + 0.8, f_el - 0.3, f_d * 0.985)
     sweep_path(S, cp, 84, 120, (0.02, 0.09, T), (0.17, -0.08, T), 0.8, 4.0)
 
 def setup_hero(S):
