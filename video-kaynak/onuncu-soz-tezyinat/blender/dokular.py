@@ -6,7 +6,7 @@ Uretir (blender/tex/):
   sirt_maske.png       sirt altin maskesi (yay boyunca u, yukseklik v)
   cilt_sirt_*.png      arka plandaki diger ciltlerin sirt maskeleri
   sayfa81.png          sag sayfa (s. 81) - krem kagit + murekkep
-  sayfa80.png          sol sayfa (s. 80) - ayni pasajdan (s.81 metni + Hasiye) gercek harfler, bulanik kalacak
+  sayfa80.png          sol sayfa (s. 80) - Onuncu Soz'de s.81'den onceki gercek metin (sayfa80_metin.txt), sonu 'Ucuncu esas:'
   yaprak.png / yaprak_arka.png   ucusan yapraklarin on/arka yuzu - ayni pasajdan gercek harfler
   params.json          kitap.py'nin kullandigi olculer
 
@@ -398,6 +398,68 @@ def greek_html(body_pt, inner_left, pno, header, start):
 </div></body></html>"""
 
 
+def page80_html(body_pt):
+    """s.80: Onuncu Soz'de s.81'den hemen onceki GERCEK metin (sayfa80_metin.txt, Yeni Asya nesri; uydurma yok).
+    Sayfa bu metinle BITER (son satir 'Ucuncu esas:'); geriye dogru doldurulur: alta hizali, bastan butun
+    kelimeler atilarak sigdirilir; ilk satir tam satir (cumle ortasindan baslayabilir)."""
+    import re
+    src = os.path.join(HERE, 'sayfa80_metin.txt')
+    paras = [l.strip() for l in open(src, encoding='utf-8') if l.strip()]
+    toks = []   # paragraf basina kelime listesi; <b> etiketleri kelime kelime
+    for p in paras:
+        out = []
+        for seg in re.split(r'(<b>.*?</b>)', p):
+            if not seg:
+                continue
+            if seg.startswith('<b>'):
+                out += ['<b>' + w + '</b>' for w in seg[3:-4].split()]
+            else:
+                out += seg.split()
+        toks.append(out)
+    css = page_css(inner_left=False)
+    lh = 1.64 * body_pt * 0.3528
+    nlines = int((PAGE_H - M_BOT - M_TOP) / lh)
+    bottom = PAGE_H - M_BOT
+    return f"""<!doctype html><html lang="tr"><head><meta charset="utf-8"><style>{css}
+#body{{font-size:{body_pt}pt;}} #body p{{margin:0;text-indent:7mm;}} #body p.cont{{text-indent:0;}} #body b{{line-height:1;}}</style>
+<script>
+const TOKS = {json.dumps(toks, ensure_ascii=False)};
+const MM = 96/25.4, LH = {lh:.5f}, NL = {nlines}, BOTTOM = {bottom:.3f};
+window.fitLayout = async function(){{
+  await document.fonts.load('700 18pt Corm'); await document.fonts.load('500 18pt Corm');
+  await document.fonts.ready;
+  const body = document.getElementById('body');
+  const flat = []; TOKS.forEach((p,i)=>p.forEach((w,j)=>flat.push([i,j])));
+  function render(k){{
+    let html = '', pi = flat[k][0], wj = flat[k][1];
+    for (let i = pi; i < TOKS.length; i++) {{
+      const ws = (i === pi) ? TOKS[i].slice(wj) : TOKS[i];
+      const cls = (i === pi && wj > 0) ? ' class="cont"' : '';
+      html += '<p' + cls + '>' + ws.join(' ') + '</p>';
+    }}
+    body.innerHTML = html;
+    return Math.round(body.getBoundingClientRect().height / MM / LH);
+  }}
+  let lo = 0, hi = flat.length - 1;            // en kucuk k: satir <= NL (en cok metin)
+  while (lo < hi) {{ const m = (lo + hi) >> 1; if (render(m) <= NL) hi = m; else lo = m + 1; }}
+  let k = lo, n = render(k);
+  // ilk satir tam olmali: ilk (devam) paragrafi tek satirsa onu atla
+  const first = body.querySelector('p');
+  if (first && first.classList.contains('cont') && Math.round(first.getBoundingClientRect().height / MM / LH) < 2) {{
+    const pi = flat[k][0]; while (k < flat.length && flat[k][0] === pi) k++; n = render(k);
+  }}
+  body.style.top = (BOTTOM - n * LH) + 'mm';
+  console.log('S80 lines=' + n + '/' + NL + ' basla="' + body.innerText.slice(0, 60).replace(/\\n/g,' ') + '"');
+}};
+</script></head>
+<body><div id="pg">
+<div class="hdr">SÖZLER</div>
+<div class="pno" style="left:{M_OUT}mm">80</div>
+<div class="hrule"></div>
+<div id="body"></div>
+</div></body></html>"""
+
+
 def run_jobs(jobs):
     jp = os.path.join(WORK, 'jobs.json')
     with open(jp, 'w') as f:
@@ -506,8 +568,9 @@ def main():
             body_pt = float(line.split('body_pt=')[1].split()[0])
     print('body_pt', body_pt)
     jobs2 = [
-        dict(html=write('sayfa80.html', greek_html(body_pt, False, '80', 'SÖZLER', 'nazarlarını, asıllarına')),
-             out=os.path.join(WORK, 'sayfa80.png'), w=PAGE_W * PX_MM, h=PAGE_H * PX_MM, dsf=2.2, transparent=True),
+        dict(html=write('sayfa80.html', page80_html(body_pt)),
+             out=os.path.join(WORK, 'sayfa80.png'), w=PAGE_W * PX_MM, h=PAGE_H * PX_MM, dsf=2.2, transparent=True,
+             fit=True),
         dict(html=write('yaprak.html', greek_html(body_pt, True, '79', 'ONUNCU SÖZ', 'Çünkü ya onun ömrü')),
              out=os.path.join(WORK, 'yaprak.png'), w=PAGE_W * PX_MM, h=PAGE_H * PX_MM, dsf=1.6, transparent=True),
         dict(html=write('yaprak_arka.html', greek_html(body_pt, False, '78', 'SÖZLER', 'başka şeylerin suretleri')),

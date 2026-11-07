@@ -626,14 +626,14 @@ def joint_strip(name, ztop, outward=+1, coll=None, depth=0.0013):
 def headband(name, Tk, xsp, z0, z1, y, coll=None):
     cu = bpy.data.curves.new(name, 'CURVE')
     cu.dimensions = '3D'
-    cu.bevel_depth = 0.00125
+    cu.bevel_depth = HB_R
     cu.bevel_resolution = 3
     sp = cu.splines.new('POLY')
     n = 20
     sp.points.add(n)
     for i in range(n + 1):
         z = z0 + 0.0008 + (z1 - z0 - 0.0016) * i / n
-        sp.points[i].co = (xsp(z) + 0.0009, y, z, 1.0)
+        sp.points[i].co = (xsp(z) + HB_DX, y, z, 1.0)
     ob = bpy.data.objects.new(name, cu)
     return link(ob, coll)
 
@@ -724,7 +724,7 @@ def build_book(prefix, Tk, spine_mask, spine_blur=None, bands_mm=PRM['bands'], m
     zl0 = zr + 0.0004
     rb = extrude_profile(prefix + 'sag_blok', block_profile(z0, zr, xsp, xfo, 64), -HP / 2, HP / 2, 18, coll)
     rb.data.materials.append(edge); rb.data.materials.append(MATS['s81'])
-    lb = extrude_profile(prefix + 'sol_blok', block_profile(zl0, z1, xsp, xfo, 64), -HP / 2, HP / 2, 18, coll)
+    lb = extrude_profile(prefix + 'sol_blok', block_profile(zl0, z1, xsp, xfo, 96), -HP / 2, HP / 2, 18, coll)
     lb.data.materials.append(edge); lb.data.materials.append(MATS['s80'])
     def top_pred(zv):
         return lambda p, cos: all(abs(c.z - zv) < 1e-7 for c in cos) and abs(p.normal.z) > 0.5
@@ -750,9 +750,30 @@ def build_book(prefix, Tk, spine_mask, spine_blur=None, bands_mm=PRM['bands'], m
 
 # ---- acilis geometrisi: kapak acisi, oluk, sol blok rampasi -------------------------------
 GD = 0.0052          # sag blok oluk derinligi (build_book ile ayni)
-GUT_X = 0.0031       # oluk cizgisi: sol blogun sirt ucu burada sag sayfanin sirt kenarina biner (~1.2 mm bindirme)
-RAMP_U0 = 0.026      # sol sayfanin olukta kivrilan bolumu (m)
-RAMP_ANGLES = [30.0, 60.0, 90.0, 120.0, 150.0, 172.0, TH_OPEN]
+GUT_X = 0.006        # oluk kok noktasi: sabit kapitalbent tupunun (x<=4.8 mm) saginda
+RAMP_U0 = 0.006      # kivrim, sol yigin uzerinde 6 mm sonra biter (tumsek yok)
+THIN_U = 0.026       # cilt dibinde blok incelmesi (eski deger)
+BLANK_UB = 0.017     # yalniz bos kenar (u<17 mm) gerilir; s.80 metni u=19.1 mm'de baslar -> metin asla kivrimda degil
+HB_DX, HB_R = 0.0006, 0.00115   # kapitalbent tupu: sirta 0.3 mm daha yakin, 0.1 mm ince (kivrima >= 1 mm pay)
+N_LEAVES = 0         # ucusan yapraklar kaldirildi: kitap kurdelesinden acilir, kapak + ince sol blok birlikte doner
+# yogun anahtarlar (acik poza yakin): komsu anahtar karisimi kagidi sirt kenarina suremesin
+RAMP_ANGLES = [30.0, 60.0, 90.0, 120.0, 140.0, 155.0, 166.0, 175.0, 182.0, 188.0, TH_OPEN]
+# her aci icin cozulmus kivrim (dunya x,z; m): Q, P1, P2, J. Dik aciklik >= 1 mm: sirt kabugu kenari, mafsal ucu,
+# karton ic yuzu, kapitalbent. (cozucu: analist fullsolve.py; build sirasinda verify_left_page() ile yeniden olculur)
+RAMP_TABLE = {
+    30.000: ((0.006, 0.0367527), (0.0073139, 0.0382606), (0.0078951, 0.0413235), (0.0096272, 0.0423235)),
+    60.000: ((0.006, 0.0358484), (0.006679, 0.0377296), (0.0082756, 0.0456565), (0.0092756, 0.0473885)),
+    90.000: ((0.006, 0.0346007), (0.0060516, 0.0366001), (0.0064387, 0.0495991), (0.0064387, 0.0515991)),
+    120.000: ((0.006, 0.0334217), (0.0069692, 0.039849), (0.0043765, 0.0494971), (0.0018765, 0.0538272)),
+    140.000: ((0.006, 0.0328773), (0.0083405, 0.0436255), (2.7e-06, 0.0526028), (-0.0015294, 0.0538884)),
+    155.000: ((0.006, 0.0326827), (0.0090258, 0.044811), (-0.0021722, 0.0523172), (-0.0039848, 0.0531624)),
+    166.000: ((0.006, 0.0326687), (0.0092193, 0.0462936), (-0.0036811, 0.0517536), (-0.0056217, 0.0522374)),
+    175.000: ((0.006, 0.0326687), (0.0105672, 0.0443045), (-0.0033231, 0.050954), (-0.0068098, 0.051259)),
+    182.000: ((0.006, 0.0326687), (0.009953, 0.0445272), (-0.0026224, 0.050551), (-0.0076193, 0.0503765)),
+    188.000: ((0.006, 0.0326687), (0.0107603, 0.0458346), (-0.0047573, 0.0500333), (-0.0082232, 0.0495462)),
+    194.385: ((0.006, 0.0326687), (0.0101329, 0.0460448), (-0.0039235, 0.0498408), (-0.0087668, 0.0485986)),
+}
+
 
 def ease_arrive(t, k=0.9):
     """0->1: yavas baslar, sifir olmayan hizla varir (k<1) -> agir, 'tok' oturma."""
@@ -812,43 +833,30 @@ def poly_z(poly, x):
             best = z if best is None else max(best, z)
     return best
 
-def ramp_curve(th, xs0, zl0, Q, margin=0.0025):
-    """Sol sayfa (s.80) yuzunun olukta izledigi egri: Q'dan baslar, mafsali/kartonu asarak rijit
-    yuzeye J'de teget baglanir. Donmus kapagin ustunde en az `margin` kalacak sekilde yukseltilir."""
+_XSP = book_dims(T)[2]
+
+def right_face_z(x, th, zr):
+    """Sag blok (s.81) ust yuzeyinin 'acik' anahtarli yuksekligi (build_book ile ayni formul)."""
+    xg0 = _XSP(zr)
+    drop = GD * (1 - smoothstep(xg0, xg0 + 0.030, x)) ** 2
+    lift = 0.0011 * math.exp(-((x - (xg0 + 0.042)) / 0.03) ** 2)
+    return zr + (lift - drop) * rval(th)
+
+def ramp_curve(th, xs0, zl0, Q, margin=None):
+    """Kisa, alcak oluk kivrimi (Bezier). Kontrol noktalari cozulmus tablodan; Q ve J bu sahnenin
+    geometrisinden hesaplanir, P1/P2 tablodaki Q/J'ye gore ofsetleriyle tasinir."""
     P = Vector((0.0, PIVOT_Z))
     A = P + rot2(th, Vector((xs0, zl0)) - P)
     d = rot2(th, Vector((1.0, 0.0)))
-    if th < 185:
-        # hareket sirasinda: kagit oluktan kisa yoldan kartonun mentese ucuna gider ve kartona yapisik ilerler
-        # (kemer yok -> alttan karton ic yuzu gorunmez)
-        J = A + d * 0.006
-        L = (J - Q).length
-        tau = (J - Q).normalized()
-        P1 = Q + tau * (L * 0.35); P2 = J - d * (L * 0.35)
-        return Q, P1, P2, J, d, 1.0
     J = A + d * RAMP_U0
-    L = (J - Q).length
-    k = smoothstep(90.0, TH_OPEN, th)
-    up = Vector((-0.08, 1.0)).normalized()
-    tau = ((J - Q).normalized() * (1 - k) + up * k).normalized()
-    a, b_ = L * (0.38 + 0.55 * k), L * 0.42
-    polys = [joint_top(th), SPINE_TOP] if th > 185 else None   # yalniz kapak yataya yakinken anlamli
-    clr = None
-    for it in range(30):
-        P1 = Q + tau * a
-        P2 = J - d * b_
-        clr = 1.0
-        if polys:
-            for i in range(81):
-                c = bez(Q, P1, P2, J, i / 80)
-                for poly in polys:
-                    zt = poly_z(poly, c.x)
-                    if zt is not None:
-                        clr = min(clr, c.y - zt)
-        if clr >= margin or a > 2.2 * L:
-            break
-        a *= 1.08
-    return Q, P1, P2, J, d, clr
+    key = min(RAMP_TABLE, key=lambda a: abs(a - th))
+    tQ, tP1, tP2, tJ = [Vector(v) for v in RAMP_TABLE[key]]
+    if abs(key - th) > 0.02:
+        raise ValueError(f'rampa tablosunda aci yok: {th}')
+    dq, dj = (Q - tQ).length, (J - tJ).length
+    P1 = Q + (tP1 - tQ)
+    P2 = J + (tP2 - tJ)
+    return Q, P1, P2, J, d, max(dq, dj)
 
 _PATHS = {}
 def ramp_path(th, xs0, zl0, zr):
@@ -857,7 +865,7 @@ def ramp_path(th, xs0, zl0, zr):
     key = round(th, 4)
     if key in _PATHS:
         return _PATHS[key]
-    Q = Vector((GUT_X, zr - 0.0004 - GD * rval(th)))
+    Q = Vector((GUT_X, right_face_z(GUT_X, th, zr) - 0.0004))
     Qc, P1, P2, J, d, clr = ramp_curve(th, xs0, zl0, Q)
     n = 240
     pts = [bez(Qc, P1, P2, J, i / n) for i in range(n + 1)]
@@ -886,14 +894,16 @@ def left_ramp_keys(lb, xsp, zl0, z1, zr):
     xs0 = xsp(zl0)
     keys = []
     for th in RAMP_ANGLES:
-        at, clr, Lb = ramp_path(th, xs0, zl0, zr)
-        print(f'[rampa] th={th:.1f} aciklik={clr*1000:.2f}mm egri={Lb*1000:.1f}mm', flush=True)
+        at, dev, Lb = ramp_path(th, xs0, zl0, zr)
+        E = max(0.0, Lb - RAMP_U0)          # kivrimin fazladan boyu: yalniz bos kenardan karsilanir
+        print(f'[rampa] th={th:.1f} egri={Lb*1000:.1f}mm tablo_sapma={dev*1000:.3f}mm', flush=True)
         sk = lb.shape_key_add(name=f'rampa_{th:.0f}', from_mix=False)
         for i, v in enumerate(lb.data.vertices):
             c = v.co
             u = c.x - xsp(c.z)
-            C, N = at(u)
-            thin = 0.70 + 0.30 * smoothstep(0.0, RAMP_U0, u)   # cilt dibinde sayfalar sikisik
+            s_ = u + E * min(1.0, max(0.0, u) / BLANK_UB)
+            C, N = at(s_)
+            thin = 0.70 + 0.30 * smoothstep(0.0, THIN_U, u)   # cilt dibinde sayfalar sikisik
             w = C + N * ((c.z - zl0) * thin)
             loc = P + rot2(-th, w - P)
             sk.data[i].co = (loc.x, c.y, loc.y)
@@ -1032,7 +1042,8 @@ def build():
     MATS['astar'] = mat_simple('sirt_astar', (0.42, 0.34, 0.24), 0.85)
     MATS['s81'] = mat_page('sayfa81', load_img('sayfa81.png'), glow=True)
     MATS['s80'] = mat_page('sayfa80', load_img('sayfa80.png'))
-    MATS['yaprak'] = mat_page('yaprak', load_img('yaprak.png'), mirror_back=True, back_img=load_img('sayfa80.png'))
+    if N_LEAVES:
+        MATS['yaprak'] = mat_page('yaprak', load_img('yaprak.png'), mirror_back=True, back_img=load_img('sayfa80.png'))
     MATS['kapital'] = mat_headband('kapitalbent')
     MATS['kurdele'] = mat_ribbon('kurdele')
     MATS['ceviz'] = mat_walnut_img('ceviz') if os.path.exists(CEVIZ_DAT) else mat_walnut('ceviz')
@@ -1059,7 +1070,7 @@ def build():
     rib = ribbon('kurdele'); rib.data.materials.append(MATS['kurdele'])
     # ucusan yapraklar
     leaves = []
-    for k in range(3):
+    for k in range(N_LEAVES):
         pz = book['zr'] + 0.00008 * (k + 1)
         lp = empty(f'yaprak_mentese{k}', (GUT_X, 0.0, pz))
         lf = leaf_obj(f'yaprak{k}', k, book['xfo'](book['zl0']) - book['xsp'](book['zl0']))
@@ -1408,6 +1419,10 @@ def report_bbox(S, f):
     box = [(x, y, z) for x in (-0.006, XF) for y in (-HB/2, HB/2) for z in (0, T)]
     pg = [(x, y, z) for x in (0.019, 0.142) for y in (HP/2 - 0.031, -HP/2 + 0.024) for z in (S['book']['zr'],)]
     print(f'[bbox] f{f} kitap {proj(box)} | metin {proj(pg)}', flush=True)
+    zq = S['book']['zr'] - 0.0045
+    ph = world_to_camera_view(sc, cam, Vector((GUT_X, HP / 2 - 0.001, zq)))
+    pt = world_to_camera_view(sc, cam, Vector((GUT_X, -HP / 2 + 0.001, zq)))
+    print(f'[oluk] f{f} {ph.x*1080:.1f} {(1-ph.y)*1920:.1f} {pt.x*1080:.1f} {(1-pt.y)*1920:.1f}', flush=True)
     # kapak madalyonu (semse) merkezi ve uclari (kapali kitap icin anlamli)
     mx, my = JW + 0.0815, HB / 2 - 0.111
     def px(p):
@@ -1460,6 +1475,86 @@ def bake_all(res_desk=8192):
     em = b.new('ShaderNodeEmission'); b.link(cc.outputs[0], em.inputs['Color']); b.out(em.outputs[0])
     do_bake(ob, m, 2400, 3200, LEATHER_BAKED, True)
 
+# ------------------------------------------------------------------ dogrulama (sol sayfa kivrimi)
+def verify_left_page(S, step=0.5):
+    """Gercek sekil-anahtari verisiyle (Blender'in dogrusal karisimi), her aci icin s.80 yuzunun engellerden
+    DIK acikligini olcer: sirt kabugu kenari, mafsal uc yuzu, karton ic yuzu, kapitalbent diskleri.
+    Ayrica sol sayfanin (u>1 mm) sag sayfanin altina inmedigini kontrol eder."""
+    import numpy as np
+    book = S['book']; lb = book['left']; zr, zl0, z0, z1 = book['zr'], book['zl0'], book['z0'], book['z1']
+    xsp = book['xsp']
+    kb = lb.data.shape_keys.key_blocks
+    basis = kb['Basis']
+    idx = [i for i, v in enumerate(basis.data) if abs(v.co.z - zl0) < 1e-7 and abs(v.co.y) < 0.007]
+    ys = sorted(set(round(basis.data[i].co.y, 6) for i in idx))
+    y0 = min(ys, key=abs)
+    idx = sorted([i for i in idx if abs(basis.data[i].co.y - y0) < 1e-6], key=lambda i: basis.data[i].co.x)
+    B = np.array([[basis.data[i].co.x, basis.data[i].co.z] for i in idx])
+    U = B[:, 0] - np.array([xsp(z) for z in B[:, 1]])
+    K = {a: np.array([[sk.data[i].co.x, sk.data[i].co.z] for i in idx]) for a, sk in S['lsk']}
+    P = np.array([0.0, PIVOT_Z])
+    def R(th, v):
+        c, s_ = math.cos(math.radians(th)), math.sin(math.radians(th))
+        return np.stack([v[..., 0] * c - v[..., 1] * s_, v[..., 0] * s_ + v[..., 1] * c], -1)
+    # sabit engeller
+    rim = [(0.0, T), (0.0007, T - 0.00027), (0.0014, T - 0.00054), (0.0, T + 0.0004)]
+    hb = []
+    for z in np.linspace(zr - 0.002, z1 - 0.0008, 14):   # kapitalbentin acikta kalan ust kismi (alti s.81 blogunun icinde)
+        c0 = np.array([xsp(z) + HB_DX, z])
+        for a in range(0, 360, 20):
+            hb.append(c0 + HB_R * np.array([math.cos(math.radians(a)), math.sin(math.radians(a))]))
+    static = np.array(rim + [tuple(h) for h in hb])
+    jl = [(0.0, z) for z in (0.0008, 0.0, -0.001, -0.002)] + [(s_, -0.002) for s_ in np.arange(0, 0.0301, 0.001)] \
+         + [(s_, 0.0008) for s_ in np.arange(0, 0.0071, 0.001)]
+    jl = np.array(jl)
+    res = []
+    th = 10.0
+    worst = (9, 0, ''); worst_r = (9, 0)
+    while th <= TH_OPEN + 1e-6:
+        w = ramp_weights(th)
+        L = B.copy()
+        for a, wa in w.items():
+            if wa:
+                L = L + wa * (K[a] - B)
+        X = P + R(th, L - P)
+        obs = np.vstack([static, P + R(th, jl)])
+        tags = ['kenar'] * len(rim) + ['kapital'] * len(hb) + ['mafsal/karton'] * len(jl)
+        a_, b_ = X[:-1], X[1:]
+        D = b_ - a_; LL = (D ** 2).sum(1) + 1e-18
+        Nn = np.stack([-D[:, 1], D[:, 0]], 1) / np.sqrt(LL)[:, None]
+        mind = 9.0; mtag = ''
+        for o, tg in zip(obs, tags):
+            t = np.clip(((o - a_) * D).sum(1) / LL, 0, 1)
+            C = a_ + D * t[:, None]
+            dist = np.sqrt(((o - C) ** 2).sum(1))
+            j = int(np.argmin(dist))
+            if dist[j] > 0.015:
+                continue
+            dep = float(((o - C[j]) * Nn[j]).sum())
+            if dep < mind:
+                mind, mtag = dep, f'{tg} o=({o[0]*1000:.2f},{o[1]*1000:.2f}) seg{j}/{len(D)} u={U[j]*1000:.1f}'
+        # sol sayfa sag sayfanin ustunde mi (u>1 mm)
+        mr = 9.0
+        for (x, z), u in zip(X, U):
+            if u > 0.001 and _XSP(zr) + 0.0003 < x < 0.16:
+                mr = min(mr, z - right_face_z(x, th, zr))
+        res.append((th, mind, mr, mtag))
+        for o, tg in zip(obs, tags):
+            pass
+        if mind < worst[0]: worst = (mind, th, mtag)
+        if mr < worst_r[0]: worst_r = (mr, th)
+        th += step
+    for a in RAMP_ANGLES:
+        r = min(res, key=lambda q: abs(q[0] - a))
+        print(f'[dogrula] anahtar {a:6.1f}: dik aciklik {r[1]*1000:6.2f} mm  {r[3]}', flush=True)
+    for lo_ in (25.0, 30.0):
+        sub = [q for q in res if q[0] >= lo_]
+        wq = min(sub, key=lambda q: q[1])
+        print(f'[dogrula] th>={lo_:.0f}: en kotu dik aciklik {wq[1]*1000:.2f} mm @ {wq[0]:.1f} ({wq[3]})', flush=True)
+    print(f'[dogrula] EN KOTU dik aciklik (10..{TH_OPEN:.1f}, {step} adim, karisimlar dahil): {worst[0]*1000:.2f} mm '
+          f'@ {worst[1]:.1f} ({worst[2]}) | sol>sag sayfa en kotu: {worst_r[0]*1000:.2f} mm @ {worst_r[1]:.1f}', flush=True)
+    return worst, worst_r
+
 # ------------------------------------------------------------------ main
 def main():
     t0 = time.time()
@@ -1473,6 +1568,8 @@ def main():
     if SAMPLES:
         samples = SAMPLES
     render_setup(S, samples)
+    if arg('--verify', False) or FRAMES:
+        verify_left_page(S)
     for nm in [x for x in str(arg('--off', '') or '').split(',') if x]:
         bpy.data.objects[nm].data.energy = 0.0
         print('[off]', nm)
