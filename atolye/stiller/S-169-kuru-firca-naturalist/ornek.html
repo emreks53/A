@@ -486,7 +486,7 @@
   M.yika(M.kesis(mAlem, M.fMaske([270, 60, 600, 320], (x) => (Math.abs(x - 560) < 30 ? sstep(562, 556, x) : sstep(302, 297, x)))), '#9C6E2A', { yog: 0.6, kenar: 0.1, kuru: 0.3, kuruY: 0.15 });
   // zemin: yatay kısa darbeler ve kum noktaları; bitki gölgeleri
   kuruKat(null, { n: 2200, kutu: [0, 801, W, W], olas: (x, y) => (mBina.a[(y | 0) * W + (x | 0)] > 0.5 ? 0 : 0.25 + 0.75 * sstep(800, 1000, y)), yon: (x, y) => (nz(x / 80, y / 80) - 0.5) * 0.3, uz: [4, 12], kal: [0.8, 1.3], tohum: 17, sapma: 0.25 }, '#BFA27A', { yog: 0.5, kuru: 0.5, koru: korOn });
-  M.yika(M.maske((c) => { c.translate(-7, 5); for (const d of Y.yapraklar) c.fill(P(d)); cicekAlan(c); }), '#A9A2B4', { yog: 0.4, koru: M.birles(korOn, mBina), kenar: 0.05, kuru: 0.32, kuruY: 0.14, grad: (x, y) => (y > 802 ? 1 : 0) });
+  M.yika(M.maske((c) => { c.translate(-5, 4); for (const d of Y.yapraklar) c.fill(P(d)); cicekAlan(c); }), '#A9A2B4', { yog: 0.22, koru: M.birles(korOn, mBina), kenar: 0.05, kuru: 0.32, kuruY: 0.14, grad: (x, y) => (y > 802 ? 1 : 0) });
   M.yika(M.maske((c) => { c.beginPath(); c.moveTo(300, 800); c.lineTo(300, 790); c.lineTo(222, 808); c.lineTo(232, 816); c.closePath(); c.fill(); }), '#A9A2B4', { yog: 0.55, koru: korOn, kenar: 0.05, kuru: 0.3 });
 
   // ------------------------------------------------------------ 3. yapraklar: damarlar arasında kuru darbeler, damarlar açık kalır

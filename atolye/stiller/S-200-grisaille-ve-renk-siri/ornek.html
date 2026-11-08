@@ -931,7 +931,7 @@
     const o = img.data;
     const sir = {};
     const tanim = (ad, hex, k) => (sir[KB[ad]] = { c: H.hex(hex), k });
-    tanim('gok', '#7CAEEA', 0.95);
+    tanim('gok', '#6FA8EC', 0.96);
     tanim('kubbe', '#4CB86C', 0.9);
     tanim('kasnak', '#48AC66', 0.88);
     tanim('minare', '#F2DCB8', 0.24);
@@ -939,11 +939,12 @@
     tanim('altin', '#ECB23A', 0.96);
     tanim('yaprak', '#78B862', 0.8);
     tanim('sap', '#78B862', 0.8);
-    tanim('zemin', '#EED6A6', 0.32);
+    tanim('zemin', '#BFDDA0', 0.62);
     tanim('cicekOrta', '#F2BB36', 0.92);
     const gokAlt = H.hex('#D2E5F6');
     const gunesC = H.hex('#FBE6A6');
-    const gul = H.hex('#F1A3B6');
+    const gul = H.hex('#F4A9BC');
+    const gulKoyu = H.hex('#E07A98');
     const pencereY = H.hex('#3E9E5A');
     const pencereT = H.hex('#E2CDA8');
     const cicekler = S.bitki.cicekler;
@@ -981,11 +982,12 @@
           let tom = false;
           for (const t of tomurcuklar) if (Math.hypot(xx - t.x, yy - t.y) < t.r * 1.7) tom = true;
           if (tom && en > 1.1) {
-            c = gul;
-            k = 0.8;
+            c = gulKoyu;
+            k = 0.85;
           } else {
-            c = gul;
-            k = 0.78 * H.smooth(0.62, 0.15, en);
+            // gül sırrı bütün taç yaprağa; göbeğe doğru koyulaşır, kenarda incelir
+            c = H.mix(gul, gulKoyu, H.smooth(0.7, 0.2, en));
+            k = 0.62 + 0.3 * H.smooth(0.9, 0.2, en);
           }
         } else if (sir[kod]) {
           c = sir[kod].c;
@@ -1004,7 +1006,7 @@
         if (!c || k <= 0) continue;
         // sır kalınlığı fırçaya göre değişir; ışıklardan silinmiş, gri modelaj orada gümüş gibi görünür
         k *= 0.66 + 0.34 * KAL[(y >> 1) * 1024 + (x >> 1)];
-        if (kod !== KB.gok && kod !== KB.altin) k *= 1 - 0.5 * H.smooth(0.84, 0.99, V[p]);
+        if (kod !== KB.gok && kod !== KB.altin) k *= 1 - (kod === KB.cicek ? 0.3 : 0.5) * H.smooth(0.84, 0.99, V[p]);
         const i = p * 4;
         o[i] = o[i] * (1 - k + (k * c[0]) / 255);
         o[i + 1] = o[i + 1] * (1 - k + (k * c[1]) / 255);
