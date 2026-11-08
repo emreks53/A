@@ -451,8 +451,8 @@ const rampa = (d) => (t) => {
 };
 const RENK = {
   // renkli grafit kalemlerinin kırık, tozlu renkleri: canlı kuru boya değil, grafitin içinde kalan sırlar
-  kubbe: rampa([[0, [176, 200, 158]], [0.3, [128, 172, 136]], [0.62, [70, 134, 108]], [1, [44, 102, 86]]]), // adaçayı → zümrüt
-  kasnak: rampa([[0, [146, 182, 150]], [0.5, [78, 138, 112]], [1, [46, 100, 86]]]),
+  kubbe: rampa([[0, [172, 204, 150]], [0.3, [112, 172, 126]], [0.62, [52, 130, 98]], [1, [30, 96, 78]]]), // adaçayı → zümrüt
+  kasnak: rampa([[0, [136, 184, 146]], [0.5, [60, 136, 104]], [1, [32, 96, 80]]]),
   tas: rampa([[0, [240, 230, 212]], [0.5, [226, 210, 186]], [1, [200, 180, 160]]]), // sıcak taş
   altin: rampa([[0, [232, 204, 126]], [0.5, [206, 160, 74]], [1, [154, 112, 52]]]), // aşı boyası altın
   yaprak: rampa([[0.15, [178, 194, 136]], [0.45, [122, 160, 112]], [0.85, [70, 118, 94]]]),
@@ -982,8 +982,8 @@ kontur(elipsNoktalari(880, 140, 42, 42, 0.4, 60), { alfa: 0.16, kalin: 0.8, geci
   const kagit = [246, 244, 238];
   const grafit = [42, 43, 49];
   const isilti = [128, 132, 142];
-  const RG = 0.9;  // renkli kalem sırlarının gücü
-  const GT = 0.45; // grafitin altındaki renge çalma oranı
+  const RG = 1.0;  // renkli kalem sırlarının gücü
+  const GT = 0.75; // grafitin altındaki renge çalma oranı
   for (let y = 0; y < N; y++) {
     for (let x = 0; x < N; x++) {
       const i = y * N + x;

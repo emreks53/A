@@ -421,11 +421,6 @@
     yuzdur(Kd.x1, Kd.y1, Kd.x1 + 190, Kd.y2, K.tasGolge, 0.7, 'sol');
     yuzdur(Kd.x1, Kd.y2 - 22, Kd.x2, Kd.y2, hex('#C9A878'), 0.45, 'alt');
     yuzdur(Kd.x2 - 70, Kd.y1, Kd.x2, Kd.y2, K.beyaz, 0.6, 'sag');
-    // pencerelerin çevresinde ince gölge float'ı (sol yanda) ve ışık (sağ yanda)
-    for (const p of Kd.pencereler) {
-      yuzdur(p.x - p.w / 2 - 12, p.y - 4, p.x - p.w / 2, p.y + p.h, K.tasGolge, 0.5, 'sag');
-      yuzdur(p.x + p.w / 2, p.y - 4, p.x + p.w / 2 + 10, p.y + p.h, K.beyaz, 0.8, 'sol');
-    }
     const k = Kd.kornis;
     yatayDarbe(k.x1, k.x2, k.y1, k.y2, K.beyaz, K.tasGolge, { kil: 4 });
     for (const p of Kd.pencereler) {

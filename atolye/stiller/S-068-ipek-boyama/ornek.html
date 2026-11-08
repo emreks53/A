@@ -446,7 +446,7 @@
       }
       case T.kasnak: { const k = y < 610 ? SAHNE.kasnak[0] : SAHNE.kasnak[1], L = silindirIsik(x, 560, (k.x2 - k.x1) / 2 + 2); return Dm(Dm(C.zumrut, C.teal, sstep(0.9, 0.4, L)), C.laci, 0.5 * sstep(0.5, 0.15, L) + 0.2 * w); }
       case T.pencere: return Dm(C.civit, C.mor, 0.35 * w);
-      case T.kaide: { const tt = (x - 300) / 520; let d = Dm(C.seftali, C.gul, sstep(0.75, 0.3, tt + (w - 0.5) * 0.6)); d = Dm(d, C.lila, sstep(0.3, 0.0, tt) * 0.9); d = Dm(d, C.altin, 0.3 * sstep(0.55, 1, tt) * w); return d.map((v) => v * 1.3); }
+      case T.kaide: { const tt = (x - 300) / 520; let d = Dm(C.seftali, C.gul, sstep(0.75, 0.3, tt + (w - 0.5) * 0.6)); d = Dm(d, C.lila, sstep(0.3, 0.0, tt) * 0.9); d = Dm(d, C.altin, 0.3 * sstep(0.55, 1, tt) * w); d = Dm(d, C.krem, 0.3 * sstep(0.35, 0.8, tt + (w - 0.5) * 0.5)); return d.map((v) => v * 1.05); }
       case T.kornis: return Dm(Dm(C.krem, C.altin, 0.45), C.seftali, 0.4 * w);
       case T.minare: case T.serefe: case T.topuz: {
         const w2 = fbm(nE, x / 22 + 9, y / 30, 2);
@@ -455,7 +455,7 @@
         d = Dm(d, C.gul, 0.35 * sstep(0.85, 0.35, L));
         d = Dm(d, C.lila, 0.9 * sstep(0.6, -0.05, L));
         if (t === T.serefe) d = Dm(d, C.altin, 0.35);
-        return d.map((v) => v * 1.3);
+        return d.map((v) => v * 1.1);
       }
       case T.korkuluk: return Dm(C.mor, C.lila, 0.4 + 0.3 * w);
       case T.zikzak: { const k = Math.floor((a.cy - 522) / 15); return k % 2 ? Dm(C.fusya, C.eflatun, w) : Dm(C.altin, C.turuncu, 0.3 * w); }

@@ -287,7 +287,7 @@
 
   const r = SAHNE.rng(5601);
   // renkli kalem ölçüsü: çizgiler biraz daha kalın ve aralıklı, öbekler az örtüşür (tarama okunur kalsın)
-  const taraK = (x, o, rr) => tara(x, Object.assign({}, o, { aralik: o.aralik * 1.32, kal: o.kal * 1.18, sik: (o.sik || 0.62) * 1.35 }), rr);
+  const taraK = (x, o, rr) => tara(x, Object.assign({}, o, { aralik: o.aralik * 1.12, kal: o.kal * 1.22, sik: (o.sik || 0.62) * 1.08 }), rr);
   const tuval = document.getElementById('tuval');
   tuval.width = W2; tuval.height = W2;
   const ctx = tuval.getContext('2d');
@@ -353,6 +353,7 @@
 
   // ---------------------------------------------------------------- katman: çiz → (sil) → kâğıda bırak
   const K = katmanTuvali(), KB = katmanTuvali();
+  const GUC = 1.3; // profesyonel, yoğun katmanlı çalışma: bütün kalemler daha sert bastırılır
   function uygula(o) {
     const bx = o.bx || [0, 0, W, W];
     const X1 = clamp(Math.floor(bx[0] * 2), 0, W2), Y1 = clamp(Math.floor(bx[1] * 2), 0, W2);
@@ -365,7 +366,7 @@
       KB.temizle(); KB.x.setTransform(1, 0, 0, 1, 0, 0); KB.x.filter = 'blur(3.5px)'; KB.x.drawImage(K.c, 0, 0); KB.x.filter = 'none';
       vb = KB.x.getImageData(X1, Y1, w, h).data;
     }
-    const opq = o.opq === undefined ? 0.1 : o.opq, ys = o.yumus === undefined ? 0.2 : o.yumus, M = o.maske, guc = o.guc || 1, gren = o.gren === undefined ? 0.62 : o.gren;
+    const opq = o.opq === undefined ? 0.1 : o.opq, ys = o.yumus === undefined ? 0.2 : o.yumus, M = o.maske, guc = (o.guc || 1) * GUC, gren = o.gren === undefined ? 0.5 : o.gren;
     for (let yy = 0; yy < h; yy++) {
       const y = Y1 + yy, row = (y >> 1) * W;
       for (let xx = 0; xx < w; xx++) {
