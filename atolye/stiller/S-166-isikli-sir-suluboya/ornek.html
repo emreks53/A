@@ -579,12 +579,12 @@
     kaburgaUzak[i] = enk * isa;
   }
   const dilimSapma = [0, 1, 2, 3, 4, 5].map(() => Array.from({ length: 16 }, () => R() - 0.5));
-  const sinirTitre = (x, y, k) => (nz(x / 40 + 7 + k * 5, y / 55) - 0.5) * 0.06 + (nz(x / 13 + k * 13, y / 13) - 0.5) * 0.012;
+  const sinirTitre = (x, y, k) => (nz(x / 40 + 7 + k * 5, y / 55) - 0.5) * 0.028 + (nz(x / 13 + k * 13, y / 13) - 0.5) * 0.01;
   const kubbeSir = (k, esik, renk, yog, ek) => {
     ek = ek || {};
     M.yika(M.fMaske([356, 296, 766, 557], (x, y) => {
       const i = y * W + x, m = mKubbe.a[i]; if (m <= 0) return 0;
-      const v = kubbeVeri[i] + sinirTitre(x, y, k) + dilimSapma[k][dilimNo[i]] * 0.075;
+      const v = kubbeVeri[i] + sinirTitre(x, y, k) + dilimSapma[k][dilimNo[i]] * 0.05;
       let a = m * sstep(-esik - 0.007, -esik + 0.007, -v);
       if (ek.alt != null) a *= sstep(ek.alt - 0.01, ek.alt + 0.01, v);
       if (ek.bosluk) { const d = kaburgaUzak[i]; a *= 1 - sstep(0.8, 0.9, kubbeVeri[i]) * (d > 0.3 && d < 1.5 ? 1 : 0) * (y > 312 ? 1 : 0); }

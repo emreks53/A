@@ -923,8 +923,8 @@
         // parıltı: sağ üstte, kenarı düzensiz ama net korunmuş kâğıt
         // ışık alan dilimlerin ortasında, dilim boyunca uzanan kenarı net korunmuş kâğıt şeritleri
         const nz0 = (fbm(nC, X / 22, Y / 22, 2) - 0.5);
-        const serit = sstep(0.3, 0.38, f + nz0 * 0.08) * sstep(0.8, 0.72, f + nz0 * 0.08);
-        const hl = sstep(0.86, 0.89, lt + nz0 * 0.08) * serit + sstep(0.955, 0.965, lt + nz0 * 0.05);
+        const sw = 0.24 * sstep(0.84, 0.95, lt + nz0 * 0.06), fc = Math.abs(f - 0.56 + nz0 * 0.05);
+        const hl = sstep(sw, sw - 0.04, fc) * sstep(0.0, 0.03, sw) + sstep(0.96, 0.97, lt + nz0 * 0.05);
         // 1. sır: açık sarı-yeşil, ıslakta mavi-yeşille karışarak (yumuşak çiçeklenme)
         sir(i, mixc(KY1, KYM, sstep(0.38, 0.72, v2)), 0.9 * (1 - 0.92 * Math.min(1, hl)) * (0.86 + 0.28 * v1));
         // 2. sır: her dilim ayrı bir lavi — dilim içinde sabit ton, sola doğru hafif koyulaşma

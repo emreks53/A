@@ -550,7 +550,7 @@ c.fillRect(0, 0, 1024, 1024);
 //         sırtlar ince altınla, yamaçlar kısa 'balta darbesi' çizgileriyle, doruklar seyrek yosun noktalarıyla işlenir
 const OKR = [212, 160, 100];
 const MAL = [84, 166, 132];
-const AZR = [58, 104, 178];
+const AZR = [66, 114, 186];
 const katMal = katmanlayici({ N: 3, yum: 0.09, dalga: 0.12, df: 0.03, dfa: 0.01, lif: 0.18, lfa: 0.3, lfb: 0.02, kenar: 0.08, tohum: 1901 });
 const katAz = katmanlayici({ N: 4, yum: 0.09, dalga: 0.12, df: 0.028, dfa: 0.01, lif: 0.2, lfa: 0.3, lfb: 0.02, kenar: 0.1, tohum: 1902 });
 const katIsik = katmanlayici({ N: 2, yum: 0.12, dalga: 0.1, df: 0.02, dfa: 0.01, lif: 0.1, lfa: 0.2, lfb: 0.02, kenar: 0, tohum: 1903 });
@@ -594,7 +594,16 @@ function dorukProfili(r, nz, tepeU) {
   }
   for (let pas = 0; pas < 5; pas++) v = v.map((q, i) => (i === 0 || i === N ? q : (v[i - 1] + 2 * q + v[i + 1]) / 4));
   // dolgun omuzlar: profil dışa doğru şişirilir (mermi değil, kütleli kaya)
-  v = v.map((q) => 1 - Math.pow(1 - q, 1.55));
+  v = v.map((q) => 1 - Math.pow(1 - q, 1.45));
+  // omuzlarda küçük ikincil tepecikler (kırık, kademeli doruk başı)
+  const tepecik = [];
+  for (let j = 0; j < 4; j++) tepecik.push([0.12 + r() * 0.76, 0.025 + r() * 0.03, 0.035 + r() * 0.045]);
+  v = v.map((q, i) => {
+    const u = i / N;
+    let ek = 0;
+    for (const [cu, cw, chh] of tepecik) ek = Math.max(ek, chh * Math.max(0, 1 - Math.pow((u - cu) / cw, 2)));
+    return q + ek * yumusak(0.3, 0.6, q);
+  });
   // kaya kırıkları ve yuvarlak doruk başı
   v = v.map((q, i) => {
     const u = i / N;
@@ -645,10 +654,14 @@ function kaya(x, yb, w, h, tohum, uzak, ic) {
   c.clip(yol);
   // iç doruklar: büyük dağın içinde öne doğru yığılan daha alçak doruklar
   if (!ic && !uzak) {
-    const m = 2 + Math.floor(w / 80);
+    const m = 4 + Math.floor(w / 60);
     const icler = [];
-    for (let k = 0; k < m; k++) icler.push([x + (r() - 0.5) * w * 0.75, yb + 4, w * (0.38 + r() * 0.24), h * (0.26 + r() * 0.3), tohum * 7 + k]);
-    icler.sort((p1, p2) => p2[3] - p1[3]);
+    for (let k = 0; k < m; k++) {
+      const kat = k % 3;
+      const taban = yb + 4 - h * (kat === 0 ? 0 : kat === 1 ? 0.14 + r() * 0.1 : 0.3 + r() * 0.12);
+      icler.push([x + (r() - 0.5) * w * 0.8, taban, w * (0.28 + r() * 0.22), h * (0.16 + r() * 0.2), tohum * 7 + k, kat]);
+    }
+    icler.sort((p1, p2) => p2[5] - p1[5] || p2[3] - p1[3]);
     for (const [ix, iy, iw, ih, it] of icler) kaya(ix, iy, iw, ih, it, false, true);
   }
   // balta darbesi: konturdan yamaç boyunca inen kısa, sivrilen çizgiler (mavi-yeşil gölge + kimi yerde altın)

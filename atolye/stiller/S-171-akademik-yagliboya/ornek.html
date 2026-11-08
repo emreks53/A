@@ -1735,6 +1735,9 @@ const H = (function () {
         { aralik: 2.4, en: [1.1, 2.0], boy: [3, 9], adim: 1, alfa: [0.88, 1], esik: 13, detay: [0.28, 1], kil: 0, oynak: 2, }
       ],
     });
+    // altın alemler ince samur fırçayla en son, keskin olarak yeniden işlenir
+    H.alemBoya(ctx, S.minareParcalari().find((q) => q.tip === 'alem').alem, ALTIN, { alemCizgi: 0.4 });
+    H.alemBoya(ctx, S.alemParcalari(560, 300, 1), ALTIN, { alemCizgi: 0.5 });
     H.tuvalBezi(yuk, 4.2, 0.07, 9);
     H.boyaIsigi(ctx, yuk, { guc: 0.95, parilti: 0.8, parEsik: 0.1, golge: 0.7 });
   }
