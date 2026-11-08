@@ -124,7 +124,7 @@
 
   // ------------------------------------------------------------ renkler (halk boyası)
   const C = {
-    gok: '#86D0F4', gokAlt: '#D2F1FA', bulut: '#FFFFFF', bulutGolge: '#D9EEF6',
+    gok: '#72C6F6', gokAlt: '#CDEFFC', bulut: '#FFFFFF', bulutGolge: '#D9EEF6',
     gunes: '#FFD43B', gunesHalka: '#FF9F2E', isin: '#FFC233', isin2: '#FF8A3D',
     zemin: '#F5D188',
     kubbe: '#25A04C', kubbe2: '#36B85E', kasnak: '#2A9A4A', kasnakAcik: '#45B865',
@@ -697,8 +697,11 @@
       const altinMi = Math.abs(r - altinR[0]) + Math.abs(g - altinR[1]) + Math.abs(b - altinR[2]) < 40;
       // ahşap lifi boyanın altından: ince sıcak çizgiler; fırça izi: boya kalınlığı dalgası
       const firca = (vnoise(x * 0.03, y * 0.55, 21) - 0.5) * 0.035;
-      const lk = 1 - 0.075 * lif - 0.03 * lif2 - 0.05 * Math.min(1, gozenek) + firca;
-      r *= lk; g *= lk * 0.99; b *= lk * 0.96;
+      // gök boyası daha kalın ve parlak sürülmüş: lif daha hafif seçilir, sıcak ahşap tonu bulaştırmaz
+      const gokMu = b > 225 && r < 215 && g > 185;
+      const lg = gokMu ? 0.55 : 1;
+      const lk = 1 - (0.075 * lif + 0.03 * lif2 + 0.05 * Math.min(1, gozenek)) * lg + firca * lg;
+      r *= lk; g *= lk * (gokMu ? 1 : 0.99); b *= lk * (gokMu ? 1 : 0.96);
       let spec;
       if (altinMi) {
         isik = (0.32 + 0.9 * NL / L[2]) * (1 - 0.3 * sh) * ao;

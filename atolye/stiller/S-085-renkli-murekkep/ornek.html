@@ -313,6 +313,19 @@
     murekkep(kutu, A, { pig: o.pig, yog: o.yog, kenar: 0.5, kenarR: 1, dalga: 0.1, tohum: o.tohum });
   }
 
+  // kalem kaldırılarak çekilmiş hat: uzun yollar rastgele boylarda parçalara bölünür, aralarda küçük boşluk
+  function kopuk(listeler, tohum) {
+    const r = SAHNE.rng(tohum), out = [];
+    for (const pts of listeler) {
+      let i = 0;
+      while (i < pts.length - 1) {
+        const n = 8 + Math.floor(r() * 30), parca = pts.slice(i, Math.min(pts.length, i + n + 1));
+        if (parca.length > 1) out.push(parca);
+        i += n + (r() < 0.6 ? 1 + Math.floor(r() * 3) : 0);
+      }
+    }
+    return out;
+  }
   const CR = kapsamCiz(TAM, (c) => {
     for (const ci of B.cicekler) {
       for (const e of SAHNE.tacYapraklari(ci)) { c.beginPath(); c.ellipse(e.cx, e.cy, e.rx * 1.04, e.ry * 1.1, e.aci, 0, Math.PI * 2); c.fill(); }
@@ -328,15 +341,23 @@
   const BUL = (() => {
     const r = SAHNE.rng(55);
     const M = kapsamCiz(TAM, (c) => {
+      // düzensiz loblu kümeler: her bulut farklı; altı hafif eğik ve dalgalı
       for (const [bx, by, bs] of [[170, 245, 1.05], [500, 150, 0.85], [770, 335, 1.0], [945, 468, 0.72], [88, 470, 0.72]]) {
-        const adet = 6;
+        const adet = 4 + Math.floor(r() * 3);
+        hobbsCiz(c, damla(bx + (r() - 0.5) * 16 * bs, by + 8 * bs, (104 + r() * 24) * bs, 19 * bs, (r() - 0.5) * 0.06, 11, r), 12, 0.1, r, 0.3);
         for (let k = 0; k < adet; k++) {
-          const t = k / (adet - 1), ox = (t - 0.5) * 190 * bs, h = Math.sin(Math.PI * t);
-          const rr = (20 + 24 * h + r() * 8) * bs;
-          c.beginPath(); c.arc(bx + ox, by - h * 18 * bs + (r() - 0.5) * 6, rr, 0, Math.PI * 2); c.fill();
+          const t = (k + 0.25 + r() * 0.5) / adet, ox = (t - 0.5) * (175 + r() * 40) * bs, h = Math.pow(Math.sin(Math.PI * t), 0.8);
+          const rr = (18 + 28 * h * (0.65 + r() * 0.6)) * bs;
+          hobbsCiz(c, damla(bx + ox, by - h * (12 + r() * 14) * bs - 4 * bs, rr * (1 + r() * 0.2), rr * (0.85 + r() * 0.2), r() * 3, 9, r), 10, 0.11, r, 0.45);
         }
-        c.beginPath(); c.ellipse(bx, by + 10 * bs, 118 * bs, 20 * bs, 0, 0, Math.PI * 2); c.fill();
-        c.clearRect(bx - 200 * bs, by + 22 * bs, 400 * bs, 80 * bs);
+      }
+      const vv = c.getImageData(0, 0, W, W), dd = vv.data;
+      for (let i = 0; i < N; i++) dd[i * 4 + 3] = Math.round(sstep(0.28, 0.5, dd[i * 4 + 3] / 255) * 255);
+      c.putImageData(vv, 0, 0);
+      for (const [bx, by, bs] of [[170, 245, 1.05], [500, 150, 0.85], [770, 335, 1.0], [945, 468, 0.72], [88, 470, 0.72]]) {
+        c.save(); c.globalCompositeOperation = 'destination-out'; c.beginPath(); c.moveTo(bx - 220 * bs, by + 20 * bs);
+        for (let x = -220; x <= 220; x += 20) c.lineTo(bx + x * bs, by + (20 + 5 * Math.sin(x / 37 + bx) + x * 0.025) * bs);
+        c.lineTo(bx + 220 * bs, by + 90 * bs); c.lineTo(bx - 220 * bs, by + 90 * bs); c.closePath(); c.fill(); c.restore();
       }
     });
     const o = new Float32Array(N), nW1 = gurultu(57), nW2 = gurultu(58);
@@ -360,9 +381,9 @@
       },
       yog: (x, y) => {
         const d = gd(x, y);
-        return (0.1 + 0.2 * Math.pow(clamp(1 - y / 820, 0, 1), 0.7)) * (d < 60 ? 0.6 : 1) * (0.85 + 0.3 * fbm(nD, x / 120, y / 120, 2)) * (0.9 + 0.13 * nB(x / 130 - y / 700, y / 10) + 0.07 * nA(x / 60, y / 5));
+        return (0.1 + 0.2 * Math.pow(clamp(1 - y / 820, 0, 1), 0.7)) * (d < 60 ? 0.6 : 1) * (0.8 + 0.4 * fbm(nD, x / 90, y / 110, 3)) * (0.9 + 0.13 * nB(x / 130 - y / 700, y / 10) + 0.07 * nA(x / 60, y / 5));
       },
-      tohum: 1,
+      dalga: 0.26, dalgaOlcek: 50, tohum: 1,
     });
   }
   // 2. ve 3. kat: kuruduktan sonra üst gökte keskin kenarlı, üst üste binen mürekkep havuzları (bulutların etrafından)
@@ -446,7 +467,7 @@
   // ============================================================ KAİDE ve MİNARE: beyaz taş, leylak gölgeler, renkli hatlar
   const kKai = [284, 688, 836, 806];
   const kaiM = KAIDE_M.map((v, i) => v * (1 - CR[i]));
-  murekkep(kKai, kapsamAlan(kKai, (x, y) => kaiM[y * W + x]), { pig: (x, y) => lerpK(karis(P.lim, 0.6, P.tur3, 0.25), karis(P.gul, 0.4, P.tur3, 0.3, P.lim, 0.3), sstep(0.4, 0.6, fbm(nC, x / 80, y / 40, 2))), yog: 0.07, tohum: 31 });
+  murekkep(kKai, kapsamAlan(kKai, (x, y) => kaiM[y * W + x] * sstep(0.3, 0.34, fbm(nE, x / 70, y / 40, 3) + 0.25 * sstep(700, 330, x))), { pig: (x, y) => lerpK(karis(P.lim, 0.6, P.tur3, 0.25), karis(P.gul, 0.4, P.tur3, 0.3, P.lim, 0.3), sstep(0.4, 0.6, fbm(nC, x / 80, y / 40, 2))), yog: 0.08, kenar: 1.8, tohum: 31 });
   murekkep(kKai, kapsamAlan(kKai, (x, y) => kaiM[y * W + x] * ((y > 703 && y < 712) || x < 314 ? 1 : 0)), { pig: karis(P.mor, 0.6, P.kob, 0.3, P.gul, 0.2), yog: (x, y) => (y < 712 ? 0.22 : 0.15) * (0.5 + 0.5 * sstep(830, 420, x)), tohum: 32 });
   {
     const A = kapsamCiz(kKai, (c) => { for (const p of SAHNE.kaide.pencereler) c.fill(new Path2D(SAHNE.kemerYolu(p.x, p.y, p.w, p.h))); });
@@ -468,8 +489,8 @@
     hat(kMin, SAHNE.zikzakCizgileri(), { gen: 2.2, pig: karis(P.mac, 0.9, P.mor, 0.15), yog: 0.55, tohum: 45 });
     const A = kapsamCiz(kMin, (c) => { for (const p of SAHNE.minarePencereleri) c.fill(new Path2D(SAHNE.kemerYolu(p.x, p.y, p.w, p.h))); });
     murekkep(kMin, A, { pig: karis(P.mor, 0.7, P.kob, 0.4), yog: 0.4, tohum: 46 });
-    hat(kMin, SAHNE.yollar().minare.flatMap((d) => yolNoktalari(d, 3)), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 47, carpM: CRT.map((v, i) => v * (1 - KAIDE_M[i]) * (1 - KASNAK_M[i])) });
-    hat(kKai, yolNoktalari(SAHNE.yollar().kornis, 3).concat(yolNoktalari(SAHNE.yollar().kaide, 3)), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 48, carpM: CRT });
+    hat(kMin, kopuk(SAHNE.yollar().minare.flatMap((d) => yolNoktalari(d, 3)), 471), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 47, carpM: CRT.map((v, i) => v * (1 - KAIDE_M[i]) * (1 - KASNAK_M[i])) });
+    hat(kKai, kopuk(yolNoktalari(SAHNE.yollar().kornis, 3).concat(yolNoktalari(SAHNE.yollar().kaide, 3)), 481), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 48, carpM: CRT });
   }
   // alemler: parlak turuncu-sarı mürekkep
   for (const [cx, kutu] of [[560, [530, 176, 590, 314]], [300, [280, 72, 320, 154]]]) {
