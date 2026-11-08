@@ -1,0 +1,39 @@
+{
+  "kod": "S-061",
+  "no": 61,
+  "ad": "Kalem ve Lavi",
+  "ad_en": "Pen and Wash",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Kendinden emin, kalınlığı değişen mürekkep çizgisi; altında çizgiye tam oturmayan gevşek, saydam suluboya lavileri.",
+  "tanim": "Kalem ve lavi (pen and wash), çizimin dolma kalem, daldırma uç ya da ince uçlu kalemle mürekkeple yapıldığı, rengin ise gevşek, saydam suluboya lavileriyle eklendiği karma tekniktir. Görüntüyü taşıyan mürekkep çizgisidir: kalınlığı değişen konturlar, köşelerde taşan hatlar, tarama ve karalama gölgeler; renk ikincildir, çizgiyle tam örtüşmez ve kâğıdın beyazını bol bırakır. Kentsel eskiz (urban sketching), seyahat defterleri, mimari ön çizimler ve kitap resimlemede yaygındır.",
+  "koken": "Kökü Rembrandt ve Claude Lorrain'in bistr ve sepya lavili kalem desenlerine, 18. yüzyıl İngiliz topografik ve hiciv çizimlerine (Paul Sandby, Thomas Rowlandson) uzanır; 20. yüzyıl başında Arthur Rackham'ın renkli lavili mürekkep resimleriyle kitap resimlemede olgunlaştı. Bugün Urban Sketchers topluluğu (2007, Gabriel Campanario) ve yerinde çizen çağdaş eskizcilerle sokakta çizimin ortak dili oldu.",
+  "ayirt_edici": [
+    "Koyu kahve-siyah mürekkep çizgisi baskın: kalınlığı uç açısına ve basınca göre değişiyor; gölge yanındaki konturlar kalın, ışıklı yanınki ince, kubbenin sağ konturunda küçük bir boşlukla kaybolan kenar",
+    "Köşelerde kalem kalkıyor, yatay hatlar yapının ötesine taşıyor; yer yer ikinci, arayan çizgiler ve kubbe tabanı, korniş, minare ekseni boyunca ince inşa çizgileri",
+    "Gölgeler mürekkeple kurulmuş: kubbenin sol yanında kaburgaya koşut kontur taraması ve çapraz tarama, minare ile kasnakta dikey tarama, korniş altında sık şerit; pencereler zikzak karalamayla koyulaşmış",
+    "Laviler çizgiye oturmuyor: kubbe yeşili sağa-yukarı kaymış, solda konturla arasında beyaz pay bırakıp sağda dışarı taşıyor; ışıklı şerit boyanmamış kâğıt",
+    "Gök, yapının çevresinde düzensiz beyaz pay bırakan, kenarları yırtık, ultramarine ile seruleum arasında ıslakta geçen bir leke; güneş kâğıdın beyazı, çevresinde soluk sarı",
+    "Kuruyan lavi kenarlarında koyu pigment çizgisi, kâğıt dokusunda granülasyon, birkaç boya sıçrantısı; beyaz çiçekler boyanmadan bırakılmış, yalnız merkeze yakın gölge yanında gül pembesi"
+  ],
+  "palet": [
+    "#211913",
+    "#FBF8F1",
+    "#A1BEDC",
+    "#B7D480",
+    "#224F46",
+    "#EAD5BC",
+    "#CCC3CE",
+    "#E3A5BA"
+  ],
+  "kodla_cizim": "İki katman. Lavi katmanı 1024 çözünürlükte piksel başına optik yoğunluk olarak birikir: her leke Hobbs usulü yinelemeli bozulmuş çokgenlerin düşük saydamlıkla on kez üst üste doldurulmasıyla bir kapsama alanı olur; boş bırakılacak yerler (ışık şeridi, bulutlar, çiçekler, gürültüyle eşiklenmiş genişletilmiş yapı silueti) bu alandan silinir. Alanın bulanık kopyasından farkı kuruyan kenarda pigment birikimini, kâğıt yükseklik dokusu granülasyonu, düşük frekanslı gürültü yoğunluk dalgalanmasını verir; renk iki pigment arasında konuma göre karışır ve renk = kâğıt × exp(−Σ yoğunluk × soğurma) ile çarpımsal biriktirilir. Lekeler geometriden kaydırılarak konur, çizgiye tam uymaz. Mürekkep katmanı 2048 çözünürlükte: her darbe el titremesiyle bozulmuş bir yolun değişken kalınlıklı şerit olarak doldurulmasıdır (kalınlık = uç açısına göre yön çarpanı × başta basınç, sonda incelme × gürültü); mimari hatlar keskin köşelerden bölünüp uçlarından taşırılır, bazılarına ikinci arayan çizgi eklenir. Gölge taraması ışık modeline (kubbe için dönel yüzey normali, kasnak ve minare için silindir) göre eşiklenen kısa darbelerle, kubbede meridyenler boyunca kontur taramasıyla yapılır; pencereler kırpılmış zikzak karalamadır. Örtüşmeler ressam sırasıyla çözülür: önde duran biçimin silueti mürekkep katmanından silinip sonra kendi çizgileri çizilir. En sonda kâğıt dokusu kabartma ışığıyla eklenir.",
+  "etiketler": [
+    "mürekkep",
+    "suluboya",
+    "lavi",
+    "kentsel eskiz",
+    "tarama",
+    "seyahat defteri",
+    "karma teknik"
+  ]
+}

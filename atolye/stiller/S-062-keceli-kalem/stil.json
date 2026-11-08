@@ -1,0 +1,39 @@
+{
+  "kod": "S-062",
+  "no": 62,
+  "ad": "Keçeli Kalem (Marker)",
+  "ad_en": "Marker Rendering",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Kesik uçlu keçeli kalemin çizgili paralel darbeleri, binen yerlerde koyulaşan bantlar, soğuk gri altlık, siyah kontur ve beyaz vurgular.",
+  "tanim": "Keçeli kalemle sunum çizimi (marker rendering), alkol bazlı, saydam mürekkepli kalemlerle yapılan hızlı ve parlak bir tekniktir. Kesik (chisel) uçla çekilen paralel darbeler kâğıtta çizgili bir doku bırakır; üst üste binen darbeler koyulaşır, renkler soğuk ve sıcak gri altlıkların üstüne katmanlanır. Konturlar ince uçlu siyah kalemle, parlak noktalar beyaz jel kalem ya da guaşla eklenir. Endüstriyel ürün ve otomobil tasarımı, mimari ve iç mimari sunum eskizlerinde yaygındır.",
+  "koken": "Keçeli kalem 1950'lerde Sidney Rosenthal'ın Magic Marker'ıyla yaygınlaştı; karışabilen alkol bazlı kalemler (Chartpak AD, 1987'den sonra Japon Copic) tasarım stüdyolarında hızlı sunum çiziminin standart aracı oldu. Teknik, otomobil ve ürün tasarımı okullarında (Pasadena'daki Art Center College of Design gibi) ve mimarlık bürolarının sunum perspektiflerinde kuşaktan kuşağa aktarılan bir el ustalığı olarak gelişti.",
+  "ayirt_edici": [
+    "Gök, kesik uçlu açık mavi kalemlerle çekilmiş eğik, paralel darbelerden bir zemin bloğu: darbe uçları savrulmuş ve düzensiz, yapının hemen arkasında ve sol üstte ikinci, üçüncü kat koyulaşıyor",
+    "Kubbede kaburgalar boyunca kıvrık darbeler: üç yeşil üst üste biniyor, binen yerlerde koyu bantlar kaburga ritmini veriyor; sol kenarda soğuk gri altlık, ışık şeridi boyanmamış kâğıt",
+    "Beyaz taş yapı yalnız sıcak ve soğuk gri darbelerle kurulmuş: minarenin ve kaidenin gölge yanı, korniş altı ve yerdeki gölge soğuk gri",
+    "Hızlı darbelerin sonunda mürekkep azalıp açılıyor; darbe kenarlarında hafif koyulaşma ve kâğıda yayılan yumuşak hare",
+    "İnce uçlu siyah kalemle düzgün kontur ve koyu kalemle doldurulmuş pencereler",
+    "Beyaz jel kalem vurguları: kubbenin ışıklı kenarı, kaburgalarda kısa çizgiler, alem kürelerinde, pencerelerde, yaprak ve çiçeklerde parlak çizgi ve noktalar"
+  ],
+  "palet": [
+    "#A4D1EB",
+    "#68ACDB",
+    "#98CA6D",
+    "#559C24",
+    "#0E380B",
+    "#BFB39F",
+    "#EE8FB0",
+    "#1A1A1C"
+  ],
+  "kodla_cizim": "Renk katmanı beyaz başlar ve her keçeli kalem darbesi çarpımsal karışımla basılır, böylece binen darbeler gerçek mürekkep gibi koyulaşır. Bir darbe, el titremesiyle hafifçe bozulmuş bir orta çizgi boyunca sabit genişlikte (kesik uç) tek bir çokgen olarak doldurulur; tek dolgu olduğu için kendi üstüne binmez. Hızlı darbelerde doğrusal geçişli dolgu sonda mürekkebi azaltır, kenarlara ince ve soluk iki çizgi (mürekkep birikimi), başlangıca hafif bir leke ve darbe yönünde birkaç ince çizgilenme eklenir. Her bölge (gök, minare, kaide, kasnak, kubbe, alemler, her yaprak, taç yaprağı) önce renk katmanında beyaza döndürülür (önde duran biçim için kâğıt bırakılır), darbeleri ayrı bir katmana çizilip bölge maskesiyle 1–2 px taşarak kırpılır ve basılır; işlem bölgenin sınır kutusuyla sınırlıdır. Gök darbeleri bloğun gürültülü sınırına ve yapıya uzaklığa göre seçilen, uçları rastgele kısaltılmış hafif yaylardır; kubbe darbeleri SAHNE.kubbeProfili ile meridyenler boyunca kıvrılır, ton ışık modeline göre katman sayısıyla kurulur. En sonda renk katmanının bulanık kopyası hafifçe çarpılarak kâğıtta yayılma verilir; üstüne örtme sırasıyla (önde duranın silueti silinerek) ince uçlu siyah kontur, en üste beyaz jel kalem vurguları çizilir.",
+  "etiketler": [
+    "keçeli kalem",
+    "marker",
+    "sunum çizimi",
+    "endüstriyel tasarım",
+    "mimari eskiz",
+    "parlak",
+    "kontur"
+  ]
+}

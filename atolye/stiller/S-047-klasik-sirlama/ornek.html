@@ -212,7 +212,7 @@
       c = mixc(c, [0.8, 0.86, 0.5], sp * 0.5);
       { const nn = kubbeNormal(x, y), hz = Math.max(0, (nn[0] * LV[0] + nn[1] * LV[1] + nn[2] * (LV[2] + 1)) / Math.hypot(LV[0], LV[1], LV[2] + 1)); c = mixc(c, [0.95, 0.96, 0.75], Math.pow(hz, 40) * 0.45); }
       const lm = 0.3 * c[0] + 0.6 * c[1] + 0.1 * c[2];
-      c = mixc(c, [lm * 1.05, lm, lm * 0.7], 0.18);
+      c = mixc(c, [lm * 1.05, lm, lm * 0.7], 0.26);
       gol = 1 - V;
     } else if (b === 'kasnak') {
       const ust = y < 610;
@@ -225,6 +225,7 @@
         if (y > p.y && y < p.y + p.h && Math.abs(dx) < 2.5) V += 0.18 * (1 - Math.abs(dx) / 2.5) * silindirIsik(p.x, 560, 226);
       }
       c = sir(V, SIR_YESIL, 1.2 + 1.7 * (1 - V) + (fbm(nB, x / 40, y / 40, 3) - 0.5) * 0.3);
+      { const lm = 0.3 * c[0] + 0.6 * c[1] + 0.1 * c[2]; c = mixc(c, [lm * 1.05, lm, lm * 0.7], 0.28); }
       gol = 1 - V;
     } else if (b === 'pencere') {
       const kasnakta = y > 555 && y < 692 && x > 330 && x < 790;
@@ -267,7 +268,7 @@
     }
     const hv = havuz(x, y);
     CR[i] = c[0] * hv; CG[i] = c[1] * hv; CB[i] = c[2] * hv;
-    GOLGE[i] = clamp(gol * 0.6 + (1 - hv) * 0.8, 0, 1);
+    GOLGE[i] = clamp(gol * 0.8 + (1 - hv) * 0.35, 0, 1);
   }
 
   // ------------------------------------------------------------ çiçekler: Felemenk natürmort usulü, koyudan ışığa çıkan beyaz çiçekler
@@ -322,7 +323,7 @@
         const gr = g.createRadialGradient(ox, oy, e.rx * 0.05, e.cx, e.cy, e.rx * 1.25);
         const k = 0.72 + 0.28 * (yon + 1) / 2;
         gr.addColorStop(0, rgb([1.0, 0.98, 0.92], hv * k)); gr.addColorStop(0.45, rgb([0.93, 0.88, 0.79], hv * k));
-        gr.addColorStop(0.85, rgb([0.55, 0.46, 0.38], hv * k)); gr.addColorStop(1, rgb([0.3, 0.22, 0.16], hv * k));
+        gr.addColorStop(0.8, rgb([0.66, 0.58, 0.48], hv * k)); gr.addColorStop(1, rgb([0.48, 0.4, 0.32], hv * k));
         g.save(); g.filter = 'blur(2.5px)'; g.fillStyle = 'rgba(20,10,4,0.35)'; g.translate(-2, 3); g.fill(new Path2D(d)); g.restore();
         g.fillStyle = gr; g.fill(new Path2D(d));
         // göbeğe yakın pembe gölge
@@ -348,11 +349,11 @@
 
   // ------------------------------------------------------------ sfumato: ışıkta kenar bulunur, gölgede duman gibi kaybolur
   {
-    const r1 = [bulanik3(CR, W2, W2, 2), bulanik3(CG, W2, W2, 2), bulanik3(CB, W2, W2, 2)];
-    const r2 = [bulanik3(CR, W2, W2, 8), bulanik3(CG, W2, W2, 8), bulanik3(CB, W2, W2, 8)];
+    const r1 = [bulanik3(CR, W2, W2, 1), bulanik3(CG, W2, W2, 1), bulanik3(CB, W2, W2, 1)];
+    const r2 = [bulanik3(CR, W2, W2, 6), bulanik3(CG, W2, W2, 6), bulanik3(CB, W2, W2, 6)];
     const gb = bulanik3(GOLGE, W2, W2, 4);
     for (let i = 0; i < N2; i++) {
-      const k = sstep(0.25, 0.95, gb[i]) * 0.85;
+      const k = sstep(0.35, 0.95, gb[i]) * 0.75;
       CR[i] = r1[0][i] + (r2[0][i] - r1[0][i]) * k;
       CG[i] = r1[1][i] + (r2[1][i] - r1[1][i]) * k;
       CB[i] = r1[2][i] + (r2[2][i] - r1[2][i]) * k;

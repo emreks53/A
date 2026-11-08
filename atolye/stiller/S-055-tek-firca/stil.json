@@ -1,0 +1,22 @@
+{
+  "kod": "S-055",
+  "no": 55,
+  "ad": "Tek Fırça Dekoratif Boyama",
+  "ad_en": "One-Stroke Decorative Painting",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "İki renk yüklü yassı fırçayla her yaprağın ve taç yaprağın tek darbede, içinde koyudan açığa geçerek boyandığı dekoratif halk boyaması.",
+  "tanim": "Tek fırça (one-stroke) dekoratif boyamada yassı fırçanın bir köşesine koyu, öbür köşesine açık renk yüklenir; fırça çekildiğinde darbenin bir kenarı koyu, öbür kenarı açık kalır, ortada iki renk kendiliğinden karışır. Böylece bir yaprak, bir taç yaprak ya da bir gül yaprağı gölgesi ve ışığıyla birlikte tek darbede çıkar. Kıvrımlı yaprak, kabuk (yelpaze) taç yaprak, C ve S darbeleri, virgül ve damla darbeleri, kıvrık filizler ve nokta işiyle gür çiçek demetleri kurulur. Ahşap pano, tepsi, sandık ve boyalı teneke eşya süslemesinde kullanılır.",
+  "koken": "Kökü Avrupa ve Amerikan halk boyamasına (tole painting, Pennsylvania Hollandalı süslemesi, Norveç rosemaling'i), Rus Jostovo tepsilerine ve boyalı teneke geleneğine uzanır. Çift yüklü yassı fırça tekniğini 1990'larda Donna Dewberry 'One Stroke' adıyla sistemleştirip televizyon programları ve kitaplarla yaygınlaştırdı; bugün hobi boyamasının ve dekoratif ahşap süslemenin en bilinen yöntemlerindendir.",
+  "ayirt_edici": [
+    "Kubbenin her dilimi tabandan tepeye tek uzun darbe: solda koyu, sağda açık yeşil, ortada kendiliğinden geçiş ve darbe boyunca kıl izleri",
+    "Tek darbe yapraklar: keskiyle başlayıp bastırılan, ucunda yeniden keskiye kalkan, bir kenarı koyu yeşil öbür kenarı sarı-krem, bir kısmı kıvrımlı kenarlı; keskiyle çekilmiş açık damar",
+    "Kabuk darbeli arka taç yapraklar, kubbe ve U darbeli gonca, kıvrımlı etek yaprakları ile kurulan güller; beş kabuk darbeli mor, mavi, pembe kır çiçekleri ve nokta işi göbekler",
+    "Merkezde dönen fırçayla tek darbede boyanmış güneş diski ve virgül ışınları; C darbelerinden kabarık bulutlar",
+    "Altın-oker S darbesi ve tüy gibi virgüllerden köşe kıvrımı; koyu yeşil bordürde krem virgül çiftleri, altın liner ve köşe çiçekleri; kıvrık filizler ve üçlü nokta dolgular",
+    "Çift yüklü dikey ve yatay darbelerle sade, dekoratif minare, kaide ve kasnak; çapraz fırça izli gök taban boyası ve kenarda vernikli çıplak çam ahşap"
+  ],
+  "palet": ["#1C4A2A", "#C8D86A", "#2A8A45", "#A0174A", "#FFE9EF", "#26473A", "#B8862B", "#9CC8E8"],
+  "kodla_cizim": "Temel araç bir 'çift yüklü yassı fırça' fonksiyonudur: fırçanın iki köşesinin izlediği A ve B yolları verilir, ardışık noktalar arasındaki her dörtgen A'dan B'ye doğru iki renkli (ortası karışık) doğrusal degradeyle doldurulur; opak darbelerde dörtgenler dikiş kalmasın diye ~0,7 px üst üste biner, üstüne darbe boyunca rengi hafifçe koyu ya da açık kıl izi çizgileri eklenir. Bu fonksiyondan omurga + genişlik profiliyle yaprak (keskiden başlayıp keskiye biten, istenirse dalgalı kenarlı), merkezde dönen kabuk/yelpaze taç yaprağı, uçları incelen C darbesi, kübik S darbesi, yuvarlak başlı virgül ve incelen spiral filiz türetilir. Kubbe dilimleri SAHNE.kubbeProfili'nden alınan iki komşu meridyen A ve B yolu yapılarak tek darbeyle boyanır; minare, kaide ve kasnak parçaları SAHNE ölçüleriyle dikey ve yatay darbeler, güller kabuk + C darbeleri, çiçek ve yapraklar SAHNE.bitki konumlarıyla çizilir. Gök, degradenin üstüne yarı saydam çapraz geniş darbelerle; bordür çift kat dolgu (evenodd), virgül çiftleri ve altın çizgiyle kurulur. En sonda 2× çözünürlükte piksel piksel gürültüyle bükülmüş yıllık halkalardan ahşap damarı hesaplanır: kenarda çıplak ahşap, panoda ince boyanın altından hafifçe görünür; pah çizgileri ve hafif vernik parlaması eklenir.",
+  "etiketler": ["tek fırça", "one-stroke", "çift yüklü fırça", "dekoratif boyama", "tole", "halk sanatı", "ahşap", "gül", "kıvrım", "virgül darbesi"]
+}

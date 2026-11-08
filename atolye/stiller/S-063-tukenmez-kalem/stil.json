@@ -1,0 +1,39 @@
+{
+  "kod": "S-063",
+  "no": 63,
+  "ad": "Tükenmez Kalem",
+  "ad_en": "Ballpoint Pen",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Mavi, kırmızı, yeşil, siyah ve mor tükenmez kalemle çizgili defter kâğıdına tarama, çapraz tarama ve karalama.",
+  "tanim": "Tükenmez kalem çizimi, yağlı mürekkepli bilyeli uçla yapılan, tonun yalnızca çizgi yoğunluğuyla kurulduğu bir tekniktir. Hafif bastırınca açık ve kâğıt dişinde kesik kesik, sert bastırınca koyu bir çizgi çıkar; gölgeler gidip gelen tarama, çapraz tarama ve karalamayla katman katman koyulaştırılır, kalemin biriktiği yerde küçük mürekkep damlaları kalır. Renkli kalemler üst üste binerek karışır. Okul defteri kenarlarından eskiz defterlerine ve ince ayrıntılı çağdaş resimlere kadar geniş bir kullanımı vardır.",
+  "koken": "Bilyeli kalem 1938'de László Bíró tarafından patentlendi, 1950'lerde Marcel Bich'in BIC kalemleriyle ucuz ve her yerde bulunur oldu; dört renkli kalemler okul ve büro defterlerinin rengini belirledi. Alighiero Boetti'nin mavi tükenmezle doldurulmuş büyük yüzeyleri, Jan Fabre'nin tükenmez kalem çizimleri, Il Lee ve Juan Francisco Casas gibi sanatçılar tekniği müze ölçeğine taşıdı.",
+  "ayirt_edici": [
+    "Çizgili defter kâğıdı: soluk mavi satır çizgileri ve kırmızı kenar boşluğu çizgisi çizimin altından görünüyor",
+    "Gök yama yama, gidip gelen mavi tarama: her yama kendi açısında, dönüşlerde küçük kancalarla; sol üstte çapraz tarama ve mor katman, güneşe doğru seyrelip kâğıda kalıyor; küme bulutlar kâğıt beyazı",
+    "Renkler üst üste karışıyor: kubbede yeşil kontur taraması üstüne yeşil, mavi ve siyah çapraz tarama; altın alemler kırmızı ve yeşil taramanın karışımı",
+    "Basınç farkı görünür: hafif çizgiler soluk ve kâğıt dişinde kesik, sert çizgiler koyu; konturlar bir iki kez geçilmiş",
+    "Kalemin biriktiği yerlerde küçük mürekkep damlaları",
+    "Çiçekler kırmızı konturlu, tabanlarında kırmızı ve mor tarama; yapraklar iki yönlü yeşil taramalı, gölge yarısında mavi; güneş kırmızı halka ve ışınlar"
+  ],
+  "palet": [
+    "#1F3EA8",
+    "#C7213B",
+    "#167A3C",
+    "#1C1C26",
+    "#5B2A91",
+    "#FCFCF9",
+    "#B5D0E8",
+    "#ECA0A7"
+  ],
+  "kodla_cizim": "Kâğıt düz bir zemin üstüne satır ve kenar çizgileriyle çizilir; mürekkep ayrı bir katmanda çarpımsal birikir. Her kalem darbesi 1,4 px aralıkla örneklenir, her küçük parçanın basıncı uçlarda azalan ve gürültüyle dalgalanan bir değerdir; basınç düşükken kâğıt dişi gürültüsü eşiği aşan parçalar atlanır (kesik çizgi). Parçalar renk ve basınç kovalarına toplanıp tek yol olarak çizilir: aynı katmanda kendi üstüne binmez, katmanlar arasında (bir tarama yönü bitince) çarpımsal olarak koyulaşır; kalınlık ve saydamlık basınçla artar, rastgele darbe uçlarına mürekkep damlası konur. Tarama, aralığı ve uçları oynayan, hafif yaylı paralel çizgilerin komşularıyla küçük dönüş kancalarıyla tek darbede birleşmesidir; gök ve kaide, her biri kendi açısında düzensiz eliptik hücrelere bölünerek yama yama taranır. Ton, ışık modelinden (kubbe için dönel yüzey normali, silindirler) ya da güneşe uzaklıktan gelir ve eşiklerle katman sayısına çevrilir; kubbede meridyenler boyunca kesik, birbirine kaymış kısa darbeler kontur taraması yapar. Örtüşmeler önde duran biçimin silueti mürekkep katmanından silinerek çözülür; en sonda hafif lif dokusu eklenir.",
+  "etiketler": [
+    "tükenmez kalem",
+    "tarama",
+    "çapraz tarama",
+    "defter",
+    "çizgi",
+    "çok renkli",
+    "eskiz"
+  ]
+}

@@ -87,16 +87,20 @@
     x.restore();
   }
 
-  // ------------------------------------------------------------ gök: siyah lake, ufukta zımparalanmış kehribar yaldız
-  B.fillStyle = lin(0, 0, 0, 800, [[0, '#060404'], [0.55, '#0c0605'], [1, '#1c0b07']]);
+  // ------------------------------------------------------------ gök: siyah lake, ufukta ve güneş çevresinde cilayla açılmış yaldız
+  B.fillStyle = lin(0, 0, 0, 800, [[0, '#050304'], [0.6, '#090505'], [1, '#140806']]);
   B.fillRect(0, 0, 1024, 1024);
-  // zımpara derinliği: ufukta ve güneş çevresinde siyahın altından önce kırmızı, sonra yaldız (cánh gián) çıkar
-  for (const [x, renk] of [[A, '150,32,16'], [G, '196,132,48']]) {
-    x.fillStyle = lin(0, 420, 0, 800, [[0, `rgba(${renk},0)`], [0.6, `rgba(${renk},0.5)`], [1, `rgba(${renk},0.8)`]]);
-    x.fillRect(0, 420, 1024, 380);
-    x.fillStyle = rad(880, 140, 50, 340, [[0, `rgba(${renk},1)`], [0.3, `rgba(${renk},0.68)`], [1, `rgba(${renk},0)`]]);
-    x.fillRect(480, 0, 544, 560);
-  }
+  // Zımpara derinliği yumuşak ve denetimli: siyahın altından önce koyu kırmızı lake, daha derinde
+  // kehribar lake altındaki altın varak (cánh gián) yumuşak geçişle çıkar.
+  A.fillStyle = rad(880, 140, 60, 330, [[0, 'rgba(150,40,18,0.95)'], [0.35, 'rgba(128,30,14,0.62)'], [0.7, 'rgba(100,22,10,0.22)'], [1, 'rgba(90,20,10,0)']]);
+  A.fillRect(480, 0, 544, 560);
+  G.fillStyle = rad(880, 140, 58, 230, [[0, 'rgba(236,184,86,1)'], [0.2, 'rgba(216,150,64,0.86)'], [0.5, 'rgba(178,104,40,0.48)'], [0.8, 'rgba(140,72,28,0.14)'], [1, 'rgba(120,60,24,0)']]);
+  G.fillRect(560, 0, 464, 460);
+  // ufuk: koyu kırmızıdan kehribara yumuşak bant (binaların arkasında)
+  A.fillStyle = lin(0, 470, 0, 800, [[0, 'rgba(118,26,12,0)'], [0.55, 'rgba(118,26,12,0.42)'], [1, 'rgba(132,32,14,0.78)']]);
+  A.fillRect(0, 470, 1024, 330);
+  G.fillStyle = lin(0, 610, 0, 800, [[0, 'rgba(176,108,40,0)'], [0.6, 'rgba(184,116,44,0.4)'], [1, 'rgba(206,146,62,0.82)']]);
+  G.fillRect(0, 610, 1024, 190);
 
   // güneş: altın varak disk, gümüş halka
   parca(S.daireYolu(880, 140, 58), 'varak', 'rgba(232,186,78,1)');
@@ -123,8 +127,10 @@
     return p;
   }
   const bulutlar = [[170, 262, 230, 52, 5], [480, 150, 180, 42, 4], [758, 352, 160, 36, 4], [100, 470, 130, 30, 3], [950, 468, 120, 28, 3]];
+  const bulutYollari = [];
   for (const [bx, by, bw, bh, bn] of bulutlar) {
     const p = bulutYolu(bx, by, bw, bh, bn);
+    bulutYollari.push(p);
     G.save(); G.globalCompositeOperation = 'destination-out'; G.fillStyle = '#000'; G.fill(p); G.restore();
     G.fillStyle = lin(0, by - bh * 1.1, 0, by + bh * 0.35, [[0, 'rgba(214,218,222,1)'], [0.55, 'rgba(206,210,214,0.95)'], [1, 'rgba(196,200,206,0.25)']]);
     G.fill(p);
@@ -136,24 +142,31 @@
     G.lineWidth = 1.6; G.strokeStyle = 'rgba(232,184,80,1)'; G.stroke(k);
   }
 
-  // altın ve gümüş varak pulları
+  // nashiji: güneş çevresinde ve ufukta yoğunlaşan ince altın pullar; birkaç kesik varak karesi (kirikane)
   {
     const r = S.rng(99);
-    const odak = [[880, 140, 260, 70], [170, 262, 170, 34], [480, 150, 140, 26], [758, 352, 130, 24], [512, 700, 520, 60], [100, 470, 100, 14], [950, 468, 100, 14]];
-    for (const [ox, oy, yr, adet] of odak) {
-      for (let i = 0; i < adet; i++) {
-        const a = r() * Math.PI * 2, d = yr * Math.sqrt(r());
-        const x = ox + Math.cos(a) * d * 1.3, y = oy + Math.sin(a) * d * 0.7;
-        if (y > 790 || S.kubbedeMi(x, y)) continue;
-        const rr = 1.2 + r() * r() * 5;
-        const n = 3 + Math.floor(r() * 4);
-        const p = new Path2D();
-        const a0 = r() * 6.28;
-        for (let k = 0; k < n; k++) { const aa = a0 + (k / n) * Math.PI * 2 + (r() - 0.5) * 0.8; const q = rr * (0.5 + r() * 0.7); k ? p.lineTo(x + Math.cos(aa) * q, y + Math.sin(aa) * q * 0.8) : p.moveTo(x + Math.cos(aa) * q, y + Math.sin(aa) * q * 0.8); }
-        p.closePath();
-        G.fillStyle = r() < 0.62 ? 'rgba(234,190,84,1)' : 'rgba(214,218,224,1)';
-        G.fill(p);
-      }
+    const pul = (x, y, rr, renk) => {
+      const n = 4 + Math.floor(r() * 3), p = new Path2D(), a0 = r() * 6.28;
+      for (let k = 0; k < n; k++) { const aa = a0 + (k / n) * Math.PI * 2 + (r() - 0.5) * 0.7; const q = rr * (0.55 + r() * 0.6); k ? p.lineTo(x + Math.cos(aa) * q, y + Math.sin(aa) * q * 0.75) : p.moveTo(x + Math.cos(aa) * q, y + Math.sin(aa) * q * 0.75); }
+      p.closePath(); G.fillStyle = renk; G.fill(p);
+    };
+    for (let i = 0; i < 2600; i++) {
+      const x = r() * 1024, y = r() * 800;
+      const ds = Math.hypot((x - 880) * 0.85, y - 140);
+      const yog = Math.max(0.9 * Math.exp(-Math.pow(Math.max(0, ds - 70) / 120, 2)), 0.75 * sstep(560, 790, y));
+      if (r() > yog || ds < 90 || S.kubbedeMi(x, y) || bulutYollari.some((q) => G.isPointInPath(q, x * K, y * K))) continue;
+      const t = r();
+      pul(x, y, 0.5 + r() * r() * 1.6, t < 0.8 ? `rgba(${226 + 20 * r() | 0},${178 + 20 * r() | 0},${80 + 20 * r() | 0},1)` : 'rgba(214,218,224,1)');
+    }
+    // kirikane: güneşin iki yanında seyrek kesik altın kareler
+    for (let i = 0; i < 38; i++) {
+      const a = -Math.PI * 0.95 + r() * Math.PI * 1.25, d = 112 + r() * 120;
+      const x = 880 + Math.cos(a) * d, y = 140 + Math.sin(a) * d * 0.9;
+      if (y < 4 || y > 520 || x > 1020) continue;
+      const s2 = 1.6 + r() * 2.2, q = r() * 1.57;
+      const p = new Path2D();
+      for (let k = 0; k < 4; k++) { const aa = q + k * Math.PI / 2; k ? p.lineTo(x + Math.cos(aa) * s2, y + Math.sin(aa) * s2) : p.moveTo(x + Math.cos(aa) * s2, y + Math.sin(aa) * s2); }
+      p.closePath(); G.fillStyle = r() < 0.7 ? 'rgba(240,196,92,1)' : 'rgba(220,224,230,1)'; G.fill(p);
     }
   }
 
@@ -161,9 +174,9 @@
   B.fillStyle = lin(0, 800, 0, 1024, [[0, '#9A2416'], [0.5, '#7A1810'], [1, '#4A0C08']]);
   B.fillRect(0, 800, 1024, 224);
   for (const x of [A, G, E, P]) { x.save(); x.globalCompositeOperation = 'destination-out'; x.fillStyle = '#000'; x.fillRect(0, 800, 1024, 224); x.restore(); }
-  A.fillStyle = lin(0, 800, 0, 1024, [[0, 'rgba(14,6,4,0.3)'], [1, 'rgba(14,6,4,0.7)']]);
+  A.fillStyle = lin(0, 800, 0, 1024, [[0, 'rgba(12,5,4,0)'], [0.45, 'rgba(12,5,4,0.22)'], [1, 'rgba(12,5,4,0.78)']]);
   A.fillRect(0, 800, 1024, 224);
-  G.fillStyle = 'rgba(200,140,60,0.25)'; G.fillRect(0, 800, 1024, 60);
+  G.fillStyle = lin(0, 800, 0, 846, [[0, 'rgba(206,146,62,0.5)'], [1, 'rgba(206,146,62,0)']]); G.fillRect(0, 800, 1024, 46);
 
   // ------------------------------------------------------------ minare: yumurta kabuğu, altın şerefeler
   const mc = 300;
@@ -233,9 +246,45 @@
   }
 
   // ------------------------------------------------------------ kubbe: yeşil lake, sağ üstte yeşilin altından yaldız
-  parca(S.kubbeYolu, 'lake', rad(650, 380, 20, 330, [[0, '#2C7A45'], [0.4, '#1A5A33'], [0.8, '#0E3720'], [1, '#08200F']]));
-  ekle(G, S.kubbeYolu, rad(665, 365, 10, 230, [[0, 'rgba(200,188,84,0.9)'], [0.45, 'rgba(176,170,72,0.55)'], [1, 'rgba(150,150,60,0)']]), S.kubbeYolu);
-  ekle(A, S.kubbeYolu, rad(655, 375, 10, 260, [[0, 'rgba(84,140,64,0.95)'], [0.45, 'rgba(84,140,64,0.62)'], [1, 'rgba(84,140,64,0)']]), S.kubbeYolu);
+  parca(S.kubbeYolu, 'lake', '#0B2A17');
+  {
+    // Her dilim (kaburga arası) kendi ışığını alır; ışıklı yanda yeşil lake zımparayla incelir ve altındaki
+    // altın varak önce yeşim yeşili, sonra altın-yeşil, en parlak yerde altın olarak yumuşakça görünür.
+    const pr = S.kubbeProfili(500);
+    const rAt = (y) => {
+      for (let i = 0; i < pr.length - 1; i++) if (y <= pr[i].y && y >= pr[i + 1].y) { const t = (pr[i].y - y) / (pr[i].y - pr[i + 1].y || 1); return pr[i].r + (pr[i + 1].r - pr[i].r) * t; }
+      return 0;
+    };
+    const x0 = 356 * K, y0 = 298 * K, w = 408 * K, h = 258 * K;
+    const cb = S.yeniTuval(w, h), ca = S.yeniTuval(w, h), cg = S.yeniTuval(w, h);
+    const ib = new ImageData(w, h), ia = new ImageData(w, h), ig = new ImageData(w, h);
+    const db = ib.data, da = ia.data, dg = ig.data;
+    const Lx = 0.66, Ly = 0.5, Lz = 0.56, Ln = Math.hypot(Lx, Ly, Lz);
+    for (let py = 0; py < h; py++) {
+      const yy = (y0 + py + 0.5) / K;
+      const R = rAt(yy); if (R <= 0) continue;
+      const th = clamp((555 - yy) / 255, 0, 1) * 1.2, ct = Math.cos(th), st = Math.sin(th);
+      for (let px = 0; px < w; px++) {
+        const xx = (x0 + px + 0.5) / K;
+        const u = (xx - 560) / R; if (u < -1 || u > 1) continue;
+        const ph = Math.asin(u);
+        const gs = (ph + Math.PI / 2) / (Math.PI / 16), sl = gs - Math.floor(gs);
+        const pe = ph + (sl - 0.5) * 0.46; // dilimin şişkinliği
+        const d = (Math.sin(pe) * ct * Lx + st * Ly + Math.cos(pe) * ct * Lz) / Ln;
+        const o = (py * w + px) * 4;
+        const k = clamp(d * 0.55 + 0.45, 0, 1), kk = k * k;
+        db[o] = 5 + 30 * kk; db[o + 1] = 22 + 86 * kk; db[o + 2] = 13 + 44 * kk; db[o + 3] = 255;
+        const ja = sstep(0.3, 0.78, d) * 0.72;
+        da[o] = 54; da[o + 1] = 126; da[o + 2] = 70; da[o + 3] = ja * 255;
+        const ga = sstep(0.62, 0.97, d), gm = sstep(0.15, 1, ga);
+        dg[o] = 116 + 124 * gm; dg[o + 1] = 150 + 56 * gm; dg[o + 2] = 56 + 54 * gm; dg[o + 3] = ga * 0.95 * 255;
+      }
+    }
+    for (const [c, d, x] of [[cb, ib, B], [ca, ia, A], [cg, ig, G]]) {
+      c.getContext('2d').putImageData(d, 0, 0);
+      x.save(); x.clip(P2(S.kubbeYolu)); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(c, x0, y0); x.restore();
+    }
+  }
   {
     G.save(); G.clip(P2(S.kubbeYolu));
     for (const k of S.kaburgalar(16)) { G.lineWidth = 1.5; G.strokeStyle = 'rgba(226,182,78,1)'; G.stroke(P2(S.yol(k.noktalar))); }
@@ -300,33 +349,35 @@
       const i = (y * W + x) * 4;
       const xx = x / K;
       let r = bd[i], g = bd[i + 1], b = bd[i + 2];
-      // zımpara gürültüsü: ortaya çıkan katmanların bulutlu, keskin kenarları
-      const zg = fbm(n1, xx * 0.0095, yy * 0.0095) + 0.07 * (n4(xx * 0.11, yy * 0.11) - 0.5) + 0.03 * (n5(xx * 0.3, yy * 0.3) - 0.5);
+      // ince zımpara tanesi: yalnızca geçiş bölgelerinde (alfa 0 ile 1 arasında) hissedilir
+      const zg = n5(xx * 0.42, yy * 0.42) - 0.5 + 0.5 * (n4(xx * 1.1, yy * 1.1) - 0.5);
       // lakenin derinliği: çok hafif dalgalı yoğunluk
       const dk = 1 + 0.06 * (n2(xx * 0.006, yy * 0.006) - 0.5);
       r *= dk; g *= dk; b *= dk;
       // alt lake
       const aa = ad[i + 3] / 255;
       if (aa > 0.004) {
-        const m = sstep(0.47, 0.5, aa + (zg - 0.5) * 0.9);
+        const m = clamp(aa + zg * 0.55 * aa * (1 - aa), 0, 1);
         r += (ad[i] - r) * m; g += (ad[i + 1] - g) * m; b += (ad[i + 2] - b) * m;
       }
       // varak
       const ga = gd[i + 3] / 255;
       if (ga > 0.004) {
-        // aynı zımpara alanı: önce kırmızı alt lake, biraz daha derinde yaldız çıkar (kırmızı hale)
-        const m = ga > 0.97 ? 1 : sstep(0.56, 0.59, ga + (zg - 0.5) * 0.9);
+        const m = ga > 0.97 ? 1 : clamp(ga + zg * 0.7 * ga * (1 - ga), 0, 1);
         if (m > 0) {
-          // varak kareleri (yaklaşık 26 birim), ekleri, kırışıklık
-          const Ls = 62, u = (xx + 7) / Ls, v = (yy + 3) / Ls;
-          const ui = Math.floor(u), vi = Math.floor(v + (ui % 2) * 0.37);
-          const fu = u - ui, fv = v + (ui % 2) * 0.37 - vi;
-          let t = 0.95 + 0.1 * hash(ui, vi, 3);
-          const ek = Math.min(fu, 1 - fu, fv, 1 - fv) * Ls;
-          if (ek < 0.8) t *= 1.06;
-          t *= 0.94 + 0.12 * n4(xx * 0.25, yy * 0.06 + ui) + 0.06 * (fbm(n2, xx * 0.04, yy * 0.04) - 0.5);
-          // kenara doğru (lake altında) hafif koyulaşma: cánh gián
-          t *= 0.75 + 0.3 * Math.min(1, ga * 1.4);
+          // varak kareleri (yaklaşık 30 birim, sıraları kaydırılmış): bindirme payı, ince gölge, kırışık, çatlak
+          const Ls = 30, v = (yy + 11) / Ls, vi = Math.floor(v);
+          const u = (xx + 5) / Ls + (vi & 1) * 0.5, ui = Math.floor(u);
+          const fu = u - ui, fv = v - vi;
+          let t = 0.93 + 0.12 * hash(ui, vi, 3);
+          const ek = Math.min(fu * Ls, fv * Ls);
+          const ek2 = Math.min((1 - fu) * Ls, (1 - fv) * Ls);
+          if (ek < 0.7) t *= 1.08; else if (ek < 1.3) t *= 0.86;
+          if (ek2 < 0.45) t *= 0.9;
+          t *= 0.95 + 0.1 * n4(xx * 0.16 + ui * 3.1, yy * 0.16 + vi * 1.7);
+          if (hash(ui, vi, 9) > 0.45) { const cr = Math.abs(n3(xx * 0.06 + ui * 7, yy * 0.06 + vi * 5) - 0.5); if (cr < 0.012) t *= 0.6 + 0.4 * (cr / 0.012); }
+          // kehribar lake altında (alfa düşükken) koyulaşma: cánh gián
+          t *= 0.72 + 0.28 * Math.min(1, ga * 1.25);
           const vr = gd[i] * t, vg = gd[i + 1] * t, vb = gd[i + 2] * t;
           r += (vr - r) * m; g += (vg - g) * m; b += (vb - b) * m;
         }

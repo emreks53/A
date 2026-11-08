@@ -16,7 +16,7 @@
     "Her yerde kalan ince levha tonu, ezilmiş bulanık kenarlar ve kâğıt tanesinin tutmadığı benekler",
     "Geniş kâğıt kenar boşluğu, levha kenarında biriken koyu mürekkep ve kâğıda gömülmüş levha izi"
   ],
-  "palet": ["#224260", "#628B9A", "#E1CE97", "#173E29", "#87B084", "#D2BB7E", "#8A6923", "#F3ECDD"],
+  "palet": ["#224260", "#628B9A", "#E1CE97", "#1C4739", "#8AB185", "#D2BB7E", "#8A6923", "#F3ECDD"],
   "kodla_cizim": "2048 px iç çözünürlükte yedi pigment (levha tonu, seruleum, Prusya mavisi, viridyan, sarı, gül, siena) ayrı yoğunluk tuvallerine 'lighter' karışımıyla kıl kıl fırça darbeleri olarak boyanır: kubbede meridyen boyunca, kasnakta yatay, yapraklarda yaprak biçimine kırpılmış sivri darbeler. Göğün mavisi ve zeminin sienası piksel döngüsünde merdane geçişleri olarak hesaplanır (geçiş başına yoğunluk, sınırda mürekkep sırtı, yatay merdane benekleri). Üç silme katmanı vardır: merdane mürekkebini alan bez silmeleri (güneş halesi, ışık yolları, bulutlar; bez dokusuyla çarpılır), her katmanı alan son silmeler (kubbe parıltıları, taç yaprakları) ve kazıma çizgileri; çiçek göbekleri ve pembe gölgeler silmeden sonra eklenir. Katmanlar bulanıklaştırılıp gürültüyle kaydırılmış koordinatlardan okunur (preste ezilen kenar), kalın mürekkepte Worley hücreleri ve dallı damarlarla retikülasyon, ince mürekkepte kâğıt tanesi uygulanır; renkler Beer–Lambert çarpımıyla kâğıda basılır, levha kenarı yükseklik haritasından kabartma ışığıyla gömülür.",
   "etiketler": ["monotipi", "tek baskı", "eksiltmeli baskı", "merdane", "retikülasyon", "levha tonu", "ressam baskısı", "atmosferik"]
 }

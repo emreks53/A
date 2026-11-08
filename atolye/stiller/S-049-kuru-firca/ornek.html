@@ -247,7 +247,7 @@
     while (k < adet && deneme < adet * 30) {
       deneme++;
       const x = x0 + R() * (x1 - x0), y = y0 + R() * (y1 - y0);
-      if (!cls.includes(sAt(x, y))) continue;
+      if (!cls.includes(sAt(clamp(x, 0, W - 1), y))) continue;
       if (kabul && R() > kabul(x, y)) continue;
       yap(x, y); k++;
     }
@@ -274,13 +274,13 @@
     for (let py = 0; py < W2; py++) for (let px = 0; px < W2; px++) { const i = py * W2 + px; mMavi[i] = m[i] * sstep(105, 200, gunesD(px / S, py / S) + (nC(px / 30, py / 30) - 0.5) * 60); }
     const gokYon = (x, y) => -0.22 + (nB(x / 260, y / 260) - 0.5) * 0.9;
     // 1) açık serulean, geniş süpürmeler
-    dagit([1], 170, [0, 0, W, 800], (x, y) => 1 - bulutD(x, y) * 0.85, (x, y) => {
-      firca(yol(x, y, gokYon, 90 + R() * 150, null, 5), 24 + R() * 18, oyn(RENK.serulean, 0.1), { p: 0.34 + R() * 0.2, kuru: 0.5 + R() * 0.3, kil: 1.1 });
+    dagit([1], 95, [-80, 0, W, 800], (x, y) => 1 - bulutD(x, y) * 0.85, (x, y) => {
+      firca(yol(x, y, gokYon, 170 + R() * 170, null, 5), 34 + R() * 22, oyn(RENK.serulean, 0.1), { p: 0.4 + R() * 0.2, kuru: 0.45 + R() * 0.3, kil: 1.1 });
     });
     katman(mMavi, 'carp');
     // 2) kobalt ve ultramarin, üstte yoğun
-    dagit([1], 170, [0, 0, W, 640], (x, y) => (1 - y / 700) * (1 - bulutD(x, y)), (x, y) => {
-      firca(yol(x, y, gokYon, 70 + R() * 130, null, 5), 16 + R() * 18, oyn(R() < 0.6 ? RENK.kobalt : RENK.ultramarin, 0.1), { p: 0.3 + R() * 0.2, kuru: 0.6, kil: 1.05 });
+    dagit([1], 95, [-80, 0, W, 640], (x, y) => (1 - y / 700) * (1 - bulutD(x, y)), (x, y) => {
+      firca(yol(x, y, gokYon, 130 + R() * 160, null, 5), 26 + R() * 20, oyn(R() < 0.6 ? RENK.kobalt : RENK.ultramarin, 0.1), { p: 0.36 + R() * 0.2, kuru: 0.55, kil: 1.05 });
     });
     for (const [bx, by, bs] of BULUTLAR) for (let k = 0; k < 6 * bs; k++) {
       const x = bx + (R() - 0.6) * 140 * bs, y = by + 14 * bs + R() * 12 * bs;
@@ -288,8 +288,8 @@
     }
     katman(mMavi, 'carp');
     // 3) ufka doğru sıcak şeftali; güneş çevresinde dairesel limon (yalnız beyaz kâğıda)
-    dagit([1], 90, [0, 480, W, 800], (x, y) => sstep(500, 790, y), (x, y) => {
-      firca(yol(x, y, gokYon, 70 + R() * 110, null, 5), 14 + R() * 16, oyn(RENK.seftali, 0.08), { p: 0.32 + R() * 0.2, kuru: 0.55, kil: 1.05 });
+    dagit([1], 55, [-80, 480, W, 800], (x, y) => sstep(500, 790, y), (x, y) => {
+      firca(yol(x, y, gokYon, 140 + R() * 160, null, 5), 22 + R() * 20, oyn(RENK.seftali, 0.08), { p: 0.38 + R() * 0.2, kuru: 0.5, kil: 1.05 });
     });
     katman(mMavi, 'carp', 0.85);
     for (let k = 0; k < 44; k++) {
@@ -318,6 +318,11 @@
     dagit([2], 150, [360, 300, 760, 556], (x, y) => Math.pow(1 - kubbeIsik(x, y), 1.8), (x, y) => {
       firca(yol(x, y, yukari, 30 + R() * 70, [2], 4), 7 + R() * 9, oyn(R() < 0.6 ? RENK.viridyen : RENK.koyuYesil, 0.1), { p: 0.36 + R() * 0.25, kuru: 0.6, kil: 1.0 });
     });
+    // taban: kubbenin alt kenarı boyunca yatay kuru darbeler (alttaki beyaz boşlukları kapatır)
+    for (let k = 0; k < 16; k++) {
+      const y = 528 + R() * 26, r = kubbeR(y), x0 = 560 - r + R() * r * 1.2;
+      firca([[x0, y], [Math.min(560 + r - 4, x0 + 60 + R() * 90), y + (R() - 0.5) * 3]], 10 + R() * 8, oyn(x0 > 600 ? RENK.yaprakYesil : RENK.viridyen, 0.1), { p: 0.55, kuru: 0.45, kil: 1.0 });
+    }
     for (const kb of SAHNE.kaburgalar(16, 40)) {
       const pts = kb.noktalar.slice().reverse().map(([x, y]) => [x + (R() - 0.5) * 0.6, y]);
       const l = kubbeIsik(560 + kb.u * 150, 460);
@@ -385,8 +390,8 @@
   // ================================================================ YER ve öndeki koyu yaprak kütlesi
   {
     const mY = bolgeMaske([8], 1.2);
-    dagit([8], 70, [0, 800, W, 860], null, (x, y) => {
-      firca(yol(x, y, () => (R() - 0.5) * 0.1, 70 + R() * 140, null, 5), 10 + R() * 12, oyn(R() < 0.7 ? RENK.okr : RENK.siena, 0.1), { p: 0.4 + R() * 0.25, kuru: 0.55, kil: 1.05 });
+    dagit([8], 45, [-60, 800, W, 860], null, (x, y) => {
+      firca(yol(x, y, () => (R() - 0.5) * 0.1, 140 + R() * 180, null, 5), 14 + R() * 12, oyn(R() < 0.7 ? RENK.okr : RENK.siena, 0.1), { p: 0.4 + R() * 0.25, kuru: 0.55, kil: 1.05 });
     });
     katman(mY, 'carp');
     dagit([8], 260, [0, 820, W, W], (x, y) => sstep(820, 880, y), (x, y) => {

@@ -16,7 +16,7 @@
     "Silmeden kalan ince levha tonu, kenarında mürekkep biriken eğimli levha izi",
     "Tırtıllı kenarlı el yapımı kâğıt, gri paspartu üstünde yumuşak gölge"
   ],
-  "palet": ["#466B91", "#629370", "#365940", "#E1D6C3", "#E0CFC3", "#CCAD74", "#F2EDE1", "#8D8980"],
+  "palet": ["#466B91", "#719E7D", "#274F34", "#E1D6C3", "#E0CFC3", "#CCAD74", "#F2EDE1", "#8D8980"],
   "kodla_cizim": "Sahne levha alanına (0,84 ölçek) çizilir. Üç ekran dışı tuval tutulur: aşındırma derinliği (gri ton, geçişlerle), tampon rengi (bölge renkleri, 4,5 px bulanıklaştırılarak à la poupée karışması) ve ince çizgiler (öndeki biçim arkadaki çizgiyi siler). Piksel döngüsünde ton, düşük frekanslı gürültüyle kaydırılmış eşiklerle 6 kademeye ayrılır (örtü cilası basamakları); her kademede iki Worley alanından kurulan reçine tanelerinin yarıçapı küçülür ve aradaki ağın mürekkep yoğunluğu artar. Çizgiler tırtıklı yoğunlukla eklenir, levha tonu dalgalı silme gürültüsüyle uygulanır; renk Beer–Lambert çarpımıyla kâğıda basılır. Levha izi yükseklik haritasından kabartma ışığı alır, kâğıt kenarı çok ölçekli gürültüyle tırtıllanıp paspartuya gölge düşürür.",
   "etiketler": ["akuatint", "çukur baskı", "gravür", "à la poupée", "reçine greni", "ton baskı", "levha izi", "18. yüzyıl"]
 }

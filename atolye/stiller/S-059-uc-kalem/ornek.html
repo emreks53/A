@@ -351,6 +351,19 @@
   // yumuşak (ezilmiş) leke: geniş, saydam vuruşlar
   function leke(x, pts, w, a, c) { x.strokeStyle = rgba(c, a); x.lineWidth = w; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath(); pts.forEach(([p, q], i) => (i ? x.lineTo(p, q) : x.moveTo(p, q))); x.stroke(); }
 
+  // taşkın kırpma: tarama, biçimin kenarından düzensiz biçimde birkaç piksel taşar (elle çizim gibi)
+  const TMP = katmanTuvali();
+  function genisMaske(yol) {
+    const k = katmanTuvali(), x = k.x; x.fillStyle = '#000'; x.strokeStyle = '#000'; x.fill(yol);
+    for (let i = 0; i < 5; i++) { x.lineWidth = 2 + r() * 7; x.setLineDash([4 + r() * 22, 3 + r() * 18]); x.lineDashOffset = r() * 40; x.stroke(yol); }
+    x.setLineDash([]); return k.c;
+  }
+  const GM = { minare: genisMaske(minareYolu), kaide: genisMaske(kaideYolu), kubbe: genisMaske(kubbeYolu), kasnak: genisMaske(kasnakYolu) };
+  function bolgede(x, m, ciz) {
+    TMP.temizle(); ciz(TMP.x);
+    TMP.x.save(); TMP.x.setTransform(1, 0, 0, 1, 0, 0); TMP.x.globalCompositeOperation = 'destination-in'; TMP.x.drawImage(m, 0, 0); TMP.x.restore();
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(TMP.c, 0, 0); x.restore();
+  }
   // ---------------------------------------------------------------- ışık tonları
   const golge = (l) => sstep(0.62, 0.12, l);
   const ton = (fn) => harita((x, y, b, l) => fn(b, l, x, y));
@@ -372,12 +385,18 @@
   katman((x) => {
     x.save(); x.clip(minareYolu); for (let xx = 266; xx < 300; xx += 6) leke(x, [[xx, 150], [xx, 800]], 9, 0.3, KIRMIZI); leke(x, [[270, 480], [334, 580]], 40, 0.25, KIRMIZI); x.restore();
     x.save(); x.clip(kaideYolu); for (let yy = 708; yy < 800; yy += 10) leke(x, [[300, yy], [420, yy], [520, yy]], 12, 0.22, KIRMIZI); leke(x, [[300, 710], [820, 710]], 10, 0.35, KIRMIZI); x.restore();
-    for (let k = 0; k < 9; k++) leke(x, [[250 + r() * 30, 806 + k * 4], [560, 808 + k * 4], [860 - r() * 30, 806 + k * 4]], 8, 0.12, KIRMIZI);
+    for (let k = 0; k < 5; k++) leke(x, [[270 + r() * 30, 806 + k * 5], [560, 808 + k * 5], [840 - r() * 30, 806 + k * 5]], 7, 0.1, KIRMIZI);
   }, { ezme: 9, opq: 0.4, gren: 0.35, maske: ton((b, l, x, y) => (b === 'minare' || b === 'kaide' ? 0.35 + 0.75 * golge(l) : y > 800 ? sstep(860, 805, y) * sstep(200, 320, x) * sstep(900, 800, x) : 0)), sil: [MK.bitki, MK.onYapi].slice(0, 1) });
   katman((x) => {
-    x.save(); x.clip(minareYolu); taraT(x, { bx: [244, 140, 358, 802], aci: egik, aralik: 3.6, boy: 22, kal: 2.1, alfa: 0.9, renk: KIRMIZI, obek: 20, sik: 0.9 }); x.restore();
-    x.save(); x.clip(kaideYolu); taraT(x, { bx: [286, 688, 834, 802], aci: egik, aralik: 4.0, boy: 38, kal: 2.2, alfa: 0.9, renk: KIRMIZI, obek: 32, sik: 0.9 }); x.restore();
+    bolgede(x, GM.minare, (x) => { taraT(x, { bx: [244, 140, 358, 802], aci: egik, aralik: 3.6, boy: 22, kal: 2.1, alfa: 0.9, renk: KIRMIZI, obek: 20, sik: 0.9 }); });
+    bolgede(x, GM.kaide, (x) => { taraT(x, { bx: [286, 688, 834, 802], aci: egik, aralik: 4.0, boy: 38, kal: 2.2, alfa: 0.9, renk: KIRMIZI, obek: 32, sik: 0.9 }); });
   }, { opq: 0.45, sil: [MK.bitki], maske: ton((b, l) => (b === 'minare' || b === 'kaide' ? 0.1 + 0.95 * golge(l) : 0)) });
+
+  // kubbe ve kasnakta yeşilin altında kalan kırmızı tebeşir modellemesi (gölge tarafı)
+  katman((x) => {
+    bolgede(x, GM.kubbe, (x) => taraT(x, { bx: [356, 296, 700, 557], aci: egik, aralik: 4.2, boy: 34, kal: 2.0, alfa: 0.9, renk: KIRMIZI, obek: 30, sik: 0.9 }));
+    bolgede(x, GM.kasnak, (x) => taraT(x, { bx: [330, 553, 640, 694], aci: egik, aralik: 4.0, boy: 24, kal: 2.0, alfa: 0.9, renk: KIRMIZI, obek: 22, sik: 0.9 }));
+  }, { opq: 0.45, sil: [MK.bitki], maske: ton((b, l) => (b === 'kubbe' || b === 'kasnak' ? 0.75 * sstep(0.45, 0.05, l) : 0)) });
 
   // ================================================================ 3) yeşil pastel: kubbe ve kasnak (sürtülmüş zemin + kaburga boyunca vuruşlar + koyu yeşil tarama)
   const KOYUYESIL = hex('#2C5E44');
@@ -394,12 +413,12 @@
       while (y > 310) { const L = 30 + r() * 30, pts = []; for (let t = 0; t <= 4; t++) { const yy = y - L * t / 4; pts.push([560 + (u + (r() - 0.5) * 0.006) * kubbeRy(yy), yy]); } strok(x, pts, 2.6, 0.8, YESIL, 0.1, 0.35); y -= L + 6 + r() * 24; }
     }
     x.restore();
-    x.save(); x.clip(kasnakYolu); taraT(x, { bx: [330, 553, 790, 694], aci: Math.PI / 2 - 0.1, aralik: 4, boy: 20, kal: 2.4, alfa: 0.75, renk: YESIL, obek: 20, sik: 0.9 }); x.restore();
+    bolgede(x, GM.kasnak, (x) => { taraT(x, { bx: [330, 553, 790, 694], aci: Math.PI / 2 - 0.1, aralik: 4, boy: 20, kal: 2.4, alfa: 0.75, renk: YESIL, obek: 20, sik: 0.9 }); });
   }, { opq: 0.65, gren: 0.75, maske: ton((b, l) => (b === 'kubbe' ? 0.7 + 0.3 * l : b === 'kasnak' ? 0.55 + 0.3 * l : 0)) });
   // koyu yeşil pastel: gölge tarafında çapraz tarama (Watteau yönünde)
   katman((x) => {
-    x.save(); x.clip(kubbeYolu); taraT(x, { bx: [356, 296, 764, 557], aci: egik, aralik: 3.8, boy: 36, kal: 2.2, alfa: 0.9, renk: KOYUYESIL, obek: 32, sik: 0.9 }); x.restore();
-    x.save(); x.clip(kasnakYolu); taraT(x, { bx: [330, 553, 790, 694], aci: egik, aralik: 3.6, boy: 26, kal: 2.1, alfa: 0.9, renk: KOYUYESIL, obek: 24, sik: 0.9 }); x.restore();
+    bolgede(x, GM.kubbe, (x) => { taraT(x, { bx: [356, 296, 764, 557], aci: egik, aralik: 3.8, boy: 36, kal: 2.2, alfa: 0.9, renk: KOYUYESIL, obek: 32, sik: 0.9 }); });
+    bolgede(x, GM.kasnak, (x) => { taraT(x, { bx: [330, 553, 790, 694], aci: egik, aralik: 3.6, boy: 26, kal: 2.1, alfa: 0.9, renk: KOYUYESIL, obek: 24, sik: 0.9 }); });
   }, { opq: 0.6, gren: 0.7, maske: ton((b, l) => (b === 'kubbe' || b === 'kasnak' ? 0.08 + 0.95 * golge(l) : 0)) });
   // ışıkta açık yeşil pastel
   katman((x) => {
@@ -410,20 +429,22 @@
 
   // ================================================================ 4) siyah tebeşir: en koyu gölgeler, pencereler, vurgular
   katman((x) => {
-    x.save(); x.clip(kasnakPencereYolu); taraT(x, { bx: [334, 560, 786, 682], aci: egik, aralik: 1.8, boy: 14, kal: 1.8, alfa: 0.95, renk: SIYAH, obek: 12, sik: 0.5 }); x.restore();
+    x.save(); x.clip(kasnakPencereYolu); taraT(x, { bx: [334, 560, 786, 682], aci: egik, aralik: 2.3, boy: 14, kal: 1.7, alfa: 0.95, renk: SIYAH, obek: 12, sik: 0.5 }); x.restore();
     x.save(); x.clip(kaidePencereYolu); taraT(x, { bx: [410, 714, 710, 780], aci: egik, aralik: 2.0, boy: 16, kal: 1.8, alfa: 0.9, renk: SIYAH, obek: 14, sik: 0.5 }); x.restore();
     x.save(); x.clip(minarePencereYolu); taraT(x, { bx: [288, 218, 312, 650], aci: egik, aralik: 2.0, boy: 12, kal: 1.6, alfa: 0.9, renk: SIYAH, obek: 10, sik: 0.5 }); x.restore();
-  }, { opq: 0.6, gren: 0.55, guc: 1.2 });
+  }, { opq: 0.6, gren: 0.8, guc: 1.0 });
   katman((x) => {
-    x.save(); x.clip(kubbeYolu); taraT(x, { bx: [356, 296, 620, 557], aci: egik + 0.08, aralik: 3.4, boy: 22, kal: 1.7, alfa: 0.8, renk: SIYAH, obek: 22, sik: 0.9 }); x.restore();
-    x.save(); x.clip(kasnakYolu); taraT(x, { bx: [330, 553, 560, 694], aci: egik, aralik: 3.2, boy: 18, kal: 1.6, alfa: 0.75, renk: SIYAH, obek: 18, sik: 0.9 }); x.restore();
-    x.save(); x.clip(minareYolu); taraT(x, { bx: [244, 140, 300, 802], aci: egik, aralik: 3.0, boy: 14, kal: 1.5, alfa: 0.75, renk: SIYAH, obek: 14, sik: 0.9 }); x.restore();
+    bolgede(x, GM.kubbe, (x) => { taraT(x, { bx: [356, 296, 620, 557], aci: egik + 0.08, aralik: 3.4, boy: 22, kal: 1.7, alfa: 0.8, renk: SIYAH, obek: 22, sik: 0.9 }); });
+    bolgede(x, GM.kasnak, (x) => { taraT(x, { bx: [330, 553, 560, 694], aci: egik, aralik: 3.2, boy: 18, kal: 1.6, alfa: 0.75, renk: SIYAH, obek: 18, sik: 0.9 }); });
+    bolgede(x, GM.minare, (x) => { taraT(x, { bx: [244, 140, 300, 802], aci: egik, aralik: 3.0, boy: 14, kal: 1.5, alfa: 0.75, renk: SIYAH, obek: 14, sik: 0.9 }); });
   }, { opq: 0.55, sil: [MK.bitki], maske: ton((b, l) => (yapiMi(b) && b !== 'pencere' ? sstep(0.24, 0.0, l) * 0.8 : 0)) });
   // siyah konturlar (gölge tarafında kalın), kaburga vurguları, korniş altı
   katman((x) => {
     const kn = SAHNE.kubbeNoktalari(100);
     elCizgisi(x, kn.slice(0, 70), 1.9, 0.85, SIYAH, r, { parca: 90, titre: 0.4 });
     elCizgisi(x, kn.slice(60), 1.1, 0.5, SIYAH, r, { parca: 90, titre: 0.4 });
+    elCizgisi(x, kn.slice(4, 56), 1.0, 0.35, SIYAH, r, { parca: 60, titre: 1.4, kayma: -2.2 });
+    elCizgisi(x, [[266, 490], [266, 798]], 1.0, 0.35, SIYAH, r, { parca: 80, titre: 1.2, kayma: 1.8 });
     for (const kb of SAHNE.kaburgalar(16, 70)) { if (kb.u > 0.55) continue; elCizgisi(x, kb.noktalar.filter((p) => p[1] > 306 && p[1] < 548), 1.1, 0.35 + 0.35 * clamp(-kb.u, 0, 1), SIYAH, r, { parca: 70, titre: 0.4 }); }
     const kr = SAHNE.kaide.kornis;
     elCizgisi(x, [[kr.x1, kr.y2 + 0.5], [kr.x2, kr.y2 + 0.5]], 1.5, 0.7, SIYAH, r, { parca: 120 });
@@ -439,7 +460,7 @@
       else if (p.tip === 'topuz') elCizgisi(x, ornekle(p.yol, 2)[0].slice(0, 30), 1.4, 0.7, SIYAH, r, { parca: 100 });
     }
     for (const z of SAHNE.zikzakCizgileri()) elCizgisi(x, z, 1.5, 0.6, SIYAH, r, { parca: 26, titre: 0.25, ortus: 2 });
-  }, { opq: 0.6, gren: 0.6, sil: [MK.bitki] });
+  }, { opq: 0.62, gren: 0.6, guc: 1.35, sil: [MK.bitki] });
   // kırmızı konturlar (ışık tarafı ve ayrıntılar)
   katman((x) => {
     const kn = SAHNE.kubbeNoktalari(100);
@@ -455,7 +476,7 @@
       else if (p.tip === 'topuz') elCizgisi(x, ornekle(p.yol, 2)[0], 1.2, 0.7, KIRMIZI, r, { parca: 100 });
     }
     for (const p of SAHNE.minarePencereleri) elCizgisi(x, kemerNok(p), 1.1, 0.7, KIRMIZI, r, { parca: 200 });
-  }, { opq: 0.45, gren: 0.6, sil: [MK.bitki] });
+  }, { opq: 0.5, gren: 0.6, guc: 1.35, sil: [MK.bitki] });
 
   // ================================================================ 5) altın-okra pastel: alemler
   katman((x) => {
@@ -536,11 +557,11 @@
   // ================================================================ 7) beyaz tebeşir: ışıklar (yapılar, gök, bulutlar, güneş)
   katman((x) => {
     x.save(); x.clip(kubbeYolu);
-    taraT(x, { bx: [520, 296, 764, 557], aci: egik, aralik: 4.2, boy: 26, kal: 2.0, alfa: 0.85, renk: BEYAZ, obek: 24, sik: 0.95 });
+    taraT(x, { bx: [560, 296, 764, 520], ic: (px, py) => isik(px, py) > 0.8, aci: egik, aralik: 5.0, boy: 22, kal: 1.8, alfa: 0.7, renk: BEYAZ, obek: 20, sik: 1.1 });
     x.restore();
-    x.save(); x.clip(minareYolu); taraT(x, { bx: [300, 140, 358, 802], aci: egik, aralik: 3.2, boy: 16, kal: 1.8, alfa: 0.85, renk: BEYAZ, obek: 14, sik: 0.85 }); x.restore();
-    x.save(); x.clip(kaideYolu); taraT(x, { bx: [520, 688, 834, 802], aci: egik, aralik: 3.4, boy: 28, kal: 1.9, alfa: 0.8, renk: BEYAZ, obek: 24, sik: 0.9 }); x.restore();
-    x.save(); x.clip(kasnakYolu); taraT(x, { bx: [600, 553, 790, 694], aci: Math.PI / 2, aralik: 4, boy: 16, kal: 1.8, alfa: 0.7, renk: BEYAZ, obek: 16, sik: 0.9 }); x.restore();
+    bolgede(x, GM.minare, (x) => { taraT(x, { bx: [300, 140, 358, 802], aci: egik, aralik: 3.2, boy: 16, kal: 1.8, alfa: 0.85, renk: BEYAZ, obek: 14, sik: 0.85 }); });
+    bolgede(x, GM.kaide, (x) => { taraT(x, { bx: [520, 688, 834, 802], aci: egik, aralik: 3.4, boy: 28, kal: 1.9, alfa: 0.8, renk: BEYAZ, obek: 24, sik: 0.9 }); });
+    bolgede(x, GM.kasnak, (x) => { taraT(x, { bx: [600, 553, 790, 694], aci: Math.PI / 2, aralik: 4, boy: 16, kal: 1.8, alfa: 0.7, renk: BEYAZ, obek: 16, sik: 0.9 }); });
     const kr = SAHNE.kaide.kornis; elCizgisi(x, [[kr.x1 + 4, kr.y1 + 3], [kr.x2 - 2, kr.y1 + 3]], 3.2, 0.8, BEYAZ, r, { parca: 140 });
   }, { opq: 0.9, sil: [MK.bitki], maske: ton((b, l, px, py) => (b === 'kubbe' ? sstep(0.62, 0.95, l) : b === 'minare' || b === 'kaide' || b === 'kasnak' ? sstep(0.55, 0.92, l) : 0.9)) });
   katman((x) => { x.save(); x.clip(kubbeYolu); for (let k = 0; k < 6; k++) leke(x, [[600 + k * 14, 330 + k * 10], [650 + k * 10, 400 + k * 12], [690 + k * 6, 480]], 16, 0.32, BEYAZ); x.restore(); },
@@ -570,7 +591,7 @@
         strok(x, [[mx - ux * (L / 2 - sh), my - uy * (L / 2 - sh)], [mx + ux * (L / 2 + sh), my + uy * (L / 2 + sh)]], 2.1, Math.min(1, al * 1.6) * (0.7 + 0.3 * r()), KIRMIZI2, 0.15, 0.35);
       }
     }
-    for (let k = 0; k < 12; k++) leke(x, [[60 + r() * 60, 803 + k * 3], [500, 806 + k * 3], [960 - r() * 60, 803 + k * 3]], 2, 0.25, KIRMIZI);
+    for (let k = 0; k < 7; k++) { const y0 = 803 + k * 5 + r() * 3, x0 = 40 + r() * 200; strok(x, [[x0, y0], [x0 + 300 + r() * 400, y0 + (r() - 0.5) * 4]], 1.6, 0.55, KIRMIZI, 0.1, 0.3); }
   }, { opq: 0.45, guc: 1.6, gren: 0.6, sil: [MK.yapi, MK.bitki], maske: ton((b, l, px, py) => sstep(20, 140, Math.min(px, W - px))) });
 
   // ---------------------------------------------------------------- sonuç

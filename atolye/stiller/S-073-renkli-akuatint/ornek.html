@@ -402,7 +402,7 @@ for (let y = 0; y < N; y++) {
       const ar = -Math.log(Math.max(0.03, cr)), ag = -Math.log(Math.max(0.03, cg)), ab = -Math.log(Math.max(0.03, cb));
       // basamaklı ton: örtü cilasının fırçalı kenarlarıyla kademelendirme
       const tv = tonD[i];
-      const kn = (kesN(X, Yc) - 0.5) * 0.75 + (kesI(X / 5, Yc / 5) - 0.5) * 0.07;
+      const kn = (kesN(X * 0.42, Yc * 1.15) - 0.5) * 0.85 + (kesN(X * 1.3 + 90, Yc * 1.3) - 0.5) * 0.25 + (kesI(X / 5, Yc / 5) - 0.5) * 0.07;
       let L = Math.floor(tv * KADEME + 0.35 + kn * Math.min(1, tv * 6));
       L = Math.max(0, Math.min(KADEME, L));
       if (tv < 0.012) L = 0;

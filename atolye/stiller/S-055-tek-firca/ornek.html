@@ -75,18 +75,20 @@
         st.addColorStop(1, css(cB, alfa));
       }
       ctx.fillStyle = st;
+      // dikiş çizgisi kalmasın: opak darbelerde her dörtgen bir öncekinin üstüne ~0,7 px biner
+      let a0e = a0, b0e = b0;
+      if (alfa >= 1 && i > 0) {
+        const la = Math.hypot(a1[0] - a0[0], a1[1] - a0[1]) || 1, lb = Math.hypot(b1[0] - b0[0], b1[1] - b0[1]) || 1;
+        a0e = [a0[0] - ((a1[0] - a0[0]) / la) * 0.7, a0[1] - ((a1[1] - a0[1]) / la) * 0.7];
+        b0e = [b0[0] - ((b1[0] - b0[0]) / lb) * 0.7, b0[1] - ((b1[1] - b0[1]) / lb) * 0.7];
+      }
       ctx.beginPath();
-      ctx.moveTo(a0[0], a0[1]);
+      ctx.moveTo(a0e[0], a0e[1]);
       ctx.lineTo(a1[0], a1[1]);
       ctx.lineTo(b1[0], b1[1]);
-      ctx.lineTo(b0[0], b0[1]);
+      ctx.lineTo(b0e[0], b0e[1]);
       ctx.closePath();
       ctx.fill();
-      if (alfa >= 1) {
-        ctx.strokeStyle = st;
-        ctx.lineWidth = 0.55;
-        ctx.stroke();
-      }
     }
     // kıl izleri: darbe boyunca ince, hafif koyu / açık çizgiler
     const kil = o.kil === undefined ? 7 : o.kil;
@@ -321,12 +323,12 @@
   const parcalar = S.minareParcalari();
   const dikeyDarbe = (x1, x2, ya, yb, cA, cB, o) => {
     const A = [], B = [];
-    for (let i = 0; i <= 10; i++) { const y = ya + (yb - ya) * (i / 10); A.push([x1, y]); B.push([x2, y]); }
+    const n = Math.max(10, Math.ceil(Math.abs(yb - ya) / 3)); for (let i = 0; i <= n; i++) { const y = ya + (yb - ya) * (i / n); A.push([x1, y]); B.push([x2, y]); }
     serit(A, B, cA, cB, o || { kil: 6 });
   };
   const yatayDarbe = (x1, x2, ya, yb, cA, cB, o) => {
     const A = [], B = [];
-    for (let i = 0; i <= 14; i++) { const x = x1 + (x2 - x1) * (i / 14); A.push([x, ya]); B.push([x, yb]); }
+    const n = Math.max(14, Math.ceil(Math.abs(x2 - x1) / 3)); for (let i = 0; i <= n; i++) { const x = x1 + (x2 - x1) * (i / n); A.push([x, ya]); B.push([x, yb]); }
     serit(A, B, cA, cB, o || { kil: 6 });
   };
   for (const p of parcalar) {
@@ -429,7 +431,7 @@
 
   // ============================================================ 6. KUBBE: her dilim tabandan tepeye TEK uzun darbe (solda koyu, sağda açık)
   {
-    const prof = S.kubbeProfili(36);
+    const prof = S.kubbeProfili(150);
     const L = [0.62, 0.5, 0.78];
     for (let k = 0; k < 16; k++) {
       const u1 = Math.sin(-Math.PI / 2 + (Math.PI * k) / 16), u2 = Math.sin(-Math.PI / 2 + (Math.PI * (k + 1)) / 16);
@@ -620,9 +622,22 @@
     for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; nokta(c.x + Math.cos(a) * c.r * 0.2, c.y + Math.sin(a) * c.r * 0.2, Math.max(1, c.r * 0.06), hex('#C9741E')); }
   }
   const kirRenk = [[K.mor, K.beyaz], [K.mavi, K.beyaz], [K.gul, K.beyaz], [hex('#D9802A'), hex('#FFF4D0')]];
+  // güllerin çevresine sıkışık yaprak demetleri (her biri tek darbe)
+  S.bitki.cicekler.forEach((c, i) => {
+    if (c.r < 44) return;
+    const r = S.rng(300 + i);
+    for (let k = 0; k < 5; k++) {
+      const a = -Math.PI * 0.95 + k * 0.48 + (r() - 0.5) * 0.2 + (k > 2 ? Math.PI * 0.55 : 0);
+      const bx = c.x + Math.cos(a) * c.r * 0.55, by = c.y + Math.sin(a) * c.r * 0.55;
+      const nx = -Math.sin(a), ny = Math.cos(a);
+      yaprak(bx, by, a, c.r * (0.95 + r() * 0.3), 0.55, k % 2 ? YK : YK2, k % 2 ? YA : YA2, { dalga: 0.12, ters: nx * 0.7 - ny * 0.7 > 0, bukum: (r() - 0.5) * 0.3 });
+    }
+  });
+  const gulRenk = [[hex('#B0263E'), hex('#FFEFE6')], [K.gulKoyu, K.gulAcik], [hex('#C2452F'), hex('#FFF1DC')], [hex('#8E1F5C'), hex('#FBE3F0')], [K.gulKoyu, K.gulAcik]];
+  let gi = 0;
   S.bitki.cicekler.forEach((c, i) => {
     if (c.r >= 44) {
-      const renk = i % 3 === 0 ? [hex('#B0263E'), hex('#FFEFE6')] : [K.gulKoyu, K.gulAcik];
+      const renk = gulRenk[gi++ % gulRenk.length];
       gul(c.x, c.y, c.r * 1.08, renk[0], renk[1], 0);
     } else {
       const [kk, aa] = kirRenk[i % 4];

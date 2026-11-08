@@ -287,6 +287,7 @@
     P.closePath();
     return P;
   }
+  const kutuNok = (p, e) => { e = e || 0; let a = 1e9, b = 1e9, c = -1e9, d = -1e9; for (const q of p) { a = Math.min(a, q[0]); b = Math.min(b, q[1]); c = Math.max(c, q[0]); d = Math.max(d, q[1]); } return [a - e, b - e, c + e, d + e]; };
   function merkez(p) { let x = 0, y = 0; for (const q of p) { x += q[0]; y += q[1]; } return [x / p.length, y / p.length]; }
   function donustur(p, dx, dy, s, cx, cy) {
     if (cx === undefined) [cx, cy] = merkez(p);
@@ -503,7 +504,6 @@
     RK.x.drawImage(GT.c, px, py, pw, ph, px, py, pw, ph);
     RK.x.restore();
   }
-  const kutuNok = (p, e) => { e = e || 0; let a = 1e9, b = 1e9, c = -1e9, d = -1e9; for (const q of p) { a = Math.min(a, q[0]); b = Math.min(b, q[1]); c = Math.max(c, q[0]); d = Math.max(d, q[1]); } return [a - e, b - e, c + e, d + e]; };
 
   /** Bir açıyla paralel düz darbelerle bir alanı tarar (darbe genişliği w, aralık a). */
   function paralel(x, x1, y1, x2, y2, aci, w, a, renk, o) {
