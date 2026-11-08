@@ -60,8 +60,17 @@ export function kalinlikMm(kitap: string): number {
 
 /** Sırt yazısı: satırlar, Menba'daki kısa ad ve EB Garamond 600 ölçüleri (harf aralığı .01em; Chromium'da ölçüldü).
     em: en uzun satırın eni; hm: yazının bandın yarı yüksekliğine sığması gereken yarım yüksekliği (em);
-    dy: iki satırlı adın optik kaydırması (em). */
-export const SIRT: Record<KulliyatEseri, { satirlar: string[]; kisa: string; em: number; hm: number; dy?: number }> = {
+    dy: iki satırlı adın optik kaydırması (em). tek: iki satırlı adın tek satırdaki ölçüleri; Güneş hangisinde ad
+    daha büyük yazılıyorsa onu seçer (dar bantta iki satır, geniş ve ince bantta tek satır). */
+export interface SirtYazisi {
+  satirlar: string[];
+  kisa: string;
+  em: number;
+  hm: number;
+  dy?: number;
+  tek?: { em: number; hm: number };
+}
+export const SIRT: Record<KulliyatEseri, SirtYazisi> = {
   Sözler: { satirlar: ['Sözler'], kisa: 'Sözler', em: 2.517, hm: 0.375 },
   Mektubat: { satirlar: ['Mektubat'], kisa: 'Mektubat', em: 4.103, hm: 0.375 },
   "Lem'alar": { satirlar: ['Lem’alar'], kisa: 'Lem’alar', em: 3.539, hm: 0.375 },
@@ -69,13 +78,13 @@ export const SIRT: Record<KulliyatEseri, { satirlar: string[]; kisa: string; em:
   'Mesnevî-i Nûriye': { satirlar: ['Mesnevî-i Nûriye'], kisa: 'Mesnevî', em: 7.183, hm: 0.645 },
   "İşârâtü'l-İ'câz": { satirlar: ['İşârâtü’l-İ’câz'], kisa: 'İşârât', em: 5.525, hm: 0.635 },
   'Barla Lâhikası': { satirlar: ['Barla Lâhikası'], kisa: 'Barla', em: 5.893, hm: 0.375 },
-  // tek satırda bant enine sığmak için küçülürdü (390'da 14,6 px); iki satırda 16,5 px
-  'Kastamonu Lâhikası': { satirlar: ['Kastamonu', 'Lâhikası'], kisa: 'Kastamonu', em: 4.772, hm: 0.805, dy: -0.015 },
+  // 390'da tek satırda bant enine sığmak için 14,6 px'e küçülür, iki satırda 16,5 px
+  'Kastamonu Lâhikası': { satirlar: ['Kastamonu', 'Lâhikası'], kisa: 'Kastamonu', em: 4.772, hm: 0.805, dy: -0.015, tek: { em: 8.494, hm: 0.375 } },
   'Emirdağ Lâhikası': { satirlar: ['Emirdağ Lâhikası'], kisa: 'Emirdağ', em: 7.259, hm: 0.645 },
   'Sikke-i Tasdîk-i Gaybî': { satirlar: ['Sikke-i Tasdîk-i Gaybî'], kisa: 'Sikke', em: 9.128, hm: 0.645 },
   'Tarihçe-i Hayat': { satirlar: ['Tarihçe-i Hayat'], kisa: 'Tarihçe', em: 6.419, hm: 0.645 },
   'Asâ-yı Mûsâ': { satirlar: ['Asâ-yı Mûsâ'], kisa: 'Asâ-yı Mûsâ', em: 5.079, hm: 0.645 },
-  'İman ve Küfür Muvâzeneleri': { satirlar: ['İman ve Küfür', 'Muvâzeneleri'], kisa: 'Muvâzene', em: 6.107, hm: 0.9, dy: 0.07 },
+  'İman ve Küfür Muvâzeneleri': { satirlar: ['İman ve Küfür', 'Muvâzeneleri'], kisa: 'Muvâzene', em: 6.107, hm: 0.9, dy: 0.07, tek: { em: 11.874, hm: 0.485 } },
   Muhâkemat: { satirlar: ['Muhâkemat'], kisa: 'Muhâkemat', em: 4.991, hm: 0.375 },
 };
 

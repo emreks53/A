@@ -1313,8 +1313,8 @@ await adim('telefon tarayıcısında (360 x 640) iki yığın ve kart menünün 
   }
 });
 
-await adim('kısa telefonlarda (375 x 553, 360 x 560, 320 x 568 çentikli) kart ve iki yığın menünün üstüne sığar; yatay telefonda Kur\'an solda, yığınlar sağda, kaydırma yok', async () => {
-  for (const [w, h, ust] of [[375, 553, 0], [360, 560, 0], [320, 568, 20], [844, 390, 0], [740, 360, 0]]) {
+await adim('kısa telefonlarda (375 x 553, 360 x 560, 320 x 568 çentikli) kart ve iki yığın menünün üstüne sığar; yatay telefonda Kur\'an solda, yığınlar sağda, kart okunur, kaydırma yok', async () => {
+  for (const [w, h, ust, yan = 0] of [[375, 553, 0], [360, 560, 0], [320, 568, 20], [844, 390, 0], [740, 360, 0], [568, 320, 0], [640, 360, 0], [667, 375, 0, 47], [740, 280, 0]]) {
     const c2 = await browser.newContext({ viewport: { width: w, height: h }, isMobile: true, hasTouch: true });
     try {
       const p2 = await c2.newPage();
@@ -1322,18 +1322,33 @@ await adim('kısa telefonlarda (375 x 553, 360 x 560, 320 x 568 çentikli) kart 
       await p2.addInitScript(() => localStorage.setItem('nuruhakikat.gunes.yer', JSON.stringify({ lemalar: { sayfa: 8, zaman: Date.now() } })));
       await p2.goto(base + '#/gunes');
       await p2.waitForSelector('#view-gunes .gunes__devam:not([hidden])');
-      if (ust) await p2.evaluate((u) => document.documentElement.style.setProperty('--safe-area-inset-top', `${u}px`), ust);
+      await p2.evaluate(([u, y]) => {
+        const st = document.documentElement.style;
+        if (u) st.setProperty('--safe-area-inset-top', `${u}px`);
+        if (y) for (const k of ['left', 'right']) st.setProperty(`--safe-area-inset-${k}`, `${y}px`);
+      }, [ust, yan]);
       await p2.evaluate(() => document.fonts.ready);
       const o = await p2.evaluate(() => {
         const menu = document.querySelector('.tabbar').getBoundingClientRect().top;
         const ciltler = Array.from(document.querySelectorAll('#view-gunes .cilt'), (c) => c.getBoundingClientRect());
-        const kart = document.querySelector('#view-gunes .gunes__devam').getBoundingClientRect();
-        const sahne = document.querySelector('#view-gunes .gunes__sahne').getBoundingClientRect();
+        const kartE = document.querySelector('#view-gunes .gunes__devam');
+        const kart = kartE.getBoundingClientRect();
+        const ad = document.querySelector('#view-gunes .gunes__devam-ad');
+        const dugme = document.querySelector('#view-gunes .gunes__devam-dugme').getBoundingClientRect();
+        // Mushaf: çizimin (viewBox 240 x 190, ortalanmış) x 60..180 aralığı
+        const r = document.querySelector('#view-gunes .gunes__sahne-svg').getBoundingClientRect();
+        const k = Math.min(r.width / 240, r.height / 190);
+        const cx = r.left + r.width / 2;
         const g = document.querySelector('.gunes');
-        return { menu, enAlt: Math.max(...ciltler.map((r) => r.bottom), kart.bottom), kaydirma: g.scrollHeight - g.clientHeight, yatay: document.documentElement.scrollWidth - innerWidth, sahneSag: sahne.right, yiginSol: Math.min(...ciltler.map((r) => r.left)) };
+        return {
+          menu, enAlt: Math.max(...ciltler.map((c) => c.bottom), kart.bottom), kaydirma: g.scrollHeight - g.clientHeight, yatay: document.documentElement.scrollWidth - innerWidth,
+          mushafSol: cx - 60 * k, mushafSag: cx + 60 * k, yiginSol: Math.min(...ciltler.map((c) => c.left)),
+          adSigar: ad.clientWidth > 0 && ad.scrollWidth <= ad.clientWidth, dugmeIcinde: dugme.right <= kart.right + 0.5, kartTasmaz: kartE.scrollWidth <= kartE.clientWidth,
+        };
       });
       assert.ok(o.kaydirma <= 0 && o.yatay <= 0 && o.enAlt <= o.menu - 15, `${w}x${h} ${JSON.stringify(o)}`);
-      if (w > h) assert.ok(o.sahneSag <= o.yiginSol + 1, `yatayda Kur'an solda ${JSON.stringify(o)}`);
+      assert.ok(o.adSigar && o.dugmeIcinde && o.kartTasmaz, `${w}x${h} kart ${JSON.stringify(o)}`);
+      if (w > h) assert.ok(o.mushafSol >= yan - 0.5 && o.mushafSag <= o.yiginSol, `${w}x${h} yatayda Mushaf solda, ekranda ${JSON.stringify(o)}`);
     } finally {
       await c2.close();
     }
