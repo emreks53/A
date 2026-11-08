@@ -1,97 +1,109 @@
 // Oku akışının veri türleri ve hem uygulamada hem derleme eklentisinde (vite/oku-videolar.ts) kullanılan yardımcılar.
 
-/** Risale-i Nur Külliyatı: Kenz'deki kitap sırası ve Menba'daki dizi bu sıradadır. */
+/** Risale-i Nur Külliyatı, RNK Neşriyat kütüphanesindeki sırayla (Büyük Boy Eserler). Kenz'deki kitap sırası,
+    Güneş'teki iki yığın (sütun sütun: ilk YIGIN_SUTUN eser sol yığın, üstten alta; sonra sağ yığın, en sağ altta
+    Muhâkemat) ve Menba çizimindeki yığınlar bu sıradadır. */
 export const KULLIYAT = [
   'Sözler',
   'Mektubat',
   "Lem'alar",
   'Şuâlar',
-  "İşârâtü'l-İ'câz",
   'Mesnevî-i Nûriye',
-  'Asâ-yı Mûsâ',
+  "İşârâtü'l-İ'câz",
   'Barla Lâhikası',
   'Kastamonu Lâhikası',
   'Emirdağ Lâhikası',
   'Sikke-i Tasdîk-i Gaybî',
   'Tarihçe-i Hayat',
-  'Muhâkemat',
+  'Asâ-yı Mûsâ',
   'İman ve Küfür Muvâzeneleri',
+  'Muhâkemat',
 ] as const;
 
-/** Külliyat'ın bütün ciltleri bu renktedir (Menba rafı, açılan kapak; Güneş rafı ve Kenz CSS'te aynı değerdeki var(--cilt) ile) */
+/** Güneş ve Menba'daki sol yığının eser sayısı (geri kalanı sağ yığın) */
+export const YIGIN_SUTUN = 7;
+
+/** Külliyat'ın bütün ciltleri bu renktedir (Menba yığınları, açılan kapak; Güneş ve Kenz CSS'te aynı değerdeki var(--cilt) ile) */
 export const CILT = '#D7787B';
 
-type KulliyatEseri = (typeof KULLIYAT)[number];
+/** Sırt ve kapak adının rengi: bezle uyan ten rengi (CSS'te var(--ten)) */
+export const TEN = '#F8E2D4';
 
-/** RNK Neşriyat baskısının sayfa sayısı: kitabın kalınlığı buna göre */
-export const SAYFA: Record<KulliyatEseri, number> = {
-  Sözler: 862,
-  Mektubat: 575,
-  "Lem'alar": 498,
-  Şuâlar: 654,
-  "İşârâtü'l-İ'câz": 324,
-  'Mesnevî-i Nûriye': 271,
-  'Asâ-yı Mûsâ': 251,
-  'Barla Lâhikası': 397,
-  'Kastamonu Lâhikası': 254,
-  'Emirdağ Lâhikası': 559,
-  'Sikke-i Tasdîk-i Gaybî': 269,
-  'Tarihçe-i Hayat': 720,
-  Muhâkemat: 143,
-  'İman ve Küfür Muvâzeneleri': 208,
+export type KulliyatEseri = (typeof KULLIYAT)[number];
+
+/** Kalınlık / sırt boyu: kullanıcının fotoğrafından (RNK deri cilt Külliyat), perspektif düzeltilmiş.
+    Göreli kalınlık "tıpatıp" bu oranlardan gelir. */
+export const KALINLIK: Record<KulliyatEseri, number> = {
+  Sözler: 0.1869,
+  Mektubat: 0.131,
+  "Lem'alar": 0.115,
+  Şuâlar: 0.1582,
+  'Mesnevî-i Nûriye': 0.0724,
+  "İşârâtü'l-İ'câz": 0.0844,
+  'Barla Lâhikası': 0.1003,
+  'Kastamonu Lâhikası': 0.0751,
+  'Emirdağ Lâhikası': 0.1097,
+  'Sikke-i Tasdîk-i Gaybî': 0.0644,
+  'Tarihçe-i Hayat': 0.1489,
+  'Asâ-yı Mûsâ': 0.0878,
+  'İman ve Küfür Muvâzeneleri': 0.0692,
+  Muhâkemat: 0.0614,
 };
 
-/** Kitabın gerçek kalınlığı (mm): iki kapak ~6 mm + sayfa başına 0,05 mm. Külliyat dışı bir ad için orta kalınlık. */
+/** Sırt boyu (mm): kalınlık mm = oran x 240 (yalnız gösterim birimi; ekrandaki ölçek CSS'te, iki yığında tek) */
+export const SIRT_BOYU_MM = 240;
+
+/** Kitabın kalınlığı (mm). Külliyat dışı bir ad için orta kalınlık. */
 export function kalinlikMm(kitap: string): number {
-  const sayfa = (SAYFA as Record<string, number | undefined>)[kitap];
-  return 6 + 0.05 * (sayfa ?? 400);
+  return ((KALINLIK as Record<string, number | undefined>)[kitap] ?? 0.1) * SIRT_BOYU_MM;
 }
 
-/** Sırt yazısı: Güneş'teki satırlar, satır uzunluğuna göre yazı boyu katsayısı k (= .97 / en uzun satırın em boyu)
-    ve Menba rafındaki kısa ad */
-export const SIRT: Record<KulliyatEseri, { satirlar: string[]; k: number; kisa: string }> = {
-  Sözler: { satirlar: ['Sözler'], k: 0.3764, kisa: 'Sözler' },
-  Mektubat: { satirlar: ['Mektubat'], k: 0.2319, kisa: 'Mektubat' },
-  "Lem'alar": { satirlar: ['Lem’alar'], k: 0.268, kisa: 'Lem’alar' },
-  Şuâlar: { satirlar: ['Şuâlar'], k: 0.366, kisa: 'Şuâlar' },
-  "İşârâtü'l-İ'câz": { satirlar: ['İşârâtü’l-İ’câz'], k: 0.1709, kisa: 'İşârât' },
-  'Mesnevî-i Nûriye': { satirlar: ['Mesnevî-i Nûriye'], k: 0.1321, kisa: 'Mesnevî' },
-  'Asâ-yı Mûsâ': { satirlar: ['Asâ-yı Mûsâ'], k: 0.1869, kisa: 'Asâ-yı Mûsâ' },
-  'Barla Lâhikası': { satirlar: ['Barla Lâhikası'], k: 0.1608, kisa: 'Barla' },
-  'Kastamonu Lâhikası': { satirlar: ['Kastamonu Lâhikası'], k: 0.1118, kisa: 'Kastamonu' },
-  'Emirdağ Lâhikası': { satirlar: ['Emirdağ Lâhikası'], k: 0.1307, kisa: 'Emirdağ' },
-  'Sikke-i Tasdîk-i Gaybî': { satirlar: ['Sikke-i Tasdîk-i', 'Gaybî'], k: 0.147, kisa: 'Sikke' },
-  'Tarihçe-i Hayat': { satirlar: ['Tarihçe-i Hayat'], k: 0.1477, kisa: 'Tarihçe' },
-  Muhâkemat: { satirlar: ['Muhâkemat'], k: 0.1909, kisa: 'Muhâkemat' },
-  'İman ve Küfür Muvâzeneleri': { satirlar: ['İman ve Küfür', 'Muvâzeneleri'], k: 0.1555, kisa: 'Muvâzene' },
+/** Sırt yazısı: satırlar, Menba'daki kısa ad ve EB Garamond 600 ölçüleri (harf aralığı .01em; Chromium'da ölçüldü).
+    em: en uzun satırın eni; hm: yazının bandın yarı yüksekliğine sığması gereken yarım yüksekliği (em);
+    dy: iki satırlı adın optik kaydırması (em). */
+export const SIRT: Record<KulliyatEseri, { satirlar: string[]; kisa: string; em: number; hm: number; dy?: number }> = {
+  Sözler: { satirlar: ['Sözler'], kisa: 'Sözler', em: 2.517, hm: 0.375 },
+  Mektubat: { satirlar: ['Mektubat'], kisa: 'Mektubat', em: 4.103, hm: 0.375 },
+  "Lem'alar": { satirlar: ['Lem’alar'], kisa: 'Lem’alar', em: 3.539, hm: 0.375 },
+  Şuâlar: { satirlar: ['Şuâlar'], kisa: 'Şuâlar', em: 2.59, hm: 0.635 },
+  'Mesnevî-i Nûriye': { satirlar: ['Mesnevî-i Nûriye'], kisa: 'Mesnevî', em: 7.183, hm: 0.645 },
+  "İşârâtü'l-İ'câz": { satirlar: ['İşârâtü’l-İ’câz'], kisa: 'İşârât', em: 5.525, hm: 0.635 },
+  'Barla Lâhikası': { satirlar: ['Barla Lâhikası'], kisa: 'Barla', em: 5.893, hm: 0.375 },
+  'Kastamonu Lâhikası': { satirlar: ['Kastamonu Lâhikası'], kisa: 'Kastamonu', em: 8.494, hm: 0.375 },
+  'Emirdağ Lâhikası': { satirlar: ['Emirdağ Lâhikası'], kisa: 'Emirdağ', em: 7.259, hm: 0.645 },
+  'Sikke-i Tasdîk-i Gaybî': { satirlar: ['Sikke-i Tasdîk-i Gaybî'], kisa: 'Sikke', em: 9.128, hm: 0.645 },
+  'Tarihçe-i Hayat': { satirlar: ['Tarihçe-i Hayat'], kisa: 'Tarihçe', em: 6.419, hm: 0.645 },
+  'Asâ-yı Mûsâ': { satirlar: ['Asâ-yı Mûsâ'], kisa: 'Asâ-yı Mûsâ', em: 5.079, hm: 0.645 },
+  'İman ve Küfür Muvâzeneleri': { satirlar: ['İman ve Küfür', 'Muvâzeneleri'], kisa: 'Muvâzene', em: 6.107, hm: 0.9, dy: 0.07 },
+  Muhâkemat: { satirlar: ['Muhâkemat'], kisa: 'Muhâkemat', em: 4.991, hm: 0.375 },
 };
 
-/** Sırt satırlarının em boyu (EB Garamond 600, harf aralığı .02em; Chromium'da ölçüldü): SVG'deki yazı boyu için */
+/** Satırların em boyu (EB Garamond 600, harf aralığı .01em): Menba çizimi ve kapaktaki yazı boyu için */
 export const SATIR_EM: Record<string, number> = {
-  Sözler: 2.577,
-  Mektubat: 4.183,
-  'Lem’alar': 3.619,
-  Şuâlar: 2.65,
-  'İşârâtü’l-İ’câz': 5.675,
-  'Mesnevî-i Nûriye': 7.343,
-  'Asâ-yı Mûsâ': 5.189,
-  'Barla Lâhikası': 6.033,
-  'Kastamonu Lâhikası': 8.674,
-  'Emirdağ Lâhikası': 7.419,
-  'Sikke-i Tasdîk-i': 6.598,
-  Gaybî: 2.505,
-  'Tarihçe-i Hayat': 6.569,
-  Muhâkemat: 5.081,
-  'İman ve Küfür': 6.237,
-  Muvâzeneleri: 5.652,
-  İşârât: 2.417,
-  Mesnevî: 3.488,
-  Barla: 2.221,
-  Kastamonu: 4.862,
-  Emirdağ: 3.607,
-  Sikke: 2.299,
-  Tarihçe: 3.168,
-  Muvâzene: 4.238,
+  Sözler: 2.517,
+  Mektubat: 4.103,
+  'Lem’alar': 3.539,
+  Şuâlar: 2.59,
+  'Mesnevî-i Nûriye': 7.183,
+  'İşârâtü’l-İ’câz': 5.525,
+  'Barla Lâhikası': 5.893,
+  'Kastamonu Lâhikası': 8.494,
+  'Emirdağ Lâhikası': 7.259,
+  'Sikke-i Tasdîk-i Gaybî': 9.128,
+  'Tarihçe-i Hayat': 6.419,
+  'Asâ-yı Mûsâ': 5.079,
+  'İman ve Küfür': 6.107,
+  Muvâzeneleri: 5.532,
+  'İman ve Küfür Muvâzeneleri': 11.874,
+  Muhâkemat: 4.991,
+  İşârât: 2.357,
+  Mesnevî: 3.418,
+  Barla: 2.171,
+  Kastamonu: 4.772,
+  Emirdağ: 3.537,
+  Sikke: 2.249,
+  Tarihçe: 3.098,
+  Muvâzene: 4.158,
 };
 
 export interface Video {

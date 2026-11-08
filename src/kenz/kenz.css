@@ -1,26 +1,19 @@
 /*
  * Kenz: Risale-i Nur'dan videolar, geçtiği kitap ve bölüme göre (ayrı ekran). (Güneş: src/gunes/gunes.css)
- * "Müze / koleksiyon": mürekkep laciverti zemin, fildişi yazı; kart kutusu yok, ince şampanya çizgiler.
+ * Açık ten teması: çok açık, gül alt tonlu fildişi zemin; lacivert başlıklar, sıcak mürekkep yazı; kart kutusu yok,
+ * ince altın çizgiler. Kitaplar yatık mini sırtlar (#D7787B).
  */
 
-/* Kenz'de (ve Oku Kenz'den açıldıysa) gündüz fotoğrafı hiç görünmez: geçişlerde koyu ekranın ardından gökyüzü
-   sızmaz. Güneş'te ve Kenz'de fotoğraf koyulaşmış kalır: bu ekranlar arasında geçerken parlak belirmez. */
-.bg__img {
-  transition: filter 0.45s ease;
-}
+/* Kenz'de (ve Oku Kenz'den açıldıysa) gündüz fotoğrafı hiç görünmez; Güneş'te kendi zemini fotoğrafı örter */
 .bg {
   transition: opacity 0.35s ease;
 }
 .app[data-zemin='kenz'],
 .app[data-zemin='gunes'] {
-  background: #0b1430;
+  background: var(--sabah);
 }
 .app[data-zemin='kenz'] .bg {
   opacity: 0;
-}
-.app[data-zemin='kenz'] .bg__img,
-.app[data-zemin='gunes'] .bg__img {
-  filter: brightness(0.62) saturate(0.75) contrast(1.05);
 }
 
 /* ---------- Kenz (ayrı ekran; gökyüzünün üstüne çizilmez) ---------- */
@@ -28,10 +21,8 @@
   /* alt menü, ekranın kendi perdelerinin üstünde kalsın */
   isolation: isolate;
   overflow: hidden;
-  background:
-    radial-gradient(100% 40% at 50% 0%, rgba(40, 56, 110, 0.4), rgba(40, 56, 110, 0) 70%),
-    linear-gradient(180deg, #0d1736 0%, #0b1430 50%, #070e24 100%);
-  color: var(--fildisi);
+  background: var(--zemin-sabah);
+  color: var(--kalem);
 }
 .kenz {
   position: absolute;
@@ -57,7 +48,7 @@
   margin-left: auto;
   margin-right: auto;
 }
-/* üstte durum çubuğunun altı, altta menünün arkası ve altı hep düz gece rengidir */
+/* üstte durum çubuğunun altı, altta menünün arkası ve altı hep düz zemin rengidir */
 .kenz__ust-perde,
 .kenz__alt-perde {
   position: absolute;
@@ -68,12 +59,12 @@
 .kenz__ust-perde {
   top: 0;
   height: calc(var(--safe-top) + 10px);
-  background: linear-gradient(180deg, #0d1736 55%, rgba(13, 23, 54, 0));
+  background: linear-gradient(180deg, var(--sabah-ust) 55%, rgba(251, 246, 242, 0));
 }
 .kenz__alt-perde {
   bottom: 0;
   height: calc(var(--menu-ust) + 28px);
-  background: linear-gradient(180deg, rgba(7, 14, 36, 0), rgba(7, 14, 36, 0.92) 40%, #070e24 70%);
+  background: linear-gradient(180deg, rgba(244, 234, 227, 0), rgba(244, 234, 227, 0.92) 40%, var(--sabah-alt) 70%);
 }
 
 .kenz__kalkan {
@@ -106,7 +97,7 @@
   align-items: center;
   gap: 12px;
   margin: 0;
-  color: var(--fildisi);
+  color: var(--lacivert);
   font-family: var(--eb);
   font-weight: 500;
   font-size: 44px;
@@ -117,15 +108,16 @@
   width: 34px;
   height: 34px;
   margin-top: 2px;
-  color: var(--sampanya);
+  color: var(--lacivert);
 }
 .kenz__alt {
-  margin: 12px 0 0;
-  color: var(--fildisi-3);
-  font-family: var(--sans);
+  margin: 10px 0 0;
+  color: var(--kalem-2);
+  font-family: var(--eb);
+  font-style: italic;
   font-weight: 500;
-  font-size: 13.5px;
-  line-height: 1.4;
+  font-size: 17px;
+  line-height: 1.35;
 }
 
 /* kitap fihristi (üç ve daha çok kitap olunca): dokununca o kitaba kayar */
@@ -152,8 +144,8 @@
   border: 0;
   border-radius: 16px;
   background: none;
-  box-shadow: inset 0 0 0 1px var(--sampanya-cizgi);
-  color: var(--fildisi-2);
+  box-shadow: inset 0 0 0 1px var(--yaldiz-cizgi);
+  color: var(--kalem-2);
   font-family: var(--sans);
   font-weight: 500;
   font-size: 13px;
@@ -163,27 +155,27 @@
   -webkit-tap-highlight-color: transparent;
 }
 .fihrist__kitap:active {
-  background: rgba(244, 237, 224, 0.06);
+  background: rgba(130, 97, 42, 0.07);
 }
 .fihrist__kitap:focus-visible {
-  outline: 1.5px solid var(--sampanya);
+  outline: 1.5px solid var(--lacivert);
   outline-offset: 2px;
 }
-/* küçük gül rengi sırt (kitap başlığındaki sırtla aynı bez) */
+/* küçük yatık sırt (kitap başlığındaki sırtla aynı bez) */
 .fihrist__kitap i {
   flex: none;
-  width: 5px;
-  height: 16px;
-  border-radius: 1px 1px 0.5px 0.5px;
+  width: 18px;
+  height: 6px;
+  border-radius: 1px / 22%;
   background:
-    linear-gradient(90deg, rgba(60, 14, 22, 0.45) 0, rgba(60, 14, 22, 0) 1.5px, rgba(255, 236, 230, 0.14) 35%, rgba(60, 14, 22, 0) 60%, rgba(60, 14, 22, 0.5) 100%),
+    linear-gradient(180deg, rgba(60, 14, 22, 0.5), rgba(255, 236, 230, 0.2) 30%, rgba(60, 14, 22, 0.45)),
     var(--cilt);
 }
 .fihrist__kitap span {
-  color: var(--fildisi-2);
+  color: var(--kalem-2);
 }
 .fihrist__kitap b {
-  color: var(--fildisi-3);
+  color: var(--kalem-3);
   font-weight: 500;
   font-size: 12px;
 }
@@ -202,31 +194,46 @@
   align-items: flex-end;
   gap: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--sampanya-ince);
+  border-bottom: 1px solid var(--yaldiz-ince);
 }
-/* küçük kitap sırtı: gerçek kalınlığıyla orantılı (--mm), Güneş rafındaki bezle aynı renk; kör baskı çift çizgiler */
+/* küçük kitap sırtı: Güneş'teki yığınlar gibi yatık; kalınlık fotoğraftaki orandan (--mm = oran x 240; burada
+   oran x 96 px), aynı bez, iki uçta çift kabartma sırt */
 .kitap__sirt {
   position: relative;
   flex: none;
-  width: calc(var(--mm, 26) * 0.34px);
-  height: 34px;
-  margin-bottom: 1px;
-  overflow: hidden;
-  border-radius: 1.5px 1.5px 0.5px 0.5px;
+  align-self: center;
+  width: 40px;
+  height: calc(var(--mm, 24) * 0.4px);
+  margin-bottom: -2px;
+  border-radius: 1.2px / 22%;
   background:
-    linear-gradient(rgba(96, 26, 34, 0.45), rgba(96, 26, 34, 0.45)) 0 3px / 100% 0.75px no-repeat,
-    linear-gradient(rgba(255, 230, 224, 0.35), rgba(255, 230, 224, 0.35)) 0 3.75px / 100% 0.75px no-repeat,
-    linear-gradient(rgba(96, 26, 34, 0.45), rgba(96, 26, 34, 0.45)) 0 calc(100% - 4.5px) / 100% 0.75px no-repeat,
-    linear-gradient(rgba(255, 230, 224, 0.35), rgba(255, 230, 224, 0.35)) 0 calc(100% - 3.75px) / 100% 0.75px no-repeat,
-    linear-gradient(90deg, rgba(60, 14, 22, 0.45) 0, rgba(60, 14, 22, 0) 2px, rgba(255, 236, 230, 0.14) 35%, rgba(60, 14, 22, 0) 60%, rgba(60, 14, 22, 0.5) 100%),
+    linear-gradient(180deg, rgba(60, 14, 22, 0.55) 0, rgba(255, 236, 230, 0.18) 28%, rgba(255, 236, 230, 0) 52%, rgba(60, 14, 22, 0.18) 82%, rgba(60, 14, 22, 0.55) 100%),
+    linear-gradient(
+      90deg,
+      rgba(60, 14, 22, 0.5) 0 1px,
+      transparent 1px 3px,
+      rgba(255, 236, 230, 0.5) 3px 3.7px,
+      rgba(60, 14, 22, 0.4) 3.7px 4.4px,
+      transparent 4.4px 5.2px,
+      rgba(255, 236, 230, 0.5) 5.2px 5.9px,
+      rgba(60, 14, 22, 0.4) 5.9px 6.6px,
+      transparent 6.6px calc(100% - 6.6px),
+      rgba(255, 236, 230, 0.5) calc(100% - 6.6px) calc(100% - 5.9px),
+      rgba(60, 14, 22, 0.4) calc(100% - 5.9px) calc(100% - 5.2px),
+      transparent calc(100% - 5.2px) calc(100% - 4.4px),
+      rgba(255, 236, 230, 0.5) calc(100% - 4.4px) calc(100% - 3.7px),
+      rgba(60, 14, 22, 0.4) calc(100% - 3.7px) calc(100% - 3px),
+      transparent calc(100% - 3px) calc(100% - 1px),
+      rgba(60, 14, 22, 0.55) calc(100% - 1px)
+    ),
     var(--cilt);
-  box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 3px 5px -3px rgba(96, 40, 36, 0.5);
 }
 .kitap__ad {
   flex: 1;
   min-width: 0;
   margin: 0;
-  color: var(--fildisi);
+  color: var(--lacivert);
   font-family: var(--eb);
   font-weight: 500;
   font-size: 30px;
@@ -235,14 +242,14 @@
 .kitap__sayi {
   flex: none;
   padding-bottom: 3px;
-  color: var(--fildisi-3);
+  color: var(--kalem-3);
   font-family: var(--sans);
   font-weight: 500;
   font-size: 12px;
   white-space: nowrap;
 }
 
-/* bölüm (Lem'a, Şuâ, Söz ...): aralıklı küçük şampanya etiket */
+/* bölüm (Lem'a, Şuâ, Söz ...): aralıklı küçük altın etiket (EB Garamond büyük harf) */
 .bolum + .bolum {
   margin-top: 30px;
 }
@@ -251,17 +258,17 @@
   align-items: baseline;
   gap: 9px;
   margin: 18px 0 14px;
-  color: var(--sampanya);
-  font-family: var(--sans);
+  color: var(--yaldiz);
+  font-family: var(--eb);
   font-weight: 600;
-  font-size: 10px;
+  font-size: 11.5px;
   line-height: 1.3;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 .bolum__ad small {
   margin-left: auto;
-  color: var(--fildisi-3);
+  color: var(--kalem-3);
   font-weight: 500;
   font-size: 11px;
   letter-spacing: 0;
@@ -292,7 +299,7 @@
   position: absolute;
   inset: -8px;
   border-radius: 14px;
-  background: rgba(244, 237, 224, 0.05);
+  background: rgba(130, 97, 42, 0.07);
   opacity: 0;
   pointer-events: none;
 }
@@ -300,7 +307,7 @@
   opacity: 1;
 }
 .kart:focus-visible {
-  outline: 1.5px solid var(--sampanya);
+  outline: 1.5px solid var(--lacivert);
   outline-offset: 6px;
   border-radius: 10px;
 }
@@ -313,7 +320,8 @@
   aspect-ratio: 9 / 16;
   overflow: hidden;
   border-radius: 6px;
-  background: #111a33;
+  background: #2a2320;
+  box-shadow: 0 10px 20px -12px rgba(70, 36, 28, 0.55), 0 1px 2px rgba(70, 36, 28, 0.18);
 }
 .kart__img {
   display: block;
@@ -326,7 +334,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 0.5px rgba(244, 237, 224, 0.22);
+  box-shadow: inset 0 0 0 0.5px rgba(58, 43, 39, 0.2);
   background: linear-gradient(0deg, rgba(4, 8, 20, 0.6), rgba(4, 8, 20, 0) 38%);
 }
 /* süre: afişin altında yalın beyaz yazı (rozet yok) */
@@ -359,7 +367,7 @@
 }
 .kart__ad {
   display: block;
-  color: var(--fildisi);
+  color: var(--lacivert);
   font-family: var(--eb);
   font-weight: 500;
   font-size: 23px;
@@ -370,7 +378,7 @@
   align-items: center;
   gap: 6px;
   margin-top: 8px;
-  color: var(--fildisi-2);
+  color: var(--kalem-2);
   font-family: var(--sans);
   font-weight: 500;
   font-size: 12.5px;
@@ -380,7 +388,7 @@
   flex: none;
   width: 14px;
   height: 14px;
-  color: var(--sampanya);
+  color: var(--yaldiz);
 }
 /* etiketler bağlantının içindedir, ayrı dokunulmaz: düğme gibi görünmez, yalın yazıdır */
 .kart__etiketler {
@@ -390,7 +398,7 @@
   margin-top: 12px;
 }
 .kart .etiket {
-  color: rgba(217, 196, 154, 0.85);
+  color: var(--gul);
   font-family: var(--sans);
   font-weight: 500;
   font-size: 12px;
@@ -505,7 +513,7 @@
   display: flex;
   justify-content: center;
   margin-top: 48px;
-  color: rgba(217, 196, 154, 0.4);
+  color: rgba(2, 32, 100, 0.22);
 }
 .kenz__son .dugum {
   width: 20px;

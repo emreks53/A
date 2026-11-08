@@ -365,7 +365,7 @@ await adim('geri kaydırınca önceki video baştan başlar', async () => {
   assert.equal(await duruyor(I), true);
 });
 
-await adim('Menba: rahlede Kur\'an-ı Kerim, rafta Külliyat (Şuâlar öne çıkmış); Şuâlar, On Birinci Şuâ, Altıncı Mesele, 203. sayfa', async () => {
+await adim('Menba: nurlu Kur\'an-ı Kerim, iki yığında Külliyat (Şuâlar yığından çekilmiş); Şuâlar, On Birinci Şuâ, Altıncı Mesele, 203. sayfa', async () => {
   await page.locator('.reel[data-aktif] .reel__dugme--menba').click();
   await page.waitForSelector('.alt-sayfa.acik');
   const s = '.alt-sayfa.acik';
@@ -374,22 +374,25 @@ await adim('Menba: rahlede Kur\'an-ı Kerim, rafta Külliyat (Şuâlar öne çı
   const cizim = await page.locator(`${s} .menba__cizim`).evaluate((e) => ({
     rol: e.getAttribute('role'),
     ad: e.getAttribute('aria-label'),
-    one: Array.from(e.querySelectorAll('text'), (t) => [t.closest('[font-size]').getAttribute('font-size'), t.textContent]).filter(([b]) => +b > 5.4).map(([, y]) => y),
-    yazilar: Array.from(e.querySelectorAll('text'), (t) => t.textContent),
-    yaziTipi: Array.from(new Set(Array.from(e.querySelectorAll('text'), (t) => t.closest('[font-family]').getAttribute('font-family')))),
+    one: Array.from(e.querySelectorAll('g[data-secili] text.sirt'), (t) => t.textContent),
+    yazilar: Array.from(e.querySelectorAll('text.sirt'), (t) => t.textContent),
+    yaziTipi: Array.from(new Set(Array.from(e.querySelectorAll('text.sirt'), (t) => t.closest('[font-family]').getAttribute('font-family')))),
     nokta: e.querySelectorAll('circle').length,
-    sirtlar: e.querySelectorAll('text').length,
+    sirtlar: e.querySelectorAll('text.sirt').length,
+    kuran: Array.from(e.querySelectorAll('.kuran-yazi'), (t) => t.textContent),
     w: e.querySelector('svg').getBoundingClientRect().width,
   }));
   assert.equal(cizim.rol, 'img');
   assert.match(cizim.ad, /Kur’an-ı Kerim/);
-  assert.match(cizim.ad, /Şuâlar öne çıkmış/);
-  // öne çıkan eserin adı büyük; öbür 13 sırtta kısa adlar; hepsi EB Garamond; çizimde nokta (daire) yok
+  assert.match(cizim.ad, /Şuâlar yığından çekilmiş/);
+  // yığından çekilen eser tam adıyla; öbür 13 sırtta kısa adlar; hepsi EB Garamond; çizimde nokta (daire) yok;
+  // Mushaf'ın üstünde küçük altın "Kur’an" 
   assert.deepEqual(cizim.one, ['Şuâlar']);
   assert.equal(cizim.sirtlar, 14);
   assert.ok(cizim.yazilar.includes('Muvâzene') && !cizim.yazilar.includes('RİSALE-İ NUR KÜLLİYATI'), JSON.stringify(cizim.yazilar));
   assert.deepEqual(cizim.yaziTipi, ['EB Garamond, serif']);
   assert.equal(cizim.nokta, 0);
+  assert.deepEqual(cizim.kuran, ['Kur’an']);
   assert.equal(cizim.w, 390);
   assert.equal(await page.locator(`${s} .menba__eser`).innerText(), 'Şuâlar');
   assert.deepEqual(await page.locator(`${s} .menba__yer li`).allTextContents(), ['On Birinci Şuâ', 'Altıncı Mesele', '203. sayfa']);
@@ -470,7 +473,7 @@ await adim('Menba: Lem’alar, On Yedinci Lem’a, 154. sayfa; künyesiz videoda
   assert.deepEqual(await page.locator(`${s} .menba__yer li`).allTextContents(), ['On Yedinci Lem’a', '154. sayfa']);
   assert.deepEqual(await page.locator(`${s} .menba__etiketler li`).allTextContents(), ['#ihlas', '#muhabbet', '#kurtuluş']);
   assert.deepEqual(
-    await page.locator(`${s} .menba__cizim text`).evaluateAll((l) => l.filter((t) => +t.closest('[font-size]').getAttribute('font-size') > 5.4).map((t) => t.textContent)),
+    await page.locator(`${s} .menba__cizim g[data-secili] text.sirt`).allTextContents(),
     ['Lem’alar'],
   );
   assert.equal(await page.locator(`${s} .menba__kunye`).count(), 0);
@@ -679,9 +682,12 @@ await adim('Kenz ayrı ekran: mürekkep laciverti, sade kütüphane; videolar ki
   assert.equal(await page.locator('#view-kenz').getAttribute('hidden'), null);
   assert.equal(await page.locator('#kenz-baslik').innerText(), 'Kenz');
   assert.equal(await page.locator('.tab--kenz').getAttribute('aria-current'), 'page');
-  assert.equal(await temaRengi(), '#0D1736');
+  assert.equal(await temaRengi(), '#FBF6F2');
   await page.waitForTimeout(300);
   assert.equal(await page.locator('.tab--kenz').evaluate((t) => getComputedStyle(t, '::before').opacity), '1');
+  // açık ten zemin, lacivert başlık
+  assert.match(await page.locator('#view-kenz').evaluate((v) => getComputedStyle(v).backgroundImage), /linear-gradient/);
+  assert.equal(await page.locator('.kenz__baslik').evaluate((b) => getComputedStyle(b).color), 'rgb(2, 32, 100)');
   const kitaplar = await page.locator('.kitap').evaluateAll((l) =>
     l.map((k) => ({
       ad: k.querySelector('.kitap__ad').textContent,
@@ -705,7 +711,7 @@ await adim('Kenz ayrı ekran: mürekkep laciverti, sade kütüphane; videolar ki
     {
       ad: 'Lem’alar',
       sayi: '1 video',
-      mm: '30.90',
+      mm: '27.60',
       bolumler: [
         {
           ad: 'On Yedinci Lem’a',
@@ -721,7 +727,7 @@ await adim('Kenz ayrı ekran: mürekkep laciverti, sade kütüphane; videolar ki
     {
       ad: 'Şuâlar',
       sayi: '1 video',
-      mm: '38.70',
+      mm: '37.97',
       bolumler: [
         {
           ad: 'On Birinci Şuâ',
@@ -909,9 +915,10 @@ const cizildi = (p = page) =>
     const yuva = iz?.children[g];
     return yuva && Array.from(yuva.children).every((s) => s.hasAttribute('data-cizildi') && s.querySelector('canvas')?.width > 0);
   });
-const ESERLER = ['Sözler', 'Mektubat', 'Lem’alar', 'Şuâlar', 'İşârâtü’l-İ’câz', 'Mesnevî-i Nûriye', 'Asâ-yı Mûsâ', 'Barla Lâhikası', 'Kastamonu Lâhikası', 'Emirdağ Lâhikası', 'Sikke-i Tasdîk-i Gaybî', 'Tarihçe-i Hayat', 'Muhâkemat', 'İman ve Küfür Muvâzeneleri'];
+// RNK Neşriyat kütüphanesindeki sıra; Güneş'te sütun sütun: ilk 7 sol yığın (üstten alta), sonra sağ yığın
+const ESERLER = ['Sözler', 'Mektubat', 'Lem’alar', 'Şuâlar', 'Mesnevî-i Nûriye', 'İşârâtü’l-İ’câz', 'Barla Lâhikası', 'Kastamonu Lâhikası', 'Emirdağ Lâhikası', 'Sikke-i Tasdîk-i Gaybî', 'Tarihçe-i Hayat', 'Asâ-yı Mûsâ', 'İman ve Küfür Muvâzeneleri', 'Muhâkemat'];
 
-await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), altında 14 eser Külliyat sırasıyla; PDF\'i olan okuyucuda, olmayan RNK Neşriyat\'ın sitesinde açılır, ikisi de yoksa "yakında"; Kenz ile Güneş arası geçiş geçmişe yazılmaz', async () => {
+await adim('Güneş kütüphanesi: üstte nurlu Kur\'an-ı Kerim (süs, dokunulmaz), altında iki düz yığında 14 eser (Sözler sol üstte, Muhâkemat sağ altta); PDF\'i olan okuyucuda, olmayan RNK Neşriyat\'ın sitesinde açılır, ikisi de yoksa "yakında"; Kenz ile Güneş arası geçiş geçmişe yazılmaz', async () => {
   await page.locator('.tab--kenz').click();
   await sekmeOlsun('kenz');
   await page.locator('.tab--gunes').click();
@@ -921,7 +928,7 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
     Array.from(document.querySelectorAll('#view-gunes .cilt'), (e) => {
       const r = e.getBoundingClientRect();
       const etiket = e.getAttribute('aria-label') ?? e.querySelector('.visually-hidden').textContent;
-      return { ad: etiket.replace(/, (yakında|RNK Neşriyat sitesinde açılır)$/, ''), etiket: e.tagName, href: e.getAttribute('href'), hedef: e.getAttribute('target'), rel: e.getAttribute('rel'), dis: e.classList.contains('cilt--dis'), yakinda: e.classList.contains('cilt--yakinda'), w: r.width, h: r.height, mm: parseFloat(e.closest('li').style.getPropertyValue('--mm')) };
+      return { ad: etiket.replace(/, (yakında|RNK Neşriyat sitesinde açılır)$/, ''), etiket: e.tagName, href: e.getAttribute('href'), hedef: e.getAttribute('target'), rel: e.getAttribute('rel'), dis: e.classList.contains('cilt--dis'), yakinda: e.classList.contains('cilt--yakinda'), yigin: e.closest('ul').classList.contains('yigin--sol') ? 'sol' : 'sag', x: r.left, w: r.width, h: r.height, mm: parseFloat(e.closest('li').style.getPropertyValue('--mm')) };
     }),
   );
   assert.deepEqual(raf.map((s) => s.ad), ESERLER);
@@ -931,34 +938,50 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
     raf.filter((s) => s.dis).map((s) => [s.ad, s.href, s.hedef, s.rel]),
     [
       ['Mektubat', 'https://rnk.tr/r?s=tr&b=mektubat', '_blank', 'noopener'],
-      ['İşârâtü’l-İ’câz', 'https://rnk.tr/r?s=tr&b=isarat', '_blank', 'noopener'],
       ['Mesnevî-i Nûriye', 'https://rnk.tr/r?s=tr&b=mesnevi', '_blank', 'noopener'],
-      ['Asâ-yı Mûsâ', 'https://rnk.tr/r?s=tr&b=asamusa', '_blank', 'noopener'],
+      ['İşârâtü’l-İ’câz', 'https://rnk.tr/r?s=tr&b=isarat', '_blank', 'noopener'],
       ['Barla Lâhikası', 'https://rnk.tr/r?s=tr&b=barla', '_blank', 'noopener'],
       ['Kastamonu Lâhikası', 'https://rnk.tr/r?s=tr&b=kastamonu', '_blank', 'noopener'],
       ['Emirdağ Lâhikası', 'https://rnk.tr/r?s=tr&b=emirdag1', '_blank', 'noopener'],
       ['Sikke-i Tasdîk-i Gaybî', 'https://rnk.tr/r?s=tr&b=sikke', '_blank', 'noopener'],
       ['Tarihçe-i Hayat', 'https://rnk.tr/r?s=tr&b=tarihce', '_blank', 'noopener'],
+      ['Asâ-yı Mûsâ', 'https://rnk.tr/r?s=tr&b=asamusa', '_blank', 'noopener'],
       ['İman ve Küfür Muvâzeneleri', 'https://rnk.tr/r?s=tr&b=imankufur', '_blank', 'noopener'],
     ],
   );
   assert.deepEqual(raf.filter((s) => s.yakinda).map((s) => s.ad), ['Muhâkemat']);
-  // Kitaplar gerçek kalınlıklarında: genişlik sayfa sayısıyla orantılı (iki rafta aynı ölçek), hepsi aynı boyda
-  const olcek = raf.map((s) => s.w / s.mm);
+  // İki düz yığın: ilk 7 sol, son 7 sağ; her yığında bütün ciltler aynı x'te (kaydırma, eğim yok)
+  assert.deepEqual(raf.map((s) => s.yigin), [...Array(7).fill('sol'), ...Array(7).fill('sag')]);
+  for (const [i, s] of raf.entries()) assert.ok(Math.abs(s.x - raf[i < 7 ? 0 : 7].x) < 0.5, `${s.ad} x ${s.x}`);
+  // Kitaplar fotoğraftaki gerçek kalınlıklarında: bant yüksekliği kalınlıkla orantılı (iki yığında tek ölçek),
+  // hepsi aynı enlikte (sırt boyu)
+  const olcek = raf.map((s) => s.h / s.mm);
   assert.ok(Math.max(...olcek) - Math.min(...olcek) < 0.03, `ölçek ${olcek.map((o) => o.toFixed(3))}`);
-  assert.equal(raf.reduce((a, b) => (b.w > a.w ? b : a)).ad, 'Sözler');
-  assert.equal(raf.reduce((a, b) => (b.w < a.w ? b : a)).ad, 'Muhâkemat');
+  assert.equal(raf.reduce((a, b) => (b.h > a.h ? b : a)).ad, 'Sözler');
+  assert.equal(raf.reduce((a, b) => (b.h < a.h ? b : a)).ad, 'Muhâkemat');
   for (const s of raf) {
-    assert.ok(s.w >= 22 && s.h >= 150 && Math.abs(s.h - raf[0].h) < 0.5, `${s.ad} ${s.w}×${s.h}`);
+    assert.ok(s.h >= 22 && s.w >= 150 && Math.abs(s.w - raf[0].w) < 0.5, `${s.ad} ${s.w}×${s.h}`);
     assert.equal(s.etiket, s.yakinda ? 'SPAN' : 'A');
   }
+  // sırt adları ten rengi EB Garamond; hiçbiri bandından taşmaz
+  const adlar = await page.locator('#view-gunes .cilt__ad > span').evaluateAll((l) =>
+    l.map((y) => {
+      const r = y.getBoundingClientRect();
+      const b = y.closest('.cilt').getBoundingClientRect();
+      return { renk: getComputedStyle(y).color, aile: getComputedStyle(y).fontFamily.split(',')[0], tasar: r.left < b.left || r.right > b.right || r.top < b.top - 0.5 || r.bottom > b.bottom + 0.5, boy: parseFloat(getComputedStyle(y).fontSize) };
+    }),
+  );
+  assert.deepEqual(new Set(adlar.map((a) => `${a.renk}|${a.aile}|${a.tasar}`)), new Set(['rgb(248, 226, 212)|"EB Garamond"|false']));
+  assert.ok(Math.max(...adlar.map((a) => a.boy)) >= 20, `en büyük ad ${Math.max(...adlar.map((a) => a.boy))}`);
   // Bütün ciltler tek renk (#D7787B); sırtlarda süzgeç (filter) yok
   const renkler = await page.locator('#view-gunes .cilt__deri').evaluateAll((l) => l.map((d) => [getComputedStyle(d).backgroundColor, getComputedStyle(d).filter, getComputedStyle(d.parentElement).filter]));
   assert.deepEqual(new Set(renkler.map((r) => r.join())), new Set(['rgb(215, 120, 123),none,none']));
   // ekran okuyucu nerede açılacağını da duyar
   assert.equal(await page.locator('#view-gunes .cilt[data-kitap="mektubat"]').getAttribute('aria-label'), 'Mektubat, RNK Neşriyat sitesinde açılır');
   assert.equal(await page.locator('#view-gunes .cilt--yakinda .visually-hidden').first().textContent(), 'Muhâkemat, yakında');
-  assert.equal((await page.locator('#view-gunes .gunes__not').innerText()).trim(), 'Okuyucuda olmayan kitaplar RNK Neşriyat sitesinde açılır');
+  // yığının altında "… sitesinde açılır" yazısı yok
+  assert.equal(await page.locator('#view-gunes .gunes__not').count(), 0);
+  assert.ok(!(await page.locator('#view-gunes').innerText()).includes('sitesinde açılır'));
   // dokununca kitap RNK'nın okuma sitesinde yeni sekmede açılır; uygulama yerinde kalır
   await context.route(/^https:\/\/rnk\.tr\//, (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<title>Risale-i Nur</title>' }));
   const [sekmeRnk] = await Promise.all([context.waitForEvent('page'), page.locator('#view-gunes .cilt[data-kitap="mektubat"]').click()]);
@@ -973,18 +996,19 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
   assert.equal(await mushaf.getAttribute('aria-hidden'), 'true');
   const m = await mushaf.boundingBox();
   assert.ok(m.width >= 140, `mushaf ${m.width}`);
+  assert.ok((await page.locator('#view-gunes .gunes__sahne-svg').boundingBox()).height >= 200);
   await page.mouse.click(m.x + m.width / 2, m.y + m.height / 2);
   await page.waitForTimeout(300);
   assert.equal(await sekme(), 'gunes');
-  assert.equal(await page.locator('#view-gunes h1').innerText(), 'RİSALE-İ NUR KÜLLİYATI');
+  assert.equal((await page.locator('#view-gunes h1').innerText()).replace(/\s+/g, ' '), 'RİSALE-İ NUR KÜLLİYATI');
   // Hiçbir şey okunmamışken "kaldığın yer" yok; her şey ekrana sığar (kaydırma yok)
   assert.equal(await page.locator('#view-gunes .gunes__devam:not([hidden])').count(), 0);
   const sigar = await page.evaluate(() => {
-    const son = document.querySelector('#view-gunes li:last-child .cilt').getBoundingClientRect();
-    return son.bottom <= document.querySelector('.tabbar').getBoundingClientRect().top;
+    const alt = Math.max(...Array.from(document.querySelectorAll('#view-gunes .cilt'), (c) => c.getBoundingClientRect().bottom));
+    return alt <= document.querySelector('.tabbar').getBoundingClientRect().top - 15;
   });
   assert.ok(sigar, 'raf alt menünün altında kalıyor');
-  assert.equal(await temaRengi(), '#0D1736');
+  assert.equal(await temaRengi(), '#FBF6F2');
   await page.goBack();
   await sekmeOlsun('ana');
 });
@@ -1254,7 +1278,7 @@ await adim('yatay geniş ekranda iki sayfa yan yana; kapak tek', async () => {
   }
 });
 
-await adim('telefon tarayıcısında (360 x 640) raf ve kart menünün üstüne sığar, en ince sırt (Muhâkemat) 22 px; hareket azaltılmışsa kitap geçişsiz açılır', async () => {
+await adim('telefon tarayıcısında (360 x 640) iki yığın ve kart menünün üstüne sığar, en ince bant (Muhâkemat) 22 px; hareket azaltılmışsa kitap geçişsiz açılır', async () => {
   const c2 = await browser.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
   try {
     await kitapYolu(c2);
@@ -1269,9 +1293,9 @@ await adim('telefon tarayıcısında (360 x 640) raf ve kart menünün üstüne 
       const ciltler = Array.from(document.querySelectorAll('#view-gunes .cilt'), (c) => c.getBoundingClientRect());
       const kart = document.querySelector('#view-gunes .gunes__devam').getBoundingClientRect();
       const sahne = document.querySelector('#view-gunes .gunes__sahne').getBoundingClientRect();
-      return { menu, enDar: Math.min(...ciltler.map((r) => r.width)), enAlt: Math.max(...ciltler.map((r) => r.bottom)), kartAlt: kart.bottom, kartUst: kart.top, sahneUst: sahne.top, kaydirma: document.querySelector('.gunes').scrollHeight - innerHeight };
+      return { menu, enInce: Math.min(...ciltler.map((r) => r.height)), enAlt: Math.max(...ciltler.map((r) => r.bottom)), kartAlt: kart.bottom, kartUst: kart.top, sahneUst: sahne.top, kaydirma: document.querySelector('.gunes').scrollHeight - innerHeight };
     });
-    assert.ok(olcu.enDar >= 21.5, `en dar sırt ${olcu.enDar}`);
+    assert.ok(olcu.enInce >= 21.5, `en ince bant ${olcu.enInce}`);
     assert.ok(olcu.enAlt < olcu.kartUst && olcu.kartAlt <= olcu.menu, JSON.stringify(olcu));
     assert.ok(olcu.sahneUst >= 0 && olcu.kaydirma <= 0, JSON.stringify(olcu));
     let gecis = false;
@@ -1416,7 +1440,7 @@ await adim('masaüstünde: kütüphane ortada bir sütun; ipucu Escape\'i söyle
   }
 });
 
-await adim('gerçek kitap listesiyle (PDF yok): 14 eser RNK Neşriyat\'ın okuma sitesinde (rnk.tr) açılır, 360 × 640\'ta raf ve not sığar; Menba\'da "Kitapta oku" kitabı orada videonun sayfasında yeni sekmede açar', async () => {
+await adim('gerçek kitap listesiyle (PDF yok): 14 eser RNK Neşriyat\'ın okuma sitesinde (rnk.tr) açılır, 360 × 640\'ta iki yığın sığar (altta not yok); Menba\'da "Kitapta oku" kitabı orada videonun sayfasında yeni sekmede açar', async () => {
   const c2 = await browser.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   try {
     await c2.route(/^https:\/\/rnk\.tr\//, (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<title>Risale-i Nur</title>' }));
@@ -1428,16 +1452,16 @@ await adim('gerçek kitap listesiyle (PDF yok): 14 eser RNK Neşriyat\'ın okuma
     const raf = await p2.evaluate(() =>
       Array.from(document.querySelectorAll('#view-gunes .cilt'), (e) => [e.getAttribute('aria-label'), e.getAttribute('href'), e.getAttribute('target'), e.className]),
     );
-    const KIMLIK = ['sozler', 'mektubat', 'lemalar', 'sualar', 'isarat', 'mesnevi', 'asamusa', 'barla', 'kastamonu', 'emirdag1', 'sikke', 'tarihce', 'muhakemat', 'imankufur'];
+    const KIMLIK = ['sozler', 'mektubat', 'lemalar', 'sualar', 'mesnevi', 'isarat', 'barla', 'kastamonu', 'emirdag1', 'sikke', 'tarihce', 'asamusa', 'imankufur', 'muhakemat'];
     assert.deepEqual(raf, ESERLER.map((ad, i) => [`${ad}, RNK Neşriyat sitesinde açılır`, `https://rnk.tr/r?s=tr&b=${KIMLIK[i]}`, '_blank', 'cilt cilt--dis']));
-    assert.equal((await p2.locator('#view-gunes .gunes__not').innerText()).trim(), 'Kitaplar RNK Neşriyat sitesinde açılır');
+    assert.equal(await p2.locator('#view-gunes .gunes__not').count(), 0);
+    assert.ok(!(await p2.locator('#view-gunes').innerText()).includes('sitesinde açılır'));
     const olcu = await p2.evaluate(() => {
       const menu = document.querySelector('.tabbar').getBoundingClientRect().top;
       const ciltler = Array.from(document.querySelectorAll('#view-gunes .cilt'), (c) => c.getBoundingClientRect());
-      const not = document.querySelector('#view-gunes .gunes__not').getBoundingClientRect();
-      return { menu, enDar: Math.min(...ciltler.map((r) => r.width)), notUst: not.top, notAlt: not.bottom, enAlt: Math.max(...ciltler.map((r) => r.bottom)), kaydirma: document.querySelector('.gunes').scrollHeight - innerHeight };
+      return { menu, enInce: Math.min(...ciltler.map((r) => r.height)), enAlt: Math.max(...ciltler.map((r) => r.bottom)), kaydirma: document.querySelector('.gunes').scrollHeight - innerHeight };
     });
-    assert.ok(olcu.enDar >= 21.5 && olcu.enAlt <= olcu.notUst && olcu.notAlt <= olcu.menu && olcu.kaydirma <= 0, JSON.stringify(olcu));
+    assert.ok(olcu.enInce >= 22 && olcu.enAlt <= olcu.menu - 15 && olcu.kaydirma <= 0, JSON.stringify(olcu));
     // Menba: Şuâlar'ın PDF'i yok; "Kitapta oku" RNK'nın okuma sitesinde videonun sayfasını (203) açar
     await p2.goto(baseGercek + `#/oku/${F}`);
     await p2.waitForSelector('.reel[data-aktif]');

@@ -1,10 +1,10 @@
-// Menba çizimi: rahle üzerinde inci beyazı Kur'an-ı Kerim (kuran-cizim.ts, Güneş'tekiyle aynı); altında mürekkep
-// laciverti bir rafta Risale-i Nur Külliyatı'nın 14 cildi, hepsi #D7787B bez ciltte ve gerçek kalınlıklarıyla
-// (RNK baskısının sayfa sayısına göre) dizili. Videonun geçtiği eser raftan biraz öne çekilmiştir; öteki ciltlerin
-// üstünde hafif bir perde vardır. Altın dolgu, parıltı ya da nokta yoktur.
-// Ölçüler 390 x 296'lık çizim alanına göredir.
-import { kuranSvg } from './kuran-cizim';
-import { CILT, kalinlikMm, KULLIYAT, SATIR_EM, SIRT, tipografik } from './ortak';
+// Menba çizimi: üstte nurlu Kur'an-ı Kerim (kuran-cizim.ts, Güneş'tekiyle aynı; 0,6 ölçek), altında Risale-i Nur
+// Külliyatı'nın 14 cildi iki küçük düz yığında (Güneş'teki sıra ve fotoğraftaki kalınlık oranları), hepsi #D7787B
+// deri ciltte, adları ten rengi kabartma. Videonun geçtiği eser yığından dışa doğru çekilmiştir: gölgeli, tam
+// adıyla; arkasında yumuşak bir boş yuva kalır. Öteki ciltler kısa adlarıyla. Nokta (daire) yoktur.
+// Ölçüler 390 x 312'lik çizim alanına göredir.
+import { kuranSvg, NUR } from './kuran-cizim';
+import { CILT, KALINLIK, KULLIYAT, SATIR_EM, SIRT, TEN, tipografik, YIGIN_SUTUN, type KulliyatEseri } from './ortak';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -14,107 +14,153 @@ const f = (v: number): string => (+v).toFixed(2).replace(/\.?0+$/, '');
 /** SVG metninde & ve < kaçışı */
 const kac = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
-/** Çizim alanı: genişlik, rafın sol ve sağ boşluğu, ciltler arası */
-const W = 390;
-const SOL = 22;
-const SAG = 22;
-const ARA = 0.6;
-/** Sırtların boyu, rafın üst yüzü (sırtların tabanı) ve sırtların tepesi */
-const H = 80;
-const TABAN = 279;
-const UST = TABAN - H;
+/** Dantel motifi (80 x 70 birimlik karo): sivri gözyaşı (dolgun ucu dışta, sivri ucu başlığa) + ok başı */
+const MOTIF =
+  `<path d="M5 35C5 22 18 17.5 32 25.5L54 35L32 44.5C18 52.5 5 48 5 35Z" fill="currentColor"/>` +
+  `<path d="M59 21.5L74 35L59 48.5" fill="none" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>`;
 
-interface Cilt {
-  ad: string;
-  x: number;
-  w: number;
+export interface DantelRenk {
+  koyu: string;
+  acik: string;
+  yuz: string;
 }
+
+/**
+ * Sırtın dantel şeridinin kabartma karosu (viewBox 0 0 80 70 içeriği): koyu kopya sağ alta, açık kopya sol üste,
+ * üstte soluk yüz. ayna: sağ uçtaki karo (motif başlığa, yani sola bakar; ışık yine sol üstten). Menba ve kapak
+ * bunu <pattern> içinde kullanır; Güneş'teki sırt aynı karonun CSS veri adresini (--dantel-sol/-sag) kullanır.
+ */
+export function danteKaroSvg(ayna: boolean, renk: DantelRenk = { koyu: 'rgb(70,14,22)', acik: 'rgb(255,240,234)', yuz: 'rgb(255,236,230)' }): string {
+  const sekil = ayna ? `<g transform="translate(80 0) scale(-1 1)">${MOTIF}</g>` : MOTIF;
+  return (
+    `<g transform="translate(3.5 4.5)" color="${renk.koyu}" opacity=".7">${sekil}</g>` +
+    `<g transform="translate(-3 -3.5)" color="${renk.acik}" opacity=".8">${sekil}</g>` +
+    `<g color="${renk.yuz}" opacity=".42">${sekil}</g>`
+  );
+}
+
+/** Oran 1'in birim karşılığı (iki yığında tek ölçek), bant eni, yığınlar arası, yığınların tabanı,
+    çekilen kitabın kayması ve uç bölgesi */
+const SM = 168;
+const BM = 114;
+const ARA = 12;
+const TABAN = 304;
+const CEK = 44;
+const ZM = 13;
+/** Kur'an'ın ölçeği ve nurun merkezi (y); ışınlar 128 x .6 = 77 birimde söner, çizimin üstüne değmez */
+const KS = 0.6;
+const NUR_Y = 84;
+const NUR_R = 128;
+
+interface Bant {
+  ad: KulliyatEseri;
+  x: number;
+  y: number;
+  h: number;
+  /** yığından çekilme yönü: sol yığın -1, sağ yığın +1 */
+  yon: -1 | 1;
+}
+
+/** Satırın em boyu (EB Garamond 600, .01em) */
+const em = (s: string) => SATIR_EM[s] ?? s.length * 0.55;
 
 /** Çizimin SVG içeriği. p: bu çizime özgü kimlik öneki (sayfada birden çok çizim olabilir). */
 export function menbaSvgIcerigi(eser: string, p: string): string {
-  // bütün raf tek ölçekte: 14 cildin toplam kalınlığı (383,25 mm) rafın genişliğine sığar (~0,88 px/mm)
-  const mm = KULLIYAT.map((ad) => +kalinlikMm(ad).toFixed(2));
-  const k = (W - SOL - SAG - (KULLIYAT.length - 1) * ARA) / mm.reduce((t, m) => t + m, 0);
-  let x = SOL;
-  const ciltler: Cilt[] = KULLIYAT.map((ad, i) => {
-    const c = { ad, x, w: mm[i] * k };
-    x += c.w + ARA;
-    return c;
-  });
-  const secili = ciltler.find((c) => c.ad === eser);
-  const raftakiler = ciltler.filter((c) => c !== secili);
+  const x0 = 195 - ARA / 2 - BM;
+  const x1 = 195 + ARA / 2;
+  const bantlar: Bant[] = [];
+  const yigin = (liste: readonly KulliyatEseri[], x: number, yon: -1 | 1) => {
+    let y = TABAN - liste.reduce((t, ad) => t + KALINLIK[ad] * SM, 0);
+    for (const ad of liste) {
+      const h = KALINLIK[ad] * SM;
+      bantlar.push({ ad, x, y, h, yon });
+      y += h;
+    }
+  };
+  yigin(KULLIYAT.slice(0, YIGIN_SUTUN), x0, -1);
+  yigin(KULLIYAT.slice(YIGIN_SUTUN), x1, 1);
 
-  // kör baskı çift çizgi (koyu iz, altında ince ışık)
-  const kor = (c: Cilt, yy: number) =>
-    `<rect x="${f(c.x + 1.5)}" y="${f(UST + yy)}" width="${f(c.w - 3)}" height=".6" fill="#601A22" fill-opacity=".42"/>` +
-    `<rect x="${f(c.x + 1.5)}" y="${f(UST + yy + 0.6)}" width="${f(c.w - 3)}" height=".6" fill="#FFE6E0" fill-opacity=".3"/>`;
-
-  /** Bir cildin sırtı. Raftakilerde kısa ad, öne çekilende Güneş'teki satırlar; yazı aşağıdan yukarı okunur. */
-  const sirt = (c: Cilt, cekilen: boolean): string => {
-    const s = SIRT[c.ad as (typeof KULLIYAT)[number]];
-    const satirlar = cekilen ? s.satirlar : [s.kisa];
-    const uz = Math.max(...satirlar.map((t) => SATIR_EM[t] ?? t.length * 0.55));
-    const fs = Math.min(cekilen ? 7.6 : 5.4, (c.w - 2.4) / (satirlar.length * 1.1), (H * 0.72) / uz);
-    const cx = c.x + c.w / 2;
-    const cy = UST + H / 2;
-    // rotate(-90) ile yazı aşağıdan yukarı okunur; ilk satır solda kalır
+  let sayac = 0;
+  /** Bir bant: deri, dışbükey gölge, yuvarlak uçlar, üçer sırt, dantel şeridi ve ten rengi kabartma ad */
+  const bant = (b: Bant, sec: boolean): string => {
+    const { x, y, h } = b;
+    const w = BM;
+    const alan = w - 2 * ZM - 6;
+    const s = SIRT[b.ad];
+    const boy = (satirlar: string[], ust: number) =>
+      Math.min(ust, alan / Math.max(...satirlar.map(em)), (h * 0.5) / (satirlar.length > 1 ? 1.9 : 0.9));
+    // çekilen kitap tam adıyla (iki satırlı ad tek satırda daha büyük kalıyorsa tek satır); öteki kitaplar kısa adla
+    let satirlar = sec ? s.satirlar : [s.kisa];
+    let fs = boy(satirlar, sec ? 11.5 : 7.6);
+    if (sec && satirlar.length > 1) {
+      const tek = [satirlar.join(' ')];
+      if (boy(tek, 11.5) > fs) {
+        satirlar = tek;
+        fs = boy(tek, 11.5);
+      }
+    }
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    // her satır tek <text class="sirt"> (yüz); kabartma kenarları aynı metnin <use> kopyaları (fill <use>'dan gelir)
     const yazi = satirlar
-      .map((t, i) => `<text x="0" y="${f((i - (satirlar.length - 1) / 2) * fs * 1.08)}" text-anchor="middle" dominant-baseline="central">${kac(t)}</text>`)
+      .map((t, i) => {
+        const id = `${p}-y${++sayac}`;
+        const ty = cy + (i - (satirlar.length - 1) / 2) * fs * 0.95 + fs * 0.3;
+        return (
+          `<use href="#${id}" transform="translate(-.4 -.45)" fill="#FFF6F0" fill-opacity=".4"/><use href="#${id}" transform="translate(.45 .6)" fill="#782A30" fill-opacity=".55"/>` +
+          `<text id="${id}" class="sirt" x="${f(cx)}" y="${f(ty)}">${kac(t)}</text>`
+        );
+      })
       .join('');
-    const kutu = `x="${f(c.x)}" y="${UST}" width="${f(c.w)}" height="${H}"`;
+    const ry = f(Math.min(2.4, h * 0.22));
+    const kutu = `x="${f(x)}" y="${f(y)}" width="${w}" height="${f(h)}" rx="1.6" ry="${ry}"`;
+    const rib = (xx: number) =>
+      `<rect x="${f(xx)}" y="${f(y + 0.6)}" width=".7" height="${f(h - 1.2)}" fill="#FFECE6" fill-opacity=".5"/>` +
+      `<rect x="${f(xx + 0.7)}" y="${f(y + 0.6)}" width=".6" height="${f(h - 1.2)}" fill="#3C0E16" fill-opacity=".42"/>`;
+    const uc = (sol: boolean) => {
+      const r = (d: number) => (sol ? x + d : x + w - d - 1.3);
+      return (
+        rib(r(2.6)) +
+        rib(r(4.4)) +
+        rib(r(6.0)) +
+        `<rect x="${f(sol ? x + 7.6 : x + w - 7.6 - 4.8)}" y="${f(y + 0.8)}" width="4.8" height="${f(h - 1.6)}" fill="url(#${p}-dantel-${sol ? 'sol' : 'sag'})"/>`
+      );
+    };
     return (
-      `<g><rect ${kutu} rx="1.2" fill="${CILT}"/>` +
-      `<rect ${kutu} rx="1.2" fill="url(#${p}-yuvarlak)"/>` +
-      `<rect ${kutu} rx="1.2" fill="url(#${p}-tepe)"/>` +
-      (cekilen ? `<rect ${kutu} filter="url(#${p}-doku)" style="mix-blend-mode:soft-light" opacity=".3"/>` : '') +
-      kor(c, H * 0.06) +
-      kor(c, H * 0.085) +
-      kor(c, H - H * 0.085 - 1.2) +
-      kor(c, H - H * 0.06 - 1.2) +
-      `<g transform="translate(${f(cx)} ${f(cy)}) rotate(-90)" font-family="EB Garamond, serif" font-weight="600" font-size="${f(fs)}" letter-spacing="${f(fs * 0.02)}" fill="#3C0E16">${yazi}</g></g>`
+      `<g class="cilt" data-ad="${kac(b.ad)}"${sec ? ` data-secili="" filter="url(#${p}-cekilen)"` : ''}>` +
+      `<rect ${kutu} fill="${CILT}"/><rect ${kutu} fill="url(#${p}-disbukey)"/><rect ${kutu} fill="url(#${p}-uclar)"/>` +
+      uc(true) +
+      uc(false) +
+      `<g font-family="EB Garamond, serif" font-weight="600" font-size="${f(fs)}" letter-spacing="${f(fs * 0.01)}" text-anchor="middle" fill="${TEN}">${yazi}</g></g>`
     );
   };
 
+  const secili = bantlar.find((b) => b.ad === eser);
+  const digerleri = bantlar.filter((b) => b !== secili);
+  const dantel = (ad: string, ayna: boolean) =>
+    `<pattern id="${p}-dantel-${ad}" width="4.8" height="4.2" patternUnits="userSpaceOnUse" viewBox="0 0 80 70">${danteKaroSvg(ayna, { koyu: '#460E16', acik: '#FFF0EA', yuz: '#FFECE6' })}</pattern>`;
   const o: string[] = [];
   o.push(`<defs>
-<linearGradient id="${p}-yuvarlak" x1="0" y1="0" x2="1" y2="0">
-<stop offset="0" stop-color="#3C0E16" stop-opacity=".5"/><stop offset=".07" stop-color="#3C0E16" stop-opacity=".1"/>
-<stop offset=".14" stop-color="#FFECE6" stop-opacity="0"/><stop offset=".3" stop-color="#FFECE6" stop-opacity=".14"/>
-<stop offset=".46" stop-color="#FFECE6" stop-opacity=".04"/><stop offset=".6" stop-color="#3C0E16" stop-opacity="0"/>
-<stop offset=".85" stop-color="#3C0E16" stop-opacity=".12"/><stop offset="1" stop-color="#3C0E16" stop-opacity=".55"/>
-</linearGradient>
-<linearGradient id="${p}-tepe" x1="0" y1="0" x2="0" y2="1">
-<stop offset="0" stop-color="#FFECE6" stop-opacity=".18"/><stop offset=".08" stop-color="#FFECE6" stop-opacity="0"/>
-<stop offset=".7" stop-color="#3C0E16" stop-opacity="0"/><stop offset="1" stop-color="#3C0E16" stop-opacity=".26"/>
-</linearGradient>
-<linearGradient id="${p}-tahta" x1="0" y1="0" x2="0" y2="1">
-<stop offset="0" stop-color="#303C6B"/><stop offset=".36" stop-color="#232E5A"/><stop offset=".36" stop-color="#D9C49A" stop-opacity=".5"/>
-<stop offset=".41" stop-color="#D9C49A" stop-opacity=".5"/><stop offset=".41" stop-color="#172148"/><stop offset="1" stop-color="#0B132E"/>
-</linearGradient>
-<filter id="${p}-doku" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" seed="7"/><feColorMatrix values="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1"/></filter>
-<filter id="${p}-cekilen" x="-60%" y="-20%" width="220%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="2.4"/><feOffset dy="1.5"/><feComponentTransfer><feFuncA type="linear" slope=".7"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-<filter id="${p}-tahta-gol" x="-10%" y="-100%" width="120%" height="400%"><feGaussianBlur stdDeviation="4"/></filter>
-<radialGradient id="${p}-isik"><stop offset="0" stop-color="#F4EDE0" stop-opacity=".16"/><stop offset=".55" stop-color="#F4EDE0" stop-opacity=".05"/><stop offset="1" stop-color="#F4EDE0" stop-opacity="0"/></radialGradient>
-<clipPath id="${p}-ciltler">${raftakiler.map((c) => `<rect x="${f(c.x)}" y="${UST}" width="${f(c.w)}" height="${H}" rx="1.2"/>`).join('')}</clipPath>
+<linearGradient id="${p}-disbukey" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3C0E16" stop-opacity=".6"/><stop offset=".07" stop-color="#3C0E16" stop-opacity=".12"/><stop offset=".2" stop-color="#FFECE6" stop-opacity=".18"/><stop offset=".31" stop-color="#FFECE6" stop-opacity=".22"/><stop offset=".46" stop-color="#FFECE6" stop-opacity=".08"/><stop offset=".56" stop-color="#FFECE6" stop-opacity="0"/><stop offset=".72" stop-color="#3C0E16" stop-opacity=".08"/><stop offset=".88" stop-color="#3C0E16" stop-opacity=".24"/><stop offset="1" stop-color="#3C0E16" stop-opacity=".62"/></linearGradient>
+<linearGradient id="${p}-uclar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3C0E16" stop-opacity=".55"/><stop offset=".012" stop-color="#FFECE6" stop-opacity=".22"/><stop offset=".03" stop-color="#3C0E16" stop-opacity=".2"/><stop offset=".045" stop-color="#3C0E16" stop-opacity="0"/><stop offset=".955" stop-color="#3C0E16" stop-opacity="0"/><stop offset=".975" stop-color="#3C0E16" stop-opacity=".25"/><stop offset=".988" stop-color="#FFECE6" stop-opacity=".08"/><stop offset="1" stop-color="#3C0E16" stop-opacity=".62"/></linearGradient>
+${dantel('sol', false)}${dantel('sag', true)}
+<linearGradient id="${p}-yuva" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A161B" stop-opacity=".62"/><stop offset=".5" stop-color="#5E2228" stop-opacity=".46"/><stop offset="1" stop-color="#7A3036" stop-opacity=".34"/></linearGradient>
+<radialGradient id="${p}-golge" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#703C30" stop-opacity=".34"/><stop offset=".6" stop-color="#703C30" stop-opacity=".12"/><stop offset="1" stop-color="#703C30" stop-opacity="0"/></radialGradient>
+<filter id="${p}-cekilen" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur in="SourceAlpha" stdDeviation="2.2" result="b"/><feOffset in="b" dx="1.2" dy="2.4" result="o"/><feFlood flood-color="#5A2428" flood-opacity=".42"/><feComposite in2="o" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 </defs>`);
-  // rahle üzerinde Kur'an-ı Kerim, 0,8 ölçekte, ortada. Arkasındaki yumuşak ışık burada çizilir, çizimin içinde
-  // kalır: Kur'an çiziminin kendi ışığı çizimin üstünden taşar, sayfanın kaydırma kutusu onu düz bir çizgiyle keserdi.
-  const s = 0.8;
-  const isikY = 2 + 92 * s;
-  o.push(`<ellipse cx="${W / 2}" cy="${f(isikY)}" rx="120" ry="${f(isikY)}" fill="url(#${p}-isik)"/>`);
-  o.push(`<g transform="translate(${f(W / 2 - 130 * s)} 2) scale(${s})">${kuranSvg(`${p}-k`, { spot: false })}</g>`);
-  // rafın gölgesi, mürekkep tahtası (Güneş'teki gibi: aydınlık üst yüz, şampanya kenar çizgisi) ve temas gölgesi
-  o.push(`<rect x="${SOL - 8}" y="${TABAN + 6}" width="${W - SOL - SAG + 16}" height="8" fill="#000" fill-opacity=".7" filter="url(#${p}-tahta-gol)"/>`);
-  o.push(`<rect x="${SOL - 8}" y="${TABAN}" width="${W - SOL - SAG + 16}" height="10" rx="1" fill="url(#${p}-tahta)"/>`);
-  o.push(`<rect x="${SOL - 8}" y="${TABAN}" width="${W - SOL - SAG + 16}" height="2" fill="#030510" fill-opacity=".5"/>`);
-  o.push(`<g>${raftakiler.map((c) => sirt(c, false)).join('')}</g>`);
-  // bütün raf için tek bez dokusu (sırtlara kırpılmış; 14 ayrı süzgeç yerine bir tane) ve hafif perde
-  o.push(`<rect x="${SOL}" y="${UST}" width="${W - SOL - SAG}" height="${H}" filter="url(#${p}-doku)" clip-path="url(#${p}-ciltler)" style="mix-blend-mode:soft-light" opacity=".3"/>`);
-  o.push(`<rect x="${SOL}" y="${UST}" width="${W - SOL - SAG}" height="${H}" fill="#050817" fill-opacity=".14" clip-path="url(#${p}-ciltler)"/>`);
+  // nurlu Kur'an: nurun merkezi (195, 84); ışınlar 77 birimde söner, çizimin içinde kalır (kaydırma kutusu kesmez)
+  o.push(`<g transform="translate(${f(195 - NUR.cx * KS)} ${f(NUR_Y - NUR.cy * KS)}) scale(${KS})">${kuranSvg(`${p}-k`, { nur: 0.9, r: NUR_R })}</g>`);
+  // yığınların masaya değdiği yerde yumuşak sıcak gölge
+  o.push(`<rect x="${f(x0 - 8)}" y="${TABAN - 4}" width="${BM + 16}" height="10" fill="url(#${p}-golge)"/>`);
+  o.push(`<rect x="${f(x1 - 8)}" y="${TABAN - 4}" width="${BM + 16}" height="10" fill="url(#${p}-golge)"/>`);
+  o.push(digerleri.map((b) => bant(b, false)).join('\n'));
   if (secili) {
-    // öne çekilen cilt: 1,07 kat büyük, tahtanın 3 px önüne taşar, altında yumuşak gölge
-    const ox = secili.x + secili.w / 2;
-    o.push(`<g filter="url(#${p}-cekilen)" transform="translate(${f(ox)} ${TABAN + 3}) scale(1.07) translate(${f(-ox)} ${-TABAN})">${sirt(secili, true)}</g>`);
+    // çekilen kitabın boş kalan yuvası, altında ince ışık kenarı; kitap dışa doğru çekilmiş, en son çizilir
+    o.push(
+      `<rect x="${f(secili.x + 0.5)}" y="${f(secili.y)}" width="${BM - 1}" height="${f(secili.h)}" rx="1.2" fill="url(#${p}-yuva)"/>` +
+        `<rect x="${f(secili.x + 1)}" y="${f(secili.y + secili.h - 0.8)}" width="${BM - 2}" height=".8" fill="#FFECE6" fill-opacity=".3"/>`,
+    );
+    o.push(bant({ ...secili, x: secili.x + secili.yon * CEK }, true));
   }
   return o.join('\n');
 }
@@ -125,10 +171,11 @@ export function menbaCizimi(eser: string): HTMLElement {
   const kap = document.createElement('div');
   kap.className = 'menba__cizim';
   kap.setAttribute('role', 'img');
-  kap.setAttribute('aria-label', `Rahle üzerinde Kur’an-ı Kerim; altında rafta Risale-i Nur Külliyatı, ${tipografik(eser)} öne çıkmış`);
+  const kulliyatta = (KULLIYAT as readonly string[]).includes(eser);
+  kap.setAttribute('aria-label', `Nurlu Kur’an-ı Kerim; altında Risale-i Nur Külliyatı${kulliyatta ? `, ${tipografik(eser)} yığından çekilmiş` : ''}`);
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('class', 'menba-sahne');
-  svg.setAttribute('viewBox', '0 0 390 296');
+  svg.setAttribute('viewBox', '0 0 390 312');
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('focusable', 'false');
   svg.innerHTML = menbaSvgIcerigi(eser, `menba${++sayac}`);

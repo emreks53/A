@@ -1,6 +1,6 @@
-// "Menba": videonun kaynağı. Üstte rahlede inci beyazı Kur'an-ı Kerim, altında rafta Risale-i Nur Külliyatı (videonun
-// geçtiği eser raftan öne çekilir); altında eser, bölüm, (varsa) kısım ve sayfa, fildişi "Kitapta oku" düğmesi, üç
-// etiket (çerçeveli düz yazı; dokunulmaz) ve (varsa) görüntü ve ses künyesi.
+// "Menba": videonun kaynağı, açık ten rengi sayfada. Üstte nurlu Kur'an-ı Kerim, altında iki küçük yığında Risale-i
+// Nur Külliyatı (videonun geçtiği eser yığından çekilir); altında eser, bölüm, (varsa) kısım ve sayfa, lacivert
+// "Kitapta oku" düğmesi, üç etiket (çerçeveli düz yazı; dokunulmaz) ve (varsa) görüntü ve ses künyesi.
 import { Capacitor } from '@capacitor/core';
 import { baglanti, kitaplar } from 'virtual:kitaplar';
 import { disAdres } from '../gunes/ortak';

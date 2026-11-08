@@ -23,7 +23,7 @@ src/assets/fonts/          EB Garamond 500/600/500 italik (başlıklar, kitap s�
 src/kenz/                  Kenz ekranı: kitap kitap video kütüphanesi (kutuphane.ts, kenz.ts)
 src/gunes/                 Güneş: Risale-i Nur kütüphanesi (gunes.ts) ve PDF okuyucu (okuyucu.ts, pdf.ts: pdf.js)
 src/oku/                   Oku: dikey video akışı (akis.ts), sağa kaydırıp çıkma (kaydir-cik.ts), Neşret, Menba
-                           (menba.ts; Külliyat rafı çizimi menba-cizim.ts; rahledeki Kur'an-ı Kerim kuran-cizim.ts)
+                           (menba.ts; Külliyat yığınları çizimi menba-cizim.ts; nurlu Kur'an-ı Kerim kuran-cizim.ts)
 content/oku/videolar.json  Oku akışındaki videolar, sırasıyla; aşağıdaki "Oku: video ekleme" bölümüne bakın
 public/videolar/           Videolar (720×1280 H.264), kapak ve paylaşım önizleme görselleri
 content/kitaplar/kitaplar.json  Güneş'te okunabilen kitaplar (PDF, sayfa farkı, içindekiler); "Güneş: kitap ekleme"
@@ -49,37 +49,41 @@ Güneş arasında geçmek geçmişe kayıt eklemez (geri hep ana ekrana gider); 
 
 ## Kenz
 
-Ayrı bir ekran: mürekkep laciverti, sade bir kütüphane (kutusuz satırlar, ince çizgiler). Videolar geçtiği **Risale-i Nur kitabına**,
+Ayrı bir ekran: çok açık, ten rengi fildişi zeminde sade bir kütüphane (lacivert başlıklar, kutusuz satırlar, ince altın çizgiler). Videolar geçtiği **Risale-i Nur kitabına**,
 kitapta da **bölümüne** göre gruplanır.
 
-- Kitaplar Külliyat sırasıyla gelir (Sözler, Mektubat, Lem’alar, Şuâlar, …); her kitabın başında Menba
-  rafındakiyle aynı küçük bir cilt sırtı (#D7787B, kalınlığı kitabınkiyle orantılı), adı ve video sayısı vardır. Altında bölümler (ör. **ON YEDİNCİ
+- Kitaplar RNK Neşriyat kütüphanesindeki sırayla gelir (Sözler, Mektubat, Lem’alar, Şuâlar, …); her kitabın başında
+  Güneş'teki yığınlarla aynı küçük, yatık bir cilt sırtı (#D7787B, kalınlığı fotoğraftaki orandan), adı ve video sayısı vardır. Altında bölümler (ör. **ON YEDİNCİ
   LEM’A**), bölümlerde videolar.
 - Kartta önizleme görseli ve süre, videonun adı (geçtiği yer: *On Yedinci Lem’a’dan*), kısım ve sayfa
   (*Altıncı Mesele · 203. sayfa*) ve üç etiket (*#ihlas #muhabbet #kurtuluş*) bulunur. Kartın tamamına
   dokununca video Oku'da açılır; sağa kaydırınca kütüphanede aynı yere dönülür.
 - Bir bölümde tek video varsa geniş kart, birden çok video varsa yana kaydırılan bir raf gösterilir. Üç ve
   daha çok kitap olunca başta kitap fihristi çıkar (dokununca o kitaba kayar).
-- Menünün arkası ve altı hep düz gece rengidir; oradaki görünmeyen kartlara dokunulmaz (saydam kalkanlar),
+- Menünün arkası ve altı hep düz zemin rengidir; oradaki görünmeyen kartlara dokunulmaz (saydam kalkanlar),
   kaydırma oradan da başlar. Geniş ekranda kütüphane ortada 600 px'lik bir sütundur.
 
 ## Güneş
 
-Mürekkep laciverti zeminde, yumuşak bir ışığın altında rahle üzerinde inci beyazı bir Kur’an-ı Kerim (tek ince
-yaldız pervaz, aynı tonda kabartma şemse; Kur'an yalnız süstür, dokunulmaz); altında iki rafta Risale-i Nur
-Külliyatı'nın 14 eseri Külliyat sırasıyla (üstte Sözler … Mesnevî-i Nûriye, altta Asâ-yı Mûsâ … İman ve Küfür
-Muvâzeneleri).
+Çok açık, ten rengi fildişi zeminde inci beyazı bir Kur’an-ı Kerim, rahlesiz; çevresinden güneş gibi nur çıkar
+(yumuşak altın ışın kamaları ve aralarında ince varak çizgileri). Kapağında tek ince yaldız pervaz, aynı tonda kabartma
+şemse ve ortasında küçük, altın renkli "Kur’an" yazısı vardır; Kur'an yalnız süstür, dokunulmaz. Altında iki düz yığında
+Risale-i Nur Külliyatı'nın 14 eseri, RNK Neşriyat kütüphanesindeki sırayla, sütun sütun: solda Sözler … Barla Lâhikası
+(üstten alta), sağda Kastamonu Lâhikası … Muhâkemat (en sağ altta). Kısa olan sağ yığının üstünde
+"RİSALE-İ NUR KÜLLİYATI" yazar.
 
-- Her eser gerçekçi bir bez cilt sırtıdır: hepsi aynı renk (#D7787B), mafsal olukları, kör baskı çizgiler ve soluk
-  altın varakla dikey ad (aşağıdan yukarı okunur). Kalınlıklar gerçektir: RNK baskısının sayfa sayısından
-  (6 mm + sayfa başına 0,05 mm; `oku/ortak.ts`, `SAYFA`), iki rafta aynı ölçekle. En kalın Sözler, en ince
-  Muhâkemat (390 px'lik ekranda 24 px).
+- Her eser yatık duran, sırtı bize bakan gerçekçi bir deri cilttir (kullanıcının RNK Külliyat fotoğrafındaki gibi):
+  hepsi aynı renk (#D7787B), yuvarlak sırt, iki uçta kabartma başlık bandı, çift sırt, ip oluğu ve başlığa bakan
+  gözyaşı + ok motifli dantel şeridi; ortada ten rengi (#F8E2D4), hafif kabartma EB Garamond ad (390 px'lik ekranda
+  21 px; uzun adlar bant enine sığacak kadar küçülür). Kalınlıklar fotoğraftaki oranlardır (`oku/ortak.ts`,
+  `KALINLIK`: kalınlık / sırt boyu), iki yığında tek ölçekle; ölçek menünün üstündeki boşluğa göre seçilir
+  (Kur'an kesilmeden önce yığınlar küçülür). En kalın Sözler, en ince Muhâkemat (390 × 844'te 26 px, 360 × 640'ta 23 px).
 - PDF'i okuyucuda olmayan eser, listede bağlantısı varsa yayınevinin okuma sitesinde açılır (şimdi RNK Neşriyat'ın
-  okuma sitesi `rnk.tr`; tarayıcıda yeni sekmede, telefon uygulamasında sistem tarayıcısında; rafın altındaki not
-  bunu söyler). Ne PDF'i ne bağlantısı olan eser soluk görünür ve "yakında" yazar; dokunulmaz.
-- En son okunan kitap için rafın altında **Kaldığın yer** kartı çıkar (kitap, bölüm, sayfa); dokununca
+  okuma sitesi `rnk.tr`; tarayıcıda yeni sekmede, telefon uygulamasında sistem tarayıcısında; ekran okuyucu bunu
+  bağlantının adında duyar). Ne PDF'i ne bağlantısı olan eser soluk görünür ve "yakında" yazar; dokunulmaz.
+- En son okunan kitap için yığınların altında **Kaldığın yer** kartı çıkar (kitap, bölüm, sayfa); dokununca
   okuyucu o sayfada açılır.
-- Kitaba dokununca cilt raftan çekilir, dönüp kapağını gösterir, kapak açılır ve okuyucu tam ekran açılır
+- Kitaba dokununca cilt yığından kalkar, dönüp kapağını gösterir, kapak açılır ve okuyucu tam ekran açılır
   (`#/gunes/<kitap>/<sayfa>`; alt menü yoktur). Hareket azaltılmışsa geçiş oynatılmaz. Sayfalar PDF'te basıldığı
   gibi gösterilir, metne dokunulmaz.
   - Yana kaydırmak, kenarlara dokunmak ya da ok tuşları sayfa çevirir; ortaya dokunmak üst ve alt çubuğu
@@ -93,7 +97,7 @@ Muvâzeneleri).
   - Kitap kalınan yerden açılınca bir an *Kaldığın yerden: 154. sayfa · Baştan aç* bildirimi çıkar.
   - Yatay geniş ekranda (tablet, masaüstü) iki sayfa yan yana açılır; kapak tektir.
   - Sayfa değişince adres de değişir (geçmişe kayıt eklenmez); kalınan yer bu cihazda hatırlanır. Kapat,
-    Escape ya da geri tuşu açıldığı yere (Güneş rafı ya da Menba) döner.
+    Escape ya da geri tuşu açıldığı yere (Güneş ya da Menba) döner.
   - Sayfalar cihazın piksel yoğunluğunda çizilir; yalnız görünen sayfa ve iki yanı çizili tutulur. PDF
     sunucusu bayt aralığını destekliyorsa büyük kitabın yalnız açılan sayfaları indirilir.
 - Menba'da videonun geçtiği kitabın PDF'i varsa **Kitapta oku** düğmesi çıkar: kitap videonun sayfasında
@@ -151,8 +155,8 @@ vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görün
     Bağlantı `https://emreks53.github.io/A/v/<video>/` biçimindedir; mesajlaşma uygulamaları önizlemeyi o
     videonun görseli ve adıyla çizer, bağlantıyı açan kişi doğrudan o videoya gelir. Paylaşım menüsü olmayan
     tarayıcıda bağlantı panoya kopyalanır.
-  - **Menba** — videonun kaynağı: rahle üzerinde inci beyazı bir Kur’an-ı Kerim; altında rafta Risale-i Nur
-    Külliyatı'nın on dört eseri gerçek kalınlıklarında dizili, videonun geçtiği eser raftan öne çekilmiş. Altında
+  - **Menba** — videonun kaynağı (açık ten rengi sayfa): nurlu, inci beyazı bir Kur’an-ı Kerim; altında iki küçük
+    yığında Risale-i Nur Külliyatı'nın on dört eseri gerçek kalınlıklarında, videonun geçtiği eser yığından yana çekilmiş. Altında
     eser, bölüm, (varsa) kısım ve sayfa (*Şuâlar · On Birinci Şuâ · Altıncı Mesele · 203. sayfa*), **Kitapta
     oku** (kitabı o sayfada açar: PDF'i varsa Güneş'in okuyucusunda, yoksa RNK Neşriyat'ın okuma sitesinde), üç
     etiket ve varsa görüntü ve ses künyesi (lisansın gerektirdiği atıflar). Sayfa üstteki tutamağa dokunarak, aşağı

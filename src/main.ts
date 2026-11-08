@@ -6,7 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { kitaplar } from 'virtual:kitaplar';
 import { kitapAcilisi } from './gunes/acilis';
 import { gunesBaslat } from './gunes/gunes';
-import { okuyucuBaslat, tahminiSayfaKutusu } from './gunes/okuyucu';
+import { okuyucuBaslat, tahminiSayfaKutusu, ZEMIN } from './gunes/okuyucu';
 import { kenzBaslat } from './kenz/kenz';
 import { acikSayfa } from './oku/alt-sayfa';
 import { akisBaslat } from './oku/akis';
@@ -50,7 +50,7 @@ function yerineGec(hash: string): void {
   show(rotaCoz(location.hash), true, true);
 }
 /** Tarayıcının üst çubuğu ekranın rengini alsın */
-const TEMA: Record<Exclude<Sekme, 'kitap'>, string> = { ana: '#5AA2EC', kenz: '#0D1736', gunes: '#0D1736', oku: '#000000' };
+const TEMA: Record<Exclude<Sekme, 'kitap'>, string> = { ana: '#5AA2EC', kenz: '#FBF6F2', gunes: '#FBF6F2', oku: '#000000' };
 const temaRengi = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
 /** Oku açılırken odaktaki öğe (ör. dokunulan Kenz kartı): çıkınca odak ona döner */
 let okuOncesiOdak: HTMLElement | null = null;
@@ -86,9 +86,19 @@ const okuyucu = okuyucuBaslat(kitapGorunumu, {
     if (aktif === 'kitap' && location.hash !== hash) history.replaceState(history.state, '', hash);
   },
   temaDegisti(renk) {
-    if (aktif === 'kitap') temaRengi?.setAttribute('content', renk);
+    if (aktif !== 'kitap') return;
+    temaRengi?.setAttribute('content', renk);
+    durumCubuguGuncelle('kitap', 'gunes');
   },
 });
+
+/** Uygulamada (Capacitor) durum çubuğu yazısı: açık zeminde koyu (Style.Light), fotoğrafta ve karanlıkta açık
+    (Style.Dark). Kenz ve Güneş açık ten zeminde; okuyucu kendi temasına göre (gece teması karanlık). */
+let durumCubugu: ((acikZemin: boolean) => void) | null = null;
+function durumCubuguGuncelle(sekme: Sekme, gorunen: string): void {
+  const acik = sekme === 'kitap' ? okuyucu.zeminRengi() !== ZEMIN.gece : sekme !== 'oku' && (gorunen === 'kenz' || gorunen === 'gunes');
+  durumCubugu?.(acik);
+}
 
 // Güneş rafı: kitaba dokununca cilt raftan çekilip açılır (hareket azaltılmışsa doğrudan okuyucu)
 const gunes = gunesBaslat(document.getElementById('view-gunes')!, {
@@ -183,6 +193,7 @@ function show(r: Rota, icerden = false, yerine = false): void {
   const gorunen = alttaki === 'kitap' ? 'gunes' : alttaki;
   app.dataset.zemin = gorunen;
   temaRengi?.setAttribute('content', sekme === 'kitap' ? okuyucu.zeminRengi() : TEMA[sekme]);
+  durumCubuguGuncelle(sekme, gorunen);
   // Oku ve okuyucu tam ekrandır: örtülen alt menü ne odak alır ne de ekran okuyucuya görünür.
   tabbar.inert = sekme === 'oku' || sekme === 'kitap';
   for (const link of links) {
@@ -263,7 +274,8 @@ async function setupNative(): Promise<void> {
   await App.addListener('appUrlOpen', ({ url }) => baglantiylaAc(url)).catch(() => undefined);
   baglantiylaAc((await App.getLaunchUrl().catch(() => undefined))?.url);
   await StatusBar.setOverlaysWebView({ overlay: true }).catch(() => undefined);
-  await StatusBar.setStyle({ style: Style.Dark }).catch(() => undefined);
+  durumCubugu = (acik) => void StatusBar.setStyle({ style: acik ? Style.Light : Style.Dark }).catch(() => undefined);
+  durumCubuguGuncelle(aktif ?? 'ana', app.dataset.zemin ?? 'ana');
   await SplashScreen.hide().catch(() => undefined);
 }
 

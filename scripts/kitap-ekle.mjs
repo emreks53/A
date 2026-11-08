@@ -9,21 +9,22 @@ import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+// src/oku/ortak.ts KULLIYAT ile aynı sıra (RNK Neşriyat kütüphanesi)
 const KULLIYAT = [
   'Sözler',
   'Mektubat',
   "Lem'alar",
   'Şuâlar',
-  "İşârâtü'l-İ'câz",
   'Mesnevî-i Nûriye',
-  'Asâ-yı Mûsâ',
+  "İşârâtü'l-İ'câz",
   'Barla Lâhikası',
   'Kastamonu Lâhikası',
   'Emirdağ Lâhikası',
   'Sikke-i Tasdîk-i Gaybî',
   'Tarihçe-i Hayat',
-  'Muhâkemat',
+  'Asâ-yı Mûsâ',
   'İman ve Küfür Muvâzeneleri',
+  'Muhâkemat',
 ];
 const kimlik = (ad) =>
   ad
