@@ -569,100 +569,108 @@ function lavi(yol, x1, y1, x2, y2, duraklar) {
   c.restore();
 }
 
-// ---- 2) altın varak bulut şeritleri (suyari-gasumi): kademeli, uçları yuvarlak, boyları farklı uzun şeritler;
-//         varak kareleri hafifçe seçilir, kenarda ince altın kontur, çevrede seyrek altın tozu (sunago)
+// ---- 2) altın varak bulut şeritleri (suyari-gasumi): kademeli, kıvrımlı geçişli, uçları yuvarlak, boyları farklı;
+//         varak kareleri hafifçe seçilir, kenarda ince altın kontur ve hafif kabarıklık, çevrede seyrek altın tozu
 const parilti = []; // son geçişte parlayacak noktalar
 {
   const r = S.rng(1871);
-  // her bulut: kapsüller [x1, x2, üst y, yükseklik]
+  // her bulut: kapsüller [x1, x2, üst y, yükseklik]; ek loblar [x, y, yarıçap]
   const bulutlar = [
-    [[-60, 372, 238, 27], [28, 262, 214, 28], [96, 196, 194, 24]],
-    [[606, 1080, 268, 24], [700, 958, 246, 26], [770, 884, 228, 21], [988, 1080, 252, 20]],
-    [[-60, 236, 606, 24], [26, 176, 586, 23]],
-    [[796, 1080, 596, 24], [858, 1012, 576, 23], [930, 980, 560, 18]],
-    [[150, 330, 330, 14], [520, 700, 108, 12]],
+    { k: [[-60, 384, 240, 24], [22, 262, 219, 24], [118, 214, 200, 21]], l: [[30, 236, 16], [246, 228, 13]] },
+    { k: [[598, 1080, 268, 22], [684, 1010, 248, 22], [842, 952, 230, 19], [1000, 1080, 252, 18]], l: [[700, 262, 14], [950, 242, 12]] },
+    { k: [[-60, 244, 606, 22], [16, 170, 586, 21], [56, 118, 569, 17]], l: [[170, 600, 12]] },
+    { k: [[792, 1080, 598, 22], [868, 1046, 578, 21], [948, 1012, 561, 17]], l: [[874, 592, 12]] },
+    { k: [[432, 760, 96, 15], [496, 650, 82, 15]], l: [] },
   ];
-  const kapsul = (p, [x1, x2, yt, h], ic) => {
-    const i = ic || 0;
-    p.roundRect(x1 + i, yt + i, x2 - x1 - 2 * i, h - 2 * i, (h - 2 * i) / 2);
-  };
-  const birlesim = new Path2D();
-  for (const b of bulutlar) for (const k of b) kapsul(birlesim, k);
-  // toz yoğunluğu maskesi (dar, yumuşak)
-  const mk = S.yeniTuval(512, 512);
-  const m = mk.getContext('2d', { willReadFrequently: true });
-  m.scale(0.5, 0.5);
-  m.filter = 'blur(10px)';
-  m.fillStyle = '#fff';
-  for (const b of bulutlar) for (const [x1, x2, yt, h] of b) {
-    m.beginPath();
-    m.roundRect(x1 - 10, yt - 6, x2 - x1 + 20, h + 16, (h + 12) / 2);
-    m.fill();
+  // birleşim maskesi: kapsüller + loblar, hafif bulanıklaştırılıp eşiklenir (iç köşeler yumuşak kıvrımla birleşir)
+  const mk = yeniKatman();
+  mk.x.filter = `blur(${3.2 * OLCEK}px)`;
+  mk.x.fillStyle = '#fff';
+  for (const b of bulutlar) {
+    for (const [x1, x2, yt, h] of b.k) {
+      mk.x.beginPath();
+      mk.x.roundRect(x1, yt, x2 - x1, h, h / 2);
+      mk.x.fill();
+    }
+    for (const [x, y, rad] of b.l) {
+      mk.x.beginPath();
+      mk.x.arc(x, y, rad, 0, Math.PI * 2);
+      mk.x.fill();
+    }
   }
-  const md = m.getImageData(0, 0, 512, 512).data;
-  const Mz = (x, y) => md[(Math.min(511, Math.max(0, (y / 2) | 0)) * 512 + Math.min(511, Math.max(0, (x / 2) | 0))) * 4 + 3] / 255;
-  // altın tozu: şeridin çevresinde, dışa doğru seyrelir
+  const W2 = 1024 * OLCEK;
+  const md = mk.x.getImageData(0, 0, W2, W2).data;
+  const sM = (px, py) => md[(Math.min(W2 - 1, Math.max(0, py)) * W2 + Math.min(W2 - 1, Math.max(0, px))) * 4 + 3] / 255;
+  // toz yoğunluğu: maskenin geniş bulanığı
+  const tz = S.yeniTuval(512, 512);
+  const tx = tz.getContext('2d', { willReadFrequently: true });
+  tx.filter = 'blur(7px)';
+  tx.drawImage(mk.c, 0, 0, 512, 512);
+  tx.drawImage(mk.c, 0, 0, 512, 512);
+  const td = tx.getImageData(0, 0, 512, 512).data;
+  const Mz = (x, y) => td[(Math.min(511, Math.max(0, (y / 2) | 0)) * 512 + Math.min(511, Math.max(0, (x / 2) | 0))) * 4 + 3] / 255;
   const altinlar = ['#C49A3E', '#D8B254', '#E9CB72', '#F3DC95'];
   for (let k = 0; k < 60000; k++) {
     const x = r() * 1024;
-    const y = 150 + r() * 520;
+    const y = 60 + r() * 600;
     const v = Mz(x, y);
-    if (v <= 0.02 || r() > Math.pow(v, 2.2) * 0.75) continue;
+    if (v <= 0.02 || v > 0.97 || r() > Math.pow(v, 2) * 0.7) continue;
     const s = 0.35 + r() * r() * 0.9;
     c.fillStyle = altinlar[(r() * altinlar.length) | 0];
-    c.globalAlpha = 0.45 + r() * 0.45;
+    c.globalAlpha = 0.4 + r() * 0.45;
     c.fillRect(x, y, s, s * (0.6 + r() * 0.8));
-    if (r() < 0.01) parilti.push([x, y, 0.4 + r() * 0.4]);
+    if (r() < 0.008) parilti.push([x, y, 0.4 + r() * 0.4]);
   }
   c.globalAlpha = 1;
+  // varak + kabarıklık + kontur, tek piksel geçişinde
+  const vk = varakDokusu({ boy: 46, tohum: 1874, cesit: 0.06, kaydirma: 0.06, dikis: 0.42, y0: 60, y1: 660, isik: (x, y) => 0.07 + 0.12 * (x / 1024 - 0.5) - 0.05 * (y / 800) + 0.08 * Math.exp(-(Math.pow(x - 860, 2) + Math.pow(y - 220, 2)) / 60000) });
+  const vim = vk.x.getImageData(0, 60 * OLCEK, W2, 600 * OLCEK);
+  const vd = vim.data;
+  const KONTUR = [150, 110, 42];
+  const ad = 3 * OLCEK;
+  for (let py = 0; py < 600 * OLCEK; py++) {
+    const gy = py + 60 * OLCEK;
+    for (let px = 0; px < W2; px++) {
+      const i = (py * W2 + px) * 4;
+      const s = md[(gy * W2 + px) * 4 + 3] / 255;
+      if (s < 0.3) {
+        vd[i + 3] = 0;
+        continue;
+      }
+      const a = kenet((s - 0.5) * 9 + 0.5, 0, 1);
+      // kabarıklık: üst kenarda açık, alt kenarda koyu
+      const yukari = sM(px, gy - ad);
+      const asagi = sM(px, gy + ad);
+      const isk = 0.16 * kenet((0.75 - yukari) * 2, 0, 1) - 0.14 * kenet((0.75 - asagi) * 2, 0, 1);
+      let R = vd[i] + (isk > 0 ? (255 - vd[i]) * isk : vd[i] * isk);
+      let G = vd[i + 1] + (isk > 0 ? (248 - vd[i + 1]) * isk : vd[i + 1] * isk);
+      let B = vd[i + 2] + (isk > 0 ? (214 - vd[i + 2]) * isk : vd[i + 2] * isk);
+      const kt = 0.85 * Math.exp(-Math.pow((s - 0.56) / 0.085, 2));
+      R += (KONTUR[0] - R) * kt;
+      G += (KONTUR[1] - G) * kt;
+      B += (KONTUR[2] - B) * kt;
+      vd[i] = R;
+      vd[i + 1] = G;
+      vd[i + 2] = B;
+      vd[i + 3] = 255 * a;
+    }
+  }
+  vk.x.putImageData(vim, 0, 60 * OLCEK);
+  vk.x.clearRect(0, 0, 1024, 60);
+  vk.x.clearRect(0, 660, 1024, 364);
   // varak altında ince gölge (varak hafif kalkık)
   c.save();
   c.translate(0.8, 1.2);
-  c.filter = 'blur(1.5px)';
-  c.fillStyle = 'rgba(150,118,60,0.22)';
-  c.fill(birlesim);
-  c.restore();
-  // varak: kareler sıra sıra, hafif ton farkı; ışık sağ üstten
-  const vk = varakDokusu({ boy: 46, tohum: 1874, cesit: 0.06, kaydirma: 0.06, dikis: 0.45, y0: 100, y1: 640, isik: (x, y) => 0.12 * (x / 1024 - 0.5) - 0.05 * (y / 800) + 0.08 * Math.exp(-(Math.pow(x - 860, 2) + Math.pow(y - 220, 2)) / 60000) });
-  c.save();
-  c.clip(birlesim);
+  c.globalAlpha = 0.2;
+  c.filter = 'blur(1.5px) brightness(0.55)';
   c.drawImage(vk.c, 0, 0, 1024, 1024);
-  // her kapsülün üst kenarında ince açık parıltı, alt kenarında koyu altın
-  for (const b of bulutlar) for (const [x1, x2, yt, h] of b) {
-    const g = c.createLinearGradient(0, yt, 0, yt + h);
-    g.addColorStop(0, 'rgba(255,244,200,0.35)');
-    g.addColorStop(0.25, 'rgba(255,244,200,0)');
-    g.addColorStop(0.8, 'rgba(160,120,50,0)');
-    g.addColorStop(1, 'rgba(160,120,50,0.18)');
-    c.fillStyle = g;
-    const p = new Path2D();
-    kapsul(p, [x1, x2, yt, h]);
-    c.fill(p);
-  }
   c.restore();
-  // birleşim sınırı: ince koyu altın kontur (yalnız dış kenar kalır)
-  const kt = yeniKatman();
-  const kx = kt.x;
-  for (const b of bulutlar) for (const k of b) {
-    const p = new Path2D();
-    kapsul(p, k);
-    kx.lineWidth = 2.2;
-    kx.strokeStyle = 'rgba(150,112,44,0.75)';
-    kx.stroke(p);
-  }
-  kx.globalCompositeOperation = 'destination-out';
-  for (const b of bulutlar) for (const k of b) {
-    const p = new Path2D();
-    kapsul(p, k, 0.15);
-    kx.fillStyle = '#000';
-    kx.fill(p);
-  }
-  c.drawImage(kt.c, 0, 0, 1024, 1024);
+  c.drawImage(vk.c, 0, 0, 1024, 1024);
   // birkaç parıltı
   for (let k = 0; k < 40; k++) {
-    const b = bulutlar[(r() * 4) | 0];
+    const b = bulutlar[(r() * 5) | 0].k;
     const [x1, x2, yt, h] = b[(r() * b.length) | 0];
-    parilti.push([x1 + h / 2 + r() * (x2 - x1 - h), yt + 2 + r() * (h - 4), 0.5 + r() * 0.4]);
+    parilti.push([x1 + h / 2 + r() * (x2 - x1 - h), yt + 3 + r() * (h - 6), 0.5 + r() * 0.4]);
   }
 }
 
@@ -684,7 +692,7 @@ const parilti = []; // son geçişte parlayacak noktalar
   c.arc(880, 140, 42, 0, Math.PI * 2);
   c.fill();
   const r = S.rng(1872);
-  for (let k = 0; k < 900; k++) {
+  for (let k = 0; k < 500; k++) {
     const a = r() * Math.PI * 2;
     const d = 45 + Math.abs((r() + r() + r() - 1.5) * 22);
     c.fillStyle = r() < 0.5 ? '#D9B456' : '#EFD58C';
@@ -1036,7 +1044,7 @@ const ekran = ekranaAktar(ctx0);
     let ek = 0;
     const h = karma(x, y, 11);
     if (h > 0.9996 - 0.003 * doy * (1 - L * 0.6)) ek = 0.16 + 0.2 * karma(x, y, 12);
-    const renk = renkTane[y * 1024 + x] * 0.06 * (0.4 + doy);
+    const renk = renkTane[y * 1024 + x] * 0.06 * (0.4 + doy) * (1 - kenet((R - Bb) / 70, 0, 1));
     d[i] = kenet(R * (m - renk) + (255 - R) * ek, 0, 255);
     d[i + 1] = kenet(G * m + (255 - G) * ek, 0, 255);
     d[i + 2] = kenet(Bb * (m + renk) + (250 - Bb) * ek, 0, 255);

@@ -852,6 +852,18 @@
     const d = SAHNE.tomurcukYolu(t);
     oge((x) => x.fill(new Path2D(d)), kutuD(d, 2), (x, y) => 0.2 + 0.4 * sstep(-t.r, t.r, -((x - t.x) * 0.75 - (y - t.y) * 0.66)), MUR.gul, hex('#E8849E'), 0.75);
     kontur(duz(d), 0.8, MUR.gul, 0.85);
+    // tomurcuğun dibinde üç küçük çanak yaprak (yeşil noktalı, yeşil boyalı)
+    const ca = Math.cos(t.aci), sa = Math.sin(t.aci);
+    const bx = t.x - ca * t.r * 0.9, by = t.y - sa * t.r * 0.9;
+    for (const sg of [-1, 0, 1]) {
+      const ex = bx + ca * t.r * 1.25 - sa * sg * t.r * 0.6, ey = by + sa * t.r * 1.25 + ca * sg * t.r * 0.6;
+      const ku = (p0, p1, p2) => { const o = []; for (let k = 0; k <= 8; k++) { const u = k / 8, v = 1 - u; o.push([v * v * p0[0] + 2 * v * u * p1[0] + u * u * p2[0], v * v * p0[1] + 2 * v * u * p1[1] + u * u * p2[1]]); } return o; };
+      const s0 = [bx - sa * sg * t.r * 0.25, by + ca * sg * t.r * 0.25], s2 = [bx + sa * sg * t.r * 0.2, by - ca * sg * t.r * 0.2];
+      const pts = ku(s0, [bx + ca * t.r * 0.6 - sa * sg * t.r * 0.8, by + sa * t.r * 0.6 + ca * sg * t.r * 0.8], [ex, ey]).concat(ku([ex, ey], [bx + ca * t.r * 0.5, by + sa * t.r * 0.5], s2).slice(1));
+      const sp = SAHNE.yol(pts, true);
+      oge((x) => x.fill(new Path2D(sp)), kutuD(sp, 2), () => 0.45, MUR.yaprak, hex('#6CB654'), 0.75);
+      kontur(duz(sp), 0.6, MUR.yaprak, 0.75);
+    }
   });
   B.cicekler.forEach((c, ci) => {
     const L = c.r * 1.06, G = c.r * 0.5;

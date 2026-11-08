@@ -218,6 +218,7 @@
       // kaydırılmış gürültü indeksleri: her geçiş başka bir çiçeklenme deseni görür
       const k2 = ((y + kay) % N) * N + ((x + kay * 3) % N);
       let d = o.yog ? o.yog(x, y) : 1;
+      const d0 = d;
       // yumuşak çiçeklenme: açık lekeler, kenarında ince koyu halka
       const v = BULUT[k2];
       const esik = 0.56;
@@ -228,7 +229,8 @@
       d *= 1 + (0.5 - TANE[k]) * gran * 0.9;
       // kenar birikimi: maskenin içinde, bulanık kopyanın düştüğü yerde
       const e = clamp((m - b) * 2.6, 0, 1);
-      d = d * guc + kenar * e * e * (0.7 + 0.6 * INCE[k]);
+      // pigment olmayan yerde kenar birikimi de olmaz (dereceli yıkamanın açık ucunda kenar silikleşir)
+      d = d * guc + kenar * e * e * (0.7 + 0.6 * INCE[k]) * clamp(d0 * 1.4, 0, 1);
       d = clamp(d, 0, 1.2) * m;
       const j = k * 3;
       OUT[j] *= 1 - d * (1 - ci[0]);
@@ -319,56 +321,85 @@
   const sapY = B.saplar.map((s) => kesP(s.map(([x, y]) => [x - 2.4, y]).concat(s.slice().reverse().map(([x, y]) => [x + 2.4, y])), { genlik: 0.12 }));
   const bitkiSil = birlestir(cicekSil, ...yapraklar.map((y) => y.yol), ...tomurcukY, ...sapY);
 
-  // ------------------------------------------------------------ 1. gök: köprülerle ayrılmış yatay bantlar, dereceli yıkama
-  const bantSinir = [0, 170, 330, 480, 620, 800];
-  const bantY = (i, x) => bantSinir[i] + (i > 0 && i < bantSinir.length - 1 ? 16 * Math.sin(x / 230 + i * 1.9) + 5 * Math.sin(x / 83 + i) : i === 0 ? -10 : 0);
-  const bantGuc = [1.0, 0.82, 0.66, 0.5, 0.36];
+  // ------------------------------------------------------------ 1. gök: tek şablon açıklığı, yukarıdan ufka açılan dereceli yıkama
+  // bulut ve güneş adacıkları şablonda kâğıt olarak kalır; onları tutan kısa, uçlarda genişleyen bağlar (köprüler) beyaz kalır
+  const BAGLAR = [
+    // [x1, y1, x2, y2] — adacığı en yakın komşusuna ya da çerçeveye tutturan kısa bağlar
+    [262, 257, 287, 259], // sol üst bulut → minare
+    [681, 336, 640, 342], // sağ bulut → kubbe
+    [998, 474, 1032, 471], // küçük sağ bulut → çerçeve
+    [30, 470, -8, 467], // küçük sol bulut → çerçeve
+    [990, 146, 1032, 151], // güneş halesi → sağ kenar
+  ];
+  function bagCiz(g, x1, y1, x2, y2, w) {
+    // şablon bağı: ortası ince, uçları hafif genişleyen, elle kesilmiş kısa şerit
+    const x = x1, y = y1, L = Math.hypot(x2 - x1, y2 - y1), a = Math.atan2(y2 - y1, x2 - x1);
+    const ca = Math.cos(a), sa = Math.sin(a);
+    const n = gurultu(Math.round(x * 7 + y));
+    const pts = [], geri = [];
+    for (let i = 0; i <= 12; i++) {
+      const t = i / 12;
+      const half = w * (0.42 + 0.5 * Math.pow(Math.abs(t - 0.5) * 2, 2.5)) + (n(t * 4, 1) - 0.5) * 0.5;
+      const px = x + ca * L * t, py = y + sa * L * t;
+      pts.push([px - sa * half, py + ca * half]);
+      geri.push([px + sa * half, py - ca * half]);
+    }
+    g.beginPath();
+    pts.concat(geri.reverse()).forEach(([X, Y], i) => (i ? g.lineTo(X, Y) : g.moveTo(X, Y)));
+    g.closePath();
+    g.fill();
+  }
   gecis({
-    renk: '#4F8FCB',
+    renk: '#4D97C9',
     ac: (g) => g.fillRect(-10, -10, N + 20, 810),
     kopru: (g) => {
-      for (let i = 1; i < bantSinir.length - 1; i++) { const pts = []; for (let x = -10; x <= N + 10; x += 8) pts.push([x, bantY(i, x)]); kopruCiz(g, pts, 2.6); }
+      for (const [x1, y1, x2, y2] of BAGLAR) bagCiz(g, x1, y1, x2, y2, 4);
       g.lineWidth = 5;
       for (const p of [minareSil, yapiSil, alem1, alem2, ...bulutY, gunesY]) payli(g, p, 2.6);
     },
     sakla: [bitkiSil],
     yog: (x, y) => {
-      // her bantta yukarıdan aşağı hafifleyen yıkama; genel olarak üstten ufka açılır; güneşe yakın daha açık
-      let i = 0;
-      while (i < bantSinir.length - 2 && y > bantY(i + 1, x)) i++;
-      const yb = bantY(i, x), ya = bantY(i + 1, x);
-      const ic = clamp((y - yb) / (ya - yb), 0, 1);
-      const gunes = 1 - 0.5 * ss(400, 0, Math.hypot(x - GX, y - GY));
-      return bantGuc[i] * gunes * (1.06 - 0.22 * ic);
+      // üstte dolgun, ufka doğru açılan dereceli yıkama; güneşe yakın daha açık
+      const gunes = 1 - 0.35 * ss(380, 0, Math.hypot(x - GX, y - GY));
+      return (1.05 - 0.98 * ss(20, 600, y)) * gunes;
     },
-    guc: 0.66, kenar: 0.34, cicek: 0.22, gran: 0.55, kutu: [0, 0, N, 812],
+    guc: 0.62, kenar: 0.5, cicek: 0.22, gran: 0.6, kutu: [0, 0, N, 812],
   });
 
   // ------------------------------------------------------------ 2. güneş: disk ve halka (köprüyle ayrılmış), iki geçiş
   gecis({
-    renk: '#F6CF52',
+    renk: '#F7DD5A',
     ac: (g) => g.fill(gunesY),
     kopru: (g) => { g.lineWidth = 2.4; g.beginPath(); g.arc(GX, GY, 72, 0, PI2); g.stroke(); for (let i = 0; i < 12; i++) { const a = (i / 12) * PI2 + 0.13; kopruCiz(g, [[GX + Math.cos(a) * 73, GY + Math.sin(a) * 73], [GX + Math.cos(a) * 118, GY + Math.sin(a) * 118]], 2.2); } },
     yog: (x, y) => 0.55 + 0.45 * clamp(1 - Math.hypot(x - GX, y - GY) / 120, 0, 1),
     guc: 0.75, kenar: 0.45, cicek: 0.3, kutu: [GX - 130, GY - 130, GX + 130, GY + 130],
   });
   gecis({
-    renk: '#EE9440', kayma: [1, -1],
+    renk: '#F2B83A', kayma: [1, -1],
     ac: (g) => g.fill(kes(S.daireYolu(GX, GY, 64))),
-    yog: (x, y) => 0.35 + 0.6 * clamp(Math.hypot(x - GX + 20, y - GY + 20) / 90, 0, 1),
+    yog: (x, y) => 0.3 + 0.55 * clamp(Math.hypot(x - GX + 20, y - GY + 20) / 90, 0, 1),
     guc: 0.7, kenar: 0.5, cicek: 0.4, kutu: [GX - 80, GY - 80, GX + 80, GY + 80],
   });
 
-  // ------------------------------------------------------------ 3. bulutlar: alt yarıda soluk lila-mavi yıkama
+  // ------------------------------------------------------------ 3. bulutlar: kendi şablonu; loblar arasında köprü, alt yarıda soluk lila-mavi yıkama
   gecis({
     renk: '#9EA9DA',
     ac: (g) => { for (const p of bulutY) g.fill(p); },
+    kopru: (g) => {
+      for (const [bx, by, bs] of BULUTLAR) {
+        // loblar arasındaki çentiklerden tabana inen iki köprü
+        for (const [dx, ust] of [[-47, -44], [33, -46]]) {
+          const x0 = bx + dx * bs, y0 = by + ust * bs, y1 = by + 22 * bs;
+          bagCiz(g, x0, y0, x0 + 3 * bs, y1, 2.6);
+        }
+      }
+    },
     yog: (x, y) => {
       let best = 0;
-      for (const [bx, by, bs] of BULUTLAR) if (Math.abs(x - bx) < 115 * bs && y > by - 50 * bs && y < by + 30 * bs) best = Math.max(best, ss(by - 22 * bs, by + 16 * bs, y));
-      return 0.15 + 0.85 * best;
+      for (const [bx, by, bs] of BULUTLAR) if (Math.abs(x - bx) < 115 * bs && y > by - 50 * bs && y < by + 30 * bs) best = Math.max(best, ss(by - 30 * bs, by + 16 * bs, y));
+      return 0.22 + 0.78 * best;
     },
-    guc: 0.45, kenar: 0.4, cicek: 0.3, kutu: [0, 90, N, 500],
+    guc: 0.5, kenar: 0.45, cicek: 0.3, kutu: [0, 90, N, 500],
   });
 
   // ------------------------------------------------------------ 4. taş: minare ve kaide (soluk okr), sonra gölge geçişi
@@ -512,7 +543,7 @@
   zemY.push([N + 10, N + 10], [-10, N + 10]);
   const zemin = kesP(zemY);
   gecis({
-    renk: '#DDB27A',
+    renk: '#E2A68C',
     ac: (g) => g.fill(zemin),
     kopru: (g) => { const pts = []; for (let x = -10; x <= N + 10; x += 8) pts.push([x, 900 - 18 * Math.sin(x / 150 + 1.1) - 7 * Math.sin(x / 57)]); kopruCiz(g, pts, 2.6); g.lineWidth = 5; payli(g, yapiSil, 2.4); payli(g, minareSil, 2.4); },
     sakla: [bitkiSil],

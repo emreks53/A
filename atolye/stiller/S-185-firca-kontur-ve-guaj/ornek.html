@@ -635,6 +635,13 @@
     for (const p0 of diz) {
       const p = ornekle(p0, 1.1);
       if (p.length < 2) continue;
+      // kapalı biçimlerde dış normal: ışığa bakan kenar ince ve yer yer kesik, gölgedeki kenar dolgun
+      let yonIsaret = 0;
+      if (p0.kapali && o.isikAgirlik !== false) {
+        let A = 0;
+        for (let i = 0; i < p0.length; i++) { const a = p0[i], b = p0[(i + 1) % p0.length]; A += a[0] * b[1] - b[0] * a[1]; }
+        yonIsaret = A > 0 ? 1 : -1;
+      }
       const parcalar = o.kose === false ? [p] : koseBol(p, 0.62);
       const surus = [];
       for (const q of parcalar) {
@@ -657,7 +664,13 @@
           const yon = 1 - yonEtki + yonEtki * Math.abs(Math.sin(a - PHI));
           const giris = 0.25 + 0.75 * sstep(0, bas, s), cikis = 0.08 + 0.92 * sstep(0, son, L - s);
           const basinc = 0.72 + 0.5 * Math.sin(Math.PI * clamp(s / L, 0, 1)); // sürüşün ortasında fırça şişer
-          return W * 1.15 * yon * basinc * Math.min(giris, cikis) * (0.86 + 0.28 * nI(s / 45 + faz, 4.4));
+          let agirlik = 1;
+          if (yonIsaret) {
+            const lit = yonIsaret * (Math.sin(a) * 0.75 + Math.cos(a) * 0.66);
+            agirlik = lerp(1.32, 0.42, sstep(-0.25, 0.7, lit));
+            if (lit > 0.4) agirlik *= 1 - 0.94 * sstep(0.63, 0.72, nI(s / 36 + faz, 7.7)) * sstep(0.4, 0.7, lit);
+          }
+          return W * 1.15 * yon * basinc * agirlik * Math.min(giris, cikis) * (0.86 + 0.28 * nI(s / 45 + faz, 4.4));
         }, o.renk || rgba(P.fir, 0.95));
       }
     }
@@ -701,11 +714,40 @@
     firca([[[Math.min(...b.daireler.map((d) => d.x - d.r)) + 8, b.taban], [Math.max(...b.daireler.map((d) => d.x + d.r)) - 8, b.taban]]], 1.3, { kose: false, yonEtki: 0.2 });
   }
 
+  // ince, uzun yatay bulut şeritleri: krem düz biçim, altında tek, şişip incelen fırça çizgisi
+  for (const [sx, sy, sw] of [[690, 238, 170], [122, 128, 175], [150, 374, 150], [872, 412, 120]]) {
+    const ust = new Path2D();
+    ust.moveTo(sx - sw / 2, sy);
+    ust.bezierCurveTo(sx - sw * 0.4, sy - 11, sx - sw * 0.16, sy - 15, sx + sw * 0.02, sy - 10);
+    ust.bezierCurveTo(sx + sw * 0.16, sy - 18, sx + sw * 0.4, sy - 12, sx + sw / 2, sy);
+    ust.closePath();
+    guaj(ctx, (x) => x.fill(ust), P.kremAcik, { kutu: [sx - sw / 2 - 4, sy - 22, sx + sw / 2 + 4, sy + 4], yon: 0.02, doku: 0.03, tohum: sx | 0 });
+    firca([[[sx - sw / 2 + 6, sy + 0.5], [sx, sy + 1.2], [sx + sw / 2 - 6, sy + 0.5]]], 1.6, { kose: false, maxL: 400, yonEtki: 0.15, bas: 18, son: 24 });
+  }
+
   // ================================================================ yer
   dolgu(elY('M-10,800 L1034,800 L1034,1034 L-10,1034 Z', 0.5), P.kum, { kutu: [0, 796, 1024, 1024], guaj: { yon: 0 }, golgeRenk: P.zeytin, golge: (x, y) => 1 - esik(y + (nI(x * 0.01, 3) - 0.5) * 24, 892) });
   // bina gölgesi (yere düşen düz biçim)
   dolgu(elY('M268,800 L820,800 L806,809 L258,812 Z', 0.4), P.kumGolge, { kutu: [250, 796, 830, 816] });
   firca([[[16, 800], [1008, 800]]], 1.6, { kose: false, maxL: 330, yonEtki: 0.2 });
+  // çimenin kum ile buluştuğu yerde fırça ucuyla çekilmiş ot demetleri; kumda seyrek çakıl
+  for (let x = 14; x < 1014; x += 22 + R() * 18) {
+    const yb = 892 - (nI(x * 0.01, 3) - 0.5) * 24 + 2;
+    const n = 3 + ((R() * 3) | 0);
+    for (let k = 0; k < n; k++) {
+      const x0 = x + (k - n / 2) * 3.2 + (R() - 0.5) * 2;
+      const a = -Math.PI / 2 + (k - (n - 1) / 2) * 0.22 + (R() - 0.5) * 0.15;
+      const Lb = 9 + R() * 9;
+      const x1 = x0 + Math.cos(a) * Lb, y1 = yb + Math.sin(a) * Lb;
+      firca([[[x1, y1], [lerp(x0, x1, 0.5) + Math.cos(a + 1.5) * 1.2, lerp(yb, y1, 0.5)], [x0, yb + 1]]], 1.25, { kose: false, bas: 2, son: 5, yonEtki: 0.3, renk: rgba(P.yaprak2Koyu, 0.9) });
+    }
+  }
+  for (let i = 0; i < 46; i++) {
+    const x = 20 + R() * 984, y = 812 + R() * 66;
+    if (x > 250 && x < 830 && y < 820) continue;
+    const r0 = 1.6 + R() * 2.2;
+    dolgu(new Path2D(SAHNE.elipsYolu({ cx: x, cy: y, rx: r0 * 1.4, ry: r0 * 0.8, aci: 0 })), P.kumGolge, { kutu: [x - 6, y - 4, x + 6, y + 4] });
+  }
 
   // ================================================================ minare
   const MY = minareYollari();

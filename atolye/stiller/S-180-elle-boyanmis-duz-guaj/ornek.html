@@ -16,8 +16,9 @@
 // düz renk alanlarını yassı ve yuvarlak sentetik fırçalarla tek tek boyar. Kenarlar temiz ama elle çekilmiş
 // (hafif dalgalı, yer yer fırça kılı izi), düz alanların içinde biçimi izleyen hafif fırça izleri ve boyanın
 // ince-kalın sürüldüğü yerler; her öğede yalnız bir gölge tonu; kaburgalar ince fırçayla, uçlara doğru incelerek.
-// Sıcak ve uyumlu sınırlı palet. Yöntem: her alan el titremeli yolla düz doldurulur, içine yönlü fırça izi
-// deseni (açık/koyu kıllar) ve iri yumuşak kalınlık benekleri kırpılarak basılır; kenarda boyanın biriktiği
+// Sınırlı palet: su yeşili gök, hardal güneş, mercan zemin, zümrüt kubbe, krem. Yöntem: her alan el titremeli
+// yolla düz doldurulur, içine yönlü fırça darbesi deseni (açık/koyu yassı şeritler, yanlarında boya sırtı,
+// seyrek kıllar) 'soft-light' ile ve iri yumuşak kalınlık benekleri kırpılarak basılır; kenarda boyanın biriktiği
 // ince koyu çizgi, bazı büyük kütlelerin çevresinde boyanmadan kalmış kıl inceliğinde kâğıt payı bırakılır.
 (function () {
   'use strict';
@@ -156,28 +157,48 @@
   BUYUK_.rect(-60, -60, 1144, 1144);
   // ------------------------------------------------------------ fırça izi desenleri (dikişsiz döşenir)
   function fircaDeseni(tohum, yon, sapma) {
+    // her darbe: yassı fırçanın bıraktığı hafif açık ya da koyu bir şerit, iki yanında ince boya sırtı,
+    // içinde seyrek kıl izleri; desen 'soft-light' ile basıldığı için boyanın kendi tonunu açar ya da koyulaştırır
     const W = 512;
     const c = S.yeniTuval(W * OL, W * OL);
     const g = c.getContext('2d');
     g.setTransform(OL, 0, 0, OL, 0, 0);
     g.lineCap = 'round';
     const r = S.rng(tohum);
-    for (let i = 0; i < 520; i++) {
+    for (let i = 0; i < 300; i++) {
       const x = r() * W, y = r() * W, a = yon + (r() - 0.5) * sapma;
-      const L = 40 + r() * 110, w = 6 + r() * 14;
-      const acik = r() < 0.5;
-      const n = Math.round(w * 0.9);
-      const bukum = (r() - 0.5) * 0.2 * L;
+      const L = 70 + r() * 130, w = 14 + r() * 20;
+      const acik = r() < 0.55;
+      const ton = acik ? '255,255,255' : '0,0,0';
+      const govde = (acik ? 0.16 : 0.13) * (0.5 + r() * 0.7);
+      const bukum = (r() - 0.5) * 0.16 * L;
       const kil = [];
-      for (let k = 0; k < n; k++) kil.push([(k / (n - 1) - 0.5) * w, r() * L * 0.12, L * (0.82 + r() * 0.18), (acik ? 0.026 : 0.02) * (0.4 + r()), (w / n) * (0.9 + r() * 1.2)]);
+      const n = Math.round(w * 0.35);
+      for (let k = 0; k < n; k++) kil.push([(r() - 0.5) * w * 0.9, r() * L * 0.1, L * (0.75 + r() * 0.25), 0.1 + r() * 0.12, 0.5 + r() * 0.9, r() < 0.5]);
       for (const dx of [-W, 0, W]) for (const dy of [-W, 0, W]) {
         const X = x + dx, Y = y + dy;
         if (X < -L - w || X > W + L + w || Y < -L - w || Y > W + L + w) continue;
         const ca = Math.cos(a), sa = Math.sin(a);
         const pt = (u, v) => { const t = u / L; const b = bukum * 4 * t * (1 - t); return [X + u * ca - (v + b) * sa, Y + u * sa + (v + b) * ca]; };
-        for (const [v, u0, u1, al, lw] of kil) {
+        // gövde: uçlara doğru incelen şerit
+        g.fillStyle = `rgba(${ton},${govde})`;
+        g.beginPath();
+        for (let k = 0; k <= 16; k++) { const u = (L * k) / 16, h = w * 0.5 * (0.75 + 0.25 * Math.sin(Math.PI * k / 16)); const p = pt(u, -h); k ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }
+        for (let k = 16; k >= 0; k--) { const u = (L * k) / 16, h = w * 0.5 * (0.75 + 0.25 * Math.sin(Math.PI * k / 16)); const p = pt(u, h); g.lineTo(p[0], p[1]); }
+        g.closePath();
+        g.fill();
+        // iki yanda boya sırtı (biri açık biri koyu)
+        for (const [v, rk, al] of [[-w * 0.5, '255,255,255', 0.22], [w * 0.5, '0,0,0', 0.18]]) {
+          g.strokeStyle = `rgba(${rk},${al})`;
+          g.lineWidth = 1.1;
+          g.beginPath();
+          for (let k = 0; k <= 16; k++) { const u = L * (0.04 + 0.92 * k / 16); const p = pt(u, v * (0.75 + 0.25 * Math.sin(Math.PI * k / 16))); k ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }
+          g.stroke();
+        }
+        // kıl izleri
+        for (const [v, u0, u1, al, lw, ac] of kil) {
           const p0 = pt(u0, v), p1 = pt((u0 + u1) / 2, v), p2 = pt(u1, v);
-          g.strokeStyle = acik ? `rgba(255,253,245,${al})` : `rgba(60,40,25,${al})`;
+          g.strokeStyle = ac ? `rgba(255,255,255,${al})` : `rgba(0,0,0,${al * 0.8})`;
           g.lineWidth = lw;
           g.beginPath();
           g.moveTo(p0[0], p0[1]);
@@ -202,15 +223,15 @@
       const v = fbm(n, i / 20, j / 20, 4);
       const t = clamp((v - 0.5) * 2.4, -1, 1);
       const k = (j * Nn + i) * 4;
-      if (t > 0) { im.data[k] = 255; im.data[k + 1] = 252; im.data[k + 2] = 242; im.data[k + 3] = t * 24; }
-      else { im.data[k] = 50; im.data[k + 1] = 35; im.data[k + 2] = 20; im.data[k + 3] = -t * 14; }
+      if (t > 0) { im.data[k] = 255; im.data[k + 1] = 252; im.data[k + 2] = 242; im.data[k + 3] = t * 46; }
+      else { im.data[k] = 50; im.data[k + 1] = 35; im.data[k + 2] = 20; im.data[k + 3] = -t * 26; }
     }
     g.putImageData(im, 0, 0);
     return c;
   })();
 
   // ------------------------------------------------------------ boyama
-  const FIRCA = { genlik: 0.65, dalga: 34, ince: 0.18, inceDalga: 4, adim: 1.6 };
+  const FIRCA = { genlik: 0.85, dalga: 30, ince: 0.22, inceDalga: 4, adim: 1.6 };
   let tohumSay = 1700;
   const el = (d, o) => elYolu(d, Object.assign({}, FIRCA, { tohum: tohumSay++ }, o || {}));
   const elP = (pts, o) => polyEl(pts, Object.assign({}, FIRCA, { tohum: tohumSay++ }, o || {}));
@@ -237,9 +258,11 @@
     desen.setTransform(new DOMMatrix().translate(R() * 512, R() * 512).rotate(o.don || 0).scale(1 / OL));
     const [cr, cg, cb] = rgb(renk);
     const parlak = (cr + cg + cb) / 765;
-    ana.globalAlpha = (o.doku === undefined ? 1 : o.doku) * (parlak > 0.9 ? 0.45 : parlak > 0.8 ? 0.7 : 1);
+    ana.globalAlpha = (o.doku === undefined ? 1 : o.doku) * (parlak > 0.9 ? 0.7 : parlak > 0.8 ? 0.85 : 1);
+    ana.globalCompositeOperation = 'soft-light';
     ana.fillStyle = desen;
     ana.fillRect(-10, -10, 1044, 1044);
+    ana.globalCompositeOperation = 'source-over';
     ana.globalAlpha = o.kalin === undefined ? 1 : o.kalin;
     const ox = R() * 300, oy = R() * 300;
     ana.drawImage(KALIN, -ox, -oy, 1400, 1400);
@@ -274,12 +297,12 @@
 
   // ------------------------------------------------------------ palet (sıcak, sınırlı)
   const P_ = {
-    gok: '#AFCFD6', gok2: '#C6DED7', gok3: '#E3E7D4', hale2: '#C9E0D8', hale: '#E6EBD3', gunes: '#F6D88E',
+    gok: '#86C6C4', gok2: '#AEDBD2', gok3: '#F0E6CB', hale2: '#C9E0D8', hale: '#E6EBD3', gunes: '#F2C445',
     bulut: '#FBF5EA', bulutG: '#E7DCCD',
     yesil: '#438A57', yesilG: '#306C45', kasnak: '#367C50', kasnakG: '#28603E', pencere: '#16382A',
     tas: '#F4E5CB', tasG: '#E1C9A3', tasPencere: '#7C5646',
     altin: '#D9A441', altinG: '#B4822F', kiremit: '#C7765A',
-    kum: '#E9C899', on: '#E4B48D', onG: '#D69F7A',
+    kum: '#E8C47C', on: '#E29A76', onG: '#D08463',
     yaprak: '#6F9A5C', yaprakG: '#557F49', zeytin: '#8EA764', zeytinG: '#72894E',
     cicek: '#FFFBF3', cicekG: '#EBDDD3', orta: '#EAA63E', mercan: '#DE7D5F', tomurcuk: '#E89A8C',
   };
@@ -293,12 +316,11 @@
   boya(elP(bant(360, 12, 0.4)), P_.gok2, { desen: FY, kenar: 0.04, doku: 0.7 });
   boya(elP(bant(560, 10, 2.2)), P_.gok3, { desen: FY, kenar: 0.04, doku: 0.7 });
   const GX = 880, GY = 140;
-  boya(el(S.daireYolu(GX, GY, 150), { genlik: 0.9, dalga: 40 }), P_.hale2, { desen: FC, kenar: 0.05 });
-  boya(el(S.daireYolu(GX, GY, 108), { genlik: 0.8, dalga: 40 }), P_.hale, { desen: FC, kenar: 0.05 });
-  boya(el(S.daireYolu(GX, GY, 66), { genlik: 0.7 }), P_.gunes, { desen: FC, kenar: 0.08, pay: 1.4 });
+  // güneş: halesiz, tek düz hardal sarısı disk; fırça dairesel döner
+  boya(el(S.daireYolu(GX, GY, 74), { genlik: 0.8, dalga: 40 }), P_.gunes, { desen: FC, kenar: 0.08, pay: 1.6, doku: 1.2 });
   function bulutNok(cx, cy, s, tepeler) {
     const ust = [];
-    for (let x = cx - 104 * s; x <= cx + 104 * s; x += 1.5) {
+    for (let x = cx - 116 * s; x <= cx + 116 * s; x += 1.5) {
       let y = Infinity;
       for (const [dx, dy, r] of tepeler) { const X = cx + dx * s, Y = cy + dy * s, rr = r * s; if (Math.abs(x - X) < rr) y = Math.min(y, Y - Math.sqrt(rr * rr - (x - X) * (x - X))); }
       if (y < Infinity) ust.push([x, Math.min(y, cy + 16 * s)]);
@@ -308,16 +330,17 @@
     for (let x = x1; x >= x0; x -= 3) alt.push([x, cy + 16 * s + Math.sin(((x - x0) / (x1 - x0)) * Math.PI) * 2 * s]);
     return ust.concat(alt);
   }
-  const TEPE = [[-76, 6, 24], [-46, -8, 32], [-6, -22, 42], [36, -8, 33], [72, 6, 24]];
-  for (const [bx, by, bs] of [[172, 250, 1.0], [494, 152, 0.74], [770, 330, 0.95], [946, 470, 0.6], [88, 466, 0.64]]) {
+  // uzun, düz tabanlı, alçak tümsekli bulutlar (tek fırça yönünde yatay boyanmış)
+  const TEPE = [[-96, 8, 16], [-66, -2, 24], [-26, -10, 30], [16, -6, 26], [54, 2, 20], [86, 8, 14]];
+  for (const [bx, by, bs] of [[176, 262, 1.0], [520, 168, 0.82], [784, 352, 0.9], [74, 478, 0.62], [958, 488, 0.55]]) {
     const yol = elP(bulutNok(bx, by, bs, TEPE));
-    boya(yol, P_.bulut, { desen: FY, kenar: 0.06 });
+    boya(yol, P_.bulut, { desen: FY, kenar: 0.06, doku: 1.2 });
     // tek gölge tonu: alt kenarda, bulut biçimini izleyen dalgalı bant
     ana.save();
     ana.clip(yol);
     const g = [];
-    for (let x = bx - 110 * bs; x <= bx + 110 * bs; x += 3) g.push([x, by + 4 * bs + 4 * bs * Math.sin((x - bx) / (18 * bs))]);
-    g.push([bx + 110 * bs, by + 40 * bs], [bx - 110 * bs, by + 40 * bs]);
+    for (let x = bx - 120 * bs; x <= bx + 120 * bs; x += 3) g.push([x, by + 5 * bs + 3 * bs * Math.sin((x - bx) / (16 * bs))]);
+    g.push([bx + 120 * bs, by + 40 * bs], [bx - 120 * bs, by + 40 * bs]);
     boya(elP(g, { genlik: 0.4 }), P_.bulutG, { desen: FY, kenar: 0 });
     ana.restore();
   }

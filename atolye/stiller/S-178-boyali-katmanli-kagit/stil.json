@@ -5,28 +5,28 @@
   "ad_en": "Painted Layered Paper",
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
-  "ozet": "Önce suluboyayla boyanıp sonra kesilen kalın kâğıtlar, aralarında boşlukla katman katman dizilmiş; her katmanda suluboya degradesi ve granülasyon, kesik kenarda kâğıdın beyaz özü, altında yumuşak gölge.",
-  "tanim": "Hayalî bir kâğıt ressamının eli. Ressam kalın, soğuk preste suluboya kâğıdını kesmeden önce boyar: gök için yukarıdan ufka açılan dereceli bir yıkama yapıp ıslakken bulutları kaldırır, kum tepelerini pembe ve okr yıkamalarla boyayıp kuruyunca kenarında ince koyu çizgi bırakan ikinci bir sır katı sürer, kubbeyi ıslak üstüne ıslak yeşillerle (solda mavi-yeşil, sağ üstte sarı-yeşil) gölgelendirip kaburgaları ince fırçayla çizer; pigment kâğıdın çukurlarına çökerek hafif granülasyon bırakır. Kuruyunca maket bıçağıyla temiz ve ölçülü biçimler keser; pencereleri katmandan oyar ve arkasına koyu boyalı bir kâğıt koyar, korkuluk aralıklarını tek tek açar. Katmanları köpük bantlarla arkadan öne dizer: gök kartı, halkalı güneş, bulutlar, iki sıra kum tepesi, minare, kaide ve kabartma pencere çerçeveleri, kasnak, kubbe, zemin, yapraklar ve çiçekler. Her kesik kenarda kâğıdın beyaz özü ışığa bakan yanda ince bir çizgi olarak parlar, karşı yanda kalınlık gölgesi, altta yumuşak düşen gölge vardır. Çiçekler beyaz kâğıttan, dipleri soluk pembe yıkamalı; yaprakların bir yarısına koyu yıkama sürülmüştür.",
-  "koken": "Katmanlı kâğıt kesimi (layered paper art, gölge kutusu) ile suluboya boyamanın birleşimine dayanır: kesilmeden önce suluboyayla boyanmış kâğıt katmanları. Belirli bir sanatçı taklit edilmez; bu, atölyenin tanımladığı hayalî bir ressamın elidir. S-029 Katmanlı Kâğıt'ın ressam kardeşidir; farkı düz renkli kâğıtlar yerine her katmandaki dereceli, ıslak üstüne ıslak ve granülasyonlu suluboya yüzeyi, fırçayla boyanmış kaburgalar, sır kenarları ve kalın kâğıdın belirgin beyaz kesik kenarıdır.",
+  "ozet": "Önce suluboyayla boyanıp sonra kesilen kalın kâğıtlar, aralarında boşlukla katman katman dizilmiş; gökte ufuktan yükselen üç sıra boyalı bulut kümesi, her katmanda suluboya degradesi ve granülasyon, kesik kenarda kâğıdın beyaz özü, altında yumuşak gölge.",
+  "tanim": "Hayalî bir kâğıt ressamının eli. Ressam kalın, soğuk preste suluboya kâğıdını kesmeden önce boyar: gök kartına yukarıda peygamber çiçeği mavisinden ufka doğru açılan sakin, dereceli bir yıkama yapar; bulut kümelerini üstte beyaz bırakıp alta doğru lila-mavi yıkamayla gölgeler, kuruyunca tümseklerin altına kenarında ince koyu çizgi bırakan ikinci bir lila sır katı sürer; kum tepelerini pembe ve okr yıkamalarla aynı yolla boyar; kubbeyi ıslak üstüne ıslak yeşillerle (solda mavi-yeşil, sağ üstte sarı-yeşil) gölgelendirip kaburgaları ince fırçayla çizer; pigment kâğıdın çukurlarına çökerek hafif granülasyon bırakır. Kuruyunca maket bıçağıyla temiz ve ölçülü biçimler keser; pencereleri katmandan oyar ve arkasına koyu boyalı bir kâğıt koyar, korkuluk aralıklarını tek tek açar. Katmanları köpük bantlarla arkadan öne dizer: gök kartı, üç kat üst üste daire güneş, ufuktan yükselen üç sıra yuvarlak tümsekli bulut kümesi, iki sıra kum tepesi, minare, kaide ve kabartma pencere çerçeveleri, kasnak, kubbe, zemin, yapraklar ve çiçekler. Her kesik kenarda kâğıdın beyaz özü ışığa bakan yanda ince bir çizgi olarak parlar, karşı yanda kalınlık gölgesi, altta yumuşak düşen gölge vardır; gökte havada asılı tek tek bulut yoktur, derinliği üst üste binen bulut sıraları verir. Çiçekler beyaz kâğıttan, dipleri soluk pembe yıkamalı; yaprakların bir yarısına koyu yıkama sürülmüştür.",
+  "koken": "Katmanlı kâğıt kesimi (layered paper art, gölge kutusu) ile suluboya boyamanın birleşimine dayanır: kesilmeden önce suluboyayla boyanmış kâğıt katmanları. Belirli bir sanatçı taklit edilmez; bu, atölyenin tanımladığı hayalî bir ressamın elidir. S-029 Katmanlı Kâğıt'ın ressam kardeşidir; farkı düz renkli kâğıtlar ve havada asılı bulutlar yerine her katmandaki dereceli, ıslak üstüne ıslak ve granülasyonlu suluboya yüzeyi, ufuktan yükselen üst üste bulut kümesi katmanları, üç katlı güneş, sır kenarları ve kalın kâğıdın belirgin beyaz kesik kenarıdır.",
   "ayirt_edici": [
-    "Gök kartında yukarıdan ufka açılan dereceli suluboya yıkaması, ıslakken kaldırılmış yumuşak beyaz bulut lekeleri ve yatay yıkama bantları",
+    "Gök kartında peygamber çiçeği mavisinden ufka açılan sakin, dereceli suluboya yıkaması ve hafif yatay yıkama bantları",
+    "Ufuktan yükselen üç sıra yuvarlak tümsekli bulut kümesi katmanı: üstte beyaz, alta doğru lila-mavi yıkama, tümseklerin altında ince koyu kenarlı ikinci sır katı; sıralar arasında yumuşak gölgeler",
+    "Üç kat üst üste kesilmiş daire güneş: krem, açık sarı ve altın sarısı diskler, her birinin altında gölge",
     "Pembe ve okr kum tepesi katmanları: içlerinde ikinci sır katının dalgalı, ince koyu kenarlı sınırları ve pigment granülasyonu",
-    "Tek katman kubbe: ıslak üstüne ıslak yeşil gölgelendirme (solda mavi-yeşil, sağ üstte sarı-yeşil) ve ince fırçayla boyanmış on beş kaburga",
-    "Her kesik kenarda kalın kâğıdın beyaz özü: ışığa bakan yanda ince parlak çizgi, karşı yanda kalınlık gölgesi; katmanlar arasında yumuşak düşen gölgeler",
-    "Oyulmuş pencereler ve korkuluk aralıkları, arkalarında koyu boyalı kâğıt; kaidede kabartma sivri kemer çerçeveleri",
-    "Halka katmanlı güneş, alt yanları lila-mavi yıkamalı beyaz bulutlar, yarısına koyu yıkama sürülmüş yapraklar ve dipleri soluk pembe beyaz çiçekler"
+    "Tek katman kubbe: ıslak üstüne ıslak yeşil gölgelendirme ve ince fırçayla boyanmış kaburgalar; oyulmuş pencereler ve korkuluk aralıklarının arkasında koyu boyalı kâğıt",
+    "Her kesik kenarda kalın kâğıdın beyaz özü ve kalınlık gölgesi; yarısına koyu yıkama sürülmüş yapraklar ve dipleri soluk pembe beyaz çiçekler"
   ],
   "palet": [
-    "#5B9BD1",
-    "#F7BE4F",
+    "#6A97D2",
+    "#C7CEEB",
+    "#F6C445",
     "#2A7344",
     "#7EC071",
     "#E7BCA5",
     "#E9C996",
-    "#A9CD85",
-    "#5B5679"
+    "#A9CD85"
   ],
-  "kodla_cizim": "2× iç çözünürlükte canvas. Her katmanın boyası 1024 × 1024 sahne pikselinde piksel piksel üretilen bir suluboya yıkamasıdır: renk rampası üzerinde bir degrade fonksiyonu, gürültüyle dalgalanma, eşiklenmiş fbm gürültüsüyle ıslak üstüne ıslak ikinci pigmentler, yatay yıkama bantları, paylaşılan kâğıt tanesiyle koyu tonlarda artan granülasyon ve işaretli mesafe fonksiyonuyla tanımlanan sır katları (sınırda üstel kenar koyulaşması); kubbede kaburgalar yıkamanın üstüne çizgiyle boyanır. Katman yolu (SAHNE yollarından hafif el titremeli bıçak kesimi, pencereler için evenodd delikler) bu yıkamaya kırpılarak doldurulur. Düşen gölge tuval dışı gölge hilesiyle; beyaz kesik kenar ve kalınlık gölgesi, katmanın ayrı bir tuvale dolgusundan kaydırılmış kopyasının 'destination-out' ile silinmesiyle kalan bantlardır. Sonda kâğıt kabartması 'soft-light' ile ve sağ üstten yumuşak ışık.",
+  "kodla_cizim": "2× iç çözünürlükte canvas. Her katmanın boyası 1024 × 1024 sahne pikselinde piksel piksel üretilen bir suluboya yıkamasıdır: renk rampası üzerinde bir degrade fonksiyonu, gürültüyle dalgalanma, eşiklenmiş fbm gürültüsüyle ıslak üstüne ıslak ikinci pigmentler, yatay yıkama bantları, paylaşılan kâğıt tanesiyle koyu tonlarda artan granülasyon ve işaretli mesafe fonksiyonuyla tanımlanan sır katları (sınırda üstel kenar koyulaşması); kubbede kaburgalar yıkamanın üstüne çizgiyle boyanır. Bulut kümeleri, taban çizgisi dalgalı rastgele daire dizilerinin üst zarfından elde edilen siluetlerdir; yıkamaları siluetin tepesine olan uzaklığa göre beyazdan lila-maviye geçer, sır katı aynı zarfın aşağı kaydırılmışıdır. Katman yolu (SAHNE yollarından hafif el titremeli bıçak kesimi, pencereler için evenodd delikler) bu yıkamaya kırpılarak doldurulur. Düşen gölge tuval dışı gölge hilesiyle; beyaz kesik kenar ve kalınlık gölgesi, katmanın ayrı bir tuvale dolgusundan kaydırılmış kopyasının 'destination-out' ile silinmesiyle kalan bantlardır. Sonda kâğıt kabartması 'soft-light' ile ve sağ üstten yumuşak ışık.",
   "etiketler": [
     "katmanlı kâğıt",
     "suluboya",

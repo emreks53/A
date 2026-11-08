@@ -13,9 +13,11 @@
 <script src="../../sahne/sahne.js"></script>
 <script>
 // S-178 Boyalı Katmanlı Kâğıt — hayalî bir kâğıt ressamının eli: kalın suluboya kâğıtlarını önce suluboyayla
-// boyar (dereceli gök yıkaması, ıslak üstüne ıslak yeşiller, pigment granülasyonu, fırçayla çizilmiş kaburgalar),
-// kuruyunca maket bıçağıyla keser ve araya köpük koyarak katman katman dizer. Her katmanın kesik kenarında
-// kâğıdın beyaz özü ince bir ışık çizgisi olarak görünür, altındaki katmana yumuşak gölge düşer.
+// boyar (dereceli gök yıkaması, beyazdan lilaya gölgelenmiş bulut kümeleri, ıslak üstüne ıslak yeşiller, pigment
+// granülasyonu, fırçayla çizilmiş kaburgalar), kuruyunca maket bıçağıyla keser ve araya köpük koyarak katman
+// katman dizer; gökte havada asılı bulut yerine ufuktan yükselen üç sıra bulut kümesi katmanı vardır.
+// Her katmanın kesik kenarında kâğıdın beyaz özü ince bir ışık çizgisi olarak görünür, altındaki katmana
+// yumuşak gölge düşer.
 // Yöntem: her katmanın boyası piksel piksel üretilen bir suluboya yıkamasıdır (degrade + ıslak karışım +
 // yıkama bantları + granülasyon); katman yolu bu yıkamayla doldurulur, gölgesi tuval dışı gölge hilesiyle,
 // beyaz kesik kenarı kaydırılmış yolun farkıyla çizilir.
@@ -288,50 +290,57 @@
   const dogrusal = (x1, y1, x2, y2, dur) => { const g = ana.createLinearGradient(x1, y1, x2, y2); dur.forEach(([t, c]) => g.addColorStop(t, c)); return g; };
   const ss = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
-  // ------------------------------------------------------------ 1. gök: dereceli suluboya yıkaması (arka kart)
+  // ------------------------------------------------------------ 1. gök: sakin, dereceli suluboya yıkaması (arka kart)
   const GX = 880, GY = 140;
   const GOK = yika({
     tohum: 11,
-    renk: [[0, '#5B9BD1'], [0.35, '#86B9E0'], [0.7, '#C4DDEC'], [1, '#F6EAD6']],
-    t: (x, y) => clamp(y / 820 + 0.18 * ss(0, 1, 1 - Math.hypot(x - GX, y - GY) / 520), 0, 1),
-    oynak: 0.05,
-    islak: [{ renk: '#FFFFFF', olcek: 130, guc: 0.55, esik: 0.56 }, { renk: '#B9A9D8', olcek: 160, guc: 0.18, esik: 0.6 }],
-    bant: 0.16,
+    renk: [[0, '#6A97D2'], [0.35, '#8DB3E0'], [0.7, '#C3D7EE'], [1, '#EEF1F4']],
+    t: (x, y) => clamp(y / 640 + 0.2 * ss(0, 1, 1 - Math.hypot(x - GX, y - GY) / 480), 0, 1),
+    oynak: 0.04,
+    islak: [{ renk: '#A9A3DA', olcek: 220, guc: 0.12, esik: 0.58 }],
+    bant: 0.1,
     gran: 0.45,
   });
   ana.drawImage(GOK, 0, 0, 1024, 1024);
 
-  // ------------------------------------------------------------ 2. güneş: halka katmanı ve disk
+  // ------------------------------------------------------------ 2. güneş: üç kat üst üste kesilmiş daire
   const daireP = (cx, cy, r) => { const p = []; for (let i = 0; i < 220; i++) { const t = (i / 220) * PI2; p.push([cx + Math.cos(t) * r, cy + Math.sin(t) * r]); } return p; };
-  const halkaY = birlestir(kesP(daireP(GX, GY, 118)), kesP(daireP(GX, GY, 84).reverse()));
-  katman(halkaY, yika({ tohum: 12, kutu: [GX - 130, GY - 130, GX + 130, GY + 130], renk: [[0, '#FBEFC0'], [1, '#F7DE95']], t: (x, y) => Math.hypot(x - GX, y - GY) / 120, islak: [{ renk: '#FFF8DE', olcek: 40, guc: 0.6, esik: 0.5 }], gran: 0.4 }), { kural: 'evenodd', ga: 0.26, gb: 10, gx: -3, gy: 5 });
-  katman(kesP(daireP(GX, GY, 70)), yika({ tohum: 14, kutu: [GX - 80, GY - 80, GX + 80, GY + 80], renk: [[0, '#FCE38A'], [0.55, '#F7BE4F'], [1, '#EE9A3C']], t: (x, y) => Math.hypot(x - GX + 18, y - GY + 18) / 92, islak: [{ renk: '#F28A3A', olcek: 26, guc: 0.35, esik: 0.55 }], gran: 0.6 }), { ga: 0.32, gb: 9, gx: -3.5, gy: 5.5 });
+  katman(kesP(daireP(GX, GY, 116)), yika({ tohum: 12, kutu: [GX - 128, GY - 128, GX + 128, GY + 128], renk: [[0, '#FDF6DC'], [1, '#F8EBC0']], t: (x, y) => Math.hypot(x - GX, y - GY) / 118, gran: 0.35 }), { ga: 0.24, gb: 11, gx: -3, gy: 5 });
+  katman(kesP(daireP(GX, GY, 90)), yika({ tohum: 13, kutu: [GX - 100, GY - 100, GX + 100, GY + 100], renk: [[0, '#FBE7A0'], [1, '#F6D57A']], t: (x, y) => Math.hypot(x - GX, y - GY) / 92, gran: 0.45 }), { ga: 0.26, gb: 9, gx: -3, gy: 5 });
+  katman(kesP(daireP(GX, GY, 64)), yika({ tohum: 14, kutu: [GX - 76, GY - 76, GX + 76, GY + 76], renk: [[0, '#FCE27C'], [0.6, '#F6C445'], [1, '#EFAE38']], t: (x, y) => Math.hypot(x - GX + 16, y - GY + 16) / 86, gran: 0.6 }), { ga: 0.3, gb: 8, gx: -3, gy: 5 });
 
-  // ------------------------------------------------------------ 3. bulutlar: beyaz kâğıt, alt yanları lila-mavi yıkama
-  function bulutYolu(cx, cy, s, tepeler) {
-    const ust = [];
-    for (let x = cx - 104 * s; x <= cx + 104 * s; x += 1.5) {
-      let y = Infinity;
-      for (const [dx, dy, r] of tepeler) {
-        const X = cx + dx * s, Y = cy + dy * s, rr = r * s;
-        if (Math.abs(x - X) < rr) y = Math.min(y, Y - Math.sqrt(rr * rr - (x - X) * (x - X)));
-      }
-      if (y < Infinity) ust.push([x, Math.min(y, cy + 18 * s)]);
+  // ------------------------------------------------------------ 3. bulut kümeleri: ufuktan yükselen üç sıra boyalı kâğıt katmanı
+  // her sıra: tepesi yuvarlak kabarık bir siluet; üstte beyaz, alta doğru lila-mavi suluboya
+  function kumeNok(taban, tepeY, rmin, rmax, tohum) {
+    const r = S.rng(tohum);
+    const tepeler = [];
+    let x = -60;
+    while (x < 1100) {
+      const rr = rmin + r() * (rmax - rmin);
+      tepeler.push([x + rr * 0.8, tepeY(x) + rr, rr]);
+      x += rr * (1.05 + r() * 0.5);
     }
-    const x0 = ust[0][0], x1 = ust[ust.length - 1][0];
-    const alt = [];
-    for (let x = x1; x >= x0; x -= 3) alt.push([x, cy + 18 * s + Math.sin(((x - x0) / (x1 - x0)) * Math.PI) * 2 * s]);
-    return ust.concat(alt);
+    const ust = [];
+    for (let xx = -30; xx <= 1054; xx += 2) {
+      let y = Infinity;
+      for (const [cx, cy, rr] of tepeler) if (Math.abs(xx - cx) < rr) y = Math.min(y, cy - Math.sqrt(rr * rr - (xx - cx) * (xx - cx)));
+      if (y === Infinity) y = taban;
+      ust.push([xx, Math.min(y, taban)]);
+    }
+    ust.push([1054, taban], [-30, taban]);
+    return { pts: ust, ust: (xx) => { let y = Infinity; for (const [cx, cy, rr] of tepeler) if (Math.abs(xx - cx) < rr) y = Math.min(y, cy - Math.sqrt(rr * rr - (xx - cx) * (xx - cx))); return y === Infinity ? taban : y; } };
   }
-  const BULUTLAR = [[172, 250, 1.0], [492, 152, 0.74], [770, 330, 0.95], [946, 470, 0.6], [88, 466, 0.64]];
-  const TEPE = [[-76, 6, 24], [-46, -8, 32], [-6, -22, 42], [36, -8, 33], [72, 6, 24]];
-  const BULUT = yika({ tohum: 15, kutu: [0, 80, 1024, 520], renk: [[0, '#FFFFFF'], [0.55, '#F6F5FA'], [1, '#C9CFEA']], t: (x, y) => {
-    // her bulutun kendi tabanına göre: alt kenara yakın koyulaşır
-    let best = 0;
-    for (const [bx, by, bs] of BULUTLAR) { const v = (y - (by - 30 * bs)) / (48 * bs); if (Math.abs(x - bx) < 120 * bs && v > -0.5 && v < 1.4) best = Math.max(best, clamp(v, 0, 1)); }
-    return best;
-  }, islak: [{ renk: '#E6DDF2', olcek: 30, guc: 0.4, esik: 0.55 }], gran: 0.3, oynak: 0.06 });
-  for (const [bx, by, bs] of BULUTLAR) katman(kesP(bulutYolu(bx, by, bs, TEPE)), BULUT, { ga: 0.3, gb: 11, gx: -4, gy: 7 });
+  const SIRALAR = [
+    { tepe: (x) => 412 + 40 * Math.sin(x / 260 + 0.8) + 18 * Math.sin(x / 97), rmin: 30, rmax: 58, tohum: 71, ust: '#FFFFFF', alt: '#C7CEEB', ga: 0.26 },
+    { tepe: (x) => 492 + 30 * Math.sin(x / 210 + 2.4) + 14 * Math.sin(x / 83 + 1), rmin: 26, rmax: 50, tohum: 72, ust: '#FFFFFF', alt: '#CFD0EE', ga: 0.28 },
+    { tepe: (x) => 566 + 22 * Math.sin(x / 180 + 4.1) + 10 * Math.sin(x / 61 + 2), rmin: 22, rmax: 42, tohum: 73, ust: '#FFFEFA', alt: '#D8D6F0', ga: 0.3 },
+  ];
+  for (const sr of SIRALAR) {
+    const k = kumeNok(740, sr.tepe, sr.rmin, sr.rmax, sr.tohum);
+    const boya = yika({ tohum: sr.tohum + 100, kutu: [0, 300, 1024, 760], renk: [[0, sr.ust], [0.4, '#F4F4FB'], [1, sr.alt]], t: (x, y) => clamp((y - k.ust(x)) / 90, 0, 1), islak: [{ renk: '#E4DCF2', olcek: 70, guc: 0.25, esik: 0.6 }], gran: 0.35, oynak: 0.05,
+      cam: [{ renk: '#D6D2EE', alfa: 0.22, f: (x, y) => y - (k.ust(x + 12) + 36 + 6 * Math.sin(x / 37)) }] });
+    katman(kesP(k.pts, { genlik: 0.3, dalga: 60 }), boya, { ga: sr.ga, gb: 14, gx: -3, gy: 2.5 });
+  }
 
   // ------------------------------------------------------------ 4. uzak kum tepeleri (iki katman, sıcak yıkamalar)
   function tepeYolu(y0, gen, faz) {

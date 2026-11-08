@@ -716,7 +716,7 @@
   }
 
   // ================================================================ zemin (soluk ılık levha zemini) ve gök
-  const gokR = rampa([[0, '#73A6D0'], [0.24, '#A3C6DE'], [0.5, '#DAE5E1'], [0.74, '#F5EDD8'], [1, '#F4E2BE']]);
+  const gokR = rampa([[0, '#6A9FCE'], [0.26, '#9EC3DD'], [0.52, '#D8E3E0'], [0.74, '#F6E9D9'], [1, '#F4D7C0']]);
   const gokF = (x, y) => { const c = gokR(y / 800 + (nI(x * 0.004, y * 0.004) - 0.5) * 0.06); const g = Math.exp(-Math.pow(Math.hypot(x - 880, y - 140) / 170, 2)); return [lerp(c[0], 253, g * 0.75), lerp(c[1], 247, g * 0.75), lerp(c[2], 228, g * 0.75)]; };
   boya(new Path2D('M-10,-10 L1034,-10 L1034,806 L-10,806 Z'), [0, 0, 1024, 806], gokF, (x, y) => 0.04 + (nI(x * 0.006, y * 0.006) - 0.5) * 0.12, { yog: 0.9, uzun: 10, kalin: 0.75, alfa: 0.5, kontrast: 0.055, duz: 0, capraz: 0, ara: 2.5, doku: 0.012, sap: 0.06 });
   // güneş: yumuşak, örtücü açık disk
@@ -852,7 +852,7 @@
   const K = SAHNE.kaide;
   const kaideD = SAHNE.yol([[K.x1, K.y1], [K.x2, K.y1], [K.x2, K.y2], [K.x1, K.y2]], true);
   const kaideY = new Path2D(kaideD);
-  boya(kaideY, [K.x1, K.y1, K.x2, K.y2], (x, y) => tasR(0.82 - 0.55 * Math.exp(-(y - 704) / 9) - 0.12 * Math.pow(1 - (x - 300) / 520, 2)), 0, { yog: 0.7, uzun: 8, kalin: 0.6 });
+  boya(kaideY, [K.x1, K.y1, K.x2, K.y2], (x, y) => tasR(0.82 - 0.55 * Math.exp(-(y - 704) / 9) - 0.12 * Math.pow(1 - (x - 300) / 520, 2)), 0, { yog: 0.8, uzun: 8, kalin: 0.6, kontrast: 0.13, capraz: 0 });
   {
     // her taş bloğu hafif farklı tonda; derzler ince
     ctx.save(); ctx.clip(kaideY);
@@ -887,7 +887,7 @@
     pencereBoya(w, 0.24);
   }
   const kornD = SAHNE.yol([[K.kornis.x1, K.kornis.y1], [K.kornis.x2, K.kornis.y1], [K.kornis.x2, K.kornis.y2], [K.kornis.x1, K.kornis.y2]], true);
-  boya(new Path2D(kornD), [290, 692, 830, 704], (x, y) => tasR(y < 699 ? 0.96 : 0.45), 0, { yog: 0.6, uzun: 9 });
+  boya(new Path2D(kornD), [290, 692, 830, 704], (x, y) => tasR(y < 699 ? 0.96 : 0.45), 0, { yog: 0.6, uzun: 9, capraz: 0 });
   ince([[291, 692.8], [829, 692.8]], 1.0, css(tasR(1), 0.9), { gen: 0.08 });
 
   // ================================================================ kasnak ve kubbe (zümrüt)
@@ -1106,11 +1106,14 @@
   // ================================================================ levha çerçevesi: ince sepya çift cetvel
   {
     // dış kenarda ince örtücü krem pervaz, içinde koyu sepya cetvel ve ince kızıl toprak cetvel
-    const cer = new Path2D('M0,0 L1024,0 L1024,1024 L0,1024 Z M9,9 L9,1015 L1015,1015 L1015,9 Z');
-    guaj(ctx, (x) => x.fill(cer, 'evenodd'), '#F3EAD6', { alfa: 1, doku: 0.02, tohum: 77 });
+    // levhanın pervazı: krem kenar, ince cetveller arasında soluk adaçayı yeşili bir guaj şerit
+    const cer = (a, b) => new Path2D(`M${a},${a} L${1024 - a},${a} L${1024 - a},${1024 - a} L${a},${1024 - a} Z M${b},${b} L${b},${1024 - b} L${1024 - b},${1024 - b} L${1024 - b},${b} Z`);
+    guaj(ctx, (x) => x.fill(cer(0, 20), 'evenodd'), '#F4ECDA', { alfa: 1, doku: 0.02, tohum: 77 });
+    guaj(ctx, (x) => x.fill(cer(7, 14), 'evenodd'), '#B9C9A6', { alfa: 1, doku: 0.03, yon: 0, tohum: 78 });
     const kare = (ins) => [[ins, ins], [1024 - ins, ins], [1024 - ins, 1024 - ins], [ins, 1024 - ins], [ins, ins]];
-    for (const q of koseBol(ornekle(kare(9.5), 2), 0.7)) ince(q, 1.5, 'rgba(84,62,40,0.92)', { gen: 0.1, uc: 2 });
-    for (const q of koseBol(ornekle(kare(14), 2), 0.7)) ince(q, 0.9, 'rgba(168,84,58,0.85)', { gen: 0.1, uc: 2 });
+    for (const q of koseBol(ornekle(kare(7), 2), 0.7)) ince(q, 1.1, 'rgba(84,62,40,0.9)', { gen: 0.1, uc: 2 });
+    for (const q of koseBol(ornekle(kare(14), 2), 0.7)) ince(q, 0.7, 'rgba(84,62,40,0.85)', { gen: 0.1, uc: 2 });
+    for (const q of koseBol(ornekle(kare(20), 2), 0.7)) ince(q, 1.4, 'rgba(70,52,34,0.95)', { gen: 0.1, uc: 2 });
   }
 
   SAHNE.hazir();

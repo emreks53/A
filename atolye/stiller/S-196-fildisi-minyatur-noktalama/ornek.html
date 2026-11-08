@@ -530,13 +530,13 @@
         // taç yaprağın sol-alt yanı leylak-gri gölgede
         const sx = e.cx - Math.cos(e.aci) * 0 - e.rx * 0.6;
         const sg = g.createLinearGradient(e.cx + e.rx * 0.7, e.cy - e.ry * 0.7, sx, e.cy + e.ry * 0.8);
-        sg.addColorStop(0, 'rgba(210,200,210,0)');
-        sg.addColorStop(1, 'rgba(206,188,192,0.38)');
+        sg.addColorStop(0, 'rgba(206,186,176,0)');
+        sg.addColorStop(1, 'rgba(198,168,156,0.4)');
         g.fillStyle = sg;
         g.fill(ep);
         const bg = g.createRadialGradient(c.x, c.y, c.r * 0.12, c.x, c.y, c.r * 0.85);
-        bg.addColorStop(0, 'rgba(230,150,170,0.8)');
-        bg.addColorStop(0.38, 'rgba(236,182,194,0.3)');
+        bg.addColorStop(0, 'rgba(232,160,170,0.62)');
+        bg.addColorStop(0.38, 'rgba(238,190,194,0.24)');
         bg.addColorStop(0.62, 'rgba(236,180,192,0)');
         g.fillStyle = bg;
         g.fill(ep);
@@ -682,11 +682,16 @@
         if (t < -1.08 || t > 1.08) continue;
         const tt = Math.min(1, t * t);
         const dik = Math.abs(-px * dy + py * dx - bukum * (1 - tt));
-        const yy = yk * (1 - 0.65 * tt);
+        // virgül biçimli fırça izi: başı dolgun ve yuvarlak, kuyruğu incelir
+        const tq = H.clamp((t + 1) / 2, 0, 1);
+        const prof = tq < 0.18 ? Math.sqrt(tq / 0.18) : 1 - 0.78 * Math.pow((tq - 0.18) / 0.82, 1.25);
+        const yy = yk * Math.max(0.12, prof);
         let w = yy + 0.5 - dik;
         if (w <= 0) continue;
         if (w > 1) w = 1;
-        w *= 0.7 + 0.3 * (1 - tt);
+        w *= 0.78 + 0.22 * (1 - tt);
+        // suluboya izin kenarında biraz toplanır
+        if (dik > yy - 0.9) w *= 1.18;
         const j = p * 3;
         A[j] += w * pr;
         A[j + 1] += w * pgr;
@@ -698,7 +703,7 @@
 
   function yon(sinif, x, y) {
     // x, y 1024 koordinatı
-    if (sinif === KB.gok || sinif === KB.gunes) return (R() < 0.34 ? 0.42 : -0.98) + 0.35 * n1(x / 170, y / 170);
+    if (sinif === KB.gok || sinif === KB.gunes) return -0.62 + 0.3 * n1(x / 210, y / 210) + (R() < 0.07 ? 1.0 : 0);
     if (sinif === KB.kubbe) {
       const r = H.kubbeR(y) || 1;
       const u = (x - 560) / r;
@@ -716,13 +721,14 @@
   }
   // bölgeye göre işaret karışımı: tarama oranı, nokta boyu
   function karisim(sinif) {
-    if (sinif === KB.gok) return [0.9, 1.3];
-    if (sinif === KB.kubbe) return [0.6, 1.3];
-    if (sinif === KB.kasnak) return [0.45, 1.25];
-    if (sinif === KB.zemin) return [0.25, 1.2];
-    if (sinif === KB.yaprak) return [0.55, 1.25];
-    if (sinif === KB.minare || sinif === KB.kaide) return [0.15, 1.1];
-    return [0, 1.1];
+    if (sinif === KB.gok) return [0.55, 1.9];
+    if (sinif === KB.kubbe) return [0.66, 1.9];
+    if (sinif === KB.kasnak) return [0.5, 1.8];
+    if (sinif === KB.zemin) return [0.45, 1.8];
+    if (sinif === KB.yaprak) return [0.55, 1.8];
+    if (sinif === KB.minare || sinif === KB.kaide) return [0.12, 1.75];
+    if (sinif === KB.altin || sinif === KB.pencere || sinif === KB.cicekOrta) return [0, 1.35];
+    return [0, 1.7];
   }
 
   // ------------------------------------------------ 4) noktacık ve tarama ile boyama
@@ -744,34 +750,36 @@
       const lc = CG[(yi >> 2) * HC + (xi >> 2)];
       const eksik = lt - lc;
       if (eksik <= 0) continue;
-      const s = guc * (0.75 + 0.5 * R());
+      // açık yerlerde daha soluk ve sık, koyu yerlerde daha dolgun işaretler
+      const s = guc * (0.75 + 0.5 * R()) * (0.5 + 0.62 * Math.min(1, lt / 0.55));
       if (R() > eksik / (s * 1.1)) continue;
       // pigment: hedefin rengi, ressamın karışımında küçük sapmalar (mücevher gibi titreşim)
       const k = s / Math.max(lt, 0.04);
       const sap = (R() - 0.5) * 2;
-      let pr = ar * k * (1 - 0.06 * sap);
+      let pr = ar * k * (1 - 0.03 * sap);
       let pgr = ag * k;
-      let pb = ab * k * (1 + 0.1 * sap);
+      let pb = ab * k * (1 + 0.05 * sap);
       const [oran, nb] = karisim(sinif);
       const yx = x / 2;
       const yy = y / 2;
       const a = oran > 0 && R() < oran ? yon(sinif, yx, yy) : null;
       if (a !== null) {
-        const uz = 8 + R() * 6;
-        cizik(x, y, a + (R() - 0.5) * 0.16, uz, 0.72 + R() * 0.25, (R() - 0.5) * 1.6, pr * 0.62, pgr * 0.62, pb * 0.62, sinif);
+        const gk = sinif === KB.gok;
+        const uz = (sinif === KB.kasnak ? 11 : gk ? 9 : 13) + R() * (gk ? 5 : 7);
+        cizik(x, y, a + (R() - 0.5) * 0.12, uz, (gk ? 1.35 : 1.15) + R() * 0.3, (R() - 0.5) * (gk ? 3 : 2.2), pr * 0.55, pgr * 0.55, pb * 0.55, sinif);
       } else {
-        damla(x, y, nb * (0.85 + R() * 0.5), pr, pgr, pb, sinif);
+        damla(x, y, nb * (0.8 + R() * 0.45), pr, pgr, pb, sinif);
       }
       konan++;
     }
     sayac += konan;
     return konan;
   }
-  gecis(3200000, 0.2);
-  gecis(3200000, 0.16);
-  gecis(3200000, 0.13);
-  gecis(3200000, 0.11);
-  gecis(2800000, 0.09);
+  gecis(2800000, 0.34);
+  gecis(2800000, 0.27);
+  gecis(2800000, 0.22);
+  gecis(2800000, 0.18);
+  gecis(2600000, 0.14);
 
   // ------------------------------------------------ 5) fildişi üstünde bileşim
   const img = ctx.createImageData(N2, N2);
@@ -783,7 +791,7 @@
       const xx = x / 2;
       const f = fildisiRef(xx, yy);
       // fildişinin ince, uzunlamasına damarları (çok hafif)
-      const dmr = 0.012 * ng(xx / 2.2 + 3 * ng(yy / 260, xx / 400), yy / 120) + 0.006 * ng(xx * 0.9, yy * 0.9);
+      const dmr = 0.008 * ng(xx / 90, yy / 70) + 0.004 * ng(xx / 9, yy / 9);
       const p = y * N2 + x;
       const j = p * 3;
       const i = p * 4;

@@ -5,28 +5,28 @@
   "ad_en": "Hand-Colored Stipple Engraving",
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
-  "ozet": "Tonlar çizgiyle değil ince noktalarla kurulur: her bölgesi kendi renkli mürekkebiyle basılmış noktalama gravür, noktalı konturlar ve parlak kâğıt üstünde saydam el boyası.",
-  "tanim": "Hayalî bir botanik levha gravürcüsünün eli. Bakır levhaya ince iğne ve noktalama kalemiyle yalnız nokta vurur, hiç tarama çizgisi kullanmaz: gölgede noktalar sık ve iri, ışıkta seyrek ve küçüktür; konturlar bile düzenli dizilmiş sık nokta sıralarıdır, kubbe kaburgaları da noktalıdır. Levhayı bölge bölge kendi yumuşak rengiyle mürekkepler (gökte mavi, kubbe ve kasnakta koyu yeşil, taşta sepya, yaprakta yeşil, taç yapraklarda gül, göbekte okr) ve parlak, ılık beyaz bir kâğıda basar. Yapraklarda damarları noktasız bırakarak açık çizgiler elde eder; taç yapraklarda noktalar dibe doğru yoğunlaşır. Baskı kuruyunca ince fırçayla, çizginin içinde kalarak saydam suluboya ile bitirir: açık mavi gök, zümrüt kubbe, krem taş, taze yeşil yaprak, altın alem ve göbek; beyaz taç yapraklara yalnız diplerinde hafif bir pembe verir. Güneşi noktalı ışınlarla çevreler, bulutların altını noktayla gölgeler.",
+  "ozet": "Tonlar çizgiyle değil ince noktalarla kurulur: her bölgesi kendi renkli mürekkebiyle basılmış noktalama gravür, noktalı konturlar ve üstünde dolgun, taze renkli saydam el boyası.",
+  "tanim": "Hayalî bir botanik levha gravürcüsünün eli. Bakır levhaya ince iğne ve noktalama kalemiyle yalnız nokta vurur, hiç tarama çizgisi kullanmaz: gölgede noktalar sık ve iri, ışıkta seyrek ve küçüktür; konturlar bile düzenli dizilmiş sık nokta sıralarıdır, kubbe kaburgaları da noktalıdır. Levhayı bölge bölge kendi yumuşak rengiyle mürekkepler (gökte mavi, kubbe ve kasnakta koyu yeşil, taşta sepya, yaprakta yeşil, taç yapraklarda gül, göbekte okr) ve parlak, ılık beyaz bir kâğıda basar. Yapraklarda damarları noktasız bırakarak açık çizgiler elde eder; taç yapraklarda noktalar dibe doğru yoğunlaşır. Baskı kuruyunca ince fırçayla, çizginin içinde kalarak saydam suluboyayı cömert ve dolgun sürer: göğü tepede gök mavisi, ufka doğru ılık açık okrayla iki renkte bitirir; kubbe ve kasnağa doygun zümrüt, taşa ılık krem, yaprak ve saplara taze yeşil, aleme ve göbeklere altın, tomurcuklara gül pembesi verir; beyaz taç yaprakları kâğıt beyazında bırakıp yalnız diplerine pembe sürer. Minare korkuluğunun babaları arasını kaynaşan sık noktalarla koyu düşey çizgiler olarak basar, tomurcukların dibine küçük yeşil çanak yapraklar ekler. Güneşi noktalı ışınlarla çevreler, bulutların altını noktayla gölgeler.",
   "koken": "18. yüzyıl sonu ve 19. yüzyıl botanik levhalarında kullanılan noktalama gravür (stipple engraving) tekniğine, levhanın bölge bölge renkli mürekkeplenmesine (à la poupée) ve basılan levhanın elle suluboyayla bitirilmesine dayanır; çizgi gravürden (S-005) ve renkli nokta resminden (S-097) farkı, tonun tek renkli ince baskı noktalarıyla kurulması ve rengin saydam el boyasından gelmesidir. Hiçbir gerçek sanatçı taklit edilmez; bu, atölyenin tanımladığı hayalî bir ressamın elidir.",
   "ayirt_edici": [
     "Bütün tonlar tek tek basılmış ince noktalardan: gölgede sık ve iri, ışıkta seyrek ve küçük noktalar",
     "Konturlar çizgi değil, düzenli dizilmiş sık nokta sıraları; kubbe kaburgaları da noktalı",
     "Bölgeye göre renkli mürekkep: gökte mavi, kubbe ve kasnakta koyu yeşil, taşta sepya, yaprakta yeşil, taç yaprakta gül, göbekte okr",
-    "Parlak kâğıt üstünde saydam el boyası: açık mavi gök, zümrüt kubbe, krem taş, taze yeşil yapraklar, altın alem ve göbekler",
+    "Dolgun, taze renkli saydam el boyası: tepede gök mavisinden ufukta ılık okraya geçen gök, doygun zümrüt kubbe, ılık krem taş, taze yeşil yapraklar, altın alem ve göbekler, gül pembesi tomurcuklar",
     "Yapraklarda noktasız bırakılmış açık damarlar; beyaz taç yapraklarda dibe doğru yoğunlaşan pembe noktalar",
     "Noktalı ışınlarla çevrili altın güneş ve altları noktayla gölgelenmiş bulutlar"
   ],
   "palet": [
     "#3F6FA8",
-    "#B9DAF0",
+    "#8CC0EA",
+    "#F3D9A4",
     "#1C5236",
-    "#4DB37C",
+    "#2AA068",
     "#5C3E2B",
-    "#F1E2C5",
-    "#9C4562",
-    "#F0C24A"
+    "#EFD6AC",
+    "#EDB52F"
   ],
-  "kodla_cizim": "Tek canvas, 2× iç çözünürlük, dış kaynak yok. Öğeler arkadan öne 1024 px'lik dört tampona boyanır: ton (0–1), mürekkep rengi, el boyası rengi ve yoğunluğu; her öğenin maskesi kutu boyutunda geçici tuvalde çizilir ve tonu SAHNE geometrisinden hesaplanan ışıktan gelir (kubbede Lambert + dilim fazı, silindirlerde yatay ışık, yaprakta taraf ve noktasız damar şeritleri, taç yaprakta dibe doğru artış). Her pikseli en son örten öğenin sıra numarası ayrıca tutulur. Konturlar yol boyunca eşit aralıklı nokta listesi olarak kaydedilir; öndeki bir öğe örtüyorsa çizilmez. El boyası tamponu 2048'e yumuşatılarak büyütülür, kâğıt dişi ve düşük frekanslı gürültüyle hafifçe düzensizleştirilip 'multiply' ile basılır. Sonra titrek bir ızgarada (1,85 px) aday noktalar tonla orantılı olasılık ve çapla seçilir, kenar yumuşatılmış diskler olarak piksel düzeyinde birikim tamponuna basılır, kontur noktaları eklenir ve bütün nokta katmanı mürekkep renkleriyle 'multiply' ile bindirilir.",
+  "kodla_cizim": "Tek canvas, 2× iç çözünürlük, dış kaynak yok. Öğeler arkadan öne 1024 px'lik dört tampona boyanır: ton (0–1), mürekkep rengi, el boyası rengi ve yoğunluğu; her öğenin maskesi kutu boyutunda geçici tuvalde çizilir ve tonu SAHNE geometrisinden hesaplanan ışıktan gelir (kubbede Lambert + dilim fazı, silindirlerde yatay ışık, yaprakta taraf ve noktasız damar şeritleri, taç yaprakta dibe doğru artış). Her pikseli en son örten öğenin sıra numarası ayrıca tutulur. Konturlar yol boyunca eşit aralıklı nokta listesi olarak kaydedilir; öndeki bir öğe örtüyorsa çizilmez. El boyasının rengi sabit ya da konuma bağlı olabilir (gökte maviden okraya geçiş). El boyası tamponu 2048'e yumuşatılarak büyütülür, kâğıt dişi ve düşük frekanslı gürültüyle hafifçe düzensizleştirilip 'multiply' ile basılır. Sonra titrek bir ızgarada (1,85 px) aday noktalar tonla orantılı olasılık ve çapla seçilir, kenar yumuşatılmış diskler olarak piksel düzeyinde birikim tamponuna basılır, kontur noktaları eklenir ve bütün nokta katmanı mürekkep renkleriyle 'multiply' ile bindirilir.",
   "etiketler": [
     "gravür",
     "noktalama",

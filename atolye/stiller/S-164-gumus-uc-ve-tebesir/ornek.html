@@ -670,7 +670,7 @@
     tohum: 1641, ince: [2.4, 0.6], orta: [8, 0.22], iri: [70, 0.12], kum: 0.22,
     dokuma: (X, Y) => 0.035 * (nf2(X / 260, Y / 9) - 0.5),
   });
-  const ZEM = hex('#DAE8E2').map((v) => v / 255);
+  const ZEM = hex('#D3E2DA').map((v) => v / 255);
   const kagit = (X, Y, h) => {
     const s = (nf3(X / 520, Y / 26) - 0.5) * 0.022 + (nf2(X / 900, Y / 700) - 0.5) * 0.02;
     const k = 0.99 + 0.02 * h + s;
@@ -720,9 +720,9 @@
       const r = BOLGE_AD[ids[i]];
       if (r === 'kubbe') {
         const l = kubbeIsik(x, y);
-        s = clamp((0.62 - l) * 1.35, 0, 0.85) + 0.2 * Math.pow(1 - dilim(x, y), 3) * (0.3 + 0.7 * (1 - l)) + 0.3 * sstep(538, 554, y);
+        s = clamp((0.74 - l) * 1.3, 0, 0.88) + 0.22 * Math.pow(1 - dilim(x, y), 3) * (0.3 + 0.7 * (1 - l)) + 0.3 * sstep(536, 554, y);
         const u = kU(x, y);
-        b = 0.65 * sstep(kabU(9), kabU(10), u) * (1 - sstep(kabU(11), kabU(12), u)) * sstep(545, 400, y) + 0.3 * sstep(0.82, 0.96, l);
+        b = 0.85 * sstep(kabU(8.6), kabU(9.6), u) * (1 - sstep(kabU(11.4), kabU(12.4), u)) * sstep(548, 420, y) + 0.5 * sstep(0.78, 0.95, l) * (1 - 0.5 * Math.pow(1 - dilim(x, y), 4));
         ty = 0.42 + 0.45 * (1 - l);
       } else if (r === 'kasnak') {
         const u = cylU(x, y);
@@ -763,11 +763,20 @@
   // silgiyle (stump) yayılmış çok soluk mavi tebeşir: göğün üstünde
   const L = laviKur(kucult(H), 164);
   const gokM = mEksi(bolgeMaske(ids, ['gok', 'gunes']), BM.hepsi);
-  lavi(L, mEksi(gokM, sinirla(kutuBulanik(bulutM, 3, 2))), '#B4D2EE', { guc: 0.55, kenar: 0, tane: 0.5, akis: 0.3, oyna: 2, yay: 6, yumusak: 0.6, f: (x, y) => (1 - sstep(30, 560, y)) * sstep(60, 220, Math.hypot(x - GX, y - GY)) });
+  lavi(L, mEksi(gokM, sinirla(kutuBulanik(bulutM, 3, 2))), '#A6C9EE', { guc: 0.66, kenar: 0, tane: 0.5, akis: 0.3, oyna: 2, yay: 6, yumusak: 0.6, f: (x, y) => (1 - sstep(30, 560, y)) * sstep(60, 220, Math.hypot(x - GX, y - GY)) });
+
+  // tebeşir: silgi ve parmakla yayılmış (stump) yumuşak renk; astarın dişinin tepelerine tutunur, çizgi bırakmaz
+  const TEBESIR = { kenar: 0, tane: -0.95, akis: 0.4, oyna: 2.2, yay: 3, yumusak: 0.55 };
+  const alan = (f) => { const M = new Float32Array(NN); for (let i = 0; i < NN; i++) M[i] = f(i); return sinirla(M); };
+  lavi(L, alan((i) => TY[i]), '#46A877', Object.assign({}, TEBESIR, { guc: 0.66 }));
+  lavi(L, alan((i) => TY[i] * sstep(0.3, 0.75, DS[i])), '#2E8460', Object.assign({}, TEBESIR, { guc: 0.4, yay: 5 }));
+  lavi(L, alan((i) => TZ[i]), '#F0B88E', Object.assign({}, TEBESIR, { guc: 0.6, akis: 0.5, yay: 6 }));
+  lavi(L, alan((i) => TG[i]), '#E58AA0', Object.assign({}, TEBESIR, { guc: 0.78, yay: 2, oyna: 1 }));
+  lavi(L, alan((i) => TO[i]), '#DDAA45', Object.assign({}, TEBESIR, { guc: 0.8, yay: 1, oyna: 0.5 }));
 
   // ================================================================ çizim katmanları
   const SIL = katman(), BEY = katman(), TEB = katman();
-  SIL.x.strokeStyle = '#687072';
+  SIL.x.strokeStyle = '#596062';
   BEY.x.strokeStyle = '#FBFCF7';
 
   /** Koşut tarama: aci doğrultusunda, aralik ile; her k çizgi bir yama (aynı kırılma noktaları), uçlar tona göre biter. */
@@ -810,17 +819,18 @@
   }
 
   // ---- tebeşir: geniş, yumuşak, astarın dişine takılan vuruşlar
-  tarama(TEB.x, harita(TY), { renk: '#36A268', aci: 2.15, aralik: 3.1, boy: [16, 30], esik: 0.2, w: 2.0, alfa: 0.82, kavis: 1.2, yama: 4 });
-  tarama(TEB.x, (x, y) => harita(TY)(x, y) * (harita(DS)(x, y) > 0.35 ? 1 : 0), { renk: '#25845A', aci: 1.75, aralik: 3.3, boy: [12, 24], esik: 0.3, w: 1.8, alfa: 0.6, kavis: 1, yama: 4 });
-  tarama(TEB.x, harita(TO), { renk: '#D9A63F', aci: 2.15, aralik: 2.6, boy: [12, 26], esik: 0.1, w: 2.4, alfa: 0.8, kavis: 1, yama: 4 });
-  tarama(TEB.x, harita(TZ), { renk: '#D9AE6A', aci: 3.08, aralik: 3.0, boy: [22, 48], esik: 0.1, w: 2.0, alfa: 0.85, kavis: 0.6, yama: 3 });
-  tarama(SIL.x, (x, y) => harita(TZ)(x, y) * (0.5 + 0.5 * nf3(x / 70, y / 30)), { aci: 3.1, aralik: 4.2, boy: [16, 40], esik: 0.36, w: 0.55, alfa: 0.6, kavis: 0.4, yama: 3 });
-  tarama(TEB.x, harita(TG), { renk: '#E28A9F', aci: 2.15, aralik: 2.2, boy: [8, 16], esik: 0.12, w: 2.6, alfa: 0.85, kavis: 0.8, yama: 4 });
+  // tebeşirin üstünde yalnız birkaç seyrek, yumuşak vuruş (kubbenin gölge yanında ve çiçek diplerinde)
+  tarama(TEB.x, (x, y) => harita(TY)(x, y) * sstep(0.45, 0.8, harita(DS)(x, y)), { renk: '#2F8A60', aci: 2.1, aralik: 5.2, boy: [14, 26], esik: 0.3, w: 1.5, alfa: 0.35, kavis: 1, yama: 4 });
+  tarama(SIL.x, (x, y) => harita(TZ)(x, y) * (0.5 + 0.5 * nf3(x / 70, y / 30)), { aci: 3.1, aralik: 3.4, boy: [16, 40], esik: 0.3, w: 0.75, alfa: 0.7, kavis: 0.4, yama: 3 });
 
   // ---- gümüş uç taraması: üç kat (ana eğik, yatıklaşan çapraz, dikleşen çapraz)
-  tarama(SIL.x, harita(DS), { aci: 2.1, aralik: 2.1, boy: [10, 22], esik: 0.1, w: 0.62, alfa: 0.9 });
-  tarama(SIL.x, harita(DS), { aci: 2.65, aralik: 2.3, boy: [9, 18], esik: 0.42, w: 0.58, alfa: 0.8 });
-  tarama(SIL.x, harita(DS), { aci: 1.62, aralik: 2.5, boy: [8, 16], esik: 0.66, w: 0.55, alfa: 0.8 });
+  const gumusTara = (D) => {
+    tarama(SIL.x, D, { aci: 2.1, aralik: 2.35, boy: [11, 24], esik: 0.08, w: 0.85, alfa: 0.95 });
+    tarama(SIL.x, D, { aci: 2.6, aralik: 2.5, boy: [9, 18], esik: 0.4, w: 0.78, alfa: 0.85 });
+    tarama(SIL.x, D, { aci: 1.65, aralik: 2.9, boy: [8, 16], esik: 0.7, w: 0.72, alfa: 0.75 });
+  };
+  // yapı ve gök önce; bitkilerin taraması, bitki konturları arkadaki çizgileri sildikten sonra
+  gumusTara((x, y) => (BM.hepsi[clamp(Math.round(y), 0, N - 1) * N + clamp(Math.round(x), 0, N - 1)] > 0.5 ? 0 : harita(DS)(x, y)));
 
   // ---- yapı konturları ve kaburgalar (gümüş uç, tek ve kesin çizgi)
   function gumus(p, o) {
@@ -867,8 +877,8 @@
   for (const b of bulutlar) for (const q of bulutKenari(b, 0.8)) gumus(q, { w: 0.5, alfa: 0.45, titre: 0.1 });
 
   // ---- beyaz guaş taraması (ışıklar)
-  tarama(BEY.x, harita(DB), { aci: 2.1, aralik: 2.0, boy: [8, 20], esik: 0.12, w: 0.95, alfa: 0.9, kavis: 0.6, yama: 5 });
-  tarama(BEY.x, harita(DB), { aci: 2.7, aralik: 2.3, boy: [7, 15], esik: 0.6, w: 0.9, alfa: 0.75, kavis: 0.5, yama: 5 });
+  tarama(BEY.x, harita(DB), { aci: 2.1, aralik: 2.3, boy: [9, 22], esik: 0.1, w: 1.3, alfa: 0.95, kavis: 0.6, yama: 5 });
+  tarama(BEY.x, harita(DB), { aci: 2.7, aralik: 2.6, boy: [7, 15], esik: 0.55, w: 1.2, alfa: 0.85, kavis: 0.5, yama: 5 });
   // güneş: dolu beyaz kurs
   BEY.x.fillStyle = '#FBFCF7';
   BEY.x.globalAlpha = 0.85;
@@ -918,6 +928,8 @@
       }
     }
   }
+
+  gumusTara((x, y) => (BM.hepsi[clamp(Math.round(y), 0, N - 1) * N + clamp(Math.round(x), 0, N - 1)] > 0.5 ? harita(DS)(x, y) : 0));
 
   // ================================================================ birleştir
   birlestir({

@@ -814,7 +814,7 @@
   // güneş: sıcak ışıltının ortasında kâğıt beyazı bir kurs, çevresinde tek ince altın halka
   {
     const p = [];
-    for (let a = -0.15; a <= PI2 - 0.35; a += 0.01) p.push([GX + Math.cos(a) * 42, GY + Math.sin(a) * 42]);
+    for (let a = -0.35; a <= PI2 + 0.05; a += 0.01) p.push([GX + Math.cos(a) * 42, GY + Math.sin(a) * 42]);
     altin(p, { w: 3.0, sis: 0.3, titre: 0.12 });
   }
   // bulutlar: ışığa bakan üst-sağ kenarlarda ince altın

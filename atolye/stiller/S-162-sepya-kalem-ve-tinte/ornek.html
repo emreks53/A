@@ -797,7 +797,7 @@
       const d = D(px, py);
       if (d <= 0) continue;
       if (Math.pow(clamp(d, 0, 1), o.us) * o.yogun <= ign(i, j)) continue;
-      const r = o.r * (0.8 + 0.4 * hashF(i, j, 13));
+      const r = o.r * (0.72 + 0.5 * clamp(d, 0, 1)) * (0.82 + 0.36 * hashF(i, j, 13));
       mx.globalAlpha = 0.75 + 0.25 * hashF(i, j, 17);
       mx.beginPath();
       mx.ellipse(px, py, r * (1 + hashF(i, j, 19) * 0.25), r, hashF(i, j, 23) * Math.PI, 0, PI2);
@@ -812,24 +812,24 @@
     if (bolgeAd(x, y) !== 'kubbe') return 0;
     const l = kubbeIsik(x, y);
     const f = dilim(x, y);
-    return clamp((0.74 - l) * 1.55, 0, 0.92) + 0.3 * Math.pow(1 - f, 3) * (0.35 + 0.65 * (1 - l)) + 0.3 * sstep(532, 554, y);
+    return clamp((0.8 - l) * 1.7, 0, 0.97) + 0.32 * Math.pow(1 - f, 3) * (0.35 + 0.65 * (1 - l)) + 0.32 * sstep(530, 554, y);
   }, { aralik: 2.45 });
   noktala(330, 555, 790, 692, (x, y) => {
     if (bolgeAd(x, y) !== 'kasnak') return 0;
     const u = cylU(x, y);
-    return clamp((0.7 - silindirIsik(u)) * 1.4, 0, 0.85) + (y < 570 ? 0.6 * sstep(570, 556, y) : 0) + (y >= 610 && y < 622 ? 0.45 * sstep(622, 611, y) : 0);
+    return clamp((0.76 - silindirIsik(u)) * 1.55, 0, 0.92) + (y < 572 ? 0.62 * sstep(572, 556, y) : 0) + (y >= 610 && y < 624 ? 0.5 * sstep(624, 611, y) : 0);
   }, { aralik: 2.5 });
   noktala(240, 140, 360, 800, (x, y) => {
     if (bolgeAd(x, y) !== 'minare' || (x >= 289 && y >= 691.5)) return 0;
     const u = (x - 300) / mYari(y);
-    let d = 0.18 + 0.62 * sstep(-0.05, -0.92, u);
+    let d = 0.82 * sstep(0.05, -0.9, u);
     if ((y > 468 && y < 494) || (y > 300 && y < 321) || (y > 206 && y < 214)) d += 0.45;
     if ((y > 436 && y < 442) || (y > 272 && y < 277)) d += 0.3;
     return d;
   }, { aralik: 2.4 });
   noktala(288, 690, 832, 800, (x, y) => {
     if (bolgeAd(x, y) !== 'kaide') return 0;
-    let d = 0.34 * sstep(380, 300, x) + 0.08;
+    let d = 0.42 * sstep(380, 300, x);
     if (y >= 704 && y < 720) d += 0.62 * sstep(720, 705, y);
     return d;
   }, { aralik: 2.5 });
@@ -838,7 +838,7 @@
   // zemin: yapının dibinde sola düşen gölge, seyrek noktalar
   noktala(180, 800, 300, 822, (x, y) => (bolgeAd(x, y) !== 'zemin' ? 0 : 0.55 * sstep(820, 801, y) * sstep(180, 240, x)), { aralik: 2.4 });
   // zemin: kumun sabırlı, seyrek noktalaması (ufka doğru sıklaşır)
-  noktala(0, 801, 1024, 1024, (x, y) => (bolgeAd(x, y) !== 'zemin' ? 0 : 0.2 * (1 - sstep(800, 1000, y)) * (0.55 + 0.9 * nf(x / 60, y / 25))), { aralik: 3.0, r: 0.72 });
+  noktala(0, 801, 1024, 1024, (x, y) => (bolgeAd(x, y) !== 'zemin' ? 0 : 0.16 * (1 - sstep(800, 1000, y)) * (0.5 + 0.9 * nf(x / 60, y / 25))), { aralik: 3.0, r: 0.7 });
   // ---- kısa taramalar: kubbenin gölge kenarında meridyen boyunca, korniş altında, pencerelerde
   const kubbeX = (b, y) => 560 + Math.sin(b) * kubbeR(y);
   for (let k = 0; k < 16; k++) {
