@@ -1,0 +1,22 @@
+{
+  "kod": "S-045",
+  "no": 45,
+  "ad": "Enkostik",
+  "ad_en": "Encaustic",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Sıcak, pigmentli balmumu katları: saydam derinlik ve içten ışıltı, kaynaşmış pürüzsüz alanlar, kazınmış, damlatılmış ve oyulmuş dokular.",
+  "tanim": "Enkostik, pigmentin eritilmiş balmumu ve damar reçinesiyle karıştırılıp sıcakken ahşap panoya sürüldüğü, her katın ısıyla bir öncekine kaynaştırıldığı bir tekniktir. Mum yarı saydam olduğu için alttaki katlar üsttekilerin arasından ışır; resim derin, sıcak ve hafif sütlü görünür. Isıyla eritilen alanlar pürüzsüz ve yumuşak kenarlı olur, fırçayla hızlı sürülen yerlerde mum yığılıp dokulanır; kazıyıcıyla alt katlar açılır, oyulan çizgiler koyu boyayla doldurulur, eriyen mum kenarlarda göllenip ince sırtlar bırakır. Yüzey cilalanınca saten bir parlaklık kazanır.",
+  "koken": "Teknik Antik Yunan ve Roma'da gemi ve duvar boyamasında kullanıldı; en ünlü örnekleri MS 1.–3. yüzyıl Mısır'ının Fayum mumya portreleridir. Erken Bizans ikonalarından sonra unutuldu; 20. yüzyılda Diego Rivera duvarlarda, Jasper Johns 'Bayrak' (1954–55) dizisinde kullandı, ardından taşınabilir ısıtıcıların yaygınlaşmasıyla çağdaş ressamlar arasında katman, doku ve ışıltı arayışının malzemesi oldu.",
+  "ayirt_edici": [
+    "Sıcak okra alt katın turkuaz gökten ve zümrüt kubbeden ışıması; sütlü beyaz ve serin mavi mum perdeleriyle katmanlı derinlik",
+    "Isıyla kaynaşmış pürüzsüz kubbe ve güneş çevresinin yanında, gökün alt yanlarında ve çayırda fırçayla yığılmış dokulu mum",
+    "Güneşin yanında ve gökün iki yanında kazıyıcıyla çapraz sıyrılıp turuncu alt katı gösteren şeritler",
+    "Perde, kubbe, çiçek ve güneş kenarlarında göllenmiş mumun ince parlak sırtları; gökte damlamış mum benekleri ve kısa akıntılar",
+    "Kubbe kaburgaları, kasnak, kaide ve minare çevresinde, güneşin etrafında oyulup koyu boyayla doldurulmuş çizgiler",
+    "Yumuşak, hafif bulanık kenarlar ve kabartılarda sağ üstten gelen saten parlama"
+  ],
+  "palet": ["#5B9FA2", "#689690", "#E8B050", "#FFF5BB", "#4E8554", "#20372A", "#EFDCB6", "#B96E3F"],
+  "kodla_cizim": "2048 px'lik renk tamponunun yanında bir mum kalınlığı (yükseklik) tamponu tutulur. Katlar sırayla eklenir: sıcak okra taban, renk blokları, saydam turkuaz gök (güneş çevresinde sarı-turuncu ışıltı), sütlü, sıcak ve serin perdeler, yumuşak beyaz bulutlar, yapı, kubbe ve bitkiler. Her kat Path2D'den çıkarılan maskenin bulanıklaştırılıp gürültüyle eşiklenmesiyle yumuşak kenarlı, kısmen saydam karışır, mum rengine doğru hafif sütleşir ve kalınlık ekler. Kazıyıcı, alt kat anındaki kopyaya dönen çapraz anizotrop gürültü şeritleriyle yapılır ve kalınlığı düşürür. Fırça yığınları kısa, kalın darbelerin bulanıklaştırılmış yükseklik izidir; perde sınırlarında ve biçim kenarlarında göllenmiş mum, gürültü eşiğine ve bulanık maskeye göre ince sırtlar olarak eklenir. Renk tamponu hafifçe bulanıklaştırılır, sonra oyulmuş çizgiler koyu dolguyla ve çukur olarak, damla ve benekler parlak kabartı olarak eklenir. Son geçişte yükseklik normallerinden sağ üstten yayınık ışık ve yumuşak, saten bir Blinn-Phong parlaması verilir; kalın mumda renk biraz ısınır.",
+  "etiketler": ["enkostik", "balmumu", "katmanlı", "saydam", "doku", "kazıma", "ahşap pano", "geleneksel"]
+}
