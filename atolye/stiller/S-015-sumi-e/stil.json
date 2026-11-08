@@ -1,22 +1,22 @@
 {
   "kod": "S-015",
   "no": 15,
-  "ad": "Sumi-e (Mürekkep Lavi)",
-  "ad_en": "Sumi-e Ink Wash",
+  "ad": "Renkli Sumi-e",
+  "ad_en": "Ink Painting with Color",
   "aile": "Uzak Doğu",
   "ozgun": false,
-  "ozet": "Pirinç kâğıdına tek mürekkebin sulandırılmış tonlarıyla, az, kendinden emin fırça vuruşu ve bol boşluk.",
-  "tanim": "Sumi-e (Çincede shuimo hua), çubuk mürekkebin suyla farklı yoğunluklarda açılıp yumuşak fırçayla emici pirinç kâğıdına uygulandığı resim geleneğidir. Her vuruş tek seferde ve düzeltilmeden yapılır: fırça bastırılıp kaldırılarak yaprak biçimlenir, kuruyan fırça 'kasure' denen beyaz çizgili izler bırakır, ıslak mürekkep kâğıdın liflerine yayılır. Boşluk (ma) resmin parçasıdır; sis, uzaklık ve ışık boş bırakılan kâğıtla anlatılır. Renk çok az kullanılır, resim çoğunlukla kırmızı bir mühürle tamamlanır.",
-  "koken": "Tang ve Song Çin'inde gelişti; geleneği Wang Wei'ye bağlanır, Mu Qi ve Liang Kai gibi Chan (Zen) ressamlarıyla olgunlaştı. 13–14. yüzyıllarda Zen keşişleriyle Japonya'ya geçti ve Muromachi döneminde Sesshū Tōyō ile doruğa ulaştı. Bambu, erik çiçeği, orkide ve krizantem, yani 'dört soylu bitki', fırça eğitiminin temelidir.",
+  "ozet": "Az ve kendinden emin mürekkep vuruşlarına eklenen saydam renk lavları: malakit yeşili, çivit mavisi, okra, erik pembesi ve kırmızı mühür.",
+  "tanim": "Renkli sumi-e (Japoncada tansai, 'hafif renk'), mürekkep resminin fırça ekonomisini ve boşluğunu koruyup üstüne saydam bitkisel ve mineral renkler sürülmesidir. Biçim yine tek seferde, düzeltilmeden yapılan mürekkep vuruşlarından gelir: yan fırçanın ucu koyu, topuğu soluktur, kuruyan fırça 'kasure' izleri bırakır. Renk ise ıslak kâğıda düşmüş lavlar ya da doğrudan renkle yüklenmiş fırça noktalarıdır: gökte ve sis bantlarında çivit mavisi, mimaride malakit yeşili, çiçeklerde pembe ve koyu kırmızı. Boş bırakılan kâğıt (ma) resmin parçası olarak kalır; resim kırmızı bir mühürle tamamlanır.",
+  "koken": "Mürekkep resmi Tang ve Song Çin'inde gelişti, Zen keşişleriyle Japonya'ya geçip Muromachi döneminde Sesshū Tōyō ile doruğa ulaştı. Mürekkebe hafif renk katma da eski bir yoldur: Çin'de Yuan döneminden beri açık kırmızı-kahve ve mavi lavlarla yapılan 'qianjiang' manzaraları, Japonya'da tansai resimleri bunun örnekleridir. Erik çiçeği, 'dört soylu bitki'nin ilkidir; Wu Changshuo gibi ustalar koyu mürekkep dallara kırmızı ve pembe çiçekler kondurmuştur. Renkler sınırlıdır: çivit, malakit (rokushō), sarı gamboj ve okra, koşnil kırmızısı (enji), mühürde zencefre.",
   "ayirt_edici": [
-    "Kubbenin gölge yanı tek bir yan fırça vuruşudur: fırçanın ucunda koyu, topuğunda soluk mürekkep; aşağıda kuruyup kıl kıl açılır",
-    "Tepeden inip kuruyarak sönen birkaç hızlı kaburga çizgisi; ışık yanında kubbenin sağ kenarı neredeyse kaybolur",
-    "Kasnak, yoğunluğu soldan sağa azalan fırça noktalarından bir bant; gölge yanında ıslak noktalar lavın içine akar",
-    "Kuru fırçanın 'kasure' izi erik gövdesinde, korniş ve kasnak çizgilerinde; ıslak vuruşların kenarında mürekkep liflere yayılır",
-    "Bol boşluk (ma): kaide ve minarenin alt yanı sise karışır, güneş boş bırakılmış soluk bir dairedir; sol alt köşeden giren erik dalında kümeler hâlinde çiçek, tomurcuk ve yosun noktaları",
-    "Çok az renk: kubbe ve kasnakta soluk yeşil, alem kürelerinde okra; sağ altta yazısız, geometrik desenli küçük kırmızı mühür"
+    "Kubbe malakit yeşili bir lavdır; gölge yanında tek bir koyu yan fırça vuruşu ve birkaç hızlı, kuruyarak sönen kaburga çizgisi biçimi verir",
+    "Üstte, solda koyu, aşağı ve güneşe doğru kâğıda açılan çivit mavisi dereceli gök lavı (bokashi); güneş, minare ve alemler boş kalır",
+    "Kubbenin sağında, solda ve kaidenin eridiği yerde yatay, tırtıklı çivit sis bantları (kasumi); kaide ve minarenin alt yanı sise karışır",
+    "Kuru fırçalı (kasure) mürekkep erik dalı üzerinde pembe lavlı taç yaprakları, sarı başlı ercikler, koyu kırmızı tomurcuk noktaları ve dış çizgisiz pembe-kırmızı (mogu) çiçekler",
+    "Okra-altın alem küreleri, güneşin içinde hafif sıcak bir okra",
+    "Alt yarıda bol boşluk (ma) ve sağ altta yazısız, geometrik desenli zencefre kırmızısı mühür"
   ],
-  "palet": ["#F3EDE0", "#C9CBB6", "#A09F90", "#5F6154", "#141415", "#D2AA69", "#BE4439"],
-  "kodla_cizim": "Canvas 2048 px; mürekkep bir yoğunluk alanında birikir ve kâğıt rengine Beer-Lambert benzeri üstel bir azalmayla uygulanır. Fırça vuruşu, omurga boyunca 0,5 px adımlarla enine taranır: fırça 5–76 kıldan oluşur, her kılın kendi mürekkep yükü ve kuruma hızı vardır (kenardaki kıllar önce kurur); kuruyan kıl kâğıdın ince tanesinin yalnız tepelerine değer, böylece kasure çizgileri ve tanecikli kuru fırça kendiliğinden oluşur. Kıllar arasında enine ton farkı yan fırçanın ucu koyu, topuğu soluk yüklemesini verir; bastırılan baş yuvarlanır, uç sivrilir. Vuruşun ıslak payı ayrı bir alana yazılır ve sonda iki kutu bulanıklığından uzamış lif gürültüsüyle seçilen bir saçak olarak kâğıda yayılır. Lavlar bulanık maskelerden hesaplanır: eşikleri gürültüyle tırtıklanır, kuruyan kenarda mürekkep birikir, içte tanelenir; birkaç geri akma (çiçeklenme) lekesi eklenir. Kaide ve minarenin alt yanı gürültülü bir sis maskesiyle söner. Erik çiçekleri iki kısa kavisli taç yaprağı çizgisi ve noktalı erciklerle, kendi düzleminde basıklaştırılarak çizilir; arkalarındaki dal silinir. Yeşil ve okra ayrı renk katmanlarıdır; mühür oyulmuş geometrik çizgiler ve damga dokusuyla çizilir.",
-  "etiketler": ["sumi-e", "mürekkep", "lav", "fırça", "Uzak Doğu", "zen", "boşluk", "monokrom"]
+  "palet": ["#F1EBDE", "#7590C1", "#4D936F", "#C49947", "#E4A1A8", "#CB213D", "#DB4930", "#131315"],
+  "kodla_cizim": "Canvas 2048 px; mürekkep bir yoğunluk alanında birikir ve kâğıt rengine Beer-Lambert benzeri üstel bir azalmayla uygulanır. Mürekkep çizimi eskisi gibidir: fırça vuruşu omurga boyunca enine taranan, her biri kendi mürekkep yüküyle kuruyan 5–76 kıldan oluşur (kasure ve tanecikli kuru fırça kendiliğinden çıkar), ıslak pay sonda liflere yayılır; lavlar bulanık maskelerin gürültüyle tırtıklanmış eşikleriyle, kenarda biriken mürekkeple hesaplanır. Renk dört 1024 px lav katmanında (malakit yeşili, okra, çivit mavisi, erik pembesi) aynı lav işleviyle üretilir ve kâğıdı mürekkepten önce çarpar: gök, siluetleri ve güneşi oyulmuş dereceli bir maske; sis bantları çok bulanık elipsler; taç yaprağı lavları çiçeğin kendi düzlemindeki dairelerden, göbeğe doğru koyulaşarak. Ayrıca fırça mürekkep yerine renkle yüklenebilir: tomurcuk ve mogu çiçek noktaları koşnil kırmızısı (enji), ercik başları sarı bir 2048 px alana yazılır ve kanal başına ayrı soğurma katsayılarıyla, hafif bir ıslak yayılmayla uygulanır. Mühür oyulmuş geometrik çizgiler ve damga dokusuyla zencefre kırmızısı basılır.",
+  "etiketler": ["sumi-e", "mürekkep", "tansai", "lav", "fırça", "Uzak Doğu", "erik çiçeği", "boşluk"]
 }

@@ -1,22 +1,22 @@
 {
   "kod": "S-005",
   "no": 5,
-  "ad": "Gravür (Kalem Tarama)",
-  "ad_en": "Engraving (Pen & Ink Hatching)",
+  "ad": "Elle Renklendirilmiş Gravür",
+  "ad_en": "Hand-Colored Engraving",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Kalınlığı şişip incelen paralel çizgilerle, krem kâğıda yalnız siyah mürekkeple kurulan ton.",
-  "tanim": "Gravür (kalem tarama), bakır ya da çelik levhaya kalemle (burin) kazınan çizgilerin mürekkeplenip basılmasıyla oluşan resim dilidir. Gri ton yoktur: ton, biçimi izleyen paralel çizgilerin kalınlığı ve aralığıyla, koyu yerlerde çapraz taramayla, geçişlerde noktalamayla kurulur. Çizgiler kontrollü ve keskindir, uçları iğne gibi incelerek biter. Eski kitap resimlerinde, haritalarda, banknot ve pullarda, senet ve sertifikalarda kullanılır.",
-  "koken": "15. yüzyılda kuyumcu atölyelerinden doğan bakır gravür, Martin Schongauer ve Albrecht Dürer ile olgunlaştı; 17. yüzyılda Claude Mellan tonu tek bir şişip incelen çizgiyle kurmayı ustalığa vardırdı. 19. yüzyılda çelik gravür kitap resminin, 20. yüzyılda Czesław Słania gibi ustaların elinde pul ve banknot gravürünün dili oldu.",
+  "ozet": "Siyah mürekkeple basılmış kalem taramalı gravürün üstüne fırçayla sürülmüş saydam, düz suluboya yıkamaları.",
+  "tanim": "Elle renklendirilmiş gravür, bakır ya da çelik levhadan siyah mürekkeple basılan resmin sonradan fırçayla, saydam suluboyayla boyanmasıdır. Ton ve biçim yine şişip incelen paralel çizgilerden, çapraz taramadan ve noktalamadan gelir; renk bunların altında görünen düz yıkamalar olarak durur. Her renk tek seferde sürüldüğü için yıkamalar düzdür, kenarlarında boya birikir, yer yer çizginin dışına taşar ya da çizgiye varmadan durur. 18. ve 19. yüzyıl gezi kitaplarında, botanik levhalarda, haritalarda ve manzara baskılarında yaygındır.",
+  "koken": "Baskı resmi elle boyama 15. yüzyıl tahta baskılarına kadar gider; 18. ve 19. yüzyılda bakır ve çelik gravürlü gezi albümleri, botanik ve doğa tarihi levhaları (örneğin John James Audubon'un Amerika Kuşları albümü), haritalar atölyelerde çalışan renklendiricilerce boyandı. Renklendiriciler örnek bir levhaya bakarak sınırlı bir paletle çalışırdı: Prusya mavisi, bakır yeşili (verdigris), gamboj sarısı, sarı aşı boyası, gül kökü kırmızısı, özsu yeşili. Kromolitografinin yaygınlaşmasıyla 19. yüzyılın sonunda yerini basılı renge bıraktı.",
   "ayirt_edici": [
-    "Kalınlığı tona göre şişip incelen, uçları iğne gibi biten paralel çizgiler",
-    "Kubbede dilimler arasında kabaran ∩ biçimli enlem çizgileri; gölge yanında meridyenlerle çapraz tarama",
-    "Gökte güneşe yaklaştıkça incelip kaybolan yatay çizgiler, ince ışınlı güneş ve çizgilerin seyrelmesiyle beliren bulutlar",
-    "Kasnakta, kaidede ve minarede silindiri izleyen yatay çizgiler; pencerelerde sık çapraz tarama",
-    "Kubbenin parıltısında çizgilerin kısa vuruşlara, sonra küçülen noktalara dönüşmesi; zeminde ve çiçek ortalarında noktalama",
-    "Krem kâğıt üzerinde ince çift çizgili çerçeve"
+    "Değişmeden duran gravür çizgisi: kalınlığı tona göre şişip incelen paralel çizgiler, kubbede enlem yayları ve meridyenlerle çapraz tarama, noktalama",
+    "Çizgilerin altında düz, saydam yıkamalar: bakır yeşili kubbe ve kasnak, gamboj sarısı güneş, altın alemler, gül kırmızısı çiçekler, özsu yeşili yapraklar",
+    "Kenarında boya biriken, yer yer çizginin dışına taşan ya da çizgiye varmadan duran tırtıllı yıkama sınırları (kubbenin sağında göğe taşan yeşil, güneşin çevresinde mavi ile sarı arasında kalan ince boşluk)",
+    "Yukarıda koyu, ufka doğru açılan mavi gök yıkaması; bulutlar boyanmadan kâğıdın kremi olarak bırakılmış",
+    "Boyanın hafif düzensizliği: kubbenin gölge yanına sürülmüş ikinci yeşil kat, gökte yatay fırça izleri, pigment tanesi",
+    "Krem kâğıtta ince çift çizgili çerçeve ve iki çizgi arasında açık bakır yeşili bir şerit"
   ],
-  "palet": ["#F1E7CF", "#E7DDC6", "#C3BAA7", "#5E584E", "#17130F"],
-  "kodla_cizim": "Canvas 2048 px. Her öğe için biçimi izleyen kılavuz çizgi aileleri kurulur: gökte yatay, kubbede kaburga dilimleri arasında hafifçe kabaran ∩ biçimli enlem yayları ve meridyenler, kasnak, kaide ve minarede yatay silindir çizgileri, yapraklarda damar yönünde eğik çizgiler, taç yapraklarda merkezden yayılan çizgiler. Ton kubbe profilinden Lambert ışığıyla, silindirlerde yüzey açısına göre, gökte güneşe uzaklık ve bulut maskesiyle hesaplanır. Her çizgi 1,4 px aralıklarla örneklenir; genişliği tona göre 0,5 px'den aralığın yaklaşık %85'ine kadar şişer, eşiğin altında kesilir, uçları iğne gibi incelir. Şeritler tek bir Path2D'de dolgu olarak çizilir; rasterleştiricinin kalınlık basamakları kontur gibi görünmesin diye her çizgi piksel altı kaydırılır. Çapraz tarama ikinci ve üçüncü ailelerle yalnız koyu yerlerde yapılır. Kubbenin parıltısına yaklaşan enlem çizgileri önce incelir, sonra kesik kısa vuruşlara bölünür, en sonunda aynı yolun üzerinde dizilen, küçülüp seyrelerek kaybolan noktalara döner; zemin ve çiçek ortaları serbest noktalamayla kurulur; öndeki öğe arkadakini kâğıt rengiyle örter. Sonda piksel piksel kâğıt dokusu, levha izi ve mürekkebin hafif dağılması eklenir.",
-  "etiketler": ["gravür", "kalem tarama", "bakır levha", "banknot", "siyah beyaz", "çizgi", "baskı resim", "eski kitap"]
+  "palet": ["#EAE0C9", "#91A9B0", "#679D78", "#E4CC94", "#A88338", "#D48385", "#6A8149", "#26201A"],
+  "kodla_cizim": "Canvas 2048 px. Gravür çizimi eskisi gibidir: her öğe için biçimi izleyen kılavuz çizgi aileleri, tona göre 0,5 px'den aralığın yaklaşık %85'ine kadar şişen, uçları incelen şerit çizgiler, koyu yerlerde çapraz tarama, parıltıya doğru kısa vuruşlara ve noktalara dönen enlem çizgileri; öndeki öğe arkadakini kâğıt rengiyle örter. Renklendirme ayrı bir 1024 px'lik çarpımlı katmanda yapılır: her yıkama SAHNE yollarından çizilen bir maskedir (kubbe, kasnak, alemler, taş yapı, zikzak bant, saplar ve yapraklar, taç yaprakları, göbekler, gök, güneş, zemin, çerçeve şeridi), çizgiye tam oturmayan elin taklidi olarak 1–3 px kaydırılır, kimi yerde birkaç piksel şişirilir. Gök ve zemin yıkamaları binaların ve bitkilerin çevresinden ayrı bir kaymayla oyulur; bulutlar bulanık bir maskeyle boş bırakılır. Maske bulanıklaştırılıp gürültülü bir eşikle kesilir (tırtıllı kenar); eşiğe yakın yerde yoğunluk artar (kenarda biriken boya); iri ölçekli gürültü, pigment tanesi ve gökte yatay uzatılmış gürültüyle fırça izi yoğunluğu oynatır. Son adımda piksel piksel krem kâğıt, kâğıt dokusu ve levha izi suluboya katmanıyla çarpılır, mürekkep en üste biner.",
+  "etiketler": ["gravür", "elle renklendirme", "suluboya", "kalem tarama", "bakır levha", "baskı resim", "eski kitap", "botanik levha"]
 }

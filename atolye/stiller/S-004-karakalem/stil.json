@@ -1,22 +1,22 @@
 {
   "kod": "S-004",
   "no": 4,
-  "ad": "Karakalem",
-  "ad_en": "Graphite Pencil Drawing",
+  "ad": "Renkli Karakalem",
+  "ad_en": "Tinted Graphite Drawing",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Kâğıdın dişine tutunan grafitle, biçimi izleyen tarama ve tekrar eden eskiz çizgileri.",
-  "tanim": "Karakalem, grafit kurşun kalemle yalnız gri tonlarla yapılan çizimdir. Ton, kalemin baskısıyla ve biçimin üzerinde dolaşan paralel ya da çapraz taramayla kurulur; yer yer parmakla ya da kâğıt kalemle (estompe) yayılarak yumuşatılır. Kurgu çizgileri, tekrar eden konturlar ve kenarlara doğru yarım bırakılan alanlar çizime canlılık verir. Eskiz defterlerinde, mimari ve akademik çizimde, resim hazırlıklarında kullanılır.",
-  "koken": "Grafit, 16. yüzyılda İngiltere'de Borrowdale'de bulunan saf yataklarla çizime girdi; 1795'te Nicolas-Jacques Conté'nin grafiti kille karıştırıp pişirerek yaptığı kalem, bugünkü sertlik derecelerini (H–B) mümkün kıldı. Jean-Auguste-Dominique Ingres'in kurşun kalem portreleri ve Adolph Menzel'in eskizleri tekniğin ustalık örnekleridir; akademik resim eğitiminde bugün de temel derstir.",
+  "ozet": "Grafit taramanın değerleri taşıdığı, üstüne kâğıt dişine tutunan renkli kalem sırlarının sürüldüğü çizim.",
+  "tanim": "Renkli karakalem, kurşun kalemle kurulan bir çizimin renkli kalem ya da renkli grafitle sırlanmasıdır. Işık ve gölge yine grafitin taramasından, tekrar eden konturlardan ve parmakla yayılmış lekelerden gelir; renk bu değerlerin üstüne saydam, üst üste binen katlar hâlinde sürülür. Mumlu boya önce kâğıdın dişinin tepelerine tutunur, bu yüzden renk düz bir dolgu değil, beyaz beneklerle nefes alan bir doku olur. Mimari eskizlerde, botanik çizimde ve resimli kitap hazırlıklarında sık kullanılır.",
+  "koken": "Kurşun kalem çizimini renkle canlandırma geleneği eskidir: 18. yüzyılda Antoine Watteau gibi ressamlar siyah, kırmızı ve beyaz tebeşirle (trois crayons) çalıştı; 19. yüzyıl gezgin ve mimar eskizlerinde grafit çizim hafif renkle desteklendi. Mumlu renkli kalemler 20. yüzyılın başında yaygınlaştı; bugün grafite renk özü katılmış renkli grafit kalemleri bu iki dünyayı tek uçta birleştirir. Ressamlar renkli kalemi önce hafif baskıyla sırlayıp katları üst üste bindirerek koyulaştırır.",
   "ayirt_edici": [
-    "Kubbede kaburgalar boyunca uzanan tarama; gölge yanında enlem yaylarını izleyen çapraz tarama",
-    "İki üç kez, hafifçe kayarak ve baskısı değişerek çizilmiş konturlar; gölge yanında daha kalın çizgi",
-    "Kubbe ve minare eksenlerini, kat hizalarını ve kubbenin oranını gösteren açık kurgu çizgileri",
-    "Parmakla yayılmış yumuşak gri lekeler; ışıklı kenarlara yaslanıp dışa doğru düzgünce sönen derli toplu hale taraması",
-    "Grafitin kâğıt dişinde kırılan tanesi; koyu pencerelerde ve gölgelerde hafif metalik parlaklık",
-    "Kenarlara doğru gölgesi silinip yalnız çizgisi kalan, yarım bırakılmış çiçek ve yapraklar"
+    "Kubbede kaburgalar boyunca sürülmüş renkli kalem katları: ışıklı yanda adaçayı yeşili, gölge yanında zümrüt; altındaki grafit tarama değerleri taşımayı sürdürür",
+    "Kâğıdın dişine tutunan renk: sırların içinde beyaz benekler, renk düz dolgu değil kalem dokusu",
+    "Grafit taramanın boyalı yerlerde altındaki rengin koyusuna çalması (renkli grafit): kasnakta koyu yeşil, pencerelerde mor-kahve gölgeler",
+    "Üstte yoğun, ufka ve güneşe doğru baskısı azalarak sönen mavi gök taraması; bulutlar kâğıdın beyazı olarak bırakılmış, güneşin çevresinde dairesel sıcak vuruşlar",
+    "Aşı boyası-altın alemler, minarenin zikzak bandında kiremit kırmızısı bir çizgi, sıcak taş tonlu minare ve kaide",
+    "Dipten uca açılan gül pembesi taç yaprakları, sarı göbekler ve iki tonlu yeşil yapraklar; kenarlara doğru yarım kalıp sönen çizim"
   ],
-  "palet": ["#F1EFE9", "#E4E2DD", "#D1D0CC", "#8F8F8F", "#5D5E62", "#49494D", "#2A2B31"],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte; çizim önce ayrı bir grafit yoğunluğu katmanına yapılır. Bölge haritası ve kubbe profilinden bir ton haritası çıkarılır (kubbede hafif dışbükey dilimlerle Lambert ışığı, kasnak ve minarede silindir gölgesi). Her öğenin kılavuz çizgileri (kubbede meridyenler ve ∩ biçimli enlem yayları, kasnakta dikey, kaidede eğik, yapraklarda damar yönünde) 14–64 px'lik, uçları degradeyle incelen kalem vuruşlarına bölünür; vuruşun çizilip çizilmeyeceği ve koyuluğu tona göre, eşikleri farklı üç dört katmanla belirlenir. Gökte ve öndeki zeminde tarama, her kılavuz çizgisinde tonun eşiği aştığı kesimi tek (uzunsa birkaç ardışık) vuruşla çizer; baskı tona göre degradeyle azaldığından siluete yaslanan, dışa doğru sönen derli toplu bir hale oluşur. Konturlar düşük frekanslı titreşimle kaydırılan iki üç geçişte, parça parça değişen baskıyla çizilir. Öndeki öğe arkadakinin izini 'destination-out' ile siler, ton haritasından bulanıklaştırılmış lekeler yayma gölgesini verir, gürültülü elips bir maske çizimi kenarlarda söndürür. Son adımda piksel piksel iki ölçekli kâğıt dişiyle birleşir: grafit önce dişin tepelerine tutunur, baskı arttıkça çukurlar dolar; en koyu yerlere soğuk bir parlaklık eklenir.",
-  "etiketler": ["kurşun kalem", "grafit", "eskiz", "tarama", "monokrom", "çizim", "akademik", "kâğıt dokusu"]
+  "palet": ["#EEECE6", "#7EA1D0", "#7FA282", "#153A2C", "#A57136", "#D18390", "#5C8C5F", "#D4C0A8"],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, iki ayrı katman: grafit yoğunluk katmanı ve beyaz zeminli, 'multiply' ile boyanan renkli kalem katmanı. Grafit çizimi eskisi gibidir: bölge haritası ve kubbe profilinden çıkarılan ton haritasına göre biçimi izleyen tarama, çapraz tarama, tekrar eden konturlar, kurgu çizgileri, yayma gölgeler. Renk katmanı aynı tarama fonksiyonuyla, ayrı bir tohumlu rastgele diziyle (grafit vuruşları değişmesin diye) daha kalın uçla ve sık çizilir; renk her vuruşta konuma ve tona göre bir renk rampasından seçilir (kubbede adaçayı → zümrüt, taşta krem → toprak, taç yaprağında pembe → koyu gül). Gökte ve yerde sönme vuruşları seyrelterek değil baskıyı azaltarak yapılır; güneşin halesi eş merkezli dairesel vuruşlardır. Öndeki öğe arkadakinin hem grafitini hem rengini siler. Son adımda piksel piksel birleştirme: kâğıt rengi renk katmanıyla çarpılır, boya iki ölçekli kâğıt dişinin önce tepelerine tutunur ve yoğunlaştıkça çukurları doldurur; grafit en üste biner, boyalı yerde biraz hafifler ve altındaki rengin koyusuna çalar; en koyu yerlerde grafitin soğuk parlaklığı kalır.",
+  "etiketler": ["kurşun kalem", "grafit", "renkli kalem", "renkli grafit", "eskiz", "tarama", "çizim", "kâğıt dokusu"]
 }

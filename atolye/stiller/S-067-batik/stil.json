@@ -1,0 +1,22 @@
+{
+  "kod": "S-067",
+  "no": 67,
+  "ad": "Batik",
+  "ad_en": "Batik",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Pamuklu bezde mumla boyama: krem mum çizgileri, açıktan koyuya boya katmanları ve çatlayan mumdan sızan koyu damarlar.",
+  "tanim": "Batik, sıcak mumun bez üstüne tjanting (ince ağızlı bakır kalem) ya da cap (bakır kalıp) ile sürülüp bezin boyaya batırılmasıdır; mumlanan yer boyayı almaz. Mumlama ve boyama açık renkten koyuya doğru birkaç kez tekrarlanır, sonunda mum kaynatılarak sökülür. Bezin ilk rengi ince çizgi ve noktalarda kalır, her boya katmanı bir öncekinin üstüne biner; mum kırıldığı yerde koyu boya sızıp ince çatlak damarları bırakır, boya kenarlarda ipliklere yayılır. Giyim kumaşı, sarong, şal ve duvar örtüsünde kullanılır.",
+  "koken": "Mumla boya itme Mısır, Hindistan, Çin ve Batı Afrika'da çok eskiden bilinir; sanat olarak en çok Endonezya'nın Cava adasında, Yogyakarta ve Surakarta saraylarında gelişti. Parang, kawung, mega mendung (Cirebon'un katmanlı bulutları) ve tumpal üçgen bordür gibi motifler kuşaktan kuşağa geçti. 19. yüzyılda bakır cap kalıbı yaygınlaştı; Cava batiki 2009'da UNESCO Somut Olmayan Kültürel Miras listesine girdi.",
+  "ayirt_edici": [
+    "Krem tjanting çizgileri ve isen noktaları: kubbe kaburgaları, pencere kemerleri, taç yaprak damarları, gökteki nokta ve dört yapraklı çiçekçik dizileri",
+    "Mega mendung bulutları: dıştan içe lacivertten açık maviye ve kreme inen bantlar, aralarında ince krem mum çizgileri",
+    "Açıktan koyuya kademeli boya katmanları: krem, sarı, turuncu, kırmızı; açık yeşil, yeşil, koyu yeşil; mavi ve en sonda çivit",
+    "Bütün yüzeye yayılan ince çivit çatlak damarları (crackle); çatlaklar birbirine T biçiminde kavuşuyor",
+    "Boya ipliğe sızdığı için tırtıklı, hafif haleli renk sınırları ve görünen düz pamuk örgüsü",
+    "Çivit zeminli bordür: kırmızı-turuncu tumpal üçgenleri, aralarda dört noktalı çiçekçikler, köşelerde kawung motifi"
+  ],
+  "palet": ["#F3E7CA", "#EFC245", "#B32E29", "#8AB249", "#2F7F49", "#3566A1", "#7F4B2B", "#1B223F"],
+  "kodla_cizim": "Desen önce düz boya renkleriyle 2048 çözünürlükte bir tuvale çizilir: SAHNE yollarından dolgular, kademeli tonlu kubbe dilimleri (dilim başına ışık modelinden seçilen yeşil), krem tjanting çizgileri, isen noktaları ve pirinç taneleri, tumpal üçgenli bordür ve kawung köşeler. Mega mendung bulutları daire birleşimi maskesinin tam öklid uzaklık dönüşümüyle (Felzenszwalb) bulunan iç uzaklığa göre bantlara ayrılır, böylece bantlar bulutun dış çizgisini izler. Ardından her piksel bezin krem rengine göre optik yoğunluğa çevrilir; örnekleme satıra ve sütuna bağlı gürültüyle kaydırılır (boya iplik boyunca sızar, kenarlar örgüye göre tırtıklanır), yoğunluğun bulanık kopyası yalnız koyulaştıracak biçimde karıştırılarak boya halesi verilir. Çatlak ağı, iki baskın yönlü ve ara sıra kırılan rastgele yürüyüşlerle çizilir; bir çatlak başka bir çatlağa ulaşınca durur (ızgara kaydı). Çatlaklar çivit yoğunluğuna doğru karıştırılır, büyük ölçekli gürültüyle boya alımı dalgalandırılır, düz örgü (6 px iplik, üstte kalan iplik satranç düzeniyle) ve hafif bez kırışıklığı ışıkla verilir.",
+  "etiketler": ["batik", "mum rezist", "kumaş boyama", "tekstil", "geleneksel", "Endonezya"]
+}

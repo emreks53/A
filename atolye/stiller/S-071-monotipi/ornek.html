@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>S-071 Monotipi — Atölye örnek görseli</title>
+<style>
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #e9e1d0; }
+  canvas { display: block; width: 1024px; height: 1024px; }
+</style>
+</head>
+<body>
+<canvas id="tuval"></canvas>
+<script src="../../sahne/sahne.js"></script>
+<script>
+// S-071 Monotipi — boyanmış levhadan alınmış tek baskı. Göğe merdaneyle açılmış mavi (merdane geçiş izleri),
+// fırçayla boyanmış kubbe, kasnak ve yapraklar; bezle silinmiş güneş, bulutlar, beyaz taş ve çiçekler;
+// pamukla silinmiş ışıklar, fırça sapıyla kazınmış çizgiler; kalın mürekkepte retikülasyon (damarlanma),
+// levha tonu, preste ezilmiş yumuşak kenarlar, kâğıt tanesi ve kâğıda gömülmüş levha izi.
+// Ortak sahne ve yardımcılar: ../../sahne/SAHNE.md
+
+'use strict';
+// ------------------------------------------------------------------ ortak yardımcılar
+const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+const TAU = Math.PI * 2;
+const hex = (h) => [parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255];
+const P2 = (d) => new Path2D(d);
+
+/** Tohumlu değer gürültüsü: (x, y) → [0,1]. */
+function gurultuFn(tohum) {
+  const r = SAHNE.rng(tohum);
+  const v = new Float32Array(256);
+  const p = new Uint8Array(512);
+  for (let i = 0; i < 256; i++) { v[i] = r(); p[i] = i; }
+  for (let i = 255; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = p[i]; p[i] = p[j]; p[j] = t; }
+  for (let i = 0; i < 256; i++) p[i + 256] = p[i];
+  return function (x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf), w = yf * yf * (3 - 2 * yf);
+    const X = xi & 255, Y = yi & 255;
+    const a = v[p[p[X] + Y]], b = v[p[p[X + 1] + Y]], c = v[p[p[X] + Y + 1]], d = v[p[p[X + 1] + Y + 1]];
+    return a + (b - a) * u + (c - a) * w + (a - b - c + d) * u * w;
+  };
+}
+/** Fraktal gürültü (fbm): ölçek = en kaba hücre boyu (1024 koordinatında). */
+function fbmFn(tohum, oktav, olcek, kazanc) {
+  kazanc = kazanc || 0.5;
+  const g = [];
+  for (let i = 0; i < oktav; i++) g.push(gurultuFn(tohum * 31 + i * 7 + 1));
+  let top = 0, a = 1;
+  for (let i = 0; i < oktav; i++) { top += a; a *= kazanc; }
+  return function (x, y) {
+    let s = 0, a = 1, f = 1 / olcek;
+    for (let i = 0; i < oktav; i++) { s += a * g[i](x * f + i * 17.3, y * f - i * 9.1); a *= kazanc; f *= 2.03; }
+    return s / top;
+  };
+}
+
+/** Çalışma çözünürlüğünde ekran dışı katman (koordinatlar 1024'te). */
+function yeniKatman() {
+  const c = SAHNE.yeniTuval(N, N);
+  const x = c.getContext('2d', { willReadFrequently: true });
+  x.setTransform(O, 0, 0, O, 0, 0);
+  return [c, x];
+}
+function okuKanal(c, kanal) {
+  const d = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, N, N).data;
+  const out = new Float32Array(N * N);
+  for (let i = 0, j = kanal; i < N * N; i++, j += 4) out[i] = d[j] / 255;
+  return out;
+}
+/** Çizim fonksiyonundan alfa maskesi (Float32Array, 0–1). */
+function maske(ciz, bulaniklik) {
+  const [c, x] = yeniKatman();
+  x.fillStyle = '#fff'; x.strokeStyle = '#fff';
+  ciz(x);
+  if (bulaniklik) return okuKanal(bulanikTuval(c, bulaniklik), 3);
+  return okuKanal(c, 3);
+}
+/** Tuvali bulanıklaştırılmış kopyası (bulaniklik 1024 px cinsinden). */
+function bulanikTuval(c, b) {
+  const k = SAHNE.yeniTuval(N, N);
+  const x = k.getContext('2d', { willReadFrequently: true });
+  x.filter = `blur(${b * O}px)`;
+  x.drawImage(c, 0, 0);
+  return k;
+}
+/** Float32Array kutu bulanıklığı (3 geçiş ≈ Gauss), r çalışma pikseli. */
+function bulanikDizi(a, r) {
+  r = Math.max(1, Math.round(r));
+  const t = new Float32Array(N * N);
+  const gecis = (src, dst, yatay) => {
+    const inv = 1 / (2 * r + 1);
+    for (let j = 0; j < N; j++) {
+      let s = 0;
+      const idx = (k) => (yatay ? j * N + k : k * N + j);
+      for (let k = -r; k <= r; k++) s += src[idx(Math.min(N - 1, Math.max(0, k)))];
+      for (let k = 0; k < N; k++) {
+        dst[idx(k)] = s * inv;
+        s += src[idx(Math.min(N - 1, k + r + 1))] - src[idx(Math.max(0, k - r))];
+      }
+    }
+  };
+  for (let p = 0; p < 3; p++) { gecis(a, t, true); gecis(t, a, false); }
+  return a;
+}
+/** Kabartma (gömme) ışığı: yükseklik haritası → gölge/ışık çarpanı. Işık sağ üstten. */
+function kabartma(H, guc) {
+  const out = new Float32Array(N * N);
+  const lx = 0.62, ly = -0.62;
+  for (let y = 1; y < N - 1; y++) {
+    for (let x = 1; x < N - 1; x++) {
+      const i = y * N + x;
+      const hx = (H[i + 1] - H[i - 1]) * 0.5, hy = (H[i + N] - H[i - N]) * 0.5;
+      out[i] = (-hx * lx - hy * ly) * guc;
+    }
+  }
+  return out;
+}
+
+/** SVG yolunu nokta dizilerine çevirir (M, L, C, Z). */
+function yolNoktalari(d, adim) {
+  adim = adim || 3;
+  const t = d.match(/[MLCZA]|-?\d*\.?\d+(?:e-?\d+)?/g);
+  const alt = []; let cur = null, i = 0, cmd = '', x = 0, y = 0, sx = 0, sy = 0;
+  const num = () => parseFloat(t[i++]);
+  while (i < t.length) {
+    if (/[MLCZA]/.test(t[i])) cmd = t[i++];
+    if (cmd === 'M') { x = num(); y = num(); sx = x; sy = y; cur = []; alt.push(cur); cur.push([x, y]); cmd = 'L'; }
+    else if (cmd === 'L') { x = num(); y = num(); cur.push([x, y]); }
+    else if (cmd === 'C') {
+      const x1 = num(), y1 = num(), x2 = num(), y2 = num(), x3 = num(), y3 = num();
+      const L = Math.hypot(x1 - x, y1 - y) + Math.hypot(x2 - x1, y2 - y1) + Math.hypot(x3 - x2, y3 - y2);
+      const n = Math.max(2, Math.ceil(L / adim));
+      for (let k = 1; k <= n; k++) {
+        const s = k / n, u = 1 - s;
+        cur.push([u * u * u * x + 3 * u * u * s * x1 + 3 * u * s * s * x2 + s * s * s * x3, u * u * u * y + 3 * u * u * s * y1 + 3 * u * s * s * y2 + s * s * s * y3]);
+      }
+      x = x3; y = y3;
+    } else if (cmd === 'Z') { if (Math.hypot(x - sx, y - sy) > 0.01) cur.push([sx, sy]); x = sx; y = sy; cmd = ''; }
+    else if (cmd === 'A') { for (let k = 0; k < 5; k++) num(); x = num(); y = num(); cur.push([x, y]); }
+    else i++;
+  }
+  return alt;
+}
+/** Kâğıt lifi dokusu: ince gürültü + uzun lifler (0–1 civarı, ortalama ~0.5). */
+function kagitDokusu(tohum) {
+  const g1 = fbmFn(tohum, 3, 2.2), g2 = fbmFn(tohum + 5, 3, 24);
+  const out = new Float32Array(N * N);
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      const X = x / O, Y = y / O;
+      out[y * N + x] = 0.6 * g1(X, Y) + 0.4 * g2(X * 1.8, Y * 0.6);
+    }
+  }
+  return out;
+}
+/** Worley (hücre) gürültüsü: (x, y) → [F1, F2-F1] hücre boyuna göre. */
+function worleyFn(tohum, hucre) {
+  const r = SAHNE.rng(tohum);
+  const ox = new Float32Array(65536), oy = new Float32Array(65536);
+  for (let i = 0; i < 65536; i++) { ox[i] = r(); oy[i] = r(); }
+  const out = [0, 0];
+  return function (x, y) {
+    x /= hucre; y /= hucre;
+    const xi = Math.floor(x), yi = Math.floor(y);
+    let f1 = 9, f2 = 9;
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const cx = xi + dx, cy = yi + dy, k = ((cy & 255) << 8) | (cx & 255);
+        const ex = cx + ox[k] - x, ey = cy + oy[k] - y, d = ex * ex + ey * ey;
+        if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d;
+      }
+    }
+    out[0] = Math.sqrt(f1); out[1] = Math.sqrt(f2) - out[0];
+    return out;
+  };
+}
+
+
+// ------------------------------------------------------------------ kurulum
+const O = 2;
+const N = 1024 * O;
+const tuval = document.getElementById('tuval');
+tuval.width = N; tuval.height = N;
+const ctx = tuval.getContext('2d');
+const Y = SAHNE.yollar();
+const BT = SAHNE.bitki;
+const rnd = SAHNE.rng(7101);
+const PL = { x1: 58, y1: 50, x2: 966, y2: 974, r: 6 }; // levha (plaka) sınırı
+
+// Pigmentler: birim yoğunlukta beyaz kâğıt üstündeki görünüşleri (Beer–Lambert karışımı)
+const PIG = {
+  ton: '#B3A590', // levha tonu (ılık gri)
+  mavi: '#69A2CB', // seruleum
+  lac: '#33527E', // Prusya mavisi
+  yesil: '#3C9862', // viridyan
+  sari: '#F1CD5C', // Napoli / kadmiyum sarısı
+  gul: '#E08FA2', // gül kökü
+  toprak: '#C5804C', // yanık siena
+};
+const DMAX = 2.6; // katman tuvalinde 255 = bu yoğunluk
+const al = (d) => (d / DMAX).toFixed(4);
+const K = {};
+for (const k in PIG) { const [c, x] = yeniKatman(); x.globalCompositeOperation = 'lighter'; x.lineCap = 'round'; x.lineJoin = 'round'; K[k] = x; K[k].tuval = c; }
+const K2 = {}; // son silmeden SONRA boyananlar (çiçek göbekleri, pembe gölgeler)
+for (const k of ['lac', 'sari', 'gul', 'toprak']) { const [c, x] = yeniKatman(); x.globalCompositeOperation = 'lighter'; K2[k] = x; K2[k].tuval = c; }
+const [W1c, W1] = yeniKatman(); W1.globalCompositeOperation = 'lighter'; // ilk silme (merdane mürekkebi ve levha tonu)
+const [W2c, W2] = yeniKatman(); W2.globalCompositeOperation = 'lighter'; // son silme (her şey)
+const [WKc, WK] = yeniKatman(); WK.globalCompositeOperation = 'lighter'; // kazıma çizgileri
+const [Ec, Ex] = yeniKatman(); // yapı silueti (merdane mürekkebi silinir)
+
+// ------------------------------------------------------------------ fırça
+/** Kıllı fırça darbesi: pts boyunca gen genişliğinde, kıl kıl çizgiler (yoğunluk ekler). */
+function firca(x, pts, gen, alfa, o) {
+  o = o || {};
+  const L = pts.length;
+  if (L < 2) return;
+  const nrm = [];
+  for (let i = 0; i < L; i++) {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(L - 1, i + 1)];
+    const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+    nrm.push([-dy / l, dx / l]);
+  }
+  const kil = o.kil || 1.8;
+  const n = Math.max(2, Math.round(gen / kil));
+  const parca = o.parca || 3;
+  for (let k = 0; k < n; k++) {
+    const off = ((k + 0.5) / n - 0.5) * gen + (rnd() - 0.5) * kil * 0.8;
+    const a0 = alfa * (0.3 + 0.7 * rnd());
+    x.lineWidth = kil * (0.8 + 0.9 * rnd());
+    const s0 = Math.floor(rnd() * (o.basKay || 0.08) * L);
+    const s1 = L - Math.floor(rnd() * (o.sonKay || 0.15) * L);
+    for (let c = 0; c < parca; c++) {
+      const i0 = Math.floor(lerp(s0, s1 - 1, c / parca)), i1 = Math.floor(lerp(s0, s1 - 1, (c + 1) / parca));
+      if (i1 <= i0) continue;
+      if (o.kuru && rnd() < o.kuru * (c / parca) * 0.7) continue;
+      const fade = 1 - (o.kuru || 0) * (c / parca) * 0.6;
+      x.strokeStyle = `rgba(255,255,255,${(a0 * fade).toFixed(4)})`;
+      x.beginPath();
+      for (let i = i0; i <= i1; i++) {
+        const t = i / (L - 1);
+        let tap = o.sivri ? Math.pow(Math.sin(Math.PI * (0.05 + 0.9 * t)), 0.6) : 1;
+        if (o.tap) tap *= o.tap[i];
+        const px = pts[i][0] + nrm[i][0] * off * tap, py = pts[i][1] + nrm[i][1] * off * tap;
+        if (i === i0) x.moveTo(px, py); else x.lineTo(px, py);
+      }
+      x.stroke();
+    }
+  }
+}
+/** p0 → p1 arası, bükümlü nokta dizisi. */
+function cizgi(x0, y0, x1, y1, n, bukum, dalga) {
+  const out = [];
+  const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+  const ph = rnd() * TAU;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const b = (bukum || 0) * Math.sin(Math.PI * t) + (dalga || 0) * Math.sin(ph + t * 7);
+    out.push([x0 + dx * t + nx * b, y0 + dy * t + ny * b]);
+  }
+  return out;
+}
+const yatayFirca = (x, x0, x1, y, gen, alfa, o) => firca(x, cizgi(x0, y + (rnd() - 0.5) * 2, x1, y + (rnd() - 0.5) * 3, 16, (rnd() - 0.5) * 4, 1.2), gen, alfa, o);
+const doldur = (x, d, yog) => { x.fillStyle = `rgba(255,255,255,${al(yog)})`; x.fill(typeof d === 'string' ? P2(d) : d); };
+
+// ------------------------------------------------------------------ yapı silueti (merdane mürekkebi bezle alınır)
+Ex.fillStyle = '#fff';
+[Y.kubbe, Y.kasnakUst, Y.kasnakAlt, Y.kaide, Y.kornis, ...Y.minare, ...Y.alem, ...Y.minareAlem].forEach((d) => Ex.fill(P2(d)));
+
+// ------------------------------------------------------------------ gök: boyalı vuruşlar ve silmeler
+// sol üst köşe derinleşir: kuru fırçayla çapraz Prusya mavisi vuruşları
+for (let i = 0; i < 22; i++) {
+  const y0 = 50 + rnd() * 360, x0 = 30 + rnd() * 200;
+  const L = 220 + rnd() * 300, a = -0.32 + (rnd() - 0.5) * 0.3;
+  firca(K.lac, cizgi(x0, y0, x0 + Math.cos(a) * L, y0 + Math.sin(a) * L, 16, (rnd() - 0.5) * 40), 30 + rnd() * 26, 0.15 * (1 - y0 / 560), { kuru: 0.75, kil: 2.6, sonKay: 0.3 });
+}
+for (let i = 0; i < 14; i++) {
+  const y0 = 60 + rnd() * 260, x0 = 280 + rnd() * 320;
+  firca(K.mavi, cizgi(x0, y0, x0 + 200 + rnd() * 160, y0 + (rnd() - 0.6) * 60, 14, (rnd() - 0.5) * 30), 26 + rnd() * 20, 0.12, { kuru: 0.7, kil: 2.6 });
+}
+// güneşten dışa doğru bezle silinmiş ışık yolları (ilk silme)
+for (let i = 0; i < 26; i++) {
+  const a = Math.PI * (0.55 + rnd() * 0.75), r0 = 40 + rnd() * 30, r1 = 230 + rnd() * 320;
+  firca(W1, cizgi(880 + Math.cos(a) * r0, 140 + Math.sin(a) * r0, 880 + Math.cos(a) * r1, 140 + Math.sin(a) * r1, 14, (rnd() - 0.5) * 20), 18 + rnd() * 30, 0.1 + rnd() * 0.1, { kuru: 0.8, kil: 2.6, sonKay: 0.4 });
+}
+// ufka doğru ılık pembe ve sarı ışık: merdane mavisi hafifçe alınır, üstüne geniş vuruşlar
+for (let i = 0; i < 16; i++) yatayFirca(W1, 40, 990, 600 + rnd() * 190, 30, 0.07, { kuru: 0.6, kil: 3 });
+for (let i = 0; i < 40; i++) {
+  const y = 520 + rnd() * 275, x0 = 30 + rnd() * 560, x1 = x0 + 200 + rnd() * 420;
+  const k = rnd() < 0.5 ? K.gul : K.sari;
+  yatayFirca(k, x0, Math.min(990, x1), y, 22 + rnd() * 22, (k === K.gul ? 0.12 : 0.14) * smooth(500, 740, y), { kuru: 0.65, kil: 2.6 });
+}
+// güneşin çevresinde dairesel sarı ve pembe vuruşlar (silinmiş halenin üstünde)
+{
+  const g = K.sari.createRadialGradient(880, 140, 40, 880, 140, 210);
+  g.addColorStop(0, `rgba(255,255,255,${al(0.5)})`); g.addColorStop(0.35, `rgba(255,255,255,${al(0.22)})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+  K.sari.fillStyle = g; K.sari.fillRect(600, 0, 424, 400);
+  const g2 = K.gul.createRadialGradient(880, 140, 90, 880, 140, 260);
+  g2.addColorStop(0, 'rgba(255,255,255,0)'); g2.addColorStop(0.5, `rgba(255,255,255,${al(0.1)})`); g2.addColorStop(1, 'rgba(255,255,255,0)');
+  K.gul.fillStyle = g2; K.gul.fillRect(560, 0, 464, 460);
+}
+for (let i = 0; i < 12; i++) {
+  const R = 60 + rnd() * 110, a0 = rnd() * TAU, a1 = a0 + 0.4 + rnd() * 0.9;
+  const pts = [];
+  for (let k = 0; k <= 20; k++) { const a = lerp(a0, a1, k / 20); pts.push([880 + Math.cos(a) * R, 140 + Math.sin(a) * R]); }
+  firca(K.sari, pts, 16 + rnd() * 18, 0.17 * (1 - (R - 54) / 150), { kuru: 0.6, kil: 2.4 });
+  if (rnd() < 0.4) firca(K.gul, pts, 12, 0.07, { kuru: 0.7, kil: 2.4 });
+}
+// bulutlar: bezle tamponlanmış yumuşak lekeler ve sürüklenme izleri; altlarında pembe, üstlerinde sarı
+const BULUT = [[170, 250, 1.25], [505, 150, 1.05], [760, 335, 1.35], [945, 470, 0.85], [95, 470, 0.9], [345, 395, 0.7]];
+const rb = SAHNE.rng(33);
+for (const [bx, by, bs] of BULUT) {
+  for (let i = 0; i < 16; i++) {
+    const x = bx + (rb() - 0.5) * 190 * bs, y = by + (rb() - 0.5) * 30 * bs - Math.abs(rb() - 0.5) * 26 * bs * (1 - Math.abs(x - bx) / (110 * bs));
+    W1.fillStyle = `rgba(255,255,255,${0.1 + rb() * 0.12})`;
+    W1.beginPath(); W1.ellipse(x, y, (22 + rb() * 34) * bs, (12 + rb() * 14) * bs, (rb() - 0.5) * 0.3, 0, TAU); W1.fill();
+  }
+  for (let i = 0; i < 7; i++) {
+    const y = by + (rb() - 0.2) * 30 * bs;
+    const x0 = bx - (90 + rb() * 70) * bs;
+    firca(W1, cizgi(x0, y, x0 + (170 + rb() * 120) * bs, y + (rb() - 0.5) * 10, 14, (rb() - 0.5) * 6), (8 + rb() * 10) * bs, 0.12, { kuru: 0.75, kil: 2.6, sonKay: 0.4 });
+  }
+  yatayFirca(K.gul, bx - 100 * bs, bx + 90 * bs, by + 18 * bs, 14 * bs, 0.07, { kuru: 0.7, kil: 2.4 });
+  if (bx > 450) yatayFirca(K.sari, bx - 70 * bs, bx + 100 * bs, by - 14 * bs, 12 * bs, 0.08, { kuru: 0.7, kil: 2.4 });
+}
+
+// ------------------------------------------------------------------ kubbe
+const prof = SAHNE.kubbeProfili(48); // tabandan tepeye
+const meridyen = (u, t0, t1) => {
+  const out = [];
+  for (let i = 0; i < prof.length; i++) { const t = i / (prof.length - 1); if (t >= (t0 || 0) && t <= (t1 || 1)) out.push([560 + u * prof[i].r, prof[i].y]); }
+  return out;
+};
+const tapM = () => prof.map((q) => 0.3 + 0.7 * (q.r / 200));
+for (const k of [K.yesil, K.lac, K.sari, K.toprak, W2]) { k.save(); k.clip(P2(Y.kubbe)); }
+for (let i = 0; i <= 74; i++) {
+  const u = -1.02 + (2.04 * i) / 74 + (rnd() - 0.5) * 0.01;
+  const pts = meridyen(clamp(u, -1, 1));
+  const tp = tapM();
+  firca(K.yesil, pts, 15, 0.3 * (1.05 + 0.35 * Math.max(0, -u)), { tap: tp, kil: 2, sonKay: 0.1 });
+  if (u < -0.15) firca(K.lac, pts, 13, 0.2 * smooth(-0.15, -0.95, u), { tap: tp, kil: 2.2, kuru: 0.3 });
+  if (u > 0.05 && u < 0.85) firca(K.sari, meridyen(u, 0.2, 0.92), 12, 0.13 * Math.sin(Math.PI * (u - 0.05) / 0.8), { kil: 2.2, kuru: 0.4 });
+}
+// kubbe tabanı koyulaşır, tepeye doğru açılır
+for (let i = 0; i < 9; i++) yatayFirca(K.lac, 360, 760, 548 - i * 5, 8, 0.07 * (1 - i / 9), { kil: 2.4 });
+// ışıklı yanda pamukla silinmiş parıltılar (kaburgalar boyunca)
+for (let i = 0; i < 34; i++) {
+  const u = 0.1 + rnd() * 0.6;
+  const t0 = 0.2 + rnd() * 0.3, t1 = t0 + 0.2 + rnd() * 0.35;
+  firca(W2, meridyen(u, t0, Math.min(0.94, t1)), 8 + rnd() * 12, (0.16 + rnd() * 0.12) * (1 - Math.abs(u - 0.35)), { kil: 2.6, kuru: 0.6, parca: 4 });
+}
+for (const k of [K.yesil, K.lac, K.sari, K.toprak, W2]) k.restore();
+// kaburgalar: gölgede ince koyu fırça çizgisi, ışıkta yanında fırça sapıyla kazınmış açık çizgi
+WK.save(); WK.clip(P2(Y.kubbe));
+K.lac.save(); K.lac.clip(P2(Y.kubbe));
+for (const kb of SAHNE.kaburgalar(16, 40)) {
+  const pts = kb.noktalar; // tabandan tepeye
+  K.lac.lineWidth = 1.6 + 0.6 * Math.max(0, -kb.u);
+  K.lac.strokeStyle = `rgba(255,255,255,${al(0.65 + 0.4 * Math.max(0, -kb.u))})`;
+  K.lac.beginPath(); pts.forEach(([x, y], i) => (i ? K.lac.lineTo(x, y) : K.lac.moveTo(x, y))); K.lac.stroke();
+  if (kb.u > -0.55) {
+    WK.lineWidth = 1.1;
+    let pen = false;
+    WK.beginPath();
+    pts.forEach(([x, y], i) => {
+      const t = i / (pts.length - 1);
+      const kopuk = rnd() < 0.08 || t > 0.9;
+      const xx = x + 2.4 * Math.cos(kb.boylam) ;
+      if (kopuk) { pen = false; return; }
+      if (!pen) { WK.moveTo(xx, y); pen = true; } else WK.lineTo(xx, y);
+    });
+    WK.strokeStyle = `rgba(255,255,255,${0.35 + 0.45 * clamp((kb.u + 0.55) / 1.2)})`;
+    WK.stroke();
+  }
+}
+K.lac.restore(); WK.restore();
+
+// ------------------------------------------------------------------ kasnak
+for (let k = 0; k < 2; k++) {
+  const q = SAHNE.kasnak[k];
+  const d = k ? Y.kasnakAlt : Y.kasnakUst;
+  for (const x of [K.yesil, K.lac, K.sari, W2]) { x.save(); x.clip(P2(d)); }
+  for (let y = q.y1 - 2; y < q.y2 + 4; y += 4) {
+    yatayFirca(K.yesil, q.x1 - 10, q.x2 + 10, y, 9, 0.3, { kil: 2 });
+    yatayFirca(K.lac, q.x1 - 10, q.x1 + 120 + rnd() * 60, y, 9, 0.2, { kil: 2.2, kuru: 0.7 });
+    yatayFirca(K.lac, q.x2 - 30, q.x2 + 6, y, 9, 0.1, { kil: 2.2, kuru: 0.5 });
+  }
+  // silindirin ışık şeridi: dikey pamuk silmeleri
+  for (let i = 0; i < 9; i++) {
+    const x0 = q.x1 + (q.x2 - q.x1) * (0.66 + rnd() * 0.16);
+    firca(W2, cizgi(x0, q.y1 + 2, x0 + (rnd() - 0.5) * 6, q.y2 - 2, 8), 6 + rnd() * 6, 0.16, { kuru: 0.4, kil: 2.4 });
+    firca(K.sari, cizgi(x0, q.y1 + 2, x0, q.y2 - 2, 8), 8, 0.06, { kuru: 0.4 });
+  }
+  // üst kenarda saçak gölgesi
+  yatayFirca(K.lac, q.x1, q.x2, q.y1 + 2.5, 5, 0.45, { kil: 1.6 });
+  for (const x of [K.yesil, K.lac, K.sari, W2]) x.restore();
+  for (const p of SAHNE.kasnakPencereleri(k)) {
+    const dp = SAHNE.kemerYolu(p.x, p.y, p.w, p.h);
+    doldur(K.lac, dp, 1.25); doldur(K.toprak, dp, 0.35); doldur(K.yesil, dp, 0.5);
+  }
+}
+
+// ------------------------------------------------------------------ kaide ve korniş
+{
+  const KD = SAHNE.kaide;
+  for (const x of [K.toprak, K.lac, K.sari, K.gul]) { x.save(); x.clip(P2(Y.kaide)); }
+  for (let i = 0; i < 18; i++) {
+    const x0 = KD.x1 + rnd() * 160;
+    firca(K.toprak, cizgi(x0, 706, x0 + (rnd() - 0.5) * 10, 800, 10), 14, 0.08 * (1 - (x0 - 300) / 200), { kuru: 0.5 });
+    firca(K.lac, cizgi(x0, 706, x0 + (rnd() - 0.5) * 10, 800, 10), 14, 0.05 * (1 - (x0 - 300) / 200), { kuru: 0.5 });
+  }
+  for (let i = 0; i < 4; i++) { yatayFirca(K.toprak, 296, 824, 707 + i * 3, 5, 0.22 - i * 0.04, { kil: 1.6 }); yatayFirca(K.lac, 296, 824, 707 + i * 3, 5, 0.14 - i * 0.03, { kil: 1.6 }); }
+  for (let i = 0; i < 10; i++) yatayFirca(K.sari, 560 + rnd() * 100, 830, 715 + rnd() * 80, 12, 0.07, { kuru: 0.6 });
+  yatayFirca(K.toprak, 296, 824, 797, 6, 0.2, { kil: 1.8 });
+  for (const x of [K.toprak, K.lac, K.sari, K.gul]) x.restore();
+  for (const p of KD.pencereler) {
+    const dp = SAHNE.kemerYolu(p.x, p.y, p.w, p.h);
+    doldur(K.toprak, dp, 0.75); doldur(K.lac, dp, 0.55); doldur(K.gul, dp, 0.25);
+    K.sari.save(); K.sari.clip(P2(dp)); firca(K.sari, cizgi(p.x + p.w * 0.25, p.y + 4, p.x + p.w * 0.3, p.y + p.h, 6), 4, 0.1); K.sari.restore();
+  }
+  // korniş altı ince gölge çizgisi
+  K.lac.lineWidth = 1.6; K.lac.strokeStyle = `rgba(255,255,255,${al(0.45)})`;
+  K.lac.beginPath(); K.lac.moveTo(291, 704.5); K.lac.lineTo(829, 704.5); K.lac.stroke();
+  K.toprak.lineWidth = 1.2; K.toprak.strokeStyle = `rgba(255,255,255,${al(0.35)})`;
+  K.toprak.beginPath(); K.toprak.moveTo(291, 692.5); K.toprak.lineTo(829, 692.5); K.toprak.stroke();
+}
+
+// ------------------------------------------------------------------ minare
+{
+  const parcalar = SAHNE.minareParcalari();
+  for (const p of parcalar) {
+    if (p.tip === 'alem' || p.tip === 'bant') continue;
+    let d, x1, x2, y1, y2;
+    if (p.tip === 'poligon') { d = SAHNE.yol(p.noktalar, true); x1 = Math.min(...p.noktalar.map((q) => q[0])); x2 = Math.max(...p.noktalar.map((q) => q[0])); y1 = Math.min(...p.noktalar.map((q) => q[1])); y2 = Math.max(...p.noktalar.map((q) => q[1])); }
+    else if (p.tip === 'topuz') { d = p.yol; x1 = 266; x2 = 334; y1 = 146; y2 = 200; }
+    else { d = SAHNE.yol([[p.x1, p.y1], [p.x2, p.y1], [p.x2, p.y2], [p.x1, p.y2]], true); x1 = p.x1; x2 = p.x2; y1 = p.y1; y2 = p.y2; }
+    const cik = p.ad.startsWith('çıkma');
+    for (const x of [K.toprak, K.lac, K.gul]) { x.save(); x.clip(P2(d)); }
+    const w = x2 - x1;
+    const adet = Math.max(3, Math.round(w / 6));
+    for (let i = 0; i < adet; i++) {
+      const xx = x1 + w * (i / adet) * 0.55;
+      const g = (1 - i / adet) * (cik ? 0.4 : 0.14);
+      firca(K.toprak, cizgi(xx, y1 - 2, xx + (rnd() - 0.5) * 3, y2 + 2, 10), 7, g, { kuru: 0.3, kil: 1.8 });
+      firca(K.lac, cizgi(xx, y1 - 2, xx, y2 + 2, 10), 7, g * 0.65, { kuru: 0.3, kil: 1.8 });
+    }
+    if (cik) { doldur(K.toprak, d, 0.18); doldur(K.lac, d, 0.15); }
+    if (p.tip === 'korkuluk') { doldur(K.toprak, d, 0.45); doldur(K.lac, d, 0.32); doldur(K.gul, d, 0.08); }
+    if (p.ad.startsWith('şerefe')) { yatayFirca(K.toprak, x1, x2, y2 - 1.5, 3, 0.5, { kil: 1.4 }); yatayFirca(K.lac, x1, x2, y2 - 1.5, 3, 0.35, { kil: 1.4 }); }
+    if (p.ad === 'bilezik') yatayFirca(K.toprak, x1, x2, y2 - 1, 2.5, 0.4, { kil: 1.4 });
+    for (const x of [K.toprak, K.lac, K.gul]) x.restore();
+    if (p.tip === 'korkuluk') {
+      // korkuluk babaları: fırça sapıyla kazınmış dikey çizgiler
+      WK.lineWidth = 2.4; WK.lineCap = 'butt';
+      for (let i = 0; i < 9; i++) {
+        const x = p.x1 + 5 + ((p.x2 - p.x1 - 10) * (i + 0.5)) / 9;
+        WK.strokeStyle = `rgba(255,255,255,${0.7 + rnd() * 0.25})`;
+        WK.beginPath(); WK.moveTo(x + (rnd() - 0.5), p.y1 + 4); WK.lineTo(x + (rnd() - 0.5), p.y2 - 3); WK.stroke();
+      }
+      WK.lineWidth = 1.6; WK.strokeStyle = 'rgba(255,255,255,0.8)';
+      WK.beginPath(); WK.moveTo(p.x1 + 2, p.y1 + 2); WK.lineTo(p.x2 - 2, p.y1 + 2); WK.stroke();
+    }
+  }
+  for (const z of SAHNE.zikzakCizgileri()) { firca(K.toprak, z, 3.4, 0.55, { kil: 1.2, parca: 4, sonKay: 0.02, basKay: 0.01 }); firca(K.lac, z, 3, 0.35, { kil: 1.2, parca: 4, sonKay: 0.02, basKay: 0.01 }); }
+  for (const p of SAHNE.minarePencereleri) { const dp = SAHNE.kemerYolu(p.x, p.y, p.w, p.h); doldur(K.toprak, dp, 0.7); doldur(K.lac, dp, 0.6); doldur(K.gul, dp, 0.15); }
+}
+
+// ------------------------------------------------------------------ alemler (altın: sarı + siena)
+for (const d of [...Y.alem, ...Y.minareAlem]) { doldur(K.sari, d, 1.25); doldur(K.toprak, d, 0.3); }
+for (const [cx, taban, s] of [[560, 300, 1], [300, 146, 0.62]]) {
+  const a = SAHNE.alemParcalari(cx, taban, s);
+  for (const k of a.kureler) {
+    K.toprak.fillStyle = `rgba(255,255,255,${al(0.45)})`;
+    K.toprak.beginPath(); K.toprak.arc(k.cx - k.r * 0.35, k.cy + k.r * 0.1, k.r * 0.7, 0, TAU); K.toprak.fill();
+    W2.fillStyle = 'rgba(255,255,255,0.55)';
+    W2.beginPath(); W2.arc(k.cx + k.r * 0.4, k.cy - k.r * 0.35, k.r * 0.3, 0, TAU); W2.fill();
+  }
+  doldur(K.toprak, SAHNE.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R), 0.3);
+}
+
+// ------------------------------------------------------------------ zemin (gevşek yatay vuruşlar)
+for (let i = 0; i < 46; i++) {
+  const y = 796 + rnd() * 190;
+  const z = rnd();
+  const k = z < 0.45 ? K.toprak : z < 0.8 ? K.sari : K.gul;
+  yatayFirca(k, 30 + rnd() * 420, 520 + rnd() * 480, y, 18 + rnd() * 16, (k === K.toprak ? 0.11 : k === K.sari ? 0.13 : 0.07) * smooth(790, 840, y), { kuru: 0.75, kil: 2.8, sonKay: 0.4, basKay: 0.2 });
+}
+for (let i = 0; i < 14; i++) yatayFirca(K.yesil, 30 + rnd() * 600, 300 + rnd() * 700, 830 + rnd() * 150, 20, 0.08, { kuru: 0.7, kil: 2.6 });
+for (let i = 0; i < 8; i++) yatayFirca(K.lac, 30, 300 + rnd() * 300, 840 + rnd() * 140, 18, 0.05, { kuru: 0.7, kil: 2.6 });
+
+// ------------------------------------------------------------------ bitkiler
+{
+  // saplar
+  for (const s of BT.saplar) {
+    firca(K.yesil, s, 4.5, 0.5, { kil: 1.5, sonKay: 0.03, basKay: 0.01 });
+    firca(K.toprak, s, 3.5, 0.18, { kil: 1.5, sonKay: 0.05 });
+    firca(K.lac, s, 2.5, 0.2, { kil: 1.2 });
+  }
+  // yapraklar: yaprak biçimine kırpılmış, ekseni boyunca bir iki fırça darbesi
+  BT.yapraklar.forEach((yp, i) => {
+    const d = P2(SAHNE.yaprakYolu(yp));
+    const ca = Math.cos(yp.aci), sa = Math.sin(yp.aci), L = yp.uzunluk;
+    const eks = cizgi(yp.x, yp.y, yp.x + ca * L, yp.y + sa * L, 10, (rnd() - 0.5) * 4);
+    const buyuk = L > 50;
+    const ton = rnd();
+    for (const x of [K.yesil, K.lac, K.sari, W2, WK]) { x.save(); x.clip(d); }
+    doldur(K.yesil, d, 0.22);
+    firca(K.yesil, eks, L * 0.55, buyuk ? 0.28 : 0.24, { kil: 2.2, sivri: true, sonKay: 0.05 });
+    firca(K.yesil, eks, L * 0.4, 0.14, { kil: 2.4, sivri: true, kuru: 0.5 });
+    if (ton < 0.45) firca(K.lac, eks, L * 0.4, buyuk ? 0.2 : 0.12, { kil: 2.4, sivri: true, kuru: 0.5 });
+    if (ton > 0.5) firca(K.sari, eks, L * 0.42, 0.22, { kil: 2.4, sivri: true, kuru: 0.4 });
+    // yaprak ortasından fırça sapıyla kazınmış damar
+    if (buyuk || ton > 0.3) {
+      WK.lineWidth = buyuk ? 1.5 : 1.1; WK.strokeStyle = `rgba(255,255,255,${0.35 + 0.3 * ton})`;
+      WK.beginPath(); eks.slice(1, 9).forEach(([a, b], j) => (j ? WK.lineTo(a, b) : WK.moveTo(a, b))); WK.stroke();
+    }
+    for (const x of [K.yesil, K.lac, K.sari, W2, WK]) x.restore();
+  });
+  // tomurcuklar
+  for (const t of BT.tomurcuklar) {
+    const d = SAHNE.tomurcukYolu(t);
+    doldur(K.gul, d, 1.3); doldur(K.toprak, d, 0.18);
+    K.yesil.save(); K.yesil.translate(t.x, t.y); K.yesil.rotate(t.aci);
+    K.yesil.fillStyle = `rgba(255,255,255,${al(0.6)})`; K.yesil.beginPath(); K.yesil.ellipse(-t.r * 0.5, 0, t.r * 0.6, t.r * 0.9, 0, 0, TAU); K.yesil.fill();
+    K.yesil.restore();
+  }
+  // çiçekler: taç yaprakları pamukla silinir, ortaya pembe gölge ve sarı göbek boyanır
+  BT.cicekler.forEach((c, ci) => {
+    const tac = SAHNE.tacYapraklari(c);
+    for (const e of tac) {
+      W2.fillStyle = 'rgba(255,255,255,0.8)';
+      W2.fill(P2(SAHNE.elipsYolu({ ...e, rx: e.rx * 0.97, ry: e.ry * 0.95 })));
+      // silinirken bezin çizdiği ışınsal izler
+      const dx = Math.cos(e.aci), dy = Math.sin(e.aci);
+      firca(W2, cizgi(c.x + dx * c.r * 0.12, c.y + dy * c.r * 0.12, c.x + dx * c.r * 0.98, c.y + dy * c.r * 0.98, 6), e.ry * 1.5, 0.16, { kil: 2.4, kuru: 0.3 });
+    }
+    const pembe = ci % 3 !== 1;
+    const g = K2.gul.createRadialGradient(c.x, c.y, c.r * 0.1, c.x, c.y, c.r * 1.05);
+    g.addColorStop(0, `rgba(255,255,255,${al(pembe ? 0.55 : 0.2)})`);
+    g.addColorStop(0.55, `rgba(255,255,255,${al(pembe ? 0.12 : 0.04)})`);
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    K2.gul.fillStyle = g;
+    for (const e of tac) K2.gul.fill(P2(SAHNE.elipsYolu(e)));
+    // taç yaprak aralarına ince gölge (gölge tarafı: sol alt)
+    // taç yaprak diplerine gölge tarafında hafif mavi-gri
+    for (const e of tac) {
+      if (Math.cos(e.aci - 2.4) < 0.1) continue;
+      const g3 = K2.lac.createRadialGradient(c.x, c.y, c.r * 0.15, c.x, c.y, c.r * 0.9);
+      g3.addColorStop(0, `rgba(255,255,255,${al(0.12)})`); g3.addColorStop(1, 'rgba(255,255,255,0)');
+      K2.lac.fillStyle = g3; K2.lac.fill(P2(SAHNE.elipsYolu(e)));
+    }
+    // göbek
+    K2.sari.fillStyle = `rgba(255,255,255,${al(1.4)})`;
+    K2.sari.beginPath(); K2.sari.arc(c.x, c.y, c.r * 0.2, 0, TAU); K2.sari.fill();
+    K2.toprak.fillStyle = `rgba(255,255,255,${al(0.9)})`;
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * TAU + c.aci;
+      K2.toprak.beginPath(); K2.toprak.arc(c.x + Math.cos(a) * c.r * 0.27, c.y + Math.sin(a) * c.r * 0.27, Math.max(1.1, c.r * 0.04), 0, TAU); K2.toprak.fill();
+    }
+    K2.toprak.fillStyle = `rgba(255,255,255,${al(0.35)})`;
+    K2.toprak.beginPath(); K2.toprak.arc(c.x - c.r * 0.05, c.y + c.r * 0.05, c.r * 0.14, 0, TAU); K2.toprak.fill();
+  });
+}
+
+// ------------------------------------------------------------------ katmanları oku
+const okuU8 = (c, kanal) => {
+  const d = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, N, N).data;
+  const out = new Uint8Array(N * N);
+  for (let i = 0, j = kanal; i < N * N; i++, j += 4) out[i] = d[j];
+  return out;
+};
+const ADLAR = Object.keys(PIG);
+const KAT = ADLAR.map((k) => okuU8(bulanikTuval(K[k].tuval, 1.7), 3));
+const AD2 = Object.keys(K2), IX2 = AD2.map((k) => ADLAR.indexOf(k));
+const KAT2 = AD2.map((k) => okuU8(bulanikTuval(K2[k].tuval, 1.2), 3));
+const W1a = okuU8(bulanikTuval(W1c, 5), 3);
+const W2a = okuU8(bulanikTuval(W2c, 1.3), 3);
+const WKa = okuU8(bulanikTuval(WKc, 0.45), 3);
+const Ea = okuU8(bulanikTuval(Ec, 1.6), 3);
+const Eg = okuU8(bulanikTuval(Ec, 7), 3); // silme kenarına itilen mürekkep için geniş siluet
+
+// ------------------------------------------------------------------ baskı (pres)
+const ABS = ADLAR.map((k) => hex(PIG[k]).map((v) => -Math.log(Math.max(0.02, v))));
+const KAGIT = hex('#F4EDDE');
+const kagit = kagitDokusu(711);
+const wA = fbmFn(201, 3, 46), wB = fbmFn(202, 3, 46), wC = fbmFn(203, 2, 7), wD = fbmFn(204, 2, 7);
+const hucA = worleyFn(301, 4.2), hucB = worleyFn(302, 1.8), ret1 = fbmFn(304, 4, 60), retW = fbmFn(303, 3, 26);
+const lekeF = fbmFn(401, 4, 120), lekeI = fbmFn(402, 3, 14);
+const rag = fbmFn(501, 3, 3.2), ragB = fbmFn(502, 3, 15);
+const serit = gurultuFn(601), merd = fbmFn(602, 2, 5);
+const gunesIz = gurultuFn(701);
+// levha kenarı yükseklik haritası (levha izi)
+const H = new Float32Array(N * N);
+const sdLevha = (X, Yy) => {
+  const cx = (PL.x1 + PL.x2) / 2, cy = (PL.y1 + PL.y2) / 2, hx = (PL.x2 - PL.x1) / 2 - PL.r, hy = (PL.y2 - PL.y1) / 2 - PL.r;
+  const qx = Math.abs(X - cx) - hx, qy = Math.abs(Yy - cy) - hy;
+  return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - PL.r;
+};
+const SD = new Float32Array(N * N);
+for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const s = sdLevha(x / O, y / O); SD[y * N + x] = s; H[y * N + x] = smooth(-2.2, 1.8, s) * 1.6; }
+const EMB = kabartma(H, 0.9 * O);
+
+const img = ctx.createImageData(N, N);
+const px = img.data;
+const d = new Float32Array(ADLAR.length);
+const iTon = 0, iMavi = 1, iLac = 2, iYesil = 3, iSari = 4, iGul = 5, iToprak = 6;
+const ornek = (a, i0, fx, fy) => (a[i0] * (1 - fx) + a[i0 + 1] * fx) * (1 - fy) + (a[i0 + N] * (1 - fx) + a[i0 + N + 1] * fx) * fy;
+for (let y = 0; y < N; y++) {
+  const Yc = y / O;
+  for (let x = 0; x < N; x++) {
+    const Xc = x / O;
+    const i = y * N + x;
+    const sd = SD[i];
+    const lif = kagit[i];
+    let r = KAGIT[0], g = KAGIT[1], b = KAGIT[2];
+    const pk = 1 + (lif - 0.5) * 0.06;
+    if (sd < 0.8) {
+      // basılı alan: sıkıştırılmış, hafifçe kaymış koordinatlar (ezilen mürekkep kenarı)
+      const sx = clamp(x + ((wA(Xc, Yc) - 0.5) * 7 + (wC(Xc, Yc) - 0.5) * 3) * O, 0, N - 2.001), sy = clamp(y + ((wB(Xc, Yc) - 0.5) * 7 + (wD(Xc, Yc) - 0.5) * 3) * O, 0, N - 2.001);
+      const ix = Math.floor(sx), iy = Math.floor(sy), fx = sx - ix, fy = sy - iy, i0 = iy * N + ix;
+      const X = sx / O, Yw = sy / O;
+      for (let k = 0; k < KAT.length; k++) d[k] = (ornek(KAT[k], i0, fx, fy) / 255) * DMAX;
+      const E = ornek(Ea, i0, fx, fy) / 255, Eb = ornek(Eg, i0, fx, fy) / 255;
+      const ragT = 0.6 * rag(X, Yw) + 0.4 * ragB(X, Yw);
+      // güneş: bezle dairesel silme, dışa doğru çekilmiş ışınsal izler
+      const gdx = X - 880, gdy = Yw - 140, gr = Math.hypot(gdx, gdy), ga = Math.atan2(gdy, gdx);
+      const gIz = 0.5 + 0.5 * gunesIz(ga * 4.2 + 40 + gr * 0.004, gr * 0.02) * (0.6 + 0.4 * ragB(X * 0.5, Yw * 0.5));
+      const gunesW = Math.max(smooth(58, 40, gr), Math.pow(smooth(280, 46, gr), 0.8) * (0.55 + 0.42 * gIz));
+      let w1 = Math.min(1, ornek(W1a, i0, fx, fy) / 255 * (0.65 + 0.7 * ragT) + gunesW);
+      const w2 = Math.min(1, ornek(W2a, i0, fx, fy) / 255 * (0.9 + 0.18 * ragT) + ornek(WKa, i0, fx, fy) / 255 + smooth(46, 34, gr));
+      // merdane: göğe yatay geçişlerle açılmış mavi, yere siena; geçiş sınırlarında mürekkep sırtı
+      let gok = 0, yer = 0;
+      if (Yw < 830) {
+        const yy = Yw + (X - 512) * 0.018;
+        const gecis = Math.floor((yy - 30) / 124), ic = (yy - 30) / 124 - gecis;
+        const carp = 0.8 + 0.4 * serit(gecis * 3.7, 0.5);
+        const sirt = 0.32 * Math.exp(-((ic - 0.02) * (ic - 0.02)) / 0.0005) + 0.14 * Math.exp(-((ic - 0.975) * (ic - 0.975)) / 0.0003);
+        const mot = 0.88 + 0.24 * merd(X * 0.35, Yw * 2.2);
+        gok = (lerp(1.18, 0.3, smooth(40, 790, Yw)) * carp + sirt) * mot;
+      }
+      if (Yw > 780) {
+        const mot = 0.85 + 0.3 * merd(X * 0.3, Yw * 2);
+        const ust = smooth(784, 830, Yw + (lekeF(X * 2, 3) - 0.5) * 40);
+        yer = (0.2 + 0.08 * Math.sin(Yw * 0.05 + X * 0.004)) * mot * ust * (0.7 + 0.6 * lekeF(X * 1.5, Yw * 3));
+        gok *= 1 - ust;
+      }
+      const sil = 1 - 0.9 * E;
+      // silme kenarına itilen mürekkep sırtı (siluetin hemen dışında)
+      const kenar = Math.max(0, Eb - E) * 1.1;
+      d[iMavi] += gok * sil * (1 - w1) + kenar * gok * 0.8;
+      d[iToprak] += yer * (1 - w1);
+      d[iSari] += yer * 0.3 * (1 - w1);
+      // levha tonu: silmelerden sonra bile ince bir zar kalır
+      const lekeT = 0.65 + 0.7 * lekeF(X, Yw);
+      d[iTon] += 0.3 * lekeT * (1 - 0.6 * Math.max(w1, w2)) + 0.12 * lekeI(X, Yw);
+      // son silmeler her katmandan alır
+      let top = 0;
+      for (let k = 1; k < d.length; k++) { d[k] *= 1 - w2; top += d[k]; }
+      top += d[iTon];
+      for (let j = 0; j < KAT2.length; j++) { const v = (ornek(KAT2[j], i0, fx, fy) / 255) * DMAX; d[IX2[j]] += v; top += v; }
+      // levha kenarında birikmiş mürekkep
+      const kenarIz = smooth(-5, -0.5, sd);
+      d[iTon] += kenarIz * 0.6 * (0.7 + 0.6 * lekeI(X * 3, Yw * 3));
+      // retikülasyon: kalın mürekkep ayrılırken açılan dallı damarlar
+      const ww = (retW(X, Yw) - 0.5) * 9;
+      // mürekkep preste boncuklanır: koyu adacıklar, aralarında açık hale (yumuşak hücreler)
+      const cA = hucA(X + ww, Yw - ww)[0], cB = hucB(X - ww * 0.5, Yw + ww * 0.5)[0];
+      const q1 = ret1(X + ww * 4, Yw - ww * 3), v1 = Math.pow(1 - Math.abs(2 * q1 - 1), 5);
+      const kalin = smooth(0.5, 1.8, top), cokKalin = smooth(1.2, 2.6, top);
+      const retik = 1 - kalin * (0.3 * smooth(0.25, 0.85, cA) + 0.12 * smooth(0.3, 0.9, cB)) - cokKalin * 0.32 * v1 + kalin * 0.1;
+      // pres: kâğıt tanesinin tepeleri ince mürekkebi tam almaz; geniş lekelenme
+      const ince = 1 - smooth(0.4, 1.6, top);
+      const tane = 1 - ince * 0.35 * smooth(0.45, 0.8, lif) - 0.06 * (1 - lif);
+      const leke = 0.9 + 0.2 * lekeF(X * 2.3, Yw * 2.3);
+      const f = retik * tane * leke;
+      let ar = 0, ag = 0, ab = 0;
+      for (let k = 0; k < d.length; k++) { const v = d[k] * f; ar += v * ABS[k][0]; ag += v * ABS[k][1]; ab += v * ABS[k][2]; }
+      const kap = smooth(0.8, -0.6, sd);
+      r = lerp(r, r * Math.exp(-ar), kap); g = lerp(g, g * Math.exp(-ag), kap); b = lerp(b, b * Math.exp(-ab), kap);
+    }
+    const e = 1 + EMB[i] + (lif - 0.5) * 0.05;
+    px[i * 4] = clamp(r * pk * e) * 255;
+    px[i * 4 + 1] = clamp(g * pk * e) * 255;
+    px[i * 4 + 2] = clamp(b * pk * e) * 255;
+    px[i * 4 + 3] = 255;
+  }
+}
+ctx.putImageData(img, 0, 0);
+SAHNE.hazir();
+</script>
+</body>
+</html>

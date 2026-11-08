@@ -1,0 +1,22 @@
+{
+  "kod": "S-066",
+  "no": 66,
+  "ad": "Mum Boya Rezist",
+  "ad_en": "Wax Resist",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Önce beyaz ve renkli mum boyayla çizilen çizgiler, üstüne sürülen canlı suluboyayı iter; çizgiler tanecikli ve keskin kalır.",
+  "tanim": "Mum boya rezist, kâğıda önce beyaz ve renkli mum boyalarla çizgi, desen ve dolgu yapılıp ardından bütün yüzeyin bol sulu, canlı suluboya yıkamalarıyla boyanmasıdır. Mumdaki yağ suyu ittiği için boya çizgilere tutunmaz: çizgiler kâğıt dokusunun tepelerinde tanecikli, kırık ama keskin kalır, boya çizgilerin kenarında birikip koyu bir pay bırakır, mumun üstünde de küçük damlalar hâlinde boncuklanır. Beyaz mum boyayla görünmez çizilen desen boyanınca ortaya çıktığı için okul ve atölye resminde, çocuk kitabı resimlemesinde ve deneysel suluboya çalışmalarında sevilir.",
+  "koken": "Mumla boya ya da boyayı itme (rezist) ilkesi batik ve Ukrayna pisanka yumurtaları gibi geleneklerde yüzyıllardır kullanılır. Kâğıt üstünde mum boya ve suluboya rezisti 20. yüzyılda yaygınlaştı: Henry Moore İkinci Dünya Savaşı'ndaki sığınak çizimlerinde mum boya, suluboya ve mürekkebi birlikte kullandı; teknik sonra sanat eğitiminin ve resimli çocuk kitaplarının temel yöntemlerinden biri oldu.",
+  "ayirt_edici": [
+    "Mavi gökte beyaz mum boyayla çizilmiş bulutlar, sarmallar ve yıldızcıklar; boya taramanın aralarına dolmuş, çizgiler beyaz kalmış",
+    "Güneşte sarı mum dolgu, turuncu ve beyaz halkalar, dalgalı ışınlar; çevresine sürülen gamboj-turuncu hale",
+    "Mum çizgileri kâğıt dokusunun tepelerinde tanecikli ve kırık: kubbe kaburgaları, kaide taş sıraları, pencere kemerleri, yaprak damarları",
+    "Boya mum çizgilerinin kenarında birikip koyu bir pay bırakıyor, mumun üstünde küçük boya damlaları boncuklanmış",
+    "Islak üstüne ıslak yıkamalar: ultramarinden turkuaza geçen gök, sarı-yeşilden koyu ftalo yeşiline dönen kubbe, okra-turuncu toprak",
+    "Pembe-macenta taç yapraklar beyaz mum konturlu, ortaları sarı mum dolgulu ve turuncu noktalı; kenarda maskeleme bandının bıraktığı temiz kâğıt payı"
+  ],
+  "palet": ["#232E95", "#528CB1", "#F2CE31", "#3C7F19", "#0A4751", "#EEB771", "#E6769E", "#1D772A"],
+  "kodla_cizim": "2048 iç çözünürlükte piksel piksel kurulur. Mum boya çizgileri SAHNE yollarından örneklenen noktalara elle titreme verilerek 2–3 izli, boyunca basıncı ve kalınlığı gürültüyle değişen, uçları incelen vuruşlar olarak iki tuvale çizilir: biri rengi, öteki basıncı tutar (açıklaştır karışımıyla, üst üste binen vuruşlar koyulaşmaz). Öğeler arkadan öne çizilir ve her öğe önce kendi alanındaki arka çizgileri siler. Mum kapsaması basınç ile kâğıt yüksekliğinin (soğuk pres dokusu, çok oktavlı gürültü) toplamının eşiklenmesiyle bulunur; böylece mum yalnız kâğıt tepelerinde tutunur. Suluboya, bölge haritasından alınan ve gürültülü eşikle gevşetilen maskelerle on iki pigmentin (ultramarin, turkuaz, mor, sap yeşili, ftalo, gamboj, turuncu, siena, okra, macenta, gül, çivit) optik yoğunluğu olarak biriktirilir; kuruyan kenarda pigment birikimi, kâğıt çukurlarında çökelme ve ıslak dalgalanma eklenir. Birleştirmede boya mumun üstünde %94 azaltılır, mumun bulanık kopyasıyla farkından kenar birikimi hesaplanır, mumun üstüne rastgele boya damlaları (koyu kenarlı küçük halkalar) serpilir; renk = kâğıt × exp(−yoğunluk), mum rengi kapsamaya göre üste karıştırılır ve kâğıt kabartısı sağ üstten ışıkla verilir.",
+  "etiketler": ["mum boya", "rezist", "suluboya", "karışık teknik", "doku", "boya"]
+}

@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>S-032 Renkli Kontur Cel — Atölye örnek görseli</title>
+<style>
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #7cc0f2; }
+  canvas { display: block; width: 1024px; height: 1024px; }
+</style>
+</head>
+<body>
+<canvas id="tuval"></canvas>
+<script src="../../sahne/sahne.js"></script>
+<script>
+'use strict';
+// S-032 Renkli Kontur Cel — toon render: her biçimde bir ana renk, sert kenarlı tek gölge tonu ve küçük
+// sert parlama; konturlar siyah değil, her dolgunun koyu ve doygun hâli; dış siluette kalın, iç ayrıntıda
+// ince çizgi; gölge tarafında ince kenar ışığı; 3 bantlı düz gök ve cel gölgeli bulutlar.
+// Ortak sahne ve yardımcılar: ../../sahne/SAHNE.md
+
+const S = SAHNE;
+const O = 2;
+const N = 1024 * O;
+const tuval = document.getElementById('tuval');
+const ctx = S.tuval(tuval, O);
+
+// ------------------------------------------------------------------ yardımcılar
+const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+const mix = (a, b, t) => a + (b - a) * t;
+const nrm = (v) => { const l = Math.hypot(v[0], v[1], v[2]); return [v[0] / l, v[1] / l, v[2] / l]; };
+const rgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+function bez(p0, p1, p2, p3, t) { const u = 1 - t; return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3; }
+const Lv = nrm([0.66, -0.6, 0.45]);
+const Hv = nrm([Lv[0], Lv[1], Lv[2] + 1]);
+const L2 = (() => { const l = Math.hypot(Lv[0], Lv[1]); return [Lv[0] / l, Lv[1] / l]; })();
+
+// ------------------------------------------------------------------ palet: ana / gölge / parlama / kenar ışığı / kontur
+const P = {
+  kubbe: { a: rgb('#21B871'), g: rgb('#11866C'), p: rgb('#B8F5D2'), r: rgb('#8EE8F2'), c: '#06573F' },
+  kasnak: { a: rgb('#18A566'), g: rgb('#0D7A60'), p: rgb('#9BEFC0'), r: rgb('#83E2EE'), c: '#054E3A' },
+  tas: { a: rgb('#FFF3DF'), g: rgb('#D2C3EA'), p: rgb('#FFFFFF'), r: rgb('#FFF8FF'), c: '#A3592F' },
+  altin: { a: rgb('#FFC63A'), g: rgb('#EB8A1C'), p: rgb('#FFF7CC'), r: rgb('#FFE3A0'), c: '#9C4300' },
+  yaprak: { a: rgb('#63C54A'), g: rgb('#2E9650'), p: rgb('#C8F57E'), r: rgb('#A8F0D8'), c: '#14653A' },
+  yaprakK: { a: rgb('#3FAE4E'), g: rgb('#1E7D4E'), p: rgb('#A6EA7A'), r: rgb('#93E6D6'), c: '#0D5534' },
+  tac: { a: rgb('#FFFFFF'), g: rgb('#F7C6DA'), p: rgb('#FFFFFF'), r: rgb('#FFE9F2'), c: '#CF4C7F' },
+  tacIc: { a: rgb('#FFD3E2'), g: rgb('#F3A2C2'), p: rgb('#FFFFFF'), r: rgb('#FFE9F2'), c: '#CF4C7F' },
+  orta: { a: rgb('#FFD23C'), g: rgb('#F49A1E'), p: rgb('#FFF6B8'), r: rgb('#FFE7A0'), c: '#B3510A' },
+  tomurcuk: { a: rgb('#FF8DB6'), g: rgb('#E3528D'), p: rgb('#FFD6E6'), r: rgb('#FFC6DC'), c: '#A3235A' },
+  bulut: { a: rgb('#FFFFFF'), g: rgb('#C6DEF8'), p: rgb('#FFFFFF'), r: rgb('#FFFFFF'), c: '#4F86CF' },
+};
+const SAP = { a: '#4DAE46', c: '#14653A' };
+
+// ------------------------------------------------------------------ mesafe alanı (EDT) ve kabartma
+function edt2(G, w, h) {
+  const m = Math.max(w, h);
+  const f = new Float64Array(m), dd = new Float64Array(m), v = new Int32Array(m), z = new Float64Array(m + 1);
+  const dt = (n) => {
+    let k = 0; v[0] = 0; z[0] = -1e20; z[1] = 1e20;
+    for (let q = 1; q < n; q++) {
+      let s = (f[q] + q * q - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]);
+      while (s <= z[k]) { k--; s = (f[q] + q * q - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]); }
+      k++; v[k] = q; z[k] = s; z[k + 1] = 1e20;
+    }
+    k = 0;
+    for (let q = 0; q < n; q++) { while (z[k + 1] < q) k++; dd[q] = (q - v[k]) * (q - v[k]) + f[v[k]]; }
+  };
+  for (let x = 0; x < w; x++) { for (let y = 0; y < h; y++) f[y] = G[y * w + x]; dt(h); for (let y = 0; y < h; y++) G[y * w + x] = dd[y]; }
+  for (let y = 0; y < h; y++) { const o = y * w; for (let x = 0; x < w; x++) f[x] = G[o + x]; dt(w); for (let x = 0; x < w; x++) G[o + x] = dd[x]; }
+}
+function kutuBulanik(A, w, h, r) {
+  const B = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) {
+    let acc = 0; const o = y * w;
+    for (let x = -r; x <= r; x++) acc += A[o + clamp(x, 0, w - 1)];
+    for (let x = 0; x < w; x++) { B[o + x] = acc / (2 * r + 1); acc += A[o + Math.min(w - 1, x + r + 1)] - A[o + Math.max(0, x - r)]; }
+  }
+  for (let x = 0; x < w; x++) {
+    let acc = 0;
+    for (let y = -r; y <= r; y++) acc += B[clamp(y, 0, h - 1) * w + x];
+    for (let y = 0; y < h; y++) { A[y * w + x] = acc / (2 * r + 1); acc += B[Math.min(h - 1, y + r + 1) * w + x] - B[Math.max(0, y - r) * w + x]; }
+  }
+}
+function sisir(L, R, yum) {
+  const { A, w, h } = L; const n = w * h;
+  const G = new Float64Array(n);
+  for (let i = 0; i < n; i++) G[i] = A[i] >= 0.5 ? 1e10 : 0;
+  edt2(G, w, h);
+  const H = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const d = A[i] >= 0.5 ? (Math.sqrt(G[i]) - 0.5) / O : 0; const t = clamp(d / R); H[i] = R * O * Math.sqrt(1 - (1 - t) * (1 - t)); }
+  kutuBulanik(H, w, h, yum); kutuBulanik(H, w, h, yum);
+  const NX = new Float32Array(n), NY = new Float32Array(n), NZ = new Float32Array(n);
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const k = y * w + x; const gx = (H[k + 1] - H[k - 1]) * 0.5, gy = (H[k + w] - H[k - w]) * 0.5; const l = Math.hypot(gx, gy, 1);
+    NX[k] = -gx / l; NY[k] = -gy / l; NZ[k] = 1 / l;
+  }
+  L.NX = NX; L.NY = NY; L.NZ = NZ;
+}
+function ornekA(L, X, Y) {
+  const fx = (X - L.x0) * O - 0.5, fy = (Y - L.y0) * O - 0.5;
+  const ix = Math.floor(fx), iy = Math.floor(fy);
+  if (ix < 0 || iy < 0 || ix >= L.w - 1 || iy >= L.h - 1) return 0;
+  const tx = fx - ix, ty = fy - iy, k = iy * L.w + ix, A = L.A;
+  return (A[k] * (1 - tx) + A[k + 1] * tx) * (1 - ty) + (A[k + L.w] * (1 - tx) + A[k + L.w + 1] * tx) * ty;
+}
+function nset(s, x, y, z) { const l = Math.hypot(x, y, z) || 1; s[0] = x / l; s[1] = y / l; s[2] = z / l; }
+function donel(s, X, cx, r, dr) {
+  const x = X - cx; const u = clamp(x / Math.max(r, 0.001), -1, 1); const z = Math.sqrt(1 - u * u) * r;
+  nset(s, x, -r * dr, z); return u;
+}
+function profil(fn, n) {
+  const pts = []; for (let i = 0; i <= n; i++) pts.push(fn(i / n)); pts.sort((a, b) => a[0] - b[0]);
+  const y0 = pts[0][0], y1 = pts[pts.length - 1][0], st = 0.125; const m = Math.ceil((y1 - y0) / st) + 1;
+  const R = new Float32Array(m); let k = 0;
+  for (let i = 0; i < m; i++) {
+    const y = y0 + i * st; while (k < pts.length - 2 && pts[k + 1][0] < y) k++;
+    const a = pts[k], b = pts[k + 1]; const t = b[0] - a[0] ? clamp((y - a[0]) / (b[0] - a[0])) : 0; R[i] = a[1] + (b[1] - a[1]) * t;
+  }
+  const D = new Float32Array(m);
+  for (let i = 0; i < m; i++) { const a = Math.max(0, i - 2), b = Math.min(m - 1, i + 2); D[i] = (R[b] - R[a]) / ((b - a) * st); }
+  const idx = (y) => clamp((y - y0) / st, 0, m - 1);
+  return {
+    r(y) { const f = idx(y), i = Math.floor(f), t = f - i; return i >= m - 1 ? R[m - 1] : R[i] * (1 - t) + R[i + 1] * t; },
+    dr(y) { const f = idx(y), i = Math.floor(f), t = f - i; return i >= m - 1 ? D[m - 1] : D[i] * (1 - t) + D[i + 1] * t; },
+  };
+}
+
+// ------------------------------------------------------------------ cel katmanı: normal → ışık değeri → sert eşik (türevle kenar yumuşatma)
+const sv = new Float32Array(8);
+function cel(o) {
+  const pad = 5;
+  const x0 = Math.floor(o.bb[0]) - pad, y0 = Math.floor(o.bb[1]) - pad;
+  const x1 = Math.ceil(o.bb[2]) + pad, y1 = Math.ceil(o.bb[3]) + pad;
+  const w = (x1 - x0) * O, h = (y1 - y0) * O;
+  const c = S.yeniTuval(w, h); const m = c.getContext('2d', { willReadFrequently: true });
+  m.setTransform(O, 0, 0, O, -x0 * O, -y0 * O); m.fillStyle = '#000'; m.strokeStyle = '#000'; m.lineCap = 'round'; m.lineJoin = 'round';
+  o.maske(m); m.setTransform(1, 0, 0, 1, 0, 0);
+  const img = m.getImageData(0, 0, w, h), d = img.data, n = w * h;
+  const A = new Float32Array(n); for (let i = 0; i < n; i++) A[i] = d[i * 4 + 3] / 255;
+  const L = { A, w, h, x0, y0 };
+  if (o.sisir) sisir(L, o.sisir, o.yum || 2);
+  const F = new Float32Array(n), SP = new Float32Array(n), PI = new Array(n);
+  const esik = o.esik === undefined ? 0.12 : o.esik, parlak = o.parlak === undefined ? 0.97 : o.parlak;
+  for (let j = 0; j < h; j++) {
+    const Y = y0 + (j + 0.5) / O;
+    for (let i = 0; i < w; i++) {
+      const k = j * w + i; if (A[k] < 0.004) { F[k] = 1; SP[k] = 0; continue; }
+      const X = x0 + (i + 0.5) / O;
+      sv[0] = 0; sv[1] = 0; sv[2] = 1; sv[6] = 1; sv[7] = 1;
+      if (L.NX) { sv[0] = L.NX[k]; sv[1] = L.NY[k]; sv[2] = L.NZ[k]; }
+      PI[k] = o.yuzey ? o.yuzey(sv, X, Y, k, L) : null;
+      const ndl = sv[0] * Lv[0] + sv[1] * Lv[1] + sv[2] * Lv[2];
+      F[k] = (sv[7] < 0.5 ? -1 : ndl) - (1 - sv[6]);
+      SP[k] = (sv[0] * Hv[0] + sv[1] * Hv[1] + sv[2] * Hv[2]) * (sv[7] < 0.5 ? 0 : 1) - (1 - sv[6]);
+    }
+  }
+  const rim = o.rim === undefined ? 3.6 : o.rim;
+  for (let j = 1; j < h - 1; j++) {
+    const Y = y0 + (j + 0.5) / O;
+    for (let i = 1; i < w - 1; i++) {
+      const k = j * w + i; if (A[k] < 0.004) continue;
+      const X = x0 + (i + 0.5) / O;
+      const pal = PI[k] || o.P;
+      // gölge kaplaması: alanın piksel türeviyle 1 piksellik keskin geçiş
+      const gF = (Math.abs(F[k + 1] - F[k - 1]) + Math.abs(F[k + w] - F[k - w])) * 0.5 + 1e-4;
+      const cs = clamp(0.5 + (esik - F[k]) / gF);
+      const gS = (Math.abs(SP[k + 1] - SP[k - 1]) + Math.abs(SP[k + w] - SP[k - w])) * 0.5 + 1e-4;
+      const ch = o.parlakYok ? 0 : clamp(0.5 + (SP[k] - parlak) / gS) * (1 - cs);
+      // kenar ışığı: gölge tarafında, siluetin hemen içinde ince şerit
+      let cr = 0;
+      if (rim > 0) cr = clamp((1 - ornekA(L, X - L2[0] * rim, Y - L2[1] * rim)) * 1.6 - 0.3) * cs * (A[k] > 0.6 ? 1 : 0);
+      let r = mix(pal.a[0], pal.g[0], cs), g = mix(pal.a[1], pal.g[1], cs), b = mix(pal.a[2], pal.g[2], cs);
+      r = mix(r, pal.p[0], ch); g = mix(g, pal.p[1], ch); b = mix(b, pal.p[2], ch);
+      r = mix(r, pal.r[0], cr); g = mix(g, pal.r[1], cr); b = mix(b, pal.r[2], cr);
+      d[k * 4] = r; d[k * 4 + 1] = g; d[k * 4 + 2] = b;
+    }
+  }
+  m.putImageData(img, 0, 0);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(c, x0 * O, y0 * O); ctx.restore();
+  if (o.cizgi) cizgi(o.cizgi[0], o.cizgi[1], o.cizgi[2] || 1.7);
+  return L;
+}
+
+// ------------------------------------------------------------------ dış silüet konturu: birleşik maskenin dış mesafe alanından halka
+function silKontur(bb, maskeCiz, renkCiz, kalin) {
+  const pad = Math.ceil(kalin) + 4;
+  const x0 = Math.floor(bb[0]) - pad, y0 = Math.floor(bb[1]) - pad, x1 = Math.ceil(bb[2]) + pad, y1 = Math.ceil(bb[3]) + pad;
+  const w = (x1 - x0) * O, h = (y1 - y0) * O, n = w * h;
+  const mc = S.yeniTuval(w, h), m = mc.getContext('2d', { willReadFrequently: true });
+  m.setTransform(O, 0, 0, O, -x0 * O, -y0 * O); m.fillStyle = '#000'; m.strokeStyle = '#000'; m.lineCap = 'round'; m.lineJoin = 'round';
+  maskeCiz(m);
+  const md = m.getImageData(0, 0, w, h).data;
+  const rc = S.yeniTuval(w, h), r = rc.getContext('2d', { willReadFrequently: true });
+  r.setTransform(O, 0, 0, O, -x0 * O, -y0 * O); r.lineCap = 'round'; r.lineJoin = 'round';
+  renkCiz(r, kalin * 2.6);
+  const out = r.getImageData(0, 0, w, h), od = out.data;
+  const G = new Float64Array(n);
+  for (let i = 0; i < n; i++) G[i] = md[i * 4 + 3] >= 128 ? 0 : 1e10;
+  edt2(G, w, h);
+  const t = kalin * O;
+  for (let i = 0; i < n; i++) {
+    const a = md[i * 4 + 3] / 255;
+    const dd = Math.sqrt(G[i]);
+    let cov = a >= 0.5 ? 0 : clamp(t - dd + 0.5);
+    if (a > 0 && a < 0.5) cov = Math.max(cov, 1 - a * 0.0);
+    od[i * 4 + 3] = cov * 255;
+  }
+  r.setTransform(1, 0, 0, 1, 0, 0); r.putImageData(out, 0, 0);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(rc, x0 * O, y0 * O); ctx.restore();
+}
+function cizgi(yol, renk, kal) { ctx.save(); ctx.strokeStyle = renk; ctx.lineWidth = kal; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(typeof yol === 'string' ? new Path2D(yol) : yol); ctx.restore(); }
+
+// ================================================================== gök: üç düz bant, güneş halkaları
+function gok() {
+  // üç bant; her bandın içinde hafif degrade, bantlar arasında sert sınır
+  const bant = [[0, 300, '#4590E2', '#58A2EA'], [300, 560, '#78BCF2', '#8FCAF5'], [560, 800, '#BDE5F8', '#F7EAD3']];
+  for (const [a, b, c1, c2] of bant) { const g = ctx.createLinearGradient(0, a, 0, b); g.addColorStop(0, c1); g.addColorStop(1, c2); ctx.fillStyle = g; ctx.fillRect(0, a, 1024, b - a); }
+  // güneş: düz halkalar
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, 1024, 800); ctx.clip();
+  ctx.fillStyle = 'rgba(255,248,214,0.22)'; ctx.beginPath(); ctx.arc(880, 140, 150, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(255,248,214,0.3)'; ctx.beginPath(); ctx.arc(880, 140, 98, 0, 7); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = '#FFF4C2'; ctx.beginPath(); ctx.arc(880, 140, 50, 0, 7); ctx.fill();
+  ctx.fillStyle = '#FFE38A'; ctx.beginPath(); ctx.arc(880, 140, 50, 0, 7); ctx.arc(874, 146, 44, 0, 7, true); ctx.fill('evenodd');
+  cizgi(S.daireYolu(880, 140, 50), '#F0A21E', 5);
+}
+
+// ================================================================== bulutlar
+function bulut(cx, cy, sc, toh) {
+  const rr = S.rng(toh);
+  const kur = [];
+  const taban = cy + 18 * sc;
+  for (const [x, y, r] of [[-80, 6, 24], [-48, -10, 34], [-6, -28, 44], [38, -14, 36], [76, 0, 27], [104, 9, 16], [14, 4, 32], [-28, 6, 30]])
+    kur.push({ x: cx + (x + (rr() - 0.5) * 6) * sc, y: cy + (y + (rr() - 0.5) * 5) * sc, r: r * sc * (0.94 + rr() * 0.12) });
+  let bx0 = 1e9, by0 = 1e9, bx1 = -1e9;
+  for (const k of kur) { bx0 = Math.min(bx0, k.x - k.r); bx1 = Math.max(bx1, k.x + k.r); by0 = Math.min(by0, k.y - k.r); }
+  const mask = (c) => { c.save(); c.beginPath(); c.rect(bx0 - 6, by0 - 6, bx1 - bx0 + 12, taban - by0 + 6); c.clip(); for (const k of kur) { c.beginPath(); c.arc(k.x, k.y, k.r, 0, 7); c.fill(); } c.restore(); };
+  cel({
+    bb: [bx0, by0, bx1, taban], P: P.bulut, maske: mask, esik: 0.32, parlakYok: true, rim: 0,
+    yuzey(s, X, Y) {
+      let z1 = -1e9, best = null;
+      for (const k of kur) { const dx = X - k.x, dy = Y - k.y, q = k.r * k.r - dx * dx - dy * dy; if (q > 0) { const z = Math.sqrt(q) + k.r * 0.4; if (z > z1) { z1 = z; best = k; } } }
+      if (!best) return null;
+      nset(s, X - best.x, Y - best.y + smooth(taban - 12 * sc, taban, Y) * best.r * 1.2, z1 - best.r * 0.4);
+      return null;
+    },
+  });
+  silKontur([bx0, by0, bx1, taban], mask, (c) => { c.fillStyle = P.bulut.c; c.fillRect(bx0 - 20, by0 - 20, bx1 - bx0 + 40, taban - by0 + 40); }, 3);
+}
+
+// ================================================================== zemin
+function zemin() {
+  ctx.fillStyle = '#F6D7A4'; ctx.fillRect(0, 800, 1024, 224);
+  ctx.fillStyle = '#EFC890'; ctx.fillRect(0, 900, 1024, 124);
+  // sert cel gölgesi: yapının sola düşen gölgesi
+  ctx.fillStyle = '#DDAE80';
+  ctx.beginPath(); ctx.moveTo(296, 800); ctx.lineTo(828, 800); ctx.lineTo(800, 818); ctx.lineTo(236, 826); ctx.closePath(); ctx.fill();
+  cizgi('M0,800 L1024,800', '#C98A55', 2.2);
+}
+
+// ================================================================== yapı
+function yapi() {
+  const Y_ = S.yollar();
+  const c = S.minare.cx;
+  const parcalar = S.minareParcalari();
+  const Pp = (ad) => parcalar.find((p) => p.ad === ad);
+  const K = S.kaide, kr = K.kornis;
+  const kp = profil((t) => [bez(555, 430, 318, 300, t), 560 - bez(360, 358, 440, 560, t)], 6000);
+  const tp = profil((t) => [bez(200, 182, 160, 146, t), c - bez(c - 22, c - 34, c - 12, c, t)], 2000);
+  const alemM = S.alemParcalari(c, 146, 0.62), alemK = S.alemParcalari(560, 300, 1);
+  const dik = (x1, y1, x2, y2) => S.yol([[x1, y1], [x2, y1], [x2, y2], [x1, y2]], true);
+  const ince = 1.7;
+
+  // --- birleşik silüet (dış kontur) için parça listesi: [yol, kontur rengi]
+  const parcaYollari = [];
+  for (const p of parcalar) {
+    if (p.tip === 'poligon') parcaYollari.push([S.yol(p.noktalar, true), P.tas.c]);
+    else if (p.tip === 'korkuluk') parcaYollari.push([dik(p.x1, p.y1, p.x2, p.y2), P.tas.c]);
+    else if (p.tip === 'topuz') parcaYollari.push([p.yol, P.tas.c]);
+  }
+  for (const d of Y_.minareAlem) parcaYollari.push([d, P.altin.c]);
+  parcaYollari.push([Y_.kaide, P.tas.c], [Y_.kornis, P.tas.c], [Y_.kasnakAlt, P.kasnak.c], [Y_.kasnakUst, P.kasnak.c], [Y_.kubbe, P.kubbe.c]);
+  for (const d of Y_.alem) parcaYollari.push([d, P.altin.c]);
+
+  // --- minare (her parça: cel dolgu, hemen ardından ince kontur)
+  const silindir = (x1, x2, y1, y2, ops) => {
+    ops = ops || {};
+    const R = (x2 - x1) / 2;
+    cel({
+      bb: [x1, y1, x2, y2], P: P.tas, parlak: 0.985, cizgi: [dik(x1, y1, x2, y2), P.tas.c, ince],
+      maske(m) { m.fillRect(x1, y1, x2 - x1, y2 - y1); },
+      yuzey(s, X, Y) {
+        donel(s, X, c, R, 0);
+        if (ops.pah) { nset(s, s[0], s[1] - 1.2 * smooth(y1 + ops.pah, y1, Y) + 1.2 * smooth(y2 - ops.pah, y2, Y), s[2]); }
+        if (ops.yuzey) ops.yuzey(s, X, Y);
+        return null;
+      },
+    });
+  };
+  const koni = (p) => {
+    const q = p.noktalar, yA = q[0][1], yB = q[1][1], rA = c - q[0][0], rB = c - q[1][0];
+    cel({
+      bb: [c - Math.max(rA, rB), Math.min(yA, yB), c + Math.max(rA, rB), Math.max(yA, yB)], P: P.tas, parlakYok: true, cizgi: [S.yol(q, true), P.tas.c, ince],
+      maske(m) { m.beginPath(); q.forEach(([x, y], i) => (i ? m.lineTo(x, y) : m.moveTo(x, y))); m.closePath(); m.fill(); },
+      yuzey(s, X, Y) { const t = (Y - yA) / (yB - yA); donel(s, X, c, rA + (rB - rA) * t, (rB - rA) / (yB - yA)); return null; },
+    });
+  };
+  const korkuluk = (p) => {
+    const R = (p.x2 - p.x1) / 2;
+    cel({
+      bb: [p.x1, p.y1, p.x2, p.y2], P: P.tas, parlakYok: true, rim: 2,
+      maske(m) { m.fillRect(p.x1, p.y1, p.x2 - p.x1, p.y2 - p.y1); },
+      yuzey(s, X, Y) {
+        donel(s, X, c, R, 0);
+        if (Y > p.y1 + 4 && Y < p.y2 - 3.5) {
+          const th = Math.asin(clamp((X - c) / R, -1, 1)); const f = (th + Math.PI / 2) / (Math.PI / 9); const q = f - Math.floor(f) - 0.5;
+          if (Math.abs(q) > 0.24) s[7] = 0;
+        }
+        return null;
+      },
+    });
+    cizgi(`M${p.x1},${p.y1 + 4} L${p.x2},${p.y1 + 4}`, P.tas.c, 1.2);
+    cizgi(`M${p.x1},${p.y2 - 3.5} L${p.x2},${p.y2 - 3.5}`, P.tas.c, 1.2);
+    cizgi(dik(p.x1, p.y1, p.x2, p.y2), P.tas.c, ince);
+  };
+  silindir(c - 34, c + 34, 488, 800, { yuzey(s, X, Y) { if (Y > 760) s[6] = 0; } });
+  // zikzak bandı
+  ctx.save(); ctx.beginPath(); ctx.rect(266, 520, 68, 64); ctx.clip();
+  for (const z of S.zikzakCizgileri()) cizgi(S.yol(z), P.tas.c, 1.6);
+  ctx.restore();
+  cizgi('M266,522 L334,522', P.tas.c, 1.4); cizgi('M266,582 L334,582', P.tas.c, 1.4);
+  koni(Pp('çıkma-1'));
+  { const p = Pp('şerefe-1'); silindir(p.noktalar[0][0], p.noktalar[1][0], 456, 468, { pah: 4 }); }
+  korkuluk(Pp('korkuluk-1'));
+  silindir(c - 27, c + 27, 316, 436, { yuzey(s, X, Y) { if (Y > 428) s[7] = 0; } });
+  koni(Pp('çıkma-2'));
+  { const p = Pp('şerefe-2'); silindir(p.noktalar[0][0], p.noktalar[1][0], 290, 300, { pah: 3.4 }); }
+  korkuluk(Pp('korkuluk-2'));
+  silindir(c - 19, c + 19, 206, 272, { yuzey(s, X, Y) { if (Y > 265) s[7] = 0; } });
+  silindir(c - 25, c + 25, 198, 206, { pah: 3 });
+  cel({
+    bb: [c - 27, 144, c + 27, 201], P: P.tas, parlak: 0.975, cizgi: [Pp('topuz').yol, P.tas.c, ince],
+    maske(m) { m.fill(new Path2D(Pp('topuz').yol)); },
+    yuzey(s, X, Y) { donel(s, X, c, tp.r(Y), tp.dr(Y)); return null; },
+  });
+  alem(alemM);
+  for (const p of S.minarePencereleri) pencere(S.kemerYolu(p.x, p.y, p.w, p.h), p, P.tas, '#8E5236', '#D99A6C');
+
+  // --- kaide
+  cel({
+    bb: [K.x1, K.y1, K.x2, K.y2], P: P.tas, parlakYok: true, rim: 0, cizgi: [Y_.kaide, P.tas.c, ince],
+    maske(m) { m.fillRect(K.x1, K.y1, K.x2 - K.x1, K.y2 - K.y1); },
+    yuzey(s, X, Y) {
+      nset(s, 0, -0.1, 1);
+      if (Y < 715 - (X - K.x1) * 0.004) s[7] = 0;             // kornişin sert gölgesi
+      if (X < K.x1 + 9) s[7] = 0;                               // sol köşe dönüşü
+      return null;
+    },
+  });
+  for (const px of [365, 495, 625, 755]) cizgi(`M${px},716 L${px},798`, P.tas.c, 1.1);
+  for (const p of K.pencereler) pencere(S.kemerYolu(p.x, p.y, p.w, p.h), p, P.tas, '#8E5236', '#D99A6C');
+  cel({
+    bb: [kr.x1, kr.y1, kr.x2, kr.y2], P: P.tas, parlak: 0.99, rim: 0, cizgi: [Y_.kornis, P.tas.c, ince],
+    maske(m) { m.fillRect(kr.x1, kr.y1, kr.x2 - kr.x1, kr.y2 - kr.y1); },
+    yuzey(s, X, Y) { const v = (Y - 698) / 6; nset(s, 0, v * 1.4, Math.sqrt(Math.max(0.05, 1 - v * v))); return null; },
+  });
+  // --- kasnak
+  for (let k = 1; k >= 0; k--) {
+    const q = S.kasnak[k], cx = (q.x1 + q.x2) / 2, R = (q.x2 - q.x1) / 2;
+    cel({
+      bb: [q.x1, q.y1, q.x2, q.y2], P: P.kasnak, parlak: 0.985, rim: 4, cizgi: [k ? Y_.kasnakAlt : Y_.kasnakUst, P.kasnak.c, ince],
+      maske(m) { m.fillRect(q.x1, q.y1, q.x2 - q.x1, q.y2 - q.y1); },
+      yuzey(s, X, Y) {
+        donel(s, X, cx, R, 0);
+        if (Y < q.y1 + 6) s[7] = 0;                       // üst kattan / kubbeden düşen gölge şeridi
+        if (Y > q.y2 - 3) nset(s, s[0], 0.8, s[2]);
+        return null;
+      },
+    });
+    cizgi(`M${q.x1},${q.y1 + 6} L${q.x2},${q.y1 + 6}`, P.kasnak.c, 1.1);
+    for (const p of S.kasnakPencereleri(k)) pencere(S.kemerYolu(p.x, p.y, p.w, p.h), p, P.kasnak, '#0C3B38', '#2BC487');
+  }
+  // --- kubbe
+  const DIL = Math.PI / 16;
+  cel({
+    bb: [358, 298, 762, 556], P: P.kubbe, parlak: 0.962, esik: 0.1, rim: 4.5,
+    maske(m) { m.fill(new Path2D(S.kubbeYolu)); },
+    yuzey(s, X, Y) {
+      const r = kp.r(Y), dr = kp.dr(Y);
+      const u = donel(s, X, 560, r, dr);
+      const phi = Math.asin(u);
+      const f = (phi + Math.PI / 2) / DIL; const g = f - Math.floor(f) - 0.5;
+      const egim = -g * 0.5 * smooth(8, 50, r);
+      nset(s, s[0] - egim * Math.cos(phi), s[1], s[2] + egim * Math.sin(phi));
+      if (Y > 546) s[7] = 0;
+      return null;
+    },
+  });
+  ctx.save(); ctx.clip(new Path2D(S.kubbeYolu));
+  for (const kb of S.kaburgalar(16)) cizgi(S.yol(kb.noktalar), P.kubbe.c, 1.5);
+  ctx.restore();
+  cizgi('M362,546 L758,546', P.kubbe.c, 1.2);
+  cizgi(Y_.kubbe, P.kubbe.c, ince);
+  alem(alemK);
+
+  // --- dış silüet: kalın, renkli (birleşik maskenin dışında halka)
+  silKontur([240, 70, 840, 805], (m) => { for (const [d] of parcaYollari) m.fill(new Path2D(d)); },
+    (r, k) => { for (const [d, col] of parcaYollari) { const pp = new Path2D(d); r.strokeStyle = col; r.lineWidth = k; r.stroke(pp); r.fillStyle = col; r.fill(pp); } }, 3.2);
+}
+function pencere(yol, p, pal, ic, yan) {
+  const pp = new Path2D(yol);
+  ctx.save(); ctx.clip(pp);
+  ctx.fillStyle = ic; ctx.fill(pp);
+  // içe dönük sol pervaz ışık alır: sert, ince şerit
+  ctx.fillStyle = yan;
+  ctx.fillRect(p.x - p.w / 2, p.y, Math.max(1.6, p.w * 0.2), p.h);
+  // üst kemerden içe düşen sert gölge
+  ctx.fillStyle = 'rgba(0,0,0,0.0)';
+  ctx.restore();
+  cizgi(pp, pal.c, 1.6);
+}
+function alem(a) {
+  const el = (s, X, Y, cx, cy, rx, ry, rz) => { const x = (X - cx) / rx, y = (Y - cy) / ry; nset(s, x / rx, y / ry, Math.sqrt(Math.max(0, 1 - x * x - y * y)) / rz); };
+  const cb = a.cubuk;
+  cel({ bb: [cb.x1, cb.y1, cb.x2, cb.y2], P: P.altin, rim: 0, cizgi: [S.yol([[cb.x1, cb.y1], [cb.x2, cb.y1], [cb.x2, cb.y2], [cb.x1, cb.y2]], true), P.altin.c, 1.2], maske(m) { m.fillRect(cb.x1, cb.y1, cb.x2 - cb.x1, cb.y2 - cb.y1); }, yuzey(s, X) { donel(s, X, (cb.x1 + cb.x2) / 2, (cb.x2 - cb.x1) / 2, 0); return null; } });
+  for (const k of a.kureler) cel({ bb: [k.cx - k.r, k.cy - k.r, k.cx + k.r, k.cy + k.r], P: P.altin, rim: 1.2, parlak: 0.95, cizgi: [S.daireYolu(k.cx, k.cy, k.r), P.altin.c, 1.3], maske(m) { m.beginPath(); m.arc(k.cx, k.cy, k.r, 0, 7); m.fill(); }, yuzey(s, X, Y) { el(s, X, Y, k.cx, k.cy, k.r, k.r, k.r); return null; } });
+  const y = a.yaka;
+  cel({ bb: [y.cx - y.rx, y.cy - y.ry, y.cx + y.rx, y.cy + y.ry], P: P.altin, rim: 1.2, parlak: 0.96, cizgi: [S.elipsYolu({ cx: y.cx, cy: y.cy, rx: y.rx, ry: y.ry, aci: 0 }), P.altin.c, 1.3], maske(m) { m.beginPath(); m.ellipse(y.cx, y.cy, y.rx, y.ry, 0, 0, 7); m.fill(); }, yuzey(s, X, Y) { el(s, X, Y, y.cx, y.cy, y.rx, y.ry, y.ry * 1.3); return null; } });
+  const h = a.hilal;
+  cel({ bb: [h.cx - h.R, h.cy - h.R, h.cx + h.R, h.cy + h.R], P: P.altin, rim: 1.2, sisir: h.R * 0.35, yum: 1, parlak: 0.95, cizgi: [S.hilalYolu(h.cx, h.cy, h.R), P.altin.c, 1.3], maske(m) { m.fill(new Path2D(S.hilalYolu(h.cx, h.cy, h.R))); } });
+}
+
+// ================================================================== bitkiler
+function bitkiler() {
+  const B = S.bitki;
+  // zemine düşen sert, düz cel gölgeleri (sola-aşağı)
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 801, 1024, 223); ctx.clip();
+  ctx.translate(-7, 9); ctx.fillStyle = 'rgba(205,140,90,0.32)';
+  for (const y of B.yapraklar) if (y.y > 790) ctx.fill(new Path2D(S.yaprakYolu(y)));
+  for (const c of B.cicekler) if (c.y > 800) for (const e of S.tacYapraklari(c)) ctx.fill(new Path2D(S.elipsYolu(e)));
+  ctx.restore();
+  // saplar: koyu yeşil kontur + açık gövde + ince ışık çizgisi
+  for (const sp of B.saplar) { const pp = new Path2D(S.yol(sp)); cizgi(pp, SAP.c, 7.6); cizgi(pp, SAP.a, 4); }
+  for (const y of B.yapraklar) yaprak(y);
+  for (const t of B.tomurcuklar) {
+    const pp = new Path2D(S.tomurcukYolu(t));
+    cizgi(pp, P.tomurcuk.c, 4.2);
+    const ca = Math.cos(t.aci), sa = Math.sin(t.aci);
+    cel({
+      bb: [t.x - t.r * 2, t.y - t.r * 2, t.x + t.r * 2, t.y + t.r * 2], P: P.tomurcuk, sisir: t.r * 0.8, yum: 1, rim: 1.4, parlak: 0.95,
+      maske(m) { m.fill(pp); },
+      yuzey(s, X, Y) { const u = ((X - t.x) * ca + (Y - t.y) * sa) / t.r; return u < -0.25 ? P.yaprak : null; },
+    });
+    cizgi(pp, P.tomurcuk.c, 1.2);
+  }
+  for (const c of B.cicekler) cicek(c);
+}
+function yaprak(y) {
+  const L = y.uzunluk, W = L * y.genislik, ca = Math.cos(y.aci), sa = Math.sin(y.aci);
+  const pal = L > 50 ? P.yaprakK : P.yaprak;
+  const pp = new Path2D(S.yaprakYolu(y));
+  const kal = L > 50 ? 4.6 : 3.8;
+  cizgi(pp, pal.c, kal);
+  cel({
+    bb: [Math.min(y.x, y.x + ca * L) - W, Math.min(y.y, y.y + sa * L) - W, Math.max(y.x, y.x + ca * L) + W, Math.max(y.y, y.y + sa * L) + W],
+    P: pal, sisir: W * 0.3, yum: 2, rim: 1.6, parlak: 0.975, esik: 0.18,
+    maske(m) { m.fill(pp); },
+    yuzey(s, X, Y) {
+      const dx = X - y.x, dy = Y - y.y; const v = -dx * sa + dy * ca;
+      const th = v > 0 ? 1 : -1;
+      nset(s, s[0] + 0.75 * th * sa, s[1] - 0.75 * th * ca, s[2]);
+      return null;
+    },
+  });
+  const [a, b] = S.yaprakDamari(y);
+  cizgi(`M${a[0]},${a[1]} L${b[0]},${b[1]}`, pal.c, L > 50 ? 1.5 : 1.2);
+}
+function cicek(c) {
+  const tac = S.tacYapraklari(c);
+  const kal = c.r > 40 ? 5 : 4;
+  for (const e of tac) cizgi(S.elipsYolu(e), P.tac.c, kal);
+  for (const e of tac) {
+    const ca = Math.cos(e.aci), sa = Math.sin(e.aci), rz = e.ry * 0.55;
+    cel({
+      bb: [e.cx - e.rx, e.cy - e.rx, e.cx + e.rx, e.cy + e.rx], P: P.tac, rim: c.r > 40 ? 2.4 : 1.6, parlak: 0.992, esik: 0.2, cizgi: [S.elipsYolu(e), P.tac.c, 1.3],
+      maske(m) { m.beginPath(); m.ellipse(e.cx, e.cy, e.rx, e.ry, e.aci, 0, 7); m.fill(); },
+      yuzey(s, X, Y) {
+        const dx = X - e.cx, dy = Y - e.cy, u = dx * ca + dy * sa, v = -dx * sa + dy * ca;
+        const q = Math.max(0, 1 - (u / e.rx) ** 2 - (v / e.ry) ** 2);
+        let lu = u / (e.rx * e.rx), lv = v / (e.ry * e.ry), lz = Math.sqrt(q) / rz;
+        const ll = Math.hypot(lu, lv, lz); lu /= ll; lv /= ll; lz /= ll;
+        const rx = X - c.x, ry = Y - c.y, rr = Math.hypot(rx, ry) || 1;
+        const cup = 0.6 * clamp(rr / c.r);
+        nset(s, lu * ca - lv * sa - cup * rx / rr, lu * sa + lv * ca - cup * ry / rr, lz);
+        return rr < c.r * 0.34 ? P.tacIc : null;
+      },
+    });
+  }
+  // orta ve ercik noktaları
+  const rc = c.r * 0.21;
+  cizgi(S.daireYolu(c.x, c.y, rc), P.orta.c, 3.6);
+  cel({
+    bb: [c.x - rc, c.y - rc, c.x + rc, c.y + rc], P: P.orta, rim: 1.2, parlak: 0.96,
+    maske(m) { m.beginPath(); m.arc(c.x, c.y, rc, 0, 7); m.fill(); },
+    yuzey(s, X, Y) { const dx = (X - c.x) / rc, dy = (Y - c.y) / rc; nset(s, dx, dy, Math.sqrt(Math.max(0, 1 - dx * dx - dy * dy)) * 1.4); return null; },
+  });
+  cizgi(S.daireYolu(c.x, c.y, rc), P.orta.c, 1.2);
+  ctx.fillStyle = P.orta.c;
+  for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2 + c.aci; ctx.beginPath(); ctx.arc(c.x + Math.cos(a) * c.r * 0.3, c.y + Math.sin(a) * c.r * 0.3, Math.max(1.3, c.r * 0.04), 0, 7); ctx.fill(); }
+}
+
+// ------------------------------------------------------------------ çizim sırası
+gok();
+bulut(170, 236, 1.0, 21);
+bulut(500, 140, 0.62, 22);
+bulut(840, 372, 0.95, 23);
+bulut(76, 486, 0.6, 24);
+bulut(962, 560, 0.5, 25);
+zemin();
+yapi();
+bitkiler();
+S.hazir();
+</script>
+</body>
+</html>

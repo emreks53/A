@@ -1,0 +1,22 @@
+{
+  "kod": "S-052",
+  "no": 52,
+  "ad": "Duvar Resmi",
+  "ad_en": "Mural",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Tuğla duvara dış cephe akriliğiyle boyanmış, uzaktan okunan iri biçimli ve doygun renkli bir kent duvar resmi.",
+  "tanim": "Duvar resmi, bir yapının iç ya da dış duvarına doğrudan boyanan büyük ölçekli resimdir. Dış cephe duvar resimleri sokaktan, metrelerce uzaktan okunmak üzere tasarlanır: biçimler sadeleştirilir, renkler doygun ve az sayıda tona indirilir, kalın konturlar biçimleri ayırır. Boya duvarın dokusunu örtmez; tuğlanın derzleri, yüzeyindeki oyuklar ve tuğladan tuğlaya değişen emilim resmin içinden görünür. Zamanla güneş renkleri soldurur, yağmur iz bırakır, dipte nem ve küçük boya atmaları belirir.",
+  "koken": "Duvar resminin kökü mağara resimlerine ve fresk geleneğine uzanır. Modern kent duvar resmi 1920–30'larda Diego Rivera, José Clemente Orozco ve David Alfaro Siqueiros'un Meksika muralizmiyle, ABD'de WPA kamu sanatı programıyla yaygınlaştı; 1970'lerden sonra mahalle ve topluluk duvar resimleri hareketiyle dünyaya yayıldı. Bugün akrilik dış cephe boyaları, rulo, fırça ve ızgarayla büyütülmüş eskizlerle yapılır.",
+  "ayirt_edici": [
+    "Boyanın altından görünen tuğla dokusu: derz çizgileri, tuğla kenarlarındaki pahlar, yüzeydeki oyuklar ve tuğladan tuğlaya hafif ton farkı",
+    "Elle çekilmiş dalgalı bantlardan kurulan gök; bant geçişlerinde birbirine giren kısa kuru fırça dilleri",
+    "İri, sade biçimler ve kalın lacivert kontur; kubbe dilimleri, kasnak ve minare ikişer üçer düz tonla gölgelenmiş",
+    "Turuncu halkalı soluk sarı güneş ve konturu olmayan ince ışın kamaları; yuvarlak uçlu şeritlerden ağırbaşlı bulutlar",
+    "Kenarları hafif pürüzlü boya, güneşle solmuş renkler, dipte nem lekesi ve köşelerde küçük boya atmaları",
+    "Resmin altında boyanmamış kırmızı tuğla sırası, duvar dibinde temas gölgesi, ot tutamları ve perspektifte beton kaldırım"
+  ],
+  "palet": ["#1B3C8C", "#55A2D6", "#F4E3A2", "#2A9447", "#F6ECD6", "#F26A5A", "#1C2340", "#A8573A"],
+  "kodla_cizim": "Duvar resmi önce ekran dışı bir tuvale, sahne boyalı alana (y < 936) sığacak biçimde küçültülerek düz renkli vektör biçimlerle çizildi: dalgalı gök bantları ve geçişlerinde sivri fırça dilleri, ışın kamalı güneş, şerit bulutlar, posterize 16 dilimli kubbe (dilim tonu sağ üstten gelen ışığa göre beş kademeye yuvarlanır), üç tonlu kasnaklar, iki tonlu minare ve kaide, kalın konturlu yapraklar ve çiçekler (SAHNE yolları). Sonra 1024² piksel tek tek işlendi: koşu bağlı tuğla ızgarasından gürültüyle bozulmuş kenarlı bir yükseklik haritası (tuğla yüzü, pah, derz, oyuklar) kuruldu, eğiminden sağ üstten gelen kabartma ışığı hesaplandı. Boya rengi, düşük frekanslı gürültüyle kaydırılan noktadan örneklenerek kenarlar elle çekilmiş gibi pürüzlendirildi; tuğla başına emilim farkı, rulo izi, yukarıda artan solma, derzlerde eksik örtme, yalnız birkaç köşe bölgesinde ve dipte boya atması (astar ya da tuğla görünür), yağmur izi, dipte nem ve derzlerde kireç çiçeklenmesi eklendi. Boyalı alanın altı çıplak tuğla olarak bırakıldı; kaldırım degrade, perspektif derzleri, beton gürültüsü ve ot tutamlarıyla çizildi.",
+  "etiketler": ["duvar resmi", "mural", "tuğla", "dış cephe", "akrilik", "kent sanatı", "kontur", "doku", "eskime"]
+}

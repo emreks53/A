@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>S-015 Sumi-e (Mürekkep Lavi) — Atölye örnek görseli</title>
+<title>S-015 Renkli Sumi-e — Atölye örnek görseli</title>
 <style>
   html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #f3eee1; }
   canvas { display: block; width: 1024px; height: 1024px; }
@@ -13,11 +13,12 @@
 <script src="../../sahne/sahne.js"></script>
 <script>
 'use strict';
-// S-015 Sumi-e (Mürekkep Lavi). Az ve kendinden emin vuruş: kubbenin gölge yanı tek bir yan fırça vuruşudur
+// S-015 Renkli Sumi-e (tansai). Az ve kendinden emin vuruş: kubbenin gölge yanı tek bir yan fırça vuruşudur
 // (fırçanın ucunda koyu, topuğunda soluk mürekkep), kaburgalar birkaç hızlı, solan çizgi; kasnak farklı
 // yoğunlukta fırça noktalarından bir bant. Kaide ve minarenin alt yanı sise karışır; kâğıdın çoğu boş (ma).
 // Önde, sol alt köşeden giren yaşlı bir erik dalı: kuru fırçalı (kasure) gövde, dik filizler, kümeler hâlinde
-// çiçek ve tomurcuk. Renk çok az: kubbede soluk yeşil, alemlerde okra; yazısız, geometrik kırmızı mühür.
+// çiçek ve tomurcuk. Renk saydam lavlar ve renkle yüklenmiş fırça: kubbede malakit yeşili, gökte ve sis
+// bantlarında çivit mavisi, alemlerde okra, pembe taç yaprakları, sarı ercikler, kırmızı tomurcuklar; zencefre mühür.
 // Ortak sahne ve yardımcılar: ../../sahne/SAHNE.md
 
 const O = 2;
@@ -127,6 +128,11 @@ const DRY = new Float32Array(N * N);   // kuru mürekkep (yayılmaz)
 const WET = new Float32Array(N * N);   // ıslak mürekkep (liflere yayılır)
 const TD = new Float32Array(N * N), TW = new Float32Array(N * N); // bir vuruşun geçici tamponu (üst üste binme yok)
 const YESIL = new Float32Array(1024 * 1024), OKRA = new Float32Array(1024 * 1024);
+// renkli lavlar (1024): MAVI çivit / gök mavisi, PEMBE erik çiçeğinin pembesi
+const MAVI = new Float32Array(1024 * 1024), PEMBE = new Float32Array(1024 * 1024);
+// renkli fırça (2048): fırça mürekkep yerine renkle yüklenir. ENJI kırmızı-pembe (boneless çiçek, tomurcuk), SARI ercik başları
+const ENJI = new Float32Array(N * N), SARI = new Float32Array(N * N);
+let BOYA = null, BOYA_K = 1; // null → mürekkep; yoksa vuruş bu renk alanına yazılır
 let bx0, by0, bx1, by1;
 const kutuSifirla = () => { bx0 = N; by0 = N; bx1 = -1; by1 = -1; };
 function isle() {
@@ -134,7 +140,7 @@ function isle() {
     let i = y * N + Math.max(0, bx0);
     for (let x = Math.max(0, bx0); x <= Math.min(N - 1, bx1); x++, i++) {
       const v = TD[i];
-      if (v > 0) { WET[i] += TW[i]; DRY[i] += v - TW[i]; TD[i] = 0; TW[i] = 0; }
+      if (v > 0) { if (BOYA) BOYA[i] += v * BOYA_K; else { WET[i] += TW[i]; DRY[i] += v - TW[i]; } TD[i] = 0; TW[i] = 0; }
     }
   }
 }
@@ -277,7 +283,7 @@ function leke(cx, cy, rx, ry, aci, o) {
  * içte tanelenir; isteğe bağlı çiçeklenme (geri akma) lekeleri. hedef: 'D' kuru mürekkep, 'W' ıslak, 'G' yeşil, 'K' okra.
  */
 function lav(ciz, o) {
-  const tint = o.hedef === 'G' || o.hedef === 'K';
+  const tint = o.hedef === 'G' || o.hedef === 'K' || o.hedef === 'M' || o.hedef === 'P';
   const s = tint ? 1 : O, W = 1024 * s;
   const c = SAHNE.yeniTuval(W, W), x = c.getContext('2d', { willReadFrequently: true });
   x.setTransform(s, 0, 0, s, 0, 0);
@@ -291,7 +297,7 @@ function lav(ciz, o) {
   const esik = o.esik == null ? 0.15 : o.esik, yum = o.yum == null ? 0.05 : o.yum, kenar = o.kenar == null ? 0.4 : o.kenar;
   const tirtik = o.tirtik == null ? 1 : o.tirtik, gr = o.gr == null ? 0.25 : o.gr, gam = o.gam == null ? 0.8 : o.gam;
   const cic = o.cicek || [];
-  const hedef = o.hedef === 'G' ? YESIL : o.hedef === 'K' ? OKRA : o.hedef === 'W' ? WET : DRY;
+  const hedef = o.hedef === 'G' ? YESIL : o.hedef === 'K' ? OKRA : o.hedef === 'M' ? MAVI : o.hedef === 'P' ? PEMBE : o.hedef === 'W' ? WET : DRY;
   for (let li = 0; li < kw * kh; li++) {
     const m = d[li * 4 + 3] / 255;
     if (m < 0.004) continue;
@@ -369,6 +375,31 @@ lav((x) => {
   x.beginPath(); x.ellipse(915, 598, 170, 14, -0.02, 0, TAU); x.fill();
   x.beginPath(); x.ellipse(96, 646, 130, 10, 0.02, 0, TAU); x.fill();
 }, { bul: 12, ton: 0.06, esik: 0.06, yum: 0.05, kenar: 0.15, tirtik: 0.6, gr: 0.4, gam: 1.4, kutu: [0, 540, 1024, 700] });
+// renk: çivit mavisi gök. Üstte, solda koyu bir bokashi (dereceli lav), aşağı ve güneşe doğru kâğıda açılır;
+// güneş, minare ve alem boş kalır.
+const siluet = (() => {
+  const y = SAHNE.yollar(), p = new Path2D();
+  for (const d of y.minare.concat(y.minareAlem, y.alem)) p.addPath(new Path2D(d));
+  return p;
+})();
+lav((x) => {
+  const g = x.createLinearGradient(0, -20, 0, 470);
+  g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.32, 'rgba(0,0,0,0.72)'); g.addColorStop(0.62, 'rgba(0,0,0,0.3)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 1024, 520);
+  x.globalCompositeOperation = 'destination-out';
+  const h = x.createRadialGradient(880, 140, 40, 880, 140, 330);
+  h.addColorStop(0, 'rgba(0,0,0,1)'); h.addColorStop(0.22, 'rgba(0,0,0,1)'); h.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = h; x.fillRect(500, 0, 524, 480);
+  x.fillStyle = '#000'; x.lineWidth = 3; x.stroke(siluet); x.fill(siluet);
+}, { bul: 5, ton: 0.95, esik: 0.006, yum: 0.02, kenar: 0.05, tirtik: 0.12, gr: 0.3, gam: 1.0, hedef: 'M', kutu: [0, 0, 1024, 520] });
+// sis bantları (kasumi): yatay, tırtıklı çivit lavları; kubbenin sağında, solda ve kaidenin eridiği yerde
+lav((x) => {
+  x.beginPath(); x.ellipse(905, 600, 210, 20, -0.02, 0, TAU); x.fill();
+  x.beginPath(); x.ellipse(96, 646, 140, 13, 0.02, 0, TAU); x.fill();
+  x.beginPath(); x.ellipse(640, 768, 360, 22, 0.01, 0, TAU); x.fill();
+}, { bul: 14, ton: 0.5, esik: 0.06, yum: 0.08, kenar: 0.1, tirtik: 0.45, gr: 0.4, gam: 1.2, hedef: 'M', kutu: [0, 540, 1024, 860] });
+// güneşin içinde çok hafif sıcak bir okra
+lav((x) => { x.beginPath(); x.arc(880, 140, 44, 0, TAU); x.fill(); }, { bul: 6, ton: 0.22, esik: 0.1, kenar: 0.1, tirtik: 0.4, hedef: 'K', kutu: [820, 80, 940, 200] });
 
 // ================================================================== MİNARE
 {
@@ -451,7 +482,7 @@ lav((x) => {
   // gölge yanında ıslak lav: soldaki pencereler içine akar (ıslağa ıslak)
   lav((x) => { const g = x.createLinearGradient(336, 0, 560, 0); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.45, 'rgba(0,0,0,0.5)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(354, 563, 230, 40); x.fillRect(337, 617, 250, 66); }, { bul: 4, ton: 0.22, esik: 0.1, yum: 0.06, kenar: 0.35, tirtik: 0.8, hedef: 'W', yapi: true, kutu: [330, 555, 600, 695], cicek: [{ x: 420, y: 650, r: 16, ac: 0.4, koyu: 0.5 }] });
   // kasnakta soluk yeşil: solda, sağa doğru kâğıda açılır
-  lav((x) => { const g = x.createLinearGradient(336, 0, 720, 0); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.55, 'rgba(0,0,0,0.35)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(353, 562, 400, 44); x.fillRect(337, 616, 430, 70); }, { bul: 5, ton: 0.3, esik: 0.12, kenar: 0.25, tirtik: 0.7, hedef: 'G', kutu: [330, 550, 790, 700] });
+  lav((x) => { const g = x.createLinearGradient(336, 0, 790, 0); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.55, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0.4)'); x.fillStyle = g; x.fillRect(353, 562, 400, 44); x.fillRect(337, 616, 430, 70); }, { bul: 5, ton: 0.62, esik: 0.12, kenar: 0.16, tirtik: 0.7, hedef: 'G', kutu: [330, 550, 790, 700] });
 }
 
 // ================================================================== KUBBE
@@ -459,7 +490,8 @@ lav((x) => {
   const kubbeYol = new Path2D(SAHNE.kubbeYolu);
   const KK = [350, 290, 770, 560];
   // soluk yeşil: ıslak kâğıda düşmüş gibi; tepe-sağda kâğıt kalır
-  lav((x) => { x.fill(kubbeYol); }, { bul: 4, ton: 0.58, esik: 0.3, kenar: 0.2, tirtik: 0.55, hedef: 'G', kutu: KK, maske: (x, y) => (1 - 0.9 * smooth(0.35, 0.92, kubbeIsik(x, y))) * (1 - 0.35 * smooth(560, 760, x)) });
+  // malakit (mineral yeşili): ıslak kâğıda düşmüş gibi; tepe-sağdaki ışıkta incelir
+  lav((x) => { x.fill(kubbeYol); }, { bul: 4, ton: 0.95, esik: 0.3, kenar: 0.35, tirtik: 0.55, hedef: 'G', kutu: KK, maske: (x, y) => (1 - 0.72 * smooth(0.45, 0.95, kubbeIsik(x, y))) * (1 - 0.25 * smooth(600, 760, x)) });
   // gölge yanında mürekkep lavı (bokashi): soldan sağa söner, içinde tek bir çiçeklenme (geri akma)
   lav((x) => {
     x.save(); x.clip(kubbeYol);
@@ -572,6 +604,17 @@ function donustur(x, y, aci, sy) {
   const ca = Math.cos(aci), sa = Math.sin(aci);
   return (lx, ly) => { const u = lx * ca + ly * sa, v = (-lx * sa + ly * ca) * sy; return [x + u * ca - v * sa, y + u * sa + v * ca]; };
 }
+/** Renk: taç yapraklarına pembe lav; göbeğe doğru koyulaşır, kenarda boya birikir. pet: [lx, ly, r] (yerel düzlem) */
+function pembeLav(x, y, r, pet, T, ton) {
+  lav((c) => {
+    for (const [px, py, pr] of pet) {
+      c.beginPath();
+      for (let j = 0; j <= 28; j++) { const a = (j / 28) * TAU, q = T(px + Math.cos(a) * pr * 0.96, py + Math.sin(a) * pr * 0.96); j ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]); }
+      c.fill();
+    }
+  }, { bul: Math.max(0.8, r * 0.05), ton: ton || 0.8, esik: 0.32, yum: 0.08, kenar: 0.45, tirtik: 0.45, gr: 0.2, gam: 0.8, hedef: 'P', kutu: [x - r * 1.3, y - r * 1.3, x + r * 1.3, y + r * 1.3],
+    maske: (fx, fy) => 0.55 + 0.45 * (1 - clamp(Math.hypot(fx - x, fy - y) / r)) });
+}
 /** Taç yaprağı: iki kısa, ince kavis (sol, sağ) dışta buluşur; arada bazen boşluk kalır. */
 function tacYaprak(cx, cy, th, pr, ink, T) {
   const yay = (a0, a1) => { const out = []; for (let j = 0; j <= 16; j++) { const a = lerp(a0, a1, j / 16); const rr = pr * (1 + 0.05 * Math.sin(j * 0.7)); out.push(T(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr)); } return out; };
@@ -586,12 +629,16 @@ function ercik(T, r, a0, a1, adet) {
     const bk = (R() - 0.5) * 0.4;
     const e = T(Math.cos(a) * L, Math.sin(a) * L);
     vurus(egri([T(Math.cos(a) * r * 0.1, Math.sin(a) * r * 0.1), T(Math.cos(a + bk) * L * 0.55, Math.sin(a + bk) * L * 0.55), e]), { w: 0.95, prof: P.esit, ink: 1.15, kuru: 0.3, K: 3, kenar: 0.1 });
-    leke(e[0], e[1], Math.max(1.4, r * 0.075), Math.max(1.1, r * 0.06), a, { ink: 1.95, islak: 0.45, kenar: 0.18 });
+    BOYA = SARI; BOYA_K = 0.75; // ercik başları sarı (çiçek tozu)
+    leke(e[0], e[1], Math.max(1.4, r * 0.075) * 1.15, Math.max(1.1, r * 0.06) * 1.15, a, { ink: 1.95, islak: 0.45, kenar: 0.18 });
+    BOYA = null;
   }
+  BOYA = SARI; BOYA_K = 0.7;
   for (let i = 0; i < Math.round(adet / 3); i++) {
     const a = lerp(a0, a1, R()), L = r * (0.3 + 0.35 * R()), e = T(Math.cos(a) * L, Math.sin(a) * L);
-    leke(e[0], e[1], 1.1, 0.9, a, { ink: 1.7, islak: 0.4 });
+    leke(e[0], e[1], 1.3, 1.1, a, { ink: 1.7, islak: 0.4 });
   }
+  BOYA = null;
 }
 function cicekCiz([x, y, r, tip, a]) {
   if (tip === 'tam') {
@@ -603,6 +650,7 @@ function cicekCiz([x, y, r, tip, a]) {
       pet.push([Math.cos(th) * d, Math.sin(th) * d, r * 0.45 * (0.88 + 0.24 * R()), th]);
     }
     ayir(x, y, r, tacIci(don, sy, pet.concat([[0, 0, r * 0.45]])));
+    pembeLav(x, y, r, pet.concat([[0, 0, r * 0.45]]), T, 0.85);
     pet.forEach(([px, py, pr, th], k) => tacYaprak(px, py, th, pr, k === atla ? 0.42 : 0.66, T));
     const ea = R() * TAU;
     ercik(T, r, ea, ea + TAU * (0.75 + 0.25 * R()), r > 20 ? 9 : 7);
@@ -612,6 +660,7 @@ function cicekCiz([x, y, r, tip, a]) {
     const T = donustur(x, y, 0, 1), pet = [];
     for (const da of [-0.95, 0, 0.95]) { const th = a + da, d = r * 0.42; pet.push([Math.cos(th) * d, Math.sin(th) * d, r * 0.44 * (0.9 + 0.2 * R()), th]); }
     ayir(x, y, r, tacIci(0, 1, pet));
+    pembeLav(x, y, r, pet, T, 0.9);
     for (const [px, py, pr, th] of pet) tacYaprak(px, py, th, pr, 0.66, T);
     const bx = x - Math.cos(a) * r * 0.32, by = y - Math.sin(a) * r * 0.32;
     for (const da of [-0.7, 0, 0.7]) leke(bx + Math.cos(a + Math.PI + da) * r * 0.16, by + Math.sin(a + Math.PI + da) * r * 0.16, r * 0.17, r * 0.11, a + da, { ink: 1.9, islak: 0.6, kenar: 0.2 });
@@ -619,17 +668,22 @@ function cicekCiz([x, y, r, tip, a]) {
   } else if (tip === 'tomurcukA') {
     // açık tomurcuk: yuvarlak çizgi ve iki koyu çanak noktası
     ayir(x, y, r, tacIci(0, 1, [[0, 0, r * 0.62]]));
+    pembeLav(x, y, r, [[0, 0, r * 0.62]], (a, b) => [x + a, y + b], 1);
     const yay = []; for (let j = 0; j <= 20; j++) { const t = a + 1.2 + (j / 20) * (TAU - 0.6); yay.push([x + Math.cos(t) * r * 0.62, y + Math.sin(t) * r * 0.62]); }
     vurus(yay, { w: Math.max(1.4, r * 0.14), prof: P.yaprak, ink: 0.8, kuru: 0.35, K: 5, kenar: 0.3 });
     for (const da of [-0.5, 0.5]) leke(x - Math.cos(a + da) * r * 0.62, y - Math.sin(a + da) * r * 0.62, r * 0.22, r * 0.15, a + da, { ink: 1.9, islak: 0.6 });
   } else if (tip === 'tomurcuk') {
+    BOYA = ENJI; BOYA_K = 0.8; // tomurcuk: koyu kırmızı-pembe (enji) fırça noktası
     leke(x, y, r * 1.0, r * 0.82, a, { ink: 1.85, islak: 0.65, pool: 0.3, kenar: 0.15 });
+    BOYA = null;
   } else if (tip === 'lav') {
     // kemiksiz (mogu): beş soluk lav noktası, kenarı hafifçe koyulaşır
     const T = donustur(x, y, R() * Math.PI, 0.7 + 0.3 * R());
     for (let k = 0; k < 5; k++) {
       const th = a + (k * TAU) / 5 + (R() - 0.5) * 0.2, d = r * 0.5, c = T(Math.cos(th) * d, Math.sin(th) * d);
+      BOYA = ENJI; BOYA_K = 2.5; // kemiksiz (mogu) çiçek: mürekkep yerine pembe-kırmızı lav noktaları
       leke(c[0], c[1], r * 0.48, r * 0.42, th, { ink: 0.16 + 0.06 * R(), islak: 0.9, pool: 0.55, kenar: 0.14 });
+      BOYA = null;
     }
     ercik(T, r * 0.9, a, a + TAU, 6);
   }
@@ -699,7 +753,10 @@ function muhur(x0, y0, s) {
     return out;
   })();
   const out = anaCtx.createImageData(N, N), o = out.data;
-  const kagit = [243, 237, 224], yesil = [146, 186, 132], okra = [210, 156, 64], dip = [17, 17, 19];
+  const kagit = [243, 237, 224], yesil = [48, 152, 108], okra = [220, 158, 40], dip = [17, 17, 19];
+  const mavi = [62, 110, 206], pembe = [236, 122, 154];
+  const kEnji = [0.12, 1.55, 0.95], kSari = [0.04, 0.24, 1.35]; // renkli fırçanın soğurması (Beer-Lambert)
+  const EB = bulanik(ENJI, 1), SB = bulanik(SARI, 1);
   const kab = [1.42, 1.45, 1.5];
   const H2 = N >> 1;
   for (let y = 0; y < N; y++) {
@@ -711,9 +768,15 @@ function muhur(x0, y0, s) {
       const ex = Math.min(x, y, N - 1 - x, N - 1 - y) / N;
       let kt = 1 - 0.01 * (mo - 0.5) * 2 - 0.035 * LIFC[i] + 0.012 * smooth(0.6, 0.85, fn) - 0.025 * (1 - smooth(0, 0.12, ex));
       let r = kagit[0] * kt, g = kagit[1] * kt, b = kagit[2] * kt;
-      const ye = YESIL[q] * 0.62, ok = OKRA[q] * 0.85;
+      const ye = YESIL[q] * 0.86, ok = OKRA[q] * 0.95, ma = MAVI[q] * 0.88, pe = PEMBE[q] * 0.85;
+      r *= lerp(1, mavi[0] / 255, ma); g *= lerp(1, mavi[1] / 255, ma); b *= lerp(1, mavi[2] / 255, ma);
       r *= lerp(1, yesil[0] / 255, ye); g *= lerp(1, yesil[1] / 255, ye); b *= lerp(1, yesil[2] / 255, ye);
       r *= lerp(1, okra[0] / 255, ok); g *= lerp(1, okra[1] / 255, ok); b *= lerp(1, okra[2] / 255, ok);
+      r *= lerp(1, pembe[0] / 255, pe); g *= lerp(1, pembe[1] / 255, pe); b *= lerp(1, pembe[2] / 255, pe);
+      // renkli fırça: enji ve sarı, ıslak kenarı biraz yayılmış
+      const DE = ENJI[i] * 0.55 + EB[i] * 0.45, DS = SARI[i] * 0.6 + SB[i] * 0.4;
+      if (DE > 0.0005) { r *= Math.exp(-kEnji[0] * DE); g *= Math.exp(-kEnji[1] * DE); b *= Math.exp(-kEnji[2] * DE); }
+      if (DS > 0.0005) { r *= Math.exp(-kSari[0] * DS); g *= Math.exp(-kSari[1] * DS); b *= Math.exp(-kSari[2] * DS); }
       // mürekkep: kuru + ıslak + liflere yayılan hale
       const w = WET[i];
       const yay = smooth(0.32, 0.72, fn);
@@ -731,7 +794,7 @@ function muhur(x0, y0, s) {
         if (ma > 0) {
           const md = muhurDoku[(yy * H2) + (x >> 1)];
           const kap = ma * (0.8 + 0.2 * mo) * (1 - 0.85 * smooth(0.7, 0.86, md));
-          r = lerp(r, (r * 192) / 255, kap); g = lerp(g, (g * 50) / 255, kap); b = lerp(b, (b * 40) / 255, kap);
+          r = lerp(r, (r * 230) / 255, kap); g = lerp(g, (g * 66) / 255, kap); b = lerp(b, (b * 40) / 255, kap); // zencefre (vermilyon) mühür
         }
       }
       o[j] = r; o[j + 1] = g; o[j + 2] = b; o[j + 3] = 255;

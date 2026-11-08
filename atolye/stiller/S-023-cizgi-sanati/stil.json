@@ -1,35 +1,22 @@
 {
   "kod": "S-023",
   "no": 23,
-  "ad": "Çizgi Sanatı",
-  "ad_en": "Line Art",
+  "ad": "Renkli Çizgi Sanatı",
+  "ad_en": "Colored Line Art",
   "aile": "Grafik ve Dijital",
   "ozgun": false,
-  "ozet": "Tek renk, eşit kalınlıkta çizgilerle; dolgusuz, bol boşluklu, zarif bir çizim.",
-  "tanim": "Çizgi sanatı (line art) konuyu yalnızca çizgiyle anlatır: ton, gölge ve dolgu yerine eşit kalınlıkta (monoline), tek renkli konturlar ve iç ayrıntı çizgileri kullanılır. Yuvarlak uçlu, temiz vektör çizgiler ve geniş beyaz alan sakin, zarif bir etki verir. Logo ve ikon tasarımında, ambalajda, davetiyelerde, boyama kitaplarında ve minimal duvar baskılarında yaygındır.",
-  "koken": "Kökü gravür, kalem çizimi ve teknik illüstrasyon geleneğine; modern biçimiyle Matisse ve Picasso'nun tek çizgi desenlerine ve 20. yüzyıl ortasının reklam çizimlerine dayanır. Bugünkü monoline biçim vektör araçları ve ikon tasarımıyla (eşit kalınlık, yuvarlak uç ve birleşim) yaygınlaştı.",
+  "ozet": "Eşit kalınlıkta, yuvarlak uçlu çizgilerin öğeye göre renklendiği, arkalarında çok açık düz dolgular bulunan zarif bir çizim.",
+  "tanim": "Renkli çizgi sanatı (colored line art) konuyu yine yalnızca çizgiyle anlatır: eşit kalınlıkta (monoline), yuvarlak uçlu konturlar ve iç ayrıntı çizgileri; ton, gölge ve doku yoktur. Fark, çizginin tek bir mürekkep rengi yerine her öğede kendi rengini almasıdır: uyumlu, sınırlı bir paletle kubbe yeşil, taş kiremit, çiçek mercan olur. Biçimlerin arkasına çizginin rengine eşlik eden çok açık, düz dolgular konabilir; çizgi her zaman baskın kalır. Ambalajda, davetiye ve kırtasiyede, çocuk kitaplarında, ikon setlerinde ve modern duvar baskılarında yaygındır.",
+  "koken": "Kökü gravür, kalem çizimi ve teknik illüstrasyon geleneğine, renkli konturlarıyla Art Nouveau afişlerine ve Hergé'nin 'ligne claire' (açık çizgi) çizgi romanlarına dayanır. Bugünkü renkli monoline biçim vektör araçları ve ikon tasarımıyla yaygınlaştı: eşit kalınlık, yuvarlak uç ve birleşim, her öğede tek renkli çizgi ve pastel düz dolgu.",
   "ayirt_edici": [
-    "Bütün çizgiler aynı kalınlıkta (2,3 px) ve tek renk (koyu yeşil mürekkep); uçlar ve birleşimler yuvarlak",
-    "Dolgu yok; tek vurgu altın: iki hilalin dolgusu ve güneşin çizgisi",
-    "Ayrıntılar yalnız çizgiyle: kubbe kaburgaları, kemerli pencereler, şerefe korkuluk babaları, zikzak bant, topuz dilimleri, yaprak damarları, çiçek ercikleri",
-    "Kaburgalar tepede komşusuna fazla yaklaştığı yerde bitiyor; çizgiler üst üste yığılmıyor",
-    "Örtüşmeler gizli çizgi yöntemiyle temiz: arkadaki çizgi öndeki biçimin içinde görünmüyor",
-    "Geniş boş gök, ışınlı güneş ve iki sade bulut çizgisi; seyreltilmiş yapraklarla sakin ön plan"
+    "Bütün çizgiler aynı kalınlıkta (2,3 px), uçlar ve birleşimler yuvarlak; çizginin rengi öğeye göre değişir",
+    "Kubbe ve kasnak koyu yeşil çizgili, açık nane dolgulu; kubbenin ve kasnağın sol yanında biraz koyu, düz bir nane lekesi, kasnak pencereleri orta yeşil",
+    "Minare ve kaide kiremit rengi çizgili, kum dolgulu; zikzak bant ve pencere içleri bir ton koyu kum",
+    "Alemler altın çizgili ve açık altın küreli, hilaller dolu altın; güneş altın ışınlı, açık sarı diskli",
+    "Gökte arduvaz mavisi çizgili, çok açık mavi dolgulu iki sade bulut ve kuyruk çizgileri",
+    "Mercan-gül çizgili, uçuk pembe dolgulu çiçekler ve tomurcuklar, altın göbek ve halkalı ercikler; adaçayı yeşili çizgili, açık adaçayı dolgulu yapraklar"
   ],
-  "palet": [
-    "#FAF6EE",
-    "#1F3B34",
-    "#C9A23A",
-    "#B08A2C"
-  ],
-  "kodla_cizim": "JavaScript ile üretilen satır içi SVG; bütün yollar stroke-width 2,3, stroke-linecap ve stroke-linejoin round. Gizli çizgiler ressam sırasıyla çözülür: arkadan öne çizilen her kapalı biçim kâğıt rengiyle doldurulur (görünürde dolgu yoktur). Kaburgalar SAHNE.kaburgalar'dan alınıp komşu kaburgaya 6 px'ten fazla yaklaştıkları yükseklikte kesilir; çiçekler taç uçlarında çentikli kutupsal bir eğriyle tek dış çizgi olarak (taç ayrımları, damarlar ve ucu halkalı ercikler, boyu SAHNE.rng ile değişen hafif kıvrık ikinci derece Bézier çizgileri), yapraklar orta ve uca doğru kıvrılan yan damarlarıyla, bulutlar dairelerin üst zarfı olarak hesaplanır. Öndeki yapraklardan yalnız çiçeklerin arkasından çıkanlar seçilerek boşluk korunur.",
-  "etiketler": [
-    "çizgi",
-    "monoline",
-    "minimal",
-    "vektör",
-    "tek renk",
-    "zarif",
-    "ikon"
-  ]
+  "palet": ["#FAF6EE", "#1D6B48", "#A8DDBD", "#B8892A", "#B5613D", "#56789E", "#D65A68", "#5E8D5C"],
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG; bütün yollar stroke-width 2,3, stroke-linecap ve stroke-linejoin round. Her öğe çizilmeden önce o anki çizgi ve dolgu rengi bir palet tablosundan seçilir (koyu çizgi ile çok açık dolgu çiftleri: yeşil/nane, kiremit/kum, altın/açık altın, arduvaz/açık mavi, mercan/uçuk pembe, adaçayı/açık adaçayı). Gizli çizgiler ressam sırasıyla çözülür: arkadan öne çizilen her kapalı biçim kendi açık dolgusuyla doldurulur ve arkasındakini örter. Kubbenin gölge yanı, sol kenar ile tepeye doğru daralan bir meridyen arasında çizgisiz, düz bir nane lekesidir; kasnakta aynı leke dikdörtgendir. Kaburgalar SAHNE.kaburgalar'dan alınıp komşu kaburgaya 6 px'ten fazla yaklaştıkları yükseklikte kesilir; çiçekler taç uçlarında çentikli kutupsal bir eğriyle tek dış çizgi olarak (taç ayrımları, damarlar, ucu halkalı ercikler), yapraklar orta ve uca doğru kıvrılan yan damarlarıyla, bulutlar dairelerin üst zarfı olarak hesaplanır. Öndeki yapraklardan yalnız çiçeklerin arkasından çıkanlar seçilerek boşluk korunur.",
+  "etiketler": ["çizgi", "monoline", "renkli çizgi", "minimal", "vektör", "pastel", "zarif", "ikon"]
 }

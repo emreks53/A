@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>S-023 Çizgi Sanatı — Atölye örnek görseli</title>
+<title>S-023 Renkli Çizgi Sanatı — Atölye örnek görseli</title>
 <style>
   html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #FAF6EE; }
   canvas, svg { display: block; }
@@ -12,23 +12,37 @@
 <div id="sahne"></div>
 <script src="../../sahne/sahne.js"></script>
 <script>
-  // S-023 Çizgi Sanatı (Line Art) — tek renk, eşit kalınlıkta (monoline) çizgiler, yuvarlak uç ve
-  // birleşimler; dolgu yok (yalnız altın hilal vurgusu). Bütün ayrıntılar çizgiyle: kaburgalar,
-  // pencereler, şerefe korkulukları, yaprak damarları. Örtüşmeler kâğıt rengiyle gizlenir (ressam sırası).
+  // S-023 Renkli Çizgi Sanatı (Colored Line Art) — eşit kalınlıkta (monoline) çizgiler, yuvarlak uç ve
+  // birleşimler. Çizgi, öğeye göre uyumlu bir paletle renklenir: kubbe ve kasnak koyu yeşil, alemler altın,
+  // minare ve kaide kiremit/kum, gökteki ayrıntılar arduvaz mavisi, çiçekler mercan-gül, yapraklar adaçayı.
+  // Bazı biçimlerin arkasında çok açık, düz bir renk dolgusu; ton ve gölge yine çizgiyle değil, yok.
+  // Örtüşmeler dolguyla gizlenir (ressam sırası).
   const S = SAHNE;
   const r = S.rng(23);
   const KAGIT = '#FAF6EE';
   const MUREKKEP = '#1F3B34';
-  const ALTIN = '#C9A23A';
-  const ALTIN_CIZGI = '#B08A2C'; // güneş: aynı altın vurgunun çizgi tonu
   const K = 2.3; // tek çizgi kalınlığı
+  // palet: çizgi (koyu) ve dolgu (çok açık) çiftleri
+  const R = {
+    yesil: '#1D6B48', nane: '#A8DDBD', naneGolge: '#93D2AE', yesilPencere: '#4F9C77',
+    altin: '#B8892A', altinDolgu: '#F3DE9E', hilal: '#D2A23A',
+    kiremit: '#B5613D', kum: '#F2E2C7', kumKoyu: '#E9CDAA',
+    arduvaz: '#56789E', gokDolgu: '#E4EDF6', gunes: '#D3962A', gunesDolgu: '#FBE6A2',
+    mercan: '#D65A68', pembe: '#FADBD8', tomurcuk: '#F5C9CC', gobek: '#F2CC6E',
+    adacayi: '#5E8D5C', adacayiDolgu: '#D9E8CC', toprak: '#B9875C',
+  };
+  const RR = R; // çiçek işlevinde R yarıçap adı olarak kullanılıyor
+  let CIZ = MUREKKEP, DOL = KAGIT; // o anki öğenin çizgi ve dolgu rengi
+  const renk = (c, d) => { CIZ = c; DOL = d || KAGIT; };
 
   const f = (n) => Math.round(n * 100) / 100;
   const parcalar = [];
-  // kâğıt dolgulu (arkadakini örten) çizgi
-  const ort = (d, ek) => parcalar.push(`<path d="${d}" fill="${KAGIT}" ${ek || ''}/>`);
+  // dolgulu (arkadakini örten) çizgi
+  const ort = (d, ek) => parcalar.push(`<path d="${d}" fill="${DOL}" stroke="${CIZ}" ${ek || ''}/>`);
   // yalnız çizgi
-  const cz = (d, ek) => parcalar.push(`<path d="${d}" fill="none" ${ek || ''}/>`);
+  const cz = (d, ek) => parcalar.push(`<path d="${d}" fill="none" stroke="${CIZ}" ${ek || ''}/>`);
+  // çizgisiz düz renk lekesi (gölge yanı)
+  const leke = (d, renk) => parcalar.push(`<path d="${d}" fill="${renk}" stroke="none"/>`);
   const cizgi = (x1, y1, x2, y2) => cz(`M${f(x1)},${f(y1)} L${f(x2)},${f(y2)}`);
   const dik = (x1, y1, x2, y2) => S.yol([[x1, y1], [x2, y1], [x2, y2], [x1, y2]], true);
 
@@ -56,7 +70,8 @@
       const r1 = 50, r2 = 62;
       d += ` M${f(S.gunes.x + Math.cos(a) * r1)},${f(S.gunes.y + Math.sin(a) * r1)} L${f(S.gunes.x + Math.cos(a) * r2)},${f(S.gunes.y + Math.sin(a) * r2)}`;
     }
-    parcalar.push(`<path d="${d}" fill="none" stroke="${ALTIN_CIZGI}"/>`);
+    parcalar.push(`<path d="${S.daireYolu(S.gunes.x, S.gunes.y, 36)}" fill="${R.gunesDolgu}" stroke="none"/>`);
+    parcalar.push(`<path d="${d}" fill="none" stroke="${R.gunes}"/>`);
   }
   function bulut(x, y, s, daireler, kuyruk) {
     // dairelerin üst zarfı: düz tabanlı, uçları sivri kavisli tek bir bulut çizgisi + ince kuyruk
@@ -78,11 +93,13 @@
     if (kuyruk > 0) cizgi(x1 + 14 * s, y, x1 + (14 + kuyruk) * s, y);
     else cizgi(x0 - 14 * s, y, x0 + (kuyruk - 14) * s, y);
   }
+  renk(R.arduvaz, R.gokDolgu);
   bulut(150, 262, 1, [[-44, 0, 26], [-6, -2, 40], [36, 2, 30], [66, 0, 18]], -40);
   bulut(812, 380, 0.8, [[-40, 0, 22], [-4, 0, 36], [36, 0, 25]], 70);
 
   // ------------------------------------------------------------ minare (arkada)
   const minare = S.minareParcalari();
+  renk(R.kiremit, R.kum);
   for (const p of minare) {
     if (p.tip === 'poligon') {
       ort(S.yol(p.noktalar, true));
@@ -99,11 +116,12 @@
         cizgi(x, p.y1 + 5, x, p.y2);
       }
     } else if (p.tip === 'bant') {
+      leke(dik(p.x1 + K / 2, p.y1, p.x2 - K / 2, p.y2), R.kumKoyu);
       cizgi(p.x1, p.y1, p.x2, p.y1);
       cizgi(p.x1, p.y2, p.x2, p.y2);
       for (const z of S.zikzakCizgileri()) {
         const zz = z.map(([x, y]) => [x, y + 2]);
-        parcalar.push(`<path d="${S.yol(zz)}" fill="none" stroke-linejoin="round"/>`);
+        cz(S.yol(zz), 'stroke-linejoin="round"');
       }
     } else if (p.tip === 'topuz') {
       ort(p.yol);
@@ -112,34 +130,51 @@
       cz(`M300,146 C308,162 310,182 307,200`);
     } else if (p.tip === 'alem') {
       alem(p.alem, true);
+      renk(R.kiremit, R.kum);
     }
   }
+  renk(R.kiremit, R.kumKoyu);
   for (const p of S.minarePencereleri) ort(S.kemerYolu(p.x, p.y, p.w, p.h));
+  renk(R.kiremit, R.kum);
   // gövdede ince taş bilezikleri
   cizgi(266, 650, 334, 650);
   cizgi(273, 400, 327, 400);
 
   // ------------------------------------------------------------ kaide
   const KD = S.kaide;
+  renk(R.kiremit, R.kum);
   ort(dik(KD.x1, KD.y1, KD.x2, KD.y2));
   ort(dik(KD.kornis.x1, KD.kornis.y1, KD.kornis.x2, KD.kornis.y2));
   cizgi(KD.x1, KD.y1 + 8, KD.x2, KD.y1 + 8);
   for (const p of KD.pencereler) {
+    renk(R.kiremit, R.kum);
     ort(S.kemerYolu(p.x, p.y, p.w, p.h));
+    renk(R.kiremit, R.kumKoyu);
     ort(S.kemerYolu(p.x, p.y + 8, p.w - 12, p.h - 8));
   }
 
   // ------------------------------------------------------------ kasnak (alttan üste)
   for (let k = 1; k >= 0; k--) {
     const q = S.kasnak[k];
+    renk(R.yesil, R.nane);
     ort(dik(q.x1, q.y1, q.x2, q.y2));
+    // gölge yanı: düz, biraz koyu bir nane lekesi (çizginin içinde)
+    leke(dik(q.x1 + K / 2, q.y1 + K / 2, q.x1 + (q.x2 - q.x1) * 0.3, q.y2 - K / 2), R.naneGolge);
     cizgi(q.x1, q.y2 - 7, q.x2, q.y2 - 7);
+    renk(R.yesil, R.yesilPencere);
     for (const p of S.kasnakPencereleri(k)) ort(S.kemerYolu(p.x, p.y, p.w, p.h));
   }
 
   // ------------------------------------------------------------ kubbe ve kaburgalar
+  renk(R.yesil, R.nane);
   ort(S.kubbeYolu);
   const prof = S.kubbeProfili(80);
+  {
+    // gölge yanı: sol kenarla sola eğik bir meridyen arasında düz, biraz koyu nane lekesi
+    const ic = prof.map((q) => [560 - q.r * 0.52, q.y]).filter((q) => q[1] > 306);
+    const dis = prof.map((q) => [560 - q.r + K * 0.5, q.y]).filter((q) => q[1] > 306).reverse();
+    leke(yumusak(ic) + ' L' + dis.map((q) => `${f(q[0])},${f(q[1])}`).join(' L') + ' Z', R.naneGolge);
+  }
   const kbl = S.kaburgalar(16, 80).filter((kb) => Math.abs(kb.u) < 0.95);
   const us = [-1, ...kbl.map((kb) => kb.u), 1];
   kbl.forEach((kb, i) => {
@@ -151,19 +186,22 @@
   alem(S.alemParcalari(560, 300, 1), false);
 
   function alem(a, kucuk) {
+    renk(R.altin, R.altinDolgu);
     cizgi(a.yaka.cx, a.cubuk.y1 + 6, a.yaka.cx, a.cubuk.y2);
     for (const k of a.kureler) ort(S.daireYolu(k.cx, k.cy, k.r));
     ort(S.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx, ry: a.yaka.ry, aci: 0 }));
-    parcalar.push(`<path d="${S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R)}" fill="${ALTIN}"/>`);
+    parcalar.push(`<path d="${S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R)}" fill="${R.hilal}" stroke="${R.altin}"/>`);
   }
 
   // ------------------------------------------------------------ yer çizgisi
+  renk(R.toprak);
   cizgi(0, 800, 1024, 800);
 
   // ------------------------------------------------------------ bitkiler
   const B = S.bitki;
   // öndeki çiçeklerin sapları (yaprakların arkasında)
   const onCicekler = B.cicekler.slice(4);
+  renk(R.adacayi, R.adacayiDolgu);
   for (const c of onCicekler) {
     const bx = c.x + (c.x < 512 ? -30 : 30) * (c.r / 60);
     cz(yumusak([[c.x, c.y], [c.x + (bx - c.x) * 0.4, c.y + (1030 - c.y) * 0.45], [bx, 1030]]));
@@ -175,6 +213,7 @@
   for (const s of B.saplar) cz(yumusak(s));
 
   function yaprak(y) {
+    renk(R.adacayi, R.adacayiDolgu);
     ort(S.yaprakYolu(y));
     const L = y.uzunluk;
     const ca = Math.cos(y.aci), sa = Math.sin(y.aci);
@@ -203,6 +242,7 @@
   for (const y of dalYapraklari) yaprak(y);
 
   function tomurcuk(t) {
+    renk(R.mercan, R.tomurcuk);
     ort(S.tomurcukYolu(t));
     const ca = Math.cos(t.aci), sa = Math.sin(t.aci);
     const p = (u, v) => [t.x + u * ca - v * sa, t.y + u * sa + v * ca];
@@ -229,6 +269,7 @@
       rr -= R * 0.07 * Math.exp(-(sapma * sapma) / 0.0016);
       pts.push([c.x + Math.cos(th) * rr, c.y + Math.sin(th) * rr]);
     }
+    renk(RR.mercan, RR.pembe);
     ort(S.yol(pts, true), 'stroke-linejoin="round"');
     // taç yaprak ayrımları: iki yaprağın birleştiği çukurdan göbeğe doğru kıvrılan kısa yay
     const pol = (a, rr) => [c.x + Math.cos(a) * rr, c.y + Math.sin(a) * rr];
@@ -248,6 +289,7 @@
       }
     }
     // göbek ve ercikler: büyük çiçeklerde ucu küçük halkalı, boyu değişen ince sapçıklar
+    renk(RR.altin, RR.gobek);
     ort(S.daireYolu(c.x, c.y, R * 0.16));
     if (buyuk) {
       for (let i = 0; i < 6; i++) {

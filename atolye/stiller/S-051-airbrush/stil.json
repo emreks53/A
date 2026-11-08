@@ -1,0 +1,22 @@
+{
+  "kod": "S-051",
+  "no": 51,
+  "ad": "Airbrush (Püskürtme Boya)",
+  "ad_en": "Airbrush",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Maske ve şablonla kesilmiş keskin kenarlar içinde kusursuz yumuşak püskürtme degradeler, krom parıltılar ve yıldız ışıltıları.",
+  "tanim": "Airbrush, boyanın basınçlı havayla ince bir sis hâlinde püskürtüldüğü bir tekniktir; ressam yapışkan maske filmi (frisket), kesilmiş şablonlar ve elde tutulan eğri cetvellerle alanları korur. Böylece bir kenar bıçak gibi keskin kalırken boya kenardan içeri doğru fırça izi olmadan yumuşakça söner. Fotoğraf kadar pürüzsüz geçişler, metal ve camda krom gibi parlak yansımalar, beyaz silgi ucuyla açılmış yıldız parıltıları ve degradenin seyrek ucundaki ince boya zerrecikleri tekniğin imzasıdır. Albüm kapakları, film afişleri, reklam ve otomobil illüstrasyonunda yaygın kullanılmıştır.",
+  "koken": "Püskürtme tabancası 1879'da Abner Peeler'in, 1893'te Charles Burdick'in patentleriyle gelişti; önce fotoğraf rötuşunda kullanıldı. 1970–80'lerde Hajime Sorayama'nın krom figürleri, Peter Lloyd ve Charles White III'ün albüm kapakları, Roger Dean'in parlayan gökleri ve Japon 'city pop' kapak illüstrasyonları airbrush estetiğini zirveye taşıdı; dijital boyamadan önce ticari illüstrasyonun parlak, pürüzsüz yüzü bu teknikti.",
+  "ayirt_edici": [
+    "Çivit maviden açık camgöbeğine, ufukta şeftaliye inen parlayan gök degradesi; güneşin çevresinde seyrek uçta zerreleşen geniş ışıltı",
+    "Şablonla püskürtülmüş bulutlar: alt kenar bıçak gibi keskin ve şeftali renkli, beyaz kabarık tepeler yukarı doğru yumuşakça sönüyor",
+    "Krom gibi parlak yeşil kubbe: dilim dilim kırılan pencere yansıması, kubbenin alt kısmında dilimlere göre dalgalanan keskin ufuk yansıması",
+    "Krom altın alemler: açık sarı üst yarı, ortada koyu kahve ufuk bandı, turuncu alt yansıma ve beyaz parlak noktalar",
+    "Güneşte, hilal uçlarında, kubbe parlamasında ve çiy damlalarında dört uzun, dört kısa ışınlı yıldız parıltıları",
+    "Orta damar maskesiyle bir yarısı koyu, öbür yarısı açık püskürtülmüş yapraklar; merkezden sarıya ya da pembeye boyanmış frangipani çiçekleri ve çiy damlaları"
+  ],
+  "palet": ["#0E1650", "#2F6CC8", "#FFB98C", "#168046", "#A0F096", "#FFD95A", "#C81460", "#9D93C4"],
+  "kodla_cizim": "Her boya geçişi ekran dışı bir tuvale yumuşak radyal ve doğrusal degradeler olarak püskürtülür, sonra 'destination-in' ile bir maske yolu (frisket: kubbe, taç yaprak, yaprak yarısı, bulut şablonu, tepe sırtı) uygulanarak kenar keskinleştirilir; ardından alfa kanalına piksel başına karma gürültüyle tanecik ve kısmi örtülü (seyrek) bölgelerde tek piksellik boya zerrecikleri eklenip ana tuvale basılır. Kubbe, SAHNE.kubbeProfili'nden türetilen dönel yüzey normaliyle piksel piksel gölgelenir: kaburgalar arasındaki her dilim hafif dışbükey sayılır, sağ üstten Blinn-Phong ışığı, yansıyan ışının yüksekliğine göre gök/toprak krom yansıması ve keskin ufuk çizgisi, dikdörtgen bir 'pencere' yansıması ve solda soğuk kenar ışığı hesaplanır. Minare, kasnak ve babalar silindir normalinden kurulan çok duraklı yatay degradelerle; alemler sabit ufuk bandlı krom altın degradesiyle; yaprak yarıları damar boyunca keskin geçişli degradeyle boyanır. Yıldız parıltıları 'lighter' karışımla incelen ışın üçgenleri ve ışıltılı çekirdekten oluşur; en sonda bütün yüzeye hafif püskürtme taneciği eklenir.",
+  "etiketler": ["airbrush", "püskürtme", "frisket", "şablon", "degrade", "krom", "parıltı", "retro", "1980'ler", "illüstrasyon"]
+}
