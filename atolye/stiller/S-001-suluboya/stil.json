@@ -10,12 +10,28 @@
   "koken": "Kökleri Doğu Asya mürekkep resmine ve Orta Çağ el yazması süslemesine uzanır; Avrupa'da Albrecht Dürer'in doğa çalışmalarıyla belirginleşir. 18. ve 19. yüzyıl İngiliz okulu (Thomas Girtin, J. M. W. Turner, John Sell Cotman) tekniği bağımsız bir sanat dalına dönüştürdü; John Singer Sargent ve Winslow Homer gevşek, ışıklı suluboyanın ustaları oldu.",
   "ayirt_edici": [
     "Üst üste binen saydam yıkamalar: kubbenin gölgeli yanında ikinci kat sır koyulaşıp keskin, koyu bir kenarla kurumuş",
-    "Gökte ve kubbede ıslak üstüne ıslak açılmalar; karnabahar gibi saçaklı, koyu kenarlı lekeler",
-    "Kâğıdın beyazı ışık olarak bırakılmış: güneş, kubbedeki parlak şerit, minarenin ışıklı yanı ve beyaz çiçekler",
-    "Koyu geçişlerde pigment çökelmesi (granülasyon) ve soğuk preslenmiş kâğıdın dokusu",
-    "Yer yer görünen kurşun kalem altlığı; kenarlara doğru kâğıda eriyen, bitmemiş, düzensiz bir sınır"
+    "Gökte, kubbede ve yaprak kütlesinde ıslak üstüne ıslak açılmalar; karnabahar gibi saçaklı, koyu kenarlı lekeler",
+    "Kaybolan ve bulunan kenarlar: boya kalem çizgisinin kimi yerde dışına taşıyor, kimi yerde geride kalıp beyaz bir pay bırakıyor; yapının ışıklı sağ ucu kâğıda eriyor",
+    "Yapraklar tek fırça darbesi ya da ortasında beyaz damar kalan iki yarım darbe; kimi ucunda ıslakta dağılmış, kimi kuru fırçayla kırılmış",
+    "Kâğıdın beyazı ışık olarak bırakılmış: güneş, kubbedeki parlak şerit, minarenin ışıklı yanı ve yalnız gölge yanına soluk bir darbe vurulmuş beyaz çiçekler",
+    "Pigment çökelmesi (granülasyon), soğuk preslenmiş kâğıt dokusu, yer yer görünen kurşun kalem altlığı ve kenarlara doğru bitmemiş bırakılmış düzensiz sınır"
   ],
-  "palet": ["#5C7CB7", "#9FB571", "#35694C", "#A99E9C", "#B37845", "#C66C96", "#F7F4EC"],
-  "kodla_cizim": "Her yıkama piksel başına bir kapsama alanıdır: bölge haritası gürültüyle titretilerek okunur ya da Tyler Hobbs usulü yinelemeli bozulmuş çokgenler düşük saydamlıkta onlarca kat doldurulur. Alanın bulanık kopyasından farkıyla kuruyan kenardaki pigment birikimi, kâğıt yüksekliği ve ince gürültüden granülasyon, Hobbs damlalarıyla karnabahar açılmaları hesaplanır. Yoğunluk altı pigmentin (yaprak yeşili, viridyen, ultramarin, seruleum, ham siena, kinakridon gül) soğurma vektörüyle çarpılarak biriktirilir ve renk = kâğıt × exp(−Σ yoğunluk) ile çarpımsal karışır. Kaburgaların ışıklı yanı nemli fırçayla boya kaldırır gibi açılır; kurşun kalem ayrı bir tuvalde titrek, kesik çizgilerle çizilir; kâğıt dokusu en sonda kabartma ışığıyla eklenir.",
-  "etiketler": ["suluboya", "saydam", "ıslak teknik", "kâğıt dokusu", "boya", "geleneksel"]
+  "palet": [
+    "#5C7CB7",
+    "#9FB571",
+    "#35694C",
+    "#A99E9C",
+    "#C2862F",
+    "#A34D77",
+    "#F7F4EC"
+  ],
+  "kodla_cizim": "Her yıkama piksel başına bir kapsama alanıdır: bölge haritasından alınan maske bulanıklaştırılıp gürültüyle değişen bir eşik ve yumuşaklıkla kesilir (boya kalem çizgisinin dışına taşar ya da geride kalır; kenar yer yer sert, yer yer kâğıda erir) ya da Tyler Hobbs usulü yinelemeli bozulmuş çokgenler düşük saydamlıkta onlarca kat doldurulur. Alanın bulanık kopyasından farkıyla kuruyan kenardaki pigment birikimi, kâğıt yüksekliği ve ince gürültüden granülasyon, Hobbs damlalarıyla karnabahar açılmaları hesaplanır. Yapraklar baskısı değişen fırça darbesi çokgenleridir (tek ya da arada beyaz damar kalan iki yarım), ucu ya da bir yanı bulanık kopyayla karıştırılarak eritilir, kimi kâğıt dokusuyla eşiklenip kuru fırça gibi kırılır; taç yapraklar bozulmuş serbest biçimlerdir ve yalnız ışıktan uzak yanlarına soluk gölge darbesi vurulur. Pencereler tek darbelik bozuk kemer lekeleridir. Yoğunluk yedi pigmentin (yaprak yeşili, viridyen, ultramarin, seruleum, ham siena, kinakridon gül, gamboj) soğurma vektörüyle çarpılarak biriktirilir ve renk = kâğıt × exp(−Σ yoğunluk) ile çarpımsal karışır. Kaburgaların ışıklı yanı nemli fırçayla boya kaldırır gibi açılır; kurşun kalem ayrı bir tuvalde titrek, kesik çizgilerle çizilir; kâğıt dokusu en sonda kabartma ışığıyla eklenir.",
+  "etiketler": [
+    "suluboya",
+    "saydam",
+    "ıslak teknik",
+    "kâğıt dokusu",
+    "boya",
+    "geleneksel"
+  ]
 }

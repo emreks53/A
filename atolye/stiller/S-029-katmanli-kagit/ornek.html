@@ -145,12 +145,12 @@
   katman((g) => { g.fillStyle = '#D2E6E4'; g.fillRect(0, 0, 1024, 1024); delik(g, dalgaliDaire(GX, GY, 252, 0.014, 3)); }, { g: { x: -4, y: 5, b: 11, a: 0.3 } });
   katman((g) => { g.fillStyle = '#BEDCE6'; g.fillRect(0, 0, 1024, 1024); delik(g, dalgaliDaire(GX, GY, 348, 0.016, 4)); }, { g: { x: -4, y: 6, b: 12, a: 0.32 } });
 
-  // sol üstte daha koyu, dalgalı gök şeridi
   katman((g) => {
     const p = new Path2D();
+    // sayfanın üstünü baştan başa çerçeveleyen dalgalı gök şeridi (solda kalın, sağa doğru incelir)
     p.moveTo(0, 0);
-    p.lineTo(560, 0);
-    for (let x = 560; x >= 0; x -= 8) { const t = Math.min(1, (560 - x) / 160); p.lineTo(x, t * (10 + (560 - x) * 0.12 + 10 * Math.sin(x / 70 + 0.5) + 5 * Math.sin(x / 23))); }
+    p.lineTo(1024, 0);
+    for (let x = 1024; x >= 0; x -= 8) p.lineTo(x, 22 + (1024 - x) * 0.05 + 10 * Math.sin(x / 70 + 0.5) + 5 * Math.sin(x / 23));
     p.closePath();
     doldur(g, p, '#A9CFE1');
   }, { g: { x: -4, y: 6, b: 12, a: 0.3 } });

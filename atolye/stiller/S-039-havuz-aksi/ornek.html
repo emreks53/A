@@ -250,7 +250,7 @@
   const yumusak = SAHNE.yeniTuval(S2, S2);
   (function () {
     const g = yumusak.getContext('2d', { willReadFrequently: true });
-    g.filter = 'blur(2.6px)';
+    g.filter = 'blur(4.6px)';
     g.drawImage(sahne, 0, 0);
     g.filter = 'none';
     const k = SAHNE.yeniTuval(512, 512);
@@ -285,23 +285,23 @@
     const k = (2 * Math.PI) / lam, a = (aci * Math.PI) / 180;
     return { ku: k * Math.cos(a), kv: k * Math.sin(a), A, ev: i * 1.7 };
   });
-  const AMP = 0.5;
+  const AMP = 0.55;
   // yüzen şeyler (ekran konumu); çevrelerinde dalgacık halkaları
   const yuzenler = [
-    { t: 'yaprak', x: 148, y: 312, s: 24, a: 0.6, renk: [214, 92, 118] },
-    { t: 'yaprak', x: 196, y: 332, s: 19, a: 2.3, renk: [250, 236, 236] },
-    { t: 'yuvarlak', x: 826, y: 196, s: 30, a: 0.4 },
-    { t: 'yaprak', x: 884, y: 252, s: 20, a: -1.2, renk: [230, 130, 150] },
-    { t: 'yaprak', x: 742, y: 700, s: 22, a: 1.9, renk: [252, 240, 238] },
-    { t: 'yuvarlak', x: 112, y: 690, s: 26, a: 2.6 },
-    { t: 'yaprak', x: 158, y: 726, s: 17, a: -0.4, renk: [206, 84, 112] },
-    { t: 'yaprak', x: 436, y: 846, s: 21, a: 2.9, renk: [236, 150, 168] },
-    { t: 'yuvarlak', x: 948, y: 612, s: 22, a: 1.3 },
-    { t: 'yaprak', x: 640, y: 900, s: 18, a: 0.9, renk: [252, 244, 240] },
-    { t: 'yaprak', x: 300, y: 214, s: 16, a: -2.0, renk: [224, 112, 136] },
-    { t: 'yuvarlak', x: 214, y: 872, s: 29, a: -0.9 },
-    { t: 'yaprak', x: 268, y: 904, s: 20, a: 0.3, renk: [246, 226, 228] },
-    { t: 'yaprak', x: 96, y: 820, s: 18, a: 1.4, renk: [220, 104, 128] },
+    { t: 'yaprak', x: 148, y: 312, s: 32, a: 0.6, renk: [214, 92, 118] },
+    { t: 'yaprak', x: 196, y: 332, s: 26, a: 2.3, renk: [250, 236, 236] },
+    { t: 'yuvarlak', x: 826, y: 196, s: 40, a: 0.4 },
+    { t: 'yaprak', x: 884, y: 252, s: 27, a: -1.2, renk: [230, 130, 150] },
+    { t: 'yaprak', x: 742, y: 700, s: 30, a: 1.9, renk: [252, 240, 238] },
+    { t: 'yuvarlak', x: 112, y: 690, s: 35, a: 2.6 },
+    { t: 'yaprak', x: 158, y: 726, s: 23, a: -0.4, renk: [206, 84, 112] },
+    { t: 'yaprak', x: 436, y: 846, s: 28, a: 2.9, renk: [236, 150, 168] },
+    { t: 'yuvarlak', x: 948, y: 612, s: 30, a: 1.3 },
+    { t: 'yaprak', x: 640, y: 900, s: 24, a: 0.9, renk: [252, 244, 240] },
+    { t: 'yaprak', x: 300, y: 214, s: 22, a: -2.0, renk: [224, 112, 136] },
+    { t: 'yuvarlak', x: 214, y: 872, s: 39, a: -0.9 },
+    { t: 'yaprak', x: 268, y: 904, s: 27, a: 0.3, renk: [246, 226, 228] },
+    { t: 'yaprak', x: 96, y: 820, s: 24, a: 1.4, renk: [220, 104, 128] },
   ];
   const halkalar = yuzenler.map((o, i) => ({ x: o.x, y: o.y, r0: o.s * 1.0, A: 0.75 + (i % 3) * 0.15, lam: 8.5 + (i % 2) * 1.5 }));
   halkalar.push({ x: 560, y: 470, r0: 4, A: 0.7, lam: 9 }); // kubbenin aksine düşen tek bir damla
@@ -323,7 +323,7 @@
       const X = (i * G) / OL, Y = Math.max(SU_UST, (j * G) / OL);
       const U = U_(X, Y), V = V_(Y);
       const n = fbm(U / 300 + 3, V / 190, 21, 3);
-      sakin[j * GN + i] = 0.3 + 0.7 * Math.pow(sinir((n - 0.32) * 2.6, 0, 1), 1.2);
+      sakin[j * GN + i] = 0.22 + 0.78 * Math.pow(sinir((n - 0.3) * 2.6, 0, 1), 1.2);
       buk[j * GN + i] = (fbm(U / 170, V / 110, 23, 3) - 0.5) * 7;
       buk2[j * GN + i] = (fbm(U / 90 + 9, V / 60, 24, 2) - 0.5) * 5;
     }
@@ -334,7 +334,7 @@
       const a = arr[j * GN + i], b = arr[j * GN + i + 1], c = arr[(j + 1) * GN + i], e = arr[(j + 1) * GN + i + 1];
       return a + (b - a) * fx + (c - a) * fy + (a - b - c + e) * fx * fy;
     };
-    const DIKEY = [[-2, 0.12], [-1, 0.22], [0, 0.32], [1, 0.22], [2, 0.12]]; // aksin dikey sıvazlaması
+    const DIKEY = [[-3, 0.08], [-2, 0.12], [-1, 0.18], [0, 0.24], [1, 0.18], [2, 0.12], [3, 0.08]]; // aksin dikey sıvazlaması
     const ornek = (sx, sy, out, wt) => {
       const x0 = sinir(Math.floor(sx), 0, S2 - 2), y0 = sinir(Math.floor(sy), 0, S2 - 2);
       const fx = sinir(sx - x0, 0, 1), fy = sinir(sy - y0, 0, 1);
@@ -377,15 +377,15 @@
           sv += (ev / uz) * e;
         }
         // eğim aksi kaydırır: dikeyde çok, yatayda az; uzakta küçülür
-        const dyS = 34 * sv * p, dxS = 10 * su_ * p;
+        const dyS = 58 * sv * p, dxS = 16 * su_ * p;
         top[0] = top[1] = top[2] = 0;
         const sx = (X + dxS) * OL;
-        for (const [oy, wt] of DIKEY) ornek(sx, (KAY - Y + dyS + oy * p * 1.6) * OL, top, wt);
+        for (const [oy, wt] of DIKEY) ornek(sx, (KAY - Y + dyS + oy * p * 2.2) * OL, top, wt);
         // dalga yüzü gölgesi: göğe bakan yüz açık, öbürü koyu
         const yuz = 1 - 0.55 * sv * (0.6 + 0.4 * yakin);
         let R = top[0] * yuz, Gc = top[1] * yuz, B = top[2] * yuz;
         // suyun rengi: aks hafif koyulaşır, deniz yeşiline çalar
-        R *= 0.8; Gc *= 0.9; B *= 0.92;
+        R *= 0.74; Gc *= 0.85; B *= 0.89;
         // havuz dibi (yakında görünür): çini ızgarası, kırılmayla titrer
         const du = U + su_ * 30, dv = V * F + sv * 30;
         const cu = Math.abs(((du / 64) % 1 + 1) % 1 - 0.5), cvv = Math.abs(((dv / 64) % 1 + 1) % 1 - 0.5);
@@ -451,10 +451,10 @@
       const yakin = (Y - SU_UST) / (SU_ALT - SU_UST);
       for (let x = 0; x < W / 2; x++) {
         const U = (x * 2 - 512) / p;
-        const n1 = fbm(U / 80, V / 80, 31, 3), n2 = fbm(U / 80 + 7, V / 80 + 3, 32, 3);
-        const ag = Math.pow(1 - Math.abs(Math.sin((n1 - n2) * 14)), 9);
+        const n1 = fbm(U / 46, V / 46, 31, 3), n2 = fbm(U / 46 + 7, V / 46 + 3, 32, 3);
+        const ag = Math.pow(1 - Math.abs(Math.sin((n1 - n2) * 18)), 14);
         const o = (y * (W / 2) + x) * 4;
-        d[o] = 200; d[o + 1] = 255; d[o + 2] = 236; d[o + 3] = ag * yakin * yakin * 46;
+        d[o] = 200; d[o + 1] = 255; d[o + 2] = 236; d[o + 3] = ag * yakin * yakin * 30;
       }
     }
     g.putImageData(im, 0, 0);

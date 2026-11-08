@@ -372,6 +372,13 @@
     for (let i = 0; i < n; i++) { const x = i % W, y = (i / W) | 0; G[i] = y < 812 + (nA(x / 30, 3) - 0.5) * 18 ? 1 - G[i] : 0; }
     return G;
   })();
+  // yapının sağ, ışıklı ucunda gök yıkaması yapıya varmadan söner: kenar kaybolur, biçimi kalem taşır
+  const YAKIN = (() => {
+    const n = W * 830, M = new Float32Array(n);
+    for (let i = 0; i < n; i++) if (yapiSet[BOL[i]]) M[i] = 1;
+    return bulanik(M, W, 830, 16);
+  })();
+  const kayipGok = (x, y) => 1 - 0.9 * sstep(0.03, 0.3, YAKIN[y * W + x]) * sstep(730, 800, x + (fbm(nD, x / 40, y / 40, 2) - 0.5) * 60) * sstep(540, 660, y);
   // binaların çevresi: gökyüzü yıkaması binaya yaklaşınca sert, koyu kenarla kurur
   const gunesIz = (x, y) => { const d = Math.hypot(x - 880, y - 140); return sstep(235, 120, d + (fbm(nE, x / 30, y / 30, 2) - 0.5) * 30); };
   yikama(kGok, gokKapsam.slice(), {
@@ -379,7 +386,7 @@
     yog: (x, y) => {
       const ust = Math.pow(clamp(1 - y / 830, 0, 1), 0.75);
       const j = y * W + x;
-      return (0.1 + 0.6 * ust) * (1 - gunesIz(x, y)) * (1 - 0.85 * BULUT[j]) * (0.7 + 0.6 * fbm(nB, x / 160 + 4, y / 160, 3)) * sstep(812, 700, y + (nA(x / 50, 2) - 0.5) * 60);
+      return (0.1 + 0.6 * ust) * kayipGok(x, y) * (1 - gunesIz(x, y)) * (1 - 0.85 * BULUT[j]) * (0.7 + 0.6 * fbm(nB, x / 160 + 4, y / 160, 3)) * sstep(812, 700, y + (nA(x / 50, 2) - 0.5) * 60);
     },
     kenar: 1.1, kenarR: 3, gran: 0.35, dalga: 0.35, dalgaOlcek: 70, vin: 0.0, tohum: 3,
     acilma: [{ x: 215, y: 370, r: 40 }, { x: 610, y: 225, r: 30 }, { x: 405, y: 105, r: 26 }], acilmaKaldir: 0.3, acilmaKenar: 2.2,
@@ -499,12 +506,12 @@
   }
   yikama(kKas, gevsek(kKas, KASSET, { r: 3, tasma: 0.4, olcek: 16, kayip: 0.15, tohum: 21, kayipF: (x) => 0.7 * sstep(700, 768, x) }, (x, y) => y < 610), {
     pig: karis(P.vir, 0.55, P.sap, 0.4),
-    yog: (x, y) => 0.38 + 1.0 * Math.pow(1 - silindirIsik(x, 560, 208), 1.3),
+    yog: (x, y) => (0.38 + 1.0 * Math.pow(1 - silindirIsik(x, 560, 208), 1.3)) * (1 - 0.65 * sstep(690, 770, x + (fbm(nD, x / 20, y / 20 + 5, 2) - 0.5) * 60)),
     kenar: 1.0, gran: 0.35, tohum: 21,
   });
   yikama(kKas, gevsek(kKas, KASSET, { r: 3, tasma: 0.4, olcek: 16, kayip: 0.15, tohum: 22, kayipF: (x) => 0.7 * sstep(715, 786, x) }, (x, y) => y >= 609), {
     pig: (x, y) => karis(P.vir, 0.5, P.sap, 0.5, P.sie, 0.08 * silindirIsik(x, 560, 226)),
-    yog: (x, y) => 0.32 + 1.05 * Math.pow(1 - silindirIsik(x, 560, 226), 1.3),
+    yog: (x, y) => (0.32 + 1.05 * Math.pow(1 - silindirIsik(x, 560, 226), 1.3)) * (1 - 0.72 * sstep(700, 785, x + (fbm(nD, x / 20, y / 20, 2) - 0.5) * 60)),
     kenar: 1.0, gran: 0.35, tohum: 22, acilma: [{ x: 452, y: 660, r: 18, e: 1.2 }],
   });
   // kubbenin kasnağa düşürdüğü gölge ve alt kasnağın üst kenarı: kalınlığı değişen, yer yer kesilen tek fırça izi
@@ -627,31 +634,25 @@
     });
     yikama(kMin, A, { pig: karis(P.sie, 0.6, P.ult, 0.35, P.ros, 0.1), yog: (x) => 0.45 + 0.35 * clamp((310 - x) / 40, 0, 1), kenar: 0.6, kenarR: 1.4, gran: 0.5, tohum: 48 });
   }
-  yikama(kMin, lekeler(kMin, SAHNE.minarePencereleri, 49), { pig: karis(P.ult, 0.5, P.sie, 0.55, P.ros, 0.2), yog: (x, y) => 0.6 + 0.35 * ((y - 222) % 130 > 18 ? 1 : 0.5), kenar: 1.0, gran: 0.6, tohum: 49 });
+  yikama(kMin, lekeler(kMin, SAHNE.minarePencereleri, 49), { pig: karis(P.ult, 0.5, P.sie, 0.55, P.ros, 0.2), yog: (x, y) => 0.32 + 0.4 * clamp(((y - 222) % 128) / 36, 0, 1), kenar: 1.2, gran: 0.8, dalga: 0.6, dalgaOlcek: 6, tohum: 49 });
 
   // ============================================================ ALEMLER (altın)
   for (const [cx, kutu] of [[560, [534, 180, 586, 312]], [300, [282, 76, 318, 152]]]) {
     yikama(kutu, kapsamBolge(kutu, kume('altin'), 0.25), {
-      pig: (x) => karis(P.sie, 1.0, P.ros, 0.12 + 0.1 * clamp((cx - x) / 12, 0, 1), P.ult, 0.12 * clamp((cx - x) / 12, 0, 1)),
-      yog: (x) => 0.55 + 0.6 * clamp((cx + 3 - x) / 14, 0, 1), kenar: 0.8, kenarR: 1.3, gran: 0.4, tohum: cx,
+      pig: (x) => karis(P.gam, 0.9, P.sie, 0.35 + 0.4 * clamp((cx - x) / 12, 0, 1), P.ros, 0.06 + 0.08 * clamp((cx - x) / 12, 0, 1), P.ult, 0.1 * clamp((cx - x) / 12, 0, 1)),
+      yog: (x) => 0.5 + 0.55 * clamp((cx + 2 - x) / 12, 0, 1), kenar: 1.0, kenarR: 1.3, gran: 0.4, tohum: cx,
     });
   }
 
   // ============================================================ ÇİÇEKLER VE YAPRAKLAR
-  const B = SAHNE.bitki;
-  const cicekSet = kume('cicek', 'cicekOrta');
-  // çiçek maskesi (yaprak yıkamaları çiçeklerin etrafından dolaşır: negatif boyama)
-  const CICEK = new Float32Array(N);
-  for (let i = 0; i < N; i++) if (cicekSet[BOL[i]]) CICEK[i] = 1;
-  const CICEKB = bulanik(CICEK, W, W, 1);
-  // öndeki yaprak kütlesi: ıslakta yeşil-siena, çiçeklerin etrafından
+  // öndeki yaprak kütlesi: ıslakta yeşil-siena, çiçeklerin etrafından (negatif boyama)
   const kOn = [0, 760, W, W];
   {
     const r = SAHNE.rng(51);
     const kutle = kapsamCiz(kOn, (c) => {
       hobbsCiz(c, [[-20, 900], [120, 812], [300, 828], [520, 806], [760, 820], [930, 800], [1050, 880], [1050, 1040], [-20, 1040]].map((p) => [p[0], p[1], 1]), 24, 0.075, r, 0.35);
     });
-    for (let j = 0; j < kutle.length; j++) { const i = kOn[1] * W + j; kutle[j] *= (1 - CICEKB[i]) * (yapiSet[BOL[i]] ? 0.0 : 1) * (BOL[i] === BI.zemin ? sstep(790, 840, Math.floor(i / W)) : 1); }
+    for (let j = 0; j < kutle.length; j++) { const i = kOn[1] * W + j; kutle[j] *= (1 - CICEKG[i]) * (yapiSet[BOL[i]] ? 0.0 : 1) * (BOL[i] === BI.zemin ? sstep(790, 840, Math.floor(i / W)) : 1); }
     yikama(kOn, kutle, {
       pig: (x, y) => { const t = fbm(nC, x / 90, y / 90, 3); return karis(P.sap, 0.7 - 0.3 * t, P.vir, 0.25 + 0.4 * t, P.sie, 0.25 * (1 - t), P.ult, 0.1 * t); },
       yog: (x, y) => 0.5 * (0.55 + 0.9 * fbm(nE, x / 70, y / 60, 3)) * (0.7 + 0.5 * sstep(800, 960, y)),
@@ -660,97 +661,196 @@
     });
   }
   // zemin: siena, yatay
+  const zeminSet = kume('zemin', 'cicek', 'cicekOrta', 'yaprak', 'sap');
   yikama([0, 780, W, 860], kapsamAlan([0, 780, W, 860], (x, y) => {
-    const i = y * W + x; return (BOL[i] === BI.zemin ? 1 : 0) * sstep(862, 800, y + (nA(x / 40, 7) - 0.5) * 20);
+    const i = y * W + x; return (zeminSet[BOL[i]] ? 1 - CICEKG[i] : 0) * sstep(862, 800, y + (nA(x / 40, 7) - 0.5) * 20);
   }), { pig: karis(P.sie, 0.8, P.ros, 0.1, P.ult, 0.06), yog: 0.17, kenar: 0.7, gran: 0.6, vin: 0.0, tohum: 53 });
-  // saplar
+
+  // saplar: elin baskısıyla kalınlaşıp incelen, yer yer kâğıtta kaybolan tek hamle
   {
-    const r = SAHNE.rng(54);
-    const A = kapsamCiz([0, 500, W, W], (c) => {
+    const kutu = [0, 500, W, W];
+    const A = kapsamCiz(kutu, (c) => {
       c.lineCap = 'round'; c.lineJoin = 'round';
-      for (const s of B.saplar) {
-        c.lineWidth = 3.4; c.globalAlpha = 0.9;
-        c.beginPath(); s.forEach(([x, y], i) => { const ii = Math.round(y) * W + Math.round(clamp(x, 0, W - 1)); const px = x + DX[Math.min(N - 1, ii)] * 0.6; i ? c.lineTo(px, y) : c.moveTo(px, y); }); c.stroke();
-        c.lineWidth = 1.2; c.globalAlpha = 0.6; c.stroke();
-      }
-      c.globalAlpha = 1;
+      B.saplar.forEach((sp, sn) => {
+        const yog = [];
+        for (let i = 0; i < sp.length - 1; i++) for (let k = 0; k < 5; k++) {
+          const t = (i + k / 5) / (sp.length - 1);
+          const [xa, ya] = sp[i], [xb, yb] = sp[i + 1];
+          yog.push([xa + (xb - xa) * k / 5, ya + (yb - ya) * k / 5, t]);
+        }
+        for (let i = 0; i < yog.length - 1; i++) {
+          const [x, y, t] = yog[i], [x2, y2] = yog[i + 1];
+          const n1 = nG(sn * 7.3 + i * 0.07, 3.3);
+          if (n1 < 0.3 && t > 0.12 && t < 0.92) continue;
+          const ii = clamp(Math.round(y), 0, W - 1) * W + clamp(Math.round(x), 0, W - 1);
+          c.lineWidth = (1.4 + 3.4 * n1) * (1 - 0.4 * t);
+          c.beginPath(); c.moveTo(x + DX[ii] * 0.7, y); c.lineTo(x2 + DX[ii] * 0.7, y2); c.stroke();
+        }
+      });
     });
-    for (let j = 0; j < A.length; j++) A[j] *= 1 - CICEKB[500 * W + j];
-    yikama([0, 500, W, W], A, { pig: karis(P.sap, 0.8, P.vir, 0.3, P.sie, 0.15), yog: 0.95, kenar: 0.6, kenarR: 1.5, gran: 0.3, vin: 0.03, tohum: 55 });
+    for (let j = 0; j < A.length; j++) A[j] *= 1 - CICEKG[500 * W + j];
+    yikama(kutu, A, { pig: (x, y) => lerpK(karis(P.sap, 0.8, P.vir, 0.3, P.sie, 0.15), karis(P.vir, 0.6, P.ult, 0.25, P.sap, 0.3), fbm(nC, x / 30, y / 60, 2)), yog: (x, y) => 0.65 + 0.5 * fbm(nB, x / 18, y / 18, 2), kenar: 0.6, kenarR: 1.5, gran: 0.3, vin: 0.03, tohum: 55 });
   }
-  // yapraklar: her biri ayrı yıkama; üst üste binen yerler koyulaşır
+
+  // yapraklar: her biri tek fırça darbesi (dipte değip ortada bastırılan, uçta kaldırılan) ya da ortasında
+  // kâğıt beyazı damar kalan iki yarım darbe; ıslaklığı değişir: kimi ucunda kâğıda erir, kimi kuru fırçayla
+  // kırılır, kimi ıslak lekede açılma yapar. Üst üste binen yerler koyulaşır.
   {
     const r = SAHNE.rng(56);
     B.yapraklar.forEach((yp, n) => {
-      if (r() < 0.07) return; // bir kaçını kalemde bırak
-      const L = yp.uzunluk;
-      const kutu = kutuDuz([yp.x - L - 6, yp.y - L - 6, yp.x + L + 6, yp.y + L + 6]);
-      const pts = yolNoktalari(SAHNE.yaprakYolu(yp), 3)[0];
-      const A = kapsamCiz(kutu, (c) => { titrekCokgen(c, pts, 0.5); c.fill(); });
-      const w = kutu[2] - kutu[0];
-      // orta damar: boya kaldırılarak açılmış ince çizgi
-      const [d0, d1] = SAHNE.yaprakDamari(yp);
+      const kenarda = yp.y > 930 && (yp.x < 150 || yp.x > 890);
+      if (r() < (kenarda ? 0.45 : 0.08)) return; // bir kaçını kalemde bırak
+      const L = yp.uzunluk * (0.95 + r() * 0.18), Wd = L * yp.genislik * (0.92 + r() * 0.3);
       const ca = Math.cos(yp.aci), sa = Math.sin(yp.aci);
+      const egri = (r() - 0.5) * 0.24, asim = (r() - 0.5) * 0.4;
+      const tur = r(), ikili = tur > 0.42 && tur < 0.78, islak = tur >= 0.78, kuru = !islak && r() < 0.35, damarli = !ikili && r() < 0.45;
+      const P2 = (u, v) => [yp.x + u * ca - v * sa, yp.y + u * sa + v * ca];
+      const omurga = (t) => egri * L * Math.sin(Math.PI * t);
+      const gen = (t) => Wd * 0.5 * Math.pow(Math.sin(Math.PI * Math.pow(clamp(t, 0, 1), 0.8)), 0.85) * (1 + 0.1 * Math.sin(t * 9 + n));
+      const isikTaraf = (-sa * isikYon[0] + ca * isikYon[1]) > 0 ? 1 : -1;
+      const kutu = kutuDuz([yp.x - L - 8, yp.y - L - 8, yp.x + L + 8, yp.y + L + 8]);
+      const A = kapsamCiz(kutu, (c) => {
+        const yarim = (taraf, bosluk) => {
+          c.beginPath();
+          for (let i = 0; i <= 16; i++) { const t = i / 16, q = P2(t * L, omurga(t) + taraf * bosluk); i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]); }
+          for (let i = 16; i >= 0; i--) { const t = i / 16, q = P2(t * L * (1 + (r() - 0.5) * 0.02), omurga(t) + taraf * (bosluk + gen(t) * (1 + taraf * asim) + (r() - 0.5) * 0.9)); c.lineTo(q[0], q[1]); }
+          c.closePath(); c.fill();
+        };
+        if (ikili) {
+          c.globalAlpha = 1; yarim(-isikTaraf, 0.9);
+          c.globalAlpha = 0.55 + r() * 0.25; yarim(isikTaraf, 0.9);
+        } else { c.globalAlpha = 1; yarim(1, 0); yarim(-1, 0); }
+        c.globalAlpha = 1;
+      });
+      const w = kutu[2] - kutu[0], h = kutu[3] - kutu[1];
+      const Ab = bulanik(A, w, h, 3.5);
+      const yt = r(), ytaraf = r() < 0.5 ? 1 : -1;
       for (let j = 0; j < A.length; j++) {
-        const x = kutu[0] + (j % w), y = kutu[1] + Math.floor(j / w), i = y * W + x;
-        const t = (x - d0[0]) * ca + (y - d0[1]) * sa, v = -(x - d0[0]) * sa + (y - d0[1]) * ca;
-        const damar = t > 2 && t < L * 0.85 ? Math.exp(-(v * v) / 1.6) * 0.55 : 0;
-        A[j] *= (1 - CICEKB[i]) * (1 - damar);
+        if (A[j] < 0.003 && Ab[j] < 0.003) continue;
+        const x = kutu[0] + (j % w), y = kutu[1] + ((j / w) | 0), i = y * W + x;
+        const dx = x - yp.x, dy = y - yp.y, t = (dx * ca + dy * sa) / L;
+        const vp = -dx * sa + dy * ca - omurga(clamp(t, 0, 1)), v = vp / (Wd * 0.5);
+        // kaybolan kenar: ucu ya da bir yanı ıslakta kâğıda erir
+        let sft = yt < 0.4 ? sstep(0.55, 1.05, t) : yt < 0.75 ? 0.85 * sstep(0.1, 0.9, v * ytaraf) : 0;
+        if (islak) sft = Math.max(sft, 0.45);
+        let a = A[j] + (Ab[j] - A[j]) * sft;
+        // kuru fırça: uca doğru boya yalnız kâğıdın tepelerinde kalır
+        if (kuru) { const d = sstep(0.45, 1.0, t), th = 0.18 + 0.58 * d; a *= sstep(th - 0.07, th + 0.07, KAGIT[i] + 0.12 * (nE(x / 2.5, y / 2.5) - 0.5)); }
+        // nemli fırçayla kaldırılmış orta damar
+        if (damarli && t > 0.08 && t < 0.8) a *= 1 - Math.exp(-(vp * vp) / 1.4) * 0.6;
+        A[j] = a * (1 - CICEKG[i]);
       }
-      const t0 = r(), koyu = L > 50 ? 1 : 0.8;
-      const ucPig = karis(P.vir, 0.65, P.ult, 0.3, P.sap, 0.2), dipPig = karis(P.sap, 0.9, P.sie, 0.2 + 0.2 * t0, P.vir, 0.1);
+      const t0 = r(), koyu = L > 50 ? 1 : 0.85;
+      const ucPig = karis(P.vir, 0.65, P.ult, 0.3, P.sap, 0.2), dipPig = karis(P.sap, 0.9, P.sie, 0.2 + 0.25 * t0, P.vir, 0.1);
+      const sarPig = karis(P.sap, 0.7, P.gam, 0.45, P.sie, 0.1);
       yikama(kutu, A, {
-        pig: (x, y) => { const t = clamp(((x - yp.x) * ca + (y - yp.y) * sa) / L, 0, 1); return lerpK(dipPig, ucPig, clamp(t * (0.6 + t0) + (t0 - 0.5) * 0.4, 0, 1)); },
-        yog: (x, y) => koyu * (0.5 + 0.5 * fbm(nB, x / 25 + n, y / 25, 2)) * (0.85 + 0.5 * t0),
-        kenar: 1.1, kenarR: 2, gran: 0.35, dalga: 0.35, dalgaOlcek: 18, vin: 0.03, tohum: 60 + n,
+        pig: (x, y) => {
+          const tt = clamp(((x - yp.x) * ca + (y - yp.y) * sa) / L, 0, 1), m = fbm(nC, x / 14 + n, y / 14, 2);
+          let k = lerpK(dipPig, ucPig, clamp(tt * (0.6 + t0) + (t0 - 0.5) * 0.4 + (m - 0.5) * 0.9, 0, 1));
+          if (t0 > 0.7) k = lerpK(k, sarPig, 0.45 * sstep(0.45, 0.65, m));
+          return k;
+        },
+        yog: (x, y) => koyu * (0.42 + 0.65 * fbm(nB, x / 20 + n, y / 20, 2)) * (0.8 + 0.55 * t0) * (islak ? 1.12 : 1),
+        kenar: islak ? 1.7 : 1.15, kenarR: 2, gran: 0.35, dalga: 0.4, dalgaOlcek: 16, vin: 0.03, tohum: 60 + n,
+        acilma: islak ? [{ x: yp.x + ca * L * 0.55, y: yp.y + sa * L * 0.55, r: Wd * 0.32 }] : null, acilmaKaldir: 0.45, acilmaKenar: 2.4,
       });
     });
   }
-  // tomurcuklar: kinakridon gül
+
+  // tomurcuklar: tek damla kinakridon gül, dibine ıslakta karışan yeşil çanak
   B.tomurcuklar.forEach((t, n) => {
-    const kutu = kutuDuz([t.x - 22, t.y - 22, t.x + 22, t.y + 22]);
-    const pts = yolNoktalari(SAHNE.tomurcukYolu(t), 2)[0];
-    const A = kapsamCiz(kutu, (c) => { titrekCokgen(c, pts, 0.3); c.fill(); });
+    const kutu = kutuDuz([t.x - 26, t.y - 26, t.x + 26, t.y + 26]);
+    const r = SAHNE.rng(210 + n);
+    const ca = Math.cos(t.aci), sa = Math.sin(t.aci);
+    const P2 = (u, v) => [t.x + u * ca - v * sa, t.y + u * sa + v * ca, 1];
+    const pts = [P2(-t.r * 0.85, 0), P2(-t.r * 0.55, -t.r * 0.95), P2(t.r * 0.45, -t.r * 0.72), P2(t.r * 1.5, (r() - 0.5) * 2), P2(t.r * 0.45, t.r * 0.72), P2(-t.r * 0.55, t.r * 0.95)];
+    const A = kapsamCiz(kutu, (c) => hobbsCiz(c, pts, 10, 0.15, r, 0.2));
     yikama(kutu, A, {
-      pig: (x, y) => lerpK(P.ros, karis(P.ros, 0.6, P.ult, 0.3), clamp((t.x - x) / 10 + 0.3, 0, 1)),
-      yog: (x, y) => 0.32 + 0.3 * clamp((t.x - x + t.y - y) / 16 + 0.5, 0, 1), kenar: 1.0, kenarR: 1.5, gran: 0.2, dalgaOlcek: 10, vin: 0.03, tohum: 200 + n,
+      pig: (x, y) => lerpK(P.ros, karis(P.ros, 0.85, P.ult, 0.15), clamp(((t.x - x) * isikYon[0] + (t.y - y) * isikYon[1]) / t.r * 0.6 + 0.2, 0, 1)),
+      yog: (x, y) => 0.3 + 0.4 * clamp((((x - t.x) * ca + (y - t.y) * sa) / t.r) * 0.4 + 0.5, 0, 1), kenar: 1.3, kenarR: 1.5, gran: 0.2, dalgaOlcek: 10, vin: 0.03, tohum: 200 + n,
     });
+    const C = kapsamCiz(kutu, (c) => {
+      c.lineCap = 'round';
+      for (const s of [-1, 1]) {
+        const a = t.aci + Math.PI + s * (0.45 + r() * 0.3);
+        c.lineWidth = 2 + r() * 1.5; c.globalAlpha = 0.9;
+        const bx = t.x - ca * t.r * 0.5, by = t.y - sa * t.r * 0.5;
+        c.beginPath(); c.moveTo(bx + Math.cos(t.aci) * 4, by + Math.sin(t.aci) * 4); c.lineTo(bx - Math.cos(a) * t.r * 0.9, by - Math.sin(a) * t.r * 0.9); c.stroke();
+      }
+      c.globalAlpha = 1;
+    });
+    yikama(kutu, C, { pig: karis(P.sap, 0.8, P.vir, 0.3), yog: 0.55, yumusak: 1.2, kenar: 0.6, gran: 0.2, vin: 0.03, tohum: 250 + n });
   });
-  // çiçekler: taç yapraklar kâğıt beyazı; yalnız gölgeli yanlarda soluk sır, göbek siena
-  const isikYon = [0.74, -0.67];
-  B.cicekler.forEach((c, n) => {
-    const kutu = kutuDuz([c.x - c.r * 1.2, c.y - c.r * 1.2, c.x + c.r * 1.2, c.y + c.r * 1.2]);
-    // taç yaprakların hepsi: çok soluk, kenarları kuruyup ince gri çizgi bırakan bir sır
-    SAHNE.tacYapraklari(c).forEach((e, k) => {
-      const yon = Math.cos(e.aci) * isikYon[0] + Math.sin(e.aci) * isikYon[1];
-      const pts = yolNoktalari(SAHNE.elipsYolu(e), 2)[0];
-      const A = kapsamCiz(kutu, (cc) => { titrekCokgen(cc, pts, 0.25); cc.fill(); });
-      yikama(kutu, A, {
-        pig: karis(P.ult, 0.6, P.ros, 0.25, P.sie, 0.25),
-        yog: (x, y) => 0.012 + 0.13 * clamp(-yon * 0.9 - 0.05, 0, 1) * sstep(0.2, 0.9, Math.hypot(x - c.x, y - c.y) / c.r),
-        kenar: 2.2, kenarR: 1.5, gran: 0.25, dalga: 0.6, dalgaOlcek: 14, vin: 0.04, tohum: 300 + n * 7 + k,
-      });
-    });
-    // göbeğe doğru pembe kızarma (ıslakta)
-    {
-      const kb = kutuDuz([c.x - c.r * 0.7, c.y - c.r * 0.7, c.x + c.r * 0.7, c.y + c.r * 0.7]);
-      const A = kapsamAlan(kb, (x, y) => CICEK[y * W + x] * sstep(0.65, 0.2, Math.hypot(x - c.x, y - c.y) / c.r));
-      yikama(kb, A, { pig: karis(P.ros, 0.8, P.sie, 0.2), yog: 0.07, yumusak: 2, kenar: 0, gran: 0.2, vin: 0.04, tohum: 700 + n });
-    }
-    // göbek
-    const kg = kutuDuz([c.x - c.r * 0.4, c.y - c.r * 0.4, c.x + c.r * 0.4, c.y + c.r * 0.4]);
-    const rr = SAHNE.rng(400 + n);
-    const A = kapsamCiz(kg, (cc) => {
-      cc.beginPath(); cc.arc(c.x + 0.5, c.y + 0.5, c.r * 0.19, 0, Math.PI * 2); cc.fill();
-    });
-    yikama(kg, A, { pig: karis(P.sie, 0.9, P.sap, 0.25), yog: 0.75, kenar: 1.0, kenarR: 1.2, gran: 0.5, dalgaOlcek: 8, vin: 0.05, tohum: 500 + n });
-    const A2 = kapsamCiz(kg, (cc) => {
-      for (let i = 0; i < 10; i++) {
-        const a = (i / 10) * Math.PI * 2 + rr() * 0.3;
-        cc.beginPath(); cc.arc(c.x + Math.cos(a) * c.r * 0.27, c.y + Math.sin(a) * c.r * 0.27, Math.max(1.1, c.r * 0.04), 0, Math.PI * 2); cc.fill();
+
+  // çiçekler: taç yapraklar kâğıt beyazı; ışıktan uzak yapraklara serin, soluk bir gölge darbesi (ışığa bakan
+  // yanı kâğıda erir, gölge yanı sert kurur), göbeğe doğru ıslakta pembe kızarma, sarı-siena göbek ve damlalar
+  CICEKLER.forEach(({ c, yap }, n) => {
+    const kutu = kutuDuz([c.x - c.r * 1.4, c.y - c.r * 1.4, c.x + c.r * 1.4, c.y + c.r * 1.4]);
+    const w = kutu[2] - kutu[0];
+    const r = SAHNE.rng(300 + n);
+    const A = new Float32Array(w * (kutu[3] - kutu[1]));
+    yap.forEach((p) => {
+      const yon = Math.cos(p.a) * isikYon[0] + Math.sin(p.a) * isikYon[1];
+      const a = clamp(0.5 - yon * 0.7, 0.0, 1) * (0.65 + r() * 0.55);
+      if (a < 0.08) return;
+      const ox = -isikYon[0] * c.r * 0.05, oy = -isikYon[1] * c.r * 0.05;
+      const pts = boz(p.pts, 1, 0.14, r);
+      const Ak = kapsamCiz(kutu, (cc) => { cc.beginPath(); pts.forEach((q, i) => (i ? cc.lineTo(q[0] + ox, q[1] + oy) : cc.moveTo(q[0] + ox, q[1] + oy))); cc.closePath(); cc.fill(); });
+      const sinir = 0.25 + r() * 0.5;
+      for (let j = 0; j < A.length; j++) {
+        if (!Ak[j]) continue;
+        const x = kutu[0] + (j % w), y = kutu[1] + ((j / w) | 0);
+        const q = ((x - p.cx) * isikYon[0] + (y - p.cy) * isikYon[1]) / p.rx;
+        const f = Ak[j] * a * sstep(sinir, sinir - 0.85, q + (nE(x / 6, y / 6) - 0.5) * 0.3);
+        A[j] = Math.max(A[j], f) + 0.25 * Math.min(A[j], f);
       }
     });
-    yikama(kg, A2, { pig: karis(P.sie, 0.8, P.ros, 0.4, P.ult, 0.15), yog: 1.0, kenar: 0.5, kenarR: 1, gran: 0.2, vin: 0.05, tohum: 600 + n });
+    // yaprak araları: göbekten dışa iki üç ince darbe (üst üste binen taç yaprakları sezdirir)
+    {
+      const S2 = kapsamCiz(kutu, (cc) => {
+        cc.lineCap = 'round';
+        for (let k = 0; k < 5; k++) {
+          if (r() < 0.5) continue;
+          const a = c.aci + ((k + 0.5) * Math.PI * 2) / 5 + (r() - 0.5) * 0.2;
+          const L0 = c.r * (0.28 + r() * 0.1), L1 = c.r * (0.6 + r() * 0.3), b = (r() - 0.5) * 0.3;
+          cc.globalAlpha = 0.45 + r() * 0.4; cc.lineWidth = Math.max(1.1, c.r * 0.05);
+          cc.beginPath(); cc.moveTo(c.x + Math.cos(a) * L0, c.y + Math.sin(a) * L0);
+          cc.quadraticCurveTo(c.x + Math.cos(a + b) * (L0 + L1) / 2, c.y + Math.sin(a + b) * (L0 + L1) / 2, c.x + Math.cos(a + b * 0.5) * L1, c.y + Math.sin(a + b * 0.5) * L1);
+          cc.stroke();
+        }
+        cc.globalAlpha = 1;
+      });
+      for (let j = 0; j < A.length; j++) A[j] = Math.min(1, A[j] + S2[j] * 0.8);
+    }
+    const sicak = r();
+    yikama(kutu, A, {
+      pig: (x, y) => lerpK(karis(P.ult, 0.6, P.ros, 0.25, P.sie, 0.25), karis(P.ult, 0.45, P.sap, 0.35, P.sie, 0.25), sicak * 0.6 * sstep(-0.2, 0.6, (y - c.y) / c.r)),
+      yog: (x, y) => (0.15 + 0.08 * fbm(nB, x / 12 + n, y / 12, 2)) * (c.r > 40 ? 1 : 0.85),
+      kenar: 1.5, kenarR: 1.6, gran: 0.3, dalga: 0.55, dalgaOlcek: 12, vin: 0.04, tohum: 300 + n,
+    });
+    // göbeğe doğru pembe kızarma ve sarımsı ışık (ıslakta, kenarsız)
+    {
+      const kb = kutuDuz([c.x - c.r * 0.8, c.y - c.r * 0.8, c.x + c.r * 0.8, c.y + c.r * 0.8]);
+      const A2 = kapsamAlan(kb, (x, y) => CICEKR[y * W + x] * sstep(0.7, 0.2, Math.hypot(x - c.x, y - c.y) / c.r + (nE(x / 7, y / 7) - 0.5) * 0.3));
+      yikama(kb, A2, { pig: sicak > 0.5 ? karis(P.ros, 0.8, P.sie, 0.2) : karis(P.gam, 0.7, P.ros, 0.3), yog: 0.08, yumusak: 2, kenar: 0, gran: 0.2, vin: 0.04, tohum: 700 + n });
+    }
+    // göbek: ıslak sarı-siena leke, gölge yanına düşen koyu damlalar
+    const kg = kutuDuz([c.x - c.r * 0.55, c.y - c.r * 0.55, c.x + c.r * 0.55, c.y + c.r * 0.55]);
+    const gb = kapsamCiz(kg, (cc) => hobbsCiz(cc, damla(c.x + 0.5, c.y + 0.5, c.r * 0.2, c.r * 0.17, r() * 6, 8, r), 12, 0.13, r, 0.4));
+    yikama(kg, gb, {
+      pig: (x, y) => lerpK(karis(P.gam, 1.0, P.sie, 0.25), karis(P.sie, 0.9, P.sap, 0.35, P.ros, 0.1), clamp(0.5 + 0.5 * ((x - c.x) * -isikYon[0] + (y - c.y) * -isikYon[1]) / (c.r * 0.2), 0, 1)),
+      yog: 0.7, kenar: 1.2, kenarR: 1.2, gran: 0.5, dalgaOlcek: 8, vin: 0.05, tohum: 500 + n,
+    });
+    const nd = 4 + Math.floor(r() * 4);
+    const nok = kapsamCiz(kg, (cc) => {
+      for (let i = 0; i < nd; i++) {
+        const a = 2.4 + (r() - 0.5) * 3.4, d = c.r * (0.17 + r() * 0.14);
+        cc.globalAlpha = 0.6 + r() * 0.4;
+        cc.beginPath(); cc.arc(c.x + Math.cos(a) * d, c.y + Math.sin(a) * d, Math.max(0.9, c.r * (0.025 + r() * 0.035)), 0, Math.PI * 2); cc.fill();
+      }
+      cc.globalAlpha = 1;
+    });
+    yikama(kg, nok, { pig: karis(P.sie, 0.8, P.ros, 0.4, P.ult, 0.2), yog: 0.95, kenar: 0.5, kenarR: 1, gran: 0.2, vin: 0.05, tohum: 600 + n });
   });
   // sıçratma damlaları
   {
@@ -763,7 +863,7 @@
       }
       c.globalAlpha = 1;
     });
-    for (let j = 0; j < A.length; j++) A[j] *= 1 - CICEKB[600 * W + j] * 0.8;
+    for (let j = 0; j < A.length; j++) A[j] *= 1 - CICEKG[600 * W + j] * 0.8;
     yikama(kutu, A, { pig: (x) => (x < 512 ? karis(P.sap, 0.7, P.vir, 0.4) : karis(P.vir, 0.5, P.ros, 0.35, P.ult, 0.2)), yog: 0.8, kenar: 0.8, kenarR: 1, gran: 0.2, vin: 0.06, tohum: 78 });
   }
 
@@ -780,7 +880,8 @@
         const ox = (r() - 0.5) * 0.8, oy = (r() - 0.5) * 0.8;
         kc.beginPath();
         for (let s = i; s < Math.min(pts.length, i + uz + 1); s++) {
-          const x = pts[s][0] + ox + (r() - 0.5) * 0.5, y = pts[s][1] + oy + (r() - 0.5) * 0.5;
+          const ii = clamp(Math.round(pts[s][1]), 0, W - 1) * W + clamp(Math.round(pts[s][0]), 0, W - 1);
+          const x = pts[s][0] + ox + DX[ii] * 0.22 + (r() - 0.5) * 0.5, y = pts[s][1] + oy + DY[ii] * 0.22 + (r() - 0.5) * 0.5;
           s === i ? kc.moveTo(x, y) : kc.lineTo(x, y);
         }
         kc.globalAlpha = Math.min(1, alfa * 1.7 * (0.55 + r() * 0.45)); kc.lineWidth = 0.75 + r() * 0.45;
@@ -799,9 +900,9 @@
     Y.minarePencereleri.forEach((d) => yolCiz(d, 0.4, false, 2));
     Y.zikzak.forEach((d) => yolCiz(d, 0.25, true, 2));
     Y.alem.concat(Y.minareAlem).forEach((d) => yolCiz(d, 0.45, false, 1.5));
-    Y.cicekler.forEach((d) => yolCiz(d, 0.42, true, 2));
+    Y.cicekler.forEach((d) => yolCiz(d, 0.22, true, 2));
     Y.tomurcuklar.forEach((d) => yolCiz(d, 0.4, false, 2));
-    Y.yapraklar.forEach((d, k) => { if (k % 2 === 0 || k > 60) yolCiz(d, 0.3, true, 3); });
+    Y.yapraklar.forEach((d, k) => { if (k % 2 === 0 || k > 60) yolCiz(d, 0.24, true, 3); });
     Y.saplar.forEach((d) => yolCiz(d, 0.3, true, 4));
     // yapı çizgileri: köşelerden taşan yardımcı çizgiler, eksen
     const duz = (x1, y1, x2, y2, a) => cizgi([[x1, y1], [(x1 + x2) / 2, (y1 + y2) / 2], [x2, y2]], a, false);

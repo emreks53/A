@@ -528,11 +528,13 @@
     // bulutlar: dalgalı gümüş halat çerçeve (daireler birleşimi, düz taban), içi gümüş kıvrımlarla dolu
     const bulutlar = [[170, 250, 1.0], [470, 150, 0.8], [760, 345, 1.0], [948, 470, 0.68], [84, 470, 0.68]].map(([bx, by, bs]) => {
       const taban = by + 12 * bs;
-      const d = [[-36, 2, 12], [-15, -8, 17], [9, -12, 20], [32, -2, 14]].map(([u, v, r]) => [bx + u * bs, by + v * bs, r * bs]);
-      return { d, taban, bs };
+      const d = [[-36, 2, 12], [-15, -8, 17], [9, -12, 20], [32, -2, 15]].map(([u, v, r]) => [bx + u * bs, by + v * bs, r * bs]);
+      // düz taban: uç dairelerin merkezleri arasında, tabanın üstünde bir şerit de bulutun içi sayılır
+      return { d, taban, bs, sx1: d[0][0], sx2: d[3][0], sy: taban - 11 * bs };
     });
     const bulutIci = (B, x, y, ic) => {
       if (y > B.taban - ic) return false;
+      if (x > B.sx1 && x < B.sx2 && y > B.sy) return true;
       for (const [cx, cy, r] of B.d) if ((x - cx) ** 2 + (y - cy) ** 2 < (r - ic) ** 2) return true;
       return false;
     };
@@ -545,7 +547,7 @@
           const t = -Math.PI / 2 + (i / n) * Math.PI * 2;
           pts.push([cx + Math.cos(t) * r, cy + Math.sin(t) * r]);
         }
-        const gizli = (x, y) => y > B.taban || B.d.some(([ox, oy, or]) => (ox !== cx || oy !== cy) && (x - ox) ** 2 + (y - oy) ** 2 < (or - 0.2) ** 2);
+        const gizli = (x, y) => y > B.taban || (x > B.sx1 && x < B.sx2 && y > B.sy) || B.d.some(([ox, oy, or]) => (ox !== cx || oy !== cy) && (x - ox) ** 2 + (y - oy) ** 2 < (or - 0.2) ** 2);
         for (const r2 of parcala(pts, gizli)) halat(yapi, r2, GUMUS, 2.0);
       }
       const [lx, ly, lr] = B.d[0];

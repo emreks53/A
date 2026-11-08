@@ -16,7 +16,7 @@
     "Her kâğıtta lifli doku, sağ üste bakan kesim kenarında ince ışık, karşı kenarda kâğıt kalınlığı gölgesi",
     "Derinliğe göre palet: arkada soluk gök ve kum tonları, önde daha doygun yeşiller ve beyaz çiçekler"
   ],
-  "palet": ["#BEDCE6", "#F6CC5E", "#F1E8D6", "#2B7243", "#55A861", "#D8A93F", "#EBDCBC", "#FFFDF7"],
+  "palet": ["#BEDCE6", "#F5D77C", "#F1E8D6", "#2B7243", "#55A861", "#D8A93F", "#EBDCBC", "#FFFDF7"],
   "kodla_cizim": "Her kâğıt katmanı 2048 × 2048'lik ekran dışı bir tuvale kendi biçimleriyle (SAHNE.yollar(), minare parçaları, kubbe profili, SAHNE.bitki) boyanır, delikler destination-out ile kesilir. Sonra bir kez üretilen lif dokusu (ince benek + 9000 kıvrık iplik) her katmana farklı kaydırmayla source-atop olarak işlenir; katmanın kendi alfa kanalı sol alta kaydırılıp çıkarılarak sağ üst kenarda ince ışık, ters yönde kâğıt kalınlığı gölgesi elde edilir. Katman ana tuvale shadowBlur ve shadowOffset ile (ışık sağ üstten, gölge sol alta) basılır; böylece her katman ancak altındakilere gölge düşürür. Kubbe 16 dilime ayrı ayrı kesilip boylamına göre yeşil tonlandırıldı. Beyaz kaide düz kalmasın diye gövdenin üstüne ayrı katmanlar olarak pilastrlar, taban silmesi, SAHNE.kemerYolu() ile oyulmuş kör kemer frizi ve evenodd dolguyla kesilmiş sivri kemer pencere çerçeveleri eklendi; minarenin çıkmaları ve bileziği de gövdeden ayrı, kabarık kâğıttır. En sonda soft-light karışımlı radyal ışıkla fotoğraf aydınlatması verildi.",
   "etiketler": ["kâğıt", "kesme", "katmanlı", "gölge", "derinlik", "el yapımı", "doku", "paper art"]
 }
