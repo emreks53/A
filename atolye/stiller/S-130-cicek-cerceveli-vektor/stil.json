@@ -1,0 +1,22 @@
+{
+  "kod": "S-130",
+  "no": 130,
+  "ad": "Çiçek Çerçeveli Vektör",
+  "ad_en": "Floral Frame Vector",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Sahnenin sivri kemerli bir pencerede yumuşak degradeli, parlak gün ışığında cilalı bir vektörle çizildiği; çevresini güller, beyaz çiçekler, yapraklar ve tomurcuklardan simetrik, süslü bir bordürün sardığı tebrik kartı illüstrasyonu.",
+  "tanim": "Çiçek çerçeveli vektör illüstrasyon, ana konuyu bir kemer, pencere ya da dikdörtgen içinde sunar ve bu açıklığın çevresini simetrik bir çiçek bordürüyle süsler. İçteki sahne yumuşak degradeler, temiz kenarlar ve parlak bir gün ışığıyla çizilir; bordürde katmanlı güller, beş yapraklı beyaz çiçekler, damarlı yapraklar ve tomurcuklar bir sarmaşık boyunca kemeri izler, köşelerde buketlerde toplanır. İnce altın silmeler ve yumuşak gölgeler kart inceliği verir. Bayram ve tebrik kartlarında, davetiyelerde, dini gün paylaşımlarında ve dekoratif baskılarda çok sevilen bir dildir.",
+  "koken": "Konuyu çiçek bordürüyle çevreleme geleneği Orta Çağ el yazmalarının çiçekli kenar süslemelerine, Osmanlı tezhibinin mihrap biçimli çerçevelerine ve Viktorya dönemi tebrik kartlarının kabartma güllerine dayanır. Bugünkü biçimi, vektör programlarında degrade ağları ve yumuşak gölgelerle çizilen dijital tebrik kartı ve davetiye illüstrasyonundan gelir; özellikle mihrap ya da kemer biçimli pencere içinde mescit görünümü ve çevresinde güller, dini bayram kartlarının yaygın kompozisyonudur.",
+  "ayirt_edici": [
+    "Sahne, altın çift silmeyle çizilmiş sivri kemerli bir pencerenin içinde; pencerenin iç kenarında yumuşak kart gölgesi",
+    "Sol yarısı çizilip aynalanan, tam simetrik çiçek bordürü: kemeri 34 px dışından izleyen çift sarmaşık, dönüşümlü yapraklar, kemer üstünde beyaz çiçekler ve tomurcuklar",
+    "Üç halka taç yaprak ve ortada sarmal hilallerden kurulmuş, göbekten kenara degradeli katmanlı güller: pembe, allık ve krem; alt köşelerde büyük gül buketleri, tepede ortada bir gül",
+    "Beş yapraklı, allıklı göbekten beyaza degradeli beyaz çiçekler ve damarlı, iki tonlu degradeli yapraklar",
+    "Pencere içinde parlak mavi gök, güneş parıltısı, yumuşak gölgeli kabarık bulutlar, uzak yeşil tepeler; silindir degradeli minare ve kasnak, radyal degradeli kaburgalı kubbe, altın degradeli alemler",
+    "Bordür, ince benek desenli fildişi kart zemine yumuşak bir gölgeyle basılmış gibi; eser tuvali kenardan kenara doldurur"
+  ],
+  "palet": ["#80B2E0", "#FAF3EA", "#2C7F3F", "#5EB469", "#D9607A", "#FFDCE1", "#EBC66A", "#6FAA62"],
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Pencere, merkezleri eksenden ±20,5 px uzakta olan iki daire yayından (yarıçap 420,5, ayak y = 470, tepe y ≈ 50) kurulan sivri kemer yoludur. Pencere içine kırpılarak önce gök, güneş parıltısı, gölgeli bulutlar, tepeler ve yer çizilir; sahne öğeleri 0,82 ölçekle (x' = 92 + 0,82x, y' = 104 + 0,82y) SAHNE.minareParcalari, kaide, kasnak, kubbeYolu, kaburgalar ve bitki'den, silindir için yatay, kubbe için radyal degradelerle çizilir. Altın silme, kemer yolunun dışa kaydırılmış kopyalarının degradeli çizgisidir. Bordür ayrı bir ekran dışı tuvalde sol yarı olarak çizilir (sap → yaprak → tomurcuk → beyaz çiçek → gül sırasıyla), translate + scale(−1, 1) ile aynalanır, simetri eksenindeki tepe gülü ve alt çiçek ayrıca eklenir; sonra tek bir shadowBlur gölgesiyle karta basılır. Güller üç halkada bezier taç yapraklarından ve iç içe hilal sarmalından, her yaprağın kendi radyal degradesi ve beyaz kenar ışığıyla oluşur.",
+  "etiketler": ["vektör", "çiçek çerçeve", "tebrik kartı", "gül", "degrade", "simetri", "kemer", "süsleme"]
+}

@@ -883,7 +883,7 @@ function kristal(X, Y, out, o) {
     const dx = nx * 2.2 + o.ici[0], dy = ny * 2.2 + o.ici[1];
     const l = Math.hypot(dx, dy, 1);
     const up = -dy / l, sd = (dx * LV[0] + dy * LV[1] + LV[2]) / l;
-    const v = smooth(-0.35, 0.05, up) * 0.9 + smooth(0.25, 0.6, up) * 0.6 + Math.pow(Math.max(0, sd), 24) * 3.5;
+    const v = (o.icTaban === undefined ? 0.14 : o.icTaban) + 1.5 * Math.exp(-Math.pow((up - 0.32) / 0.2, 2)) + 0.5 * smooth(0.6, 0.9, up) + Math.pow(Math.max(0, sd), 24) * 3.5;
     const w = o.iciw === undefined ? 0.8 : o.iciw;
     r = r * (1 - w) + T[0] * v * w * 1.6; g = g * (1 - w) + T[1] * v * w * 1.6; b = b * (1 - w) + T[2] * v * w * 1.6;
   }

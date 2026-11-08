@@ -1,0 +1,39 @@
+{
+  "kod": "S-121",
+  "no": 121,
+  "ad": "Yarı Düz Vektör",
+  "ad_en": "Semi-Flat Vector",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Kontursuz düz vektör biçimlerin içinde yumuşak degrade gölge, temas yerlerinde hafif ortam kapanması ve ince parlaklık.",
+  "tanim": "Yarı düz vektör, düz illüstrasyonun keskin kenarlı, kontursuz biçimlerini korur ama her biçimin içine dar ton aralıklı, yumuşak bir degrade gölgelendirme ekler; görüntü böylece düz ile üç boyut arasında durur. Biçimlerin birbirine değdiği yerlerde hafif ortam kapanması, ışık yanında ince parlaklıklar ve yumuşak düşen gölgeler derinlik verir; palet aydınlık ve uyumludur. Çağdaş editoryal illüstrasyonda, uygulama ve web tanıtım görsellerinde ve kurumsal anlatımlarda yaygındır.",
+  "koken": "2010'ların düz tasarım (flat design) akımının ardından, tamamen düz biçimlerin derinlik anlatmakta yetersiz kaldığı yerlerde gelişen \"semi-flat\" ya da \"flat 2.0\" yaklaşımından gelir: Google'ın Material Design'ı (2014) düz yüzeylere yumuşak gölge ve katman derinliği ekledi; editoryal illüstratörler vektör araçlarındaki degrade ve bulanık gölgelerle bu dili olgunlaştırdı. Tarifin özü: düz renkli biçim, aynı rengin dar aralıklı degradesiyle verilen hacim, temas noktalarında yumuşak ortam kapanması ve her zaman keskin vektör kenar.",
+  "ayirt_edici": [
+    "Hiçbir biçimde kontur yok; kenarlar keskin, içler dar ton aralıklı yumuşak degradeyle gölgeli",
+    "Kubbe ve kasnaklarda soldan sağa silindirik degrade: gölge yanı derin yeşil, sağda yumuşak ışık; kubbe tabanında ve korniş altında ortam kapanması",
+    "Kaburgalar ince koyu yiv ile sağında ince ışık çizgisi; kubbenin sağ üstünde bulanık, geniş bir parlaklık",
+    "Kaidede hafif kabarık dikmeler ve pencere silmeleri, sol yanlarında yumuşak düşen gölge; pencere içlerinde ışık alan sol söve",
+    "Beyaz taç yapraklarında ışıktan uzak yanda lavanta tonlu yumuşak degrade, dipte pembe allık, alttaki taç yaprağa düşen yumuşak gölge",
+    "Önde iki yumuşak çayır tümseği; mavi gökten krem ufka degrade gök ve haleli güneş"
+  ],
+  "palet": [
+    "#7FBFE6",
+    "#F3F0E2",
+    "#22895C",
+    "#40AE78",
+    "#FBF4E8",
+    "#E8AC3C",
+    "#62B06C",
+    "#F09884"
+  ],
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Her biçim SAHNE yollarından (kubbeYolu, kaburgalar, kasnakPencereleri, minareParcalari, kaide, bitki) Path2D olarak doldurulur; hacim aynı biçime kırpılmış doğrusal ve ışınsal degradelerle verilir. Kubbe satır satır çizilir: her yükseklikte o satırın yarıçapına oturan yatay degrade (u = sin boylam) silindirik gölgeyi kurar, üstüne tabanda ortam kapanması ve filter: blur ile bulanık bir parlaklık gelir. Ortam kapanması ve düşen gölgeler canvas shadowBlur / shadowOffset (2× ölçekli) ve kırpılmış saydam degradelerle; taç yapraklarında ışık yönüne (sağ üst) göre doğrusal degrade. Bulutlar aynı yönde çizilmiş daireler ve yuvarlatılmış dikdörtgenin birleşimi. Bant oluşmasın diye son adımda ±1 düzeyli görünmez titreşim eklenir.",
+  "etiketler": [
+    "vektör",
+    "yarı düz",
+    "degrade",
+    "yumuşak gölge",
+    "editoryal",
+    "dijital",
+    "çağdaş"
+  ]
+}

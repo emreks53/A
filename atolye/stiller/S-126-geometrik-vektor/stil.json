@@ -1,0 +1,22 @@
+{
+  "kod": "S-126",
+  "no": 126,
+  "ad": "Geometrik Vektör",
+  "ad_en": "Geometric Construction Vector",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Her biçimin pergel ve cetvelle, yani daire yayları, teğet eğriler ve ortak bir kurgu ızgarasıyla kurulduğu, düz ve uyumlu renkli zarif amblem illüstrasyonu.",
+  "tanim": "Geometrik kurgu vektörü, konuyu yalnızca kesin geometrik ilkellerden kurar: daire yayları, teğet doğrular, vesikalar (iki dairenin kesişimi) ve aynı köşe yarıçapıyla yuvarlatılmış dikdörtgenler. Gölge, biçimlerin ışığa göre adım adım tonlanan düz yüzeylere bölünmesiyle verilir; renkler sınırlı, düz ve birbirine uyumludur. Simetri ve oranlar bilinçli olarak korunur; sonuç bir amblem ya da logo illüstrasyonu kadar derli toplu ve vakur görünür. Kurumsal kimliklerde, ambalajda, kitap kapaklarında ve editoryal illüstrasyonda kullanılır.",
+  "koken": "Kökü pergelle kurulan İslam geometrik bezemesine, Rönesans'ın oran çizimlerine ve 20. yüzyıl ortasının modernist amblem tasarımına (Paul Rand, Saul Bass, Chermayeff & Geismar) uzanır. Bugünkü biçimi, logoların altın oran daireleriyle 'kurgu ızgarası' üzerinde çizildiği dijital vektör pratiğinden gelir; illüstratörler aynı disiplini sahne illüstrasyonuna taşıyarak her eğriyi bir dairenin parçası, her yuvarlatmayı aynı yarıçap yapar. Bauhaus'un ana renkli geometrisinden farkı yumuşak, uyumlu palet ve ayrıntıdaki inceliktir.",
+  "ayirt_edici": [
+    "Kubbe, merkezleri taban çizgisinde duran iki dairenin yaylarından kurulmuş sivri kemer; bu iki kurgu dairesi gökte ince beyaz yaylar olarak kubbenin çevresinde görünür",
+    "Gök, güneşe ortak merkezli ve yarıçapları sabit oranla büyüyen düz renk halkalardan oluşur; halka sınırlarında ince beyaz pergel izi",
+    "Kubbenin 16 dilimi, kasnağın pencere bölmeleri ve sekizgen minarenin üç yüzü ışık yönüne göre ayrı ayrı düz tonlarla basamaklanır",
+    "Pencereler eşkenar sivri kemer (iki eş yay), şerefe altlarında yarım daire kuşakları, kaide cephesinde iki kareden sekiz köşeli yıldız madalyonları",
+    "Çiçekler altı vesika taç yapraklı pergel rozetleri (hayat çiçeği kurgusu) ve araya 30° kaydırılmış pembe iç yapraklar; yapraklar orta çizgiden ikiye bölünmüş vesikalar",
+    "Bulutlar aynı taban çizgisine oturan, yarıçapları altın oranla küçülen dairelerden; tepeler ve öndeki çimen büyük daire parçaları"
+  ],
+  "palet": ["#FFF2D2", "#C2DFDF", "#1D5643", "#55B188", "#FCF8EF", "#E2AE48", "#F2B7A6", "#86B48E"],
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlükte; bütün biçimler Path2D ile arc/arcTo ilkellerinden kurulur. Kubbe silueti iki ctx.arc yayıdır (yarıçap 262,6; merkezler x = 497,4 ve 622,6, y = 555); dilim sınırları bu profilin u = sin(boylam) ile ölçeklenmiş meridyenleridir ve her dilim, yüzey normalinin sağ üstten gelen ışıkla iç çarpımına göre sekiz tonluk bir yeşil diziden düz renk alır. Kasnak bölmeleri aynı yöntemle, minare sekizgen gövdenin üç yüzü (0,414 oranı) olarak tonlanır. Pencereler eşkenar sivri kemer fonksiyonuyla (yarıçap = genişlik), vesika yaprak ve taç yaprakları iki eş dairenin kesişiminden (ρ = (L² + W²) / 4W) çizilir; küre ve göbeklerde gölge, kaydırılmış eş daireyle kesilen hilaldir. Gök, güneş merkezli dokuz düz halka ve kenarlarında ince beyaz çizgilerdir; kurgu daireleri ayrı bir ince beyaz yay katmanıdır. Geometri SAHNE.minareParcalari, kasnakPencereleri, kaide, hilalYolu ve bitki'den gelir.",
+  "etiketler": ["vektör", "geometrik", "amblem", "pergel", "düz renk", "simetri", "kurgu ızgarası", "editoryal"]
+}

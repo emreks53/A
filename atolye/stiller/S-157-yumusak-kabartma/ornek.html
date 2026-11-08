@@ -467,11 +467,11 @@
     const L = [0.6, -0.6, 0.53];
     const ln = Math.hypot(...L); L[0] /= ln; L[1] /= ln; L[2] /= ln;
     const ux = 0.7071, uy = -0.7071;
-    const Hb2 = bulanik(H, N, N, 20, 3);
+    const Hb2 = bulanik(H, N, N, 26, 3);
     const Hb3 = bulanik(H, N, N, 6, 3);
     const alb = B.getImageData(0, 0, N, N).data;
     const out = ctx.createImageData(N, N), o = out.data;
-    const off = 11 * SS, off2 = 3.5 * SS;
+    const off = 13 * SS, off2 = 3.5 * SS;
     const rd = S.rng(157);
     const smp = (A, x, y) => { x = clamp(x | 0, 0, N - 1); y = clamp(y | 0, 0, N - 1); return A[y * N + x]; };
     for (let y = 0; y < N; y++) {
@@ -488,7 +488,7 @@
         // dış/iç gölge ve parıltı: geniş ve dar bulanıklık
         const sd = Math.max(0, smp(Hb2, x + ux * off, y + uy * off) - h0) * 0.7 + Math.max(0, smp(Hb3, x + ux * off2, y + uy * off2) - h0) * 0.5;
         const hd = Math.max(0, smp(Hb2, x - ux * off, y - uy * off) - h0) * 0.7 + Math.max(0, smp(Hb3, x - ux * off2, y - uy * off2) - h0) * 0.5;
-        const golge = 0.5 * (1 - Math.exp(-sd * 0.36));
+        const golge = 0.56 * (1 - Math.exp(-sd * 0.36));
         const parilti = 0.85 * (1 - Math.exp(-hd * 0.4));
         const dt = rd() - 0.5;
         let r = alb[j] * sh, g = alb[j + 1] * sh, b = alb[j + 2] * sh;

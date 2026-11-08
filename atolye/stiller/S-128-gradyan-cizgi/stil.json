@@ -1,0 +1,22 @@
+{
+  "kod": "S-128",
+  "no": 128,
+  "ad": "Gradyan Çizgi",
+  "ad_en": "Gradient Line Art",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Tek kalınlıkta, yuvarlak uçlu çizgilerin içinin düz renk değil yumuşak renk geçişiyle dolduğu, açık zeminde zarif ve kesin bir çizgi illüstrasyonu.",
+  "tanim": "Gradyan çizgi sanatı konuyu eşit kalınlıkta (monoline) konturlarla anlatır, ancak çizginin rengi boyunca akar: her öğenin çizgisi iki ya da üç renk arasında yumuşakça geçer. Böylece yalnızca çizgiden oluşan bir resim hem ışık yönünü hem de renk sıcaklığını taşır. Zemin açık kalır, biçimlerin arkasında yalnızca çok soluk dolgular bulunur; bazı çizgilerin uçları saydamlığa doğru söner. Uygulama ve marka ikonlarında, davetiye ve ambalajda, ekran grafiklerinde ve modern duvar baskılarında yaygın, temiz ve ışıltılı bir dildir.",
+  "koken": "Monoline çizimin kökü kalem çizimi, teknik illüstrasyon ve Art Nouveau'nun akan konturlarına dayanır; renkli konturun yerini renk geçişli konturun alması vektör programlarının çizgiye gradyan uygulayabilmesiyle (2010'lar) mümkün oldu. Instagram ve arayüz ikonlarıyla yaygınlaşan bu dil, bugün çizgi illüstratörlerinin ışık ve derinliği tek kalınlıkta çizgiyle vermek için kullandığı bir tekniktir. Renkli Çizgi Sanatı'ndan farkı, her öğede tek renk yerine renk akışı ve dolguların neredeyse beyaz kalmasıdır.",
+  "ayirt_edici": [
+    "Bütün çizgiler aynı kalınlıkta (3,1 px), yuvarlak uçlu ve birleşimli; içleri düz renk yerine gradyandır",
+    "Kubbe konturu ve 15 kaburga sol alttaki zümrüt yeşilinden sağ üstteki limon yeşiline akar; kasnak çizgileri zümrütten turkuaza geçer",
+    "Alemler koyu altından açık altına; minare ve kaide çizgileri aşağıdan yukarı kehribardan güle döner",
+    "Çiçekler beyaz dolgulu, üst üste binen taç yapraklı; konturları ve damarları gülden şeftaliye, yapraklar zümrütten limona geçer",
+    "Gök ayrıntıları: maviden su yeşiline akan, iki ucu saydamlığa sönen yatay çizgilerden katman bulutlar; güneşin çevresinde uçları sönen altın-şeftali ışınlar",
+    "Açık maviden beyaza, yerde soluk allığa geçen zemin; kubbe, kasnak ve yapraklarda çok soluk degrade dolgular"
+  ],
+  "palet": ["#E4F0FB", "#006B5A", "#C4E036", "#E2A93A", "#DA3A7C", "#FFB56E", "#4C7FE6", "#4FD8C6"],
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük; lineWidth 3,1, lineCap ve lineJoin 'round'. Her öğe kendi sınırlayıcı kutusuna yayılan createLinearGradient ile strokeStyle alır: kubbe çapraz (zümrüt → yeşil → limon), kasnak yatay (zümrüt → turkuaz), minare ve kaide dikey ya da çapraz (kehribar → altın → gül), her yaprak orta damarı boyunca, her çiçek kendi köşegeni boyunca. Bulut ve zemin çizgileri ile güneş ışınları, uç duraklarında alfa 0 olan gradyanlarla söner. Dolgular çok açık doğrusal / radyal gradyanlardır ve öndeki öğe arkadakini örter. Kubbe konturu SAHNE.kubbeYolu, kaburgalar SAHNE.kaburgalar(16); minare, kaide, pencereler, zikzak ve bitkiler SAHNE.minareParcalari, kemerYolu, zikzakCizgileri, yaprakYolu, tomurcukYolu, tacYapraklari ve bitki'den gelir; öndeki yaprak yelpazesi 46 px'ten yakın yapraklar atlanarak seyreltilir.",
+  "etiketler": ["çizgi", "gradyan", "monoline", "vektör", "ikon", "zarif", "açık zemin", "dijital"]
+}

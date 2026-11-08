@@ -79,12 +79,12 @@
    * Gölge: biçimin 45° köşegen boyunca kaydırılmış kopyalarının en büyüğü (birleşim, koyulaşma yok);
    * kopya t kadar uzaktaysa yoğunluğu exp(-t/TAU): kenarlar keskin, kuyruk yumuşakça söner.
    */
-  function katman(ciz, golgeVer) {
+  function katman(ciz, golgeVer, golgeAl) {
     temizle(katC);
     katC.save();
     ciz(katC);
     katC.restore();
-    if (!maskeBos) {
+    if (!maskeBos && golgeAl !== false) {
       const kv = katC.getImageData(0, 0, W, W);
       const k = kv.data;
       const m = maskeC.getImageData(0, 0, W, W).data;
@@ -212,7 +212,7 @@
     }
     dol(c, dik(K.x1, K.y2 - 9, K.x2, K.y2 - 7), P.tasCizgi);
   });
-  // 6) alt kasnak, 7) üst kasnak
+  // 5) alt kasnak, 6) üst kasnak
   for (const k of [1, 0]) {
     katman((c) => {
       const kq = S.kasnak[k];
@@ -221,7 +221,7 @@
       for (const p of S.kasnakPencereleri(k)) dol(c, S.kemerYolu(p.x, p.y, p.w, p.h), P.pencere);
     });
   }
-  // 8) kubbe alemi (kubbenin önünde: gölgesi kubbeye düşer)
+  // 7) kubbe alemi (kubbenin önünde: gölgesi kubbeye düşer)
   function alemCiz(c, a) {
     dol(c, dik(a.cubuk.x1, a.cubuk.y1, a.cubuk.x2, a.cubuk.y2), P.altin);
     for (const k of a.kureler) dol(c, S.daireYolu(k.cx, k.cy, k.r), P.altin);
@@ -229,7 +229,7 @@
     dol(c, S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R), P.altin);
   }
   katman((c) => alemCiz(c, S.alemParcalari(560, 300, 1)));
-  // 9) kubbe: düz yeşil, ince kaburga şeritleri
+  // 8) kubbe: düz yeşil, ince kaburga şeritleri
   katman((c) => {
     dol(c, S.kubbeYolu, P.kubbe);
     c.save();
@@ -243,7 +243,7 @@
   // ---------------------------------------------------------------- minare: çıkıntılar gövdeye gölge düşürür
   const minare = S.minareParcalari();
   const mx = S.minare.cx;
-  // 10) şerefeler, çıkmalar, korkuluklar, bilezik, topuz ve alem
+  // 9) şerefeler, çıkmalar, korkuluklar, bilezik, topuz ve alem
   katman((c) => {
     for (const p of minare) {
       if (p.tip === 'poligon' && !p.ad.startsWith('gövde')) dol(c, S.yol(p.noktalar, true), p.ad.startsWith('çıkma') ? P.tasAlt : P.tas);
@@ -258,7 +258,7 @@
       else if (p.tip === 'alem') alemCiz(c, p.alem);
     }
   });
-  // 11) minare gövdeleri, pencereleri ve zikzak bandı
+  // 10) minare gövdeleri, pencereleri ve zikzak bandı
   katman((c) => {
     for (const p of minare) if (p.tip === 'poligon' && p.ad.startsWith('gövde')) dol(c, S.yol(p.noktalar, true), P.tas);
     // korkulukların ardında gövde sürer (dikmeler arasından görünür)
@@ -272,7 +272,7 @@
   });
 
   // ---------------------------------------------------------------- gök
-  // 12) bulutlar
+  // 11) bulutlar
   function bulutYolu(x, y, s) {
     const yol = new Path2D();
     for (const [dx, dy, rr] of [[-46, -13, 25], [-4, -30, 38], [40, -16, 28]]) {
@@ -284,13 +284,13 @@
   }
   katman((c) => {
     for (const [x, y, s] of [[180, 262, 1.1], [478, 152, 0.7], [818, 374, 0.92], [72, 470, 0.5]]) dol(c, bulutYolu(x, y, s), P.bulut);
-  });
-  // 13) güneş (ışık kaynağı: gölge düşürmez)
+  }, true, false); // uzak bulutlar gölge almaz, yalnız göğe gölge düşürür
+  // 12) güneş (ışık kaynağı: gölge düşürmez)
   katman((c) => {
     dol(c, S.daireYolu(880, 140, 96), P.hale);
     dol(c, S.daireYolu(880, 140, 60), P.gunes);
   }, false);
-  // 14) gök ve yer (en arkadaki düzlem)
+  // 13) gök ve yer (en arkadaki düzlem)
   katman((c) => {
     dol(c, dik(0, 0, 1024, 800), P.gok);
     dol(c, dik(0, 800, 1024, 1024), P.zemin);

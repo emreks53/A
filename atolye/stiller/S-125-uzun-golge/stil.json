@@ -1,0 +1,39 @@
+{
+  "kod": "S-125",
+  "no": 125,
+  "ad": "Uzun Gölge",
+  "ad_en": "Long Shadow Flat",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Düz renkli biçimlerin her biri sol alta doğru 45°'lik uzun, keskin kenarlı ve bir ton koyu bir gölge düşürür.",
+  "tanim": "Uzun gölge, düz tasarımın (flat design) bir çeşitlemesidir: biçimler kontursuz ve düz renklidir, derinliği yalnızca her biçimden ışığın tersine, genellikle 45° açıyla uzanan uzun gölge verir. Gölge yalnızca bir ton koyudur, kenarları keskin kalır, uzadıkça yumuşakça söner ve arkadaki her yüzeye düşer; üst üste binen gölgeler birleşir, koyulaşmaz. Simgelerde, arayüz grafiklerinde, afiş ve bilgilendirme görsellerinde kullanılır.",
+  "koken": "2013 civarında düz tasarım akımıyla birlikte simge tasarımında yayıldı; iOS 7 ve düz simgeler döneminde Dribbble'da popülerleşen \"long shadow\" simgeleriyle tanındı. Kökü, tipografideki gölge baskılı ve ekstrüzyonlu harf efektlerine uzanır. Tarifin özü: düz renkli biçimler, tek ışık yönü, 45° süpürülmüş gölge, tek ton koyulaştırma ve gölgelerin birleşmesi.",
+  "ayirt_edici": [
+    "Her biçimden sol alta 45° uzanan uzun gölgeler: minare, kubbe, bulutlar ve çiçekler gökte, yerde ve arkalarındaki yüzeylerde iz bırakır",
+    "Gölge yalnızca bir ton koyu, kenarları keskin, kuyruğu yumuşakça sönüyor; üst üste binen gölgeler koyulaşmıyor",
+    "Kubbe alemi kubbenin sol üstüne, şerefeler ve topuz minare gövdesine, bina minarenin alt gövdesine gölge düşürüyor",
+    "Bütün biçimler düz renkli ve kontursuz: ince kaburga şeritli zümrüt kubbe, iki tonda kasnak, fildişi taş",
+    "Açık turkuaz gök, haleli sarı güneş, kum rengi yer; korkuluk dikmeleri arasından minare gövdesi ve gök görünür",
+    "Sarı göbekli beyaz çiçekler ve mercan tomurcuklar; gölgeleri yapraklara ve yere düşer"
+  ],
+  "palet": [
+    "#A8DDEA",
+    "#FFE59C",
+    "#F8E3B8",
+    "#22A570",
+    "#178B5F",
+    "#FFF8EC",
+    "#F5B740",
+    "#42B06F"
+  ],
+  "kodla_cizim": "Canvas 2D (2048 iç çözünürlük). Sahne 13 düzlem katmana ayrılır (öndeki çiçekler, öndeki yapraklar, yan dallar, kaide, alt ve üst kasnak, kubbe alemi, kubbe, minare çıkıntıları, minare gövdesi, bulutlar, güneş, gök ve yer). Katmanlar önden arkaya işlenir: her katman ekran dışı bir tuvale düz renklerle çizilir, önündeki katmanların birleşik gölge maskesiyle piksel piksel bir ton koyulaştırılır ve ana tuvalin altına (destination-over) eklenir. Katmanın kendi gölgesi, beyaz siluetinin (−s, +s) kaydırılmış kopyalarının en büyüğüdür: katlama yöntemiyle s = 1, 2, 4 … 512 piksel kaydırılıp her kopya exp(−s/τ) ile sönümlenir ve 'lighten' birleşimiyle maskeye eklenir. Böylece gölgeler birleşir, kenarlar keskin kalır, kuyruk yumuşakça söner.",
+  "etiketler": [
+    "düz tasarım",
+    "uzun gölge",
+    "vektör",
+    "geometrik",
+    "simge dili",
+    "dijital",
+    "grafik"
+  ]
+}

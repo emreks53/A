@@ -55,16 +55,6 @@
   }
   function kirp(d, f) { ctx.save(); ctx.clip(typeof d === 'string' ? P(d) : d); f(); ctx.restore(); }
   const dikd = (x1, y1, x2, y2) => `M${x1},${y1} L${x2},${y1} L${x2},${y2} L${x1},${y2} Z`;
-  /** Daireler birleşimi: önce çift kalın kontur, sonra dolgu → yalnız dış çizgi kalır. */
-  function birlesim(daireler, dolgu, kontur, lw, golge) {
-    const p = new Path2D();
-    for (const [x, y, r] of daireler) { p.moveTo(x + r, y); p.arc(x, y, r, 0, Math.PI * 2); }
-    ctx.strokeStyle = kontur; ctx.lineWidth = (lw || LW) * 2; ctx.stroke(p);
-    ctx.fillStyle = dolgu; ctx.fill(p);
-    if (golge) { ctx.save(); ctx.clip(p); golge(); ctx.restore(); }
-    return p;
-  }
-
   // ------------------------------------------------------------ gök
   ctx.fillStyle = C.gok;
   ctx.fillRect(0, 0, 1024, 1024);

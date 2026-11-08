@@ -26,7 +26,7 @@
     "#1F4634",
     "#5A3D2A"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, yalnız vektör yollarla. Biçimler SAHNE.yollar() ve geometri yardımcılarından alınır; önce düz renkle doldurulur, sonra biçime kırpılarak tek gölge tonu basılır (kubbede sol kenar ile u = −0,32 meridyeni arasındaki alan, silindirlerde sol şerit, yapraklarda orta damarın ışığa ters yanı, taç yapraklarında ve bulutlarda ışığa doğru kaydırılmış kopyanın dışında kalan hilal), en son 1,45 birimlik koyu yeşil ya da kahverengi kontur çekilir. Bulutlar daire ve kapsül birleşimidir: önce çift kalın kontur, sonra dolgu çizilerek yalnız dış çizgi bırakılır. İç ayrıntılar (çift kaburga çizgileri, taş derzleri, korkuluk babaları, damarlar, kıvrımlar, erkek organlar) 0,6–0,9 birimlik yarı saydam çizgilerle eklenir; rastgelelik, doku ya da süzgeç kullanılmaz.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, yalnız vektör yollarla. Biçimler SAHNE.yollar() ve geometri yardımcılarından alınır; önce düz renkle doldurulur, sonra biçime kırpılarak tek gölge tonu basılır (kubbede sol kenar ile u = −0,32 meridyeni arasındaki alan, silindirlerde sol şerit, yapraklarda orta damarın ışığa ters yanı, taç yapraklarında ve bulutlarda ışığa doğru kaydırılmış kopyanın dışında kalan hilal), en son 1,45 birimlik koyu yeşil ya da kahverengi kontur çekilir. Bulutlar uzun, alçak elips ve kapsül birleşimidir: önce çift kalın kontur, sonra dolgu çizilerek yalnız dış çizgi bırakılır. İç ayrıntılar (çift kaburga çizgileri, taş derzleri, korkuluk babaları, damarlar, kıvrımlar, erkek organlar) 0,6–0,9 birimlik yarı saydam çizgilerle eklenir; rastgelelik, doku ya da süzgeç kullanılmaz.",
   "etiketler": [
     "vektör",
     "kontur",

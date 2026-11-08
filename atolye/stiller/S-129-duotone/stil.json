@@ -1,0 +1,22 @@
+{
+  "kod": "S-129",
+  "no": 129,
+  "ad": "Duotone (Zümrüt ve Altın)",
+  "ad_en": "Duotone (Emerald and Gold)",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Yalnızca zümrüt yeşili ve sıcak altın mürekkeple fildişi kâğıda basılmış gibi; tonları düz tram yüzdeleri, ince nokta ve çizgi tramlarıyla kurulan sakin ve lüks bir iki renkli grafik.",
+  "tanim": "Duotone, bütün görüntünün iki mürekkeple basıldığı grafik tekniktir: her mürekkep ayrı bir kalıptır ve ara tonlar mürekkebin yüzdesiyle, yani düz tram tonları, nokta tramı ve çizgi tramıyla elde edilir; kâğıdın rengi üçüncü renk olarak çalışır. İki mürekkebin üst üste geldiği yerde koyu bir karışım tonu çıkar. Keskin biçimler, sınırlı palet ve görünür ama ince tram yüzeyleri ona hem baskı hem tasarım nesnesi kimliği verir. Afişlerde, kitap kapaklarında, davetiye ve kurumsal yayınlarda, lüks ambalajda sevilir.",
+  "koken": "İki renkli baskının kökü 19. yüzyıl tonlu litografisine ve 20. yüzyılın iki renkli ofset ve tipo baskılarına dayanır; ekonomik olduğu için kitap kapaklarında, seyahat afişlerinde ve dergilerde yaygınlaştı. Tram tonlarıyla (yarım ton nokta ve çizgi tramı) ara değer vermek fotomekanik baskının ilkesidir. Bugün dijital tasarımda 'duotone' iki renge indirgenmiş zarif grafikler için kullanılan bir dil olarak yeniden popülerdir.",
+  "ayirt_edici": [
+    "Yalnızca iki mürekkep: zümrüt yeşili ve sıcak altın; üçüncü renk fildişi kâğıt; iki mürekkebin üst üste geldiği pencerelerde koyu zeytin yeşili",
+    "Gökte zümrütün yukarıda %28'den ufka doğru küçülerek sönen 45° nokta tramı; güneşin çevresinde dışa doğru seyrelen 15° altın nokta halesi ve ince altın halkalar",
+    "Kubbenin 16 dilimi ve kasnak bölmeleri zümrüdün düz tram yüzdeleriyle (%100'den %55'e) basamaklanır; koyu dilimlerde kâğıt rengi, açıklarda zümrüt kaburgalar",
+    "Beyaz taşın gölgeleri zümrüt çapraz çizgi tramı, sıcaklığı altının %10–30 düz tonu; bulutların altında ve parmaklıklarda yatay çizgi tramı",
+    "Kâğıt beyazı taç yaprakları altın konturlu, diplerinde altın yatay çizgi tramı; yapraklar zümrüdün %100 ve %55 tonlarında iki yarı",
+    "Eserin kendisine ait ince altın çift çerçeve çizgisi; genel değer açık, sakin ve lüks"
+  ],
+  "palet": ["#FBF6E8", "#0E684E", "#DBA43C", "#79A690", "#F4E4C5", "#0D5A37"],
+  "kodla_cizim": "İki mürekkebin her biri ayrı bir kalıptır: kalıp başına iki ekran dışı 2048 × 2048 tuval; P'nin R, G, B kanalları düz tram, nokta tramı ve yatay çizgi tramı yoğunluğunu, Q'nun R kanalı çapraz çizgi tramı yoğunluğunu tutar. 'bas(yol, E, G)' her biçimi iki kalıba birden dört kanalı yazarak basar (boş bırakılan kalıpta biçimin yeri boşalır, 'gec' verilirse o kalıba dokunulmaz); gök ve hale yoğunlukları gradyanla yazılır. Sonunda her piksel için kalıp başına kaplama hesaplanır: nokta tramı açılı (zümrüt 45°, altın 15°) kosinüs nokta fonksiyonuyla, çizgi tramları kosinüs şeritleriyle eşiklenir ve kenarları yumuşatılır; kaplamalar fildişi kâğıda çarpma (multiply) modeliyle basılır ve putImageData ile tuvale konur. Geometri SAHNE.kubbeProfili, kasnakPencereleri, minareParcalari, zikzakCizgileri, kaide, hilalYolu ve bitki'den gelir.",
+  "etiketler": ["duotone", "iki renk", "baskı", "tram", "yarım ton", "zümrüt", "altın", "lüks"]
+}

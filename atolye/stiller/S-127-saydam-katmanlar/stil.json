@@ -1,0 +1,22 @@
+{
+  "kod": "S-127",
+  "no": 127,
+  "ad": "Saydam Katmanlar",
+  "ad_en": "Transparent Vector Layers",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Keskin kenarlı vektör biçimlerin yarı saydam renklerle çarpma karışımında üst üste bindiği, her kesişimin yeni bir ton doğurduğu açık ve havadar illüstrasyon.",
+  "tanim": "Saydam katmanlı vektör illüstrasyonda biçimler opak değil, renkli cam ya da aydinger gibi yarı saydamdır ve 'multiply' (çarpma) karışımıyla üst üste konur. İki biçimin kesiştiği yerde iki rengin çarpımı olan üçüncü bir ton ortaya çıkar; böylece az sayıda renkle zengin bir ton skalası kurulur ve derinlik, gölge ve ışık katmanların üst üste binmesinden doğar. Kenarlar keskin, palet açık ve havadardır. Çağdaş editoryal illüstrasyonda, afiş ve kitap kapaklarında, marka grafiklerinde ve hareketli grafikte sevilen modern bir dildir.",
+  "koken": "Saydam renklerin üst üste basılarak yeni ton vermesi serigrafi ve risograf baskıdaki üst baskıya (overprint), Bauhaus'ta Josef Albers'in renk etkileşimi çalışmalarına ve Moholy-Nagy'nin saydam düzlem kompozisyonlarına dayanır. Vektör programlarındaki karışım kipleri ve opaklık ayarıyla 2010'larda dijital illüstrasyonun yaygın bir üslubu oldu; bugün 'overlay / multiply illustration' adıyla editoryal ve kurumsal işlerde kullanılır.",
+  "ayirt_edici": [
+    "Gök, farklı renkte (mavi, lila, su yeşili, açık mavi) çapraz eğimli yarı saydam şeritlerden kurulur; şeritlerin kesiştiği üçgen ve baklava alanlar yeni tonlar verir",
+    "Güneş, üç sarı-şeftali dairenin Venn gülü; çevresinde beyaz saydam haleler",
+    "Kubbenin 16 dilimi komşusuna hafifçe taşar; kaburgalar kesişimlerdeki koyulaşmadan doğar, gölge ve ışık üst üste binen saydam merceklerle verilir",
+    "Minarenin bütün levhalarının üstünden geçen tek bir saydam mavi-lila gölge şeridi; zikzak bantta üst üste binen üçgenlerden baklavalar; kaideye düşen saydam eğik gölge düzlemi",
+    "Yarı saydam yeşil yapraklar birbirinin üstünden görünür; taç yaprakları beyaz zemin üstünde saydam allık rengi, kesişen ortaları koyulaşır",
+    "Beyaz saydam haplardan bulutlar ve altlarındaki kaydırılmış lila gölge kopyaları; yerde çapraz kesişen saydam çimen şeritleri"
+  ],
+  "palet": ["#FDFCF8", "#9ACCF2", "#C3B6F2", "#96E0D3", "#9ED9A8", "#3E9E6E", "#F8CFCF", "#EDBB45"],
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Her biçim 'kat(yol, renk, örtücülük, kip)' yardımcısıyla globalAlpha ve globalCompositeOperation = 'multiply' kullanılarak basılır; ışık eklemesi gereken bulut ve haleler yarı saydam beyazla 'source-over' basılır. Gök, açık mavi bir zeminin üstüne eğimli kenarlı beş çokgen şerit ve güneş çevresinde daireler; kubbe beyaz bir alt örtünün üstüne açık yeşil, ardından SAHNE.kubbeProfili meridyenlerinden kurulan ve sınırları ±0,022 taşan 16 dilim (iki yeşil dönüşümlü, %38 örtücülük) ve gölge / ışık elipsleriyle çizilir. Minare, kaide ve alemler kendi beyaz alt örtüleri üstüne saydam levhalardır; minare gölge şeridi SAHNE.yollar().minare birleşimine kırpılır. Yapraklar beş yeşilden rastgele (SAHNE.rng) seçilen saydam dolgular; çiçeklerde opak beyaz taç yapraklarının üstüne %33 allık katmanı biner. Geometri SAHNE.minareParcalari, kasnakPencereleri, kaide, kemerYolu ve bitki'den gelir.",
+  "etiketler": ["vektör", "saydam", "multiply", "üst baskı", "katmanlı", "çağdaş", "havadar", "editoryal"]
+}

@@ -1,0 +1,39 @@
+{
+  "kod": "S-122",
+  "no": 122,
+  "ad": "Gradyan Vektör",
+  "ad_en": "Gradient Vector",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Her biçim kontursuz, çok duraklı doğrusal ve dairesel degradelerle dolu; renkler birbirine pürüzsüzce akar.",
+  "tanim": "Gradyan vektör illüstrasyonu düz biçim dilini korur, ama her biçimi tek bir renkle değil, üç-dört duraklı yumuşak degradelerle doldurur: gök maviden pembe-altın bir ufuk ışıltısına, kubbe dilimleri derin zümrütten limon yeşiline, taş kremden şeftaliye akar. Biçim sınırlarını çizgi değil, yan yana gelen degradelerin farkı belirler; sonuç ışıltılı, pürüzsüz ve dingin bir görüntüdür. Afiş, kapak, uygulama tanıtımları ve marka görsellerinde yaygındır.",
+  "koken": "Vektör programlarına degrade dolgunun girmesiyle (Adobe Illustrator, 1990'lar) başlayan, 2016 sonrası arayüz ve marka tasarımındaki degrade dönüşüyle yeniden yükselen bir dil; Instagram'ın 2016'daki degradeli logosu ve Dribbble / Behance'teki degradeli manzara illüstrasyonları akımın simgeleridir. Tarifin özü: kontur yok, her biçim çok duraklı degrade, geçişler yalnız ton değil renk değişimi de taşır (mavi → lavanta → şeftali), yüzey grensiz ve pürüzsüzdür.",
+  "ayirt_edici": [
+    "Gök maviden lavantaya, pembe ufka ve altın sarısı ışıltıya akan çok duraklı degrade; güneşin çevresinde geniş ışınsal ışıltı",
+    "Kubbe 16 dilim: her dilim kendi degradesiyle, tabanda derin teal, ortada zümrüt, tepede limon yeşili; dilim sınırları çizgisiz, yalnız komşu degradelerin farkıyla",
+    "Taş yapı kremden şeftaliye dikey degrade, sol yanında gül tonlu gölge; minarede pembe-şeftali zikzak şerit",
+    "Bulutlar beyazdan pembe-lavantaya, yapraklar tealden limon yeşiline degradeli; uzakta pembe kum tepeleri",
+    "Taç yaprakları dipte pembe, uçta beyaz, ışıktan uzak yanda lavanta; göbekler sarıdan turuncuya ışınsal degrade",
+    "Kontur ve gren yok; bütün yüzeyler pürüzsüz"
+  ],
+  "palet": [
+    "#4E98DE",
+    "#E6D3EA",
+    "#FFE7C2",
+    "#0D5E4A",
+    "#A6DD86",
+    "#F7CDB2",
+    "#F4929F",
+    "#FFD24A"
+  ],
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük; her SAHNE biçimi Path2D olarak createLinearGradient / createRadialGradient dolgularıyla çizilir. Kubbe 16 meridyen diliminden kurulur: her dilim kendi yoluna kırpılıp satır satır doldurulur; her satırda dilimin o yükseklikteki genişliğine oturan, renkleri yüksekliğe göre (teal → zümrüt → limon) karıştırılmış dört duraklı yatay degrade kullanılır. Gök, tepeler, kaide ve minare için çok duraklı degradeler; güneş ışıltısı 'screen', son ışık örtüsü 'soft-light' karışımıyla. Bant oluşmasın diye son adımda üçgen dağılımlı, ±1,6 düzeyli görünmez titreşim eklenir.",
+  "etiketler": [
+    "vektör",
+    "degrade",
+    "gradyan",
+    "ışıltılı",
+    "pürüzsüz",
+    "dijital",
+    "çağdaş"
+  ]
+}
