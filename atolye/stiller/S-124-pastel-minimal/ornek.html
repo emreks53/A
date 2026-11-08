@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-124 Pastel Minimal — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #EEF1EB; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #DCE9EC; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -22,16 +22,17 @@
 
   // ---------------------------------------------------------------- palet
   const P = {
-    gokUst: '#D9E6E6', gokAlt: '#F5EFE4',
-    gunes: '#F7E2C6',
-    bulut: '#FBF9F4',
-    zemin: '#EFE5D5', zeminG: '#E9DCC8',
-    tas: '#F9F3E8', tasG: '#EEE5D6', tasC: '#E2D6C2',
-    adacayi: '#AFC7A8', adacayiG: '#A0BA99', adacayiC: '#8FAB89', adacayiA: '#BCD1B5', kasnak: '#A8C1A1', kasnakG: '#9AB493',
-    pencere: '#97AE95', pencereTas: '#AFBFAC',
-    altin: '#D9BE82', altinG: '#C8AA6C',
-    yaprak: '#B5C9AC', yaprakG: '#A4BB9B', sap: '#A3B99C',
-    cicek: '#FFFDF9', cicekG: '#F3ECE6', allik: '#F2D5CC', orta: '#EDC796', ortaG: '#E0B27E',
+    gokUst: '#C6DEEB', gokOrta: '#DCE9EC', gokAlt: '#F7ECDD',
+    gunes: '#F8D2AE',
+    bulut: '#FFFDF8',
+    zemin: '#F3E2CB', zeminG: '#EDD5BB',
+    tas: '#FBF5EC', tasG: '#EFE4D3', tasC: '#E2D2BB',
+    adacayi: '#A2CBA8', adacayiG: '#91BC98', adacayiC: '#80AD88', adacayiA: '#B6D8B9', kasnak: '#9BC4A1', kasnakG: '#8BB592',
+    pencere: '#7FA787', pencereTas: '#A7C3AB',
+    altin: '#DDBA76', altinG: '#C9A360',
+    yaprak: '#A8CDA1', yaprakG: '#95BF90', sap: '#98BC93',
+    cicek: '#FFFDF9', cicekG: '#F4E9E5', allik: '#F2C4BA', orta: '#F0C186', ortaG: '#E2AB6E',
+    pembe: '#FADDD6', pembeG: '#F1CBC2',
   };
 
   // ---------------------------------------------------------------- yardımcılar
@@ -61,7 +62,7 @@
   const terminator = -0.42; // tek ve hafif gölge tonu: ışık sağ üstten
 
   // ================================================================ GÖK: çok açık, sakin
-  dol(dik(0, 0, 1024, 1024), lin(0, 0, 0, 800, [[0, P.gokUst], [1, P.gokAlt]]));
+  dol(dik(0, 0, 1024, 1024), lin(0, 0, 0, 800, [[0, P.gokUst], [0.55, P.gokOrta], [1, P.gokAlt]]));
   dol(S.daireYolu(880, 140, 54), P.gunes);
 
   // iki küçük, sade bulut
@@ -80,7 +81,7 @@
   // ================================================================ YER
   dol(dik(0, 800, 1024, 1024), lin(0, 800, 0, 1024, [[0, P.zemin], [1, P.zeminG]]));
   // yapının yere düşen tek tonluk, çok açık gölgesi
-  dol('M300,800 L820,800 L806,811 L258,811 Z', '#E8DCC8');
+  dol('M300,800 L820,800 L806,811 L258,811 Z', '#E9D6BE');
 
   // ================================================================ MİNARE
   const minare = S.minareParcalari();
@@ -199,7 +200,7 @@
     dol(`M${q(p(-tt.r * 0.95, 0))} Q${q(p(-tt.r * 0.2, -tt.r * 1.0))} ${q(p(tt.r * 0.25, -tt.r * 0.5))} Q${q(p(-tt.r * 0.1, 0))} ${q(p(tt.r * 0.25, tt.r * 0.5))} Q${q(p(-tt.r * 0.2, tt.r * 1.0))} ${q(p(-tt.r * 0.95, 0))} Z`, P.yaprakG);
   }
   /** Zarif beş taç yapraklı çiçek: yuvarlak uçlu, aralıklı taç yapraklar, tek hafif ton */
-  function cicek(c, s) {
+  function cicek(c, s, pembe) {
     const r = c.r * (s || 1);
     for (let i = 0; i < 5; i++) {
       const a = c.aci + (i * Math.PI * 2) / 5;
@@ -207,11 +208,11 @@
       const p = (u, v) => [c.x + (u * ca - v * sa) * r, c.y + (u * sa + v * ca) * r];
       const d = `M${q(p(0.14, 0))} C${q(p(0.32, -0.3))} ${q(p(0.78, -0.5))} ${q(p(0.96, -0.24))} C${q(p(1.04, -0.08))} ${q(p(1.04, 0.08))} ${q(p(0.96, 0.24))} C${q(p(0.78, 0.5))} ${q(p(0.32, 0.3))} ${q(p(0.14, 0))} Z`;
       const golgede = ca * L[0] + sa * L[1] < -0.3;
-      dol(d, golgede ? P.cicekG : P.cicek);
+      dol(d, pembe ? (golgede ? P.pembeG : P.pembe) : golgede ? P.cicekG : P.cicek);
       // dipte çok hafif allık
       kirp(d, () => {
         const g = ctx.createRadialGradient(c.x, c.y, r * 0.12, c.x, c.y, r * 0.55);
-        g.addColorStop(0, 'rgba(240,198,188,0.75)');
+        g.addColorStop(0, pembe ? 'rgba(236,170,160,0.85)' : 'rgba(240,190,178,0.8)');
         g.addColorStop(1, 'rgba(242,213,204,0)');
         dol(S.daireYolu(c.x, c.y, r * 0.6), g);
       });
@@ -223,13 +224,13 @@
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   // yan dallar: ince saplar, seyrek yapraklar
-  for (const s of B.saplar) cizgi(S.yol(s), P.sap, 2.2);
+  for (const s of B.saplar) cizgi(S.yol(s), P.sap, 2.6);
   B.yapraklar.slice(0, 36).forEach((y, i) => {
     if (i % 2 === 1) return; // yaprakların yarısı: boşluk korunur
     inceYaprak(y.x, y.y, y.uzunluk * 1.05, y.aci, i % 4 === 0 ? P.yaprak : P.yaprakG);
   });
-  for (const t of B.tomurcuklar.slice(0, 8)) tomurcuk(t, 1);
-  for (const c of B.cicekler.slice(0, 4)) cicek(c, 1.05);
+  for (const t of B.tomurcuklar.slice(0, 8)) tomurcuk(t, 1.15);
+  for (const c of B.cicekler.slice(0, 4)) cicek(c, 1.22, true);
 
   // ön: uzun, ince saplar üzerinde birkaç çiçek; küçükler kapalı tomurcuk
   const on = B.cicekler.slice(4);

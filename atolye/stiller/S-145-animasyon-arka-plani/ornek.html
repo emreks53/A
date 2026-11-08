@@ -1112,6 +1112,22 @@
     ctx.fillStyle = g2;
     ctx.fillRect(300, 704, 520, 60);
     ctx.restore();
+    // kaide ön yüzünde ressamca ışık: sağ üstte sıcak güneş, solda gökten gelen serin mavi, altta hafif koyulaşma
+    ctx.save();
+    ctx.clip(G.yol(Y.kaide));
+    const g3 = ctx.createLinearGradient(300, 0, 820, 0);
+    g3.addColorStop(0, 'rgba(110,140,205,0.22)');
+    g3.addColorStop(0.4, 'rgba(110,140,205,0.04)');
+    g3.addColorStop(0.75, 'rgba(255,236,190,0)');
+    g3.addColorStop(1, 'rgba(255,236,190,0.22)');
+    ctx.fillStyle = g3;
+    ctx.fillRect(300, 704, 520, 96);
+    const g4 = ctx.createRadialGradient(780, 712, 0, 780, 712, 260);
+    g4.addColorStop(0, 'rgba(255,250,228,0.35)');
+    g4.addColorStop(1, 'rgba(255,250,228,0)');
+    ctx.fillStyle = g4;
+    ctx.fillRect(300, 704, 520, 96);
+    ctx.restore();
   }
   // sağ kenarlarda güneşin ince ışık çizgisi (minare ve kaide)
   {
@@ -1395,9 +1411,11 @@
     // ince ışık hüzmeleri
     for (let k = 0; k < 10; k++) {
       const a = (k / 10) * Math.PI * 2 + 0.3;
-      const boy = k % 2 ? 90 : 170;
+      // hüzmeler yalnızca açık gökte uzun: buluta doğru (aşağı) olanlar kısa kalır
+      const asagi = Math.sin(a) > 0.2;
+      const boy = (k % 2 ? 80 : 150) * (asagi ? 0.45 : 1);
       const g = ctx.createLinearGradient(GUNES.x, GUNES.y, GUNES.x + Math.cos(a) * boy, GUNES.y + Math.sin(a) * boy);
-      g.addColorStop(0, 'rgba(255,250,230,0.22)');
+      g.addColorStop(0, 'rgba(255,250,230,0.2)');
       g.addColorStop(1, 'rgba(255,250,230,0)');
       ctx.strokeStyle = g;
       ctx.lineWidth = k % 2 ? 1.2 : 2;
