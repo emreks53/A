@@ -7,12 +7,13 @@
 :root {
   --krem-ust: #fcfaf5;
   --krem-alt: #fbf7ef;
-  --murekkep: #0e1f4d;
+  /* kremdeki koyu yazı (okuyucunun sayfaları, bildirim). Genel --murekkep (styles.css) ile karışmasın diye ayrı ad. */
+  --krem-yazi: #0e1f4d;
   --soluk: #55607a;
   --altin: #8e540a;
   --cizgi: rgba(14, 31, 77, 0.1);
   --yazi-arayuz: 'Encode Sans', 'Segoe UI', 'Open Sans', Roboto, sans-serif;
-  --yazi-baslik: 'Tinos', 'Times New Roman', Times, serif;
+  --yazi-baslik: var(--eb);
   --video-golge: 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 12px rgba(0, 0, 0, 0.35);
   --nur: #ffe4a8;
 }
@@ -210,29 +211,29 @@
 /* ---------- altta: geçtiği yer (çok küçük) ve Nur-u Hakikat imi (soluk); ekranın üstünde yazı yoktur ---------- */
 .reel__kaynak {
   position: absolute;
-  left: 14px;
+  left: 16px;
   right: 56px;
-  bottom: calc(var(--safe-bottom) + 13px);
+  bottom: calc(var(--safe-bottom) + 15px);
   margin: 0;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.82);
-  font-family: var(--yazi-arayuz);
-  font-weight: 600;
-  font-size: 11px;
-  line-height: 14px;
-  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: var(--eb);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.2;
   white-space: nowrap;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   pointer-events: none;
 }
 .reel__damga {
   position: absolute;
-  right: 14px;
-  bottom: calc(var(--safe-bottom) + 11px);
-  width: 18px;
-  height: 18px;
-  opacity: 0.4;
+  right: 16px;
+  bottom: calc(var(--safe-bottom) + 14px);
+  width: 20px;
+  height: 20px;
+  opacity: 0.45;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
   pointer-events: none;
   user-select: none;
@@ -353,7 +354,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 /* parlak karelerde de beyaz simgeler seçilsin: arkalarında hafif, yumuşak bir gölge */
 .reel__dugmeler::before {
@@ -368,7 +369,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   min-width: 60px;
   min-height: 60px;
   margin: 0;
@@ -389,16 +390,22 @@
   outline-offset: 2px;
 }
 .reel__dugme svg {
-  width: 32px;
-  height: 32px;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 8px rgba(0, 0, 0, 0.25));
+  width: 30px;
+  height: 30px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
 }
+/* düğme adı: aralıklı küçük büyük harf (tr) */
 .reel__dugme-ad {
   font-family: var(--yazi-arayuz);
-  font-weight: 700;
-  font-size: 12.5px;
+  font-weight: 600;
+  font-size: 11px;
   line-height: 1;
-  text-shadow: var(--video-golge);
+  letter-spacing: 0.12em;
+  text-indent: 0.12em;
+  text-transform: uppercase;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.6),
+    0 0 8px rgba(0, 0, 0, 0.3);
 }
 
 /* sesli oynatmaya izin verilmeyen tarayıcılarda: ses kapalı göstergesi (düğme değil; dokunuş videoya geçer) */
@@ -434,7 +441,7 @@
   padding: 10px 18px;
   border-radius: 20px;
   background: rgba(252, 250, 245, 0.96);
-  color: var(--murekkep);
+  color: var(--krem-yazi);
   font-family: var(--yazi-arayuz);
   font-weight: 700;
   font-size: 14px;
@@ -597,7 +604,7 @@
   clip: auto;
   border-radius: 22px;
   background: rgba(252, 250, 245, 0.96);
-  color: var(--murekkep);
+  color: var(--krem-yazi);
   font-family: var(--yazi-arayuz);
   font-weight: 700;
   font-size: 14px;
@@ -630,7 +637,7 @@
   margin: 0 auto;
   border-radius: 28px 28px 0 0;
   background: linear-gradient(180deg, var(--krem-ust), var(--krem-alt));
-  color: var(--murekkep);
+  color: var(--krem-yazi);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
     0 -12px 40px rgba(0, 0, 0, 0.35);
@@ -704,37 +711,45 @@
   padding: 0 22px calc(14px + var(--safe-bottom));
 }
 
-/* Menba: gece kütüphanesinin koyu sayfası; nur içinde rahlede Kur'an-ı Kerim, altında rafta Külliyat */
+/* Menba: mürekkep laciverti sayfa; rahlede inci beyazı Kur'an-ı Kerim, altında rafta Külliyat. Şampanya yalnız ince
+   çizgide ve aralıklı küçük etikette; altın dolgu ya da parıltı yok. */
 .alt-sayfa--menba {
   max-height: calc(100% - var(--safe-top) - 24px);
+  border-radius: 26px 26px 0 0;
   background:
-    radial-gradient(420px 300px at 50% 120px, rgba(232, 190, 110, 0.1), rgba(232, 190, 110, 0) 70%),
-    linear-gradient(180deg, #0e1c43 0%, #0a1534 50%, #081028 100%);
+    radial-gradient(70% 34% at 50% 18%, rgba(40, 56, 110, 0.38), rgba(40, 56, 110, 0) 72%),
+    linear-gradient(180deg, #0e1838 0%, #0b1430 46%, #080f26 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 236, 190, 0.16),
-    inset 0 0 0 1px rgba(232, 194, 122, 0.08),
-    0 -18px 50px rgba(0, 0, 0, 0.5);
-  color: #f7eedc;
+    inset 0 0.5px 0 rgba(217, 196, 154, 0.35),
+    0 -20px 50px rgba(0, 0, 0, 0.55);
+  color: var(--fildisi);
 }
 .alt-perde:has(+ .alt-sayfa--menba) {
-  background: rgba(3, 6, 16, 0.58);
+  background: rgba(3, 6, 16, 0.6);
 }
 .alt-sayfa--menba .alt-sayfa__tutamak {
   height: 26px;
 }
 .alt-sayfa--menba .alt-sayfa__tutamak::before {
-  background: rgba(255, 255, 255, 0.26);
+  width: 36px;
+  height: 4px;
+  margin-left: -18px;
+  border-radius: 2px;
+  background: rgba(244, 237, 224, 0.22);
 }
 .alt-sayfa--menba .alt-sayfa__tutamak:focus-visible {
-  outline-color: #e8c27a;
+  outline-color: var(--sampanya);
 }
 .alt-sayfa--menba .alt-sayfa__ust {
   padding: 2px 22px 0;
 }
 .alt-sayfa--menba .alt-sayfa__baslik {
-  color: #e8c27a;
-  letter-spacing: 0.24em;
-  text-indent: 0.24em;
+  color: var(--sampanya);
+  font-weight: 600;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
   text-align: center;
 }
 .alt-sayfa--menba .alt-sayfa__govde {
@@ -746,63 +761,54 @@
 }
 
 .menba__cizim {
-  margin-top: 6px;
+  margin-top: 4px;
 }
 .menba-sahne {
   display: block;
   width: 100%;
   height: auto;
-  max-height: min(458px, 56vh);
+  max-height: min(296px, 44vh);
+  overflow: visible;
 }
 @supports (height: 1svh) {
   .menba-sahne {
-    max-height: min(458px, 56svh);
+    max-height: min(296px, 44svh);
   }
 }
 .menba__kaynak {
-  margin: 14px 24px 0;
+  margin: 0 24px;
   text-align: center;
 }
 .menba__eser {
-  margin: 0;
-  color: #fbf3e2;
-  font-family: var(--yazi-baslik);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 31px;
-  line-height: 1.05;
-}
-.menba__eser span {
-  display: inline-block;
-  transform: scaleY(1.08);
+  margin: 10px 0 0;
+  color: var(--fildisi);
+  font-family: var(--eb);
+  font-weight: 600;
+  font-size: 38px;
+  line-height: 1;
 }
 .menba__yer {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 4px 10px;
-  margin: 10px 0 0;
+  gap: 4px 0;
+  margin: 12px 0 0;
   padding: 0;
   list-style: none;
-  color: #f3d79b;
+  color: var(--fildisi-2);
   font-family: var(--yazi-arayuz);
-  font-weight: 600;
-  font-size: 14.5px;
+  font-weight: 500;
+  font-size: 13.5px;
   line-height: 1.3;
 }
 .menba__yer li + li::before {
-  content: '';
-  display: inline-block;
-  width: 4px;
-  height: 4px;
-  margin: 0 10px 2px 0;
-  transform: rotate(45deg);
-  background: rgba(232, 194, 122, 0.6);
+  content: '·';
+  margin: 0 9px;
+  color: var(--sampanya);
 }
 .menba__sayfa {
-  color: rgba(240, 228, 204, 0.62);
-  font-weight: 500;
+  color: var(--fildisi-3);
 }
 /* çok dar ekranda sayfa kendi satırına iner (satır başında ayraç kalmasın) */
 @media (max-width: 359px) {
@@ -813,23 +819,22 @@
     display: none;
   }
 }
-/* "Kitapta oku": kaynağı Güneş'te, kitabın kendisinde o sayfada açar (PDF'i yoksa yayınevinin okuma sitesinde) */
+/* "Kitapta oku": kaynağı Güneş'te, kitabın kendisinde o sayfada açar (PDF'i yoksa yayınevinin okuma sitesinde).
+   Düz fildişi düğme, mürekkep yazı; altın degrade ya da parıltı yok. */
 .menba__oku {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
+  height: 48px;
   min-height: 48px;
-  margin: 16px 0 0;
-  padding: 0 20px 0 16px;
+  margin: 20px 0 0;
+  padding: 0 18px 0 16px;
   border-radius: 24px;
-  background: linear-gradient(180deg, #f6dc9b 0%, #e2b764 55%, #c9973f 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 248, 225, 0.7),
-    inset 0 -1px 0 rgba(120, 78, 18, 0.35),
-    0 8px 22px rgba(0, 0, 0, 0.38);
-  color: #1d1406;
+  background: var(--fildisi);
+  box-shadow: 0 10px 26px -12px rgba(0, 0, 0, 0.8);
+  color: var(--murekkep);
   font-family: var(--yazi-arayuz);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 15px;
   line-height: 1;
   text-decoration: none;
@@ -839,68 +844,67 @@
   transform: scale(0.97);
 }
 .menba__oku:focus-visible {
-  outline: 2px solid #f7eedc;
+  outline: 2px solid var(--fildisi);
   outline-offset: 3px;
 }
 .menba__oku-simge {
   display: grid;
-  width: 21px;
-  height: 21px;
+  width: 19px;
+  height: 19px;
 }
 .menba__oku-simge svg {
   width: 100%;
   height: 100%;
 }
 .menba__oku-yer {
-  padding-left: 9px;
-  border-left: 1px solid rgba(29, 20, 6, 0.25);
-  color: rgba(29, 20, 6, 0.72);
-  font-weight: 600;
+  padding-left: 10px;
+  border-left: 1px solid rgba(11, 20, 48, 0.2);
+  color: rgba(11, 20, 48, 0.62);
+  font-weight: 500;
   font-size: 14px;
 }
 /* dış sitede açılır */
-.menba__oku--dis {
-  padding-right: 16px;
-}
 .menba__oku-dis {
   display: grid;
-  width: 13px;
-  height: 13px;
-  margin-left: -3px;
-  color: rgba(29, 20, 6, 0.62);
+  width: 12px;
+  height: 12px;
+  margin-left: -2px;
+  color: rgba(11, 20, 48, 0.6);
 }
 .menba__oku-dis svg {
   width: 100%;
   height: 100%;
 }
+/* konular: ince şampanya çerçeveli düz yazı (dokunulmaz; düğme gibi görünmez) */
 .menba__etiketler {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
-  margin: 16px 0 0;
+  gap: 8px;
+  margin: 18px -4px 0;
   padding: 0;
   list-style: none;
 }
 .menba__etiketler .etiket {
   display: inline-flex;
   align-items: center;
-  height: 30px;
-  padding: 0 13px;
-  border-radius: 15px;
-  background: rgba(232, 194, 122, 0.1);
-  box-shadow: inset 0 0 0 1px rgba(232, 194, 122, 0.22);
-  color: #efd49c;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--sampanya-cizgi);
+  color: var(--fildisi-2);
   font-family: var(--yazi-arayuz);
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 500;
+  font-size: 12.5px;
   line-height: 1;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 .menba__kunye {
   margin: 22px 24px 0;
-  border-top: 1px solid rgba(232, 194, 122, 0.14);
-  color: rgba(240, 228, 204, 0.62);
+  border-top: 1px solid var(--sampanya-ince);
+  color: var(--fildisi-3);
   font-family: var(--yazi-arayuz);
   font-weight: 500;
   font-size: 13px;
@@ -910,7 +914,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 56px;
+  min-height: 54px;
   list-style: none;
   cursor: pointer;
 }
@@ -918,29 +922,30 @@
   display: none;
 }
 .menba__kunye-ozet:focus-visible {
-  outline: 2px solid #e8c27a;
+  outline: 2px solid var(--sampanya);
   border-radius: 8px;
 }
 .menba__kunye-ad {
   flex: 1;
-  color: #f7eedc;
-  font-weight: 600;
-  font-size: 15px;
+  color: var(--fildisi-2);
+  font-weight: 500;
+  font-size: 14px;
 }
 .menba__kunye-sayi {
-  font-size: 13px;
+  color: var(--fildisi-3);
+  font-size: 12.5px;
 }
 .menba__kunye-ok {
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
-  color: #e8c27a;
+  width: 16px;
+  height: 16px;
+  color: var(--sampanya);
   transition: transform 0.2s ease;
 }
 .menba__kunye-ok svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 .menba__kunye[open] .menba__kunye-ok {
   transform: rotate(180deg);
@@ -948,9 +953,9 @@
 .menba__kunye ul {
   margin: 0;
   padding: 12px 16px 12px 32px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.045);
-  box-shadow: inset 0 0 0 1px rgba(232, 194, 122, 0.14);
+  border-radius: 12px;
+  background: rgba(244, 237, 224, 0.03);
+  box-shadow: inset 0 0 0 1px var(--sampanya-ince);
 }
 .menba__kunye li + li {
   margin-top: 6px;
@@ -959,7 +964,7 @@
   margin: 10px 0 4px;
 }
 .menba__lisans a {
-  color: #e8c27a;
+  color: var(--sampanya);
   font-weight: 600;
 }
 

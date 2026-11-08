@@ -1,34 +1,64 @@
 import { describe, expect, it } from 'vitest';
+import { kuranSvg } from './kuran-cizim';
 import { menbaSvgIcerigi } from './menba-cizim';
-import { ciltRengi, KULLIYAT, reelKaynagi, tipografik } from './ortak';
+import { CILT, KULLIYAT, reelKaynagi, SIRT, tipografik } from './ortak';
 
-const yazilar = (svg: string) => [...svg.matchAll(/<text[^>]*font-family="([^"]+)"[^>]*>([^<]*)<\/text>/g)].map((m) => [m[1], m[2]]);
+/** Sırt yazıları: [yazı boyu, metin]; her <g font-size> içindeki <text>'ler sırasıyla */
+const sirtlar = (svg: string) =>
+  [...svg.matchAll(/<g transform="[^"]*rotate\(-90\)" font-family="([^"]+)"[^>]*font-size="([\d.]+)"[^>]*>(.*?)<\/g>/g)].map((m) => ({
+    yazi: m[1],
+    boy: Number(m[2]),
+    satirlar: [...m[3].matchAll(/<text[^>]*>([^<]*)<\/text>/g)].map((t) => t[1]),
+  }));
 
 describe('Menba çizimi', () => {
-  it('videonun eseri raftan öne çıkar, adı sırtında yazılıdır; öteki 13 eser rafta durur', () => {
-    for (const eser of ['Lem\'alar', 'Şuâlar']) {
-      const y = yazilar(menbaSvgIcerigi(eser, 't'));
-      expect(y.filter(([f]) => f.startsWith('Tinos')).map(([, ad]) => ad)).toEqual([tipografik(eser)]);
-      // "RİSALE-İ NUR KÜLLİYATI" + 13 sırt + öne çıkan
-      expect(y).toHaveLength(15);
-    }
-  });
-
-  it('her eser için çizilir; uzun adlar sırta sığacak kadar küçülür', () => {
+  it('videonun eseri raftan öne çıkar, Güneş’teki satırları sırtında yazılıdır; öteki 13 eser kısa adlarıyla rafta durur', () => {
     for (const eser of KULLIYAT) {
-      const svg = menbaSvgIcerigi(eser, 't');
-      const one = svg.match(/font-family="Tinos, serif"[^>]*font-size="([\d.]+)"/);
-      expect(one, eser).not.toBeNull();
-      expect(Number(one![1])).toBeGreaterThanOrEqual(8);
-      expect(Number(one![1])).toBeLessThanOrEqual(12);
-      expect(svg).not.toMatch(/NaN|undefined/);
+      const s = sirtlar(menbaSvgIcerigi(eser, 't'));
+      expect(s, eser).toHaveLength(14);
+      expect(s.every((x) => x.yazi.startsWith('EB Garamond'))).toBe(true);
+      // öne çekilen en son çizilir (öteki ciltlerin önündedir)
+      const one = s[13];
+      expect(one.satirlar, eser).toEqual(SIRT[eser].satirlar);
+      expect(one.boy, eser).toBeGreaterThanOrEqual(5.4);
+      expect(one.boy, eser).toBeLessThanOrEqual(7.6);
+      const raftakiler = s.slice(0, 13).map((x) => x.satirlar.join(' '));
+      expect(raftakiler).toEqual(KULLIYAT.filter((k) => k !== eser).map((k) => SIRT[k].kisa));
+      // toplam <text>: 13 kısa ad + öne çekilenin satırları (1 ya da 2)
+      expect([...menbaSvgIcerigi(eser, 't').matchAll(/<text/g)]).toHaveLength(13 + SIRT[eser].satirlar.length);
     }
   });
 
-  it('Külliyat dışı bir eserde hiçbiri öne çıkmaz, 14 sırt da rafta', () => {
-    const y = yazilar(menbaSvgIcerigi('Başka', 't'));
-    expect(y.filter(([f]) => f.startsWith('Tinos'))).toEqual([]);
-    expect(y).toHaveLength(15);
+  it('Külliyat dışı bir eserde hiçbiri öne çıkmaz, 14 sırt da kısa adlarıyla rafta', () => {
+    const svg = menbaSvgIcerigi('Başka', 't');
+    const s = sirtlar(svg);
+    expect(s.map((x) => x.satirlar.join(' '))).toEqual(KULLIYAT.map((k) => SIRT[k].kisa));
+    expect([...svg.matchAll(/<text/g)]).toHaveLength(14);
+    expect(svg).not.toMatch(/-cekilen\)" transform/);
+  });
+
+  it('bütün ciltler tek renk (#D7787B); çizimde nokta (daire), Tinos, NaN ya da undefined yoktur', () => {
+    expect(CILT).toBe('#D7787B');
+    for (const eser of [...KULLIYAT, 'Başka']) {
+      const svg = menbaSvgIcerigi(eser, 't');
+      expect(svg).not.toMatch(/<circle|Tinos|NaN|undefined/);
+      expect([...svg.matchAll(/ fill="#D7787B"/g)]).toHaveLength(14);
+    }
+    expect(kuranSvg('k')).not.toMatch(/<circle/);
+  });
+
+  it('cilt genişliği kitabın kalınlığıyla orantılı: Sözler en kalın, Muhâkemat en ince', () => {
+    const svg = menbaSvgIcerigi('Başka', 't');
+    const g = [...svg.matchAll(/<g><rect x="[\d.]+" y="199" width="([\d.]+)"/g)].map((m) => Number(m[1]));
+    expect(g).toHaveLength(14);
+    expect(Math.max(...g)).toBe(g[0]);
+    expect(Math.min(...g)).toBe(g[KULLIYAT.indexOf('Muhâkemat')]);
+    expect(g[0] / g[KULLIYAT.indexOf('Muhâkemat')]).toBeCloseTo(49.1 / 13.15, 1);
+  });
+
+  it('her eser için metin kaçışlı, yazı tipi EB Garamond, öne çekilenin adı tipografik kesme işaretiyle', () => {
+    const one = sirtlar(menbaSvgIcerigi("Lem'alar", 't'))[13];
+    expect(one.satirlar).toEqual([tipografik("Lem'alar")]);
   });
 
   it('kimlikler önekle ayrışır (aynı sayfada iki çizim çakışmaz)', () => {
@@ -39,6 +69,7 @@ describe('Menba çizimi', () => {
     expect(kimlikler.every((k) => k.startsWith('menba1-'))).toBe(true);
     // her url(#…) başvurusu bu çizimin kendi kimliğine gider
     const basvurular = [...a.matchAll(/url\(#([^)]+)\)/g)].map((m) => m[1]);
+    expect(basvurular.length).toBeGreaterThan(10);
     expect(basvurular.every((b) => kimlikler.includes(b))).toBe(true);
   });
 });
@@ -47,14 +78,5 @@ describe('ortak yardımcılar', () => {
   it('reels altındaki kaynak: bölüm, varsa " · kısım"', () => {
     expect(reelKaynagi({ bolum: "On Yedinci Lem'a" })).toBe('On Yedinci Lem’a');
     expect(reelKaynagi({ bolum: 'On Birinci Şuâ', kisim: 'Altıncı Mesele' })).toBe('On Birinci Şuâ · Altıncı Mesele');
-  });
-
-  it('cilt rengi Külliyat sırasıyla döner; Kenz ile Menba aynı rengi kullanır', () => {
-    expect(ciltRengi("Lem'alar")).toBe('#1F4A3B');
-    expect(ciltRengi('Şuâlar')).toBe('#5A3720');
-    expect(ciltRengi('Asâ-yı Mûsâ')).toBe(ciltRengi('Sözler'));
-    const svg = menbaSvgIcerigi("Lem'alar", 't');
-    // Lem'alar (3. eser) cilt degradesi t-c2: ortası Kenz'deki sırt rengi
-    expect(svg).toMatch(/id="t-c2"[^]*?stop-color="#1F4A3B"/);
   });
 });

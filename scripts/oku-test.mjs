@@ -269,16 +269,16 @@ await adim('Oku tam ekran: alt menü örtülür; ekranın üstünde yazı yok, a
     const r = e.getBoundingClientRect();
     return { boy: getComputedStyle(e).fontSize, sol: r.left, alt: innerHeight - r.bottom };
   });
-  assert.equal(kaynak.boy, '11px');
-  assert.equal(kaynak.sol, 14);
+  assert.equal(kaynak.boy, '15px');
+  assert.equal(kaynak.sol, 16);
   assert.ok(kaynak.alt < 30, `kaynak yazısı en altta olmalı: ${kaynak.alt}`);
   const damga = await page.locator('.reel[data-aktif] .reel__damga').evaluate((e) => {
     const r = e.getBoundingClientRect();
     return { w: r.width, op: getComputedStyle(e).opacity, sag: innerWidth - r.right, alt: innerHeight - r.bottom, src: e.getAttribute('src') };
   });
-  assert.equal(damga.w, 18);
-  assert.equal(damga.op, '0.4');
-  assert.equal(damga.sag, 14);
+  assert.equal(damga.w, 20);
+  assert.equal(damga.op, '0.45');
+  assert.equal(damga.sag, 16);
   assert.ok(damga.alt < 30);
   assert.match(damga.src, /\.svg$/);
 });
@@ -374,16 +374,22 @@ await adim('Menba: rahlede Kur\'an-ı Kerim, rafta Külliyat (Şuâlar öne çı
   const cizim = await page.locator(`${s} .menba__cizim`).evaluate((e) => ({
     rol: e.getAttribute('role'),
     ad: e.getAttribute('aria-label'),
-    one: Array.from(e.querySelectorAll('text'), (t) => [t.getAttribute('font-family'), t.textContent]).filter(([f]) => f.startsWith('Tinos')),
+    one: Array.from(e.querySelectorAll('text'), (t) => [t.closest('[font-size]').getAttribute('font-size'), t.textContent]).filter(([b]) => +b > 5.4).map(([, y]) => y),
+    yazilar: Array.from(e.querySelectorAll('text'), (t) => t.textContent),
+    yaziTipi: new Set(Array.from(e.querySelectorAll('text'), (t) => t.closest('[font-family]').getAttribute('font-family'))),
+    nokta: e.querySelectorAll('circle').length,
     sirtlar: e.querySelectorAll('text').length,
     w: e.querySelector('svg').getBoundingClientRect().width,
   }));
   assert.equal(cizim.rol, 'img');
   assert.match(cizim.ad, /Kur’an-ı Kerim/);
   assert.match(cizim.ad, /Şuâlar öne çıkmış/);
-  assert.deepEqual(cizim.one, [['Tinos, serif', 'Şuâlar']]);
-  // yazı: "RİSALE-İ NUR KÜLLİYATI" + 13 sırt + öne çıkan eser
-  assert.equal(cizim.sirtlar, 15);
+  // öne çıkan eserin adı büyük; öbür 13 sırtta kısa adlar; hepsi EB Garamond; çizimde nokta (daire) yok
+  assert.deepEqual(cizim.one, ['Şuâlar']);
+  assert.equal(cizim.sirtlar, 14);
+  assert.ok(cizim.yazilar.includes('Muvâzene') && !cizim.yazilar.includes('RİSALE-İ NUR KÜLLİYATI'), JSON.stringify(cizim.yazilar));
+  assert.deepEqual([...cizim.yaziTipi], ['EB Garamond, serif']);
+  assert.equal(cizim.nokta, 0);
   assert.equal(cizim.w, 390);
   assert.equal(await page.locator(`${s} .menba__eser`).innerText(), 'Şuâlar');
   assert.deepEqual(await page.locator(`${s} .menba__yer li`).allTextContents(), ['On Birinci Şuâ', 'Altıncı Mesele', '203. sayfa']);
@@ -464,7 +470,7 @@ await adim('Menba: Lem’alar, On Yedinci Lem’a, 154. sayfa; künyesiz videoda
   assert.deepEqual(await page.locator(`${s} .menba__yer li`).allTextContents(), ['On Yedinci Lem’a', '154. sayfa']);
   assert.deepEqual(await page.locator(`${s} .menba__etiketler li`).allTextContents(), ['#ihlas', '#muhabbet', '#kurtuluş']);
   assert.deepEqual(
-    await page.locator(`${s} .menba__cizim text[font-family^="Tinos"]`).allTextContents(),
+    await page.locator(`${s} .menba__cizim text`).evaluateAll((l) => l.filter((t) => +t.closest('[font-size]').getAttribute('font-size') > 5.4).map((t) => t.textContent)),
     ['Lem’alar'],
   );
   assert.equal(await page.locator(`${s} .menba__kunye`).count(), 0);
@@ -673,14 +679,14 @@ await adim('Kenz ayrı ekran: gece kütüphanesi; videolar kitap kitap, kitapta 
   assert.equal(await page.locator('#view-kenz').getAttribute('hidden'), null);
   assert.equal(await page.locator('#kenz-baslik').innerText(), 'Kenz');
   assert.equal(await page.locator('.tab--kenz').getAttribute('aria-current'), 'page');
-  assert.equal(await temaRengi(), '#0C1A40');
+  assert.equal(await temaRengi(), '#0D1736');
   await page.waitForTimeout(300);
   assert.equal(await page.locator('.tab--kenz').evaluate((t) => getComputedStyle(t, '::before').opacity), '1');
   const kitaplar = await page.locator('.kitap').evaluateAll((l) =>
     l.map((k) => ({
       ad: k.querySelector('.kitap__ad').textContent,
       sayi: k.querySelector('.kitap__sayi').textContent,
-      cilt: k.style.getPropertyValue('--cilt'),
+      mm: k.style.getPropertyValue('--mm'),
       bolumler: Array.from(k.querySelectorAll('.bolum'), (b) => ({
         ad: b.querySelector('.bolum__ad span').textContent,
         buyuk: getComputedStyle(b.querySelector('.bolum__ad')).textTransform,
@@ -699,7 +705,7 @@ await adim('Kenz ayrı ekran: gece kütüphanesi; videolar kitap kitap, kitapta 
     {
       ad: 'Lem’alar',
       sayi: '1 video',
-      cilt: '#1F4A3B',
+      mm: '30.90',
       bolumler: [
         {
           ad: 'On Yedinci Lem’a',
@@ -715,7 +721,7 @@ await adim('Kenz ayrı ekran: gece kütüphanesi; videolar kitap kitap, kitapta 
     {
       ad: 'Şuâlar',
       sayi: '1 video',
-      cilt: '#5A3720',
+      mm: '38.70',
       bolumler: [
         {
           ad: 'On Birinci Şuâ',
@@ -744,12 +750,13 @@ await adim('menünün altındaki ve yanındaki koyu bantta görünmeyen karta do
       [Math.round(m.left / 2), Math.round(m.top + 30)],
     ];
   });
-  // Bir kartın her iki noktanın altına girdiği kaydırma yerini bul
-  const yer = await page.evaluate((noktalar) => {
+  // Bir kartın menünün altına girdiği kaydırma yerini bul (menünün yanındaki dar bantta kart yoktur: kartlar
+  // menüden içeride başlar; oraya dokunmak da yine bir şey açmamalı)
+  const yer = await page.evaluate(([[x, yy]]) => {
     const k = document.querySelector('.kenz');
     for (let y = 0; y <= k.scrollHeight - k.clientHeight; y += 4) {
       k.scrollTop = y;
-      if (noktalar.every(([x, yy]) => document.elementsFromPoint(x, yy).some((e) => e.closest('.kart')))) return y;
+      if (document.elementsFromPoint(x, yy).some((e) => e.closest('.kart'))) return y;
     }
     return -1;
   }, noktalar);
@@ -914,7 +921,7 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
     Array.from(document.querySelectorAll('#view-gunes .cilt'), (e) => {
       const r = e.getBoundingClientRect();
       const etiket = e.getAttribute('aria-label') ?? e.querySelector('.visually-hidden').textContent;
-      return { ad: etiket.replace(/, (yakında|RNK Neşriyat sitesinde açılır)$/, ''), etiket: e.tagName, href: e.getAttribute('href'), hedef: e.getAttribute('target'), rel: e.getAttribute('rel'), dis: e.classList.contains('cilt--dis'), yakinda: e.classList.contains('cilt--yakinda'), w: r.width, h: r.height };
+      return { ad: etiket.replace(/, (yakında|RNK Neşriyat sitesinde açılır)$/, ''), etiket: e.tagName, href: e.getAttribute('href'), hedef: e.getAttribute('target'), rel: e.getAttribute('rel'), dis: e.classList.contains('cilt--dis'), yakinda: e.classList.contains('cilt--yakinda'), w: r.width, h: r.height, mm: parseFloat(e.closest('li').style.getPropertyValue('--mm')) };
     }),
   );
   assert.deepEqual(raf.map((s) => s.ad), ESERLER);
@@ -936,10 +943,18 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
     ],
   );
   assert.deepEqual(raf.filter((s) => s.yakinda).map((s) => s.ad), ['Muhâkemat']);
+  // Kitaplar gerçek kalınlıklarında: genişlik sayfa sayısıyla orantılı (iki rafta aynı ölçek), hepsi aynı boyda
+  const olcek = raf.map((s) => s.w / s.mm);
+  assert.ok(Math.max(...olcek) - Math.min(...olcek) < 0.03, `ölçek ${olcek.map((o) => o.toFixed(3))}`);
+  assert.equal(raf.reduce((a, b) => (b.w > a.w ? b : a)).ad, 'Sözler');
+  assert.equal(raf.reduce((a, b) => (b.w < a.w ? b : a)).ad, 'Muhâkemat');
   for (const s of raf) {
-    assert.ok(s.w >= 44 && s.h >= 44, `${s.ad} dokunma alanı ${s.w}×${s.h}`);
+    assert.ok(s.w >= 22 && s.h >= 150 && Math.abs(s.h - raf[0].h) < 0.5, `${s.ad} ${s.w}×${s.h}`);
     assert.equal(s.etiket, s.yakinda ? 'SPAN' : 'A');
   }
+  // Bütün ciltler tek renk (#D7787B); sırtlarda süzgeç (filter) yok
+  const renkler = await page.locator('#view-gunes .cilt__deri').evaluateAll((l) => l.map((d) => [getComputedStyle(d).backgroundColor, getComputedStyle(d).filter, getComputedStyle(d.parentElement).filter]));
+  assert.deepEqual(new Set(renkler.map((r) => r.join())), new Set(['rgb(215, 120, 123),none,none']));
   // ekran okuyucu nerede açılacağını da duyar
   assert.equal(await page.locator('#view-gunes .cilt[data-kitap="mektubat"]').getAttribute('aria-label'), 'Mektubat, RNK Neşriyat sitesinde açılır');
   assert.equal(await page.locator('#view-gunes .cilt--yakinda .visually-hidden').first().textContent(), 'Muhâkemat, yakında');
@@ -969,7 +984,7 @@ await adim('Güneş kütüphanesi: üstte süs Kur\'an-ı Kerim (dokunulmaz), al
     return son.bottom <= document.querySelector('.tabbar').getBoundingClientRect().top;
   });
   assert.ok(sigar, 'raf alt menünün altında kalıyor');
-  assert.equal(await temaRengi(), '#0B1338');
+  assert.equal(await temaRengi(), '#0D1736');
   await page.goBack();
   await sekmeOlsun('ana');
 });
@@ -1239,7 +1254,7 @@ await adim('yatay geniş ekranda iki sayfa yan yana; kapak tek', async () => {
   }
 });
 
-await adim('telefon tarayıcısında (360 x 640) raf ve kart menünün üstüne sığar, sırtlar en az 44 px; hareket azaltılmışsa kitap geçişsiz açılır', async () => {
+await adim('telefon tarayıcısında (360 x 640) raf ve kart menünün üstüne sığar, en ince sırt (Muhâkemat) 22 px; hareket azaltılmışsa kitap geçişsiz açılır', async () => {
   const c2 = await browser.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
   try {
     await kitapYolu(c2);
@@ -1256,7 +1271,7 @@ await adim('telefon tarayıcısında (360 x 640) raf ve kart menünün üstüne 
       const sahne = document.querySelector('#view-gunes .gunes__sahne').getBoundingClientRect();
       return { menu, enDar: Math.min(...ciltler.map((r) => r.width)), enAlt: Math.max(...ciltler.map((r) => r.bottom)), kartAlt: kart.bottom, kartUst: kart.top, sahneUst: sahne.top, kaydirma: document.querySelector('.gunes').scrollHeight - innerHeight };
     });
-    assert.ok(olcu.enDar >= 44, `en dar sırt ${olcu.enDar}`);
+    assert.ok(olcu.enDar >= 21.5, `en dar sırt ${olcu.enDar}`);
     assert.ok(olcu.enAlt < olcu.kartUst && olcu.kartAlt <= olcu.menu, JSON.stringify(olcu));
     assert.ok(olcu.sahneUst >= 0 && olcu.kaydirma <= 0, JSON.stringify(olcu));
     let gecis = false;
@@ -1422,7 +1437,7 @@ await adim('gerçek kitap listesiyle (PDF yok): 14 eser RNK Neşriyat\'ın okuma
       const not = document.querySelector('#view-gunes .gunes__not').getBoundingClientRect();
       return { menu, enDar: Math.min(...ciltler.map((r) => r.width)), notUst: not.top, notAlt: not.bottom, enAlt: Math.max(...ciltler.map((r) => r.bottom)), kaydirma: document.querySelector('.gunes').scrollHeight - innerHeight };
     });
-    assert.ok(olcu.enDar >= 44 && olcu.enAlt <= olcu.notUst && olcu.notAlt <= olcu.menu && olcu.kaydirma <= 0, JSON.stringify(olcu));
+    assert.ok(olcu.enDar >= 21.5 && olcu.enAlt <= olcu.notUst && olcu.notAlt <= olcu.menu && olcu.kaydirma <= 0, JSON.stringify(olcu));
     // Menba: Şuâlar'ın PDF'i yok; "Kitapta oku" RNK'nın okuma sitesinde videonun sayfasını (203) açar
     await p2.goto(baseGercek + `#/oku/${F}`);
     await p2.waitForSelector('.reel[data-aktif]');

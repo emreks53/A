@@ -15,11 +15,12 @@ function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, me
   return e;
 }
 
-// Neşret: ortada nur parıltısı, çevresine saçılan ışınlar (neşretmek: yaymak). Güneş sekmesinin diskli güneşinden ayrı.
+// Neşret: ortada ince çizgili nur parıltısı (dolgusuz), çevresine saçılan ışınlar (neşretmek: yaymak). Güneş
+// sekmesinin diskli güneşinden ayrı.
 const NESRET_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.6c.55 2.45 1.95 3.85 4.4 4.4-2.45.55-3.85 1.95-4.4 4.4-.55-2.45-1.95-3.85-4.4-4.4 2.45-.55 3.85-1.95 4.4-4.4Z" fill="#FFE0A0"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.2c.5 2 1.8 3.3 3.8 3.8-2 .5-3.3 1.8-3.8 3.8-.5-2-1.8-3.3-3.8-3.8 2-.5 3.3-1.8 3.8-3.8Z"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>';
 const MENBA_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 const OYNAT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></svg>';
 const SESSIZ_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5Z" fill="currentColor"/><path d="M15.5 9.5l5 5m0-5-5 5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
