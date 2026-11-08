@@ -912,7 +912,7 @@ def left_ramp_keys(lb, xsp, zl0, z1, zr):
     return keys
 
 def head_tuck_keys(book):
-    """Bas/kuyruk 'kep' toplamasi: kitap acikken on mafsal seridi ve sirt kabugunun mafsala yakin ust kismi,
+    """Bas 'kep' toplamasi (yalniz bas ucu; kuyrukta toplama bosluk/centik actigi icin kaldirildi): kitap acikken on mafsal seridi ve sirt kabugunun mafsala yakin ust kismi,
     sayfa blogunun basinin 1.5 mm icine cekilir; boylece alcak oluk kivriminin ustunde/arkasinda kesik deri
     uclari (pembe 'blok') gorunmez. Kapali kitapta (anahtar 0) sekil aynen korunur."""
     f = TUCK_Y / (HB / 2)
@@ -921,13 +921,13 @@ def head_tuck_keys(book):
     jf.shape_key_add(name='Basis')
     k = jf.shape_key_add(name='bas_ic', from_mix=False)
     for i, v in enumerate(jf.data.vertices):
-        k.data[i].co = (v.co.x, v.co.y * f, v.co.z)
+        k.data[i].co = (v.co.x, v.co.y * f if v.co.y > 0 else v.co.y, v.co.z)   # yalniz BAS ucu; kuyruk v3 gibi
     keys.append(k)
     sp = book['spine']
     sp.shape_key_add(name='Basis')
     k2 = sp.shape_key_add(name='bas_ic', from_mix=False)
     for i, v in enumerate(sp.data.vertices):
-        w = smoothstep(0.50, 0.85, v.co.z / T)
+        w = smoothstep(0.50, 0.85, v.co.z / T) if v.co.y > 0 else 0.0     # yalniz BAS ucu
         k2.data[i].co = (v.co.x, v.co.y * (1 - w * (1 - f)), v.co.z)
     keys.append(k2)
     return keys
@@ -1454,6 +1454,13 @@ def report_bbox(S, f):
     ph = world_to_camera_view(sc, cam, Vector((GUT_X, HP / 2 - 0.001, zq)))
     pt = world_to_camera_view(sc, cam, Vector((GUT_X, -HP / 2 + 0.001, zq)))
     print(f'[oluk] f{f} {ph.x*1080:.1f} {(1-ph.y)*1920:.1f} {pt.x*1080:.1f} {(1-pt.y)*1920:.1f}', flush=True)
+    jm = S['book']['joint_f'].matrix_world
+    for tag, ys_ in (('kuyruk', (-HB / 2, -HB / 2 + 0.006)), ('bas', (HB / 2, HB / 2 - 0.006))):
+        pts = [jm @ Vector((x_, y_, z_)) for x_ in (0.0, JW, 0.014) for y_ in ys_ for z_ in (T - BT, T)]
+        pts += [Vector((x_, y_, z_)) for x_ in (-0.006, 0.0) for y_ in ys_ for z_ in (0.03, T)]
+        c_ = [world_to_camera_view(sc, cam, p) for p in pts]
+        xs_ = [c.x * 1080 for c in c_]; ys2 = [(1 - c.y) * 1920 for c in c_]
+        print(f'[{tag}] f{f} {min(xs_):.0f} {min(ys2):.0f} {max(xs_):.0f} {max(ys2):.0f}', flush=True)
     # kapak madalyonu (semse) merkezi ve uclari (kapali kitap icin anlamli)
     mx, my = JW + 0.0815, HB / 2 - 0.111
     def px(p):
