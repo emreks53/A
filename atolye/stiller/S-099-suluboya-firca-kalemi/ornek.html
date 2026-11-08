@@ -100,8 +100,18 @@
    */
   function darbe(h, pts, w, renk, alfa, o) {
     o = o || {};
+    if (pts.length < 2) return;
+    // seyrek noktaları sık örnekle (genişlik profili düzgün çıksın)
+    {
+      const yeniPts = [pts[0]];
+      for (let i = 1; i < pts.length; i++) {
+        const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
+        const m = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 2));
+        for (let k = 1; k <= m; k++) yeniPts.push([ax + ((bx - ax) * k) / m, ay + ((by - ay) * k) / m]);
+      }
+      pts = yeniPts;
+    }
     const n = pts.length;
-    if (n < 2) return;
     const faz = dTohum++ * 1.37;
     const L = [0];
     for (let i = 1; i < n; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
@@ -112,8 +122,9 @@
       let p;
       if (o.profil === 'yaprak') p = Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 0.75);
       else if (o.profil === 'duz') p = 1;
-      else p = Math.min(1, t / 0.1) * (t > 0.6 ? Math.max(0.12, 1 - (t - 0.6) / 0.4 * 0.88) : 1);
-      p = Math.max(o.profil === 'yaprak' ? 0.04 : 0.12, p) * (1 + (n1(faz + L[i] * 0.02, faz) - 0.5) * 0.25);
+      else if (o.profil === 'kemer') p = t < 0.6 ? 1 : Math.sqrt(Math.max(0, 1 - Math.pow((t - 0.6) / 0.4, 1.6)));
+      else p = (0.55 + 0.45 * Math.min(1, t / 0.1)) * (t > 0.6 ? Math.max(0.12, 1 - (t - 0.6) / 0.4 * 0.88) : 1);
+      p = Math.max(o.profil === 'yaprak' || o.profil === 'kemer' ? 0.04 : 0.12, p) * (1 + (n1(faz + L[i] * 0.02, faz) - 0.5) * 0.25);
       const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
       const dx = b[0] - a[0], dy = b[1] - a[1], m = Math.hypot(dx, dy) || 1;
       const nx = -dy / m, ny = dx / m;
@@ -123,7 +134,19 @@
     }
     const yol = new Path2D();
     sol.forEach(([x, y], i) => (i ? yol.lineTo(x, y) : yol.moveTo(x, y)));
+    // uçta yuvarlak (fırça ucunun kalkışı)
+    {
+      const [nx, ny, r] = nor[n - 1];
+      const a0 = Math.atan2(ny, nx);
+      yol.arc(pts[n - 1][0], pts[n - 1][1], Math.max(0.01, r), a0, a0 - Math.PI, true);
+    }
     for (let i = n - 1; i >= 0; i--) yol.lineTo(sag[i][0], sag[i][1]);
+    // başta yuvarlak (basılan fırça ucu); kemerli pencerede taban düz kalır
+    if (o.profil !== 'kemer') {
+      const [nx, ny, r] = nor[0];
+      const a0 = Math.atan2(-ny, -nx);
+      yol.arc(pts[0][0], pts[0][1], Math.max(0.01, r), a0, a0 - Math.PI, true);
+    }
     yol.closePath();
     h.save();
     h.globalCompositeOperation = 'multiply';
@@ -167,7 +190,9 @@
     temizle(A.h);
     temizle(Bk.h);
     temizle(Mk.h);
+    A.h.save();
     ciz(A.h);
+    A.h.restore();
     // eritilmiş kopya: bulanık, biraz açılmış
     Bk.h.save();
     Bk.h.setTransform(1, 0, 0, 1, 0, 0);
@@ -182,7 +207,9 @@
     Bk.h.restore();
     // keskin kısım: maske ile
     if (keskin) {
+      Mk.h.save();
       keskin(Mk.h);
+      Mk.h.restore();
       A.h.save();
       A.h.setTransform(1, 0, 0, 1, 0, 0);
       A.h.globalCompositeOperation = 'destination-in';
@@ -251,7 +278,7 @@
     bolge(
       (h) => {
         // üstte yoğun, çapraz fırça kalemi darbeleri: mavi → turkuaz, köşede mor ve pembe
-        for (let i = 0; i < 70; i++) {
+        for (let i = 0; i < 58; i++) {
           const x0 = -80 + rr() * 1100, y0 = -40 + rr() * 330;
           const ang = -0.5 + (rr() - 0.5) * 0.25;
           const Ld = 120 + rr() * 220;
@@ -259,8 +286,8 @@
           const dG = Math.hypot(x0 + Math.cos(ang) * Ld * 0.5 - S.gunes.x, y0 - S.gunes.y);
           if (dG < 230) continue;
           const xr = x0 / 1024;
-          const renk = xr < 0.22 && y0 < 150 && rr() < 0.55 ? C.mor : xr > 0.55 && rr() < 0.3 ? C.camgobegi : rr() < 0.5 ? C.mavi : C.turkuaz;
-          darbe(h, egri([k1, k2, k3], 3), 18 + rr() * 12, renk, 0.55 + rr() * 0.25);
+          const renk = xr < 0.22 && y0 < 150 && rr() < 0.4 ? C.lila : xr > 0.55 && rr() < 0.3 ? C.camgobegi : rr() < 0.38 ? C.mavi : C.turkuaz;
+          darbe(h, egri([k1, k2, k3], 3), 18 + rr() * 12, renk, 0.42 + rr() * 0.22);
         }
         // aşağıda seyrek, açık darbeler (ufka doğru)
         for (let i = 0; i < 30; i++) {
@@ -291,6 +318,26 @@
         }
       },
       { bulanik: 14, bulanik2: 40, su: 0.8 }
+    );
+  }
+  // su fırçasıyla aşağı çekilmiş gök: darbelerin rengi yumuşak, yer yer çizgili bir geçişe döner
+  {
+    const rr = S.rng(111);
+    bolge(
+      (h) => {
+        for (let i = 0; i < 46; i++) {
+          const y0 = 20 + rr() * 520, x0 = -100 + rr() * 900, Ld = 260 + rr() * 380;
+          const ang = -0.38 + (rr() - 0.5) * 0.2;
+          const x1 = x0 + Math.cos(ang) * Ld, y1 = y0 + Math.sin(ang) * Ld;
+          const dG = Math.min(Math.hypot((x0 + x1) / 2 - S.gunes.x, (y0 + y1) / 2 - S.gunes.y), Math.hypot(x1 - S.gunes.x, y1 - S.gunes.y));
+          if (dG < 250) continue;
+          const kuv = Math.max(0, 1 - y0 / 600);
+          const renk = x0 < 250 && rr() < 0.4 ? C.lila : rr() < 0.55 ? C.turkuaz : C.mavi;
+          darbe(h, egri([[x0, y0], [(x0 + x1) / 2, (y0 + y1) / 2 + (rr() - 0.5) * 20], [x1, y1]], 4), 40 + rr() * 40, renk, 0.12 + 0.3 * kuv, { profil: 'yaprak' });
+        }
+      },
+      null,
+      { bulanik: 22, bulanik2: 6, su: 0.9 }
     );
   }
   // güneş: sarı ve turuncu dairesel darbeler, ortası suyla açılmış
@@ -449,7 +496,7 @@
         }
         for (const z of S.zikzakCizgileri()) darbe(h, z, 3.2, C.pembe, 0.85, { profil: 'duz', damar: false });
         for (const p of S.minarePencereleri) {
-          darbe(h, [[p.x, p.y + 1], [p.x, p.y + p.h]], p.w, C.mor, 0.85, { profil: 'yaprak', damar: false });
+          darbe(h, [[p.x, p.y + p.h], [p.x, p.y]], p.w, C.mor, 0.85, { profil: 'kemer', damar: false });
           darbe(h, [[p.x - 1, p.y + p.h * 0.3], [p.x - 1, p.y + p.h]], p.w * 0.5, C.lacivert, 0.5, { profil: 'duz', damar: false });
         }
       },
@@ -459,6 +506,12 @@
   }
   // alem: sarı ve turuncu küçük darbeler
   function alem(a, s) {
+    const ay = new Path2D();
+    ay.addPath(P(S.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx, ry: a.yaka.ry, aci: 0 })));
+    ay.addPath(P(kutu(a.cubuk.x1, a.cubuk.y1, a.cubuk.x2, a.cubuk.y2)));
+    for (const k of a.kureler) ay.addPath(P(S.daireYolu(k.cx, k.cy, k.r)));
+    ay.addPath(P(S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R)));
+    beyazBirak(ay, 0.5);
     bolge(
       (h) => {
         const k = a.kureler;
@@ -498,12 +551,12 @@
       (h) => {
         // sol yanda lila-mavi dikey darbeler, korniş altında yatay lila darbe, sağa doğru şeftali-sarı ışık
         for (let x = KD.x1 + 6; x < KD.x1 + 170; x += 14 + rr() * 6) {
-          darbe(h, [[x, KD.y1 + 4], [x + (rr() - 0.5) * 4, KD.y2 - 3]], 16, rr() < 0.7 ? C.lila : C.mavi, 0.42 * (1 - (x - KD.x1) / 220), { profil: 'darbe' });
+          darbe(h, [[x, KD.y1 - 12], [x + (rr() - 0.5) * 4, KD.y2 + 12]], 16, rr() < 0.7 ? C.lila : C.mavi, 0.6 * (1 - (x - KD.x1) / 230), { profil: 'duz' });
         }
         darbe(h, [[KD.x1, KD.y1 + 7], [KD.x2, KD.y1 + 7]], 12, C.lila, 0.75, { profil: 'duz' });
-        for (let i = 0; i < 6; i++) {
-          const y = KD.y1 + 26 + rr() * 60;
-          darbe(h, egri([[KD.x1 + 250 + rr() * 100, y], [KD.x2 - 10, y + (rr() - 0.5) * 6]], 3), 14 + rr() * 8, rr() < 0.5 ? C.seftali : C.kum, 0.22, { profil: 'darbe' });
+        for (let i = 0; i < 9; i++) {
+          const y = KD.y1 + 22 + rr() * 66;
+          darbe(h, egri([[KD.x1 + 230 + rr() * 100, y], [KD.x2 - 10, y + (rr() - 0.5) * 6]], 3), 16 + rr() * 8, rr() < 0.5 ? C.seftali : C.kum, 0.32, { profil: 'darbe' });
         }
       },
       (m) => {
@@ -519,8 +572,10 @@
         // ince kenar darbeleri (mor, fırça ucu) ve pencereler
         darbe(h, [[kr.x1, kr.y2], [kr.x2, kr.y2]], 2.6, C.mor, 0.55, { profil: 'yaprak', damar: false });
         darbe(h, [[KD.x1 + 1, KD.y1], [KD.x1 + 1, KD.y2]], 2.4, C.mor, 0.45, { profil: 'duz', damar: false });
+        darbe(h, [[KD.x2 - 1, KD.y1 + 2], [KD.x2 - 1, KD.y2]], 2, C.seftali, 0.7, { profil: 'duz', damar: false });
+        darbe(h, [[KD.x1, KD.y2 - 2], [KD.x2, KD.y2 - 2]], 3, C.lila, 0.6, { profil: 'yaprak', damar: false });
         for (const p of KD.pencereler) {
-          darbe(h, [[p.x, p.y + 1], [p.x, p.y + p.h]], p.w, C.mor, 0.85, { profil: 'yaprak' });
+          darbe(h, [[p.x, p.y + p.h], [p.x, p.y]], p.w, C.mor, 0.85, { profil: 'kemer' });
           darbe(h, [[p.x - p.w * 0.2, p.y + p.h * 0.25], [p.x - p.w * 0.2, p.y + p.h]], p.w * 0.55, C.lacivert, 0.55, { profil: 'duz' });
           const pts = noktala(S.kemerYolu(p.x, p.y - 5, p.w + 10, p.h + 5), 3).slice(1, -1);
           darbe(h, pts, 2.2, C.pembe, 0.55, { profil: 'yaprak', damar: false });
@@ -562,7 +617,7 @@
     bolge(
       (h) => {
         for (const p of S.kasnakPencereleri(k)) {
-          darbe(h, [[p.x, p.y + 1], [p.x, p.y + p.h]], p.w * 1.05, C.lacivert, 0.9, { profil: 'yaprak', damar: p.w > 10 });
+          darbe(h, [[p.x, p.y + p.h], [p.x, p.y]], p.w * 1.05, C.lacivert, 0.9, { profil: 'kemer', damar: p.w > 10 });
           if (p.w > 9) darbe(h, [[p.x - p.w * 0.25, p.y + p.h * 0.3], [p.x - p.w * 0.25, p.y + p.h]], p.w * 0.4, C.mor, 0.5, { profil: 'duz', damar: false });
         }
         darbe(h, [[q.x1, q.y1 + 2], [q.x2, q.y1 + 2]], 3, C.limon, 0.8, { profil: 'duz', damar: false });
@@ -586,8 +641,8 @@
           const t2 = 0.82 + rr() * 0.18;
           const renk = u < -0.45 ? C.zumrut : u < 0.02 ? C.yesil : u < 0.55 ? C.cimen : u < 0.8 ? C.yesil : C.zumrut;
           const isik = u > 0.18 && u < 0.5;
-          darbe(h, mer(u, 0, t2), 15 + rr() * 5, renk, isik ? 0.45 : 0.75, { profil: 'darbe' });
-          if (u < -0.35 && rr() < 0.6) darbe(h, mer(u + 0.01, 0, 0.55 + rr() * 0.3), 9, C.lacivert, 0.22, { profil: 'darbe' });
+          darbe(h, [[560 + u * 200, 572]].concat(mer(u, 0, t2)), 15 + rr() * 5, renk, isik ? 0.45 : 0.75, { profil: 'darbe' });
+          if (u < -0.35 && rr() < 0.6) darbe(h, [[560 + u * 200, 572]].concat(mer(u + 0.01, 0, 0.55 + rr() * 0.3)), 9, C.lacivert, 0.22, { profil: 'darbe' });
           if (u > 0.1 && u < 0.6 && rr() < 0.6) darbe(h, mer(u + 0.02, 0.25, 0.95), 10, C.limon, 0.55, { profil: 'darbe' });
         }
       },
@@ -784,3 +839,6 @@
 
   S.hazir();
 })();
+</script>
+</body>
+</html>

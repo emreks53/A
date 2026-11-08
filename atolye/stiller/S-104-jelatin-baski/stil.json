@@ -1,0 +1,22 @@
+{
+  "kod": "S-104",
+  "no": 104,
+  "ad": "Jelatin Baskı",
+  "ad_en": "Gel Plate Print",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Jel plakaya merdaneyle sürülen saydam akrilik katmanların kesilmiş maskeler, şablonlar ve yapraklarla tek tek kâğıda çekildiği monobaskı.",
+  "tanim": "Jelatin baskı (jel plaka monobaskısı), jelatinden ya da esnek silikon jelden yapılmış yumuşak bir plakaya merdaneyle ince bir akrilik ya da baskı mürekkebi sürülüp üstüne kâğıt bastırılarak yapılan, preste gerek duymayan bir baskı tekniğidir. Boya katmanının üstüne kesilmiş kâğıt maskeler, şablonlar, gerçek yapraklar ya da dokulu nesneler konur; maskelenen yerler kâğıt beyazı ya da önceki katmanın rengi kalır, nesnelerin dokusu basılır. Katmanlar saydam olduğu için bindiği yerde yeni renkler doğar; merdanenin durma çizgileri, geçiş bantları, tarakla açılmış çizgiler ve maske kenarında biriken boya tekniğin kendi izleridir. Her çekim tektir; kolaj, kart, defter kapağı ve karışık teknik çalışmalarda kullanılır.",
+  "koken": "Jelatin plakayla baskı 19. yüzyılda büro çoğaltma aracı (hektograf) olarak doğdu; 20. yüzyılda okul ve atölyelerde basit monobaskı yöntemi olarak sürdü. 2010'larda kalıcı silikon jel plakaların (Gelli Arts, 2011) yaygınlaşmasıyla Joan Bess, Linda Germain gibi sanatçıların ve karışık teknik topluluklarının eliyle bağımsız bir sanat baskısı türüne dönüştü; tarihsel kökü Degas ve Gauguin'in monotip denemelerine uzanır.",
+  "ayirt_edici": [
+    "Üst üste binen saydam akrilik katmanlar: iki ayrı gök çekimi, kubbede açık yeşil üstüne tarakla kaburgaları açılmış zümrüt, sol yanda mavi-yeşil saydam katman",
+    "Merdane izleri: yumuşak durma çizgileri, geçiş bantları ve merdane yönünde uzamış ince dokular",
+    "Eğrelti otu yaprakları ikinci gök çekiminde maske olarak kullanılmış; arka planda açık, hayalet izler",
+    "Gerçek yaprak baskısı gibi damarlı, saydam yapraklar; bindikleri yerde koyulaşıyor, maskeleriyle aralarında ince kaymalar",
+    "Kesilmiş kâğıt maskelerle beyaz kalan bulutlar, çiçekler ve güneş halkası; maske kenarında biriken boya çizgisi",
+    "Yerde yırtık kâğıt maskeyle basılmış ikinci, daha sıcak şeftali katman; yuvarlak köşeli plaka kenarı"
+  ],
+  "palet": ["#64ACE2", "#9CD6E6", "#FFDC46", "#FFCE8E", "#96D66E", "#14946A", "#4A4CA0", "#F8A0B6"],
+  "kodla_cizim": "Her çekim ayrı bir işlemdir: şablon açıklığı tuvalde beyaz çizilir, kâğıt maskeler destination-out ile çıkarılır, maske okunup bir piksel yumuşatılır. Yoğunluk merdane yönünde ve ona dik koordinatlarla kurulan bir alanla oynar: çevre aralığıyla tekrarlanan yumuşak durma çizgileri ve ardındaki incelme, geçiş bantları ve kenarlarındaki hafif sırt, merdane yönünde uzamış gürültü çizgileri, ince benekler ve geniş, eşit olmayan çekim lekeleri; tarak işlevi kubbe kaburgalarında ve kasnakta boyayı açar. Maskenin bulanık kopyasıyla farkından kenarda biriken boya eklenir, plaka yuvarlak köşeli bir dikdörtgenle sınırlanır ve her katman saydam akrilik gibi çarpımla kâğıda uygulanır. Yapraklar ayrı tuvallerde 'lighter' ile yaprak gövdesi, orta damar ve yan damarlar olarak birikir ve üç yeşil çekim olarak basılır; gök ve yer katmanlarında bitki maskeleri birkaç piksel kayık durur. Eğrelti otları ikinci gök çekiminin maskesidir.",
+  "etiketler": ["jelatin baskı", "jel plaka", "monobaskı", "akrilik", "saydam katman", "maske", "yaprak baskısı", "karışık teknik"]
+}

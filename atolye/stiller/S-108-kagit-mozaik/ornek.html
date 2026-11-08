@@ -64,7 +64,7 @@
   const gunes = S.gunes;
 
   // paletler
-  const GOKP = palet(['#D6EEFB', '#BDE2F8', '#9FD2F4', '#82C1F0', '#68AFEC', '#529FE6', '#4290DF']);
+  const GOKP = palet(['#B4DDF7', '#94CBF2', '#74B8EE', '#58A6E9', '#4194E2', '#2F84DA', '#2575CF']);
   const SICAK = hex('#FFF3C8');
   const BULUTP = palet(['#DCE8F6', '#E8F0FA', '#F2F7FC', '#FAFCFE']);
   const ZEMINP = palet(['#DDBF82', '#E6CC97', '#EED9B0', '#F4E5C6']);
@@ -79,8 +79,17 @@
   const GOK = et({
     mod: 'gok', h: 13, renk(x, y, r) {
       const ds = Math.hypot(x - gunes.x, y - gunes.y);
-      let c = sec(GOKP, clamp(0.2 + 0.8 * (1 - y / 820), 0, 1), r, 1.8);
-      if (ds < 330) c = karis(c, SICAK, Math.pow(1 - ds / 330, 1.4) * 0.85);
+      let c = sec(GOKP, clamp(0.12 + 0.88 * (1 - y / 820), 0, 1), r, 1.8);
+      if (ds < 272) {
+        // güneş halkaları: sarı → krem → beyaz → gök mavisi (griye düşmeden)
+        const t = clamp((ds - 58) / (272 - 58), 0, 1);
+        const halka = Math.floor((ds - 58) / 13) % 2 === 0;
+        if (t < 0.3) c = karis(hex('#FFE07A'), hex('#FFF1C6'), t / 0.3);
+        else if (t < 0.55) c = karis(hex('#FFF1C6'), hex('#F6FAF8'), (t - 0.3) / 0.25);
+        else c = karis(hex('#F6FAF8'), c, Math.pow((t - 0.55) / 0.45, 0.8));
+        if (halka) c = karis(c, t < 0.5 ? hex('#FFD45E') : hex('#BFE2F8'), 0.22);
+        c = karis(c, sec(palet(['#F2F2EA', '#FFFFFF']), 0.5, r, 2), 0.06);
+      }
       return c;
     },
   });
@@ -258,7 +267,7 @@
   // ------------------------------------------------------------ sıra koordinatı ve anahtar
   const RHO = new Float32Array(N), KEY = new Int32Array(N), HH = new Float32Array(ET.length);
   for (let k = 1; k < ET.length; k++) HH[k] = ET[k].h * K;
-  const RS = 205 * K; // güneş halkalarının yarıçapı
+  const RS = 272 * K; // güneş halkalarının yarıçapı
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x, l = L[i];
     if (!l) { KEY[i] = -1; continue; }

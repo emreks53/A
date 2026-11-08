@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>S-104 Jelatin Baskı — Atölye örnek görseli</title>
+<style>
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #fdfcf9; }
+  canvas { display: block; width: 1024px; height: 1024px; }
+</style>
+</head>
+<body>
+<canvas id="tuval"></canvas>
+<script src="../../sahne/sahne.js"></script>
+<script>
+// S-104 Jelatin Baskı (jel plaka monobaskı) — esnek jel plakaya merdaneyle ince akrilik sürülür, üstüne
+// kesilmiş kâğıt maskeler, şablonlar ve gerçek yapraklar konup kâğıt bastırılarak çekilir. Katman katman
+// saydam renkler üst üste biner; maskelenen yerler kâğıt beyazı ya da önceki renk kalır, maskenin kenarında
+// boya birikir. Merdane izleri (durma çizgileri, geçiş bantları), tarakla açılmış çizgiler ve yaprak
+// baskılarının damarları tekniğin kendi dokusudur.
+// Ortak sahne ve yardımcılar: ../../sahne/SAHNE.md
+'use strict';
+const W = 1024, H = 1024, N = W * H;
+const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+const TAU = Math.PI * 2;
+const P2 = (d) => new Path2D(d);
+
+// ------------------------------------------------------------------ gürültü ve maske yardımcıları
+function gurultuFn(tohum) {
+  const r = SAHNE.rng(tohum);
+  const v = new Float32Array(256);
+  const p = new Uint8Array(512);
+  for (let i = 0; i < 256; i++) { v[i] = r(); p[i] = i; }
+  for (let i = 255; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = p[i]; p[i] = p[j]; p[j] = t; }
+  for (let i = 0; i < 256; i++) p[i + 256] = p[i];
+  return function (x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf), w = yf * yf * (3 - 2 * yf);
+    const X = xi & 255, Y = yi & 255;
+    const a = v[p[p[X] + Y]], b = v[p[p[X + 1] + Y]], c = v[p[p[X] + Y + 1]], d = v[p[p[X + 1] + Y + 1]];
+    return a + (b - a) * u + (c - a) * w + (a - b - c + d) * u * w;
+  };
+}
+function fbmFn(tohum, oktav, olcek, kazanc) {
+  kazanc = kazanc || 0.5;
+  const g = [];
+  for (let i = 0; i < oktav; i++) g.push(gurultuFn(tohum * 31 + i * 7 + 1));
+  let top = 0, a = 1;
+  for (let i = 0; i < oktav; i++) { top += a; a *= kazanc; }
+  return function (x, y) {
+    let s = 0, a = 1, f = 1 / olcek;
+    for (let i = 0; i < oktav; i++) { s += a * g[i](x * f + i * 17.3, y * f - i * 9.1); a *= kazanc; f *= 2.03; }
+    return s / top;
+  };
+}
+function bulanik(m, r) {
+  const t = new Float32Array(N), o = new Float32Array(N);
+  const k = 1 / (2 * r + 1);
+  for (let gecis = 0; gecis < 2; gecis++) {
+    const kaynak = gecis ? o : m;
+    for (let y = 0; y < H; y++) {
+      let s = 0;
+      const b = y * W;
+      for (let x = -r; x <= r; x++) s += kaynak[b + clamp(x, 0, W - 1)];
+      for (let x = 0; x < W; x++) {
+        t[b + x] = s * k;
+        s += kaynak[b + Math.min(W - 1, x + r + 1)] - kaynak[b + Math.max(0, x - r)];
+      }
+    }
+    for (let x = 0; x < W; x++) {
+      let s = 0;
+      for (let y = -r; y <= r; y++) s += t[clamp(y, 0, H - 1) * W + x];
+      for (let y = 0; y < H; y++) {
+        o[y * W + x] = s * k;
+        s += t[Math.min(H - 1, y + r + 1) * W + x] - t[Math.max(0, y - r) * W + x];
+      }
+    }
+  }
+  return o;
+}
+function maske(ciz) {
+  const c = SAHNE.yeniTuval(W, H);
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.fillStyle = g.strokeStyle = '#fff'; g.lineCap = 'round'; g.lineJoin = 'round';
+  ciz(g);
+  const d = g.getImageData(0, 0, W, H).data;
+  const m = new Float32Array(N);
+  for (let i = 0, j = 3; i < N; i++, j += 4) m[i] = d[j] / 255;
+  return m;
+}
+
+// ------------------------------------------------------------------ geometri
+const B = SAHNE.bitki;
+const Y = SAHNE.yollar();
+const MP = SAHNE.minareParcalari();
+const PLAKA = { x1: 16, y1: 16, x2: 1008, y2: 1008, r: 10 };
+const BULUTLAR = [[170, 248, 1.0], [505, 152, 0.82], [770, 334, 1.06], [940, 470, 0.66], [92, 468, 0.66]];
+function bulutYolu(g, bx, by, s) {
+  // kâğıttan elle kesilmiş bulut maskesi: hafif düzensiz loblar
+  const lob = [[-60, 8, 20], [-34, -6, 27], [0, -17, 33], [36, -6, 27], [62, 8, 19]];
+  g.beginPath();
+  for (const [dx, dy, r] of lob) { g.moveTo(bx + (dx + r) * s, by + dy * s); g.arc(bx + dx * s, by + dy * s, r * s, 0, TAU); }
+  g.roundRect(bx - 70 * s, by - 2 * s, 140 * s, 30 * s, 14 * s);
+}
+const yapiYollari = () => [SAHNE.kubbeYolu, Y.kasnakUst, Y.kasnakAlt, Y.kaide, Y.kornis, ...Y.minare, ...Y.alem, ...Y.minareAlem];
+// yaprak maskeleri baskıdan biraz kayık durur: bir yanda ince beyaz aralık, öbür yanda bindirme kalır
+const MASKE_KAYMA = [2.2, -1.6];
+function bitkiMaskesi(g, kayik, cicekDahil) {
+  g.save();
+  if (kayik) g.translate(MASKE_KAYMA[0], MASKE_KAYMA[1]);
+  g.lineWidth = 4.5;
+  for (const s of Y.saplar) g.stroke(P2(s));
+  for (const y of Y.yapraklar) g.fill(P2(y));
+  for (const t of Y.tomurcuklar) g.fill(P2(t));
+  g.restore();
+  if (cicekDahil !== false) cicekMaskesi(g);
+}
+function cicekMaskesi(g) {
+  for (const c of B.cicekler) for (const e of SAHNE.tacYapraklari(c)) { g.beginPath(); g.ellipse(e.cx, e.cy, e.rx * 1.02, e.ry * 1.02, e.aci, 0, TAU); g.fill(); }
+}
+
+// ------------------------------------------------------------------ kâğıt
+const tuval = document.getElementById('tuval');
+tuval.width = W; tuval.height = H;
+const ctx = tuval.getContext('2d');
+const R = new Float32Array(N), G = new Float32Array(N), Bm = new Float32Array(N);
+{
+  const lif = fbmFn(3, 3, 3.2), kaba = fbmFn(4, 3, 80);
+  for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
+    const t = (lif(x, y) - 0.5) * 5 + (kaba(x, y) - 0.5) * 3;
+    R[i] = 253 + t; G[i] = 252 + t; Bm[i] = 248 + t;
+  }
+}
+// plaka alanı: köşeleri yuvarlak, kenarda boya incelir
+const plakaM = maske((g) => { g.beginPath(); g.roundRect(PLAKA.x1, PLAKA.y1, PLAKA.x2 - PLAKA.x1, PLAKA.y2 - PLAKA.y1, PLAKA.r); g.fill(); });
+
+/**
+ * Bir jel plaka çekimi. o.renk(x,y) → [r,g,b] ya da sabit renk; o.ac(g) şablon açıklığı; o.kapa(g) kâğıt maskeleri;
+ * o.yog yoğunluk; o.yon merdane yönü; o.cevre merdane çevresi (durma çizgisi aralığı); o.tarak(x,y) → 0..1 açılan çizgiler.
+ */
+let cekimNo = 0;
+function cek(o) {
+  cekimNo++;
+  const tohum = 100 + cekimNo * 13;
+  const kx = o.plakaKay ? o.plakaKay[0] : 0, ky = o.plakaKay ? o.plakaKay[1] : 0;
+  let m = maske((g) => {
+    g.save(); g.translate(kx, ky);
+    if (o.ac) o.ac(g); else g.fillRect(0, 0, W, H);
+    g.restore();
+    if (o.kapa) { g.globalCompositeOperation = 'destination-out'; o.kapa(g); }
+  });
+  const bl = bulanik(m, 2);
+  const yumus = bulanik(m, 1);
+  const n1 = gurultuFn(tohum), n2 = gurultuFn(tohum + 1), n3 = fbmFn(tohum + 2, 3, 22), n4 = fbmFn(tohum + 3, 3, 150);
+  const yon = o.yon || 0, ca = Math.cos(yon), sa = Math.sin(yon);
+  const C = o.cevre || 205, BW = o.bant || 190;
+  const sabit = Array.isArray(o.renk) ? o.renk : null;
+  const r0 = n1(3.1, 7.7) * C;
+  for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
+    let a = yumus[i] * 0.6 + m[i] * 0.4;
+    if (a <= 0.003) continue;
+    a *= plakaM[i];
+    if (a <= 0.003) continue;
+    const u = x * ca + y * sa, v = -x * sa + y * ca;
+    // merdane: durma çizgileri (çevre aralığıyla), çizginin ardında boya incelmesi, geçiş bantları
+    const um = (((u + r0 + 6 * (n1(v / 120, 0.5) - 0.5)) % C) + C) % C;
+    const durma = Math.exp(-(um - 3) * (um - 3) / 7) * 0.26 - Math.exp(-(um - 13) * (um - 13) / 60) * 0.12 + Math.exp(-(um - C * 0.52) * (um - C * 0.52) / 6) * 0.07;
+    const bi = Math.floor((v + 4000) / BW);
+    const bv = (v + 4000) - bi * BW;
+    const bant = (n2(bi * 1.7, 0.3) - 0.5) * 0.24 + Math.exp(-(bv - 2.5) * (bv - 2.5) / 8) * 0.12 - Math.exp(-(bv - 9) * (bv - 9) / 30) * 0.06;
+    // jel dokusu: merdane yönünde uzamış çizgiler, ince portakal kabuğu benekleri, eşit olmayan çekim
+    const cizgi = (n1(u / 90 + 30, v / 4.5) - 0.5) * 0.13 + (n2(u / 30 + 9, v / 9) - 0.5) * 0.08;
+    const benek = (n3(x, y) - 0.5) * 0.26;
+    const cekis = (n4(x, y) - 0.5) * 0.36;
+    let d = (o.yog || 0.7) * (1 + durma + bant + cizgi + benek + cekis);
+    if (o.tarak) d *= 1 - o.tarak(x, y);
+    // maske kenarında biriken boya
+    const kenar = clamp((m[i] - bl[i]) * 2.6);
+    d = clamp(d * a * (1 + 0.35 * kenar));
+    const col = sabit || o.renk(x, y);
+    R[i] *= 1 - d * (1 - col[0] / 255);
+    G[i] *= 1 - d * (1 - col[1] / 255);
+    Bm[i] *= 1 - d * (1 - col[2] / 255);
+  }
+}
+
+// ================================================================== 1) gök: iki çekim. İkinci çekimde eğrelti otu yaprakları
+// plakaya maske olarak konur: yerlerinde yalnız ilk kat kalır, açık hayalet izler belirir.
+const skyKapa = (g) => {
+  for (const d of yapiYollari()) g.fill(P2(d));
+  g.fillRect(297, 140, 6, 60);
+  g.beginPath(); g.arc(SAHNE.gunes.x, SAHNE.gunes.y, 82, 0, TAU); g.fill();
+  for (const [x, y, s] of BULUTLAR) { bulutYolu(g, x, y, s); g.fill(); }
+  bitkiMaskesi(g, true);
+  g.fillRect(0, 801, W, H);
+};
+function egrelti(g, x0, y0, boy, aci, egri) {
+  // eğrelti otu: kavisli sap ve uca doğru küçülen karşılıklı yaprakçıklar
+  const n = 14;
+  let px = x0, py = y0, a = aci;
+  g.lineWidth = 2.4;
+  for (let i = 0; i < n; i++) {
+    const t = i / n, adim = boy / n;
+    const nx = px + Math.cos(a) * adim, ny = py + Math.sin(a) * adim;
+    g.beginPath(); g.moveTo(px, py); g.lineTo(nx, ny); g.stroke();
+    const l = boy * 0.2 * (1 - t * 0.8) + 4;
+    for (const s of [-1, 1]) {
+      const b = a + s * 1.05;
+      g.beginPath(); g.ellipse(nx + Math.cos(b) * l * 0.5, ny + Math.sin(b) * l * 0.5, l * 0.52, l * 0.17, b, 0, TAU); g.fill();
+    }
+    px = nx; py = ny; a += egri;
+  }
+}
+const EGRELTILER = [[96, 812, 300, -1.75, 0.03], [196, 812, 230, -1.35, -0.035], [36, 812, 190, -1.25, -0.02], [924, 812, 300, -1.4, -0.03], [826, 812, 220, -1.8, 0.035], [990, 812, 190, -1.9, 0.02]];
+cek({
+  renk: (x, y) => {
+    const t = smooth(40, 780, y + 40 * (Math.sin(x / 160) - 0.5));
+    return [lerp(96, 160, t), lerp(184, 226, t), lerp(236, 232, t)];
+  },
+  yog: 0.5, yon: 0, cevre: 214, bant: 170, kapa: skyKapa,
+});
+cek({
+  renk: (x, y) => {
+    const t = smooth(0, 800, y);
+    return [lerp(70, 120, t), lerp(160, 206, t), lerp(226, 228, t)];
+  },
+  yog: 0.42, yon: 0.12, cevre: 188, bant: 210, plakaKay: [1.4, -0.8],
+  kapa: (g) => { skyKapa(g); for (const e of EGRELTILER) egrelti(g, ...e); },
+});
+// 2) güneş: sarı daire şablonu, içte şeftali ikinci çekim
+cek({ renk: [255, 220, 70], yog: 0.85, yon: 0.3, cevre: 180, ac: (g) => { g.beginPath(); g.arc(SAHNE.gunes.x, SAHNE.gunes.y, 60, 0, TAU); g.fill(); } });
+cek({ renk: [255, 168, 96], yog: 0.45, yon: 1.2, cevre: 150, ac: (g) => { g.beginPath(); g.arc(SAHNE.gunes.x + 6, SAHNE.gunes.y + 5, 34, 0, TAU); g.fill(); } });
+// bulutların altına leylak gölge: bulut maskesinin alt kısmı açık
+cek({
+  renk: [196, 190, 238], yog: 0.4, yon: 0, cevre: 240, plakaKay: [1.5, 1],
+  ac: (g) => { for (const [x, y, s] of BULUTLAR) { g.save(); bulutYolu(g, x, y, s); g.clip(); g.fillRect(x - 90 * s, y + 12 * s, 180 * s, 40 * s); g.restore(); } },
+});
+
+// 3) yer: açık şeftali; altta yırtık kâğıt maskeyle ikinci, daha sıcak bir çekim
+cek({
+  renk: [255, 206, 136], yog: 0.62, yon: 0.05, cevre: 230, bant: 120,
+  ac: (g) => g.fillRect(0, 800, W, H),
+  kapa: (g) => { for (const d of [Y.kaide, ...Y.minare]) g.fill(P2(d)); bitkiMaskesi(g, true); },
+});
+{
+  const yr = gurultuFn(61);
+  cek({
+    renk: [250, 160, 110], yog: 0.42, yon: -0.1, cevre: 190, bant: 140, plakaKay: [1, 0],
+    ac: (g) => {
+      g.beginPath(); g.moveTo(0, H);
+      for (let x = 0; x <= W; x += 3) g.lineTo(x, 872 + 14 * Math.sin(x / 150) + 7 * (yr(x / 22, 0.5) - 0.5) + 2.5 * (yr(x / 3.5, 4.5) - 0.5));
+      g.lineTo(W, H); g.closePath(); g.fill();
+    },
+    kapa: (g) => bitkiMaskesi(g, true),
+  });
+}
+
+// 4) taş: kaide, korniş ve minare krem şablondan; sol yanlar leylak gölge
+const tasAc = (g) => { g.fill(P2(Y.kaide)); g.fill(P2(Y.kornis)); for (const d of Y.minare) g.fill(P2(d)); };
+cek({ renk: [255, 226, 182], yog: 0.36, yon: Math.PI / 2, cevre: 190, ac: tasAc, kapa: (g) => bitkiMaskesi(g, false) });
+cek({
+  renk: [170, 170, 232], yog: 0.42, yon: Math.PI / 2, cevre: 170, plakaKay: [1, 0.5],
+  ac: (g) => {
+    for (const p of MP) {
+      if (p.tip === 'poligon' && p.ad.startsWith('gövde')) { const xs = p.noktalar.map((q) => q[0]), ys = p.noktalar.map((q) => q[1]); g.fillRect(Math.min(...xs), Math.min(...ys), (Math.max(...xs) - Math.min(...xs)) * 0.32, Math.max(...ys) - Math.min(...ys)); }
+      if (p.ad.startsWith('çıkma')) g.fill(P2(SAHNE.yol(p.noktalar, true)));
+      if (p.tip === 'topuz') { g.save(); g.clip(P2(p.yol)); g.fillRect(260, 140, 38, 70); g.restore(); }
+    }
+    const K = SAHNE.kaide;
+    g.fillRect(K.x1, K.y1, K.x2 - K.x1, 10);
+    g.fillRect(K.x1, K.y1, 18, K.y2 - K.y1);
+  },
+  kapa: (g) => bitkiMaskesi(g, false),
+});
+
+// 5) kubbe ve kasnak: önce açık yeşil, sonra tarakla kaburgaları açılmış zümrüt; sağ üstte kâğıt maske ışığı korur
+const yesilAc = (g) => { g.fill(P2(SAHNE.kubbeYolu)); g.fill(P2(Y.kasnakUst)); g.fill(P2(Y.kasnakAlt)); };
+cek({ renk: [150, 214, 110], yog: 0.72, yon: 0.4, cevre: 200, plakaKay: [2.2, -1.6], ac: yesilAc, kapa: (g) => bitkiMaskesi(g, false) });
+const PROF = SAHNE.kubbeProfili(120);
+const profR = (y) => {
+  if (y >= 555) return 200;
+  if (y <= 300) return 0;
+  let i = 0;
+  while (i < PROF.length - 2 && PROF[i + 1].y > y) i++;
+  const a = PROF[i], b = PROF[i + 1];
+  return lerp(a.r, b.r, clamp((a.y - y) / ((a.y - b.y) || 1)));
+};
+cek({
+  renk: [20, 148, 98], yog: 0.82, yon: -1.5, cevre: 240, bant: 230,
+  ac: yesilAc,
+  kapa: (g) => {
+    // ışık maskesi: kubbenin sağ yanına elle kesilmiş hilal biçimli kâğıt
+    g.save();
+    g.clip(P2(SAHNE.kubbeYolu));
+    g.beginPath(); g.rect(0, 0, W, H);
+    g.translate(560, 555); g.scale(0.9, 0.95); g.translate(-560 - 52, -555 + 8);
+    g.moveTo(360, 555); g.bezierCurveTo(358, 430, 440, 318, 560, 300); g.bezierCurveTo(680, 318, 762, 430, 760, 555); g.closePath();
+    g.fill('evenodd');
+    g.restore();
+    bitkiMaskesi(g, false);
+  },
+  tarak: (x, y) => {
+    if (y < 300 || y > 555) {
+      // kasnak: tarağın düz çekilmiş dikey izleri, sağda daha seyrek boya
+      const u = (x - 560) / 226;
+      return clamp(0.12 + 0.55 * smooth(0.2, 0.75, u) * (1 - smooth(0.82, 1, u)));
+    }
+    const r = profR(y);
+    const u = clamp((x - 560) / Math.max(1, r), -1, 1);
+    const f = ((Math.asin(u) / Math.PI + 0.5) * 16) % 1;
+    const dis = Math.exp(-(f - 0.5) * (f - 0.5) / 0.006) * 0.0 + Math.exp(-Math.pow(Math.min(f, 1 - f), 2) / 0.0028) * 0.75;
+    return clamp(dis + 0.3 * smooth(-0.1, 0.8, u));
+  },
+});
+// sol yanda ikinci, koyu yeşil-mavi saydam katman
+cek({
+  renk: [40, 110, 140], yog: 0.4, yon: 0.2, cevre: 180, plakaKay: [-1, 1],
+  ac: (g) => {
+    g.save(); g.clip(P2(SAHNE.kubbeYolu));
+    g.beginPath(); g.ellipse(430, 470, 120, 210, 0.15, 0, TAU); g.fill();
+    g.restore();
+  },
+  kapa: (g) => bitkiMaskesi(g, false),
+});
+// 6) altın alemler
+cek({ renk: [236, 164, 40], yog: 0.88, yon: 0, cevre: 160, ac: (g) => { for (const d of Y.alem.concat(Y.minareAlem)) g.fill(P2(d)); g.fillRect(297.5, 140, 5, 8); } });
+// 7) koyu çivit-mor şablon: pencereler, korkuluk, zikzak, kubbe kaburgaları ince kesik çizgiler
+cek({
+  renk: [70, 74, 160], yog: 0.8, yon: Math.PI / 2, cevre: 200, plakaKay: [1.2, 1.4],
+  ac: (g) => {
+    for (const d of Y.kasnakPencereleri.concat(Y.kaidePencereleri, Y.minarePencereleri)) g.fill(P2(d));
+    for (const p of MP) if (p.tip === 'korkuluk') {
+      for (let i = 0; i < 9; i++) { const x = p.x1 + 6 + ((p.x2 - p.x1 - 12) * (i + 0.5)) / 9; g.fillRect(x - 1.8, p.y1 + 4, 3.6, p.y2 - p.y1 - 7); }
+      g.fillRect(p.x1, p.y2 - 2.5, p.x2 - p.x1, 2.5);
+    }
+    g.lineWidth = 3; g.lineJoin = 'miter';
+    for (const z of Y.zikzak) g.stroke(P2(z));
+    const K = SAHNE.kaide;
+    g.fillRect(K.kornis.x1, K.kornis.y2 - 2, K.kornis.x2 - K.kornis.x1, 2);
+  },
+  kapa: (g) => bitkiMaskesi(g, false),
+});
+
+// 8) yaprak baskıları: gerçek yaprak mürekkeplenip basılmış gibi, damarlar koyu; üç yeşil, saydam bindirme
+function yaprakBaskisi(g, y) {
+  const p = P2(SAHNE.yaprakYolu(y));
+  g.save();
+  g.globalCompositeOperation = 'lighter';
+  g.globalAlpha = 0.6; g.fill(p);
+  g.clip(p);
+  const ca = Math.cos(y.aci), sa = Math.sin(y.aci);
+  const P = (u, v) => [y.x + u * ca - v * sa, y.y + u * sa + v * ca];
+  const L = y.uzunluk, Wd = L * y.genislik;
+  g.globalAlpha = 0.34; g.lineWidth = Math.max(1.1, L * 0.028); g.lineCap = 'round';
+  g.beginPath(); g.moveTo(...P(0, 0)); g.lineTo(...P(L * 0.95, 0)); g.stroke();
+  g.lineWidth = Math.max(0.7, L * 0.014); g.globalAlpha = 0.26;
+  for (let t = 0.16; t < 0.86; t += 0.13) {
+    for (const s of [-1, 1]) {
+      g.beginPath(); g.moveTo(...P(L * t, 0));
+      g.quadraticCurveTo(...P(L * (t + 0.08), s * Wd * 0.3), ...P(L * (t + 0.2), s * Wd * 0.62));
+      g.stroke();
+    }
+  }
+  g.globalAlpha = 0.18; g.lineWidth = Math.max(1.2, L * 0.03);
+  g.stroke(p);
+  g.restore();
+}
+{
+  const yesiller = [[62, 170, 84], [26, 140, 96], [130, 200, 80]];
+  const tuvaller = yesiller.map(() => SAHNE.yeniTuval(W, H));
+  const r = SAHNE.rng(55);
+  B.yapraklar.forEach((y) => { const k = y.uzunluk > 50 ? (r() < 0.6 ? 1 : 0) : (r() < 0.55 ? 0 : 2); yaprakBaskisi(tuvaller[k].getContext('2d'), y); });
+  // saplar: mürekkeplenmiş ip baskısı gibi ince, hafif dalgalı çizgi
+  {
+    const g = tuvaller[0].getContext('2d');
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.75; g.strokeStyle = '#fff'; g.lineWidth = 3.6; g.lineCap = 'round';
+    for (const s of Y.saplar) g.stroke(P2(s));
+    g.restore();
+  }
+  yesiller.forEach((renk, k) => {
+    const c = tuvaller[k];
+    cek({
+      renk, yog: 1.0, yon: 0.8 + k, cevre: 260, bant: 400,
+      ac: (g) => g.drawImage(c, 0, 0),
+      kapa: (g) => { cicekMaskesi(g); for (const t of Y.tomurcuklar) g.fill(P2(t)); },
+    });
+  });
+  // tomurcuklar: mercan
+  cek({ renk: [246, 112, 110], yog: 0.82, yon: 0, ac: (g) => { for (const t of Y.tomurcuklar) g.fill(P2(t)); }, kapa: (g) => cicekMaskesi(g) });
+}
+
+// 9) çiçekler: beyaz kâğıt maskeler; ortada pembe yuvarlak şablon ve sarı göbek
+cek({
+  renk: [248, 150, 176], yog: 0.32, yon: 0.5, cevre: 120,
+  ac: (g) => { for (const c of B.cicekler) { g.beginPath(); g.arc(c.x + 1.5, c.y - 1, c.r * 0.55, 0, TAU); g.fill(); } },
+});
+cek({
+  renk: [255, 196, 40], yog: 0.9, yon: 0.2, cevre: 140,
+  ac: (g) => { for (const c of B.cicekler) { g.beginPath(); g.arc(c.x, c.y, c.r * 0.2, 0, TAU); g.fill(); } },
+});
+cek({
+  renk: [236, 110, 60], yog: 0.85, yon: 0.2, cevre: 140,
+  ac: (g) => {
+    for (const c of B.cicekler) for (let i = 0; i < 9; i++) {
+      const a = c.aci + (i / 9) * TAU;
+      g.beginPath(); g.arc(c.x + Math.cos(a) * c.r * 0.29, c.y + Math.sin(a) * c.r * 0.29, Math.max(1.3, c.r * 0.04), 0, TAU); g.fill();
+    }
+  },
+});
+
+const img = ctx.createImageData(W, H);
+for (let i = 0, j = 0; i < N; i++, j += 4) {
+  img.data[j] = R[i]; img.data[j + 1] = G[i]; img.data[j + 2] = Bm[i]; img.data[j + 3] = 255;
+}
+ctx.putImageData(img, 0, 0);
+SAHNE.hazir();
+</script>
+</body>
+</html>

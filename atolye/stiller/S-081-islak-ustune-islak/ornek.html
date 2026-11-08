@@ -182,6 +182,14 @@
     return A;
   }
   const TAM = [0, 0, W, W];
+  // geometrik maskeler: bölge haritasında pencere kenarlarındaki karışık pikseller yanlış bölgeye düşebilir
+  function yolMaske(dizi) { return kapsamCiz(TAM, (c) => { for (const d of dizi) c.fill(new Path2D(d)); }); }
+  const GY = SAHNE.yollar();
+  const KASNAK_M = yolMaske([GY.kasnakUst, GY.kasnakAlt]);
+  const KAIDE_M = yolMaske([GY.kaide, GY.kornis]);
+  const MINARE_M = yolMaske(GY.minare);
+  const KUBBE_M = yolMaske([GY.kubbe]);
+  for (let i = 0; i < N; i++) MINARE_M[i] *= (1 - KAIDE_M[i]) * (1 - KASNAK_M[i]);
   function cokgen(c, pts) { c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]))); c.closePath(); }
   // Tyler Hobbs usulü bozulmuş çokgen
   function boz(pts, derinlik, oran, r) {
@@ -441,7 +449,7 @@
 
   // ============================================================ KASNAK
   const kKas = [300, 530, 820, 720];
-  const kasM = kes(maske(kume('kasnak', 'pencere'), (x, y) => y >= 553 && y <= 694), kKas);
+  const kasM = kes(KASNAK_M, kKas);
   yikama(kKas, islak(kKas, kasM, 6, { e0: 0.05, e1: 0.82, sekil: 5.5, lif: 3, olcek: 24 }), {
     pig: (x, y) => { const m = fbm(nC, x / 60, y / 40, 3); return lerpK(karis(P.vir, 0.7, P.sap, 0.45), karis(P.tur, 0.7, P.vir, 0.4, P.ult, 0.15), sstep(0.4, 0.7, m)); },
     yog: (x, y) => (0.42 + 0.85 * Math.pow(1 - silindirIsik(x, 560, 226), 1.3)) * (y < 610 ? 0.92 : 1) * (1 - 0.45 * sstep(700, 790, x)),
@@ -461,7 +469,7 @@
 
   // ============================================================ KAİDE (beyaz taş: neredeyse yalnız kâğıt)
   const kKai = [270, 670, 850, 830];
-  const kaiM = kes(maske(kume('kaide', 'pencere'), (x, y) => y >= 690), kKai);
+  const kaiM = kes(KAIDE_M, kKai);
   yikama(kKai, islak(kKai, kaiM, 6, { e0: 0.05, e1: 0.85 }), {
     pig: (x, y) => lerpK(karis(P.sie, 0.6, P.ros, 0.3, P.ult, 0.15), karis(P.ult, 0.5, P.mor, 0.3, P.ros, 0.2), sstep(0.35, 0.7, fbm(nC, x / 60, y / 40, 2))),
     yog: (x, y) => (0.06 + 0.24 * sstep(760, 320, x)) * (1 + 0.6 * sstep(720, 705, y)), kenar: 0, gran: 0.45, dalga: 0.45, tohum: 31,
@@ -474,7 +482,7 @@
 
   // ============================================================ MİNARE
   const kMin = [220, 60, 380, 820];
-  const minM = kes(maske(kume('minare')), kMin);
+  const minM = kes(MINARE_M, kMin);
   // gölge yanı: lavanta, ıslakta yayılan
   yikama(kMin, islak(kMin, kapsamAlan(kMin, (x, y) => (minM[(y - 60) * 160 + x - 220] && (x - 300) / minareYari(y) < -0.05 + (fbm(nD, x / 30, y / 60, 3) - 0.5) * 0.4 ? 1 : 0)), 4.5, { e0: 0.05, e1: 0.85 }), {
     pig: (x, y) => lerpK(karis(P.ult, 0.5, P.mor, 0.35, P.ros, 0.15), karis(P.sie, 0.5, P.ros, 0.3, P.ult, 0.2), sstep(0.4, 0.7, fbm(nC, x / 40, y / 80, 2))),
@@ -543,12 +551,14 @@
   B.cicekler.forEach((c, n) => {
     const kutu = kutuDuz([c.x - c.r * 1.6, c.y - c.r * 1.6, c.x + c.r * 1.6, c.y + c.r * 1.6]);
     const w = kutu[2] - kutu[0];
+    const CF = kapsamCiz(kutu, (cc) => { for (const e of SAHNE.tacYapraklari(c)) { cc.beginPath(); cc.ellipse(e.cx, e.cy, e.rx * 1.04, e.ry * 1.1, e.aci, 0, Math.PI * 2); cc.fill(); } cc.beginPath(); cc.arc(c.x, c.y, c.r * 0.3, 0, Math.PI * 2); cc.fill(); });
+    const cf = (x, y) => CF[(y - kutu[1]) * (kutu[2] - kutu[0]) + x - kutu[0]];
     const golge = kapsamAlan(kutu, (x, y) => {
       const q = ((x - c.x) * isikYon[0] + (y - c.y) * isikYon[1]) / c.r;
-      return CR[y * W + x] * sstep(0.1, -0.7, q);
+      return cf(x, y) * sstep(0.1, -0.7, q);
     });
     yikama(kutu, islak(kutu, golge, 3.5, { e0: 0.05, e1: 0.9, sekil: 3, lif: 1.5, olcek: 12 }), { pig: karis(P.ult, 0.5, P.mor, 0.35, P.ros, 0.15), yog: 0.13, kenar: 0, gran: 0.3, tohum: 60 + n });
-    const pembe = kapsamAlan(kutu, (x, y) => CR[y * W + x] * sstep(0.85, 0.15, Math.hypot(x - c.x, y - c.y) / c.r + (nE(x / 8, y / 8) - 0.5) * 0.4));
+    const pembe = kapsamAlan(kutu, (x, y) => cf(x, y) * sstep(0.85, 0.15, Math.hypot(x - c.x, y - c.y) / c.r + (nE(x / 8, y / 8) - 0.5) * 0.4));
     yikama(kutu, islak(kutu, pembe, 4, { e0: 0.02, e1: 0.9, sekil: 3.5, lif: 2, olcek: 10 }), { pig: n % 3 === 0 ? karis(P.gam, 0.6, P.ros, 0.35) : karis(P.ros, 0.85, P.mor, 0.1), yog: 0.17, kenar: 0, gran: 0.25, tohum: 80 + n });
     const gob = kapsamCiz(kutu, (cc) => { cc.beginPath(); cc.arc(c.x, c.y, c.r * 0.2, 0, Math.PI * 2); cc.fill(); });
     yikama(kutu, islak(kutu, gob, 2.6, { e0: 0.05, e1: 0.8, sekil: 2, lif: 1.5, olcek: 8 }), { pig: karis(P.gam, 1, P.sie, 0.25), yog: 0.6, kenar: 0, gran: 0.3, tohum: 100 + n });

@@ -571,7 +571,7 @@
   const bulutlar = [[168, 246, 1.0], [500, 150, 0.82], [770, 330, 1.05], [935, 468, 0.68], [88, 470, 0.7]];
   const bulutLop = bulutlar.map(([bx, by, s], k) => {
     const rb = SAHNE.rng(500 + k), l = [];
-    for (let i = 0; i < 9; i++) { const t = i / 8 - 0.5 + (rb() - 0.5) * 0.06, h = 1 - 4 * t * t; l.push([bx + t * 170 * s + (rb() - 0.5) * 14 * s, by - h * 24 * s + (rb() - 0.5) * 10 * s - (rb() < 0.3 ? 10 * s : 0), (12 + h * 24 + rb() * 12) * s]); }
+    for (let i = 0; i < 11; i++) { const t = i / 10 - 0.5 + (rb() - 0.5) * 0.08, h = 1 - 4 * t * t, k = 0.35 * h + 0.65 * rb(); l.push([bx + t * 180 * s + (rb() - 0.5) * 16 * s, by - k * 26 * s - 4 * s, (10 + k * 26 + rb() * 6) * s]); }
     return { bx, by, s, l };
   });
   function bulut(x, y, kes) {
@@ -676,7 +676,7 @@
   katman((x) => {
     for (let y = 694; y < 806; y += 7) for (let x0 = 250; x0 < 840; x0 += 70) {
       const len = 110 + r() * 60, pts = [[x0 + (r() - 0.5) * 30, y + (r() - 0.5) * 3], [x0 + len, y + (r() - 0.5) * 3]];
-      const l = isik(clamp(x0 + len / 2, 302, 818), clamp(y, 712, 798)), c = mixc(C.tas, C.tasGolge, y < 704 ? 0 : (1 - l) * 0.9);
+      const l = 0.45 + 0.5 * clamp((x0 + len / 2 - 300) / 520, 0, 1), c = mixc(mixc(C.tas, C.seftali, sstep(0.75, 0.95, l) * 0.5), C.tasGolge, y < 704 ? 0 : (1 - l) * 0.9);
       sunger(x, pts, 18, 0.2 + 0.16 * (1 - l), c, r, { son: 0.55, iz: 0.5 });
     }
     // korniş altı gölge
@@ -686,11 +686,11 @@
   // ================================================================ KASNAK
   const yesilRenk = (l) => rampa([[0, C.maviYesil], [0.25, C.yesilKoyu], [0.45, C.zumrut], [0.65, C.yesil], [0.85, C.yesilAcik], [1, C.yesilSari]], l);
   katman((x) => {
-    haritaCiz(x, (px, py) => { const l = isik(clamp(px, 340, 780), py < 610 ? 580 : 650), c = yesilRenk(l * 0.92); return [c[0], c[1], c[2], 0.5 + 0.12 * (1 - l)]; }, [330, 553, 790, 694]);
+    haritaCiz(x, (px, py) => { const l = silindirIsik(px, 560, py < 610 ? 208 : 226), c = yesilRenk(l * 0.92); return [c[0], c[1], c[2], 0.5 + 0.12 * (1 - l)]; }, [330, 553, 790, 694]);
     for (let gx = 326; gx <= 794; gx += 9) {
       for (const [y1, y2] of [[552, 612], [607, 695]]) {
-        const l = isik(clamp(gx, 340, 780), (y1 + y2) / 2);
-        sunger(x, [[gx + (r() - 0.5) * 3, y1 - 6], [gx + (r() - 0.5) * 3, y2 + 6]], 16, 0.16, yesilRenk(clamp(l * 0.92 + (r() - 0.5) * 0.15, 0, 1)), r, { son: 0.3, bas: 0.02, iz: 0.5 });
+        const l = silindirIsik(gx, 560, y1 < 600 ? 208 : 226);
+        sunger(x, [[gx + (r() - 0.5) * 3, y1 - 6], [gx + (r() - 0.5) * 3, y2 + 6]], 16, 0.14, yesilRenk(clamp(l * 0.92 + (r() - 0.5) * 0.15, 0, 1)), r, { son: 0.3, bas: 0.02, iz: 0.5 });
       }
     }
   }, Object.assign({ kirp: MK.kasnak, bx: [330, 553, 790, 694] }, TOZ, { opq: 0.5 }));
@@ -704,7 +704,7 @@
         let ya = 290 + r() * 20;
         while (ya < 555) {
           const y0 = ya, y1 = Math.min(566, ya + 90 + r() * 80), ym = (y0 + y1) / 2;
-          ya = y1 - 30 - r() * 20;
+          ya = y1 >= 560 ? 1e9 : y1 - 30 - r() * 20;
           const l = kTon(560 + clamp(uu, -0.98, 0.98) * kubbeRy(ym), ym);
           sunger(x, meridyen(uu, y0, y1, 6), Math.max(8, kubbeRy(ym) * 0.085), 0.32 + 0.22 * (1 - l), yesilRenk(clamp(l + (r() - 0.5) * 0.1, 0, 1)), r, { son: 0.45, iz: 0.7 });
         }

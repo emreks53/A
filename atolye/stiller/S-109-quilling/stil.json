@@ -1,0 +1,40 @@
+{
+  "kod": "S-109",
+  "no": 109,
+  "ad": "Quilling (Kâğıt Kıvırma)",
+  "ad_en": "Paper Quilling",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Dar renkli kâğıt şeritlerin sarılıp sıkı ve gevşek kıvrımlara, damla ve göz biçimlerine dönüştürülerek açık renkli kartona kenarı üstüne yapıştırılması; ince, kabartmalı, gölgeli.",
+  "tanim": "Quilling'de birkaç milimetre genişliğindeki renkli kâğıt şeritler ince bir çubuğa sarılır; sıkı kalan sarım dolu bir disk, bırakılıp açılan sarım ortası kaymış gevşek bir kıvrım olur. Gevşek kıvrımlar parmakla bir ya da iki ucundan sıkıştırılarak damla, göz ve yaprak biçimleri alır; açık uçlu şeritler kıvrık sarmallar ve dış çizgiler çizer. Parçalar kartona kenarı üstüne dikilerek yapıştırılır, bu yüzden yukarıdan bakınca ince çizgiler, aralarından görünen karton ve her şeridin kartona düşürdüğü yumuşak gölgeler görülür. Tebrik kartlarında, çerçeveli süs panolarında ve resimlemede sevilen, ince ve kabartmalı bir el işidir.",
+  "koken": "Kâğıt kıvırma Rönesans'ta rahibe ve keşişlerin kitap kenarlarından kestikleri yaldızlı şeritlerle kutsal tasvirleri ve röliker kutularını süslemesiyle başladı; 18. ve 19. yüzyılda İngiltere'de 'paper filigree' adıyla soylu kadınların uğraşı oldu, çay kutuları ve paravanlar süslendi. 20. yüzyıl sonunda yeniden canlandı; Yulia Brodskaya gibi çağdaş sanatçılar onu resimleme ve reklam tasarımına taşıdı.",
+  "ayirt_edici": [
+    "Kubbe dilimlerinin yeşil tonlarda gevşek ve sıkı kıvrımlarla doldurulması; kaburgalar ve dış çizgi kenarı üstüne koyu yeşil şeritler",
+    "Her şeridin sol-alt yanında koyu, sağ-üst kenarında açık ince yüz ve kartona sola-aşağı düşen iki kademeli yumuşak gölge",
+    "Beş damla biçimli beyaz taç yaprağı, içlerinde pembe küçük damlalar ve saçaklı şeritten sarılmış sarı göbeklerle çiçekler; göz biçimli gevşek kıvrım yapraklar, pembe damla tomurcuklar",
+    "Fildişi kıvrımlarla dolu kaide ve minare; damla biçimli büyük kıvrımdan minare topuzu, sıkı altın disklerden alem küreleri ve şerit hilaller",
+    "Sıkı turuncu disk çevresinde uçları dışa bakan sarı-turuncu damla ışınlı güneş; beyaz kıvrımlarla dolu, beyaz şeritle çevrili bulutlar",
+    "Bütün yüzeyin kıvrımlarla dolması: gökte açık maviden kreme geçen gevşek kıvrım ve damlalar (güneş çevresinde boş kalan aydınlık hale), yerde soluk kum ve adaçayı yeşili kıvrımlar; kasnaklarda koyu yeşil kemer şeritleri içinde sıkı kıvrımlı pencereler, mercan ve turkuaz zikzak şeritler"
+  ],
+  "palet": [
+    "#9BCCF0",
+    "#D6EDFA",
+    "#2B8146",
+    "#5FBC6F",
+    "#1E6436",
+    "#F1EADA",
+    "#DDA93A",
+    "#F6B6C8"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, üç ayrı katmanda (gök, bina, bitkiler). Her şerit, alt-sola kaydırılmış koyu bir çizgi, üstte ana renk ve sağ-üste kaydırılmış ince açık çizgiden oluşan üç geçişli bir çizgiyle çizilir. Kıvrımlar parametrik sarmaldır: yarıçap tur boyunca iç yarıçaptan dışa doğru büyür, gevşek kıvrımlarda merkez (göz) rastgele kayar, dış turlar birim biçime (damla: x = cos t, y = k·sin t·√((1−cos t)/2); göz: y = k·sin t·|sin t|) yarıçapın karesiyle harmanlanarak sıkıştırılır ve son tur kapanır. Bölgeler (kubbe dilimleri, kasnaklar, kaide, minare gövdesi, bulutlar) ekran dışı bir maskeye çizilir; maskenin uzaklık dönüşümü üzerinde açgözlü 'en büyük boş daire' yerleşimiyle kıvrımlar sığdırılır, pencereler delik olarak çıkarılır. Gök ve yer gibi büyük bölgeler, binanın ve bulutların silueti çıkarılmış maskede büyükten küçüğe yarıçap kademeleriyle rastgele denenerek (uzaklık alanı her yerleşimde yerel olarak güncellenir) 1600 dolayında gevşek ve sıkı kıvrım ve damlayla doldurulur. Çiçek göbekleri kısa ışınsal şeritlerle saçaklı sarım olarak çizilir. Her katmanın silueti gölge rengiyle doldurulup iki kademe bulanıklık ve kaydırmayla açık mavi-krem degrade kartona basılır (gök katmanında daha hafif), sonra katman üstüne çizilir; kartona ince lif dokusu eklenir.",
+  "etiketler": [
+    "quilling",
+    "kâğıt",
+    "şerit",
+    "kıvrım",
+    "kabartma",
+    "gölge",
+    "el işi",
+    "zarif"
+  ]
+}

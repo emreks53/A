@@ -324,16 +324,16 @@
     const L = katman();
     const g = L.g;
     // alt kat: iri, soluk delphinium yaprakları (göğün yumuşak zemini)
-    for (let k = 0; k < 1100; k++) {
+    for (let k = 0; k < 760; k++) {
       const x = -30 + R() * 1084, y = -30 + R() * 860;
-      const c = sap(gokRenk(x, y), 8, 6);
+      const c = sap(gokRenk(x, y), 6, 5);
       tac(g, {
-        x, y, a: R() * Math.PI * 2, L: 26 + R() * 24, phi: 0.55 + R() * 0.3, e: 0.35, n: 26,
+        x, y, a: R() * Math.PI * 2, L: 36 + R() * 30, phi: 0.6 + R() * 0.3, e: 0.35, n: 30,
         renk: [acik(c, 0.2), acik(c, 0.06), c], alfa: 0.62, damar: 9, damarA: 0.24, damarK: 0.06, kenar: 0.1,
       });
     }
     // üst kat: dört yapraklı ortanca çiçekçikleri; aşağıda ve bulutlarda seyrekleşir
-    const hucre = 25;
+    const hucre = 33;
     for (let j = -1; j < 800 / hucre + 1; j++) {
       for (let i = -1; i < 1024 / hucre + 1; i++) {
         const x = (i + 0.5 + (R() - 0.5) * 0.9) * hucre, y = (j + 0.5 + (R() - 0.5) * 0.9) * hucre;
@@ -343,7 +343,7 @@
         const tur = R();
         if (tur < 0.22) c = karis(c, hex('#B7A6E0'), 0.45); // menekşemsi
         else if (tur < 0.34) c = karis(c, hex('#8FC7D9'), 0.4); // turkuaza çalan
-        ortanca(g, x, y, 12 + R() * 5, karis(c, koyu(c, 0.1), 0.6));
+        ortanca(g, x, y, 15 + R() * 6, karis(c, koyu(c, 0.1), 0.6));
       }
     }
     benek(L, 0.12);

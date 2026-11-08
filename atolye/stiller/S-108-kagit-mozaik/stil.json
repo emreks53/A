@@ -10,16 +10,16 @@
   "koken": "Teknik, antik Roma ve Bizans mozaiklerinin dizim düzenlerini (opus vermiculatum: biçimi izleyen sıralar, opus tessellatum: düzenli sıralar) taş ve cam yerine kâğıtla uygular. 19. yüzyıl sonundan beri el işi ve sanat eğitiminde, dergi kâğıdından yapılan mozaiklerle 20. yüzyıl kolaj sanatında yaygınlaştı. Taş mozaikten farkı mat, ince kâğıt yüzeyi, yumuşak yırtık kenarları ve beyaz kâğıt zeminidir.",
   "ayirt_edici": [
     "Her biçimin dış çizgisini izleyen kâğıt parçası sıraları: bulutların, minarenin ve kubbenin çevresinde iki sıra mavi hale, sonra dalgalı yatay gök sıraları",
-    "Güneşin çevresinde sarıdan kreme ve soluk maviye geçen halka sıraları, güneş diskinde turuncu-sarı halkalar",
+    "Güneşin çevresinde sarıdan kreme, beyaza ve gök mavisine geçen geniş halka sıraları (her ikinci halka biraz daha sıcak ya da serin), güneş diskinde turuncu-sarı halkalar",
     "Kubbede meridyen yönünde dikey sütunlar hâlinde dizilmiş yeşil parçalar, dilimler arasında koyu yeşil kaburga parçacıkları ve tepede küçük halka sıralı başlık",
     "Parçalar arasında ince beyaz zemin derzleri ve sağ üstten gelen ışıkla derzlere düşen çok hafif gölge",
     "Mat kâğıt yüzeyi: her parçada hafif lif bulutları ve ton farkı, bazı yırtık kenarlarda açık kâğıt özü",
     "Krem parçalardan kaide ve minare, kum rengi zemin üzerinde yeşil yapraklar ve pembe göbekli, krem-beyaz parçalı çiçekler"
   ],
   "palet": [
-    "#4290DF",
-    "#9FD2F4",
-    "#FFC23A",
+    "#2F84DA",
+    "#94CBF2",
+    "#FFE07A",
     "#2A8A45",
     "#70C874",
     "#F2ECDF",

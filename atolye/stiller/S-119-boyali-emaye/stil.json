@@ -1,0 +1,22 @@
+{
+  "kod": "S-119",
+  "no": 119,
+  "ad": "Boyalı Emaye",
+  "ad_en": "Painted Enamel",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Beyaz emaye zemin üzerine fırçayla boyanıp fırınlanmış, tel kullanılmayan resim emayesi: camsı, parlak yüzey, birbirine yumuşakça akan renkler ve ince altın vurgular.",
+  "tanim": "Boyalı emaye (resim emayesi), bakır bir levhanın beyaz emayeyle kaplanıp üzerine ince öğütülmüş emaye renklerinin fırçayla, bir resim gibi sürüldüğü ve her katın fırında cama dönüştürüldüğü tekniktir. Kloazone ya da şamplövede olduğu gibi renkleri ayıran teller ya da oyuklar yoktur: renkler fırında hafifçe akıp birbirine yumuşak geçişlerle karışır, yüzey cam gibi düzgün ve parlaktır. Altın en son ince çizgi, nokta ve kontür olarak sürülüp düşük ısıda pişirilir; bazı yerlerde saydam emaye altın folyo (paillon) üstüne konarak mücevher gibi parlatılır. Saat kadranları, madalyonlar, kutu kapakları, ikona ve süs levhalarında kullanılır.",
+  "koken": "Resim emayesi 15. yüzyıl sonunda Fransa'nın Limoges kentinde doğdu; Nardon Pénicaud, Léonard Limosin ve Jean de Court gibi ustalar dinî ve mitolojik sahneleri bakır levhalara boyadı, altın folyolu saydam emayeleri mücevher gibi kullandı. 17. ve 18. yüzyılda Cenevre ve Blois'da saat ve minyatür portre emayesi, Çin'in Kanton atölyelerinde beyaz zeminli 'yangcai' emayeler, İngiltere'de Battersea kutuları, Rusya'da Rostov finifti bu geleneği sürdürdü.",
+  "ayirt_edici": [
+    "Fırında akmış gibi yumuşak renk sınırları ve ressamca geçişler; tel ya da kontür ayırıcı yok",
+    "Camsı, parlak yüzey: kubbenin sağ üstünde hafif dalgalı, portakal kabuğu dokulu pencere yansıması ve emayenin içten parlaması",
+    "Mücevher gibi doygun renkler: zümrüt kubbe ve kasnak, safir pencereler, gül pembesi taç yaprak dipleri, beyaz emaye zemin ve bulutlar",
+    "İnce altın vurgular: kaburga çizgileri, güneş ışınları, kontürler ve nokta dizileri; altına metal tozu pırıltısı",
+    "Altın folyo üstünde saydam turuncu emaye çiçek göbekleri ve köşelerde yakut mücevherler",
+    "Levhanın kendi turkuaz emaye kenar şeridi; beyaz emaye noktalar ve iki altın çizgi"
+  ],
+  "palet": ["#3AA6E0", "#C8E9F3", "#139452", "#4CC27C", "#2F58A8", "#E8708F", "#F8F3E6", "#D6A848"],
+  "kodla_cizim": "2048 iç çözünürlükte üç katman kurulur: boya, altın ve folyo. Boya katmanı Path2D alanlarına doğrusal ve dairesel geçişlerle, kırpılmış ve bulanıklaştırılmış modelleme lekeleriyle (gölgede koyu, ışıkta beyaz emaye), gökte geniş lavi sürmeleriyle ve taç yapraklarda dipten uca ince pembe fırça lekeleriyle boyanır; kubbe kaburgalarının ışık yanına ince beyaz emaye çizgileri çekilir. Altın çizgi, nokta ve alemler ayrı bir maskeye; altın folyo göbekler ve köşe taşları ayrı bir maskeye çizilir, öndeki biçimler arkadaki altını ve folyoyu siler. Fırın etkisi için boya katmanı bulanıklaştırılır ve 'screen' ile içten parlama eklenir. Piksel döngüsünde renkli yerlere emaye kalınlığı dalgası ve doygunluk, folyoya Worley hücreli buruşuk metal parıltısı, altına bulanık maskeden kabartma normali, Lambert ışığı ve pırıltı, bütün yüzeye geniş bombe parıltısı ve gürültüyle dalgalandırılmış yumuşak köşeli pencere yansıması eklenir.",
+  "etiketler": ["emaye", "resim emayesi", "Limoges", "camsı", "parlak", "altın", "mücevher", "fırınlanmış"]
+}

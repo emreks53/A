@@ -125,12 +125,12 @@
       if (av > 1.15) continue;
       const i = y * W2 + x;
       if (m && m[i] < 0.5) continue;
-      const kenar = 1 - 0.12 * nE(un * L * 0.06 + ox, vn > 0 ? 1 : 7);
-      const a = sstep(kenar + 0.08, kenar - 0.08, av) * sstep(-0.05, 0.05, un) * sstep(1.08, 0.97, un);
+      const kenar = 1 - 0.08 * nE(un * L * 0.03 + ox, vn > 0 ? 1 : 7);
+      const a = sstep(kenar + 0.1, kenar - 0.14, av) * sstep(-0.05, 0.05, un) * sstep(1.08, 0.97, un);
       if (a <= 0) continue;
       // profil: hafif eğimli düz yüz + yan kenarda sırt + uçta dudak
-      const prof = kal * (0.75 + 0.25 * vn) + sirt * sstep(0.55, 0.92, vn) * sstep(1.12, 0.95, vn) + sirt * 0.8 * sstep(0.82, 0.98, un) * sstep(1.08, 0.99, un);
-      const hedefH = (o.taban == null ? 0 : o.taban) + prof + 0.15 * (nB(x / 3, y / 3) - 0.5);
+      const prof = kal * (0.75 + 0.25 * vn) + sirt * sstep(0.35, 0.9, vn) * sstep(1.15, 0.92, vn) + sirt * 0.7 * sstep(0.75, 0.97, un) * sstep(1.08, 0.98, un);
+      const hedefH = (o.taban == null ? 0 : o.taban) + prof + 0.08 * (nB(x / 4, y / 4) - 0.5);
       H[i] += (hedefH - H[i]) * a;
     }
   }
@@ -141,7 +141,7 @@
     for (let y = 0; y < W2; y++) for (let x = 0; x < W2; x++) H[y * W2 + x] = 0.35 * fbm(nA, x / 30, y / 30, 3) + 0.08 * nC(x / 2, y / 2);
     // gök: güneş çevresinde iç içe yaylar, başka yerde dalgalı yatay sıvamalar
     const liste = [];
-    for (let y = -20; y < 830; y += 26) for (let x = -20; x < 1060; x += 34) liste.push([x + R() * 34, y + R() * 26]);
+    for (let y = -30; y < 830; y += 38) for (let x = -30; x < 1070; x += 52) liste.push([x + R() * 52, y + R() * 38]);
     for (let i = liste.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); const t = liste[i]; liste[i] = liste[j]; liste[j] = t; }
     for (const [x, y] of liste) {
       const dx = x - 880, dy = y - 140, d = Math.hypot(dx, dy);
@@ -149,21 +149,23 @@
       const dal = -0.12 + 0.32 * Math.sin((x + y * 0.7) / 230);
       const t = sstep(330, 190, d);
       const a = t > 0.5 ? teg : dal;
-      sivama({ x, y, a: a + (R() - 0.5) * 0.25, L: 60 + R() * 50, w: 28 + R() * 14, k: t > 0.5 ? 0.35 : (R() - 0.5) * 0.5, kal: 1.2 + R() * 0.6, sirt: 1.0 + R() * 0.8, taban: 0.4 });
+      sivama({ x, y, a: a + (R() - 0.5) * 0.25, L: 90 + R() * 70, w: 42 + R() * 24, k: t > 0.5 ? 0.35 : (R() - 0.5) * 0.5, kal: 1.0 + R() * 0.6, sirt: 0.7 + R() * 0.5, taban: 0.4 });
     }
     // yer: taranmış (tarakla çekilmiş) dalgalı yatay çizgiler
     for (let y = 1580; y < W2; y++) for (let x = 0; x < W2; x++) {
       const Y = y / 2, X = x / 2;
       const ufuk = 800;
       if (Y < ufuk - 2) continue;
-      const dal = Y + 5 * Math.sin(X / 70 + Y / 40) + 3 * Math.sin(X / 23);
-      const tarak = Math.pow(Math.abs(Math.sin(dal * Math.PI / 4.2)), 0.8);
+      const dal = Y + 6 * Math.sin(X / 80 + Y / 45) + 2.5 * Math.sin(X / 31 + Y / 20);
+      const tarak = Math.pow(Math.abs(Math.sin(dal * Math.PI / 7.5)), 0.7) * (0.8 + 0.4 * nE(X / 40, Y / 12));
       const t = sstep(ufuk - 2, ufuk + 3, Y);
       const i = y * W2 + x;
       H[i] = H[i] * (1 - t) + t * (1.4 + 1.1 * tarak + 0.25 * nC(x / 3, y / 3));
     }
   }
+  { const Hs = kutuBulanik(H, W2, W2, 2); for (let y = 0; y < 1600; y++) for (let x = 0; x < W2; x++) H[y * W2 + x] = Hs[y * W2 + x]; }
   const HZEMIN = H.slice();
+  const HZD = kutuBulanik(kutuBulanik(HZEMIN, W2, W2, 16), W2, W2, 16); // yapı ve bulutlar için düzgün taban
 
   // ------------------------------------------------------------ 2. güneş: iç içe halkalı disk ve bıçakla çekilmiş ışınlar
   const GUNES = { x: 880, y: 140, r: 44 };
@@ -211,13 +213,13 @@
           const d = Math.hypot(X - lx, Y - ly) / lr;
           if (d >= 1) continue;
           const hh = Math.sqrt(1 - d * d) * 9 * bs;
-          if (hh > h) { h = hh; hal = Math.sin(d * lr * 0.5) * sstep(0.35, 0.8, d); }
+          if (hh > h) { h = hh; hal = Math.sin(d * lr * 0.3 + Math.atan2(Y - ly, X - lx) * 2) * sstep(0.5, 0.9, d) * 0.7; }
         }
         if (h <= 0) continue;
         const alt = sstep(by + 10 * bs, by - 2 * bs, Y);
         h *= alt;
         const i = y * W2 + x, a = sstep(0, 0.9, h);
-        const hn = HZEMIN[i] + h + 0.5 * hal * alt;
+        const hn = HZD[i] + h + (1.1 * hal + 0.9 * Math.pow(nC(X / 4.5, Y / 4.5), 3) * sstep(0.5, 3, h)) * alt;
         if (hn > H[i]) H[i] += (hn - H[i]) * a;
         BULM[i] = Math.max(BULM[i], a);
       }
@@ -253,7 +255,7 @@
         else if ((Y >= 436 && Y < 456) || (Y >= 272 && Y < 290)) h += 2.5 + 1.2 * (Math.sin((X - 252) * Math.PI / 5.3) > 0.2 ? 1 : 0);
         else if ((Y >= 468 && Y < 488) || (Y >= 300 && Y < 316)) h += 3.5 * (Y < 488 && Y >= 468 ? (488 - Y) / 20 : (316 - Y) / 16);
         if (Y >= 522 && Y < 582) h += 0.9 * Math.pow(Math.abs(Math.sin(((Y - 526 - 12 * (Math.abs(((X - 266) / (68 / 12)) % 2 - 1))) * Math.PI) / 19)), 6);
-        H[i] = H[i] * (1 - mMinare[i]) + (HZEMIN[i] + h) * mMinare[i];
+        H[i] = H[i] * (1 - mMinare[i]) + (HZD[i] + h) * mMinare[i];
       }
       // kaide: düz blok, korniş çıkıntısı
       if (mKaide[i] > 0.01) {
@@ -261,14 +263,16 @@
         if (Y >= 692 && Y < 704) h = 11.5; else if (Y >= 704 && Y < 708) h = 8;
         // taş sıra izleri (spatula ile hafif çizilmiş)
         h -= 0.45 * sstep(1.2, 0.2, Math.abs(((Y - 704) % 24) - 12) - 10.6) * (Y > 708 ? 1 : 0);
-        H[i] = H[i] * (1 - mKaide[i]) + (HZEMIN[i] + h) * mKaide[i];
+        h += 0.35 * (nB(X / 44, Y / 3.5) - 0.5);
+        H[i] = H[i] * (1 - mKaide[i]) + (HZD[i] + h) * mKaide[i];
       }
       // kasnak: silindir; alt kat daha geniş, üst kat bir basamak geride
       if (mKasnak[i] > 0.01) {
         const ust = Y < 610, rr = ust ? 208 : 226, u = clamp((X - 560) / rr, -1, 1);
         let h = (ust ? 8 : 9) + (ust ? 10 : 13) * Math.sqrt(1 - u * u);
         if (!ust && Y < 614) h += 1.2; if (ust && Y < 559) h += 1.0;
-        H[i] = H[i] * (1 - mKasnak[i]) + (HZEMIN[i] + h) * mKasnak[i];
+        h += 0.35 * (nB(X / 38, Y / 3) - 0.5);
+        H[i] = H[i] * (1 - mKasnak[i]) + (HZD[i] + h) * mKasnak[i];
       }
       // kubbe: yarım küre kabartması + yükselen kaburgalar
       if (mKubbe[i] > 0.01) {
@@ -277,7 +281,8 @@
         const faz = (Math.asin(u) + Math.PI / 2) / (Math.PI / 16), fr = faz - Math.round(faz);
         const px = Math.abs(fr) * (Math.PI / 16) * r * cs;
         h += 2.3 * sstep(3.2, 0.2, px) * sstep(302, 318, Y);
-        H[i] = H[i] * (1 - mKubbe[i]) + (HZEMIN[i] + h) * mKubbe[i];
+        h += 0.45 * (nB(faz * 2.6, Y / 34) - 0.5) + 0.25 * (nE(faz * 7, Y / 12) - 0.5);   // spatula sürtme izleri (meridyen boyunca)
+        H[i] = H[i] * (1 - mKubbe[i]) + (HZD[i] + h) * mKubbe[i];
       }
       // pencereler oyulur
       if (mPencere[i] > 0.01) H[i] -= 4.2 * mPencere[i];
@@ -287,7 +292,7 @@
       for (let y = Math.floor((cy - r - 1) * 2); y <= (cy + r + 1) * 2; y++) for (let x = Math.floor((cx - r - 1) * 2); x <= (cx + r + 1) * 2; x++) {
         const d = Math.hypot(x / 2 - cx, y / 2 - cy) / r;
         if (d > 1.05) continue;
-        const i = y * W2 + x, hn = HZEMIN[i] + h + Math.sqrt(Math.max(0, 1 - d * d)) * r * 0.8;
+        const i = y * W2 + x, hn = HZD[i] + h + Math.sqrt(Math.max(0, 1 - d * d)) * r * 0.8;
         const a = sstep(1.05, 0.95, d);
         if (hn > H[i]) H[i] += (hn - H[i]) * a;
       }
@@ -305,7 +310,7 @@
       }
     }
   }
-  const HYAPI = H.slice();
+  const HYAPI = kutuBulanik(kutuBulanik(H, W2, W2, 4), W2, W2, 4);
 
   // ------------------------------------------------------------ 5. bitkiler: sırt gibi saplar, damarlı yapraklar, bıçak çekişli taç yaprakları
   const BITKI = new Int32Array(N2).fill(-1); // her pikselde en üstteki bitki parçasının renk kimliği
@@ -386,7 +391,7 @@
           let h = (1.4 + 4.6 * Math.pow(t, 1.2)) * Math.pow(Math.max(0, 1 - rho * rho), 0.35);
           h += 1.6 * sstep(0.72, 0.95, rho) * sstep(1.05, 0.96, rho) * sstep(0.35, 0.8, t);   // uçta dudak
           const aci = Math.atan2(Y + e.cy - c.y, X + e.cx - c.x);
-          h += 0.45 * Math.sin(aci * (c.r * 0.9)) * sstep(0.2, 0.6, t) * sstep(1, 0.7, rho);    // bıçak izleri
+          h += 0.55 * Math.sin(aci * (c.r * 0.32)) * sstep(0.2, 0.6, t) * sstep(1, 0.7, rho);    // bıçak izleri
           ustune(i, HYAPI[i] + taban + h, sstep(1.05, 0.96, rho), noBeyaz);
         }
       }
@@ -449,8 +454,8 @@
       }
       // kuru fırça: çıkıntıların tepesine açık ton
       const det = H[i] - HB[i];
-      const kf = sstep(0.25, 1.4, det) * (0.55 + 0.45 * nB(x / 2.2, y / 6));
-      c = mixc(c, mixc(c, [255, 255, 250], 0.55), kf * 0.75);
+      const kf = sstep(0.35, 1.6, det) * (0.55 + 0.45 * nB(x / 2.2, y / 6));
+      c = mixc(c, mixc(c, [255, 255, 250], 0.5), kf * 0.6);
       // fırça izi: boyada çok hafif değer oynaması
       const fz = 1 + (nC(x / 1.6 + y / 9, y / 1.6) - 0.5) * 0.035;
       const j = i * 3;
@@ -484,7 +489,7 @@
     const GB = kutuBulanik(GOL, W2, W2, 2);
     const HAO = kutuBulanik(kutuBulanik(H, W2, W2, 10), W2, W2, 10);
     const img = ctx.createImageData(W2, W2), d = img.data;
-    const amb = 0.62, kd = 0.55, duz = amb + kd * L[2];
+    const amb = 0.58, kd = 0.62, duz = amb + kd * L[2];
     for (let y = 0; y < W2; y++) for (let x = 0; x < W2; x++) {
       const i = y * W2 + x;
       const hx = H[y * W2 + Math.min(W2 - 1, x + 1)] - H[y * W2 + Math.max(0, x - 1)];

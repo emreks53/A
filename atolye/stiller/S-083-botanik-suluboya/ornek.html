@@ -183,6 +183,14 @@
     return A;
   }
   const TAM = [0, 0, W, W];
+  // geometrik maskeler: bölge haritasında pencere kenarlarındaki karışık pikseller yanlış bölgeye düşebilir
+  function yolMaske(dizi) { return kapsamCiz(TAM, (c) => { for (const d of dizi) c.fill(new Path2D(d)); }); }
+  const GY = SAHNE.yollar();
+  const KASNAK_M = yolMaske([GY.kasnakUst, GY.kasnakAlt]);
+  const KAIDE_M = yolMaske([GY.kaide, GY.kornis]);
+  const MINARE_M = yolMaske(GY.minare);
+  const KUBBE_M = yolMaske([GY.kubbe]);
+  for (let i = 0; i < N; i++) MINARE_M[i] *= (1 - KAIDE_M[i]) * (1 - KASNAK_M[i]);
   function cokgen(c, pts) { c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]))); c.closePath(); }
   // Tyler Hobbs usulü bozulmuş çokgen
   function boz(pts, derinlik, oran, r) {
@@ -307,7 +315,7 @@
 
   // ============================================================ KUBBE: 16 dilimin her biri ayrı ayrı modellenmiş
   const kKub = [356, 296, 764, 560];
-  const kubM = maske(kume('kubbe'));
+  const kubM = KUBBE_M;
   const kab = SAHNE.kaburgalar(16, 80);
   // dilim içi konum: iki kaburga arasındaki yer (0 sol kaburga, 1 sağ kaburga)
   const dilim = (x, y) => {
@@ -375,7 +383,7 @@
 
   // ============================================================ KASNAK: silindir modellemesi, keskin kemerli pencereler
   const kKas = [330, 552, 790, 696];
-  const kasM = maske(kume('kasnak', 'pencere'));
+  const kasM = KASNAK_M;
   yikama(kKas, kapsamAlan(kKas, (x, y) => kasM[y * W + x] * (y > 553 ? 1 : 0)), {
     pig: (x, y) => lerpK(karis(P.sap, 0.55, P.vir, 0.5), karis(P.vir, 0.75, P.ult, 0.3), sstep(0.6, 0.15, silindirIsik(x, 560, 226))),
     yog: (x) => 0.38 + 0.85 * Math.pow(1 - silindirIsik(x, 560, 226), 1.5), kenar: 0.25, kenarR: 1.2, gran: 0.1, dalga: 0.08, tohum: 21,
@@ -398,7 +406,7 @@
 
   // ============================================================ KAİDE, MİNARE: beyaz taş, ince gölge sırları
   const kKai = [286, 688, 834, 804];
-  const kaiM = maske(kume('kaide', 'pencere'));
+  const kaiM = KAIDE_M;
   const tasSir = karis(P.sie, 0.55, P.gam, 0.3, P.ros, 0.08);
   const golgeGri = karis(P.ult, 0.45, P.sie, 0.45, P.ros, 0.1);
   yikama(kKai, kapsamAlan(kKai, (x, y) => kaiM[y * W + x]), { pig: tasSir, yog: (x) => 0.07 + 0.08 * sstep(820, 300, x), kenar: 0.2, gran: 0.1, dalga: 0.08, tohum: 31 });
@@ -409,7 +417,7 @@
     SAHNE.kaide.pencereler.forEach((p) => kalemYol(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 0.4, 0.7));
   }
   const kMin = [236, 70, 364, 806];
-  const minM = maske(kume('minare'));
+  const minM = MINARE_M;
   yikama(kMin, kapsamAlan(kMin, (x, y) => minM[y * W + x]), {
     pig: (x, y) => lerpK(tasSir, golgeGri, sstep(0.55, 0.2, silindirIsik(x, 300, minareYari(y)))),
     yog: (x, y) => 0.04 + 0.32 * Math.pow(1 - silindirIsik(x, 300, minareYari(y)), 1.6), kenar: 0.2, gran: 0.1, dalga: 0.06, tohum: 41,
@@ -435,7 +443,8 @@
       pig: (x) => karis(P.oku, 0.9, P.sie, 0.35 + 0.6 * clamp((cx - x) / 12, 0, 1), P.ult, 0.08 * clamp((cx - x) / 12, 0, 1)),
       yog: (x) => 0.45 + 0.6 * clamp((cx + 2 - x) / 12, 0, 1), kenar: 0.3, kenarR: 1, gran: 0.08, tohum: cx,
     });
-    yikama(kutu, kapsamCiz(kutu, (c) => { c.fillRect(cx + 1.5, 176, 1.8, 140); }), { kaldir: true, yog: 0.5, kenar: 0, gran: 0, dalga: 0, tohum: cx + 1 });
+    { const A = kapsamCiz(kutu, (c) => { c.fillRect(cx + 1.2, 60, 1.8, 260); }), AM = kapsamBolge(kutu, kume('altin')); for (let j = 0; j < A.length; j++) A[j] *= AM[j];
+      yikama(kutu, A, { kaldir: true, yog: 0.5, kenar: 0, gran: 0, dalga: 0, tohum: cx + 1 }); }
   }
   // yapı kurşun kalem altlığı: ince, sürekli, sakin
   {
@@ -516,7 +525,7 @@
       }
       yikama(kutu, G, { pig: karis(P.ult, 0.4, P.mor, 0.3, P.sap, 0.2, P.sie, 0.1), yog: 0.12, kenar: 0.2, kenarR: 1, gran: 0.08, dalga: 0.1, dalgaOlcek: 12, tohum: 700 + k });
       yikama(kutu, V, { pig: karis(P.mor, 0.5, P.ult, 0.3, P.sie, 0.2), yog: 0.11, kenar: 0, gran: 0, dalga: 0, tohum: 710 + k });
-      if (pembe) yikama(kutu, Pm, { pig: karis(P.ros, 0.9, P.mor, 0.1), yog: 0.13, yumusak: 1.5, kenar: 0, gran: 0.05, dalga: 0.1, tohum: 720 + k });
+      if (pembe) yikama(kutu, Pm, { pig: karis(P.ros, 0.9, P.mor, 0.1), yog: 0.1, yumusak: 1.5, kenar: 0, gran: 0.05, dalga: 0.1, tohum: 720 + k });
       // görünmeyen (üstteki yaprağın altında kalan) kalem çizgisi silinmiş
       kc.save(); kc.beginPath(); kc.rect(kutu[0], kutu[1], w, kutu[3] - kutu[1]);
       yap[ustunde[k]].pts.forEach((q, i) => (i ? kc.lineTo(q[0], q[1]) : kc.moveTo(q[0], q[1]))); kc.closePath();
@@ -615,7 +624,7 @@
         const tv = t - Math.abs(v) / f.L * 1.1;
         const fz = tv * yanDamar, ypx = Math.abs(fz - Math.round(fz)) / yanDamar * f.L * 0.68;
         const yan = sstep(0.95, 0.25, ypx) * sstep(0.05, 0.2, t) * sstep(0.95, 0.7, t) * sstep(0.95, 0.4, Math.abs(v) / g);
-        V[j] = Math.max(orta * sstep(0.02, 0.1, t) * sstep(1, 0.85, t), yan * 0.85);
+        V[j] = Math.max(orta * sstep(0.02, 0.1, t) * sstep(1, 0.85, t), yan * 0.72);
         Sd[j] = sstep(-0.15, 0.25, -v * isikTaraf / g);
       }
       // 1. sır: açık yeşil zemin

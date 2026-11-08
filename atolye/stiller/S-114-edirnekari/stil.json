@@ -1,0 +1,40 @@
+{
+  "kod": "S-114",
+  "no": 114,
+  "ad": "Edirnekâri",
+  "ad_en": "Edirnekâri Lacquered Woodwork",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Edirne işi boyalı ve lake ahşap süsleme: açık krem zemin üzerinde altın tahrirli, beyaz ışık fırçalı parlak çiçek demetleri, varak altın pervaz ve sıcak, parlak vernik.",
+  "tanim": "Edirnekâri, ahşap dolap kapakları, sandıklar, rahleler, tavan ve kapılar üzerine yapılan Osmanlı boyama ve lake süsleme sanatıdır. Ahşap astarlanıp zemin boyasıyla kaplanır, üzerine gül, lale, karanfil, sümbül ve papatyadan demetler, vazolar ve manzaralar boyanır; çiçeklerin taç yapraklarına beyaz ışık fırçaları vurulur, her biçim ince altın tahrirle çevrilir. Kenarlara altın pervazlar, küçük çiçek dizili şeritler ve köşe kıvrımları işlenir, zemin altın benek ve ince altın helezonlarla (halkâri) zenginleştirilir. En sonda sürülen lake vernik renkleri derinleştirir ve yüzeye sıcak, cam gibi bir parlaklık verir.",
+  "koken": "Adını Edirne'den alan teknik 17. ve 18. yüzyılda Türk barok ve rokoko zevkiyle olgunlaştı; Topkapı Sarayı'nın Harem dairelerinde, Edirne Selimiye Camii'nin hünkâr mahfilinde ve konak tavanlarında örnekleri görülür. Kırmızı, siyah, yeşil ve sarı zeminlerin yanında krem ve açık zeminli işler de yapıldı. Lake (laka) cilası İran ve Hint yoluyla geldi, Edirne ustaları onu çiçekli boyama ve varak altınla birleştirdi. Bugün geleneksel Türk el sanatları atölyelerinde ahşap kutu ve panolar üzerinde yaşatılmaktadır.",
+  "ayirt_edici": [
+    "Her çiçeği, yaprağı, kubbe kaburgasını ve pencereyi çevreleyen, üstünde ince parıltı çizgisi olan kabartma altın tahrir",
+    "Önden görünen, iç içe dilimli taç halkaları merkeze doğru koyulaşan güller; taç kenarlarında beyaz ışık fırçaları; lale, karanfil, sümbül, papatya ve küçük şükûfe çiçekçikleri",
+    "Açık krem boyalı zemin, soluk mavi gök ve zeminde ince altın helezon dallar (halkâri) ile üçlü altın zer benekleri",
+    "Boncuk dizili varak altın kabartma pervaz, içinde beyaz çiçek ve altın yaprakçık dizili mercan şerit, köşelerde altın barok C ve S kıvrımları",
+    "Varak altın güneş ve alemler, kubbe eteğinde altın şerit üzerinde boyalı çiçek dizisi",
+    "Bütün yüzeyde sıcak saydam lake vernik, çapraz yumuşak parlaklık bandı ve altından çok hafif belli olan ahşap lifleri"
+  ],
+  "palet": [
+    "#F5ECD5",
+    "#AFD3F3",
+    "#3E9852",
+    "#EE8FA2",
+    "#D9443F",
+    "#5677CF",
+    "#E2786A",
+    "#E3B64A"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, doğrudan ana tuvale çizilir. Krem zemin piksel döngüsüyle fBm lekeler ve yatay fırça çekişleriyle, gök degrade ve yarı saydam incelen fırça darbeleriyle boyanır. Altın tahrir koyu altın çizgi ve sol üste kaydırılmış ince açık parıltı çizgisinden, varak altın dolgular çok duraklı metalik degradeden oluşur. Güller dilim sayısı halkadan halkaya azalan, kutupsal kosinüs üslü dört taç halkasıyla kurulur; her halka bir dıştakinin üstüne hafif gölge düşürür, radyal degradeyle merkeze doğru koyulaşır, her dilimin kenarına ışık yönüne göre parlaklığı değişen beyaz, iki ucu sivrilen fırça darbesi çekilir. Lale, karanfil, sümbül, papatya ve şükûfeler kendi yol işlevleriyle boyanıp altınla çevrilir; mimari SAHNE geometrisinden degrade boya ve altın tahrirle çizilir. Zeminde helezon eğrili halkâri dalları ve zer benekleri, çerçevede kabartma ışık ve gölge çizgili altın pervazlar, boncuk dizisi, mercan şerit ve köşe kıvrımları çizilir. En sonda sıcak 'multiply' vernik tonu, 'soft-light' ile ahşap lifi dokusu ve 'screen' ile lif dokusuyla dalgalanan çapraz parlaklık bantları basılır.",
+  "etiketler": [
+    "Edirnekâri",
+    "Osmanlı",
+    "lake",
+    "ahşap boyama",
+    "altın tahrir",
+    "çiçek demeti",
+    "Türk barok",
+    "zarif"
+  ]
+}

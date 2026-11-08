@@ -1,0 +1,22 @@
+{
+  "kod": "S-103",
+  "no": 103,
+  "ad": "Damga Baskı",
+  "ad_en": "Stamp Printing",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Silgi ve kauçuktan elle oyulmuş küçük damgaların beyaz kâğıda tek tek basılmasıyla, tekrar eden biçimlerden kurulan resim.",
+  "tanim": "Damga baskı, yumuşak silgi, kauçuk ya da linol bloklardan bıçakla oyulan küçük damgaların mürekkep yastığına bastırılıp kâğıda elle basılmasıyla yapılan doğrudan baskı tekniğidir. Resim tek tek damga izlerinden kurulur: aynı yaprak, tuğla, taç yaprağı ya da kare damga defalarca, dönerek ve kayarak tekrar eder. Her izde mürekkep biraz farklı tutar; kenarda hafif birikinti, içte kâğıt dişinden gelen benekli bir dolgu ve basıncın bir yana kayması görülür, saydam mürekkep bindiği yerde koyulaşır. Kart, ambalaj kâğıdı, defter, çocuk kitabı resimlemesi ve günlük süslemede sevilen oyunbaz ama zarif bir tekniktir.",
+  "koken": "Mühür ve tahta damga kökleri Mezopotamya silindir mühürlerine ve Çin mühür sanatına uzanır; desenli damgayla kumaş ve kâğıt süsleme her kültürde vardır. Kauçuk damga 1860'larda vulkanize kauçukla ortaya çıktı; 1960–70'lerde Fluxus sanatçıları ve posta sanatı (mail art) hareketi damgayı sanat aracı yaptı. Günümüzde silgi oyma damgalar (keshigomu hanko), el yapımı kırtasiye ve resimli kitap atölyeleri tekniği yaygınlaştırdı.",
+  "ayirt_edici": [
+    "Sahnenin her parçası ayrı damga izlerinden kurulu: gökte kare damgalar, kubbede on altı dilim damgası, kasnak ve kaidede tuğla ve taş blok damgaları, yerde uzun yuvarlak damgalar",
+    "Her izde benekli, tam tutmamış mürekkep; kenarda hafif birikinti ve basıncın bir yana azalması",
+    "Saydam mürekkep: gökteki kare damgalar ve taç yaprakları bindikleri yerde koyulaşıyor",
+    "Damgaya oyulmuş beyaz çizgiler: yaprak damarları, taç yaprağı çizgileri, bulut kıvrımları, korkuluk aralıkları",
+    "Aynı damganın tekrarı: tek bulut damgası iki boyda beş kez, aynı kemer damgası pencerelerde, aynı yaprak damgası dönerek",
+    "Damgalar arasında ve nesnelerin çevresinde beyaz kâğıt aralıkları; güneş çevresinde sarı ve şeftali damgalarla parlak bir hale"
+  ],
+  "palet": ["#8CCCF0", "#FFE08C", "#FFCCB0", "#1CA064", "#4EC06C", "#225C80", "#F6B0C6", "#F46860"],
+  "kodla_cizim": "Her mürekkep ayrı bir tuval katmanıdır. Sahne önden arkaya basılır: çiçekler, tomurcuklar, yapraklar, saplar, kaide, kasnak, kubbe, minare, güneş, bulutlar, en son gök ve yer. Her damga izi kendi sınır kutusunda geçici tuvale, rastgele yönlü bir doğrusal saydamlık geçişiyle (basınç kayması) çizilir; oyulmuş çizgiler destination-out ile çıkarılır, öndeki biçimlerin biriktiği örtü tuvali de çıkarılır, sonra iz katmana 'lighter' ile ve ize özgü yoğunlukla eklenir; böylece binen izler koyulaşır. Gök ve yer damgaları için örtü bulanıklaştırılıp genişletilir, nesnelerin çevresinde beyaz pay kalır. Son geçişte her katmanın kenarı piksel ölçeğinde gürültüyle dişlendirilir, bulanık kopyasıyla farkından kenar birikintisi hesaplanır; mürekkep yoğunluğu düşük frekanslı dalgalanma, kauçuğun tutmadığı minik beyaz benekler ve kâğıt lifiyle oynatılıp saydam mürekkep olarak çarpımla beyaz kâğıda uygulanır.",
+  "etiketler": ["damga", "silgi oyma", "kauçuk damga", "tekrar", "el baskısı", "oyunbaz", "kırtasiye", "desen"]
+}
