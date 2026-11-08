@@ -16,7 +16,7 @@
     "Kalemle küçük doku işaretleri: toprakta turuncu ve kahve tikler, çakıl halkaları, ufuk boyunca yeşil çimen tutamları, bulutların üstünde mavi kalem yayları, güneşin turuncu ve hardal ışınları",
     "Beyaz guaj çiçekler, dipten dışa gül pembesi kalem darbeleri ve hardal göbekte kahve noktalar; parlak, sıcak gündüz paleti"
   ],
-  "palet": ["#76C6E3", "#F8C93E", "#FFF9EF", "#46AE62", "#F6EAD3", "#F1C890", "#4F9F57", "#D5607A", "#7A4A30"],
+  "palet": ["#76C6E3", "#F8C93E", "#FFF9EF", "#46AE62", "#F1C890", "#4F9F57", "#D5607A", "#7A4A30"],
   "kodla_cizim": "İki ayrı katman ve 2048 iç çözünürlük. Guaj: her biçim ekran dışı katmanda doldurulur; büyük biçimlerin kenarı canvas'a bağlanan SVG feTurbulence + feDisplacementMap süzgeciyle, küçük biçimlerinki (yaprak, taç yaprak, pencere) örneklenen yolun gürültüyle titretilmesiyle dalgalanır; sonra 'source-atop' ile biçimin yönüne döndürülmüş, bulanık geniş darbelerden üretilmiş fırça izi deseni basılır ve katman yalnız biçimin kutusu kadar ana resme aktarılır. Kuru boya: tarama (kırpılmış alanda, gölge maskesine göre olasılıkla konan kısa paralel darbeler), kontur (SVG yolu getPointAtLength ile örneklenip titretilen ve biraz kaydırılan çizgi) ve doku işaretleri kalem katmanına çizilir; her nesneden sonra katman, yönsüz ince kâğıt tanesinden üretilmiş alfa maskesiyle 'destination-in' uygulanarak taneli hâle getirilir ve ana resme basılır (ressam sırası korunur: öndeki yaprak arkadakinin çizgisini örter). Kubbede kısa darbeler sahne profilinden üretilen meridyenler boyunca, dönel yüzeyin gölge yanına göre konur. En sonda çok hafif mat yüzey tanesi.",
   "etiketler": ["guaj", "renkli kalem", "kuru boya", "karma teknik", "çocuk kitabı", "tarama", "illüstrasyon", "mat"]
 }

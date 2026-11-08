@@ -219,6 +219,16 @@ function tasarim(g, hedef) {
   // gök (harmanlı elek), güneş, bulutlar
   dikd('gok', 0, 0, W, 800);
   const gx = SAHNE.gunes.x, gy = SAHNE.gunes.y;
+  // afiş ışınları: güneşten yayılan, ayrı bir elekten açık sarı kamalar
+  boya('sari');
+  for (let i = 0; i < 22; i++) {
+    const a0 = Math.PI * 0.42 + (i / 22) * Math.PI * 1.25, da = 0.052 + 0.012 * Math.sin(i * 2.3);
+    g.beginPath(); g.moveTo(gx, gy);
+    g.lineTo(gx + Math.cos(a0) * 1600, gy + Math.sin(a0) * 1600);
+    g.lineTo(gx + Math.cos(a0 + da) * 1600, gy + Math.sin(a0 + da) * 1600);
+    g.closePath(); g.fill();
+  }
+  boya('gok');
   doldur('sari', SAHNE.daireYolu(gx, gy, 98));
   doldur(null, SAHNE.daireYolu(gx, gy, 76));
   doldur('sari', SAHNE.daireYolu(gx, gy, 70));
@@ -284,10 +294,17 @@ function tasarim(g, hedef) {
   for (let k = 1; k >= 0; k--) {
     const q = SAHNE.kasnak[k];
     dikd('yesil', q.x1, q.y1, q.x2 - q.x1, q.y2 - q.y1);
-    const xa = payandaX(k, 0.36), xb = payandaX(k, 0.86);
-    dikd('acik', xa, q.y1 + 5, xb - xa, q.y2 - q.y1 - 5);
     dikd('acik', q.x1, q.y1, q.x2 - q.x1, 5);
-    for (const p of SAHNE.kasnakPencereleri(k)) doldur('koyu', SAHNE.kemerYolu(p.x, p.y, p.w, p.h));
+    dikd('acik', q.x1, q.y2 - 4, q.x2 - q.x1, 2.5);
+    // ışık sağdan: sağ yarıdaki pencerelerin sağ söveleri açık yeşil
+    const cx = (q.x1 + q.x2) / 2;
+    for (const p of SAHNE.kasnakPencereleri(k)) {
+      if (p.x > cx - 20) {
+        const s = clamp((p.x - cx + 20) / 120);
+        doldur('acik', SAHNE.kemerYolu(p.x + p.w * (0.18 + 0.12 * s), p.y - 3, p.w + 4 + 4 * s, p.h + 3));
+      }
+      doldur('koyu', SAHNE.kemerYolu(p.x, p.y, p.w, p.h));
+    }
   }
 
   // kubbe: zümrüt; ışıklı dilimlerin üst kısmı açık yeşil (kaburgalar aralarda zümrüt çizgi kalır)
@@ -352,7 +369,7 @@ function ustBaskiMaskesi(dx, dy) {
     g.fillStyle = '#fff';
     for (let k = 1; k >= 0; k--) {
       const q = SAHNE.kasnak[k];
-      g.fillRect(q.x1, q.y1 + 5, payandaX(k, -0.8) - q.x1, q.y2 - q.y1 - 5);
+      g.fillRect(q.x1, q.y1 + 5, payandaX(k, -0.66) - q.x1, q.y2 - q.y1 - 9);
     }
   }, 3);
   const m = new Float32Array(N);

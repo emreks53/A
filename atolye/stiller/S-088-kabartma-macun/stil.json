@@ -1,0 +1,40 @@
+{
+  "kod": "S-088",
+  "no": 88,
+  "ad": "Kabartma Macun",
+  "ad_en": "Texture Paste Relief",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Akrilik modelleme macunuyla spatula ile biçimlenmiş kabartma pano: kubbe kaburgaları, korniş, bulutlar ve taç yaprakları yüzeyden yükselir; parlak akrilikle boyanmış, sağ üstten gelen ışıkla yumuşak gölgeli, saten yüzeyli.",
+  "tanim": "Kabartma macun (doku ya da modelleme macunu) tekniğinde akrilik esaslı, kalın kıvamlı macun spatula, tarak ve şekillendirme bıçaklarıyla bir panoya sürülür ve biçimlendirilir. Geniş alanlar spatula sıvamalarıyla, bulut ve çiçekler kabartılarak, ayrıntılar oyularak ya da taranarak yapılır. Macun kuruyunca akrilik boyayla renklendirilir; çıkıntılara açık bir tonla kuru fırça yapılarak doku belirginleştirilir. Işık yandan geldiğinde gölgeler kabartmayı canlandırır; dekoratif pano ve karışık teknik çalışmalarında yaygındır.",
+  "koken": "Kökü sıva ve alçı kabartmaya (stuko) ve 20. yüzyılda ressamların boyaya kum, alçı ya da mermer tozu katarak yüzey kurmasına uzanır; Antoni Tàpies'in madde resimleri bilinen örneklerdir. 1950'lerden sonra akrilik polimer esaslı modelleme macunlarının üretilmesiyle kolay şekillenen, sağlam kuruyan kalın kabartmalar mümkün oldu. Bugün özellikle spatula ile 'heykel resmi' ve üç boyutlu çiçek kabartmaları adıyla dekoratif sanatta çok sevilir.",
+  "ayirt_edici": [
+    "Gök üst üste binen geniş spatula sıvamalarıyla kaplı: her sıvamanın bir kenarında ve ucunda yığılmış macun sırtı, sırtlarda açık mavi-beyaz kuru fırça",
+    "Güneş kabarık bir disk: içinde iç içe halkalar, çevresinde bıçakla çekilmiş sivri ışınlar ve güneşi saran yay biçimli sıvamalar",
+    "Bulutlar lob lob yükselen kabarık tamponlar; içlerinde sarmal bıçak izleri, sol altlarına yumuşak gölge düşüyor",
+    "Kubbe yüzeyden yükselen bir yarım küre kabartması, üstünde kaburga sırtları; kasnak ve kaide pencereleri oyulmuş, korniş ve şerefeler çıkıntılı, gölgeleri sola düşüyor",
+    "Yer, tarakla dalga dalga taranmış macun: ufukta ince kum şeridi, önde açık çayır yeşili; çizgilerin sırtları kuru fırçayla açılmış",
+    "Yapraklar orta damarı oyulmuş kabartmalar; beyaz taç yaprakları bıçakla çekilmiş, uçları kalkık, merkezden ışınsal izli; çiçek ortası sarı boncuklu"
+  ],
+  "palet": [
+    "#65B3F3",
+    "#FCFBF8",
+    "#FFD446",
+    "#42A050",
+    "#268650",
+    "#F8F0E2",
+    "#B4DC78",
+    "#9680A2"
+  ],
+  "kodla_cizim": "Pano 2048 piksellik bir yükseklik haritası ve ayrı bir boya tamponu olarak kurulur. Gök alanı karışık sırayla çekilen spatula sıvamalarıyla örtülür: her sıvama yerel koordinatlarda hafif eğimli düz bir yüz ile bir kenarında ve ucunda yığılan sırt profili taşır ve alttakini örterek yerine geçer; güneş çevresinde sıvamalar teğet yönünde döner. Yer dalgalı sinüs tarama (tarak) çizgileridir; ufukta kum, önde çayır yeşiline boyanır. Güneş halkalı bir kubbecik ve sivri ışın kamaları, bulutlar loblardan yarım küre birleşimi olarak yükseltilir. Yapı 2048 çözünürlüklü bölge haritasından pahlı (bulanık) maskelerle kurulur: minare ve kasnak silindir, kubbe derinliği kubbe yarıçapıyla orantılı yarım küre artı kaburga sırtları, korniş ve şerefeler ek çıkıntı, pencereler oyuk; yüzeylere hafif spatula sürtme izleri eklenir. Bitkiler en üste eklenir: saplar yuvarlak sırt, yapraklar orta damarı oyuk kabartma, taç yaprakları uca doğru kalınlaşan, uçta dudaklı, ışınsal izli bıçak çekişi, çiçek ortası boncuklar. Boya bölge ve parça kimliğine göre verilir; çıkıntılara (yükseklik eksi bulanık yükseklik) açık tonla kuru fırça uygulanır. Işık sağ üstten yaklaşık 35° yükseklikte gelir: normal haritasından Lambert gölgelemesi, yükseklik haritasında ışığa doğru yürüyerek yumuşak düşen gölge, oyuklarda ortam kapanması ve saten Blinn-Phong parlaması; altın alemler daha parlaktır.",
+  "etiketler": [
+    "kabartma",
+    "modelleme macunu",
+    "akrilik",
+    "spatula",
+    "doku",
+    "rölyef",
+    "karışık teknik",
+    "saten"
+  ]
+}

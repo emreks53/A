@@ -1,0 +1,40 @@
+{
+  "kod": "S-087",
+  "no": 87,
+  "ad": "Yaş Üstüne Yaş Yağlıboya",
+  "ad_en": "Wet-on-Wet Oil Landscape",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Islak astar üstünde iri fırçayla yumuşacık geçişli gök, spatulayla çekilmiş dağlar ve sis, yelpaze fırçasıyla tıklatılmış çalılar ve keskin spatula ışıklarıyla neşeli bir manzara resmi.",
+  "tanim": "Yaş üstüne yaş yağlıboya manzara tekniğinde tuval önce ince, yağlı bir beyaz astarla ıslatılır; renkler bu ıslak katmanın üstünde kolayca karışır ve tek oturuşta yumuşak geçişler elde edilir. Gök iri fırçanın çapraz (X) darbeleriyle boyanıp temiz, kuru bir fırçayla yumuşatılır; bulutlar dairesel hareketle tamponlanır, dağlar spatulayla çekilir ve eteklerine sis verilir. Ağaç ve çalılar yelpaze fırçasının ucuyla koyudan açığa doğru tıklatılarak yapılır; en sonda spatulayla keskin ışık çizgileri eklenir. Televizyon resim derslerinin ve amatör manzara resminin en sevilen yöntemlerindendir.",
+  "koken": "Yöntem, Alman asıllı ressam William Alexander'ın 1970'lerdeki televizyon derslerinde yaygınlaştı; öğrencisi Bob Ross 1983–1994 arasında yayımlanan 'The Joy of Painting' programıyla tekniği bütün dünyaya tanıttı. Kökü 19. yüzyıl Avrupa manzara resminin hızlı, tek oturuşluk çalışmalarına uzanır. Bugün resim kurslarında 'Bob Ross tekniği' adıyla da öğretilir.",
+  "ayirt_edici": [
+    "Gök, köşelerdeki koyu maviden ufka doğru beyaza yumuşacık geçiyor; içinde iri fırçanın çapraz (X) darbeleri silik bir doku bırakıyor, güneş parlak bir ışımanın ortasında",
+    "Kabarık tepeli, düz ve göğe karışan tabanlı küçük bulutlar: sağ üst yüzleri parlak beyaz, altları lavanta-gri",
+    "Ufukta lavanta rengi dağlar: güneşe bakan yamaçlarda spatulayla çekilmiş kopuk şeftali-beyaz ışık şeritleri, eteklerinde beyaz sis bandı",
+    "Yelpaze fırçasıyla tıklatılmış yuvarlak çalı kümeleri: koyu yeşil taban, üstünde orta yeşil, sağ üstte sarı-yeşil ışık tıklamaları ve küçük beyaz-pembe çiçek benekleri",
+    "Mimaride keskin spatula ışıkları: kornişte parlak beyaz çizgi, minarenin ve kaidenin sağ kenarları, kasnak katlarının üst kenarı, kubbenin sağ silueti",
+    "Kubbede yaşken karışmış yumuşak gölge; kaburga olukları ve ışık tarafındaki açık bantlar birbirine geçiyor"
+  ],
+  "palet": [
+    "#4585C9",
+    "#FEFDF6",
+    "#A1A6D0",
+    "#FFEEE4",
+    "#96C854",
+    "#22583A",
+    "#309048",
+    "#E2B648"
+  ],
+  "kodla_cizim": "Renk ve kalınlık 2048 piksellik kayan noktalı tamponlarda tutulur. Gök piksel başına dikey geçiş olarak kurulur (köşelerde koyu mavi, güneş çevresinde sıcak ışıma); üstüne yerel tonun hafif koyusu ve açığıyla yumuşak kenarlı yüzlerce iri çapraz darbe düşük örtücülükle çekilir ve tampon hafifçe bulanıklaştırılarak ıslak karışım verilir. Bulutlar 'lighten' karışımlı ışınsal tamponlardan kurulan bir yoğunluk haritasıdır; kenarlar küçük ölçekli gürültüyle tüylendirilir, ışık yoğunluğun bulanık eğiminden, tabanın göğe karışması ayrı bir düz taban maskesinden gelir. Dağlar tepe noktalarından türetilen kırık sırt eğrileridir: ışığa bakan yamaçta sırttan aşağı uzanan gürültü şeritleri keskin eşikle açılır (spatula vurgusu), etekler sise geçer. Yapı yumuşak silindir ve küre aydınlatmasıyla piksel piksel boyanır, üstünden yumuşak kenarlı darbeler geçer; kaburga olukları ve ışık bantları ayrı bir geçişte eklenir. Spatula ışıkları keskin kenarlı, boyunca gürültüyle kopan şeritlerdir. Çalı ve çimenler yelpaze fırçası tıklamalarıdır: her tıklama dar bir yelpazede beş-altı kısa sivri kıl izi; yaprak yerlerinde koyu, orta ve açık üç kat. Son geçişte kalınlık haritasından kabartı ışığı, kalın boyada parlama ve ince boyada bez dokusu eklenir.",
+  "etiketler": [
+    "yağlıboya",
+    "yaş üstüne yaş",
+    "manzara",
+    "yelpaze fırçası",
+    "spatula",
+    "yumuşak geçiş",
+    "Bob Ross",
+    "boya"
+  ]
+}

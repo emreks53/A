@@ -16,7 +16,7 @@
     "Beyaz kâğıt boyanmadan bırakılmış: bulutlar, minare ve kaidenin ışıklı yanları, çiçeklerin taç yaprakları; çiçek göbeğinden dışa pembe ve eflatun darbe su ile kenara çekilmiş",
     "Güneş iç içe sarı, turuncu ve şeftali yay darbeleri, ortası suyla açılmış"
   ],
-  "palet": ["#FFFEFB", "#18B4D8", "#3B6FE0", "#B9A6EE", "#0E9C6A", "#7ACB3A", "#F0629E", "#FFD23A", "#FF9A2E"],
+  "palet": ["#18B4D8", "#3B6FE0", "#B9A6EE", "#0E9C6A", "#7ACB3A", "#F0629E", "#FFD23A", "#FF9A2E"],
   "kodla_cizim": "Darbe: merkez çizgisi (Catmull-Rom eğrisi, sahne profilinden meridyen ya da yaprak ekseni) sık örneklenir, uzunluk boyunca basınç profiliyle (bas–sürdür–kaldır, iki ucu sivri yaprak, düz ya da kemer) ve gürültüyle değişen genişlikte bir şerit çokgeni kurulur, uçlarına yay eklenir; 'multiply' ile doldurulur, kenarına hafif koyu birikim çizgisi, içine 'destination-out' ile kâğıt beyazını gösteren ince lif damarları çekilir. Bölge: darbeler keskin bir katmana çizilir; su fırçası etkisi için bu katmanın bulanık (blur 10–40 px) ve biraz açılmış kopyası alınır, keskin kalacak yer bir maske (gradyan ve yumuşak lekeler) ile seçilir; keskin katman maskeyle 'destination-in', bulanık kopya maskeyle 'destination-out' kesilip üst üste konur, gerekirse bölge yoluyla yumuşak kırpılır ve ana resme 'multiply' basılır. Boyanmayacak beyazlar (bulut, taş, taç yaprak, alem altı) önceki boyanın üstüne bulanık kenarlı kâğıt rengiyle kaldırılır. En sonda koyu yerlerde biraz daha belirgin kâğıt tanesi.",
   "etiketler": ["fırça kalemi", "suluboya", "su fırçası", "keçeli", "geçiş", "canlı renk", "çiçek", "günlük çizim"]
 }

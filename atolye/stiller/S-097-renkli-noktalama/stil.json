@@ -16,7 +16,7 @@
     "Kâğıdın beyazı her yerde görünüyor; beyaz çiçekler, bulutlar ve ışıklı taş yüzeyler neredeyse boş bırakılmış, çiçek göbeğine doğru pembe noktalar sıklaşıyor",
     "Küçük ayrıntılar (alemler, hilaller) daha ince uçlu kalemin daha küçük noktalarıyla"
   ],
-  "palet": ["#FFFEFA", "#1597D3", "#2D4DB4", "#7A57C2", "#16964A", "#F4BE00", "#F2801C", "#E5468A", "#8A5634"],
+  "palet": ["#1597D3", "#2D4DB4", "#7A57C2", "#16964A", "#F4BE00", "#F2801C", "#E5468A", "#8A5634"],
   "kodla_cizim": "Sekiz kalem rengi için 1024 boyutlu ayrı 'mürekkep kapsama' haritaları (gri tonlu ekran dışı canvas) kurulur. Her sahne bölgesi Path2D ile ressam sırasıyla bu haritalara yazılır: bölgedeki her kalem için kapsama değeri ya da gölgelendirme gradyanı (kubbe için ışık yönüne göre dairesel, kasnak ve minare için silindir gibi doğrusal), diğer kalemler sıfır. Kenar bantları, kaburgalar ve taç yaprak kenarları 'lighter' birleşimiyle kapsamaya eklenir; bulutlar ve güneş çevresi bulanık 'destination-out' ile silinir. Kapsama, örtüşmeyi telafi eden −ln(1−k) dönüşümüyle hücre başına nokta olasılığına çevrilir ve her kalem için yılankavi Floyd–Steinberg hata yaymayla (eşiğe küçük rastgele sapma) ızgara hücrelerine dağıtılır; konan her nokta hücre içinde biraz kaydırılmış, yarıçapı hafif değişen bir dairedir. Noktalar 2048 iç çözünürlükte 'multiply' ile çizilir (üst üste düşen mürekkep koyulaşır). Alemler ayrı haritalarda, daha sık ızgara ve küçük noktalı ikinci bir geçişle çizilir. En sonda çok hafif kâğıt tanesi.",
   "etiketler": ["noktalama", "fineliner", "kalem", "optik karışım", "mürekkep", "hassas", "illüstrasyon"]
 }

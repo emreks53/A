@@ -224,9 +224,9 @@ cek({
 cek({
   renk: (x, y) => {
     const t = smooth(0, 800, y);
-    return [lerp(70, 120, t), lerp(160, 206, t), lerp(226, 228, t)];
+    return [lerp(146, 226, t), lerp(162, 204, t), lerp(244, 240, t)];
   },
-  yog: 0.42, yon: 0.12, cevre: 188, bant: 210, plakaKay: [1.4, -0.8],
+  yog: 0.42, yon: 0.12, cevre: 188, bant: 150, plakaKay: [1.4, -0.8],
   kapa: (g) => { skyKapa(g); for (const e of EGRELTILER) egrelti(g, ...e); },
 });
 // 2) güneş: sarı daire şablonu, içte şeftali ikinci çekim
@@ -291,14 +291,6 @@ cek({
   renk: [20, 148, 98], yog: 0.82, yon: -1.5, cevre: 240, bant: 230,
   ac: yesilAc,
   kapa: (g) => {
-    // ışık maskesi: kubbenin sağ yanına elle kesilmiş hilal biçimli kâğıt
-    g.save();
-    g.clip(P2(SAHNE.kubbeYolu));
-    g.beginPath(); g.rect(0, 0, W, H);
-    g.translate(560, 555); g.scale(0.9, 0.95); g.translate(-560 - 52, -555 + 8);
-    g.moveTo(360, 555); g.bezierCurveTo(358, 430, 440, 318, 560, 300); g.bezierCurveTo(680, 318, 762, 430, 760, 555); g.closePath();
-    g.fill('evenodd');
-    g.restore();
     bitkiMaskesi(g, false);
   },
   tarak: (x, y) => {
@@ -311,7 +303,7 @@ cek({
     const u = clamp((x - 560) / Math.max(1, r), -1, 1);
     const f = ((Math.asin(u) / Math.PI + 0.5) * 16) % 1;
     const dis = Math.exp(-(f - 0.5) * (f - 0.5) / 0.006) * 0.0 + Math.exp(-Math.pow(Math.min(f, 1 - f), 2) / 0.0028) * 0.75;
-    return clamp(dis + 0.3 * smooth(-0.1, 0.8, u));
+    return clamp(dis + 0.62 * smooth(-0.15, 0.85, u));
   },
 });
 // sol yanda ikinci, koyu yeşil-mavi saydam katman

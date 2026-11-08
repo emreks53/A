@@ -342,7 +342,7 @@
     for (const yp of B.yapraklar) {
       const L = yp.uzunluk, Wd = L * yp.genislik, ca = Math.cos(yp.aci), sa = Math.sin(yp.aci);
       const buyuk = L > 50;
-      const no = renkNo(buyuk ? [62, 150, 86] : [104, 178, 84]);
+      const no = renkNo(buyuk ? [38, 128, 82] : [62, 156, 82]);
       const ext = L + 4;
       for (let y = Math.floor((yp.y - ext) * 2); y <= (yp.y + ext) * 2; y++) for (let x = Math.floor((yp.x - ext) * 2); x <= (yp.x + ext) * 2; x++) {
         if (x < 0 || y < 0 || x >= W2 || y >= W2) continue;
@@ -439,9 +439,10 @@
       else if (b === BI.kaide) c = Y < 708 ? [255, 252, 244] : [248, 240, 226];
       else if (b === BI.minare) c = [250, 244, 232];
       else if (Y >= 800) {
-        // yer: kumlu açık okra
-        c = mixc([240, 214, 158], [226, 192, 132], sstep(800, 1024, Y));
-        c = mixc(c, [214, 226, 150], 0.25 * sstep(0.55, 0.75, fbm(nA, X / 90, Y / 50, 2)));
+        // yer: taranmış macun, ufukta ince kum şeridi, önde taze çayır yeşili
+        c = mixc([200, 230, 136], [150, 206, 106], sstep(830, 1024, Y));
+        c = mixc(c, [196, 226, 128], 0.35 * sstep(0.5, 0.75, fbm(nA, X / 90, Y / 50, 2)));
+        c = mixc(c, [240, 218, 160], sstep(822, 808, Y));
       } else {
         // gök
         const t = Y / 800;

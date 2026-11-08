@@ -340,22 +340,22 @@
   }
   {
     const mG = new Float32Array(N); for (let i = 0; i < N; i++) mG[i] = (i / W) < 812 ? mGok[i] : 0;
-    for (const [x, y] of noktalar(44, mG, -30, -30, W + 30, 812)) {
+    for (const [x, y] of noktalar(58, mG, -40, -40, W + 40, 812)) {
       const c = gokRenk(x, y), d = Math.hypot(x - 880, y - 140);
       const capraz = R() < 0.3 ? 0.9 : 0;
       const a = -0.42 + capraz + (fbm(nC, x / 260, y / 260, 2) - 0.5) * 0.8 + (R() - 0.5) * 0.35 + (d < 150 ? (R() - 0.5) * 2 : 0);
       const c2 = gokRenk(x + (R() - 0.5) * 70, y + (R() - 0.5) * 50);
-      darbe({ x, y, a, L: 100 + R() * 80, w: 40 + R() * 22, k: (R() - 0.5) * 0.5, c: oyna(doygun(c, 1.12), 0.06, 10), c2: oyna(c2, 0.08, 14), karis: 0.55, kuru: 0.4 + R() * 0.4, kalin: 0.3, m: mGok });
+      darbe({ x, y, a, L: 130 + R() * 100, w: 52 + R() * 26, k: (R() - 0.5) * 0.5, c: oyna(doygun(c, 1.12), 0.06, 10), c2: oyna(c2, 0.08, 14), karis: 0.55, kuru: 0.45 + R() * 0.4, kalin: 0.3, m: mGok });
     }
     // ikinci kat: daha küçük, taze renk dokunuşları (yan yana, karışmamış)
     const turler = [[96, 160, 228], [126, 186, 236], [156, 168, 230], [104, 194, 216], [190, 184, 232], [120, 206, 220]];
-    for (const [x, y] of noktalar(78, mG, 0, 0, W, 800)) {
+    for (const [x, y] of noktalar(96, mG, 0, 0, W, 800)) {
       let c = gokRenk(x, y);
       const lum = (c[0] + c[1] + c[2]) / 3;
       if (bul(x, y) < 0.3 && lum < 215 && R() < 0.5) c = mixc(c, turler[Math.floor(R() * turler.length)], 0.3);
       else if (y > 560 && R() < 0.5) c = mixc(c, R() < 0.5 ? [252, 226, 196] : [214, 214, 240], 0.35);
       const a = -0.4 + (R() - 0.5) * 0.9;
-      darbe({ x, y, a, L: 64 + R() * 56, w: 26 + R() * 16, c: oyna(c, 0.05, 10), kuru: 0.55, kalin: 0.35, m: mGok });
+      darbe({ x, y, a, L: 80 + R() * 70, w: 32 + R() * 18, c: oyna(c, 0.05, 10), kuru: 0.6, kalin: 0.35, m: mGok });
     }
     // bulutlar: yuvarlak hareketli kalın beyazlar, mor-gri altlar
     for (const [x, y] of noktalar(23, BUL.map((b) => (b > 0.5 ? 1 : 0)), 0, 0, W, 560)) {

@@ -16,7 +16,7 @@
     "Her biçim aynı kalınlıkta, hafif titrek, net lacivert konturla çevrili; bulutlarda mavi kontur",
     "Küçük nokta ve çizgi süsleri: kasnak altında limon yeşili nokta dizisi, gökte beyaz nokta üçlüleri, kumda beyaz ve turuncu noktalar, çiçek göbeğinde turuncu nokta halkası"
   ],
-  "palet": ["#1A1E40", "#33B5EA", "#74D2F4", "#FFE033", "#FF9A1F", "#16A253", "#A6EC73", "#FF6F86", "#CDBDF2", "#FFD47C"],
+  "palet": ["#1A1E40", "#33B5EA", "#74D2F4", "#FFE033", "#16A253", "#A6EC73", "#FF6F86", "#FFD47C"],
   "kodla_cizim": "2048 iç çözünürlüklü canvas. Her alan bir Path2D ile kırpılıp önce rengin biraz açık bir 'ince ilk katı' sürülür, sonra belirli yönde, aralığı kalınlığından küçük (üst üste binen) yuvarlak uçlu darbeler çekilir; her darbenin tonu hafifçe oynar, düşük frekanslı gürültüyle kıvrılır, iki kenarına ince koyu boya sırtı, ortasına hafif parlak çizgi eklenir. Gök güneşten çıkan 30 üçgen dilimdir, her dilim ışın yönünde boyanır; güneş halkaları daire boyunca darbelerle doldurulur. Kubbede darbeler sahne profilinden üretilen meridyenler boyunca çekilir; ton alanları iki meridyen ve paralel arasında kurulan net kenarlı bölgelerdir. Açık renk ayrıntılar (kaburga, ışık darbesi, zikzak, noktalar) koyu katmanların üstüne örtücü çizilir. Kontur, SVG yolu getPointAtLength ile örneklenip yay uzunluğu boyunca gürültüyle 0,5 px kadar titretilen sabit kalınlıklı çizgidir; bulutların birleşik dış çizgisi önce kalın çizgi, sonra beyaz dolgu ile elde edilir. En sonda çok hafif mat boya ve kâğıt tanesi eklenir.",
   "etiketler": ["boya kalemi", "posca", "akrilik", "örtücü", "pop", "kontur", "düz renk", "doodle"]
 }

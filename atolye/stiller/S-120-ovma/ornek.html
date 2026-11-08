@@ -86,13 +86,13 @@
       c.globalAlpha = 0.25 + rnd() * 0.35;
       c.strokeStyle = gri(clamp(v + (rnd() - 0.5) * 0.25, 0, 1));
       c.lineWidth = boy * (0.25 + rnd() * 0.3);
-      const a = aciFn ? aciFn(x, y) : rnd() * Math.PI;
-      if (rnd() < 0.45) {
+      const a = aciFn ? aciFn(x, y) : (rnd() - 0.5) * 1.2;
+      if (rnd() < 0.55) {
         // dairesel ovma
-        const r = boy * (0.3 + rnd() * 0.4);
-        c.beginPath(); c.ellipse(x, y, r, r * (0.5 + rnd() * 0.4), a, 0, Math.PI * (1.2 + rnd() * 0.8)); c.stroke();
+        const r = boy * (0.35 + rnd() * 0.5);
+        c.beginPath(); c.ellipse(x, y, r, r * (0.55 + rnd() * 0.4), rnd() * Math.PI, 0, Math.PI * (1.3 + rnd() * 0.7)); c.stroke();
       } else {
-        const L = boy * (1 + rnd());
+        const L = boy * (1.1 + rnd() * 1.2);
         c.beginPath(); c.moveTo(x - Math.cos(a) * L / 2, y - Math.sin(a) * L / 2);
         c.quadraticCurveTo(x + Math.sin(a) * L * 0.15, y - Math.cos(a) * L * 0.15, x + Math.cos(a) * L / 2, y + Math.sin(a) * L / 2);
         c.stroke();
@@ -118,10 +118,10 @@
     const gok = new Path2D('M-20,-20 H1044 V806 H-20 Z');
     alan(gok, {
       u: lin(U, 0, 0, 0, 806, [[0, '#6A78E0'], [0.45, '#4FB3E0'], [0.8, '#F2A27A'], [1, '#F6C46A']]),
-      ud: { adet: 1400, renk: ['#7A6CE0', '#46A6E6', '#F08C8C', '#F7B65E', '#5FC4D8'], boy: 70, en: 14, aci: () => (rnd() - 0.5) * 0.5, alfa: 0.35 },
+      ud: { adet: 900, renk: ['#7A6CE0', '#46A6E6', '#F08C8C', '#F7B65E', '#5FC4D8'], boy: 80, en: 22, aci: () => (rnd() - 0.5) * 1.4, alfa: 0.3 },
       s1: lin(S1, 0, 0, 0, 806, [[0, '#BFE0F6'], [0.5, '#DDF0F8'], [0.85, '#FFF4E4'], [1, '#FFF1D8']]),
       p1: lin(P1, 0, 0, 0, 806, [[0, gri(0.5)], [0.6, gri(0.6)], [1, gri(0.7)]]),
-      p1d: { adet: 2600, deger: (x, y) => 0.45 + 0.3 * (y / 806) + 0.25 * Math.exp(-((x - 880) ** 2 + (y - 140) ** 2) / (2 * 260 * 260)), boy: 46, bl: 3 },
+      p1d: { adet: 2600, deger: (x, y) => 0.42 + 0.3 * (y / 806) + 0.25 * Math.exp(-((x - 880) ** 2 + (y - 140) ** 2) / (2 * 260 * 260)), boy: 50, bl: 3 },
       s2: '#FFFBEE',
       p2: 0.0,
       p2d: { adet: 900, deger: (x, y) => { const g = Math.exp(-((x - 880) ** 2 + (y - 140) ** 2) / (2 * 300 * 300)); return g > 0.08 ? 0.35 + 0.6 * g : null; }, boy: 50, bl: 4 },
@@ -167,11 +167,11 @@
     const yer = new Path2D('M-20,798 H1044 V1044 H-20 Z');
     alan(yer, {
       kutu: [0, 790, 1024, 234],
-      u: lin(U, 0, 798, 0, 1024, [[0, '#EE8A4E'], [1, '#D9603E']]),
-      ud: { adet: 500, renk: ['#F0A040', '#E0583E', '#F2B65A', '#C9704A'], boy: 80, en: 14, aci: () => (rnd() - 0.5) * 0.25, alfa: 0.45 },
-      s1: lin(S1, 0, 798, 0, 1024, [[0, '#FFF0CC'], [1, '#F4DCB0']]),
-      p1: 0.58,
-      p1d: { adet: 900, deger: (x, y) => 0.5 + 0.2 * vnoise(x * 0.01, y * 0.02, 5), boy: 50, aci: () => (rnd() - 0.5) * 0.3, bl: 3 },
+      u: lin(U, 0, 798, 0, 1024, [[0, '#F6B860'], [1, '#EE9A52']]),
+      ud: { adet: 500, renk: ['#F5C35A', '#F08A5A', '#F7D27A', '#E8A0A0'], boy: 80, en: 16, aci: () => (rnd() - 0.5) * 0.4, alfa: 0.45 },
+      s1: lin(S1, 0, 798, 0, 1024, [[0, '#FFF6DE'], [1, '#FAEACA']]),
+      p1: 0.66,
+      p1d: { adet: 900, deger: (x, y) => 0.58 + 0.2 * vnoise(x * 0.01, y * 0.02, 5), boy: 50, aci: () => (rnd() - 0.5) * 0.5, bl: 3 },
     });
   }
 
@@ -202,7 +202,7 @@
         u: lin(U, c - 54, 0, c + 54, 0, [[0, '#9A6FC8'], [0.45, '#E49A7A'], [1, '#F2B866']]),
         ud: { adet: 30, renk: ['#C97BA8', '#F0A068', '#A88AD8'], boy: 22, en: 6, aci: () => Math.PI / 2 + (rnd() - 0.5) * 0.3, alfa: 0.5 },
         s1: lin(S1, c - 54, 0, c + 54, 0, [[0, '#E2D8F0'], [0.5, '#FFF4E6'], [1, '#FFFBF0']]),
-        p1: lin(P1, c - 54, 0, c + 54, 0, [[0, gri(0.5)], [0.6, gri(0.72)], [1, gri(0.8)]]),
+        p1: lin(P1, c - 54, 0, c + 54, 0, [[0, gri(0.62)], [0.6, gri(0.76)], [1, gri(0.84)]]),
         s2: '#FFFFFA',
         p2: lin(P2, c - 54, 0, c + 54, 0, [[0, gri(0)], [0.55, gri(0.1)], [0.85, gri(0.55)], [1, gri(0.3)]]),
       });
@@ -309,9 +309,11 @@
         kutu: [y.x - L, y.y - L, 2 * L, 2 * L],
         u: lin(U, a[0], a[1], c[0], c[1], [[0, '#2A5AA0'], [0.5, '#1E8A5A'], [1, '#6CC048']]),
         s1: lin(S1, a[0], a[1], c[0], c[1], [[0, '#88B8B0'], [1, '#C8EAB0']]),
-        p1: 0.4,
+        ud: { adet: Math.round(L * 0.4), renk: ['#2E9A5E', '#3A70B0', '#7CC64A'], boy: L * 0.3, en: L * 0.08, aci: () => y.aci, alfa: 0.5 },
+        p1: 0.46,
+        p1d: { adet: Math.round(L * 0.3), deger: 0.5, boy: L * 0.3, aci: () => y.aci, bl: 1 },
         s2: '#F0FFE0',
-        p2: 0.06,
+        p2: 0.1,
       });
       U.save(); U.strokeStyle = 'rgba(200,240,140,0.8)'; U.lineWidth = 1.4; U.beginPath(); U.moveTo(a[0], a[1]); U.lineTo(c[0], c[1]); U.stroke(); U.restore();
     }
@@ -324,13 +326,13 @@
         const yol = P(S.elipsYolu(e));
         alan(yol, {
           kutu: [cc.x - cc.r * 1.2, cc.y - cc.r * 1.2, cc.r * 2.4, cc.r * 2.4],
-          u: rad(U, cc.x, cc.y, 2, cc.r * 1.05, [[0, '#F06A8E'], [0.55, '#F4A0B8'], [1, '#C8A0E8']]),
+          u: rad(U, cc.x, cc.y, 2, cc.r * 1.05, [[0, '#F5709A'], [0.5, '#F7A8BE'], [1, '#D6B0F0']]),
           ud: { adet: Math.round(cc.r * 0.8), renk: ['#F6B0C4', '#E890C8', '#F8C890'], boy: cc.r * 0.4, en: cc.r * 0.1, aci: (x, y) => Math.atan2(y - cc.y, x - cc.x), alfa: 0.5 },
           s1: '#FFFFFF',
-          p1: rad(P1, cc.x, cc.y, 2, cc.r, [[0, gri(0.4)], [0.5, gri(0.8)], [1, gri(0.88)]]),
-          p1d: { adet: Math.round(cc.r * 1.2), deger: 0.85, boy: cc.r * 0.35, aci: (x, y) => Math.atan2(y - cc.y, x - cc.x), bl: 1.2 },
+          p1: rad(P1, cc.x, cc.y, 2, cc.r, [[0, gri(0.22)], [0.5, gri(0.55)], [1, gri(0.76)]]),
+          p1d: { adet: Math.round(cc.r * 1.2), deger: (x, y) => (Math.hypot(x - cc.x, y - cc.y) > cc.r * 0.45 ? 0.72 : 0.4), boy: cc.r * 0.35, aci: (x, y) => Math.atan2(y - cc.y, x - cc.x), bl: 1.2 },
           s2: '#FFFFFF',
-          p2: 0.35,
+          p2: rad(P2, cc.x + cc.r * 0.2, cc.y - cc.r * 0.2, 2, cc.r * 1.1, [[0, gri(0.2)], [0.6, gri(0.6)], [1, gri(0.4)]]),
         });
       }
       const orta = new Path2D(); orta.arc(cc.x, cc.y, cc.r * 0.2, 0, Math.PI * 2);
@@ -348,46 +350,50 @@
   const bolge = S.bolgeHaritasi();
   const out = ctx.createImageData(N, N);
   const o = out.data;
-  const per = 9.5; // örgü aralığı (iç çözünürlükte piksel)
+  const per = 6.2; // örgü aralığı (iç çözünürlükte piksel)
   const sstep = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   for (let py = 0; py < N; py++) {
     for (let px = 0; px < N; px++) {
       const j = (py * N + px) * 4;
       const x = px / K, y = py / K;
-      // bez örgüsü (düz dokuma): atkı ve çözgü iplikleri
-      const tx = px / per + 0.25 * vnoise(px * 0.01, py * 0.01, 7), ty = py / per + 0.25 * vnoise(px * 0.01, py * 0.01, 8);
+      // bez örgüsü (düz dokuma), iplik kalınlığı ve yönü düzensiz
+      const tx = px / per + 0.6 * vnoise(px * 0.006, py * 0.006, 7) + 0.15 * vnoise(px * 0.05, py * 0.02, 17);
+      const ty = py / per + 0.6 * vnoise(px * 0.006, py * 0.006, 8) + 0.15 * vnoise(px * 0.02, py * 0.05, 18);
       const ix = Math.floor(tx), iy = Math.floor(ty);
       const fx = tx - ix, fy = ty - iy;
       const cift = (ix + iy) & 1;
       const sx = Math.sin(Math.PI * fx), sy = Math.sin(Math.PI * fy);
-      const cozgu = sx * (cift ? 0.62 : 0.6 + 0.4 * sy);
-      const atki = sy * (cift ? 0.6 + 0.4 * sx : 0.62);
-      const kalinlik = 0.85 + 0.3 * hash(ix, 0, 3) * 0 + 0.15 * (vnoise(ix * 0.3, iy * 0.05, 9) - 0.5) + 0.15 * (vnoise(iy * 0.3, ix * 0.05, 10) - 0.5);
-      const orgu = Math.max(cozgu, atki) * kalinlik;
-      // fırça yönü: kubbe ve kasnakta dikey, başka yerde yatay kuru fırça izi
+      const cozgu = sx * (cift ? 0.55 : 0.55 + 0.45 * sy) * (0.8 + 0.4 * vnoise(ix * 0.7, py * 0.01, 9));
+      const atki = sy * (cift ? 0.55 + 0.45 * sx : 0.55) * (0.8 + 0.4 * vnoise(iy * 0.7, px * 0.01, 10));
+      const orgu = Math.max(cozgu, atki);
+      // fırça yönü: kubbe, kasnak ve minarede dikey, başka yerde yatay kuru fırça izi
       const bg = bolge.bolge(x, y);
       const dikey = bg === 'kubbe' || bg === 'kasnak' || bg === 'minare';
       const u = dikey ? y : x, v = dikey ? x : y;
-      const kuru = 0.55 * vnoise(u * 0.03, v * 0.35, 11) + 0.3 * vnoise(u * 0.09, v * 0.9, 12) + 0.15 * vnoise(x * 0.012, y * 0.012, 13);
-      const doku = orgu * 0.55 + kuru * 0.45;
-      // birinci ovma: basınç ne kadar yüksekse boya o kadar derin çukurlara iner
+      // kıl izleri (fırça yönünde uzun, enine sık), orta ölçekli kırılma
+      const kil = 0.6 * vnoise(u * 0.03, v * 0.5, 11) + 0.4 * vnoise(u * 0.08, v * 1.2, 12);
+      // ovulmuş, kümelenmiş boya: bükülmüş çok ölçekli gürültü
+      const wx = x + 26 * (vnoise(x * 0.012, y * 0.012, 15) - 0.5), wy = y + 26 * (vnoise(x * 0.012, y * 0.012, 16) - 0.5);
+      const ovul = 0.24 * vnoise(wx * 0.045, wy * 0.045, 13) + 0.4 * vnoise(wx * 0.13, wy * 0.13, 14) + 0.36 * vnoise(wx * 0.32, wy * 0.32, 19);
+      const doku = orgu * 0.3 + ovul * 0.52 + kil * 0.18;
+      // birinci ovma: basınç arttıkça boya dokunun daha derin yerlerine iner
       const p1 = P1v[j] / 255;
-      const e1 = 1 - p1;
-      const c1 = sstep(e1 - 0.11, e1 + 0.11, doku) * (0.55 + 0.45 * p1);
+      const e1 = 1 - p1 * 1.05;
+      const c1 = sstep(e1 - 0.2, e1 + 0.2, doku) * (0.62 + 0.33 * p1);
       let r = Uv[j] + (S1v[j] - Uv[j]) * c1;
       let g = Uv[j + 1] + (S1v[j + 1] - Uv[j + 1]) * c1;
       let b = Uv[j + 2] + (S1v[j + 2] - Uv[j + 2]) * c1;
-      // ikinci ovma (ışık): yalnız örgünün tepelerinde, başka gürültüyle
+      // ikinci ovma (ışık): daha kuru fırça, yalnız tepelerde
       const p2 = P2v[j] / 255;
       if (p2 > 0.01) {
-        const kuru2 = 0.6 * vnoise(u * 0.04, v * 0.45, 21) + 0.4 * vnoise(x * 0.02, y * 0.02, 22);
-        const doku2 = orgu * 0.65 + kuru2 * 0.35;
-        const e2 = 1 - p2 * 0.9;
-        const c2 = sstep(e2 - 0.08, e2 + 0.08, doku2) * 0.9;
+        const kil2 = 0.5 * vnoise(wx * 0.06, wy * 0.06, 21) + 0.3 * vnoise(wx * 0.16, wy * 0.16, 22) + 0.2 * vnoise(u * 0.04, v * 0.6, 23);
+        const doku2 = orgu * 0.38 + kil2 * 0.62;
+        const e2 = 1 - p2 * 0.95;
+        const c2 = sstep(e2 - 0.12, e2 + 0.12, doku2) * 0.85;
         r += (S2v[j] - r) * c2; g += (S2v[j + 1] - g) * c2; b += (S2v[j + 2] - b) * c2;
       }
       // bezin dokusu ince boyanın altından hafifçe ışıklanır (sağ üstten)
-      const ishik = (Math.sin(Math.PI * (fx - 0.15)) * 0.5 + Math.sin(Math.PI * (fy + 0.15)) * 0.5 - 0.6) * 0.06;
+      const ishik = (orgu - 0.5) * 0.05 + (Math.sin(Math.PI * (fx - 0.2)) - Math.sin(Math.PI * (fy + 0.2))) * 0.012;
       const f = 1 + ishik;
       o[j] = clamp(r * f, 0, 255); o[j + 1] = clamp(g * f, 0, 255); o[j + 2] = clamp(b * f, 0, 255); o[j + 3] = 255;
     }
