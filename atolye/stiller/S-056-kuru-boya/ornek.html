@@ -400,7 +400,7 @@
   const bulutGovde = (x, y) => {
     let m = 0;
     for (const [bx, by, s] of bulutlar) {
-      const dx = (x - bx) / (95 * s), dy = (y - by) / (y < by ? 30 * s : 15 * s);
+      const dx = (x - bx) / (112 * s), dy = (y - by) / (y < by ? 40 * s : 19 * s);
       const d = Math.hypot(dx, dy) + (nD(x / 22, y / 22) - 0.5) * 0.45;
       m = Math.max(m, sstep(1.0, 0.55, d));
     }
@@ -454,18 +454,18 @@
   katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: -0.15, aciJ: 0.1, aralik: 2.0, boy: 30, kal: 1.7, alfa: 0.8, renk: hex('#FFFBF0'), obek: 24 }, r),
     { sil: gokSil, bx: gokBx, opq: 0.6, maske: harita((x, y) => (y < 800 ? bulutGovde(x, y) * kenar(x, y, false) * 0.95 : 0)) });
   // 8) bulutların güneşe bakan üst kenarı şeftali
-  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: -0.12, aciJ: 0.1, aralik: 2.4, boy: 22, kal: 1.4, alfa: 0.6, renk: hex('#F8B07E'), obek: 20 }, r),
-    { sil: gokSil, bx: gokBx, guc: 1.1, maske: harita((x, y) => (y < 800 ? bulutGovde(x, y) * sstep(0.3, 0.9, bulutGovde(x - 10, y + 9) - bulutGovde(x + 10, y - 9) + 0.5) * 0.7 : 0)) });
+  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: -0.12, aciJ: 0.1, aralik: 2.4, boy: 22, kal: 1.4, alfa: 0.5, renk: hex('#F8B07E'), obek: 20 }, r),
+    { sil: gokSil, bx: gokBx, guc: 0.8, maske: harita((x, y) => (y < 800 ? bulutGovde(x, y) * sstep(0.3, 0.9, bulutGovde(x - 10, y + 9) - bulutGovde(x + 10, y - 9) + 0.5) * 0.7 : 0)) });
 
   // ================================================================ ZEMİN (koyu sarı toprak, turuncu ve menekşe gölgeler)
   const zBx = [0, 790, W, W];
   const ZEM = harita((x, y) => (y >= 798 ? kenar(x, y, true) : 0));
-  katman((x) => taraK(x, { bx: zBx, aci: -0.12, aciJ: 0.1, aralik: 2.3, boy: 36, kal: 1.55, alfa: 0.75, renk: hex('#F3BE4A'), obek: 26 }, r),
-    { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 1.35, maske: ZEM });
-  katman((x) => taraK(x, { bx: zBx, aci: -2.6, aciJ: 0.15, aralik: 2.6, boy: 28, kal: 1.45, alfa: 0.62, renk: hex('#E2762E'), obek: 24 }, r),
-    { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 1.3, maske: harita((x, y) => ZEM[y * W + x] * (0.35 + 0.65 * sstep(0.42, 0.68, nE(x / 60, y / 40)))) });
-  katman((x) => taraK(x, { bx: zBx, aci: -0.4, aciJ: 0.12, aralik: 2.7, boy: 26, kal: 1.4, alfa: 0.6, renk: hex('#A84A2C'), obek: 22 }, r),
-    { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 1.3, maske: harita((x, y) => ZEM[y * W + x] * (0.25 + 0.75 * sstep(880, 1010, y)) * sstep(0.45, 0.72, nD(x / 45 + 5, y / 35))) });
+  katman((x) => taraK(x, { bx: zBx, aci: -0.12, aciJ: 0.1, aralik: 2.3, boy: 36, kal: 1.55, alfa: 0.7, renk: hex('#F2C463'), obek: 26 }, r),
+    { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 1.2, maske: ZEM });
+  katman((x) => taraK(x, { bx: zBx, aci: -2.6, aciJ: 0.15, aralik: 2.6, boy: 28, kal: 1.45, alfa: 0.5, renk: hex('#E8894A'), obek: 24 }, r),
+    { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 0.95, maske: harita((x, y) => ZEM[y * W + x] * (0.35 + 0.65 * sstep(0.42, 0.68, nE(x / 60, y / 40)))) });
+  katman((x) => taraK(x, { bx: zBx, aci: -0.4, aciJ: 0.12, aralik: 2.7, boy: 26, kal: 1.4, alfa: 0.5, renk: hex('#A84A2C'), obek: 22 }, r),
+    { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 0.9, maske: harita((x, y) => ZEM[y * W + x] * (0.25 + 0.75 * sstep(880, 1010, y)) * sstep(0.45, 0.72, nD(x / 45 + 5, y / 35))) });
   katman((x) => taraK(x, { bx: zBx, aci: -0.05, aciJ: 0.1, aralik: 2.5, boy: 40, kal: 1.45, alfa: 0.66, renk: hex('#6B4DB4'), obek: 26 }, r),
     { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 1.35, maske: harita((x, y) => ZEM[y * W + x] * Math.max(sstep(836, 802, y) * sstep(230, 320, x) * sstep(870, 790, x), 0.5 * sstep(930, 1015, y))) });
 
@@ -596,8 +596,9 @@
     }
   }
   const yBx = [0, 500, W, W];
-  katman((x) => yaprakCiz(x, hex('#A9C94C'), (yp) => 0.8, { aralik: 1.9, kal: 1.5, yari: [1, 0.8] }), { sil: [MK.onBitki], bx: yBx });
-  katman((x) => yaprakCiz(x, hex('#3F8C40'), (yp) => (yp.uzunluk > 50 ? 0.85 : 0.6), { aralik: 2.0, kal: 1.45, aci: 0.5, yari: [0.45, 1] }), { sil: [MK.onBitki], bx: yBx });
+  katman((x) => { B.yapraklar.forEach((yp, i) => { x.save(); x.globalCompositeOperation = 'destination-out'; x.fillStyle = '#000'; x.fill(yaprakYollari[i]); x.restore(); x.save(); x.clip(yaprakYollari[i]); const L = yp.uzunluk; taraK(x, { bx: [yp.x - L * 1.1, yp.y - L * 1.1, yp.x + L * 1.1, yp.y + L * 1.1], aci: yp.aci + 0.25, aciJ: 0.1, aralik: 2.0, boy: Math.max(14, L * 0.4), kal: 1.5, alfa: 0.8, renk: hex('#D3E46A'), obek: Math.max(10, L * 0.3), sik: 0.5 }, r); x.restore(); }); }, { sil: [MK.onBitki], bx: yBx, guc: 1.1 });
+  katman((x) => yaprakCiz(x, hex('#8CC043'), (yp) => 0.85, { aralik: 1.9, kal: 1.55, yari: [0.9, 0.9] }), { sil: [MK.onBitki], bx: yBx });
+  katman((x) => yaprakCiz(x, hex('#2F9446'), (yp) => (yp.uzunluk > 50 ? 0.9 : 0.7), { aralik: 2.0, kal: 1.5, aci: 0.5, yari: [0.55, 1] }), { sil: [MK.onBitki], bx: yBx, guc: 1.1 });
   katman((x) => yaprakCiz(x, hex('#1D5238'), (yp) => (yp.uzunluk > 50 ? 0.75 : 0.35), { aralik: 2.4, kal: 1.4, aci: 0.75, yari: [0.1, 0.9] }), { sil: [MK.onBitki], bx: yBx });
   katman((x) => yaprakCiz(x, hex('#2F3F82'), (yp) => (yp.y > 880 ? 0.6 : 0.15), { aralik: 3.0, kal: 1.3, aci: 0.9, yari: [0, 0.8] }), { sil: [MK.onBitki], bx: yBx });
   katman((x) => yaprakCiz(x, hex('#F0E27A'), (yp, i) => (i % 4 === 1 ? 0.6 : 0.25), { aralik: 2.6, kal: 1.4, aci: 0.4, yari: [0.9, 0] }), { sil: [MK.onBitki], bx: yBx, opq: 0.35 });
@@ -633,9 +634,10 @@
     });
   }
   const cBx = [0, 500, W, W];
-  katman((x) => tacCiz(x, hex('#F6A6C2'), (c, e, yon) => 0.75 + 0.2 * (yon < 0), { aralik: 1.5, kal: 1.5, boy: [0.55, 0.45] }), { bx: cBx });
-  katman((x) => tacCiz(x, hex('#D2427E'), (c, e, yon) => 0.8, { aralik: 1.8, kal: 1.5, boy: [0.2, 0.25] }), { bx: cBx });
-  katman((x) => tacCiz(x, hex('#A898D8'), (c, e, yon) => (yon < -0.1 ? 0.75 : 0.0), { aralik: 2.0, kal: 1.4, boy: [0.5, 0.5] }), { bx: cBx });
+  katman((x) => tacCiz(x, hex('#F7A2C0'), (c, e, yon) => 0.85 + 0.15 * (yon < 0), { aralik: 1.4, kal: 1.6, boy: [0.8, 0.35] }), { bx: cBx, guc: 1.15 });
+  katman((x) => tacCiz(x, hex('#D8387A'), (c, e, yon) => 0.85, { aralik: 1.7, kal: 1.55, boy: [0.3, 0.3] }), { bx: cBx, guc: 1.1 });
+  katman((x) => tacCiz(x, hex('#9A7FD6'), (c, e, yon) => (yon < -0.1 ? 0.8 : yon < 0.3 ? 0.35 : 0.0), { aralik: 2.0, kal: 1.45, boy: [0.55, 0.45] }), { bx: cBx });
+  katman((x) => tacCiz(x, hex('#FFF4F8'), (c, e, yon) => (yon > 0.2 ? 0.85 : 0.0), { aralik: 1.8, kal: 1.8, boy: [0.75, 0.3] }), { bx: cBx, opq: 0.6 });
   katman((x) => tacCiz(x, hex('#8E2A62'), (c, e, yon) => 0.85, { aralik: 2.4, kal: 1.3, boy: [0.06, 0.12] }), { bx: cBx });
   // göbekler
   katman((x) => { for (const c of B.cicekler) { x.save(); x.beginPath(); x.arc(c.x, c.y, c.r * 0.22, 0, 7); x.clip(); taraK(x, { bx: [c.x - c.r * 0.3, c.y - c.r * 0.3, c.x + c.r * 0.3, c.y + c.r * 0.3], aci: egik, aralik: 1.5, boy: 12, kal: 1.4, alfa: 0.9, renk: hex('#F5C832'), obek: 10, sik: 0.4 }, r); x.restore(); } },
@@ -646,7 +648,7 @@
     { bx: cBx, cila: false });
 
   // ================================================================ KONTUR ÇİZGİLERİ (net, ince, renkli kalemle)
-  const kontur = (fn, bx) => katman(fn, { bx: bx || [0, 0, W, W], cila: false, yumus: 0.12 });
+  const kontur = (fn, bx) => { KALINLIK = 1.8; katman(fn, { bx: bx || [0, 0, W, W], cila: false, yumus: 0.12, guc: 1.1 }); KALINLIK = 1; };
   // kubbe ve kaburgalar
   kontur((x) => {
     const kn = SAHNE.kubbeNoktalari(120);

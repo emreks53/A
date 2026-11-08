@@ -457,8 +457,8 @@ const RENK = {
   altin: rampa([[0, [232, 204, 126]], [0.5, [206, 160, 74]], [1, [154, 112, 52]]]), // aşı boyası altın
   yaprak: rampa([[0.15, [150, 190, 100]], [0.45, [92, 152, 86]], [0.85, [48, 110, 80]]]),
   gul: rampa([[0, [234, 186, 190]], [0.45, [214, 136, 152]], [1, [172, 88, 116]]]), // tozlu gül
-  gok: [118, 152, 198],
-  gokKoyu: [100, 130, 182],
+  gok: [104, 146, 204],
+  gokKoyu: [92, 124, 186],
   sicak: [232, 208, 156],
   kum: [226, 214, 192],
 };
@@ -547,8 +547,8 @@ function gok() {
     for (const [bx, by, s] of bulutlar) t *= smooth(0.45, 1.3, ((x - bx) / (92 * s)) ** 2 + ((y - by + 9 * s) / (21 * s)) ** 2);
     return clamp(t);
   };
-  tara(duzAile(0, 0, 1024, 800, -0.86, 3.4), { esik: 0.08, aralik: 0.8, alfa: 0.3, kalin: 0.9, minL: 18, maxL: 46, tonF: gokT, kirp });
-  boya(duzAile(0, 0, 1024, 800, -0.86, 2.0), { esik: 0.06, aralik: 0.6, alfa: 0.75, kalin: 1.5, minL: 18, maxL: 44, tonF: gokT, renkF: () => RENK.gok, kirp });
+  tara(duzAile(0, 0, 1024, 800, -0.86, 3.4), { esik: 0.08, aralik: 0.8, alfa: 0.26, kalin: 0.9, minL: 18, maxL: 46, tonF: gokT, kirp });
+  boya(duzAile(0, 0, 1024, 800, -0.86, 1.7), { esik: 0.06, aralik: 0.55, alfa: 0.85, kalin: 1.5, minL: 18, maxL: 44, tonF: gokT, renkF: () => RENK.gok, kirp });
   boya(duzAile(0, 0, 1024, 800, -0.3, 2.8), { esik: 0.4, aralik: 0.5, alfa: 0.45, kalin: 1.3, minL: 18, maxL: 46, tonF: gokT, renkF: () => RENK.gokKoyu, kirp });
   // güneşin çevresinde, kalemin dairesel vuruşlarıyla çok açık, sıcak bir hale; güneşin kendisi kâğıdın beyazı
   const gunT = (x, y) => { const d = Math.hypot(x - 880, y - 140); return 0.3 * Math.exp(-(((d - 62) / 22) ** 2)) * smooth(44, 54, d); };

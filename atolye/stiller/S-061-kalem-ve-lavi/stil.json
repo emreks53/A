@@ -13,20 +13,20 @@
     "Köşelerde kalem kalkıyor, yatay hatlar yapının ötesine taşıyor; yer yer ikinci, arayan çizgiler ve kubbe tabanı, korniş, minare ekseni boyunca ince inşa çizgileri",
     "Gölgeler mürekkeple kurulmuş: kubbenin sol yanında kaburgaya koşut kontur taraması ve çapraz tarama, minare ile kasnakta dikey tarama, korniş altında sık şerit; pencereler zikzak karalamayla koyulaşmış",
     "Laviler çizgiye oturmuyor: kubbe yeşili sağa-yukarı kaymış, solda konturla arasında beyaz pay bırakıp sağda dışarı taşıyor; ışıklı şerit boyanmamış kâğıt",
-    "Gök, yapının çevresinde düzensiz beyaz pay bırakan, kenarları yırtık, ultramarine ile seruleum arasında ıslakta geçen bir leke; güneş kâğıdın beyazı, çevresinde soluk sarı",
+    "Gök açık tonlu, kenarları düzensiz tek bir leke: yapının çevresinde beyaz pay, ultramarine ile seruleum ıslakta geçiyor, bulutlar mendille kaldırılmış yumuşak kenarlı açıklıklar; güneş kâğıt beyazı bir disk, çevresinde kaymış sarı-turuncu lavi ve tek hamlede çekilmiş, kapanmayan mürekkep halkası",
     "Kuruyan lavi kenarlarında koyu pigment çizgisi, kâğıt dokusunda granülasyon, birkaç boya sıçrantısı; beyaz çiçekler boyanmadan bırakılmış, yalnız merkeze yakın gölge yanında gül pembesi"
   ],
   "palet": [
     "#211913",
     "#FBF8F1",
-    "#A1BEDC",
+    "#BDD0E2",
     "#B7D480",
-    "#224F46",
+    "#316A55",
     "#EAD5BC",
     "#CCC3CE",
     "#E3A5BA"
   ],
-  "kodla_cizim": "İki katman. Lavi katmanı 1024 çözünürlükte piksel başına optik yoğunluk olarak birikir: her leke Hobbs usulü yinelemeli bozulmuş çokgenlerin düşük saydamlıkla on kez üst üste doldurulmasıyla bir kapsama alanı olur; boş bırakılacak yerler (ışık şeridi, bulutlar, çiçekler, gürültüyle eşiklenmiş genişletilmiş yapı silueti) bu alandan silinir. Alanın bulanık kopyasından farkı kuruyan kenarda pigment birikimini, kâğıt yükseklik dokusu granülasyonu, düşük frekanslı gürültü yoğunluk dalgalanmasını verir; renk iki pigment arasında konuma göre karışır ve renk = kâğıt × exp(−Σ yoğunluk × soğurma) ile çarpımsal biriktirilir. Lekeler geometriden kaydırılarak konur, çizgiye tam uymaz. Mürekkep katmanı 2048 çözünürlükte: her darbe el titremesiyle bozulmuş bir yolun değişken kalınlıklı şerit olarak doldurulmasıdır (kalınlık = uç açısına göre yön çarpanı × başta basınç, sonda incelme × gürültü); mimari hatlar keskin köşelerden bölünüp uçlarından taşırılır, bazılarına ikinci arayan çizgi eklenir. Gölge taraması ışık modeline (kubbe için dönel yüzey normali, kasnak ve minare için silindir) göre eşiklenen kısa darbelerle, kubbede meridyenler boyunca kontur taramasıyla yapılır; pencereler kırpılmış zikzak karalamadır. Örtüşmeler ressam sırasıyla çözülür: önde duran biçimin silueti mürekkep katmanından silinip sonra kendi çizgileri çizilir. En sonda kâğıt dokusu kabartma ışığıyla eklenir.",
+  "kodla_cizim": "İki katman. Lavi katmanı 1024 çözünürlükte piksel başına optik yoğunluk olarak birikir: her leke Hobbs usulü yinelemeli bozulmuş çokgenlerin düşük saydamlıkla on kez üst üste doldurulmasıyla bir kapsama alanı olur; boş bırakılacak yerler (ışık şeridi, çiçekler, güneş diski, gürültüyle eşiklenmiş genişletilmiş yapı silueti) bu alandan silinir; bulutlar bulanık kenarlı, eksik güçte silinerek mendille kaldırılmış gibi yumuşak kalır. Alanın bulanık kopyasından farkı kuruyan kenarda pigment birikimini, kâğıt yükseklik dokusu granülasyonu, düşük frekanslı gürültü yoğunluk dalgalanmasını verir; renk iki pigment arasında konuma göre karışır ve renk = kâğıt × exp(−Σ yoğunluk × soğurma) ile çarpımsal biriktirilir. Lekeler geometriden kaydırılarak konur, çizgiye tam uymaz. Mürekkep katmanı 2048 çözünürlükte: her darbe el titremesiyle bozulmuş bir yolun değişken kalınlıklı şerit olarak doldurulmasıdır (kalınlık = uç açısına göre yön çarpanı × başta basınç, sonda incelme × gürültü); mimari hatlar keskin köşelerden bölünüp uçlarından taşırılır, bazılarına ikinci arayan çizgi eklenir. Gölge taraması ışık modeline (kubbe için dönel yüzey normali, kasnak ve minare için silindir) göre eşiklenen kısa darbelerle, kubbede meridyenler boyunca kontur taramasıyla yapılır; pencereler kırpılmış zikzak karalamadır. Örtüşmeler ressam sırasıyla çözülür: önde duran biçimin silueti mürekkep katmanından silinip sonra kendi çizgileri çizilir. En sonda kâğıt dokusu kabartma ışığıyla eklenir.",
   "etiketler": [
     "mürekkep",
     "suluboya",

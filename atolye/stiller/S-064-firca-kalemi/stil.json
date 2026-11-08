@@ -10,11 +10,11 @@
   "koken": "Doğu Asya fırça geleneğinden gelen hazneli fırça kalemler, 20. yüzyılın ikinci yarısında Japon üreticilerin (Pentel, Kuretake, Tombow) kalemleriyle dünyaya yayıldı. Batı'da çizgi roman mürekkeplemesinin (Milton Caniff, Will Eisner) kalın-ince, dinamik fırça çizgisini taşınabilir kıldı; Tombow türü renkli fırça kalemler de suluboyaya yakın, hızlı ve çizgili bir renklendirme biçimi getirdi.",
   "ayirt_edici": [
     "Siyah çizgi basınçla şişip inceliyor: kubbenin sol konturu kalın ve tepeye doğru inceliyor, sağa inen hat incecik başlayıp kalınlaşıyor; yaprak ve taç yapraklarında bir yan kalın, bir yan ince",
-    "Hızlı darbelerin sonunda kılların ayrıldığı kuru, kırık uçlar: tepeye doğru biten kaburgalar, saplar, korniş altındaki kalın gölge darbesi ve yer çizgisi",
+    "Hızlı darbelerin sonunda kılların ayrıldığı kuru, kırık uçlar: uzun konturlar (kubbenin dış hattı, kasnak ve korniş hatları, minare gövdesi) birkaç darbeye bölünmüş, her darbe kuru bir kesintiyle bitiyor; tepeye doğru biten kaburgalar, saplar ve yer çizgisi de kuru açılıyor",
     "Pencereler bastırılmış fırçanın dolu, kenarı pürüzlü lekeleri; minarenin, kasnağın ve kubbenin gölge yanında hızlı, eğik, uçları kuru kısa çizgiler",
-    "Renkli fırça kalemin saydam darbeleri: kubbede kaburgalar boyunca yukarı savrulan üç yeşil, binen yerlerde koyulaşma ve ince beyaz aralıklar; ışık şeridi kâğıt",
-    "Gök, binanın arkasında birkaç geniş, uçları kuru açılan mavi darbe; güneş iki dairesel sarı darbe ve tek hamlede çekilmiş yarım halka",
-    "Gölgeler lavanta, taş sıcak kum rengi; çiçeklerde merkezden dışa çekilmiş açık ve koyu pembe darbeler, sarı orta"
+    "Renkli fırça kalemin saydam darbeleri: kubbede kaburgalar boyunca yukarı savrulan üç yeşil, binen yerlerde koyulaşma ve ince beyaz aralıklar; ışık şeridi kâğıt, üstünden tek bir kuru açık yeşil darbe geçiyor",
+    "Gök, binanın çevresinde kümelenen eğik, boyları ve açıları farklı, uçları kuru açılan mavi darbeler; yapının hemen arkasında kısa koyu darbeler, güneşin çevresi kâğıt; güneş iki dairesel sarı darbe ve tek hamlede çekilmiş, neredeyse kapanan siyah halka",
+    "Gölgeler lavanta, taş sıcak kum rengi; çiçeklerde merkezden dışa çekilmiş şeftali ve mercan rengi darbeler, sarı orta"
   ],
   "palet": [
     "#18161C",
@@ -22,11 +22,11 @@
     "#66AD2D",
     "#1F6217",
     "#CEC0DF",
-    "#F6E6CB",
-    "#FBC9D4",
-    "#FFD84D"
+    "#F8D2B0",
+    "#FA845F",
+    "#FAD763"
   ],
-  "kodla_cizim": "Her fırça darbesi bir basınç profiliyle çizilir: iniş (ince uçtan hızla kalınlaşma), ortada şişme, kalkışta incelme; kenarlar düşük frekanslı gürültüyle hafifçe pürüzlenir. Darbenin son bölümünde gövde biter ve fırça kıllara ayrılır: genişlik boyunca dizilen 6–24 kıl, kendi gürültüsü darbe sonuna doğru yükselen bir eşiği aştığı yerlerde ince şeritler olarak sürer, kenardaki kıllar önce kopar. Gövde ve kıllar tek bir yola eklenip tek seferde doldurulur, böylece saydam renkte üst üste binme olmaz. Renk katmanı beyaz başlar; renkli darbeler çarpımsal ve yarı saydam basılır, bölge bölge (önce beyaza dönen, maskeyle 2–5 px taşarak kırpılan) uygulanır: kubbede meridyenler boyunca yukarı savrulan darbeler, kasnakta dikey darbeler, yapraklarda tek basışlı yaprak darbesi, taç yapraklarında merkezden dışa darbeler. Siyah çizgi ayrı katmanda ressam sırasıyla (önde duranın silueti silinerek) çizilir; mimari hatlar köşelerden bölünür, her parça rastgele yönde çekilir; pencereler pürüzlü kemer lekeleri olarak doldurulur. En sonda bristol kâğıdın çok ince dokusu eklenir.",
+  "kodla_cizim": "Her fırça darbesi bir basınç profiliyle çizilir: iniş (ince uçtan hızla kalınlaşma), ortada şişme, kalkışta incelme; kenarlar düşük frekanslı gürültüyle hafifçe pürüzlenir. Darbenin son bölümünde gövde biter ve fırça kıllara ayrılır: genişlik boyunca dizilen 6–24 kıl, kendi gürültüsü darbe sonuna doğru yükselen bir eşiği aştığı yerlerde ince şeritler olarak sürer, kenardaki kıllar önce kopar. Gövde ve kıllar tek bir yola eklenip tek seferde doldurulur, böylece saydam renkte üst üste binme olmaz. Renk katmanı beyaz başlar; renkli darbeler çarpımsal ve yarı saydam basılır; gök darbeleri altı küme halinde, açı, boy ve eğrilikleri rastgele seçilerek ve güneşin çevresi boş bırakılarak çekilir; diğer darbeler bölge bölge (önce beyaza dönen, maskeyle 2–5 px taşarak kırpılan) uygulanır: kubbede meridyenler boyunca yukarı savrulan darbeler, kasnakta dikey darbeler, yapraklarda tek basışlı yaprak darbesi, taç yapraklarında merkezden dışa darbeler. Siyah çizgi ayrı katmanda ressam sırasıyla (önde duranın silueti silinerek) çizilir; mimari hatlar köşelerden bölünür, uzun hatlar ayrıca 120–220 birimlik darbelere ayrılır (her darbe kuru kuyrukla biter, böylece konturda kuru kesintiler oluşur), her parça rastgele yönde çekilir; pencereler pürüzlü kemer lekeleri olarak doldurulur. En sonda bristol kâğıdın çok ince dokusu eklenir.",
   "etiketler": [
     "fırça kalem",
     "mürekkep",
