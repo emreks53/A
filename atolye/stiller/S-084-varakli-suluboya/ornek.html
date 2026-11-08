@@ -189,6 +189,7 @@
   const KAIDE_M = yolMaske([GY.kaide, GY.kornis]);
   const MINARE_M = yolMaske(GY.minare);
   const KUBBE_M = yolMaske([GY.kubbe]);
+  const ALTIN_M = yolMaske(GY.alem.concat(GY.minareAlem));
   for (let i = 0; i < N; i++) MINARE_M[i] *= (1 - KAIDE_M[i]) * (1 - KASNAK_M[i]);
   function cokgen(c, pts) { c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]))); c.closePath(); }
   // Tyler Hobbs usulü bozulmuş çokgen

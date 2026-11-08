@@ -544,6 +544,37 @@
       strok(cx, line, 1.45, al, c, o.bas === undefined ? 0.1 : o.bas, o.son === undefined ? 0.55 : o.son, 0.95);
     }
   }
+  // zikzak karalama (mum boya / pastel ile ileri-geri doldurma): merkez (px, py), vuruş yönü a, vuruş boyu L, adım s, geçiş n
+  function karala(cx, px, py, a, L, s, n, w, al, c, r, o) {
+    o = o || {};
+    const ux = Math.cos(a), uy = Math.sin(a), nx = -uy, ny = ux, pts = [];
+    const egik = o.egik || 0; // geçişler hafif kayık (el hareketi)
+    for (let k = 0; k <= n; k++) {
+      const side = k % 2 ? 1 : -1, t = (k - n / 2) * s, j = 0.82 + 0.3 * r();
+      const kk = side * (L / 2) * j + egik * t;
+      pts.push([px + ux * kk + nx * t + (r() - 0.5) * s * 0.3, py + uy * kk + ny * t + (r() - 0.5) * s * 0.3]);
+    }
+    cx.lineWidth = w; cx.lineJoin = 'round'; cx.lineCap = 'round'; cx.strokeStyle = rgba(c, al);
+    cx.beginPath(); cx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) cx.lineTo(pts[i][0], pts[i][1]);
+    cx.stroke();
+  }
+  // alan doldurma: bx içinde karalama öbekleri. o: {bx, ic, adim, aci, aciJ, boy, s, n, kal, alfa, renk}
+  function karalaAlan(cx, o, r) {
+    const [x1, y1, x2, y2] = o.bx, liste = [];
+    for (let gy = y1; gy < y2; gy += o.adim) for (let gx = x1; gx < x2; gx += o.adim) liste.push([gx + (r() - 0.5) * o.adim, gy + (r() - 0.5) * o.adim]);
+    karistir(liste, r);
+    const f = (v, x, y) => (typeof v === 'function' ? v(x, y) : v);
+    for (const [px, py] of liste) {
+      if (o.ic && !o.ic(px, py)) continue;
+      const al = f(o.alfa, px, py); if (al <= 0.01) continue;
+      const c = o.renk(px, py); if (!c) continue;
+      const a = f(o.aci, px, py) + (r() - 0.5) * (o.aciJ || 0.15);
+      karala(cx, px, py, a, f(o.boy, px, py), o.s, o.n + Math.round((r() - 0.5) * 3), f(o.kal, px, py), al, c, r, { egik: o.egik });
+    }
+  }
+  // ton maskesi: alfa = fn(x, y) (1024'te hesaplanır) olan 2048 tuval; katmanı kirp ile yumuşakça zayıflatmak için
+  function tonMaske(fn, bx) { const k = katmanTuvali(); haritaCiz(k.x, (x, y) => { const a = fn(x, y); return a > 0 ? [0, 0, 0, a] : null; }, bx); return k.c; }
 
   const r = SAHNE.rng(9301);
   const nA = gurultu(931), nB = gurultu(932), nC = gurultu(933), nD = gurultu(934), nE = gurultu(935);
@@ -787,6 +818,8 @@
   }, Object.assign({ sil: [MK.yaprakUstu], bx: [0, 500, W, W] }, KALEM));
   katman((x) => {
     for (const yp of B.yapraklar) { const [a, b] = SAHNE.yaprakDamari(yp); strok(x, [a, [lerp(a[0], b[0], 0.5), lerp(a[1], b[1], 0.5)], b], 1.0, 0.6, C.yaprakKoyu, 0.05, 0.4); }
+  }, Object.assign({ kirp: MK.yaprakG, bx: [0, 500, W, W] }, KALEM));
+  katman((x) => {
     for (const c of B.cicekler) {
       for (const p of tacKenarlari(c)) elCizgisi(x, p, 0.95, 0.42, C.mor, r, { parca: 40, titre: 0.15 });
       x.fillStyle = rgba(C.gobek, 0.95); x.beginPath(); x.arc(c.x, c.y, c.r * 0.19, 0, 7); x.fill();

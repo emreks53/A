@@ -189,6 +189,7 @@
   const KAIDE_M = yolMaske([GY.kaide, GY.kornis]);
   const MINARE_M = yolMaske(GY.minare);
   const KUBBE_M = yolMaske([GY.kubbe]);
+  const ALTIN_M = yolMaske(GY.alem.concat(GY.minareAlem));
   for (let i = 0; i < N; i++) MINARE_M[i] *= (1 - KAIDE_M[i]) * (1 - KASNAK_M[i]);
   function cokgen(c, pts) { c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]))); c.closePath(); }
   // Tyler Hobbs usulü bozulmuş çokgen
@@ -446,7 +447,7 @@
   }
   // alemler: parlak turuncu-sarı mürekkep
   for (const [cx, kutu] of [[560, [530, 176, 590, 314]], [300, [280, 72, 320, 154]]]) {
-    murekkep(kutu, kapsamBolge(kutu, kume('altin')), { pig: (x) => lerpK(karis(P.lim, 0.9, P.tur3, 0.2), karis(P.tur3, 0.9, P.mac, 0.2), clamp((cx + 2 - x) / 12, 0, 1)), yog: (x) => 0.45 + 0.3 * clamp((cx + 2 - x) / 12, 0, 1), kenar: 0.8, kenarR: 1.2, tohum: cx });
+    murekkep(kutu, kes(ALTIN_M, kutu), { pig: (x) => lerpK(karis(P.lim, 0.9, P.tur3, 0.2), karis(P.tur3, 0.9, P.mac, 0.2), clamp((cx + 2 - x) / 12, 0, 1)), yog: (x) => 0.45 + 0.3 * clamp((cx + 2 - x) / 12, 0, 1), kenar: 0.8, kenarR: 1.2, tohum: cx });
   }
 
   // ============================================================ ÖN PLAN

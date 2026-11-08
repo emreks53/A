@@ -1,0 +1,39 @@
+{
+  "kod": "S-095",
+  "no": 95,
+  "ad": "Suda Çözünür Mum Pastel",
+  "ad_en": "Water-Soluble Wax Pastel",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Beyaz suluboya kâğıdında kalın, örtücü mumlu vuruşlar; bir kısmı ıslak fırçayla eritilip vuruş izlerini taşıyan parlak, saydam bir laviye dönüşmüş.",
+  "tanim": "Suda çözünür mum pastel (ör. Caran d'Ache Neocolor II) kuru kullanıldığında yumuşak, örtücü, mumlu bir pastel gibi davranır; üstünden ıslak fırçayla geçilince pigment çözülür ve suluboya gibi saydam, parlak bir lavi olur. Eritilen yerlerde vuruşların izi lavinin içinde koyu çizgiler olarak kalır, ıslak alanın kenarında kuruyan boya ince bir sınır bırakır; kuruyan lavinin üstüne yeniden atılan kuru vuruşlar canlı bir kontrast yaratır. İllüstrasyonda, eskiz defterlerinde ve karışık teknik çalışmalarda sevilir.",
+  "koken": "Caran d'Ache 1952'de suya dayanıklı Neocolor I'i, 1972'de suda çözünür Neocolor II'yi piyasaya sürdü; firmanın anlatımına göre Picasso Neocolor'ı ilk kullanan sanatçılar arasındaydı. Bugün başka üreticilerin suda çözünür mum pastelleri de vardır; teknik özellikle eskiz defteri, seyahat çizimi ve illüstrasyonda yaygındır.",
+  "ayirt_edici": [
+    "Kalın, örtücü, mumlu vuruşlar: sol üst köşede kuru kalmış dalgalı mavi, turkuaz ve leylak çizgiler, kâğıt dişinde kırılan kenarlarıyla",
+    "Gökün büyük kısmı eritilmiş: yatay fırça izli, granülasyonlu parlak turkuaz-mavi lavi; içinde vuruşların koyu izleri hâlâ seçiliyor, ıslak alanın kenarında ince koyu sınır",
+    "Bulutlar ve güneş kursu kâğıdın beyazı olarak bırakılmış; güneşin çevresinde kuru, kalın sarı-turuncu yaylar ve dışa doğru eritilmiş sarı hale",
+    "Kubbede meridyen vuruşları zümrüt, sarı-yeşil ve petrol mavisi bir laviye erimiş; kuruduktan sonra sağ omza kalın sarı-yeşil vuruşlar, kaburgalara koyu yeşil çizgiler atılmış",
+    "Beyaz taşın gölgesi eritilmiş leylak lavi, ışıklı yüzde kuru limon-şeftali vuruşlar; pencereler kalın lacivert ve menekşe mum vuruşlarıyla dolgun",
+    "Beyaz çiçeklerin göbeğe yakın kısmı eritilmiş pembe-leylak lavi; kenarlarda kalın magenta mum çizgisi, sarı göbek ve turuncu noktalar kuru; yaprakların dip yarısı eritilmiş"
+  ],
+  "palet": [
+    "#2EC3C8",
+    "#5DB2EE",
+    "#3F86E0",
+    "#9E8CE6",
+    "#2FB85A",
+    "#B4E24A",
+    "#FFD23A",
+    "#E2448C"
+  ],
+  "kodla_cizim": "2048 piksellik iç çözünürlükte orta-iri dişli bir suluboya kâğıdı yükseklik haritası kurulur. Her bölgede kalın, küt uçlu mum vuruşları (gökte yatay dalgalı çizgiler, kubbede meridyenler, kasnakta dikey, yapraklarda boyuna) bir katman tuvaline çizilir ve pürüzlü kenarlı bir ıslak alan maskesi üretilir. Eritme yordamı: maskenin dışındaki vuruşlar mumlu, örtücü ve dişe tutunan biçimde bırakılır; maskenin içinde vuruş katmanı büyük ölçüde bulanıklaştırılır, yönlü gürültüden üretilen bir fırça izi maskesiyle zayıflatılır ve saydam lavi olarak bırakılır (çarpma karışımı, pigment kâğıt çukurlarında birikerek granülasyon yapar); ıslak maskenin iç kenarından üretilen ince bir bantta aynı lavi yeniden bırakılarak kuruma kenarı koyulaştırılır; vuruşların az bulanık kopyası düşük yoğunlukla eklenerek lavinin içinde vuruş izleri kalır. Bulutlar ve güneş kursu boyasız bırakılır. Kuruyan lavilerin üstüne kubbe ışıkları, kaburgalar, konturlar, pencereler, alemler ve çiçek ayrıntıları kalın, mumlu vuruşlarla çizilir. Sonda dişe hafif kabartma ışığı verilir.",
+  "etiketler": [
+    "suda çözünür mum pastel",
+    "Neocolor II",
+    "mum pastel",
+    "lavi",
+    "karışık teknik",
+    "beyaz kâğıt",
+    "canlı renk"
+  ]
+}

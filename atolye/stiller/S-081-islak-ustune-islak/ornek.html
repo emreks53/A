@@ -189,6 +189,7 @@
   const KAIDE_M = yolMaske([GY.kaide, GY.kornis]);
   const MINARE_M = yolMaske(GY.minare);
   const KUBBE_M = yolMaske([GY.kubbe]);
+  const ALTIN_M = yolMaske(GY.alem.concat(GY.minareAlem));
   for (let i = 0; i < N; i++) MINARE_M[i] *= (1 - KAIDE_M[i]) * (1 - KASNAK_M[i]);
   function cokgen(c, pts) { c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]))); c.closePath(); }
   // Tyler Hobbs usulü bozulmuş çokgen
@@ -443,7 +444,7 @@
   // alemin çevresine ıslakta yayılan altın sarısı hale
   for (const [cx, cy, rr] of [[560, 245, 40], [300, 115, 30]]) {
     const kutu = kutuDuz([cx - rr * 2, cy - rr * 2.6, cx + rr * 2, cy + rr * 2.6]);
-    const A = kapsamBolge(kutu, kume('altin'));
+    const A = kes(ALTIN_M, kutu);
     yikama(kutu, islak(kutu, A, 7, { e0: 0.02, e1: 0.6, sekil: 5, lif: 3 }), { pig: karis(P.gam, 0.9, P.sie, 0.2), yog: 0.3, kenar: 0, gran: 0.2, tohum: cx });
   }
 
@@ -570,7 +571,7 @@
   // ============================================================ KURUDUKTAN SONRA: birkaç keskin ayrıntı
   // hilaller ve alemler: ince fırça ucuyla, sert kenarlı altın okru
   for (const [cx, kutu] of [[560, [530, 176, 590, 314]], [300, [280, 72, 320, 154]]]) {
-    yikama(kutu, kapsamBolge(kutu, kume('altin')), {
+    yikama(kutu, kes(ALTIN_M, kutu), {
       pig: (x) => karis(P.gam, 0.9, P.sie, 0.3 + 0.5 * clamp((cx - x) / 12, 0, 1), P.ros, 0.05),
       yog: (x) => 0.55 + 0.5 * clamp((cx + 2 - x) / 12, 0, 1), kenar: 1.0, kenarR: 1.4, gran: 0.3, dalga: 0.3, dalgaOlcek: 8, tohum: cx + 1,
     });

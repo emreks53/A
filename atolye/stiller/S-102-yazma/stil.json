@@ -12,11 +12,11 @@
     "Krem pamuklu bez ve görünür ince dokuma; boya bezin içine işlemiş, kenarları hafifçe yumuşamış",
     "Gök, oyulmuş küçük çiçekli kare çivit kalıbının yan yana basılmasıyla dolmuş; kalıp birleşimlerinde ince bindirme çizgileri ve krem aralıklar",
     "Önce dolgu (yeşil, kırmızı, sarı, çivit), en son koyu kahve tahrir kalıbı; dolgu ile kontur arasında hafif kayıklıklar",
-    "Aynı kalıbın tekrarı: dört çintemani bulutu, korniş altındaki kırmızı baklava şeridi, bordürde gül ve yaprak çifti motifleri",
+    "Aynı kalıbın tekrarı: beş çintemani bulutu, korniş altındaki kırmızı baklava şeridi, bordürde gül ve yaprak çifti motifleri",
     "Kubbenin yeşil kalıbında oyulmuş ışık çizgileri altındaki cehri sarısını gösteriyor; kalıbın tam tutmadığı ince açıklar",
     "Köşe rozetli, kırmızı çizgili ve iç kenarı kırmızı oya kemercikli, kalıpla basılmış bordür"
   ],
-  "palet": ["#F8F2E2", "#AFC3D6", "#E8D6A4", "#4C9A5E", "#C03E32", "#E8AA2C", "#3A68A8", "#402A20"],
+  "palet": ["#F6F0E0", "#C1D1D6", "#ECD6A6", "#5A9652", "#C04738", "#E3A93A", "#4A70B0", "#3E2A20"],
   "kodla_cizim": "Her boya (seyreltik çivit ve cehri zemin, cehri, yeşil, çivit, pembe, kök boya, tahrir) ayrı bir tuval katmanıdır; her kalıp basışı bu katmana 'lighter' ile, rastgele birkaç piksellik kayma ve basışa özgü yoğunlukla eklenir, böylece kalıp birleşimlerinde bindirmeler koyulaşır. Tekrarlanan kalıplar (gök ve yer kare kalıpları, bulut, baklava, bordür gülleri, oya) 2× çözünürlükte küçük damga tuvallerine bir kez çizilip defalarca basılır; oyma çizgiler destination-out ile kalıptan çıkarılır. Bitkiler önden arkaya basılır ve her biçim bir örtme tuvaline eklenir; arkadaki kalıplar orada oyuk kalır. Gök ve yer kalıpları nesnelerin çevresinde bulanıklaştırılmış bir rezerv maskesiyle krem pay bırakır. Son aşamada krem bez tonu satır ve sütun düzensizlikli sinüs dokumasıyla kurulur; her katman hafif bulanıklaştırılıp basınç dalgalanması, kalıbın tutmadığı küçük açıklar, tahta lifi ve dokuma kabartısıyla oynatılarak çarpımla bezin üstüne uygulanır.",
   "etiketler": ["yazma", "tahta kalıp", "el baskısı", "Tokat", "kök boya", "tekstil", "bordür", "geleneksel"]
 }

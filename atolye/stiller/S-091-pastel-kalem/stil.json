@@ -1,0 +1,39 @@
+{
+  "kod": "S-091",
+  "no": 91,
+  "ad": "Pastel Kalem",
+  "ad_en": "Pastel Pencil",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Açık krem kâğıtta pastel kalemle ince, tebeşirsi taramalar; kâğıt kalemle yedirilmiş yumuşak taban tonları, keskin ayrıntılar ve beyaz pastel ışıklar.",
+  "tanim": "Pastel kalem, yumuşak pastelin ahşap kılıf içine alınmış ince ve biraz sert hâlidir; tebeşirsi, tozlu, mat bir çizgi bırakır ve renkli kalemden farklı olarak parmakla ya da kâğıt kalemle (estompla) yedirilebilir. Sanatçı önce geniş alanlara hafifçe sürdüğü renkleri yedirerek yumuşak bir taban kurar, üstüne ince taramalar, keskin konturlar ve ayrıntılar ekler, en sonda beyaz pastel kalemle ışık verir. Portre, hayvan ve botanik çiziminde, ayrıntılı manzara çalışmalarında sevilir.",
+  "koken": "Pastel kalemler 20. yüzyılda Conté, Faber-Castell, Stabilo, Derwent ve Caran d'Ache gibi üreticilerle yaygınlaştı; 18. yüzyıl pastel portrecilerinin (Rosalba Carriera, Maurice-Quentin de La Tour, Jean-Étienne Liotard) yüz ve dantel ayrıntıları için kullandığı sert pastel çubuklarının devamıdır. Bugün özellikle gerçekçi portre ve hayvan çizimlerinde tek başına ya da yumuşak pastelin üstünde ayrıntı katmanı olarak kullanılır.",
+  "ayirt_edici": [
+    "Açık krem kâğıtta gökün her yerinde çapraz, tebeşirsi ince taramalar; çizgilerin çevresinde ince pastel tozu, kâğıt dişinde kırılan yumuşak kenarlar",
+    "Gökün alt yarısı, kubbenin gölgeli dilimleri ve çayır yer yer kâğıt kalemle yedirilmiş: taramalar yumuşak bir renk geçişine karışıyor, üstüne yeniden seyrek ve keskin vuruşlar atılmış",
+    "Kubbede kaburga boyunca eğrilen meridyen taraması; gölgede soğuk mavi-yeşil çapraz tarama, sağ omuzda beyaz ve açık yeşil pastelle bastırılmış ışık çizgileri",
+    "Güneş yedirilmiş açık limon sarısı bir kurs, çevresinde dairesel, kısa sarı-şeftali vuruşlar; bulut tepeleri beyaz pastel, altları leylak-gri tarama",
+    "Beyaz taş leylak-gri gölge ve okra ışık taramasıyla; minare korkulukları, zikzak bant, kemerli pencereler ve kaburgalar ince, renkli pastel kalem konturlarıyla keskin çizilmiş",
+    "Beyaz çiçekler kâğıdın beyazı: göbeğe doğru leylak-mavi tarama ve pembe yedirme, yalnız görünen taç kenarlarında ince mor çizgi; yapraklar yedirilmiş taban üstüne damardan dışa taranmış"
+  ],
+  "palet": [
+    "#FBF8F0",
+    "#78A9DC",
+    "#B9A7DC",
+    "#F7DF8A",
+    "#55A65E",
+    "#2E8B5F",
+    "#EED0A0",
+    "#9A84AE"
+  ],
+  "kodla_cizim": "2048 piksellik iç çözünürlükte, çok ölçekli gürültüden ince keçe dokulu bir kâğıt dişi yükseklik haritası kurulur. Her renk katmanı ayrı bir tuvale çizilir, öğenin elle bırakılmış gibi pürüzlü kenarlı maskesiyle kırpılır ve kâğıda bırakılır: pigment dişin tepelerine yumuşak bir eşikle tutunur, yarı örtücü karışır (açık renk koyuyu biraz örter); her katmanın 2–3 piksel bulanık kopyası düşük yoğunlukla bırakılarak çizgilerin çevresine pastel tozu eklenir. Önce bölge haritası ve sahnenin ışık modelinden (kubbe normali, silindir ışığı) üretilen yumuşak taban tonları düşük diş etkisiyle sürülür; sonra uçları incelen öbek taramaları atılır: gökte iki yönde, kubbede kubbe profilinden türetilen meridyenler boyunca, yapraklarda damardan dışa, çiçeklerde göbekten dışa. Yedirme adımı kâğıttaki rengi seçili yerlerde (gürültü öbekleri, gökün alt yarısı, kubbenin gölgesi, yapraklar) bulanıklaştırıp karıştırır; üstüne seyrek keskin taramalar ve beyaz pastel ışıklar eklenir. Konturlar titreşimli, örtüşen el çizgisi parçalarıdır; taç yapraklarında yalnız üstteki yaprağın örtmediği kenarlar çizilir. Sonda kâğıt dişine sağ üstten hafif kabartma ışığı verilir.",
+  "etiketler": [
+    "pastel kalem",
+    "kuru teknik",
+    "tarama",
+    "yedirme",
+    "tebeşirsi",
+    "krem kâğıt",
+    "ince ayrıntı"
+  ]
+}

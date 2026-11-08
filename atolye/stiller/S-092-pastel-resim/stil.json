@@ -1,0 +1,39 @@
+{
+  "kod": "S-092",
+  "no": 92,
+  "ad": "Pastel Resim",
+  "ad_en": "Pastel Painting on Sanded Paper",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Açık renkli zımparalı kâğıtta baştan sona işlenmiş yumuşak pastel tablo: parmakla yedirilmiş geçişler, çubuğun yanıyla kırık renkli vuruşlar ve ucuyla parlak son dokunuşlar.",
+  "tanim": "Pastel resim, yumuşak pastel çubuklarla kâğıdın bütün yüzeyi örtülerek yapılan, boyalı resim kadar dolgun bir tekniktir. Zımparalı (kumlu) pastel kâğıdı çok katman tutar: sanatçı önce geniş renk alanlarını parmakla ya da süngerle yedirir, üstüne çubuğun yanıyla kısa, geniş, kırık renkli vuruşlar katar, en sonda çubuğun ucuyla keskin, açık renk vurgular atar. Pigment saf ve bağlayıcısı az olduğundan renkler ışıltılı, yüzey kadife gibi mattır. Manzara, natürmort ve portre resminde kullanılır.",
+  "koken": "18. yüzyılda Rosalba Carriera ve Maurice-Quentin de La Tour pastel portreyi saygın bir sanata dönüştürdü; 19. yüzyılda Edgar Degas katman katman işlediği pastellerle tekniği yağlıboyanın eşiti yaptı, Mary Cassatt ve Odilon Redon parlak renkli pasteller üretti. 20. yüzyılın sonlarında zımparalı ve kumlu yüzeyli pastel kâğıtlarının yaygınlaşması, çok katmanlı ve bütünüyle örtülü çağdaş pastel manzara resmini doğurdu.",
+  "ayirt_edici": [
+    "Kâğıt hiçbir yerde boşluk olarak görünmüyor: bütün yüzey baştan sona pastelle örtülü, ince kum dişi yüzeye kadifemsi, mat bir doku veriyor",
+    "Gök parmakla yedirilmiş pürüzsüz bir geçiş: güneş çevresinde krem ve limon sarısından şeftaliye, açık turkuaza ve gök mavisine; üstünde çubuğun yanıyla atılmış, kenarları kumlu kâğıtta kırılan geniş vuruşlar",
+    "Kırık renk: mavi gökte turkuaz, leylak ve pembe; kubbede zümrüt, sarı-yeşil ve gölgede petrol mavisi; beyaz taşta sıcak krem ışık ile mavi-leylak gölge vuruşları yan yana",
+    "Kubbede kaburga boyunca geniş meridyen vuruşları ve kısmen yedirilmiş gövde; çubuğun keskin ucuyla çizilmiş koyu ve açık kaburga çizgileri, sağ omuzda limon-krem parıltı vuruşları",
+    "Krem-beyaz bulutların altında leylak-gri gölge, tepelerinde keskin beyaz son vuruşlar; güneş yedirilmiş parlak bir hale içinde beyaz kurs",
+    "Beyaz çiçeklerde göbekten dışa krem, leylak ve pembe vuruşlar, taç kenarlarında parlak beyaz çizgi; çimen ve yapraklarda sarı-yeşilden mavi-yeşile kısa, katmanlı vuruşlar"
+  ],
+  "palet": [
+    "#FFF3D2",
+    "#FFE99A",
+    "#BFE6E2",
+    "#7DBDE8",
+    "#1F9468",
+    "#86C95C",
+    "#BDB6DE",
+    "#F4B9C2"
+  ],
+  "kodla_cizim": "2048 piksellik iç çözünürlükte çok ince, düzgün bir kum dişi yükseklik haritası kurulur. Önce bölge haritasından ve ışık modelinden türetilen ton haritası tam yoğunlukla, diş etkisi çok az olarak bırakılır ve bütün yüzey bulanıklaştırılıp yedirilir; böylece kâğıt hiç görünmez. Sonra çubuğun yanı vuruşları üretilir: rastgele sırayla dağıtılmış, uçları hafif incelen, kavisli geniş şeritler; renkleri yerel taban tonu ile bir kırık renk paletinin karışımıdır. Her vuruş katmanı 1,4 piksel bulanıklaştırılıp kum dişine yüksek örtücülükle ve keskin bir eşikle bırakılır, böylece vuruş kenarları kumlu kırılır. Gök, taş, kubbe ve zemin gürültü öbekleri ve yükseklikle değişen oranlarla yeniden yedirilir; ikinci, daha küçük vuruş katmanları ve bulutlarda kavisli vuruşlar eklenir. En sonda örtücü son vuruşlar atılır: kubbe kaburgaları ve parıltıları, kasnak ve korniş ışıkları, bulut tepeleri, yalnız görünen taç kenarları, yaprak damarları, alem parıltıları. Sonuçta dişe hafif kabartma ışığı ve çok ince bir tane verilir.",
+  "etiketler": [
+    "pastel",
+    "yumuşak pastel",
+    "zımparalı kâğıt",
+    "kırık renk",
+    "yedirme",
+    "kadife yüzey",
+    "resim"
+  ]
+}

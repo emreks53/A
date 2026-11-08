@@ -608,7 +608,7 @@
     // lavi: pigment suyla yayılır
     KB.temizle(); KB.x.setTransform(1, 0, 0, 1, 0, 0); KB.x.filter = `blur(${o.yay || 9}px)`; KB.x.drawImage(K.c, 0, 0); KB.x.drawImage(K.c, 0, 0); KB.x.filter = 'none'; kirp(KB, isl);
     if (o.firca) kirp(KB, o.firca);
-    birak(KB.c, { mod: 'lavi', guc: o.guc || 1.1, granul: 0.45, bx });
+    birak(KB.c, { mod: 'lavi', guc: o.guc || 1.1, granul: 0.3, bx });
     // kuruyan kenarda biriken koyu çizgi
     if (o.kenar !== 0) {
       KC.temizle(); KC.x.setTransform(1, 0, 0, 1, 0, 0); KC.x.drawImage(KB.c, 0, 0); kirp(KC, o.kenarM || kenarMaske(isl, 3));

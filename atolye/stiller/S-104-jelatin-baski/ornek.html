@@ -277,7 +277,7 @@ cek({
 
 // 5) kubbe ve kasnak: önce açık yeşil, sonra tarakla kaburgaları açılmış zümrüt; sağ üstte kâğıt maske ışığı korur
 const yesilAc = (g) => { g.fill(P2(SAHNE.kubbeYolu)); g.fill(P2(Y.kasnakUst)); g.fill(P2(Y.kasnakAlt)); };
-cek({ renk: [150, 214, 110], yog: 0.72, yon: 0.4, cevre: 200, plakaKay: [2.2, -1.6], ac: yesilAc, kapa: (g) => bitkiMaskesi(g, false) });
+cek({ renk: [160, 220, 104], yog: 0.72, yon: 0.4, cevre: 200, plakaKay: [2.2, -1.6], ac: yesilAc, kapa: (g) => bitkiMaskesi(g, false) });
 const PROF = SAHNE.kubbeProfili(120);
 const profR = (y) => {
   if (y >= 555) return 200;
@@ -303,7 +303,8 @@ cek({
     const u = clamp((x - 560) / Math.max(1, r), -1, 1);
     const f = ((Math.asin(u) / Math.PI + 0.5) * 16) % 1;
     const dis = Math.exp(-(f - 0.5) * (f - 0.5) / 0.006) * 0.0 + Math.exp(-Math.pow(Math.min(f, 1 - f), 2) / 0.0028) * 0.75;
-    return clamp(dis + 0.62 * smooth(-0.15, 0.85, u));
+    const yuk = smooth(555, 330, y); // üstte ve sağda boya daha çok açılır: ışık
+    return clamp(dis + 0.55 * smooth(-0.2, 0.75, u) + 0.35 * smooth(0, 0.9, u) * yuk);
   },
 });
 // sol yanda ikinci, koyu yeşil-mavi saydam katman

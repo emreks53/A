@@ -1,0 +1,39 @@
+{
+  "kod": "S-094",
+  "no": 94,
+  "ad": "Mum Boya",
+  "ad_en": "Wax Crayon",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Beyaz kâğıtta mum boyayla ileri-geri zikzak doldurma: vuruşların içinde kâğıt dişinin beyaz benekleri, üst üste binen yarı saydam renkler ve cilalanmış, mumlu alanlar.",
+  "tanim": "Mum boya (crayon), parafin ya da balmumu bağlayıcıyla dökülmüş kalın bir pigment çubuğudur. Hafif bastırıldığında mum yalnız kâğıt dişinin tepelerine tutunur ve vuruşun içinde beyaz benekler kalır; renkler yarı saydam olduğundan üst üste bindirilince karışır, sarının üstüne mavi yeşil verir. Sert bastırıldığında ya da açık renkle üstünden geçildiğinde (cilalama) diş dolar, yüzey dolgun, pürüzsüz ve hafif parlak olur. Küt uç biraz sert, kendine özgü çizgiler verir; illüstrasyonda, resimli kitaplarda ve canlı renkli eskizlerde kullanılır.",
+  "koken": "Bugünkü mum boya 19. yüzyıl sonunda Avrupa'da gelişti; 1903'te Binney & Smith firmasının Crayola markası onu ucuz ve her yerde bulunan bir malzeme yaptı. Picasso ve Joan Miró bazı çizimlerinde mum boyayı başka tekniklerle birlikte kullandı; çağdaş resimli kitap sanatçıları ve illüstratörler mum boyanın beneklerini ve cilalı yüzeyini bilinçli bir ifade aracı olarak seçer.",
+  "ayirt_edici": [
+    "Bütün alanlar ileri-geri zikzak vuruşlarla doldurulmuş: gökte çapraz, güneş çevresinde dairesel, kubbe dilimlerinde kaburga boyunca, zeminde yatay, çayırda dik",
+    "Mum yalnız kâğıt dişinin tepelerine tutunmuş: vuruşların içinde ve aralarında beyaz kâğıt benekleri ve boşlukları",
+    "Renkler üst üste binerek karışıyor: kubbede limon ve sarı-yeşil üstüne yeşil, gölgede mavi-yeşil; gök mavisi üstüne turkuaz ve leylak",
+    "Cilalanmış, sert bastırılmış alanlar: güneş kursu, kubbenin sağ omzu ve beyaz parıltılar, koyu pencereler, alemler, tomurcuklar ve çiçek göbekleri dolgun ve mumlu",
+    "Küt uçlu, hafif titrek mum boya konturları: kubbede koyu yeşil kaburgalar, taşta kahverengi, çiçeklerde magenta, zikzak bantta kırmızı",
+    "Beyaz çiçekler kâğıt beyazı ve beyaz mum cilası; göbeğe doğru pembe-leylak vuruşlar, sarı göbekte turuncu noktalar"
+  ],
+  "palet": [
+    "#8FCDF3",
+    "#56AEE8",
+    "#FFE04A",
+    "#3DB459",
+    "#B6E04E",
+    "#F2C04E",
+    "#A99BEB",
+    "#D9508E"
+  ],
+  "kodla_cizim": "2048 piksellik iç çözünürlükte orta dişli bir resim kâğıdı yükseklik haritası (üç ölçekli gürültü) kurulur. Karalama yordamı bir merkez, yön, boy ve adımla küt uçlu, kalın bir zikzak çoklu çizgi çizer: vuruş yönünde ileri-geri giderken dik doğrultuda ilerler; alan karalama bu öbekleri rastgele sırayla bir bölgeye dağıtır. Kubbe dilimleri komşu kaburgalar arasında, kubbe profilinden türetilen meridyenler boyunca yukarı-aşağı geçişlerle doldurulur; ton farkı, katmanın ışık modelinden üretilmiş yumuşak ton maskeleriyle zayıflatılmasından gelir. Her katman 0,9 piksel bulanıklaştırılıp kâğıda bırakılır: mum dişin tepelerine çok keskin bir eşikle tutunur (beyaz benekler) ve renk yarı saydam karışır. Cilalı katmanlarda diş etkisi düşük, örtücülük yüksektir. Konturlar titreşimli, küt uçlu el çizgisi parçalarıdır; taç yapraklarında yalnız görünen kenarlar çizilir. Sonda dişe hafif kabartma ışığı verilir.",
+  "etiketler": [
+    "mum boya",
+    "crayon",
+    "kuru teknik",
+    "zikzak doldurma",
+    "cilalama",
+    "beyaz kâğıt",
+    "canlı renk"
+  ]
+}
