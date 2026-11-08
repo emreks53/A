@@ -457,12 +457,12 @@
     cizgiKova = new Map();
     noktaKova = new Map();
   }
-  function ort(yol, cizgi) {
+  function ort(yol, cizgi, dolguYok) {
     bas();
     ix.save();
     ix.globalCompositeOperation = 'destination-out';
     ix.fillStyle = '#000';
-    ix.fill(yol);
+    if (!dolguYok) ix.fill(yol);
     if (cizgi) { ix.lineWidth = cizgi; ix.strokeStyle = '#000'; ix.stroke(yol); }
     ix.restore();
   }
@@ -546,7 +546,7 @@
   }
 
   // ================================================================ 3. GÖK: altın güneş, gümüş bulutlar
-  // güneş: iç içe halkalar, ışınlar, çevresinde seyrelen noktalama
+  // güneş: iç içe halkalar, ışınlar, fisto ve nokta halkası
   for (let k = 0; k < 4; k++) {
     const p = [];
     const r = 14 + k * 9;
@@ -566,7 +566,22 @@
     jel(p, BEYAZ, { w: 0.9, damla: 0 });
   }
   noktala([880 - 30, 140 - 30, 880 + 30, 140 + 30], (x, y) => Math.hypot(x - 880, y - 140) < 12, () => 0.9, BEYAZ, { alan: 4, r: 0.8 });
-  noktala([680, 0, 1024, 330], (x, y) => { const d = Math.hypot(x - 880, y - 140); return d > 50 && d < 178; }, (x, y) => 0.8 * Math.pow(1 - (Math.hypot(x - 880, y - 140) - 50) / 128, 1.8), ALTIN, { alan: 8, r: 0.8 });
+  // dış süs: ışın uçlarını saran altın fisto (yarım daire) halkası ve düzenli aralıklı nokta halkası;
+  // seyrelen noktalama yok, kenar keskin (parlama izlenimi vermez)
+  for (let i = 0; i < 24; i++) {
+    const a0 = (i / 24) * PI2, a1 = ((i + 1) / 24) * PI2, am = (a0 + a1) / 2;
+    const p = [];
+    for (let t = 0; t <= 1.001; t += 0.1) {
+      const a = lerp(a0, a1, t), r = 104 + Math.sin(Math.PI * t) * 7;
+      p.push([880 + Math.cos(a) * r, 140 + Math.sin(a) * r]);
+    }
+    jel(p, ALTIN, { w: 1.1, damla: 0, parlak: 0.08 });
+    nokta(880 + Math.cos(am) * 104, 140 + Math.sin(am) * 104, 1.3, ALTIN);
+  }
+  for (let i = 0; i < 60; i++) {
+    const a = (i / 60) * PI2;
+    nokta(880 + Math.cos(a) * 122, 140 + Math.sin(a) * 122, i % 5 === 0 ? 1.6 : 1.0, i % 5 === 0 ? ALTIN : GUMUS);
+  }
   // bulutlar: gümüş kabarık hat, içinde koşut yaylar (süs)
   const bulutlar = [[170, 250, 1.0], [500, 150, 0.8], [760, 330, 1.1], [940, 470, 0.7], [90, 470, 0.7]];
   for (const [bx, by, bs] of bulutlar) {
@@ -766,7 +781,7 @@
 
   // ================================================================ 10. BİTKİLER: yapraklarda damar deseni, çiçeklerde pembe çizgiler
   for (const s of BIT.saplar) {
-    ort(new Path2D(SAHNE.yol(s)), 4);
+    ort(new Path2D(SAHNE.yol(s)), 4, true);
     jel(s, LIME, { w: 1.4 });
     jel(s.map((q) => [q[0] + 2.4, q[1]]), TURKUAZ, { w: 0.8, damla: 0 });
     bas();

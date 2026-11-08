@@ -268,20 +268,21 @@
     yukselt(y0, y1, kal, null);
   }
   /** Boya kalınlığı: yeni boya eskisini örter, kenarında küçük bir sırt bırakır; kıl izleri hafif oluk açar. */
-  function yukselt(y0, y1, kal, LUM) {
+  function yukselt(y0, y1, kal, LUM, rimK) {
+    rimK = rimK === undefined ? 1.6 : rimK;
     const ab = bulanik(AB, WW, WW, 2, 2, y0, y1);
     let lb = null;
-    if (LUM) lb = bulanik(LUM, WW, WW, 2, 2, y0, y1);
+    if (LUM) lb = bulanik(LUM, WW, WW, 2, 2, y0, y1); // LUM önceden alfa ile çarpılmış; ab ile bölünür
     for (let i = y0 * WW; i < (y1 + 1) * WW; i++) {
       const a = AB[i]; if (a < 0.01) continue;
       const rim = Math.max(0, a - ab[i]);
       let h = 0.5 + 0.3 * MOD[i];
-      if (LUM) h += (LUM[i] - lb[i]) * 0.04;
-      HT[i] = HT[i] * (1 - a) + a * kal * h + rim * kal * 1.6;
+      if (LUM) h += (LUM[i] / a - lb[i] / Math.max(0.02, ab[i])) * 0.04;
+      HT[i] = HT[i] * (1 - a) + a * kal * h + rim * kal * rimK;
     }
   }
   /** Renkli fırça darbeleriyle boyanan ara tuval, tampona örtücü olarak eklenir. */
-  function tuvalKatman(ciz) {
+  function tuvalKatman(ciz, kal, rimK) {
     const c = SAHNE.yeniTuval(WW, WW), g = c.getContext('2d', { willReadFrequently: true });
     g.setTransform(S, 0, 0, S, 0, 0); ciz(g);
     const d = g.getImageData(0, 0, WW, WW).data;
@@ -292,10 +293,10 @@
       const a = d[i * 4 + 3]; if (!a) continue;
       const al = a / 255;
       CR[i] += (d[i * 4] - CR[i]) * al; CG[i] += (d[i * 4 + 1] - CG[i]) * al; CB[i] += (d[i * 4 + 2] - CB[i]) * al;
-      AB[i] = al; LUM[i] = d[i * 4] * 0.3 + d[i * 4 + 1] * 0.55 + d[i * 4 + 2] * 0.15;
+      AB[i] = al; LUM[i] = al * (d[i * 4] * 0.3 + d[i * 4 + 1] * 0.55 + d[i * 4 + 2] * 0.15);
       const yy = (i / WW) | 0; if (yy < y0) y0 = yy; y1 = yy;
     }
-    if (y1 >= 0) yukselt(Math.max(0, y0 - 6), Math.min(WW - 1, y1 + 6), 1, LUM);
+    if (y1 >= 0) yukselt(Math.max(0, y0 - 6), Math.min(WW - 1, y1 + 6), kal === undefined ? 1 : kal, LUM, rimK);
   }
   const tumu = { m: new Float32Array(N).fill(1), y0: 0, y1: WW - 1 };
   const maske = (f) => maskeYap(S, f);
@@ -325,7 +326,7 @@
     gok: ['#3B6F95', '#5A8FAC', '#8AB5BD', '#C6D3BF', '#E6D6AE'].map(hex),
     hale1: hex('#5F93B0'), hale2: hex('#9CC2C4'), gunes: hex('#F6E9C0'),
     bulutG: hex('#AFC4C6'), bulut: hex('#F3EEE0'),
-    tasG: hex('#A4A2B2'), tasO: hex('#DCD3C0'), tasI: hex('#F4EDDC'), tasK: hex('#7E7889'),
+    tasG: hex('#ABA5AE'), tasO: hex('#DCD3C0'), tasI: hex('#F4EDDC'), tasK: hex('#827B86'),
     pencereT: hex('#4C4050'), zikzak: hex('#A0714C'),
     k0: hex('#184731'), k1: hex('#27693F'), k2: hex('#44894D'), k3: hex('#93C077'), kab: hex('#10331F'),
     ks0: hex('#143B28'), ks1: hex('#1F5A39'), ks2: hex('#2C7447'), ksP: hex('#0D2418'),
@@ -343,7 +344,7 @@
     const v = y + (nA(x / 150, 3.3) - 0.5) * 46 + MOD[i] * 15;
     let k = 0; while (k < 4 && v > SINIR[k]) k++;
     return C.gok[k];
-  }, { yum: 0, amp: 0.075, kk: 0, ic: 0.12 });
+  }, { yum: 0, amp: 0.075, kk: 0, ic: 0.07 });
   // güneş: iç içe düz halkalar
   katman(maske((g) => g.fill(P(SAHNE.daireYolu(880, 140, 94)))), C.hale1, { amp: 0.08, kaba: 0.7, yum: 4, kenar: 0.22, kk: 0.8, disp: 1.6 });
   katman(maske((g) => g.fill(P(SAHNE.daireYolu(880, 140, 72)))), C.hale2, { amp: 0.07, kaba: 0.6, yum: 4, kenar: 0.2, kk: 0.7, disp: 1.4 });
@@ -383,7 +384,7 @@
       }
       g.restore();
     }
-  });
+  }, 1, 0.25);
 
   // ------------------------------------------------------------ minare
   const minareP = new Path2D(); Y.minare.forEach((d) => minareP.addPath(P(d)));
@@ -415,7 +416,7 @@
 
   // ------------------------------------------------------------ kasnak
   const kasnakM = maske((g) => { g.fill(P(Y.kasnakUst)); g.fill(P(Y.kasnakAlt)); });
-  katman(kasnakM, (x, y) => { const l = kasnakIsik(x, y) * (y < 610 ? 0.92 : 1); return l < 0.3 ? C.ks0 : l < 0.62 ? C.ks1 : C.ks2; }, { kaba: 0.3 });
+  katman(kasnakM, (x, y, i) => { const l = kasnakIsik(x, y) * (y < 610 ? 0.92 : 1) + MOD[i] * 0.09; return l < 0.3 ? C.ks0 : l < 0.62 ? C.ks1 : C.ks2; }, { kaba: 0.3, amp: 0.13, ic: 0.08 });
   katman(maske((g) => { g.fillRect(352, 555, 416, 3.5); g.fillRect(334, 610, 452, 3.5); }), hex('#4F9358'), { yum: 1, op: 0.9 });
   katman(maske((g) => { g.fillRect(352, 606, 416, 4); g.fillRect(334, 688, 452, 4); }), C.kab, { yum: 1, op: 0.8 });
   katman(maske((g) => Y.kasnakPencereleri.forEach((d) => g.fill(P(d)))), C.ksP, { yum: 1, kaba: 0.3 });
@@ -494,8 +495,10 @@
     for (const y of B.yapraklar) {
       const L = y.uzunluk, ca = Math.cos(y.aci), sa = Math.sin(y.aci), b = buyuk(y), tr = isikTarafi(y);
       const eks = (off, bk) => { const pts = []; for (let j = 0; j <= 12; j++) { const t = j / 12, v = off * yaprakProf(t) + bk * Math.sin(Math.PI * t); pts.push([y.x + t * L * ca - v * sa, y.y + t * L * sa + v * ca]); } return pts; };
-      kilFirca(g, eks(0, 0), L * 0.47, b ? C.yap0 : C.yapS, { jit: 7, uc: 0.03, profil: yaprakProf, kalin: 2 });
-      kilFirca(g, eks(tr * L * 0.12, 0), L * 0.22, b ? C.yap1 : C.yapS1, { jit: 8, uc: 0.1, profil: yaprakProf, kalin: 1.9 });
+      const bk = (R() - 0.5) * L * 0.08;
+      kilFirca(g, eks(0, bk), L * 0.47, b ? C.yap0 : C.yapS, { jit: 13, uc: 0.09, profil: yaprakProf, kalin: 1.6 });
+      kilFirca(g, eks(tr * L * 0.12, bk), L * 0.22, b ? C.yap1 : C.yapS1, { jit: 13, uc: 0.28, profil: yaprakProf, kalin: 1.45 });
+      if (b) kilFirca(g, eks(tr * L * 0.15, bk).slice(2, 9), L * 0.08, mixc(C.yap1, C.damar, 0.6), { jit: 8, uc: 0.35, a: 0.85, kalin: 1.3, sivri: true });
       g.strokeStyle = css(C.damar, 0.75); g.lineWidth = 1.2; g.lineCap = 'round';
       g.beginPath(); g.moveTo(y.x, y.y); g.quadraticCurveTo(y.x + L * 0.5 * ca, y.y + L * 0.5 * sa, y.x + L * 0.86 * ca, y.y + L * 0.86 * sa); g.stroke();
     }
@@ -519,16 +522,16 @@
           const t = j / 18, u = s0 + (sEnd - s0) * t, b = bk * Math.sin(Math.PI * t);
           pts.push([c.x + dx + u * ca - b * sa, c.y + dy + u * sa + b * ca]);
         }
-        kilFirca(g, pts, ry * (2.15 / ns) * wk, renkF(isik, s, ns), { jit: 13, uc: 0.28, a: 0.97, kalin: 1.45, profil: (t) => 0.4 + 0.6 * Math.sin(Math.PI * Math.min(1, 0.12 + t * 0.8)) });
+        kilFirca(g, pts, ry * (2.15 / ns) * wk, renkF(isik, s, ns), { jit: 9, uc: 0.16, a: 0.97, kalin: 1.85, profil: (t) => 0.4 + 0.6 * Math.sin(Math.PI * Math.min(1, 0.12 + t * 0.8)) });
       }
     }
   };
   tuvalKatman((g) => {
     const rc = SAHNE.rng(511);
     for (const c of B.cicekler) {
-      tacDarbeleri(g, c, rc, (isik) => (isik > 0.2 ? C.cic : mixc(C.cic, C.cicG, 0.22 - isik * 0.25)), 0.9, c.r * 0.06, -c.r * 0.06, 1.25);
+      tacDarbeleri(g, c, rc, (isik) => (isik > 0.2 ? C.cic : mixc(C.cic, C.cicG, 0.22 - isik * 0.25)), 0.9, c.r * 0.06, -c.r * 0.06, 1.4);
     }
-  });
+  }, 1, 0.5);
   // ışık alan taç yapraklara saf beyaz, kısa, kuru uçlu vurgu darbeleri; merkeze pembe gölge darbeleri
   tuvalKatman((g) => {
     const rc = SAHNE.rng(512);
@@ -540,13 +543,13 @@
         for (let j = 0; j <= 10; j++) { const u = u0 + (u1 - u0) * (j / 10); pts.push([c.x + c.r * 0.06 + u * ca, c.y - c.r * 0.06 + u * sa]); }
         kilFirca(g, pts, c.r * 0.16, hex('#FFFDF6'), { jit: 6, uc: 0.35, a: 0.9, kalin: 1.3, sivri: true });
       }
-      for (let k = 0; k < 10; k++) {
-        const a = c.aci + (k / 10) * Math.PI * 2 + (rc() - 0.5) * 0.3, r0 = c.r * 0.12, r1 = c.r * (0.34 + rc() * 0.12), pts = [];
+      for (let k = 0; k < 5; k++) {
+        const a = c.aci + ((k + 0.5) / 5) * Math.PI * 2 + (rc() - 0.5) * 0.3, r0 = c.r * 0.1, r1 = c.r * (0.33 + rc() * 0.08), pts = [];
         for (let j = 0; j <= 6; j++) { const u = r0 + (r1 - r0) * (j / 6); pts.push([c.x + Math.cos(a) * u, c.y + Math.sin(a) * u]); }
-        kilFirca(g, pts, c.r * 0.13, C.pembe, { jit: 8, uc: 0.3, a: 0.7, kalin: 1.3, sivri: true });
+        kilFirca(g, pts, c.r * 0.2, C.pembe, { jit: 6, uc: 0.25, a: 0.6, kalin: 1.6, sivri: true });
       }
     }
-  });
+  }, 0.6, 0.5);
   // göbek: tıpışlarla (dab) konmuş koyu sarı, çevresinde kahverengi benekler, sağ üstte açık nokta
   tuvalKatman((g) => {
     const rc = SAHNE.rng(513);

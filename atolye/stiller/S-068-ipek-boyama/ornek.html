@@ -263,10 +263,6 @@
     on(SAHNE.kubbeYolu, T.kubbe);
     for (const k of SAHNE.kaburgalar(16)) altin(SAHNE.yol(k.noktalar), 1.6);
     altin(SAHNE.kubbeYolu, 2.4);
-    // kubbe tabanına yakın enlem çizgisi (dilimleri ikiye böler)
-    const prof = SAHNE.kubbeProfili(60);
-    const q = prof.find((p) => p.y < 520);
-    altin(cizgiY(560 - q.r, q.y, 560 + q.r, q.y), 1.3);
     for (const d of Y.alem) { on(d, T.altin); altin(d, 1.3); }
   }
   // ------------------------------------------------------------ zemin: dalgalı renksiz çizgilerle bölünmüş
@@ -436,9 +432,9 @@
       case T.gunes: { const g = Math.hypot(x - 880, y - 140) / 50; return g < 0.6 ? Dm(C.sari, C.altin, sstep(0, 0.6, g)) : Dm(C.altin, C.turuncu, sstep(0.6, 1, g)); }
       case T.bulut: {
         const v = (y - a.y0) / Math.max(1, a.y1 - a.y0), u = (x - a.x0) / Math.max(1, a.x1 - a.x0);
-        let d = Dm(sifir, C.lila, 0.75 * sstep(0.25, 1.05, v + (w - 0.5) * 0.4));
-        d = Dm(d, C.pembe, 0.5 * sstep(0.45, 0.9, w) * (1 - v) * sstep(0.2, 0.9, u));
-        return Dm(d, C.acikMavi || Dh('#9FD3F0'), 0.35 * sstep(0.6, 0.0, u) * (1 - v));
+        let d = Dm(sifir, C.lila, 0.85 * sstep(0.15, 1.0, v + (w - 0.5) * 0.8));
+        d = Dm(d, C.pembe, 0.7 * sstep(0.35, 0.8, w) * (1.15 - v) * sstep(0.05, 0.85, u));
+        return Dm(d, Dh('#8FC6EE'), 0.6 * sstep(0.65, 0.0, u + (w - 0.5) * 0.5) * (1.1 - v));
       }
       case T.kubbe: {
         const L = kubbeIsik(x, y), g = 1 - L;
@@ -450,13 +446,14 @@
       }
       case T.kasnak: { const k = y < 610 ? SAHNE.kasnak[0] : SAHNE.kasnak[1], L = silindirIsik(x, 560, (k.x2 - k.x1) / 2 + 2); return Dm(Dm(C.zumrut, C.teal, sstep(0.9, 0.4, L)), C.laci, 0.5 * sstep(0.5, 0.15, L) + 0.2 * w); }
       case T.pencere: return Dm(C.civit, C.mor, 0.35 * w);
-      case T.kaide: { const tt = (x - 300) / 520; let d = Dm(C.seftali, C.gul, sstep(0.75, 0.3, tt + (w - 0.5) * 0.3)); d = Dm(d, C.lila, sstep(0.3, 0.0, tt) * 0.9); d = Dm(d, C.altin, 0.3 * sstep(0.55, 1, tt) * w); return d.map((v) => v * 1.3); }
+      case T.kaide: { const tt = (x - 300) / 520; let d = Dm(C.seftali, C.gul, sstep(0.75, 0.3, tt + (w - 0.5) * 0.6)); d = Dm(d, C.lila, sstep(0.3, 0.0, tt) * 0.9); d = Dm(d, C.altin, 0.3 * sstep(0.55, 1, tt) * w); return d.map((v) => v * 1.3); }
       case T.kornis: return Dm(Dm(C.krem, C.altin, 0.45), C.seftali, 0.4 * w);
       case T.minare: case T.serefe: case T.topuz: {
-        const r = t === T.topuz ? 22 : minareYari(y), L = silindirIsik(x, 300, r + 1);
-        let d = Dm(C.krem, C.seftali, 0.55 + 0.3 * w);
-        d = Dm(d, C.gul, 0.3 * sstep(0.7, 0.4, L));
-        d = Dm(d, C.lila, sstep(0.55, 0.15, L));
+        const w2 = fbm(nE, x / 22 + 9, y / 30, 2);
+        const r = t === T.topuz ? 22 : minareYari(y), L = silindirIsik(x, 300, r + 1) + (w - 0.5) * 0.45 + (w2 - 0.5) * 0.5;
+        let d = Dm(C.krem, C.seftali, 0.45 + 0.5 * w);
+        d = Dm(d, C.gul, 0.35 * sstep(0.85, 0.35, L));
+        d = Dm(d, C.lila, 0.9 * sstep(0.6, -0.05, L));
         if (t === T.serefe) d = Dm(d, C.altin, 0.35);
         return d.map((v) => v * 1.3);
       }
@@ -498,39 +495,56 @@
     return sifir;
   }
 
-  // ------------------------------------------------------------ tuz taneleri: boyayı çeken kristallerin bıraktığı açık, lifli lekeler
+  // ------------------------------------------------------------ tuz: kristal boyayı ve suyu kendine çeker. Kristalin altı koyulaşır,
+  // çevresinde boya çekildiği için açık, ışınsal lifli bir yıldız kalır; dış ucunda ince koyu bir sınır. Kümeler sık ve iç içe.
   const TUZ = new Float32Array(N2), TUZK = new Float32Array(N2);
   {
     const rr = SAHNE.rng(404);
     // [x, y, yarıçap, adet, tane boyu]
-    const kumeler = [[150, 110, 95, 150, 1], [430, 330, 70, 70, 0.8], [700, 105, 70, 60, 0.8], [170, 640, 80, 90, 0.9], [985, 620, 30, 20, 0.6], [620, 905, 110, 90, 0.9], [150, 975, 50, 30, 0.7], [890, 990, 60, 30, 0.7], [960, 250, 24, 14, 0.6], [70, 380, 30, 26, 0.7], [790, 470, 46, 36, 0.8],
-      [512, 27, 60, 26, 0.5], [420, 830, 50, 40, 0.8], [880, 832, 40, 30, 0.7], [20, 830, 30, 16, 0.6], [27, 512, 50, 22, 0.5], [997, 760, 50, 20, 0.5], [300, 997, 60, 20, 0.5]];
+    const kumeler = [[150, 110, 100, 420, 1], [430, 330, 70, 150, 0.8], [700, 105, 80, 170, 0.8], [170, 640, 85, 230, 0.9], [985, 620, 30, 40, 0.6], [620, 905, 110, 220, 0.9], [150, 975, 50, 70, 0.7], [890, 990, 60, 70, 0.7], [960, 250, 26, 30, 0.6], [70, 380, 34, 60, 0.7], [790, 470, 50, 90, 0.8],
+      [512, 27, 60, 60, 0.5], [420, 830, 50, 90, 0.8], [880, 832, 40, 70, 0.7], [20, 830, 30, 30, 0.6], [27, 512, 50, 50, 0.5], [997, 760, 50, 40, 0.5], [300, 997, 60, 50, 0.5]];
     const tuzlu = new Set([T.gok, T.bulut, T.zemin, T.kenar, T.hale]);
     for (const [kx, ky, kr, adet, boy] of kumeler) for (let k = 0; k < adet; k++) {
-      const a0 = rr() * Math.PI * 2, rd = Math.pow(rr(), 0.7) * kr;
+      const a0 = rr() * Math.PI * 2, rd = Math.pow(rr(), 0.6) * kr;
       const cx = kx + Math.cos(a0) * rd, cy = ky + Math.sin(a0) * rd;
-      const Rs = (3 + rr() * rr() * 11) * boy;
-      const ph = rr() * 100;
-      const X0 = Math.max(0, Math.floor((cx - Rs * 1.8) * S)), X1 = Math.min(W2 - 1, Math.ceil((cx + Rs * 1.8) * S));
-      const Y0 = Math.max(0, Math.floor((cy - Rs * 1.8) * S)), Y1 = Math.min(W2 - 1, Math.ceil((cy + Rs * 1.8) * S));
+      const Rs = (2.2 + rr() * rr() * 7.5) * boy * (1.15 - 0.4 * rd / kr);
+      const ph = rr() * 100, fr = 1.2 + rr() * 1.6;
+      const X0 = Math.max(0, Math.floor((cx - Rs * 1.6) * S)), X1 = Math.min(W2 - 1, Math.ceil((cx + Rs * 1.6) * S));
+      const Y0 = Math.max(0, Math.floor((cy - Rs * 1.6) * S)), Y1 = Math.min(W2 - 1, Math.ceil((cy + Rs * 1.6) * S));
       const merkezAlan = ETK[clamp(Math.round(cy * S), 0, W2 - 1) * W2 + clamp(Math.round(cx * S), 0, W2 - 1)];
       if (merkezAlan < 0 || !tuzlu.has(alanlar[merkezAlan].tag)) continue;
-      const guc = 0.4 + rr() * 0.3;
+      const guc = (0.3 + rr() * 0.25) * (1 - 0.35 * rd / kr);
       for (let y = Y0; y <= Y1; y++) for (let x = X0; x <= X1; x++) {
         const i = y * W2 + x;
         if (ETK[i] !== merkezAlan) continue;
         const dx = x / S - cx, dy = y / S - cy, d = Math.hypot(dx, dy), th = Math.atan2(dy, dx), ca = Math.cos(th), sa = Math.sin(th);
-        const Rt = Rs * (0.5 + 0.55 * nF(ca * 1.6 + ph, sa * 1.6 - ph) + 0.45 * Math.pow(nD(ca * 5 + ph, sa * 5 + ph), 2));
-        const q = d / Rt + (nE(th * 22 + ph, d * 0.5) - 0.5) * 0.45;
-        if (q > 1.3) continue;
-        const kaldir = sstep(1.1, 0.2, q) * guc;
+        // düzensiz, saçaklı leke: kenar gürültüyle girintili çıkıntılı, içinde ışınsal ince lifler
+        const Rt = Rs * (0.5 + 0.75 * fbm(nF, ca * fr + ph, sa * fr - ph, 2) + 0.35 * Math.pow(nD(ca * fr * 3 + ph, sa * fr * 3), 2));
+        const q = d / Rt + (nE(th * 14 + ph, d * 0.9) - 0.5) * 0.5;
+        if (q > 1.25) continue;
+        const lif = 0.45 + 1.0 * Math.pow(nD(th * 26 + ph, d * 0.22 + ph), 1.6);
+        const kaldir = sstep(1.05, 0.3, q) * guc * lif;
         TUZ[i] = 1 - (1 - TUZ[i]) * (1 - kaldir);
-        TUZK[i] = Math.max(TUZK[i], Math.exp(-Math.pow((q - 1.12) / 0.12, 2)) * 0.45 * guc);
+        const merkez = Math.exp(-Math.pow(d / (Rs * 0.13 + 0.3), 2)) * 0.7 * guc * 2;
+        const kenar = Math.exp(-Math.pow((q - 1.06) / 0.12, 2)) * 0.4 * guc * 2;
+        TUZK[i] = Math.max(TUZK[i], merkez + kenar);
       }
+    }
+  }
+  // gutta şişeden sıkılır: çizgi kalınlığı yer yer değişir, kavşaklarda küçük birikintiler
+  {
+    const Ab = bulanik(GA, W2, W2, 1.3), Rb = bulanik(GR, W2, W2, 1.3);
+    for (let i = 0; i < N2; i++) {
+      if (Ab[i] < 0.02 && Rb[i] < 0.02) continue;
+      const x = i % W2, y = (i / W2) | 0;
+      const t = 0.42 + (nB(x / 26, y / 26) - 0.5) * 0.36 + (nE(x / 7, y / 7) - 0.5) * 0.1;
+      if (Ab[i] >= 0.02) GA[i] = sstep(t - 0.13, t + 0.13, Ab[i]);
+      if (Rb[i] >= 0.02) GR[i] = sstep(t - 0.13, t + 0.13, Rb[i]) * (1 - GA[i]);
     }
   }
   // gutta sınırında boya birikimi
   const YAKIN = bulanik(GU, W2, W2, 5);
+  const cicekTag = new Set([T.pencere, T.altin, T.cicekOrta, T.kenarCicek, T.kenarYaprak, T.sap, T.zikzak, T.korkuluk, T.kose]);
   // altın gutta yüksekliği (metal ışıklandırma için)
   const HA = bulanik(GA, W2, W2, 1.6), HR = bulanik(GR, W2, W2, 1.4);
   // ipek parlaklığı: hafif dalgalı germe yüzeyi
@@ -541,24 +555,32 @@
   for (let y = 0; y < W2; y++) for (let x = 0; x < W2; x++) {
     const i = y * W2 + x, X = x / S, Yy = y / S;
     const a = alanlar[ETK[i]] || alanlar[0];
-    const w = fbm(nA, X / 70 + a.r1 * 50, Yy / 70 + a.r2 * 50, 3);
+    // akış: alan bükülmüş gürültü (domain warp); boya ıslak ipekte kıvrılarak yayılır
+    const wx = fbm(nB, X / 150 + a.r1 * 20, Yy / 150, 2) - 0.5, wy = fbm(nB, X / 150 + 40, Yy / 150 + a.r2 * 20, 2) - 0.5;
+    const w = fbm(nA, X / 75 + wx * 2.6 + a.r1 * 50, Yy / 75 + wy * 2.6 + a.r2 * 50, 3);
     let d = boya(a, X, Yy, w);
     // ıslakta ince damarlar ve lekelenme
     const leke = 0.84 + 0.32 * fbm(nB, X / 30 + a.r3 * 40, Yy / 30, 3);
     // kuruma çizgileri: ıslak cephenin bıraktığı ince, koyu, dalgalı izler
-    const fz = fbm(nF, X / 85 + a.r2 * 30, Yy / 85 - a.r1 * 30, 3);
-    const genis = a.n > 9000 && a.tag !== T.kubbe && a.tag !== T.kasnak && a.tag !== T.kaide && a.tag !== T.minare ? 1 : 0;
-    const gelgit = genis * (Math.exp(-Math.pow((fz - 0.47) / 0.01, 2)) * 0.14 + Math.exp(-Math.pow((fz - 0.6) / 0.008, 2)) * 0.1);
-    let k = leke * (1 + 0.42 * Math.min(1, YAKIN[i] * 1.4) + gelgit);
+    // açılmalar (auréole): ıslak cephe durduğu yerde ince koyu bir sınır bırakır, içi boyası itildiği için açılır
+    const bs = a.n > 12000 ? 125 : a.n > 2500 ? 70 : 34;
+    const fz = fbm(nF, X / bs + wx * 1.6 + a.r2 * 30, Yy / bs + wy * 1.6 - a.r1 * 30, 3);
+    const genis = a.n > 900 && !cicekTag.has(a.tag) ? (a.tag === T.kubbe || a.tag === T.kasnak ? 0.6 : a.n > 2500 ? 1 : 0.7) : 0;
+    const t1 = 0.57 + (a.r3 - 0.5) * 0.05, t2 = 0.41 - (a.r1 - 0.5) * 0.05;
+    const ic1 = sstep(t1, t1 + 0.07, fz), ic2 = sstep(t2, t2 - 0.06, fz);
+    const gelgit = genis * (Math.exp(-Math.pow((fz - t1) / 0.0055, 2)) * 0.4 + Math.exp(-Math.pow((fz - t2) / 0.005, 2)) * 0.22);
+    let k = leke * (1 + 0.42 * Math.min(1, YAKIN[i] * 1.4) + gelgit) * (1 - genis * (0.24 * ic1 + 0.14 * ic2));
     const tz = TUZ[i];
     k *= (1 - tz) * (1 + TUZK[i] * 0.9);
     let r = ipek[0] * Math.exp(-d[0] * k), g = ipek[1] * Math.exp(-d[1] * k), b = ipek[2] * Math.exp(-d[2] * k);
     // ipek parlaklığı: düşük frekanslı germe dalgası + çok ince örgü
     const sh = fbm(nC, X / 260, Yy / 340, 3), shx = fbm(nC, (X + 3) / 260, Yy / 340, 3) - sh, shy = fbm(nC, X / 260, (Yy + 3) / 340, 3) - sh;
-    const band = Math.exp(-Math.pow(((X - Yy * 0.75) - 120 + (sh - 0.5) * 260) / 190, 2));
-    const parla = Math.pow(clamp(0.5 + (shx * LV2[0] - shy * LV2[1]) * 40, 0, 1), 3) * 0.16 + 0.14 * band * (0.6 + 0.4 * Math.sin((X + Yy) / 23 + sh * 9) * 0) + 0.05 * Math.max(0, Math.sin((X + Yy * 0.4) / 160 + sh * 4));
-    const orgu = 0.985 + 0.015 * ((y % 3 === 0 ? -1 : 0.5) + (x % 4 === 0 ? -0.6 : 0.3));
-    r = (r + (255 - r) * parla) * orgu; g = (g + (255 - g) * parla) * orgu; b = (b + (255 - b) * parla) * orgu;
+    const band = 1.35 * Math.exp(-Math.pow(((X - Yy * 0.75) - 150 + (sh - 0.5) * 260) / 120, 2)) + 0.8 * Math.exp(-Math.pow(((X - Yy * 0.75) + 330 + (sh - 0.5) * 200) / 80, 2));
+    // lif yönünde ince parıltı (atkı ipliklerinin anizotrop yansıması)
+    const lifP = (nE(X / 220 + (sh - 0.5) * 3, Yy * 0.7) - 0.5) * 0.028 + (nD(X / 70, Yy * 0.45 + 7) - 0.5) * 0.02;
+    const parla = Math.pow(clamp(0.5 + (shx * LV2[0] - shy * LV2[1]) * 40, 0, 1), 3) * 0.18 + 0.2 * band + 0.06 * Math.max(0, Math.sin((X + Yy * 0.4) / 160 + sh * 4)) + lifP * (0.5 + band);
+    const orgu = 0.98 + 0.02 * ((y % 3 === 0 ? -1 : 0.5) + (x % 4 === 0 ? -0.6 : 0.3));
+    const pz = clamp(parla, -0.05, 0.45); r = (r + (255 - r) * pz) * orgu; g = (g + (255 - g) * pz) * orgu; b = (b + (255 - b) * pz) * orgu;
     // renksiz gutta: boyanmamış ipek, hafif kabarık ve parlak
     const gr = GR[i];
     if (gr > 0.01) {

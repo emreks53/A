@@ -287,10 +287,11 @@
       // ışık alan dilimlerin üst bölümüne açık fıstık yeşili ikinci damla: yanları kaburgada, alt ucu
       // dilimi kesen kavisli bir gelgit çizgisinde biter
       if (isik > 0.55) {
-        const cy = 352 + (1 - isik) * 60 + (k % 2) * 14;
+        const kr = S.rng(700 + k);
+        const dy = (kr() - 0.5) * 16;
         murekkep({
-          kutu: [Math.min(...xs) - 2, 298, Math.max(...xs) + 2, 520],
-          ciz: (g) => { g.save(); g.clip(P(S.kubbeYolu)); g.clip(P(S.yol(pts, true))); elips(560 + Math.sin(ph) * 150, cy, 70, 78, 0)(g); g.restore(); },
+          kutu: [Math.min(...xs) - 2, 298, Math.max(...xs) + 2, 540],
+          ciz: (g) => { g.save(); g.clip(P(S.kubbeYolu)); g.clip(P(S.yol(pts, true))); elips(668, 352 + dy, 150, 118, -0.5)(g); g.restore(); },
           bul: 3, gen: 0.16, olc: 0.03, renk: [C('#C8EC4A'), C('#7ED040')], renkOlc: 0.02,
           yog: 0.45 + (isik - 0.55) * 0.6, kenar: C('#2F7A14'), kenarG: 0.65, kenarW: 1.2, bant: 8, kaldir: 0.6, halka: [[14, 0.12]],
         });

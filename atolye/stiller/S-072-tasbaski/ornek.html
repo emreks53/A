@@ -600,10 +600,13 @@ function gren(tohum) {
 const G = gren(9001);
 // elle noktalama ızgarası (her hücrede kaydırılmış bir nokta)
 // elle konan noktalar ızgaraya oturmaz: hücre içinde neredeyse serbest konum, nokta başına farklı boy
-const SP = 2.8 * O;
+// noktalar eğik, yavaşça bükülen sıralarda (elin gezindiği yön) ve hücre içinde kaydırılmış olarak durur
+const SP = 2.9 * O;
 const JX = new Float32Array(65536), JY = new Float32Array(65536), JS = new Float32Array(65536);
-{ const r = SAHNE.rng(77); for (let i = 0; i < 65536; i++) { JX[i] = (r() - 0.5) * 0.92; JY[i] = (r() - 0.5) * 0.92; JS[i] = 0.7 + 0.6 * r(); } }
-const ATLA = new Uint8Array(65536); { const r = SAHNE.rng(78); for (let i = 0; i < 65536; i++) ATLA[i] = r() < 0.12 ? 1 : 0; }
+{ const r = SAHNE.rng(77); for (let i = 0; i < 65536; i++) { JX[i] = (r() - 0.5) * 0.74; JY[i] = (r() - 0.5) * 0.74; JS[i] = 0.75 + 0.5 * r(); } }
+const ATLA = new Uint8Array(65536); { const r = SAHNE.rng(78); for (let i = 0; i < 65536; i++) ATLA[i] = r() < 0.05 ? 1 : 0; }
+const bukU = fbmFn(7801, 2, 70), bukV = fbmFn(7802, 2, 70);
+const NA = 0.43, NC = Math.cos(NA), NS = Math.sin(NA);
 
 // ------------------------------------------------------------------ eskimiş kâğıt
 const kagit = kagitDokusu(7212);
@@ -642,17 +645,22 @@ for (let y = 0; y < N; y++) {
       if (sx < 0 || sy < 0 || sx >= N || sy >= N) continue;
       let kap;
       if (t.doku === 'nokta') {
-        const cx = Math.floor(sx / SP), cy = Math.floor(sy / SP);
+        // eğik ve bükülmüş ızgara koordinatları
+        const wu = (bukU(sx / O + k * 50, sy / O) - 0.5) * 6 * SP, wv = (bukV(sx / O, sy / O + k * 50) - 0.5) * 6 * SP;
+        const U = sx * NC - sy * NS + wu, V = sx * NS + sy * NC + wv;
+        const cx = Math.floor(U / SP), cy = Math.floor(V / SP);
         kap = 0;
         for (let a = -1; a <= 1; a++) for (let bb = -1; bb <= 1; bb++) {
-          const ux = cx + bb, uy = cy + a, h = (((uy * 7 + k * 13) & 255) << 8) | ((ux * 5 + uy * 3) & 255);
-          const nx = (ux + 0.5 + JX[h]) * SP, ny = (uy + 0.5 + JY[h]) * SP;
+          const ux = cx + bb, uy = cy + a, h = ((uy & 255) << 8) | (ux & 255);
+          const nu = (ux + 0.5 + JX[h]) * SP, nv = (uy + 0.5 + JY[h]) * SP;
+          const du = nu - U, dv = nv - V;
+          const nx = sx + du * NC + dv * NS, ny = sy - du * NS + dv * NC;
           const tx = Math.min(N - 1, Math.max(0, nx | 0)), ty = Math.min(N - 1, Math.max(0, ny | 0));
           const tv = t.ton[ty * N + tx] / 255;
           if (tv <= 0.01) continue;
           if (ATLA[h] && tv < 0.75) continue; // elle noktalamada atlanan yerler
           const rr = (SP * 0.5 * Math.sqrt(tv) + 0.35) * JS[h];
-          const dd = Math.hypot(sx - nx, sy - ny);
+          const dd = Math.hypot(du, dv);
           const v = clamp(rr - dd + 0.5);
           if (v > kap) kap = v;
         }

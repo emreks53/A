@@ -5,18 +5,36 @@
   "ad_en": "Gouache",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Örtücü, mat ve kadifemsi düz renkler; açık renk koyunun üstüne sürülür, fırça izi ve kâğıt kenarı görünür.",
-  "tanim": "Guaj, suluboyanın tebeşir ya da beyaz pigmentle koyulaştırılmış, örtücü hâlidir: kuruyunca mat, kadife gibi düz bir yüzey verir. Saydam olmadığı için açık renk koyu rengin üstüne doğrudan sürülebilir; ışık ve gölge degradeyle değil, yan yana konmuş birkaç düz tonla kurulur. Geniş alanlarda fırça yönünde hafif çizgilenme, fırça uçlarında kuru fırça kırıkları kalır. Afiş, kitap resmi, animasyon arka planı ve tasarım çizimlerinde yaygındır.",
+  "ozet": "Örtücü, mat ve tebeşirimsi düz renkler; açık renk koyunun üstüne fırça fırça sürülür, kuru fırça kenarları ve krem kâğıt görünür.",
+  "tanim": "Guaj, suluboyanın tebeşir ya da beyaz pigmentle koyulaştırılmış, örtücü hâlidir: kuruyunca mat, kadife gibi, hafif tozlu bir yüzey verir. Saydam olmadığı için açık renk koyu rengin üstüne doğrudan sürülebilir; ışık ve gölge degradeyle değil, yan yana konmuş birkaç düz tonla kurulur. Düz görünen alanların içinde bile fırça yönünde çizgilenme, eşit olmayan örtme ve darbe sınırları kalır; kenarlar elle çekildiği için hafifçe titrer, fırçanın kuruduğu yerde kırılır. Afiş, kitap resmi, animasyon arka planı ve tasarım çizimlerinde yaygındır.",
   "koken": "Örtücü sulu boyalar Orta Çağ el yazmalarından ve 16. yüzyıl portre minyatürlerinden beri kullanılır; 'gouache' adı 18. yüzyıl Fransa'sında yerleşti. 20. yüzyılın ortasında afiş ve kitap resminin başlıca malzemesi oldu: Mary Blair, Alice ve Martin Provensen, Charley Harper gibi ressamlar sınırlı paletli, düz tonlu, fırça izi görünen bir resimleme dili kurdu; Matisse ise guajla boyadığı kâğıtları keserek kolajlar yaptı.",
   "ayirt_edici": [
-    "Gökte dört düz mavi bant; bantlar arasında karışma yok, geçişler yatay darbelerin birbirine geçmesiyle yapılmış",
-    "Kubbe koyudan açığa üç düz yeşil katla boyanmış; en üstte kaburga boyunca ayrı ayrı sürülmüş açık sarı-yeşil vurgu darbeleri",
-    "Açık rengin koyunun üstüne örtücü sürülmesi: gök üstünde krem bulutlar, koyu yaprak üstünde beyaz taç yapraklar, gri-mor gölge üstünde açık taş",
-    "Büyük alanlarda fırça yönünde hafif çizgilenme ve darbe sınırları; yapraklar uçları incelen tek fırça darbeleri",
-    "Mat, parlamasız yüzey; çiçeklerde ve bulutlarda sağ üste kaydırılmış açık tonun altından görünen gölge şeridi",
-    "Boyanın bittiği yerde kuru fırça uçlarıyla kırılan kenar ve görünen krem rengi kâğıt"
+    "Düz renk alanlarının içinde fırça yönünde çizgilenme ve eşit olmayan örtme: gökte ve yerde yatay, kubbede kaburga boyunca, minarede dikey darbeler",
+    "Gökte koyu maviden açık kreme beş düz bant; geçişler degrade değil, yatay darbelerin birbirine geçmesiyle",
+    "Kubbe üç düz yeşil tonla boyanmış, ton sınırları darbe darbe iç içe geçiyor; ışık alan tarafta kaburga boyunca ayrı ayrı sürülmüş açık sarı-yeşil vurgu darbeleri",
+    "Açık rengin koyunun üstüne örtücü sürülmesi: beyaz taç yapraklar merkezden dışa açılan yüklü fırça darbeleriyle gri-leylak gölge biçiminin üstüne konmuş, darbe aralarından gölge görünüyor",
+    "Elle çekilmiş, hafifçe titreyen kenarlar; bulutlarda, güneş halkalarında ve büyük alanların sınırında kuru fırça kırıkları, darbe kenarlarında ince boya sırtları",
+    "Mat, parlamasız, tebeşirimsi yüzey ve boyanın bittiği yerde fırça uçlarıyla kırılan kenardan görünen krem rengi kâğıt"
   ],
-  "palet": ["#3B6F95", "#8AB5BD", "#184731", "#44894D", "#93C077", "#A4A2B2", "#D8B47E", "#EAE0CA"],
-  "kodla_cizim": "2048 px'lik bir kayan noktalı renk tamponuna katman katman örtücü boya sürülür. Her katmanın biçimi Path2D ile ekran dışı tuvale çizilip kapsama maskesine çevrilir; maske hafifçe bulanıklaştırılıp ince gürültüyle eşiklenir, böylece kenarlar keskinle yumuşak arasında, el yapımı bir titreklik kazanır. Ayrı bir 'darbe haritası' tuvaline bölgeye göre yön alan kıl demetli fırça darbeleri gri tonlarla çizilir (gökte yatay, kubbede kaburga boyunca, minarede dikey, çiçeklerde merkezden dışa); bu harita her katmanın değerini yüzde birkaç oynatarak çizgilenmeyi ve darbe sınırlarını verir, gökteki bant sınırlarını da darbe darbe kaydırır. Işık, kubbe için dönel yüzey normali, kasnak ve minare için silindir modeliyle hesaplanıp üç-dört düz tona basamaklanır. Kubbe vurguları, bulut kıvrımları ve yapraklar kıl demetli renkli darbelerle ara tuvale boyanıp tampona eklenir. Son geçişte kâğıt dişi gürültüsü eklenir ve resim, kenarlarda darbe uçlarıyla kırılan düzensiz bir dikdörtgenle krem kâğıda oturtulur.",
-  "etiketler": ["guaj", "örtücü boya", "mat yüzey", "düz renk", "kitap resmi", "afiş", "fırça izi", "geleneksel"]
+  "palet": [
+    "#3B6F95",
+    "#8AB5BD",
+    "#184731",
+    "#44894D",
+    "#93C077",
+    "#ABA5AE",
+    "#D8B47E",
+    "#EAE0CA"
+  ],
+  "kodla_cizim": "2048 px'lik bir kayan noktalı renk tamponuna katman katman örtücü boya sürülür. Her katmanın biçimi Path2D ile ekran dışı tuvale çizilip kapsama maskesine çevrilir; maske bulanıklaştırılır, düşük frekanslı bir yer değiştirme alanıyla örneklenir (elle çekilmiş titrek kenar) ve gürültü ile darbe haritasına göre eşiklenir. Ayrı bir 'darbe haritası' tuvaline bölgeye göre yön alan kıl demetli fırça darbeleri gri tonlarla çizilir (gökte ve yerde yatay, kubbede kaburga boyunca, minarede dikey, çiçeklerde merkezden dışa); bu harita her katmanın değerini yüzde on kadar oynatır, ton sınırlarını darbe darbe kaydırır ve ince kıl yapısından türetilen boşluk alanıyla kenarlarda kuru fırça kırıkları açar. Kubbe vurguları, bulut kıvrımları, yapraklar ve taç yaprakları kıl demetli renkli darbelerle ara tuvale boyanır (her taç yaprak merkezden dışa 3–5 darbe, göbek tıpış lekeleri). Her katman bir boya kalınlığı haritası da günceller: kenarda küçük sırt, kıl izlerinde oluk; son geçişte bu harita sağ üstten çok hafif kabartı ışığı verir, koyu tonlara tebeşirimsi açık benekler ve kâğıt dişi eklenir, resim kenarlarda darbe uçlarıyla kırılan düzensiz bir dikdörtgenle krem kâğıda oturtulur.",
+  "etiketler": [
+    "guaj",
+    "örtücü boya",
+    "mat yüzey",
+    "düz renk",
+    "kitap resmi",
+    "afiş",
+    "fırça izi",
+    "geleneksel"
+  ]
 }

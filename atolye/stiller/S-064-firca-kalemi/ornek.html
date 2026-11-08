@@ -517,20 +517,32 @@
   const tum = new Path2D();
   tum.rect(0, 0, 1024, 800);
   bolge(tum, (x) => {
-    const darbeler = [
-      [[[40, 330], [260, 300], [520, 282], [760, 300], [900, 330]], 58, '#93d2ef', 0.6],
-      [[[980, 420], [760, 398], [480, 392], [200, 414], [60, 440]], 64, '#93d2ef', 0.6],
-      [[[110, 520], [380, 500], [660, 494], [920, 516]], 56, '#93d2ef', 0.6],
-      [[[150, 210], [400, 176], [640, 170], [740, 182]], 46, '#a9dcf3', 0.6],
-      [[[960, 610], [700, 590], [420, 596], [170, 616]], 50, '#a9dcf3', 0.55],
-      [[[50, 380], [220, 350], [420, 336]], 40, '#58ade0', 0.6],
-      [[[70, 470], [230, 452], [330, 450]], 34, '#58ade0', 0.6],
-      [[[800, 352], [930, 372], [1000, 396]], 34, '#58ade0', 0.55],
-      [[[220, 120], [360, 100], [470, 104]], 26, '#c3e6f6', 0.6],
-      [[[130, 690], [360, 680], [560, 680]], 36, '#c3e6f6', 0.55],
+    // birkaç gevşek, eğik darbe kümesi: açıları, boyları ve aralıkları farklı; uçları kuru açılıyor;
+    // yapının çevresinde koyu ikinci kat, güneşe doğru kâğıt beyazı
+    const gruplar = [
+      [205, 300, 9, 150, 300, -0.5, 34], [470, 196, 7, 130, 260, -0.3, 32], [800, 425, 9, 140, 280, -0.62, 34],
+      [130, 545, 6, 110, 220, -0.4, 30], [895, 615, 5, 100, 190, -0.55, 28], [650, 285, 4, 110, 200, -0.42, 28],
     ];
-    const don = (p) => p.map(([px, py]) => [512 + (px - 512) * Math.cos(-0.05) - (py - 400) * Math.sin(-0.05), 400 + (px - 512) * Math.sin(-0.05) + (py - 400) * Math.cos(-0.05)]);
-    for (const [p, w, c, al] of darbeler) renk(x, don(p), { w, renk: c, alfa: al, kuru: 0.65, cikis: 110, giris: 26, uc: 0.25, sis: 0.2 });
+    const gunesUzak = (pp) => pp.every(([px, py]) => Math.hypot(px - 880, py - 140) > 112);
+    for (const [gx, gy, n, L1, L2, aci0, w0] of gruplar) {
+      for (let k = 0; k < n; k++) {
+        const aci = aci0 + (R() - 0.5) * 0.22;
+        const ca = Math.cos(aci), sa = Math.sin(aci);
+        const off = (k - (n - 1) / 2) * w0 * (0.7 + R() * 0.35);
+        const L = L1 + R() * (L2 - L1);
+        const kx = gx - sa * off + (R() - 0.5) * 50, ky = gy + ca * off + (R() - 0.5) * 14;
+        const egri = (R() - 0.5) * 34;
+        const pp = [[kx - ca * L / 2, ky - sa * L / 2], [kx - sa * egri, ky + ca * egri], [kx + ca * L / 2, ky + sa * L / 2]];
+        if (!gunesUzak(pp)) continue;
+        if (R() < 0.5) pp.reverse();
+        const koyu = R() < 0.18;
+        renk(x, pp, { w: (koyu ? 0.6 : 1) * w0 * (0.85 + R() * 0.3), renk: koyu ? '#6cb8e4' : R() < 0.5 ? '#a9dcf3' : '#93d2ef', alfa: 0.62, kuru: 0.75, cikis: L * 0.42, giris: 18, uc: 0.2, sis: 0.25 });
+      }
+    }
+    // yapının hemen arkasında kısa koyu darbeler (beyaz taşı öne çıkarır)
+    for (const [x0, y0, x1, y1, w] of [[224, 420, 262, 372, 30], [228, 560, 262, 520, 28], [770, 480, 836, 452, 34], [784, 560, 850, 538, 30], [346, 396, 392, 352, 26]]) {
+      renk(x, [[x0, y0], [x1, y1]], { w, renk: '#58ade0', alfa: 0.55, kuru: 0.7, cikis: 40, giris: 6, uc: 0.2 });
+    }
     // güneş: iki dairesel sarı darbe, turuncu gölge
     const dairePt = (r, a0, a1) => { const pp = []; for (let a = a0; a <= a1; a += 0.07) pp.push([880 + Math.cos(a) * r, 140 + Math.sin(a) * r]); return pp; };
     renk(x, dairePt(24, -0.6, 5.6), { w: 36, renk: '#ffd84d', alfa: 0.85, kuru: 0.3, cikis: 26, giris: 8 });
@@ -679,14 +691,28 @@
       const L = uzunluk(s);
       const tas = o.tas === undefined ? 1 : o.tas;
       const k = L > 25 ? 1 : L / 25;
+      if (o.bolUz && L > o.bolUz * 1.3) {
+        // uzun hat birkaç hızlı darbeye bölünür: her darbe kuru, kırık bir uçla biter (kuru kesinti)
+        const adet = Math.round(L / o.bolUz);
+        let s0 = 0;
+        for (let j = 0; j < adet; j++) {
+          const s1 = j === adet - 1 ? L + tas * 6 : ((j + 1) * L) / adet + (R() - 0.5) * 24;
+          let pc = parca(uzat(s, tas * R() * 3, tas * 6), Math.max(0, s0), s1);
+          if (R() < 0.45) pc = pc.slice().reverse();
+          const Lp = uzunluk(pc);
+          ink(pc, Object.assign({ giris: Math.min(Lp * 0.12, 8), cikis: Lp * 0.5, kuru: 0.85, kilEsik: 0.28 }, o, { w: o.w || 3 }));
+          s0 = s1 - 4 - R() * 6;
+        }
+        continue;
+      }
       ink(uzat(s, tas * k * R() * 3, tas * k * (2 + R() * 7)), Object.assign({ giris: Math.min(L * 0.15, 8), cikis: Math.min(L * 0.45, 60), kuru: 0.7 }, o, { w: (o.w || 3) * (L < 20 ? 0.7 : 1) }));
     }
   }
-  function ort(yol, cizgi) {
+  function ort(yol, cizgi, dolguYok) {
     ix.save();
     ix.globalCompositeOperation = 'destination-out';
     ix.fillStyle = '#000';
-    ix.fill(yol);
+    if (!dolguYok) ix.fill(yol);
     if (cizgi) { ix.lineWidth = cizgi; ix.strokeStyle = '#000'; ix.stroke(yol); }
     ix.restore();
   }
@@ -731,7 +757,7 @@
       }
       continue;
     }
-    hat(pts, { w: p.tip === 'topuz' ? 3.2 : 2.8, tas: p.tip === 'topuz' ? 0.2 : 0.8, kose: p.tip === 'topuz' ? 1.2 : 0.6, wk: (t) => 1 });
+    hat(pts, { w: p.tip === 'topuz' ? 3.2 : 2.8, tas: p.tip === 'topuz' ? 0.2 : 0.8, kose: p.tip === 'topuz' ? 1.2 : 0.6, wk: (t) => 1, bolUz: p.tip === 'topuz' ? 0 : 120 });
   }
   // gölge yanında hızlı kısa çizgiler
   for (const [ad, cx, Rr] of [['gövde-alt', 300, 34], ['gövde-orta', 300, 27], ['gövde-üst', 300, 19]]) {
@@ -758,8 +784,8 @@
 
   // kaide
   ort(kaideYol);
-  hat([[K.kornis.x1, K.kornis.y1], [K.kornis.x2, K.kornis.y1]], { w: 3.4, tas: 1.4, kuru: 0.6 });
-  hat([[K.kornis.x1, K.kornis.y2], [K.kornis.x2, K.kornis.y2]], { w: 2.6, tas: 0.8, kuru: 0.7 });
+  hat([[K.kornis.x1, K.kornis.y1], [K.kornis.x2, K.kornis.y1]], { w: 3.4, tas: 1.4, kuru: 0.6, bolUz: 190 });
+  hat([[K.kornis.x1, K.kornis.y2], [K.kornis.x2, K.kornis.y2]], { w: 2.6, tas: 0.8, kuru: 0.7, bolUz: 220 });
   hat([[K.kornis.x1, K.kornis.y1], [K.kornis.x1, K.kornis.y2]], { w: 2.4, tas: 0 });
   hat([[K.x1, K.y1], [K.x1, K.y2]], { w: 3.4, tas: 0.6 });
   hat([[K.x2, K.y1], [K.x2, K.y2]], { w: 2.4, tas: 0.6 });
@@ -773,8 +799,8 @@
   for (const k of [1, 0]) {
     const q = KS[k];
     ort(new Path2D(SAHNE.yol(dikd(q.x1, q.y1, q.x2, q.y2), true)));
-    hat([[q.x1, q.y1], [q.x2, q.y1]], { w: 3.2, tas: 1.4, kuru: 0.6 });
-    hat([[q.x1, q.y2], [q.x2, q.y2]], { w: 3.6, tas: 1.0, kuru: 0.5, ters: 0 });
+    hat([[q.x1, q.y1], [q.x2, q.y1]], { w: 3.2, tas: 1.4, kuru: 0.6, bolUz: 160 });
+    hat([[q.x1, q.y2], [q.x2, q.y2]], { w: 3.6, tas: 1.0, kuru: 0.5, ters: 0, bolUz: 200 });
     hat([[q.x1, q.y1], [q.x1, q.y2]], { w: 3.8, tas: 0.4 });
     hat([[q.x2, q.y1], [q.x2, q.y2]], { w: 2.4, tas: 0.4 });
     for (const p of KP[k]) leke(SAHNE.kemerYolu(p.x, p.y, p.w + 1, p.h));
@@ -794,8 +820,14 @@
   // dış hat: solda kalın, tepeden sağa inen ince ve kuru
   const dis = SAHNE.kubbeNoktalari(120);
   const tepeI = dis.findIndex((q) => q[0] >= 560);
-  ink(dis.slice(0, tepeI + 3), { w: 7, kuru: 0.5, giris: 8, cikis: 60, wk: (t) => lerp(1.1, 0.5, t) });
-  ink(dis.slice(tepeI - 2), { w: 4.2, kuru: 0.3, giris: 30, cikis: 30, wk: (t) => lerp(0.45, 1.1, t) });
+  const solYay = dis.slice(0, tepeI + 3), sagYay = dis.slice(tepeI - 2);
+  const solL = uzunluk(solYay), sagL = uzunluk(sagYay);
+  // sol: tabandan yukarı basarak çıkan kalın darbe kuru biter; ikinci darbe tepeden aşağı inip incelir
+  ink(parca(solYay, 0, solL * 0.62), { w: 7.4, kuru: 0.85, kilEsik: 0.26, giris: 8, cikis: solL * 0.25, wk: (t) => lerp(1.1, 0.8, t) });
+  ink(parca(solYay, solL * 0.5, solL).reverse(), { w: 5, kuru: 0.8, kilEsik: 0.26, giris: 10, cikis: solL * 0.2, wk: (t) => lerp(0.55, 1.0, t) });
+  // sağ: tepeden ince başlayıp kalınlaşan, ortada kuru bir kesintiyle iki darbe
+  ink(parca(sagYay, 0, sagL * 0.48), { w: 4, kuru: 0.85, kilEsik: 0.28, giris: 24, cikis: sagL * 0.2, wk: (t) => lerp(0.45, 0.9, t) });
+  ink(parca(sagYay, sagL * 0.42, sagL), { w: 4.6, kuru: 0.5, giris: 14, cikis: 30, wk: (t) => lerp(0.8, 1.1, t) });
   // sol gölgede kısa, savrulan tarama
   for (let k = 0; k < 18; k++) {
     const y = 380 + k * 9.5;
@@ -803,7 +835,7 @@
     const x0 = 560 - r + 3;
     ink([[x0, y + 6], [x0 + 18 + R() * 16, y - 10]], { w: 2, kuru: 0.8, giris: 1, cikis: 22 });
   }
-  hat([[352, 555], [768, 555]], { w: 3.6, tas: 1.2, kuru: 0.6 });
+  hat([[352, 555], [768, 555]], { w: 3.6, tas: 1.2, kuru: 0.6, bolUz: 180 });
 
   // kubbe alemi
   ort(birlesik(Y.alem));
@@ -811,7 +843,7 @@
 
   // bitkiler: uzun, akıcı saplar; iki darbeli yapraklar; şişen taç yaprağı çizgileri
   for (const s of BIT.saplar) {
-    ort(new Path2D(SAHNE.yol(s)), 5);
+    ort(new Path2D(SAHNE.yol(s)), 5, true);
     ink(s.slice().reverse(), { w: 3.2, kuru: 0.6, giris: 10, cikis: 120, tit: 0.8, sis: 0.2 });
   }
   BIT.yapraklar.forEach((y) => {

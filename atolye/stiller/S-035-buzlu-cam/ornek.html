@@ -89,8 +89,12 @@ function cam(yol, bb, o) {
   if (o.golge !== false) {
     const g = Object.assign({ dx: -5, dy: 9, b: 9, a: 0.3 }, o.golge || {});
     sc.fillStyle = `rgba(40,10,90,${g.a})`; sc.fill(yol);
-    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.filter = `blur(${g.b * O}px)`;
-    ctx.drawImage(sekil, x0 + g.dx * O, y0 + g.dy * O); ctx.restore();
+    // bulanıklık yalnız panel payı kadar küçük bir tuvalde (tüm tuvalde süzgeç çok yavaş)
+    const br = g.b * O, pp = Math.ceil(br * 3) + 2;
+    const gt = S.yeniTuval(w + 2 * pp, h + 2 * pp), gc = gt.getContext('2d');
+    gc.filter = `blur(${br}px)`; gc.drawImage(sekil, pp, pp);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(gt, x0 + g.dx * O - pp, y0 + g.dy * O - pp); ctx.restore();
   }
   // c) cam gövde: hafif büyütülmüş (kırılma) bulanık arka plan + renk + çok ince buz + iç degrade
   const [kat, kc] = yeni();
@@ -148,7 +152,16 @@ function gunesBulut() {
 }
 function zeminCam() {
   const p = new Path2D(); p.roundRect(-20, 800, 1064, 260, [26, 26, 0, 0]);
-  cam(p, [0, 800, 1024, 1024], { renk: [255, 236, 226], yog: 0.16, bul: 18, golge: { dx: 0, dy: -4, b: 14, a: 0.22 }, kenar: 1.6, isik: 0.3 });
+  cam(p, [0, 800, 1024, 1024], {
+    renk: [255, 236, 226], yog: 0.16, bul: 18, golge: { dx: 0, dy: -4, b: 14, a: 0.22 }, kenar: 1.6, isik: 0.3,
+    ic(kc) {
+      kc.save(); kc.filter = `blur(${10 * O}px)`; kc.fillStyle = 'rgba(255,255,255,0.13)';
+      kc.beginPath(); kc.moveTo(560, 800); kc.lineTo(680, 800); kc.lineTo(560, 1024); kc.lineTo(440, 1024); kc.closePath(); kc.fill();
+      kc.fillStyle = 'rgba(255,255,255,0.09)';
+      kc.beginPath(); kc.moveTo(720, 800); kc.lineTo(756, 800); kc.lineTo(636, 1024); kc.lineTo(600, 1024); kc.closePath(); kc.fill();
+      kc.restore();
+    },
+  });
 }
 function minare() {
   const c = S.minare.cx;
@@ -161,7 +174,7 @@ function minare() {
     else { yol = P2(p.yol); bb = [c - 26, 146, c + 26, 200]; }
     const ince = bb[3] - bb[1] < 25;
     cam(yol, bb, {
-      renk: C_.beyaz, yog: 0.62, bul: 12, golge: { dx: -3, dy: ince ? 5 : 7, b: ince ? 4 : 7, a: 0.26 }, kenar: 1.2,
+      renk: C_.beyaz, yog: 0.66, doy: 0.75, bul: 12, golge: { dx: -3, dy: ince ? 5 : 7, b: ince ? 4 : 7, a: 0.26 }, kenar: 1.2,
       ic(kc) {
         if (p.ad === 'gövde-alt') {
           // zikzak bandı camın içine kazınmış ışık çizgileri
@@ -197,7 +210,7 @@ function alem(a, s) {
 function kaide() {
   const K = S.kaide, kr = K.kornis;
   cam(P2(dik(K.x1, K.y1, K.x2, K.y2)), [K.x1, K.y1, K.x2, K.y2], {
-    renk: C_.beyaz, yog: 0.64, bul: 14, golge: { dx: -6, dy: 10, b: 12, a: 0.3 }, kenar: 1.4,
+    renk: C_.beyaz, yog: 0.74, doy: 0.45, bul: 14, golge: { dx: -6, dy: 10, b: 12, a: 0.3 }, kenar: 1.4,
     ic(kc) {
       // pilastrlar: camda ince ışık ve gölge çizgileri
       for (const px of [365, 495, 625, 755]) { kc.fillStyle = 'rgba(255,255,255,0.55)'; kc.fillRect(px, 708, 1.6, 90); kc.fillStyle = 'rgba(70,40,120,0.16)'; kc.fillRect(px + 1.6, 708, 6, 90); }
@@ -207,7 +220,7 @@ function kaide() {
     },
   });
   for (const p of K.pencereler) cam(P2(S.kemerYolu(p.x, p.y, p.w, p.h)), [p.x - p.w / 2, p.y, p.x + p.w / 2, p.y + p.h], { renk: C_.amber, yog: 0.5, bul: 6, golge: { dx: -2, dy: 3, b: 3, a: 0.3 }, kenar: 1.1, isik: 0.35 });
-  cam(P2(dik(kr.x1, kr.y1, kr.x2, kr.y2)), [kr.x1, kr.y1, kr.x2, kr.y2], { renk: C_.beyaz, yog: 0.68, bul: 8, golge: { dx: -3, dy: 6, b: 5, a: 0.32 }, kenar: 1.3, isik: 0.6 });
+  cam(P2(dik(kr.x1, kr.y1, kr.x2, kr.y2)), [kr.x1, kr.y1, kr.x2, kr.y2], { renk: C_.beyaz, yog: 0.76, doy: 0.45, bul: 8, golge: { dx: -3, dy: 6, b: 5, a: 0.32 }, kenar: 1.3, isik: 0.6 });
 }
 function kasnakKubbe() {
   for (let k = 1; k >= 0; k--) {

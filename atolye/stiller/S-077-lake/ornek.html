@@ -104,7 +104,7 @@
   G.fillRect(0, 610, 1024, 190);
 
   // güneş: altın varak disk, gümüş halka
-  parca(S.daireYolu(880, 140, 60), 'varak', 'rgba(242,196,90,1)');
+  parca(S.daireYolu(880, 140, 60), 'varak', 'rgba(240,192,80,1)');
   parca(S.daireYolu(880, 140, 72), 'varak', 'rgba(214,218,222,1)', { cizgi: 2.4 });
   parca(S.daireYolu(880, 140, 84), 'varak', 'rgba(226,180,74,1)', { cizgi: 1.4 });
 
@@ -374,14 +374,20 @@
           const Ls = 30, v = (yy + 11) / Ls, vi = Math.floor(v);
           const u = (xx + 5) / Ls + (vi & 1) * 0.5, ui = Math.floor(u);
           const fu = u - ui, fv = v - vi;
-          const gk = ga * ga; // ekler ve çatlaklar varak açıkça görünen yerde belirgin
-          let t = 1 + gk * (0.12 * hash(ui, vi, 3) - 0.07);
+          const gk = ga > 0.97 ? 1 : 0.4 * ga * ga; // ekler ve ton farkları çıplak varakta belirgin, lake altında silik
+          // her varak karesi ışığı biraz farklı açıyla yansıtır; panel boyunca geniş, yumuşak bir cila parıltısı
+          let t = 1 + gk * (0.22 * hash(ui, vi, 3) - 0.12) + gk * 0.08 * Math.sin((xx + yy) * 0.012 + hash(ui, vi, 4) * 2);
           const ek = Math.min(fu * Ls, fv * Ls);
           const ek2 = Math.min((1 - fu) * Ls, (1 - fv) * Ls);
           if (ek < 0.7) t *= 1 + 0.08 * gk; else if (ek < 1.3) t *= 1 - 0.14 * gk;
           if (ek2 < 0.45) t *= 1 - 0.1 * gk;
           t *= 0.95 + 0.1 * n4(xx * 0.16 + ui * 3.1, yy * 0.16 + vi * 1.7);
-          if (hash(ui, vi, 9) > 0.62) { const cr = Math.abs(n3(xx * 0.05 + ui * 7, yy * 0.05 + vi * 5) - 0.5); if (cr < 0.009) t *= 1 - 0.38 * gk * (1 - cr / 0.009); }
+          if (ga > 0.97 && hash(ui, vi, 9) > 0.6) { // ince, kırık çizgili varak yırtığı (karenin içinde kısa bir doğru parçası)
+            const ca = hash(ui, vi, 10) * Math.PI, cs = Math.cos(ca), sn = Math.sin(ca);
+            const qx = fu - 0.5 - (hash(ui, vi, 11) - 0.5) * 0.4, qy = fv - 0.5 - (hash(ui, vi, 12) - 0.5) * 0.4;
+            const dl = Math.abs(qx * sn - qy * cs) * Ls + (n3(xx * 0.5, yy * 0.5) - 0.5) * 0.9, boy = Math.abs(qx * cs + qy * sn);
+            if (dl < 0.32 && boy < 0.3) t *= 1 - 0.26 * (1 - dl / 0.32) * (1 - boy / 0.3);
+          }
           // kehribar lake altında (alfa düşükken) koyulaşma: cánh gián
           t *= 0.72 + 0.28 * Math.min(1, ga * 1.25);
           const vr = gd[i] * t, vg = gd[i + 1] * t, vb = gd[i + 2] * t;
