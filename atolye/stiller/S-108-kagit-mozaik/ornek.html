@@ -79,7 +79,7 @@
   const GOK = et({
     mod: 'gok', h: 13, renk(x, y, r) {
       const ds = Math.hypot(x - gunes.x, y - gunes.y);
-      let c = sec(GOKP, clamp(1 - y / 820, 0, 1), r, 1.8);
+      let c = sec(GOKP, clamp(0.2 + 0.8 * (1 - y / 820), 0, 1), r, 1.8);
       if (ds < 330) c = karis(c, SICAK, Math.pow(1 - ds / 330, 1.4) * 0.85);
       return c;
     },

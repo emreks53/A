@@ -1,0 +1,22 @@
+{
+  "kod": "S-098",
+  "no": 98,
+  "ad": "Guaj ve Kuru Boya",
+  "ad_en": "Gouache and Colored Pencil",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Düz, mat guaj biçimlerin üstüne kuru boyayla çizilmiş tarama, doku ve çizgiler; çağdaş çocuk kitabı resmi gibi parlak ve samimi.",
+  "tanim": "Guaj ve kuru boya, örtücü ve mat guajla sürülen düz renk biçimlerinin, kuruduktan sonra renkli kalemle işlendiği karma tekniktir. Guaj alanı ve hacmi verir; kalem gölgeyi tarama ile, ayrıntıyı ince çizgilerle, yüzeyi küçük doku işaretleriyle ekler ve boyanın pürüzünde taneli kalır. Çizgiler boya biçimlerine tam oturmaz, bu da resme el yapımı bir sıcaklık katar. Çağdaş çocuk kitaplarında, dergi resimlemesinde ve kartpostal illüstrasyonunda çok sevilen bir dildir.",
+  "koken": "Guaj 18. yüzyıldan beri afiş, tasarım ve kitap resminin hızlı, örtücü boyasıdır; renkli kalemle birleşimi 20. yüzyıl ortası çocuk kitabı resimlemesinde (Alice ve Martin Provensen, Mary Blair'in guaj işleri) başladı. 2000'lerden bu yana Carson Ellis, Isabelle Arsenault, Julie Morstad gibi resimcilerin düz guaj biçim, kalem dokusu ve sınırlı ama sıcak paletle kurduğu çağdaş resimli kitap üslubu bu tekniğin bugünkü yüzüdür.",
+  "ayirt_edici": [
+    "Bütün biçimler düz, örtücü, mat guaj: hafif dalgalı fırça kenarı, içinde geniş, yumuşak fırça izi ve tebeşirimsi ton oynaması; gök, toprak, kubbe ve yapraklar ayrı ayrı boyanmış alanlar",
+    "Gölgeler kuru boya taramasıyla: kubbenin sol yanında kaburga yönünde koyu yeşil kısa darbeler, minare ve kaidenin gölge yanında lila tarama, kasnakta dikey yeşil tarama, bulutların altında lila şerit",
+    "Kalem çizgileri taneli ve guaja tam oturmuyor: kahve, koyu yeşil ve gül pembesi konturlar biçimlerden biraz kaymış, kâğıt ve boya pürüzünde kesik kesik",
+    "Açık renk koyunun üstünde: kubbede açık yeşil guaj ışık lekesi, kaburgalarda sarı-yeşil kalem, beyaz kalem parıltıları",
+    "Kalemle küçük doku işaretleri: toprakta turuncu ve kahve tikler, çakıl halkaları, ufuk boyunca yeşil çimen tutamları, bulutların üstünde mavi kalem yayları, güneşin turuncu ve hardal ışınları",
+    "Beyaz guaj çiçekler, dipten dışa gül pembesi kalem darbeleri ve hardal göbekte kahve noktalar; parlak, sıcak gündüz paleti"
+  ],
+  "palet": ["#76C6E3", "#F8C93E", "#FFF9EF", "#46AE62", "#F6EAD3", "#F1C890", "#4F9F57", "#D5607A", "#7A4A30"],
+  "kodla_cizim": "İki ayrı katman ve 2048 iç çözünürlük. Guaj: her biçim ekran dışı katmanda doldurulur; büyük biçimlerin kenarı canvas'a bağlanan SVG feTurbulence + feDisplacementMap süzgeciyle, küçük biçimlerinki (yaprak, taç yaprak, pencere) örneklenen yolun gürültüyle titretilmesiyle dalgalanır; sonra 'source-atop' ile biçimin yönüne döndürülmüş, bulanık geniş darbelerden üretilmiş fırça izi deseni basılır ve katman yalnız biçimin kutusu kadar ana resme aktarılır. Kuru boya: tarama (kırpılmış alanda, gölge maskesine göre olasılıkla konan kısa paralel darbeler), kontur (SVG yolu getPointAtLength ile örneklenip titretilen ve biraz kaydırılan çizgi) ve doku işaretleri kalem katmanına çizilir; her nesneden sonra katman, yönsüz ince kâğıt tanesinden üretilmiş alfa maskesiyle 'destination-in' uygulanarak taneli hâle getirilir ve ana resme basılır (ressam sırası korunur: öndeki yaprak arkadakinin çizgisini örter). Kubbede kısa darbeler sahne profilinden üretilen meridyenler boyunca, dönel yüzeyin gölge yanına göre konur. En sonda çok hafif mat yüzey tanesi.",
+  "etiketler": ["guaj", "renkli kalem", "kuru boya", "karma teknik", "çocuk kitabı", "tarama", "illüstrasyon", "mat"]
+}

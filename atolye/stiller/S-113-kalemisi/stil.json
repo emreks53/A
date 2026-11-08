@@ -1,0 +1,40 @@
+{
+  "kod": "S-113",
+  "no": 113,
+  "ad": "Kalemişi",
+  "ad_en": "Ottoman Kalemişi Painting",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Beyaz kireç sıva üzerine silkme kalıplarıyla aktarılıp düz, mat renklerle boyanan ve el tahririyle çevrelenen Osmanlı rumi-hatayi süslemesi.",
+  "tanim": "Kalemişi, cami, türbe ve köşklerin kubbe, tavan ve duvarlarını süsleyen Osmanlı boyama sanatıdır. Desen önce kâğıda çizilir, çizgileri iğneyle delinir; kâğıt sıvaya tutulup üstünden kömür tozu kesesiyle vurulur (silkme) ve desen sıvaya noktalar hâlinde geçer. Aynı kalıp defalarca kullanıldığından bordürlerdeki rumi, hatayi ve gülbezekler birebir tekrarlanır. Alanlar kireç ya da tutkal bağlayıcılı düz, mat boyalarla doldurulur, sonra ince fırçayla koyu bir tahrir çizgisi çekilir; büyük yüzeylerde sahne de aynı düz, süslemeci üslupla boyanır.",
+  "koken": "Selçuklu ve Beylikler döneminde başlayan kalemişi, 16. yüzyılda Mimar Sinan yapılarıyla klasik biçimine ulaştı: Süleymaniye, Edirne Selimiye ve Rüstem Paşa camilerinin kubbe ve kemerlerinde rumi, hatayi, bulut ve penç motifleri kırmızı, lacivert, firuze ve altınla işlendi. 18. ve 19. yüzyılda Batı etkisiyle Türk barok kalemişinde duvarlara manzara, köşk ve cami resimleri girdi. Bugün restorasyon atölyeleri ve kalemişi ustaları aynı silkme, boyama ve tahrir sırasını sürdürür.",
+  "ayirt_edici": [
+    "Beyaz kireç sıva zeminli bordürde aynı kalıptan çıkmış birebir tekrar eden gülbezek, firuze rumi ve aşı sarısı penç motifleri, lacivert helezon dal",
+    "Motiflerin çevresinde silkmeden kalan düzenli aralıklı ince kömür tozu noktaları",
+    "Düz, mat, yatay fırça çekişli boya alanları ve içinden görünen sıva dişi; parlaklık ve degrade yok",
+    "Her biçimi çevreleyen, kalınlığı hafifçe değişen koyu kırmızı-kahve el tahriri",
+    "Sahnenin süslemeci düz boyanması: basamaklı açık lacivert badana gök, şemse gibi ışınlı güneş, dilimli yeşil kubbe, kalıpla bezenmiş kubbe eteği ve kaide kuşağı",
+    "Önde ucu çentikli beş beyaz taç yapraklı hatayi çiçekleri, lal kırmızısı laleler, saz yaprakları ve kalıpla serpilmiş filizli aşı boyası toprak"
+  ],
+  "palet": [
+    "#F6F2E9",
+    "#C4392C",
+    "#2D57A8",
+    "#2AA6A0",
+    "#E2A63A",
+    "#3F9150",
+    "#B2D5EE",
+    "#5B2219"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Motif kalıpları (rumi, rumi gözü, dilimli gülbezek, penç, filiz) yerel koordinatlı SVG yollarından gizli bir SVG path ile getPointAtLength kullanılarak bir kez noktalara çevrilir; her örnek bu noktaların ölçek, döndürme ve aynayla dönüştürülmesiyle basılır, böylece kalıp tekrarları birebir aynıdır. Her motif önce düz renkle doldurulur, çizginin hemen dışına 3 birim aralıklı küçük gri silkme noktaları serpilir, sonra normal yönünde gürültüyle titreyen ve kalınlığı gürültüyle değişen parça parça çizgilerle el tahriri çekilir; boya, nokta ve tahrir doğru örtüşme için aynı katmana çizim sırasıyla işlenir. Bordür dört kenarda sinüs helezon dal boyunca gülbezek, karşılıklı rumi ve penç dizisiyle kurulur. Sahne SAHNE geometrisinden düz renkli bölgelerle (gölge yanı ayrı düz ton) boyanır. Boya katmanına fBm'den yumuşak yatay fırça çekişi ve ince/kalın sürülme dokusu 'source-atop' ile, en sonda bütün yüzeye sıva dişi 'multiply' ile basılır; sıva piksel döngüsüyle gürültülü kireç beyazı olarak üretilir.",
+  "etiketler": [
+    "kalemişi",
+    "Osmanlı",
+    "silkme",
+    "rumi",
+    "hatayi",
+    "kireç sıva",
+    "mat boya",
+    "süsleme"
+  ]
+}

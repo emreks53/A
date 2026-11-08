@@ -5,18 +5,35 @@
   "ad_en": "Color Scratchboard",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Siyah yüzey sivri uçla kazınır; elle çekilmiş ince, ışıl ışıl renkli çizgiler karanlıktan çıkar.",
-  "tanim": "Kazıma (scratchboard), beyaz kil ya da renkli bir alt katmanın üstü siyah mürekkeple kaplanmış bir levhanın sivri bir uçla kazınmasıdır; kazınan her çizgi alttaki rengi açığa çıkarır. Resim karanlıktan ışığa doğru yapılır: ışıklı yerde çizgiler sıklaşıp kalınlaşır, gölgede incelip kesik noktalara döner, kazınmayan yer simsiyah kalır. Renkli biçiminde ya gökkuşağı renkli kazıma kâğıdı kullanılır ya da kazınmış beyaz çizgiler sonradan saydam mürekkeplerle boyanır. Kitap ve dergi resimlemesinde, doğa ve hayvan çiziminde, ambalaj ve etiket grafiğinde görülür.",
-  "koken": "Tekniğin öncüsü 19. yüzyılda İngiltere ve Fransa'da gravür baskının ucuz bir karşılığı olarak geliştirilen kil kaplı kazıma kartonlarıdır. 20. yüzyılın başında gazete ve kitap resimlemesinde yaygınlaştı; Lynd Ward ve Thomas Nason gibi sanatçılar ağaç baskı etkisini kazımayla aradı. Günümüzde Scott McKowen tiyatro afişleriyle, Mark Summers kitap kapaklarıyla tanınır; gökkuşağı renkli kazıma kâğıtları da sanat eğitiminde yaygındır.",
+  "ozet": "Beyaz kil kaplı levha açık renkli mürekkeplerle boyanıp sivri uçla kazınır; elle çekilmiş ince beyaz çizgiler ve taramalar biçimi ve ışığı kurar.",
+  "tanim": "Kazıma (scratchboard), beyaz kil kaplı bir levhanın sivri bir uçla kazınmasıdır. Renkli biçiminde kil yüzey önce saydam ya da yarı saydam renkli mürekkeplerle boyanır, ardından kazınan her çizgi alttaki beyaz kili açığa çıkarır. Ton çizgilerin sıklığı ve kalınlığıyla kurulur: ışıklı yerde beyaz çizgiler sıklaşıp birleşir, gölgede incelir ve mürekkebin rengi baskın kalır; kazınmayan ince çizgiler biçimin konturu olur. Kitap ve dergi resimlemesinde, doğa çiziminde, ambalaj ve etiket grafiğinde görülür.",
+  "koken": "Tekniğin öncüsü 19. yüzyılda İngiltere ve Fransa'da gravür baskının ucuz bir karşılığı olarak geliştirilen kil kaplı kazıma kartonlarıdır. 20. yüzyılın başında gazete ve kitap resimlemesinde yaygınlaştı; Lynd Ward ve Thomas Nason gibi sanatçılar ağaç baskı etkisini kazımayla aradı. Günümüzde Ampersand Claybord gibi beyaz kil levhalar mürekkeple boyanıp kazınarak renkli kullanılır; Scott McKowen tiyatro afişleriyle, Mark Summers kitap kapaklarıyla tanınır.",
   "ayirt_edici": [
-    "Simsiyah zeminden çıkan ince renkli çizgiler: güneşten dışa sarı, turuncu, macenta, mor, mavi ve turkuaza dönen gökkuşağı kazıma göğü",
-    "Gökte elle kazınmış akış çizgileri: rüzgâr gibi kıvrılıp güneşin çevresinde halka halka dönen, boyları ve aralıkları değişen, uçları incelen çizgiler; aydınlık yerde sık ve kalın, sol üstte seyrek, aralarında kazınmış benekler",
-    "Kubbede meridyen çizgileri ve ışıklı yanda paralellerle çapraz tarama; maviden zümrüt yeşiline, oradan limon sarısına geçen renk",
-    "Kaidede her taş bloğu ayrı yönlü taramalı, üst kenarları ışıklı, gölgeli solda çapraz tarama ve benekler; minarede silindiri izleyen düşey çizgiler, ışıklı yanda çapraz çizgiler, siyah taş derzleri",
-    "Kazınmamış siyah çizgiler biçimi ayırıyor: kubbe kaburgaları, pencere içleri, taç yaprak konturları; taç yapraklarda merkezden ışınsal çizgiler, çiçek ortalarında benekler, yapraklarda balıksırtı tarama",
-    "Güneş diski tamamen kazınmış, çevresinde uçlara doğru incelen kırk sekiz ışın; zeminde kazınmış ot vuruşları"
+    "Açık ve orta tonlu mürekkep yüzeyi üstünde elle kazınmış beyaz çizgiler: gökte güneşin çevresinde altın sarısı, uzaklaştıkça gök mavisi mürekkep",
+    "Gökte rüzgâr gibi kıvrılıp güneşin çevresinde halka halka dönen akış çizgileri: aydınlık yerde sık ve kalın (neredeyse beyaz), sol üstte seyrek ve ince, uçları incelen",
+    "Kubbede yeşil mürekkep üstüne meridyen çizgileri ve ışıklı yanda paralellerle çapraz tarama; gölgede koyu yeşil, ışıkta çağla yeşili ve beyaza yakın",
+    "Kaidede açık şeftali-krem mürekkep, her taş bloğu ayrı yönlü taramalı, kazınmamış derzler; minarede silindiri izleyen çizgiler, gölgede lila, gül pembesi mürekkep üstünde beyaz kazınmış zikzak bant",
+    "Kazınmayan ince mürekkep çizgileri biçimi ayırıyor: kubbe kaburgaları, taç yaprak konturları; pencere içleri küçük koyu mavi vurgu, ince kazınmış çerçeveli",
+    "Beyaza yakın, ışınsal çizgilerle kazınmış taç yapraklar (dipte gül pembesi, lila ya da şeftali mürekkep), altın benekli ortalar, balıksırtı yapraklar; kum rengi zeminde kazınmış ot vuruşları; güneş diski tamamen kazınmış, çevresinde incelen ışınlar"
   ],
-  "palet": ["#0E0D10", "#FFD23A", "#FF9A2E", "#E040B8", "#9A4FF0", "#2EB8F0", "#5EDC5A", "#FF9CCB"],
-  "kodla_cizim": "Görüntü 2048 iç çözünürlükte piksel piksel hesaplanır. Her öğe kendi biçimini izleyen bir çizgi ailesinin koordinatını taşır: kubbede boylam (asin((x−560)/r(y))) ile meridyenler ve ışıklı yanda paraleller, kasnak ve minarede silindir boylamı, kaidede taş bloğu başına karma ile seçilen tarama yönü (blok üst kenarı ışıklı, gölgede ikinci yönde çapraz tarama, karma ızgarasından benekler), minarede ışıklı yanda çapraz çizgiler ve taş derzleri, taç yapraklarda çiçek merkezine göre açı, yapraklarda yaprak eksenine göre balıksırtı, bulutlarda bulut maskesinin tam öklid uzaklık dönüşümünden bulunan iç derinlik (kenarda kontur çizgileri, içte dalgalı yatay tarama). Pikselin en yakın çizgi merkezine piksel cinsinden uzaklığı, ışık modelinden (kubbe normali, silindir ışığı, güneşe uzaklık) gelen kapsamaya bağlı yarı genişlikle yumuşak eşiklenir; ince gürültü kenarı pürüzlendirir, böylece karanlıkta çizgiler kesik noktalara döner. Gök ayrı bir tuvale akış çizgileri olarak kazınır: rüzgâr benzeri gürültülü bir yön alanı güneşin çevresinde halkasal yönle karıştırılır (açı ikiye katlanarak, yön işaretinden bağımsız), Jobard–Lefer usulü eşit aralıklı akış çizgileri rastgele tohumlardan iki yöne izlenir ve uzamsal kovalarla komşu çizgiye yaklaşınca kesilir; aralık ve kalınlık güneşe uzaklık ve ufuktan gelen ışıkla değişir, çizgi uçlara doğru incelir, koyu gökte seyrek benekler kazınır. Güneş, ışınlar, pencere çerçeveleri, kaburga vurguları, korkuluklar, zikzak ve ot vuruşları ayrı bir tuvale incelen çizgiler olarak kazınır; pencere içleri, kaburgalar, derzler ve bölge sınırları kazınmamış siyah boşluk olarak bırakılır. Açığa çıkan renk, gökte güneşe uzaklığa bağlı gökkuşağı rampasından, öğelerde mürekkep rampalarından örneklenir; siyah yüzey hafif parlaklık ve ince dokuyla verilir.",
-  "etiketler": ["kazıma", "scratchboard", "çizgi", "tarama", "siyah zemin", "gökkuşağı"]
+  "palet": [
+    "#61A9E1",
+    "#F6E4AE",
+    "#F5F3EC",
+    "#3DA560",
+    "#B2DE71",
+    "#E8C58F",
+    "#F09CBA",
+    "#DFB676"
+  ],
+  "kodla_cizim": "Görüntü 2048 iç çözünürlükte piksel piksel hesaplanır. Her öğe kendi biçimini izleyen bir çizgi ailesinin koordinatını taşır: kubbede boylam (asin((x−560)/r(y))) ile meridyenler ve ışıklı yanda paraleller, kasnak ve minarede silindir boylamı, kaidede taş bloğu başına karma ile seçilen tarama yönü, taç yapraklarda çiçek merkezine göre açı, yapraklarda yaprak eksenine göre balıksırtı, bulutlarda bulut maskesinin tam öklid uzaklık dönüşümünden bulunan iç derinlik. Pikselin en yakın çizgi merkezine piksel cinsinden uzaklığı, ışık modelinden (kubbe normali, silindir ışığı, güneşe uzaklık) gelen kapsamaya bağlı yarı genişlikle yumuşak eşiklenir; ince gürültü kenarı pürüzlendirir. Gök ayrı bir tuvale akış çizgileri olarak kazınır: rüzgâr benzeri gürültülü bir yön alanı güneşin çevresinde halkasal yönle karıştırılır, Jobard–Lefer usulü eşit aralıklı akış çizgileri izlenir; aralık ve kalınlık güneşe uzaklık ve ufuktan gelen ışıkla değişir, çizgi uçlara doğru incelir. Güneş, ışınlar, pencere çerçeveleri, kaburga vurguları, korkuluklar, zikzak ve ot vuruşları ayrı bir tuvale incelen çizgiler olarak kazınır; kaburgalar, derzler, konturlar ve bölge sınırları kazınmamış mürekkep çizgisi olarak bırakılır ve mürekkep orada biraz koyulaştırılır. Son renk, bölgenin mürekkep rampasından (gök: altın sarısı → krem → gök mavisi; kubbe: yeşiller; taş: lila → gül → şeftali → krem; zemin: kum) örneklenen mürekkep ile beyaz kilin kazıma kapsamasına göre karışımıdır; mürekkepte hafif dalgalanma, kilde ince doku vardır.",
+  "etiketler": [
+    "kazıma",
+    "scratchboard",
+    "clayboard",
+    "çizgi",
+    "tarama",
+    "renkli mürekkep",
+    "aydınlık"
+  ]
 }

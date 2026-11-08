@@ -605,6 +605,12 @@
     // guajla sürülmüş açık yeşil ışık lekesi (kaburga yönünde)
     const prof = S.kubbeProfili(60);
     const mer = (u, t1, t2) => prof.slice(Math.round(t1 * 60), Math.round(t2 * 60) + 1).map((q) => [560 + u * q.r, q.y]);
+    // açık yeşil guaj ışık lekesi (koyunun üstüne örtücü), kubbeye kırpılmış
+    ctx.save();
+    ctx.clip(yol);
+    guaj(P(S.elipsYolu({ cx: 628, cy: 400, rx: 112, ry: 62, aci: -1.2 })), 'rgba(160,221,134,0.9)', [540, 300, 720, 520], { aci: -Math.PI / 2, iz: 0.8 });
+    guaj(P(S.elipsYolu({ cx: 622, cy: 372, rx: 58, ry: 24, aci: -1.15 })), 'rgba(205,240,160,0.85)', [580, 310, 670, 440], { aci: -Math.PI / 2, iz: 0.8 });
+    ctx.restore();
     // kaburgalar: koyu yeşil kalem; gölge yanında kaburga yönünde tarama; ışık yanında açık sarı-yeşil kalem
     ctx.save();
     const kirp = yol;
@@ -637,8 +643,9 @@
     for (const kb of S.kaburgalar(16, 60)) kalemCizgi(kb.noktalar, C.kYesil, 1.6, 0.75, { amp: 0.6, dx: -0.8 });
     kalemYol(S.kubbeYolu, C.kYesil, 2, 0.9, { amp: 0.9, dx: -1.5, dy: 1 });
     // beyaz kalem parıltıları
-    kalemCizgi(mer(0.38, 0.6, 0.86), C.kBeyaz, 2.6, 0.9, { amp: 0.4 });
-    kalemCizgi(mer(0.46, 0.66, 0.8), C.kBeyaz, 2, 0.8, { amp: 0.4 });
+    kalemCizgi(mer(0.36, 0.58, 0.86), C.kBeyaz, 3, 1, { amp: 0.4 });
+    kalemCizgi(mer(0.44, 0.64, 0.82), C.kBeyaz, 2.4, 1, { amp: 0.4 });
+    kalemCizgi(mer(0.29, 0.72, 0.88), C.kBeyaz, 2, 0.9, { amp: 0.4 });
     ctx.restore();
     kalemBas();
   }

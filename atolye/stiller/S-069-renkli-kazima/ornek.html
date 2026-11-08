@@ -142,7 +142,7 @@
   const nA = gurultu(41), nB = gurultu(42), nC = gurultu(43), nD = gurultu(44), nE = gurultu(45);
   const Bt = SAHNE.bitki, Y = SAHNE.yollar();
 
-  // ------------------------------------------------------------ yardımcı tuvaller: vurgu kazımaları, siyah boşluklar, bitki kimlikleri
+  // ------------------------------------------------------------ yardımcı tuvaller: vurgu kazımaları, kazınmayan çizgiler, bitki kimlikleri
   const yeni = () => { const c = SAHNE.yeniTuval(W2, W2), x = c.getContext('2d', { willReadFrequently: true }); x.setTransform(S, 0, 0, S, 0, 0); x.lineCap = 'round'; x.lineJoin = 'round'; return x; };
   const kG = yeni(), bG = yeni(), iG = yeni();
   const P2 = (d) => (typeof d === 'string' ? new Path2D(d) : d);
@@ -172,9 +172,9 @@
     }
     for (const r of [50]) { kG.lineWidth = 2.4; kG.beginPath(); kG.arc(GX, GY, r, 0, Math.PI * 2); kG.stroke(); }
   }
-  // --- yapı konturları: siyah boşluklar + ışıklı yanda ince vurgu kazıması
+  // --- yapı konturları: kazınmayan (mürekkepli) çizgiler + ışıklı yanda ince vurgu kazıması
   {
-    // pencereler: siyah kalır, kenarında ince kazınmış çerçeve
+    // pencereler: koyu mavi mürekkepli kalır, kenarında ince kazınmış çerçeve
     const pencereler = [...SAHNE.kasnakPencereleri(0).map((p) => [p, 1]), ...SAHNE.kasnakPencereleri(1).map((p) => [p, 1.3]), ...SAHNE.kaide.pencereler.map((p) => [p, 1.6]), ...SAHNE.minarePencereleri.map((p) => [p, 1.3])];
     for (const [p, w] of pencereler) {
       const d = SAHNE.kemerYolu(p.x, p.y, p.w, p.h);
@@ -182,7 +182,7 @@
       kazi(SAHNE.kemerYolu(p.x, p.y - 2.2 * w, p.w + 4.4 * w, p.h + 2.2 * w), 1.1 * w);
     }
     for (const p of SAHNE.kaide.pencereler) { bos(SAHNE.kemerYolu(p.x, p.y - 8, p.w + 18, p.h + 8), 1.6); kazi(SAHNE.kemerYolu(p.x, p.y - 11, p.w + 24, p.h + 11), 1.3); }
-    // kubbe kaburgaları: siyah ince boşluk, sağında (ışıklı yan) parlak kazıma
+    // kubbe kaburgaları: kazınmamış ince mürekkep çizgisi, sağında (ışıklı yan) parlak kazıma
     for (const k of SAHNE.kaburgalar(16)) {
       const pts = k.noktalar;
       bos(SAHNE.yol(pts), 1.6);
@@ -195,7 +195,7 @@
     // korniş: yoğun kazınmış parlak şerit
     kG.fillStyle = '#fff'; kG.fillRect(292, 694, 538, 3.5); kG.globalAlpha = 0.7; kG.fillRect(292, 699, 538, 1.5); kG.globalAlpha = 1;
     bos(cz(290, 704, 830, 704), 2.4);
-    // kaide taş derzleri (siyah)
+    // kaide taş derzleri (kazınmamış mürekkep)
     for (let y = 720, sira = 0; y < 800; y += 16, sira++) {
       bos(cz(300, y, 820, y), 1.3);
       for (let x = 300 + (sira % 2 ? 26 : 8); x < 820; x += 44) if (!SAHNE.kaide.pencereler.some((p) => Math.abs(x - p.x) < p.w / 2 + 14)) bos(cz(x, y, x, y + 16), 1.3);
@@ -257,7 +257,7 @@
   }
   const kv = kG.getImageData(0, 0, W2, W2).data, bv = bG.getImageData(0, 0, W2, W2).data, iv = iG.getImageData(0, 0, W2, W2).data;
 
-  // bölge sınırları: kazınmamış ince siyah çizgi
+  // bölge sınırları: kazınmamış ince mürekkep çizgisi
   const SINIR = new Float32Array(N2);
   {
     const M = new Float32Array(N2);
@@ -283,7 +283,7 @@
   const CIC3 = ['#E8885E', '#F2A87E', '#F7C9A6', '#FCE6D4'].map(rgb);
   const ZEM = ['#C99558', '#DCAE6C', '#EAC686', '#F4DCA6'].map(rgb);
   const ALT = ['#BC8526', '#DFAA3C', '#F4D57E'].map(rgb);
-  const PENCERE = rgb('#3E739A'), KIL = [252, 250, 244];
+  const PENCERE = rgb('#4A82AA'), KIL = [252, 250, 244];
 
   // ------------------------------------------------------------ tarama alanı: çizgiye uzaklık → kazıma kapsaması
   // v: çizgi koordinatı (tam sayılar çizgi merkezi), sp: iki çizgi arası piksel, c: kapsama (0..1)
@@ -424,14 +424,14 @@
         // bulut: biçimi izleyen kontur çizgileri, üstte kalın (ışıklı)
         const dd = BDER[i], bi = BNO[i], s = BUL[bi][2];
         const ust = sstep(BUL[bi][1] + 18 * s, BUL[bi][1] - 40 * s, Yy);
-        const c = clamp(0.12 + 0.8 * ust - dd / (40 * s) * 0.3, 0.04, 0.9);
+        const c = clamp(0.5 + 0.45 * ust - dd / (40 * s) * 0.2, 0.3, 0.92);
         // dış kenarı izleyen birkaç kontur, içi yatay dalgalı tarama (ortada göz gibi kapanan halka kalmasın)
         const kon = cizgiMaske(dd / 3.6 + (nA(X / 20, Yy / 20) - 0.5) * 0.25, 3.6 * S, c, kaba);
         const ic = cizgiMaske((Yy + 2.2 * Math.sin(X / 13 + bi)) / 3.3, 3.3 * S, clamp(c * 0.85, 0.05, 0.8), kaba);
         const kt = sstep(13 * s + 2, 9 * s + 1, dd);
         m = kon * kt + ic * (1 - kt);
         if (dd < 1.6) m = 1;
-        col = karR(col, [255, 255, 255], 0.35);
+        col = karR(col, [255, 255, 255], 0.2);
       } else {
         // gök: elle kazınmış akış çizgileri (ayrı tuvalde çizildi); kazıma kenarı ufak tırtıklı
         m = sstep(0.08, 0.6, sv[i * 4 + 3] / 255 + kaba * 0.18);
@@ -474,7 +474,7 @@
       const yay = (X * 0.57 - Yy * 0.82 + Math.cos(u) * 4) / 2.8;
       if (L > 0.66) m = Math.max(m, cizgiMaske(yay, 2.8 * S, (L - 0.66) * 1.6, kaba));
       else { const cs = 3, gx = X / cs, gy = Yy / cs, ix = Math.floor(gx), iy = Math.floor(gy); if (hash(ix + 77, iy + 5) < 0.2 * L + 0.04) m = Math.max(m, sstep(0.3, 0.1, Math.hypot(gx - ix - 0.5, gy - iy - 0.5))); }
-      // taş sıraları: siyah derz, hemen altında ışıklı kazıma
+      // taş sıraları: kazınmamış derz, hemen altında ışıklı kazıma
       const per = Yy > 488 ? 19 : 17, fy = ((Yy - (Yy > 488 ? 500 : 334)) % per + per) % per;
       if (Yy > 316 && Yy < 436 || Yy > 590) { if (fy < 1.1) m *= 0.05; else if (fy < 2.6) m = Math.max(m, 0.3 + 0.6 * L); }
       if (Yy > 521 && Yy < 583) m *= 0.25;
@@ -530,17 +530,18 @@
         m = cizgiMaske(h, 3.4 * 0.75 * S, Math.pow(L, 1.1) * 0.85, kaba);
         col = rampa(YAPR, L);
       } else { col = rampa(YAPR, 0.5); m = 0; }
-    } else { col = [0, 0, 0]; m = 0; }
-    // vurgu kazımaları ve siyah boşluklar
+    } else { col = PENCERE; m = 0; }
+    // vurgu kazımaları ve kazınmayan çizgiler
     const kz = kv[i * 4 + 3] / 255, bs = bv[i * 4 + 3] / 255;
     m = Math.max(m * (1 - bs) * (1 - SINIR[i]), kz);
-    if (kz > 0.02 && !(b === BI.gok || b === BI.gunes || b === BI.kubbe || b === BI.kasnak || b === BI.kaide || b === BI.minare || b === BI.altin || b === BI.zemin || b === BI.yaprak || b === BI.cicek || b === BI.sap || b === BI.cicekOrta)) col = rampa(TAS, 0.8);
-    if (b === BI.pencere) col = rampa(TAS, 0.85);
-    if (b === BI.sap) col = rampa(YAPR, 0.7);
-    // siyah yüzey: hafif parlak, ince doku
-    const sy = 13 + 6 * Math.exp(-((X - 760) * (X - 760) + (Yy - 260) * (Yy - 260)) / (2 * 380 * 380)) + (nD(X / 3, Yy / 3) - 0.5) * 3;
-    const parl = (0.88 + 0.24 * nC(X / 2.2 + 9, Yy / 2.2)) * (kz > 0.9 ? 0.86 + 0.14 * nE(X * 1.7 + Yy * 0.5, Yy * 0.25) : 1);
-    const r = sy + (col[0] * parl - sy) * m, g = sy - 1 + (col[1] * parl - sy + 1) * m, bb = sy + 2 + (col[2] * parl - sy - 2) * m;
+    if (b === BI.pencere) { col = PENCERE; m = Math.max(m, 0.5 * cizgiMaske(X / 2.6, 2.6 * S, 0.2, kaba)); } // pencere içleri: koyu mavi mürekkep üstüne seyrek ince kazıma (küçük koyu vurgu)
+    if (b === BI.sap) col = rampa(YAPR, 0.45);
+    // mürekkep: hafif fırça/sünger dalgalanması; kazınmayan çizgilerde mürekkep biraz koyulaşır
+    const tex = 1 + (fbm(nB, X / 70, Yy / 70, 2) - 0.5) * 0.07 + (nD(X / 3, Yy / 3) - 0.5) * 0.03;
+    const koyu = (1 - 0.24 * Math.max(bs, SINIR[i])) * tex;
+    // kazınan çizgi: beyaz kil, ince doku
+    const kil = 0.965 + 0.035 * nC(X / 2.2 + 9, Yy / 2.2);
+    const r = col[0] * koyu * (1 - m) + KIL[0] * kil * m, g = col[1] * koyu * (1 - m) + KIL[1] * kil * m, bb = col[2] * koyu * (1 - m) + KIL[2] * kil * m;
     o[i * 4] = clamp(r, 0, 255); o[i * 4 + 1] = clamp(g, 0, 255); o[i * 4 + 2] = clamp(bb, 0, 255); o[i * 4 + 3] = 255;
   }
   ctx.putImageData(img, 0, 0);

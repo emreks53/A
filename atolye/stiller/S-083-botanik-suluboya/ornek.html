@@ -323,7 +323,7 @@
   yikama(kKub, kes(kubM, kKub), { pig: karis(P.sap, 0.7, P.lim, 0.45), yog: 0.36, kenar: 0.25, kenarR: 1.4, gran: 0.1, dalga: 0.1, tohum: 11 });
   yikama(kKub, kes(kubM, kKub), {
     pig: (x, y) => lerpK(karis(P.sap, 0.6, P.vir, 0.5), karis(P.vir, 0.75, P.ult, 0.3), sstep(0.5, 0.1, kubbeIsik(x, y))),
-    yog: (x, y) => 0.1 + 0.95 * Math.pow(1 - kubIsik(x, y), 1.6), kenar: 0.2, kenarR: 1.2, gran: 0.12, dalga: 0.08, tohum: 12,
+    yog: (x, y) => 0.1 + 0.95 * Math.pow(1 - kubIsik(x, y), 1.6), kenar: 0.2, kenarR: 1.2, gran: 0.14, dalga: 0.14, dalgaOlcek: 24, tohum: 12,
   });
   // gölge sırı: keskin, sakin bir sınırla
   yikama(kKub, kapsamAlan(kKub, (x, y) => kubM[y * W + x] * sstep(0.3, 0.26, kubbeIsik(x, y))), {
@@ -462,14 +462,14 @@
   // ---- çiçekler: beş geniş, ters yumurta biçimli taç yaprak; tabanda soluk serin gölge, ince damarlar,
   // uçlarda hafif pembe; yeşil-sarı göbek ve halka hâlinde ercikler
   function tacYaprak(c, cx, cy, a, L, gen, centik) {
+    // ters yumurta biçimi: tabanda dar, uçta yuvarlak; ucun ortasında küçük bir çentik
     const ca = Math.cos(a), sa = Math.sin(a), P2 = (u, v) => [cx + u * ca - v * sa, cy + u * sa + v * ca];
-    const pts = [];
-    for (let i = 0; i <= 24; i++) { const t = i / 24; pts.push(P2(t * L, Math.pow(Math.sin(Math.PI * Math.pow(t, 0.62)), 0.75) * gen * 0.5)); }
-    const uc = [];
-    for (let i = 24; i >= 0; i--) { const t = i / 24; uc.push(P2(t * L, -Math.pow(Math.sin(Math.PI * Math.pow(t, 0.62)), 0.75) * gen * 0.5)); }
-    const tum = pts.concat(uc);
-    // uçtaki çentik
-    const ti = 24; tum[ti] = P2(L * (1 - centik), 0);
+    const tc = 0.6;
+    const yw = (t) => gen * 0.5 * (t < tc ? Math.pow(Math.sin((Math.PI / 2) * (t / tc)), 0.85) : Math.sqrt(Math.max(0, 1 - Math.pow((t - tc) / (1 - tc), 2))));
+    const tum = [];
+    for (let i = 0; i <= 30; i++) { const t = i / 30; tum.push(P2(t * L * (1 - centik * Math.exp(-Math.pow((1 - t) * 6, 2)) * 0), yw(t))); }
+    tum.push(P2(L * (1 - centik), 0));
+    for (let i = 30; i >= 0; i--) { const t = i / 30; tum.push(P2(t * L, -yw(t))); }
     return tum;
   }
   const CICEKLER = B.cicekler.map((c, n) => {
@@ -477,8 +477,8 @@
     const yap = [];
     for (let k = 0; k < 5; k++) {
       const a = c.aci + (k * Math.PI * 2) / 5 + (r() - 0.5) * 0.12;
-      const L = c.r * (1.0 + r() * 0.1), gen = c.r * (0.98 + r() * 0.1);
-      yap.push({ a, L, gen, pts: tacYaprak(null, c.x, c.y, a, L, gen, 0.05 + r() * 0.04) });
+      const L = c.r * (1.02 + r() * 0.1), gen = c.r * (0.92 + r() * 0.1);
+      yap.push({ a, L, gen, pts: tacYaprak(null, c.x, c.y, a, L, gen, 0.035 + r() * 0.03) });
     }
     return { c, yap, pembe: n % 3 !== 1 };
   });
@@ -508,14 +508,14 @@
         // üstteki yaprağın bu yaprağa düşürdüğü ince gölge
         G[j] += A[j] * (1 - U[j]) * Math.max(0, Ub[j] - U[j]) * 2.2;
         // damarlar: tabandan yelpaze gibi açılan ince çizgiler
-        const th = Math.atan2(v * 0.5, u + 0.08);
-        const dv = Math.abs(Math.sin(th * 7.5 + 0.4));
-        V[j] = vis * sstep(0.1, 0.0, dv) * sstep(0.05, 0.2, u) * sstep(0.92, 0.55, u);
+        const th = Math.atan2(v * 0.5, u + 0.08), fz = th * 2.6 + 0.5;
+        const dpx = Math.abs(fz - Math.round(fz)) / 2.6 * Math.hypot(u * p.L, v * p.gen * 0.5);
+        V[j] = vis * sstep(0.75, 0.15, dpx) * sstep(0.08, 0.22, u) * sstep(0.85, 0.35, u);
         Pm[j] = vis * sstep(0.55, 0.95, u + 0.25 * Math.abs(v) * 0.4);
         tum[j] = Math.max(tum[j], A[j]);
       }
       yikama(kutu, G, { pig: karis(P.ult, 0.4, P.mor, 0.3, P.sap, 0.2, P.sie, 0.1), yog: 0.12, kenar: 0.2, kenarR: 1, gran: 0.08, dalga: 0.1, dalgaOlcek: 12, tohum: 700 + k });
-      yikama(kutu, V, { pig: karis(P.mor, 0.5, P.ult, 0.3, P.sie, 0.2), yog: 0.16, kenar: 0, gran: 0, dalga: 0, tohum: 710 + k });
+      yikama(kutu, V, { pig: karis(P.mor, 0.5, P.ult, 0.3, P.sie, 0.2), yog: 0.11, kenar: 0, gran: 0, dalga: 0, tohum: 710 + k });
       if (pembe) yikama(kutu, Pm, { pig: karis(P.ros, 0.9, P.mor, 0.1), yog: 0.13, yumusak: 1.5, kenar: 0, gran: 0.05, dalga: 0.1, tohum: 720 + k });
       // görünmeyen (üstteki yaprağın altında kalan) kalem çizgisi silinmiş
       kc.save(); kc.beginPath(); kc.rect(kutu[0], kutu[1], w, kutu[3] - kutu[1]);
@@ -613,17 +613,17 @@
         // orta damar ve yan damarlar (uca doğru eğik)
         const orta = Math.exp(-(v * v) / 1.0);
         const tv = t - Math.abs(v) / f.L * 1.1;
-        const yd = Math.abs(Math.sin(tv * Math.PI * yanDamar));
-        const yan = sstep(0.12, 0.0, yd) * sstep(0.05, 0.2, t) * sstep(0.95, 0.7, t) * sstep(0.95, 0.4, Math.abs(v) / g);
+        const fz = tv * yanDamar, ypx = Math.abs(fz - Math.round(fz)) / yanDamar * f.L * 0.68;
+        const yan = sstep(0.95, 0.25, ypx) * sstep(0.05, 0.2, t) * sstep(0.95, 0.7, t) * sstep(0.95, 0.4, Math.abs(v) / g);
         V[j] = Math.max(orta * sstep(0.02, 0.1, t) * sstep(1, 0.85, t), yan * 0.85);
         Sd[j] = sstep(-0.15, 0.25, -v * isikTaraf / g);
       }
       // 1. sır: açık yeşil zemin
-      yikama(kutu, A, { pig: alt ? karis(P.sap, 0.5, P.cer, 0.25, P.lim, 0.2) : ust, yog: alt ? 0.2 : 0.34, kenar: 0.3, kenarR: 1, gran: 0.08, dalga: 0.15, dalgaOlcek: 14, tohum: 1000 + k });
+      yikama(kutu, A, { pig: alt ? karis(P.sap, 0.5, P.cer, 0.25, P.lim, 0.2) : ust, yog: alt ? 0.2 : 0.34, kenar: 0.35, kenarR: 1, gran: 0.1, dalga: 0.25, dalgaOlcek: 12, tohum: 1000 + k });
       // 2. sır: gölge yarısı, damarlar boş bırakılır
       const G = new Float32Array(A.length);
       for (let j = 0; j < A.length; j++) G[j] = A[j] * (1 - V[j]) * (0.25 + 0.75 * Sd[j]);
-      yikama(kutu, G, { pig: (x, yy) => lerpK(koyu, karis(P.vir, 0.6, P.sap, 0.5), sstep(0.4, 0.65, fbm(nC, x / 16 + k, yy / 16, 2))), yog: alt ? 0.18 : 0.42, kenar: 0.25, kenarR: 1, gran: 0.1, dalga: 0.12, dalgaOlcek: 10, tohum: 1100 + k });
+      yikama(kutu, G, { pig: (x, yy) => lerpK(koyu, karis(P.vir, 0.6, P.sap, 0.5), sstep(0.4, 0.65, fbm(nC, x / 16 + k, yy / 16, 2))), yog: alt ? 0.18 : 0.42, kenar: 0.35, kenarR: 1, gran: 0.12, dalga: 0.25, dalgaOlcek: 10, tohum: 1100 + k });
       // 3. kuru fırça: damarlar arasında kısa ince darbeler
       const D = kapsamCiz(kutu, (c) => {
         c.lineCap = 'round';
