@@ -102,7 +102,7 @@
 
   // ---------------------------------------------------------------- minare: saydam taş levhalar
   const mx = S.minare.cx;
-  const TAS = '#F1E2C2', TAS2 = '#E9D3AB', GOLGE = '#C3CDEE', PENCERE = '#5E8C9A', ALTIN = '#EDBB45', ALTIN2 = '#F2A15A';
+  const TAS = '#F1E2C2', TAS2 = '#E9D3AB', GOLGE = '#B2C2F2', PENCERE = '#3A86A0', ALTIN = '#EDBB45', ALTIN2 = '#F2A15A';
   // önce minarenin altında beyaz örtü: arkadaki gök düzlemleri taşın içinden görünmesin diye hafif kapat
   {
     const govdeler = [[34, 488, 800], [27, 316, 436], [19, 206, 272]];
@@ -175,12 +175,12 @@
   // ---------------------------------------------------------------- kaide
   const K = S.kaide;
   kat(dik(K.x1, K.y1, K.x2, K.y2), '#FFFDF8', 0.9, 'source-over');
-  kat(dik(K.x1, K.y1, K.x2, K.y2), '#F4E6C9', 0.7);
+  kat(dik(K.x1, K.y1, K.x2, K.y2), '#F6EAD2', 0.65);
   kat(dik(K.kornis.x1, K.kornis.y1, K.kornis.x2, K.kornis.y2 + 3), '#FFFDF8', 0.9, 'source-over');
   kat(dik(K.kornis.x1, K.kornis.y1, K.kornis.x2, K.kornis.y2 + 3), '#EAD3A8', 0.7);
   kat(dik(K.x1, K.y2 - 12, K.x2, K.y2), '#EAD3A8', 0.55);
   // kubbe ve kasnağın kaideye düşen saydam gölgesi (sola eğik düzlem)
-  kat(cokgen([[334, 704], [520, 704], [470, 800], [300, 800], [300, 760]]), GOLGE, 0.45);
+  kat(cokgen([[334, 704], [520, 704], [470, 800], [300, 800], [300, 760]]), GOLGE, 0.42);
   kat(dik(K.x1, K.y1, K.x1 + 22, K.y2), GOLGE, 0.4);
   for (const w of K.pencereler) {
     kat(yolP(S.kemerYolu(w.x, w.y - 6, w.w + 12, w.h + 8)), '#E2C796', 0.45);

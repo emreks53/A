@@ -19,7 +19,7 @@
   const S = SAHNE;
   const ctx = S.tuval(document.getElementById('tuval'), 2);
   const TAU = Math.PI * 2;
-  const LW = 3.1;
+  const LW = 3.6;
 
   // ---------------------------------------------------------------- yardımcılar
   const yolP = (d) => new Path2D(d);
@@ -52,11 +52,11 @@
   ctx.lineJoin = 'round';
 
   // gradyan paletleri
-  const YESIL = ['#006B5A', '#16A064', '#C4E036'];
+  const YESIL = ['#0B6688', '#0E9A6C', '#4DBE50', '#CFE23A'];
   const ALTIN = ['#B07A1E', '#E2A93A', '#F7D774'];
   const GUL = ['#DA3A7C', '#F27A7C', '#FFB56E'];
   const GOK = ['#4C7FE6', '#4FB3E0', '#4FD8C6'];
-  const TAS = ['#D57C34', '#E9A64C', '#EE8E98'];
+  const TAS = ['#9277DE', '#E66B9C', '#F4A748'];
   const YAPRAK = ['#078870', '#3AB062', '#BCDD45'];
 
   // ---------------------------------------------------------------- zemin
@@ -94,29 +94,64 @@
     }
   }
 
-  // ---------------------------------------------------------------- bulutlar: uçları sönen yatay gradyan çizgiler (katman bulut)
-  function bulut(x, y, s, satirlar) {
-    satirlar.forEach(([a, b, dy]) => {
-      const x1 = x + a * s, x2 = x + b * s, yy = y + dy * s;
-      const g = ctx.createLinearGradient(x1, 0, x2, 0);
-      g.addColorStop(0, 'rgba(76,127,230,0)');
-      g.addColorStop(0.18, 'rgba(76,127,230,1)');
-      g.addColorStop(0.6, 'rgba(79,179,224,1)');
-      g.addColorStop(0.86, 'rgba(79,216,198,1)');
-      g.addColorStop(1, 'rgba(79,216,198,0)');
-      cizgi([[x1, yy], [x2, yy]], g);
-    });
+  // ---------------------------------------------------------------- bulutlar: kabarık monoline kontur (maviden su yeşiline)
+  // Kontur, düz bir taban çizgisine oturan dairelerin dış sınırıdır: her daire komşusuyla üst
+  // kesişim noktasına kadar yay olarak çizilir; altında uçları saydamlığa sönen bir iki yatay çizgi.
+  function kesisim(a, b) {
+    const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy);
+    const l = (a[2] * a[2] - b[2] * b[2] + d * d) / (2 * d);
+    const h = Math.sqrt(Math.max(0, a[2] * a[2] - l * l));
+    const mx0 = a[0] + (dx * l) / d, my0 = a[1] + (dy * l) / d;
+    return [mx0 + (dy * h) / d, my0 - (dx * h) / d]; // üstteki nokta
   }
-  bulut(178, 252, 1.0, [[-40, 80, -24], [-110, 60, -8], [-70, 110, 8], [-130, 20, 24]]);
-  bulut(486, 146, 0.78, [[-50, 70, -10], [-100, 40, 6], [-30, 90, 22]]);
-  bulut(818, 366, 0.95, [[-30, 90, -24], [-100, 70, -8], [-60, 120, 8], [-120, 30, 24]]);
-  bulut(84, 470, 0.7, [[-60, 50, -8], [-90, 30, 8], [-40, 70, 24]]);
-  bulut(960, 486, 0.68, [[-70, 40, -8], [-40, 70, 8], [-90, 20, 24]]);
+  function bulut(x, y, s, daireler, alt) {
+    const c = daireler.map(([dx, r]) => [x + dx * s, y - r * s * 0.55, r * s]);
+    const p = new Path2D();
+    const ilk = c[0], son = c[c.length - 1];
+    const a0 = Math.PI - Math.asin(Math.min(1, (y - ilk[1]) / ilk[2]));
+    p.moveTo(ilk[0] + Math.cos(a0) * ilk[2], y);
+    let aci = a0;
+    for (let i = 0; i < c.length; i++) {
+      const k = c[i];
+      let bitis;
+      if (i < c.length - 1) {
+        const q = kesisim(k, c[i + 1]);
+        bitis = Math.atan2(q[1] - k[1], q[0] - k[0]);
+        p.arc(k[0], k[1], k[2], aci, bitis, false);
+        const n = c[i + 1];
+        aci = Math.atan2(q[1] - n[1], q[0] - n[0]);
+      } else {
+        bitis = Math.asin(Math.min(1, (y - k[1]) / k[2]));
+        p.arc(k[0], k[1], k[2], aci, bitis, false);
+      }
+    }
+    p.closePath();
+    const x1 = ilk[0] - ilk[2], x2 = son[0] + son[2];
+    const fg = ctx.createLinearGradient(0, y - 60 * s, 0, y);
+    fg.addColorStop(0, 'rgba(255,255,255,0.95)');
+    fg.addColorStop(1, 'rgba(236,246,252,0.95)');
+    dol(p, fg);
+    ciz(p, dogru(x1, y, x2, y - 40 * s, GOK));
+    for (const [a, b, dy] of alt) {
+      const xa = x + a * s, xb = x + b * s, yy = y + dy * s;
+      const g = ctx.createLinearGradient(xa, 0, xb, 0);
+      g.addColorStop(0, 'rgba(76,127,230,0)');
+      g.addColorStop(0.25, 'rgba(76,127,230,0.9)');
+      g.addColorStop(0.7, 'rgba(79,200,212,0.9)');
+      g.addColorStop(1, 'rgba(79,216,198,0)');
+      cizgi([[xa, yy], [xb, yy]], g);
+    }
+  }
+  bulut(158, 262, 0.94, [[-72, 20], [-34, 32], [12, 42], [58, 28], [90, 18]], [[-130, -40, 14], [30, 110, 14]]);
+  bulut(486, 150, 0.74, [[-50, 20], [-14, 32], [26, 26], [56, 16]], [[-90, 0, 14]]);
+  bulut(818, 372, 0.92, [[-74, 18], [-38, 30], [6, 40], [52, 30], [86, 18]], [[-20, 140, 14]]);
+  bulut(86, 478, 0.62, [[-44, 18], [-10, 30], [28, 22], [54, 14]], [[10, 120, 14]]);
+  bulut(958, 492, 0.58, [[-46, 16], [-14, 28], [24, 22], [50, 14]], [[-120, -20, 14]]);
 
   // ---------------------------------------------------------------- minare
   const mx = S.minare.cx;
   const tasG = dogru(mx - 40, 800, mx + 40, 80, TAS);
-  const tasDolgu = 'rgba(255,248,236,0.9)';
+  const tasDolgu = '#FEF8EE'; // opak: arkadaki çizgiler taşın içinden görünmez
   {
     const parcalar = S.minareParcalari();
     for (const p of parcalar) {
@@ -139,7 +174,7 @@
         }
         cizgi([[p.x1, p.y1 + 5], [p.x2, p.y1 + 5]], tasG);
       }
-      if (p.ad.startsWith('gövde')) {
+      if (p.ad.startsWith('gövde') && p.noktalar && Math.max(...p.noktalar.map((q) => q[0])) - mx > 22) {
         // gövde boyunca ince çift dikey çizgi: köşe ayrıtları
         const xs = p.noktalar.map((q) => q[0]);
         const R = (Math.max(...xs) - Math.min(...xs)) / 2;
@@ -187,8 +222,8 @@
   }
 
   // ---------------------------------------------------------------- kasnak
-  const yg = dogru(330, 700, 790, 560, ['#00705A', '#0C9C84', '#28BAC2']);
-  const kg = dogru(380, 560, 700, 300, YESIL);
+  const yg = dogru(330, 700, 790, 560, ['#1562A6', '#0C9A80', '#2FC4B4']);
+  const kg = dogru(372, 560, 740, 300, YESIL);
   const yesilDolgu = (y1, y2) => {
     const g = ctx.createLinearGradient(330, 0, 790, 0);
     g.addColorStop(0, 'rgba(214,238,218,0.75)');

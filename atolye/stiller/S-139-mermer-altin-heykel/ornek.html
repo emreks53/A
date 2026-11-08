@@ -845,7 +845,7 @@ function bitkilerCiz() {
 // açık gök fonu; cilalı yüzeylerde dikdörtgen ışık yansımaları, mermer zeminde yumuşak ayna yansıması.
 const LV = nrm([0.55, -0.64, 0.54]);
 const KEY = [2.35, 2.28, 2.15];
-const UST = [0.62, 0.66, 0.74], ALT = [0.6, 0.57, 0.52];
+const UST = [0.64, 0.64, 0.68], ALT = [0.62, 0.57, 0.5];
 const stil = { isik: LV, tint: [0.5, 0.52, 0.58], aoTint: [0.66, 0.67, 0.7], yaprakKat: 0.4, tacCanak: 0.42, tacKenar: 0.16, sapKalin: 4.6 };
 
 // stüdyo ortamı (yansımalar için): fon, büyük softbox, sol şerit ışık, tavan ışığı, açık zemin
@@ -996,7 +996,7 @@ stil.pencere = function (X, Y, out, parca) {
 
 // ------------------------------------------------------------------ bitkiler: mermer çiçek, yeşil mermer yaprak, altın ercik
 const VERDE = lin('#86BA94'), VERDE2 = lin('#3B7A54'), VERDE_D = lin('#CFE6D5');
-stil.sap = function (X, Y, out) { yesim(X, Y, out, 0.12, 0.1); const gl = (out[0] + out[1] + out[2]) / 3; out[0] = mix(out[0], gl, 0.32); out[1] = mix(out[1], gl, 0.32); out[2] = mix(out[2], gl, 0.32); };
+stil.sap = function (X, Y, out) { metal(ALTIN, 0.2, out); };
 stil.yaprak = function (X, Y, out, y, i) {
   if (1) { const ort = smooth(1.0, 0.3, Math.abs(G.lvp)) * (1 - clamp(G.lt) * 0.6); G.ao *= 1 - 0.25 * ort; yesim(X + i * 37, Y, out, 0.1, 0.05 + 0.3 * ihash(i, 1, 1)); const gl = (out[0] + out[1] + out[2]) / 3; out[0] = mix(out[0], gl, 0.32); out[1] = mix(out[1], gl, 0.32); out[2] = mix(out[2], gl, 0.32); return; }
   const d = damarli(X * 1.7 + i * 31, Y * 1.7);
@@ -1034,7 +1034,7 @@ stil.orta = function (c) {
 
 // ------------------------------------------------------------------ fon ve zemin
 function fonCiz() {
-  const UF = lin('#FCF3E6'), ORTA = lin('#D6E9F7'), TEPE = lin('#8DBCE8');
+  const UF = lin('#FCEBD6'), ORTA = lin('#E6ECF0'), TEPE = lin('#92C0EA');
   const bulutlar = [[190, 250, 210, 60], [520, 150, 170, 44], [780, 330, 230, 64], [945, 470, 140, 36], [85, 470, 150, 38]];
   tumu(0, 820, (X, Y, out) => {
     const t = clamp(Y / 800);
@@ -1043,8 +1043,8 @@ function fonCiz() {
     else { const k = smooth(0.55, 1, t); r = mix(ORTA[0], UF[0], k); g = mix(ORTA[1], UF[1], k); b = mix(ORTA[2], UF[2], k); }
     // stüdyo fonunda yumuşak ışık lekesi (sağ üst)
     const dx = X - 860, dy = Y - 150, d = Math.sqrt(dx * dx + dy * dy);
-    const gl = 0.35 * Math.exp(-d / 260);
-    r += gl; g += gl * 0.97; b += gl * 0.9;
+    const gl = 0.4 * Math.exp(-d / 280);
+    r += gl; g += gl * 0.94; b += gl * 0.82;
     // çok yumuşak, odak dışı bulutlar
     let cl = 0;
     for (const c of bulutlar) {
@@ -1053,11 +1053,11 @@ function fonCiz() {
     }
     cl = clamp(cl * (0.8 + 0.4 * fbm(X / 90, Y / 60, 3)));
     r = mix(r, 1.08, cl * 0.75); g = mix(g, 1.07, cl * 0.75); b = mix(b, 1.06, cl * 0.75);
-    const s = 2.25;
+    const s = 2.45;
     out[0] = r * s; out[1] = g * s; out[2] = b * s;
   }, 0);
 }
-const ZEMIN_M = lin('#E2DBD0');
+const ZEMIN_M = lin('#DDD2C3');
 function zeminCiz() {
   // cilalı beyaz mermer zemin (yansıma sonradan eklenir)
   tumu(793, 1024, (X, Y, out) => {

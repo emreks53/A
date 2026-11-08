@@ -123,7 +123,8 @@
     lg.globalAlpha = 1;
     lg.globalCompositeOperation = 'source-over';
     const g = Object.assign({ x: -9, y: 13, b: 22, a: 0.17 }, o.g || {});
-    const t = Object.assign({ x: -2, y: 3, b: 4, a: 0.16 }, o.t || {});
+    g.a *= 1.35; g.x *= 1.25; g.y *= 1.25;
+    const t = Object.assign({ x: -2, y: 3, b: 4, a: 0.2 }, o.t || {});
     ana.save();
     ana.setTransform(1, 0, 0, 1, 0, 0);
     ana.shadowColor = `rgba(70,64,80,${g.a})`;
@@ -194,7 +195,7 @@
         let t = o.amb + o.kat * l;
         // dilim kenarlarında ince oluk gölgesi (komşu dilim arası)
         const kenar = Math.min(s, 1 - s) * (Math.PI / N) * r * Math.cos(fi); // ekranda kenara uzaklık (px)
-        t *= 0.6 + 0.4 * yumusak(0.25, 3.2, kenar);
+        t *= 0.55 + 0.45 * yumusak(0.3, 4.2, kenar);
         // dilimin ışığa bakan sağ kenarında ince parlak kâğıt kenarı
         const sk = (1 - s) * (Math.PI / N) * r * Math.cos(fi);
         if (s > 0.5 && sk > 0.5 && sk < 1.6) t += 0.1 * o.kenarIsik;
@@ -228,7 +229,7 @@
   const GX = 880, GY = 140;
   (function gok() {
     const im = ana.createImageData(W2, W2), D = im.data;
-    const C = [-300, 1500], ARA = 132;
+    const C = [-300, 1500], ARA = 142;
     const ust = hex('#BCDBF1'), orta = hex('#DAEAF5'), alt = hex('#F8F3EA'), sic = hex('#FFF8E6');
     for (let py = 0; py < W2; py++) {
       const y = (py + 0.5) / OL;
@@ -240,7 +241,7 @@
         const dx = x - C[0], dy = y - C[1], d = Math.hypot(dx, dy);
         const q = d / ARA, k = Math.floor(q), s = q - k;
         const yon = k % 2 ? 1 : -1;
-        const tau = yon * 0.07 * (0.6 + 0.8 * s);
+        const tau = yon * 0.095 * (0.6 + 0.8 * s);
         const nx = (dx / d) * tau, ny = (dy / d) * tau;
         const l = (nx * LV[0] + ny * LV[1] + LV[2]) / Math.hypot(nx, ny, 1);
         let f = 1.008 + (l - LV[2]) * 0.4;
@@ -509,7 +510,7 @@
     const pr = SAHNE.kubbeProfili(300).map((q) => [560 + q.r, q.y]);
     return profilTablosu(pr, 560);
   })();
-  const kubbeImg = donel({ cx: 560, rmax: 201, y1: 299, y2: 556, r: KUBBE, dilim: 16, bombe: 3.2, amb: 0.16, kat: 0.92, pal: PAL.yesil, parla: 0.035, kenarIsik: 1 });
+  const kubbeImg = donel({ cx: 560, rmax: 201, y1: 299, y2: 556, r: KUBBE, dilim: 16, bombe: 4.4, amb: 0.14, kat: 0.95, pal: PAL.yesil, parla: 0.03, kenarIsik: 1.2 });
   katman((g) => g.drawImage(kubbeImg.c, kubbeImg.x, kubbeImg.y, kubbeImg.w, kubbeImg.h), { g: { x: -9, y: 13, b: 22, a: 0.2 } });
   katman((g) => alem(g, SAHNE.alemParcalari(560, 300, 1)), { g: { x: -5, y: 7, b: 11, a: 0.18 }, kenar: 0.8 });
 

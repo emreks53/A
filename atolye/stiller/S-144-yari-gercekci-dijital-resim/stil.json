@@ -1,0 +1,22 @@
+{
+  "kod": "S-144",
+  "no": 144,
+  "ad": "Yarı Gerçekçi Dijital Resim",
+  "ad_en": "Semi-Realistic Digital Painting",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Krem zemin üzerinde ince kaş kemer çerçevenin içinde, gerçeğe yakın yumuşak ışıkla ve ressamca fırça dokusuyla boyanmış kubbe; altta ve iki yanda beyaz çiçek çelengi.",
+  "tanim": "Yarı gerçekçi dijital resim, biçimleri ve ışığı gerçeğe yakın kurup yüzeyi fotoğraf titizliğine götürmeden ressamca bir fırça dokusuyla bırakan dijital boyama üslubudur. Hacimler yumuşak geçişli ışık ve gölgeyle modellenir; ayrıntı odakta yoğunlaşır, gök ve zemin daha geniş fırçalarla çözülür. Kitap kapaklarında, tebrik ve davetiye tasarımlarında, kültürel ve manevi temalı dekoratif illüstrasyonlarda sık kullanılır; çoğu zaman zarif bir çerçeve ve çiçek süslemeleriyle birlikte sunulur.",
+  "koken": "Akademik resmin ışık-gölge geleneğini (William-Adolphe Bouguereau, Lawrence Alma-Tadema) ve 20. yüzyıl kitap ve afiş illüstrasyonunu dijital ortama taşır. 2000'lerden itibaren Photoshop, Painter ve Procreate gibi programlardaki dokulu fırçalar, katmanlı yumuşak gölgelendirme ve seçici ayrıntı bu dili yaygınlaştırdı; bugün konsept sanatında ve ticari illüstrasyonda 'semi-realistic' adıyla anılan üslubun temeli budur.",
+  "ayirt_edici": [
+    "Krem zemine ince altın-bej çift çizgiyle çizilmiş kaş kemer (ogee) çerçeve; paspartu gibi kemerin içine düşen ince yumuşak gölge",
+    "Kemerin içinde yumuşak mavi gök ve ışığı sağ üstten alan, alt yüzleri gri-mavi gölgeli hacimli bulutlar",
+    "Piksel piksel gölgelenmiş kaburgalı kubbe: sıcak ışık, serin gölge, kenarda gök yansıması, kaburga sırtlarında ince ışık",
+    "Biçimin yönünü izleyen dijital fırça darbeleri (kubbede meridyen boyunca, kasnak ve kaidede yatay, gökte geniş); pencereler ve alemler keskin bırakılmış",
+    "Altta ve iki yanda çerçeve çizgisini taşan beyaz çiçek çelengi: damarlı yapraklar, gölgeli taç yaprakları, sarı ercikler ve beyaz tomurcuklar",
+    "Arkadaki minarede hafif hava perspektifi; bütün sahnede sıcak gün ışığı ile serin gölgenin dengesi"
+  ],
+  "palet": ["#F0E8DA", "#92B6DB", "#5CB86B", "#38764F", "#F5DB86", "#B39565", "#3B6737", "#EDEFEE"],
+  "kodla_cizim": "Krem zemin radyal degradeyle boyanır; kaş kemer iki kübik Bezier kavisle kurulup gök ve mimari bu yola kırpılır. Bulutlar puf kümelerinden üretilen yoğunluk alanında güneşe doğru örneklenen örtmeyle ışıklandırılır. Minare, kaide ve kasnak, yarım-Lambert ışık modeliyle (gölgede serin gök rengi, ışıkta sıcak güneş rengi) silindir normallerinden hesaplanan çok duraklı degradelerle; kubbe SAHNE.kubbeProfili'nden türetilen yüzey normaliyle piksel piksel (dilim şişkinliği, yuvarlak kaburga sırtı, oluk gölgesi, yumuşak parlama, Fresnel gök yansıması) boyanır. Ardından bölge maskesine göre (gök, minare, kaide, kasnak, kubbe; pencereler ve alemler hariç) yaklaşık 85 bin kısa, kavisli fırça darbesi alttaki rengi örnekleyerek ve biçimin yönünde (kubbede meridyen eğimi) çizilir, her bölgenin darbeleri kendi maskesiyle kırpılır. Çerçevenin içine gölge düşürülür, çift çizgi çekilir. Çelenk SAHNE.bitki konumlarına eklenen üç asma kolundan oluşur; yapraklar ışığa bakan ve bakmayan iki yarım, damarlar ve gölgeyle, çiçekler beş gölgeli taç yaprağı, yeşil dişicik ve 26 ercikle boyanır. En sonda çok hafif tuval dokusu 'overlay' ile eklenir.",
+  "etiketler": ["dijital resim", "yarı gerçekçi", "illüstrasyon", "kemer çerçeve", "çiçek çelengi", "fırça dokusu", "yumuşak ışık", "zarif"]
+}

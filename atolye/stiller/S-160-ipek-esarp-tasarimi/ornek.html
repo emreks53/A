@@ -543,10 +543,10 @@
   cizgi(dik(6, 6, 1018, 1018), P.hat, 1);
 
   // ---------------------------------------------------------------- ipek: dimi dokusu ve yumuşak parıltı
-  defs.push(`<pattern id="dimi" patternUnits="userSpaceOnUse" width="3" height="3" patternTransform="rotate(-45)"><rect width="3" height="1.2" fill="#FFFFFF" opacity="0.13"/><rect y="1.8" width="3" height="0.7" fill="#5A4A3A" opacity="0.07"/></pattern>`);
+  defs.push(`<pattern id="dimi" patternUnits="userSpaceOnUse" width="3" height="3" patternTransform="rotate(-45)"><rect width="3" height="1.2" fill="#FFFFFF" opacity="0.15"/><rect y="1.8" width="3" height="0.7" fill="#5A4A3A" opacity="0.08"/></pattern>`);
   out.push(`<rect width="1024" height="1024" fill="url(#dimi)"/>`);
-  out.push(`<rect width="1024" height="1024" fill="${lg(0, 0, 1024, 1024, [[0, '#FFFFFF', 0.04], [0.16, '#FFFFFF', 0.08], [0.27, '#FFFFFF', 0.26], [0.4, '#FFFFFF', 0.03], [0.6, '#FFFFFF', 0], [0.72, '#FFFFFF', 0.18], [0.86, '#FFFFFF', 0.02], [1, '#FFFFFF', 0.1]])}" style="mix-blend-mode:screen"/>`);
-  out.push(`<rect width="1024" height="1024" fill="${lg(1024, 0, 0, 1024, [[0, '#6B5A4A', 0], [0.5, '#6B5A4A', 0.07], [0.6, '#6B5A4A', 0.02], [0.82, '#6B5A4A', 0], [1, '#6B5A4A', 0.04]])}" style="mix-blend-mode:multiply"/>`);
+  out.push(`<rect width="1024" height="1024" fill="${lg(0, 0, 1024, 1024, [[0, '#FFFFFF', 0.06], [0.14, '#FFFFFF', 0.12], [0.255, '#FFFFFF', 0.4], [0.3, '#FFFFFF', 0.3], [0.42, '#FFFFFF', 0.04], [0.6, '#FFFFFF', 0], [0.705, '#FFFFFF', 0.3], [0.75, '#FFFFFF', 0.2], [0.88, '#FFFFFF', 0.03], [1, '#FFFFFF', 0.14]])}" style="mix-blend-mode:screen"/>`);
+  out.push(`<rect width="1024" height="1024" fill="${lg(1024, 0, 0, 1024, [[0, '#6B5A4A', 0], [0.36, '#6B5A4A', 0.02], [0.5, '#6B5A4A', 0.1], [0.6, '#6B5A4A', 0.03], [0.82, '#6B5A4A', 0], [1, '#6B5A4A', 0.06]])}" style="mix-blend-mode:multiply"/>`);
 
   document.getElementById('sahne').innerHTML =
     `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" shape-rendering="geometricPrecision">` +

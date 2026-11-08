@@ -928,8 +928,8 @@ function yaldiz(out, rough) {
 // ------------------------------------------------------------------ malzemeler
 const BEYAZ = lin('#F5F7F9');
 const SELADON = lin('#74B690'), SELADON_D = lin('#2A7655'), SELADON_A = lin('#C4E2CE');
-const ALTIN = [1.0, 0.76, 0.36];
-const PEMBE = lin('#F1BFCB'), SARI = lin('#F1C443');
+const ALTIN = [1.0, 0.72, 0.3];
+const PEMBE = lin('#E596AE'), SARI = lin('#F1C443');
 const _al = [0, 0, 0];
 function porselen(out, k) {
   k = k || 1;
@@ -1028,7 +1028,7 @@ function porselenTac(c, i) {
 stil.tacYolu = porselenTac;
 stil.tac = function (X, Y, out, c, p, k, L) {
   const r = G.rho;
-  const bl = smooth(0.6, 0.08, r) * 0.75;
+  const bl = smooth(0.9, 0.12, r) * 0.95;
   _al[0] = mix(BEYAZ[0], PEMBE[0], bl); _al[1] = mix(BEYAZ[1], PEMBE[1], bl); _al[2] = mix(BEYAZ[2], PEMBE[2], bl);
   G.ao *= 0.78 + 0.22 * smooth(0.08, 0.45, r);
   // ince yaprak: kenarlarda ışık geçirir
@@ -1080,7 +1080,7 @@ stil.tomurcuk = function (X, Y, out) {
 
 // ------------------------------------------------------------------ fon ve zemin
 function fonCiz() {
-  const TEPE = lin('#8CC3EE'), ORTA = lin('#CBE6F8'), UF = lin('#EEF6FB');
+  const TEPE = lin('#86C2EC'), ORTA = lin('#C6E6F6'), UF = lin('#EAF6F8');
   const bulutlar = [[175, 250, 230, 62], [505, 148, 180, 46], [775, 333, 250, 66], [948, 470, 150, 36], [86, 470, 160, 38]];
   tumu(0, 820, (X, Y, out) => {
     const t = clamp(Y / 800);

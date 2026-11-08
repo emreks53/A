@@ -156,7 +156,7 @@
   const gok = new Path2D();
   gok.rect(0, 0, 1024, 800);
   gok.addPath(P(SAHNE.daireYolu(880, 140, 74)));
-  boya(gok, { renk: '#4E9FE0', renk2: '#7DBDE8', yog: 0.6, kenar: 0.25, gran: 0.38, olcek: 160, dal: 0.35, bulanik: 4, kural: 'evenodd', kutu: [0, 0, 1024, 800],
+  boya(gok, { renk: '#4E9FE0', renk2: '#7DBDE8', yog: 0.6, kenar: 0.25, gran: 0.26, olcek: 220, dal: 0.24, bulanik: 4, kural: 'evenodd', kutu: [0, 0, 1024, 800],
     egim: (x, y) => 0.42 + 0.68 * (1 - y / 800) * (1 - y / 800) + 0.1 });
   // bulutlar: önce kâğıt beyazı (boş bırakılmış gibi), sonra alt yarıda gri-mavi sır
   BULUT.forEach(([x, y, s, a]) => {
@@ -173,7 +173,15 @@
   boya(SAHNE.daireYolu(880, 140, 56), { renk: '#F6CF5C', renk2: '#F9DE84', yog: 0.55, kenar: 0.45, gran: 0.35, olcek: 40, dal: 0.3, bulanik: 3 });
 
   // ------------------------------------------------------------ zemin
-  boya(dikd(0, 800, 1024, 1024), { renk: '#DDB97E', renk2: '#E8CB92', yog: 0.55, kenar: 0.2, gran: 0.6, olcek: 120, dal: 0.35, bulanik: 4 });
+  boya(dikd(0, 800, 1024, 1024), { renk: '#DDB97E', renk2: '#E8CB92', yog: 0.5, kenar: 0.2, gran: 0.4, olcek: 160, dal: 0.25, bulanik: 4,
+    egim: (x, y) => 0.75 + 0.45 * (y - 800) / 224 });
+  // önde ikinci, keskin kenarlı saydam sır: üst kenarı yumuşak dalgalı, adaçayı yeşili çimenlik (bindiği yerde koyulaşır)
+  {
+    const nk = [];
+    for (let x = -10; x <= 1034; x += 8) nk.push([x, 905 + 14 * Math.sin(x / 150 + 0.6) + 8 * Math.sin(x / 61 + 2.1)]);
+    nk.push([1034, 1030], [-10, 1030]);
+    boya(SAHNE.yol(nk, true), { renk: '#8FC98A', renk2: '#A9D394', yog: 0.34, kenar: 0.35, gran: 0.3, olcek: 140, dal: 0.25, bulanik: 3, kutu: [0, 870, 1024, 1024] });
+  }
   // yapının gölgesi: keskin kenarlı ikinci sır
   boya('M300,800 L820,800 L760,836 L234,836 Z', { renk: '#A89BB8', yog: 0.32, kenar: 0.35, gran: 0.5, olcek: 50, bulanik: 2 });
 
@@ -224,7 +232,7 @@
     const ust = z.map(([x, y]) => [x, y - 1.8]), alt = z.map(([x, y]) => [x, y + 1.8]).reverse();
     boya(SAHNE.yol(ust.concat(alt), true), { renk: '#B0805E', yog: 0.62, kenar: 0.2, gran: 0.4, olcek: 20, bulanik: 1 });
   }
-  const PEN_TAS = { renk: '#55807E', renk2: '#5F7896', yog: 0.72, kenar: 0.4, gran: 0.5, olcek: 20, dal: 0.3, bulanik: 1.5 };
+  const PEN_TAS = { renk: '#55807E', renk2: '#5F7896', yog: 0.72, kenar: 0.35, gran: 0.2, olcek: 40, dal: 0.15, bulanik: 1.5 };
   for (const d of Y.minarePencereleri) boya(d, PEN_TAS);
 
   // ------------------------------------------------------------ alem
@@ -260,8 +268,8 @@
   }
 
   // ------------------------------------------------------------ kasnak
-  const YESIL = { renk: '#2F9A5E', renk2: '#3FA571', yog: 0.76, kenar: 0.5, gran: 0.45, olcek: 80, dal: 0.5, bulanik: 3 };
-  const YESIL_G = { renk: '#2E6F8A', renk2: '#3A6E78', yog: 0.32, kenar: 0.35, gran: 0.5, olcek: 50, dal: 0.3, bulanik: 2 };
+  const YESIL = { renk: '#2F9A5E', renk2: '#3FA571', yog: 0.82, kenar: 0.42, gran: 0.16, olcek: 260, dal: 0.2, bulanik: 3 };
+  const YESIL_G = { renk: '#2E6F8A', renk2: '#3A6E78', yog: 0.32, kenar: 0.3, gran: 0.2, olcek: 160, dal: 0.12, bulanik: 2 };
   for (let k = 1; k >= 0; k--) {
     const q = SAHNE.kasnak[k];
     const d = dikd(q.x1, q.y1, q.x2, q.y2);
@@ -272,13 +280,13 @@
     boya(dikd(q.x1, q.y2 - 5, q.x2, q.y2), { ...YESIL_G, yog: 0.3 });
     let pyol = '';
     for (const w of SAHNE.kasnakPencereleri(k)) pyol += SAHNE.kemerYolu(w.x, w.y, w.w, w.h) + ' ';
-    boya(pyol, { renk: '#1C5A40', renk2: '#22506A', yog: 0.85, kenar: 0.3, gran: 0.45, olcek: 30, bulanik: 1.2 });
+    boya(pyol, { renk: '#1C5A40', renk2: '#22506A', yog: 0.85, kenar: 0.25, gran: 0.15, olcek: 60, dal: 0.15, bulanik: 1.2 });
   }
 
   // ------------------------------------------------------------ kubbe
   const prof = SAHNE.kubbeProfili(60);
   kagitAc(Y.kubbe);
-  boya(Y.kubbe, { renk: '#38A566', renk2: '#5DB86A', yog: 0.72, kenar: 0.55, gran: 0.45, olcek: 170, dal: 0.42, bulanik: 4,
+  boya(Y.kubbe, { renk: '#33A062', renk2: '#58B568', yog: 0.84, kenar: 0.45, gran: 0.14, olcek: 320, dal: 0.2, bulanik: 4,
     egim: (x, y) => 0.74 + 0.4 * Math.min(1, Math.hypot(x - 660, y - 370) / 280) });
   const gol = prof.map((q) => [560 - q.r, q.y]).concat(prof.slice().reverse().map((q) => [560 - q.r * 0.3, q.y]));
   boya(SAHNE.yol(gol, true), { ...YESIL_G, yog: 0.36 });
@@ -291,7 +299,7 @@
     const sag = kb.noktalar.map(([x, y], i) => [x + w * (prof[i].r / 200 + 0.25), y]).reverse();
     kyol += SAHNE.yol(sol.concat(sag), true) + ' ';
   }
-  boya(kyol, { renk: '#1E6B48', yog: 0.42, kenar: 0.1, gran: 0.35, olcek: 40, bulanik: 0.8, kutu: [356, 296, 764, 559] });
+  boya(kyol, { renk: '#1E6B48', yog: 0.42, kenar: 0.1, gran: 0.12, olcek: 80, dal: 0.1, bulanik: 0.8, kutu: [356, 296, 764, 559] });
   ctx.restore();
   kagitAc(dikd(356, 549, 764, 557));
   boya(dikd(356, 549, 764, 557), { ...YESIL, renk: '#2B8F57', bulanik: 1 });
@@ -308,6 +316,16 @@
       sag.push([pts[i][0] + (dy / n) * w, pts[i][1] - (dx / n) * w]);
     }
     return SAHNE.yol(sol.concat(sag.reverse()), true);
+  }
+  // öndeki tomurcukların sapları (yaprakların arkasında kalır; tomurcuk havada asılı durmaz)
+  for (const t of B.tomurcuklar.slice(8)) {
+    const x0 = t.x - Math.cos(t.aci) * t.r * 0.8, y0 = t.y - Math.sin(t.aci) * t.r * 0.8;
+    const bx = t.x + (t.x < 512 ? -16 : 16), pts = [];
+    for (let i = 0; i <= 16; i++) {
+      const u = i / 16, w = 1 - u;
+      pts.push([w * w * x0 + 2 * w * u * t.x + u * u * bx, w * w * y0 + 2 * w * u * (t.y + 80) + u * u * (t.y + 170)]);
+    }
+    boya(serit(pts, 3, 4.5), { renk: '#5E9A4E', yog: 0.7, kenar: 0.2, gran: 0.3, olcek: 30, bulanik: 1 });
   }
   for (const s of B.saplar) boya(serit(s, 5.5, 3), { renk: '#5E9A4E', yog: 0.7, kenar: 0.2, gran: 0.4, olcek: 30, bulanik: 1 });
 
@@ -374,7 +392,7 @@
     for (let j = 1; j < W2 - 1; j++) for (let i = 1; i < W2 - 1; i++) {
       const k = j * W2 + i;
       const egim = KAGIT[k - W2 - 1] - KAGIT[k + W2 + 1];
-      const f = 1 + egim * 0.12 + (KAGIT[k] - 0.5) * 0.04;
+      const f = 1 + egim * 0.08 + (KAGIT[k] - 0.5) * 0.03;
       const p = k * 4;
       v[p] = Math.min(255, v[p] * f); v[p + 1] = Math.min(255, v[p + 1] * f); v[p + 2] = Math.min(255, v[p + 2] * f);
     }

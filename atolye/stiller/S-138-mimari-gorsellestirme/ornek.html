@@ -1100,6 +1100,7 @@ stil.orta = function (c) {
 
 // ------------------------------------------------------------------ gök ve bulutlar
 const BULUTLAR = [[178, 248, 300, 110, 1], [505, 146, 240, 80, 2], [775, 330, 320, 112, 3], [950, 470, 200, 66, 4], [84, 468, 210, 70, 5]];
+let BB = null;
 function bulutYog(X, Y) {
   let best = -9;
   for (const b of BULUTLAR) {
@@ -1107,7 +1108,7 @@ function bulutYog(X, Y) {
     let dy = (Y - b[1]) / (b[3] / 2);
     if (dy > 0) dy *= 1.9;
     const e = 1 - dx * dx - dy * dy;
-    if (e > best) best = e;
+    if (e > best) { best = e; BB = b; }
   }
   if (best < -0.9) return -1;
   const n = fbm(X / 52, Y / 34, 5, 0.52);
@@ -1135,7 +1136,8 @@ function gokCiz() {
         const dn2 = bulutYog(X + 6 * 0.77, Y - 6 * 0.64);
         const lit = clamp(0.55 + (dn - dn2) * 4.5);
         const derin = smooth(0.2, 1.1, dn);
-        const golg = clamp(1 - lit) * (0.55 + 0.45 * derin);
+        const alt = smooth(-0.3, 0.7, (Y - BB[1]) / (BB[3] / 2));
+        const golg = clamp(clamp(1 - lit) * (0.5 + 0.4 * derin) + alt * 0.45 - (1 - alt) * 0.1);
         const cr = mix(1.75, 0.82, golg), cg = mix(1.7, 0.9, golg), cb = mix(1.6, 1.1, golg);
         // güneşe yakın bulut kenarlarında sıcak parıltı
         const sg = Math.exp(-d / 260) * 0.35 * lit;

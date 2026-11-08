@@ -10,23 +10,23 @@
   "koken": "Suluboyanın saydamlığını vektör biçimin düzenine taşıyan bu yaklaşım 2010'larda Photoshop, Illustrator ve Procreate için hazırlanan suluboya doku fırçaları ve kırpma maskeleriyle yaygınlaştı; tasarımcılar taranmış gerçek suluboya lavilerini vektör biçimlerin içine maskeleyerek kullandı. Kökü, suluboyanın kuru kâğıt üzerine keskin kenarlı katman (kuru üstüne yaş) tekniği ile modern düz illüstrasyonun buluşmasıdır. Atölyenin örneği bu tarifi kodla kurar: lekeler dışarı taşmaz, sıçrama ve leke yoktur.",
   "ayirt_edici": [
     "Bütün biçimlerde kusursuz keskin vektör kenarı; boya kenardan hiç taşmaz, kontur çizgisi yok",
-    "Biçim içinde yumuşak, ıslak geçişli yoğunluk ve ton dalgalanması: gökte maviden açık maviye, kubbede yeşilden sarı-yeşile",
+    "Biçim içinde yumuşak, ıslak geçişli yoğunluk ve ton dalgalanması: gökte maviden açık maviye, kubbede sağ üstteki ışıktan sola doğru koyulaşan düzgün, temiz yeşil lavi",
     "Kâğıt çukurlarında toplanan pigment tanesi ve bütün yüzeye yayılan soğuk baskı kâğıt dokusu",
     "Biçimlerin iç kenarında ince boya halkası; taç yaprakları bindiği yerde saydam sırların koyulaşması",
-    "Gölgeler keskin kenarlı ikinci bir saydam sır: kubbe ve kasnağın sol yanında mavi-yeşil, taşta lila-gri, bulutların alt kenarında gri-mavi",
+    "Gölgeler ve katmanlar keskin kenarlı ikinci bir saydam sır: kubbe ve kasnağın sol yanında mavi-yeşil, taşta lila-gri, bulutların alt kenarında gri-mavi, önde dalgalı kenarlı adaçayı yeşili çimenlik",
     "Boş bırakılmış kâğıt beyazı: bulutlar, güneş halkası, beyaz çiçekler; yaprakları orta damar boyunca ayıran ince kâğıt boşluğu"
   ],
   "palet": [
     "#FBF8F1",
     "#4E9FE0",
     "#7DBDE8",
-    "#38A566",
+    "#33A062",
     "#E6CFA8",
     "#DDB97E",
     "#E7B9C8",
     "#A99DBA"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Önce üç ölçekli değer gürültüsünden 2048 × 2048'lik bir kâğıt yükseklik alanı üretilir. Her biçim kendi sınır kutusunda ekran dışında boyanır: biçimin kenar yumuşatmalı maskesi ve bulanıklaştırılmış kopyası alınır; maskenin içindeki her pikselde pigment yoğunluğu, temel yoğunluk × fBm ile yumuşak ıslak lekeler × derecelendirme + bulanık maskeden iç kenar halkası, kâğıt çukurlarında artan granülasyonla çarpılarak hesaplanır; renk iki pigment arasında ikinci bir fBm ile karışır. Sonuç 'multiply' kipinde saydam sır olarak ana tuvale konur; kenar yalnız keskin maskeden gelir, dışarı hiçbir şey taşmaz. Beyaz kalacak alanlar (bulut, çiçek, yapı) önce kâğıt rengiyle örtülür; gölgeler, bulut altları ve yaprak yarımları kırpma maskesiyle keskin kenarlı ikinci sırlardır. En sonda kâğıt yükseklik alanının çapraz türevinden hafif bir kabartma ışığı bütün yüzeye uygulanır.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Önce üç ölçekli değer gürültüsünden 2048 × 2048'lik bir kâğıt yükseklik alanı üretilir. Her biçim kendi sınır kutusunda ekran dışında boyanır: biçimin kenar yumuşatmalı maskesi ve bulanıklaştırılmış kopyası alınır; maskenin içindeki her pikselde pigment yoğunluğu, temel yoğunluk × fBm ile yumuşak ıslak lekeler × derecelendirme + bulanık maskeden iç kenar halkası, kâğıt çukurlarında artan granülasyonla çarpılarak hesaplanır; renk iki pigment arasında ikinci bir fBm ile karışır. Sonuç 'multiply' kipinde saydam sır olarak ana tuvale konur; kenar yalnız keskin maskeden gelir, dışarı hiçbir şey taşmaz. Kubbe ve kasnakta lavi düzgün tutulur (geniş ölçekli, zayıf dalgalanma, az granülasyon); zemin önden ufka açılan derecelendirilmiş bir lavidir ve önüne dalgalı üst kenarlı ikinci bir yeşil sır biner. Beyaz kalacak alanlar (bulut, çiçek, yapı) önce kâğıt rengiyle örtülür; gölgeler, bulut altları ve yaprak yarımları kırpma maskesiyle keskin kenarlı ikinci sırlardır; öndeki tomurcuklara ince sap şeritleri eklenir. En sonda kâğıt yükseklik alanının çapraz türevinden hafif bir kabartma ışığı bütün yüzeye uygulanır.",
   "etiketler": [
     "vektör",
     "suluboya",

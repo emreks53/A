@@ -1,0 +1,22 @@
+{
+  "kod": "S-146",
+  "no": 146,
+  "ad": "Dijital Suluboya",
+  "ad_en": "Digital Watercolor",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Dokulu kâğıt üzerinde saydam, temiz lavi katmanları; kenarlarda hafif pigment birikimi, granülasyonlu gök, kaburgalı zarif kubbe ve önde şakayık, gül ve okaliptüs.",
+  "tanim": "Dijital suluboya, Procreate ya da Photoshop'taki suluboya fırçalarıyla gerçek suluboyanın saydamlığını, kâğıt dokusunu ve kenar davranışını taklit eden kontrollü bir dijital resim üslubudur. Katmanlar 'çarpma' kipinde üst üste biner, her geçiş alttakini koyulaştırır; beyazlar boyayla değil, boş bırakılan kâğıtla elde edilir. Lekesiz, sıçramasız ve düzenli olması onu düğün davetiyeleri, tebrik kartları, botanik baskılar ve zarif kitap illüstrasyonları için sevilen bir dil yapar.",
+  "koken": "Geleneksel suluboyanın İngiliz manzara okuluna (J. M. W. Turner, John Sell Cotman) ve botanik illüstrasyon geleneğine dayanır. 2010'larda Kyle Webster'ın dijital fırça setleri, Procreate'in ıslak kenar ve granülasyon fırçaları ve davetiye ile kırtasiye tasarımında yayılan 'watercolor floral' estetiği bu kontrollü, temiz dijital suluboya dilini popülerleştirdi.",
+  "ayirt_edici": [
+    "Bütün tuvali kaplayan, üstte kobalt-seruleum, ufka doğru açılıp pembe-kum tonuna dönen dokulu gök lavisi; bulutlar boş bırakılmış kâğıt beyazı, altlarında lila gölge",
+    "Her lavinin kenarında ince pigment birikimi (ıslak kenar), kâğıt çukurlarında hafif granülasyon ve geniş, yumuşak renk dalgalanması; sıçrama ve leke yok",
+    "Yeşil kubbe iki sırla boyanmış: ışıklı sağ üstte açık ilk lavi, gölgeli yana ikinci koyu sır; kaburgalar ince, hafif titrek fırça çizgisi",
+    "Beyaz taş yapı boş kâğıtla bırakılmış; yalnızca lavanta-gri gölge lavileri, ince zikzak fırça çizgileri ve mor-kahve pencereler",
+    "Önde katman katman saydam taç yapraklı beyaz, allık pembesi ve şeftali rengi şakayıklar ve güller; arkalarında yuvarlak yapraklı okaliptüs dalları",
+    "Bütün yüzeyde soğuk preslenmiş kâğıt kabartması"
+  ],
+  "palet": ["#6998C6", "#A1C69A", "#60976D", "#EBE3D9", "#CFACAB", "#BD555C", "#DE8D5B", "#A5B8B0"],
+  "kodla_cizim": "Önce Perlin gürültüsüyle soğuk preslenmiş kâğıdın yükseklik alanı üretilir. Her boya geçişi bir 'lavi' fonksiyonuyla yapılır: biçim maskesi ekran dışı tuvale çizilir, kutu bulanıklığıyla yumuşatılır, kenarına gürültü eklenip yumuşak eşikten geçirilir; maskenin bulanık kopyasından farkı alınarak iç kenar bandı bulunur ve orada pigment yoğunluğu artırılır (ıslak kenar), kâğıt çukurlarında granülasyon, düşük frekanslı gürültüyle akış dalgalanması eklenir; sonuç 'multiply' ile sırlanır. Çiçekler önden arkaya boyanır ve her biri bir saklama maskesine yazılır; arkadaki yapraklar, gök ve mimari bu maskeyle çiçeklerin beyazını boş bırakır, gök ayrıca bina siluetini saklar. Şakayık ve güller iki halka dalgalı taç yaprağı, arkada yukarı bakan çanak yaprakları ve önde kâse biçimli taç yapraklarıyla, her biri merkeze doğru koyulaşan ayrı lavi olarak çizilir. Kubbenin iki sırrının yoğunluğu SAHNE.kubbeProfili'nden hesaplanan yüzey normaline ve ışığa göre ayarlanır; kaburgalar SAHNE.kaburgalar() çizgilerinin gürültüyle titretilmiş fırça lavileridir. En sonda kâğıt yükseklik alanının kabartması 'overlay' ile bütün yüzeye işlenir.",
+  "etiketler": ["suluboya", "dijital", "lavi", "ıslak kenar", "granülasyon", "şakayık", "okaliptüs", "davetiye estetiği"]
+}

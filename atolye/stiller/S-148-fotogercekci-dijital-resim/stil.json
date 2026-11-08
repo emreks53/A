@@ -1,0 +1,22 @@
+{
+  "kod": "S-148",
+  "no": 148,
+  "ad": "Fotogerçekçi Dijital Resim",
+  "ad_en": "Photorealistic Digital Painting",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Fotoğraf kadar gerçekçi: doğal sirrüs ve kümülüslü gök, hava perspektifi, fiziksel tabanlı ışık, parlayan kaburgalı kubbe, dokulu taş ve alan derinliğiyle doğal çiçekler.",
+  "tanim": "Fotogerçekçi dijital resim, bir sahneyi fotoğraftan ayırt edilmesi güç bir doğrulukla boyamayı ya da hesaplamayı hedefler. Işık fiziksel olarak tutarlıdır; boyalı metal, taş, yaprak ve taç yaprağı gibi malzemeler kendi yansıma ve doku özellikleriyle gösterilir; uzaklık hava perspektifi ve odak derinliğiyle verilir. Mimari görselleştirmede, reklam ve ürün görsellerinde, film konsept resimlerinde ve matte painting'de kullanılır.",
+  "koken": "1960–70'lerin fotogerçekçilik akımı (Richard Estes, Chuck Close, Ralph Goings) resimde fotoğraf doğruluğunu hedefledi. Dijital çağda matte painting ressamları ve bilgisayar grafiği, bu doğruluğu fiziksel tabanlı görüntüleme (PBR), doğrusal renk uzayında ışık hesabı, ACES ton eşleme, ortam gölgesi ve alan derinliği gibi araçlarla sürdürdü.",
+  "ayirt_edici": [
+    "Tepede koyu maviden ufukta solgun gri-maviye inen gök degradesi ve güneşin çevresinde parlak hale",
+    "Yatay gerilmiş ince sirrüs tülleri, sol üstte fraktal kenarlı bir kümülüs ve binanın ardında ufukta yükselen kümülüs kuşağı; pusa gömülmüş uzak mavi tepeler",
+    "Kubbede doğrusal ışıkla hesaplanmış yayınık ışık, parlama ve Fresnel gök yansıması; kaburga oluklarında ve tabanda ortam gölgesi, ince levha ekleri",
+    "Kaidede kesme taş derzleri ve ince taş dokusu; binanın perspektifli mermer avluya düşen yumuşak gölgesi ve soluk yansıması",
+    "Yükseklik alanından yeniden ışıklandırılmış beyaz frangipani çiçekleri ve damarlı yapraklar: birbirine düşen gölgeler, yaprak aralarında derinlik, taç yapraklarda yarı saydamlık",
+    "Ön plandaki çiçek ve yapraklarda sığ alan derinliği, odak kubbede; hafif ışık taşması ve ince sensör taneciği"
+  ],
+  "palet": ["#3E77C8", "#73A4DE", "#F5F5F4", "#76C090", "#2C6840", "#E9E6E1", "#244617", "#EECE79"],
+  "kodla_cizim": "Bütün ışık doğrusal renk uzayında hesaplanır: albedo 2.2 gama ile doğrusallaştırılır, güneş (Lambert) + gök ve zemin yarıküre ortam ışığı toplanır, ACES ton eşlemeyle sRGB'ye döndürülür. Gök piksel piksel degrade ve güneş halesiyle; sirrüsler alan bükmeli, yatay gerilmiş fraktal gürültüyle; kümülüsler elips zarfı ile çarpılan alan bükmeli 6 oktavlı gürültüden yoğunluk, iki ölçekli bulanıklıktan yüzey normali ve güneşe doğru örtmeyle ışıklandırılır, ince kenarlar ışığı geçirir. Avlu mermeri perspektif dönüşümüyle dünya koordinatından derz, damar ve Fresnel parlaklığıyla hesaplanır. Mimari, bu fiziksel ışık fonksiyonuyla silindir normallerinden degradelerle boyanır; kubbe SAHNE.kubbeProfili normaliyle piksel piksel parlama, Fresnel yansıması, oluk ve taban ortam gölgesiyle hesaplanır; bölge haritasına göre taşa gürültü dokusu ve kesme taş derzleri işlenir; yansıma ve düşen gölge eklenir. Çiçek ve yapraklar 2048 çözünürlükte piksel piksel yükseklik, renk ve malzeme tamponlarına yazılır (yaprakta orta damar ve yan damar olukları, taç yaprakta kıvrım); yükseklik alanından normal, güneşe doğru gölge taraması, geniş bulanıklık farkından ortam gölgesi, taç yapraklarda yarı saydamlık ve yapraklarda parlama hesaplanır. Ön plan katmanı 3 piksel bulanıklaştırılarak alan derinliği verilir; en sonda parlak bölgelerden ışık taşması ve ince tanecik eklenir.",
+  "etiketler": ["fotogerçekçi", "fiziksel tabanlı ışık", "PBR", "alan derinliği", "hava perspektifi", "matte painting", "dijital resim", "gerçekçi gök"]
+}

@@ -26,7 +26,7 @@
     "#4FA673",
     "#86B877"
   ],
-  "kodla_cizim": "JavaScript ile üretilen satır içi SVG. Sahne kendi 1024 koordinatında çizilir ve translate(108) + scale(0,789) ile ortadaki alana yerleşip clipPath ile kırpılır; gölgeler u = −0,38 sınırının solunda düz elek tonu ve üstüne kırpılmış 35° ince tarama, gök sinüs kenarlı dört bant. Bordürün bir kenarı çizilir (mercan bantta sinüs dal, tepe ve çukurlarda çiçekler ve yaprak çiftleri; döndürülmüş elipslerden burgu ip; yoncalı turkuaz bant; kenar ortası kartuşu) ve merkez çevresinde dört kez döndürülerek konur; köşe madalyonları ayrıca. İpek: −45° dönük dimi <pattern> karosu (%13 beyaz, %7 koyu şerit) ve 'screen' / 'multiply' karışımlı çapraz ışık bantları; rulo kenar evenodd dış bant ve ince açık çizgi.",
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG. Sahne kendi 1024 koordinatında çizilir ve translate(108) + scale(0,789) ile ortadaki alana yerleşip clipPath ile kırpılır; gölgeler u = −0,38 sınırının solunda düz elek tonu ve üstüne kırpılmış 35° ince tarama, gök sinüs kenarlı dört bant. Bordürün bir kenarı çizilir (mercan bantta sinüs dal, tepe ve çukurlarda çiçekler ve yaprak çiftleri; döndürülmüş elipslerden burgu ip; yoncalı turkuaz bant; kenar ortası kartuşu) ve merkez çevresinde dört kez döndürülerek konur; köşe madalyonları ayrıca. İpek: −45° dönük dimi <pattern> karosu (%15 beyaz, %8 koyu şerit) ve 'screen' / 'multiply' karışımlı çapraz ışık bantları; rulo kenar evenodd dış bant ve ince açık çizgi.",
   "etiketler": [
     "tekstil",
     "ipek",

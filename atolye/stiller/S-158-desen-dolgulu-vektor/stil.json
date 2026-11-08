@@ -17,16 +17,16 @@
     "Her biçimde kendi renginin koyu tonunda ince, keskin kontur"
   ],
   "palet": [
-    "#CDE4F1",
+    "#C6E0F0",
     "#FBF3E3",
-    "#E4D1AE",
+    "#DCC497",
     "#3C9466",
     "#86C79A",
     "#E3B955",
     "#F5EAD3",
     "#7FB78B"
   ],
-  "kodla_cizim": "JavaScript ile üretilen satır içi SVG ve parametreleriyle önbelleğe alınan <pattern> karoları (userSpaceOnUse): nokta, pul (alt yarım daire yayları), şerit (döndürülmüş), kafes (45°), zikzak, baklava, yiv, dalga ve dört yapraklı çiçek. Her SAHNE biçimi kendi deseniyle doldurulur; silindir gölgesi Lambert ışığından saydamlığı hesaplanan yatay degrade katmanıdır. Kubbede her dilimin desen renkleri dilimin ışığından karıştırılır; çift dilimler pul, tek dilimler dört ince meridyen çizgisi alır. Gökteki noktalar tek tek hesaplanır (yarıçap ufka ve güneşe doğru büyür). Taç yapraklarında taç biçimli kırpılmış iç elips çizgili desenle doldurulur; bütün biçimlere 1 px kontur.",
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG ve parametreleriyle önbelleğe alınan <pattern> karoları (userSpaceOnUse): nokta, pul (alt yarım daire yayları), şerit (döndürülmüş), kafes (45°), zikzak, baklava, yiv, dalga ve dört yapraklı çiçek. Her SAHNE biçimi kendi deseniyle doldurulur; silindir gölgesi Lambert ışığından saydamlığı hesaplanan yatay degrade katmanıdır. Kubbede her dilimin desen renkleri dilimin ışığından karıştırılır; çift dilimler pul, tek dilimler dört ince meridyen çizgisi alır. Gökteki noktalar tek tek hesaplanır (yarıçap ufka ve güneşe doğru büyür). Taç yapraklarında taç biçimli kırpılmış iç elips çizgili desenle doldurulur; bütün biçimlere 1 px kontur. Desen hücreleri 6–18 px'tir; küçük boyutta da desen kimliği okunsun diye motifler iri ve zeminle belirgin ton farkında tutulur.",
   "etiketler": [
     "vektör",
     "desen",
