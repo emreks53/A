@@ -354,7 +354,7 @@
   function katman(ciz, o) { K.temizle(); ciz(K.x); for (const m of o.sil || []) sil(K, m); uygula(o); }
 
   const KIRMIZI = hex('#B4462C'), KIRMIZI2 = hex('#C8644A'), SIYAH = hex('#231E1C'), BEYAZ = hex('#F6F3EA');
-  const YESIL = hex('#4E9462'), YESIL2 = hex('#8CC08A'), OKRA = hex('#CC9A3C'), GUL = hex('#DE8C98');
+  const YESIL = hex('#5E8A6A'), YESIL2 = hex('#A3BC98'), OKRA = hex('#CC9A3C'), GUL = hex('#DE8C98');
   const egik = -0.86; // Watteau usulü çapraz tarama: sol alttan sağ üste
   const taraT = (x, o) => tara(x, Object.assign({ aciJ: 0.06, egri: 0.02, ters: false, bas: 0.12, son: 0.3 }, o), r);
   // yumuşak (ezilmiş) leke: geniş, saydam vuruşlar
@@ -408,13 +408,13 @@
   }, { opq: 0.45, sil: [MK.bitki], maske: ton((b, l) => (b === 'kubbe' || b === 'kasnak' ? 0.75 * sstep(0.45, 0.05, l) : 0)) });
 
   // ================================================================ 3) yeşil pastel: kubbe ve kasnak (sürtülmüş zemin + kaburga boyunca vuruşlar + koyu yeşil tarama)
-  const KOYUYESIL = hex('#2C5E44');
+  const KOYUYESIL = hex('#33574A');
   katman((x) => {
     x.save(); x.clip(kubbeYolu);
-    for (let u = -1.05; u < 1.05; u += 0.045) { const pts = []; for (let t = 0; t <= 10; t++) { const yy = lerp(556, 302, t / 10); pts.push([560 + u * kubbeRy(yy), yy]); } leke(x, pts, 16, 0.5, YESIL); }
+    for (let u = -1.05; u < 1.05; u += 0.045) { const pts = []; for (let t = 0; t <= 10; t++) { const yy = lerp(556, 302, t / 10); pts.push([560 + u * kubbeRy(yy), yy]); } leke(x, pts, 16, 0.4, YESIL); }
     x.restore();
     x.save(); x.clip(kasnakYolu); for (let yy = 558; yy < 692; yy += 8) leke(x, [[334, yy], [786, yy]], 12, 0.45, YESIL); x.restore();
-  }, { ezme: 7, opq: 0.6, gren: 0.4, maske: ton((b, l) => (b === 'kubbe' ? 0.75 + 0.25 * l : b === 'kasnak' ? 0.65 + 0.3 * l : 0)) });
+  }, { ezme: 7, opq: 0.5, gren: 0.45, maske: ton((b, l) => (b === 'kubbe' ? 0.55 + 0.35 * l : b === 'kasnak' ? 0.5 + 0.35 * l : 0)) });
   katman((x) => {
     x.save(); x.clip(kubbeYolu);
     for (let u = -0.98; u < 1.0; u += 0.032) {
@@ -580,14 +580,18 @@
     for (const [bx, by, s] of [[170, 250, 1.0], [505, 150, 0.8], [770, 330, 1.05], [930, 470, 0.7], [92, 470, 0.7]]) {
       for (let k = 0; k < 7; k++) { const yy = by - 14 * s + k * 5 * s, w = (130 - Math.abs(k - 3) * 22) * s; leke(x, [[bx - w / 2 + r() * 10, yy], [bx, yy - 3 * s], [bx + w / 2 - r() * 10, yy + 2]], 9 * s, 0.32, BEYAZ); }
     }
-    x.fillStyle = rgba(BEYAZ, 0.75); x.beginPath(); x.arc(880, 140, 36, 0, Math.PI * 2); x.fill();
-    for (let k = 0; k < 16; k++) { const rr = 30 + k * 9; x.strokeStyle = rgba(BEYAZ, 0.42 * Math.pow(1 - k / 16, 1.5)); x.lineWidth = 10; x.beginPath(); x.arc(880, 140, rr, 0, Math.PI * 2); x.stroke(); }
+    for (let k = 0; k < 12; k++) { const rr = 46 + k * 8; x.strokeStyle = rgba(BEYAZ, 0.3 * Math.pow(1 - k / 12, 1.6)); x.lineWidth = 9; x.beginPath(); x.arc(880, 140, rr, 0, Math.PI * 2); x.stroke(); }
   }, { ezme: 8, opq: 0.85, gren: 0.45, sil: [MK.yapi, MK.bitki] });
   katman((x) => {
     // bulut üstlerinde birkaç keskin beyaz tarama, güneşte dairesel vuruşlar
     for (const [bx, by, s] of [[170, 250, 1.0], [505, 150, 0.8], [770, 330, 1.05], [930, 470, 0.7], [92, 470, 0.7]]) taraT(x, { bx: [bx - 55 * s, by - 22 * s, bx + 55 * s, by + 4 * s], ic: (px, py) => Math.hypot((px - bx) / (60 * s), (py - by + 6 * s) / (16 * s)) < 1, aci: egik, aralik: 3.6, boy: 16 * s, kal: 1.8, alfa: 0.75, renk: BEYAZ, obek: 14, sik: 0.9 });
-    for (let k = 0; k < 90; k++) { const a = r() * Math.PI * 2, rr = 28 + r() * 70; const a2 = a + Math.PI / 2; const px = 880 + Math.cos(a) * rr, py = 140 + Math.sin(a) * rr; strok(x, [[px - Math.cos(a2) * 8, py - Math.sin(a2) * 8], [px + Math.cos(a2) * 8, py + Math.sin(a2) * 8]], 1.8, 0.7 * (1 - rr / 110), BEYAZ, 0.1, 0.3); }
-    for (let k = 0; k < 9; k++) { const a = r() * Math.PI * 2; x.lineCap = 'round'; strok(x, [[880 + Math.cos(a) * 24, 140 + Math.sin(a) * 24], [880 + Math.cos(a) * 46, 140 + Math.sin(a) * 46]], 2.2, 0.5, BEYAZ, 0.1, 0.4); }
+    // güneş: beyaz tebeşirle çizilmiş kurs — eğik paralel tarama, iki kez dolanan kontur ve kısa ışınlar
+    x.save(); x.beginPath(); x.arc(880, 140, 40, 0, 7); x.clip();
+    taraT(x, { bx: [836, 96, 924, 184], aci: egik, aralik: 2.9, boy: 26, kal: 2.0, alfa: 0.85, renk: BEYAZ, obek: 22, sik: 0.8 });
+    x.restore();
+    elCizgisi(x, ornekle(SAHNE.daireYolu(880, 140, 40), 2)[0], 2.0, 0.85, BEYAZ, r, { parca: 70, titre: 0.5 });
+    elCizgisi(x, ornekle(SAHNE.daireYolu(881.5, 138.5, 43.5), 2)[0].slice(10, 90), 1.2, 0.45, BEYAZ, r, { parca: 60, titre: 0.8 });
+    for (let k = 0; k < 24; k++) { const a = (k / 24) * Math.PI * 2 + (r() - 0.5) * 0.06, r0 = 52 + r() * 4, r1 = r0 + (k % 2 ? 14 : 30) + r() * 6; strok(x, [[880 + Math.cos(a) * r0, 140 + Math.sin(a) * r0], [880 + Math.cos(a) * r1, 140 + Math.sin(a) * r1]], k % 2 ? 1.5 : 2.0, 0.75, BEYAZ, 0.05, 0.55); }
   }, { opq: 0.9, gren: 0.7, sil: [MK.yapi, MK.bitki] });
   // ufukta ve gökte hafif, gevşek kırmızı tarama: binayı kâğıttan ayırır (çizim gibi kenarlara doğru söner)
   katman((x) => {

@@ -63,6 +63,40 @@ const MO = gurultu(1024, 1024, 24, 12, 6);     // lavın bulut gibi düzensizli�
 const MH = gurultu(1024, 1024, 7, 13, 1.6);    // lav kenarı ve çiçeklenme tırtığı
 const FN = gurultu(N, N, 2.2, 14, 0.9, 6);     // uzamış lifler: mürekkebin yayılma yönü
 
+// ------------------------------------------------------------------ elle sürülmüş yatay lav bandı
+/**
+ * Yatay bir fırça bandının yolu: üst ve alt kenarı dalgalı, sol ucu küt (fırçanın konduğu yer), sağ ucu
+ * incelerek biter. o: {sol, uc (uçlarda incelen pay, 0..1), dalga (orta çizginin oynaması, h'ye oranla), egim}
+ */
+function bantYolu(x, x0, x1, yc, h, t, o) {
+  o = o || {};
+  const L = x1 - x0, n = Math.max(14, Math.round(L / 5)), dal = o.dalga == null ? 0.3 : o.dalga;
+  const ust = [], alt = [];
+  for (let i = 0; i <= n; i++) {
+    const s = i / n, px = x0 + L * s;
+    const sol = smooth(0, o.sol || 0.05, s), sag = 1 - 0.9 * smooth(1 - (o.uc || 0.25), 1, s);
+    const k = h * 0.5 * Math.max(0.06, sol * sag);
+    const orta = yc + (f1(t + (s * L) / 110) - 0.5) * h * dal + (o.egim || 0) * (px - x0);
+    ust.push([px, orta - k * (0.8 + 0.4 * f1(t + 13.3 + (s * L) / 24))]);
+    alt.push([px, orta + k * (0.8 + 0.4 * f1(t + 41.7 + (s * L) / 31))]);
+  }
+  x.beginPath(); x.moveTo(ust[0][0], ust[0][1]);
+  for (const p of ust) x.lineTo(p[0], p[1]);
+  for (let i = alt.length - 1; i >= 0; i--) x.lineTo(alt[i][0], alt[i][1]);
+  x.closePath();
+}
+/** Kasumi: üst üste binen birkaç yatay bant; üst kenarda yoğun, aşağı doğru kâğıda açılır. */
+function kasumi(x, bantlar) {
+  for (const [x0, x1, yc, h, t, o] of bantlar) {
+    const g = x.createLinearGradient(0, yc - h * 0.55, 0, yc + h * 0.6);
+    g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.4, 'rgba(0,0,0,0.75)'); g.addColorStop(0.75, 'rgba(0,0,0,0.3)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; bantYolu(x, x0, x1, yc, h, t, o); x.fill();
+  }
+}
+const SIS_SAG = [[742, 1040, 596, 30, 3.1, { sol: 0.22, uc: 0.1 }], [800, 1040, 619, 12, 7.7, { sol: 0.3, uc: 0.1 }]];
+const SIS_SOL = [[-20, 252, 643, 20, 11.2, { sol: 0.02, uc: 0.4 }], [10, 196, 661, 8, 15.9, { sol: 0.05, uc: 0.45 }]];
+const SIS_ALT = [[262, 1010, 763, 32, 19.4, { sol: 0.14, uc: 0.3 }], [350, 920, 789, 12, 23.8, { sol: 0.2, uc: 0.35 }], [600, 860, 741, 8, 27.1, { sol: 0.3, uc: 0.4 }]];
+
 // ------------------------------------------------------------------ eğri yardımcıları
 function ornekle(p, adim) {
   const out = [p[0].slice()];
@@ -371,10 +405,8 @@ lav((x) => {
   x.fillStyle = g; x.beginPath(); x.arc(880, 140, 260, 0, TAU); x.arc(880, 140, 50, 0, TAU, true); x.fill('evenodd');
 }, { bul: 3, ton: 0.07, esik: 0.03, yum: 0.03, kenar: 0, tirtik: 0.35, gr: 0.35, gam: 1.3, kutu: [600, 0, 1024, 420] });
 // uzakta, kubbenin sağında yatay bir sis bandı
-lav((x) => {
-  x.beginPath(); x.ellipse(915, 598, 170, 14, -0.02, 0, TAU); x.fill();
-  x.beginPath(); x.ellipse(96, 646, 130, 10, 0.02, 0, TAU); x.fill();
-}, { bul: 12, ton: 0.06, esik: 0.06, yum: 0.05, kenar: 0.15, tirtik: 0.6, gr: 0.4, gam: 1.4, kutu: [0, 540, 1024, 700] });
+lav((x) => kasumi(x, SIS_SAG.slice(0, 1).concat(SIS_SOL.slice(0, 1))),
+  { bul: 5, ton: 0.06, esik: 0.08, yum: 0.06, kenar: 0.15, tirtik: 0.7, gr: 0.4, gam: 1.4, kutu: [0, 540, 1024, 700] });
 // renk: çivit mavisi gök. Üstte, solda koyu bir bokashi (dereceli lav), aşağı ve güneşe doğru kâğıda açılır;
 // güneş, minare ve alem boş kalır.
 const siluet = (() => {
@@ -391,13 +423,12 @@ lav((x) => {
   h.addColorStop(0, 'rgba(0,0,0,1)'); h.addColorStop(0.22, 'rgba(0,0,0,1)'); h.addColorStop(1, 'rgba(0,0,0,0)');
   x.fillStyle = h; x.fillRect(500, 0, 524, 480);
   x.fillStyle = '#000'; x.lineWidth = 3; x.stroke(siluet); x.fill(siluet);
-}, { bul: 5, ton: 0.95, esik: 0.006, yum: 0.02, kenar: 0.05, tirtik: 0.12, gr: 0.3, gam: 1.0, hedef: 'M', kutu: [0, 0, 1024, 520] });
+}, { bul: 5, ton: 0.9, esik: 0.006, yum: 0.02, kenar: 0.05, tirtik: 0.12, gr: 0.3, gam: 1.0, hedef: 'M', kutu: [0, 0, 1024, 520],
+  // lavın alt ucu düz bir çizgide kesilmesin: düzensiz, yumuşak bir sönmeyle kâğıda karışır
+  maske: (x, y) => 1 - smooth(250, 440, y + (MO[(Math.min(1023, y | 0)) * 1024 + (x | 0)] - 0.5) * 120) });
 // sis bantları (kasumi): yatay, tırtıklı çivit lavları; kubbenin sağında, solda ve kaidenin eridiği yerde
-lav((x) => {
-  x.beginPath(); x.ellipse(905, 600, 210, 20, -0.02, 0, TAU); x.fill();
-  x.beginPath(); x.ellipse(96, 646, 140, 13, 0.02, 0, TAU); x.fill();
-  x.beginPath(); x.ellipse(640, 768, 360, 22, 0.01, 0, TAU); x.fill();
-}, { bul: 14, ton: 0.5, esik: 0.06, yum: 0.08, kenar: 0.1, tirtik: 0.45, gr: 0.4, gam: 1.2, hedef: 'M', kutu: [0, 540, 1024, 860] });
+lav((x) => kasumi(x, SIS_SAG.concat(SIS_SOL, SIS_ALT)),
+  { bul: 3.5, ton: 0.55, esik: 0.07, yum: 0.07, kenar: 0.1, tirtik: 0.8, gr: 0.4, gam: 1.0, hedef: 'M', kutu: [0, 540, 1024, 860] });
 // güneşin içinde çok hafif sıcak bir okra
 lav((x) => { x.beginPath(); x.arc(880, 140, 44, 0, TAU); x.fill(); }, { bul: 6, ton: 0.22, esik: 0.1, kenar: 0.1, tirtik: 0.4, hedef: 'K', kutu: [820, 80, 940, 200] });
 
@@ -482,7 +513,15 @@ lav((x) => { x.beginPath(); x.arc(880, 140, 44, 0, TAU); x.fill(); }, { bul: 6, 
   // gölge yanında ıslak lav: soldaki pencereler içine akar (ıslağa ıslak)
   lav((x) => { const g = x.createLinearGradient(336, 0, 560, 0); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.45, 'rgba(0,0,0,0.5)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(354, 563, 230, 40); x.fillRect(337, 617, 250, 66); }, { bul: 4, ton: 0.22, esik: 0.1, yum: 0.06, kenar: 0.35, tirtik: 0.8, hedef: 'W', yapi: true, kutu: [330, 555, 600, 695], cicek: [{ x: 420, y: 650, r: 16, ac: 0.4, koyu: 0.5 }] });
   // kasnakta soluk yeşil: solda, sağa doğru kâğıda açılır
-  lav((x) => { const g = x.createLinearGradient(336, 0, 790, 0); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.55, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0.4)'); x.fillStyle = g; x.fillRect(353, 562, 400, 44); x.fillRect(337, 616, 430, 70); }, { bul: 5, ton: 0.62, esik: 0.12, kenar: 0.16, tirtik: 0.7, hedef: 'G', kutu: [330, 550, 790, 700] });
+  // (iki katta ikişer yatay fırça bandı: solda küt başlar, sağda incelip kâğıda açılarak biter)
+  lav((x) => {
+    const g = x.createLinearGradient(336, 0, 790, 0); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.5, 'rgba(0,0,0,0.75)'); g.addColorStop(0.85, 'rgba(0,0,0,0.4)'); g.addColorStop(1, 'rgba(0,0,0,0.12)');
+    x.fillStyle = g;
+    bantYolu(x, 350, 772, 583, 46, 31.4, { sol: 0.01, uc: 0.035, dalga: 0.06, egim: 0.004 }); x.fill();
+    bantYolu(x, 356, 640, 579, 24, 35.2, { sol: 0.02, uc: 0.06, dalga: 0.12 }); x.fill();
+    bantYolu(x, 334, 782, 650, 70, 38.6, { sol: 0.01, uc: 0.03, dalga: 0.05, egim: -0.003 }); x.fill();
+    bantYolu(x, 340, 660, 662, 36, 42.9, { sol: 0.02, uc: 0.06, dalga: 0.12 }); x.fill();
+  }, { bul: 2.5, ton: 0.6, esik: 0.14, yum: 0.06, kenar: 0.28, tirtik: 0.8, hedef: 'G', kutu: [326, 548, 800, 700] });
 }
 
 // ================================================================== KUBBE

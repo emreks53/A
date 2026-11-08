@@ -9,14 +9,32 @@
   "tanim": "Renkli çizgi sanatı (colored line art) konuyu yine yalnızca çizgiyle anlatır: eşit kalınlıkta (monoline), yuvarlak uçlu konturlar ve iç ayrıntı çizgileri; ton, gölge ve doku yoktur. Fark, çizginin tek bir mürekkep rengi yerine her öğede kendi rengini almasıdır: uyumlu, sınırlı bir paletle kubbe yeşil, taş kiremit, çiçek mercan olur. Biçimlerin arkasına çizginin rengine eşlik eden çok açık, düz dolgular konabilir; çizgi her zaman baskın kalır. Ambalajda, davetiye ve kırtasiyede, çocuk kitaplarında, ikon setlerinde ve modern duvar baskılarında yaygındır.",
   "koken": "Kökü gravür, kalem çizimi ve teknik illüstrasyon geleneğine, renkli konturlarıyla Art Nouveau afişlerine ve Hergé'nin 'ligne claire' (açık çizgi) çizgi romanlarına dayanır. Bugünkü renkli monoline biçim vektör araçları ve ikon tasarımıyla yaygınlaştı: eşit kalınlık, yuvarlak uç ve birleşim, her öğede tek renkli çizgi ve pastel düz dolgu.",
   "ayirt_edici": [
-    "Bütün çizgiler aynı kalınlıkta (2,3 px), uçlar ve birleşimler yuvarlak; çizginin rengi öğeye göre değişir",
-    "Kubbe ve kasnak koyu yeşil çizgili, açık nane dolgulu; kubbenin ve kasnağın sol yanında biraz koyu, düz bir nane lekesi, kasnak pencereleri orta yeşil",
-    "Minare ve kaide kiremit rengi çizgili, kum dolgulu; zikzak bant ve pencere içleri bir ton koyu kum",
+    "Bütün çizgiler aynı kalınlıkta (2,6 px), uçlar ve birleşimler yuvarlak; çizginin rengi öğeye göre değişir; ton, gölge ve doku yok",
+    "Kubbe ve kasnak koyu yeşil çizgili, çok açık nane dolgulu; kubbede tepeye doğru sıklaşınca kesilen kaburga çizgileri, kasnak pencereleri bir ton koyu nane",
+    "Minare ve kaide kiremit rengi çizgili, uçuk kum dolgulu; kaidede pencerelerde kesilen taş sırası çizgileri ve şaşırtmalı derzler, zikzak bant ve pencere içleri bir ton koyu kum",
     "Alemler altın çizgili ve açık altın küreli, hilaller dolu altın; güneş altın ışınlı, açık sarı diskli",
-    "Gökte arduvaz mavisi çizgili, çok açık mavi dolgulu iki sade bulut ve kuyruk çizgileri",
+    "Gökte arduvaz mavisi çizgili, çok açık mavi dolgulu iki sade bulut ve kuyruk çizgileri; yer çizgisinde küçük adaçayı ot öbekleri",
     "Mercan-gül çizgili, uçuk pembe dolgulu çiçekler ve tomurcuklar, altın göbek ve halkalı ercikler; adaçayı yeşili çizgili, açık adaçayı dolgulu yapraklar"
   ],
-  "palet": ["#FAF6EE", "#1D6B48", "#A8DDBD", "#B8892A", "#B5613D", "#56789E", "#D65A68", "#5E8D5C"],
-  "kodla_cizim": "JavaScript ile üretilen satır içi SVG; bütün yollar stroke-width 2,3, stroke-linecap ve stroke-linejoin round. Her öğe çizilmeden önce o anki çizgi ve dolgu rengi bir palet tablosundan seçilir (koyu çizgi ile çok açık dolgu çiftleri: yeşil/nane, kiremit/kum, altın/açık altın, arduvaz/açık mavi, mercan/uçuk pembe, adaçayı/açık adaçayı). Gizli çizgiler ressam sırasıyla çözülür: arkadan öne çizilen her kapalı biçim kendi açık dolgusuyla doldurulur ve arkasındakini örter. Kubbenin gölge yanı, sol kenar ile tepeye doğru daralan bir meridyen arasında çizgisiz, düz bir nane lekesidir; kasnakta aynı leke dikdörtgendir. Kaburgalar SAHNE.kaburgalar'dan alınıp komşu kaburgaya 6 px'ten fazla yaklaştıkları yükseklikte kesilir; çiçekler taç uçlarında çentikli kutupsal bir eğriyle tek dış çizgi olarak (taç ayrımları, damarlar, ucu halkalı ercikler), yapraklar orta ve uca doğru kıvrılan yan damarlarıyla, bulutlar dairelerin üst zarfı olarak hesaplanır. Öndeki yapraklardan yalnız çiçeklerin arkasından çıkanlar seçilerek boşluk korunur.",
-  "etiketler": ["çizgi", "monoline", "renkli çizgi", "minimal", "vektör", "pastel", "zarif", "ikon"]
+  "palet": [
+    "#FAF6EE",
+    "#1D6B48",
+    "#C9EBD6",
+    "#B8892A",
+    "#B5613D",
+    "#56789E",
+    "#D65A68",
+    "#5E8D5C"
+  ],
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG; bütün yollar stroke-width 2,6, stroke-linecap ve stroke-linejoin round. Her öğe çizilmeden önce o anki çizgi ve dolgu rengi bir palet tablosundan seçilir (koyu çizgi ile çok açık dolgu çiftleri: yeşil/nane, kiremit/kum, altın/açık altın, arduvaz/açık mavi, mercan/uçuk pembe, adaçayı/açık adaçayı). Gizli çizgiler ressam sırasıyla çözülür: arkadan öne çizilen her kapalı biçim kendi açık dolgusuyla doldurulur ve arkasındakini örter. Gölge lekesi yoktur; biçim yalnız çizgiyle ve tek açık dolguyla kurulur. Kaidenin taş sıraları pencere aralıklarında kesilen yatay çizgiler ve şaşırtmalı dikey derzlerdir. Kaburgalar SAHNE.kaburgalar'dan alınıp komşu kaburgaya 6 px'ten fazla yaklaştıkları yükseklikte kesilir; çiçekler taç uçlarında çentikli kutupsal bir eğriyle tek dış çizgi olarak (taç ayrımları, damarlar, ucu halkalı ercikler), yapraklar orta ve uca doğru kıvrılan yan damarlarıyla, bulutlar dairelerin üst zarfı olarak hesaplanır. Öndeki yapraklardan yalnız çiçeklerin arkasından çıkanlar seçilerek boşluk korunur.",
+  "etiketler": [
+    "çizgi",
+    "monoline",
+    "renkli çizgi",
+    "minimal",
+    "vektör",
+    "pastel",
+    "zarif",
+    "ikon"
+  ]
 }

@@ -302,7 +302,13 @@
     }
     for (let i = 0; i < N2; i++) H[i] = sstep(0.14, 0.88, (H[i] - mn) / (mx - mn));
   }
-  const KAGIT = [106, 52, 34];
+  const KAGIT = [150, 98, 60]; // sıcak, koyu ten rengi (taba) pastel kartonu
+  // kenar payı: vuruşlar kartonun kenarına doğru seyrelir, ufalanarak biter; çıplak karton görünür
+  const KM = new Float32Array(N);
+  for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+    const d = Math.min(x, W - x, y, W - y) + (fbm(nD, x / 38, y / 38, 3) - 0.5) * 34 + (nE(x / 7, y / 7) - 0.5) * 8;
+    KM[y * W + x] = sstep(14, 34, d);
+  }
   const CR = new Float32Array(N2), CG = new Float32Array(N2), CB = new Float32Array(N2), T = new Float32Array(N2);
   for (let i = 0; i < N2; i++) { const k = 0.86 + 0.22 * H[i]; CR[i] = KAGIT[0] * k; CG[i] = KAGIT[1] * k; CB[i] = KAGIT[2] * k; }
 
@@ -321,7 +327,7 @@
       const j = (yy * w + xx) * 4, a = v[j + 3];
       if (!a) continue;
       const i = (Y1 + yy) * W2 + X1 + xx;
-      const P = Math.min(1, (a / 255) * guc);
+      const P = Math.min(1, (a / 255) * guc * KM[((i >> 12) << 10) + ((i & 2047) >> 1)]);
       const hh = Math.max(H[i], Math.min(1, T[i] * 0.45) * 0.72);
       const dep = sstep(-ys, ys, hh - (1 - P)) * ort;
       if (dep < 0.004) continue;
@@ -375,14 +381,14 @@
   const gunesUzak = (x, y) => Math.hypot(x - 880, y - 140);
   const bulutlar = [[170, 250, 1.0], [505, 150, 0.8], [770, 330, 1.05], [930, 470, 0.7], [92, 470, 0.7]];
   const bulutta = (x, y) => { let m = 0; for (const [bx, by, s] of bulutlar) { const d = Math.hypot((x - bx) / (118 * s), (y - by) / (y < by ? 34 * s : 22 * s)) + (nD(x / 25, y / 25) - 0.5) * 0.5; m = Math.max(m, sstep(1, 0.5, d)); } return m; };
-  const gokAci = (x, y) => { const d = gunesUzak(x, y); const akis = -0.12 + (nE(x / 240, y / 200) - 0.5) * 0.6; if (d < 160) return Math.atan2(y - 140, x - 880) + Math.PI / 2; if (d < 230) { const t = (d - 160) / 70; return lerp(Math.atan2(y - 140, x - 880) + Math.PI / 2, akis, t); } return akis; };
+  const gokAci = (x, y) => { const d = gunesUzak(x, y); const akis = -0.12 + (nE(x / 240, y / 200) - 0.5) * 0.6; if (d < 120) return Math.atan2(y - 140, x - 880) + Math.PI / 2; if (d < 175) { const t = (d - 120) / 55; return lerp(Math.atan2(y - 140, x - 880) + Math.PI / 2, akis, t); } return akis; };
   const gokIc = (x, y) => y < 806;
 
   // ================================================================ 1) ALT KAT (parlak, sonra kazınarak açığa çıkacak)
   katman((x) => {
-    alanDoldur(x, { bx: [0, 0, W, 806], ic: gokIc, aralik: 16, boy: 50, gen: 18, aci: gokAci, p: 0.72, renk: (px, py) => {
+    alanDoldur(x, { bx: [0, 0, W, 806], ic: gokIc, aralik: 16, boy: 50, gen: 18, aci: gokAci, p: 0.58, renk: (px, py) => {
       const d = gunesUzak(px, py);
-      if (d < 260) return sec([['#FFD84A', 3], ['#FF9A3A', 2], ['#FFFFFF', 1]]);
+      if (d < 125) return sec([['#FFD84A', 3], ['#F6A05A', 1]]);
       if (py > 600) return sec([['#FF8A5A', 2], ['#F4C04A', 1], ['#D9479A', 1]]);
       return sec([['#D23C94', 3], ['#8E44C8', 2], ['#F07A3A', 1]]);
     } });
@@ -423,11 +429,11 @@
   const gn = (x, y, s) => (fbm(nE, x / s, y / s, 3) - 0.5);
   // gök
   katman((x) => {
-    alanDoldur(x, { bx: [0, 0, W, 806], ic: gokIc, aralik: 9.5, boy: 80, gen: 14, aci: gokAci, aciJ: 0.16, p: 0.8, egri: 0.16, renk: (px, py) => {
+    alanDoldur(x, { bx: [0, 0, W, 806], ic: gokIc, aralik: 10.5, boy: 80, gen: 14, aci: gokAci, aciJ: 0.16, p: 0.74, egri: 0.16, renk: (px, py) => {
       const d = gunesUzak(px, py), bu = bulutta(px, py);
-      if (d < 62) return rampaSec([[0, '#FFFFFF'], [1, '#FFF6C0']], r());
-      if (d < 185 && r() < sstep(185, 135, d)) return rampaSec([[0, '#FFF3A8'], [0.5, '#FFE060'], [0.85, '#FFC03A'], [1, '#FFA04A']], (d - 62) / 123 + gn(px, py, 60) * 0.2);
-      if (d < 215 && r() < 0.3) return rampaSec([[0, '#FFB070'], [1, '#FF9A6A']], r());
+      if (d < 56) return rampaSec([[0, '#FFF8DC'], [1, '#FFEFA8']], r());
+      if (d < 108 && r() < sstep(108, 80, d)) return rampaSec([[0, '#FFEFA0'], [0.55, '#FBDC6A'], [1, '#F2C25A']], (d - 56) / 52 + gn(px, py, 60) * 0.2);
+      if (d < 130 && r() < 0.16) return rampaSec([[0, '#F6C890'], [1, '#EBB894']], r());
       if (bu > 0.3 && r() < bu * 1.05) return rampaSec([[0, '#FFFFFF'], [0.5, '#EEF0FF'], [1, '#B4A6E6']], r() * 0.35 + (bu < 0.7 ? 0.55 : 0.05));
       const t = py / 800 + gn(px, py, 160) * 0.22;
       if (r() < 0.3) return rampaSec([[0, '#3A2CA8'], [0.22, '#2A3CC8'], [0.4, '#2A5ED0'], [0.56, '#2A86D0'], [0.7, '#46A6D8'], [0.84, '#84C6EE'], [0.95, '#C8E2F6'], [1.06, '#F4C8B8']], t + (r() - 0.5) * 0.12);
@@ -521,7 +527,7 @@
   katman((x) => {
     alanDoldur(x, { bx: [0, 0, W, 806], ic: gokIc, aralik: 26, boy: 70, gen: 18, aci: gokAci, aciJ: 0.3, p: 0.4, renk: (px, py) => {
       const d = gunesUzak(px, py);
-      if (d < 160) return r() < 0.5 ? rampaSec([[0, '#FFFFFF'], [1, '#FFF2A0']], r()) : null;
+      if (d < 110) return r() < 0.35 ? rampaSec([[0, '#FFF6D8'], [1, '#FFEC9A']], r()) : null;
       if (py < 420 && d > 260) return r() < 0.3 ? rampaSec([[0, '#2E62D8'], [1, '#3C86E0']], r()) : null;
       return null;
     } });
@@ -571,7 +577,7 @@
       smx.strokeStyle = 'rgba(255,255,255,0.8)'; smx.lineWidth = w * 1.6; smx.beginPath(); pts.forEach(([px, py], i) => (i ? smx.lineTo(px, py) : smx.moveTo(px, py))); smx.stroke();
     };
     // gök: güneş halesi çevresinde dönen ezmeler, sol üstte yatay
-    for (let k = 0; k < 120; k++) { const a0 = r() * Math.PI * 2, rr = 70 + r() * 140, pts = []; for (let q = 0; q <= 6; q++) { const a = a0 + q * 0.06; pts.push([880 + Math.cos(a) * rr, 140 + Math.sin(a) * rr]); } if (pts.every(([px, py]) => py < 790 && bolge(px, py) === 'gok')) ez(pts, 11); }
+    for (let k = 0; k < 70; k++) { const a0 = r() * Math.PI * 2, rr = 60 + r() * 60, pts = []; for (let q = 0; q <= 6; q++) { const a = a0 + q * 0.06; pts.push([880 + Math.cos(a) * rr, 140 + Math.sin(a) * rr]); } if (pts.every(([px, py]) => py < 790 && bolge(px, py) === 'gok')) ez(pts, 11); }
     for (let k = 0; k < 260; k++) { const px = 10 + r() * 1000, py = 10 + r() * 780, a = gokAci(px, py) + (r() - 0.5) * 0.3, L = 30 + r() * 50; const pts = []; for (let q = 0; q <= 5; q++) pts.push([px + Math.cos(a) * L * q / 5, py + Math.sin(a) * L * q / 5]); if (pts.every(([qx, qy]) => bolge(qx, qy) === 'gok' && gunesUzak(qx, qy) > 80)) ez(pts, 10); }
     // kubbe: gölgeden ışığa geçişte meridyen boyunca
     for (let k = 0; k < 110; k++) { const u = -0.95 + r() * 1.8, y0 = 330 + r() * 200, L = 40 + r() * 40, pts = []; for (let q = 0; q <= 5; q++) { const yy = y0 + L * q / 5; if (yy > 552) break; pts.push([560 + u * kubbeRy(yy), yy]); } if (pts.length > 2) ez(pts, 8); }
@@ -616,7 +622,7 @@
     // kubbe kaburgaları
     for (const kb of SAHNE.kaburgalar(16, 60)) { const pts = kb.noktalar.filter((p) => p[1] > 306 && p[1] < 552); for (let s = 0; s < pts.length - 6; s += 6 + Math.floor(r() * 4)) kaz(pts.slice(s, s + 10).map(([a, b]) => [a + (r() - 0.5) * 0.6, b]), 1.7, 0.95); }
     // güneşin çevresinde halkalar
-    for (let q = 0; q < 4; q++) { const rr = 74 + q * 22 + r() * 5, a0 = 1.2 + r() * 0.5, a1 = a0 + 1.4 + r() * 1.6, pts = []; for (let a = a0; a <= a1; a += 0.04) pts.push([880 + Math.cos(a) * rr, 140 + Math.sin(a) * rr]); kaz(pts, 1.6, 0.9); }
+    for (let q = 0; q < 4; q++) { const rr = 62 + q * 13 + r() * 4, a0 = 1.2 + r() * 0.5, a1 = a0 + 1.4 + r() * 1.6, pts = []; for (let a = a0; a <= a1; a += 0.04) pts.push([880 + Math.cos(a) * rr, 140 + Math.sin(a) * rr]); kaz(pts, 1.6, 0.9); }
     // yaprak damarları ve yan damarlar
     B.yapraklar.forEach((yp) => { const [a, b] = SAHNE.yaprakDamari(yp); kaz([a, [lerp(a[0], b[0], 0.5), lerp(a[1], b[1], 0.5)], b], 1.6, 0.95); if (yp.uzunluk > 45) for (let t = 0.3; t < 0.85; t += 0.18) for (const s of [-1, 1]) { const sx = lerp(a[0], b[0], t), sy = lerp(a[1], b[1], t), aa = yp.aci + s * 0.7, L = yp.uzunluk * yp.genislik * 0.4; kaz([[sx, sy], [sx + Math.cos(aa) * L, sy + Math.sin(aa) * L]], 1.2, 0.85); } });
     // taç yapraklarında çizgiler

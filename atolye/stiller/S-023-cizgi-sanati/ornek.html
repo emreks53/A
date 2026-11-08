@@ -21,12 +21,12 @@
   const r = S.rng(23);
   const KAGIT = '#FAF6EE';
   const MUREKKEP = '#1F3B34';
-  const K = 2.3; // tek çizgi kalınlığı
+  const K = 2.6; // tek çizgi kalınlığı
   // palet: çizgi (koyu) ve dolgu (çok açık) çiftleri
   const R = {
-    yesil: '#1D6B48', nane: '#A8DDBD', naneGolge: '#93D2AE', yesilPencere: '#4F9C77',
-    altin: '#B8892A', altinDolgu: '#F3DE9E', hilal: '#D2A23A',
-    kiremit: '#B5613D', kum: '#F2E2C7', kumKoyu: '#E9CDAA',
+    yesil: '#1D6B48', nane: '#C9EBD6', yesilPencere: '#A3D9BA',
+    altin: '#B8892A', altinDolgu: '#F6E6B4', hilal: '#D2A23A',
+    kiremit: '#B5613D', kum: '#F6EBDA', kumKoyu: '#EEDCC0',
     arduvaz: '#56789E', gokDolgu: '#E4EDF6', gunes: '#D3962A', gunesDolgu: '#FBE6A2',
     mercan: '#D65A68', pembe: '#FADBD8', tomurcuk: '#F5C9CC', gobek: '#F2CC6E',
     adacayi: '#5E8D5C', adacayiDolgu: '#D9E8CC', toprak: '#B9875C',
@@ -146,6 +146,21 @@
   ort(dik(KD.x1, KD.y1, KD.x2, KD.y2));
   ort(dik(KD.kornis.x1, KD.kornis.y1, KD.kornis.x2, KD.kornis.y2));
   cizgi(KD.x1, KD.y1 + 8, KD.x2, KD.y1 + 8);
+  // taş sıraları: pencerelerde kesilen iki yatay derz ve aralarında şaşırtmalı dikey derzler
+  {
+    const bos = KD.pencereler.map((p) => [p.x - p.w / 2 - 10, p.x + p.w / 2 + 10]).sort((a, b) => a[0] - b[0]);
+    const serbest = (x) => !bos.some(([a, b]) => x > a && x < b);
+    const sira = [KD.y1 + 8, 744, 772, KD.y2];
+    for (const y of [744, 772]) {
+      let x0 = KD.x1 + 14;
+      for (const [a, b] of bos.concat([[KD.x2 - 14, KD.x2]])) { if (a - x0 > 10) cizgi(x0, y, a, y); x0 = Math.max(x0, b); }
+    }
+    for (let j = 0; j < 3; j++) {
+      for (let x = KD.x1 + 40 + (j % 2) * 34; x < KD.x2 - 20; x += 68) {
+        if (serbest(x - 4) && serbest(x + 4)) cizgi(x, sira[j] + 4, x, sira[j + 1] - 4);
+      }
+    }
+  }
   for (const p of KD.pencereler) {
     renk(R.kiremit, R.kum);
     ort(S.kemerYolu(p.x, p.y, p.w, p.h));
@@ -158,8 +173,6 @@
     const q = S.kasnak[k];
     renk(R.yesil, R.nane);
     ort(dik(q.x1, q.y1, q.x2, q.y2));
-    // gölge yanı: düz, biraz koyu bir nane lekesi (çizginin içinde)
-    leke(dik(q.x1 + K / 2, q.y1 + K / 2, q.x1 + (q.x2 - q.x1) * 0.3, q.y2 - K / 2), R.naneGolge);
     cizgi(q.x1, q.y2 - 7, q.x2, q.y2 - 7);
     renk(R.yesil, R.yesilPencere);
     for (const p of S.kasnakPencereleri(k)) ort(S.kemerYolu(p.x, p.y, p.w, p.h));
@@ -169,12 +182,6 @@
   renk(R.yesil, R.nane);
   ort(S.kubbeYolu);
   const prof = S.kubbeProfili(80);
-  {
-    // gölge yanı: sol kenarla sola eğik bir meridyen arasında düz, biraz koyu nane lekesi
-    const ic = prof.map((q) => [560 - q.r * 0.52, q.y]).filter((q) => q[1] > 306);
-    const dis = prof.map((q) => [560 - q.r + K * 0.5, q.y]).filter((q) => q[1] > 306).reverse();
-    leke(yumusak(ic) + ' L' + dis.map((q) => `${f(q[0])},${f(q[1])}`).join(' L') + ' Z', R.naneGolge);
-  }
   const kbl = S.kaburgalar(16, 80).filter((kb) => Math.abs(kb.u) < 0.95);
   const us = [-1, ...kbl.map((kb) => kb.u), 1];
   kbl.forEach((kb, i) => {
@@ -196,6 +203,13 @@
   // ------------------------------------------------------------ yer çizgisi
   renk(R.toprak);
   cizgi(0, 800, 1024, 800);
+  // yer çizgisinde küçük ot öbekleri
+  renk(R.adacayi);
+  for (const [x, y] of [[44, 800], [196, 800], [410, 800], [590, 800], [706, 800], [858, 800], [1000, 800]]) {
+    cz(`M${x - 7},${y - 9} Q${x - 3},${y - 4} ${x},${y}`);
+    cz(`M${x + 1},${y - 13} L${x},${y}`);
+    cz(`M${x + 8},${y - 8} Q${x + 3},${y - 4} ${x},${y}`);
+  }
 
   // ------------------------------------------------------------ bitkiler
   const B = S.bitki;
