@@ -153,7 +153,7 @@
     bulut: ['#C9D7E4', '#EAF0F6', '#FFFFFF'],
     sari: ['#E9A62C', '#F6C843', '#FCE184'],
     turuncu: ['#E07E2A', '#F0A23C', '#F8C76A'],
-    tepeU: ['#A8C8B4', '#C5DCC8', '#DDEBDA'],
+    tepeU: ['#9CC2AC', '#BFD9C3', '#DDEDDA'],
     tepeY: ['#7FB07A', '#A3CB92', '#C7E2B1'],
     kum: ['#D8BE8A', '#EAD5A8', '#F6E9C9'],
     cimen: ['#4F9A4C', '#72B65F', '#9ED184'],
@@ -173,21 +173,23 @@
     // gök: yumuşak akordeon katlı büyük kâğıt; her panel hafifçe farklı açıda durur
     ana.fillStyle = PAL.gok[1];
     ana.fillRect(0, 0, 1024, 1024);
-    const katlar = [0, 190, 372, 560, 1024];
-    const egim = [-0.16, 0.12, -0.1, 0.08];
+    // akordeon: yedi yatay panel dönüşümlü yukarı (ışığa) ve aşağı bakar; her panel içinde hafif eğim
+    const katlar = [0, 96, 192, 288, 384, 480, 576, 672, 1024];
+    const egim = [-0.17, 0.17, -0.16, 0.16, -0.15, 0.15, -0.14, 0.14];
     for (let i = 0; i < katlar.length - 1; i++) {
       const y1 = katlar[i], y2 = katlar[i + 1];
       const gr = ana.createLinearGradient(0, y1, 0, y2);
-      const t = 0.5 + egim[i] * 0.9 + (0.06 * (3 - i)) / 3 - 0.02;
-      gr.addColorStop(0, ton(PAL.gok, t - egim[i] * 0.35));
-      gr.addColorStop(1, ton(PAL.gok, t + egim[i] * 0.35));
+      const t = 0.5 + egim[i] * 0.95 + (0.08 * (7 - i)) / 7 - 0.04;
+      gr.addColorStop(0, ton(PAL.gok, t - egim[i] * 0.3));
+      gr.addColorStop(1, ton(PAL.gok, t + egim[i] * 0.3));
       ana.fillStyle = gr;
       ana.fillRect(0, y1, 1024, y2 - y1);
     }
     for (let i = 1; i < katlar.length - 1; i++) {
       ana.save();
       ana.lineWidth = 1.4;
-      ana.strokeStyle = i % 2 ? 'rgba(255,255,255,0.35)' : 'rgba(40,60,80,0.07)';
+      // panel üstte ışıklıysa kat dağdır (ince ışık), değilse vadi (ince gölge)
+      ana.strokeStyle = egim[i] > 0 ? 'rgba(255,255,255,0.5)' : 'rgba(40,60,80,0.1)';
       ana.beginPath(); ana.moveTo(0, katlar[i]); ana.lineTo(1024, katlar[i]); ana.stroke();
       ana.restore();
     }
@@ -280,9 +282,13 @@
     for (const [x, y, gs] of tepeler) {
       const sol = [x - gs, taban], sag = [x + gs * 1.1, taban], tp = [x, y];
       const orta = [x + gs * 0.12, taban];
-      yuz(g, [sol, tp, orta], pal, tN([-0.55, -0.3, 0.75], 0.25, 0.8));
-      yuz(g, [orta, tp, sag], pal, tN([0.55, -0.35, 0.75], 0.25, 0.8));
-      kat(g, tp, orta, 'dag', 0.9);
+      // her yamaç iki yüzlü: sırttan inen ikinci bir vadi/dağ katıyla pilili
+      const sol2 = [x - gs * 0.5, taban], sag2 = [x + gs * 0.62, taban];
+      yuz(g, [sol, tp, sol2], pal, tN([-0.62, -0.25, 0.72], 0.22, 0.82));
+      yuz(g, [sol2, tp, orta], pal, tN([-0.32, -0.38, 0.85], 0.22, 0.82));
+      yuz(g, [orta, tp, sag2], pal, tN([0.62, -0.4, 0.7], 0.22, 0.82));
+      yuz(g, [sag2, tp, sag], pal, tN([0.3, -0.3, 0.88], 0.22, 0.82));
+      kat(g, tp, orta, 'dag', 0.9); kat(g, tp, sol2, 'vadi', 0.7); kat(g, tp, sag2, 'vadi', 0.7);
     }
   }
   katman((g) => daglar(g, [[60, 612, 120], [205, 640, 110], [340, 600, 150], [700, 606, 140], [860, 622, 120], [1000, 600, 130]], 820, PAL.tepeU), { g: { x: -5, y: 7, b: 12, a: 0.2 } });
@@ -466,9 +472,11 @@
   katman((g) => {
     const T = 7, N = 16;
     const prof = SAHNE.kubbeProfili(T);
+    // kat halkaları dönüşümlü hafif içe basılır: dilim pilisiyle birlikte basamaklı, yüzlü bir kubbe
+    const kademe = (i) => (i === 0 || i === T ? 1 : i % 2 ? 0.984 : 1.006);
     const P3 = (fi, i, kabar) => {
       const q = prof[i];
-      const r = q.r * kabar;
+      const r = q.r * kabar * kademe(i);
       return [560 + r * Math.sin(fi), q.y, r * Math.cos(fi)];
     };
     const norm = (a, b, c) => {
@@ -484,14 +492,15 @@
     for (let k = 0; k < N; k++) {
       const f0 = -Math.PI / 2 + (Math.PI * k) / N, f1 = f0 + Math.PI / N, fm = (f0 + f1) / 2;
       for (let i = 0; i < T; i++) {
-        const v0a = P3(f0, i, 0.972), v0b = P3(f0, i + 1, 0.972);
-        const ma = P3(fm, i, 1.018), mb = P3(fm, i + 1, 1.018);
-        const v1a = P3(f1, i, 0.972), v1b = P3(f1, i + 1, 0.972);
+        const v0a = P3(f0, i, 0.952), v0b = P3(f0, i + 1, 0.952);
+        const ma = P3(fm, i, 1.026), mb = P3(fm, i + 1, 1.026);
+        const v1a = P3(f1, i, 0.952), v1b = P3(f1, i + 1, 0.952);
         const nl = norm(v0a, ma, v0b), nr = norm(ma, v1a, mb);
         const p2 = (p) => [p[0], p[1]];
         const yukari = i / T; // tepeye doğru yüzler yukarı bakar
-        yuz(g, [p2(v0a), p2(ma), p2(mb), p2(v0b)], PAL.yesil, tN(nl, 0.12, 1.0) + yukari * 0.06, 0.035);
-        yuz(g, [p2(ma), p2(v1a), p2(v1b), p2(mb)], PAL.yesil, tN(nr, 0.12, 1.0) + yukari * 0.06, 0.035);
+        const kd = i % 2 ? -0.045 : 0.045; // basamak: bir halka yukarı (ışığa), bir halka aşağı bakar
+        yuz(g, [p2(v0a), p2(ma), p2(mb), p2(v0b)], PAL.yesil, tN(nl, 0.08, 1.08) + yukari * 0.05 + kd, 0.035);
+        yuz(g, [p2(ma), p2(v1a), p2(v1b), p2(mb)], PAL.yesil, tN(nr, 0.08, 1.08) + yukari * 0.05 + kd, 0.035);
         if (i === 0) { daglar.push([]); vadiler.push([]); }
         daglar[k].push(p2(ma)); if (i === T - 1) daglar[k].push(p2(mb));
         vadiler[k].push(p2(v0a)); if (i === T - 1) vadiler[k].push(p2(v0b));
@@ -505,10 +514,10 @@
       for (let k = 0; k <= N * 2; k++) {
         const fi = -Math.PI / 2 + (Math.PI * k) / (N * 2);
         const q = prof[i];
-        const r = q.r * (k % 2 ? 1.018 : 0.972);
+        const r = q.r * (k % 2 ? 1.026 : 0.952) * kademe(i);
         pts.push([560 + r * Math.sin(fi), q.y]);
       }
-      kirik(g, pts, 'vadi', 0.55);
+      kirik(g, pts, i % 2 ? 'vadi' : 'dag', 0.75);
     }
   }, { g: { x: -7, y: 10, b: 16, a: 0.32 } });
   // kubbe tabanında katlı yaka şeridi
@@ -525,7 +534,19 @@
 
   // ------------------------------------------------------------ 16–17: zemin — pilili kum ve çimen
   katman((g) => {
-    yuz(g, [[0, 796], [1024, 796], [1024, 852], [0, 852]], PAL.kum, tN([0, -0.6, 0.8]) + 0.05, 0.05);
+    // kum: üçgen pilili (kıvrık) şerit — yüzler dönüşümlü sağa ve sola bakar
+    const w = 64, y1 = 796, y2 = 852;
+    for (let i = -1; i * w / 2 < 1024 + w; i++) {
+      const x = i * w / 2, yukari = i % 2 === 0;
+      const tri = yukari ? [[x, y2], [x + w / 2, y1], [x + w, y2]] : [[x, y1], [x + w / 2, y2], [x + w, y1]];
+      const half1 = yukari ? [tri[0], tri[1], [x + w / 2, y2]] : [tri[0], tri[1], [x + w / 2, y1]];
+      void half1;
+      yuz(g, tri, PAL.kum, tN([yukari ? 0.42 : -0.42, yukari ? -0.4 : 0.1, 0.82], 0.25, 0.8), 0.03);
+    }
+    for (let i = 0; i * w / 2 <= 1024 + w; i++) {
+      const x = i * w / 2;
+      kat(g, [x, i % 2 ? y1 : y2], [x + w / 2, i % 2 ? y2 : y1], i % 2 ? 'vadi' : 'dag', 0.8);
+    }
     yuz(g, [[0, 852], [1024, 852], [1024, 862], [0, 862]], PAL.kum, tN([0, 0.7, 0.6]), 0.02);
     yuz(g, [[0, 862], [1024, 862], [1024, 1024], [0, 1024]], PAL.kum, tN([0, -0.4, 0.9]), 0.05);
     kat(g, [0, 852], [1024, 852], 'dag', 1); kat(g, [0, 862], [1024, 862], 'vadi', 1);

@@ -16,25 +16,7 @@
     "Airbrush ile boyanmış katmanlı güller (beyaz, allık pembesi, şeftali): dipte koyulaşan taç yaprakları, ışıklı kıvrık kenarlar, sarmal iç; yan dallarda net, önde hafifçe yumuşak odakta",
     "Bütün resmi saran yumuşak parıltı (Orton etkisi) ve önde soluk pastel bokeh diskleri"
   ],
-  "palet": [
-    "#91BCF2",
-    "#DDD7F1",
-    "#F7DEE5",
-    "#53CE90",
-    "#24955C",
-    "#FDF2EF",
-    "#E9ADC3",
-    "#A5D0B9"
-  ],
+  "palet": ["#91BCF2", "#DDD7F1", "#F7DEE5", "#53CE90", "#24955C", "#FDF2EF", "#E9ADC3", "#A5D0B9"],
   "kodla_cizim": "Gök dört duraklı pastel degrade ve geniş radyal güneş ışıltısıyla boyanır. Bulutlar G.kumulus puflarından kurulan yükseklik alanından (her puf bir yarım küre) yüzey normali ve ortam gölgesi hesaplanarak yumuşak eşikle gölgelenir (ışıkta sıcak beyaz, gölgede lila), sonra yaklaşık 2,6 piksel bulanıklaştırılır; ışık huzmeleri bulanık üçgenler olarak 'screen' ile eklenir. Mimari ayrı bir 2048'lik katmanda, geniş sarmalı yayınık ışıkla (gölgede lavanta, ışıkta şeftali çarpan; yeşilde taştan daha derin modelleme) silindir normallerinden degradelerle; kubbe SAHNE.kubbeProfili normaliyle piksel piksel, geniş kadife parlama, küçük net vurgu, sırt ışığı, oluk gölgesi ve pembe-lila Fresnel yansımasıyla boyanır; minare bölgesi bu katmandan ayrılıp hafif pus ve bulanıklık alır. Güller iki halka radyal degradeli taç yaprağı (ışığa bakan yapraklar açık, ters yöndekiler koyu, kenarlarda ince açık kıvrım) ve altın oranlı açıyla dizilip içe doğru küçülen hilal yapraklardan oluşur. Yan dallar net çizilir; ön plan üç katmana ayrılır: yapraklar 1,8, orta sıra güller 1,1, en öndeki güller 2,6 piksel bulanıklaştırılır. En sonda yarım çözünürlüklü bulanık kopya hafifçe 'screen' ve 'soft-light' ile bindirilir (Orton parıltısı), pastel bokeh diskleri eklenir ve bantlaşmayı önlemek için çok ince ton titreşimi uygulanır.",
-  "etiketler": [
-    "yumuşak fırça",
-    "airbrush",
-    "pastel",
-    "rüya gibi",
-    "yumuşak odak",
-    "bokeh",
-    "kadife degrade",
-    "dijital resim"
-  ]
+  "etiketler": ["yumuşak fırça", "airbrush", "pastel", "rüya gibi", "yumuşak odak", "bokeh", "kadife degrade", "dijital resim"]
 }

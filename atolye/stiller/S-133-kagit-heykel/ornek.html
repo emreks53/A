@@ -540,7 +540,7 @@
     const pr = SAHNE.kubbeProfili(300).map((q) => [560 + q.r, q.y]);
     return profilTablosu(pr, 560);
   })();
-  const kubbeImg = donel({ cx: 560, rmax: 201, y1: 299, y2: 556, r: KUBBE, dilim: 16, bombe: 7.2, amb: 0.02, kat: 1.04, pal: PAL.yesil, parla: 0.2, us: 14, kenarIsik: 1.6 });
+  const kubbeImg = donel({ cx: 560, rmax: 201, y1: 299, y2: 556, r: KUBBE, dilim: 16, bombe: 7.2, amb: 0.02, kat: 1.04, pal: PAL.yesil, parla: 0.13, us: 11, kenarIsik: 1.6 });
   katman((g) => g.drawImage(kubbeImg.c, kubbeImg.x, kubbeImg.y, kubbeImg.w, kubbeImg.h), { g: { x: -9, y: 13, b: 22, a: 0.2 } });
   katman((g) => alem(g, SAHNE.alemParcalari(560, 300, 1)), { g: { x: -5, y: 7, b: 11, a: 0.18 }, kenar: 0.8 });
 

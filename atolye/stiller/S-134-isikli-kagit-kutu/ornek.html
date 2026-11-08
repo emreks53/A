@@ -222,9 +222,9 @@
   function gunesIsinlari() {
     // ince uzun lazer yarıkları: uzun, orta ve kısa ışınlar dönüşümlü
     const p = new Path2D();
-    for (let i = 0; i < 32; i++) {
-      const a = (i * TAU) / 32 + 0.1;
-      const L = i % 4 === 0 ? 190 : i % 2 === 0 ? 132 : 78, W = i % 4 === 0 ? 5.6 : i % 2 === 0 ? 4.6 : 3.6;
+    for (let i = 0; i < 24; i++) {
+      const a = (i * TAU) / 24 + 0.13;
+      const L = i % 3 === 0 ? 112 : i % 3 === 1 ? 72 : 50, W = i % 3 === 0 ? 5 : i % 3 === 1 ? 4.2 : 3.6;
       damla(p, GX + Math.cos(a) * 80, GY + Math.sin(a) * 80, L, W, a);
     }
     return p;
@@ -237,7 +237,7 @@
   }
   function gunesDelikleri(g) { delik(g, SAHNE.daireYolu(GX, GY, 60)); delik(g, gunesIsinlari()); delik(g, gunesNoktalari()); }
   parla(gunesIsinlari(), 0, '#FFF8E4'); parla(gunesNoktalari(), 0, '#FFF8E4');
-  parla(SAHNE.daireYolu(GX, GY, 60), 0, '#FFE9A8', 0.9);
+  parla(SAHNE.daireYolu(GX, GY, 60), 0, '#FFD878', 0.28);
   katman('gok', (g) => {
     g.fillRect(0, 0, 1024, 1024);
     gunesDelikleri(g);
@@ -271,8 +271,8 @@
   // bulutlar: ince beyaz ipek kâğıt (delikten biraz taşar: kenarda iki kat → yumuşak çizgi)
   katman('gok', (g) => { for (const [x, y, s] of BULUTLAR) g.fill(bulutYolu(x, y, s, 5)); }, '#FEFBF5', { hale: { x: -3, y: 4, b: 8, a: 0.08 }, kenar: 0.6, isilti: 0.5, isiltiB: 8 });
   // güneş: sarı ipek kâğıt disk
-  katman('gok', (g) => { g.fill(P(SAHNE.daireYolu(GX, GY, 64))); }, '#FFE6A0', { hale: { x: -3, y: 4, b: 8, a: 0.1 }, kenar: 0.6, isilti: 0.6, isiltiB: 12 });
-  katman('gok', (g) => { g.fill(P(SAHNE.daireYolu(GX, GY, 30))); }, '#FFEDB8', { hale: { a: 0 }, kenar: 0.4 });
+  katman('gok', (g) => { g.fill(P(SAHNE.daireYolu(GX, GY, 64))); }, '#FFDD8A', { hale: { x: -3, y: 4, b: 8, a: 0.1 }, kenar: 0.6, isilti: 0.6, isiltiB: 12 });
+  katman('gok', (g) => { g.fill(P(SAHNE.daireYolu(GX, GY, 36))); }, '#FFE9AE', { hale: { a: 0 }, kenar: 0.4 });
 
   // ------------------------------------------------------------ 3–4: tepeler
   function tepe(y0, gen, faz) {
@@ -314,9 +314,9 @@
     for (const w of SAHNE.minarePencereleri) g.fill(P(dik(w.x - w.w / 2 - 2, w.y - 2, w.x + w.w / 2 + 2, w.y + w.h + 2)));
     for (const w of K.pencereler) g.fill(P(dik(w.x - w.w / 2 - 2, w.y - 2, w.x + w.w / 2 + 2, w.y + w.h + 2)));
     for (const k of [0, 1]) for (const p of SAHNE.kasnakPencereleri(k)) g.fill(P(dik(p.x - p.w / 2 - 1.5, p.y - 1.5, p.x + p.w / 2 + 1.5, p.y + p.h + 1.5)));
-  }, '#FFE3A0', { hale: { a: 0 }, kenar: 0 });
+  }, '#FFD98A', { hale: { a: 0 }, kenar: 0 });
   for (const d of Yl.minarePencereleri) parla(d, 0, '#FFD780', 0.95);
-  for (const d of Yl.kaidePencereleri) parla(d, 0, '#FFD780', 0.95);
+  for (const d of Yl.kaidePencereleri) parla(d, 0, '#FFCF70', 1);
   for (const d of Yl.kasnakPencereleri) parla(d, 0, '#FFD780', 0.95);
   katman('bina', (g) => {
     for (const d of Yl.minare) g.fill(P(d));
@@ -392,13 +392,13 @@
     for (let x = 0; x <= 1024; x += 4) p.lineTo(x, 797 + 6 * Math.sin(x / 88 + 0.4) + 3 * Math.sin(x / 29));
     p.lineTo(1024, 1024); p.closePath();
     g.fill(p);
-  }, '#F7E3BC', { hale: { x: -4, y: 6, b: 12, a: 0.14 } });
+  }, '#F8E8C8', { hale: { x: -4, y: 6, b: 12, a: 0.14 } });
   katman('zemin', (g) => {
     const p = new Path2D(); p.moveTo(0, 1024);
     for (let x = 0; x <= 1024; x += 4) p.lineTo(x, 904 - 18 * Math.sin(x / 150 + 1.2) - 7 * Math.sin(x / 47 + 0.3));
     p.lineTo(1024, 1024); p.closePath();
     g.fill(p);
-  }, '#F1D9AC', { hale: { x: -4, y: 6, b: 12, a: 0.12 } });
+  }, '#F9EDD4', { hale: { x: -4, y: 6, b: 12, a: 0.12 } });
 
   // ------------------------------------------------------------ 19–24: bitkiler — yeşil kâğıt yapraklar (damarları kesik), parlayan beyaz çiçekler
   function damarlar(g, liste) {
@@ -456,10 +456,10 @@
     // çekirdek: kesiklerin içi neredeyse beyaz, sıcak
     ana.save(); ana.setTransform(1, 0, 0, 1, 0, 0);
     ana.globalCompositeOperation = 'screen';
-    ana.globalAlpha = 0.75; ana.drawImage(ISIK, 0, 0);
+    ana.globalAlpha = 0.3; ana.drawImage(ISIK, 0, 0);
     // üç yarıçapta taşma: dar (keskin parıltı), orta, geniş (yumuşak hale)
     const n = 1024, t = SAHNE.yeniTuval(n, n), tg = t.getContext('2d');
-    for (const [b, a] of [[2.5, 0.85], [7, 0.6], [18, 0.42]]) {
+    for (const [b, a] of [[2.5, 0.6], [7, 0.5], [18, 0.4]]) {
       tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, n, n);
       tg.filter = `blur(${b}px)`; tg.drawImage(ISIK, 0, 0, n, n); tg.filter = 'none';
       ana.globalAlpha = a; ana.drawImage(t, 0, 0, W2, W2);
@@ -468,7 +468,7 @@
     // güneşin çevresinde sıcak ışık taşması
     ana.save(); ana.globalCompositeOperation = 'screen';
     const g = ana.createRadialGradient(GX, GY, 40, GX, GY, 300);
-    g.addColorStop(0, 'rgba(255,240,200,0.55)'); g.addColorStop(0.4, 'rgba(255,240,205,0.18)'); g.addColorStop(1, 'rgba(255,240,210,0)');
+    g.addColorStop(0, 'rgba(255,236,190,0.4)'); g.addColorStop(0.4, 'rgba(255,240,205,0.14)'); g.addColorStop(1, 'rgba(255,240,210,0)');
     ana.fillStyle = g; ana.fillRect(0, 0, 1024, 1024);
     ana.restore();
   })();

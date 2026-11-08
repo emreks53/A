@@ -29,6 +29,13 @@
     const c = [0, 1, 2].map((i) => Math.round(A[i] + (B[i] - A[i]) * k));
     return a === undefined ? `rgb(${c[0]},${c[1]},${c[2]})` : `rgba(${c[0]},${c[1]},${c[2]},${a})`;
   }
+  /** Uzak sırtlar için serin pus (gök rengi): uzaktaki tepeler maviye, dipleri sıcak sise döner. */
+  const SIS_M = '#EEF2F2'; // dağ diplerindeki serin, açık sis
+  function pusM(renk, k, hedef) {
+    const A = hex(renk), B = hex(hedef || '#DCE7F1');
+    const c = [0, 1, 2].map((i) => Math.round(A[i] + (B[i] - A[i]) * k));
+    return `rgb(${c[0]},${c[1]},${c[2]})`;
+  }
   /** Sis bandı: y1'de saydam, y2'de yoğun (aşağı doğru artar). */
   function sis(y1, y2, a, renk) {
     const g = ctx.createLinearGradient(0, y1, 0, y2);
@@ -82,25 +89,28 @@
     p.roundRect(x - w * 0.05, y - h * 0.95, w * 0.42, h * 0.8, h * 0.4);
     ctx.fill(p);
   }
-  seritBulut(190, 252, 230, 18, 0.62);
-  seritBulut(120, 280, 150, 12, 0.45);
-  seritBulut(500, 160, 170, 14, 0.55);
-  seritBulut(770, 320, 190, 15, 0.5);
-  seritBulut(930, 455, 150, 12, 0.42);
-  seritBulut(90, 452, 140, 11, 0.42);
+  seritBulut(190, 222, 230, 18, 0.62);
+  seritBulut(120, 250, 150, 12, 0.45);
+  seritBulut(500, 150, 170, 14, 0.55);
+  seritBulut(760, 292, 190, 15, 0.5);
+  seritBulut(972, 262, 120, 10, 0.4);
 
   // ------------------------------------------------------------ 3–6: uzak dağ sıraları — her biri bir öncekinden biraz koyu ve doygun, dipleri sise karışır
+  // Altı sıra: en arkadaki gökle neredeyse aynı tonda ve yüksekte (kubbenin omuzlarının arkasından görünür),
+  // her yeni sıra biraz daha alçak, koyu ve doygun; mavi-lilaktan camgöbeği yeşile döner.
   const DAG = [
-    { y0: 552, d: [[620, 18, 1.7], [260, 8, 0.4], [110, 3, 2.0]], t: [[330, 60, 150], [700, 50, 160]], renk: '#B3C3D6', pus: 0.8, sis: [540, 650] },
-    { y0: 600, d: [[540, 16, 0.4], [230, 9, 1.3], [95, 3, 0.2]], t: [[120, 70, 120], [880, 86, 150], [470, 40, 110]], renk: '#9FB4CB', pus: 0.72, sis: [590, 700] },
-    { y0: 650, d: [[460, 14, 2.1], [190, 8, 0.5], [70, 2.5, 1.1]], t: [[40, 60, 110], [260, 48, 130], [980, 70, 120], [760, 40, 120]], renk: '#8FAEC0', pus: 0.6, sis: [640, 740] },
-    { y0: 700, d: [[380, 12, 0.9], [160, 7, 2.6], [60, 2, 0.4]], t: [[160, 38, 130], [880, 42, 140]], renk: '#82A9AC', pus: 0.47, sis: [690, 775] },
+    { y0: 470, d: [[700, 16, 1.2], [300, 9, 0.4], [120, 3, 2.0]], t: [[120, 120, 170], [540, 150, 190], [930, 118, 160]], renk: '#7F9DDB', pus: 0.72 },
+    { y0: 520, d: [[600, 15, 0.4], [250, 9, 1.3], [100, 3, 0.2]], t: [[40, 92, 120], [330, 120, 150], [760, 136, 170], [1010, 84, 110]], renk: '#7395D2', pus: 0.58 },
+    { y0: 572, d: [[520, 14, 2.1], [210, 8, 0.5], [80, 2.5, 1.1]], t: [[200, 98, 140], [620, 70, 150], [900, 108, 150]], renk: '#6A92C0', pus: 0.45 },
+    { y0: 624, d: [[460, 13, 0.9], [180, 7, 2.6], [70, 2, 0.4]], t: [[60, 70, 120], [430, 60, 130], [800, 74, 150]], renk: '#5E93A8', pus: 0.33 },
+    { y0: 674, d: [[400, 12, 1.6], [160, 6, 0.8], [60, 2, 2.2]], t: [[240, 52, 140], [700, 44, 140], [990, 60, 120]], renk: '#55938D', pus: 0.22 },
   ];
   for (const k of DAG) {
+    const ust = Math.max(...k.t.map((q) => q[1])) + 30;
     const yol = sirt(k.y0, k.d, k.t);
-    ctx.fillStyle = dikeyDolgu(k.y0 - 110, k.sis[1], pus(k.renk, k.pus - 0.06), pus(k.renk, Math.min(1, k.pus + 0.25)));
+    ctx.fillStyle = dikeyDolgu(k.y0 - ust, k.y0 + 80, pusM(k.renk, k.pus), pusM(k.renk, Math.min(1, k.pus + 0.4), SIS_M));
     ctx.fill(yol);
-    sis(k.sis[0], k.sis[1] + 30, 0.78);
+    sis(k.y0 - 26, k.y0 + 74, 0.8, SIS_M);
   }
 
   // ------------------------------------------------------------ 7–8: hurmalık — iki sıra düz siluet, uzaktaki daha soluk

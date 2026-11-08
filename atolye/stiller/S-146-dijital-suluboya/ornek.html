@@ -989,9 +989,9 @@
   const B = SAHNE.bitki;
   const rr = SAHNE.rng(146);
   const RENK = {
-    beyaz: { yap: [232, 212, 212], koyu: [214, 176, 186], orta: [238, 204, 150] },
-    allik: { yap: [238, 176, 182], koyu: [214, 120, 140], orta: [232, 170, 120] },
-    seftali: { yap: [246, 186, 146], koyu: [230, 140, 100], orta: [236, 180, 96] },
+    beyaz: { yap: [244, 216, 210], koyu: [228, 164, 172], orta: [240, 206, 138] },
+    allik: { yap: [244, 172, 178], koyu: [222, 100, 126], orta: [236, 178, 112] },
+    seftali: { yap: [250, 188, 152], koyu: [232, 124, 100], orta: [238, 182, 96] },
   };
   function tacYol(R, a, w, dalga, rrr, u0) {
     // yuvarlak, dalgalı uçlu taç yaprağı; yerel eksende merkezden dışa (u0: kökün merkeze uzaklığı)
@@ -1023,71 +1023,54 @@
     cx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
     cx.closePath();
   }
+  // Halkalar önden arkaya boyanır; her halka bitince yerel saklama maskesine yazılır, arkadaki halka onun altından
+  // geçer gibi yalnız dışında kalır. Böylece taç yaprakları çamurlaşmadan, net pigment kenarlarıyla katmanlanır.
   const HALKALAR = {
     sakayik: [
-      { n: 8, R: 1.0, w: 0.58, op: 0.24, dl: 0.2 },
-      { n: 7, R: 0.8, w: 0.54, op: 0.26, dl: 0.18 },
+      { n: 6, R: 0.8, w: 0.56, op: 0.34, dl: 0.16, ton: 0.55 },
+      { n: 7, R: 1.0, w: 0.6, op: 0.27, dl: 0.24, ton: 0.15 },
     ],
     gul: [
-      { n: 6, R: 1.0, w: 0.62, op: 0.26, dl: 0.07 },
-      { n: 5, R: 0.76, w: 0.6, op: 0.3, dl: 0.06 },
+      { n: 5, R: 0.78, w: 0.6, op: 0.36, dl: 0.06, ton: 0.55 },
+      { n: 6, R: 1.0, w: 0.62, op: 0.28, dl: 0.08, ton: 0.15 },
     ],
   };
+  const REZ_YEREL = new Float32Array(N * N);
   function cicekSu(c, tur, tip) {
-    const R = c.r * (tip === 'sakayik' ? 1.42 : 1.2);
+    const R = c.r * (tip === 'sakayik' ? 1.32 : 1.18);
     const P = RENK[tur];
     const sq = 0.82 + rr() * 0.12;
     const ea = (rr() - 0.5) * 0.7;
     const cE = Math.cos(ea);
     const sE = Math.sin(ea);
+    const kutuC = [c.x - R * 1.35, c.y - R * 1.35, c.x + R * 1.35, c.y + R * 1.35];
     // çiçek düzleminden ekrana: hafif yan bakış (basık elips)
     const T = ([u, v]) => {
       const x = u * cE + v * sE;
       const y = (-u * sE + v * cE) * sq;
       return [c.x + x * cE - y * sE, c.y - R * 0.04 + x * sE + y * cE];
     };
-    const halkalar = HALKALAR[tip];
-    const dis = [];
-    halkalar.forEach((h, hi) => {
-      const ofs = hi * 0.47 + rr() * 0.3;
-      for (let i = 0; i < h.n; i++) {
-        const a = c.aci + ofs + (i / h.n) * Math.PI * 2 + (rr() - 0.5) * 0.25;
-        const Ri = R * h.R * (0.9 + rr() * 0.18);
-        const pts = tacYol(Ri, a, Ri * h.w, h.dl, rr, Ri * 0.18).map(T);
-        if (hi === 0) dis.push(pts);
-        const t = hi / (halkalar.length - 1);
-        const renk = G.karis(P.yap, P.koyu, t * 0.85);
-        yika({
-          ciz: (cx) => {
-            egriYol(cx, pts);
-            cx.fill();
-          },
-          kutu: kutuYol(pts), renk, op: h.op * (tur === 'beyaz' ? 1.15 : 1.3), yumusak: 1.2, esik: 0.2, kenarR: 3, kenarKoyu: 1.0, gran: 0.22, akis: 0.15,
-          yog: (X, Y) => {
-            const d = Math.hypot(X - c.x, Y - c.y);
-            const t2 = Math.max(0, 1 - d / Ri);
-            return (0.25 + 1.3 * t2 * t2) * (0.35 + 0.65 * G.yumusak(R * 0.05, R * 0.3, d));
-          },
-          rez: [REZ_CICEK],
-        });
-      }
-    });
-    // orta çanak: arkada yukarı bakan yapraklar, önde kâse biçimli (gülümseme) taç yaprakları
-    const cy0 = -R * 0.05;
-    const kase = tip === 'sakayik' ? { arka: 6, on: 3, gen: 0.8, boy: 0.52 } : { arka: 4, on: 2, gen: 0.62, boy: 0.42 };
-    for (let i = 0; i < kase.arka; i++) {
-      const a = -Math.PI / 2 + ((i + 0.5) / kase.arka - 0.5) * 2.3 + (rr() - 0.5) * 0.2;
-      const Ri = R * kase.boy * (0.9 + rr() * 0.2);
-      const pts = tacYol(Ri, a, Ri * 0.62, 0.12, rr, 0).map(([u, v]) => T([u, v + cy0]));
-      yika({
-        ciz: (cx) => {
+    const REZ = [REZ_CICEK, REZ_YEREL];
+    const yerelSakla = (sekiller) =>
+      maskeyeCiz(REZ_YEREL, (cx) => {
+        for (const pts of sekiller) {
           egriYol(cx, pts);
           cx.fill();
-        },
-        kutu: kutuYol(pts), renk: G.karis(P.yap, P.koyu, 0.45), op: tur === 'beyaz' ? 0.3 : 0.42, yumusak: 1.1, esik: 0.2, kenarR: 3, kenarKoyu: 1.1, gran: 0.2, akis: 0.1,
-        yog: (X, Y) => 0.35 + 0.9 * G.kenet((Y - (c.y - R * 0.5)) / (R * 0.5), 0, 1), rez: [REZ_CICEK],
-      });
-    }
+        }
+      }, kutuC);
+    // ılık göbek (ıslak içine ıslak): önce, bütün taç yapraklarının altına
+    yika({
+      ciz: (cx) => {
+        cx.beginPath();
+        cx.ellipse(c.x, c.y - R * 0.06, R * 0.2, R * 0.2 * sq, 0, 0, Math.PI * 2);
+        cx.fill();
+      },
+      kutu: [c.x - R * 0.35, c.y - R * 0.35, c.x + R * 0.35, c.y + R * 0.35], renk: P.orta, op: 0.55, yumusak: 4, islak: true, kenarKoyu: 0, gran: 0.3, rez: [REZ_CICEK],
+    });
+    // 1) orta çanak, önde: kâse biçimli (gülümseme) taç yaprakları — ışık alan, açık
+    const cy0 = -R * 0.05;
+    const kase = tip === 'sakayik' ? { arka: 4, on: 3, gen: 0.8, boy: 0.5 } : { arka: 3, on: 2, gen: 0.64, boy: 0.42 };
+    const onSekil = [];
     for (let i = 0; i < kase.on; i++) {
       const t = i / Math.max(1, kase.on - 1);
       const w = R * kase.gen * (1 - t * 0.45);
@@ -1115,21 +1098,76 @@
           cx.closePath();
           cx.fill();
         },
-        kutu: kutuYol(pts), renk: G.karis(P.yap, P.koyu, 0.25 + t * 0.25), op: tur === 'beyaz' ? 0.24 + t * 0.08 : 0.34 + t * 0.1, yumusak: 1.2, esik: 0.2, kenarR: 2.5, kenarKoyu: 0.9, gran: 0.2, akis: 0.1,
-        yog: (X, Y) => 0.5 + 0.7 * G.kenet((Y - c.y) / (R * 0.4) + 0.5, 0, 1),
-        rez: [REZ_CICEK],
+        kutu: kutuYol(pts), renk: G.karis(P.yap, P.koyu, 0.3 + t * 0.3), op: tur === 'beyaz' ? 0.3 + t * 0.08 : 0.4 + t * 0.1, yumusak: 1.1, esik: 0.2, kenarR: 2.5, kenarKoyu: 1.1, gran: 0.2, akis: 0.1,
+        yog: (X, Y) => 0.45 + 0.8 * G.kenet((Y - c.y) / (R * 0.4) + 0.5, 0, 1),
+        rez: REZ,
+      });
+      onSekil.push(pts);
+      yerelSakla([pts]);
+    }
+    // 2) çanağın arkasında yukarı bakan iç yapraklar: içi gölgede, derin renk
+    const arkaSekil = [];
+    for (let i = 0; i < kase.arka; i++) {
+      const a = -Math.PI / 2 + ((i + 0.5) / kase.arka - 0.5) * 2.2 + (rr() - 0.5) * 0.35;
+      const Ri = R * kase.boy * (0.8 + rr() * 0.35);
+      const pts = tacYol(Ri, a, Ri * (0.8 + rr() * 0.2), 0.28, rr, 0).map(([u, v]) => T([u, v + cy0]));
+      arkaSekil.push(pts);
+      yika({
+        ciz: (cx) => {
+          egriYol(cx, pts);
+          cx.fill();
+        },
+        kutu: kutuYol(pts), renk: G.karis(P.yap, P.koyu, 0.7), op: tur === 'beyaz' ? 0.36 : 0.5, yumusak: 1.1, esik: 0.2, kenarR: 3, kenarKoyu: 1.2, gran: 0.2, akis: 0.1,
+        yog: (X, Y) => 0.4 + 0.9 * G.kenet((Y - (c.y - R * 0.5)) / (R * 0.5), 0, 1), rez: REZ,
       });
     }
-    // ılık göbek (ıslak içine ıslak) ve birkaç ercik noktası
-    yika({
-      ciz: (cx) => {
-        cx.beginPath();
-        cx.ellipse(c.x, c.y - R * 0.04, R * 0.16, R * 0.16 * sq, 0, 0, Math.PI * 2);
-        cx.fill();
-      },
-      kutu: [c.x - R * 0.3, c.y - R * 0.3, c.x + R * 0.3, c.y + R * 0.3], renk: P.orta, op: 0.5, yumusak: 4, islak: true, kenarKoyu: 0, gran: 0.3, rez: [REZ_CICEK],
+    yerelSakla(arkaSekil);
+    // 3) iç ve dış halka: önce iç, sonra arkadaki dış halka
+    const dis = [];
+    HALKALAR[tip].forEach((h, hi) => {
+      const ofs = hi * 0.47 + rr() * 0.3;
+      const sekiller = [];
+      for (let i = 0; i < h.n; i++) {
+        const a = c.aci + ofs + (i / h.n) * Math.PI * 2 + (rr() - 0.5) * 0.25;
+        const Ri = R * h.R * (0.9 + rr() * 0.18);
+        const pts = tacYol(Ri, a, Ri * h.w, h.dl, rr, Ri * 0.18).map(T);
+        sekiller.push(pts);
+        if (hi === HALKALAR[tip].length - 1) dis.push(pts);
+        // ışığa bakan (sağ üst) yapraklar daha açık, ters yöndekiler daha dolgun
+        const isik = Math.cos(a) * 0.6 - Math.sin(a) * 0.8;
+        const renk = G.karis(P.yap, P.koyu, h.ton + 0.15 * (1 - isik) * 0.5);
+        yika({
+          ciz: (cx) => {
+            egriYol(cx, pts);
+            cx.fill();
+          },
+          kutu: kutuYol(pts), renk, op: h.op * (tur === 'beyaz' ? 1.12 : 1.25) * (1 - 0.18 * isik), yumusak: 1.2, esik: 0.2, kenarR: 3, kenarKoyu: 1.4, gran: 0.22, akis: 0.12,
+          yog: (X, Y) => {
+            const d = Math.hypot(X - c.x, Y - c.y);
+            const t2 = Math.max(0, 1 - d / Ri);
+            return (0.3 + 1.25 * t2 * t2) * (0.4 + 0.6 * G.yumusak(R * 0.05, R * 0.3, d));
+          },
+          rez: REZ,
+        });
+      }
+      yerelSakla(sekiller);
     });
-    // gölge tarafı: çiçeğin sol altına serin bir sır
+    // birkaç ercik noktası (gülde göbekte, şakayıkta kâse ağzında)
+    if (tip === 'gul' || tur !== 'beyaz') {
+      yika({
+        ciz: (cx) => {
+          for (let k = 0; k < 9; k++) {
+            const a = rr() * Math.PI * 2;
+            const d = R * (0.04 + rr() * 0.1);
+            cx.beginPath();
+            cx.arc(c.x + Math.cos(a) * d, c.y - R * 0.1 + Math.sin(a) * d * sq, Math.max(0.9, R * 0.022), 0, Math.PI * 2);
+            cx.fill();
+          }
+        },
+        kutu: [c.x - R * 0.3, c.y - R * 0.35, c.x + R * 0.3, c.y + R * 0.2], renk: [214, 150, 60], op: 0.7, yumusak: 0.6, esik: 0.3, kenarR: 1, kenarKoyu: 0.3, gran: 0.1, rez: [REZ_CICEK],
+      });
+    }
+    // gölge tarafı: çiçeğin sol altına ılık-serin, ince bir sır
     yika({
       ciz: (cx) => {
         for (const pts of dis) {
@@ -1137,7 +1175,7 @@
           cx.fill();
         }
       },
-      kutu: [c.x - R * 1.2, c.y - R * 1.2, c.x + R * 1.2, c.y + R * 1.2], renk: [196, 190, 214], op: 0.4, islak: true, yumusak: 2, kenarKoyu: 0, gran: 0.3,
+      kutu: kutuC, renk: [212, 186, 206], op: 0.26, islak: true, yumusak: 2, kenarKoyu: 0, gran: 0.25,
       yog: (X, Y) => G.kenet(((c.x - X) * 0.6 + (Y - c.y) * 0.8) / R, 0, 1), rez: [REZ_CICEK],
     });
     maskeyeCiz(REZ_CICEK, (cx) => {
@@ -1148,7 +1186,13 @@
       cx.beginPath();
       cx.ellipse(c.x, c.y - R * 0.04, R * 0.5, R * 0.5 * sq, 0, 0, Math.PI * 2);
       cx.fill();
-    }, [c.x - R * 1.3, c.y - R * 1.3, c.x + R * 1.3, c.y + R * 1.3]);
+    }, kutuC);
+    // yerel maskeyi temizle
+    const x0 = Math.max(0, Math.floor(kutuC[0]));
+    const x1 = Math.min(N, Math.ceil(kutuC[2]));
+    const y0 = Math.max(0, Math.floor(kutuC[1]));
+    const y1 = Math.min(N, Math.ceil(kutuC[3]));
+    for (let y = y0; y < y1; y++) REZ_YEREL.fill(0, y * N + x0, y * N + x1);
   }
   function tomurcukSu(t, tur) {
     const P = RENK[tur];
@@ -1285,11 +1329,11 @@
     ];
     maskeyeCiz(bulut, (cx) => {
       for (const [x, y, w, h] of kumeler) {
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 28; i++) {
           const t = rb();
           const px = x + (t - 0.5) * w;
-          const py = y - rb() * h * Math.cos((t - 0.5) * Math.PI);
-          const r = (h * 0.45 + rb() * h * 0.45) * (0.6 + 0.4 * Math.cos((t - 0.5) * Math.PI));
+          const py = y - rb() * h * 0.9 * Math.cos((t - 0.5) * Math.PI);
+          const r = (h * 0.28 + rb() * rb() * h * 0.62) * (0.6 + 0.4 * Math.cos((t - 0.5) * Math.PI));
           cx.beginPath();
           cx.arc(px, py, r, 0, Math.PI * 2);
           cx.fill();
@@ -1297,7 +1341,19 @@
         cx.fillRect(x - w * 0.45, y - h * 0.3, w * 0.9, h * 0.3);
       }
     }, [0, 0, N, 700]);
-    const bulutB = G.bulanik(bulut, N, N, 7);
+    const bulutB0 = G.bulanik(bulut, N, N, 5);
+    const bulutS = G.bulanik(bulut, N, N, 16);
+    // bulutun alt kenarı ıslak: göğe yumuşakça karışır; üst kenar net kalır
+    const bulutB = new Float32Array(N * N);
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        const k = y * N + x;
+        const ust = bulutB0[Math.max(0, y - 14) * N + x];
+        const alt = bulutB0[Math.min(N - 1, y + 14) * N + x];
+        const w = G.kenet((ust - alt) * 2.2, 0, 1);
+        bulutB[k] = bulutB0[k] * (1 - w) + bulutS[k] * w * 1.1;
+      }
+    }
     // gök lavisi: üstte kobalt-seruleum, ufka doğru açılıp sıcak pembe-kuma döner
     yika({
       ciz: (cx) => cx.fillRect(-20, -20, N + 40, 840),
@@ -1307,13 +1363,14 @@
         const a = G.karis([92, 146, 206], [136, 184, 226], G.yumusak(0, 0.55, t));
         return G.karis(a, [232, 210, 200], G.yumusak(0.6, 1, t));
       },
-      op: 0.78, yumusak: 2, kenarGur: 0, kenarKoyu: 0, gran: 0.26, akis: 0.3, akisFrek: 0.0055,
+      op: 0.78, yumusak: 2, kenarGur: 0, kenarKoyu: 0, gran: 0.2, akis: 0.16, akisFrek: 0.004,
       yog: (X, Y) => {
         const k = Y * N + X;
         const t = G.kenet(Y / 800, 0, 1);
         const gun = Math.hypot(X - 860, Y - 150) / 260;
-        const bl = G.yumusak(0.25, 0.75, bulutB[k] + PK.fbm(X * 0.03, Y * 0.03, 3) * 0.35);
-        return (1 - 0.72 * t) * (1 - bl * 0.94) * (0.45 + 0.55 * G.kenet(gun, 0, 1));
+        // bulut kenarı: kâğıt beyazı bırakılan, yumuşak ama düzgün loblu kenar (üstte net, altta ıslak)
+        const bl = G.yumusak(0.3, 0.62, bulutB[k] + PK.fbm(X * 0.014, Y * 0.014, 3) * 0.2);
+        return (1 - 0.6 * t) * (1 - bl * 0.96) * (0.45 + 0.55 * G.kenet(gun, 0, 1));
       },
       rez: [REZ_BINA, REZ_CICEK],
     });
@@ -1333,10 +1390,24 @@
       },
       rez: [REZ_BINA, REZ_CICEK],
     });
+    // ufukta uzak, pusa karışmış adaçayı yeşili ağaç sırası (ıslak içine ıslak)
+    yika({
+      ciz: (cx) => {
+        cx.beginPath();
+        cx.moveTo(-20, 801);
+        for (let x = -20; x <= N + 20; x += 4) cx.lineTo(x, 788 - 18 * (0.5 + PN.fbm(x * 0.017, 5.1, 3)) - 7 * Math.abs(Math.sin(x * 0.04 + PK.n(x * 0.01, 2.2))));
+        cx.lineTo(N + 20, 801);
+        cx.closePath();
+        cx.fill();
+      },
+      kutu: [0, 740, N, 805], renk: [150, 178, 156], op: 0.42, yumusak: 2, esik: 0.22, kenarGur: 0.25, kenarR: 4, kenarKoyu: 0.6, gran: 0.35, akis: 0.25,
+      yog: (X, Y) => 0.7 + 0.3 * G.yumusak(770, 798, Y),
+      rez: [REZ_BINA, REZ_CICEK],
+    });
     // ufukta uzak kum ve zemin
     yika({
-      ciz: (cx) => cx.fillRect(-20, 790, N + 40, 260),
-      kutu: [0, 785, N, N], renk: [226, 196, 150], op: 0.32, yumusak: 6, esik: 0.3, kenarGur: 0.4, kenarKoyu: 0.25, gran: 0.4, akis: 0.3,
+      ciz: (cx) => cx.fillRect(-20, 798, N + 40, 260),
+      kutu: [0, 793, N, N], renk: [226, 196, 150], op: 0.32, yumusak: 6, esik: 0.3, kenarGur: 0.4, kenarKoyu: 0.25, gran: 0.4, akis: 0.3,
       yog: (X, Y) => 1 - G.yumusak(800, 1000, Y) * 0.4,
       rez: [REZ_BINA, REZ_CICEK],
     });

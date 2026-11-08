@@ -16,25 +16,7 @@
     "Altta ve iki yanda çerçeve çizgisini taşan beyaz çiçek çelengi: damarlı yapraklar, gölgeli taç yaprakları, sarı ercikler ve beyaz tomurcuklar; taç yaprakları ve yapraklar biçimi izleyen ince fırça darbeleriyle boyanmış",
     "Ufukta pusa gömülmüş yumuşak ağaç sırası ve güneşli açık yeşil çimen; arkadaki minarede hafif hava perspektifi, bütün sahnede sıcak gün ışığı ile serin gölgenin dengesi"
   ],
-  "palet": [
-    "#F0E8DA",
-    "#98BADC",
-    "#71D27D",
-    "#327B43",
-    "#F5DB86",
-    "#B39565",
-    "#3B6737",
-    "#B4D095"
-  ],
+  "palet": ["#F0E8DA", "#98BADC", "#71D27D", "#327B43", "#F5DB86", "#B39565", "#3B6737", "#B4D095"],
   "kodla_cizim": "Krem zemin radyal degradeyle boyanır; kaş kemer iki kübik Bezier kavisle kurulup gök ve mimari bu yola kırpılır. Bulutlar puf kümelerinden üretilen yoğunluk alanında güneşe doğru örneklenen örtmeyle ışıklandırılır; ufukta Perlin gürültüsüyle dalgalanan pusa gömülmüş ağaç sırası ve degradeli açık yeşil çimen boyanır. Minare, kaide ve kasnak, yarım-Lambert ışık modeliyle (gölgede serin gök rengi, ışıkta sıcak güneş rengi; beyaz taşta daha aydınlık ortam) silindir normallerinden hesaplanan çok duraklı degradelerle; kubbe SAHNE.kubbeProfili'nden türetilen yüzey normaliyle piksel piksel (dilim şişkinliği, yuvarlak kaburga sırtı, oluk gölgesi, yumuşak parlama, Fresnel gök yansıması) boyanır. Ardından bölge maskesine göre (gök ve çimen, minare, kaide, kasnak, kubbe; pencereler ve alemler hariç) yaklaşık 85 bin kısa, kavisli fırça darbesi alttaki rengi örnekleyerek ve biçimin yönünde (kubbede meridyen eğimi) çizilir, her bölgenin darbeleri kendi maskesiyle kırpılır. Çerçevenin içine gölge düşürülür, çift çizgi çekilir. Çelenk ayrı bir katmanda SAHNE.bitki konumlarına eklenen üç asma kolundan oluşur; yapraklar ışığa bakan ve bakmayan iki yarım, damarlar ve gölgeyle, çiçekler beş gölgeli taç yaprağı, yeşil dişicik ve 26 ercikle boyanır. Sonra bu katmana parlaklık eğimine dik (kontur yönünde) yaklaşık 52 bin kısa fırça darbesi alttaki rengi örnekleyerek işlenir; keskin kenarlar ve yarı saydam gölgeler atlanır. En sonda çok hafif tuval dokusu 'overlay' ile eklenir.",
-  "etiketler": [
-    "dijital resim",
-    "yarı gerçekçi",
-    "illüstrasyon",
-    "kemer çerçeve",
-    "çiçek çelengi",
-    "fırça dokusu",
-    "yumuşak ışık",
-    "zarif"
-  ]
+  "etiketler": ["dijital resim", "yarı gerçekçi", "illüstrasyon", "kemer çerçeve", "çiçek çelengi", "fırça dokusu", "yumuşak ışık", "zarif"]
 }
