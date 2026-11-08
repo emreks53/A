@@ -1,0 +1,40 @@
+{
+  "kod": "S-140",
+  "no": 140,
+  "ad": "Mermer Rölyef",
+  "ad_en": "Marble Relief",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Cilalı mermerden oyulmuş alçak kabartma: beyaz mermer yapı ve çiçekler, açık yeşil taş kubbe, altın varaklı kaburgalar ve alemler, yumuşak damarlı renkli mermer zemin.",
+  "tanim": "Mermer rölyef, sahnenin bir taş levhadan ya da birbirine geçirilmiş renkli taşlardan, zemin derinleştirilerek oyulduğu ve figürlerin yüzeyden hafifçe kabardığı heykel tekniğidir. Cilalı mermerin yumuşak parlaklığı, ince damarları ve gün ışığında oyma kenarlarında beliren yumuşak gölgeler onu tanıtır; altın varaklı ayrıntılar değerli ve vakur bir hava katar. Anıt panolarında, çeşme ve mihrap süslemelerinde, saray ve cami iç mekânlarında kullanılır.",
+  "koken": "Alçak kabartma (bas-relief) Mısır ve Asur duvar panolarından Partenon frizine, oradan Rönesans'ta Donatello'nun çok sığ 'rilievo schiacciato'suna uzanır. Renkli taş kakma (opus sectile, pietra dura) ve altın varakla birleşen mermer rölyef; Osmanlı çeşme ve sebil cephelerinde, saray kapılarında ve Tac Mahal'in çiçek kabartmalı mermer panolarında doruğa ulaştı.",
+  "ayirt_edici": [
+    "Gerçek derinlikli alçak kabartma: silindir gibi yuvarlanan minare ve kasnak, şişkin kubbe, yüzeyden kalkan bulut lobları ve oyulmuş taç yaprakları; oyma kenarlarından sol alta düşen yumuşak gölgeler",
+    "Renkli taşlar: açık mavi bulutsu mermer gök; beyaz mermer minare, kaide, bulutlar ve çiçekler; açık yeşil damarlı taş kubbe ve kasnak; yeşim tonlu yapraklar, pembe mermer tomurcuklar, bal rengi mermer toprak",
+    "Altın varak: kubbe kaburgaları ve etek bileziği, alemler, güneş, minare şeritleri ve zikzaklar, kaide pencere kemerleri, çiçek göbekleri ve ercik noktaları",
+    "Cilalı taşta saten parlama; altında ışığa göre koyulaşıp açılan metalik yansıma",
+    "Beyaz mermerde yumuşak gri damarlar; bulutlarda kemer biçimli, taç yapraklarında ışınsal oyma kalemi çizgileri",
+    "Kenarda yuvarlak profilli beyaz mermer çerçeve silmesi ve içinde ince altın fitil"
+  ],
+  "palet": [
+    "#DDE9F1",
+    "#F7F4ED",
+    "#8CC39A",
+    "#7CB88C",
+    "#A8D0A2",
+    "#D6AC4A",
+    "#EDDFC6",
+    "#EECAC8"
+  ],
+  "kodla_cizim": "Yükseklik alanı (2048 × 2048) SAHNE geometrisinden kurulur: maskelerin Öklid mesafe dönüşümüyle keskin oyma pahları; kubbeye kubbeProfili'nden hesaplanan sıkıştırılmış küre derinliği, kasnak ve minareye silindir derinliği; pencereler, korkuluk yuvaları ve zikzaklar oyulur; çerçeve silmesi kenara uzaklıktan bir profil fonksiyonuyla çizilir; bitkiler alttaki rölyefin bulanıklaştırılmış yüzeyine oturur. Mermer dokuları 1024 ızgarada türbülanslı sinüs damarlarıyla (ince çekirdek ve yumuşak hale, gürültüyle sönümlenen) ve bulutsu ton farkıyla üretilip öğe yollarıyla kırpılarak boyanır; ayrı bir haritada cila ve altın maskesi tutulur. Aydınlatma: gökten gelen dolgu ışığı, ortam örtmesi, ışığa doğru yürüyen yumuşak gölge, mermerde Blinn-Phong saten parlama, altında normal yönüne bağlı metalik yansıma ve renkli parlama.",
+  "etiketler": [
+    "mermer",
+    "rölyef",
+    "kabartma",
+    "taş",
+    "altın varak",
+    "heykel",
+    "cilalı",
+    "vakur"
+  ]
+}

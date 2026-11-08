@@ -392,7 +392,7 @@ function sim(out, u, v, Lp, tx, ty, guc) {
 }
 // palet: değer 0..1 → iplik rengi (iğne başına titreşimle)
 function palet(p, t, h) {
-  const f = clamp(t) * (p.length - 1) + (h - 0.5) * 0.9;
+  const f = clamp(t) * (p.length - 1) + (h - 0.5) * 0.75;
   return p[clamp(Math.round(f), 0, p.length - 1)];
 }
 // düz yönlü bölünmüş saten / uzun-kısa iğne koordinatları
@@ -446,29 +446,30 @@ function gok() {
   const L = katman([0, 0, 1024, 812], (m) => m.fillRect(0, 0, 1024, 812), 0);
   bas(L, (X, Y, k, out) => {
     const sdx = X - 880, sdy = Y - 140, sd = Math.hypot(sdx, sdy);
-    if (sd < 33) {
-      // güneş: altın sim, ışınsal saten
-      const a = Math.atan2(sdy, sdx);
-      const w = 0.035;
-      const bi = Math.floor(a / w), u = a / w - bi;
-      const v = sd / 33;
-      sim(out, u, v, 33, Math.cos(a), Math.sin(a), 0.9);
+    if (sd < 32) {
+      // güneş: çapraz saten altın sim (diski boydan boya geçen iğneler)
+      const d = duz(X, Y, Math.PI / 4, 1.7, 80, 3, false);
+      const tx = 0.7071, ty = 0.7071;
+      const tt = (X - 880) * -ty + (Y - 140) * tx;
+      const half = Math.sqrt(Math.max(1, 32 * 32 - tt * tt));
+      const ss = (X - 880) * tx + (Y - 140) * ty;
+      sim(out, d.u, (ss + half) / (2 * half), 2 * half, tx, ty, 1.0);
+      const e = smooth(32, 30.5, sd); out[0] *= 0.75 + 0.25 * e; out[1] *= 0.75 + 0.25 * e; out[2] *= 0.75 + 0.25 * e;
       return;
     }
-    if (sd < 120) {
-      // güneş halesi: ışınsal uzun-kısa iğne, sarıdan göğe
+    if (sd < 80) {
+      // güneş halesi: düzgün ışınsal uzun-kısa iğne
       const a = Math.atan2(sdy, sdx);
       const w = 2.3 / sd;
       const bi = Math.floor(a / w), u = a / w - bi;
-      const Lb = (bi & 1) ? 13 : 21;
-      const off = ihash(bi, 5, 1) * Lb;
-      const q = (sd - 33 + off) / Lb, si = Math.floor(q), v = q - si;
-      const rc = 33 + (si + 0.5) * Lb - off;
-      const h = ihash(bi, si, 6);
-      const t = (rc - 33) / 87 + (h - 0.5) * 0.35;
-      if (t < 0.75) {
-        const c = palet(GUNES_P, t / 0.75, h);
-        iplik(out, c, u, v, Lb, Math.cos(a), Math.sin(a), 0.4);
+      const uc = (bi & 1) ? 66 : 78;
+      if (sd < uc) {
+        const ic = (bi % 3 === 0) ? 50 : 54;
+        const r0 = sd < ic ? 32 : ic, r1 = sd < ic ? ic : uc;
+        const v = (sd - r0) / (r1 - r0);
+        const t = sd < ic ? 0.75 : 0.2;
+        const c = palet(GUNES_P, t, ihash(bi, sd < ic ? 1 : 2, 6) * 0.6 + 0.2);
+        iplik(out, c, u, v, r1 - r0, Math.cos(a), Math.sin(a), 0.4);
         return;
       }
     }
@@ -493,16 +494,12 @@ function gok() {
 }
 // zemin çizgisi: yapının dibinde seyrek yatay koşma iğneleri
 function zeminIgne() {
-  const L = katman([0, 790, 1024, 860], (m) => m.fillRect(0, 790, 1024, 70), 0);
-  bas(L, (X, Y, k, out) => {
-    const d = duz(X, Y, 0, 2.6, 15, 21, false);
-    const h = ihash(d.bi, d.si, 3);
-    const yog = smooth(860, 800, d.cy) * (0.25 + 0.5 * smooth(0, 160, Math.abs(d.cx - 560) < 280 ? 280 - Math.abs(d.cx - 560) : 0));
-    if (h > yog * 0.8 || d.u < 0.2 || d.u > 0.8) { out[3] = 0; return; }
-    iplik(out, palet(KREM_P, 0.25 + h * 0.3, h), (d.u - 0.2) / 0.6, d.v, d.L, 1, 0, 0.3);
-  });
+  // zemin çizgisi: yapının dibinde iki sıra düzgün yatay bölünmüş saten (açık bej), kenarlara doğru incelir
+  nakisKatman([0, 799, 1024, 806], (m) => { m.beginPath(); m.moveTo(0, 801.5); m.quadraticCurveTo(512, 799.2, 1024, 801.5); m.lineTo(1024, 803.5); m.quadraticCurveTo(512, 806.5, 0, 803.5); m.closePath(); m.fill(); }, (X, Y, k, out) => {
+    const d = duz(X, Y, 0, 2.2, 16, 21, false);
+    iplik(out, palet(KREM_P, 0.32, ihash(d.bi, d.si, 3)), d.u, d.v, d.L, 1, 0, 0.3);
+  }, { golge: 0.3 });
 }
-
 // ------------------------------------------------------------------ nakış katmanı yardımcısı (kabarık gölge)
 function nakisKatman(bb, ciz, fn, o) {
   o = o || {};
@@ -812,14 +809,14 @@ function cicekler() {
         // ışınsal uzun-kısa iğne: dıştan beyaz, köke doğru pembe; kabarık saten gölgesi
         const dx = X - c.x, dy = Y - c.y;
         const rr = Math.hypot(dx, dy), an = Math.atan2(dy, dx);
-        const w = 1.9 / Math.max(rr, 4);
+        const w = 2.5 / Math.max(rr, 4);
         const bi = Math.floor(an / w), u = an / w - bi;
         const iki = (bi & 1);
         const sinir = c.r * (iki ? 0.56 : 0.44) * (0.92 + 0.16 * ihash(bi, 7, p));
         const dis = rr > sinir;
         const r0 = dis ? sinir : c.r * 0.12, r1 = dis ? c.r * 1.1 : sinir;
         const v = (rr - r0) / (r1 - r0);
-        const tc = dis ? 0.08 + 0.15 * ihash(bi, 4, p) : 0.45 + 0.4 * (1 - (rr / sinir));
+        const tc = dis ? 0.05 + 0.18 * ihash(bi, 4, p) : 0.5 + 0.5 * (1 - (rr / sinir));
         const col = palet(TAC_P, tc, ihash(bi, dis ? 5 : 6, p));
         iplik(out, col, u, clamp(v), r1 - r0, Math.cos(an), Math.sin(an), 0.5);
         // kabarık dolgu: kenara yakın hafif gölge

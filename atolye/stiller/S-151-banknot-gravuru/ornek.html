@@ -148,24 +148,28 @@
   ctx.fillStyle = KAGIT;
   ctx.fillRect(0, 0, 1024, 1024);
   {
-    const g = ctx.createLinearGradient(0, 0, 1024, 0);
-    g.addColorStop(0, '#F7DEDA');
-    g.addColorStop(0.28, '#F8EAD2');
-    g.addColorStop(0.55, '#F5F0CF');
-    g.addColorStop(0.78, '#DFF0E4');
-    g.addColorStop(1, '#D9EAF5');
+    // iris alt baskı: tepede açık gök mavisinden naneye, ufukta kremden şeftaliye dikey geçiş
+    const g = ctx.createLinearGradient(0, 0, 0, 1024);
+    g.addColorStop(0, '#DAEAF7');
+    g.addColorStop(0.36, '#DDEEF0');
+    g.addColorStop(0.6, '#E6F2E2');
+    g.addColorStop(0.76, '#F5F0CF');
+    g.addColorStop(0.9, '#F8E4CC');
+    g.addColorStop(1, '#F7DCD2');
     ctx.save();
     ctx.globalCompositeOperation = 'multiply';
-    ctx.globalAlpha = 0.62;
+    ctx.globalAlpha = 0.7;
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, 1024, 1024);
-    // gökte üstten açık mavi tül: iris alt baskısı göğün üst yarısında maviye döner
-    const gv = ctx.createLinearGradient(0, 0, 0, 560);
-    gv.addColorStop(0, 'rgba(206,226,244,0.42)');
-    gv.addColorStop(1, 'rgba(206,226,244,0)');
+    // yanlarda hafif gül ve deniz mavisi: iris mürekkep haznesinin yatay kayması
+    const gy = ctx.createLinearGradient(0, 0, 1024, 0);
+    gy.addColorStop(0, 'rgba(247,214,214,0.35)');
+    gy.addColorStop(0.35, 'rgba(247,214,214,0)');
+    gy.addColorStop(0.7, 'rgba(214,236,240,0)');
+    gy.addColorStop(1, 'rgba(214,236,240,0.4)');
     ctx.globalAlpha = 1;
-    ctx.fillStyle = gv;
-    ctx.fillRect(0, 0, 1024, 560);
+    ctx.fillStyle = gy;
+    ctx.fillRect(0, 0, 1024, 1024);
     ctx.restore();
   }
   // alt baskı: ince giyoş ağı (soluk gül): dikey akan iki dalga ailesi zincir halkaları örer; yatay gök
@@ -173,7 +177,7 @@
   bas(0, 0, 1024, 800, (X, Y) => {
     const a = cz((x, y) => (x + 5.5 * Math.sin(y / 8.5)) / 12, X, Y, 1, 0.05);
     const b = cz((x, y) => (x - 5.5 * Math.sin(y / 8.5)) / 12, X, Y, 1, 0.05);
-    return birlesik(a, b) * 0.42;
+    return birlesik(a, b) * 0.3;
   }, MUR.gul);
 
   // ================================================================ 2. GÖK: dalgalı torna çizgileri, bulutlar çizgi incelmesiyle
@@ -207,7 +211,7 @@
   bas(0, 0, 1024, 800, (X, Y) => {
     const dg = Math.hypot(X - GX, Y - GY);
     if (dg < 106) return 0;
-    let t = 0.2 - 0.1 * (Y / 800);
+    let t = 0.15 - 0.06 * (Y / 800);
     t *= 0.35 + 0.65 * yumusak(106, 340, dg);
     const b = bulut(X, Y);
     if (b > 0.45) {

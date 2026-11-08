@@ -44,7 +44,8 @@
     altin: '#EDB848', altinA: '#FFE394', altinG: '#B9813A',
     zemin: '#F3D7A8', zeminAlt: '#EAC38F', zeminG: '#D9B19D',
     yaprak: '#3E8E70', yaprakA: '#71B78C', yaprakK: '#2A6C57',
-    hurma: '#5B9A88', hurmaA: '#7DB3A0', govde: '#B39478', govdeA: '#D6B794',
+    hurma: '#4E9A80', hurmaA: '#7DBB9C', hurmaG: '#3F8371', hurmaK: '#2F6B5E', govde: '#B39478', govdeA: '#D6B794',
+    hurmaMeyve: '#E39A3E', hurmaMeyveG: '#C27A33',
     cicek: '#FFFDF6', cicekG: '#F1DCC6', orta: '#F3B53C', ortaG: '#D58E2B',
     pembe: '#F7B9A6', pembeG: '#E38F7F',
     pay: '#F6EBD6', cizgi: '#2F8C5A',
@@ -171,8 +172,53 @@
   }
 
   // ---------------------------------------------------------------- hurmalar
-  function hurma(x0, y0, x1, y1, s) {
-    // gövde: hafif kavisli, incelen, halkalı
+  /** Tüylü (pinnat) hurma yaprağı: orta damar boyunca iki yanda testere dişli yaprakçıklar; göğe bakan yan açık, alttaki yan koyu ton. */
+  function hurmaYapragi(x1, y1, a, L, sark, Wm, acik, koyu, damar) {
+    const N = 26;
+    const pts = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      pts.push([x1 + Math.cos(a) * L * t, y1 + Math.sin(a) * L * t + sark * L * t * t]);
+    }
+    const nokta = (t) => {
+      const u = Math.min(N - 1e-6, Math.max(0, t * N));
+      const i = Math.floor(u);
+      const f2 = u - i;
+      const p0 = pts[i];
+      const p1 = pts[Math.min(N, i + 1)];
+      const x = p0[0] + (p1[0] - p0[0]) * f2;
+      const y = p0[1] + (p1[1] - p0[1]) * f2;
+      const tl = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) || 1;
+      return { x, y, tx: (p1[0] - p0[0]) / tl, ty: (p1[1] - p0[1]) / tl };
+    };
+    const M = 15;
+    for (const yan of [1, -1]) {
+      const q0 = nokta(0.02);
+      const ny0 = q0.tx * yan; // normalin y bileşeni: (−ty, tx)·yan
+      const ust = ny0 < 0; // bu yan göğe bakıyor
+      const kenar = [[x1, y1]];
+      for (let i = 0; i < M; i++) {
+        const t0 = 0.1 + (0.88 * i) / M;
+        const t1 = Math.min(1, t0 + 0.88 / M + 0.05);
+        const w = Wm * Math.pow(Math.sin(Math.PI * Math.min(1, t1 * 1.08)), 0.7) * (1 - 0.35 * t1);
+        const qa = nokta(t0);
+        const qb = nokta(t1);
+        const nx = -qb.ty * yan;
+        const ny = qb.tx * yan;
+        kenar.push([qa.x - qa.ty * yan * w * 0.16, qa.y + qa.tx * yan * w * 0.16]);
+        kenar.push([qb.x + nx * w, qb.y + ny * w * (ust ? 0.85 : 1.15)]);
+      }
+      kenar.push(pts[N]);
+      for (let i = N; i >= 0; i--) kenar.push(pts[i]);
+      dol(S.yol(kenar, true), ust ? acik : koyu);
+    }
+    ctx.strokeStyle = damar;
+    ctx.lineWidth = 1.3;
+    ctx.stroke(P2(S.yol(pts)));
+  }
+  function hurma(x0, y0, x1, y1, s, tohum) {
+    const rh = S.rng(tohum || 5);
+    // gövde: hafif kavisli, incelen, pullu (yaprak dipleri)
     const kv = (x1 - x0) * 0.5;
     const n = 30;
     const sol = [];
@@ -181,7 +227,7 @@
       const t = i / n;
       const x = x0 + (x1 - x0) * t + Math.sin(Math.PI * t) * kv * 0.4;
       const y = y0 + (y1 - y0) * t;
-      const w = (9 - 4 * t) * s;
+      const w = (9 - 3.5 * t) * s;
       sol.push([x - w, y]);
       sag.push([x + w, y]);
     }
@@ -205,50 +251,37 @@
         ctx.stroke();
       }
     });
-    // taç: kemerli, tırtıklı yapraklar
-    const yap = [-2.75, -2.25, -1.75, -1.25, -0.6, -0.1, 0.45, 0.95, 1.5, 2.1];
-    for (let k = 0; k < yap.length; k++) {
-      const a = yap[k] - Math.PI / 2 + (k % 2 ? 0.08 : -0.06);
-      const L = (78 + (k % 3) * 12) * s;
-      const sark = 0.9 * Math.abs(Math.sin(a + Math.PI / 2)) + 0.25; // yana açılanlar daha çok sarkar
-      const pts = [];
-      const N = 18;
-      const ust = [];
-      const alt = [];
-      for (let i = 0; i <= N; i++) {
-        const t = i / N;
-        const x = x1 + Math.cos(a) * L * t;
-        const y = y1 + Math.sin(a) * L * t + sark * L * 0.55 * t * t;
-        pts.push([x, y]);
+    // taç: arkada koyu, önde açık iki kat tüylü yaprak; yana açılanlar daha çok sarkar
+    const kat = [
+      { renk: [C.hurmaG, C.hurmaK], acilar: [-104, -76, -128, -52, -150, -30, -172, -8, 192, 12] },
+      { renk: [C.hurmaA, C.hurma], acilar: [-90, -64, -116, -40, -140, -16, -164, 4, 184, 22, 158] },
+    ];
+    for (const { renk, acilar } of kat) {
+      for (const d of acilar) {
+        const a = ((d + (rh() - 0.5) * 8) * Math.PI) / 180;
+        const yatay = Math.abs(Math.cos(a));
+        const L = (84 + rh() * 22 - (1 - yatay) * 10) * s;
+        const sark = (0.12 + 0.62 * yatay * yatay) * (Math.sin(a) > 0.2 ? 0.6 : 1);
+        hurmaYapragi(x1, y1, a, L, sark, 15 * s, renk[0], renk[1], C.yaprakK);
       }
-      for (let i = 0; i <= N; i++) {
-        const t = i / N;
-        const [x, y] = pts[i];
-        const [xn, yn] = pts[Math.min(N, i + 1)];
-        const [xp, yp] = pts[Math.max(0, i - 1)];
-        const tx = xn - xp;
-        const ty = yn - yp;
-        const tl = Math.hypot(tx, ty) || 1;
-        const nx = -ty / tl;
-        const ny = tx / tl;
-        const w = 13 * s * Math.sin(Math.PI * Math.min(1, t * 1.15)) * (1 - t * 0.35);
-        const dis = i % 2 ? 1 : 1.22; // hafif tırtık
-        ust.push([x + nx * w * 0.35, y + ny * w * 0.35]);
-        alt.push([x - nx * w * dis, y - ny * w * dis]);
-      }
-      const d = S.yol([...ust, ...alt.reverse()], true);
-      dol(d, k % 2 ? C.hurma : C.hurmaA);
-      ctx.strokeStyle = C.yaprakK;
-      ctx.lineWidth = 1.2 * s;
-      ctx.stroke(P2(S.yol(pts)));
     }
-    dol(S.daireYolu(x1, y1 + 2 * s, 7 * s), C.govde);
+    // hurma salkımları: tacın altında iki küçük kehribar salkım
+    for (const sx of [-1, 1]) {
+      for (let i = 0; i < 11; i++) {
+        const u = i / 10;
+        const x = x1 + sx * (8 + u * 7) * s + Math.sin(i * 2.3) * 3.2 * s;
+        const y = y1 + (6 + u * 16) * s + Math.cos(i * 1.7) * 2 * s;
+        dol(S.daireYolu(x, y, 3.1 * s), i % 3 ? C.hurmaMeyve : C.hurmaMeyveG);
+      }
+    }
+    dol(S.daireYolu(x1, y1 + 2 * s, 7.5 * s), C.govde);
+    dol(S.daireYolu(x1 + 2 * s, y1, 4.5 * s), C.govdeA);
   }
-  hurma(206, 812, 196, 612, 0.9);
-  hurma(868, 812, 884, 628, 0.85);
-  hurma(990, 818, 974, 676, 0.7);
-  // afişi solda çerçeveleyen uzun hurma (önde, çiçeklerin arkasında)
-  hurma(34, 1040, 86, 356, 1.45);
+  hurma(206, 812, 196, 612, 0.9, 11);
+  hurma(868, 812, 884, 628, 0.85, 12);
+  hurma(990, 818, 974, 676, 0.7, 13);
+  // afişi solda çerçeveleyen uzun hurma (önde, çiçeklerin arkasında); tacı kenardan taşar
+  hurma(34, 1040, 86, 356, 1.5, 14);
 
   // ---------------------------------------------------------------- düz ışık bantları
   const ISIK = 0.66;

@@ -13,7 +13,7 @@
     "Gökte dalgalı yatay torna çizgileri; bulutlar çizgilerin incelmesiyle açık, alt yüzlerinde yoğunlaşan çizgilerle modellenmiş",
     "Güneşte on iki dalga eğrisinden örülmüş altın giyoş halkası, içinde gül rengi yaprak rozeti ve ince altın ışınlar",
     "Çerçevede yeşil ve mavi iç içe dalga bantları, köşelerde küçük gül rengi rozetler",
-    "Şeftaliden kreme, nane yeşiline ve maviye geçen iris alt baskı ve ince gül rengi giyoş ağı",
+    "Tepede açık gök mavisinden naneye, kreme ve ufukta şeftaliye geçen iris alt baskı; gökte dikey akan ince gül rengi giyoş zincir ağı",
     "Çiçek taç yaprakları göbekten ışınsal gül rengi çizgilerle, yapraklar orta damardan açılan eğik çizgilerle; göbekler altın noktalarla"
   ],
   "palet": [
@@ -26,7 +26,7 @@
     "#487A46",
     "#F5F0CF"
   ],
-  "kodla_cizim": "2048 iç çözünürlüklü canvas ve piksel tabanlı bir gravür motoru: her öğe için her pikselde bir faz fonksiyonu (çizgiler tam sayılarda) ve bir ton fonksiyonu hesaplanır; çizgi kalınlığı ton × aralık × katsayıdır, örtü kutu süzgeciyle kenar yumuşatılarak bulunur, faz eğimi sayısal türevle alınır. Kubbede faz boylamdır (asin((x−560)/r(y)) × 104/π), aralık 2,3 px'in altına inince her ikinci çizgi düşer; ton yaklaşık kubbe normalinin Lambert ışığından ve kaburga oluklarından gelir, gölgede enlem yaylarıyla ikinci tarama eklenir. Silindirlerde yatay çizgiler, pencerelerde üçlü çapraz tarama. Her katman öğenin yoluyla 'destination-in' kırpılır ve 'multiply' ile basılır (mürekkepler üst üste biner). Gök fazı dalgalı çizgiler, bulutlar Gauss topaklarından. Giyoş rozetleri ve çerçeve bantları r(θ) = R + A·sin(kθ + φ) kutupsal eğrileri ve genliği değişen sinüslerle ince çizgi olarak çizilir; iris alt baskı çarpma karışımlı doğrusal geçiştir.",
+  "kodla_cizim": "2048 iç çözünürlüklü canvas ve piksel tabanlı bir gravür motoru: her öğe için her pikselde bir faz fonksiyonu (çizgiler tam sayılarda) ve bir ton fonksiyonu hesaplanır; çizgi kalınlığı ton × aralık × katsayıdır, örtü kutu süzgeciyle kenar yumuşatılarak bulunur, faz eğimi sayısal türevle alınır. Kubbede faz boylamdır (asin((x−560)/r(y)) × 104/π), aralık 2,3 px'in altına inince her ikinci çizgi düşer; ton yaklaşık kubbe normalinin Lambert ışığından ve kaburga oluklarından gelir, gölgede enlem yaylarıyla ikinci tarama eklenir. Silindirlerde yatay çizgiler, pencerelerde üçlü çapraz tarama. Her katman öğenin yoluyla 'destination-in' kırpılır ve 'multiply' ile basılır (mürekkepler üst üste biner). Gök fazı dalgalı çizgiler, bulutlar Gauss topaklarından. Giyoş rozetleri ve çerçeve bantları r(θ) = R + A·sin(kθ + φ) kutupsal eğrileri ve genliği değişen sinüslerle ince çizgi olarak çizilir; iris alt baskı çarpma karışımlı dikey doğrusal geçiştir; gül rengi alt baskı ağı x ± 5,5·sin(y/8,5) biçimli iki dikey dalga ailesidir ve yatay gök çizgilerini dike yakın açıyla kestiği için girişim (moiré) oluşturmaz.",
   "etiketler": [
     "gravür",
     "giyoş",

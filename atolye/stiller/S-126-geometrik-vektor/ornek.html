@@ -112,11 +112,12 @@
     p.closePath();
     return p;
   }
-  // pergel izleri: kubbeyi kuran iki büyük daire (merkezleri taban çizgisinde) gökte ince beyaz yay olarak görünür
+  // pergel izleri: kubbeyi kuran iki büyük daire (merkezleri taban çizgisinde) gökte ince beyaz tam daireler
+  // olarak görünür; alt yarıları kasnağın, tepelerin ve kaidenin arkasına girer (yarım kalmış yay yok).
   ctx.save();
   ctx.lineWidth = 1.3;
-  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-  for (const cx of [560 - 62.58, 560 + 62.58]) { ctx.beginPath(); ctx.arc(cx, 555, 262.58, Math.PI, TAU); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(255,255,255,0.62)';
+  for (const cx of [560 - 62.58, 560 + 62.58]) { ctx.beginPath(); ctx.arc(cx, 555, 262.58, 0, TAU); ctx.stroke(); }
   ctx.restore();
 
   // bulut: aynı taban çizgisine oturan, yarıçapları altın oranla küçülen daireler; düz taban, yatay gölge şeridi
