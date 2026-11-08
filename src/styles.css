@@ -140,24 +140,32 @@
   --quote-shadow-near: rgba(40, 148, 225, 0.2);
   --quote-shadow-far: rgba(40, 148, 225, 0.45);
 
-  /* "müze / koleksiyon": mürekkep laciverti zemin, fildişi yazı; şampanya yalnız ince çizgi, aralıklı küçük etiket ve
-     seçili simgede (altın dolgu ya da parıltı yok). Kitaplar tek renk: #D7787B. */
-  --murekkep: #0b1430;
-  --fildisi: #f4ede0;
-  --fildisi-2: rgba(244, 237, 224, 0.74);
-  --fildisi-3: rgba(244, 237, 224, 0.56);
-  --sampanya: #d9c49a;
-  --sampanya-cizgi: rgba(217, 196, 154, 0.26);
-  --sampanya-ince: rgba(217, 196, 154, 0.14);
+  /* Külliyat ciltlerinin tek rengi */
   --cilt: #d7787b;
   /* bezin gölgesi ve ışığı (rgb üçlüsü; saydamlıkla kullanılır) */
   --cilt-golge: 60, 14, 22;
   --cilt-isik: 255, 236, 230;
   /* logonun laciverti (açık zeminde) */
   --lacivert: #022064;
+  /* açık ten teması (Kenz, Güneş, Menba sayfası): çok açık, gül alt tonlu fildişi zemin; yazı lacivert ve sıcak
+     mürekkep; altın yalnız ince çizgide ve aralıklı küçük etikette. Kitaplar tek renk #D7787B, adları ten rengi. */
+  --sabah-ust: #fbf6f2;
+  --sabah: #f8f0eb;
+  --sabah-alt: #f4eae3;
+  --zemin-sabah: linear-gradient(180deg, var(--sabah-ust) 0%, var(--sabah) 46%, var(--sabah-alt) 100%);
+  --kalem: #3a2b27; /* sıcak mürekkep: gövde (zeminde 12:1) */
+  --kalem-2: #6f5a54; /* ikincil (5.7:1) */
+  --kalem-3: #7a655e; /* üçüncül: sayılar, sayfa (4.8:1) */
+  --yaldiz: #82612a; /* antika altın: aralıklı etiketler, ikonlar (5.05:1) */
+  --yaldiz-cizgi: rgba(130, 97, 42, 0.26);
+  --yaldiz-ince: rgba(130, 97, 42, 0.14);
+  --gul: #9e4a4f; /* koyu gül: Kenz etiketleri (5.3:1) */
+  --ten: #f8e2d4; /* sırt ve kapak adı: bezle uyan ten rengi */
+  /* sırtın dantel şeridi (8 x 7 px kabartma karo: başlığa bakan gözyaşı + ok; sol uç / sağ uç). :root'ta, çünkü
+     kitap açılışındaki sırt kopyası Güneş'in dışında (body'de) çizilir ve değişkenleri buradan alır. */
+  --dantel-sol: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%228%22%20height%3D%227%22%20viewBox%3D%220%200%2080%2070%22%3E%3Cg%20transform%3D%22translate(3.5%204.5)%22%20color%3D%22rgb(70%2C14%2C22)%22%20opacity%3D%22.7%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(-3%20-3.5)%22%20color%3D%22rgb(255%2C240%2C234)%22%20opacity%3D%22.8%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3Cg%20color%3D%22rgb(255%2C236%2C230)%22%20opacity%3D%22.42%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  --dantel-sag: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%228%22%20height%3D%227%22%20viewBox%3D%220%200%2080%2070%22%3E%3Cg%20transform%3D%22translate(3.5%204.5)%22%20color%3D%22rgb(70%2C14%2C22)%22%20opacity%3D%22.7%22%3E%3Cg%20transform%3D%22translate(80%200)%20scale(-1%201)%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(-3%20-3.5)%22%20color%3D%22rgb(255%2C240%2C234)%22%20opacity%3D%22.8%22%3E%3Cg%20transform%3D%22translate(80%200)%20scale(-1%201)%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cg%20color%3D%22rgb(255%2C236%2C230)%22%20opacity%3D%22.42%22%3E%3Cg%20transform%3D%22translate(80%200)%20scale(-1%201)%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E");
   --eb: 'EB Garamond', 'Tinos', Georgia, serif;
-  --zemin-ekran: radial-gradient(90% 44% at 50% 13%, rgba(40, 56, 110, 0.42), rgba(40, 56, 110, 0) 70%),
-    linear-gradient(180deg, #0d1736 0%, #0b1430 52%, #070e24 100%);
   /* bez dokusu (gri gürültü; soft-light ile karışır) */
   --doku: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n' x='0' y='0' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .5'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   --serif: 'Tinos', 'Times New Roman', Times, serif;
@@ -309,7 +317,7 @@ h2[tabindex='-1']:focus {
   display: block;
 }
 
-/* ---------- alt menü: yüzen koyu cam kapsül, üç eşit sekme (ana ekranda fildişi) ---------- */
+/* ---------- alt menü: her ekranda fildişi cam (ana ekrandakiyle aynı yüzey), üç eşit sekme ---------- */
 .tabbar {
   position: absolute;
   left: 50%;
@@ -322,13 +330,13 @@ h2[tabindex='-1']:focus {
   padding: calc(5 * var(--u));
   transform: translateX(-50%);
   border-radius: calc(22 * var(--u));
-  background: rgba(14, 22, 50, 0.82);
-  -webkit-backdrop-filter: blur(22px) saturate(140%);
-  backdrop-filter: blur(22px) saturate(140%);
+  background: rgba(251, 248, 241, 0.94);
+  -webkit-backdrop-filter: blur(22px) saturate(110%);
+  backdrop-filter: blur(22px) saturate(110%);
   box-shadow:
-    inset 0 0 0 0.5px rgba(217, 196, 154, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 18px 36px -18px rgba(0, 0, 0, 0.75);
+    inset 0 0 0 0.5px rgba(2, 32, 100, 0.12),
+    0 1px 3px rgba(96, 52, 40, 0.06),
+    0 16px 32px -18px rgba(96, 52, 40, 0.42);
   user-select: none;
   -webkit-user-select: none;
 }
@@ -341,27 +349,24 @@ h2[tabindex='-1']:focus {
   justify-content: center;
   gap: calc(5 * var(--u));
   border-radius: calc(17 * var(--u));
-  color: rgba(244, 237, 224, 0.62);
+  color: rgba(2, 32, 100, 0.64); /* 4.87:1 */
   text-decoration: none;
   outline: none;
   -webkit-touch-callout: none;
 }
-/* seçili sekme: sessiz fildişi yüzey, şampanya kıl çizgi; ana ekranda hiçbiri seçili değildir */
+/* seçili sekme: kum rengi kapsül, altın kıl çizgi; ana ekranda hiçbiri seçili değildir */
 .tab::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: rgba(244, 237, 224, 0.07);
-  box-shadow: inset 0 0 0 0.5px rgba(217, 196, 154, 0.16);
+  background: #f3e9df;
+  box-shadow: inset 0 0 0 0.5px rgba(130, 97, 42, 0.3);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
 .tab[aria-current='page'] {
-  color: var(--fildisi);
-}
-.tab[aria-current='page'] .tab__icon {
-  color: var(--sampanya);
+  color: var(--lacivert);
 }
 .tab[aria-current='page']::before {
   opacity: 1;
@@ -371,7 +376,7 @@ h2[tabindex='-1']:focus {
   position: absolute;
   inset: 2px;
   border-radius: inherit;
-  box-shadow: 0 0 0 1.5px var(--sampanya);
+  box-shadow: 0 0 0 1.5px rgba(2, 32, 100, 0.55);
 }
 
 .tab__icon {
@@ -400,9 +405,8 @@ h2[tabindex='-1']:focus {
   white-space: nowrap;
 }
 
-/* ana ekran (ve ana ekrandan açılan Oku): fildişi cam, hepsi logo laciverti, seçili sekme yok */
+/* ana ekran (ve ana ekrandan açılan Oku): bugünkü gibi; hepsi logo laciverti, seçili sekme yok, lacivert gölge */
 .app[data-zemin='ana'] .tabbar {
-  background: rgba(251, 248, 241, 0.94);
   -webkit-backdrop-filter: blur(22px) saturate(90%);
   backdrop-filter: blur(22px) saturate(90%);
   box-shadow:
@@ -411,9 +415,6 @@ h2[tabindex='-1']:focus {
 }
 .app[data-zemin='ana'] .tab {
   color: var(--lacivert);
-}
-.app[data-zemin='ana'] .tab:focus-visible::after {
-  box-shadow: 0 0 0 1.5px rgba(2, 32, 100, 0.55);
 }
 
 @media (prefers-reduced-motion: reduce) {

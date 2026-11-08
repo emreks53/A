@@ -1,22 +1,20 @@
-// Güneş: Risale-i Nur Külliyatı'nın kütüphanesi. Mürekkep laciverti zeminde, yumuşak bir ışık altında rahlede
-// inci beyazı Kur'an-ı Kerim (yalnız süstür, dokunulmaz); altında iki rafta 14 cilt (6 + 8). Bütün ciltler aynı
-// bezden (#D7787B), her biri gerçek kalınlığında: iki raf tek ölçekte, genişlik = RNK baskısının sayfa sayısından
-// bulunan milimetre (oku/ortak.ts kalinlikMm). Sırt adları varak, aşağıdan yukarı okunur.
+// Güneş: Risale-i Nur Külliyatı'nın kütüphanesi. Çok açık ten rengi zeminde, çevresinden güneş gibi nur saçan
+// inci beyazı Kur'an-ı Kerim (rahlesiz; yalnız süstür, dokunulmaz); altında iki düz yığında 14 cilt (7 + 7), RNK
+// Neşriyat kütüphanesindeki sırayla sütun sütun: Sözler sol üstte, Muhâkemat sağ altta. Bütün ciltler aynı deriden
+// (#D7787B), yatık durur, sırtı bize bakar; kalınlıkları kullanıcının fotoğrafındaki gerçek oranlarda (iki yığın
+// tek ölçekte; oku/ortak.ts KALINLIK). Sırt adları ten rengi, hafif kabartma.
 // PDF'i eklenmiş kitap okuyucuda açılır; PDF'i olmayan kitap, listede dış adresi varsa o sitede (RNK Neşriyat'ın
 // okuma sitesi rnk.tr; sitede yeni sekmede, telefon uygulamasında tarayıcıda) açılır; ikisi de yoksa cilt soluktur,
-// "yakında" kuşağı taşır. En son okunan kitap için rafın altında "Kaldığın yer".
+// "yakında" kuşağı taşır. En son okunan kitap için yığınların altında "Kaldığın yer".
 import { Capacitor } from '@capacitor/core';
 import { baglanti, kitaplar } from 'virtual:kitaplar';
 import { kuranSvg } from '../oku/kuran-cizim';
-import { kalinlikMm, KULLIYAT, SIRT, tipografik } from '../oku/ortak';
+import { KALINLIK, kalinlikMm, KULLIYAT, SIRT, type SirtYazisi, tipografik, YIGIN_SUTUN } from '../oku/ortak';
 import { basiliSayfa, bolumBul, disAdres, kitapKimligi, type Kitap } from './ortak';
 import { sonOkunan } from './yer';
 
 const KITAP_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>';
-
-const DIS_SVG =
-  '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5H3.5v9h9V10M9 3h4v4M13 3 7.5 8.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, metin?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(etiket);
@@ -35,26 +33,49 @@ export interface Gunes {
   yenile(): void;
 }
 
+/** Sırt adını bir ya da iki satır dizer; yazı boyu ölçüleri (--em, --hm, --dy: gunes.css) dizilişe göre */
+function satirDiz(li: HTMLElement, s: SirtYazisi, tek: boolean): void {
+  const yazi = li.querySelector<HTMLElement>('.cilt__ad > span');
+  if (!yazi) return;
+  const iki = s.satirlar.length > 1 && !(tek && s.tek);
+  yazi.className = iki ? 'iki' : '';
+  yazi.replaceChildren();
+  if (iki) {
+    s.satirlar.forEach((satir, i) => {
+      if (i) yazi.append(el('br'));
+      yazi.append(satir);
+    });
+  } else yazi.append(s.satirlar.join(' '));
+  li.style.setProperty('--em', String(iki || !s.tek ? s.em : s.tek.em));
+  li.style.setProperty('--hm', String(iki || !s.tek ? s.hm : s.tek.hm));
+  if (iki && s.dy) li.style.setProperty('--dy', String(s.dy));
+  else li.style.removeProperty('--dy');
+}
+
+/** İki satırlı adlar (Kastamonu Lâhikası, İman ve Küfür Muvâzeneleri): hangi dizilişte daha büyük yazılıyorsa o.
+    Yazı boyu CSS'te bant enine ve yüksekliğine göre hesaplanır (yerleşim gerekmez, yalnız hesaplanan stil). */
+function satirSec(li: HTMLElement, s: SirtYazisi): void {
+  const yazi = li.querySelector<HTMLElement>('.cilt__ad > span');
+  if (!yazi || !s.tek) return;
+  satirDiz(li, s, true);
+  const tekBoy = parseFloat(getComputedStyle(yazi).fontSize);
+  satirDiz(li, s, false);
+  const ikiBoy = parseFloat(getComputedStyle(yazi).fontSize);
+  if (tekBoy >= ikiBoy - 0.05) satirDiz(li, s, true);
+}
+
 function ciltKur(ad: (typeof KULLIYAT)[number], kitap: Kitap | undefined, dis: string | undefined): HTMLLIElement {
   const s = SIRT[ad];
   const li = el('li');
-  // genişlik gerçek kalınlıkla orantılı (mm); iki rafta aynı ölçek
+  // bant yüksekliği = kalınlık (mm) x tek ölçek (--mm-px, iki yığında aynı); yazı boyu ölçüleri satırdan (gunes.css)
   li.style.setProperty('--mm', String(+kalinlikMm(ad).toFixed(2)));
   const acilir = kitap || dis;
   const cilt = el(acilir ? 'a' : 'span', `cilt${kitap ? '' : dis ? ' cilt--dis' : ' cilt--yakinda'}`);
   cilt.dataset.kitap = kitapKimligi(ad);
-  // yazı boyu: sırtın yüksekliğine, satır uzunluğuna (k) ve satır sayısına (n) göre en büyüğü
-  cilt.style.setProperty('--k', String(s.k));
-  cilt.style.setProperty('--n', String(s.satirlar.length));
   const deri = el('span', 'cilt__deri');
   deri.setAttribute('aria-hidden', 'true');
-  const yazi = el('span');
-  s.satirlar.forEach((satir, i) => {
-    if (i) yazi.append(el('br'));
-    yazi.append(satir);
-  });
   const adKutu = el('span', 'cilt__ad');
-  adKutu.append(yazi);
+  adKutu.append(el('span'));
   deri.append(adKutu);
   if (kitap) {
     const a = cilt as HTMLAnchorElement;
@@ -78,54 +99,45 @@ function ciltKur(ad: (typeof KULLIYAT)[number], kitap: Kitap | undefined, dis: s
     cilt.append(el('span', 'visually-hidden', `${tipografik(ad)}, yakında`), deri, kusak);
   }
   li.append(cilt);
+  satirDiz(li, s, false);
   return li;
 }
 
 export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
   const kitaplik = el('div', 'gunes');
+  // yığınların oran toplamı: yatay ekranda ölçek (--S) yüksekliğe sığmaktan bulunur (uzun yığın; kısa yığın ve
+  // üstündeki etiket)
+  const toplamlar = [KULLIYAT.slice(0, YIGIN_SUTUN), KULLIYAT.slice(YIGIN_SUTUN)].map((a) => a.reduce((t, ad) => t + KALINLIK[ad], 0));
+  kitaplik.style.setProperty('--yigin-boy', Math.max(...toplamlar).toFixed(4));
+  kitaplik.style.setProperty('--kisa-boy', Math.min(...toplamlar).toFixed(4));
   const ic = el('div', 'gunes__ic');
 
   const sahne = el('div', 'gunes__sahne');
   sahne.setAttribute('aria-hidden', 'true');
-  sahne.innerHTML = `<svg class="gunes__sahne-svg" viewBox="0 0 260 232" aria-hidden="true" focusable="false">${kuranSvg('gs')}</svg>`;
+  sahne.innerHTML = `<svg class="gunes__sahne-svg" viewBox="0 0 240 190" aria-hidden="true" focusable="false">${kuranSvg('gs')}</svg>`;
 
-  const baslik = el('h1', 'gunes__etiket', 'Risale-i Nur Külliyatı');
+  // Külliyat: iki düz yığın; etiket kısa olan sağ yığının üstündeki boşlukta (gunes.css, ızgara)
+  const kulliyat = el('div', 'gunes__kulliyat');
+  const baslik = el('h1', 'gunes__etiket');
   baslik.lang = 'tr';
   baslik.tabIndex = -1;
-
-  const raflar = el('div', 'gunes__raflar');
+  baslik.append(el('span', undefined, 'Risale-i Nur'), ' ', el('span', undefined, 'Külliyatı'));
+  kulliyat.append(baslik);
   const ciltler = new Map<string, HTMLElement>();
-  // üst rafta altı, altta sekiz cilt (üst raf 195,2 mm, alt raf 188,05 mm: ikisi de aynı ölçekte)
-  for (const [i, adlar] of [KULLIYAT.slice(0, 6), KULLIYAT.slice(6)].entries()) {
-    const raf = el('div', 'gunes__raf');
-    const ul = el('ul', 'gunes__kitaplar');
-    ul.setAttribute('aria-label', i === 0 ? 'Üst raf' : 'Alt raf');
+  const ikiSatirlilar: [HTMLElement, SirtYazisi][] = [];
+  // sütun sütun: ilk yedi eser sol yığın (üstten alta), kalan yedisi sağ yığın; en sağ altta Muhâkemat
+  for (const [i, adlar] of [KULLIYAT.slice(0, YIGIN_SUTUN), KULLIYAT.slice(YIGIN_SUTUN)].entries()) {
+    const ul = el('ul', `yigin yigin--${i === 0 ? 'sol' : 'sag'}`);
+    ul.setAttribute('aria-label', i === 0 ? 'Sol yığın' : 'Sağ yığın');
     for (const ad of adlar) {
       const li = ciltKur(ad, kitaplar.find((k) => k.kitap === ad), disAdres(baglanti, ad));
       ciltler.set(kitapKimligi(ad), li.firstElementChild as HTMLElement);
+      if (SIRT[ad].tek) ikiSatirlilar.push([li, SIRT[ad]]);
       ul.append(li);
     }
-    const tahta = el('div', 'gunes__tahta');
-    tahta.setAttribute('aria-hidden', 'true');
-    raf.append(ul, tahta);
-    raflar.append(raf);
+    kulliyat.append(ul);
   }
-
-  const bosluk = el('div', 'gunes__bosluk');
-  bosluk.setAttribute('aria-hidden', 'true');
-  ic.append(sahne, baslik, raflar);
-  // dış sitede açılan kitaplar varsa rafın altında söylenir
-  const disaAcilan = KULLIYAT.filter((ad) => !kitaplar.some((k) => k.kitap === ad) && disAdres(baglanti, ad));
-  if (baglanti && disaAcilan.length) {
-    const not = el('p', 'gunes__not');
-    const yazi = el('span');
-    yazi.append(disaAcilan.length === KULLIYAT.length ? 'Kitaplar ' : 'Okuyucuda olmayan kitaplar ', el('b', undefined, baglanti.ad), ' sitesinde açılır');
-    const ok = el('span', 'gunes__not-ok');
-    ok.innerHTML = DIS_SVG;
-    not.append(yazi, ok);
-    ic.append(not);
-  }
-  ic.append(bosluk);
+  ic.append(sahne, kulliyat);
   kitaplik.append(ic);
   gorunum.replaceChildren(kitaplik);
 
@@ -135,13 +147,22 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
   ic.append(devam);
   let kurdeleli: HTMLElement | null = null;
 
+  // uzun adların dizilişi ekranın boyuna ve kartın açık olup olmamasına göre (bant boyu değişir)
+  const satirlariSec = () => ikiSatirlilar.forEach(([li, sy]) => satirSec(li, sy));
+  let bekleyen = 0;
+  addEventListener('resize', () => {
+    cancelAnimationFrame(bekleyen);
+    bekleyen = requestAnimationFrame(satirlariSec);
+  });
+
   function yenile(): void {
     const son = sonOkunan(kitaplar);
     const k = son && kitaplar.find((x) => x.kimlik === son.kimlik);
     const yer = son?.yer;
     devam.hidden = !yer;
-    // kart açıkken sahne ve sırtlar biraz kısalır (gunes.css)
+    // kart açıkken yığınların ölçeği kartın yüksekliği kadar küçülür (gunes.css)
     kitaplik.toggleAttribute('data-devam', !devam.hidden);
+    satirlariSec();
     if (kurdeleli) {
       kurdeleli.classList.remove('cilt--kaldigin');
       kurdeleli.querySelector('.cilt__kurdele')?.remove();
@@ -154,7 +175,7 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
     const bolum = bolumBul(k, yer.sayfa);
     const yerYazisi = [bolum ? tipografik(bolum.baslik) : '', basili ? `${basili}. sayfa` : ''].filter(Boolean);
 
-    // raftaki cilt biraz öne çekilir, kurdelesi raftan sarkar
+    // cilt yığından biraz dışa çekilir, kurdelesi alttaki kitabın üstüne sarkar
     const cilt = ciltler.get(k.kimlik);
     if (cilt) {
       cilt.classList.add('cilt--kaldigin');
@@ -195,7 +216,7 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
     }
   }
 
-  // Kitaba dokununca: (hareket azaltılmamışsa) cilt raftan çekilip açılır, sonra okuyucu
+  // Kitaba dokununca: (hareket azaltılmamışsa) cilt yığından kalkıp açılır, sonra okuyucu
   kitaplik.addEventListener('click', (e) => {
     if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
     const a = (e.target as Element).closest<HTMLAnchorElement>('a.cilt, a.gunes__devam');

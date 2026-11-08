@@ -49,7 +49,7 @@ const HATA_YAZISI: Record<HataNedeni, string> = {
   cihaz: 'Okuyucu bu cihazda açılamadı. Tarayıcınızı ya da cihazınızın yazılımını güncelleyip yeniden deneyin.',
 };
 
-const ZEMIN: Record<Tema, string> = { gunduz: '#EBE7E0', sepya: '#E9DEC7', gece: '#0A1534' };
+export const ZEMIN: Record<Tema, string> = { gunduz: '#EBE7E0', sepya: '#E9DEC7', gece: '#0A1534' };
 const KAGIT: Record<Tema, string> = { gunduz: '#FFFFFF', sepya: '#F6EEDC', gece: '#0F1A3A' };
 
 /** Okuyucu açılınca ilk sayfanın ekranda duracağı yer (açılış geçişi için; sayfa oranı bilinmiyorsa A5) */

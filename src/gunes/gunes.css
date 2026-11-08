@@ -954,41 +954,46 @@
 }
 
 /* =====================================================================================================
-   Kütüphane: "müze / koleksiyon". Mürekkep laciverti zemin; üstte yumuşak ışık altında rahlede inci beyazı
-   Kur'an-ı Kerim, altında iki rafta 14 cilt (6 + 8). Ciltler tek bezden (#D7787B), gerçek kalınlıklarıyla
-   orantılı (iki raf tek ölçekte). Yükseklikler menünün üstünde kalan boşluğa göre: 390 x 844'te sahne 214,
-   sırt 190 px; 360 x 640 tarayıcıda 160 / 134 px; kısa ya da büyütülmüş ekranlarda da her şey menünün üstüne
-   sığar, sütun kaymaz.
+   Kütüphane: açık ten rengi zemin; üstte çevresinden güneş gibi nur saçan inci beyazı Kur'an-ı Kerim (rahlesiz),
+   altında iki düz yığında 14 cilt (7 + 7, sütun sütun: Sözler sol üstte, Muhâkemat sağ altta). Ciltler yatık,
+   sırtı bize bakar; tek deriden (#D7787B), kalınlıkları fotoğraftaki oranlarda (oku/ortak.ts KALINLIK; iki yığın
+   tek ölçekte). Ölçek menünün üstünde kalan boşluktan: kısa ekranda önce Kur'an küçülür, yığınlar sığar; her şey
+   menünün üstünde, sütun kaymaz. 390 x 844'te en ince bant 25,8 px, 360 x 640'ta 23,3 px. Yatay ekranda (telefon,
+   tablet, masaüstü) Kur'an solda, yığınlar sağda; ölçek o zaman yığının sığdığı yükseklikten.
    ===================================================================================================== */
 .view--gunes {
   overflow: hidden;
   isolation: isolate;
-  background: var(--zemin-ekran);
-  color: var(--fildisi);
+  background: var(--zemin-sabah);
+  color: var(--kalem);
   /* Menünün üstünde kalan boşluk (üst güvenli alan ve alttaki 10 px pay dışında). Alt menü --u ile büyüdüğü
      (geniş telefon, yatay ekran, masaüstü) için ekran yüksekliğinden değil bundan ölçülür. */
   --bos: calc(100vh - max(var(--safe-top), 10px) - var(--menu-ust) - 10px);
-  /* Ölçülerin dayandığı "eşdeğer ekran yüksekliği": içerik bu boşluğa 1'e 1 ölçeklenir (390 x 844'te 844,
-     360 x 640'ta ~638); aşağıdaki katsayılar 390 x 844 ve 360 x 640'a göre ayarlıdır. */
-  --alan-e: calc(var(--bos) * 1.0475 + 65.8px);
-  /* Kur'an sahnesinin, sırtların yüksekliği ve raflar arası */
-  --sahne-h: clamp(96px, calc(var(--alan-e) * 0.2647 - 9.4px), 248px);
-  --sirt-h: clamp(92px, calc(var(--alan-e) * 0.2745 - 41.7px), 204px);
-  --raf-ara: clamp(10px, calc(var(--alan-e) * 0.039 - 8px), 28px);
-  /* rafın en geniş hali (tablette 520) ve sırt yazısının mürekkebi */
-  --raf-en: 440px;
-  --sirt-yazi: rgb(var(--cilt-golge));
+  /* yığınlar: kenar boşluğu, iki yığın arası, bant eni (sırt boyu; 14 kitapta aynı): 178 @390, 163 @360, en çok 205 */
+  --kenar: 12px;
+  --ara: 10px;
+  --B: calc((min(100vw, 444px) - 2 * var(--kenar) - var(--ara)) / 2);
+  /* ortak başlık boyu: 21 px @390, 19,2 px @360 */
+  --F: min(21px, calc(var(--B) * 0.118));
 }
 @supports (height: 100dvh) {
   .view--gunes {
     --bos: calc(100dvh - max(var(--safe-top), 10px) - var(--menu-ust) - 10px);
   }
 }
-/* "Kaldığın yer" kartı açıkken sahne ve sırtlar biraz kısalır: kart da menünün üstüne sığar */
-.gunes[data-devam] {
-  --sahne-h: clamp(72px, calc(var(--alan-e) * 0.2 - 16px), 248px);
-  --sirt-h: clamp(84px, calc(var(--alan-e) * 0.2745 - 54px), 204px);
-  --raf-ara: clamp(8px, calc(var(--alan-e) * 0.039 - 11px), 28px);
+/* iOS ana ekran uygulamasında (PWA, html.ios-pwa: main.ts) durum çubuğu "black-translucent" kalır, ana ekranın
+   fotoğrafı altından akar; açık zeminde beyaz saat okunsun diye durum çubuğunun altında hafif sıcak gölge
+   (Kenz'deki: kenz.css). Telefon uygulamasında (Capacitor) durum çubuğu yazısı koyulaşır, gölge gerekmez. */
+.ios-pwa .view--gunes::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--safe-top);
+  background: linear-gradient(180deg, rgba(58, 43, 39, 0.42), rgba(58, 43, 39, 0));
+  pointer-events: none;
 }
 /* Güneş'in kendi zemini var: ortak gökyüzü (ana ekranınki) gizlenir */
 .app[data-zemin='gunes'] .bg {
@@ -1004,6 +1009,20 @@
   overscroll-behavior: contain;
   scrollbar-width: none;
   scroll-padding: calc(var(--safe-top) + 12px) 0 calc(var(--menu-ust) + 12px);
+  /* TEK ÖLÇEK: --S = kalınlık oranı 1'in px karşılığı (iki yığında aynı), menünün üstündeki boşluktan.
+     380 @360x640, 420 @390x844, 408 çentikli 390x844: gerçek en-boy oranının 2,3 katı kadar (en ince bant da
+     dokunulabilir kalsın, ad büyük yazılsın diye); göreli kalınlık birebir. Kart açıkken kartın yüksekliği
+     boşluktan düşülür (kart + üst boşluğu). --mm-px = --S / 240 mm (sırt boyu). */
+  --kart: 0px;
+  --S: clamp(340px, min(calc((var(--bos) - var(--kart)) * 0.2022 + 269.6px), calc(var(--B) * 2.6)), 440px);
+  --mm-px: calc(var(--S) / 240);
+}
+.gunes[data-devam] {
+  --kart: 81px;
+}
+/* kart açıkken kısa ekranda Kur'an daha da küçülebilir (yığınlar ve kart menünün üstünde kalsın) */
+.gunes[data-devam] .gunes__sahne {
+  min-height: 56px;
 }
 .gunes::-webkit-scrollbar {
   display: none;
@@ -1013,265 +1032,255 @@
   flex-direction: column;
   align-items: center;
   min-height: 100%;
-  padding: calc(max(var(--safe-top), 10px) + clamp(4px, calc(var(--alan-e) * 0.014), 14px)) 14px calc(var(--menu-ust) + 10px);
+  padding: calc(max(var(--safe-top), 10px) + 4px) 0 calc(var(--menu-ust) + 18px);
 }
 
-/* süs: dokunulmaz, odaklanmaz */
+/* sahne (süs: dokunulmaz, odaklanmaz): kalan yüksekliği alır; nurlu Kur'an ortada (çizim en çok 262 px, mushaf
+   çizimin %80'i: ≈ 211 px). Nur kutudan taşar; ekranın kenarında kaydırıcı keser, yığınların arkasından geçer. */
 .gunes__sahne {
-  flex: none;
-  width: calc(var(--sahne-h) * 260 / 232);
-  height: var(--sahne-h);
+  position: relative;
+  flex: 1 1 0;
+  min-height: 96px;
+  width: 100%;
   pointer-events: none;
   user-select: none;
 }
 .gunes__sahne-svg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
   display: block;
-  width: 100%;
-  height: 100%;
+  height: min(100%, 262px);
+  width: auto;
+  aspect-ratio: 240 / 190;
+  transform: translate(-50%, -50%);
   overflow: visible;
 }
 
-.gunes__etiket {
-  display: flex;
-  align-items: center;
+/* ---------- Külliyat: iki düz yığın, alttan hizalı (aynı masada). Etiket, kısa olan sağ yığının üstündeki boşlukta. ---------- */
+.gunes__kulliyat {
+  position: relative;
+  flex: none;
+  display: grid;
+  grid-template-columns: var(--B) var(--B);
+  grid-template-rows: 1fr auto;
+  column-gap: var(--ara);
   justify-content: center;
-  gap: 12px;
-  margin: clamp(6px, calc(var(--alan-e) * 0.022 - 4px), 16px) 0 clamp(8px, calc(var(--alan-e) * 0.033 - 7px), 24px);
-  color: var(--sampanya);
-  font-family: var(--sans);
+  width: 100%;
+  margin-top: clamp(10px, calc(var(--bos) * 0.03 - 4px), 16px);
+}
+.gunes__etiket {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+  padding: 4px 0 4px 0.24em;
+  color: var(--yaldiz);
+  font-family: var(--eb);
   font-weight: 600;
-  font-size: 10px;
-  line-height: 1;
-  letter-spacing: 0.28em;
-  text-indent: 0.28em;
+  font-size: 11.5px;
+  line-height: 1.32;
+  letter-spacing: 0.24em;
+  text-align: center;
   text-transform: uppercase;
-  white-space: nowrap;
   outline: none;
 }
-.gunes__etiket::before,
+.gunes__etiket span {
+  display: block;
+  white-space: nowrap;
+}
 .gunes__etiket::after {
   content: '';
-  width: 20px;
+  display: block;
+  width: 34px;
   height: 1px;
-  background: var(--sampanya-cizgi);
+  margin: 8px auto 0;
+  transform: translateX(-0.12em);
+  background: var(--yaldiz-cizgi);
 }
-
-/* ---------- raflar ---------- */
-.gunes__raflar {
+.yigin {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--raf-ara);
-  width: 100%;
-  max-width: var(--raf-en);
-}
-.gunes__raf {
-  position: relative;
-}
-.gunes__kitaplar {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 1px;
-  height: var(--sirt-h);
+  align-self: end;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-/* genişlik = (raf - üst raftaki 5 aralık) x kalınlık (mm) / 195,2 (üst rafın toplamı): iki raf tek ölçekte,
-   alt raf biraz kısa kalır ve ortalanır */
-.gunes__kitaplar > li {
-  flex: none;
-  width: calc((100% - 5px) * var(--mm) / 195.2);
-  height: 100%;
+/* (sırayla sol yığın daha uzun; sıra değişip sağ yığın uzarsa grid-row'lar ve etiketin sütunu yer değiştirir) */
+.yigin--sol {
+  grid-column: 1;
+  grid-row: 1 / 3;
 }
-/* kitapların rafa değdiği yerde gölge */
-.gunes__raf::after {
+.yigin--sag {
+  grid-column: 2;
+  grid-row: 2;
+}
+/* bant yüksekliği = kalınlık (mm) x tek ölçek */
+.yigin > li {
+  position: relative;
+  height: calc(var(--mm) * var(--mm-px));
+}
+/* yığının masaya değdiği yerde ince sıcak gölge */
+.yigin::after {
   content: '';
   position: absolute;
-  z-index: 2;
-  left: 0;
-  right: 0;
-  bottom: 12px;
-  height: 14px;
-  background: linear-gradient(0deg, rgba(3, 5, 16, 0.38), rgba(3, 5, 16, 0));
+  z-index: -1;
+  left: -5%;
+  right: -5%;
+  bottom: -10px;
+  height: 16px;
+  background: radial-gradient(closest-side, rgba(112, 60, 48, 0.34), rgba(112, 60, 48, 0.12) 55%, rgba(112, 60, 48, 0));
   pointer-events: none;
 }
-/* raf tahtası: aydınlık üst yüz, şampanya ön kenar, koyu ön yüz ve duvara düşen gölge */
-.gunes__tahta {
-  position: relative;
-  z-index: 3;
-  height: 12px;
-  margin: 0 -8px;
-  border-radius: 1px 1px 2px 2px;
-  background:
-    linear-gradient(180deg, rgba(3, 5, 16, 0.6) 0, rgba(3, 5, 16, 0) 2.5px),
-    linear-gradient(
-      180deg,
-      #303c6b 0,
-      #232e5a 4px,
-      rgba(217, 196, 154, 0.5) 4px,
-      rgba(217, 196, 154, 0.5) 4.5px,
-      #172148 4.5px,
-      #0b132e 100%
-    );
-  box-shadow:
-    0 14px 20px -10px rgba(0, 0, 0, 0.85),
-    0 1px 0 rgba(0, 0, 0, 0.35);
+.yigin > li:last-child .cilt__deri {
+  box-shadow: 0 1.5px 1.2px -0.5px rgba(70, 20, 24, 0.45);
 }
 
-/* ---------- cilt (kitap sırtı): bez, mafsal olukları, kör baskı çizgiler, varak ad ---------- */
+/* ---------- cilt: yatık kitabın sırtı (fotoğraftaki deri sırt; tek öğe, süzgeç yok, kap sorgusu yok) ---------- */
 .cilt {
   position: relative;
-  z-index: 1;
   display: block;
-  width: 100%;
   height: 100%;
-  border-radius: 2.5px 2.5px 1px 1px;
-  color: var(--sirt-yazi);
+  color: var(--ten);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 1.5px 0 2px -0.5px rgba(3, 5, 16, 0.55);
   transition: transform 0.18s ease;
 }
-/* dokununca raftan biraz çekilir */
-a.cilt:active {
-  transform: translateY(-6px);
+/* dokununca yığından yana çekilir */
+.yigin--sol a.cilt:active {
+  transform: translateX(-8px);
+}
+.yigin--sag a.cilt:active {
+  transform: translateX(8px);
 }
 .cilt:focus-visible {
-  /* raf tahtasının ve komşu ciltlerin üstüne çıkar; fildişi halka iki yanından koyu: hem lacivertte hem bezde görünür */
-  z-index: 5;
-  outline: 2px solid var(--fildisi);
-  outline-offset: 2px;
-  box-shadow:
-    0 0 0 6px var(--murekkep),
-    1.5px 0 2px -0.5px rgba(3, 5, 16, 0.55);
+  z-index: 3;
+  outline: 2px solid var(--lacivert);
+  outline-offset: 1px;
 }
+/* Bandın boyunca: yuvarlak (dışbükey) deri (üst kenarda koyu dikiş, üst üçte birde ışık, altta gölge), yuvarlak uç,
+   kabartma başlık bandı, çift kabartma sırt, ip oluğu, başlığa bakan gözyaşı + ok dantel şeridi (8 px), iç oluk;
+   ortada ad; sağ uç aynası. Işık sol üstten. */
 .cilt__deri {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border-radius: inherit;
+  border-radius: 2.4px / 22%;
   background-color: var(--cilt);
   background-image:
-    /* başta ışık, ayakta gölge */
-    linear-gradient(180deg, rgba(var(--cilt-isik), 0.13) 0, rgba(var(--cilt-isik), 0) 18%, rgba(var(--cilt-golge), 0) 70%, rgba(var(--cilt-golge), 0.2) 100%),
-    /* hafif yuvarlak sırt (yüzdeyle) */
+    /* yuvarlak (dışbükey) sırt */
+    linear-gradient(
+      180deg,
+      rgba(var(--cilt-golge), 0.62) 0,
+      rgba(var(--cilt-golge), 0.2) 1.3px,
+      rgba(var(--cilt-isik), 0.05) 8%,
+      rgba(var(--cilt-isik), 0.19) 21%,
+      rgba(var(--cilt-isik), 0.23) 31%,
+      rgba(var(--cilt-isik), 0.1) 45%,
+      rgba(var(--cilt-isik), 0) 56%,
+      rgba(var(--cilt-golge), 0.07) 71%,
+      rgba(var(--cilt-golge), 0.22) 87%,
+      rgba(var(--cilt-golge), 0.4) 96%,
+      rgba(var(--cilt-golge), 0.66) 100%
+    ),
+    /* yuvarlak uçlar: sol uç ışıkta, sağ uç gölgede */
     linear-gradient(
       90deg,
-      rgba(var(--cilt-isik), 0) 6%,
-      rgba(var(--cilt-isik), 0.1) 20%,
-      rgba(var(--cilt-isik), 0.15) 31%,
-      rgba(var(--cilt-isik), 0.05) 46%,
-      rgba(var(--cilt-golge), 0) 58%,
-      rgba(var(--cilt-golge), 0.07) 80%,
-      rgba(var(--cilt-golge), 0.12) 100%
+      rgba(var(--cilt-golge), 0.6) 0,
+      rgba(var(--cilt-isik), 0.16) 1.4px,
+      rgba(var(--cilt-isik), 0.28) 2.4px,
+      rgba(var(--cilt-golge), 0.26) 4.2px,
+      transparent 4.8px
     ),
-    /* kapak kenarları (sabit px: geniş kitaplar silindir gibi görünmez) */
-    linear-gradient(90deg, rgba(var(--cilt-golge), 0.5) 0, rgba(var(--cilt-golge), 0.14) 2px, rgba(var(--cilt-golge), 0) 5px),
-    linear-gradient(270deg, rgba(var(--cilt-golge), 0.56) 0, rgba(var(--cilt-golge), 0.18) 2.5px, rgba(var(--cilt-golge), 0) 7px),
-    /* bez dokusu */
+    linear-gradient(
+      270deg,
+      rgba(var(--cilt-golge), 0.68) 0,
+      rgba(var(--cilt-golge), 0.2) 1.4px,
+      rgba(var(--cilt-isik), 0.1) 2.4px,
+      rgba(var(--cilt-golge), 0.28) 4.2px,
+      transparent 4.8px
+    ),
+    /* sol uç bölgesi (23 px): başlık bandı 4.4-6.6, çift sırt 7.4-9 ve 9.6-11.2, ip oluğu 11.9-12.7, dantelin iç oluğu 21.3-22.1 */
+    linear-gradient(90deg, transparent 0, transparent 4.4px, rgba(var(--cilt-isik),0.36) 4.4px 5.5px, transparent 5.5px, transparent 5.5px, rgba(var(--cilt-golge),0.32) 5.5px 6.6px, transparent 6.6px, transparent 7.4px, rgba(var(--cilt-isik),0.55) 7.4px 8.2px, transparent 8.2px, transparent 8.2px, rgba(var(--cilt-golge),0.46) 8.2px 9px, transparent 9px, transparent 9.6px, rgba(var(--cilt-isik),0.55) 9.6px 10.4px, transparent 10.4px, transparent 10.4px, rgba(var(--cilt-golge),0.46) 10.4px 11.2px, transparent 11.2px, transparent 11.9px, rgba(var(--cilt-golge),0.36) 11.9px 12.3px, transparent 12.3px, transparent 12.3px, rgba(var(--cilt-isik),0.28) 12.3px 12.7px, transparent 12.7px, transparent 21.3px, rgba(var(--cilt-golge),0.36) 21.3px 21.7px, transparent 21.7px, transparent 21.7px, rgba(var(--cilt-isik),0.28) 21.7px 22.1px, transparent 22.1px),
+    /* sağ uç bölgesi (ayna; ışık yine sol üstten) */
+    linear-gradient(90deg, transparent 0, transparent 0.9px, rgba(var(--cilt-golge),0.36) 0.9px 1.3px, transparent 1.3px, transparent 1.3px, rgba(var(--cilt-isik),0.28) 1.3px 1.7px, transparent 1.7px, transparent 10.3px, rgba(var(--cilt-golge),0.36) 10.3px 10.7px, transparent 10.7px, transparent 10.7px, rgba(var(--cilt-isik),0.28) 10.7px 11.1px, transparent 11.1px, transparent 11.8px, rgba(var(--cilt-isik),0.55) 11.8px 12.6px, transparent 12.6px, transparent 12.6px, rgba(var(--cilt-golge),0.46) 12.6px 13.4px, transparent 13.4px, transparent 14px, rgba(var(--cilt-isik),0.55) 14px 14.8px, transparent 14.8px, transparent 14.8px, rgba(var(--cilt-golge),0.46) 14.8px 15.6px, transparent 15.6px, transparent 16.4px, rgba(var(--cilt-isik),0.36) 16.4px 17.5px, transparent 17.5px, transparent 17.5px, rgba(var(--cilt-golge),0.32) 17.5px 18.6px, transparent 18.6px),
+    /* dantel şeridi: başlığa bakan kabartma gözyaşı + ok (8 x 7 px karo; styles.css :root) */
+    var(--dantel-sol),
+    var(--dantel-sag),
+    /* deri dokusu */
     var(--doku);
-  background-size:
-    auto,
-    auto,
-    auto,
-    auto,
-    140px 140px;
-  background-blend-mode: normal, normal, normal, normal, soft-light;
-  box-shadow: inset 0 0 0 0.5px rgba(var(--cilt-golge), 0.42);
+  background-size: auto, auto, auto, 23px 100%, 23px 100%, 8px 7px, 8px 7px, 140px 140px;
+  background-position: 0 0, 0 0, 0 0, left top, right top, 13px center, right 13px center, 0 0;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat-y, repeat-y, repeat;
+  background-blend-mode: normal, normal, normal, normal, normal, normal, normal, soft-light;
 }
-/* mafsallar: iki kenardan 2,4-4 px içte ince oluk */
-.cilt__deri::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(90deg, transparent 2.4px, rgba(var(--cilt-golge), 0.3) 2.4px 3.2px, rgba(var(--cilt-isik), 0.2) 3.2px 4px, transparent 4px) left / 50% 100% no-repeat,
-    linear-gradient(270deg, transparent 2.4px, rgba(var(--cilt-golge), 0.32) 2.4px 3.2px, rgba(var(--cilt-isik), 0.12) 3.2px 4px, transparent 4px) right / 50% 100% no-repeat;
-}
-/* baş ışığı, başta ve ayakta kör baskı çift çizgi, ayak gölgesi */
-.cilt__deri::after {
-  content: '';
-  position: absolute;
-  inset: 0 4px;
-  pointer-events: none;
-  --y1: calc(var(--sirt-h) * 0.056);
-  --y2: calc(var(--sirt-h) * 0.078);
-  --kor: linear-gradient(180deg, rgba(96, 26, 34, 0.4) 0 1px, rgba(255, 230, 224, 0.3) 1px 2px);
-  background:
-    linear-gradient(180deg, rgba(255, 242, 238, 0.38), rgba(255, 242, 238, 0)) 0 0 / 100% 3px no-repeat,
-    var(--kor) 0 var(--y1) / 100% 2px no-repeat,
-    var(--kor) 0 var(--y2) / 100% 2px no-repeat,
-    var(--kor) 0 calc(100% - var(--y2) - 2px) / 100% 2px no-repeat,
-    var(--kor) 0 calc(100% - var(--y1) - 2px) / 100% 2px no-repeat,
-    linear-gradient(0deg, rgba(var(--cilt-golge), 0.28), rgba(var(--cilt-golge), 0)) 0 100% / 100% 4px no-repeat;
-}
+/* ad alanı: iki uç bölgesinin (23 px) içinde, 1 px pay */
 .cilt__ad {
   position: absolute;
-  z-index: 1;
-  left: 3px;
-  right: 3px;
-  top: calc(var(--sirt-h) * 0.125);
-  bottom: calc(var(--sirt-h) * 0.125);
+  inset: 0 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  container-type: size;
 }
-/* Aşağıdan yukarı okunur. Koyu şarap mürekkebiyle basılı (bezde 5,5:1; soluk varak 2,4:1'de kalıyordu); altında
-   bezin ışığını alan ince kenar, basılmış gibi. Yazı boyu sırtın boyuna, satır uzunluğuna (--k) ve satır sayısına
-   (--n) göre. Kap sorgusu birimi (cqh/cqw) olmayan tarayıcıda (iOS 15) genişlik ekran genişliğinden ve kitabın
-   kalınlığından (--mm) hesaplanır. */
+/* Ad: EB Garamond 600, ten rengi, hafif kabartma. Boy: ortak --F; uzun adda bant enine (B - iki uç - 2 x 4 px pay),
+   ince bantta bant yüksekliğine göre küçülür (--em, --hm, --dy: oku/ortak.ts SIRT'tan, satır başına ölçülmüş).
+   Kap sorgusu yok: iOS 15'te de çalışır. */
 .cilt__ad > span {
-  writing-mode: vertical-rl;
-  text-orientation: sideways;
-  transform: rotate(180deg);
-  color: var(--sirt-yazi);
+  color: var(--ten);
   font-family: var(--eb);
   font-weight: 600;
-  font-size: min(
-    calc(var(--sirt-h) * 0.082),
-    calc(var(--sirt-h) * 0.75 * var(--k)),
-    calc(((min(100vw - 28px, var(--raf-en)) - 5px) * var(--mm) / 195.2 - 6px) / (var(--n) * 1.1))
-  );
-  line-height: 1.06;
-  letter-spacing: 0.02em;
-  text-align: center;
+  font-size: min(var(--F), calc((var(--B) - 54px) / var(--em)), calc((var(--mm) * var(--mm-px) / 2 - 2.5px) / var(--hm)));
+  line-height: 1;
+  letter-spacing: 0.01em;
   white-space: nowrap;
-  /* yazı 180° döndüğü için bu kaydırma sağ altta açık kenar olur */
-  text-shadow: -0.3px -0.6px 0 rgba(var(--cilt-isik), 0.4);
+  text-align: center;
+  transform: translateY(calc(var(--dy, 0) * 1em));
+  /* hafif kabartma: sol üstte ışık kenarı, sağ altta keskin koyu kenar ve yumuşak gölge */
+  text-shadow:
+    -0.5px -0.55px 0 rgba(255, 246, 240, 0.4),
+    0.6px 0.75px 0 rgba(120, 34, 42, 0.55),
+    0.9px 1.4px 1.8px rgba(70, 14, 22, 0.34);
 }
-@supports (width: 1cqw) {
-  .cilt__ad > span {
-    font-size: min(calc(var(--sirt-h) * 0.082), calc(100cqh * var(--k)), calc(100cqw / (var(--n) * 1.1)));
-  }
+.cilt__ad > span.iki {
+  line-height: 0.84;
 }
 
-/* kaldığın yer: cilt raftan biraz öne çekilir (tahtanın üstüne biner), koyu gül kurdelesi raftan sarkar */
+/* kaldığın yer: cilt yığından 6 px dışa çıkar; iç ucuna yakın, alt kenarından koyu gül kurdele sarkar (alttaki
+   kitabın uç bölgesinin üstüne: ekrandan taşmaz) */
+.yigin--sol .cilt--kaldigin {
+  transform: translateX(-6px);
+}
+.yigin--sag .cilt--kaldigin {
+  transform: translateX(6px);
+}
 .cilt--kaldigin {
-  z-index: 4;
-  height: calc(100% + 4px);
-  margin-bottom: -4px;
+  z-index: 2;
 }
 .cilt__kurdele {
   position: absolute;
-  right: 8px;
-  bottom: -21px;
+  z-index: 1;
+  bottom: -15px;
   width: 6px;
-  height: 25px;
+  height: 19px;
   background: linear-gradient(90deg, #7e3439, #b8646a 48%, #7e3439);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  box-shadow: 0 1px 1px rgba(60, 14, 22, 0.3);
 }
-
-/* yakında: PDF'i ya da dış adresi yok; cilt soluk, üstünde fildişi kuşak */
+.yigin--sol .cilt__kurdele {
+  right: 30px;
+}
+.yigin--sag .cilt__kurdele {
+  left: 30px;
+}
+/* yakında: PDF'i ya da dış adresi yok; cilt soluk, ortasında fildişi kuşak */
 .cilt--yakinda .cilt__deri {
   opacity: 0.45;
 }
 .cilt--yakinda .cilt__ad > span {
   opacity: 0.6;
 }
-/* (ince ciltte kuşak sırttan taşar, komşu ciltlerin üstüne biner) */
 .cilt--yakinda {
   z-index: 2;
 }
@@ -1280,77 +1289,40 @@ a.cilt:active {
   z-index: 1;
   left: 50%;
   top: 50%;
-  min-width: calc(100% + 4px);
-  height: 19px;
-  padding: 0 5px;
-  transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
-  white-space: nowrap;
-  border-radius: 1.5px;
-  background: #f4ede0;
-  color: #0b1430;
-  font-family: var(--sans);
-  font-weight: 600;
-  font-size: 9px;
-  line-height: 1;
+  height: 16px;
+  padding: 0 7px;
+  transform: translate(-50%, -50%);
+  border-radius: 8px;
+  background: var(--sabah-ust);
+  box-shadow: 0 1px 2px rgba(60, 14, 22, 0.3);
+  color: var(--lacivert);
+  font: 600 9px/1 var(--sans);
   letter-spacing: 0.02em;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
 }
 
-/* dış sitede açılan kitaplar için not (rafın altında; hiç gizlenmez) */
-.gunes__not {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin: clamp(8px, calc(var(--alan-e) * 0.033 - 8px), 22px) 0 0;
-  color: var(--fildisi-3);
-  font-family: var(--sans);
-  font-weight: 500;
-  font-size: 11.5px;
-  line-height: 1.3;
-  text-align: center;
-}
-.gunes__not b {
-  color: var(--fildisi-2);
-  font-weight: 600;
-}
-.gunes__not-ok {
-  display: grid;
-  flex: none;
-  width: 11px;
-  height: 11px;
-  color: var(--fildisi-3);
-}
-.gunes__not-ok svg {
-  width: 100%;
-  height: 100%;
-}
-
-/* ---------- kaldığın yer kartı (menünün üstünde) ---------- */
-.gunes__bosluk {
-  flex: 1 0 0;
-}
+/* ---------- kaldığın yer kartı (yığınların altında, menünün üstünde) ---------- */
 .gunes__devam {
   position: relative;
   display: flex;
   flex: none;
   align-items: center;
   gap: 12px;
-  width: min(100%, 362px);
+  width: min(calc(100% - 24px), 362px);
   min-height: 64px;
-  margin-top: clamp(12px, 2.2vh, 20px);
+  margin-top: 12px;
   padding: 8px 10px 8px 12px;
   overflow: hidden;
   border-radius: 18px;
-  background: rgba(244, 237, 224, 0.04);
-  -webkit-backdrop-filter: blur(16px) saturate(1.15);
-  backdrop-filter: blur(16px) saturate(1.15);
+  background: rgba(255, 251, 247, 0.72);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   box-shadow:
-    inset 0 0 0 0.5px var(--sampanya-cizgi),
-    0 18px 34px -18px rgba(0, 0, 0, 0.85);
-  color: var(--fildisi);
+    inset 0 0 0 0.5px var(--yaldiz-cizgi),
+    0 14px 28px -18px rgba(96, 52, 40, 0.45);
+  color: var(--kalem);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -1358,13 +1330,13 @@ a.cilt:active {
   display: none;
 }
 .gunes__devam:focus-visible {
-  outline: 1.5px solid var(--sampanya);
+  outline: 1.5px solid var(--lacivert);
   outline-offset: 2px;
 }
 .gunes__devam:active {
   transform: scale(0.985);
 }
-/* küçük kapak: raftaki sırtla aynı bez, kör baskı çerçeve */
+/* küçük kapak: yığındakiyle aynı deri, kör baskı çerçeve */
 .gunes__devam-kapak {
   position: relative;
   flex: none;
@@ -1375,17 +1347,12 @@ a.cilt:active {
   background-image:
     linear-gradient(180deg, rgba(var(--cilt-isik), 0.13) 0, rgba(var(--cilt-isik), 0) 18%, rgba(var(--cilt-golge), 0) 70%, rgba(var(--cilt-golge), 0.2) 100%),
     linear-gradient(90deg, rgba(var(--cilt-golge), 0.5) 0, rgba(var(--cilt-golge), 0.14) 2px, rgba(var(--cilt-golge), 0) 5px),
-    linear-gradient(270deg, rgba(var(--cilt-golge), 0.3) 0, rgba(var(--cilt-golge), 0) 4px),
     var(--doku);
-  background-size:
-    auto,
-    auto,
-    auto,
-    140px 140px;
-  background-blend-mode: normal, normal, normal, soft-light;
+  background-size: auto, auto, 140px 140px;
+  background-blend-mode: normal, normal, soft-light;
   box-shadow:
     inset 0 0 0 0.5px rgba(var(--cilt-golge), 0.42),
-    0 4px 10px -3px rgba(0, 0, 0, 0.7);
+    0 4px 10px -4px rgba(96, 40, 36, 0.5);
 }
 .gunes__devam-kapak::before {
   content: '';
@@ -1412,36 +1379,28 @@ a.cilt:active {
   min-width: 0;
 }
 .gunes__devam-ust {
-  color: var(--sampanya);
-  font-family: var(--sans);
-  font-weight: 600;
-  font-size: 10px;
-  line-height: 1.1;
+  color: var(--yaldiz);
+  font: 600 10px/1.1 var(--sans);
   letter-spacing: 0.22em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .gunes__devam-ad {
   overflow: hidden;
-  color: var(--fildisi);
-  font-family: var(--eb);
-  font-weight: 500;
-  font-size: 19px;
-  line-height: 1.1;
+  color: var(--lacivert);
+  font: 500 19px/1.1 var(--eb);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 .gunes__devam-yer {
   overflow: hidden;
-  color: var(--fildisi-3);
-  font-family: var(--sans);
-  font-weight: 500;
-  font-size: 12.5px;
-  line-height: 1.2;
+  color: var(--kalem-3);
+  font: 500 12.5px/1.2 var(--sans);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 .gunes__devam-yer b {
-  color: var(--fildisi-2);
+  color: var(--kalem-2);
   font-weight: 600;
 }
 .gunes__devam-dugme {
@@ -1451,8 +1410,8 @@ a.cilt:active {
   width: 40px;
   height: 40px;
   border-radius: 20px;
-  background: var(--fildisi);
-  color: var(--murekkep);
+  background: var(--lacivert);
+  color: var(--sabah-ust);
 }
 .gunes__devam-dugme svg {
   width: 20px;
@@ -1465,7 +1424,7 @@ a.cilt:active {
   bottom: 0;
   height: 2px;
   border-radius: 1px;
-  background: rgba(244, 237, 224, 0.12);
+  background: rgba(130, 97, 42, 0.16);
 }
 .gunes__devam-ilerleme::after {
   content: '';
@@ -1475,13 +1434,12 @@ a.cilt:active {
   bottom: 0;
   width: calc(var(--o) * 100%);
   border-radius: 1px;
-  background: rgba(244, 237, 224, 0.7);
+  background: var(--yaldiz);
 }
-
-/* çok kısa ekranlarda (tarayıcı çubukları açık) not ve kart küçülür */
+/* çok kısa ekranlarda (tarayıcı çubukları açık) kart küçülür */
 @media (max-height: 700px) {
-  .gunes__not {
-    font-size: 10.5px;
+  .gunes[data-devam] {
+    --kart: 77px;
   }
   .gunes__devam {
     min-height: 56px;
@@ -1496,32 +1454,93 @@ a.cilt:active {
     font-size: 17px;
   }
 }
-/* büyük ekranlar (dik tablet): sahne en çok 300, sırtlar en çok 240 px'e dek büyür (sırtların payı biraz az:
-   raflar daha geniş olduğundan yazılar yine sığar) */
-@media (min-width: 600px) and (min-height: 860px) {
-  .view--gunes {
-    --sahne-h: clamp(96px, calc(var(--alan-e) * 0.2647 - 9.4px), 300px);
-    --sirt-h: clamp(92px, calc(var(--alan-e) * 0.2745 - 64px), 240px);
-  }
-  .gunes[data-devam] {
-    --sahne-h: clamp(72px, calc(var(--alan-e) * 0.2 - 16px), 300px);
-    --sirt-h: clamp(84px, calc(var(--alan-e) * 0.2745 - 76px), 240px);
-  }
-  .view--gunes {
-    --raf-en: 520px;
-  }
-  .gunes__devam {
-    width: min(100%, 520px);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .cilt,
   .gunes__devam {
     transition: none;
   }
-  a.cilt:active,
+  /* (seçiciler basma kurallarıyla aynı özgüllükte; kaldığın yerdeki cilt yerinde, 6 px dışarıda kalır) */
+  .yigin--sol a.cilt:active,
+  .yigin--sag a.cilt:active,
   .gunes__devam:active {
     transform: none;
+  }
+  .yigin--sol a.cilt--kaldigin:active {
+    transform: translateX(-6px);
+  }
+  .yigin--sag a.cilt--kaldigin:active {
+    transform: translateX(6px);
+  }
+}
+
+/* ---------- tablet (dikey): yığınlar daha geniş ve daha kalın, adlar daha büyük ---------- */
+@media (min-width: 600px) and (min-height: 860px) and (orientation: portrait) {
+  .view--gunes {
+    --B: calc((min(100vw, 544px) - 2 * var(--kenar) - var(--ara)) / 2);
+    --F: min(24px, calc(var(--B) * 0.118));
+  }
+  .gunes {
+    --S: clamp(340px, min(calc((var(--bos) - var(--kart)) * 0.36 + 200px), calc(var(--B) * 2.6)), 560px);
+  }
+}
+
+/* ---------- yatay ekran (telefon, tablet, masaüstü): Kur'an solda, yığınlar sağda ----------
+   Yükseklik azdır: üst üste sığmazlar. Ölçek yığının sığdığı yükseklikten (--yigin-boy: uzun yığının oran
+   toplamı, gunes.ts); kart Kur'an'ın altına iner, yığınları küçültmez. Dar yatay telefonda bant eni, Kur'an ve
+   kart sütunu en az 220 px (kart açıkken 250 px) kalacak kadar daralır. Çok kısa ekranda (tarayıcı çubukları açık)
+   bantlar incelir ama hepsi, kısa yığının üstündeki etiketle birlikte, menünün üstünde kalır. */
+@media (orientation: landscape) and (min-aspect-ratio: 4 / 3) {
+  .view--gunes {
+    --yan: calc(
+      max(var(--safe-area-inset-left, env(safe-area-inset-left, 0px)), 12px) +
+        max(var(--safe-area-inset-right, env(safe-area-inset-right, 0px)), 12px)
+    );
+    --B: clamp(110px, calc((100vw - var(--yan) - clamp(12px, 4vw, 64px) - var(--ara) - 220px) / 2), 205px);
+  }
+  .gunes {
+    --S: clamp(
+      120px,
+      min(calc((var(--bos) - 12px) / var(--yigin-boy, 0.85)), calc((var(--bos) - 62px) / var(--kisa-boy, 0.62)), calc(var(--B) * 2.6)),
+      560px
+    );
+  }
+  .gunes[data-devam] {
+    --B: clamp(110px, calc((100vw - var(--yan) - clamp(12px, 4vw, 64px) - var(--ara) - 250px) / 2), 205px);
+  }
+  .gunes__ic {
+    display: grid;
+    grid-template-columns: minmax(0, 440px) auto;
+    grid-template-rows: 1fr auto;
+    column-gap: clamp(12px, 4vw, 64px);
+    justify-content: center;
+    padding-left: max(var(--safe-area-inset-left, env(safe-area-inset-left, 0px)), 12px);
+    padding-right: max(var(--safe-area-inset-right, env(safe-area-inset-right, 0px)), 12px);
+  }
+  .gunes__sahne {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: stretch;
+    min-height: 0;
+  }
+  .gunes[data-devam] .gunes__sahne {
+    min-height: 0;
+  }
+  /* çizim sütundan geniş olmasın: Mushaf (çizimin ortadaki yarısı) sütuna sığar, nur taşabilir */
+  .gunes__sahne-svg {
+    max-width: 200%;
+  }
+  .gunes__devam {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: center;
+    width: min(100%, 362px);
+  }
+  .gunes__kulliyat {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: end;
+    width: auto;
+    margin-top: 0;
   }
 }
 

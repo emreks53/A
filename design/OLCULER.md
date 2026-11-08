@@ -22,15 +22,15 @@ içinde `--u` ile çarpılarak her ekrana ölçeklenir (referans ekranda `--u` =
 
 ## Alt menü
 
-Sade arayüzle değişti (ilk tasarımdaki krem çubuk ve altın seçili sekme kaldırıldı). Ölçüler 390 genişliğe göre,
+Açık ten temasıyla her ekranda aynı fildişi cam (ilk tasarımdaki krem çubuk ve altın seçili sekme kaldırıldı). Ölçüler 390 genişliğe göre,
 `--u` ile ölçeklenir.
 
 | Öğe | Değer |
 | --- | --- |
 | Çubuk | genişlik min(ekran − 32, 420), 390'da 358 × 64; köşe 22; alttan 16 (en az güvenli alan + 6); iç boşluk 5 |
-| Zemin | ana ekranda fildişi cam rgba(251,248,241,.94); öteki ekranlarda koyu cam rgba(14,22,50,.82), şampanya kıl çizgi |
-| Seçili sekme | rgba(244,237,224,.07) yüzey, .5 px şampanya kıl çizgi, köşe 17; simge şampanya #D9C49A, yazı fildişi |
+| Zemin | her ekranda fildişi cam rgba(251,248,241,.94); ana ekranda lacivert gölge, öteki ekranlarda sıcak gölge |
+| Seçili sekme | kum rengi #F3E9DF kapsül, .5 px altın kıl çizgi rgba(130,97,42,.3), köşe 17; simge ve yazı #022064 (ana ekranda seçili sekme yok) |
 | Simgeler | 24 × 24, tek renk çizgi (1,1): dünya ve güneş; Kenz kullanıcının düğümü (`#dugum`, dolgu) |
-| Etiketler | Encode Sans 600, 11, büyük harf, harf aralığı .12em; ana ekranda #022064, koyu çubukta fildişi %62 |
+| Etiketler | Encode Sans 600, 11, büyük harf, harf aralığı .12em; ana ekranda #022064, öteki ekranlarda seçili olmayanlar #022064 %64 |
 
 Tasarımla karşılaştırma: `npm run build && npm run test:visual`.
