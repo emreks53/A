@@ -16,25 +16,7 @@
     "İnce altın boya: kubbe kaburgaları, nokta dizileri, minare halkaları ve zikzakı, güneş ışınları; altında metal tozu pırıltısı",
     "Altın folyo (paillon) üstünde saydam emaye taşlar: buruşuk folyolu güneş, kehribar çiçek göbekleri, kenar şeridinde yakut ve zümrüt taşlar arasında beyaz emaye inciler"
   ],
-  "palet": [
-    "#1C86D0",
-    "#9ED6F0",
-    "#159855",
-    "#58C988",
-    "#1D3F96",
-    "#D23F76",
-    "#FBF9F3",
-    "#1A9AC4"
-  ],
+  "palet": ["#1C86D0", "#9ED6F0", "#159855", "#58C988", "#1D3F96", "#D23F76", "#FBF9F3", "#1A9AC4"],
   "kodla_cizim": "2048 iç çözünürlükte dört katman kurulur: boya, altın maskesi, folyo maskesi ve emaye kalınlığı (gri yükseklik haritası). Boya katmanı Path2D alanlarına doğrusal ve dairesel geçişlerle, alanın içine kırpılmış geçişli gölge katlarıyla ve binlerce ince noktayla (gök, kubbe, kasnak, bulut ve kum) boyanır; taç yapraklara dipten uca ince gül ve beyaz çizgiler, kubbenin ışık yanına beyaz taramalar çekilir, kontürler koyu emaye rengiyle ince çizilir. Her alan kalınlık haritasına kendi düzeyiyle, folyo taşları ve inciler dairesel geçişli kabarık damlalar olarak işlenir; öndeki biçimler arkadaki altını ve folyoyu siler. Fırın için boya katmanı hafifçe bulanıklaştırılıp 'screen' ile içten parlatılır; kalınlık haritası iki yarıçapla bulanıklaştırılır. Piksel döngüsünde iki bulanıklığın farkı renk kenarında birikme (koyulaşma, doygunluk), küçük bulanıklığın eğimi yüzey normali olur: Lambert gölgesi ve Blinn-Phong parıltısı, normal ve portakal kabuğu gürültüsüyle kaydırılan yumuşak köşeli, dikme ve kayıtlı pencere yansıması, levhanın geniş parlaklığı eklenir; folyoya Worley hücreli buruşuk metal parıltısı, altına kendi bulanık maskesinden kabartma ve pırıltı verilir.",
-  "etiketler": [
-    "emaye",
-    "resim emayesi",
-    "Limoges",
-    "camsı",
-    "parlak",
-    "altın",
-    "mücevher",
-    "fırınlanmış"
-  ]
+  "etiketler": ["emaye", "resim emayesi", "Limoges", "camsı", "parlak", "altın", "mücevher", "fırınlanmış"]
 }
