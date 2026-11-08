@@ -325,19 +325,52 @@
     const rr = S.rng(111);
     bolge(
       (h) => {
-        for (let i = 0; i < 46; i++) {
-          const y0 = 20 + rr() * 520, x0 = -100 + rr() * 900, Ld = 260 + rr() * 380;
+        for (let i = 0; i < 56; i++) {
+          const y0 = 20 + rr() * 600, x0 = -100 + rr() * 900, Ld = 260 + rr() * 380;
           const ang = -0.38 + (rr() - 0.5) * 0.2;
           const x1 = x0 + Math.cos(ang) * Ld, y1 = y0 + Math.sin(ang) * Ld;
           const dG = Math.min(Math.hypot((x0 + x1) / 2 - S.gunes.x, (y0 + y1) / 2 - S.gunes.y), Math.hypot(x1 - S.gunes.x, y1 - S.gunes.y));
           if (dG < 250) continue;
-          const kuv = Math.max(0, 1 - y0 / 600);
+          const kuv = Math.max(0.3, 1 - y0 / 700);
           const renk = x0 < 250 && rr() < 0.4 ? C.lila : rr() < 0.55 ? C.turkuaz : C.mavi;
           darbe(h, egri([[x0, y0], [(x0 + x1) / 2, (y0 + y1) / 2 + (rr() - 0.5) * 20], [x1, y1]], 4), 40 + rr() * 40, renk, 0.12 + 0.3 * kuv, { profil: 'yaprak' });
         }
       },
       null,
-      { bulanik: 22, bulanik2: 6, su: 0.9 }
+      { bulanik: 13, bulanik2: 5, su: 0.9 }
+    );
+  }
+  // gökün ortası: açık renk kalemle çekilmiş, çoğu keskin kalmış seyrek darbeler (ufka doğru açılan gök
+  // boş bir pus gibi değil, yine fırça kalemi darbeleriyle okunur)
+  {
+    const rr = S.rng(121);
+    bolge(
+      (h) => {
+        for (let i = 0; i < 34; i++) {
+          const x0 = -80 + rr() * 1100, y0 = 250 + rr() * 380;
+          const ang = -0.42 + (rr() - 0.5) * 0.22, Ld = 110 + rr() * 170;
+          const xm = x0 + Math.cos(ang) * Ld * 0.5, ym = y0 + Math.sin(ang) * Ld * 0.5;
+          if (Math.hypot(xm - S.gunes.x, ym - S.gunes.y) < 280) continue;
+          const renk = x0 < 300 && rr() < 0.35 ? C.lila : rr() < 0.3 ? C.camgobegi : C.turkuaz;
+          const k1 = [x0, y0], k3 = [x0 + Math.cos(ang) * Ld, y0 + Math.sin(ang) * Ld];
+          const k2 = [xm, ym + (rr() - 0.5) * 14];
+          darbe(h, egri([k1, k2, k3], 3), 15 + rr() * 10, renk, (0.26 + rr() * 0.14) * Math.max(0.55, 1 - (y0 - 250) / 500));
+        }
+      },
+      (m) => {
+        m.fillStyle = 'rgba(0,0,0,0.8)';
+        m.fillRect(0, 0, 1024, 1024);
+        m.globalCompositeOperation = 'destination-out';
+        for (let i = 0; i < 14; i++) {
+          const x = rr() * 1024, y = 260 + rr() * 360, r = 50 + rr() * 70;
+          const gg = m.createRadialGradient(x, y, 0, x, y, r);
+          gg.addColorStop(0, 'rgba(0,0,0,0.8)');
+          gg.addColorStop(1, 'rgba(0,0,0,0)');
+          m.fillStyle = gg;
+          m.fillRect(x - r, y - r, 2 * r, 2 * r);
+        }
+      },
+      { bulanik: 9, su: 0.85 }
     );
   }
   // güneş: sarı ve turuncu dairesel darbeler, ortası suyla açılmış
@@ -390,7 +423,7 @@
       }
       yol.rect(bx - 80 * bs, by - 4 * bs, 160 * bs, 22 * bs);
       yollar.push([yol, bx, by, bs]);
-      beyazBirak(yol, 5);
+      beyazBirak(yol, 1.8);
     }
     bolge(
       (h) => {
@@ -771,9 +804,9 @@
         for (const c of B.cicekler) {
           for (const e of S.tacYapraklari(c)) {
             const ca = Math.cos(e.aci), sa = Math.sin(e.aci);
-            const u0 = c.r * 0.1, u1 = c.r * 0.6;
-            darbe(h, [[c.x + ca * u0, c.y + sa * u0], [c.x + ca * u1, c.y + sa * u1]], c.r * 0.5, C.pembe, 0.8, { profil: 'darbe' });
-            darbe(h, [[c.x + ca * u0, c.y + sa * u0], [c.x + ca * c.r * 0.35, c.y + sa * c.r * 0.35]], c.r * 0.3, C.eflatun, 0.5, { profil: 'darbe' });
+            const u0 = c.r * 0.12, u1 = c.r * 0.52;
+            darbe(h, [[c.x + ca * u0, c.y + sa * u0], [c.x + ca * u1, c.y + sa * u1]], c.r * 0.42, C.gul, 0.55, { profil: 'darbe' });
+            darbe(h, [[c.x + ca * u0, c.y + sa * u0], [c.x + ca * c.r * 0.3, c.y + sa * c.r * 0.3]], c.r * 0.24, C.pembe, 0.32, { profil: 'darbe' });
           }
         }
       },

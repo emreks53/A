@@ -748,9 +748,9 @@
   {
     // tümsekler: arkadan öne üç sıra, her biri bir öncekini örter
     const siralar = [
-      { yb: 818, h: [10, 18], w: [120, 190], ust: '#DCE8CC', alt: '#CBDDB9' },
-      { yb: 872, h: [12, 22], w: [140, 220], ust: '#D3E3C0', alt: '#C2D7AE' },
-      { yb: 940, h: [14, 26], w: [160, 240], ust: '#CCDFB8', alt: '#B9D1A4' },
+      { yb: 818, h: [10, 18], w: [120, 190], ust: '#E2ECCF', alt: '#C6DBB2' },
+      { yb: 872, h: [12, 22], w: [140, 220], ust: '#DAE8C4', alt: '#BCD4A6' },
+      { yb: 940, h: [14, 26], w: [160, 240], ust: '#D3E4BC', alt: '#B2CD9C' },
     ];
     siralar.forEach((sr, si) => {
       let x = -60 - rnd() * 80;
@@ -772,7 +772,7 @@
         sirt.bezierCurveTo(cx - w * 0.6, sr.yb + 4, cx - w * 0.45, tepe, cx, tepe);
         sirt.bezierCurveTo(cx + w * 0.45, tepe, cx + w * 0.6, sr.yb + 4, cx + w * 1.15, sr.yb + 12);
         ctx.save(); ctx.clip(yol); ctx.filter = 'blur(3px)'; ctx.strokeStyle = '#9DBE94'; ctx.globalAlpha = 0.35; ctx.lineWidth = 6; ctx.stroke(sirt); ctx.restore();
-        kontur(sirt, '#86A98A', 0.8, 0.6);
+        kontur(sirt, '#7FA587', 0.9, 0.75);
         // sırtta ot öbekleri
         for (let k = 0; k < 3; k++) {
           const t = 0.2 + rnd() * 0.6, ox = cx - w + t * 2 * w;
@@ -782,13 +782,13 @@
         x += w * (1.4 + rnd() * 0.5);
       }
       // her sıranın önüne birkaç küçük çiçek
-      for (let k = 0; k < 9; k++) {
-        const x2 = 20 + rnd() * 984, y2 = sr.yb + 18 + rnd() * 30;
-        kucukCicek(x2, y2, 3 + rnd() * 1.8, k % 3 === 0 ? '#B9C6EA' : k % 3 === 1 ? '#FFFFFF' : '#E9C3D4');
+      for (let k = 0; k < 6; k++) {
+        const x2 = 30 + rnd() * 964, y2 = sr.yb + 16 + rnd() * 28;
+        const renk = k % 3 === 0 ? '#A9BCEB' : k % 3 === 1 ? '#FFFFFF' : '#EBBBD0';
+        const m = 2 + Math.floor(rnd() * 3);
+        for (let q = 0; q < m; q++) kucukCicek(x2 + (rnd() - 0.5) * 26, y2 + (rnd() - 0.5) * 10, 4.2 + rnd() * 1.8, renk);
       }
-      if (si === 0) { kaya(412, 826, 26, 22, 31); kaya(598, 822, 30, 24, 32); }
-      if (si === 1) { kaya(330, 888, 22, 18, 33); kaya(700, 884, 20, 16, 34); }
-      if (si === 2) { kaya(612, 1002, 30, 24, 35); kaya(290, 1010, 24, 20, 36); }
+      if (si === 0) { kaya(410, 824, 30, 30, 31); kaya(600, 822, 34, 34, 32); }
     });
   }
 
