@@ -1,55 +1,28 @@
-// Güneş: Risale-i Nur Külliyatı'nın kütüphanesi. Şafak vakti: güneş, rahledeki Kur'an-ı Kerim'in ardından doğar
-// (Kur'an yalnız süstür, dokunulmaz); altında ceviz rafta 14 cilt (7 + 7), her biri en az 44 px'lik bir bağlantı.
+// Güneş: Risale-i Nur Külliyatı'nın kütüphanesi. Mürekkep laciverti zeminde, yumuşak bir ışık altında rahlede
+// inci beyazı Kur'an-ı Kerim (yalnız süstür, dokunulmaz); altında iki rafta 14 cilt (6 + 8). Bütün ciltler aynı
+// bezden (#D7787B), her biri gerçek kalınlığında: iki raf tek ölçekte, genişlik = RNK baskısının sayfa sayısından
+// bulunan milimetre (oku/ortak.ts kalinlikMm). Sırt adları varak, aşağıdan yukarı okunur.
 // PDF'i eklenmiş kitap okuyucuda açılır; PDF'i olmayan kitap, listede dış adresi varsa o sitede (RNK Neşriyat'ın
 // okuma sitesi rnk.tr; sitede yeni sekmede, telefon uygulamasında tarayıcıda) açılır; ikisi de yoksa cilt soluktur,
 // "yakında" kuşağı taşır. En son okunan kitap için rafın altında "Kaldığın yer".
 import { Capacitor } from '@capacitor/core';
 import { baglanti, kitaplar } from 'virtual:kitaplar';
-import { RENKLER } from '../oku/menba-cizim';
-import { KULLIYAT, tipografik } from '../oku/ortak';
+import { kuranSvg } from '../oku/kuran-cizim';
+import { kalinlikMm, KULLIYAT, SIRT, tipografik } from '../oku/ortak';
 import { basiliSayfa, bolumBul, disAdres, kitapKimligi, type Kitap } from './ortak';
-import sahneSvg from './sahne.svg?raw';
 import { sonOkunan } from './yer';
 
-/** Raftaki sırt: genişlik payı (g), boy oranı (b), yazı boyu (fs), yazı boyu / satır uzunluğu (k), satırlar */
-const SIRTLAR: Record<string, { g: number; b: number; fs: number; k: number; satirlar: string[] }> = {
-  Sözler: { g: 53, b: 1, fs: 15, k: 0.3912, satirlar: ['Sözler'] },
-  Mektubat: { g: 51, b: 0.985, fs: 15, k: 0.2534, satirlar: ['Mektubat'] },
-  "Lem'alar": { g: 50, b: 0.99, fs: 15, k: 0.2609, satirlar: ['Lem’alar'] },
-  Şuâlar: { g: 53, b: 1, fs: 15, k: 0.3597, satirlar: ['Şuâlar'] },
-  "İşârâtü'l-İ'câz": { g: 47, b: 0.97, fs: 12.5, k: 0.2534, satirlar: ['İşârâtü’l-', 'İ’câz'] },
-  'Mesnevî-i Nûriye': { g: 47, b: 0.97, fs: 12.5, k: 0.2466, satirlar: ['Mesnevî-i', 'Nûriye'] },
-  'Asâ-yı Mûsâ': { g: 45, b: 0.955, fs: 12.5, k: 0.383, satirlar: ['Asâ-yı', 'Mûsâ'] },
-  'Barla Lâhikası': { g: 48, b: 0.98, fs: 12.5, k: 0.2768, satirlar: ['Barla', 'Lâhikası'] },
-  'Kastamonu Lâhikası': { g: 48, b: 0.98, fs: 12.5, k: 0.2116, satirlar: ['Kastamonu', 'Lâhikası'] },
-  'Emirdağ Lâhikası': { g: 51, b: 1, fs: 12.5, k: 0.2768, satirlar: ['Emirdağ', 'Lâhikası'] },
-  'Sikke-i Tasdîk-i Gaybî': { g: 46, b: 0.965, fs: 11, k: 0.3033, satirlar: ['Sikke-i', 'Tasdîk-i', 'Gaybî'] },
-  'Tarihçe-i Hayat': { g: 50, b: 1, fs: 12.5, k: 0.2673, satirlar: ['Tarihçe-i', 'Hayat'] },
-  Muhâkemat: { g: 44, b: 0.95, fs: 13, k: 0.2, satirlar: ['Muhâkemat'] },
-  'İman ve Küfür Muvâzeneleri': { g: 45, b: 0.96, fs: 10.5, k: 0.1782, satirlar: ['İman ve', 'Küfür', 'Muvâzeneleri'] },
-};
-
 const KITAP_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 
 const DIS_SVG =
-  '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5H3.5v9h9V10M9 3h4v4M13 3 7.5 8.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-
-// Ana ekranın gökyüzü fotoğrafı (aynı dosyalar: önbellekten gelir)
-const FOTO = import.meta.glob<string>('../assets/bg/*.{avif,webp,jpg}', { eager: true, query: '?url', import: 'default' });
-const foto = (ad: string) => FOTO[`../assets/bg/${ad}`];
+  '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5H3.5v9h9V10M9 3h4v4M13 3 7.5 8.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, metin?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(etiket);
   if (sinif) e.className = sinif;
   if (metin !== undefined) e.textContent = metin;
   return e;
-}
-
-/** Kitabın cilt renkleri [orta, koyu, açık] (Menba rafı ve Kenz ile aynı, Külliyat sırasıyla) */
-export function ciltRenkleri(ad: string): readonly [string, string, string] {
-  const i = (KULLIYAT as readonly string[]).indexOf(ad);
-  return RENKLER[Math.max(0, i) % RENKLER.length];
 }
 
 export interface GunesSecenek {
@@ -62,48 +35,17 @@ export interface Gunes {
   yenile(): void;
 }
 
-function zeminKur(): HTMLElement {
-  const zemin = el('div', 'gunes__zemin');
-  zemin.setAttribute('aria-hidden', 'true');
-  const resim = el('picture', 'gunes__foto');
-  for (const [tur, uzanti] of [['image/avif', 'avif'], ['image/webp', 'webp'], ['', 'jpg']] as const) {
-    const genis = el('source');
-    genis.media = '(min-aspect-ratio: 4/5)';
-    if (tur) genis.type = tur;
-    genis.srcset = `${foto(`bg-wide-1280.${uzanti}`)} 1280w, ${foto(`bg-wide-2560.${uzanti}`)} 2560w`;
-    genis.sizes = '100vw';
-    resim.append(genis);
-  }
-  for (const [tur, uzanti] of [['image/avif', 'avif'], ['image/webp', 'webp']] as const) {
-    const dik = el('source');
-    dik.type = tur;
-    dik.srcset = `${foto(`bg-portrait-854.${uzanti}`)} 854w, ${foto(`bg-portrait-1708.${uzanti}`)} 1708w`;
-    dik.sizes = '100vw';
-    resim.append(dik);
-  }
-  const img = el('img', 'gunes__foto-img');
-  img.src = foto('bg-portrait-854.jpg');
-  img.srcset = `${foto('bg-portrait-854.jpg')} 854w, ${foto('bg-portrait-1708.jpg')} 1708w`;
-  img.sizes = '100vw';
-  img.alt = '';
-  img.decoding = 'async';
-  img.loading = 'lazy';
-  resim.append(img);
-  zemin.append(resim, el('div', 'gunes__safak'));
-  return zemin;
-}
-
-function ciltKur(ad: string, kitap: Kitap | undefined, dis: string | undefined): HTMLLIElement {
-  const s = SIRTLAR[ad];
+function ciltKur(ad: (typeof KULLIYAT)[number], kitap: Kitap | undefined, dis: string | undefined): HTMLLIElement {
+  const s = SIRT[ad];
   const li = el('li');
-  li.style.setProperty('--g', String(s.g));
+  // genişlik gerçek kalınlıkla orantılı (mm); iki rafta aynı ölçek
+  li.style.setProperty('--mm', String(+kalinlikMm(ad).toFixed(2)));
   const acilir = kitap || dis;
   const cilt = el(acilir ? 'a' : 'span', `cilt${kitap ? '' : dis ? ' cilt--dis' : ' cilt--yakinda'}`);
   cilt.dataset.kitap = kitapKimligi(ad);
-  cilt.style.setProperty('--cilt', ciltRenkleri(ad)[0]);
-  cilt.style.setProperty('--b', String(s.b));
-  cilt.style.setProperty('--fs', `${s.fs}px`);
+  // yazı boyu: sırtın yüksekliğine, satır uzunluğuna (k) ve satır sayısına (n) göre en büyüğü
   cilt.style.setProperty('--k', String(s.k));
+  cilt.style.setProperty('--n', String(s.satirlar.length));
   const deri = el('span', 'cilt__deri');
   deri.setAttribute('aria-hidden', 'true');
   const yazi = el('span');
@@ -113,7 +55,7 @@ function ciltKur(ad: string, kitap: Kitap | undefined, dis: string | undefined):
   });
   const adKutu = el('span', 'cilt__ad');
   adKutu.append(yazi);
-  deri.append(el('span', 'cilt__sus'), adKutu);
+  deri.append(adKutu);
   if (kitap) {
     const a = cilt as HTMLAnchorElement;
     a.href = `#/gunes/${kitap.kimlik}`;
@@ -145,7 +87,7 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
 
   const sahne = el('div', 'gunes__sahne');
   sahne.setAttribute('aria-hidden', 'true');
-  sahne.innerHTML = sahneSvg;
+  sahne.innerHTML = `<svg class="gunes__sahne-svg" viewBox="0 0 260 232" aria-hidden="true" focusable="false">${kuranSvg('gs')}</svg>`;
 
   const baslik = el('h1', 'gunes__etiket', 'Risale-i Nur Külliyatı');
   baslik.lang = 'tr';
@@ -153,7 +95,8 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
 
   const raflar = el('div', 'gunes__raflar');
   const ciltler = new Map<string, HTMLElement>();
-  for (const [i, adlar] of [KULLIYAT.slice(0, 7), KULLIYAT.slice(7)].entries()) {
+  // üst rafta altı, altta sekiz cilt (üst raf 195,2 mm, alt raf 188,05 mm: ikisi de aynı ölçekte)
+  for (const [i, adlar] of [KULLIYAT.slice(0, 6), KULLIYAT.slice(6)].entries()) {
     const raf = el('div', 'gunes__raf');
     const ul = el('ul', 'gunes__kitaplar');
     ul.setAttribute('aria-label', i === 0 ? 'Üst raf' : 'Alt raf');
@@ -184,7 +127,7 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
   }
   ic.append(bosluk);
   kitaplik.append(ic);
-  gorunum.replaceChildren(zeminKur(), kitaplik);
+  gorunum.replaceChildren(kitaplik);
 
   // "Kaldığın yer" kartı tek bir öğedir, yerinde güncellenir (kitap kapanınca odak ona döner)
   const devam = el('a', 'gunes__devam');
@@ -197,6 +140,8 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
     const k = son && kitaplar.find((x) => x.kimlik === son.kimlik);
     const yer = son?.yer;
     devam.hidden = !yer;
+    // kart açıkken sahne ve sırtlar biraz kısalır (gunes.css)
+    kitaplik.toggleAttribute('data-devam', !devam.hidden);
     if (kurdeleli) {
       kurdeleli.classList.remove('cilt--kaldigin');
       kurdeleli.querySelector('.cilt__kurdele')?.remove();
@@ -229,7 +174,6 @@ export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
       `Kaldığın yerden devam et: ${tipografik(k.kitap)}${yerYazisi.length ? `, ${yerYazisi.join(', ')}` : ''}${oran ? `, yüzde ${Math.round(oran * 100)} okundu` : ''}`,
     );
     const kapak = el('span', 'gunes__devam-kapak');
-    kapak.style.setProperty('--cilt', ciltRenkleri(k.kitap)[0]);
     kapak.append(el('i'));
     const metin = el('span', 'gunes__devam-metin');
     const ust = el('span', 'gunes__devam-ust', 'Kaldığın yer');

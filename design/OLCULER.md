@@ -22,14 +22,15 @@ içinde `--u` ile çarpılarak her ekrana ölçeklenir (referans ekranda `--u` =
 
 ## Alt menü
 
+Sade arayüzle değişti (ilk tasarımdaki krem çubuk ve altın seçili sekme kaldırıldı). Ölçüler 390 genişliğe göre,
+`--u` ile ölçeklenir.
+
 | Öğe | Değer |
 | --- | --- |
-| Çubuk | 352,2 × 81,3, köşe 25,1, alttan / yanlardan 18,95; dolgu #FCFAF5 → #FBF7EF |
-| Seçili sekme zemini | 100 × 76,7, köşe 21,9, üstten 2,28; #FEF6E3 → #FCF1D8 → #FDF4DC |
-| Sekme merkezleri (çubuk merkezine göre) | Oku −106 · Kenz +0,9 · Güneş +109,4 |
-| Dünya ikonu | Ø 29,7 (32 kutu), merkez çubuk üstünden 25,04 |
-| Düğüm ikonu | 30,95 × 33,66, üstten 14,12 |
-| Güneş ikonu | 37,4 kutu, disk r ≈ 9,8, 8 ışın; üstten 10,45 |
-| Etiketler | Encode Sans Bold 15,53; Oku #022064, Kenz #8E540A, Güneş #1F3E7F → #201D69 |
+| Çubuk | genişlik min(ekran − 32, 420), 390'da 358 × 64; köşe 22; alttan 16 (en az güvenli alan + 6); iç boşluk 5 |
+| Zemin | ana ekranda fildişi cam rgba(251,248,241,.94); öteki ekranlarda koyu cam rgba(14,22,50,.82), şampanya kıl çizgi |
+| Seçili sekme | rgba(244,237,224,.07) yüzey, .5 px şampanya kıl çizgi, köşe 17; simge şampanya #D9C49A, yazı fildişi |
+| Simgeler | 24 × 24, tek renk çizgi (1,1): dünya ve güneş; Kenz kullanıcının düğümü (`#dugum`, dolgu) |
+| Etiketler | Encode Sans 600, 11, büyük harf, harf aralığı .12em; ana ekranda #022064, koyu çubukta fildişi %62 |
 
 Tasarımla karşılaştırma: `npm run build && npm run test:visual`.

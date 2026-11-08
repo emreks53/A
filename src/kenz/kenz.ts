@@ -1,9 +1,8 @@
-// Kenz ekranı: Risale-i Nur'dan videolar, geçtiği kitap ve bölüme göre ("gece kütüphanesi").
+// Kenz ekranı: Risale-i Nur'dan videolar, geçtiği kitap ve bölüme göre.
 import { kutuphaneCiz } from './kutuphane';
 
-/** Nur-u Hakikat düğümü, yalnız çizgi (başlıkta ve sonda) */
-const DUGUM_SVG =
-  '<svg class="dugum" viewBox="0 0 32 32" aria-hidden="true"><path d="M14.556 13.5A5.3 5.3 0 1 1 17.444 13.5A5.3 5.3 0 1 1 18.887 16A5.3 5.3 0 1 1 17.444 18.5A5.3 5.3 0 1 1 14.556 18.5A5.3 5.3 0 1 1 13.113 16A5.3 5.3 0 1 1 14.556 13.5Z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="16" r="1.69" fill="currentColor"/></svg>';
+/** Nur-u Hakikat düğümü: kullanıcının logosu, index.html'deki #dugum simgesinden aynen (başlıkta ve sonda; rengi CSS'ten) */
+const DUGUM_SVG = '<svg class="dugum" aria-hidden="true"><use href="#dugum"/></svg>';
 
 export function kenzBaslat(gorunum: HTMLElement): void {
   const kaydirma = gorunum.querySelector<HTMLElement>('.kenz')!;

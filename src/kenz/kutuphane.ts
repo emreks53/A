@@ -1,7 +1,7 @@
 // Kenz: videolar geçtiği Risale-i Nur kitabına, kitapta da bölümüne göre gruplanır.
 // Kitaplar Külliyat sırasıyla, bölümler ve videolar listedeki sırayla gelir. Karta dokununca video Oku'da açılır.
 import { videolar } from 'virtual:oku-videolar';
-import { ciltRengi, etiketYazisi, kimlikYap, KULLIYAT, sureYazisi, tipografik, type Video } from '../oku/ortak';
+import { etiketYazisi, kalinlikMm, kimlikYap, KULLIYAT, sureYazisi, tipografik, type Video } from '../oku/ortak';
 
 export interface BolumGrubu {
   bolum: string;
@@ -42,7 +42,7 @@ const kimlik = kimlikYap;
 
 const OYNAT_SVG = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1.2v7.6L8.6 5 2 1.2Z" fill="currentColor"/></svg>';
 const KITAP_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.4C10.2 4.9 7.6 4.2 3.5 4.3v13.6c4.1-.1 6.7.6 8.5 2.1 1.8-1.5 4.4-2.2 8.5-2.1V4.3c-4.1-.1-6.7.6-8.5 2.1Zm0 0V20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 
 /** Kartın erişilebilir adı: "On Yedinci Lem’a’dan, 1:59. Lem’alar, 154. sayfa. #ihlas #muhabbet #kurtuluş" */
 export function kartEtiketi(v: Video): string {
@@ -98,7 +98,6 @@ function fihrist(gruplar: KitapGrubu[], liste: Video[]): HTMLElement {
     const li = el('li');
     const d = el('button', 'fihrist__kitap');
     d.type = 'button';
-    d.style.setProperty('--cilt', ciltRengi(kitap));
     const sayi = liste.filter((v) => v.kitap === kitap).length;
     d.setAttribute('aria-label', `${tipografik(kitap)}, ${sayi} video`);
     const sirt = el('i');
@@ -130,7 +129,8 @@ export function kutuphaneCiz(liste: Video[] = videolar): HTMLElement {
     const bolum = el('section', 'kitap');
     const id = `kitap-${kimlik(kitap)}`;
     bolum.id = id;
-    bolum.style.setProperty('--cilt', ciltRengi(kitap));
+    // (başlıktaki küçük sırt kitabın gerçek kalınlığıyla orantılıdır; renk bütün ciltlerde aynı: --cilt)
+    bolum.style.setProperty('--mm', kalinlikMm(kitap).toFixed(2));
     const ad = el('h2', 'kitap__ad');
     ad.append(el('span', undefined, tipografik(kitap)));
     ad.id = `${id}-ad`;

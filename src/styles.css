@@ -79,27 +79,87 @@
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* EB Garamond 500, 600 ve 500 italik (@fontsource/eb-garamond 5.3.0, OFL-1.1): başlıklar, kitap sırtları */
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/eb-garamond-500-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/eb-garamond-500-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/eb-garamond-600-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/eb-garamond-600-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/eb-garamond-500-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/eb-garamond-500-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   --sky: #5aa2ec;
-  --bar-top: #fcfaf5;
-  --bar-bottom: #fbf7ef;
-  --pill-top: #fef6e3;
-  --pill-mid: #fcf1d8;
-  --pill-bottom: #fdf4dc;
-  --oku: #022064;
-  --kenz: #8e540a;
-  --gunes-top: #1f3e7f;
-  --gunes-bottom: #201d69;
   --quote-shadow-near: rgba(40, 148, 225, 0.2);
   --quote-shadow-far: rgba(40, 148, 225, 0.45);
 
-  /* ikincil yazı (kremde 6:1), ince çizgi, kart yüzeyi ve gölgeler */
-  --ink-soft: #55607a;
-  --hairline: rgba(2, 32, 100, 0.09);
-  --kart: linear-gradient(180deg, rgba(252, 250, 245, 0.96), rgba(251, 247, 239, 0.94));
-  --kart-kenar: inset 0 0 0 1px rgba(255, 255, 255, 0.78);
-  --yuzen-golge: 0 18px 36px -14px rgba(10, 48, 110, 0.38), 0 2px 6px rgba(10, 48, 110, 0.1);
-  --gok-hale: 0 0 8px rgba(40, 148, 225, 0.2), 0 0 24px rgba(40, 148, 225, 0.45), 0 1px 2px rgba(6, 34, 92, 0.32);
+  /* "müze / koleksiyon": mürekkep laciverti zemin, fildişi yazı; şampanya yalnız ince çizgi, aralıklı küçük etiket ve
+     seçili simgede (altın dolgu ya da parıltı yok). Kitaplar tek renk: #D7787B. */
+  --murekkep: #0b1430;
+  --fildisi: #f4ede0;
+  --fildisi-2: rgba(244, 237, 224, 0.74);
+  --fildisi-3: rgba(244, 237, 224, 0.56);
+  --sampanya: #d9c49a;
+  --sampanya-cizgi: rgba(217, 196, 154, 0.26);
+  --sampanya-ince: rgba(217, 196, 154, 0.14);
+  --cilt: #d7787b;
+  /* bezin gölgesi ve ışığı (rgb üçlüsü; saydamlıkla kullanılır) */
+  --cilt-golge: 60, 14, 22;
+  --cilt-isik: 255, 236, 230;
+  /* logonun laciverti (açık zeminde) */
+  --lacivert: #022064;
+  --eb: 'EB Garamond', 'Tinos', Georgia, serif;
+  --zemin-ekran: radial-gradient(90% 44% at 50% 13%, rgba(40, 56, 110, 0.42), rgba(40, 56, 110, 0) 70%),
+    linear-gradient(180deg, #0d1736 0%, #0b1430 52%, #070e24 100%);
+  /* bez dokusu (gri gürültü; soft-light ile karışır) */
+  --doku: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n' x='0' y='0' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .5'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   --serif: 'Tinos', 'Times New Roman', Times, serif;
   --sans: 'Encode Sans', 'Segoe UI', 'Open Sans', Roboto, sans-serif;
 
@@ -108,10 +168,12 @@
   --u: min(calc(100vw / 390), calc(100vh / 640));
   --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
-  /* alt menünün ekranın altına uzaklığı: güvenli alanın 6 px üstü, en az tasarımdaki 18.95 px */
-  --menu-alt: max(calc(18.95 * var(--u)), calc(var(--safe-bottom) + 6px));
-  /* alt menünün üst kenarı (ekranın altından) */
-  --menu-ust: calc(var(--menu-alt) + 81.3 * var(--u));
+  /* güvenli alanlar dışındaki ekran yüksekliği (Güneş ölçüleri buna göre) */
+  --alan: calc(100vh - var(--safe-top) - var(--safe-bottom));
+  /* alt menü: ekranın altına uzaklığı (güvenli alanın 6 px üstü, en az 16 px), yüksekliği ve üst kenarı */
+  --menu-alt: max(calc(16 * var(--u)), calc(var(--safe-bottom) + 6px));
+  --menu-h: calc(64 * var(--u));
+  --menu-ust: calc(var(--menu-alt) + var(--menu-h));
 
   /* alıntının ince konum ayarı (referans px) */
   --quote-dx: 1.2;
@@ -120,6 +182,7 @@
 @supports (height: 100dvh) {
   :root {
     --u: min(calc(100vw / 390), calc(100dvh / 640));
+    --alan: calc(100dvh - var(--safe-top) - var(--safe-bottom));
   }
 }
 /* Yatay / geniş ekranlarda (tablet, masaüstü, yatay telefon) kompozisyon biraz daha büyük ölçeklenir. */
@@ -246,51 +309,59 @@ h2[tabindex='-1']:focus {
   display: block;
 }
 
-/* ---------- alt menü: yüzen krem kapsül, üç eşit sekme ---------- */
+/* ---------- alt menü: yüzen koyu cam kapsül, üç eşit sekme (ana ekranda fildişi) ---------- */
 .tabbar {
   position: absolute;
   left: 50%;
   bottom: var(--menu-alt);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  width: calc(352.2 * var(--u));
-  height: calc(81.3 * var(--u));
-  margin-left: calc(-176.1 * var(--u));
-  border-radius: calc(25.1 * var(--u));
-  background: linear-gradient(180deg, var(--bar-top), var(--bar-bottom));
+  width: min(calc(100% - 32px), 420px);
+  height: var(--menu-h);
+  margin: 0;
+  padding: calc(5 * var(--u));
+  transform: translateX(-50%);
+  border-radius: calc(22 * var(--u));
+  background: rgba(14, 22, 50, 0.82);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  backdrop-filter: blur(22px) saturate(140%);
   box-shadow:
-    0 0 0 0.5px rgba(2, 32, 100, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(2, 32, 100, 0.035),
-    0 1px 2px rgba(2, 24, 72, 0.08),
-    0 calc(16 * var(--u)) calc(34 * var(--u)) calc(-14 * var(--u)) rgba(2, 24, 72, 0.45);
+    inset 0 0 0 0.5px rgba(217, 196, 154, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 36px -18px rgba(0, 0, 0, 0.75);
   user-select: none;
   -webkit-user-select: none;
 }
 
 .tab {
   position: relative;
-  display: block;
-  height: 100%;
-  border-radius: calc(19.1 * var(--u));
-  color: var(--oku);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(5 * var(--u));
+  border-radius: calc(17 * var(--u));
+  color: rgba(244, 237, 224, 0.62);
   text-decoration: none;
   outline: none;
   -webkit-touch-callout: none;
 }
-/* seçili sekme: kapsülle eş merkezli (6 px içte) altın tülü yüzey; ana ekranda hiçbiri seçili değildir */
+/* seçili sekme: sessiz fildişi yüzey, şampanya kıl çizgi; ana ekranda hiçbiri seçili değildir */
 .tab::before {
   content: '';
   position: absolute;
-  inset: calc(6 * var(--u)) calc(6.2 * var(--u));
-  border-radius: calc(19.1 * var(--u));
-  background: linear-gradient(180deg, #fcf4e0 0%, #f8eacb 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(196, 138, 39, 0.17),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    0 1px 1px rgba(150, 100, 20, 0.06);
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(244, 237, 224, 0.07);
+  box-shadow: inset 0 0 0 0.5px rgba(217, 196, 154, 0.16);
   opacity: 0;
   transition: opacity 0.2s ease;
+}
+.tab[aria-current='page'] {
+  color: var(--fildisi);
+}
+.tab[aria-current='page'] .tab__icon {
+  color: var(--sampanya);
 }
 .tab[aria-current='page']::before {
   opacity: 1;
@@ -298,35 +369,51 @@ h2[tabindex='-1']:focus {
 .tab:focus-visible::after {
   content: '';
   position: absolute;
-  inset: calc(4 * var(--u));
-  border-radius: calc(21 * var(--u));
-  box-shadow: 0 0 0 2px rgba(2, 32, 100, 0.55);
+  inset: 2px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1.5px var(--sampanya);
 }
 
 .tab__icon {
-  position: absolute;
-  left: 50%;
-  top: calc(13 * var(--u));
+  position: relative;
   display: block;
-  width: calc(32 * var(--u));
-  height: calc(32 * var(--u));
-  margin-left: calc(-16 * var(--u));
+  flex: none;
+  width: calc(24 * var(--u));
+  height: calc(24 * var(--u));
+  overflow: visible;
   pointer-events: none;
+}
+/* Kenz: kullanıcının düğümü (#dugum), aynı şekil, yalnız rengi değişir */
+.tab__icon--dugum {
+  fill: currentColor;
 }
 
 .tab__label {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(50 * var(--u));
-  color: var(--oku);
-  font-family: 'Encode Sans', 'Segoe UI', 'Open Sans', Roboto, sans-serif;
-  font-weight: 700;
-  font-size: calc(14 * var(--u));
-  line-height: calc(16 * var(--u));
-  letter-spacing: 0.01em;
-  text-align: center;
+  position: relative;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: calc(11 * var(--u));
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-indent: 0.12em;
+  text-transform: uppercase;
   white-space: nowrap;
+}
+
+/* ana ekran (ve ana ekrandan açılan Oku): fildişi cam, hepsi logo laciverti, seçili sekme yok */
+.app[data-zemin='ana'] .tabbar {
+  background: rgba(251, 248, 241, 0.94);
+  -webkit-backdrop-filter: blur(22px) saturate(90%);
+  backdrop-filter: blur(22px) saturate(90%);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(2, 32, 100, 0.12),
+    0 18px 36px -18px rgba(2, 24, 72, 0.5);
+}
+.app[data-zemin='ana'] .tab {
+  color: var(--lacivert);
+}
+.app[data-zemin='ana'] .tab:focus-visible::after {
+  box-shadow: 0 0 0 1.5px rgba(2, 32, 100, 0.55);
 }
 
 @media (prefers-reduced-motion: reduce) {

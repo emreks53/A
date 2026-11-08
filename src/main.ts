@@ -5,7 +5,7 @@ import './gunes/gunes.css';
 import { Capacitor } from '@capacitor/core';
 import { kitaplar } from 'virtual:kitaplar';
 import { kitapAcilisi } from './gunes/acilis';
-import { ciltRenkleri, gunesBaslat } from './gunes/gunes';
+import { gunesBaslat } from './gunes/gunes';
 import { okuyucuBaslat, tahminiSayfaKutusu } from './gunes/okuyucu';
 import { kenzBaslat } from './kenz/kenz';
 import { acikSayfa } from './oku/alt-sayfa';
@@ -50,7 +50,7 @@ function yerineGec(hash: string): void {
   show(rotaCoz(location.hash), true, true);
 }
 /** Tarayıcının üst çubuğu ekranın rengini alsın */
-const TEMA: Record<Exclude<Sekme, 'kitap'>, string> = { ana: '#5AA2EC', kenz: '#0C1A40', gunes: '#0B1338', oku: '#000000' };
+const TEMA: Record<Exclude<Sekme, 'kitap'>, string> = { ana: '#5AA2EC', kenz: '#0D1736', gunes: '#0D1736', oku: '#000000' };
 const temaRengi = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
 /** Oku açılırken odaktaki öğe (ör. dokunulan Kenz kartı): çıkınca odak ona döner */
 let okuOncesiOdak: HTMLElement | null = null;
@@ -97,7 +97,6 @@ const gunes = gunesBaslat(document.getElementById('view-gunes')!, {
     kitapAcilisi({
       kaynak,
       ad: tipografik(kitap.kitap),
-      renk: ciltRenkleri(kitap.kitap),
       hedef: tahminiSayfaKutusu(),
       zemin: okuyucu.zeminRengi(),
       kagit: okuyucu.kagitRengi(),
