@@ -1,0 +1,22 @@
+{
+  "kod": "S-131",
+  "no": 131,
+  "ad": "Lazer Kesim Dantel",
+  "ad_en": "Laser-Cut Lace Layers",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Lazerle dantel gibi ince oyulmuş pastel ve beyaz kâğıt katmanları; altlarındaki renkli astar kartı deliklerden görünür.",
+  "tanim": "Lazer kesim dantel, ince karton ya da kâğıdın lazerle milimetrik desenlerle oyulmasıyla elde edilen, dantel kadar ince ve düzenli bir süsleme dilidir. Oyulmuş açık renkli kâğıt, renkli bir astar kartın üstüne birkaç milimetre aralıkla bindirilir; delikler astarın rengini gösterir, katmanlar arasındaki yumuşak gölgeler derinlik verir. Düğün davetiyelerinde, lüks ambalajlarda, tebrik kartlarında ve vitrin süslemelerinde sevilen zarif ve aydınlık bir görünümdür.",
+  "koken": "Kâğıt oymanın kökü Çin'in jianzhi geleneğine, Osmanlı'nın kat'ı sanatına ve Avrupa'nın 19. yüzyıl dantel kâğıtlarına (Victoria dönemi kâğıt dantelli kartpostallar, kabartma kâğıt örtüler) uzanır. 2000'lerden sonra masaüstü lazer kesim makineleriyle bu incelik seri üretime geçti; davetiye ve ambalaj tasarımında arabesk, rozet ve fisto kenarlı katmanlı kâğıtlar yaygınlaştı.",
+  "ayirt_edici": [
+    "Kubbe dilimlerinde, dilim daraldıkça küçülen lale, badem ve nokta oyma zinciri; deliklerden koyu yeşil astar kartı görünür",
+    "Gökte ve üst saçakta kâğıttan bırakılmış kıvrık dal, sarmal filiz ve yapraklarla gerçek filigran arabesk şeritler",
+    "Güneş yerine katmanlı dantel mandala: fisto kenarlı altın astar, damla ve göz delikli beyaz rozet, rozet oymalı altın göbek",
+    "Pembe astar üstünde beyaz dantel çiçekler: her taç yaprakta yelpaze damlalar ve kenar boyunca göz delikleri; iskelet gibi oyulmuş yapraklar",
+    "Kaidede yıldız ve yonca kafesli panolar, pencere çevresinde göz delikli kemerler, fisto kenarlı korniş; minarede sivri kemer korkuluklar ve kesik zikzak",
+    "Fisto kenarlı, göz delikli tepe ve zemin şeritleri; katmanlar arasında ve deliklerin içinde yumuşak gölge"
+  ],
+  "palet": ["#CCE1EE", "#FFFEFA", "#F3D3D6", "#80C092", "#2D7A4C", "#E8C878", "#CFE7D6", "#F5ECDD"],
+  "kodla_cizim": "Her öğe 2048 px'lik ekran dışı tuvalde ayrı kâğıt katmanı olarak çizilir: önce renkli astar kartı, üstünde açık renkli dantel kâğıt. Dantel desenleri kodla üretilen motiflerden kurulur (damla, badem, altı ve sekiz yapraklı rozet, yonca, sekiz kollu yıldız); motifler isPointInPath ile bölgenin içine, pencere çevrelerine pay bırakarak altıgen ızgarada dizilir ve destination-out ile kesilir. Kubbe 16 dilime ayrı ayrı kesilir; her dilime profil yarıçapına göre küçülen lale, badem ve nokta zinciri oyulur. Arabesk şeritlerde bant tümüyle oyulup içine kâğıt renginde sinüs dal, logaritmik sarmal filizler ve badem yapraklar yeniden çizilir. Kart dokusu (ince benek, hafif keçe bulutu, seyrek inci pırıltısı) source-atop ile işlenir; katmanın alfa kopyası kaydırılıp çıkarılarak kesim kenarlarında ince ışık ve kâğıt kalınlığı gölgesi elde edilir; her katman shadowBlur ile alttakine sol alta düşen yumuşak gölge bırakır. En sonda soft-light radyal ışık uygulanır.",
+  "etiketler": ["kâğıt", "lazer kesim", "dantel", "filigran", "arabesk", "katmanlı", "pastel", "zarif"]
+}

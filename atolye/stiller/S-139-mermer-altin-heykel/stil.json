@@ -1,0 +1,40 @@
+{
+  "kod": "S-139",
+  "no": 139,
+  "ad": "Mermer ve Altın Heykel",
+  "ad_en": "Marble and Gold Sculpture",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Sahne cilalı beyaz mermerden bir heykel: içten ışıyan yeşim kubbe, kaburgalarda altın kakma, altın pervaz ve alemler; stüdyo ışığı ve açık gök fonu.",
+  "tanim": "Mimariyi değerli malzemelerden oyulmuş bir heykel olarak gösteren lüks ürün renderıdır. Kaide, minare ve çiçekler ılık beyaz, seyrek ve yumuşak damarlı cilalı mermerdir; kubbe ve kasnak koyu yeşil yeşim, kaburgalar ince altın kakma şeritler, pervazlar, pencere söveleri, zikzak bant, süpürgelik, saplar ve alemler altındır. Işık stüdyo gün ışığıdır: sağ üstte büyük bir softbox, solda dikey bir şerit ışık; cilalı yüzeylerde dikdörtgen ışık yansımaları, mermer zeminde heykelin yumuşak aynası görünür. Mücevher ve lüks obje tanıtımlarının vakur, aydınlık görüntü dilidir.",
+  "koken": "Klasik mermer heykel geleneği (Bernini, Canova), mermere değerli taş ve altın kakma işçiliği (pietra dura, Tac Mahal'in kakma süslemesi) ve yeşim oymacılığı, günümüzün dijital ürün görselleştirmesiyle buluşur. Lüks marka kampanyalarında ve Keyshot, Octane, Redshift gibi araçlarla yapılan 3B ürün renderlarında kullanılan stüdyo kurgusu (büyük softbox, şerit ışık, açık fon, yansıtıcı zemin) bu üslubun ışık tarifidir. Özü: yarı saydam beyaz mermer, derin yeşim, metal altın, dikdörtgen yansımalar.",
+  "ayirt_edici": [
+    "İçten ışıyan koyu yeşil yeşim kubbe; dilimlerde kırılan dikdörtgen softbox yansımaları",
+    "Her kaburgada ince altın kakma şerit; kasnak pervazlarında, pencere sövelerinde ve kaide dibindeki süpürgelikte altın",
+    "Seyrek, yumuşak gri-altın damarlı ılık beyaz cilalı mermer kaide ve minare",
+    "Minarede altın kakma zikzak bant, altın bilezik ve şerefe kenarları",
+    "Mermerden oyulmuş beş yapraklı çiçekler: altın göbek ve ercik boncukları, yeşim yapraklar, altın saplar",
+    "Açık mavi gökten krem ufka inen stüdyo fonu ve heykeli yumuşakça yansıtan cilalı mermer zemin"
+  ],
+  "palet": [
+    "#BBDDEC",
+    "#EFECE8",
+    "#2B9250",
+    "#75C392",
+    "#E4E3DF",
+    "#CEB76C",
+    "#56A872",
+    "#E0DCD6"
+  ],
+  "kodla_cizim": "S-138 ile aynı piksel tabanlı çekirdek (2048 px doğrusal çerçeve arabelleği, Path2D maske katmanları, analitik dönel yüzey ve silindir normalleri, mesafe dönüşümüyle şişirme, kaydırılmış bulanık maske gölgeleri). Işık stüdyo ortamından gelir: yansıma yönü, dikdörtgen bir softbox, dikey şerit ışık ve tavan ışığı içeren ortam işlevinde örneklenir; mermer sargılı Lambert, gölge sınırında saçılma terimi ve Schlick Fresnel'li cilayla, damarlar fbm ile bükülmüş seyrek sinüs bantlarından (yumuşak kenarlı, düşük karşıtlık) ve bulutsu tül katmanından üretilir; yeşimde iç bulutluluk yüzey normaline göre kaydırılarak iki derinlikte örneklenir ve ışığa bakan yüzlerde içten gelen doygun yeşil eklenir; altın metal Fresnel ile gölgelendirilir; kaburga, pervaz, söve, zikzak ve süpürgelik bölgeleri malzeme seçimiyle altına çevrilir. Zemin yansıması yapının alt kısmının aynalanıp mesafeyle bulanıklaşan ve sönen bir kopyasıdır. Sonda hafif parlama ve ACES ton eşleme.",
+  "etiketler": [
+    "3B render",
+    "heykel",
+    "mermer",
+    "altın",
+    "yeşim",
+    "stüdyo ışığı",
+    "lüks",
+    "ürün görselleştirme"
+  ]
+}

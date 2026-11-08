@@ -18,9 +18,9 @@
   // renkli alanlarda 1/3 dimi bağlı yatay ipek atkı atlamaları, sırma alanlarda yassı tel sarılı, çapraz
   // yivli, parlak metal atkılar. Her ipliğin yuvarlak gölgesi ve ipek parlaklığı piksel başına hesaplanır.
   const OL = 2, W2 = 1024 * OL;
-  // ızgara: çözgü aralığı 2 birim (512 çözgü), atkı aralığı 3 birim (342 atkı)
-  const CW = 2, RH = 3, NC = 512, NR = 342;
-  const PX = CW * OL, PY = RH * OL; // hücre başına 4 × 6 piksel
+  // ızgara: çözgü aralığı 1,5 birim (683 çözgü), atkı aralığı 2 birim (512 atkı) — sık, ince dokuma
+  const CW = 1.5, RH = 2, NC = 683, NR = 512;
+  const PX = CW * OL, PY = RH * OL; // hücre başına 3 × 4 piksel
   const ctx = SAHNE.tuval(document.getElementById('tuval'), OL);
   const Y = SAHNE.yollar();
   const B = SAHNE.bitki;

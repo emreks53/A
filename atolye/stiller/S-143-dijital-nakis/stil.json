@@ -1,0 +1,40 @@
+{
+  "kod": "S-143",
+  "no": 143,
+  "ad": "Dijital Nakış",
+  "ad_en": "Digital Embroidery",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "İnce makine nakışı renderı: açık keten zemin, gökte uzun-kısa iğne, kubbede kaburga boyunca saten, kuşkulu altın sim kaburgalar, Fransız düğümlü çiçekler.",
+  "tanim": "Sahne açık bir keten kumaşa ince işlenmiş bir nakış panosu gibi render edilir. Gök yatay uzun-kısa iğneyle, mavi tonları iplik boylarının kademelenmesiyle geçirilerek işlenmiştir; ufka yaklaştıkça iğneler seyrekleşir ve keten zemin görünür. Kubbe kaburgalar boyunca saten iğnelerle, kaburgalar kuşkulu altın simle işlenmiş; kasnak dikey saten, taş yapılar yatay bölünmüş saten, pencereler altın simle çevrili koyu dolgular, minaredeki zikzak altın simdir. Çiçekler ışınsal uzun-kısa iğneli beyaz-pembe saten ve Fransız düğümü ortalı, yapraklar balıksırtı, saplar sap işidir; her iğne tek renktir ve yönüne göre ipek gibi parlar.",
+  "koken": "İğneyle resim (thread painting, acupictura) Avrupa'da Orta Çağ'dan beri, Çin'de Su nakışıyla yüzyıllardır uygulanır; Osmanlı dival işi altın simin kumaş üstüne kuşkulanmasını yetkinleştirmiştir. 1980'lerden itibaren bilgisayarlı nakış makineleri (Tajima, Brother) ve dijitalleştirme yazılımları (Wilcom) saten, tatami ve uzun-kısa iğne dolgularını programlanabilir kıldı. Render tarifinin özü: biçimi izleyen iğne yön alanı, iğne başına tek iplik rengi, iplik yönüne bağlı ipek parlaklığı ve kumaşın dokusu.",
+  "ayirt_edici": [
+    "Kubbede kaburga boyunca uzanıp tepeye doğru daralan yeşil saten iğneler; her kaburgada kuşkulu altın sim",
+    "Gökte yatay uzun-kısa iğne: mavi tonlar kademeli iplik boylarıyla geçer, ufka doğru seyrekleşip keteni gösterir",
+    "Çapraz saten altın sim güneş diski ve çevresinde düzgün ışınsal uzun-kısa iğne halesi",
+    "Kasnakta dikey, taşta yatay bölünmüş saten; altın simle çevrili koyu pencere dolguları ve altın sim zikzak",
+    "Işınsal uzun-kısa iğneli beyaz-pembe taç yapraklar, altın sarısı Fransız düğümü ortalar, balıksırtı yapraklar ve sap işi saplar",
+    "İnce bezayağı dokumalı açık keten zemin ve kabarık iğnelerin kumaşa düşürdüğü hafif gölge"
+  ],
+  "palet": [
+    "#93BBD3",
+    "#C6D2D9",
+    "#DEDCD4",
+    "#6DBC89",
+    "#257F44",
+    "#D8C359",
+    "#D8D6CD",
+    "#749E59"
+  ],
+  "kodla_cizim": "Her piksel bir iğneye aittir: bölgeye göre bir iğne koordinat sistemi kurulur (düz bölgelerde döndürülmüş s/t eksenleri; kubbede boylam ve yay uzunluğu; taç yapraklarında açı ve yarıçap; yapraklarda orta damara göre balıksırtı; saplarda yol boyunca eğik bantlar). t ekseni iplik genişliğinde bantlara, s ekseni bant başına rastgele kaydırılmış (uzun-kısa iğnede bant sırasına göre uzun ve kısa) iğne boylarına bölünür. İğne rengi, iğnenin orta noktasında hesaplanan değerin (gök eğimi, bulut yoğunluğu, kubbe normalinin ışıkla açısı, silindir konumu) iplik paletinde titreşimli bir tona çevrilmesiyle seçilir; böylece her iğne tek renktir. İplik gölgelendirmesi: enine yuvarlak profil, iplikler arası koyu aralık, iğne uçlarında incelme, hafif büküm çizgisi ve iplik yönüne bağlı Kajiya-Kay benzeri parlama; altın sim daha keskin parlama ve belirgin bükümle. Keten zemin piksel piksel bezayağı dokuma, her nakış katmanı kumaşa kaydırılmış bulanık maskeyle hafif gölge düşürür; Fransız düğümleri bükümlü küçük küreler. Sonda ACES ton eşleme.",
+  "etiketler": [
+    "nakış",
+    "iplik",
+    "saten",
+    "uzun-kısa iğne",
+    "altın sim",
+    "keten",
+    "dijital render",
+    "tekstil"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "kod": "S-133",
+  "no": 133,
+  "ad": "Kâğıt Heykel",
+  "ad_en": "Paper Sculpture",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Çizilip bükülen, kıvrılan pastel kâğıtlardan, yumuşak stüdyo ışığında kabartma heykel: bombeli kubbe dilimleri, rulo minare, kıvrık taç yapraklar.",
+  "tanim": "Kâğıt heykel (paper sculpture), kâğıdın çizilip katlanması, bükülmesi, kıvrılması ve rulo yapılmasıyla kurulan alçak kabartma illüstrasyondur. Düz kesik katmanlardan farklı olarak yüzeyler eğridir: ışık bükülmüş bir şeridin üstünde yumuşakça kayar, çizik izleri keskin ışık-gölge çizgileri bırakır, kıvrık kenarlar parlar. Fotoğraflanarak reklamda, dergi kapaklarında ve kitap illüstrasyonunda kullanılan aydınlık, hacimli bir zanaat dilidir.",
+  "koken": "Kâğıt heykel 20. yüzyıl ortasında reklam ve vitrin sanatında gelişti; Bruce Angrave ve Ron Ritchie gibi sanatçılar teknikleri kitaplarla sistemleştirdi. Jeff Nishinaka'nın beyaz kâğıt kabartmaları, Richard Sweeney'nin eğri katlı heykelleri ve Owen Gildersleeve, Helen Musselwhite gibi illüstratörlerin renkli işleri bugünkü görünümü belirledi.",
+  "ayirt_edici": [
+    "Kubbe on altı ayrı bükülmüş kâğıt dilimden: her dilimde soldan sağa yumuşak bombe ışığı, aralarında oluk gölgesi, ışığa bakan kenarda ince parlak kâğıt kenarı",
+    "Rulo silindir minare: yatay silindir ışığı ve ek yeri çiziği; yivli konik şerefe çıkmaları, kemerli kenarlı bükük tablalar, kemer pencereleri kesik korkuluklar",
+    "Sekiz bombeli dilimli soğan topuz; yarım rulo pilastrlı, bükük silmeli beyaz kaide; kesik pencerelerin içinde arka karta düşen gölge",
+    "Gök, eğri kat izleriyle hafifçe dalgalanan tek parça kâğıt kabartma; güneş sarmal pilili disk ve ortasından çizikli bükük ışınlar",
+    "Uçları geriye kıvrık, kıvrımın altında ince gölgesi olan beyaz taç yapraklar, saçaklı sarı rulo göbek; orta damarından çizikli, iki yarısı ayrı tonda yapraklar",
+    "Üst kenarı kıvrık pastel tepe ve zemin şeritleri; sağ üstten yumuşak stüdyo ışığı ve iki katlı (geniş ve dar) yumuşak gölgeler"
+  ],
+  "palet": ["#BCDBF1", "#68B37F", "#B4E0BC", "#EAE5DF", "#F6D98C", "#93C99F", "#F2C9D2", "#EFE7DA"],
+  "kodla_cizim": "Kubbe ve soğan topuz piksel piksel gölgelenir: her pikselin boylamı asin((x − cx) / r(y)) ile bulunur, ait olduğu dilimdeki konumuna göre yüzey normali yana döndürülerek dilime bombe verilir; profil eğiminden gelen dikey bileşenle Lambert ışığı hesaplanır, dilim kenarlarına oluk gölgesi ve ışığa bakan kenara ince parlaklık eklenir. Gök de piksel piksel kurulur: uzak bir merkez çevresindeki eş merkezli halkalar dönüşümlü olarak hafif içe ve dışa eğik sayılıp eğri kat izli kabartma elde edilir. Silindirler (minare, kasnak, pilastrlar, saplar) altı duraklı yatay eğimle, silmeler dikey bükülme eğimiyle, çizik izleri koyu ve açık ince çizgi çiftiyle çizilir. Taç yaprakları radyal eğim, yan bombe ve uçta açık bir kıvrım bandıyla, göbek saçak çizgileriyle yapılır. Her öğe ayrı tuvalde kâğıt dokusu ve ışıklı kenarla işlenip iki gölgeyle (geniş yumuşak ve dar temas gölgesi) basılır.",
+  "etiketler": ["kâğıt", "heykel", "kabartma", "bükme", "kıvırma", "pastel", "stüdyo ışığı", "hacim"]
+}

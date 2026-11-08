@@ -1,0 +1,22 @@
+{
+  "kod": "S-132",
+  "no": 132,
+  "ad": "Origami",
+  "ad_en": "Folded Paper",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Sahne katlanmış kâğıttan kurulur: keskin kat izleri, kat açısına göre tonlanan düz yüzeyler, pilili yapraklar ve yıldız güneş.",
+  "tanim": "Origami, tek parça kâğıdın kesilmeden ve yapıştırılmadan katlanarak biçim kazandığı Japon kâğıt katlama sanatıdır. Bu üslupta her öğe katlanmış bir kâğıt model gibi görünür: kat izleri keskin, yüzeyler düzdür ve her yüz ışığa göre kendi tonunu alır; dağ katları ince bir ışık, vadi katları ince bir gölge çizgisi bırakır. Vitrin tasarımında, editoryal illüstrasyonda ve kâğıt el işi esintili reklam görsellerinde kullanılan temiz ve zarif bir dildir.",
+  "koken": "Kâğıt katlama Japonya'da Heian döneminde törensel katlamalarla başladı, Edo döneminde 'Senbazuru Orikata' (1797) gibi kitaplarla yaygınlaştı. Modern origaminin dilini Akira Yoshizawa'nın özgün modelleri ve katlama gösterim sistemi kurdu; Miura-ori pilisi, büküm katları ve mozaik katlamalar 20. yüzyılda Kōryō Miura, Shuzo Fujimoto ve Robert J. Lang gibi adlarla gelişti.",
+  "ayirt_edici": [
+    "Her dilimin ortasında dağ katı, aralarında vadi katı bulunan pilili kubbe; yüzler sağ üstten gelen ışığa göre tonlanır, yatay kat halkalarıyla basamaklanır",
+    "Sekizgen prizma minare: sol yüz gölgede, orta yüz yarı ışıkta, sağ yüz aydınlık; şerefe altlarında aşağı bakan kesik piramit çıkmalar ve akordeon pilili korkuluklar",
+    "Minaredeki zikzak bant, Miura katı gibi sırayla yukarı ve aşağı bakan paralelkenar yüzlerden",
+    "Güneş: ortası büküm katlı (fırıldak) sekiz uçlu yıldız, arkasında akordeon pilili krem yelpaze",
+    "Balıksırtı pilili yapraklar ve ortasından katlı, çentikli taç yapraklı beyaz çiçekler; içte pembe kat kanadı, sarı yıldız göbek",
+    "Akordeon katlı gök, iki yüzlü katlanmış dağlar ve bulutlar; modellerin arkadaki kâğıda düşen yumuşak gölgesi"
+  ],
+  "palet": ["#CBE4F4", "#F6C843", "#F7EBC6", "#35904F", "#7CCB7C", "#E8E2D6", "#6CB65E", "#F4C3D0"],
+  "kodla_cizim": "Her yüz bir çokgendir; rengi, yüzün normali ile sağ üstten gelen ışık vektörünün iç çarpımından (Lambert) üç duraklı bir paletten alınır, kâğıt tam düz durmasın diye her yüze hafif çapraz eğim verilir. Kubbe, SAHNE.kubbeProfili() eğrisinden 7 kat × 16 dilim × 2 yarım yüz olarak kurulur: dilim ortaları dışa (dağ), dilim sınırları içe (vadi) itilmiş 3B noktalardan yüz normalleri hesaplanır. Kasnaklar 13 ve 15 yüzlü prizmadır; minare sekizgen prizma ve kesik piramitlerden, zikzak bant SAHNE.zikzakCizgileri() arasındaki paralelkenarlardan oluşur. Yapraklarda orta damarın iki yanına kırpılmış balıksırtı pili bantları, çiçeklerde çentikli uçurtma yüzler çizilir. Kat izleri dağ katında ince beyaz, vadi katında ince koyu çizgidir. Her model grubu ayrı ekran dışı tuvalde kami dokusu ve ışıklı kenarla işlenip sol alta düşen yumuşak gölgeyle basılır.",
+  "etiketler": ["origami", "katlama", "kâğıt", "pili", "kat izi", "düz yüzey", "geometrik", "aydınlık"]
+}

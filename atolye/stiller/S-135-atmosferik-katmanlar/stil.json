@@ -1,0 +1,22 @@
+{
+  "kod": "S-135",
+  "no": 135,
+  "ad": "Atmosferik Katmanlar",
+  "ad_en": "Atmospheric Layers",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Düz, keskin kenarlı siluet katmanları ışıklı bir pusun içinde uzaklaşır: önde en doygun çiçekler, ortada yapı, arkada giderek solan dağlar ve gök.",
+  "tanim": "Atmosferik katmanlar, sahneyi düz renkli, keskin kenarlı siluet katmanlarına bölüp uzaklık arttıkça her katmanı pus rengine doğru açan bir vektör illüstrasyon üslubudur. Derinlik gölgeyle değil hava perspektifiyle, yani doygunluk ve açıklık farkıyla kurulur; katmanların dipleri temiz eğimlerle sis bandına karışır. Seyahat afişlerinde, dijital manzara illüstrasyonlarında, kitap ve uygulama kapaklarında sevilen sakin, aydınlık bir dildir.",
+  "koken": "Hava perspektifini Leonardo da Vinci tarif etti; Çin ve Japon manzara resminde sisle ayrılan dağ katları (Song dönemi ustaları, Hasegawa Tōhaku) ve ukiyo-e baskılarındaki bokashi geçişleri aynı fikri taşır. 20. yüzyıl seyahat afişleri (Roger Broders, WPA afişleri) ve 2010'ların düz tasarım manzara illüstrasyonları bu katmanlı siluet dilini yaygınlaştırdı.",
+  "ayirt_edici": [
+    "Dört uzak dağ sırası: en arkadaki neredeyse gök renginde, öne gelen her sıra biraz daha koyu ve doygun; her birinin dibi sise karışır",
+    "İki sıra hurmalık silueti, uzaktaki daha soluk; aralarında ve yapının dibinde yatay sis bantları",
+    "Düz renkli, keskin kenarlı yapı: kubbe dilimleri beş düz tonda, kaburgalar ince açık çizgi, kasnaklarda düz gölge ve ışık şeritleri; hafif pus payıyla orta değerde",
+    "Öne geldikçe doygunlaşan üç çayır katmanı ve en önde en doygun yeşil yapraklar; her yaprağın ışığa bakan yarısı keskin bir ayrımla açık",
+    "Keskin kenarlı beyaz çiçekler: her taç yaprağın gölge yarısı tek ton, doygun pembe halka ve altın göbek",
+    "Yukarıda berrak maviden ufukta sıcak pusa temiz gök geçişi, ince yatay şerit bulutlar ve ışıltılı düz güneş diski"
+  ],
+  "palet": ["#93C6E8", "#FAF0E2", "#B3C3D6", "#82A9AC", "#3E9A5F", "#F3ECE0", "#2E9447", "#F2A81D"],
+  "kodla_cizim": "Çizim tamamen vektör dolgudur: katmanlar arkadan öne Path2D siluetleri olarak çizilir. Dağ sırtları sinüs dalgalarının ve Gauss tepelerinin toplamıyla kurulur; her katmanın rengi uzaklığına göre sabit bir pus rengine (#F7EEE2) doğru karıştırılır ve dikey eğimle dibe doğru pusa açılır. Her katmandan sonra tam genişlikte, aşağı doğru yoğunlaşan bir sis bandı çizilir; bir sonraki katman bandın altını örttüğü için her siluetin dibi temiz bir geçişle sise karışır. Hurmalar yay biçimli, sarkık yaprak şeritlerinden üretilir. Yapı SAHNE geometrisinden düz renklerle (kubbe dilimleri ve kasnak şeritleri ışık yönüne göre beş kademede) çizilir ve hafif pus payı alır. Önde bitkiler ve çiçekler en doygun renklerle, yaprak ve taç yaprakları orta eksenden keskin iki tonla boyanır. En sonda çok ince titreşim gürültüsü eğimlerde bantlanmayı önler.",
+  "etiketler": ["vektör", "hava perspektifi", "katmanlı siluet", "pus", "sis", "manzara", "düz renk", "sakin"]
+}

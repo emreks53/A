@@ -1,0 +1,22 @@
+{
+  "kod": "S-134",
+  "no": 134,
+  "ad": "Işıklı Kâğıt Kutu",
+  "ad_en": "Paper-Cut Light Box",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Arkadan aydınlatılan katmanlı kâğıt kesim: gün ışığı renkleri ince kâğıtlardan süzülür, kesik delikler parlar, üst üste binen kâğıtlar rengi koyulaştırır.",
+  "tanim": "Işıklı kâğıt kutu, oyulmuş kâğıt katmanlarının aralıklarla bir çerçeveye dizilip arkadan ışıkla aydınlatılmasıyla yapılan bir kâğıt sanatıdır. Işık her kâğıttan geçerken biraz azalır: tek kat kâğıt aydınlık, üst üste binen yerler daha tok görünür; kesik delikler ışığı doğrudan geçirip parlar, kâğıdın lifli ve bulutlu yapısı ışıkta seçilir. Gece lambası, vitrin ve dekor objesi olarak sevilen bu tarz burada gündüz renkleri ve sıcak bir arka ışıkla aydınlık tutulmuştur.",
+  "koken": "Arkadan aydınlatılan kâğıt; Çin ve Japon kâğıt fenerlerinden, shōji pencerelerinden ve Avrupa'nın 18.–19. yüzyıl litofan ve tünel kitap (peepshow) geleneklerinden beslenir. Çağdaş katmanlı 'shadow box' ve LED'li 'light box' kâğıt kesimleri 2010'larda lazer kesim ve kişiye özel dekor objeleriyle yaygınlaştı.",
+  "ayirt_edici": [
+    "Arka ışık sağ üstteki güneşten yayılır; renkler kâğıtların üst üste çarpılmasıyla oluşur: gök tepede üç, ortada iki, ufukta tek kat mavi kâğıttır",
+    "Işığı doğrudan geçiren kesik delikler: güneş ışını yarıkları, amber ipek kâğıtla yanan kasnak, kaide ve minare pencereleri, yaprak damarları, kubbe kaburgaları",
+    "Kubbe üst üste binen yeşil ipek kâğıt dilimlerinden; sola doğru kat sayısı artarak gölge tarafını tonlar",
+    "Işığa tutulmuş kâğıdın lifli, bulutlu dokusu; yaprakların çakıştığı yerler daha koyu yeşil",
+    "Siluetlerin çevresinde arkadan sızan sıcak ışık parıltısı, arkadaki katmanlara düşen yumuşak hale ve delikler çevresinde ışık taşması",
+    "İki tepe katı arasında soluk hurma siluetleri; ipek kâğıt bulutlar ve parlayan beyaz çiçekler"
+  ],
+  "palet": ["#FFF6E6", "#D3E9F8", "#A7D8A2", "#FDF7EE", "#FFDF96", "#9FD39B", "#F9EDD2", "#B2DCA2"],
+  "kodla_cizim": "Önce güneşten yayılan sıcak bir arka ışık eğimi çizilir. Her kâğıt katmanı bir maske, bir geçirgenlik rengi ve bir gruptan oluşur; katmanlar ana tuvale multiply ile çarpılarak basılır, böylece üst üste binen kâğıtlar ışığı azaltıp rengi koyulaştırır. Çarpma sıra gözetmediği için katmanlar önden arkaya işlenir ve her maske, önündeki başka gruptaki kâğıtların (delikleri dahil) birleşimiyle oyulur: yalnız aynı gruptakiler (gök katları, kubbe dilimleri, yapraklar) çakışıp tonlanır, renkler temiz kalır. Her kâğıda çok ölçekli bulut gürültüsü ve yumuşak liflerden oluşan gri bir doku çarpılır; maskenin bulanık kopyasından arkadakilere düşen hale, siluet çevresine sıcak ışık sızması ve sağ üst kesim kenarına ince parıltı (screen) eklenir. En sonda parlak bölgeler eşiklenip bulanıklaştırılarak delikler ve güneş çevresine ışık taşması verilir.",
+  "etiketler": ["kâğıt", "ışıklı kutu", "arkadan aydınlatma", "katmanlı", "ipek kâğıt", "saydamlık", "parıltı", "gündüz"]
+}

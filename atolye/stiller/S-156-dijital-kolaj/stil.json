@@ -9,12 +9,12 @@
   "tanim": "Dijital kolaj, taranmış eski gravürleri, botanik levhaları, dergi baskılarını ve dokulu kâğıtları ekranda keserek düzenli bir kompozisyonda birleştiren çağdaş bir tasarım üslubudur. Elle yapılan kolajın aksine parçaların kenarı kusursuzdur; her parça ince, temiz bir kesim kenarı ve altındaki kâğıda düşen yumuşak bir gölgeyle hafifçe kabarır. Malzeme çeşitliliği (çizgili el yapımı kâğıt, yarım ton baskı, elle renklendirilmiş gravür, yaldızlı kâğıt) görüntüye zengin ama derli toplu bir doku verir. Kitap kapaklarında, afişlerde, editoryal sayfalarda ve sosyal medya tasarımlarında sık görülür.",
   "koken": "Kolaj 1912'de Picasso ve Braque'ın papier collé denemeleriyle başladı; Max Ernst'in eski gravürlerden kestiği kolaj romanları (La Femme 100 têtes, 1929) ve Hannah Höch'ün fotomontajları kesilmiş baskı parçalarının dilini kurdu, Joseph Cornell'in kutuları ve 1960'ların pop kolajları bu dili sürdürdü. 2000'lerden bu yana Photoshop'ta katman, maske ve gölge efektleriyle yapılan dijital kolaj, kamu malı botanik levha ve gravür arşivlerinin taranıp paylaşılmasıyla ayrı bir tür hâline geldi. Yırtık kâğıt kolajının (S-079) kesin kenarlı, düzenli dijital akrabasıdır.",
   "ayirt_edici": [
-    "Gökte düz kesilmiş kâğıt şeritleri (koyu ve açık mavi çizgili vergé kâğıt, arada mavi yarım ton baskılı kâğıt, ufukta krem kâğıt) ve yapının arkasında kusursuz kesilmiş büyük, açık kayısı rengi kâğıt daire",
+    "Gökte düz kesilmiş yatay kâğıt şeritleri (ince yatay çizgili mavi ve açık mavi vergé kâğıt, arada mavi yarım ton baskılı kâğıt, ufukta krem kâğıt) ve kubbeyi çerçeveleyen, ince altın yaldız halkalı açık kayısı rengi kâğıt madalyon",
     "Her parçanın sol alta düşen yumuşak gölgesi ve bitki parçalarında ince, temiz beyaz kesim payı",
-    "Eski botanik levhalardan kesilmiş dallar, yapraklar ve beyaz çiçekler: sepya ve yeşil mürekkep konturları, ince gravür taramaları, soluk el boyası",
+    "Eski botanik levhalardan kesilmiş dallar, yapraklar, saplı tomurcuklar ve beyaz çiçekler: sepya ve yeşil mürekkep konturları, ince gravür taramaları, soluk el boyası",
     "Yatay gravür çizgileriyle gölgelenmiş, ayrı kesilmiş bulutlar; sarı yarım ton baskılı krem hale üstünde altın yaldızlı kâğıttan güneş",
     "Taş için dokulu krem kâğıt ve gravür taramalı minare, kubbe için meridyen taramalı, yeşile boyanmış gravür baskısı, kasnak için keten dokulu yeşil kâğıt",
-    "Pencereleri oyulmuş kâğıtların arkasından görünen koyu yeşil arkalık; ayrı şerit olarak yapıştırılmış korniş ve denizlikler"
+    "Pencereleri oyulmuş kâğıtların arkasından görünen koyu yeşil arkalık; kum rengi zeminin önünde dalgalı kenarlı, lifli açık yeşil kâğıt şerit"
   ],
   "palet": [
     "#94BFE4",
@@ -24,9 +24,9 @@
     "#F6EEDC",
     "#38A05E",
     "#EAD3A6",
-    "#D9B54E"
+    "#F2C95A"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Kâğıtlar önceden piksel piksel üretilen dokulardır (değer gürültüsü): yatay ince çizgili ve seyrek dikey zincir çizgili vergé kâğıt, 45° yarım ton noktalı baskı, benekli krem taş kâğıdı, kum rengi kâğıt, keten dokulu yeşil kâğıtlar, temiz krem baskı kâğıdı, ince taneli açık kayısı kâğıt, çapraz parlama bantlı yaldızlı kâğıt; parçalara sahne koordinatında desen olarak uygulanır. Her parça kendi sınır kutusunda ekran dışı bir tuvalde 'kesilir' (vektör yol + doku + gravür çizgileri) ve ana tuvale tuvalin kendi gölgesiyle (sol alta kayık, bulanık) yapıştırılır. Gravür taraması kırpılmış alanda açılı paralel çizgilerle yapılır: yaprakların gölge yarısında yan damarlara paralel, taç yapraklarında merkezden ışınsal kısa çizgiler ve ışığa ters kenarda tarama, kubbede yoğunluğu sola doğru artan meridyenler, bulutlarda aşağı doğru sıklaşan yatay çizgiler. Pencereler kâğıtta oyulur (evenodd) ve arkalarına koyu yeşil kâğıt konur, böylece gölge deliğin içine düşer; kesim payı siluetin çift kalın krem konturuyla elde edilir.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Kâğıtlar önceden piksel piksel üretilen dokulardır (değer gürültüsü): yatay ince çizgili vergé kâğıt, 45° yarım ton noktalı baskı, benekli krem taş kâğıdı, kum rengi kâğıt, lifli açık yeşil kâğıt, keten dokulu yeşil kâğıtlar, temiz krem baskı kâğıdı, ince taneli açık kayısı kâğıt, çapraz parlama bantlı yaldızlı kâğıt; parçalara sahne koordinatında desen olarak uygulanır; her doku yalnız kullanıldığı bölgede hesaplanır. Her parça kendi sınır kutusunda ekran dışı bir tuvalde 'kesilir' (vektör yol + doku + gravür çizgileri) ve ana tuvale tuvalin kendi gölgesiyle (sol alta kayık, bulanık) yapıştırılır. Kubbenin arkasındaki madalyon, altın yaldızlı kâğıttan biraz büyük bir dairenin üstüne konmuş kayısı kâğıt dairedir; öndeki tomurcuklar saplarıyla tek parça kesilir. Gravür taraması kırpılmış alanda açılı paralel çizgilerle yapılır: yaprakların gölge yarısında yan damarlara paralel, taç yapraklarında merkezden ışınsal kısa çizgiler ve ışığa ters kenarda tarama, kubbede yoğunluğu sola doğru artan meridyenler, bulutlarda aşağı doğru sıklaşan yatay çizgiler. Pencereler kâğıtta oyulur (evenodd) ve arkalarına koyu yeşil kâğıt konur, böylece gölge deliğin içine düşer; kesim payı siluetin çift kalın krem konturuyla elde edilir.",
   "etiketler": [
     "kolaj",
     "dijital",

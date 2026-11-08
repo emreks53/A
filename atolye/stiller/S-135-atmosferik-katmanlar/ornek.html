@@ -151,7 +151,7 @@
   const H = 0.1; // yapının pus payı
   const R = {
     tas: pus('#F3ECE0', H), tasA: pus('#FFFCF6', H * 0.5), tasG: pus('#DCD1C0', H), tasK: pus('#C7BBA7', H),
-    pen: pus('#9C8F7B', H), yesil: pus('#3E9A5F', H), yesilA: pus('#5DB277', H), yesilG: pus('#2F8150', H), yesilP: pus('#22603B', H),
+    pen: pus('#9C8F7B', H), yesil: pus('#3E9A5F', H), yesilO: pus('#4DA66B', H), yesilA: pus('#5DB277', H), yesilG: pus('#34885A', H), yesilP2: pus('#2B7A4E', H), yesilP: pus('#22603B', H),
     altin: pus('#D9AE45', H * 0.5), altinA: pus('#F2D27C', H * 0.5),
   };
   const dik = (x1, y1, x2, y2) => SAHNE.yol([[x1, y1], [x2, y1], [x2, y2], [x1, y2]], true);
@@ -203,9 +203,9 @@
   for (const k of [1, 0]) {
     const q = SAHNE.kasnak[k];
     const w = q.x2 - q.x1;
-    ctx.fillStyle = R.yesil; ctx.fillRect(q.x1, q.y1, w, q.y2 - q.y1);
-    ctx.fillStyle = R.yesilG; ctx.fillRect(q.x1, q.y1, w * 0.2, q.y2 - q.y1);
-    ctx.fillStyle = R.yesilA; ctx.fillRect(q.x1 + w * 0.68, q.y1, w * 0.2, q.y2 - q.y1);
+    // silindir: kademeli düz şeritler (koyu → orta → ışık → orta)
+    const bant = [[0, 0.07, R.yesilP2], [0.07, 0.22, R.yesilG], [0.22, 0.6, R.yesil], [0.6, 0.7, R.yesilO], [0.7, 0.86, R.yesilA], [0.86, 1, R.yesilO]];
+    for (const [a, b, c] of bant) { ctx.fillStyle = c; ctx.fillRect(q.x1 + w * a, q.y1, w * (b - a) + 0.5, q.y2 - q.y1); }
     ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillRect(q.x1, q.y1, w, 3);
     ctx.fillStyle = R.yesilP; for (const p of SAHNE.kasnakPencereleri(k)) ctx.fill(P(SAHNE.kemerYolu(p.x, p.y, p.w, p.h)));
   }
@@ -220,7 +220,7 @@
       for (const q of prof) { sol.push([560 + u0 * q.r, q.y]); sag.push([560 + u1 * q.r, q.y]); }
       const fm = -Math.PI / 2 + (Math.PI * (k + 0.5)) / N;
       const l = Math.sin(fm + 0.35);
-      ctx.fillStyle = l < -0.45 ? R.yesilG : l > 0.55 ? R.yesilA : R.yesil;
+      ctx.fillStyle = l < -0.7 ? R.yesilP2 : l < -0.3 ? R.yesilG : l < 0.35 ? R.yesil : l < 0.72 ? R.yesilO : R.yesilA;
       ctx.fill(P(SAHNE.yol(sol.concat(sag.reverse()), true)));
     }
     ctx.save(); ctx.clip(P(Yl.kubbe));

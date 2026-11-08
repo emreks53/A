@@ -119,10 +119,12 @@
   // bulutlar: kâğıt beyazı biçim, altta zümrüt yatay çizgi tramı, altın ince kontur
   function bulut(x, y, s) {
     const p = new Path2D();
-    const parca = [[-46, -14, 26], [-2, -30, 40], [44, -16, 28]];
+    const parca = [[-44, -30, 25], [-2, -42, 38], [42, -32, 27]]; // dairelerin altı hap biçiminin içinde kalır: düz taban
     for (const [dx, dy, r] of parca) p.addPath(daire(x + dx * s, y + dy * s, r * s));
     const h = 30 * s;
     p.addPath(yolP(`M${x - 70 * s},${y} A${h / 2},${h / 2} 0 0,1 ${x - 70 * s},${y - h} L${x + 70 * s},${y - h} A${h / 2},${h / 2} 0 0,1 ${x + 70 * s},${y} Z`));
+    // ince altın kontur: birleşik biçim çift kalınlıkta çizilir, içi kâğıtla örtülür; dışta kalan yarısı görünür
+    bas(p, 'gec', { duz: 1 }, 2.6);
     bas(p, {}, {});
     kirpliBas(p, () => bas(dik(x - 120 * s, y - 16 * s, x + 120 * s, y + 4), { yatay: 0.32 }, {}));
   }
@@ -193,15 +195,15 @@
     for (const k of a.kureler) {
       const c = daire(k.cx, k.cy, k.r);
       bas(c, {}, altin);
-      kirpliBas(c, () => bas(daire(k.cx - k.r * 0.45, k.cy + k.r * 0.4, k.r * 0.85), { capraz: 0.45 }, 'gec'));
+      kirpliBas(c, () => bas(daire(k.cx - k.r * 0.45, k.cy + k.r * 0.4, k.r * 0.85), { duz: 0.3 }, 'gec'));
       bas(daire(k.cx + k.r * 0.35, k.cy - k.r * 0.35, k.r * 0.22), {}, { duz: 0.25 });
     }
     const y = elips(a.yaka.cx, a.yaka.cy, a.yaka.rx, a.yaka.ry);
     bas(y, {}, altin);
-    kirpliBas(y, () => bas(dik(a.yaka.cx - 40, a.yaka.cy + a.yaka.ry * 0.2, a.yaka.cx + 40, a.yaka.cy + 20), { capraz: 0.45 }, 'gec'));
+    kirpliBas(y, () => bas(dik(a.yaka.cx - 40, a.yaka.cy + a.yaka.ry * 0.2, a.yaka.cx + 40, a.yaka.cy + 20), { duz: 0.3 }, 'gec'));
     const h = yolP(S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R));
     bas(h, {}, altin);
-    kirpliBas(h, () => bas(dik(a.hilal.cx - 40, a.hilal.cy - 40, a.hilal.cx - a.hilal.R * 0.3, a.hilal.cy + 40), { capraz: 0.45 }, 'gec'));
+    kirpliBas(h, () => bas(dik(a.hilal.cx - 40, a.hilal.cy - 40, a.hilal.cx - a.hilal.R * 0.3, a.hilal.cy + 40), { duz: 0.3 }, 'gec'));
   }
   alem(S.alemParcalari(mx, 146, 0.62));
 
@@ -302,7 +304,7 @@
   for (const t of B.tomurcuklar) {
     const p = yolP(S.tomurcukYolu(t));
     bas(p, {}, { duz: 1 });
-    kirpliBas(p, () => bas(daire(t.x - Math.cos(t.aci) * t.r * 0.4, t.y - Math.sin(t.aci) * t.r * 0.4, t.r * 0.9), { capraz: 0.5 }, 'gec'));
+    kirpliBas(p, () => bas(daire(t.x - Math.cos(t.aci) * t.r * 0.4, t.y - Math.sin(t.aci) * t.r * 0.4, t.r * 0.9), { duz: 0.34 }, 'gec'));
   }
   function cicek(c) {
     const tac = S.tacYapraklari(c).map((e) => ({ ...e, cx: c.x + Math.cos(e.aci) * c.r * 0.55, cy: c.y + Math.sin(e.aci) * c.r * 0.55, rx: c.r * 0.52, ry: c.r * 0.41 }));

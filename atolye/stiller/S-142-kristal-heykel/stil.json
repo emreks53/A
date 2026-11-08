@@ -1,0 +1,40 @@
+{
+  "kod": "S-142",
+  "no": 142,
+  "ad": "Kristal Heykel",
+  "ad_en": "Crystal Sculpture",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Kesme kristal heykel renderı: üçgen fasetli zümrüt kubbe, berrak sekizgen kristal minare, sitrin alemler; kırılma, renk ayrışması, kostik ve yıldız parıltıları.",
+  "tanim": "Sahne parlak gün ışığında duran kesme kristalden bir heykeldir. Zümrüt kubbe mücevher gibi üçgen fasetlere kesilmiştir, meridyen kaburgalar fasetlerin parlak sırtlarıdır; kasnak dikey fasetli zümrüt, minare berrak sekizgen kristal, kaide pahlı kalın bir kristal blok, alemler altın tonlu sitrindir. Her kristal yüzey arkasındaki görüntüyü kırar; kenarlarda gökkuşağı renk ayrışması, fasetlerde iç yansıma parıltıları, sırtlarda ince ışık çizgileri ve yer yer yıldız parıltıları görülür. Çiçekler arkalarındaki yaprakları kıran pembe berrak kristal, yapraklar peridot camdır; zeminde renkli kostik benekler vardır.",
+  "koken": "Bohemya kristali, Baccarat ve Swarovski'nin kesme kristal objeleri ile mücevher fasetleme geleneğine dayanır. Dijital tarafta ışın izlemeli kırılma, dispersiyon ve kostik renderları bu görünümün kaynağıdır. Tarifin özü: arka görüntünün yüzey normali yönünde kaydırılarak örneklenmesi (ekran uzayında kırılma), kırmızı-yeşil-mavinin farklı kaydırılması, faset başına iç yansıma, Fresnel gök yansıması ve yıldız parıltıları. Atölyedeki S-035 Buzlu Cam'ın mat, düz panellerinden farklı olarak berrak, keskin fasetli ve parıltılıdır.",
+  "ayirt_edici": [
+    "Üçgen fasetlere kesilmiş zümrüt kubbe: meridyen kaburgalar parlak faset sırtları, bazı fasetlerde iç ateş",
+    "Berrak sekizgen kristal minare: arkasındaki göğü kıran açık-koyu fasetler, kumlanmış zikzak ve pencereler",
+    "Pahlı kalın kristal kaide: içinde ters dönmüş ufuk, kenarlarda gökkuşağı tayfı ve kumlanmış kemerler",
+    "Dikey fasetli zümrüt kasnak, sitrin fasetli alemler ve yıldız parıltıları",
+    "Arkalarındaki yaprakları kırarak gösteren pembe berrak kristal çiçekler ve iki fasetli peridot yapraklar",
+    "Parlak gün ışığı göğü ve yapının dibinde renkli kostik benekler"
+  ],
+  "palet": [
+    "#90B7DC",
+    "#85D7A3",
+    "#57B375",
+    "#2C824C",
+    "#B6C4D5",
+    "#C5D4D2",
+    "#D3C893",
+    "#8EBF75"
+  ],
+  "kodla_cizim": "S-138 ile aynı piksel tabanlı çekirdek ve geometri, üstüne kırılma: gök ve zemin çizildikten sonra (ve minareden sonra yeniden) çerçeve arabelleğinin anlık kopyası alınır; bitkilerde her katman için yalnız o bölgenin kopyası alınır. Her kristal piksel bu kopyayı yüzey normali yönünde kaydırarak örnekler, kırmızı ve mavi farklı miktarda kaydırılır (dispersiyon), sonuç geçirgenlik rengiyle çarpılıp üsluplaştırılmış bir iç yansıma ortamıyla (dar parlak gök şeridi, güneş, koyu alt) karıştırılır; Schlick Fresnel gök yansıması ve çok keskin güneş parlaması eklenir. Kubbe normali boylam/yay uzunluğu ızgarasında kuantalanıp her dörtgen köşegenden iki eğik üçgen fasete bölünür; kasnak ve minare normalleri 13/15 ve 8 yöne kuantalanır, faset kenarlarına ışık yönüne göre parlak ya da koyu sırt çizgisi çizilir. Kaide, ters ufku örnekleyen kalın blok, pahlarda tayf; çiçek gölgesinde ve kaide dibinde renkli kostik ışık eklenir, sonda yıldız parıltıları, parlama ve ACES ton eşleme.",
+  "etiketler": [
+    "3B render",
+    "kristal",
+    "cam",
+    "kırılma",
+    "dispersiyon",
+    "kostik",
+    "faset",
+    "parıltı"
+  ]
+}

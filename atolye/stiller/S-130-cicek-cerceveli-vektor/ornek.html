@@ -430,8 +430,42 @@
     // --- alt kenar dizisi
     for (const q of [[338, 1012, 40, -0.2, 1], [370, 1014, 36, -2.9, 0], [408, 1010, 38, -0.35, 0], [446, 1016, 34, -2.7, 1], [476, 1012, 30, -0.5, 0]]) Y(...q);
     C(390, 1010, 18, 0.5); C(458, 1016, 14, 1.2);
-    // çizim sırası: sap → yaprak → tomurcuk → beyaz çiçek → gül
+    // sapsız kalan her yaprak, tomurcuk, çiçek ve gül en yakın sapa ince bir saplıkla bağlanır
+    // (boşlukta yüzen öğe kalmaz). Sap eğrileri sap() ile aynı biçimde örneklenir.
+    const sapNokta = [];
+    for (const [pts] of saplar) {
+      let [cx0, cy0] = pts[0];
+      const ekle = (x, y) => sapNokta.push([x, y]);
+      ekle(cx0, cy0);
+      for (let i = 1; i < pts.length - 1; i++) {
+        const [kx, ky] = pts[i];
+        const ex = (pts[i][0] + pts[i + 1][0]) / 2, ey = (pts[i][1] + pts[i + 1][1]) / 2;
+        for (let k = 1; k <= 12; k++) { const t = k / 12, u = 1 - t; ekle(u * u * cx0 + 2 * u * t * kx + t * t * ex, u * u * cy0 + 2 * u * t * ky + t * t * ey); }
+        cx0 = ex; cy0 = ey;
+      }
+      const [lx, ly] = pts[pts.length - 1];
+      for (let k = 1; k <= 8; k++) ekle(cx0 + ((lx - cx0) * k) / 8, cy0 + ((ly - cy0) * k) / 8);
+    }
+    const saplik = [];
+    function bagla(bx, by, esik) {
+      let en = null, ed = 1e9;
+      for (const [x, y] of sapNokta) { const d = Math.hypot(x - bx, y - by); if (d < ed) { ed = d; en = [x, y]; } }
+      if (ed <= esik) return;
+      const mx0 = (en[0] + bx) / 2, my0 = (en[1] + by) / 2;
+      const nx = -(by - en[1]) / ed, ny = (bx - en[0]) / ed;
+      saplik.push([en, [mx0 + nx * ed * 0.18, my0 + ny * ed * 0.18], [bx, by]]);
+    }
+    for (const [x, y] of yapraklar) bagla(x, y, 3);
+    for (const [x, y, r, a] of tomurcuklar) bagla(x - Math.cos(a) * r * 0.9, y - Math.sin(a) * r * 0.9, 3);
+    for (const [x, y, r] of cicekler) bagla(x, y, r * 0.9);
+    for (const [x, y, R] of guller) bagla(x, y, R * 0.9);
+    // çizim sırası: sap → saplık → yaprak → tomurcuk → beyaz çiçek → gül
     for (const [pts, w] of saplar) sap(c, pts, w);
+    c.strokeStyle = '#5A8F4C';
+    c.lineWidth = 2;
+    c.lineCap = 'round';
+    for (const [a0, k, b0] of saplik) { c.beginPath(); c.moveTo(a0[0], a0[1]); c.quadraticCurveTo(k[0], k[1], b0[0], b0[1]); c.stroke(); }
+    console.warn('saplik', saplik.length, saplik.map(([a0, k, b0]) => Math.round(Math.hypot(b0[0] - a0[0], b0[1] - a0[1])) + '@' + Math.round(b0[0]) + ',' + Math.round(b0[1])).join(' '));
     for (const q of yapraklar) yaprak2(c, ...q);
     for (const q of tomurcuklar) tomurcuk2(c, ...q);
     for (const q of cicekler) beyazCicek(c, ...q);
