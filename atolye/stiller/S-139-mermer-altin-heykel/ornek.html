@@ -1034,7 +1034,7 @@ stil.orta = function (c) {
 
 // ------------------------------------------------------------------ fon ve zemin
 function fonCiz() {
-  const UF = lin('#FCEBD6'), ORTA = lin('#E6ECF0'), TEPE = lin('#92C0EA');
+  const UF = lin('#FCEAD3'), ORTA = lin('#DDE9F2'), TEPE = lin('#80B6E8');
   const bulutlar = [[190, 250, 210, 60], [520, 150, 170, 44], [780, 330, 230, 64], [945, 470, 140, 36], [85, 470, 150, 38]];
   tumu(0, 820, (X, Y, out) => {
     const t = clamp(Y / 800);
@@ -1053,7 +1053,7 @@ function fonCiz() {
     }
     cl = clamp(cl * (0.8 + 0.4 * fbm(X / 90, Y / 60, 3)));
     r = mix(r, 1.08, cl * 0.75); g = mix(g, 1.07, cl * 0.75); b = mix(b, 1.06, cl * 0.75);
-    const s = 2.45;
+    const s = 2.6;
     out[0] = r * s; out[1] = g * s; out[2] = b * s;
   }, 0);
 }
