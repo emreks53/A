@@ -676,6 +676,122 @@
   sakayiklar.push([96, 404, 30, 0.5, true, 0.2], [934, 404, 28, 1.2, false, -0.3], [176, 168, 22, 0.9, false, 0.4]);
   for (const [x, y, Rr, rot, b, eg] of sakayiklar) sakayik(x, y, Rr, rot, b, eg);
 
+  // ------------------------------------------------------------ 11. ön bahçe: kat kat yumuşak tümsekler, süs kayaları, ot öbekleri, küçük çiçekler
+  function otObegi(x, y, s) {
+    ctx.save(); ctx.lineWidth = 0.8; ctx.globalAlpha = 0.85;
+    const n = 5 + Math.floor(rnd() * 5);
+    for (let k = 0; k < n; k++) {
+      const a = -Math.PI / 2 + (k / (n - 1) - 0.5) * 1.5 + (rnd() - 0.5) * 0.2;
+      const L = s * (0.6 + rnd() * 0.6) * (1 - Math.abs(k / (n - 1) - 0.5) * 0.7);
+      ctx.strokeStyle = k % 2 ? '#7FA787' : '#5F8F78';
+      ctx.beginPath(); ctx.moveTo(x, y);
+      ctx.quadraticCurveTo(x + Math.cos(a) * L * 0.5, y + Math.sin(a) * L * 0.6, x + Math.cos(a + (a + Math.PI / 2) * 0.35) * L, y + Math.sin(a) * L);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function kucukCicek(x, y, r, renk) {
+    ctx.save();
+    ctx.strokeStyle = '#7FA787'; ctx.lineWidth = 0.7; ctx.globalAlpha = 0.8;
+    ctx.beginPath(); ctx.moveTo(x, y + r * 4); ctx.quadraticCurveTo(x + r, y + r * 2, x, y); ctx.stroke();
+    ctx.globalAlpha = 0.95;
+    for (let k = 0; k < 5; k++) {
+      const a = (k / 5) * Math.PI * 2 + x;
+      ctx.fillStyle = renk;
+      ctx.beginPath(); ctx.ellipse(x + Math.cos(a) * r * 0.6, y + Math.sin(a) * r * 0.6, r * 0.55, r * 0.38, a, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = R.ercik; ctx.beginPath(); ctx.arc(x, y, r * 0.28, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  function kaya(cx, cy, w, h, tohum) {
+    const r = S.rng(tohum);
+    const pts = [];
+    const n = 14;
+    for (let k = 0; k < n; k++) {
+      const a = Math.PI + (k / (n - 1)) * Math.PI; // üst yarı
+      const rr = 1 + (r() - 0.5) * 0.22;
+      pts.push([cx + Math.cos(a) * w * rr, cy + Math.sin(a) * h * rr * (0.85 + 0.3 * Math.sin(k * 1.3))]);
+    }
+    const yol = new Path2D();
+    yol.moveTo(cx - w, cy + h * 0.18);
+    for (const q of pts) yol.lineTo(q[0], q[1]);
+    yol.lineTo(cx + w, cy + h * 0.18);
+    yol.quadraticCurveTo(cx, cy + h * 0.32, cx - w, cy + h * 0.18);
+    yol.closePath();
+    const g = ctx.createLinearGradient(cx + w * 0.6, cy - h, cx - w * 0.6, cy + h * 0.2);
+    g.addColorStop(0, '#E4ECEC'); g.addColorStop(0.45, R.kaya); g.addColorStop(1, R.kayaKoyu);
+    ctx.fillStyle = g; ctx.fill(yol);
+    benek(yol, 0.3);
+    kenarBirikimi(yol, '#7E97A0', 4, 0.35);
+    // kıvrık kaya kırışıkları (ince fırça) ve oyuklar
+    ctx.save(); ctx.clip(yol); ctx.strokeStyle = '#6F8790'; ctx.lineWidth = 0.7; ctx.globalAlpha = 0.6;
+    for (let k = 0; k < 4; k++) {
+      const x0 = cx - w * 0.7 + r() * w * 1.2, y0 = cy - h * (0.2 + r() * 0.6);
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x0 + w * 0.2, y0 - h * 0.25, x0 + w * (0.25 + r() * 0.2), y0 + h * 0.15); ctx.stroke();
+    }
+    for (let k = 0; k < 2; k++) {
+      const ox = cx + (r() - 0.5) * w * 0.9, oy = cy - h * (0.25 + r() * 0.35), orx = w * (0.08 + r() * 0.06);
+      ctx.fillStyle = 'rgba(110,135,146,0.45)'; ctx.beginPath(); ctx.ellipse(ox, oy, orx, orx * 0.7, 0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#FFFFFF'; ctx.globalAlpha = 0.8; ctx.beginPath(); ctx.ellipse(ox + 0.6, oy - 0.6, orx, orx * 0.7, 0.3, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke(); ctx.globalAlpha = 0.6;
+    }
+    ctx.restore();
+    kontur(yol, '#6A7F86', 0.8, 0.75);
+    // ışık yanında beyaz guaj
+    ctx.save(); ctx.strokeStyle = '#FFFFFF'; ctx.globalAlpha = 0.75; ctx.lineWidth = 1.1;
+    ctx.beginPath(); for (let k = 8; k < n - 1; k++) { const q = pts[k]; const xx = cx + (q[0] - cx) * 0.9, yy = cy + (q[1] - cy) * 0.88; k === 8 ? ctx.moveTo(xx, yy) : ctx.lineTo(xx, yy); } ctx.stroke();
+    ctx.restore();
+    // dipte yosun benekleri ve ot
+    for (let k = 0; k < 7; k++) { ctx.fillStyle = k % 2 ? R.yosun : '#6F9A72'; ctx.globalAlpha = 0.85; ctx.beginPath(); ctx.ellipse(cx - w + r() * 2 * w, cy + h * 0.12 + r() * 4, 1.7, 1.0, r() * 3, 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    otObegi(cx - w * 0.85, cy + h * 0.2, 14); otObegi(cx + w * 0.9, cy + h * 0.2, 12);
+  }
+  {
+    // tümsekler: arkadan öne üç sıra, her biri bir öncekini örter
+    const siralar = [
+      { yb: 818, h: [10, 18], w: [120, 190], ust: '#DCE8CC', alt: '#CBDDB9' },
+      { yb: 872, h: [12, 22], w: [140, 220], ust: '#D3E3C0', alt: '#C2D7AE' },
+      { yb: 940, h: [14, 26], w: [160, 240], ust: '#CCDFB8', alt: '#B9D1A4' },
+    ];
+    siralar.forEach((sr, si) => {
+      let x = -60 - rnd() * 80;
+      while (x < 1084) {
+        const w = sr.w[0] + rnd() * (sr.w[1] - sr.w[0]), h = sr.h[0] + rnd() * (sr.h[1] - sr.h[0]);
+        const cx = x + w, tepe = sr.yb - h;
+        const yol = new Path2D();
+        yol.moveTo(cx - w * 1.15, sr.yb + 12);
+        yol.bezierCurveTo(cx - w * 0.6, sr.yb + 4, cx - w * 0.45, tepe, cx, tepe);
+        yol.bezierCurveTo(cx + w * 0.45, tepe, cx + w * 0.6, sr.yb + 4, cx + w * 1.15, sr.yb + 12);
+        yol.lineTo(cx + w * 1.15, 1030); yol.lineTo(cx - w * 1.15, 1030); yol.closePath();
+        const g = ctx.createLinearGradient(0, tepe, 0, tepe + 70);
+        g.addColorStop(0, sr.ust); g.addColorStop(1, sr.alt);
+        ctx.fillStyle = g; ctx.fill(yol);
+        benek(yol, 0.28);
+        // sırt çizgisi: ince kontür ve altında hafif boya birikimi
+        const sirt = new Path2D();
+        sirt.moveTo(cx - w * 1.15, sr.yb + 12);
+        sirt.bezierCurveTo(cx - w * 0.6, sr.yb + 4, cx - w * 0.45, tepe, cx, tepe);
+        sirt.bezierCurveTo(cx + w * 0.45, tepe, cx + w * 0.6, sr.yb + 4, cx + w * 1.15, sr.yb + 12);
+        ctx.save(); ctx.clip(yol); ctx.filter = 'blur(3px)'; ctx.strokeStyle = '#9DBE94'; ctx.globalAlpha = 0.35; ctx.lineWidth = 6; ctx.stroke(sirt); ctx.restore();
+        kontur(sirt, '#86A98A', 0.8, 0.6);
+        // sırtta ot öbekleri
+        for (let k = 0; k < 3; k++) {
+          const t = 0.2 + rnd() * 0.6, ox = cx - w + t * 2 * w;
+          const u = (ox - cx) / w, oy = tepe + (sr.yb + 8 - tepe) * Math.min(1, u * u) + 2;
+          otObegi(ox, oy, 10 + rnd() * 8);
+        }
+        x += w * (1.4 + rnd() * 0.5);
+      }
+      // her sıranın önüne birkaç küçük çiçek
+      for (let k = 0; k < 9; k++) {
+        const x2 = 20 + rnd() * 984, y2 = sr.yb + 18 + rnd() * 30;
+        kucukCicek(x2, y2, 3 + rnd() * 1.8, k % 3 === 0 ? '#B9C6EA' : k % 3 === 1 ? '#FFFFFF' : '#E9C3D4');
+      }
+      if (si === 0) { kaya(412, 826, 26, 22, 31); kaya(598, 822, 30, 24, 32); }
+      if (si === 1) { kaya(330, 888, 22, 18, 33); kaya(700, 884, 20, 16, 34); }
+      if (si === 2) { kaya(612, 1002, 30, 24, 35); kaya(290, 1010, 24, 20, 36); }
+    });
+  }
+
   // ------------------------------------------------------------ 12. önde çiçekli çalılar
   {
     const B = S.bitki;
@@ -727,11 +843,15 @@
         const xs = x / K, ys = y / K;
         // ipeğin çapraz parıltısı
         const bant = (xs * 0.62 + ys * 0.78);
-        const parilti = 0.07 * Math.exp(-Math.pow((bant - 520) / 240, 2)) + 0.035 * Math.exp(-Math.pow((bant - 1120) / 150, 2)) - 0.015 * Math.exp(-Math.pow((bant - 820) / 120, 2));
-        const f = 1 + iplikTon + (profil - 0.64) * 0.05 + dugum * 0.6 + cozgu;
+        let parilti = 0.1 * Math.exp(-Math.pow((bant - 520) / 240, 2)) + 0.05 * Math.exp(-Math.pow((bant - 1120) / 150, 2)) - 0.02 * Math.exp(-Math.pow((bant - 820) / 120, 2));
+        // ipek parıltısı iplik iplik kırılır: her atkı ipliği ışığı biraz farklı yansıtır (yatay ışıltı çizgileri)
+        const isilti = 0.55 + 0.9 * hash(iplik, Math.floor(x / 90 + hash(iplik, 1, 79) * 3), 80);
+        parilti *= isilti * (0.75 + 0.5 * profil);
+        const f = 1 + iplikTon + (profil - 0.64) * 0.07 + dugum * 0.6 + cozgu;
+        // parıltı ipekte hafif sıcak (altınsı) ton verir
         d[j] = clamp(d[j] * f + 255 * parilti, 0, 255);
-        d[j + 1] = clamp(d[j + 1] * f + 252 * parilti, 0, 255);
-        d[j + 2] = clamp(d[j + 2] * f + 245 * parilti, 0, 255);
+        d[j + 1] = clamp(d[j + 1] * f + 250 * parilti, 0, 255);
+        d[j + 2] = clamp(d[j + 2] * f + 236 * parilti, 0, 255);
       }
     }
     ctx.putImageData(im, 0, 0);
