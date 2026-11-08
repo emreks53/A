@@ -224,8 +224,71 @@
   dol(S.daireYolu(O[0], O[1], 30), rg(O[0], O[1], 30, [[0, '#FFFFFF'], [0.6, '#FFF6D6'], [1, '#F5DE98']]), `stroke="${P.seritKenar}" stroke-width="1.2"`);
   dol(dik(0, 0, 1024, 820), lg(0, 380, 0, 805, [[0, P.ufuk, 0], [0.55, P.ufuk, 0.35], [1, P.ufuk, 0.82]]));
 
-  // ================================================================ 2. ZEMİN
+  // ================================================================ 2. ZEMİN: perspektifte mermer avlu döşemesi, köşelerde sekiz kollu yıldız kakma
   dol(dik(0, 800, 1024, 1024), lg(0, 800, 0, 1024, [[0, P.zemin], [1, P.zeminAlt]]));
+  {
+    const fo = 1000; // odak (px), göz yüksekliği 1 birim
+    const cx = 560;
+    const yv = 560; // kaçış noktası (kasnak hizası)
+    const s = 0.151; // döşeme kenarı (ön sırada ≈ 70 px)
+    const pr = (X, Z) => [cx + (fo * X) / Z, yv + fo / Z];
+    const Zuzak = fo / 240; // y = 800
+    const Zon = 2.0;
+    const Xs = [];
+    for (let i = -17; i <= 15; i++) Xs.push((i - 0.5) * s);
+    const Zs = [];
+    for (let j = 0; Zuzak - j * s > Zon - s; j++) Zs.push(Zuzak - j * s);
+    let tA = '';
+    let tB = '';
+    for (let j = 0; j < Zs.length - 1; j++) {
+      for (let i = 0; i < Xs.length - 1; i++) {
+        const q = [pr(Xs[i], Zs[j]), pr(Xs[i + 1], Zs[j]), pr(Xs[i + 1], Zs[j + 1]), pr(Xs[i], Zs[j + 1])];
+        if (Math.max(q[1][0], q[2][0]) < -20 || Math.min(q[0][0], q[3][0]) > 1044) continue;
+        const d = S.yol(q, true) + ' ';
+        if ((i + j) % 2) tA += d;
+        else tB += d;
+      }
+    }
+    grup(kirp(dik(0, 801, 1024, 1024)), () => {
+      dol(tA, '#F8F1E2');
+      dol(tB, '#F0E5CD');
+      // derzler
+      let dz = '';
+      for (const Z of Zs) dz += `M0,${f(yv + fo / Z)} L1024,${f(yv + fo / Z)} `;
+      for (const X of Xs) {
+        const a = pr(X, Zs[0]);
+        const b = pr(X, Zs[Zs.length - 1]);
+        dz += `M${f(a[0])},${f(a[1])} L${f(b[0])},${f(b[1])} `;
+      }
+      cizgi(dz, '#D6C39B', 0.9, 'opacity="0.85"');
+      // sekiz kollu yıldız (iki kare) kakmalar ve ortalarında küçük göbek
+      let yd = '';
+      let gb = '';
+      for (const Z of Zs) {
+        for (const X of Xs) {
+          const m = pr(X, Z);
+          if (m[0] < -30 || m[0] > 1054) continue;
+          const R = s * 0.3;
+          const pts = [];
+          for (let k = 0; k < 16; k++) {
+            const rr = k % 2 ? R * 0.765 * 0.72 : R;
+            const an = (k * Math.PI) / 8;
+            pts.push(pr(X + rr * Math.cos(an), Z + rr * Math.sin(an)));
+          }
+          yd += S.yol(pts, true) + ' ';
+          const g1 = pr(X - R * 0.22, Z);
+          const g2 = pr(X + R * 0.22, Z);
+          const g3 = pr(X, Z + R * 0.22);
+          const g4 = pr(X, Z - R * 0.22);
+          gb += S.yol([g1, g4, g2, g3], true) + ' ';
+        }
+      }
+      dol(yd, P.yildiz6, `stroke="${P.seritKenar}" stroke-width="0.9" stroke-linejoin="miter"`);
+      dol(gb, P.yildiz4, `stroke="${P.seritKenar}" stroke-width="0.6"`);
+      // ufka doğru hafif pus: döşeme uzakta açılır
+      dol(dik(0, 800, 1024, 1024), lg(0, 800, 0, 1024, [[0, P.ufuk, 0.8], [0.3, P.ufuk, 0.3], [1, P.ufuk, 0]]));
+    });
+  }
   dol(dik(0, 799, 1024, 801.5), P.seritKenar, 'opacity="0.55"');
   // kaidenin sola düşen yumuşak gölgesi
   dol('M300,800 L820,800 L760,826 L230,826 Z', lg(0, 800, 0, 826, [[0, '#CDBB97', 0.55], [1, '#CDBB97', 0]]));

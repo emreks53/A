@@ -908,31 +908,86 @@
     gx.putImageData(im, 0, 0);
     ctx.drawImage(gc, 0, 0, 1024, 1024);
   }
-  // doğal bulutlar: gürültüyle aşınmış kümülüs ve ince stratokümülüs, güneşe doğru örneklenen gölge
-  {
-    const rb = SAHNE.rng(4811);
-    const kume = [
-      { x: 160, y: 300, gen: 300, yuk: 80, adet: 34, r0: 22, r1: 56, ol: 1.0 },
-      { x: 470, y: 178, gen: 260, yuk: 54, adet: 26, r0: 18, r1: 44, ol: 0.95 },
-      { x: 800, y: 380, gen: 330, yuk: 96, adet: 40, r0: 24, r1: 60, ol: 1.0 },
-      { x: 85, y: 540, gen: 200, yuk: 30, adet: 18, r0: 14, r1: 30, ol: 0.85 },
-      { x: 935, y: 580, gen: 200, yuk: 28, adet: 16, r0: 14, r1: 28, ol: 0.85 },
-      { x: 640, y: 240, gen: 150, yuk: 20, adet: 12, r0: 10, r1: 22, ol: 0.7 },
-    ];
-    for (const k of kume) {
-      const p = G.kumulus(rb, k.x, k.y, k.gen, k.yuk, k.adet, k.r0, k.r1);
-      const x0 = k.x - k.gen / 2 - k.r1 - 30;
-      const y0 = k.y - k.yuk - k.r1 - 30;
-      const w = k.gen + 2 * k.r1 + 60;
-      const h = k.yuk + 2 * k.r1 + 60;
-      const c = G.bulut(p, {
-        x0, y0, w, h, olcek: 1.5, gur: PN, gurAmp: 0.55, gurFrek: 0.028, oktav: 6, icKoru: [0.6, 1.2],
-        isik: [255, 254, 250], golge: [176, 188, 206], alt: [188, 196, 212], kenar: [0.12, 0.58],
-        emilim: 0.8, adimlar: 7, adimBoy: 5, tabanY: k.y + k.r1 * 0.5, tabanYum: 16, altGuc: 0.5, opaklik: k.ol,
-        normalMod: true, r1: 3, r2: 12, normalGuc: 18, ortulme: 0.45, isik3: [0.6, -0.65, 0.45],
-      });
-      ctx.drawImage(c, x0, y0, w, h);
+  // doğal bulutlar: zarf (birkaç elips) × alan bükmeli fraktal gürültü; yüzey normali ve güneşe doğru örtme ile ışık
+  function gercekBulut(x0, y0, w, h, zarf, taban, o) {
+    o = o || {};
+    const W = Math.ceil(w);
+    const H = Math.ceil(h);
+    const D = new Float32Array(W * H);
+    for (let j = 0; j < H; j++) {
+      const Y = y0 + j;
+      const tb = G.yumusak(taban + 8, taban - 22, Y);
+      for (let i = 0; i < W; i++) {
+        const X = x0 + i;
+        let env = 0;
+        for (const z of zarf) {
+          const dx = (X - z[0]) / z[2];
+          const dy = (Y - z[1]) / z[3];
+          const v = 1 - dx * dx - dy * dy;
+          if (v > env) env = v;
+        }
+        if (env <= -0.25) {
+          D[j * W + i] = -1;
+          continue;
+        }
+        env = env > 0 ? Math.pow(env, 0.55) : env;
+        const wx = X + 46 * PN.fbm(X * 0.005, Y * 0.005, 3);
+        const wy = Y + 30 * PN.fbm(X * 0.005 + 7.7, Y * 0.005, 3);
+        const n = PN.fbm(wx * (o.frek || 0.011), wy * (o.frek || 0.011) * 1.25, 6);
+        D[j * W + i] = (env * 1.15 + n * 1.25 - 0.32) * tb;
+      }
     }
+    const D1 = G.bulanik(D, W, H, 3);
+    const D2 = G.bulanik(D, W, H, 12);
+    const [c, cx] = G.tuval(W, H);
+    const im = cx.createImageData(W, H);
+    const d = im.data;
+    const L3 = G.norm([0.62, -0.62, 0.42]);
+    for (let j = 1; j < H - 1; j++) {
+      for (let i = 1; i < W - 1; i++) {
+        const k = j * W + i;
+        const v = D[k];
+        if (v <= 0) continue;
+        const a = G.yumusak(0, 0.42, v);
+        const gx = (D1[k + 1] - D1[k - 1]) * 0.6 + (D2[k + 1] - D2[k - 1]) * 1.6;
+        const gy = (D1[k + W] - D1[k - W]) * 0.6 + (D2[k + W] - D2[k - W]) * 1.6;
+        const sk = 16;
+        const nx = -gx * sk;
+        const ny = -gy * sk;
+        const nl = Math.hypot(nx, ny, 1);
+        const lam = G.kenet(0.42 + 0.7 * ((nx * L3[0] + ny * L3[1] + L3[2]) / nl), 0, 1);
+        let oc = 0;
+        for (let t = 1; t <= 7; t++) {
+          const xi = Math.round(i + 6 * t * 0.7);
+          const yi = Math.round(j - 6 * t * 0.7);
+          if (xi >= W || yi < 0) break;
+          oc += Math.max(0, D[yi * W + xi]);
+        }
+        const ort = Math.exp(-oc * 0.55);
+        let ay = lam * 0.55 + ort * 0.45;
+        const Y = y0 + j;
+        ay *= 1 - 0.32 * G.yumusak(taban - 70, taban, Y);
+        let col = G.karis([160, 172, 194], [255, 254, 250], G.kenet(ay, 0, 1));
+        // ince kenarlar ışığı geçirir: parlak ve saydam
+        const ince = 1 - G.yumusak(0.02, 0.3, v);
+        col = G.karis(col, [255, 255, 255], ince * 0.55 * ort);
+        const q = k * 4;
+        d[q] = col[0];
+        d[q + 1] = col[1];
+        d[q + 2] = col[2];
+        d[q + 3] = 255 * a * (o.op == null ? 1 : o.op);
+      }
+    }
+    cx.putImageData(im, 0, 0);
+    ctx.drawImage(c, x0, y0, W, H);
+  }
+  {
+    gercekBulut(-40, 170, 400, 230, [[90, 300, 120, 55], [200, 285, 110, 70], [300, 315, 80, 40], [20, 320, 70, 35]], 345);
+    gercekBulut(320, 70, 340, 160, [[420, 165, 90, 45], [520, 150, 100, 55], [600, 175, 60, 30]], 195);
+    gercekBulut(600, 230, 440, 250, [[720, 380, 110, 55], [820, 350, 130, 80], [930, 385, 90, 45], [870, 300, 70, 40]], 425);
+    gercekBulut(-20, 480, 300, 120, [[60, 545, 110, 26], [170, 540, 80, 22]], 562, { op: 0.9 });
+    gercekBulut(790, 520, 260, 110, [[880, 582, 100, 24], [970, 575, 70, 20]], 600, { op: 0.9 });
+    gercekBulut(560, 200, 200, 90, [[640, 245, 70, 20], [700, 250, 40, 14]], 262, { op: 0.8, frek: 0.016 });
   }
   // ufukta uzak tepeler (hava perspektifiyle mavileşmiş) ve pus
   {
@@ -994,7 +1049,7 @@
     golge: golgeTas,
     tas: TAS,
     tasKoyu: [150, 140, 124],
-    yesil: [52, 130, 74],
+    yesil: [44, 116, 66],
     yesilKoyu: [8, 40, 24],
     golgeRenk: [40, 48, 64],
     isikRenk: [255, 250, 236],
@@ -1010,7 +1065,7 @@
     alemParilti: 1,
   });
   // kubbe: boyalı metal levha — yayınık + GGX benzeri parlama + gök yansıması + oluk ortam gölgesi
-  const KUBBE = [56, 140, 82];
+  const KUBBE = [44, 122, 70];
   G.kubbeGolgele(mx, {
     olcek: 2,
     kaburgaGen: 1.5,
@@ -1029,7 +1084,7 @@
   });
   {
     const q = SAHNE.kasnak[0];
-    mx.fillStyle = G.silindirDegrade(mx, q.x1, q.x2, (n) => foto([76, 150, 96], G.norm([n[0] * 0.5, -0.85, n[2] * 0.5])));
+    mx.fillStyle = G.silindirDegrade(mx, q.x1, q.x2, (n) => foto([66, 136, 86], G.norm([n[0] * 0.5, -0.85, n[2] * 0.5])));
     mx.fillRect(q.x1, q.y1 - 1, q.x2 - q.x1, 3.5);
   }
   G.alem(mx, SAHNE.alemParcalari(560, 300, 1), (t) => {
@@ -1176,8 +1231,8 @@
   function yaprakTara(Kt, y, z0, ton) {
     const uz = y.uzunluk;
     const gen = uz * 0.24;
-    const koyu = G.karis([40, 72, 36], [52, 84, 40], ton);
-    const acik = G.karis([78, 116, 56], [98, 132, 62], ton);
+    const koyu = G.karis([30, 58, 30], [44, 70, 34], ton);
+    const acik = G.karis([64, 100, 48], [86, 116, 56], ton);
     tara(Kt, y.x, y.y, uz, gen, y.aci,
       (t) => Math.pow(Math.sin(Math.PI * Math.min(1, t)), 0.75) * (1 - 0.18 * t),
       (t, vn, u) => {
@@ -1198,7 +1253,7 @@
   }
   function cicekTara(Kt, c, z0) {
     // beyaz frangipani (yaseminimsi): beş kalın taç yaprak, çark gibi bindirilmiş, göbek sarı
-    const R = c.r * 1.08;
+    const R = c.r * 1.2;
     for (let i = 0; i < 5; i++) {
       const a = c.aci + (i * Math.PI * 2) / 5;
       const asim = 0.16;
@@ -1207,7 +1262,7 @@
           const s = v > 0 ? 1 + asim : 1 - asim;
           return Math.pow(Math.max(0, Math.sin(Math.PI * Math.pow(t, 1.35))), 0.62) * s * (0.45 + 0.55 * t);
         },
-        (t, vn) => z0 + i * 0.6 + R * (0.34 * Math.sin(Math.min(1, t * 1.6) * Math.PI / 2) - 0.08 * t * t) + R * 0.06 * vn * vn + R * 0.04 * vn,
+        (t, vn) => z0 + i * 0.8 + R * (0.38 * Math.sin(Math.min(1, t * 1.5) * Math.PI / 2) - 0.14 * t * t) + R * 0.14 * vn * vn * t + R * 0.07 * vn,
         (t, vn) => {
           const sari = Math.exp(-t * 4.2);
           return G.karis([250, 248, 242], [246, 196, 70], sari * 0.95);
@@ -1308,13 +1363,13 @@
     const yap = B.yapraklar.slice().sort((a, b) => a.y - b.y);
     yap.forEach((y, i) => {
       const hedef = y.y > 900 && y.uzunluk > 60 ? on : orta;
-      yaprakTara(hedef, { x: y.x, y: y.y, uzunluk: y.uzunluk * 1.12, aci: y.aci }, 6 + (y.y - 800) * 0.04 + i * 0.01, rr());
+      yaprakTara(hedef, { x: y.x, y: y.y, uzunluk: y.uzunluk * 1.0, aci: y.aci }, 6 + (y.y - 800) * 0.04 + i * 0.01, rr());
     });
     // ek gür yapraklar (önde)
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 16; i++) {
       const x = 20 + rr() * 984;
-      const y = 880 + rr() * 150;
-      yaprakTara(on, { x, y, uzunluk: 70 + rr() * 40, aci: -Math.PI / 2 + (x - 512) / 760 + (rr() - 0.5) * 1.7 }, 4 + rr() * 3, rr());
+      const y = 900 + rr() * 130;
+      yaprakTara(on, { x, y, uzunluk: 60 + rr() * 34, aci: -Math.PI / 2 + (x - 512) / 760 + (rr() - 0.5) * 1.7 }, 4 + rr() * 3, rr());
     }
     B.tomurcuklar.forEach((t) => tomurcukTara(orta, t, 14));
     B.cicekler.forEach((c) => cicekTara(c.r >= 44 ? on : orta, { x: c.x, y: c.y, r: c.r, aci: c.aci }, 18 + c.r * 0.12));
