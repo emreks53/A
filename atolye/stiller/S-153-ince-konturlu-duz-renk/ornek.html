@@ -37,10 +37,10 @@
     cicek: '#FFFFFF', cicekG: '#F5D2DC', orta: '#F4C34E', ortaG: '#E3A43A',
     tomurcuk: '#F5B4C3', tomurcukG: '#E896AA',
     // kontur renkleri
-    kY: '#1F4634', kK: '#5A3D2A', kA: '#6E4A1E', kG: '#2C5468', kC: '#3E4A2E',
+    kY: '#163828', kK: '#4A3122', kA: '#5C3C14', kG: '#2A4C60', kC: '#33402A',
   };
-  const LW = 1.45; // ana kontur
-  const LI = 0.85; // iç ayrıntı
+  const LW = 1.9; // ana kontur
+  const LI = 1.0; // iç ayrıntı
 
   function dolKontur(d, dolgu, kontur, lw) {
     const p = typeof d === 'string' ? P(d) : d;
@@ -97,6 +97,13 @@
     ctx.save(); ctx.clip(p);
     ctx.fillStyle = C.bulut; ctx.fill(yap(4 * s, -6 * s));
     ctx.restore();
+    // iki kabarcığın içinde ince, kısa iç kıvrım çizgisi (açık çizgi bulut geleneği)
+    for (const i of [2, 4]) {
+      const [x, y, rr] = d[i];
+      ctx.beginPath();
+      ctx.arc(x + rr * 0.12 * m, y + rr * 0.38, rr * 0.62, Math.PI * (m > 0 ? 1.08 : 1.42), Math.PI * (m > 0 ? 1.58 : 1.92));
+      ctx.strokeStyle = 'rgba(42,76,96,0.55)'; ctx.lineWidth = LI * 0.9; ctx.lineCap = 'round'; ctx.stroke();
+    }
   }
   bulut(170, 246, 1.0);
   bulut(500, 146, 0.78, true);
@@ -140,7 +147,7 @@
       if (p.ad.startsWith('şerefe')) cizgi([[x1 + 2, y1 + 3.5], [x2 - 2, y1 + 3.5]], 'rgba(90,61,42,0.55)', LI);
       if (p.ad === 'gövde-alt') {
         // taş sıraları
-        for (let y = 600; y < 800; y += 26) cizgi([[x1 + 1, y], [x2 - 1, y]], 'rgba(90,61,42,0.28)', LI);
+        for (let y = 600; y < 800; y += 26) cizgi([[x1 + 1, y], [x2 - 1, y]], 'rgba(74,49,34,0.4)', LI * 0.9);
       }
     } else if (p.tip === 'bant') {
       // zikzak bant: iki ince çerçeve çizgisi ve üç zikzak
@@ -209,10 +216,10 @@
   // taş derzleri: ince, açık kahve
   kirp(Y.kaide, () => {
     const sira = [704, 728, 752, 776, 800];
-    for (let i = 1; i < sira.length - 1; i++) cizgi([[K.x1, sira[i]], [K.x2, sira[i]]], 'rgba(90,61,42,0.26)', LI);
+    for (let i = 1; i < sira.length - 1; i++) cizgi([[K.x1, sira[i]], [K.x2, sira[i]]], 'rgba(74,49,34,0.42)', LI * 0.9);
     for (let i = 0; i < sira.length - 1; i++) {
       const kay = i % 2 ? 0 : 26;
-      for (let x = K.x1 + 16 + kay; x < K.x2; x += 52) cizgi([[x, sira[i] + (i ? 0 : 9)], [x, sira[i + 1]]], 'rgba(90,61,42,0.22)', LI);
+      for (let x = K.x1 + 16 + kay; x < K.x2; x += 52) cizgi([[x, sira[i] + (i ? 0 : 9)], [x, sira[i + 1]]], 'rgba(74,49,34,0.36)', LI * 0.9);
     }
   });
   dolKontur(Y.kaide, null, C.kK);
@@ -262,8 +269,8 @@
     for (const kb of SAHNE.kaburgalar(16, 60)) {
       const c = Math.cos(kb.boylam);
       const ac = 1.6 * c + 0.3;
-      cizgi(kb.noktalar.map(([x, y], i) => [x - ac * (prof[i].r / 200), y]), 'rgba(24,62,42,0.8)', LI);
-      cizgi(kb.noktalar.map(([x, y], i) => [x + ac * (prof[i].r / 200), y]), 'rgba(24,62,42,0.45)', LI * 0.8);
+      cizgi(kb.noktalar.map(([x, y], i) => [x - ac * (prof[i].r / 200), y]), 'rgba(22,56,40,0.95)', LI * 1.05);
+      cizgi(kb.noktalar.map(([x, y], i) => [x + ac * (prof[i].r / 200), y]), 'rgba(22,56,40,0.55)', LI * 0.8);
     }
   });
   dolKontur(Y.kubbe, null, C.kY);
@@ -302,14 +309,14 @@
     dolKontur(d, null, C.kY, LW * (buyuk ? 1 : 0.85));
     // damarlar
     const [a, b] = SAHNE.yaprakDamari(y);
-    cizgi([a, b], 'rgba(31,70,52,0.75)', LI);
+    cizgi([a, b], 'rgba(22,56,40,0.85)', LI);
     const gen = W * y.genislik;
     for (let k = 1; k <= 4; k++) {
       const t = 0.16 + k * 0.16;
       for (const yon of [-1, 1]) {
         const p0 = q(W * t, 0), p1 = q(W * (t + 0.13), yon * gen * 0.22), p2 = q(W * (t + 0.2), yon * gen * 0.3 * (1 - t * 0.6));
         ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]);
-        ctx.strokeStyle = 'rgba(31,70,52,0.5)'; ctx.lineWidth = LI * 0.75; ctx.stroke();
+        ctx.strokeStyle = 'rgba(22,56,40,0.6)'; ctx.lineWidth = LI * 0.75; ctx.stroke();
       }
     }
   }

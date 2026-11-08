@@ -59,13 +59,13 @@
   const serit = (y1, e1, y2, e2, renk, al) => kat(cokgen([[-10, y1 - e1 * 522], [1034, y1 + e1 * 522], [1034, y2 + e2 * 522], [-10, y2 - e2 * 522]]), renk, al);
   kirpli(gokAlan, () => {
     kat(dik(0, 0, 1024, 800), '#E4F1FA', 1);
-    serit(-40, 0, 300, -0.2, '#9ACCF2', 0.46);
-    serit(150, 0.2, 420, 0.2, '#C3B6F2', 0.42);
+    serit(-40, 0, 300, -0.2, '#9ACCF2', 0.42);
+    serit(150, 0.2, 420, 0.2, '#C8BCF4', 0.36);
     serit(330, -0.16, 600, -0.16, '#96E0D3', 0.48);
     serit(520, 0.13, 720, 0.13, '#BCD6F6', 0.4);
-    // ufuk pusu: beyaz saydam şerit (ışık ekler)
-    serit(640, -0.05, 820, 0, '#FFFDF6', 0.42);
-    kat(cokgen([[-10, 700], [1034, 680], [1034, 820], [-10, 820]]), '#FCEBD8', 0.35);
+    // ufuk pusu: beyaz saydam şerit (normal karışım: ışık ekler)
+    kat(cokgen([[-10, 640 + 0.05 * 522], [1034, 640 - 0.05 * 522], [1034, 820], [-10, 820]]), '#FFFFFF', 0.34, 'source-over');
+    kat(cokgen([[-10, 700], [1034, 680], [1034, 820], [-10, 820]]), '#FFF3E0', 0.22);
     // güneş levhası ve beyaz saydam haleler (normal karışım: ışık ekler)
     kat(daire(G.x, G.y, 250), '#FFFFFF', 0.3, 'source-over');
     kat(daire(G.x - 26, G.y + 20, 172), '#FFF8E2', 0.5, 'source-over');
@@ -90,15 +90,15 @@
 
   // uzak tepeler: üst üste binen saydam elips düzlemler
   kirpli(gokAlan, () => {
-    kat(elips(160, 830, 430, 150), '#BFE8D2', 0.5);
-    kat(elips(540, 850, 380, 110), '#D4F0C6', 0.5);
-    kat(elips(910, 840, 400, 165), '#B6E4DC', 0.5);
+    kat(elips(160, 830, 430, 150), '#B4EEC8', 0.5);
+    kat(elips(540, 850, 380, 110), '#CDF5B8', 0.46);
+    kat(elips(910, 840, 400, 165), '#A6EADB', 0.5);
   });
 
   // ---------------------------------------------------------------- yer
-  kat(dik(0, 800, 1024, 1024), '#F7EBD3', 0.8);
-  kat(cokgen([[-10, 860], [1034, 940], [1034, 1034], [-10, 1034]]), '#CFEFC4', 0.55);
-  kat(cokgen([[-10, 960], [1034, 890], [1034, 1034], [-10, 1034]]), '#BFE8DE', 0.5);
+  kat(dik(0, 800, 1024, 1024), '#FDF3E3', 0.8);
+  kat(cokgen([[-10, 860], [1034, 940], [1034, 1034], [-10, 1034]]), '#BDEFDF', 0.5);
+  kat(cokgen([[-10, 960], [1034, 890], [1034, 1034], [-10, 1034]]), '#BDE6F4', 0.45);
 
   // ---------------------------------------------------------------- minare: saydam taş levhalar
   const mx = S.minare.cx;
@@ -255,7 +255,7 @@
   }
   for (const s of B.saplar) sap(s, 4.4, '#5E9E62', 0.8);
 
-  const YAPRAK = [['#8CC56A', 0.6], ['#3FA08A', 0.52], ['#6AB46E', 0.58], ['#B8D86C', 0.62], ['#4E9E78', 0.55]];
+  const YAPRAK = [['#74C97C', 0.6], ['#2FA38E', 0.52], ['#56BC7A', 0.58], ['#A2DE84', 0.62], ['#43A882', 0.55]];
   const rr = SAHNE.rng(127);
   B.yapraklar.forEach((y, i) => {
     const [renk, a] = YAPRAK[Math.floor(rr() * YAPRAK.length)];

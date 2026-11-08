@@ -45,7 +45,7 @@
     zemin: '#F3D7A8', zeminAlt: '#EAC38F', zeminG: '#D9B19D',
     yaprak: '#3E8E70', yaprakA: '#71B78C', yaprakK: '#2A6C57',
     hurma: '#4E9A80', hurmaA: '#7DBB9C', hurmaG: '#3F8371', hurmaK: '#2F6B5E', govde: '#B39478', govdeA: '#D6B794',
-    hurmaMeyve: '#E39A3E', hurmaMeyveG: '#C27A33',
+    hurmaMeyve: '#D9953F', hurmaMeyveG: '#B5733A',
     cicek: '#FFFDF6', cicekG: '#F1DCC6', orta: '#F3B53C', ortaG: '#D58E2B',
     pembe: '#F7B9A6', pembeG: '#E38F7F',
     pay: '#F6EBD6', cizgi: '#2F8C5A',
@@ -67,6 +67,33 @@
     gl.addColorStop(1, 'rgba(255,236,200,0)');
     ctx.fillStyle = gl;
     ctx.fillRect(0, 0, 1024, 820);
+    // art deco ışın demeti: güneşten yayılan açık kamalar, uzaklaştıkça püskürtmeyle söner
+    {
+      const c = S.yeniTuval(1024 * OL, 1024 * OL);
+      const g2 = c.getContext('2d');
+      g2.setTransform(OL, 0, 0, OL, 0, 0);
+      const N = 30;
+      g2.fillStyle = '#FFF6DC';
+      for (let k = 0; k < N; k += 2) {
+        const a1 = (k / N) * Math.PI * 2 + 0.06;
+        const a2 = ((k + 1) / N) * Math.PI * 2 + 0.06;
+        g2.beginPath();
+        g2.moveTo(880, 140);
+        g2.lineTo(880 + 1800 * Math.cos(a1), 140 + 1800 * Math.sin(a1));
+        g2.lineTo(880 + 1800 * Math.cos(a2), 140 + 1800 * Math.sin(a2));
+        g2.closePath();
+        g2.fill();
+      }
+      g2.globalCompositeOperation = 'destination-in';
+      const sn = g2.createRadialGradient(880, 140, 70, 880, 140, 1000);
+      sn.addColorStop(0, 'rgba(0,0,0,0.42)');
+      sn.addColorStop(0.35, 'rgba(0,0,0,0.24)');
+      sn.addColorStop(0.75, 'rgba(0,0,0,0.08)');
+      sn.addColorStop(1, 'rgba(0,0,0,0)');
+      g2.fillStyle = sn;
+      g2.fillRect(0, 0, 1024, 1024);
+      ctx.drawImage(c, 0, 0, 1024, 1024);
+    }
     // afiş halkaları: düz, eşmerkezli açık bantlar
     for (const [rr, a] of [[180, 0.16], [124, 0.22], [86, 0.35]]) {
       ctx.fillStyle = `rgba(255,248,226,${a})`;
@@ -165,10 +192,29 @@
     g.addColorStop(1, C.zeminAlt);
     ctx.fillStyle = g;
     ctx.fillRect(0, 790, 1024, 234);
+    // afişe özgü katmanlı kum düzlemleri: yumuşak kavisli, her biri düz bir ton ve püskürtme geçişi
+    const kum = [
+      [846, 14, 0.0042, 1.1, '#EFC994', '#F3D7A8'],
+      [902, 18, 0.0036, 2.4, '#E9BD86', '#EFCB97'],
+      [962, 16, 0.0048, 0.4, '#E3B27C', '#EAC08A'],
+    ];
+    for (const [y0, A, k, faz, koyu, acik] of kum) {
+      const pts = [];
+      for (let x = 0; x <= 1024; x += 8) pts.push([x, y0 + A * Math.sin(x * k * Math.PI + faz) + A * 0.4 * Math.sin(x * k * 2.7 + faz * 2)]);
+      const d = S.yol([...pts, [1024, 1030], [0, 1030]], true);
+      const gk = ctx.createLinearGradient(0, y0 - A, 0, y0 + 70);
+      gk.addColorStop(0, acik);
+      gk.addColorStop(1, koyu);
+      dol(d, gk);
+      // kum sırtının güneşe bakan ince ışık kenarı
+      ctx.strokeStyle = 'rgba(255,236,200,0.75)';
+      ctx.lineWidth = 2;
+      ctx.stroke(P2(S.yol(pts)));
+    }
     // uzun düz gölge bantları (alçak güneş)
     ctx.fillStyle = 'rgba(214,170,150,0.45)';
     ctx.fillRect(0, 808, 1024, 5);
-    ctx.fillRect(0, 828, 1024, 3);
+    ctx.fillRect(0, 826, 1024, 3);
   }
 
   // ---------------------------------------------------------------- hurmalar
@@ -256,7 +302,7 @@
       { renk: [C.hurmaG, C.hurmaK], acilar: [-104, -76, -128, -52, -150, -30, -172, -8, 192, 12] },
       { renk: [C.hurmaA, C.hurma], acilar: [-90, -64, -116, -40, -140, -16, -164, 4, 184, 22, 158] },
     ];
-    for (const { renk, acilar } of kat) {
+    const yaprakKati = ({ renk, acilar }) => {
       for (const d of acilar) {
         const a = ((d + (rh() - 0.5) * 8) * Math.PI) / 180;
         const yatay = Math.abs(Math.cos(a));
@@ -264,18 +310,19 @@
         const sark = (0.12 + 0.62 * yatay * yatay) * (Math.sin(a) > 0.2 ? 0.6 : 1);
         hurmaYapragi(x1, y1, a, L, sark, 15 * s, renk[0], renk[1], C.yaprakK);
       }
-    }
-    // hurma salkımları: tacın altında iki küçük kehribar salkım
+    };
+    yaprakKati(kat[0]);
+    // hurma salkımları: tacın altında iki küçük kehribar salkım (öndeki yaprakların arkasında)
     for (const sx of [-1, 1]) {
-      for (let i = 0; i < 11; i++) {
-        const u = i / 10;
-        const x = x1 + sx * (8 + u * 7) * s + Math.sin(i * 2.3) * 3.2 * s;
-        const y = y1 + (6 + u * 16) * s + Math.cos(i * 1.7) * 2 * s;
-        dol(S.daireYolu(x, y, 3.1 * s), i % 3 ? C.hurmaMeyve : C.hurmaMeyveG);
+      for (let i = 0; i < 9; i++) {
+        const u = i / 8;
+        const x = x1 + sx * (7 + u * 6) * s + Math.sin(i * 2.3) * 2.6 * s;
+        const y = y1 + (5 + u * 13) * s + Math.cos(i * 1.7) * 1.6 * s;
+        dol(S.daireYolu(x, y, 2.5 * s), i % 3 ? C.hurmaMeyve : C.hurmaMeyveG);
       }
     }
-    dol(S.daireYolu(x1, y1 + 2 * s, 7.5 * s), C.govde);
-    dol(S.daireYolu(x1 + 2 * s, y1, 4.5 * s), C.govdeA);
+    dol(S.daireYolu(x1, y1 + 1.5 * s, 5.5 * s), C.govde);
+    yaprakKati(kat[1]);
   }
   hurma(206, 812, 196, 612, 0.9, 11);
   hurma(868, 812, 884, 628, 0.85, 12);
@@ -522,6 +569,16 @@
         dol(d, C.cicek);
         ctx.restore();
       });
+    }
+    // püskürtme: taç yapraklarının dibinde sıcak kayısı tonu
+    {
+      const tum = new Path2D();
+      for (const e of tac) tum.addPath(P2(S.elipsYolu(e)));
+      const gp = ctx.createRadialGradient(c.x - c.r * 0.08, c.y + c.r * 0.08, c.r * 0.15, c.x, c.y, c.r * 1.05);
+      gp.addColorStop(0, 'rgba(243,170,112,0.42)');
+      gp.addColorStop(0.45, 'rgba(243,170,112,0.12)');
+      gp.addColorStop(1, 'rgba(243,170,112,0)');
+      dol(tum, gp);
     }
     dol(S.daireYolu(c.x, c.y, c.r * 0.22), C.ortaG);
     kirpli(S.daireYolu(c.x, c.y, c.r * 0.22), () => dol(S.daireYolu(c.x + c.r * 0.05, c.y - c.r * 0.05, c.r * 0.2), C.orta));
