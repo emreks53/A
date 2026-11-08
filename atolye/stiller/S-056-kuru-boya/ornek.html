@@ -406,48 +406,68 @@
     }
     return m;
   };
+  // kâğıdın kenarında ince, düzensiz bir beyaz pay kalır; resmin geri kalanı baştan sona renkle örtülü
   const kenar = (x, y, alt) => {
-    const d = Math.min(x, W - x, y, alt ? W - y : 1e9) + (fbm(nB, x / 70, y / 70, 3) - 0.5) * 150;
-    return sstep(18, 130, d);
+    const d = Math.min(x, W - x, y, alt ? W - y : 1e9) + (fbm(nB, x / 46, y / 46, 3) - 0.5) * 44;
+    return sstep(8, 40, d);
   };
-  const GOK = harita((x, y, b) => (y < 802 ? kenar(x, y, false) * (1 - 0.9 * bulutGovde(x, y)) : 0));
+  const GOK = harita((x, y, b) => (y < 802 ? kenar(x, y, false) * (1 - 0.93 * bulutGovde(x, y)) : 0));
   const yapiIci = (b) => b === 'kubbe' || b === 'kasnak' || b === 'kaide' || b === 'minare' || b === 'pencere' || b === 'altin';
+  // gökte geniş, düzensiz cila lekeleri: açık kalem/renksiz harmanlayıcıyla bastırılıp dişi doldurulmuş, mumlu yerler
+  for (let y = 0; y < 802; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x; if (BOL[i] !== BI.gok && BOL[i] !== BI.gunes) continue;
+    const c = 0.75 * sstep(0.44, 0.66, fbm(nC, x / 95 + 3, y / 80, 3)) * kenar(x, y, false);
+    if (c > CILA[i]) CILA[i] = c;
+  }
+  const bulutAlt = (x, y) => { let alt = 0; for (const [bx, by, s] of bulutlar) { const dx = (x - bx) / (102 * s), dy = (y - by - 10 * s) / (17 * s); alt = Math.max(alt, sstep(1.1, 0.35, Math.hypot(dx, dy))); } return alt; };
 
-  // ================================================================ GÖK
+  // ================================================================ GÖK (yoğun, katman katman: şeftali → limon → gök mavisi → ultramarin → menekşe → gül)
   const gokIc = (x, y) => y < 810;
   const gokBx = [0, 0, W, 812];
   const gokSil = [MK.yapi, MK.bitki];
   const egik = -0.98; // "/" yönünde tarama
-  // açık gök mavisi: tüm gök, yukarıda daha yoğun, güneşe yakın açık
-  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: egik, aciJ: 0.12, aralik: 2.5, boy: 34, kal: 1.45, alfa: 0.62, renk: hex('#86BEE6'), obek: 30 }, r),
-    { sil: gokSil, bx: gokBx, cila: false, maske: harita((x, y) => GOK[y * W + x] * (0.3 + 0.7 * sstep(800, 80, y)) * sstep(110, 330, gunesUzak(x, y))) });
-  // kobalt mavisi: sol üst köşede derinlik
-  katman((x) => taraK(x, { bx: [0, 0, 760, 560], ic: gokIc, aci: egik + 0.12, aciJ: 0.14, aralik: 2.7, boy: 30, kal: 1.4, alfa: 0.55, renk: hex('#4A6CC4'), obek: 28 }, r),
-    { sil: gokSil, bx: [0, 0, 780, 600], cila: false, maske: harita((x, y) => GOK[y * W + x] * sstep(0.25, 0.95, (1 - y / 620) * (1.15 - x / 900)) * 0.85) });
-  // lila: ikinci yönde, gökte kırık bir örtü + bulut altları
-  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: 0.42, aciJ: 0.16, aralik: 3.2, boy: 28, kal: 1.3, alfa: 0.5, renk: hex('#B49FDA'), obek: 26 }, r),
-    { sil: gokSil, bx: gokBx, cila: false, maske: harita((x, y) => {
-      const k = kenar(x, y, false);
-      let alt = 0;
-      for (const [bx, by, s] of bulutlar) { const dx = (x - bx) / (100 * s), dy = (y - by - 10 * s) / (16 * s); alt = Math.max(alt, sstep(1.1, 0.4, Math.hypot(dx, dy))); }
-      return k * (0.45 * sstep(0.45, 0.75, nE(x / 120, y / 120)) * sstep(780, 300, y) * sstep(160, 360, gunesUzak(x, y)) + 0.75 * alt * (1 - 0.6 * bulutGovde(x, y - 8)));
+  const GR_ = 64; // güneş kursunun yarıçapı
+  // 1) sıcak alt kat: güneşin çevresi ve ufuk şeftali
+  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: egik - 0.1, aciJ: 0.12, aralik: 2.4, boy: 32, kal: 1.45, alfa: 0.6, renk: hex('#F9BC92'), obek: 28 }, r),
+    { sil: gokSil, bx: gokBx, guc: 0.85, maske: harita((x, y) => { const d = gunesUzak(x, y); return GOK[y * W + x] * sstep(GR_ + 30, GR_ + 120, d) * Math.min(1, 0.8 * sstep(500, 200, d) + 0.85 * sstep(470, 780, y) + 0.2); }) });
+  // 2) limon sarısı: güneşin çevresinde dönen tarama
+  katman((x) => taraK(x, { bx: [480, 0, W, 560], aci: (px, py) => Math.atan2(py - 140, px - 880) + Math.PI / 2, aciJ: 0.1, aralik: 2.2, boy: 24, kal: 1.45, alfa: 0.65, renk: hex('#FAE07A'), obek: 22, egri: 0.1 }, r),
+    { sil: gokSil, bx: [460, 0, W, 580], guc: 0.9, maske: harita((x, y) => { const d = gunesUzak(x, y); return y < 800 ? sstep(GR_ - 6, GR_ + 10, d) * sstep(260, 90, d) * kenar(x, y, false) * (1 - 0.6 * bulutGovde(x, y)) : 0; }) });
+  // 3) gök mavisi: bütün gök, güneşe yaklaştıkça incelir
+  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: egik, aciJ: 0.12, aralik: 2.3, boy: 34, kal: 1.5, alfa: 0.62, renk: hex('#6DB8EC'), obek: 30 }, r),
+    { sil: gokSil, bx: gokBx, guc: 0.95, maske: harita((x, y) => GOK[y * W + x] * sstep(170, 380, gunesUzak(x, y)) * (0.35 + 0.65 * sstep(780, 260, y))) });
+  // 4) ultramarin: sol üstte derinlik
+  katman((x) => taraK(x, { bx: [0, 0, 820, 640], ic: gokIc, aci: egik + 0.14, aciJ: 0.14, aralik: 2.5, boy: 30, kal: 1.45, alfa: 0.55, renk: hex('#4A5FCB'), obek: 28 }, r),
+    { sil: gokSil, bx: [0, 0, 840, 660], guc: 0.9, maske: harita((x, y) => GOK[y * W + x] * sstep(0.25, 1.0, (1 - y / 620) * (1.25 - x / 820)) * sstep(260, 460, gunesUzak(x, y))) });
+  // 5) menekşe: ikinci yönde çapraz tarama, gökte kırık bir örtü ve bulut altları
+  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: 0.42, aciJ: 0.16, aralik: 2.7, boy: 28, kal: 1.4, alfa: 0.55, renk: hex('#A387DC'), obek: 26 }, r),
+    { sil: gokSil, bx: gokBx, guc: 0.9, maske: harita((x, y) => {
+      const d = gunesUzak(x, y), k = kenar(x, y, false);
+      return k * (Math.min(1, 0.65 * sstep(0.36, 0.68, nE(x / 115, y / 115)) + 0.6 * sstep(0.1, 0.8, (1 - y / 520) * (1.1 - x / 760)) + 0.35 * sstep(380, 640, y)) * sstep(230, 430, d) * (1 - bulutGovde(x, y)) + 0.85 * bulutAlt(x, y) * (1 - 0.55 * bulutGovde(x, y - 8)));
     }) });
-  // limon sarısı: güneşin çevresinde dönen tarama
-  katman((x) => taraK(x, { bx: [520, 0, W, 520], aci: (px, py) => Math.atan2(py - 140, px - 880) + Math.PI / 2, aciJ: 0.1, aralik: 2.4, boy: 26, kal: 1.4, alfa: 0.7, renk: hex('#F5D64E'), obek: 22, egri: 0.08 }, r),
-    { sil: gokSil, bx: [500, 0, W, 560], cila: false, maske: harita((x, y) => { const d = gunesUzak(x, y); return y < 800 ? sstep(52, 80, d) * sstep(340, 120, d) * kenar(x, y, false) : 0; }) });
-  // şeftali: güneş halesinin dışı ve ufuk
-  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: egik - 0.1, aciJ: 0.12, aralik: 2.8, boy: 30, kal: 1.4, alfa: 0.5, renk: hex('#F5AE7C'), obek: 26 }, r),
-    { sil: gokSil, bx: gokBx, cila: false, maske: harita((x, y) => { const d = gunesUzak(x, y); return kenar(x, y, false) * (0.55 * sstep(100, 190, d) * sstep(420, 220, d) + 0.5 * sstep(560, 790, y)) * (1 - 0.8 * bulutGovde(x, y)); }) });
+  // 6) gül pembesi: ufukta ve güneş halesinin dış halkasında, maviyle örtüşüp leylak verir
+  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: egik + 0.3, aciJ: 0.12, aralik: 2.7, boy: 30, kal: 1.4, alfa: 0.5, renk: hex('#F297B6'), obek: 26 }, r),
+    { sil: gokSil, bx: gokBx, guc: 0.85, maske: harita((x, y) => { const d = gunesUzak(x, y); return GOK[y * W + x] * Math.min(1, 0.8 * sstep(470, 790, y) * (0.6 + 0.4 * nD(x / 70, y / 50)) + 0.55 * sstep(150, 230, d) * sstep(420, 280, d)); }) });
+  // 7) güneş kursu ve bulutlar: krem ve beyazla sertçe cilalanmış, mumlu ışık
+  katman((x) => { x.save(); x.beginPath(); x.arc(880, 140, GR_ + 8, 0, 7); x.clip(); taraK(x, { bx: [800, 60, 960, 220], aci: (px, py) => Math.atan2(py - 140, px - 880) + Math.PI / 2, aciJ: 0.1, aralik: 1.9, boy: 22, kal: 1.6, alfa: 0.9, renk: hex('#FFF1A8'), obek: 20, egri: 0.1 }, r); x.restore(); },
+    { sil: gokSil, bx: [800, 60, 960, 220], opq: 0.7, maske: harita((x, y) => sstep(GR_ + 10, GR_ - 20, gunesUzak(x, y))) });
+  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: -0.15, aciJ: 0.1, aralik: 2.0, boy: 30, kal: 1.7, alfa: 0.8, renk: hex('#FFFBF0'), obek: 24 }, r),
+    { sil: gokSil, bx: gokBx, opq: 0.6, maske: harita((x, y) => (y < 800 ? bulutGovde(x, y) * kenar(x, y, false) * 0.95 : 0)) });
+  // 8) bulutların güneşe bakan üst kenarı şeftali
+  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: -0.12, aciJ: 0.1, aralik: 2.4, boy: 22, kal: 1.4, alfa: 0.6, renk: hex('#F8B07E'), obek: 20 }, r),
+    { sil: gokSil, bx: gokBx, guc: 1.1, maske: harita((x, y) => (y < 800 ? bulutGovde(x, y) * sstep(0.3, 0.9, bulutGovde(x - 10, y + 9) - bulutGovde(x + 10, y - 9) + 0.5) * 0.7 : 0)) });
 
-  // ================================================================ ZEMİN
+  // ================================================================ ZEMİN (koyu sarı toprak, turuncu ve menekşe gölgeler)
   const zBx = [0, 790, W, W];
-  const ZEM = harita((x, y) => (y >= 798 ? kenar(x, y, true) * (0.6 + 0.4 * sstep(800, 860, y)) : 0));
-  katman((x) => taraK(x, { bx: zBx, aci: -0.12, aciJ: 0.1, aralik: 2.6, boy: 36, kal: 1.5, alfa: 0.62, renk: hex('#E3C38A'), obek: 26 }, r),
-    { sil: [MK.yapi, MK.bitki], bx: zBx, cila: false, guc: 1.35, maske: ZEM });
-  katman((x) => taraK(x, { bx: zBx, aci: -2.6, aciJ: 0.15, aralik: 3, boy: 28, kal: 1.4, alfa: 0.5, renk: hex('#C58E52'), obek: 24 }, r),
-    { sil: [MK.yapi, MK.bitki], bx: zBx, cila: false, guc: 1.25, maske: harita((x, y) => ZEM[y * W + x] * (0.35 + 0.65 * sstep(0.45, 0.7, nE(x / 60, y / 40)))) });
-  katman((x) => taraK(x, { bx: zBx, aci: -0.05, aciJ: 0.1, aralik: 2.8, boy: 40, kal: 1.4, alfa: 0.55, renk: hex('#9C88C4'), obek: 26 }, r),
-    { sil: [MK.yapi, MK.bitki], bx: zBx, cila: false, guc: 1.3, maske: harita((x, y) => ZEM[y * W + x] * sstep(830, 802, y) * sstep(250, 330, x) * sstep(860, 780, x)) });
+  const ZEM = harita((x, y) => (y >= 798 ? kenar(x, y, true) : 0));
+  katman((x) => taraK(x, { bx: zBx, aci: -0.12, aciJ: 0.1, aralik: 2.3, boy: 36, kal: 1.55, alfa: 0.75, renk: hex('#F3BE4A'), obek: 26 }, r),
+    { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 1.35, maske: ZEM });
+  katman((x) => taraK(x, { bx: zBx, aci: -2.6, aciJ: 0.15, aralik: 2.6, boy: 28, kal: 1.45, alfa: 0.62, renk: hex('#E2762E'), obek: 24 }, r),
+    { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 1.3, maske: harita((x, y) => ZEM[y * W + x] * (0.35 + 0.65 * sstep(0.42, 0.68, nE(x / 60, y / 40)))) });
+  katman((x) => taraK(x, { bx: zBx, aci: -0.4, aciJ: 0.12, aralik: 2.7, boy: 26, kal: 1.4, alfa: 0.6, renk: hex('#A84A2C'), obek: 22 }, r),
+    { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 1.3, maske: harita((x, y) => ZEM[y * W + x] * (0.25 + 0.75 * sstep(880, 1010, y)) * sstep(0.45, 0.72, nD(x / 45 + 5, y / 35))) });
+  katman((x) => taraK(x, { bx: zBx, aci: -0.05, aciJ: 0.1, aralik: 2.5, boy: 40, kal: 1.45, alfa: 0.66, renk: hex('#6B4DB4'), obek: 26 }, r),
+    { sil: [MK.yapi, MK.bitki], bx: zBx, guc: 1.35, maske: harita((x, y) => ZEM[y * W + x] * Math.max(sstep(836, 802, y) * sstep(230, 320, x) * sstep(870, 790, x), 0.5 * sstep(930, 1015, y))) });
 
   // ================================================================ MİNARE
   const mBx = [244, 70, 358, 802];

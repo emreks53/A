@@ -599,8 +599,10 @@
   // --- kubbe: kaburgalar boyunca yukarı savrulan darbeler, ışık şeridi beyaz
   const kubbeYol = new Path2D(Y.kubbe);
   bolge(kubbeYol, (x) => {
+    // ışık şeridine tek, kuru açık darbe: şerit temiz bir parlama değil, kâğıdın göründüğü kırık bir boşluk
+    renk(x, merid(0.3, 560, 330), { w: 14, renk: '#d8ef9a', alfa: 0.6, kuru: 0.95, kilEsik: 0.42, cikis: 200, giris: 4 });
     for (let u = -1.0; u <= 1.0; u += 0.085 + R() * 0.02) {
-      if (u > 0.2 && u < 0.44) continue;
+      if (u > 0.2 && u < 0.4) continue;
       const ust = 300 + R() * 20;
       const p = merid(u, 560, ust);
       renk(x, p, { w: 26, renk: '#b6dd63', alfa: 0.75, kuru: 0.55, cikis: 70, giris: 6 });
@@ -638,7 +640,7 @@
   for (const t of BIT.tomurcuklar) {
     const d = SAHNE.tomurcukYolu(t);
     const ca = Math.cos(t.aci), sa = Math.sin(t.aci);
-    bolge(new Path2D(d), (x) => renk(x, [[t.x - ca * t.r * 0.9, t.y - sa * t.r * 0.9], [t.x + ca * t.r * 1.6, t.y + sa * t.r * 1.6]], { w: t.r * 2.2, renk: '#ff7aa8', alfa: 0.85, kuru: 0, giris: t.r, cikis: t.r * 1.2, uc: 0.3 }), { kutu: kutuNok(duzlestir(d, 3)[0], 4), tasma: 3 });
+    bolge(new Path2D(d), (x) => renk(x, [[t.x - ca * t.r * 0.9, t.y - sa * t.r * 0.9], [t.x + ca * t.r * 1.6, t.y + sa * t.r * 1.6]], { w: t.r * 2.2, renk: '#ff835e', alfa: 0.85, kuru: 0, giris: t.r, cikis: t.r * 1.2, uc: 0.3 }), { kutu: kutuNok(duzlestir(d, 3)[0], 4), tasma: 3 });
   }
   function tacNoktalari(e) {
     const pts = [];
@@ -659,8 +661,8 @@
       const ek = (u, v) => [c.x + ca * u - sa * v, c.y + sa * u + ca * v];
       const golge = ca * 0.7 - sa * 0.7 < 0;
       bolge(cokgenYolu(pts), (x) => {
-        renk(x, [ek(c.r * 0.08, 0), ek(c.r * 1.08, (R() - 0.5) * c.r * 0.1)], { w: c.r * 0.8, renk: '#ffc2d6', alfa: 0.8, kuru: 0.5, giris: c.r * 0.2, cikis: c.r * 0.5, uc: 0.35 });
-        renk(x, [ek(c.r * 0.1, c.r * 0.05), ek(c.r * (golge ? 0.75 : 0.5), c.r * 0.08)], { w: c.r * 0.38, renk: '#ff6f9f', alfa: 0.7, kuru: 0.6, giris: 2, cikis: c.r * 0.3 });
+        renk(x, [ek(c.r * 0.08, 0), ek(c.r * 1.08, (R() - 0.5) * c.r * 0.1)], { w: c.r * 0.8, renk: '#ffcaa6', alfa: 0.8, kuru: 0.5, giris: c.r * 0.2, cikis: c.r * 0.5, uc: 0.35 });
+        renk(x, [ek(c.r * 0.1, c.r * 0.05), ek(c.r * (golge ? 0.75 : 0.5), c.r * 0.08)], { w: c.r * 0.38, renk: '#ff7d5a', alfa: 0.72, kuru: 0.6, giris: 2, cikis: c.r * 0.3 });
       }, { kutu: kutuNok(pts, 4), tasma: 4 });
     }
     bolge(new Path2D(SAHNE.daireYolu(c.x, c.y, c.r * 0.22)), (x) => renk(x, [[c.x - c.r * 0.2, c.y + c.r * 0.05], [c.x + c.r * 0.22, c.y - c.r * 0.03]], { w: c.r * 0.5, renk: '#ffcc33', alfa: 0.95, kuru: 0, giris: 2, cikis: 4, uc: 0.6 }), { kutu: [c.x - c.r * 0.3, c.y - c.r * 0.3, c.x + c.r * 0.3, c.y + c.r * 0.3], tasma: 2 });

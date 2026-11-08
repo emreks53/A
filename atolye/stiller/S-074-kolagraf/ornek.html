@@ -448,7 +448,7 @@ for (let y = 0; y < N; y++) {
       const sD = DIL[Math.max(0, Math.min(16, Math.floor(dilim)))];
       // elle kesilmiş kartonun olukları: hafif dalgalı, yer yer ezik; lifler oluk boyunca
       const wob = (kartM(X * 0.35 + sD.ox, Yc * 0.14) - 0.5) * 1.6;
-      const q = fi * 52 * sD.fm + sD.ph + wob + sD.eg * (Yc - 430) / 50;
+      const q = fi * 92 * sD.fm + sD.ph + wob + sD.eg * (Yc - 430) / 50;
       const lifO = lifF(X * 1.6, Yc * 0.22), lifK = lifF(X * 0.7 + 90, Yc * 0.09);
       const ezik = smooth(0.66, 0.82, kartI(X * 0.6 + sD.ox, Yc * 0.25));
       const cq = 0.5 + 0.5 * Math.cos(q);
@@ -464,8 +464,8 @@ for (let y = 0; y < N; y++) {
       const seyrek = kb > 0 ? smooth(1 - kb, 1 - kb + 0.25, kumA(x / 2.3 + 50, y / 2.3)) : 0;
       const gr = Math.max(kb * kb, seyrek * 0.85);
       const benek = smooth(0.55, 0.75, kumA(x / 1.4 + 31, y / 1.4)) * 0.35; // sırtta silinmeyen lif benekleri
-      const dOluk = 0.3 + benek + 1.25 * vadi * (0.55 + 0.45 * egik) * (0.7 + 0.6 * lifO) + 0.22 * ezik + 0.2 * (kartM(X, Yc) - 0.5) + 0.6 * yarik;
-      d += m[5] * ink0 * lerp(dOluk, 1.15 + 0.9 * tane, Math.min(0.9, gr));
+      const dOluk = 0.42 + benek + 1.2 * vadi * (0.55 + 0.45 * egik) * (0.7 + 0.6 * lifO) + 0.22 * ezik + 0.2 * (kartM(X, Yc) - 0.5) + 0.6 * yarik;
+      d += m[5] * ink0 * (lerp(dOluk, 1.15 + 0.9 * tane, Math.min(0.9, gr)) + 0.45 * yarik * gr);
       h += m[5] * (h0 + lerp(0.24 * sirt * egik + 0.04 * lifO - 0.45 * yarik, 0.3 * (1 - tane), Math.min(0.9, gr)));
     }
     // zımpara: ince taneli

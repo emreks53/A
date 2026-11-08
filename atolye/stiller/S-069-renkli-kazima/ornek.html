@@ -344,6 +344,78 @@
     }
   });
   const hash = (a, b) => { let h = Math.imul(a, 374761393) + Math.imul(b, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  // ------------------------------------------------------------ gök: elle kazınmış akış çizgileri
+  // Kazıyıcı ucu rüzgâr gibi akan bir yön alanını izler; güneşin çevresinde halka halka döner. Çizgiler arası mesafe
+  // ışıkla daralır (aydınlık yerde sık ve kalın, koyu yerde seyrek ve ince), her çizginin boyu ve kalınlığı değişir, uçları incelir.
+  const sG = yeni();
+  {
+    const rr = SAHNE.rng(6969);
+    const gokMu = (x, y) => {
+      if (x < 0 || y < 0 || x >= 1024 || y >= 1024) return false;
+      const i = Math.floor(y * S) * W2 + Math.floor(x * S), b = BOL[i];
+      return (b === BI.gok || b === BI.gunes) && BNO[i] < 0 && Math.hypot(x - GX, y - GY) > 56;
+    };
+    const isikG = (x, y) => clamp(0.05 + 0.32 * sstep(160, 800, y) + 0.95 * Math.exp(-Math.hypot(x - GX, y - GY) / 230) + 0.16 * (fbm(nB, x / 140, y / 90, 3) - 0.3), 0, 0.95);
+    const yon = (x, y) => {
+      const t1 = Math.atan2(0.16 * Math.sin(x / 150 + y / 230) + (fbm(nB, x / 320 + 7, y / 320, 2) - 0.5) * 1.5, 1);
+      const t2 = Math.atan2(y - GY, x - GX) + Math.PI / 2, wc = sstep(380, 190, Math.hypot(x - GX, y - GY));
+      const c = (1 - wc) * Math.cos(2 * t1) + wc * Math.cos(2 * t2), sn = (1 - wc) * Math.sin(2 * t1) + wc * Math.sin(2 * t2);
+      return 0.5 * Math.atan2(sn, c);
+    };
+    const H = 6, GWd = Math.ceil(1024 / H), kova = Array.from({ length: GWd * GWd }, () => []);
+    const yakin = (x, y, d) => {
+      const cx = Math.floor(x / H), cy = Math.floor(y / H), k = Math.ceil(d / H);
+      for (let j = cy - k; j <= cy + k; j++) for (let i = cx - k; i <= cx + k; i++) {
+        if (i < 0 || j < 0 || i >= GWd || j >= GWd) continue;
+        const a = kova[j * GWd + i];
+        for (let m = 0; m < a.length; m += 2) { const dx = a[m] - x, dy = a[m + 1] - y; if (dx * dx + dy * dy < d * d) return true; }
+      }
+      return false;
+    };
+    const mesafe = (x, y) => lerp(10.5, 3.9, isikG(x, y));
+    const izle = (x0, y0, yonIsaret, Lmax) => {
+      const out = []; let x = x0, y = y0, px = 0, py = 0;
+      for (let s2 = 0; s2 < Lmax; s2 += 1.5) {
+        const a = yon(x, y); let dx = Math.cos(a), dy = Math.sin(a);
+        if (s2 === 0) { dx *= yonIsaret; dy *= yonIsaret; } else if (dx * px + dy * py < 0) { dx = -dx; dy = -dy; }
+        px = dx; py = dy; x += dx * 1.5; y += dy * 1.5;
+        if (!gokMu(x, y) || yakin(x, y, mesafe(x, y) * 0.62)) break;
+        out.push([x, y]);
+      }
+      return out;
+    };
+    const cizgiler = [];
+    for (let k = 0; k < 42000; k++) {
+      const x = rr() * 1024, y = rr() * 800;
+      if (!gokMu(x, y) || yakin(x, y, mesafe(x, y))) continue;
+      const Lmax = 30 + rr() * rr() * 230;
+      const a = izle(x, y, 1, Lmax / 2), b = izle(x, y, -1, Lmax / 2);
+      const pts = b.reverse().concat([[x, y]], a);
+      if (pts.length < 6) continue;
+      for (const [qx, qy] of pts) kova[Math.floor(qy / H) * GWd + Math.floor(qx / H)].push(qx, qy);
+      cizgiler.push(pts);
+    }
+    sG.strokeStyle = '#fff';
+    for (const pts of cizgiler) {
+      const n = pts.length, ph = rr() * 50, bas = 0.8 + rr() * 0.35;
+      for (let i = 1; i < n; i++) {
+        const t = i / (n - 1), [x, y] = pts[i];
+        const L = isikG(x, y), d = mesafe(x, y);
+        const w = clamp(d * (0.16 + 0.62 * Math.pow(L, 1.2)) * bas, 0.45, 3.4) * Math.pow(Math.sin(Math.PI * clamp(t * 0.94 + 0.03, 0, 1)), 0.45) * (0.85 + 0.3 * nC(ph + i * 0.05, 3.1));
+        sG.lineWidth = Math.max(0.35, w);
+        sG.beginPath(); sG.moveTo(pts[i - 1][0], pts[i - 1][1]); sG.lineTo(x, y); sG.stroke();
+      }
+    }
+    // koyu üst gökte seyrek kazınmış noktalar (benek), güneşe doğru küçük çapraz kırpıntılar
+    for (let k = 0; k < 2600; k++) {
+      const x = rr() * 1024, y = rr() * 560;
+      if (!gokMu(x, y)) continue;
+      const L = isikG(x, y);
+      if (rr() > (0.55 - L) * 1.4) continue;
+      sG.fillStyle = '#fff'; sG.beginPath(); sG.arc(x, y, 0.45 + rr() * 0.6, 0, Math.PI * 2); sG.fill();
+    }
+  }
+  const sv = sG.getImageData(0, 0, W2, W2).data;
   const img = ctx.createImageData(W2, W2), o = img.data;
   const yapIdx = (v) => v - YAPRAK0;
   for (let y = 0; y < W2; y++) for (let x = 0; x < W2; x++) {
@@ -362,10 +434,8 @@
         if (dd < 1.6) m = 1;
         col = karR(col, [255, 255, 255], 0.35);
       } else {
-        // gök: yatay dalgalı çizgiler; güneşe ve ufka doğru kalınlaşır
-        const isik = clamp(0.04 + 0.34 * sstep(160, 800, Yy) + 0.95 * Math.exp(-gd / 230) + 0.14 * (fbm(nB, X / 140, Yy / 90, 3) - 0.3), 0, 0.95);
-        const v = (Yy + 3.2 * Math.sin(X / 47 + Yy / 90) + (nA(X / 60, Yy / 60) - 0.5) * 2.2) / 5.2;
-        m = cizgiMaske(v, 5.2 * S, Math.pow(isik, 1.35) * 0.9, kaba);
+        // gök: elle kazınmış akış çizgileri (ayrı tuvalde çizildi); kazıma kenarı ufak tırtıklı
+        m = sstep(0.08, 0.6, sv[i * 4 + 3] / 255 + kaba * 0.18);
       }
     } else if (b === BI.kubbe) {
       const yi = clamp(Math.round(Yy), 300, 555), r = Math.max(1, kubbeR[yi]);
@@ -383,14 +453,31 @@
       m = cizgiMaske((u + Math.PI / 2) / (Math.PI / N), sp, clamp(Math.pow(L, 1.6) * 0.8, 0, 0.9) * Math.min(1, sp / 3), kaba);
       col = rampa(KUBBE, clamp(0.25 + L * 0.6, 0, 1));
     } else if (b === BI.kaide) {
-      const t = (X - 300) / 520, L = clamp(0.28 + 0.66 * t + 0.08 * sstep(800, 720, Yy), 0, 1);
-      m = cizgiMaske((Yy - 704) / 3.2 + (nA(X / 30, Yy / 30) - 0.5) * 0.2, 3.2 * S, Math.pow(L, 1.0) * 0.9, kaba);
-      col = rampa(TAS, L);
+      const t = (X - 300) / 520, L = clamp(0.24 + 0.68 * t + 0.08 * sstep(800, 720, Yy) + (nB(X / 50, Yy / 50) - 0.5) * 0.12, 0, 1);
+      // taş blokları: her blokta ayrı yönlü tarama, ışıklı üst kenar, benekler; gölgeli solda çapraz tarama
+      const sira = Math.floor((Yy - 720) / 16), yTop = 720 + sira * 16;
+      const xo = 300 + (((sira % 2) + 2) % 2 ? 26 : 8), kol = Math.floor((X - xo) / 44);
+      const hb = hash(sira + 50, kol + 50), ang = (hb < 0.5 ? 0.42 : -0.42) + (hash(kol + 9, sira + 3) - 0.5) * 0.3 + (hb > 0.82 ? Math.PI / 2 - 0.42 : 0);
+      const pr = (X * Math.sin(ang) - Yy * Math.cos(ang)) / 2.7;
+      m = cizgiMaske(pr + (nA(X / 25, Yy / 25) - 0.5) * 0.3, 2.7 * S, Math.pow(L, 1.15) * 0.82, kaba);
+      if (L < 0.5) m = Math.max(m, cizgiMaske((X * Math.sin(ang + 1.3) - Yy * Math.cos(ang + 1.3)) / 3.1, 3.1 * S, (0.5 - L) * 0.55, kaba) * 0.85);
+      if (Yy >= 720 && Yy - yTop < 2.4) m = Math.max(m, 0.35 + 0.6 * L);
+      if (Yy < 720) m = Math.max(m * 0.5, cizgiMaske((Yy - 704) / 2.6, 2.6 * S, L * 0.75, kaba));
+      { const cs = 3.1, gx = X / cs, gy = Yy / cs, ix = Math.floor(gx), iy = Math.floor(gy), hh = hash(ix + 311, iy + 7);
+        if (hh < 0.18 * L) { const px = ix + 0.5, py = iy + 0.5; m = Math.max(m, sstep(0.32, 0.12, Math.hypot(gx - px, gy - py))); } }
+      col = rampa(TAS, clamp(L + 0.08, 0, 1));
     } else if (b === BI.minare) {
       const r = minareYari(Yy), L = silindirIsik(X, 300, r + 1);
       const u = Math.asin(clamp((X - 300) / (r + 0.5), -0.999, 0.999));
       const N = Yy < 206 ? 18 : Yy < 300 ? 26 : 32, sp = Math.max(0.6, (Math.PI / N) * r * Math.cos(u)) * S;
       m = cizgiMaske((u + Math.PI / 2) / (Math.PI / N), sp, clamp(Math.pow(L, 1.4) * 0.92, 0, 0.92) * Math.min(1, sp / 3), kaba);
+      // ışıklı yanda yatay çapraz tarama (silindiri saran hafif yaylar), gölgede seyrek benek
+      const yay = (Yy + Math.cos(u) * 3.5) / 3;
+      if (L > 0.5) m = Math.max(m, cizgiMaske(yay, 3 * S, (L - 0.5) * 1.2, kaba));
+      else { const cs = 3, gx = X / cs, gy = Yy / cs, ix = Math.floor(gx), iy = Math.floor(gy); if (hash(ix + 77, iy + 5) < 0.2 * L + 0.04) m = Math.max(m, sstep(0.3, 0.1, Math.hypot(gx - ix - 0.5, gy - iy - 0.5))); }
+      // taş sıraları: siyah derz, hemen altında ışıklı kazıma
+      const per = Yy > 488 ? 19 : 17, fy = ((Yy - (Yy > 488 ? 500 : 334)) % per + per) % per;
+      if (Yy > 316 && Yy < 436 || Yy > 590) { if (fy < 1.1) m *= 0.05; else if (fy < 2.6) m = Math.max(m, 0.3 + 0.6 * L); }
       if (Yy > 521 && Yy < 583) m *= 0.25;
       col = rampa(TAS, clamp(L * 1.1, 0, 1));
       if (Yy > 521 && Yy < 583) col = rampa(CIC, 0.5);
