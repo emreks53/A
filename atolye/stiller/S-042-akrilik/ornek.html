@@ -348,7 +348,7 @@
     // gövde: leylak
     for (const [dx, dy, r] of KUME) {
       const cx = bx + dx * bs, cy = taban + dy * bs, rr = r * bs;
-      for (let q = 0; q < 4; q++) { const rq = rr * (0.3 + q * 0.21), a0 = Math.PI * (0.92 + R() * 0.12), a1 = Math.PI * (2.08 - R() * 0.12); boyaFirca(yay(cx, cy, rq, a0, a1, 14), rr * 0.38, C.bulutG, { prof: bprof, kuru: R() < 0.25, jit: 10 }); }
+      for (let q = 0; q < 3; q++) { const rq = rr * (0.35 + q * 0.29), a0 = Math.PI * (0.92 + R() * 0.12), a1 = Math.PI * (2.08 - R() * 0.12), ox = (R() - 0.5) * rr * 0.2, oy = (R() - 0.5) * rr * 0.15; boyaFirca(yay(cx + ox, cy + oy, rq, a0, a1, 14), rr * 0.46, C.bulutG, { prof: bprof, kuru: R() < 0.25, jit: 10 }); }
       boyaFirca(egri(cx - rr * 0.75, cy + rr * 0.05, cx + rr * 0.75, cy - rr * 0.02, -rr * 0.12, 10), rr * 0.6, C.bulutG, { prof: bprof, kuru: false, jit: 10 });
     }
     for (let q = 0; q < 3; q++) { const yy = by + 6 * bs + q * 7 * bs; boyaFirca(egri(bx - 112 * bs, yy, bx + 112 * bs, yy + (R() - 0.5) * 3, (R() - 0.5) * 4, 12), 12 * bs, C.bulutG, { prof: bprof, kuru: R() < 0.4, jit: 10 }); }
@@ -356,7 +356,7 @@
     for (const [dx, dy, r] of KUME) {
       const cx = bx + dx * bs + 4 * bs, cy = taban + dy * bs - 6 * bs, rr = r * bs * 0.88;
       boyaFirca(egri(cx - rr * 0.55, cy + rr * 0.02, cx + rr * 0.6, cy - rr * 0.04, -rr * 0.1, 10), rr * 0.42, C.bulutO, { prof: bprof, kuru: false, jit: 8 });
-      for (let q = 0; q < 3; q++) { const rq = rr * (0.3 + q * 0.26), a0 = Math.PI * (1.0 + R() * 0.15), a1 = Math.PI * (1.98 - R() * 0.1); boyaFirca(yay(cx, cy, rq, a0, a1, 14), rr * 0.36, q === 0 ? C.bulutO : C.bulut, { prof: bprof, kuru: R() < 0.3, jit: 8 }); }
+      for (let q = 0; q < 2; q++) { const rq = rr * (0.42 + q * 0.3), a0 = Math.PI * (1.02 + R() * 0.2), a1 = Math.PI * (1.96 - R() * 0.16), ox = (R() - 0.5) * rr * 0.25, oy = (R() - 0.5) * rr * 0.2; boyaFirca(yay(cx + ox, cy + oy, rq, a0, a1, 14), rr * 0.5, C.bulut, { prof: bprof, kuru: R() < 0.3, jit: 8 }); }
       boyaFirca(yay(cx + 2, cy - 2, rr * 0.82, Math.PI * 1.45, Math.PI * 1.92, 10), rr * 0.24, C.bulut, { prof: (t) => Math.sin(Math.PI * t), kuru: true, jit: 4 });
     }
   }

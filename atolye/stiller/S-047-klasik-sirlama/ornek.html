@@ -119,29 +119,42 @@
     return 0.4 + 0.7 * Math.exp(-(dx * dx + dy * dy) * 1.05);
   };
 
-  // ------------------------------------------------------------ bulut kalınlığı (kümülüs: düz taban, kabarık tepe)
+  // ------------------------------------------------------------ bulutlar: yuvarlak kabarcıklardan kurulan kümülüs (düz taban, kabarık tepe)
+  // Her kabarcık bir yarım küre gibi yükseklik verir; yüzey normali bu yükseklikten bulunur, bulut güneşe göre aydınlanır.
   const BH = 800, CH0 = new Float32Array(W * BH);
   const BULUTLAR = [
     // cx, taban y, yarı genişlik, yükseklik, tohum
-    [140, 372, 250, 170, 1],
-    [500, 182, 150, 50, 2],
-    [805, 340, 215, 96, 3],
-    [50, 585, 165, 40, 4],
-    [985, 545, 150, 44, 5],
+    [150, 372, 245, 165, 1],
+    [505, 186, 140, 50, 2],
+    [800, 342, 205, 92, 3],
+    [60, 588, 160, 40, 4],
+    [975, 548, 140, 44, 5],
   ];
+  const PUF = [];
+  for (const [cx, yb, hw, h, s] of BULUTLAR) {
+    const rr = SAHNE.rng(500 + s), n = Math.max(4, Math.round(hw / 24));
+    for (let k = 0; k < n; k++) {
+      const t = clamp(((k + 0.5) / n) * 2 - 1 + (rr() - 0.5) * 0.2, -0.97, 0.97), env = Math.pow(1 - t * t, 0.6);
+      const r = h * (0.24 + 0.36 * env) * (0.75 + rr() * 0.5);
+      PUF.push({ x: cx + t * hw * 0.92, y: yb - r * (0.35 + 0.55 * env) - h * 0.12 * env, r, yb });
+    }
+    for (let k = 0; k < Math.round(n * 0.6); k++) {
+      const t = (rr() * 2 - 1) * 0.65, env = Math.pow(1 - t * t, 0.8);
+      const r = h * (0.18 + 0.2 * env) * (0.75 + rr() * 0.5);
+      PUF.push({ x: cx + t * hw * 0.9, y: yb - h * (0.42 + 0.5 * env) * (0.8 + rr() * 0.3), r, yb });
+    }
+  }
   for (let y = 0; y < BH; y++) for (let x = 0; x < W; x++) {
-    let H = 0, wx = 0, wy = 0, hesap = false;
-    for (const [cx, yb, hw, h, s] of BULUTLAR) {
-      if (y < yb - h * 1.45 - 30 || y > yb + 36 || x < cx - hw - 20 || x > cx + hw + 20) continue;
-      if (!hesap) { wx = (fbm(nE, x / 90, y / 90, 2) - 0.5) * 44; wy = (fbm(nE, x / 90 + 31, y / 90 + 17, 2) - 0.5) * 32; hesap = true; }
-      const hx = (x + wx * 0.5 - cx) / hw; if (hx <= -1 || hx >= 1) continue;
-      const pr = Math.pow(1 - hx * hx, 0.55);
-      const top = yb - h * pr * (0.55 + 0.9 * fbm(nD, x / 72 + s * 7.1, s * 3.3, 3));
-      const bot = yb + 16 * (fbm(nD, x / 46 + s * 5.3, s * 9.7, 2) - 0.5);
-      const e = sstep(top - 8, top + 34, y + wy * 0.5) * sstep(bot + 12, bot - 22, y) * sstep(1, 0.72, Math.abs(hx));
-      if (e <= 0) continue;
-      const bil = fbm(nA, (x + wx) / 30 + s * 11, (y + wy) / 25 + s * 5, 5);
-      H = Math.max(H, e * (0.3 + 1.15 * bil));
+    let H = 0, gz = -1;
+    for (const p of PUF) {
+      const dx = x - p.x, dy = (y - p.y) * 1.12;
+      if (dx > p.r * 1.25 || dx < -p.r * 1.25 || dy > p.r * 1.25 || dy < -p.r * 1.25 || y > p.yb + 18) continue;
+      if (gz < 0) gz = fbm(nA, x / 13, y / 11, 4);
+      const d = Math.sqrt(dx * dx + dy * dy) + (gz - 0.5) * p.r * 0.5;
+      if (d >= p.r) continue;
+      const taban = sstep(p.yb + 10 + (gz - 0.5) * 16, p.yb - 14, y);
+      const hh = p.r * Math.sqrt(1 - (d / p.r) * (d / p.r)) * taban;
+      if (hh > H) H = hh;
     }
     CH0[y * W + x] = H;
   }
@@ -181,26 +194,26 @@
       const cs = sstep(0.56, 0.8, fbm(nB, x / 300 + y / 900, y / 13, 4)) * sstep(520, 300, y) * 0.32;
       c = mixc(c, mixc([0.66, 0.68, 0.7], [1.0, 0.94, 0.8], Math.exp(-(dd * dd) / (2 * 420 * 420))), cs);
     }
-    // kümülüs bulutlar: ışık güneşten (sağ üst); aydınlık kenarlar krem-altın, gölgeler mor-gri
+    // kümülüs bulutlar: ışık güneşten (sağ üst, önde); aydınlık kubbeler krem-altın, gölgeler mor-gri, tabanlar sıcak yansımalı
     if (y < BH) {
       const h = chb(x, y);
-      if (h > 0.1) {
-        const al = sstep(0.16, 0.52, h);
-        const gx = (chb(x + 2, y) - chb(x - 2, y)) / 4, gy = (chb(x, y + 2) - chb(x, y - 2)) / 4;
-        let lx = 880 - x, ly = 140 - y; const ll = Math.hypot(lx, ly) || 1; lx /= ll; ly /= ll;
-        const nx = -gx * 22, ny = -gy * 22, nl = Math.hypot(nx, ny, 1);
-        const lam = clamp((nx * lx * 0.85 + ny * ly * 0.85 + 0.42) / nl, 0, 1);
-        let acc = 0; for (let j = 1; j <= 6; j++) acc += chb(x + lx * j * 8, y + ly * j * 8);
-        const T = Math.exp(-acc * 0.36);
-        const lit = clamp(0.5 * lam + 0.62 * T - 0.06, 0, 1);
+      if (h > 0.3) {
+        const al = sstep(0.4, 6, h) * 0.97;
+        const gx = (chb(x + 1.5, y) - chb(x - 1.5, y)) / 3, gy = (chb(x, y + 1.5) - chb(x, y - 1.5)) / 3;
+        const nl = Math.hypot(gx, gy, 1), nx = -gx / nl, ny = -gy / nl, nz = 1 / nl;
+        let lx = 880 - x, ly = 140 - y, lz = 260; const ll = Math.hypot(lx, ly, lz); lx /= ll; ly /= ll; lz /= ll;
+        const lam = clamp(nx * lx + ny * ly + nz * lz, 0, 1);
+        const l2 = Math.hypot(lx, ly) || 1;
+        let acc = 0; for (let j = 1; j <= 6; j++) acc += Math.max(0, chb(x + (lx / l2) * j * 9, y + (ly / l2) * j * 9) - h - j * 3);
+        const T = Math.exp(-acc * 0.025);
+        const lit = clamp(lam * (0.35 + 0.65 * T) * 1.12, 0, 1);
         const yakin = Math.exp(-(dd * dd) / (2 * 430 * 430));
-        const litC = mixc([0.98, 0.91, 0.78], [1.0, 0.97, 0.86], yakin);
-        let shC = mixc(c, mixc([0.36, 0.34, 0.4], [0.62, 0.52, 0.46], yakin * 0.6), 0.72);
-        shC = mixc(shC, [0.78, 0.6, 0.44], 0.22 * sstep(0.2, 0.8, ny / nl)); // alttan yansıyan sıcak ışık
-        let cc = mixc(shC, litC, Math.pow(lit, 1.2));
-        cc = mixc(cc, shC, 0.35 * yakin * sstep(0.4, 1.0, al)); // güneşe yakın bulutun gövdesi ters ışıkta koyulaşır
-        cc = mixc(cc, [1.0, 0.98, 0.9], 0.75 * (1 - al) * sstep(0.2, 0.8, lam) * (0.35 + yakin)); // gümüş kenar
-        c = mixc(c, cc, al * 0.97);
+        const litC = mixc([0.98, 0.93, 0.82], [1.0, 0.97, 0.87], yakin);
+        let shC = mixc(c, [0.5, 0.48, 0.54], 0.62);
+        shC = mixc(shC, [0.8, 0.64, 0.48], 0.3 * sstep(0.1, 0.7, ny)); // alttan yansıyan sıcak ışık
+        let cc = mixc(shC, litC, Math.pow(lit, 0.9));
+        cc = mixc(cc, [1.0, 0.98, 0.9], 0.5 * (1 - al) * sstep(0.3, 0.9, lam) * (0.4 + yakin)); // ışıklı kenar
+        c = mixc(c, cc, al);
       }
     }
     // uzak tepeler ve ağaçlar
@@ -503,9 +516,9 @@
     const BR = [bulanik3(CR, W, W, 2), bulanik3(CG, W, W, 2), bulanik3(CB, W, W, 2)];
     function yon(s, x, y) {
       if (s === 1) {
-        if (y < BH && chb(x, y) > 0.25) {
+        if (y < BH && chb(x, y) > 3) {
           const gx = chb(x + 3, y) - chb(x - 3, y), gy = chb(x, y + 3) - chb(x, y - 3);
-          if (Math.abs(gx) + Math.abs(gy) > 0.01) return Math.atan2(gy, gx) + Math.PI / 2 + (R() - 0.5) * 0.3;
+          if (Math.abs(gx) + Math.abs(gy) > 0.3) return Math.atan2(gy, gx) + Math.PI / 2 + (R() - 0.5) * 0.3;
         }
         return -0.1 + (fbm(nD, x / 240, y / 170, 2) - 0.5) * 0.9 + (R() - 0.5) * 0.25;
       }

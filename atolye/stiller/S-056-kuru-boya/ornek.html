@@ -459,6 +459,10 @@
     { sil: gokSil, bx: [800, 60, 960, 220], opq: 0.7, maske: harita((x, y) => sstep(GR_ + 10, GR_ - 20, gunesUzak(x, y))) });
   katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: -0.15, aciJ: 0.1, aralik: 2.0, boy: 30, kal: 1.7, alfa: 0.8, renk: hex('#FFFBF0'), obek: 24 }, r),
     { sil: gokSil, bx: gokBx, opq: 0.6, cila: false, maske: harita((x, y) => (y < 800 ? bulutGovde(x, y) * kenar(x, y, false) * 0.95 : 0)) });
+  // 7b) bulutların düz tabanı leylak-mavi gölgeli
+  const bulutGolge = (x, y) => { let m = 0; for (const b of bulutLoplari) { if (Math.abs(x - b.bx) > 140 * b.s) continue; m = Math.max(m, sstep(b.by - 16 * b.s, b.by + 12 * b.s, y) * sstep(160 * b.s, 60 * b.s, Math.abs(x - b.bx - 20 * b.s))); } return m * bulutGovde(x, y); };
+  katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: 0.3, aciJ: 0.12, aralik: 2.3, boy: 20, kal: 1.4, alfa: 0.7, renk: hex('#9C95DC'), obek: 18 }, r),
+    { sil: gokSil, bx: gokBx, guc: 0.9, cila: false, maske: harita((x, y) => (y < 800 ? bulutGolge(x, y) : 0)) });
   // 8) bulutların güneşe bakan üst kenarı şeftali
   katman((x) => taraK(x, { bx: gokBx, ic: gokIc, aci: -0.12, aciJ: 0.1, aralik: 2.4, boy: 22, kal: 1.4, alfa: 0.5, renk: hex('#F8B07E'), obek: 20 }, r),
     { sil: gokSil, bx: gokBx, guc: 0.8, cila: false, maske: harita((x, y) => (y < 800 ? bulutGovde(x, y) * sstep(0.3, 0.9, bulutGovde(x - 10, y + 9) - bulutGovde(x + 10, y - 9) + 0.5) * 0.7 : 0)) });

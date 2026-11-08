@@ -457,8 +457,8 @@ const RENK = {
   altin: rampa([[0, [232, 204, 126]], [0.5, [206, 160, 74]], [1, [154, 112, 52]]]), // aşı boyası altın
   yaprak: rampa([[0.15, [150, 190, 100]], [0.45, [92, 152, 86]], [0.85, [48, 110, 80]]]),
   gul: rampa([[0, [232, 180, 186]], [0.45, [212, 128, 146]], [1, [170, 82, 110]]]), // tozlu gül
-  gok: [112, 148, 192],
-  gokKoyu: [100, 126, 172],
+  gok: [106, 146, 198],
+  gokKoyu: [96, 124, 178],
   sicak: [232, 208, 156],
   kum: [226, 214, 192],
 };
@@ -659,7 +659,7 @@ function alemCiz(a, olcek) {
       for (let t = -1.2; t <= 1.2; t += 0.1) p.push([cx + i + Math.sin(t) * 0.5, cy + t * r]);
       k.push(p);
     }
-    tara(k, { esik: 0.15, aralik: 0.6, alfa: 0.55, kalin: 0.9, minL: 30, maxL: 40, kirp: yol, tonF: (x, y) => clamp(0.85 - ((x - cx) / r) * 0.6 - ((cy - y) / r) * 0.3) });
+    tara(k, { esik: 0.15, aralik: 0.6, alfa: 0.55, kalin: 0.9, minL: 30, maxL: 40, kirp: renkYol || yol, tonF: (x, y) => clamp(0.85 - ((x - cx) / r) * 0.6 - ((cy - y) / r) * 0.3) });
   };
   // çubuk
   const cb = a.cubuk;
@@ -725,7 +725,7 @@ function kasnak() {
     boya(vr, { esik: 0, aralik: 1, alfa: 0.92, kalin: 1.9, minL: 24, maxL: 60, tonF: (x, y) => 0.7 + 0.3 * ton(x, y), renkF: (x, y) => RENK.kasnak(ton(x, y) * 0.9), kirp: yol });
     const hr = [];
     for (let y = k.y1; y <= k.y2 + 2; y += 2.2) hr.push([[k.x1 - 4, y], [k.x2 + 4, y + 0.6]]);
-    boya(hr, { esik: 0, aralik: 1, alfa: 0.6, kalin: 1.6, minL: 20, maxL: 50, tonF: (x, y) => 0.5 + 0.5 * ton(x, y), renkF: (x, y) => RENK.kasnak(0.2 + ton(x, y) * 0.6), kirp: yol });
+    boya(hr, { esik: 0, aralik: 1, alfa: 0.75, kalin: 1.6, minL: 20, maxL: 50, tonF: (x, y) => 0.5 + 0.5 * ton(x, y), renkF: (x, y) => RENK.kasnak(0.2 + ton(x, y) * 0.6), kirp: yol });
     const v2 = [];
     for (let x = k.x1 - 0.5; x <= k.x2 + 2; x += 2.9) v2.push([[x, k.y1 - 2], [x - 0.4, k.y2 + 2]]);
     tara(v2, { esik: 0.45, aralik: 0.35, alfa: 0.5, kalin: 1.0, minL: 14, maxL: 40, kirp: yol });

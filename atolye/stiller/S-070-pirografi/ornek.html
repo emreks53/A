@@ -277,9 +277,10 @@
       const rd = Math.hypot(X - DC.x, Yy - DC.y);
       if (rd > CER - 3 || !gokMu(X, Yy)) continue;
       const gd = Math.hypot(sx(X) - 880, sy(Yy) - 140);
-      const yog = clamp(0.03 + 0.62 * Math.pow(sstep(250, CER, rd), 1.5) + 0.1 * sstep(560, 150, sx(X) + sy(Yy) * 0.4), 0, 0.75) * (0.15 + 0.85 * sstep(42, 150, gd)) * sstep(40, 46, gd);
-      if (rr() > yog * 0.62) continue;
-      sG.globalAlpha = 0.6 + rr() * 0.4; sG.fillStyle = '#fff'; sG.beginPath(); sG.arc(X, Yy, 0.5 + rr() * 0.5, 0, Math.PI * 2); sG.fill();
+      const kenarY = sstep(270, CER - 4, rd);
+      const yog = clamp(0.012 + 0.7 * Math.pow(kenarY, 2.2) + 0.05 * sstep(560, 150, sx(X) + sy(Yy) * 0.4), 0, 0.75) * (0.1 + 0.9 * sstep(42, 170, gd)) * sstep(40, 46, gd);
+      if (rr() > yog * 0.75) continue;
+      sG.globalAlpha = 0.45 + rr() * 0.4 + 0.15 * kenarY; sG.fillStyle = '#fff'; sG.beginPath(); sG.arc(X, Yy, 0.42 + rr() * 0.38 + 0.15 * kenarY, 0, Math.PI * 2); sG.fill();
     }
     sG.restore(); sG.globalAlpha = 1;
   }
