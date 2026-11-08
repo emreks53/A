@@ -11,7 +11,7 @@
   "ayirt_edici": [
     "Zerreli ezme altın gök ve lacivert konturlu, uçları helezonla kıvrılan çin bulutları",
     "Gölgesiz, düz malakit yeşili kubbe; ince koyu mürekkep konturlar ve dilim çizgileri",
-    "Yükseltilmiş düz yeşil zemin düzlemi; ufukta pastel renkli süngerimsi kayalar, servi ve çiçek açmış meyve ağaçları",
+    "Yükseltilmiş düz yeşil zemin düzlemi; ufukta sırtın ardından yükselen pastel renkli, loblu süngerimsi kaya yığınları, servi ve çiçek açmış meyve ağaçları",
     "Kaide ve minarede yıldızlı çini panolar, lacivert friz, zikzak bant ve altın şebekeli pencereler",
     "Önde lale, karanfil, gül, sümbül ve papatyadan düz boyalı bahçe; çimene serpiştirilmiş küçük çiçekler",
     "Altın ve renkli cetvellerle çevrili resim, zerefşanlı kenar suyu; minarenin alemi çerçeveyi taşar"
@@ -26,7 +26,7 @@
     "#29563A",
     "#21170E"
   ],
-  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Bütün biçimler SAHNE geometrisinden (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, alemler) düz dolgu ve ince mürekkep konturla çizilir; gölge ve degrade yoktur. Çin bulutları eğriliği artan (klotoid) bir omurga boyunca loblu şerit poligonlarıyla, kayalar gürültülü kapalı eğrilerle, çiçekli ağaçlar tohumlu özyinelemeli dallanmayla, servi yaprakları sıra sıra küçük kavislerle, çini panolar sekiz köşeli yıldız-haç örgüsüyle üretilir. Altın gök ve boya yüzeyi için piksel düzeyinde değer gürültüsü, kenar suyunda tohumlu zerefşan pulları kullanılır. Minarenin üst kısmı cetvellerden sonra yeniden çizilerek çerçeveyi taşar.",
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Bütün biçimler SAHNE geometrisinden (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, alemler) düz dolgu ve ince mürekkep konturla çizilir; gölge ve degrade yoktur. Çin bulutları hafif S çizen, uçlarında eğriliği artan (klotoid) bir omurga boyunca iki kenarı loblu şerit poligonlarıyla; süngerimsi kayalar tepeye daralan bir zarf içinde sıra sıra dizilen loblu kapalı eğrilerle (öndeki sıra arkadakini örter); çiçekli ağaçlar tohumlu özyinelemeli dallanmayla, servi yaprakları sıra sıra küçük kavislerle, çini panolar sekiz köşeli yıldız-haç örgüsüyle üretilir. Altın gök ve boya yüzeyi için piksel düzeyinde değer gürültüsü, kenar suyunda tohumlu zerefşan pulları kullanılır. Ön bahçedeki çiçeklerin taçları çerçeveye kesilmeyecek bir kuşağa toplanır, sapları çerçeveye iner. Minarenin üst kısmı cetvellerden sonra yeniden çizilerek çerçeveyi taşar.",
   "etiketler": [
     "minyatür",
     "nakkaşhane",

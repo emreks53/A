@@ -979,35 +979,6 @@
     penc(gx, gy, 22, [C.lacivert, 'altin'], 8, k(0.7));
   }
 
-  // altın çin bulutları
-  function cinBulutu(cx, cy, s, yon) {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.scale(s * yon, s);
-    const L0 = 40;
-    const Lk = 95;
-    const sag = omurga(0, 0, 0, L0 + Lk, 1, (u) => (u < L0 ? -0.004 : -(0.025 + 0.0016 * (u - L0))));
-    const sol = omurga(0, 0, Math.PI, L0 + Lk * 0.85, 1, (u) => (u < L0 ? -0.004 : -(0.025 + 0.00176 * (u - L0))));
-    const pts = sol.slice().reverse().concat(sag.slice(1));
-    const m = sol.length - 1;
-    const W = 11;
-    const d = (i) => (i < m ? (m - i) / (L0 + Lk * 0.85) : (i - m) / (L0 + Lk));
-    const taper = (i) => 1 - 0.8 * yumusak(0.28, 1, d(i));
-    const lob = (i) => 1 + 0.8 * Math.exp(-Math.pow((i - m) / (L0 + 12), 2)) * Math.pow(Math.abs(Math.cos(((i - m) * Math.PI) / (L0 * 0.78))), 0.6);
-    const wUst = (t, i) => W * taper(i) * lob(i);
-    const wAlt = (t, i) => W * 0.75 * taper(i);
-    const dis = serit(pts, wAlt, wUst);
-    altinDoldur(dis);
-    ctx.lineWidth = k(1) / s;
-    ctx.strokeStyle = C.tahrir;
-    ctx.stroke(dis);
-    const ic = serit(pts, (t, i) => Math.max(0, wAlt(t, i) - 3.5), (t, i) => Math.max(0, wUst(t, i) - 3.5));
-    ctx.lineWidth = k(0.6) / s;
-    ctx.strokeStyle = C.altinKoyu;
-    ctx.stroke(ic);
-    ctx.restore();
-  }
-
   // minare
   function alemCiz(a) {
     const yollar = [

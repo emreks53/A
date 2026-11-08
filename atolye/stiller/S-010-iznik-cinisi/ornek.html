@@ -282,9 +282,8 @@
     }
     const L0 = 40;
     const Lk = 95;
-    // omurga hafif S çizer; iki ucu ters yönlere helezonla kıvrılır
-    const sag = omurga(0, 0, 0, L0 + Lk, 1, (u) => (u < L0 ? 0.0075 * Math.sin((u / L0) * Math.PI) : -(0.025 + 0.0016 * (u - L0))));
-    const sol = omurga(0, 0, Math.PI, L0 + Lk * 0.85, 1, (u) => (u < L0 ? 0.0075 * Math.sin((u / L0) * Math.PI) : -(0.025 + 0.00176 * (u - L0))));
+    const sag = omurga(0, 0, 0, L0 + Lk, 1, (u) => (u < L0 ? -0.004 : -(0.025 + 0.0016 * (u - L0))));
+    const sol = omurga(0, 0, Math.PI, L0 + Lk * 0.85, 1, (u) => (u < L0 ? -0.004 : -(0.025 + 0.00176 * (u - L0))));
     const pts = sol.slice().reverse().concat(sag.slice(1));
     const m = sol.length - 1;
     const W = 13;
@@ -292,9 +291,7 @@
     const taper = (i) => 1 - 0.8 * yumusak(0.28, 1, d(i));
     const lob = (i) => 1 + 0.8 * Math.exp(-Math.pow((i - m) / (L0 + 12), 2)) * Math.pow(Math.abs(Math.cos(((i - m) * Math.PI) / (L0 * 0.78))), 0.6);
     const wUst = (t, i) => W * taper(i) * lob(i);
-    // alt kenar da küçük, şaşırtmalı loblu: düğümlü kuşak
-    const lobAlt = (i) => 1 + 0.42 * Math.exp(-Math.pow((i - m) / (L0 + 4), 2)) * Math.pow(Math.abs(Math.sin(((i - m) * Math.PI) / (L0 * 0.78))), 0.6);
-    const wAlt = (t, i) => W * 0.72 * taper(i) * lobAlt(i);
+    const wAlt = (t, i) => W * 0.75 * taper(i);
     const dis = serit(pts, wAlt, wUst);
     const hedef = renk === C.kirmizi ? kz : r;
     hedef.fillStyle = renk;
@@ -319,27 +316,13 @@
   cinBulutu(175, 236, 1.0, 1, C.kobalt);
   cinBulutu(455, 160, 0.7, -1, C.firuze);
   cinBulutu(770, 300, 0.8, 1, C.kirmizi);
-  cinBulutu(950, 430, 0.55, -1, C.kobalt);
+  cinBulutu(902, 446, 0.55, -1, C.kobalt);
   cinBulutu(115, 425, 0.55, 1, C.firuze);
   cinBulutu(640, 196, 0.5, 1, C.kobalt);
-  cinBulutu(150, 118, 0.48, -1, C.kirmizi);
-  cinBulutu(712, 96, 0.42, -1, C.firuze);
-  cinBulutu(868, 262, 0.42, 1, C.firuze);
-  // çintemani: üç top ve altında iki dalgalı kaplan çizgisi
-  function cintemani(x, y, s) {
-    for (const [u, v] of [[0, -8.5], [-8.6, 5.5], [8.6, 5.5]]) {
-      boya(S.daireYolu(x + u * s, y + v * s, 6.4 * s), C.kobalt, 1.0);
-      boya(S.daireYolu(x + u * s + 1.2 * s, y + v * s - 1.0 * s, 2.6 * s), C.kirmizi, 0);
-    }
-    for (const dy of [21, 29]) {
-      const pts = omurga(x - 18 * s, y + dy * s, -0.05, 36, s, (u) => 0.16 * Math.sin(u / 2.6) / s);
-      boya(serit(pts, (t) => (1.3 + 1.4 * Math.sin(Math.PI * t)) * s, (t) => (1.3 + 1.4 * Math.sin(Math.PI * t)) * s), C.kirmizi, 0.9);
-    }
-  }
-  cintemani(110, 318, 0.9);
-  cintemani(394, 250, 0.85);
-  cintemani(560, 98, 0.8);
-  cintemani(866, 372, 0.85);
+  cinBulutu(146, 112, 0.5, -1, C.kirmizi);
+  cinBulutu(716, 98, 0.44, -1, C.firuze);
+  cinBulutu(404, 318, 0.4, 1, C.kobalt);
+  cinBulutu(884, 366, 0.42, 1, C.firuze);
   {
     // güneş: büyük rozet, ışın taçlı
     const gx = 880;

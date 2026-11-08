@@ -22,7 +22,7 @@
     "#173828",
     "#B4AC8A"
   ],
-  "kodla_cizim": "Kâğıt, 2048 px bir maske tuvalinde kesip-ekleme işlemleriyle kurulur: dolu sayfadan iç alan oyulur (destination-out), bina silueti, bulutlar, güneş, dantel ve çiçekler eklenir, ardından kubbe dilimleri, pencereler, damarlar ve kesik (köprülü) yarıklar oyulur. Bütün saplar ve köprüler en az 3,6 px genişliktedir; kapalı yarıklar setLineDash ile aralıklı kesildiği için ada oluşmaz. Geliştirme sırasında maske üzerinde bağlı bileşen sayımı (BFS) ve 1 px aşındırma denetimi yapıldı: kâğıt tek parçadır (denetim kodu sayfada kapalı durur). Görüntü; lifli zemin dokusu, maskeden üretilen bulanık ve kayık gölge, dokulu kâğıt ve maskenin kaydırılmış farkından elde edilen ince kenar ışığı ile kenar gölgesinin bileşimidir.",
+  "kodla_cizim": "Kâğıt, 2048 px bir maske tuvalinde kesip-ekleme işlemleriyle kurulur: dolu sayfadan iç alan oyulur (destination-out), bina silueti, bulutlar, güneş, dantel ve çiçekler eklenir, ardından kubbe dilimleri, pencereler, damarlar ve kesik (köprülü) yarıklar oyulur. Saplar ve köprüler çoğunlukla 3,6 px ve üzeri genişliktedir; yalnız yaprak diplerinde, birkaç kıvrım ucunda ve kubbe tepesinde kaburgaların birleştiği yerde 2–3 px'e iner. Kapalı yarıklar setLineDash ile aralıklı kesildiği için ada oluşmaz. Maske üzerinde bağlı bileşen sayımı (BFS) yapıldı: 2048 px çözünürlükte kâğıt tek parçadır, geriye yalnız kenar yumuşatmasından kalan tek piksellik kırıntılar kalır (denetim kodu sayfada kapalı durur). Görüntü; lifli zemin dokusu, maskeden üretilen bulanık ve kayık gölge, dokulu kâğıt ve maskenin kaydırılmış farkından elde edilen ince kenar ışığı ile kenar gölgesinin bileşimidir.",
   "etiketler": [
     "kat'ı",
     "kâğıt oyma",

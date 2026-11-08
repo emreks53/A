@@ -11,10 +11,10 @@
   "ayirt_edici": [
     "Lacivert zemin üzerinde altın rumî ve hatayî su yoluyla bezeli bordür; köşe kareleri ve altın cetveller",
     "Kenar suyunda ince lacivert tığlar ve her kenarın ortasında dışa taşan hatayî tepelikler",
-    "Altın zeminli köşebentlerde lacivert rumîli, kırmızı hatayîli helezon dallar",
+    "Altın zeminli köşebentlerde iç içe geçen iki helezon sistemi: ince koyu saplı hatayî, penç, gonca ve yaprak dalları ile onların üstünden ince bir aralık bırakarak geçen lacivert rumî kolları; boşluklarda küçük kıvrımlar ve üçlü noktalar",
     "Dilimli sivri kemerli (mihrabiye) çerçevenin içinde aharlı krem zemin ve soluk altın halkâr",
     "Düz yeşil kubbe, altın kaburgalar ve tabanda altın-kırmızı dilim frizi; altın konturlu, tahrirli minare ve kaide",
-    "Kara Memi üslubunda iki tonlu tırtıklı saz yaprakları, lale, karanfil, gül ve sümbül"
+    "Kara Memi üslubunda iki tonlu tırtıklı saz yaprakları, mızrak biçimli lale yaprakları; lale, karanfil, gül ve sümbül"
   ],
   "palet": [
     "#CFA64E",
@@ -26,7 +26,7 @@
     "#E3A49B",
     "#4F8550"
   ],
-  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Ezme altın, sağ üstten hafif parıltılı ve zerreli bir gürültü dokusu olarak bir kez üretilip sayfaya sabit desen dolgusu olarak kullanılır. Rumî, hatayî ve penç motifleri Bezier yollarıyla tanımlanıp döndürülerek yerleştirilir; helezonlar spiral nokta dizileriyle, köşebentlerdeki dallar boş alana en büyük daireyi sığdıran açgözlü daire istifi ve ağaç biçimli bağlantılarla kurulur, öbür köşebent aynalanarak simetri sağlanır. Bordür dört kenarda döndürülmüş sinüs su yolu, kemer iki yay ve kavşara eğrisinden oluşur. Sahne kemere sığması için 0,8 ölçekle aynı yerleşimde çizilir: düz dolgu, altın kontur, koyu tahrir; saz yaprakları omurga ve tırtıklı şerit poligonuyla üretilir.",
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Ezme altın, sağ üstten hafif parıltılı ve zerreli bir gürültü dokusu olarak bir kez üretilip sayfaya sabit desen dolgusu olarak kullanılır. Rumî, hatayî ve penç motifleri Bezier yollarıyla tanımlanıp döndürülerek yerleştirilir; helezonlar spiral nokta dizileriyle kurulur. Köşebentte iki ayrı açgözlü daire istifi yapılır; her daireye bir helezon oturur ve helezonlar önceki sapların en yakın noktasından iki ucu teğetli Bezier saplarla beslenerek ağaç biçimli bir su yolu oluşturur. Alt katta hatayî sistemi, üst katta lacivert şeritli rumî sistemi çizilir; üst kat ayrı bir katmanda alttakini destination-out ile silerek iç içe geçme aralığı bırakır. Kalan boşluklar kapsama haritasının uzaklık dönüşümüyle bulunur ve büyükten küçüğe küçük kıvrımlar, penç ve üçlü noktalarla doldurulur; öbür köşebent aynalanarak simetri sağlanır. Bordür dört kenarda döndürülmüş sinüs su yolu, kemer iki yay ve kavşara eğrisinden oluşur. Sahne kemere sığması için 0,8 ölçekle aynı yerleşimde çizilir: düz dolgu, altın kontur, koyu tahrir; saz yaprakları omurga ve tırtıklı şerit poligonuyla üretilir.",
   "etiketler": [
     "tezhip",
     "altın",
