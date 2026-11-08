@@ -625,31 +625,62 @@
   }
   const ton = (c, k) => [c[0] * k, c[1] * k, c[2] * k];
   const css = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
-  /** Yumuşak modelajlı örtücü katman + üstüne ince fırça taramaları (form yönünde). */
+  /**
+   * Örtücü guaj: önce modelajı yarı yarıya yassıltılmış mat bir zemin katı, sonra modelajı asıl kuran ince ve
+   * düzenli fırça taramaları (form yönünde, eşit aralıklı): ışıkta beyaz katılmış açık, gölgede koyu ve çapraz.
+   */
+  const BEYAZ = [255, 252, 242];
+  const lum = (c) => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
   function boya(yol, kutu, renkF, yonF, o) {
-    o = Object.assign({ yog: 1, uzun: 7, kalin: 0.75, alfa: 0.5, oynat: 0.09, doku: 0.03 }, o);
-    guaj(ctx, (x) => x.fill(yol), '#808080', { kutu, f: renkF, yon: yonF, doku: o.doku, along: 0.05, across: 0.5, leke: 0.012, kenar: 0.03, tane: 0.025, tohum: (R() * 1e5) | 0 });
-    if (o.yog <= 0) return;
-    // taramalar
+    o = Object.assign({ yog: 1, uzun: 7, kalin: 0.7, alfa: 0.6, kontrast: 0.2, duz: 0.3, capraz: 1, doku: 0.03, ara: 2.3, zemin: true, sap: 0.1 }, o);
     const [x0, y0, x1, y1] = kutu;
-    const alan = (x1 - x0) * (y1 - y0);
-    const n = Math.floor((alan / 9) * o.yog);
+    // ortalama ton (yassıltma ve açık/koyu tarama kararı için)
+    let ort = [0, 0, 0];
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) { const c = renkF(lerp(x0, x1, (i + 0.5) / 5), lerp(y0, y1, (j + 0.5) / 5)); ort[0] += c[0] / 25; ort[1] += c[1] / 25; ort[2] += c[2] / 25; }
+    const lO = lum(ort) + 1;
+    if (o.zemin) {
+      const fz = o.duz > 0 ? (x, y) => { const c = renkF(x, y); return [lerp(c[0], ort[0], o.duz), lerp(c[1], ort[1], o.duz), lerp(c[2], ort[2], o.duz)]; } : renkF;
+      guaj(ctx, (x) => x.fill(yol), '#808080', { kutu, f: fz, yon: typeof yonF === 'function' ? yonF : yonF, doku: o.doku, along: 0.05, across: 0.5, leke: 0.012, kenar: 0.03, tane: 0.025, tohum: (R() * 1e5) | 0 });
+    }
+    if (o.yog <= 0) return;
+    const gecis = Math.ceil(o.yog), olas = o.yog / gecis;
+    const ax = o.ara * 2.2, ay = o.ara;
     ctx.save();
     ctx.clip(yol);
     ctx.lineCap = 'round';
-    ctx.lineWidth = o.kalin;
-    for (let i = 0; i < n; i++) {
-      const x = x0 + R() * (x1 - x0), y = y0 + R() * (y1 - y0);
-      const a = typeof yonF === 'function' ? yonF(x, y) : yonF;
-      const L = o.uzun * (0.6 + R() * 0.8);
-      const c = renkF(x, y);
-      const k = 1 + (R() - 0.5) * 2 * o.oynat;
-      ctx.strokeStyle = css(ton(c, k), o.alfa);
-      const ca = Math.cos(a), sa = Math.sin(a);
-      ctx.beginPath();
-      ctx.moveTo(x - ca * L / 2, y - sa * L / 2);
-      ctx.quadraticCurveTo(x + sa * 0.6, y - ca * 0.6, x + ca * L / 2, y + sa * L / 2);
-      ctx.stroke();
+    for (let g = 0; g < gecis; g++) {
+      for (let gy = y0 - ay; gy < y1 + ay; gy += ay) {
+        for (let gx = x0 - ax; gx < x1 + ax; gx += ax) {
+          if (R() > olas) continue;
+          const x = gx + R() * ax, y = gy + R() * ay;
+          const c = renkF(x, y);
+          const b = (lum(c) - lO) / lO;
+          const pa = clamp(0.5 + b * 2.6, 0.14, 0.86);
+          const acik = R() < pa;
+          const k = o.kontrast * (0.55 + R() * 0.7);
+          const cc = acik ? [lerp(c[0], BEYAZ[0], k), lerp(c[1], BEYAZ[1], k), lerp(c[2], BEYAZ[2], k)] : [c[0] * (1 - k), c[1] * (1 - k * 0.92), c[2] * (1 - k * 0.8)];
+          const a = (typeof yonF === 'function' ? yonF(x, y) : yonF) + (R() - 0.5) * o.sap;
+          const L = o.uzun * (0.7 + R() * 0.6);
+          ctx.strokeStyle = css(cc, o.alfa * (0.8 + R() * 0.4));
+          ctx.lineWidth = o.kalin * (0.8 + R() * 0.4);
+          let ca = Math.cos(a), sa = Math.sin(a);
+          const bk = (R() - 0.5) * 0.9;
+          ctx.beginPath();
+          ctx.moveTo(x - ca * L / 2, y - sa * L / 2);
+          ctx.quadraticCurveTo(x - sa * bk, y + ca * bk, x + ca * L / 2, y + sa * L / 2);
+          ctx.stroke();
+          if (!acik && o.capraz && b < -0.06 && R() < o.capraz * clamp(-b * 3, 0, 0.8)) {
+            // gölgede çapraz tarama
+            const a2 = a + 0.62 * (R() < 0.5 ? 1 : -1);
+            ca = Math.cos(a2); sa = Math.sin(a2);
+            const L2 = L * 0.8;
+            ctx.beginPath();
+            ctx.moveTo(x - ca * L2 / 2, y - sa * L2 / 2);
+            ctx.lineTo(x + ca * L2 / 2, y + sa * L2 / 2);
+            ctx.stroke();
+          }
+        }
+      }
     }
     ctx.restore();
   }
@@ -675,11 +706,9 @@
   }
 
   // ================================================================ zemin (soluk ılık levha zemini) ve gök
-  const gokR = rampa([[0, '#D3E4EB'], [0.33, '#EAECE4'], [0.68, '#F3EAD7'], [1, '#F1E4CA']]);
-  guaj(ctx, (x) => x.fillRect(0, 0, 1024, 806), '#E8E6DC', {
-    f: (x, y) => { const c = gokR(y / 800 + (nI(x * 0.004, y * 0.004) - 0.5) * 0.08); const g = Math.exp(-Math.pow(Math.hypot(x - 880, y - 140) / 190, 2)); return [lerp(c[0], 252, g * 0.7), lerp(c[1], 246, g * 0.7), lerp(c[2], 226, g * 0.7)]; },
-    yon: 0.15, doku: 0.012, along: 0.02, across: 0.3, leke: 0.012, tohum: 3, alfa: 1,
-  });
+  const gokR = rampa([[0, '#8FBAD8'], [0.3, '#B5D0DF'], [0.58, '#E0E6DE'], [0.8, '#F4EAD3'], [1, '#F3E0BC']]);
+  const gokF = (x, y) => { const c = gokR(y / 800 + (nI(x * 0.004, y * 0.004) - 0.5) * 0.06); const g = Math.exp(-Math.pow(Math.hypot(x - 880, y - 140) / 170, 2)); return [lerp(c[0], 253, g * 0.75), lerp(c[1], 247, g * 0.75), lerp(c[2], 228, g * 0.75)]; };
+  boya(new Path2D('M-10,-10 L1034,-10 L1034,806 L-10,806 Z'), [0, 0, 1024, 806], gokF, (x, y) => 0.04 + (nI(x * 0.006, y * 0.006) - 0.5) * 0.12, { yog: 0.9, uzun: 13, kalin: 0.8, alfa: 0.55, kontrast: 0.07, duz: 0, capraz: 0, ara: 2.6, doku: 0.012, sap: 0.05 });
   // güneş: yumuşak, örtücü açık disk
   guaj(ctx, (x) => { x.filter = `blur(${2.5 * OL}px)`; x.beginPath(); x.arc(880, 140, 36, 0, PI2); x.fill(); }, '#FFF8E6', { kutu: [830, 90, 930, 190], alfa: 0.92, doku: 0.01, tohum: 4 });
   // bulutlar: yumuşak kenarlı örtücü beyaz, altları soğuk gri
@@ -698,8 +727,8 @@
   }
 
   // ---- yer: soluk kum, ince çakıl ve ot
-  const yerR = rampa([[0, '#E4D7BA'], [1, '#D7C7A2']]);
-  boya(new Path2D('M-10,800 L1034,800 L1034,1034 L-10,1034 Z'), [0, 800, 1024, 1024], (x, y) => yerR((y - 800) / 224 + (nI(x * 0.02, y * 0.05) - 0.5) * 0.15), 0.02, { yog: 0.35, uzun: 9, alfa: 0.3 });
+  const yerR = rampa([[0, '#E6D1A2'], [1, '#D2B47D']]);
+  boya(new Path2D('M-10,800 L1034,800 L1034,1034 L-10,1034 Z'), [0, 800, 1024, 1024], (x, y) => yerR((y - 800) / 224 + (nI(x * 0.02, y * 0.05) - 0.5) * 0.25), 0.02, { yog: 0.8, uzun: 11, alfa: 0.5, kontrast: 0.1, duz: 0, ara: 2.4 });
   // binanın yere düşen yumuşak gölgesi
   guaj(ctx, (x) => { x.filter = `blur(${2 * OL}px)`; x.beginPath(); x.moveTo(266, 801); x.lineTo(822, 801); x.lineTo(800, 811); x.lineTo(250, 815); x.closePath(); x.fill(); }, '#BCA987', { kutu: [240, 796, 830, 822], alfa: 0.5 });
   for (let i = 0; i < 140; i++) {
@@ -846,7 +875,7 @@
   ince([[291, 692.8], [829, 692.8]], 1.0, css(tasR(1), 0.9), { gen: 0.08 });
 
   // ================================================================ kasnak ve kubbe (zümrüt)
-  const yesR = rampa([[0, '#184A35'], [0.32, '#25674A'], [0.6, '#337E58'], [0.84, '#5EA274'], [1, '#A7CFA0']]);
+  const yesR = rampa([[0, '#0E4530'], [0.3, '#1A6846'], [0.58, '#24875A'], [0.82, '#4DB07A'], [1, '#B4E2AE']]);
   const goreGolge = (x, R0, cx, adet) => {
     const u = clamp((x - cx) / R0, -0.999, 0.999);
     const ph = ((Math.asin(u) + Math.PI / 2) / (Math.PI / adet)) % 1;
@@ -858,7 +887,7 @@
     const kutu = [q.x1, q.y1, q.x2, q.y2];
     const R0 = (q.x2 - q.x1) / 2, cx = (q.x1 + q.x2) / 2;
     const ust = q.y1 + (k === 0 ? 5 : 6);
-    boya(new Path2D(d), kutu, (x, y) => { const l = silindirIsik(x, cx, R0); let t = 0.15 + 0.75 * l; if (y < ust) t += 0.18; if (y > q.y2 - 4) t -= 0.15; return yesR(t); }, Math.PI / 2, { yog: 0.8, uzun: 6, kalin: 0.6 });
+    boya(new Path2D(d), kutu, (x, y) => { const l = silindirIsik(x, cx, R0); let t = 0.15 + 0.75 * l; if (y < ust) t += 0.18; if (y > q.y2 - 4) t -= 0.15; return yesR(t); }, Math.PI / 2, { yog: 1.0, uzun: 6, kalin: 0.65, kontrast: 0.22, ara: 2.0 });
     ince([[q.x1, ust], [q.x2, ust]], 0.8, css(yesR(0.05), 0.6), { gen: 0.05 });
     ince([[q.x1, q.y1 + 0.8], [q.x2, q.y1 + 0.8]], 0.9, css(yesR(1), 0.7), { gen: 0.05 });
     for (const w of SAHNE.kasnakPencereleri(k)) {
@@ -888,7 +917,7 @@
       return [c[0] * (1 + v * 0.12), c[1], c[2] * (1 - v * 0.1)];
     };
     const yonK = (x, y) => { const r0 = kubbeYaricap(y); const u = clamp((x - 560) / Math.max(r0, 1), -1, 1); return Math.PI / 2 + u * 0.6; };
-    boya(kubbe, kk, renkK, yonK, { yog: 1.5, uzun: 9, kalin: 0.7, alfa: 0.5, oynat: 0.1 });
+    boya(kubbe, kk, renkK, yonK, { yog: 1.25, uzun: 10, kalin: 0.75, alfa: 0.62, kontrast: 0.24, duz: 0.35, ara: 2.2 });
     // kaburga sırtları: solda ince koyu, sağda ince açık çizgi
     for (const kb of SAHNE.kaburgalar(16)) {
       const pts = kb.noktalar.filter((q) => q[1] > 306);
@@ -922,8 +951,8 @@
   // ================================================================ bitkiler: botanik titizlikte
   const B = SAHNE.bitki;
   const isik2 = [0.75, -0.66];
-  const yapR = rampa([[0, '#34502F'], [0.4, '#4F6E40'], [0.75, '#738F57'], [1, '#A2B67F']]);
-  const yapR2 = rampa([[0, '#2F5440'], [0.4, '#477257'], [0.75, '#6A9473'], [1, '#9DBB97']]);
+  const yapR = rampa([[0, '#21492B'], [0.4, '#3A6E3C'], [0.75, '#62984F'], [1, '#A6CC80']]);
+  const yapR2 = rampa([[0, '#1B4A40'], [0.4, '#2F6E5A'], [0.75, '#589E7E'], [1, '#9FD2AE']]);
   for (const s of B.saplar) {
     const p = ornekle(s, 2);
     const sol = [], sag = [];
@@ -954,7 +983,7 @@
       // ışıklı yarıda damara yakın açık, kenara doğru koyulaşır; dipte koyu
       return rmp(0.82 - golge - 0.18 * Math.abs(v) * (1 - golge) - 0.2 * (1 - sstep(0, 0.25, u)));
     };
-    boya(yol, kutu, renkY, (x, yy) => y.aci + (((x - y.x) * nx + (yy - y.y) * ny) > 0 ? 0.9 : -0.9), { yog: 1.0, uzun: 4, kalin: 0.5, alfa: 0.4 });
+    boya(yol, kutu, renkY, (x, yy) => y.aci + (((x - y.x) * nx + (yy - y.y) * ny) > 0 ? 0.9 : -0.9), { yog: 1.1, uzun: 5, kalin: 0.55, alfa: 0.6, kontrast: 0.22, ara: 1.9 });
     // orta damar: açık çizgi, yanında koyu gölge; yan damarlar ince ve açık, dışa kıvrılarak
     const [a, b] = SAHNE.yaprakDamari(y);
     ince([a, b].map((q) => [q[0] + nx * yon * 0.7, q[1] + ny * yon * 0.7]), 0.7, css(rmp(0.15), 0.5), { uc: 8 });
@@ -1015,7 +1044,7 @@
         const pembe = 0.25 * (1 - sstep(0.1, 0.42, u));
         return [lerp(col[0], 236, pembe), lerp(col[1], 196, pembe), lerp(col[2], 204, pembe)];
       };
-      boya(yol, kutu, renkT, (x, y) => Math.atan2(y - c.y, x - c.x), { yog: 1.1, uzun: c.r * 0.16 + 2, kalin: 0.45, alfa: 0.35, oynat: 0.04 });
+      boya(yol, kutu, renkT, (x, y) => Math.atan2(y - c.y, x - c.x), { yog: 1.1, uzun: c.r * 0.18 + 2.5, kalin: 0.5, alfa: 0.55, kontrast: 0.14, duz: 0.2, ara: 1.8 });
       // ince ışınsal taç yaprak damarları
       const nd = c.r > 40 ? 9 : 6;
       for (let k = 0; k < nd; k++) {

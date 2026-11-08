@@ -1,0 +1,39 @@
+{
+  "kod": "S-168",
+  "no": 168,
+  "ad": "Tonlu Kâğıtta Suluboya ve Beyaz",
+  "ad_en": "Watercolor and White on Toned Paper",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Açık gri tonlu kâğıtta saydam suluboya yıkamaları ve ince fırçayla sürülmüş örtücü beyaz guaj: beyaz bulutlar, güneş ışıltısı, ışıklı taş, kaburga parıltıları ve çiçek yaprakları.",
+  "tanim": "Hayalî bir ressamın eli. Orta dişli, açık nötr gri tonlu çizim kâğıdı; suluboya için 2 ve 8 numara yuvarlak, gök için yassı fırça, guaj için ince 1 numara yuvarlak fırça. Palet: serüle ve kobalt, yaprak yeşili ve ftalo yeşili, ham ve yanık siena, kinakridon gül, menekşeye çalan gri; titanyum beyazı guaj ve göbekler için biraz sarı guaj. Kâğıdın tonu orta değer olarak kalır; suluboya yalnız koyulaştırır (gök, gölgeler, yeşiller). Işıklar en sonda örtücü beyazla, bilinçli darbelerle sürülür: minarenin ışıklı yanında dikey, kaidede yatay, bulutlarda tümsekleri izleyen kavisli, taç yapraklarda merkezden dışa darbeler; darbe uçları kâğıda kuru sürtülür. Bitirirken kubbe kaburgalarına ve alemlere ince beyaz parıltılar, yaprak kenarlarına açık sarı-yeşil çizgiler, ufka ve güneşli zemine krem renkli kuru fırça pusu ekler.",
+  "koken": "Renkli ya da tonlu kâğıtta beyazla ışık verme (Rönesans'tan beri mavi ve gri kâğıtta beyazla yükseltilmiş çizimler), 19. yüzyıl gezi defterlerinde tonlu kâğıda suluboya ve Çin beyazı ile çalışma ve bugünkü tonlu kâğıt eskiz defteri pratiğine dayanır. Gerçek bir ressamı örnek almaz; atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Açık gri tonlu kâğıt orta ton olarak görünür: göğün alt yarısında, taşın gölge geçişlerinde ve zeminde kâğıdın kendi rengi",
+    "Örtücü beyaz guajla, kavisli kuru fırça darbeleriyle kurulmuş bulutlar; alt kenarları kâğıda sürtülerek eriyor",
+    "Güneş: dolu beyaz çekirdek ve çevresinde dairesel kuru fırça darbeleriyle sürülmüş ışıltı",
+    "Minarenin ışıklı yanında dikey, kaidede yatay, görünür beyaz fırça darbeleri; gölge yanlar saydam leylak-gri suluboya",
+    "Saydam zümrüt yeşili kubbede ışıklı kaburgaların sağında ince beyaz parıltı çizgileri ve açık yeşil guaj ışık darbeleri; alemlerde beyaz parıltı noktaları",
+    "Çiçek yaprakları merkezden dışa beyaz guaj darbeleriyle ve kenarı izleyen ince örtücü çizgiyle; ışıktan uzak yapraklarda guaj inceldiği için gri kâğıt gölge olur"
+  ],
+  "palet": [
+    "#DCD9D2",
+    "#82A7C4",
+    "#A9C79D",
+    "#2F6E3A",
+    "#938E9D",
+    "#FCFBF8",
+    "#CDB194",
+    "#5F864C"
+  ],
+  "kodla_cizim": "Canvas 2D, 1024 piksel. Kâğıt rengi #DCD9D2 olan çarpımsal sır motoru suluboyayı verir; örtücü guaj ayrı bir işlemle karışır: renk = renk × (1 − örtme) + beyaz × örtme. Guaj darbeleri çoklu çizgi boyunca uçları incelen, hafif titrek çokgenler olarak (darbe başına saydamlıkla) maske tuvaline çizilir; örtmenin kısmi olduğu yerlerde kâğıt yüksekliği ve gürültüyle eşiklenerek kuru fırça kırığı oluşur, guaj kalınlığı kabartma haritasına eklenip kalın darbeler ışık yakalar. Bulutlar daire tümseklerini izleyen yay darbeleri ve aşağı doğru seyrelen dolgu; güneş halesi rastgele yarıçaplı yay darbeleri; taç yapraklar yaprak yoluna kırpılmış merkezden dışa darbeler ve kenar çizgisi; kaburga parıltıları kaburga noktalarından kaydırılmış ince darbeler.",
+  "etiketler": [
+    "tonlu kâğıt",
+    "suluboya",
+    "guaj",
+    "beyaz vurgu",
+    "kuru fırça",
+    "eskiz defteri",
+    "ressamın eli"
+  ]
+}

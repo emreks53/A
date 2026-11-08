@@ -1,0 +1,39 @@
+{
+  "kod": "S-169",
+  "no": 169,
+  "ad": "Kuru Fırça Natüralist",
+  "ad_en": "Drybrush Naturalist",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Soluk, yumuşak yıkamaların üstüne neredeyse kuru, ince fırçayla biçimi izleyen binlerce sabırlı darbe: taş damarı, kaburga çizgileri, yaprak damarları ve taç yaprak sırtları; sakin ve ayrıntılı.",
+  "tanim": "Hayalî, sabırlı bir gerçekçi suluboyacının eli. Belirgin dişli, kaba 640 g pamuk kâğıt; ilk yıkamalar için yumuşak bir fırça, ayrıntı için kılları açılmış ve her darbeden önce kâğıt mendile kurutulmuş 0–2 numara samur fırça. Palet doğaldır: serüle, ham siena, sarı okr, yaprak yeşili, Hooker yeşili, yanık umbra, tomurcuklar için kinakridon gül, menekşeyle yumuşatılmış Payne grisi. Önce gök, taş, kubbe ve zemine soluk, yumuşak kenarlı yıkamalar sürer ve kurutur; sonra tonu, biçimi izleyen paralel ince kuru darbelerle kurar: kubbede kaburgalar boyunca, minarede dikey, kaidede yatay taş damarı, kumda kısa darbeler. Boya yalnız kâğıdın tepelerine tutunur, darbeler kırılır; gölgeyi koyu boya yerine darbe sıklığıyla verir. Yapraklarda yan damarlara paralel darbeler atar, damarları açık bırakır; beyaz taç yapraklarda dipten uca ince sırt çizgileri çeker. Bitirirken pencerelere, kaburgalara ve ercik noktalarına keskin koyu ayrıntılar koyar.",
+  "koken": "20. yüzyıl gerçekçi suluboyasının kuru fırça (drybrush) geleneğine ve doğa ile bitki resmindeki ince fırça ayrıntılandırmasına dayanır: kaba kâğıtta az sulu boya, dokuyu kâğıdın dişinden alma ve tonu darbe yoğunluğuyla kurma. Gerçek bir ressamı örnek almaz; atölyenin tanımladığı hayalî bir ressamın elidir. S-049 Kuru Fırça'nın coşkulu, bütün yüzeyi kaplayan darbelerinin aksine darbeler ince, sakin ve yalnız biçimin üstündedir.",
+  "ayirt_edici": [
+    "Kubbe kaburgalar boyunca (meridyen yönünde) ince, kesik kesik kuru fırça darbeleriyle modellenmiş; ışıkta seyrek, gölgede sık",
+    "Boya yalnız kâğıdın tepelerine tutunuyor: kaba kâğıt dokusu darbeleri kırıyor, aralarda beyaz kâğıt noktaları",
+    "Minarede dikey, kaidede yatay ince taş damarı; soluk taş sıraları ve şaşırtmalı derzler",
+    "Yapraklarda yan damarlara paralel ince darbeler; orta ve yan damarlar açık kâğıt olarak kalmış",
+    "Beyaz taç yapraklarda dipten uca yelpaze gibi açılan ince gri-leylak sırt çizgileri; göbeklerde benekli siena noktalar ve ince ercikler",
+    "Sakin, soluk gök ve yumuşak bulutlar; zeminde kısa kuru fırça darbeleriyle kum dokusu"
+  ],
+  "palet": [
+    "#ADCCE1",
+    "#C0D8A3",
+    "#669A5B",
+    "#456342",
+    "#C4B8AE",
+    "#EBDCBD",
+    "#5C854D",
+    "#D4B775"
+  ],
+  "kodla_cizim": "Canvas 2D, 1024 piksel, kaba kâğıt yüksekliği (fbm) ile çarpımsal sır motoru. İlk yıkamalar yumuşak kenarlı maskelerle sürülür. Kuru fırça katmanları yordamsal darbelerdir: kutu içinde rastgele noktalar ışık ya da yoğunluk işlevine göre kabul edilir, yön alanı boyunca (kubbede dönel yüzeyin meridyeni, atan2(1, u·dr/dy)) birkaç adımda ilerletilir ve bölge yoluna kırpılmış 0,7–1,5 px çizgiler olarak maske tuvaline çizilir. Her katman, kapsamayı kâğıt yüksekliği, tane ve akış gürültüsüne karşı yumuşak bir eşikten geçiren kuru fırça seçeneğiyle yıkanır; böylece boya yalnız kâğıdın tepelerinde kalır. Yaprak darbeleri yan damar çizgilerine yaklaşınca atlanır; taç yaprak sırtları dipten uca ikinci derece eğrilerdir; gölge, darbe sıklığıyla verilir.",
+  "etiketler": [
+    "suluboya",
+    "kuru fırça",
+    "gerçekçi",
+    "doğa resmi",
+    "ayrıntılı",
+    "kaba kâğıt",
+    "ressamın eli"
+  ]
+}
