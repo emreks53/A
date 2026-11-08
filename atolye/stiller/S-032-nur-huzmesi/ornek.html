@@ -286,6 +286,13 @@
     g.addColorStop(1, 'rgba(255,210,140,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, W);
+    // ışınların başladığı halkanın içi: kaynağın dolgun parıltısı (hilalin ardında boşluk kalmasın)
+    g = ctx.createRadialGradient(kaynak.x, kaynak.y, 0, kaynak.x, kaynak.y, 24);
+    g.addColorStop(0, 'rgba(255,222,150,0.62)');
+    g.addColorStop(0.55, 'rgba(255,218,146,0.45)');
+    g.addColorStop(1, 'rgba(255,214,140,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(kaynak.x - 24, kaynak.y - 24, 48, 48);
     // hilalin kendisi: ışık kaynağı
     const al = S.alemParcalari(560, 300, 1).hilal;
     const hil = new Path2D(S.hilalYolu(al.cx, al.cy, al.R));
