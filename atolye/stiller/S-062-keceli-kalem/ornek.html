@@ -824,11 +824,11 @@
       ince(uzat(s, tas * k * (1 + R() * 5), tas * k * (1 + R() * 6)), o);
     }
   }
-  function ort(yol, cizgi) {
+  function ort(yol, cizgi, dolguYok) {
     ix.save();
     ix.globalCompositeOperation = 'destination-out';
     ix.fillStyle = '#000';
-    ix.fill(yol);
+    if (!dolguYok) ix.fill(yol);
     if (cizgi) { ix.lineWidth = cizgi; ix.strokeStyle = '#000'; ix.stroke(yol); }
     ix.restore();
   }
@@ -882,7 +882,7 @@
   ort(birlesik(Y.alem));
   alemHat(SAHNE.alemParcalari(560, 300, 1), 1.1);
   // bitkiler
-  for (const s of BIT.saplar) { ort(new Path2D(SAHNE.yol(s)), 5); ince(s, { w: 1.0, tit: 0.4 }); }
+  for (const s of BIT.saplar) { ort(new Path2D(SAHNE.yol(s)), 5, true); ince(s, { w: 1.0, tit: 0.4 }); }
   BIT.yapraklar.forEach((y) => {
     const d = SAHNE.yaprakYolu(y);
     ort(new Path2D(d));

@@ -276,14 +276,25 @@
       const isik = clamp(Math.sin(ph) * 0.62 + Math.cos(ph) * 0.78, 0, 1);
       const pts = prof.map((q) => [560 + u1 * q.r, q.y]).concat(prof.slice().reverse().map((q) => [560 + u2 * q.r, q.y]));
       const xs = pts.map((q) => q[0]);
-      const koyu = mixC(C('#034A3A'), C('#14904A'), isik * isik);
-      const acik = mixC(C('#0A7258'), C('#9FD83A'), Math.pow(isik, 1.6));
+      const koyu = mixC(C('#02584A'), C('#0FA35A'), isik * isik);
+      const acik = mixC(C('#0A8A66'), C('#B4E43A'), Math.pow(isik, 1.6));
       murekkep({
         kutu: [Math.min(...xs) - 2, 298, Math.max(...xs) + 2, 556], ciz: kubbeIc(yolCiz(S.yol(pts, true))), bul: 1.6, gen: 0.1, olc: 0.04,
         renk: [koyu, acik], yon: (x, y) => clamp(0.15 + (555 - y) / 255 * 0.85, 0, 1), renkOlc: 0.02,
         yog: 0.7 + (k % 2) * 0.08, kenar: C('#023A26'), kenarG: 0.7, kenarW: 1.3, bant: 12, kaldir: 0.85,
         halka: [[20, 0.14], [46, 0.1]], altin: k % 4 === 1 ? 0.25 : 0,
       });
+      // ışık alan dilimlerin üst bölümüne açık fıstık yeşili ikinci damla: yanları kaburgada, alt ucu
+      // dilimi kesen kavisli bir gelgit çizgisinde biter
+      if (isik > 0.55) {
+        const cy = 352 + (1 - isik) * 60 + (k % 2) * 14;
+        murekkep({
+          kutu: [Math.min(...xs) - 2, 298, Math.max(...xs) + 2, 520],
+          ciz: (g) => { g.save(); g.clip(P(S.kubbeYolu)); g.clip(P(S.yol(pts, true))); elips(560 + Math.sin(ph) * 150, cy, 70, 78, 0)(g); g.restore(); },
+          bul: 3, gen: 0.16, olc: 0.03, renk: [C('#C8EC4A'), C('#7ED040')], renkOlc: 0.02,
+          yog: 0.45 + (isik - 0.55) * 0.6, kenar: C('#2F7A14'), kenarG: 0.65, kenarW: 1.2, bant: 8, kaldir: 0.6, halka: [[14, 0.12]],
+        });
+      }
     }
   }
   // kaburgalar: alkol kalemiyle çekilmiş açık çizgiler (boyayı kaldırır, iki yanında koyu kenar)

@@ -670,11 +670,11 @@
   }
 
   /** Örtme: önde duran biçimin silueti mürekkep katmanından silinir (arkadaki çizgiler görünmez). */
-  function ort(yol, cizgi) {
+  function ort(yol, cizgi, dolguYok) {
     ix.save();
     ix.globalCompositeOperation = 'destination-out';
     ix.fillStyle = '#000';
-    ix.fill(yol);
+    if (!dolguYok) ix.fill(yol);
     if (cizgi) { ix.lineWidth = cizgi; ix.strokeStyle = '#000'; ix.stroke(yol); }
     ix.restore();
   }
@@ -909,7 +909,7 @@
   // ================================================================ 3. BİTKİLER (önde)
   for (const s of BIT.saplar) {
     const yol = new Path2D(SAHNE.yol(s));
-    ort(yol, 4);
+    ort(yol, 4, true);
     kalem(s, { w: 1.35, tit: 0.8, dalga: 60, son: 20 });
     kalem(s.map((q) => [q[0] + 2.2, q[1]]).slice(2, -4), { w: 0.55, alfa: 0.6 });
   }

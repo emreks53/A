@@ -454,12 +454,12 @@
     kovalar = new Map();
     damlalar.length = 0;
   }
-  function ort(yol, cizgi) {
+  function ort(yol, cizgi, dolguYok) {
     bas();
     ix.save();
     ix.globalCompositeOperation = 'destination-out';
     ix.fillStyle = '#000';
-    ix.fill(yol);
+    if (!dolguYok) ix.fill(yol);
     if (cizgi) { ix.lineWidth = cizgi; ix.strokeStyle = '#000'; ix.stroke(yol); }
     ix.restore();
   }
@@ -802,7 +802,7 @@
 
   // ================================================================ 10. BİTKİLER
   for (const s of BIT.saplar) {
-    ort(new Path2D(SAHNE.yol(s)), 4);
+    ort(new Path2D(SAHNE.yol(s)), 4, true);
     tk(titret(s, 0.6, 50, NF, R() * 99), YESIL, { bas: 0.9, w: 1.1 });
     tk(titret(s.map((q) => [q[0] + 2.4, q[1]]), 0.6, 50, NF, R() * 99), YESIL, { bas: 0.8, w: 1.0 });
     bas();
