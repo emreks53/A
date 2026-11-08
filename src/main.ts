@@ -284,6 +284,12 @@ async function setupPwa(): Promise<void> {
   registerSW({ immediate: true });
 }
 
+// iOS'ta ana ekrana eklenmiş uygulama (PWA): durum çubuğu yazısı hep beyazdır (black-translucent); açık zeminli
+// ekranlar onun altına hafif gölge koyar (kenz.css, gunes.css)
+if (!Capacitor.isNativePlatform() && (navigator as Navigator & { standalone?: boolean }).standalone === true) {
+  document.documentElement.classList.add('ios-pwa');
+}
+
 if (Capacitor.isNativePlatform()) {
   void setupNative();
 } else if ('serviceWorker' in navigator && import.meta.env.PROD && window.self === window.top) {

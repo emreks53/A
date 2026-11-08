@@ -973,6 +973,8 @@ await adim('Güneş kütüphanesi: üstte nurlu Kur\'an-ı Kerim (süs, dokunulm
   );
   assert.deepEqual(new Set(adlar.map((a) => `${a.renk}|${a.aile}|${a.tasar}`)), new Set(['rgb(248, 226, 212)|"EB Garamond"|false']));
   assert.ok(Math.max(...adlar.map((a) => a.boy)) >= 20, `en büyük ad ${Math.max(...adlar.map((a) => a.boy))}`);
+  // uzun adlar da eski raftakinden (390'da 15,6 px) küçük değil: Kastamonu Lâhikası iki satır
+  assert.ok(adlar[ESERLER.indexOf('Kastamonu Lâhikası')].boy >= 15.6, `Kastamonu ${adlar[ESERLER.indexOf('Kastamonu Lâhikası')].boy}`);
   // Bütün ciltler tek renk (#D7787B); sırtlarda süzgeç (filter) yok
   const renkler = await page.locator('#view-gunes .cilt__deri').evaluateAll((l) => l.map((d) => [getComputedStyle(d).backgroundColor, getComputedStyle(d).filter, getComputedStyle(d.parentElement).filter]));
   assert.deepEqual(new Set(renkler.map((r) => r.join())), new Set(['rgb(215, 120, 123),none,none']));
@@ -1308,6 +1310,33 @@ await adim('telefon tarayıcısında (360 x 640) iki yığın ve kart menünün 
     assert.equal(await sayfaNo(p2), '7 / 36');
   } finally {
     await c2.close();
+  }
+});
+
+await adim('kısa telefonlarda (375 x 553, 360 x 560, 320 x 568 çentikli) kart ve iki yığın menünün üstüne sığar; yatay telefonda Kur\'an solda, yığınlar sağda, kaydırma yok', async () => {
+  for (const [w, h, ust] of [[375, 553, 0], [360, 560, 0], [320, 568, 20], [844, 390, 0], [740, 360, 0]]) {
+    const c2 = await browser.newContext({ viewport: { width: w, height: h }, isMobile: true, hasTouch: true });
+    try {
+      const p2 = await c2.newPage();
+      p2.on('pageerror', (e) => hatalar.push(String(e)));
+      await p2.addInitScript(() => localStorage.setItem('nuruhakikat.gunes.yer', JSON.stringify({ lemalar: { sayfa: 8, zaman: Date.now() } })));
+      await p2.goto(base + '#/gunes');
+      await p2.waitForSelector('#view-gunes .gunes__devam:not([hidden])');
+      if (ust) await p2.evaluate((u) => document.documentElement.style.setProperty('--safe-area-inset-top', `${u}px`), ust);
+      await p2.evaluate(() => document.fonts.ready);
+      const o = await p2.evaluate(() => {
+        const menu = document.querySelector('.tabbar').getBoundingClientRect().top;
+        const ciltler = Array.from(document.querySelectorAll('#view-gunes .cilt'), (c) => c.getBoundingClientRect());
+        const kart = document.querySelector('#view-gunes .gunes__devam').getBoundingClientRect();
+        const sahne = document.querySelector('#view-gunes .gunes__sahne').getBoundingClientRect();
+        const g = document.querySelector('.gunes');
+        return { menu, enAlt: Math.max(...ciltler.map((r) => r.bottom), kart.bottom), kaydirma: g.scrollHeight - g.clientHeight, yatay: document.documentElement.scrollWidth - innerWidth, sahneSag: sahne.right, yiginSol: Math.min(...ciltler.map((r) => r.left)) };
+      });
+      assert.ok(o.kaydirma <= 0 && o.yatay <= 0 && o.enAlt <= o.menu - 15, `${w}x${h} ${JSON.stringify(o)}`);
+      if (w > h) assert.ok(o.sahneSag <= o.yiginSol + 1, `yatayda Kur'an solda ${JSON.stringify(o)}`);
+    } finally {
+      await c2.close();
+    }
   }
 });
 

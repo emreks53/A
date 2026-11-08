@@ -9,7 +9,7 @@
 import { Capacitor } from '@capacitor/core';
 import { baglanti, kitaplar } from 'virtual:kitaplar';
 import { kuranSvg } from '../oku/kuran-cizim';
-import { kalinlikMm, KULLIYAT, SIRT, tipografik, YIGIN_SUTUN } from '../oku/ortak';
+import { KALINLIK, kalinlikMm, KULLIYAT, SIRT, tipografik, YIGIN_SUTUN } from '../oku/ortak';
 import { basiliSayfa, bolumBul, disAdres, kitapKimligi, type Kitap } from './ortak';
 import { sonOkunan } from './yer';
 
@@ -81,6 +81,9 @@ function ciltKur(ad: (typeof KULLIYAT)[number], kitap: Kitap | undefined, dis: s
 
 export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
   const kitaplik = el('div', 'gunes');
+  // uzun yığının oran toplamı: yatay ekranda ölçek (--S) yığın yüksekliğinden bulunur
+  const yiginBoyu = Math.max(...[KULLIYAT.slice(0, YIGIN_SUTUN), KULLIYAT.slice(YIGIN_SUTUN)].map((a) => a.reduce((t, ad) => t + KALINLIK[ad], 0)));
+  kitaplik.style.setProperty('--yigin-boy', yiginBoyu.toFixed(4));
   const ic = el('div', 'gunes__ic');
 
   const sahne = el('div', 'gunes__sahne');

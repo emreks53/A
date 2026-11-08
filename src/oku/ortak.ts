@@ -69,7 +69,8 @@ export const SIRT: Record<KulliyatEseri, { satirlar: string[]; kisa: string; em:
   'Mesnevî-i Nûriye': { satirlar: ['Mesnevî-i Nûriye'], kisa: 'Mesnevî', em: 7.183, hm: 0.645 },
   "İşârâtü'l-İ'câz": { satirlar: ['İşârâtü’l-İ’câz'], kisa: 'İşârât', em: 5.525, hm: 0.635 },
   'Barla Lâhikası': { satirlar: ['Barla Lâhikası'], kisa: 'Barla', em: 5.893, hm: 0.375 },
-  'Kastamonu Lâhikası': { satirlar: ['Kastamonu Lâhikası'], kisa: 'Kastamonu', em: 8.494, hm: 0.375 },
+  // tek satırda bant enine sığmak için küçülürdü (390'da 14,6 px); iki satırda 16,5 px
+  'Kastamonu Lâhikası': { satirlar: ['Kastamonu', 'Lâhikası'], kisa: 'Kastamonu', em: 4.772, hm: 0.805, dy: -0.015 },
   'Emirdağ Lâhikası': { satirlar: ['Emirdağ Lâhikası'], kisa: 'Emirdağ', em: 7.259, hm: 0.645 },
   'Sikke-i Tasdîk-i Gaybî': { satirlar: ['Sikke-i Tasdîk-i Gaybî'], kisa: 'Sikke', em: 9.128, hm: 0.645 },
   'Tarihçe-i Hayat': { satirlar: ['Tarihçe-i Hayat'], kisa: 'Tarihçe', em: 6.419, hm: 0.645 },
@@ -100,6 +101,7 @@ export const SATIR_EM: Record<string, number> = {
   Mesnevî: 3.418,
   Barla: 2.171,
   Kastamonu: 4.772,
+  Lâhikası: 3.487,
   Emirdağ: 3.537,
   Sikke: 2.249,
   Tarihçe: 3.098,

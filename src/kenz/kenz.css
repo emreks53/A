@@ -61,6 +61,16 @@
   height: calc(var(--safe-top) + 10px);
   background: linear-gradient(180deg, var(--sabah-ust) 55%, rgba(251, 246, 242, 0));
 }
+.ios-pwa .kenz__ust-perde::before {
+  /* iOS ana ekran uygulamasında beyaz durum çubuğu yazısının altında hafif sıcak gölge (gunes.css'teki gibi) */
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--safe-top);
+  background: linear-gradient(180deg, rgba(58, 43, 39, 0.42), rgba(58, 43, 39, 0));
+}
 .kenz__alt-perde {
   bottom: 0;
   height: calc(var(--menu-ust) + 28px);
