@@ -1,0 +1,38 @@
+{
+  "kod": "S-034",
+  "no": 34,
+  "ad": "Kayık Dolgu",
+  "ad_en": "Offset Fill Line Art",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Eşit kalınlıkta ince lacivert çizgiler, çizgiden kaymış ve her zaman ona ulaşmayan düz renk dolgular, gölgelerde yarım ton noktaları.",
+  "tanim": "Görüntü iki ayrı levha gibi kurulur: üstte lacivert (siyah değil) mürekkep levhası, altta düz renk dolgu levhası. Mürekkep levhasında bütün biçimler eşit kalınlıkta, ince (yaklaşık 1,7 px) çizgilerle çizilir ve gölgeler 45° açılı yarım ton noktalarıyla verilir; dolgu levhası opak düz renklerden (yeşil, mercan, hardal, gök mavisi) oluşur, bütünüyle çizgilere göre sağ alta birkaç piksel kaydırılır ve bazı biçimlerde içe çekilir, böylece renk bir yanda çizgiyi taşar, öbür yanda kâğıt beyazı bir boşluk bırakır. Renkler üst üste çarpılmaz: öndeki dolgu arkadakini örter, öndeki biçim arkadaki çizgileri siler. Zemin kırık beyaz, ince lifli kâğıttır ve kâğıt dâhil yalnız 6 renk kullanılır; sonuç zarif ve oyunbaz bir editoryal görünümdür.",
+  "koken": "Serigrafi ve ofset baskıdaki kayıt kayması (misregistration) estetiğine, çizgi levhası ile renk levhalarının ayrı hazırlandığı çizgi-ve-düz-renk illüstrasyon pratiğine ve 2010'lardan beri editoryal ve ambalaj illüstrasyonunda sevilen kaydırılmış dolgu (\"offset fill\") eğilimine dayanır; yarım ton noktaları ticari baskı tramından gelir. Atölye tarifi S-027 Risograf'tan farklı olarak üst üste çarpılan mürekkep kullanmaz: opak dolgular, tek renk ince mürekkep çizgisi, tek yönde sabit kayma, bazı dolguların çizgiye ulaşmaması ve gölgede yalnız mürekkep rengiyle yarım ton.",
+  "ayirt_edici": [
+    "Bütün çizgiler eşit kalınlıkta, ince ve lacivert",
+    "Dolgular sağ alta kaymış: kubbe ve kasnağın yeşili sağda çizgiyi taşar, solda kâğıt beyazı boşluk kalır; altın alemler kendi çizgisinin yanına kaymış",
+    "Kubbenin, kasnağın, minarenin ve kaidenin gölge tarafında 45° yarım ton noktaları",
+    "Taç yapraklarda mercan dolgu yalnız merkeze yakın; renk çizgiye ulaşmıyor",
+    "Köşeleri yuvarlatılmış gök mavisi alan, güneş çevresinde kâğıt beyazı hale ve kısa ışın çizgileri",
+    "Kırık beyaz, ince lifli kâğıt; zeminde seyrek hardal noktaları"
+  ],
+  "palet": [
+    "#F6F0E3",
+    "#1E2A57",
+    "#35A27A",
+    "#F08A7E",
+    "#F3B23E",
+    "#A3CFEA"
+  ],
+  "kodla_cizim": "Üç tuval kullanılır: dolgu levhası, mürekkep levhası ve 2048 px'lik ana tuval. Sahne ressam sırasıyla bir kez dolaşılır; her öğe dolgu levhasına opak rengini (gerekirse 'destination-out' kenar çizgisiyle içe çekilmiş hâlini) çizer, mürekkep levhasında önce kendi alanını silerek arkadaki çizgileri gizler, sonra Path2D çizgisini ve gölge alanından (dönel yüzey ve silindir normallerinden n·L) boyutu hesaplanan, 45° döndürülmüş ızgaradaki yarım ton dairelerini çizer. Baskı adımında kâğıt rengi, (6; 4,5) px kaydırılmış dolgu levhası ve mürekkep levhası üst üste konur; en sonda piksel gürültüsü ve rastgele kısa liflerden kâğıt dokusu eklenir.",
+  "etiketler": [
+    "çizgi illüstrasyon",
+    "kaydırılmış dolgu",
+    "kayıt kayması",
+    "yarım ton",
+    "editoryal",
+    "kâğıt dokusu",
+    "sınırlı palet",
+    "lacivert mürekkep"
+  ]
+}

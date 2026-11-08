@@ -1,0 +1,22 @@
+{
+  "kod": "S-080",
+  "no": 80,
+  "ad": "Karışık Teknik",
+  "ad_en": "Mixed Media",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Gesso, kolaj, akrilik lavi, şablon, altın varak, mürekkep, kurşun kalem ve serpintinin katman katman bir arada kullanıldığı resim.",
+  "tanim": "Karışık teknik, tek bir resimde birden çok malzemenin üst üste kullanılmasıdır: dokulu gesso zemine desenli kâğıtlar yapıştırılır, üstünden saydam akrilik lavi ve akıntılar geçer, şablonla desen basılır, altın varak konur; en sonda opak boya, mürekkep çizgisi ve kalem işaretleri eklenir. Katmanlar birbirinin içinden görünür; kâğıdın çizgisi lavinin altından, kalemin ön çizimi boyanın kenarından sezilir. Sanat defterlerinde (art journal), illüstrasyonda ve çağdaş resimde sevilen, zengin ama bilinçle düzenlenmiş bir yüzey üretir.",
+  "koken": "Malzemeleri karıştırma fikri Kübistlerin 1912'deki kolajlarına ve Dada'nın buluntu nesne resimlerine dayanır; Kurt Schwitters'in Merz kolajları, Robert Rauschenberg'in 'combine' resimleri ve Joseph Cornell'in kutuları yolu açtı. Gesso, akrilik ve kolajla katmanlı çalışma 1990'lardan sonra sanat defteri ve scrapbook kültürüyle yaygınlaştı; bugün illüstratörler ve resim atölyeleri tekniği şablonlar, damgalar ve varakla sürdürüyor.",
+  "ayirt_edici": [
+    "Yazısız desenli kâğıt kolajı: kareli, çizgili defter, çiçek desenli, noktalı ve şeritli kâğıt parçaları, hafif gölgeleriyle",
+    "Saydam akrilik lavi: turkuaz gök, sol üstte lacivert, güneş çevresinde şeftali, zeminde okr ve toprak; kenarda koyulaşma ve aşağı süzülen akıntılar",
+    "Süngerle basılmış şablon desenleri: beyaz nokta ızgarası, altın sekiz köşeli yıldız örgüsü",
+    "Kırık kenarlı, çatlaklı altın varak güneş ve çevresinde küçük varak pulları",
+    "Kubbede, kasnakta ve kaidede kuru fırça izli opak akrilik; üstünde köşelerden taşan titrek mürekkep çizgileri ve gölge taramaları",
+    "Kurşun kalem ön çizimi, eksen ve ölçü çizgileri, çarpı işaretleri; beyaz, siyah ve altın boya serpintisi; bütün yüzeyde gesso fırça kabartması"
+  ],
+  "palet": ["#46AEB0", "#3A5BAE", "#F4A46A", "#E0A24E", "#2E8A4A", "#E8664E", "#E2B54C", "#18161E"],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, katman sırasıyla çizilir. Gesso için gri bir tuvale binlerce yarı saydam fırça darbesi çekilir, gradyanından sağ üstten ışıklı kabartma haritası çıkarılır ve en sonda bütün resme 'overlay' kipiyle basılır. Kolaj kâğıtları döndürülmüş, bir kenarı yırtık, gölgeli dikdörtgenlere çizilen desenlerdir. Lavi, biçim maskesinin bulanık kopyasıyla farkından kenar koyulaşması, fbm gürültüsünden yoğunluk farkı alan ve 'multiply' kipiyle binen bir katmandır; akıntılar damla uçlu eğrilerdir. Şablonlar gürültü eşiğiyle süngerlenir. Varak, buruşukluk gürültüsü ve ince çatlak çizgileriyle piksel piksel gölgelenen, pürüzlü maskeli bir yamadır. Opak boya, kıl izlerinden oluşan kuru fırça darbeleriyle ayrı tuvallerde boyanıp gürültülü eşikli 'gevşek maskeler'le kırpılır. Mürekkep, gizli bir SVG yolundan örneklenen noktaların gürültüyle titretilip parça parça değişen kalınlıkla, düz kenarlarda köşelerden taşırılarak çizilmesidir; kalem çizgileri ince, yarı saydam gridir; serpinti kümelenmiş elips damlalardır.",
+  "etiketler": ["karışık teknik", "kolaj", "akrilik", "mürekkep", "varak", "şablon", "sanat defteri", "doku"]
+}

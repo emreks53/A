@@ -104,7 +104,7 @@ function profil(fn, n) {
 }
 // taş için iki kademeli gölge taneleri (şeftali → çivit), yeşil için petrol, altın için mercan
 const TAS = [{ renk: K.seftali, f: aralik(0.08, 0.62, 0.95) }, { renk: K.civit, f: aralik(0.55, 1.1, 0.55) }];
-const YESIL = [{ renk: K.krem, f: (t) => (t < -0.12 ? Math.min(0.42, (-t - 0.12) * 1.4) : 0) }, { renk: K.petrol, f: aralik(0.05, 0.95, 0.92) }];
+const YESIL = [{ renk: K.krem, f: (t) => (t < -0.18 ? Math.min(0.32, (-t - 0.18) * 1.2) : 0) }, { renk: K.petrol, f: aralik(0.05, 0.95, 0.92) }];
 const ALTIN = [{ renk: K.krem, f: (t) => (t < 0 ? Math.min(0.75, -t * 2.2) : 0) }, { renk: K.mercan, f: aralik(0.15, 0.95, 0.9) }];
 
 // ================================================================== gök, güneş, bulutlar
@@ -116,7 +116,7 @@ function gok() {
   }, [
     { renk: K.civit, f: (t) => 0.78 * Math.pow(clamp(1 - t.y / 560), 1.5) * smooth(60, 330, t.ds) },
     { renk: K.seftali, f: (t) => 0.8 * smooth(440, 690, t.y) * (1 - smooth(720, 800, t.y) * 0.7) + 0.5 * Math.exp(-(t.ds - 50) / 150) * (t.ds > 50 ? 1 : 0) },
-    { renk: K.krem, f: (t) => 0.92 * Math.pow(smooth(620, 800, t.y), 1.5) + 0.7 * Math.exp(-(t.ds - 52) / 70) * (t.ds > 52 ? 1 : 0) },
+    { renk: K.krem, f: (t) => 0.8 * Math.pow(smooth(620, 800, t.y), 1.5) + 0.7 * Math.exp(-(t.ds - 52) / 70) * (t.ds > 52 ? 1 : 0) },
   ]);
   // güneş
   const g = P2(S.daireYolu(880, 140, 54));
@@ -253,7 +253,7 @@ function kaide() {
   const yol = P2(S.yollar().kaide);
   dolgu(yol, C.krem);
   tane(yol, [Kd.x1, Kd.y1, Kd.x2, Kd.y2], (X, Y) => {
-    let t = 0.3 - (X - Kd.x1) / (Kd.x2 - Kd.x1) * 0.3;      // sola doğru hafif koyulaşma
+    let t = 0.5 - (X - Kd.x1) / (Kd.x2 - Kd.x1) * 0.28;     // sola doğru hafif koyulaşma
     t += 0.85 * smooth(722, 704, Y);                         // kornişin altındaki gölge
     t += 0.35 * smooth(770, 800, Y);                         // zemine yakın
     t += 0.6 * smooth(Kd.x1 + 10, Kd.x1, X);                 // sol köşe
@@ -336,7 +336,7 @@ function bitkiler() {
         // taç yaprak hafif çanak: merkeze yakın ve ışığa sırtı dönük taraf gölgede
         const yon = (rx * Lv[0] + ry * Lv[1]) / (Math.hypot(rx, ry) || 1);
         const dxe = X - e.cx, dye = Y - e.cy; const kenar = ((dxe * Math.cos(e.aci) + dye * Math.sin(e.aci)) / e.rx) ** 2 + ((-dxe * Math.sin(e.aci) + dye * Math.cos(e.aci)) / e.ry) ** 2;
-        return { rr, s: 0.32 + 0.38 * yon + 0.3 * smooth(0.55, 1, kenar) * (yon > -0.2 ? 1 : 0.4) };
+        return { rr, s: 0.32 + (c.r < 30 ? 0.2 : 0) + 0.38 * yon + 0.3 * smooth(0.55, 1, kenar) * (yon > -0.2 ? 1 : 0.4) };
       }, [
         { renk: K.seftali, f: (q) => smooth(0.25, 0.85, q.s) * 0.75 },
         { renk: K.mercan, f: (q) => smooth(0.45, 0.1, q.rr) * 0.85 },

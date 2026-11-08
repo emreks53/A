@@ -434,7 +434,12 @@
       case T.hale: { const g = Math.hypot(x - 880, y - 140); return Dm(Dm(C.sari, C.seftali, sstep(60, 124, g)), C.pembe, 0.25 * sstep(90, 124, g) * w); }
       case T.isin: return a.r1 < 0.5 ? Dm(C.altin, C.turuncu, sstep(60, 120, Math.hypot(x - 880, y - 140))) : Dm(C.turuncu, C.mercan, sstep(60, 120, Math.hypot(x - 880, y - 140)));
       case T.gunes: { const g = Math.hypot(x - 880, y - 140) / 50; return g < 0.6 ? Dm(C.sari, C.altin, sstep(0, 0.6, g)) : Dm(C.altin, C.turuncu, sstep(0.6, 1, g)); }
-      case T.bulut: { const v = (y - a.y0) / Math.max(1, a.y1 - a.y0); return Dm(Dm(sifir, C.lila, 0.5 * sstep(0.3, 1.1, v + (w - 0.5) * 0.4)), C.pembe, 0.35 * sstep(0.5, 0.9, w) * (1 - v)); }
+      case T.bulut: {
+        const v = (y - a.y0) / Math.max(1, a.y1 - a.y0), u = (x - a.x0) / Math.max(1, a.x1 - a.x0);
+        let d = Dm(sifir, C.lila, 0.75 * sstep(0.25, 1.05, v + (w - 0.5) * 0.4));
+        d = Dm(d, C.pembe, 0.5 * sstep(0.45, 0.9, w) * (1 - v) * sstep(0.2, 0.9, u));
+        return Dm(d, C.acikMavi || Dh('#9FD3F0'), 0.35 * sstep(0.6, 0.0, u) * (1 - v));
+      }
       case T.kubbe: {
         const L = kubbeIsik(x, y), g = 1 - L;
         let d = Dm(C.cimen, C.zumrut, sstep(0.05, 0.45, g + (w - 0.5) * 0.25));
@@ -445,7 +450,7 @@
       }
       case T.kasnak: { const k = y < 610 ? SAHNE.kasnak[0] : SAHNE.kasnak[1], L = silindirIsik(x, 560, (k.x2 - k.x1) / 2 + 2); return Dm(Dm(C.zumrut, C.teal, sstep(0.9, 0.4, L)), C.laci, 0.5 * sstep(0.5, 0.15, L) + 0.2 * w); }
       case T.pencere: return Dm(C.civit, C.mor, 0.35 * w);
-      case T.kaide: { const tt = (x - 300) / 520; let d = Dm(C.seftali, C.gul, sstep(0.75, 0.3, tt + (w - 0.5) * 0.3)); d = Dm(d, C.lila, sstep(0.3, 0.0, tt) * 0.9); return Dm(d, sifir, 0.25 * sstep(0.6, 1, tt)); }
+      case T.kaide: { const tt = (x - 300) / 520; let d = Dm(C.seftali, C.gul, sstep(0.75, 0.3, tt + (w - 0.5) * 0.3)); d = Dm(d, C.lila, sstep(0.3, 0.0, tt) * 0.9); d = Dm(d, C.altin, 0.3 * sstep(0.55, 1, tt) * w); return d.map((v) => v * 1.3); }
       case T.kornis: return Dm(Dm(C.krem, C.altin, 0.45), C.seftali, 0.4 * w);
       case T.minare: case T.serefe: case T.topuz: {
         const r = t === T.topuz ? 22 : minareYari(y), L = silindirIsik(x, 300, r + 1);
@@ -453,7 +458,7 @@
         d = Dm(d, C.gul, 0.3 * sstep(0.7, 0.4, L));
         d = Dm(d, C.lila, sstep(0.55, 0.15, L));
         if (t === T.serefe) d = Dm(d, C.altin, 0.35);
-        return d;
+        return d.map((v) => v * 1.3);
       }
       case T.korkuluk: return Dm(C.mor, C.lila, 0.4 + 0.3 * w);
       case T.zikzak: { const k = Math.floor((a.cy - 522) / 15); return k % 2 ? Dm(C.fusya, C.eflatun, w) : Dm(C.altin, C.turuncu, 0.3 * w); }

@@ -1,0 +1,22 @@
+{
+  "kod": "S-069",
+  "no": 69,
+  "ad": "Renkli Kazıma",
+  "ad_en": "Color Scratchboard",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Siyah yüzey sivri uçla kazınır; ince, ışıl ışıl renkli çizgiler karanlıktan çıkar.",
+  "tanim": "Kazıma (scratchboard), beyaz kil ya da renkli bir alt katmanın üstü siyah mürekkeple kaplanmış bir levhanın sivri bir uçla kazınmasıdır; kazınan her çizgi alttaki rengi açığa çıkarır. Resim karanlıktan ışığa doğru yapılır: ışıklı yerde çizgiler sıklaşıp kalınlaşır, gölgede incelip kesik noktalara döner, kazınmayan yer simsiyah kalır. Renkli biçiminde ya gökkuşağı renkli kazıma kâğıdı kullanılır ya da kazınmış beyaz çizgiler sonradan saydam mürekkeplerle boyanır. Kitap ve dergi resimlemesinde, doğa ve hayvan çiziminde, ambalaj ve etiket grafiğinde görülür.",
+  "koken": "Tekniğin öncüsü 19. yüzyılda İngiltere ve Fransa'da gravür baskının ucuz bir karşılığı olarak geliştirilen kil kaplı kazıma kartonlarıdır. 20. yüzyılın başında gazete ve kitap resimlemesinde yaygınlaştı; Lynd Ward ve Thomas Nason gibi sanatçılar ağaç baskı etkisini kazımayla aradı. Günümüzde Scott McKowen tiyatro afişleriyle, Mark Summers kitap kapaklarıyla tanınır; gökkuşağı renkli kazıma kâğıtları da sanat eğitiminde yaygındır.",
+  "ayirt_edici": [
+    "Simsiyah zeminden çıkan ince renkli çizgiler: güneşten dışa sarı, turuncu, macenta, mor, mavi ve turkuaza dönen gökkuşağı kazıma göğü",
+    "Ton çizgi kalınlığıyla kurulmuş: güneşe ve ufka yakın yatay çizgiler kalınlaşıp birleşiyor, sol üstte incelip kesik noktalara dönüyor",
+    "Kubbede meridyen çizgileri ve ışıklı yanda paralellerle çapraz tarama; maviden zümrüt yeşiline, oradan limon sarısına geçen renk",
+    "Kazınmamış siyah çizgiler biçimi ayırıyor: kubbe kaburgaları, taş derzleri, pencere içleri, taç yaprak konturları",
+    "Taç yapraklarda merkezden ışınsal çizgiler, çiçek ortalarında kazınmış benekler; yapraklarda damar yönünde balıksırtı tarama",
+    "Güneş diski tamamen kazınmış, çevresinde uçlara doğru incelen kırk sekiz ışın; zeminde kazınmış ot vuruşları"
+  ],
+  "palet": ["#0E0D10", "#FFD23A", "#FF9A2E", "#E040B8", "#9A4FF0", "#2EB8F0", "#5EDC5A", "#FF9CCB"],
+  "kodla_cizim": "Görüntü 2048 iç çözünürlükte piksel piksel hesaplanır. Her öğe kendi biçimini izleyen bir çizgi ailesinin koordinatını taşır: gökte dalgalandırılmış yatay çizgiler, kubbede boylam (asin((x−560)/r(y))) ile meridyenler ve ışıklı yanda paraleller, kasnak ve minarede silindir boylamı, kaidede yatay sıralar, taç yapraklarda çiçek merkezine göre açı, yapraklarda yaprak eksenine göre balıksırtı, bulutlarda bulut maskesinin tam öklid uzaklık dönüşümünden bulunan iç derinlik (kontur çizgileri). Pikselin en yakın çizgi merkezine piksel cinsinden uzaklığı, ışık modelinden (kubbe normali, silindir ışığı, güneşe uzaklık) gelen kapsamaya bağlı yarı genişlikle yumuşak eşiklenir; ince gürültü kenarı pürüzlendirir, böylece karanlıkta çizgiler kesik noktalara döner. Güneş, ışınlar, pencere çerçeveleri, kaburga vurguları, korkuluklar, zikzak ve ot vuruşları ayrı bir tuvale incelen çizgiler olarak kazınır; pencere içleri, kaburgalar, derzler ve bölge sınırları kazınmamış siyah boşluk olarak bırakılır. Açığa çıkan renk, gökte güneşe uzaklığa bağlı gökkuşağı rampasından, öğelerde mürekkep rampalarından örneklenir; siyah yüzey hafif parlaklık ve ince dokuyla verilir.",
+  "etiketler": ["kazıma", "scratchboard", "çizgi", "tarama", "siyah zemin", "gökkuşağı"]
+}

@@ -118,6 +118,13 @@
     g.fillStyle = ALT; g.fillRect(K.kornis.x1, K.kornis.y1, K.kornis.x2 - K.kornis.x1, 2.5);
     g.fillStyle = KOYU; g.fillRect(K.kornis.x1, K.kornis.y2 - 1, K.kornis.x2 - K.kornis.x1, 2.5);
     g.fillStyle = GOLGE; g.fillRect(K.x1, K.y1 + 1, K.x2 - K.x1, 10);
+    g.lineCap = 'round';
+    g.strokeStyle = 'rgba(24,110,60,0.95)';
+    g.lineWidth = 5;
+    for (const sp of S.bitki.saplar) g.stroke(new Path2D(S.yol(sp)));
+    g.strokeStyle = 'rgba(150,215,90,0.9)';
+    g.lineWidth = 1.4;
+    for (const sp of S.bitki.saplar) { g.save(); g.translate(1, -0.5); g.stroke(new Path2D(S.yol(sp))); g.restore(); }
     for (const q of S.kasnak) { g.fillStyle = ALT; g.fillRect(q.x1, q.y1, q.x2 - q.x1, 2); g.fillStyle = KOYU; g.fillRect(q.x1, q.y2 - 2, q.x2 - q.x1, 2); }
   }
   const detayV = detay.getContext('2d').getImageData(0, 0, W, W).data;
@@ -168,7 +175,7 @@
     if (r() < 0.36) return secAgirlik(r, [{ p: 3, c: C.beyaz, w: [1.2, 4], h: 0.7 }, { p: 1.2, c: C.gumus, w: [1, 2.5], h: 0.4 }, { p: 1.4, c: C.lacivert, w: [1, 3], h: 0.2 }, { p: 1, c: C.turkuaz, w: [1, 3], h: 0.5 }]);
     if (t < 0.3) return secAgirlik(r, [{ p: 3, c: C.lacivert, w: [14, 40], h: 0.1 }, { p: 2, c: C.kobalt, w: [10, 30] }, { p: 0.6, c: C.turkuaz, w: [4, 10], hc: 0.4, ic: C.lacivert }]);
     if (t < 0.55) return secAgirlik(r, [{ p: 2, c: C.kobalt, w: [10, 28] }, { p: 3, c: C.gokmavi, w: [12, 36] }, { p: 1, c: C.turkuaz, w: [5, 14], hc: 0.6, ic: C.lacivert }, { p: 0.7, c: C.lacivert, w: [4, 10] }]);
-    return secAgirlik(r, [{ p: 2.2, c: C.gokmavi, w: [8, 24] }, { p: 2.5, c: C.acikmavi, w: [10, 30], hc: 0.5, ic: C.gokmavi }, { p: 1, c: C.turkuaz, w: [5, 14], hc: 0.5, ic: C.kobalt }, { p: 1.4, c: C.beyaz, w: [6, 18], hc: 1.0, ic: C.gokmavi, h: 0.7 }]);
+    return secAgirlik(r, [{ p: 2.2, c: C.gokmavi, w: [8, 24] }, { p: 2.5, c: C.acikmavi, w: [10, 30], hc: 0.5, ic: C.kobalt }, { p: 1, c: C.turkuaz, w: [5, 14], hc: 0.5, ic: C.lacivert }, { p: 1.4, c: C.beyaz, w: [6, 18], hc: 1.0, ic: C.kobalt, h: 0.7 }]);
   });
   // güneş çevresi: beyaz-krem halka dökmesi (puddle)
   const tGunes = tablo(12, 0, 220, (t, r) => {
@@ -377,7 +384,7 @@
       } else if (b === IX.cicekOrta) {
         c = mix(c, C.altin, 0.3);
       }
-      const dk = kay[i] * 4, da2 = detayV[dk + 3] / 255;
+      const dk = kay[i] * 4, da2 = b === IX.cicek || b === IX.cicekOrta || b === IX.yaprak ? 0 : detayV[dk + 3] / 255;
       if (da2 > 0.02) { c = mix(c, [detayV[dk], detayV[dk + 1], detayV[dk + 2]], da2); h += 0.4 * da2; }
       R[i] = c[0]; G[i] = c[1]; B[i] = c[2]; H[i] = h;
       HC[i] = da2 > 0.3 ? 0 : e.hc;
@@ -420,7 +427,7 @@
         const e = TABLOLAR[ti][k];
         const ic = e.ic || C.lacivert;
         const ekle = (hx, hy, hr, hz) => {
-          const hc2 = { x: hx, y: hy, r: hr, ux: -gys, uy: gxs, uz: hz, ic, kenar: e.c, ic2: r() < 0.3 };
+          const hc2 = { x: hx, y: hy, r: hr, ux: -gys, uy: gxs, uz: hz, ic, kenar: e.c, ic2: r() < 0.3, ak: b === IX.kubbe || b === IX.yaprak ? 0.32 : b === IX.gok ? 0.6 : 0.5 };
           hucreler.push(hc2);
           const ext = hr * hz + 3;
           for (let ky = Math.max(0, Math.floor((hy - ext) / KOVA)); ky <= Math.min(KW - 1, Math.floor((hy + ext) / KOVA)); ky++)
@@ -465,8 +472,8 @@
       }
       if (!en || ed > 1.35) continue;
       // iki hücre birbirine dayanıyorsa aralarında dantel duvarı (Voronoi benzeri ağ)
-      if (en2 && ed2 < 1 && (ed2 - ed) * Math.min(en.r, en2.r) < 1.1) {
-        const c = mix(en.kenar, C.beyaz, 0.7);
+      if (en2 && ed2 < 1 && Math.min(en.r, en2.r) > 2.6 && (ed2 - ed) * Math.min(en.r, en2.r) < 0.75) {
+        const c = mix(en.kenar, C.beyaz, en.ak);
         R[i] = c[0]; G[i] = c[1]; B[i] = c[2];
         H[i] = H[i] + 0.6;
         continue;
@@ -482,7 +489,7 @@
         H[i] = H[i] - 0.6 * (1 - t * t);
       } else if (ed < 1) {
         // dantel: hücreyi saran parlak açık halka
-        const c = mix(en.kenar, C.beyaz, 0.7);
+        const c = mix(en.kenar, C.beyaz, en.ak);
         R[i] = c[0]; G[i] = c[1]; B[i] = c[2];
         H[i] = H[i] + 0.6;
       } else if (ed < 1 + Math.max(0.12, 0.9 / en.r)) {
@@ -559,6 +566,16 @@
     ctx.moveTo(-60, -60);
     ctx.lineTo(330, -60);
     ctx.lineTo(-60, 330);
+    ctx.closePath();
+    ctx.fill();
+    // ince, uzun bir pencere yansıması (reçine kaplamanın parlaklığı)
+    ctx.filter = 'blur(9px)';
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.beginPath();
+    ctx.moveTo(40, 300);
+    ctx.lineTo(300, 40);
+    ctx.lineTo(328, 52);
+    ctx.lineTo(62, 318);
     ctx.closePath();
     ctx.fill();
     ctx.filter = 'none';

@@ -1,0 +1,40 @@
+{
+  "kod": "S-033",
+  "no": 33,
+  "ad": "Taneli Gradyan",
+  "ad_en": "Grain Gradient",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Düz vektör biçimler; gölge ve ışık yalnızca tane yoğunluğuyla, 8 renklik sınırlı palet, kontursuz editoryal görünüm.",
+  "tanim": "Biçimler kontursuz, düz tek renk dolgulardır; tonlama yumuşak degrade yerine yalnızca piksel boyunda stokastik tanelerle yapılır: gölgeye doğru ikinci rengin taneleri sıklaşır, ışığa doğru seyrelir, en parlak yerlere açık renkli tane serpilir. Tane yoğunluğu sağ üstten gelen ışığa göre 3B biçimden (dönel yüzey kubbe, silindir minare ve kasnak) ya da basit yönlü ve dairesel alanlardan hesaplanır; kaburgalar her dilimin soluna doğru sıklaşan tane şeritleriyle verilir. Palet 8 renkle sınırlıdır (krem, şeftali, mercan, hardal, zümrüt, petrol yeşili, gök mavisi, çivit) ve her rengin sabit bir rolü vardır: taşta şeftali sonra çivit, yeşilde petrol, altında mercan tanesi, ışıkta krem ya da hardal. Bütün yüzeyin üstünde ince, tek renkli bir tane katmanı bulunur; sonuç çağdaş dergi ve kitap kapağı illüstrasyonlarındaki taneli görünümdür.",
+  "koken": "2010'ların sonundan itibaren editoryal illüstrasyonda, Dribbble/Behance çevresinde ve Procreate ile Illustrator'ın tane/gürültü fırçalarıyla yaygınlaşan taneli degrade (\"grainy gradient\", \"noise texture\") eğilimine dayanır; kökü baskıdaki stokastik tram ile sprey ve airbrush tonlamasına uzanır. Atölye tarifi bunu kesin kurallara bağlar: kontursuz düz biçim, gölge yalnız tane yoğunluğuyla, en fazla 8 renk ve her rengin sabit bir gölge/ışık rolü, piksel boyunda beyaz gürültü ve tüm yüzeyde ince genel tane.",
+  "ayirt_edici": [
+    "Gökte üstte çivit, ufka doğru şeftali ve krem tanelerine dönen taneli geçiş; güneşin çevresinde tane halesi",
+    "Kubbede yumuşak degrade yok: solda sıklaşan petrol yeşili taneler, sağ üstte seyrek krem ışık taneleri",
+    "Kaburgalar çizgi değil, her dilimin solunda yoğunlaşan tane şeritleri",
+    "Krem taşta şeftali ve çivit tanelerinden iki kademeli gölge; korniş altında koyu tane bandı",
+    "Yapraklarda orta damarın bir yanında petrol tanesi, ışık yanında hardal pırıltısı; çiçek ortalarına doğru mercan tanesi",
+    "Kontursuz düz biçimler, 8 renklik sınırlı palet ve her yerde ince tane"
+  ],
+  "palet": [
+    "#F5EAD6",
+    "#EFB489",
+    "#DE6A52",
+    "#E8A63A",
+    "#2F9468",
+    "#154C49",
+    "#8BBBDB",
+    "#3A4D8C"
+  ],
+  "kodla_cizim": "Tuval 1:1 (1024 px) kurulur ki tane tek piksel kalsın. Her biçim önce Path2D ile düz renkle doldurulur; sonra sınır kutusundaki her piksel için bir ton değeri t hesaplanır (dönel yüzey ve silindir normallerinden n·L, dilim fazı, kıvrım ve gölge terimleri ya da doğrusal/dairesel alanlar) ve her tane katmanı için t'den bir yoğunluk eğrisi çıkarılır; konuma bağlı karma (hash) gürültüsü yoğunluğun altında kalan piksel o katmanın rengini alır. Tane görüntüsü biçimin yoluyla kırpılarak basılır. En sonda bütün görüntüye tek renkli ince piksel gürültüsü eklenir.",
+  "etiketler": [
+    "tane",
+    "grain",
+    "gürültü degrade",
+    "editoryal",
+    "sınırlı palet",
+    "vektör",
+    "kontursuz",
+    "çağdaş illüstrasyon"
+  ]
+}

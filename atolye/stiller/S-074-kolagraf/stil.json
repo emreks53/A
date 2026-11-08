@@ -1,0 +1,22 @@
+{
+  "kod": "S-074",
+  "no": 74,
+  "ad": "Kolagraf",
+  "ad_en": "Collagraph",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Kumaş, karton, kum, yaprak ve tutkalla kolajlanmış levhadan basılmış, her bölgesi ayrı dokulu, derin kabartmalı baskı.",
+  "tanim": "Kolagraf, karton ya da sunta bir taban üzerine kumaş, oluklu karton, zımpara, karborundum tozu, yaprak, ip, dantel ve tutkal çizgileri gibi dokulu malzemelerin yapıştırılıp verniklenmesiyle kurulan levhadan yapılan baskıdır. Levha çoğunlukla çukur baskı gibi mürekkeplenip silinir ve preste nemli kâğıda basılır: pürüzlü yüzeyler ve kesik kenarlar bol mürekkep tutup koyu, düz ve vernikli yüzeyler açık basar. Kâğıt malzemelerin girintisine bastırıldığı için güçlü bir kabartma oluşur; her malzemenin dokusu baskıda ayrı ayrı okunur.",
+  "koken": "Terim 1950'lerde ABD'de Glen Alps tarafından yaygınlaştırıldı; Rolf Nesch 1930'larda metal parçalarla kurduğu levhalarla öncü sayılır. Edmond Casarella karton kabartma baskılarıyla, Clare Romano ve John Ross ise teknik kitapları ve kolagraflarıyla tekniği atölyelerde yerleştirdi; ucuz ve toksik olmayan malzemesi sayesinde bugün okul ve baskı atölyelerinin en yaygın tekniklerinden biridir.",
+  "ayirt_edici": [
+    "Gökte çuval bezi örgüsü: ipliklerin arasındaki gözeneklerde koyu mavi mürekkep, güneşe doğru açılan tampon",
+    "Kubbede meridyen boyunca soyulmuş oluklu karton ve dilim yarıkları; gölge yanında fırçayla sürülmüş, sağa doğru seyrelen karborundum",
+    "Kasnakta zımpara, kaidede yatay fırça izli macun, bulutlarda ve minarede buruşuk ipek kâğıdı, zeminde kum",
+    "Gerçek yapraklardan basılmış açık damarlar ve ağsı doku; ip saplar, kesik karton taç yaprakları, kumlu göbekler",
+    "Güneşin çevresinde, zikzak bantta ve korkulukta kabarık tutkal çizgileri",
+    "Bütün kesik kenarlarda biriken koyu mürekkep, kabartma gölgeleri, kalın levhanın derin izi"
+  ],
+  "palet": ["#385774", "#114A21", "#62936F", "#2F5E3B", "#ACA18C", "#8B6741", "#BFA45E", "#F1ECE1"],
+  "kodla_cizim": "Levha 2048 px'te kurulur. Dokuz malzeme (kumaş, kum, ipek kâğıdı, karton, oyuk, oluklu karton, zımpara, yaprak, macun) üç tuvalin R, G, B kanallarında maske olarak tutulur; her yeni parça 'multiply' ile önceki maskelerden kendi biçimini siler. Ayrı tuvallerde tampon rengi, mürekkep miktarı ile levha yüksekliği (R ve G kanalı) ve tutkal/ip çizgileri durur; yaprak damarları yükseklik ve mürekkep kanalına çizilir. Piksel döngüsünde her malzeme kendi dokusunu hesaplar: düzensiz iplikli örgü, Worley taneli kum ve karborundum, meridyen açısından oluklar ve dilim yarıkları, lifli ve buruşuk ipek, ağsı yaprak dokusu, yatay fırça izi. Okuma, gürültüyle titretilmiş koordinatlardan yapılır (elle kesilmiş kenar). Sonra yükseklik haritasının eğiminden kenarlarda biriken mürekkep (aynı rengin koyulaşması ve nötr bir zar), tarlatan silmesi dalgalanması ve levha tonu eklenir; kâğıt yüksekliği (kenar boşluğu basılmamış, yüksek parçalar daha çok bastırılmış) kabartma ışığıyla gölgelenir.",
+  "etiketler": ["kolagraf", "kolaj", "çukur baskı", "doku", "kabartma", "karborundum", "deneysel baskı", "malzeme"]
+}

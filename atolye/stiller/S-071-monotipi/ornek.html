@@ -271,6 +271,11 @@ Ex.fillStyle = '#fff';
 [Y.kubbe, Y.kasnakUst, Y.kasnakAlt, Y.kaide, Y.kornis, ...Y.minare, ...Y.alem, ...Y.minareAlem].forEach((d) => Ex.fill(P2(d)));
 
 // ------------------------------------------------------------------ gök: boyalı vuruşlar ve silmeler
+// gökteki boya yapı siluetine girmez (sanatçı yapının biçimini önceden bezle almıştır)
+const disari = new Path2D('M0,0 H1024 V1024 H0 Z');
+[Y.kubbe, Y.kasnakUst, Y.kasnakAlt, Y.kaide, Y.kornis, ...Y.minare].forEach((d) => disari.addPath(P2(d)));
+const GOKK = [K.lac, K.mavi, K.gul, K.sari];
+for (const k of GOKK) { k.save(); k.clip(disari, 'evenodd'); }
 // sol üst köşe derinleşir: kuru fırçayla çapraz Prusya mavisi vuruşları
 for (let i = 0; i < 22; i++) {
   const y0 = 50 + rnd() * 360, x0 = 30 + rnd() * 200;
@@ -326,6 +331,8 @@ for (const [bx, by, bs] of BULUT) {
   yatayFirca(K.gul, bx - 100 * bs, bx + 90 * bs, by + 18 * bs, 14 * bs, 0.07, { kuru: 0.7, kil: 2.4 });
   if (bx > 450) yatayFirca(K.sari, bx - 70 * bs, bx + 100 * bs, by - 14 * bs, 12 * bs, 0.08, { kuru: 0.7, kil: 2.4 });
 }
+
+for (const k of GOKK) k.restore();
 
 // ------------------------------------------------------------------ kubbe
 const prof = SAHNE.kubbeProfili(48); // tabandan tepeye
@@ -485,8 +492,8 @@ for (const [cx, taban, s] of [[560, 300, 1], [300, 146, 0.62]]) {
 for (let i = 0; i < 46; i++) {
   const y = 796 + rnd() * 190;
   const z = rnd();
-  const k = z < 0.45 ? K.toprak : z < 0.8 ? K.sari : K.gul;
-  yatayFirca(k, 30 + rnd() * 420, 520 + rnd() * 480, y, 18 + rnd() * 16, (k === K.toprak ? 0.11 : k === K.sari ? 0.13 : 0.07) * smooth(790, 840, y), { kuru: 0.75, kil: 2.8, sonKay: 0.4, basKay: 0.2 });
+  const k = z < 0.55 ? K.toprak : z < 0.93 ? K.sari : K.gul;
+  yatayFirca(k, 30 + rnd() * 420, 520 + rnd() * 480, y, 18 + rnd() * 16, (k === K.toprak ? 0.12 : k === K.sari ? 0.12 : 0.05) * smooth(790, 840, y), { kuru: 0.75, kil: 2.8, sonKay: 0.4, basKay: 0.2 });
 }
 for (let i = 0; i < 14; i++) yatayFirca(K.yesil, 30 + rnd() * 600, 300 + rnd() * 700, 830 + rnd() * 150, 20, 0.08, { kuru: 0.7, kil: 2.6 });
 for (let i = 0; i < 8; i++) yatayFirca(K.lac, 30, 300 + rnd() * 300, 840 + rnd() * 140, 18, 0.05, { kuru: 0.7, kil: 2.6 });

@@ -160,7 +160,7 @@
       tel(sarmal(cx, cy, rr, 1.3, dn, a0));
     }
   }
-  for (let r0 = 0, y = 44; y < 800; y += 72, r0++) sarmasik(y, -20, 1044, 9, 132, r0 * 1.7, 11);
+  for (let r0 = 0, y = 48; y < 800; y += 80, r0++) sarmasik(y, -20, 1044, 9, 140, r0 * 1.7, 11.5);
   // güneş
   const GX = 880, GY = 138;
   for (let i = 0; i < 16; i++) {
@@ -420,7 +420,7 @@
     if (md[i * 4 + 3] > 128) { tur[i] = 1; h[i] = 0.97 + 0.01 * n1(x * 0.05, y * 0.05); continue; }
     const e = d - HW;
     // menisküs: telin dibinde emaye hafifçe yükselir, hücrenin ortası çok hafif çukur; geniş dalga
-    h[i] = 0.93 - 0.05 * (1 - Math.exp(-e / 7)) + 0.012 * n2(x * 0.006, y * 0.006) + 0.004 * n3(x * 0.04, y * 0.04);
+    h[i] = 0.93 - 0.05 * (1 - Math.exp(-e / 7)) + 0.012 * n2(x * 0.006, y * 0.006) + 0.006 * n3(x * 0.02, y * 0.02);
   }
   // gözenekler ve kabarcıklar
   {
@@ -448,9 +448,9 @@
   const altin = hex('#D4A64A'), altinAcik = hex('#FFF0B8'), altinKoyu = hex('#6E4A12');
   // yumuşak ışık kutusunun yansıması (sol üstte), normallerle bükülür
   const kutuYans = (u, v) => {
-    const du = (u - 250) / 210, dv = (v - 190) / 125;
+    const du = (u - 240) / 200, dv = (v - 200) / 130;
     const e = du * du + dv * dv;
-    return (1 - sstep(0.7, 1.0, e)) * (0.35 + 0.65 * clamp(1 - (u - 60) / 400, 0, 1));
+    return (1 - sstep(0.88, 1.0, e)) * (0.25 + 0.75 * clamp(1 - (u - 50) / 380 - (v - 80) / 500, 0, 1));
   };
   const SN = 9; // eğim çarpanı
   const kadife = hex('#151a2a');
@@ -464,7 +464,7 @@
     const dif = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]);
     const nh = Math.max(0, nx * Hh[0] + ny * Hh[1] + nz * Hh[2]);
     const xx = x / K, yy = y / K;
-    const ref = kutuYans(xx + nx * 260, yy + ny * 260);
+    const ref = kutuYans(xx + nx * 520, yy + ny * 520);
     const d = dist[i];
     const metal = md[j + 3] > 128;
     const cov = metal ? 1 : sstep(HW + 0.8, HW - 0.8, d);
@@ -486,7 +486,7 @@
       const k = (0.86 + 0.22 * (dif - L[2])) * tane * (1 - kir[i]);
       er *= k; eg *= k; eb *= k;
       const sp = Math.pow(nh, 90) * 0.85 + Math.pow(nh, 14) * 0.06;
-      const ws = (sp + ref * 0.15) * 255;
+      const ws = (sp + ref * 0.2) * 255;
       er += ws; eg += ws; eb += ws * 1.02;
       r = er + (r - er) * cov; g = eg + (g - eg) * cov; b = eb + (b - eb) * cov;
     }

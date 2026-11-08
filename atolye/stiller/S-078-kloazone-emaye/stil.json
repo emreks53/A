@@ -1,0 +1,22 @@
+{
+  "kod": "S-078",
+  "no": 78,
+  "ad": "Kloazone Emaye",
+  "ad_en": "Cloisonné Enamel",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Metal zemine lehimlenmiş ince altın tellerle çevrili hücreleri dolduran parlak, opak, camsı emaye.",
+  "tanim": "Kloazone, bir metal levhanın üstüne yan yatırılarak yapıştırılan ince altın, gümüş ya da bakır tellerle (kloazon) desenin çizildiği, tellerin ayırdığı hücrelerin toz cam macunuyla doldurulup fırınlanarak eritildiği emaye tekniğidir. Birkaç kez doldurulup pişirilen yüzey sonunda zımparalanıp cilalanır: tel sırtları altın çizgiler olarak parlar, aradaki emaye opak, pürüzsüz ve mücevher gibi parlaktır. Işık geçirmez; renk metalin üstündeki camdan gelir. Vazolarda, kutularda, takılarda, nişan ve plaketlerde kullanılır.",
+  "koken": "Teknik Tunç Çağı Kıbrıs'ında ve Miken'de doğdu, Bizans'ta altın kloazone ikonalar ve mücevherlerle doruğa ulaştı. Çin'e 13.–14. yüzyılda geldi; Ming dönemi Jingtai hükümdarlığında (1450'ler) turkuaz zeminli, telden bulut kıvrımlı 'jingtailan' kaplar ünlendi. Japonya'da shippō, Rusya'da Fabergé atölyeleri tekniği sürdürdü; Osmanlı kuyumculuğunda da mineli altın işler saray hazinesinin parçasıdır.",
+  "ayirt_edici": [
+    "Her biçimi, her kubbe dilimini, her taç yaprağını ve yaprak yarısını çevreleyen tek kalınlıkta ince altın teller",
+    "Turkuaz gökte ve kobalt zeminde emayeyi tutan dalgalı sarmaşık telleri ve tepelerinde kıvrılan sarmallar",
+    "Opak, camsı emaye renkleri: turkuaz, kobalt, zümrüt, mercan, beyaz, sarı; kubbe dilimlerinde ve taç yapraklarda hücre içi renk geçişleri",
+    "Tellerin dibinde menisküs parıltıları, sol üstte tellerin kenarında kırılan pencere yansıması: parlak, hafif dalgalı yüzey",
+    "Emayede küçük gözenekler ve kabarcık çukurları",
+    "Kobalt şeritte mercan ve sarı baklavalı emaye bordür; boncuklu ve oymalı, yaldızlı metal çerçeve, köşeleri yuvarlak plaket"
+  ],
+  "palet": ["#1E9EA6", "#1D3A94", "#1E8A4C", "#E2583F", "#F2EFE7", "#F1C33F", "#D4A64A", "#EE8A9A"],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte; sahne bordürün içine %88 ölçekle girer. Her emaye hücresi gizli bir kimlik haritasına benzersiz renkle, renk katmanına kendi emaye rengi ya da geçişiyle çizilir; dolgu telleri (sarmaşık ve sarmallar, kubbe ve yaprak telleri) ayrı bir katmana çizilir ve üstüne gelen hücreler onları siler. Kimliğin değiştiği her piksel ve her süs teli tohum olur; Felzenszwalb Öklid uzaklık dönüşümü ve hafif yumuşatma ile tek kalınlıkta, kenar yumuşatmalı teller elde edilir. Bu uzaklıktan bir yükseklik alanı kurulur: yuvarlak tel sırtı, telin dibinde yükselen menisküs, geniş dalga ve rastgele gözenek çukurları. Normaller yükseklik alanından alınır; emaye yaygın ışık, dar ve geniş tepeli parlama ve normallerle bükülen eliptik pencere yansımasıyla, altın teller ve yaldızlı metal ayrı bir metal modeliyle ışıklandırılır. Çerçeve, yuvarlak köşeli dikdörtgenin işaretli uzaklığından hesaplanan kesit profiliyle (boncuk, oluk, oymalı düz bant, pah) piksel piksel gölgelenir; dışta plaketin düşürdüğü gölgeyle kadife zemin vardır.",
+  "etiketler": ["emaye", "kloazone", "altın tel", "mücevher", "parlak", "zanaat", "metal", "geleneksel"]
+}

@@ -176,7 +176,8 @@
     o = o || {};
     const L = pts.length; if (L < 2) return;
     const v = o.v === undefined ? 128 + (R() - 0.5) * 60 : o.v, kal = o.kal === undefined ? 120 : o.kal;
-    const son = Math.max(1, Math.floor((L - 1) * (o.govde || 0.8 + R() * 0.12)));
+    const kuru = R() < 0.35;
+    const son = Math.max(1, Math.floor((L - 1) * (o.govde || (kuru ? 0.84 + R() * 0.08 : 1))));
     const p = govde(pts, w, son);
     g.fillStyle = `rgb(${v | 0},${kal},0)`; g.fill(p);
     const nor = pts.map((q, i) => { const a = pts[Math.min(L - 1, i + 1)], b = pts[Math.max(0, i - 1)], dx = a[0] - b[0], dy = a[1] - b[1], l = Math.hypot(dx, dy) || 1; return [-dy / l, dx / l]; });
@@ -212,8 +213,8 @@
     }
   }
   // güneş çevresi: dairesel darbeler
-  for (let k = 0; k < 70; k++) {
-    const r = 60 + R() * 100, a0 = R() * Math.PI * 2, sp = 0.5 + R() * 0.7, pts = [];
+  for (let k = 0; k < 120; k++) {
+    const r = 8 + R() * 190, a0 = R() * Math.PI * 2, sp = 0.5 + R() * 0.7, pts = [];
     for (let j = 0; j <= 16; j++) { const a = a0 + sp * (j / 16); pts.push([880 + Math.cos(a) * r, 140 + Math.sin(a) * r]); }
     duzFirca(dg, pts, 18 + R() * 16);
   }
@@ -278,8 +279,8 @@
       const i = y * WW + x; let a = mb[i];
       if (a < 0.01) continue;
       a *= op;
-      if (delik) { const t = 0.75 - 0.75 * GB[i]; a *= 1 - sstep(t - 0.04, t + 0.04, delik[i]); if (a <= 0.003) continue; }
-      if (o.kuru && DD[i] > 0.5) a *= 0.15 * BEZ[i];
+      if (delik) { const t = 0.12 + 0.8 * (1 - GB[i]); a *= 1 - sstep(t - 0.04, t + 0.04, delik[i]); if (a <= 0.003) continue; }
+      if (o.kuru && DD[i] > 0.5) a *= 0.55 + 0.45 * sstep(0.2, 0.6, BEZ[i]);
       if (fn) { c = renk(x / S, y / S, i); if (!c) continue; if (c.length > 3) a *= c[3]; }
       const k = 1 + amp * DR[i];
       CR[i] += (c[0] * k - CR[i]) * a; CG[i] += (c[1] * k - CG[i]) * a; CB[i] += (c[2] * k - CB[i]) * a;
@@ -315,7 +316,8 @@
     const dgk = Math.hypot(x - 880, y - 140);
     const t = y / 800 + (fbm(nA, x / 260, y / 160, 2) - 0.5) * 0.07 + DR[i] * 0.018;
     let k = 0; while (k < 5 && t > SINIR[k]) k++;
-    if (dgk < 150 + DR[i] * 6) return k < 2 ? C.hale : C.gok[Math.min(5, k + 1)];
+    if (dgk < 112 + DR[i] * 26) return k < 2 ? C.hale : C.gok[Math.min(5, k + 1)];
+    if (dgk < 168 + DR[i] * 30 && k < 3) return C.gok[k + 1];
     return C.gok[k];
   }, { delik: arkaDelik, kuru: true });
   // güneş

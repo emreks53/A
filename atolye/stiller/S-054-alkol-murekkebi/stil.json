@@ -1,0 +1,22 @@
+{
+  "kod": "S-054",
+  "no": 54,
+  "ad": "Alkol Mürekkebi",
+  "ad_en": "Alcohol Ink",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Sentetik kâğıtta organik çiçeklenmelerle yayılan saydam, doygun renkler; keskin koyu kuru kenarlar, beyaz boşluklar ve metalik altın.",
+  "tanim": "Alkol mürekkebi, alkolde çözünmüş boyarmaddeli, çok akışkan ve saydam bir mürekkeptir; emici olmayan sentetik (Yupo) kâğıt, seramik ya da metal üzerinde kullanılır. Damlatılan mürekkep hızla organik biçimlerde yayılır ve alkol buharlaşırken pigment kenarda toplanıp keskin, koyu bir kuru kenar çizgisi bırakır; içi açık kalır, iç içe gelgit halkaları oluşur. Kurumuş boyaya yeni bir damla ya da saf alkol değince eski boya yeniden ıslanıp kenara itilir, rengi kaldırılmış açık alanlar ve yeni kenar çizgileri belirir. Doygun mücevher renkleri, yumuşak renk geçişleri, kâğıdın beyazı ve metalik altın vurgular tekniğin tipik görüntüsüdür.",
+  "koken": "Alkol bazlı mürekkepler 20. yüzyılda keçeli kalem ve endüstriyel boyama için geliştirildi; 2000'lerde Ranger (Tim Holtz) gibi markaların ürünleri ve 1990'larda Japonya'da üretilen Yupo sentetik kâğıdıyla bağımsız bir resim tekniğine dönüştü. Damlatma, üfleme (hava ya da pipetle), alkolle kaldırma ve metalik karışımlarla yapılan soyut ve çiçekli işler bugün dekoratif sanatta çok yaygındır.",
+  "ayirt_edici": [
+    "Gökte turkuaz, kobalt, mor ve macenta çiçeklenmeler: dalgalı, keskin, koyu kuru kenarlar; benekli, tüylü iç doku ve iç içe soluk gelgit halkaları",
+    "Çiçeklenmeler arasında ve yapının çevresinde bırakılmış beyaz kâğıt boşluğu; bulutlar saf alkolle boyası kaldırılmış, kenarı koyulaşmış beyaz biçimler",
+    "Soldan derin petrol yeşiline, sağ üstte fıstık yeşiline dönen tek büyük kubbe çiçeklenmesi; üstüne binen açık ve koyu damlalar, alkol kalemiyle açılmış kaburga çizgileri",
+    "Saydam üst üste binmeler: taç yapraklar ve yapraklar birbirinin üstünden görünür, her yeni damla öncekinin üstünde koyu bir kenar çizgisi bırakır",
+    "Turuncu-sarı güneş ve içine damlatılmış soluk sarı; kasnakta çivit pencere damlaları, soluk leylak-şeftali minare ve kaide",
+    "Metalik altın: pul pul parlayan alemler, zikzak bant, korniş ve kasnak çizgileri, bazı kenarlarda kırık altın çizgiler ve serpinti damlacıkları"
+  ],
+  "palet": ["#0FA6B8", "#2D6BD8", "#7A2CC9", "#FFB000", "#0FA35A", "#E8247E", "#F2A541", "#D9AE4A"],
+  "kodla_cizim": "Kâğıt, kayan noktalı bir RGB tampon olarak tutulur ve her çiçeklenme bu tampona tek tek uygulanır. Bir çiçeklenme için maske (elips, daire, SAHNE yolları; gökte yapı silueti çıkarılarak) ekran dışı tuvale çizilir, CSS blur ile bulanıklaştırılır ve çok oktavlı gürültüyle değişen bir eşikle kesilir: bulanıklık kenarın ne kadar serbest dalgalanacağını belirler. Alan değerinin gradyanından her pikselin kenara piksel cinsinden uzaklığı bulunur; buna göre keskin koyu kuru kenar, içe doğru sönen koyu bant, gürültüyle oynayan iç gelgit halkaları, iki ölçekli benekli yoğunluk ve gürültü ya da yöne göre iki renk arasında yumuşak renk geçişi hesaplanır. Yeni mürekkep önce alttaki boyayı kâğıt rengine doğru kaldırır (yeniden ıslatma), sonra saydam çarpma karışımıyla eklenir; kaldırılan pigment kenara itilerek kenar çizgisini koyulaştırır. Yalnız alkol damlaları (bulutlar, kaburgalar) renksiz kaldırma olarak uygulanır. Bazı kenarlarda gürültüyle kırılan altın çizgi örtmesi, ayrıca alemler, zikzak, korniş, çiçek göbekleri ve serpinti için tuvalde çizilmiş bir altın maskesi toplanır; çıktıda altın, gürültüyle bronzdan açık sarıya değişen pullu bir metal rengiyle ve rastgele parlak noktalarla basılır.",
+  "etiketler": ["alkol mürekkebi", "Yupo", "çiçeklenme", "saydam", "doygun renk", "kuru kenar", "metalik altın", "akışkan", "simülasyon"]
+}

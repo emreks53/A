@@ -1,0 +1,40 @@
+{
+  "kod": "S-032",
+  "no": 32,
+  "ad": "Renkli Kontur Cel",
+  "ad_en": "Colored-Outline Cel Shading",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Toon render: düz ana renk, sert kenarlı tek gölge tonu, küçük sert parlama; siyah yerine renkli, dışta kalın konturlar.",
+  "tanim": "Her biçim üç düz tonla boyanır: ana renk, 3B normalden hesaplanan ışık değerinin sabit bir eşikte kesilmesiyle oluşan tek ve sert kenarlı gölge tonu (beyaz taşta leylak, yeşilde serin petrol yeşili, altında turuncu, beyaz taç yaprakta pembe) ve yansımanın eşiklenmesiyle çıkan küçük sert parlama. Konturlar hiçbir zaman siyah değildir, her dolgunun koyu ve doygun hâlidir (zümrüde koyu yeşil, kreme kiremit kahvesi, altına koyu turuncu, gül rengine koyu pembe, buluta mavi); birleşik dış silüet yaklaşık 3 px kalın, iç ayrıntılar (kaburgalar, pencereler, zikzak, taç yaprak bindirmeleri) 1,2–1,7 px incedir. Gölge tarafında siluetin hemen içinde açık camgöbeği ya da pembe ince bir kenar ışığı yer alır. Gök 2–3 düz, sert sınırlı degrade bant; bulutlar ve zemindeki gölgeler de sert kenarlı cel tonlarıdır ve bütün kenarlar animasyon arka planı temizliğinde, vektör keskinliğindedir.",
+  "koken": "Anime ve Batı animasyonunun selüloit (cel) boyama geleneğine, oyun ve 3B grafikte \"toon shading\" ya da \"cel shading\" adıyla bilinen eşikli aydınlatmaya (örneğin The Legend of Zelda: The Wind Waker, 2002) ve çağdaş dijital illüstrasyonda yaygın renkli çizgi (\"colored lineart\") uygulamasına dayanır. Atölye tarifi bunları sabitler: tek gölge eşiği, küçük sert parlama, her dolgunun kendi koyu tonundan kontur, dış silüette kalın ve iç ayrıntıda ince çizgi hiyerarşisi, gölge tarafında ince kenar ışığı ve bantlı düz gök.",
+  "ayirt_edici": [
+    "Kubbede sert kenarlı tek gölge tonu ve dilim dilim bölünmüş, keskin açık yeşil parlama şeritleri",
+    "Siyah çizgi yok: koyu yeşil, kiremit kahvesi, koyu turuncu, koyu pembe ve mavi renkli konturlar",
+    "Kalın dış silüet ile ince iç çizgiler (kaburgalar, pencereler, zikzak, taç yaprak bindirmeleri)",
+    "Kubbe ve kasnağın gölge tarafında siluetin içinde ince camgöbeği kenar ışığı",
+    "Üç sert bantlı düz gök, halkalı güneş ve cel gölgeli, mavi konturlu bulutlar",
+    "Beyaz taşta leylak gölgeler; yapraklar orta damardan ikiye bölünmüş iki ton"
+  ],
+  "palet": [
+    "#4B96E4",
+    "#80C1F3",
+    "#21B871",
+    "#11866C",
+    "#06573F",
+    "#FFF3DF",
+    "#D2C3EA",
+    "#A3592F"
+  ],
+  "kodla_cizim": "2048 px'lik tuvalde her biçim bir cel katmanıdır: piksel başına normal (kubbe Bezier profilli dönel yüzey + dilim şişkinliği, silindirler, elipsoitler; yaprak, tomurcuk ve hilalde mesafe dönüşümünden şişirme, yapraklarda orta damar kırığı) hesaplanır; n·L sabit eşikte kesilerek gölge, n·H eşiklenerek parlama bulunur ve geçiş alanın piksel türevine bölünerek tam bir piksellik kenar yumuşatmasıyla yapılır (vektör keskinliği). Kenar ışığı, maskenin ışığın tersi yönde kaydırılmış örneği ile gölge kaplamasının kesişimidir. Dış silüet, birleşik maskenin Felzenszwalb dış mesafe alanından 3 px'lik bir halka olarak çizilir, rengini parçaların koyu tonlarından oluşan bir renk haritasından alır; iç çizgiler ressam sırasıyla her parçanın hemen ardından ince Path2D çizgileridir. Gök üç degrade bant, bulutlar küre kümelerinden cel gölgelenir; yaprak ve çiçeklerin zemine düşen gölgeleri düz, kaydırılmış biçimlerdir.",
+  "etiketler": [
+    "cel shading",
+    "toon",
+    "renkli kontur",
+    "animasyon arka planı",
+    "anime",
+    "sert gölge",
+    "kenar ışığı",
+    "vektör"
+  ]
+}

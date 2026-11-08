@@ -1,0 +1,40 @@
+{
+  "kod": "S-035",
+  "no": 35,
+  "ad": "Buzlu Cam",
+  "ad_en": "Frosted Glass",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Canlı, bulanık bir renk zemininin önünde renklendirilmiş, yarı saydam buzlu cam panellerden kurulmuş sahne.",
+  "tanim": "Önce iri, yumuşak renk lekelerinden (camgöbeği, mor, pembe, şeftali, turkuaz) oluşan, güçlüce bulanıklaştırılmış canlı bir zemin hazırlanır. Her öğe bu zeminin önünde bir buzlu cam paneldir: arkasındaki görüntünün bulanık, doygunluğu artırılmış ve hafifçe büyütülmüş (kırılma) kopyasını gösterir, üstüne kendi rengiyle (zümrüt kubbe ve kasnak, sıcak beyaz minare ve kaide, altın alemler, gül rengi çiçekler, yeşil yapraklar) renklendirilir ve çok ince bir buz tanesi alır. Panelin içinde sağ üstten sol alta aydınlıktan renkli koyuluğa giden bir kırılma degradesi ve dış sınırdan içe sızan yumuşak bir ışık, kenarında sağ üstte parlak, sol altta sönen 1–2 px'lik bir yansıma vardır; her panel sola-aşağı yumuşak bir gölge düşürerek katmanları ayırır. Biçimler sade ve okunur tutulur: kubbe kaburgaları camdaki ince ışık-gölge çizgileri, pencereler daha koyu renkli küçük cam panellerdir.",
+  "koken": "Kullanıcı arayüzü tasarımında 2020 civarında \"glassmorphism\" adıyla yaygınlaşan buzlu cam görünümüne (Apple'ın macOS Big Sur ve iOS arayüzlerindeki arka plan bulanıklığı, Microsoft Fluent Design'ın \"acrylic\" malzemesi) ve CSS backdrop-filter tekniğine dayanır. Atölye tarifi bu arayüz malzemesini illüstrasyona taşır: canlı bulanık renk zemini, her öğede arka plan bulanıklığı, doygunluk artışı ve hafif büyütme, öğeye özgü renk tonu, iç kırılma degradesi, iç kenar ışıması, sağ üstte parlayan ince kenar ve katmanlar arası yumuşak gölge.",
+  "ayirt_edici": [
+    "Camgöbeğinden mora, pembeye ve şeftaliye geçen canlı, bulanık renk zemini",
+    "Zümrüt camdan kubbe: arkadaki renkler bulanık sızar, kaburgalar camdaki ince ışık çizgileri, sağ üstte keskin yansıma",
+    "Sıcak beyaz cam minare ve kaide; korkuluk babaları ve zikzak bant cama kazınmış ışık çizgileri",
+    "Her panelin sağ üst kenarında parlak, ince yansıma ve içte kenardan sızan ışık",
+    "Gül rengi cam taç yapraklar ve yeşil cam yapraklar; arkalarındaki yapraklar bulanık görünür",
+    "Katmanları ayıran yumuşak mor gölgeler; zemin geniş bir buzlu cam levha"
+  ],
+  "palet": [
+    "#4EC5FE",
+    "#6B8EFE",
+    "#CE7FE2",
+    "#F190BE",
+    "#51A88C",
+    "#DEDAEC",
+    "#FEBB62",
+    "#FAB9BD"
+  ],
+  "kodla_cizim": "Zemin, taşma paylı ekran dışı bir tuvalde doğrusal degrade ve renk lekelerinden (dış durak aynı rengin saydamı olduğu için koyu hale oluşmaz) çizilip yaklaşık 80 px bulanıklaştırılır. Her cam panelde o anki tuvalin panel çevresindeki bölgesi 'blur() saturate() brightness()' süzgeciyle kopyalanır ve %4–6 büyütülerek yolun içine basılır; üstüne panel rengi, ince beyaz film, döşenmiş tane deseni, doğrusal kırılma degradesi ve iç ayrıntılar (kaburga, zikzak, korkuluk babaları, pilastrlar) çizilir; iç kenar ışıması, biçimin dışı beyazla doldurulup bulanıklaştırılarak elde edilir. Gölge, biçimin bulanık ve kaydırılmış kopyasıdır ve cam basılmadan önce konur; kenar yansıması degradeli çift kalın çizginin yalnız dış yarısıdır, bu yüzden birleşik biçimlerde (bulutlar) iç sınırlar görünmez. Paneller ressam sırasıyla basıldığı için öndeki cam arkadaki paneli de bulanık gösterir.",
+  "etiketler": [
+    "buzlu cam",
+    "glassmorphism",
+    "arka plan bulanıklığı",
+    "yarı saydam",
+    "canlı renk",
+    "arayüz estetiği",
+    "parlak kenar",
+    "katmanlı"
+  ]
+}

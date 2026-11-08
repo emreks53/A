@@ -1,0 +1,22 @@
+{
+  "kod": "S-071",
+  "no": 71,
+  "ad": "Monotipi",
+  "ad_en": "Monotype",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Boyanmış düz bir levhadan alınan tek baskı: ezilmiş yumuşak lekeler, silinerek açılmış ışıklar, damarlanan mürekkep.",
+  "tanim": "Monotipi, cam, metal ya da pleksi bir levhanın üzerine mürekkep ya da yağlı boyayla resim yapılıp üstüne nemli kâğıt konarak preste ya da elle bir kez basılmasıyla elde edilen özgün baskıdır. Resim levhada boyanarak (eklemeli) ya da levhaya merdaneyle açılan mürekkebin bez, pamuk, parmak ve fırça sapıyla alınmasıyla (eksiltmeli) kurulur; aynı görüntüden ikinci bir eş çıkmaz. Pres mürekkebi ezip yumuşatır, kenarları hayalet gibi bulanıklaştırır; kalın mürekkep ayrılırken damarlı, benekli dokular (retikülasyon) bırakır, silinen yerlerde bile ince bir levha tonu kalır. Ressamların baskı ile resim arasında kalan, lekeci ve atmosferik işleri için kullanılır.",
+  "koken": "Tekniği 17. yüzyılda Cenovalı Giovanni Benedetto Castiglione ilk kez kullandı. 19. yüzyıl sonunda Edgar Degas yüzlerce monotipiyle ve üzerlerine pastelle çalışarak onu yeniden canlandırdı; Paul Gauguin aktarma monotipileri, Maurice Prendergast renkli ve benekli monotipileri, Henri Matisse beyaz çizgili siyah monotipileriyle tanındı. 20. yüzyılda Milton Avery ve Mary Frank gibi sanatçılar da sık kullandı.",
+  "ayirt_edici": [
+    "Göğe yatay geçişlerle merdaneyle açılmış mavi; geçiş sınırlarında ince mürekkep sırtları ve kuru fırçayla çekilmiş çapraz Prusya mavisi vuruşları",
+    "Bezle silinerek açılmış güneş, ışık yolları ve bulutlar; pamukla kazınmış kubbe parıltıları ve fırça sapıyla çizilmiş açık kaburga, korkuluk ve yaprak damarı çizgileri",
+    "Kubbe ve yapraklardaki kalın mürekkepte preste oluşan benekli, damarlı retikülasyon dokusu",
+    "Silinerek beyazlatılmış, hayalet gibi yumuşak kenarlı çiçekler; üstlerine sonradan konmuş pembe ve sarı dokunuşlar",
+    "Her yerde kalan ince levha tonu, ezilmiş bulanık kenarlar ve kâğıt tanesinin tutmadığı benekler",
+    "Geniş kâğıt kenar boşluğu, levha kenarında biriken koyu mürekkep ve kâğıda gömülmüş levha izi"
+  ],
+  "palet": ["#224260", "#628B9A", "#E1CE97", "#173E29", "#87B084", "#D2BB7E", "#8A6923", "#F3ECDD"],
+  "kodla_cizim": "2048 px iç çözünürlükte yedi pigment (levha tonu, seruleum, Prusya mavisi, viridyan, sarı, gül, siena) ayrı yoğunluk tuvallerine 'lighter' karışımıyla kıl kıl fırça darbeleri olarak boyanır: kubbede meridyen boyunca, kasnakta yatay, yapraklarda yaprak biçimine kırpılmış sivri darbeler. Göğün mavisi ve zeminin sienası piksel döngüsünde merdane geçişleri olarak hesaplanır (geçiş başına yoğunluk, sınırda mürekkep sırtı, yatay merdane benekleri). Üç silme katmanı vardır: merdane mürekkebini alan bez silmeleri (güneş halesi, ışık yolları, bulutlar; bez dokusuyla çarpılır), her katmanı alan son silmeler (kubbe parıltıları, taç yaprakları) ve kazıma çizgileri; çiçek göbekleri ve pembe gölgeler silmeden sonra eklenir. Katmanlar bulanıklaştırılıp gürültüyle kaydırılmış koordinatlardan okunur (preste ezilen kenar), kalın mürekkepte Worley hücreleri ve dallı damarlarla retikülasyon, ince mürekkepte kâğıt tanesi uygulanır; renkler Beer–Lambert çarpımıyla kâğıda basılır, levha kenarı yükseklik haritasından kabartma ışığıyla gömülür.",
+  "etiketler": ["monotipi", "tek baskı", "eksiltmeli baskı", "merdane", "retikülasyon", "levha tonu", "ressam baskısı", "atmosferik"]
+}

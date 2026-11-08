@@ -1,0 +1,22 @@
+{
+  "kod": "S-070",
+  "no": 70,
+  "ad": "Pirografi",
+  "ad_en": "Pyrography",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Kabuklu bir ağaç dilimine kızgın uçla yakılmış çizgi, nokta ve gölgeler; üstüne saydam ahşap boyası ve renkli kalem.",
+  "tanim": "Pirografi (ahşap yakma), elektrikli bir kalemin kızgın metal ucuyla ahşabın yüzeyini yakarak çizim yapmaktır. İnce yazma ucu keskin kahverengi çizgiler, geniş gölgeleme ucu açık tarçından koyu is kahvesine inen yumuşak tonlar verir; noktalama ve kısa çekme vuruşları doku kurar. Ahşabın yıllık halkaları yanığı farklı aldığı için damar resmin içinden görünür. Çoğu zaman sonradan saydam ahşap boyası, suluboya ya da renkli kalemle renklendirilir. Kesme tahtası, kutu, süs tabağı ve ağaç dilimi panolarda yaygındır.",
+  "koken": "Ateşte kızdırılmış demirle ahşap ve su kabağı süsleme Çin, Peru ve Afrika'da çok eskiye uzanır; Avrupa'da 17. yüzyıldan beri bilinir. 19. yüzyılın sonunda platin uçlu, benzin buharıyla ısıtılan aletlerle Viktorya döneminde 'poker work' adıyla moda oldu; 20. yüzyılda elektrikli kalemle hobi ve halk sanatı olarak yaygınlaştı. Günümüzde Julie Bender ve Jordan Thrower gibi sanatçılar fotoğraf gerçekliğinde ve renklendirilmiş pirografi işleriyle tanınır.",
+  "ayirt_edici": [
+    "Kabuklu, yıllık halkaları ve öz ışınları görünen açık renkli ağaç dilimi; kabukta ışınsal yarıklar ve ince kambiyum çizgisi",
+    "Yazma ucuyla yakılmış titrek kahverengi kontur çizgileri, çevrelerinde hafif is halesi; kaburgalar, taş derzleri, yaprak damarları",
+    "Gölgeleme ucuyla açık tarçından koyu is kahvesine inen tonlar: kubbenin sol yanı, kasnak, minarenin gölge yüzü, simsiyaha yakın pencere içleri",
+    "Gökte çerçeveye doğru sıklaşan noktalama; güneşte noktalı ışınlar, otlarda kısa çekme vuruşları",
+    "Saydam boya ve renkli kalemle renklendirme: yeşil kubbe ve kasnak, altın alemler, gül rengi çiçekler, yeşil yapraklar, soluk mavi gök ve sarı güneş halesi",
+    "Sahneyi çevreleyen iki yakılmış halka ve aralarında boncuk noktalar; dilimin koyu keten zemine düşen yumuşak gölgesi"
+  ],
+  "palet": ["#E9C895", "#CCA26A", "#3A1E0C", "#658E44", "#E0A63A", "#D27E86", "#8FA9C0", "#6E5440"],
+  "kodla_cizim": "Sahne dilimin içine sığsın diye (512, 540) çevresinde 0.8 ölçekle dönüştürülür ve bölge haritası bu dönüşümle 2048 çözünürlükte alınır. Yakma çizgileri SAHNE yollarından örneklenip hafifçe oynatılan, baskısı ve kalınlığı gürültüyle değişen kısa parçalar olarak bir tuvale çizilir (öndeki öğe arkadakinin çizgisini siler); güneş ışınları ve çiçek ortaları nokta, gök ise yoğunluğu çerçeveye uzaklıkla artan rastgele noktalama olarak ayrı tuvale yakılır. Her piksel için ahşap rengi hesaplanır: özden uzaklığı gürültüyle dalgalandırılmış yıllık halkalar (erken odun açık, geç odun koyu ve keskin biten bant, halkadan halkaya değişen koyuluk), öz ışınları, lif gürültüsü, kabuktan içe daralan çatlaklar; kabukta kenara paralel ince katmanlar, rastgele aralıklı ışınsal yarıklar, kızıl iç kabuk ve kambiyum çizgisi. Gölgeleme yanığı bölgeye göre ışık modelinden (kubbe normali, silindir ışığı) gelir, çekme vuruşu yönünde gerilmiş gürültüyle dokulanır, geç odunda biraz azalır. Çizgiler çekirdek + bulanık is halesi olarak eklenir. Renk = ahşap × renkli kalem/boya tonu (liflere takılan çizgili kapsama) × exp(−yanık × [0.78, 1.12, 1.62]); dilim koyu keten zemine yumuşak gölge düşürür.",
+  "etiketler": ["pirografi", "ahşap yakma", "ağaç dilimi", "renkli kalem", "el sanatı", "doku"]
+}

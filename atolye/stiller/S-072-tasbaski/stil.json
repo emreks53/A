@@ -1,0 +1,22 @@
+{
+  "kod": "S-072",
+  "no": 72,
+  "ad": "Taşbaskı (Kromolitografi)",
+  "ad_en": "Chromolithograph",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Her rengi ayrı taştan basılmış 19. yüzyıl renkli taşbaskısı: kalem greni, noktalama geçişleri, hafif kayık renkler, süslü bordür.",
+  "tanim": "Kromolitografi, yağlı taş kalemi ya da mürekkeple çizilen resmin kireç taşına aktarılıp su ile yağın birbirini itmesi ilkesiyle basıldığı taşbaskının çok renkli biçimidir; her renk için ayrı bir taş hazırlanır ve kâğıt sırayla, bazen on beş yirmi taştan geçirilir. Grenli taşa sürülen kalem tonları düzensiz ince noktalar, elle noktalanmış (stipple) alanlar yumuşak geçişler verir; renkler üst üste binerek yeni tonlar kurar, taşlar arasındaki küçük kayıklıklar kenarlarda renk saçakları bırakır. Kitap levhaları, seyahat albümleri, etiket, takvim ve süslü bordürlü duvar resimlerinde yaygındı.",
+  "koken": "Taşbaskıyı 1796'da Alois Senefelder buldu; Godefroy Engelmann 1837'de renkli taşbaskının patentini aldı. Owen Jones'un 'The Grammar of Ornament' (1856) levhaları, Louis Haghe'nin David Roberts için hazırladığı Doğu albümleri, Louis Prang'in Boston'da bastığı 'kromo'lar ve yüzyıl sonunun afiş ve etiketleri tekniğin en bilinen örnekleridir; 20. yüzyılda yerini ofset baskıya bıraktı.",
+  "ayirt_edici": [
+    "Dokuz ayrı taş (sarı, iki mavi, pembe, gri, okra, yeşil, Prusya mavisi, kırmızı) ve sepya ana kalıp çizgisi; renkler üst üste binerek ton kurar",
+    "Kubbe, zemin ve yapraklarda taş kalemi greninin düzensiz, kümeli noktaları",
+    "Gökte ve çiçek pembesinde elle noktalanmış ince, düzenli nokta geçişleri",
+    "Taşlar arasında hafif kayıklık: konturların dışına taşan ya da kâğıdı açıkta bırakan renk saçakları",
+    "Okra zeminli, dört yapraklı kırmızı güller, mavi baklavalar ve köşe rozetleriyle basılı bordür; altta boş kıvrık uçlu kartuş",
+    "Kenarlara doğru sararmış, yer yer pas lekeli (foxing) eski kâğıt"
+  ],
+  "palet": ["#DFCA9E", "#5D767F", "#5B6A41", "#CA9860", "#B37B3C", "#9B5A2A", "#E0CBA9", "#1D211A"],
+  "kodla_cizim": "Sahne 0,875 ölçekle bordürün içine yerleştirilir. Her taş 2048 px'lik gri tonlu bir tuvaldir: öğeler arkadan öne Path2D ile bütün taşlara birden doldurulur (öndeki biçim arkadaki tonu örter), tonlar doğrusal ve ışınsal geçişlerle, kaburga gölgeleri ve kalem gölgeleri toplamalı olarak eklenir; sepya ana kalıp her öğeden sonra kontur, kaburga ve damar çizgisi alır. Bordür ve kartuş da aynı taşlara basılır. Baskıda her taş kendi kaymasıyla okunur; 'kara' taşlarda ton, Worley tabanlı ve histogramla eşitlenmiş bir gren alanıyla eşiklenir (taş kalemi), 'nokta' taşında hücre başına kaydırılmış noktaların yarıçapı tonla büyür (elle noktalama). Mürekkepler sırayla çarpımla basılır; kâğıt kenar sararması, geniş lekeler ve kümelenmiş foxing noktalarıyla eskitilir.",
+  "etiketler": ["taşbaskı", "kromolitografi", "renkli baskı", "19. yüzyıl", "noktalama", "bordür", "eski kâğıt", "kayıklık"]
+}

@@ -1,0 +1,22 @@
+{
+  "kod": "S-042",
+  "no": 42,
+  "ad": "Akrilik",
+  "ad_en": "Acrylic",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Doygun, parlak renkler; düz fırçanın keskin kenarlı darbeleri, karışmadan üst üste binen katlar ve tuval dokusu.",
+  "tanim": "Akrilik, pigmentin akrilik polimer emülsiyonuyla bağlandığı, suyla incelen ama kuruyunca suya dayanıklı hâle gelen çabuk kuruyan bir boyadır. Çabuk kuruduğu için renkler yaş yaşa karışmaz; ressam tonları keskin kenarlı katlar hâlinde üst üste koyar, düz alanlarda fırça izi ve darbe kenarlarında ince boya sırtları kalır. Renkler doygun ve parlaktır, yüzey yağlıboyadan daha ince ve düzdür, hafif saten bir parlaklığı vardır. Çağdaş resimde, duvar resminde ve tuval üzerine canlı renkli manzaralarda yaygındır.",
+  "koken": "Akrilik boya 1930'larda geliştirildi, 1950'lerde Magna ve ardından Liquitex adıyla sanatçı boyası olarak piyasaya çıktı. Meksikalı duvar ressamları (Siqueiros) ve Amerikan renk alanı ressamları (Helen Frankenthaler, Morris Louis) ilk kullanıcıları arasındaydı; David Hockney'in 1960'lardaki parlak, düz renkli Kaliforniya tabloları ve Bridget Riley'nin keskin kenarlı resimleri akriliğin çabuk kuruyan, karışmayan katlarını bir anlatım diline dönüştürdü.",
+  "ayirt_edici": [
+    "Kobalt mavisinden turkuaza, fıstık yeşilinden sarı-yeşile doygun, parlak renkler",
+    "Kubbede ve gökte ışık-gölgenin degradesiz, keskin sınırlı düz ton katlarıyla kurulması; sınırlarda darbeler birbirine geçer",
+    "Düz uçlu fırçanın uzun, keskin kenarlı yatay darbeleri, güneş çevresinde dairesel darbeler",
+    "Kubbe, bulut ve minare çevresinde yer yer açık kalan ince boşluklardan görünen turuncu-kırmızı astar",
+    "Darbe kenarlarında ışık yakalayan ince boya sırtları, düz alanlarda kıl olukları ve hafif saten parlama",
+    "Bütün yüzeyde, ince boyalı yerlerde daha belirgin tuval bezi dokusu"
+  ],
+  "palet": ["#1A3E99", "#2E86CE", "#0B5A40", "#2EAD56", "#9ED64A", "#A196D6", "#E2582E", "#F07BB2"],
+  "kodla_cizim": "2048 px'lik bir renk tamponu turuncu-kırmızı astarla başlar. Ayrı bir 'darbe haritası' tuvaline düz uçlu fırça darbeleri çizilir; R kanalı darbenin ton oynamasını, G kanalı boya kalınlığını (gövde, kenar sırtı, kıl olukları), B kanalı kuru uçları taşır. Darbeler bölgeye göre yön alır: gökte uzun yatay, güneş çevresinde dairesel, kubbede kaburga boyunca, minarede dikey, kasnakta yatay. Biçimler Path2D'den çıkarılan keskin kapsama maskeleriyle katman katman örtücü boyanır; ışık kubbe için dönel yüzey normali, kasnak ve minare için silindir modeliyle hesaplanıp beş-altı düz tona basamaklanır ve basamak sınırları darbe haritasıyla kaydırılarak darbe biçimli, keskin kenarlar elde edilir. Arkadaki boya öndeki biçimlerin bulanık maskesine ve düşük frekanslı gürültüye göre yer yer biçimin çevresinde boşluk bırakır, astar oradan görünür. Bitkiler sivri darbe biçimleriyle hem renk hem yükseklik olarak çizilir. Son geçişte darbe kalınlığı ve çözgü-atkı modelli tuval bezi yükseklik haritasına toplanır; ince ve geniş ölçekli normallerle sağ üstten yayınık ışık ve saten parlama verilir.",
+  "etiketler": ["akrilik", "doygun renk", "keskin kenar", "düz fırça", "tuval", "çağdaş resim", "katmanlı boya"]
+}
