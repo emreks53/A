@@ -29,6 +29,7 @@
     yaprak: '#7DA877', yaprakG: '#5C8A5C',
     mercan: '#EC8D73', mercanG: '#CD6E57',
     zemin: '#E6CCA6',
+    cali: '#A9C49A', caliG: '#93B386',
   };
 
   // ---------------------------------------------------------------- SVG yardımcıları
@@ -198,6 +199,17 @@
   }
   for (const s of B.saplar) out.push(`<path d="${S.yol(s)}" fill="none" stroke="${P.yaprakG}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>`);
 
+  // önde alçak, yuvarlak bir çalı kütlesi: çiçek tarhının zemini (tek ton gölgeli düz biçim)
+  {
+    const r2 = S.rng(22);
+    const parca = [];
+    for (let x = -60; x <= 1090; x += 92 + r2() * 30) parca.push(S.daireYolu(x, 1018 + r2() * 26, 82 + r2() * 34));
+    const id = 'k' + sayac++;
+    defs.push(`<clipPath id="${id}">${parca.map((d) => `<path d="${d}"/>`).join('')}</clipPath>`);
+    for (const d of parca) dol(d, P.caliG);
+    grup(id, () => { for (const d of parca) dol(d, P.cali, `transform="translate(9,-9)"`); });
+  }
+
   function yaprak(y, koyu) {
     const ACIK = koyu ? P.yesil : P.yaprak, GOLGE = koyu ? P.yesilG : P.yaprakG;
     const Lu = y.uzunluk, W = Lu * y.genislik;
@@ -219,7 +231,7 @@
   B.yapraklar.forEach((y, i) => {
     if (i < 36) return yaprak(y, false);
     const [cx, cy] = merkezi(y);
-    if (secili.some(([x, yy]) => Math.hypot(x - cx, yy - cy) < 78)) return;
+    if (secili.some(([x, yy]) => Math.hypot(x - cx, yy - cy) < 56)) return;
     secili.push([cx, cy]);
     // her üç yapraktan biri kubbenin yeşilinde: derinlik ve palet birliği
     yaprak({ ...y, uzunluk: y.uzunluk * 1.12 }, secili.length % 3 === 0);
