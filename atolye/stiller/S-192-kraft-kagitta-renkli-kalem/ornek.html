@@ -967,6 +967,13 @@
     }
     const a = tarama(fu, fv, ar, boy, 0.46, 51);
     let fr = PR[i], fg = PG[i], fb = PB[i];
+    if (tip === T_MPENC || tip === T_KPENC || tip === T_KASPENC) {
+      // pencere içleri: koyu kalemle sık, iki yönde sıkıca doldurulmuş (kenarı net)
+      const k = 0.82 + 0.16 * d;
+      fr += (r * 0.8 - fr) * k; fg += (g * 0.8 - fg) * k; fb += (bl * 0.8 - fb) * k;
+      OR[i] = fr; OG[i] = fg; OB[i] = fb;
+      continue;
+    }
     if (c1 > 0) {
       const k = dep(a * c1, d) * (KUCUK.has(tip) ? 1 : 0.94);
       fr += (r - fr) * k; fg += (g - fg) * k; fb += (bl - fb) * k;
