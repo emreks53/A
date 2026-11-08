@@ -150,9 +150,35 @@
   }
 
   // ------------------------------------------------------------ silkme kalıpları (motifler; yerel koordinat)
-  // rumi: ucu kıvrık, çatal uçlu yaprak (dip 0,0; sağa uzanır)
-  const RUMI = ornekle('M0,0 C2,-9 12,-14 22,-12 C30,-10 36,-4 38,2 C33,-1 29,-1 26,1 C29,3 30,7 27,10 C22,8 18,8 15,10 C9,12 2,7 0,0 Z', 0.8);
-  const RUMI_GOZ = ornekle('M8,0 C11,-5 17,-7 23,-5 C19,-3 15,-1 13,3 C11,3 9,2 8,0 Z', 0.8);
+  // rumi: dolgun karınlı, uzun sivri uçlu, iç kenarında çatal (ikinci uç) olan klasik rumi; içinde göz
+  // (dip 0,0; sağa uzanır, uzunluk 56)
+  const RUMI = ornekle('M0,0 C1,-10 10,-16 22,-16 C34,-16 46,-10 56,-1 C48,-4 41,-5 35,-3 C38,0 39,4 37,8 C31,3 22,2 14,5 C8,7 2,5 0,0 Z', 0.8);
+  const RUMI_GOZ = ornekle('M7,-3 C10,-9 19,-12 28,-10 C22,-8 17,-6 14,-2 C11,-1 8,-1 7,-3 Z', 0.8);
+  // hatayi: yandan görünen, katmanlı, sivri dilimli stilize çiçek; çanakta iki kıvrık yaprakçık
+  // (dip 0,6; yukarı açılır, yükseklik ≈ 38)
+  function dilimliYol(pts, kab) {
+    let d = `M${pts[0][0]},${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i++) {
+      const a = pts[i - 1], c = pts[i];
+      const mx = (a[0] + c[0]) / 2, my = (a[1] + c[1]) / 2, dx = c[0] - a[0], dy = c[1] - a[1], L = Math.hypot(dx, dy);
+      d += ` Q${(mx + (dy / L) * kab * L).toFixed(2)},${(my - (dx / L) * kab * L).toFixed(2)} ${c[0]},${c[1]}`;
+    }
+    return d + ' Z';
+  }
+  const HATAYI_DIS = ornekle(dilimliYol([[-7, 4], [-21, 0], [-13, -5], [-18, -14], [-9, -11], [-8, -21], [-3, -14], [0, -25], [3, -14], [8, -21], [9, -11], [18, -14], [13, -5], [21, 0], [7, 4]], 0.2), 0.7);
+  const HATAYI_IC = ornekle(dilimliYol([[-5, 2], [-11, -6], [-6, -7], [-6, -15], [-2, -10], [0, -18], [2, -10], [6, -15], [6, -7], [11, -6], [5, 2]], 0.16), 0.7);
+  const HATAYI_GOZ = ornekle('M0,-1 C-4,-2 -4,-8 0,-12 C4,-8 4,-2 0,-1 Z', 0.6);
+  const HATAYI_CANAK = ornekle('M-1,4 C-6,3 -12,5 -14,10 C-10,8 -6,9 -4,13 C-3,10 -1,8 0,8 C1,8 3,10 4,13 C6,9 10,8 14,10 C12,5 6,3 1,4 Z', 0.7);
+  function hatayi(m, dis, ic, tw) {
+    motif(HATAYI_CANAK, m, RENK.yesil, (tw || 1.2) * 0.85);
+    motif(HATAYI_DIS, m, dis, tw || 1.2);
+    motif(HATAYI_IC, m, ic, (tw || 1.2) * 0.85);
+    motif(HATAYI_GOZ, m, RENK.lacivert, (tw || 1.2) * 0.75);
+  }
+  function rumi(m, renk, tw) {
+    motif(RUMI, m, renk, tw);
+    motif(RUMI_GOZ, m, RENK.lacivert, (tw || 1.2) * 0.7);
+  }
   // hatayi gülbezek: dilimli dış taç, iç halka, göbek
   function gulbezek(R0, dilim) {
     let d = '';
@@ -214,25 +240,24 @@
       silkme(sapP, 2.6);
       for (let k = 0; k < adet; k++) {
         const u0 = k * T;
-        // ortada gülbezek
-        const [cx, cy, a] = kn(u0 + T / 2, 0);
-        const v0 = 8.5 * Math.sin(Math.PI); // 0
-        motif(GUL_DIS, { x: cx, y: cy + 0 * v0, a, s: 1 }, RENK.lal, 1.4);
-        motif(GUL_IC, { x: cx, y: cy, a, s: 1 }, RENK.asiAcik, 1.2);
-        motif(ornekle('M-4,0 A4,4 0 1,0 4,0 A4,4 0 1,0 -4,0 Z', 0.7), { x: cx, y: cy, a, s: 1 }, RENK.lacivert, 1.1);
-        // gülbezeğin iki yanında, dalın tepe ve çukurunda karşılıklı rumiler
-        for (const yan of [-1, 1]) {
-          const u = u0 + T / 2 + yan * T * 0.25;
-          const vv = 10 * Math.sin((u / T) * Math.PI * 2);
-          const [rx, ry] = kn(u, vv);
-          const dis = vv > 0 ? 1 : -1; // dalın dış yanına doğru açılır
-          const yon = a + (yan > 0 ? 0 : Math.PI);
-          motif(RUMI, { x: rx, y: ry, a: yon + dis * yan * 0.5 * (yan > 0 ? 1 : -1), s: 0.74, fy: dis * yan < 0 }, RENK.firuze, 1.3);
-          motif(RUMI_GOZ, { x: rx, y: ry, a: yon + dis * yan * 0.5 * (yan > 0 ? 1 : -1), s: 0.74, fy: dis * yan < 0 }, RENK.lacivert, 0.9);
+        const a = kn(0, 0)[2];
+        // dalın tepesinde (iç kenara yakın) dışa doğru açılan hatayi; çukurunda koynuna oturan gülbezek (penç)
+        {
+          const [hx, hy] = kn(u0 + T / 4, 10);
+          hatayi({ x: hx, y: hy, a, s: 0.82 }, RENK.lal, RENK.asiAcik, 1.2);
+          const [cx, cy] = kn(u0 + (3 * T) / 4, 1);
+          motif(GUL_DIS, { x: cx, y: cy, a, s: 0.82 }, RENK.lal, 1.3);
+          motif(GUL_IC, { x: cx, y: cy, a, s: 0.82 }, RENK.asiAcik, 1.1);
+          motif(ornekle('M-4,0 A4,4 0 1,0 4,0 A4,4 0 1,0 -4,0 Z', 0.7), { x: cx, y: cy, a, s: 0.85 }, RENK.lacivert, 1);
         }
-        // kalıp sınırında küçük penç
-        const [px, py] = kn(u0, 0);
-        if (k > 0) motif(PENC, { x: px, y: py, a: a + (k % 2 ? 0 : Math.PI), s: 0.7 }, RENK.asi, 1.1);
+        // dalın orta çizgiyi kestiği yerlerde iki yana çatallanan karşılıklı rumiler (dal yönünde uzanır)
+        for (const uz of [u0, u0 + T / 2]) {
+          if (uz < 6) continue;
+          const egim = Math.atan(10 * ((2 * Math.PI) / T) * Math.cos((uz / T) * Math.PI * 2));
+          const [rx, ry] = kn(uz, 0);
+          rumi({ x: rx, y: ry, a: a + egim - 0.62, s: 0.4 }, RENK.firuze, 1.1);
+          rumi({ x: rx, y: ry, a: a + egim + 0.62, s: 0.4, fy: true }, RENK.firuze, 1.1);
+        }
       }
     }
     // köşe gülbezekleri
