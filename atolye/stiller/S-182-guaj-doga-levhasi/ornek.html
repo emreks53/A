@@ -645,15 +645,24 @@
     }
     if (o.yog <= 0) return;
     const gecis = Math.ceil(o.yog), olas = o.yog / gecis;
-    const ax = o.ara * 2.2, ay = o.ara;
+    // ızgara baskın tarama yönünde döndürülür: çizgiler enine 'ara' kadar aralıklı, boyuna kaydırmalı
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    const a0 = typeof yonF === 'function' ? yonF(mx, my) : yonF;
+    const ua = Math.cos(a0), va = Math.sin(a0);
+    const yar = Math.hypot(x1 - x0, y1 - y0) / 2 + 4;
+    const boy = Math.max(o.uzun * 0.75, o.ara * 2.2), en = o.ara;
     ctx.save();
     ctx.clip(yol);
     ctx.lineCap = 'round';
     for (let g = 0; g < gecis; g++) {
-      for (let gy = y0 - ay; gy < y1 + ay; gy += ay) {
-        for (let gx = x0 - ax; gx < x1 + ax; gx += ax) {
+      let sira = 0;
+      for (let vv = -yar; vv < yar; vv += en, sira++) {
+        const kay = ((sira * 0.37 + g * 0.5) % 1) * boy;
+        for (let uu = -yar - kay; uu < yar; uu += boy) {
           if (R() > olas) continue;
-          const x = gx + R() * ax, y = gy + R() * ay;
+          const pu = uu + R() * boy * 0.5, pv = vv + (R() - 0.5) * en * 0.5;
+          const x = mx + pu * ua - pv * va, y = my + pu * va + pv * ua;
+          if (x < x0 - 2 || x > x1 + 2 || y < y0 - 2 || y > y1 + 2) continue;
           const c = renkF(x, y);
           const b = (lum(c) - lO) / lO;
           const pa = clamp(0.5 + b * 2.6, 0.14, 0.86);

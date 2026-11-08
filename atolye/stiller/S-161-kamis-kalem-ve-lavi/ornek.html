@@ -771,7 +771,7 @@
   // ================================================================ kamış kalem (ceviz mürekkebi)
   const MUR = katman(), SULU = katman();
   const NIB = -0.6; // kamış ucunun açısı (≈ -34°): sağ üste giden vuruşlar ince, sağ alta inenler kalın
-  const KOYU = '#38200F', ACIK = '#A07D58', SKOYU = '#76583D', SACIK = '#BDA07F';
+  const KOYU = '#4A2915', ACIK = '#A57347', SKOYU = '#8C6641', SACIK = '#C6A47E';
   let vNo = 0;
   /** Kamış kalem vuruşu: ucun K lifi aynı yolu uç açısı doğrultusunda kaydırarak izler; mürekkep yükü başta dolu,
    *  sonda azalır, kenar lifleri önce kurur; basınçlı kalın yerlerde yarık uç ortada ince bir açık çizgi bırakır. */
@@ -843,14 +843,14 @@
   const ters = (p) => p.slice().reverse();
 
   // ---- yapı çizgileri
-  const yapW = { kubbe: 6.2, kaburga: 3.0, kasnak: 4.8, kasnakH: 4.4, pencere: 2.5, nis: 1.9, kornis: 4.2, kaide: 5.0, kpencere: 3.4, mgovde: 4.6, zikzak: 2.8, cikma: 3.6, serefe: 3.6, korkuluk: 3.0, parmak: 2.0, bilezik: 2.6, topuz: 3.6, mpencere: 2.6 };
+  const yapW = { kubbe: 10.5, kaburga: 4.2, kasnak: 7.6, kasnakH: 7.0, pencere: 3.5, nis: 2.6, kornis: 6.6, kaide: 8.0, kpencere: 5.2, mgovde: 7.2, zikzak: 3.9, cikma: 5.6, serefe: 5.4, korkuluk: 4.3, parmak: 2.6, bilezik: 3.7, topuz: 5.6, mpencere: 3.7 };
   for (const e of yapiCizgileri()) {
     const W = yapW[e.tur] || 2.5;
     if (e.tur === 'kaburga') {
       // kaburgalar yukarıdan aşağı; tepeye yakın sıklaştığı yerde bırakılır; ışıklı yanda sulu mürekkep
       const p = ters(e.p).filter((q) => q[1] > 318 + 14 * (1 - Math.abs(e.u)));
       const isikli = e.u > -0.45;
-      vuruslar(isikli ? SULU.x : MUR.x, elle(p, { titre: 0.35, dalga: 50 }), { W: isikli ? 2.6 : 2.9, maxL: 150, koyu: isikli ? SKOYU : KOYU, acik: isikli ? SACIK : ACIK, yuk1: 0.5 });
+      vuruslar(isikli ? SULU.x : MUR.x, elle(p, { titre: 0.35, dalga: 50 }), { W: isikli ? 3.7 : 4.3, maxL: 150, koyu: isikli ? SKOYU : KOYU, acik: isikli ? SACIK : ACIK, yuk1: 0.5 });
       continue;
     }
     if (e.tur === 'kubbe') {
@@ -866,12 +866,12 @@
   // alemler
   for (const a of [SAHNE.alemParcalari(560, 300, 1), SAHNE.minareParcalari().find((q) => q.ad === 'alem').alem]) {
     const kucuk = a.kureler[0].r < 9;
-    for (const e of alemCizgileri(a)) kamis(MUR.x, elle(e.p, { titre: 0.2 }), { W: kucuk ? 1.5 : 2.0, K: 4, yuk1: 0.85 });
+    for (const e of alemCizgileri(a)) kamis(MUR.x, elle(e.p, { titre: 0.2 }), { W: kucuk ? 2.0 : 2.7, K: 4, yuk1: 0.85 });
   }
   // yer çizgisi (bitkilerin arkasında kalır)
-  vuruslar(MUR.x, elle([[0, 800], [298, 800]], { titre: 0.6 }), { W: 2.6, maxL: 140 });
-  vuruslar(MUR.x, elle([[822, 800], [1024, 800]], { titre: 0.6 }), { W: 2.6, maxL: 140 });
-  vuruslar(MUR.x, elle([[300, 800], [820, 800]], { titre: 0.4 }), { W: 3.2, maxL: 140 });
+  vuruslar(MUR.x, elle([[0, 800], [298, 800]], { titre: 0.6 }), { W: 4.4, maxL: 140 });
+  vuruslar(MUR.x, elle([[822, 800], [1024, 800]], { titre: 0.6 }), { W: 4.4, maxL: 140 });
+  vuruslar(MUR.x, elle([[300, 800], [820, 800]], { titre: 0.4 }), { W: 5.2, maxL: 140 });
 
   // ---- tarama: sulu mürekkeple tutumlu, biçime oturan kısa vuruşlar
   const kubbeX = (b, y) => 560 + Math.sin(b) * kubbeR(y);
@@ -885,7 +885,7 @@
       const yTop = 555 - (70 + 120 * Math.min(1, -u) + rng() * 20);
       const p = [];
       for (let y = yTop; y <= 549; y += 1) p.push([kubbeX(bj, y), y]);
-      vuruslar(SULU.x, elle(p, { titre: 0.3 }), { W: 2.1, K: 4, maxL: 70, koyu: SKOYU, acik: SACIK, yuk1: 0.6 });
+      vuruslar(SULU.x, elle(p, { titre: 0.3 }), { W: 3.0, K: 4, maxL: 70, koyu: SKOYU, acik: SACIK, yuk1: 0.6 });
     }
   }
   // kasnaklarda gölge yanı dikey vuruşlar (pencerelerin arasından)
@@ -894,7 +894,7 @@
     for (let x = x1 + 4; x < x1 + 92; x += 4.2 + (x - x1) * 0.07) {
       const p = [];
       for (let y = y1 + rng() * 4; y < y2 - rng() * 4; y += 1) p.push([x + (rng() - 0.5) * 0.2, y]);
-      for (const q of kirp(p, (a, b) => !pencerede(a, b) && !pencerede(a - 2, b) && !pencerede(a + 2, b))) if (q.length > 4) kamis(SULU.x, elle(q, { titre: 0.25 }), { W: 1.9, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.7 });
+      for (const q of kirp(p, (a, b) => !pencerede(a, b) && !pencerede(a - 2, b) && !pencerede(a + 2, b))) if (q.length > 4) kamis(SULU.x, elle(q, { titre: 0.25 }), { W: 2.7, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.7 });
     }
   }
   // minarenin gölge yanı
@@ -903,30 +903,30 @@
       const x = x0 + 3.2 + j * 4.4;
       const p = [];
       for (let y = y1 + rng() * 6; y < y2 - rng() * 6; y += 1) p.push([x, y]);
-      for (const q of kirp(p, (a, b) => !(a >= 289 && b >= 691.5) && !pencerede(a + 2, b) && !pencerede(a - 2, b) && !(b > 520 && b < 584))) vuruslar(SULU.x, elle(q, { titre: 0.3 }), { W: 1.9, K: 4, maxL: 80, koyu: SKOYU, acik: SACIK, yuk1: 0.6 });
+      for (const q of kirp(p, (a, b) => !(a >= 289 && b >= 691.5) && !pencerede(a + 2, b) && !pencerede(a - 2, b) && !(b > 520 && b < 584))) vuruslar(SULU.x, elle(q, { titre: 0.3 }), { W: 2.7, K: 4, maxL: 80, koyu: SKOYU, acik: SACIK, yuk1: 0.6 });
     }
   }
   // korniş altı gölge şeridi: kısa eğik vuruşlar
   for (let x = 304; x < 700; x += 6.5) {
     if (rng() < 0.12) continue;
     const y = 706 + rng() * 1.5;
-    kamis(SULU.x, elle([[x, y + 9], [x + 6, y]], { titre: 0.15 }), { W: 2.0, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.8 });
+    kamis(SULU.x, elle([[x, y + 9], [x + 6, y]], { titre: 0.15 }), { W: 2.7, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.8 });
   }
   // kaidenin sol ucu ve yerdeki gölge
-  for (let x = 304; x < 336; x += 5) kamis(SULU.x, elle([[x, 790], [x + 22, 722]], { titre: 0.3 }), { W: 2.0, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.6 });
+  for (let x = 304; x < 336; x += 5) kamis(SULU.x, elle([[x, 790], [x + 22, 722]], { titre: 0.3 }), { W: 2.7, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.6 });
   for (let i = 0; i < 5; i++) {
     const y = 807 + i * 9 + rng() * 2;
     const xa = 30 + rng() * 80, xb = xa + 50 + rng() * 70;
-    kamis(SULU.x, elle([[xa, y], [xb, y + rng() * 1.5]], { titre: 0.4 }), { W: 2.0, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.5 });
+    kamis(SULU.x, elle([[xa, y], [xb, y + rng() * 1.5]], { titre: 0.4 }), { W: 2.7, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.5 });
     const xc = 800 + rng() * 120;
-    kamis(SULU.x, elle([[xc, y + 3], [xc + 40 + rng() * 60, y + 3]], { titre: 0.4 }), { W: 2.0, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.5 });
+    kamis(SULU.x, elle([[xc, y + 3], [xc + 40 + rng() * 60, y + 3]], { titre: 0.4 }), { W: 2.7, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.5 });
   }
 
   // ---- bulutlar ve güneş (sulu mürekkep, yalnız göğün üstünde)
   {
     const p = [];
     for (let a = -0.2; a <= PI2 - 0.9; a += 0.01) p.push([GX + Math.cos(a) * 40, GY + Math.sin(a) * 40]);
-    vuruslar(SULU.x, elle(p, { titre: 0.3, yuz: 8 }), { W: 2.4, K: 5, maxL: 120, koyu: SKOYU, acik: SACIK });
+    vuruslar(SULU.x, elle(p, { titre: 0.3, yuz: 8 }), { W: 3.6, K: 5, maxL: 120, koyu: SKOYU, acik: SACIK });
   }
 
   // ---- bitkiler: her öğe arkasındaki çizgiyi örter (ressam çizgiyi öndeki biçimde keser)
@@ -935,44 +935,44 @@
   }
   for (const e of liste) {
     if (e.tur === 'sap') {
-      sil((k) => { k.lineWidth = 4.6; k.stroke(noktaYoluAcik(e.p)); });
-      vuruslar(MUR.x, elle(ters(e.p), { titre: 0.5 }), { W: 4.2, maxL: 150, yuk1: 0.38 });
+      sil((k) => { k.lineWidth = 6.4; k.stroke(noktaYoluAcik(e.p)); });
+      vuruslar(MUR.x, elle(ters(e.p), { titre: 0.5 }), { W: 5.8, maxL: 150, yuk1: 0.38 });
     } else if (e.tur === 'yaprak') {
-      sil((k) => { const P = noktaYolu(e.p); k.fill(P); k.lineWidth = 2.6; k.stroke(P); });
+      sil((k) => { const P = noktaYolu(e.p); k.fill(P); k.lineWidth = 4.4; k.stroke(P); });
       const m = Math.floor(e.p.length / 2);
-      const W = e.y.uzunluk > 62 ? 3.8 : 3.2;
+      const W = e.y.uzunluk > 62 ? 5.4 : 4.6;
       kamis(MUR.x, elle(e.p.slice(0, m + 1), { titre: 0.3, yuz: 7 }), { W, yuk1: 0.6 });
       kamis(MUR.x, elle(ters(e.p.slice(m)), { titre: 0.3, yuz: 7 }), { W, yuk1: 0.5 });
       const [a, b] = e.damar;
-      kamis(SULU.x, elle([a, [lerp(a[0], b[0], 0.82), lerp(a[1], b[1], 0.82)]], { titre: 0.3 }), { W: 1.7, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.6 });
+      kamis(SULU.x, elle([a, [lerp(a[0], b[0], 0.82), lerp(a[1], b[1], 0.82)]], { titre: 0.3 }), { W: 2.4, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.6 });
     } else if (e.tur === 'tomurcuk') {
-      sil((k) => { const P = noktaYolu(e.p); k.fill(P); k.lineWidth = 2.4; k.stroke(P); });
-      kamis(MUR.x, elle(e.p, { titre: 0.2, yuz: 4 }), { W: 2.6, K: 5, yuk1: 0.7 });
+      sil((k) => { const P = noktaYolu(e.p); k.fill(P); k.lineWidth = 3.6; k.stroke(P); });
+      kamis(MUR.x, elle(e.p, { titre: 0.2, yuz: 4 }), { W: 3.7, K: 5, yuk1: 0.7 });
       const t = e.t, ca = Math.cos(t.aci), sa = Math.sin(t.aci);
-      for (const s of [-1, 1]) kamis(MUR.x, elle([[t.x - ca * t.r * 0.9, t.y - sa * t.r * 0.9], [t.x + ca * t.r * 0.2 - sa * s * t.r * 0.75, t.y + sa * t.r * 0.2 + ca * s * t.r * 0.75]], { titre: 0.1 }), { W: 1.6, K: 4 });
+      for (const s of [-1, 1]) kamis(MUR.x, elle([[t.x - ca * t.r * 0.9, t.y - sa * t.r * 0.9], [t.x + ca * t.r * 0.2 - sa * s * t.r * 0.75, t.y + sa * t.r * 0.2 + ca * s * t.r * 0.75]], { titre: 0.1 }), { W: 2.2, K: 4 });
     } else if (e.tur === 'cicek') {
       const c = e.c;
-      const W = c.r > 40 ? 3.8 : 3.0;
+      const W = c.r > 40 ? 5.6 : 4.4;
       for (const t of e.taclar) {
-        sil((k) => { const P = noktaYolu(t); k.fill(P); k.lineWidth = 2.6; k.stroke(P); });
+        sil((k) => { const P = noktaYolu(t); k.fill(P); k.lineWidth = 4.4; k.stroke(P); });
         const m = Math.floor(t.length / 2);
         kamis(MUR.x, elle(t.slice(2, t.length - 2), { titre: 0.3, yuz: 7 }), { W, yuk1: 0.55, maxL: 200 });
         void m;
         if (c.r > 40) {
           const a = Math.atan2(t[m][1] - c.y, t[m][0] - c.x);
-          for (const d of [-0.12, 0.12]) kamis(SULU.x, elle([[c.x + Math.cos(a + d) * c.r * 0.3, c.y + Math.sin(a + d) * c.r * 0.3], [c.x + Math.cos(a + d * 1.4) * c.r * 0.62, c.y + Math.sin(a + d * 1.4) * c.r * 0.62]], { titre: 0.2 }), { W: 1.5, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.55 });
+          for (const d of [-0.12, 0.12]) kamis(SULU.x, elle([[c.x + Math.cos(a + d) * c.r * 0.3, c.y + Math.sin(a + d) * c.r * 0.3], [c.x + Math.cos(a + d * 1.4) * c.r * 0.62, c.y + Math.sin(a + d * 1.4) * c.r * 0.62]], { titre: 0.2 }), { W: 2.1, K: 4, koyu: SKOYU, acik: SACIK, yuk1: 0.55 });
         }
       }
       sil((k) => { k.beginPath(); k.arc(c.x, c.y, c.r * 0.22, 0, PI2); k.fill(); });
       const o = [];
       for (let a = 0; a <= PI2 + 0.3; a += 0.05) o.push([c.x + Math.cos(a) * c.r * 0.2, c.y + Math.sin(a) * c.r * 0.2]);
-      kamis(MUR.x, elle(o.slice(0, Math.floor(o.length * 0.7)), { titre: 0.12 }), { W: c.r > 40 ? 2.2 : 1.7, K: 4, yuk1: 0.55 });
+      kamis(MUR.x, elle(o.slice(0, Math.floor(o.length * 0.7)), { titre: 0.12 }), { W: c.r > 40 ? 3.0 : 2.3, K: 4, yuk1: 0.55 });
       const say = c.r > 40 ? 11 : 7;
       for (let i = 0; i < say; i++) {
         const a = (i / say) * PI2 + c.aci;
         const rr = c.r * 0.29;
         const px = c.x + Math.cos(a) * rr, py = c.y + Math.sin(a) * rr;
-        kamis(MUR.x, [[px, py], [px + Math.cos(a) * 1.6, py + Math.sin(a) * 1.6]], { W: c.r > 40 ? 2.2 : 1.7, K: 3, yuk1: 1 });
+        kamis(MUR.x, [[px, py], [px + Math.cos(a) * 1.6, py + Math.sin(a) * 1.6]], { W: c.r > 40 ? 3.0 : 2.3, K: 3, yuk1: 1 });
       }
     }
   }

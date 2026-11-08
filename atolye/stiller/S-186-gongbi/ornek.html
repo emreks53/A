@@ -460,6 +460,36 @@ function kubbeHucre(x, y) {
   const uc = Math.sin(-Math.PI / 2 + ((gi + 0.5) * Math.PI) / 16);
   return { R, lat, u, th, gi, f, uc };
 }
+
+/** Elips kümesinin birleşim sınırı: her elipsin başka bir elipsin içinde kalmayan yay parçaları ([[x,y],…] dizileri). */
+function elipsBirlesimi(elipsler, adim) {
+  adim = adim || 1.5;
+  const icinde = (x, y, haric) => elipsler.some((e, j) => j !== haric && Math.pow((x - e.x) / e.rx, 2) + Math.pow((y - e.y) / e.ry, 2) < 0.985);
+  const parcalar = [];
+  elipsler.forEach((e, i) => {
+    const n = Math.max(24, Math.ceil((2 * Math.PI * Math.max(e.rx, e.ry)) / adim));
+    let cur = [];
+    const run = [];
+    for (let k = 0; k <= n; k++) {
+      const a = (k / n) * Math.PI * 2;
+      const x = e.x + Math.cos(a) * e.rx;
+      const y = e.y + Math.sin(a) * e.ry;
+      if (!icinde(x, y, i)) cur.push([x, y]);
+      else if (cur.length) {
+        run.push(cur);
+        cur = [];
+      }
+    }
+    if (cur.length) run.push(cur);
+    // başta ve sonda kesilen parçayı birleştir
+    if (run.length > 1 && run[0][0] && run[run.length - 1].length && Math.hypot(run[0][0][0] - run[run.length - 1][run[run.length - 1].length - 1][0], run[0][0][1] - run[run.length - 1][run[run.length - 1].length - 1][1]) < adim * 2) {
+      const son = run.pop();
+      run[0] = son.concat(run[0]);
+    }
+    for (const r of run) if (r.length > 2) parcalar.push(r);
+  });
+  return parcalar;
+}
 // ---------------------------------------------------------------- S-186 Gongbi (titiz ipek resmi)
 // Hayalî ressamın eli: ince kurt kılı çizgi fırçası ve sulandırılmış çam isi mürekkebiyle "demir tel" kontur,
 // şaplanmış açık renkli ipek, malakit / azurit / istiridye beyazı / allık / gütta sarısı; her renk ayrı bir
@@ -499,7 +529,7 @@ c.fillRect(0, 0, 1024, 1024);
   const mk = S.yeniTuval(512, 512);
   const m = mk.getContext('2d', { willReadFrequently: true });
   m.scale(0.5, 0.5);
-  m.filter = 'blur(8px)';
+  m.filter = 'blur(5px)';
   m.fillStyle = '#fff';
   for (const b of lobler) for (const e of b.out) {
     m.beginPath();
@@ -555,18 +585,24 @@ c.fillRect(0, 0, 1024, 1024);
   }
   q.filter = 'none';
   c.drawImage(gk.c, 0, 0, 1024, 1024);
-  // bulutların üstüne ince istiridye beyazı
-  c.save();
-  c.filter = 'blur(8px)';
-  c.fillStyle = 'rgba(255,255,252,0.3)';
+  // bulutların üstüne ince istiridye beyazı; kenarları soluk çivitle ince demir tel çizgiyle çekilir
   for (const b of lobler) {
+    const p = new Path2D();
     for (const e of b.out) {
-      c.beginPath();
-      c.ellipse(e.x, e.y - 2, e.rx * 0.9, e.ry * 0.85, 0, 0, Math.PI * 2);
-      c.fill();
+      p.moveTo(e.x + e.rx, e.y);
+      p.ellipse(e.x, e.y, e.rx, e.ry, 0, 0, Math.PI * 2);
     }
+    c.save();
+    c.clip(p);
+    const gg = c.createLinearGradient(0, b.cy - 34 * b.s, 0, b.cy + 20 * b.s);
+    gg.addColorStop(0, 'rgba(255,255,252,0.55)');
+    gg.addColorStop(0.6, 'rgba(255,255,252,0.3)');
+    gg.addColorStop(1, 'rgba(206,218,226,0.25)');
+    c.fillStyle = gg;
+    c.fill(p);
+    c.restore();
+    for (const run of elipsBirlesimi(b.out, 1.2)) cizgiNokta(c, run, { w: 0.55, renk: 'rgba(110,134,156,0.45)', titreme: 0.12, frek: 0.03, basinc: 0.3, sivri: 6 });
   }
-  c.restore();
   // yer: toprak lavisi, yatay geniş fırçayla üç-dört kat
   const yerKat = katmanlayici({ N: 4, yum: 0.09, dalga: 0.08, df: 0.006, dfa: 0.03, lif: 0.18, lfa: 0.25, lfb: 0.005, kenar: 0.1, tohum: 1871 });
   pikselBoya(c, null, 0, 770, 1024, 1024, (x, y, o) => {
