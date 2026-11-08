@@ -92,6 +92,7 @@ const BLOK = { x1: 22, y1: 22, x2: 1002, y2: 1002 };
 hg.save(); hg.beginPath(); hg.rect(BLOK.x1, BLOK.y1, BLOK.x2 - BLOK.x1, BLOK.y2 - BLOK.y1); hg.clip();
 // kimlik rengi: 24 bitlik dağınık bir kod; kenar yumuşatmasının karıştırdığı renkler hiçbir koda denk gelmez
 const KOD = new Map([[0, 0]]);
+const rTon = SAHNE.rng(505);
 function kimlikKodu(id) {
   let k = (Math.imul(id, 2654435761) >>> 8) & 0xffffff;
   while (KOD.has(k) || k === 0) k = (k + 7919) & 0xffffff;
@@ -100,7 +101,7 @@ function kimlikKodu(id) {
 }
 function parca(renk, ciz, o) {
   const id = PARCA.length;
-  PARCA.push({ renk: hex(renk), ...(o || {}) });
+  PARCA.push({ renk: hex(renk), ton: rTon() - 0.5, ...(o || {}) }); // her parça ayrı mürekkeplenir: yoğunluk biraz farklı
   const kod = kimlikKodu(id);
   hg.save();
   hg.fillStyle = `rgb(${(kod >> 16) & 255},${(kod >> 8) & 255},${kod & 255})`;
@@ -358,7 +359,7 @@ for (let y = 0, i = 0, j = 0; y < H; y++) for (let x = 0; x < W; x++, i++, j += 
     const gec = Math.exp(-(f - 0.18) * (f - 0.18) / 0.004);      // yaz odunu çizgisi
     const ilk = smooth(0.25, 0.9, f) * 0.5;                       // ilkbahar odunu
     const ince = lifInce(x / 40, y / 1.3);
-    let d = 0.95 * (1 - 0.22 * gec - 0.05 * ilk - 0.04 * (ince - 0.5)) * (0.9 + 0.16 * (baren(x, y) - 0.5) * 2 * 0.5);
+    let d = (0.93 + 0.05 * P.ton) * (1 - 0.3 * gec - 0.09 * ilk - 0.04 * (ince - 0.5)) * (0.9 + 0.16 * (baren(x, y) - 0.5) * 2 * 0.5);
     d *= 1 - 0.14 * smooth(0.72, 0.86, benek(x + id * 3.1, y));
     d = clamp(d * (1 + 0.1 * kenarYakin[i]));
     const c = P.renk;

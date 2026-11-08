@@ -427,13 +427,13 @@
     const KD = S.kaide;
     lavi(dalgaliYol(kutu(KD.x1 - 4, KD.kornis.y1 - 2, KD.x2 + 3, KD.y2 + 2), 3, 43), (h) => {
       const g = h.createLinearGradient(KD.x1, 0, KD.x2, 0);
-      g.addColorStop(0, '#E6D9DD');
+      g.addColorStop(0, '#EEE3DF');
       g.addColorStop(0.35, C.tas);
       g.addColorStop(1, '#F8EDD6');
       return g;
     }, 0.8, { yumusak: 2 });
     lavi(dalgaliYol(kutu(KD.x1, KD.y1, KD.x2 - 6, KD.y1 + 14), 2, 44), C.tasGolge, 0.7, { yumusak: 3 });
-    lavi(dalgaliYol(kutu(KD.x1 - 2, KD.y1, KD.x1 + 120, KD.y2), 6, 45), C.tasGolge, 0.55, { yumusak: 8, kenar: 0 });
+    lavi(dalgaliYol(kutu(KD.x1 - 2, KD.y1, KD.x1 + 120, KD.y2), 6, 45), C.tasGolge, 0.4, { yumusak: 8, kenar: 0 });
     // pencereler: lavanta-çivit lavi
     laviGrup(KD.pencereler.map((p) => ({ yol: dalgaliYol(S.kemerYolu(p.x + 2, p.y + 2, p.w, p.h), 1.5, p.x), renk: '#8F8CC8', alfa: 0.75 })).concat(S.minarePencereleri.map((p) => ({ yol: dalgaliYol(S.kemerYolu(p.x + 1, p.y + 1, p.w, p.h), 1, p.y), renk: '#8F8CC8', alfa: 0.7 }))), 1.3);
   }

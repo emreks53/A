@@ -312,6 +312,7 @@
       c.beginPath(); c.arc(ci.x, ci.y, ci.r * 0.3, 0, Math.PI * 2); c.fill();
     }
   });
+  const CRT = CR.map((v) => 1 - v);
   // ============================================================ GÖK
   const kGok = [0, 0, W, 860];
   const pay = (() => { const b = bulanik(yapiM, W, W, 3.5), o = new Float32Array(N); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; o[i] = Math.max(CR[i], sstep(0.05, 0.25, b[i] + (fbm(nD, x / 26, y / 26, 2) - 0.5) * 0.3)); } return o; })();
@@ -411,7 +412,7 @@
 
   // ============================================================ KAİDE ve MİNARE: beyaz taş, leylak gölgeler, renkli hatlar
   const kKai = [284, 688, 836, 806];
-  const kaiM = KAIDE_M;
+  const kaiM = KAIDE_M.map((v, i) => v * (1 - CR[i]));
   murekkep(kKai, kapsamAlan(kKai, (x, y) => kaiM[y * W + x]), { pig: (x, y) => lerpK(karis(P.lim, 0.6, P.tur3, 0.25), karis(P.gul, 0.4, P.tur3, 0.3, P.lim, 0.3), sstep(0.4, 0.6, fbm(nC, x / 80, y / 40, 2))), yog: 0.07, tohum: 31 });
   murekkep(kKai, kapsamAlan(kKai, (x, y) => kaiM[y * W + x] * ((y > 703 && y < 712) || x < 314 ? 1 : 0)), { pig: karis(P.mor, 0.6, P.kob, 0.3, P.gul, 0.2), yog: (x, y) => (y < 712 ? 0.22 : 0.15) * (0.5 + 0.5 * sstep(830, 420, x)), tohum: 32 });
   {
@@ -419,7 +420,7 @@
     murekkep(kKai, A, { pig: karis(P.mor, 0.7, P.kob, 0.4, P.mac, 0.15), yog: (x, y) => 0.32 + 0.25 * clamp((y - 720) / 55, 0, 1), tohum: 33 });
   }
   const kMin = [236, 70, 364, 806];
-  const minM = MINARE_M;
+  const minM = MINARE_M.map((v, i) => v * (1 - CR[i]));
   murekkep(kMin, kapsamAlan(kMin, (x, y) => minM[y * W + x] * (x < 300 - minareYari(y) * 0.1 ? 1 : 0)), { pig: (x, y) => gecis(karis(P.mor, 0.6, P.kob, 0.3), karis(P.tur, 0.6, P.mor, 0.3), x, y, 60, 41), yog: (x, y) => 0.1 + 0.08 * clamp(-(x - 300) / minareYari(y), 0, 1), tohum: 41 });
   murekkep(kMin, kapsamAlan(kMin, (x, y) => minM[y * W + x] * ((y > 467 && y < 489) || (y > 299 && y < 317) || (y > 197 && y < 207) || y > 486 + (x - 266) * 1.3 ? 1 : 0)), { pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.14, tohum: 42 });
   murekkep(kMin, kapsamAlan(kMin, (x, y) => minM[y * W + x] * (x > 300 ? 1 : 0)), { pig: karis(P.lim, 0.6, P.tur3, 0.3), yog: 0.04, kenar: 0.6, tohum: 43 });
@@ -434,8 +435,8 @@
     hat(kMin, SAHNE.zikzakCizgileri(), { gen: 2.2, pig: karis(P.mac, 0.9, P.mor, 0.15), yog: 0.55, tohum: 45 });
     const A = kapsamCiz(kMin, (c) => { for (const p of SAHNE.minarePencereleri) c.fill(new Path2D(SAHNE.kemerYolu(p.x, p.y, p.w, p.h))); });
     murekkep(kMin, A, { pig: karis(P.mor, 0.7, P.kob, 0.4), yog: 0.4, tohum: 46 });
-    hat(kMin, SAHNE.yollar().minare.flatMap((d) => yolNoktalari(d, 3)), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 47 });
-    hat(kKai, yolNoktalari(SAHNE.yollar().kornis, 3).concat(yolNoktalari(SAHNE.yollar().kaide, 3)), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 48 });
+    hat(kMin, SAHNE.yollar().minare.flatMap((d) => yolNoktalari(d, 3)), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 47, carpM: CRT });
+    hat(kKai, yolNoktalari(SAHNE.yollar().kornis, 3).concat(yolNoktalari(SAHNE.yollar().kaide, 3)), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 48, carpM: CRT });
   }
   // alemler: parlak turuncu-sarı mürekkep
   for (const [cx, kutu] of [[560, [530, 176, 590, 314]], [300, [280, 72, 320, 154]]]) {
