@@ -395,6 +395,17 @@
     for (let y = 0; y < H; y++) { for (let x = 0; x < W; x++) fa[x] = f[y * W + x]; dt1(fa, W, d, v, z); for (let x = 0; x < W; x++) f[y * W + x] = d[x]; }
   }
 
+  // uzaklık alanını hafifçe yumuşat: piksel basamaklı sınırlardan gelen tırtıkları giderir
+  const dist = new Float32Array(N);
+  for (let i = 0; i < N; i++) dist[i] = Math.sqrt(f[i]);
+  {
+    const tmp = new Float32Array(N);
+    for (let tekrar = 0; tekrar < 2; tekrar++) {
+      for (let y = 0; y < H; y++) for (let x = 1; x < W - 1; x++) { const i = y * W + x; tmp[i] = (dist[i - 1] + dist[i] + dist[i + 1]) / 3; }
+      for (let y = 1; y < H - 1; y++) for (let x = 0; x < W; x++) { const i = y * W + x; dist[i] = (tmp[i - W] + tmp[i] + tmp[i + W]) / 3; }
+    }
+  }
+
   // ------------------------------------------------------------ yükseklik alanı
   const HW = 2.1; // tel yarı kalınlığı (2048 px)
   const h = new Float32Array(N);
@@ -404,7 +415,7 @@
     const i = y * W + x;
     const sd = sdKutu(x / K, y / K, IN, IN, 1024 - IN, 1024 - IN, RI);
     if (sd > 0.5 / K) { tur[i] = 2; continue; }
-    const d = Math.sqrt(f[i]);
+    const d = dist[i];
     if (d < HW) { tur[i] = 1; h[i] = 0.93 + 0.075 * (1 - (d / HW) * (d / HW)); continue; }
     if (md[i * 4 + 3] > 128) { tur[i] = 1; h[i] = 0.97 + 0.01 * n1(x * 0.05, y * 0.05); continue; }
     const e = d - HW;
@@ -417,7 +428,7 @@
     for (let k = 0; k < 900; k++) {
       const px = r() * W, py = r() * H;
       const i0 = (py | 0) * W + (px | 0);
-      if (tur[i0] !== 0 || Math.sqrt(f[i0]) < HW + 3) continue;
+      if (tur[i0] !== 0 || dist[i0] < HW + 3) continue;
       const rr = 0.9 + r() * r() * 3.2, der = 0.03 + r() * 0.03;
       const R0 = Math.ceil(rr * 2);
       for (let yy = -R0; yy <= R0; yy++) for (let xx = -R0; xx <= R0; xx++) {
@@ -454,7 +465,7 @@
     const nh = Math.max(0, nx * Hh[0] + ny * Hh[1] + nz * Hh[2]);
     const xx = x / K, yy = y / K;
     const ref = kutuYans(xx + nx * 260, yy + ny * 260);
-    const d = Math.sqrt(f[i]);
+    const d = dist[i];
     const metal = md[j + 3] > 128;
     const cov = metal ? 1 : sstep(HW + 0.8, HW - 0.8, d);
     let r = 0, g = 0, b = 0;
