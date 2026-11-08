@@ -314,10 +314,10 @@
     for (const w of SAHNE.minarePencereleri) g.fill(P(dik(w.x - w.w / 2 - 2, w.y - 2, w.x + w.w / 2 + 2, w.y + w.h + 2)));
     for (const w of K.pencereler) g.fill(P(dik(w.x - w.w / 2 - 2, w.y - 2, w.x + w.w / 2 + 2, w.y + w.h + 2)));
     for (const k of [0, 1]) for (const p of SAHNE.kasnakPencereleri(k)) g.fill(P(dik(p.x - p.w / 2 - 1.5, p.y - 1.5, p.x + p.w / 2 + 1.5, p.y + p.h + 1.5)));
-  }, '#FFD98A', { hale: { a: 0 }, kenar: 0 });
-  for (const d of Yl.minarePencereleri) parla(d, 0, '#FFD780', 0.95);
-  for (const d of Yl.kaidePencereleri) parla(d, 0, '#FFCF70', 1);
-  for (const d of Yl.kasnakPencereleri) parla(d, 0, '#FFD780', 0.95);
+  }, '#FFD27A', { hale: { a: 0 }, kenar: 0 });
+  for (const d of Yl.minarePencereleri) parla(d, 0, '#FFC458', 0.9);
+  for (const d of Yl.kaidePencereleri) parla(d, 0, '#FFC458', 0.95);
+  for (const d of Yl.kasnakPencereleri) parla(d, 0, '#FFC458', 0.9);
   katman('bina', (g) => {
     for (const d of Yl.minare) g.fill(P(d));
     g.fill(P(Yl.kaide)); g.fill(P(Yl.kornis));
