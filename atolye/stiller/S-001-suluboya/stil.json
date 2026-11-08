@@ -16,22 +16,7 @@
     "Kâğıdın beyazı ışık olarak bırakılmış: güneş, kubbedeki parlak şerit, minarenin ışıklı yanı ve yalnız gölge yanına soluk bir darbe vurulmuş beyaz çiçekler",
     "Pigment çökelmesi (granülasyon), soğuk preslenmiş kâğıt dokusu, yer yer görünen kurşun kalem altlığı ve kenarlara doğru bitmemiş bırakılmış düzensiz sınır"
   ],
-  "palet": [
-    "#5C7CB7",
-    "#9FB571",
-    "#35694C",
-    "#A99E9C",
-    "#C2862F",
-    "#A34D77",
-    "#F7F4EC"
-  ],
+  "palet": ["#5C7CB7", "#9FB571", "#35694C", "#A99E9C", "#C2862F", "#AD657A", "#F7F4EC"],
   "kodla_cizim": "Her yıkama piksel başına bir kapsama alanıdır: bölge haritasından alınan maske bulanıklaştırılıp gürültüyle değişen bir eşik ve yumuşaklıkla kesilir (boya kalem çizgisinin dışına taşar ya da geride kalır; kenar yer yer sert, yer yer kâğıda erir) ya da Tyler Hobbs usulü yinelemeli bozulmuş çokgenler düşük saydamlıkta onlarca kat doldurulur. Alanın bulanık kopyasından farkıyla kuruyan kenardaki pigment birikimi, kâğıt yüksekliği ve ince gürültüden granülasyon, Hobbs damlalarıyla karnabahar açılmaları hesaplanır. Yapraklar baskısı değişen fırça darbesi çokgenleridir (tek ya da arada beyaz damar kalan iki yarım), ucu ya da bir yanı bulanık kopyayla karıştırılarak eritilir, kimi kâğıt dokusuyla eşiklenip kuru fırça gibi kırılır; taç yapraklar bozulmuş serbest biçimlerdir ve yalnız ışıktan uzak yanlarına soluk gölge darbesi vurulur. Pencereler tek darbelik bozuk kemer lekeleridir. Yoğunluk yedi pigmentin (yaprak yeşili, viridyen, ultramarin, seruleum, ham siena, kinakridon gül, gamboj) soğurma vektörüyle çarpılarak biriktirilir ve renk = kâğıt × exp(−Σ yoğunluk) ile çarpımsal karışır. Kaburgaların ışıklı yanı nemli fırçayla boya kaldırır gibi açılır; kurşun kalem ayrı bir tuvalde titrek, kesik çizgilerle çizilir; kâğıt dokusu en sonda kabartma ışığıyla eklenir.",
-  "etiketler": [
-    "suluboya",
-    "saydam",
-    "ıslak teknik",
-    "kâğıt dokusu",
-    "boya",
-    "geleneksel"
-  ]
+  "etiketler": ["suluboya", "saydam", "ıslak teknik", "kâğıt dokusu", "boya", "geleneksel"]
 }
