@@ -480,9 +480,10 @@
     const mY2 = bolgeMaske([9], 0.8);
     for (const s of B.saplar) firca(s.slice().reverse(), 3.6, RENK.yaprakYesil, { p: 1.0, kuru: 0.35, kil: 0.9, acil: 0 });
     for (const y of B.yapraklar) {
-      const L = y.uzunluk, ca = Math.cos(y.aci), sa = Math.sin(y.aci), gw = L * y.genislik * 0.8;
-      const pts = []; for (let k = 0; k <= 10; k++) { const t = k / 10; pts.push([y.x + ca * L * t, y.y + sa * L * t]); }
-      firca(pts, gw, oyn(R() < 0.5 ? RENK.sariYesil : RENK.yaprakYesil, 0.08), { p: 0.95, kuru: 0.45, kil: 1.0, sivri: 1, acil: 0.1 });
+      const L = y.uzunluk, ca = Math.cos(y.aci), sa = Math.sin(y.aci), gw = L * y.genislik * 1.15;
+      const pts = []; for (let k = 0; k <= 10; k++) { const t = -0.04 + k / 9.4; pts.push([y.x + ca * L * t, y.y + sa * L * t]); }
+      firca(pts, gw, oyn(R() < 0.5 ? RENK.sariYesil : RENK.yaprakYesil, 0.08), { p: 1.0, kuru: 0.35, kil: 1.0, sivri: 0.7, acil: 0.05 });
+      firca(pts.slice().reverse(), gw * 0.85, oyn(RENK.sariYesil, 0.08), { p: 0.85, kuru: 0.5, kil: 1.0, sivri: 0.8, acil: 0.05 });
     }
     katman(mY2, 'carp');
     for (const y of B.yapraklar) {
@@ -491,8 +492,10 @@
       firca(pts, gw * 0.9, oyn(R() < 0.5 ? RENK.viridyen : RENK.koyuYesil, 0.08), { p: 0.8, kuru: 0.6, kil: 0.9, sivri: 0.8, acil: 0.1 });
       firca([[y.x, y.y], [y.x + ca * L * 0.85, y.y + sa * L * 0.85]], 1.6, RENK.koyuYesil, { p: 0.8, kuru: 0.5, kil: 0.9, acil: 0 });
     }
-    for (const t of B.tomurcuklar) firca([[t.x - Math.cos(t.aci) * t.r * 0.9, t.y - Math.sin(t.aci) * t.r * 0.9], [t.x + Math.cos(t.aci) * t.r * 1.6, t.y + Math.sin(t.aci) * t.r * 1.6]], t.r * 1.8, RENK.gul, { p: 1.0, kuru: 0.35, kil: 0.9, sivri: 0.7, acil: 0 });
     katman(bolgeMaske([9], 0.6), 'carp');
+    // tomurcuklar bölge haritasında çiçek sayılır: ayrı katmanda, yalnız tomurcuk çevresinde
+    for (const t of B.tomurcuklar) firca([[t.x - Math.cos(t.aci) * t.r * 0.9, t.y - Math.sin(t.aci) * t.r * 0.9], [t.x + Math.cos(t.aci) * t.r * 1.6, t.y + Math.sin(t.aci) * t.r * 1.6]], t.r * 1.8, RENK.gul, { p: 1.0, kuru: 0.35, kil: 0.9, sivri: 0.7, acil: 0 });
+    katman(bolgeMaske([9, 10], 0.6), 'carp');
     // çiçekler: beyaz kâğıt bırakılır; gölge yanında mor-gri, ışık yanında gül renkli kuru dokunuş, ortada limon
     const mC = bolgeMaske([10], 0.2);
     for (const c of B.cicekler) {
