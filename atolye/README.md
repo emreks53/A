@@ -30,7 +30,7 @@ tarayıcıda açılıp 1024 × 1024 görüntüye çevrilir.
 | Türk-İslam Sanatları | S-007 – S-013 |
 | Uzak Doğu | S-014 – S-015 |
 | Sanat Akımları | S-016 – S-021 |
-| Grafik ve Dijital | S-022 – S-030 |
+| Grafik ve Dijital | S-022 – S-030, S-121 – S-160 |
 | Atölye Render Üslupları | S-031 – S-040 |
 
 Aile `stil.json` içinde yazar; galeri ve katalog stilleri ailelerine göre gruplar.
@@ -96,6 +96,11 @@ Atölyenin örnekleri müşterinin açıkça belirttiği zevke göre çizilir:
   görselin geneli açık tonlarda kalır.
 - **Bozukluk efekti yok:** sıva dökülmesi, çatlak, kraklör, batik çatlak damarı, hücre/kabarcık, sıçrama,
   akıntı, çizik, leke, eskime, kir kullanılmaz. Doku tekniğin kendisinden gelir.
+- **Grafik ve Dijital'de:** en sevilenler S-029 Katmanlı Kâğıt ve S-022 Düz İllüstrasyon; S-025 İzometrik,
+  S-026 Piksel, S-028 Teknik Çizim ve S-030 Neon beğenilmedi. Cepheden düz görünüm korunur; oyuncak, oyun,
+  düşük çözünürlük, teknik çizim ve karanlık parıltı yok.
+- **Gevşek üslup yok:** konu mukaddes olduğu için her üslup titiz, özenli ve vakurdur; eskiz, karalama,
+  çizgi film, çocuksu, şakacı, kitsch ya da dağınık görünüm kullanılmaz.
 - **Taşıyıcı görünmez:** eser 1024 × 1024 tuvali kenardan kenara doldurur; masa, keten, duvar şeridi ya da
   yuvarlak bir nesnenin arkasındaki zemin görünmez. Esere ait ince bir çerçeve çizgisi olabilir.
 
