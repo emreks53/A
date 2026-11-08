@@ -14,7 +14,7 @@
     "Güneş bir rozetin merkezinde parlayan altın disk; desen çevresinde ışıkla açılır, ufka doğru kreme solar",
     "Kubbe 16 dilimin her biri kendi ışık tonunda, dilim aralarında ince koyu ve açık kaburga çizgileri; minare ve kasnak ışık yönüne göre hesaplanmış silindir geçişleriyle",
     "Bütün biçimlerde kendi renginin koyu tonunda ince kontur; pembe dipli beyaz çiçekler, altın göbek ve noktalar, iki tonlu yapraklar",
-    "Fildişi kenar bandında ince altın çift çerçeve çizgisi"
+    "Zeminde perspektifte açık mermer avlu döşemesi: iki tonlu kareler, köşelerinde altın kenarlı açık mavi sekiz kollu yıldız kakmalar; fildişi kenar bandında ince altın çift çerçeve"
   ],
   "palet": [
     "#D3E6F2",
@@ -23,10 +23,10 @@
     "#E9F2F9",
     "#329157",
     "#FFFDF7",
-    "#EDBE45",
+    "#F0E5CD",
     "#8DBD78"
   ],
-  "kodla_cizim": "JavaScript ile üretilen satır içi SVG. Desen: 12 genlerin merkezleri üçgen kafes üzerinde (kenar 50 px, bir merkez güneşte, 880,140); aralarına kareler ve altıgenler kurulur (4.6.12 döşemesi). Her çokgende Hankin yöntemi (temas açısı 64°): kenar ortalarından içe iki ışın, komşu kenarın ışınıyla kesişimi yıldız çokgenini verir. Yıldızlar türüne göre doldurulur, dış çizgileri iki kez çizilir (7 px altın, 3,6 px fildişi, sivri birleşim) ve çift çizgili şerit olur; bütün çokgenler aynı yöne çevrildiği için her kesişimde 'rb' ışını tutarlı biçimde üstten geçer ve kısa üst parçalar gölgesiyle yeniden çizilir (örgü). Güneş çevresinde radyal parıltı, ufka doğru krem geçiş. Mimari SAHNE geometrisinden: kubbe 16 dilim, her dilimin rengi Lambert parlaklığından karıştırılır; kasnak ve minarede aynı ışık modelinden 13 duraklı yatay degrade; 1 px konturlar. Bitkiler SAHNE.bitki konumlarında.",
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG. Desen: 12 genlerin merkezleri üçgen kafes üzerinde (kenar 50 px, bir merkez güneşte, 880,140); aralarına kareler ve altıgenler kurulur (4.6.12 döşemesi). Her çokgende Hankin yöntemi (temas açısı 64°): kenar ortalarından içe iki ışın, komşu kenarın ışınıyla kesişimi yıldız çokgenini verir. Yıldızlar türüne göre doldurulur, dış çizgileri iki kez çizilir (7 px altın, 3,6 px fildişi, sivri birleşim) ve çift çizgili şerit olur; bütün çokgenler aynı yöne çevrildiği için her kesişimde 'rb' ışını tutarlı biçimde üstten geçer ve kısa üst parçalar gölgesiyle yeniden çizilir (örgü). Güneş çevresinde radyal parıltı, ufka doğru krem geçiş. Mimari SAHNE geometrisinden: kubbe 16 dilim, her dilimin rengi Lambert parlaklığından karıştırılır; kasnak ve minarede aynı ışık modelinden 13 duraklı yatay degrade; 1 px konturlar. Zemin: kaçış noktası (560, 560), odak 1000 px olan perspektif döşeme; kare taşlar dünya koordinatında kurulup izdüşürülür, iki tonlu dama, derzler ve her köşede iki kareden sekiz kollu yıldız kakma, ufka doğru krem pus. Bitkiler SAHNE.bitki konumlarında.",
   "etiketler": [
     "vektör",
     "geometrik desen",

@@ -930,7 +930,7 @@ stil.kubbe = function (X, Y, out) {
   const h = ihash(gi, row, 5), h2 = ihash(row, gi, 8);
   // faset parlaklığı ışığa göre tutarlı, üstüne seyrek parlak "ateş" fasetleri
   const nl = G.nx * LV[0] + G.ny * LV[1] + G.nz * LV[2];
-  const ic = 0.28 + 1.05 * smooth(-0.1, 0.95, nl) + 0.35 * (h - 0.5) + 0.12 * (1 - fs);
+  const ic = (0.24 + 0.95 * smooth(-0.1, 0.95, nl) + 0.35 * (h - 0.5) + 0.12 * (1 - fs)) * (0.55 + 0.45 * Math.sqrt(Math.max(0, Math.cos(G.phi))));
   kristal(X, Y, out, { tint: ZUMRUT, ic, k: 26, disp: 0.18, govde: ZUMRUT_G, ici: [(h - 0.5) * 1.2 - G.nx * 0.8, (h2 - 0.5) * 1.0 + (fs - 0.5) * 0.5], iciw: 0.78 });
   // faset sırtları: meridyen (kaburga) ve enlem kenarları
   const dm = Math.min(f, 1 - f) * GW * G.r * Math.max(0.12, Math.cos(G.phi));
@@ -1051,7 +1051,7 @@ function kaideKristal(X, Y, out) {
   }
 }
 // sitrin (altın tonlu) kristal alem
-const SITRIN = [1.0, 0.74, 0.3], SITRIN_G = [0.06, 0.035, 0.004];
+const SITRIN = [1.0, 0.7, 0.22], SITRIN_G = [0.22, 0.12, 0.01];
 stil.altin = function (X, Y, out, parca) {
   // küremsi normalleri fasetlere kuantala
   const th = Math.atan2(G.nx, G.nz), ps = Math.asin(clamp(G.ny, -1, 1));
@@ -1060,11 +1060,11 @@ stil.altin = function (X, Y, out, parca) {
   nset(Math.sin(qt) * Math.cos(qp), Math.sin(qp), Math.cos(qt) * Math.cos(qp));
   const ic = 0.7 + 0.9 * ihash(Math.round(th / 0.5) + 9, Math.round(ps / 0.55) + 9, 4);
   kristal(X, Y, out, { tint: SITRIN, ic, k: 8, disp: 0.25, govde: SITRIN_G });
-  if (ft > 0.42 || fp > 0.42) cizgi(out, 0.4, BEYAZ_IS);
+  if (ft > 0.46 || fp > 0.46) cizgi(out, 0.3, BEYAZ_IS);
 };
 
 // ------------------------------------------------------------------ bitkiler: berrak pembe kristal çiçekler, peridot yapraklar
-const PEMBE_K = [1.0, 0.74, 0.86], PERIDOT = [0.3, 0.78, 0.18], PERIDOT_G = [0.008, 0.035, 0.006];
+const PEMBE_K = [1.0, 0.84, 0.92], PERIDOT = [0.3, 0.78, 0.18], PERIDOT_G = [0.008, 0.035, 0.006];
 let KD = null;
 function bolgeArka(L) { arkaAl(L.x0 - 40, L.y0 - 40, L.x0 + L.w / O + 40, L.y0 + L.h / O + 40); }
 stil.sap = function (X, Y, out) { kristal(X, Y, out, { tint: PERIDOT, ic: 0.85, k: 5, disp: 0.2, govde: PERIDOT_G, spec: 0.3, ici: [0, 0.3], iciw: 0.4 }); };
