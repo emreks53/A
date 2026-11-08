@@ -242,30 +242,42 @@
    * Her pikselin normali yükseklik alanından çıkar; güneş (yumuşak sarmalı Lambert + ince gümüş kenar),
    * gök dolgusu ve düz, serin bir taban ile ışıklandırılır → kabarık, gerçekçi hacim.
    */
-  function kumulus(x0, y0, s, tohum) {
+  function kumulus(x0, y0, s, tohum, gen) {
     const r = S.rng(tohum);
+    gen = gen || 1;
     const kure = [];
-    // ana gövde: tabanda geniş, yukarı doğru daralan bir kubbe; yüzeyine irili ufaklı kabarcıklar dizilir
-    const G = 108 * s, Hh = 74 * s;
-    for (let k = 0; k < 9; k++) {
-      const t = k / 8;
-      kure.push([x0 + (t - 0.5) * 2 * G * 0.86, y0 - 18 * s, (22 + 16 * Math.sin(Math.PI * t)) * s, 0]);
+    // gövde: tabanda geniş, yukarı doğru daralan bir kubbe; yüzeyine irili ufaklı kabarcıklar dizilir
+    const G = 110 * s * gen, Hh = 78 * s;
+    // ana gövde elipsoidi; dış kabarcıklar siluette, iç kabarcıklar gövde yüzeyinden hafifçe taşar
+    const gA = G * 0.78, gB = Hh * 0.82, gY = y0 - 18 * s, gZ = 44 * s;
+    const govdeH = (x, y) => {
+      const ex = (x - x0) / gA, ey = (y - gY) / gB;
+      const d = 1 - ex * ex - ey * ey;
+      return d > 0 ? gZ * Math.sqrt(d) : 0;
+    };
+    for (let k = 0; k < 34; k++) {
+      const a = Math.PI * (0.03 + 0.94 * r());
+      const yar = 0.66 + 0.38 * r();
+      const ex = x0 + Math.cos(a) * G * yar;
+      const ey = y0 - 16 * s - Math.sin(a) * Hh * yar * (0.6 + 0.5 * Math.sin(a));
+      const rr = (11 + 20 * r() * (0.35 + 0.65 * Math.sin(a))) * s;
+      kure.push([ex, ey, rr, Math.max(0, govdeH(ex, ey) - rr * 0.7) + (yar - 0.55) * 8 * s]);
     }
-    for (let k = 0; k < 46; k++) {
-      const a = Math.PI * (0.06 + 0.88 * r());
-      const yar = 0.55 + 0.45 * r();
-      const ex = x0 + Math.cos(a) * G * yar * (a > Math.PI / 2 ? 0.95 : 1);
-      const ey = y0 - 14 * s - Math.sin(a) * Hh * yar * (0.75 + 0.35 * Math.sin(a));
-      const rr = (8 + 20 * r() * Math.sin(a) + 6 * Math.sin(a)) * s;
-      kure.push([ex, ey, rr, (yar - 0.6) * 18 * s]);
+    for (let k = 0; k < 12; k++) {
+      const a = Math.PI * (0.1 + 0.8 * r());
+      const yar = 0.25 + 0.55 * r();
+      const ex = x0 + Math.cos(a) * gA * yar, ey = gY - Math.sin(a) * gB * yar;
+      const rr = (14 + 14 * r()) * s;
+      kure.push([ex, ey, rr, govdeH(ex, ey) - rr * 0.62]);
     }
-    kure.push([x0 + 8 * s, y0 - 52 * s, 40 * s, 6 * s], [x0 - 34 * s, y0 - 38 * s, 32 * s, 4 * s], [x0 + 48 * s, y0 - 34 * s, 30 * s, 2 * s]);
-    let bx1 = 1e9, by1 = 1e9, bx2 = -1e9, by2 = y0;
+    let bx1 = x0 - G * 1.12, by1 = 1e9, bx2 = x0 + G * 1.12, by2 = y0;
     for (const [cx, cy, rr] of kure) {
       bx1 = Math.min(bx1, cx - rr); bx2 = Math.max(bx2, cx + rr); by1 = Math.min(by1, cy - rr);
     }
     const x1 = Math.floor(bx1 - 2), y1 = Math.floor(by1 - 2), x2 = Math.ceil(bx2 + 2), y2 = Math.ceil(by2 + 1);
     const W = (x2 - x1) * OL, H = (y2 - y1) * OL;
+    // taban: yatık bir elipsoit (düz, geniş alt gövde)
+    const tA = G * 1.08, tB = 30 * s, tY = y0 - 6 * s, tZ = 26 * s;
     // siluet maskesi (kenar yumuşatmalı), tabanı düz kesilmiş
     const c = S.yeniTuval(W, H);
     const cc = c.getContext('2d', { willReadFrequently: true });
@@ -275,6 +287,10 @@
       cc.moveTo(cx + rr, cy);
       cc.arc(cx, cy, rr, 0, Math.PI * 2);
     }
+    cc.moveTo(x0 + tA, tY);
+    cc.ellipse(x0, tY, tA, tB, 0, 0, Math.PI * 2);
+    cc.moveTo(x0 + gA, gY);
+    cc.ellipse(x0, gY, gA, gB, 0, 0, Math.PI * 2);
     cc.save();
     cc.clip();
     cc.fillStyle = '#fff';
@@ -282,13 +298,15 @@
     cc.restore();
     const id = cc.getImageData(0, 0, W, H);
     const m = id.data;
-    const h = new Float32Array(W * H);
+    let h = new Float32Array(W * H);
     for (let j = 0; j < H; j++) {
       const y = y1 + (j + 0.5) / OL;
       for (let i = 0; i < W; i++) {
         if (m[(j * W + i) * 4 + 3] === 0) continue;
         const x = x1 + (i + 0.5) / OL;
-        let best = 0;
+        const ex = (x - x0) / tA, ey = (y - tY) / tB;
+        let best = ex * ex + ey * ey < 1 ? tZ * Math.sqrt(1 - ex * ex - ey * ey) : 0;
+        best = Math.max(best, govdeH(x, y));
         for (const [cx, cy, rr, z] of kure) {
           const d2 = (x - cx) * (x - cx) + (y - cy) * (y - cy);
           if (d2 < rr * rr) best = Math.max(best, Math.sqrt(rr * rr - d2) + z);
@@ -296,7 +314,29 @@
         h[j * W + i] = best;
       }
     }
-    const LDb = norm([0.62, 0.62, 0.48]);
+    // kabarcık birleşimlerindeki sert kıvrımları yumuşat: ayrılabilir kutu bulanıklığı (3 geçiş)
+    const R = Math.max(2, Math.round(3.4 * s * OL));
+    const tmp = new Float32Array(W * H);
+    for (let gec = 0; gec < 3; gec++) {
+      for (let j = 0; j < H; j++) {
+        let acc = 0;
+        for (let i = -R; i <= R; i++) acc += h[j * W + Math.max(0, Math.min(W - 1, i))];
+        for (let i = 0; i < W; i++) {
+          tmp[j * W + i] = acc / (2 * R + 1);
+          acc += h[j * W + Math.min(W - 1, i + R + 1)] - h[j * W + Math.max(0, i - R)];
+        }
+      }
+      for (let i = 0; i < W; i++) {
+        let acc = 0;
+        for (let j = -R; j <= R; j++) acc += tmp[Math.max(0, Math.min(H - 1, j)) * W + i];
+        for (let j = 0; j < H; j++) {
+          h[j * W + i] = acc / (2 * R + 1);
+          acc += tmp[Math.min(H - 1, j + R + 1) * W + i] - tmp[Math.max(0, j - R) * W + i];
+        }
+      }
+    }
+    const LDb = norm([0.66, 0.6, 0.45]);
+    const gun = [1.04, 1.0, 0.93], gok = [0.52, 0.62, 0.82];
     for (let j = 0; j < H; j++) {
       const y = y1 + (j + 0.5) / OL;
       for (let i = 0; i < W; i++) {
@@ -305,19 +345,15 @@
         const k = j * W + i;
         const hx = (h[Math.min(W * H - 1, k + 1)] - h[Math.max(0, k - 1)]) * OL * 0.5;
         const hy = (h[Math.max(0, k - W)] - h[Math.min(W * H - 1, k + W)]) * OL * 0.5; // yukarı pozitif
-        const n = norm([-hx, -hy, 1.6]);
-        const wrap = Math.max(0, (nokta(n, LDb) + 0.45) / 1.45);
-        const tabanT = ss(y0 - 30 * s, y0, y); // tabana doğru serin, düz gölge
-        const kenar = Math.pow(1 - Math.max(0, n[2]), 3) * Math.max(0, n[0] * 0.6 + n[1] * 0.6); // gümüş kenar
-        const out = [];
-        const gun = [1.0, 0.97, 0.9], gok = [0.42, 0.52, 0.7], alt = [0.5, 0.52, 0.56];
+        const n = norm([-hx, -hy, 1.15]);
+        const wrap = Math.max(0, (nokta(n, LDb) + 0.55) / 1.55);
+        const tabanT = ss(y0 - 44 * s, y0 - 2 * s, y); // tabana doğru serin, düz gölge
+        const kenar = Math.pow(1 - Math.max(0, n[2]), 2.5) * Math.max(0, n[0] * 0.7 + n[1] * 0.5); // gümüş kenar
         for (let q = 0; q < 3; q++) {
-          const amb = gok[q] * (0.55 + 0.45 * n[1]) + alt[q] * 0.25;
-          out[q] = (gun[q] * wrap * 0.78 * (1 - 0.55 * tabanT) + amb * 0.62) * 0.98 + kenar * 0.5 * gun[q];
+          const amb = gok[q] * (0.6 + 0.24 * n[1]);
+          const v = gun[q] * Math.pow(wrap, 1.25) * 0.98 * (1 - 0.72 * tabanT) + amb * 0.62 * (1 - 0.22 * tabanT) + kenar * 0.4 * gun[q];
+          m[o + q] = kod(Math.max(v, amb * 0.5));
         }
-        m[o] = kod(out[0]);
-        m[o + 1] = kod(out[1]);
-        m[o + 2] = kod(out[2]);
       }
     }
     cc.setTransform(1, 0, 0, 1, 0, 0);
@@ -543,9 +579,11 @@
     const N = 16;
     const kab = [];
     for (let k = 1; k < N; k++) kab.push(-Math.PI / 2 + (Math.PI * k) / N);
-    const w = 0.024;
+    const w = 0.028;
+    const dF = Math.PI / N;
     donel(S.kubbeYolu, 560, [358, 298, 762, 556], (n, x, y, phi) => {
-      // kaburga kabartısı: boylam boyunca dar Gauss tümsekleri → normal teğet yönde eğilir
+      // kaburga kabartısı: boylam boyunca dar Gauss tümsekleri; aralarındaki dilimler hafif içbükey
+      // → normal teğet yönde eğilir, her dilim ışığı kendi açısıyla yakalar
       let dh = 0, h = 0;
       for (const f of kab) {
         const z = (phi - f) / w;
@@ -555,11 +593,16 @@
           h += e;
         }
       }
-      const guc = 0.0085 * ss(306, 360, y);
+      const tp = ((phi + Math.PI / 2) / dF) % 1;
+      dh += -0.45 * Math.PI * Math.cos(Math.PI * tp) / dF;
+      const guc = 0.013 * ss(306, 372, y);
       const tf = [Math.cos(phi), 0, -Math.sin(phi)];
       const nn = norm([n[0] - guc * dh * tf[0], n[1], n[2] - guc * dh * tf[2]]);
       const ao = (0.72 + 0.28 * ss(556, 520, y)) * (1 - 0.06 * (1 - h) * ss(330, 380, y) * 0);
-      return golgele(nn, YESIL, { ao, golge: 0.8 + 0.2 * ss(556, 540, y), ks: 0.16, us: 26, fr: 0.2 });
+      const c1 = golgele(nn, YESIL, { ao, golge: 0.8 + 0.2 * ss(556, 540, y), ks: 0.1, us: 14, fr: 0.26 });
+      // cilalı boya: dar, parlak güneş yansıması
+      const sp = 0.55 * Math.pow(Math.max(0, nokta(nn, HV)), 90);
+      return [c1[0] + sp * GUNES[0], c1[1] + sp * GUNES[1], c1[2] + sp * GUNES[2]];
     });
     // alemin kubbeye düşen ince gölgesi
     kirp(S.kubbeYolu, () => {

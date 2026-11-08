@@ -5,18 +5,36 @@
   "ad_en": "Soft Airbrush Digital Painting",
   "aile": "Grafik ve Dijital",
   "ozgun": false,
-  "ozet": "Yumuşak fırçayla kadife gibi kaynaşan degradeler, pastel gün ışığı, yumuşak odaklı arka plan ve ön plan; kubbenin kaburgaları ve alemler keskin odakta.",
-  "tanim": "Yumuşak dijital resim, sertliği sıfıra yakın yuvarlak fırçalarla yapılan ve geçişlerin fırça izi bırakmadan kadife gibi kaynaştığı bir dijital boyama üslubudur. Işık geniş ve yaygındır, gölgeler renklidir (lavanta, şeftali) ve yumuşaktır; ana konu net tutulurken arka plan ve ön plan, fotoğraftaki sığ alan derinliği gibi bulanıklaştırılır. Romantik kitap kapaklarında, aile ve çocuk temalı posterlerde, tebrik kartlarında ve sakin, rüya gibi dekoratif resimlerde sevilir.",
+  "ozet": "Yumuşak fırçayla kadife gibi kaynaşan degradeler, pastel ve ışıklı gün ışığı, hafif yumuşak odaklı bulutlar ve ön plan; kubbe, kaburgalar ve alemler keskin odakta.",
+  "tanim": "Yumuşak dijital resim, sertliği sıfıra yakın yuvarlak fırçalarla yapılan ve geçişlerin fırça izi bırakmadan kadife gibi kaynaştığı bir dijital boyama üslubudur. Işık geniş ve yaygındır, gölgeler renklidir (lavanta, şeftali) ve yumuşaktır; ana konu net ve canlı tutulurken arka plan ve en öndeki çiçekler, fotoğraftaki sığ alan derinliği gibi hafifçe yumuşatılır. Romantik kitap kapaklarında, tebrik kartlarında ve sakin, rüya gibi dekoratif resimlerde sevilir.",
   "koken": "Kökü 1970–80'lerin airbrush illüstrasyonuna ve fotoğraftaki yumuşak odak ile Michael Orton'un adını taşıyan parıltı tekniğine dayanır. Dijital çağda Photoshop'un yumuşak yuvarlak fırçası, Gauss bulanıklığı ve 'screen' karışımlı parıltı katmanlarıyla yeniden yorumlandı; pastel paletli bugünkü 'soft painting' dili özellikle 2010'lardan sonra dijital illüstrasyonda yaygınlaştı.",
   "ayirt_edici": [
-    "Üstte pastel mavi, ortada lila, ufukta pembe-şeftaliye dönen kadife gök ve sağ üstte geniş, sıcak güneş ışıltısı",
-    "Yumuşak odaklı, altları pembe-lila gölgeli bulutlar ve göğe karışan çok yumuşak ışık huzmeleri",
-    "Keskin odakta yeşim yeşili kubbe: ince açık kaburga sırtları, geniş kadife parlama, kenarda pembe-lila gök yansıması; alemler net",
+    "Üstte pastel mavi, ortada lila, ufukta pembe-şeftaliye dönen kadife gök ve sağ üstte geniş, sıcak, ışıl ışıl güneş parıltısı",
+    "Yumuşak odaklı, kabarık hacimli bulutlar: güneşe bakan sırtları sıcak beyaz, altları ve kıvrımları lila gölgeli; göğe karışan çok yumuşak ışık huzmeleri",
+    "Keskin odakta yeşim yeşili kubbe: ince açık kaburga sırtları, koyu oluklar, geniş kadife parlama ve kenarda pembe-lila gök yansıması; alemler net",
     "Gölgeleri lavanta, ışıkları şeftali olan beyaz taş; arkadaki minare hafifçe yumuşak odakta",
-    "Önde sığ alan derinliğiyle bulanıklaşmış beyaz, pembe ve şeftali güller ve yapraklar; yan dallarda küçük, net güller",
-    "Bütün resmi saran yumuşak parıltı (Orton etkisi) ve önde pastel bokeh diskleri"
+    "Airbrush ile boyanmış katmanlı güller (beyaz, allık pembesi, şeftali): dipte koyulaşan taç yaprakları, ışıklı kıvrık kenarlar, sarmal iç; yan dallarda net, önde hafifçe yumuşak odakta",
+    "Bütün resmi saran yumuşak parıltı (Orton etkisi) ve önde soluk pastel bokeh diskleri"
   ],
-  "palet": ["#ABC7F0", "#F6DFE5", "#E4D3D5", "#7AC7A1", "#63B092", "#F9E8EB", "#75AB9F", "#FAE8B0"],
-  "kodla_cizim": "Gök dört duraklı pastel degrade ve geniş radyal güneş ışıltısıyla boyanır; bulutlar radyal degradeli puflardan ayrı katmanda kurulup alt kısımları 'source-atop' lila gölgeyle tonlandıktan sonra 9 piksel bulanıklaştırılır, ışık huzmeleri bulanık üçgenler olarak 'screen' ile eklenir. Mimari ayrı bir 2048'lik katmanda, geniş sarmalı yayınık ışıkla (gölgede lavanta, ışıkta şeftali çarpan) silindir normallerinden degradelerle; kubbe SAHNE.kubbeProfili normaliyle piksel piksel, geniş kadife parlama, küçük net vurgu, sırt ışığı ve pembe-lila Fresnel yansımasıyla boyanır; minare bölgesi bu katmandan ayrılıp hafifçe pus ve bulanıklık alır. Yan dallardaki güller ve yapraklar net bir katmana, öndeki büyük güller ve yapraklar ayrı bir katmana çizilir; bu katman 5 piksel, alt kenara doğru da 12 piksel bulanıklaştırılarak sığ alan derinliği verilir. En sonda yarım çözünürlüklü bulanık kopya 'screen' ile parıltı olarak bindirilir, pastel bokeh diskleri eklenir ve bantlaşmayı önlemek için çok ince ton titreşimi uygulanır.",
-  "etiketler": ["yumuşak fırça", "airbrush", "pastel", "rüya gibi", "yumuşak odak", "bokeh", "kadife degrade", "dijital resim"]
+  "palet": [
+    "#91BCF2",
+    "#DDD7F1",
+    "#F7DEE5",
+    "#53CE90",
+    "#24955C",
+    "#FDF2EF",
+    "#E9ADC3",
+    "#A5D0B9"
+  ],
+  "kodla_cizim": "Gök dört duraklı pastel degrade ve geniş radyal güneş ışıltısıyla boyanır. Bulutlar G.kumulus puflarından kurulan yükseklik alanından (her puf bir yarım küre) yüzey normali ve ortam gölgesi hesaplanarak yumuşak eşikle gölgelenir (ışıkta sıcak beyaz, gölgede lila), sonra yaklaşık 2,6 piksel bulanıklaştırılır; ışık huzmeleri bulanık üçgenler olarak 'screen' ile eklenir. Mimari ayrı bir 2048'lik katmanda, geniş sarmalı yayınık ışıkla (gölgede lavanta, ışıkta şeftali çarpan; yeşilde taştan daha derin modelleme) silindir normallerinden degradelerle; kubbe SAHNE.kubbeProfili normaliyle piksel piksel, geniş kadife parlama, küçük net vurgu, sırt ışığı, oluk gölgesi ve pembe-lila Fresnel yansımasıyla boyanır; minare bölgesi bu katmandan ayrılıp hafif pus ve bulanıklık alır. Güller iki halka radyal degradeli taç yaprağı (ışığa bakan yapraklar açık, ters yöndekiler koyu, kenarlarda ince açık kıvrım) ve altın oranlı açıyla dizilip içe doğru küçülen hilal yapraklardan oluşur. Yan dallar net çizilir; ön plan üç katmana ayrılır: yapraklar 1,8, orta sıra güller 1,1, en öndeki güller 2,6 piksel bulanıklaştırılır. En sonda yarım çözünürlüklü bulanık kopya hafifçe 'screen' ve 'soft-light' ile bindirilir (Orton parıltısı), pastel bokeh diskleri eklenir ve bantlaşmayı önlemek için çok ince ton titreşimi uygulanır.",
+  "etiketler": [
+    "yumuşak fırça",
+    "airbrush",
+    "pastel",
+    "rüya gibi",
+    "yumuşak odak",
+    "bokeh",
+    "kadife degrade",
+    "dijital resim"
+  ]
 }

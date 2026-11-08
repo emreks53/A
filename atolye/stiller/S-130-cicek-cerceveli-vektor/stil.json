@@ -10,13 +10,31 @@
   "koken": "Konuyu çiçek bordürüyle çevreleme geleneği Orta Çağ el yazmalarının çiçekli kenar süslemelerine, Osmanlı tezhibinin mihrap biçimli çerçevelerine ve Viktorya dönemi tebrik kartlarının kabartma güllerine dayanır. Bugünkü biçimi, vektör programlarında degrade ağları ve yumuşak gölgelerle çizilen dijital tebrik kartı ve davetiye illüstrasyonundan gelir; özellikle mihrap ya da kemer biçimli pencere içinde mescit görünümü ve çevresinde güller, dini bayram kartlarının yaygın kompozisyonudur.",
   "ayirt_edici": [
     "Sahne, altın çift silmeyle çizilmiş sivri kemerli bir pencerenin içinde; pencerenin iç kenarında yumuşak kart gölgesi",
-    "Sol yarısı çizilip aynalanan, tam simetrik çiçek bordürü: kemeri 34 px dışından izleyen çift sarmaşık, dönüşümlü yapraklar, kemer üstünde beyaz çiçekler ve tomurcuklar",
+    "Sol yarısı çizilip aynalanan, tam simetrik çiçek bordürü: kemeri 34 px dışından izleyen çift sarmaşık, yan dallar ve alt kenarda eksene uzanan sarmaşık; her yaprak, tomurcuk ve çiçek bir dala ince saplıkla bağlı, kemer üstünde beyaz çiçekler ve tomurcuklar",
     "Üç halka taç yaprak ve ortada sarmal hilallerden kurulmuş, göbekten kenara degradeli katmanlı güller: pembe, allık ve krem; alt köşelerde büyük gül buketleri, tepede ortada bir gül",
     "Beş yapraklı, allıklı göbekten beyaza degradeli beyaz çiçekler ve damarlı, iki tonlu degradeli yapraklar",
     "Pencere içinde parlak mavi gök, güneş parıltısı, yumuşak gölgeli kabarık bulutlar, uzak yeşil tepeler; silindir degradeli minare ve kasnak, radyal degradeli kaburgalı kubbe, altın degradeli alemler",
     "Bordür, ince benek desenli fildişi kart zemine yumuşak bir gölgeyle basılmış gibi; eser tuvali kenardan kenara doldurur"
   ],
-  "palet": ["#80B2E0", "#FAF3EA", "#2C7F3F", "#5EB469", "#D9607A", "#FFDCE1", "#EBC66A", "#6FAA62"],
-  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Pencere, merkezleri eksenden ±20,5 px uzakta olan iki daire yayından (yarıçap 420,5, ayak y = 470, tepe y ≈ 50) kurulan sivri kemer yoludur. Pencere içine kırpılarak önce gök, güneş parıltısı, gölgeli bulutlar, tepeler ve yer çizilir; sahne öğeleri 0,82 ölçekle (x' = 92 + 0,82x, y' = 104 + 0,82y) SAHNE.minareParcalari, kaide, kasnak, kubbeYolu, kaburgalar ve bitki'den, silindir için yatay, kubbe için radyal degradelerle çizilir. Altın silme, kemer yolunun dışa kaydırılmış kopyalarının degradeli çizgisidir. Bordür ayrı bir ekran dışı tuvalde sol yarı olarak çizilir (sap → yaprak → tomurcuk → beyaz çiçek → gül sırasıyla), translate + scale(−1, 1) ile aynalanır, simetri eksenindeki tepe gülü ve alt çiçek ayrıca eklenir; sonra tek bir shadowBlur gölgesiyle karta basılır. Güller üç halkada bezier taç yapraklarından ve iç içe hilal sarmalından, her yaprağın kendi radyal degradesi ve beyaz kenar ışığıyla oluşur.",
-  "etiketler": ["vektör", "çiçek çerçeve", "tebrik kartı", "gül", "degrade", "simetri", "kemer", "süsleme"]
+  "palet": [
+    "#80B2E0",
+    "#FAF3EA",
+    "#2C7F3F",
+    "#5EB469",
+    "#D9607A",
+    "#FFDCE1",
+    "#EBC66A",
+    "#6FAA62"
+  ],
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Pencere, merkezleri eksenden ±20,5 px uzakta olan iki daire yayından (yarıçap 420,5, ayak y = 470, tepe y ≈ 50) kurulan sivri kemer yoludur. Pencere içine kırpılarak önce gök, güneş parıltısı, gölgeli bulutlar, tepeler ve yer çizilir; sahne öğeleri 0,82 ölçekle (x' = 92 + 0,82x, y' = 104 + 0,82y) SAHNE.minareParcalari, kaide, kasnak, kubbeYolu, kaburgalar ve bitki'den, silindir için yatay, kubbe için radyal degradelerle çizilir. Altın silme, kemer yolunun dışa kaydırılmış kopyalarının degradeli çizgisidir. Bordür ayrı bir ekran dışı tuvalde sol yarı olarak çizilir (sap → yaprak → tomurcuk → beyaz çiçek → gül sırasıyla), translate + scale(−1, 1) ile aynalanır, simetri eksenindeki tepe gülü ve alt çiçek ayrıca eklenir; sonra tek bir shadowBlur gölgesiyle karta basılır. Sapsız kalan her yaprak, tomurcuk ve çiçek için sap eğrileri örneklenerek en yakın sap noktası bulunur ve oradan hafif kavisli ince bir saplık çizilir; bir gülün arkasından çıkan yapraklar o güle bağlı sayılır. Güller üç halkada bezier taç yapraklarından ve iç içe hilal sarmalından, her yaprağın kendi radyal degradesi ve beyaz kenar ışığıyla oluşur.",
+  "etiketler": [
+    "vektör",
+    "çiçek çerçeve",
+    "tebrik kartı",
+    "gül",
+    "degrade",
+    "simetri",
+    "kemer",
+    "süsleme"
+  ]
 }

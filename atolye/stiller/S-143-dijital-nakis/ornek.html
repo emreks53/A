@@ -508,11 +508,6 @@ function nakisKatman(bb, ciz, fn, o) {
   bas(L, (X, Y, k, out) => fn(X, Y, k, out, L));
   return L;
 }
-// çevre çizgisi (sap işi / bölünmüş iğne gibi ince sim ya da iplik): yol boyunca
-function hatDikis(yol, gen, renkFn, sim_) {
-  const L = katman([0, 0, 1024, 1024], (m) => { m.lineWidth = gen; m.stroke(new Path2D(yol)); }, 0);
-  return L;
-}
 
 // ------------------------------------------------------------------ minare (yatay bölünmüş saten, krem)
 function tasSaten(X, Y, out, cx, R, o) {
@@ -524,7 +519,6 @@ function tasSaten(X, Y, out, cx, R, o) {
   const c = palet(o.p || KREM_P, isik, h);
   iplik(out, c, d.u, d.v, d.L, d.tx, d.ty, 0.35);
 }
-function kemerAltinCevre(X, Y, p, out) { return false; }
 function minare() {
   const c = 300;
   const parcalar = S.minareParcalari();
@@ -605,16 +599,14 @@ function minare() {
     });
   }
 }
-// kemer içinde mi (genişletme payıyla)
+// kemer içinde mi (genişletme payıyla): sahnedeki sivri kemer yolu üzerinde tam isabet testi
+const _hc = document.createElement('canvas').getContext('2d');
+const _kemerOn = new Map();
 function ornekKemer(X, Y, p, pay) {
-  const w = p.w + pay * 2, x = p.x, y = p.y - pay, h = p.h + pay;
-  if (X < x - w / 2 || X > x + w / 2 || Y > y + h) return false;
-  const s = y + Math.min(h, w * 0.62);
-  if (Y >= s) return true;
-  // sivri kemer: yaklaşık iki yay
-  const t = (s - Y) / (s - y);
-  const half = (w / 2) * Math.sqrt(Math.max(0, 1 - t * t * 0.98)) * (1 - 0.18 * t);
-  return Math.abs(X - x) <= half;
+  const anah = p.x.toFixed(2) + ',' + p.y + ',' + pay;
+  let yol = _kemerOn.get(anah);
+  if (!yol) { yol = new Path2D(S.kemerYolu(p.x, p.y - pay, p.w + pay * 2, p.h + pay)); _kemerOn.set(anah, yol); }
+  return _hc.isPointInPath(yol, X, Y);
 }
 const ZIK = S.zikzakCizgileri();
 

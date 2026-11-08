@@ -6,14 +6,14 @@
   "aile": "Grafik ve Dijital",
   "ozgun": false,
   "ozet": "Fildişi atlas zemin üzerine renkli ipek ve altın-gümüş sırma atkılarla dokunmuş, parlak ve değerli bir ipek kumaş.",
-  "tanim": "Kemha, Osmanlı saray atölyelerinde dokunan, ipek zemin üzerine renkli ipek ve altın ya da gümüş sırma (metal tel sarılı) atkılarla desen çıkarılan ağır ve değerli bir ipek kumaştır. Desen alanlarında renkli atkılar aralıklarla bağlanarak yüzeyde yatay ipek atlamaları oluşturur; zemin ise uzun çözgü atlamalı atlas (saten) dokusuyla parlar. Sırma iplikler ışığı pırıltılı biçimde yansıtır, desen kenarları dokumanın atkı aralığında temiz biçimde basamaklanır. Kaftanlarda, yastık yüzlerinde, örtülerde ve sancaklarda kullanılmıştır.",
+  "tanim": "Kemha, Osmanlı saray atölyelerinde dokunan, ipek zemin üzerine renkli ipek ve altın ya da gümüş sırma (metal tel sarılı) atkılarla desen çıkarılan ağır ve değerli bir ipek kumaştır. Desen alanlarında renkli atkılar aralıklarla bağlanarak yüzeyde yatay ipek atlamaları oluşturur; zemin ise uzun çözgü atlamalı atlas (saten) dokusuyla parlar. Sırma iplikler ışığı pırıltılı biçimde yansıtır, sık dokunan kumaşta desen kenarları atkı aralığında ince ve temiz biçimde basamaklanır. Kaftanlarda, yastık yüzlerinde, örtülerde ve sancaklarda kullanılmıştır.",
   "koken": "Kemha 15. yüzyıldan itibaren Bursa'da, 16. yüzyılda İstanbul'daki saray dokuma atölyelerinde en parlak dönemini yaşadı; lale, karanfil, sümbül, çintemani ve bulut motifleri saray nakkaşhanesinde çizilen desenlerden dokuma kartonuna aktarılırdı. Teknik olarak lampas grubundandır: zemin ve desen ayrı çözgü-atkı sistemleriyle bağlanır; sırma, ipek bir özün üzerine sarılmış, altın ya da gümüş kaplı yassı metal şeritten yapılır. Topkapı Sarayı Müzesi'ndeki padişah kaftanları kemhanın en tanınmış örnekleridir.",
   "ayirt_edici": [
-    "Fildişi atlas zemin: uzun dikey çözgü atlamaları, dağınık bağlantı noktaları ve geniş, yumuşak ipek parıltısı",
+    "Fildişi atlas zemin: uzun dikey çözgü atlamaları, dağınık bağlantı noktaları ve kumaş boyunca kayan geniş, yumuşak ipek parıltısı",
     "Desen alanlarında yatay ipek atkı atlamaları ve onları tutan ince fildişi bağlayıcı çözgüler; her ipliğin yuvarlak kesit gölgesi",
-    "Altın sırma: kubbe konturu ve kaburgaları, alemler, güneş, korniş, şerefeler, çiçek göbekleri; yassı tel sarımının çapraz yivleri ve pırıltıları",
+    "Altın sırma: kubbe konturu ve kaburgaları, alemler, güneş, korniş, şerefeler, çiçek göbekleri; yassı tel sarımının çapraz yivleri ve atlama atlama değişen kıvılcımlı pırıltılar",
     "Gümüş sırma minare ve kaide; gölge yanlarında lila-gri ipek, minarede lal ipek zikzak bant",
-    "Desen kenarlarının dokuma ızgarasında temiz basamaklanması; lal ve pembe konturlu beyaz ipek çiçekler, iki tonlu yeşil ipek yapraklar",
+    "Sık dokumanın ızgarasında ince ve temiz basamaklanan desen kenarları; lal ve pembe konturlu beyaz ipek çiçekler, iki tonlu yeşil ipek yapraklar ve saplar",
     "Kumaşın kendi bordürü: altın sırma şerit ve ince lal çizgi"
   ],
   "palet": [
@@ -21,12 +21,12 @@
     "#3E9B5C",
     "#2F8752",
     "#EDCD68",
-    "#E2E5EA",
+    "#EAEDF1",
     "#BC4A62",
     "#FFFCF5",
     "#A9CBE6"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Sahne önce 512 çözgü × 342 atkılık bir dokuma kartonuna çizilir: her katman (bulut, minare, kubbe tonları, altın konturlar, yapraklar, çiçekler) ekran dışı küçük bir tuvale vektör yolla çizilir ve kaplaması yarıyı geçen hücreler o malzemeyi alır. Sonra her piksel için hücresi ve hücre içindeki yeri bulunur ve gerçek bağlantıya göre gölgelenir: zeminde 8 kuşaklı, çözgü yüzlü atlas ((j + 3i) mod 8 bağlantı) — dikey çözgü atlamalarının yuvarlak kesit gölgesi, uçlarda dalma ve ince yüzey ışığı; renkli ipek alanlarda yedi çözgüde bir, üç basamak kayarak bağlanan yatay atkı atlamaları ve dar fildişi bağlayıcı çözgüler; sırma alanlarda beş çözgüde bir bağlanan metal atkılar — iplik kesiti, çapraz sarım yivleri ve keskin pırıltılar altın ya da gümüş renk rampasından okunur. Çözgü ve atkılara iplik iplik küçük ton farkları, dikey ve yatay ipliklere farklı yönlü geniş ipek parıltısı eklenir.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Sahne önce 683 çözgü × 512 atkılık (çözgü aralığı 1,5, atkı aralığı 2 birim) sık bir dokuma kartonuna çizilir: her katman (bulut, minare, kubbe tonları, altın konturlar, yapraklar, çiçekler) ekran dışı küçük bir tuvale vektör yolla çizilir ve kaplaması yarıyı geçen hücreler o malzemeyi alır. Sonra her piksel için hücresi ve hücre içindeki yeri bulunur ve gerçek bağlantıya göre gölgelenir: zeminde 8 kuşaklı, çözgü yüzlü atlas ((j + 3i) mod 8 bağlantı) — dikey çözgü atlamalarının yuvarlak kesit gölgesi, uçlarda dalma ve ince yüzey ışığı; renkli ipek alanlarda yedi çözgüde bir, üç basamak kayarak bağlanan yatay atkı atlamaları ve dar fildişi bağlayıcı çözgüler; sırma alanlarda beş çözgüde bir bağlanan metal atkılar — iplik kesiti, çapraz sarım yivleri ve keskin pırıltılar altın ya da gümüş renk rampasından okunur; her sırma atlamasına ayrı bir parlaklık çarpanı verilir. Çözgü ve atkılara iplik iplik küçük ton farkları, dikey ve yatay ipliklere farklı yönlü geniş ipek parıltısı eklenir.",
   "etiketler": [
     "dokuma",
     "ipek",

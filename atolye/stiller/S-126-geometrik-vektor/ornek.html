@@ -24,7 +24,7 @@
 
   // ---------------------------------------------------------------- palet
   const P = {
-    gokHalka: ['#FFF2D2', '#FCE8C9', '#F6E3CC', '#ECE3D3', '#DFE5D8', '#D0E3DC', '#C2DFDF', '#B5D9E0', '#A9D3DF'],
+    gokHalka: ['#FFF2D2', '#FDE6C4', '#F8DEC6', '#EBDFCD', '#D9E4D7', '#C5DDDC', '#B1D5DF', '#9FCCDF', '#91C3DD'],
     gunes: '#FFE7A6', gunesIc: '#FFDB86',
     bulut: '#FFFFFF', bulutG: '#E7EFF0',
     yesil: ['#17503D', '#1B5D47', '#206B51', '#26795B', '#2D8866', '#369671', '#43A47C', '#55B188'],
@@ -329,17 +329,28 @@
   const meridyen = (u) => { const pts = []; for (let i = 0; i <= 64; i++) { const y = 555 - (255 * i) / 64; pts.push([560 + u * kubbeR(y), y]); } return pts; };
   {
     const n = 16;
+    // Her dilim iki düz yüze bölünür (kaburgalar sırt, dilim ortası oluk): sol yarı sağa, sağ yarı sola
+    // döner; her yüz kendi normaliyle ışığa göre sürekli bir yeşil tonu alır → 32 ayrı düz yüz.
+    const tonS = (pal, b) => {
+      const t = Math.max(0, Math.min(1, b)) * (pal.length - 1), i = Math.min(pal.length - 2, Math.floor(t));
+      return lerpHex(pal[i], pal[i + 1], t - i);
+    };
+    const yuzTonu = (az) => {
+      const lat = 0.6;
+      const nx = Math.sin(az) * Math.cos(lat), ny = Math.sin(lat), nz = Math.cos(az) * Math.cos(lat);
+      return Math.max(0, (nx * L[0] + ny * L[1] + nz * L[2] - 0.05) / 0.95);
+    };
     for (let k = 0; k < n; k++) {
       const p1 = -Math.PI / 2 + (Math.PI * k) / n, p2 = -Math.PI / 2 + (Math.PI * (k + 1)) / n;
-      const pm = (p1 + p2) / 2;
-      const lat = 0.6;
-      const nx = Math.sin(pm) * Math.cos(lat), ny = Math.sin(lat), nz = Math.cos(pm) * Math.cos(lat);
-      const b = Math.max(0, (nx * L[0] + ny * L[1] + nz * L[2] - 0.05) / 0.95);
-      const a = meridyen(Math.sin(p1)), c = meridyen(Math.sin(p2)).reverse();
-      const p = new Path2D();
-      [...a, ...c].forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y)));
-      p.closePath();
-      kirpli(kubbe, () => { dol(p, ton(P.yesil, b)); ctx.lineWidth = 0.6; ctx.strokeStyle = ton(P.yesil, b); ctx.stroke(p); });
+      const pm = (p1 + p2) / 2, d = 0.34;
+      for (const [q1, q2, az] of [[p1, pm, pm + d], [pm, p2, pm - d]]) {
+        const a = meridyen(Math.sin(q1)), c = meridyen(Math.sin(q2)).reverse();
+        const p = new Path2D();
+        [...a, ...c].forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y)));
+        p.closePath();
+        const renk = tonS(P.yesil, yuzTonu(az) * 1.05);
+        kirpli(kubbe, () => { dol(p, renk); ctx.lineWidth = 0.6; ctx.strokeStyle = renk; ctx.stroke(p); });
+      }
     }
     // dilim dikişleri: ince açık çizgi
     kirpli(kubbe, () => {

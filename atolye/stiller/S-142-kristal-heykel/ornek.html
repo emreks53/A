@@ -1233,15 +1233,11 @@ arkaAl(0, 0, 1024, 1024);
 stil.minareSonra = () => arkaAl(0, 0, 1024, 1024);
 binaCiz();
 // bitkiler: her katmandan önce bölgenin arka görüntüsü alınır (kristal arkasındakini kırar)
-{
-  const B = S.bitki;
-  const _katman = katman;
-  // katman çağrısını sarmala: maske oluşunca bölge kopyası alınsın
-  window.__kat = (bb, ciz, pad) => { const L = _katman(bb, ciz, pad); bolgeArka(L); return L; };
-}
+// katman + bölgenin arka görüntüsü (kristal, arkasında o ana dek çizilmiş olanı kırar)
+function katK(bb, ciz, pad) { const L = katman(bb, ciz, pad); bolgeArka(L); return L; }
 for (const s of S.bitki.saplar) { sapCizK(s); }
 function sapCizK(s) {
-  const L = window.__kat(bbNok(s, 4), (m) => { m.lineWidth = stil.sapKalin; m.stroke(new Path2D(S.yol(s))); }, 2);
+  const L = katK(bbNok(s, 4), (m) => { m.lineWidth = stil.sapKalin; m.stroke(new Path2D(S.yol(s))); }, 2);
   sisir(L, stil.sapKalin / 2, 1);
   golge(L, -5, 6, 3, 0.25, stil.tint);
   bas(L, (X, Y, k, out) => { sifirla(); nset(L.NX[k], L.NY[k], L.NZ[k]); stil.sap(X, Y, out); });
@@ -1249,7 +1245,7 @@ function sapCizK(s) {
 S.bitki.yapraklar.forEach((y, i) => {
   const d = S.yaprakYolu(y);
   const ca = Math.cos(y.aci), sa = Math.sin(y.aci), Lw = y.uzunluk;
-  const L = window.__kat([y.x - Lw, y.y - Lw, y.x + Lw, y.y + Lw], (m) => m.fill(new Path2D(d)), 2);
+  const L = katK([y.x - Lw, y.y - Lw, y.x + Lw, y.y + Lw], (m) => m.fill(new Path2D(d)), 2);
   sisir(L, 1.6, 1);
   golge(L, -6, 7, 3.5, 0.3, stil.tint);
   KD = { D: L.D, k: 0 };
@@ -1263,7 +1259,7 @@ S.bitki.yapraklar.forEach((y, i) => {
   });
 });
 for (const t of S.bitki.tomurcuklar) {
-  const L = window.__kat([t.x - t.r * 2, t.y - t.r * 2, t.x + t.r * 2, t.y + t.r * 2], (m) => m.fill(new Path2D(S.tomurcukYolu(t))), 2);
+  const L = katK([t.x - t.r * 2, t.y - t.r * 2, t.x + t.r * 2, t.y + t.r * 2], (m) => m.fill(new Path2D(S.tomurcukYolu(t))), 2);
   sisir(L, t.r * 0.7, 1);
   golge(L, -3, 4, 2.5, 0.25, stil.tint);
   bas(L, (X, Y, k, out) => { sifirla(); nset(L.NX[k], L.NY[k], L.NZ[k]); stil.tomurcuk(X, Y, out); });
@@ -1277,7 +1273,7 @@ S.bitki.cicekler.forEach((c, ci) => {
   kostik(c);
   yollar.forEach((d, p) => {
     const a = c.aci + (p * Math.PI * 2) / 5, ca = Math.cos(a), sa = Math.sin(a);
-    const L = window.__kat([c.x - R, c.y - R, c.x + R, c.y + R], (m) => m.fill(new Path2D(d)), 2);
+    const L = katK([c.x - R, c.y - R, c.x + R, c.y + R], (m) => m.fill(new Path2D(d)), 2);
     sisir(L, c.r * 0.05, 1);
     bas(L, (X, Y, k, out) => {
       sifirla();

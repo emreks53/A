@@ -368,6 +368,16 @@
   }
 
   // saplar
+  // öndeki tomurcukların sapları (yaprakların arkasında kalır; tomurcuk havada asılı durmaz)
+  for (const t of B.tomurcuklar.slice(8)) {
+    const x0 = t.x - Math.cos(t.aci) * t.r * 0.8, y0 = t.y - Math.sin(t.aci) * t.r * 0.8;
+    const bx = t.x + (t.x < 512 ? -16 : 16), pts = [];
+    for (let i = 0; i <= 16; i++) {
+      const u = i / 16, w = 1 - u;
+      pts.push([w * w * x0 + 2 * w * u * t.x + u * u * bx, w * w * y0 + 2 * w * u * (t.y + 80) + u * u * (t.y + 170)]);
+    }
+    dolKontur(serit(pts, 3.2, 4.6), C.sap, C.kY, LI * 1.1);
+  }
   for (const s of B.saplar) dolKontur(serit(s, 6, 3.2), C.sap, C.kY, LI * 1.2);
   // yapraklar: arkadakiler önce
   const yaps = B.yapraklar.slice().sort((a, b) => a.y - b.y);

@@ -13,7 +13,7 @@
 <script src="../../sahne/sahne.js"></script>
 <script>
   // S-159 Kemha Dokuma — Osmanlı kemhası: fildişi atlas (saten) zemin üzerine renkli ipek ve altın/gümüş
-  // sırma atkılarla dokunmuş sahne. Desen önce 256 × 256 hücrelik bir "dokuma kartonu"na çizilir; sonra her
+  // sırma atkılarla dokunmuş sahne. Desen önce 683 × 512 hücrelik sık bir "dokuma kartonu"na çizilir; sonra her
   // hücre gerçek bir bağlantıyla işlenir: zeminde çözgü yüzlü 5 kuşaklı atlas (uzun dikey çözgü atlamaları),
   // renkli alanlarda 1/3 dimi bağlı yatay ipek atkı atlamaları, sırma alanlarda yassı tel sarılı, çapraz
   // yivli, parlak metal atkılar. Her ipliğin yuvarlak gölgesi ve ipek parlaklığı piksel başına hesaplanır.
@@ -135,10 +135,10 @@
   for (const d of Y.minarePencereleri) kat('pencere', dol(d));
   function alem(a) {
     // dokumada okunsun diye parçalar yarım hücre kalınlaştırılır; küreler arasında ince boyun kalır
-    kat('altin', dol(dikd(a.cubuk.x1 - 1.0, a.cubuk.y1, a.cubuk.x2 + 1.0, a.cubuk.y2)));
-    for (const k of a.kureler) kat('altin', dol(SAHNE.daireYolu(k.cx, k.cy, k.r + 1.0)));
-    kat('altin', dol(SAHNE.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx + 1, ry: a.yaka.ry + 1, aci: 0 })));
-    kat('altin', dol(SAHNE.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R + 1.6)), 0.4);
+    kat('altin', dol(dikd(a.cubuk.x1 - 0.3, a.cubuk.y1, a.cubuk.x2 + 0.3, a.cubuk.y2)));
+    for (const k of a.kureler) kat('altin', dol(SAHNE.daireYolu(k.cx, k.cy, k.r + 0.6)));
+    kat('altin', dol(SAHNE.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx + 0.6, ry: a.yaka.ry + 0.6, aci: 0 })));
+    kat('altin', dol(SAHNE.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R + 1.0)), 0.4);
   }
   alem(SAHNE.alemParcalari(mc, 146, 0.62));
 
@@ -189,6 +189,16 @@
       sag.push([pts[i][0] + (dy / n) * w, pts[i][1] - (dx / n) * w]);
     }
     return SAHNE.yol(sol.concat(sag.reverse()), true);
+  }
+  // öndeki tomurcukların sapları (yaprakların arkasında kalır; tomurcuk havada asılı durmaz)
+  for (const t of B.tomurcuklar.slice(8)) {
+    const x0 = t.x - Math.cos(t.aci) * t.r * 0.8, y0 = t.y - Math.sin(t.aci) * t.r * 0.8;
+    const bx = t.x + (t.x < 512 ? -16 : 16), pts = [];
+    for (let i = 0; i <= 16; i++) {
+      const u = i / 16, w = 1 - u;
+      pts.push([w * w * x0 + 2 * w * u * t.x + u * u * bx, w * w * y0 + 2 * w * u * (t.y + 80) + u * u * (t.y + 170)]);
+    }
+    kat('yaprakKoyu', dol(serit(pts, 3.6, 4.6)));
   }
   for (const s of B.saplar) kat('yaprakKoyu', dol(serit(s, 6, 4.5)));
   const L = { x: 0.6, y: -0.8 };
@@ -318,7 +328,7 @@
           let t = (0.14 + 0.5 * Math.pow(pr, 1.1) * (0.55 + 0.45 * yiv) + 0.55 * pir) * (0.8 + 0.2 * zarf);
           // her sırma atlaması ışığı biraz farklı açıyla yakalar → kıvılcımlı metal parıltısı; geniş parlama bandı
           const fl = ip((((i + SIR_ADIM * j) / SIR) | 0) * 977 + j * 131);
-          t = t * (0.66 + 0.62 * pA * pA) * ATKI[j] * (0.8 + 0.42 * fl);
+          t = t * (0.66 + 0.62 * pA * pA) * ATKI[j] * (0.8 + 0.42 * fl) * 1.32;
           rampa(m.tip === 'altin' ? ALT : GUM, t * 0.96 + 0.04, tmp);
           r = tmp[0]; g = tmp[1]; b = tmp[2];
         }
