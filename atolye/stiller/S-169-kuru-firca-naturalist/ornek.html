@@ -328,7 +328,7 @@
   const tuval = document.getElementById('tuval');
   tuval.width = 1024; tuval.height = 1024;
   const ctx = tuval.getContext('2d');
-  const M = Motor({ kagit: '#FCFAF4', tohum: 169, doku: { olcek: 4.4, ince: 2.3, karisim: 0.74, kabartma: 0.12, ton: 0.04 } });
+  const M = Motor({ kagit: '#FCFAF4', tohum: 169, doku: { olcek: 4.4, ince: 2.3, karisim: 0.74, kabartma: 0.085, ton: 0.03 } });
   const g = Geo();
   const { W, clamp, sstep } = M;
   const Y = SAHNE.yollar();
@@ -412,7 +412,7 @@
     }
   }), 6);
   M.yika(gok, '#EDDCC0', { yog: 0.5, yumusak: 2, grad: (x, y) => sstep(460, 800, y), koru: tumKor, kenar: 0.06, gran: 0.1, akis: 0.12 });
-  M.yika(gok, '#A9C9E3', { yog: 0.85, yumusak: 1.5, grad: (x, y) => Math.pow(1 - sstep(-40, 640, y), 1.05) * (1 - 0.85 * Math.exp(-((gUz(x, y) / 210) ** 2))), koru: M.islem(tumKor, mBulut, (p, q) => Math.max(p, q * 0.9), 'hepsi'), kenar: 0.1, kenarR: 4, gran: 0.18, akis: 0.12 });
+  M.yika(gok, '#A2C8E8', { yog: 0.9, yumusak: 1.5, grad: (x, y) => Math.pow(1 - sstep(-40, 640, y), 1.05) * (1 - 0.85 * Math.exp(-((gUz(x, y) / 210) ** 2))), koru: M.islem(tumKor, mBulut, (p, q) => Math.max(p, q * 0.9), 'hepsi'), kenar: 0.1, kenarR: 4, gran: 0.18, akis: 0.12 });
   M.yika(M.kesis(mBulut, M.fMaske([0, 0, W, 600], (x, y) => sstep(-0.2, 0.9, M.fbm(nz, x / 40, y / 14, 2) * 0.6 + 0.4 * ((y % 120) / 120)))), '#C9C6D6', { yog: 0.35, yumusak: 2, koru: tumKor, kenar: 0.04, gran: 0.1 });
   // taş: soluk okr; kubbe ve kasnak: soluk yeşil; zemin: soluk kum
   M.yika(M.birles(mMinare, mKaide), '#F1E5CC', { yog: 0.75, yumusak: 0.6, koru: korOn, kenar: 0.08, gran: 0.1, akis: 0.15 });
@@ -437,7 +437,7 @@
   const minU = (x, y) => (x - 300) / g.minareYari(y);
   M.yika(M.fMaske([250, 140, 352, 800], (x, y) => mMinare.a[y * W + x] * (1 - mKaide.a[y * W + x]) * sstep(0.35, -0.4, minU(x, y))), '#BDB8C6', { yog: 0.6, yumusak: 2, koru: korOn, kenar: 0.04, gran: 0.12 });
   M.yika(M.fMaske([300, 700, 820, 730], (x, y) => (y >= 704 ? mKaide.a[y * W + x] * sstep(728, 706, y) : 0)), '#B9B4C4', { yog: 0.7, koru: korOn, kenar: 0.04 });
-  M.yika(M.fMaske([300, 704, 820, 800], (x, y) => mKaide.a[y * W + x] * clamp((560 - x) / 300, 0, 1)), '#C9C3CF', { yog: 0.5, yumusak: 2, koru: korOn, kenar: 0 });
+  M.yika(M.fMaske([300, 704, 820, 800], (x, y) => mKaide.a[y * W + x] * clamp((480 - x) / 200, 0, 1)), '#CCC7D4', { yog: 0.4, yumusak: 2, koru: korOn, kenar: 0 });
   // bitki ilk yıkamaları
   M.yika(M.yolMaske(Y.yapraklar), '#B3CC8C', { yog: 0.85, yumusak: 0.5, koru: mCicek, kenar: 0.1, gran: 0.1, akis: 0.18 });
   M.yika(M.maske((c) => { c.lineWidth = 3; for (const s of Y.saplar) c.stroke(P(s)); }), '#86A762', { yog: 0.85, koru: mCicek, kenar: 0.08 });
@@ -461,7 +461,7 @@
   M.yika(M.fMaske([330, 550, 790, 620], (x, y) => ((y >= 555 && y < 562) || (y >= 610 && y < 616) ? mKasnak.a[y * W + x] : 0)), '#2E5E4B', { yog: 0.6, kuru: 0.38, koru: korOn, kenar: 0 });
   // minare: dikey taş damarı, gölge yanında sık; şerefe altları; pencereler
   const minKutu = [258, 140, 342, 800];
-  kuruKat(Y.minare, { n: 1500, kutu: minKutu, olas: (x, y) => (mKaide.a[(y | 0) * W + (x | 0)] > 0.5 ? 0 : 0.04 + 0.96 * sstep(0.35, -0.7, minU(x, y))), yon: () => Math.PI / 2, uz: [10, 22], kal: [0.7, 1.1], tohum: 14, sapma: 0.02 }, '#ABA7C0', { yog: 0.45, kuru: 0.43 });
+  kuruKat(Y.minare, { n: 1500, kutu: minKutu, olas: (x, y) => (mKaide.a[(y | 0) * W + (x | 0)] > 0.5 ? 0 : 0.04 + 0.96 * sstep(0.35, -0.7, minU(x, y))), yon: () => Math.PI / 2, uz: [10, 22], kal: [0.7, 1.1], tohum: 14, sapma: 0.02 }, '#ADA9C2', { yog: 0.4, kuru: 0.44 });
   kuruKat(Y.minare, { n: 500, kutu: minKutu, olas: (x, y) => (mKaide.a[(y | 0) * W + (x | 0)] > 0.5 ? 0 : 0.15 + 0.85 * sstep(0.7, 0.0, minU(x, y))), yon: () => Math.PI / 2, uz: [8, 18], kal: [0.7, 1.0], tohum: 15, sapma: 0.02 }, '#D4C09C', { yog: 0.4, kuru: 0.45 });
   const parcalar = SAHNE.minareParcalari();
   M.yika(M.yolMaske(parcalar.filter((p) => p.ad.startsWith('çıkma')).map((p) => SAHNE.yol(p.noktalar, true))), '#9C97AE', { yog: 0.7, kenar: 0.1, gran: 0.15 });
@@ -472,8 +472,8 @@
   M.yika(M.yolMaske([...Y.minarePencereleri, ...Y.kaidePencereleri]), '#5E5670', { yog: 0.85, koru: korOn, kenar: 0.15, kenarR: 2, gran: 0.15 });
   M.yika(M.fMaske([270, 140, 330, 202], (x, y) => { const m = mMinare.a[y * W + x]; if (y < 146 || y > 200 || m <= 0) return 0; return m * sstep(300, 290, x + (y - 175) * 0.12); }), '#ADA7BB', { yog: 0.6, kenar: 0.05, gran: 0.15 });
   // kaide: yatay ince taş damarı, taş sıraları, sola doğru sıklaşır
-  kuruKat([Y.kaide], { n: 1500, kutu: [300, 716, 820, 800], olas: (x, y) => 0.08 + 0.92 * Math.pow(sstep(760, 300, x), 1.5), yon: () => 0, uz: [14, 34], kal: [0.7, 1.1], tohum: 16, sapma: 0.015 }, '#B4ADBE', { yog: 0.5, kuru: 0.45 });
-  kuruKat([Y.kaide], { n: 700, kutu: [300, 716, 820, 800], olas: () => 0.5, yon: () => 0, uz: [10, 26], kal: [0.7, 1.0], tohum: 18, sapma: 0.015 }, '#D2BE9A', { yog: 0.45, kuru: 0.47 });
+  kuruKat([Y.kaide], { n: 900, kutu: [300, 716, 820, 800], olas: (x, y) => 0.06 + 0.94 * Math.pow(sstep(700, 300, x), 1.6), yon: () => 0, uz: [14, 34], kal: [0.7, 1.0], tohum: 16, sapma: 0.015 }, '#B6B0C4', { yog: 0.42, kuru: 0.46 });
+  kuruKat([Y.kaide], { n: 600, kutu: [300, 716, 820, 800], olas: () => 0.5, yon: () => 0, uz: [10, 26], kal: [0.7, 1.0], tohum: 18, sapma: 0.015 }, '#D9C6A2', { yog: 0.4, kuru: 0.47 });
   M.yika(M.maske((c) => {
     c.lineWidth = 1;
     for (const y of [728, 752, 776]) { c.beginPath(); c.moveTo(300, y + 0.5); c.lineTo(820, y + 0.5); c.stroke(); }
@@ -481,7 +481,7 @@
     for (let k = 0; k < 4; k++) for (let x = 300 + (k % 2) * 34 + 20; x < 820; x += 68) { c.beginPath(); c.moveTo(x + 0.5, sira[k] + (k ? 0 : 0)); c.lineTo(x + 0.5, sira[k + 1]); c.stroke(); }
     c.globalCompositeOperation = 'destination-out';
     for (const p of SAHNE.kaide.pencereler) c.fill(P(SAHNE.kemerYolu(p.x, p.y - 3, p.w + 8, p.h + 6)));
-  }), '#AFA697', { yog: 0.45, kuru: 0.36, kuruY: 0.12, koru: korOn, kenar: 0 });
+  }), '#B5AC9E', { yog: 0.38, kuru: 0.38, kuruY: 0.12, koru: korOn, kenar: 0 });
   // altın: ince kuru darbeler
   M.yika(M.kesis(mAlem, M.fMaske([270, 60, 600, 320], (x) => (Math.abs(x - 560) < 30 ? sstep(562, 556, x) : sstep(302, 297, x)))), '#9C6E2A', { yog: 0.6, kenar: 0.1, kuru: 0.3, kuruY: 0.15 });
   // zemin: yatay kısa darbeler ve kum noktaları; bitki gölgeleri
