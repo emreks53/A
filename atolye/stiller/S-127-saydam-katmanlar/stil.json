@@ -16,7 +16,25 @@
     "Yarı saydam yeşil yapraklar birbirinin üstünden görünür; taç yaprakları beyaz zemin üstünde saydam allık rengi, kesişen ortaları koyulaşır",
     "Beyaz saydam haplardan bulutlar ve altlarındaki kaydırılmış lila gölge kopyaları; yerde çapraz kesişen saydam çimen şeritleri"
   ],
-  "palet": ["#FDFCF8", "#9ACCF2", "#C3B6F2", "#96E0D3", "#9ED9A8", "#3E9E6E", "#F8CFCF", "#EDBB45"],
-  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Her biçim 'kat(yol, renk, örtücülük, kip)' yardımcısıyla globalAlpha ve globalCompositeOperation = 'multiply' kullanılarak basılır; ışık eklemesi gereken bulut ve haleler yarı saydam beyazla 'source-over' basılır. Gök, açık mavi bir zeminin üstüne eğimli kenarlı beş çokgen şerit ve güneş çevresinde daireler; kubbe beyaz bir alt örtünün üstüne açık yeşil, ardından SAHNE.kubbeProfili meridyenlerinden kurulan ve sınırları ±0,022 taşan 16 dilim (iki yeşil dönüşümlü, %38 örtücülük) ve gölge / ışık elipsleriyle çizilir. Minare, kaide ve alemler kendi beyaz alt örtüleri üstüne saydam levhalardır; minare gölge şeridi SAHNE.yollar().minare birleşimine kırpılır. Yapraklar beş yeşilden rastgele (SAHNE.rng) seçilen saydam dolgular; çiçeklerde opak beyaz taç yapraklarının üstüne %33 allık katmanı biner. Geometri SAHNE.minareParcalari, kasnakPencereleri, kaide, kemerYolu ve bitki'den gelir.",
-  "etiketler": ["vektör", "saydam", "multiply", "üst baskı", "katmanlı", "çağdaş", "havadar", "editoryal"]
+  "palet": [
+    "#FDFCF8",
+    "#B9D8ED",
+    "#A7BDE8",
+    "#A2D3DB",
+    "#529F5E",
+    "#44906D",
+    "#F8CBC9",
+    "#ECA850"
+  ],
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Her biçim 'kat(yol, renk, örtücülük, kip)' yardımcısıyla globalAlpha ve globalCompositeOperation = 'multiply' kullanılarak basılır; ışık eklemesi gereken bulut ve haleler yarı saydam beyazla 'source-over' basılır. Gök, açık mavi bir zeminin üstüne eğimli kenarlı dört renkli çokgen şerit, beyaz bir ufuk pusu şeridi, şeftali bir ufuk levhası ve güneş çevresinde daireler; kubbe beyaz bir alt örtünün üstüne açık yeşil, ardından SAHNE.kubbeProfili meridyenlerinden kurulan ve sınırları ±0,022 taşan 16 dilim (iki yeşil dönüşümlü, %38 örtücülük) ve gölge / ışık elipsleriyle çizilir. Minare, kaide ve alemler kendi beyaz alt örtüleri üstüne saydam levhalardır; minare gölge şeridi SAHNE.yollar().minare birleşimine kırpılır. Yapraklar beş yeşilden rastgele (SAHNE.rng) seçilen saydam dolgular; çiçeklerde opak beyaz taç yapraklarının üstüne %33 allık katmanı biner. Geometri SAHNE.minareParcalari, kasnakPencereleri, kaide, kemerYolu ve bitki'den gelir.",
+  "etiketler": [
+    "vektör",
+    "saydam",
+    "multiply",
+    "üst baskı",
+    "katmanlı",
+    "çağdaş",
+    "havadar",
+    "editoryal"
+  ]
 }

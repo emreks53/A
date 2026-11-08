@@ -270,6 +270,10 @@
   {
     fCiz(rect(24, 24, 1000, 1000), 2.4);
     fCiz(rect(33, 33, 991, 991), 1.1);
+    // iki çizgi arasında ince folyo inci dizisi
+    for (let t = 52; t <= 972; t += 15) {
+      for (const [x, y] of [[t, 28.5], [t, 995.5], [28.5, t], [995.5, t]]) fDol(daire(x, y, 1.25));
+    }
     const yildiz = (cx, cy, r) => {
       const p = new Path2D();
       for (let k = 0; k < 2; k++) {
@@ -495,7 +499,7 @@
     const yans = gurultuDokusu(256, 256, 22, 3, 153);
     const tane = gurultuDokusu(1024, 1024, 0.9, 2, 154);
     // altın rampası
-    const rampa = [[0, [150, 108, 34]], [0.28, [192, 146, 56]], [0.5, [222, 182, 88]], [0.7, [243, 213, 134]], [0.86, [253, 238, 190]], [1, [255, 252, 236]]];
+    const rampa = [[0, [150, 108, 34]], [0.28, [192, 146, 56]], [0.5, [222, 182, 88]], [0.7, [243, 213, 134]], [0.86, [251, 232, 176]], [1, [254, 243, 206]]];
     const altin = (t) => {
       t = clamp(t, 0, 1);
       for (let k = 0; k < rampa.length - 1; k++) if (t <= rampa[k + 1][0]) {

@@ -27,7 +27,7 @@
     bulut: '#FBF9F4',
     zemin: '#EFE5D5', zeminG: '#E9DCC8',
     tas: '#F9F3E8', tasG: '#EEE5D6', tasC: '#E2D6C2',
-    adacayi: '#AFC7A8', adacayiG: '#A0BA99', adacayiC: '#8FAB89', adacayiA: '#BCD1B5',
+    adacayi: '#AFC7A8', adacayiG: '#A0BA99', adacayiC: '#8FAB89', adacayiA: '#BCD1B5', kasnak: '#A8C1A1', kasnakG: '#9AB493',
     pencere: '#97AE95', pencereTas: '#AFBFAC',
     altin: '#D9BE82', altinG: '#C8AA6C',
     yaprak: '#B5C9AC', yaprakG: '#A4BB9B', sap: '#A3B99C',
@@ -138,8 +138,8 @@
   for (let k = 1; k >= 0; k--) {
     const kq = S.kasnak[k];
     const R = (kq.x2 - kq.x1) / 2;
-    dol(dik(kq.x1, kq.y1, kq.x2, kq.y2), P.adacayi);
-    dol(dik(kq.x1, kq.y1, 560 + terminator * R, kq.y2), P.adacayiG);
+    dol(dik(kq.x1, kq.y1, kq.x2, kq.y2), P.kasnak);
+    dol(dik(kq.x1, kq.y1, 560 + terminator * R, kq.y2), P.kasnakG);
     dol(dik(kq.x1, kq.y2 - 4, kq.x2, kq.y2), P.adacayiG);
     dol(dik(kq.x1, kq.y2 - 4, 560 + terminator * R, kq.y2), P.adacayiC);
     for (const p of S.kasnakPencereleri(k)) dol(S.kemerYolu(p.x, p.y, p.w, p.h), P.pencere);
