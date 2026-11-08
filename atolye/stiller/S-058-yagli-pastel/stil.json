@@ -13,7 +13,7 @@
     "Doygun, parlak renkler: kobalt ve gök mavisi, zümrüt ve sarı-yeşil kubbe, limon sarısı güneş, okra zemin, beyaz-leylak çiçekler",
     "Kazıma (sgraffito): kubbe kaburgaları, güneş halkaları, yaprak damarları ve taç yaprağı çizgileri kalın kattan kazınmış, alttaki altın sarısı ve pembe kat görünüyor",
     "Gökte ve kubbede parmakla ezilmiş yumuşak geçiş şeritleri; hemen yanlarında ezilmemiş keskin vuruşlar",
-    "Pürüzlü kâğıdın dişi mumu yakalıyor: vuruşların içinde koyu benekler, kabartmalı yüzey ve hafif mum parlaklığı",
+    "Sıcak taba rengi pürüzlü karton: kenarlarda vuruşlar seyrelip ufalanarak bitiyor ve çıplak karton düzensiz bir pay olarak görünüyor; mum dişin tepelerine tutunuyor, yüzey kabartmalı ve hafif parlak",
     "Üstten hafifçe sürtülen açık renklerin (beyaz, açık mavi, sarı-yeşil) alttakini kırık kırık göstermesi"
   ],
   "palet": [
@@ -24,9 +24,9 @@
     "#FFE060",
     "#EEB43C",
     "#9C9AE8",
-    "#F0388A"
+    "#96623C"
   ],
-  "kodla_cizim": "2048 piksellik pürüzlü karton dişi bir yükseklik haritasıdır; renk ve mum kalınlığı ayrı dizilerde tutulur. Vuruşlar dokuz 'kıl' şeridinden oluşan, uçları incelen tıknaz şeritlerdir; renkler ışık modelinden türetilen tonla renk rampalarından (iki durak arasında rastgele karışım) seçilir. Katmanlar örtücü olarak bırakılır: pigment diş yüksekliği ve önceden birikmiş mum kalınlığına bağlı eşikle tutunur, mum kalınlığı artar. Sıra: parlak alt kat (kopyası saklanır), ana kat, düşük basınçlı sürtme katı, parmakla ezme (ince bir şerit içinde görüntünün kayan kopyalarıyla bulaştırma, orada mum düzleşir), net ayrıntılar (pencereler, korkuluk, korniş, zikzak), kazıma (kazınan çizgilerde üst kat alt katın kopyasıyla değiştirilir, mum oluk açar ve kenarlarda sırt yapar). En sonda mum kalınlığı ve kâğıt dişinden normal hesaplanıp yaygın ışık ve yumuşak bir parlama (speküler) eklenir.",
+  "kodla_cizim": "2048 piksellik pürüzlü karton dişi bir yükseklik haritasıdır; kartonun rengi sıcak taba, renk ve mum kalınlığı ayrı dizilerde tutulur. Kenarda gürültüyle düzensizleştirilmiş bir pay maskesi vuruşların basıncını azaltır; vuruşlar orada ufalanarak biter ve çıplak karton görünür. Vuruşlar dokuz 'kıl' şeridinden oluşan, uçları incelen tıknaz şeritlerdir; renkler ışık modelinden türetilen tonla renk rampalarından (iki durak arasında rastgele karışım) seçilir. Katmanlar örtücü olarak bırakılır: pigment diş yüksekliği ve önceden birikmiş mum kalınlığına bağlı eşikle tutunur, mum kalınlığı artar. Sıra: parlak alt kat (kopyası saklanır), ana kat, düşük basınçlı sürtme katı, parmakla ezme (ince bir şerit içinde görüntünün kayan kopyalarıyla bulaştırma, orada mum düzleşir), net ayrıntılar (pencereler, korkuluk, korniş, zikzak), kazıma (kazınan çizgilerde üst kat alt katın kopyasıyla değiştirilir, mum oluk açar ve kenarlarda sırt yapar). En sonda mum kalınlığı ve kâğıt dişinden normal hesaplanıp yaygın ışık ve yumuşak bir parlama (speküler) eklenir.",
   "etiketler": [
     "yağlı pastel",
     "kuru teknik",

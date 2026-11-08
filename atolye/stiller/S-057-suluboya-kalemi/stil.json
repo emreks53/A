@@ -5,16 +5,16 @@
   "ad_en": "Watercolor Pencil",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Kuru kalem taraması ile ıslak fırçanın çözdüğü yıkamalar bir arada: bazı yerler net çizgi, bazı yerler tarama izi süren, tanecikli suluboya lekesi.",
+  "ozet": "Kuru renkli kalem taraması ile ıslak fırçanın çözdüğü suluboya aynı yaprakta: resmin yarısı çiçeklenmeli, akışkan yıkama, öbür yarısı net kalem çizgisi.",
   "tanim": "Suluboya kalemi (akvarel kalem), suda çözünen bağlayıcılı renkli kalemdir: önce kuru olarak renkli kalem gibi çizilir, sonra ıslak fırçayla üzerinden geçilen yerlerde pigment çözülüp suluboyaya dönüşür. Fırçanın değdiği yerde renk koyulaşır ve yayılır ama tarama yönü çoğu zaman seçilebilir kalır; kuruyan lekenin kenarında pigment birikir, kâğıdın çukurlarına tanecikler çöker. Değmeyen yerler kalem çizgisi olarak kalır; çizim ile resim aynı yaprakta buluşur. Seyahat eskizinde, botanik ve doğa defterlerinde, çocuk kitabı resminde sık kullanılır.",
   "koken": "Suda çözünen renkli kalemler 1930'larda (Caran d'Ache Prismalo 1931, ardından Derwent ve Faber-Castell Albrecht Dürer serileri) ortaya çıktı. Taşınabilir olduğu için açık havada eskiz ve seyahat defteri ressamlarının, botanik illüstratörlerin aracı oldu; 'kuru başla, ıslak bitir' yaklaşımı kalem çizgisiyle suluboya lekesini birleştirir.",
   "ayirt_edici": [
-    "Aynı resimde iki hâl: kubbenin gölgeli yarısı, sol üst gök, zemin bandı ve bazı yapraklar suyla çözülmüş; ışıklı taraflar ve kenarlar kuru, net kalem taraması",
-    "Çözülmüş yıkamaların içinde tarama yönü ve fırça kılı izleri hâlâ seçiliyor",
-    "Islak alanların düzensiz kenarlarında kuruma çizgisi gibi koyulaşan pigment birikimi",
-    "Soğuk preslenmiş kâğıdın çukurlarına çöken tanecikler ve kâğıt beyazının kuru vuruşlar arasında kalması",
-    "Kuru kalem taraması gökte çapraz, güneş çevresinde dairesel; kubbede kaburga boyunca meridyen vuruşları",
-    "Net renkli kalem konturları (koyu yeşil, sepya, mor) ıslak yerlerde hafifçe yumuşamış"
+    "Resmin aşağı yukarı yarısı ıslak fırçayla çözülmüş: sol üst gök, kubbe ve kasnağın sol yanı, kaidenin solu, zemin ve öndeki çiçeklerin çoğu suluboya lekesi; güneşli sağ gök, kubbenin ışıklı yarısı, sağdaki çiçekler ve minare kuru, net kalem taraması",
+    "Islak ile kuru arasındaki sınır düz bir çizgi değil, loblu ve düzensiz bir hat: kubbeyi eğri bir çizgiyle bölüyor, ıslak tarafta tarama izleri yer yer hâlâ seçiliyor",
+    "Islak gökte ve zeminde çiçeklenmeler (geri kaçma lekeleri): içi açık, kenarı karnabahar gibi koyu; pigment akışla dalgalanıp yer yer koyulaşıyor",
+    "Islak alanların ve biçimlerin kenarında kuruma çizgisi gibi koyulaşan pigment birikimi, alt kenarlarda göllenme; soğuk pres kâğıdın çukurlarına çöken tanecikler",
+    "Kuru tarafta pürüzlü kâğıdın dişine tutunan çapraz tarama ve beyaz kâğıt benekleri; güneş çevresinde dairesel sarı vuruşlar, kubbede kaburga boyunca meridyen çizgileri",
+    "Renkli kalem konturları (koyu yeşil, sepya, mor) kuru yerlerde keskin, ıslak yerlerde dağılmış; çiçeklerde pembe ve menekşe suyla birbirine akmış"
   ],
   "palet": [
     "#FBFAF5",
@@ -26,7 +26,7 @@
     "#D6A456",
     "#EE8FAE"
   ],
-  "kodla_cizim": "Kuru Boya (S-056) ile aynı katman ve vuruş altyapısı kullanılır; kâğıt dişi iri tümsekli (soğuk pres) ve ayrıca bir tanecik haritası vardır. Islak fırça bölgeleri ayrı bir 1024 haritada tanımlanır: kubbe gölgesinde meridyen boyunca, yapraklarda damar boyunca fırça izleri; gök, zemin ve kaidede gürültüyle düzensizleştirilmiş kenarlı alanlar; fırça kılı çizgileri ikinci bir haritada. Her katman kâğıda bırakılırken kuru kısımda pigment diş tepelerine eşikle tutunur; ıslak kısımda katmanın bulanıklaştırılmış kopyası (yayılan pigment) koyulaştırılarak, kıl izleriyle modüle edilerek, çukurlara ve tanelere fazla çöktürülerek ve ıslak alan kenarında (harita ile bulanık kopyası arasındaki farktan bulunan) birikimle birlikte bırakılır; iki sonuç ıslaklık oranına göre karıştırılır. Konturlar az yayılan ayrı bir ıslak ayarla çizilir.",
+  "kodla_cizim": "Kuru Boya (S-056) ile aynı katman ve vuruş altyapısı kullanılır; kâğıt dişi iri tümsekli (soğuk pres) ve ayrıca bir tanecik haritası vardır. Islak fırça alanı 1024'lük bir haritada, yukarıdan aşağı dolanan ve iri ölçekli gürültüyle loblanan bir sınır eğrisiyle (resmin yaklaşık yarısı) ve kuru tarafta küçük bir ıslak adacıkla tanımlanır; sınır birkaç piksellik sert geçişlidir. Her katman kâğıda bırakılırken kuru kısımda pigment diş tepelerine eşikle tutunur (kuru vuruşlar biraz daha bastırılır). Islak kısımda yayılan pigment, katmanın dörtte bir çözünürlükte bulanıklaştırılıp yumuşakça büyütülmüş geniş kopyası ile az bulanık kopyasının karışımıdır; bu koyulaştırılır, iri bir akış gürültüsü ve fırça kılı izleriyle modüle edilir, rastgele yerleştirilen çiçeklenmelerde (açısal gürültülü sınır: içi açık, kenarı koyu halka) açılır, ıslak alan kenarında, alt kenarlarda (göllenme) ve bölge haritasından bulunan biçim kenarlarında koyulaşır, kâğıt çukurlarına ve tane haritasına fazla çöker. Minare ve alemler kuru bırakılır; konturlar az yayılan ayrı bir ıslak ayarla çizilir.",
   "etiketler": [
     "suluboya kalemi",
     "akvarel kalem",

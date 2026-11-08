@@ -374,6 +374,14 @@
   kat(15, 0.62, 1.15, (cls) => R() < P2[cls]);
   kat(10, 0.4, 1.3, (cls) => R() < P3[cls]);
 
+  // üst kenar: astar şeridi kalmasın diye kenar boyunca birkaç geniş gök levhası
+  for (let x = -20; x < W + 20; x += 34 + R() * 20) {
+    const y = 4 + R() * 10, cls = sAt(clamp(x, 0, W - 1), y + 4); if (cls !== 1) continue;
+    const a = -0.2 + (R() - 0.5) * 0.5, ca = Math.cos(a), sa = Math.sin(a);
+    const [c1, c2] = ikiRenk(1, clamp(x, 0, W - 1), y + 8, ca, sa, 14);
+    levha({ x, y, a, L: 70 + R() * 50, G: 26 + R() * 12, c1, c2, sekil: 0, t: 1.0, sk1: (R() - 0.5) * 0.6, sk2: (R() - 0.5) * 0.6, sf: 0.06 + R() * 0.08, th: 0.4 + R() * 0.3, so: R() * 200, rg: 0.5, re: 0.8, surt: 0.4 });
+  }
+
   // ------------------------------------------------------------ gök: güneşin kalın empastosu ve bulut levhaları
   for (let k = 0; k < 30; k++) {
     const ang = R() * Math.PI * 2, rr = Math.pow(R(), 0.9) * 58;
@@ -554,10 +562,14 @@
       const ox = -Math.sin(a) * c.r * 0.1 * (Math.sin(a + 0.75) > 0 ? -1 : 1);
       levha({ x: c.x + Math.cos(a) * c.r * 0.56 + ox, y: c.y + Math.sin(a) * c.r * 0.56 + Math.cos(a) * c.r * 0.1 * (Math.sin(a + 0.75) > 0 ? -1 : 1), a: a + (R() - 0.5) * 0.25, L: c.r * 0.92, G: c.r * 0.5, sekil: 2, c1, c2: [255, 255, 252], t: 2.0, rg: 1.1, re: 1.8, sf: 0.2 * (30 / c.r), th: 0.5, so: R() * 99, tv: (R() - 0.5) * 0.8, kenar: 0.6 });
     }
-    levha({ x: c.x, y: c.y, a: R() * 3, L: c.r * 0.42, G: c.r * 0.38, sekil: 1, c1: [255, 196, 30], c2: [230, 120, 20], t: 2.2, rg: 0.8, re: 0.8, sf: 0.5, th: 0.55, so: R() * 99, kenar: 0.4 });
-    for (let k = 0; k < 7; k++) {
-      const a = (k / 7) * Math.PI * 2 + R();
-      levha({ x: c.x + Math.cos(a) * c.r * 0.26, y: c.y + Math.sin(a) * c.r * 0.26, a, L: Math.max(3, c.r * 0.09), G: Math.max(2.4, c.r * 0.07), sekil: 1, c1: [170, 70, 20], t: 2.4, rg: 0.3, re: 0.3, sf: 1, so: R() * 99, kenar: 0.2 });
+    // göbek: üç küçük spatula dokunuşu (gölgede koyu turuncu, ortada sarı, ışıkta açık limon), çevresinde düzensiz ercik noktaları
+    levha({ x: c.x - c.r * 0.05, y: c.y + c.r * 0.05, a: R() * 3, L: c.r * 0.44, G: c.r * 0.36, sekil: 1, c1: [226, 128, 24], c2: [240, 150, 30], t: 2.0, rg: 0.8, re: 0.9, sf: 0.12, th: 0.5, so: R() * 99, kenar: 0.6 });
+    levha({ x: c.x + c.r * 0.02, y: c.y - c.r * 0.02, a: R() * 3, L: c.r * 0.34, G: c.r * 0.26, sekil: 1, c1: [255, 196, 36], c2: [250, 176, 30], t: 2.4, rg: 0.9, re: 1.0, sf: 0.1, th: 0.5, so: R() * 99, kenar: 0.6 });
+    levha({ x: c.x + c.r * 0.07, y: c.y - c.r * 0.08, a: R() * 3, L: c.r * 0.16, G: c.r * 0.12, sekil: 1, c1: [255, 238, 130], t: 2.8, rg: 0.6, re: 0.6, sf: 0.1, so: R() * 99, kenar: 0.5 });
+    const ne = 5 + ((R() * 4) | 0);
+    for (let k = 0; k < ne; k++) {
+      const a = R() * Math.PI * 2, rr = c.r * (0.2 + R() * 0.13);
+      levha({ x: c.x + Math.cos(a) * rr, y: c.y + Math.sin(a) * rr, a: R() * 3, L: Math.max(3, c.r * (0.06 + R() * 0.06)), G: Math.max(2.4, c.r * 0.06), sekil: 1, c1: R() < 0.5 ? [170, 70, 20] : [200, 104, 26], t: 2.4, rg: 0.3, re: 0.3, sf: 0.2, so: R() * 99, kenar: 0.3 });
     }
   }
 

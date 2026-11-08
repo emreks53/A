@@ -168,6 +168,33 @@
     return { m, y0: temel.y0, y1: temel.y1 };
   }
   const birlesik = (dizi) => { const p = new Path2D(); dizi.forEach((d) => p.addPath(P(d))); return p; };
+  /**
+   * Fırçayla sürülmüş sıcak mum darbeleri: her darbe hem renk tuvaline yarı saydam bir sır olarak hem yükseklik
+   * tuvaline (üst üste binen darbeler kabarık, kenarlı bir yüzey kurar) çizilir.
+   */
+  function mumDarbeleri(o) {
+    const cc = SAHNE.yeniTuval(WW, WW), cg = cc.getContext('2d', { willReadFrequently: true });
+    const hc = SAHNE.yeniTuval(WW, WW), hg = hc.getContext('2d', { willReadFrequently: true });
+    for (const g of [cg, hg]) { g.setTransform(S, 0, 0, S, 0, 0); g.lineCap = 'round'; if (o.klip) g.clip(o.klip); }
+    const rv = SAHNE.rng(o.tohum);
+    for (let k = 0; k < o.adet; k++) {
+      const x = o.alan[0] + rv() * (o.alan[2] - o.alan[0]), y = o.alan[1] + rv() * (o.alan[3] - o.alan[1]);
+      if (o.izin && !o.izin(x, y)) continue;
+      const an = o.yon(x, y) + (rv() - 0.5) * (o.sap === undefined ? 0.5 : o.sap), l = o.boy[0] + rv() * (o.boy[1] - o.boy[0]), w = o.en[0] + rv() * (o.en[1] - o.en[0]);
+      const dx = Math.cos(an) * l / 2, dy = Math.sin(an) * l / 2, bk = (rv() - 0.5) * 0.3;
+      const yol = new Path2D(); yol.moveTo(x - dx, y - dy); yol.quadraticCurveTo(x - dy * bk, y + dx * bk, x + dx, y + dy);
+      cg.strokeStyle = css(o.renk(x, y, rv), o.a * (0.6 + rv() * 0.6)); cg.lineWidth = w; cg.stroke(yol);
+      hg.strokeStyle = `rgba(255,255,255,${o.h * (0.6 + rv() * 0.6)})`; hg.lineWidth = w * 0.92; hg.stroke(yol);
+    }
+    const cd = cg.getImageData(0, 0, WW, WW).data, hd = hg.getImageData(0, 0, WW, WW).data, t = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const a = cd[i * 4 + 3] / 255;
+      if (a) { CR[i] += (cd[i * 4] - CR[i]) * a; CG[i] += (cd[i * 4 + 1] - CG[i]) * a; CB[i] += (cd[i * 4 + 2] - CB[i]) * a; }
+      t[i] = hd[i * 4 + 3] / 255;
+    }
+    const tb = bulanik(t, WW, WW, 1, 1);
+    for (let i = 0; i < N; i++) H[i] += tb[i] * (o.hk === undefined ? 1 : o.hk);
+  }
 
   // ------------------------------------------------------------ 1. alt kat: sıcak okra mum ve renk blokları
   katman(tumu, (x, y) => {
@@ -194,6 +221,15 @@
   // derinlik: alt kattan sızan sıcak ışık ve serin sır lekeleri
   katman(kosul(tumu, (x, y) => (y < 790 ? sstep(0.55, 0.75, fbm(nD, x / 140, y / 110, 3)) : 0)), [236, 150, 92], { yum: 0, op: 0.35, sut: 0.02, kal: 0.15 });
   katman(kosul(tumu, (x, y) => (y < 560 ? sstep(0.5, 0.72, fbm(nA, x / 160 + 7, y / 120, 3)) * sstep(700, 200, x) : 0)), [18, 70, 112], { yum: 0, op: 0.4, sut: 0.02, kal: 0.15 });
+  // gökte fırçalanmış mum: kısa, geniş, yönü hafifçe değişen darbeler; her biri gökten açık, koyu ya da sıcak bir sır
+  const GOK_R = [[0, [22, 84, 128]], [0.35, [46, 140, 172]], [0.62, [112, 192, 190]], [0.85, [226, 222, 176]], [1, [242, 214, 160]]];
+  const yapiOn = maske((g) => { g.fill(minareP); g.fill(kaideP); g.fill(kasnakP); g.fill(kubbeP); });
+  mumDarbeleri({
+    tohum: 4547, adet: 3600, alan: [-20, -10, 1044, 812], a: 0.2, h: 0.32, boy: [26, 74], en: [10, 22], sap: 0.9,
+    izin: (x, y) => Math.hypot(x - 880, y - 140) > 66 && yapiOn.m[(Math.round(y * S) * WW + Math.round(x * S))] === 0,
+    yon: (x, y) => (nB(x / 160, y / 160) - 0.5) * 1.2,
+    renk: (x, y, rv) => { const b = rampa(GOK_R, y / 800), v = rv(); return v < 0.34 ? mixc(b, [250, 246, 226], 0.3) : v < 0.68 ? mixc(b, [12, 58, 104], 0.22) : mixc(b, [246, 176, 96], 0.22); },
+  });
   // güneş: koyu sarı hale ve parlak disk, kenarında göllenmiş mum
   const gunesM = maske((g) => g.fill(P(SAHNE.daireYolu(880, 140, 62))));
   katman(maske((g) => g.fill(P(SAHNE.daireYolu(880, 140, 92)))), [246, 172, 64], { yum: 8, op: 0.55, kal: 0.3 });
@@ -233,6 +269,18 @@
   katman(kosul(kubbeM, (x, y) => sstep(0.86, 0.96, KUBBE.isik(x, y) + (nC(x / 30, y / 30) - 0.5) * 0.1)), [232, 244, 186], { yum: 5, op: 0.55, kal: 0.25 });
   katman(maske((g) => { Y.alem.forEach((d) => g.fill(P(d))); Y.minareAlem.forEach((d) => g.fill(P(d))); }), (x) => { const cx = x > 430 ? 560 : 300; return mixc([180, 110, 30], [255, 220, 120], sstep(-3, 4, x - cx)); }, { yum: 1, op: 0.95, kal: 0.5 });
 
+  // yapıda da fırça izi: kubbede kaburga boyunca zümrüt ve sarı-yeşil sırlar, taşta krem ve gül rengi sırlar
+  const kubbeYon = (x, y) => { const u = KUBBE.u(x, y), dr = (KUBBE.r(y + 1) - KUBBE.r(y - 1)) / 2; return Math.atan2(1, u * dr); };
+  mumDarbeleri({
+    tohum: 4548, adet: 1300, alan: [356, 296, 764, 558], klip: kubbeP, a: 0.18, h: 0.2, boy: [22, 56], en: [6, 13], sap: 0.15, yon: kubbeYon,
+    renk: (x, y, rv) => { const l = KUBBE.isik(x, y), v = rv(); return v < 0.5 ? mixc([18, 92, 58], [150, 206, 112], sstep(0.2, 0.9, l)) : v < 0.8 ? mixc([10, 60, 44], [60, 140, 80], l) : [214, 226, 140]; },
+  });
+  mumDarbeleri({
+    tohum: 4549, adet: 900, alan: [244, 140, 830, 800], klip: (() => { const q = new Path2D(); q.addPath(minareP); q.addPath(kaideP); q.addPath(kasnakP); return q; })(), a: 0.13, h: 0.16, boy: [16, 40], en: [5, 10], sap: 0.2,
+    yon: (x, y) => (x < 356 && (y < 690 || x < 300) ? Math.PI / 2 : 0),
+    renk: (x, y, rv) => (y > 555 && y < 692 ? (rv() < 0.5 ? [30, 96, 62] : [70, 150, 90]) : rv() < 0.5 ? [255, 244, 214] : rv() < 0.5 ? [226, 176, 140] : [200, 170, 130]),
+  });
+
   // ------------------------------------------------------------ yer: sıyena, dokulu yeşil mum
   katman(maske((g) => g.fillRect(0, 798, W, 226)), (x, y, i) => (y < 826 ? [206, 128, 64] : [...rampa([[0, [44, 96, 52]], [0.5, [92, 140, 62]], [0.75, [170, 160, 72]], [1, [214, 150, 70]]], fbm(nD, x / 60, y / 36, 3)), 0.82]), { yum: 3, op: 0.92, kal: 0.15 });
   katman(maske((g) => { g.beginPath(); g.moveTo(300, 800); g.lineTo(820, 800); g.lineTo(792, 822); g.lineTo(240, 822); g.closePath(); g.fill(); }), [132, 66, 36], { yum: 4, op: 0.6, kal: 0 });
@@ -245,7 +293,7 @@
     const a = -0.32, ca = Math.cos(a), sa = Math.sin(a);
     for (let y = 0; y < WW; y++) for (let x = 0; x < WW; x++) {
       const i = y * WW + x, X = x / S, Yy = y / S;
-      const bolge = Math.max(sstep(150, 60, Math.hypot((X - 150) * 0.6, Yy - 640)), sstep(150, 60, Math.hypot((X - 930) * 0.7, Yy - 640)), sstep(120, 40, Math.hypot((X - 640) * 0.5, Yy - 60)));
+      const bolge = Math.max(sstep(150, 60, Math.hypot((X - 150) * 0.6, Yy - 640)), sstep(150, 60, Math.hypot((X - 930) * 0.7, Yy - 640)));
       if (bolge <= 0.01 || yb[i] > 0.6) continue;
       const u = X * ca + Yy * sa, v = -X * sa + Yy * ca;
       const serit = nA(u / 70, v / 3.2) * 0.7 + nC(u / 20, v / 1.4) * 0.3;
@@ -259,14 +307,30 @@
   // ------------------------------------------------------------ bitkiler: mum lekeleri
   const B = SAHNE.bitki;
   katman(maske((g) => { g.lineWidth = 3.8; g.lineCap = 'round'; Y.saplar.forEach((d) => g.stroke(P(d))); }), [62, 96, 46], { yum: 1, op: 0.9, kal: 0.3 });
-  katman(maske((g) => Y.yapraklar.forEach((d) => g.fill(P(d)))), (x, y) => [52, 98, 50], { yum: 2, op: 0.88, kal: 0.6 });
+  katman(maske((g) => Y.yapraklar.forEach((d) => g.fill(P(d)))), (x, y) => [52, 98, 50], { yum: 2, op: 0.88, kal: 0.22 });
   katman(maske((g) => B.yapraklar.forEach((y) => { const L = y.uzunluk, tr = Math.sin(y.aci) * 0.74 + Math.cos(y.aci) * 0.67 > 0 ? -1 : 1; g.beginPath(); g.ellipse(y.x + Math.cos(y.aci) * L * 0.45 - Math.sin(y.aci) * tr * L * 0.1, y.y + Math.sin(y.aci) * L * 0.45 + Math.cos(y.aci) * tr * L * 0.1, L * 0.36, L * 0.1, y.aci, 0, Math.PI * 2); g.fill(); })), [150, 186, 92], { yum: 3, op: 0.6, kal: 0.2 });
-  katman(maske((g) => Y.tomurcuklar.forEach((d) => g.fill(P(d)))), [214, 104, 112], { yum: 2, op: 0.9, kal: 0.5 });
+  katman(maske((g) => Y.tomurcuklar.forEach((d) => g.fill(P(d)))), [214, 104, 112], { yum: 2, op: 0.9, kal: 0.2 });
   const cicekM = maske((g) => B.cicekler.forEach((c) => SAHNE.tacYapraklari(c).forEach((e) => g.fill(P(SAHNE.elipsYolu(e))))));
-  katman(cicekM, [220, 206, 196], { yum: 3, op: 0.92, kal: 0.6 });
-  katman(maske((g) => B.cicekler.forEach((c) => SAHNE.tacYapraklari(c).forEach((e) => { g.beginPath(); g.ellipse(e.cx + c.r * 0.06, e.cy - c.r * 0.06, e.rx * 0.8, e.ry * 0.78, e.aci, 0, Math.PI * 2); g.fill(); }))), [254, 248, 236], { yum: 3, op: 0.9, kal: 0.4 });
+  katman(cicekM, [214, 204, 196], { yum: 3, op: 0.9, kal: 0.12 });
+  katman(maske((g) => B.cicekler.forEach((c) => SAHNE.tacYapraklari(c).forEach((e) => { g.beginPath(); g.ellipse(e.cx + c.r * 0.06, e.cy - c.r * 0.06, e.rx * 0.8, e.ry * 0.78, e.aci, 0, Math.PI * 2); g.fill(); }))), [254, 248, 236], { yum: 3, op: 0.8, kal: 0.08 });
+  // taç yapraklarda merkezden dışa yarı saydam beyaz mum darbeleri (kabartma değil, katman katman sır)
+  {
+    const fc = SAHNE.yeniTuval(WW, WW), fg = fc.getContext('2d', { willReadFrequently: true }), rf = SAHNE.rng(4550);
+    fg.setTransform(S, 0, 0, S, 0, 0); fg.lineCap = 'round';
+    for (const c of B.cicekler) for (const e of SAHNE.tacYapraklari(c)) {
+      fg.save(); fg.clip(P(SAHNE.elipsYolu(e)));
+      for (let k = 0; k < 4; k++) {
+        const dl = (rf() - 0.5) * 0.9, a = e.aci + dl, r0 = c.r * 0.2, r1 = c.r * (0.8 + rf() * 0.3), isik = Math.cos(e.aci + Math.PI / 4);
+        fg.strokeStyle = css(isik > 0 ? [255, 252, 244] : [226, 214, 222], 0.3 + rf() * 0.2); fg.lineWidth = e.ry * (0.45 + rf() * 0.3);
+        fg.beginPath(); fg.moveTo(c.x + Math.cos(a) * r0, c.y + Math.sin(a) * r0); fg.lineTo(c.x + Math.cos(a) * r1, c.y + Math.sin(a) * r1); fg.stroke();
+      }
+      fg.restore();
+    }
+    const fd = fg.getImageData(0, 0, WW, WW).data;
+    for (let i = 0; i < N; i++) { const a = fd[i * 4 + 3] / 255; if (!a) continue; CR[i] += (fd[i * 4] - CR[i]) * a; CG[i] += (fd[i * 4 + 1] - CG[i]) * a; CB[i] += (fd[i * 4 + 2] - CB[i]) * a; H[i] += a * 0.08; }
+  }
   katman(maske((g) => B.cicekler.forEach((c) => { g.beginPath(); g.arc(c.x, c.y, c.r * 0.4, 0, Math.PI * 2); g.fill(); })), [236, 150, 156], { yum: 4, op: 0.45, kal: 0.1 });
-  katman(maske((g) => B.cicekler.forEach((c) => { g.beginPath(); g.arc(c.x, c.y, c.r * 0.19, 0, Math.PI * 2); g.fill(); })), [236, 160, 50], { yum: 1, op: 0.95, kal: 0.7 });
+  katman(maske((g) => B.cicekler.forEach((c) => { g.beginPath(); g.arc(c.x, c.y, c.r * 0.19, 0, Math.PI * 2); g.fill(); })), [236, 160, 50], { yum: 1, op: 0.95, kal: 0.25 });
 
   // ------------------------------------------------------------ dokulu fırça yığınları ve damlalar (yükseklik)
   {
@@ -288,28 +352,22 @@
     const tb = bulanik(t, WW, WW, 2, 2);
     for (let i = 0; i < N; i++) H[i] += tb[i] * 1.5 * (1 - sstep(0.05, 0.5, yb[i]));
   }
-  // sır perdelerinin kenarında göllenmiş mum: perde sınırları boyunca ince, parlak sırtlar (yalnız gökte)
-  {
-    for (let y = 0; y < WW; y++) for (let x = 0; x < WW; x++) {
-      const i = y * WW + x, X = x / S, Yy = y / S;
-      if (Yy > 790) continue;
-      const gz = 1 - sstep(0.02, 0.3, yb[i]);
-      if (gz <= 0) continue;
-      const f1 = fbm(nC, X / 120, Yy / 60, 3), f2 = fbm(nD, X / 140, Yy / 110, 3), f3 = fbm(nA, X / 160 + 7, Yy / 120, 3);
-      let sirt = Math.exp(-Math.pow((f1 - 0.63) / 0.01, 2)) * (Yy < 760 ? 1 : 0) + Math.exp(-Math.pow((f2 - 0.65) / 0.01, 2)) * 0.35 + Math.exp(-Math.pow((f3 - 0.61) / 0.01, 2)) * sstep(700, 200, X) * (Yy < 560 ? 0.6 : 0);
-      sirt = Math.min(1, sirt) * gz;
-      if (sirt < 0.01) continue;
-      CR[i] += (MUM[0] - CR[i]) * sirt * 0.25; CG[i] += (MUM[1] - CG[i]) * sirt * 0.25; CB[i] += (MUM[2] - CB[i]) * sirt * 0.2;
-      H[i] += sirt * 0.5;
-    }
-  }
   // ısıyla kaynaşmış pürüzsüz alanlar ve göllenmiş kenar sırtları
   {
     const kenarM = new Float32Array(N);
-    const yukler = [kubbeM, gunesM, cicekM];
+    const yukler = [kubbeM, gunesM];
     for (const m of yukler) for (let i = 0; i < N; i++) kenarM[i] = Math.max(kenarM[i], m.m[i]);
     const kb = bulanik(kenarM, WW, WW, 4, 2);
-    for (let i = 0; i < N; i++) { const v = kb[i]; H[i] += sstep(0.25, 0.5, v) * (1 - sstep(0.5, 0.85, v)) * 0.9; }
+    for (let i = 0; i < N; i++) { const v = kb[i]; H[i] += sstep(0.25, 0.5, v) * (1 - sstep(0.5, 0.85, v)) * 0.7; }
+    // gökte ısıyla kaynaştırılmış iki-üç geniş alan: fırça dokusu erir, cam gibi düzleşir; sınırında tek, yumuşak bir mum sırtı
+    const Hy = bulanik(H, WW, WW, 10, 2);
+    for (let y = 0; y < WW; y++) for (let x = 0; x < WW; x++) {
+      const i = y * WW + x, X = x / S, Yy = y / S;
+      if (Yy > 790 || yb[i] > 0.3) continue;
+      const f = fbm(nC, X / 230 + 3, Yy / 170, 2) + sstep(160, 60, Math.hypot(X - 880, Yy - 140)) * 0.3;
+      const F = sstep(0.56, 0.64, f) * (1 - sstep(0.05, 0.3, yb[i]));
+      H[i] = lerp(H[i], Hy[i], F) + Math.exp(-Math.pow((f - 0.56) / 0.018, 2)) * 0.35 * (1 - sstep(0.05, 0.3, yb[i]));
+    }
   }
 
   // ------------------------------------------------------------ yumuşak kenar: renk tamponu hafifçe bulanıklaşır
@@ -326,7 +384,7 @@
     cz([[290, 692], [830, 692], [830, 704], [290, 704], [290, 692]], 1); cz([[300, 704], [300, 800]], 1); cz([[820, 704], [820, 800]], 1);
     for (const p of SAHNE.minareParcalari()) if (p.noktalar) cz([...p.noktalar, p.noktalar[0]], 0.9);
     // güneş çevresinde oyulmuş halkalar
-    for (const r of [72, 84, 104]) { const pts = []; for (let k = 0; k <= 90; k++) { const a = (k / 90) * Math.PI * 1.7 + 2.2 + r * 0.03; pts.push([880 + Math.cos(a) * r, 140 + Math.sin(a) * r]); } cz(pts, 0.9); }
+    for (const r of [76, 98]) { const pts = []; for (let k = 0; k <= 90; k++) { const a = (k / 90) * Math.PI * 1.7 + 2.2 + r * 0.03; pts.push([880 + Math.cos(a) * r, 140 + Math.sin(a) * r]); } cz(pts, 0.9); }
     const d = g.getImageData(0, 0, WW, WW).data;
     for (let i = 0; i < N; i++) {
       const a = d[i * 4 + 3] / 255; if (!a) continue;
@@ -341,30 +399,29 @@
     g.setTransform(S, 0, 0, S, 0, 0); g.lineCap = 'round';
     const rv = SAHNE.rng(71), damla = [];
     // kısa akıntılar: güneşin altından ve sağ kenardan süzülen birkaç mum izi
-    for (const [x, y, l] of [[846, 206, 70], [902, 210, 46], [996, 40, 120], [70, 300, 60]]) damla.push([x, y, l, 4 + rv() * 3]);
+    for (const [x, y, l, w] of [[214, 0, 150, 12], [628, 0, 92, 10], [846, 196, 112, 11], [1004, 0, 220, 13]]) damla.push([x, y, l, w]);
     for (const [x, y, l, w] of damla) {
       // dalgalı, aşağı doğru incelip sonunda damla biriktiren iz
-      const pts = []; for (let j = 0; j <= 20; j++) { const t = j / 20; pts.push([x + Math.sin(t * 5 + x) * 1.6, y + l * t]); }
-      g.fillStyle = 'rgba(255,255,255,0.85)'; g.beginPath();
-      pts.forEach(([px, py], j) => { const ww = w * (0.55 + 0.45 * (1 - j / 20)); if (j) g.lineTo(px - ww / 2, py); else g.moveTo(px - ww / 2, py); });
-      for (let j = 20; j >= 0; j--) { const ww = w * (0.55 + 0.45 * (1 - j / 20)); g.lineTo(pts[j][0] + ww / 2, pts[j][1]); }
+      const pts = []; for (let j = 0; j <= 20; j++) { const t = j / 20; pts.push([x + Math.sin(t * 4 + x) * 2.2, y + l * t]); }
+      const gen = (j) => w * (0.5 + 0.3 * (1 - j / 20) + 0.12 * Math.sin(j * 1.7 + x));
+      g.fillStyle = 'rgba(255,255,255,1)'; g.beginPath();
+      pts.forEach(([px, py], j) => { const ww = gen(j); if (j) g.lineTo(px - ww / 2, py); else g.moveTo(px - ww / 2, py); });
+      for (let j = 20; j >= 0; j--) g.lineTo(pts[j][0] + gen(j) / 2, pts[j][1]);
       g.closePath(); g.fill();
-      g.beginPath(); g.ellipse(pts[20][0], pts[20][1], w * 0.6, w * 0.75, 0, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.ellipse(pts[20][0], pts[20][1] + w * 0.2, w * 0.58, w * 0.78, 0, 0, Math.PI * 2); g.fill();
     }
     const sicrama = [];
-    for (let k = 0; k < 60; k++) sicrama.push([40 + rv() * 944, 840 + rv() * 170, 1.2 + rv() * 3.4]);
-    // gökte fırçadan damlamış mum benekleri (iki küme)
-    for (const [cx, cy, n] of [[420, 90, 26], [130, 380, 20], [700, 470, 16]]) for (let k = 0; k < n; k++) { const a = rv() * Math.PI * 2, r = Math.pow(rv(), 0.7) * 70; sicrama.push([cx + Math.cos(a) * r * 1.4, cy + Math.sin(a) * r * 0.8, 1.4 + rv() * 4.2]); }
+    for (let k = 0; k < 28; k++) sicrama.push([40 + rv() * 944, 846 + rv() * 160, 1.2 + rv() * 2.6]);
     for (const [x, y, r] of sicrama) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
     const d = g.getImageData(0, 0, WW, WW).data, t = new Float32Array(N);
     for (let i = 0; i < N; i++) t[i] = d[i * 4 + 3] / 255;
     const tb = bulanik(t, WW, WW, 2, 2);
     for (let y = 0; y < WW; y++) for (let x = 0; x < WW; x++) {
       const i = y * WW + x, a = t[i]; if (!a && tb[i] < 0.01) continue;
-      const Yy = y / S, renk = Yy > 830 ? [236, 200, 120] : [Math.min(255, CR[i] * 1.12 + 22), Math.min(255, CG[i] * 1.1 + 22), Math.min(255, CB[i] * 1.06 + 18)];
-      const k = a * 0.45;
+      const Yy = y / S, renk = Yy > 830 ? [236, 200, 120] : mixc([Math.min(255, CR[i] * 1.1 + 24), Math.min(255, CG[i] * 1.08 + 24), Math.min(255, CB[i] * 1.04 + 20)], [246, 236, 206], 0.4);
+      const k = a * 0.82;
       CR[i] += (renk[0] - CR[i]) * k; CG[i] += (renk[1] - CG[i]) * k; CB[i] += (renk[2] - CB[i]) * k;
-      H[i] += tb[i] * 0.8;
+      H[i] += tb[i] * 1.1;
     }
   }
 

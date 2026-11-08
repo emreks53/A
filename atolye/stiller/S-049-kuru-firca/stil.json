@@ -5,16 +5,16 @@
   "ad_en": "Dry Brush",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Neredeyse kuru fırçanın pürüzlü kâğıtta atlayarak bıraktığı kırık, çizgili darbeler; aralarda beyaz kâğıt benekleri ve tüy gibi dağılan uçlar.",
+  "ozet": "Neredeyse kuru fırçanın pürüzlü kâğıtta sürüklenerek bıraktığı uzun, çizgili darbeler: dolu başlangıç, darbe yönünde uzayan beyaz boşluklar, tüy gibi dağılan uçlar.",
   "tanim": "Kuru fırça tekniğinde fırçadaki boya ve su iyice azaltılır; fırça kâğıt ya da tuval üstünde hızla sürüklenince boya yalnız yüzey dokusunun tepelerine tutunur, çukurlar boş kalır. Darbeler tek tek kıl izlerinden oluşan çizgili, kırık bir doku bırakır; boya tükendikçe darbe kesilir, ucu tüy gibi dağılır. Saydam renkler üst üste bindirilerek taş, ağaç kabuğu, çimen ve gök gibi dokulu yüzeyler hızlı ve enerjik biçimde anlatılır. Suluboya, akrilik ve guaşla yapılır.",
   "koken": "Tekniğin en bilinen ustası Andrew Wyeth'tir; çimen, kuru ot ve eskimiş ahşabı kuru fırçalı suluboya ve tempera ile incelikle işledi. Winslow Homer ve John Singer Sargent suluboyalarında parıltı ve doku için kuru fırça darbelerine başvurdu; Albrecht Dürer'in doğa çalışmalarında da benzer kırık darbeler görülür. Bugün akrilik manzara ve illüstrasyonda yaygın bir doku tekniğidir.",
   "ayirt_edici": [
-    "Her darbe tek tek kıl izlerinden oluşan paralel, çizgili bir iz; boya yalnız kâğıt dişinin tepelerine tutunmuş, aralarda beyaz benekler kalmış",
-    "Darbe uçları boya tükendikçe kırılıyor, tüy gibi dağılıyor; kenarlar saçaklı",
-    "Gökte geniş, kıvrımlı kobalt, serulean ve ultramarin süpürmeleri; güneşin çevresinde dairesel limon ve şeftali darbeleri",
-    "Kubbede meridyen boyunca yukarı çekilmiş sarı-yeşil, yeşil ve koyu yeşil katlar; kasnakta yatay, minarede dikey kuru darbeler",
-    "Taş, yaprak ve gök farklı yönlerde üst üste binen saydam renk katlarıyla anlatılıyor; ışıklı yüzler büyük ölçüde kâğıt beyazı bırakılmış",
-    "Önde sivri, enerjik yaprak vuruşları; çiçekler beyaz kâğıt, yalnız gölge yanına mor-gri ve gül renginde kuru dokunuş"
+    "Gökte fırça genişliğinde, uzun ve yatay süpürmeler: her darbenin başı dolu ve köşeli, sonu kuruyup tüy gibi dağılıyor",
+    "Darbelerin içinde paralel kıl çizgileri; boya azaldıkça kıllar ayrışıyor, beyaz kâğıt darbe yönünde uzamış benekler hâlinde görünüyor",
+    "Saydam katlar üst üste biniyor: açık serulean bantların üstünde daha kısa, koyu kobalt ve ultramarin darbeler; bulutlar boş bırakılmış kâğıt, altlarında kuru mor-gri dokunuş",
+    "Kubbede tabandan tepeye meridyen boyunca çekilmiş sarı-yeşil, yeşil ve viridyen darbeler; kasnakta yatay bantlar, kemerli pencerelerin altı kuru fırçayla saçaklanıyor",
+    "Güneş boş kâğıt bir disk; kenarından dışa çekilmiş kısa limon ve şeftali darbeleriyle çevrili",
+    "Önde okra zemin üstüne aşağıdan yukarı fırlatılmış, ucu incelen çimen darbeleri; çiçekler kâğıt beyazı, yalnız gölge yanında mor-gri ve gül renginde kuru dokunuş"
   ],
   "palet": [
     "#FAF7F0",
@@ -26,7 +26,7 @@
     "#E2B05C",
     "#9686B0"
   ],
-  "kodla_cizim": "Kâğıt dişi, çok ölçekli değer gürültüsünden kurulup histogramla eşitlenmiş 2048 piksellik bir yükseklik haritasıdır. Her darbe bir yol boyunca dağılmış kıllardan oluşur: her kılın kendi boya yükü, başlangıç ve bitiş noktası, kalınlığı ve uzunluk boyunca gürültüyle değişen basıncı vardır; basınç darbe sonuna doğru azalır, kenar kıllar daha az boya taşır, sivri darbelerde kenar kıllar kısalır. Basınç gri tonda bir tuvale 'lighten' karışımıyla (üst üste binince artmaz, en büyüğü kalır), renk ayrı bir tuvale çizilir. Katman aktarılırken boya yalnız 'kâğıt yüksekliği > 1 − basınç' olan piksellere bırakılır ve renk çarpımsal (saydam) karışır; bölgeler pürüzlü kenarlı maskelerle sınırlanır. Gök, kubbe ve kasnak, taş, alemler, yer ve bitkiler sırayla, her biri birkaç renk katında ve kendi yön alanında (gök eğik dalga, kubbe meridyen, kasnak yatay, minare dikey, yaprak ekseni) boyanır; en sonda bulutlarda örtücü beyaz kuru darbeler ve kâğıt kabartısının ışığı eklenir.",
+  "kodla_cizim": "Kâğıt dişi, çok ölçekli değer gürültüsünden kurulup histogramla eşitlenmiş 2048 piksellik bir yükseklik haritasıdır. Her darbe bir yol boyunca dağılmış kıllardan oluşur: her kılın kendi boya yükü, başlangıç ve bitiş noktası ve kalınlığı vardır. Darbe ilerledikçe kuruluk artar; kıl yalnız darbe yönünde uzun, enine birkaç kıl genişliğinde bir atlama gürültüsünün eşiği aştığı yerlerde boya bırakır, bu yüzden beyaz boşluklar darbe boyunca uzar. Sona doğru kıllar açılır, ayrı ayrı kesilir ve uç tüy gibi dağılır; kenar kıllar daha az boya taşır, sivri darbelerde kısalır. Basınç gri bir tuvale 'lighten' karışımıyla, renk ayrı bir tuvale çizilir; katman aktarılırken basınç kâğıt dişiyle hafifçe eşiklenir ve renk çarpımsal (saydam) karışır. Bölgeler pürüzlü kenarlı maskelerle, pencereler temiz kenarlı maskeyle sınırlanır. Gök satır satır uzun süpürmelerle (bulutlar ve güneş diski boş bırakılarak), kubbe meridyen boyunca, kasnak ve kaide yatay, minare dikey, yer ve çimen aşağıdan yukarı, yapraklar tek sivri darbeyle boyanır; en sonda kâğıt kabartısının hafif ışığı eklenir.",
   "etiketler": [
     "kuru fırça",
     "akrilik",

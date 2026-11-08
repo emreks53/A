@@ -437,24 +437,42 @@ setTimeout(function () {
     kume(-70, 470, 300, 120, 30, 92, 30, 0.38);
     kume(735, 1090, 505, 34, 16, 42, 18, 0.45);
     kume(-60, 280, 518, 26, 14, 34, 14, 0.4);
-    // her kabarcık bir yarım küre: en yüksek olanın normali bulutun hacmini verir
-    let KN = [0, 0, 1];
-    const kabarcik = (x, y) => {
-      let u = 0, hb = -1;
-      for (const k of KAB) {
-        const dx = x - k.x, dy = y - k.y;
-        if (dx > k.r || dx < -k.r || dy > k.r || dy < -k.r) continue;
-        const d2 = dx * dx + dy * dy;
-        if (d2 >= k.r * k.r) continue;
-        const v = ss(k.r, k.r * 0.45, Math.sqrt(d2)) * ss(k.taban + 8, k.taban - 16, y);
-        if (v > u) u = v;
-        const h = Math.sqrt(k.r * k.r - d2) + (k.taban - k.y) * 0.3;
-        if (h > hb) {
-          hb = h;
-          KN = [dx / k.r, dy / k.r, Math.sqrt(Math.max(0, 1 - d2 / (k.r * k.r)))];
+    // kabarcıklar yumuşak birleşimle (log-toplam-üs) tek bir yükseklik alanına dönüşür; normal bu alandan alınır
+    const CH = new Float32Array(GW * GW), CU = new Float32Array(GW * GW);
+    const KK = 9;
+    for (let y = 0; y < 560; y++)
+      for (let x = 0; x < GW; x++) {
+        const qx = x + fbm(x / 90, y / 90 + 3, 2) * 12, qy = y + fbm(x / 90 + 5, y / 90, 2) * 7;
+        let u = 0, se = 0;
+        for (const k of KAB) {
+          const dx = qx - k.x, dy = qy - k.y;
+          if (dx > k.r || dx < -k.r || dy > k.r || dy < -k.r) continue;
+          const d2 = dx * dx + dy * dy;
+          if (d2 >= k.r * k.r) continue;
+          const v = ss(k.r, k.r * 0.45, Math.sqrt(d2));
+          if (v > u) u = v;
+          se += Math.exp((Math.sqrt(k.r * k.r - d2) + (k.taban - k.y) * 0.35) / KK);
+        }
+        if (se > 0) {
+          const i = y * GW + x;
+          CH[i] = KK * Math.log(se) + fbm(x / 26, y / 26, 3) * 7 * u;
+          CU[i] = u;
         }
       }
-      return u;
+    // kümülüslerin düz tabanı
+    for (let y = 0; y < 560; y++)
+      for (let x = 0; x < GW; x++) {
+        let tb = 0;
+        for (const k of KAB) if (Math.abs(x - k.x) < k.r * 1.1 && y < k.taban + 30) tb = Math.max(tb, ss(k.taban + 8, k.taban - 16, y));
+        CU[y * GW + x] *= tb;
+      }
+    const kabarcik = (x, y) => CU[Math.min(GW - 1, y) * GW + x];
+    let KN = [0, 0, 1];
+    const kabNormal = (x, y) => {
+      const i = y * GW + x;
+      const gx = (CH[Math.min(i + 2, GW * GW - 1)] - CH[Math.max(0, i - 2)]) / 4;
+      const gy = (CH[Math.min(i + 2 * GW, GW * GW - 1)] - CH[Math.max(0, i - 2 * GW)]) / 4;
+      KN = nrm([-gx, -gy, 0.9]);
     };
     const serit = (x, y) => {
       const wx = fbm(x / 260 + 4.1, y / 160, 3) * 60;
@@ -466,10 +484,10 @@ setTimeout(function () {
       const ser2 = ss(0.0, 0.3, ns + b2 * 0.55 - 0.41) * b2 * 0.65;
       return Math.max(ser, ser2);
     };
-    const LC = nrm([0.62, -0.45, -0.3]); // bulutlar arkadan ışık alır
-    const g0 = hex('#14334E'), g1 = hex('#5E8C9C'), g2 = hex('#EBCB98'), g3 = hex('#EFAE7C');
+    const LC = nrm([0.62, -0.5, -0.15]); // bulutlar arkadan ışık alır
+    const g0 = hex('#0F3043'), g1 = hex('#3D7286'), g2 = hex('#EEC890'), g3 = hex('#F2A468');
     const sic = hex('#FFCF90');
-    const bS = hex('#3A4560'), bO = hex('#8E7488'), bI = hex('#F7BF84'), bK = hex('#FFF1D4'), bU = hex('#6C8CA6');
+    const bS = hex('#2C3E50'), bO = hex('#7E6C7C'), bI = hex('#FFC27C'), bK = hex('#FFF2D8'), bU = hex('#5E88A0');
     for (let j = 0; j < GW; j++) {
       const y = j;
       for (let i = 0; i < GW; i++) {
@@ -491,14 +509,13 @@ setTimeout(function () {
         b += disk * 2.2;
         const yakin = Math.exp(-dd / 300);
         // kümülüs: hacimli, arkadan ışıklı kabarcıklar
-        const ex = fbm(x / 90, y / 90 + 3, 2) * 10, ey = fbm(x / 90 + 5, y / 90, 2) * 6;
-        const u = kabarcik(x + ex, y + ey);
+        const u = y < 560 ? kabarcik(x, y) : 0;
         let ku = 0;
         if (u > 0) {
           ku = ss(0.18, 0.66, u + fbm(x / 36, y / 36, 4) * 0.4 * (1.1 - u));
           if (ku > 0.001) {
-            const tx = fbm(x / 22 + 9, y / 22, 3) * 0.35;
-            const n = nrm([KN[0] + tx, KN[1] + tx * 0.6, KN[2] + 0.15]);
+            kabNormal(x, y);
+            const n = KN;
             const lam = n[0] * LC[0] + n[1] * LC[1] + n[2] * LC[2];
             let cc = karis(bS, bO, ss(-0.45, 0.05, lam));
             cc = karis(cc, bI, ss(0.0, 0.55, lam) * (0.55 + 0.45 * yakin));
