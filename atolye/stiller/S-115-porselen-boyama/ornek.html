@@ -346,41 +346,48 @@
     kat(() => { g.strokeStyle = 'rgba(105,150,90,0.9)'; g.lineWidth = 3; g.stroke(P2(S.yol(s))); }, 0.3);
     g.save(); g.translate(0.9, 0); ince(S.yol(s), '#FFFFFF', 0.7, 0.5); g.restore();
   }
-  // yapraklar: sarı-yeşilden mavi-yeşile tamponlanmış geçiş, damarlar silinerek açılmış
+  // yapraklar: emaye fırça darbeleriyle boyanır: açık zemin katı, gölge yanında koyu darbeler, ışık yanında
+  // silinmiş açık darbe; orta damar ve yan damarlar silinerek açılır; kenarda emayenin hafif birikmesi
   for (const y of S.bitki.yapraklar) {
     const d = P2(S.yaprakYolu(y));
     const [a, b] = S.yaprakDamari(y);
     const sari = R() < 0.5;
+    const ca = Math.cos(y.aci), sa = Math.sin(y.aci);
+    const W = y.uzunluk * y.genislik;
+    const ek = (u, v) => [y.x + u * ca - v * sa, y.y + u * sa + v * ca];
     kat(() => {
       const gr = g.createLinearGradient(a[0], a[1], b[0], b[1]);
-      gr.addColorStop(0, sari ? '#6E9F5A' : '#4E8A6A');
-      gr.addColorStop(0.6, sari ? '#9CC67A' : '#7FB48C');
-      gr.addColorStop(1, sari ? '#C9DC8C' : '#A9CFA8');
+      gr.addColorStop(0, sari ? '#7FA866' : '#5E9478');
+      gr.addColorStop(0.6, sari ? '#A9CB86' : '#8FBE9C');
+      gr.addColorStop(1, sari ? '#D3E0A0' : '#B9D7B6');
       g.fillStyle = gr; g.fill(d);
     });
-    // bir yarıda koyu kat
     g.save(); g.clip(d);
-    kat(() => {
-      const ca = Math.cos(y.aci), sa = Math.sin(y.aci);
-      g.fillStyle = 'rgba(70,120,85,0.45)';
-      g.beginPath(); g.moveTo(y.x, y.y); g.lineTo(y.x + ca * y.uzunluk, y.y + sa * y.uzunluk); g.lineTo(y.x + ca * y.uzunluk - sa * 30, y.y + sa * y.uzunluk + ca * 30); g.lineTo(y.x - sa * 30, y.y + ca * 30); g.fill();
-    });
-    // damarlar: silinmiş beyaz çizgiler
+    // gölge yanı (ışığa uzak yarı) koyu darbeler
+    const yan = (-sa * 0.6 + ca * -0.8) > 0 ? -1 : 1; // ışığa uzak yan
+    for (let k = 0; k < 4; k++) {
+      const v0 = yan * W * (0.12 + k * 0.16);
+      const pts = []; for (let i = 0; i <= 10; i++) { const t = 0.04 + i * 0.09; pts.push(ek(y.uzunluk * t, v0 * Math.sin(Math.PI * Math.min(1, t * 1.1)) * 1.1)); }
+      kat(() => firca(pts, W * 0.16, sari ? 'rgba(80,120,70,0.35)' : 'rgba(55,105,85,0.38)'));
+    }
+    // ışık yanında silinmiş açık darbe
+    { const pts = []; for (let i = 0; i <= 10; i++) { const t = 0.12 + i * 0.07; pts.push(ek(y.uzunluk * t, -yan * W * 0.32 * Math.sin(Math.PI * t))); } sil(() => firca(pts, W * 0.12, '#FFFFFF'), 0, 0.4); }
+    // damarlar: silinmiş açık çizgiler
     sil(() => {
       g.lineWidth = 0.9;
       g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
-      const ca = Math.cos(y.aci), sa = Math.sin(y.aci);
       for (let k = 1; k <= 4; k++) {
         const t = k / 5;
         const mx = a[0] + (b[0] - a[0]) * t, my = a[1] + (b[1] - a[1]) * t;
-        for (const yan of [1, -1]) {
-          const ex = mx + ca * y.uzunluk * 0.12 - sa * yan * y.uzunluk * 0.16, ey = my + sa * y.uzunluk * 0.12 + ca * yan * y.uzunluk * 0.16;
-          g.lineWidth = 0.55; g.beginPath(); g.moveTo(mx, my); g.lineTo(ex, ey); g.stroke();
+        for (const yn of [1, -1]) {
+          const ex = mx + ca * y.uzunluk * 0.12 - sa * yn * y.uzunluk * 0.16, ey = my + sa * y.uzunluk * 0.12 + ca * yn * y.uzunluk * 0.16;
+          g.lineWidth = 0.5; g.beginPath(); g.moveTo(mx, my); g.quadraticCurveTo((mx + ex) / 2 + ca * 2, (my + ey) / 2 + sa * 2, ex, ey); g.stroke();
         }
       }
-    }, 0, 0.6);
+    }, 0, 0.42);
+    // kenarda emaye birikmesi
+    kat(() => { g.strokeStyle = sari ? 'rgba(90,130,70,0.35)' : 'rgba(60,110,90,0.35)'; g.lineWidth = 1.8; g.stroke(d); });
     g.restore();
-    ince(d, '#4F7A55', 0.5, 0.45);
   }
   // tomurcuklar: gül pembesi emaye, ışık silinmiş (degradeyle tamponlanmış)
   for (const t of S.bitki.tomurcuklar) {
@@ -445,35 +452,56 @@
     kat(() => { g.fillStyle = 'rgba(170,60,95,0.55)'; g.beginPath(); g.ellipse(x, y - r * 0.2, r * 0.13, r * 0.08, 0, 0, 7); g.fill(); });
   }
   // beyaz çiçek: sırrın beyazı; yalnız leylak-gri gölge, dipte pembe allık, çok ince çizgiler
+  function tacYolu(c, e, i) {
+    // ucu hafif çentikli, kenarı dalgalı, dibe doğru incelen taç yaprak
+    const p = new Path2D();
+    const ca = Math.cos(e.aci), sa = Math.sin(e.aci);
+    const tohum = c.x * 0.13 + i * 1.7;
+    for (let k = 0; k <= 72; k++) {
+      const f = (k / 72) * Math.PI * 2;
+      let rr = 1 - 0.07 * Math.exp(-Math.pow(f / 0.16, 2)) - 0.07 * Math.exp(-Math.pow((f - Math.PI * 2) / 0.16, 2));
+      rr *= 1 - 0.32 * Math.exp(-Math.pow((f - Math.PI) / 0.55, 2));
+      rr *= 1 + 0.035 * Math.sin(5 * f + tohum) + 0.02 * Math.sin(9 * f + tohum * 2);
+      const u = Math.cos(f) * e.rx * 1.04 * rr, v = Math.sin(f) * e.ry * 1.08 * rr;
+      const x = e.cx + u * ca - v * sa, y = e.cy + u * sa + v * ca;
+      k ? p.lineTo(x, y) : p.moveTo(x, y);
+    }
+    p.closePath();
+    return p;
+  }
   function beyazCicek(c) {
     const tac = S.tacYapraklari(c);
-    for (const e of tac) {
-      const d = P2(S.elipsYolu(e));
+    tac.forEach((e, ti) => {
+      const d = tacYolu(c, e, ti);
       sil(() => { g.fill(d); }, 0, 1);
       g.save(); g.clip(d);
-      // gölge: ışık sağ üstten, yaprağın sol-alt yarısı ve dibi
+      // gölge: ışık sağ üstten, yaprağın sol-alt yarısı ve dibi; fırçayla tamponlanmış leylak-gri
       kat(() => {
         const gx = e.cx - c.r * 0.22, gy = e.cy + c.r * 0.22;
         const gr = g.createRadialGradient(gx, gy, 0, gx, gy, e.rx * 1.25);
-        gr.addColorStop(0, 'rgba(184,178,212,0.6)'); gr.addColorStop(0.6, 'rgba(205,200,228,0.28)'); gr.addColorStop(1, 'rgba(230,228,240,0)');
+        gr.addColorStop(0, 'rgba(184,178,212,0.58)'); gr.addColorStop(0.6, 'rgba(205,200,228,0.26)'); gr.addColorStop(1, 'rgba(230,228,240,0)');
         g.fillStyle = gr; g.fillRect(e.cx - c.r * 1.5, e.cy - c.r * 1.5, c.r * 3, c.r * 3);
       });
       kat(() => {
-        const gr = g.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r * 0.6);
-        gr.addColorStop(0, 'rgba(236,150,172,0.85)'); gr.addColorStop(0.55, 'rgba(244,190,204,0.45)'); gr.addColorStop(1, 'rgba(250,230,235,0)');
+        const gr = g.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r * 0.62);
+        gr.addColorStop(0, 'rgba(236,150,172,0.85)'); gr.addColorStop(0.55, 'rgba(244,190,204,0.42)'); gr.addColorStop(1, 'rgba(250,230,235,0)');
         g.fillStyle = gr; g.fillRect(c.x - c.r, c.y - c.r, c.r * 2, c.r * 2);
       });
-      // ince damarlar
+      // dipten uca yelpaze gibi açılan fırça darbeleri: leylak gölge darbeleri ve silinmiş beyaz darbeler
       for (let k = -2; k <= 2; k++) {
-        const a = e.aci + k * 0.18;
-        ince(`M${c.x + Math.cos(a) * c.r * 0.2},${c.y + Math.sin(a) * c.r * 0.2} L${c.x + Math.cos(a) * c.r * 0.85},${c.y + Math.sin(a) * c.r * 0.85}`, '#B8A6BF', 0.4, 0.35);
+        const an = e.aci + k * 0.2;
+        const pts = []; for (let i = 0; i <= 8; i++) { const t = 0.18 + i * 0.085; pts.push([c.x + Math.cos(an + 0.04 * Math.sin(i)) * c.r * t, c.y + Math.sin(an + 0.04 * Math.sin(i)) * c.r * t]); }
+        if (k % 2) kat(() => firca(pts, c.r * 0.035, 'rgba(176,160,196,0.3)'));
+        else sil(() => firca(pts, c.r * 0.045, '#FFFFFF'), 0, 0.55);
       }
+      // kenarda emaye birikmesi: gölge yanında ince leylak çizgi
+      kat(() => { g.strokeStyle = 'rgba(170,158,190,0.4)'; g.lineWidth = 1.6; g.stroke(d); });
       g.restore();
-      ince(d, '#A99CB4', 0.55, 0.55);
-    }
+    });
     // göbek: sarı emaye, kahve noktalı başçıklar
-    kat(() => { g.fillStyle = '#F2CF5C'; g.beginPath(); g.arc(c.x, c.y, c.r * 0.2, 0, 7); g.fill(); }, 0.4);
+    kat(() => { g.fillStyle = '#F2CF5C'; g.beginPath(); g.arc(c.x, c.y, c.r * 0.2, 0, 7); g.fill(); });
     kat(() => { g.fillStyle = 'rgba(200,140,40,0.6)'; g.beginPath(); g.arc(c.x - c.r * 0.05, c.y + c.r * 0.05, c.r * 0.12, 0, 7); g.fill(); }, 1);
+    sil(() => { g.beginPath(); g.arc(c.x + c.r * 0.06, c.y - c.r * 0.07, c.r * 0.06, 0, 7); g.fill(); }, 0, 0.6);
     g.fillStyle = 'rgba(140,90,40,0.8)';
     for (let k = 0; k < 11; k++) { const a = (k / 11) * Math.PI * 2; g.beginPath(); g.arc(c.x + Math.cos(a) * c.r * 0.26, c.y + Math.sin(a) * c.r * 0.26, Math.max(0.7, c.r * 0.028), 0, 7); g.fill(); }
   }

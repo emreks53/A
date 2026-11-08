@@ -13,7 +13,7 @@
 <script src="../../sahne/sahne.js"></script>
 <script>
 // S-103 Damga Baskı — sahne, silgi ve kauçuktan elle oyulmuş küçük damgaların beyaz kâğıda tek tek
-// basılmasıyla kurulur: gök kare damgalarla, kubbe dilim damgalarıyla, kasnak ve kaide tuğla damgalarıyla,
+// basılmasıyla kurulur: gök güneş çevresindeki halkalarda uzun yuvarlak damgalarla, kubbe dilim damgalarıyla, kasnak ve kaide tuğla damgalarıyla,
 // bulutlar yuvarlak damgalarla, çiçekler taç yaprağı damgalarıyla. Her basışta mürekkep biraz farklı
 // tutar: kenarda hafif birikinti, içte benekli dolgu, bir yana basınç kayması; saydam mürekkep
 // bindiği yerde koyulaşır. Damgalar arasında beyaz kâğıt aralıkları kalır.
@@ -457,7 +457,7 @@ for (const [bx, by, s0] of BULUTLAR) {
   ortEkle((g) => { bulutYolu(g, bx, by, s); g.fill(); }, 0);
 }
 
-// 11) gök ve yer: kare ve uzun yuvarlak damgalar; öndeki her şeyin çevresinde beyaz pay (maske) kalır
+// 11) gök ve yer: uzun yuvarlak damgalar (gökte halkalar, yerde tuğla dizisi); öndeki her şeyin çevresinde beyaz pay (maske) kalır
 const HALE = (() => {
   const m = okuAlfa(ORT);
   const b = bulanik(m, 3);

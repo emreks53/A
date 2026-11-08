@@ -519,7 +519,9 @@
     const r = SAHNE.rng(141);
     const liste = [];
     // yapının dibinde tek, kısa toprak darbesi
-    liste.push({ pts: egriNokta(250, 812, 880, 806, 0.01, 30), gen: (t) => 26 * Math.pow(Math.sin(Math.PI * clamp(t * 0.9 + 0.05, 0, 1)), 0.4), kuru: 0.7, dalga: 0.3, toprak: 1 });
+    const toprak = darbeler(kOn, [{ pts: egriNokta(250, 812, 880, 806, 0.01, 30), gen: (t) => 26 * Math.pow(Math.sin(Math.PI * clamp(t * 0.9 + 0.05, 0, 1)), 0.4), kuru: 0.7, dalga: 0.3 }]);
+    for (let j = 0; j < toprak.length; j++) { const i = kOn[1] * W + j; toprak[j] = Math.min(1, toprak[j]) * (1 - CR[i]) * (1 - yapiM[i] * 0.9); }
+    yikama(kOn, toprak, { pig: karis(P.sie, 0.6, P.gam, 0.35, P.ros, 0.1), yog: 0.17, kenar: 1.0, kenarR: 2.4, gran: 0.4, dalga: 0.35, tohum: 50 });
     for (let k = 0; k < 26; k++) {
       const x = r() * W, y = 860 + r() * 180, L = 90 + r() * 120, a = -0.5 + (r() - 0.5) * 1.6 + (x - 512) / 1400;
       const g0 = 40 + r() * 50;
@@ -533,8 +535,8 @@
     const A = darbeler(kOn, liste);
     for (let j = 0; j < A.length; j++) { const i = kOn[1] * W + j; A[j] = Math.min(1, A[j]) * (1 - CR[i]) * (1 - yapiM[i] * 0.9); }
     yikama(kOn, A, {
-      pig: (x, y) => { const t = fbm(nC, x / 120, y / 60, 3); return y < 830 && y > 786 && x > 236 && x < 894 ? karis(P.sie, 0.6, P.gam, 0.35, P.ros, 0.1) : lerpK(karis(P.sag, 0.8, P.sap, 0.3, P.gam, 0.1), karis(P.tur, 0.5, P.sag, 0.5), sstep(0.4, 0.65, t)); },
-      yog: (x, y) => (y < 830 && y > 786 && x > 236 && x < 894 ? 0.17 : y < 850 ? 0.09 : 0.12 + 0.1 * sstep(860, 1000, y)), kenar: 1.0, kenarR: 2.4, gran: 0.4, dalga: 0.35, tohum: 51,
+      pig: (x, y) => { const t = fbm(nC, x / 120, y / 60, 3); return lerpK(karis(P.sag, 0.8, P.sap, 0.3, P.gam, 0.1), karis(P.tur, 0.5, P.sag, 0.5), sstep(0.4, 0.65, t)); },
+      yog: (x, y) => 0.09 + 0.13 * sstep(840, 1000, y), kenar: 1.0, kenarR: 2.4, gran: 0.4, dalga: 0.35, tohum: 51,
     });
   }
   // saplar

@@ -713,7 +713,7 @@
     for (let y = 690; y < 808; y += 12) for (let x0 = 230; x0 < 840; x0 += 120) {
       const len = 170 + r() * 90, pts = [[x0 + (r() - 0.5) * 40, y + (r() - 0.5) * 4], [x0 + len, y + (r() - 0.5) * 4]];
       const l = clamp((x0 + len / 2 - 300) / 520, 0, 1);
-      sunger(x, pts, 26, 0.24, mixc(C.tas, C.seftali, 0.25 + 0.45 * l), r, { son: 0.55, iz: 0.7 });
+      sunger(x, pts, 26, 0.26 + 0.12 * l, mixc(mixc(C.tas, C.seftali, 0.3 + 0.6 * l), C.sari, 0.25 * l), r, { son: 0.55, iz: 0.7 });
     }
   }, Object.assign({ kirp: MK.kaide, bx: [286, 688, 834, 802] }, TOZ, { opq: 0.5 }));
   katman((x) => {
@@ -723,7 +723,7 @@
       while (x0 < 700) {
         const len = 90 + r() * 110, pts = [[x0, y + (r() - 0.5) * 3], [x0 + len, y + (r() - 0.5) * 3]];
         const g = 1 - clamp((x0 - 300) / 420, 0, 1);
-        sunger(x, pts, 16 + r() * 6, 0.12 + 0.3 * g * g, r() < 0.55 ? C.tasGolge : r() < 0.6 ? C.tasMavi : C.leylak, r, { son: 0.75, iz: 0.8 });
+        sunger(x, pts, 16 + r() * 6, 0.05 + 0.42 * Math.pow(g, 1.6), r() < 0.55 ? C.tasGolge : r() < 0.6 ? C.tasMavi : C.leylak, r, { son: 0.75, iz: 0.8 });
         x0 += len * (0.7 + r() * 0.4);
       }
     }
@@ -739,7 +739,9 @@
   // 3) silgiyle kaldırılmış ışıklar: kornişin üst kenarı ve güneşli yüzde yatay silgi izleri
   katman((x) => {
     strok(x, [[300, 693.5], [828, 693.5]], 2.6, 0.8, [255, 255, 255], 0.0, 0.25, 0.6);
-    for (const [x0, x1, y, w] of [[600, 800, 742, 5], [640, 812, 764, 4], [560, 760, 786, 3.5], [720, 816, 728, 3]]) strok(x, [[x0, y], [x1, y + 1]], w, 0.55, [255, 255, 255], 0.35, 0.45, 0.3);
+    for (const [x0, x1, y, w] of [[600, 800, 742, 5], [640, 812, 764, 4], [560, 760, 786, 3.5], [720, 816, 728, 3]]) strok(x, [[x0, y], [x1, y + 1]], w, 0.8, [255, 255, 255], 0.35, 0.45, 0.3);
+    // sağ köşe: güneşi tam alan dikey kenar silgiyle açılmış
+    strok(x, [[815, 712], [815, 798]], 7, 0.75, [255, 255, 255], 0.15, 0.2, 0.6);
   }, Object.assign({ kirp: maskeCikar(MK.kaide, [mPencere]), bx: [286, 688, 834, 802] }, SILGI, { bulanik: 1.6 }));
 
   // ================================================================ KASNAK
