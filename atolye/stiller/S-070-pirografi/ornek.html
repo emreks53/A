@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-070 Pirografi — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #2a2420; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #d6ccbc; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -314,7 +314,7 @@
     const rD = dilimR(th);
     let r, g, b;
     if (rd > rD + 1) {
-      // zemin: koyu keten, dilimin yumuşak gölgesi
+      // zemin: açık keten, dilimin yumuşak gölgesi
       const gr = Math.hypot(X - golgeMerkez.x, Yy - golgeMerkez.y), gth = Math.atan2(Yy - golgeMerkez.y, X - golgeMerkez.x);
       const gol = 1 - 0.42 * sstep(dilimR(gth) + 30, dilimR(gth) - 6, gr);
       const keten = 0.94 + 0.04 * Math.sin(x * 1.9) * Math.sin(y * 1.7) + 0.05 * (nB(X / 2, Yy / 2) - 0.5) + 0.04 * (fbm(nC, X / 90, Yy / 90, 3) - 0.5);

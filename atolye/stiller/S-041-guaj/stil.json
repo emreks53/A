@@ -16,25 +16,7 @@
     "Elle çekilmiş, hafifçe titreyen kenarlar; bulutlarda, güneş halkalarında ve büyük alanların sınırında kuru fırça kırıkları, darbe kenarlarında ince boya sırtları",
     "Mat, parlamasız, tebeşirimsi yüzey ve boyanın bittiği yerde fırça uçlarıyla kırılan kenardan görünen krem rengi kâğıt"
   ],
-  "palet": [
-    "#3B6F95",
-    "#8AB5BD",
-    "#184731",
-    "#44894D",
-    "#93C077",
-    "#ABA5AE",
-    "#D8B47E",
-    "#EAE0CA"
-  ],
+  "palet": ["#3B6F95", "#8AB5BD", "#184731", "#44894D", "#93C077", "#ABA5AE", "#D8B47E", "#EAE0CA"],
   "kodla_cizim": "2048 px'lik bir kayan noktalı renk tamponuna katman katman örtücü boya sürülür. Her katmanın biçimi Path2D ile ekran dışı tuvale çizilip kapsama maskesine çevrilir; maske bulanıklaştırılır, düşük frekanslı bir yer değiştirme alanıyla örneklenir (elle çekilmiş titrek kenar) ve gürültü ile darbe haritasına göre eşiklenir. Ayrı bir 'darbe haritası' tuvaline bölgeye göre yön alan kıl demetli fırça darbeleri gri tonlarla çizilir (gökte ve yerde yatay, kubbede kaburga boyunca, minarede dikey, çiçeklerde merkezden dışa); bu harita her katmanın değerini yüzde on kadar oynatır, ton sınırlarını darbe darbe kaydırır ve ince kıl yapısından türetilen boşluk alanıyla kenarlarda kuru fırça kırıkları açar. Kubbe vurguları, bulut kıvrımları, yapraklar ve taç yaprakları kıl demetli renkli darbelerle ara tuvale boyanır (her taç yaprak merkezden dışa 3–5 darbe, göbek tıpış lekeleri). Her katman bir boya kalınlığı haritası da günceller: kenarda küçük sırt, kıl izlerinde oluk; son geçişte bu harita sağ üstten çok hafif kabartı ışığı verir, koyu tonlara tebeşirimsi açık benekler ve kâğıt dişi eklenir, resim kenarlarda darbe uçlarıyla kırılan düzensiz bir dikdörtgenle krem kâğıda oturtulur.",
-  "etiketler": [
-    "guaj",
-    "örtücü boya",
-    "mat yüzey",
-    "düz renk",
-    "kitap resmi",
-    "afiş",
-    "fırça izi",
-    "geleneksel"
-  ]
+  "etiketler": ["guaj", "örtücü boya", "mat yüzey", "düz renk", "kitap resmi", "afiş", "fırça izi", "geleneksel"]
 }

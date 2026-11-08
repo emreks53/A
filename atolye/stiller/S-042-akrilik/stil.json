@@ -16,24 +16,7 @@
     "Kubbe, bulut ve minare çevresinde yer yer açık kalan ince boşluklardan görünen turuncu-kırmızı astar",
     "Darbe kenarlarında ışık yakalayan ince boya sırtları, hafif saten parlama ve ince boyalı yerlerde belirginleşen tuval bezi dokusu"
   ],
-  "palet": [
-    "#1A3E99",
-    "#2E86CE",
-    "#0B5A40",
-    "#2EAD56",
-    "#9ED64A",
-    "#A9A3CC",
-    "#E2582E",
-    "#F07BB2"
-  ],
+  "palet": ["#1A3E99", "#2E86CE", "#0B5A40", "#2EAD56", "#9ED64A", "#A9A3CC", "#E2582E", "#F07BB2"],
   "kodla_cizim": "2048 px'lik bir renk tamponu turuncu-kırmızı astarla başlar. Ayrı bir 'darbe haritası' tuvaline düz uçlu fırça darbeleri çizilir; R kanalı darbenin ton oynamasını, G kanalı boya kalınlığını (gövde, kenar sırtı, kıl olukları), B kanalı kuru uçları taşır. Darbeler bölgeye göre yön alır: gökte uzun yatay, güneş çevresinde rastgele konumlu ve yönlü kısa darbeler, güneş diskinde birkaç geniş kıvrık darbe, kubbede kaburga boyunca, minarede dikey, kasnakta yatay. Biçimler Path2D'den çıkarılan keskin kapsama maskeleriyle katman katman örtücü boyanır; ışık kubbe için dönel yüzey normali, kasnak ve minare için silindir modeliyle hesaplanıp beş-altı düz tona basamaklanır ve basamak sınırları darbe haritasıyla kaydırılarak darbe biçimli, keskin kenarlar elde edilir; güneş halkalarının sınırı da darbe haritası ve gürültüyle kırılır. Bulutlar, saplar, yapraklar, tomurcuklar ve taç yaprakları değişken genişlikli fırça gövdeleriyle (kıl çizgileri, rastgele kuru uç) hem renk tuvaline hem darbe haritasına çizilir: taç yaprak başına merkezden dışa 2–3 darbe, gölge kenarında ince leylak, dipte pembe darbe; bulutlarda kıvrımı izleyen yay darbeleri. Arkadaki boya öndeki biçimlerin bulanık maskesine ve gürültüye göre yer yer biçimin çevresinde boşluk bırakır, astar oradan görünür. Son geçişte darbe kalınlığı ve çözgü-atkı modelli tuval bezi yükseklik haritasına toplanır; ince ve geniş ölçekli normallerle sağ üstten yayınık ışık ve saten parlama verilir.",
-  "etiketler": [
-    "akrilik",
-    "doygun renk",
-    "keskin kenar",
-    "düz fırça",
-    "tuval",
-    "çağdaş resim",
-    "katmanlı boya"
-  ]
+  "etiketler": ["akrilik", "doygun renk", "keskin kenar", "düz fırça", "tuval", "çağdaş resim", "katmanlı boya"]
 }
