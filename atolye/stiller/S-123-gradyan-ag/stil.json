@@ -9,24 +9,24 @@
   "tanim": "Gradyan ağ (gradient mesh), her vektör biçimin içine noktaları ayrı ayrı renklendirilebilen bir ağ kurarak fotoğrafa yakın, yumuşak renk geçişleri elde eden tekniktir. Biçimlerin kenarı vektör keskinliğinde kalır; içlerde ise ışık, gölge, gök ve yer yansıması birbirine kesintisiz karışır: ışıkta sıcak, gölgede serin tonlar. Ürün illüstrasyonunda, gerçekçi vektör portrede, ambalaj ve reklam görsellerinde kullanılır.",
   "koken": "Adobe Illustrator 8 (1998) ile gelen Gradient Mesh aracına dayanır; Yukio Miyamoto gibi vektör sanatçıları ve 2000'lerin fotogerçekçi vektör akımı aracı ustalık düzeyine taşıdı. Tarifin özü: biçim başına keskin siluet, içinde çok noktalı yumuşak renk ağı; ışık gerçekçidir (ana ışık, gök dolgusu, yer yansıması, parlama), doku ve fırça izi yoktur.",
   "ayirt_edici": [
-    "Kubbe dönel yüzey olarak ışıklandırılmış: sağ üstte sıcak ışık ve yumuşak parlama, sol altta serin gölge, ince kabarık kaburgalar",
+    "Kubbe dönel yüzey olarak ışıklandırılmış: hafif içbükey dilimler ve kabarık kaburgalar; sağ üstte kaburga sırtlarında dar, parlak güneş yansımaları, kenarlarda gök yansıması, tabanda ortam gölgesi",
+    "Kümülüs bulutlar kabarık hacimler gibi ışıklandırılmış: güneşe bakan tepeler parlak beyaz, kıvrımlarda serin gri-mavi, düz ve serin tabanlar; siluet keskin",
     "Kasnak pencereleri gerçek oyuk gibi: kasnağın solundakilerde ışık alan sol söve, sağındakilerde gölgeli sağ söve, tepede yumuşak gölge",
     "Altın alem çevreyi yansıtan metal: tepede gök ışıltısı, altta sıcak yer yansıması, keskin parlama noktası",
-    "Minarede şerefe altlarında düşen gölge, korkuluk dikmeleri tek tek küçük silindir; binanın minareye düşen yumuşak gölgesi",
-    "Kümülüs bulutlar keskin kenarlı topaklardan; her topak sıcak beyazdan serin gri-maviye yumuşak geçişli",
-    "Gerçekçi taç yaprakları: dipte yeşilimsi krem ve pembe allık, uçta hafif çentik, ışık kenarında parlaklık, ortada ince oluk; göbekte ince ercikler"
+    "Yerde uzağa doğru incelen rüzgâr dalgacıklı kum, ufka yakın sıcak pus; tepede derin maviden ufukta açık tona inen gök",
+    "Gerçekçi taç yaprakları ve cilalı yapraklar: dipte yeşilimsi krem ve pembe allık, ince ercikler; yapraklarda damara paralel parlama şeridi"
   ],
   "palet": [
-    "#60A0DC",
-    "#E7ECEA",
-    "#5CB577",
-    "#2F7A4C",
-    "#F6EEE0",
-    "#C48F33",
-    "#4F9452",
-    "#F6D6D6"
+    "#4F8FD6",
+    "#EEF1EC",
+    "#5DB477",
+    "#22623E",
+    "#ECE1D1",
+    "#F1F2F4",
+    "#C3963F",
+    "#ECD9B6"
   ],
-  "kodla_cizim": "Canvas 2D (2048 iç çözünürlük) ve piksel gölgelendirici. Her mimari biçim (kubbe, kasnaklar, minare parçaları, topuz, alem küreleri) önce ekran dışı bir maskeye çizilir; her satırın yarı genişliği kenar kaplamasından alt piksel doğrulukla ölçülür ve eğiminden dönel yüzeyin normali çıkarılır. Normaller doğrusal renk uzayında güneş (Lambert), gök / yer yarımküre dolgusu, Blinn parlaması ve Fresnel çevre yansımasıyla renklendirilir; kubbe kaburgaları boylam boyunca Gauss tümsekleriyle normal saptırılarak verilir. Sonuç maskenin kenar yumuşatmasıyla birleşir, böylece vektör kenar keskin kalır. Kaide ve korniş düz yüzey gölgelendiricisiyle (korniş altı düşen gölge, dikme gölgeleri, yer yansıması). Bulut, taç yaprağı ve yapraklarda kırpılmış biçimin içine filter: blur'lu yumuşak renk lekeleri (ağ noktaları) ve shadowBlur gölgeler konur. Son adımda ±1,5 düzeyli titreşim.",
+  "kodla_cizim": "Canvas 2D (2048 iç çözünürlük) ve piksel gölgelendirici. Her mimari biçim (kubbe, kasnaklar, minare parçaları, topuz, alem küreleri) önce ekran dışı bir maskeye çizilir; her satırın yarı genişliği kenar kaplamasından alt piksel doğrulukla ölçülür ve eğiminden dönel yüzeyin normali çıkarılır. Normaller doğrusal renk uzayında güneş (Lambert), gök / yer yarımküre dolgusu, Blinn parlaması ve Fresnel çevre yansımasıyla renklendirilir; kubbede kaburgalar boylam boyunca Gauss tümsekleri, dilimler kosinüs içbükeyliği olarak normali saptırır, üstüne dar bir cila parlaması eklenir. Bulutlar kürelerden kurulan bir yükseklik alanıdır (en büyük küre yüksekliği, kutu bulanıklığıyla yumuşatılmış); normalleri bu alandan çıkarılıp sarmalı Lambert, gök dolgusu ve tabanda serinleşmeyle ışıklandırılır. Kum, perspektifli yer düzleminde asimetrik dalgacık yükseklik fonksiyonunun piksel piksel ışıklandırılmasıdır. Kaide ve korniş düz yüzey gölgelendiricisiyle; taç yaprağı ve yapraklarda kırpılmış biçimin içine filter: blur'lu yumuşak renk lekeleri ve shadowBlur gölgeler. Bütün siluetler maskenin kenar yumuşatmasıyla keskin kalır. Son adımda ±1,5 düzeyli titreşim.",
   "etiketler": [
     "vektör",
     "gradyan ağ",

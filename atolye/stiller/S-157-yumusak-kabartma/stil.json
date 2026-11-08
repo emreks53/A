@@ -5,28 +5,28 @@
   "ad_en": "Soft Emboss (Neumorphic)",
   "aile": "Grafik ve Dijital",
   "ozgun": false,
-  "ozet": "Açık pastel, mat bir yüzeyden yumuşakça yükselen yuvarlak kenarlı biçimler; ışık yanında beyaz parıltı, karşı yanda yumuşak gölge ve içeri bastırılmış yuvalar.",
+  "ozet": "Açık lila, mat bir yüzeyden yumuşakça yükselen yuvarlak kenarlı biçimler; neredeyse tek renkli düzende nane yeşili kubbe, ışık yanında beyaz parıltı, karşı yanda lila tonlu yumuşak gölge ve içeri bastırılmış yuvalar.",
   "tanim": "Yumuşak kabartma (neumorphism), biçimlerin zeminle aynı malzemeden çıkıyormuş gibi hafifçe yükseldiği ya da içeri bastırıldığı, derinliğin yalnızca iki yumuşak gölgeyle (ışık yanında açık, karşı yanda koyu) verildiği dijital bir arayüz ve illüstrasyon üslubudur. Kenarlar yuvarlak, yüzeyler mat ve düşük karşıtlıklıdır; renkler pastel ve sakindir. Uygulama arayüzlerinde, ikon setlerinde ve sakin, dokunsal hissi olan dijital illüstrasyonlarda kullanılır.",
   "koken": "Üslup 2019 sonunda tasarımcı Alexander Plyuto'nun Dribbble'da paylaştığı bankacılık uygulaması taslağıyla yayıldı ve Michal Malewicz'in yazısıyla 'neumorphism' adıyla tanındı. Düz tasarım ile 2000'lerin iskeomorfizmi arasında bir yol olarak, CSS'te biri açık biri koyu iki box-shadow ile kurulan yumuşak çıkıntı ve iç gölge fikrine dayanır.",
   "ayirt_edici": [
-    "Her biçimin sağ üstünde geniş beyaz parıltı, sol altında yumuşak ve bulanık gölge (çift gölge)",
+    "Her biçimin sağ üstünde geniş beyaz parıltı, sol altında lila tonlu, yumuşak ve bulanık gölge (çift gölge)",
     "Yastık gibi yuvarlak kenarlı, düz üstlü mat çıkıntılar: minare, kaide ve korniş, kasnak, kubbe, hap biçimli bulutlar, çiçekler ve yapraklar",
-    "İçeri bastırılmış yuvalar: pencereler, korkuluk yuvaları, kubbe kaburgaları, zikzak olukları, güneş çanağı ve çiçek göbeği halkası",
-    "Gökle aynı renkte, yalnız ışık ve gölgeyle seçilen bulutlar",
-    "Her öğenin kendi pastel rengi: nane yeşili kubbe ve kasnak, krem taş, gök mavisi zemin, soluk altın alemler ve ışın hapları, krem toprak rafı",
-    "Pürüzsüz, dokusuz, düşük karşıtlıklı ve aydınlık yüzey"
+    "İçeri bastırılmış yuvalar: pencereler, korkuluk yuvaları, kubbe kaburgaları, zikzak olukları, güneş çanağı, çiçek göbeği halkası ve taç yaprakları arasındaki dikişler",
+    "Gökle aynı lila renkte, yalnız ışık ve gölgeyle seçilen bulutlar",
+    "Neredeyse tek renkli düzen: lila gök, açık lila zemin rafı ve lila-beyaz taş; her alanda tek bir yumuşak ton olarak nane yeşili kubbe ve kasnak, soluk altın alemler ve güneş, beyaz çiçekler, açık yeşil yapraklar",
+    "Pürüzsüz, dokusuz, mat ve aydınlık yüzey; en az ayrıntı"
   ],
   "palet": [
-    "#CFE0EF",
-    "#F1E5D2",
-    "#ABD9BB",
-    "#AED9BD",
-    "#F2E8D6",
-    "#E8CC86",
-    "#F5DE96",
-    "#B9DABE"
+    "#DCD6EE",
+    "#ECE4F1",
+    "#F4F0F7",
+    "#B3DDC7",
+    "#B5DEC9",
+    "#EED291",
+    "#C3E0CE",
+    "#EDC6DA"
   ],
-  "kodla_cizim": "2048 × 2048 yükseklik alanında öğe maskeleri (SAHNE yolları) Öklid mesafe dönüşümüyle sinüs biçimli 'yastık' profiliyle, geniş yarıçaplı yuvarlak kenarlarla kabartılır; pencereler, kaburgalar, oluklar ve güneş çanağı negatif yükseklikle bastırılır; bitkiler alttakilerin bulanık yüzeyine oturur. Ayrı bir tuvale her öğenin düz pastel rengi boyanır. Aydınlatmada yüzey normaliyle mat ve düşük karşıtlıklı gölgelendirme yapılır; çift gölge için yükseklik alanının iki farklı genişlikte Gauss bulanıklığı ışık yönünde ve tersinde kaydırılarak okunur: ışık yönündeki fazlalık hafif soğuk tonlu gölge, tersindeki fazlalık beyaz parıltı olur; aynı fark içeri bastırılmış yuvalarda iç gölgeyi verir.",
+  "kodla_cizim": "2048 × 2048 yükseklik alanında öğe maskeleri (SAHNE yolları) Öklid mesafe dönüşümüyle sinüs biçimli 'yastık' profiliyle, geniş yarıçaplı yuvarlak kenarlarla kabartılır; pencereler, kaburgalar, oluklar, güneş çanağı ve çiçeğin içiyle kırpılmış taç yaprağı dikişleri negatif yükseklikle bastırılır; bitkiler alttakilerin bulanık yüzeyine oturur. Ayrı bir tuvale her öğenin tek, düz pastel tonu boyanır (lila gök ve zemin, lila-beyaz taş, nane yeşili kubbe). Aydınlatmada yüzey normaliyle mat ve düşük karşıtlıklı gölgelendirme yapılır; çift gölge için yükseklik alanının iki farklı genişlikte Gauss bulanıklığı ışık yönünde ve tersinde (17 ve 4 px) kaydırılarak okunur: ışık yönündeki fazlalık lila tonlu gölge, tersindeki fazlalık beyaz parıltı olur; aynı fark içeri bastırılmış yuvalarda iç gölgeyi verir.",
   "etiketler": [
     "neumorphism",
     "yumuşak gölge",

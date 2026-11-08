@@ -40,7 +40,7 @@
     tasK: ['#94877A', '#AE9F8F', '#C8BAA8'],
     altin: ['#B4852A', '#E6BE5C', '#FFF1B8'],
     sari: ['#EDA93A', '#F8CD6A', '#FFF2C4'],
-    bulut: ['#D6D2D8', '#F3F1F2', '#FFFFFF'],
+    bulut: ['#C4C0CE', '#E9E7EE', '#FFFFFF'],
     tepe1: ['#8DBE8E', '#B6DAAA', '#E0F1D2'],
     tepe2: ['#74B07E', '#9ECF97', '#D2ECC2'],
     zemin: ['#DDB07C', '#F2D2A6', '#FDEFD9'],
@@ -234,8 +234,8 @@
     // vadi katları. Her şerit ayrı renkte bir kâğıt; ışığa (sağ üst) dönük yüzler aydınlık, karşı yüzler gölgede.
     // Renkler güneşe yaklaştıkça serin açık turkuazdan krem ve sıcak kayısıya döner (gün ışığında renkli kartlar).
     const im = ana.createImageData(W2, W2), D = im.data;
-    const C = [-300, 1500], ARA = 128;
-    const RAMPA = [[700, '#BFE4E6'], [1000, '#CDEBE6'], [1250, '#E2F1E2'], [1450, '#F6F0DA'], [1650, '#FCE7C4'], [1850, '#FCDCB0'], [2100, '#FAD2A2']]
+    const C = [-300, 1500], ARA = 118;
+    const RAMPA = [[700, '#C6E7E6'], [1050, '#D3EDE5'], [1300, '#E6F2E0'], [1500, '#F7F1DB'], [1700, '#FCE9C8'], [1900, '#FCDFB6'], [2100, '#FAD6A8']]
       .map(([d, h]) => [d, hex(h)]);
     const rampa = (d) => {
       if (d <= RAMPA[0][0]) return RAMPA[0][1];
@@ -253,23 +253,26 @@
         const dx = x - C[0], dy = y - C[1], d = Math.hypot(dx, dy);
         const q = d / ARA, k = Math.floor(q), s = q - k;
         const yon = k % 2 ? 1 : -1;
-        // her şerit kendi kâğıdının rengini taşır (şerit ortasının uzaklığına göre)
-        const by = rampa((k + 0.5) * ARA);
+        const by = rampa(d);
         // yüz eğimi: kenarlara doğru bükülen, ortası daha dik yüz
-        const tau = yon * (0.2 + 0.2 * Math.sin(Math.PI * s));
+        const tau = yon * (0.16 + 0.16 * Math.sin(Math.PI * s));
         const ux = dx / d, uy = dy / d;
         const l = (ux * tau * LV[0] + uy * tau * LV[1] + LV[2]) / Math.hypot(tau, 1);
         const rel = (l - LV[2]) / 0.3; // yaklaşık −1 … +1
         let r = by[0], g = by[1], b = by[2];
-        if (rel > 0) { const m = rel * 0.55; r += (255 - r) * m; g += (253 - g) * m; b += (244 - b) * m; }
-        else { r *= 1 + rel * 0.13; g *= 1 + rel * 0.115; b *= 1 + rel * 0.075; }
+        if (rel > 0) { const m = rel * 0.42; r += (255 - r) * m; g += (254 - g) * m; b += (246 - b) * m; }
+        else {
+          // gölge yüz: aynı rengin daha tok (kendisiyle çarpılmış) hâli — grileşmeden koyulaşır
+          const m = -rel * 0.4; r += (r * r / 255 - r) * m; g += (g * g / 255 - g) * m; b += (b * b / 255 - b) * m;
+          r *= 1 + rel * 0.035; g *= 1 + rel * 0.035; b *= 1 + rel * 0.02;
+        }
         // kat izleri: vadide (ışıklı yüzün dış kenarı) ince koyu oluk, sırtta (ışıklı yüzün iç kenarı) parlak çizgi
         const e = s * ARA, e2 = (1 - s) * ARA;
         if (yon > 0) {
-          const v = Math.max(0, 1 - e2 / 3.2); r *= 1 - 0.13 * v; g *= 1 - 0.12 * v; b *= 1 - 0.09 * v;
-          const sr = Math.max(0, 1 - e / 1.6) * 0.6; r += (255 - r) * sr; g += (255 - g) * sr; b += (250 - b) * sr;
+          const v = Math.max(0, 1 - e2 / 3); r *= 1 - 0.1 * v; g *= 1 - 0.1 * v; b *= 1 - 0.08 * v;
+          const sr = Math.max(0, 1 - e / 1.5) * 0.65; r += (255 - r) * sr; g += (255 - g) * sr; b += (250 - b) * sr;
         } else {
-          const v = Math.max(0, 1 - e / 3.2); r *= 1 - 0.1 * v; g *= 1 - 0.09 * v; b *= 1 - 0.06 * v;
+          const v = Math.max(0, 1 - e / 3); r *= 1 - 0.08 * v; g *= 1 - 0.08 * v; b *= 1 - 0.06 * v;
         }
         const gd = Math.hypot(x - GX, y - GY), gs = Math.max(0, 1 - gd / 380);
         const sg = gs * gs * 0.5;
@@ -344,11 +347,15 @@
     for (const [dx, dy, r0] of lob) {
       const cx = x + dx * s, cy = y + dy * s, r = r0 * s;
       g.save();
-      g.shadowColor = 'rgba(90,100,130,0.2)'; g.shadowBlur = 5 * OL * s; g.shadowOffsetX = -1.5 * OL; g.shadowOffsetY = 2.5 * OL;
-      const rg = g.createRadialGradient(cx + r * 0.3, cy - r * 0.35, r * 0.05, cx, cy, r);
-      rg.addColorStop(0, ton(PAL.bulut, 1)); rg.addColorStop(0.55, ton(PAL.bulut, 0.92)); rg.addColorStop(0.9, ton(PAL.bulut, 0.7)); rg.addColorStop(1, ton(PAL.bulut, 0.8));
+      g.shadowColor = 'rgba(100,80,100,0.3)'; g.shadowBlur = 7 * OL * s; g.shadowOffsetX = -2.5 * OL * s; g.shadowOffsetY = 4 * OL * s;
+      // bombeli kâğıt lob: ışık sağ üstten, sol altta gölge, kenarda ince yansıma
+      const rg = g.createRadialGradient(cx + r * 0.32, cy - r * 0.38, r * 0.04, cx + r * 0.08, cy - r * 0.08, r * 1.08);
+      rg.addColorStop(0, ton(PAL.bulut, 1)); rg.addColorStop(0.45, ton(PAL.bulut, 0.9)); rg.addColorStop(0.82, ton(PAL.bulut, 0.52)); rg.addColorStop(1, ton(PAL.bulut, 0.64));
       g.fillStyle = rg;
-      g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.fill();
+      g.beginPath(); g.ellipse(cx, cy, r * 1.08, r, 0, 0, TAU); g.fill();
+      g.shadowColor = 'transparent';
+      g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 1.1;
+      g.beginPath(); g.ellipse(cx, cy, r * 1.08 - 1, r - 1, 0, -1.9, 0.1); g.stroke();
       g.restore();
     }
   }

@@ -270,14 +270,14 @@
       const rr = (14 + 14 * r()) * s;
       kure.push([ex, ey, rr, govdeH(ex, ey) - rr * 0.62]);
     }
-    let bx1 = x0 - G * 1.12, by1 = 1e9, bx2 = x0 + G * 1.12, by2 = y0;
+    let bx1 = x0 - G * 1.0, by1 = 1e9, bx2 = x0 + G * 1.0, by2 = y0 + 6 * s;
     for (const [cx, cy, rr] of kure) {
       bx1 = Math.min(bx1, cx - rr); bx2 = Math.max(bx2, cx + rr); by1 = Math.min(by1, cy - rr);
     }
     const x1 = Math.floor(bx1 - 2), y1 = Math.floor(by1 - 2), x2 = Math.ceil(bx2 + 2), y2 = Math.ceil(by2 + 1);
     const W = (x2 - x1) * OL, H = (y2 - y1) * OL;
     // taban: yatık bir elipsoit (düz, geniş alt gövde)
-    const tA = G * 1.08, tB = 30 * s, tY = y0 - 6 * s, tZ = 26 * s;
+    const tA = G * 0.96, tB = 30 * s, tY = y0 - 8 * s, tZ = 26 * s;
     // siluet maskesi (kenar yumuşatmalı), tabanı düz kesilmiş
     const c = S.yeniTuval(W, H);
     const cc = c.getContext('2d', { willReadFrequently: true });
@@ -314,6 +314,9 @@
         h[j * W + i] = best;
       }
     }
+    // düz tabanın altını son satırla doldur: bulanıklık tabanda koyu bir kenar çizgisi üretmesin
+    const jKes = Math.min(H - 1, Math.floor((y0 - y1) * OL) - 1);
+    for (let j = jKes + 1; j < H; j++) for (let i = 0; i < W; i++) h[j * W + i] = h[jKes * W + i];
     // kabarcık birleşimlerindeki sert kıvrımları yumuşat: ayrılabilir kutu bulanıklığı (3 geçiş)
     const R = Math.max(2, Math.round(3.4 * s * OL));
     const tmp = new Float32Array(W * H);
@@ -391,7 +394,7 @@
       const y = 800 + (j + 0.5) / OL;
       const dy = y - 798;
       const Z = 1400 / dy; // derinlik
-      const sonum = ss(26, 4, Z * 0.18); // uzakta dalgacık sönümü
+      const sonum = ss(10, 2.5, Z * 0.18); // uzakta dalgacık sönümü (ufka yakın düzleşir)
       for (let i = 0; i < W; i++) {
         const x = (i + 0.5) / OL;
         const X = ((x - 560) * Z) / 260;

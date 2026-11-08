@@ -453,12 +453,15 @@
   for (const c of S.bitki.cicekler) {
     const tac = S.tacYapraklari(c);
     tac.forEach((e, k) => bitkiKabart(elipsMaske(e), 4.2 + 0.2 * k, c.r * 0.22));
+    const tp = new Path2D(); for (const e of tac) tp.addPath(P(S.elipsYolu(e)));
+    // taç yaprakları arasında yumuşak bastırılmış dikiş (yalnız çiçeğin içinde)
     for (const e of tac) {
       const a = e.aci + Math.PI / 5;
-      const a0 = [c.x + Math.cos(a) * c.r * 0.28, c.y + Math.sin(a) * c.r * 0.28], a1 = [c.x + Math.cos(a) * c.r * 0.9, c.y + Math.sin(a) * c.r * 0.9];
-      ekle(cizgiMaske([a0, a1], Math.max(2.6, c.r * 0.07)), -1.6, Math.max(1.3, c.r * 0.035), { prof: 'yastik' });
+      const a0 = [c.x + Math.cos(a) * c.r * 0.26, c.y + Math.sin(a) * c.r * 0.26], a1 = [c.x + Math.cos(a) * c.r * 1.05, c.y + Math.sin(a) * c.r * 1.05];
+      const lw = Math.max(2.6, c.r * 0.07);
+      const M = maske(kutuN([a0, a1], lw + 2), (m) => { m.save(); m.clip(tp); m.lineWidth = lw; m.lineCap = 'round'; m.stroke(P(S.yol([a0, a1]))); m.restore(); });
+      ekle(M, -1.7, Math.max(1.3, c.r * 0.035), { prof: 'yastik' });
     }
-    const tp = new Path2D(); for (const e of tac) tp.addPath(P(S.elipsYolu(e)));
     boya(tp, R.cicek);
     const ro = c.r * 0.22;
     ekle(daireMaske(c.x, c.y, ro * 1.25), -1.4, ro * 0.6, { prof: 'yastik' });
