@@ -184,16 +184,34 @@
   // ------------------------------------------------------------ 1. geçiş: varak altın zemin ve yaldızlı çerçeve (piksel)
   const ALTIN = [[0, [84, 52, 18]], [0.32, [160, 112, 38]], [0.56, [212, 164, 66]], [0.78, [242, 210, 124]], [1, [255, 244, 196]]];
   const BOLE = [150, 58, 38];
-  const varak = 84;
   const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  // varak yaprakları elle döşenmiş: sıra yükseklikleri, yaprak genişlikleri ve sıra eğimi hafifçe değişir,
+  // birleşim yerleri sıradan sıraya kayar (düzenli tuğla ızgarası değil)
+  const SIRA = [];
+  {
+    const rv = SAHNE.rng(4344);
+    let yy = PY0 - 30 - rv() * 40;
+    while (yy < PY1 + 100) {
+      const sira = { y0: yy, egim: (rv() - 0.5) * 0.014, kol: [] };
+      let xx = PX0 - 20 - rv() * 70;
+      while (xx < PX1 + 120) { sira.kol.push(xx); xx += 72 + rv() * 22; }
+      sira.kol.push(xx);
+      SIRA.push(sira); yy += 74 + rv() * 20;
+    }
+  }
+  const BOLE_C = [170, 74, 46];
   const altinRenk = (X, Yy, i, ek) => {
-    // varak yaprakları: tuğla düzeni, her yaprak biraz farklı parlaklıkta, birleşim yerinde ince çizgi
-    const sat = Math.floor(Yy / varak), kay = sat % 2 ? varak / 2 : 0, sut = Math.floor((X + kay) / varak);
-    const fx = (X + kay) - sut * varak, fy = Yy - sat * varak;
-    let v = 0.54 + (hash(sut, sat) - 0.5) * 0.09 + (fbm(nA, X / 170, Yy / 170, 3) - 0.5) * 0.5 + ek;
+    // sıra: eğim ve hafif dalga ile kaydırılmış y'ye göre
+    let sat = 0;
+    const yk = (q) => SIRA[q].y0 + SIRA[q].egim * (X - 512) + (nA(X / 120, q * 3.1) - 0.5) * 3;
+    while (sat < SIRA.length - 2 && Yy >= yk(sat + 1)) sat++;
+    const sr = SIRA[sat], fy = Yy - yk(sat);
+    let sut = 0; while (sut < sr.kol.length - 2 && X >= sr.kol[sut + 1] + fy * 0.012) sut++;
+    const fx = X - sr.kol[sut] - fy * 0.012;
+    let v = 0.54 + (hash(sut + sat * 31, sat) - 0.5) * 0.1 + (fbm(nA, X / 170, Yy / 170, 3) - 0.5) * 0.5 + ek;
     v += (nB(X / 6, Yy / 40) - 0.5) * 0.05; // ince kırışık
     const ek1 = Math.min(fx, fy);
-    if (ek1 < 1.1) v -= 0.12 * (1 - ek1 / 1.1);
+    if (ek1 < 1.1) v -= 0.1 * (1 - ek1 / 1.1);
     else if (ek1 < 3) v += 0.04;
     // zımba/oyma kabartısı
     const xa = i - 1, xb = i + 1, ya = i - WW, yb = i + WW;
@@ -201,12 +219,16 @@
     const dif = (-gx * LV[0] - gy * LV[1] + LV[2]) / nl;
     v += (dif - LV[2]) * 1.15 - (0.78 - ZHb[i]) * 0.5;
     let c = rampa(ALTIN, clamp(v, 0, 1));
-    // dökülmüş varaktan görünen kırmızı bolus
-    // aşınma: kenara yakın, yumuşak kenarlı birkaç yama ve yer yer yaprak birleşimlerinde ince bolus çizgisi
-    const kenara = Math.max(0, 1 - (Math.min(X, W - X, Yy) - PX0) / 60);
-    const kayip = fbm(nC, X / 26, Yy / 26, 3) + kenara * 0.2 + (fbm(nA, X / 3, Yy / 3, 2) - 0.5) * 0.12;
-    if (kayip > 0.76) c = mixc(c, BOLE, sstep(0.76, 0.8, kayip) * 0.92);
-    if (ek1 < 0.9 && hash(sut * 3 + 1, sat * 7 + 2) < 0.18) c = mixc(c, BOLE, 0.4);
+    // aşınma 1: kenar ve köşelerde altın incelmiş, alttaki kırmızı bolus yumuşak, sıcak bir ton olarak sezilir
+    const kd = Math.min(X - PX0, PX1 - X, Yy - PY0), kose = Math.min(Math.hypot(X - PX0, Yy - PY0), Math.hypot(PX1 - X, Yy - PY0));
+    const ovul = sstep(46, 0, kd) * 0.55 + sstep(150, 0, kose) * 0.5;
+    if (ovul > 0) c = mixc(c, mixc(BOLE_C, c, 0.45), clamp(ovul * sstep(0.35, 0.7, fbm(nC, X / 60, Yy / 60, 2)), 0, 0.42));
+    // aşınma 2: bazı yaprak birleşimlerinde, birleşim boyunca kesik kesik ince sıcak kırmızı bolus çizgisi
+    const ust = fy < fx, dikis = ust ? hash(sat * 7 + 3, sut * 13 + 1) : hash(sut * 11 + 5, sat * 17 + 2);
+    if (dikis < 0.4 && ek1 < 1.5) {
+      const boy = ust ? X : Yy, parca = sstep(0.42, 0.62, nB(boy / 26 + dikis * 50, ust ? 3.7 : 8.3));
+      c = mixc(c, BOLE_C, parca * 0.72 * (1 - sstep(0.6, 1.5, ek1)));
+    }
     return c;
   };
   {
@@ -222,9 +244,9 @@
         const prof = t < 0.28 ? 0.62 : t < 0.62 ? 0.42 + 0.35 * Math.sin(((t - 0.28) / 0.34) * Math.PI) : t < 0.84 ? 0.55 + 0.4 * Math.sin(((t - 0.62) / 0.22) * Math.PI) : 0.45;
         let v = prof * taraf + (fbm(nA, X / 30, Yy / 30, 3) - 0.5) * 0.18;
         c = rampa(ALTIN, clamp(v, 0, 1));
-        const asinma = fbm(nC, X / 9, Yy / 9, 3) + (t < 0.12 || (t > 0.66 && t < 0.78) ? 0.1 : 0);
-        if (asinma > 0.72) c = mixc(c, BOLE, sstep(0.72, 0.77, asinma) * 0.9);
-        if (asinma > 0.84) c = mixc(c, [214, 204, 180], sstep(0.84, 0.88, asinma));
+        // çerçevede aşınma: yalnız çıkıntılı profillerde (boncuk, dış kenar), yumuşak ve sıcak
+        const cikinti = t < 0.1 || (t > 0.66 && t < 0.8) ? 1 : 0.25;
+        c = mixc(c, mixc(BOLE, c, 0.4), cikinti * 0.4 * sstep(0.5, 0.72, fbm(nC, X / 50, Yy / 50, 2)));
       } else if (ic < PX0) {
         c = [176, 40, 30]; // zinober fileto
         c = mixc(c, [120, 30, 24], (nA(X / 4, Yy / 4) - 0.5) * 0.6 + 0.2);
@@ -251,7 +273,7 @@
       for (let x = x0; x <= x1; x += ara) {
         let y = y0 - R() * boy;
         while (y < y1) {
-          const L = boy * (0.7 + R() * 0.6), xm = x + (R() - 0.5) * ara * 0.5, ym = y + L / 2;
+          const L = boy * (0.7 + R() * 0.6), xm = x + (R() - 0.5) * ara * (o.sac || 0.5), ym = y + L / 2;
           if (!ic || ic(xm, ym)) { const c = renk(xm, ym); if (c) { const an = yon(xm, ym) + (R() - 0.5) * 0.08, dx = Math.cos(an) * L / 2, dy = Math.sin(an) * L / 2, j = 1 + (R() - 0.5) * jt; cizgi(xm - dx, ym - dy, xm + dx, ym + dy, [c[0] * j, c[1] * j, c[2] * j], a, lw * (0.85 + R() * 0.3)); } }
           y += L * (0.9 + R() * 0.35);
         }
@@ -260,7 +282,7 @@
       for (let y = y0; y <= y1; y += ara) {
         let x = x0 - R() * boy;
         while (x < x1) {
-          const L = boy * (0.7 + R() * 0.6), ym = y + (R() - 0.5) * ara * 0.5, xm = x + L / 2;
+          const L = boy * (0.7 + R() * 0.6), ym = y + (R() - 0.5) * ara * (o.sac || 0.5), xm = x + L / 2;
           if (!ic || ic(xm, ym)) { const c = renk(xm, ym); if (c) { const an = yon(xm, ym) + (R() - 0.5) * 0.08, dx = Math.cos(an) * L / 2, dy = Math.sin(an) * L / 2, j = 1 + (R() - 0.5) * jt; cizgi(xm - dx, ym - dy, xm + dx, ym + dy, [c[0] * j, c[1] * j, c[2] * j], a, lw * (0.85 + R() * 0.3)); } }
           x += L * (0.9 + R() * 0.35);
         }
@@ -270,6 +292,17 @@
   }
   const doldur = (yol, c, a) => { ctx.save(); ctx.clip(panel); ctx.fillStyle = css(c, a === undefined ? 1 : a); ctx.fill(yol); ctx.restore(); };
   const kontur = (yol, c, lw, a) => { ctx.save(); ctx.clip(panel); ctx.strokeStyle = css(c, a === undefined ? 1 : a); ctx.lineWidth = lw; ctx.stroke(yol); ctx.restore(); };
+  /** Yumuşak modelleme alt katı: bölgenin her pikseline ışık fonksiyonundan ton (yeşil toprak gölgelerde görünür). */
+  function taban(yol, bb, fn) {
+    const [x0, y0, x1, y1] = bb, w = Math.ceil((x1 - x0) * S), h = Math.ceil((y1 - y0) * S);
+    const c = SAHNE.yeniTuval(w, h), g = c.getContext('2d'), im = g.createImageData(w, h), d = im.data;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const X = x0 + x / S, Yy = y0 + y / S, k = (y * w + x) * 4, col = fn(X, Yy), j = 1 + (nC(X / 3, Yy / 3) - 0.5) * 0.04;
+      d[k] = col[0] * j; d[k + 1] = col[1] * j; d[k + 2] = col[2] * j; d[k + 3] = 255;
+    }
+    g.putImageData(im, 0, 0);
+    ctx.save(); ctx.clip(panel); ctx.clip(yol); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(c, Math.round(x0 * S), Math.round(y0 * S)); ctx.restore();
+  }
   const birlesik = (dizi) => { const p = new Path2D(); dizi.forEach((d) => p.addPath(P(d))); return p; };
   const DIK = () => Math.PI / 2, YATAY = () => 0;
 
@@ -299,7 +332,7 @@
     ctx.save(); ctx.clip(panel);
     for (let k = 0; k < 260; k++) {
       const x = PX0 + 8 + rr() * (PX1 - PX0 - 16), y = UFUK + 30 + rr() * (PY1 - UFUK - 36);
-      const tur = rr(), c = tur < 0.45 ? [244, 238, 220] : tur < 0.8 ? [196, 52, 36] : [52, 70, 150], s = 1.7 + rr() * 1.4;
+      const tur = rr(), c = tur < 0.5 ? [244, 238, 220] : tur < 0.75 ? [206, 78, 40] : [52, 70, 150], s = 1.7 + rr() * 1.4;
       ctx.strokeStyle = css([60, 104, 58], 0.9); ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(x, y + s); ctx.lineTo(x + (rr() - 0.5) * 3, y + s + 6); ctx.stroke();
       ctx.fillStyle = css(c, 0.95);
       for (let j = 0; j < 5; j++) { const a = (j / 5) * Math.PI * 2 + tur * 6; ctx.beginPath(); ctx.arc(x + Math.cos(a) * s, y + Math.sin(a) * s, s * 0.62, 0, Math.PI * 2); ctx.fill(); }
@@ -310,15 +343,16 @@
 
   // ------------------------------------------------------------ minare
   const minareP = birlesik(Y.minare);
-  doldur(minareP, TAS_ALT);
   const minareL = (x, y) => {
     let l = silindirIsik(x, 300, minareYari(y));
     if ((y > 468 && y < 488) || (y > 300 && y < 316)) l *= 0.5;
     return l;
   };
-  tara(minareP, [244, 140, 356, 800], DIK, (x, y) => { const l = minareL(x, y); return l < 0.3 && R() > l * 2.6 ? null : rampa(TAS, clamp(l * 1.15, 0, 1)); }, { ara: 2.2, boy: 10, jit: 0.035 });
-  tara(minareP, [244, 140, 356, 800], () => Math.PI / 2 - 0.45, (x, y) => { const l = minareL(x, y); return l < 0.45 ? null : rampa(TAS, clamp(l * 1.2 + 0.05, 0, 1)); }, { ara: 2.6, boy: 6, a: 0.8 });
-  tara(minareP, [244, 140, 356, 800], DIK, (x, y) => (minareL(x, y) > 0.74 ? [253, 250, 240] : null), { ara: 2.8, boy: 5, lw: 0.9, a: 0.85 });
+  const tasTaban = (l) => mixc(TAS_ALT, rampa(TAS, clamp(l * 1.05, 0, 1)), 0.25 + 0.65 * sstep(0.08, 0.62, l));
+  taban(minareP, [244, 140, 356, 800], (x, y) => tasTaban(minareL(x, y) - 0.16));
+  tara(minareP, [244, 140, 356, 800], DIK, (x, y) => { const l = minareL(x, y); return l < 0.32 && R() > l * 2.2 + 0.15 ? null : rampa(TAS, clamp(l * 1.12, 0, 1)); }, { ara: 1.6, boy: 9, jit: 0.09, a: 0.72, lw: 0.95, sac: 1.1 });
+  tara(minareP, [244, 140, 356, 800], () => Math.PI / 2 - 0.2, (x, y) => { const l = minareL(x, y); return l < 0.5 ? null : rampa(TAS, clamp(l * 1.18 + 0.04, 0, 1)); }, { ara: 2.1, boy: 7, a: 0.5, lw: 0.9, sac: 1.1 });
+  tara(minareP, [244, 140, 356, 800], DIK, (x, y) => (minareL(x, y) > 0.76 ? [253, 250, 240] : null), { ara: 2.4, boy: 6, lw: 0.85, a: 0.7, sac: 1.1 });
   // şerefe döşemeleri: ışıklı üst kenar, gölgeli alt
   ctx.save(); ctx.clip(panel); ctx.lineCap = 'butt';
   for (const [x1, x2, y] of [[246, 354, 457], [255, 345, 291], [275, 325, 199]]) cizgi(x1, y, x2, y, [250, 244, 226], 0.95, 1.6);
@@ -332,10 +366,10 @@
 
   // ------------------------------------------------------------ kaide
   const kaideP = birlesik([Y.kaide, Y.kornis]);
-  doldur(kaideP, TAS_ALT);
   const kaideL = (x, y) => (y < 704 ? 0.92 : y < 713 ? 0.35 : 0.42 + 0.42 * clamp((x - 300) / 520, 0, 1) + (y > 786 ? -0.08 : 0));
-  tara(kaideP, [290, 690, 830, 800], DIK, (x, y) => { const l = kaideL(x, y); return l < 0.45 && R() > l * 1.6 ? null : rampa(TAS, clamp(l * 1.1, 0, 1)); }, { ara: 2.2, boy: 10, jit: 0.035 });
-  tara(kaideP, [290, 690, 830, 800], () => Math.PI / 2 + 0.45, (x, y) => (kaideL(x, y) < 0.5 ? null : rampa(TAS, clamp(kaideL(x, y) * 1.15 + 0.06, 0, 1))), { ara: 2.6, boy: 6, a: 0.8 });
+  taban(kaideP, [290, 690, 830, 800], (x, y) => tasTaban(kaideL(x, y) - 0.16));
+  tara(kaideP, [290, 690, 830, 800], () => Math.PI / 2 + 0.1, (x, y) => { const l = kaideL(x, y); return l < 0.45 && R() > l * 1.5 + 0.2 ? null : rampa(TAS, clamp(l * 1.1, 0, 1)); }, { ara: 1.6, boy: 9, jit: 0.09, a: 0.72, lw: 0.95, sac: 1.1 });
+  tara(kaideP, [290, 690, 830, 800], () => Math.PI / 2 + 0.3, (x, y) => (kaideL(x, y) < 0.55 ? null : rampa(TAS, clamp(kaideL(x, y) * 1.15 + 0.05, 0, 1))), { ara: 2.2, boy: 7, a: 0.45, lw: 0.9, sac: 1.1 });
   for (const d of Y.kaidePencereleri) { doldur(P(d), [30, 34, 72]); kontur(P(d), [16, 16, 36], 1, 0.9); }
   ctx.save(); ctx.clip(panel); ctx.lineCap = 'butt';
   cizgi(290, 693, 830, 693, [252, 248, 236], 0.95, 1.8); cizgi(292, 703.5, 828, 703.5, [96, 92, 66], 0.85, 1.6);
@@ -345,14 +379,15 @@
 
   // ------------------------------------------------------------ kasnak
   const kasnakP = birlesik([Y.kasnakUst, Y.kasnakAlt]);
-  doldur(kasnakP, [16, 46, 32]);
-  tara(kasnakP, [330, 553, 790, 694], DIK, (x, y) => {
+  const kasnakL = (x, y) => {
     let l = kasnakIsik(x, y) * (y < 610 ? 0.92 : 1);
     if ((y > 555 && y < 560) || (y > 610 && y < 615)) l = Math.min(1, l + 0.3);
     if ((y > 604 && y < 610) || y > 687) l *= 0.5;
-    return rampa(KASNAK, clamp(l * 1.1, 0, 1));
-  }, { ara: 2.1, boy: 6 });
-  tara(kasnakP, [330, 553, 790, 694], () => Math.PI / 2 - 0.4, (x, y) => { const l = kasnakIsik(x, y); return l < 0.55 ? null : rampa(KASNAK, clamp(l * 1.2, 0, 1)); }, { ara: 2.7, boy: 5, a: 0.75 });
+    return l;
+  };
+  taban(kasnakP, [330, 553, 790, 694], (x, y) => mixc([20, 52, 36], rampa(KASNAK, clamp(kasnakL(x, y) * 1.05 - 0.14, 0, 1)), 0.75));
+  tara(kasnakP, [330, 553, 790, 694], DIK, (x, y) => rampa(KASNAK, clamp(kasnakL(x, y) * 1.1, 0, 1)), { ara: 1.6, boy: 7, a: 0.72, jit: 0.1, lw: 0.95, sac: 1.1 });
+  tara(kasnakP, [330, 553, 790, 694], () => Math.PI / 2 - 0.22, (x, y) => { const l = kasnakIsik(x, y); return l < 0.55 ? null : rampa(KASNAK, clamp(l * 1.2, 0, 1)); }, { ara: 2.2, boy: 6, a: 0.5, lw: 0.9, sac: 1.1 });
   for (const k of [0, 1]) for (const p of SAHNE.kasnakPencereleri(k)) {
     doldur(P(SAHNE.kemerYolu(p.x, p.y, p.w, p.h)), [10, 24, 18]);
     if (Math.sin(p.aci) > -0.4) { ctx.save(); ctx.clip(panel); ctx.lineCap = 'butt'; cizgi(p.x + p.w / 2 + 1.1, p.y + p.h, p.x + p.w / 2 + 1.1, p.y + p.w * 0.62, [120, 178, 120], 0.85, 1.1); ctx.restore(); }
@@ -365,12 +400,12 @@
 
   // ------------------------------------------------------------ kubbe: malakit yeşili, kaburga boyunca tarama
   const kubbeP = P(Y.kubbe);
-  doldur(kubbeP, [18, 58, 40]);
+  taban(kubbeP, [356, 296, 764, 558], (x, y) => mixc([18, 58, 40], rampa(MALAKIT, clamp((KUBBE.isik(x, y) - 0.12) * 1.15 - 0.13, 0, 1)), 0.8));
   const kubbeYon = (x, y) => { const u = KUBBE.u(x, y), dr = (KUBBE.r(y + 1) - KUBBE.r(y - 1)) / 2; return Math.atan2(1, u * dr); };
   const enlemYon = (x, y) => { const u = KUBBE.u(x, y), dr = (KUBBE.r(y + 1) - KUBBE.r(y - 1)) / 2; return Math.atan2(1, u * dr) + Math.PI / 2 - 0.25 * u; };
-  tara(kubbeP, [358, 298, 762, 556], kubbeYon, (x, y) => { const l = KUBBE.isik(x, y); return rampa(MALAKIT, clamp((l - 0.12) * 1.2, 0, 1)); }, { ara: 2.3, boy: 10 });
-  tara(kubbeP, [358, 298, 762, 556], enlemYon, (x, y) => { const l = KUBBE.isik(x, y); return l < 0.5 ? null : rampa(MALAKIT, clamp(l * 1.1, 0, 1)); }, { ara: 2.8, boy: 6, a: 0.7, yatay: true });
-  tara(kubbeP, [358, 298, 762, 556], kubbeYon, (x, y) => (KUBBE.isik(x, y) > 0.88 ? [226, 244, 210] : null), { ara: 2.6, boy: 6, lw: 0.9, a: 0.85 });
+  tara(kubbeP, [358, 298, 762, 556], kubbeYon, (x, y) => { const l = KUBBE.isik(x, y); return rampa(MALAKIT, clamp((l - 0.12) * 1.2, 0, 1)); }, { ara: 1.6, boy: 10, a: 0.74, jit: 0.1, lw: 0.95, sac: 1.1 });
+  tara(kubbeP, [358, 298, 762, 556], (x, y) => kubbeYon(x, y) - 0.22, (x, y) => { const l = KUBBE.isik(x, y); return l < 0.5 ? null : rampa(MALAKIT, clamp(l * 1.1, 0, 1)); }, { ara: 2.1, boy: 8, a: 0.5, lw: 0.9, sac: 1.1 });
+  tara(kubbeP, [358, 298, 762, 556], kubbeYon, (x, y) => (KUBBE.isik(x, y) > 0.86 ? [226, 244, 210] : null), { ara: 2.3, boy: 6, lw: 0.85, a: 0.7, sac: 1.1 });
   // kaburgalar: koyu çizgi ve yanında mordan altın (kırık, elle çekilmiş)
   ctx.save(); ctx.clip(panel); ctx.clip(kubbeP); ctx.lineCap = 'round';
   for (const kb of SAHNE.kaburgalar(16, 60)) {

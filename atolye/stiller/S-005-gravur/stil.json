@@ -11,12 +11,30 @@
   "ayirt_edici": [
     "Değişmeden duran gravür çizgisi: kalınlığı tona göre şişip incelen paralel çizgiler, kubbede enlem yayları ve meridyenlerle çapraz tarama, noktalama",
     "Çizgilerin altında düz, saydam yıkamalar: bakır yeşili kubbe ve kasnak, gamboj sarısı güneş, altın alemler, gül kırmızısı çiçekler, özsu yeşili yapraklar",
-    "Kenarında boya biriken, yer yer çizginin dışına taşan ya da çizgiye varmadan duran tırtıllı yıkama sınırları (kubbenin sağında göğe taşan yeşil, güneşin çevresinde mavi ile sarı arasında kalan ince boşluk)",
+    "Kenarında boya biriken, çizgiye tam oturmayan yıkamalar: her biçimde elin başka yöne kayması (taç yapraklarının bir yanında boyanmamış krem şerit, öteki yanında çizgiden taşan pembe), güneşin çevresinde yer yer boşluk kalan, yer yer maviyle üst üste binip yeşile dönen sınır",
     "Yukarıda koyu, ufka doğru açılan mavi gök yıkaması; bulutlar boyanmadan kâğıdın kremi olarak bırakılmış",
-    "Boyanın hafif düzensizliği: kubbenin gölge yanına sürülmüş ikinci yeşil kat, gökte yatay fırça izleri, pigment tanesi",
+    "Boyanın elle sürülmüş düzensizliği: her çiçekte biraz başka bir sulandırma, taç yaprağının dibinde, göbeğe doğru koyulaşan gül rengi, kubbenin gölge yanına kenarı belirgin ikinci bir yeşil kat, gökte yatay fırça izleri, pigment tanesi",
     "Krem kâğıtta ince çift çizgili çerçeve ve iki çizgi arasında açık bakır yeşili bir şerit"
   ],
-  "palet": ["#EAE0C9", "#91A9B0", "#679D78", "#E4CC94", "#A88338", "#D48385", "#6A8149", "#26201A"],
-  "kodla_cizim": "Canvas 2048 px. Gravür çizimi eskisi gibidir: her öğe için biçimi izleyen kılavuz çizgi aileleri, tona göre 0,5 px'den aralığın yaklaşık %85'ine kadar şişen, uçları incelen şerit çizgiler, koyu yerlerde çapraz tarama, parıltıya doğru kısa vuruşlara ve noktalara dönen enlem çizgileri; öndeki öğe arkadakini kâğıt rengiyle örter. Renklendirme ayrı bir 1024 px'lik çarpımlı katmanda yapılır: her yıkama SAHNE yollarından çizilen bir maskedir (kubbe, kasnak, alemler, taş yapı, zikzak bant, saplar ve yapraklar, taç yaprakları, göbekler, gök, güneş, zemin, çerçeve şeridi), çizgiye tam oturmayan elin taklidi olarak 1–3 px kaydırılır, kimi yerde birkaç piksel şişirilir. Gök ve zemin yıkamaları binaların ve bitkilerin çevresinden ayrı bir kaymayla oyulur; bulutlar bulanık bir maskeyle boş bırakılır. Maske bulanıklaştırılıp gürültülü bir eşikle kesilir (tırtıllı kenar); eşiğe yakın yerde yoğunluk artar (kenarda biriken boya); iri ölçekli gürültü, pigment tanesi ve gökte yatay uzatılmış gürültüyle fırça izi yoğunluğu oynatır. Son adımda piksel piksel krem kâğıt, kâğıt dokusu ve levha izi suluboya katmanıyla çarpılır, mürekkep en üste biner.",
-  "etiketler": ["gravür", "elle renklendirme", "suluboya", "kalem tarama", "bakır levha", "baskı resim", "eski kitap", "botanik levha"]
+  "palet": [
+    "#EAE0C9",
+    "#91A9B0",
+    "#679D78",
+    "#E4CC94",
+    "#A88338",
+    "#D48385",
+    "#6A8149",
+    "#26201A"
+  ],
+  "kodla_cizim": "Canvas 2048 px. Gravür çizimi: her öğe için biçimi izleyen kılavuz çizgi aileleri, tona göre 0,5 px'den aralığın yaklaşık %85'ine kadar şişen, uçları incelen şerit çizgiler, koyu yerlerde çapraz tarama, parıltıya doğru kısa vuruşlara ve noktalara dönen enlem çizgileri; öndeki öğe arkadakini kâğıt rengiyle örter. Renklendirme ayrı bir 1024 px'lik çarpımlı katmanda yapılır: her yıkama SAHNE yollarından çizilen bir maskedir (kubbe, kasnak, alemler, taş yapı, zikzak bant, saplar ve yapraklar, taç yaprakları, göbekler, gök, güneş, zemin, çerçeve şeridi). Maske çizgiye tam oturmayan elin taklidi olarak bütün olarak 1–3 px kaydırılır; yaprak, çiçek ve göbeklerde her biçim ayrıca kendi tohumlu kaymasıyla çizilir. Güneş lekesi ve gökteki oyuğu birkaç sinüsle bozulmuş elle çizilmiş çemberlerdir. Maske bulanıklaştırılıp gürültülü bir eşikle kesilir (tırtıllı kenar); eşiğe yakın yerde yoğunluk artar (kenarda biriken boya); iri ve küçük biçimlerde ince ölçekli gürültü, pigment tanesi ve gökte yatay uzatılmış gürültü yoğunluğu oynatır; çiçeklerde her çiçeğe ayrı bir güç ve göbeğe doğru artan yoğunluk verilir. Son adımda piksel piksel krem kâğıt, kâğıt dokusu ve levha izi suluboya katmanıyla çarpılır, mürekkep en üste biner.",
+  "etiketler": [
+    "gravür",
+    "elle renklendirme",
+    "suluboya",
+    "kalem tarama",
+    "bakır levha",
+    "baskı resim",
+    "eski kitap",
+    "botanik levha"
+  ]
 }

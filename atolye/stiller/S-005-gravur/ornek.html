@@ -688,6 +688,7 @@ const LEKE = gurultu(1024, 1024, 30, 61, 9);      // boyanın düzensiz yoğunlu
 const TANE = gurultu(1024, 1024, 4, 62, 1);       // pigment tanesi
 const KENAR = gurultu(1024, 1024, 6, 63, 1.6);    // kenarın tırtılı
 const FIRCA = gurultu(128, 1024, 3, 64, 0.8);     // yatay fırça izleri (x yönünde 8 kat uzatılarak okunur)
+const LEKE2 = gurultu(1024, 1024, 8, 65, 2.2);    // küçük biçimlerde boyanın ince dalgalanması
 const br = SAHNE.rng(5051);
 /**
  * Bir yıkama: ciz(ctx) maskeyi beyazla çizer (ctx zaten dx,dy kadar kaydırılmış: çizgiye tam oturmayan el).
@@ -721,7 +722,8 @@ function yika(ciz, renk, o) {
       const ic = smooth(esik - 0.07, esik + 0.07, bl);
       if (ic <= 0) continue;
       const kenar = 1 - smooth(esik, Math.min(0.995, esik + 0.42), bl); // kenarda biriken boya
-      let d = yog * ic * (1 + kenarK * kenar) * (1 + duz * (LEKE[i] - 0.5) * 2) * (0.9 + 0.2 * TANE[i]);
+      const lk = o.ince ? LEKE[i] * 0.4 + LEKE2[i] * 0.6 : LEKE[i];
+      let d = yog * ic * (1 + kenarK * kenar) * (1 + duz * (lk - 0.5) * 2) * (0.9 + 0.2 * TANE[i]);
       if (o.firca) d *= 1 + o.firca * (FIRCA[y * 128 + (x >> 3)] - 0.5) * 2;
       if (o.yogF) d *= o.yogF(x, y);
       d = d < 0 ? 0 : d > 0.97 ? 0.97 : d;
@@ -729,7 +731,18 @@ function yika(ciz, renk, o) {
     }
   }
 }
+/** Elle çizilmiş, tam yuvarlak olmayan bir çember (fırçanın dolaştığı sınır). */
+const elCemberi = (c, cx, cy, r, f1, f2) => {
+  c.beginPath();
+  for (let a = 0; a <= TAU + 0.001; a += 0.02) {
+    const rr = r + 3.2 * Math.sin(3 * a + f1) + 1.8 * Math.sin(7 * a + f2) + 1.0 * Math.sin(13 * a + f1 * 2);
+    a ? c.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr) : c.moveTo(cx + rr, cy);
+  }
+  c.closePath();
+};
 const dolY = (c, yol, t) => { if (t) { c.lineWidth = t; c.stroke(yol); } c.fill(yol); };
+/** Renklendiricinin eli her biçimde biraz başka yere kayar: biçim başına küçük, tohumlu bir kayma. */
+const kay = (c, f, a) => { const ax = (br() - 0.5) * 2 * (a || 1.6), ay = (br() - 0.5) * 2 * (a || 1.6); c.save(); c.translate(ax, ay); f(); c.restore(); };
 const PAL = { // dönem paleti: Prusya mavisi, bakır yeşili (verdigris), sarı aşı boyası / gamboj, gül kökü, özsu yeşili, toprak
   gok: [112, 166, 214], gunes: [244, 204, 92], yesil: [54, 150, 112], yesilKoyu: [40, 118, 96],
   altin: [222, 168, 52], tas: [236, 204, 154], kiremit: [204, 104, 82], toprak: [214, 172, 108],
@@ -756,11 +769,11 @@ const PAL = { // dönem paleti: Prusya mavisi, bakır yeşili (verdigris), sarı
     c.globalCompositeOperation = 'destination-out';
     c.save(); c.translate(-2.5, 1.5); dolY(c, binaYol, 1.5); c.restore();
     c.save(); c.translate(1, -1); dolY(c, bitkiYol, 2); c.restore();
-    c.beginPath(); c.arc(SAHNE.gunes.x - 1, SAHNE.gunes.y + 1, 123, 0, TAU); c.fill();
+    elCemberi(c, SAHNE.gunes.x - 1, SAHNE.gunes.y + 1, 123, 1.3, 7.1); c.fill();
   }, PAL.gok, { dx: 1, dy: 0, yogunluk: 0.64, kenar: 0.35, duzensiz: 0.2, firca: 0.18, yayil: 2.4,
     yogF: (x, y) => (0.42 + 0.58 * Math.pow(clamp(1 - (y - 40) / 760), 1.2)) * (1 - 0.88 * BUL[(y * 1024 + x) * 4 + 3] / 255) });
   // 2) güneş: sarı aşı boyasıyla yuvarlak bir leke
-  yika((c) => { c.beginPath(); c.arc(SAHNE.gunes.x, SAHNE.gunes.y, 120, 0, TAU); c.fill(); }, PAL.gunes,
+  yika((c) => { elCemberi(c, SAHNE.gunes.x, SAHNE.gunes.y, 120, 4.6, 2.3); c.fill(); }, PAL.gunes,
     { dx: -2, dy: 2, yogunluk: 0.5, kenar: 0.5, yayil: 2.5, kutu: [740, 0, 1024, 290], yogF: (x, y) => 1 - 0.45 * clamp(Math.hypot(x - 880, y - 140) / 120) });
   // 3) minare ve kaide: açık, sıcak taş; zikzak bandında kiremit kırmızısı
   yika((c) => { dolY(c, minareYol); c.fill(P(Y.kaide)); c.fill(P(Y.kornis)); }, PAL.tas, { dx: -1.5, dy: 1, yogunluk: 0.42, kenar: 0.5, duzensiz: 0.3, kutu: [230, 130, 850, 810] });
@@ -774,7 +787,7 @@ const PAL = { // dönem paleti: Prusya mavisi, bakır yeşili (verdigris), sarı
     c.beginPath(); c.moveTo(340, 560); c.lineTo(340, 300);
     for (let y = 300; y <= 560; y += 10) c.lineTo(560 - kubbeR(Math.min(555, Math.max(301, y))) * (0.12 + 0.05 * Math.sin(y * 0.03)), y);
     c.closePath(); c.fill(); c.restore();
-  }, PAL.yesilKoyu, { dx: 1, dy: 0, yogunluk: 0.34, kenar: 0.2, yayil: 6, kutu: [340, 280, 780, 570] });
+  }, PAL.yesilKoyu, { dx: 1, dy: 0, yogunluk: 0.3, kenar: 0.75, yayil: 2.6, duzensiz: 0.3, kutu: [340, 280, 780, 570] });
   // 5) alemler: altın
   yika((c) => { for (const d of Y.alem.concat(Y.minareAlem)) dolY(c, P(d), 1.4); }, PAL.altin, { dx: 0.8, dy: -0.6, yogunluk: 0.85, kenar: 0.25, yayil: 0.7, kutu: [270, 70, 590, 320] });
   // 6) zemin: toprak tonu, bitkilerin çevresinden dolaşır
@@ -787,17 +800,24 @@ const PAL = { // dönem paleti: Prusya mavisi, bakır yeşili (verdigris), sarı
   // 7) saplar ve yapraklar: özsu yeşili; öndeki iri yapraklara koyu bir kat
   // (çiçeklerin örttüğü yere boya sürülmez: renklendirici çiçeğin çevresinden dolaşır)
   const cicekDis = (c, dx, dy) => { c.globalCompositeOperation = 'destination-out'; c.save(); c.translate(dx, dy); c.fill(cicekYol); c.restore(); };
-  yika((c) => { c.lineWidth = 3.4; for (const st of B.saplar) { c.beginPath(); st.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); } B.yapraklar.forEach((yp) => dolY(c, P(SAHNE.yaprakYolu(yp)), 1.2)); cicekDis(c, -2.2, -0.8); },
-    PAL.yaprak, { dx: 1.6, dy: 1.2, yogunluk: 0.72, kenar: 0.4, yayil: 1.3, kutu: [0, 500, 1024, 1024] });
-  yika((c) => { B.yapraklar.forEach((yp, i) => { if (i >= 36 && (i % 3)) c.fill(P(SAHNE.yaprakYolu(yp))); }); cicekDis(c, 1.2, -0.8); },
-    PAL.yaprakKoyu, { dx: -1.2, dy: 0.8, yogunluk: 0.4, kenar: 0.5, yayil: 1.5, kutu: [0, 780, 1024, 1024] });
+  yika((c) => { c.lineWidth = 3.4; for (const st of B.saplar) { c.beginPath(); st.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); } B.yapraklar.forEach((yp) => kay(c, () => dolY(c, P(SAHNE.yaprakYolu(yp)), 0.6 + br() * 1.6), 1.8)); cicekDis(c, -2.2, -0.8); },
+    PAL.yaprak, { dx: 1.0, dy: 1.0, yogunluk: 0.72, kenar: 0.6, yayil: 1.4, ince: true, duzensiz: 0.3, kutu: [0, 500, 1024, 1024] });
+  yika((c) => { B.yapraklar.forEach((yp, i) => { if (i >= 36 && (i % 3)) kay(c, () => c.fill(P(SAHNE.yaprakYolu(yp))), 2); }); cicekDis(c, 1.2, -0.8); },
+    PAL.yaprakKoyu, { dx: -1.0, dy: 0.8, yogunluk: 0.4, kenar: 0.7, yayil: 1.5, ince: true, kutu: [0, 780, 1024, 1024] });
   // 8) tomurcuklar ve çiçekler: gül kökü kırmızısı (iki sulandırma), göbekler gamboj sarısı
   const cs = B.cicekler;
-  yika((c) => { cs.forEach((ck, i) => { if (i % 3 !== 1) c.fill(P(SAHNE.tacYapraklari(ck).map(SAHNE.elipsYolu).join(' '))); }); for (const t of B.tomurcuklar) c.fill(P(SAHNE.tomurcukYolu(t))); },
-    PAL.gul, { dx: 1.8, dy: -1.4, yogunluk: 0.62, kenar: 0.55, duzensiz: 0.3, yayil: 1.6, kutu: [0, 500, 1024, 1024] });
-  yika((c) => { cs.forEach((ck, i) => { if (i % 3 === 1) c.fill(P(SAHNE.tacYapraklari(ck).map(SAHNE.elipsYolu).join(' '))); }); },
-    PAL.gulAcik, { dx: -1.5, dy: 1.6, yogunluk: 0.6, kenar: 0.55, duzensiz: 0.3, yayil: 1.6, kutu: [0, 500, 1024, 1024] });
-  yika((c) => { for (const ck of cs) { c.beginPath(); c.arc(ck.x, ck.y, ck.r * 0.3, 0, TAU); c.fill(); } },
+  // her çiçeğe biraz başka bir sulandırma; boya taç yaprağının dibinde, göbeğe doğru koyulaşır
+  const guc = cs.map(() => 0.82 + br() * 0.36);
+  const cicekYog = (sec) => (x, y) => {
+    let en = 9, k = -1;
+    for (let i = 0; i < cs.length; i++) { if (!sec(i)) continue; const q = Math.hypot(x - cs[i].x, y - cs[i].y) / cs[i].r; if (q < en) { en = q; k = i; } }
+    return k < 0 || en > 1.2 ? 1 : guc[k] * (0.82 + 0.5 * (1 - smooth(0.25, 0.8, en)));
+  };
+  yika((c) => { cs.forEach((ck, i) => { if (i % 3 !== 1) kay(c, () => c.fill(P(SAHNE.tacYapraklari(ck).map(SAHNE.elipsYolu).join(' '))), 2.2); }); for (const t of B.tomurcuklar) kay(c, () => c.fill(P(SAHNE.tomurcukYolu(t))), 1.5); },
+    PAL.gul, { dx: 1.0, dy: -0.8, yogunluk: 0.58, kenar: 0.8, duzensiz: 0.32, yayil: 1.8, ince: true, yogF: cicekYog((i) => i % 3 !== 1), kutu: [0, 500, 1024, 1024] });
+  yika((c) => { cs.forEach((ck, i) => { if (i % 3 === 1) kay(c, () => c.fill(P(SAHNE.tacYapraklari(ck).map(SAHNE.elipsYolu).join(' '))), 2.2); }); },
+    PAL.gulAcik, { dx: -0.8, dy: 1.0, yogunluk: 0.56, kenar: 0.8, duzensiz: 0.32, yayil: 1.8, ince: true, yogF: cicekYog((i) => i % 3 === 1), kutu: [0, 500, 1024, 1024] });
+  yika((c) => { for (const ck of cs) kay(c, () => { c.beginPath(); c.arc(ck.x, ck.y, ck.r * (0.27 + br() * 0.07), 0, TAU); c.fill(); }, 1.6); },
     PAL.gobek, { dx: 0.8, dy: 0.8, yogunluk: 0.8, kenar: 0.3, yayil: 1, kutu: [0, 500, 1024, 1024] });
   // 9) çerçeve: iki çizgi arasında açık bakır yeşili bir şerit
   yika((c) => { c.lineWidth = 6.2; c.strokeRect(CER.x1 - 3.6, CER.y1 - 3.6, CER.x2 - CER.x1 + 7.2, CER.y2 - CER.y1 + 7.2); },

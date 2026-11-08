@@ -314,7 +314,7 @@
   // ------------------------------------------------------------ kaide: açık sogaya boyanmış taş blokları, krem mum derzleri
   {
     const Kd = SAHNE.kaide;
-    doldur(Y.kaide, K.tas);
+    doldur(Y.kaide, '#D8B97F');
     g.save(); g.clip(yol(Y.kaide));
     g.fillStyle = K.tasKoyu; g.fillRect(300, 704, 74, 96);
     g.fillStyle = K.sogaAcik; g.fillRect(300, 704, 20, 96);
@@ -322,10 +322,10 @@
     // taş sıraları: krem derzler, her blokta cecek
     let sira = 0;
     for (let y = 720; y < 800; y += 15.5, sira++) {
-      cizgi(300, y, 820, y, K.krem, 1.5);
+      cizgi(300, y, 820, y, K.krem, 2.5);
       for (let x = 300 + (sira % 2 ? 24 : 5); x < 820; x += 38) {
-        cizgi(x, y, x, y + 15.5, K.krem, 1.5);
-        cecek(x + 19, y + 7.7, 1.25, K.krem); cecek(x + 13, y + 7.7, 0.8, K.krem); cecek(x + 25, y + 7.7, 0.8, K.krem);
+        cizgi(x, y, x, y + 15.5, K.krem, 2.5);
+        cecek(x + 19, y + 7.7, 1.8, K.krem); cecek(x + 12, y + 7.7, 1.2, K.krem); cecek(x + 26, y + 7.7, 1.2, K.krem);
       }
     }
     g.restore();

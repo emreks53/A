@@ -149,16 +149,16 @@
     for (const p of PUF) {
       const dx = x - p.x, dy = (y - p.y) * 1.12;
       if (dx > p.r * 1.25 || dx < -p.r * 1.25 || dy > p.r * 1.25 || dy < -p.r * 1.25 || y > p.yb + 18) continue;
-      if (gz < 0) gz = fbm(nA, x / 13, y / 11, 4);
-      const d = Math.sqrt(dx * dx + dy * dy) + (gz - 0.5) * p.r * 0.5;
+      if (gz < 0) gz = fbm(nA, x / 30, y / 24, 3);
+      const d = Math.sqrt(dx * dx + dy * dy) + (gz - 0.5) * p.r * 0.36;
       if (d >= p.r) continue;
-      const taban = sstep(p.yb + 10 + (gz - 0.5) * 16, p.yb - 14, y);
+      const taban = sstep(p.yb + 12 + (gz - 0.5) * 34, p.yb - 16, y);
       const hh = p.r * Math.sqrt(1 - (d / p.r) * (d / p.r)) * taban;
       if (hh > H) H = hh;
     }
     CH0[y * W + x] = H;
   }
-  const CHB = bulanik3(CH0, W, BH, 1);
+  const CHB = bulanik3(CH0, W, BH, 2);
   const chb = (x, y) => {
     x = clamp(x, 0, W - 1.001); y = clamp(y, 0, BH - 1.001);
     const xi = x | 0, yi = y | 0, fx = x - xi, fy = y - yi, i = yi * W + xi;
@@ -185,7 +185,7 @@
   function gokRenk(x, y) {
     const dd = Math.hypot(x - 880, y - 140);
     const t = clamp(y / 790, 0, 1) + (fbm(nC, x / 170, y / 110, 3) - 0.5) * 0.06 + 0.12 * Math.exp(-(dd * dd) / (2 * 320 * 320));
-    let c = rampa([[0, [0.12, 0.22, 0.42]], [0.26, [0.22, 0.38, 0.6]], [0.52, [0.48, 0.6, 0.7]], [0.78, [0.82, 0.8, 0.7]], [1, [0.97, 0.88, 0.66]]], t);
+    let c = rampa([[0, [0.12, 0.22, 0.42]], [0.26, [0.22, 0.38, 0.6]], [0.52, [0.52, 0.6, 0.66]], [0.78, [0.82, 0.8, 0.7]], [1, [0.97, 0.88, 0.66]]], t);
     c = mixc(c, [1.0, 0.94, 0.74], 0.85 * Math.exp(-(dd * dd) / (2 * 150 * 150)));
     c = mixc(c, [0.98, 0.9, 0.68], 0.5 * Math.exp(-(dd * dd) / (2 * 380 * 380)));
     c = mixc(c, [1.0, 0.99, 0.93], sstep(48, 24, dd));
@@ -206,13 +206,13 @@
         const l2 = Math.hypot(lx, ly) || 1;
         let acc = 0; for (let j = 1; j <= 6; j++) acc += Math.max(0, chb(x + (lx / l2) * j * 9, y + (ly / l2) * j * 9) - h - j * 3);
         const T = Math.exp(-acc * 0.025);
-        const lit = clamp(lam * (0.35 + 0.65 * T) * 1.12, 0, 1);
         const yakin = Math.exp(-(dd * dd) / (2 * 430 * 430));
-        const litC = mixc([0.98, 0.93, 0.82], [1.0, 0.97, 0.87], yakin);
-        let shC = mixc(c, [0.5, 0.48, 0.54], 0.62);
+        const lit = clamp(lam * (0.35 + 0.65 * T) * 1.12, 0, 1) * (1 - 0.42 * yakin * sstep(1, 10, h)); // güneşe yakın bulut ters ışıkta
+        const litC = mixc([1.0, 0.96, 0.88], [1.0, 0.98, 0.9], yakin);
+        let shC = mixc(c, mixc([0.54, 0.53, 0.6], [0.62, 0.55, 0.5], yakin), 0.6);
         shC = mixc(shC, [0.8, 0.64, 0.48], 0.3 * sstep(0.1, 0.7, ny)); // alttan yansıyan sıcak ışık
         let cc = mixc(shC, litC, Math.pow(lit, 0.9));
-        cc = mixc(cc, [1.0, 0.98, 0.9], 0.5 * (1 - al) * sstep(0.3, 0.9, lam) * (0.4 + yakin)); // ışıklı kenar
+        cc = mixc(cc, [1.0, 0.98, 0.9], 0.7 * sstep(9, 1, h) * sstep(0.2, 0.8, lam) * (0.3 + yakin)); // ışıklı kenar
         c = mixc(c, cc, al);
       }
     }
@@ -272,9 +272,9 @@
       gol = 1 - V;
     } else if (b === KASNAK) {
       const ust = y < 610;
-      let V = silindirIsik(x, 560, ust ? 208 : 226) * (ust ? 1.0 : 1.1);
+      let V = silindirIsik(x, 560, ust ? 208 : 226) * (ust ? 1.12 : 1.1);
       V = 0.13 + 0.87 * V;
-      if (ust && y < 574) V *= 0.6 + 0.4 * sstep(555, 574, y);
+      if (ust && y < 574) V *= 0.68 + 0.32 * sstep(555, 574, y);
       if (!ust && y < 613.5) V = Math.min(1, V * 1.25 + 0.06);
       else if (!ust && y < 628) V *= 0.6 + 0.4 * sstep(613, 628, y);
       if (y > 682) V *= 0.86;
@@ -356,7 +356,9 @@
   const SINIF_B = new Uint8Array(ADLAR.length);
   SINIF_B[GOK] = 1; SINIF_B[GUNES] = 1; SINIF_B[KUBBE] = 2; SINIF_B[KASNAK] = 3; SINIF_B[KAIDE] = 4; SINIF_B[MINARE] = 5; SINIF_B[ZEMIN] = 6;
   for (let py = 0; py < W; py++) for (let px = 0; px < W; px++) {
-    const i = py * W + px, j = 2 * py * W2 + 2 * px;
+    // elle çizilmiş kenar: bölge haritası yarım piksel kadar oynatılarak okunur
+    const ox = Math.round((nE(px / 9, py / 9) - 0.5) * 2.4), oy = Math.round((nE(px / 9 + 40, py / 9 + 40) - 0.5) * 2.4);
+    const i = py * W + px, j = clamp(2 * py + oy, 0, W2 - 2) * W2 + clamp(2 * px + ox, 0, W2 - 2);
     const b0 = BOL2[j], b1 = BOL2[j + 1], b2 = BOL2[j + W2], b3 = BOL2[j + W2 + 1];
     if (b0 === b1 && b0 === b2 && b0 === b3) {
       boya(b0, px + 0.5, py + 0.5);
@@ -377,6 +379,11 @@
     const L2 = [0.75, -0.66];
     const rgb = (a, k, al) => `rgba(${Math.round(clamp(a[0] * (k || 1), 0, 1) * 255)},${Math.round(clamp(a[1] * (k || 1), 0, 1) * 255)},${Math.round(clamp(a[2] * (k || 1), 0, 1) * 255)},${al === undefined ? 1 : al})`;
     g.lineCap = 'round'; g.lineJoin = 'round';
+    /** Yumuşak düşen gölge (tuval dışına çizilen biçimin gölgesi içeri kaydırılır; filtreden çok daha hızlı). */
+    function golge(yol, renk, bl, ox, oy) {
+      g.save(); g.shadowColor = renk; g.shadowBlur = bl * 4; g.shadowOffsetX = (ox + 4000) * 2; g.shadowOffsetY = oy * 2;
+      g.translate(-4000, 0); g.fillStyle = '#000'; g.fill(yol); g.restore();
+    }
     for (const s of B.saplar) {
       const hv = havuz(s[12][0], s[12][1]);
       g.strokeStyle = rgb([0.1, 0.11, 0.04], hv * 1.2); g.lineWidth = 3.8; g.stroke(new Path2D(SAHNE.yol(s)));
@@ -384,7 +391,7 @@
       g.save(); g.translate(0.9, -0.4); g.stroke(new Path2D(SAHNE.yol(s))); g.restore();
     }
     for (const y of B.yapraklar) {
-      const hv = havuz(y.x, y.y) * (0.72 + Rc() * 0.75);
+      const hv = havuz(y.x, y.y) * (0.85 + Rc() * 0.95);
       const yol = new Path2D(SAHNE.yaprakYolu(y));
       const L = y.uzunluk, ca = Math.cos(y.aci), sa = Math.sin(y.aci);
       const nx = -sa, ny = ca, isik = nx * L2[0] + ny * L2[1];
@@ -393,7 +400,7 @@
       const s1 = isik > 0 ? kz : ac, s2 = isik > 0 ? ac : kz;
       const gr = g.createLinearGradient(mx - nx * wd, my - ny * wd, mx + nx * wd, my + ny * wd);
       gr.addColorStop(0, rgb(s1, hv)); gr.addColorStop(0.5, rgb(or, hv)); gr.addColorStop(1, rgb(s2, hv * (0.7 + Math.abs(isik) * 0.5)));
-      g.save(); g.filter = 'blur(5px)'; g.fillStyle = 'rgba(12,7,2,0.45)'; g.translate(-4, 6); g.fill(yol); g.restore();
+      golge(yol, 'rgba(12,7,2,0.45)', 5, -4, 6);
       g.fillStyle = gr; g.fill(yol);
       const gl = g.createLinearGradient(y.x, y.y, y.x + ca * L, y.y + sa * L);
       gl.addColorStop(0, 'rgba(14,9,3,0.5)'); gl.addColorStop(0.45, 'rgba(14,9,3,0)'); gl.addColorStop(1, 'rgba(14,9,3,0.25)');
@@ -431,8 +438,7 @@
     for (const cc of B.cicekler) {
       MERKEZ.push(cc);
       const hv = Math.min(1.18, havuz(cc.x, cc.y) * 1.6), r = cc.r;
-      g.save(); g.filter = `blur(${Math.max(3, r * 0.25)}px)`; g.fillStyle = 'rgba(8,4,1,0.55)';
-      g.beginPath(); g.ellipse(cc.x - r * 0.25, cc.y + r * 0.32, r * 1.05, r * 0.95, 0, 0, Math.PI * 2); g.fill(); g.restore();
+      { const el = new Path2D(); el.ellipse(cc.x - r * 0.25, cc.y + r * 0.32, r * 1.05, r * 0.95, 0, 0, Math.PI * 2); golge(el, 'rgba(8,4,1,0.55)', Math.max(3, r * 0.25), 0, 0); }
       const tp = [];
       for (let k = 0; k < 5; k++) {
         const a = cc.aci + (k * Math.PI * 2) / 5 + (Rc() - 0.5) * 0.12;
@@ -443,7 +449,7 @@
         const yol = new Path2D(tacYolu(cc, e.a, e.w, e.L));
         gmk.fill(yol);
         const ca = Math.cos(e.a), sa = Math.sin(e.a), k = 0.7 + 0.3 * (e.yon + 1) / 2;
-        g.save(); g.filter = 'blur(2.5px)'; g.fillStyle = 'rgba(20,10,4,0.32)'; g.translate(-2, 3); g.fill(yol); g.restore();
+        golge(yol, 'rgba(20,10,4,0.32)', 2.5, -2, 3);
         const ox = cc.x + ca * r * 0.72 + L2[0] * r * 0.12, oy = cc.y + sa * r * 0.72 + L2[1] * r * 0.12;
         const gr = g.createRadialGradient(ox, oy, r * 0.03, cc.x + ca * r * 0.5, cc.y + sa * r * 0.5, r * 0.75);
         gr.addColorStop(0, rgb([1.0, 0.98, 0.92], hv * k)); gr.addColorStop(0.4, rgb([0.93, 0.9, 0.82], hv * k));
@@ -604,7 +610,9 @@
     const r2 = [bulanik3(CR, W, W, 3), bulanik3(CG, W, W, 3), bulanik3(CB, W, W, 3)];
     const gb = bulanik3(GOLGE, W, W, 2);
     for (let i = 0; i < N; i++) {
-      const k = sstep(0.38, 0.95, gb[i]) * 0.72;
+      let k = sstep(0.38, 0.95, gb[i]) * 0.72;
+      // ışık karanlığa sızmaz (hale olmasın); karanlık ışığın kenarını yumuşakça yer
+      if (r2[0][i] + r2[1][i] > CR[i] + CG[i]) k *= 0.3;
       CR[i] += (r2[0][i] - CR[i]) * k; CG[i] += (r2[1][i] - CG[i]) * k; CB[i] += (r2[2][i] - CB[i]) * k;
     }
   }
@@ -618,22 +626,26 @@
     for (let py = 0; py < W; py++) for (let px = 0; px < W; px++) {
       const wx = px * ax + (nC(px / 17 + tohum, py / 17) - 0.5) * hucre * 0.6 + hucre, wy = py * ay + (nD(px / 17, py / 17 + tohum) - 0.5) * hucre * 0.6 + hucre;
       const gx = Math.floor(wx / hucre), gy = Math.floor(wy / hucre);
-      let f1 = 1e9, f2 = 1e9, q1 = 0;
+      let f1 = 1e9, f2 = 1e9, q1 = 0, q2 = 0;
       for (let j = gy - 1; j <= gy + 1; j++) for (let k = gx - 1; k <= gx + 1; k++) {
         if (j < 0 || k < 0 || j >= M || k >= M) continue;
         const q = j * M + k, dx = PX[q] - wx, dy = PY[q] - wy, d = dx * dx + dy * dy;
-        if (d < f1) { f2 = f1; f1 = d; q1 = q; } else if (d < f2) f2 = d;
+        if (d < f1) { f2 = f1; q2 = q1; f1 = d; q1 = q; } else if (d < f2) { f2 = d; q2 = q; }
       }
+      // her çatlak kenarının kendi gücü var: kimi derin, kimi neredeyse görünmez
+      const qa = Math.min(q1, q2), qb = Math.max(q1, q2);
+      let hs = Math.imul(qa * 73856093 ^ qb * 19349663 ^ tohum * 83492791, 0x9e3779b1); hs ^= hs >>> 15; hs = Math.imul(hs, 0x85ebca6b); hs ^= hs >>> 13;
+      const kg = sstep(0.18, 0.75, (hs >>> 0) / 4294967296);
       const e = (Math.sqrt(f2) - Math.sqrt(f1)) * 0.5, i = py * W + px;
       const yog = sstep(0.25, 0.7, fbm(nC, px / 160 + tohum * 3, py / 160, 2));
       const gg = gen * (0.6 + 0.8 * nD(px / 36 + tohum, py / 36));
-      CAT[i] = Math.max(CAT[i], guc * (0.12 + 0.88 * yog) * (1 - sstep(gg * 0.3, gg, e)));
+      CAT[i] = Math.max(CAT[i], guc * kg * (0.15 + 0.85 * yog) * (1 - sstep(gg * 0.3, gg, e)));
       const vx = wx - PX[q1], vy = wy - PY[q1], vl = Math.hypot(vx, vy) || 1;
       CUP[i] += ((vx * 0.7 - vy * 0.7) / vl) * sstep(hucre * 0.35, 0, e) * 0.03 * guc;
     }
   }
-  krakle(12, 0.55, 1.0, 71, 0.9, 1.06);
-  krakle(5, 0.42, 0.3, 72, 1.0, 1.0);
+  krakle(13, 0.6, 1.0, 71, 0.9, 1.06);
+  krakle(6, 0.4, 0.22, 72, 1.0, 1.0);
 
   // ------------------------------------------------------------ sararmış vernik, kir, bez dokusu, çatlaklar, son ton
   {
@@ -648,7 +660,7 @@
       // vernik: maviyi yeşile, beyazı bal rengine çeker; kenar ve altta daha kalın, eşitsiz
       const ex = Math.min(x, W - x, y, W - y);
       const kal = 0.1 * (1 - sstep(0, 230, ex)) + 0.05 * sstep(600, 1024, y) + 0.06 * (fbm(nE, x / 150, y / 150, 3) - 0.5);
-      r = r * (0.99 - kal * 0.2) + 0.028; g = g * (0.92 - kal * 0.3) + 0.017; b = b * (0.7 - kal * 0.45) + 0.005;
+      r = r * (1.0 - kal * 0.2) + 0.03; g = g * (0.9 - kal * 0.3) + 0.017; b = b * (0.7 - kal * 0.45) + 0.005;
       // kir ve kararmış tuval kenarı
       const kir = 0.8 + 0.2 * sstep(0, 170, ex) - 0.07 * (fbm(nB, x / 110, y / 110, 3) - 0.5) - 0.12 * sstep(10, 0, ex);
       r *= kir; g *= kir * 0.985; b *= kir * 0.95;
@@ -657,7 +669,7 @@
       const dok = 1 + (0.022 * orgu + 0.02 * (nA(x * 0.8, y * 0.8) - 0.5)) * (0.4 + 0.6 * sstep(0.1, 0.5, lum));
       // çatlaklar: açıkta koyu, koyuda hafif açık çizgi; hücre kenarları kalkık
       const cat = CAT[i];
-      const cg = 1 - 0.2 * cat * sstep(0.05, 0.4, lum) + 0.06 * cat * sstep(0.14, 0.03, lum);
+      const cg = 1 - 0.2 * cat * sstep(0.05, 0.4, lum) + 0.03 * cat * sstep(0.14, 0.03, lum);
       const k = dok * cg * (1 + CUP[i] * sstep(0.03, 0.3, lum));
       d[i * 4] = ton(r * k) * 255; d[i * 4 + 1] = ton(g * k) * 255; d[i * 4 + 2] = ton(b * k) * 255; d[i * 4 + 3] = 255;
     }
