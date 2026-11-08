@@ -12,10 +12,10 @@
 <canvas id="tuval"></canvas>
 <script src="../../sahne/sahne.js"></script>
 <script>
-// S-074 Kolagraf — dokulu malzemelerin yapıştırılmasıyla kurulmuş levhadan çukur baskı. Gökte kumaş örgüsü,
-// bulutlarda yırtık ipek kâğıdı, kubbede soyulmuş oluklu karton ve gölge yanında karborundum, kasnakta
+// S-074 Kolagraf — dokulu malzemelerin yapıştırılmasıyla kurulmuş levhadan çukur baskı, açık ve taze renklerle.
+// Gökte kumaş örgüsü, bulutlarda ipek kâğıdı, kubbede oluklu karton ve gölge yanında ince karborundum, kasnakta
 // zımpara, kaidede fırçalanmış macun, gerçek yapraklardan damar izleri, ip saplar, tutkal çizgileri;
-// keskin kesim kenarlarında biriken mürekkep, derin kabartma gölgeleri ve kalın levhanın izi.
+// ince mürekkeplenmiş, bolca silinmiş levha, beyaz kâğıtta kabartma ve dar levha izi.
 // Ortak sahne ve yardımcılar: ../../sahne/SAHNE.md
 
 'use strict';
@@ -189,7 +189,7 @@ const ctx = tuval.getContext('2d');
 const Y = SAHNE.yollar();
 const BT = SAHNE.bitki;
 const rnd = SAHNE.rng(7404);
-const PL = { x1: 54, y1: 48, x2: 970, y2: 976, r: 9 };
+const PL = { x1: 24, y1: 24, x2: 1000, y2: 1000, r: 7 };
 const IMAX = 2.6, HMAX = 2.6;
 
 // malzeme maskeleri: 3 tuvalin R, G, B kanallarında 9 yuva (öndeki biçim arkadakileri siler)
@@ -198,7 +198,7 @@ const MT = [0, 1, 2].map(() => { const [c, x] = yeniKatman(); x.fillStyle = '#00
 const [renkC, RX] = yeniKatman(); // mürekkep rengi (tampon)
 const [ihC, IH] = yeniKatman(); // R: mürekkep miktarı, G: levha yüksekliği
 const [tutC, TX] = yeniKatman(); // tutkal / ip (eklenen yükseklik)
-RX.fillStyle = '#6E6A60'; RX.fillRect(0, 0, 1024, 1024);
+RX.fillStyle = '#B9C4C8'; RX.fillRect(0, 0, 1024, 1024);
 IH.fillStyle = '#000'; IH.fillRect(0, 0, 1024, 1024);
 TX.globalCompositeOperation = 'lighter'; TX.lineCap = 'round'; TX.lineJoin = 'round';
 const KAN = ['rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)'];
@@ -229,13 +229,13 @@ for (const x of [...MT.map((m) => m.x), RX, IH, TX]) { x.save(); x.beginPath(); 
 // ------------------------------------------------------------------ gök: kumaş (çuval bezi), güneş: kesik karton + tutkal halkaları
 {
   const gok = 'M0,0 H1024 V800 H0 Z';
-  parca(gok, 'kumas', null, [0, 40, 0, 800, 1.35, 0.55], 0.7);
-  const g = RX.createLinearGradient(0, 40, 0, 800);
-  g.addColorStop(0, '#2B5A97'); g.addColorStop(0.5, '#4F83BA'); g.addColorStop(0.85, '#87A9C4'); g.addColorStop(1, '#B5B7A6');
+  parca(gok, 'kumas', null, [0, 20, 0, 800, 0.95, 0.42], 0.7);
+  const g = RX.createLinearGradient(0, 20, 0, 800);
+  g.addColorStop(0, '#5E9EDB'); g.addColorStop(0.5, '#86BBE6'); g.addColorStop(0.85, '#B2D5EC'); g.addColorStop(1, '#E0ECEE');
   RX.fillStyle = g; RX.fill(P2(gok));
   // güneş yöresi tamponla açılır ve ılık sarıya döner
-  const gr = RX.createRadialGradient(880, 140, 30, 880, 140, 250);
-  gr.addColorStop(0, 'rgba(222,168,70,1)'); gr.addColorStop(0.35, 'rgba(210,172,108,0.6)'); gr.addColorStop(1, 'rgba(206,170,110,0)');
+  const gr = RX.createRadialGradient(880, 140, 30, 880, 140, 235);
+  gr.addColorStop(0, 'rgba(252,214,128,1)'); gr.addColorStop(0.4, 'rgba(250,226,172,0.7)'); gr.addColorStop(1, 'rgba(246,230,196,0)');
   RX.fillStyle = gr; RX.fill(P2(gok));
   const gi = IH.createRadialGradient(880, 140, 40, 880, 140, 280);
   gi.addColorStop(0, 'rgba(0,0,0,0.7)'); gi.addColorStop(1, 'rgba(0,0,0,0)');
@@ -245,7 +245,7 @@ for (const x of [...MT.map((m) => m.x), RX, IH, TX]) { x.save(); x.beginPath(); 
   const gm = IH.createRadialGradient(880, 140, 40, 880, 140, 280);
   gm.addColorStop(0, 'rgb(90,255,255)'); gm.addColorStop(1, 'rgb(255,255,255)');
   IH.fillStyle = gm; IH.fill(P2(gok)); IH.restore();
-  parca(SAHNE.daireYolu(880, 140, 46), 'karton', '#E2AE3A', 0.42, 1.55);
+  parca(SAHNE.daireYolu(880, 140, 46), 'karton', '#F2C24A', 0.55, 1.55);
   for (const r of [58, 71, 85]) tutkal(SAHNE.daireYolu(880, 140, r), 3.4, 0.9);
 }
 // zemin: tutkala serpilmiş kum; üst kenarı düzensiz, birkaç tane kenarın dışına sıçramış
@@ -260,10 +260,10 @@ const ZEMIN = (() => {
   for (let i = 0; i < 70; i++) { const x = rz() * 1024, y = 784 + rz() * 12, r = 0.7 + rz() * 1.3; p.moveTo(x + r, y); p.arc(x, y, r, 0, TAU); }
   return p;
 })();
-parca(ZEMIN, 'kum', null, [0, 790, 0, 1024, 0.62, 1.05], 0.5);
-{ const g = RX.createLinearGradient(0, 785, 0, 1024); g.addColorStop(0, '#B88E58'); g.addColorStop(1, '#996740'); RX.fillStyle = g; RX.fill(ZEMIN); }
+parca(ZEMIN, 'kum', null, [0, 790, 0, 1024, 0.42, 0.66], 0.5);
+{ const g = RX.createLinearGradient(0, 785, 0, 1024); g.addColorStop(0, '#E6C48E'); g.addColorStop(1, '#D9A86C'); RX.fillStyle = g; RX.fill(ZEMIN); }
 // yapının sola düşen gölgesi: zeminde daha yoğun mürekkep
-{ IH.save(); IH.globalCompositeOperation = 'lighter'; const g = IH.createLinearGradient(0, 800, 0, 846); g.addColorStop(0, 'rgb(70,0,0)'); g.addColorStop(1, 'rgb(0,0,0)'); IH.fillStyle = g; IH.fill(P2('M300,800 L110,828 L300,846 L820,846 L820,800 Z')); IH.restore(); }
+{ IH.save(); IH.globalCompositeOperation = 'lighter'; const g = IH.createLinearGradient(0, 800, 0, 846); g.addColorStop(0, 'rgb(34,0,0)'); g.addColorStop(1, 'rgb(0,0,0)'); IH.fillStyle = g; IH.fill(P2('M300,800 L110,828 L300,846 L820,846 L820,800 Z')); IH.restore(); }
 // bulutlar: yırtık ipek kâğıdı
 {
   const rb = SAHNE.rng(31);
@@ -279,7 +279,7 @@ parca(ZEMIN, 'kum', null, [0, 790, 0, 1024, 0.62, 1.05], 0.5);
       const yir = 1 + (rb() - 0.5) * 0.12 + 0.05 * Math.sin(a * 23 + bx);
       pts.push([bx + Math.cos(a) * rx * yir, by + Math.sin(a) * ry * dal * yir]);
     }
-    parca(poly(pts, true), 'ipek', '#A7B9CB', 0.42, 0.95);
+    parca(poly(pts, true), 'ipek', '#C9D9E8', 0.2, 0.95);
   }
 }
 // ------------------------------------------------------------------ minare: karton parçaları, tutkal zikzak ve korkuluk
@@ -293,46 +293,46 @@ parca(ZEMIN, 'kum', null, [0, 790, 0, 1024, 0.62, 1.05], 0.5);
     else if (p.tip === 'topuz') { d = p.yol; x1 = 266; x2 = 334; }
     else { d = SAHNE.yol([[p.x1, p.y1], [p.x2, p.y1], [p.x2, p.y2], [p.x1, p.y2]], true); x1 = p.x1; x2 = p.x2; }
     const cik = p.ad.startsWith('çıkma');
-    parca(d, cik || p.tip === 'korkuluk' ? 'karton' : 'ipek', cik ? '#8E8272' : '#A69A86', [x1, 0, x2, 0, cik ? 1.0 : 0.55, cik ? 0.55 : 0.16], (say++ % 2 ? 1.05 : 1.25) + (p.ad.startsWith('şerefe') ? 0.25 : 0));
+    parca(d, cik || p.tip === 'korkuluk' ? 'karton' : 'ipek', cik ? '#BCAE98' : '#CDC2AE', [x1, 0, x2, 0, cik ? 0.75 : 0.42, cik ? 0.35 : 0.08], (say++ % 2 ? 1.05 : 1.25) + (p.ad.startsWith('şerefe') ? 0.25 : 0));
     if (p.tip === 'korkuluk') for (let i = 0; i < 9; i++) { const x = p.x1 + 5 + ((p.x2 - p.x1 - 10) * (i + 0.5)) / 9; tutkal(`M${x},${p.y1 + 4} L${x},${p.y2 - 4}`, 2.4, 0.9); }
   }
-  for (const p of SAHNE.minarePencereleri) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#3A3028', 1.6, 0.1);
+  for (const p of SAHNE.minarePencereleri) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#6A5240', 1.25, 0.1);
 }
 // ------------------------------------------------------------------ kaide: fırçalanmış macun, korniş şeridi, kesik pencereler
-parca(Y.kaide, 'macun', '#ADA088', [300, 0, 820, 0, 0.72, 0.26], 1.1);
-parca('M300,704 H820 V714 H300 Z', 'macun', '#7E7466', 0.9, 1.0);
-parca(Y.kornis, 'karton', '#B6AA94', 0.3, 1.6);
-for (const p of SAHNE.kaide.pencereler) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#46302A', 1.6, 0.1);
+parca(Y.kaide, 'macun', '#D8CDB6', [300, 0, 820, 0, 0.6, 0.16], 1.1);
+parca('M300,704 H820 V714 H300 Z', 'macun', '#B3A68F', 0.75, 1.0);
+parca(Y.kornis, 'karton', '#D9CFBC', 0.2, 1.6);
+for (const p of SAHNE.kaide.pencereler) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#74533F', 1.25, 0.1);
 // ------------------------------------------------------------------ kasnak: zımpara, kesik pencereler
 for (let k = 1; k >= 0; k--) {
   const q = SAHNE.kasnak[k];
-  parca(k ? Y.kasnakAlt : Y.kasnakUst, 'zimpara', '#2D6C43', [q.x1, 0, q.x2, 0, 1.45, 0.75], k ? 1.25 : 1.45);
-  for (const p of SAHNE.kasnakPencereleri(k)) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#183424', 1.75, 0.15);
+  parca(k ? Y.kasnakAlt : Y.kasnakUst, 'zimpara', '#48A562', [q.x1, 0, q.x2, 0, 1.05, 0.55], k ? 1.25 : 1.45);
+  for (const p of SAHNE.kasnakPencereleri(k)) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#2A6A40', 1.35, 0.15);
 }
 // ------------------------------------------------------------------ kubbe: oluklu karton dilimleri, gölge yanında karborundum
 {
-  parca(Y.kubbe, 'oluk', '#2F8751', [655, 380, 10, 600, 430, 300, [[0, 0.55], [0.5, 0.9], [1, 1.3]]], 1.6);
+  parca(Y.kubbe, 'oluk', '#45AC63', [655, 380, 10, 600, 430, 300, [[0, 0.34], [0.5, 0.66], [1, 1.12]]], 1.6);
 }
 // alemler: karton, tutkal kontur
 for (const [axx, taban, s] of [[560, 300, 1], [300, 146, 0.62]]) {
   const a = SAHNE.alemParcalari(axx, taban, s);
   const ys = [SAHNE.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx, ry: a.yaka.ry, aci: 0 }), SAHNE.yol([[a.cubuk.x1, a.cubuk.y1], [a.cubuk.x2, a.cubuk.y1], [a.cubuk.x2, a.cubuk.y2], [a.cubuk.x1, a.cubuk.y2]], true), ...a.kureler.map((k) => SAHNE.daireYolu(k.cx, k.cy, k.r)), SAHNE.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R)];
-  for (const d of ys) parca(d, 'karton', '#C08C2C', [axx - 20 * s, 0, axx + 20 * s, 0, 1.2, 0.5], 1.75);
+  for (const d of ys) parca(d, 'karton', '#DCA83A', [axx - 20 * s, 0, axx + 20 * s, 0, 1.0, 0.4], 1.75);
 }
 // ------------------------------------------------------------------ bitkiler: ip saplar, gerçek yapraklar, karton taç yaprakları
 {
   for (const s of BT.saplar) {
     const p = poly(s);
-    RX.save(); RX.lineWidth = 7; RX.strokeStyle = '#4A6E35'; RX.stroke(p); RX.restore();
-    IH.save(); IH.lineWidth = 5; IH.strokeStyle = ihRenk(1.3, 0.7); IH.stroke(p); IH.restore();
+    RX.save(); RX.lineWidth = 7; RX.strokeStyle = '#6E9E48'; RX.stroke(p); RX.restore();
+    IH.save(); IH.lineWidth = 5; IH.strokeStyle = ihRenk(0.95, 0.7); IH.stroke(p); IH.restore();
     tutkal(p, 4.4, 0.9);
   }
-  const YRENK = ['#4D7C3A', '#6A903C', '#3C6537', '#587F2E'];
+  const YRENK = ['#6AAA4C', '#86BC4E', '#559A48', '#76AE3E'];
   BT.yapraklar.forEach((yp, i) => {
     const d = SAHNE.yaprakYolu(yp);
     const ton = YRENK[i % 4];
     const koyu = yp.uzunluk > 50;
-    parca(d, 'yaprak', ton, koyu ? 1.35 : 1.1, 1.0 + (i % 3) * 0.1);
+    parca(d, 'yaprak', ton, koyu ? 1.0 : 0.85, 1.0 + (i % 3) * 0.1);
     // damarlar: kabarık (yüksek, silinmiş) çizgiler
     const ca = Math.cos(yp.aci), sa = Math.sin(yp.aci), L = yp.uzunluk, W = L * yp.genislik;
     const P = (u, v) => [yp.x + u * ca - v * sa, yp.y + u * sa + v * ca];
@@ -350,15 +350,15 @@ for (const [axx, taban, s] of [[560, 300, 1], [300, 146, 0.62]]) {
     }
     IH.restore();
   });
-  for (const t of BT.tomurcuklar) parca(SAHNE.tomurcukYolu(t), 'karton', '#C2607A', 1.0, 1.35);
+  for (const t of BT.tomurcuklar) parca(SAHNE.tomurcukYolu(t), 'karton', '#E58AA0', 0.8, 1.35);
   BT.cicekler.forEach((c) => {
     SAHNE.tacYapraklari(c).forEach((e, j) => {
-      parca(SAHNE.elipsYolu(e), 'karton', '#D27C8C', [c.x, c.y, c.r * 0.1, c.x, c.y, c.r * 1.05, [[0, 0.62], [0.3, 0.2], [0.6, 0.05], [1, 0.02]]], 1.3 + (j % 2) * 0.28);
+      parca(SAHNE.elipsYolu(e), 'karton', '#EDB4C0', [c.x, c.y, c.r * 0.1, c.x, c.y, c.r * 1.05, [[0, 0.5], [0.3, 0.14], [0.6, 0.03], [1, 0.0]]], 1.3 + (j % 2) * 0.28);
     });
-    parca(SAHNE.daireYolu(c.x, c.y, c.r * 0.22), 'kum', '#D29C30', 1.15, 1.75);
+    parca(SAHNE.daireYolu(c.x, c.y, c.r * 0.22), 'kum', '#EDB83A', 0.9, 1.75);
     for (let i = 0; i < 9; i++) {
       const a = (i / 9) * TAU + c.aci;
-      parca(SAHNE.daireYolu(c.x + Math.cos(a) * c.r * 0.28, c.y + Math.sin(a) * c.r * 0.28, Math.max(1.4, c.r * 0.045)), 'kum', '#8A4A28', 1.6, 1.85);
+      parca(SAHNE.daireYolu(c.x + Math.cos(a) * c.r * 0.28, c.y + Math.sin(a) * c.r * 0.28, Math.max(1.4, c.r * 0.045)), 'kum', '#B8683A', 1.15, 1.85);
     }
   });
 }
@@ -494,10 +494,10 @@ for (let y = 0; y < N; y++) {
     if (tu > 0.004) { h += tu * 1.15; d *= 1 - 0.7 * tu; }
     H[i] = h;
     // tarlatanla elle silme: geniş dalgalanma ve çapraz silme izleri
-    const sil = 0.74 + 0.5 * silF(X, Yc) + 0.16 * (silS(X * 0.6 + Yc * 0.4, Yc * 0.9 - X * 0.3) - 0.5);
+    const sil = 0.8 + 0.4 * silF(X, Yc) + 0.16 * (silS(X * 0.6 + Yc * 0.4, Yc * 0.9 - X * 0.3) - 0.5);
     d *= sil;
     // levha tonu: düz yüzeylerde bile kalan ince nötr zar
-    LT[i] = 0.1 + 0.16 * tonF(X, Yc) * Math.min(1, top);
+    LT[i] = (0.025 + 0.06 * tonF(X, Yc)) * Math.min(1, top);
     const cr = RN[i4] / 255, cg = RN[i4 + 1] / 255, cb = RN[i4 + 2] / 255;
     TR[i] = Math.exp(-d * -Math.log(Math.max(0.03, cr)));
     TG[i] = Math.exp(-d * -Math.log(Math.max(0.03, cg)));
@@ -519,8 +519,8 @@ for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const i = y * N + x; c
 bulanikDizi(P, 0.5 * O);
 const EMB = kabartma(P, 0.85 * O);
 const kagit = kagitDokusu(7414);
-const KAGIT = hex('#F2EDE2');
-const NOTR = hex('#5A5248').map((v) => -Math.log(v));
+const KAGIT = hex('#F8F5EE');
+const NOTR = hex('#6A6052').map((v) => -Math.log(v));
 const img = ctx.createImageData(N, N);
 const px = img.data;
 for (let y = 1; y < N - 1; y++) {
@@ -531,12 +531,12 @@ for (let y = 1; y < N - 1; y++) {
     const gx = (Hb[i + 1] - Hb[i - 1]) * 0.5 * O, gy = (Hb[i + N] - Hb[i - N]) * 0.5 * O;
     let kenar = smooth(0.08, 0.6, Math.hypot(gx, gy)) * ic;
     // levhanın kesik kenarı mürekkep tutar
-    kenar = Math.max(kenar, smooth(-6, -1, s) * ic * 0.8);
+    kenar = Math.max(kenar, smooth(-5, -1, s) * ic * 0.4);
     const lif = (kagit[i] - 0.5) * 0.05;
     let r = KAGIT[0] + lif, g = KAGIT[1] + lif, b = KAGIT[2] + lif;
     if (ic > 0) {
-      const p = 1 + kenar * 2.0;
-      const lt = LT[i] + kenar * 0.75;
+      const p = 1 + kenar * 0.75;
+      const lt = LT[i] + kenar * 0.2;
       const tr = Math.pow(TR[i], p) * Math.exp(-lt * NOTR[0]);
       const tg = Math.pow(TG[i], p) * Math.exp(-lt * NOTR[1]);
       const tb = Math.pow(TB[i], p) * Math.exp(-lt * NOTR[2]);

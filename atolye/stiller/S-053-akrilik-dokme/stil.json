@@ -5,18 +5,37 @@
   "ad_en": "Acrylic Pour",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Kontrollü dökülmüş akışkan akrilikler: kıvrılan parlak boya akıntıları, silikonun açtığı hücreler ve dantel ağı.",
-  "tanim": "Akrilik dökme (fluid art), akışkanlaştırıcıyla inceltilmiş akrilik boyaların fırçasız, tuvale dökülerek ve tuval eğilerek yayıldığı bir tekniktir. Renkler birbirine karışmadan ince ve kalın şeritler hâlinde akar, kıvrılır; boyaya katılan birkaç damla silikon yağı üst katı yırtarak alttaki rengi gösteren yuvarlak hücreler (cells) açar, sık hücrelerin arasında ince bir dantel (lacing) ağı kalır. Kalın boya kuruyunca yüzey hafif kabartmalı olur ve çoğu zaman reçineyle kaplanarak cam gibi parlatılır. Dekoratif tablolar, ahşap ve seramik süslemesinde yaygındır.",
-  "koken": "Akışkan boyayla resim, 1930'larda David Alfaro Siqueiros'un deneysel atölyesindeki dökme ve 'kaza' teknikleriyle, sonra Jackson Pollock ve Helen Frankenthaler'in boya dökme yöntemleriyle sanat tarihine girdi. Bugünkü hücreli akrilik dökme 2010'larda flip cup, dirty pour, swipe ve ring pour gibi adlandırılmış tekniklerle, silikon ve akışkanlaştırıcıların kullanımıyla yaygın bir hobi ve dekoratif sanat hâline geldi.",
+  "ozet": "Kontrollü dökülmüş akışkan akrilikler: pürüzsüz, parlak renk şeritleri ve girdaplar, keskin ve zarif renk sınırları, reçine gibi cam parlaklığı.",
+  "tanim": "Akrilik dökme (fluid art), akışkanlaştırıcıyla inceltilmiş akrilik boyaların fırçasız, tuvale dökülerek ve tuval eğilerek yayıldığı bir tekniktir. Silikon katılmadan yapılan temiz dökmede (flip cup, swipe, ring pour) renkler birbirine karışmadan ince ve kalın şeritler hâlinde akar, kıvrılıp girdaplar çizer; aralarındaki sınırlar keskin ve pürüzsüz kalır. Kalın boya kuruyunca yüzeyde hafif sırtlar oluşur ve iş çoğu zaman reçineyle kaplanarak cam gibi parlatılır. Dekoratif tablolar, ahşap ve seramik süslemesinde yaygındır.",
+  "koken": "Akışkan boyayla resim, 1930'larda David Alfaro Siqueiros'un deneysel atölyesindeki dökme tekniklerinde, sonra Jackson Pollock ve Helen Frankenthaler'in boya dökme yöntemlerinde sanat tarihine girdi. Bugünkü akrilik dökme 2010'larda flip cup, swipe, ring pour ve puddle pour gibi adlandırılmış tekniklerle ve akışkanlaştırıcıların kullanımıyla yaygın bir dekoratif sanat hâline geldi; temiz (silikonsuz) dökmeler şerit ve girdap akışını öne çıkarır, bitmiş iş epoksi reçineyle kaplanır.",
   "ayirt_edici": [
-    "Gökte lacivertten açık maviye inen, uzun ve yumuşak kıvrımlarla akan parlak boya akıntıları ve aralarında ince beyaz, gümüş, turkuaz şeritler",
-    "Silikon hücreleri: beyaz ve açık mavi şeritlerde gök mavisi, kobalt ya da koyu petrol yeşili içli çukur hücreler, çevrelerinde parlak dantel halkası, büyük hücrelerin yanında küçük uydu hücreler",
-    "Kubbede meridyenler boyunca dökülmüş zümrüt, fıstık yeşili ve çağla şeritleri; kaburga yanlarında koyu yeşil ve ince altın, beyaz çizgiler; dilimlerde hücre kümeleri",
-    "İnce altın halkalarla ayrılmış beyaz ve krem halkalardan dökülmüş güneş birikintisi (puddle), yalnız dış kenarında altın ve mavi hücreler; altın, bronz ve açık sarı şeritli alemler",
-    "Üfleme çiçek gibi dökülmüş taç yapraklar: ortası beyaz, kenara doğru pembe ve macenta halkalar; malakit gibi çizgili yapraklar; kum ve bakır şeritli zemin",
-    "Şerit sırtlarında ve hücre kenarlarında keskin parlamalar, sol üstte reçine kaplamanın pencere yansıması"
+    "Gökte gök mavisi, seruleum, turkuaz, aqua, açık mavi ve beyazdan dökülmüş uzun, pürüzsüz şeritler; tuval eğilirken çizilmiş geniş girdaplar (solda, ortada üstte ve sağda)",
+    "Şeritlerin arasında saç teli inceliğinde beyaz, açık altın ve kobalt damarlar; renk sınırları keskin ve yumuşatılmış, karışma ya da bulanıklık yok",
+    "Kubbede meridyenler boyunca dökülmüş zümrüt, yeşil, fıstık, çağla ve nane şeritleri; kaburga yanlarında koyu yeşil ile ince altın ya da beyaz çizgi; kasnakta yatay yeşil akıntılar",
+    "Güneş, ortası limon sarısı ve krem, çevresi beyaz halkalardan ve ince altın çizgilerden oluşan bir halka dökmesi (puddle pour)",
+    "Çiçekler halka dökmesi gibi: ortada altın şeritli göbek, limon ve krem halka, beyaz taç yaprak, kenarda açık ve gül pembesi ince şerit; yapraklar malakit gibi çizgili, zemin kum, şeftali, krem ve açık terrakota şeritli",
+    "Kalın boyanın şerit sırtlarında ince parlamalar, yüzeyde geniş, yumuşak parlaklık dalgaları ve sol üstte reçine kaplamanın ince pencere yansıması"
   ],
-  "palet": ["#0F1E56", "#2F86D0", "#F7F8F6", "#14834A", "#7FCB4E", "#D9A63A", "#E3C48C", "#C2286E"],
-  "kodla_cizim": "Bütün görüntü piksel piksel hesaplanır. SAHNE bölge haritası düşük frekanslı gürültüyle kaydırılarak okunur; böylece her bölge (gök, güneş, kubbe, kasnak, taş, zemin, yaprak, çiçek, altın) ayrı bir dökme gibi akışkan sınırlı olur. Her bölgenin bir akış koordinatı s vardır: gökte iki katlı alan bükmesiyle (domain warp) kıvrılan yükseklik, güneşte gürültülü uzaklık, kubbede SAHNE.kubbeProfili'nden çıkarılan boylamla dilim içi konum, minarede dikey, kaide ve kasnakta yatay akış, çiçekte en yakın taç yaprağın elips uzaklığı. s, tohumlu olarak üretilen 'dökülen katman' tablolarında (renk, genişlik, kalınlık, hücre yoğunluğu, alttaki renk) aranır; s'nin gradyanından piksel cinsinden kenar uzaklığı bulunup şerit sınırları yumuşatılır ve sınırlarda kalınlık sırtı eklenir. Hücreler sarsılmış ızgarada, hücre yoğunluğu yüksek şeritlerde ve gürültüyle kümelenerek (yoğunluk bölgeye göre: kubbe ve gökte çok, minare ve kaidede az), akış yönünde uzatılmış elipsler olarak üretilir; büyük hücrelere uydu hücreler, yoğun alanlara dantel hücreleri eklenir; kova ızgarasıyla her piksel için en yakın iki hücre bulunur: iç (alttaki renk, ortası açık çukur), dantel halkası, dışında ince koyu çizgi ve dayanan hücreler arasında dantel duvarı çizilir. Korkuluk boşlukları, şerefe gölgeleri, zikzak, korniş ve saplar ayrı bir ayrıntı tuvalinden aynı kaydırmayla okunur. Son olarak kalınlık haritasından normal çıkarılır ve sağ üstten keskin Blinn-Phong parlaklığıyla reçine gibi ışıtılır; sol üste bulanık pencere yansıması eklenir.",
-  "etiketler": ["akrilik dökme", "fluid art", "hücre", "dantel", "akışkan", "reçine", "parlak", "soyut doku", "simülasyon"]
+  "palet": [
+    "#48A4E1",
+    "#B6E3F7",
+    "#42C4D7",
+    "#F4F6F2",
+    "#288E52",
+    "#8DCA84",
+    "#E0B040",
+    "#E685A9"
+  ],
+  "kodla_cizim": "Bütün görüntü 2048 iç çözünürlükte piksel piksel hesaplanır ve sonunda 2×2 ortalamayla 1024'e indirilir. SAHNE bölge haritası 2048'de çizilir; kenar yumuşatma pikselleri en yakın tam renkli komşunun bölgesine verilir, harita çok hafif, yumuşak bir gürültüyle kaydırılarak okunur. Her bölgenin bir akış koordinatı s vardır: gökte birkaç Gauss ağırlıklı girdap dönüşümü ve iki katlı alan bükmesiyle (domain warp) kıvrılan yükseklik, güneşte gürültülü uzaklık, kubbede SAHNE.kubbeProfili'nden çıkarılan boylamla dilim içi konum, minarede dikey, kaide ve kasnakta yatay akış, zeminde girdaplı yatay akış, çiçekte merkeze uzaklık ile taç yaprak elipsinin kenar koordinatının birleşimi. s, tohumlu olarak üretilen 'dökülen katman' tablolarında (renk, genişlik, kalınlık) aranır; s'nin gradyanından piksel cinsinden kenar uzaklığı bulunup şerit sınırları yumuşatılır ve sınırlarda ince kalınlık sırtı eklenir. Korkuluk boşlukları, şerefe gölgeleri, zikzak, korniş ve saplar ayrı bir ayrıntı tuvalinden aynı kaydırmayla okunur. Kalınlık haritasından normal çıkarılır, düşük frekanslı yüzey dalgalanması eklenir ve sağ üstten keskin Blinn-Phong parlaklığıyla reçine gibi ışıtılır; sol üste bulanık pencere yansıması eklenir. Hücre, kabarcık ya da dantel üretilmez.",
+  "etiketler": [
+    "akrilik dökme",
+    "fluid art",
+    "flip cup",
+    "swipe",
+    "girdap",
+    "akışkan",
+    "reçine",
+    "parlak",
+    "simülasyon"
+  ]
 }

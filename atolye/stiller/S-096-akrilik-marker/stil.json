@@ -1,0 +1,22 @@
+{
+  "kod": "S-096",
+  "no": 96,
+  "ad": "Akrilik Marker",
+  "ad_en": "Paint Marker",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Örtücü akrilik boya kalemiyle düz, parlak renk alanları; görünür kalem darbeleri, koyunun üstüne sürülmüş açık renkler ve net lacivert kontur.",
+  "tanim": "Akrilik marker (Posca türü boya kalemi), ucundan su bazlı, örtücü akrilik boya akan kalemlerle yapılan resimdir. Keçeli kalemin tersine boya saydam değil örtücüdür: açık renk koyunun üstüne sürülebilir, beyaz nokta ve çizgiler yeşilin ya da mavinin üstünde parlak kalır. Alanlar yan yana çekilmiş darbelerle doldurulur; darbe sınırları, boya birikimi ve yuvarlak uçlar görünür kalır. Sokak sanatı, illüstrasyon, kişiselleştirilmiş eşya ve pop havalı çizimlerde çok kullanılır.",
+  "koken": "Pigmentli boya kalemleri 1980'lerde Japonya'da yaygınlaştı; Mitsubishi Pencil'in 1983'te çıkardığı Posca, su bazlı akrilik boyalı ve kokusuz olmasıyla okul afişlerinden graffiti ve çizgi roman çizerlerine uzanan bir kitlenin aracı oldu. 2000'lerden bu yana doodle sanatı, ayakkabı ve kaykay boyama, kafe camı yazıları ve pop çizimlerle (ör. Jon Burgerman, Mr Doodle'ın düz, renkli alanlı işleri) tanınan dili budur: düz örtücü renk, kalın kontur, beyaz vurgu noktaları.",
+  "ayirt_edici": [
+    "Bütün alanlar düz ve örtücü renk; içlerinde aynı yönde çekilmiş, biraz üst üste binen kalem darbeleri ve darbe kenarlarında ince boya sırtı seçiliyor (gökte ışın yönünde, kubbede kaburga boyunca, kaide ve minarede dikey)",
+    "Gök, güneşten yayılan iki mavi tonlu ışın dilimleriyle pop bir zemin; güneş sarı disk, turuncu yarım gölge, turuncu ışın çizgileri ve beyaz nokta halkası",
+    "Açık renkler koyunun üstünde: koyu yeşilin üstüne limon yeşili kaburgalar ve beyaz ışık darbeleri, maviye beyaz bulutlar, mercan bant üstüne beyaz zikzak, yaprak yeşiline beyaz çiçekler ve beyaz parlama çizgileri",
+    "Kubbe dört düz tonla kurulmuş: solda koyu yeşil, ortada yeşil, sağda açık yeşil ve aşağı doğru sivrilen soluk ışık dilimi; dilim içindeki darbelerin yuvarlak uçları görünüyor",
+    "Her biçim aynı kalınlıkta, hafif titrek, net lacivert konturla çevrili; bulutlarda mavi kontur",
+    "Küçük nokta ve çizgi süsleri: kasnak altında limon yeşili nokta dizisi, gökte beyaz nokta üçlüleri, kumda beyaz ve turuncu noktalar, çiçek göbeğinde turuncu nokta halkası"
+  ],
+  "palet": ["#1A1E40", "#33B5EA", "#74D2F4", "#FFE033", "#FF9A1F", "#16A253", "#A6EC73", "#FF6F86", "#CDBDF2", "#FFD47C"],
+  "kodla_cizim": "2048 iç çözünürlüklü canvas. Her alan bir Path2D ile kırpılıp önce rengin biraz açık bir 'ince ilk katı' sürülür, sonra belirli yönde, aralığı kalınlığından küçük (üst üste binen) yuvarlak uçlu darbeler çekilir; her darbenin tonu hafifçe oynar, düşük frekanslı gürültüyle kıvrılır, iki kenarına ince koyu boya sırtı, ortasına hafif parlak çizgi eklenir. Gök güneşten çıkan 30 üçgen dilimdir, her dilim ışın yönünde boyanır; güneş halkaları daire boyunca darbelerle doldurulur. Kubbede darbeler sahne profilinden üretilen meridyenler boyunca çekilir; ton alanları iki meridyen ve paralel arasında kurulan net kenarlı bölgelerdir. Açık renk ayrıntılar (kaburga, ışık darbesi, zikzak, noktalar) koyu katmanların üstüne örtücü çizilir. Kontur, SVG yolu getPointAtLength ile örneklenip yay uzunluğu boyunca gürültüyle 0,5 px kadar titretilen sabit kalınlıklı çizgidir; bulutların birleşik dış çizgisi önce kalın çizgi, sonra beyaz dolgu ile elde edilir. En sonda çok hafif mat boya ve kâğıt tanesi eklenir.",
+  "etiketler": ["boya kalemi", "posca", "akrilik", "örtücü", "pop", "kontur", "düz renk", "doodle"]
+}

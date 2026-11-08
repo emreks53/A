@@ -5,37 +5,18 @@
   "ad_en": "Old Master Glazing",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Sıcak astar üstüne saydam renk sırları, verniğin altında seçilen yumuşak fırça izi, ışıklı bulutlu gök, sararmış vernik ve ince çatlak ağı.",
-  "tanim": "Eski ustaların yağlıboya yönteminde resim sıcak, açık bir astar üstüne değer çalışmasıyla kurulur; renk sonra ince, saydam sırlar hâlinde kat kat sürülür. Alttaki açık katman sırların içinden parlar, gölgelerde sır kalınlaştıkça renk derinleşir. Işıklar kalın ve opak, gölgeler ince boyanır: ışıkta fırça izi verniğin altında hafifçe seçilir, gölgede kenarlar sfumato ile duman gibi erir. Yüzyıllar içinde sararan vernik bütün renkleri bal ve amber tonuna çeker, boya katmanı ince bir çatlak ağıyla (krakle) kaplanır, tuvalin kenarları kararır.",
-  "koken": "Sırlama tekniği 15. yüzyılda Jan van Eyck ve Flaman ustalarıyla olgunlaştı; Leonardo da Vinci gölgelerde sınırları dumanımsı eriten sfumatoyu tanımladı. Tiziano ve Venedik okulu renkli sırları zenginleştirdi, Rembrandt sıcak karanlıktan doğan ışığı işledi. Manzarada Claude Lorrain'in altın pusa gömülü ışıklı gökleri ve Felemenk Altın Çağı ressamlarının (Jacob van Ruisdael, Aelbert Cuyp) kabarık kümülüs bulutları bu örneğin gökyüzüne kaynaklık eder; öndeki beyaz çiçekler Felemenk natürmortlarının koyu zeminden ışığa çıkan çiçeklerini anar. Müzelerdeki eski tabloların bal rengi ve çatlakları ise zamanın ve verniğin izidir.",
+  "ozet": "Açık, sıcak astar üstüne saydam renk sırları; ışıl ışıl yeşil kubbe, Claude Lorrain usulü aydınlık gök, yumuşak sfumato ve pürüzsüz geçişler; açık ve ferah gün ışığı.",
+  "tanim": "Eski ustaların yağlıboya yönteminde resim sıcak, açık bir astar üstüne değer çalışmasıyla kurulur; renk sonra ince, saydam sırlar hâlinde kat kat sürülür. Alttaki açık katman sırların içinden parlar ve renge cam gibi bir derinlik verir: kubbenin yeşili tek düze değil, bakır yeşilinden sarı-yeşile kayan ışıklı katmanlardır. Geçişler pürüzsüzdür, gölgede kenarlar sfumato ile duman gibi erir, ama bu örnekte bütün resim açık değerlerde tutulur: Claude Lorrain ve Canaletto'nun aydınlık gün ışığı, açık sıcak bir zemin ve ince, taze, sıcak bir vernik.",
+  "koken": "Sırlama tekniği 15. yüzyılda Jan van Eyck ve Flaman ustalarıyla olgunlaştı; Leonardo da Vinci gölgelerde sınırları dumanımsı eriten sfumatoyu tanımladı. Tiziano ve Venedik okulu renkli sırları zenginleştirdi. Bu örneğin aydınlık manzarası Claude Lorrain'in güneşe doğru altın pusa açılan göklerine, Canaletto'nun berrak gün ışıklı Venedik görünümlerine ve Felemenk Altın Çağı ressamlarının (Jacob van Ruisdael, Aelbert Cuyp) kabarık kümülüs bulutlarına dayanır.",
   "ayirt_edici": [
-    "Kubbede tek düze olmayan saydam yeşil sırlar: tepede mavimsi bakır yeşili, ışıkta sarı-yeşil, gölgede kahveye çalan neredeyse siyah yeşil",
-    "Işıklarda biçimi izleyen, verniğin altında hafifçe seçilen fırça izi (gökte yatay, kubbede kaburga boyunca); gölgede kenarlar sfumato ile eriyor",
-    "Claude Lorrain usulü ışıklı gök: güneş çevresinde altın pus, sağdan aydınlanan kabarık kümülüs bulutlar, ufukta mavimsi puslu tepeler ve ağaçlar",
-    "Kubbeyi saran ışık havuzu, köşelere doğru sıcak kahve-amber karanlık; öndeki beyaz çiçekler Felemenk natürmortu gibi koyudan ışığa çıkıyor",
-    "Bütün renkleri bal-amber tonuna çeken sararmış vernik ve kirlenip kararmış tuval kenarları",
-    "Yüzeyi saran, kenarlarının gücü değişen ince çatlak ağı (krakle); en çok açık gökte ve çiçeklerde seçiliyor"
+    "Kubbede saydam, ışıl ışıl yeşil sırlar: bakır yeşilinden sarı-yeşile kayan katmanlar, alttaki açık astar içlerinden parlıyor",
+    "Yumuşak sfumato modelaj ve pürüzsüz geçişler; fırça izi ancak yakından, biçimi izleyen ince ve yumuşak vuruşlar olarak seçiliyor",
+    "Claude Lorrain ve Canaletto usulü aydınlık gök: üstte berrak mavi, güneş çevresinde altın pus, sağdan aydınlanan kabarık kümülüs bulutlar",
+    "Ufukta hava perspektifiyle mavimsi-yeşil, açık tepeler ve ağaç kümeleri; öne doğru açık, sıcak yeşil çayır",
+    "Bütün resim yüksek değerde: koyu çevre ya da kararan köşe yok; sıcak, ışıklı taş kaide ve krem minare",
+    "Işıkta krem renkli, kalınca sürülmüş beyaz çiçekler; taç yapraklarda ince damarlar ve hafif pembe kızarma"
   ],
-  "palet": [
-    "#16180F",
-    "#523C20",
-    "#8D6C3A",
-    "#D5B77B",
-    "#3E4B3F",
-    "#2B4E1A",
-    "#67741D",
-    "#939423"
-  ],
-  "kodla_cizim": "Görüntü 1024 pikselde piksel başına bir ışık modeliyle hesaplanır; bölge haritası 2048'de okunur, kenar piksellerinde dört alt örnek alınır ve harita yarım piksel kadar oynatılarak elle çizilmiş kenar verilir. Kubbe dönel yüzey normali, kasnak ve minare silindir ışığı alır. Yeşil, sırlama formülüyle bulunur: renk = astar × değer × sır^kalınlık; sır rengi gürültüyle bakır yeşili, sap yeşili ve gölgede kahveleşmiş yeşil arasında gezinir, ışıkta opak bir sürtme katı eklenir. Bulutlar yarım küre yüksekliği veren kabarcıklardan kurulur; yüzey normali bu yükseklikten çıkar, güneşe doğru yürüyen bir gölge örneklemesiyle gölgelenir. Çiçek ve yapraklar ayrı bir tuvalde gradyan ve tuval gölgeleriyle boyanır. Ardından yaklaşık on beş bin fırça vuruşu bölgesine göre yön ve boyut alır (gökte yatay ya da bulut çevresini izleyen, kubbede kaburga boyunca); her vuruş rengini başından alıp sürükler, kıl çizgileri ve hafif kabartı bırakır. Gölgelilik haritasına göre bulanık kopya karıştırılarak sfumato verilir. Krakle, kenar güçleri rastgele iki ölçekli bozulmuş Voronoi hücrelerinden çıkar; en sonda sararmış vernik, kenar kiri, bez dokusu ve S biçimli ton eğrisi uygulanır.",
-  "etiketler": [
-    "yağlıboya",
-    "sırlama",
-    "sfumato",
-    "chiaroscuro",
-    "krakle",
-    "eski usta",
-    "Rönesans",
-    "Barok",
-    "Claude Lorrain"
-  ]
+  "palet": ["#4F7FBC", "#C4D3D6", "#FAF0D0", "#8DBD63", "#508948", "#FDEBB0", "#808E3E", "#F3E9C9"],
+  "kodla_cizim": "Görüntü 1024 pikselde piksel başına bir ışık modeliyle hesaplanır; bölge haritası 2048'de okunur, kenar piksellerinde dört alt örnek alınır ve harita yarım piksel kadar oynatılarak elle çizilmiş kenar verilir. Kubbe dönel yüzey normali, kasnak ve minare silindir ışığı alır; bütün değerler yüksek bir tabandan başlatılır (koyu çevre ya da ışık havuzu yok, aydınlatma neredeyse eşit). Yeşil, sırlama formülüyle bulunur: renk = açık astar × değer × sır^kalınlık; sır rengi gürültüyle bakır yeşili ile sarı-yeşil arasında gezinir, gölgeli yana gökten serin yansıma eklenir. Bulutlar yarım küre yüksekliği veren kabarcıklardan kurulur; yüzey normali bu yükseklikten çıkar, güneşe doğru yürüyen bir gölge örneklemesiyle gölgelenir. Çiçek ve yapraklar ayrı bir tuvalde gradyan ve hafif tuval gölgeleriyle boyanır. Ardından on binlerce düşük karışımlı fırça vuruşu bölgesine göre yön ve boyut alır (gökte yatay ya da bulut çevresini izleyen, kubbede kaburga boyunca); vuruşlar rengi başından alıp sürükler, çok hafif kabartı bırakır. Gölgelilik haritasına göre bulanık kopya karıştırılarak sfumato verilir. En sonda ince, eşit, sıcak bir vernik tonu, ışıklarda seçilen hafif bez dokusu ve yumuşak ton eğrisi uygulanır.",
+  "etiketler": ["yağlıboya", "sırlama", "sfumato", "eski usta", "gün ışığı", "Rönesans", "Barok", "Claude Lorrain", "Canaletto"]
 }

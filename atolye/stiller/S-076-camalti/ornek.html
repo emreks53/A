@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-076 Camaltı Resmi — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #2a1a10; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #f3ead6; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -13,8 +13,8 @@
 <script src="../../sahne/sahne.js"></script>
 <script>
 // S-076 Camaltı Resmi — camın arkasına boyanmış halk resmi: önce koyu kontur, sonra düz parlak renkler,
-// saydam bırakılan yerlerin arkasında buruşuk kalay / altın yaldız folyo; önde parlak cam yüzeyi,
-// yansıma çizgileri ve ahşap çerçeve.
+// açık gök ve açık zemin; saydam bırakılan yerlerin arkasında buruşuk kalay / altın yaldız folyo; önde
+// parlak cam yüzeyi, yumuşak yansıma çizgileri, camın kenarında boyalı ince bordür ve ince açık çerçeve.
 // Yöntem: üç katman (boya, folyo maskesi, kontur) ressamın sırasıyla doldurulur; kontur bulanıklaştırılıp
 // gürültülü eşikle fırça kalınlığı kazanır; folyo, Voronoi yüzeyli buruşuk metal olarak piksel piksel
 // ışıklandırılır; cam parıltısı ve çerçeve en üste çizilir.
@@ -49,8 +49,8 @@
   const P2 = (d) => new Path2D(d);
 
   // ------------------------------------------------------------ yerleşim
-  const CER = 48;            // ahşap çerçeve genişliği
-  const BOR = 20;            // camın kenarındaki boyalı bordür
+  const CER = 10;            // ince, açık renkli çerçeve çıtası
+  const BOR = 12;            // camın kenarındaki boyalı bordür
   const IC = CER + BOR;      // resim alanının başladığı yer
   const sc = (1024 - 2 * IC) / 1024; // sahne bu ölçekle resim alanına sığar
 
@@ -84,18 +84,18 @@
 
   // ------------------------------------------------------------ renkler (halk camaltı paleti)
   const R = {
-    gokUst: '#13246B', gokOrta: '#1F4597', gokAlt: '#5F9BD3',
-    bulut: '#FBF8F0', bulutGolge: '#B9CBE6',
+    gokUst: '#76B0E3', gokOrta: '#A3CDEE', gokAlt: '#F1EEDC',
+    bulut: '#FFFDF6', bulutGolge: '#C6DAF0',
     kirmizi: '#C8281F', kirmiziKoyu: '#861418', sari: '#F2C230', turuncu: '#E98A23',
-    beyaz: '#F7F2E6', beyazGolge: '#C9CCD6', mavi: '#1C2E78',
-    yesil: '#1D7F3A', yesilAcik: '#38A54F', yesilKoyu: '#0F5527', yaprak: '#24823A', yaprakAcik: '#6CC05A',
-    zemin: '#141E16', pembe: '#EE8FA6', pembeKoyu: '#C24A6A',
-    altinTon: '#E7B23C', kubbeTonSol: '#0C6A2C', kubbeTonSag: '#3CC060',
+    beyaz: '#FBF7EC', beyazGolge: '#D6DAE4', mavi: '#2E56B4',
+    yesil: '#2C9A4C', yesilAcik: '#4DBA62', yesilKoyu: '#1F7D3E', yaprak: '#36A04A', yaprakAcik: '#86D06A',
+    zemin: '#EAD8A6', zeminAlt: '#E0C48A', pembe: '#F29CB0', pembeKoyu: '#D86683',
+    altinTon: '#EDBC45', kubbeTonSol: '#24944A', kubbeTonSag: '#62D27E',
   };
 
   sahneKoord();
 
-  // ------------------------------------------------------------ gök: koyu laciverten açık maviye, fırça yönlü
+  // ------------------------------------------------------------ gök: açık gök mavisinden ufukta kremaya
   B.fillStyle = dogrusal(0, 0, 0, 800, [[0, R.gokUst], [0.45, R.gokOrta], [1, R.gokAlt]]);
   B.fillRect(-20, -20, 1064, 840);
 
@@ -141,7 +141,7 @@
   }
 
   // ------------------------------------------------------------ zemin
-  B.fillStyle = R.zemin; B.fillRect(-20, 800, 1064, 260);
+  B.fillStyle = dogrusal(0, 800, 0, 1024, [[0, R.zemin], [1, R.zeminAlt]]); B.fillRect(-20, 800, 1064, 260);
   C.globalCompositeOperation = 'destination-out'; C.fillRect(-20, 800, 1064, 260); C.globalCompositeOperation = 'source-over';
   F.globalCompositeOperation = 'destination-out'; F.fillRect(-20, 800, 1064, 260); F.globalCompositeOperation = 'source-over';
   cizgi('M-20,800 L1044,800', 2.6);
@@ -211,16 +211,16 @@
   // ------------------------------------------------------------ kasnak
   const KS = S.kasnak;
   nesne(dik(KS[1].x1, KS[1].y1, KS[1].x2, KS[1].y2), dogrusal(KS[1].x1, 0, KS[1].x2, 0, [[0, R.yesilKoyu], [0.14, R.yesilKoyu], [0.145, R.yesil], [1, R.yesil]]), { cizgi: 2.6 });
-  for (const p of S.kasnakPencereleri(1)) nesne(S.kemerYolu(p.x, p.y, p.w, p.h), '#0B1A10', { cizgi: 1.8 });
+  for (const p of S.kasnakPencereleri(1)) nesne(S.kemerYolu(p.x, p.y, p.w, p.h), '#1C5434', { cizgi: 1.8 });
   boyaCizgi(`M${KS[1].x1 + 4},${KS[1].y2 - 6} L${KS[1].x2 - 4},${KS[1].y2 - 6}`, R.sari, 2.6);
   nesne(dik(KS[0].x1, KS[0].y1, KS[0].x2, KS[0].y2), dogrusal(KS[0].x1, 0, KS[0].x2, 0, [[0, R.yesil], [0.14, R.yesil], [0.145, R.yesilAcik], [1, R.yesilAcik]]), { cizgi: 2.6 });
-  for (const p of S.kasnakPencereleri(0)) nesne(S.kemerYolu(p.x, p.y, p.w, p.h), '#0B1A10', { cizgi: 1.6 });
+  for (const p of S.kasnakPencereleri(0)) nesne(S.kemerYolu(p.x, p.y, p.w, p.h), '#1C5434', { cizgi: 1.6 });
   boyaCizgi(`M${KS[0].x1 + 4},${KS[0].y2 - 5} L${KS[0].x2 - 4},${KS[0].y2 - 5}`, R.sari, 2.2);
   // kasnak üstünde kırmızı-beyaz dişli şerit
   for (let x = KS[0].x1 + 3; x < KS[0].x2 - 6; x += 10) nesne(`M${x},557 L${x + 5},563 L${x + 10},557 Z`, R.kirmizi, { cizgi: 0 });
 
   // ------------------------------------------------------------ kubbe: saydam yeşil, arkasında folyo
-  nesne(S.kubbeYolu, dogrusal(360, 0, 760, 0, [[0, R.kubbeTonSol], [0.5, '#1E9442'], [1, R.kubbeTonSag]]), { folyo: true, cizgi: 3 });
+  nesne(S.kubbeYolu, dogrusal(360, 0, 760, 0, [[0, R.kubbeTonSol], [0.5, '#3CB65E'], [1, R.kubbeTonSag]]), { folyo: true, cizgi: 3 });
   B.save(); B.clip(P2(S.kubbeYolu));
   C.save(); C.clip(P2(S.kubbeYolu));
   for (const k of S.kaburgalar(16)) cizgi(S.yol(k.noktalar), 1.5);
@@ -252,8 +252,8 @@
   }
   bit.yapraklar.forEach((y, i) => {
     const koyu = i % 3 === 0;
-    nesne(S.yaprakYolu(y), koyu ? '#17672C' : R.yaprak, { cizgi: 2.2 });
-    boyaDolgu(yaprakYarim(y), koyu ? '#2E9A3E' : R.yaprakAcik);
+    nesne(S.yaprakYolu(y), koyu ? '#25843A' : R.yaprak, { cizgi: 2.2 });
+    boyaDolgu(yaprakYarim(y), koyu ? '#4BB052' : R.yaprakAcik);
     const [a, b] = S.yaprakDamari(y);
     cizgi(`M${a[0]},${a[1]} L${b[0]},${b[1]}`, 1.2);
   });
@@ -274,7 +274,7 @@
   function gul(c) {
     const R0 = c.r * 1.0, x = c.x, y = c.y;
     // yeşil çanak yaprakları
-    for (let i = 0; i < 5; i++) { const a = c.aci + 0.3 + (i / 5) * Math.PI * 2; nesne(tacYaprak(x, y, a, R0 * 1.12, R0 * 0.2, R0 * 0.3), '#1E7A34', { cizgi: 1.8 }); }
+    for (let i = 0; i < 5; i++) { const a = c.aci + 0.3 + (i / 5) * Math.PI * 2; nesne(tacYaprak(x, y, a, R0 * 1.12, R0 * 0.2, R0 * 0.3), '#2E9442', { cizgi: 1.8 }); }
     // dış sıra
     for (let i = 0; i < 6; i++) { const a = c.aci + (i / 6) * Math.PI * 2; nesne(tacYaprak(x, y, a, R0 * 0.95, R0 * 0.42, 0), i % 2 ? '#D4352B' : '#C42A24', { cizgi: 2.2 }); }
     // ikinci sıra
@@ -325,11 +325,13 @@
     const p = new Path2D();
     p.rect(CER, CER, 1024 - 2 * CER, 1024 - 2 * CER);
     p.rect(IC, IC, 1024 - 2 * IC, 1024 - 2 * IC);
-    nesne(p, '#0E0B0A', { kural: 'evenodd', cizgi: 0 });
+    nesne(p, '#F6EEDA', { kural: 'evenodd', cizgi: 0 });
     const q = new Path2D();
-    q.rect(CER + 6, CER + 6, 1024 - 2 * CER - 12, 1024 - 2 * CER - 12);
-    q.rect(CER + 11, CER + 11, 1024 - 2 * CER - 22, 1024 - 2 * CER - 22);
-    nesne(q, R.altinTon, { kural: 'evenodd', folyo: true, cizgi: 0 });
+    q.rect(CER + 4, CER + 4, 1024 - 2 * CER - 8, 1024 - 2 * CER - 8);
+    q.rect(CER + 8, CER + 8, 1024 - 2 * CER - 16, 1024 - 2 * CER - 16);
+    nesne(q, R.altinTon, { kural: 'evenodd', folyo: 'altin', cizgi: 0 });
+    cizgi(dik(CER + 4, CER + 4, 1024 - CER - 4, 1024 - CER - 4), 1.1);
+    cizgi(dik(CER + 8, CER + 8, 1024 - CER - 8, 1024 - CER - 8), 1.1);
     cizgi(dik(IC, IC, 1024 - IC, 1024 - IC), 2.4);
   }
 
@@ -411,7 +413,7 @@
       const fm = fd[i + 3] / 255;
       if (fm > 0.01) {
         const br = folyo(x, y) + (fd[i + 1] < 200 ? 0.3 : 0);
-        const k = 0.12 + 1.05 * Math.min(br, 1.05);
+        const k = 0.6 + 0.68 * Math.min(br, 1.05);
         const parla = Math.max(0, br - 0.85) * 255 * 0.9;
         const fr = r * k + parla, fg = g * k + parla * 0.97, fb = b * k + parla * 0.88;
         r = r + (fr - r) * fm; g = g + (fg - g) * fm; b = b + (fb - b) * fm;
@@ -435,12 +437,12 @@
   ctx.save();
   ctx.beginPath(); ctx.rect(CER, CER, 1024 - 2 * CER, 1024 - 2 * CER); ctx.clip();
   // çerçevenin cama düşen gölgesi (ışık sağ üstten → sol ve üst kenarda)
-  let g = ctx.createLinearGradient(CER, 0, CER + 26, 0);
-  g.addColorStop(0, 'rgba(10,5,0,0.55)'); g.addColorStop(1, 'rgba(10,5,0,0)');
-  ctx.fillStyle = g; ctx.fillRect(CER, CER, 26, 1024 - 2 * CER);
-  g = ctx.createLinearGradient(0, CER, 0, CER + 22);
-  g.addColorStop(0, 'rgba(10,5,0,0.5)'); g.addColorStop(1, 'rgba(10,5,0,0)');
-  ctx.fillStyle = g; ctx.fillRect(CER, CER, 1024 - 2 * CER, 22);
+  let g = ctx.createLinearGradient(CER, 0, CER + 12, 0);
+  g.addColorStop(0, 'rgba(60,40,10,0.18)'); g.addColorStop(1, 'rgba(10,5,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(CER, CER, 12, 1024 - 2 * CER);
+  g = ctx.createLinearGradient(0, CER, 0, CER + 10);
+  g.addColorStop(0, 'rgba(60,40,10,0.16)'); g.addColorStop(1, 'rgba(10,5,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(CER, CER, 1024 - 2 * CER, 10);
   // geniş, yumuşak çapraz yansıma ve ince parlak çizgiler
   ctx.globalCompositeOperation = 'screen';
   const bant = (u0, gen, alfa) => {
@@ -473,7 +475,7 @@
   const ax = ahs.getContext('2d', { willReadFrequently: true });
   const aimg = ax.createImageData(tw, th2);
   const ad = aimg.data;
-  const ac1 = hex('#3B2010'), ac2 = hex('#7A4824'), ac3 = hex('#5A321A');
+  const ac1 = hex('#C99D5E'), ac2 = hex('#EBCF98'), ac3 = hex('#D8B47A');
   for (let y = 0; y < th2; y++) for (let x = 0; x < tw; x++) {
     const i = (y * tw + x) * 4;
     const u = x / tw, v = y / th2;
@@ -508,31 +510,24 @@
     // kesit ışığı: dış pah, oyuk, iç boncuk
     const gr = ctx.createLinearGradient(0, 0, 0, CER);
     const a = k.isik;
-    const L1 = (v) => `rgba(255,236,200,${clamp(v * a - 0.35, 0, 0.6)})`;
-    const D1 = (v) => `rgba(20,8,0,${clamp(v / a, 0, 0.8)})`;
-    gr.addColorStop(0, D1(0.55));
-    gr.addColorStop(0.06, L1(0.75));
-    gr.addColorStop(0.16, L1(0.5));
-    gr.addColorStop(0.3, D1(0.1));
-    gr.addColorStop(0.5, D1(0.35));
-    gr.addColorStop(0.66, D1(0.12));
-    gr.addColorStop(0.74, L1(0.72));
-    gr.addColorStop(0.82, D1(0.25));
-    gr.addColorStop(0.86, 'rgba(232,190,90,0.0)');
-    gr.addColorStop(0.87, 'rgba(214,168,72,0.95)');
-    gr.addColorStop(0.92, a > 1 ? 'rgba(255,226,140,1)' : 'rgba(170,122,44,1)');
-    gr.addColorStop(0.97, 'rgba(120,80,26,1)');
-    gr.addColorStop(1, 'rgba(30,14,4,1)');
+    // ince çıta: dışta hafif gölgeli pah, ortada açık ahşap, içte yaldızlı boncuk
+    gr.addColorStop(0, `rgba(110,70,20,${0.35 / a})`);
+    gr.addColorStop(0.18, `rgba(255,244,220,${clamp((a - 0.6) * 0.6, 0, 0.4)})`);
+    gr.addColorStop(0.5, 'rgba(255,244,220,0)');
+    gr.addColorStop(0.62, 'rgba(226,180,80,0.0)');
+    gr.addColorStop(0.68, 'rgba(226,184,86,0.95)');
+    gr.addColorStop(0.82, a > 1 ? 'rgba(255,232,150,1)' : 'rgba(214,166,70,1)');
+    gr.addColorStop(1, 'rgba(160,112,40,1)');
     ctx.fillStyle = gr; ctx.fillRect(0, 0, 1024, CER);
     ctx.restore();
     // genel ışık düzeyi
-    ctx.fillStyle = a > 1 ? `rgba(255,220,170,${(a - 1) * 0.6})` : `rgba(0,0,0,${(1 - a) * 0.8})`;
+    ctx.fillStyle = a > 1 ? `rgba(255,236,200,${(a - 1) * 0.6})` : `rgba(90,60,20,${(1 - a) * 0.45})`;
     ctx.fillRect(0, 0, 1024, 1024);
     ctx.restore();
   });
   // gönye çizgileri
   ctx.save();
-  ctx.strokeStyle = 'rgba(25,10,2,0.6)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(120,80,30,0.45)'; ctx.lineWidth = 0.8;
   for (const [a, b] of [[[0, 0], [CER, CER]], [[1024, 0], [1024 - CER, CER]], [[0, 1024], [CER, 1024 - CER]], [[1024, 1024], [1024 - CER, 1024 - CER]]]) {
     ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
   }

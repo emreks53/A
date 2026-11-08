@@ -1,0 +1,22 @@
+{
+  "kod": "S-116",
+  "no": 116,
+  "ad": "Boyalı Ahşap Rölyef",
+  "ad_en": "Painted Wood Relief",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Sığ oyulmuş ahşap pano: kabartma kubbe dilimleri, pencereler ve çiçekler parlak halk renkleriyle boyanmış, boyanın altından ahşap lifi seçilir.",
+  "tanim": "Boyalı ahşap rölyefte resim, bir tahta panonun yüzeyinden birkaç milimetre derinlikte oyulur: arka zemin keskiyle indirilir, öndeki biçimler kabartma olarak kalır, ardından her bölge düz ve canlı halk boyalarıyla boyanır. Işık oyma kenarlarında parlar, oyukların içine yumuşak gölgeler düşer; ince boya katmanının altından ahşabın lifleri ve keski izleri hafifçe görünür. Ev eşyası, kapı ve dolap kanatları, sandık yüzleri ve duvar panolarında kullanılır; neşeli, temiz ve dokunsal bir görüntü verir.",
+  "koken": "Oyulup boyanan ahşap pano Anadolu'da ahşap cami minberleri, kapı kanatları ve çeyiz sandıklarından, Orta Avrupa ve İskandinav köy evlerinin boyalı oymalarından (Norveç ve İsveç halk oyması), Meksika ve Hindistan'ın renkli ahşap kabartmalarına kadar yaygın bir halk sanatıdır. Usta önce deseni tahtaya çizer, zemini oluklu keskiyle indirir, kabartmaları bıçakla yuvarlar; sonra tutkallı ya da yağlı toprak boyalarla parlak kırmızı, sarı, mavi ve yeşil renkler sürer, bazen beyaz nokta ve çizgilerle süsler.",
+  "ayirt_edici": [
+    "Kabartma olarak oyulmuş on altı dilimli kubbe, silindir kesitli kasnak, öne taşan şerefeler, yastık biçimli bulutlar ve güneş ışınları",
+    "Pencereler, korkuluk aralıkları ve zikzak bant oyuk; içleri koyu mavi ve kırmızı boyalı",
+    "Sağ üstten gelen ışıkla oyma kenarlarında parlak sırt, sola ve aşağı düşen yumuşak oyma gölgeleri",
+    "Boyanın altından seçilen ince, yatay ahşap lifleri; gökte ve yerde sığ oluklu keski izleri",
+    "Düz, canlı halk renkleri ve beyaz boya noktaları; ince elle boyanmış, hafif titrek renk sınırları",
+    "Panonun kendisine ait, sarı topuzlu kırmızı oyma çerçeve; pano bütün tuvali doldurur"
+  ],
+  "palet": ["#7FCBF0", "#25A04C", "#36B85E", "#2A5DB0", "#E04B3C", "#F7C531", "#FBF6EA", "#F0C979"],
+  "kodla_cizim": "1024 px tuvalde her öğe aynı anda iki yere işlenir: düz halk renkleri bir boya tuvaline Path2D ile boyanır, biçim ise kayan noktalı bir yükseklik haritasına oyulur. Her öğenin maskesi kendi sınır kutusunda çizilip bulanıklaştırılır; keskin maske oyma duvarını, geniş bulanık maske yastık biçimli üstü verir; kubbe yüksekliği boylama göre dilimlenip kaburgalarda oluk açılarak, kasnak ve minare silindir kesitiyle, taç yapraklar elips kubbelerle hesaplanır; gök ve yer, oluklu keski izi gibi uzun ve sığ oyukların en derini alınarak kurulur. Yükseklikten normal çıkarılır, ışığa doğru yürüyen ışın yumuşak gölge, bulanık yükseklik farkı ortam örtmesi verir. Birleşimde boya rengi Lambert ışığı, gölge ve örtme ile çarpılır; gürültüyle bükülmüş sinüs bantlarından ince ahşap lifi ve gözenekler boyanın altından koyulaştırılır, boya katmanı ±1 px kaydırılarak elle boyamanın titrek sınırları verilir; altın alemlere metal parlaması eklenir.",
+  "etiketler": ["ahşap oyma", "rölyef", "halk sanatı", "boyalı ahşap", "kabartma", "keski izi", "dokunsal", "neşeli"]
+}

@@ -5,35 +5,35 @@
   "ad_en": "Chalkboard Chalk",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Ahşap çerçeveli koyu arduaz tahtada renkli tebeşir: aralarından tahtanın göründüğü tozlu, kırık vuruşlar, parmak sürtmeleri, silinmiş eski çizimlerin soluk izleri.",
-  "tanim": "Kara tahta tebeşiri, koyu arduaz ya da boyalı tahta üzerinde kalsiyum karbonat veya alçı tebeşirlerle yapılan çizimdir. Tebeşir tahtanın ince dokusunun tepelerinde kalır, vuruşlar tozlu ve kırık görünür; yan yüzle sürülen geniş alanlar parmakla dağıtılarak yumuşatılır, üstüne uçla net çizgiler atılır. Tahta silindikçe eski çizimlerin soluk izleri ve silgi sürtmelerinin bulutları kalır. Kafe ve dükkân tahtalarında, okul tahtalarında, vitrin ve menü süslemesinde kullanılır; usta işi tahtalar bordür ve köşe süsleriyle çerçevelenir.",
-  "koken": "Okul kara tahtası 19. yüzyılın başında (James Pillans ve George Baron'a atfedilir) yaygınlaştı; renkli tebeşirle anlatım çizimi öğretmenlerin ve dükkânların gündelik sanatı oldu. 20. yüzyılda kafe ve bistro menü tahtaları, bugün de el yazısı ve süsleme ustalarının 'chalk art' çalışmaları bu geleneği sürdürür.",
+  "ozet": "Açık yeşil-gri tahtada bitmiş, aydınlık bir renkli tebeşir duvar resmi: tahtanın neredeyse tamamı parmakla dağıtılmış tebeşirle örtülü, tahta yalnız tebeşir tanelerinin arasından seçiliyor.",
+  "tanim": "Kara tahta tebeşiri, arduaz ya da boyalı tahta üzerinde kalsiyum karbonat veya alçı tebeşirlerle yapılan çizimdir. Tebeşir tahtanın ince dokusunun tepelerinde kalır; tebeşirin yan yüzüyle sürülen geniş alanlar parmakla dağıtılarak yumuşatılır ve bitmiş bir tebeşir duvar resminde tahta neredeyse tamamen örtülür, yalnız tanelerin arasından seçilir. Üstüne uçla net çizgiler ve tozlu vuruşlar atılır. Kafe ve dükkân duvarlarında, vitrin ve okul panolarında, sokak tebeşir resminde kullanılır.",
+  "koken": "Okul kara tahtası 19. yüzyılın başında (James Pillans ve George Baron'a atfedilir) yaygınlaştı; renkli tebeşirle anlatım çizimi öğretmenlerin ve dükkânların gündelik sanatı oldu. 20. yüzyılda kafe ve bistro tahtaları, bugün de 'chalk art' ustalarının tahtayı baştan sona renkli tebeşirle örttükleri duvar boyu panoları bu geleneği sürdürür; yeşil ve açık renkli tahtalar koyu arduazın yerini büyük ölçüde almıştır.",
   "ayirt_edici": [
-    "Koyu yeşil-siyah arduaz tahta her yerde seçiliyor: gökte kırık mavi vuruşların ve parmak sürtmelerinin arasından, zeminde okra vuruşların altından, kenarlarda ve köşelerde açıkta; silinmiş eski çizimlerin soluk izleri",
-    "Tebeşir tahta dokusunun tepelerinde kalıyor: vuruşların içinde koyu benekler, tozlu ve kırık kenarlar",
-    "Gök tebeşirin yan yüzüyle hafifçe sürülmüş, yer yer parmakla dağıtılmış; kubbe ve taş yapılar daha yoğun sürülüp dağıtılmış, üstlerinde uçla atılmış net çizgiler",
-    "Canlı tebeşir renkleri: gök mavisi, yeşil ve açık yeşil kubbe, sarı güneş ve ışınları, pembe ve beyaz çiçekler, okra zemin",
-    "Kubbe kaburgaları parmakla silinerek açılmış koyu çizgiler ve yanlarında açık yeşil çizgilerle verilmiş",
-    "Köşeleri yuvarlatılmış çift çizgili pano bordürü, pembe sarmal köşe süsleri ve kenarlarda ahşap çerçeve; alt rafta tebeşir tozu"
+    "Gök baştan sona tebeşirle örtülü: yukarıda gök mavisi, ufka doğru açık mavi ve krem; yan yüzle sürülüp parmakla dağıtılmış, üstünde tozlu, kırık kenarlı beyaz ve mavi yan vuruşlar",
+    "Açık yeşil-gri tahta yalnız tebeşir tanelerinin arasından ince benekler hâlinde ve pencere içlerinde seçiliyor; vuruş kenarları tozlu",
+    "Güneşin çevresinde dağıtılmış geniş açık sarı hale, beyaz göbek ve uçla çekilmiş kısa sarı ışınlar; kalın, dağıtılmış beyaz bulutlar ve kabarık üst çizgileri",
+    "Yeşil tebeşirle dağıtılmış kubbe: kaburga yönünde açık yeşil ve beyaz vuruşlar, gölge yanında mavi-yeşil; kaburgalar parmakla silinerek açılmış ince çizgiler",
+    "Beyaz ve krem tebeşirle örtülü minare ve kaide, gölge yanında açık lila; üstlerinde çapraz beyaz tarama ve uçla çekilmiş konturlar, pembe zikzak bant",
+    "Parlak kum sarısı zemin, yeşil yapraklar ve beyaz çiçekler: göbekte açık sarı ve turuncu, gölge yanında lila, pembe-lila konturlu taç yapraklar; çerçeve yok, resim kenara kadar"
   ],
   "palet": [
-    "#1E2624",
-    "#7FA9C0",
-    "#5DBE6E",
-    "#2E8A58",
-    "#F2F0E6",
-    "#F6E27A",
-    "#F49CBA",
-    "#80563A"
+    "#94C8E6",
+    "#BADBEA",
+    "#E1E6E5",
+    "#EAD9A7",
+    "#5BB06D",
+    "#3D8E66",
+    "#F3DC84",
+    "#5B776B"
   ],
-  "kodla_cizim": "Arduaz tahta 2048 pikselde ince taneli bir yükseklik haritası, lekeler ve yatay silgi izleriyle kurulur. Tebeşir katmanları ayrı tuvallere çizilir ve örtücü olarak bırakılır: pigment diş yüksekliği ile basınca bağlı eşikle yalnız tepelere tutunur. Geniş alanlar paralel ince şeritlerden oluşan 'yan yüz' vuruşlarıyla doldurulur; gökte bu üç kattır: iri gürültüyle seyrekleşen, bulanıklaştırılarak (parmakla dağıtma) bırakılan yarı saydam bir toz katı, dişe kırık tutunan ezilmemiş vuruşlar ve birkaç uzun parmak sürtmesi; böylece tahta aralardan görünür. Zemin de gürültüyle seyrekleştirilir. Net çizgiler, bulut kıvrımları, yaprak vuruşları, konturlar ve bordür titreşimli el çizgisi parçalarıdır. Gök, köşeleri yuvarlatılmış ve kenarı gürültüyle düzensizleştirilmiş bir pano maskesi içinde kalır. Kubbe kaburgaları renk dizisi tahta rengine geri çekilerek 'silinir'. Eski çizim izleri ve silgi bulutları çok düşük örtücülükle ilk katmanda, tebeşir tozu pusu en sonda eklenir. Ahşap çerçeve, damar gürültüsüyle üretilmiş bir doku tuvalinden gönyeli dört parçaya kırpılarak, iç gölge ve kenar ışığıyla çizilir.",
+  "kodla_cizim": "Açık yeşil-gri tahta 2048 pikselde, tebeşir tanesi ölçeğinde (1024'te 1–2 piksel) bir diş yükseklik haritasıyla kurulur. Tebeşir katmanları ayrı tuvallere çizilir ve örtücü olarak bırakılır: pigment diş yüksekliği ile basınca bağlı eşikle tepelere tutunur, basınç yükseldikçe vadiler de dolar. Geniş alanlar paralel ince şeritlerden oluşan 'yan yüz' vuruşlarıyla doldurulur; gök ve zemin iki kattır: önce sık vuruşlar bulanıklaştırılarak (parmakla dağıtma) tahtayı neredeyse tamamen örten bir örtü, üstüne dişe kırık tutunan ezilmemiş vuruşlar; gökte ayrıca uzun, yumuşak parmak sürtmeleri. Gök rengi yükseklik ve güneşe uzaklıkla seçilir. Taş yapılar, kubbe ve kasnak aynı yolla, ışık haritasına (kubbe normali, silindir ışığı) göre seçilen renklerle örtülür; kubbe kaburgaları renk dizisi tahta rengine geri çekilerek 'silinir'. Net çizgiler, bulut kıvrımları, yaprak vuruşları ve konturlar titreşimli el çizgisi parçalarıdır. Bulanıklaştırmanın tuval kenarında bıraktığı ince şerit içerideki komşu piksellerle doldurulur; çerçeve, bordür ya da silinmiş eski çizim izi yoktur.",
   "etiketler": [
     "tebeşir",
     "kara tahta",
     "renkli tebeşir",
-    "kafe tahtası",
+    "tebeşir duvar resmi",
     "kuru teknik",
     "doku",
-    "çerçeve"
+    "aydınlık"
   ]
 }

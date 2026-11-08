@@ -5,35 +5,18 @@
   "ad_en": "Sgraffito",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Koyu üst kat kazınarak alttaki renkli katmanlar ortaya çıkarılır; resim kazıma çizgileri ve açılmış alanlardan oluşur.",
-  "tanim": "Sgrafito (İtalyanca 'kazınmış'), renkli bir alt katın üstüne zıt renkte, genellikle koyu bir boya ya da sıva katı sürülüp bu katın sivri uçlu ya da geniş ağızlı aletlerle kazınması tekniğidir. Kazınan yerden alttaki renk çıkar; ince iğne çizgileri taramayla ton verir, geniş kazıyıcı darbeleri alan açar. Kazıma yönleri ve alet izleri yüzeyde görünür, oyukların kenarları hafif kabartı ve gölge yapar. Cephe süslemesinde, seramikte ve resimde kullanılır.",
+  "ozet": "Açık krem kireç sıva üst kat kazınarak alttaki parlak renkli katmanlar ortaya çıkarılır; resim kazıma çizgileri ve açılmış alanlardan oluşur, bütünü açık ve ferahtır.",
+  "tanim": "Sgrafito (İtalyanca 'kazınmış'), renkli bir alt katın üstüne zıt renkte bir boya ya da sıva katı sürülüp bu katın sivri uçlu ya da geniş ağızlı aletlerle kazınması tekniğidir. Bu örnekte üst kat açık krem bir kireç sıvadır: kazınan yerden gökte mavi, kubbede yeşil, alemlerde altın, çiçeklerde gül rengi çıkar, kazınmadan kalan sıva bulutları, ışıkları ve beyaz taşı verir. İnce iğne çizgileri taramayla ton kurar, geniş açılmış alanlar rengi doyurur; alet izleri ve oyuk kenarları yakından seçilir. Cephe süslemesinde, seramikte ve resimde kullanılır.",
   "koken": "Teknik Roma döneminden bilinir; Rönesans İtalya'sında saray cephelerinde (Floransa'da Palazzo Spinelli) yaygınlaştı ve Orta Avrupa'da, özellikle Bohemya ve İsviçre'de (Engadin evleri) cephe sanatının simgesi oldu. Seramikte Bizans ve Anadolu Selçuklu sgrafito kâseleri, 20. yüzyılda da Picasso'nun seramikleri tekniğin ünlü örnekleridir; çocukların renkli mum üstüne siyah boya kazıdığı 'kazıma resim' de aynı ilkeye dayanır.",
   "ayirt_edici": [
-    "Neredeyse siyah, benekli mat üst kat bütün resmi kaplıyor; görüntü yalnız kazınarak açılmış yerlerden çıkıyor",
-    "Renkli alt katlar: gökte mavi, kubbe ve kasnakta yeşil, alemlerde altın, kaide ve minarede pembe-krem, çiçeklerde gül, yerde turuncu",
-    "Kazıma çizgilerinin kalınlığıyla kurulmuş ton: gökte güneşe ve ufka doğru kalınlaşan dalgalı yatay çizgiler, kubbede meridyen taraması ve ışıklı yanda enlem yaylarıyla çapraz tarama",
-    "Kazınmadan bırakılmış koyu kaburgalar, pencereler ve konturlar; geniş kazıyıcıyla açılmış kaide ve taç yapraklarında ince koyu artıklar, kopuk ve titrek çizgi uçları",
-    "Bulutlarda kalınlaşıp birleşen tarama çizgileri ve kabarcıkların ışıklı tepesini izleyen kırık yay kazımaları; güneş kazıyıcıyla açılmış bir disk, çevresinde boyları düzensiz iğne ışınları",
-    "Oyukların ışığa bakan duvarında gölge, karşı kenarında hafif parlama ve pürüzlü, ufalanmış kenarlar"
+    "Açık krem, mat kireç sıva üst kat bütün resmi kaplıyor; bulutlar, ışıklar, beyaz taş ve kubbe kaburgaları kazınmadan bırakılmış sıvadır",
+    "Parlak renkli alt katlar kazınarak açılmış: gökte mavi, kubbe ve kasnakta yeşil, alemlerde altın, güneşte sarı-turuncu, çiçeklerde gül, çayırda yeşil, taşın gölgesinde sıcak toprak rengi",
+    "Kazıma çizgisinin kalınlığıyla kurulmuş ton: gökte yukarıda kalın, ufka ve güneşe doğru incelen dalgalı yatay çizgiler; kubbede meridyen taraması, gölgeli yanda enlem yaylarıyla çapraz tarama",
+    "Tamamen açılmış alanlar: kasnak ve kaide pencereleri, altın alemler, güneş diski, çiçek göbekleri; çevrelerinde ince bir sıva payı ve kazınmış kemer çizgisi",
+    "Yapraklarda gölge yarısı sık, ışıklı yarı seyrek taranmış; orta ve yan damarlar kazınmadan kalan krem çizgiler",
+    "Bulutların dış kenarında tek, ince ve kırık kazıma konturu; oyukların ışığa bakan duvarında hafif gölge ve alet izi"
   ],
-  "palet": [
-    "#24211F",
-    "#2A6EB4",
-    "#9ED2E0",
-    "#3E9A50",
-    "#9CC84A",
-    "#F0C44A",
-    "#E46C94",
-    "#F4D8B4"
-  ],
-  "kodla_cizim": "Önce 1024 piksellik renkli alt kat hazırlanır: bölge haritası gürültüyle kaydırılarak gevşek, taşkın lekeler hâlinde boyanır (gök mavi rampası, güneşte turuncu-sarı ve bulut yoğunluğuna göre tepede sıcak beyaz, tabanda mor-gri, kubbede ışık modeline göre yeşil, kaide pembe-krem, çiçek gül ve ortası pembe-beyaz) ve bulanıklaştırılır. Kazıma ayrı bir 2048 piksellik maskede canvas çizgileriyle yapılır: iğne taraması her çizgide kalınlığı, eğimi ve kopuklukları değişen paralel çizgilerdir, kalınlık ton fonksiyonundan (gök parlaklığı, kubbe ve silindir ışığı) gelir; bulutlar, düzensiz kabarcıklardan kurulan bir yoğunluk alanında gök taramasının kalınlaşmasıyla ve kabarcık tepelerini izleyen kırık yaylarla açılır; güneş diski kazıyıcıyla açılır, çevresine boyları rastgele iğne ışınları çizilir; geniş kazıyıcı darbeleri kaide, korniş ve taç yapraklarını açar; kubbede meridyen çizgileri ve ışıklı yanda enlem yayları, kaburgalarda kazıntıyı silen koyu şeritler vardır. Her bölge kendi maskesiyle aktarılır, yeşil kanal alet izi derinliği olarak saklanır. Birleştirmede maske iki ölçekli gürültüyle pürüzlendirilir, kazınan yerde alt kat rengi alet izi ve çizik dokusuyla çarpılır, sağ üst komşuya göre oyuk gölgesi ve karşı kenar parlaması hesaplanır; kazınmayan yer benekli koyu sıva olarak kalır.",
-  "etiketler": [
-    "sgrafito",
-    "kazıma",
-    "katman",
-    "sıva",
-    "çizgi",
-    "tarama",
-    "geleneksel"
-  ]
+  "palet": ["#F1EBDC", "#2066CA", "#198753", "#91B05A", "#FBCB45", "#F8668F", "#D58259", "#8ED241"],
+  "kodla_cizim": "Önce 1024 piksellik parlak renkli alt kat hazırlanır: bölge haritası gürültüyle kaydırılarak gevşek, taşkın lekeler hâlinde boyanır (gök mavi rampası, güneşte sarı-turuncu, bulutların altında açık mavi-mor, kubbede ışık modeline göre yeşil, kasnak pencerelerinde koyu yeşil, kaide ve minarede toprak-okra, çiçek gül, çayır yeşil) ve bulanıklaştırılır. Kazıma ayrı bir 2048 piksellik maskede canvas çizgileriyle yapılır; üst kat açık olduğu için ton ters işler: çizgi kalınlığı gölgede ve koyu gökte artar, ışıkta ve bulutta azalıp kaybolur. İğne taraması her çizgide kalınlığı, eğimi ve kopuklukları değişen paralel çizgilerdir; bulutlar düzensiz kabarcıklardan kurulan bir yoğunluk alanında taramanın silinmesiyle açık kalır, dış sınırlarına ince kırık bir kontur çizilir; güneş diski, pencereler, alemler ve çiçek göbekleri tamamen açılır; kaburgalar ve yaprak damarları destination-out ile kazınmamış bırakılır. Her bölge kendi maskesiyle aktarılır, yeşil kanal alet izi derinliği olarak saklanır. Birleştirmede maske iki ölçekli gürültüyle pürüzlendirilir, kazınan yerde alt kat rengi alet izi dokusuyla çarpılır, sağ üst komşuya göre oyuk gölgesi ve karşı kenar parlaması hesaplanır; kazınmayan yer ince kumlu, açık krem kireç sıva olarak kalır.",
+  "etiketler": ["sgrafito", "kazıma", "katman", "kireç sıva", "çizgi", "tarama", "açık zemin", "geleneksel"]
 }

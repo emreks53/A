@@ -5,36 +5,18 @@
   "ad_en": "Lacquer Painting",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Ayna gibi parlak siyah ve kırmızı lake; cilayla açılan yaldızlı geçişler, yumurta kabuğu kakma, altın ve gümüş varak, sedef.",
-  "tanim": "Lake resim, ağaç reçinesinden elde edilen lakenin bir pano üzerine kat kat sürülüp her kattan sonra kurutulması ve zımparalanmasıyla yapılır. Renkler, altın ve gümüş varaklar, ezilmiş yumurta kabuğu ve sedef katların arasına gömülür; son katlar zımpara ve cilayla inceltildiğinde alttaki renkler ve varak, biçimleri izleyen yumuşak geçişlerle yüzeye çıkar. Sonuç derin, ayna gibi parlak, mücevher etkili bir yüzeydir; pano resimlerinde, paravanlarda, kutularda ve iç mekân süslemesinde kullanılır.",
+  "ozet": "Işıklı altın varak ve kehribar lake zeminli, ayna gibi parlak pano; cilayla altına açılan yeşil lake, yumurta kabuğu kakma, gümüş varak, sedef ve kırmızı lake vurgular.",
+  "tanim": "Lake resim, ağaç reçinesinden elde edilen lakenin bir pano üzerine kat kat sürülüp her kattan sonra kurutulması ve zımparalanmasıyla yapılır. Renkler, altın ve gümüş varaklar, ezilmiş yumurta kabuğu ve sedef katların arasına gömülür; son katlar zımpara ve cilayla inceltildiğinde alttaki renkler ve varak, biçimleri izleyen yumuşak geçişlerle yüzeye çıkar. Bu örnekte zemin, ince kehribar lake altından parlayan altın varaktır; sonuç aydınlık, sıcak, ayna gibi parlak ve mücevher etkili bir yüzeydir. Pano resimlerinde, paravanlarda, kutularda ve iç mekân süslemesinde kullanılır.",
   "koken": "Lake sanatı Çin'de Neolitik çağa uzanır, Japonya'da urushi (maki-e altın tozu, raden sedef kakma) olarak incelikli bir saray sanatına dönüştü. Vietnam'da sơn mài ('zımparalanmış boya') adıyla bilinen resim tekniği 1930'larda Hanoi'deki Çinhindi Güzel Sanatlar Okulu'nda geleneksel lake zanaatından geliştirildi; Nguyễn Gia Trí, Trần Văn Cẩn ve Nguyễn Sáng gibi ustalar siyah, kırmızı, altın, gümüş ve yumurta kabuğuyla büyük pano resimleri yaptı. Osmanlı'da 'lake' ya da 'Edirnekâri' adıyla bilinen yakın gelenek de cilt kapakları ve çekmeceleri süsledi.",
   "ayirt_edici": [
-    "Kusursuz, derin siyah lake gök ve kırmızı lake zemin; güneş çevresinde ve ufukta siyahın altından önce koyu kırmızı, sonra kehribar lake altındaki altının yumuşak geçişlerle cilayla açılması",
-    "Yeşil kubbede her dilimin kendi ışığını alması ve ışıklı omuzda yeşil lakenin altından yeşim yeşili, altın-yeşil ve altın tonlarının biçimi izleyerek parlaması",
-    "Altın varak güneş, şerefeler, alemler, saplar ve kaburgalar; varak karelerinin ekleri ve ince çatlakları görünür; ufukta ve güneş çevresinde serpme altın pullar ve seyrek kesik varak kareleri",
-    "Üstü gümüş varak, altı kehribar lake altında altına dönüp siyahta sönen, altın konturlu bulutlar",
-    "Minarede, kaidede ve büyük çiçeklerde ezilmiş yumurta kabuğu kakması; küçük çiçeklerde pembe, yeşil ve mavi parıldayan sedef taç yapraklar",
-    "Sol üst köşede panelin ayna gibi cilalı yüzeyine düşen iki bölmeli pencere yansıması"
+    "Bütün gökte ince kehribar lake altından parlayan altın varak: hafifçe seçilen varak kareleri, güneşe ve ufka doğru cilayla açılan açık şampanya altını",
+    "Yeşil lake kubbede her dilimin kendi ışığını alması; ışıklı omuzda yeşim yeşili ve altın-yeşil cila parıltısı, kırmızı lake kontur ve altın kaburgalar",
+    "Ortası cilayla altına açılmış kırmızı lake güneş, gümüş varak halkalar; çevresinde serpme gümüş ve açık altın pullar",
+    "Gümüş varak, altın maki-e çizgili bulutlar; kehribar-altın lake zemin ve ince kırmızı lake ufuk çizgisi",
+    "Minarede, kaidede ve büyük çiçeklerde ince altın lake aralı beyaz yumurta kabuğu kakması; küçük çiçeklerde pembe, yeşil ve mavi parıldayan sedef taç yapraklar",
+    "Kırmızı lake şerefe çıkmaları, korniş, zikzak ve gonca vurguları; sol üstte cilalı yüzeye düşen yumuşak pencere yansıması"
   ],
-  "palet": [
-    "#0A0808",
-    "#8B2D18",
-    "#10311C",
-    "#2F703E",
-    "#CCB764",
-    "#D5AD50",
-    "#834B20",
-    "#EBEEF2"
-  ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Her parça bir malzemeyle beş ekran dışı katmandan birine çizilir: üst lake rengi, alt lake (ikinci renk ve miktarı), varak (ton ve miktar), yumurta kabuğu (ton) ve sedef (parça başına faz kayması); opak parçalar alttaki malzemeleri siler. Cilayla açılan alanlar yumuşak radyal ve doğrusal gradyanlarla boyanır; piksel geçişinde boyanan miktar doğrudan karışım oranı olur, yalnızca geçiş bölgelerinde ince bir 'zımpara tanesi' gürültüsü eklenir. Kubbe piksel piksel gölgelenir: her dilimin şişkinliği normali döndürür, ışık miktarı yeşil lake tonunu, yeşim yeşili alt katı ve altın varağın açılma oranını belirler. Varak, şaşırtmalı kareler, bindirme ve gölge çizgileri, kırışıklık ve gürültü konturlarından ince çatlaklarla dokulanır; bu ayrıntılar varak açıkça göründüğü yerde belirginleşir. Yumurta kabuğu, gürültüyle bükülmüş koordinatlarda Voronoi parçalarına bölünür; parça kenarları koyu lake çatlağı olur. Sedef, büyüme halkaları ve gürültüden türeyen kosinüs paletli ince film girişim renkleri alır. En üstte 'screen' kipiyle hafif bulanık pencere yansıması, çapraz cila ışığı ve kenar koyulaşması çizilir.",
-  "etiketler": [
-    "lake",
-    "sơn mài",
-    "urushi",
-    "varak",
-    "yumurta kabuğu",
-    "sedef",
-    "parlak",
-    "zanaat"
-  ]
+  "palet": ["#DAAC5D", "#F7EB96", "#2D844C", "#D7D786", "#C44327", "#E8DDC6", "#EAEDF0", "#D09852"],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Her parça bir malzemeyle beş ekran dışı katmandan birine çizilir: üst lake rengi, alt lake (ikinci renk ve miktarı), varak (ton ve miktar), yumurta kabuğu (ton) ve sedef (parça başına faz kayması); opak parçalar alttaki malzemeleri siler. Gök ve zemin, kehribar lake tabanın üstüne miktarı gradyanla değişen altın varak olarak kurulur: lake üstte biraz kalın, güneşe ve ufka doğru cilayla incelir. Piksel geçişinde boyanan miktar doğrudan karışım oranı olur, yalnızca geçiş bölgelerinde ince bir 'zımpara tanesi' gürültüsü eklenir. Kubbe piksel piksel gölgelenir: her dilimin şişkinliği normali döndürür, ışık miktarı açık yeşil lake tonunu, yeşim yeşili alt katı ve altın varağın açılma oranını belirler. Varak, şaşırtmalı kareler ve ince bindirme çizgileriyle hafifçe dokulanır. Yumurta kabuğu, gürültüyle bükülmüş koordinatlarda Voronoi parçalarına bölünür; parçaların arası dar ve sıcak altın lakeyle doludur. Sedef, büyüme halkaları ve gürültüden türeyen kosinüs paletli ince film girişim renkleri alır. Altın zeminde seçilsinler diye alemler ve kubbe ince kırmızı lakeyle çevrelenir. En üstte 'screen' kipiyle hafif bulanık pencere yansıması ve çapraz cila ışığı çizilir.",
+  "etiketler": ["lake", "sơn mài", "urushi", "varak", "yumurta kabuğu", "sedef", "parlak", "zanaat"]
 }

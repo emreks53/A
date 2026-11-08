@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>S-102 Yazma (Tahta Kalıp Baskı) — Atölye örnek görseli</title>
+<style>
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #f7f1e3; }
+  canvas { display: block; width: 1024px; height: 1024px; }
+</style>
+</head>
+<body>
+<canvas id="tuval"></canvas>
+<script src="../../sahne/sahne.js"></script>
+<script>
+// S-102 Yazma (Tahta Kalıp Baskı) — Tokat yazması geleneği: krem pamuklu bez üstüne oyulmuş armut ağacı
+// kalıplarla, her renk ayrı kalıptan elle basılır. Önce dolgu kalıpları (kök boya kırmızısı, cehri sarısı,
+// yeşil, çivit), en son koyu kahve "tahrir" (kontur) kalıbı. Zemin küçük kare kalıpların yan yana
+// basılmasıyla dolar; aynı kalıp tekrar tekrar kullanılır, her basışta mürekkep yoğunluğu ve yeri biraz
+// değişir; kenarda kalıpla basılmış süslü bordür. Boya bezin içine işler, dokuma dokusu görünür.
+// Ortak sahne ve yardımcılar: ../../sahne/SAHNE.md
+'use strict';
+const W = 1024, H = 1024, N = W * H;
+const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+const TAU = Math.PI * 2;
+const P2 = (d) => new Path2D(d);
+
+// ------------------------------------------------------------------ gürültü
+function gurultuFn(tohum) {
+  const r = SAHNE.rng(tohum);
+  const v = new Float32Array(256);
+  const p = new Uint8Array(512);
+  for (let i = 0; i < 256; i++) { v[i] = r(); p[i] = i; }
+  for (let i = 255; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = p[i]; p[i] = p[j]; p[j] = t; }
+  for (let i = 0; i < 256; i++) p[i + 256] = p[i];
+  return function (x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf), w = yf * yf * (3 - 2 * yf);
+    const X = xi & 255, Y = yi & 255;
+    const a = v[p[p[X] + Y]], b = v[p[p[X + 1] + Y]], c = v[p[p[X] + Y + 1]], d = v[p[p[X + 1] + Y + 1]];
+    return a + (b - a) * u + (c - a) * w + (a - b - c + d) * u * w;
+  };
+}
+function fbmFn(tohum, oktav, olcek, kazanc) {
+  kazanc = kazanc || 0.5;
+  const g = [];
+  for (let i = 0; i < oktav; i++) g.push(gurultuFn(tohum * 31 + i * 7 + 1));
+  let top = 0, a = 1;
+  for (let i = 0; i < oktav; i++) { top += a; a *= kazanc; }
+  return function (x, y) {
+    let s = 0, a = 1, f = 1 / olcek;
+    for (let i = 0; i < oktav; i++) { s += a * g[i](x * f + i * 17.3, y * f - i * 9.1); a *= kazanc; f *= 2.03; }
+    return s / top;
+  };
+}
+function bulanik(m, r) {
+  const t = new Float32Array(N), o = new Float32Array(N);
+  const k = 1 / (2 * r + 1);
+  for (let gecis = 0; gecis < 2; gecis++) {
+    const kaynak = gecis ? o : m;
+    for (let y = 0; y < H; y++) {
+      let s = 0;
+      const b = y * W;
+      for (let x = -r; x <= r; x++) s += kaynak[b + clamp(x, 0, W - 1)];
+      for (let x = 0; x < W; x++) {
+        t[b + x] = s * k;
+        s += kaynak[b + Math.min(W - 1, x + r + 1)] - kaynak[b + Math.max(0, x - r)];
+      }
+    }
+    for (let x = 0; x < W; x++) {
+      let s = 0;
+      for (let y = -r; y <= r; y++) s += t[clamp(y, 0, H - 1) * W + x];
+      for (let y = 0; y < H; y++) {
+        o[y * W + x] = s * k;
+        s += t[Math.min(H - 1, y + r + 1) * W + x] - t[Math.max(0, y - r) * W + x];
+      }
+    }
+  }
+  return o;
+}
+function okuKanal(c, kanal) {
+  const d = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H).data;
+  const m = new Float32Array(N);
+  for (let i = 0, j = kanal; i < N; i++, j += 4) m[i] = d[j] / 255;
+  return m;
+}
+
+// ------------------------------------------------------------------ boyalar (doğal boya renkleri) ve kalıp katmanları
+const BOYA = {
+  zeminSari: [236, 196, 108],  // seyreltik cehri: yer kalıbı
+  gokCivit:  [118, 166, 214],  // seyreltik çivit: gök kalıbı
+  sari:      [232, 170, 44],   // cehri sarısı
+  yesil:     [92, 156, 88],    // yeşil (çivit + cehri)
+  civit:     [58, 104, 168],   // çivit
+  pembe:     [228, 150, 140],  // seyreltik kök boya
+  kirmizi:   [192, 62, 50],    // kök boya kırmızısı
+  kontur:    [64, 42, 32],     // demir-kahve tahrir
+};
+const SIRA = ['zeminSari', 'gokCivit', 'sari', 'yesil', 'civit', 'pembe', 'kirmizi', 'kontur'];
+const KAT = {};
+for (const ad of SIRA) {
+  const c = SAHNE.yeniTuval(W, H);
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+  KAT[ad] = { c, g };
+}
+const rIz = SAHNE.rng(202);
+// sahne kalıpları bordürün iç çizgisinde biter; bordür basılırken kırpma kapatılır
+let ALAN = { x: 61, y: 61, w: W - 122, h: H - 122 };
+const tmp = SAHNE.yeniTuval(W, H);
+const tg = tmp.getContext('2d');
+
+/** Bir kalıp basışı: kalıbın yeri ±kayma kadar oynar, mürekkep yoğunluğu her basışta biraz değişir.
+ *  oyma = true → kalıp ayrı tuvalde hazırlanır (destination-out ile oyulmuş çizgiler kâğıtta krem kalır). */
+function bas(ad, ciz, o) {
+  o = o || {};
+  const k = o.kayma === undefined ? 1.6 : o.kayma;
+  const dx = (rIz() - 0.5) * 2 * k, dy = (rIz() - 0.5) * 2 * k;
+  const yog = o.yog !== undefined ? o.yog : 0.8 + rIz() * 0.2;
+  const g = KAT[ad].g;
+  if (o.oyma) {
+    tg.setTransform(1, 0, 0, 1, 0, 0);
+    tg.globalCompositeOperation = 'source-over';
+    tg.clearRect(0, 0, W, H);
+    tg.save();
+    if (ALAN) { tg.beginPath(); tg.rect(ALAN.x, ALAN.y, ALAN.w, ALAN.h); tg.clip(); }
+    tg.translate(dx, dy);
+    tg.fillStyle = tg.strokeStyle = '#fff';
+    ciz(tg);
+    tg.restore();
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = yog; g.drawImage(tmp, 0, 0); g.restore();
+  } else {
+    g.save();
+    if (ALAN) { g.beginPath(); g.rect(ALAN.x, ALAN.y, ALAN.w, ALAN.h); g.clip(); }
+    g.globalCompositeOperation = 'lighter'; g.globalAlpha = yog;
+    g.translate(dx, dy);
+    g.fillStyle = g.strokeStyle = '#fff';
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    ciz(g);
+    g.restore();
+  }
+}
+/** Küçük, tekrar kullanılan kalıp (damga tuvali, 2× çözünürlük). */
+function kalip(w, h, ciz) {
+  const c = SAHNE.yeniTuval(w * 2, h * 2);
+  const g = c.getContext('2d');
+  g.scale(2, 2);
+  g.fillStyle = g.strokeStyle = '#fff';
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  ciz(g);
+  return { c, w, h };
+}
+function kalipBas(ad, k, x, y, aci, o) {
+  bas(ad, (g) => {
+    g.translate(x, y);
+    if (aci) g.rotate(aci);
+    g.drawImage(k.c, -k.w / 2, -k.h / 2, k.w, k.h);
+  }, o);
+}
+
+// ------------------------------------------------------------------ geometri yardımcıları
+const B = SAHNE.bitki;
+const Y = SAHNE.yollar();
+const IC = { x1: 62, y1: 62, x2: 962, y2: 962 }; // bordür içindeki alan
+function elips(g, cx, cy, rx, ry, a) { g.beginPath(); g.ellipse(cx, cy, rx, ry, a || 0, 0, TAU); }
+function daire(g, cx, cy, r) { g.beginPath(); g.arc(cx, cy, r, 0, TAU); }
+/** Beş yapraklı yazma çiçeğinin taç yaprağı (ucunda küçük çentik). */
+function tacYolu(cx, cy, r, a) {
+  const ca = Math.cos(a), sa = Math.sin(a);
+  const P = (u, v) => [cx + u * ca - v * sa, cy + u * sa + v * ca];
+  const p = new Path2D();
+  const s = P(r * 0.16, 0);
+  p.moveTo(...s);
+  p.bezierCurveTo(...P(r * 0.3, -r * 0.44), ...P(r * 0.96, -r * 0.56), ...P(r * 0.99, -r * 0.13));
+  p.quadraticCurveTo(...P(r * 0.84, -r * 0.02), ...P(r * 0.99, r * 0.13));
+  p.bezierCurveTo(...P(r * 0.96, r * 0.56), ...P(r * 0.3, r * 0.44), ...s);
+  return p;
+}
+/** Çintemani bulutu: yuvarlak loblar, iki ucunda kıvrım. */
+const BULUT_LOB = [[-58, 8, 15], [-34, -5, 21], [-4, -14, 25], [28, -6, 21], [54, 6, 16], [16, 10, 18], [-22, 10, 18]];
+function bulutKalibi(tur) {
+  return kalip(170, 90, (g) => {
+    g.translate(85, 48);
+    if (tur === 'kontur') {
+      g.lineWidth = 3;
+      for (const [x, y, r] of BULUT_LOB) { daire(g, x, y, r); g.stroke(); }
+      g.globalCompositeOperation = 'destination-out';
+      for (const [x, y, r] of BULUT_LOB) { daire(g, x, y, r - 1.5); g.fill(); }
+      g.globalCompositeOperation = 'source-over';
+      // iç kıvrımlar
+      g.lineWidth = 2.2;
+      for (const [x, y, r, a0] of [[-34, -3, 11, 3.6], [-4, -11, 13, 3.4], [28, -4, 11, 3.8]]) {
+        g.beginPath();
+        for (let t = 0; t <= 1; t += 0.04) {
+          const rr = r * (1 - t * 0.75), a = a0 + t * 4.4;
+          const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
+          t ? g.lineTo(px, py) : g.moveTo(px, py);
+        }
+        g.stroke();
+      }
+    } else {
+      for (const [x, y, r] of BULUT_LOB) { daire(g, x, y, r); g.fill(); }
+    }
+  });
+}
+
+// ------------------------------------------------------------------ zemin kalıpları (gök ve yer), nesne rezervi
+const GAD = 96;
+const gadGok = kalip(GAD, GAD, (g) => {
+  g.fillRect(0, 0, GAD, GAD);
+  g.globalCompositeOperation = 'destination-out';
+  const c = GAD / 2;
+  for (let i = 0; i < 4; i++) { const a = (i * Math.PI) / 2 + Math.PI / 4; elips(g, c + Math.cos(a) * 9, c + Math.sin(a) * 9, 7.5, 4.2, a); g.fill(); }
+  for (const [x, y] of [[0, 0], [GAD, 0], [0, GAD], [GAD, GAD]]) { daire(g, x, y, 8); g.fill(); }
+  for (const [x, y] of [[c, 0], [0, c], [GAD, c], [c, GAD]]) { daire(g, x, y, 2.6); g.fill(); }
+  for (const [x, y] of [[c / 2, c / 2], [c * 1.5, c / 2], [c / 2, c * 1.5], [c * 1.5, c * 1.5]]) { daire(g, x, y, 1.8); g.fill(); }
+  g.globalCompositeOperation = 'source-over';
+  daire(g, c, c, 2.4); g.fill();
+  for (const [x, y] of [[0, 0], [GAD, 0], [0, GAD], [GAD, GAD]]) { daire(g, x, y, 3); g.fill(); }
+});
+const gadZemin = kalip(GAD, GAD, (g) => {
+  g.fillRect(0, 0, GAD, GAD);
+  g.globalCompositeOperation = 'destination-out';
+  const c = GAD / 2;
+  for (const [x, y, s] of [[c, c, 1], [0, 0, 0.7], [GAD, 0, 0.7], [0, GAD, 0.7], [GAD, GAD, 0.7]]) {
+    for (let i = 0; i < 3; i++) { const a = -Math.PI / 2 + (i - 1) * 0.75; elips(g, x + Math.cos(a) * 8 * s, y + Math.sin(a) * 8 * s, 6.5 * s, 3 * s, a); g.fill(); }
+    g.fillRect(x - 0.9 * s, y, 1.8 * s, 9 * s);
+  }
+  for (const [x, y] of [[c, 0], [0, c], [GAD, c], [c, GAD]]) { daire(g, x, y, 2.4); g.fill(); }
+});
+
+// nesnelerin rezervi: gök ve yer kalıpları bunların çevresinde krem bir pay bırakır
+const rezerv = (() => {
+  const c = SAHNE.yeniTuval(W, H);
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.fillStyle = g.strokeStyle = '#fff';
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  g.fill(P2(SAHNE.kubbeYolu));
+  g.fill(P2(Y.kasnakAlt)); g.fill(P2(Y.kasnakUst)); g.fill(P2(Y.kaide)); g.fill(P2(Y.kornis));
+  for (const d of Y.minare) g.fill(P2(d));
+  for (const d of Y.alem.concat(Y.minareAlem)) g.fill(P2(d));
+  g.fillRect(297, 140, 6, 60);
+  daire(g, SAHNE.gunes.x, SAHNE.gunes.y, 66); g.fill();
+  for (const b of BULUTLAR()) for (const [x, y, r] of BULUT_LOB) { daire(g, b[0] + x * b[2], b[1] + (y + 3) * b[2], (r + 1.5) * b[2]); g.fill(); }
+  g.lineWidth = 6;
+  for (const s of Y.saplar) g.stroke(P2(s));
+  for (const y of B.yapraklar) { g.fill(P2(SAHNE.yaprakYolu(y))); g.lineWidth = 3; g.stroke(P2(SAHNE.yaprakYolu(y))); }
+  for (const t of B.tomurcuklar) g.fill(P2(SAHNE.tomurcukYolu(t)));
+  for (const f of B.cicekler) { daire(g, f.x, f.y, f.r * 1.08); g.fill(); }
+  const m = okuKanal(c, 3);
+  const b = bulanik(m, 2);
+  for (let i = 0; i < N; i++) m[i] = Math.max(m[i], clamp(b[i] * 3));
+  return m;
+})();
+function BULUTLAR() { return [[172, 244, 0.95], [505, 156, 0.8], [772, 336, 1.0], [930, 476, 0.62], [104, 470, 0.62]]; }
+
+// ------------------------------------------------------------------ 1) zemin kalıpları: gök (çivit) ve yer (cehri)
+for (let y = 32; y < 800; y += GAD) for (let x = 14; x < W; x += GAD) kalipBas('gokCivit', gadGok, x + GAD / 2, y + GAD / 2, 0, { kayma: 1.3, yog: 0.38 + rIz() * 0.12 });
+for (let y = 800; y < H; y += GAD) for (let x = 14; x < W; x += GAD) kalipBas('zeminSari', gadZemin, x + GAD / 2, y + GAD / 2, 0, { kayma: 1.3, yog: 0.42 + rIz() * 0.12 });
+// gök kalıbının yer çizgisini aşan kısmı ve yer kalıbının yukarı taşan kısmı silinir (kalıplar çizgiye dayanır)
+{
+  const g = KAT.gokCivit.g; g.fillStyle = '#000'; g.fillRect(0, 801, W, H);
+  const z = KAT.zeminSari.g; z.fillStyle = '#000'; z.fillRect(0, 0, W, 799.5);
+}
+
+// ------------------------------------------------------------------ 2) güneş: çarkıfelek rozeti
+{
+  const gx = SAHNE.gunes.x, gy = SAHNE.gunes.y;
+  const yaprak = (g, i, r1, r2, w) => {
+    const a = (i / 12) * TAU;
+    g.save(); g.translate(gx, gy); g.rotate(a);
+    g.beginPath(); g.moveTo(r1, 0); g.quadraticCurveTo((r1 + r2) / 2, -w, r2, 0); g.quadraticCurveTo((r1 + r2) / 2, w, r1, 0); g.closePath();
+    g.restore();
+  };
+  bas('sari', (g) => { for (let i = 0; i < 12; i++) { yaprak(g, i, 24, 58, 11); g.fill(); } daire(g, gx, gy, 24); g.fill(); });
+  bas('kirmizi', (g) => { daire(g, gx, gy, 15); g.fill(); for (let i = 0; i < 12; i++) { const a = ((i + 0.5) / 12) * TAU; daire(g, gx + Math.cos(a) * 52, gy + Math.sin(a) * 52, 3.2); g.fill(); } });
+  bas('kontur', (g) => {
+    g.lineWidth = 2.4;
+    for (let i = 0; i < 12; i++) { yaprak(g, i, 24, 58, 11); g.stroke(); }
+    daire(g, gx, gy, 24); g.stroke(); daire(g, gx, gy, 15); g.stroke();
+    g.lineWidth = 1.6;
+    for (let i = 0; i < 12; i++) { const a = (i / 12) * TAU; g.beginPath(); g.moveTo(gx + Math.cos(a) * 30, gy + Math.sin(a) * 30); g.lineTo(gx + Math.cos(a) * 48, gy + Math.sin(a) * 48); g.stroke(); }
+  });
+}
+
+// ------------------------------------------------------------------ 3) bulutlar: aynı çintemani kalıbı birkaç kez
+{
+  const kk = bulutKalibi('kontur'), kd = bulutKalibi('dolgu');
+  for (const [x, y, s] of BULUTLAR()) {
+    bas('civit', (g) => { g.translate(x, y); g.scale(s, s); g.drawImage(kk.c, -85, -48, 170, 90); }, { yog: 0.85 });
+    bas('pembe', (g) => { g.translate(x, y + 2 * s); g.scale(s * 0.6, s * 0.45); g.drawImage(kd.c, -85, -48, 170, 90); }, { yog: 0.25 });
+  }
+}
+
+// ------------------------------------------------------------------ 4) minare: üç kalıp üst üste (birleşim yerleri hafif kayık)
+const MP = SAHNE.minareParcalari();
+const minareBolum = [[488, 800], [290, 488], [70, 290]];
+for (const [y1, y2] of minareBolum) {
+  const kesit = (g) => { g.beginPath(); g.rect(200, y1, 200, y2 - y1); g.clip(); };
+  const kx = (rIz() - 0.5) * 2.4;
+  // dolgu: sol yanda açık çivit gölge, korkuluk ve zikzak kırmızı, alem sarı
+  bas('gokCivit', (g) => {
+    g.translate(kx, 0); kesit(g);
+    for (const p of MP) if (p.ad.startsWith('gövde')) { const xs = p.noktalar.map((q) => q[0]); g.fillRect(Math.min(...xs) + 3, Math.min(...p.noktalar.map((q) => q[1])), (Math.max(...xs) - Math.min(...xs)) * 0.28, 999); }
+    g.save(); g.clip(P2(MP.find((p) => p.ad === 'topuz').yol)); g.fillRect(260, 140, 36, 70); g.restore();
+  }, { yog: 0.45 });
+  bas('kirmizi', (g) => {
+    g.translate(kx, 0); kesit(g);
+    g.lineWidth = 3.4; g.lineJoin = 'miter';
+    for (const z of Y.zikzak) g.stroke(P2(z));
+    for (const p of MP) if (p.tip === 'korkuluk') {
+      for (let i = 0; i < 8; i++) { const x = p.x1 + 6 + ((p.x2 - p.x1 - 12) * (i + 0.5)) / 8; g.fillRect(x - 2.5, p.y1 + 4, 5, p.y2 - p.y1 - 7); }
+    }
+  });
+  bas('sari', (g) => {
+    g.translate(kx, 0); kesit(g);
+    for (const d of Y.minareAlem) g.fill(P2(d));
+    for (const p of MP) if (p.ad.startsWith('şerefe')) g.fill(P2(SAHNE.yol(p.noktalar, true)));
+  }, { yog: 0.7 });
+  bas('kontur', (g) => {
+    g.translate(kx, 0); kesit(g);
+    g.lineWidth = 2.4;
+    for (const d of Y.minare) g.stroke(P2(d));
+    for (const d of Y.minareAlem) { g.lineWidth = 1.4; g.stroke(P2(d)); }
+    for (const d of Y.minarePencereleri) g.fill(P2(d));
+    g.lineWidth = 1.6;
+    for (const p of MP) if (p.ad.startsWith('gövde')) {
+      const ys = p.noktalar.map((q) => q[1]);
+      for (let y = Math.min(...ys) + 26; y < Math.max(...ys) - 8; y += 26) { if (y > 516 && y < 590) continue; g.beginPath(); g.moveTo(p.noktalar[0][0] + 2, y); g.lineTo(p.noktalar[1][0] - 2, y); g.stroke(); }
+    }
+  });
+}
+
+// ------------------------------------------------------------------ 5) kaide: krem taş (rezerv), kırmızı pencereler, baklava şeridi
+{
+  const K = SAHNE.kaide;
+  bas('gokCivit', (g) => { g.fillRect(K.x1 + 3, K.y1 + 3, 22, K.y2 - K.y1 - 6); g.fillRect(K.x1 + 3, K.y1 + 3, K.x2 - K.x1 - 6, 7); }, { yog: 0.42 });
+  bas('kirmizi', (g) => { for (const d of Y.kaidePencereleri) g.fill(P2(d)); });
+  // aynı küçük baklava kalıbı korniş altında tekrar tekrar
+  const baklava = kalip(16, 12, (g) => { g.beginPath(); g.moveTo(8, 1); g.lineTo(15, 6); g.lineTo(8, 11); g.lineTo(1, 6); g.closePath(); g.fill(); });
+  for (let x = K.x1 + 34; x < K.x2 - 20; x += 22) kalipBas('kirmizi', baklava, x, 716, 0, { kayma: 0.8 });
+  bas('kontur', (g) => {
+    g.lineWidth = 2.4;
+    g.stroke(P2(Y.kaide)); g.stroke(P2(Y.kornis));
+    for (const d of Y.kaidePencereleri) g.stroke(P2(d));
+    g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(K.x1 + 2, 724); g.lineTo(K.x2 - 2, 724); g.stroke();
+    g.beginPath(); g.moveTo(K.x1 + 2, 709); g.lineTo(K.x2 - 2, 709); g.stroke();
+  });
+}
+
+// ------------------------------------------------------------------ 6) kasnak ve kubbe
+{
+  // sarı alt kalıp (yeşilin altına; kayınca bir yanda sarı kenar görünür)
+  bas('sari', (g) => { g.fill(P2(SAHNE.kubbeYolu)); g.fill(P2(Y.kasnakUst)); g.fill(P2(Y.kasnakAlt)); }, { yog: 0.5 });
+  // yeşil dolgu: sağ dilimlerde oyulmuş ışık çizgileri krem kalır
+  bas('yesil', (g) => {
+    g.fill(P2(SAHNE.kubbeYolu));
+    g.fill(P2(Y.kasnakUst)); g.fill(P2(Y.kasnakAlt));
+    g.globalCompositeOperation = 'destination-out';
+    const prof = SAHNE.kubbeProfili(60);
+    for (let k = 8; k < 15; k++) {
+      const pa = -Math.PI / 2 + (Math.PI * k) / 16, pb = pa + Math.PI / 16;
+      const u = Math.sin(pa + (pb - pa) * 0.62), w = (Math.sin(pb) - Math.sin(pa)) * 0.16;
+      const sol = [], sag = [];
+      for (let i = 10; i <= 46; i++) { const q = prof[i]; const s = Math.sin(((i - 10) / 36) * Math.PI); sol.push([560 + (u - w * s) * q.r, q.y]); sag.push([560 + (u + w * s) * q.r, q.y]); }
+      g.fill(P2(SAHNE.yol(sol.concat(sag.reverse()), true)));
+    }
+    // kasnak ışık çizgileri
+    for (const k of [0, 1]) for (const p of SAHNE.kasnakPencereleri(k)) if (p.x > 600) g.fillRect(p.x + p.w / 2 + 3, p.y + 6, 2.2, p.h - 8);
+  }, { oyma: true, yog: 0.92 });
+  // çivit üst basışı: sol dilimlerde gölge
+  bas('civit', (g) => {
+    g.save(); g.clip(P2(SAHNE.kubbeYolu));
+    const prof = SAHNE.kubbeProfili(60);
+    const sol = [], sag = [];
+    for (let i = 0; i <= 60; i++) { const q = prof[i]; sol.push([560 - q.r, q.y]); sag.push([560 + Math.sin(-Math.PI / 2 + (Math.PI * 4) / 16) * q.r, q.y]); }
+    g.fill(P2(SAHNE.yol(sol.concat(sag.reverse()), true)));
+    g.restore();
+    for (const k of [0, 1]) { const q = SAHNE.kasnak[k]; g.fillRect(q.x1, q.y1, (q.x2 - q.x1) * 0.12, q.y2 - q.y1); }
+  }, { yog: 0.32 });
+  // alem
+  bas('sari', (g) => { for (const d of Y.alem) g.fill(P2(d)); }, { yog: 0.9 });
+  bas('kontur', (g) => {
+    g.lineWidth = 2.6; g.stroke(P2(SAHNE.kubbeYolu));
+    g.lineWidth = 1.7; for (const d of Y.kaburgalar) g.stroke(P2(d));
+    g.lineWidth = 2.4; g.stroke(P2(Y.kasnakUst)); g.stroke(P2(Y.kasnakAlt));
+    for (const d of Y.kasnakPencereleri) g.fill(P2(d));
+    g.lineWidth = 1.5; for (const d of Y.alem) g.stroke(P2(d));
+    g.lineWidth = 1.4;
+    g.beginPath(); g.moveTo(354, 561); g.lineTo(766, 561); g.moveTo(336, 616); g.lineTo(784, 616); g.stroke();
+  });
+}
+
+// ------------------------------------------------------------------ 7) bitkiler: sap, yaprak, tomurcuk ve çiçek kalıpları
+bas('yesil', (g) => { g.lineWidth = 4.4; for (const s of Y.saplar) g.stroke(P2(s)); }, { yog: 0.95 });
+for (const y of B.yapraklar) {
+  const d = P2(SAHNE.yaprakYolu(y));
+  bas('yesil', (g) => g.fill(d), { yog: 0.82 + rIz() * 0.15 });
+  bas('kontur', (g) => {
+    g.lineWidth = 1.9; g.stroke(d);
+    const [a, b] = SAHNE.yaprakDamari(y);
+    g.lineWidth = 1.4; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+  });
+}
+for (const t of B.tomurcuklar) {
+  const d = P2(SAHNE.tomurcukYolu(t));
+  bas('kirmizi', (g) => g.fill(d));
+  bas('kontur', (g) => { g.lineWidth = 1.7; g.stroke(d); });
+}
+for (const c of B.cicekler) {
+  const yollar = [];
+  for (let i = 0; i < 5; i++) yollar.push(tacYolu(c.x, c.y, c.r, c.aci + (i * TAU) / 5));
+  // pembe: taç yaprağın dibinde hafif kök boya gölgesi
+  bas('pembe', (g) => { for (let i = 0; i < 5; i++) { const a = c.aci + (i * TAU) / 5; elips(g, c.x + Math.cos(a) * c.r * 0.42, c.y + Math.sin(a) * c.r * 0.42, c.r * 0.2, c.r * 0.13, a); g.fill(); } }, { yog: 0.55 });
+  bas('sari', (g) => { daire(g, c.x, c.y, c.r * 0.22); g.fill(); });
+  bas('kirmizi', (g) => {
+    for (let i = 0; i < 5; i++) {
+      const a = c.aci + ((i + 0.5) * TAU) / 5;
+      daire(g, c.x + Math.cos(a) * c.r * 0.3, c.y + Math.sin(a) * c.r * 0.3, Math.max(1.4, c.r * 0.045)); g.fill();
+    }
+    daire(g, c.x, c.y, c.r * 0.08); g.fill();
+  });
+  bas('kontur', (g) => {
+    g.lineWidth = Math.max(1.6, c.r * 0.045);
+    for (const p of yollar) g.stroke(p);
+    daire(g, c.x, c.y, c.r * 0.22); g.stroke();
+    g.lineWidth = Math.max(1.1, c.r * 0.028);
+    for (let i = 0; i < 5; i++) {
+      const a = c.aci + (i * TAU) / 5;
+      g.beginPath(); g.moveTo(c.x + Math.cos(a) * c.r * 0.6, c.y + Math.sin(a) * c.r * 0.6); g.lineTo(c.x + Math.cos(a) * c.r * 0.84, c.y + Math.sin(a) * c.r * 0.84); g.stroke();
+    }
+  });
+}
+
+// ------------------------------------------------------------------ 8) bordür: köşe rozetleri, gül ve yaprak kalıpları, oya kenarı
+const BOR = { dis: 10, ic: 58 };
+ALAN = null;
+{
+  const gul = (tur) => kalip(32, 32, (g) => {
+    g.translate(16, 16);
+    for (let i = 0; i < 8; i++) {
+      g.save(); g.rotate((i / 8) * TAU);
+      g.beginPath(); g.moveTo(4, 0); g.quadraticCurveTo(9, -5.4, 14, 0); g.quadraticCurveTo(9, 5.4, 4, 0); g.closePath();
+      if (tur === 'dolgu') g.fill(); else if (tur === 'kontur') { g.lineWidth = 1.5; g.stroke(); }
+      g.restore();
+    }
+    if (tur === 'orta') { daire(g, 0, 0, 4.4); g.fill(); }
+    if (tur === 'kontur') { daire(g, 0, 0, 4.4); g.lineWidth = 1.4; g.stroke(); }
+  });
+  const yaprakCift = (tur) => kalip(34, 18, (g) => {
+    g.translate(17, 9);
+    for (const s of [-1, 1]) {
+      g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(s * 7, -7, s * 15, 0); g.quadraticCurveTo(s * 7, 7, 0, 0); g.closePath();
+      if (tur === 'dolgu') g.fill(); else { g.lineWidth = 1.4; g.stroke(); g.beginPath(); g.moveTo(s * 2, 0); g.lineTo(s * 12, 0); g.stroke(); }
+    }
+    if (tur !== 'dolgu') { daire(g, 0, 0, 2); g.fill(); }
+  });
+  const kose = (tur) => kalip(44, 44, (g) => {
+    g.translate(22, 22);
+    for (let i = 0; i < 4; i++) {
+      g.save(); g.rotate((i / 4) * TAU + Math.PI / 4);
+      g.beginPath(); g.moveTo(3, 0); g.bezierCurveTo(8, -10, 18, -9, 19, 0); g.bezierCurveTo(18, 9, 8, 10, 3, 0); g.closePath();
+      if (tur === 'dolgu') g.fill(); else if (tur === 'kontur') { g.lineWidth = 1.6; g.stroke(); }
+      g.restore();
+      g.save(); g.rotate((i / 4) * TAU);
+      g.beginPath(); g.moveTo(8, 0); g.lineTo(16, -3.5); g.lineTo(21, 0); g.lineTo(16, 3.5); g.closePath();
+      if (tur === 'yesil') g.fill(); else if (tur === 'kontur') { g.lineWidth = 1.2; g.stroke(); }
+      g.restore();
+    }
+    if (tur === 'orta') { daire(g, 0, 0, 5); g.fill(); }
+    if (tur === 'kontur') { daire(g, 0, 0, 5); g.lineWidth = 1.4; g.stroke(); }
+  });
+  const gD = gul('dolgu'), gO = gul('orta'), gK = gul('kontur');
+  const yD = yaprakCift('dolgu'), yK = yaprakCift('kontur');
+  const kD = kose('dolgu'), kY = kose('yesil'), kO = kose('orta'), kK = kose('kontur');
+  const m = (BOR.dis + BOR.ic) / 2; // bant ekseni
+  const uzun = W - 2 * BOR.ic;
+  const adet = Math.round(uzun / 46);
+  const adim = uzun / adet;
+  const kenarlar = [
+    (t) => [BOR.ic + t, m, 0], (t) => [BOR.ic + t, H - m, 0],
+    (t) => [m, BOR.ic + t, Math.PI / 2], (t) => [W - m, BOR.ic + t, Math.PI / 2],
+  ];
+  for (const kenar of kenarlar) {
+    for (let i = 0; i < adet; i++) {
+      const [x, y, a] = kenar((i + 0.5) * adim);
+      if (i % 2 === 0) {
+        kalipBas('kirmizi', gD, x, y, a, { kayma: 1 });
+        kalipBas('sari', gO, x, y, a, { kayma: 1 });
+        kalipBas('kontur', gK, x, y, a, { kayma: 1 });
+      } else {
+        kalipBas('yesil', yD, x, y, a, { kayma: 1 });
+        kalipBas('kontur', yK, x, y, a, { kayma: 1 });
+      }
+    }
+  }
+  for (const [x, y] of [[m, m], [W - m, m], [m, H - m], [W - m, H - m]]) {
+    kalipBas('sari', kD, x, y, 0, { kayma: 1 });
+    kalipBas('yesil', kY, x, y, 0, { kayma: 1 });
+    kalipBas('kirmizi', kO, x, y, 0, { kayma: 1 });
+    kalipBas('kontur', kK, x, y, 0, { kayma: 1 });
+  }
+  // çizgi kalıpları (her kenar ayrı basış) ve köşe kareleri
+  const cizgi = (ad, d, lw, o) => {
+    for (const [x1, y1, x2, y2] of [[d, d, W - d, d], [d, H - d, W - d, H - d], [d, d, d, H - d], [W - d, d, W - d, H - d]]) {
+      bas(ad, (g) => { g.lineWidth = lw; g.lineCap = 'butt'; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); }, o || { kayma: 0.8 });
+    }
+  };
+  cizgi('kirmizi', BOR.dis + 1, 4);
+  cizgi('kontur', BOR.dis + 5, 1.6);
+  cizgi('kontur', BOR.ic - 4, 1.6);
+  cizgi('kirmizi', BOR.ic, 4);
+  // oya kenarı: iç çizgiden alana sarkan küçük kırmızı kemercikler
+  const oya = kalip(14, 9, (g) => { g.beginPath(); g.moveTo(1, 0); g.quadraticCurveTo(7, 12, 13, 0); g.closePath(); g.fill(); });
+  const oyaK = kalip(14, 9, (g) => { daire(g, 7, 4.6, 1.3); g.fill(); });
+  const ic = BOR.ic + 2;
+  const oyaAdet = Math.round((W - 2 * ic) / 15);
+  const oyaAdim = (W - 2 * ic) / oyaAdet;
+  for (let i = 0; i < oyaAdet; i++) {
+    const t = ic + (i + 0.5) * oyaAdim;
+    for (const [x, y, a] of [[t, ic + 4, 0], [t, H - ic - 4, Math.PI], [ic + 4, t, -Math.PI / 2], [W - ic - 4, t, Math.PI / 2]]) {
+      kalipBas('kirmizi', oya, x, y, a, { kayma: 0.7, yog: 0.75 + rIz() * 0.2 });
+      kalipBas('sari', oyaK, x, y, a, { kayma: 0.7 });
+    }
+  }
+}
+
+// ------------------------------------------------------------------ boyama: bez dokusu + boya katmanları (çarpım)
+const tuval = document.getElementById('tuval');
+tuval.width = W; tuval.height = H;
+const ctx = tuval.getContext('2d');
+
+const rr = SAHNE.rng(77);
+const satir = new Float32Array(H), sutun = new Float32Array(W);
+for (let i = 0; i < H; i++) satir[i] = (rr() - 0.5) * 0.035 + (rr() < 0.04 ? (rr() - 0.5) * 0.06 : 0);
+for (let i = 0; i < W; i++) sutun[i] = (rr() - 0.5) * 0.035 + (rr() < 0.04 ? (rr() - 0.5) * 0.06 : 0);
+const kumas = new Float32Array(N); // dokuma kabartısı 0..1
+{
+  const n = gurultuFn(9);
+  for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
+    const a = Math.sin((x + 0.6 * n(x / 7, y / 7)) * Math.PI / 1.5), b = Math.sin((y + 0.6 * n(x / 7 + 50, y / 7)) * Math.PI / 1.5);
+    kumas[i] = 0.5 + 0.5 * a * b;
+  }
+}
+const lekeK = fbmFn(21, 4, 90);    // kalıp basıncının geniş dalgalanması
+const lekeI = fbmFn(22, 3, 5);     // kalıbın tutmadığı küçük açıklar
+const damar = gurultuFn(23);       // tahta kalıbın lifi
+
+const R = new Float32Array(N), G = new Float32Array(N), Bm = new Float32Array(N);
+for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
+  const t = 1 + satir[y] + sutun[x] + (kumas[i] - 0.5) * 0.05;
+  R[i] = 248 * t; G[i] = 242 * t; Bm[i] = 226 * t;
+}
+
+for (const ad of SIRA) {
+  let m = okuKanal(KAT[ad].c, 0);
+  // boya bezin liflerine biraz yürür: hafif yumuşak kenar
+  const b = bulanik(m, 1);
+  const col = BOYA[ad];
+  const zemin = ad === 'gokCivit' || ad === 'zeminSari';
+  const sx = ad.length * 13.7;
+  for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
+    let c = Math.max(m[i] * 0.85 + b[i] * 0.15, b[i] * 0.8);
+    if (c <= 0.003) continue;
+    if (zemin) c *= 1 - rezerv[i];
+    c = Math.min(c, 1.25);
+    // basınç dalgalanması, kalıbın tutmadığı açıklar, tahta lifi, dokuma
+    const k = lekeK(x + sx, y);
+    const ac = smooth(0.6, 0.78, lekeI(x + sx, y - sx));
+    const lif = damar(x / 30 + sx, y / 1.6);
+    c *= (0.84 + 0.3 * k) * (1 - 0.32 * ac) * (0.93 + 0.1 * lif) * (0.86 + 0.2 * kumas[i]);
+    c = clamp(c);
+    R[i] *= 1 - c * (1 - col[0] / 255);
+    G[i] *= 1 - c * (1 - col[1] / 255);
+    Bm[i] *= 1 - c * (1 - col[2] / 255);
+  }
+}
+
+const img = ctx.createImageData(W, H);
+for (let i = 0, j = 0; i < N; i++, j += 4) {
+  img.data[j] = R[i]; img.data[j + 1] = G[i]; img.data[j + 2] = Bm[i]; img.data[j + 3] = 255;
+}
+ctx.putImageData(img, 0, 0);
+SAHNE.hazir();
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-052 Duvar Resmi — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #8a8278; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #f3dda4; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -12,10 +12,9 @@
 <canvas id="tuval"></canvas>
 <script src="../../sahne/sahne.js"></script>
 <script>
-// S-052 Duvar Resmi — tuğla duvara dış cephe akriliğiyle boyanmış büyük bir kent duvar resmi: uzaktan okunan
-// sade, iri biçimler ve doygun renkler, kalın koyu kontur, elle çekilmiş hafif pürüzlü kenarlar; boyanın
-// altından tuğla dokusu ve derz çizgileri görünür; hafif güneş solması, yağmur izi, kenarlarda boya atması.
-// Altta boyanmamış iki sıra tuğla ve kaldırım, resmin bir duvar olduğunu gösterir.
+// S-052 Duvar Resmi — dış cephe akriliğiyle boyanmış büyük bir kent duvar resmi, kenardan kenara bütün yüzeyi
+// kaplar: uzaktan okunan sade, iri biçimler ve parlak, doygun renkler, kalın koyu kontur, elle çekilmiş hafif
+// pürüzlü kenarlar, rulo izi. Duvarın dokusu yalnız boyanın altında çok hafif bir kabartı olarak sezilir.
 (function () {
   'use strict';
   const S = SAHNE;
@@ -57,14 +56,9 @@
   const nA = gurultu(21), nB = gurultu(22), nC = gurultu(23), nD = gurultu(24);
 
   // ============================================================ 1. DUVAR RESMİ (ekran dışı tuvalde düz renkli boya)
-  const RES_ALT = 936; // boyalı alanın alt sınırı (tuğla sırası çizgisi)
-  const ZEMIN = 966; // kaldırımın başladığı yer
   const resim = S.yeniTuval();
   const g = resim.getContext('2d', { willReadFrequently: true });
-  // sahne boyalı alana sığacak biçimde biraz küçültülür; en alttaki çiçeklerin alt ucu (y ≈ 1023)
-  // tuğla sırasının hemen üstüne denk gelecek kadar yukarı kaydırılır, böylece konu gökte küçük kalmaz
-  const s = 0.95;
-  g.setTransform(s, 0, 0, s, (W / 2) * (1 - s), RES_ALT - 1023 * s);
+  // sahne tam, kanonik boyutunda; resim bütün tuvali kenardan kenara kaplar
   const KONTUR = '#1C2340';
   g.lineJoin = 'round';
   g.lineCap = 'round';
@@ -80,7 +74,7 @@
   };
 
   // --- gök: el ile çekilmiş dalgalı bantlar, geçişlerde birbirine giren kuru fırça dilleri
-  const bantlar = ['#1B3C8C', '#2459AE', '#3479C6', '#55A2D6', '#8CCBDD', '#C9E5CF', '#F4E3A2'];
+  const bantlar = ['#3B7DCD', '#4A91D7', '#5DA7DF', '#7BBEE6', '#A2D4E9', '#CDE9D8', '#F7E8B0'];
   const sinirlar = [130, 255, 370, 480, 590, 700];
   const bantY = (k, x) => sinirlar[k] + Math.sin(x * 0.011 + k * 1.9) * 7 + Math.sin(x * 0.027 + k) * 3;
   g.fillStyle = bantlar[bantlar.length - 1];
@@ -190,7 +184,7 @@
     g.stroke();
     g.fillStyle = '#F3DDA4';
     g.fillRect(-120, 800, 1270, 240);
-    g.fillStyle = '#E2BD78';
+    g.fillStyle = '#EAC985';
     g.beginPath();
     g.moveTo(-120, 1040);
     for (let x = -120; x <= 1150; x += 10) g.lineTo(x, 880 + Math.sin(x * 0.01) * 6);
@@ -331,13 +325,13 @@
     g.lineWidth = 4;
     g.stroke(p);
   };
-  kasnakCiz(1, '#145A2B', '#1F7A3A', '#3DA155', '#0B2E1A');
-  kasnakCiz(0, '#18602F', '#2B8A45', '#4DB466', '#0B2E1A');
+  kasnakCiz(1, '#18682F', '#22863F', '#44AC5A', '#0F3B22');
+  kasnakCiz(0, '#1C6E34', '#2E934A', '#55BE6C', '#0F3B22');
 
   // --- kubbe: 16 dilim, sağ üstten ışığa göre kademeli düz tonlar (posterize), kalın kaburgalar
   {
     const prof = S.kubbeProfili(60);
-    const tonlar = ['#0D4A25', '#14612F', '#1C7A3A', '#2A9447', '#45AE57', '#6BC86A'];
+    const tonlar = ['#156A35', '#1C7E3E', '#249248', '#33A853', '#4FBE62', '#78D576'];
     for (let k = 0; k < 16; k++) {
       const u1 = Math.sin(-Math.PI / 2 + (Math.PI * k) / 16), u2 = Math.sin(-Math.PI / 2 + (Math.PI * (k + 1)) / 16);
       const ph = -Math.PI / 2 + (Math.PI * (k + 0.5)) / 16;
@@ -451,7 +445,7 @@
     });
   }
 
-  // ============================================================ 2. TUĞLA DUVAR + BOYA (piksel piksel)
+  // ============================================================ 2. DUVAR DOKUSU + BOYA (piksel piksel; duvar boyanın altında yalnız sezilir)
   const resimVeri = g.getImageData(0, 0, W, W).data;
   const CH = 24, BL = 72, MT = 3.6; // sıra yüksekliği, tuğla boyu, derz kalınlığı
   const N = W * W;
@@ -479,136 +473,34 @@
   }
   const cikti = ctx.createImageData(W, W);
   const d = cikti.data;
-  const TUGLALAR = [hex('#9E4B33'), hex('#B35C3C'), hex('#8A3F2C'), hex('#A8573A'), hex('#94503A'), hex('#BC6A48')];
-  const HARC = hex('#B5AEA2');
-  // boya atmasının görüldüğü birkaç yer (konudan uzak: köşeler, kenarlar, dip)
-  const ATMA = [[40, 60, 70], [990, 610, 60], [150, 900, 50], [990, 880, 70], [12, 420, 36]];
-  const ASTAR = hex('#ECE6D8');
   for (let y = 0; y < W; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
       const h = H[i];
       const hx = H[y * W + Math.min(W - 1, x + 1)] - H[y * W + Math.max(0, x - 1)];
       const hy = H[Math.min(W - 1, y + 1) * W + x] - H[Math.max(0, y - 1) * W + x];
-      // ışık sağ üstten: yukarı ve sağa bakan eğimler aydınlanır
-      let golge = (1 + (-hx * 0.55 + hy * 0.6) * 0.5) * (0.95 + 0.07 * (x / W) * (1 - y / W) + 0.03 * (1 - y / W));
-      golge *= 0.86 + 0.14 * clamp(h, 0, 1);
-      const tid = tugla[i];
-      const th = hash(tid, 11, 3);
-      const derz = h < 0.35;
-      // boyanın sınırı (alttaki boyanmamış sıralar), hafif pürüzlü
-      const resimSinir = RES_ALT + (nC(x * 0.2, 3) - 0.5) * 3 + (hash(x, 1, 8) - 0.5) * 1.5;
-      let renk;
-      if (y < resimSinir) {
-        // kenarları elle çekilmiş gibi pürüzlü: örnekleme noktası ince gürültüyle kaydırılır
-        const ox = (nD(x * 0.16, y * 0.16) - 0.5) * 3.4 + (nA(x * 0.6, y * 0.6) - 0.5) * 1.0;
-        const oy = (nD(x * 0.16 + 40, y * 0.16 + 40) - 0.5) * 3.4 + (nA(x * 0.6 + 9, y * 0.6 + 9) - 0.5) * 1.0;
-        const sx = clamp(Math.round(x + ox), 0, W - 1), sy = clamp(Math.round(y + oy), 0, W - 1);
-        const k = (sy * W + sx) * 4;
-        let boya = [resimVeri[k], resimVeri[k + 1], resimVeri[k + 2]];
-        // tuğladan tuğlaya boyanın emilimi farklı: hafif ton oynaması; rulo izi
-        const ton = 1 + (th - 0.5) * 0.05 + (nB(x * 0.02, y * 0.06) - 0.5) * 0.05;
-        boya = [boya[0] * ton, boya[1] * ton, boya[2] * ton];
-        // güneş solması: üstte daha fazla, hafif beyazlaşma ve doygunluk kaybı
-        const sol = 0.06 + 0.08 * (1 - y / W) + (fbm(nA, x * 0.006, y * 0.006, 3) - 0.5) * 0.12;
-        const gri = (boya[0] + boya[1] + boya[2]) / 3;
-        boya = mix(boya, [gri + 18, gri + 18, gri + 14], clamp(sol, 0, 0.3));
-        // derzde boya her yere girmez: harç rengi yer yer görünür
-        let ort = derz ? 0.9 + nA(x * 0.9, y * 0.9) * 0.2 : 1;
-        // boya atması (hafif): yalnız birkaç bölgede, tuğla kenarlarında ve dipte küçük kopuklar
-        let bolge = sstep(890, 936, y) * 0.75;
-        for (const [bx, by, br] of ATMA) { const dx = x - bx, dy = y - by; bolge += Math.exp(-(dx * dx + dy * dy) / (br * br)); }
-        bolge = Math.min(1, bolge) * sstep(0.35, 0.6, fbm(nC, x * 0.02 + 3, y * 0.02, 3));
-        const kop = bolge * (fbm(nD, x * 0.07, y * 0.07, 3) + (1 - h) * 0.1 + (hash(x >> 1, y >> 1, 17) - 0.5) * 0.04);
-        let alt = derz ? HARC : TUGLALAR[(th * 6) | 0];
-        if (kop > 0.62) { ort = 0; }
-        else if (kop > 0.58) { ort = Math.min(ort, 0.2); alt = ASTAR; }
-        renk = mix(alt, boya, clamp(ort, 0, 1));
-      } else {
-        renk = derz ? HARC : mix(TUGLALAR[(th * 6) | 0], [70, 40, 30], (hash(x, y, 21) - 0.5) * 0.2 + nB(x * 0.3, y * 0.3) * 0.12);
-      }
-      // yağmur izleri: üstten inen ince, soluk dikey lekeler
-      const iz = sstep(0.62, 0.9, nA(x * 0.09, 50.5)) * (0.5 + 0.5 * nB(x * 0.09, y * 0.004)) * (1 - y / 1300);
-      renk = mix(renk, [96, 90, 84], iz * 0.12);
-      // dipte nem ve sıçrayan toz
-      const nem = sstep(880 + nC(x * 0.03, 9) * 40, 966, y);
-      renk = mix(renk, [88, 74, 62], nem * 0.28);
-      // derzlerde beyaz çiçeklenme (kireç)
-      if (derz && y > 900) renk = mix(renk, [236, 232, 220], 0.25 * hash(x >> 2, y >> 2, 31));
-      const tane = (hash(x, y, 41) - 0.5) * 10;
+      // boyanın altındaki duvar yalnız çok hafif bir kabartı: sağ üstten gelen ışıkla derz ve tuğla yüzü zor seçilir
+      let golge = 1 + (-hx * 0.55 + hy * 0.6) * 0.04;
+      golge *= 0.99 + 0.01 * clamp(h, 0, 1);
+      // boya filminin kendi dokusu: rulo ve fırçanın bıraktığı ince, düzensiz kabartı
+      golge *= 1 + (nC(x * 0.33, y * 0.33) - 0.5) * 0.035 + (nA(x * 0.9 + 31, y * 0.9) - 0.5) * 0.02;
+      const th = hash(tugla[i], 11, 3);
+      // kenarları elle çekilmiş gibi pürüzlü: örnekleme noktası ince gürültüyle kaydırılır
+      const ox = (nD(x * 0.16, y * 0.16) - 0.5) * 3.4 + (nA(x * 0.6, y * 0.6) - 0.5) * 1.0;
+      const oy = (nD(x * 0.16 + 40, y * 0.16 + 40) - 0.5) * 3.4 + (nA(x * 0.6 + 9, y * 0.6 + 9) - 0.5) * 1.0;
+      const sx = clamp(Math.round(x + ox), 0, W - 1), sy = clamp(Math.round(y + oy), 0, W - 1);
+      const k = (sy * W + sx) * 4;
+      // boya her yeri tam örter; tuğladan tuğlaya emilim farkı çok az, rulo izi geniş ve yumuşak
+      const ton = 1 + (th - 0.5) * 0.008 + (nB(x * 0.02, y * 0.06) - 0.5) * 0.045 + (fbm(nC, x * 0.004, y * 0.03, 2) - 0.5) * 0.03;
+      const tane = (hash(x, y, 41) - 0.5) * 6;
       const o = i * 4;
-      d[o] = clamp(renk[0] * golge + tane, 0, 255);
-      d[o + 1] = clamp(renk[1] * golge + tane, 0, 255);
-      d[o + 2] = clamp(renk[2] * golge + tane, 0, 255);
+      d[o] = clamp(resimVeri[k] * ton * golge + tane, 0, 255);
+      d[o + 1] = clamp(resimVeri[k + 1] * ton * golge + tane, 0, 255);
+      d[o + 2] = clamp(resimVeri[k + 2] * ton * golge + tane, 0, 255);
       d[o + 3] = 255;
     }
   }
   ctx.putImageData(cikti, 0, 0);
-
-  // ============================================================ 3. KALDIRIM
-  {
-    // duvar dibinde temas gölgesi
-    const gg = ctx.createLinearGradient(0, ZEMIN - 6, 0, ZEMIN + 6);
-    gg.addColorStop(0, 'rgba(30,24,20,0)');
-    gg.addColorStop(1, 'rgba(30,24,20,0.4)');
-    ctx.fillStyle = gg;
-    ctx.fillRect(0, ZEMIN - 6, W, 6);
-    const z = ctx.createLinearGradient(0, ZEMIN, 0, W);
-    z.addColorStop(0, '#8E887E');
-    z.addColorStop(0.18, '#ABA59A');
-    z.addColorStop(1, '#C3BDB1');
-    ctx.fillStyle = z;
-    ctx.fillRect(0, ZEMIN, W, W - ZEMIN);
-    // bordür kenarı (duvara paralel), plak derzleri (perspektifte ufka kaçan)
-    ctx.strokeStyle = 'rgba(70,64,58,0.55)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(0, ZEMIN + 18);
-    ctx.lineTo(W, ZEMIN + 18);
-    ctx.stroke();
-    const kx = 512, ky = 760;
-    for (let i = -6; i <= 6; i++) {
-      const xb = 512 + i * 170;
-      const t0 = (ZEMIN + 18 - ky) / (W - ky);
-      ctx.beginPath();
-      ctx.moveTo(kx + (xb - kx) * t0, ZEMIN + 18);
-      ctx.lineTo(xb, W);
-      ctx.stroke();
-    }
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, ZEMIN + 19.5);
-    ctx.lineTo(W, ZEMIN + 19.5);
-    ctx.stroke();
-    // beton dokusu
-    const id = ctx.getImageData(0, ZEMIN, W, W - ZEMIN), dd = id.data;
-    for (let y = 0; y < W - ZEMIN; y++) {
-      for (let x = 0; x < W; x++) {
-        const o = (y * W + x) * 4;
-        const n = (hash(x, y + ZEMIN, 51) - 0.5) * 18 + (fbm(nB, x * 0.04, (y + ZEMIN) * 0.12, 3) - 0.5) * 22;
-        dd[o] = clamp(dd[o] + n, 0, 255);
-        dd[o + 1] = clamp(dd[o + 1] + n, 0, 255);
-        dd[o + 2] = clamp(dd[o + 2] + n * 0.9, 0, 255);
-      }
-    }
-    ctx.putImageData(id, 0, ZEMIN);
-    // duvar dibinde birkaç ot tutamı
-    const r = S.rng(88);
-    for (const tx of [96, 418, 744, 958]) {
-      for (let k = 0; k < 9; k++) {
-        const a = -Math.PI / 2 + (r() - 0.5) * 1.3;
-        const L2 = 8 + r() * 12;
-        const x0 = tx + (r() - 0.5) * 14;
-        ctx.strokeStyle = r() < 0.5 ? '#5F7A3A' : '#7C9446';
-        ctx.lineWidth = 1.4;
-        ctx.beginPath();
-        ctx.moveTo(x0, ZEMIN + 2);
-        ctx.quadraticCurveTo(x0 + Math.cos(a) * L2 * 0.5, ZEMIN + 2 + Math.sin(a) * L2 * 0.6, x0 + Math.cos(a) * L2, ZEMIN + 2 + Math.sin(a) * L2);
-        ctx.stroke();
-      }
-    }
-  }
   S.hazir();
 })();
 </script>
