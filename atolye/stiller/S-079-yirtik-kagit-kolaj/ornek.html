@@ -76,7 +76,7 @@
     const c = S.yeniTuval(N, N);
     const x = c.getContext('2d', { willReadFrequently: true });
     const im = x.createImageData(N, N), d = im.data;
-    const r = S.rng(100 + tur.length);
+    const r = S.rng(100 + tur.length + (['firca', 'sunger', 'lif', 'tarak'].includes(tur) ? 0 : tur.charCodeAt(0) * 7 + tur.charCodeAt(1)));
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
       let v = 128;
       // döşenebilir gürültü için periyodik koordinat: sınırda harmanla
@@ -94,6 +94,23 @@
       } else if (tur === 'tarak') { // taraklı dalgalı çizgiler
         const yy = w * 40 + 1.0 * Math.sin(u * Math.PI * 4 + g(4, 4, n2) * 6);
         v += 30 * Math.sin(yy * Math.PI * 2) + 26 * (g(8, 8, n3) - 0.5) + 30 * (g(4, 60, n1) - 0.5);
+      } else if (tur === 'kraft') { // kraft / ambalaj kâğıdı: sık lif, ince benek
+        v += 22 * (g(12, 12, n2) - 0.5) + 26 * (g(90, 90, n4) - 0.5) + 16 * (g(3, 3, n1) - 0.5);
+      } else if (tur === 'washi') { // dut kâğıdı: bulutlu yoğunluk farkları
+        v += 34 * (g(4, 4, n3) - 0.5) + 16 * (g(14, 14, n1) - 0.5);
+      } else if (tur === 'suluboya') { // suluboyayla boyanmış kâğıt: lekeler, koyu kenarlı halkalar, granülasyon
+        const f = 0.6 * g(2, 2, n1) + 0.28 * g(5, 5, n2) + 0.12 * g(13, 13, n4);
+        const dd = f - 0.5; // boya birikintisinin kurumuş kenarı: dışta keskin, içe doğru yumuşak sönen koyu sınır
+        const halka = dd > 0 ? Math.exp(-dd / 0.03) : Math.exp(-Math.pow(dd / 0.005, 2));
+        v += 64 * (f - 0.5) - 24 * halka + 26 * (g(130, 130, n3) - 0.5) + 10 * (g(40, 40, n2) - 0.5);
+      } else if (tur === 'baski') { // dergi sayfasından kesilmiş baskı: 45° yarım ton noktaları, ton gürültüyle değişir
+        const ton = 0.38 + 0.34 * g(3, 3, n2);
+        const per = 64, a = Math.PI / 4;
+        const xr = (i * Math.cos(a) + j * Math.sin(a)) / N * per, yr = (-i * Math.sin(a) + j * Math.cos(a)) / N * per;
+        const fx = xr - Math.floor(xr) - 0.5, fy = yr - Math.floor(yr) - 0.5;
+        const dd = Math.sqrt(fx * fx + fy * fy);
+        const nok = clamp((Math.sqrt(ton / Math.PI) - dd) * 9 + 0.5, 0, 1);
+        v += 34 - 78 * nok + 10 * (g(40, 40, n1) - 0.5);
       }
       d[(j * N + i) * 4] = d[(j * N + i) * 4 + 1] = d[(j * N + i) * 4 + 2] = clamp(v, 0, 255);
       d[(j * N + i) * 4 + 3] = 255;
@@ -109,6 +126,56 @@
       }
       for (let k = 0; k < 140; k++) { x.fillStyle = r() < 0.6 ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.4)'; x.beginPath(); x.arc(r() * N, r() * N, 0.6 + r() * 1.4, 0, 7); x.fill(); }
     }
+    if (tur === 'kraft' || tur === 'washi') { // lifler: kraftta kısa ve sık, dut kâğıdında uzun, kıvrımlı, açık
+      x.lineCap = 'round';
+      const adet = tur === 'kraft' ? 2600 : 520;
+      for (let k = 0; k < adet; k++) {
+        const px = r() * N, py = r() * N, a = r() * Math.PI * 2;
+        const L = tur === 'kraft' ? 3 + r() * 11 : 24 + r() * 70;
+        const kv = (r() - 0.5) * (tur === 'kraft' ? 0.8 : 2.4);
+        if (tur === 'kraft') { x.strokeStyle = r() < 0.55 ? `rgba(0,0,0,${0.1 + r() * 0.16})` : `rgba(255,255,255,${0.12 + r() * 0.2})`; x.lineWidth = 0.5 + r() * 0.8; }
+        else { x.strokeStyle = `rgba(255,255,255,${0.22 + r() * 0.3})`; x.lineWidth = 0.5 + r() * 1.1; }
+        for (const ox of [-N, 0, N]) for (const oy of [-N, 0, N]) {
+          const X = px + ox, Y = py + oy;
+          if (X < -L || Y < -L || X > N + L || Y > N + L) continue;
+          x.beginPath(); x.moveTo(X, Y);
+          x.bezierCurveTo(X + Math.cos(a + kv) * L * 0.35, Y + Math.sin(a + kv) * L * 0.35, X + Math.cos(a - kv) * L * 0.7, Y + Math.sin(a - kv) * L * 0.7, X + Math.cos(a) * L, Y + Math.sin(a) * L);
+          x.stroke();
+        }
+      }
+      if (tur === 'kraft') for (let k = 0; k < 420; k++) { x.fillStyle = r() < 0.75 ? `rgba(40,20,0,${0.2 + r() * 0.25})` : 'rgba(255,255,255,0.35)'; x.beginPath(); x.arc(r() * N, r() * N, 0.4 + r() * r() * 1.8, 0, 7); x.fill(); }
+      else for (let k = 0; k < 90; k++) { x.fillStyle = 'rgba(255,255,255,0.3)'; x.beginPath(); x.ellipse(r() * N, r() * N, 1 + r() * 3, 0.6 + r() * 1.2, r() * 3, 0, 7); x.fill(); }
+    }
+    if (tur === 'burusuk') { // buruşturulup düzeltilmiş kâğıt: periyodik Voronoi yüzeyleri, kat izleri
+      const M = 26, pts = [];
+      for (let k = 0; k < M; k++) pts.push([r() * N, r() * N, r() * Math.PI * 2, 0.35 + r() * 0.65]);
+      const im2 = x.getImageData(0, 0, N, N), d2 = im2.data;
+      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+        let b1 = 1e12, b2 = 1e12, kb = 0;
+        for (let k = 0; k < M; k++) {
+          let dx = Math.abs(i - pts[k][0]), dy = Math.abs(j - pts[k][1]);
+          if (dx > N / 2) dx = N - dx; if (dy > N / 2) dy = N - dy;
+          const dd = dx * dx + dy * dy;
+          if (dd < b1) { b2 = b1; b1 = dd; kb = k; } else if (dd < b2) b2 = dd;
+        }
+        const [px, py, a, e] = pts[kb];
+        let dx = i - px, dy = j - py;
+        if (dx > N / 2) dx -= N; if (dx < -N / 2) dx += N; if (dy > N / 2) dy -= N; if (dy < -N / 2) dy += N;
+        // yüzeyin eğimi: kendi yönünde hafif gradyan; kat çizgisinde ince parlak/koyu sırt
+        let v = 128 + 34 * Math.cos(a) * e + 0.18 * e * (dx * Math.cos(a) + dy * Math.sin(a));
+        const ke = Math.sqrt(b2) - Math.sqrt(b1);
+        if (ke < 2.2) v += (Math.cos(a) > 0 ? 26 : -30) * (1 - ke / 2.2);
+        const o = (j * N + i) * 4;
+        d2[o] = d2[o + 1] = d2[o + 2] = clamp(0.55 * v + 0.45 * d2[o], 0, 255);
+      }
+      x.putImageData(im2, 0, 0);
+    }
+    if (tur === 'tane') { // kâğıdın ince dişi: her yüzeyde, çok hafif
+      const im3 = x.getImageData(0, 0, N, N), d3 = im3.data;
+      for (let k = 0; k < N * N; k++) { const v = 128 + (r() - 0.5) * 44; d3[k * 4] = d3[k * 4 + 1] = d3[k * 4 + 2] = v; }
+      x.putImageData(im3, 0, 0);
+      x.filter = 'blur(0.6px)'; x.drawImage(c, 0, 0); x.filter = 'none';
+    }
     if (tur === 'sunger') { // sünger izleri: kümelenmiş küçük düzensiz lekeler, kenarlardan sarılarak döşenir
       for (let k = 0; k < 5200; k++) {
         const cx = r() * N, cy = r() * N, rr = 0.8 + r() * r() * 5.5;
@@ -122,7 +189,8 @@
     }
     return c;
   }
-  const DOKU = { firca: doku('firca'), sunger: doku('sunger'), lif: doku('lif'), tarak: doku('tarak') };
+  const DOKU = {};
+  for (const t of ['firca', 'sunger', 'lif', 'tarak', 'kraft', 'washi', 'suluboya', 'baski', 'burusuk', 'tane']) DOKU[t] = doku(t);
   const desenler = {};
   for (const k in DOKU) desenler[k] = ctx.createPattern(DOKU[k], 'repeat');
 
@@ -230,15 +298,18 @@
     const kirisik = o.kirisik !== undefined ? o.kirisik : Math.min(2, Math.floor(alan / 30000));
     for (let k = 0; k < kirisik; k++) {
       const x0 = kb[0] + r() * (kb[2] - kb[0]), y0 = kb[1] + r() * (kb[3] - kb[1]);
-      const a = r() * Math.PI, L = 20 + r() * 60;
+      const a = r() * Math.PI, L = 50 + r() * 90;
       const p = new Path2D();
       for (let t = 0; t <= 1.0001; t += 0.1) {
-        const xx = x0 + Math.cos(a) * L * (t - 0.5) + Math.sin(a) * 4 * Math.sin(t * 5 + k), yy = y0 + Math.sin(a) * L * (t - 0.5) - Math.cos(a) * 4 * Math.sin(t * 5 + k);
+        const xx = x0 + Math.cos(a) * L * (t - 0.5) + Math.sin(a) * 2 * Math.sin(t * 3 + k), yy = y0 + Math.sin(a) * L * (t - 0.5) - Math.cos(a) * 2 * Math.sin(t * 3 + k);
         t === 0 ? p.moveTo(xx, yy) : p.lineTo(xx, yy);
       }
-      ctx.save(); ctx.filter = 'blur(2.4px)';
-      ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,255,255,0.26)'; ctx.stroke(p);
-      ctx.translate(-2.2, 2.6); ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(40,25,10,0.13)'; ctx.stroke(p);
+      // tutkal kırışığı: ince ışıklı sırt, yanında yumuşak gölge
+      ctx.save(); ctx.filter = 'blur(2.6px)';
+      ctx.translate(-1.6, 2); ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(40,25,10,0.1)'; ctx.stroke(p);
+      ctx.restore();
+      ctx.save(); ctx.filter = 'blur(0.8px)';
+      ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.stroke(p);
       ctx.restore();
     }
     if (o.ek) o.ek(ctx);
@@ -254,13 +325,13 @@
 
   // ------------------------------------------------------------ gök: yırtık mavi şeritler
   const gokRenk = ['#2C5BA6', '#3A73BC', '#4F8ACB', '#6FA3D8', '#93BEE4', '#B9D6EE'];
-  const gokDoku = ['firca', 'sunger', 'firca', 'lif', 'sunger', 'firca'];
+  const gokDoku = ['suluboya', 'firca', 'baski', 'lif', 'burusuk', 'washi'];
   for (let k = 0; k < 6; k++) {
     const y1 = -30 + k * 132, y2 = y1 + 196;
     const pts = [];
     for (let x = -40; x <= 1064; x += 40) pts.push([x, y1 + 18 * Math.sin(x * 0.006 + k)]);
     for (let x = 1064; x >= -40; x -= 40) pts.push([x, y2 + 22 * Math.sin(x * 0.005 + k * 2.1) + 12 * Math.sin(x * 0.017 + k)]);
-    Pp(pts, { renk: gokRenk[k], doku: gokDoku[k], guc: 0.5, aci: (rnd() - 0.5) * 0.25, puruz: 3, beyaz: 5, olcek: 0.6 });
+    Pp(pts, { renk: gokRenk[k], doku: gokDoku[k], guc: gokDoku[k] === 'baski' ? 0.4 : gokDoku[k] === 'burusuk' ? 0.62 : 0.5, aci: gokDoku[k] === 'baski' ? 0 : (rnd() - 0.5) * 0.25, puruz: 3, beyaz: 5, olcek: gokDoku[k] === 'baski' ? 0.42 : gokDoku[k] === 'burusuk' ? 0.9 : 0.6 });
   }
   // güneş: sarı ipek hale, turuncu ve sarı yırtık daireler
   P(S.daireYolu(880, 140, 116), 2, { renk: '#FBEFC4', doku: 'lif', guc: 0.45, puruz: 4, beyaz: 4 });
@@ -270,14 +341,15 @@
   // bulutlar: beyaz el yapımı kâğıt + gri-mavi ipek gölge
   function bulut(cx, cy, s) {
     P(S.elipsYolu({ cx: cx + 10 * s, cy: cy + 10 * s, rx: 92 * s, ry: 26 * s, aci: 0 }), 1.8, { renk: '#C3D2E6', ipek: true, alfa: 0.7, puruz: 3, beyaz: 0 });
-    P(S.elipsYolu({ cx: cx - 30 * s, cy: cy, rx: 58 * s, ry: 26 * s, aci: 0.08 }), 1.6, { renk: '#FFFFFF', oz: '#FFFFFF', doku: 'lif', guc: 0.5, puruz: 3, beyaz: 3 });
-    P(S.elipsYolu({ cx: cx + 22 * s, cy: cy - 14 * s, rx: 52 * s, ry: 32 * s, aci: -0.1 }), 1.6, { renk: '#FBFCFF', oz: '#FFFFFF', doku: 'lif', guc: 0.5, puruz: 3, beyaz: 3 });
-    P(S.elipsYolu({ cx: cx + 62 * s, cy: cy + 4 * s, rx: 40 * s, ry: 22 * s, aci: 0.15 }), 1.6, { renk: '#F4F7FC', oz: '#FFFFFF', doku: 'lif', guc: 0.5, puruz: 2.5, beyaz: 3 });
+    const pz = 2.6 + 2.4 * s;
+    P(S.elipsYolu({ cx: cx - 30 * s, cy: cy, rx: 58 * s, ry: 26 * s, aci: 0.08 }), 1.6, { renk: '#EEF0F2', oz: '#FFFFFF', doku: 'washi', guc: 0.75, olcek: 0.7, puruz: pz, beyaz: 3.6 });
+    P(S.elipsYolu({ cx: cx + 22 * s, cy: cy - 14 * s, rx: 52 * s, ry: 32 * s, aci: -0.1 }), 1.6, { renk: '#F6F2E8', oz: '#FFFFFF', doku: 'lif', guc: 0.7, puruz: pz, beyaz: 3.6 });
+    P(S.elipsYolu({ cx: cx + 62 * s, cy: cy + 4 * s, rx: 40 * s, ry: 22 * s, aci: 0.15 }), 1.6, { renk: '#E9EEF4', oz: '#FFFFFF', doku: 'washi', guc: 0.75, olcek: 0.6, puruz: pz * 0.9, beyaz: 3.2 });
   }
   bulut(150, 258, 1.0); bulut(470, 150, 0.8); bulut(748, 356, 0.72); bulut(96, 476, 0.55); bulut(942, 472, 0.52);
 
   // ------------------------------------------------------------ zemin: kum renkli boyalı kâğıt
-  { const pts = []; for (let x = -40; x <= 1064; x += 40) pts.push([x, 792 + 6 * Math.sin(x * 0.01)]); pts.push([1064, 1064], [-40, 1064]); Pp(pts, { renk: '#D9B77C', doku: 'firca', guc: 0.45, aci: 0.05, puruz: 3, beyaz: 5 }); }
+  { const pts = []; for (let x = -40; x <= 1064; x += 40) pts.push([x, 792 + 6 * Math.sin(x * 0.01)]); pts.push([1064, 1064], [-40, 1064]); Pp(pts, { renk: '#D3AE74', doku: 'kraft', guc: 0.6, olcek: 0.7, puruz: 3, beyaz: 5 }); }
   { const pts = []; for (let x = -40; x <= 1064; x += 40) pts.push([x, 900 + 14 * Math.sin(x * 0.008 + 1)]); pts.push([1064, 1064], [-40, 1064]); Pp(pts, { renk: '#C49455', doku: 'sunger', guc: 0.45, puruz: 3.5, beyaz: 5 }); }
 
   // ------------------------------------------------------------ minare
@@ -329,7 +401,7 @@
 
   // ------------------------------------------------------------ kaide
   const KA = S.kaide;
-  Pp(dikd(KA.x1, KA.y1, KA.x2, KA.y2 + 4), { renk: '#F7F2E6', oz: '#FFFFFF', doku: 'lif', guc: 0.55, puruz: 2, beyaz: 3.5, kirisik: 3 });
+  Pp(dikd(KA.x1, KA.y1, KA.x2, KA.y2 + 4), { renk: '#F4EEE0', oz: '#FFFFFF', doku: 'washi', guc: 0.7, olcek: 0.8, puruz: 2, beyaz: 3.5, kirisik: 3 });
   Pp([[KA.x1 + 2, KA.y1 + 4], [KA.x1 + 84, KA.y1 + 4], [KA.x1 + 70, KA.y1 + 50], [KA.x1 + 90, KA.y2 - 2], [KA.x1 + 2, KA.y2 - 2]], { renk: '#BDAF98', ipek: true, ozYok: true, alfa: 0.45, puruz: 3, beyaz: 0 });
   Pp(dikd(KA.kornis.x1, KA.kornis.y1 - 1, KA.kornis.x2, KA.kornis.y2 + 1), { renk: '#E3D7BF', doku: 'tarak', guc: 0.35, aci: 0, olcek: 0.25, puruz: 1.1, beyaz: 2.5 });
   for (const p of KA.pencereler) {
@@ -341,7 +413,7 @@
   Pp(dikd(KS[1].x1, KS[1].y1, KS[1].x2, KS[1].y2), { renk: '#2F7B3C', doku: 'firca', guc: 0.5, aci: 0, puruz: 1.8, beyaz: 3.5 });
   Pp([[KS[1].x1 + 2, KS[1].y1 + 3], [KS[1].x1 + 92, KS[1].y1 + 3], [KS[1].x1 + 76, KS[1].y2 - 30], [KS[1].x1 + 86, KS[1].y2 - 2], [KS[1].x1 + 2, KS[1].y2 - 2]], { renk: '#1C4A26', ipek: true, ozYok: true, alfa: 0.42, puruz: 2.6, beyaz: 0 });
   for (const p of S.kasnakPencereleri(1)) P(S.kemerYolu(p.x, p.y, p.w + 1, p.h), 1, { renk: '#163C1F', puruz: 0.7, beyaz: 1.4, lif: false });
-  Pp(dikd(KS[0].x1, KS[0].y1, KS[0].x2, KS[0].y2 + 3), { renk: '#45A04F', doku: 'firca', guc: 0.5, aci: 0, puruz: 1.6, beyaz: 3.5 });
+  Pp(dikd(KS[0].x1, KS[0].y1, KS[0].x2, KS[0].y2 + 3), { renk: '#45A04F', doku: 'suluboya', guc: 0.5, puruz: 1.6, beyaz: 3.5 });
   Pp([[KS[0].x1 + 2, KS[0].y1 + 3], [KS[0].x1 + 70, KS[0].y1 + 3], [KS[0].x1 + 84, KS[0].y2 - 1], [KS[0].x1 + 2, KS[0].y2 - 1]], { renk: '#1C4A26', ipek: true, ozYok: true, alfa: 0.38, puruz: 2.6, beyaz: 0 });
   for (const p of S.kasnakPencereleri(0)) P(S.kemerYolu(p.x, p.y, p.w + 1, p.h), 1, { renk: '#1A4524', puruz: 0.6, beyaz: 1.2, lif: false });
 
@@ -357,7 +429,8 @@
       const u1 = Math.sin(boy[k]) - (k ? 0.012 : 0.02), u2 = Math.sin(boy[k + 1]) + (k < 7 ? 0.006 : 0.02);
       const sol = prof.slice(0, -2).map((q) => [560 + u1 * q.r, q.y + 1]);
       const sag = prof.slice(0, -2).map((q) => [560 + u2 * q.r, q.y + 1]).reverse();
-      Pp(sol.concat(sag), { renk: tonlar[k], doku: k % 2 ? 'firca' : 'sunger', guc: 0.45, aci: Math.PI / 2 + (rnd() - 0.5) * 0.3, puruz: 1.3, beyaz: 3.2, kirisik: 1 });
+      const dd = ['sunger', 'suluboya', 'firca', 'kraft', 'suluboya', 'baski', 'firca', 'burusuk'][k];
+      Pp(sol.concat(sag), { renk: tonlar[k], doku: dd, guc: dd === 'baski' ? 0.32 : dd === 'kraft' ? 0.5 : 0.45, aci: dd === 'baski' ? 0 : Math.PI / 2 + (rnd() - 0.5) * 0.3, olcek: dd === 'baski' ? 0.36 : 0.5, puruz: 1.3, beyaz: 3.2, kirisik: 0 });
     }
     // sağ üstte açık sarı-yeşil ipek kâğıt parıltısı
   }
@@ -371,7 +444,7 @@
     Pp(sol.concat(sag), { renk: '#4E8A3A', doku: 'firca', guc: 0.4, puruz: 0.8, beyaz: 1.6, lif: false });
   }
   const yaprakRenk = ['#3F7F36', '#5E9C42', '#2E6A30', '#7AAE4E', '#4C9046', '#8DBA5C'];
-  const yaprakDoku = ['firca', 'sunger', 'lif', 'tarak', 'firca', 'sunger'];
+  const yaprakDoku = ['suluboya', 'sunger', 'kraft', 'tarak', 'firca', 'washi'];
   bit.yapraklar.forEach((y, i) => {
     const k = Math.floor(rnd() * yaprakRenk.length);
     const buyuk = y.uzunluk > 50;
@@ -405,6 +478,9 @@
     });
   });
 
+  // kâğıdın ince dişi ve çok hafif fotoğraf ışığı: bütün yüzeyde
+  { const pat = desenler.tane; pat.setTransform(new DOMMatrix().scale(0.5)); ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.5; ctx.fillStyle = pat; ctx.fillRect(0, 0, 1024, 1024); ctx.restore(); }
+  { const g = ctx.createRadialGradient(560, 420, 300, 512, 512, 780); g.addColorStop(0, 'rgba(255,250,235,0)'); g.addColorStop(1, 'rgba(60,40,20,0.12)'); ctx.fillStyle = g; ctx.fillRect(0, 0, 1024, 1024); }
   S.hazir();
 })();
 </script>

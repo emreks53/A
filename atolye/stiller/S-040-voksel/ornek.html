@@ -183,7 +183,7 @@ setTimeout(function () {
   }
 
   // ------------------------------------------------------------------ voksel ızgarası
-  const VX = 116, VY = 100, VZ = 96;
+  const VX = 116, VY = 112, VZ = 96;
   const G = new Uint8Array(VX * VY * VZ);
   const id3 = (x, y, z) => (y * VZ + z) * VX + x;
   const koy = (x, y, z, m) => {
@@ -318,8 +318,8 @@ setTimeout(function () {
         const d = Math.hypot(x + 0.5 - DC[0], z + 0.5 - DC[1]);
         if (d > R) continue;
         const a = Math.atan2(z + 0.5 - DC[1], x + 0.5 - DC[0]);
-        const f = ((a / (Math.PI * 2)) * 32 + 100) % 1;
-        const kab = (f < 0.16 || f > 0.9) && t < 0.9;
+        const f = ((a / (Math.PI * 2)) * 24 + 100) % 1;
+        const kab = (f < 0.12 || f > 0.92) && t < 0.9;
         koy(x, y, z, kab ? m.yesilK : m.yesil);
       }
   }
@@ -330,17 +330,18 @@ setTimeout(function () {
         for (let z = Math.floor(cz - R - 1); z <= cz + R + 1; z++) if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy, z + 0.5 - cz) <= R) koy(x, y, z, mm);
   }
   function hilal(cx, y0, cz, s) {
-    // boynuzları yukarı bakan piksel hilal (x-y düzleminde, 2 voksel kalın)
+    // boynuzları yukarı bakan piksel hilal (x-y düzleminde, ön yüzü kameraya dönük)
     const desen = s >= 1
-      ? ['X.......X', 'XX.....XX', '.XX...XX.', '.XXX.XXX.', '..XXXXX..', '...XXX...']
-      : ['X...X', 'XX.XX', '.XXX.'];
+      ? ['.X.......X.', 'XX.......XX', 'XX.......XX', 'XXX.....XXX', '.XXX...XXX.', '.XXXXXXXXX.', '..XXXXXXX..', '....XXX....']
+      : ['X.....X', 'XX...XX', '.XXXXX.', '..XXX..'];
     const h = desen.length;
+    const ca = Math.cos((36 * Math.PI) / 180), sa = Math.sin((36 * Math.PI) / 180);
     for (let j = 0; j < h; j++)
       for (let i = 0; i < desen[j].length; i++)
         if (desen[j][i] === 'X') {
-          const x = cx + i - Math.floor(desen[j].length / 2), y = y0 + (h - 1 - j);
-          koy(x, y, cz, m.altin);
-          if (s >= 1) koy(x, y, cz - 1, m.altin);
+          const u = i - Math.floor(desen[j].length / 2);
+          const y = y0 + (h - 1 - j);
+          koy(cx + u, y, cz, m.altin);
         }
   }
   const AY = Y_K1 + KH + 1;
@@ -350,6 +351,7 @@ setTimeout(function () {
   kure(DC[0], AY + 6.5, DC[1], 1.35, m.altin);
   kure(DC[0], AY + 9.5, DC[1], 1.05, m.altin);
   hilal(CX, AY + 11, CZ, 1);
+  for (let y = AY + 8; y <= AY + 11; y++) koy(CX, y, CZ, m.altin);
 
   // ------------------------------------------------------------------ 3. minare (solda, arkada)
   const MX = 14.5, MZ = 30.5;
@@ -436,7 +438,7 @@ setTimeout(function () {
   }
   const RENK = [m.beyaz, m.pembe, m.beyaz, m.lila, m.pembeA];
   // ön tarh: çalılar ve aralarında çiçekler
-  const caliler = [[16, 70, 3.2], [30, 80, 3.6], [47, 74, 2.8], [62, 82, 3.4], [78, 73, 3], [93, 80, 3.5], [104, 66, 3], [12, 55, 2.8], [102, 50, 2.6], [88, 64, 2.4], [26, 64, 2.4]];
+  const caliler = [[8, 40, 2.6], [30, 12, 2.4], [96, 22, 2.8], [104, 38, 2.4], [16, 70, 3.2], [30, 80, 3.6], [47, 74, 2.8], [62, 82, 3.4], [78, 73, 3], [93, 80, 3.5], [104, 66, 3], [12, 55, 2.8], [102, 50, 2.6], [88, 64, 2.4], [26, 64, 2.4]];
   for (const [x, z, R] of caliler) if (adaF(x, z) > 0.05) cali(x + 0.5, z + 0.5, R, TOP + 1);
   for (let i = 0; i < 150; i++) {
     const x = 6 + Math.floor(r() * 104), z = 62 + Math.floor(r() * 32);
@@ -509,7 +511,7 @@ setTimeout(function () {
   const OY = 532 - ((sy0 + sy1) / 2) * OL;
 
   // ------------------------------------------------------------------ 7. ışın izleme (her iç piksel için)
-  const LI = nrm([0.52, 0.8, 0.3]); // ışık: sağ üstten
+  const LI = nrm([0.62, 0.76, -0.2]); // ışık: sağ üstten (biraz arkadan; gölgeler öne-sola düşer)
   const W2 = N, H2 = N;
   const img = ana.createImageData(W2, H2);
   const P = img.data;

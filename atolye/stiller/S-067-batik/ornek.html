@@ -263,7 +263,7 @@
       doldur(p, i % 2 ? K.sogaAcik : K.okra); cek(p, K.krem, 2);
       if (i % 2 === 0) for (let k = 0; k < 3; k++) nokta(gx + Math.cos(a) * (82 + k * 13), gy + Math.sin(a) * (82 + k * 13), 1.9 - k * 0.3, K.krem);
     }
-    const halka = [[66, K.kizil], [56, K.sogaAcik], [44, K.okra], [30, K.krem], [22, K.okra]];
+    const halka = [[66, K.kizil], [56, K.sogaAcik], [44, K.okra], [30, K.okraAcik], [20, K.okra]];
     for (const [r, c] of halka) { nokta(gx, gy, r, c); g.strokeStyle = K.krem; g.lineWidth = 2; g.beginPath(); g.arc(gx, gy, r, 0, Math.PI * 2); g.stroke(); }
     for (let i = 0; i < 26; i++) { const a = (i / 26) * Math.PI * 2; nokta(gx + Math.cos(a) * 61, gy + Math.sin(a) * 61, 1.7, K.krem); }
     for (let i = 0; i < 14; i++) { const a = (i / 14) * Math.PI * 2 + 0.13; nokta(gx + Math.cos(a) * 37, gy + Math.sin(a) * 37, 2.1, K.krem); nokta(gx + Math.cos(a + 0.22) * 50, gy + Math.sin(a + 0.22) * 50, 1.5, K.krem); }

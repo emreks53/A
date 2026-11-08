@@ -61,8 +61,10 @@
   const ZEMIN = 966; // kaldırımın başladığı yer
   const resim = S.yeniTuval();
   const g = resim.getContext('2d', { willReadFrequently: true });
-  const s = RES_ALT / W; // sahne, boyalı alana sığacak biçimde küçültülür
-  g.setTransform(s, 0, 0, s, (W / 2) * (1 - s), 0);
+  // sahne boyalı alana sığacak biçimde biraz küçültülür; en alttaki çiçeklerin alt ucu (y ≈ 1023)
+  // tuğla sırasının hemen üstüne denk gelecek kadar yukarı kaydırılır, böylece konu gökte küçük kalmaz
+  const s = 0.95;
+  g.setTransform(s, 0, 0, s, (W / 2) * (1 - s), RES_ALT - 1023 * s);
   const KONTUR = '#1C2340';
   g.lineJoin = 'round';
   g.lineCap = 'round';
@@ -480,7 +482,7 @@
   const TUGLALAR = [hex('#9E4B33'), hex('#B35C3C'), hex('#8A3F2C'), hex('#A8573A'), hex('#94503A'), hex('#BC6A48')];
   const HARC = hex('#B5AEA2');
   // boya atmasının görüldüğü birkaç yer (konudan uzak: köşeler, kenarlar, dip)
-  const ATMA = [[40, 60, 70], [990, 610, 60], [150, 900, 50], [990, 880, 70], [610, 20, 40], [12, 420, 36]];
+  const ATMA = [[40, 60, 70], [990, 610, 60], [150, 900, 50], [990, 880, 70], [12, 420, 36]];
   const ASTAR = hex('#ECE6D8');
   for (let y = 0; y < W; y++) {
     for (let x = 0; x < W; x++) {

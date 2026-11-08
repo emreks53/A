@@ -405,7 +405,7 @@
     for (let k = 0; k < 16; k++) { const a = (k / 16) * Math.PI * 2 + 0.1, r0 = 62 + (k % 2) * 8, r1 = r0 + 26 + (k % 2) * 12; strok(x, [[880 + Math.cos(a) * r0, 140 + Math.sin(a) * r0], [880 + Math.cos(a) * r1, 140 + Math.sin(a) * r1]], 3.0, 0.85, k % 2 ? SARI2 : SARI, 0.08, 0.3); }
   }, { opq: 0.95, gren: 0.7, sil: [MK.yapi, MK.bitki] });
   // bulutlar: dağıtılmış beyaz + net üst kıvrımlar
-  const bulutlar = [[170, 250, 1.0], [505, 150, 0.8], [770, 330, 1.05], [930, 470, 0.7], [92, 470, 0.7]];
+  const bulutlar = [[170, 250, 1.0], [505, 150, 0.8], [770, 330, 1.05], [868, 478, 0.7], [150, 480, 0.7]];
   katman((x) => { for (const [bx, by, s] of bulutlar) for (let k = 0; k < 5; k++) leke(x, [[bx - 60 * s + k * 6, by + 4 * s - k * 4 * s], [bx, by - 10 * s - k * 3 * s], [bx + 60 * s - k * 6, by + 4 * s - k * 4 * s]], 14 * s, 0.5, BEYAZ); },
     { ezme: 7, opq: 0.8, gren: 0.45, sil: [MK.yapi, MK.bitki] });
   katman((x) => {

@@ -287,7 +287,6 @@
   const kemerNok = (p) => ornekle(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 2)[0];
 
   const r = SAHNE.rng(5801);
-  const T0 = performance.now(); const zaman = (ad) => console.warn('zaman ' + ad + ' ' + Math.round(performance.now() - T0));
   const tuval = document.getElementById('tuval');
   tuval.width = W2; tuval.height = W2;
   const ctx = tuval.getContext('2d');
@@ -406,7 +405,6 @@
   // alt katın kopyası (kazıma bunu açığa çıkarır)
   const AR = CR.slice(), AG = CG.slice(), AB = CB.slice();
 
-  zaman('altkat');
   // ================================================================ 2) ANA KAT: doygun, tıknaz vuruşlar
   // renk rampası: ton + gürültü → komşu iki durak arasından bir renk (renk kütleleri oluşur, vuruşlar yine kırık)
   function rampaSec(dur, t) {
@@ -519,7 +517,6 @@
     }
   }, { bx: [0, 500, W, W], guc: 1.2 });
 
-  zaman('ana');
   // ================================================================ 3) SÜRTME (scumble): üstten hafif, kırık açık renkler
   katman((x) => {
     alanDoldur(x, { bx: [0, 0, W, 806], ic: gokIc, aralik: 26, boy: 70, gen: 18, aci: gokAci, aciJ: 0.3, p: 0.4, renk: (px, py) => {
@@ -537,7 +534,6 @@
   katman((x) => { alanDoldur(x, { bx: [0, 800, W, W], aralik: 26, boy: 60, gen: 16, aci: -0.04, p: 0.4, renk: () => (r() < 0.35 ? hex('#FFE88A') : null) }); },
     { sil: [MK.yapi, MK.bitki], bx: [0, 796, W, W], ys: 0.1 });
 
-  zaman('surtme');
   // ================================================================ 4) PARMAKLA EZME (harmanlama)
   {
     const c = SAHNE.yeniTuval(W2, W2), x = c.getContext('2d');
@@ -590,7 +586,6 @@
     for (let i = 0; i < N2; i++) { const s = smv[(((i >> 12) << 10) + ((i & 2047) >> 1)) * 4 + 3] / 255; if (s > 0) T[i] = lerp(T[i], Tb[i] + 0.1, s * 0.85); }
   }
 
-  zaman('ezme');
   // ================================================================ 4b) AYRINTILAR: pencereler, korkuluklar, korniş (ezilmeden, net)
   katman((x) => {
     for (const yol of [kasnakPencereYolu, kaidePencereYolu, minarePencereYolu]) {
@@ -614,7 +609,6 @@
     for (const z of SAHNE.zikzakCizgileri()) for (let i = 0; i < z.length - 1; i++) { const [a1, b1] = z[i], [a2, b2] = z[i + 1]; vurus(x, (a1 + a2) / 2, (b1 + b2) / 2, Math.atan2(b2 - b1, a2 - a1), Math.hypot(a2 - a1, b2 - b1) * 1.15, 3.4, hex('#C0502E'), 1, 0); }
   }, { sil: [MK.bitki], bx: [240, 190, 840, 806], guc: 1.25 });
 
-  zaman('ayrinti');
   // ================================================================ 5) KAZIMA (sgraffito): üst kat kazınır, alt kat görünür
   {
     const k = katmanTuvali(), x = k.x;
@@ -642,7 +636,6 @@
     }
   }
 
-  zaman('kazima');
   // ================================================================ 6) MUM PARLAKLIĞI ve KABARTI
   const img = ctx.createImageData(W2, W2), d = img.data;
   const L3 = (() => { const v = [0.55, -0.62, 0.56], l = Math.hypot(...v); return v.map((q) => q / l); })();
@@ -664,7 +657,6 @@
     d[i * 4 + 3] = 255;
   }
   ctx.putImageData(img, 0, 0);
-  zaman('son');
   SAHNE.hazir();
 })();
 </script>
