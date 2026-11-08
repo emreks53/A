@@ -1,0 +1,22 @@
+{
+  "kod": "S-019",
+  "no": 19,
+  "ad": "Art Deco",
+  "ad_en": "Art Deco",
+  "aile": "Sanat Akımları",
+  "ozgun": false,
+  "ozet": "Geometrik bakışım, güneş patlaması, basamaklı biçimler ve metalik altın çizgiler; siyah, zümrüt, altın ve krem.",
+  "tanim": "Art Deco, makine çağının hızını ve lüksünü geometriye dönüştüren bir tasarım akımıdır: güneş patlaması ışınları, basamaklı zigurat biçimleri, şevronlar, yelpaze ve pul motifleri, akış çizgili (streamline) sadeleştirilmiş biçimler. Renkler güçlü ve zıttır; siyah ve koyu zümrüt zemin üstünde metalik altın çizgiler, krem ve mercan vurgular. Seyahat ve demiryolu afişlerinde, gökdelen cephelerinde, sinema salonlarında, mücevher ve iç mimaride kullanılır.",
+  "koken": "Adını 1925 Paris Uluslararası Modern Süsleme ve Endüstri Sanatları Sergisi'nden alır; kübizm, Viyana Atölyeleri, Mısır ve Maya süslemesi ile makine estetiğinden beslendi. Cassandre'ın demiryolu ve vapur afişleri, Chrysler ve Empire State binaları, Tamara de Lempicka'nın resimleri ve Erté'nin tasarımları akımın simgeleridir. Türkiye'de 1930'ların Ankara ve İstanbul apartmanlarında, Ankara Palas çevresindeki yapılarda yaygın izleri vardır.",
+  "ayirt_edici": [
+    "Kubbenin ardından açılan, altın çizgili ve dönüşümlü tonlu güneş patlaması ışınları; boncuk dizili çift yay",
+    "Basamaklı (zigurat) tepe çerçevesi, kademeli minare konsolları ve basamaklı pencere çerçeveleri",
+    "Seyahat afişi gibi şeritli gök: koyu zümrütten yeşime, kreme ve mercana; çizgilerle kesilmiş güneş diski",
+    "Her yerde metalik altın çizgi: kubbe kaburgaları, konturlar, korkuluk çubukları, şevron frizler",
+    "Geometrik yelpaze çiçekler ve şevron yaprak çiftleri; zeminde altın kenarlı pul (yelpaze) deseni",
+    "Akış çizgili kapsül bulutlar ve ince paralel hız çizgileri"
+  ],
+  "palet": ["#0D0E0D", "#08382C", "#0F6A4C", "#7CC4A0", "#E9CB72", "#B98C2C", "#F0E3C4", "#E07A5F"],
+  "kodla_cizim": "Canvas 2048 px'de vektör olarak çizilir. Tuval boyunca açık ve koyu duraklar arasında dolaşan tek bir çapraz degrade, bütün altın çizgi ve dolgulara metalik parıltı verir. Gök on iki dikey degrade şeritten kurulur; güneş patlaması, kubbe tabanı merkezli dönüşümlü saydam kamalar ve altın ışın çizgileridir. Kubbe kaburga dilimleri, ışık yönüne göre altı basamaklı zümrüt tonundan biriyle boyanır (akış gölgesi). Minare konsolları basamaklara, pencere çerçeveleri ziguratlara, kaide ve kasnak frizleri şevron çizgilerine çevrilir. Çiçekler yay dilimlerinden ve kenar pullarından oluşan yelpazeler, zemin yarım daire pullardan bir desendir; çerçeve basamaklı bir çokgen, köşelerde yarım güneş yelpazeleri vardır. Sonunda hafif baskı dokusu çarpılır.",
+  "etiketler": ["afiş", "geometrik", "güneş patlaması", "zigurat", "altın", "seyahat afişi", "1930'lar", "sanat akımı", "bakışım"]
+}

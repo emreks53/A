@@ -10,13 +10,13 @@
   "koken": "Georges Claude neon lambasını 1910'da Paris'te tanıttı; 1923'te Los Angeles'a gelen ilk neon reklamlarla birlikte tabela dili 1930–60 arası Amerikan şehirlerinin, Las Vegas'ın ve Tokyo'nun gece yüzü oldu. Cam bükme ustalığı bir zanaat olarak sürerken, 1980'lerden sonra neon görünümü synthwave ve gece temalı grafik tasarımda dijital olarak da yeniden üretilir.",
   "ayirt_edici": [
     "Sabit kalınlıkta, uçları yuvarlak cam tüpler; her tüpte beyaz-sıcak çekirdek, renkli gövde ve dört katlı yumuşak hale",
-    "Yeşil tüplerle kubbe dış çizgisi, beş kaburga, iki kat kasnak ve kemerli pencereler; tepede alemin oturduğu boşluk",
+    "Yeşil tüplerle kubbe dış çizgisi, beş kaburga, iki kat kasnak; alt katta kemerli pencereler, üst katta küçük kemerli nişler; tepede alemin oturduğu boşluk",
     "Sıcak beyaz minare ve kaide, altın alemler, hilaller ve pencereler; şerefe korkulukları ve gövde bandı zikzak tüplerle",
-    "Pembe ve beyaz beş loblu çiçekler, yeşil saplar ve yapraklar",
+    "Ölçülü, ağırbaşlı palet: yumuşak gül pembesi ve inci beyazı beş loblu çiçekler, altın göbekler, yeşim yeşili saplar ve yapraklar",
     "Gerçek neon yapımı ayrıntıları: bükülme yerlerinde boşluklar, uçlarda sönük koyu elektrot kısımları, karartılmış bağlantı tüpü ve küçük tüp tutucular",
     "Soluk yıldızlı gece göğü; parlak koyu zeminde bulanık yansıma ve ışık havuzu"
   ],
-  "palet": ["#070B18", "#34F08A", "#FFF2DC", "#FFC247", "#FF62A8", "#EAF4FF", "#3FE6A0"],
-  "kodla_cizim": "Motif, SAHNE geometrisinden (kubbe profili ve kaburgalar, kasnak pencereleri, kaide, minare parçaları, alem, SAHNE.bitki) üretilen çoklu çizgilerden oluşan bir 'tüp listesi' olarak kuruldu; her tüpün rengi, kalınlığı, elektrot ucu ve tutucu aralığı var. Çiçekler beş loblu kutupsal eğriyle tek tüp, hilal dış ve iç yayın birleşimiyle çizildi. Tüpler 2× çözünürlükte ayrı tuvallere ışık, gövde ve çekirdek olarak çizildi; ışık tuvali 'lighter' karışımla dört farklı bulanıklıkta (70, 30, 12, 4 px) üst üste toplandı, üstüne doygun renkli gövde ve hafif bulanık beyaz çekirdek basıldı. Tüplerin uçları yay uzunluğuna göre kesilip koyu camla, tutucular tüp yönüne dik küçük kıskaçlarla eklendi. Yapı tüpleri ters çevrilip bulanıklaştırılarak zemine sönümlenen yansıma olarak işlendi; gök degrade ve tohumlu yıldızlarla kuruldu.",
+  "palet": ["#070B18", "#34F08A", "#FFF2DC", "#FFC247", "#F7A9BE", "#FFEFEA", "#6FD8A4"],
+  "kodla_cizim": "Motif, SAHNE geometrisinden (kubbe profili ve kaburgalar, kasnak pencereleri, kaide, minare parçaları, alem, SAHNE.bitki) üretilen çoklu çizgilerden oluşan bir 'tüp listesi' olarak kuruldu; her tüpün rengi, kalınlığı, elektrot ucu ve tutucu aralığı var. Çiçekler beş loblu kutupsal eğriyle tek tüp, hilal dış ve iç yayın birleşimiyle, kasnak nişleri ve pencereleri SAHNE.kemerYolu() örneklenerek alt ucu açık tek tüp olarak çizildi. Hale renkleri yarı saydam tutuldu ki pembe ve sıcak beyaz tüpler yeşil kubbeyi bastırmasın. Tüpler 2× çözünürlükte ayrı tuvallere ışık, gövde ve çekirdek olarak çizildi; ışık tuvali 'lighter' karışımla dört farklı bulanıklıkta (70, 30, 12, 4 px) üst üste toplandı, üstüne doygun renkli gövde ve hafif bulanık beyaz çekirdek basıldı. Tüplerin uçları yay uzunluğuna göre kesilip koyu camla, tutucular tüp yönüne dik küçük kıskaçlarla eklendi. Yapı tüpleri ters çevrilip bulanıklaştırılarak zemine sönümlenen yansıma olarak işlendi; gök degrade ve tohumlu yıldızlarla kuruldu.",
   "etiketler": ["neon", "gece", "ışık", "tabela", "parıltı", "cam tüp", "retro", "dijital"]
 }

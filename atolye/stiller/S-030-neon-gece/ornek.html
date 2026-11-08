@@ -22,11 +22,11 @@
   // ------------------------------------------------------------ renkler
   const RENK = {
     yesil: { tup: '#34F08A', isik: '#10D468', cekirdek: '#E6FFF0' },
-    beyazSicak: { tup: '#FFF2DC', isik: '#FFC98A', cekirdek: '#FFFFFA' },
+    beyazSicak: { tup: '#FFF2DC', isik: 'rgba(255,196,128,0.82)', cekirdek: '#FFFFFA' },
     altin: { tup: '#FFC247', isik: '#FF9318', cekirdek: '#FFF6DA' },
-    pembe: { tup: '#FF62A8', isik: '#FF2A86', cekirdek: '#FFE8F2' },
-    beyaz: { tup: '#EAF4FF', isik: '#8FC2FF', cekirdek: '#FFFFFF' },
-    yaprak: { tup: '#3FE6A0', isik: '#14B87A', cekirdek: '#E4FFF4' },
+    gul: { tup: '#F7A9BE', isik: 'rgba(214,104,140,0.85)', cekirdek: '#FFF0F4' },     // yumuşak gül pembesi
+    inci: { tup: '#FFEFEA', isik: 'rgba(236,170,170,0.7)', cekirdek: '#FFFFFF' },     // pembe esintili inci beyazı
+    yaprak: { tup: '#6FD8A4', isik: 'rgba(30,146,96,0.78)', cekirdek: '#E8FFF2' },
   };
 
   // ------------------------------------------------------------ tüp listesi
@@ -139,9 +139,12 @@
       const pts = yolNoktalari(SAHNE.kemerYolu(p.x, p.y + 4, w, h), 6).slice(0, -1);
       tup(pts, 'yesil', 3.6, { uc: 3, tutucu: 0 });
     }
+    // üst kasnak nişleri: küçük sivri kemerler (alt uçları açık, tek tüp)
     for (const p of SAHNE.kasnakPencereleri(0)) {
       if (p.w < 7) continue;
-      tup([[p.x, p.y + 6], [p.x, p.y + p.h - 4]], 'yesil', 3.4, { uc: 2.5, tutucu: 0 });
+      const w = Math.max(6, p.w * 0.72), h = p.h - 11;
+      const pts = yolNoktalari(SAHNE.kemerYolu(p.x, p.y + 5, w, h), 6).slice(0, -1);
+      tup(pts, 'yesil', 3, { uc: 2, tutucu: 0 });
     }
   })();
 
@@ -214,7 +217,7 @@
   }
   alem(560, 298, 1.0);
 
-  // ------------------------------------------------------------ bitkiler: yeşil saplar ve yapraklar, pembe/beyaz çiçekler
+  // ------------------------------------------------------------ bitkiler: yeşim yeşili saplar ve yapraklar, gül pembesi / inci beyazı çiçekler
   (function bitkiler() {
     const B = SAHNE.bitki;
     const G = { grup: 'bitki' };
@@ -230,11 +233,11 @@
     const on = B.yapraklar.slice(36).map((y, i) => ({ y, i })).filter((o) => o.y.uzunluk > 72).slice(0, 9);
     on.forEach((o) => yapragi(o.y, 3.4));
     // tomurcuklar
-    B.tomurcuklar.forEach((t) => tup(yolNoktalari(SAHNE.tomurcukYolu(t), 8).slice(0, -1), 'pembe', 3, Object.assign({ uc: 2, tutucu: 0 }, G)));
+    B.tomurcuklar.forEach((t) => tup(yolNoktalari(SAHNE.tomurcukYolu(t), 8).slice(0, -1), 'gul', 3, Object.assign({ uc: 2, tutucu: 0 }, G)));
     // çiçekler: beş loblu tek tüp kontur + göbek halkası
     B.cicekler.forEach((c, i) => {
       const buyuk = c.r > 40;
-      const renk = buyuk ? (i % 2 ? 'beyaz' : 'pembe') : i % 2 ? 'pembe' : 'beyaz';
+      const renk = buyuk ? (i % 2 ? 'inci' : 'gul') : i % 2 ? 'gul' : 'inci';
       const pts = [];
       const n = 160;
       const bosluk = 0.1;
@@ -245,7 +248,7 @@
         pts.push([c.x + Math.cos(t) * r, c.y + Math.sin(t) * r]);
       }
       tup(pts, renk, buyuk ? 4.4 : 3.6, Object.assign({ uc: 3, tutucu: buyuk ? 240 : 0 }, G));
-      tup(daire(c.x, c.y, c.r * 0.2, 3), renk === 'beyaz' ? 'pembe' : 'altin', buyuk ? 3.6 : 3, Object.assign({ uc: 1.5, tutucu: 0 }, G));
+      tup(daire(c.x, c.y, c.r * 0.2, 3), 'altin', buyuk ? 3.6 : 3, Object.assign({ uc: 1.5, tutucu: 0 }, G));
       if (buyuk) {
         // taç yaprak damarları: kısa düz tüpler
         for (let k = 0; k < 5; k++) {
@@ -415,13 +418,13 @@
         ana.save();
         ana.translate(q.x, q.y);
         ana.rotate(q.a + Math.PI / 2);
-        const h = t.w * 1.9;
-        ana.fillStyle = 'rgba(28,30,40,0.78)';
-        ana.fillRect(-h / 2, -0.9, h, 1.8);
-        ana.fillStyle = 'rgba(200,210,230,0.35)';
-        ana.fillRect(-h / 2, -0.9, h, 0.5);
-        ana.fillStyle = 'rgba(70,76,92,0.9)';
-        ana.beginPath(); ana.arc(-h / 2, 0, 1.1, 0, Math.PI * 2); ana.arc(h / 2, 0, 1.1, 0, Math.PI * 2); ana.fill();
+        const h = t.w * 1.7;
+        ana.fillStyle = 'rgba(28,30,40,0.5)';
+        ana.fillRect(-h / 2, -0.6, h, 1.2);
+        ana.fillStyle = 'rgba(210,218,235,0.3)';
+        ana.fillRect(-h / 2, -0.6, h, 0.4);
+        ana.fillStyle = 'rgba(80,86,102,0.75)';
+        ana.beginPath(); ana.arc(-h / 2, 0, 0.9, 0, Math.PI * 2); ana.arc(h / 2, 0, 0.9, 0, Math.PI * 2); ana.fill();
         ana.restore();
       }
     }

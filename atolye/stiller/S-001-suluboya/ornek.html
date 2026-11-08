@@ -344,16 +344,16 @@
     return du < 0 ? sstep(-gen - 0.015, -gen + 0.015, du) : sstep(gen + 0.09, gen - 0.02, du);
   };
   yikama(kKubbe, kapsamBolge(kKubbe, KUBBESET, 1), {
-    pig: (x, y) => { const l = isikKubbe(x, y); return karis(P.sap, 0.5 + 0.5 * l, P.vir, 0.85 * (1 - l) + 0.12, P.sie, 0.2 * l * l, P.ult, 0.12 * (1 - l)); },
-    yog: (x, y) => (0.3 + 1.1 * Math.pow(1 - isikKubbe(x, y), 1.35)) * (1 - 0.88 * parlak(x, y)),
-    kenar: 1.0, gran: 0.3, dalga: 0.4, dalgaOlcek: 30, tohum: 11,
+    pig: (x, y) => { const l = isikKubbe(x, y), t = 0.62 + 0.38 * l + 0.97 * (1 - l) + 0.12 * (1 - l); return karis(P.sap, (0.5 + 0.5 * l) / t * 1.15, P.vir, (0.85 * (1 - l) + 0.12) / t * 1.15, P.sie, 0.2 * l * l, P.ult, 0.12 * (1 - l) / t * 1.15); },
+    yog: (x, y) => (0.3 + 0.78 * Math.pow(1 - isikKubbe(x, y), 1.35)) * (1 - 0.88 * parlak(x, y)),
+    kenar: 0.75, gran: 0.3, dalga: 0.4, dalgaOlcek: 30, tohum: 11,
     acilma: [{ x: 488, y: 440, r: 30, e: 1.4 }], acilmaKaldir: 0.3, acilmaKenar: 2.4,
   });
   // gölge sırı: sol tarafta kuruyup sert kenar bırakan ikinci kat
   yikama(kKubbe, kapsamBolge(kKubbe, KUBBESET, 1.2, (x, y) => kubbeU(x, y) + (fbm(nD, x / 22, y / 70, 3) - 0.5) * 0.25 < -0.18 + 0.12 * (555 - y) / 255), {
     pig: karis(P.vir, 0.7, P.ult, 0.5, P.sie, 0.06),
-    yog: (x, y) => 0.28 + 0.6 * clamp(-kubbeU(x, y), 0, 1),
-    kenar: 1.3, gran: 0.7, dalga: 0.35, tohum: 12,
+    yog: (x, y) => 0.24 + 0.36 * clamp(-kubbeU(x, y), 0, 1),
+    kenar: 1.2, gran: 0.7, dalga: 0.35, tohum: 12,
   });
   // kaburgalar: fırça ucuyla, kalınlığı değişen tek hamle; yer yer kuru fırça kopukluğu
   {
@@ -380,7 +380,7 @@
     });
     const w = kKubbe[2] - kKubbe[0];
     for (let j = 0; j < A.length; j++) { const x = kKubbe[0] + (j % w), y = kKubbe[1] + Math.floor(j / w); if (BOL[y * W + x] !== BI.kubbe) A[j] = 0; }
-    yikama(kKubbe, A, { pig: karis(P.vir, 0.75, P.ult, 0.4, P.sie, 0.15), yog: 0.85, kenar: 0.5, kenarR: 1.5, gran: 0.3, dalga: 0.3, tohum: 14 });
+    yikama(kKubbe, A, { pig: karis(P.vir, 0.75, P.ult, 0.4, P.sie, 0.15), yog: (x, y) => 0.45 + 0.4 * clamp(kubbeU(x, y) + 0.6, 0, 1), kenar: 0.5, kenarR: 1.5, gran: 0.3, dalga: 0.3, tohum: 14 });
     // kaburgaların ışıklı yanında nemli fırçayla kaldırılmış açık çizgi
     const A2 = kapsamCiz(kKubbe, (c) => {
       c.lineCap = 'round';

@@ -20,6 +20,7 @@
   'use strict';
   const W = 1024, N = W * W, S2 = 2, W2 = W * S2;
   const tuval = document.getElementById('tuval');
+  tuval.getContext('2d', { willReadFrequently: true }); // katlar arasında tuval tekrar tekrar okunur
   const ctx = SAHNE.tuval(tuval, S2);
   const R = SAHNE.rng(5150);
 
@@ -552,7 +553,6 @@
     }
     ctx.putImageData(pv, 0, 0);
   }
-  console.warn('darbe sayilari', sayac.join(','));
   SAHNE.hazir();
 })();
 </script>

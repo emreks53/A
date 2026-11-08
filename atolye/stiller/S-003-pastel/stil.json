@@ -1,0 +1,21 @@
+{
+  "kod": "S-003",
+  "no": 3,
+  "ad": "Yumuşak Pastel",
+  "ad_en": "Soft Pastel",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Tonlu kâğıtta tebeşirimsi, kırık vuruşlar; kâğıt dişinden görünen zemin ve parmakla dağıtılmış geçişler.",
+  "tanim": "Yumuşak pastel, az bağlayıcıyla sıkıştırılmış saf pigment çubuklarıdır; pürüzlü kâğıda sürtülünce pigment yalnız dişin tepelerine tutunur ve vuruşlar tozlu, kırık görünür. Çubuğun yan yüzüyle geniş alanlar, ucuyla tarama çizgileri yapılır; parmakla dağıtılan yerler yumuşak geçişler verir, üstüne gelen keskin vuruşlar onlarla karşıtlık kurar. Tonlu kâğıdın rengi vuruşların arasından görünerek resmin bir parçası olur.",
+  "koken": "18. yüzyılda Rosalba Carriera ve Maurice Quentin de La Tour'un portreleriyle saygınlık kazandı; Jean-Siméon Chardin de ustalarındandır. 19. yüzyılda Edgar Degas katmanlı, taramalı pastelleriyle tekniği yeniden tanımladı; Mary Cassatt ve Odilon Redon onu izledi.",
+  "ayirt_edici": [
+    "Sıcak gri, petek dokulu kâğıt: renk yalnız dişin tepelerinde, çukurlarda kâğıt görünüyor",
+    "Çubuğun yan yüzüyle geniş, düz uçlu vuruşlar (gök, kasnak, çiçeklerin taç yaprakları)",
+    "Gökte uçla atılmış paralel tarama öbekleri, kubbede kaburgalar boyunca keskin çizgiler",
+    "Gökte, güneş halesinde ve kubbenin gölgeli yanında parmakla dağıtılmış yumuşak geçişler",
+    "Kenarlarda boş bırakılmış kâğıt; tozlu, canlı ve sınırlı bir çubuk paleti"
+  ],
+  "palet": ["#9D9487", "#5877C2", "#BDCC86", "#233338", "#DDD3BB", "#F9F5EB", "#A18356", "#3A543E"],
+  "kodla_cizim": "Kâğıt dişi, titreşimli altıgen petek ile çok ölçekli gürültüden kurulan 2048 piksellik bir yükseklik haritasıdır. Her katta vuruşlar ayrı bir tuvale basınç (saydamlık) olarak çizilir; pigment yalnız 'diş yüksekliği > 1 − basınç' olan piksellere yumuşak bir eşikle bırakılır. Renkler ışık modelli bir hedeften okunup kırk kadar çubuktan oluşan sınırlı bir kutuya yuvarlanır (bazen ikinci en yakın çubuk: kırık renk). Sırayla yan yüzle geniş alt kat, parmakla dağıtma (maskeli bulanıklaştırma), orta vuruşlar, güneş halesi, uçla tarama öbekleri, yapı ayrıntıları ve bitkiler gelir; en sonda kâğıt dişinin kabartma ışığı eklenir.",
+  "etiketler": ["pastel", "kuru teknik", "tonlu kâğıt", "doku", "tarama", "geleneksel"]
+}

@@ -23,10 +23,13 @@
     const tuval = document.getElementById('tuval');
     const ctx = S.tuval(tuval, 2);
     const rnd = S.rng(31);
-    // bant sınırları: gece vakitleri (İmsak, Yatsı) geniş kanatlar, gündüz vakitleri dar; her bant yapıdan bir parça taşır
-    const SINIR = [0, 356, 470, 586, 724, W];
+    // bant sınırları: beş vakit neredeyse eşit genişlikte (gece kanatları biraz geniş); İmsak gök ve sol çiçekler,
+    // Öğle bütün minare, İkindi kubbenin ortası ve alemi, Akşam kubbenin sağ omzu ve batan güneş, Yatsı ay ve sağ çiçekler
+    const SINIR = [0, 236, 428, 620, 812, W];
     const bx = (b) => SINIR[b];
     const bw = (b) => SINIR[b + 1] - SINIR[b];
+    const orta = (b) => SINIR[b] + (SINIR[b + 1] - SINIR[b]) / 2;
+    const GUNES_AKSAM = [787, 516]; // Akşam bandında alçak güneş
     const bantNo = (x) => (x < SINIR[1] ? 0 : x < SINIR[2] ? 1 : x < SINIR[3] ? 2 : x < SINIR[4] ? 3 : 4);
 
     // ---------------------------------------------------------------- vakitlerin ışığı
@@ -80,8 +83,8 @@
       },
       {
         ad: 'Akşam',
-        gunes: { yon: nrm([0.86, 0.28, -0.42]), renk: hex('#FF8A3D'), guc: 1.5 },
-        gok: { renk: hex('#9C5A98'), guc: 0.34 },
+        gunes: { yon: nrm([0.9, 0.12, -0.36]), renk: hex('#FF8A3D'), guc: 1.5 },
+        gok: { renk: hex('#9C5A98'), guc: 0.46 },
         yer: { renk: hex('#9A4A3A'), guc: 0.12 },
         pencere: 0.25,
         alem: 0.15,
@@ -354,7 +357,8 @@
               const xx = Math.round(x + dx * k);
               const yy = Math.round(y + dy * k);
               if (xx < 0 || yy < 0 || xx >= W || yy >= W) break;
-              if (engel.has(kaba[yy * W + xx])) {
+              const e = kaba[yy * W + xx];
+              if (engel.has(e) && (e !== NO.pencere || xx > 340)) {
                 gol = 1;
                 break;
               }
@@ -382,8 +386,8 @@
       const durak = [
         [[0, '#121741'], [0.42, '#272C66'], [0.72, '#54508F'], [0.92, '#9C7BA6'], [1, '#C496A8']],
         [[0, '#1C58C2'], [0.5, '#3F86DA'], [0.85, '#9DCBF1'], [1, '#D4EAF8']],
-        [[0, '#5A86C0'], [0.22, '#93AFC8'], [0.42, '#D9C79C'], [0.7, '#F2C27E'], [1, '#F8B868']],
-        [[0, '#2A1C58'], [0.3, '#6E2C76'], [0.55, '#C5467A'], [0.78, '#F2834A'], [1, '#FFC86A']],
+        [[0, '#6A93CA'], [0.24, '#A6BCCD'], [0.44, '#E2CF9F'], [0.7, '#F2C27E'], [1, '#F8B868']],
+        [[0, '#2A1C58'], [0.24, '#6E2C76'], [0.46, '#C5467A'], [0.6, '#F2834A'], [0.69, '#FFC86A'], [1, '#FFD98E']],
         [[0, '#04071E'], [0.5, '#0B133C'], [0.88, '#18215A'], [1, '#262C60']],
       ];
       const yildizCiz = (x, y, r, a) => {
@@ -427,38 +431,73 @@
             const y = Math.pow(rnd(), 1.6) * 520;
             yildizCiz(x, y, 0.4 + rnd() * 0.5, (0.25 + rnd() * 0.5) * (1 - y / 600));
           }
-          yildizCiz(150, 400, 1.3, 0.95);
+          // ufka yakın, alttan pembe aydınlanan ince şafak bulutları
+          for (const [cy, s] of [[598, 0.8], [668, 1], [722, 0.7]]) {
+            for (let i = 0; i < 7; i++) {
+              const x = -20 + rnd() * (bw(0) + 40);
+              const y = cy + (rnd() - 0.5) * 8;
+              g.save();
+              g.translate(x, y);
+              g.scale(1, 0.13);
+              const rr = (38 + rnd() * 36) * s;
+              const cg = g.createRadialGradient(0, rr * 0.4, 0, 0, rr * 0.4, rr);
+              cg.addColorStop(0, 'rgba(236,160,176,0.32)');
+              cg.addColorStop(1, 'rgba(236,160,176,0)');
+              g.fillStyle = cg;
+              g.fillRect(-rr, -rr, rr * 2, rr * 2);
+              g.restore();
+            }
+          }
+          // sabah yıldızı (Zühre): doğu ufkunun üstünde parlak, küçük ışınlı
+          yildizCiz(132, 372, 2.0, 1.0);
+          g.strokeStyle = 'rgba(255,240,230,0.55)';
+          g.lineWidth = 0.7;
+          g.beginPath();
+          g.moveTo(132 - 11, 372); g.lineTo(132 + 11, 372);
+          g.moveTo(132, 372 - 11); g.lineTo(132, 372 + 11);
+          g.stroke();
         }
         if (b === 1) {
-          const rg = g.createRadialGradient(413, -80, 10, 413, -80, 360);
+          const rg = g.createRadialGradient(orta(1), -80, 10, orta(1), -80, 360);
           rg.addColorStop(0, 'rgba(255,255,250,0.55)');
           rg.addColorStop(1, 'rgba(255,255,250,0)');
           g.fillStyle = rg;
           g.fillRect(bx(b), 0, bw(b), 800);
-          bulut(415, 215, 0.75, 'rgba(255,255,255,0.6)', 14);
+          bulut(orta(1), 215, 0.75, 'rgba(255,255,255,0.6)', 14);
         }
         if (b === 2) {
-          const rg = g.createRadialGradient(610, 40, 10, 610, 40, 380);
-          rg.addColorStop(0, 'rgba(255,236,190,0.55)');
+          const rg = g.createRadialGradient(bx(3) - 8, 40, 10, bx(3) - 8, 40, 380);
+          rg.addColorStop(0, 'rgba(255,236,190,0.4)');
           rg.addColorStop(1, 'rgba(255,236,190,0)');
           g.fillStyle = rg;
           g.fillRect(bx(b), 0, bw(b), 800);
-          bulut(525, 150, 0.6, 'rgba(255,240,210,0.55)', 12);
+          bulut(orta(2) - 30, 150, 0.6, 'rgba(255,240,210,0.55)', 12);
         }
         if (b === 3) {
-          // batan güneş: ufka yakın, binanın ardından taşan ışık
-          const gx = 702;
-          const gy = 368;
+          // batan güneş: alçakta, kubbenin sağ omzunun ve kasnağın ardına inerken; ufukta yatay ışık
+          const gx = GUNES_AKSAM[0];
+          const gy = GUNES_AKSAM[1];
           let rg = g.createRadialGradient(gx, gy, 10, gx, gy, 420);
-          rg.addColorStop(0, 'rgba(255,214,140,0.85)');
-          rg.addColorStop(0.25, 'rgba(255,150,90,0.35)');
+          rg.addColorStop(0, 'rgba(255,200,130,0.6)');
+          rg.addColorStop(0.25, 'rgba(255,150,90,0.3)');
           rg.addColorStop(1, 'rgba(255,120,90,0)');
           g.fillStyle = rg;
           g.fillRect(bx(b), 0, bw(b), 800);
+          // ufuk boyunca yatay uzanan sıcak ışık
+          g.save();
+          g.translate(gx, gy + 30);
+          g.scale(1, 0.28);
+          rg = g.createRadialGradient(0, 0, 0, 0, 0, 300);
+          rg.addColorStop(0, 'rgba(255,200,130,0.45)');
+          rg.addColorStop(0.5, 'rgba(255,160,100,0.2)');
+          rg.addColorStop(1, 'rgba(255,150,90,0)');
+          g.fillStyle = rg;
+          g.fillRect(-300, -300, 600, 600);
+          g.restore();
           // uzun ince bulutlar: alttan turuncu aydınlık
-          for (const [cy, s] of [[250, 1], [175, 0.8], [312, 0.6]]) {
+          for (const [cy, s] of [[200, 0.8], [292, 1], [372, 0.9], [452, 0.7], [508, 0.5]]) {
             for (let i = 0; i < 9; i++) {
-              const x = 590 + rnd() * 130;
+              const x = bx(b) - 10 + rnd() * (bw(b) + 20);
               const y = cy + (rnd() - 0.5) * 10;
               g.save();
               g.translate(x, y);
@@ -477,15 +516,19 @@
               g.restore();
             }
           }
-          g.fillStyle = '#FFF3C8';
-          g.beginPath();
-          g.arc(gx, gy, 21, 0, Math.PI * 2);
-          g.fill();
-          rg = g.createRadialGradient(gx, gy, 20, gx, gy, 70);
-          rg.addColorStop(0, 'rgba(255,230,160,0.9)');
-          rg.addColorStop(1, 'rgba(255,190,120,0)');
+          rg = g.createRadialGradient(gx, gy, 0, gx, gy, 25);
+          rg.addColorStop(0, '#FFF6D2');
+          rg.addColorStop(0.6, '#FFE29A');
+          rg.addColorStop(1, '#FFB450');
           g.fillStyle = rg;
-          g.fillRect(gx - 70, gy - 70, 140, 140);
+          g.beginPath();
+          g.arc(gx, gy, 25, 0, Math.PI * 2);
+          g.fill();
+          rg = g.createRadialGradient(gx, gy, 24, gx, gy, 80);
+          rg.addColorStop(0, 'rgba(255,200,120,0.5)');
+          rg.addColorStop(1, 'rgba(255,160,100,0)');
+          g.fillStyle = rg;
+          g.fillRect(gx - 80, gy - 80, 160, 160);
         }
         if (b === 4) {
           for (let i = 0; i < 170; i++) {
@@ -781,12 +824,12 @@
       }
       if (b === 3) {
         // güneş binanın kenarından taşar
-        const g = ctx.createRadialGradient(702, 368, 10, 702, 368, 150);
-        g.addColorStop(0, 'rgba(255,200,120,0.5)');
-        g.addColorStop(0.4, 'rgba(255,140,80,0.14)');
+        const g = ctx.createRadialGradient(GUNES_AKSAM[0], GUNES_AKSAM[1], 10, GUNES_AKSAM[0], GUNES_AKSAM[1], 150);
+        g.addColorStop(0, 'rgba(255,190,110,0.22)');
+        g.addColorStop(0.4, 'rgba(255,140,80,0.1)');
         g.addColorStop(1, 'rgba(255,120,80,0)');
         ctx.fillStyle = g;
-        ctx.fillRect(540, 220, 310, 320);
+        ctx.fillRect(GUNES_AKSAM[0] - 150, GUNES_AKSAM[1] - 150, 300, 300);
       }
       ctx.restore();
     }
@@ -805,7 +848,6 @@
       ctx.fillRect(x - 0.6, 0, 1.2, W);
     }
     // ortak yay: beş işaret noktasından geçen yumuşak eğri
-    const orta = (b) => bx(b) + bw(b) / 2;
     const isaret = [[orta(0), 104], [orta(1), 38], [orta(2), 50], [orta(3), 86], [orta(4), 112]];
     const yayN = [[-120, 160], ...isaret, [W + 120, 150]];
     ctx.strokeStyle = 'rgba(236,204,120,0.85)';

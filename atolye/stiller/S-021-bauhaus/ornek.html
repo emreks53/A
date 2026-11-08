@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-021 Bauhaus — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #E9E1CF; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #E5D9BE; }
   canvas, svg { display: block; }
 </style>
 </head>
@@ -18,7 +18,7 @@
   const S = SAHNE;
   const f = (n) => Math.round(n * 100) / 100;
   const R = {
-    krem: '#E9E1CF',
+    krem: '#E5D9BE',
     beyaz: '#FBF8F1',
     siyah: '#1B1A19',
     kirmizi: '#D7322B',
@@ -85,7 +85,9 @@
 
   // ---------------------------------------------------------------- kaide, korniş, kasnak
   dik(304, 704, 816, 800, R.beyaz); // kaide
-  dik(300, 704, 306, 800, R.krem); // minare ile kaide arasında ince ayrım
+  // kaidenin iki ucunda kalın siyah dikmeler: beyaz gövde krem zeminden ve beyaz minareden kesin ayrılsın
+  dik(304, 704, 320, 800, R.siyah);
+  dik(800, 704, 816, 800, R.siyah);
   for (const [x, w, h] of [[432, 32, 56], [560, 36, 64], [688, 32, 56]]) dol(kemer(x, 800 - 20 - h, w, h), R.mavi);
   dik(288, 688, 832, 704, R.kirmizi); // korniş: kırmızı çubuk
   dik(336, 608, 784, 688, R.siyah); // alt kasnak
@@ -180,9 +182,9 @@
     { x: 848, y: 912, r: 64, tur: 'dortlu' },
   ];
   for (const c of on) dik(c.x - 3, c.y, c.x + 3, 1024, R.siyah);
-  // ince saplarda birer çeyrek daire yaprak
-  for (const [x, a, renk] of [[288, -PI / 2, R.mavi], [440, PI, R.siyah], [624, PI, R.mavi], [752, -PI / 2, R.siyah]]) dol(ceyrek(x, 1000, 28, a), renk);
   for (const c of on) cicek(c.x, c.y, c.r, c.tur);
+  // ince saplarda birer çeyrek daire yaprak: başın hemen altında, komşu çiçeklerden boşlukla ayrı
+  for (const [x, a, renk] of [[288, -PI / 2, R.mavi], [440, PI, R.siyah], [624, -PI / 2, R.siyah], [752, PI, R.mavi]]) dol(ceyrek(x, 928, 20, a), renk);
 
   // ---------------------------------------------------------------- SVG + hafif baskı greni
   document.getElementById('sahne').innerHTML =

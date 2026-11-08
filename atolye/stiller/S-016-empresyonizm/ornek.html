@@ -170,7 +170,7 @@
     tasIsik: [[C.krem, 4], [C.beyaz, 2], [D.limonAcik, 1.6], [D.pembeAcik, 1.8], [D.turuncuAcik, 0.5]],
     tasOrta: [[D.pembeAcik, 2], [D.leylakAcik, 2.5], [C.krem, 1.5], [C.gokAcik, 1.4], [C.okr, 0.6]],
     tasGolge: [[C.leylak, 4], [D.kobaltAcik, 2], [C.mor, 1.2], [C.gokAcik, 1.4], [C.pembe, 0.8]],
-    pencere: [[C.morKoyu, 4], [C.ultra, 2], [C.koyuYesil, 2], [C.mor, 1]],
+    pencere: [[C.morKoyu, 4], [C.ultra, 1.4], [C.koyuYesil, 2], [C.mor, 1], [[118, 72, 84], 1.5], [[60, 90, 140], 1]],
     altinIsik: [[C.limon, 3], [C.sari, 3], [C.beyaz, 1], [C.turuncu, 1]],
     altinGolge: [[C.turuncu, 3], [C.kirmizi, 1], [C.sari, 1.5], [C.mor, 0.5]],
     yaprakIsik: [[C.sariYesil, 3], [C.cimen, 3.5], [C.zumrut, 2], [D.yesilAcik, 1], [C.limon, 0.6], [C.turuncu, 0.3]],
@@ -195,7 +195,7 @@
   function renkSec(x, y) {
     const i = idx(x, y), b = ADLAR[BOL[i]], l = LM[i];
     switch (b) {
-      case 'kubbe': return ucBant(l, P.kubbeIsik, P.kubbeOrta, P.kubbeGolge, 0.62, 0.86);
+      case 'kubbe': return ucBant(l, P.kubbeIsik, P.kubbeOrta, P.kubbeGolge, 0.7, 0.93);
       case 'kasnak': return ucBant(l * 0.9, P.kubbeIsik, P.kubbeOrta, P.kubbeGolge, 0.66, 0.9);
       case 'kaide': case 'minare': return ucBant(l, P.tasIsik, P.tasOrta, P.tasGolge, 0.42, 0.66);
       case 'pencere': return sec(P.pencere);
@@ -271,7 +271,7 @@
       ctx.strokeStyle = rgb([c[0] * j, c[1] * j, c[2] * j]);
       ctx.lineWidth = lw * (0.7 + R() * 0.6); ctx.globalAlpha = 0.85 + R() * 0.15;
       ctx.stroke(p);
-      hctx.lineWidth = lw * 0.7; hctx.globalAlpha = yuk * 0.75 * (0.5 + R() * 0.9); hctx.stroke(p);
+      hctx.lineWidth = lw * 0.7; hctx.globalAlpha = yuk * 0.55 * (0.5 + R() * 0.9); hctx.stroke(p);
     }
     ctx.globalAlpha = 1; hctx.globalAlpha = 1;
   }
@@ -296,8 +296,8 @@
   }
   const detay = (x, y, b) => b === 'minare' || b === 'pencere' || b === 'altin' || b === 'cicekOrta' || b === 'kasnak' || b === 'cicek' || b === 'sap' || b === 'tomurcuk';
   const ince = (b) => b === 'minare' || b === 'altin' || b === 'pencere';
-  kat(13, 16, { kayma: 3, sapma: 0.5, yuk: 0.06, uzun: 1.3, sart: (x, y, b) => !ince(b) || R() < 0.25 });
-  kat(8.5, 10, { kayma: 1.8, sapma: 0.55, yuk: 0.07, uzun: 1.1, sart: (x, y, b) => (!ince(b) && R() < 0.62) || R() < 0.4 });
+  kat(13, 16, { kayma: 2.2, sapma: 0.5, yuk: 0.06, uzun: 1.3, sart: (x, y, b) => !ince(b) || R() < 0.25 });
+  kat(8.5, 10, { kayma: 1.2, sapma: 0.55, yuk: 0.07, uzun: 1.1, sart: (x, y, b) => (!ince(b) && R() < 0.62) || R() < 0.4 });
   kat(5, 5.2, { kayma: 0.7, sapma: 0.35, yuk: 0.08, sart: (x, y, b) => detay(x, y, b) || R() < 0.1 });
   kat(2.6, 2.6, { kayma: 0.3, sapma: 0.25, yuk: 0.08, sart: (x, y, b) => b === 'pencere' || b === 'altin' || b === 'cicekOrta' || (b === 'minare' && R() < 0.5) });
 
@@ -385,7 +385,7 @@
       const gy = (H[Math.min(W2 - 1, y + 1) * W2 + x] - H[Math.max(0, y - 1) * W2 + x]) * 6;
       const nl = Math.hypot(gx, gy, 1);
       const dif = (-gx * Lx - gy * Ly + Lz) / nl;
-      const sh = clamp(1 + (dif - Lz) * 0.9, 0.82, 1.18) * (0.97 + 0.04 * dok);
+      const sh = clamp(1 + (dif - Lz) * 0.8, 0.86, 1.14) * (0.97 + 0.04 * dok);
       const j = i * 4;
       p[j] = clamp(p[j] * sh, 0, 255); p[j + 1] = clamp(p[j + 1] * sh, 0, 255); p[j + 2] = clamp(p[j + 2] * sh, 0, 255);
     }

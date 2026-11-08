@@ -12,7 +12,7 @@
     "Kubbe, kasnak, kaide ve minare kesim çizgileriyle parçalara ayrılmış; parçalar birbirine göre kaymış ve hafifçe dönmüş",
     "Aynı anda iki bakış: kubbe önden ve tepeden (ışınsal dilimli elips), şerefeler yandan ve üstten (halkalar), kaidenin sağa kaçan yan yüzü",
     "Her düzlem bir kenarından koyulaşıp öbür yana açılan geçişle gölgelenmiş; kenarlar komşu düzleme akıyor (passage) ve yarı saydam düzlemler üst üste biniyor",
-    "Okr, gri, kahverengi ve kirli yeşille sınırlı analitik palet; ortası aydınlık, kenarlara doğru koyulaşan düzlem mozaiği",
+    "Okr, gri, kahverengi ve kirli yeşille sınırlı analitik palet; açık minare koyu bir düzlem sütununun, koyu yeşil kubbe açık ve orta tonlu düzlemlerin önünde okunur",
     "Sentetik kübizmden kolaj dokuları: ahşap damarı (faux bois), yazısız gazete rasteri ve nokta deseni",
     "Yer yer koyu, fırçayla çekilmiş düzlem çizgileri ve her yüzeyde kısa, eğik fırça vuruşları"
   ],
@@ -22,11 +22,11 @@
     "#684C32",
     "#34281E",
     "#C9C3B2",
-    "#96928A",
-    "#56784E",
+    "#969286",
+    "#4F7247",
     "#CCA03E"
   ],
-  "kodla_cizim": "Canvas (2048 iç çözünürlük). Arka plan, birkaç yapı çizgisinden sonra hücreleri tek tek bölen BSP kesimleriyle yaklaşık 118 dışbükey düzleme ayrılır; her düzlem okr/gri/kahve tonlarından birini alır ve bir kenarından içeri doğrusal geçişle gölgelenir; üç hücre prosedürel ahşap damarı, yazısız gazete yarım tonu ve nokta deseniyle doldurulur. Minare, kaide, kasnak ve kubbe önce ekran dışı bir katmana düz kübist tonlarla (prizma yüzleri, 16 dilim, kaburgalar) çizilir; sonra kesim doğrularının oluşturduğu her hücre kaydırılıp döndürülerek ana tuvale taşınır ve kendi ton/ışık geçişini alır. Kubbenin tepeden görünüşü, şerefe halkaları ve kaidenin yan yüzü ikinci bakış olarak eklenir; ardından yarı saydam düzlemler, piksel renginden örneklenen 38 bin kısa fırça vuruşu, koyu düzlem çizgileri ve tuval dokusu gelir. Geometri SAHNE'den (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, bitki yerleri) alınır.",
+  "kodla_cizim": "Canvas (2048 iç çözünürlük). Arka plan, birkaç yapı çizgisinden sonra hücreleri tek tek bölen BSP kesimleriyle yaklaşık 118 dışbükey düzleme ayrılır; her düzlem okr/gri/kahve tonlarından birini alır (minarenin arkası koyu, kubbenin gölgeli yanı açık tutulur) ve bir kenarından içeri doğrusal geçişle gölgelenir; üç hücre prosedürel ahşap damarı, yazısız gazete yarım tonu ve nokta deseniyle doldurulur. Minare, kaide, kasnak ve kubbe önce ekran dışı bir katmana düz kübist tonlarla (prizma yüzleri, 16 dilim, kaburgalar) çizilir; sonra kesim doğrularının oluşturduğu her hücre kaydırılıp döndürülerek taşınır, kendi ton/ışık geçişini ve yalnız nesnenin içinde kalan koyu kenar çizgilerini alır; parçaların arasındaki aralıklara nesnenin koyulaşmış, kaymamış hâli dolar. Kubbenin tepeden görünüşü, şerefe halkaları ve kaidenin yan yüzü ikinci bakış olarak eklenir. Çiçeklerin taç yaprakları altı köşeli çokgenlerdir ve ekseninden aydınlık/gölgeli iki düzleme bölünür. Ardından yarı saydam düzlemler, piksel renginden örneklenen 38 bin kısa fırça vuruşu, koyu düzlem çizgileri ve tuval dokusu gelir. Geometri SAHNE'den (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, bitki yerleri) alınır.",
   "etiketler": [
     "modern sanat",
     "avangart",

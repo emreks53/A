@@ -83,10 +83,11 @@
   }
   const BIRIM = yaprakYolu(1, 1, 0, 0);
   const SP = 256;
-  // gölgelendirme kalıbı: dipte koyu gül gölgesi, içte yumuşak ışık, lif çizgileri, damar, açık kenar
-  const GOLGELI = SAHNE.yeniTuval(SP, SP);
-  (function () {
-    const g = GOLGELI.getContext('2d');
+  // gölgelendirme kalıbı: dipte koyu gül gölgesi, içte yumuşak ışık, lif çizgileri, damar, açık kenar.
+  // kivrim ±1: yaprağın bir kenarı geriye kıvrılmıştır (açık kıvrık şerit ve altında ince gölge).
+  function kalipYap(kivrim) {
+    const K = SAHNE.yeniTuval(SP, SP);
+    const g = K.getContext('2d');
     const P = yaprakYolu(SP, SP, 0, SP / 2);
     g.save();
     g.clip(P);
@@ -139,7 +140,35 @@
     g.strokeStyle = 'rgba(95,30,52,0.32)';
     g.stroke(P);
     g.restore();
-  })();
+    if (kivrim) {
+      // kıvrık kenar: P ile içe kaymış P2 arasındaki şerit; uca doğru genişler
+      const P2 = yaprakYolu(SP * 0.95, SP * 0.84, SP * 0.02, SP / 2 + kivrim * SP * 0.085);
+      const B = SAHNE.yeniTuval(SP, SP);
+      const b = B.getContext('2d');
+      const gr2 = b.createLinearGradient(0, 0, SP, 0);
+      gr2.addColorStop(0, 'rgba(255,240,244,0)');
+      gr2.addColorStop(0.35, 'rgba(255,240,244,0.35)');
+      gr2.addColorStop(1, 'rgba(255,246,248,0.7)');
+      b.fillStyle = gr2;
+      b.fill(P);
+      b.globalCompositeOperation = 'destination-out';
+      b.fill(P2);
+      g.drawImage(B, 0, 0);
+      g.save();
+      g.clip(P);
+      g.beginPath();
+      if (kivrim < 0) g.rect(SP * 0.25, 0, SP, SP / 2); else g.rect(SP * 0.25, SP / 2, SP, SP / 2);
+      g.clip();
+      g.filter = 'blur(3px)';
+      g.strokeStyle = 'rgba(90,20,45,0.32)';
+      g.lineWidth = 6;
+      g.stroke(P2);
+      g.restore();
+    }
+    return K;
+  }
+  const KALIPLAR = [kalipYap(0), kalipYap(-1), kalipYap(1)];
+  const GOLGELI = KALIPLAR[0];
   // gölge kalıbı (bulanık yaprak); birim kutu u∈[-0.3,1.3], v∈[-0.8,0.8]
   const GOLGE = SAHNE.yeniTuval(160, 160);
   (function () {
@@ -150,7 +179,7 @@
   })();
 
   let sayac = 0;
-  function yaprak(x, y, L, Wd, a, renk, golge) {
+  function yaprak(x, y, L, Wd, a, renk, golge, kalip) {
     const c = Math.cos(a), s = Math.sin(a);
     if (golge === undefined) golge = 0.3;
     if (golge > 0) {
@@ -163,13 +192,14 @@
     ctx.setTransform(OL * L * c, OL * L * s, -OL * Wd * s, OL * Wd * c, OL * x, OL * y);
     ctx.fillStyle = typeof renk === 'string' ? renk : rgb(renk);
     ctx.fill(BIRIM);
-    ctx.drawImage(GOLGELI, 0, -0.5, 1, 1);
+    ctx.drawImage(KALIPLAR[kalip || 0], 0, -0.5, 1, 1);
     sayac++;
   }
   const sifirla = () => ctx.setTransform(OL, 0, 0, OL, 0, 0);
   // saydam yaprak: üst üste binen yerler koyulaşır, alttaki yaprağın kenarı seçilir
-  function yaprakSaydam(x, y, L, Wd, a, renk, golge, alfa) {
+  function yaprakSaydam(x, y, L, Wd, a, renk, golge, alfa, kalip) {
     const c = Math.cos(a), s = Math.sin(a);
+    const KL = KALIPLAR[kalip || 0];
     const dx = -0.8 - L * 0.05, dy = 1.0 + L * 0.06;
     ctx.setTransform(OL * L * c, OL * L * s, -OL * Wd * s, OL * Wd * c, OL * (x + dx), OL * (y + dy));
     ctx.globalAlpha = golge;
@@ -179,8 +209,9 @@
     ctx.fillStyle = rgb(renk);
     ctx.fill(BIRIM);
     ctx.globalAlpha = Math.min(1, alfa + 0.1);
-    ctx.drawImage(GOLGELI, 0, -0.5, 1, 1);
+    ctx.drawImage(KL, 0, -0.5, 1, 1);
     ctx.globalAlpha = 1;
+    sayac++;
   }
 
   // ------------------------------------------------------------ kâğıt zemin
@@ -231,35 +262,51 @@
     b = Math.min(1, b) * (0.6 + 0.4 * fbm(x / 60, y / 25, 31, 3));
     return karis(c, [255, 252, 250], 0.85 * b);
   };
-  const akis = (x, y0) => y0 + 13 * Math.sin(x / 230 + y0 / 60) + 4 * Math.sin(x / 83 + y0 * 0.17 + 1.3);
+  const akis = (x, y0) => y0 + 24 * Math.sin(x / 250 + y0 / 85) + 9 * Math.sin(x / 110 - y0 / 140 + 1.3) + 3 * Math.sin(x / 47 + y0 * 0.19);
+  // kenar payı: kâğıt kenarı düz bir şerit değil; yer yer yapraklar kenara taşar, yer yer derin koylar açılır
+  const pay = (t, tohum) => Math.max(0, (fbm(t / 190, tohum, 61, 3) - 0.43) * 330) + 26 * (fbm(t / 37, tohum + 3, 67, 2) - 0.5);
   const akisAci = (x, y0) => {
     const e = 2;
     return Math.atan2(akis(x + e, y0) - akis(x - e, y0), 2 * e);
   };
   let akinti = 0;
-  for (let y0 = -10; y0 < 816; y0 += 16.5, akinti++) {
+  for (let y0 = -14; y0 < 822; y0 += 19, akinti++) {
     const sira = [];
     const serit = akinti % 5 === 2 ? 1 : akinti % 5 === 3 ? 0.45 : 0; // gül tenli akıntı şeritleri
-    let x = -30 + r() * 14;
-    while (x < W + 30) {
-      const L = 27 + r() * 15;
-      const y = akis(x, y0) + (r() - 0.5) * 5;
-      const kenar = Math.min(x + 6, W + 6 - x, y + 18) - 46 * fbm(x / 60, y / 60, 41, 3) + (y > 560 ? 40 : 0);
-      const sac = kenar > 22 || r() < Math.max(0, kenar / 22) * 0.75;
+    let x = -40 + r() * 20;
+    while (x < W + 40) {
+      // iri ve ufak yapraklar karışık: pul gibi tek boy değil
+      const L = r() < 0.18 ? 22 + r() * 8 : 32 + r() * 22;
+      const y = akis(x, y0) + (r() - 0.5) * 9;
+      const kenar = Math.min(x + 8 - pay(y, 1), W + 8 - x - pay(y, 2), y + 20 - pay(x, 3)) + (y > 600 ? 60 : 0);
+      const sac = kenar > 18 || r() < Math.max(0, (kenar + 30) / 48) * 0.55;
       if (sac && y < 808 && binaYakininda(x, y)) {
         let c = gokRengi(x, Math.min(y, 798));
         // akıntı şeritleri: hafif açık/koyu bantlar
         const bant = Math.sin(y0 * 0.29 + x / 330) * 5;
-        c = oynat([c[0] + bant, c[1] + bant, c[2] + bant], 12);
+        c = oynat([c[0] + bant, c[1] + bant, c[2] + bant], 14);
         const sol = Math.max(0, Math.min(1, (fbm(x / 210, akinti * 0.7, 51, 2) - 0.32) * 3.2));
         if (serit) c = karis(c, gulle([c[0] + 6, c[1] - 4, c[2] - 2], 0.42), serit * sol);
-        sira.push({ x, y, L, Wd: L * (0.72 + r() * 0.14), a: akisAci(x, y0) + (r() - 0.5) * 0.42, c });
+        const kv = r();
+        sira.push({ x, y, L, Wd: L * (0.74 + r() * 0.26), a: akisAci(x, y0) + (r() - 0.5) * 0.75, c, k: kv < 0.22 ? 1 : kv < 0.44 ? 2 : 0, al: 0.8 + r() * 0.12 });
       }
-      x += L * (0.6 + r() * 0.12);
+      x += L * (0.5 + r() * 0.28);
     }
     sira.sort((p, q) => q.x - p.x); // uçtan dibe: yuvarlak uçlar görünür kalsın
     ctx.globalAlpha = 1;
-    for (const p of sira) yaprakSaydam(p.x - p.L * 0.5, p.y, p.L, p.Wd, p.a, p.c, 0.16, 0.86);
+    for (const p of sira) yaprakSaydam(p.x - p.L * 0.5, p.y, p.L, p.Wd, p.a, p.c, 0.16, p.al, p.k);
+  }
+  // kâğıt kenarında dağınık birkaç yaprak: el ile serpilmiş gibi
+  for (let i = 0; i < 46; i++) {
+    const kenarSec = i % 3;
+    const t = r() * W;
+    let x, y;
+    if (kenarSec === 0) { x = r() * 50 - 8; y = t * 0.78; }
+    else if (kenarSec === 1) { x = W - r() * 50 + 8; y = t * 0.78; }
+    else { x = t; y = r() * 46 - 8; }
+    if (!binaYakininda(x, y)) continue;
+    const L = 22 + r() * 22;
+    yaprakSaydam(x, y, L, L * (0.75 + r() * 0.2), r() * Math.PI * 2, oynat(gokRengi(Math.max(40, Math.min(W - 40, x)), Math.max(30, y)), 16), 0.18, 0.88, (i % 3));
   }
 
   // güneş: solgun krem-altın yapraklardan iri bir gül, çevresinde ışık halkası
@@ -310,7 +357,7 @@
     let s = 0;
     for (let y = y1 + satirAdim * 0.6; y < y2; y += satirAdim, s++) {
       for (let x = x1 - 2 + (s % 2) * L * 0.3; x < x2; x += L * 0.6) {
-        liste.push({ x, y, c: oynat(renkF(x, y), 16) });
+        liste.push({ x, y, c: oynat(renkF(x, y), 20) });
       }
     }
     if (!liste.length) {
@@ -442,7 +489,7 @@
     const t = (x - K.x1) / (K.x2 - K.x1);
     return gulle(t < 0.5 ? karis([206, 194, 166], [240, 233, 216], t / 0.5) : karis([240, 233, 216], [253, 249, 240], (t - 0.5) / 0.5), 0.2);
   };
-  yatayBant(K.x1, K.x2 + 8, K.y1 + 1, K.y2 + 4, 26, (x, y) => {
+  yatayBant(K.x1, K.x2 + 8, K.y1 + 1, K.y2 + 4, 36, (x, y) => {
     const c = tasRenk(x);
     const k = y < K.y1 + 8 ? -26 : 0; // korniş gölgesi
     return [c[0] + k, c[1] + k, c[2] + k];
@@ -464,19 +511,19 @@
   function kasnak(k) {
     const q = SAHNE.kasnak[k];
     const cx = 560, R = (q.x2 - q.x1) / 2;
-    const L = k ? 24 : 19;
-    const sAdim = k ? 10 : 8.6;
+    const L = k ? 40 : 33;
+    const sAdim = k ? 16.2 : 13.4;
     const liste = [];
     let s = 0;
     for (let y = q.y1 + sAdim * 0.55; y < q.y2 + 1; y += sAdim, s++) {
-      const dth = (L * 0.6) / R;
+      const dth = (L * 0.7) / R;
       for (let th = -Math.PI / 2 - dth * 0.5 + (s % 2) * dth * 0.5; th < Math.PI / 2 + 0.02; th += dth) {
         const cs = Math.max(0.1, Math.cos(th));
         const x = cx + R * Math.sin(th);
         const isik = 0.18 + 0.82 * Math.max(0, Math.cos(th - 0.62)) - (y > q.y2 - 6 ? 0.15 : 0);
         let c = gulle(yesil(isik), 0.22);
         if (y < q.y1 + 5) c = [c[0] + 26, c[1] + 26, c[2] + 22];
-        liste.push({ x, y, L: L * cs, Wd: sAdim * 1.35, c: oynat(c, 14) });
+        liste.push({ x, y: y + (r() - 0.5) * 2, L: L * cs * (0.9 + r() * 0.2), Wd: sAdim * (1.22 + r() * 0.16), c: oynat(c, 20) });
       }
     }
     liste.sort((p, q) => q.x - p.x);
@@ -543,10 +590,10 @@
         dif = 0.04 + 0.98 * Math.pow(dif, 1.5);
         // kaburga çizgileri: dilim sınırına yakın yapraklar biraz koyu
         const dilim = ((lam + Math.PI / 2) / (Math.PI / 16)) % 1;
-        const kab = Math.min(dilim, 1 - dilim) < 0.12 ? -0.13 : 0;
+        const kab = Math.min(dilim, 1 - dilim) < 0.13 ? -0.2 : 0;
         let c = gulle(yesil(dif + kab), 0.14 + 0.16 * dif);
         c = oynat(c, 12);
-        if (r() < 0.08) c = gulle([c[0] + 10, c[1] + 6, c[2] + 8], 0.22); // ara ara gül tenli bir pul
+        if (r() < 0.05) c = karis(c, [236, 196, 200], 0.3); // ara ara gül tenli bir pul
         liste.push({ x: x - Math.cos(a) * L * 0.5, y: y - Math.sin(a) * L * 0.5, L, wd, a, c, y });
       }
     }
@@ -561,13 +608,15 @@
   (function () {
     const liste = [];
     let s = 0;
-    for (let y = 805; y < W + 10; y += 11, s++) {
-      for (let x = W + 14 - (s % 2) * 8; x > -24; x -= 14 + r() * 3) {
-        const c = oynat(gulle(karis([228, 214, 194], [204, 186, 160], (y - 800) / 224), 0.22), 14);
-        liste.push({ x, y: y + (r() - 0.5) * 2, c });
+    for (let y = 806; y < W + 14; y += 14.5, s++) {
+      for (let x = W + 18 - (s % 2) * 11; x > -30; x -= 19 + r() * 6) {
+        const c = oynat(gulle(karis([228, 214, 194], [204, 186, 160], (y - 800) / 224), 0.22), 16);
+        const L = 28 + r() * 12;
+        const kv = r();
+        liste.push({ x, y: y + (r() - 0.5) * 4, c, L, k: kv < 0.2 ? 1 : kv < 0.4 ? 2 : 0 });
       }
     }
-    for (const p of liste) yaprak(p.x - 12, p.y, 24, 16, (r() - 0.5) * 0.18, p.c, 0.2);
+    for (const p of liste) yaprak(p.x - p.L * 0.5, p.y, p.L, p.L * (0.66 + r() * 0.14), (r() - 0.5) * 0.4, p.c, 0.2, p.k);
   })();
 
   // ------------------------------------------------------------ bitkiler: yeşil yapraklar ve gül goncaları

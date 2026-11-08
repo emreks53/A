@@ -1,0 +1,21 @@
+{
+  "kod": "S-001",
+  "no": 1,
+  "ad": "Suluboya",
+  "ad_en": "Watercolor",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Saydam, üst üste binen boya katmanları, ıslakta açılmalar ve kâğıdın beyazı.",
+  "tanim": "Suluboya, suyla inceltilmiş saydam pigmentlerin kâğıda katman katman sürülmesiyle yapılır; renkler üst üste bindikçe koyulaşır, beyaz boya yerine kâğıdın kendisi ışık olarak bırakılır. Islak kâğıtta renkler yumuşakça birbirine akar, kuruyan yıkamalar ise kenarlarında koyu, keskin bir iz bırakır. Manzara, mimari eskiz, seyahat defteri ve botanik resimde çok kullanılır.",
+  "koken": "Kökleri Doğu Asya mürekkep resmine ve Orta Çağ el yazması süslemesine uzanır; Avrupa'da Albrecht Dürer'in doğa çalışmalarıyla belirginleşir. 18. ve 19. yüzyıl İngiliz okulu (Thomas Girtin, J. M. W. Turner, John Sell Cotman) tekniği bağımsız bir sanat dalına dönüştürdü; John Singer Sargent ve Winslow Homer gevşek, ışıklı suluboyanın ustaları oldu.",
+  "ayirt_edici": [
+    "Üst üste binen saydam yıkamalar: kubbenin gölgeli yanında ikinci kat sır koyulaşıp keskin, koyu bir kenarla kurumuş",
+    "Gökte ve kubbede ıslak üstüne ıslak açılmalar; karnabahar gibi saçaklı, koyu kenarlı lekeler",
+    "Kâğıdın beyazı ışık olarak bırakılmış: güneş, kubbedeki parlak şerit, minarenin ışıklı yanı ve beyaz çiçekler",
+    "Koyu geçişlerde pigment çökelmesi (granülasyon) ve soğuk preslenmiş kâğıdın dokusu",
+    "Yer yer görünen kurşun kalem altlığı; kenarlara doğru kâğıda eriyen, bitmemiş, düzensiz bir sınır"
+  ],
+  "palet": ["#5C7CB7", "#9FB571", "#35694C", "#A99E9C", "#B37845", "#C66C96", "#F7F4EC"],
+  "kodla_cizim": "Her yıkama piksel başına bir kapsama alanıdır: bölge haritası gürültüyle titretilerek okunur ya da Tyler Hobbs usulü yinelemeli bozulmuş çokgenler düşük saydamlıkta onlarca kat doldurulur. Alanın bulanık kopyasından farkıyla kuruyan kenardaki pigment birikimi, kâğıt yüksekliği ve ince gürültüden granülasyon, Hobbs damlalarıyla karnabahar açılmaları hesaplanır. Yoğunluk altı pigmentin (yaprak yeşili, viridyen, ultramarin, seruleum, ham siena, kinakridon gül) soğurma vektörüyle çarpılarak biriktirilir ve renk = kâğıt × exp(−Σ yoğunluk) ile çarpımsal karışır. Kaburgaların ışıklı yanı nemli fırçayla boya kaldırır gibi açılır; kurşun kalem ayrı bir tuvalde titrek, kesik çizgilerle çizilir; kâğıt dokusu en sonda kabartma ışığıyla eklenir.",
+  "etiketler": ["suluboya", "saydam", "ıslak teknik", "kâğıt dokusu", "boya", "geleneksel"]
+}
