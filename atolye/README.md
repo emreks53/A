@@ -26,7 +26,7 @@ tarayıcıda açılıp 1024 × 1024 görüntüye çevrilir.
 
 | Aile | Numaralar |
 | --- | --- |
-| Boya ve Kuru Teknikler | S-001 – S-006, S-041 – S-080 |
+| Boya ve Kuru Teknikler | S-001 – S-006, S-041 – S-120 |
 | Türk-İslam Sanatları | S-007 – S-013 |
 | Uzak Doğu | S-014 – S-015 |
 | Sanat Akımları | S-016 – S-021 |
@@ -84,6 +84,20 @@ Bütün örnekleri yeniden çizmek için: `node atolye/araclar/ciz.mjs --hepsi`
   "etiketler": ["doku", "geleneksel", "…"]
 }
 ```
+
+## Üslup ilkeleri (müşteri geri bildirimiyle)
+
+Atölyenin örnekleri müşterinin açıkça belirttiği zevke göre çizilir:
+
+- **En sevilenler:** S-079 Yırtık Kâğıt Kolaj, S-075 Pochoir, S-061 Kalem ve Lavi, S-049 Kuru Fırça,
+  S-050 Sünger Boyama, S-001 Suluboya, S-002 Yağlıboya. Ortak yanları: aydınlık gün ışığı, açık ve canlı
+  renkler, temiz yüzeyler, belirgin el yapımı doku, sahnenin bütün tuvali doldurması.
+- **Aydınlık:** koyu zemin, siyah kâğıt, gece göğü, ağır karanlık (chiaroscuro) ve koyu kenar gölgesi yok;
+  görselin geneli açık tonlarda kalır.
+- **Bozukluk efekti yok:** sıva dökülmesi, çatlak, kraklör, batik çatlak damarı, hücre/kabarcık, sıçrama,
+  akıntı, çizik, leke, eskime, kir kullanılmaz. Doku tekniğin kendisinden gelir.
+- **Taşıyıcı görünmez:** eser 1024 × 1024 tuvali kenardan kenara doldurur; masa, keten, duvar şeridi ya da
+  yuvarlak bir nesnenin arkasındaki zemin görünmez. Esere ait ince bir çerçeve çizgisi olabilir.
 
 ## Kurallar
 
