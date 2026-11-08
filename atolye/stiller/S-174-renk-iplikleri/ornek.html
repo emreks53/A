@@ -1566,12 +1566,15 @@ const H = (function () {
     ctx.lineCap = 'round';
     for (const a of [ap, ma]) {
       for (const k of a.kureler) {
-        for (let i = -2; i <= 2; i++) {
-          const x = k.cx + i * k.r * 0.38;
-          const hh = Math.sqrt(Math.max(0, k.r * k.r - (i * k.r * 0.38) ** 2)) * 0.85;
-          ctx.strokeStyle = css(i > 0 ? PALET[1] : i === 0 ? PALET[2] : PALET[4]); ctx.lineWidth = Math.max(1, k.r * 0.32);
-          ctx.beginPath(); ctx.moveTo(x, k.cy - hh); ctx.lineTo(x, k.cy + hh); ctx.stroke();
+        ctx.save();
+        ctx.beginPath(); ctx.arc(k.cx, k.cy, k.r, 0, Math.PI * 2); ctx.clip();
+        const adim = Math.max(1.1, k.r * 0.3);
+        for (let x = k.cx - k.r; x <= k.cx + k.r + 0.1; x += adim) {
+          const u = (x - k.cx) / k.r;
+          ctx.strokeStyle = css(u > 0.35 ? PALET[0] : u > -0.1 ? PALET[1] : u > -0.55 ? PALET[3] : PALET[4]); ctx.lineWidth = adim * 1.05;
+          ctx.beginPath(); ctx.moveTo(x, k.cy - k.r); ctx.lineTo(x, k.cy + k.r); ctx.stroke();
         }
+        ctx.restore();
       }
     }
   }
