@@ -237,29 +237,26 @@
   const B = boyaC.getContext('2d', { willReadFrequently: true });
   B.setTransform(SS, 0, 0, SS, 0, 0);
   const R = {
-    kagit: '#FBF8F0',
-    gokUst: '#C4DCEC', gokAlt: '#EAF1EE',
-    gunes: '#F4D98A', isin: '#F6E4AA', gunesCizgi: '#E0B657',
-    zemin: '#F0E4CA',
-    tas: '#F5EDDC', tasAcik: '#F9F3E7',
-    pencereTas: '#A8C8BB',
-    kasnakAlt: '#9FCFAA', kasnakUst: '#AED7B6', pencereYesil: '#6DA77F',
-    kubbe: '#A3D2AD', kubbeCizgi: '#5F9D72',
-    altin: '#E2C27A', altinCizgi: '#C99B45',
-    yaprak: '#B3D2A3', yaprakKoyu: '#9EC690', damar: '#80A972', sap: '#9CC18E',
-    tomurcuk: '#F0BFCB', pembe: 'rgba(238,176,192,', orta: '#F0CA62', ercik: '#C38F33',
+    kagit: '#FBF9F3',
+    gunes: '#F4DA8E', isin: '#FBF9F3', gunesCizgi: '#D9AE55',
+    zemin: '#F7F1E4',
+    tas: '#FCFAF4', tasAcik: '#FDFCF8',
+    pencereTas: '#C9DFDA',
+    kasnakAlt: '#BFDFC6', kasnakUst: '#CAE6D0', pencereYesil: '#97C6A5',
+    kubbe: '#B8DDC0',
+    altin: '#E3C47C', altinCizgi: '#CDA250',
+    yaprak: '#CAE2BD', yaprakKoyu: '#BBD9AD', damar: '#A3C495', sap: '#BDD9B0',
+    tomurcuk: '#F3C9D3', pembe: 'rgba(240,184,198,', orta: '#F2CE6A', ercik: '#C99A40',
   };
   B.fillStyle = R.kagit; B.fillRect(0, 0, 1024, 1024);
   // gök tonu (açık mavi baskı)
   {
-    const g = B.createLinearGradient(0, 0, 0, 800);
-    g.addColorStop(0, R.gokUst); g.addColorStop(0.75, '#DCEAF0'); g.addColorStop(1, R.gokAlt);
-    B.fillStyle = g; B.fillRect(0, 0, 1024, 800);
-    const gl = B.createRadialGradient(880, 140, 20, 880, 140, 330);
-    gl.addColorStop(0, 'rgba(252,242,208,0.95)'); gl.addColorStop(0.45, 'rgba(250,240,210,0.45)'); gl.addColorStop(1, 'rgba(250,240,210,0)');
+    // gök boş pamuk kâğıttır: yalnız güneş çevresinde çok hafif sıcak bir ton
+    const gl = B.createRadialGradient(880, 140, 30, 880, 140, 300);
+    gl.addColorStop(0, 'rgba(250,234,190,0.6)'); gl.addColorStop(0.5, 'rgba(250,238,204,0.22)'); gl.addColorStop(1, 'rgba(250,240,210,0)');
     B.fillStyle = gl; B.fillRect(0, 0, 1024, 800);
     const z = B.createLinearGradient(0, 800, 0, 1024);
-    z.addColorStop(0, '#F3E9D3'); z.addColorStop(1, R.zemin);
+    z.addColorStop(0, '#F8F3E7'); z.addColorStop(1, R.zemin);
     B.fillStyle = z; B.fillRect(0, 800, 1024, 224);
   }
 
@@ -271,6 +268,9 @@
     ekle(M2, -0.7, 0.5, { prof: 'yuvarlak' });
     B.strokeStyle = R.altinCizgi; B.lineWidth = 1.1; B.strokeRect(22, 22, 980, 980);
   }
+
+  // ---------------------------------------------------------------- zemin: alçak kör kabartma alanı (ufuk çizgisi)
+  kabart(maske([30, 796, 994, 994], (m) => m.fillRect(31, 800, 962, 193)), 0.9, 2.2, { prof: 'yuvarlak' });
 
   // ---------------------------------------------------------------- güneş
   {
@@ -467,7 +467,7 @@
     const dome = S.kubbeYolu;
     kabart(yolMaske(dome, 3), 5.4, 3.0, {
       prof: 'yuvarlak',
-      ust: (X, Y) => { const r = rY(Y); return 26.0 * Math.sqrt(Math.max(0, r * r - (X - 560) ** 2)) / 200; },
+      ust: (X, Y) => { const r = rY(Y); if (r <= 0) return 0; const u = (X - 560) / r; return Math.max(0, 22.0 * (r / 200) * (1 - u * u) * (1 + 0.35 * (1 - u * u))); },
     });
     B.fillStyle = R.kubbe; B.fill(P(dome));
     // kaburgalar: ince kabarık sırtlar ve çakışık kıl çizgiler
@@ -478,7 +478,7 @@
       ekle(M, 0.9, 1.1, { prof: 'yuvarlak' });
     }
     B.save(); B.clip(P(dome));
-    B.strokeStyle = R.kubbeCizgi; B.lineWidth = 0.85;
+    B.strokeStyle = 'rgba(150,200,165,0.55)'; B.lineWidth = 0.8;
     for (const kb of kab) B.stroke(P(S.yol(kb.noktalar)));
     B.restore();
     // kubbe eteğinde silme
@@ -583,16 +583,16 @@
 
   // ---------------------------------------------------------------- aydınlatma
   {
-    const L = [0.6, -0.6, 0.53];
+    const L = [0.62, -0.62, 0.40];
     const ln = Math.hypot(...L); L[0] /= ln; L[1] /= ln; L[2] /= ln;
     const Hy = yariya(H);
     const M = N / 2;
     const Hyb = bulanik(Hy, M, M, 5, 2);
-    let golge = gerekGolge(Hy, L, 30, 1.6);
+    let golge = gerekGolge(Hy, L, 40, 2.2);
     golge = bulanik(golge, M, M, 1, 2);
     const alb = B.getImageData(0, 0, N, N).data;
     const out = ctx.createImageData(N, N), o = out.data;
-    const kontrast = 0.8, k = 1.0;
+    const kontrast = 0.92, k = 1.0;
     const rd = S.rng(9);
     for (let y = 0; y < N; y++) {
       const y0 = Math.max(0, y - 1), y1 = Math.min(N - 1, y + 1);
@@ -606,7 +606,7 @@
         let sh = 1 + (Math.max(0, ndl) / ((L[2] + 0.3) / 1.3) - 1) * kontrast;
         const yi = (y >> 1) * M + (x >> 1);
         const ao = 1 - clamp((Hyb[yi] - Hy[yi]) * 0.06, 0, 0.16);
-        sh *= ao * (0.9 + 0.1 * golge[yi]);
+        sh *= ao * (0.86 + 0.14 * golge[yi]);
         sh *= 1.02 - 0.045 * ((N - x) + y) / (2 * N);
         const j = i * 4, dt = rd() - 0.5;
         for (let c = 0; c < 3; c++) {

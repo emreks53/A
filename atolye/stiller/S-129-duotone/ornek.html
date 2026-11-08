@@ -92,15 +92,16 @@
   {
     const gok = dik(0, 0, 1024, 800);
     bas(gok, {}, {});
-    // zümrüt: yukarıda %26'dan ufka doğru sönen nokta tramı (noktalar küçülür)
-    basGradyan(gok, 'E', 'nokta', (c) => c.createLinearGradient(0, 0, 0, 800), [[0, 0.28], [0.4, 0.15], [0.72, 0.04], [0.8, 0.0]]);
+    // zümrüt: yalnız göğün üst kenarında %22'den aşağı doğru hızla sönen nokta tramı (noktalar küçülür);
+    // gök ortası ve ufuk temiz kâğıt kalır
+    basGradyan(gok, 'E', 'nokta', (c) => c.createLinearGradient(0, 0, 0, 800), [[0, 0.22], [0.16, 0.12], [0.34, 0.04], [0.48, 0.0]]);
     // altın: güneşin çevresinde dışa doğru seyrelen nokta halesi
-    basGradyan(dik(0, 0, 1024, 800), 'G', 'nokta', (c) => c.createRadialGradient(G0.x, G0.y, 60, G0.x, G0.y, 420), [[0, 0.34], [0.5, 0.12], [1, 0]]);
+    basGradyan(dik(0, 0, 1024, 800), 'G', 'nokta', (c) => c.createRadialGradient(G0.x, G0.y, 60, G0.x, G0.y, 330), [[0, 0.3], [0.5, 0.1], [1, 0]]);
     // güneş halesinde zümrüdü sil (altın temiz kalsın)
     for (const c of [K.E.p]) {
       c.save();
       c.globalCompositeOperation = 'source-over';
-      const g = c.createRadialGradient(G0.x, G0.y, 0, G0.x, G0.y, 300);
+      const g = c.createRadialGradient(G0.x, G0.y, 0, G0.x, G0.y, 380);
       g.addColorStop(0, 'rgba(0,0,0,1)');
       g.addColorStop(0.6, 'rgba(0,0,0,0.85)');
       g.addColorStop(1, 'rgba(0,0,0,0)');
