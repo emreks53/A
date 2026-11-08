@@ -540,11 +540,11 @@
         // ışık: küre normali
         const nx = sl * Math.cos(phi), ny = -Math.sin(phi), nz = cl * Math.cos(phi);
         let dif = Math.max(0, nx * Ld[0] + ny * Ld[1] + nz * Ld[2]);
-        dif = 0.02 + 1.0 * dif;
+        dif = 0.04 + 0.98 * Math.pow(dif, 1.5);
         // kaburga çizgileri: dilim sınırına yakın yapraklar biraz koyu
         const dilim = ((lam + Math.PI / 2) / (Math.PI / 16)) % 1;
         const kab = Math.min(dilim, 1 - dilim) < 0.12 ? -0.13 : 0;
-        let c = gulle(yesil(dif + kab), 0.1 + 0.12 * dif);
+        let c = gulle(yesil(dif + kab), 0.14 + 0.16 * dif);
         c = oynat(c, 12);
         if (r() < 0.08) c = gulle([c[0] + 10, c[1] + 6, c[2] + 8], 0.22); // ara ara gül tenli bir pul
         liste.push({ x: x - Math.cos(a) * L * 0.5, y: y - Math.sin(a) * L * 0.5, L, wd, a, c, y });

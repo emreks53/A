@@ -420,9 +420,10 @@
     pig: karis(P.vir, 0.6, P.ult, 0.5), yog: 0.7, kenar: 0.6, gran: 0.4, tohum: 23,
   });
   // pencereler ve nişler
-  yikama(kKas, kapsamBolge(kKas, kume('pencere'), 0.4), {
+  yikama(kKas, kapsamBolge(kKas, kume('pencere'), 0.9), {
     pig: (x, y) => karis(P.vir, 0.65, P.ult, 0.55, P.sie, 0.35 + 0.2 * (1 - silindirIsik(x, 560, 226))),
-    yog: (x, y) => 1.15 + 0.4 * (1 - silindirIsik(x, 560, 226)), kenar: 0.6, kenarR: 1.6, gran: 0.4, tohum: 24,
+    yog: (x, y) => (0.75 + 0.55 * (1 - silindirIsik(x, 560, 226))) * (0.55 + 0.9 * nB(x / 9 + 3, 7)) * sstep(0.0, 0.25, nC(x / 5, y / 6) + 0.12),
+    kenar: 1.0, kenarR: 1.6, gran: 0.55, dalga: 0.6, dalgaOlcek: 8, tohum: 24,
   });
 
   // ============================================================ KAİDE (beyaz taş)
@@ -430,11 +431,11 @@
   const KAISET = kume('kaide');
   yikama(kKai, kapsamBolge(kKai, KAISET, 1.4), {
     pig: karis(P.sie, 0.8, P.ros, 0.1),
-    yog: (x, y) => 0.13 * clamp(1.35 - (x - 300) / 420, 0.15, 1.2), kenar: 0.7, gran: 0.4, vin: 0.0, tohum: 31,
+    yog: (x, y) => 0.13 * clamp(1.35 - (x - 300) / 420, 0.15, 1.2) * sstep(800, 690, x + (nA(4, y / 14) - 0.5) * 60), kenar: 0.7, gran: 0.4, vin: 0.0, tohum: 31,
   });
   // korniş altı gölgesi ve sol uçtaki gölge
   yikama(kKai, kapsamBolge(kKai, KAISET, 0.8, (x, y) => (y > 702 && y < 709 + (nB(x / 10, 5) - 0.5) * 4) || x < 312 + (nB(4, y / 9) - 0.5) * 6), {
-    pig: karis(P.ult, 0.5, P.sie, 0.5, P.ros, 0.06), yog: 0.3, kenar: 0.9, gran: 0.65, tohum: 32,
+    pig: karis(P.ult, 0.5, P.sie, 0.5, P.ros, 0.06), yog: (x, y) => 0.3 * sstep(835, 700, x + (nB(7, y / 6) - 0.5) * 70), kenar: 0.9, gran: 0.65, tohum: 32,
   });
   // kaide pencereleri
   yikama(kKai, kapsamBolge(kKai, kume('pencere'), 0.5), {
@@ -653,7 +654,7 @@
           const x = pts[s][0] + ox + (r() - 0.5) * 0.5, y = pts[s][1] + oy + (r() - 0.5) * 0.5;
           s === i ? kc.moveTo(x, y) : kc.lineTo(x, y);
         }
-        kc.globalAlpha = Math.min(1, alfa * 1.35 * (0.55 + r() * 0.45)); kc.lineWidth = 0.75 + r() * 0.45;
+        kc.globalAlpha = Math.min(1, alfa * 1.7 * (0.55 + r() * 0.45)); kc.lineWidth = 0.75 + r() * 0.45;
         kc.stroke();
         i += uz + (kopuk && r() < 0.5 ? 1 + Math.floor(r() * 3) : 0);
       }

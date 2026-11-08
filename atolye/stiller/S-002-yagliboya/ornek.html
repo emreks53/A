@@ -319,7 +319,7 @@
       const j = jS * (1 + (R() - 0.5) * (o.titresim || 0.07)), sic = sS + (R() - 0.5) * 4;
       ctx.strokeStyle = rgb([c[0] * j + sic, c[1] * j, c[2] * j - sic]);
       const lwb = lw * (0.65 + R() * 0.7);
-      ctx.lineWidth = lwb; ctx.globalAlpha = o.alfa || (0.82 + R() * 0.18);
+      ctx.lineWidth = lwb; ctx.globalAlpha = o.alfa ? o.alfa * (0.6 + R() * 0.5) : 0.82 + R() * 0.18;
       ctx.stroke(p);
       hctx.lineWidth = lwb * 0.7; hctx.globalAlpha = yukA * (0.45 + R() * 1.0);
       hctx.stroke(p);
@@ -385,21 +385,26 @@
       if (pts.length < 2) { const a = yon(x0, y0_); pts.push([x0 + Math.cos(a) * Rb, y0_ + Math.sin(a) * Rb]); }
       // fırçada tam karışmamış ikinci renk: komşu bir noktadan
       const zengin = doygun(c, o.doygun || 1.1);
-      const sec = R();
+      const sec = R(), deger = (c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11) / 255;
+      // fırçadaki karışmamış ikinci renk: açık yerde açık ton, gölgede koyu/sıcak ton (ışık-gölge korunur)
       const ikinci = sec < 0.4 ? doygun(hedef(x0 + (R() - 0.5) * Rb * 4, y0_ + (R() - 0.5) * Rb * 4), 1.15)
-        : sec < 0.75 ? mixc(zengin, [255, 248, 232], 0.22) : mixc(zengin, [30, 26, 50], 0.22);
-      darbe(pts, Rb * (0.85 + R() * 0.3), zengin, { ikinci, yukseklik: o.yukseklik, kuru: R() < (o.kuruOran || 0.15), titresim: o.titresim });
+        : sec < 0.4 + 0.45 * deger ? mixc(zengin, [255, 248, 232], 0.22) : mixc(zengin, deger < 0.35 ? [20, 14, 30] : [30, 26, 50], 0.25);
+      const kenar = kenarda(x0, y0_);
+      if (kenar && o.kenarAtla) continue;
+      darbe(pts, Rb * (0.85 + R() * 0.3), zengin, { ikinci, yukseklik: kenar ? o.yukseklik * 0.12 : o.yukseklik, kuru: kenar || R() < (o.kuruOran || 0.15), titresim: o.titresim, alfa: kenar ? 0.55 : 0 });
     }
     return liste.length;
   }
+  // kenar şeridi: boya ince sürülmüş, tuval bezi ve astar görünür
+  const kenarda = (x, y) => Math.min(x, y, W - x, W - y) < 16 + 34 * fbm(nB, x / 70 + 5, y / 70, 3);
   function doygun(c, k) { const m = (c[0] + c[1] + c[2]) / 3; return [m + (c[0] - m) * k, m + (c[1] - m) * k, m + (c[2] - m) * k]; }
 
   const sayac = [];
   const maskeOlustur = (...a) => { const m = new Uint8Array(16); a.forEach((n) => (m[BI[n]] = 1)); return m; };
   sayac.push(kat(18, -1, { uzunGok: 10, uzunKubbe: 6, uzun: 5, min: 2, maxFark: 90, yukseklik: 0.06, kuruOran: 0.06, izgara: 0.8 }));
-  sayac.push(kat(10, 16, { uzunGok: 9, uzunKubbe: 7, uzun: 6, min: 2, maxFark: 70, yukseklik: 0.07, kuruOran: 0.15, sinifDur: true, tepe: 115, pencere: 12 }));
-  sayac.push(kat(5, 20, { uzunGok: 7, uzunKubbe: 8, uzun: 6, min: 1, maxFark: 55, yukseklik: 0.08, kuruOran: 0.1, sinifDur: true, tepe: 100, pencere: 12, darbeTitresim: 0.09 }));
-  sayac.push(kat(2.6, 24, { uzunGok: 5, uzunKubbe: 8, uzun: 5, min: 1, maxFark: 45, yukseklik: 0.09, kuruOran: 0.05, sinifDur: true, titresim: 0.05, tepe: 85, pencere: 10, darbeTitresim: 0.06 }));
+  sayac.push(kat(10, 16, { kenarAtla: true, uzunGok: 9, uzunKubbe: 7, uzun: 6, min: 2, maxFark: 70, yukseklik: 0.07, kuruOran: 0.15, sinifDur: true, tepe: 115, pencere: 12 }));
+  sayac.push(kat(5, 20, { kenarAtla: true, uzunGok: 7, uzunKubbe: 8, uzun: 6, min: 1, maxFark: 55, yukseklik: 0.08, kuruOran: 0.1, sinifDur: true, tepe: 100, pencere: 12, darbeTitresim: 0.09 }));
+  sayac.push(kat(2.6, 24, { kenarAtla: true, uzunGok: 5, uzunKubbe: 8, uzun: 5, min: 1, maxFark: 45, yukseklik: 0.09, kuruOran: 0.05, sinifDur: true, titresim: 0.05, tepe: 85, pencere: 10, darbeTitresim: 0.06 }));
   sayac.push(kat(1.4, 18, { uzun: 4, min: 1, maxFark: 40, yukseklik: 0.09, sinifDur: true, titresim: 0.04, tepe: 70, pencere: 6, darbeTitresim: 0.04, maske: maskeOlustur('minare', 'altin', 'pencere', 'cicekOrta', 'kasnak') }));
 
   // ------------------------------------------------------------ son dokunuşlar: kaburgalar, ışık lekeleri (kalın beyaz)
@@ -508,14 +513,16 @@
     const pv = ctx.getImageData(0, 0, W2, W2);
     const p = pv.data;
     const hv = hctx.getImageData(0, 0, W2, W2).data;
-    const H = new Float32Array(W2 * W2);
+    const H = new Float32Array(W2 * W2), DOK = new Float32Array(W2 * W2);
     // bez dokusu: boyanın ince olduğu yerde belirir
     for (let y = 0; y < W2; y++) for (let x = 0; x < W2; x++) {
       const i = y * W2 + x, h = hv[i * 4] / 255;
-      const pr = 7.2, cx = Math.floor(x / pr), cy = Math.floor(y / pr);
+      const pr = 10, cx = Math.floor(x / pr), cy = Math.floor(y / pr);
       const wx = 0.5 + 0.5 * Math.cos((2 * Math.PI * x) / pr), wy = 0.5 + 0.5 * Math.cos((2 * Math.PI * y) / pr);
       const dok = ((cx + cy) & 1 ? wy * 0.75 + wx * 0.25 : wx * 0.75 + wy * 0.25) + (nC(x / 3, y / 3) - 0.5) * 0.3;
-      H[i] = h * 1.0 + dok * 0.035 * Math.max(0, 1 - h * 2.5);
+      const ince = 0.2 + 0.8 * Math.max(0, 1 - h * 2.2);
+      H[i] = h * 1.0 + dok * 0.06 * ince;
+      DOK[i] = dok * ince;
     }
     // yumuşatma: boya sırtları yuvarlansın
     let H2 = kutuBulanik(kutuBulanik(H, W2, W2, 1), W2, W2, 1);
@@ -538,9 +545,10 @@
       const sh = clamp(1 + (dif - tab) * 1.1, 0.76, 1.28);
       const sp = Math.pow(Math.max(0, nx * Hx + ny * Hy + nz * Hz), 50) * 0.24;
       const j = i * 4;
-      p[j] = clamp(p[j] * sh + sp * 255, 0, 255);
-      p[j + 1] = clamp(p[j + 1] * sh + sp * 250, 0, 255);
-      p[j + 2] = clamp(p[j + 2] * sh + sp * 235, 0, 255);
+      const dk = 1 + (DOK[i] - 0.25) * 0.16; // ince boyada bez iplikleri
+      p[j] = clamp(p[j] * sh * dk + sp * 255, 0, 255);
+      p[j + 1] = clamp(p[j + 1] * sh * dk + sp * 250, 0, 255);
+      p[j + 2] = clamp(p[j + 2] * sh * dk + sp * 235, 0, 255);
     }
     ctx.putImageData(pv, 0, 0);
   }

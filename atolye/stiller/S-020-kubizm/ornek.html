@@ -353,7 +353,7 @@
   const kk = katman.getContext('2d');
   const katman2 = S.yeniTuval(2048, 2048);
   const kk2 = katman2.getContext('2d');
-  function parcali(ciz, sinir, dogrular, kaydirma, golgeGuc) {
+  function parcali(ciz, sinir, dogrular, kaydirma, golgeGuc, sirGuc = 1) {
     kk.setTransform(1, 0, 0, 1, 0, 0);
     kk.clearRect(0, 0, 2048, 2048);
     kk.setTransform(2, 0, 0, 2, 0, 0);
@@ -376,9 +376,9 @@
       kk2.globalCompositeOperation = 'source-atop';
       // her düzlem kendi ışığında: kimi açık, kimi koyu, kimi okr sırlı
       const sec = rnd();
-      if (sec < 0.3) doldur(kk2, h, css([250, 242, 222], 0.1 + rnd() * 0.1));
+      if (sec < 0.3) doldur(kk2, h, css([250, 242, 222], (0.1 + rnd() * 0.1) * sirGuc));
       else if (sec < 0.55) doldur(kk2, h, css(P.koyu, 0.08 + rnd() * 0.1));
-      else if (sec < 0.7) doldur(kk2, h, css(P.okr, 0.1 + rnd() * 0.08));
+      else if (sec < 0.7) doldur(kk2, h, css(P.okr, (0.1 + rnd() * 0.08) * sirGuc));
       const kn = gecis(kk2, h, golgeGuc * (0.6 + rnd() * 0.6), null, isiktanUzak);
       if (rnd() < 0.5) gecis(kk2, h, 0.25, [248, 240, 220]);
       kk2.globalCompositeOperation = 'source-over';
@@ -395,7 +395,7 @@
 
   // ================================================================ 4. minare (kaydırılmış dilimler, iki bakış)
   const minare = S.minareParcalari();
-  const TAS = { koyu: [108, 94, 72], orta: [178, 160, 126], acik: [230, 216, 182] };
+  const TAS = { koyu: [92, 80, 60], orta: [168, 150, 116], acik: [232, 218, 184] };
   function prizma(c, x1, x2, y1, y2) {
     // silindir yerine üç düz yüz: sol koyu, orta açık, sağ orta
     const w = x2 - x1;
@@ -457,7 +457,8 @@
     dik(220, 130, 380, 810),
     [dogru(300, 380, 84), dogru(300, 600, 12), dogru(300, 250, -9), dogru(300, 700, 170), dogru(300, 500, -14), dogru(296, 170, 92)],
     (h, i) => [[4, 0, 1], [-6, 0, -1.2], [0, 0, 0], [7, 0, 1.4], [-4, 0, 0], [3, 0, -0.8], [0, 2, 0], [-3, 0, 0.6]][i % 8],
-    0.45
+    0.45,
+    0.3
   );
   // şerefeler tepeden de görülür: yarı saydam elips halkalar
   for (const [x, y, rx, ry] of [[293, 457, 58, 12], [296, 291, 48, 10]]) {

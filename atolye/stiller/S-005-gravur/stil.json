@@ -1,0 +1,22 @@
+{
+  "kod": "S-005",
+  "no": 5,
+  "ad": "Gravür (Kalem Tarama)",
+  "ad_en": "Engraving (Pen & Ink Hatching)",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Kalınlığı şişip incelen paralel çizgilerle, krem kâğıda yalnız siyah mürekkeple kurulan ton.",
+  "tanim": "Gravür (kalem tarama), bakır ya da çelik levhaya kalemle (burin) kazınan çizgilerin mürekkeplenip basılmasıyla oluşan resim dilidir. Gri ton yoktur: ton, biçimi izleyen paralel çizgilerin kalınlığı ve aralığıyla, koyu yerlerde çapraz taramayla, geçişlerde noktalamayla kurulur. Çizgiler kontrollü ve keskindir, uçları iğne gibi incelerek biter. Eski kitap resimlerinde, haritalarda, banknot ve pullarda, senet ve sertifikalarda kullanılır.",
+  "koken": "15. yüzyılda kuyumcu atölyelerinden doğan bakır gravür, Martin Schongauer ve Albrecht Dürer ile olgunlaştı; 17. yüzyılda Claude Mellan tonu tek bir şişip incelen çizgiyle kurmayı ustalığa vardırdı. 19. yüzyılda çelik gravür kitap resminin, 20. yüzyılda Czesław Słania gibi ustaların elinde pul ve banknot gravürünün dili oldu.",
+  "ayirt_edici": [
+    "Kalınlığı tona göre şişip incelen, uçları iğne gibi biten paralel çizgiler",
+    "Kubbede dilimler arasında kabaran ∩ biçimli enlem çizgileri; gölge yanında meridyenlerle çapraz tarama",
+    "Gökte güneşe yaklaştıkça incelip kaybolan yatay çizgiler, ince ışınlı güneş ve çizgilerin seyrelmesiyle beliren bulutlar",
+    "Kasnakta, kaidede ve minarede silindiri izleyen yatay çizgiler; pencerelerde sık çapraz tarama",
+    "Kubbenin parıltısında, zeminde ve çiçek ortalarında noktalama",
+    "Krem kâğıt üzerinde ince çift çizgili çerçeve"
+  ],
+  "palet": ["#F1E7CF", "#E7DDC6", "#C3BAA7", "#5E584E", "#17130F"],
+  "kodla_cizim": "Canvas 2048 px. Her öğe için biçimi izleyen kılavuz çizgi aileleri kurulur: gökte yatay, kubbede kaburga dilimleri arasında hafifçe kabaran ∩ biçimli enlem yayları ve meridyenler, kasnak, kaide ve minarede yatay silindir çizgileri, yapraklarda damar yönünde eğik çizgiler, taç yapraklarda merkezden yayılan çizgiler. Ton kubbe profilinden Lambert ışığıyla, silindirlerde yüzey açısına göre, gökte güneşe uzaklık ve bulut maskesiyle hesaplanır. Her çizgi 1,4 px aralıklarla örneklenir; genişliği tona göre 0,5 px'den aralığın yaklaşık %85'ine kadar şişer, eşiğin altında kesilir, uçları iğne gibi incelir. Şeritler tek bir Path2D'de dolgu olarak çizilir; rasterleştiricinin kalınlık basamakları kontur gibi görünmesin diye her çizgi piksel altı kaydırılır. Çapraz tarama ikinci ve üçüncü ailelerle yalnız koyu yerlerde, noktalama geçişlerde yapılır; öndeki öğe arkadakini kâğıt rengiyle örter. Sonda piksel piksel kâğıt dokusu, levha izi ve mürekkebin hafif dağılması eklenir.",
+  "etiketler": ["gravür", "kalem tarama", "bakır levha", "banknot", "siyah beyaz", "çizgi", "baskı resim", "eski kitap"]
+}

@@ -1,0 +1,22 @@
+{
+  "kod": "S-004",
+  "no": 4,
+  "ad": "Karakalem",
+  "ad_en": "Graphite Pencil Drawing",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Kâğıdın dişine tutunan grafitle, biçimi izleyen tarama ve tekrar eden eskiz çizgileri.",
+  "tanim": "Karakalem, grafit kurşun kalemle yalnız gri tonlarla yapılan çizimdir. Ton, kalemin baskısıyla ve biçimin üzerinde dolaşan paralel ya da çapraz taramayla kurulur; yer yer parmakla ya da kâğıt kalemle (estompe) yayılarak yumuşatılır. Kurgu çizgileri, tekrar eden konturlar ve kenarlara doğru yarım bırakılan alanlar çizime canlılık verir. Eskiz defterlerinde, mimari ve akademik çizimde, resim hazırlıklarında kullanılır.",
+  "koken": "Grafit, 16. yüzyılda İngiltere'de Borrowdale'de bulunan saf yataklarla çizime girdi; 1795'te Nicolas-Jacques Conté'nin grafiti kille karıştırıp pişirerek yaptığı kalem, bugünkü sertlik derecelerini (H–B) mümkün kıldı. Jean-Auguste-Dominique Ingres'in kurşun kalem portreleri ve Adolph Menzel'in eskizleri tekniğin ustalık örnekleridir; akademik resim eğitiminde bugün de temel derstir.",
+  "ayirt_edici": [
+    "Kubbede kaburgalar boyunca uzanan tarama; gölge yanında enlem yaylarını izleyen çapraz tarama",
+    "İki üç kez, hafifçe kayarak ve baskısı değişerek çizilmiş konturlar; gölge yanında daha kalın çizgi",
+    "Kubbe ve minare eksenlerini, kat hizalarını ve kubbenin oranını gösteren açık kurgu çizgileri",
+    "Parmakla yayılmış yumuşak gri lekeler; ışıklı kenarların yanına yaslanıp uzaklaştıkça seyrelen tarama",
+    "Grafitin kâğıt dişinde kırılan tanesi; koyu pencerelerde ve gölgelerde hafif metalik parlaklık",
+    "Kenarlara doğru gölgesi silinip yalnız çizgisi kalan, yarım bırakılmış çiçek ve yapraklar"
+  ],
+  "palet": ["#F6F4EE", "#D6D4D0", "#C7C6C3", "#858485", "#80848E", "#45474D", "#2A2B31"],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte; çizim önce ayrı bir grafit yoğunluğu katmanına yapılır. Bölge haritası ve kubbe profilinden bir ton haritası çıkarılır (kubbede hafif dışbükey dilimlerle Lambert ışığı, kasnak ve minarede silindir gölgesi). Her öğenin kılavuz çizgileri (kubbede meridyenler ve ∩ biçimli enlem yayları, kasnakta dikey, kaidede eğik, yapraklarda damar yönünde) 14–64 px'lik, uçları degradeyle incelen kalem vuruşlarına bölünür; vuruşun çizilip çizilmeyeceği ve koyuluğu tona göre, eşikleri farklı üç dört katmanla belirlenir. Konturlar düşük frekanslı titreşimle kaydırılan iki üç geçişte, parça parça değişen baskıyla çizilir. Öndeki öğe arkadakinin izini 'destination-out' ile siler, ton haritasından bulanıklaştırılmış lekeler yayma gölgesini verir, gürültülü elips bir maske çizimi kenarlarda söndürür. Son adımda piksel piksel iki ölçekli kâğıt dişiyle birleşir: grafit önce dişin tepelerine tutunur, baskı arttıkça çukurlar dolar; en koyu yerlere soğuk bir parlaklık eklenir.",
+  "etiketler": ["kurşun kalem", "grafit", "eskiz", "tarama", "monokrom", "çizim", "akademik", "kâğıt dokusu"]
+}

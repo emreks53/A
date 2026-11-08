@@ -1,0 +1,22 @@
+{
+  "kod": "S-015",
+  "no": 15,
+  "ad": "Sumi-e (Mürekkep Lavi)",
+  "ad_en": "Sumi-e Ink Wash",
+  "aile": "Uzak Doğu",
+  "ozgun": false,
+  "ozet": "Pirinç kâğıdına tek mürekkebin sulandırılmış tonlarıyla, az ve kendinden emin fırça vuruşları.",
+  "tanim": "Sumi-e (Çincede shuimo hua), çubuk mürekkebin suyla farklı yoğunluklarda açılıp yumuşak fırçayla emici pirinç kâğıdına uygulandığı resim geleneğidir. Her vuruş tek seferde ve düzeltilmeden yapılır: fırça bastırılıp kaldırılarak yaprak biçimlenir, kuruyan fırça 'kasure' denen beyaz çizgili izler bırakır, ıslak mürekkep kâğıdın liflerine yayılır. Boşluk (ma) resmin parçasıdır; sis, uzaklık ve ışık boş bırakılan kâğıtla anlatılır. Renk çok az kullanılır, resim çoğunlukla kırmızı bir mühürle tamamlanır.",
+  "koken": "Tang ve Song Çin'inde gelişti; geleneği Wang Wei'ye bağlanır, Mu Qi ve Liang Kai gibi Chan (Zen) ressamlarıyla olgunlaştı. 13–14. yüzyıllarda Zen keşişleriyle Japonya'ya geçti ve Muromachi döneminde Sesshū Tōyō ile doruğa ulaştı. Bambu, erik çiçeği, orkide ve krizantem, yani 'dört soylu bitki', fırça eğitiminin temelidir.",
+  "ayirt_edici": [
+    "Soluk gri lavlardan koyu siyah vurgulara uzanan mürekkep tonları; kubbenin solunda kendinden emin tek koyu vuruş",
+    "Bastırılıp kaldırılarak tek vuruşta yapılmış sivri yapraklar ve hızlı fırça çizgileriyle kaburgalar",
+    "Kasnaktaki geniş lav vuruşunda ve dallarda kuru fırçanın beyaz çizgili 'kasure' izi",
+    "Islak mürekkebin pirinç kâğıdının liflerine yumuşakça yayılması; kubbe lavında geri akma lekesi",
+    "Bol boşluk: kaide ve minarenin alt yanı sise karışıp kaybolur, güneş yalnızca soluk bir halkanın içindeki boşluktur",
+    "Çok az renk: kubbede soluk yeşil, alemlerde okra; yazısız, sekiz köşeli yıldız desenli küçük kırmızı mühür"
+  ],
+  "palet": ["#F4EFE3", "#DBD7CC", "#7E7C78", "#1A1814", "#C5CAB5", "#D0A051", "#BF4437"],
+  "kodla_cizim": "Canvas 2048 px. Fırça vuruşu bir omurga eğrisi ve basınç profiliyle çizilir: ıslak gövde, kuruyan uca doğru solan degradeli bir şerittir; üstünde 3–56 kıl kendi mürekkep miktarı ve sinüs gürültüsüyle ilerler, mürekkebi eşiğin altına düşünce kesilir (kasure). Yapı ve bitki vuruşları ayrı katmanlara yapılır. Lavlar (soluk gri, yeşil, okra) bulanıklaştırılmış maskelerden hesaplanan yoğunluk alanlarıdır: kenarları lif ve benek gürültüsüyle tırtıklanır, kenarda mürekkep birikir; taç yaprakları kemiksiz (mogu) lav lekeleridir. Birleştirmede vuruşların bulanık kopyası lif gürültüsüyle karıştırılarak mürekkebin kâğıda yayılması verilir; yapı katmanı gürültülü bir sis maskesiyle aşağıda söndürülür. Kâğıt uzamış lif gürültüsü ve gömülü kıvrık liflerle, mühür oyulmuş geometrik çizgiler ve damga dokusuyla çizilir; hepsi sıcak beyaz kâğıtla çarpılarak birleşir.",
+  "etiketler": ["sumi-e", "mürekkep", "lav", "fırça", "Uzak Doğu", "zen", "boşluk", "monokrom"]
+}

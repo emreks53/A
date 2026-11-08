@@ -408,10 +408,8 @@
     };
     bant(0, 6, [[0, 'rgba(60,52,44,0.55)'], [1, 'rgba(60,52,44,0.0)']]);
     // yuvarlatılmış ağız (bullnose): üst kenarda ışıktan uzağa, alt kenarda ışığa bakar
-    const agiz = SU_UST - 58;
     if (ust) bant(56, SU_UST, [[0, 'rgba(255,255,255,0.35)'], [0.18, 'rgba(255,255,255,0.12)'], [0.55, 'rgba(70,64,56,0.18)'], [1, 'rgba(36,32,26,0.62)']]);
     else bant(56, W - SU_ALT, [[0, 'rgba(80,70,60,0.3)'], [0.3, 'rgba(255,255,255,0.0)'], [0.72, 'rgba(255,255,250,0.5)'], [1, 'rgba(200,196,186,0.2)']]);
-    void agiz;
     // ince pervaz çizgileri (oyma basamaklar)
     for (const u of [9, 45]) {
       const yl = yy(u);
