@@ -6,7 +6,7 @@
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
   "ozet": "Kabartılmış holografik folyo: yüzeyler eğrildikçe pembe, camgöbeği, lila ve altın arasında renk değiştirir; krom yansımalar ve keskin parıltılar derin lacivert zeminde parlar.",
-  "tanim": "Hologram Folyo, nesneleri yanardöner, aynalı bir folyodan kabartılmış gibi gösteren bir render tarifidir. Her biçim yumuşak bir yastık şişkinliği ve keskin bir pahla kabartılır; rengi, krom bir ortam haritasının (parlak gök, keskin koyu ufuk bandı, sağ üstte ışık kutusu) yansıması ile ince film yanardönerliğinin çarpımıdır: ton bakış açısına, yüzey yönüne ve folyo üzerindeki konuma göre pastel gökkuşağında (pembe, lila, camgöbeği, nane, altın) kayar. Şerit ışıklardan gelen keskin parlama çizgileri, seyrek mikro parıltı tanecikleri ve en parlak noktalarda dört kollu yıldız parlamaları folyonun karakterini verir. Kubbe tanınır kalsın diye zümrüt yeşili krom tabanlıdır ve yanardöner parıltı ancak eğik açılarda belirir; zemin derin lacivert ve parlaktır.",
+  "tanim": "Hologram Folyo, nesneleri yanardöner, aynalı bir folyodan kabartılmış gibi gösteren bir render tarifidir. Her biçim yumuşak bir yastık şişkinliği ve keskin bir pahla kabartılır; rengi, krom bir ortam haritasının (parlak gök, keskin koyu ufuk bandı, sağ üstte ışık kutusu) yansıması ile ince film yanardönerliğinin çarpımıdır: ton bakış açısına, yüzey yönüne ve folyo üzerindeki konuma göre pastel gökkuşağında (pembe, lila, camgöbeği, nane, altın) kayar. Şerit ışıklardan gelen keskin parlama çizgileri, seyrek mikro parıltı tanecikleri ve en parlak noktalarda dört kollu yıldız parlamaları folyonun karakterini verir. Kubbe tanınır kalsın diye derin zümrüt yeşili krom tabanlıdır; yanardöner parıltı (camgöbeği, mor, sarı-yeşil) ancak eğik açılarda ve kenarlarda belirir; zemin derin lacivert ve parlaktır.",
   "koken": "Holografik folyo baskı ve iridesan ambalaj/çıkartma estetiğine, 1990'ların 'Y2K krom' grafiklerine ve 2020'lerde 3B yazılımlarda yaygınlaşan yanardöner (ince film girişimli) krom malzeme render akımına dayanır. Atölye tarifi şunları sabitler: yastık + keskin pah kabartma; krom ortam haritası ile açıya ve konuma bağlı pastel gökkuşağı tonunun çarpımı; şerit ışık çizgileri, mikro parıltı ve yıldız parlaması; yeşil kalan kubbe; derin lacivert, yansımalı zemin.",
   "ayirt_edici": [
     "Yüzey eğrildikçe pembe, lila, camgöbeği ve altın arasında kayan yanardöner ton; düz yüzeylerde çapraz gökkuşağı geçişleri",
@@ -19,14 +19,14 @@
   "palet": [
     "#0C1440",
     "#1A1F5C",
-    "#0A9150",
+    "#1F976E",
     "#EEEAF6",
-    "#F5C65A",
-    "#FF8CCB",
-    "#86E6FF",
-    "#C59BFF"
+    "#C7A463",
+    "#D09BB8",
+    "#92E0D2",
+    "#BD95B7"
   ],
-  "kodla_cizim": "Tek canvas, 2× iç çözünürlük. Her öğe bir folyo katmanıdır: SAHNE yollarından maske; uzaklık dönüşümünden keskin pah, maskenin bulanık hâlinden kırışıksız yastık şişkinliği; minare, kasnak ve kubbe için satır satır dönel yükseklik; kubbeye boylama göre kabartma kaburgalar, güneşe eş merkezli kırınım halkaları, yapraklara orta damar sırtı eklenir. Normalden yansıma vektörü hesaplanıp krom ortam haritasından (gök degradesi, keskin ufuk bandı, ışık kutusu) parlaklık alınır; bu, bakış açısı, yüzey yönü ve konuma bağlı düşük frekanslı dalgayla kayan pastel gökkuşağı tonuyla (kubbe ve kasnakta yeşile yakın kısıtlı palet) çarpılır. Şerit ışık çizgileri, keskin anahtar parlaması, karma tabanlı mikro parıltı ve yumuşak ton eşleme eklenir; oyuklar lacivert. Her katman altında koyu, bulanık bir gölge vardır; en parlak noktalardan seçilen birkaç yerde 'lighter' karışımla dört kollu yıldız parlaması çizilir. Fon lacivert degrade, düşük yoğunluklu renkli sis lekeleri ve yanardöner tozdur; yapı ayrı tuvalde kurulup zemine ters çevrilmiş, sönümlenen bir yansıma olarak da basılır.",
+  "kodla_cizim": "Tek canvas, 2× iç çözünürlük. Her öğe bir folyo katmanıdır: SAHNE yollarından maske; uzaklık dönüşümünden keskin pah, maskenin bulanık hâlinden kırışıksız yastık şişkinliği; minare, kasnak ve kubbe için satır satır dönel yükseklik; kubbeye boylama göre kabartma kaburgalar, güneşe eş merkezli kırınım halkaları, yapraklara orta damar sırtı eklenir. Normalden yansıma vektörü hesaplanıp krom ortam haritasından (gök degradesi, keskin ufuk bandı, ışık kutusu) parlaklık alınır; bu, bakış açısı, yüzey yönü ve konuma bağlı düşük frekanslı dalgayla kayan pastel gökkuşağı tonuyla (kubbe ve kasnakta derin zümrüt taban üstünde zümrüt-camgöbeği-mor mücevher tonlarından kısıtlı palet; yanardönerlik yüzey eğildikçe artar) çarpılır. Şerit ışık çizgileri, keskin anahtar parlaması, karma tabanlı mikro parıltı ve yumuşak ton eşleme eklenir; oyuklar lacivert. Her katman altında koyu, bulanık bir gölge vardır; en parlak noktalardan seçilen birkaç yerde 'lighter' karışımla dört kollu yıldız parlaması çizilir. Fon lacivert degrade, düşük yoğunluklu renkli sis lekeleri ve yanardöner tozdur; yapı ayrı tuvalde kurulup zemine ters çevrilmiş, sönümlenen bir yansıma olarak da basılır.",
   "etiketler": [
     "holografik",
     "folyo",

@@ -209,8 +209,8 @@ setTimeout(function () {
     karo: malzeme('karo', '#E9DDC6'),
     karoK: malzeme('karoK', '#DCCDB1'),
     pencere: malzeme('pencere', '#4A3B48'),
-    yesil: malzeme('yesil', '#43B465'),
-    yesilK: malzeme('yesilK', '#217A3D'),
+    yesil: malzeme('yesil', '#43B465', { kubbe: 0.6 }),
+    yesilK: malzeme('yesilK', '#1A6533', { kubbe: 0.9 }),
     kasnak: malzeme('kasnak', '#2E9150'),
     kasnakA: malzeme('kasnakA', '#5CC277'),
     kPen: malzeme('kPen', '#0F2D1B'),
@@ -315,10 +315,14 @@ setTimeout(function () {
     for (let x = Math.floor(DC[0] - R - 1); x <= DC[0] + R + 1; x++)
       for (let z = Math.floor(DC[1] - R - 1); z <= DC[1] + R + 1; z++) {
         const d = Math.hypot(x + 0.5 - DC[0], z + 0.5 - DC[1]);
-        if (d > R) continue;
+        if (d > R + 0.9) continue;
         const a = Math.atan2(z + 0.5 - DC[1], x + 0.5 - DC[0]);
-        const f = ((a / (Math.PI * 2)) * 24 + 100) % 1;
-        const kab = (f < 0.12 || f > 0.92) && t < 0.9;
+        // 16 dilim; kaburga şeridi en az bir voksel genişlikte kalsın diye yarıçapa göre genişler
+        const f = ((a / (Math.PI * 2)) * 16 + 100.5) % 1;
+        const yg = Math.max(0.11, 0.55 / Math.max(1, (Math.PI * 2 * R) / 16));
+        const kab = (f < yg || f > 1 - yg) && t < 0.94;
+        // kaburgalar yüzeyden bir voksel kabarık sırttır
+        if (d > R && !(kab && t < 0.86)) continue;
         koy(x, y, z, kab ? m.yesilK : m.yesil);
       }
   }
@@ -328,20 +332,18 @@ setTimeout(function () {
       for (let y = Math.floor(cy - R - 1); y <= cy + R + 1; y++)
         for (let z = Math.floor(cz - R - 1); z <= cz + R + 1; z++) if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy, z + 0.5 - cz) <= R) koy(x, y, z, mm);
   }
-  function hilal(cx, y0, cz, s) {
-    // boynuzları yukarı bakan piksel hilal (x-y düzleminde, ön yüzü kameraya dönük)
-    const desen = s >= 1
-      ? ['.X.......X.', 'XX.......XX', 'XX.......XX', 'XXX.....XXX', '.XXX...XXX.', '.XXXXXXXXX.', '..XXXXXXX..', '....XXX....']
-      : ['X.....X', 'XX...XX', '.XXXXX.', '..XXX..'];
-    const h = desen.length;
-    const ca = Math.cos((36 * Math.PI) / 180), sa = Math.sin((36 * Math.PI) / 180);
-    for (let j = 0; j < h; j++)
-      for (let i = 0; i < desen[j].length; i++)
-        if (desen[j][i] === 'X') {
-          const u = i - Math.floor(desen[j].length / 2);
-          const y = y0 + (h - 1 - j);
-          koy(cx + u, y, cz, m.altin);
-        }
+  function hilal(cx, y0, cz, s, kalin) {
+    // boynuzları yukarı bakan hilal: dış daireden yukarı kaydırılmış iç daire çıkarılır (x-y düzleminde,
+    // kameraya dönük); kalın hilal iki voksel derinliktedir, böylece uzaktan da okunur
+    const Ro = 5.6 * s, Ri = Ro * 0.8, kay = Ro * 0.5;
+    const n = Math.ceil(Ro) + 1;
+    for (let j = 0; j <= 2 * n; j++)
+      for (let i = -n; i <= n; i++) {
+        const px = i, py = j + 0.5 - Ro;
+        const dis = Math.hypot(px, py) <= Ro;
+        const ic = Math.hypot(px, py - kay) < Ri;
+        if (dis && !ic) for (let d = 0; d < (kalin || 1); d++) koy(cx + i, y0 + j, cz + d, m.altin);
+      }
   }
   const AY = Y_K1 + KH + 1;
   silindir(DC[0], DC[1], 2.3, AY, AY, m.altin);
@@ -349,8 +351,7 @@ setTimeout(function () {
   kure(DC[0], AY + 3, DC[1], 1.7, m.altin);
   kure(DC[0], AY + 6.5, DC[1], 1.35, m.altin);
   kure(DC[0], AY + 9.5, DC[1], 1.05, m.altin);
-  hilal(CX, AY + 11, CZ, 1);
-  for (let y = AY + 8; y <= AY + 11; y++) koy(CX, y, CZ, m.altin);
+  hilal(CX, AY + 11, CZ, 1, 2);
 
   // ------------------------------------------------------------------ 3. minare (solda, arkada)
   const MX = 14.5, MZ = 30.5;
@@ -408,7 +409,7 @@ setTimeout(function () {
   for (let y = Y0 + 76; y <= Y0 + 83; y++) koy(Math.floor(MX), y, Math.floor(MZ), m.altin);
   kure(MX, Y0 + 78, MZ, 1.1, m.altin);
   kure(MX, Y0 + 80.5, MZ, 0.9, m.altin);
-  hilal(Math.floor(MX), Y0 + 83, Math.floor(MZ), 0.62);
+  hilal(Math.floor(MX), Y0 + 83, Math.floor(MZ), 0.86, 2);
 
   // ------------------------------------------------------------------ 4. çiçekler ve çalılar (küçük voksel kümeleri)
   const dolu = (x, z) => al(x, TOP + 1, z) !== 0;
@@ -659,7 +660,10 @@ setTimeout(function () {
       const kenar = kd < 0.055 ? 0.9 : kd < 0.09 ? 0.96 : 1;
       const gok = 0.44 * ao, gun = 0.66 * Math.max(0, ndl) * golge * (0.55 + 0.45 * ao);
             for (let c = 0; c < 3; c++) {
-        let val = mat.c[c] * (gok * [0.94, 0.98, 1.08][c] + gun * [1.05, 1.0, 0.9][c]) * jit * kenar;
+        let sh = gok * [0.94, 0.98, 1.08][c] + gun * [1.05, 1.0, 0.9][c];
+        // kubbede basamak yüzleri arasındaki ton farkı biraz kısılır: kaburga şeritleri basamakların önüne geçer
+        if (mat.kubbe) sh = 0.72 + (sh - 0.72) * mat.kubbe;
+        let val = mat.c[c] * sh * jit * kenar;
         if (mat.bulut) val = mat.c[c] * (0.78 + 0.22 * Math.max(0, ndl)) * (0.85 + 0.15 * ao) * kenar;
         P[j + c] = Math.min(255, val);
       }

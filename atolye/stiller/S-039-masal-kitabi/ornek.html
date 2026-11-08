@@ -637,20 +637,40 @@ setTimeout(function () {
         for (let k = 0; k < prof.length - 1; k++) if (yy <= prof[k].y && yy >= prof[k + 1].y) return prof[k].r + (prof[k + 1].r - prof[k].r) * ((prof[k].y - yy) / (prof[k].y - prof[k + 1].y || 1));
         return 0;
       };
+      // gölge biçimi: solda yumuşak kenarlı, daha soğuk ve koyu ikinci ton (guajda ıslak geçiş)
+      {
+        const gc = tuvalYap(1024, 1024);
+        const gg = gc.getContext('2d');
+        gg.fillStyle = '#226B3E';
+        gg.fill(kubbeYol);
+        gg.globalCompositeOperation = 'destination-out';
+        gg.translate(560, 300);
+        gg.scale(0.93, 1.02);
+        gg.translate(-560 + 92, -300 - 6);
+        gg.fill(kubbeYol);
+        g.save();
+        g.globalAlpha = 0.62;
+        g.filter = `blur(${7 * K}px)`;
+        g.drawImage(gc, 0, 0, 1024, 1024);
+        g.restore();
+      }
+      // meridyen yönünde düzenli guaj vuruşları: ışık tarafında açık, gölgede az ve sakin
       g.lineCap = 'round';
-      for (let i = 0; i < 380; i++) {
-        const u = r() * 2 - 1, t = Math.pow(r(), 0.8);
-        const yy = 552 - t * 240;
+      for (let i = 0; i < 560; i++) {
+        const u = r() * 2 - 1, t = Math.pow(r(), 0.85);
+        const yy = 552 - t * 238;
         const rr = rAt(yy);
         const x = 560 + u * rr;
-        const dr = rAt(yy - 3) - rr; // yukarı çıkınca yarıçap değişimi
+        const dr = rAt(yy - 3) - rr;
         const dx = u * dr, dy = -3;
         const dl = Math.hypot(dx, dy);
-        const isik = ss(-0.3, 0.9, u * 0.75 + t * 0.45);
-        g.strokeStyle = isik > 0.62 ? (r() < 0.5 ? '#86D08E' : '#6DC27C') : isik > 0.32 ? (r() < 0.5 ? '#4FAB66' : '#41A05C') : r() < 0.5 ? '#2E834B' : '#287640';
-        g.globalAlpha = (isik > 0.32 ? 0.22 : 0.14) + r() * 0.16;
-        g.lineWidth = 4 + r() * 5;
-        const L = (14 + r() * 20) * (0.5 + 0.5 * Math.sqrt(Math.max(0, 1 - u * u)));
+        const isik = ss(-0.25, 0.85, u * 0.8 + t * 0.4);
+        const golgede = isik < 0.3;
+        if (golgede && r() < 0.55) continue;
+        g.strokeStyle = isik > 0.62 ? (r() < 0.5 ? '#8AD291' : '#72C580') : isik > 0.3 ? (r() < 0.5 ? '#52AE68' : '#46A45F') : r() < 0.5 ? '#2C7C47' : '#327F4A';
+        g.globalAlpha = golgede ? 0.16 + r() * 0.08 : 0.2 + r() * 0.14;
+        g.lineWidth = (golgede ? 3 : 3.5) + r() * 3;
+        const L = (22 + r() * 22) * (0.5 + 0.5 * Math.sqrt(Math.max(0, 1 - u * u)));
         g.beginPath();
         g.moveTo(x - (dx / dl) * L / 2, yy - (dy / dl) * L / 2);
         g.lineTo(x + (dx / dl) * L / 2, yy + (dy / dl) * L / 2);
@@ -668,6 +688,46 @@ setTimeout(function () {
   // kaburgalar: koyu yeşil kalem; ışık tarafında açık eşlik çizgisi
   kalem((g) => { for (const k of kab) g.stroke(P2(S.yol(k.noktalar.slice(1)))); }, '#215F39', 1.5, null, null, null, null, null, 0.75);
   kalem((g) => { g.translate(2.2, 0); for (const k of kab) if (k.u > -0.2) g.stroke(P2(S.yol(k.noktalar.slice(2, -3)))); }, '#9EDCA0', 1.1, null, null, null, null, null, 0.55);
+  // gölge tarafında renkli kalem taraması: çapraz, ince, kâğıt dişinde kırılan çizgiler
+  {
+    const prof = S.kubbeProfili(80);
+    const rAt = (yy) => {
+      for (let k = 0; k < prof.length - 1; k++) if (yy <= prof[k].y && yy >= prof[k + 1].y) return prof[k].r + (prof[k + 1].r - prof[k].r) * ((prof[k].y - yy) / (prof[k].y - prof[k + 1].y || 1));
+      return 0;
+    };
+    const golgeMi = (x, y) => {
+      if (y < 306 || y > 553) return false;
+      const r = rAt(y);
+      if (r <= 0) return false;
+      const u = (x - 560) / r, t = (553 - y) / 247;
+      return u > -0.97 && u < -0.38 + 0.12 * t;
+    };
+    const tr = S.rng(3957);
+    kalem((g) => {
+      const ca = Math.cos(-1.05), sa = Math.sin(-1.05);
+      for (let k = -40; k < 40; k++) {
+        const ox = 470 + k * 4.2, oy = 430;
+        let ac = false, sx = 0, sy = 0;
+        for (let s2 = -160; s2 <= 160; s2 += 2) {
+          const x = ox + ca * s2, y = oy + sa * s2;
+          const ic = golgeMi(x, y) && tr() > 0.02;
+          if (ic && !ac) {
+            sx = x;
+            sy = y;
+            ac = true;
+          } else if (!ic && ac) {
+            ac = false;
+            if (Math.hypot(x - sx, y - sy) > 6) {
+              g.beginPath();
+              g.moveTo(sx, sy);
+              g.lineTo(x - ca * 2, y - sa * 2);
+              g.stroke();
+            }
+          }
+        }
+      }
+    }, '#1D5A36', 1.05, null, null, null, null, null, 0.72);
+  }
   alemCiz(S.alemParcalari(560, 300, 1), 1);
   zaman('yapi');
 
@@ -679,17 +739,21 @@ setTimeout(function () {
   // yerde küçük ot tutamları ve çakıllar (kalemle)
   {
     const r = S.rng(3944);
-    kalem((g) => {
-      for (let i = 0; i < 40; i++) {
-        const x = 20 + r() * 984, y = 805 + r() * 40;
-        for (let k = -2; k <= 2; k++) {
+    // ot tutamları: koyu yeşil kalemle beşer-yedişer yaprak, üstüne açık yeşil ikinci geçiş
+    const tutamlar = [];
+    for (let i = 0; i < 64; i++) tutamlar.push([16 + r() * 992, 806 + r() * 70, 0.8 + r() * 0.6, 2 + Math.floor(r() * 2)]);
+    const tutamCiz = (g, kay) => {
+      for (const [x, y, s, n] of tutamlar)
+        for (let k = -n; k <= n; k++) {
+          const e = (k / n) * 0.9;
           g.beginPath();
-          g.moveTo(x + k * 2, y);
-          g.quadraticCurveTo(x + k * 3, y - 6, x + k * 4.5 + (r() - 0.5) * 3, y - 9 - r() * 5);
+          g.moveTo(x + k * 1.6 * s, y);
+          g.quadraticCurveTo(x + k * 2.6 * s, y - 7 * s, x + (k * 4.2 + e * 3) * s + kay, y - (11 + (n - Math.abs(k)) * 3.2) * s);
           g.stroke();
         }
-      }
-    }, '#8A9A55', 1.3, null, null, null, null, null, 0.7);
+    };
+    kalem((g) => tutamCiz(g, 0), '#4F7A34', 1.7, null, null, null, null, null, 0.9);
+    kalem((g) => { g.translate(0.8, -0.6); tutamCiz(g, 0.8); }, '#93B860', 0.9, null, null, null, null, null, 0.7);
     for (let i = 0; i < 22; i++) {
       const x = 20 + r() * 984, y = 812 + r() * 200, rx = 4 + r() * 4;
       const cp = new Path2D();

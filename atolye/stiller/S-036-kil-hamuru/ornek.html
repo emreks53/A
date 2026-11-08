@@ -319,6 +319,7 @@ setTimeout(function () {
     }
     const puruz = kil.puruz != null ? kil.puruz : 0.45;
     const ince = kil.ince != null ? kil.ince : 0.3;
+    const pO = kil.puruzOlcek || 20; // pürüz ölçeği (px)
     const nS = rnd() * 200;
     const bevel = o.bevel || 6;
     const yuk = o.yuk != null ? o.yuk : 1;
@@ -364,7 +365,7 @@ setTimeout(function () {
         let hh = H[i];
         const u = UU ? UU[i] : 0, rr = RW ? RW[y] : 0;
         // pürüz: düşük frekanslı topaklı yüzey
-        if (puruz > 0) hh += s * puruz * (fbm(ux / 20 + nS, uy / 20, 3) + ince * gurultu(ux / 4.5, uy / 4.5 + nS));
+        if (puruz > 0) hh += s * puruz * (fbm(ux / pO + nS, uy / pO, 3) + ince * gurultu(ux / 4.5, uy / 4.5 + nS));
         let kav = 0;
         for (let k = 0; k < izler.length; k++) {
           const p = izler[k];
@@ -517,7 +518,8 @@ setTimeout(function () {
     },
     bevel: 30,
     mat: MAT.fon,
-    kil: { puruz: 1.6, ince: 0, parmak: 0, alet: 22, aletL: 70, aletW: 5, aletD: 1.2, topak: 0 },
+    // dekor fonu: ince taneli değil, geniş başparmak ve spatula sıvamalarıyla düzlenmiş kil levha
+    kil: { puruz: 1.4, puruzOlcek: 95, ince: 0, parmak: 0, alet: 16, aletL: 170, aletW: 13, aletD: 1.5, topak: 0 },
     dalga: 0,
     golge: null,
     renkOyna: 0.04,
@@ -707,7 +709,44 @@ setTimeout(function () {
     oyukRenk: '#8C7480',
     oyukDerin: 7,
     oyukDuvar: 2.6,
+    // spatula ucuyla çizilmiş taş sıraları: yatay derzler ve şaşırtmalı dikey derzler
+    ek: (x, y, u, r, s) => {
+      for (const p of KD.pencereler) if (Math.abs(x - p.x) < p.w / 2 + 7 && y > p.y - 8 && y < p.y + p.h + 3) return [0, 0];
+      let d = 99;
+      for (const yy of [728, 752, 776]) d = Math.min(d, Math.abs(y - yy - 0.6 * Math.sin(x / 37)));
+      const sira = Math.floor((y - 704) / 24);
+      const ofs = sira % 2 ? 26 : 0;
+      const xx = ((x - 300 + ofs) % 52 + 52) % 52;
+      const dv = Math.min(xx, 52 - xx);
+      d = Math.min(d, dv + (Math.abs(((y - 704) % 24) - 12) > 10.5 ? 3 : 0));
+      const o = Math.exp(-(d * d) / 1.3);
+      return [-1.1 * o * s, o * 0.22];
+    },
     golge: { dx: -5, dy: 3, blur: 5, alfa: 0.35 },
+  });
+  // pencerelerin çevresine bastırılmış kil çerçeveler (ayrı rulo şeritler)
+  for (const p of KD.pencereler) {
+    katman({
+      ciz: (g) => {
+        const yl = new Path2D(S.kemerYolu(p.x, p.y - 5, p.w + 11, p.h + 5));
+        yl.addPath(new Path2D(S.kemerYolu(p.x, p.y - 0.5, p.w + 1, p.h + 0.5)));
+        g.fill(yl, 'evenodd');
+      },
+      renk: TASK,
+      bevel: 2.4,
+      dalga: 0.35,
+      kil: { puruz: 0.2, topak: 0.3, parmak: 0 },
+      golge: { dx: -1.6, dy: 2.2, blur: 2, alfa: 0.4 },
+    });
+  }
+  // kaidenin dibinde yuvarlanmış kil süpürgelik
+  katman({
+    ciz: (g) => yuvarlakDik(g, KD.x1 - 4, 786, KD.x2 + 4, 803, 6),
+    renk: TASK,
+    bevel: 5,
+    dalga: 0.6,
+    kil: { alet: 3, aletAci: 0, aletL: 40, topak: 0.6, puruz: 0.35 },
+    golge: { dx: -2, dy: 3, blur: 3, alfa: 0.4 },
   });
   katman({
     ciz: (g) => yuvarlakDik(g, KD.kornis.x1, KD.kornis.y1 - 1, KD.kornis.x2, KD.kornis.y2 + 1, 5),

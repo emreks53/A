@@ -6,27 +6,27 @@
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
   "ozet": "Bütün sahne küçük 3B küplerden kurulmuş, havada duran bir ada dioraması; her küp görünen üç yüzünde düz tonla gölgelenir.",
-  "tanim": "Voksel, sahneyi eşit büyüklükte küçük küplerden (voksellerden) kuran bir 3B render tarifidir. Bakış dörtte üç dik izdüşümdür; her küpün görünen üç yüzü düz bir tonla boyanır: ışık sağ üstten geldiği için üst yüz en açık, sağ yüz orta, ön yüz en koyudur. Küplerin birleştiği iç köşelerde yumuşak geçişli ortam örtmesi, uzun öğelerin ardında yumuşak kenarlı düşen gölgeler ve her küpün kenarında ince bir koyulaşma bulunur; böylece küpler tek tek okunur ama yüzey dağınık görünmez. Her malzemenin iki-üç tonlu sınırlı bir paleti vardır (çim, toprak, kaya, taş, karo, yeşil kubbe, altın). Kubbe kademeli bir voksel yarım küre olarak kurulur ve koyu kaburga şeritleri taşır; sahne havada duran, katmanlı bir ada dioramasıdır.",
+  "tanim": "Voksel, sahneyi eşit büyüklükte küçük küplerden (voksellerden) kuran bir 3B render tarifidir. Bakış dörtte üç dik izdüşümdür; her küpün görünen üç yüzü düz bir tonla boyanır: ışık sağ üstten geldiği için üst yüz en açık, sağ yüz orta, ön yüz en koyudur. Küplerin birleştiği iç köşelerde yumuşak geçişli ortam örtmesi, uzun öğelerin ardında yumuşak kenarlı düşen gölgeler ve her küpün kenarında ince bir koyulaşma bulunur; böylece küpler tek tek okunur ama yüzey dağınık görünmez. Her malzemenin iki-üç tonlu sınırlı bir paleti vardır (çim, toprak, kaya, taş, karo, yeşil kubbe, altın). Kubbe kademeli bir voksel yarım küre olarak kurulur; 16 dilimin sınırlarında yüzeyden bir voksel kabarık koyu kaburga sırtları taşır ve basamakları sakin tutulur ki kaburgalar okunur; sahne havada duran, katmanlı bir ada dioramasıdır.",
   "koken": "MagicaVoxel gibi araçlarla yaygınlaşan voksel sanatına, Minecraft benzeri blok estetiğine ve 3B illüstrasyondaki 'voxel diorama' akımına dayanır. Piksel sanatının (2B kare) ve düz vektör izometrik çizimin aksine, burada her öğe gerçekten üç boyutlu küplerden oluşur ve ışıkla gölgelenir. Atölye tarifi şunları sabitler: dörtte üç dik izdüşüm, yüz başına düz ton (üst en açık), köşe başına yumuşak ortam örtmesi, titretilmiş gölge ışınlarıyla yumuşak düşen gölge, küp kenarında ince çizgi, malzeme başına sınırlı palet, havada duran ada.",
   "ayirt_edici": [
     "Her şey küplerden: ada, kaide, kasnak, kademeli voksel kubbe, minare, çiçekler, çalılar ve bulutlar",
     "Her küpün üç görünen yüzü düz tonda: üst en açık, sağ yüz orta, ön yüz koyu (ışık sağ üstten)",
     "Küplerin birleştiği köşelerde yumuşak ortam örtmesi; kaide ve çiçeklerin önüne-soluna düşen yumuşak gölgeler",
-    "Koyu yeşil kaburga şeritli voksel yarım küre kubbe, açık yeşil kuşaklı iki kat pencereli kasnak, piksel hilalli altın alem",
+    "Bir voksel kabarık koyu yeşil kaburga sırtlarıyla 16 dilime ayrılan voksel kubbe, açık yeşil kuşaklı iki kat pencereli kasnak, iri voksel hilalli altın alemler",
     "Solda korkuluklu iki şerefeli, zikzak bantlı, soğan topuzlu voksel minare",
     "Çim, toprak ve kaya katmanlı havada duran ada; taş karo meydan, küçük pembe-beyaz-lila voksel çiçek kümeleri"
   ],
   "palet": [
-    "#7CC35A",
-    "#9A6B43",
+    "#6FAD4F",
+    "#7C5636",
     "#F3EBDA",
-    "#E9DDC6",
-    "#43B465",
-    "#217A3D",
-    "#F2C445",
-    "#F5A3BD"
+    "#CFC1A8",
+    "#369251",
+    "#1F5732",
+    "#CCA43A",
+    "#C998A9"
   ],
-  "kodla_cizim": "Tek canvas, 2× iç çözünürlük. 116 × 112 × 96 hücrelik bir voksel ızgarası kurulur: fbm kenarlı havada duran ada (çim, toprak ve kaya katmanları), damalı taş meydan, pencereli kaide ve saçak, çevresine kemerli pencereler oyulmuş iki silindir kasnak, SAHNE.kubbeProfili()'nden katman katman voksellenen ve boylama göre kaburga şeridi alan kubbe, küreli ve piksel hilalli alemler, halkalardan kurulan minare (zikzak bandı, iki şerefe, soğan topuz), çalılar, çiçek kümeleri ve gölge düşürmeyen bulutlar. Kadraj dolu voksellerin ekran izdüşümünden otomatik hesaplanır. Her iç piksel için dörtte üç dik izdüşümde bir ışın, ızgarada Amanatides–Woo DDA ile yürütülür; çarpılan yüzün normali ile düz gölgeleme, yüzün önündeki boş hücrenin komşularından köşe başına ortam örtmesi (bilinear karışım), iki tabakalı titretilmiş gölge ışınıyla yumuşak gölge, küp kenarında ince koyulaşma ve voksel başına küçük ton oynaması uygulanır. Boşluğa giden ışınlar gök degradesi ve güneş ışıltısını alır; güneş basamaklı piksel disktir.",
+  "kodla_cizim": "Tek canvas, 2× iç çözünürlük. 116 × 112 × 96 hücrelik bir voksel ızgarası kurulur: fbm kenarlı havada duran ada (çim, toprak ve kaya katmanları), damalı taş meydan, pencereli kaide ve saçak, çevresine kemerli pencereler oyulmuş iki silindir kasnak, SAHNE.kubbeProfili()'nden katman katman voksellenen, boylama göre 16 dilime bölünüp dilim sınırlarında bir voksel dışa taşan koyu kaburga sırtı alan kubbe, küreli ve iki dairenin farkından voksellenen (kubbede iki voksel kalın) hilalli alemler, halkalardan kurulan minare (zikzak bandı, iki şerefe, soğan topuz), çalılar, çiçek kümeleri ve gölge düşürmeyen bulutlar. Kadraj dolu voksellerin ekran izdüşümünden otomatik hesaplanır. Her iç piksel için dörtte üç dik izdüşümde bir ışın, ızgarada Amanatides–Woo DDA ile yürütülür; çarpılan yüzün normali ile düz gölgeleme, yüzün önündeki boş hücrenin komşularından köşe başına ortam örtmesi (bilinear karışım), iki tabakalı titretilmiş gölge ışınıyla yumuşak gölge, küp kenarında ince koyulaşma ve voksel başına küçük ton oynaması uygulanır; kubbe dilimlerinde yüzler arası ton farkı kısılır (kaburgalar öne çıksın diye). Boşluğa giden ışınlar gök degradesi ve güneş ışıltısını alır; güneş basamaklı piksel disktir.",
   "etiketler": [
     "voksel",
     "3B",

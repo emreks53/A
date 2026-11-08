@@ -16,7 +16,7 @@
 // Her öğe kabartılmış bir folyo parçasıdır: maske → uzaklık dönüşümüyle yastık + keskin pah yüksekliği
 // → normal → krom ortam haritası (parlak gök, keskin ufuk bandı, ışık kutusu) × yanardöner ton
 // (bakış açısına ve konuma göre pembe-camgöbeği-lila-altın kayar) + şerit ışık çizgileri + mikro parıltı.
-// Kubbe yeşil kromdur; yanardöner parıltı yalnız eğik açılarda artar. En parlak noktalara yıldız parlaması.
+// Kubbe derin zümrüt kromdur; yanardöner (camgöbeği, mor) parıltı yalnız eğik açılarda artar. En parlak noktalara yıldız parlaması.
 setTimeout(function () {
   'use strict';
   const S = SAHNE;
@@ -219,8 +219,8 @@ setTimeout(function () {
   }
   const MAT = {
     inci: { taban: hex('#EEEAF6'), irid: 0.5, iridK: 0.45, ton: 0.0, metal: 1.0 },
-    yesil: { taban: hex('#0A9150'), irid: 0.06, iridK: 0.42, ton: 0.1, metal: 1.0, pal: ['#7DF2C4', '#8FE6F0', '#C6B0FF', '#8FE6F0', '#7DF2C4', '#D9F59A'].map(hex) },
-    yesilK: { taban: hex('#0B8A4C'), irid: 0.06, iridK: 0.36, ton: 0.4, metal: 1.0, pal: ['#7DF2C4', '#8FE6F0', '#C6B0FF', '#8FE6F0', '#7DF2C4', '#D9F59A'].map(hex) },
+    yesil: { taban: hex('#047A3C'), irid: 0.03, iridK: 0.55, ton: 0.1, metal: 0.95, pal: ['#1FCF8E', '#22BFD8', '#8E6BFF', '#22BFD8', '#1FCF8E', '#A8E85A'].map(hex) },
+    yesilK: { taban: hex('#0B8A4C'), irid: 0.05, iridK: 0.4, ton: 0.4, metal: 1.0, pal: ['#1FCF8E', '#22BFD8', '#8E6BFF', '#22BFD8', '#1FCF8E', '#A8E85A'].map(hex) },
     altin: { taban: hex('#F5C65A'), irid: 0.22, iridK: 0.35, ton: 0.75, metal: 1.0 },
     gul: { taban: hex('#FFD3EA'), irid: 0.66, iridK: 0.3, ton: 0.0, metal: 1.0 },
     yaprak: { taban: hex('#4FD69C'), irid: 0.32, iridK: 0.4, ton: 0.4, metal: 0.95 },
