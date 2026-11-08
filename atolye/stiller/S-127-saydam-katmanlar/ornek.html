@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>S-127 Saydam Katmanlar — Atölye örnek görseli</title>
+<style>
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #FDFCF8; }
+  canvas { display: block; width: 1024px; height: 1024px; }
+</style>
+</head>
+<body>
+<canvas id="tuval"></canvas>
+<script src="../../sahne/sahne.js"></script>
+<script>
+  // S-127 Saydam Katmanlar (Transparent Vector Layers) — keskin kenarlı vektör biçimler yarı saydam
+  // renklerle 'multiply' karışımında üst üste biner; her kesişim yeni bir ton doğurur: gökte büyük
+  // daire düzlemleri, güneşte üç dairelik Venn gülü, kubbede birbirine binen dilimler (kaburgalar
+  // kesişimden çıkar), minarede baştan başa geçen saydam gölge şeridi, üst üste binen yapraklar ve
+  // ortası koyulaşan taç yaprakları. Açık, havadar palet; beyaz kâğıt zemin.
+  const S = SAHNE;
+  const ctx = S.tuval(document.getElementById('tuval'), 2);
+  const TAU = Math.PI * 2;
+
+  // ---------------------------------------------------------------- yardımcılar
+  const yolP = (d) => new Path2D(d);
+  const dik = (x1, y1, x2, y2) => { const p = new Path2D(); p.rect(x1, y1, x2 - x1, y2 - y1); return p; };
+  const daire = (x, y, r) => { const p = new Path2D(); p.arc(x, y, r, 0, TAU); return p; };
+  const elips = (x, y, rx, ry, a) => { const p = new Path2D(); p.ellipse(x, y, rx, ry, a || 0, 0, TAU); return p; };
+  /** Saydam katman: biçim, renk, örtücülük, karışım kipi (varsayılan multiply). */
+  function kat(p, renk, a, kip) {
+    ctx.save();
+    ctx.globalCompositeOperation = kip || 'multiply';
+    ctx.globalAlpha = a == null ? 1 : a;
+    ctx.fillStyle = renk;
+    ctx.fill(p);
+    ctx.restore();
+  }
+  function kirpli(p, fn) { ctx.save(); ctx.clip(p); fn(); ctx.restore(); }
+  function cokgen(pts) { const p = new Path2D(); pts.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y))); p.closePath(); return p; }
+  function hap(x1, x2, y, r) {
+    const p = new Path2D();
+    p.moveTo(x1, y - r); p.lineTo(x2, y - r);
+    p.arc(x2, y, r, -Math.PI / 2, Math.PI / 2, false);
+    p.lineTo(x1, y + r);
+    p.arc(x1, y, r, Math.PI / 2, Math.PI * 1.5, false);
+    p.closePath();
+    return p;
+  }
+
+  // ---------------------------------------------------------------- kâğıt
+  ctx.fillStyle = '#FDFCF8';
+  ctx.fillRect(0, 0, 1024, 1024);
+
+  // ---------------------------------------------------------------- gök: çapraz kesişen saydam şeritler
+  // Gök, farklı renkte yarı saydam şerit levhaların çapraz kesişmesinden kurulur: her kesişim yeni
+  // bir ton (mavi + lila → çivit, lila + su yeşili → açık mavi, su yeşili + şeftali → adaçayı).
+  const gokAlan = dik(0, 0, 1024, 800);
+  const G = S.gunes;
+  const serit = (y1, e1, y2, e2, renk, al) => kat(cokgen([[-10, y1 - e1 * 522], [1034, y1 + e1 * 522], [1034, y2 + e2 * 522], [-10, y2 - e2 * 522]]), renk, al);
+  kirpli(gokAlan, () => {
+    kat(dik(0, 0, 1024, 800), '#E4F1FA', 1);
+    serit(-40, 0, 300, -0.2, '#9ACCF2', 0.46);
+    serit(150, 0.2, 420, 0.2, '#C6BCF2', 0.3);
+    serit(330, -0.16, 600, -0.16, '#9ADFD5', 0.4);
+    serit(520, 0.13, 720, 0.13, '#C4DBF6', 0.34);
+    // ufuk pusu: beyaz saydam şerit (ışık ekler)
+    serit(640, -0.05, 820, 0, '#FFFDF6', 0.42);
+    kat(cokgen([[-10, 700], [1034, 680], [1034, 820], [-10, 820]]), '#FCEBD8', 0.35);
+    // güneş levhası ve beyaz saydam haleler (normal karışım: ışık ekler)
+    kat(daire(G.x, G.y, 250), '#FFFFFF', 0.3, 'source-over');
+    kat(daire(G.x - 26, G.y + 20, 172), '#FFF8E2', 0.5, 'source-over');
+    kat(daire(G.x, G.y, 104), '#FFFBEA', 0.6, 'source-over');
+  });
+  // güneş: üç dairenin Venn gülü
+  for (let i = 0; i < 3; i++) {
+    const a = -Math.PI / 2 + (i * TAU) / 3;
+    kat(daire(G.x + Math.cos(a) * 22, G.y + Math.sin(a) * 22, 48), ['#FFDF80', '#FFC7B2', '#FFEC98'][i], 0.58);
+  }
+
+  // bulutlar: beyaz saydam haplar (normal) + altlarında kaydırılmış mavi-lila saydam gölge (multiply)
+  function bulut(x, y, s, parca) {
+    for (const [a, b, dy, r] of parca) kat(hap(x + a * s, x + b * s, y + dy * s + 7 * s, r * s), '#C9D3EE', 0.45);
+    for (const [a, b, dy, r] of parca) kat(hap(x + a * s, x + b * s, y + dy * s, r * s), '#FFFFFF', 0.62, 'source-over');
+  }
+  bulut(170, 250, 1.0, [[-70, 40, 0, 18], [-30, 60, -20, 22], [-90, -10, 10, 13]]);
+  bulut(486, 146, 0.75, [[-50, 30, 0, 16], [-20, 46, -16, 18]]);
+  bulut(808, 360, 0.95, [[-60, 50, 0, 18], [-20, 74, -20, 21], [-80, 0, 12, 12]]);
+  bulut(86, 470, 0.62, [[-50, 30, 0, 15], [-26, 46, -14, 16]]);
+  bulut(950, 486, 0.58, [[-46, 34, 0, 15], [-20, 54, -14, 16]]);
+
+  // uzak tepeler: üst üste binen saydam elips düzlemler
+  kirpli(gokAlan, () => {
+    kat(elips(160, 830, 430, 150), '#BFE8D2', 0.5);
+    kat(elips(540, 850, 380, 110), '#D4F0C6', 0.5);
+    kat(elips(910, 840, 400, 165), '#B6E4DC', 0.5);
+  });
+
+  // ---------------------------------------------------------------- yer
+  kat(dik(0, 800, 1024, 1024), '#F7EBD3', 0.8);
+  kat(cokgen([[-10, 880], [1034, 930], [1034, 1034], [-10, 1034]]), '#D6EFCC', 0.5);
+  kat(cokgen([[-10, 950], [1034, 905], [1034, 1034], [-10, 1034]]), '#CBEADF', 0.45);
+
+  // ---------------------------------------------------------------- minare: saydam taş levhalar
+  const mx = S.minare.cx;
+  const TAS = '#F1E2C2', TAS2 = '#E9D3AB', GOLGE = '#C3CDEE', PENCERE = '#5E8C9A', ALTIN = '#EDBB45', ALTIN2 = '#F2A15A';
+  // önce minarenin altında beyaz örtü: arkadaki gök düzlemleri taşın içinden görünmesin diye hafif kapat
+  {
+    const govdeler = [[34, 488, 800], [27, 316, 436], [19, 206, 272]];
+    for (const [R, y1, y2] of govdeler) kat(dik(mx - R, y1, mx + R, y2), '#FFFDF8', 0.85, 'source-over');
+    for (const [R, y1, y2] of govdeler) kat(dik(mx - R, y1, mx + R, y2), TAS, 0.55);
+    // şerefeler: çıkma yamuğu, tabla, korkuluk ayrı levhalar; birleşim yerlerinde koyulaşır
+    const serefe = (yc, Rc, Rt, yt1, yt2, kx1, kx2, ky1, ky2) => {
+      kat(cokgen([[mx - Rc, yc], [mx - Rt, yt2 + 2], [mx + Rt, yt2 + 2], [mx + Rc, yc]]), '#FFFDF8', 0.8, 'source-over');
+      kat(cokgen([[mx - Rc, yc], [mx - Rt, yt2 + 2], [mx + Rt, yt2 + 2], [mx + Rc, yc]]), TAS2, 0.6);
+      kat(dik(mx - Rt - 2, yt1, mx + Rt + 2, yt2), '#FFFDF8', 0.8, 'source-over');
+      kat(dik(mx - Rt - 2, yt1, mx + Rt + 2, yt2), TAS2, 0.62);
+      kat(dik(kx1, ky1, kx2, ky2 + 2), '#FFFDF8', 0.8, 'source-over');
+      kat(dik(kx1, ky1, kx2, ky2 + 2), TAS, 0.6);
+      // korkuluk: saydam dikmeler
+      for (let i = 0; i < 9; i++) {
+        const x = kx1 + 6 + ((kx2 - kx1 - 12) * (i + 0.5)) / 9;
+        kat(dik(x - 2.2, ky1 + 4, x + 2.2, ky2 - 2), TAS2, 0.8);
+      }
+      kat(dik(kx1, ky1, kx2, ky1 + 4), TAS2, 0.7);
+    };
+    serefe(488, 34, 52, 456, 468, mx - 48, mx + 48, 436, 456);
+    serefe(316, 27, 43, 290, 300, mx - 40, mx + 40, 272, 290);
+    kat(dik(mx - 25, 198, mx + 25, 206), '#FFFDF8', 0.8, 'source-over');
+    kat(dik(mx - 25, 198, mx + 25, 206), TAS2, 0.7);
+    // topuz: iki saydam yarı (soğan)
+    const topuz = yolP(`M${mx - 22},200 C${mx - 34},182 ${mx - 12},160 ${mx},146 C${mx + 12},160 ${mx + 34},182 ${mx + 22},200 Z`);
+    kat(topuz, '#FFFDF8', 0.85, 'source-over');
+    kat(topuz, TAS, 0.6);
+    kat(elips(mx + 4, 186, 18, 16), '#FFF6E2', 0.5);
+    // zikzak: aşağı ve yukarı bakan üçgen dizileri üst üste biner, kesişimlerde baklava çıkar
+    for (let k = 0; k < 3; k++) {
+      const y0 = 524 + k * 19.5;
+      for (let i = 0; i < 6; i++) {
+        const x = mx - 34 + (68 / 6) * i, w = 68 / 6;
+        kat(cokgen([[x, y0 + 14], [x + w / 2, y0], [x + w, y0 + 14]]), '#D9B98A', 0.55);
+        kat(cokgen([[x + w / 2, y0 + 2], [x + w, y0 + 16], [x + w * 1.5, y0 + 2]]), '#C9D9E0', 0.5);
+      }
+    }
+    for (const w of S.minarePencereleri) kat(yolP(S.kemerYolu(w.x, w.y, w.w, w.h)), PENCERE, 0.75);
+    // baştan başa saydam gölge şeridi: minarenin sol yarısı (bütün levhaların üstünden geçer)
+    const silu = new Path2D();
+    for (const d of S.yollar().minare) silu.addPath(yolP(d));
+    silu.addPath(dik(mx - 48, 436, mx + 48, 458));
+    silu.addPath(dik(mx - 40, 272, mx + 40, 292));
+    kirpli(silu, () => {
+      kat(dik(mx - 56, 140, mx - 6, 800), GOLGE, 0.42);
+      kat(dik(mx - 56, 140, mx - 22, 800), GOLGE, 0.3);
+    });
+  }
+  // alem: üst üste binen saydam altın daireler
+  function alem(a) {
+    const W = '#FFFDF6';
+    kat(dik(a.cubuk.x1, a.cubuk.y1, a.cubuk.x2, a.cubuk.y2), W, 1, 'source-over');
+    for (const k of a.kureler) kat(daire(k.cx, k.cy, k.r), W, 1, 'source-over');
+    kat(elips(a.yaka.cx, a.yaka.cy, a.yaka.rx, a.yaka.ry), W, 1, 'source-over');
+    kat(yolP(S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R)), W, 1, 'source-over');
+    kat(dik(a.cubuk.x1, a.cubuk.y1, a.cubuk.x2, a.cubuk.y2), ALTIN, 0.85);
+    for (const k of a.kureler) {
+      kat(daire(k.cx, k.cy, k.r), ALTIN, 0.7);
+      kat(daire(k.cx - k.r * 0.35, k.cy + k.r * 0.3, k.r * 0.8), ALTIN2, 0.45);
+    }
+    kat(elips(a.yaka.cx, a.yaka.cy, a.yaka.rx, a.yaka.ry), ALTIN, 0.75);
+    kat(elips(a.yaka.cx - a.yaka.rx * 0.3, a.yaka.cy + 1, a.yaka.rx * 0.7, a.yaka.ry * 0.8), ALTIN2, 0.45);
+    const h = yolP(S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R));
+    kat(h, ALTIN, 0.85);
+    kirpli(h, () => kat(daire(a.hilal.cx - a.hilal.R * 0.5, a.hilal.cy + a.hilal.R * 0.3, a.hilal.R * 0.8), ALTIN2, 0.5));
+  }
+  alem(S.alemParcalari(mx, 146, 0.62));
+
+  // ---------------------------------------------------------------- kaide
+  const K = S.kaide;
+  kat(dik(K.x1, K.y1, K.x2, K.y2), '#FFFDF8', 0.9, 'source-over');
+  kat(dik(K.x1, K.y1, K.x2, K.y2), '#F4E6C9', 0.7);
+  kat(dik(K.kornis.x1, K.kornis.y1, K.kornis.x2, K.kornis.y2 + 3), '#FFFDF8', 0.9, 'source-over');
+  kat(dik(K.kornis.x1, K.kornis.y1, K.kornis.x2, K.kornis.y2 + 3), '#EAD3A8', 0.7);
+  kat(dik(K.x1, K.y2 - 12, K.x2, K.y2), '#EAD3A8', 0.55);
+  // kubbe ve kasnağın kaideye düşen saydam gölgesi (sola eğik düzlem)
+  kat(cokgen([[334, 704], [520, 704], [470, 800], [300, 800], [300, 760]]), GOLGE, 0.45);
+  kat(dik(K.x1, K.y1, K.x1 + 22, K.y2), GOLGE, 0.4);
+  for (const w of K.pencereler) {
+    kat(yolP(S.kemerYolu(w.x, w.y - 6, w.w + 12, w.h + 8)), '#E2C796', 0.45);
+    kat(yolP(S.kemerYolu(w.x, w.y, w.w, w.h)), PENCERE, 0.78);
+    kat(yolP(S.kemerYolu(w.x - w.w * 0.2, w.y + 4, w.w * 0.6, w.h - 4)), '#2F6E7A', 0.35);
+  }
+
+  // ---------------------------------------------------------------- kasnak
+  for (let k = 1; k >= 0; k--) {
+    const q = S.kasnak[k];
+    kat(dik(q.x1, q.y1, q.x2, q.y2), '#FFFFFF', 1, 'source-over');
+    kat(dik(q.x1, q.y1, q.x2, q.y2), '#63B98A', 0.82);
+    kat(dik(q.x1, q.y1, q.x2, q.y1 + 8), '#4FAE7C', 0.4);
+    kat(dik(q.x1, q.y2 - 9, q.x2, q.y2), '#2F8A6E', 0.45);
+    for (const w of S.kasnakPencereleri(k)) {
+      kat(yolP(S.kemerYolu(w.x, w.y, w.w, w.h)), '#1F6458', 0.72);
+      kat(yolP(S.kemerYolu(w.x + w.w * 0.25, w.y + 3, w.w * 0.7, w.h - 3)), '#7FD0B6', 0.35);
+    }
+    // silindirin gölgede kalan sol yanı: iki saydam şerit
+    const cx = (q.x1 + q.x2) / 2, R = (q.x2 - q.x1) / 2;
+    kat(dik(q.x1, q.y1, cx - R * 0.35, q.y2), '#2C7D8C', 0.32);
+    kat(dik(q.x1, q.y1, cx - R * 0.75, q.y2), '#2C7D8C', 0.3);
+    kat(dik(cx + R * 0.45, q.y1, cx + R * 0.82, q.y2), '#E9F7A8', 0.25, 'screen');
+  }
+
+  // ---------------------------------------------------------------- kubbe: birbirine binen saydam dilimler
+  {
+    const prof = S.kubbeProfili(80);
+    const kubbe = yolP(S.kubbeYolu);
+    kat(kubbe, '#FFFFFF', 1, 'source-over');
+    kat(kubbe, '#9ED9A8', 1);
+    const meridyen = (u) => prof.map((q) => [560 + u * q.r, q.y]);
+    const n = 16, tasma = 0.022;
+    const renkler = ['#3E9E6E', '#4CAA74'];
+    kirpli(kubbe, () => {
+      for (let k = 0; k < n; k++) {
+        const p1 = -Math.PI / 2 + (Math.PI * k) / n, p2 = -Math.PI / 2 + (Math.PI * (k + 1)) / n;
+        const u1 = Math.max(-1, Math.sin(p1) - tasma), u2 = Math.min(1, Math.sin(p2) + tasma);
+        const pts = [...meridyen(u1), ...meridyen(u2).reverse()];
+        kat(cokgen(pts), renkler[k % 2], 0.38);
+      }
+      // gölge: sol yanda iki saydam mercek, sağ üstte limon ışığı
+      kat(elips(420, 470, 175, 240, 0.12), '#2A7E8E', 0.32);
+      kat(elips(380, 500, 110, 200, 0.12), '#2A7E8E', 0.28);
+      kat(elips(668, 400, 120, 175, 0.45), '#F2F6C0', 0.42);
+      kat(dik(350, 540, 770, 556), '#1F6E5E', 0.3);
+    });
+  }
+  alem(S.alemParcalari(560, 300, 1));
+
+  // ---------------------------------------------------------------- bitkiler
+  const B = S.bitki;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  function sap(pts, w, renk, a) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = a;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length - 1; i++) ctx.quadraticCurveTo(pts[i][0], pts[i][1], (pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2);
+    ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+    ctx.lineWidth = w;
+    ctx.strokeStyle = renk;
+    ctx.stroke();
+    ctx.restore();
+  }
+  for (const t of B.tomurcuklar.slice(8)) {
+    const x0 = t.x - Math.cos(t.aci) * t.r * 0.8, y0 = t.y - Math.sin(t.aci) * t.r * 0.8;
+    const bx = t.x + (t.x < 512 ? -14 : 14);
+    sap([[x0, y0], [t.x, t.y + 80], [bx, t.y + 170]], 3.6, '#5E9E62', 0.75);
+  }
+  for (const s of B.saplar) sap(s, 4.4, '#5E9E62', 0.8);
+
+  const YAPRAK = [['#8CC56A', 0.6], ['#3FA08A', 0.52], ['#6AB46E', 0.58], ['#B8D86C', 0.62], ['#4E9E78', 0.55]];
+  const rr = SAHNE.rng(127);
+  B.yapraklar.forEach((y, i) => {
+    const [renk, a] = YAPRAK[Math.floor(rr() * YAPRAK.length)];
+    const yy = i < 36 ? y : { ...y, uzunluk: y.uzunluk * 1.05 };
+    const p = yolP(S.yaprakYolu(yy));
+    kat(p, renk, a);
+    // orta damar: ince beyaz saydam çizgi
+    const [s0, s1] = S.yaprakDamari(yy);
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(s0[0], s0[1]); ctx.lineTo(s1[0], s1[1]); ctx.stroke();
+    ctx.restore();
+  });
+  for (const t of B.tomurcuklar) {
+    const p = yolP(S.tomurcukYolu(t));
+    kat(p, '#FFFFFF', 0.85, 'source-over');
+    kat(p, '#F4A4A0', 0.7);
+    kat(yolP(S.tomurcukYolu({ ...t, r: t.r * 0.7 })), '#F07C86', 0.35);
+  }
+  // çiçekler: beyaz örtü üstüne saydam allık rengi taç yapraklar; kesişimler koyulaşır
+  for (const c of B.cicekler) {
+    const tac = S.tacYapraklari(c).map((e) => ({ ...e, cx: c.x + Math.cos(e.aci) * c.r * 0.55, cy: c.y + Math.sin(e.aci) * c.r * 0.55, rx: c.r * 0.56, ry: c.r * 0.4 }));
+    for (const e of tac) kat(yolP(S.elipsYolu(e)), '#FFFFFF', 0.95, 'source-over');
+    for (const e of tac) kat(yolP(S.elipsYolu(e)), '#F8CFCF', 0.33);
+    kat(daire(c.x, c.y, c.r * 0.34), '#F6B9B5', 0.35);
+    kat(daire(c.x - c.r * 0.04, c.y + c.r * 0.03, c.r * 0.2), '#FFD45E', 0.85);
+    kat(daire(c.x + c.r * 0.06, c.y - c.r * 0.05, c.r * 0.14), '#F7A84A', 0.55);
+  }
+
+  S.hazir();
+</script>
+</body>
+</html>

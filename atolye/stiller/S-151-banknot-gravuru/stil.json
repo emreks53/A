@@ -1,0 +1,40 @@
+{
+  "kod": "S-151",
+  "no": 151,
+  "ad": "Banknot Gravürü",
+  "ad_en": "Guilloche Engraving",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Açık kâğıtta tona göre şişip incelen çok renkli çelik gravür çizgileri; gökte dalgalı torna çizgileri, güneşte ve çerçevede giyoş rozet ve örgü bantları.",
+  "tanim": "Banknot gravürü, değerli kâğıtların çukur baskı (intaglio) çelik gravür dilidir: biçimler paralel çizgilerle modellenir ve ton, çizginin kalınlaşıp incelmesiyle taşınır. Yanında giyoş tornasının ürettiği iç içe dalga ve rozet desenleri, gökkuşağı geçişli alt baskı ve ince çerçeve bantları yer alır. Banknot, pul, hisse senedi ve sertifikalarda vakar ve güvenlik için kullanılır; bu örnekte her öğe kendi mürekkebindedir: yeşil kubbe, sepya taş, mavi gök, gül rengi çiçekler, altın alemler.",
+  "koken": "Çelik gravür banknot baskısına 19. yüzyıl başında Jacob Perkins'in sertleştirilebilir çelik levhalarıyla girdi; American Bank Note Company, Bradbury Wilkinson ve De La Rue gibi basımevleri ve Czesław Słania gibi pul gravürcüleri üslubu olgunlaştırdı. Giyoş desenleri gül tornası (rose engine) ve geometrik torna ile üretilir; iris (gökkuşağı) alt baskı, mürekkep haznesi bölünerek renklerin yumuşakça birbirine geçtiği klasik güvenlik baskısıdır.",
+  "ayirt_edici": [
+    "Kubbe meridyen çizgileriyle kazınmış: çizgiler gölgede kalınlaşır, ışıkta incelir, tepeye doğru birer atlanarak seyrelir; gölge yarısında enlem yayları yönünde çapraz tarama",
+    "Gökte dalgalı yatay torna çizgileri; bulutlar çizgilerin incelmesiyle açık, alt yüzlerinde yoğunlaşan çizgilerle modellenmiş",
+    "Güneşte on iki dalga eğrisinden örülmüş altın giyoş halkası, içinde gül rengi yaprak rozeti ve ince altın ışınlar",
+    "Çerçevede yeşil ve mavi iç içe dalga bantları, köşelerde küçük gül rengi rozetler",
+    "Şeftaliden kreme, nane yeşiline ve maviye geçen iris alt baskı ve ince gül rengi giyoş ağı",
+    "Çiçek taç yaprakları göbekten ışınsal gül rengi çizgilerle, yapraklar orta damardan açılan eğik çizgilerle; göbekler altın noktalarla"
+  ],
+  "palet": [
+    "#F8F4EA",
+    "#187050",
+    "#3074BC",
+    "#C45276",
+    "#865E44",
+    "#BE8E34",
+    "#487A46",
+    "#F5F0CF"
+  ],
+  "kodla_cizim": "2048 iç çözünürlüklü canvas ve piksel tabanlı bir gravür motoru: her öğe için her pikselde bir faz fonksiyonu (çizgiler tam sayılarda) ve bir ton fonksiyonu hesaplanır; çizgi kalınlığı ton × aralık × katsayıdır, örtü kutu süzgeciyle kenar yumuşatılarak bulunur, faz eğimi sayısal türevle alınır. Kubbede faz boylamdır (asin((x−560)/r(y)) × 104/π), aralık 2,3 px'in altına inince her ikinci çizgi düşer; ton yaklaşık kubbe normalinin Lambert ışığından ve kaburga oluklarından gelir, gölgede enlem yaylarıyla ikinci tarama eklenir. Silindirlerde yatay çizgiler, pencerelerde üçlü çapraz tarama. Her katman öğenin yoluyla 'destination-in' kırpılır ve 'multiply' ile basılır (mürekkepler üst üste biner). Gök fazı dalgalı çizgiler, bulutlar Gauss topaklarından. Giyoş rozetleri ve çerçeve bantları r(θ) = R + A·sin(kθ + φ) kutupsal eğrileri ve genliği değişen sinüslerle ince çizgi olarak çizilir; iris alt baskı çarpma karışımlı doğrusal geçiştir.",
+  "etiketler": [
+    "gravür",
+    "giyoş",
+    "banknot",
+    "çelik gravür",
+    "intaglio",
+    "güvenlik baskısı",
+    "çizgi",
+    "çok renkli"
+  ]
+}

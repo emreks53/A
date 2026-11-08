@@ -1,0 +1,39 @@
+{
+  "kod": "S-153",
+  "no": 153,
+  "ad": "İnce Konturlu Düz Renk",
+  "ad_en": "Fine-Line Flat Color",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "İnce, eşit kalınlıkta koyu yeşil ve kahverengi konturlar; içlerinde konturla kusursuz çakışan düz renkler ve tek bir yumuşak gölge tonu.",
+  "tanim": "İnce konturlu düz renk, editoryal resimlemede sevilen temiz ve zarif bir vektör üslubudur: her biçim ince, eşit kalınlıkta bir kontur çizgisiyle çevrilir ve içi konturla kusursuz çakışan düz bir renkle doldurulur. Hacim tek bir gölge tonuyla, ışığa ters düşen yanda keskin kenarlı bir alanla verilir; degrade, doku ya da parlama kullanılmaz. Taş derzleri, kaburgalar, yaprak damarları ve erkek organlar daha da ince iç çizgilerle işlenir. Dergi ve gazete resimlemelerinde, seyahat afişlerinde, kitap kapaklarında ve kurumsal yayınlarda kullanılır.",
+  "koken": "Kökeni Hergé'nin Tenten albümlerinde olgunlaşan açık çizgi (ligne claire) anlayışına dayanır: eşit kalınlıkta kontur, düz renk, gölgesiz ya da tek tonlu hacim. Adını 1977'de Hollandalı çizer Joost Swarte koydu (klare lijn); Ever Meulen ve Serge Clerc gibi çizerler bu dili afiş ve editoryal resimlemeye taşıdı. Bugün vektör araçlarıyla çalışan editoryal resimleyiciler, çizgi roman abartısı olmadan, konturun inceliğini ve rengin düzlüğünü temiz, okunaklı bir dil olarak kullanır.",
+  "ayirt_edici": [
+    "Her biçimin çevresinde eşit kalınlıkta ince kontur: kubbe ve bitkilerde koyu yeşil, taş ve altında kahverengi, bulutlarda koyu mavi-yeşil",
+    "Konturla kusursuz çakışan düz renk dolgular; degrade, doku ya da parlama yok",
+    "Tek yumuşak gölge tonu: kubbe, kasnak ve minarenin sol yanında, yaprakların ışığa ters yarısında, taç yapraklarının alt-sol kenarında keskin kenarlı alanlar",
+    "Çift ince çizgili kabartma kaburgalar, kaidede kahverengi taş derzleri, minarede çift çizgili korkuluk babaları ve zikzak bant",
+    "Yaprak damarları, taç yapraklarında ince kıvrım çizgileri, çiçek göbeğinde ince saplı noktalı erkek organlar",
+    "Güneşte ince çizgi ışınlar ve halkalar; düz tabanlı, ince konturlu bulutlar"
+  ],
+  "palet": [
+    "#A8D8EA",
+    "#3FA266",
+    "#33905A",
+    "#FBF4E4",
+    "#EED9AE",
+    "#EDC15A",
+    "#1F4634",
+    "#5A3D2A"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, yalnız vektör yollarla. Biçimler SAHNE.yollar() ve geometri yardımcılarından alınır; önce düz renkle doldurulur, sonra biçime kırpılarak tek gölge tonu basılır (kubbede sol kenar ile u = −0,32 meridyeni arasındaki alan, silindirlerde sol şerit, yapraklarda orta damarın ışığa ters yanı, taç yapraklarında ve bulutlarda ışığa doğru kaydırılmış kopyanın dışında kalan hilal), en son 1,45 birimlik koyu yeşil ya da kahverengi kontur çekilir. Bulutlar daire ve kapsül birleşimidir: önce çift kalın kontur, sonra dolgu çizilerek yalnız dış çizgi bırakılır. İç ayrıntılar (çift kaburga çizgileri, taş derzleri, korkuluk babaları, damarlar, kıvrımlar, erkek organlar) 0,6–0,9 birimlik yarı saydam çizgilerle eklenir; rastgelelik, doku ya da süzgeç kullanılmaz.",
+  "etiketler": [
+    "vektör",
+    "kontur",
+    "düz renk",
+    "editoryal",
+    "ince çizgi",
+    "temiz",
+    "resimleme"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "kod": "S-158",
+  "no": 158,
+  "ad": "Desen Dolgulu Vektör",
+  "ad_en": "Pattern-Filled Vector",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Her biçim keskin kenarlı ve kendi ince mikro deseniyle dolu: gökte noktalar, kubbede pul ve çizgi, kaidede kafes, zeminde minik çiçekler; uyumlu açık renkler.",
+  "tanim": "Desen dolgulu vektör illüstrasyon, düz renk yerine her alanı küçük, düzenli bir yüzey deseniyle (nokta, pul, çizgi, kafes, çiçek) dolduran dekoratif grafik üsluptur. Biçimler net konturlarla ayrılır; ışık ve gölge, desenin zemin ve motif tonlarının açılıp koyulaşmasıyla verilir. Ambalaj, kırtasiye, tekstil baskısı, kitap kapakları ve dekoratif editoryal illüstrasyonlarda yaygındır.",
+  "koken": "Kökü William Morris'in ve Viyana Atölyeleri'nin yüzey desenlerine, 1950'lerin dekoratif illüstrasyonuna (Mary Blair, Alexander Girard) ve Japon chiyogami kâğıtlarına uzanır. Bugün vektör programlarının desen örnekleriyle (pattern swatch) üretilen çağdaş dekoratif illüstrasyonun ve yüzey tasarımının dilidir.",
+  "ayirt_edici": [
+    "Gök: ufka ve güneşe doğru büyüyen beyaz nokta ızgarası; güneş ince eşmerkezli halkalar ve noktalı hale",
+    "Kubbe dilimleri sırayla pul deseni ve ince meridyen çizgileri, aralarında altın kaburgalar; dilim tonu ışığa göre açılıp koyulaşır",
+    "Üst kasnakta zikzak, alt kasnakta baklava, kaidede ince çapraz kafes, kornişte nokta dizisi, minare gövdesinde yiv, topuzda pul deseni",
+    "Zemin minik dört yapraklı çiçek deseni; bulutlar dalga çizgili uzun katmanlar",
+    "Yapraklar iki yarıda farklı açılı çizgilerle; taç yaprakları pembe noktalı, diplerinde çizgili iç alan; göbekler noktalı altın",
+    "Her biçimde kendi renginin koyu tonunda ince, keskin kontur"
+  ],
+  "palet": [
+    "#CDE4F1",
+    "#FBF3E3",
+    "#E4D1AE",
+    "#3C9466",
+    "#86C79A",
+    "#E3B955",
+    "#F5EAD3",
+    "#7FB78B"
+  ],
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG ve parametreleriyle önbelleğe alınan <pattern> karoları (userSpaceOnUse): nokta, pul (alt yarım daire yayları), şerit (döndürülmüş), kafes (45°), zikzak, baklava, yiv, dalga ve dört yapraklı çiçek. Her SAHNE biçimi kendi deseniyle doldurulur; silindir gölgesi Lambert ışığından saydamlığı hesaplanan yatay degrade katmanıdır. Kubbede her dilimin desen renkleri dilimin ışığından karıştırılır; çift dilimler pul, tek dilimler dört ince meridyen çizgisi alır. Gökteki noktalar tek tek hesaplanır (yarıçap ufka ve güneşe doğru büyür). Taç yapraklarında taç biçimli kırpılmış iç elips çizgili desenle doldurulur; bütün biçimlere 1 px kontur.",
+  "etiketler": [
+    "vektör",
+    "desen",
+    "dekoratif",
+    "yüzey deseni",
+    "nokta",
+    "pul",
+    "kafes",
+    "açık renk"
+  ]
+}

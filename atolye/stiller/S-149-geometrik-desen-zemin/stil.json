@@ -1,0 +1,40 @@
+{
+  "kod": "S-149",
+  "no": 149,
+  "ad": "Geometrik Desen Zemin",
+  "ad_en": "Islamic Geometric Pattern Ground",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Gök yerine açık mavi üzerinde soluk altın şeritlerle örülmüş 12 kollu yıldız (girih) deseni; önünde temiz, parlak, ince konturlu vektör mimari.",
+  "tanim": "Geometrik desen zeminli vektör illüstrasyon, sahnenin arkasına düz bir gök yerine ölçülü bir İslami yıldız desenini koyar; desen ışıklı, açık tonlarda kalır ve önündeki yapının temiz biçimlerine ritimli bir zemin olur. Yıldızlar ve örgülü şeritler cetvel-pergel kesinliğiyle kurulur, mimari ise yumuşak geçişli dolgular ve ince konturlarla çizilir. Kapak, afiş, ambalaj ve dinî-kültürel yayınların görsellerinde sık kullanılan bir dildir.",
+  "koken": "Girih ve yıldız desenleri Selçuklu, Memlük, Endülüs (Elhamra) ve Timurlu mimarisinde olgunlaştı; 12 kollu yıldız rozetleri bu geleneğin en yaygın motiflerindendir. Desen burada Ernest Hanbury Hankin'in 1925'te tarif ettiği \"temas eden çokgenler\" yöntemiyle kurulur: bir döşemenin her kenar ortasından iki ışın çıkar, ışınlar komşularıyla buluşarak yıldızları oluşturur. Önündeki temiz vektör mimari çağdaş dijital illüstrasyonun dilidir.",
+  "ayirt_edici": [
+    "Gökte 4.6.12 döşemesinden doğan 12 kollu yıldız rozetleri, aralarında 6 ve 4 kollu küçük yıldızlar; her rozetin içinde ince çizgili 24 köşeli ikinci yıldız ve altın göbek",
+    "Şeritler altın kenarlı, fildişi içli çift çizgi; her kesişimde bir şerit üstten geçer, alttan geçenin üzerinde ince gölge (örgü)",
+    "Güneş bir rozetin merkezinde parlayan altın disk; desen çevresinde ışıkla açılır, ufka doğru kreme solar",
+    "Kubbe 16 dilimin her biri kendi ışık tonunda, dilim aralarında ince koyu ve açık kaburga çizgileri; minare ve kasnak ışık yönüne göre hesaplanmış silindir geçişleriyle",
+    "Bütün biçimlerde kendi renginin koyu tonunda ince kontur; pembe dipli beyaz çiçekler, altın göbek ve noktalar, iki tonlu yapraklar",
+    "Fildişi kenar bandında ince altın çift çerçeve çizgisi"
+  ],
+  "palet": [
+    "#D3E6F2",
+    "#CFB06A",
+    "#FAF1D8",
+    "#E9F2F9",
+    "#329157",
+    "#FFFDF7",
+    "#EDBE45",
+    "#8DBD78"
+  ],
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG. Desen: 12 genlerin merkezleri üçgen kafes üzerinde (kenar 50 px, bir merkez güneşte, 880,140); aralarına kareler ve altıgenler kurulur (4.6.12 döşemesi). Her çokgende Hankin yöntemi (temas açısı 64°): kenar ortalarından içe iki ışın, komşu kenarın ışınıyla kesişimi yıldız çokgenini verir. Yıldızlar türüne göre doldurulur, dış çizgileri iki kez çizilir (7 px altın, 3,6 px fildişi, sivri birleşim) ve çift çizgili şerit olur; bütün çokgenler aynı yöne çevrildiği için her kesişimde 'rb' ışını tutarlı biçimde üstten geçer ve kısa üst parçalar gölgesiyle yeniden çizilir (örgü). Güneş çevresinde radyal parıltı, ufka doğru krem geçiş. Mimari SAHNE geometrisinden: kubbe 16 dilim, her dilimin rengi Lambert parlaklığından karıştırılır; kasnak ve minarede aynı ışık modelinden 13 duraklı yatay degrade; 1 px konturlar. Bitkiler SAHNE.bitki konumlarında.",
+  "etiketler": [
+    "vektör",
+    "geometrik desen",
+    "girih",
+    "yıldız",
+    "İslami süsleme",
+    "altın",
+    "örgü",
+    "temiz"
+  ]
+}

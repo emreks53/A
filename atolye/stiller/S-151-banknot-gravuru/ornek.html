@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>S-151 Banknot Gravürü — Atölye örnek görseli</title>
+<style>
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #F8F4EA; }
+  canvas { display: block; width: 1024px; height: 1024px; }
+</style>
+</head>
+<body>
+<canvas id="tuval"></canvas>
+<script src="../../sahne/sahne.js"></script>
+<script>
+  // S-151 Banknot Gravürü (Guilloche Engraving) — açık kâğıt üzerinde çok renkli çelik gravür:
+  // biçimleri modelleyen, kalınlığı tona göre şişip incelen paralel çizgiler, gölgede çapraz tarama,
+  // gökte dalgalı torna çizgileri ve gökkuşağı (iris) alt baskı, güneşte ve çerçevede giyoş rozet ve
+  // örgü bantları. Yeşil, mavi, gül, sepya ve altın mürekkepler.
+  const S = SAHNE;
+  const OL = 2;
+  const ctx = S.tuval(document.getElementById('tuval'), OL);
+  const PX = 1 / OL;
+  const KAGIT = '#F8F4EA';
+  const MUR = {
+    yesil: [24, 112, 80],
+    yesilK: [18, 84, 66],
+    zeytin: [72, 122, 70],
+    mavi: [48, 116, 188],
+    gul: [196, 82, 118],
+    sepya: [134, 94, 68],
+    altin: [190, 142, 52],
+  };
+  const rgb = (m, a) => `rgba(${m[0]},${m[1]},${m[2]},${a ?? 1})`;
+  const kenet = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const yumusak = (a, b, v) => {
+    const t = kenet((v - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
+  const isik = (() => {
+    const v = [0.62, 0.52, 0.58];
+    const n = Math.hypot(...v);
+    return v.map((q) => q / n);
+  })();
+
+  // ---------------------------------------------------------------- gravür motoru
+  /** Kutu süzgeçli çizgi örtüsü: p faz (çizgiler tam sayılarda), g |∇p| (1/px), w çizgi kalınlığı (px). */
+  function hat(p, g, w) {
+    if (w <= 0.01) return 0;
+    const d = Math.abs(p - Math.round(p)) / g;
+    const lo = Math.max(-w / 2, d - PX / 2);
+    const hi = Math.min(w / 2, d + PX / 2);
+    return hi > lo ? (hi - lo) / PX : 0;
+  }
+  /** Faz fonksiyonu ve tonla (0–1) çizgi örtüsü. kat: tam tonda çizgi kalınlığı / aralık. dusur: aralık bu px'ten küçülünce her ikinci çizgi düşer. */
+  function cz(faz, X, Y, t, kat, dusur) {
+    if (t <= 0.004) return 0;
+    const p = faz(X, Y);
+    const e = 0.3;
+    let g = Math.hypot(faz(X + e, Y) - p, faz(X, Y + e) - p) / e;
+    if (g < 1e-6) return 0;
+    let pp = p;
+    if (dusur) {
+      let s = 1 / g;
+      while (s < dusur) {
+        pp *= 0.5;
+        g *= 0.5;
+        s *= 2;
+      }
+    }
+    return hat(pp, g, (Math.min(1, t) * kat) / g);
+  }
+  const birlesik = (...a) => 1 - a.reduce((s, q) => s * (1 - q), 1);
+  function yolBirlestir(liste) {
+    const p = new Path2D();
+    for (const m of liste) p.addPath(typeof m === 'string' ? new Path2D(m) : m);
+    return p;
+  }
+  /** Bir bölgeyi piksel piksel gravür çizgileriyle basar (çarpma karışımı = mürekkep üst üste baskısı). */
+  function bas(x0, y0, x1, y1, alan, murekkep, maske, mod) {
+    x0 = Math.max(0, Math.floor(x0));
+    y0 = Math.max(0, Math.floor(y0));
+    x1 = Math.min(1024, Math.ceil(x1));
+    y1 = Math.min(1024, Math.ceil(y1));
+    const w = (x1 - x0) * OL;
+    const h = (y1 - y0) * OL;
+    if (w <= 0 || h <= 0) return;
+    const c = S.yeniTuval(w, h);
+    const g = c.getContext('2d');
+    const im = g.createImageData(w, h);
+    const d = im.data;
+    for (let j = 0; j < h; j++) {
+      const Y = y0 + (j + 0.5) / OL;
+      for (let i = 0; i < w; i++) {
+        const X = x0 + (i + 0.5) / OL;
+        const a = alan(X, Y);
+        if (a > 0.004) {
+          const k = (j * w + i) * 4;
+          d[k] = murekkep[0];
+          d[k + 1] = murekkep[1];
+          d[k + 2] = murekkep[2];
+          d[k + 3] = a >= 1 ? 255 : a * 255;
+        }
+      }
+    }
+    g.putImageData(im, 0, 0);
+    if (maske) {
+      g.globalCompositeOperation = 'destination-in';
+      g.setTransform(OL, 0, 0, OL, -x0 * OL, -y0 * OL);
+      g.fill(Array.isArray(maske) ? yolBirlestir(maske) : typeof maske === 'string' ? new Path2D(maske) : maske);
+    }
+    ctx.save();
+    ctx.globalCompositeOperation = mod || 'multiply';
+    ctx.drawImage(c, x0, y0, x1 - x0, y1 - y0);
+    ctx.restore();
+  }
+  /** Altta kalan çizgileri silmek için kâğıt rengiyle doldurur. */
+  function kagitla(yol) {
+    ctx.fillStyle = KAGIT;
+    ctx.fill(typeof yol === 'string' ? new Path2D(yol) : yol);
+  }
+  function kontur(yol, m, w, a) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.strokeStyle = rgb(m, a ?? 1);
+    ctx.lineWidth = w;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke(typeof yol === 'string' ? new Path2D(yol) : yol);
+    ctx.restore();
+  }
+  const dik = (x1, y1, x2, y2) => S.yol([[x1, y1], [x2, y1], [x2, y2], [x1, y2]], true);
+  /** Kutupsal eğri (giyoş): r(θ) fonksiyonundan kapalı yol. */
+  function kutupsal(cx, cy, rf, n) {
+    const p = new Path2D();
+    for (let i = 0; i <= n; i++) {
+      const t = (i / n) * Math.PI * 2;
+      const r = rf(t);
+      const x = cx + r * Math.cos(t);
+      const y = cy + r * Math.sin(t);
+      if (i) p.lineTo(x, y);
+      else p.moveTo(x, y);
+    }
+    p.closePath();
+    return p;
+  }
+
+  // ================================================================ 1. KÂĞIT VE İRİS ALT BASKI
+  ctx.fillStyle = KAGIT;
+  ctx.fillRect(0, 0, 1024, 1024);
+  {
+    const g = ctx.createLinearGradient(0, 0, 1024, 0);
+    g.addColorStop(0, '#F7DEDA');
+    g.addColorStop(0.28, '#F8EAD2');
+    g.addColorStop(0.55, '#F5F0CF');
+    g.addColorStop(0.78, '#DFF0E4');
+    g.addColorStop(1, '#D9EAF5');
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = 0.62;
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 1024, 1024);
+    // gökte üstten açık mavi tül: iris alt baskısı göğün üst yarısında maviye döner
+    const gv = ctx.createLinearGradient(0, 0, 0, 560);
+    gv.addColorStop(0, 'rgba(206,226,244,0.75)');
+    gv.addColorStop(1, 'rgba(206,226,244,0)');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = gv;
+    ctx.fillRect(0, 0, 1024, 560);
+    ctx.restore();
+  }
+  // alt baskı: ince giyoş ağı (soluk gül), iki dalga ailesinin kesişimi
+  bas(0, 0, 1024, 800, (X, Y) => {
+    const a = cz((x, y) => (y + 7 * Math.sin(x / 23)) / 7, X, Y, 1, 0.07);
+    const b = cz((x, y) => (y - 7 * Math.sin(x / 23)) / 7, X, Y, 1, 0.07);
+    return birlesik(a, b) * 0.28;
+  }, MUR.gul);
+
+  // ================================================================ 2. GÖK: dalgalı torna çizgileri, bulutlar çizgi incelmesiyle
+  const GX = S.gunes.x;
+  const GY = S.gunes.y;
+  const bulutlar = [
+    [180, 252, 1.0],
+    [470, 150, 0.8],
+    [800, 372, 1.0],
+    [96, 470, 0.7],
+    [955, 486, 0.6],
+  ];
+  const rb = S.rng(3);
+  const topaklar = [];
+  for (const [bx, by, bs] of bulutlar) {
+    for (let i = 0; i < 9; i++) topaklar.push([bx + (rb() - 0.5) * 150 * bs, by + (rb() - 0.5) * 22 * bs - 6 * bs, (26 + rb() * 22) * bs]);
+  }
+  function bulut(X, Y) {
+    let s = 0;
+    for (const [x, y, r] of topaklar) {
+      const dx = (X - x) / (r * 1.25);
+      const dy = (Y - y) / r;
+      const q = dx * dx + dy * dy;
+      if (q < 4) s += Math.exp(-q * 1.6);
+    }
+    return s;
+  }
+  // bulutların içi kâğıt beyazı (alt baskı bulutta açılır)
+  bas(0, 0, 1024, 800, (X, Y) => yumusak(0.4, 0.5, bulut(X, Y)) * 0.8, [248, 244, 234], null, 'source-over');
+  const gokFaz = (x, y) => (y + 3.6 * Math.sin(x / 38 + y / 95) + 1.6 * Math.sin(x / 15.5)) / 4.3;
+  bas(0, 0, 1024, 800, (X, Y) => {
+    const dg = Math.hypot(X - GX, Y - GY);
+    if (dg < 106) return 0;
+    let t = 0.27 - 0.18 * (Y / 800);
+    t *= 0.35 + 0.65 * yumusak(106, 340, dg);
+    const b = bulut(X, Y);
+    if (b > 0.45) {
+      // bulutun içi: ince çizgilerle modelleme, alt yüzler koyu, güneşe bakan üst yüzler kâğıt beyazı
+      const gol = kenet((bulut(X, Y - 12) - bulut(X, Y + 12)) * 1.1 + 0.15, 0, 1);
+      return cz(gokFaz, X, Y, 0.04 + 0.26 * gol, 0.9);
+    }
+    // bulut kenarına yaklaşırken çizgiler kalınlaşır (kenarı belirgin kılar)
+    t += 0.12 * yumusak(0.25, 0.44, b);
+    return cz(gokFaz, X, Y, t, 0.9);
+  }, MUR.mavi);
+  // bulut kenarlarına çok ince kontur noktaları yerine ince eş-yükselti çizgisi
+  bas(0, 0, 1024, 800, (X, Y) => {
+    const b = bulut(X, Y);
+    const d = Math.abs(b - 0.45);
+    return d < 0.018 && Y < 760 ? (1 - d / 0.018) * 0.8 : 0;
+  }, MUR.mavi);
+
+  // ================================================================ 3. GÜNEŞ: giyoş rozet
+  {
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    // dış halka: 12 dalga eğrisinin örgüsü (altın)
+    ctx.lineWidth = 0.6;
+    ctx.strokeStyle = rgb(MUR.altin, 0.85);
+    for (let j = 0; j < 12; j++) ctx.stroke(kutupsal(GX, GY, (t) => 83 + 13 * Math.sin(12 * t + (j * Math.PI * 2) / 12), 1200));
+    // orta halka: yaprak rozeti (gül)
+    ctx.strokeStyle = rgb(MUR.gul, 0.8);
+    ctx.lineWidth = 0.55;
+    for (let j = 0; j < 8; j++) ctx.stroke(kutupsal(GX, GY, (t) => 46 + 17 * Math.abs(Math.sin(8 * t + (j * Math.PI) / 8)), 1400));
+    // sınır halkaları
+    ctx.strokeStyle = rgb(MUR.altin, 0.95);
+    ctx.lineWidth = 0.8;
+    for (const r of [43, 66.5, 99]) ctx.stroke(kutupsal(GX, GY, () => r, 240));
+    ctx.lineWidth = 0.5;
+    for (const r of [45.5, 68.5, 101.5]) ctx.stroke(kutupsal(GX, GY, () => r, 240));
+    // merkez: ince ışınlar ve çiçek düğüm
+    ctx.lineWidth = 0.55;
+    for (let k = 0; k < 72; k++) {
+      const a = (k / 72) * Math.PI * 2;
+      const r1 = k % 2 ? 24 : 16;
+      ctx.beginPath();
+      ctx.moveTo(GX + r1 * Math.cos(a), GY + r1 * Math.sin(a));
+      ctx.lineTo(GX + 41 * Math.cos(a), GY + 41 * Math.sin(a));
+      ctx.stroke();
+    }
+    ctx.strokeStyle = rgb(MUR.gul, 0.75);
+    ctx.lineWidth = 0.5;
+    for (let j = 0; j < 6; j++) ctx.stroke(kutupsal(GX, GY, (t) => 6 + 8 * Math.abs(Math.cos(3 * t + (j * Math.PI) / 18)), 400));
+    ctx.restore();
+  }
+
+  // ================================================================ 4. ZEMİN
+  bas(0, 800, 1024, 1024, (X, Y) => {
+    let t = 0.17 + 0.15 * ((Y - 800) / 224);
+    // yapının dibinde ince temas gölgesi
+    if (Y < 806 && X > 296 && X < 824) t += 0.35 * (1 - (Y - 800) / 6);
+    return cz((x, y) => (y + 1.2 * Math.sin(x / 31)) / 3.4, X, Y, t, 0.85);
+  }, MUR.altin);
+
+  // ================================================================ 5. MİNARE (sepya mürekkep, yatay çizgiler)
+  const mx = S.minare.cx;
+  const silTon = (X, cx, yr, koyu, acik) => {
+    const u = kenet((X - cx) / yr, -0.999, 0.999);
+    const lon = Math.asin(u);
+    const lam = Math.max(0, Math.cos(lon - 0.75));
+    return koyu - (koyu - acik) * lam;
+  };
+  const minare = S.minareParcalari();
+  for (const p of minare) {
+    if (p.tip === 'alem') continue;
+    let yol;
+    let x1;
+    let x2;
+    let y1;
+    let y2;
+    if (p.tip === 'poligon') {
+      yol = S.yol(p.noktalar, true);
+      const xs = p.noktalar.map((q) => q[0]);
+      const ys = p.noktalar.map((q) => q[1]);
+      x1 = Math.min(...xs);
+      x2 = Math.max(...xs);
+      y1 = Math.min(...ys);
+      y2 = Math.max(...ys);
+    } else if (p.tip === 'topuz') {
+      yol = p.yol;
+      x1 = 264;
+      x2 = 336;
+      y1 = 144;
+      y2 = 201;
+    } else {
+      yol = dik(p.x1, p.y1, p.x2, p.y2);
+      x1 = p.x1;
+      x2 = p.x2;
+      y1 = p.y1;
+      y2 = p.y2;
+    }
+    if (p.tip === 'bant') continue;
+    kagitla(yol);
+    const yr = (x2 - x1) / 2;
+    const cikma = p.ad.startsWith('çıkma');
+    const serefe = p.ad.startsWith('şerefe');
+    if (p.tip === 'korkuluk') {
+      bas(x1, y1, x2, y2, (X, Y) => cz((x, y) => y / 2.6, X, Y, 0.55 + 0.25 * (1 - silTon(X, mx, yr, 1, 0)), 0.8), MUR.sepya, yol);
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      const adet = 11;
+      for (let i = 0; i < adet; i++) {
+        const x = x1 + 4 + ((x2 - x1 - 8) * (i + 0.5)) / adet;
+        ctx.fillStyle = KAGIT;
+        ctx.fillRect(x - 2, y1 + 3.5, 4, y2 - y1 - 3.5);
+      }
+      ctx.restore();
+      for (let i = 0; i < adet; i++) {
+        const x = x1 + 4 + ((x2 - x1 - 8) * (i + 0.5)) / adet;
+        kontur(`M${x - 2},${y1 + 4} L${x - 2},${y2} M${x + 2},${y1 + 4} L${x + 2},${y2}`, MUR.sepya, 0.6);
+      }
+      kontur(dik(x1, y1, x2, y1 + 3.5), MUR.sepya, 0.7);
+    } else {
+      const koyu = cikma ? 0.95 : 0.72;
+      const acik = cikma ? 0.45 : 0.06;
+      bas(x1, y1, x2, y2, (X, Y) => {
+        let t = silTon(X, mx, yr, koyu, acik);
+        if (serefe && Y > y2 - 3.5) t = Math.max(t, 0.85);
+        if (!cikma && !serefe && p.tip !== 'topuz' && Y < y1 + 6) t = Math.max(t, 0.6 * (1 - (Y - y1) / 6));
+        const a = cz((x, y) => y / 3.1, X, Y, t, 0.82);
+        const b = t > 0.55 ? cz((x, y) => (x * 0.9 + y * 0.45) / 2.6, X, Y, (t - 0.55) * 1.6, 0.6) : 0;
+        return birlesik(a, b);
+      }, MUR.sepya, yol);
+    }
+    kontur(yol, MUR.sepya, 0.85);
+  }
+  // zikzak bant: kazınmış çift çizgiler
+  for (const z of S.zikzakCizgileri()) {
+    kontur(S.yol(z), MUR.sepya, 2.2);
+    kontur(S.yol(z.map(([x, y]) => [x, y + 3.2])), MUR.sepya, 0.7);
+  }
+  for (const w of S.minarePencereleri) {
+    const d = S.kemerYolu(w.x, w.y, w.w, w.h);
+    bas(w.x - w.w, w.y, w.x + w.w, w.y + w.h, (X, Y) => birlesik(cz((x, y) => (x + y) / 1.9, X, Y, 1, 0.55), cz((x, y) => (x - y) / 1.9, X, Y, 1, 0.5), cz((x, y) => y / 2.2, X, Y, 1, 0.4)), MUR.sepya, d);
+    kontur(d, MUR.sepya, 0.8);
+  }
+
+  // ================================================================ 6. KAİDE
+  const K = S.kaide;
+  {
+    const yol = dik(K.x1, K.y1, K.x2, K.y2);
+    kagitla(yol);
+    bas(K.x1, K.y1, K.x2, K.y2, (X, Y) => {
+      let t = 0.14 + 0.22 * (1 - (X - K.x1) / (K.x2 - K.x1)) ** 2;
+      if (Y < K.y1 + 12) t = Math.max(t, 0.7 * (1 - (Y - K.y1) / 12));
+      if (X < K.x1 + 14) t = Math.max(t, 0.5);
+      if (Y > K.y2 - 10) t += 0.12;
+      return cz((x, y) => y / 3.2, X, Y, t, 0.82);
+    }, MUR.sepya, yol);
+    kontur(`M${K.x1},${K.y2 - 10} L${K.x2},${K.y2 - 10}`, MUR.sepya, 0.7);
+    kontur(yol, MUR.sepya, 0.9);
+    const KR = K.kornis;
+    const ky = dik(KR.x1, KR.y1, KR.x2, KR.y2);
+    kagitla(ky);
+    bas(KR.x1, KR.y1, KR.x2, KR.y2, (X, Y) => cz((x, y) => y / 2.4, X, Y, Y > KR.y2 - 4 ? 0.8 : 0.12 + 0.25 * (X < KR.x1 + 14 ? 1 : 0), 0.8), MUR.sepya, ky);
+    kontur(ky, MUR.sepya, 0.9);
+    for (const w of K.pencereler) {
+      const dis = S.kemerYolu(w.x, w.y - 5, w.w + 12, w.h + 7);
+      bas(w.x - w.w, w.y - 6, w.x + w.w, w.y + w.h + 2, (X, Y) => cz((x, y) => (x - y) / 2.3, X, Y, 0.35, 0.7), MUR.sepya, dis);
+      kontur(dis, MUR.sepya, 0.8);
+      const d = S.kemerYolu(w.x, w.y, w.w, w.h);
+      kagitla(d);
+      bas(w.x - w.w, w.y, w.x + w.w, w.y + w.h, (X, Y) => birlesik(cz((x, y) => (x + y) / 1.9, X, Y, 1, 0.55), cz((x, y) => (x - y) / 1.9, X, Y, 1, 0.5), cz((x, y) => y / 2.2, X, Y, 1, 0.45)), MUR.sepya, d);
+      kontur(d, MUR.sepya, 0.9);
+    }
+  }
+
+  // ================================================================ 7. KASNAK (koyu yeşil mürekkep)
+  for (let k = 1; k >= 0; k--) {
+    const q = S.kasnak[k];
+    const yol = dik(q.x1, q.y1, q.x2, q.y2);
+    kagitla(yol);
+    const cx = (q.x1 + q.x2) / 2;
+    const yr = (q.x2 - q.x1) / 2;
+    bas(q.x1, q.y1, q.x2, q.y2, (X, Y) => {
+      let t = silTon(X, cx, yr, 0.92, 0.3);
+      if (Y > q.y2 - 6) t = Math.max(t, 0.85);
+      if (Y < q.y1 + 3) t *= 0.4;
+      const a = cz((x, y) => y / 3.0, X, Y, t, 0.85);
+      const b = t > 0.62 ? cz((x, y) => (x * 0.35 - y) / 2.7, X, Y, (t - 0.62) * 1.8, 0.6) : 0;
+      return birlesik(a, b);
+    }, MUR.yesilK, yol);
+    for (const w of S.kasnakPencereleri(k)) {
+      const d = S.kemerYolu(w.x, w.y, w.w, w.h);
+      kagitla(d);
+      bas(w.x - w.w, w.y, w.x + w.w, w.y + w.h, (X, Y) => birlesik(cz((x, y) => (x + y) / 1.7, X, Y, 1, 0.6), cz((x, y) => (x - y) / 1.7, X, Y, 1, 0.55), cz((x, y) => x / 1.8, X, Y, 1, 0.4)), MUR.yesilK, d);
+      kontur(d, MUR.yesilK, 0.7);
+    }
+    kontur(yol, MUR.yesilK, 0.9);
+  }
+
+  // ================================================================ 8. KUBBE (yeşil: meridyen çizgileri, gölgede enlem taraması)
+  const rTab = new Float32Array(1100 * 4);
+  {
+    const pr = S.kubbeProfili(400);
+    for (let i = 0; i < rTab.length; i++) {
+      const y = i / 4;
+      if (y < 300 || y > 555) {
+        rTab[i] = 0;
+        continue;
+      }
+      let r = 0;
+      for (let k = 0; k < pr.length - 1; k++) {
+        if (y <= pr[k].y && y >= pr[k + 1].y) {
+          const t = (pr[k].y - y) / (pr[k].y - pr[k + 1].y || 1);
+          r = pr[k].r + (pr[k + 1].r - pr[k].r) * t;
+          break;
+        }
+      }
+      rTab[i] = r;
+    }
+  }
+  const rAt = (y) => rTab[kenet(Math.round(y * 4), 0, rTab.length - 1)];
+  const NM = 104; // yarım kürede meridyen çizgisi
+  const kubbeFaz = (x, y) => (Math.asin(kenet((x - 560) / Math.max(rAt(y), 0.5), -1, 1)) * NM) / Math.PI;
+  const enlemFaz = (x, y) => {
+    const u = kenet((x - 560) / Math.max(rAt(y), 0.5), -1, 1);
+    return (y - 9 * Math.sqrt(1 - u * u)) / 3.0;
+  };
+  function kubbeTon(X, Y) {
+    const r = rAt(Y);
+    const u = kenet((X - 560) / Math.max(r, 0.5), -0.999, 0.999);
+    const lon = Math.asin(u);
+    const phi = kenet((555 - Y) / 255, 0, 1) * 1.42;
+    const n = [Math.cos(phi) * Math.sin(lon), Math.sin(phi), Math.cos(phi) * Math.cos(lon)];
+    const lam = Math.max(0, n[0] * isik[0] + n[1] * isik[1] + n[2] * isik[2]);
+    const gp = lon / (Math.PI / 16) + 8;
+    const fr = gp - Math.floor(gp);
+    const oluk = Math.abs(fr - 0.5) * 2; // kaburgaya yakın 1
+    return kenet(0.9 - 0.8 * lam + 0.1 * oluk * oluk, 0.04, 1);
+  }
+  kagitla(S.kubbeYolu);
+  bas(358, 298, 762, 556, (X, Y) => {
+    const t = kubbeTon(X, Y);
+    const a = cz(kubbeFaz, X, Y, t, 0.82, 2.3);
+    const b = t > 0.5 ? cz(enlemFaz, X, Y, (t - 0.5) * 1.5, 0.62) : 0;
+    return birlesik(a, b);
+  }, MUR.yesil, S.kubbeYolu);
+  {
+    const prof = S.kubbeProfili(90);
+    ctx.save();
+    ctx.clip(new Path2D(S.kubbeYolu));
+    for (let k = 1; k < 16; k++) {
+      const l = -Math.PI / 2 + (Math.PI * k) / 16;
+      const u = Math.sin(l);
+      const pts = prof.map((q) => [560 + u * q.r, q.y]).filter((q) => q[1] > 304);
+      const d = S.yol(pts);
+      kontur(d, MUR.yesilK, 1.15);
+      ctx.save();
+      ctx.translate(1.5, 0);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = 'rgba(248,244,234,0.85)';
+      ctx.lineWidth = 0.9;
+      ctx.stroke(new Path2D(d));
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  kontur(S.kubbeYolu, MUR.yesilK, 1.1);
+
+  // ================================================================ 9. ALEMLER (altın mürekkep)
+  function alem(a) {
+    const s = a.yaka.rx / 20;
+    const parcalar = [
+      dik(a.cubuk.x1, a.cubuk.y1, a.cubuk.x2, a.cubuk.y2),
+      ...a.kureler.map((k) => S.daireYolu(k.cx, k.cy, k.r)),
+      S.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx, ry: a.yaka.ry, aci: 0 }),
+      S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R),
+    ];
+    for (const d of parcalar) kagitla(d);
+    const x0 = a.yaka.cx - 22 * s;
+    const x1 = a.yaka.cx + 22 * s;
+    const y0 = a.hilal.cy - a.hilal.R - 2;
+    const y1 = a.yaka.cy + a.yaka.ry + 2;
+    bas(x0, y0, x1, y1, (X, Y) => {
+      const u = (X - a.yaka.cx) / (12 * s);
+      const t = kenet(0.75 - 0.6 * Math.max(0, Math.cos(Math.atan(u) * 1.4 - 0.7)) + 0.15, 0.25, 1);
+      return cz((x, y) => y / (1.7 * Math.max(0.75, s)), X, Y, t, 0.9);
+    }, MUR.altin, parcalar);
+    for (const d of parcalar) kontur(d, MUR.altin, 0.8);
+  }
+  alem(minare.find((p) => p.tip === 'alem').alem);
+  alem(S.alemParcalari(560, 300, 1));
+
+  // ================================================================ 10. BİTKİLER
+  const B = S.bitki;
+  const Lx = 0.7071;
+  const Ly = -0.7071;
+  // saplar
+  for (const t of B.tomurcuklar.slice(8)) {
+    const x0 = t.x - Math.cos(t.aci) * t.r * 0.8;
+    const y0 = t.y - Math.sin(t.aci) * t.r * 0.8;
+    const bx = t.x + (t.x < 512 ? -16 : 16);
+    kontur(`M${x0},${y0} Q${t.x},${t.y + 80} ${bx},${t.y + 170}`, MUR.zeytin, 2.4);
+  }
+  for (const s of B.saplar) {
+    kontur(S.yol(s), MUR.zeytin, 3.4);
+    ctx.save();
+    ctx.translate(0.9, -0.6);
+    ctx.strokeStyle = KAGIT;
+    ctx.lineWidth = 1;
+    ctx.stroke(new Path2D(S.yol(s)));
+    ctx.restore();
+  }
+
+  function yaprak(y) {
+    const Lu = y.uzunluk;
+    const W = Lu * y.genislik;
+    const ca = Math.cos(y.aci);
+    const sa = Math.sin(y.aci);
+    const d = S.yaprakYolu(y);
+    kagitla(d);
+    const pozAcik = -sa * Lx + ca * Ly > 0; // v>0 yanı ışıkta mı
+    const R = Lu + 2;
+    const sp = Lu > 60 ? 2.9 : 2.5;
+    bas(y.x - R, y.y - R, y.x + R, y.y + R, (X, Y) => {
+      const dx = X - y.x;
+      const dy = Y - y.y;
+      const u = dx * ca + dy * sa;
+      const v = -dx * sa + dy * ca;
+      const av = Math.abs(v);
+      if (av < 0.7) return 0;
+      const golge = (v > 0) !== pozAcik;
+      let t = (golge ? 0.66 : 0.3) + 0.25 * (av / (W * 0.5)) ** 2 + 0.12 * (u / Lu);
+      const a = cz((x, yy) => {
+        const uu = (x - y.x) * ca + (yy - y.y) * sa;
+        const vv = Math.abs(-(x - y.x) * sa + (yy - y.y) * ca);
+        return (vv - 0.5 * uu) / sp;
+      }, X, Y, t, 0.85);
+      return a;
+    }, MUR.zeytin, d);
+    kontur(d, MUR.zeytin, 0.75);
+    const [a, b] = S.yaprakDamari(y);
+    kontur(`M${a[0]},${a[1]} L${b[0]},${b[1]}`, MUR.zeytin, 0.55);
+  }
+  B.yapraklar.forEach((y) => yaprak(y));
+
+  for (const t of B.tomurcuklar) {
+    const d = S.tomurcukYolu(t);
+    kagitla(d);
+    const ca = Math.cos(t.aci);
+    const sa = Math.sin(t.aci);
+    bas(t.x - t.r * 2, t.y - t.r * 2, t.x + t.r * 2, t.y + t.r * 2, (X, Y) => {
+      const dx = X - t.x;
+      const dy = Y - t.y;
+      const v = -dx * sa + dy * ca;
+      const tt = 0.3 + 0.45 * yumusak(-t.r, t.r, -v * Math.sign(ca + 0.001));
+      return cz((x, yy) => (-(x - t.x) * sa + (yy - t.y) * ca) / 1.8, X, Y, tt, 0.8);
+    }, MUR.gul, d);
+    kontur(d, MUR.gul, 0.7);
+    const p = (u, v) => [t.x + u * ca - v * sa, t.y + u * sa + v * ca];
+    const q = (pt) => `${pt[0]},${pt[1]}`;
+    const kaliks = `M${q(p(-t.r * 1.0, 0))} Q${q(p(-t.r * 0.2, -t.r * 1.1))} ${q(p(t.r * 0.25, -t.r * 0.55))} Q${q(p(-t.r * 0.1, 0))} ${q(p(t.r * 0.25, t.r * 0.55))} Q${q(p(-t.r * 0.2, t.r * 1.1))} ${q(p(-t.r * 1.0, 0))} Z`;
+    kagitla(kaliks);
+    bas(t.x - t.r * 2, t.y - t.r * 2, t.x + t.r * 2, t.y + t.r * 2, (X, Y) => cz((x, yy) => (x + yy) / 1.6, X, Y, 0.7, 0.8), MUR.zeytin, kaliks);
+    kontur(kaliks, MUR.zeytin, 0.6);
+  }
+
+  function cicek(c) {
+    const tac = S.tacYapraklari(c).map((e) => ({ ...e, cx: c.x + Math.cos(e.aci) * c.r * 0.55, cy: c.y + Math.sin(e.aci) * c.r * 0.55, rx: c.r * 0.52, ry: c.r * 0.43 }));
+    tac.sort((m, n) => Math.cos(m.aci) * Lx + Math.sin(m.aci) * Ly - (Math.cos(n.aci) * Lx + Math.sin(n.aci) * Ly));
+    const n = Math.max(24, Math.round((2 * Math.PI * c.r * 0.55) / 3.1));
+    for (const e of tac) {
+      const d = S.elipsYolu(e);
+      kagitla(d);
+      const ux = Math.cos(e.aci);
+      const uy = Math.sin(e.aci);
+      const yuz = ux * Lx + uy * Ly; // ışığa bakan taç yaprağı açık
+      bas(e.cx - e.rx - 2, e.cy - e.rx - 2, e.cx + e.rx + 2, e.cy + e.rx + 2, (X, Y) => {
+        const dx = X - c.x;
+        const dy = Y - c.y;
+        const rr = Math.hypot(dx, dy);
+        if (rr < 1) return 0;
+        const boy = (dx * ux + dy * uy) / (c.r * 1.07);
+        const en = Math.abs(-dx * uy + dy * ux) / e.ry;
+        let t = 0.06 + 0.5 * Math.max(0, 1 - boy * 1.25) ** 2 + 0.3 * Math.max(0, en - 0.55) ** 1.5 + 0.12 * (0.5 - 0.5 * yuz);
+        // komşu taç yaprağın altında kalan kenar
+        const p = (Math.atan2(dy, dx) * n) / (2 * Math.PI);
+        const g = n / (2 * Math.PI * rr);
+        return hat(p, g, (Math.min(1, t) * 0.8) / g);
+      }, MUR.gul, d);
+      kontur(d, MUR.gul, 0.8);
+    }
+    // göbek: altın noktalar (ayçiçeği dizilimi)
+    const ro = c.r * 0.21;
+    const go = S.daireYolu(c.x, c.y, ro);
+    kagitla(go);
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    const adet = Math.round(ro * ro * 0.55);
+    for (let i = 0; i < adet; i++) {
+      const rr = ro * Math.sqrt((i + 0.5) / adet) * 0.95;
+      const a = i * 2.39996;
+      const x = c.x + rr * Math.cos(a);
+      const y = c.y + rr * Math.sin(a);
+      const golge = (x - c.x) * Lx + (y - c.y) * Ly < 0;
+      ctx.fillStyle = rgb(MUR.altin, golge ? 1 : 0.75);
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(0.55, ro * 0.075), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    kontur(go, MUR.altin, 0.8);
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = rgb(MUR.altin, 1);
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 + c.aci;
+      ctx.beginPath();
+      ctx.arc(c.x + Math.cos(a) * c.r * 0.3, c.y + Math.sin(a) * c.r * 0.3, Math.max(0.9, c.r * 0.03), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  for (const c of B.cicekler) cicek(c);
+
+  // ================================================================ 11. ÇERÇEVE: giyoş örgü bantları ve köşe rozetleri
+  {
+    const d0 = 8;
+    const d1 = 32;
+    const band = new Path2D(dik(d0, d0, 1024 - d0, 1024 - d0) + ' ' + dik(d1, d1, 1024 - d1, 1024 - d1));
+    ctx.save();
+    ctx.fillStyle = KAGIT;
+    ctx.fill(band, 'evenodd');
+    ctx.fillStyle = KAGIT;
+    ctx.fillRect(0, 0, 1024, d0);
+    ctx.fillRect(0, 1024 - d0, 1024, d0);
+    ctx.fillRect(0, 0, d0, 1024);
+    ctx.fillRect(1024 - d0, 0, d0, 1024);
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = '#E3F0E6';
+    ctx.fill(band, 'evenodd');
+    ctx.restore();
+    const orta = (d0 + d1) / 2;
+    const A = (d1 - d0) / 2 - 2.5;
+    const kenarlar = [
+      (t) => [d1 + t * (1024 - 2 * d1), orta, 1],
+      (t) => [d1 + t * (1024 - 2 * d1), 1024 - orta, 1],
+      (t) => [orta, d1 + t * (1024 - 2 * d1), 0],
+      (t) => [1024 - orta, d1 + t * (1024 - 2 * d1), 0],
+    ];
+    const L = 1024 - 2 * d1;
+    const dalga = Math.round(L / 30);
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.lineWidth = 0.55;
+    for (const kf of kenarlar) {
+      for (let j = 0; j < 8; j++) {
+        for (const yon of [1, -1]) {
+          ctx.strokeStyle = yon > 0 ? rgb(MUR.yesil, 0.95) : rgb(MUR.mavi, 0.9);
+          ctx.beginPath();
+          for (let i = 0; i <= 1600; i++) {
+            const t = i / 1600;
+            const [x, y, yatay] = kf(t);
+            const o = yon * A * Math.sin(2 * Math.PI * dalga * t + (j * Math.PI * 2) / 8) * (0.55 + 0.45 * Math.cos(2 * Math.PI * dalga * 2 * t + j));
+            const X = yatay ? x : x + o;
+            const Y = yatay ? y + o : y;
+            if (i) ctx.lineTo(X, Y);
+            else ctx.moveTo(X, Y);
+          }
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.strokeStyle = rgb(MUR.yesil, 1);
+    ctx.lineWidth = 1.1;
+    ctx.strokeRect(d0 + 0.5, d0 + 0.5, 1024 - 2 * d0 - 1, 1024 - 2 * d0 - 1);
+    ctx.strokeRect(d1 - 0.5, d1 - 0.5, 1024 - 2 * d1 + 1, 1024 - 2 * d1 + 1);
+    ctx.lineWidth = 0.6;
+    ctx.strokeRect(d1 + 3, d1 + 3, 1024 - 2 * d1 - 6, 1024 - 2 * d1 - 6);
+    ctx.strokeRect(3.5, 3.5, 1017, 1017);
+    ctx.restore();
+    // köşe rozetleri
+    for (const [cx, cy] of [[orta, orta], [1024 - orta, orta], [orta, 1024 - orta], [1024 - orta, 1024 - orta]]) {
+      const kare = new Path2D(dik(cx - 12, cy - 12, cx + 12, cy + 12));
+      ctx.fillStyle = KAGIT;
+      ctx.fill(kare);
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = '#FAEEF0';
+      ctx.fill(kare);
+      ctx.lineWidth = 0.45;
+      ctx.strokeStyle = rgb(MUR.gul, 0.8);
+      for (let j = 0; j < 6; j++) ctx.stroke(kutupsal(cx, cy, (t) => 5 + 5 * Math.abs(Math.sin(4 * t + (j * Math.PI) / 12)), 300));
+      ctx.strokeStyle = rgb(MUR.altin, 1);
+      ctx.lineWidth = 0.8;
+      ctx.stroke(kutupsal(cx, cy, () => 11.5, 80));
+      ctx.stroke(kutupsal(cx, cy, () => 2.2, 30));
+      ctx.lineWidth = 0.9;
+      ctx.strokeStyle = rgb(MUR.yesil, 1);
+      ctx.stroke(kare);
+      ctx.restore();
+    }
+  }
+
+  SAHNE.hazir();
+</script>
+</body>
+</html>

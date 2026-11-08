@@ -1,0 +1,39 @@
+{
+  "kod": "S-152",
+  "no": 152,
+  "ad": "Vintage Seyahat Afişi",
+  "ad_en": "Vintage Travel Poster",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Yazısız 1930-50'ler taşbaskı seyahat afişi: düz renk düzlemleri, gökte pürüzsüz püskürtme geçiş, güneşli sıcak palet, mor-mavi gölgeler ve ince baskı greni.",
+  "tanim": "Vintage seyahat afişi, demiryolu, vapur ve turizm kurumlarının 20. yüzyıl ortasında taşbaskıyla bastırdığı afişlerin dilidir. Biçimler birkaç düz renkle sadeleştirilir, gök püskürtme geçişle verilir; güneşin sıcak ışığı ile serin mor gölgeler karşıtlık kurar, katmanlı uzak planlar ve çerçeveleyen bir ön plan öğesi derinlik ve güçlü bir kompozisyon sağlar. Bu örnekte yazı alanı yoktur; resim krem kâğıt payıyla çerçevelenmiş bir afiş görselidir.",
+  "koken": "Roger Broders'ın PLM demiryolu afişleri, Cassandre, Kenneth Shoesmith, Frank Newbould ve Tom Purvis'in işleri ile 1930'ların Orta Doğu seyahat afişleri türün örnekleridir. Taşbaskıda her renk ayrı bir taştan basılır; geçişler püskürtme ve sıçratma (spatter) ile, ton ise taşın greniyle elde edilir; 1950'lerde aynı dil ofset litografiye taşındı.",
+  "ayirt_edici": [
+    "Üstte solgun turkuazdan ufukta kayısı rengine pürüzsüz gök geçişi; gökte sıcak ve serin püskürtme taneleri",
+    "Güneş düz, eşmerkezli açık halkalarla; gökte uzun, katmanlı şerit bulutlar, alt yüzlerinde leylak gölge",
+    "Minare, kasnak ve kubbe dilimleri 3–4 düz ışık bandında: sağda sıcak ışık, solda mor-mavi gölge ve ince yansıma bandı; kubbenin sağ kenarında ışık çizgisi",
+    "Arkada leylak tonlu iki kat uzak dağ ve hurmalar; solda afişi çerçeveleyen, tacı kenardan taşan uzun hurma",
+    "Krem afiş kâğıdında solmuş sıcak renkler, ince taşbaskı greni; ince yeşil çizgili krem afiş payı"
+  ],
+  "palet": [
+    "#58AAD4",
+    "#FBE0B6",
+    "#2F8C5A",
+    "#A6D98E",
+    "#D3BCCB",
+    "#CDB5CB",
+    "#5B9A88",
+    "#EDB848"
+  ],
+  "kodla_cizim": "2048 iç çözünürlüklü canvas. Gök doğrusal ve radyal geçişlerle, üstüne ufka doğru sıcak, tepeye doğru serin 26 000 tohumlu püskürtme noktası. Bulutlar üç katmanlı mercek biçimli Bezier yolları; her katman gölge renginde çizilip sağ üste kaydırılmış açık kopyasıyla kırpılır. Dağlar Gauss toplamlarından siluet; hurmalar incelen kavisli gövde ve halka çizgileri, sarkan eğri boyunca genişliği değişen hafif tırtıklı yaprak çokgenleri. Düz ışık bantları: her silindirde Lambert parlaklığı dört düzeye nicelenir ve dikey şeritlerle doldurulur; kubbe dilimleri aynı nicelemeyle renklenir, sağ kenara ışık, sol kenara serin yansıma çizgisi. Bütün görsel sıcak kâğıt rengiyle çarpılır; taşbaskı greni 2 × 2 hücreli kaba ve ince piksel gürültüsüdür (koyu tonlarda daha belirgin). Krem pay ve ince yeşil çizgi en sonda.",
+  "etiketler": [
+    "afiş",
+    "seyahat afişi",
+    "taşbaskı",
+    "vintage",
+    "düz renk",
+    "püskürtme",
+    "grafik tasarım",
+    "sıcak palet"
+  ]
+}

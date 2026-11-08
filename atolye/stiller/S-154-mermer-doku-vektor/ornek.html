@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>S-154 Mermer Doku Vektör — Atölye örnek görseli</title>
+<style>
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #f4f1ec; }
+  canvas, svg { display: block; width: 1024px; height: 1024px; }
+</style>
+</head>
+<body>
+<canvas id="tuval"></canvas>
+<script src="../../sahne/sahne.js"></script>
+<script>
+  // S-154 Mermer Doku Vektör — düz, temiz vektör biçimler; her biçimin içi gerçekçi bir mermer dokusuyla
+  // doldurulur (taş için beyaz Carrara, kubbe için yeşil mermer, taç yaprakları için pembe mermer, gök için
+  // açık mavi, zemin için krem mermer). Biçimler ince altın konturla çevrilir; bazı damarlar da altındır.
+  const OL = 2, W2 = 1024 * OL;
+  const ctx = SAHNE.tuval(document.getElementById('tuval'), OL);
+  const Y = SAHNE.yollar();
+  const B = SAHNE.bitki;
+  const P = (d) => new Path2D(d);
+  const dikd = (x1, y1, x2, y2) => `M${x1},${y1} L${x2},${y1} L${x2},${y2} L${x1},${y2} Z`;
+
+  // ------------------------------------------------------------ değer gürültüsü (tohumlu)
+  const PERM = new Uint8Array(512);
+  const GRAD = new Float32Array(256);
+  (function () {
+    const r = SAHNE.rng(154);
+    const p = [...Array(256).keys()];
+    for (let i = 255; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; }
+    for (let i = 0; i < 512; i++) PERM[i] = p[i & 255];
+    for (let i = 0; i < 256; i++) GRAD[i] = r();
+  })();
+  function gurultu(x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const X = xi & 255, Yy = yi & 255;
+    const a = GRAD[PERM[PERM[X] + Yy]], b = GRAD[PERM[PERM[X + 1] + Yy]];
+    const c = GRAD[PERM[PERM[X] + Yy + 1]], d = GRAD[PERM[PERM[X + 1] + Yy + 1]];
+    const u = xf * xf * xf * (xf * (xf * 6 - 15) + 10), v = yf * yf * yf * (yf * (yf * 6 - 15) + 10);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  }
+  function fbm(x, y, okt) {
+    let s = 0, amp = 0.5, top = 0;
+    for (let i = 0; i < okt; i++) { s += gurultu(x, y) * amp; top += amp; x = x * 2.03 + 17.1; y = y * 2.03 + 9.7; amp *= 0.5; }
+    return s / top;
+  }
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+
+  // ------------------------------------------------------------ mermer tarifleri
+  // a: zemin açık, b: bulutlu ton, d: ana damar, e: ince damar; olcek: desen büyüklüğü (px); aci: damar yönü
+  const MERMER = {
+    carrara: { a: '#FBFAF7', b: '#E4E3E1', d: '#97A0AB', e: '#BDC3CA', ag: 0.55, olcek: 240, aci: 0.75, burgu: 3.0, sk: 2.6, dk: 0.022, ek: 0.010, altin: 0.010, bulut: 0.7 },
+    carrara2: { a: '#FAF8F4', b: '#E5E2DC', d: '#9CA3AC', e: '#C2C6CB', ag: 0.5, olcek: 280, aci: -0.55, burgu: 3.2, sk: 2.4, dk: 0.020, ek: 0.009, altin: 0.009, bulut: 0.7 },
+    yesil: { a: '#40B072', b: '#228650', d: '#E6F7EB', e: '#A3DCB7', ag: 0.6, olcek: 250, aci: 0.95, burgu: 3.4, sk: 1.7, dk: 0.020, ek: 0.010, altin: 0.012, bulut: 0.85 },
+    yesilKoyu: { a: '#2F9862', b: '#1C7343', d: '#D9F0E0', e: '#8FCDA6', ag: 0.55, olcek: 210, aci: 0.3, burgu: 3.0, sk: 2.0, dk: 0.020, ek: 0.010, altin: 0.010, bulut: 0.8 },
+    pencere: { a: '#1F6A45', b: '#155135', d: '#BFE2CC', e: '#66A884', ag: 0.5, olcek: 90, aci: 1.0, burgu: 2.4, sk: 1.8, dk: 0.03, ek: 0.012, altin: 0.0, bulut: 0.6 },
+    yaprak: { a: '#7FC595', b: '#56A773', d: '#F3FBF4', e: '#BCE4C7', ag: 0.5, olcek: 90, aci: 0.9, burgu: 2.6, sk: 1.8, dk: 0.03, ek: 0.012, altin: 0.0, bulut: 0.7 },
+    yaprakK: { a: '#62B281', b: '#3E915E', d: '#E8F6EC', e: '#A7D8B6', ag: 0.5, olcek: 100, aci: -0.6, burgu: 2.6, sk: 1.8, dk: 0.028, ek: 0.012, altin: 0.0, bulut: 0.7 },
+    pembe: { a: '#FBEAEE', b: '#F0C6D0', d: '#DE9DAD', e: '#FFFFFF', ag: 0.45, olcek: 80, aci: 0.6, burgu: 2.8, sk: 1.8, dk: 0.03, ek: 0.016, altin: 0.0, bulut: 0.8 },
+    gok: { a: '#E6F2F8', b: '#CFE3EF', d: '#F3F9FC', e: '#EEF6FA', ag: 0.25, cek: 0.3, olcek: 420, aci: 0.4, burgu: 3.0, sk: 1.8, dk: 0.016, ek: 0.007, altin: 0.0, bulut: 0.75 },
+    bulut: { a: '#FFFFFF', b: '#EDF0F2', d: '#B8C3CC', e: '#D6DCE1', ag: 0.4, olcek: 140, aci: 0.2, burgu: 2.6, sk: 1.8, dk: 0.02, ek: 0.009, altin: 0.0, bulut: 0.5 },
+    krem: { a: '#F3E7D0', b: '#E2CFAC', d: '#FFFCF4', e: '#E9DABE', ag: 0.3, olcek: 260, aci: 0.15, burgu: 3.0, sk: 2.0, dk: 0.024, ek: 0.009, altin: 0.0, bulut: 0.7 },
+  };
+  for (const k in MERMER) for (const c of ['a', 'b', 'd', 'e']) MERMER[k][c] = hex(MERMER[k][c]);
+  const ALTIN_A = hex('#F6DE8C'), ALTIN_B = hex('#C99A36'), ALTIN_C = hex('#8C6420');
+
+  /**
+   * Mermer rengi (x, y 1024 biriminde). ox/oy: bloğun kesim yeri (her parça başka yerden kesilmiş gibi).
+   * Ana damarlar: burgulu bir alanın akış çizgileri (sin(x + türbülans) tarifi) — uzun, akan, dallanan damarlar;
+   * her damarın çevresinde yumuşak bir hale; ince damar ağı; seyrek ve çok ince altın damarlar.
+   */
+  function mermerRenk(m, x, y, ox, oy, out) {
+    const ca = Math.cos(m.aci), sa = Math.sin(m.aci);
+    const u = (x * ca + y * sa) / m.olcek + ox, v = (-x * sa + y * ca) / m.olcek + oy;
+    // bulutlu zemin
+    const bl = fbm(u * 1.4 + 3.1, v * 1.4 + 7.7, 4);
+    const t0 = ss(0.3, 0.75, bl) * m.bulut;
+    let r = m.a[0] + (m.b[0] - m.a[0]) * t0, g = m.a[1] + (m.b[1] - m.a[1]) * t0, b = m.a[2] + (m.b[2] - m.a[2]) * t0;
+    // burgu alanı
+    const wx = fbm(u * 0.8 + 11.3, v * 0.8 + 2.9, 4) - 0.5;
+    const wy = fbm(u * 0.8 + 4.7, v * 0.8 + 13.1, 4) - 0.5;
+    // ana damarlar: akış çizgileri
+    const ince = 0.22 * (fbm(u * 3 + 5, v * 3 + 9, 3) - 0.5);
+    const tt = (u + m.burgu * wx + ince) * m.sk;
+    const uz = Math.abs(tt - Math.round(tt));
+    const kapi = ss(0.34, 0.6, fbm(u * 0.9 + v * 0.4 + 41, v * 1.3 + 19, 3));
+    const gen = m.dk * (0.4 + 1.2 * fbm(u * 2.4 + 21, v * 2.4 + 5, 2));
+    // ikinci aile: başka açıda, daha seyrek — dallanma ve kesişme
+    const tt2 = (v * 0.8 + u * 0.5 + m.burgu * wy + ince) * m.sk * 0.6 + 0.31;
+    const uz2 = Math.abs(tt2 - Math.round(tt2));
+    const kapi2 = ss(0.5, 0.66, fbm(u * 1.1 + 81, v * 1.1 + 27, 3));
+    const cek = m.cek === undefined ? 1 : m.cek;
+    const dm = cek * Math.max((1 - ss(gen * 0.3, gen, uz)) * kapi, (1 - ss(gen * 0.2, gen * 0.7, uz2)) * kapi2 * 0.85);
+    const hale = Math.max((1 - ss(0, gen * 8, uz)) * kapi, (1 - ss(0, gen * 5, uz2)) * kapi2) * 0.24;
+    const da = Math.min(1, dm + hale);
+    r += (m.d[0] - r) * da; g += (m.d[1] - g) * da; b += (m.d[2] - b) * da;
+    // ince damar ağı: eş-değer çizgileri, seyrek
+    const n2 = fbm(u * 2.2 + 1.2 * wy + 31, v * 2.2 + 1.2 * wx + 8, 3);
+    const ek = 1 - ss(m.ek * 0.3, m.ek, Math.abs(n2 - 0.5));
+    const ea = ek * m.ag * ss(0.36, 0.62, fbm(u * 2.0 + 7, v * 2.0 + 51, 2));
+    r += (m.e[0] - r) * ea; g += (m.e[1] - g) * ea; b += (m.e[2] - b) * ea;
+    // altın damar: başka yönde akan, çok ince, seyrek
+    if (m.altin > 0) {
+      const t3 = (v * 0.9 + u * 0.35 + 1.6 * wy + 0.12 * (fbm(u * 4 + 2, v * 4 + 8, 2) - 0.5)) * 1.3 + 0.37;
+      const u3 = Math.abs(t3 - Math.round(t3));
+      const k3 = ss(0.46, 0.6, fbm(u * 0.7 + 71, v * 0.7 + 13, 3));
+      const ga = (1 - ss(m.altin * 0.45, m.altin, u3)) * k3;
+      if (ga > 0.002) {
+        const pr = gurultu(x * 0.3 + y * 0.1, y * 0.3);
+        const s2 = pr < 0.5 ? pr * 2 : (pr - 0.5) * 2;
+        const c1 = pr < 0.5 ? ALTIN_C : ALTIN_B, c2 = pr < 0.5 ? ALTIN_B : ALTIN_A;
+        const gr = c1[0] + (c2[0] - c1[0]) * s2, gg = c1[1] + (c2[1] - c1[1]) * s2, gb = c1[2] + (c2[2] - c1[2]) * s2;
+        r += (gr - r) * ga; g += (gg - g) * ga; b += (gb - b) * ga;
+      }
+    }
+    out[0] = r; out[1] = g; out[2] = b;
+  }
+
+  // ------------------------------------------------------------ yol sınırı ve mermer dolgu
+  function yolKutu(d) {
+    const tk = d.match(/[MLCAZ]|-?\d*\.?\d+(?:e-?\d+)?/g);
+    let x1 = 1e9, y1 = 1e9, x2 = -1e9, y2 = -1e9, kom = 'M';
+    const ek = (x, y, r) => { x1 = Math.min(x1, x - r); x2 = Math.max(x2, x + r); y1 = Math.min(y1, y - r); y2 = Math.max(y2, y + r); };
+    for (let i = 0; i < tk.length; ) {
+      const t = tk[i];
+      if (/[MLCAZ]/.test(t)) { kom = t; i++; continue; }
+      if (kom === 'A') { const rx = +tk[i]; ek(+tk[i + 5], +tk[i + 6], rx); i += 7; }
+      else { ek(+tk[i], +tk[i + 1], 0); i += 2; }
+    }
+    return [x1, y1, x2, y2];
+  }
+  const tmp = [0, 0, 0];
+  /** Bir vektör biçimini mermerle doldurur: biçim maskesi (kenar yumuşatmalı) × piksel başına mermer. */
+  function mermerDoldur(d, m, ox, oy, kutu, olcek) {
+    olcek = olcek || OL;
+    const [bx1, by1, bx2, by2] = kutu || yolKutu(d);
+    const x0 = Math.floor(bx1) - 2, y0 = Math.floor(by1) - 2;
+    const w = Math.ceil(bx2 - x0) + 3, h = Math.ceil(by2 - y0) + 3;
+    const cw = Math.max(1, Math.round(w * olcek)), ch = Math.max(1, Math.round(h * olcek));
+    const c = SAHNE.yeniTuval(cw, ch);
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.setTransform(olcek, 0, 0, olcek, -x0 * olcek, -y0 * olcek);
+    g.fillStyle = '#000';
+    g.fill(typeof d === 'string' ? P(d) : d);
+    const im = g.getImageData(0, 0, cw, ch);
+    const v = im.data;
+    for (let j = 0; j < ch; j++) {
+      const y = y0 + (j + 0.5) / olcek;
+      for (let i = 0; i < cw; i++) {
+        const k = (j * cw + i) * 4;
+        if (v[k + 3] === 0) continue;
+        mermerRenk(m, x0 + (i + 0.5) / olcek, y, ox, oy, tmp);
+        v[k] = tmp[0]; v[k + 1] = tmp[1]; v[k + 2] = tmp[2];
+      }
+    }
+    g.putImageData(im, 0, 0);
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(c, x0 * OL, y0 * OL, w * OL, h * OL);
+    ctx.restore();
+  }
+
+  // ------------------------------------------------------------ altın: döşenebilir metal doku (kontur ve dolgu için)
+  const ALTIN = (function () {
+    const c = SAHNE.yeniTuval(W2, W2);
+    const g = c.getContext('2d');
+    const lg = g.createLinearGradient(0, 0, W2, W2 * 0.8);
+    const duraklar = ['#B8892E', '#F3D98A', '#C99A36', '#FBEBB0', '#B48428', '#E9C870', '#A87A24', '#F5DE96', '#C09030'];
+    duraklar.forEach((d, i) => lg.addColorStop(i / (duraklar.length - 1), d));
+    g.fillStyle = lg;
+    g.fillRect(0, 0, W2, W2);
+    // ince varak kırışığı: hafif açık-koyu benekler
+    const im = g.getImageData(0, 0, W2, W2);
+    const v = im.data;
+    for (let j = 0; j < W2; j++) for (let i = 0; i < W2; i++) {
+      const n = gurultu(i * 0.045, j * 0.045) * 0.6 + gurultu(i * 0.16, j * 0.16) * 0.4 - 0.5;
+      const k = (j * W2 + i) * 4;
+      v[k] += n * 46; v[k + 1] += n * 40; v[k + 2] += n * 22;
+    }
+    g.putImageData(im, 0, 0);
+    return c;
+  })();
+  const altinDesen = ctx.createPattern(ALTIN, 'no-repeat');
+  altinDesen.setTransform(new DOMMatrix([1 / OL, 0, 0, 1 / OL, 0, 0]));
+
+  /** İnce altın kontur: koyu altın alt çizgi + parlak üst çizgi (kakma tel gibi). */
+  function altinKontur(d, lw) {
+    lw = lw || 2.1;
+    const p = typeof d === 'string' ? P(d) : d;
+    ctx.save();
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(120,84,24,0.85)'; ctx.lineWidth = lw + 0.9; ctx.stroke(p);
+    ctx.strokeStyle = altinDesen; ctx.lineWidth = lw; ctx.stroke(p);
+    ctx.restore();
+  }
+  function altinCizgi(pts, lw) {
+    const p = new Path2D();
+    pts.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y)));
+    altinKontur(p, lw);
+  }
+  function altinDolgu(d) {
+    const p = typeof d === 'string' ? P(d) : d;
+    ctx.fillStyle = altinDesen; ctx.fill(p);
+  }
+  /** Düz, yarı saydam vektör gölge (ışık sağ üstten). */
+  function golge(d, a) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = `rgba(60,70,80,${a})`;
+    ctx.fill(typeof d === 'string' ? P(d) : d);
+    ctx.restore();
+  }
+
+  // ------------------------------------------------------------ gök (açık mavi mermer), güneş, bulutlar
+  mermerDoldur(dikd(0, 0, 1024, 800), MERMER.gok, 0, 0, [0, 0, 1024, 800], 1);
+  // güneş: altın varak disk, iki ince altın halka
+  altinDolgu(SAHNE.daireYolu(880, 140, 54));
+  altinKontur(SAHNE.daireYolu(880, 140, 54), 2.2);
+  altinKontur(SAHNE.daireYolu(880, 140, 76), 1.4);
+  altinKontur(SAHNE.daireYolu(880, 140, 112), 1.0);
+
+  function bulutYolu(cx, cy, s, ayna) {
+    const m = ayna ? -1 : 1;
+    const d = [[cx - 66 * s * m, cy + 2 * s, 18 * s], [cx - 38 * s * m, cy - 12 * s, 26 * s], [cx - 2 * s * m, cy - 22 * s, 32 * s], [cx + 34 * s * m, cy - 10 * s, 25 * s], [cx + 62 * s * m, cy + 2 * s, 18 * s]];
+    const p = new Path2D();
+    for (const [x, y, r] of d) { p.moveTo(x + r, y); p.arc(x, y, r, 0, Math.PI * 2); }
+    const r = 10 * s, x1 = cx - 84 * s, x2 = cx + 84 * s, y0 = cy + 2 * s;
+    p.moveTo(x1 + r, y0); p.lineTo(x2 - r, y0); p.arc(x2 - r, y0 + r, r, -Math.PI / 2, Math.PI / 2);
+    p.lineTo(x1 + r, y0 + 2 * r); p.arc(x1 + r, y0 + r, r, Math.PI / 2, Math.PI * 1.5);
+    return p;
+  }
+  const BULUT = [[170, 246, 1.0, false], [500, 148, 0.78, true], [770, 344, 1.0, true], [952, 474, 0.6, false], [86, 466, 0.62, true]];
+  BULUT.forEach(([x, y, s, a], i) => {
+    const p = bulutYolu(x, y, s, a);
+    // birleşim biçimi: çift kalın altın kontur önce, mermer üstüne → yalnız dış kontur kalır
+    ctx.save();
+    ctx.strokeStyle = 'rgba(120,84,24,0.85)'; ctx.lineWidth = 2 * (1.8 + 0.9); ctx.stroke(p);
+    ctx.strokeStyle = altinDesen; ctx.lineWidth = 2 * 1.8; ctx.stroke(p);
+    ctx.restore();
+    mermerDoldur(p, MERMER.bulut, i * 3.7, i * 1.9, [x - 90 * s, y - 56 * s, x + 90 * s, y + 24 * s]);
+  });
+
+  // ------------------------------------------------------------ zemin (krem mermer)
+  mermerDoldur(dikd(0, 800, 1024, 1024), MERMER.krem, 4, 2);
+  golge('M300,800 L820,800 L760,834 L236,834 Z', 0.07);
+  altinCizgi([[0, 800], [1024, 800]], 2.2);
+
+  // ------------------------------------------------------------ minare (Carrara)
+  const M = SAHNE.minareParcalari();
+  const mc = 300;
+  const minareGovde = [];
+  for (const p of M) {
+    if (p.tip === 'poligon') minareGovde.push(SAHNE.yol(p.noktalar, true));
+    else if (p.tip === 'korkuluk') minareGovde.push(dikd(p.x1, p.y1, p.x2, p.y2));
+    else if (p.tip === 'topuz') minareGovde.push(p.yol);
+  }
+  // bütün minare tek bir bloktan kesilmiş gibi tek dokuda
+  const minareYol = new Path2D();
+  minareGovde.forEach((d) => minareYol.addPath(P(d)));
+  mermerDoldur(minareYol, MERMER.carrara, 2.2, 5.1, [254, 140, 346, 800]);
+  // silindir gölgesi (düz, yarı saydam)
+  ctx.save(); ctx.clip(minareYol);
+  golge(dikd(240, 140, mc - 8, 800), 0.09);
+  ctx.restore();
+  for (const p of M) {
+    if (p.tip === 'poligon') {
+      altinKontur(SAHNE.yol(p.noktalar, true), 1.8);
+      if (p.ad.startsWith('çıkma')) golge(SAHNE.yol(p.noktalar, true), 0.08);
+    } else if (p.tip === 'korkuluk') {
+      const adet = 10;
+      for (let i = 0; i < adet; i++) {
+        const x = p.x1 + 4 + ((p.x2 - p.x1 - 8) * (i + 0.5)) / adet;
+        altinCizgi([[x, p.y1 + 5], [x, p.y2 - 3]], 1.4);
+      }
+      altinCizgi([[p.x1, p.y1 + 4], [p.x2, p.y1 + 4]], 1.2);
+      altinKontur(dikd(p.x1, p.y1, p.x2, p.y2), 1.8);
+    } else if (p.tip === 'bant') {
+      for (const z of SAHNE.zikzakCizgileri()) altinCizgi(z, 1.8);
+    } else if (p.tip === 'topuz') {
+      altinKontur(p.yol, 1.8);
+    }
+  }
+  S_pencereler(Y.minarePencereleri, 1.6);
+  function S_pencereler(liste, lw) {
+    liste.forEach((d, i) => {
+      mermerDoldur(d, MERMER.pencere, i * 2.3 + 1, i * 1.7);
+      altinKontur(d, lw);
+    });
+  }
+
+  // ------------------------------------------------------------ alem (altın)
+  function alem(a, lw) {
+    const ys = [
+      dikd(a.cubuk.x1, a.cubuk.y1, a.cubuk.x2, a.cubuk.y2),
+      ...a.kureler.map((k) => SAHNE.daireYolu(k.cx, k.cy, k.r)),
+      SAHNE.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx, ry: a.yaka.ry, aci: 0 }),
+      SAHNE.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R),
+    ];
+    for (const d of ys) {
+      altinDolgu(d);
+      ctx.save(); ctx.clip(P(d));
+      golge(dikd(a.yaka.cx - 40, a.hilal.cy - 30, a.yaka.cx - 1, a.yaka.cy + 20), 0.16);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(120,84,24,0.9)'; ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.stroke(P(d));
+    }
+  }
+  alem(SAHNE.alemParcalari(mc, 146, 0.62), 0.9);
+
+  // ------------------------------------------------------------ kaide (ikinci Carrara bloğu)
+  const K = SAHNE.kaide;
+  mermerDoldur(Y.kaide, MERMER.carrara2, 7.3, 1.2);
+  golge(dikd(K.x1, K.y1, K.x2, K.y1 + 8), 0.08);
+  golge(dikd(K.x1, K.y1, K.x1 + 14, K.y2), 0.07);
+  altinKontur(Y.kaide, 2.0);
+  mermerDoldur(Y.kornis, MERMER.carrara, 9.1, 3.3);
+  altinKontur(Y.kornis, 1.8);
+  S_pencereler(Y.kaidePencereleri, 1.8);
+
+  // ------------------------------------------------------------ kasnak (koyu yeşil mermer)
+  for (let k = 1; k >= 0; k--) {
+    const q = SAHNE.kasnak[k];
+    const d = dikd(q.x1, q.y1, q.x2, q.y2);
+    mermerDoldur(d, MERMER.yesilKoyu, 3 + k * 5.5, 8 + k * 2.2);
+    const cx = (q.x1 + q.x2) / 2, R = (q.x2 - q.x1) / 2;
+    golge(dikd(q.x1, q.y1, cx - R * 0.3, q.y2), 0.13);
+    altinCizgi([[q.x1, q.y1 + 6], [q.x2, q.y1 + 6]], 1.1);
+    altinCizgi([[q.x1, q.y2 - 6], [q.x2, q.y2 - 6]], 1.1);
+    SAHNE.kasnakPencereleri(k).forEach((w, i) => {
+      const pd = SAHNE.kemerYolu(w.x, w.y, w.w, w.h);
+      mermerDoldur(pd, MERMER.pencere, i * 1.3 + k * 9, i * 0.7);
+      altinKontur(pd, 1.3);
+    });
+    altinKontur(d, 2.0);
+  }
+
+  // ------------------------------------------------------------ kubbe (yeşil mermer, altın kaburgalar)
+  const prof = SAHNE.kubbeProfili(60);
+  mermerDoldur(Y.kubbe, MERMER.yesil, 1.7, 3.9, [356, 296, 764, 559]);
+  const gol = prof.map((q) => [560 - q.r, q.y]).concat(prof.slice().reverse().map((q) => [560 - q.r * 0.3, q.y]));
+  golge(SAHNE.yol(gol, true), 0.12);
+  ctx.save(); ctx.clip(P(Y.kubbe));
+  for (const kb of SAHNE.kaburgalar(16, 60)) altinCizgi(kb.noktalar, 1.25);
+  ctx.restore();
+  altinKontur(Y.kubbe, 2.3);
+  mermerDoldur(dikd(356, 549, 764, 557), MERMER.yesilKoyu, 12, 4);
+  altinKontur(dikd(356, 549, 764, 557), 1.4);
+  alem(SAHNE.alemParcalari(560, 300, 1), 1.2);
+
+  // ------------------------------------------------------------ bitkiler: altın saplar, yeşil mermer yapraklar, pembe mermer çiçekler
+  for (const s of B.saplar) altinCizgi(s, 3.0);
+  const yaps = B.yapraklar.slice().sort((a, b) => a.y - b.y);
+  yaps.forEach((y, i) => {
+    const d = SAHNE.yaprakYolu(y);
+    mermerDoldur(d, y.uzunluk > 50 ? MERMER.yaprakK : MERMER.yaprak, i * 0.73, i * 1.31);
+    altinKontur(d, 1.6);
+    const [a, b] = SAHNE.yaprakDamari(y);
+    altinCizgi([a, [a[0] + (b[0] - a[0]) * 0.85, a[1] + (b[1] - a[1]) * 0.85]], 1.0);
+  });
+  B.tomurcuklar.forEach((t, i) => {
+    const d = SAHNE.tomurcukYolu(t);
+    mermerDoldur(d, MERMER.pembe, i * 2.1, i * 0.9);
+    altinKontur(d, 1.4);
+  });
+  const cs = B.cicekler.slice().sort((a, b) => a.r - b.r);
+  cs.forEach((c, ci) => {
+    SAHNE.tacYapraklari(c).forEach((e, i) => {
+      const d = SAHNE.elipsYolu(e);
+      mermerDoldur(d, MERMER.pembe, ci * 1.7 + i * 0.61, ci * 0.9 + i * 1.13);
+      // ışığa ters kenarda düz, yarı saydam gölge hilali
+      const k = Math.max(2.2, c.r * 0.17);
+      const ic = new Path2D(SAHNE.elipsYolu({ ...e, cx: e.cx + 0.6 * k, cy: e.cy - 0.8 * k }));
+      const dis = new Path2D();
+      dis.rect(c.x - c.r * 3, c.y - c.r * 3, c.r * 6, c.r * 6);
+      dis.addPath(ic);
+      ctx.save();
+      ctx.clip(P(d));
+      ctx.clip(dis, 'evenodd');
+      golge(d, 0.10);
+      ctx.restore();
+      altinKontur(d, Math.max(1.2, Math.min(2.0, c.r / 26)));
+    });
+    // altın göbek ve altın erkek organ noktaları
+    altinDolgu(SAHNE.daireYolu(c.x, c.y, c.r * 0.17));
+    ctx.strokeStyle = 'rgba(120,84,24,0.9)'; ctx.lineWidth = 0.9; ctx.stroke(P(SAHNE.daireYolu(c.x, c.y, c.r * 0.17)));
+    for (let i = 0; i < 10; i++) {
+      const a = c.aci + (i / 10) * Math.PI * 2;
+      const r2 = c.r * 0.29;
+      altinCizgi([[c.x + Math.cos(a) * c.r * 0.18, c.y + Math.sin(a) * c.r * 0.18], [c.x + Math.cos(a) * r2, c.y + Math.sin(a) * r2]], 0.8);
+      const d = SAHNE.daireYolu(c.x + Math.cos(a) * r2, c.y + Math.sin(a) * r2, Math.max(1.3, c.r * 0.035));
+      altinDolgu(d);
+    }
+  });
+
+  // eserin kendi ince altın çerçevesi
+  altinKontur(dikd(16, 16, 1008, 1008), 2.0);
+  altinKontur(dikd(23, 23, 1001, 1001), 0.9);
+
+  SAHNE.hazir();
+</script>
+</body>
+</html>
