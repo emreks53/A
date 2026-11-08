@@ -11,21 +11,22 @@
     "koken": "Kökleri Doğu Asya mürekkep resmine ve Orta Çağ el yazması süslemesine uzanır; Avrupa'da Albrecht Dürer'in doğa çalışmalarıyla belirginleşir. 18. ve 19. yüzyıl İngiliz okulu (Thomas Girtin, J. M. W. Turner, John Sell Cotman) tekniği bağımsız bir sanat dalına dönüştürdü; John Singer Sargent ve Winslow Homer gevşek, ışıklı suluboyanın ustaları oldu.",
     "ayirt_edici": [
       "Üst üste binen saydam yıkamalar: kubbenin gölgeli yanında ikinci kat sır koyulaşıp keskin, koyu bir kenarla kurumuş",
-      "Gökte ve kubbede ıslak üstüne ıslak açılmalar; karnabahar gibi saçaklı, koyu kenarlı lekeler",
-      "Kâğıdın beyazı ışık olarak bırakılmış: güneş, kubbedeki parlak şerit, minarenin ışıklı yanı ve beyaz çiçekler",
-      "Koyu geçişlerde pigment çökelmesi (granülasyon) ve soğuk preslenmiş kâğıdın dokusu",
-      "Yer yer görünen kurşun kalem altlığı; kenarlara doğru kâğıda eriyen, bitmemiş, düzensiz bir sınır"
+      "Gökte, kubbede ve yaprak kütlesinde ıslak üstüne ıslak açılmalar; karnabahar gibi saçaklı, koyu kenarlı lekeler",
+      "Kaybolan ve bulunan kenarlar: boya kalem çizgisinin kimi yerde dışına taşıyor, kimi yerde geride kalıp beyaz bir pay bırakıyor; yapının ışıklı sağ ucu kâğıda eriyor",
+      "Yapraklar tek fırça darbesi ya da ortasında beyaz damar kalan iki yarım darbe; kimi ucunda ıslakta dağılmış, kimi kuru fırçayla kırılmış",
+      "Kâğıdın beyazı ışık olarak bırakılmış: güneş, kubbedeki parlak şerit, minarenin ışıklı yanı ve yalnız gölge yanına soluk bir darbe vurulmuş beyaz çiçekler",
+      "Pigment çökelmesi (granülasyon), soğuk preslenmiş kâğıt dokusu, yer yer görünen kurşun kalem altlığı ve kenarlara doğru bitmemiş bırakılmış düzensiz sınır"
     ],
     "palet": [
       "#5C7CB7",
       "#9FB571",
       "#35694C",
       "#A99E9C",
-      "#B37845",
-      "#C66C96",
+      "#C2862F",
+      "#AD657A",
       "#F7F4EC"
     ],
-    "kodla_cizim": "Her yıkama piksel başına bir kapsama alanıdır: bölge haritası gürültüyle titretilerek okunur ya da Tyler Hobbs usulü yinelemeli bozulmuş çokgenler düşük saydamlıkta onlarca kat doldurulur. Alanın bulanık kopyasından farkıyla kuruyan kenardaki pigment birikimi, kâğıt yüksekliği ve ince gürültüden granülasyon, Hobbs damlalarıyla karnabahar açılmaları hesaplanır. Yoğunluk altı pigmentin (yaprak yeşili, viridyen, ultramarin, seruleum, ham siena, kinakridon gül) soğurma vektörüyle çarpılarak biriktirilir ve renk = kâğıt × exp(−Σ yoğunluk) ile çarpımsal karışır. Kaburgaların ışıklı yanı nemli fırçayla boya kaldırır gibi açılır; kurşun kalem ayrı bir tuvalde titrek, kesik çizgilerle çizilir; kâğıt dokusu en sonda kabartma ışığıyla eklenir.",
+    "kodla_cizim": "Her yıkama piksel başına bir kapsama alanıdır: bölge haritasından alınan maske bulanıklaştırılıp gürültüyle değişen bir eşik ve yumuşaklıkla kesilir (boya kalem çizgisinin dışına taşar ya da geride kalır; kenar yer yer sert, yer yer kâğıda erir) ya da Tyler Hobbs usulü yinelemeli bozulmuş çokgenler düşük saydamlıkta onlarca kat doldurulur. Alanın bulanık kopyasından farkıyla kuruyan kenardaki pigment birikimi, kâğıt yüksekliği ve ince gürültüden granülasyon, Hobbs damlalarıyla karnabahar açılmaları hesaplanır. Yapraklar baskısı değişen fırça darbesi çokgenleridir (tek ya da arada beyaz damar kalan iki yarım), ucu ya da bir yanı bulanık kopyayla karıştırılarak eritilir, kimi kâğıt dokusuyla eşiklenip kuru fırça gibi kırılır; taç yapraklar bozulmuş serbest biçimlerdir ve yalnız ışıktan uzak yanlarına soluk gölge darbesi vurulur. Pencereler tek darbelik bozuk kemer lekeleridir. Yoğunluk yedi pigmentin (yaprak yeşili, viridyen, ultramarin, seruleum, ham siena, kinakridon gül, gamboj) soğurma vektörüyle çarpılarak biriktirilir ve renk = kâğıt × exp(−Σ yoğunluk) ile çarpımsal karışır. Kaburgaların ışıklı yanı nemli fırçayla boya kaldırır gibi açılır; kurşun kalem ayrı bir tuvalde titrek, kesik çizgilerle çizilir; kâğıt dokusu en sonda kabartma ışığıyla eklenir.",
     "etiketler": [
       "suluboya",
       "saydam",
@@ -49,11 +50,11 @@
     "tanim": "Empasto, yağlıboyanın tüpten çıktığı kıvamda ya da daha kalın sürülerek fırça ve spatula izlerinin yüzeyde kabartı olarak kaldığı tekniktir. Darbeler biçimi izler, boya sırtları ışığı yakalar; renk doygun, ışık-gölge (chiaroscuro) güçlüdür. Boyanın ince sürüldüğü yerlerde tuval bezinin dokusu ve alttaki astar seçilir.",
     "koken": "Yağlıboya 15. yüzyılda Flaman ressamlarınca (Jan van Eyck) olgunlaştırıldı; kalın boya sürme Tiziano'nun geç dönemi ve Rembrandt'ın ışıklı empastolarıyla öne çıktı. 19. yüzyılda Van Gogh hareketli, kalın darbeleri bir anlatım aracına dönüştürdü; 20. yüzyılda Frank Auerbach ve Leon Kossoff boyanın maddesini resmin konusu hâline getirdi.",
     "ayirt_edici": [
-      "Biçimi izleyen darbeler: kubbede kaburgalar boyunca, kasnakta yatay, gökte geniş ve eğik süpürmeler",
+      "Biçimi izleyen darbeler: kubbede kaburgalar boyunca, kasnakta yatay, minarede silindir boyunca dikey, gökte geniş ve eğik süpürmeler",
       "Her darbede kıl izleri: rengi hafifçe değişen paralel çizgiler ve fırçada tam karışmamış ikinci renk",
       "Sağ üstten ışık alan kabartmalı boya sırtları, darbe sonlarında yığılan boya",
       "Kubbenin koyu yeşil gölgesinden sarı-yeşil ışığına uzanan güçlü ışık-gölge",
-      "Çiçeklerde, güneşte ve minarenin ışıklı yanında kalın beyaz empasto vuruşları",
+      "Çiçeklerde, minarenin ışıklı yanında ve güneşte çapraz atılmış kalın beyaz empasto vuruşları",
       "Kenarlara doğru ince sürülmüş boyanın arasından görünen sıcak astar ve tuval bezi dokusu"
     ],
     "palet": [
@@ -66,7 +67,7 @@
       "#F5EFD4",
       "#3F622B"
     ],
-    "kodla_cizim": "Işık modeliyle (kubbe için dönel yüzey normali, kasnak ve minare için silindir) doygun renkli bir hedef tablo kurulur. Hertzmann usulü beş katta (fırça yarıçapı 18 → 1,4) boyanır: her katta tuval ile hedef arasındaki fark pencere ortalamasıyla ölçülür; fark büyük yerden başlayan darbe bölgeye özgü bir yön alanında (kaburga meridyeni, yatay, eğik süpürme, yaprak ekseni) ilerler ve renk sapınca durur. Darbe 3–26 kıllık bir demettir; aynı Path2D'ler ayrı bir yükseklik tuvaline toplamalı çizilir. Yükseklik yumuşatılıp yüksek geçiren süzgeçten geçirilir, ince boyalı yerlere bez dokusu eklenir ve normal haritasıyla sağ üstten yayınık ve parlak ışık verilir. Kaburgalar, minare ayrıntıları ve alemler küçük fırçayla ayrıca işlenir.",
+    "kodla_cizim": "Işık modeliyle (kubbe için dönel yüzey normali, kasnak ve minare için silindir) doygun renkli bir hedef tablo kurulur. Hertzmann usulü beş katta (fırça yarıçapı 18 → 1,4) boyanır: her katta tuval ile hedef arasındaki fark pencere ortalamasıyla ölçülür; fark büyük yerden başlayan darbe bölgeye özgü bir yön alanında (kaburga meridyeni, yatay, eğik süpürme, yaprak ekseni) ilerler ve renk sapınca durur. Darbe 3–26 kıllık bir demettir; aynı Path2D'ler ayrı bir yükseklik tuvaline toplamalı çizilir. Minare gövdesi silindir ışığına göre renklenen uzun dikey kıl demetleriyle, kaburgalar, şerefeler, zikzak bant ve alemler küçük fırçayla ayrıca işlenir. Yükseklik yumuşatılıp yüksek geçiren süzgeçten geçirilir, ince boyalı yerlere düz dokuma bez dokusu eklenir ve normal haritasıyla sağ üstten yayınık ve parlak ışık verilir.",
     "etiketler": [
       "yağlıboya",
       "empasto",
@@ -90,23 +91,24 @@
     "tanim": "Yumuşak pastel, az bağlayıcıyla sıkıştırılmış saf pigment çubuklarıdır; pürüzlü kâğıda sürtülünce pigment yalnız dişin tepelerine tutunur ve vuruşlar tozlu, kırık görünür. Çubuğun yan yüzüyle geniş alanlar, ucuyla tarama çizgileri yapılır; parmakla dağıtılan yerler yumuşak geçişler verir, üstüne gelen keskin vuruşlar onlarla karşıtlık kurar. Tonlu kâğıdın rengi vuruşların arasından görünerek resmin bir parçası olur.",
     "koken": "18. yüzyılda Rosalba Carriera ve Maurice Quentin de La Tour'un portreleriyle saygınlık kazandı; Jean-Siméon Chardin de ustalarındandır. 19. yüzyılda Edgar Degas katmanlı, taramalı pastelleriyle tekniği yeniden tanımladı; Mary Cassatt ve Odilon Redon onu izledi.",
     "ayirt_edici": [
-      "Sıcak gri, petek dokulu kâğıt: renk yalnız dişin tepelerinde, çukurlarda kâğıt görünüyor",
-      "Çubuğun yan yüzüyle geniş, düz uçlu vuruşlar (gök, kasnak, çiçeklerin taç yaprakları)",
-      "Gökte uçla atılmış paralel tarama öbekleri, kubbede kaburgalar boyunca keskin çizgiler",
-      "Gökte, güneş halesinde ve kubbenin gölgeli yanında parmakla dağıtılmış yumuşak geçişler",
-      "Kenarlarda boş bırakılmış kâğıt; tozlu, canlı ve sınırlı bir çubuk paleti"
+      "Sıcak gri, petek dokulu tonlu kâğıt her yerde işin parçası: renk yalnız dişin tepelerinde kalıyor, vuruşların arasından ve boş bırakılmış kenarlardan kâğıt görünüyor",
+      "Çubuğun yan yüzüyle geniş, düz uçlu vuruşlar (gök, kasnak, zemin) ve uçla atılmış paralel tarama öbekleri (gökte, kubbede ve kaidede çapraz)",
+      "Gökte ve güneş halesinde parmakla dağıtılmış yumuşak, puslu geçişler; hemen yanlarında dağıtılmamış keskin vuruşlar",
+      "Yapraklar boyunca uzanan, araları açık paralel çizgiler; taç yapraklar göbekten dışa basınçlı beyaz vuruşlar, gölge yanında lavanta tarama",
+      "Pastel kalemle atılmış birkaç keskin çizgi: kubbenin gölgeli silueti, pencereler, yaprak ve taç yaprak kenarları",
+      "Tozlu, açık değerli, tebeşirimsi renkler; yağlıboyanın parlaklığı ve kabartması yok"
     ],
     "palet": [
       "#9D9487",
-      "#5877C2",
-      "#BDCC86",
-      "#233338",
-      "#DDD3BB",
-      "#F9F5EB",
-      "#A18356",
-      "#3A543E"
+      "#88ADCF",
+      "#D0DCA0",
+      "#4C7671",
+      "#F2EAD9",
+      "#AD9FC8",
+      "#E1B13C",
+      "#498956"
     ],
-    "kodla_cizim": "Kâğıt dişi, titreşimli altıgen petek ile çok ölçekli gürültüden kurulan 2048 piksellik bir yükseklik haritasıdır. Her katta vuruşlar ayrı bir tuvale basınç (saydamlık) olarak çizilir; pigment yalnız 'diş yüksekliği > 1 − basınç' olan piksellere yumuşak bir eşikle bırakılır. Renkler ışık modelli bir hedeften okunup kırk kadar çubuktan oluşan sınırlı bir kutuya yuvarlanır (bazen ikinci en yakın çubuk: kırık renk). Sırayla yan yüzle geniş alt kat, parmakla dağıtma (maskeli bulanıklaştırma), orta vuruşlar, güneş halesi, uçla tarama öbekleri, yapı ayrıntıları ve bitkiler gelir; en sonda kâğıt dişinin kabartma ışığı eklenir.",
+    "kodla_cizim": "Kâğıt dişi, titreşimli altıgen petek ile çok ölçekli gürültüden kurulan 2048 piksellik bir yükseklik haritasıdır. Her katta vuruşlar ayrı bir tuvale basınç (saydamlık) olarak çizilir; pigment yalnız 'diş yüksekliği > 1 − basınç' olan piksellere yumuşak bir eşikle bırakılır, basınç düşük tutulduğu için kâğıt vuruşların içinden ve arasından görünür. Renkler ışık modelli, açık değerli bir hedeften okunur, tebeşir beyazıyla biraz açılır ve kırk kadar çubuktan oluşan sınırlı bir kutuya yuvarlanır (bazen ikinci en yakın çubuk: kırık renk). Sırayla yan yüzle seyrek alt kat, gökte gürültü maskeli parmakla dağıtma (bulanıklaştırma), orta vuruşlar, güneş halesi, uçla tarama öbekleri, pastel kalem ayrıntıları, zeminde yatay yan vuruşlar, paralel çizgilerle yapraklar ve basınçlı vuruşlarla çiçekler, en üstte yapılarda çapraz tarama öbekleri gelir; en sonda kâğıt dişinin kabartma ışığı eklenir (vuruş kabartması yoktur).",
     "etiketler": [
       "pastel",
       "kuru teknik",
@@ -133,20 +135,20 @@
       "Kubbede kaburgalar boyunca uzanan tarama; gölge yanında enlem yaylarını izleyen çapraz tarama",
       "İki üç kez, hafifçe kayarak ve baskısı değişerek çizilmiş konturlar; gölge yanında daha kalın çizgi",
       "Kubbe ve minare eksenlerini, kat hizalarını ve kubbenin oranını gösteren açık kurgu çizgileri",
-      "Parmakla yayılmış yumuşak gri lekeler; ışıklı kenarların yanına yaslanıp uzaklaştıkça seyrelen tarama",
+      "Parmakla yayılmış yumuşak gri lekeler; ışıklı kenarlara yaslanıp dışa doğru düzgünce sönen derli toplu hale taraması",
       "Grafitin kâğıt dişinde kırılan tanesi; koyu pencerelerde ve gölgelerde hafif metalik parlaklık",
       "Kenarlara doğru gölgesi silinip yalnız çizgisi kalan, yarım bırakılmış çiçek ve yapraklar"
     ],
     "palet": [
-      "#F6F4EE",
-      "#D6D4D0",
-      "#C7C6C3",
-      "#858485",
-      "#80848E",
-      "#45474D",
+      "#F1EFE9",
+      "#E4E2DD",
+      "#D1D0CC",
+      "#8F8F8F",
+      "#5D5E62",
+      "#49494D",
       "#2A2B31"
     ],
-    "kodla_cizim": "Canvas 2048 px iç çözünürlükte; çizim önce ayrı bir grafit yoğunluğu katmanına yapılır. Bölge haritası ve kubbe profilinden bir ton haritası çıkarılır (kubbede hafif dışbükey dilimlerle Lambert ışığı, kasnak ve minarede silindir gölgesi). Her öğenin kılavuz çizgileri (kubbede meridyenler ve ∩ biçimli enlem yayları, kasnakta dikey, kaidede eğik, yapraklarda damar yönünde) 14–64 px'lik, uçları degradeyle incelen kalem vuruşlarına bölünür; vuruşun çizilip çizilmeyeceği ve koyuluğu tona göre, eşikleri farklı üç dört katmanla belirlenir. Konturlar düşük frekanslı titreşimle kaydırılan iki üç geçişte, parça parça değişen baskıyla çizilir. Öndeki öğe arkadakinin izini 'destination-out' ile siler, ton haritasından bulanıklaştırılmış lekeler yayma gölgesini verir, gürültülü elips bir maske çizimi kenarlarda söndürür. Son adımda piksel piksel iki ölçekli kâğıt dişiyle birleşir: grafit önce dişin tepelerine tutunur, baskı arttıkça çukurlar dolar; en koyu yerlere soğuk bir parlaklık eklenir.",
+    "kodla_cizim": "Canvas 2048 px iç çözünürlükte; çizim önce ayrı bir grafit yoğunluğu katmanına yapılır. Bölge haritası ve kubbe profilinden bir ton haritası çıkarılır (kubbede hafif dışbükey dilimlerle Lambert ışığı, kasnak ve minarede silindir gölgesi). Her öğenin kılavuz çizgileri (kubbede meridyenler ve ∩ biçimli enlem yayları, kasnakta dikey, kaidede eğik, yapraklarda damar yönünde) 14–64 px'lik, uçları degradeyle incelen kalem vuruşlarına bölünür; vuruşun çizilip çizilmeyeceği ve koyuluğu tona göre, eşikleri farklı üç dört katmanla belirlenir. Gökte ve öndeki zeminde tarama, her kılavuz çizgisinde tonun eşiği aştığı kesimi tek (uzunsa birkaç ardışık) vuruşla çizer; baskı tona göre degradeyle azaldığından siluete yaslanan, dışa doğru sönen derli toplu bir hale oluşur. Konturlar düşük frekanslı titreşimle kaydırılan iki üç geçişte, parça parça değişen baskıyla çizilir. Öndeki öğe arkadakinin izini 'destination-out' ile siler, ton haritasından bulanıklaştırılmış lekeler yayma gölgesini verir, gürültülü elips bir maske çizimi kenarlarda söndürür. Son adımda piksel piksel iki ölçekli kâğıt dişiyle birleşir: grafit önce dişin tepelerine tutunur, baskı arttıkça çukurlar dolar; en koyu yerlere soğuk bir parlaklık eklenir.",
     "etiketler": [
       "kurşun kalem",
       "grafit",
@@ -176,7 +178,7 @@
       "Kubbede dilimler arasında kabaran ∩ biçimli enlem çizgileri; gölge yanında meridyenlerle çapraz tarama",
       "Gökte güneşe yaklaştıkça incelip kaybolan yatay çizgiler, ince ışınlı güneş ve çizgilerin seyrelmesiyle beliren bulutlar",
       "Kasnakta, kaidede ve minarede silindiri izleyen yatay çizgiler; pencerelerde sık çapraz tarama",
-      "Kubbenin parıltısında, zeminde ve çiçek ortalarında noktalama",
+      "Kubbenin parıltısında çizgilerin kısa vuruşlara, sonra küçülen noktalara dönüşmesi; zeminde ve çiçek ortalarında noktalama",
       "Krem kâğıt üzerinde ince çift çizgili çerçeve"
     ],
     "palet": [
@@ -186,7 +188,7 @@
       "#5E584E",
       "#17130F"
     ],
-    "kodla_cizim": "Canvas 2048 px. Her öğe için biçimi izleyen kılavuz çizgi aileleri kurulur: gökte yatay, kubbede kaburga dilimleri arasında hafifçe kabaran ∩ biçimli enlem yayları ve meridyenler, kasnak, kaide ve minarede yatay silindir çizgileri, yapraklarda damar yönünde eğik çizgiler, taç yapraklarda merkezden yayılan çizgiler. Ton kubbe profilinden Lambert ışığıyla, silindirlerde yüzey açısına göre, gökte güneşe uzaklık ve bulut maskesiyle hesaplanır. Her çizgi 1,4 px aralıklarla örneklenir; genişliği tona göre 0,5 px'den aralığın yaklaşık %85'ine kadar şişer, eşiğin altında kesilir, uçları iğne gibi incelir. Şeritler tek bir Path2D'de dolgu olarak çizilir; rasterleştiricinin kalınlık basamakları kontur gibi görünmesin diye her çizgi piksel altı kaydırılır. Çapraz tarama ikinci ve üçüncü ailelerle yalnız koyu yerlerde, noktalama geçişlerde yapılır; öndeki öğe arkadakini kâğıt rengiyle örter. Sonda piksel piksel kâğıt dokusu, levha izi ve mürekkebin hafif dağılması eklenir.",
+    "kodla_cizim": "Canvas 2048 px. Her öğe için biçimi izleyen kılavuz çizgi aileleri kurulur: gökte yatay, kubbede kaburga dilimleri arasında hafifçe kabaran ∩ biçimli enlem yayları ve meridyenler, kasnak, kaide ve minarede yatay silindir çizgileri, yapraklarda damar yönünde eğik çizgiler, taç yapraklarda merkezden yayılan çizgiler. Ton kubbe profilinden Lambert ışığıyla, silindirlerde yüzey açısına göre, gökte güneşe uzaklık ve bulut maskesiyle hesaplanır. Her çizgi 1,4 px aralıklarla örneklenir; genişliği tona göre 0,5 px'den aralığın yaklaşık %85'ine kadar şişer, eşiğin altında kesilir, uçları iğne gibi incelir. Şeritler tek bir Path2D'de dolgu olarak çizilir; rasterleştiricinin kalınlık basamakları kontur gibi görünmesin diye her çizgi piksel altı kaydırılır. Çapraz tarama ikinci ve üçüncü ailelerle yalnız koyu yerlerde yapılır. Kubbenin parıltısına yaklaşan enlem çizgileri önce incelir, sonra kesik kısa vuruşlara bölünür, en sonunda aynı yolun üzerinde dizilen, küçülüp seyrelerek kaybolan noktalara döner; zemin ve çiçek ortaları serbest noktalamayla kurulur; öndeki öğe arkadakini kâğıt rengiyle örter. Sonda piksel piksel kâğıt dokusu, levha izi ve mürekkebin hafif dağılması eklenir.",
     "etiketler": [
       "gravür",
       "kalem tarama",
@@ -214,7 +216,7 @@
     "ayirt_edici": [
       "Mavi, okra ve yeşil düz renk kalıplarının üzerine basılmış kalın siyah ana kalıp",
       "Güneşten yayılan oyulmuş ışınlar ve ufka doğru sıklaşan yatay U oyukları",
-      "Kubbenin gölge yanındaki siyah kütleye enlem boyunca açılmış, incelerek biten kavisli V oyukları; ışıklı yanda yeşilden oyulmuş parıltı izleri",
+      "Kubbenin gölge yanındaki siyah kütleye enlem boyunca açılmış, incelerek biten kavisli V oyukları; sınırda ışığa doğru sivrilen, oyulmadan kalmış siyah dişler; ışıklı yanda yeşilden oyulmuş parıltı izleri",
       "Yapraklarda oyulmuş damarlar; çiçek, tomurcuk ve minarede kalın siyah konturlar",
       "Lekeli, benekli mürekkep ve yer yer görünen kâğıt; renk katmanları ile siyah arasında hafif kayma",
       "El oyması titrek kenarlar, düzensiz bulutlar ve baskı alanını çevreleyen kalıp kenarı"
@@ -227,7 +229,7 @@
       "#353D33",
       "#1E1C1B"
     ],
-    "kodla_cizim": "Her renk (mavi, okra, yeşil, siyah) 2048 px'lik ayrı bir kalıp tuvalidir. Biçimler Path2D ile doldurulur; oyma izleri V ya da U profilli, titreyen şeritler olarak 'destination-out' ile kalıptan oyulur: gökte güneşten çıkan ışınlar ve ufka doğru sıklaşan oyuklar, kubbenin gölge kütlesinde enlem yayları, gölgede yeşil, ışıkta siyah kaburgalar, ışıklı yanda parıltı izleri, yapraklarda damarlar. Öndeki biçim arkadakileri bütün kalıplarda boşaltır. Baskı adımında her kalıp 2–3 px kaydırılarak ve gürültüyle titretilmiş koordinatlardan okunur (el oyması kenar); kaplama geniş lekelenme, yatay merdane izi ve kâğıt gözeneklerinde mürekkebin tutmamasıyla değişir. Renkler sırayla yarı saydam (çarpma ve örtme karışımı) basılır; siyah en son ve en örtücü katmandır. Kâğıt lif ve gözenek gürültüsüyle dokulanır.",
+    "kodla_cizim": "Her renk (mavi, okra, yeşil, siyah) 2048 px'lik ayrı bir kalıp tuvalidir. Biçimler Path2D ile doldurulur; oyma izleri V ya da U profilli, titreyen şeritler olarak 'destination-out' ile kalıptan oyulur: gökte güneşten çıkan ışınlar ve ufka doğru sıklaşan oyuklar, kubbenin gölge kütlesinde enlem yayları (sınırda oyulmadan bırakılan dişlerle), gölgede yeşil, ışıkta siyah kaburgalar, ışıklı yanda parıltı izleri, yapraklarda damarlar. Öndeki biçim arkadakileri bütün kalıplarda boşaltır. Baskı adımında her kalıp 2–3 px kaydırılarak ve gürültüyle titretilmiş koordinatlardan okunur (el oyması kenar); kaplama geniş lekelenme ve yatay merdane iziyle değişir; kâğıt gözeneklerinde mürekkebin tutmadığı benekler, merdanenin az mürekkep bıraktığı geniş bölgelerde ve kalıp kenarına doğru yoğunlaşır, oralarda kümelenen küçük boşluklar da açılır. Renkler sırayla yarı saydam (çarpma ve örtme karışımı) basılır; siyah en son ve en örtücü katmandır. Kâğıt lif ve gözenek gürültüsüyle dokulanır.",
     "etiketler": [
       "linol",
       "oyma baskı",
@@ -255,7 +257,7 @@
     "ayirt_edici": [
       "Zerreli ezme altın gök ve lacivert konturlu, uçları helezonla kıvrılan çin bulutları",
       "Gölgesiz, düz malakit yeşili kubbe; ince koyu mürekkep konturlar ve dilim çizgileri",
-      "Yükseltilmiş düz yeşil zemin düzlemi; ufukta pastel renkli süngerimsi kayalar, servi ve çiçek açmış meyve ağaçları",
+      "Yükseltilmiş düz yeşil zemin düzlemi; ufukta sırtın ardından yükselen pastel renkli, loblu süngerimsi kaya yığınları, servi ve çiçek açmış meyve ağaçları",
       "Kaide ve minarede yıldızlı çini panolar, lacivert friz, zikzak bant ve altın şebekeli pencereler",
       "Önde lale, karanfil, gül, sümbül ve papatyadan düz boyalı bahçe; çimene serpiştirilmiş küçük çiçekler",
       "Altın ve renkli cetvellerle çevrili resim, zerefşanlı kenar suyu; minarenin alemi çerçeveyi taşar"
@@ -270,7 +272,7 @@
       "#29563A",
       "#21170E"
     ],
-    "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Bütün biçimler SAHNE geometrisinden (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, alemler) düz dolgu ve ince mürekkep konturla çizilir; gölge ve degrade yoktur. Çin bulutları eğriliği artan (klotoid) bir omurga boyunca loblu şerit poligonlarıyla, kayalar gürültülü kapalı eğrilerle, çiçekli ağaçlar tohumlu özyinelemeli dallanmayla, servi yaprakları sıra sıra küçük kavislerle, çini panolar sekiz köşeli yıldız-haç örgüsüyle üretilir. Altın gök ve boya yüzeyi için piksel düzeyinde değer gürültüsü, kenar suyunda tohumlu zerefşan pulları kullanılır. Minarenin üst kısmı cetvellerden sonra yeniden çizilerek çerçeveyi taşar.",
+    "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Bütün biçimler SAHNE geometrisinden (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, alemler) düz dolgu ve ince mürekkep konturla çizilir; gölge ve degrade yoktur. Çin bulutları hafif S çizen, uçlarında eğriliği artan (klotoid) bir omurga boyunca iki kenarı loblu şerit poligonlarıyla; süngerimsi kayalar tepeye daralan bir zarf içinde sıra sıra dizilen loblu kapalı eğrilerle (öndeki sıra arkadakini örter); çiçekli ağaçlar tohumlu özyinelemeli dallanmayla, servi yaprakları sıra sıra küçük kavislerle, çini panolar sekiz köşeli yıldız-haç örgüsüyle üretilir. Altın gök ve boya yüzeyi için piksel düzeyinde değer gürültüsü, kenar suyunda tohumlu zerefşan pulları kullanılır. Ön bahçedeki çiçeklerin taçları çerçeveye kesilmeyecek bir kuşağa toplanır, sapları çerçeveye iner. Minarenin üst kısmı cetvellerden sonra yeniden çizilerek çerçeveyi taşar.",
     "etiketler": [
       "minyatür",
       "nakkaşhane",
@@ -299,10 +301,10 @@
     "ayirt_edici": [
       "Lacivert zemin üzerinde altın rumî ve hatayî su yoluyla bezeli bordür; köşe kareleri ve altın cetveller",
       "Kenar suyunda ince lacivert tığlar ve her kenarın ortasında dışa taşan hatayî tepelikler",
-      "Altın zeminli köşebentlerde lacivert rumîli, kırmızı hatayîli helezon dallar",
+      "Altın zeminli köşebentlerde iç içe geçen iki helezon sistemi: ince koyu saplı hatayî, penç, gonca ve yaprak dalları ile onların üstünden ince bir aralık bırakarak geçen lacivert rumî kolları; boşluklarda küçük kıvrımlar ve üçlü noktalar",
       "Dilimli sivri kemerli (mihrabiye) çerçevenin içinde aharlı krem zemin ve soluk altın halkâr",
       "Düz yeşil kubbe, altın kaburgalar ve tabanda altın-kırmızı dilim frizi; altın konturlu, tahrirli minare ve kaide",
-      "Kara Memi üslubunda iki tonlu tırtıklı saz yaprakları, lale, karanfil, gül ve sümbül"
+      "Kara Memi üslubunda iki tonlu tırtıklı saz yaprakları, mızrak biçimli lale yaprakları; lale, karanfil, gül ve sümbül"
     ],
     "palet": [
       "#CFA64E",
@@ -314,7 +316,7 @@
       "#E3A49B",
       "#4F8550"
     ],
-    "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Ezme altın, sağ üstten hafif parıltılı ve zerreli bir gürültü dokusu olarak bir kez üretilip sayfaya sabit desen dolgusu olarak kullanılır. Rumî, hatayî ve penç motifleri Bezier yollarıyla tanımlanıp döndürülerek yerleştirilir; helezonlar spiral nokta dizileriyle, köşebentlerdeki dallar boş alana en büyük daireyi sığdıran açgözlü daire istifi ve ağaç biçimli bağlantılarla kurulur, öbür köşebent aynalanarak simetri sağlanır. Bordür dört kenarda döndürülmüş sinüs su yolu, kemer iki yay ve kavşara eğrisinden oluşur. Sahne kemere sığması için 0,8 ölçekle aynı yerleşimde çizilir: düz dolgu, altın kontur, koyu tahrir; saz yaprakları omurga ve tırtıklı şerit poligonuyla üretilir.",
+    "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Ezme altın, sağ üstten hafif parıltılı ve zerreli bir gürültü dokusu olarak bir kez üretilip sayfaya sabit desen dolgusu olarak kullanılır. Rumî, hatayî ve penç motifleri Bezier yollarıyla tanımlanıp döndürülerek yerleştirilir; helezonlar spiral nokta dizileriyle kurulur. Köşebentte iki ayrı açgözlü daire istifi yapılır; her daireye bir helezon oturur ve helezonlar önceki sapların en yakın noktasından iki ucu teğetli Bezier saplarla beslenerek ağaç biçimli bir su yolu oluşturur. Alt katta hatayî sistemi, üst katta lacivert şeritli rumî sistemi çizilir; üst kat ayrı bir katmanda alttakini destination-out ile silerek iç içe geçme aralığı bırakır. Kalan boşluklar kapsama haritasının uzaklık dönüşümüyle bulunur ve büyükten küçüğe küçük kıvrımlar, penç ve üçlü noktalarla doldurulur; öbür köşebent aynalanarak simetri sağlanır. Bordür dört kenarda döndürülmüş sinüs su yolu, kemer iki yay ve kavşara eğrisinden oluşur. Sahne kemere sığması için 0,8 ölçekle aynı yerleşimde çizilir: düz dolgu, altın kontur, koyu tahrir; saz yaprakları omurga ve tırtıklı şerit poligonuyla üretilir.",
     "etiketler": [
       "tezhip",
       "altın",
@@ -342,8 +344,8 @@
     "koken": "15. yüzyıldan beri Türk kitap sanatlarında cilt kapağı, yan kâğıdı ve hat kenarı süslemesinde kullanılır. Çiçekli ebruyu 18. yüzyılda Hatip Mehmed Efendi başlattı; 20. yüzyılda Necmeddin Okyay çiçekli ebruyu geliştirip akkâse ve yazılı ebru gibi teknikleri canlandırdı, Mustafa Düzgünman geleneği sürdürdü.",
     "ayirt_edici": [
       "Lacivert ve çivit taşlardan battal gök; taşların arasında ince açık damarlar ve gelgitle dalgalanan kenarlar",
-      "Aynı noktaya iç içe serpilmiş okra ve sarı damlalardan halkalı güneş",
-      "Yeşil battalın kubbe meridyenleri boyunca taranmasıyla sivri dilimli, tepeye toplanan kubbe deseni",
+      "Aynı noktaya iç içe serpilmiş okra ve sarı damlalardan halkalı güneş; sarı toprak boyalı alemler",
+      "Yeşil battalın kubbe meridyenleri boyunca taranmasıyla sivri dilimli, tepeye toplanan kubbe deseni; 16 dilimi ayıran ince akkâse kâğıt çizgileri",
       "Akkâse şablonuyla ayrılmış, beyaz mermer desenli kaide ve minare; şablonun bıraktığı ince kâğıt çizgisi ve koyu pencereler",
       "Taraklı (tek yönde taranmış) toprak renkli zemin",
       "İğneyle çekilmiş iç içe renkli laleler, tırtıklı karanfiller, papatyalar, sümbüller, damla yapraklar ve boncuk dizisi gibi saplar"
@@ -358,7 +360,7 @@
       "#B3352A",
       "#F2EBDA"
     ],
-    "kodla_cizim": "Aubrey Jaffer'in ebru dönüşümleri uygulanır: damla p' = c + (p−c)·√(1 + r²/|p−c|²), tarak dişi p' = p + α·λ/(d+λ)·M (gelgitte komşu dişler ters yönde, eşit aralıklı dişlerde her noktaya en yakın iki diş), iğne adımı p' = p + v·e^(−|p−s|²/σ²). Her bölge (gök, zemin, kubbe, kasnak, bina, pencere, alem) için ayrı bir işlem dizisi kaydedilir. Damla çokgenlerini ileri taşımak yerine her piksel bu dönüşümlerin tersinden geçirilir (damlada tam ters formül, iğnede sabit nokta yinelemesi) ve hangi damlaya düştüğü bulunur; böylece en sert taramada bile sınırlar keskin ve hatasız kalır. Uyarlamalı örnekleme, damla kenarına doğru koyulaşan boya, akışla gerilen doku ve damla kimliği değişen piksellerde ince damar eklenir. Kubbe deseni boylam-yükseklik uzayında hesaplanıp meridyen eşlemesiyle kubbeye sarılır; bölgeler SAHNE bölge haritasıyla akkâse şablonu gibi ayrılır. Çiçekler kendi kutularında damla ve iğne çekişleriyle üretilir.",
+    "kodla_cizim": "Aubrey Jaffer'in ebru dönüşümleri uygulanır: damla p' = c + (p−c)·√(1 + r²/|p−c|²), tarak dişi p' = p + α·λ/(d+λ)·M (gelgitte komşu dişler ters yönde, eşit aralıklı dişlerde her noktaya en yakın iki diş), iğne adımı p' = p + v·e^(−|p−s|²/σ²). Her bölge (gök, zemin, kubbe, kasnak, bina, pencere, alem) için ayrı bir işlem dizisi kaydedilir. Damla çokgenlerini ileri taşımak yerine her piksel bu dönüşümlerin tersinden geçirilir (damlada tam ters formül, iğnede sabit nokta yinelemesi) ve hangi damlaya düştüğü bulunur; böylece en sert taramada bile sınırlar keskin ve hatasız kalır. Uyarlamalı örnekleme, damla kenarına doğru koyulaşan boya, akışla gerilen doku ve damla kimliği değişen piksellerde ince damar eklenir. Kubbe deseni boylam-yükseklik uzayında hesaplanıp meridyen eşlemesiyle kubbeye sarılır; 16 dilim, ayrı şablon parçaları gibi aralarında ince kâğıt çizgisi bırakılarak ayrılır; bölgeler SAHNE bölge haritasıyla akkâse şablonu gibi ayrılır. Alemler sarı toprak zeminli bir battalla boyanır. Çiçekler kendi kutularında damla ve iğne çekişleriyle üretilir; arka sıradaki goncalar kendi saplarıyla ön çiçeklerin arkasında kalır.",
     "etiketler": [
       "ebru",
       "battal",
@@ -389,7 +391,7 @@
       "Hafif mavimsi beyaz astar üzerinde kobalt, firuze ve zümrüt yeşili; ince siyah kontur",
       "Kabarık mercan kırmızısı laleler, karanfiller, rozetler ve alemler",
       "Kobalt konturlu ve kaburgalı zümrüt yeşili kubbe; firuze kasnakta kobalt pencereler",
-      "Uzun, kıvrık, tırtıklı, iki tonlu saz yaprakları ve sümbüller; gökte çin bulutları ve rozet güneş",
+      "Uzun, kıvrık, tırtıklı, iki tonlu saz yaprakları ve sümbüller; gökte kobalt, firuze ve kırmızı çin bulutları ile rozet güneş",
       "Her çinide sır parlaması ve pencere yansıması, sır birikmesiyle dalgalanan renk, iğne delikleri, çiniden çiniye ton ve baskı kayması"
     ],
     "palet": [
@@ -441,7 +443,7 @@
       "#173828",
       "#B4AC8A"
     ],
-    "kodla_cizim": "Kâğıt, 2048 px bir maske tuvalinde kesip-ekleme işlemleriyle kurulur: dolu sayfadan iç alan oyulur (destination-out), bina silueti, bulutlar, güneş, dantel ve çiçekler eklenir, ardından kubbe dilimleri, pencereler, damarlar ve kesik (köprülü) yarıklar oyulur. Bütün saplar ve köprüler en az 3,6 px genişliktedir; kapalı yarıklar setLineDash ile aralıklı kesildiği için ada oluşmaz. Geliştirme sırasında maske üzerinde bağlı bileşen sayımı (BFS) ve 1 px aşındırma denetimi yapıldı: kâğıt tek parçadır (denetim kodu sayfada kapalı durur). Görüntü; lifli zemin dokusu, maskeden üretilen bulanık ve kayık gölge, dokulu kâğıt ve maskenin kaydırılmış farkından elde edilen ince kenar ışığı ile kenar gölgesinin bileşimidir.",
+    "kodla_cizim": "Kâğıt, 2048 px bir maske tuvalinde kesip-ekleme işlemleriyle kurulur: dolu sayfadan iç alan oyulur (destination-out), bina silueti, bulutlar, güneş, dantel ve çiçekler eklenir, ardından kubbe dilimleri, pencereler, damarlar ve kesik (köprülü) yarıklar oyulur. Saplar ve köprüler çoğunlukla 3,6 px ve üzeri genişliktedir; yalnız yaprak diplerinde, birkaç kıvrım ucunda ve kubbe tepesinde kaburgaların birleştiği yerde 2–3 px'e iner. Kapalı yarıklar setLineDash ile aralıklı kesildiği için ada oluşmaz. Maske üzerinde bağlı bileşen sayımı (BFS) yapıldı: 2048 px çözünürlükte kâğıt tek parçadır, geriye yalnız kenar yumuşatmasından kalan tek piksellik kırıntılar kalır (denetim kodu sayfada kapalı durur). Görüntü; lifli zemin dokusu, maskeden üretilen bulanık ve kayık gölge, dokulu kâğıt ve maskenin kaydırılmış farkından elde edilen ince kenar ışığı ile kenar gölgesinin bileşimidir.",
     "etiketler": [
       "kat'ı",
       "kâğıt oyma",
@@ -484,7 +486,7 @@
       "#F6F4F0",
       "#18171B"
     ],
-    "kodla_cizim": "Canvas 2048 px iç çözünürlükte çizilir; sahne sivri kemere sığsın diye %84 ölçeklenir. Her cam parçası (Voronoi ile bölünmüş gök, kaburgalara ve enlemlere göre kesilmiş kubbe, kasnak şeritleri, minare ve kaide parçaları, ikiye bölünmüş yapraklar, taç yapraklar, bordür camları) gizli bir kimlik haritasına kendi rengiyle, kurşunun yarısı kadar şişirilerek çizilir. Kimliğin değiştiği kenarlardan Öklid uzaklık dönüşümü (Felzenszwalb) ile tek kalınlıkta, ortası hafif parlak kurşun üretilir. Cam piksel piksel renklendirilir: parça rengi ve degrade, yönlü değer gürültüsüyle çekme izleri, geniş gürültüyle yoğunluk farkı, sinüs ve gürültüyle katedral dalgası. Üstüne grizay boya, kabarcıklar, bulanık kurşunla kenar koyulaşması ve parlak camlardan 'screen' ışıltı eklenir; dışta taş duvar, kemer taşları, kilit taşı ve denizlik vektörle çizilip gürültü dokusuyla çarpılır.",
+    "kodla_cizim": "Canvas 2048 px iç çözünürlükte çizilir; sahne sivri kemere sığsın diye %84 ölçeklenir. Her cam parçası (Voronoi ile bölünmüş gök, kaburgalara ve enlemlere göre kesilmiş kubbe, kasnak şeritleri, minare ve kaide parçaları, ikiye bölünmüş yapraklar, taç yapraklar; kemer boyunca simetrik dizilen, tepede ve alt ortada altın kilit camıyla biten bordür camları) gizli bir kimlik haritasına kendi rengiyle, kurşunun yarısı kadar şişirilerek çizilir. Kimliğin değiştiği kenarlardan Öklid uzaklık dönüşümü (Felzenszwalb) ile tek kalınlıkta, ortası hafif parlak kurşun üretilir. Cam piksel piksel renklendirilir: parça rengi ve degrade, yönlü değer gürültüsüyle çekme izleri, geniş gürültüyle yoğunluk farkı, sinüs ve gürültüyle katedral dalgası. Üstüne grizay boya, yalnız bazı camlara serpilen kabarcıklar, bulanık kurşunla kenar koyulaşması ve parlak camlardan 'screen' ışıltı eklenir; dışta taş duvar, kemer taşları, kilit taşı ve denizlik vektörle çizilip gürültü dokusuyla çarpılır.",
     "etiketler": [
       "cam",
       "ışık",
@@ -551,27 +553,27 @@
     "aile": "Uzak Doğu",
     "ozgun": false,
     "ozet": "Japon ağaç baskısı: düz renk kalıpları, kalın siyah çizgiler, bokashi geçişli gök ve pembe sis kuşakları.",
-    "tanim": "Ukiyo-e, her rengin ayrı bir kiraz tahtası kalıba oyulup elle, sırayla washi kâğıdına basıldığı Japon ağaç baskı resmidir. Biçimleri ana kalıbın (sumi) kalın, eşit siyah çizgileri belirler; renk alanları düzdür, gökte ve kenarlarda kalıbın ıslak silinmesiyle elde edilen bokashi geçişleri görülür. Manzaralarda yatay sis kuşakları (kasumi) derinlik verir; tahtanın damarı ve hafif kayık baskı her nüshada sezilir.",
+    "tanim": "Ukiyo-e, her rengin ayrı bir kiraz tahtası kalıba oyulup elle, sırayla washi kâğıdına basıldığı Japon ağaç baskı resmidir. Biçimleri ana kalıbın (sumi) kalın siyah çizgileri belirler; renk alanları düzdür, gökte ve kenarlarda kalıbın ıslak silinmesiyle elde edilen bokashi geçişleri görülür. Manzaralarda yatay sis kuşakları (kasumi) derinlik verir; tahtanın damarı ve hafif kayık baskı her nüshada sezilir.",
     "koken": "17. yüzyıl Edo'sunda kitap resimleriyle başladı, 18. yüzyılda çok renkli baskı (nishiki-e) Suzuki Harunobu ile yerleşti. 1820'lerden sonra Avrupa'dan gelen Prusya mavisi gökleri değiştirdi; Katsushika Hokusai'nin 'Fuji'nin Otuz Altı Görünümü' ve Utagawa Hiroshige'nin 'Tōkaidō'nun Elli Üç Durağı' ile 'Edo'nun Yüz Ünlü Manzarası' manzara baskısının doruğudur. 19. yüzyıl sonunda Japonizm akımıyla Van Gogh ve Monet'yi derinden etkiledi.",
     "ayirt_edici": [
-      "Kubbe, kasnak, minare ve çiçekleri çevreleyen kalın, eşit siyah ana kalıp çizgileri; pencereler düz siyah",
-      "Üstte koyu Prusya mavisinden aşağı doğru açılan bokashi gök; kubbede yukarıdan aşağı yeşil bokashi",
-      "Minarenin önünden ve kubbenin arkasından geçen, üst kenarı pembe alt kenarı silinmiş kasumi sis kuşakları",
-      "Düz kırmızı güneş teker, çizgisiz mavi-gri uzak tepeler, sakura biçimli çentikli beyaz çiçekler ve kiraz dalları",
-      "Renk alanlarında ağaç damarı ve baren lekeleri; renklerin çizgiden hafifçe kaydığı kayık baskı",
+      "Kubbe, kasnak, minare ve çiçekleri çevreleyen kalın siyah ana kalıp çizgileri: kalınlığı yer yer değişir, kenarları oymanın izini taşıyan hafif tırtıklıdır; pencereler düz siyah",
+      "Üstte düz koyu Prusya mavisi şeritten (ichimonji bokashi) aşağı doğru açılan gök, ufukta şeftali bokashi; kubbede yukarıdan aşağı yeşil bokashi",
+      "Basamak basamak üst üste binen, alt ve üst kenarı düz, uçları üslupça yuvarlatılmış kasumi sis kuşakları; her katın üst kenarı koyu pembe, aşağısı silik; minareyi ortasından örter",
+      "Gök, güneş, zemin ve kubbede açıkça görülen kiraz tahtası damarı (dalgalı ince halkalar, düğüm çevresinde kıvrılan çizgiler) ve baren basıncının eşitsizliğinden kalan lekeler",
+      "Düz kırmızı güneş teker, çizgisiz mavi-gri uzak tepeler, sakura biçimli çentikli beyaz çiçekler ve kiraz dalları; renklerin çizgiden hafifçe kaydığı kayık baskı",
       "Lifli sıcak bej washi kâğıdı, siyah çerçeve çizgisi ve yazısız kırmızı ve sarı kartuşlar"
     ],
     "palet": [
-      "#1E3A74",
-      "#C43C2A",
-      "#367446",
-      "#D4766C",
-      "#EFE2C6",
+      "#1D2F4E",
+      "#B63F29",
+      "#476742",
+      "#CA8A71",
+      "#E4D6B9",
       "#221D1A",
-      "#D65C76",
-      "#DCAA3A"
+      "#B08A5E",
+      "#C99633"
     ],
-    "kodla_cizim": "Canvas 2048 px'de baskı sırası taklit edilir: önce lifli washi kâğıdı, sonra her renk kalıbı ayrı ekran dışı tuvale çizilip 'multiply' ile ve birkaç piksel kaydırılarak (kayık baskı) basılır. Ağaç damarı, alan bükmeli değer gürültüsünden üretilen bir alfa maskesinin her kalıpta farklı açıyla 'destination-out' uygulanmasıdır. Nesneler (minare, yapı, bitkiler) gruplar hâlinde ressam sırasıyla işlenir: her öğe renk ve çizgi tuvallerinde önce kendi biçimini siler, sonra renklenip çizilir; böylece öndeki biçim arkadaki çizgileri örter. Önde duranın silueti kâğıt rengine döndürülür. Gök, kubbe ve kasumi bokashi'leri doğrusal degradelerle, sakura taç yaprakları çentikli Bézier biçimleriyle, kiraz dalları incelen şeritlerle çizilir; en sonda kâğıt dokusu çarpılır, kenar boşluğu ve kartuşlar eklenir.",
+    "kodla_cizim": "Canvas 2048 px'de baskı sırası taklit edilir: önce lifli washi kâğıdı, sonra her renk kalıbı ayrı ekran dışı tuvale çizilip 'multiply' ile ve birkaç piksel kaydırılarak (kayık baskı) basılır. Kiraz tahtasının damarı iki dokudan gelir: bükülmüş değer gürültüsüyle dalgalandırılmış, düğüm çevresinde kıvrılan sinüs halkalarının açık tepeleri boyayı siler ('destination-out', baren basıncının geniş lekeleriyle birlikte), koyu tepeleri katmanın bir kopyasını yalnız oralarda bir kez daha basar; her kalıp farklı açıyla damarlanır. Ana kalıp çizgileri önce vektörle, bir de 1,5 kat kalın olarak çizilir; kalın kopya ikili bir leke maskesinde kalır, sonra katman 1,25 px bulanıklaştırılıp gürültüyle değişen bir eşikten geçirilir: kalınlık yer yer değişir, kenarlar hafif tırtıklanır, mürekkep yoğunluğu eşitsizleşir. Nesneler gruplar hâlinde ressam sırasıyla işlenir; önde duranın silueti kâğıt rengine döndürülür, böylece öndeki biçim arkadaki çizgileri örter. Gök (ichimonji), kubbe ve kasumi bokashi'leri doğrusal degradelerle; kasumi kuşakları basamaklı katlar hâlinde, alttaki kat üsttekinin silik ucunu örterek; sakura taç yaprakları çentikli Bézier biçimleriyle, kiraz dalları incelen şeritlerle çizilir; en sonda kâğıt dokusu çarpılır, kenar boşluğu ve kartuşlar eklenir.",
     "etiketler": [
       "ağaç baskı",
       "Japon",
@@ -594,27 +596,27 @@
     "ad_en": "Sumi-e Ink Wash",
     "aile": "Uzak Doğu",
     "ozgun": false,
-    "ozet": "Pirinç kâğıdına tek mürekkebin sulandırılmış tonlarıyla, az ve kendinden emin fırça vuruşları.",
+    "ozet": "Pirinç kâğıdına tek mürekkebin sulandırılmış tonlarıyla, az, kendinden emin fırça vuruşu ve bol boşluk.",
     "tanim": "Sumi-e (Çincede shuimo hua), çubuk mürekkebin suyla farklı yoğunluklarda açılıp yumuşak fırçayla emici pirinç kâğıdına uygulandığı resim geleneğidir. Her vuruş tek seferde ve düzeltilmeden yapılır: fırça bastırılıp kaldırılarak yaprak biçimlenir, kuruyan fırça 'kasure' denen beyaz çizgili izler bırakır, ıslak mürekkep kâğıdın liflerine yayılır. Boşluk (ma) resmin parçasıdır; sis, uzaklık ve ışık boş bırakılan kâğıtla anlatılır. Renk çok az kullanılır, resim çoğunlukla kırmızı bir mühürle tamamlanır.",
     "koken": "Tang ve Song Çin'inde gelişti; geleneği Wang Wei'ye bağlanır, Mu Qi ve Liang Kai gibi Chan (Zen) ressamlarıyla olgunlaştı. 13–14. yüzyıllarda Zen keşişleriyle Japonya'ya geçti ve Muromachi döneminde Sesshū Tōyō ile doruğa ulaştı. Bambu, erik çiçeği, orkide ve krizantem, yani 'dört soylu bitki', fırça eğitiminin temelidir.",
     "ayirt_edici": [
-      "Soluk gri lavlardan koyu siyah vurgulara uzanan mürekkep tonları; kubbenin solunda kendinden emin tek koyu vuruş",
-      "Bastırılıp kaldırılarak tek vuruşta yapılmış sivri yapraklar ve hızlı fırça çizgileriyle kaburgalar",
-      "Kasnaktaki geniş lav vuruşunda ve dallarda kuru fırçanın beyaz çizgili 'kasure' izi",
-      "Islak mürekkebin pirinç kâğıdının liflerine yumuşakça yayılması; kubbe lavında geri akma lekesi",
-      "Bol boşluk: kaide ve minarenin alt yanı sise karışıp kaybolur, güneş yalnızca soluk bir halkanın içindeki boşluktur",
-      "Çok az renk: kubbede soluk yeşil, alemlerde okra; yazısız, sekiz köşeli yıldız desenli küçük kırmızı mühür"
+      "Kubbenin gölge yanı tek bir yan fırça vuruşudur: fırçanın ucunda koyu, topuğunda soluk mürekkep; aşağıda kuruyup kıl kıl açılır",
+      "Tepeden inip kuruyarak sönen birkaç hızlı kaburga çizgisi; ışık yanında kubbenin sağ kenarı neredeyse kaybolur",
+      "Kasnak, yoğunluğu soldan sağa azalan fırça noktalarından bir bant; gölge yanında ıslak noktalar lavın içine akar",
+      "Kuru fırçanın 'kasure' izi erik gövdesinde, korniş ve kasnak çizgilerinde; ıslak vuruşların kenarında mürekkep liflere yayılır",
+      "Bol boşluk (ma): kaide ve minarenin alt yanı sise karışır, güneş boş bırakılmış soluk bir dairedir; sol alt köşeden giren erik dalında kümeler hâlinde çiçek, tomurcuk ve yosun noktaları",
+      "Çok az renk: kubbe ve kasnakta soluk yeşil, alem kürelerinde okra; sağ altta yazısız, geometrik desenli küçük kırmızı mühür"
     ],
     "palet": [
-      "#F4EFE3",
-      "#DBD7CC",
-      "#7E7C78",
-      "#1A1814",
-      "#C5CAB5",
-      "#D0A051",
-      "#BF4437"
+      "#F3EDE0",
+      "#C9CBB6",
+      "#A09F90",
+      "#5F6154",
+      "#141415",
+      "#D2AA69",
+      "#BE4439"
     ],
-    "kodla_cizim": "Canvas 2048 px. Fırça vuruşu bir omurga eğrisi ve basınç profiliyle çizilir: ıslak gövde, kuruyan uca doğru solan degradeli bir şerittir; üstünde 3–56 kıl kendi mürekkep miktarı ve sinüs gürültüsüyle ilerler, mürekkebi eşiğin altına düşünce kesilir (kasure). Yapı ve bitki vuruşları ayrı katmanlara yapılır. Lavlar (soluk gri, yeşil, okra) bulanıklaştırılmış maskelerden hesaplanan yoğunluk alanlarıdır: kenarları lif ve benek gürültüsüyle tırtıklanır, kenarda mürekkep birikir; taç yaprakları kemiksiz (mogu) lav lekeleridir. Birleştirmede vuruşların bulanık kopyası lif gürültüsüyle karıştırılarak mürekkebin kâğıda yayılması verilir; yapı katmanı gürültülü bir sis maskesiyle aşağıda söndürülür. Kâğıt uzamış lif gürültüsü ve gömülü kıvrık liflerle, mühür oyulmuş geometrik çizgiler ve damga dokusuyla çizilir; hepsi sıcak beyaz kâğıtla çarpılarak birleşir.",
+    "kodla_cizim": "Canvas 2048 px; mürekkep bir yoğunluk alanında birikir ve kâğıt rengine Beer-Lambert benzeri üstel bir azalmayla uygulanır. Fırça vuruşu, omurga boyunca 0,5 px adımlarla enine taranır: fırça 5–76 kıldan oluşur, her kılın kendi mürekkep yükü ve kuruma hızı vardır (kenardaki kıllar önce kurur); kuruyan kıl kâğıdın ince tanesinin yalnız tepelerine değer, böylece kasure çizgileri ve tanecikli kuru fırça kendiliğinden oluşur. Kıllar arasında enine ton farkı yan fırçanın ucu koyu, topuğu soluk yüklemesini verir; bastırılan baş yuvarlanır, uç sivrilir. Vuruşun ıslak payı ayrı bir alana yazılır ve sonda iki kutu bulanıklığından uzamış lif gürültüsüyle seçilen bir saçak olarak kâğıda yayılır. Lavlar bulanık maskelerden hesaplanır: eşikleri gürültüyle tırtıklanır, kuruyan kenarda mürekkep birikir, içte tanelenir; birkaç geri akma (çiçeklenme) lekesi eklenir. Kaide ve minarenin alt yanı gürültülü bir sis maskesiyle söner. Erik çiçekleri iki kısa kavisli taç yaprağı çizgisi ve noktalı erciklerle, kendi düzleminde basıklaştırılarak çizilir; arkalarındaki dal silinir. Yeşil ve okra ayrı renk katmanlarıdır; mühür oyulmuş geometrik çizgiler ve damga dokusuyla çizilir.",
     "etiketler": [
       "sumi-e",
       "mürekkep",
@@ -641,10 +643,11 @@
     "koken": "1860'ların sonunda Paris'te doğdu; adını Claude Monet'nin 1874 sergisindeki 'İzlenim, Gün Doğumu' tablosundan aldı. Camille Pissarro, Alfred Sisley, Pierre-Auguste Renoir ve Berthe Morisot akımın öncülerindendir; Monet'nin saman yığınları ve Rouen Katedrali dizileri aynı konunun farklı ışıklardaki izlenimlerini işler.",
     "ayirt_edici": [
       "Yan yana konmuş kısa, kırık, karıştırılmamış saf renk lekeleri; renkler gözde karışıyor",
-      "Kubbenin ışığında sarı-yeşil ve turuncu, gölgesinde viridyen, ultramarin ve mor kıvılcımlar",
-      "Renkli gölgeler: taş yapıların gölgesi leylak-mavi, ışıklı yanı krem ve açık sarı",
+      "Kubbenin ışığında sarı-yeşil ve açık zümrüt, gölgesinde viridyen, ultramarin ve mor kıvılcımlar; yer yer sıcak turuncu-sarı ışık lekeleri",
+      "Renkli gölgeler: taş yapıların gölgesi leylak-mavi ve serin gri, ışıklı yanı krem ve açık sarı",
       "Güneşin çevresinde titreşen sıcak ışık ve havadaki parıltı",
-      "Yönü ve boyu değişen canlı fırça izleri; yumuşak, kayıp kenarlar"
+      "Yönü ve boyu değişen canlı fırça izleri: gökte daha iri, çiçek tarlasında küçük ve sık; dallarda saplar boyunca koyu yeşil, kesik lekeler",
+      "Yumuşak, kayıp kenarlar"
     ],
     "palet": [
       "#6AA8DE",
@@ -656,7 +659,7 @@
       "#BEAADE",
       "#FCEEC6"
     ],
-    "kodla_cizim": "Işık modeli her piksel için bir bölge ve 0–1 arası bir aydınlık değeri verir. Her leke, bölgesinin ışık, orta ya da gölge kümesinden (değerleri birbirine yakın, tonları farklı saf renkler) ağırlıklı rastgele seçilir. Lekeler 2048 piksellik tuvalde birkaç kıllık kısa fırça vuruşlarıdır; yönü bölgeye göre (kubbede meridyen, kasnakta yatay, gökte eğik, yapraklarda eksen) belirlenip gürültüyle saptırılır, rengi biraz kaydırılmış bir noktadan okunduğu için kenarlar kaybolur. Seyreltik bir ön boyanın üstüne üç boyda leke katı, ardından tamamlayıcı kıvılcımlar, yapı ayrıntıları, güneş ve çiçekler gelir; hafif boya kabartısı ve bez dokusu son ışıkta eklenir.",
+    "kodla_cizim": "Işık modeli her piksel için bir bölge ve 0–1 arası bir aydınlık değeri verir. Her leke, bölgesinin ışık, orta ya da gölge kümesinden (değerleri birbirine yakın, tonları farklı saf renkler) ağırlıklı rastgele seçilir. Lekeler 2048 piksellik tuvalde birkaç kıllık kısa fırça vuruşlarıdır; yönü bölgeye göre (kubbede meridyen, kasnakta yatay, gökte eğik, yapraklarda eksen) belirlenip gürültüyle saptırılır, rengi biraz kaydırılmış bir noktadan okunduğu için kenarlar kaybolur. Seyreltik bir ön boyanın üstüne üç boyda leke katı gelir (gökte ince katlar seyrek tutulur), ardından tamamlayıcı kıvılcımlar, yapı ayrıntıları, saplar boyunca ve yan dallardaki yapraklarda koyu lekeler, güneş ve çiçekler; hafif boya kabartısı ve bez dokusu son ışıkta eklenir.",
     "etiketler": [
       "empresyonizm",
       "sanat akımı",
@@ -680,11 +683,12 @@
     "tanim": "Puantilizm (noktacılık), resmi küçük, ayrı ve karıştırılmamış renk noktalarıyla kurar; renkler tuvalde değil izleyicinin gözünde karışır. Sınırlı bir saf renk paleti kullanılır, tamamlayıcı renkler yan yana konarak titreşim yaratılır. Renk kuramına dayanan bu yöntem düzenli, sakin ve ışıklı bir yüzey verir.",
     "koken": "Georges Seurat 1880'lerde Michel Eugène Chevreul ve Ogden Rood'un renk kuramlarından yola çıkarak geliştirdi; 'La Grande Jatte Adası'nda Bir Pazar Öğleden Sonrası' (1884–1886) akımın simgesidir. Paul Signac, Henri-Edmond Cross ve Théo van Rysselberghe yöntemi Yeni Empresyonizm adıyla sürdürdü; Seurat bazı tablolarına noktalarla boyanmış çerçeveler ekledi.",
     "ayirt_edici": [
-      "Resmin tamamı küçük, ayrı ve hemen hemen eş boyda saf renk noktalarından oluşuyor",
+      "Resmin tamamı küçük, ayrı ve hemen hemen eş boyda saf renk noktalarından oluşuyor; alemler gibi ince ayrıntılarda noktalar küçülüyor",
       "Yeşil kubbe yeşil, sarı ve mavi noktalarla kurulmuş; ışıkta ve gölgede turuncu ve mor tamamlayıcı noktalar",
       "Kontur boyunca ışınım halesi: kubbe ve minarenin kenarında gök daha açık, yapının kenarı daha koyu",
+      "Beyaz çiçeklerde ışık yanı krem-sarı, gölge yanı mavi-leylak noktalar; taç yapraklar serin bir nokta sırasıyla ayrılıyor",
       "Noktaların arasından görünen astarlı bez",
-      "Komşu rengin tamamlayıcısıyla noktalanmış, ince koyu bir sırayla resimden ayrılan boyalı çerçeve"
+      "Komşu rengin tamamlayıcısıyla noktalanmış, elle atılmış ince koyu bir nokta sırasıyla resimden ayrılan boyalı çerçeve"
     ],
     "palet": [
       "#FAE240",
@@ -696,7 +700,7 @@
       "#22965C",
       "#96C63A"
     ],
-    "kodla_cizim": "Işık modelli, renkli gölgeli bir hedef tabloya bulanık kopyasından farkı eklenerek kontur halesi (ışınım) verilir; güneş çevresindeki yumuşak geçiş bunun dışında tutulur. Bridson Poisson diski üç ölçekte nokta üretir: seyrek bir alt kat, ana kat ve kontur ile küçük öğelerde daha ince noktalar. Her noktanın hedef rengi, on iki saf renk ve üç açık tondan oluşan paletin en iyi üçlü karışımına ayrıştırılır (doğrusal ışıkta optik karışım; değeri hedeften uzak boyalar ve tek renge yığılma cezalandırılır) ve ağırlıklara göre tek bir renk seçilir; yüzde beş olasılıkla tamamlayıcı renk konur. Çerçeve noktaları iç kenarın ortalama renginin tamamlayıcısından ayrıştırılır. Noktalar hafif bir kabartma ve bez dokusuyla ışıklandırılır.",
+    "kodla_cizim": "Işık modelli, renkli gölgeli bir hedef tabloya (taç yapraklarda ışık geçişi ve serin kenar çizgisi dahil) bulanık kopyasından farkı eklenerek kontur halesi (ışınım) verilir; güneş çevresindeki yumuşak geçiş bunun dışında tutulur. Bridson Poisson diski üç ölçekte nokta üretir: seyrek bir alt kat, ana kat ve kontur ile küçük öğelerde daha ince noktalar. Her noktanın hedef rengi, on iki saf renk ve üç açık tondan oluşan paletin en iyi üçlü karışımına ayrıştırılır (doğrusal ışıkta optik karışım; değeri hedeften uzak boyalar ve tek renge yığılma cezalandırılır) ve ağırlıklara göre tek bir renk seçilir; yüzde beş olasılıkla tamamlayıcı renk konur. Alemlerin çevresi silinip gök ve altın çok küçük noktalarla yeniden kurulur (hilal okunsun diye). Çerçeve noktaları iç kenarın ortalama renginin tamamlayıcısından ayrıştırılır; iç sınır aralığı ve hizası oynak noktalarla elle atılmış gibi çizilir. Noktalar hafif bir kabartma ve bez dokusuyla ışıklandırılır.",
     "etiketler": [
       "puantilizm",
       "yeni empresyonizm",
@@ -721,8 +725,8 @@
     "koken": "1890'larda Avrupa'da Arts and Crafts hareketi ve Japon baskılarının etkisiyle doğdu; Fransa'da Art Nouveau, Almanya'da Jugendstil, Avusturya'da Sezession, İtalya'da Stile Liberty adını aldı. Alfons Mucha'nın Paris afişleri (Gismonda, Mevsimler, Zodyak), Hector Guimard'ın metro girişleri, Victor Horta'nın Brüksel yapıları ve Gustav Klimt'in altınlı panoları akımın simgeleridir. İstanbul'da Raimondo D'Aronco'nun Karaköy ve Yıldız'daki yapıları Osmanlı'daki örneklerdendir.",
     "ayirt_edici": [
       "Kubbenin ardında Mucha usulü büyük hale: mozaik taşlı iki sıra bant, inci dizisi, dantel kemercikleri ve ince ışın çizgileri",
-      "Basık kemerli süslü çerçeve: iki sıra renkli kare taştan bant, altın çizgiler, madalyonlar ve kıvrık köşe süsleri",
-      "Uçları sarmal kıvrılan kamçı filizleri ve S biçimli zambak sapları",
+      "Basık kemerli süslü çerçeve: iki sıra renkli kare taştan bant, altın çizgiler, köşe gülleri, madalyonlar ve kıvrık köşe süsleri",
+      "Uçları sarmal kıvrılan kamçı filizleri ve S biçimli zambak sapları; çerçevenin içinden akıp ucu dalga gibi kıvrılan, kat kat şerit bulutlar",
       "Kalınlığı değişen koyu kahve konturlarla çevrilmiş düz renk alanları; kubbede ve yapılarda afiş usulü iki tonlu gölge",
       "Önde çerçeveyi taşan iri gelincikler, uzun kıvrık bıçak yapraklar; yanlarda altı yapraklı zambaklar",
       "Solgun zarif palet ve gök zemininde soluk dört yapraklı çiçeklerden şablon deseni"
@@ -737,7 +741,7 @@
       "#79A06F",
       "#3B3122"
     ],
-    "kodla_cizim": "Canvas 2048 px'de vektör olarak çizilir. Kalın-ince kontur, biçimin dışına kırpılmış ve sağ alta kaydırılmış kalın bir çizgiyle ince ana çizginin üst üste konmasıyla elde edilir. Kamçı kıvrımları, sinüslü bir S eğrisine eklenmiş logaritmik sarmalın, ortası şişen ve uca doğru incelen şeritlere çevrilmesidir. Çerçeve büyük yarıçaplı bir yaydan kurulan basık kemerdir; bantta yay ve kenarlar boyunca döndürülmüş renkli kareler mozaik dokusu verir. Hale eş merkezli halka dilimleri, inci daireleri ve kemerciklerle; kubbe, kaburga eğrilerinden kurulan parlak şerit ve elips dışı gölgeyle iki tonlu boyanır. Zambak ve gelincikler Bézier taç yapraklarla, yapraklar kıvrık eksen boyunca iki tonlu bıçak biçimleriyle çizilir; sonunda taş baskı kâğıdı dokusu çarpılır.",
+    "kodla_cizim": "Canvas 2048 px'de vektör olarak çizilir. Kalın-ince kontur, biçimin dışına kırpılmış ve sağ alta kaydırılmış kalın bir çizgiyle ince ana çizginin üst üste konmasıyla elde edilir. Kamçı kıvrımları, sinüslü bir S eğrisine teğeti kırılmadan eklenen logaritmik sarmalın, ortası şişen ve uca doğru incelen şeritlere çevrilmesidir; bulutlar da çerçeve kenarından başlayan, alt kenarı düz gölgeli üç kat böyle şerittir. Çerçeve büyük yarıçaplı bir yaydan kurulan basık kemerdir; bantta yay ve kenarlar boyunca döndürülmüş renkli kareler mozaik dokusu verir. Hale eş merkezli halka dilimleri, inci daireleri ve kemerciklerle; kubbe, kaburga eğrilerinden kurulan parlak şerit ve elips dışı gölgeyle iki tonlu boyanır. Zambak ve gelincikler Bézier taç yapraklarla, yapraklar kıvrık eksen boyunca iki tonlu bıçak biçimleriyle çizilir; sonunda taş baskı kâğıdı dokusu çarpılır.",
     "etiketler": [
       "afiş",
       "Mucha",
@@ -775,7 +779,7 @@
       "#0D0E0D",
       "#08382C",
       "#0F6A4C",
-      "#7CC4A0",
+      "#64A584",
       "#E9CB72",
       "#B98C2C",
       "#F0E3C4",
@@ -825,7 +829,7 @@
       "#4F7247",
       "#CCA03E"
     ],
-    "kodla_cizim": "Canvas (2048 iç çözünürlük). Arka plan, birkaç yapı çizgisinden sonra hücreleri tek tek bölen BSP kesimleriyle yaklaşık 118 dışbükey düzleme ayrılır; her düzlem okr/gri/kahve tonlarından birini alır (minarenin arkası koyu, kubbenin gölgeli yanı açık tutulur) ve bir kenarından içeri doğrusal geçişle gölgelenir; üç hücre prosedürel ahşap damarı, yazısız gazete yarım tonu ve nokta deseniyle doldurulur. Minare, kaide, kasnak ve kubbe önce ekran dışı bir katmana düz kübist tonlarla (prizma yüzleri, 16 dilim, kaburgalar) çizilir; sonra kesim doğrularının oluşturduğu her hücre kaydırılıp döndürülerek taşınır, kendi ton/ışık geçişini ve yalnız nesnenin içinde kalan koyu kenar çizgilerini alır; parçaların arasındaki aralıklara nesnenin koyulaşmış, kaymamış hâli dolar. Kubbenin tepeden görünüşü, şerefe halkaları ve kaidenin yan yüzü ikinci bakış olarak eklenir. Çiçeklerin taç yaprakları altı köşeli çokgenlerdir ve ekseninden aydınlık/gölgeli iki düzleme bölünür. Ardından yarı saydam düzlemler, piksel renginden örneklenen 38 bin kısa fırça vuruşu, koyu düzlem çizgileri ve tuval dokusu gelir. Geometri SAHNE'den (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, bitki yerleri) alınır.",
+    "kodla_cizim": "Canvas (2048 iç çözünürlük). Arka plan, birkaç yapı çizgisinden sonra hücreleri tek tek bölen BSP kesimleriyle yaklaşık 118 dışbükey düzleme ayrılır; her düzlem okr/gri/kahve tonlarından birini alır (minarenin arkası koyu, kubbenin gölgeli yanı açık tutulur) ve bir kenarından içeri doğrusal geçişle gölgelenir; üç hücre prosedürel ahşap damarı, yazısız gazete yarım tonu ve nokta deseniyle doldurulur. Minare, kaide, kasnak ve kubbe önce ekran dışı bir katmana düz kübist tonlarla (prizma yüzleri, 16 dilim, kaburgalar) çizilir; sonra kesim doğrularının oluşturduğu her hücre kaydırılıp döndürülerek taşınır, kendi ton/ışık geçişini ve yalnız nesnenin içinde kalan koyu kenar çizgilerini alır; parçaların arasındaki aralıklara nesnenin koyulaşmış, kaymamış hâli dolar. Kubbenin tepeden görünüşü, şerefe halkaları ve kaidenin yan yüzü ikinci bakış olarak eklenir. Çiçeklerin taç yaprakları altı köşeli çokgenlerdir ve ekseninden aydınlık/gölgeli iki düzleme bölünür. Ardından yarı saydam düzlemler, piksel renginden örneklenen 38 bin kısa fırça vuruşu, koyu düzlem çizgileri ve hafif bir kontrast artışıyla birlikte tuval dokusu gelir. Geometri SAHNE'den (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, bitki yerleri) alınır.",
     "etiketler": [
       "modern sanat",
       "avangart",
@@ -973,12 +977,12 @@
     "tanim": "Low poly, sahneyi az sayıda düz gölgelenmiş üçgenden oluşan bir ağ olarak gösterir; her üçgen tek renktir ve hacim, ışığa göre farklı ton alan yüzlerle (faset) okunur. Üçgen kenarları çizgiyle değil, komşu yüzler arasındaki renk basamaklarıyla görünür. Oyun grafiğinde, hareketli grafik tasarımında, duvar kâğıtlarında ve poster illüstrasyonunda yaygındır.",
     "koken": "Adını 1990'ların gerçek zamanlı 3B grafiğindeki düşük poligon sayılı modellerden alır; 2010'larda bağımsız oyunlar ve dijital illüstrasyonda bilinçli bir estetiğe dönüştü. Fotoğraf ve resimleri Delaunay üçgenlemesiyle üçgen ağına çeviren üretken tasarım araçları bu görünümü yaygınlaştırdı.",
     "ayirt_edici": [
-      "Bütün yüzey yaklaşık 3 600 düz renkli üçgenden oluşan tek bir ağ; çizgi yok, kenarlar renk basamaklarıyla görünüyor",
+      "Bütün yüzey yaklaşık 3 800 düz renkli üçgenden oluşan tek bir ağ; çizgi yok, kenarlar renk basamaklarıyla görünüyor",
       "Gökte büyük üçgenler; kubbede, pencerelerde, minarede ve çiçeklerde küçülen üçgenler",
-      "Kubbe kaburgalar boyunca hizalanmış dörtgen hücrelerden; her hücrenin iki üçgeni ayrı ton alarak dilimleri belirginleştiriyor",
+      "Kubbe kaburgalar boyunca hizalanmış hücrelerden; her kaburga tabandan üst üçte bire dek uzanan ince, bir ton koyu üçgen şeridi",
       "Kemerli pencereler beşgen, şerefe korkulukları zikzak üçgen dizisi, minaredeki zikzak bant diş sıraları hâlinde",
-      "Sağ üstten gelen ışıkla mücevher kesimi gölgelendirme; güneş, eş merkezli halkalardan ışıyan bir üçgen yelpazesi",
-      "Alemler ve hilaller elle üçgenlenmiş altın yüzler; yapraklar orta damarda kırılan iki tonlu yüzeyler"
+      "Sağ üstten gelen ışıkla mücevher kesimi gölgelendirme; güneş, yüzleri dışa eğik on köşeli bir disk ve onu saran düzgün çokgen hale halkaları",
+      "Alemler, hilaller, küçük pencereler ve ince saplar elle üçgenlenmiş; yapraklar orta damarda, saplar ortadan kırılan iki tonlu yüzeyler"
     ],
     "palet": [
       "#90BCE4",
@@ -990,7 +994,7 @@
       "#F8C847",
       "#527643"
     ],
-    "kodla_cizim": "Canvas (2048 iç çözünürlük). SAHNE geometrisiyle her nesne (kubbe dilimleri, pencereler, minare parçaları, yapraklar, çiçekler…) ayrı bir renk kimliğiyle kimlik haritasına çizilir. Noktalar: kubbede kaburga × enlem kafesi, pencerelerde kemer beşgeni köşeleri, yapı kenarlarında sık noktalar, yaprak ve çiçek kenarlarında (ışın boyunca yürüyerek bulunan) noktalar, güneşin çevresinde halkalar; gök ve zemin değişken yarıçaplı Poisson diskiyle doldurulur. Komşuluk bilgili, yürüyerek yer bulan Bowyer–Watson Delaunay yaklaşık 1 850 noktadan 3 600 üçgen üretir. Her üçgenin rengi SAHNE.renkHaritasi'nın üçgen içindeki ortalamasıdır (yalnız çoğunluk nesnesinin örnekleri); üstüne nesne türüne göre çözümsel yüzey normaliyle sağ üstten Lambert ışığı ve küçük rastgele yüz farkı eklenir. Alemler ve zikzak bant elle üçgenlenir.",
+    "kodla_cizim": "Canvas (2048 iç çözünürlük). SAHNE geometrisiyle her nesne (kubbe dilimleri, pencereler, minare parçaları, yapraklar, çiçekler…) ayrı bir renk kimliğiyle kimlik haritasına çizilir. Noktalar: kubbede kaburga × enlem kafesi (alt seviyelerde kaburganın iki yanına konan noktalar ince bir kaburga şeridi kurar), pencerelerde kemer beşgeni köşeleri, yapı kenarlarında sık noktalar, yaprak ve çiçek kenarlarında (ışın boyunca yürüyerek bulunan) noktalar, güneşte on köşeli disk ve aynı açılara dizilmiş hale halkaları; gök ve zemin değişken yarıçaplı Poisson diskiyle doldurulur. Komşuluk bilgili, yürüyerek yer bulan Bowyer–Watson Delaunay yaklaşık 1 900 noktadan 3 800 üçgen üretir. Her üçgenin rengi SAHNE.renkHaritasi'nın üçgen içindeki ortalamasıdır (yalnız çoğunluk nesnesinin örnekleri); üstüne nesne türüne göre çözümsel yüzey normaliyle sağ üstten Lambert ışığı ve küçük rastgele yüz farkı eklenir. Kaburga şeridindeki ince üçgenler bir ton koyulaştırılır, güneş diski sıcak açık sarıya boyanır. Alemler, zikzak bant, minare ve kaide pencereleri (kemer beşgeni üç üçgen) ve saplar (yalnız görünen parçaları, iki tonlu şerit) ağın üstüne elle üçgenlenir.",
     "etiketler": [
       "üçgen",
       "ağ",
@@ -1020,7 +1024,7 @@
       "Üç tonlu yüzey gölgelemesi: üst yüzler en açık, sağ (güneşe bakan) yüzler açık, sol yüzler koyu",
       "Kubbe izometrik elipslerden kurulmuş dönel yüzey; 32 dilim düz tonlarla ve ince kaburga çizgileriyle",
       "Sekizgen prizma minare, korkuluklu iki şerefe ve soğan topuz; zemine sola düşen düz yarı saydam gölgeler",
-      "Karonun üstünde yükseltilmiş çiçek tarhları, yuvarlak çalılar ve küçük yol fenerleri"
+      "Karonun üstünde yükseltilmiş çiçek tarhları, yuvarlak çalılar, küçük yol fenerleri; minarenin dibindeki avluda yıldız kakmalı taş madalyon üstünde sekizgen şadırvan ve saksıda bir hurma ağacı"
     ],
     "palet": [
       "#1F693C",
@@ -1032,7 +1036,7 @@
       "#A9764A",
       "#BFE0EE"
     ],
-    "kodla_cizim": "Tek canvas (2× iç çözünürlük). Kendi izdüşüm fonksiyonu P(x,y,z) = (512 + (x−y)·cos30°, OY + (x+y)·sin30° − z) ile bütün öğeler dünya koordinatında kuruldu. Kutular, n kenarlı prizmalar ve kesik koniler yüzey normali ile ışık vektörünün (sağ üst) iç çarpımına göre rampadan düz ton alır; arkaya bakan yüzler çizilmez. Kubbe SAHNE.kubbeProfili()'nden alınan profille dönel yüzey olarak 32 dilime bölündü, her dilimin yalnız izleyiciye bakan kısmı görünürlük sınırında kesilip hafif dikey geçişle dolduruldu; kasnak pencereleri silindir yüzeyine sarılmış sivri kemerler, kaide pencereleri yüz düzlemine eğilmiş kemerlerdir. Gölgeler ışık yönünde zemine izdüşürülen noktaların dışbükey zarfıyla ekran dışı tuvalde birleştirilip karo üstüne kırpıldı. Tarh, çalı, çiçek ve fenerler derinliğe (x+y) göre sıralanıp ressam algoritmasıyla çizildi.",
+    "kodla_cizim": "Tek canvas (2× iç çözünürlük). Kendi izdüşüm fonksiyonu P(x,y,z) = (512 + (x−y)·cos30°, OY + (x+y)·sin30° − z) ile bütün öğeler dünya koordinatında kuruldu. Kutular, n kenarlı prizmalar ve kesik koniler yüzey normali ile ışık vektörünün (sağ üst) iç çarpımına göre rampadan düz ton alır; arkaya bakan yüzler çizilmez. Kubbe SAHNE.kubbeProfili()'nden alınan profille dönel yüzey olarak 32 dilime bölündü, her dilimin yalnız izleyiciye bakan kısmı görünürlük sınırında kesilip hafif dikey geçişle dolduruldu; kasnak pencereleri silindir yüzeyine sarılmış sivri kemerler, kaide pencereleri yüz düzlemine eğilmiş kemerlerdir. Gölgeler ışık yönünde zemine izdüşürülen noktaların dışbükey zarfıyla ekran dışı tuvalde birleştirilip karo üstüne kırpıldı. Avludaki şadırvan sekizgen prizma ve kesik konilerden kuruldu; su, havuz ağzına kırpılmış daha alçak bir sekizgen olarak çizildiği için arka iç duvar görünür. Hurmanın gövdesi iki tonlu boğumlarla, tacı ekran düzleminde sarkan, kenarı tırtıllı ve üst yarısı açık tonlu on iki yaprakla çizildi. Tarh, çalı, çiçek, fener ve avlu öğeleri derinliğe (x+y) göre sıralanıp ressam algoritmasıyla çizildi.",
     "etiketler": [
       "izometrik",
       "vektör",
@@ -1116,7 +1120,7 @@
       "#053338",
       "#3C216E"
     ],
-    "kodla_cizim": "Her mürekkep (sarı, pembe, yeşil, mavi) için 2048 px'lik ayrı bir yoğunluk katmanı çizilir (alfa = mürekkep miktarı): gökte mavi ve pembe degradeler, güneşte sarı ve pembe, kubbede yeşil zemin, enlem boyunca mavi gölge ve sarı parıltı, çiçeklerde pembe, binada mavi çizgiler. Öndeki biçim arkadakini bütün katmanlarda boşaltır (knockout). Baskı adımında her katman kendi kaymasıyla okunur ve taranır: sarı, pembe ve mavi farklı açılarda (7°, 75°, 15°) 5,4 px hücreli yarım ton noktalarıyla, yeşil stokastik taneyle. Yoğunluk geniş lekelenme gürültüsü ve renge göre farklı yerde duran yatay merdane bantlarıyla oynatılır; ince benekler mürekkebi keser. Renkler kırık beyaz kâğıtla çarpılarak (multiply) üst üste biner, çevrede basılmamış kenar payı kalır.",
+    "kodla_cizim": "Her mürekkep (sarı, pembe, yeşil, mavi) için 2048 px'lik ayrı bir yoğunluk katmanı çizilir (alfa = mürekkep miktarı): gökte mavi ve pembe degradeler, güneşte sarı ve pembe, kubbede yeşil zemin, enlem boyunca mavi gölge ve sarı parıltı, çiçeklerde pembe, binada mavi çizgiler. Öndeki biçim arkadakini bütün katmanlarda boşaltır (knockout). Baskı adımında her katman kendi kaymasıyla okunur ve taranır: sarı, pembe ve mavi farklı açılarda (7°, 75°, 15°) 5,4 px hücreli yarım ton noktalarıyla, yeşil stokastik taneyle. Yoğunluk geniş lekelenme gürültüsü ve renge göre farklı yerde duran yatay merdane bantlarıyla (her renkte bir de mürekkebi azalmış dar şerit) oynatılır; bantlar hem nokta boyunu hem mürekkep miktarını etkiler; ince benekler mürekkebi keser. Renkler kırık beyaz kâğıtla çarpılarak (multiply) üst üste biner, çevrede basılmamış kenar payı kalır.",
     "etiketler": [
       "risograf",
       "nokta renk",
@@ -1147,7 +1151,7 @@
       "Oklu ölçü çizgileri ve sayılar (16,00 · 28,72 · zincir ölçüler), kot işaretleri, kesik-noktalı eksenler ve kubbenin yapım daireleri",
       "Soluk yapı ızgarası, bölge harfli pafta çerçevesi ve temel kesitinde 45° tarama",
       "Sağ üstte büyütülmüş alem detayı (DETAY A · 1:50), sağ altta antet ve çizgisel ölçek",
-      "Katlama izleri, aşınmış kenarlar, amonyak lekeleri; ön planda damarlı ve taramalı ince botanik çiçek etütleri"
+      "Katlama izleri, aşınmış kenarlar, kuruma halkalı su lekeleri; ön planda damarlı ve taramalı ince botanik çiçek etütleri"
     ],
     "palet": [
       "#0F3063",
@@ -1158,7 +1162,7 @@
       "#819EC5",
       "#EAF6FF"
     ],
-    "kodla_cizim": "Kâğıt 1024 × 1024 ImageData olarak piksel piksel hesaplandı: merkezden kenara Prusya mavisi geçişi, üç ölçekli değer gürültüsüyle beneklenme, gürültüyle bozulmuş dairesel maskelerle açık içli koyu halkalı lekeler ve aşınmış kenarlar. Bütün çizim 2× çözünürlükte ayrı, saydam bir 'çizgi katmanına' beyazla yapıldı; SAHNE.yollar() ve SAHNE.minareParcalari() geometrisi Path2D ile çizildi, öndeki öğe çizilmeden önce kendi biçimi destination-out ile silinerek arkadaki çizgiler örtüldü. Ölçü okları, kot işaretleri, eksen simgesi, tarama, pafta çerçevesi, antet ve ölçek çubuğu kendi yardımcılarımızla; yazılar DejaVu Sans ve Liberation Mono. Botanik etütler SAHNE.bitki konumlarından kontur, orta ve yan damar, gölge yarısında ince tarama ve ercik çizgileriyle kuruldu. Katman gürültü maskesiyle hafifçe düzensizleştirilip önce bulanık (dağılma), sonra keskin olarak kâğıda basıldı; en son katlama sırtları ve köşe aşınması eklendi.",
+    "kodla_cizim": "Kâğıt 1024 × 1024 ImageData olarak piksel piksel hesaplandı: merkezden kenara Prusya mavisi geçişi, üç ölçekli değer gürültüsüyle beneklenme, gürültüyle bozulmuş dairesel maskelerle açık içli, koyu kuruma halkalı su lekeleri ve aşınmış kenarlar. Bütün çizim 2× çözünürlükte ayrı, saydam bir 'çizgi katmanına' beyazla yapıldı; SAHNE.yollar() ve SAHNE.minareParcalari() geometrisi Path2D ile çizildi, öndeki öğe çizilmeden önce kendi biçimi destination-out ile silinerek arkadaki çizgiler örtüldü. Ölçü okları, kot işaretleri, eksen simgesi, tarama, pafta çerçevesi, antet ve ölçek çubuğu kendi yardımcılarımızla; yazılar DejaVu Sans ve Liberation Mono. Botanik etütler SAHNE.bitki konumlarından kontur, orta ve yan damar, gölge yarısında ince tarama ve ercik çizgileriyle kuruldu. Katman gürültü maskesiyle hafifçe düzensizleştirilip önce bulanık (dağılma), sonra keskin olarak kâğıda basıldı; en son katlama sırtları ve köşe aşınması eklendi.",
     "etiketler": [
       "teknik çizim",
       "mavi kopya",
@@ -1193,7 +1197,7 @@
     ],
     "palet": [
       "#BEDCE6",
-      "#F6CC5E",
+      "#F5D77C",
       "#F1E8D6",
       "#2B7243",
       "#55A861",
@@ -1349,15 +1353,15 @@
     "aile": "Atölye Özgün",
     "ozgun": true,
     "ozet": "Koyu kadife üstünde gümüş ve altın telkâri: burgulu tel hatlar, sık spiral dolgular, granül boncuklar.",
-    "tanim": "Her şey koyu, hafif havlı kadifenin (lacivert ya da bordo) üstüne serilmiş ince gümüş ve altın telden yapılmış gibi çizilir. Dış hatlar ve bölme çizgileri burgulu çift teldir (halat deseni); alanlar sıkıca sarılmış minik tel spiraller, S ve C kıvrımlarıyla doldurulur, birleşim yerlerine ve küçük boşluklara granül boncuklar konur. Her tel metal gibi gölgelenir (koyu kenar, orta ton, ışığa bakan yanda parlak çizgi) ve kadifeye küçük gölgeler düşürür. Malzeme biçime göre seçilir: burada kubbe altın spirallerle, minare ve kaide gümüşle dolu, çiçekler gümüş taç yapraklı ve altın boncuklu, yapraklar eskitilmiş altın.",
+    "tanim": "Her şey koyu, hafif havlı kadifenin (lacivert ya da bordo) üstüne serilmiş ince gümüş ve altın telden yapılmış gibi çizilir. Dış hatlar ve bölme çizgileri burgulu çift teldir (halat deseni); alanlar sıkıca yerleştirilmiş minik tel spiraller, S ve C kıvrımlarıyla, ince uzun alanlar (yapraklar) damardan kenara uzanan eğik yassı tellerle (balık sırtı) doldurulur; birleşim yerlerine ve küçük boşluklara granül boncuklar konur. Her tel metal gibi gölgelenir (koyu kenar, orta ton, ışığa bakan yanda parlak çizgi) ve kadifeye küçük gölgeler düşürür; önde duran parça arkadakinin tellerini örter. Malzeme biçime göre seçilir: burada kubbe altın spirallerle, minare, kasnak ve kaide gümüşle dolu, çiçekler gümüş taç yapraklı ve altın granül göbekli, yapraklar eskitilmiş altın, bulutlar gümüş çerçeveli.",
     "koken": "İlham, Mardin ve Midyat telkârisi ile Osmanlı kuyumculuğundaki filigran işçiliğinden geldi: ince gümüş tel bükülüp burularak çerçeve yapılır, içi yassı tel kıvrımlarıyla doldurulur, lehimlenip granülle süslenir. Fikrin özü bir mimari manzarayı bir mücevher plaketi gibi düşünmek: her çizgi bir tel, her alan sabırla doldurulmuş bir hücredir.",
     "ayirt_edici": [
       "Burgulu çift telden (halat desenli) dış hatlar, kubbe kaburgaları ve pencere kemerleri",
-      "Hücreleri dolduran sık tel spiraller, S ve C kıvrımları",
-      "Altın spirallerle dolu kubbe, gümüş telden minare, kasnak ve kaide",
-      "Alem kürelerinde, korniş ve şerefe uçlarında, çiçek ortalarında granül boncuklar",
-      "Koyu bordo, havlı kadife zemin ve tellerin kadifeye düşen küçük gölgeleri",
-      "Gümüş taç yapraklı çiçekler, eskitilmiş altın yapraklar ve altın telkâri güneş"
+      "Hücreleri dolduran sık tel spiraller, S ve C kıvrımları ve aralardaki granül boncuklar",
+      "Altın spirallerle dolu kubbe; gümüş telden minare, kasnak, kaide ve dalgalı çerçeveli bulutlar",
+      "Eskitilmiş altından, balık sırtı yassı tellerle dolu yapraklar",
+      "Gümüş, üst üste binen taç yaprakları ve altın granül kümesi göbekli çiçekler",
+      "Koyu bordo, havlı kadife zemin ve tellerin kadifeye düşen küçük gölgeleri; altın telkâri güneş"
     ],
     "palet": [
       "#4A0F1E",
@@ -1366,9 +1370,9 @@
       "#F4D888",
       "#A4ACB6",
       "#EAF0F5",
-      "#94692A"
+      "#A47832"
     ],
-    "kodla_cizim": "Canvas, 2048 iç çözünürlük. Kadife zemin piksel piksel değer gürültüsüyle üretilir (geniş parıltı, dikey hav lifleri, kenar kararması). Teller toplu Path2D vuruşlarıyla üç katmanda çizilir: koyu kenar, ışığa kaydırılmış orta ton ve ince parlak çizgi; burgulu tel, yol boyunca eşit aralıklı eğik kısa halkalardan oluşur, SAHNE yolları SVG getPointAtLength ile örneklenir. Dolgu için bitkisiz ve bitkili iki bölge haritası ile halat çizgilerinden bir sınır maskesi çıkarılır; uzaklık dönüşümü (chamfer) ve ızgarayla hızlandırılmış dart atışıyla daireler sıkı yerleştirilir, her daire Arşimet spirali, iki ters spiralden S kıvrımı ya da açık C kıvrımı olur, en küçükleri granül boncuk. Boncuklar önceden çizilmiş küre görüntüleridir. Yapı ve bitki katmanları ayrı ayrı, bulanık ve kaydırılmış gölgeleriyle kadifeye bindirilir; metale hafif hacim degradesi ve birkaç ışıltı eklenir.",
+    "kodla_cizim": "Canvas, 2048 iç çözünürlük. Kadife zemin piksel piksel değer gürültüsüyle üretilir (geniş parıltı, dikey hav lifleri, kenar kararması). Teller metal türü ve kalınlığa göre toplanmış Path2D vuruşlarıyla üç katmanda çizilir: koyu kenar, ışığa kaydırılmış orta ton ve ince parlak çizgi; burgulu tel, yol boyunca eşit aralıklı eğik kısa halkalardan oluşur, SAHNE yolları SVG getPointAtLength ile örneklenir. Örtme: minarenin kaide ve kasnak ardına düşen hatları bölge haritasıyla, bitkilerde sap, yaprak, tomurcuk ve taç yaprağı hatları çizim sırasına göre üstteki biçimlerle (isPointInPath) kesilir. Dolgu için görünür tel hatlarından bir sınır maskesi çıkarılır; uzaklık dönüşümü (chamfer) ve ızgarayla hızlandırılmış dart atışıyla daireler sıkı yerleştirilir, her daire Arşimet spirali, iki ters spiralden S kıvrımı ya da açık C kıvrımı olur, en küçükleri granül boncuk; yapraklarda damar boyunca eğik teller kenara kadar yürütülür. Boncuklar önceden çizilmiş küre görüntüleridir. Yapı ve bitki katmanları ayrı ayrı, bulanık ve kaydırılmış gölgeleriyle kadifeye bindirilir; metale hafif hacim degradesi ve birkaç ışıltı eklenir.",
     "etiketler": [
       "özgün",
       "telkâri",
@@ -1390,15 +1394,15 @@
     "aile": "Atölye Özgün",
     "ozgun": true,
     "ozet": "Bütün yüzey sivri kemerli küçük niş hücrelerine bölünür; sahne boyalı, oyma alçı bir kabartma gibi okunur.",
-    "tanim": "Resim yüzeyinin tamamı, bal peteği gibi yarım hücre kaydırılmış sıralar hâlinde dizilen küçük sivri kemerli niş hücrelerine bölünür; her hücrenin üstü sivri kemer, altı alttaki iki hücrenin kemerleriyle biçimlenir, böylece hücreler boşluksuz kenetlenir. Her hücre içbükey bir niştir: sağ üstten gelen ışıkla kenar sırtının sağ üstü parlar, kemerin altındaki kovuk gölgede kalır; hücrenin rengi sahnenin o noktasından alınıp alçı kremine biraz karıştırılır. Ayrıntı gereken yerlerde (alem, hilal, pencere sıraları, çiçek ortaları, siluet kenarları) hücre kendi içinde daha küçük hücrelere bölünür. Bazı hücrelerin kenarları ince altın yaldızla çizilir ve bütün yüzey oyulmuş, boyanmış alçı kabartma gibi görünür.",
+    "tanim": "Resim yüzeyinin tamamı, yarım hücre kaydırılmış kademeler (sıralar) hâlinde dizilen küçük sivri kemerli niş hücrelerine bölünür. Her hücre bir mukarnas nişidir: üstte sivri kemer başlık, dikey yan duvarlar ve düz bir taban; tabanın altında, alttaki iki nişin kemerleri arasına sarkan, ortadan sırtlı üçgen bir pandantif yüzü bulunur, böylece hücreler boşluksuz kenetlenir ve her kademe yatay bir çizgiyle okunur. Niş içbükeydir: sağ üstten gelen ışıkla kemer sırtının sağ üstü parlar, başlığın altındaki kovuk ve sağ iç duvar gölgede kalır, sol iç duvar ve taban aydınlanır. Hücrenin rengi sahnenin o noktasından alınır ve alçı kremine biraz karıştırılır. Ayrıntı gereken yerlerde (siluet kenarları, alem, hilal, çiçekler, saplar) hücre kendi içinde daha küçük hücrelere bölünür; pencere gibi kemerli açıklıklar kendi biçiminde tek ve derin bir niş olur. Kubbe gibi değerli yüzeylerde hücre kenarları ince altın yaldızla çizilir; bütün yüzey oyulmuş, boyanmış alçı kabartma gibi görünür.",
     "koken": "İlham, Selçuklu ve Osmanlı mimarisindeki mukarnaslardan (taç kapılarda, kubbe geçişlerinde ve mihrap kavsaralarında kademe kademe dizilen küçük niş hücreleri) ve boyalı alçı mukarnas tavanlarından geldi. Fikrin özü, mukarnasın üç boyutlu hücre dilini bir resmin piksel ızgarası gibi kullanmak: her hücre hem bir mimari niş hem de resmin bir renk noktasıdır.",
     "ayirt_edici": [
-      "Bütün yüzeyi kaplayan, kaydırmalı sıralar hâlinde kenetlenmiş sivri kemerli niş hücreleri",
-      "Her hücrede ışık alan sağ üst kenar sırtı ve kemer altında gölgeli içbükey kovuk",
-      "Gökte büyük, alemde, hilalde, pencerelerde ve çiçek ortalarında iç içe küçülen hücreler",
-      "Lacivert-mavi boyalı gök, yeşil kubbe ve krem alçı minare ile kaide",
-      "Kubbe hücrelerinde, alemlerde ve güneşte ince altın yaldızlı kenarlar",
-      "İnce alçı tanesi ve hücreden hücreye hafifçe değişen boya tonu"
+      "Bütün yüzeyi kaplayan, yarım hücre kaydırılmış kademeler hâlinde kenetlenmiş sivri kemerli niş hücreleri",
+      "Her nişte gölgeli başlık kovuğu, aydınlık sol iç duvar ve ışık alan sağ üst kemer sırtı",
+      "Nişlerin arasında, alttaki kemerlerin arasına sarkan sırtlı üçgen pandantif yüzleri ve kademe çizgileri",
+      "Gökte büyük, siluet kenarlarında, alemde, çiçeklerde ve saplarda iç içe küçülen hücreler",
+      "Kendi kemer biçiminde derin nişler olarak okunan kasnak, kaide ve minare pencereleri",
+      "Yukarıda koyu, ufukta açık mavi boyalı gök, altın yaldız kenarlı yeşil kubbe ve krem alçı minare ile kaide"
     ],
     "palet": [
       "#4680C4",
@@ -1409,7 +1413,7 @@
       "#2A3527",
       "#AF9B77"
     ],
-    "kodla_cizim": "Canvas, 2048 iç çözünürlük, tamamen piksel işleme. Hücre ızgarası analitiktir: dört seviye (48, 24, 12 ve 6 piksel genişlik), her satır yarım hücre kaydırılır, hücre sınırı eşkenar sivri kemer eğrisinden hesaplanır. Bir hücrenin bölünüp bölünmeyeceği içine düşen SAHNE bölgelerinin çeşitliliği, pencere, alem ya da çiçek ortası bulunması ve ton varyansıyla belirlenir. Her piksel için hücre zinciri, kenarlara yumuşak en küçük uzaklık ve buna bağlı kase biçimli derinlik (iç içe hücrelerde toplanarak) hesaplanır; derinlik alanından normaller çıkarılır, sağ üstten Lambert ışığı, yükseklik alanında ışığa doğru yürüyerek atılan gölge, derinliğe bağlı ortam kapanması ve alçı tanesi eklenir. Hücre rengi, parçanın baskın bölgesindeki başvuru renklerinin ortalamasıdır (alçı kremiyle karıştırılmış, gök lacivert-turkuaza çekilmiş); altın hücrelere metal parlaklık, seçili hücrelerin sırtına altın yaldız çizgisi verilir.",
+    "kodla_cizim": "Canvas, 2048 iç çözünürlük, tamamen piksel işleme. Hücre ızgarası analitiktir: dört seviye (42, 21, 10,5 ve 5,25 piksel genişlik), sıra yüksekliği genişliğin 1,14 katı, kemer yüksekliği 0,58 katı; her sıra yarım hücre kaydırılır, hücre üstü tepesi sivriltilmiş eşkenar kemer eğrisinden, altı alttaki iki hücrenin kemerlerinden hesaplanır. Bir hücrenin bölünüp bölünmeyeceği içine düşen SAHNE bölgelerinin çeşitliliği, pencere, alem ya da çiçek ortası bulunması ve ton varyansıyla belirlenir. Pencereler kendi kemer biçimlerinden çizilen bir maskeyle ayrı, derin niş hücreleri olur. Her piksel için hücre zinciri bulunur; niş kısmında yatay ve dikey konumdan (kemer tepesinde yumuşatılmış) düzgün bir kase derinliği, taban altında öne çıkan sırtlı pandantif yüzü hesaplanır, iç içe hücrelerde derinlikler toplanır. Derinlik alanından normaller çıkarılır; sağ üstten Lambert ışığı, yükseklik alanında ışığa doğru yürüyerek atılan gölge, derinliğe bağlı ortam kapanması ve alçı tanesi eklenir. Hücre rengi, parçanın baskın bölgesindeki (ince öğeler ağırlıklı sayılır) başvuru renklerinin ortalamasıdır (alçı kremiyle karıştırılmış, gök yukarıda koyu, ufukta açık maviye çekilmiş); altın hücrelere metal parlaklık, kubbe, alem, güneş ve çiçek ortası hücrelerinin kenarına altın yaldız çizgisi verilir.",
     "etiketler": [
       "özgün",
       "mukarnas",
@@ -1450,7 +1454,7 @@
       "#2E8A7A",
       "#F4FBFF"
     ],
-    "kodla_cizim": "Canvas, 2048 iç çözünürlük. Eğik stereografik izdüşümle gerçek bir gök ızgarası (dik açıklık çemberleri, sağ açıklık meridyenleri, tutulum) çizilir; Samanyolu, her pikselin ters izdüşümle galaktik enlemi bulunup değer gürültüsüyle yoğunluk ve toz şeritleri verilerek üretilir, arka plan yıldızları bu yoğunluğa göre dağıtılır. Kubbe bulutsusu kubbedeMi maskesi içinde fbm gürültüsünden yapılıp bulanıklaştırılarak 'lighter' ile eklenir. Takımyıldızlar SAHNE geometrisinden (kubbeNoktalari, kaburgalar, kasnak ve kasnakPencereleri, kaide, minare parçaları, alemParcalari, bitki) çıkarılan köşe ve çizgi listeleridir; yıldızlar önem derecesine göre büyüklük, radyal degrade hâle ve büyüklerde dört kollu ışınla çizilir. Öndeki büyük çiçekler harita çemberine sığacak biçimde biraz içeri alınmıştır. Hepsi harita çemberine kırpılır; çerçeve, derece çentikleri ve DejaVu Sans ile küçük derece etiketleri en üstte çizilir.",
+    "kodla_cizim": "Canvas, 2048 iç çözünürlük. Eğik stereografik izdüşümle gerçek bir gök ızgarası (dik açıklık çemberleri, sağ açıklık meridyenleri, tutulum) çizilir; Samanyolu, her pikselin ters izdüşümle galaktik enlemi bulunup değer gürültüsüyle yoğunluk ve toz şeritleri verilerek üretilir, arka plan yıldızları bu yoğunluğa göre dağıtılır. Kubbe bulutsusu kubbedeMi maskesi içinde fbm gürültüsünden yapılıp bulanıklaştırılarak 'lighter' ile eklenir. Takımyıldızlar SAHNE geometrisinden (kubbeNoktalari, kaburgalar, kasnak ve kasnakPencereleri, kaide, minare parçaları, alemParcalari, bitki) çıkarılan köşe ve çizgi listeleridir; yıldızlar önem derecesine göre büyüklük, radyal degrade hâle ve büyüklerde dört kollu ışınla çizilir. Öndeki büyük çiçekler harita çemberine sığacak biçimde biraz içeri alınmış; çemberin dışına taşan sap, yaprak, tomurcuk ve çiçek noktaları kenara doğru üstel olarak sıkıştırılır (kenarda balıkgözü izdüşümü gibi), böylece hiçbir takımyıldız kesilmez. Izgara ve yıldızlar harita çemberine kırpılır, yalnız çembere yakın en parlak yıldızların ışınları çerçevenin üstünden geçer; çerçeve, derece çentikleri ve DejaVu Sans ile küçük derece etiketleri en üstte çizilir.",
     "etiketler": [
       "özgün",
       "gök haritası",
@@ -1599,28 +1603,28 @@
     "ad_en": "Pool Reflection",
     "aile": "Atölye Özgün",
     "ozgun": true,
-    "ozet": "Yapının kendisi görünmez; sahne yalnızca avludaki durgun havuzun suyunda, yukarıdan bakılan ters aksiyle anlatılır.",
-    "tanim": "Kural: konu hiçbir zaman doğrudan çizilmez, yalnızca yukarıdan bakılan durgun bir suyun yüzündeki aksi gösterilir. Aks yalnız dikeyde ters döner (kubbe sağda, minare solda kalır); ince yatay dalga bantları ve hafif kırılma onu bozar, dikey çizgiler titrek kıvrımlara döner. Su aksi boyar: kenarlarda koyu deniz yeşili, ortada berrak; dalga sırtlarında gökten kırık parıltılar, güneşin aksinde pırıltılar vardır. Su yüzünde kendi küçük gölgeleri ve çevrelerinde halka halka dalgacıklar olan gül ve beyaz yapraklar ile yuvarlak yapraklar yüzer; çerçeveyi üstte ve altta ince kakma bantlı, dilimli ağızlı oyma mermer havuz kenarı kurar.",
-    "koken": "İlham, Osmanlı ve Endülüs avlularının durgun havuzları ile şadırvanlardır: Elhamra'nın Mersin Avlusu'ndaki havuzda yapının aksi, Türk bahçelerindeki havuzlarda gökle kubbe aynı yüzeyde buluşur. Fikrin özü, bakışı yere çevirmek: konu suyun aynasında, yaprakların ve dalgacıkların arasından, bir anlığına titreyen bir görüntü olarak okunur. Kural her konuya uygulanabilir: neyi çizerseniz çizin, yalnızca onun sudaki aksi ve suyun yüzü görünür.",
+    "ozet": "Yapının kendisi görünmez; sahne yalnızca avludaki havuzun suyunda, kenardan eğik bakılınca görünen ters ve dalgayla kırılmış aksiyle anlatılır.",
+    "tanim": "Kural: konu hiçbir zaman doğrudan çizilmez; yalnızca havuz kenarından eğik bakılan suyun yüzündeki aksi gösterilir. Aks yalnız dikeyde ters döner (kubbe sağda, minare solda kalır) ve yumuşak, boyalı bir görüntüdür; dalga yüzünün eğimi onu dikeyde kaydırıp sıvazlar, böylece kenarlar yatay şeritlere kırılır. Perspektif korunur: dalgalar uzak kıyıda incelir, yüzen şeylerin çevresindeki dalgacık halkaları elips olur. Uzakta su ayna gibidir; yakına geldikçe aks zayıflar, su koyulaşır ve havuzun çini dibi ile ışık ağı silikçe seçilir; güneşin aksi dalga eğimine göre dağılan pırıltılara bölünür. Su yüzünde eğik bakışla kısalmış gül yaprakları ve nilüfer yaprakları yüzer; resmi üstte ve altta ince kakma bantlı, dilimli ağızlı oyma mermer havuz kenarı çerçeveler.",
+    "koken": "İlham, Osmanlı ve Endülüs avlularının durgun havuzları ile şadırvanlardır: Elhamra'nın Mersin Avlusu'ndaki havuzda yapının aksi, Türk bahçelerindeki havuzlarda gökle kubbe aynı yüzeyde buluşur. Fikrin özü, bakışı yapıdan suya çevirmek: konu suyun aynasında, yaprakların ve dalgacıkların arasından, bir anlığına titreyen bir görüntü olarak okunur. Kural her konuya uygulanabilir: neyi çizerseniz çizin, yalnızca onun sudaki aksi ve suyun yüzü görünür.",
     "ayirt_edici": [
-      "Kubbe, kasnak, kaide ve minare yalnızca ters dönmüş aks olarak görünür; kubbe sağda, minare solda kalır",
-      "Yatay dalga bantları kaburgaları ve minare kenarlarını titrek kıvrımlara çevirir; dalga sırtlarında kırık gök parıltıları",
-      "Su rengi kenarlarda koyu deniz yeşili, ortada daha berrak; ortada havuz dibine düşen silik ışık ağı",
-      "Yüzen gül ve beyaz yapraklar ile çentikli yuvarlak yapraklar; her birinin küçük gölgesi ve çevresinde halka halka dalgacıklar",
-      "Güneşin sudaki aksinde parlama ve pırıltılar",
+      "Kubbe, kasnak, kaide ve minare yalnızca ters dönmüş, yumuşak bir aks olarak görünür; kubbe sağda, minare solda kalır, uzak kıyıdaki çiçekli dallar aksın üstünden sarkar",
+      "Dalga eğimi aksi dikeyde kaydırıp sıvazlar: kubbe, kasnak ve minare kenarları ince yatay şeritlere kırılır; dalgalar uzakta incelir",
+      "Yakında aks zayıflar, su koyu deniz mavisine döner; havuzun çini dibi ve ışık ağı suyun içinden silikçe görünür",
+      "Yüzen gül ve beyaz yapraklar ile çentikli nilüfer yaprakları eğik bakışla kısalmış; çevrelerinde elips biçimli halka halka dalgacıklar",
+      "Güneşin aksi, dalga eğimine göre dağılan pırıltılara bölünür ve çevresine ışık taşar",
       "Üstte ve altta damarlı, oyma basamaklı, dilimli ağızlı mermer havuz kenarı; içinde yeşil sekiz köşeli yıldız ve gül renkli baklavalardan ince kakma bant"
     ],
     "palet": [
-      "#226866",
-      "#0C383A",
-      "#5E97CF",
-      "#2F7D3B",
-      "#EEE6D3",
-      "#F0ECE4",
+      "#497D93",
+      "#90ADB0",
+      "#265840",
+      "#337276",
+      "#F1EEE7",
       "#2F6B52",
-      "#B4566A"
+      "#B4566A",
+      "#D65C76"
     ],
-    "kodla_cizim": "Canvas 2B, 2048 iç çözünürlük. Sahne ekran dışı bir tuvale çizilir (kendi doygun göğüm, bulutlar ve güneş parıltısı; yapı ve bitkiler SAHNE.ciz ile), hafifçe yumuşatılır. Suyun her pikseli için ters koordinat (Y = 960 − y) hesaplanır; yer değiştirme, uzun bir kabarma, evresi düşük frekanslı gürültüyle bükülen ince yatay dalgacıklar, 16 piksellik ızgaradan çift doğrusal okunan kırılma alanı ve yüzen her şeyin çevresinde ışınsal sinüs halkalarından oluşur; kaynak üç dikey örnekle sıvazlanarak çift doğrusal okunur. Renk kenara uzaklığa göre koyu deniz yeşiline karıştırılır, aks karartılır, dalga sırtlarında gürültüyle kırılan parıltılar eklenir, üst kenarın gölgesi düşer. Üstüne havuz dibindeki ışık ağı (gürültü farkı), güneş parlaması ve pırıltılar, dalgacık halkaları, gölgeli gül yaprakları ve damarlı yuvarlak yapraklar çizilir. Mermer piksel piksel damar gürültüsüyle üretilir; profil, pervaz çizgileri, oluk, yuvarlatılmış ağız, dilimli kenar ve yıldız-baklava kakma bandı vektörle eklenir.",
+    "kodla_cizim": "Canvas 2B, 2048 iç çözünürlük. Yansıyacak sahne ekran dışında kendi çizimimizle boyanır: doygun gök, parlak güneş çekirdeği ve ışıltısı, gölgeli bulut öbekleri; minare, kasnak ve kaide SAHNE yollarından silindir gölgeli yatay geçişlerle, kubbe sağ üstten ışık alan ışınsal geçiş, yumuşak kaburgalar ve parlak alınla, bitkiler kendi renkleriyle doldurulur; sonra 4,6 px bulanıklık ve yumuşak ışık kipinde yatay fırça dokusuyla boyalı bir yumuşaklık verilir. Su piksel piksel hesaplanır: perspektif ölçeği p(Y) (uzak 0,5, yakın 1) ve 0,6 dikey kısalmayla yer düzlemi koordinatları (U, V = ln p / (p' · 0,6)) bulunur; bu düzlemde yedi yönlü sinüs dalgası (kaba ızgaradan okunan sakin/dalgalı yamalar ve evre bükümüyle) ve yüzen her şeyin çevresinde ışınsal halka dalgaları toplanıp eğim çözümsel olarak hesaplanır. Ters koordinat (Y = 960 − y) eğimle dikeyde çok, yatayda az kaydırılır ve yedi dikey örnekle sıvazlanarak çift doğrusal okunur; dalga yüzü eğime göre açılıp koyulaşır, renk deniz yeşiline çekilir. Fresnel benzeri bir oranla yakında aks zayıflayıp kırılmayla titreyen çini ızgaralı havuz dibine karışır. Güneş pırıltısı, eğimin güneşi o noktaya yansıttığı yerlerde Gauss eşleşmesiyle doğar; parlak maske üç bulanıklıkla eklemeli olarak taşar. Üstüne havuz dibindeki ışık ağı (gürültü farkı), yüzeye yatırılmış (döndür, sonra dikeyde kısalt) gölgeli gül yaprakları ve damarlı nilüfer yaprakları çizilir. Mermer piksel piksel damar gürültüsüyle üretilir; profil, pervaz çizgileri, oluk, yuvarlatılmış ağız, dilimli kenar ve yıldız-baklava kakma bandı vektörle eklenir.",
     "etiketler": [
       "özgün",
       "yansıma",
@@ -1628,7 +1632,7 @@
       "havuz",
       "mermer",
       "kakma",
-      "yukarıdan bakış",
+      "perspektif",
       "dalga"
     ],
     "klasor": "S-039-havuz-aksi",
@@ -1643,14 +1647,14 @@
     "aile": "Atölye Özgün",
     "ozgun": true,
     "ozet": "Mimari hiç çizilmez; yapı, onu çevreleyen yoğun süs bahçesinden oyulmuş boş fildişi siluetler olarak okunur.",
-    "tanim": "Kural: asıl konu hiçbir zaman figür olarak çizilmez, yalnızca boşluk olarak kalır. Kubbe, kasnak, kaide, minare ve alemler boş fildişi kâğıt siluetlerdir; geri kalan her yeri lacivert zemin üzerinde hatayi, rumi, saz yaprağı, lale, karanfil, gonca, sarmal altın dallar ve altın nokta üçlülerinden oluşan yoğun ama ölçülü bir süs bahçesi doldurur (koyu yeşil, gül, altın, lacivert ve firuze). Süsler boşluğa değmez, aralarında ince bir zemin şeridi kalır, böylece siluetin kenarı keskin okunur. Boşlukların içinde yalnızca çok ince soluk altın kıl çizgiler bulunur (kaburgalar, pencere kemerleri, şerefe ve korkuluk çizgileri); öndeki çiçekler süs alanına karışır.",
+    "tanim": "Kural: asıl konu hiçbir zaman figür olarak çizilmez, yalnızca boşluk olarak kalır. Kubbe, kasnak, kaide, minare ve alemler boş fildişi kâğıt siluetlerdir; geri kalan her yeri lacivert zemin üzerinde klasik Osmanlı tezhip dağarcığıyla kurulmuş yoğun ama ölçülü bir süs bahçesi doldurur: ince altın helezon dallar, ortalarında önden dilimli hatayiler ve yandan görülen palmet hatayiler, dallar boyunca çatallı rumiler, uzun dişli saz yaprakları, lale, karanfil, gonca ve penç; gökte çin bulutu şeritleri. Renkler koyu yeşil, gül, altın, lacivert ve firuzedir; her motifin koyu ince bir kontur (tahrir) çizgisi ve içinde açık bir ışık çizgisi vardır. Süsler boşluğa değmez, aralarında ince bir zemin şeridi kalır, böylece siluetin kenarı keskin okunur. Boşlukların içinde yalnızca çok ince soluk altın kıl çizgiler bulunur (kaburgalar, pencere kemerleri, şerefe ve korkuluk çizgileri); öndeki çiçekler süs alanına karışır.",
     "koken": "İlham, tezhip ve kalem işinin zemin anlayışından, ciltlerdeki şemse oymalarından, ebru ve kâğıt oymacılığındaki (katı) boşluk okumasından ve Rubin vazosu gibi figür-zemin oyunlarından geldi. Fikrin özü, kutsal yapıyı süslemeden çok onun çevresini süslemek: kubbe ve minare bahçenin içinde bırakılmış sessiz, aydınlık bir boşluk olarak kalır. Kural her konuya uygulanabilir: konu yalnızca, onu dolduran süsün yokluğuyla görünür.",
     "ayirt_edici": [
       "Kubbe, kasnak, kaide, minare ve hilalli alemler yalnızca boş fildişi siluet olarak görünür; siluetin çevresinde ince bir lacivert zemin şeridi",
-      "Lacivert zemini her yerde dolduran altın sarmal dallar; her sarmalın ortasında bir hatayi",
-      "Dallar boyunca firuze ve altın rumiler, dişli yeşil saz yaprakları, kısa saplı lale, karanfil ve goncalar",
-      "Güneş, altın ışınlı çok katlı bir şemse-hatayi olarak süs alanının içinde",
-      "Öndeki çiçekler büyük gül ve lacivert hatayiler, laleler ve karanfiller olarak süs bahçesine karışır",
+      "Lacivert zemini dolduran ince altın helezon dallar; ortalarında önden dilimli hatayiler ya da yandan görülen, tohum benekli altın tepelikli palmet hatayiler",
+      "Dallar boyunca altın ve firuze çatallı rumiler, sarmal uçlarında rumi kanatları, uzun dişli yeşil saz yaprakları, kısa saplı lale, karanfil ve goncalar",
+      "Gökte ince altın ve firuze çin bulutu şeritleri; güneş altın ışınlı çok katlı bir hatayi-şemse",
+      "Öndeki çiçekler büyük dilimli hatayiler, palmet hatayiler, laleler ve karanfiller; kaidenin altında küçük rumi ve goncalarla süslü yatay bir kıvrık dal",
       "Boşlukların içinde yalnızca soluk altın kıl çizgiler: kaburgalar, pencere kemerleri, şerefe, korkuluk ve zikzak çizgileri"
     ],
     "palet": [
@@ -1663,7 +1667,7 @@
       "#3AA7A3",
       "#4E70BC"
     ],
-    "kodla_cizim": "Canvas 2B, 2048 iç çözünürlük. Bütün yapı parçalarının SAHNE.yollar() yollarından bir boşluk maskesi çizilir ve iki geçişli pah (chamfer) algoritmasıyla her pikselin boşluğa uzaklığı hesaplanır. Süsler ayrı bir tuvalde üretilir: sabit çapalar (güneş şemsesi, SAHNE.bitki çiçekleri ve sapları), boşluktan uzak noktalara Poisson diskiyle yerleştirilen sarmal dallar (her birinin ortasında bir hatayi, engelde kesilen helezon), dallar boyunca dönüşümlü saz, rumi, küçük yaprak, kısa saplı lale/karanfil/gonca ve sarmal filizler, en sonda üç geçişli seyrek dolgu. Her öğe yerel koordinatta Path2D ile kontur çizgili olarak çizilir; çakışmalar 4 piksellik bir doluluk ızgarası ve uzaklık alanıyla önlenir. Süs katmanından boşluklar kalın bir kontur ile silinir (zemin şeridi), çok hafif gölgeyle guaj dokulu lacivert zeminin üstüne konur; boşluklar dokulu fildişi kâğıtla doldurulur ve içine 0,6 piksellik soluk altın kıl çizgiler çekilir.",
+    "kodla_cizim": "Canvas 2B, 2048 iç çözünürlük. Bütün yapı parçalarının SAHNE.yollar() yollarından bir boşluk maskesi çizilir ve iki geçişli pah (chamfer) algoritmasıyla her pikselin boşluğa uzaklığı hesaplanır. Süsler ayrı bir tuvalde üretilir: sabit çapalar (güneş şemsesi, SAHNE.bitki çiçekleri ve sapları), gökte çin bulutu şeritleri (iki ucu sarmal kıvrımlı, ortası halkalı dalgalı merkez çizgisi), kaidenin altında yatay kıvrık dal, boşluktan uzak noktalara Poisson diskiyle yerleştirilen sarmal dallar (ortalarında önden ya da yandan hatayi, dış uçlarında rumi kanadı, engelde kesilen helezon), dallar boyunca dönüşümlü saz, rumi, küçük yaprak, kısa saplı lale/karanfil/gonca ve sarmal filizler, en sonda seyrek dolgu. Motifler yerel koordinatta Path2D ile çizilir: hatayi yaprakları uca yakın iki çentikli, sivri uçlu 'dilimli' bir profilden, palmet hatayi çanak, yedi ve dört yapraklı iki yelpaze ve benekli tepelikten, saz yaprağı uca yatık dişlerden kurulur; her biri koyu kontur ve içte küçültülmüş açık tahrir çizgisi alır. Çakışmalar 4 piksellik bir doluluk ızgarası ve uzaklık alanıyla önlenir. Süs katmanından boşluklar kalın bir kontur ile silinir (zemin şeridi), çok hafif gölgeyle guaj dokulu lacivert zeminin üstüne konur; boşluklar dokulu fildişi kâğıtla doldurulur ve içine 0,6 piksellik soluk altın kıl çizgiler çekilir.",
     "etiketler": [
       "özgün",
       "negatif alan",
@@ -1671,6 +1675,7 @@
       "tezhip",
       "hatayi",
       "rumi",
+      "saz üslubu",
       "Osmanlı süslemesi",
       "lacivert"
     ],
