@@ -1,6 +1,11 @@
-// Bir Risale-i Nur cildinin ön kapağı (kitap açılırken görünür): raftaki sırtla aynı bez (#D7787B), menteşe oluğu,
-// kör baskı çerçeve, varak ad ve altında ince çizgiyle "RİSALE-İ NUR KÜLLİYATI". Altın süs, şemse ya da nokta yok.
-// viewBox 0 0 300 426.
+// Bir Risale-i Nur cildinin ön kapağı (kitap açılırken görünür): raftaki sırtla aynı bez (CILT, #D7787B), menteşe
+// oluğu, kör baskı çerçeve, sırttaki gibi koyu şarap mürekkebiyle ad ve altında ince çizgiyle "RİSALE-İ NUR
+// KÜLLİYATI". Altın süs, şemse ya da nokta yok. viewBox 0 0 300 426.
+import { CILT } from '../oku/ortak';
+
+/** Sırt ve kapak yazısının mürekkebi (bezin gölge rengi; bezde 5,5:1) ve altındaki ışık kenarı */
+const MUREKKEP = '#3C0E16';
+const ISIK = '#FFECE6';
 
 /** Sayıyı iki ondalığa yuvarlar, gereksiz sıfırları atar */
 const f = (v: number): string => (+v).toFixed(2).replace(/\.?0+$/, '');
@@ -22,7 +27,7 @@ export function kapakSvg(p: string, ad: string): string {
     `<filter id="${p}-doku" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" seed="7"/><feColorMatrix values="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1"/></filter>` +
     `</defs>` +
     // bez, dokusu, çapraz ışık
-    `<rect width="${W}" height="${H}" rx="6" fill="#D7787B"/>` +
+    `<rect width="${W}" height="${H}" rx="6" fill="${CILT}"/>` +
     `<rect width="${W}" height="${H}" rx="6" filter="url(#${p}-doku)" style="mix-blend-mode:soft-light" opacity=".3"/>` +
     `<rect width="${W}" height="${H}" rx="6" fill="url(#${p}-isik)"/>` +
     // menteşe: gölge ve oluk
@@ -31,10 +36,11 @@ export function kapakSvg(p: string, ad: string): string {
     // kör baskı çerçeve (koyu iz + açık kenar)
     `<rect x="36.5" y="20.5" width="${W - 56}" height="${H - 41}" rx="1" fill="none" stroke="#601A22" stroke-opacity=".38"/>` +
     `<rect x="37.5" y="21.5" width="${W - 56}" height="${H - 41}" rx="1" fill="none" stroke="#FFE6E0" stroke-opacity=".28"/>` +
-    // varak ad, çizgi, etiket
-    `<text x="${f(cx)}" y="${f(y)}" text-anchor="middle" font-family="EB Garamond, serif" font-weight="600" font-size="${f(boy)}" fill="#F6E6C4">${kacis(ad)}</text>` +
-    `<path d="M${f(cx - 26)} ${f(y + 18)}H${f(cx + 26)}" stroke="#F6E6C4" stroke-opacity=".8" stroke-width=".8"/>` +
-    `<text x="${f(cx)}" y="${f(y + 40)}" text-anchor="middle" font-family="Encode Sans, sans-serif" font-weight="600" font-size="9" letter-spacing="2.4" fill="#F6E6C4" fill-opacity=".85">RİSALE-İ NUR KÜLLİYATI</text>` +
+    // basılı ad (altında ince ışık kenarı), çizgi, etiket
+    `<text x="${f(cx)}" y="${f(y + 0.8)}" text-anchor="middle" font-family="EB Garamond, serif" font-weight="600" font-size="${f(boy)}" fill="${ISIK}" fill-opacity=".4">${kacis(ad)}</text>` +
+    `<text x="${f(cx)}" y="${f(y)}" text-anchor="middle" font-family="EB Garamond, serif" font-weight="600" font-size="${f(boy)}" fill="${MUREKKEP}">${kacis(ad)}</text>` +
+    `<path d="M${f(cx - 26)} ${f(y + 18)}H${f(cx + 26)}" stroke="${MUREKKEP}" stroke-opacity=".7" stroke-width=".8"/>` +
+    `<text x="${f(cx)}" y="${f(y + 40)}" text-anchor="middle" font-family="Encode Sans, sans-serif" font-weight="600" font-size="9" letter-spacing="2.4" fill="${MUREKKEP}" fill-opacity=".8">RİSALE-İ NUR KÜLLİYATI</text>` +
     `</svg>`
   );
 }

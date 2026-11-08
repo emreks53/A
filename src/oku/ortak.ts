@@ -18,7 +18,7 @@ export const KULLIYAT = [
   'İman ve Küfür Muvâzeneleri',
 ] as const;
 
-/** Külliyat'ın bütün ciltleri bu renktedir (Güneş rafı, Menba rafı, Kenz, açılan kapak). CSS'te: var(--cilt) */
+/** Külliyat'ın bütün ciltleri bu renktedir (Menba rafı, açılan kapak; Güneş rafı ve Kenz CSS'te aynı değerdeki var(--cilt) ile) */
 export const CILT = '#D7787B';
 
 type KulliyatEseri = (typeof KULLIYAT)[number];

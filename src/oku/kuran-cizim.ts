@@ -78,8 +78,8 @@ export function kuranSvg(p: string, o: { spot?: boolean } = {}): string {
     `<path d="${d}" transform="translate(-.55 -.65)" fill="#fff"/>` +
     `<path d="${d}" fill="url(#${p}-semse)"/>`;
   return `<defs>
-<radialGradient id="${p}-spot" cx="128" cy="86" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F4EDE0" stop-opacity=".16"/><stop offset=".55" stop-color="#F4EDE0" stop-opacity=".05"/><stop offset="1" stop-color="#F4EDE0" stop-opacity="0"/></radialGradient>
-<linearGradient id="${p}-inci" x1="72" y1="14" x2="180" y2="167" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFDF8"/><stop offset=".45" stop-color="#F6F1E7"/><stop offset="1" stop-color="#E6DED0"/></linearGradient>
+${spot ? `<radialGradient id="${p}-spot" cx="128" cy="86" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F4EDE0" stop-opacity=".16"/><stop offset=".55" stop-color="#F4EDE0" stop-opacity=".05"/><stop offset="1" stop-color="#F4EDE0" stop-opacity="0"/></radialGradient>
+` : ''}<linearGradient id="${p}-inci" x1="72" y1="14" x2="180" y2="167" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFDF8"/><stop offset=".45" stop-color="#F6F1E7"/><stop offset="1" stop-color="#E6DED0"/></linearGradient>
 <radialGradient id="${p}-parlak" cx="98" cy="38" r="118" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
 <linearGradient id="${p}-sedef" x1="72" y1="167" x2="180" y2="14" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#D3DEEC" stop-opacity=".32"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#F3E3CB" stop-opacity=".3"/></linearGradient>
 <linearGradient id="${p}-semse" x1="105" y1="44" x2="147" y2="137" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F8F4EC"/><stop offset="1" stop-color="#E9E2D4"/></linearGradient>

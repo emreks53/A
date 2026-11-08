@@ -16,7 +16,7 @@ function el<K extends keyof HTMLElementTagNameMap>(etiket: K, sinif?: string, me
 }
 
 // Neşret: ortada ince çizgili nur parıltısı (dolgusuz), çevresine saçılan ışınlar (neşretmek: yaymak). Güneş
-// sekmesinin diskli güneşinden ayrı.
+// sekmesinin halkalı güneşinden ayrı.
 const NESRET_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8.2c.5 2 1.8 3.3 3.8 3.8-2 .5-3.3 1.8-3.8 3.8-.5-2-1.8-3.3-3.8-3.8 2-.5 3.3-1.8 3.8-3.8Z"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>';
 const MENBA_SVG =

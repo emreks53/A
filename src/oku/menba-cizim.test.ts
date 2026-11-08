@@ -56,9 +56,22 @@ describe('Menba çizimi', () => {
     expect(g[0] / g[KULLIYAT.indexOf('Muhâkemat')]).toBeCloseTo(49.1 / 13.15, 1);
   });
 
-  it('her eser için metin kaçışlı, yazı tipi EB Garamond, öne çekilenin adı tipografik kesme işaretiyle', () => {
-    const one = sirtlar(menbaSvgIcerigi("Lem'alar", 't'))[13];
+  it('öne çekilenin adı tipografik kesme işaretiyle; yazılar EB Garamond, koyu mürekkeple (bezde okunur)', () => {
+    const svg = menbaSvgIcerigi("Lem'alar", 't');
+    const one = sirtlar(svg)[13];
     expect(one.satirlar).toEqual([tipografik("Lem'alar")]);
+    const gruplar = [...svg.matchAll(/<g [^>]*font-family="([^"]+)"[^>]*fill="([^"]+)"/g)];
+    expect(gruplar).toHaveLength(14);
+    expect(new Set(gruplar.map((m) => `${m[1]} ${m[2]}`))).toEqual(new Set(['EB Garamond, serif #3C0E16']));
+  });
+
+  it('arkadaki ışık çizimin içinde kalır (kaydırma kutusu onu kesmez)', () => {
+    const svg = menbaSvgIcerigi('Şuâlar', 't');
+    const isik = svg.match(/<ellipse cx="([\d.]+)" cy="([\d.]+)" rx="([\d.]+)" ry="([\d.]+)" fill="url\(#t-isik\)"/);
+    expect(isik).not.toBeNull();
+    const [, , cy, , ry] = isik!.map(Number);
+    expect(cy - ry).toBeGreaterThanOrEqual(0);
+    expect(svg).not.toContain('t-k-spot');
   });
 
   it('kimlikler önekle ayrışır (aynı sayfada iki çizim çakışmaz)', () => {

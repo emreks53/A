@@ -29,7 +29,7 @@ export function menbaIcerik(v: Video): HTMLElement {
 
   const kaynak = el('div', 'menba__kaynak');
   const eser = el('p', 'menba__eser');
-  eser.append(el('span', undefined, tipografik(v.kitap)));
+  eser.textContent = tipografik(v.kitap);
   const yer = el('ul', 'menba__yer');
   yer.setAttribute('aria-label', 'Geçtiği yer');
   for (const [parca, sinif] of [
@@ -47,7 +47,7 @@ export function menbaIcerik(v: Video): HTMLElement {
   const kitap = kitaplar.find((k) => k.kitap === v.kitap);
   const dis = kitap ? undefined : disAdres(baglanti, v.kitap, v.sayfa);
   if (kitap || dis) {
-    const oku = el('a', `menba__oku${dis ? ' menba__oku--dis' : ''}`);
+    const oku = el('a', 'menba__oku');
     const simge = el('span', 'menba__oku-simge');
     simge.innerHTML = KITAP_SVG;
     oku.append(simge, el('span', 'menba__oku-ad', 'Kitapta oku'), el('span', 'menba__oku-yer', v.sayfa ? `${v.sayfa}. sayfa` : tipografik(v.kitap)));

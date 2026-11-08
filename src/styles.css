@@ -137,14 +137,12 @@
 
 :root {
   --sky: #5aa2ec;
-  --oku: #022064;
   --quote-shadow-near: rgba(40, 148, 225, 0.2);
   --quote-shadow-far: rgba(40, 148, 225, 0.45);
 
   /* "müze / koleksiyon": mürekkep laciverti zemin, fildişi yazı; şampanya yalnız ince çizgi, aralıklı küçük etiket ve
      seçili simgede (altın dolgu ya da parıltı yok). Kitaplar tek renk: #D7787B. */
   --murekkep: #0b1430;
-  --murekkep-derin: #070e24;
   --fildisi: #f4ede0;
   --fildisi-2: rgba(244, 237, 224, 0.74);
   --fildisi-3: rgba(244, 237, 224, 0.56);
@@ -155,8 +153,6 @@
   /* bezin gölgesi ve ışığı (rgb üçlüsü; saydamlıkla kullanılır) */
   --cilt-golge: 60, 14, 22;
   --cilt-isik: 255, 236, 230;
-  /* sırt adları, kapak adı: soluk altın varak */
-  --varak: #f6e6c4;
   /* logonun laciverti (açık zeminde) */
   --lacivert: #022064;
   --eb: 'EB Garamond', 'Tinos', Georgia, serif;

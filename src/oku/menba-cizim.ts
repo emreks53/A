@@ -71,7 +71,7 @@ export function menbaSvgIcerigi(eser: string, p: string): string {
       kor(c, H * 0.085) +
       kor(c, H - H * 0.085 - 1.2) +
       kor(c, H - H * 0.06 - 1.2) +
-      `<g transform="translate(${f(cx)} ${f(cy)}) rotate(-90)" font-family="EB Garamond, serif" font-weight="600" font-size="${f(fs)}" letter-spacing="${f(fs * 0.02)}" fill="#F6E6C4">${yazi}</g></g>`
+      `<g transform="translate(${f(cx)} ${f(cy)}) rotate(-90)" font-family="EB Garamond, serif" font-weight="600" font-size="${f(fs)}" letter-spacing="${f(fs * 0.02)}" fill="#3C0E16">${yazi}</g></g>`
     );
   };
 
@@ -94,11 +94,15 @@ export function menbaSvgIcerigi(eser: string, p: string): string {
 <filter id="${p}-doku" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" seed="7"/><feColorMatrix values="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1"/></filter>
 <filter id="${p}-cekilen" x="-60%" y="-20%" width="220%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="2.4"/><feOffset dy="1.5"/><feComponentTransfer><feFuncA type="linear" slope=".7"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 <filter id="${p}-tahta-gol" x="-10%" y="-100%" width="120%" height="400%"><feGaussianBlur stdDeviation="4"/></filter>
+<radialGradient id="${p}-isik"><stop offset="0" stop-color="#F4EDE0" stop-opacity=".16"/><stop offset=".55" stop-color="#F4EDE0" stop-opacity=".05"/><stop offset="1" stop-color="#F4EDE0" stop-opacity="0"/></radialGradient>
 <clipPath id="${p}-ciltler">${raftakiler.map((c) => `<rect x="${f(c.x)}" y="${UST}" width="${f(c.w)}" height="${H}" rx="1.2"/>`).join('')}</clipPath>
 </defs>`);
-  // rahle üzerinde Kur'an-ı Kerim, 0,8 ölçekte, ortada
+  // rahle üzerinde Kur'an-ı Kerim, 0,8 ölçekte, ortada. Arkasındaki yumuşak ışık burada çizilir, çizimin içinde
+  // kalır: Kur'an çiziminin kendi ışığı çizimin üstünden taşar, sayfanın kaydırma kutusu onu düz bir çizgiyle keserdi.
   const s = 0.8;
-  o.push(`<g transform="translate(${f(W / 2 - 130 * s)} 2) scale(${s})">${kuranSvg(`${p}-k`)}</g>`);
+  const isikY = 2 + 92 * s;
+  o.push(`<ellipse cx="${W / 2}" cy="${f(isikY)}" rx="120" ry="${f(isikY)}" fill="url(#${p}-isik)"/>`);
+  o.push(`<g transform="translate(${f(W / 2 - 130 * s)} 2) scale(${s})">${kuranSvg(`${p}-k`, { spot: false })}</g>`);
   // rafın gölgesi, mürekkep tahtası (Güneş'teki gibi: aydınlık üst yüz, şampanya kenar çizgisi) ve temas gölgesi
   o.push(`<rect x="${SOL - 8}" y="${TABAN + 6}" width="${W - SOL - SAG + 16}" height="8" fill="#000" fill-opacity=".7" filter="url(#${p}-tahta-gol)"/>`);
   o.push(`<rect x="${SOL - 8}" y="${TABAN}" width="${W - SOL - SAG + 16}" height="10" rx="1" fill="url(#${p}-tahta)"/>`);

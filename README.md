@@ -1,8 +1,9 @@
 # Nur-u Hakikat
 
 Tek kod tabanından çıkan **web sitesi** ve **mobil uygulama** (Android + iOS).
-Ana ekran, `design/mockup-ana-ekran.png` tasarımıyla birebir örtüşecek şekilde ölçülerek kurulmuştur;
-uygulama simgesi `design/logo-kaynak.png` sarı logodur.
+Ana ekranın arka planı ve sözü `design/mockup-ana-ekran.png` tasarımıyla birebir örtüşecek şekilde ölçülerek
+kurulmuştur (alt menü sonradan sadeleştirildi: aşağıya ve `design/OLCULER.md`'ye bakın); uygulama simgesi
+`design/logo-kaynak.png` sarı logodur.
 
 | Tasarım | Uygulama |
 | --- | --- |
