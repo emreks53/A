@@ -73,8 +73,8 @@
   const KUBBEP = palet(['#1C6A35', '#227A3D', '#2A8A45', '#35994E', '#43A85A', '#58B966', '#70C874', '#8AD584']);
   const YAPRAKP = [palet(['#3E8A3E', '#4C9A44', '#5AA84C']), palet(['#5AA84C', '#6CB654', '#7EC35C']), palet(['#2F7A3C', '#3C8A42', '#4A984A']), palet(['#79BA52', '#8CC85E', '#9ED36A'])];
   const PEMBE = palet(['#F6C2D0', '#F2AEC2', '#EE9AB4']);
-  const BEYAZP = palet(['#F3ECEA', '#F8F2EE', '#FDF9F5']);
-  const TACKENAR = palet(['#E9C9D6', '#E4C2D4', '#DDC4DC']);
+  const BEYAZP = palet(['#F8F5F2', '#FCFAF7', '#FFFEFC']);
+  const TACKENAR = palet(['#E9DFE2', '#E5DCE4', '#EDE2E0']);
   const KREMKENAR = palet(['#CDBF9F', '#D4C6A8', '#DACDB1']);
   const BULUTKENAR = palet(['#C3D9EF', '#CCDEF2', '#D3E3F4']);
 
@@ -227,9 +227,9 @@
   for (const c of bit.cicekler) {
     for (const e of S.tacYapraklari(c)) {
       const id = et({
-        mod: 'kontur', h: c.r > 40 ? 9 : 6, kenar: TACKENAR, renk(x, y, r) {
+        mod: 'kontur', h: c.r > 40 ? 9 : 6, kenar: TACKENAR, kenarOzel: true, renk(x, y, r, kenarMi) {
           const d = Math.hypot(x - c.x, y - c.y) / c.r;
-          return d < 0.42 ? sec(PEMBE, 0.2, r, 1.5) : sec(BEYAZP, 0.75, r, 1.8);
+          return d < 0.42 ? sec(PEMBE, 0.2, r, 1.5) : kenarMi ? sec(TACKENAR, 0.5, r, 2.5) : sec(BEYAZP, 0.75, r, 1.8);
         },
       });
       boya(id, S.elipsYolu({ ...e, rx: e.rx * 1.04, ry: e.ry * 1.06 }));
@@ -384,7 +384,8 @@
     const s = parcaTohum[k], l = L[s];
     const r = S.rng(k * 7 + 13);
     const e = ET[l];
-    const c = e.kenar && e.mod === 'kontur' && D[s] < HH[l] ? sec(e.kenar, 0.5, r, 2.5) : e.renk((s % W) / K, ((s / W) | 0) / K, r);
+    const kenarMi = !!e.kenar && e.mod === 'kontur' && D[s] < HH[l];
+    const c = e.kenarOzel ? e.renk((s % W) / K, ((s / W) | 0) / K, r, kenarMi) : kenarMi ? sec(e.kenar, 0.5, r, 2.5) : e.renk((s % W) / K, ((s / W) | 0) / K, r);
     const p = 1 + (r() - 0.5) * 0.06;
     PR[k * 3] = c[0] * p; PR[k * 3 + 1] = c[1] * p; PR[k * 3 + 2] = c[2] * p;
     PO[k] = r() * 100;
@@ -401,7 +402,7 @@
 
   // ------------------------------------------------------------ boyama
   const im = ctx.createImageData(W, H), d = im.data;
-  const ZR = 253, ZG = 252, ZB = 248; // beyaz zemin
+  const ZR = 241, ZG = 238, ZB = 231; // beyaz zemin kâğıdı (hafif kirli beyaz: beyaz parçalar ondan ayrılsın)
   const golgeKay = Math.round(1.5 * K);
   const araBoy = (l) => (l ? (ET[l].ara !== undefined ? ET[l].ara * K : Math.min(0.85 * K, HH[l] * 0.1)) : 0.85 * K);
   const tane = S.rng(4242);
