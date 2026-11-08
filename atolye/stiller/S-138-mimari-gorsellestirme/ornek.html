@@ -1099,21 +1099,61 @@ stil.orta = function (c) {
 };
 
 // ------------------------------------------------------------------ gök ve bulutlar
+// kümülüs bulutları: her bulut düz tabanlı, üst üste binen kubbemsi "pamuk" kümelerinden oluşur; her
+// kümenin küre normali güneşe göre aydınlatılır (parlak sıcak tepe, mavimsi gri alt), fbm ile karnabahar
+// dokusu ve yumuşak, lifli kenarlar
 const BULUTLAR = [[178, 248, 300, 110, 1], [505, 146, 240, 80, 2], [775, 330, 320, 112, 3], [950, 470, 200, 66, 4], [84, 468, 210, 70, 5]];
-let BB = null;
-function bulutYog(X, Y) {
-  let best = -9;
-  for (const b of BULUTLAR) {
-    const dx = (X - b[0]) / (b[2] / 2);
-    let dy = (Y - b[1]) / (b[3] / 2);
-    if (dy > 0) dy *= 1.9;
-    const e = 1 - dx * dx - dy * dy;
-    if (e > best) { best = e; BB = b; }
+const PAMUK = BULUTLAR.map((b) => {
+  const r = S.rng(700 + b[4]);
+  const [cx, cy, w, h] = b;
+  const taban = cy + h * 0.32;
+  const ps = [];
+  const n = 13;
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5) / n - 0.5;
+    const tepe = 1 - Math.pow(Math.abs(t) * 2, 1.6);
+    const rr = h * (0.17 + 0.22 * tepe) * (0.7 + 0.6 * r());
+    const px = cx + t * w * 0.82 + (r() - 0.5) * w * 0.06;
+    const py = taban - rr * (0.5 + 0.45 * tepe) - h * 0.1 * r();
+    ps.push([px, py, rr]);
   }
-  if (best < -0.9) return -1;
-  const n = fbm(X / 52, Y / 34, 5, 0.52);
-  return best * 0.9 + n * 0.9 - 0.18;
+  // üstte birkaç küçük kabarcık
+  for (let i = 0; i < 3; i++) { const t = (r() - 0.5) * 0.5; const rr = h * (0.14 + 0.1 * r()); ps.push([cx + t * w * 0.7, taban - h * (0.5 + 0.15 * r()), rr]); }
+  return { b, taban, ps, x0: cx - w * 0.62, x1: cx + w * 0.62, y0: cy - h * 0.95, y1: taban + 8 };
+});
+const BLX = 0.62, BLY = -0.55;
+function bulutOrnek(X, Y, o3) {
+  let enIyi = 0, a = 0;
+  for (const B of PAMUK) {
+    if (X < B.x0 || X > B.x1 || Y < B.y0 || Y > B.y1) continue;
+    const nd = fbm(X / 34 + B.b[4] * 7, Y / 34, 4, 0.5), nb = fbm(X / 90 - B.b[4] * 5, Y / 70, 3, 0.5);
+    let best = -9, bp = null;
+    for (const p of B.ps) {
+      const dx = (X - p[0]) / p[2], dy = (Y - p[1]) / p[2];
+      const q = 1 - Math.sqrt(dx * dx + dy * dy) + nd * 0.14 + nb * 0.6;
+      if (q > best) { best = q; bp = p; }
+    }
+    const taban = smooth(B.taban + 7, B.taban - 2, Y + nd * 6);
+    const dens = best * taban;
+    if (dens <= 0) continue;
+    const al = Math.pow(smooth(-0.1, 0.65, dens), 1.5) * 0.92;
+    if (al <= a) continue;
+    a = al;
+    const dx = (X - bp[0]) / bp[2], dy = (Y - bp[1]) / bp[2];
+    const nz = Math.sqrt(Math.max(0, 1 - dx * dx - dy * dy));
+    // karnabahar dokusu: güneş yönünde gürültü farkı
+    const nd2 = fbm((X + BLX * 4) / 34 + B.b[4] * 7, (Y + BLY * 4) / 34, 4, 0.5);
+    let lit = 0.5 + 0.62 * (dx * BLX + dy * BLY) + 0.12 * nz + (nd2 - nd) * 1.5;
+    // alt kısım ve taban: mavimsi gri gölge
+    const alt = smooth(B.taban - B.b[3] * 0.55, B.taban + 2, Y);
+    lit = clamp(lit - alt * 0.45);
+    // ince kenarlarda güneş ışığının geçtiği gümüş parıltı
+    const kenar = smooth(0.18, 0.02, dens) * clamp(dx * BLX + dy * BLY + 0.3);
+    o3[0] = mix(0.74, 1.95, lit) + kenar * 0.6; o3[1] = mix(0.84, 1.88, lit) + kenar * 0.55; o3[2] = mix(1.06, 1.74, lit) + kenar * 0.45;
+  }
+  return a;
 }
+const _bo = [0, 0, 0];
 function gokCiz() {
   const SUN = [1.0, 0.92, 0.78];
   tumu(0, 820, (X, Y, out) => {
@@ -1128,21 +1168,10 @@ function gokCiz() {
     r += SUN[0] * gl; g += SUN[1] * gl; b += SUN[2] * gl * 0.9;
     const core = smooth(30, 22, d) * 5;
     r += core; g += core * 0.97; b += core * 0.9;
-    // bulutlar
-    const dn = bulutYog(X, Y);
-    if (dn > -0.05) {
-      const a = smooth(-0.02, 0.5, dn);
-      if (a > 0) {
-        const dn2 = bulutYog(X + 6 * 0.77, Y - 6 * 0.64);
-        const lit = clamp(0.55 + (dn - dn2) * 4.5);
-        const derin = smooth(0.2, 1.1, dn);
-        const alt = smooth(-0.3, 0.7, (Y - BB[1]) / (BB[3] / 2));
-        const golg = clamp(clamp(1 - lit) * (0.5 + 0.4 * derin) + alt * 0.45 - (1 - alt) * 0.1);
-        const cr = mix(1.75, 0.82, golg), cg = mix(1.7, 0.9, golg), cb = mix(1.6, 1.1, golg);
-        // güneşe yakın bulut kenarlarında sıcak parıltı
-        const sg = Math.exp(-d / 260) * 0.35 * lit;
-        r = mix(r, cr + sg, a); g = mix(g, cg + sg * 0.92, a); b = mix(b, cb + sg * 0.75, a);
-      }
+    const a = bulutOrnek(X, Y, _bo);
+    if (a > 0) {
+      const sg = Math.exp(-d / 260) * 0.3;
+      r = mix(r, _bo[0] + sg, a); g = mix(g, _bo[1] + sg * 0.92, a); b = mix(b, _bo[2] + sg * 0.75, a);
     }
     out[0] = r; out[1] = g; out[2] = b;
   }, 0);
@@ -1150,7 +1179,7 @@ function gokCiz() {
 // traverten meydan: kaçış noktası ufukta, derzli büyük levhalar
 function zeminCiz() {
   const VY = 786, F = 610, T = 0.52;
-  const ZT = lin('#DCCBAE'), ZT2 = lin('#CDB896'), DERZ = lin('#A08B6C');
+  const ZT = lin('#D8C5A6'), ZT2 = lin('#C7B08C'), DERZ = lin('#977F5E');
   tumu(791, 1024, (X, Y, out) => {
     const dy = Y - VY;
     const xw = (X - 560) / dy / T;
@@ -1161,7 +1190,7 @@ function zeminCiz() {
     const dxp = Math.min(fx, 1 - fx) * T * dy;
     const dzp = Math.min(fz, 1 - fz) * T * dy * dy / F;
     const w = 0.35 + 0.55 * dy / 238;
-    const vis = smooth(796, 840, Y);
+    const vis = smooth(795, 818, Y);
     const j = smooth(w, w * 0.25, Math.min(dxp, dzp)) * vis;
     const h = ihash(row, col, 11);
     const m = 0.15 + 0.75 * h + 0.25 * fbm(xw * 2.5, zw * 2.5, 3);
@@ -1178,7 +1207,7 @@ function zeminCiz() {
     }
     const yk = 0.05 * (1 - j) * smooth(1024, 840, Y);
     const r = ar * (GUNES[0] * ndl * sh + GOK_A[0] * 0.95) + yk * UFUK[0], g = ag * (GUNES[1] * ndl * sh + GOK_A[1] * 0.95) + yk * UFUK[1], b = ab * (GUNES[2] * ndl * sh + GOK_A[2] * 0.95) + yk * UFUK[2] * 1.1;
-    const pus = smooth(830, 791, Y) * 0.55;
+    const pus = smooth(812, 791, Y) * 0.4;
     out[0] = mix(r, UFUK[0] * 1.1, pus); out[1] = mix(g, UFUK[1] * 1.08, pus); out[2] = mix(b, UFUK[2] * 1.02, pus);
     out[3] = smooth(791, 795, Y);
   }, 1);

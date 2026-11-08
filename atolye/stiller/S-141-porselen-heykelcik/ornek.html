@@ -951,12 +951,63 @@ stil.tas = function (X, Y, out, parca, k, L) {
   if (parca === 'kornis' && Y < 693.4) { yaldiz(out); return; }
   if (parca === 'korkuluk' && G.pervaz && Y < (Y < 400 ? 273.4 : 437.4)) { yaldiz(out); return; }
   if (parca === 'topuz' && Y > 197.5) { yaldiz(out); return; }
-  if (parca === 'kaide' && Y > 797.5) { yaldiz(out); return; }
+  if (parca === 'kaide') { kaidePorselen(X, Y, out); return; }
   if (parca === 'minare' && G.zik > 0.3) { G.ao = Math.max(G.ao, 0.85); seladon(out, 0.4, 0, 0.04); return; }
   let kk = 1;
   if (parca === 'korkuluk-ic' || parca === 'korkuluk-arka') kk = 0.88;
   porselen(out, kk);
 };
+// kaide: kalıpta biçimlenmiş porselen gövde. Pencereleri çevreleyen üç gömme pano, yuvarlak boncuk
+// pervazlı; panoların içinde kıl inceliğinde yaldız; altta yuvarlak (torus) süpürgelik, üstünde yaldız;
+// oyuk diplerinde birikmiş sır hafif seladona çalar.
+const PANO = [[430, 58], [560, 62], [690, 58]];
+function kaidePorselen(X, Y, out) {
+  // süpürgelik: y 786–800 yuvarlak torus
+  if (Y > 786) {
+    const t = (Y - 786) / 14;
+    if (t < 0.12) { egY(-0.8); yaldiz(out); return; }
+    egY(mix(-0.75, 0.7, (t - 0.12) / 0.88));
+    G.ao *= 1 - 0.25 * smooth(0.75, 1, t);
+    porselen(out);
+    return;
+  }
+  // en yakın pano
+  let p = PANO[0], bd = 1e9;
+  for (const q of PANO) { const d = Math.abs(X - q[0]); if (d < bd) { bd = d; p = q; } }
+  const cx = p[0], hw = p[1], cy = 750, hh = 33;
+  const dx = Math.abs(X - cx) - hw, dy = Math.abs(Y - cy) - hh;
+  const d = Math.max(dx, dy);
+  const gx = dx > dy ? Math.sign(X - cx) : 0, gy = dx > dy ? 0 : Math.sign(Y - cy);
+  let birik = 0;
+  if (d > -4.5 && d < 0) {
+    // boncuk pervaz
+    const t = (d + 4.5) / 4.5;
+    const k = 1.25 * Math.cos(Math.PI * t);
+    nset(-gx * k, -gy * k, 1);
+    // boncuğun alt ve sol yarısı gölgede, dip çizgisinde sır birikmesi
+    const yon = -gx * LV[0] * k - gy * LV[1] * k;
+    G.ao *= 0.9 + 0.1 * clamp(yon + 0.5);
+    if (t < 0.2 || t > 0.9) { birik = 0.4; G.ao *= 0.88; }
+  } else if (d <= -4.5) {
+    // gömme pano zemini
+    G.ao *= 0.92 - 0.2 * smooth(-8.5, -4.5, d);
+    // panonun içine düşen pervaz gölgesi (ışık sağ üstten: üst ve sağ kenarın altında)
+    const gu = Math.min(Y - (cy - hh) - 4.5, (cx + hw) - X - 4.5);
+    if (gu < 5) G.sh *= 0.72 + 0.28 * smooth(0, 5, gu);
+    if (d > -6.6 && d < -5.6) { G.ao = Math.max(G.ao, 0.9); yaldiz(out); return; }
+    birik = 0.12 * smooth(-9, -4.5, d);
+  } else {
+    // pano dışındaki düz yüz: köşelere doğru çok hafif kavis (yumuşak kalıp hacmi)
+    const u = (X - 560) / 260;
+    nset(u * 0.12, 0, 1);
+    if (d < 1.8) G.ao *= 0.9 + 0.1 * smooth(0, 1.8, d);
+  }
+  // üstte kornişin altında sır birikmesi, gövdede çok hafif sıcak-serin geçiş
+  birik += 0.18 * Math.exp(-(Y - 704) / 5);
+  const k = 1 - 0.06 * (1 - (X - 300) / 520) - 0.05 * (Y - 704) / 96;
+  _al[0] = mix(BEYAZ[0] * k, SELADON_A[0], birik); _al[1] = mix(BEYAZ[1] * k, SELADON_A[1], birik); _al[2] = mix(BEYAZ[2] * k, SELADON_A[2], birik);
+  sir(_al, 0.05, 0.035, out, { wrap: 0.28, sss: 0.18 });
+}
 stil.kubbe = function (X, Y, out) {
   kaburgaEgim(2.4, 0.024, 0.2);
   const at = Math.abs(G.kd);
@@ -1101,6 +1152,7 @@ function fonCiz() {
     out[0] = r * s; out[1] = g * s; out[2] = b * s;
   }, 0);
 }
+const ZEMIN_P = lin('#D2E1DC');
 function zeminCiz() {
   // sırlı beyaz porselen kaide yüzeyi: serin, parlak, ufka doğru gök yansıması
   tumu(793, 1024, (X, Y, out) => {
@@ -1112,7 +1164,7 @@ function zeminCiz() {
       sh *= 1 - 0.6 * clamp(dib + sol);
     }
     const ndl = -LV[1];
-    const al = BEYAZ;
+    const al = ZEMIN_P;
     const fr = 0.05 + 0.4 * Math.exp(-v * 5);
     const ref = [0.95, 1.05, 1.2];
     // ufka paralel ince parlak şerit (sırda pencere yansıması)
@@ -1125,9 +1177,39 @@ function zeminCiz() {
 }
 
 // ------------------------------------------------------------------ çizim
+// saten sırlı zeminde yapının yumuşak, bulanık yansıması
+function yansima() {
+  const y0 = 800 * O, n = 90 * O;
+  const tmp = new Float32Array(n * N * 3);
+  for (let j = 0; j < n; j++) {
+    const gy = y0 + j, my = y0 - 1 - j;
+    if (my < 0) break;
+    const fade = Math.pow(1 - j / n, 1.5) * 0.4;
+    const rad = 2 + Math.floor(j / 10);
+    for (let gx = 0; gx < N; gx++) {
+      const mi = my * N + gx;
+      if (SOLID[mi] < 0.5) continue;
+      let r = 0, g = 0, b = 0, c = 0;
+      for (let q = -rad; q <= rad; q += Math.max(1, rad >> 1)) {
+        const xx = clamp(gx + q, 0, N - 1), m3 = (my * N + xx) * 3;
+        r += FB[m3]; g += FB[m3 + 1]; b += FB[m3 + 2]; c++;
+      }
+      const t3 = (j * N + gx) * 3;
+      tmp[t3] = (r / c) * fade + 1e-9; tmp[t3 + 1] = (g / c) * fade; tmp[t3 + 2] = (b / c) * fade;
+    }
+  }
+  for (let j = 0; j < n; j++) for (let gx = 0; gx < N; gx++) {
+    const t3 = (j * N + gx) * 3;
+    if (!tmp[t3]) continue;
+    const g3 = ((y0 + j) * N + gx) * 3;
+    const fade = Math.pow(1 - j / n, 1.5) * 0.4;
+    FB[g3] = FB[g3] * (1 - fade) + tmp[t3]; FB[g3 + 1] = FB[g3 + 1] * (1 - fade) + tmp[t3 + 1]; FB[g3 + 2] = FB[g3 + 2] * (1 - fade) + tmp[t3 + 2];
+  }
+}
 fonCiz();
 zeminCiz();
 binaCiz();
+yansima();
 bitkilerCiz();
 parlama(2.0, 0.25, 6);
 cikis(0.55, 'aces');

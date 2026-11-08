@@ -6,15 +6,15 @@
   "aile": "Grafik ve Dijital",
   "ozgun": false,
   "ozet": "Sırlı beyaz porselen heykelcik renderı: seladon sırlı kubbe, kıl inceliğinde yaldız çizgiler, ince yapraklı pembe dipli porselen çiçekler.",
-  "tanim": "Sahne, ince işçilikli bir porselen heykelcik gibi render edilir. Gövde serin, saf beyaz ve cam gibi sırlıdır; sırda dört bölmeli pencere biçiminde keskin ışık yansımaları, silindirlerde dikey parlama çizgileri görülür. Kubbe ve kasnak açık yeşim-mavi seladon sırlıdır: sır kaburga sırtlarında incelip açılır, diplerinde birikip koyulaşır. Kubbe tabanı, pervazlar, pencere söveleri ve şerefe kenarları kıl inceliğinde yaldızla çizilmiştir; çiçekler kenarı hafif dalgalı, köke doğru pembeleşen ince porselen taç yapraklar ve sarı sırlı boncuk erciklerden, yapraklar yaldız damarlı seladondan oluşur.",
+  "tanim": "Sahne, ince işçilikli bir porselen heykelcik gibi render edilir. Gövde serin, saf beyaz ve cam gibi sırlıdır; sırda dört bölmeli pencere biçiminde keskin ışık yansımaları, silindirlerde dikey parlama çizgileri görülür. Kubbe ve kasnak açık yeşim-mavi seladon sırlıdır: sır kaburga sırtlarında incelip açılır, diplerinde birikip koyulaşır. Kaide kalıpta biçimlenmiş gibi gömme panolu, boncuk pervazlı ve yuvarlak süpürgeliklidir; kubbe tabanı, pervazlar, pano içleri, pencere söveleri ve şerefe kenarları kıl inceliğinde yaldızla çizilmiştir. Çiçekler kenarı hafif dalgalı, köke doğru pembeleşen ince porselen taç yapraklar ve sarı sırlı boncuk erciklerden, yapraklar yaldız damarlı seladondan oluşur; heykelcik saten sırlı açık bir zeminde hafifçe yansır.",
   "koken": "Çin seladonu (Song hanedanı Longquan fırınları) ve Kore Goryeo seladonu, sır birikmesiyle tonlanan yeşil sırrın kaynağıdır; Avrupa'da Meissen (1710), Sèvres ve Capodimonte atölyelerinin porselen heykelcikleri ve elde modellenen porselen çiçekleri, yaldızlı kenar süslemesiyle bu üslubun biçim dilini verir. Dijital tarafta cam sırrın keskin yansımaları ve ince yaprakların ışık geçirmesi stüdyo ürün renderlarının yöntemleriyle yapılır.",
   "ayirt_edici": [
     "Açık seladon sırlı kubbe: kaburga sırtlarında açılan, diplerinde koyulaşan sır ve dört bölmeli pencere yansıması",
-    "Serin, saf beyaz, cam gibi sırlı porselen gövde; silindirlerde keskin dikey parlama çizgileri",
-    "Kubbe tabanında, pervazlarda, pencere sövelerinde, şerefe ve korkuluk kenarlarında kıl inceliğinde yaldız",
-    "Minarede seladon boyalı zikzak bant",
-    "Kenarı hafif dalgalı, köke doğru pembeleşen ince porselen taç yapraklar; sarı sırlı boncuk ercikler ve yaldızlı göbek",
-    "Yaldızlı orta damarlı seladon yapraklar ve serin, açık mavi gök fonu"
+    "Serin, saf beyaz, cam gibi sırlı porselen gövde; silindirlerde keskin dikey parlama çizgileri ve seladon zikzak bant",
+    "Kalıplanmış kaide: pencereleri çevreleyen üç gömme pano, boncuk pervazlar, oyuklarda seladona çalan sır birikmesi ve yuvarlak süpürgelik",
+    "Kubbe tabanında, pervazlarda, pano içlerinde, pencere sövelerinde, şerefe ve korkuluk kenarlarında kıl inceliğinde yaldız",
+    "Kenarı hafif dalgalı, köke doğru pembeleşen ince porselen taç yapraklar; sarı sırlı boncuk ercikler, yaldızlı göbek ve yaldız damarlı seladon yapraklar",
+    "Serin, açık mavi gök fonu ve heykelciği yumuşakça yansıtan saten sırlı açık zemin"
   ],
   "palet": [
     "#B8DAE7",
@@ -23,10 +23,10 @@
     "#E5E6E7",
     "#D1C390",
     "#E2C3C9",
-    "#E1D381",
+    "#D9CD9E",
     "#84C5A9"
   ],
-  "kodla_cizim": "S-138 ile aynı piksel tabanlı çekirdek. Ortam işlevi serin açık bir fon, sağ üstte kayıtlarıyla dört bölmeli pencere biçimli bir ışık, solda küçük bir yumuşak kutu ve iki dikey şerit ışık içerir; porselen çok düşük pürüzlülüklü (0,035) Schlick Fresnel sırrı, sargılı Lambert ve hafif saçılmayla gölgelendirilir. Seladon sırrın rengi kaburga profilinden hesaplanır: sırt (kaburga yüksekliği) açık renge, sırt dibi ve kubbe tabanı koyu renge karıştırılır. Yaldız, pervaz bantlarının üst dudağı, bilezik ortası, söve katmanının dış kenarı (mesafe alanı < 0,75 px) ve yaprak orta damarı gibi dar bölgelerde metal altınla boyanır. Taç yaprakları dalgalı kenarlı, uçta çentikli nokta dizisi yollarıdır; kâse biçimi mesafe dönüşümüyle şişirmeye eklenen merkezden uzaklık terimiyle verilir, ince kenarlarda ışık geçirme eklenir. Sonda hafif parlama ve ACES ton eşleme.",
+  "kodla_cizim": "S-138 ile aynı piksel tabanlı çekirdek. Ortam işlevi serin açık bir fon, sağ üstte kayıtlarıyla dört bölmeli pencere biçimli bir ışık, solda küçük bir yumuşak kutu ve iki dikey şerit ışık içerir; porselen çok düşük pürüzlülüklü (0,035) Schlick Fresnel sırrı, sargılı Lambert ve hafif saçılmayla gölgelendirilir. Seladon sırrın rengi kaburga profilinden hesaplanır: sırt (kaburga yüksekliği) açık renge, sırt dibi ve kubbe tabanı koyu renge karıştırılır. Yaldız, pervaz bantlarının üst dudağı, bilezik ortası, söve katmanının dış kenarı (mesafe alanı < 0,75 px) ve yaprak orta damarı gibi dar bölgelerde metal altınla boyanır. Taç yaprakları dalgalı kenarlı, uçta çentikli nokta dizisi yollarıdır; kâse biçimi mesafe dönüşümüyle şişirmeye eklenen merkezden uzaklık terimiyle verilir, ince kenarlarda ışık geçirme eklenir. Kaide gövdesi pano mesafe alanından hesaplanan normallerle kalıplanır: boncuk pervaz kosinüs profilli bir sırt, pano zemini gömme ve üst-sağ kenarda pervaz gölgeli, süpürgelik eğimi değişen bir torus; oyuk diplerinde sır rengi seladona karıştırılır. Zemine yapının alt kısmı aynalanıp mesafeyle bulanıklaşan ve sönen bir kopya olarak işlenir. Sonda hafif parlama ve ACES ton eşleme.",
   "etiketler": [
     "3B render",
     "porselen",

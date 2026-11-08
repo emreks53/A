@@ -839,21 +839,51 @@ function bitkilerCiz() {
 }
 
 // ================================================================== S-142 KRİSTAL HEYKEL
-// Sahne kesme kristalden bir heykeldir: zümrüt kristal kubbe düz yüzeylere (faset) kesilmiş, kaburgalar
-// fasetlerin keskin sırtlarıdır; kasnak dikey fasetli zümrüt, minare ve kaide berrak kristal, alemler altın
-// tonlu (sitrin) kristal. Her kristal piksel, arkasındaki görüntüyü yüzey normaline göre kırarak örnekler
-// (kırmızı, yeşil, mavi ayrı kaydırılır: renk ayrışması), faset başına iç yansıma parlaklığı, Fresnel gök
-// yansıması, sırt çizgileri, zeminde renkli kostik ışık ve yıldız parıltıları eklenir. Parlak gün ışığı göğü.
+// Sahne kesme kristalden bir heykeldir: zümrüt kristal kubbe, dikey fasetli zümrüt kasnak, berrak sekizgen
+// kristal minare, basamaklı kesim (zümrüt kesim) berrak kristal kaide, altın sarısı sitrin alemler.
+// Her kristal piksel için küçük bir ışın izleme yapılır: bakış ışını ön fasette kırılır, cismin içinde
+// arka fasetlere çarpar; tam iç yansımada geri döner, ya da arkadan çıkıp arka plandaki görüntüyü örnekler.
+// Kırmızı, yeşil ve mavi ayrı kırılma indisleriyle izlenir (dispersiyon: gökkuşağı ateşi). İçteki yol
+// uzunluğu zümrüdün rengini koyulaştırır (Beer yasası). Zeminde zümrüt ve tayf renkli kostik ışık, en
+// parlak noktalarda yıldız parıltıları.
 const LV = nrm([0.6, -0.62, 0.5]);
 const HV = nrm([LV[0], LV[1], LV[2] + 1]);
-const GUNES = [3.2, 3.0, 2.7];
-const ZENIT = [0.16, 0.42, 1.12], UFUK = [0.98, 1.1, 1.26];
-const stil = { isik: LV, tint: [0.72, 0.8, 0.8], aoTint: [0.82, 0.85, 0.88], yaprakKat: 0.5, tacCanak: 0.45, tacKenar: 0.05, sapKalin: 3.6 };
+const GUNES = [3.2, 3.05, 2.75];
+const ZENIT = [0.13, 0.4, 1.12], UFUK = [0.98, 1.1, 1.27];
+const stil = { isik: LV, tint: [0.8, 0.88, 0.88], aoTint: [0.86, 0.9, 0.92], yaprakKat: 0.5, tacCanak: 0.45, tacKenar: 0.05, sapKalin: 3.6 };
+const IOR = [1.5, 1.535, 1.575];
 
-function gokRenk(up, o3) {
-  if (up >= 0) { const t = Math.pow(up, 0.5); o3[0] = mix(UFUK[0], ZENIT[0], t); o3[1] = mix(UFUK[1], ZENIT[1], t); o3[2] = mix(UFUK[2], ZENIT[2], t); }
-  else { const t = clamp(-up * 3); o3[0] = mix(1.1, 0.9, t); o3[1] = mix(1.07, 0.85, t); o3[2] = mix(1.0, 0.76, t); }
+// ------------------------------------------------------------------ yansıma / kırılma ortamı
+// gök (ufukta parlak, tepede derin mavi), güneş, birkaç parlak bulut lobu; aşağıda açık taş meydan,
+// ufkun hemen altında koyu bir şerit (uzak ağaç dizisi: kristale karşıtlık veren koyu fasetler)
+const ENVBUL = [[-0.55, -0.42, 0.72, 0.93, 1.6], [0.2, -0.35, 0.92, 0.95, 1.2], [-0.15, -0.8, 0.58, 0.94, 1.1], [0.75, -0.2, 0.62, 0.95, 1.4], [-0.85, -0.15, 0.5, 0.96, 1.2]].map((b) => { const n = nrm([b[0], b[1], b[2]]); return [n[0], n[1], n[2], b[3], b[4]]; });
+function env(dx, dy, dz, o3) {
+  const l = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+  dx /= l; dy /= l; dz /= l;
+  const up = -dy;
+  let r, g, b;
+  if (up >= 0) {
+    const t = Math.pow(up, 0.45);
+    r = mix(UFUK[0], ZENIT[0], t); g = mix(UFUK[1], ZENIT[1], t); b = mix(UFUK[2], ZENIT[2], t);
+    for (const c of ENVBUL) {
+      const d = dx * c[0] + dy * c[1] + dz * c[2];
+      if (d > c[3] - 0.03) { const k = smooth(c[3] - 0.03, c[3] + 0.015, d) * c[4]; r += k; g += k; b += k * 0.97; }
+    }
+  } else {
+    const t = clamp(-up * 2.4);
+    r = mix(1.1, 0.5, t); g = mix(1.04, 0.46, t); b = mix(0.93, 0.4, t);
+    const band = Math.exp(-Math.pow((up + 0.07) / 0.035, 2));
+    r = mix(r, 0.14, band * 0.6); g = mix(g, 0.2, band * 0.6); b = mix(b, 0.18, band * 0.6);
+  }
+  const s = dx * LV[0] + dy * LV[1] + dz * LV[2];
+  if (s > 0.5) {
+    const sun = 140 * smooth(0.9985, 0.9994, s) + 7 * Math.pow(s, 120) + 0.7 * Math.pow(s, 16);
+    r += sun; g += sun * 0.96; b += sun * 0.86;
+  }
+  o3[0] = r; o3[1] = g; o3[2] = b;
 }
+function gokRenk(up, o3) { env(0, -up, Math.sqrt(Math.max(0, 1 - up * up)), o3); }
+
 // ------------------------------------------------------------------ arka görüntü (kırılma için anlık kopya)
 let ARKA = null, AX0 = 0, AY0 = 0, AW = 0, AH = 0;
 function arkaAl(x0, y0, x1, y1) {
@@ -868,258 +898,524 @@ function arka(X, Y, c) {
   i = i < 0 ? 0 : i >= AW ? AW - 1 : i; j = j < 0 ? 0 : j >= AH ? AH - 1 : j;
   return ARKA[(j * AW + i) * 3 + c];
 }
-const _e = [0, 0, 0];
-// kristal gölgelendirme: kırılan arka görüntü × geçirgenlik rengi × iç yansıma + Fresnel gök + keskin güneş parlaması
-function kristal(X, Y, out, o) {
-  const nx = G.nx, ny = G.ny, nz = G.nz;
-  const k = o.k === undefined ? 22 : o.k, d = o.disp === undefined ? 0.16 : o.disp;
-  const ox = -nx * k + (o.ox || 0), oy = -ny * k + (o.oy || 0);
-  const T = o.tint, ic = o.ic === undefined ? 1 : o.ic;
-  let r = arka(X + ox * (1 - d), Y + oy * (1 - d), 0) * T[0] * ic;
-  let g = arka(X + ox, Y + oy, 1) * T[1] * ic;
-  let b = arka(X + ox * (1 + d), Y + oy * (1 + d), 2) * T[2] * ic;
-  if (o.ici) {
-    // iç yansıma: fasetin içte gördüğü üsluplaştırılmış ortam (parlak gök şeridi, güneş, koyu alt)
-    const dx = nx * 2.2 + o.ici[0], dy = ny * 2.2 + o.ici[1];
-    const l = Math.hypot(dx, dy, 1);
-    const up = -dy / l, sd = (dx * LV[0] + dy * LV[1] + LV[2]) / l;
-    const v = (o.icTaban === undefined ? 0.14 : o.icTaban) + 1.5 * Math.exp(-Math.pow((up - 0.32) / 0.2, 2)) + 0.5 * smooth(0.6, 0.9, up) + Math.pow(Math.max(0, sd), 24) * 3.5;
-    const w = o.iciw === undefined ? 0.8 : o.iciw;
-    r = r * (1 - w) + T[0] * v * w * 1.6; g = g * (1 - w) + T[1] * v * w * 1.6; b = b * (1 - w) + T[2] * v * w * 1.6;
+
+// ------------------------------------------------------------------ küçük ışın izleyici
+const _e = [0, 0, 0], _n = [0, 0, 0], _T = [0, 0, 0], _P = [0, 0, 0];
+// kırılma: I birim gelen ışın, (nx,ny,nz) I'ya karşı bakan birim normal, eta = n1/n2. TIR'de false.
+function kir(Ix, Iy, Iz, nx, ny, nz, eta) {
+  const c = -(Ix * nx + Iy * ny + Iz * nz);
+  const k = 1 - eta * eta * (1 - c * c);
+  if (k < 0) return false;
+  const a = eta * c - Math.sqrt(k);
+  _T[0] = eta * Ix + a * nx; _T[1] = eta * Iy + a * ny; _T[2] = eta * Iz + a * nz;
+  return true;
+}
+function yansit(Ix, Iy, Iz, nx, ny, nz) {
+  const d = 2 * (Ix * nx + Iy * ny + Iz * nz);
+  _T[0] = Ix - d * nx; _T[1] = Iy - d * ny; _T[2] = Iz - d * nz;
+}
+// İç ışın izleme (yeşil kanal kırılma indisiyle yol bulunur; son çıkışta kanal başına ayrı indis →
+// ortamdaki keskin geçişlerde, güneşte ve bulut kenarlarında gökkuşağı saçağı).
+// form: { px,py,pz: giriş noktası; kiris(p,t): iç kiriş uzunluğu ve yeni nokta (_P); faset(p): _n'ye dış faset }
+const IORC = [1.46, 1.53, 1.61];
+const IZ = { tin: [0, 0, 0], nl: [0, 0, 0], L: 0, ok: 0, cik: [0, 0, 0] };
+function izle(form) {
+  const ior = IOR[1];
+  IZ.ok = 0;
+  if (!kir(0, 0, -1, _n[0], _n[1], _n[2], 1 / ior)) return;
+  let tx = _T[0], ty = _T[1], tz = _T[2];
+  let px = form.px, py = form.py, pz = form.pz;
+  let L = 0;
+  for (let b = 0; b < 4; b++) {
+    const t = form.kiris(px, py, pz, tx, ty, tz);
+    L += t;
+    px = _P[0]; py = _P[1]; pz = _P[2];
+    form.faset(px, py, pz);
+    const nx = _n[0], ny = _n[1], nz = _n[2];
+    if (kir(tx, ty, tz, -nx, -ny, -nz, ior)) {
+      IZ.tin[0] = tx; IZ.tin[1] = ty; IZ.tin[2] = tz; IZ.nl[0] = nx; IZ.nl[1] = ny; IZ.nl[2] = nz;
+      IZ.cik[0] = _T[0]; IZ.cik[1] = _T[1]; IZ.cik[2] = _T[2];
+      IZ.L = L; IZ.ok = 1;
+      return;
+    }
+    yansit(tx, ty, tz, nx, ny, nz);
+    tx = _T[0]; ty = _T[1]; tz = _T[2];
   }
-  if (o.govde) { r += o.govde[0]; g += o.govde[1]; b += o.govde[2]; }
-  const cz = Math.max(0, nz);
+  IZ.L = L + 1; IZ.ok = 2;
+  IZ.cik[0] = tx; IZ.cik[1] = ty; IZ.cik[2] = tz;
+}
+// kristal gölgelendirici: ön faset normali _n'de; sig: soğurma (1/birim yol), govde: içte saçılan renk
+const _rad = [0, 0, 0];
+function kristal(X, Y, out, form, o) {
+  const nfx = _n[0], nfy = _n[1], nfz = _n[2];
+  const D = o.D || 40, ok = form.ortamKat || 0;
+  izle(form);
+  if (IZ.ok === 1) {
+    for (let c = 0; c < 3; c++) {
+      let ox = IZ.cik[0], oy = IZ.cik[1], oz = IZ.cik[2];
+      if (c !== 1 && kir(IZ.tin[0], IZ.tin[1], IZ.tin[2], -IZ.nl[0], -IZ.nl[1], -IZ.nl[2], IORC[c] + (o.dispEk || 0) * (c - 1))) { ox = _T[0]; oy = _T[1]; oz = _T[2]; }
+      if (oz < -0.05) {
+        const s = D / -oz;
+        let v = arka(X + ox * s, Y + oy * s, c);
+        if (ok) { env(ox, oy, oz, _e); v = mix(v, _e[c], ok); }
+        _rad[c] = v;
+      } else { env(ox, oy, oz, _e); _rad[c] = _e[c]; }
+    }
+  } else { env(IZ.cik[0], IZ.cik[1], Math.abs(IZ.cik[2]), _e); _rad[0] = _e[0] * 0.55; _rad[1] = _e[1] * 0.55; _rad[2] = _e[2] * 0.55; }
+  _n[0] = nfx; _n[1] = nfy; _n[2] = nfz;
+  const sig = o.sig, ys = o.yol || 1;
+  const cz = Math.max(0, nfz);
   const F = 0.05 + 0.95 * Math.pow(1 - cz, 5);
-  gokRenk(-2 * nz * ny, _e);
-  let nh = nx * HV[0] + ny * HV[1] + nz * HV[2];
-  if (nh < 0) nh = 0;
-  const sg = o.spec === undefined ? 1 : o.spec;
-  const sp = (Math.pow(nh, 900) * 40 + Math.pow(nh, 60) * 0.35) * G.sh * sg;
-  const fk = o.fres === undefined ? 1 : o.fres;
-  out[0] = r * (1 - F) + F * _e[0] * fk + sp * GUNES[0];
-  out[1] = g * (1 - F) + F * _e[1] * fk + sp * GUNES[1];
-  out[2] = b * (1 - F) + F * _e[2] * fk + sp * GUNES[2];
+  env(2 * nfz * nfx, 2 * nfz * nfy, 2 * nfz * nfz - 1, _e);
+  const gv = o.govde || [0, 0, 0];
+  for (let c = 0; c < 3; c++) {
+    const T = Math.exp(-sig[c] * IZ.L * ys);
+    out[c] = (_rad[c] * T + gv[c]) * (1 - F) + F * _e[c] * (o.fres || 1);
+  }
 }
 function cizgi(out, a, c) { out[0] = mix(out[0], c[0], a); out[1] = mix(out[1], c[1], a); out[2] = mix(out[2], c[2], a); }
-const BEYAZ_IS = [3.2, 3.3, 3.3], KOYU = [0.03, 0.08, 0.07];
-// faset sırtı: ışığa bakan kenar parlak, karşı kenar koyu
-function sirt(out, dpx, isikta, gen) {
-  gen = gen || 1;
-  if (dpx < gen) {
-    const a = smooth(gen, gen * 0.25, dpx);
-    if (isikta) cizgi(out, a * 0.75, BEYAZ_IS); else cizgi(out, a * 0.45, KOYU);
-  }
+const BEYAZ_IS = [3.4, 3.45, 3.5], KOYU = [0.02, 0.07, 0.05];
+
+// ------------------------------------------------------------------ formlar
+// küre yaklaşımı (kubbe, alem): nokta birim kürede; faset kuantalama işlevi verilir
+function kureForm(fasetFn) {
+  return {
+    px: 0, py: 0, pz: 1, kanal: 0, ortamKat: 0,
+    kiris(px, py, pz, tx, ty, tz) {
+      const t = Math.max(0.02, -2 * (px * tx + py * ty + pz * tz));
+      _P[0] = px + t * tx; _P[1] = py + t * ty; _P[2] = pz + t * tz;
+      const l = Math.hypot(_P[0], _P[1], _P[2]) || 1;
+      _P[0] /= l; _P[1] /= l; _P[2] /= l;
+      return t;
+    },
+    faset: fasetFn,
+  };
+}
+// silindir yaklaşımı (minare, kasnak): yatay düzlemde birim çember; ny eğimi korunur
+function silindirForm(fasetFn) {
+  return {
+    px: 0, py: 0, pz: 1, kanal: 0, ortamKat: 0, ny: 0,
+    kiris(px, py, pz, tx, ty, tz) {
+      const h2 = tx * tx + tz * tz || 1e-6;
+      const t = Math.max(0.02, -2 * (px * tx + pz * tz) / h2);
+      _P[0] = px + t * tx; _P[1] = 0; _P[2] = pz + t * tz;
+      const l = Math.hypot(_P[0], _P[2]) || 1;
+      _P[0] /= l; _P[2] /= l;
+      return t * Math.sqrt(h2 + ty * ty);
+    },
+    faset: fasetFn,
+  };
 }
 
-// ------------------------------------------------------------------ zümrüt kubbe (fasetli)
+// ------------------------------------------------------------------ zümrüt kubbe
+const ZUMRUT_S = [2.6, 0.32, 2.2], ZUMRUT_G = [0.004, 0.05, 0.016];
 const SATIR = 7;
 const SATIRH = kubbeP.boy / SATIR;
+const LATH = (Math.PI / 2) / SATIR;
 const YAY2Y = (() => {
   const t = []; for (let y = 555; y >= 300; y -= 0.25) t.push([kubbeP.s(y), y]);
   return (s) => { let lo = 0, hi = t.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (t[m][0] < s) lo = m; else hi = m; } return t[lo][1]; };
 })();
-const ZUMRUT = [0.1, 0.66, 0.15], ZUMRUT_G = [0.002, 0.03, 0.008];
-stil.kubbe = function (X, Y, out) {
+// iç/arka yüzeyler için faset: boylam GW, enlem LATH ızgarası, köşegenle iki üçgen
+function kubbeIcFaset(vx, vy, vz) {
+  const ph = Math.atan2(vx, vz);
+  const lat = clamp(Math.asin(clamp(-vy, -1, 1)), -0.6, 1.5);
+  const gq = (ph + Math.PI) / GW, gi = Math.floor(gq), fg = gq - gi;
+  const lq = (lat + 0.6) / LATH, ri = Math.floor(lq), fr = lq - ri;
+  const phc = -Math.PI + (gi + 0.5) * GW, lc = -0.6 + (ri + 0.5) * LATH;
+  const capraz = ((gi + ri) & 1) === 0;
+  const ust = capraz ? fg > fr : fg > 1 - fr;
+  const sg = ust ? 1 : -1;
+  const h1 = ihash(gi, ri * 2 + (ust ? 1 : 0), 21), h2 = ihash(ri, gi * 2 + (ust ? 1 : 0), 22);
+  const tp = 0.13 * sg + (h1 - 0.5) * 0.95, tl = (capraz ? -0.1 : 0.1) * sg + (h2 - 0.5) * 0.85;
+  const cl = Math.cos(lc + tl);
+  _n[0] = Math.sin(phc + tp) * cl; _n[1] = -Math.sin(lc + tl); _n[2] = Math.cos(phc + tp) * cl;
+}
+const KUBBE_F = kureForm(kubbeIcFaset);
+let KF = null; // ön faset bilgisi (sırt çizgileri için)
+function kubbeOnFaset() {
   const gi = G.gore, f = G.f;
   const s = G.yay, row = Math.min(SATIR - 1, Math.floor(s / SATIRH)), fs = s / SATIRH - row;
-  const phic = -Math.PI / 2 + (gi + 0.5) * GW;
+  const phc = -Math.PI / 2 + (gi + 0.5) * GW;
   const yc = YAY2Y((row + 0.5) * SATIRH);
   const drc = kubbeP.dr(yc);
-  // her dörtgen faset köşegenden iki üçgene bölünür (mücevher kesimi)
   const capraz = ((gi + row) & 1) === 0;
   const ust = capraz ? f > fs : f > 1 - fs;
   const sg = ust ? 1 : -1;
-  const tphi = 0.12 * sg, tlat = (capraz ? -0.08 : 0.08) * sg;
-  const cpc = Math.cos(phic), spc = Math.sin(phic);
-  nset(spc + cpc * tphi, -drc - tlat, cpc - spc * tphi);
-  const h = ihash(gi * 2 + (ust ? 1 : 0), row, 5), h2 = ihash(row, gi * 2 + (ust ? 1 : 0), 8);
-  const nl = G.nx * LV[0] + G.ny * LV[1] + G.nz * LV[2];
-  const ic = (0.12 + 1.2 * Math.pow(smooth(-0.15, 0.95, nl), 1.4) + 0.4 * (h - 0.5)) * (0.5 + 0.5 * Math.sqrt(Math.max(0, Math.cos(G.phi))));
-  kristal(X, Y, out, { tint: ZUMRUT, ic, k: 26, disp: 0.2, govde: ZUMRUT_G, ici: [(h - 0.5) * 1.3 - G.nx * 0.8, (h2 - 0.5) * 1.1], iciw: 0.8, icTaban: 0.06 });
+  const tphi = 0.17 * sg, tlat = (capraz ? -0.12 : 0.12) * sg;
+  const j1 = ihash(gi * 2 + (ust ? 1 : 0), row, 51) - 0.5, j2 = ihash(row, gi * 2 + (ust ? 1 : 0), 52) - 0.5;
+  const cpc = Math.cos(phc), spc = Math.sin(phc);
+  nset(spc + cpc * (tphi + j1 * 0.12), -drc - tlat - j2 * 0.1, cpc - spc * (tphi + j1 * 0.12));
+  KF = { gi, f, row, fs, capraz, ust };
+}
+stil.kubbe = function (X, Y, out) {
+  // düzgün yüzey normali → birim küre noktası
+  const sx = G.nx, sy = G.ny, sz = G.nz;
+  kubbeOnFaset();
+  KUBBE_F.px = sx; KUBBE_F.py = sy; KUBBE_F.pz = sz;
+  _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+  const h = ihash(KF.gi * 2 + (KF.ust ? 1 : 0), KF.row, 5);
+  kristal(X, Y, out, KUBBE_F, { sig: ZUMRUT_S, yol: 0.55 + 0.35 * h, govde: ZUMRUT_G, D: 110 });
+  // ateş: bazı fasetlerde güneşin tayfı (dispersiyon), bazılarında tam beyaz yansıma
+  const h2 = ihash(KF.row, KF.gi * 2 + (KF.ust ? 1 : 0), 8);
+  const nlit = G.nx * LV[0] + G.ny * LV[1] + G.nz * LV[2];
+  if (h2 > 0.9 && nlit > 0.25) {
+    const t = clamp((KF.ust ? KF.f + (1 - KF.fs) : (1 - KF.f) + KF.fs) * 0.5);
+    tayf(t, _ty);
+    const a = 0.85 * smooth(0.9, 0.97, h2) * smooth(0.25, 0.6, nlit);
+    out[0] += _ty[0] * a; out[1] += _ty[1] * a * 0.8; out[2] += _ty[2] * a;
+  } else if (h2 > 0.84 && nlit > 0.35) {
+    const a = 0.9 * smooth(0.35, 0.7, nlit);
+    out[0] += a * 0.9; out[1] += a; out[2] += a * 0.85;
+  }
   // faset sırtları: meridyen (kaburga) parlak, enlem ve köşegen ince
   const gpx = GW * G.r * Math.max(0.12, Math.cos(G.phi));
+  const f = KF.f, fs = KF.fs;
   const dm = Math.min(f, 1 - f) * gpx;
   const dl = Math.min(fs, 1 - fs) * SATIRH * 0.85;
-  if (dm < 1.9) { const a = smooth(1.9, 0.3, dm); cizgi(out, a * 0.8, (f > 0.5 ? (gi < 9) : (gi >= 7)) ? BEYAZ_IS : [0.02, 0.18, 0.06]); }
-  if (row < SATIR - 1 || fs < 0.5) { if (dl < 0.8) cizgi(out, 0.3 * smooth(0.8, 0.2, dl), fs > 0.5 ? BEYAZ_IS : KOYU); }
-  const dd = (capraz ? Math.abs(f - fs) : Math.abs(f - (1 - fs))) * Math.min(gpx, SATIRH) * 0.7;
-  if (dd < 0.7) cizgi(out, 0.25 * smooth(0.7, 0.15, dd), ust ? BEYAZ_IS : KOYU);
-  // ateş: bazı fasetlerde ışığın tam yansıdığı parlak bölge
-  if (h2 > 0.84 && nl > 0.15) { const a = smooth(0.84, 1, h2) * 0.7; out[0] += 0.35 * a; out[1] += 1.4 * a; out[2] += 0.6 * a; }
+  const isikSag = KF.gi >= 7;
+  const isikta = f > 0.5 ? KF.gi < 9 : KF.gi >= 7;
+  if (dm < 1.15) { const a = smooth(1.15, 0.2, dm); cizgi(out, a * (isikta ? 0.5 : 0.32), isikta ? BEYAZ_IS : [0.01, 0.16, 0.06]); }
+  if (KF.row < SATIR - 1 || fs < 0.5) { if (dl < 0.7) cizgi(out, 0.26 * smooth(0.7, 0.12, dl), fs > 0.5 ? BEYAZ_IS : KOYU); }
+  const dd = (KF.capraz ? Math.abs(f - fs) : Math.abs(f - (1 - fs))) * Math.min(gpx, SATIRH) * 0.7;
+  if (dd < 0.55) cizgi(out, 0.22 * smooth(0.55, 0.1, dd), KF.ust ? BEYAZ_IS : KOYU);
+  // siluette ince parlak kenar
+  if (Math.abs(G.u) > 0.985) cizgi(out, 0.5 * smooth(0.985, 0.999, Math.abs(G.u)), BEYAZ_IS);
 };
+
 // ------------------------------------------------------------------ kasnak (dikey fasetli zümrüt)
+let KAS_N = 13, CUR_Y = 0, KAS_YC = 650;
+function kasnakIcFaset(vx, vy, vz) {
+  const th = Math.atan2(vx, vz);
+  const n2 = KAS_N * 2;
+  const q = (th + Math.PI) / (2 * Math.PI) * n2;
+  const fi = Math.floor(q);
+  // iç fasetler: yatay bantlarda farklı eğim (iç yansımada ufuk ve gök farklı yüksekliklerde görünür)
+  const thc = -Math.PI + (fi + 0.5) * (2 * Math.PI / n2) + (ihash(fi, KAS_N, 71) - 0.5) * 0.2;
+  const ny = KAS_F.ny + (CUR_Y - KAS_YC) * 0.004 + (ihash(KAS_N, fi, 72) - 0.5) * 0.25;
+  const cy = Math.sqrt(Math.max(0, 1 - ny * ny));
+  _n[0] = Math.sin(thc) * cy; _n[1] = ny; _n[2] = Math.cos(thc) * cy;
+}
+const KAS_F = silindirForm(kasnakIcFaset);
 stil.kasnak = function (X, Y, out, kat) {
   const R = kat ? 226 : 208, n = kat ? 13 : 15;
-  const th = Math.asin(clamp((X - 560) / R, -0.999, 0.999));
+  KAS_N = n;
+  const u = clamp((X - 560) / R, -0.999, 0.999);
+  const th = Math.asin(u);
   const q = (th + Math.PI / 2) / (Math.PI / n);
   const fi = Math.floor(q), fq = q - fi;
   const thc = -Math.PI / 2 + (fi + 0.5) * (Math.PI / n);
-  const sv = G.ny;
-  nset(Math.sin(thc), sv, Math.cos(thc));
+  const sv = G.pervaz ? G.ny : 0;
+  const cy = Math.sqrt(1 - sv * sv);
+  KAS_F.px = u; KAS_F.py = 0; KAS_F.pz = Math.sqrt(1 - u * u); KAS_F.ny = sv * 0.6;
+  _n[0] = Math.sin(thc) * cy; _n[1] = sv; _n[2] = Math.cos(thc) * cy;
   const h = ihash(fi, kat, 3);
-  const ic = (G.pervaz ? 1.3 : 0.55 + 0.7 * h) * (0.9 + 0.2 * ((Y % 13) / 13));
-  kristal(X, Y, out, { tint: ZUMRUT, ic, k: 18, disp: 0.18, govde: ZUMRUT_G, ici: [(h - 0.5) * 1.4, (Y - (kat ? 650 : 582)) / 40], iciw: 0.6 });
+  CUR_Y = Y; KAS_YC = kat ? 651 : 582;
+  kristal(X, Y, out, KAS_F, { sig: ZUMRUT_S, yol: 0.5 + 0.4 * h, govde: ZUMRUT_G, D: 60 });
+  // panel içinde yumuşak dikey değer geçişi ve ışık alan panellerde ince parlak yansıma şeridi
+  const vy = kat ? (Y - 618) / 68 : (Y - 557) / 43;
+  const pk = 0.88 + 0.22 * clamp(vy);
+  out[0] *= pk; out[1] *= pk; out[2] *= pk;
+  if (fi >= Math.floor(n / 2) && fi <= n - 3) { const sr = Math.exp(-Math.pow((fq - 0.3) / 0.06, 2)) * 0.5 * (0.5 + 0.5 * ihash(fi, kat, 9)); out[0] += sr * 0.8; out[1] += sr; out[2] += sr * 0.85; }
   const dm = Math.min(fq, 1 - fq) * (Math.PI / n) * R * Math.cos(th);
-  sirt(out, dm, fq > 0.5 ? fi < n / 2 : fi >= n / 2, 1.2);
+  if (dm < 1.3) { const a = smooth(1.3, 0.25, dm); const isikta = fq > 0.5 ? fi < n / 2 : fi >= n / 2; cizgi(out, a * (isikta ? 0.7 : 0.45), isikta ? BEYAZ_IS : KOYU); }
   if (G.pervaz) { if (G.ny < -0.5) cizgi(out, 0.55, BEYAZ_IS); else if (G.ny > 0.4) cizgi(out, 0.3, KOYU); }
 };
 stil.cerceve = function (X, Y, out, parca, k, L) {
   if (parca === 'kasnakCerceve') {
-    kristal(X, Y, out, { tint: ZUMRUT, ic: 1.5, k: 10, disp: 0.3, govde: ZUMRUT_G });
-    if (G.ny < -0.2 || G.nx > 0.3) cizgi(out, 0.35, BEYAZ_IS);
+    KAS_F.px = clamp((X - 560) / 226, -0.99, 0.99); KAS_F.py = 0; KAS_F.pz = Math.sqrt(1 - KAS_F.px * KAS_F.px); KAS_F.ny = 0;
+    _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+    kristal(X, Y, out, KAS_F, { sig: ZUMRUT_S, yol: 0.35, govde: ZUMRUT_G, D: 14 });
+    if (G.ny < -0.2 || G.nx > 0.3) cizgi(out, 0.4, BEYAZ_IS);
     return;
   }
-  kristal(X, Y, out, { tint: BERRAK, ic: 1.05, k: 12, disp: 0.35 });
-  if (G.ny < -0.2 || G.nx > 0.25) cizgi(out, 0.5, BEYAZ_IS); else cizgi(out, 0.12, KOYU);
+  // kaide pencerelerinin kristal sövesi: berrak, parlak pahlı
+  _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+  kristal(X, Y, out, MINARE_F_SOVE, { sig: BERRAK_S, yol: 1, D: 14, govde: [0.02, 0.025, 0.03] });
+  if (G.ny < -0.2 || G.nx > 0.25) cizgi(out, 0.45, BEYAZ_IS); else cizgi(out, 0.1, KOYU);
 };
 stil.pencere = function (X, Y, out, parca) {
   const kasnakMi = parca === 'kasnak' || parca === 'nis';
   if (kasnakMi) {
-    // kesilmiş derin oyuk: koyu zümrüt, ışık alan kenarda parlak sırt
-    kristal(X, Y, out, { tint: ZUMRUT, ic: G.oyuk === 'yan' ? 1.3 : 0.32 + 0.3 * G.sh, k: 30, disp: 0.2, govde: ZUMRUT_G });
+    // kesilmiş derin oyuk: koyu zümrüt iç, ışık alan yan yüzde parlak sırt
+    KAS_F.px = clamp(G.u, -0.99, 0.99); KAS_F.py = 0; KAS_F.pz = Math.sqrt(1 - KAS_F.px * KAS_F.px); KAS_F.ny = 0;
+    _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+    kristal(X, Y, out, KAS_F, { sig: ZUMRUT_S, yol: G.oyuk === 'yan' ? 0.5 : 1.6, govde: ZUMRUT_G, D: 30 });
+    const k = G.oyuk === 'yan' ? 1 : 0.45 + 0.4 * G.sh;
+    out[0] *= k; out[1] *= k; out[2] *= k;
     if (G.oyuk === 'yan' && G.nx > 0) cizgi(out, 0.4, BEYAZ_IS);
     return;
   }
-  // berrak kristalde kumlanmış (buzlu) kemer: ince taneli, kenarı parlak
-  const m = 0.6 + 0.3 * G.sh;
-  const g = (ihash(X * 2 | 0, Y * 2 | 0, 1) - 0.5) * 0.3 + (ihash(X * 2 + 7 | 0, Y * 2 | 0, 2) > 0.985 ? 0.9 : 0);
-  out[0] = 1.25 * m + g; out[1] = 1.32 * m + g; out[2] = 1.42 * m + g;
+  // berrak kristalde kumlanmış (buzlu) kemer: ince saten tane, kenarı parlak
+  const m = 0.72 + 0.22 * G.sh + 0.1 * (1 - clamp(G.ly));
+  const g = (ihash(X * 2 | 0, Y * 2 | 0, 1) - 0.5) * 0.12;
+  out[0] = (1.3 + g) * m; out[1] = (1.36 + g) * m; out[2] = (1.46 + g) * m;
   const ed = Math.min(1 - Math.abs(G.lx), G.ly < 0.15 ? G.ly * 4 : 1, (1 - G.ly) * 6);
-  if (ed < 0.18) { const a = smooth(0.18, 0.02, ed) * 0.5; out[0] += a * 1.5; out[1] += a * 1.55; out[2] += a * 1.6; }
-};
-// ------------------------------------------------------------------ berrak kristal: minare, kaide, korniş
-const BERRAK = [0.9, 0.96, 1.0];
-const ICDESEN = [1.25, 0.62, 1.4, 0.78, 1.15, 0.7];
-stil.tas = function (X, Y, out, parca, k, L) {
-  if (parca === 'kaide') { kaideKristal(X, Y, out); return; }
-  if (parca === 'kornis') {
-    // prizma çubuk: üstte parlak sırt, ortada tayf, altta koyu
-    kristal(X, Y, out, { tint: BERRAK, ic: 1.1, k: 14, disp: 0.5, oy: -8 });
-    const t = (Y - 692) / 12;
-    if (t < 0.16) cizgi(out, 0.7, BEYAZ_IS);
-    else if (t > 0.35 && t < 0.75) { const hue = (t - 0.35) / 0.4; const a = 0.35 * Math.sin(Math.PI * hue); out[0] += a * (hue < 0.35 ? 1.6 : hue < 0.7 ? 0.3 : 0.1); out[1] += a * (hue > 0.2 && hue < 0.75 ? 1.2 : 0.2); out[2] += a * (hue > 0.6 ? 1.8 : 0.2); }
-    else if (t > 0.85) cizgi(out, 0.35, KOYU);
-    return;
-  }
-  if (parca === 'korkuluk-ic' || parca === 'korkuluk-arka') { kristal(X, Y, out, { tint: BERRAK, ic: 0.7, k: 6, disp: 0.2 }); return; }
-  // sekizgen fasetli berrak gövde (minare, şerefe, konsol, bilezik, topuz, babalar)
-  const u = G.u;
-  const th = Math.asin(clamp(u, -0.999, 0.999));
-  const q = th / (Math.PI / 4) + 0.5, fi = Math.floor(q), fq = q - fi;
-  const thc = (fi - 0.5) * (Math.PI / 4) + Math.PI / 8;
-  const cyl = Math.hypot(G.nx, G.nz) || 1;
-  nset(Math.sin(thc) * cyl, G.ny, Math.cos(thc) * cyl);
-  const ic = ICDESEN[(fi + 3) % ICDESEN.length] * (parca === 'cikma' ? 0.8 : 1);
-  kristal(X, Y, out, { tint: BERRAK, ic, k: parca === 'topuz' ? 10 : 16, disp: 0.3, ox: -th * 6, ici: [((fi + 3) % 3 - 1) * 0.7, (Y % 60) / 60 - 0.5], iciw: 0.45 });
-  const R = parca === 'serefe' ? 50 : parca === 'cikma' ? 40 : 30;
-  const dm = Math.min(fq, 1 - fq) * (Math.PI / 4) * R * Math.cos(th);
-  sirt(out, dm, fq > 0.5 ? fi < 1 : fi >= 1, 1.1);
-  if (G.pervaz) { if (G.ny < -0.5) cizgi(out, 0.55, BEYAZ_IS); else if (G.ny > 0.4) cizgi(out, 0.22, KOYU); }
-  if (parca === 'minare' && G.zik > 0.2) cizgi(out, 0.75 * G.zik, [1.6, 1.66, 1.75]);
-};
-function kaideKristal(X, Y, out) {
-  // kalın kristal blok: içinde ters dönmüş ufuk (üstte zemin, altta gök), pahlı kenarlarda güçlü kırılma ve tayf
-  const K = S.kaide;
-  const dx = Math.min(X - K.x1, K.x2 - X), dy = Math.min(Y - K.y1, K.y2 - Y);
-  const pah = 6;
-  const v = (Y - K.y1) / (K.y2 - K.y1);
-  let sy = 800 + (0.5 - v) * 150, sx = 560 + (X - 560) * -0.55;
-  let ic = 1.0, disp = 0.2;
-  nset(0, 0, 1);
-  if (dx < pah || dy < pah) {
-    const yanX = dx < dy;
-    if (yanX) nset(X < 560 ? -0.6 : 0.6, 0, 0.8); else nset(0, Y < 752 ? -0.6 : 0.6, 0.8);
-    sx += (X < 560 ? -1 : 1) * 30 * (yanX ? 1 : 0); sy += (Y < 752 ? -1 : 1) * 30 * (yanX ? 0 : 1);
-    ic = 0.85; disp = 0.6;
-  }
-  const r = arka(sx * (1 - disp * 0.02), sy, 0), g = arka(sx, sy, 1), b = arka(sx * (1 + disp * 0.02), sy, 2);
-  // kalınlık: kenarlara doğru camın kendi yeşil-mavi rengi koyulaşır
-  const kal = Math.exp(-dx / 26) * 0.6 + Math.exp(-dy / 16) * 0.4;
-  const BL = [0.74, 0.93, 0.9];
-  out[0] = r * BL[0] * ic * (1 - kal * 0.6); out[1] = g * BL[1] * ic * (1 - kal * 0.35); out[2] = b * BL[2] * ic * (1 - kal * 0.4);
-  // ters ufuk çizgisi ve ışık şeridi
-  const uf = Math.exp(-Math.pow((v - 0.5) / 0.05, 2));
-  out[0] *= 1 - 0.25 * uf; out[1] *= 1 - 0.2 * uf; out[2] *= 1 - 0.15 * uf;
-  // kubbenin zümrüt yansıması bloğun üst kısmında
-  const z = smooth(0.42, 0, v) * 0.45 * smooth(300, 420, X) * smooth(820, 700, X);
-  out[0] = mix(out[0], 0.2, z); out[1] = mix(out[1], 1.3, z); out[2] = mix(out[2], 0.55, z);
-  // ince yatay iç yansıma şeritleri
-  const s1 = Math.exp(-Math.pow((v - 0.5) / 0.012, 2)) * 0.8;
-  out[0] += s1; out[1] += s1; out[2] += s1;
-  const cz = G.nz, F = 0.05 + 0.95 * Math.pow(1 - cz, 5);
-  gokRenk(-2 * G.nz * G.ny, _e);
-  out[0] = out[0] * (1 - F) + F * _e[0]; out[1] = out[1] * (1 - F) + F * _e[1]; out[2] = out[2] * (1 - F) + F * _e[2];
-  if (dx < pah || dy < pah) {
-    const e = Math.min(dx, dy);
-    if (Math.abs(e - pah) < 0.9 || e < 0.9) cizgi(out, 0.55, (Y < 752 && dy < dx) || (X > 560 && dx < dy) ? BEYAZ_IS : KOYU);
-    // pahda tayf
-    const t = e / pah;
-    const a = 0.3 * Math.sin(Math.PI * t);
-    out[0] += a * (t < 0.4 ? 1.5 : 0.2); out[1] += a * (t > 0.25 && t < 0.75 ? 1.1 : 0.2); out[2] += a * (t > 0.6 ? 1.6 : 0.2);
-  }
-}
-// sitrin (altın tonlu) kristal alem
-const SITRIN = [1.0, 0.7, 0.22], SITRIN_G = [0.22, 0.12, 0.01];
-stil.altin = function (X, Y, out, parca) {
-  // küremsi normalleri fasetlere kuantala
-  const th = Math.atan2(G.nx, G.nz), ps = Math.asin(clamp(G.ny, -1, 1));
-  const qt = Math.round(th / 0.5) * 0.5, qp = Math.round(ps / 0.55) * 0.55;
-  const ft = Math.abs(th / 0.5 - Math.round(th / 0.5)), fp = Math.abs(ps / 0.55 - Math.round(ps / 0.55));
-  nset(Math.sin(qt) * Math.cos(qp), Math.sin(qp), Math.cos(qt) * Math.cos(qp));
-  const ic = 0.7 + 0.9 * ihash(Math.round(th / 0.5) + 9, Math.round(ps / 0.55) + 9, 4);
-  kristal(X, Y, out, { tint: SITRIN, ic, k: 8, disp: 0.25, govde: SITRIN_G });
-  if (ft > 0.46 || fp > 0.46) cizgi(out, 0.3, BEYAZ_IS);
+  if (ed < 0.16) { const a = smooth(0.16, 0.02, ed) * 0.6; out[0] += a * 1.8; out[1] += a * 1.85; out[2] += a * 1.9; }
 };
 
-// ------------------------------------------------------------------ bitkiler: berrak pembe kristal çiçekler, peridot yapraklar
-const PEMBE_K = [1.0, 0.86, 0.94], PERIDOT = [0.3, 0.78, 0.18], PERIDOT_G = [0.008, 0.035, 0.006];
+// ------------------------------------------------------------------ berrak kristal: minare
+const BERRAK_S = [0.16, 0.08, 0.05];
+let MIN_NY = 0;
+function minareIcFaset(vx, vy, vz) {
+  const th = Math.atan2(vx, vz);
+  const q = (th + Math.PI) / (Math.PI / 4);
+  const fi = Math.floor(q);
+  const thc = -Math.PI + (fi + 0.5) * (Math.PI / 4);
+  const cy = Math.sqrt(Math.max(0, 1 - MIN_NY * MIN_NY));
+  _n[0] = Math.sin(thc) * cy; _n[1] = MIN_NY; _n[2] = Math.cos(thc) * cy;
+}
+const MINARE_F = silindirForm(minareIcFaset);
+MINARE_F.ortamKat = 0.25;
+const MINARE_F_SOVE = silindirForm(minareIcFaset);
+stil.tas = function (X, Y, out, parca, k, L) {
+  if (parca === 'kaide') { kaideKristal(X, Y, out); return; }
+  if (parca === 'kornis') { kornisKristal(X, Y, out); return; }
+  const u = clamp(G.u, -0.999, 0.999);
+  if (parca === 'korkuluk-ic' || parca === 'korkuluk-arka') {
+    // korkuluğun arkasında berrak minare çekirdeği: hafif mavimsi, kaydırılmış gök
+    for (let c = 0; c < 3; c++) out[c] = arka(X - u * 6, Y - 30, c) * [0.86, 0.93, 0.97][c] + 0.03;
+    if (parca === 'korkuluk-arka') { out[0] *= 0.92; out[1] *= 0.95; }
+    return;
+  }
+  // sekizgen fasetli berrak gövde (minare, şerefe, konsol, bilezik, topuz, babalar)
+  const th = Math.asin(u);
+  const q = th / (Math.PI / 4) + 0.5, fi = Math.floor(q), fq = q - fi;
+  const thc = (fi - 0.5) * (Math.PI / 4) + Math.PI / 8;
+  const ny = clamp((parca === 'cikma' ? G.ny * 0.45 : G.ny) + (G.pervaz ? 0 : ((fi & 1) ? 0.16 : -0.12)), -0.95, 0.95);
+  const cyl = Math.sqrt(1 - ny * ny);
+  nset(Math.sin(thc) * cyl, ny, Math.cos(thc) * cyl);
+  MIN_NY = ny * 0.7;
+  MINARE_F.px = u; MINARE_F.py = 0; MINARE_F.pz = Math.sqrt(1 - u * u);
+  _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+  const D = parca === 'topuz' ? 40 : parca === 'serefe' || parca === 'cikma' ? 50 : 120;
+  kristal(X, Y, out, MINARE_F, { sig: BERRAK_S, yol: 1, D, govde: [0.015, 0.02, 0.028] });
+  {
+    const kk = 0.3;
+    for (let c = 0; c < 3; c++) out[c] = mix(out[c], arka(X - u * 4, Y, c) * [0.9, 0.96, 0.98][c] + 0.04, kk);
+  }
+  const R = parca === 'serefe' ? 50 : parca === 'cikma' ? 40 : parca === 'topuz' ? 22 : 30;
+  const dm = Math.min(fq, 1 - fq) * (Math.PI / 4) * R * Math.cos(th);
+  if (dm < 1.2) { const a = smooth(1.2, 0.2, dm); const isikta = fq > 0.5 ? fi < 1 : fi >= 1; cizgi(out, a * (isikta ? 0.75 : 0.5), isikta ? BEYAZ_IS : [0.05, 0.08, 0.12]); }
+  else if (dm < 3.6 && !G.pervaz) {
+    // faset kenarı boyunca ince tayf saçağı (dispersiyon ateşi)
+    const t = (dm - 1.2) / 2.4;
+    tayf(fq > 0.5 ? t : 1 - t, _ty);
+    const a = 0.55 * Math.sin(Math.PI * t) * (0.4 + 0.6 * ihash(fi, Math.floor(Y / 40), 61));
+    out[0] += _ty[0] * a; out[1] += _ty[1] * a; out[2] += _ty[2] * a;
+  }
+  if (G.pervaz) { if (G.ny < -0.5) cizgi(out, 0.6, BEYAZ_IS); else if (G.ny > 0.4) cizgi(out, 0.28, [0.06, 0.09, 0.14]); }
+  if (parca === 'minare' && G.zik > 0.2) cizgi(out, 0.8 * G.zik, [1.7, 1.76, 1.85]);
+};
+function kornisKristal(X, Y, out) {
+  // prizma çubuk: üstte parlak sırt, ortada geniş tayf, altta koyu kenar
+  const t = (Y - 692) / 12;
+  const ny = t < 0.3 ? -0.75 : t < 0.7 ? -0.1 : 0.6;
+  nset(0, ny, Math.sqrt(1 - ny * ny));
+  MIN_NY = ny; MINARE_F.px = clamp((X - 560) / 300, -0.9, 0.9); MINARE_F.py = 0; MINARE_F.pz = Math.sqrt(1 - MINARE_F.px * MINARE_F.px);
+  _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+  kristal(X, Y, out, MINARE_F, { sig: BERRAK_S, yol: 1, D: 18, dispEk: 0.03 });
+  if (t < 0.12) cizgi(out, 0.75, BEYAZ_IS);
+  else if (t > 0.38 && t < 0.72) {
+    const hue = (t - 0.38) / 0.34, a = 0.55 * Math.sin(Math.PI * hue);
+    out[0] += a * (hue < 0.35 ? 1.8 : hue < 0.6 ? 0.9 : 0.1); out[1] += a * (hue > 0.2 && hue < 0.8 ? 1.4 : 0.2); out[2] += a * (hue > 0.6 ? 2.0 : 0.15);
+  } else if (t > 0.9) cizgi(out, 0.35, KOYU);
+}
+
+// ------------------------------------------------------------------ kaide: basamaklı (zümrüt kesim) kalın kristal blok
+// Ön yüzde masa (düz orta alan) ve çevresinde üç basamaklı pah. Kalın blok mercek gibi davranır: masada
+// arkadaki dünya ters döner (üstte açık taş meydan ve uzak ağaç çizgisi, altta derin mavi gök); üst
+// kenarda kasnağın zümrüt yansıması (üst yüzden tam iç yansıma). Her basamak görüntüyü biraz daha
+// kaydırır: iç içe geçen çizgili halkalar; kanal başına farklı kayma gökkuşağı saçakları verir.
+const BAS = [5, 10, 15];
+const DISPK = [-1, 0, 1];
+function kaideKristal(X, Y, out) {
+  const K = S.kaide;
+  const dl = X - K.x1, dr = K.x2 - X, dt = Y - K.y1, db = K.y2 - Y;
+  let d = dl, sx = -1, sy = 0;
+  if (dr < d) { d = dr; sx = 1; sy = 0; }
+  if (dt < d) { d = dt; sx = 0; sy = -1; }
+  if (db < d) { d = db; sx = 0; sy = 1; }
+  let basi = -1;
+  for (let i = 0; i < 3; i++) if (d < BAS[i]) { basi = i; break; }
+  const a = basi >= 0 ? [0.62, 0.44, 0.26][basi] : 0;
+  const nfx = sx * Math.sin(a), nfy = sy * Math.sin(a), nfz = basi >= 0 ? Math.cos(a) : 1;
+  nset(nfx, nfy, nfz);
+  // kalın camdan görünen arka plan: ufuk çizgisi yukarı kayar (masada ~y 758), her basamak görüntüyü
+  // farklı kaydırır; kanal başına farklı kayma ufukta ve kostiklerde gökkuşağı saçağı verir
+  const kayY = basi >= 0 ? 44 + sy * (14 + 9 * (2 - basi)) : 44 - (X - 560) * 0.0, kayX = basi >= 0 ? -sx * (10 + 8 * (2 - basi)) : -(X - 560) * 0.08;
+  for (let c = 0; c < 3; c++) {
+    const dd = DISPK[c] * (basi >= 0 ? 2.4 : 1.2);
+    _rad[c] = arka(X + kayX * (1 + dd * 0.05), Y + kayY + dd, c);
+  }
+  if (basi >= 0) {
+    // pahlarda ortamın yansıması da görünür (gök, ufuk, güneş)
+    for (let c = 0; c < 3; c++) {
+      const up = -sy * (0.3 + 0.18 * (2 - basi)) + 0.15 + DISPK[c] * 0.02, dx = sx * (0.35 + 0.2 * (2 - basi));
+      env(dx, -up, 0.8, _e);
+      _rad[c] = mix(_rad[c], _e[c], 0.45);
+    }
+  }
+  // üst yüzden yansıyan zümrüt kasnak: masanın üst şeridinde dikey fasetli yeşil
+  if (basi < 0 || sy < 0) {
+    const zt = smooth(734, 719, Y) * (basi < 0 ? 1 : 0.5);
+    if (zt > 0) {
+      const th = Math.asin(clamp((X - 560) / 226, -0.99, 0.99));
+      const q = (th + Math.PI / 2) / (Math.PI / 13), fq = q - Math.floor(q);
+      const fi = Math.floor(q);
+      const v = 0.5 + 0.9 * ihash(fi, 7, 3) + 0.6 * Math.pow(Math.sin(Math.PI * fq), 6);
+      _rad[0] = mix(_rad[0], 0.06 * v, zt * 0.85); _rad[1] = mix(_rad[1], 1.05 * v, zt * 0.85); _rad[2] = mix(_rad[2], 0.3 * v, zt * 0.85);
+    }
+  }
+  const F = 0.05 + 0.95 * Math.pow(1 - nfz, 5);
+  env(2 * nfz * nfx, 2 * nfz * nfy, 2 * nfz * nfz - 1, _e);
+  const T = basi >= 0 ? [[0.5, 0.74, 0.8], [0.62, 0.84, 0.88], [0.74, 0.9, 0.93]][basi] : [0.84, 0.95, 0.96];
+  for (let c = 0; c < 3; c++) out[c] = (_rad[c] * T[c] + 0.02) * (1 - F) + F * _e[c];
+  if (basi >= 0) {
+    // basamak içinde tayf bandı (pah prizma gibi ışığı ayrıştırır)
+    const t = (d - (basi > 0 ? BAS[basi - 1] : 0)) / 5;
+    tayf(sx > 0 || sy > 0 ? t : 1 - t, _ty);
+    const a = (basi === 1 ? 0.75 : 0.35) * Math.sin(Math.PI * t) * (sy !== 0 ? 0.6 + 0.4 * Math.sin(X * 0.05) : 1);
+    out[0] += _ty[0] * a; out[1] += _ty[1] * a; out[2] += _ty[2] * a;
+  }
+  // basamak sırtları
+  if (basi >= 0) {
+    const kenar = Math.min(Math.abs(d - BAS[basi]), basi > 0 ? Math.abs(d - BAS[basi - 1]) : 9, d);
+    const isikta = sx > 0 || sy < 0;
+    if (kenar < 0.8) cizgi(out, 0.65 * smooth(0.8, 0.15, kenar), isikta || sy > 0 ? BEYAZ_IS : [0.1, 0.2, 0.24]);
+    const kx = Math.min(dl, dr), ky = Math.min(dt, db);
+    if (Math.abs(kx - ky) < 0.7 && Math.min(kx, ky) < 15) cizgi(out, 0.5, BEYAZ_IS);
+  }
+}
+
+// ------------------------------------------------------------------ sitrin (altın sarısı) alemler
+const SITRIN_S = [0.05, 0.42, 2.4], SITRIN_G = [0.12, 0.06, 0.004];
+function sitrinFaset(vx, vy, vz) {
+  const th = Math.atan2(vx, vz), ps = Math.asin(clamp(-vy, -1, 1));
+  const qt = (Math.round(th / 0.5)) * 0.5, qp = Math.round(ps / 0.55) * 0.55;
+  _n[0] = Math.sin(qt) * Math.cos(qp); _n[1] = -Math.sin(qp); _n[2] = Math.cos(qt) * Math.cos(qp);
+}
+const SITRIN_F = kureForm(sitrinFaset);
+stil.altin = function (X, Y, out) {
+  const sx = G.nx, sy = G.ny, sz = G.nz;
+  const th = Math.atan2(sx, sz), ps = Math.asin(clamp(sy, -1, 1));
+  const qt = Math.round(th / 0.78) * 0.78, qp = Math.round(ps / 0.82) * 0.82;
+  const ft = Math.abs(th / 0.78 - Math.round(th / 0.78)), fp = Math.abs(ps / 0.82 - Math.round(ps / 0.82));
+  nset(Math.sin(qt) * Math.cos(qp), Math.sin(qp), Math.cos(qt) * Math.cos(qp));
+  SITRIN_F.px = sx; SITRIN_F.py = sy; SITRIN_F.pz = sz;
+  _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+  kristal(X, Y, out, SITRIN_F, { sig: SITRIN_S, yol: 0.9, govde: SITRIN_G, D: 8 });
+  out[0] = out[0] * 1.15 + 0.06; out[1] = out[1] * 1.05 + 0.035;
+  if (ft > 0.47 || fp > 0.47) cizgi(out, 0.12, BEYAZ_IS);
+};
+
+// ------------------------------------------------------------------ bitkiler: berrak kristal çiçekler, zümrüt-peridot yapraklar
+const PEMBE_S = [0.05, 0.22, 0.1], PERIDOT_S = [3.2, 0.42, 3.6], PERIDOT_G = [0.012, 0.09, 0.02];
+// ince düz levha: ön faset eğik, arka yüz hafif ters eğik
+const LEVHA = {
+  px: 0, py: 0, pz: 1, kanal: 0, ortamKat: 0.35, bx: 0, by: 0,
+  kiris(px, py, pz, tx, ty, tz) { _P[0] = 0; _P[1] = 0; _P[2] = -1; return 0.5; },
+  faset() { _n[0] = LEVHA.bx; _n[1] = LEVHA.by; _n[2] = -Math.sqrt(Math.max(0.1, 1 - LEVHA.bx * LEVHA.bx - LEVHA.by * LEVHA.by)); },
+};
 let KD = null;
 function bolgeArka(L) { arkaAl(L.x0 - 40, L.y0 - 40, L.x0 + L.w / O + 40, L.y0 + L.h / O + 40); }
-stil.sap = function (X, Y, out) { kristal(X, Y, out, { tint: PERIDOT, ic: 0.85, k: 5, disp: 0.2, govde: PERIDOT_G, spec: 0.3, ici: [0, 0.3], iciw: 0.4 }); };
+stil.sap = function (X, Y, out) {
+  LEVHA.bx = G.nx * 0.5; LEVHA.by = G.ny * 0.5;
+  _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+  kristal(X, Y, out, LEVHA, { sig: PERIDOT_S, yol: 1.2, govde: PERIDOT_G, D: 6 });
+};
 stil.yaprak = function (X, Y, out, y, i) {
   // orta sırt: iki düz faset
   const side = G.lvp > 0 ? 1 : -1;
   const ca = Math.cos(y.aci), sa = Math.sin(y.aci);
   const px = -sa * side, py = ca * side;
-  nset(px * 0.42 + G.nx * 0.3, py * 0.42 + G.ny * 0.3, 0.85);
+  nset(px * 0.5 + G.nx * 0.25, py * 0.5 + G.ny * 0.25, 0.82);
+  LEVHA.bx = px * 0.35; LEVHA.by = py * 0.35;
+  _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
   const h = ihash(i, 1, 9);
-  kristal(X, Y, out, { tint: PERIDOT, ic: side > 0 ? 0.45 + h * 0.3 : 0.95 + h * 0.3, k: 12, disp: 0.2, govde: PERIDOT_G, spec: 0.25, ici: [side * 0.6, (h - 0.5)], iciw: 0.62 });
-  sirt(out, Math.abs(G.lvp), side < 0, 0.9);
-  // kalın cam kenarı: kenarda koyu yeşil, en dışta ince parlak çizgi
+  kristal(X, Y, out, LEVHA, { sig: PERIDOT_S, yol: 0.9 + 0.5 * h, govde: PERIDOT_G, D: 12 });
+  const isikta = px * 0.6 - py * 0.6 > 0;
+  const sd = Math.abs(G.lvp);
+  if (isikta) {
+    // ışığa bakan faset: parlak sarımsı yeşil, sırta yakın beyaz iç yansıma şeridi
+    const yb = Math.exp(-Math.pow((sd - 2.2) / 1.6, 2)) * 0.55 * (0.6 + 0.4 * h);
+    out[0] = out[0] * 1.25 + 0.05 + yb * 0.8; out[1] = out[1] * 1.3 + 0.12 + yb; out[2] = out[2] * 1.2 + 0.03 + yb * 0.75;
+  } else { out[0] *= 0.62; out[1] *= 0.7; out[2] *= 0.66; }
+  if (sd < 0.9) cizgi(out, 0.6 * smooth(0.9, 0.2, sd), isikta ? [0.02, 0.2, 0.06] : BEYAZ_IS);
   const D = KD ? KD.D[KD.k] : 9;
-  if (D < 2.2) { cizgi(out, 0.45 * smooth(2.2, 0.6, D), [0.05, 0.3, 0.06]); if (D < 0.6) cizgi(out, 0.4, BEYAZ_IS); }
+  if (D < 2.0) { cizgi(out, 0.35 * smooth(2.0, 0.6, D), [0.03, 0.22, 0.06]); if (D < 0.7) cizgi(out, 0.55, BEYAZ_IS); }
 };
-stil.tomurcuk = function (X, Y, out) { kristal(X, Y, out, { tint: PEMBE_K, ic: 0.9, k: 6, disp: 0.3, govde: [0.04, 0.012, 0.025], spec: 0.3, ici: [0.3, 0.2], iciw: 0.5 }); };
+stil.tomurcuk = function (X, Y, out) {
+  LEVHA.bx = G.nx * 0.4; LEVHA.by = G.ny * 0.4;
+  _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+  kristal(X, Y, out, LEVHA, { sig: PEMBE_S, yol: 1, govde: [0.06, 0.04, 0.05], D: 6 });
+  out[0] = out[0] * 0.8 + 0.35; out[1] = out[1] * 0.8 + 0.32; out[2] = out[2] * 0.8 + 0.36;
+};
 stil.tac = function (X, Y, out, c, p, k, L) {
-  // her taç yaprağı ortadan sırtlı iki faset
+  // her taç yaprağı: orta sırtlı iki faset + uçta üçüncü faset
   const side = G.pv > 0 ? 1 : -1;
   const a = c.aci + (p * Math.PI * 2) / 5;
-  const px = -Math.sin(a) * side, py = Math.cos(a) * side;
-  const rx = Math.cos(a), ry = Math.sin(a);
-  nset(px * 0.38 - rx * 0.3 * G.rho, py * 0.38 - ry * 0.3 * G.rho, 0.85);
-  const isikta = px * 0.7 - py * 0.7 > 0;
-  kristal(X, Y, out, { tint: PEMBE_K, ic: isikta ? 1.4 : 0.95, k: c.r * 0.3, disp: 0.22, govde: [0.03, 0.01, 0.02], spec: 0.25, ici: [side * 0.7, G.rho - 0.6], iciw: 0.38 });
-  sirt(out, Math.abs(G.pv) * c.r, !isikta, 0.8);
+  const ca = Math.cos(a), sa = Math.sin(a);
+  const qx = -sa * side, qy = ca * side;
+  const uc = G.rho > 0.78;
+  let nx = qx * 0.42 + ca * 0.18, ny = qy * 0.42 + sa * 0.18;
+  if (uc) { nx = ca * 0.5 + qx * 0.15; ny = sa * 0.5 + qy * 0.15; }
+  nset(nx, ny, 0.85);
+  LEVHA.bx = -nx * 0.6; LEVHA.by = -ny * 0.6;
+  _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+  kristal(X, Y, out, LEVHA, { sig: PEMBE_S, yol: 1, govde: [0.05, 0.035, 0.045], D: c.r * 0.9, fres: 1.3 });
+  // berrak kristalin parlak iç yansıması: ışığa bakan fasette sıcak beyaz, karşıdakinde serin leylak
+  const ndl = G.nx * LV[0] + G.ny * LV[1] + G.nz * LV[2];
+  const lt = smooth(0.2, 0.85, ndl);
+  out[0] = out[0] * 0.66 + mix(0.5, 1.5, lt); out[1] = out[1] * 0.66 + mix(0.48, 1.42, lt); out[2] = out[2] * 0.68 + mix(0.68, 1.45, lt);
+  // sırt ve kenar çizgileri, kenarda ince tayf
+  const sd = Math.abs(G.pv) * c.r;
+  const isikta = ndl > 0.55;
+  if (sd < 0.9 && !uc) cizgi(out, 0.55 * smooth(0.9, 0.15, sd), isikta ? [0.75, 0.6, 0.8] : BEYAZ_IS);
+  if (uc && G.rho < 0.81) cizgi(out, 0.4, BEYAZ_IS);
   const D = L.D[k];
-  if (D < 2.4) cizgi(out, 0.3 * smooth(2.4, 0.7, D), [0.5, 0.24, 0.36]);
-  if (D < 0.7) cizgi(out, 0.6, BEYAZ_IS);
-  // ışığa bakan yarıda sırta paralel ince parlak iç yansıma çizgisi
-  if (isikta) { const q = Math.abs(Math.abs(G.pv) * c.r - c.r * 0.12); if (q < 0.9 && G.rho > 0.3 && G.rho < 0.9) cizgi(out, 0.45 * smooth(0.9, 0.2, q), BEYAZ_IS); }
+  if (D < 2.6) {
+    const t = clamp(D / 2.6);
+    const ah = 0.45 * Math.sin(Math.PI * t);
+    out[0] += ah * (t < 0.33 ? 1.4 : 0.1); out[1] += ah * (t > 0.2 && t < 0.7 ? 1.0 : 0.15); out[2] += ah * (t > 0.55 ? 1.6 : 0.15);
+  }
+  if (D > 0.7 && D < 1.5) cizgi(out, 0.22, [0.25, 0.28, 0.4]);
+  if (D < 0.7) cizgi(out, 0.75, BEYAZ_IS);
 };
+// çiçek ortası: yuvarlak pırlanta kesim sitrin (sekizgen masa, yıldız ve taç fasetleri)
+function pirlanta(X, Y, out, cx, cy, r) {
+  const x = (X - cx) / r, y = (Y - cy) / r;
+  const rr = Math.hypot(x, y), an = Math.atan2(y, x);
+  const sek = Math.PI / 8;
+  const ai = Math.floor((an + Math.PI) / sek), fa = (an + Math.PI) / sek - ai;
+  const ac = -Math.PI + (ai + 0.5) * sek;
+  const masa = 0.48 / Math.cos((fa - 0.5) * sek);
+  let nx = 0, ny = 0, nz = 1, kenar = 9;
+  if (rr > masa) {
+    const yildiz = rr < masa + (1 - masa) * (0.5 - Math.abs(fa - 0.5)) * 1.6;
+    const tilt = yildiz ? 0.42 : 0.72;
+    const aa = yildiz ? ac : ac + (fa > 0.5 ? 0.18 : -0.18);
+    nx = Math.cos(aa) * Math.sin(tilt); ny = Math.sin(aa) * Math.sin(tilt); nz = Math.cos(tilt);
+    kenar = Math.min(Math.abs(fa - 0.5) * sek * rr * r, Math.abs(rr - masa) * r);
+  } else kenar = Math.abs(rr - masa) * r;
+  nset(nx, ny, nz);
+  SITRIN_F.px = x * 0.8; SITRIN_F.py = y * 0.8; SITRIN_F.pz = Math.sqrt(Math.max(0.05, 1 - 0.64 * rr * rr));
+  _n[0] = G.nx; _n[1] = G.ny; _n[2] = G.nz;
+  kristal(X, Y, out, SITRIN_F, { sig: SITRIN_S, yol: 0.8, govde: SITRIN_G, D: 4 });
+  out[0] = out[0] * 1.2 + 0.1; out[1] = out[1] * 1.05 + 0.055; out[2] = out[2] * 0.9;
+  if (kenar < 0.5) cizgi(out, 0.3, BEYAZ_IS);
+}
 stil.orta = function (c) {
   const r = c.r * 0.2;
   const L = katman([c.x - r, c.y - r, c.x + r, c.y + r], (m) => { m.beginPath(); m.arc(c.x, c.y, r, 0, 7); m.fill(); }, 2);
   bolgeArka(L);
-  bas(L, (X, Y, k, out) => {
-    sifirla();
-    const x = (X - c.x) / r, y = (Y - c.y) / r;
-    nset(x, y, Math.sqrt(Math.max(0.05, 1 - x * x - y * y)));
-    stil.altin(X, Y, out, 'orta');
-  });
+  golge(L, -r * 0.2, r * 0.25, r * 0.3, 0.25, [0.7, 0.62, 0.5]);
+  bas(L, (X, Y, k, out) => { sifirla(); pirlanta(X, Y, out, c.x, c.y, r); });
 };
 
 // ------------------------------------------------------------------ gök, zemin, kostikler, parıltılar
 const BULUTLAR = [[178, 248, 290, 96], [505, 146, 230, 70], [775, 330, 300, 100], [950, 470, 190, 58], [84, 468, 200, 62]];
+let BB = null;
 function bulutYog(X, Y) {
   let best = -9;
   for (const b of BULUTLAR) {
@@ -1127,10 +1423,10 @@ function bulutYog(X, Y) {
     let dy = (Y - b[1]) / (b[3] / 2);
     if (dy > 0) dy *= 1.9;
     const e = 1 - dx * dx - dy * dy;
-    if (e > best) best = e;
+    if (e > best) { best = e; BB = b; }
   }
   if (best < -0.9) return -1;
-  return best * 0.9 + fbm(X / 54, Y / 36, 4, 0.45) * 0.8 - 0.16;
+  return best * 0.9 + fbm(X / 58, Y / 38, 5, 0.5) * 0.85 - 0.18;
 }
 function gokCiz() {
   tumu(0, 820, (X, Y, out) => {
@@ -1144,54 +1440,107 @@ function gokCiz() {
     r += core; g += core; b += core * 0.92;
     const dn = bulutYog(X, Y);
     if (dn > -0.05) {
-      const a = smooth(-0.04, 0.55, dn);
+      const a = smooth(-0.03, 0.5, dn);
       if (a > 0) {
         const dn2 = bulutYog(X + 4.6, Y - 3.9);
         const lit = clamp(0.55 + (dn - dn2) * 4.5);
-        const golg = clamp(1 - lit) * (0.55 + 0.45 * smooth(0.2, 1.1, dn));
-        r = mix(r, mix(1.8, 0.95, golg), a); g = mix(g, mix(1.76, 1.02, golg), a); b = mix(b, mix(1.68, 1.22, golg), a);
+        const alt = smooth(-0.3, 0.7, (Y - BB[1]) / (BB[3] / 2));
+        const golg = clamp(clamp(1 - lit) * (0.5 + 0.4 * smooth(0.2, 1.1, dn)) + alt * 0.4 - (1 - alt) * 0.08);
+        r = mix(r, mix(1.85, 0.9, golg), a); g = mix(g, mix(1.8, 0.98, golg), a); b = mix(b, mix(1.7, 1.2, golg), a);
       }
     }
     out[0] = r; out[1] = g; out[2] = b;
   }, 0);
 }
+// yapının zemine düşen yumuşak gölgesi (sola ve öne doğru kayar); kristal olduğu için açık ve mavimsi
+function golgeMaske(X, Y) {
+  const dy = Y - 800;
+  if (dy < -1) return 0;
+  const xs = X + dy * 1.1;
+  return smooth(292, 318, xs) * smooth(828, 800, xs) * smooth(44, 20, dy) * smooth(-1, 1.5, dy);
+}
 function zeminCiz() {
-  // açık renkli cilalı taş zemin
-  const Z1 = lin('#D2C8B6'), Z2 = lin('#C3B7A2');
+  // açık renkli cilalı taş meydan
+  const Z1 = lin('#C2B6A1'), Z2 = lin('#B3A68F');
   tumu(791, 1024, (X, Y, out) => {
     const v = (Y - 791) / 233;
     const m = 0.5 + 0.35 * fbm(X / 140, (Y - 780) * 2.5 / 140, 3);
     const ar = mix(Z1[0], Z2[0], m), ag = mix(Z1[1], Z2[1], m), ab = mix(Z1[2], Z2[2], m);
-    let sh = 1;
-    if (X > 258 && X < 840) {
-      const dib = Math.exp(-(Y - 800) / 5) * smooth(258, 300, X) * smooth(840, 818, X);
-      sh *= 1 - 0.35 * clamp(dib);
-    }
+    const sh = 1 - 0.86 * golgeMaske(X, Y);
     const ndl = -LV[1];
-    const amb = [0.4, 0.52, 0.78];
-    const fr = 0.04 + 0.3 * Math.exp(-v * 5);
-    out[0] = ar * (GUNES[0] * ndl * sh + amb[0]) * (1 - fr) + fr * UFUK[0] * 1.3;
-    out[1] = ag * (GUNES[1] * ndl * sh + amb[1]) * (1 - fr) + fr * UFUK[1] * 1.3;
-    out[2] = ab * (GUNES[2] * ndl * sh + amb[2]) * (1 - fr) + fr * UFUK[2] * 1.3;
-    // yapının zümrüt kostikleri: kaidenin dibinde, sola doğru yeşil ışık lekeleri
-    if (Y < 850 && X > 230 && X < 840) {
-      // kristalden geçen ışığın zemine düşürdüğü renkli kostik benekler
-      const c = 2.6 * Math.exp(-(Y - 801) / 13) * smooth(230, 320, X) * smooth(840, 760, X);
-      const w1 = fbm(X / 26, (Y - 790) / 7, 3), w2 = fbm(X / 13 + 5, (Y - 790) / 4, 2);
-      const n = Math.pow(smooth(0.12, 0.42, w1 + w2 * 0.35), 2);
-      const hue = X * 0.021 + w1 * 4;
-      const zm = smooth(380, 460, X) * smooth(740, 660, X);
-      out[0] += c * n * (0.35 + 0.35 * Math.sin(hue)) * (1 - zm * 0.6);
-      out[1] += c * n * (0.6 + 0.3 * Math.sin(hue + 2.1) + zm * 0.5);
-      out[2] += c * n * (0.4 + 0.35 * Math.sin(hue + 4.2)) * (1 - zm * 0.4);
-    }
+    const amb = [0.38, 0.48, 0.72];
+    const fr = 0.04 + 0.26 * Math.exp(-v * 5);
+    out[0] = ar * (GUNES[0] * ndl * sh + amb[0]) * (1 - fr) + fr * UFUK[0] * 1.25;
+    out[1] = ag * (GUNES[1] * ndl * sh + amb[1]) * (1 - fr) + fr * UFUK[1] * 1.25;
+    out[2] = ab * (GUNES[2] * ndl * sh + amb[2]) * (1 - fr) + fr * UFUK[2] * 1.25;
     out[3] = smooth(791, 795, Y);
   }, 1);
 }
-// kristal çiçeğin gölgesi içinde odaklanmış renkli ışık
+// tayf: 0..1 → gökkuşağı rengi (doğrusal, kabaca eşit parlaklık)
+function tayf(h, o3) {
+  const hh = clamp(h) * 5;
+  const r = clamp(Math.abs(hh - 3) - 1), g = clamp(2 - Math.abs(hh - 2)), b = clamp(2 - Math.abs(hh - 4));
+  o3[0] = r; o3[1] = g; o3[2] = b;
+}
+const _ty = [0, 0, 0];
+// zemine düşen kostik ışık: gölgenin içinde kasnak fasetlerinin zümrüt ışık şeritleri, kaide pahının
+// odakladığı tayf çizgisi, köşelerden açılan tayf yelpazeleri ve odaklanmış beyaz ışık benekleri
+function kostikZemin() {
+  for (let gy = Math.floor(799 * O); gy < 860 * O; gy++) {
+    const Y = (gy + 0.5) / O;
+    const dy = Y - 800;
+    for (let gx = Math.floor(240 * O); gx < 860 * O; gx++) {
+      const X = (gx + 0.5) / O;
+      const g3 = (gy * N + gx) * 3;
+      const gm = golgeMaske(X, Y);
+      let r = 0, gg = 0, b = 0;
+      const xs = X + dy * 1.1;
+      if (gm > 0.01) {
+        // kasnak fasetlerinin izdüşümü: eğik zümrüt şeritler, aralarında ince parlak çizgiler
+        const u = (xs - 560) / 262;
+        const th = Math.asin(clamp(u, -0.999, 0.999));
+        const q = (th + Math.PI / 2) / (Math.PI / 13), fq = q - Math.floor(q), fi = Math.floor(q);
+        const yog = 0.45 + 0.55 * ihash(fi, 3, 31);
+        const ser = Math.pow(Math.sin(Math.PI * fq), 0.6) * yog;
+        const cizg = Math.exp(-Math.pow((Math.min(fq, 1 - fq)) / 0.05, 2));
+        const k = gm * (1.5 * Math.pow(ser, 4) + 1.1 * cizg) * smooth(42, 10, dy);
+        r += 0.08 * k + 0.2 * cizg * gm; gg += 1.9 * k + 0.25 * cizg * gm; b += 0.55 * k + 0.18 * cizg * gm;
+        // odaklanmış beyaz benekler
+        const bx = Math.floor(xs / 23), by = Math.floor(dy / 9);
+        const h = ihash(bx, by, 41);
+        if (h > 0.72) {
+          const cx = (bx + 0.2 + 0.6 * ihash(bx, by, 42)) * 23, cy = (by + 0.3 + 0.4 * ihash(bx, by, 43)) * 9;
+          const dd = Math.hypot((xs - cx) / 2.2, dy - cy);
+          const e = Math.exp(-dd * dd / 1.6) * gm * 1.6;
+          r += e; gg += e; b += e * 0.95;
+        }
+      }
+      // kaide dibindeki pahın odakladığı ince tayf çizgisi (gölgenin ön kenarı boyunca)
+      const tc = Math.exp(-Math.pow((dy - 7.5) / 2.6, 2)) * smooth(300, 340, xs) * smooth(822, 780, xs);
+      if (tc > 0.01) {
+        tayf(1 - clamp((dy - 4) / 7), _ty);
+        r += _ty[0] * tc * 1.7; gg += _ty[1] * tc * 1.5; b += _ty[2] * tc * 1.8;
+      }
+      // köşelerden açılan tayf yelpazeleri
+      for (const [fx, yon] of [[300, -1], [820, 1]]) {
+        const ax = X - fx, ay = dy;
+        if (ay < 1) continue;
+        const an = Math.atan2(ax * yon, ay);
+        if (an < 0.5 || an > 1.35) continue;
+        const rr = Math.hypot(ax, ay);
+        const hh = (an - 0.5) / 0.85;
+        tayf(hh, _ty);
+        const k = 0.75 * Math.sin(Math.PI * hh) * Math.exp(-rr / 60) * smooth(3, 12, rr);
+        r += _ty[0] * k; gg += _ty[1] * k; b += _ty[2] * k;
+      }
+      if (r + gg + b > 0.002) { FB[g3] += r; FB[g3 + 1] += gg; FB[g3 + 2] += b; }
+    }
+  }
+}
+// kristal çiçeğin gölgesi içinde odaklanmış ışık: beş yapraklı parlak odak, uçlarında tayf
 function kostik(c) {
   const sx = c.x - c.r * 0.72, sy = c.y + c.r * 0.42;
-  const R = c.r * 0.75;
+  const R = c.r * 0.8;
   const x0 = Math.max(0, Math.floor((sx - R) * O)), x1 = Math.min(N, Math.ceil((sx + R) * O));
   const y0 = Math.max(0, Math.floor((sy - R) * O)), y1 = Math.min(N, Math.ceil((sy + R) * O));
   for (let gy = y0; gy < y1; gy++) for (let gx = x0; gx < x1; gx++) {
@@ -1201,53 +1550,94 @@ function kostik(c) {
     const dx = X - sx, dy = Y - sy, d = Math.hypot(dx, dy) / R;
     if (d > 1) continue;
     const an = Math.atan2(dy, dx);
-    const petal = Math.pow(Math.max(0, Math.cos((an - c.aci) * 2.5)), 3);
-    const ring = Math.exp(-Math.pow((d - 0.42) / 0.07, 2)) * (0.3 + 0.7 * petal) + Math.exp(-Math.pow(d / 0.09, 2)) * 0.8;
-    const a = ring * 0.8;
-    const hue = (an - c.aci) * 0.8 + d * 3;
-    FB[g * 3] += a * (1.0 + 0.35 * Math.sin(hue)); FB[g * 3 + 1] += a * (0.85 + 0.3 * Math.sin(hue + 2.1)); FB[g * 3 + 2] += a * (0.95 + 0.35 * Math.sin(hue + 4.2));
+    const petal = Math.pow(Math.max(0, Math.cos((an - c.aci) * 2.5)), 6);
+    const lob = petal * Math.exp(-Math.pow((d - 0.32) / 0.16, 2)) * 0.9;
+    const core = Math.exp(-Math.pow(d / 0.09, 2)) * 1.2;
+    const uc = petal * Math.exp(-Math.pow((d - 0.56) / 0.07, 2));
+    tayf(clamp((d - 0.48) / 0.16), _ty);
+    FB[g * 3] += lob * 0.9 + core + uc * _ty[0] * 0.9;
+    FB[g * 3 + 1] += lob * 0.92 + core * 0.97 + uc * _ty[1] * 0.9;
+    FB[g * 3 + 2] += lob * 0.85 + core * 0.92 + uc * _ty[2] * 0.9;
   }
 }
 // yıldız parıltısı: çekirdek + ince dört ışın + kısa çapraz ışınlar
-function parilti(px, py, boy, guc) {
+function parilti(px, py, boy, guc, renk) {
+  renk = renk || [1, 1, 0.96];
   const R = boy;
   const x0 = Math.max(0, Math.floor((px - R) * O)), x1 = Math.min(N, Math.ceil((px + R) * O));
   const y0 = Math.max(0, Math.floor((py - R) * O)), y1 = Math.min(N, Math.ceil((py + R) * O));
   for (let gy = y0; gy < y1; gy++) for (let gx = x0; gx < x1; gx++) {
     const dx = (gx + 0.5) / O - px, dy = (gy + 0.5) / O - py;
     const ax = Math.abs(dx), ay = Math.abs(dy);
-    const core = Math.exp(-(dx * dx + dy * dy) / 2.2);
-    const ray = Math.exp(-ay * ay / 0.12) * Math.pow(Math.max(0, 1 - ax / R), 2.2) + Math.exp(-ax * ax / 0.12) * Math.pow(Math.max(0, 1 - ay / R), 2.2);
+    const core = Math.exp(-(dx * dx + dy * dy) / 1.6);
+    const ray = Math.exp(-ay * ay / 0.22) * Math.pow(Math.max(0, 1 - ax / R), 1.8) + Math.exp(-ax * ax / 0.22) * Math.pow(Math.max(0, 1 - ay / R), 1.8);
     const du = (dx + dy) * 0.7071, dv = (dx - dy) * 0.7071;
-    const dia = (Math.exp(-dv * dv / 0.1) * Math.pow(Math.max(0, 1 - Math.abs(du) / (R * 0.45)), 2) + Math.exp(-du * du / 0.1) * Math.pow(Math.max(0, 1 - Math.abs(dv) / (R * 0.45)), 2)) * 0.5;
-    const a = (core * 2.2 + ray + dia) * guc;
+    const dia = (Math.exp(-dv * dv / 0.07) * Math.pow(Math.max(0, 1 - Math.abs(du) / (R * 0.4)), 2) + Math.exp(-du * du / 0.07) * Math.pow(Math.max(0, 1 - Math.abs(dv) / (R * 0.4)), 2)) * 0.45;
+    const hl = Math.exp(-(dx * dx + dy * dy) / (R * R * 0.012)) * 0.5;
+    const a = (ray + dia + hl) * guc, cc = core * 2.4 * guc;
     const g3 = (gy * N + gx) * 3;
-    FB[g3] += a * 1.0; FB[g3 + 1] += a * 1.0; FB[g3 + 2] += a * 0.95;
+    FB[g3] += a * renk[0] + cc; FB[g3 + 1] += a * renk[1] + cc; FB[g3 + 2] += a * renk[2] + cc * 0.96;
   }
+}
+// kristal bölgelerdeki en parlak noktaları bul (yerel en büyükler, birbirinden uzak)
+const KRISTAL = new Uint8Array(N * N);
+function parlakNoktalar(adet, ara, suzgec, esik) {
+  const k = 4, w = N / k;
+  const Lm = new Float32Array(w * w);
+  for (let y = 0; y < w; y++) for (let x = 0; x < w; x++) {
+    let m = 0;
+    for (let j = 0; j < k; j++) for (let i = 0; i < k; i++) {
+      const g = (y * k + j) * N + x * k + i;
+      if (!KRISTAL[g]) continue;
+      const l = FB[g * 3] * 0.3 + FB[g * 3 + 1] * 0.55 + FB[g * 3 + 2] * 0.15;
+      if (l > m) m = l;
+    }
+    Lm[y * w + x] = m;
+  }
+  const aday = [];
+  for (let y = 1; y < w - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const v = Lm[y * w + x];
+    const px = (x + 0.5) * k / O, py = (y + 0.5) * k / O;
+    if (v < esik || (suzgec && !suzgec(px, py))) continue;
+    aday.push([v, (x + 0.5) * k / O, (y + 0.5) * k / O]);
+  }
+  aday.sort((a, b) => b[0] - a[0]);
+  // buzlu pencereler ve alem yakaları dışarıda (parıltı kristal fasetlerinde olsun)
+  const yasak = S.kaide.pencereler.concat(S.minarePencereleri).map((q) => [q.x - q.w / 2 - 8, q.y - 8, q.x + q.w / 2 + 8, q.y + q.h + 8]);
+  yasak.push([530, 285, 590, 310], [280, 115, 320, 140]);
+  const sec = [];
+  for (const a of aday) {
+    if (sec.length >= adet) break;
+    if (yasak.some((b) => a[1] > b[0] && a[1] < b[2] && a[2] > b[1] && a[2] < b[3])) continue;
+    if (sec.every((s) => Math.hypot(s[1] - a[1], s[2] - a[2]) > ara)) sec.push(a);
+  }
+  return sec;
 }
 
 // ------------------------------------------------------------------ çizim
 gokCiz();
 zeminCiz();
+kostikZemin();
 arkaAl(0, 0, 1024, 1024);
 stil.minareSonra = () => arkaAl(0, 0, 1024, 1024);
+const _solid0 = SOLID.slice();
 binaCiz();
+for (let g = 0; g < N * N; g++) if (SOLID[g] > 0.5 && FB[g * 3 + 1] >= 0 && _solid0[g] < 0.5) KRISTAL[g] = 1;
 // bitkiler: her katmandan önce bölgenin arka görüntüsü alınır (kristal arkasındakini kırar)
-// katman + bölgenin arka görüntüsü (kristal, arkasında o ana dek çizilmiş olanı kırar)
 function katK(bb, ciz, pad) { const L = katman(bb, ciz, pad); bolgeArka(L); return L; }
-for (const s of S.bitki.saplar) { sapCizK(s); }
 function sapCizK(s) {
   const L = katK(bbNok(s, 4), (m) => { m.lineWidth = stil.sapKalin; m.stroke(new Path2D(S.yol(s))); }, 2);
   sisir(L, stil.sapKalin / 2, 1);
-  golge(L, -5, 6, 3, 0.25, stil.tint);
+  golge(L, -5, 6, 3, 0.22, stil.tint);
   bas(L, (X, Y, k, out) => { sifirla(); nset(L.NX[k], L.NY[k], L.NZ[k]); stil.sap(X, Y, out); });
 }
+for (const s of S.bitki.saplar) sapCizK(s);
 S.bitki.yapraklar.forEach((y, i) => {
   const d = S.yaprakYolu(y);
   const ca = Math.cos(y.aci), sa = Math.sin(y.aci), Lw = y.uzunluk;
   const L = katK([y.x - Lw, y.y - Lw, y.x + Lw, y.y + Lw], (m) => m.fill(new Path2D(d)), 2);
   sisir(L, 1.6, 1);
-  golge(L, -6, 7, 3.5, 0.3, stil.tint);
+  golge(L, -6, 7, 3.5, 0.26, stil.tint);
   KD = { D: L.D, k: 0 };
   bas(L, (X, Y, k, out) => {
     sifirla();
@@ -1261,15 +1651,16 @@ S.bitki.yapraklar.forEach((y, i) => {
 for (const t of S.bitki.tomurcuklar) {
   const L = katK([t.x - t.r * 2, t.y - t.r * 2, t.x + t.r * 2, t.y + t.r * 2], (m) => m.fill(new Path2D(S.tomurcukYolu(t))), 2);
   sisir(L, t.r * 0.7, 1);
-  golge(L, -3, 4, 2.5, 0.25, stil.tint);
+  golge(L, -3, 4, 2.5, 0.22, stil.tint);
   bas(L, (X, Y, k, out) => { sifirla(); nset(L.NX[k], L.NY[k], L.NZ[k]); stil.tomurcuk(X, Y, out); });
 }
+const _solid1 = SOLID.slice();
 S.bitki.cicekler.forEach((c, ci) => {
   const yollar = [];
   for (let p = 0; p < 5; p++) yollar.push(tacYolu(c, p, { asim: 0.05, en: 0.8, boy: 1.04 }));
   const R = c.r * 1.2;
-  const Lt = _katmanT(c, R, yollar);
-  golge(Lt, -c.r * 0.72, c.r * 0.42, c.r * 0.16, 0.3, [0.62, 0.68, 0.72]);
+  const Lt = katman([c.x - R, c.y - R, c.x + R, c.y + R], (m) => { for (const d of yollar) m.fill(new Path2D(d)); }, 2);
+  golge(Lt, -c.r * 0.72, c.r * 0.42, c.r * 0.16, 0.26, [0.62, 0.68, 0.72]);
   kostik(c);
   yollar.forEach((d, p) => {
     const a = c.aci + (p * Math.PI * 2) / 5, ca = Math.cos(a), sa = Math.sin(a);
@@ -1285,12 +1676,24 @@ S.bitki.cicekler.forEach((c, ci) => {
   });
   stil.orta(c);
 });
-function _katmanT(c, R, yollar) { return katman([c.x - R, c.y - R, c.x + R, c.y + R], (m) => { for (const d of yollar) m.fill(new Path2D(d)); }, 2); }
-// parıltılar: alem, kubbe sırtları, minare, çiçek uçları
-const PAR = [[560, 201, 15, 1.0], [300, 101, 11, 0.8], [652, 352, 14, 0.9], [610, 318, 10, 0.7], [705, 440, 12, 0.8], [742, 520, 9, 0.6], [318, 236, 9, 0.7],
-  [770, 612, 10, 0.7], [690, 560, 8, 0.5], [332, 465, 9, 0.6], [818, 694, 10, 0.7], [470, 380, 8, 0.55], [598, 470, 9, 0.6], [303, 704, 8, 0.6], [548, 885, 8, 0.45], [868, 893, 7, 0.4]];
-for (const [x, y, b, g] of PAR) parilti(x, y, b * 1.4, g * 1.6);
-parlama(2.6, 0.28, 6);
+for (let g = 0; g < N * N; g++) if (SOLID[g] > 0.5 && _solid1[g] < 0.5) KRISTAL[g] = 1;
+// parıltılar: kristaldeki en parlak noktalarda
+// kubbede: ışığa bakan faset köşelerinde (sırtların kesiştiği noktalar) parıltı
+const KPAR = [[9, 2, 30], [10, 4, 26], [12, 3, 20], [8, 5, 16], [11, 1, 18], [13, 5, 16], [6, 3, 16]];
+for (const [gk, row, boy] of KPAR) {
+  const yy = YAY2Y(row * SATIRH), ph = -Math.PI / 2 + gk * GW;
+  const xx = 560 + kubbeP.r(yy) * Math.sin(ph);
+  parilti(xx, yy, boy, 2.2 + boy * 0.08, row === 3 ? [0.7, 1.15, 0.85] : null);
+}
+const PAR = parlakNoktalar(12, 50, (x, y) => !S.kubbedeMi(x, y), 1.6);
+PAR.forEach(([v, x, y], i) => {
+  const s = clamp((v - 1.6) / 6);
+  let renk = null;
+  if (i % 3 === 2) { tayf(ihash(i, 3, 91), _ty); renk = [0.35 + _ty[0] * 0.9, 0.35 + _ty[1] * 0.9, 0.35 + _ty[2] * 0.9]; }
+  parilti(x, y, 8 + 10 * s, 0.8 + 1.2 * s, renk);
+});
+parilti(560, 190, 16, 1.6); parilti(300, 96, 11, 1.2);
+parlama(2.4, 0.3, 6);
 cikis(0.56, 'aces');
 SAHNE.hazir();
 

@@ -12,7 +12,7 @@
     "Kubbede tek tek seçilen sırlı yeşil karolar: ince derzler, her karonun hafif farklı eğimiyle kırılan gök yansıması ve sağ üstte güneş parıltısı",
     "Kesme taş derzli, ince dokulu beyaz kireç taşı kaide; korniş ve şerefelerin altında yumuşak güneş gölgesi",
     "Kayıtlı camlı kemer pencereler: koyu camda gök yansıması, oyuk içinde güneşin düşürdüğü gölge",
-    "Kümülüs bulutlu, sağ üstte güneşli fotogerçekçi gök; arkadaki minarede hafif hava perspektifi",
+    "Güneşe bakan yüzleri parlak, altları mavimsi gri, kabarık kümelerden oluşan kümülüs bulutlu fotogerçekçi gök; arkadaki minarede hafif hava perspektifi",
     "Kaçış noktasına doğru daralan derzli traverten meydan ve üzerinde frangipani çiçeklerinin yumuşak gölgeleri",
     "Korkuluklarda tek tek babalar, oyma zikzak bant ve gökyüzünü yansıtan metal altın alemler"
   ],
@@ -24,9 +24,9 @@
     "#E5E1D8",
     "#C8B682",
     "#699B51",
-    "#D9C362"
+    "#E7CC55"
   ],
-  "kodla_cizim": "Piksel tabanlı bir render çekirdeği: 2048 px'lik doğrusal kayan noktalı çerçeve arabelleğinde her öğe Path2D ile kenarı yumuşatılmış bir maske katmanı olarak çizilip gölgelendirilir. Kubbe Bezier profilinden dönel yüzey normaliyle, kasnak ve minare silindir olarak, kaburgalar teğet yönünde normal bükmesiyle hesaplanır; karolar yay uzunluğu ve boylamdan türetilen sıra/sütun koordinatlarıyla (derz, kenar pahı, karo başına rastgele eğim ve ton) üretilir; çiçek, yaprak, tomurcuk ve hilal mesafe dönüşümüyle (Felzenszwalb) şişirilir. Gölgelendirme: Lambert güneş, yarım küre gök/zemin ortamı (yumuşak küresel aydınlatma yaklaşımı), Schlick Fresnel'li gök yansıması, Blinn güneş parlaması ve metal altın; pencerelerde oyuk derinliği kadar ışık yönünde maske örneklenerek atılan gölge; öndeki katmanların kaydırılıp bulanıklaştırılmış maskeleriyle arkadakilere düşen gölge ve ortam örtmesi. Gök fbm gürültüsünden kümülüs yoğunluğu ve güneş yönündeki yoğunluk farkıyla aydınlatılan bulutlardan, zemin perspektif ızgaralı traverten levhalardan oluşur. Sonda parlama (bloom), ACES ton eşleme ve titreşimli sRGB çıkışı.",
+  "kodla_cizim": "Piksel tabanlı bir render çekirdeği: 2048 px'lik doğrusal kayan noktalı çerçeve arabelleğinde her öğe Path2D ile kenarı yumuşatılmış bir maske katmanı olarak çizilip gölgelendirilir. Kubbe Bezier profilinden dönel yüzey normaliyle, kasnak ve minare silindir olarak, kaburgalar teğet yönünde normal bükmesiyle hesaplanır; karolar yay uzunluğu ve boylamdan türetilen sıra/sütun koordinatlarıyla (derz, kenar pahı, karo başına rastgele eğim ve ton) üretilir; çiçek, yaprak, tomurcuk ve hilal mesafe dönüşümüyle (Felzenszwalb) şişirilir. Gölgelendirme: Lambert güneş, yarım küre gök/zemin ortamı (yumuşak küresel aydınlatma yaklaşımı), Schlick Fresnel'li gök yansıması, Blinn güneş parlaması ve metal altın; pencerelerde oyuk derinliği kadar ışık yönünde maske örneklenerek atılan gölge; öndeki katmanların kaydırılıp bulanıklaştırılmış maskeleriyle arkadakilere düşen gölge ve ortam örtmesi. Gökteki her kümülüs, düz bir taban üstünde üst üste binen kubbemsi pamuk kümelerinden kurulur: her kümenin küre normali güneşe göre aydınlatılır (parlak sıcak tepe, mavimsi gri alt ve taban), fbm gürültüsü karnabahar dokusu ve yumuşak kenar verir; zemin perspektif ızgaralı traverten levhalardan oluşur. Sonda parlama (bloom), ACES ton eşleme ve titreşimli sRGB çıkışı.",
   "etiketler": [
     "3B render",
     "fotogerçekçi",
