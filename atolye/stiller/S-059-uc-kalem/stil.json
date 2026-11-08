@@ -5,26 +5,26 @@
   "ad_en": "Trois Crayons",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Mavi-gri tonlu kâğıtta kırmızı, siyah ve beyaz tebeşir; çapraz paralel taramayla modelleme, renkli pastelle seyrek vurgular.",
+  "ozet": "Sıcak bej (chamois) tonlu kâğıtta kırmızı, siyah ve beyaz tebeşir; çapraz paralel taramayla modelleme, canlı renkli pastel vurgular.",
   "tanim": "Üç kalem (aux trois crayons), orta tonlu bir kâğıt üzerinde kırmızı tebeşir (sanguine), siyah tebeşir ve beyaz tebeşirin birlikte kullanıldığı çizim tekniğidir. Biçim çoğunlukla kırmızı tebeşirle, sol alttan sağ üste giden paralel taramalarla ve hafifçe ezilmiş gölgelerle kurulur; siyah en koyu yerleri ve vurguları, beyaz ise ışıkları verir, kâğıdın tonu ara değer olarak çalışır. 18. yüzyılda buna seyrek renkli pastel dokunuşları eklenerek (rehaussé de pastel) zarif, canlı etütler yapıldı.",
   "koken": "Üç renkli tebeşir çizimi 16. yüzyılda (Federico Barocci, Rubens) başladı; 18. yüzyıl Fransa'sında Antoine Watteau'nun figür etütleriyle doruğa ulaştı, François Boucher ve Jean-Baptiste Greuze sürdürdü. Venedikli Rosalba Carriera pastelle birleştirerek tekniğe renk kattı; mavi-gri ve bej tonlu kâğıtlar dönemin tercihiydi.",
   "ayirt_edici": [
-    "Mavi-gri, vergeli eski kâğıt her yerde ara ton olarak görünüyor; tebeşirde ince yatay verge çizgileri, kenarlarda hafif sararma",
+    "Sıcak bej (chamois), vergeli eski kâğıt her yerde ara ton olarak görünüyor; tebeşirde ince yatay verge çizgileri, kenarlarda hafif sararma",
     "Kırmızı tebeşirle (sanguine) sol alttan sağ üste paralel tarama ve ezilmiş gölgeler: minare, kaide, kubbe ve kasnağın gölge tarafları",
     "Siyah tebeşir yalnız en koyu yerlerde: pencereler, gölgeli konturlar, korniş altı, korkuluk babaları",
     "Beyaz tebeşir ışıklarda: kubbenin sağ omzu, minarenin ve kaidenin aydınlık yüzü, korniş üstü, bulutlar; güneş beyaz tebeşirle taranmış, iki kez dolanan konturlu ve kısa ışınlı bir kurs",
-    "Dönemin ölçülü renkli pastel dokunuşları: kubbe ve kasnakta soluk zeytin-yeşili, alemlerde altın-okra, çiçek ve tomurcuklarda gül rengi; kâğıt ve kırmızı tebeşir yeşilin altından seçiliyor",
+    "Renkli pastel dokunuşları: kubbe ve kasnakta yeşil (gölgede koyu, ışıkta açık yeşil), alemlerde altın-okra, çiçek ve tomurcuklarda gül rengi; kâğıt ve kırmızı tebeşir yeşilin altından seçiliyor",
     "Etüt havası: ön çizim izleri ve kaymış ikinci konturlar (pişmanlık), arka planda yapının iki yanında gevşek kırmızı tarama"
   ],
   "palet": [
-    "#A3ABAE",
-    "#B4462C",
+    "#D4BF9E",
+    "#BC3F26",
     "#231E1C",
     "#F6F3EA",
-    "#5E8A6A",
-    "#33574A",
-    "#CC9A3C",
-    "#C98A8A"
+    "#3F8C5C",
+    "#22573C",
+    "#DC9A26",
+    "#E3768C"
   ],
   "kodla_cizim": "Kâğıt, ince yatay vergeler (sinüs), seyrek dikey zincir çizgileri, lif gürültüsü ve kenarda sararma lekesiyle 2048 pikselde kurulur. Tebeşir katmanları ayrı tuvallere çizilip kâğıda bırakılır: pigment diş yüksekliği ile basınca bağlı eşikle tutunur, yarı örtücü (çarpma ile örtme arası) karışır. Kırmızı ve yeşil modelleme sabit açılı (Watteau yönü) paralel tarama öbekleriyle ve bulanıklaştırılarak bırakılan geniş, saydam 'estompe' vuruşlarıyla yapılır; tarama, biçimin dışına kesik çizgili bir genişletilmiş maskeyle düzensizce taşar. Tonlar sahnenin ışık modelinden türetilir (gölgede kırmızı ve koyu yeşil, ışıkta beyaz ve açık yeşil). Siyah ve kırmızı konturlar titreşimli el çizgisi parçalarıdır; kayık ikinci çizgiler pişmanlık izi verir. Çiçeklerde göbekten dışa vuruşlar, yapraklarda yeşil estompe üstüne damardan dışa tarama vardır.",
   "etiketler": [

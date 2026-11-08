@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-059 Üç Kalem (Trois Crayons) — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #a3abae; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #d2bd9b; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -12,7 +12,7 @@
 <canvas id="tuval"></canvas>
 <script src="../../sahne/sahne.js"></script>
 <script>
-// S-059 Üç Kalem (aux trois crayons, rehaussé de pastel) — mavi-gri, vergeli (laid) eski kâğıt üzerinde
+// S-059 Üç Kalem (aux trois crayons, rehaussé de pastel) — sıcak bej (chamois), vergeli (laid) eski kâğıt üzerinde
 // kırmızı tebeşir (sanguine), siyah tebeşir ve beyaz tebeşir. 18. yüzyıl etütlerindeki gibi: biçim kırmızı
 // tebeşirle çapraz paralel taramayla ve hafifçe ezilmiş (estompe) gölgelerle kurulur, en koyu yerlere siyah
 // vurgular, ışıklı yüzlere beyaz tebeşir konur; üstüne seyrek renkli pastel dokunuşları: kubbede yeşil,
@@ -306,8 +306,8 @@
       }
     }
     for (let i = 0; i < N2; i++) H[i] = sstep(0.14, 0.86, (H[i] - mn) / (mx - mn));
-    // kâğıt rengi: mavi-gri, hafif lekeli; zincir çizgileri biraz koyu; kenarlarda zamanla sararma
-    const base = [163, 171, 174];
+    // kâğıt rengi: sıcak bej (chamois), hafif lekeli; zincir çizgileri biraz koyu; kenarlarda zamanla sararma
+    const base = [212, 191, 158];
     for (let y = 0; y < W2; y++) for (let x = 0; x < W2; x++) {
       const i = y * W2 + x, xs = x / 2, ys = y / 2;
       const zx = ((xs + 30 + nD(ys / 80, 3) * 10) % 86); const zincir = Math.exp(-((zx - 43) * (zx - 43)) / 3.5);
@@ -353,8 +353,8 @@
   }
   function katman(ciz, o) { K.temizle(); ciz(K.x); for (const m of o.sil || []) sil(K, m); uygula(o); }
 
-  const KIRMIZI = hex('#B4462C'), KIRMIZI2 = hex('#C8644A'), SIYAH = hex('#231E1C'), BEYAZ = hex('#F6F3EA');
-  const YESIL = hex('#5E8A6A'), YESIL2 = hex('#A3BC98'), OKRA = hex('#CC9A3C'), GUL = hex('#DE8C98');
+  const KIRMIZI = hex('#BC3F26'), KIRMIZI2 = hex('#D2603F'), SIYAH = hex('#231E1C'), BEYAZ = hex('#F6F3EA');
+  const YESIL = hex('#3F8C5C'), YESIL2 = hex('#8DC08C'), OKRA = hex('#DC9A26'), GUL = hex('#E3768C');
   const egik = -0.86; // Watteau usulü çapraz tarama: sol alttan sağ üste
   const taraT = (x, o) => tara(x, Object.assign({ aciJ: 0.06, egri: 0.02, ters: false, bas: 0.12, son: 0.3 }, o), r);
   // yumuşak (ezilmiş) leke: geniş, saydam vuruşlar
@@ -408,7 +408,7 @@
   }, { opq: 0.45, sil: [MK.bitki], maske: ton((b, l) => (b === 'kubbe' || b === 'kasnak' ? 0.75 * sstep(0.45, 0.05, l) : 0)) });
 
   // ================================================================ 3) yeşil pastel: kubbe ve kasnak (sürtülmüş zemin + kaburga boyunca vuruşlar + koyu yeşil tarama)
-  const KOYUYESIL = hex('#33574A');
+  const KOYUYESIL = hex('#22573C');
   katman((x) => {
     x.save(); x.clip(kubbeYolu);
     for (let u = -1.05; u < 1.05; u += 0.045) { const pts = []; for (let t = 0; t <= 10; t++) { const yy = lerp(556, 302, t / 10); pts.push([560 + u * kubbeRy(yy), yy]); } leke(x, pts, 16, 0.4, YESIL); }
