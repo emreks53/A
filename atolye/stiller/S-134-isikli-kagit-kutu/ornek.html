@@ -168,6 +168,32 @@
     p.closePath();
   }
 
+  // ------------------------------------------------------------ ışık maskesi: doğrudan ışık geçiren kesikler (en sonda parıltı verir)
+  const ISIK = SAHNE.yeniTuval(W2, W2), isg = ISIK.getContext('2d');
+  isg.setTransform(OL, 0, 0, OL, 0, 0);
+  function parla(yol, w, renk, a) {
+    isg.save(); isg.globalAlpha = a === undefined ? 1 : a; isg.fillStyle = isg.strokeStyle = renk || '#FFF4D6';
+    const y = typeof yol === 'string' ? P(yol) : yol;
+    if (w) { isg.lineWidth = w; isg.lineCap = 'round'; isg.lineJoin = 'round'; isg.stroke(y); } else isg.fill(y);
+    isg.restore();
+  }
+  /** Kesik kesik (delikli) yarık: kâğıt bütünlüğünü koruyan, ışığı çizgi çizgi geçiren lazer kesimi. */
+  function kesikCizgi(noktalar, parca, ara) {
+    const p = new Path2D();
+    let kalan = 0, ciz = true;
+    for (let i = 0; i < noktalar.length - 1; i++) {
+      let [x0, y0] = noktalar[i]; const [x1, y1] = noktalar[i + 1];
+      let L = Math.hypot(x1 - x0, y1 - y0); const ux = (x1 - x0) / (L || 1), uy = (y1 - y0) / (L || 1);
+      while (L > 0) {
+        if (kalan <= 0) { ciz = !ciz; kalan = ciz ? parca : ara; if (ciz) p.moveTo(x0, y0); }
+        const d = Math.min(L, kalan);
+        x0 += ux * d; y0 += uy * d; L -= d; kalan -= d;
+        if (ciz) p.lineTo(x0, y0);
+      }
+    }
+    return p;
+  }
+
   // ------------------------------------------------------------ ortak şekiller (ön plandakiler arkadakilerden oyulur ki temiz parlasın)
   const MP = SAHNE.minareParcalari();
   const mp = (ad) => MP.find((p) => p.ad === ad);
@@ -194,14 +220,27 @@
     return p;
   }
   function gunesIsinlari() {
+    // ince uzun lazer yarıkları: uzun, orta ve kısa ışınlar dönüşümlü
     const p = new Path2D();
-    for (let i = 0; i < 16; i++) { const a = (i * TAU) / 16 + 0.1; const L = i % 2 ? 30 : 44; damla(p, GX + Math.cos(a) * 70, GY + Math.sin(a) * 70, L, i % 2 ? 7 : 9, a); }
+    for (let i = 0; i < 32; i++) {
+      const a = (i * TAU) / 32 + 0.1;
+      const L = i % 4 === 0 ? 190 : i % 2 === 0 ? 132 : 78, W = i % 4 === 0 ? 5.6 : i % 2 === 0 ? 4.6 : 3.6;
+      damla(p, GX + Math.cos(a) * 80, GY + Math.sin(a) * 80, L, W, a);
+    }
     return p;
   }
+  function gunesNoktalari() {
+    // güneş diskinin çevresinde iğne delikleri halkası
+    const p = new Path2D();
+    for (let i = 0; i < 40; i++) { const a = (i * TAU) / 40; p.moveTo(GX + Math.cos(a) * 71 + 1.7, GY + Math.sin(a) * 71); p.arc(GX + Math.cos(a) * 71, GY + Math.sin(a) * 71, 1.7, 0, TAU); }
+    return p;
+  }
+  function gunesDelikleri(g) { delik(g, SAHNE.daireYolu(GX, GY, 60)); delik(g, gunesIsinlari()); delik(g, gunesNoktalari()); }
+  parla(gunesIsinlari(), 0, '#FFF8E4'); parla(gunesNoktalari(), 0, '#FFF8E4');
+  parla(SAHNE.daireYolu(GX, GY, 60), 0, '#FFE9A8', 0.9);
   katman('gok', (g) => {
     g.fillRect(0, 0, 1024, 1024);
-    delik(g, SAHNE.daireYolu(GX, GY, 56));
-    delik(g, gunesIsinlari());
+    gunesDelikleri(g);
     for (const [x, y, s] of BULUTLAR) delik(g, bulutYolu(x, y, s));
   }, '#D3E9F8', { hale: { a: 0 }, kenar: 0.5 });
   katman('gok', (g) => {
@@ -213,9 +252,9 @@
     }
     p.closePath();
     g.fill(p);
-    delik(g, SAHNE.daireYolu(GX, GY, 122));
+    gunesDelikleri(g);
     for (const [x, y, s] of BULUTLAR) delik(g, bulutYolu(x, y, s, 9));
-  }, '#DCEEFA', { hale: { x: -3, y: 5, b: 10, a: 0.1 } });
+  }, '#D6EBF9', { hale: { x: -3, y: 5, b: 10, a: 0.1 } });
   katman('gok', (g) => {
     const p = new Path2D();
     p.moveTo(0, 0); p.lineTo(1024, 0);
@@ -225,9 +264,10 @@
     }
     p.closePath();
     g.fill(p);
-    delik(g, SAHNE.daireYolu(GX, GY, 168));
+    gunesDelikleri(g);
     for (const [x, y, s] of BULUTLAR) delik(g, bulutYolu(x, y, s, 9));
-  }, '#DFEFFA', { hale: { x: -3, y: 5, b: 10, a: 0.08 } });
+  }, '#DAEDFA', { hale: { x: -3, y: 5, b: 10, a: 0.08 } });
+  for (const [x, y, s] of BULUTLAR) parla(bulutYolu(x, y, s), 0, '#FFFDF6', 0.32);
   // bulutlar: ince beyaz ipek kâğıt (delikten biraz taşar: kenarda iki kat → yumuşak çizgi)
   katman('gok', (g) => { for (const [x, y, s] of BULUTLAR) g.fill(bulutYolu(x, y, s, 5)); }, '#FEFBF5', { hale: { x: -3, y: 4, b: 8, a: 0.08 }, kenar: 0.6, isilti: 0.5, isiltiB: 8 });
   // güneş: sarı ipek kâğıt disk
