@@ -855,8 +855,8 @@
     }
     if (e.tur === 'kubbe') {
       const m = Math.floor(e.p.length / 2);
-      vuruslar(MUR.x, elle(e.p.slice(0, m + 1), { yuz: 12 }), { W, maxL: 120, yuk1: 0.36 });
-      vuruslar(MUR.x, elle(e.p.slice(m), { yuz: 12 }), { W, maxL: 120, yuk1: 0.36 });
+      vuruslar(MUR.x, elle(e.p.slice(0, m + 1), { yuz: 12 }), { W, maxL: 170, yuk1: 0.64 });
+      vuruslar(MUR.x, elle(e.p.slice(m), { yuz: 12 }), { W, maxL: 170, yuk1: 0.64 });
       continue;
     }
     const kapali = e.p.length > 3 && Math.hypot(e.p[0][0] - e.p[e.p.length - 1][0], e.p[0][1] - e.p[e.p.length - 1][1]) < 0.5;
@@ -936,7 +936,7 @@
   for (const e of liste) {
     if (e.tur === 'sap') {
       sil((k) => { k.lineWidth = 6.4; k.stroke(noktaYoluAcik(e.p)); });
-      vuruslar(MUR.x, elle(ters(e.p), { titre: 0.5 }), { W: 5.8, maxL: 150, yuk1: 0.38 });
+      vuruslar(MUR.x, elle(ters(e.p), { titre: 0.5 }), { W: 6.0, maxL: 170, yuk1: 0.62 });
     } else if (e.tur === 'yaprak') {
       sil((k) => { const P = noktaYolu(e.p); k.fill(P); k.lineWidth = 4.4; k.stroke(P); });
       const m = Math.floor(e.p.length / 2);

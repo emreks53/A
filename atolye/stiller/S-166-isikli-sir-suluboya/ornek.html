@@ -402,11 +402,11 @@
   const mTomurcuk = M.yolMaske(Y.tomurcuklar);
   const mBitki = M.maske((c) => {
     c.lineWidth = 4; for (const s of Y.saplar) c.stroke(P(s));
-  const mOnde = M.birles(mCicek, mTomurcuk); // yaprakların önünde kalan çiçek ve tomurcuklar
     for (const d of Y.yapraklar) c.fill(P(d));
     for (const d of Y.tomurcuklar) c.fill(P(d));
     for (const f of cicekler) { for (const t of f.tac) c.fill(P(t.d)); c.beginPath(); c.arc(f.c.x, f.c.y, f.c.r * 0.3, 0, Math.PI * 2); c.fill(); }
   });
+  const mOnde = M.birles(mCicek, mTomurcuk); // yaprakların önünde kalan çiçek ve tomurcuklar
   const mBulut = M.maske((c) => {
     for (const b of bulutlar) { c.save(); bulutKlip(c, b); c.beginPath(); bulutYolu(c, b, 0, 0, 1); c.fill(); c.restore(); }
   });

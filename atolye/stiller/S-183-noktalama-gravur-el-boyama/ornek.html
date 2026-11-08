@@ -635,19 +635,21 @@
     ciz(M.x);
     const m = M.x.getImageData(0, 0, w, h).data;
     const yaF = typeof yA === 'function';
+    const ykF = typeof yika === 'function';
     const sira = ++SIRA;
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
       const a = m[(j * w + i) * 4 + 3] / 255;
       if (a <= 0.003) continue;
       const X = x0 + i, Y = y0 + j, id = Y * N + X;
       if (a > 0.5 && ton) O[id] = sira;
-      if (!ton) { if (yika) { const ya = yaF ? yA(X + 0.5, Y + 0.5) : yA; WR[id] = WR[id] * (1 - a) + yika[0] * a; WG[id] = WG[id] * (1 - a) + yika[1] * a; WB[id] = WB[id] * (1 - a) + yika[2] * a; WA[id] = WA[id] * (1 - a) + ya * a; } continue; }
+      const yk = ykF ? yika(X + 0.5, Y + 0.5) : yika;
+      if (!ton) { if (yk) { const ya = yaF ? yA(X + 0.5, Y + 0.5) : yA; WR[id] = WR[id] * (1 - a) + yk[0] * a; WG[id] = WG[id] * (1 - a) + yk[1] * a; WB[id] = WB[id] * (1 - a) + yk[2] * a; WA[id] = WA[id] * (1 - a) + ya * a; } continue; }
       const t = clamp(ton(X + 0.5, Y + 0.5), 0, 1);
       T[id] = T[id] * (1 - a) + t * a;
       IR[id] = IR[id] * (1 - a) + ink[0] * a; IG[id] = IG[id] * (1 - a) + ink[1] * a; IB[id] = IB[id] * (1 - a) + ink[2] * a;
-      if (yika) {
+      if (yk) {
         const ya = yaF ? yA(X + 0.5, Y + 0.5) : yA;
-        WR[id] = WR[id] * (1 - a) + yika[0] * a; WG[id] = WG[id] * (1 - a) + yika[1] * a; WB[id] = WB[id] * (1 - a) + yika[2] * a;
+        WR[id] = WR[id] * (1 - a) + yk[0] * a; WG[id] = WG[id] * (1 - a) + yk[1] * a; WB[id] = WB[id] * (1 - a) + yk[2] * a;
         WA[id] = WA[id] * (1 - a) + ya * a;
       }
     }
@@ -672,9 +674,11 @@
   const gunesU = (x, y) => Math.hypot(x - 880, y - 140);
   oge((x) => x.fillRect(0, 0, 1024, 805), [0, 0, 1024, 805],
     (x, y) => { const g = Math.exp(-Math.pow(gunesU(x, y) / 170, 2)); return (0.02 + 0.36 * Math.pow(1 - y / 805, 1.6)) * (1 - 0.92 * g); },
-    MUR.gok, hex('#B9DAF0'), (x, y) => (0.25 + 0.6 * Math.pow(1 - y / 805, 0.9)) * (1 - 0.85 * Math.exp(-Math.pow(gunesU(x, y) / 150, 2))));
+    MUR.gok, (() => { const m = hex('#8CC0EA'), o = hex('#F3D9A4'); return (x, y) => { const t = sstep(430, 790, y); return [lerp(m[0], o[0], t), lerp(m[1], o[1], t), lerp(m[2], o[2], t)]; }; })(),
+    // kolorist göğü iki renkle bitirir: tepede gök mavisi, ufka doğru ılık açık okra
+    (x, y) => Math.max((0.3 + 0.62 * Math.pow(1 - y / 805, 0.8)) * (1 - 0.85 * Math.exp(-Math.pow(gunesU(x, y) / 150, 2))), 0.5 * sstep(430, 790, y)));
   // güneş: açık disk, kenarına doğru yoğunlaşan noktalar, altın boya
-  oge((x) => { x.beginPath(); x.arc(880, 140, 44, 0, PI2); x.fill(); }, [830, 90, 930, 190], (x, y) => 0.03 + 0.22 * sstep(30, 44, gunesU(x, y)), MUR.altin, hex('#F6D873'), 0.75);
+  oge((x) => { x.beginPath(); x.arc(880, 140, 44, 0, PI2); x.fill(); }, [830, 90, 930, 190], (x, y) => 0.03 + 0.22 * sstep(30, 44, gunesU(x, y)), MUR.altin, hex('#F4CB52'), 0.85);
   kontur([duzlestir(SAHNE.daireYolu(880, 140, 44), 1)[0]], 0.9, MUR.altin, 0.7);
   for (let i = 0; i < 20; i++) {
     const a = (i / 20) * PI2 + 0.08;
@@ -690,20 +694,20 @@
     // bulut: kâğıt beyazı, altta ve iç kıvrımlarda yumuşak nokta gölgesi
     oge((x) => { x.save(); x.beginPath(); x.rect(0, 0, 1024, b.taban); x.clip(); x.fill(bb.dolgu); x.restore(); }, kutu,
       (x, y) => { let t = 0.0 + 0.2 * sstep(b.taban - 26 * bs, b.taban, y); for (const d of b.daireler.slice(-3)) { const q = Math.hypot(x - d.x, y - d.y) / d.r; if (q > 0.75 && q < 1.05 && y > d.y) t += 0.1 * sstep(0.75, 1, q); } return t; },
-      MUR.gok, hex('#E7EEF6'), 0.35);
+      MUR.gok, hex('#D5E3F2'), 0.4);
     kontur(bb.parcalar, 0.75, MUR.gok, 0.5);
   }
 
   // ================================================================ yer
   oge((x) => x.fillRect(0, 800, 1024, 224), [0, 800, 1024, 1024],
     (x, y) => 0.1 + 0.18 * sstep(800, 1000, y) + (nI(x * 0.03, y * 0.06) - 0.5) * 0.06 + (y < 814 && x > 255 && x < 822 ? 0.22 * (1 - (y - 800) / 14) : 0),
-    MUR.toprak, hex('#E8D29E'), (x, y) => 0.42 + 0.1 * sstep(820, 1000, y));
-  oge((x) => { const g = x.createLinearGradient(0, 860, 0, 1024); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, '#fff'); x.fillStyle = g; x.fillRect(0, 840, 1024, 184); }, [0, 840, 1024, 1024], (x, y) => 0.18 + 0.12 * sstep(860, 1024, y), MUR.yaprak, hex('#A9CB86'), 0.45);
+    MUR.toprak, hex('#E2BE76'), (x, y) => 0.58 + 0.12 * sstep(820, 1000, y));
+  oge((x) => { const g = x.createLinearGradient(0, 860, 0, 1024); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, '#fff'); x.fillStyle = g; x.fillRect(0, 840, 1024, 184); }, [0, 840, 1024, 1024], (x, y) => 0.18 + 0.12 * sstep(860, 1024, y), MUR.yaprak, hex('#86BE66'), 0.6);
   kontur([[[0, 800.5], [1024, 800.5]]], 0.8, MUR.toprak, 0.55);
 
   // ================================================================ minare
   const MY = minareYollari();
-  const tas = hex('#F1E2C5');
+  const tas = hex('#EFD6AC');
   for (const p of MY) {
     if (p.tip === 'alem') continue;
     if (p.tip === 'bant') {
@@ -714,20 +718,21 @@
     const R0 = (p.kx2 - p.kx1) / 2;
     const cikma = p.ad.startsWith('çıkma');
     oge((x) => x.fill(yol), [p.kx1, p.ky1, p.kx2, p.ky2],
-      (x, y) => { const l = silindirIsik(x, 300, R0); let t = 0.03 + 0.72 * Math.pow(1 - l, 1.7); if (cikma) t += 0.3; if (p.ad.startsWith('şerefe') && y > p.ky2 - 3.5) t += 0.4; return t; },
+      (x, y) => { const l = silindirIsik(x, 300, R0); let t = 0.03 + 0.72 * Math.pow(1 - l, 1.7); if (cikma) t += 0.3; if (p.ad.startsWith('şerefe') && y > p.ky2 - 3.5) t += 0.4; if (p.tip === 'korkuluk' && y > p.y1 + 3 && y < p.y2 - 2.5) t = 0.06 + 0.3 * Math.pow(1 - l, 1.5); return t; },
       MUR.sepya, tas, 0.4);
     if (p.tip === 'korkuluk') {
+      // babalar arasındaki boşluklar: sık, kaynaşan noktalarla koyu düşey çizgiler (açık taş babalar arada kalır)
       const n = 9;
-      for (let i = 0; i < n; i++) {
-        const xx = p.x1 + 5 + ((p.x2 - p.x1 - 10) * (i + 0.5)) / n;
-        oge((x) => x.fillRect(xx - 1.8, p.y1 + 4, 3.6, p.y2 - p.y1 - 7), [xx - 3, p.y1, xx + 3, p.y2], () => 0.85, MUR.sepya, tas, 0.4);
+      for (let i = 0; i <= n; i++) {
+        const xx = p.x1 + 5 + ((p.x2 - p.x1 - 10) * i) / n;
+        kontur([[[xx, p.y1 + 4.2], [xx, p.y2 - 3.2]]], i === 0 || i === n ? 1.1 : 1.45, MUR.sepya, 1);
       }
     }
     kontur(duz(p.d), 0.95, MUR.sepya, 0.85);
   }
   for (const w of SAHNE.minarePencereleri) {
     const d = SAHNE.kemerYolu(w.x, w.y, w.w, w.h);
-    oge((x) => x.fill(new Path2D(d)), kutuD(d), (x) => 0.82 + 0.16 * (1 - (x - (w.x - w.w / 2)) / w.w), MUR.sepya, hex('#AFC3D2'), 0.5);
+    oge((x) => x.fill(new Path2D(d)), kutuD(d), (x) => 0.82 + 0.16 * (1 - (x - (w.x - w.w / 2)) / w.w), MUR.sepya, hex('#86A9C6'), 0.65);
     kontur(duz(d), 0.9, MUR.sepya, 0.9);
   }
 
@@ -739,7 +744,7 @@
     MUR.sepya, tas, 0.45);
   for (const w of K.pencereler) {
     const d = SAHNE.kemerYolu(w.x, w.y, w.w, w.h);
-    oge((x) => x.fill(new Path2D(d)), kutuD(d), (x) => 0.8 + 0.18 * (1 - (x - (w.x - w.w / 2)) / w.w), MUR.sepya, hex('#AFC3D2'), 0.5);
+    oge((x) => x.fill(new Path2D(d)), kutuD(d), (x) => 0.8 + 0.18 * (1 - (x - (w.x - w.w / 2)) / w.w), MUR.sepya, hex('#86A9C6'), 0.65);
     kontur(duz(d), 1.0, MUR.sepya, 0.9);
     const d2 = SAHNE.kemerYolu(w.x, w.y - 5, w.w + 10, w.h + 5);
     kontur(duz(d2).map((p) => p.filter((q) => q[1] < w.y + w.h - 1)), 0.8, MUR.sepya, 0.6);
@@ -762,10 +767,10 @@
     const ust = q.y1 + (k === 0 ? 5 : 6);
     oge((x) => x.fill(new Path2D(d)), [q.x1, q.y1, q.x2, q.y2],
       (x, y) => { const l = silindirIsik(x, cx, R0); let t = 0.2 + 0.75 * Math.pow(1 - l, 1.3); if (y < ust) t *= 0.35; if (y > q.y2 - 5) t += 0.2; return t; },
-      MUR.yesil, hex('#5DB685'), 0.6);
+      MUR.yesil, hex('#2E9E66'), 0.8);
     for (const w of SAHNE.kasnakPencereleri(k)) {
       const wd = SAHNE.kemerYolu(w.x, w.y, w.w, w.h);
-      oge((x) => x.fill(new Path2D(wd)), kutuD(wd), () => 0.97, MUR.yesil, hex('#4E8F78'), 0.5);
+      oge((x) => x.fill(new Path2D(wd)), kutuD(wd), () => 0.97, MUR.yesil, hex('#2F7A60'), 0.6);
       kontur(duz(wd), 0.7, MUR.yesil, 0.95);
     }
     kontur([[[q.x1, ust], [q.x2, ust]]], 0.8, MUR.yesil, 0.8);
@@ -783,7 +788,7 @@
         const g = r0 > 2 ? goreGolge(x, r0, 560, 16) : 0;
         return 0.04 + 0.95 * Math.pow(1 - L, 1.3) + 0.24 * g * (0.35 + 0.65 * (1 - L));
       },
-      MUR.yesil, hex('#4DB37C'), 0.6);
+      MUR.yesil, hex('#2AA068'), 0.8);
     for (const kb of SAHNE.kaburgalar(16)) kontur([kb.noktalar.filter((q) => q[1] > 308)], 0.8, MUR.yesil, 0.7);
     kontur(duz(SAHNE.kubbeYolu), 1.1, MUR.yesil, 0.92);
   }
@@ -799,7 +804,7 @@
     for (const d of parca) {
       const kt = kutuD(d, 2);
       const cx = (kt[0] + kt[2]) / 2, rr = Math.max(2, (kt[2] - kt[0]) / 2);
-      oge((x) => x.fill(new Path2D(d)), kt, (x) => 0.12 + 0.6 * Math.pow(1 - silindirIsik(x, cx, rr), 1.5), MUR.altin, hex('#EBC24E'), 0.8);
+      oge((x) => x.fill(new Path2D(d)), kt, (x) => 0.12 + 0.6 * Math.pow(1 - silindirIsik(x, cx, rr), 1.5), MUR.altin, hex('#E9B232'), 0.92);
     }
     for (const d of parca) kontur(duz(d), 0.7, MUR.altin, 0.85);
   }
@@ -811,7 +816,7 @@
   const isik2 = [0.75, -0.66];
   for (const s of B.saplar) {
     const p = ornekle(s, 2);
-    oge((x) => { x.lineWidth = 4.2; yolCiz(x, p); x.stroke(); }, kutuBul([p], 5), (x) => 0.45, MUR.yaprak, hex('#86BC6E'), 0.55);
+    oge((x) => { x.lineWidth = 4.2; yolCiz(x, p); x.stroke(); }, kutuBul([p], 5), (x) => 0.45, MUR.yaprak, hex('#62A84C'), 0.7);
     const sol = [], sag = [];
     for (let i = 0; i < p.length; i++) {
       const a = p[Math.max(0, i - 1)], b = p[Math.min(p.length - 1, i + 1)];
@@ -840,12 +845,12 @@
         if (Math.abs(u - uu) * L < 0.75 && vv > 1.5) t *= 0.3;
       }
       return t;
-    }, MUR.yaprak, hex('#94CC7C'), 0.5);
+    }, MUR.yaprak, hex('#6CB654'), 0.72);
     kontur(duz(d), 0.85, MUR.yaprak, 0.9);
   });
   B.tomurcuklar.forEach((t) => {
     const d = SAHNE.tomurcukYolu(t);
-    oge((x) => x.fill(new Path2D(d)), kutuD(d, 2), (x, y) => 0.2 + 0.4 * sstep(-t.r, t.r, -((x - t.x) * 0.75 - (y - t.y) * 0.66)), MUR.gul, hex('#EFA2B2'), 0.55);
+    oge((x) => x.fill(new Path2D(d)), kutuD(d, 2), (x, y) => 0.2 + 0.4 * sstep(-t.r, t.r, -((x - t.x) * 0.75 - (y - t.y) * 0.66)), MUR.gul, hex('#E8849E'), 0.75);
     kontur(duz(d), 0.8, MUR.gul, 0.85);
   });
   B.cicekler.forEach((c, ci) => {
@@ -866,10 +871,10 @@
         return t;
       }, MUR.gul, hex('#FFFFFF'), 0);
       // taç yaprağın dibine çok hafif gül boyası
-      oge((x) => { x.save(); x.clip(new Path2D(d)); x.beginPath(); x.arc(c.x, c.y, c.r * 0.5, 0, PI2); x.fill(); x.restore(); }, kutu, null, MUR.gul, hex('#F4C3CE'), (x, y) => 0.5 * (1 - sstep(c.r * 0.15, c.r * 0.5, Math.hypot(x - c.x, y - c.y))));
+      oge((x) => { x.save(); x.clip(new Path2D(d)); x.beginPath(); x.arc(c.x, c.y, c.r * 0.5, 0, PI2); x.fill(); x.restore(); }, kutu, null, MUR.gul, hex('#F0A7BA'), (x, y) => 0.62 * (1 - sstep(c.r * 0.15, c.r * 0.55, Math.hypot(x - c.x, y - c.y))));
       kontur(duz(d), c.r > 40 ? 0.9 : 0.75, MUR.gul, 0.85);
     }
-    oge((x) => { x.beginPath(); x.arc(c.x, c.y, c.r * 0.21, 0, PI2); x.fill(); }, kutu, (x, y) => 0.3 + 0.4 * sstep(-c.r * 0.2, c.r * 0.2, -((x - c.x) * 0.75 - (y - c.y) * 0.66)), MUR.oker, hex('#F0C24A'), 0.75);
+    oge((x) => { x.beginPath(); x.arc(c.x, c.y, c.r * 0.21, 0, PI2); x.fill(); }, kutu, (x, y) => 0.3 + 0.4 * sstep(-c.r * 0.2, c.r * 0.2, -((x - c.x) * 0.75 - (y - c.y) * 0.66)), MUR.oker, hex('#EDB52F'), 0.85);
     kontur(duzlestir(SAHNE.daireYolu(c.x, c.y, c.r * 0.21), 1), 0.7, MUR.oker, 0.85);
     const n = c.r > 40 ? 14 : 10;
     for (let i = 0; i < n; i++) {

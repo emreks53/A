@@ -790,7 +790,7 @@
   }
   const ters = (p) => p.slice().reverse();
 
-  const yapW = { kubbe: 2.4, kaburga: 1.45, kasnak: 2.0, kasnakH: 1.8, pencere: 1.3, nis: 1.05, kornis: 1.8, kaide: 2.0, kpencere: 1.6, mgovde: 1.9, zikzak: 1.5, cikma: 1.6, serefe: 1.6, korkuluk: 1.4, parmak: 1.1, bilezik: 1.4, topuz: 1.8, mpencere: 1.35 };
+  const yapW = { kubbe: 4.0, kaburga: 2.5, kasnak: 3.3, kasnakH: 3.0, pencere: 2.0, nis: 1.6, kornis: 3.0, kaide: 3.3, kpencere: 2.7, mgovde: 3.1, zikzak: 2.5, cikma: 2.7, serefe: 2.7, korkuluk: 2.2, parmak: 1.6, bilezik: 2.2, topuz: 2.9, mpencere: 2.1 };
   for (const e of yapiCizgileri()) {
     const w = yapW[e.tur] || 1;
     if (e.tur === 'kaburga') {
@@ -809,26 +809,27 @@
     ax.fillRect(a.cubuk.x1, a.cubuk.y1, a.cubuk.x2 - a.cubuk.x1, a.cubuk.y2 - a.cubuk.y1);
     ax.beginPath(); ax.ellipse(a.yaka.cx, a.yaka.cy, a.yaka.rx, a.yaka.ry, 0, 0, PI2); ax.fill();
     ax.restore();
-    for (const e of alemCizgileri(a)) altin(e.p, { w: kucuk ? 1.0 : 1.3, sis: 0.2, titre: 0.1 });
+    for (const e of alemCizgileri(a)) altin(e.p, { w: kucuk ? 1.4 : 1.9, sis: 0.2, titre: 0.1 });
   }
   // güneş: sıcak ışıltının ortasında kâğıt beyazı bir kurs, çevresinde tek ince altın halka
   {
     const p = [];
     for (let a = -0.15; a <= PI2 - 0.35; a += 0.01) p.push([GX + Math.cos(a) * 42, GY + Math.sin(a) * 42]);
-    altin(p, { w: 1.7, sis: 0.3, titre: 0.12 });
+    altin(p, { w: 3.0, sis: 0.3, titre: 0.12 });
   }
   // bulutlar: ışığa bakan üst-sağ kenarlarda ince altın
   for (const b of bulutlar) {
     const cx = (b.x0 + b.x1) / 2;
-    for (const q of bulutKenari(b, 0.8)) for (const k of kirp(q, (x, y) => gokMu(x, y) && x > cx - (b.x1 - b.x0) * 0.15)) if (uzunluk(k) > 4) altin(k, { w: 1.0, sis: 0.1, titre: 0.1 });
+    for (const q of bulutKenari(b, 0.8)) for (const k of kirp(q, gokMu)) if (uzunluk(k) > 4) altin(k, { w: lerp(1.5, 2.4, sstep(cx - 40, b.x1, k[0][0])), sis: 0.1, titre: 0.1 });
+    void cx;
   }
-  vuruslar([[0, 800], [1024, 800]], { w: 1.3, sis: 0, maxL: 300 });
+  vuruslar([[0, 800], [1024, 800]], { w: 2.4, sis: 0, maxL: 300 });
 
   // bitkiler
   function sil(fn) { for (const k of [ax, gx]) { k.save(); k.globalCompositeOperation = 'destination-out'; k.fillStyle = '#000'; k.strokeStyle = '#000'; fn(k); k.restore(); } }
   for (const e of liste) {
     if (e.tur === 'sap') {
-      sil((k) => { k.lineWidth = 4; k.stroke(noktaYoluAcik(e.p)); });
+      sil((k) => { k.lineWidth = 5; k.stroke(noktaYoluAcik(e.p)); });
       const yan = [];
       for (let i = 0; i < e.p.length; i++) {
         const a = e.p[Math.max(0, i - 1)], b = e.p[Math.min(e.p.length - 1, i + 1)];
@@ -837,45 +838,45 @@
         const s = nx > 0 ? 1 : -1;
         yan.push([e.p[i][0] + nx * s * 1.4, e.p[i][1] + ny * s * 1.4]);
       }
-      vuruslar(ters(yan), { w: 1.2, maxL: 260 });
+      vuruslar(ters(yan), { w: 2.0, maxL: 260 });
     } else if (e.tur === 'yaprak') {
       sil((k) => { const P = noktaYolu(e.p); k.fill(P); k.lineWidth = 2; k.stroke(P); });
       const m = Math.floor(e.p.length / 2);
-      altin(e.p.slice(0, m + 1), { w: 1.4 });
-      altin(ters(e.p.slice(m)), { w: 1.4 });
+      altin(e.p.slice(0, m + 1), { w: 2.4 });
+      altin(ters(e.p.slice(m)), { w: 2.4 });
       const [a, b] = e.damar;
-      altin([a, [lerp(a[0], b[0], 0.88), lerp(a[1], b[1], 0.88)]], { w: 1.0, sis: 0.1 });
+      altin([a, [lerp(a[0], b[0], 0.88), lerp(a[1], b[1], 0.88)]], { w: 1.6, sis: 0.1 });
       const y = e.y, ca = Math.cos(y.aci), sa = Math.sin(y.aci);
       for (const t of [0.3, 0.5, 0.68]) for (const yon of [-1, 1]) {
         const L2 = y.uzunluk, gen = L2 * y.genislik * 0.62 * Math.sin(Math.PI * Math.pow(t, 0.8)) * 0.62;
         const u0 = t * L2, u1 = u0 + gen * 0.7;
-        altin([[y.x + u0 * ca, y.y + u0 * sa], [y.x + u1 * ca - sa * yon * gen, y.y + u1 * sa + ca * yon * gen]], { w: 0.5, sis: 0, titre: 0.06 });
+        altin([[y.x + u0 * ca, y.y + u0 * sa], [y.x + u1 * ca - sa * yon * gen, y.y + u1 * sa + ca * yon * gen]], { w: 0.95, sis: 0, titre: 0.06 });
       }
     } else if (e.tur === 'tomurcuk') {
       sil((k) => { const P = noktaYolu(e.p); k.fill(P); k.lineWidth = 2; k.stroke(P); });
-      altin(e.p, { w: 1.25, titre: 0.1 });
+      altin(e.p, { w: 2.1, titre: 0.1 });
       const t = e.t, ca = Math.cos(t.aci), sa = Math.sin(t.aci);
-      for (const s of [-1, 1]) altin([[t.x - ca * t.r * 0.9, t.y - sa * t.r * 0.9], [t.x + ca * t.r * 0.25 - sa * s * t.r * 0.72, t.y + sa * t.r * 0.25 + ca * s * t.r * 0.72]], { w: 0.65, titre: 0.05 });
+      for (const s of [-1, 1]) altin([[t.x - ca * t.r * 0.9, t.y - sa * t.r * 0.9], [t.x + ca * t.r * 0.25 - sa * s * t.r * 0.72, t.y + sa * t.r * 0.25 + ca * s * t.r * 0.72]], { w: 1.1, titre: 0.05 });
     } else if (e.tur === 'cicek') {
       const c = e.c;
       for (const t of e.taclar) {
         sil((k) => { const P = noktaYolu(t); k.fill(P); k.lineWidth = 2; k.stroke(P); });
-        altin(t.slice(2, t.length - 2), { w: c.r > 40 ? 1.8 : 1.35, titre: 0.15 });
+        altin(t.slice(2, t.length - 2), { w: c.r > 40 ? 3.0 : 2.3, titre: 0.15 });
         const m = Math.floor(t.length / 2);
         const a = Math.atan2(t[m][1] - c.y, t[m][0] - c.x);
-        if (c.r > 26) for (const d of [-0.16, 0.16]) altin([[c.x + Math.cos(a + d * 0.5) * c.r * 0.3, c.y + Math.sin(a + d * 0.5) * c.r * 0.3], [c.x + Math.cos(a + d) * c.r * 0.62, c.y + Math.sin(a + d) * c.r * 0.62]], { w: 0.5, sis: 0, titre: 0.1 });
+        if (c.r > 26) for (const d of [-0.16, 0.16]) altin([[c.x + Math.cos(a + d * 0.5) * c.r * 0.3, c.y + Math.sin(a + d * 0.5) * c.r * 0.3], [c.x + Math.cos(a + d) * c.r * 0.62, c.y + Math.sin(a + d) * c.r * 0.62]], { w: 0.95, sis: 0, titre: 0.1 });
       }
       sil((k) => { k.beginPath(); k.arc(c.x, c.y, c.r * 0.21, 0, PI2); k.fill(); });
       const o = [];
       for (let a = 0; a <= PI2 + 0.2; a += 0.04) o.push([c.x + Math.cos(a) * c.r * 0.19, c.y + Math.sin(a) * c.r * 0.19]);
-      altin(o, { w: 0.85, titre: 0.05 });
+      altin(o, { w: 1.5, titre: 0.05 });
       const say = c.r > 40 ? 14 : 9;
       ax.save();
       for (let i = 0; i < say; i++) {
         const a = (i / say) * PI2 + c.aci;
         const r0 = c.r * 0.2, r1 = c.r * (0.3 + 0.04 * (i % 2));
-        altin([[c.x + Math.cos(a) * r0, c.y + Math.sin(a) * r0], [c.x + Math.cos(a) * r1, c.y + Math.sin(a) * r1]], { w: 0.5, sis: 0, titre: 0.03 });
-        for (const k of [ax, gx]) { k.beginPath(); k.arc(c.x + Math.cos(a) * r1, c.y + Math.sin(a) * r1, Math.max(0.9, c.r * 0.028), 0, PI2); k.fill(); }
+        altin([[c.x + Math.cos(a) * r0, c.y + Math.sin(a) * r0], [c.x + Math.cos(a) * r1, c.y + Math.sin(a) * r1]], { w: 0.8, sis: 0, titre: 0.03 });
+        for (const k of [ax, gx]) { k.beginPath(); k.arc(c.x + Math.cos(a) * r1, c.y + Math.sin(a) * r1, Math.max(1.2, c.r * 0.036), 0, PI2); k.fill(); }
       }
       ax.restore();
     }
@@ -892,7 +893,15 @@
     isikH[y * N + x] = v;
   }
   const isikB = kutuBulanik(isikH, 3, 2);
-  const AK = [hex('#7E5A1A'), hex('#B98A2C'), hex('#E2BB55'), hex('#FBE7A4'), hex('#FFF8DE')].map((c) => c.map((v) => v / 255));
+  // kabarık altın mürekkebin pahı: çizginin sağ üst kenarı ışığı yakalar, sol alt kenarı koyulaşır
+  const altA = ALT.x.getImageData(0, 0, N2, N2).data;
+  const PAH = new Float32Array(NN2);
+  for (let Y = 3; Y < N2 - 3; Y++) for (let X = 3; X < N2 - 3; X++) {
+    const I = Y * N2 + X;
+    if (altA[4 * I + 3] < 8) continue;
+    PAH[I] = (altA[4 * ((Y + 2) * N2 + X - 2) + 3] - altA[4 * ((Y - 2) * N2 + X + 2) + 3]) / 255;
+  }
+  const AK = [hex('#7A5418'), hex('#B4842A'), hex('#D9AE45'), hex('#F6DC8A'), hex('#FFF6D6')].map((c) => c.map((v) => v / 255));
   const altinRenk = (t) => {
     t = clamp(t, 0, 1) * 4;
     const i = Math.min(3, Math.floor(t)), f = t - i;
@@ -901,14 +910,15 @@
   birlestir({
     ctx, H, L, kagit, kabartma: 0.06, cukur: 0.03,
     katmanlar: [
-      { c: GOL.c, mod: 'carp', dis: (X, Y, h, a) => a * 0.32 },
+      { c: GOL.c, mod: 'carp', dis: (X, Y, h, a) => a * 0.42 },
       {
         c: ALT.c, mod: 'ust',
-        dis: (X, Y, h, a) => a * (0.9 + 0.1 * h),
+        dis: (X, Y, h, a) => a * (0.94 + 0.06 * h),
         renk: (X, Y, h) => {
           const x = X >> 1, y = Y >> 1;
-          let t = 0.12 + 0.72 * isikB[y * N + x] + 0.34 * (nf(X / 30, Y / 30) - 0.5) + 0.18 * (h - 0.5);
-          if (hashF(X >> 1, Y >> 1, 41) > 0.988) t = 1;
+          const pah = PAH[Y * N2 + X];
+          let t = 0.2 + 0.42 * isikB[y * N + x] + 0.24 * (nf(X / 30, Y / 30) - 0.5) + 0.12 * (h - 0.5) + (pah > 0 ? 0.62 * pah : 0.42 * pah);
+          if (pah > 0.25 && hashF(X >> 1, Y >> 1, 41) > 0.985) t = Math.max(t, 0.9);
           return altinRenk(t);
         },
       },

@@ -411,11 +411,11 @@
   const mTomurcuk = M.maske((c) => { for (const t of B.tomurcuklar) { c.beginPath(); c.ellipse(t.x + Math.cos(t.aci) * t.r * 0.3, t.y + Math.sin(t.aci) * t.r * 0.3, t.r * 1.05, t.r * 0.95, t.aci, 0, Math.PI * 2); c.fill(); } });
   const mBitki = M.maske((c) => {
     c.lineWidth = 4; for (const s of Y.saplar) c.stroke(P(s));
-  const mOnde = M.birles(mCicek, mTomurcuk); // yaprakların önünde kalan çiçek ve tomurcuklar
     for (const d of Y.yapraklar) c.fill(P(d));
     for (const t of B.tomurcuklar) { c.beginPath(); c.ellipse(t.x + Math.cos(t.aci) * t.r * 0.3, t.y + Math.sin(t.aci) * t.r * 0.3, t.r * 1.05, t.r * 0.95, t.aci, 0, Math.PI * 2); c.fill(); }
     for (const f of cicekler) { for (const t of f.yap) c.fill(P(t.d)); c.beginPath(); c.arc(f.c.x, f.c.y, f.r * 0.86, 0, Math.PI * 2); c.fill(); }
   });
+  const mOnde = M.birles(mCicek, mTomurcuk); // yaprakların önünde kalan çiçek ve tomurcuklar
   const korOn = M.mBulanik(mBitki, 1);
 
   // ------------------------------------------------------------ 1. gök: ıslakta karışan soluk camgöbeği, allık pembesi, şeftali ve altın

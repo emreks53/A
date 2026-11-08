@@ -323,7 +323,7 @@
         const N = pts.length;
         const yollar = [new Path2D(), new Path2D()];
         for (let ii = 0; ii < N * sik; ii++) {
-          const i = Math.floor(ii / sik);
+          const i = Math.min(N - 1, Math.floor(ii / sik));
           const p = pts[i], a = pts[(i - 1 + N) % N], b = pts[(i + 1) % N];
           let tx = b[0] - a[0], ty = b[1] - a[1];
           const l = Math.hypot(tx, ty) || 1;
@@ -484,7 +484,7 @@
     const u0 = Math.sin(b0), u1 = Math.sin(b1);
     const sol = [], sag = [];
     for (const q of prof) {
-      const ara = 1.25 * Math.pow(q.r / 200, 0.7);
+      const ara = 0.55 * Math.pow(q.r / 200, 0.7);
       const xl = 560 + u0 * q.r + (k === 0 ? 0 : ara), xr = 560 + u1 * q.r - (k === N16 - 1 ? 0 : ara);
       if (xr - xl < 0.8) break;
       sol.push([xl, q.y]);
@@ -492,9 +492,9 @@
     }
     if (sol.length < 3) continue;
     const fm = (b0 + b1) / 2;
-    const l = clamp(0.5 + 0.55 * Math.sin(fm + 0.45), 0, 1);
-    const alt = karisim('#24653F', '#5FAE69', l), ust = karisim('#2F7A4A', '#93CC86', l);
-    washi(yirt(sol.concat(sag.reverse()), { genlik: 0.55, dalga: 14, ince: 0.25 }), bokashi(0, 555, 0, 300, [[0, alt], [1, ust]]), { lif: 2.2, kenar: 0.6, golge: true, ga: 0.12, gb: 2 });
+    const l = clamp(0.5 + 0.62 * Math.sin(fm + 0.42), 0, 1);
+    const alt = karisim('#1B5536', '#58A865', l), ust = karisim('#276D45', '#98CE88', l);
+    washi(yirt(sol.concat(sag.reverse()), { genlik: 0.55, dalga: 14, ince: 0.25 }), bokashi(0, 555, 0, 300, [[0, alt], [1, ust]]), { lif: 2.2, kenar: 0.55, golge: true, ga: 0.12, gb: 2, lifAcik: 0.13 });
   }
   washi(yirt(S.daireYolu(560, 305, 8), { genlik: 0.4, dalga: 6 }), '#4B9A5C', { lif: 1.5, golge: false });
   alem(S.alemParcalari(560, 300, 1), 1);
