@@ -270,27 +270,41 @@
   function washi(liste, dolgu, o) {
     o = o || {};
     const yol = yolu(liste);
-    const lifBoy = o.lif === undefined ? 4 : o.lif;
+    const lifBoy = (o.lif === undefined ? 4 : o.lif) * 1.55;
     const kenar = o.kenar === undefined ? 1 : o.kenar;
     if (o.golge !== false) golge(yol, o.ga === undefined ? 0.13 : o.ga, o.gb === undefined ? 3 : o.gb, -0.8, 1.2);
     ana.save();
     ana.globalAlpha = o.saydam === undefined ? 1 : o.saydam;
-    // ince saçak: kenarın hemen dışında yarı saydam, inceltilmiş kâğıt
-    ana.strokeStyle = dolgu;
+    // yırtık saçak: kenarın dışında kâğıdın kendi rengi beyaza açılarak tüy gibi incelir (kozo lifleri)
+    const sa0 = o.saydam === undefined ? 1 : o.saydam;
+    const akS = o.lifAcik === undefined ? 1 : o.lifAcik / 0.3;
     if (kenar > 0) {
-      ana.globalAlpha *= 0.1;
-      ana.lineWidth = 4.2 * kenar;
-      ana.stroke(yol);
-      ana.globalAlpha = (o.saydam === undefined ? 1 : o.saydam) * 0.2;
-      ana.lineWidth = 2.4 * kenar;
-      ana.stroke(yol);
-      ana.globalAlpha = (o.saydam === undefined ? 1 : o.saydam) * 0.3;
-      ana.lineWidth = 1.1 * kenar;
-      ana.stroke(yol);
-      ana.globalAlpha = o.saydam === undefined ? 1 : o.saydam;
+      for (const [w, a1, a2] of [[8 * kenar, 0.07, 0.2], [5 * kenar, 0.13, 0.28], [2.6 * kenar, 0.28, 0.34]]) {
+        ana.lineWidth = w;
+        ana.globalAlpha = sa0 * a1;
+        ana.strokeStyle = dolgu;
+        ana.stroke(yol);
+        ana.globalAlpha = sa0 * Math.min(0.6, a2 * akS);
+        ana.strokeStyle = '#FFFEF9';
+        ana.stroke(yol);
+      }
+      ana.globalAlpha = sa0;
     }
     ana.fillStyle = dolgu;
     ana.fill(yol);
+    // iç kenar: renk yırtık çizgiye doğru incelip açılır
+    if (kenar > 0) {
+      ana.save();
+      ana.clip(yol);
+      ana.strokeStyle = '#FFFEF9';
+      ana.globalAlpha = sa0 * Math.min(0.5, 0.16 * akS);
+      ana.lineWidth = 4.2 * kenar;
+      ana.stroke(yol);
+      ana.globalAlpha = sa0 * Math.min(0.6, 0.24 * akS);
+      ana.lineWidth = 1.8 * kenar;
+      ana.stroke(yol);
+      ana.restore();
+    }
     if (o.bulut) bulutlan(yol, o.bulut);
     // washi lif dokusu
     const [x1, y1, x2, y2] = kutu(liste);
@@ -303,7 +317,7 @@
     ana.restore();
     // kenardan dışa taşan lifler (kendi renginde, biraz açık)
     if (lifBoy > 0) {
-      const sik = o.lifSik === undefined ? 1.6 : o.lifSik;
+      const sik = o.lifSik === undefined ? 2.2 : o.lifSik;
       for (const pts of liste) {
         const yon = Math.sign(alan(pts)) || 1;
         const N = pts.length;
@@ -328,16 +342,16 @@
           yp.quadraticCurveTo(sx + ex * L * 0.5 - ey * kv, sy + ey * L * 0.5 + ex * kv, sx + ex * L, sy + ey * L);
         }
         const sa = o.saydam === undefined ? 1 : o.saydam;
-        const ak = o.lifAcik === undefined ? 0.3 : o.lifAcik;
-        ana.lineWidth = 0.3;
-        ana.globalAlpha = sa * 0.42;
+        const ak = o.lifAcik === undefined ? 0.62 : o.lifAcik;
+        ana.lineWidth = 0.42;
+        ana.globalAlpha = sa * 0.3;
         ana.strokeStyle = dolgu;
         ana.stroke(yollar[0]);
         ana.globalAlpha = sa * ak * 0.8;
         ana.strokeStyle = 'rgba(255,255,250,1)';
         ana.stroke(yollar[0]);
-        ana.lineWidth = 0.24;
-        ana.globalAlpha = sa * 0.34;
+        ana.lineWidth = 0.3;
+        ana.globalAlpha = sa * 0.24;
         ana.strokeStyle = dolgu;
         ana.stroke(yollar[1]);
         ana.globalAlpha = sa * ak;
@@ -349,9 +363,9 @@
   }
 
   // ------------------------------------------------------------ 1. bokashi gök (tam sayfa washi)
-  ana.fillStyle = bokashi(0, 0, 0, 820, [[0, '#86B2D8'], [0.42, '#B3D0E6'], [0.78, '#E2EBEE'], [1, '#F4EFE3']]);
+  ana.fillStyle = bokashi(0, 0, 0, 800, [[0, '#8EC3D3'], [0.38, '#BFDCDF'], [0.68, '#EEEDE2'], [0.86, '#F8E4DA'], [1, '#FBEEE2']]);
   ana.fillRect(0, 0, 1024, 1024);
-  ana.fillStyle = bokashiR(880, 140, 20, 520, [[0, 'rgba(255,246,222,0.9)'], [0.4, 'rgba(255,244,220,0.35)'], [1, 'rgba(255,244,220,0)']]);
+  ana.fillStyle = bokashiR(880, 140, 20, 460, [[0, 'rgba(255,240,226,0.85)'], [0.4, 'rgba(255,236,222,0.3)'], [1, 'rgba(255,236,222,0)']]);
   ana.fillRect(0, 0, 1024, 1024);
   DOKU.setTransform(new DOMMatrix().scale(1 / OL));
   bulutlan(null, 0.35);
@@ -363,8 +377,8 @@
   // ------------------------------------------------------------ 2. güneş: hale ve disk
   const GX = 880, GY = 140;
   const daire = (cx, cy, r) => { const p = []; for (let i = 0; i < 160; i++) { const t = (i / 160) * PI2; p.push([cx + Math.cos(t) * r, cy + Math.sin(t) * r]); } return p; };
-  washi(yirt(daire(GX, GY, 116), { genlik: 2.4, dalga: 24 }), bokashiR(GX, GY, 40, 120, [[0, '#FFF6D6'], [1, '#FBE7B4']]), { saydam: 0.75, lif: 6, golge: false, kenar: 1.6 });
-  washi(yirt(daire(GX, GY, 64), { genlik: 1.6, dalga: 16 }), bokashiR(GX - 12, GY - 12, 6, 70, [[0, '#FFE58A'], [0.6, '#F9C258'], [1, '#F2A049']]), { lif: 4.5, ga: 0.1 });
+  washi(yirt(daire(GX, GY, 112), { genlik: 2.6, dalga: 24 }), bokashiR(GX, GY, 40, 116, [[0, '#FFF1E2'], [1, '#FBE0CF']]), { saydam: 0.7, lif: 6, golge: false, kenar: 1.6 });
+  washi(yirt(daire(GX, GY, 64), { genlik: 1.6, dalga: 16 }), bokashiR(GX - 14, GY - 14, 6, 74, [[0, '#F7A08A'], [0.55, '#EC7A62'], [1, '#E0654F']]), { lif: 4.5, ga: 0.1 });
 
   // ------------------------------------------------------------ 3. kasumi: uzun, yuvarlak uçlu sis bantları
   // kasumi (sis bandı): alt kenarı düz, üstü yumuşak tümsekli, uçları yuvarlak uzun şerit
@@ -385,11 +399,11 @@
     return ust.concat(alt);
   }
   const sisler = [
-    [-60, 430, 250, 24, [[0.3, 0.12, 14], [0.62, 0.1, 9]], ['#FFFFFF', '#FBF3EF', '#EFE4EA']],
-    [395, 650, 152, 18, [[0.45, 0.14, 10]], ['#FFFFFF', '#FDF7EA', '#F3E8D2']],
-    [610, 1080, 394, 24, [[0.25, 0.1, 12], [0.6, 0.12, 15]], ['#FFFFFF', '#FBF3EF', '#EDE5EE']],
-    [-60, 290, 474, 20, [[0.55, 0.15, 10]], ['#FFFFFF', '#FDF7EA', '#F1E7D4']],
-    [770, 1080, 522, 18, [[0.4, 0.14, 9]], ['#FFFFFF', '#FBF3EF', '#EEE6EE']],
+    [-60, 430, 250, 24, [[0.3, 0.12, 14], [0.62, 0.1, 9]], ['#FFFFFF', '#FBF0F0', '#EED9E2']],
+    [395, 650, 152, 18, [[0.45, 0.14, 10]], ['#FFFFFF', '#FDF5EC', '#F1E2D6']],
+    [690, 1080, 200, 20, [[0.35, 0.12, 10], [0.7, 0.1, 8]], ['#FFFFFF', '#FDF4EE', '#F3DED8']],
+    [610, 1080, 394, 24, [[0.25, 0.1, 12], [0.6, 0.12, 15]], ['#FFFFFF', '#FBF0F0', '#ECD9E3']],
+    [-60, 290, 474, 20, [[0.55, 0.15, 10]], ['#FFFFFF', '#FDF5EC', '#F0DFD2']],
   ];
   for (const [x1, x2, y, h, tm, rk] of sisler) {
     const ust = y - h / 2 - 16;
@@ -485,15 +499,24 @@
   washi(yirt(S.daireYolu(560, 305, 8), { genlik: 0.4, dalga: 6 }), '#4B9A5C', { lif: 1.5, golge: false });
   alem(S.alemParcalari(560, 300, 1), 1);
 
-  // ------------------------------------------------------------ 9. zemin: kum washi ve ön çayır
-  const zem = [];
-  for (let x = -30; x <= 1060; x += 4) zem.push([x, 796 + 3 * Math.sin(x / 140 + 0.6) + 2 * Math.sin(x / 47)]);
-  zem.push([1060, 1060], [-30, 1060]);
-  washi(yirt(zem, { genlik: 1.8, dalga: 22 }), bokashi(0, 790, 0, 1024, [[0, '#EADCC0'], [1, '#DCC49A']]), { lif: 5, ga: 0.1, bulut: 0.4 });
-  const cayir = [];
-  for (let x = -30; x <= 1060; x += 4) cayir.push([x, 900 + 18 * Math.sin(x / 160 + 1.7) + 7 * Math.sin(x / 61)]);
-  cayir.push([1060, 1060], [-30, 1060]);
-  washi(yirt(cayir, { genlik: 2, dalga: 22 }), bokashi(0, 880, 0, 1024, [[0, '#C8DCA8'], [1, '#A9C98C']]), { lif: 5, ga: 0.1, bulut: 0.4 });
+  // ------------------------------------------------------------ 9. zemin: üst üste yırtılmış kincha ve taze yeşil washi parçaları
+  const serit = (y0, a1, a2, a3, faz, x1, x2) => {
+    const pts = [];
+    for (let x = x1; x <= x2; x += 4) pts.push([x, y0 + a1 * Math.sin(x / 190 + faz) + a2 * Math.sin(x / 71 + faz * 2.1) + a3 * Math.sin(x / 29 + faz * 0.7)]);
+    pts.push([x2, 1060], [x1, 1060]);
+    return pts;
+  };
+  washi(yirt(serit(794, 3, 2, 1, 0.6, -30, 1060), { genlik: 1.8, dalga: 22 }), bokashi(0, 790, 0, 900, [[0, '#F0E2C2'], [1, '#E5CFA2']]), { lif: 5, ga: 0.1, bulut: 0.4 });
+  // yamaçlar: farklı tonlarda, sağdan ve soldan bindirilmiş yırtık parçalar
+  washi(yirt(serit(842, 14, 6, 2, 2.2, -30, 560), { genlik: 2, dalga: 22 }), bokashi(0, 830, 0, 1000, [[0, '#D3E2A6'], [1, '#B9D190']]), { lif: 5, ga: 0.1, bulut: 0.35 });
+  washi(yirt(serit(858, 12, 5, 2, 4.1, 460, 1060), { genlik: 2, dalga: 22 }), bokashi(0, 840, 0, 1000, [[0, '#C9DD9E'], [1, '#ADC985']]), { lif: 5, ga: 0.1, bulut: 0.35 });
+  washi(yirt(serit(918, 16, 7, 3, 1.3, -30, 1060), { genlik: 2.2, dalga: 22 }), bokashi(0, 890, 0, 1024, [[0, '#A9CB84'], [1, '#8DB771']]), { lif: 5.5, ga: 0.12, bulut: 0.4 });
+  // küçük açık yamalar (kâğıt artıklarından): yeşilin içinde soluk kincha ve sakura pembesi
+  for (const [x, y, w, h, renk] of [[150, 872, 70, 14, '#EEE0BE'], [640, 884, 90, 13, '#E9F0CF'], [880, 868, 64, 12, '#EEE0BE'], [420, 966, 80, 14, '#C2DB9E']]) {
+    const pts = [];
+    for (let i = 0; i < 60; i++) { const t = (i / 60) * PI2; pts.push([x + Math.cos(t) * w * 0.5, y + Math.sin(t) * h * 0.5 * (1 + 0.25 * Math.sin(t * 3))]); }
+    washi(yirt(pts, { genlik: 1.4, dalga: 10 }), renk, { lif: 4, ga: 0.06, saydam: 0.92 });
+  }
 
   // ------------------------------------------------------------ 10. bitkiler
   const B = S.bitki;
