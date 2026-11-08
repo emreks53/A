@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-121 Yarı Düz Vektör — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #A9C8F2; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #FADFC4; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -23,14 +23,13 @@
 
   // ---------------------------------------------------------------- düz palet
   const P = {
-    gok: '#A9C8F2', gunes: '#FFF2C6',
-    bulut: '#FFFFFF', bulutAO: '#D3DDF2',
+    gok: '#FADFC4', gunes: '#FFD983',
+    bulut: '#FFFFFF', bulutAO: '#F0D6C8',
     tas: '#FBF5EA', tasAO: '#DCCBB0', tasAlt: '#EADCC6', tasAltAO: '#CDB89A',
     yesil: '#2EA26C', yesilAO: '#167A4E', kasnak: '#25945F', kasnakAO: '#11683F', silme: '#1D8253',
     pencere: '#0F4A33', pencereAO: '#072C1E',
     altin: '#EDB140', altinAO: '#C3832A', altinIsik: '#FFDA7A',
-    zemin: '#F2DDB6', zeminAO: '#D9BE92',
-    tepe1: '#B4DCA0', tepe2: '#8CCB80', tepeAO: '#6FAE68',
+    zemin: '#BEDFA2',
     yaprak: '#5DB16C', yaprak2: '#3E9663', yaprakAO: '#2A6E47', sap: '#4C9A5E',
     cicek: '#FFFFFF', cicekAO: '#C9C3D8', orta: '#F5BE3E', ortaAO: '#C98A26',
     mercan: '#F29A84', mercanAO: '#CF6E5A',
@@ -115,7 +114,7 @@
   // ================================================================ GÖK: düz renk, düz güneş
   dol(dik(0, 0, 1024, 1024), P.gok);
   // düz güneş diski; çevresinde yumuşak, sıcak bir ışıma (halka yok)
-  yumusak(40, () => dol(S.daireYolu(880, 140, 120), 'rgba(255,246,222,0.55)'));
+  yumusak(40, () => dol(S.daireYolu(880, 140, 124), 'rgba(255,248,232,0.7)'));
   yukselti(S.daireYolu(880, 140, 62), P.gunes, 'rgba(255,240,190,0.9)', 26, 0, 0);
 
   // bulutlar: düz beyaz birleşik biçim; altında yumuşak yükselti gölgesi, alt-solda iç AO
@@ -131,7 +130,7 @@
   }
   function bulut(x, y, s) {
     const d = bulutYolu(x, y, s);
-    yukselti(d, P.bulut, 'rgba(60,90,170,0.3)', 16 * s, -4 * s, 11 * s);
+    yukselti(d, P.bulut, 'rgba(190,116,76,0.3)', 16 * s, -4 * s, 11 * s);
     hacim(d, P.bulut, P.bulutAO, 7 * s, -9 * s, 7 * s);
   }
   bulut(176, 262, 1.12);
@@ -139,11 +138,11 @@
   bulut(818, 374, 0.95);
   bulut(70, 470, 0.5);
 
-  // ================================================================ YER: düz kum
+  // ================================================================ YER: düz çimen
   dol(dik(0, 800, 1024, 1024), P.zemin);
   // yapının yere temas AO'su ve sola düşen yumuşak gölge
-  yumusak(10, () => dol('M296,798 L826,798 L806,814 L236,826 Z', 'rgba(184,146,96,0.42)'));
-  yumusak(3, () => dol(dik(296, 797, 824, 805), 'rgba(160,122,80,0.38)'));
+  yumusak(10, () => dol('M296,798 L826,798 L806,814 L236,826 Z', 'rgba(72,116,56,0.42)'));
+  yumusak(3, () => dol(dik(296, 797, 824, 805), 'rgba(60,100,50,0.4)'));
 
   // ================================================================ MİNARE
   const minare = S.minareParcalari();
@@ -277,17 +276,10 @@
   const B = S.bitki;
   const L = [0.7071, -0.7071]; // ışık yönü (sağ üst)
 
-  // önde iki düz çayır tümseği; öndeki arkadakine yumuşak AO gölgesi düşürür
-  function tumsek(y0, gen, dalga, faz, renk) {
-    let d = `M-10,1040 L-10,${y0}`;
-    for (let x = -10; x <= 1034; x += 8) d += ` L${x},${(y0 + dalga * Math.sin(x / gen + faz) + dalga * 0.45 * Math.sin(x / (gen * 0.47) + faz * 1.7)).toFixed(2)}`;
-    d += ' L1034,1040 Z';
-    yukselti(d, renk, 'rgba(60,110,50,0.32)', 14, -3, -5);
-  }
-  // tümsek yok: bitkiler düz kumun üstünde, altlarında yumuşak AO gölge havuzları
+  // bitkiler düz çimenin üstünde, altlarında yumuşak AO gölge havuzları
   yumusak(22, () => {
     for (const [x, y, rx, ry] of [[150, 1000, 190, 60], [520, 1010, 260, 56], [880, 1000, 190, 60], [380, 905, 120, 26], [660, 905, 120, 26], [125, 830, 70, 14], [905, 830, 70, 14], [255, 812, 40, 9], [770, 812, 40, 9]]) {
-      dol(S.elipsYolu({ cx: x, cy: y, rx, ry, aci: 0 }), 'rgba(176,136,84,0.36)');
+      dol(S.elipsYolu({ cx: x, cy: y, rx, ry, aci: 0 }), 'rgba(64,118,58,0.34)');
     }
   });
 
