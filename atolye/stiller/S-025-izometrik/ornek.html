@@ -285,6 +285,8 @@
   const BCX = (BX0 + BX1) / 2, BCY = (BY0 + BY1) / 2;
   const KH = 70;   // kaide yüksekliği
   const MX = 78, MY = 312; // minare ekseni
+  const HX = 16, HY = 334, HH = 132; // avludaki hurma ağacı (minarenin solunda, arkada)
+  const SX = 172, SY = 330;          // avludaki sekizgen şadırvan
 
   // çimen alanları: yolun iki yanında
   cimen([[10, 372, 0], [214, 372], [214, 510], [10, 510]]);
@@ -347,6 +349,25 @@
       for (const [r, z] of [[30, 0], [30, 220], [22, 400]]) mg.push([MX + r * Math.cos(a) + GOLGE[0] * z, MY + r * Math.sin(a) + GOLGE[1] * z]);
     }
     gruplar.push(mg);
+    // hurma (gövde ve taç) ve şadırvan
+    const hg = [];
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      for (const [r, z] of [[12, 0], [12, 8], [4, HH * 0.6], [4, HH]]) hg.push([HX + r * Math.cos(a) + GOLGE[0] * z, HY + r * Math.sin(a) + GOLGE[1] * z]);
+    }
+    gruplar.push(hg);
+    const tg = [];
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      for (const z of [HH - 14, HH + 4]) tg.push([HX - 4 + 46 * Math.cos(a) + GOLGE[0] * z, HY + 2 + 46 * Math.sin(a) + GOLGE[1] * z]);
+    }
+    gruplar.push(tg);
+    const sg = [];
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      for (const [r, z] of [[30, 0], [30, 10], [12, 29], [3, 36]]) sg.push([SX + r * Math.cos(a) + GOLGE[0] * z, SY + r * Math.sin(a) + GOLGE[1] * z]);
+    }
+    gruplar.push(sg);
     golgeCiz(gruplar);
   })();
 
@@ -606,12 +627,115 @@
     doldur([t, f, rr], ALTIN(0.78));
   }
 
+
+  // ------------------------------------------------------------ avlu: hurma ağacı ve şadırvan
+  const sekizgen = (cx, cy, R, z) => { const o = []; for (let i = 0; i < 8; i++) { const a = -Math.PI / 8 + (i * Math.PI) / 4; o.push([cx + R * Math.cos(a), cy + R * Math.sin(a), z]); } return o; };
+  function hurma(x, y, h) {
+    // taş saksı ve toprak
+    prizma(x, y, 0, 9, 13, 8, TAS, { t0: -Math.PI / 8 });
+    doldur(W(sekizgen(x, y, 10.5, 9)), '#6B4A33');
+    // gövde: hafif eğik, boğumlu; ışık sağdan → sağ yarı açık
+    const p0 = P(x, y, 9), p1 = P(x - 5, y + 6, h);
+    const n = 15;
+    for (let i = 0; i < n; i++) {
+      const t0 = i / n, t1 = (i + 1) / n;
+      const at = (t) => [p0[0] + (p1[0] - p0[0]) * t + Math.sin(t * Math.PI) * 5, p0[1] + (p1[1] - p0[1]) * t];
+      const a = at(t0), b = at(t1);
+      const w0 = 6.2 - 2 * t0, w1 = 6.2 - 2 * t1;
+      doldur([[a[0] - w0, a[1]], [a[0], a[1] + 1.5], [b[0], b[1] + 1.5], [b[0] - w1, b[1]]], i % 2 ? '#7E5F3C' : '#8D6C46');
+      doldur([[a[0], a[1] + 1.5], [a[0] + w0, a[1]], [b[0] + w1, b[1]], [b[0], b[1] + 1.5]], i % 2 ? '#A88458' : '#B8936A');
+      // boğum çizgisi
+      cizgi([[b[0] - w1, b[1]], [b[0], b[1] + 1.5], [b[0] + w1, b[1]]], 'rgba(90,62,36,0.55)', 1);
+    }
+    // taç: aşağı sarkan, kenarı tırtıllı yapraklar; yukarı bakanlar önce, öne sarkanlar sonra
+    const C = [p1[0], p1[1] - 2];
+    const yapraklar = [
+      [-150, 44, 0.55], [-118, 40, 0.7], [-82, 36, 0.8], [-52, 42, 0.62], [-22, 48, 0.5],
+      [-178, 48, 0.42], [6, 50, 0.42], [158, 44, 0.5], [28, 42, 0.62], [132, 40, 0.65], [62, 34, 0.75], [100, 32, 0.8],
+    ].map(([d, L, dr]) => ({ a: (d * Math.PI) / 180, L, dr }));
+    yapraklar.sort((p, q) => Math.sin(p.a) - Math.sin(q.a));
+    const yaprak = (f) => {
+      const ux = Math.cos(f.a), uy = Math.sin(f.a) * 0.62;
+      const nokta = (t) => [C[0] + ux * f.L * t, C[1] + uy * f.L * t + f.dr * f.L * t * t];
+      const k = 18, ust = [], alt = [];
+      for (let i = 0; i <= k; i++) {
+        const t = i / k;
+        const q = nokta(t), q2 = nokta(Math.min(1, t + 0.02));
+        let tx = q2[0] - q[0], ty = q2[1] - q[1];
+        const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+        const w = 7.5 * Math.sin(Math.PI * Math.pow(t, 0.7)) * (1 - 0.3 * t) * (i % 2 ? 1 : 0.55);
+        ust.push([q[0] + ty * w, q[1] - tx * w]);
+        alt.push([q[0] - ty * w, q[1] + tx * w]);
+      }
+      const sag = ux > 0.2;
+      doldur(ust.concat(alt.reverse()), sag ? '#4C8A40' : '#3A7236');
+      // yaprağın üst (ışık alan) yarısı
+      const orta = [];
+      for (let i = 0; i <= k; i++) orta.push(nokta(i / k));
+      const ustYari = uy * 1 + 0 < 0 || Math.abs(ux) > 0.5 ? ust : alt;
+      doldur(ustYari.slice(0, k + 1).concat(orta.reverse()), sag ? '#8CC463' : '#64A24B');
+      cizgi(orta.reverse(), 'rgba(40,80,36,0.55)', 0.9);
+    };
+    const geri = yapraklar.filter((f) => Math.sin(f.a) < -0.2), on = yapraklar.filter((f) => Math.sin(f.a) >= -0.2);
+    geri.forEach(yaprak);
+    // hurma salkımları
+    for (const [dx, dy, r] of [[-7, 7, 3.4], [-2, 9, 3], [4, 7, 3.2], [-4, 11, 2.6], [1, 12, 2.4]]) {
+      ctx.beginPath(); ctx.arc(C[0] + dx, C[1] + dy, r, 0, Math.PI * 2); ctx.fillStyle = '#B5652A'; ctx.fill();
+      ctx.beginPath(); ctx.arc(C[0] + dx + r * 0.3, C[1] + dy - r * 0.3, r * 0.45, 0, Math.PI * 2); ctx.fillStyle = '#E39A4F'; ctx.fill();
+    }
+    on.forEach(yaprak);
+  }
+  function sadirvan(cx, cy) {
+    // zeminde koyu taş sekizgen kuşak (avlu madalyonu) ve yıldız kakma
+    doldur(W(sekizgen(cx, cy, 46, 0)), '#E2D3B3');
+    cizgi(W(sekizgen(cx, cy, 46, 0)), 'rgba(160,140,104,0.7)', 1, true);
+    doldur(W(sekizgen(cx, cy, 40, 0)), '#F1E8D4');
+    const yildiz = [];
+    for (let i = 0; i < 16; i++) { const a = (i * Math.PI) / 8 - Math.PI / 8; const r = i % 2 ? 33 : 40; yildiz.push([cx + r * Math.cos(a), cy + r * Math.sin(a), 0]); }
+    cizgi(W(yildiz), 'rgba(176,150,104,0.65)', 1, true);
+    // havuz duvarı (dış), kenar taşı, iç duvar ve su
+    prizma(cx, cy, 0, 11, 30, 8, TAS, { t0: -Math.PI / 8, ust: false });
+    doldur(W(sekizgen(cx, cy, 31.5, 11)), TAS(0.96));
+    const ac = W(sekizgen(cx, cy, 26, 11));
+    doldur(ac, '#A9987A');
+    ctx.save();
+    yolCiz(ac); ctx.clip();
+    const su = W(sekizgen(cx, cy, 26, 7));
+    const ys = su.map((q) => q[1]);
+    const sg = ctx.createLinearGradient(0, Math.min(...ys), 0, Math.max(...ys));
+    sg.addColorStop(0, '#6FB9CF'); sg.addColorStop(1, '#A9DDE8');
+    doldur(su, sg);
+    // halkalar
+    const m = P(cx, cy, 7);
+    for (const r of [9, 15, 21]) { ctx.beginPath(); ctx.ellipse(m[0], m[1], r * 1.22, r * 0.71, 0, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(235,250,252,0.55)'; ctx.lineWidth = 1; ctx.stroke(); }
+    ctx.restore();
+    cizgi(W([[cx - 31.5 * Math.cos(Math.PI / 8), cy + 31.5 * Math.sin(Math.PI / 8), 11], [cx - 31.5 * Math.sin(Math.PI / 8), cy + 31.5 * Math.cos(Math.PI / 8), 11], [cx + 31.5 * Math.sin(Math.PI / 8), cy + 31.5 * Math.cos(Math.PI / 8), 11], [cx + 31.5 * Math.cos(Math.PI / 8), cy + 31.5 * Math.sin(Math.PI / 8), 11], [cx + 31.5 * Math.cos(Math.PI / 8), cy - 31.5 * Math.sin(Math.PI / 8), 11]]), 'rgba(255,255,255,0.7)', 1.1);
+    // orta ayak, kâse ve altın fıskiye
+    prizma(cx, cy, 7, 24, 4.5, 8, TAS, { t0: -Math.PI / 8 });
+    koni(cx, cy, 24, 30, 4.5, 12.5, 8, TAS, { t0: -Math.PI / 8, amb: 0.3, dif: 0.7 });
+    doldur(W(sekizgen(cx, cy, 12.5, 30)), TAS(0.95));
+    doldur(W(sekizgen(cx, cy, 10, 30)), '#86CADA');
+    prizma(cx, cy, 30, 36, 1.8, 8, ALTIN, { t0: -Math.PI / 8, amb: 0.3, dif: 0.7 });
+    const u = P(cx, cy, 38);
+    kure(u[0], u[1], 2.6);
+    // fıskiyeden kâseye düşen ince su yayları
+    ctx.lineCap = 'round';
+    for (const a of [0.3, 1.9, 3.5, 5.1]) {
+      const e = P(cx + 10.5 * Math.cos(a), cy + 10.5 * Math.sin(a), 30.5);
+      ctx.beginPath(); ctx.moveTo(u[0], u[1] - 1); ctx.quadraticCurveTo((u[0] + e[0]) / 2, u[1] - 7, e[0], e[1]);
+      ctx.strokeStyle = 'rgba(225,246,250,0.9)'; ctx.lineWidth = 1.1; ctx.stroke();
+    }
+  }
+
   // --- arka bahçe (yapının arkasında kalanlar) önce
-  cali(400, 40, 0, 16, 0); cali(440, 70, 0, 13, 1); cali(30, 230, 0, 14, 2);
+  cali(400, 40, 0, 16, 0); cali(440, 70, 0, 13, 1);
   cali(470, 120, 0, 15, 1); cali(30, 180, 0, 11, 0);
+  cali(22, 268, 0, 12, 2);
+  hurma(HX, HY, HH);
   minareTam();
-  cali(138, 300, 0, 12, 2); cali(160, 330, 0, 10, 0);
   yapi();
+  sadirvan(SX, SY);
+  cali(128, 286, 0, 10, 1);
   // sağ çimendeki çalılar ve çiçekler
   {
     // sağ çimende çiçekli çalılar (arkadan öne)

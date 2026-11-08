@@ -9,12 +9,12 @@
   "tanim": "Low poly, sahneyi az sayıda düz gölgelenmiş üçgenden oluşan bir ağ olarak gösterir; her üçgen tek renktir ve hacim, ışığa göre farklı ton alan yüzlerle (faset) okunur. Üçgen kenarları çizgiyle değil, komşu yüzler arasındaki renk basamaklarıyla görünür. Oyun grafiğinde, hareketli grafik tasarımında, duvar kâğıtlarında ve poster illüstrasyonunda yaygındır.",
   "koken": "Adını 1990'ların gerçek zamanlı 3B grafiğindeki düşük poligon sayılı modellerden alır; 2010'larda bağımsız oyunlar ve dijital illüstrasyonda bilinçli bir estetiğe dönüştü. Fotoğraf ve resimleri Delaunay üçgenlemesiyle üçgen ağına çeviren üretken tasarım araçları bu görünümü yaygınlaştırdı.",
   "ayirt_edici": [
-    "Bütün yüzey yaklaşık 3 600 düz renkli üçgenden oluşan tek bir ağ; çizgi yok, kenarlar renk basamaklarıyla görünüyor",
+    "Bütün yüzey yaklaşık 3 800 düz renkli üçgenden oluşan tek bir ağ; çizgi yok, kenarlar renk basamaklarıyla görünüyor",
     "Gökte büyük üçgenler; kubbede, pencerelerde, minarede ve çiçeklerde küçülen üçgenler",
-    "Kubbe kaburgalar boyunca hizalanmış dörtgen hücrelerden; her hücrenin iki üçgeni ayrı ton alarak dilimleri belirginleştiriyor",
+    "Kubbe kaburgalar boyunca hizalanmış hücrelerden; her kaburga tabandan üst üçte bire dek uzanan ince, bir ton koyu üçgen şeridi",
     "Kemerli pencereler beşgen, şerefe korkulukları zikzak üçgen dizisi, minaredeki zikzak bant diş sıraları hâlinde",
-    "Sağ üstten gelen ışıkla mücevher kesimi gölgelendirme; güneş, eş merkezli halkalardan ışıyan bir üçgen yelpazesi",
-    "Alemler ve hilaller elle üçgenlenmiş altın yüzler; yapraklar orta damarda kırılan iki tonlu yüzeyler"
+    "Sağ üstten gelen ışıkla mücevher kesimi gölgelendirme; güneş, yüzleri dışa eğik on köşeli bir disk ve onu saran düzgün çokgen hale halkaları",
+    "Alemler, hilaller, küçük pencereler ve ince saplar elle üçgenlenmiş; yapraklar orta damarda, saplar ortadan kırılan iki tonlu yüzeyler"
   ],
   "palet": [
     "#90BCE4",
@@ -26,7 +26,7 @@
     "#F8C847",
     "#527643"
   ],
-  "kodla_cizim": "Canvas (2048 iç çözünürlük). SAHNE geometrisiyle her nesne (kubbe dilimleri, pencereler, minare parçaları, yapraklar, çiçekler…) ayrı bir renk kimliğiyle kimlik haritasına çizilir. Noktalar: kubbede kaburga × enlem kafesi, pencerelerde kemer beşgeni köşeleri, yapı kenarlarında sık noktalar, yaprak ve çiçek kenarlarında (ışın boyunca yürüyerek bulunan) noktalar, güneşin çevresinde halkalar; gök ve zemin değişken yarıçaplı Poisson diskiyle doldurulur. Komşuluk bilgili, yürüyerek yer bulan Bowyer–Watson Delaunay yaklaşık 1 850 noktadan 3 600 üçgen üretir. Her üçgenin rengi SAHNE.renkHaritasi'nın üçgen içindeki ortalamasıdır (yalnız çoğunluk nesnesinin örnekleri); üstüne nesne türüne göre çözümsel yüzey normaliyle sağ üstten Lambert ışığı ve küçük rastgele yüz farkı eklenir. Alemler ve zikzak bant elle üçgenlenir.",
+  "kodla_cizim": "Canvas (2048 iç çözünürlük). SAHNE geometrisiyle her nesne (kubbe dilimleri, pencereler, minare parçaları, yapraklar, çiçekler…) ayrı bir renk kimliğiyle kimlik haritasına çizilir. Noktalar: kubbede kaburga × enlem kafesi (alt seviyelerde kaburganın iki yanına konan noktalar ince bir kaburga şeridi kurar), pencerelerde kemer beşgeni köşeleri, yapı kenarlarında sık noktalar, yaprak ve çiçek kenarlarında (ışın boyunca yürüyerek bulunan) noktalar, güneşte on köşeli disk ve aynı açılara dizilmiş hale halkaları; gök ve zemin değişken yarıçaplı Poisson diskiyle doldurulur. Komşuluk bilgili, yürüyerek yer bulan Bowyer–Watson Delaunay yaklaşık 1 900 noktadan 3 800 üçgen üretir. Her üçgenin rengi SAHNE.renkHaritasi'nın üçgen içindeki ortalamasıdır (yalnız çoğunluk nesnesinin örnekleri); üstüne nesne türüne göre çözümsel yüzey normaliyle sağ üstten Lambert ışığı ve küçük rastgele yüz farkı eklenir. Kaburga şeridindeki ince üçgenler bir ton koyulaştırılır, güneş diski sıcak açık sarıya boyanır. Alemler, zikzak bant, minare ve kaide pencereleri (kemer beşgeni üç üçgen) ve saplar (yalnız görünen parçaları, iki tonlu şerit) ağın üstüne elle üçgenlenir.",
   "etiketler": [
     "üçgen",
     "ağ",

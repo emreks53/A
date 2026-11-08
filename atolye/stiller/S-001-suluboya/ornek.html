@@ -540,23 +540,39 @@
   }
 
   // ============================================================ KAİDE (beyaz taş)
-  const kKai = [286, 688, 834, 806];
-  const KAISET = kume('kaide');
-  yikama(kKai, kapsamBolge(kKai, KAISET, 1.4), {
+  const kKai = [282, 684, 840, 812];
+  const KAISET = kume('kaide', 'pencere');
+  yikama(kKai, gevsek(kKai, KAISET, { r: 3, tasma: 0.45, olcek: 16, kayip: 0.3, tohum: 31, kayipF: (x) => 0.8 * sstep(640, 800, x) }), {
     pig: karis(P.sie, 0.8, P.ros, 0.1),
     yog: (x, y) => 0.13 * clamp(1.35 - (x - 300) / 420, 0.15, 1.2) * sstep(800, 690, x + (nA(4, y / 14) - 0.5) * 60), kenar: 0.7, gran: 0.4, vin: 0.0, tohum: 31,
   });
-  // korniş altı gölgesi ve sol uçtaki gölge
-  yikama(kKai, kapsamBolge(kKai, KAISET, 0.8, (x, y) => (y > 702 && y < 709 + (nB(x / 10, 5) - 0.5) * 4) || x < 312 + (nB(4, y / 9) - 0.5) * 6), {
-    pig: karis(P.ult, 0.5, P.sie, 0.5, P.ros, 0.06), yog: (x, y) => 0.3 * sstep(835, 700, x + (nB(7, y / 6) - 0.5) * 70), kenar: 0.9, gran: 0.65, tohum: 32,
-  });
+  // korniş altı gölgesi: sağa doğru incelip kaybolan, yer yer kesilen fırça izi; sol uçta dikey gölge
+  {
+    const r = SAHNE.rng(32);
+    const A = kapsamCiz(kKai, (c) => {
+      c.lineCap = 'round';
+      let x = 298;
+      while (x < 812) {
+        const xe = Math.min(812, x + 40 + r() * 110);
+        c.globalAlpha = 0.5 + r() * 0.5; c.lineWidth = (4 + r() * 5) * (1 - 0.55 * (x - 300) / 520);
+        c.beginPath(); c.moveTo(x, 706.5 + (r() - 0.5) * 2); c.quadraticCurveTo((x + xe) / 2, 707 + (r() - 0.5) * 3, xe, 706.5 + (r() - 0.5) * 2); c.stroke();
+        x = xe + (r() < 0.4 ? 6 + r() * 20 : -3);
+      }
+      c.globalAlpha = 1;
+    });
+    const L = gevsek(kKai, kume('kaide'), { r: 3, tasma: 0.45, olcek: 14, kayip: 0.4, tohum: 33 }, (x) => x < 314);
+    for (let j = 0; j < A.length; j++) A[j] = Math.max(A[j], L[j]);
+    yikama(kKai, A, {
+      pig: karis(P.ult, 0.5, P.sie, 0.5, P.ros, 0.06), yog: (x, y) => 0.32 * sstep(835, 690, x + (nB(7, y / 6) - 0.5) * 70), kenar: 0.9, gran: 0.65, tohum: 32,
+    });
+  }
   // kaide pencereleri
-  yikama(kKai, kapsamBolge(kKai, kume('pencere'), 0.5), {
-    pig: karis(P.ult, 0.5, P.sie, 0.55, P.ros, 0.2), yog: 0.8, kenar: 0.9, gran: 0.6, tohum: 33,
+  yikama(kKai, lekeler(kKai, SAHNE.kaide.pencereler, 33), {
+    pig: karis(P.ult, 0.5, P.sie, 0.55, P.ros, 0.2), yog: (x, y) => 0.55 + 0.5 * clamp((y - 718) / 60, 0, 1), kenar: 1.0, gran: 0.6, dalga: 0.5, dalgaOlcek: 9, tohum: 33,
   });
   // kaidenin dibinde yere değen gölge
-  yikama(kKai, kapsamAlan(kKai, (x, y) => (y > 790 + (nC(x / 12, 1) - 0.5) * 6 && x > 300 && x < 820 && BOL[y * W + x] === BI.kaide ? 1 : 0)), {
-    pig: karis(P.ult, 0.5, P.sie, 0.5), yog: 0.4, kenar: 0.6, gran: 0.6, tohum: 34,
+  yikama(kKai, gevsek(kKai, kume('kaide', 'zemin', 'yaprak', 'sap'), { r: 3, tasma: 0.4, olcek: 14, kayip: 0.5, tohum: 34 }, (x, y) => y > 788 + (nC(x / 12, 1) - 0.5) * 8 && y < 806 && x > 300 && x < 800), {
+    pig: karis(P.ult, 0.5, P.sie, 0.5), yog: (x) => 0.4 * sstep(820, 640, x), kenar: 0.6, gran: 0.6, tohum: 34,
   });
 
   // ============================================================ MİNARE
@@ -611,7 +627,7 @@
     });
     yikama(kMin, A, { pig: karis(P.sie, 0.6, P.ult, 0.35, P.ros, 0.1), yog: (x) => 0.45 + 0.35 * clamp((310 - x) / 40, 0, 1), kenar: 0.6, kenarR: 1.4, gran: 0.5, tohum: 48 });
   }
-  yikama(kMin, kapsamBolge(kMin, kume('pencere'), 0.4), { pig: karis(P.ult, 0.5, P.sie, 0.55, P.ros, 0.2), yog: 0.85, kenar: 0.9, gran: 0.6, tohum: 49 });
+  yikama(kMin, lekeler(kMin, SAHNE.minarePencereleri, 49), { pig: karis(P.ult, 0.5, P.sie, 0.55, P.ros, 0.2), yog: (x, y) => 0.6 + 0.35 * ((y - 222) % 130 > 18 ? 1 : 0.5), kenar: 1.0, gran: 0.6, tohum: 49 });
 
   // ============================================================ ALEMLER (altın)
   for (const [cx, kutu] of [[560, [534, 180, 586, 312]], [300, [282, 76, 318, 152]]]) {
