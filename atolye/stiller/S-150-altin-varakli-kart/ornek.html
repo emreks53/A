@@ -243,14 +243,14 @@
 
   const R = {
     kart: '#F8F2E3',
-    gokUst: '#C9DFEC', gokAlt: '#F2EEE3',
+    gokUst: '#F5DCCD', gokAlt: '#FAEEE4',
     gunes: '#F7DE9E', bulut: '#FCF9F1',
     tas: '#F5EDDB', tasGolge: '#ECE1C9', pencereTas: '#A9C2B4',
     kasnakAlt: '#8DB394', kasnakAltG: '#7FA787', kasnakUst: '#9CC0A1', kasnakUstG: '#8DB493',
     kubbeA: '#B2CFAD', kubbeB: '#A1C39D', kubbeC: '#90B68D', pencereYesil: '#6A9370',
-    zemin: '#EEDFC4', zeminAlt: '#E8D6B6',
+    zemin: '#F1E6CF', zeminAlt: '#ECDDC0',
     yaprak: '#A3C49D', yaprakKoyu: '#8DB389', sap: '#94B790',
-    tac: '#F4CDD2', tacAcik: '#FAE3E5', tomurcuk: '#EDB4BE',
+    tac: '#FDFAF2', tacAcik: '#FFFDF8', tomurcuk: '#F0B9AE',
   };
   const rect = (x1, y1, x2, y2) => { const p = new Path2D(); p.rect(x1, y1, x2 - x1, y2 - y1); return p; };
   const daire = (cx, cy, r) => { const p = new Path2D(); p.arc(cx, cy, r, 0, Math.PI * 2); return p; };
@@ -258,8 +258,9 @@
 
   B.fillStyle = R.kart; B.fillRect(0, 0, 1024, 1024);
   {
+    // düz baskı gök: iki tonlu yumuşak şeftali-allık
     const g = B.createLinearGradient(0, 40, 0, 800);
-    g.addColorStop(0, R.gokUst); g.addColorStop(0.62, '#DCE9EE'); g.addColorStop(1, R.gokAlt);
+    g.addColorStop(0, R.gokUst); g.addColorStop(0.55, '#F8E6DA'); g.addColorStop(1, R.gokAlt);
     B.fillStyle = g; B.fillRect(0, 0, 1024, 800);
     const z = B.createLinearGradient(0, 800, 0, 1024);
     z.addColorStop(0, R.zemin); z.addColorStop(1, R.zeminAlt);
@@ -268,11 +269,15 @@
 
   // ---------------------------------------------------------------- çerçeve (folyo) ve köşe yıldızları
   {
-    fCiz(rect(24, 24, 1000, 1000), 2.4);
-    fCiz(rect(33, 33, 991, 991), 1.1);
-    // iki çizgi arasında ince folyo inci dizisi
-    for (let t = 52; t <= 972; t += 15) {
-      for (const [x, y] of [[t, 28.5], [t, 995.5], [28.5, t], [995.5, t]]) fDol(daire(x, y, 1.25));
+    fCiz(rect(20, 20, 1004, 1004), 4.2);
+    fCiz(rect(37, 37, 987, 987), 2.0);
+    // iki çizgi arasında folyo baklava dizisi
+    const baklava = (x, y, r) => { const p = new Path2D(); p.moveTo(x - r, y); p.lineTo(x, y - r * 0.62); p.lineTo(x + r, y); p.lineTo(x, y + r * 0.62); p.closePath(); return p; };
+    for (let t = 58; t <= 966; t += 18) {
+      fDol(baklava(t, 28.5, 5.2)); fDol(baklava(t, 995.5, 5.2));
+      const q = baklava(0, 0, 5.2);
+      F.save(); F.translate(28.5, t); F.rotate(Math.PI / 2); F.fill(q); F.restore();
+      F.save(); F.translate(995.5, t); F.rotate(Math.PI / 2); F.fill(q); F.restore();
     }
     const yildiz = (cx, cy, r) => {
       const p = new Path2D();
@@ -288,11 +293,11 @@
       return p;
     };
     for (const [cx, cy] of [[28.5, 28.5], [995.5, 28.5], [28.5, 995.5], [995.5, 995.5]]) {
-      const y = yildiz(cx, cy, 15);
+      const y = yildiz(cx, cy, 21);
       B.fillStyle = R.kart; B.fill(y, 'nonzero');
       F.save(); F.globalCompositeOperation = 'destination-out'; F.fill(y, 'nonzero'); F.restore();
-      fCiz(y, 1.8);
-      fDol(daire(cx, cy, 4.2));
+      fCiz(y, 2.4);
+      fDol(daire(cx, cy, 6.5));
     }
   }
 
@@ -300,13 +305,12 @@
   {
     const cx = 878, cy = 146;
     fDol(daire(cx, cy, 47));
-    F.save(); F.globalCompositeOperation = 'destination-out'; F.fill(daire(cx, cy, 37)); F.restore();
-    dol(daire(cx, cy, 37), R.gunes);
-    fCiz(daire(cx, cy, 31), 1.0);
+    F.save(); F.globalCompositeOperation = 'destination-out'; F.lineWidth = 2.2; F.stroke(daire(cx, cy, 36)); F.restore();
+    dol(daire(cx, cy, 47), R.gunes);
     for (let k = 0; k < 24; k++) {
       const a = (k / 24) * Math.PI * 2 - Math.PI / 2;
       const uzun = k % 2 === 0;
-      const r0 = 55, r1 = uzun ? 96 : 76, yw = uzun ? 0.045 : 0.035;
+      const r0 = 55, r1 = uzun ? 100 : 78, yw = uzun ? 0.07 : 0.05;
       const p = new Path2D();
       p.moveTo(cx + Math.cos(a - yw) * r0, cy + Math.sin(a - yw) * r0);
       p.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
@@ -329,7 +333,7 @@
   for (const [x, y, s] of [[156, 248, 0.92], [494, 152, 0.8], [770, 336, 0.9], [912, 472, 0.64], [114, 472, 0.64]]) {
     const p = bulutYolu(x, y, s);
     // dış hat: biraz büyütülmüş folyo kontur (birleşik biçimin çevresi)
-    F.save(); F.lineWidth = 3.2; F.stroke(p); F.restore();
+    F.save(); F.lineWidth = 5.0; F.stroke(p); F.restore();
     dol(p, R.bulut);
     F.save(); F.globalCompositeOperation = 'destination-out'; F.fill(p); F.restore();
   }
@@ -345,19 +349,24 @@
       dol(d, R.tas);
       // tek ton gölge: sol yarı
       B.save(); B.clip(d); B.fillStyle = R.tasGolge; B.fillRect(x1 - 2, 0, (x2 - x1) * 0.36 + 2, 1024); B.restore();
-      fCiz(d, 1.5);
+      fCiz(d, 2.4);
       if (p.tip === 'korkuluk') {
         for (let i = 0; i < 9; i++) {
           const x = p.x1 + 5 + ((p.x2 - p.x1 - 10) * (i + 0.5)) / 9;
           const l = new Path2D(); l.moveTo(x, p.y1 + 4); l.lineTo(x, p.y2 - 4);
-          fCiz(l, 1.3);
+          fCiz(l, 1.8);
         }
       }
     }
-    for (const z of S.zikzakCizgileri()) { F.lineJoin = 'miter'; fCiz(P(S.yol(z)), 1.7); F.lineJoin = 'round'; }
+    for (const z of S.zikzakCizgileri()) { F.lineJoin = 'miter'; fCiz(P(S.yol(z)), 2.6); F.lineJoin = 'round'; }
     for (const w of S.minarePencereleri) {
       const d = P(S.kemerYolu(w.x, w.y, w.w, w.h));
-      dol(d, R.pencereTas); fCiz(d, 1.3);
+      dol(d, R.pencereTas); fCiz(d, 2.0);
+    }
+    // şerefe ve bilezik altında dolu folyo şerit
+    for (const p of S.minareParcalari()) {
+      if (p.ad.startsWith('şerefe')) { const y2 = p.noktalar[2][1]; F.fillRect(p.noktalar[0][0] + 1, y2 - 5, p.noktalar[1][0] - p.noktalar[0][0] - 2, 4); }
+      if (p.ad === 'bilezik') F.fillRect(p.noktalar[0][0], p.noktalar[0][1], p.noktalar[1][0] - p.noktalar[0][0], 4);
     }
   }
 
@@ -368,18 +377,19 @@
     F.save(); F.globalCompositeOperation = 'destination-out'; F.fill(g); F.fill(rect(K.kornis.x1, K.kornis.y1, K.kornis.x2, K.kornis.y2)); F.restore();
     dol(g, R.tas);
     B.save(); B.clip(g); B.fillStyle = R.tasGolge; B.fillRect(K.x1, K.y1, 30, K.y2 - K.y1); B.restore();
-    fCiz(g, 2.0);
+    fCiz(g, 3.0);
     const kp = K.kornis;
     const kr = rect(kp.x1, kp.y1, kp.x2, kp.y2);
-    dol(kr, '#FAF4E6'); fCiz(kr, 1.7);
-    const ts = new Path2D(); ts.moveTo(K.x1, 789); ts.lineTo(K.x2, 789); fCiz(ts, 1.2);
+    // korniş: dolu folyo bant
+    dol(kr, '#FAF4E6'); fDol(kr);
+    const ts = new Path2D(); ts.moveTo(K.x1, 789); ts.lineTo(K.x2, 789); fCiz(ts, 2.2);
     // korniş altında küçük kemer frizi (folyo)
-    for (let x = K.x1 + 22; x <= K.x2 - 20; x += 26) fCiz(P(S.kemerYolu(x, 710, 11, 9)), 1.0);
+    for (let x = K.x1 + 22; x <= K.x2 - 20; x += 26) fCiz(P(S.kemerYolu(x, 711, 11, 9)), 1.6);
     for (const w of K.pencereler) {
       const d = P(S.kemerYolu(w.x, w.y, w.w, w.h));
       dol(d, R.pencereTas);
-      fCiz(d, 1.6);
-      fCiz(P(S.kemerYolu(w.x, w.y - 7, w.w + 14, w.h + 7)), 1.1);
+      fCiz(d, 2.6);
+      fCiz(P(S.kemerYolu(w.x, w.y - 8, w.w + 16, w.h + 8)), 1.8);
     }
   }
 
@@ -389,11 +399,12 @@
     const g = rect(q.x1, q.y1, q.x2, q.y2);
     dol(g, k === 1 ? R.kasnakAlt : R.kasnakUst);
     B.save(); B.clip(g); B.fillStyle = k === 1 ? R.kasnakAltG : R.kasnakUstG; B.fillRect(q.x1, q.y1, (q.x2 - q.x1) * 0.3, q.y2 - q.y1); B.restore();
-    fCiz(g, 1.8);
+    fCiz(g, 3.0);
+    F.fillRect(q.x1, q.y1, q.x2 - q.x1, 4);
     for (const w of S.kasnakPencereleri(k)) {
       const d = P(S.kemerYolu(w.x, w.y, w.w, w.h));
       dol(d, R.pencereYesil);
-      fCiz(d, 1.1);
+      fCiz(d, 1.8);
     }
   }
 
@@ -410,9 +421,11 @@
       const p = new Path2D(S.yol(a.concat(b.slice().reverse()), true));
       dol(p, renk);
     }
-    for (const kb of kab) fCiz(P(S.yol(kb.noktalar.filter((q) => q[1] > 304))), 1.4);
-    fCiz(dome, 2.4);
-    const et = new Path2D(); et.moveTo(362, 549); et.lineTo(758, 549); fCiz(et, 1.2);
+    F.save(); F.clip(dome);
+    for (const kb of kab) fCiz(P(S.yol(kb.noktalar.filter((q) => q[1] > 304))), 2.6 * Math.max(0.55, Math.sqrt(1 - kb.u * kb.u)));
+    F.fillRect(350, 545, 420, 10);
+    F.restore();
+    fCiz(dome, 4.2);
   }
 
   // ---------------------------------------------------------------- alemler (dolu folyo)
@@ -443,17 +456,18 @@
     B.fillStyle = 'rgba(70,110,72,0.12)'; B.fill(); B.restore();
     const [a0, a1] = S.yaprakDamari(y);
     const l = new Path2D(); l.moveTo(a0[0] + ca * 4, a0[1] + sa * 4); l.lineTo(a1[0], a1[1]);
-    fCiz(l, 1.0);
+    fCiz(l, 1.6);
+    fCiz(d, 1.3);
   }
   for (const t of S.bitki.tomurcuklar) {
     const d = P(S.tomurcukYolu(t));
     F.save(); F.globalCompositeOperation = 'destination-out'; F.fill(d); F.restore();
     dol(d, R.tomurcuk);
-    fCiz(d, 1.0);
+    fCiz(d, 1.6);
   }
   for (const c of S.bitki.cicekler) {
     const tac = S.tacYapraklari(c);
-    const lw = c.r > 40 ? 1.7 : 1.25;
+    const lw = c.r > 40 ? 2.8 : 2.0;
     for (const e of tac) {
       const d = P(S.elipsYolu(e));
       F.save(); F.globalCompositeOperation = 'destination-out'; F.fill(d); F.restore();
@@ -467,7 +481,7 @@
       const l = new Path2D();
       l.moveTo(c.x + Math.cos(e.aci) * c.r * 0.32, c.y + Math.sin(e.aci) * c.r * 0.32);
       l.lineTo(c.x + Math.cos(e.aci) * c.r * 0.64, c.y + Math.sin(e.aci) * c.r * 0.64);
-      fCiz(l, c.r > 40 ? 1.1 : 0.8);
+      fCiz(l, c.r > 40 ? 1.7 : 1.2);
     }
     fDol(daire(c.x, c.y, c.r * 0.21));
     for (let i = 0; i < 10; i++) {

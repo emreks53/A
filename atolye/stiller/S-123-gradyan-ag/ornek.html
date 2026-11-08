@@ -717,6 +717,17 @@
         ctx.fill();
         ctx.restore();
       });
+      // cilalı yaprak yüzeyinde dar, belirgin parlama şeridi (ışıklı yarıda, damara paralel)
+      const pa = p(Lu * 0.18, sgn * W * 0.2), pb = p(Lu * 0.5, sgn * W * 0.34), pc = p(Lu * 0.84, sgn * W * 0.14);
+      const pd = p(Lu * 0.5, sgn * W * 0.22);
+      yumusak(Math.max(0.5, W * 0.03), () => {
+        ctx.fillStyle = 'rgba(240,255,225,0.42)';
+        ctx.beginPath();
+        ctx.moveTo(pa[0], pa[1]);
+        ctx.quadraticCurveTo(pb[0], pb[1], pc[0], pc[1]);
+        ctx.quadraticCurveTo(pd[0], pd[1], pa[0], pa[1]);
+        ctx.fill();
+      });
       // kenarda serin gök yansıması
       yumusak(W * 0.08, () => {
         ctx.lineWidth = W * 0.12;
