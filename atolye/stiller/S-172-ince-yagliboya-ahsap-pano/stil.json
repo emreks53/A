@@ -1,0 +1,40 @@
+{
+  "kod": "S-172",
+  "no": 172,
+  "ad": "İnce Yağlıboya (Ahşap Pano)",
+  "ad_en": "Fine Oil on Panel",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Hayalî bir minyatürcü yağlıboya ressamının eli: cam pürüzsüzlüğünde alçı astarlı pano, tek kıllı fırçayla minicik ayrıntılar, serin ve berrak gün ışığı, mücevher renkleri ve keskin kenarlar.",
+  "tanim": "Hayalî bir ince resim ustasının eli. Zemini tutkallı alçıyla astarlanıp cam gibi zımparalanmış meşe pano; aletleri sincap ve samurdan çok ince yuvarlak fırçalar, birkaç kıllık 'tek kıl' fırça ve el dayanağı. Paleti serin ve mücevher gibidir: ultramarin, gümüşî gök mavisi, zümrüt sırları ve yeşil toprak, kurşun beyazı, kurşun-kalay sarısı, damla damla zinober ve kobalt. Göğü ultramarinden ufukta sıcak gümüşî beyaza pürüzsüzce geçirir; uzak kayalıkları hava perspektifiyle maviye çevirir, ırmağı, minik ağaçları ve servileri nokta nokta kurar. Kubbeyi sır katmanlarıyla derin bir zümrüde götürür, ışığını tek beyaz vurguyla parlatır. Çayırı tek kıllı fırçayla binlerce çimen yaprağı ve küçük beyaz, mavi, kırmızı kır çiçekleriyle doldurur; yaprakların kenarını ince koyu konturla keser, damarlarını kıl inceliğinde çizer, üstlerine çiy taneleri koyar; taç yapraklara ışınsal minik darbeler atar. Taş derzleri, kafes camlarındaki ışık noktaları ve altın alemdeki beyaz vurgular son elde konur; resim, esere ait ince bir altın okr çerçeve şeridiyle biter.",
+  "koken": "15.–17. yüzyıl Flaman ve Hollanda pano resminin ince resim (fijnschilder) geleneğine dayanır: alçı astarlı ahşap pano, şeffaf sır katmanları, büyüteç inceliğinde ayrıntı, mavileşerek uzaklaşan 'dünya manzarası' arka planları, çiy taneleri ve kır çiçekleri. Gerçek bir ressamı taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Ultramarinden ufukta sıcak gümüşî beyaza pürüzsüz geçen gök; uzun, ince, keskin kenarlı bulut bantları",
+    "Yanlarda mavileşerek uzaklaşan sivri kayalıklar, gümüşî ırmak şeridi, minik yuvarlak ağaçlar ve serviler",
+    "Sır derinliğinde mücevher zümrüt kubbe: keskin beyaz ışık vurgusu, belirgin kaburgalar ve ince koyu siluet çizgisi",
+    "Tek kıllı fırçayla çekilmiş binlerce çimen yaprağı; aralarında minik beyaz papatya, mavi ve kırmızı kır çiçekleri",
+    "İnce koyu konturlu yapraklarda kıl inceliğinde damarlar ve çiy taneleri; taç yapraklarda ışınsal ince fırça izleri",
+    "Cam pürüzsüzlüğünde pano yüzeyi ve esere ait ince altın okr çerçeve şeridi"
+  ],
+  "palet": [
+    "#1F4CA4",
+    "#6E9CD8",
+    "#F4EFDA",
+    "#0F7B51",
+    "#3B7A3E",
+    "#D8D8D3",
+    "#C99520",
+    "#A9C1DE"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Gök piksel başına geçiş, üstünde çok düşük örtücülükte ince yatay kıl izleri; bulut bantları ortak tabanlı, dikey degradeli elips kümeleri. Kayalıklar orta noktadan kaydırmalı sırt çizgileriyle kurulur: sırt boyunca dar yüz şeritleri (sağa inen yüz aydınlık), yatay katman çizgileri, alt yamaçta yeşillik ve kayaya kırpılmış minik dikey darbeler. Çayır 9000 tek kıllık eğri çimen yaprağı ve 230 minik kır çiçeğidir. Mimari silindir aydınlatmalı degradeler, ince derzler, kafes ve ışık noktalarıyla; kubbe dönel yüzey normaliyle piksel piksel, geniş ve keskin iki parlama ve gök yansımasıyla boyanır. Her öğenin üstünden kendi renkleri okunarak yoluna kırpılmış minik darbeler geçer (minarede dikey, kubbede meridyen, yapraklarda eksen boyunca, taç yapraklarda ışınsal). Yaprak yarıları, ince kontur, damar ve çiy taneleri yollarla çizilir. Sonda çok hafif yatay ağaç damarı kabartısı, düşük frekanslı el titremesi ve ince altın okr çerçeve şeridi eklenir.",
+  "etiketler": [
+    "yağlıboya",
+    "ahşap pano",
+    "Flaman",
+    "ince resim",
+    "dünya manzarası",
+    "mücevher renk",
+    "ressamın eli",
+    "ayrıntı"
+  ]
+}

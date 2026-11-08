@@ -306,16 +306,17 @@
   function hedefCiz() {
     // gök: üstte yumuşak kobalt-gri, ufka doğru sıcak fildişi
     const gk = g.createLinearGradient(0, 0, 0, 800);
-    gk.addColorStop(0, '#93AACD');
-    gk.addColorStop(0.32, '#AFC2DD');
-    gk.addColorStop(0.68, '#D3DBE1');
-    gk.addColorStop(1, '#F0E7D4');
+    gk.addColorStop(0, '#9CB0D4');
+    gk.addColorStop(0.3, '#B7C5DF');
+    gk.addColorStop(0.6, '#DAD9E2');
+    gk.addColorStop(0.82, '#F2D9CF');
+    gk.addColorStop(1, '#F6E6D3');
     g.fillStyle = gk;
     g.fillRect(0, 0, 1024, 1024);
     // köşelere doğru hafifçe derinleşen mavi, konunun arkasında ışıklı hale
     const kv = g.createRadialGradient(560, 500, 260, 560, 500, 860);
     kv.addColorStop(0, 'rgba(120,145,190,0)');
-    kv.addColorStop(1, 'rgba(118,138,182,0.26)');
+    kv.addColorStop(1, 'rgba(128,132,184,0.24)');
     g.fillStyle = kv;
     g.fillRect(0, 0, 1024, 800);
     const hl = g.createRadialGradient(560, 470, 60, 560, 470, 430);
@@ -327,9 +328,10 @@
     const gn = g.createRadialGradient(880, 140, 0, 880, 140, 300);
     gn.addColorStop(0, 'rgba(251,244,228,1)');
     gn.addColorStop(0.135, 'rgba(251,243,224,1)');
-    gn.addColorStop(0.17, 'rgba(246,226,176,0.95)');
-    gn.addColorStop(0.3, 'rgba(244,230,196,0.55)');
-    gn.addColorStop(0.6, 'rgba(246,234,210,0.2)');
+    gn.addColorStop(0.165, 'rgba(248,226,178,0.97)');
+    gn.addColorStop(0.24, 'rgba(246,222,204,0.8)');
+    gn.addColorStop(0.42, 'rgba(240,222,222,0.42)');
+    gn.addColorStop(0.7, 'rgba(240,226,228,0.12)');
     gn.addColorStop(1, 'rgba(248,236,212,0)');
     g.fillStyle = gn;
     g.fillRect(0, 0, 1024, 800);
@@ -747,16 +749,16 @@
       // pigment: hedefin rengi, ressamın karışımında küçük sapmalar (mücevher gibi titreşim)
       const k = s / Math.max(lt, 0.04);
       const sap = (R() - 0.5) * 2;
-      let pr = ar * k * (1 - 0.12 * sap);
+      let pr = ar * k * (1 - 0.06 * sap);
       let pgr = ag * k;
-      let pb = ab * k * (1 + 0.22 * sap);
+      let pb = ab * k * (1 + 0.1 * sap);
       const [oran, nb] = karisim(sinif);
       const yx = x / 2;
       const yy = y / 2;
       const a = oran > 0 && R() < oran ? yon(sinif, yx, yy) : null;
       if (a !== null) {
-        const uz = 11 + R() * 8;
-        cizik(x, y, a + (R() - 0.5) * 0.16, uz, 0.8 + R() * 0.3, (R() - 0.5) * 1.6, pr * 0.62, pgr * 0.62, pb * 0.62, sinif);
+        const uz = 8 + R() * 6;
+        cizik(x, y, a + (R() - 0.5) * 0.16, uz, 0.72 + R() * 0.25, (R() - 0.5) * 1.6, pr * 0.62, pgr * 0.62, pb * 0.62, sinif);
       } else {
         damla(x, y, nb * (0.85 + R() * 0.5), pr, pgr, pb, sinif);
       }

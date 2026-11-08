@@ -470,7 +470,7 @@
   for (const f of cicekler) {
     const c = f.c;
     const golgeli = f.tac.filter((t) => Math.cos(t.a) * LX + Math.sin(t.a) * LY < -0.2).map((t) => t.d);
-    lavi(M.yolMaske(golgeli), '#D9D4E0', 0.6, { grad: (x, y) => 0.55 + 0.6 * sstep(c.r * 1.0, c.r * 0.2, Math.hypot(x - c.x, y - c.y)) });
+    lavi(M.cikar(M.yolMaske(golgeli), M.yolMaske(SAHNE.daireYolu(c.x, c.y, c.r * 0.22))), '#D9D4E0', 0.6, { grad: (x, y) => 0.55 + 0.6 * sstep(c.r * 1.0, c.r * 0.2, Math.hypot(x - c.x, y - c.y)) });
     lavi(M.yolMaske([...f.tac.map((t) => t.d), SAHNE.daireYolu(c.x, c.y, c.r * 0.26)]), '#E6E0E8', 0.35, { grad: (x, y) => sstep(c.r * 0.75, c.r * 0.25, Math.hypot(x - c.x, y - c.y)) });
   }
   lavi(M.maske((c) => { for (const f of cicekler) { c.beginPath(); c.arc(f.c.x, f.c.y, f.c.r * 0.2, 0, Math.PI * 2); c.fill(); } }), '#EBC65C', 0.85);

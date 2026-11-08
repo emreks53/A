@@ -418,7 +418,7 @@
   const gok = M.fMaske([0, 0, W, 812], (x, y) => (y < 800 ? 1 : 0));
   const korG = M.birles(mBina, mBitki);
   M.yika(gok, '#F2D7BE', { yog: 0.3, grad: (x, y) => sstep(560, 800, y), koru: korG, kenar: 0.06, gran: 0.08, akis: 0.15, titre: 0.6 });
-  M.yika(gok, '#86B4E2', { yog: 0.85, grad: (x, y) => Math.pow(1 - sstep(-60, 560, y), 1.1) * (1 - 0.6 * Math.exp(-((gUz(x, y) / 230) ** 2))), koru: korG, kenar: 0.2, kenarR: 4, gran: 0.15, akis: 0.16, titre: 0.8 });
+  M.yika(gok, '#7DB3E8', { yog: 0.85, grad: (x, y) => Math.pow(1 - sstep(-60, 560, y), 1.1) * (1 - 0.6 * Math.exp(-((gUz(x, y) / 230) ** 2))), koru: korG, kenar: 0.2, kenarR: 4, gran: 0.15, akis: 0.16, titre: 0.8 });
   // bulut biçimi ve alt yarısında serin leylak-gri gölge (suluboya); beyaz guaj sonra üstten örter
   const bulutSekli = (c, b) => {
     c.save(); c.beginPath(); c.rect(0, 0, W, b.by + 4 * b.s); c.clip(); c.beginPath(); for (const [x, y, r] of b.t) { c.moveTo(x + r, y); c.arc(x, y, r, 0, Math.PI * 2); } c.fill(); c.restore();
@@ -454,8 +454,8 @@
 
   // ------------------------------------------------------------ 3. kasnak ve kubbe: saydam zümrüt yeşilleri
   const kIs = (x) => g.silindir(x, 560, 226);
-  M.yika(mKasnak, '#86BE84', { yog: 0.9, koru: korB, kenar: 0.2, gran: 0.12, akis: 0.14, titre: 0.5 });
-  M.yika(M.fMaske([330, 553, 790, 694], (x, y) => mKasnak.a[y * W + x] * sstep(-0.62, -0.56, -kIs(x))), '#3F8C5C', { yog: 0.65, koru: korB, kenar: 0.3, kenarR: 2.5, gran: 0.12, titre: 0.5 });
+  M.yika(mKasnak, '#90C78A', { yog: 0.85, koru: korB, kenar: 0.2, gran: 0.12, akis: 0.14, titre: 0.5 });
+  M.yika(M.fMaske([330, 553, 790, 694], (x, y) => mKasnak.a[y * W + x] * sstep(-0.48, -0.42, -kIs(x))), '#3F8C5C', { yog: 0.55, koru: korB, kenar: 0.3, kenarR: 2.5, gran: 0.12, titre: 0.5 });
   M.yika(M.fMaske([330, 553, 790, 694], (x, y) => mKasnak.a[y * W + x] * sstep(-0.25, -0.19, -kIs(x))), '#24584C', { yog: 0.5, koru: korB, kenar: 0.3, kenarR: 2.5, gran: 0.12, titre: 0.5 });
   M.yika(M.fMaske([330, 550, 790, 620], (x, y) => ((y >= 556 && y < 563) || (y >= 611 && y < 618) ? mKasnak.a[y * W + x] : 0)), '#2A5E4B', { yog: 0.45, koru: korB, kenar: 0.2, titre: 0.4 });
   M.yika(M.yolMaske(Y.kasnakPencereleri), '#1D3A33', { yog: 0.9, koru: korB, kenar: 0.35, kenarR: 2, titre: 0.35 });
@@ -470,9 +470,9 @@
     KU[i] = enk * isa;
   }
   const kubbeF = (f) => M.fMaske([356, 296, 766, 557], (x, y) => { const i = y * W + x, m = mKubbe.a[i]; return m > 0 ? m * f(KV[i], KU[i], x, y) : 0; });
-  M.yika(mKubbe, '#8CC387', { yog: 0.9, koru: korB, kenar: 0.2, gran: 0.12, akis: 0.15, titre: 0.45 });
-  M.yika(kubbeF((v) => sstep(-0.66, -0.6, -v)), '#4A9862', { yog: 0.65, koru: korB, kenar: 0.3, kenarR: 2.5, gran: 0.12, akis: 0.12, titre: 0.45 });
-  M.yika(kubbeF((v) => sstep(-0.3, -0.24, -v)), '#2C6B55', { yog: 0.55, koru: korB, kenar: 0.3, kenarR: 2.5, gran: 0.12, titre: 0.45 });
+  M.yika(mKubbe, '#94CB8C', { yog: 0.85, koru: korB, kenar: 0.2, gran: 0.12, akis: 0.15, titre: 0.45 });
+  M.yika(kubbeF((v) => sstep(-0.5, -0.44, -v)), '#4A9862', { yog: 0.6, koru: korB, kenar: 0.3, kenarR: 2.5, gran: 0.12, akis: 0.12, titre: 0.45 });
+  M.yika(kubbeF((v) => sstep(-0.12, -0.06, -v)), '#2C6B55', { yog: 0.5, koru: korB, kenar: 0.3, kenarR: 2.5, gran: 0.12, titre: 0.45 });
   M.yika(kubbeF((v, d, x, y) => (y > 304 && d < -0.2 && d > -2.2 ? 1 : 0)), '#285B45', { yog: 0.55, koru: korB, kenar: 0.05, titre: 0.35, grad: (x, y) => 0.5 + 0.6 * (1 - clamp(KV[y * W + x], 0, 1)) });
   M.yika(M.fMaske([356, 540, 766, 557], (x, y) => mKubbe.a[y * W + x] * (y > 549 ? 1 : 0)), '#2A5E4B', { yog: 0.4, koru: korB, kenar: 0.2, titre: 0.4 });
   // altın
@@ -668,6 +668,10 @@
           for (let q = 0; q <= 8; q++) { const u = 0.1 + q * 0.12; pts.push([c.x + Math.cos(t.a) * t.L * u - Math.sin(t.a) * v * c.r * 0.86 * 0.6 * Math.sin(Math.PI * Math.min(1, u * 0.95 + 0.1)), c.y + Math.sin(t.a) * t.L * u + Math.cos(t.a) * v * c.r * 0.86 * 0.6 * Math.sin(Math.PI * Math.min(1, u * 0.95 + 0.1))]); }
           darbe(cx, pts, Math.max(3, c.r * 0.2) * (0.9 + rb() * 0.3), 0.2);
         }
+        // taç yaprağın kenarı: içten, kenarı izleyen ince örtücü darbe
+        cx.globalAlpha = 0.75 + 0.2 * clamp(yon, 0, 1);
+        cx.lineWidth = Math.max(2, c.r * 0.07);
+        cx.stroke(P(t.d));
         cx.restore();
       }
     }, kt);

@@ -1,0 +1,40 @@
+{
+  "kod": "S-174",
+  "no": 174,
+  "ad": "Renk İplikleri",
+  "ad_en": "Divisionist Color Threads",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Hayalî bir bölümcü ressamın eli: biçimi izleyerek yan yana dizilmiş uzun, ince, saf renk iplikleri; kubbede meridyen, kasnakta yatay, gökte güneşten ışınsal; berrak dağ ışığı.",
+  "tanim": "Hayalî bir bölümcü (divizyonist) ressamın eli. Zemini ince grenli, parlak beyaz astarlı tuval; aleti ince, uzun kıllı yuvarlak fırça ve tüpten neredeyse saf alınan boya. Paleti yirmiyi aşkın saf renk ve açık tondan oluşur: limon ve kadmiyum sarısı, turuncu, zinober, gül pembesi, menekşe, ultramarin, kobalt, serülyen, viridyan, zümrüt, sarı-yeşil ve bunların beyazla açılmış tonları. Renkleri paletinde karıştırmaz: her yüzeyi 2–3 piksel eninde, 15–45 piksel boyunda paralel iplik darbeleriyle örer, karışımı izleyicinin gözüne bırakır; ışıkta sarı ve beyaz, gölgede menekşe ve mavi iplikler sıklaşır. İpliklerin yönü biçimi izler: kubbede meridyen, kasnakta ve kaidede yatay, minarede silindir boyunca dikey, gökte güneşten ışınsal, dağlarda sırt boyunca, yapraklarda damar boyunca, taç yapraklarda yelpaze gibi. Pencereleri, zikzak bandı ve korkuluk nişlerini kısa iplik kümeleriyle keskin keser; düzenli, sabırlı ve kesin çalışır.",
+  "koken": "19. yüzyıl sonu İtalyan bölümcülüğünün (divisionismo) uzun ve ince saf renk darbelerine, Neo-empresyonizmin optik renk karışımına ve tamamlayıcı renk kuramına (Chevreul, Rood) dayanır; noktacılığın noktaları ya da empresyonizmin lekeleri yerine iplik biçimli darbeler kullanır. Gerçek bir ressamı taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Gökte güneşten ışınsal yayılan saf renk iplikleri: güneş çevresinde beyaz, limon ve pembe; uzakta kobalt, serülyen ve açık mavi",
+    "Kubbede meridyen boyunca dizilen zümrüt, sarı-yeşil, viridyan ve kobalt iplikler",
+    "Kasnakta ve kaidede yatay iplikler: beyaz taşta pembe, limon, leylak ve açık mavi; pencereler kısa mor-mavi iplik kümeleri",
+    "Minarede silindir boyunca dikey iplikler, mor ve turuncu zikzak bant",
+    "Yanlarda sırt boyunca örülmüş leylak-pembe dağlar; yeşil-sarı çayırda yatay iplikler",
+    "Taç yaprakları kendi ekseni boyunca yelpazelenen beyaz-limon-leylak iplikler ve ince leylak kenar; ipliklerin sırtında hafif kabartı ve tuval greni"
+  ],
+  "palet": [
+    "#3C8EE6",
+    "#5CBDEC",
+    "#24AE5A",
+    "#8ED04A",
+    "#B79AE6",
+    "#F7E040",
+    "#F2A7BE",
+    "#FFFDF4"
+  ],
+  "kodla_cizim": "Önce ekran dışında bir hedef tablo (ışık ve renk planı) kurulur: piksel başına gök, sırt fonksiyonundan dağlar, silindir ve dönel yüzey aydınlatmalı yapı, bitkiler. Sonra her bölge için biçimi izleyen paralel izler üretilir (güneş merkezli halkalarda ışınlar, kubbede dilim başına 12 meridyen, yatay ve silindir aralıklı dikey izler, sırt eğrisinden aşağı gittikçe yataylaşan izler, yaprak ekseni ve taç yaprak yelpazeleri); izler rastgele boylu ipliklere bölünür. Her ipliğin rengi, iplik ortasındaki hedef renge iz boyunca taşınan hata ve küçük titreşim eklenip 22 saf renkli paletten en yakını seçilerek bulunur (hata yayma ile optik karışım). İplikler bölgenin yoluna kırpılır, bölge önce hedefin açık bir kopyasıyla astarlanır, iplik merkezi bölge haritasıyla denetlenir; her ipliğin sırtına ince ışık çizgisi, ayrı bir tampona yükseklik çizilir. Sonda yükseklik ve bez dokusu sağ üstten aydınlatılır, hafif el titremesi uygulanır.",
+  "etiketler": [
+    "bölümcülük",
+    "divizyonizm",
+    "optik karışım",
+    "saf renk",
+    "iplik darbe",
+    "yağlıboya",
+    "ressamın eli",
+    "berrak ışık"
+  ]
+}

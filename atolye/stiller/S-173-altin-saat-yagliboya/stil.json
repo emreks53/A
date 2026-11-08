@@ -1,0 +1,40 @@
+{
+  "kod": "S-173",
+  "no": 173,
+  "ad": "Altın Saat Yağlıboya",
+  "ad_en": "Golden Hour Oil",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Hayalî bir ikindi ışığı ressamının eli: taşta ve kubbede şeftali-altın ışık, gölgelerde yumuşak leylak, ışıklı sıcak gök; biçimi izleyen, kenarları denetimli ressamca darbeler.",
+  "tanim": "Hayalî bir ikindi ışığı ressamının eli. Zemini ince grenli, yarı mat astarlı keten tuval; aletleri orta boy yassı ve badem uçlu kıl fırçalar, ayrıntı için ince yuvarlak samur. Paleti sıcak-serin çiftlerden kurulur: Napoli sarısı, şeftali ve altın okr ışıklar; leylak, kobalt menekşe ve serin mavi gölgeler; zeytin ve yeşil toprak yeşilleri. Göğü güneşin çevresinde altın, yukarıda berrak maviye dönen yatay, hafif kavisli darbelerle boyar; güneşi dairesel kısa darbelerle ışıtır, bulutların altın üst yüzlerini ve leylak tabanlarını biçimlerini izleyerek işler. Mimaride önce kütleyi biçimi izleyen darbelerle (kubbede meridyen, minarede dikey, kaide ve kasnakta yatay) kurar; pencereleri, zikzak bandı, şerefe kenarlarını, korniş çizgisini ve kaburgaları sonra küçük fırçayla temiz keser, böylece kenarlar ressamca ama denetimli kalır. Her darbede şeftaliye ve leylağa kayan tonlar yan yana titreşir. Altın tarlaya sola uzanan uzun leylak gölgeler çeker, yaprak kütlesini sıcak zeytin yeşiliyle derinleştirir; ışıkta boyayı biraz kalın sürer.",
+  "koken": "19. yüzyıl sonu açık hava manzara resminin ve luminizmin altın saat ışığı çalışmalarına, 'sıcak ışık–serin gölge' renk anlayışına ve katman katman, denetimli fırça kullanımına dayanır. Gerçek bir ressamı taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Güneşin çevresinde altın, yukarıda berrak maviye dönen ışıklı gök; güneş dairesel kısa darbelerle ışıyor",
+    "Altın üst yüzlü, leylak-pembe tabanlı bulutlar ve ufukta ince pembe bulut şeritleri",
+    "Minare ve kaidede şeftali-altın ışık, sol yüzlerde ve pencere içlerinde yumuşak leylak gölgeler",
+    "Işık tarafı sarı-zeytin, gölge tarafı mavi-yeşil kubbe; meridyen boyunca darbeler ve küçük fırçayla belirtilmiş kaburgalar",
+    "Altın tarlaya sola uzanan uzun leylak gölgeler ve sıcak zeytin yeşili yaprak kütlesi",
+    "Her yerde biçimi izleyen, şeftali ve leylak tonları yan yana titreşen ressamca darbeler; ışıkta hafif boya kabartısı ve ince tuval greni"
+  ],
+  "palet": [
+    "#7DA7DB",
+    "#FAD8A4",
+    "#F7CF9A",
+    "#9686B0",
+    "#46844D",
+    "#C9C467",
+    "#E8B97E",
+    "#6A8A4C"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; ışık sağdan, alçak ve sıcak. Gök piksel başına geçiş ve geniş altın ışıma; üstüne kıl demetli, şeftali/leylak titreşimli yatay darbeler, güneş çevresinde dairesel darbeler. Bulutlar bükülmüş yoğunluk alanı ve ince bant bulutlar; üstlerinden kontur boyunca darbeler geçer. Mimari iki geçişte boyanır: önce gövde (silindir aydınlatmalı degradeler, dönel yüzey normalli kubbe), sonra öğenin kendi renkleri okunup yoluna kırpılan, biçimi izleyen yarı saydam darbeler, en sonda pencere, zikzak, korkuluk, korniş ve kaburgalar keskin olarak yeniden çizilir. Zemine bulanık leylak gölge çokgenleri, yaprak kütlesine maskeye kırpılmış darbeler, her yaprağa eksen boyunca, taç yapraklara ışınsal darbeler atılır. Sonda bölge haritasına göre yönlenmiş darbe yükseklik haritası ve bez dokusu sağ üstten aydınlatılır, düşük frekanslı el titremesi uygulanır.",
+  "etiketler": [
+    "yağlıboya",
+    "altın saat",
+    "ikindi ışığı",
+    "leylak gölge",
+    "sıcak-serin",
+    "ressamca",
+    "ressamın eli",
+    "manzara"
+  ]
+}
