@@ -952,7 +952,7 @@
       else if (h < ust * 0.5) { col = rnd() < 0.35 * ust ? maviD : maviK; p = 0.28 + 0.26 * ust; }
       else if (h < ust * 0.5 + alt * 0.5) { const q = rnd(); col = q < 0.45 ? maviA : q < 0.7 ? krem : q < 0.85 ? seftali : beyaz; p = 0.3 + 0.2 * alt; }
       if (!col) return;
-      yanVurus(c, x, y, -0.38 + (rnd() - 0.5) * 0.1, 36 + rnd() * 26, 7 + rnd() * 3, col, p, rnd, { uc: 0.5, bukum: 0.12 });
+      yanVurus(c, x, y, -0.32 + (rnd() - 0.5) * 0.1, 30 + rnd() * 20, 7 + rnd() * 3, col, p, rnd, { uc: 0.5, bukum: 0.12 });
     });
     // bulutlar: önce leylak gölge, sonra krem ve beyaz ışık (çubuğun yanıyla hafif eğik)
     for (const kat of [0, 1, 2]) tara(0, 60, 1024, 560, 9, 7, (x, y) => {
@@ -999,8 +999,8 @@
     });
   }
   // kum: sıcak kum ve şeftali, yatay vuruşlar; kâğıt aralarda
-  ogeKat(4, 15, 12, 36, 7, 0, (t, lt) => 0.7, 0.1);
-  ogeKat(4, 18, 14, 26, 6, 0.45, (t, lt) => 0.45, 0.1);
+  ogeKat(4, 11, 9, 30, 7.5, 0, (t, lt) => 0.75, 0.1, -0.22);
+  ogeKat(4, 13, 11, 24, 6.5, 0, (t, lt) => 0.55, 0.1, -0.62);
   // yapraklar ve taç yaprakları
   ogeKat(5, 6, 6, 13, 4.2, 0, (t, lt) => 0.85, 0.08);
   ogeKat(5, 7, 7, 10, 3.6, 0.6, (t, lt) => 0.7 * sstep(0.55, 0.2, lt), 0.08);

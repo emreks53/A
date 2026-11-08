@@ -376,7 +376,7 @@
     return M.islem(b, null, (v, _, i) => {
       if (v <= 0.01) return 0;
       const h = M.H[i] * 0.8 + M.G[(i + 7919) % (W * W)] * 0.2;
-      return Math.min(1, v * 1.2) * sstep(0.02, 0.2, v - derin * (1 - h) + 0.1);
+      return Math.min(1, v * 1.2) * sstep(-0.08, 0.26, v - derin * (1 - h) + 0.1);
     }, 'ilk');
   }
   function kuruKat(yollar, o, renk, y) {
@@ -422,16 +422,50 @@
   const GX = 880, GY = 140;
   const gUz = (x, y) => Math.hypot(x - GX, y - GY);
   const gok = M.fMaske([0, 0, W, 812], (x, y) => (y < 800 ? 1 : 0));
-  const mBulut = M.mBulanik(M.maske((c) => {
-    const rb = SAHNE.rng(41);
-    for (const [bx, by, s] of [[175, 255, 1.0], [505, 150, 0.8], [770, 335, 1.1], [945, 470, 0.7], [85, 470, 0.7]]) for (let i = 0; i < 11; i++) {
-      const k = (i + 0.5) / 11, x = bx + (k - 0.5) * 170 * s + (rb() - 0.5) * 12 * s, r = (12 + Math.sin(k * Math.PI) * 24 + rb() * 8) * s;
-      c.beginPath(); c.ellipse(x, by + 8 * s - r * 0.5, r * 1.2, r * 0.82, 0, 0, Math.PI * 2); c.fill();
+  // bulutlar: yatay kuşak boyunca boyları farklı tümsekler (yassılaştırılmış metatop); gök yıkaması çevresinden
+  // yumuşak kenarla dolaşır, tabanda soluk serin gölge, gölgenin içinde birkaç ince yatay kuru darbe
+  const bulutTanim = [[196, 270, 260, 58, 0.95], [512, 152, 170, 36, 0.75], [810, 350, 300, 74, 1.05], [70, 482, 170, 24, 0.58], [960, 478, 150, 22, 0.52]];
+  const RB = SAHNE.rng(1693);
+  const bulutlar = bulutTanim.map(([bx, taban, gen, H, s]) => {
+    const t = [], N = Math.round(gen / 17), u0 = 0.36 + RB() * 0.24, kule = [];
+    for (let k = 0; k < N; k++) {
+      const u = (k + 0.5) / N;
+      const zarf = Math.exp(-(((u - u0) / 0.3) ** 2)) * 0.8 + 0.2 * Math.sin(Math.PI * u);
+      const h = H * (0.18 + 0.82 * zarf) * (0.72 + RB() * 0.5);
+      const r = Math.max(6 * s, 6 * s + h * (0.38 + RB() * 0.22));
+      const lx = bx + (u - 0.5) * gen + (RB() - 0.5) * 8 * s;
+      t.push([lx, taban - h + r, r]);
+      kule.push([lx, h]);
+      const ek = r > 12 * s ? 1 + Math.floor(RB() * 2.4) : 0;
+      for (let j = 0; j < ek; j++) { const a = -Math.PI / 2 + (RB() - 0.35) * 2.0, rr = r * (0.28 + RB() * 0.22); t.push([lx + Math.cos(a) * r * 0.86, taban - h + r + Math.sin(a) * r * 0.86, rr]); }
     }
-  }), 6);
-  M.yika(gok, '#EDDCC0', { yog: 0.5, yumusak: 2, grad: (x, y) => sstep(460, 800, y), koru: tumKor, kenar: 0.06, gran: 0.1, akis: 0.12 });
-  M.yika(gok, '#A2C8E8', { yog: 0.9, yumusak: 1.5, grad: (x, y) => Math.pow(1 - sstep(-40, 640, y), 1.05) * (1 - 0.85 * Math.exp(-((gUz(x, y) / 210) ** 2))), koru: M.islem(tumKor, mBulut, (p, q) => Math.max(p, q * 0.9), 'hepsi'), kenar: 0.1, kenarR: 4, gran: 0.18, akis: 0.12 });
-  M.yika(M.kesis(mBulut, M.fMaske([0, 0, W, 600], (x, y) => sstep(-0.2, 0.9, M.fbm(nz, x / 40, y / 14, 2) * 0.6 + 0.4 * ((y % 120) / 120)))), '#C9C6D6', { yog: 0.35, yumusak: 2, koru: tumKor, kenar: 0.04, gran: 0.1 });
+    return { bx, s, H, t, kule, taban, gen, kutu: [Math.floor(bx - gen / 2 - 50 * s), Math.floor(taban - H * 1.6 - 30), Math.ceil(bx + gen / 2 + 50 * s), Math.ceil(taban + 12)] };
+  });
+  const BF = new Float32Array(W * W), BG = new Float32Array(W * W);
+  for (const b of bulutlar) {
+    const [kx0, ky0, kx1, ky1] = b.kutu;
+    for (let y = Math.max(0, ky0); y < Math.min(W, ky1); y++) for (let x = Math.max(0, kx0); x < Math.min(W, kx1); x++) {
+      const i = y * W + x;
+      const wx = x + (M.fbm(nz, x / 24, y / 24, 3) - 0.5) * 8 * b.s, wy = y + (M.fbm(nz, x / 24 + 31, y / 24 + 17, 3) - 0.5) * 5 * b.s;
+      let F = 0;
+      for (const [lx, ly, r] of b.t) { const dx = wx - lx, dy = (wy - ly) * 1.12, q = (dx * dx + dy * dy) / (r * r); F += Math.exp(-q * q * 0.7); }
+      const uu = (x - b.bx) / (b.gen / 2 + 14 * b.s);
+      const tb = b.taban + (nz(x / 34, b.taban) - 0.5) * 5 * b.s - Math.pow(clamp(Math.abs(uu), 0, 1), 4) * 12 * b.s;
+      const v = sstep(0.42, 0.58, F * sstep(tb + 2, tb - 3, wy) * sstep(1.0, 0.9, Math.abs(uu)));
+      if (v > BF[i]) {
+        BF[i] = v;
+        let hl = 0, wt = 0;
+        for (const [lx, h] of b.kule) { const w = Math.exp(-(((x - lx) / (22 * b.s)) ** 2)); hl += h * w; wt += w; }
+        hl = wt > 0 ? hl / wt : b.H * 0.3;
+        const yb = tb - (5 * b.s + hl * 0.45) * (0.8 + 0.5 * M.fbm(nz, x / 26, b.taban / 9, 3)) - clamp((b.bx - x) / (b.H * 2.2), 0, 1) * hl * 0.2;
+        BG[i] = v * sstep(yb - 5, yb + 5, wy);
+      }
+    }
+  }
+  const mBulut = M.mBulanik(M.fMaske([0, 0, W, 560], (x, y) => BF[y * W + x]), 2);
+  M.yika(gok, '#A2C8E8', { yog: 0.9, yumusak: 1.5, grad: (x, y) => Math.pow(1 - sstep(-40, 640, y), 1.05) * (1 - 0.85 * Math.exp(-((gUz(x, y) / 210) ** 2))), koru: M.islem(tumKor, mBulut, (p, q) => Math.max(p, q * 0.97), 'hepsi'), kenar: 0.12, kenarR: 4, gran: 0.18, akis: 0.12 });
+  M.yika(M.mBulanik(M.fMaske([0, 0, W, 560], (x, y) => BG[y * W + x]), 2), '#C6C3D6', { yog: 0.5, koru: tumKor, kenar: 0.05, gran: 0.1, akis: 0.1 });
+  M.yika(kuruIz(M.kesis(M.maske((c) => { c.lineCap = 'round'; darbeler(c, { n: 700, kutu: [0, 100, W, 540], olas: (x, y) => BG[(y | 0) * W + (x | 0)] * 0.9, yon: () => 0, uz: [10, 24], kal: [0.9, 1.2], tohum: 31, sapma: 0.04 }); }), M.mBulanik(M.fMaske([0, 0, W, 560], (x, y) => BG[y * W + x]), 3)), 0.35, false), '#B4B0C8', { yog: 0.35, koru: tumKor, kenar: 0, gran: 0.08 });
   // taş: soluk okr; kubbe ve kasnak: soluk yeşil; zemin: soluk kum
   M.yika(M.birles(mMinare, mKaide), '#F1E5CC', { yog: 0.75, yumusak: 0.6, koru: korOn, kenar: 0.08, gran: 0.1, akis: 0.15 });
   M.yika(M.birles(mKubbe, mKasnak), '#B5D49A', { yog: 0.85, yumusak: 0.6, koru: korOn, kenar: 0.1, gran: 0.12, akis: 0.15 });
@@ -471,12 +505,12 @@
   kuruKat(Y.kubbe, { n: 3000, kutu: kubbeKutu, olas: (x, y) => 0.04 + 0.96 * sstep(0.95, 0.25, kv(x, y)), yon: meridyen, uz: [26, 52], kal: [0.9, 1.25], tohum: 11, sapma: 0.008 }, '#4F8E58', { yog: 0.5, derin: 0.3, yum: false });
   kuruKat(Y.kubbe, { n: 1700, kutu: kubbeKutu, olas: (x, y) => sstep(0.55, -0.1, kv(x, y)), yon: meridyen, uz: [22, 46], kal: [0.9, 1.2], tohum: 12, sapma: 0.008 }, '#2E6450', { yog: 0.48, derin: 0.3, yum: false });
   // kaburgalar: ince, kesik kesik koyu çizgi ve sağında boş kâğıt payı
-  M.yika(M.fMaske(kubbeKutu, (x, y) => { const i = y * W + x, m = mKubbe.a[i]; if (m <= 0 || y < 305) return 0; const d = KU[i]; return m * (d < -0.1 && d > -2.0 ? 1 : 0); }), '#2C5B45', { yog: 0.8, kuru: 0.36, kuruY: 0.12, koru: korOn, kenar: 0, gran: 0.1, grad: (x, y) => 0.6 + 0.5 * (1 - clamp(kv(x, y), 0, 1)) });
+  M.yika(kuruIz(M.fMaske(kubbeKutu, (x, y) => { const i = y * W + x, m = mKubbe.a[i]; if (m <= 0 || y < 305) return 0; const d = KU[i]; return m * sstep(0.1, -0.4, d) * sstep(-2.2, -1.4, d); }), 0.28, false), '#2C5B45', { yog: 0.75, koru: korOn, kenar: 0, gran: 0.08, grad: (x, y) => 0.55 + 0.55 * (1 - clamp(kv(x, y), 0, 1)) });
   // kasnak: dikey ince darbeler, pencereler kuru fırça kenarlı koyu
   kuruKat([Y.kasnakUst, Y.kasnakAlt], { n: 1500, kutu: [334, 555, 786, 692], olas: (x) => 0.05 + 0.95 * sstep(0.75, -0.35, kIs(x)), yon: () => Math.PI / 2, uz: [16, 30], kal: [0.9, 1.2], tohum: 13, sapma: 0.008 }, '#3F7B55', { yog: 0.5, derin: 0.3, yum: false });
   M.yika(M.yolMaske(Y.kasnakPencereleri), '#2D4E40', { yog: 0.85, koru: korOn, kenar: 0.15, kenarR: 2, gran: 0.15 });
-  M.yika(M.yolMaske(Y.kasnakPencereleri), '#1E3A33', { yog: 0.7, kuru: 0.4, kuruY: 0.12, koru: korOn, kenar: 0 });
-  M.yika(M.fMaske([330, 550, 790, 620], (x, y) => ((y >= 555 && y < 562) || (y >= 610 && y < 616) ? mKasnak.a[y * W + x] : 0)), '#2E5E4B', { yog: 0.6, kuru: 0.38, koru: korOn, kenar: 0 });
+  M.yika(M.kesis(M.yolMaske(Y.kasnakPencereleri), M.fMaske([330, 560, 790, 690], (x, y) => { for (const k of [0, 1]) for (const p of SAHNE.kasnakPencereleri(k)) if (Math.abs(x - p.x) < p.w && y > p.y - 2 && y < p.y + p.h) return sstep(p.y + p.h * 0.85, p.y, y); return 0; })), '#1E3A33', { yog: 0.6, koru: korOn, kenar: 0 });
+  M.yika(kuruIz(M.fMaske([330, 550, 790, 620], (x, y) => ((y >= 555 && y < 562) || (y >= 610 && y < 616) ? mKasnak.a[y * W + x] : 0)), 0.3, false), '#2E5E4B', { yog: 0.6, koru: korOn, kenar: 0 });
   // minare: dikey taş damarı, gölge yanında sık; şerefe altları; pencereler
   const minKutu = [258, 140, 342, 800];
   kuruKat(Y.minare, { n: 1000, kutu: minKutu, olas: (x, y) => (mKaide.a[(y | 0) * W + (x | 0)] > 0.5 ? 0 : 0.04 + 0.96 * sstep(0.35, -0.7, minU(x, y))), yon: () => Math.PI / 2, uz: [14, 30], kal: [1.0, 1.5], tohum: 14, sapma: 0.012 }, '#ADA9C2', { yog: 0.34 });

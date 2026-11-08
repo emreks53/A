@@ -887,33 +887,31 @@
     const a = tarama(fu, fv, ar, gok ? 70 : 50, 0.5, 11);
     const b = tarama(fu * c1 + fv * s1, -fu * s1 + fv * c1, ar * 1.08, gok ? 64 : 52, 0.5, 21);
     const c = tarama(fu * c2 + fv * s2, -fu * s2 + fv * c2, ar * 1.04, gok ? 56 : 40, 0.5, 31);
-    let r = S.R[i], g = S.G[i], bl = S.B[i];
-    let bu = 0;
-    if (gok) {
-      // bulut: kâğıdın beyazı korunur; gölge yanı mavi-gri ve leylak kalemle taranır
-      bu = sstep(0.04, 0.42, BUL[i]);
-      if (bu > 0) {
-        const gl = sstep(0.75, 0.3, BIS[i]);
-        const gr = BG3[0] + (BG1[0] - BG3[0]) * gl, gg = BG3[1] + (BG1[1] - BG3[1]) * gl, gb = BG3[2] + (BG1[2] - BG3[2]) * gl;
-        const k = bu;
-        r += (gr - r) * k; g += (gg - g) * k; bl += (gb - bl) * k;
-      }
-    }
+    const r = S.R[i], g = S.G[i], bl = S.B[i];
     const lum = 0.3 * r + 0.59 * g + 0.11 * bl, koyu = 1 - lum;
     // en koyu yerler cilalı (pürüzsüz, diş dolu); orta tonlarda vuruşlar ve diş seçilir
     const cila = sstep(0.5, 0.92, koyu);
     const str = 0.5 * a + 0.3 * b + 0.2 * c;
     let Ct = 0.74 + 0.26 * sstep(0.05, 0.55, koyu);
-    if (bu > 0) Ct = Ct * (1 - bu) + bu * (0.04 + 0.5 * Math.pow(sstep(0.8, 0.3, BIS[i]), 1.3));
+    // katman renk oynaması (üst üste farklı tonda kalemler: mor-mavi ve turkuaz)
+    const hk = (gok ? 0.22 : 0.12) * (b - c);
+    const r2 = r + hk * (bl - g), g2 = g + hk * (r - bl), b2 = bl + hk * (g - r);
+    // kalemin kendi rengi: ortalama örtüyle hedefe ulaşacak biçimde
+    let tr = Math.max(0, kagit[0] + (r2 - kagit[0]) / Ct), tg = Math.max(0, kagit[1] + (g2 - kagit[1]) / Ct), tb = Math.max(0, kagit[2] + (b2 - kagit[2]) / Ct);
+    if (gok) {
+      // bulut: kâğıdın beyazı korunur; yalnız gölge yanı mavi-gri ve leylak kalemle hafifçe taranır
+      const bu = sstep(0.04, 0.42, BUL[i]);
+      if (bu > 0) {
+        const gl = sstep(0.78, 0.3, BIS[i]);
+        const lv = sstep(0.6, 0.35, BIS[i]) * (b > c ? 0.6 : 0.15);
+        const pr = BG1[0] + (BG2[0] - BG1[0]) * lv, pg = BG1[1] + (BG2[1] - BG1[1]) * lv, pb = BG1[2] + (BG2[2] - BG1[2]) * lv;
+        tr += (pr - tr) * bu; tg += (pg - tg) * bu; tb += (pb - tb) * bu;
+        Ct = Ct * (1 - bu) + bu * (0.03 + 0.55 * Math.pow(gl, 1.3));
+      }
+    }
     const kontrast = gok ? 0.95 : tip === T_KUBBE || tip === T_KASNAK ? 0.85 : 0.7;
     let C = Ct + (str - 0.42) * kontrast * (1 - cila * 0.85) * Math.min(1, Ct * 1.6) + (D[i] - 0.5) * 0.5 * (1 - cila * 0.9) * Math.min(1, Ct * 2);
     C = C < 0 ? 0 : C > 1 ? 1 : C;
-    // katman renk oynaması (üst üste farklı tonda kalemler: mor-mavi ve turkuaz)
-    const hk = (gok ? 0.22 : 0.12) * (b - c);
-    let r2 = r + hk * (bl - g), g2 = g + hk * (r - bl), b2 = bl + hk * (g - r);
-    if (bu > 0 && BIS[i] < 0.6) { const lv = sstep(0.6, 0.35, BIS[i]) * (0.5 + 0.5 * (b - c)) * bu * 0.4; r2 += (BG2[0] - r2) * lv; g2 += (BG2[1] - g2) * lv; b2 += (BG2[2] - b2) * lv; }
-    const ctD = Math.max(0.08, Ct);
-    const tr = Math.max(0, kagit[0] + (r2 - kagit[0]) / ctD), tg = Math.max(0, kagit[1] + (g2 - kagit[1]) / ctD), tb = Math.max(0, kagit[2] + (b2 - kagit[2]) / ctD);
     const ust = 1 - 0.06 * a * b * (1 - cila);
     OR[i] = clamp((kagit[0] + (tr - kagit[0]) * C) * ust, 0, 1);
     OG[i] = clamp((kagit[1] + (tg - kagit[1]) * C) * ust, 0, 1);
