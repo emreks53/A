@@ -1,0 +1,40 @@
+{
+  "kod": "S-200",
+  "no": 200,
+  "ad": "Grisaille ve Renk Sırı",
+  "ad_en": "Grisaille with Color Glazes",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Keten tuvalde biçimi izleyen fırça vuruşları ve ince taramayla kurulmuş açık gri bir tek renk modelaj (grisaille); üstünde yeşil, mavi ve gül renkli saydam sırlar, içlerinden gri modelaj görünüyor.",
+  "tanim": "Hayalî bir klasik ressamın eli. Destek: açık beyaz astarlı ince keten tuval. Ressam önce bütün resmi serin, açık bir griyle modeller: kubbede meridyen boyunca, taşta dikey, gökte geniş eğik fırça vuruşları; yarı tonlarda ve gölgelerde biçimi izleyen, uçları incelen kısa gri taramalar; sonra bütün biçimleri ince koyu gri bir çizgiyle kesinleştirir. Kuruyunca saydam renk sırlarını geniş, yumuşak bir fırçayla sürer: gökte mavi (ufka doğru açılarak, güneş çevresinde altın sarısı), kubbe ve kasnakta yeşil, alemlerde altın sarısı, çiçeklerde gül rengi, çimende açık yeşil, taşta yalnızca çok hafif sıcak bir ton. Sır kalınlığı fırçaya göre değişir ve ışıklardan silinir; böylece gri modelaj ve taramalar her rengin içinden gümüşi görünür. En son kubbe dilimlerine, minarenin ve çiçeklerin ışıklı kenarlarına ince kurşun beyazı vuruşlar konur.",
+  "koken": "Avrupa resmindeki grisaille altboyama ve onun üstüne saydam renk sırları (velatura, glacis) sürme usulüne dayanır; Flaman ve İtalyan atölyelerinin 'ölü renk' ile başlayıp sırla bitirme pratiği ve gravür benzeri tarama modelajı ile birleşir. Belirli bir ressam taklit edilmez; tarif bu tekniklerden kurulmuş hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Her rengin içinden görünen gri modelaj: kubbede meridyen yönünde, taşta ve kasnakta dikey, uçları incelen kısa gri taramalar",
+    "Saydam yeşil sırlı kubbe; dilimlerin ışıklı yanında sır silinmiş, gümüşi açık yeşil ve ince kurşun beyazı ışık çizgileri",
+    "Mavi sırlı gök ve tepeleri beyaz, alt yüzleri gri gölgeli kabarık bulutlar; güneş çevresinde altın sarısı sır",
+    "Gül sırlı çiçekler: göbeğe doğru koyulaşan gül rengi, taç yaprakların içinde göbekten dışa gri taramalar ve ışıklı kenarda beyaz vuruş",
+    "Bütün biçimleri kesinleştiren ince, hafif titrek koyu gri kontur ve sırrın kenarının çizgiden azıcık kayması",
+    "Keten tuvalin düz dokuması ve sır kalınlığındaki geniş fırça izleri"
+  ],
+  "palet": [
+    "#F4F2ED",
+    "#4A4F5A",
+    "#648DBC",
+    "#49905E",
+    "#94C49E",
+    "#F4A9BC",
+    "#C2DEA2",
+    "#CDA23E"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Önce gri bir değer tasarımı çizilir (degrade gök ve bulutlar, silindir degradeli taş, kubbe her dilimi dışbükey sayılarak piksel piksel Lambert ışığıyla); bulut ve güneş maskeleri ayrıca tutulur. Grisaille, bu değerlere doğru çekilen kıllı fırça vuruşlarıyla (11 kıl, uçları incelen, bölgeye kırpılmış, biçim yönünde) üç boyda yaklaşık 47 000 kez boyanır ve tasarımdan sapması sınırlanır; serin gri ile astar beyazı arasında tona çevrilir. Örtmeli kontur katmanında değere göre koyulaşan, kısa parçalara bölünmüş taramalar (kubbe meridyenleri, dikey taş ve kasnak, yaprak ekseni, taç yapraklarda ışınsal) ve titrek koyu gri konturlar çizilir. Sırlar piksel piksel çarpımla bindirilir: bölge rengi × fırça kalınlığı haritası (5 200 geniş, yumuşak vuruş) × ışıkta silme; sır kenarı gürültüyle 1 px kaydırılır. En son kurşun beyazı şerit vuruşlar ve kosinüs dokumalı keten dokusu.",
+  "etiketler": [
+    "grisaille",
+    "sır",
+    "glacis",
+    "klasik resim",
+    "tarama",
+    "keten tuval",
+    "katmanlı boyama",
+    "ressamın eli"
+  ]
+}

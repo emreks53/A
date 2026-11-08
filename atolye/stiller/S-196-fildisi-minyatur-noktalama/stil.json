@@ -1,0 +1,40 @@
+{
+  "kod": "S-196",
+  "no": 196,
+  "ad": "Fildişi Minyatür Noktalama",
+  "ad_en": "Ivory Miniature Stippling",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Parlak fildişi yaprak üstünde binlerce küçük suluboya noktası ve kısa, biçimi izleyen taramayla sabırla kurulmuş, mücevher gibi pürüzsüz ve ışıklı bir portre minyatürü eli.",
+  "tanim": "Hayalî bir minyatür ressamının eli. Alet: birkaç kıllı, ucu iğne gibi toplanan samur fırça; destek: ince kesilmiş, perdahlanmış fildişi yaprak; boya: saydam suluboya, ışıklarda yalnız fildişinin kendi sıcak parıltısı. Ressam hiçbir yeri yıkamayla doldurmaz: gökte ve yerde biçime göre iki yönde, kubbede meridyen boyunca kısa ve hafif kıvrık taramalar (hachure), taşta ve çiçekte yalnız noktacıklar (pointillé) koyar; ton, aynı yere dönülerek, işaret sıklığıyla kat kat koyulaşır ve araları fildişi olarak kalır. Gök üstte inci mavisinden ufukta gül-şeftaliye iner; gölgeler leylak-gri ve serin yeşildir. Son olarak çok ince fırçayla açık, yumuşak konturlar çekilir ve alem kürelerine, çiçek göbeklerine birkaç çin beyazı ışık noktası konur.",
+  "koken": "18.–19. yüzyıl Avrupa'sındaki fildişi üstüne portre minyatürü geleneğine (pointillé ve hachure ile çalışan suluboya minyatür; fildişinin saydam boyanın içinden parlaması) ve hassas noktalama tekniğine dayanır. Belirli bir ressam taklit edilmez; burada tarif, bu tekniklerden kurulmuş hayalî bir ressamın elidir ve fildişi yerine onun görünüşü (sıcak, ışıklı, ince damarlı zemin) canlandırılır.",
+  "ayirt_edici": [
+    "Bütün resim, araları fildişi kalan binlerce küçük renk noktası ve kısa taramadan oluşuyor; yakından bakınca gökte çapraz tarama ağı seçiliyor",
+    "Işıklar boş bırakılmış sıcak fildişi: güneş, bulutların tepeleri, taş kaide ve beyaz çiçekler fildişinin kendi parıltısıyla aydınlanıyor",
+    "Gök üstte inci mavisinden ufukta gül-şeftali rengine inen yumuşak bir geçiş; güneşin çevresinde altın, sonra gül renkli hale",
+    "Kubbede meridyen yönünde kısa taramalarla modellenmiş, ışıklı yanında sarı-yeşile açılan dilimler ve ince kaburga çizgileri",
+    "Fildişinin ince, uzunlamasına damarları ve hafifçe sıcaklaşan kenarları",
+    "Çok ince, açık renkli kontur ve alem kürelerinde, çiçek göbeklerinde çin beyazı ışık noktaları"
+  ],
+  "palet": [
+    "#F5ECDA",
+    "#849CD0",
+    "#E7D5CF",
+    "#55A156",
+    "#C8E3A9",
+    "#1F5633",
+    "#DDAA44",
+    "#E1B8D9"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Önce görünmeyen bir 'hedef ton' resmi çizilir (degrade gök, bulutlar, taş, kubbe; kubbe her dilimi dışbükey sayılarak piksel piksel Lambert ışığıyla), sonra fildişi rengine göre Beer–Lambert soğurmaya (−ln(hedef/fildişi)) çevrilir. Yaklaşık 15 milyon rastgele deneme beş geçişte işlenir: her denemede 4×4 hücrenin biriken boyası hedefin altındaysa, bölge haritasıyla kırpılmış bir nokta (yarıçap ~0,6 px, kenarı hafif koyu) ya da biçim yönünde (kubbe meridyeni, gökte iki çapraz yön, yaprak ekseni) 4–7 px kısa, uçları incelen bir tarama boya tamponuna eklenir; renklerde küçük sapmalar vardır. Sonuç fildişi × exp(−A) olarak bileşir; zemine çok hafif damar gürültüsü katılır. Konturlar örtmeli ayrı bir katmanda titrek ve basıncı değişen şeritlerle çekilip çarpımla bindirilir; ışık noktaları en son.",
+  "etiketler": [
+    "minyatür",
+    "fildişi",
+    "noktalama",
+    "tarama",
+    "suluboya",
+    "ince işçilik",
+    "ışıklı",
+    "ressamın eli"
+  ]
+}

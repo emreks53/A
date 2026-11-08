@@ -402,6 +402,7 @@
   const mTomurcuk = M.yolMaske(Y.tomurcuklar);
   const mBitki = M.maske((c) => {
     c.lineWidth = 4; for (const s of Y.saplar) c.stroke(P(s));
+  const mOnde = M.birles(mCicek, mTomurcuk); // yaprakların önünde kalan çiçek ve tomurcuklar
     for (const d of Y.yapraklar) c.fill(P(d));
     for (const d of Y.tomurcuklar) c.fill(P(d));
     for (const f of cicekler) { for (const t of f.tac) c.fill(P(t.d)); c.beginPath(); c.arc(f.c.x, f.c.y, f.c.r * 0.3, 0, Math.PI * 2); c.fill(); }
@@ -638,15 +639,15 @@
   M.yika(M.mBulanik(M.maske((c) => { c.translate(-9, 7); for (const d of Y.yapraklar) c.fill(P(d)); for (const f of cicekler) for (const t of f.tac) c.fill(P(t.d)); }), 1), '#A9ABD6', { yog: 0.7, koru: M.birles(korOn, mBina), kenar: 0.3, titre: 0.6, grad: (x, y) => (y > 800 ? 1 : 0) });
 
   // ------------------------------------------------------------ 7. bitkiler: saplar, yapraklar (iki yarım, ortada korunmuş damar), tomurcuklar
-  M.yika(M.maske((c) => { c.lineWidth = 3.4; for (const s of Y.saplar) c.stroke(P(s)); }), '#79A64A', { yog: 0.9, koru: mCicek, kenar: 0.3, titre: 0.4 });
-  M.yika(M.maske((c) => { c.lineWidth = 1.6; c.translate(-1, 0.6); for (const s of Y.saplar) c.stroke(P(s)); }), '#2F6A4A', { yog: 0.5, koru: mCicek, kenar: 0.2, titre: 0.3 });
+  M.yika(M.maske((c) => { c.lineWidth = 3.4; for (const s of Y.saplar) c.stroke(P(s)); }), '#79A64A', { yog: 0.9, koru: mOnde, kenar: 0.3, titre: 0.4 });
+  M.yika(M.maske((c) => { c.lineWidth = 1.6; c.translate(-1, 0.6); for (const s of Y.saplar) c.stroke(P(s)); }), '#2F6A4A', { yog: 0.5, koru: mOnde, kenar: 0.2, titre: 0.3 });
   // yapraklar: arkadan öne gruplar halinde; her yaprak ışıklı yarısı sarı-yeşil, gölge yarısı mavi-yeşil
   const yapraklar = B.yapraklar.map((y, i) => ({ y, i, tonR: R(), tonG: R() }));
   const damarKoru = (liste) => M.maske((c) => { c.lineWidth = 1.3; for (const o of liste) { const [a, b] = SAHNE.yaprakDamari(o.y); c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); } });
   const gruplar = [yapraklar.filter((o) => o.i % 3 === 0), yapraklar.filter((o) => o.i % 3 === 1), yapraklar.filter((o) => o.i % 3 === 2)];
   for (const grup of gruplar) {
     const dk = damarKoru(grup);
-    const korY = M.birles(mCicek, dk);
+    const korY = M.birles(mOnde, dk);
     const sicak = grup.filter((o) => o.tonR < 0.55), serin = grup.filter((o) => o.tonR >= 0.55);
     M.yika(M.yolMaske(sicak.map((o) => SAHNE.yaprakYolu(o.y))), '#B4D467', { yog: 0.85, koru: korY, kenar: 0.35, kenarR: 2.5, gran: 0.15, titre: 0.45 });
     M.yika(M.yolMaske(serin.map((o) => SAHNE.yaprakYolu(o.y))), '#93C878', { yog: 0.85, koru: korY, kenar: 0.35, kenarR: 2.5, gran: 0.15, titre: 0.45 });

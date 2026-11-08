@@ -664,7 +664,7 @@
           ctx.strokeStyle = css(cc, o.alfa * (0.8 + R() * 0.4));
           ctx.lineWidth = o.kalin * (0.8 + R() * 0.4);
           let ca = Math.cos(a), sa = Math.sin(a);
-          const bk = (R() - 0.5) * 0.9;
+          const bk = (R() - 0.5) * 0.6;
           ctx.beginPath();
           ctx.moveTo(x - ca * L / 2, y - sa * L / 2);
           ctx.quadraticCurveTo(x - sa * bk, y + ca * bk, x + ca * L / 2, y + sa * L / 2);
@@ -708,7 +708,7 @@
   // ================================================================ zemin (soluk ılık levha zemini) ve gök
   const gokR = rampa([[0, '#8FBAD8'], [0.3, '#B5D0DF'], [0.58, '#E0E6DE'], [0.8, '#F4EAD3'], [1, '#F3E0BC']]);
   const gokF = (x, y) => { const c = gokR(y / 800 + (nI(x * 0.004, y * 0.004) - 0.5) * 0.06); const g = Math.exp(-Math.pow(Math.hypot(x - 880, y - 140) / 170, 2)); return [lerp(c[0], 253, g * 0.75), lerp(c[1], 247, g * 0.75), lerp(c[2], 228, g * 0.75)]; };
-  boya(new Path2D('M-10,-10 L1034,-10 L1034,806 L-10,806 Z'), [0, 0, 1024, 806], gokF, (x, y) => 0.04 + (nI(x * 0.006, y * 0.006) - 0.5) * 0.12, { yog: 0.9, uzun: 13, kalin: 0.8, alfa: 0.55, kontrast: 0.07, duz: 0, capraz: 0, ara: 2.6, doku: 0.012, sap: 0.05 });
+  boya(new Path2D('M-10,-10 L1034,-10 L1034,806 L-10,806 Z'), [0, 0, 1024, 806], gokF, (x, y) => 0.04 + (nI(x * 0.006, y * 0.006) - 0.5) * 0.12, { yog: 0.9, uzun: 10, kalin: 0.75, alfa: 0.5, kontrast: 0.055, duz: 0, capraz: 0, ara: 2.5, doku: 0.012, sap: 0.06 });
   // güneş: yumuşak, örtücü açık disk
   guaj(ctx, (x) => { x.filter = `blur(${2.5 * OL}px)`; x.beginPath(); x.arc(880, 140, 36, 0, PI2); x.fill(); }, '#FFF8E6', { kutu: [830, 90, 930, 190], alfa: 0.92, doku: 0.01, tohum: 4 });
   // bulutlar: yumuşak kenarlı örtücü beyaz, altları soğuk gri
@@ -724,11 +724,18 @@
       for (const d of b.daireler) { x.beginPath(); x.arc(d.x, d.y, d.r, 0, PI2); x.fill(); }
       x.restore();
     }, '#FFFFFF', { kutu, f: (x, y) => bulR(clamp((y - top) / (b.taban - top), 0, 1) * 0.8 + clamp((bx - x) / (200 * bs), 0, 0.3)), yon: 0.1, doku: 0.015, alfa: 0.94, tohum: 10 + bx });
+    // bulut kabarıklarını izleyen ince örtücü taramalar
+    const bulYol = new Path2D();
+    for (const d of b.daireler) { bulYol.moveTo(d.x + d.r * 0.9, d.y); bulYol.arc(d.x, d.y, d.r * 0.9, 0, PI2); }
+    const enYakin = (x, y) => { let m = 1e9, q = b.daireler[0]; for (const d of b.daireler) { const v = Math.hypot(x - d.x, y - d.y) - d.r; if (v < m) { m = v; q = d; } } return q; };
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, 1024, b.taban - 2); ctx.clip();
+    boya(bulYol, kutu, (x, y) => bulR(clamp((y - top) / (b.taban - top), 0, 1) * 0.85 + clamp((bx - x) / (200 * bs), 0, 0.3)), (x, y) => { const d = enYakin(x, y); return Math.atan2(y - d.y, x - d.x) + Math.PI / 2; }, { zemin: false, yog: 1, uzun: 6, kalin: 0.6, alfa: 0.55, kontrast: 0.1, ara: 2, capraz: 0 });
+    ctx.restore();
   }
 
   // ---- yer: soluk kum, ince çakıl ve ot
   const yerR = rampa([[0, '#E6D1A2'], [1, '#D2B47D']]);
-  boya(new Path2D('M-10,800 L1034,800 L1034,1034 L-10,1034 Z'), [0, 800, 1024, 1024], (x, y) => yerR((y - 800) / 224 + (nI(x * 0.02, y * 0.05) - 0.5) * 0.25), 0.02, { yog: 0.8, uzun: 11, alfa: 0.5, kontrast: 0.1, duz: 0, ara: 2.4 });
+  boya(new Path2D('M-10,800 L1034,800 L1034,1034 L-10,1034 Z'), [0, 800, 1024, 1024], (x, y) => yerR((y - 800) / 224 + (nI(x * 0.012, y * 0.02) - 0.5) * 0.12), (x, y) => -0.35 + (nI(x * 0.01, y * 0.01) - 0.5) * 0.3, { yog: 0.9, uzun: 6, kalin: 0.65, alfa: 0.55, kontrast: 0.11, duz: 0, ara: 2.1, capraz: 0 });
   // binanın yere düşen yumuşak gölgesi
   guaj(ctx, (x) => { x.filter = `blur(${2 * OL}px)`; x.beginPath(); x.moveTo(266, 801); x.lineTo(822, 801); x.lineTo(800, 811); x.lineTo(250, 815); x.closePath(); x.fill(); }, '#BCA987', { kutu: [240, 796, 830, 822], alfa: 0.5 });
   for (let i = 0; i < 140; i++) {
@@ -748,7 +755,7 @@
   }
 
   // ================================================================ taş paleti ve minare
-  const tasR = rampa([[0, '#B9A889'], [0.35, '#D3C5A7'], [0.7, '#EADFC8'], [1, '#F7F0E1']]);
+  const tasR = rampa([[0, '#A9967A'], [0.35, '#CDBD9C'], [0.7, '#EADDC2'], [1, '#FBF4E4']]);
   const MY = minareYollari();
   const silY = (x) => Math.PI / 2; // dikey taramalar
   for (const p of MY) {
@@ -757,7 +764,7 @@
     const R0 = (p.kx2 - p.kx1) / 2;
     const kutu = [p.kx1, p.ky1, p.kx2, p.ky2];
     const cikma = p.ad.startsWith('çıkma');
-    boya(yol, kutu, (x, y) => tasR(silindirIsik(x, 300, R0) * (cikma ? 0.55 : 1) - (p.ad.startsWith('şerefe') && y > p.ky2 - 3 ? 0.35 : 0)), silY, { yog: 0.8, uzun: 6, kalin: 0.6 });
+    boya(yol, kutu, (x, y) => tasR((0.1 + 0.95 * Math.pow(silindirIsik(x, 300, R0), 1.4)) * (cikma ? 0.6 : 1) - (p.ad.startsWith('şerefe') && y > p.ky2 - 3 ? 0.35 : 0)), silY, { yog: 1, uzun: 6, kalin: 0.6, kontrast: 0.16, ara: 2 });
     if (cikma) {
       // çıkmanın ince dikey yivleri
       for (let x = p.kx1 + 5; x < p.kx2 - 4; x += 6) {
@@ -917,7 +924,7 @@
       return [c[0] * (1 + v * 0.12), c[1], c[2] * (1 - v * 0.1)];
     };
     const yonK = (x, y) => { const r0 = kubbeYaricap(y); const u = clamp((x - 560) / Math.max(r0, 1), -1, 1); return Math.PI / 2 + u * 0.6; };
-    boya(kubbe, kk, renkK, yonK, { yog: 1.25, uzun: 10, kalin: 0.75, alfa: 0.62, kontrast: 0.24, duz: 0.35, ara: 2.2 });
+    boya(kubbe, kk, renkK, yonK, { yog: 1.25, uzun: 9, kalin: 0.75, alfa: 0.62, kontrast: 0.24, duz: 0.35, ara: 2.1, sap: 0.04 });
     // kaburga sırtları: solda ince koyu, sağda ince açık çizgi
     for (const kb of SAHNE.kaburgalar(16)) {
       const pts = kb.noktalar.filter((q) => q[1] > 306);

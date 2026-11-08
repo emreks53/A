@@ -397,6 +397,7 @@
   const cicekAlan = (c) => { for (const f of cicekler) { for (const t of f.tac) c.fill(P(t.d)); c.beginPath(); c.arc(f.c.x, f.c.y, f.c.r * 0.3, 0, Math.PI * 2); c.fill(); } };
   const mCicek = M.maske(cicekAlan);
   const mBitki = M.maske((c) => { c.lineWidth = 4; for (const s of Y.saplar) c.stroke(P(s)); for (const d of Y.yapraklar) c.fill(P(d)); for (const d of Y.tomurcuklar) c.fill(P(d)); cicekAlan(c); });
+  const mOnde = M.birles(mCicek, M.yolMaske(Y.tomurcuklar)); // yaprakların önünde kalan çiçek ve tomurcuklar
   const korOn = mBitki;
   const tumKor = M.birles(mBina, mBitki);
 
@@ -439,8 +440,8 @@
   M.yika(M.fMaske([300, 700, 820, 730], (x, y) => (y >= 704 ? mKaide.a[y * W + x] * sstep(728, 706, y) : 0)), '#B9B4C4', { yog: 0.7, koru: korOn, kenar: 0.04 });
   M.yika(M.fMaske([300, 704, 820, 800], (x, y) => mKaide.a[y * W + x] * clamp((480 - x) / 200, 0, 1)), '#CCC7D4', { yog: 0.4, yumusak: 2, koru: korOn, kenar: 0 });
   // bitki ilk yıkamaları
-  M.yika(M.yolMaske(Y.yapraklar), '#B3CC8C', { yog: 0.85, yumusak: 0.5, koru: mCicek, kenar: 0.1, gran: 0.1, akis: 0.18 });
-  M.yika(M.maske((c) => { c.lineWidth = 3; for (const s of Y.saplar) c.stroke(P(s)); }), '#86A762', { yog: 0.85, koru: mCicek, kenar: 0.08 });
+  M.yika(M.yolMaske(Y.yapraklar), '#B3CC8C', { yog: 0.85, yumusak: 0.5, koru: mOnde, kenar: 0.1, gran: 0.1, akis: 0.18 });
+  M.yika(M.maske((c) => { c.lineWidth = 3; for (const s of Y.saplar) c.stroke(P(s)); }), '#86A762', { yog: 0.85, koru: mOnde, kenar: 0.08 });
   M.yika(M.yolMaske(Y.tomurcuklar), '#E9B2BE', { yog: 0.8, koru: mCicek, kenar: 0.1 });
 
   // ------------------------------------------------------------ 2. kuru fırça: biçimi izleyen ince darbeler
@@ -513,7 +514,7 @@
         c.restore();
       }
     });
-    M.yika(m, renk, { yog, kuru: 0.42, kuruY: 0.1, koru: mCicek, kenar: 0, gran: 0.1, akis: 0.06 });
+    M.yika(m, renk, { yog, kuru: 0.42, kuruY: 0.1, koru: mOnde, kenar: 0, gran: 0.1, akis: 0.06 });
   }
   yaprakKat(yapraklar, '#5E8C4A', 0.8, true, 21);
   yaprakKat(yapraklar.filter((o) => o.i % 2 === 0), '#3B6A47', 0.7, false, 22);
@@ -525,9 +526,9 @@
       const [a, b] = SAHNE.yaprakDamari(y);
       c.beginPath(); c.moveTo(a[0] + t * nx * 1.3, a[1] + t * ny * 1.3); c.lineTo(b[0] + t * nx * 1.3, b[1] + t * ny * 1.3); c.stroke();
     }
-  }), '#355E3F', { yog: 0.6, kuru: 0.35, kuruY: 0.12, koru: mCicek, kenar: 0 });
+  }), '#355E3F', { yog: 0.6, kuru: 0.35, kuruY: 0.12, koru: mOnde, kenar: 0 });
   // saplar ve tomurcuklar: ince ayrıntı
-  M.yika(M.maske((c) => { c.lineWidth = 1.2; c.translate(-0.8, 0.5); for (const s of Y.saplar) c.stroke(P(s)); }), '#3F6A3E', { yog: 0.7, kuru: 0.36, koru: mCicek, kenar: 0 });
+  M.yika(M.maske((c) => { c.lineWidth = 1.2; c.translate(-0.8, 0.5); for (const s of Y.saplar) c.stroke(P(s)); }), '#3F6A3E', { yog: 0.7, kuru: 0.36, koru: mOnde, kenar: 0 });
   kuruKat(Y.tomurcuklar, { n: 400, kutu: [60, 520, 980, 870], olas: () => 1, yon: (x, y) => { let best = 0, bd = 1e9; for (const t of B.tomurcuklar) { const d = (x - t.x) ** 2 + (y - t.y) ** 2; if (d < bd) { bd = d; best = t.aci; } } return best; }, uz: [4, 9], kal: [0.8, 1.1], tohum: 23 }, '#B5577A', { yog: 0.7, kuru: 0.42, koru: mCicek });
   M.yika(M.maske((c) => { for (const t of B.tomurcuklar) { c.beginPath(); c.ellipse(t.x - Math.cos(t.aci) * t.r * 0.55, t.y - Math.sin(t.aci) * t.r * 0.55, t.r * 0.62, t.r * 0.42, t.aci, 0, Math.PI * 2); c.fill(); } }), '#5F8A4C', { yog: 0.8, koru: mCicek, kenar: 0.1, gran: 0.15 });
 

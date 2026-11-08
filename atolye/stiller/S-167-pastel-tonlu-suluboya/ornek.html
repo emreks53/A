@@ -411,6 +411,7 @@
   const mTomurcuk = M.maske((c) => { for (const t of B.tomurcuklar) { c.beginPath(); c.ellipse(t.x + Math.cos(t.aci) * t.r * 0.3, t.y + Math.sin(t.aci) * t.r * 0.3, t.r * 1.05, t.r * 0.95, t.aci, 0, Math.PI * 2); c.fill(); } });
   const mBitki = M.maske((c) => {
     c.lineWidth = 4; for (const s of Y.saplar) c.stroke(P(s));
+  const mOnde = M.birles(mCicek, mTomurcuk); // yaprakların önünde kalan çiçek ve tomurcuklar
     for (const d of Y.yapraklar) c.fill(P(d));
     for (const t of B.tomurcuklar) { c.beginPath(); c.ellipse(t.x + Math.cos(t.aci) * t.r * 0.3, t.y + Math.sin(t.aci) * t.r * 0.3, t.r * 1.05, t.r * 0.95, t.aci, 0, Math.PI * 2); c.fill(); }
     for (const f of cicekler) { for (const t of f.yap) c.fill(P(t.d)); c.beginPath(); c.arc(f.c.x, f.c.y, f.r * 0.86, 0, Math.PI * 2); c.fill(); }
@@ -511,12 +512,12 @@
   // önde, çiçeklerin arkasında ıslakta yayılmış soluk adaçayı-nane yaprak kütlesi (çiçeklerin beyazını öne çıkarır)
   M.yika(M.fMaske([0, 760, W, W], (x, y) => vin(x, Math.min(y, 1000)) * sstep(800 + (M.fbm(nz, x / 70, 3, 3) - 0.5) * 90, 870, y)), '#CFE5D0', { yog: 0.85, yumusak: 3, koru: M.mBulanik(mCicek, 1), kenar: 0.06, gran: 0.05, akis: 0.22, tuy: 0.5 });
   // ------------------------------------------------------------ 5. yapraklar ve saplar: nane ve adaçayı, yumuşak kenarlı
-  M.yika(M.maske((c) => { c.lineWidth = 3; for (const s of Y.saplar) c.stroke(P(s)); }), '#9CC59E', { yog: 0.85, yumusak: 0.4, koru: mCicek, kenar: 0.08 });
+  M.yika(M.maske((c) => { c.lineWidth = 3; for (const s of Y.saplar) c.stroke(P(s)); }), '#9CC59E', { yog: 0.85, yumusak: 0.4, koru: mOnde, kenar: 0.08 });
   const yapraklar = B.yapraklar.map((y, i) => ({ y, i, t: R() }));
   for (const grup of [0, 1, 2].map((k) => yapraklar.filter((o) => o.i % 3 === k))) {
-    M.yika(M.yolMaske(grup.filter((o) => o.t < 0.5).map((o) => SAHNE.yaprakYolu(o.y))), '#C2E3C5', { yog: 0.9, yumusak: 1, koru: mCicek, kenar: 0.14, kenarR: 3, gran: 0.06, akis: 0.2 });
-    M.yika(M.yolMaske(grup.filter((o) => o.t >= 0.5).map((o) => SAHNE.yaprakYolu(o.y))), '#A9D3B6', { yog: 0.9, yumusak: 1, koru: mCicek, kenar: 0.14, kenarR: 3, gran: 0.06, akis: 0.2 });
-    M.yika(M.yolMaske(grup.map((o) => { const nx = -Math.sin(o.y.aci), ny = Math.cos(o.y.aci); return yaprakYarisi(o.y, nx * LX + ny * LY > 0 ? -1 : 1); })), '#7FB79A', { yog: 0.6, yumusak: 1.6, koru: mCicek, kenar: 0.1, gran: 0.05 });
+    M.yika(M.yolMaske(grup.filter((o) => o.t < 0.5).map((o) => SAHNE.yaprakYolu(o.y))), '#C2E3C5', { yog: 0.9, yumusak: 1, koru: mOnde, kenar: 0.14, kenarR: 3, gran: 0.06, akis: 0.2 });
+    M.yika(M.yolMaske(grup.filter((o) => o.t >= 0.5).map((o) => SAHNE.yaprakYolu(o.y))), '#A9D3B6', { yog: 0.9, yumusak: 1, koru: mOnde, kenar: 0.14, kenarR: 3, gran: 0.06, akis: 0.2 });
+    M.yika(M.yolMaske(grup.map((o) => { const nx = -Math.sin(o.y.aci), ny = Math.cos(o.y.aci); return yaprakYarisi(o.y, nx * LX + ny * LY > 0 ? -1 : 1); })), '#7FB79A', { yog: 0.6, yumusak: 1.6, koru: mOnde, kenar: 0.1, gran: 0.05 });
   }
   // tomurcuklar: yuvarlak şakayık tomurcukları, pembe
   M.yika(mTomurcuk, '#F4C3CD', { yog: 0.9, yumusak: 0.6, koru: mCicek, kenar: 0.12 });

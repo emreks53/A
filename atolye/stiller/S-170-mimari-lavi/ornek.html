@@ -389,6 +389,7 @@
   const cicekAlan = (c) => { for (const f of cicekler) { for (const t of f.tac) c.fill(P(t.d)); c.beginPath(); c.arc(f.c.x, f.c.y, f.c.r * 0.3, 0, Math.PI * 2); c.fill(); } };
   const mCicek = M.maske(cicekAlan);
   const mBitki = M.maske((c) => { c.lineWidth = 3; for (const s of Y.saplar) c.stroke(P(s)); for (const d of Y.yapraklar) c.fill(P(d)); for (const d of Y.tomurcuklar) c.fill(P(d)); cicekAlan(c); });
+  const mOnde = M.birles(mCicek, M.yolMaske(Y.tomurcuklar)); // yaprakların önünde kalan çiçek ve tomurcuklar
   const korOn = mBitki;
   const tumKor = M.birles(mBina, mBitki);
 
@@ -462,8 +463,8 @@
   [860, 930, 990].forEach((ust) => lavi(M.fMaske([0, 796, W, W], (x, y) => (y >= ust ? 1 : 0)), '#D9C59E', 0.18, { koru: M.birles(korOn, mBina) }));
   lavi(M.maske((c) => { c.translate(-10, 10); for (const d of Y.yapraklar) c.fill(P(d)); cicekAlan(c); }), '#AEA6B5', 0.35, { koru: M.birles(korOn, mBina), grad: (x, y) => (y > 802 ? 1 : 0) });
   // yapraklar: düz soluk yeşil, gölge yarısı ikinci kat
-  lavi(M.yolMaske(Y.yapraklar), '#BDD3A8', 0.85, { koru: mCicek });
-  lavi(M.yolMaske(B.yapraklar.map((y) => { const nx = -Math.sin(y.aci), ny = Math.cos(y.aci); return yaprakYarisi(y, nx * LX + ny * LY > 0 ? -1 : 1); })), '#7FA683', 0.55, { koru: mCicek });
+  lavi(M.yolMaske(Y.yapraklar), '#BDD3A8', 0.85, { koru: mOnde });
+  lavi(M.yolMaske(B.yapraklar.map((y) => { const nx = -Math.sin(y.aci), ny = Math.cos(y.aci); return yaprakYarisi(y, nx * LX + ny * LY > 0 ? -1 : 1); })), '#7FA683', 0.55, { koru: mOnde });
   lavi(M.yolMaske(Y.tomurcuklar), '#E6B5C1', 0.8, { koru: mCicek });
   lavi(M.maske((c) => { c.lineWidth = 2.6; for (const s2 of Y.saplar) c.stroke(P(s2)); }), '#9DBB86', 0.85, { koru: M.birles(mCicek, M.yolMaske(Y.yapraklar)) });
   // çiçekler: beyaz kâğıt; ışıktan uzak taç yapraklara soluk gri-leylak, göbek sarı
