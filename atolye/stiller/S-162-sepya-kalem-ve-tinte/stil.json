@@ -1,0 +1,39 @@
+{
+  "kod": "S-162",
+  "no": 162,
+  "ad": "Sepya Kalem ve Tinte",
+  "ad_en": "Sepia Pen and Tint",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Gezgin bir ressamın bitmiş levhası: ince çelik uçla sepya çizgi, gölgelerde sabırlı noktalama ve kısa tarama, çizgilerin içine özenle sürülmüş soluk, temiz tinteler; sıcak krem kâğıt.",
+  "tanim": "Hayalî bir 19. yüzyıl gezgin ressamının eli. Alet: ince, esnek çelik daldırma uç ve sepya mürekkebi; renk için yuvarlak samur fırça ve az sayıda soluk suluboya. Kâğıt: sıcak krem, düzgün dokulu (wove), lekesiz kâğıt. Çizgi: önce bütün biçimler ince, sakin ve kapalı bir konturla çizilir; uç aşağı inen vuruşlarda hafifçe açılıp şişer, vuruşların başı ve sonu incelir; bulutlar dış kenarında ince bir konturla, altında birkaç kısa yatay çizgiyle gösterilir. Gölge noktalamayla kurulur: noktalar düzenli aralıkla konur, koyuluk yalnız nokta sıklığıyla artar (kubbenin gölge yanı ve kaburga oluklarının dibi, kasnağın sol yanı, minarenin gölge üçte biri, şerefe ve korniş altları); en koyu yerlere kısa koşut taramalar eklenir (kubbenin sol kenarında meridyen boyunca, korniş altında yatay, pencere içlerinde dikey). Tinte: mürekkep kuruduktan sonra çizgilerin içine taşırmadan sürülen düz ve soluk katlar: bakır yeşili kubbe ve kasnak, uçuk gök mavisi gök, gül rengi taç yapraklar, açık yaprak yeşili, devetüyü taş gölgeleri, altın okra alemler. Bitiriş: kaidede soluk taş sıraları ve kesik derzler; güneş soluk sarı bir kurs ve tek ince daire.",
+  "koken": "18. ve 19. yüzyıl topografik çizimlerine, gezi kitaplarının elle renklendirilmiş levhalarına ve bilimsel resimdeki noktalama (stippling) geleneğine dayanır: sepya kalem çizimi, noktalama ve kısa taramayla gölge, üstüne çizgiye sadık soluk suluboya tintesi (tinted drawing). Belirli bir sanatçıyı taklit etmez; bu teknikleri tek bir hayalî gezgin ressamın tutarlı eline bağlayan atölye tarifidir.",
+  "ayirt_edici": [
+    "İnce, sakin sepya kontur: aşağı inen vuruşlarda hafif şişen, uçlarda incelen çizgi; bütün biçimler kesin ve kapalı",
+    "Gölgeler düzenli aralıklı sepya noktalarla: kubbenin sol yanında ve kaburga oluklarının dibinde sıklaşan noktalama kaburgaları kabartıyor; minarenin gölge yanı, şerefe ve korniş altları noktalı",
+    "En koyu yerlerde kısa koşut taramalar: kubbenin sol kenarında meridyen boyunca, korniş altında yatay şerit, pencere ve nişlerin içinde dikey",
+    "Çizgilerin içinde soluk, temiz tinteler: bakır yeşili kubbe ve kasnak, gül rengi taç yapraklar, açık yaprak yeşili; tinte çizgiden taşmıyor",
+    "Uçuk gök mavisi gök ufka doğru krem ve sarıya açılıyor; bulutlar ince konturlu kâğıt beyazı, altlarında birkaç kısa yatay çizgi",
+    "Sıcak krem, lekesiz düzgün kâğıt; kaidede soluk taş sıraları ve kesik derzler, yapraklarda gölge yarısına koşut ince taramalar"
+  ],
+  "palet": [
+    "#5A3F29",
+    "#F8F1E2",
+    "#79B7A3",
+    "#A9CDEB",
+    "#F2C2CA",
+    "#A6C38E",
+    "#E6D2A6",
+    "#E2C062"
+  ],
+  "kodla_cizim": "Kâğıt 2048 px düzgün tane alanıdır. Tinteler 1024 px'te bölge ve bitki maskelerinden çarpımsal lavi katları olarak birikir; kenar titremesi çok düşük, kenar birikmesi ve granülasyon az tutulur, gölge tinteleri yumuşak kenarlı ikinci katlardır. Sepya mürekkep 2048 px'te değişken kalınlıklı şerit olarak doldurulur: kalınlık yolun aşağı inen bileşeniyle artar, uçlarda incelir, gürültüyle hafifçe dalgalanır; uzun hatlar vuruşlara bölünür. Noktalama ızgara hücrelerine titreşimle konan noktalardır: her hücrenin eşiği iç içe geçmiş gradyan gürültüsünden (mavi gürültüye yakın) gelir, nokta koyuluk işlevi bu eşiği aştığında konur; koyuluk işlevleri kubbe için dönel yüzey normalinden aydınlanma artı kaburga oluğu terimi, kasnak ve minare için silindir aydınlanması, korniş ve şerefe altları için bantlardır. Kısa taramalar meridyen, yatay ve dikey doğrultularda bölgeye kırpılır. Bulut konturu, başka bir lobun içine düşmeyen yay parçalarından bulunur. Öndeki bitkiler arkadaki mürekkebi siler, sonra kendi çizgilerini taşır.",
+  "etiketler": [
+    "sepya",
+    "çelik uç",
+    "noktalama",
+    "tinte",
+    "gezi levhası",
+    "suluboya",
+    "ressamın eli"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "kod": "S-164",
+  "no": 164,
+  "ad": "Gümüş Uç ve Tebeşir",
+  "ad_en": "Silverpoint and Chalk",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Soluk mavi-yeşil astarlı kâğıtta gümüş ucun çok ince, koşut eğik taramaları; ışıklarda beyaz guaş taraması, kubbede yeşil, alemlerde altın-okra, çiçeklerde gül rengi tebeşir.",
+  "tanim": "Hayalî bir ressamın eli; Rönesans çizim titizliğinde. Destek: kemik tozlu, fırçayla katlar hâlinde sürülmüş soluk mavi-yeşil astarlı kâğıt; astar ince dişlidir ve metal ucun izini tutar. Alet: gümüş uç (serin gri, basınçla kalınlaşmayan eşit kalınlıkta çizgi), ince samur fırça ve beyaz guaş; yeşil, altın-okra, gül ve soluk okra tebeşirler; göğün üstüne silgiyle (stump) yayılmış çok soluk mavi tebeşir. Çizgi: biçimler tek, kesin ve ince bir gümüş konturla kurulur; ton yalnız çizgi sıklığıyla verilir: sağ üstten sola aşağı inen koşut, hafif yaylı taramalar küçük yamalar hâlinde; koyulaştıkça ikinci ve üçüncü yönde çapraz tarama eklenir (pencere içleri en sık). Işık: beyaz guaşla aynı yönde ince fırça taraması; kubbenin sağ üst dilimlerinde, kaburgaların ışık yanında, minarenin ışıklı yüzünde, kaidede, korniş sırtında, bulutlarda ve beyaz taç yapraklarda; güneş dolu beyaz bir kurs. Renk: tebeşir geniş, yumuşak, astarın dişine takılan eğik vuruşlarla: kubbe ve kasnakta yeşil (gölgede ikinci yönde koyu yeşil), yapraklarda açık yeşil, alemlerde ve çiçek göbeklerinde altın-okra, taç yaprak diplerinde ve tomurcuklarda gül, toprakta yatay soluk okra.",
+  "koken": "Metal uç (gümüş uç) çizimi, renkli astarlı kâğıt ve beyazla ışıklandırma 14.–16. yüzyıl Avrupa atölye çiziminin temel tekniğidir; dönemin atölye el kitapları kemik tozlu astarın hazırlanışını anlatır. Renkli tebeşirle ve renkli astar üzerinde beyazla ışık verme sonraki yüzyılların desen geleneğinde sürer. Belirli bir sanatçıyı taklit etmez; bu teknikleri tek bir hayalî ressamın tutarlı eline (astar rengi, tarama yönü, beyaz ve tebeşir dağılımı) bağlayan atölye tarifidir.",
+  "ayirt_edici": [
+    "Soluk mavi-yeşil astar her yerde ara ton: gök büyük ölçüde astarın kendisi, üstte silgiyle yayılmış soluk mavi tebeşir; astarda fırça izinden belli belirsiz yatay dalgalanma ve ince diş",
+    "Gümüş ucun serin gri, eşit kalınlıklı çok ince çizgileri: sağ üstten sola aşağı inen koşut, hafif yaylı tarama yamaları; koyu yerlerde ikinci ve üçüncü yönde çapraz tarama, pencere içleri en sık",
+    "Beyaz guaş taraması ışıklarda: minarenin ışıklı yüzü, kaide, korniş sırtı, kubbenin sağ üst dilimleri ve kaburgaların ışık yanı; bulutlar beyaz tarama yamaları, güneş dolu beyaz kurs",
+    "Yeşil tebeşir kubbe ve kasnakta astarın dişine takılan eğik vuruşlarla; gölge yanında ikinci yönde koyu yeşil vuruşlar; gümüş kaburgalar üstünden geçiyor",
+    "Altın-okra tebeşirli alemler ve çiçek göbekleri; beyaz guaşla dolu taç yapraklar ve diplerinde gül rengi tebeşir; yapraklar açık yeşil tebeşir taramalı, gümüş konturlu",
+    "Toprak soluk okra tebeşirle yatay vuruşlu, araya seyrek yatay gümüş çizgiler"
+  ],
+  "palet": [
+    "#DAE8E2",
+    "#687072",
+    "#FBFCF7",
+    "#36A268",
+    "#D9A63F",
+    "#E28A9F",
+    "#B4D2EE",
+    "#D9AE6A"
+  ],
+  "kodla_cizim": "Astar 2048 px ince diş alanıdır, üstünde hafif yatay fırça dalgalanması; rengi düşük frekanslı gürültüyle hafifçe kayar. Önce 1024 px ton haritaları hesaplanır: gümüş koyuluğu, beyaz ışık ve tebeşir renkleri; yapıda dönel yüzey ve silindir aydınlanmasından, bitkilerde maskelerden (yaprağın gölge yarısı, çiçek merkezine uzaklık) gelir. Tarama üreteci tuvali verilen açıda koşut çizgilerle tarar; birkaç komşu çizgi aynı kırılma noktalarını paylaşarak bir 'yama' oluşturur, vuruşlar hafif yaylıdır ve yalnız tonun eşiği aştığı parçalarda, tona göre artan saydamlıkla çizilir. Gümüş uç üç açıda üç eşikle (çapraz tarama), beyaz guaş iki açıda, tebeşirler geniş ve kısa vuruşlarla ayrı katmanlara çizilir; kontur ve kaburgalar gümüş, kaburgaların ışık yanı beyazdır. Birleştirmede tebeşir astarın dişine göre seyreltilerek üstüne, gümüş çarpımsal, beyaz en üste konur; göğün üstündeki silgiyle yayılmış mavi, bulanık kenarlı çarpımsal bir lavi katıdır. Öndeki bitkiler arkadaki gümüş konturu siler.",
+  "etiketler": [
+    "gümüş uç",
+    "metal uç",
+    "renkli astar",
+    "beyazla ışık",
+    "tebeşir",
+    "tarama",
+    "Rönesans",
+    "ressamın eli"
+  ]
+}

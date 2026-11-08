@@ -1,0 +1,39 @@
+{
+  "kod": "S-163",
+  "no": 163,
+  "ad": "Altın Mürekkep ve Suluboya",
+  "ad_en": "Gold Ink and Watercolor",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Parlak beyaz kâğıtta yumuşak, ışıltılı suluboya yıkamaları; üstünde ışığa göre parlayıp koyulaşan ince altın mürekkep çizgileri. Siyah çizgi yok.",
+  "tanim": "Hayalî bir ressamın eli. Alet: bol su taşıyan yumuşak samur fırça; ince uçlu daldırma kalem ve mika pullu altın mürekkep. Kâğıt: parlak beyaz, soğuk preslenmiş suluboya kâğıdı. Sıra: önce yıkamalar; pastel gök birbirine geçen katlarla (tepede gök mavisi, ortada leylak, ufukta şeftali, güneş çevresinde sıcak sarı), taze zümrüt kubbe ve kasnak (sağ üst dilimlerde kâğıda açılan parlak ışık, solda yumuşak kenarlı koyu yeşil ve camgöbeği sır), beyaz taşta leylak-mavi gölgeler, allık pembesi taç yaprak dipleri ve üç tonlu taze yapraklar. Yıkamalar kuruyunca bütün çizim yalnız altın mürekkeple çekilir: yapı konturu, kubbe kaburgaları, pencere kemerleri, alemler (altın dolgulu), taç yaprak kenarları ve damarları, yaprak konturu ve damarları, çiçek ercikleri, bulutların ışığa bakan kenarı ve güneşin tek halkası. Çizgi ince ve akıcıdır, aşağı inen vuruşta hafifçe şişer. Altın, ışığa bakan yüzeylerde açık limon altınına ve küçük pırıltılara döner, gölgede koyu bal rengidir; çizginin altında mürekkebin kâğıda düşürdüğü belli belirsiz sıcak bir gölge vardır.",
+  "koken": "Altın mürekkeple yazı ve süsleme el yazması, tezhip ve minyatür geleneklerinde yüzyıllardır kullanılır; metalik mürekkeple çizilmiş suluboya illüstrasyon çağdaş kitap ve davetiye resminde aynı ışıltıyı arar. Bu tarif suluboya yıkamasını ve daldırma kalemle metalik mürekkep çizgisini birleştirir; belirli bir sanatçıyı taklit etmez, hayalî bir ressamın tutarlı elidir (yıkama sırası, pastel palet, yalnız altın kontur).",
+  "ayirt_edici": [
+    "Bütün çizim altın mürekkeple: yapı konturu, on beş kaburga, pencere kemerleri, taç yaprak ve yaprak kenarları; hiç siyah ya da kahve çizgi yok",
+    "Altın çizgi ışığa göre değişiyor: kubbenin sağ üstünde ve minarenin ışıklı yanında açık limon altını ve küçük pırıltılar, gölge yanında koyu bal rengi; çizginin altında ince sıcak gölge",
+    "Pastel gök birbirine geçen katlarla: tepede gök mavisi, ortada leylak, ufukta şeftali; güneş sıcak sarı bir ışıltının ortasında kâğıt beyazı kurs ve tek altın halka",
+    "Taze zümrüt kubbe: sağ üst dilimlerde kâğıda açılan parlak ışık şeridi, sol yanda yumuşak kenarlı koyu yeşil ve camgöbeği sır; kasnak pencereleri koyu çam yeşili",
+    "Beyaz taş kâğıt beyazı, gölgeleri leylak-mavi; kaide pencereleri leylak; alemler altın dolgulu, bulutların yalnız ışığa bakan üst kenarı altın",
+    "Beyaz taç yapraklarda allık pembesi dip, altın kenar ve ince altın damarlar, göbekte altın ercik halkası; yapraklar üç taze yeşil tonda, altın damarlı"
+  ],
+  "palet": [
+    "#FFFDF8",
+    "#B98A2C",
+    "#FBE7A4",
+    "#3FB072",
+    "#9CCAEE",
+    "#DCCBEF",
+    "#F9D2C0",
+    "#F5B3C3"
+  ],
+  "kodla_cizim": "Kâğıt 2048 px soğuk preslenmiş doku alanıdır. Yıkamalar 1024 px'te çarpımsal lavi katlarıdır: gök dört katın (mavi, leylak, şeftali, güneş sarısı) konuma bağlı yoğunluk işlevleriyle üst üste binmesidir; bulutlar bulanık maskeyle yumuşak ayrılır; kubbe sırları dönel yüzey aydınlanmasından ve dilim sınırlarından eşiklenir, yumuşak kenarlı sırlar maskenin bulanık kopyasıyla karıştırılır. Altın mürekkep 2048 px'te beyaz bir maske katmanına değişken kalınlıklı şerit olarak çizilir; aynı şeritler yarım piksel kaydırılmış ikinci bir katmana koyu kahve olarak çizilip çarpımsal ince gölge olur. Birleştirmede altın katmanının her pikseline renk, bölge haritasından hesaplanıp bulanıklaştırılan bir aydınlanma haritasından (kubbede dönel yüzey normali, kasnak ve minarede silindir) artı gürültü ve kâğıt tanesiyle beş duraklı bir altın rampasından (koyu bal → limon altını → açık krem) seçilir; seyrek pikseller tam parlak pırıltı olur. Öndeki bitkiler arkadaki altını siler, sonra kendi çizgilerini taşır.",
+  "etiketler": [
+    "altın mürekkep",
+    "suluboya",
+    "metalik",
+    "pastel",
+    "yıkama",
+    "kontur",
+    "ressamın eli"
+  ]
+}
