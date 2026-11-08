@@ -650,31 +650,31 @@
     // taç: aşağı sarkan, kenarı tırtıllı yapraklar; yukarı bakanlar önce, öne sarkanlar sonra
     const C = [p1[0], p1[1] - 2];
     const yapraklar = [
-      [-150, 44, 0.55], [-118, 40, 0.7], [-82, 36, 0.8], [-52, 42, 0.62], [-22, 48, 0.5],
-      [-178, 48, 0.42], [6, 50, 0.42], [158, 44, 0.5], [28, 42, 0.62], [132, 40, 0.65], [62, 34, 0.75], [100, 32, 0.8],
-    ].map(([d, L, dr]) => ({ a: (d * Math.PI) / 180, L, dr }));
+      [-160, 56, 0.62], [-122, 46, 0.6], [-90, 40, 0.62], [-58, 48, 0.6], [-22, 60, 0.58],
+      [178, 64, 0.62], [4, 66, 0.6], [150, 58, 0.78], [32, 60, 0.76], [122, 50, 0.95], [62, 52, 0.92], [94, 40, 1.05],
+    ].map(([d, L, dr]) => ({ a: (d * Math.PI) / 180, L: L * 1.12, dr }));
     yapraklar.sort((p, q) => Math.sin(p.a) - Math.sin(q.a));
     const yaprak = (f) => {
       const ux = Math.cos(f.a), uy = Math.sin(f.a) * 0.62;
       const nokta = (t) => [C[0] + ux * f.L * t, C[1] + uy * f.L * t + f.dr * f.L * t * t];
-      const k = 18, ust = [], alt = [];
+      const k = 26, ust = [], alt = [], orta = [];
       for (let i = 0; i <= k; i++) {
         const t = i / k;
-        const q = nokta(t), q2 = nokta(Math.min(1, t + 0.02));
-        let tx = q2[0] - q[0], ty = q2[1] - q[1];
+        const q = nokta(t), q2 = nokta(Math.min(1, t + 0.02)), q1 = nokta(Math.max(0, t - 0.02));
+        let tx = q2[0] - q1[0], ty = q2[1] - q1[1];
         const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
-        const w = 7.5 * Math.sin(Math.PI * Math.pow(t, 0.7)) * (1 - 0.3 * t) * (i % 2 ? 1 : 0.55);
+        const w = 9.5 * Math.sin(Math.PI * Math.pow(t, 0.6)) * (1 - 0.35 * t) * (i % 2 ? 1 : 0.62);
         ust.push([q[0] + ty * w, q[1] - tx * w]);
         alt.push([q[0] - ty * w, q[1] + tx * w]);
+        orta.push(q);
       }
-      const sag = ux > 0.2;
-      doldur(ust.concat(alt.reverse()), sag ? '#4C8A40' : '#3A7236');
-      // yaprağın üst (ışık alan) yarısı
-      const orta = [];
-      for (let i = 0; i <= k; i++) orta.push(nokta(i / k));
-      const ustYari = uy * 1 + 0 < 0 || Math.abs(ux) > 0.5 ? ust : alt;
-      doldur(ustYari.slice(0, k + 1).concat(orta.reverse()), sag ? '#8CC463' : '#64A24B');
-      cizgi(orta.reverse(), 'rgba(40,80,36,0.55)', 0.9);
+      const sag = ux > 0.25;
+      doldur(ust.concat(alt.slice().reverse()), sag ? '#468A3E' : '#356C34');
+      // gökyüzüne bakan (ekranda üstte kalan) yarı açık ton
+      const ortY = (a) => a.reduce((t, q) => t + q[1], 0) / a.length;
+      const yukari = ortY(ust) < ortY(alt) ? ust : alt;
+      doldur(yukari.concat(orta.slice().reverse()), sag ? '#8CC463' : '#62A04A');
+      cizgi(orta, 'rgba(36,74,34,0.6)', 0.9);
     };
     const geri = yapraklar.filter((f) => Math.sin(f.a) < -0.2), on = yapraklar.filter((f) => Math.sin(f.a) >= -0.2);
     geri.forEach(yaprak);
@@ -730,12 +730,10 @@
   // --- arka bahçe (yapının arkasında kalanlar) önce
   cali(400, 40, 0, 16, 0); cali(440, 70, 0, 13, 1);
   cali(470, 120, 0, 15, 1); cali(30, 180, 0, 11, 0);
-  cali(22, 268, 0, 12, 2);
   hurma(HX, HY, HH);
   minareTam();
   yapi();
   sadirvan(SX, SY);
-  cali(128, 286, 0, 10, 1);
   // sağ çimendeki çalılar ve çiçekler
   {
     // sağ çimende çiçekli çalılar (arkadan öne)
@@ -753,7 +751,7 @@
   tarh(290, 340, 490, 470, 16);
   tarhDoldur(290, 340, 490, 470, 16, 26);
   // ön köşeye yakın küçük çalılar ve yol fenerleri
-  fener(256, 300); fener(220, 362);
+  fener(256, 300);
   cali(240, 492, 0, 12, 1); cali(500, 270, 0, 12, 0);
   fener(266, 500); fener(500, 308);
 

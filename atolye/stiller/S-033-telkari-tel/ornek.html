@@ -112,14 +112,14 @@
       // telleri metal ve kalınlığa göre grupla
       const gruplar = new Map();
       for (const t of K.teller) {
-        const k = (t.metal === ALTIN ? 'a' : 'g') + t.gen.toFixed(2);
+        const k = (t.metal === ALTIN ? 'a' : t.metal === ESKI ? 'e' : 'g') + t.gen.toFixed(2);
         if (!gruplar.has(k)) gruplar.set(k, { metal: t.metal, gen: t.gen, yol: new Path2D() });
         const y = gruplar.get(k).yol;
         t.pts.forEach(([x, yy], i) => (i ? y.lineTo(x, yy) : y.moveTo(x, yy)));
       }
       const hgruplar = new Map();
       for (const h of K.halatlar) {
-        const k = (h.metal === ALTIN ? 'a' : 'g') + h.gen.toFixed(2);
+        const k = (h.metal === ALTIN ? 'a' : h.metal === ESKI ? 'e' : 'g') + h.gen.toFixed(2);
         if (!hgruplar.has(k)) hgruplar.set(k, { metal: h.metal, gen: h.gen, yol: new Path2D() });
         const y = hgruplar.get(k).yol;
         y.moveTo(h.x1, h.y1);
@@ -168,7 +168,7 @@
     function spiralNoktalari(cx, cy, R, yon, aci, tur) {
       const pts = [];
       const r0 = 0.35;
-      const adimR = 1.85; // sarım aralığı: teller arasında kadife görünsün
+      const adimR = 1.85; // sarım aralığı: teller arasında kadife görünsün (1024'te sarımlar seçilsin)
       const turSay = tur || Math.max(0.9, (R - r0) / adimR);
       const tmax = turSay * Math.PI * 2;
       let t = 0;
@@ -284,7 +284,7 @@
       for (let y = 1; y < W - 1; y += 1) {
         for (let x = 1; x < W - 1; x += 1) {
           const i = y * W + x;
-          if (malzeme[i] && D[i] > 1.6) adaylar.push(i);
+          if (malzeme[i] && D[i] > 1.35) adaylar.push(i);
         }
       }
       for (let i = adaylar.length - 1; i > 0; i--) {
@@ -299,9 +299,9 @@
           const y = Math.floor(i / W) + rnd() - 0.5;
           const rmax = rmaxH(x, y, malzeme[i]);
           let r = Math.min(D[i] - 0.45, rmax);
-          if (r < Math.max(1.5, rmax * esik)) continue;
+          if (r < Math.max(1.25, rmax * esik)) continue;
           r = komsuMu(x, y, r);
-          if (r < Math.max(1.5, rmax * esik)) continue;
+          if (r < Math.max(1.25, rmax * esik)) continue;
           ekle({ x, y, r, m: malzeme[i] });
         }
       }
@@ -312,7 +312,7 @@
           continue;
         }
         const z = rnd();
-        motif(K, c.x, c.y, c.r, metal, z < 0.2 ? 'S' : z < 0.34 ? 'C' : 'spiral');
+        motif(K, c.x, c.y, c.r, metal, z < 0.17 ? 'S' : z < 0.27 ? 'C' : 'spiral');
       }
       return daireler;
     }

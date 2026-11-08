@@ -169,6 +169,14 @@ function vurus(pts, o) {
     HW[i] = O * o.w * 0.5 * Math.max(0, prof(t)) * (1 + titre * (f1(S[i] / 60 + ph) - 0.5) * 2);
     KG[i] = Math.pow(Math.max(0, (t - kb) / (1 - kb)), 1.25) * 1.7 * kuru; // kuruma
   }
+  // yuvarlak baş / son: fırça kâğıda bastırılıp kalkar (mutlak uzunlukla)
+  if (o.bas || o.son) {
+    const c0 = HW[Math.min(n - 1, 4)] * 1.1 + 1, c1 = HW[Math.max(0, n - 5)] * 1.1 + 1, L = S[n - 1];
+    for (let i = 0; i < n; i++) {
+      if (o.bas && S[i] < c0) HW[i] *= Math.sqrt(Math.max(0.02, 1 - (1 - S[i] / c0) ** 2));
+      if (o.son && L - S[i] < c1) HW[i] *= Math.sqrt(Math.max(0.02, 1 - (1 - (L - S[i]) / c1) ** 2));
+    }
+  }
   // kıllar
   const QK = new Float32Array(K), WK = new Float32Array(K), TK = new Float32Array(K), A = new Float32Array(K * n);
   for (let k = 0; k < K; k++) {
@@ -480,17 +488,17 @@ lav((x) => {
 // ================================================================== ERİK DALI
 const cicekler = [];
 {
-  const dal = (pts, o) => vurus(egri(pts), Object.assign({ prof: P.dal, kuru: 0.9, kuruBas: 0.08, islak: 0.3, K: 60, kenar: 1.6 }, o));
-  const filiz = (pts, o) => vurus(egri(pts), Object.assign({ prof: P.filiz, kuru: 0.45, kuruBas: 0.3, islak: 0.45, kenar: 0.5 }, o));
+  const dal = (pts, o) => vurus(egri(pts), Object.assign({ prof: P.dal, kuru: 0.6, kuruBas: 0.25, islak: 0.25, K: 60, kenar: 2, bas: true, titre: 0.12 }, o));
+  const filiz = (pts, o) => vurus(egri(pts), Object.assign({ prof: P.filiz, kuru: 0.45, kuruBas: 0.3, islak: 0.45, kenar: 0.5, bas: true }, o));
   // ana gövde: sol alt köşeden girer; yaşlı kabuk geniş, kuru yan fırçayla; boğumlarda kısa duraklar
-  dal([[-34, 1062], [18, 1012], [70, 966], [124, 933]], { w: 66, ink: 1.15, yanTon: [1, 0.28], K: 72 });
-  dal([[-20, 1030], [30, 990], [72, 958]], { w: 18, ink: 1.6, kuru: 0.95, prof: P.kalinInce, K: 24 });
-  dal([[112, 943], [148, 906], [176, 868], [197, 826]], { w: 40, ink: 1.3, yanTon: [0.3, 1], K: 60 });
-  dal([[193, 836], [204, 792], [205, 752], [216, 712]], { w: 24, ink: 1.4, yanTon: [1, 0.4], K: 44 });
+  dal([[-34, 1062], [18, 1012], [70, 966], [124, 933]], { w: 62, ink: 1.5, yanTon: [1, 0.5], K: 72, kuru: 0.75, kuruBas: 0.15 });
+  dal([[-20, 1034], [30, 994], [72, 962]], { w: 16, ink: 1.9, kuru: 0.9, kuruBas: 0.2, prof: P.kalinInce, K: 22, bas: false });
+  dal([[110, 945], [148, 906], [176, 868], [197, 826]], { w: 38, ink: 1.6, yanTon: [0.5, 1], K: 60 });
+  dal([[193, 838], [204, 792], [205, 752], [216, 712]], { w: 24, ink: 1.7, yanTon: [1, 0.55], K: 44 });
   filiz([[214, 718], [227, 668], [239, 618], [247, 558]], { w: 8, ink: 1.75 });
   // öne, sağa uzanan kol
-  dal([[118, 936], [180, 931], [238, 918], [294, 901]], { w: 26, ink: 1.1, yanTon: [0.4, 1], K: 50 });
-  dal([[288, 905], [340, 880], [394, 869], [448, 873]], { w: 15, ink: 1.3, kuru: 0.8, K: 32 });
+  dal([[116, 937], [180, 931], [238, 918], [294, 901]], { w: 26, ink: 1.45, yanTon: [0.5, 1], K: 50 });
+  dal([[286, 906], [340, 880], [394, 869], [448, 873]], { w: 15, ink: 1.6, kuru: 0.7, K: 32 });
   filiz([[446, 873], [494, 860], [552, 850]], { w: 7, ink: 1.6 });
   // dik filizler ve yan dallar: düz, açılı, iğne gibi biter
   filiz([[250, 914], [259, 862], [268, 810]], { w: 6.5, ink: 1.7 });
@@ -500,8 +508,8 @@ const cicekler = [];
   filiz([[206, 772], [237, 744], [263, 702]], { w: 6, ink: 1.6 });
   filiz([[335, 882], [352, 850]], { w: 4, ink: 1.5 });
   // sağdan giren karşı dal
-  dal([[1056, 738], [1002, 764], [952, 788], [910, 798]], { w: 32, ink: 1.15, yanTon: [1, 0.35], K: 56 });
-  dal([[914, 797], [872, 790], [836, 773], [808, 745]], { w: 15, ink: 1.3, kuru: 0.8, K: 32 });
+  dal([[1060, 734], [1002, 763], [952, 788], [908, 799]], { w: 36, ink: 1.5, yanTon: [1, 0.5], K: 60, bas: false });
+  dal([[916, 797], [872, 790], [836, 773], [808, 745]], { w: 16, ink: 1.6, kuru: 0.7, K: 32 });
   filiz([[940, 790], [931, 722], [937, 650], [929, 592], [931, 540]], { w: 7.5, ink: 1.7 });
   filiz([[851, 781], [838, 732], [846, 692]], { w: 4.6, ink: 1.6 });
   filiz([[982, 774], [1000, 724]], { w: 4, ink: 1.5 });
@@ -534,48 +542,56 @@ function ayir(cx, cy, r) {
     }
   }
 }
+/** Çiçeğin yerel düzleminden kâğıda: döndür, bir eksende bas (perspektif), merkeze taşı. */
+function donustur(x, y, aci, sy) {
+  const ca = Math.cos(aci), sa = Math.sin(aci);
+  return (lx, ly) => { const u = lx * ca + ly * sa, v = (-lx * sa + ly * ca) * sy; return [x + u * ca - v * sa, y + u * sa + v * ca]; };
+}
 /** Taç yaprağı: iki kısa, ince kavis (sol, sağ) dışta buluşur; arada bazen boşluk kalır. */
-function tacYaprak(cx, cy, th, pr, ink) {
-  const yay = (a0, a1) => { const out = []; for (let j = 0; j <= 16; j++) { const a = lerp(a0, a1, j / 16); const rr = pr * (1 + 0.04 * Math.sin(j * 0.7)); out.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]); } return out; };
-  const w = Math.max(1.3, pr * 0.13);
-  vurus(yay(th - 1.85 + (R() - 0.5) * 0.25, th + 0.06 - R() * 0.12), { w, prof: P.yaprak, ink: ink * (0.8 + 0.35 * R()), kuru: 0.4, islak: 0.5, K: 5, kenar: 0.3 });
-  vurus(yay(th + 1.85 + (R() - 0.5) * 0.25, th + 0.12 + R() * 0.1), { w: w * 0.85, prof: P.yaprak, ink: ink * (0.7 + 0.35 * R()), kuru: 0.5, islak: 0.5, K: 5, kenar: 0.3 });
+function tacYaprak(cx, cy, th, pr, ink, T) {
+  const yay = (a0, a1) => { const out = []; for (let j = 0; j <= 16; j++) { const a = lerp(a0, a1, j / 16); const rr = pr * (1 + 0.05 * Math.sin(j * 0.7)); out.push(T(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr)); } return out; };
+  const w = Math.max(1.3, pr * 0.14);
+  vurus(yay(th - 1.8 + (R() - 0.5) * 0.3, th + 0.06 - R() * 0.15), { w, prof: P.yaprak, ink: ink * (0.8 + 0.35 * R()), kuru: 0.4, islak: 0.55, K: 5, kenar: 0.3 });
+  if (R() < 0.85) vurus(yay(th + 1.8 + (R() - 0.5) * 0.3, th + 0.14 + R() * 0.12), { w: w * 0.85, prof: P.yaprak, ink: ink * (0.7 + 0.35 * R()), kuru: 0.5, islak: 0.55, K: 5, kenar: 0.3 });
 }
 /** Ercikler: hafif kavisli ince kıllar, uçlarında koyu noktalar; arada serbest polen noktaları. */
-function ercik(cx, cy, r, a0, a1, adet) {
+function ercik(T, r, a0, a1, adet) {
   for (let i = 0; i < adet; i++) {
-    const a = lerp(a0, a1, (i + 0.5) / adet) + (R() - 0.5) * 0.45, L = r * (0.42 + 0.3 * R());
-    const bk = (R() - 0.5) * 0.35;
-    const ex = cx + Math.cos(a) * L, ey = cy + Math.sin(a) * L;
-    const mx = cx + Math.cos(a + bk) * L * 0.55, my = cy + Math.sin(a + bk) * L * 0.55;
-    vurus(egri([[cx + Math.cos(a) * r * 0.1, cy + Math.sin(a) * r * 0.1], [mx, my], [ex, ey]]), { w: 0.95, prof: P.esit, ink: 1.15, kuru: 0.3, K: 3, kenar: 0.1 });
-    leke(ex, ey, Math.max(1.4, r * 0.075), Math.max(1.1, r * 0.06), a, { ink: 1.95, islak: 0.45, kenar: 0.18 });
+    const a = lerp(a0, a1, (i + 0.5) / adet) + (R() - 0.5) * 0.5, L = r * (0.4 + 0.32 * R());
+    const bk = (R() - 0.5) * 0.4;
+    const e = T(Math.cos(a) * L, Math.sin(a) * L);
+    vurus(egri([T(Math.cos(a) * r * 0.1, Math.sin(a) * r * 0.1), T(Math.cos(a + bk) * L * 0.55, Math.sin(a + bk) * L * 0.55), e]), { w: 0.95, prof: P.esit, ink: 1.15, kuru: 0.3, K: 3, kenar: 0.1 });
+    leke(e[0], e[1], Math.max(1.4, r * 0.075), Math.max(1.1, r * 0.06), a, { ink: 1.95, islak: 0.45, kenar: 0.18 });
   }
   for (let i = 0; i < Math.round(adet / 3); i++) {
-    const a = lerp(a0, a1, R()), L = r * (0.3 + 0.35 * R());
-    leke(cx + Math.cos(a) * L, cy + Math.sin(a) * L, 1.1, 0.9, a, { ink: 1.7, islak: 0.4 });
+    const a = lerp(a0, a1, R()), L = r * (0.3 + 0.35 * R()), e = T(Math.cos(a) * L, Math.sin(a) * L);
+    leke(e[0], e[1], 1.1, 0.9, a, { ink: 1.7, islak: 0.4 });
   }
 }
 function cicekCiz([x, y, r, tip, a]) {
   if (tip === 'tam') {
+    // tam açmış çiçek; her biri başka bir açıdan görülür (bir eksende basık)
+    const sy = 0.62 + 0.38 * R(), T = donustur(x, y, R() * Math.PI, sy);
     ayir(x, y, r * 1.02);
-    const atla = (R() * 10) | 0;
+    const atla = (R() * 9) | 0;
     for (let k = 0; k < 5; k++) {
-      const th = a + (k * TAU) / 5 + (R() - 0.5) * 0.2, d = r * 0.5 * (0.92 + 0.16 * R());
-      tacYaprak(x + Math.cos(th) * d, y + Math.sin(th) * d, th, r * 0.45 * (0.9 + 0.2 * R()), k === atla ? 0.45 : 0.68);
+      const th = a + (k * TAU) / 5 + (R() - 0.5) * 0.25, d = r * 0.5 * (0.9 + 0.2 * R());
+      tacYaprak(Math.cos(th) * d, Math.sin(th) * d, th, r * 0.45 * (0.88 + 0.24 * R()), k === atla ? 0.42 : 0.66, T);
     }
-    ercik(x, y, r, a, a + TAU, r > 20 ? 10 : 7);
+    const ea = R() * TAU;
+    ercik(T, r, ea, ea + TAU * (0.75 + 0.25 * R()), r > 20 ? 9 : 7);
     leke(x, y, r * 0.08, r * 0.07, 0, { ink: 1.2, islak: 0.4 });
   } else if (tip === 'yan') {
     // yandan görünen çiçek: üç taç yaprak, altta koyu çanak, üstte yelpaze gibi ercikler
+    const T = donustur(x, y, 0, 1);
     ayir(x, y, r * 0.95);
     for (const da of [-0.95, 0, 0.95]) {
       const th = a + da, d = r * 0.42;
-      tacYaprak(x + Math.cos(th) * d, y + Math.sin(th) * d, th, r * 0.44, 0.68);
+      tacYaprak(Math.cos(th) * d, Math.sin(th) * d, th, r * 0.44 * (0.9 + 0.2 * R()), 0.66, T);
     }
     const bx = x - Math.cos(a) * r * 0.32, by = y - Math.sin(a) * r * 0.32;
     for (const da of [-0.7, 0, 0.7]) leke(bx + Math.cos(a + Math.PI + da) * r * 0.16, by + Math.sin(a + Math.PI + da) * r * 0.16, r * 0.17, r * 0.11, a + da, { ink: 1.9, islak: 0.6, kenar: 0.2 });
-    ercik(x + Math.cos(a) * r * 0.1, y + Math.sin(a) * r * 0.1, r * 1.25, a - 0.75, a + 0.75, 6);
+    ercik(donustur(x + Math.cos(a) * r * 0.1, y + Math.sin(a) * r * 0.1, 0, 1), r * 1.25, a - 0.75, a + 0.75, 6);
   } else if (tip === 'tomurcukA') {
     // açık tomurcuk: yuvarlak çizgi ve iki koyu çanak noktası
     ayir(x, y, r * 0.8);
@@ -585,12 +601,13 @@ function cicekCiz([x, y, r, tip, a]) {
   } else if (tip === 'tomurcuk') {
     leke(x, y, r * 1.0, r * 0.82, a, { ink: 1.85, islak: 0.65, pool: 0.3, kenar: 0.15 });
   } else if (tip === 'lav') {
-    // kemiksiz (mogu): beş soluk lav noktası, kenarı koyulaşır
+    // kemiksiz (mogu): beş soluk lav noktası, kenarı hafifçe koyulaşır
+    const T = donustur(x, y, R() * Math.PI, 0.7 + 0.3 * R());
     for (let k = 0; k < 5; k++) {
-      const th = a + (k * TAU) / 5 + (R() - 0.5) * 0.2, d = r * 0.5;
-      leke(x + Math.cos(th) * d, y + Math.sin(th) * d, r * 0.48, r * 0.42, th, { ink: 0.2 + 0.07 * R(), islak: 0.9, pool: 0.9, kenar: 0.13 });
+      const th = a + (k * TAU) / 5 + (R() - 0.5) * 0.2, d = r * 0.5, c = T(Math.cos(th) * d, Math.sin(th) * d);
+      leke(c[0], c[1], r * 0.48, r * 0.42, th, { ink: 0.16 + 0.06 * R(), islak: 0.9, pool: 0.55, kenar: 0.14 });
     }
-    ercik(x, y, r * 0.9, a, a + TAU, 6);
+    ercik(T, r * 0.9, a, a + TAU, 6);
   }
 }
 for (const c of cicekler.filter((c) => c[3] === 'lav')) cicekCiz(c);
