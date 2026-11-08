@@ -5,18 +5,36 @@
   "ad_en": "Chromolithograph",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Her rengi ayrı taştan basılmış 19. yüzyıl renkli taşbaskısı: kalem greni, noktalama geçişleri, hafif kayık renkler, süslü bordür.",
-  "tanim": "Kromolitografi, yağlı taş kalemi ya da mürekkeple çizilen resmin kireç taşına aktarılıp su ile yağın birbirini itmesi ilkesiyle basıldığı taşbaskının çok renkli biçimidir; her renk için ayrı bir taş hazırlanır ve kâğıt sırayla, bazen on beş yirmi taştan geçirilir. Grenli taşa sürülen kalem tonları düzensiz ince noktalar, elle noktalanmış (stipple) alanlar yumuşak geçişler verir; renkler üst üste binerek yeni tonlar kurar, taşlar arasındaki küçük kayıklıklar kenarlarda renk saçakları bırakır. Kitap levhaları, seyahat albümleri, etiket, takvim ve süslü bordürlü duvar resimlerinde yaygındı.",
+  "ozet": "Her rengi ayrı taştan basılmış aydınlık renkli taşbaskı: temiz açık kâğıt, parlak ve taze mürekkepler, taş kalemi greni, noktalama geçişleri, hafif kayık renkler ve açık renkli süslü bordür.",
+  "tanim": "Kromolitografi, yağlı taş kalemi ya da mürekkeple çizilen resmin kireç taşına aktarılıp su ile yağın birbirini itmesi ilkesiyle basıldığı taşbaskının çok renkli biçimidir; her renk için ayrı bir taş hazırlanır ve kâğıt sırayla, bazen on beş yirmi taştan geçirilir. Grenli taşa sürülen kalem tonları düzensiz ince noktalar, elle noktalanmış (stipple) alanlar yumuşak geçişler verir; renkler üst üste binerek yeni tonlar kurar, taşlar arasındaki küçük kayıklıklar kenarlarda renk saçakları bırakır. Yeni basılmış bir levhada kâğıt temiz ve açık, renkler parlaktır. Kitap levhaları, seyahat albümleri, etiket, takvim ve süslü bordürlü duvar resimlerinde yaygındı.",
   "koken": "Taşbaskıyı 1796'da Alois Senefelder buldu; Godefroy Engelmann 1837'de renkli taşbaskının patentini aldı. Owen Jones'un 'The Grammar of Ornament' (1856) levhaları, Louis Haghe'nin David Roberts için hazırladığı Doğu albümleri, Louis Prang'in Boston'da bastığı 'kromo'lar ve yüzyıl sonunun afiş ve etiketleri tekniğin en bilinen örnekleridir; 20. yüzyılda yerini ofset baskıya bıraktı.",
   "ayirt_edici": [
-    "Dokuz ayrı taş (sarı, iki mavi, pembe, gri, okra, yeşil, Prusya mavisi, kırmızı) ve sepya ana kalıp çizgisi; renkler üst üste binerek ton kurar",
-    "Kubbe, zemin ve yapraklarda taş kalemi greninin düzensiz, kümeli noktaları; zeminde kalemle çekilmiş çimen öbekleri ve öne doğru koyulaşan ton",
-    "Gökte, bulut altlarında, zeminde ve çiçek pembesinde elle noktalanmış, ızgaraya oturmayan, boyları değişen ince nokta geçişleri",
+    "Dokuz ayrı taş (sarı, iki mavi, pembe, gri, okra, yeşil, koyu mavi, kırmızı) ve açık sepya ana kalıp çizgisi; parlak, taze renkler üst üste binerek ton kurar",
+    "Kubbe, zemin ve yapraklarda taş kalemi greninin düzensiz, kümeli noktaları; zeminde kalemle çekilmiş çimen öbekleri ve toprak izleri",
+    "Gökte, bulut altlarında, zeminde ve çiçek pembesinde elle noktalanmış, ızgaraya oturmayan, boyları değişen ince nokta geçişleri; güneşe doğru açılan aydınlık gök",
     "Taşlar arasında hafif kayıklık: konturların dışına taşan ya da kâğıdı açıkta bırakan renk saçakları",
-    "Okra zeminli, dört yapraklı kırmızı güller, mavi baklavalar ve köşe rozetleriyle basılı bordür; altta boş kıvrık uçlu kartuş",
-    "Kenarlara doğru sararmış, yer yer pas lekeli (foxing) eski kâğıt"
+    "Açık sarı zeminli, dört yapraklı pembe güller, açık mavi baklavalar ve köşe rozetleriyle basılı bordür; altta boş, kıvrık uçlu açık kartuş",
+    "Temiz, açık krem kâğıt; yalnız ince lif dokusu"
   ],
-  "palet": ["#DFCA9E", "#5D767F", "#536E48", "#B77F49", "#B37B3C", "#9B5A2A", "#E0CBA9", "#1D211A"],
-  "kodla_cizim": "Sahne 0,875 ölçekle bordürün içine yerleştirilir. Her taş 2048 px'lik gri tonlu bir tuvaldir: öğeler arkadan öne Path2D ile bütün taşlara birden doldurulur (öndeki biçim arkadaki tonu örter), tonlar doğrusal ve ışınsal geçişlerle, kaburga gölgeleri ve kalem gölgeleri toplamalı olarak eklenir; sepya ana kalıp her öğeden sonra kontur, kaburga ve damar çizgisi alır. Bordür ve kartuş da aynı taşlara basılır. Baskıda her taş kendi kaymasıyla okunur; 'kara' taşlarda ton, Worley tabanlı ve histogramla eşitlenmiş bir gren alanıyla eşiklenir (taş kalemi), 'nokta' taşında eğik ve yavaşça bükülen bir ızgaranın hücrelerinde serbestçe kaydırılmış, boyları değişen, yer yer atlanmış noktaların yarıçapı tonla büyür (elle noktalama). Mürekkepler sırayla çarpımla basılır; kâğıt kenar sararması, geniş lekeler ve kümelenmiş foxing noktalarıyla eskitilir.",
-  "etiketler": ["taşbaskı", "kromolitografi", "renkli baskı", "19. yüzyıl", "noktalama", "bordür", "eski kâğıt", "kayıklık"]
+  "palet": [
+    "#FBF7EE",
+    "#86B7D6",
+    "#E7E6D0",
+    "#F7E6B5",
+    "#56A76B",
+    "#EBD392",
+    "#F5DC96",
+    "#E48276"
+  ],
+  "kodla_cizim": "Sahne 0,875 ölçekle bordürün içine yerleştirilir. Her taş 2048 px'lik gri tonlu bir tuvaldir: öğeler arkadan öne Path2D ile bütün taşlara birden doldurulur (öndeki biçim arkadaki tonu örter), tonlar doğrusal ve ışınsal geçişlerle, kaburga gölgeleri ve kalem gölgeleri toplamalı olarak eklenir; açık sepya ana kalıp her öğeden sonra kontur, kaburga ve damar çizgisi alır. Bordür ve kartuş da aynı taşlara açık tonlarla basılır. Baskıda her taş kendi kaymasıyla okunur; 'kara' taşlarda ton, Worley tabanlı ve histogramla eşitlenmiş bir gren alanıyla eşiklenir (taş kalemi), 'nokta' taşında eğik ve yavaşça bükülen bir ızgaranın hücrelerinde serbestçe kaydırılmış, boyları değişen, yer yer atlanmış noktaların yarıçapı tonla büyür (elle noktalama). Parlak mürekkepler sırayla çarpımla temiz, açık krem kâğıda basılır; kâğıtta yalnız ince lif gürültüsü ve çok hafif geniş ton dalgası vardır.",
+  "etiketler": [
+    "taşbaskı",
+    "kromolitografi",
+    "renkli baskı",
+    "19. yüzyıl",
+    "noktalama",
+    "bordür",
+    "kayıklık",
+    "aydınlık"
+  ]
 }

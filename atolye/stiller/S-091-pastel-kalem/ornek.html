@@ -497,6 +497,28 @@
   // saplar çıkarılmamış gök ve zemin maskeleri (sap, gökün/zeminin üstüne çizilir; arada kâğıt payı kalmaz)
   MK.gokS = maskeCikar(maske((x) => x.fillRect(0, 0, W, 800)), [MK.yapi, MK.yaprakUstu]);
   MK.zeminS = maskeCikar(MK.zeminH, [MK.yaprakUstu, MK.yapi]);
+  // dizi karıştır (tohumlu)
+  function karistir(a, r) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  // vuruş alanı: bx içine dağıtılmış kısa, geniş vuruşlar (pastel çubuğunun yanı, boya fırçası…)
+  // o: {bx, ic(x,y), adim, aci (sayı|fn), aciJ, boy (sayı|fn), kal (sayı|fn), alfa (sayı|fn), renk(x,y) → [r,g,b] | null, egri, bas, son, uc}
+  function vurusAlani(cx, o, r) {
+    const [x1, y1, x2, y2] = o.bx, adim = o.adim, liste = [];
+    for (let gy = y1; gy < y2; gy += adim) for (let gx = x1; gx < x2; gx += adim) liste.push([gx + (r() - 0.5) * adim * 1.1, gy + (r() - 0.5) * adim * 1.1]);
+    karistir(liste, r);
+    const f = (v, x, y) => (typeof v === 'function' ? v(x, y) : v);
+    for (const [px, py] of liste) {
+      if (o.ic && !o.ic(px, py)) continue;
+      const al = f(o.alfa, px, py); if (al <= 0.01) continue;
+      const c = o.renk(px, py); if (!c) continue;
+      const a = f(o.aci, px, py) + (r() - 0.5) * (o.aciJ || 0.2);
+      const len = f(o.boy, px, py) * (0.7 + 0.6 * r()), w = f(o.kal, px, py) * (0.75 + 0.5 * r());
+      const ux = Math.cos(a), uy = Math.sin(a), bow = (o.egri === undefined ? 0.06 : o.egri) * len * (r() - 0.5) * 2;
+      const pts = [];
+      for (let t = 0; t <= 6; t++) { const s = t / 6 - 0.5, bb = bow * (1 - 4 * s * s); pts.push([px + ux * s * len - uy * bb, py + uy * s * len + ux * bb]); }
+      if (r() < 0.5) pts.reverse();
+      strok(cx, pts, w, clamp(al * (0.85 + 0.3 * r()), 0, 1), c, o.bas === undefined ? 0.1 : o.bas, o.son === undefined ? 0.22 : o.son, o.uc === undefined ? 0.5 : o.uc);
+    }
+  }
 
   const r = SAHNE.rng(9101);
   const nA = gurultu(911), nB = gurultu(912), nC = gurultu(913), nD = gurultu(914), nE = gurultu(915), nF = gurultu(916);
@@ -663,7 +685,7 @@
   }, Object.assign({ kirp: mGok }, TARAMA, { opq: 0.9 }));
 
   // ================================================================ ZEMİN (çiçeklerin arkasında: ufukta kum, önde açık çayır)
-  const cayir = (py) => sstep(812, 870, py);
+  const cayir = (py) => sstep(800, 846, py);
   katman((x) => haritaCiz(x, (px, py) => {
     let c = mixc(C.okraAcik, C.seftali, fbm(nC, px / 90, py / 40, 2));
     c = mixc(c, mixc(C.yesilSari, C.yaprak, fbm(nC, px / 70 + 9, py / 50, 2)), cayir(py) * 0.85);
@@ -671,7 +693,7 @@
   }, [0, 796, W, W]), Object.assign({ kirp: mZemin, bx: [0, 796, W, W] }, TABAN));
   katman((x) => {
     // ufuk çizgisinde yatay kum taraması
-    tara(x, { bx: [0, 798, W, 850], aci: -0.08, aciJ: 0.1, aralik: 5.0, boy: 30, kal: KAL, obek: 16, sik: 0.8, alfa: (px, py) => 0.5 * (1 - cayir(py)) * (0.6 + 0.8 * fbm(nB, px / 70, py / 30, 2)),
+    tara(x, { bx: [0, 798, W, 850], aci: -0.08, aciJ: 0.1, aralik: 5.0, boy: 30, kal: KAL, obek: 16, sik: 0.8, alfa: (px, py) => 0.36 * (1 - cayir(py)) * (0.6 + 0.8 * fbm(nB, px / 70, py / 30, 2)),
       renk: () => { const t = r(); return t < 0.4 ? C.okra : t < 0.55 ? C.toprak : t < 0.75 ? C.leylakGri : C.okraAcik; } }, r);
     // çayırda kısa, dik ot vuruşları
     tara(x, { bx: [0, 815, W, W], aci: -1.35, aciJ: 0.35, aralik: 4.2, boy: 16, kal: KAL * 0.9, obek: 14, sik: 0.75, alfa: (px, py) => 0.55 * cayir(py) * (0.6 + 0.8 * fbm(nB, px / 50, py / 40, 2)),
