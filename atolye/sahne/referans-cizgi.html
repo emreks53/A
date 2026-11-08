@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Sahne — ölçülü çizgi başvurusu</title>
+<style>html,body{margin:0;width:1024px;height:1024px;overflow:hidden;background:#fff}svg{display:block}</style>
+</head>
+<body>
+<script src="sahne.js"></script>
+<script>
+  // Ölçülü çizgi başvurusu: 64 px ızgara, öğe dış çizgileri ve ana koordinatlar.
+  const Y = SAHNE.yollar();
+  const p = (d, s, w, fill) => `<path d="${d}" fill="${fill || 'none'}" stroke="${s}" stroke-width="${w}" stroke-linejoin="round"/>`;
+  let izgara = '';
+  for (let i = 0; i <= 1024; i += 64) {
+    const kalin = i % 256 === 0;
+    izgara += `<line x1="${i}" y1="0" x2="${i}" y2="1024" stroke="${kalin ? '#c9d6e8' : '#e8eef6'}" stroke-width="1"/>`;
+    izgara += `<line x1="0" y1="${i}" x2="1024" y2="${i}" stroke="${kalin ? '#c9d6e8' : '#e8eef6'}" stroke-width="1"/>`;
+    if (kalin && i < 1024) izgara += `<text x="${i + 3}" y="12" font-size="10" fill="#7a8aa0" font-family="DejaVu Sans, sans-serif">${i}</text><text x="3" y="${i + 12}" font-size="10" fill="#7a8aa0" font-family="DejaVu Sans, sans-serif">${i}</text>`;
+  }
+  const yesil = '#1f6b2c', tas = '#6b5a3a', altin = '#a07c18', bitki = '#4f7a3c';
+  const parcalar = [
+    `<line x1="0" y1="${SAHNE.zemin}" x2="1024" y2="${SAHNE.zemin}" stroke="#b0a080" stroke-width="1.5" stroke-dasharray="6 5"/>`,
+    `<circle cx="${SAHNE.gunes.x}" cy="${SAHNE.gunes.y}" r="40" fill="none" stroke="#e0b030" stroke-width="2" stroke-dasharray="4 4"/>`,
+    ...Y.minare.map((d) => p(d, tas, 2, '#fff')),
+    ...Y.zikzak.map((d) => p(d, tas, 1.5)),
+    ...Y.minarePencereleri.map((d) => p(d, tas, 1.5)),
+    ...Y.minareAlem.map((d) => p(d, altin, 1.5, '#fff')),
+    p(Y.kaide, tas, 2, '#fff'), p(Y.kornis, tas, 2, '#fff'),
+    ...Y.kaidePencereleri.map((d) => p(d, tas, 1.5)),
+    p(Y.kasnakAlt, yesil, 2, '#fff'), p(Y.kasnakUst, yesil, 2, '#fff'),
+    ...Y.kasnakPencereleri.map((d) => p(d, yesil, 1.3)),
+    p(Y.kubbe, yesil, 2.5, '#fff'),
+    ...Y.kaburgalar.map((d) => p(d, yesil, 1)),
+    ...Y.alem.map((d) => p(d, altin, 1.5, '#fff')),
+    ...Y.saplar.map((d) => p(d, bitki, 2)),
+    ...Y.yapraklar.map((d) => p(d, bitki, 1.2, '#fff')),
+    ...Y.tomurcuklar.map((d) => p(d, '#b06a80', 1.2, '#fff')),
+    ...Y.cicekler.map((d) => p(d, '#b06a80', 1.2, '#fff')),
+  ];
+  const etiket = (x, y, t) => `<text x="${x}" y="${y}" font-size="13" fill="#c0392b" font-family="DejaVu Sans, sans-serif">${t}</text>`;
+  const etiketler = [
+    etiket(574, 196, 'alem (560,187–300)'), etiket(612, 296, 'kubbe tepesi (560,300)'), etiket(770, 552, 'kubbe tabanı y=555'),
+    etiket(792, 604, 'üst kasnak 555–610'), etiket(800, 670, 'alt kasnak 610–692'), etiket(836, 754, 'kaide 692–800'),
+    etiket(338, 92, 'minare (x=300) tepe≈82'), etiket(354, 450, 'şerefe 1'), etiket(352, 286, 'şerefe 2'), etiket(342, 560, 'zikzak bant'),
+    etiket(8, 792, 'yer çizgisi y=800'), etiket(838, 196, 'güneş (880,140)'),
+  ];
+  document.body.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="#fff"/>${izgara}${parcalar.join('')}${etiketler.join('')}</svg>`;
+  SAHNE.hazir();
+</script>
+</body>
+</html>

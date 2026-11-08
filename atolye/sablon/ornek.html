@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>S-000 Stil Adı — Atölye örnek görseli</title>
+<style>
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #fff; }
+  canvas, svg { display: block; }
+</style>
+</head>
+<body>
+<canvas id="tuval"></canvas>
+<script src="../../sahne/sahne.js"></script>
+<script>
+  // S-000 Stil Adı — ayırt edici özellikler kısaca.
+  // Ortak sahne ve yardımcılar: ../../sahne/SAHNE.md
+  const ctx = SAHNE.tuval(document.getElementById('tuval'));
+  const r = SAHNE.rng(1); // Math.random yerine: görsel her seferinde aynı çıkar
+
+  // … stilin çizimi …
+  SAHNE.ciz(ctx); // yer tutucu: doğal renkli başvuru çizimi
+
+  SAHNE.hazir(); // çizim bitti (zaman uyumsuz çizimlerde en sonda çağırın)
+</script>
+</body>
+</html>

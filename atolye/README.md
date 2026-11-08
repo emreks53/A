@@ -1,0 +1,90 @@
+# Atölye: grafik, tasarım ve sanat stüdyosu
+
+Burada **render stilleri** (art style) araştırılır, sıfırdan yenileri üretilir ve her biri bir **numara** ve
+**adla** kataloğa girer. Her stilin bir **örnek görseli** vardır; örneklerin hepsi aynı sahneyi çizer
+(Yeşil Kubbe, minare ve çiçekler, bkz. [`sahne/SAHNE.md`](sahne/SAHNE.md)). Böylece stiller yan yana
+konunca fark yalnızca stilden gelir.
+
+- Katalog: [`KATALOG.md`](KATALOG.md) (görselli liste), [`katalog.json`](katalog.json) (makine için)
+- Galeri: [`galeri.html`](galeri.html) (tarayıcıda açın)
+- Bütün örnekler tek sayfada: [`pafta.webp`](pafta.webp)
+
+Görseller yapay zekâ görsel üreticisiyle değil, **kodla çizilir** (SVG / Canvas). Her örnek gerçek bir
+tarayıcıda açılıp 1024 × 1024 görüntüye çevrilir.
+
+## Numaralandırma
+
+- Her stilin kodu `S-` ve üç haneli sıra numarasıdır: `S-001`, `S-002`, … Numara bir kez verilir,
+  değişmez ve yeniden kullanılmaz; yeni stiller sıradaki numarayı alır.
+- Klasör adı: `S-001-suluboya` (kod + Türkçe karaktersiz kısa ad).
+- `ozgun: true` olan stiller atölyenin **sıfırdan ürettiği** stillerdir (bilinen bir akım ya da teknik değil).
+
+## Aileler
+
+| Aile | Numaralar |
+| --- | --- |
+| Boya ve Kuru Teknikler | S-001 – S-006 |
+| Türk-İslam Sanatları | S-007 – S-013 |
+| Uzak Doğu | S-014 – S-015 |
+| Sanat Akımları | S-016 – S-021 |
+| Grafik ve Dijital | S-022 – S-030 |
+| Atölye Özgün | S-031 – S-040 |
+
+Yeni turlarda gelen stiller ailesine bakılmaksızın sıradaki numarayı alır; aile `stil.json` içinde yazar.
+
+## Klasör yapısı
+
+```
+atolye/
+  sahne/            Ortak sahne: sahne.js (geometri, yardımcılar), SAHNE.md, başvuru çizimleri
+  sablon/           Yeni stil için başlangıç şablonu (ornek.html)
+  stiller/
+    S-001-suluboya/
+      ornek.html    Örnek görselin kaynağı (kodla çizim; ../../sahne/sahne.js kullanır)
+      ornek.webp    Çizim aracının ürettiği 1024 × 1024 örnek görsel
+      stil.json     Stilin kimlik kartı (aşağıda)
+  araclar/
+    ciz.mjs         ornek.html → ornek.webp (Playwright + Chromium)
+    webp.py         PNG → WebP (kayıpsız / kayıplı, küçük olanı)
+    katalog.mjs     stil.json'lardan KATALOG.md, katalog.json ve galeri.html üretir
+    pafta.py        bütün örnekleri tek bir paftada toplar (pafta.webp)
+```
+
+## Yeni stil ekleme
+
+1. Sıradaki numarayla klasör açın: `stiller/S-041-kisa-ad/`; `sablon/ornek.html` dosyasını kopyalayın.
+2. Çizimi yazın: aynı sahne, aynı yerleşim (bkz. `sahne/SAHNE.md`). Rastgelelik için `SAHNE.rng(tohum)`;
+   dış kaynak (internet, yazı tipi, resim dosyası) yok; çizim bitince `SAHNE.hazir()`.
+3. Görseli üretin: `node atolye/araclar/ciz.mjs atolye/stiller/S-041-kisa-ad`
+   (bakmak için PNG'si `atolye/.onizleme/` klasörüne de yazılır).
+4. `stil.json` kimlik kartını doldurun.
+5. Kataloğu yenileyin: `node atolye/araclar/katalog.mjs && python3 atolye/araclar/pafta.py`
+
+Bütün örnekleri yeniden çizmek için: `node atolye/araclar/ciz.mjs --hepsi`
+
+## `stil.json` kimlik kartı
+
+```json
+{
+  "kod": "S-001",
+  "no": 1,
+  "ad": "Suluboya",
+  "ad_en": "Watercolor",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Saydam, üst üste binen boya katmanları ve kâğıdın beyazı.",
+  "tanim": "2–4 cümle: stil nedir, nasıl görünür, nerede kullanılır.",
+  "koken": "Bilinen stillerde tarihçe ve örnek ustalar; özgün stillerde ilham kaynağı ve fikrin özü.",
+  "ayirt_edici": ["Görselde gerçekten görülen 4–6 ayırt edici özellik"],
+  "palet": ["#2F7D3B", "#C9A23A", "…örnek görselde kullanılan 4–8 renk"],
+  "kodla_cizim": "Örnek görselin kodla nasıl çizildiği (teknik özet).",
+  "etiketler": ["doku", "geleneksel", "…"]
+}
+```
+
+## Kurallar
+
+- Konu saygıyla çizilir: karikatür, şaka, çarpıtma yok; insan ya da hayvan figürü yok; hat ya da
+  yazı taklidi yok (teknik çizimdeki gibi düz Türkçe etiketler hariç).
+- Örnek, stilin ustaca yapılmış bir numunesi gibi görünmelidir; başvuru çiziminin üstüne geçirilmiş bir
+  süzgeç gibi değil.

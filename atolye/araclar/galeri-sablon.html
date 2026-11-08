@@ -1,0 +1,296 @@
+<title>Atölye Stil Kataloğu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400&display=swap">
+<style>
+  /* Yerleşim: numune defteri. Künye, aile süzgeci, kare numune ızgarası; numuneye dokununca ayrıntı sayfası açılır. */
+  :root {
+    --zemin: #F2F3EE;
+    --kagit: #FAFBF7;
+    --murekkep: #17211C;
+    --soluk: #5B665F;
+    --cizgi: #D6DBD2;
+    --kubbe: #2C6A3B;
+    --altin: #94701F;
+    --perde: rgba(16, 22, 19, 0.62);
+    --font-baslik: 'Bricolage Grotesque', 'DejaVu Sans', system-ui, sans-serif;
+    --font-metin: 'Literata', 'DejaVu Serif', Georgia, serif;
+    --font-kod: 'IBM Plex Mono', 'DejaVu Sans Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --zemin: #0F1512; --kagit: #161E1A; --murekkep: #E5EAE4; --soluk: #9AA69E; --cizgi: #2A352F;
+      --kubbe: #7DC490; --altin: #D8B660; --perde: rgba(0, 0, 0, 0.72); color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --zemin: #0F1512; --kagit: #161E1A; --murekkep: #E5EAE4; --soluk: #9AA69E; --cizgi: #2A352F;
+    --kubbe: #7DC490; --altin: #D8B660; --perde: rgba(0, 0, 0, 0.72); color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--zemin);
+    color: var(--murekkep);
+    font-family: var(--font-metin);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 40px 72px;
+  }
+  .sayfa { max-width: 1240px; margin: 0 auto; display: grid; gap: 28px; }
+
+  /* künye */
+  .kunye { display: grid; gap: 14px; max-width: 760px; }
+  .ust-etiket, .kod, .olcu, .say { font-family: var(--font-kod); }
+  .ust-etiket { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--soluk); margin: 0; }
+  h1 {
+    font-family: var(--font-baslik); font-weight: 700; font-size: clamp(38px, 6vw, 64px);
+    line-height: 1; letter-spacing: -0.02em; margin: 0; text-wrap: balance;
+  }
+  h1 .yesil { color: var(--kubbe); }
+  .giris { margin: 0; font-size: 17px; max-width: 64ch; color: var(--murekkep); }
+  .olcu { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--soluk); margin: 0; padding: 0; list-style: none; }
+  .olcu b { color: var(--murekkep); font-weight: 500; }
+
+  /* süzgeç */
+  .suzgec { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid var(--cizgi); padding-top: 18px; }
+  .sekme {
+    font: 500 14px/1 var(--font-baslik); color: var(--murekkep); background: transparent;
+    border: 1px solid var(--cizgi); border-radius: 999px; padding: 9px 14px; cursor: pointer;
+    display: inline-flex; gap: 8px; align-items: center;
+  }
+  .sekme .say { font-size: 12px; color: var(--soluk); }
+  .sekme[aria-pressed="true"] { background: var(--murekkep); color: var(--zemin); border-color: var(--murekkep); }
+  .sekme[aria-pressed="true"] .say { color: var(--zemin); opacity: 0.75; }
+  .ara { margin-left: auto; min-width: 0; flex: 0 1 240px; }
+  .ara input {
+    width: 100%; font: 15px var(--font-metin); color: var(--murekkep); background: var(--kagit);
+    border: 1px solid var(--cizgi); border-radius: 8px; padding: 9px 12px;
+  }
+  :focus-visible { outline: 2px solid var(--kubbe); outline-offset: 2px; }
+
+  /* ızgara */
+  .izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(224px, 1fr)); gap: 28px 20px; }
+  .numune { display: grid; gap: 10px; align-content: start; text-decoration: none; color: inherit; min-width: 0; }
+  .numune .kare { position: relative; aspect-ratio: 1; max-width: 100%; overflow: hidden; border-radius: 4px; background: var(--kagit); outline: 1px solid var(--cizgi); outline-offset: -1px; }
+  .numune img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.35s ease; }
+  .numune:hover img, .numune:focus-visible img { transform: scale(1.03); }
+  .satir { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .kod { font-size: 13px; font-weight: 500; color: var(--kubbe); font-variant-numeric: tabular-nums; }
+  .ozgun .kod { color: var(--altin); }
+  .aile-adi { font-family: var(--font-kod); font-size: 11px; letter-spacing: 0.04em; color: var(--soluk); text-align: right; }
+  .numune h3 { font: 700 19px/1.15 var(--font-baslik); margin: 0; letter-spacing: -0.01em; }
+  .numune .en { font-style: italic; color: var(--soluk); font-size: 14px; margin-top: -6px; }
+  .numune p { margin: 0; font-size: 14px; color: var(--soluk); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .bos { color: var(--soluk); padding: 40px 0; }
+  .aile-baslik { grid-column: 1 / -1; font: 700 14px var(--font-baslik); letter-spacing: 0.08em; text-transform: uppercase; color: var(--soluk); border-bottom: 1px solid var(--cizgi); padding-bottom: 8px; margin-top: 8px; display: flex; justify-content: space-between; }
+
+  /* ayrıntı */
+  dialog {
+    border: 0; padding: 0; background: var(--kagit); color: var(--murekkep);
+    width: min(1160px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); border-radius: 8px; overflow: auto;
+  }
+  dialog::backdrop { background: var(--perde); }
+  .ayrinti { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .ayrinti .gorsel { background: var(--zemin); }
+  .ayrinti .gorsel img { position: sticky; top: 0; }
+  .bilgi h2:focus { outline: none; }
+  .ayrinti .gorsel img { display: block; width: 100%; height: auto; aspect-ratio: 1; }
+  .bilgi { padding: 28px 30px 30px; display: grid; gap: 18px; align-content: start; min-width: 0; }
+  .bilgi .ust { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .bilgi h2 { font: 700 clamp(28px, 3.4vw, 40px)/1.05 var(--font-baslik); margin: 0; letter-spacing: -0.015em; text-wrap: balance; }
+  .bilgi .en { font-style: italic; color: var(--soluk); margin-top: -10px; }
+  .bilgi p { margin: 0; }
+  .bilgi h4 { margin: 0 0 6px; font: 500 12px var(--font-kod); letter-spacing: 0.12em; text-transform: uppercase; color: var(--soluk); }
+  .bilgi ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+  .rozet { font: 500 12px var(--font-kod); color: var(--altin); border: 1px solid currentColor; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+  .palet { display: flex; flex-wrap: wrap; gap: 8px; }
+  .renk { display: grid; gap: 4px; justify-items: start; background: none; border: 0; padding: 0; cursor: pointer; color: var(--soluk); font: 12px var(--font-kod); }
+  .renk span:first-child { width: 44px; height: 44px; border-radius: 4px; outline: 1px solid var(--cizgi); outline-offset: -1px; }
+  .etiketler { display: flex; flex-wrap: wrap; gap: 6px; }
+  .etiketler span { font: 12px var(--font-kod); color: var(--soluk); background: var(--zemin); border-radius: 4px; padding: 3px 8px; }
+  .gezinti { display: flex; gap: 8px; align-items: center; }
+  .dugme {
+    font: 500 14px/1 var(--font-baslik); color: var(--murekkep); background: transparent; border: 1px solid var(--cizgi);
+    border-radius: 6px; padding: 9px 12px; cursor: pointer; text-decoration: none;
+  }
+  .dugme:hover { border-color: var(--murekkep); }
+  .kapat { margin-left: auto; }
+  .kaynak { font: 13px var(--font-kod); color: var(--soluk); overflow-wrap: anywhere; }
+  .bildirim { font: 12px var(--font-kod); color: var(--kubbe); min-height: 1em; }
+
+  @media (max-width: 820px) {
+    .ayrinti { grid-template-columns: minmax(0, 1fr); }
+    .ayrinti .gorsel img { position: static; }
+    .bilgi { padding: 22px 18px 24px; }
+    .ara { margin-left: 0; flex-basis: 100%; }
+  }
+  @media (max-width: 520px) {
+    .izgara { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 14px; }
+    .numune h3 { font-size: 16px; }
+    .numune p, .aile-adi { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .numune img { transition: none; } }
+</style>
+
+<div class="sayfa">
+  <header class="kunye">
+    <p class="ust-etiket">Atölye · Grafik, tasarım ve sanat</p>
+    <h1>Stil <span class="yesil">Kataloğu</span></h1>
+    <p class="giris">Her render stili bir numara ve adla kataloğa girer. Bütün örnekler aynı sahneyi çizer: Yeşil Kubbe, minare ve çiçekler. Görseller arasındaki fark yalnızca stilden gelir. Hepsi kodla çizildi.</p>
+    <ul class="olcu" id="olcu"></ul>
+  </header>
+
+  <nav class="suzgec" aria-label="Aileye göre süz" id="suzgec"></nav>
+
+  <main class="izgara" id="izgara" aria-live="polite"></main>
+</div>
+
+<dialog id="ayrinti" aria-labelledby="ayrinti-ad"></dialog>
+
+<script>
+  const KATALOG = /*KATALOG*/null;
+
+  const $ = (s, el = document) => el.querySelector(s);
+  const kacis = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const izgara = $('#izgara');
+  const kutu = $('#ayrinti');
+
+  if (!KATALOG) {
+    izgara.innerHTML = '<p class="bos">Katalog verisi yok. <code>node atolye/araclar/katalog.mjs</code> ile galeri.html üretin.</p>';
+  } else {
+    const stiller = KATALOG.stiller;
+    const durum = { aile: 'Hepsi', arama: '' };
+
+    const ozgunSayisi = stiller.filter((s) => s.ozgun).length;
+    $('#olcu').innerHTML = [
+      `<li><b>${stiller.length}</b> stil</li>`,
+      `<li><b>${KATALOG.aileler.length}</b> aile</li>`,
+      `<li><b>${ozgunSayisi}</b> atölye özgün ✦</li>`,
+      `<li>örnekler <b>1024 × 1024</b> px</li>`,
+      `<li>kodlar <b>${stiller[0].kod}</b>–<b>${stiller[stiller.length - 1].kod}</b></li>`,
+    ].join('');
+
+    const sekmeler = [['Hepsi', stiller.length], ...KATALOG.aileler.map((a) => [a, stiller.filter((s) => s.aile === a).length])];
+    $('#suzgec').innerHTML =
+      sekmeler.map(([ad, n]) => `<button class="sekme" type="button" data-aile="${kacis(ad)}" aria-pressed="${ad === 'Hepsi'}">${kacis(ad)} <span class="say">${n}</span></button>`).join('') +
+      `<label class="ara"><span hidden>Stil ara</span><input id="ara" type="search" placeholder="Stil ara: suluboya, çini, neon…" autocomplete="off"></label>`;
+
+    $('#suzgec').addEventListener('click', (e) => {
+      const b = e.target.closest('.sekme');
+      if (!b) return;
+      durum.aile = b.dataset.aile;
+      document.querySelectorAll('.sekme').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      ciz();
+    });
+    $('#ara').addEventListener('input', (e) => {
+      durum.arama = e.target.value.trim().toLocaleLowerCase('tr');
+      ciz();
+    });
+
+    const eslesir = (s) => {
+      if (durum.aile !== 'Hepsi' && s.aile !== durum.aile) return false;
+      if (!durum.arama) return true;
+      const metin = [s.kod, s.ad, s.ad_en, s.aile, s.ozet, ...(s.etiketler || [])].join(' ').toLocaleLowerCase('tr');
+      return metin.includes(durum.arama);
+    };
+
+    const kart = (s) => `
+      <a class="numune${s.ozgun ? ' ozgun' : ''}" href="#${s.kod.toLowerCase()}" data-kod="${s.kod}">
+        <div class="kare"><img src="${s.kucuk}" alt="${kacis(s.ad)} stilinde Yeşil Kubbe" loading="lazy" width="480" height="480"></div>
+        <div class="satir"><span class="kod">${s.kod}${s.ozgun ? ' ✦' : ''}</span><span class="aile-adi">${kacis(s.aile)}</span></div>
+        <h3>${kacis(s.ad)}</h3>
+        <div class="en">${kacis(s.ad_en)}</div>
+        <p>${kacis(s.ozet)}</p>
+      </a>`;
+
+    function ciz() {
+      const liste = stiller.filter(eslesir);
+      if (!liste.length) {
+        izgara.innerHTML = '<p class="bos">Bu aramaya uyan stil yok.</p>';
+        return;
+      }
+      if (durum.aile === 'Hepsi' && !durum.arama) {
+        izgara.innerHTML = KATALOG.aileler
+          .map((a) => {
+            const grup = liste.filter((s) => s.aile === a);
+            return `<h2 class="aile-baslik"><span>${kacis(a)}</span><span class="say">${grup[0].kod}–${grup[grup.length - 1].kod}</span></h2>` + grup.map(kart).join('');
+          })
+          .join('');
+      } else {
+        izgara.innerHTML = liste.map(kart).join('');
+      }
+    }
+
+    function ac(kod) {
+      const i = stiller.findIndex((s) => s.kod.toLowerCase() === kod);
+      if (i < 0) return;
+      const s = stiller[i];
+      const onceki = stiller[(i - 1 + stiller.length) % stiller.length];
+      const sonraki = stiller[(i + 1) % stiller.length];
+      kutu.innerHTML = `
+        <div class="ayrinti">
+          <div class="gorsel"><img src="${s.gorsel}" alt="${kacis(s.ad)} stilinde Yeşil Kubbe, minare ve çiçekler" width="1024" height="1024"></div>
+          <div class="bilgi">
+            <div class="ust">
+              <span class="kod">${s.kod} · ${kacis(s.aile)}</span>
+              ${s.ozgun ? '<span class="rozet">✦ atölye özgün</span>' : ''}
+            </div>
+            <h2 id="ayrinti-ad" tabindex="-1" autofocus>${kacis(s.ad)}</h2>
+            <div class="en">${kacis(s.ad_en)}</div>
+            <p>${kacis(s.tanim)}</p>
+            <div><h4>Ayırt edici özellikler</h4><ul>${s.ayirt_edici.map((a) => `<li>${kacis(a)}</li>`).join('')}</ul></div>
+            <div><h4>${s.ozgun ? 'Fikir ve ilham' : 'Köken'}</h4><p>${kacis(s.koken)}</p></div>
+            <div><h4>Palet</h4><div class="palet">${s.palet.map((r) => `<button class="renk" type="button" data-renk="${r}" title="${r} kopyala"><span style="background:${r}"></span><span>${r}</span></button>`).join('')}</div><div class="bildirim" id="bildirim"></div></div>
+            <div><h4>Kodla nasıl çizildi</h4><p>${kacis(s.kodla_cizim)}</p></div>
+            <div class="etiketler">${(s.etiketler || []).map((e) => `<span>${kacis(e)}</span>`).join('')}</div>
+            <div class="kaynak">kaynak: atolye/stiller/${kacis(s.klasor)}/ornek.html</div>
+            <div class="gezinti">
+              <a class="dugme" href="#${onceki.kod.toLowerCase()}" aria-label="Önceki stil: ${kacis(onceki.ad)}">← ${onceki.kod}</a>
+              <a class="dugme" href="#${sonraki.kod.toLowerCase()}" aria-label="Sonraki stil: ${kacis(sonraki.ad)}">${sonraki.kod} →</a>
+              <button class="dugme kapat" type="button" data-kapat>Kapat</button>
+            </div>
+          </div>
+        </div>`;
+      if (!kutu.open) kutu.showModal();
+      kutu.scrollTop = 0;
+    }
+
+    function kapat() {
+      if (kutu.open) kutu.close();
+    }
+    kutu.addEventListener('close', () => {
+      if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+    });
+    kutu.addEventListener('click', (e) => {
+      if (e.target === kutu || e.target.closest('[data-kapat]')) kapat();
+      const r = e.target.closest('.renk');
+      if (r) {
+        const yaz = (t) => { const b = $('#bildirim'); if (b) b.textContent = t; };
+        try {
+          navigator.clipboard.writeText(r.dataset.renk).then(() => yaz(`${r.dataset.renk} kopyalandı`), () => yaz(r.dataset.renk));
+        } catch { yaz(r.dataset.renk); }
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!kutu.open) return;
+      const kod = location.hash.slice(1);
+      const i = stiller.findIndex((s) => s.kod.toLowerCase() === kod);
+      if (i < 0) return;
+      if (e.key === 'ArrowRight') location.hash = stiller[(i + 1) % stiller.length].kod.toLowerCase();
+      if (e.key === 'ArrowLeft') location.hash = stiller[(i - 1 + stiller.length) % stiller.length].kod.toLowerCase();
+    });
+
+    function yonlendir() {
+      const kod = location.hash.slice(1).toLowerCase();
+      if (/^s-\d{3}$/.test(kod)) ac(kod);
+      else kapat();
+    }
+    window.addEventListener('hashchange', yonlendir);
+    ciz();
+    yonlendir();
+  }
+</script>
