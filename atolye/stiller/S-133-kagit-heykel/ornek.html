@@ -34,21 +34,21 @@
   const yumusak = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
   const PAL = {
-    yesil: ['#357F50', '#68B37F', '#B4E0BC'],
-    yesilK: ['#2C5E40', '#3E7A55', '#5A9870'],
-    tas: ['#C8C0B6', '#EAE5DF', '#FFFEFB'],
-    tasK: ['#9A9184', '#B3AA9C', '#CCC4B6'],
-    altin: ['#B98E35', '#E3C06A', '#FFF0B8'],
-    sari: ['#E7B95A', '#F6D98C', '#FFF4CF'],
-    bulut: ['#C9D2E0', '#ECF0F6', '#FFFFFF'],
-    tepe1: ['#A9C9C0', '#CBE1D8', '#E8F3EE'],
-    tepe2: ['#9CC4A6', '#BFDCC2', '#E2F1E1'],
-    zemin: ['#DCCFBB', '#EFE7DA', '#FBF8F1'],
-    nane: ['#88BE98', '#AED6B6', '#D6EED9'],
-    yaprak: ['#4F9264', '#7DB98C', '#B5DDB9'],
-    yaprak2: ['#62A174', '#93C99F', '#C6E7C8'],
-    beyaz: ['#D8CDD3', '#F3EEF0', '#FFFFFF'],
-    pembe: ['#E3A9B7', '#F2C9D2', '#FBE6EB'],
+    yesil: ['#17603A', '#38995B', '#B4EBBE'],
+    yesilK: ['#1E4D33', '#2C6A46', '#478860'],
+    tas: ['#C9BCAD', '#EFE8DE', '#FFFEFA'],
+    tasK: ['#94877A', '#AE9F8F', '#C8BAA8'],
+    altin: ['#B4852A', '#E6BE5C', '#FFF1B8'],
+    sari: ['#EDA93A', '#F8CD6A', '#FFF2C4'],
+    bulut: ['#D6D2D8', '#F3F1F2', '#FFFFFF'],
+    tepe1: ['#8DBE8E', '#B6DAAA', '#E0F1D2'],
+    tepe2: ['#74B07E', '#9ECF97', '#D2ECC2'],
+    zemin: ['#DDB07C', '#F2D2A6', '#FDEFD9'],
+    nane: ['#5FA86E', '#8FCB90', '#CDEDC4'],
+    yaprak: ['#3C8752', '#6DB57D', '#B1E0B3'],
+    yaprak2: ['#4E9762', '#86C892', '#C2E9C3'],
+    beyaz: ['#D9C6C8', '#F6EFEE', '#FFFFFF'],
+    pembe: ['#E7959F', '#F4BFC3', '#FDE6E5'],
   };
 
   // ------------------------------------------------------------ kâğıt dokusu: ince, düzgün çizim kâğıdı
@@ -123,11 +123,13 @@
     lg.globalAlpha = 1;
     lg.globalCompositeOperation = 'source-over';
     const g = Object.assign({ x: -9, y: 13, b: 22, a: 0.17 }, o.g || {});
-    g.a *= 1.35; g.x *= 1.25; g.y *= 1.25;
+    // derin stüdyo gölgesi: kabartma zeminden belirgin biçimde kalkık durur
+    g.a *= 1.85; g.x *= 1.75; g.y *= 1.75; g.b *= 1.3;
     const t = Object.assign({ x: -2, y: 3, b: 4, a: 0.2 }, o.t || {});
+    t.a *= 1.4; t.x *= 1.3; t.y *= 1.3;
     ana.save();
     ana.setTransform(1, 0, 0, 1, 0, 0);
-    ana.shadowColor = `rgba(70,64,80,${g.a})`;
+    ana.shadowColor = `rgba(84,60,64,${g.a})`;
     ana.shadowBlur = g.b * OL; ana.shadowOffsetX = g.x * OL; ana.shadowOffsetY = g.y * OL;
     ana.drawImage(LT, 0, 0);
     ana.shadowColor = `rgba(60,52,60,${t.a})`;
