@@ -1,0 +1,39 @@
+{
+  "kod": "S-193",
+  "no": 193,
+  "ad": "Suluboya ve Renkli Kalem",
+  "ad_en": "Watercolor and Colored Pencil",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Parlak beyaz kâğıtta yumuşak, saydam suluboya lavilerinin üstüne renkli kalemle işlenmiş kontur, damar, kaburga ve düzenli gölge taraması: titiz, çağdaş bir illüstrasyon eli.",
+  "tanim": "Hayalî bir çağdaş illüstratörün eli. Kâğıdı parlak beyaz, soğuk preslenmiş suluboya kâğıdı; önce yumuşak saydam lavilerle rengi kurar: turkuaz-seruleum bir gök (yapıların çevresinde ince beyaz kâğıt payı bırakarak, bulutları boyamadan), sap yeşili kubbe üzerine kuruyunca sert kenarlı ikinci ve üçüncü sırlar, açık yeşil bir çayır, gül pembesi taç yaprakları. Laviler çizgiye tam oturmaz, kenarlarında pigment birikir, ıslakta sarıya ve maviye kayan tonlar görülür. Kuruduktan sonra keskin uçlu renkli kalemlerle ayrıntıya geçer: her öğeyi kendi koyu renginde ince bir konturla çizer (kubbede koyu yeşil, taşta sepya, alemde kahve-altın, çiçekte mor-pembe), kubbenin kaburgalarını, yaprakların orta ve yan damarlarını, taç yapraklarında merkezden dışa ince damarları, kaidede derzleri işler. Gölgeleri hep aynı yönde (sağa yukarı) düzenli çapraz taramayla koyulaştırır, en koyu yerlerde ikinci bir tarama ekler; çayıra kısa, düzgün çimen tutamları serper.",
+  "koken": "Suluboya ve renkli kalemin birlikte kullanıldığı karma teknik çizime (çocuk kitabı ve botanik illüstrasyonu, çağdaş el çizimi illüstrasyon) ve suluboyanın sır (glaze) katmanlama, kenar birikmesi ve beyaz kâğıt bırakma yöntemlerine dayanır. Gerçek bir sanatçı örnek alınmamıştır; tarif, saydam laviyi renkli kalem ayrıntısıyla tamamlayan hayalî bir illüstratörün tutarlı elidir.",
+  "ayirt_edici": [
+    "Saydam suluboya lavileri: kubbede kurumuş, sert kenarlı ikinci-üçüncü sır basamakları, kenarlarda pigment birikmesi, ıslakta karışan sarı-mavi ton kaymaları",
+    "Turkuaz-seruleum gök lavisi yukarıdan ufka açılıyor ve dalgalanıyor; yapıların çevresinde ince, düzensiz beyaz kâğıt payı; bulutlar boyanmadan bırakılmış",
+    "Renkli kalemle her öğenin kendi koyu renginde ince kontur: kubbede koyu yeşil, taşta sepya, alemde kahve-altın, çiçekte mor-pembe",
+    "Kalem ayrıntıları: kubbe kaburgaları, yapraklarda orta ve yan damarlar, taç yapraklarında merkezden dışa ince pembe damarlar, kaidede derz çizgileri",
+    "Gölgelerde tek yönlü (sağa yukarı) düzenli kalem taraması: kubbenin sol yanı, minare, korniş altı, pencereler",
+    "Açık yeşil çayır lavisi üstünde kısa, düzgün kalem çimen tutamları; gül pembesi taç yapraklı çiçekler"
+  ],
+  "palet": [
+    "#FEFEFC",
+    "#7EC4DE",
+    "#428F56",
+    "#1E4A33",
+    "#6F5A4A",
+    "#F2D8E2",
+    "#A8455F",
+    "#D5E8B8"
+  ],
+  "kodla_cizim": "Ortak sahne modeli: her öğe (minare parçaları, pencereler, kubbe, alemler, her sap, yaprak, tomurcuk, taç yaprağı ve erkek organ) 2048 çözünürlükte sağlama bitli bir kimlik rengiyle ayrı ayrı çizilip çözümlenir; kenar yumuşatması karışımları komşuya göre onarılır. Piksel başına ertelenmiş gölgeleme: kubbede kubbeProfili türevinden dönel yüzey normali, 16 dilimde hafif şişkin dilim ve yarım silindir kaburga, Blinn parlaklığı; kasnak, minare ve alemlerde satır başına kimlik uçlarından silindir/küre normali; yaprakta orta damardan katlanmış iki düzlem ve yan damarlar; taç yaprakta üstteki taç yaprağının ışığa doğru kaydırılmış elipsinden düşen gölge. Bulutlar düz tabanlı kabarcıkların yumuşak birleşimi (1 − e^−Σ), ışık yönündeki yoğunluk farkıyla gölgelenir. Kimlik haritası düşük frekanslı gürültüyle hafifçe titretilerek okunur (el çizgisi gibi kenarlar). Gölgeleme her öğe için bir de form koordinatı (kubbede boylam × yay ve yükseklik, yaprakta boy ve en, taç yaprağında açı ve yarıçap) verir; vuruşlar bu koordinatlarda şeritlere bölünmüş, uçları incelen, basıncı ve eğimi karma ile değişen prosedürel çizgilerdir. Math.random yok, SAHNE.rng ve tamsayı karması. Suluboya katmanı: hedef renk parlaklığı düzensiz sınırlı 5 kademeye (en yakına yuvarlanan, dar yumuşak geçişli) kısmen nicelenir, renk optik yoğunluğa (1 − geçirgenlik) çevrilir; gök lavisi yapı maskesinin bulanık kopyası ve gürültü eşiğiyle yapılardan biraz önce durdurulur. Yoğunluğun Gauss bulanık kopyasından farkı kenar birikmesini, düşük frekanslı gürültü lavi dalgalanmasını ve sarı-mavi ton kaymasını, kâğıt dişi granülasyonu verir; renk kâğıt × (1 − yoğunluk) ile çarpımsal bulunur. Lavide kimlik haritası daha güçlü titretilir, böylece lavi çizgiye tam oturmaz. Kalem katmanı: gölge taraması titreşimsiz geometrinin ışık değerine göre eşiklenen −0,82 radyan prosedürel tarama (koyuda +0,62 radyan ikinci kat), yerel rengin koyu doygun hâliyle çarpma; kontur, kaburga, damar, derz ve çimen çizgileri SVG yollarından ve bitki geometrisinden örneklenip kimlik haritasında görünen parçalara bölünür, basınçlı titrek çokgen çizgiler olarak çizilir ve kâğıt dişine göre çarpılarak birleştirilir.",
+  "etiketler": [
+    "suluboya",
+    "renkli kalem",
+    "karma teknik",
+    "illüstrasyon",
+    "kontur",
+    "tarama",
+    "ressamın eli"
+  ]
+}

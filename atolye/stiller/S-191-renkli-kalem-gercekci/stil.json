@@ -1,0 +1,39 @@
+{
+  "kod": "S-191",
+  "no": 191,
+  "ad": "Renkli Kalem Gerçekçi",
+  "ad_en": "Colored-Pencil Realism",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Sıcak beyaz bristol kâğıda form yönünde, kat kat sürülüp cilalanmış renkli kalemle fotoğraf netliğinde, parlak gün ışıklı bir çizim; kâğıdın beyazı yalnız diş çukurlarında.",
+  "tanim": "Hayalî bir fotogerçekçi renkli kalem ressamının eli. Aletleri: yumuşak mum bazlı ve sert yağ bazlı renkli kalemler, renksiz cila kalemi, sivri uç için zımpara; kâğıdı ince dişli, sıcak beyaz bristol. Paleti doygun ama aydınlıktır: derin seruleumdan krem beyaza inen gök, zümrüt ve çimen yeşilleri, krem taş, sarı-kahve altın, soğuk gri gölgeli beyaz çiçekler. Her alanı formu izleyen yönde (gökte iki eğik çaprazda, kubbede kaburga boyunca, taşta yatay, taç yaprakta merkezden dışa) üç dört ince kat halinde, her katta biraz farklı tonda bir kalemle tarar; koyu yerlerde basıncı artırıp cila kalemiyle bastırarak dişi tamamen doldurur ve mum parlaklığında pürüzsüz bir yüzey elde eder, açık yerlerde hafif bastırdığı için kâğıdın beyazı diş çukurlarında ince noktalar halinde kalır. Kenarları keskin ve temiz tutar, geçişleri yumuşak; kubbe kaburgalarını ışıklı ve gölgeli iki ince çizgiyle, kasnağın parlaklığını dikey bir ışık şeridiyle modeller. Bitirirken mermer avlunun derzlerini, damarlarını, temas gölgesini ve çiçeklerin taşa düşen gölgelerini işler.",
+  "koken": "Çağdaş fotogerçekçi renkli kalem çiziminin (katmanlama, cilalama/burnishing, renksiz cila kalemi, sert ve yumuşak uçların sırayla kullanılması) ve botanik ve mimari gerçekçi çizim geleneklerinin yöntemlerine dayanır. Gerçek bir sanatçı örnek alınmamıştır; tarif, bu teknikleri tutarlı alışkanlıklarla kullanan hayalî bir ressamın elidir: form yönünde 3–4 kat ince tarama, koyuda tam cilalama, açıkta diş noktaları, keskin kenar, parlak gün ışığı.",
+  "ayirt_edici": [
+    "Form yönünde sürülmüş, üst üste binen ince renkli kalem katları: gökte iki eğik çaprazda, kubbede kaburga boyunca, taşta yatay; koyu alanlarda sert bastırılıp cilalanmış, pürüzsüz mum parlaklığı",
+    "Açık alanlarda (gök, taş, mermer) kâğıdın beyazı yalnız diş çukurlarında ince noktalar halinde görünüyor",
+    "Gerçekçi ışık: her dilimi hafif şişkin kubbe, ışıklı ve gölgeli iki ince çizgi olarak kaburgalar, sağ üstte parlak yansıma; kasnakta dikey parlaklık şeridi; altın alemlerde metal yansıması",
+    "Derin seruleumdan ufukta krem beyaza yumuşak gök geçişi, sağ üstte güneş ışıltısı; ışıklı tepeli, mavi-gri tabanlı kümülüs bulutları",
+    "Perspektifte açık mermer avlu: derz çizgileri, ince damarlar, binanın dibinde temas gölgesi, çiçeklerin sola-aşağı düşen gölgeleri",
+    "Beyaz çiçeklerde soğuk gri gölgeler, üstteki taç yaprağın alttakine düşen gölgesi, merkezde pembe ton; yapraklarda orta damardan katlanmış iki ton ve açık yan damarlar"
+  ],
+  "palet": [
+    "#3D85D0",
+    "#B9D8F0",
+    "#1A6230",
+    "#56B464",
+    "#E6DCC8",
+    "#D8B04A",
+    "#EDEAE4",
+    "#3B6A2D"
+  ],
+  "kodla_cizim": "Ortak sahne modeli: her öğe (minare parçaları, pencereler, kubbe, alemler, her sap, yaprak, tomurcuk, taç yaprağı ve erkek organ) 2048 çözünürlükte sağlama bitli bir kimlik rengiyle ayrı ayrı çizilip çözümlenir; kenar yumuşatması karışımları komşuya göre onarılır. Piksel başına ertelenmiş gölgeleme: kubbede kubbeProfili türevinden dönel yüzey normali, 16 dilimde hafif şişkin dilim ve yarım silindir kaburga, Blinn parlaklığı; kasnak, minare ve alemlerde satır başına kimlik uçlarından silindir/küre normali; yaprakta orta damardan katlanmış iki düzlem ve yan damarlar; taç yaprakta üstteki taç yaprağının ışığa doğru kaydırılmış elipsinden düşen gölge. Bulutlar düz tabanlı kabarcıkların yumuşak birleşimi (1 − e^−Σ), ışık yönündeki yoğunluk farkıyla gölgelenir. Kimlik haritası düşük frekanslı gürültüyle hafifçe titretilerek okunur (el çizgisi gibi kenarlar). Gölgeleme her öğe için bir de form koordinatı (kubbede boylam × yay ve yükseklik, yaprakta boy ve en, taç yaprağında açı ve yarıçap) verir; vuruşlar bu koordinatlarda şeritlere bölünmüş, uçları incelen, basıncı ve eğimi karma ile değişen prosedürel çizgilerdir. Math.random yok, SAHNE.rng ve tamsayı karması. Bu üslupta hedef renk gerçekçi bir paletle hesaplanır; üç kat prosedürel tarama (form yönü, +0,42 ve −0,55 radyan döndürülmüş) yoğunluk alanı verir. Örtü oranı koyuluğa göre %80'den %100'e çıkar; vuruş dokusu ve ince dişli kâğıt yükseklik haritası örtüyü bu ortalamanın çevresinde oynatır, koyularda cila payı dokuyu bastırır; katlar arası küçük ton dönmesi farklı kalemleri taklit eder, pigment rengi ortalama örtüye göre telafi edilir. Zemin perspektif dönüşümüyle (göz hizası y=600) mermer karo, derz, damar ve bitki gölgesi olarak gölgelenir; kasnağa yatay düzlemde Blinn parlaklığı eklenir.",
+  "etiketler": [
+    "renkli kalem",
+    "fotogerçekçi",
+    "cilalama",
+    "katmanlama",
+    "kâğıt dişi",
+    "gerçekçi çizim",
+    "ressamın eli"
+  ]
+}

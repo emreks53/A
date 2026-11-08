@@ -1180,6 +1180,7 @@ const H = (function () {
         const a = o.yon(x, y);
         const ca = Math.cos(a) * l / 2, sa = Math.sin(a) * l / 2;
         pts = [[x - ca, y - sa], [x + ca, y + sa]];
+        if (o.ucIcinde && !(o.icinde(x - ca, y - sa) && o.icinde(x + ca, y + sa))) continue;
       }
       let c = ornek(x, y);
       if (o.renkFn) c = o.renkFn(c, x, y, r);
@@ -1273,9 +1274,9 @@ const H = (function () {
   const R = S.rng(1710);
 
   // ------------------------------------------------------------ palet (ressamın paleti)
-  const TAS = malzeme({ rampa: [[0, '#9A8468'], [0.3, '#C2AB88'], [0.55, '#E1D1B2'], [0.8, '#F2E6CE'], [1, '#FCF5E6']], ortam: 0.24, gok: '#A9B4C8', gokGuc: 0.2 });
+  const TAS = malzeme({ rampa: [[0, '#957E62'], [0.3, '#BBA381'], [0.55, '#E0CFAE'], [0.8, '#F4E7CC'], [1, '#FFF8E8']], ortam: 0.18, gok: '#A9B4C8', gokGuc: 0.22 });
   const ALTIN = { vurgu: C('#FFF0BC'), isik: C('#E8C468'), orta: C('#BF922F'), koyu: C('#7A561B'), yansima: C('#A88B5A') };
-  const YESIL = malzeme({ rampa: [[0, '#173F2C'], [0.3, '#225E3B'], [0.55, '#2F7D45'], [0.8, '#5FA358'], [1, '#B2D383']], ortam: 0.12, gok: '#7CA6B4', gokGuc: 0.26 });
+  const YESIL = malzeme({ rampa: [[0, '#163C2B'], [0.28, '#1F5838'], [0.5, '#2C7A44'], [0.75, '#5AA257'], [0.92, '#9CCB78'], [1, '#C8E096']], ortam: 0.06, gok: '#7CA6B4', gokGuc: 0.22 });
   const YAPRAK = { koyu: C('#3A5532'), orta: C('#5F7F48'), acik: C('#B3C386') };
   const CICEK = { isik: C('#FFFDF7'), orta: C('#F7EFE6'), golge: C('#B7AEBD'), kok: C('#EFCDC2'), gobek: C('#B8A847'), ercik: C('#F3C64A'), ercikKoyu: C('#A8741C'),
     tom: C('#F6DCDC'), tomKok: C('#E9B8BC'), tomUc: C('#FFF4F1'), tomGolge: C('#B98F99'), canak: C('#5C7A45') };

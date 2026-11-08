@@ -1,0 +1,39 @@
+{
+  "kod": "S-194",
+  "no": 194,
+  "ad": "Mavi Kâğıtta Pastel",
+  "ad_en": "Pastel on Blue Paper",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Açık mavi vergeli Ingres kâğıdına yumuşak pastelle özenli taramalar ve parmakla yumuşatılmış geçişler; kâğıdın mavisi göğün kendisi, bina ve çiçekler sıcak pastel tonlarda.",
+  "tanim": "Hayalî bir pastel ressamının eli. Kâğıdı açık mavi, yatay sık verge ve seyrek dikey zincir çizgili Ingres kâğıdı; aletleri sınırlı bir yumuşak pastel çubuk takımı (birkaç mavi, beyaz, krem, şeftali, kayısı, yeşiller, lila-gri, altın sarısı) ve ince pastel kalemler. Göğü büyük ölçüde kâğıda bırakır, üstüne yatay seyrek mavi-beyaz vuruşlar ve güneş çevresine parmakla yedirilmiş beyaz bir ışıltı koyar; bulutları beyaz ve kremle sık tarar, tabanlarını lilaya bırakır. Binayı ve çiçekleri sıcak tonlarla, form yönünde özenli kısa taramalarla kurar; her vuruşta eldeki takımdan hedef renge en yakın iki çubuktan birini kullanır, renkler gözde karışır. Hafif bastırdığı yerde pastel yalnız verge sırtlarına tutunur ve kâğıdın çizgileri seçilir; kubbe geçişlerinde ve taşta parmakla yumuşatır. Kâğıdın mavisini taşın gölge yanında ve kumda ara değer olarak bırakır, böylece gölgeler lila-mavi olur. Pencereleri, zikzakları, alemleri ve çiçek göbeklerini pastel kalemle sıkı ve tek renk doldurur; kaburgaları, kornişin ışık çizgisini ve taç yapraklarının kenarını ince pastel kalemle tanımlar.",
+  "koken": "Tonlu (özellikle mavi) kâğıtta pastel geleneğine (18. yüzyıl portre pastelcileri, 19. yüzyıl Fransız pastel manzaraları), Ingres tipi vergeli pastel kâğıdına ve pastelde optik karışım, tarama ve parmakla yedirme yöntemlerine dayanır. Gerçek bir sanatçı örnek alınmamıştır; tarif, kâğıdın rengini göğe ve gölgelere bırakan, sınırlı çubuk takımıyla özenle tarayan hayalî bir ressamın tutarlı elidir.",
+  "ayirt_edici": [
+    "Açık mavi Ingres kâğıdı göğün kendisi: yatay sık verge çizgileri ve seyrek dikey zincir çizgileri pastelin altından ve arasından seçiliyor",
+    "Sınırlı bir çubuk takımından vuruşlar: her vuruş hedefe en yakın iki renkten birini taşıyor, kubbede koyu ve açık yeşil, taşta krem, şeftali ve lila gözde karışıyor",
+    "Hafif bastırılan yerde pigment yalnız verge sırtlarında; güneş ışıltısında, kubbe geçişlerinde ve taşta parmakla yumuşatılmış alanlar",
+    "Kâğıdın mavisi taşın gölge yanında ve kumda ara değer olarak kalıyor: lila-mavi gölgeler, mavi-krem kum",
+    "Güneş çevresinde beyaz pastelle sürülmüş yumuşak ışıltı; bulutlarda beyaz-krem sık tarama ve lila tabanlar",
+    "Şeftali-kayısı taç yapraklı çiçekler ve ince gül rengi pastel kalem kontur; pencereler koyu mor-arduvaz tek renk dolgu"
+  ],
+  "palet": [
+    "#B0C8E0",
+    "#FFFDF7",
+    "#F3E4CC",
+    "#F8C7AE",
+    "#3F9356",
+    "#8ECB80",
+    "#9F8EAD",
+    "#D9AB48"
+  ],
+  "kodla_cizim": "Ortak sahne modeli: her öğe (minare parçaları, pencereler, kubbe, alemler, her sap, yaprak, tomurcuk, taç yaprağı ve erkek organ) 2048 çözünürlükte sağlama bitli bir kimlik rengiyle ayrı ayrı çizilip çözümlenir; kenar yumuşatması karışımları komşuya göre onarılır. Piksel başına ertelenmiş gölgeleme: kubbede kubbeProfili türevinden dönel yüzey normali, 16 dilimde hafif şişkin dilim ve yarım silindir kaburga, Blinn parlaklığı; kasnak, minare ve alemlerde satır başına kimlik uçlarından silindir/küre normali; yaprakta orta damardan katlanmış iki düzlem ve yan damarlar; taç yaprakta üstteki taç yaprağının ışığa doğru kaydırılmış elipsinden düşen gölge. Bulutlar düz tabanlı kabarcıkların yumuşak birleşimi (1 − e^−Σ), ışık yönündeki yoğunluk farkıyla gölgelenir. Kimlik haritası düşük frekanslı gürültüyle hafifçe titretilerek okunur (el çizgisi gibi kenarlar). Gölgeleme her öğe için bir de form koordinatı (kubbede boylam × yay ve yükseklik, yaprakta boy ve en, taç yaprağında açı ve yarıçap) verir; vuruşlar bu koordinatlarda şeritlere bölünmüş, uçları incelen, basıncı ve eğimi karma ile değişen prosedürel çizgilerdir. Math.random yok, SAHNE.rng ve tamsayı karması. Kâğıt: kosinüs verge çizgileri (5,2 px aralık, gürültüyle eğrilen), 104 px aralıklı dikey zincir çizgileri ve iki ölçekte lif gürültüsünden diş haritası. Pastel: 46 renklik sabit çubuk paleti; her vuruş (şerit × parça karmasıyla) hedef rengin en yakın iki çubuğundan birini uzaklık oranına göre seçer. İki kat vuruş (form yönü ve 0,62 radyan çapraz), basınç × örtü hedefi dişe göre eşiklenir; örtü hedefi hedefin kâğıt renginden uzaklığıyla büyür, taşta ışığa göre %50–95 tutulur ve telafi yapılmaz, böylece kâğıt gölgelerde görünür. Gökte telafili, yalnız diş dokulu sürülmüş taban kat ile seyrek uzun yatay vuruşlar; bulutlarda ayrı sık tarama. Seçili bölgelerde (güneş çevresi, kubbe, kasnak, taş, kum, taç) bölge içinde kalan bulanık kopyayla karıştırarak parmakla yumuşatma. Küçük ayrıntılar en yakın tek çubukla sıkı dolgu; kaburga, ışık çizgileri ve taç/yaprak konturları ayrı katmanda çizilip dişe göre eşiklenir.",
+  "etiketler": [
+    "pastel",
+    "tonlu kâğıt",
+    "Ingres kâğıdı",
+    "vergeli kâğıt",
+    "optik karışım",
+    "yumuşatma",
+    "ressamın eli"
+  ]
+}

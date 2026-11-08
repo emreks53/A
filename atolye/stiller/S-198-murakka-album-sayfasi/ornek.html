@@ -294,12 +294,12 @@
     const damlalar = [];
     // tekneye sırayla boya serpilir; her damla öncekileri iter
     // damlalar yalnız kenar suyu bölgesine (ve biraz içine) serpilir; yüzey tamamen dolar
-    while (damlalar.length < 2700) {
+    while (damlalar.length < 1900) {
       const x = rk() * W;
       const y = rk() * W;
       if (x > PANO.x + 34 && x < PANO.x + PANO.w - 34 && y > PANO.y + 34 && y < PANO.y + PANO.w - 34) continue;
       const t = rk();
-      damlalar.push({ x, y, r: 8.5 + rk() * 8, c: t < 0.38 ? 0 : t < 0.76 ? 1 : t < 0.87 ? 2 : t < 0.97 ? 3 : 4 });
+      damlalar.push({ x, y, r: 10 + rk() * 10, c: t < 0.38 ? 0 : t < 0.76 ? 1 : t < 0.87 ? 2 : t < 0.97 ? 3 : 4 });
     }
     // ebruyu biraz eğmek için en sonda hafif bir gelgit dalgası
     const kenarda = (x, y) => !(x > PANO.x - 2 && x < PANO.x + PANO.w + 2 && y > PANO.y - 2 && y < PANO.y + PANO.w + 2);
