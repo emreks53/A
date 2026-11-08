@@ -681,6 +681,12 @@
     if (i % 2) return;
     yaprak(y.x, y.y, y.uzunluk * 1.05, y.aci, YESIL[i % 3], true);
   });
+  // arka sıradaki goncalar: kendi sapları ile, ön çiçeklerin arkasında
+  B.tomurcuklar.slice(8).forEach((t, i) => {
+    sap([[t.x, t.y + 4], [t.x + (i % 2 ? 4 : -4), (t.y + 1024) / 2], [t.x, 1030]], 2.2);
+    if (i % 2) sumbul(t.x, t.y - 6, 0.75, ['#5A4A96', '#8A82C4']);
+    else lale(t.x, t.y, 0.6, 0, KIRMIZI);
+  });
   const turler = [
     { tur: 'sumbul', s: 1.3 },
     { tur: 'papatya', s: 1.6 },
@@ -703,7 +709,6 @@
     else if (tur === 'papatya') papatya(c.x, c.y, s);
     else sumbul(c.x, c.y, s, ['#4A4E98', '#7D86C8']);
   });
-  B.tomurcuklar.slice(8).forEach((t, i) => (i % 2 ? sumbul(t.x, t.y - 6, 0.75, ['#5A4A96', '#8A82C4']) : lale(t.x, t.y, 0.6, 0, KIRMIZI)));
 
   // çiçek tabakalarını çiz (kendi kutularında, saydam zeminle)
   for (const { T, kutu } of CIZ) {
