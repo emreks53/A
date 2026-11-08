@@ -672,7 +672,7 @@ await adim('bilinmeyen video adresi ilk videoyu açar, çökmez', async () => {
 
 console.log('Kenz');
 
-await adim('Kenz ayrı ekran: mürekkep laciverti, sade kütüphane; videolar kitap kitap, kitapta bölüm bölüm', async () => {
+await adim('Kenz ayrı ekran: açık ten rengi zeminde sade kütüphane; videolar kitap kitap, kitapta bölüm bölüm', async () => {
   await page.goto(base);
   await page.waitForSelector('.quote');
   await page.locator('.tab--kenz').click();
@@ -745,7 +745,7 @@ await adim('Kenz ayrı ekran: mürekkep laciverti, sade kütüphane; videolar ki
   assert.equal(await page.locator('.fihrist').count(), 0);
 });
 
-await adim('menünün altındaki ve yanındaki koyu bantta (saydam kalkan) görünmeyen karta dokunulmaz; kaydırma oradan da başlar', async () => {
+await adim('menünün altındaki ve yanındaki bantta (saydam kalkan) görünmeyen karta dokunulmaz; kaydırma oradan da başlar', async () => {
   await page.setViewportSize({ width: 390, height: 560 });
   await page.waitForTimeout(200);
   const noktalar = await page.evaluate(() => {

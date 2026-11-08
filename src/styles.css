@@ -140,15 +140,7 @@
   --quote-shadow-near: rgba(40, 148, 225, 0.2);
   --quote-shadow-far: rgba(40, 148, 225, 0.45);
 
-  /* "müze / koleksiyon": mürekkep laciverti zemin, fildişi yazı; şampanya yalnız ince çizgi, aralıklı küçük etiket ve
-     seçili simgede (altın dolgu ya da parıltı yok). Kitaplar tek renk: #D7787B. */
-  --murekkep: #0b1430;
-  --fildisi: #f4ede0;
-  --fildisi-2: rgba(244, 237, 224, 0.74);
-  --fildisi-3: rgba(244, 237, 224, 0.56);
-  --sampanya: #d9c49a;
-  --sampanya-cizgi: rgba(217, 196, 154, 0.26);
-  --sampanya-ince: rgba(217, 196, 154, 0.14);
+  /* Külliyat ciltlerinin tek rengi */
   --cilt: #d7787b;
   /* bezin gölgesi ve ışığı (rgb üçlüsü; saydamlıkla kullanılır) */
   --cilt-golge: 60, 14, 22;
@@ -174,8 +166,6 @@
   --dantel-sol: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%228%22%20height%3D%227%22%20viewBox%3D%220%200%2080%2070%22%3E%3Cg%20transform%3D%22translate(3.5%204.5)%22%20color%3D%22rgb(70%2C14%2C22)%22%20opacity%3D%22.7%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(-3%20-3.5)%22%20color%3D%22rgb(255%2C240%2C234)%22%20opacity%3D%22.8%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3Cg%20color%3D%22rgb(255%2C236%2C230)%22%20opacity%3D%22.42%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
   --dantel-sag: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%228%22%20height%3D%227%22%20viewBox%3D%220%200%2080%2070%22%3E%3Cg%20transform%3D%22translate(3.5%204.5)%22%20color%3D%22rgb(70%2C14%2C22)%22%20opacity%3D%22.7%22%3E%3Cg%20transform%3D%22translate(80%200)%20scale(-1%201)%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(-3%20-3.5)%22%20color%3D%22rgb(255%2C240%2C234)%22%20opacity%3D%22.8%22%3E%3Cg%20transform%3D%22translate(80%200)%20scale(-1%201)%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cg%20color%3D%22rgb(255%2C236%2C230)%22%20opacity%3D%22.42%22%3E%3Cg%20transform%3D%22translate(80%200)%20scale(-1%201)%22%3E%3Cpath%20d%3D%22M5%2035C5%2022%2018%2017.5%2032%2025.5L54%2035L32%2044.5C18%2052.5%205%2048%205%2035Z%22%20fill%3D%22currentColor%22%2F%3E%3Cpath%20d%3D%22M59%2021.5L74%2035L59%2048.5%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%227.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E");
   --eb: 'EB Garamond', 'Tinos', Georgia, serif;
-  --zemin-ekran: radial-gradient(90% 44% at 50% 13%, rgba(40, 56, 110, 0.42), rgba(40, 56, 110, 0) 70%),
-    linear-gradient(180deg, #0d1736 0%, #0b1430 52%, #070e24 100%);
   /* bez dokusu (gri gürültü; soft-light ile karışır) */
   --doku: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n' x='0' y='0' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .5'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   --serif: 'Tinos', 'Times New Roman', Times, serif;
