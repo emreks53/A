@@ -890,17 +890,18 @@
         const X = i * 2;
         const Y = j * 2;
         const h = G.kenet(1 - Y / 800, 0, 1); // 1 tepe, 0 ufuk
-        const zen = [0.1, 0.24, 0.6];
-        const ufk = [0.62, 0.72, 0.82];
-        const t = Math.pow(h, 0.55);
-        let c = [ufk[0] + (zen[0] - ufk[0]) * t, ufk[1] + (zen[1] - ufk[1]) * t, ufk[2] + (zen[2] - ufk[2]) * t];
+        const zen = [52, 112, 198];
+        const ort = [118, 168, 226];
+        const ufk = [214, 228, 238];
+        const t = Math.pow(h, 0.7);
+        let c = t > 0.5 ? G.karis(ort, zen, (t - 0.5) / 0.5) : G.karis(ufk, ort, t / 0.5);
         const d = Math.hypot(X - GUNES.x, Y - GUNES.y);
-        const mie = 1.6 * Math.exp(-d / 60) + 0.45 * Math.exp(-d / 260) + 0.12 * Math.exp(-d / 600);
-        c = [c[0] + mie * 1.0, c[1] + mie * 0.96, c[2] + mie * 0.86];
+        const mie = 0.95 * Math.exp(-d / 45) + 0.42 * Math.exp(-d / 190) + 0.16 * Math.exp(-d / 520);
+        c = G.karis(c, [255, 252, 240], G.kenet(mie, 0, 1));
         const q = (j * 512 + i) * 4;
-        im.data[q] = srgb(aces(c[0] * 0.9));
-        im.data[q + 1] = srgb(aces(c[1] * 0.9));
-        im.data[q + 2] = srgb(aces(c[2] * 0.9));
+        im.data[q] = c[0];
+        im.data[q + 1] = c[1];
+        im.data[q + 2] = c[2];
         im.data[q + 3] = 255;
       }
     }
@@ -926,9 +927,9 @@
       const h = k.yuk + 2 * k.r1 + 60;
       const c = G.bulut(p, {
         x0, y0, w, h, olcek: 1.5, gur: PN, gurAmp: 0.55, gurFrek: 0.028, oktav: 6, icKoru: [0.6, 1.2],
-        isik: [255, 253, 248], golge: [150, 162, 184], alt: [176, 184, 202], kenar: [0.14, 0.62],
-        emilim: 1.3, adimlar: 9, adimBoy: 5, tabanY: k.y + k.r1 * 0.5, tabanYum: 16, altGuc: 0.55, opaklik: k.ol,
-        parlakKenar: [255, 255, 255],
+        isik: [255, 254, 250], golge: [176, 188, 206], alt: [188, 196, 212], kenar: [0.12, 0.58],
+        emilim: 0.8, adimlar: 7, adimBoy: 5, tabanY: k.y + k.r1 * 0.5, tabanYum: 16, altGuc: 0.5, opaklik: k.ol,
+        normalMod: true, r1: 3, r2: 12, normalGuc: 18, ortulme: 0.45, isik3: [0.6, -0.65, 0.45],
       });
       ctx.drawImage(c, x0, y0, w, h);
     }
@@ -970,7 +971,7 @@
         const derz = Math.min(fx, 1 - fx) < 0.012 / derin || Math.min(fz, 1 - fz) < 0.02 ? 1 : 0;
         const damar = Math.pow(Math.abs(PT.fbm(wx * 1.3 + Math.floor(wz) * 3.1, wz * 2.2, 4)), 0.6);
         let v = 0.78 + 0.05 * PT.n(wx * 9, wz * 9) - 0.07 * (1 - G.kenet(damar * 4, 0, 1)) * 0.5;
-        if (derz) v *= 0.86;
+        if (derz) v *= 0.93;
         // gökten gelen yansıma: uzakta daha parlak (Fresnel)
         const fr = G.kenet(1 - (Y - 800) / 224, 0, 1);
         const c = [v * 0.95 + 0.1 * fr, v * 0.94 + 0.11 * fr, v * 0.9 + 0.14 * fr];
@@ -993,7 +994,7 @@
     golge: golgeTas,
     tas: TAS,
     tasKoyu: [150, 140, 124],
-    yesil: [44, 150, 78],
+    yesil: [52, 130, 74],
     yesilKoyu: [8, 40, 24],
     golgeRenk: [40, 48, 64],
     isikRenk: [255, 250, 236],
@@ -1009,7 +1010,7 @@
     alemParilti: 1,
   });
   // kubbe: boyalı metal levha — yayınık + GGX benzeri parlama + gök yansıması + oluk ortam gölgesi
-  const KUBBE = [42, 150, 76];
+  const KUBBE = [56, 140, 82];
   G.kubbeGolgele(mx, {
     olcek: 2,
     kaburgaGen: 1.5,
@@ -1020,7 +1021,7 @@
       const ao = (1 - 0.35 * g.oluk) * (1 - 0.35 * G.yumusak(536, 556, g.Y)) * (0.92 + 0.08 * g.kaburga);
       const up = Math.max(0, -n[1]);
       const yans = [0.05 + 0.12 * up, 0.08 + 0.15 * up, 0.14 + 0.24 * up];
-      let c = foto(KUBBE, n, { ao, parlak: 0.5, us: 46, yansima: yans });
+      let c = foto(KUBBE, n, { ao, parlak: 0.32, us: 22, yansima: yans });
       // levha dokusu: çok ince dikey dalgalanma (yeni, temiz boya)
       const tx = 1 + 0.025 * PT.n(g.phi * 40, g.Y * 0.05);
       return [c[0] * tx, c[1] * tx, c[2] * tx];
@@ -1028,7 +1029,7 @@
   });
   {
     const q = SAHNE.kasnak[0];
-    mx.fillStyle = G.silindirDegrade(mx, q.x1, q.x2, (n) => foto([70, 168, 98], G.norm([n[0] * 0.5, -0.85, n[2] * 0.5])));
+    mx.fillStyle = G.silindirDegrade(mx, q.x1, q.x2, (n) => foto([76, 150, 96], G.norm([n[0] * 0.5, -0.85, n[2] * 0.5])));
     mx.fillRect(q.x1, q.y1 - 1, q.x2 - q.x1, 3.5);
   }
   G.alem(mx, SAHNE.alemParcalari(560, 300, 1), (t) => {
@@ -1055,7 +1056,7 @@
               const fs = sira - Math.floor(sira);
               const kay = Math.floor(sira) % 2 ? 0 : 24;
               const fx = ((X - 300 + kay) / 48) % 1;
-              if (fs < 0.05 || fx < 0.02) m *= 0.93;
+              if (fs < 0.05 || fx < 0.02) m *= 0.95;
             }
           } else if (b === 'kubbe' || b === 'kasnak') {
             m = 1 + 0.012 * PT.n(X * 3, Y * 3);
@@ -1175,8 +1176,8 @@
   function yaprakTara(Kt, y, z0, ton) {
     const uz = y.uzunluk;
     const gen = uz * 0.24;
-    const koyu = G.karis([42, 92, 40], [56, 108, 44], ton);
-    const acik = G.karis([92, 150, 66], [120, 168, 72], ton);
+    const koyu = G.karis([40, 72, 36], [52, 84, 40], ton);
+    const acik = G.karis([78, 116, 56], [98, 132, 62], ton);
     tara(Kt, y.x, y.y, uz, gen, y.aci,
       (t) => Math.pow(Math.sin(Math.PI * Math.min(1, t)), 0.75) * (1 - 0.18 * t),
       (t, vn, u) => {
@@ -1285,7 +1286,7 @@
           const ters = Math.max(0, -G.nokta(n, L)) + (1 - gol) * 0.35;
           col = G.karis(col, G.karis(alb, [255, 236, 200], 0.4), ters * 0.32);
         } else {
-          col = foto(alb, n, { golge: gol, ao, parlak: 0.35, us: 34 });
+          col = foto(alb, n, { golge: gol, ao, parlak: 0.22, us: 30 });
         }
         const q = k * 4;
         d[q] = col[0];

@@ -41,15 +41,17 @@
       g.drawImage(t, 0, 0, W2, W2);
     }
     // lifler: kısa, yumuşak; çoğu açık (ince yer), azı hafif koyu (kalın yer)
-    g.lineCap = 'round';
-    g.filter = 'blur(1px)';
+    const lt = SAHNE.yeniTuval(W2, W2), l = lt.getContext('2d');
+    l.lineCap = 'round';
     for (let i = 0; i < 9000; i++) {
       const x = r() * W2, y = r() * W2, a = r() * TAU, L = 8 + r() * 26, b = (r() - 0.5) * 1.4;
       const koyu = r() < 0.35;
-      g.strokeStyle = koyu ? `rgba(150,140,130,${0.03 + r() * 0.04})` : `rgba(255,255,255,${0.08 + r() * 0.12})`;
-      g.lineWidth = 1 + r() * 2.2;
-      g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a + b) * L * 0.5, y + Math.sin(a + b) * L * 0.5, x + Math.cos(a) * L, y + Math.sin(a) * L); g.stroke();
+      l.strokeStyle = koyu ? `rgba(150,140,130,${0.03 + r() * 0.04})` : `rgba(255,255,255,${0.08 + r() * 0.12})`;
+      l.lineWidth = 1 + r() * 2.2;
+      l.beginPath(); l.moveTo(x, y); l.quadraticCurveTo(x + Math.cos(a + b) * L * 0.5, y + Math.sin(a + b) * L * 0.5, x + Math.cos(a) * L, y + Math.sin(a) * L); l.stroke();
     }
+    g.filter = 'blur(1px)';
+    g.drawImage(lt, 0, 0);
     g.filter = 'none';
   })();
 
