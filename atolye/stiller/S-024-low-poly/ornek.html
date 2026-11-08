@@ -45,7 +45,8 @@
   const dikY = (x1, y1, x2, y2) => S.yol([[x1, y1], [x2, y1], [x2, y2], [x1, y2]], true);
 
   dolK(dikY(0, 0, W, H), { tip: 'gok' });
-  dolK(S.daireYolu(S.gunes.x, S.gunes.y, 46), { tip: 'gunes' });
+  const GUNES_R = 50;
+  dolK(S.daireYolu(S.gunes.x, S.gunes.y, GUNES_R + 0.5), { tip: 'gunes' });
   dolK(dikY(0, S.zemin, W, H), { tip: 'zemin' });
   const yariGen = (p) => (p.tip === 'poligon' ? (Math.max(...p.noktalar.map((q) => q[0])) - Math.min(...p.noktalar.map((q) => q[0]))) / 2 : p.tip === 'topuz' ? 30 : (p.x2 - p.x1) / 2);
   const minareP = S.minareParcalari();
@@ -65,6 +66,7 @@
     for (const p of S.kasnakPencereleri(k)) dolK(S.kemerYolu(p.x, p.y, p.w, p.h), { tip: 'pencere' });
   }
   const prof = S.kubbeProfili(60);
+  const KABURGA_YARI = 2.6; // kaburga şeridinin yarı genişliği (px)
   const meridyen = (u) => prof.map((q) => [560 + u * q.r, q.y]);
   kc.save();
   kc.clip(new Path2D(S.kubbeYolu));
@@ -180,7 +182,16 @@
       const kay = seviye.indexOf(fz) % 2 ? 0.012 : -0.012;
       for (let k = 0; k <= 16; k += adim) {
         const kk = k === 0 || k === 16 ? k : k + kay * 16 / Math.PI;
-        nk(560 + Math.sin(-Math.PI / 2 + (Math.PI * kk) / 16) * r, y, 1);
+        const x = 560 + Math.sin(-Math.PI / 2 + (Math.PI * kk) / 16) * r;
+        // alt seviyelerde kaburga iki yanına konan noktalarla ince bir şerit olur (kaburga çizgisi)
+        if (adim === 1 && k > 0 && k < 16 && Math.abs(k - 8) < 7) {
+          // şerit tam kaburga boylamında (kaydırmasız): seviyeler arasında kırılmadan uzansın
+          const lon = -Math.PI / 2 + (Math.PI * k) / 16;
+          const xr = 560 + Math.sin(lon) * r;
+          const yari = KABURGA_YARI * Math.max(0.55, Math.cos(lon));
+          nk(xr - yari, y, 1);
+          nk(xr + yari, y, 1);
+        } else nk(x, y, 1);
       }
     }
     nk(560, 300);
@@ -337,15 +348,17 @@
       nkG(x - nx * 2.3, y - ny * 2.3, ok, 2.5);
     }
   });
-  // --- güneş: eş merkezli halkalar (ışıyan yelpaze)
+  // --- güneş: on köşeli yüzlü bir disk ve aynı açılara dizilmiş eş merkezli hale halkaları
+  // (halkalar arasında dörtgen hücreler → ışın değil, düzgün çokgen halkalar)
   {
-    const halkalar = [[22, 6], [46, 10], [78, 13], [120, 15], [170, 17], [228, 19]];
     nk(S.gunes.x, S.gunes.y);
-    halkalar.forEach(([r, n], h) => {
+    const halkalar = [[GUNES_R, 10], [80, 10], [124, 20], [178, 20], [240, 20]];
+    halkalar.forEach(([r, n]) => {
       for (let i = 0; i < n; i++) {
-        const a = ((i + (h % 2) * 0.5) / n) * Math.PI * 2 + h * 0.21;
+        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
         const x = S.gunes.x + Math.cos(a) * r, y = S.gunes.y + Math.sin(a) * r;
-        if (tipAt(x, y) === 'gok' || tipAt(x, y) === 'gunes') nk(x, y, r * 0.25);
+        // disk sınırındaki noktalar kenar yumuşatması yüzünden kimliksiz görünebilir: ilk iki halkada sınama yok
+        if (r <= 80 || tipAt(x, y) === 'gok' || tipAt(x, y) === 'gunes') nk(x, y, 2);
       }
     });
   }
@@ -524,7 +537,7 @@
         // her dilim (iki kaburga arası) tek bir düzlem gibi: dilimin orta boylamı + hücredeki iki üçgene küçük fark
         const l1 = -Math.PI / 2 + (Math.PI * o.dilim) / 16;
         const fr = (lam - l1) / (Math.PI / 16) - 0.5;
-        lam = l1 + Math.PI / 32 + (fr < 0 ? -1 : 1) * 0.27; // dilim hafif kabarık: sol üçgen gölgede, sağ üçgen ışıkta
+        lam = l1 + Math.PI / 32 + (fr < 0 ? -1 : 1) * 0.16; // dilim hafif kabarık: sol üçgen gölgede, sağ üçgen ışıkta
         const phi = t * 1.35;
         return nrm([Math.sin(lam) * Math.cos(phi) + j[0] * 0.08, -Math.sin(phi) + j[1] * 0.08, Math.cos(lam) * Math.cos(phi)]);
       }
@@ -562,13 +575,20 @@
         const c = o.c;
         return nrm([((x - c.x) / (c.r * 0.2)) * 0.8, ((y - c.y) / (c.r * 0.2)) * 0.8, 1]);
       }
-      case 'gok': return nrm([j[0] * 0.22, j[1] * 0.22, 1]);
-      case 'gunes': return nrm([j[0] * 0.1, j[1] * 0.1, 1]);
+      case 'gok': {
+        // hale halkaları temiz kalsın: güneşe yakın gök üçgenlerinde rastgele sapma azalır
+        const yak = Math.min(1, Math.max(0.25, (Math.hypot(x - S.gunes.x, y - S.gunes.y) - 60) / 220));
+        return nrm([j[0] * 0.22 * yak, j[1] * 0.22 * yak, 1]);
+      }
+      case 'gunes': {
+        const a = Math.atan2(y - S.gunes.y, x - S.gunes.x);
+        return nrm([Math.cos(a) * 0.55, Math.sin(a) * 0.55, 1]);
+      }
       case 'zemin': return nrm([j[0] * 0.25, -0.25 + j[1] * 0.2, 1]);
       default: return nrm([j[0] * 0.2, j[1] * 0.2, 1]);
     }
   }
-  const guc = { gok: 0.3, gunes: 0.2, zemin: 0.5, kubbe: 0.6, kasnak: 0.6, minare: 0.55, kaide: 0.4, kornis: 0.4, yaprak: 0.6, cicek: 0.32, cicekOrta: 0.5, pencere: 0.3, zikzak: 0.3, sap: 0.4, tomurcuk: 0.4, altin: 0.6 };
+  const guc = { gok: 0.3, gunes: 0.24, zemin: 0.5, kubbe: 0.6, kasnak: 0.6, minare: 0.55, kaide: 0.4, kornis: 0.4, yaprak: 0.6, cicek: 0.32, cicekOrta: 0.5, pencere: 0.3, zikzak: 0.3, sap: 0.4, tomurcuk: 0.4, altin: 0.6 };
   const n0L = L[2];
 
   const tuval = document.getElementById('tuval');
@@ -624,6 +644,12 @@
     const d = nv[0] * L[0] + nv[1] * L[1] + nv[2] * L[2];
     const k1 = guc[o.tip] || 0.4;
     let fct = 1 + k1 * (d - n0L) + (rnd() - 0.5) * 0.035;
+    // kaburga şeridi: kubbede yatay genişliği şerit kadar olan ince üçgenler bir ton koyu
+    if (o.tip === 'kubbe' && Math.max(ax, bx, cx) - Math.min(ax, bx, cx) < KABURGA_YARI * 2 + 1.2) fct *= 0.8;
+    if (o.tip === 'gunes') {
+      // güneş diski: sıcak açık sarı, yüzleri dışa eğik (mücevher kesimi)
+      r = 255; g = 236; bb = 178;
+    }
     r = Math.max(0, Math.min(255, r * fct));
     g = Math.max(0, Math.min(255, g * fct));
     bb = Math.max(0, Math.min(255, bb * fct));
@@ -637,6 +663,58 @@
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+  }
+
+  // ================================================================ 6b. saplar ve küçük pencereler: elle üçgenlenmiş, kesintisiz
+  // İnce saplar ve minaredeki küçük pencereler Delaunay ağında kopuk/bulanık kalabilir; bunlar ağın üstüne,
+  // yalnız görünen (önünde yaprak ya da çiçek olmayan) parçalarıyla, iki tonlu üçgen şeritler olarak çizilir.
+  function ucgenRenk(pts, renk) {
+    ctx.fillStyle = renk;
+    ctx.strokeStyle = renk;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+  const tonla = (c, f) => `rgb(${Math.min(255, c[0] * f) | 0},${Math.min(255, c[1] * f) | 0},${Math.min(255, c[2] * f) | 0})`;
+  const SAP = [92, 126, 72];
+  B.saplar.forEach((s0, k) => {
+    const id = sapO[k].id;
+    const s = [];
+    for (let i = 0; i < s0.length - 1; i++) {
+      const [x1, y1] = s0[i], [x2, y2] = s0[i + 1];
+      const n = Math.max(1, Math.round(Math.hypot(x2 - x1, y2 - y1) / 10));
+      for (let j = 0; j < n; j++) s.push([x1 + ((x2 - x1) * j) / n, y1 + ((y2 - y1) * j) / n]);
+    }
+    s.push(s0[s0.length - 1]);
+    const yan = s.map(([x, y], i) => {
+      const [xn, yn] = s[Math.min(s.length - 1, i + 1)], [xp, yp] = s[Math.max(0, i - 1)];
+      const m = Math.hypot(xn - xp, yn - yp) || 1;
+      return [-(yn - yp) / m, (xn - xp) / m];
+    });
+    const w = 2.7;
+    for (let i = 0; i < s.length - 1; i++) {
+      const mx = (s[i][0] + s[i + 1][0]) / 2, my = (s[i][1] + s[i + 1][1]) / 2;
+      if (idAt(mx, my) !== id) continue;
+      const A = s[i], Bq = s[i + 1], nA = yan[i], nB = yan[i + 1];
+      const sol = [[A[0] + nA[0] * w, A[1] + nA[1] * w], [Bq[0] + nB[0] * w, Bq[1] + nB[1] * w]];
+      const sag = [[A[0] - nA[0] * w, A[1] - nA[1] * w], [Bq[0] - nB[0] * w, Bq[1] - nB[1] * w]];
+      // normalin ışığa (sağ üst) bakan yanı açık, öbürü gölge; her parçada küçük fark
+      const isikSol = nA[0] * 0.7 - nA[1] * 0.7 > 0;
+      const t = 1 + (rnd() - 0.5) * 0.06;
+      ucgenRenk([sol[0], sol[1], Bq, A], tonla(SAP, (isikSol ? 1.18 : 0.84) * t));
+      ucgenRenk([A, Bq, sag[1], sag[0]], tonla(SAP, (isikSol ? 0.84 : 1.18) * t));
+    }
+  });
+  // küçük pencereler: kemer beşgeni üç üçgen (alt iki üçgen açık-koyu, kemer üçgeni en koyu)
+  for (const p of [...S.minarePencereleri, ...K.pencereler]) {
+    const [bl, br, rs, tp, ls] = kemerNoktalari(p);
+    const PT = [133, 122, 99];
+    ucgenRenk([bl, br, rs], tonla(PT, 1.04));
+    ucgenRenk([bl, rs, ls], tonla(PT, 0.92));
+    ucgenRenk([ls, rs, tp], tonla(PT, 0.8));
   }
 
   // ================================================================ 7. elle üçgenlenmiş alemler (altın, mücevher kesimi)

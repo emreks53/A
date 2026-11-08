@@ -55,7 +55,7 @@
       K.teller.push({ pts, metal, gen });
     }
     // burgulu çift tel (halat): yol boyunca eğik kısa halkalar
-    function halat(K, pts, metal, gen) {
+    let halat = function (K, pts, metal, gen) {
       const adim = gen * 0.92;
       // eşit aralıklı yeniden örnekle
       let birikim = 0;
@@ -308,7 +308,7 @@
       for (const c of daireler) {
         const metal = c.m === 1 ? ALTIN : c.m === 3 ? ESKI : GUMUS;
         if (c.r < 2.05) {
-          if (rnd() < 0.6) boncuk(K, c.x, c.y, Math.min(c.r, 1.7), boncukMetal || metal);
+          boncuk(K, c.x, c.y, Math.min(c.r, 1.75), boncukMetal || metal);
           continue;
         }
         const z = rnd();
@@ -332,20 +332,57 @@
     const yapiH = haritaOku(false);
     const tumH = haritaOku(true);
 
-    // sınır tuvali: halatların geçtiği çizgiler (dolgu bunlara değmez)
-    function sinirMaskesi(ciz) {
+    // ---------------------------------------------------------------- örtme: arkada kalan tel hatları çizilmez
+    // nokta dizisini görünür parçalara böler (gizli(x, y) doğruysa nokta atlanır)
+    function parcala(pts, gizli) {
+      const out = [];
+      let cur = [];
+      for (const p of pts) {
+        if (gizli(p[0], p[1])) {
+          if (cur.length > 1) out.push(cur);
+          cur = [];
+        } else cur.push(p);
+      }
+      if (cur.length > 1) out.push(cur);
+      return out;
+    }
+    // katmanın tel hatlarından dolgu sınır maskesi (dolgu bunlara ve boncuklara değmez)
+    function katmanMaskesi(Kt, ekle) {
       const c = S.yeniTuval();
       const g = c.getContext('2d', { willReadFrequently: true });
       g.strokeStyle = '#000';
       g.fillStyle = '#000';
       g.lineCap = 'round';
       g.lineJoin = 'round';
-      ciz(g);
+      for (const h of Kt.hatlar) {
+        g.lineWidth = h.gen * 1.62;
+        g.beginPath();
+        h.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+        g.stroke();
+      }
+      for (const t of Kt.teller) {
+        g.lineWidth = t.gen + 1.6;
+        g.beginPath();
+        t.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+        g.stroke();
+      }
+      for (const b of Kt.boncuklar) {
+        g.beginPath();
+        g.arc(b.x, b.y, b.r + 0.7, 0, Math.PI * 2);
+        g.fill();
+      }
+      if (ekle) ekle(g);
       const v = g.getImageData(0, 0, W, W).data;
       const m = new Uint8Array(W * W);
       for (let i = 0; i < W * W; i++) m[i] = v[i * 4 + 3] > 20 ? 1 : 0;
       return m;
     }
+    // halat çağrılarını maskeye de kaydet
+    const halat0 = halat;
+    halat = function (Kt, pts, metal, gen) {
+      (Kt.hatlar || (Kt.hatlar = [])).push({ pts, gen });
+      halat0(Kt, pts, metal, gen);
+    };
 
     const Y = S.yollar();
     const K = S.kaide;
@@ -353,57 +390,22 @@
 
     // ================================================================ YAPI
     const yapi = yeniKatman();
-    const yapiSinir = sinirMaskesi((g) => {
-      g.lineWidth = 5;
-      g.stroke(new Path2D(S.kubbeYolu));
-      g.lineWidth = 4;
-      for (const k of Y.kaburgalar) g.stroke(new Path2D(k));
-      g.lineWidth = 5;
-      g.stroke(new Path2D(Y.kasnakUst));
-      g.stroke(new Path2D(Y.kasnakAlt));
-      g.stroke(new Path2D(Y.kaide));
-      g.stroke(new Path2D(Y.kornis));
-      g.lineWidth = 4;
-      for (const p of Y.kasnakPencereleri) g.stroke(new Path2D(p));
-      for (const p of Y.kaidePencereleri) g.stroke(new Path2D(p));
-      for (const p of Y.minarePencereleri) g.stroke(new Path2D(p));
-      for (const p of Y.minare) g.stroke(new Path2D(p));
-      for (const z of Y.zikzak) g.stroke(new Path2D(z));
-      // kaide pano bölmeleri
-      for (const x of [365, 495, 625, 755]) {
-        g.beginPath();
-        g.moveTo(x, 704);
-        g.lineTo(x, 800);
-        g.stroke();
+    // minare kubbenin, kasnağın ve kaidenin ardında: onların içine düşen minare hatları gizlenir
+    const onde = new Set([NO.kubbe, NO.kasnak, NO.kaide]);
+    const minareGizli = (x, y) => {
+      let n = 0;
+      for (const [u, v] of [[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2]]) {
+        const xx = Math.round(x + u);
+        const yy = Math.round(y + v);
+        if (xx < 0 || yy < 0 || xx >= W || yy >= W) continue;
+        const b = yapiH[yy * W + xx];
+        if (onde.has(b) || (b === NO.pencere && xx > 336)) n++;
       }
-    });
-    const yapiMalzeme = new Uint8Array(W * W);
-    for (let y = 0; y < W; y++) {
-      for (let x = 0; x < W; x++) {
-        const i = y * W + x;
-        if (yapiSinir[i]) continue;
-        const b = yapiH[i];
-        if (b === NO.kubbe) yapiMalzeme[i] = 1;
-        else if (b === NO.kasnak || b === NO.kaide) yapiMalzeme[i] = 2;
-        else if (b === NO.minare) {
-          // topuz altın, korkuluk aralığı boş (korkuluk ayrıca çizilir)
-          const korkuluk = (y > 436 && y < 456) || (y > 272 && y < 290);
-          if (korkuluk) continue;
-          yapiMalzeme[i] = y < 202 ? 1 : 2;
-        }
-      }
-    }
-    doldur(
-      yapi,
-      yapiMalzeme,
-      (x, y) => {
-        if (S.kubbedeMi(x, y)) return 5.2 + 2.6 * ((y - 300) / 255);
-        if (y >= 704) return 8.0; // kaide
-        if (y >= 555 && x > 330) return 4.4; // kasnak
-        return 4.8; // minare
-      },
-      null
-    );
+      return n >= 3;
+    };
+    const minareHalat = (pts, metal, gen) => {
+      for (const r of parcala(pts, minareGizli)) halat(yapi, r, metal, gen);
+    };
 
     // dış hatlar: burgulu çift tel
     const HAT = 3.1;
@@ -417,7 +419,7 @@
     for (const x of [365, 495, 625, 755]) halat(yapi, [[x, 706], [x, 798]], GUMUS, 2.4);
     // minare
     for (const p of parcalar) {
-      if (p.tip === 'poligon') halat(yapi, ornekle(S.yol(p.noktalar, true), 1), GUMUS, 2.6);
+      if (p.tip === 'poligon') minareHalat(ornekle(S.yol(p.noktalar, true), 1), GUMUS, 2.6);
       else if (p.tip === 'topuz') halat(yapi, ornekle(p.yol, 1), ALTIN, 2.6);
       else if (p.tip === 'korkuluk') {
         halat(yapi, [[p.x1, p.y1], [p.x2, p.y1]], GUMUS, 2.6);
@@ -436,12 +438,11 @@
         boncuk(yapi, p.x1, p.y1, 2.8, GUMUS);
         boncuk(yapi, p.x2, p.y1, 2.8, GUMUS);
       } else if (p.tip === 'bant') {
-        // zikzak bandı: altın tel zikzaklar
-        halat(yapi, [[p.x1, p.y1], [p.x2, p.y1]], GUMUS, 2.2);
-        halat(yapi, [[p.x1, p.y2], [p.x2, p.y2]], GUMUS, 2.2);
+        minareHalat([[p.x1, p.y1], [p.x2, p.y1]], GUMUS, 2.2);
+        minareHalat([[p.x1, p.y2], [p.x2, p.y2]], GUMUS, 2.2);
       }
     }
-    for (const z of S.zikzakCizgileri()) halat(yapi, ornekle(S.yol(z), 0.8), ALTIN, 2.2);
+    for (const z of S.zikzakCizgileri()) minareHalat(ornekle(S.yol(z), 0.8), ALTIN, 2.2);
     for (const p of Y.minarePencereleri) halat(yapi, ornekle(p, 0.8), GUMUS, 2.0);
 
     // alemler: altın telden hilal, granül küreler
@@ -465,15 +466,11 @@
       for (let i = 0; i < 7; i++) {
         const t = Math.PI * (0.18 + (0.64 * i) / 6);
         const rr = h.R * 0.86;
-        boncuk(yapi, h.cx + Math.cos(t) * rr * -1 * Math.cos(0) * 1, h.cy + Math.sin(t) * rr, 1.15 * Math.max(0.75, s), ALTIN);
+        boncuk(yapi, h.cx - Math.cos(t) * rr, h.cy + Math.sin(t) * rr, 1.15 * Math.max(0.75, s), ALTIN);
       }
     }
     alem(560, 300, 1);
-    {
-      const m = parcalar.find((p) => p.tip === 'alem');
-      alem(300, 146, 0.62);
-      void m;
-    }
+    alem(300, 146, 0.62);
     // birleşim boncukları
     for (const k of S.kaburgalar(16)) {
       const p0 = k.noktalar[0];
@@ -528,41 +525,171 @@
         boncuk(yapi, gx + Math.cos(t) * (L + 2.5), gy + Math.sin(t) * (L + 2.5), i % 2 ? 2.2 : 3.0, ALTIN);
       }
     }
-    // bulutlar: küçük gümüş kıvrım dizileri
-    for (const [bx, by, bs] of [[170, 250, 1.0], [470, 150, 0.8], [760, 345, 1.0], [945, 470, 0.7], [80, 470, 0.7]]) {
-      const n = Math.round(4 * bs + 1);
-      const gen = 44 * bs;
-      halat(yapi, [[bx - gen, by + 9 * bs], [bx + gen, by + 9 * bs]], GUMUS, 1.9);
-      boncuk(yapi, bx - gen - 2.5, by + 9 * bs, 2.4, GUMUS);
-      boncuk(yapi, bx + gen + 2.5, by + 9 * bs, 2.4, GUMUS);
-      for (let i = 0; i < n; i++) {
-        const t = n > 1 ? i / (n - 1) : 0.5;
-        const x = bx - gen * 0.78 + gen * 1.56 * t;
-        const yuk = Math.sin(Math.PI * t);
-        const r = (6 + 5 * yuk) * bs;
-        motif(yapi, x, by + 9 * bs - r - 0.8, r, GUMUS, i % 2 ? 'S' : 'spiral');
+    // bulutlar: dalgalı gümüş halat çerçeve (daireler birleşimi, düz taban), içi gümüş kıvrımlarla dolu
+    const bulutlar = [[170, 250, 1.0], [470, 150, 0.8], [760, 345, 1.0], [948, 470, 0.68], [84, 470, 0.68]].map(([bx, by, bs]) => {
+      const taban = by + 12 * bs;
+      const d = [[-36, 2, 12], [-15, -8, 17], [9, -12, 20], [32, -2, 14]].map(([u, v, r]) => [bx + u * bs, by + v * bs, r * bs]);
+      return { d, taban, bs };
+    });
+    const bulutIci = (B, x, y, ic) => {
+      if (y > B.taban - ic) return false;
+      for (const [cx, cy, r] of B.d) if ((x - cx) ** 2 + (y - cy) ** 2 < (r - ic) ** 2) return true;
+      return false;
+    };
+    for (const B of bulutlar) {
+      // her dairenin öteki dairelerin dışında ve tabanın üstünde kalan yayı
+      for (const [cx, cy, r] of B.d) {
+        const pts = [];
+        const n = Math.ceil((Math.PI * 2 * r) / 0.8);
+        for (let i = 0; i <= n; i++) {
+          const t = -Math.PI / 2 + (i / n) * Math.PI * 2;
+          pts.push([cx + Math.cos(t) * r, cy + Math.sin(t) * r]);
+        }
+        const gizli = (x, y) => y > B.taban || B.d.some(([ox, oy, or]) => (ox !== cx || oy !== cy) && (x - ox) ** 2 + (y - oy) ** 2 < (or - 0.2) ** 2);
+        for (const r2 of parcala(pts, gizli)) halat(yapi, r2, GUMUS, 2.0);
       }
+      const [lx, ly, lr] = B.d[0];
+      const [rx, ry, rr] = B.d[B.d.length - 1];
+      const x1 = lx - Math.sqrt(Math.max(0, lr * lr - (B.taban - ly) ** 2));
+      const x2 = rx + Math.sqrt(Math.max(0, rr * rr - (B.taban - ry) ** 2));
+      halat(yapi, [[x1, B.taban], [x2, B.taban]], GUMUS, 2.0);
+      boncuk(yapi, x1 - 1, B.taban, 2.6, GUMUS);
+      boncuk(yapi, x2 + 1, B.taban, 2.6, GUMUS);
     }
 
     // yer çizgisi: iki yanda gümüş halat
-    halat(yapi, [[0, 801], [300, 801]], GUMUS, 2.6);
-    halat(yapi, [[820, 801], [W, 801]], GUMUS, 2.6);
+    halat(yapi, [[0, 801], [264, 801]], GUMUS, 2.6);
+    halat(yapi, [[822, 801], [W, 801]], GUMUS, 2.6);
 
-    // ================================================================ BİTKİLER (ayrı katman: kendi gölgesiyle yapının önünde)
-    const bitki = yeniKatman();
-    const bitkiSinir = sinirMaskesi((g) => {
-      g.lineWidth = 3.6;
-      for (const y of Y.yapraklar) g.stroke(new Path2D(y));
-      g.lineWidth = 2.6;
-      for (const yp of S.bitki.yapraklar) {
-        const [a, b] = S.yaprakDamari(yp);
+    // dolgu: hatlar çizildikten sonra, görünür hatlardan çıkarılan maskeyle
+    const yapiSinir = katmanMaskesi(yapi, (g) => {
+      g.lineWidth = 2.4;
+      for (const x of [365, 495, 625, 755]) {
         g.beginPath();
-        g.moveTo(a[0], a[1]);
-        g.lineTo(b[0], b[1]);
+        g.moveTo(x, 704);
+        g.lineTo(x, 800);
         g.stroke();
       }
-      g.lineWidth = 3.6;
-      for (const c of S.bitki.cicekler) for (const e of S.tacYapraklari(c)) g.stroke(new Path2D(S.elipsYolu(e)));
+    });
+    const yapiMalzeme = new Uint8Array(W * W);
+    const bulutMu = new Uint8Array(W * W);
+    for (const B of bulutlar) {
+      const xs = B.d.map(([cx, , r]) => [cx - r, cx + r]).flat();
+      const ys = B.d.map(([, cy, r]) => cy - r);
+      for (let y = Math.floor(Math.min(...ys)); y <= Math.ceil(B.taban); y++) {
+        for (let x = Math.floor(Math.min(...xs)); x <= Math.ceil(Math.max(...xs)); x++) {
+          if (x >= 0 && x < W && y >= 0 && y < W && bulutIci(B, x, y, 0)) bulutMu[y * W + x] = 1;
+        }
+      }
+    }
+    for (let y = 0; y < W; y++) {
+      for (let x = 0; x < W; x++) {
+        const i = y * W + x;
+        if (yapiSinir[i]) continue;
+        const b = yapiH[i];
+        if (b === NO.kubbe) yapiMalzeme[i] = 1;
+        else if (b === NO.kasnak || b === NO.kaide) yapiMalzeme[i] = 2;
+        else if (b === NO.minare) {
+          // topuz altın, korkuluk aralığı boş (korkuluk ayrıca çizilir)
+          const korkuluk = (y > 436 && y < 456) || (y > 272 && y < 290);
+          if (korkuluk) continue;
+          yapiMalzeme[i] = y < 202 ? 1 : 2;
+        } else if (bulutMu[i]) yapiMalzeme[i] = 2;
+      }
+    }
+    doldur(
+      yapi,
+      yapiMalzeme,
+      (x, y) => {
+        if (bulutMu[Math.round(y) * W + Math.round(x)]) return 4.2;
+        if (S.kubbedeMi(x, y)) return 5.2 + 2.6 * ((y - 300) / 255);
+        if (y >= 704) return 8.0; // kaide
+        if (y >= 555 && x > 330) return 4.4; // kasnak
+        return 4.8; // minare
+      },
+      null
+    );
+
+    // ================================================================ BİTKİLER (ayrı katman: kendi gölgesiyle yapının önünde)
+    // çizim sırası SAHNE'deki gibi: saplar, yapraklar, tomurcuklar, çiçekler (taç yaprakları sırayla birbirinin üstüne)
+    const bitki = yeniKatman();
+    const oc = S.yeniTuval(4, 4).getContext('2d');
+    const ortenler = [];
+    const ortenEkle = (z, d, pts) => {
+      let x1 = 1e9, y1 = 1e9, x2 = -1e9, y2 = -1e9;
+      for (const [x, y] of pts) {
+        x1 = Math.min(x1, x); y1 = Math.min(y1, y); x2 = Math.max(x2, x); y2 = Math.max(y2, y);
+      }
+      ortenler.push({ z, yol: new Path2D(d), x1, y1, x2, y2 });
+    };
+    const ortuluMu = (z) => (x, y) => {
+      for (const o of ortenler) {
+        if (o.z <= z || x < o.x1 || x > o.x2 || y < o.y1 || y > o.y2) continue;
+        if (oc.isPointInPath(o.yol, x, y)) return true;
+      }
+      return false;
+    };
+    const yaprakNokta = S.bitki.yapraklar.map((yp) => ornekle(S.yaprakYolu(yp), 0.8));
+    yaprakNokta.forEach((pts, i) => ortenEkle(1 + i, S.yaprakYolu(S.bitki.yapraklar[i]), pts));
+    const tomNokta = S.bitki.tomurcuklar.map((t) => ornekle(S.tomurcukYolu(t), 0.7));
+    tomNokta.forEach((pts, i) => ortenEkle(1000 + i, S.tomurcukYolu(S.bitki.tomurcuklar[i]), pts));
+    const tacNokta = S.bitki.cicekler.map((c, f) =>
+      S.tacYapraklari(c).map((e, k) => {
+        const pts = ornekle(S.elipsYolu(e), 0.7);
+        ortenEkle(2000 + f * 10 + k, S.elipsYolu(e), pts);
+        return pts;
+      })
+    );
+    // saplar
+    for (const s of S.bitki.saplar) for (const r of parcala(ornekle(S.yol(s), 0.8), ortuluMu(0))) halat(bitki, r, ESKI, 2.5);
+    S.bitki.yapraklar.forEach((yp, i) => {
+      const gizli = ortuluMu(1 + i);
+      for (const r of parcala(yaprakNokta[i], gizli)) halat(bitki, r, ESKI, 1.9);
+      const [a, b] = S.yaprakDamari(yp);
+      const dm = [];
+      for (let k = 0; k <= 24; k++) dm.push([a[0] + ((b[0] - a[0]) * k) / 24, a[1] + ((b[1] - a[1]) * k) / 24]);
+      for (const r of parcala(dm, gizli)) tel(bitki, r, ESKI, 1.2);
+      if (!gizli(a[0], a[1])) boncuk(bitki, a[0], a[1], 1.9, ALTIN);
+    });
+    S.bitki.tomurcuklar.forEach((t, i) => {
+      const gizli = ortuluMu(1000 + i);
+      for (const r of parcala(tomNokta[i], gizli)) halat(bitki, r, GUMUS, 1.8);
+      const sp = spiralNoktalari(t.x + Math.cos(t.aci) * t.r * 0.3, t.y + Math.sin(t.aci) * t.r * 0.3, t.r * 0.55, 1, t.aci);
+      for (const r of parcala(sp, gizli)) tel(bitki, r, GUMUS, 1.0);
+      const ux = t.x + Math.cos(t.aci) * t.r * 1.6;
+      const uy = t.y + Math.sin(t.aci) * t.r * 1.6;
+      if (!gizli(ux, uy)) boncuk(bitki, ux, uy, 2.0, ALTIN);
+    });
+    S.bitki.cicekler.forEach((c, f) => {
+      const kal = c.r > 40 ? 2.4 : c.r > 26 ? 2.0 : 1.7;
+      tacNokta[f].forEach((pts, k) => {
+        for (const r of parcala(pts, ortuluMu(2000 + f * 10 + k))) halat(bitki, r, GUMUS, kal);
+      });
+    });
+    // çiçek ortaları ve taç yaprağı uçları: en üstte
+    const ortaUst = (f) => ortuluMu(2000 + f * 10 + 9);
+    S.bitki.cicekler.forEach((c, f) => {
+      const rr = c.r * 0.28;
+      const br = Math.max(1.3, c.r * 0.045);
+      const gizli = ortaUst(f);
+      if (gizli(c.x, c.y)) return;
+      boncuk(bitki, c.x, c.y, br * 1.6, ALTIN);
+      for (let halka = 1; halka * br * 2.05 < rr; halka++) {
+        const R = halka * br * 2.05;
+        const n = Math.floor((2 * Math.PI * R) / (br * 2.1));
+        for (let i = 0; i < n; i++) {
+          const t = (i / n) * Math.PI * 2 + halka * 0.4;
+          boncuk(bitki, c.x + Math.cos(t) * R, c.y + Math.sin(t) * R, br, ALTIN);
+        }
+      }
+      for (let k = 0; k < 5; k++) {
+        const a = c.aci + (k * Math.PI * 2) / 5;
+        const x = c.x + Math.cos(a) * c.r * 1.0;
+        const y = c.y + Math.sin(a) * c.r * 1.0;
+        if (!gizli(x, y)) boncuk(bitki, x, y, Math.max(1.6, c.r * 0.05), GUMUS);
+      }
+    });
+    const bitkiSinir = katmanMaskesi(bitki, (g) => {
       for (const c of S.bitki.cicekler) {
         g.beginPath();
         g.arc(c.x, c.y, c.r * 0.3, 0, Math.PI * 2);
@@ -576,41 +703,7 @@
       if (b === NO.yaprak) bitkiMalzeme[i] = 3;
       else if (b === NO.cicek) bitkiMalzeme[i] = 2;
     }
-    // saplar
-    for (const s of S.bitki.saplar) halat(bitki, s, ESKI, 2.5);
     doldur(bitki, bitkiMalzeme, (x, y, m) => (m === 3 ? 4.0 : 5.0), null);
-    for (const yp of S.bitki.yapraklar) {
-      halat(bitki, ornekle(S.yaprakYolu(yp), 0.8), ESKI, 1.9);
-      const [a, b] = S.yaprakDamari(yp);
-      tel(bitki, [a, b], ESKI, 1.2);
-      boncuk(bitki, a[0], a[1], 1.9, ALTIN);
-    }
-    for (const t of S.bitki.tomurcuklar) {
-      halat(bitki, ornekle(S.tomurcukYolu(t), 0.7), GUMUS, 1.8);
-      tel(bitki, spiralNoktalari(t.x + Math.cos(t.aci) * t.r * 0.3, t.y + Math.sin(t.aci) * t.r * 0.3, t.r * 0.55, 1, t.aci), GUMUS, 1.0);
-      boncuk(bitki, t.x + Math.cos(t.aci) * t.r * 1.6, t.y + Math.sin(t.aci) * t.r * 1.6, 2.0, ALTIN);
-    }
-    for (const c of S.bitki.cicekler) {
-      const kal = c.r > 40 ? 2.4 : c.r > 26 ? 2.0 : 1.7;
-      for (const e of S.tacYapraklari(c)) halat(bitki, ornekle(S.elipsYolu(e), 0.7), GUMUS, kal);
-      // ortada altın granül kümesi
-      const rr = c.r * 0.28;
-      const br = Math.max(1.3, c.r * 0.045);
-      boncuk(bitki, c.x, c.y, br * 1.6, ALTIN);
-      for (let halka = 1; halka * br * 2.05 < rr; halka++) {
-        const R = halka * br * 2.05;
-        const n = Math.floor((2 * Math.PI * R) / (br * 2.1));
-        for (let i = 0; i < n; i++) {
-          const t = (i / n) * Math.PI * 2 + halka * 0.4;
-          boncuk(bitki, c.x + Math.cos(t) * R, c.y + Math.sin(t) * R, br, ALTIN);
-        }
-      }
-      // taç yaprağı uçlarında birer gümüş boncuk
-      for (let k = 0; k < 5; k++) {
-        const a = c.aci + (k * Math.PI * 2) / 5;
-        boncuk(bitki, c.x + Math.cos(a) * c.r * 1.0, c.y + Math.sin(a) * c.r * 1.0, Math.max(1.6, c.r * 0.05), GUMUS);
-      }
-    }
 
     // ================================================================ KADİFE ZEMİN (piksel piksel, 2048)
     function hash(x, y, t) {

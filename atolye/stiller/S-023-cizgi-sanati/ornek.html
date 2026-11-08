@@ -187,8 +187,9 @@
       const u0 = L * (0.24 + i * (0.5 / cift));
       for (const s of [-1, 1]) {
         const q0 = p(u0, 0);
-        const q1 = p(u0 + L * 0.13, s * W * (0.3 - i * 0.04));
-        cz(`M${f(q0[0])},${f(q0[1])} L${f(q1[0])},${f(q1[1])}`);
+        const q1 = p(u0 + L * 0.15, s * W * (0.3 - i * 0.04));
+        const kq = p(u0 + L * 0.03, s * W * (0.2 - i * 0.03)); // uca doğru kıvrılan yan damar
+        cz(`M${f(q0[0])},${f(q0[1])} Q${f(kq[0])},${f(kq[1])} ${f(q1[0])},${f(q1[1])}`);
       }
     }
   }
@@ -229,23 +230,34 @@
       pts.push([c.x + Math.cos(th) * rr, c.y + Math.sin(th) * rr]);
     }
     ort(S.yol(pts, true), 'stroke-linejoin="round"');
-    // taç yaprak ayrımları ve damarlar
+    // taç yaprak ayrımları: iki yaprağın birleştiği çukurdan göbeğe doğru kıvrılan kısa yay
+    const pol = (a, rr) => [c.x + Math.cos(a) * rr, c.y + Math.sin(a) * rr];
+    const q = (pt) => `${f(pt[0])},${f(pt[1])}`;
+    const buyuk = c.r > 40;
     for (let i = 0; i < 5; i++) {
       const ak = c.aci + Math.PI / 5 + (i * Math.PI * 2) / 5; // iki yaprak arası
-      cizgi(c.x + Math.cos(ak) * R * 0.27, c.y + Math.sin(ak) * R * 0.27, c.x + Math.cos(ak) * R * 0.5, c.y + Math.sin(ak) * R * 0.5);
-      if (c.r > 40) {
+      const a0 = pol(ak, R * 0.5), a1 = pol(ak - 0.2, R * 0.24), ka = pol(ak - 0.04, R * 0.38);
+      cz(`M${q(a0)} Q${q(ka)} ${q(a1)}`);
+      if (buyuk) {
+        // damar: yaprağın ortasında, uca doğru hafifçe kıvrılan tek çizgi; boyu yapraktan yaprağa değişir
         const at = c.aci + (i * Math.PI * 2) / 5;
-        cizgi(c.x + Math.cos(at) * R * 0.34, c.y + Math.sin(at) * R * 0.34, c.x + Math.cos(at) * R * 0.62, c.y + Math.sin(at) * R * 0.62);
+        const bukum = (r() - 0.5) * 0.16;
+        const boy = R * (0.6 + r() * 0.1);
+        const v0 = pol(at - bukum * 0.5, R * 0.41), v1 = pol(at + bukum, boy), kv = pol(at + bukum * 1.6, (R * 0.41 + boy) / 2);
+        cz(`M${q(v0)} Q${q(kv)} ${q(v1)}`);
       }
     }
-    // göbek ve ercikler
+    // göbek ve ercikler: büyük çiçeklerde ucu küçük halkalı, boyu değişen ince sapçıklar
     ort(S.daireYolu(c.x, c.y, R * 0.16));
-    const en = c.r > 40 ? 10 : 7;
-    for (let i = 0; i < en; i++) {
-      const a = (i / en) * Math.PI * 2 + c.aci;
-      const x1 = c.x + Math.cos(a) * R * 0.17, y1 = c.y + Math.sin(a) * R * 0.17;
-      const x2 = c.x + Math.cos(a) * R * 0.27, y2 = c.y + Math.sin(a) * R * 0.27;
-      cizgi(x1, y1, x2, y2);
+    if (buyuk) {
+      for (let i = 0; i < 6; i++) {
+        const a = c.aci + 0.31 + (i / 6) * Math.PI * 2 + (r() - 0.5) * 0.25;
+        const uz = R * (0.25 + r() * 0.07);
+        const e0 = pol(a, R * 0.17), e1 = pol(a + 0.12, uz), ke = pol(a + 0.02, (R * 0.17 + uz) / 2);
+        cz(`M${q(e0)} Q${q(ke)} ${q(e1)}`);
+        const uc = pol(a + 0.12, uz + 2.6);
+        ort(S.daireYolu(uc[0], uc[1], 2.2));
+      }
     }
   }
   for (const c of B.cicekler) cicek(c);

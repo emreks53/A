@@ -39,7 +39,7 @@
     for (let i = 0; i < 9000; i++) {
       const x = r() * W2, y = r() * W2, a = r() * Math.PI * 2, L = 8 + r() * 46, b = (r() - 0.5) * 0.9;
       const acik = r() < 0.72;
-      g.strokeStyle = acik ? `rgba(255,253,245,${0.06 + r() * 0.11})` : `rgba(90,70,45,${0.04 + r() * 0.07})`;
+      g.strokeStyle = acik ? `rgba(255,253,245,${0.05 + r() * 0.09})` : `rgba(90,70,45,${0.025 + r() * 0.045})`;
       g.lineWidth = 0.6 + r() * 1.3;
       g.beginPath();
       g.moveTo(x, y);
@@ -199,12 +199,14 @@
   katman((g) => { for (const w of SAHNE.minarePencereleri) doldur(g, dik(w.x - w.w, w.y - 4, w.x + w.w, w.y + w.h + 4), '#6F624E'); }, { g: { x: -2, y: 3, b: 5, a: 0.3 } });
   // gövde (pencereler kesik)
   katman((g) => {
-    for (const ad of ['gövde-alt', 'çıkma-1', 'gövde-orta', 'çıkma-2', 'gövde-üst', 'bilezik']) doldur(g, SAHNE.yol(mp(ad).noktalar, true), '#F1E8D6');
+    for (const ad of ['gövde-alt', 'gövde-orta', 'gövde-üst']) doldur(g, SAHNE.yol(mp(ad).noktalar, true), '#F1E8D6');
     doldur(g, mp('topuz').yol, '#F1E8D6');
     for (const d of Yl.minarePencereleri) delik(g, d);
   });
   // şerefeler, korkuluklar (dikme arası kesik) ve zikzak şeritler
   katman((g) => {
+    // çıkmalar ve bilezik gövdeden kabarık ayrı kâğıt; şerefe döşemeleri onların üstünde
+    for (const ad of ['çıkma-1', 'çıkma-2', 'bilezik']) doldur(g, SAHNE.yol(mp(ad).noktalar, true), '#F7F1E4');
     for (const ad of ['şerefe-1', 'şerefe-2']) doldur(g, SAHNE.yol(mp(ad).noktalar, true), '#FCF8EE');
     for (const ad of ['korkuluk-1', 'korkuluk-2']) {
       const k = mp(ad);
@@ -227,9 +229,29 @@
   const K = SAHNE.kaide;
   katman((g) => { for (const w of K.pencereler) doldur(g, dik(w.x - w.w * 0.75, w.y - 6, w.x + w.w * 0.75, w.y + w.h + 2), '#7E705A'); }, { g: { x: -2, y: 3, b: 5, a: 0.3 } });
   katman((g) => {
-    doldur(g, Yl.kaide, '#FAF5EA');
+    doldur(g, Yl.kaide, '#F4ECDC');
     for (const d of Yl.kaidePencereleri) delik(g, d);
   });
+  // kabartma taş katmanı: köşe ve ara pilastrlar, taban silmesi, korniş altında kör kemer frizi
+  katman((g) => {
+    const AK = '#FCF8EF';
+    for (const [x1, x2] of [[300, 318], [490, 500], [620, 630], [802, 820]]) doldur(g, dik(x1, 716, x2, 786), AK);
+    doldur(g, dik(296, 784, 824, 800), AK);
+    const friz = new Path2D(dik(300, 704, 820, 717));
+    g.fillStyle = AK;
+    g.fill(friz);
+    // frizde küçük sivri kemer delikleri (kör kemerler)
+    for (let x = 311; x <= 812; x += 15.6) delik(g, SAHNE.kemerYolu(x, 706.5, 8, 9));
+  }, { g: { x: -3, y: 5, b: 7, a: 0.36 }, kenar: 1 });
+  // pencereleri çevreleyen kabarık sivri kemer çerçeveleri
+  katman((g) => {
+    for (const w of K.pencereler) {
+      const p = new Path2D(SAHNE.kemerYolu(w.x, w.y - 8, w.w + 16, w.h + 8));
+      p.addPath(new Path2D(SAHNE.kemerYolu(w.x, w.y - 1, w.w + 2, w.h + 1)));
+      g.fillStyle = '#FFFFFF';
+      g.fill(p, 'evenodd');
+    }
+  }, { g: { x: -3, y: 5, b: 7, a: 0.38 }, kenar: 1 });
   katman((g) => {
     doldur(g, Yl.kornis, '#FFFFFF');
     // pencere altı denizlikleri

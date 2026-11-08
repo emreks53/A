@@ -1,0 +1,41 @@
+{
+  "kod": "S-008",
+  "no": 8,
+  "ad": "Tezhip",
+  "ad_en": "Ottoman Illumination",
+  "aile": "Türk-İslam Sanatları",
+  "ozgun": false,
+  "ozet": "Ezme altın, lacivert ve aharlı krem zeminde rumî-hatayî helezonlarıyla süslenmiş mihrabiye çerçeve.",
+  "tanim": "Tezhip, el yazması kitapların sayfalarını altın ve boyalarla süsleme sanatıdır. Ezme altın, lacivert ve aharlı kâğıt zemin üzerinde rumî ve hatayî motifleri helezon dallar halinde, katı bir simetriyle düzenlenir; her biçim ince koyu bir tahrirle çevrilir. Serlevha ve zahriye sayfalarında cetveller, köşebentler, tığlar ve tepeliklerle zengin çerçeveler kurulur.",
+  "koken": "Selçuklu ve Timurlu mirası üzerine 15.–16. yüzyıl Osmanlı saray nakkaşhanesinde olgunlaştı; Baba Nakkaş, Şahkulu ve natüralist çiçek üslubunu getiren Kara Memi başlıca ustalardır. Lale, karanfil, sümbül ve gülden oluşan yarı natüralist çiçekler Kara Memi ekolünün imzasıdır.",
+  "ayirt_edici": [
+    "Lacivert zemin üzerinde altın rumî ve hatayî su yoluyla bezeli bordür; köşe kareleri ve altın cetveller",
+    "Kenar suyunda ince lacivert tığlar ve her kenarın ortasında dışa taşan hatayî tepelikler",
+    "Altın zeminli köşebentlerde lacivert rumîli, kırmızı hatayîli helezon dallar",
+    "Dilimli sivri kemerli (mihrabiye) çerçevenin içinde aharlı krem zemin ve soluk altın halkâr",
+    "Düz yeşil kubbe, altın kaburgalar ve tabanda altın-kırmızı dilim frizi; altın konturlu, tahrirli minare ve kaide",
+    "Kara Memi üslubunda iki tonlu tırtıklı saz yaprakları, lale, karanfil, gül ve sümbül"
+  ],
+  "palet": [
+    "#CFA64E",
+    "#1C3478",
+    "#F6EEDA",
+    "#2E7B50",
+    "#BE3424",
+    "#3A2412",
+    "#E3A49B",
+    "#4F8550"
+  ],
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Ezme altın, sağ üstten hafif parıltılı ve zerreli bir gürültü dokusu olarak bir kez üretilip sayfaya sabit desen dolgusu olarak kullanılır. Rumî, hatayî ve penç motifleri Bezier yollarıyla tanımlanıp döndürülerek yerleştirilir; helezonlar spiral nokta dizileriyle, köşebentlerdeki dallar boş alana en büyük daireyi sığdıran açgözlü daire istifi ve ağaç biçimli bağlantılarla kurulur, öbür köşebent aynalanarak simetri sağlanır. Bordür dört kenarda döndürülmüş sinüs su yolu, kemer iki yay ve kavşara eğrisinden oluşur. Sahne kemere sığması için 0,8 ölçekle aynı yerleşimde çizilir: düz dolgu, altın kontur, koyu tahrir; saz yaprakları omurga ve tırtıklı şerit poligonuyla üretilir.",
+  "etiketler": [
+    "tezhip",
+    "altın",
+    "rumî",
+    "hatayî",
+    "helezon",
+    "simetri",
+    "el yazması",
+    "Kara Memi",
+    "geleneksel"
+  ]
+}

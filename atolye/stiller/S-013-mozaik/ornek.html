@@ -57,8 +57,8 @@
     zemin: { r: rampa(['#7a4f30', '#97683f', '#b0804e', '#c59a64', '#d6b17b']), lo: 0.6, hi: 0.85 },
     cimen: { r: rampa(['#4f5f2c', '#62763a', '#78904a', '#90a65c']) },
     gunes: { r: rampa(['#f0d38a', '#f8e6b2', '#fff3d6', '#fffbef']) },
-    altinAlem: { r: rampa(['#d39a32', '#eab94c', '#f7d469', '#ffe796', '#fff4cc']) },
-    alemCizgi: { r: rampa(['#4a2410', '#5e3016']) },
+    altinAlem: { r: rampa(['#b9761c', '#d99a2a', '#efbd42', '#fadb72', '#fff0b8']) },
+    alemCizgi: { r: rampa(['#33170a', '#43200f']) },
     altin: { r: rampa(['#86601f', '#a3782a', '#bd9035', '#d3a646', '#e3bb5a', '#f0d077', '#fbe7a8']) },
     cerceveKoyu: { r: rampa(['#5a1a16', '#6e231c', '#7c2c22']) },
     cerceveAcik: { r: rampa(['#efe6d2', '#f7f0e0']) },
@@ -131,37 +131,35 @@
   const ZZ = bolge({ t: 4.4, mod: 'zincir', grup: 'minare', renk: () => rampaRenk(MAL.mermer, 0.08) });
   for (const z of S.zikzakCizgileri()) cizgiTas(ZZ, z, 4.4);
   for (const p of S.minarePencereleri) doldur(bolge({ t: 4, grup: 'pencere', renk: lumRenk(MAL.koyu) }), S.kemerYolu(p.x, p.y, p.w, p.h));
-  // alemler (koyu kontur halkası + altın)
-  function alemBolge(a, tt) {
-    const o = tt;
+  // alemler: ince ayrıntı için küçük taşlar (opus vermiculatum). Koyu kontur halkası tek sıra; hilal
+  // mozaikçinin elinde biraz kalın kesilir ve taşları konturu izleyen yay sıralarıyla dizilir.
+  function alemBolge(a, tt, o) {
     const cx = a.yaka.cx;
     const yaka = S.elipsYolu({ cx, cy: a.yaka.cy, rx: a.yaka.rx, ry: a.yaka.ry, aci: 0 });
-    const hl = a.hilal, R = hl.R;
-    const hilal = S.hilalYolu(hl.cx, hl.cy, R);
-    const orta = []; // hilalin orta çizgisi (sağ boynuzdan alttan dolanıp sol boynuza)
-    for (let i = 0; i <= 24; i++) {
-      const th = -0.42 + ((Math.PI + 0.84) * i) / 24, sn = Math.sin(th);
-      const rho = (-0.8 * R * sn + Math.sqrt(0.64 * R * R * sn * sn + 2.25 * R * R)) / 2;
-      orta.push([hl.cx + Math.cos(th) * (R + rho) / 2, hl.cy + Math.sin(th) * (R + rho) / 2]);
-    }
+    const hl = a.hilal;
+    const R1 = hl.R * 1.12, R2 = R1 * 0.78, dd = R1 * 0.44, hx = hl.cx, hy = hl.cy;
+    const yk = (R2 * R2 - R1 * R1 - dd * dd) / (2 * dd), xk = Math.sqrt(Math.max(0, R1 * R1 - yk * yk));
+    const hilal = `M${hx - xk},${hy + yk} A${R1},${R1} 0 1,0 ${hx + xk},${hy + yk} A${R2},${R2} 0 1,1 ${hx - xk},${hy + yk} Z`;
     const cubuk = [[cx, a.cubuk.y2], [cx, a.cubuk.y1 + 2]];
-    const rodW = a.cubuk.x2 - a.cubuk.x1;
-    // koyu kontur halkası
-    const halka = bolge({ t: tt, grup: 'alemCizgi', renk: () => rampaRenk(MAL.alemCizgi, rnd()) });
+    const rodW = Math.max(a.cubuk.x2 - a.cubuk.x1, tt * 0.9);
+    // koyu kontur halkası (her biçimin çevresinde tek sıra)
+    const halka = bolge({ t: o, grup: 'alemCizgi', renk: () => rampaRenk(MAL.alemCizgi, rnd()) });
     const sekiller = [yaka, hilal, ...a.kureler.map((k) => S.daireYolu(k.cx, k.cy, k.r))];
     for (const d of sekiller) { doldur(halka, d); cizgiIslem(halka, d, 2 * o); }
     cizgiIslem(halka, S.yol(cubuk), rodW + 2 * o);
-    cizgiIslem(halka, S.yol(orta), R - 0.45 * R + 2 * o);
-    const altinR = (x, y) => rampaRenk(MAL.altinAlem, clamp(0.6 + (x - cx) / (a.yaka.rx * 1.4) + (rnd() - 0.5) * 0.35, 0, 1));
+    // altın: sağ üstten ışık; sol alt yarı koyu altın, sağ üst kenarda parlayan taşlar
+    const altinR = (x, y) => {
+      let pos = 0.5 + (x - cx) / (a.yaka.rx * 0.8) + (rnd() - 0.5) * 0.3;
+      if (rnd() < 0.08) pos = 1.1;
+      return rampaRenk(MAL.altinAlem, clamp(pos, 0, 1));
+    };
     const cub = bolge({ t: tt, mod: 'zincir', grup: 'alem', renk: altinR, altin: true });
     cizgiTas(cub, cubuk, tt);
     doldur(bolge({ t: tt, grup: 'alem', renk: altinR, altin: true }), yaka);
-    for (const k of a.kureler) doldur(bolge({ t: Math.min(tt, k.r * 0.9), grup: 'alem', renk: altinR, altin: true }), S.daireYolu(k.cx, k.cy, k.r));
-    const hil = bolge({ t: tt, mod: 'zincir', grup: 'alem', renk: altinR, altin: true });
-    doldur(hil, hilal);
-    cizgiTas(hil, orta, tt);
+    for (const k of a.kureler) doldur(bolge({ t: Math.min(tt, k.r * 0.8), grup: 'alem', renk: altinR, altin: true }), S.daireYolu(k.cx, k.cy, k.r));
+    doldur(bolge({ t: tt, grup: 'alem', renk: altinR, altin: true }), hilal);
   }
-  alemBolge(parcalar.find((p) => p.tip === 'alem').alem, 4);
+  alemBolge(parcalar.find((p) => p.tip === 'alem').alem, 2.5, 2.7);
 
   // kaide
   {
@@ -201,7 +199,7 @@
     const silme = bolge({ t: 5, mod: 'zincir', grup: 'kubbe', renk: () => rampaRenk(MAL.yesil, 0.05) });
     cizgiTas(silme, [[362, 551], [758, 551]], 5);
   }
-  alemBolge(S.alemParcalari(560, 300, 1), 5);
+  alemBolge(S.alemParcalari(560, 300, 1), 3.7, 3.7);
 
   // bitkiler
   const B = S.bitki;

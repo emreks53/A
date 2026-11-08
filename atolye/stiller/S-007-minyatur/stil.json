@@ -1,0 +1,41 @@
+{
+  "kod": "S-007",
+  "no": 7,
+  "ad": "Osmanlı Minyatürü",
+  "ad_en": "Ottoman Miniature",
+  "aile": "Türk-İslam Sanatları",
+  "ozgun": false,
+  "ozet": "Altın gök, çin bulutları ve gölgesiz, düz maden boyalarıyla nakkaşhane üslubunda bir kitap sayfası.",
+  "tanim": "Osmanlı minyatürü, el yazması kitapları ve murakkaları süsleyen küçük ölçekli resim sanatıdır. Örtücü maden boyaları ve altınla, gölge ve doğrusal perspektif kullanılmadan, ince mürekkep konturlarla çalışılır; zemin yukarıdan görülür gibi yükseltilmiş düz bir düzlemdir. Mimari, bahçe ve gök süslemeci bir düzenle, cetvellerle çevrili bir çerçeve içinde verilir.",
+  "koken": "Saray nakkaşhanesinde 15.–18. yüzyıllarda gelişti; Matrakçı Nasuh'un menzil (şehir) resimleri, Nakkaş Osman'ın Hünername ve Surname-i Hümayun minyatürleri, 18. yüzyılda Levni bu geleneğin önde gelen örnekleridir. Altın gök ve çin bulutu İran-Timurlu mirasıdır; servi ve çiçek açmış ağaçlar bahar ve cennet bahçesini simgeler.",
+  "ayirt_edici": [
+    "Zerreli ezme altın gök ve lacivert konturlu, uçları helezonla kıvrılan çin bulutları",
+    "Gölgesiz, düz malakit yeşili kubbe; ince koyu mürekkep konturlar ve dilim çizgileri",
+    "Yükseltilmiş düz yeşil zemin düzlemi; ufukta pastel renkli süngerimsi kayalar, servi ve çiçek açmış meyve ağaçları",
+    "Kaide ve minarede yıldızlı çini panolar, lacivert friz, zikzak bant ve altın şebekeli pencereler",
+    "Önde lale, karanfil, gül, sümbül ve papatyadan düz boyalı bahçe; çimene serpiştirilmiş küçük çiçekler",
+    "Altın ve renkli cetvellerle çevrili resim, zerefşanlı kenar suyu; minarenin alemi çerçeveyi taşar"
+  ],
+  "palet": [
+    "#CFA445",
+    "#1E3C8E",
+    "#D4432B",
+    "#2F8650",
+    "#F5EFE0",
+    "#B9C689",
+    "#29563A",
+    "#21170E"
+  ],
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Bütün biçimler SAHNE geometrisinden (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, alemler) düz dolgu ve ince mürekkep konturla çizilir; gölge ve degrade yoktur. Çin bulutları eğriliği artan (klotoid) bir omurga boyunca loblu şerit poligonlarıyla, kayalar gürültülü kapalı eğrilerle, çiçekli ağaçlar tohumlu özyinelemeli dallanmayla, servi yaprakları sıra sıra küçük kavislerle, çini panolar sekiz köşeli yıldız-haç örgüsüyle üretilir. Altın gök ve boya yüzeyi için piksel düzeyinde değer gürültüsü, kenar suyunda tohumlu zerefşan pulları kullanılır. Minarenin üst kısmı cetvellerden sonra yeniden çizilerek çerçeveyi taşar.",
+  "etiketler": [
+    "minyatür",
+    "nakkaşhane",
+    "altın",
+    "çin bulutu",
+    "gölgesiz",
+    "düz boya",
+    "el yazması",
+    "Osmanlı",
+    "geleneksel"
+  ]
+}

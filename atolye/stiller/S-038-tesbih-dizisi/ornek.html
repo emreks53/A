@@ -242,7 +242,8 @@
   const BULUT = [[170, 250, 1.0], [500, 150, 0.8], [760, 330, 1.1], [940, 470, 0.7], [90, 470, 0.7]];
   const gokRengi = (x, y) => {
     const t = sinir(y / 800, 0, 1);
-    let c = t < 0.6 ? karis([96, 152, 216], [164, 198, 230], t / 0.6) : karis([164, 198, 230], [222, 228, 226], (t - 0.6) / 0.4);
+    // ufka doğru açılan mavi; en altta bile keten renginden ayrılacak kadar mavi kalır
+    let c = t < 0.6 ? karis([96, 152, 216], [148, 194, 230], t / 0.6) : karis([148, 194, 230], [190, 218, 234], (t - 0.6) / 0.4);
     const ds = Math.hypot(x - SAHNE.gunes.x, y - SAHNE.gunes.y);
     c = karis(c, [252, 240, 206], 0.8 * Math.exp(-(ds / 190) * (ds / 190)));
     let b = 0;
@@ -252,6 +253,7 @@
     }
     return karis(c, [255, 255, 255], 0.7 * Math.min(1, b));
   };
+  const HILALLER = [SAHNE.alemParcalari(560, 300, 1).hilal, SAHNE.minareParcalari().find((q) => q.ad === 'alem').alem.hilal];
   (function () {
     const D = 10.4;
     const satirlar = [];
@@ -282,8 +284,10 @@
       const govde = kes(ic, x0, x1);
       if (govde.length < 2) continue;
       const { taneler: ham } = boyunca(govde, D + 1.15, () => D, (x, y) => oynat(doygun(gokRengi(x, y), 1.12), 8));
-      const altinYakin = (x, y) => [[0, 0], [5, 0], [-5, 0], [0, 5], [0, -5]].some(([dx, dy]) => bolge(x + dx, y + dy) === 'altin');
-      const taneler = ham.filter((t) => !altinYakin(t.x, t.y));
+      // alemlerin çevresi boş keten kalsın: hilal ve küreler gök tanelerine karışmasın
+      const altinYakin = (x, y) => [[0, 0], [7, 0], [-7, 0], [0, 7], [0, -7], [5, 5], [-5, 5], [5, -5], [-5, -5]].some(([dx, dy]) => bolge(x + dx, y + dy) === 'altin');
+      const hilalYakin = (x, y) => HILALLER.some((h) => Math.hypot(x - h.cx, y - (h.cy - h.R * 0.1)) < h.R * 1.12 + D * 0.5);
+      const taneler = ham.filter((t) => !altinYakin(t.x, t.y) && !hilalYakin(t.x, t.y));
       tumu.push({ p, govde, taneler, bas, son });
     }
     for (const s of tumu) golgeCiz(s.taneler);
@@ -461,30 +465,41 @@
       golgeCiz([{ x: k.cx, y: k.cy, d: k.r * 2 }]);
       tane({ x: k.cx, y: k.cy, d: k.r * 2, c: altin(0.7) });
     }
-    // hilal: yay boyunca dizilmiş küçük taneler, boynuz uçlarında minik imameler
+    // hilal: dolgun bir hilal gövdesi. Dış kenar boyunca bir ip; gövde kalınlaştıkça iç kenarda ve ortada
+    // ikinci, üçüncü ip başlar; hepsine minik altın taneler sık dizilir, boynuz uçlarında minik imameler.
     const R = H.R;
     const ic = (ph) => {
       const cp = Math.cos(ph);
       return (-0.8 * R * cp + Math.sqrt(0.64 * R * R * cp * cp + 4 * 0.5625 * R * R)) / 2;
     };
-    const yay = [];
-    for (let ph = -2.1; ph <= 2.1001; ph += 0.05) {
-      const sI = ic(ph);
-      if (sI >= R * 0.96) continue;
-      const m = (sI + R) / 2;
-      yay.push([H.cx + Math.sin(ph) * m, H.cy + Math.cos(ph) * m, R - sI]);
+    const db = Math.max(2.1, R * 0.215);
+    const yayNok = (rf, esik) => {
+      const pts = [];
+      for (let ph = -2.3; ph <= 2.3001; ph += 0.025) {
+        const sI = ic(ph);
+        if (R - sI < esik) continue;
+        const rr = rf(sI);
+        pts.push([H.cx + Math.sin(ph) * rr, H.cy + Math.cos(ph) * rr, ph]);
+      }
+      return pts;
+    };
+    const ipler = [
+      yayNok(() => R - db * 0.55, db * 0.85),
+      yayNok((sI) => sI + db * 0.55, db * 1.85),
+      yayNok((sI) => (R + sI) / 2, db * 2.8),
+    ].filter((q) => q.length > 2);
+    const hTaneler = [];
+    for (const q of ipler) {
+      const { taneler } = boyunca(q.map((u) => [u[0], u[1]]), db * 1.02, () => db, (x) => altin(sinir(0.42 + ((x - H.cx) / R) * 0.38, 0.1, 0.95)));
+      hTaneler.push({ q, taneler });
     }
-    ipCiz(yay.map((q) => [q[0], q[1]]), 'rgba(110,80,30,0.9)', 0.8);
-    const { taneler } = boyunca(yay.map((q) => [q[0], q[1]]), (d) => d * 1.02, (t) => {
-      const i = Math.min(yay.length - 1, Math.round(t * (yay.length - 1)));
-      return Math.max(2.6, yay[i][2] * 1.05);
-    }, (x, y, t) => altin(0.45 + 0.4 * t));
-    const govde = taneler.filter((_, i) => i > 0 && i < taneler.length - 1);
-    golgeCiz(govde);
-    for (const t of govde) tane(t);
-    const u0 = yay[0], u1 = yay[yay.length - 1];
-    imame(u0[0], u0[1], yonu(yay[3], yay[0]), R * 0.55, Math.max(2, R * 0.22), altin(0.5));
-    imame(u1[0], u1[1], yonu(yay[yay.length - 4], yay[yay.length - 1]), R * 0.55, Math.max(2, R * 0.22), altin(0.75));
+    for (const h of hTaneler) golgeCiz(h.taneler);
+    for (const h of hTaneler) ipCiz(h.q.map((u) => [u[0], u[1]]), 'rgba(110,80,30,0.9)', 0.6);
+    for (const h of hTaneler) for (const t of h.taneler) tane(t);
+    const dis = ipler[0];
+    const u0 = dis[0], u1 = dis[dis.length - 1];
+    imame(u0[0], u0[1], yonu(dis[4], dis[0]), db * 2.1, db * 0.95, altin(0.3));
+    imame(u1[0], u1[1], yonu(dis[dis.length - 5], dis[dis.length - 1]), db * 2.1, db * 0.95, altin(0.8));
   }
   alem(parca('alem').alem);
 
@@ -715,21 +730,23 @@
   // çiçekler: merkezden dışa beş loblu sarmal ip
   for (const c of B.cicekler) {
     const nok = [];
-    const tur = Math.max(3, c.r / 7.2);
+    const kucuk = c.r < 35; // yan dallardaki küçük çiçekler: daha az tur, iri tane, belirgin beş lob
+    const tur = kucuk ? 2.5 : Math.max(3, c.r / 7.2);
+    const lob = kucuk ? 0.44 : 0.26;
     const N = Math.round(tur * 60);
     for (let i = 0; i <= N; i++) {
       const th = (i / N) * tur * Math.PI * 2;
       const f = i / N;
-      const zarf = 0.74 + 0.26 * Math.pow(Math.abs(Math.cos(((th - c.aci) * 5) / 2)), 1.6);
+      const zarf = 1 - lob + lob * Math.pow(Math.abs(Math.cos(((th - c.aci) * 5) / 2)), 1.6);
       const rr = c.r * (0.05 + 0.95 * f) * (f < 0.2 ? 1 : 1 + (zarf - 1) * Math.min(1, (f - 0.2) / 0.5));
       nok.push([c.x + Math.cos(th + c.aci) * rr, c.y + Math.sin(th + c.aci) * rr, f]);
     }
     const p2 = nok.map((q) => [q[0], q[1]]);
-    const dmax = Math.max(4, Math.min(8.5, c.r / 7));
+    const dmax = kucuk ? c.r / 4.3 : Math.max(4, Math.min(8.5, c.r / 7));
     const { taneler } = boyunca(p2, (d) => d * 1.06, (t) => Math.max(2.4, dmax * (0.45 + 0.55 * Math.min(1, t * 1.6))), (x, y, t) => {
       const rr = Math.hypot(x - c.x, y - c.y) / c.r;
       if (rr < 0.2) return oynat(karis([232, 185, 63], [201, 143, 34], rr / 0.2), 10);
-      return oynat(karis([236, 176, 192], [255, 252, 250], sinir((rr - 0.22) / 0.45, 0, 1)), 6);
+      return oynat(karis(kucuk ? [226, 138, 166] : [236, 176, 192], [255, 252, 250], sinir((rr - (kucuk ? 0.3 : 0.22)) / 0.45, 0, 1)), 6);
     });
     golgeCiz(taneler);
     ipCiz(p2, 'rgba(150,110,96,0.8)', 0.75);

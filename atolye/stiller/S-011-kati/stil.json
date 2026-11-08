@@ -1,0 +1,36 @@
+{
+  "kod": "S-011",
+  "no": 11,
+  "ad": "Kat'ı (Kâğıt Oyma)",
+  "ad_en": "Kat'ı Paper Cutting",
+  "aile": "Türk-İslam Sanatları",
+  "ozgun": false,
+  "ozet": "Tek parça krem kâğıttan bıçakla oyulmuş, koyu yeşil zemine konmuş dantel gibi bir kâğıt kesimi.",
+  "tanim": "Kat'ı, kâğıdın ince bir bıçakla oyularak motiflerin çıkarıldığı ve oyulan kâğıdın zıt renkli bir zemin kâğıdına yapıştırıldığı süsleme sanatıdır. Müsbet (pozitif) ya da menfi (negatif) olarak çalışılır; rumî, hatayî, bulut ve çiçek motifleri dantel inceliğinde köprülerle birbirine bağlanır. Murakka sayfalarında, cilt kapaklarında ve kitap kenarlarında kullanılır.",
+  "koken": "15. yüzyılda Timurlu Herat'ta yaygınlaştı ve Osmanlı kitap sanatlarına geçti. 17. yüzyılda Bursalı Fahrî (Fahrî-i Bursevî) kat'ı çiçek ve kompozisyonlarıyla tanınan en ünlü Osmanlı ustasıdır; sanat bugün murakka ve cilt sanatıyla birlikte yaşatılmaktadır.",
+  "ayirt_edici": [
+    "Tek parça krem kâğıt ve koyu yeşil zemin: yalnız iki renk; kâğıdın zemine düşen sola-aşağı gölgesi ve keskin bıçak kenarları",
+    "Kubbede kaburgalar kâğıt kalacak biçimde oyulmuş sivri dilimler; yeşil zemin dilimlerden görünür",
+    "Oyulmuş pencereler, korniş dişleri, baklava kafesli panolar, zikzak yarıklar ve korkuluk kemerleri",
+    "Gökte köprülerle çerçeveye bağlanan çin bulutları, ışın taçlı güneş, üstte salbekli yarım şemse ve helezon danteli",
+    "Dilimli iç kenar ve mercek dizili, rozetli çerçeve bandı; köprü bırakılarak kesilmiş cetvel yarıkları",
+    "Önde ve yanlarda orta damarları oyulmuş lale, karanfil, gül, sümbül ve saz yaprakları"
+  ],
+  "palet": [
+    "#E8D9B2",
+    "#1D4632",
+    "#173828",
+    "#B4AC8A"
+  ],
+  "kodla_cizim": "Kâğıt, 2048 px bir maske tuvalinde kesip-ekleme işlemleriyle kurulur: dolu sayfadan iç alan oyulur (destination-out), bina silueti, bulutlar, güneş, dantel ve çiçekler eklenir, ardından kubbe dilimleri, pencereler, damarlar ve kesik (köprülü) yarıklar oyulur. Bütün saplar ve köprüler en az 3,6 px genişliktedir; kapalı yarıklar setLineDash ile aralıklı kesildiği için ada oluşmaz. Geliştirme sırasında maske üzerinde bağlı bileşen sayımı (BFS) ve 1 px aşındırma denetimi yapıldı: kâğıt tek parçadır (denetim kodu sayfada kapalı durur). Görüntü; lifli zemin dokusu, maskeden üretilen bulanık ve kayık gölge, dokulu kâğıt ve maskenin kaydırılmış farkından elde edilen ince kenar ışığı ile kenar gölgesinin bileşimidir.",
+  "etiketler": [
+    "kat'ı",
+    "kâğıt oyma",
+    "kesik kâğıt",
+    "dantel",
+    "iki renk",
+    "rumî",
+    "murakka",
+    "geleneksel"
+  ]
+}

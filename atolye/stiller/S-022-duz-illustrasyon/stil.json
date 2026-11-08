@@ -14,7 +14,7 @@
     "Kaburgalar ve zikzak bant bir ton koyu ince şeritler; pencereler en koyu yeşil",
     "Taç yapraklarında, bulutlarda ve alem kürelerinde kaydırmalı gölge: her biçimin sol alt kenarında ince koyu hilal",
     "Yapraklar orta damar boyunca açık ve gölge iki yarıya bölünmüş; adaçayı yeşili ve kubbe yeşili iki yaprak tonu",
-    "Soluk mavi gök, büyük açık renkli güneş dairesi ve halesi, mercan göbekli beyaz çiçekler; çok hafif gren"
+    "Soluk mavi gök, büyük açık renkli güneş dairesi ve halesi; önde yuvarlak hatlı düz bir çalı kütlesinin üstünde mercan göbekli beyaz çiçekler; çok hafif gren"
   ],
   "palet": [
     "#C7DCDD",
@@ -26,7 +26,7 @@
     "#7DA877",
     "#EC8D73"
   ],
-  "kodla_cizim": "JavaScript ile üretilen satır içi SVG, yalnız dolgulu (stroke'suz) yollar. Her biçim açık ve gölge tonda iki katmandır: kubbe ve kasnakta gölge bölgesi u = −0,38 meridyeninin solu (SAHNE.kubbeProfili'nden kurulan yol); minarede her parça kendi yarıçapına göre kırpılmış ikinci bir gölge geçişiyle yeniden çizilir; taç yaprakları, bulutlar ve alem kürelerinde biçim gölge renginde, üstüne sağ üste kaydırılmış açık kopyası clipPath ile kırpılarak konur. Gren, feTurbulence gürültüsünün %7 çarpma karışımıdır. Geometri SAHNE.minareParcalari, kasnakPencereleri, kaide, hilalYolu ve bitki'den gelir.",
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG; biçimler kontursuz dolgulu yollardır, yalnız kaburgalar, zikzak bant ve saplar düz renkli ince şerit (stroke) olarak çizilir. Her biçim açık ve gölge tonda iki katmandır: kubbe ve kasnakta gölge bölgesi u = −0,38 meridyeninin solu (SAHNE.kubbeProfili'nden kurulan yol); minarede her parça kendi yarıçapına göre kırpılmış ikinci bir gölge geçişiyle yeniden çizilir; taç yaprakları, bulutlar ve alem kürelerinde biçim gölge renginde, üstüne sağ üste kaydırılmış açık kopyası clipPath ile kırpılarak konur. Öndeki yaprak yelpazesi seyreltilir (birbirine 56 px'ten yakın yapraklar atlanır), tarhın altına üst üste binen dairelerden tek ton gölgeli bir çalı kütlesi konur. Gren, feTurbulence gürültüsünün %7 çarpma karışımıdır. Geometri SAHNE.minareParcalari, kasnakPencereleri, kaide, hilalYolu ve bitki'den gelir.",
   "etiketler": [
     "vektör",
     "editoryal",

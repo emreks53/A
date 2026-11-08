@@ -786,12 +786,14 @@
   for (let i = 0; i < 32; i++) { const a = (i / 32) * Math.PI * 2; ctx.beginPath(); ctx.moveTo(GUNES.x + Math.cos(a) * 12, GUNES.y + Math.sin(a) * 12); ctx.lineTo(GUNES.x + Math.cos(a) * 28, GUNES.y + Math.sin(a) * 28); ctx.stroke(); }
   // kabarcıklar (tohum)
   const rb = S.rng(77);
+  // yalnızca "tohumlu" camlarda (parçaların kabaca üçte biri) kabarcık olur; kar tanesi gibi her yere serpilmez
+  const tohumlu = (id) => ((Math.imul(id, 2654435761) >>> 0) % 100) < 34;
   for (let i = 0; i < 2600; i++) {
     const x = WX1 + rb() * (WX2 - WX1), y = WTOP + rb() * (WBOT - WTOP);
     const p = Math.round(y * K) * W + Math.round(x * K);
-    if (!ids[p] || uzak[p] < HW + 2) continue;
-    const r = 0.4 + rb() * rb() * 1.8;
-    ctx.fillStyle = 'rgba(255,255,255,0.42)';
+    if (!ids[p] || uzak[p] < HW + 2 || !tohumlu(ids[p])) continue;
+    const r = 0.35 + rb() * rb() * 1.5;
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.lineWidth = 0.5;
     ctx.beginPath(); ctx.arc(x, y, r, Math.PI * 0.1, Math.PI * 0.9); ctx.stroke();

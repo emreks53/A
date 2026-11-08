@@ -1,0 +1,40 @@
+{
+  "kod": "S-010",
+  "no": 10,
+  "ad": "İznik Çinisi",
+  "ad_en": "Iznik Tile",
+  "aile": "Türk-İslam Sanatları",
+  "ozgun": false,
+  "ozet": "Beyaz astar üzerine kobalt, firuze, kabarık mercan kırmızısı ve zümrüt yeşiliyle boyanmış sırlı çini pano.",
+  "tanim": "İznik çinisi, kuvars ağırlıklı bir gövde üzerine beyaz astar sürülüp sır altı tekniğiyle boyanan ve parlak, şeffaf sırla pişirilen Osmanlı seramiğidir. Siyah ya da koyu kontur içinde kobalt mavisi, firuze, zümrüt yeşili ve kabarık mercan kırmızısı kullanılır; saz yaprakları, lale, karanfil, sümbül ve rozetler başlıca motiflerdir. Kare çiniler bordürlerle birlikte duvar panoları halinde dizilir.",
+  "koken": "İznik atölyeleri 15. yüzyılın sonundan 17. yüzyıla kadar saray için üretim yaptı; Süleymaniye, Rüstem Paşa ve Sultanahmet camilerinde görülen, 1550'lerden sonraki kabarık kırmızılı dönem zirvedir. Desenler saray nakkaşhanesinde, Kara Memi'nin saz ve natüralist çiçek üslubuyla hazırlanırdı.",
+  "ayirt_edici": [
+    "Bordür çinileriyle çevrili 4 × 4 kare çini pano; aralarda girintili, açık renk derzler",
+    "Hafif mavimsi beyaz astar üzerinde kobalt, firuze ve zümrüt yeşili; ince siyah kontur",
+    "Kabarık mercan kırmızısı laleler, karanfiller, rozetler ve alemler",
+    "Kobalt konturlu ve kaburgalı zümrüt yeşili kubbe; firuze kasnakta kobalt pencereler",
+    "Uzun, kıvrık, tırtıklı, iki tonlu saz yaprakları ve sümbüller; gökte çin bulutları ve rozet güneş",
+    "Her çinide sır parlaması ve pencere yansıması, sır birikmesiyle dalgalanan renk, iğne delikleri, çiniden çiniye ton ve baskı kayması"
+  ],
+  "palet": [
+    "#F5F7F3",
+    "#1F3F99",
+    "#2AA3A5",
+    "#C8382A",
+    "#1F8B4E",
+    "#1A1A22",
+    "#D6D0C1"
+  ],
+  "kodla_cizim": "Tasarım üç ayrı 2048 px katmana çizilir: sır altı renkler (kobalt, firuze, yeşil), kabarık kırmızı ve siyah kontur. Renk katmanı piksel düzeyinde düşük frekanslı gürültüyle koyulaştırılıp açılarak sır birikmesi verilir ve hafifçe bulanıklaştırılarak akıtılır; kırmızı katman alt-sola kayık bir gölgeyle kabarık gösterilir; beyaz çizgiler (astar) renk katmanından silinerek açılır. Ardından tasarım çini çini kesilip derz zeminine yerleştirilir: her çiniye küçük baskı kayması, pişirim ton farkı, sağ üstten parlama, yumuşak pencere yansıması, sır kenarı ışığı ve tohumlu iğne delikleri eklenir. Lale, karanfil, sümbül, rozet, saz ve çin bulutu motifleri Bezier yolları ve omurga-şerit poligonlarıyla üretilir.",
+  "etiketler": [
+    "çini",
+    "İznik",
+    "sır altı",
+    "kobalt",
+    "mercan kırmızısı",
+    "saz yaprağı",
+    "seramik",
+    "pano",
+    "geleneksel"
+  ]
+}

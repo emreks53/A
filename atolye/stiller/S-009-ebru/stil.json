@@ -1,0 +1,41 @@
+{
+  "kod": "S-009",
+  "no": 9,
+  "ad": "Ebru",
+  "ad_en": "Turkish Paper Marbling",
+  "aile": "Türk-İslam Sanatları",
+  "ozgun": false,
+  "ozet": "Gerçek ebru matematiğiyle hesaplanmış battal, gelgit ve taraklı desenler; akkâse bina ve iğneyle çekilmiş çiçekler.",
+  "tanim": "Ebru, kitreyle koyulaştırılmış su yüzeyine öd katılmış toprak boyaların serpilip biz ve tarakla biçimlendirildiği, sonra desenin kâğıda alındığı kâğıt süsleme sanatıdır. Serpilen damlalar birbirini iterek taşlar oluşturur (battal); biz bir ileri bir geri çekilince gelgit, tarakla taranınca taraklı desenler ortaya çıkar. Damla ve iğne hareketleriyle lale, karanfil, sümbül gibi çiçekler yapılır; akkâse tekniğinde bir şablon, siluetin içini başka bir ebruya ayırır.",
+  "koken": "15. yüzyıldan beri Türk kitap sanatlarında cilt kapağı, yan kâğıdı ve hat kenarı süslemesinde kullanılır. Çiçekli ebruyu 18. yüzyılda Hatip Mehmed Efendi başlattı; 20. yüzyılda Necmeddin Okyay çiçekli ebruyu geliştirip akkâse ve yazılı ebru gibi teknikleri canlandırdı, Mustafa Düzgünman geleneği sürdürdü.",
+  "ayirt_edici": [
+    "Lacivert ve çivit taşlardan battal gök; taşların arasında ince açık damarlar ve gelgitle dalgalanan kenarlar",
+    "Aynı noktaya iç içe serpilmiş okra ve sarı damlalardan halkalı güneş",
+    "Yeşil battalın kubbe meridyenleri boyunca taranmasıyla sivri dilimli, tepeye toplanan kubbe deseni",
+    "Akkâse şablonuyla ayrılmış, beyaz mermer desenli kaide ve minare; şablonun bıraktığı ince kâğıt çizgisi ve koyu pencereler",
+    "Taraklı (tek yönde taranmış) toprak renkli zemin",
+    "İğneyle çekilmiş iç içe renkli laleler, tırtıklı karanfiller, papatyalar, sümbüller, damla yapraklar ve boncuk dizisi gibi saplar"
+  ],
+  "palet": [
+    "#22305E",
+    "#567BB4",
+    "#D9A441",
+    "#3E8350",
+    "#E2D6BC",
+    "#C29A5E",
+    "#B3352A",
+    "#F2EBDA"
+  ],
+  "kodla_cizim": "Aubrey Jaffer'in ebru dönüşümleri uygulanır: damla p' = c + (p−c)·√(1 + r²/|p−c|²), tarak dişi p' = p + α·λ/(d+λ)·M (gelgitte komşu dişler ters yönde, eşit aralıklı dişlerde her noktaya en yakın iki diş), iğne adımı p' = p + v·e^(−|p−s|²/σ²). Her bölge (gök, zemin, kubbe, kasnak, bina, pencere, alem) için ayrı bir işlem dizisi kaydedilir. Damla çokgenlerini ileri taşımak yerine her piksel bu dönüşümlerin tersinden geçirilir (damlada tam ters formül, iğnede sabit nokta yinelemesi) ve hangi damlaya düştüğü bulunur; böylece en sert taramada bile sınırlar keskin ve hatasız kalır. Uyarlamalı örnekleme, damla kenarına doğru koyulaşan boya, akışla gerilen doku ve damla kimliği değişen piksellerde ince damar eklenir. Kubbe deseni boylam-yükseklik uzayında hesaplanıp meridyen eşlemesiyle kubbeye sarılır; bölgeler SAHNE bölge haritasıyla akkâse şablonu gibi ayrılır. Çiçekler kendi kutularında damla ve iğne çekişleriyle üretilir.",
+  "etiketler": [
+    "ebru",
+    "battal",
+    "gelgit",
+    "taraklı",
+    "akkâse",
+    "çiçekli ebru",
+    "kâğıt süsleme",
+    "simülasyon",
+    "geleneksel"
+  ]
+}

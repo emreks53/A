@@ -22,7 +22,7 @@
     "#C9A23A",
     "#B08A2C"
   ],
-  "kodla_cizim": "JavaScript ile üretilen satır içi SVG; bütün yollar stroke-width 2,3, stroke-linecap ve stroke-linejoin round. Gizli çizgiler ressam sırasıyla çözülür: arkadan öne çizilen her kapalı biçim kâğıt rengiyle doldurulur (görünürde dolgu yoktur). Kaburgalar SAHNE.kaburgalar'dan alınıp komşu kaburgaya 6 px'ten fazla yaklaştıkları yükseklikte kesilir; çiçekler taç uçlarında çentikli kutupsal bir eğriyle tek dış çizgi olarak, yapraklar orta ve yan damarlarıyla, bulutlar dairelerin üst zarfı olarak hesaplanır. Öndeki yapraklardan yalnız çiçeklerin arkasından çıkanlar seçilerek boşluk korunur.",
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG; bütün yollar stroke-width 2,3, stroke-linecap ve stroke-linejoin round. Gizli çizgiler ressam sırasıyla çözülür: arkadan öne çizilen her kapalı biçim kâğıt rengiyle doldurulur (görünürde dolgu yoktur). Kaburgalar SAHNE.kaburgalar'dan alınıp komşu kaburgaya 6 px'ten fazla yaklaştıkları yükseklikte kesilir; çiçekler taç uçlarında çentikli kutupsal bir eğriyle tek dış çizgi olarak (taç ayrımları, damarlar ve ucu halkalı ercikler, boyu SAHNE.rng ile değişen hafif kıvrık ikinci derece Bézier çizgileri), yapraklar orta ve uca doğru kıvrılan yan damarlarıyla, bulutlar dairelerin üst zarfı olarak hesaplanır. Öndeki yapraklardan yalnız çiçeklerin arkasından çıkanlar seçilerek boşluk korunur.",
   "etiketler": [
     "çizgi",
     "monoline",

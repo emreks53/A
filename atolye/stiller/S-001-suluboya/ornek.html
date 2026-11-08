@@ -147,11 +147,43 @@
   // kenar: o.vinKay ile her yıkama farklı yerde durur
   function vinyet(i, kay) { return sstep(0.93 + kay, 0.87 + kay, FV[i]); }
 
+  // ------------------------------------------------------------ gevşek kenar (kaybolan ve bulunan kenarlar)
+  // Ressam kalem çizgisini tam izlemez: maske bulanıklaştırılıp gürültülü bir eşikle kesilir, böylece boya kimi
+  // yerde çizginin dışına taşar, kimi yerde geride kalıp kâğıt beyazı bir sızıntı bırakır. Kenarın yumuşaklığı da
+  // gürültüyle değişir: sert, koyu kuruyan (bulunan) kenarlar ile ıslakta kâğıda eriyen (kaybolan) kenarlar yan yana.
+  const nG = gurultu(12), nH = gurultu(13);
+  function gevsekMaske(kutu, M, o) {
+    const [x0, y0, x1, y1] = kutu, w = x1 - x0, h = y1 - y0;
+    const r = o.r || 5, Mb = bulanik(M, w, h, r), Mw = bulanik(M, w, h, r * 2.6);
+    const A = new Float32Array(w * h);
+    const tas = o.tasma == null ? 0.3 : o.tasma, ol = o.olcek || 28, kp = o.kayip || 0, sx = (o.tohum || 1) * 13.1;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      const j = (y - y0) * w + x - x0;
+      const nk = fbm(nH, x / (ol * 1.7) + sx, y / (ol * 1.7) - sx, 2);
+      const s = clamp(sstep(0.6 - kp * 0.28, 0.66 - kp * 0.28, nk) + (o.kayipF ? o.kayipF(x, y) : 0), 0, 1);
+      const m = Mb[j] + (Mw[j] - Mb[j]) * s;
+      if (m <= 0.002) continue;
+      if (m >= 0.998) { A[j] = 1; continue; }
+      const thr = clamp(0.5 + (fbm(nG, x / ol + sx, y / ol, 3) - 0.5) * 2.6 * tas + (o.kay || 0), 0.05, 0.95);
+      const gen = 0.035 + s * 0.45;
+      A[j] = sstep(thr - gen, thr + gen, m);
+    }
+    return A;
+  }
+  function maskeBolge(kutu, set, sart) {
+    const [x0, y0, x1, y1] = kutu, w = x1 - x0, M = new Float32Array(w * (y1 - y0));
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      if (set[BOL[y * W + x]] && (!sart || sart(x, y))) M[(y - y0) * w + x - x0] = 1;
+    }
+    return M;
+  }
+  const gevsek = (kutu, set, o, sart) => gevsekMaske(kutu, maskeBolge(kutu, set, sart), o);
+
   // ------------------------------------------------------------ pigmentler (soğurma vektörleri)
   const pig = (hex) => [1, 3, 5].map((k) => -Math.log(Math.max(4, parseInt(hex.substr(k, 2), 16)) / 255));
   const P = {
     sap: pig('#6A9030'), vir: pig('#2F7E6C'), ult: pig('#4352AC'), cer: pig('#4B9ACB'),
-    sie: pig('#C98C42'), ros: pig('#D24A7E'),
+    sie: pig('#C98C42'), ros: pig('#D24A7E'), gam: pig('#E2B33C'),
   };
   const karis = (...a) => { const k = [0, 0, 0]; for (let i = 0; i < a.length; i += 2) for (let c = 0; c < 3; c++) k[c] += a[i][c] * a[i + 1]; return k; };
   const lerpK = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
@@ -270,6 +302,45 @@
     }
   }
 
+  // ============================================================ ÇİÇEK REZERVİ (kâğıt beyazı bırakılan yerler)
+  // Taç yapraklar kalem elipslerini birebir izlemez: her biri biraz büyük ya da küçük, hafif dönük, ucunda
+  // küçük bir çentik, kenarı Hobbs usulü bozulmuş serbest bir biçimdir. Yeşiller bu biçimin etrafından dolaşır.
+  const B = SAHNE.bitki;
+  const isikYon = [0.74, -0.67];
+  const CICEKLER = (() => {
+    const r = SAHNE.rng(88);
+    return B.cicekler.map((c) => {
+      const yap = SAHNE.tacYapraklari(c).map((e) => {
+        const s = 0.9 + r() * 0.22, a = e.aci + (r() - 0.5) * 0.24, ph1 = r() * 6.3, ph2 = r() * 6.3;
+        const centik = r() < 0.65 ? 0.07 + r() * 0.1 : 0;
+        const cx = c.x + Math.cos(a) * c.r * 0.53 * s, cy = c.y + Math.sin(a) * c.r * 0.53 * s;
+        const rx = e.rx * s * (1 + r() * 0.08), ry = e.ry * s * (1.02 + r() * 0.16);
+        const ca = Math.cos(a), sa = Math.sin(a), pts = [];
+        for (let i = 0; i < 14; i++) {
+          const th = (i / 14) * Math.PI * 2, dth = Math.min(th, Math.PI * 2 - th);
+          let rr = 1 + 0.07 * Math.sin(2 * th + ph1) + 0.05 * Math.sin(3 * th + ph2) - centik * Math.exp(-(dth * dth) / 0.03);
+          const ex = rx * Math.cos(th) * rr, ey = ry * Math.sin(th) * rr * (0.78 + 0.3 * (Math.cos(th) + 1) / 2);
+          pts.push([cx + ex * ca - ey * sa, cy + ex * sa + ey * ca, 1]);
+        }
+        return { cx, cy, a, rx, ry, pts: boz(pts, 3, 0.16, r) };
+      });
+      return { c, yap };
+    });
+  })();
+  const CICEKR = new Float32Array(N);
+  {
+    const kc0 = SAHNE.yeniTuval(W, W), k0 = kc0.getContext('2d', { willReadFrequently: true });
+    k0.fillStyle = '#fff';
+    for (const { c, yap } of CICEKLER) {
+      for (const y of yap) { k0.beginPath(); y.pts.forEach((q, i) => (i ? k0.lineTo(q[0], q[1]) : k0.moveTo(q[0], q[1]))); k0.closePath(); k0.fill(); }
+      k0.beginPath(); k0.arc(c.x, c.y, c.r * 0.3, 0, Math.PI * 2); k0.fill();
+    }
+    const v = k0.getImageData(0, 0, W, W).data;
+    for (let i = 0; i < N; i++) CICEKR[i] = v[i * 4 + 3] / 255;
+  }
+  // yeşillerin çiçeğin etrafından dolaştığı gevşek sınır (kimi yerde beyaz bir pay, kimi yerde taç yaprağa biraz taşar)
+  const CICEKG = gevsekMaske([0, 0, W, W], CICEKR, { r: 3, tasma: 0.38, olcek: 12, kayip: 0.12, tohum: 5 });
+
   // ============================================================ GÖK
   const GOKSET = kume('gok', 'gunes', 'zemin', 'sap', 'yaprak');
   const yapiSet = kume('minare', 'kaide', 'kasnak', 'kubbe', 'pencere', 'altin');
@@ -292,7 +363,15 @@
     for (let j = 0; j < Bb.length; j++) Bb[j] = sstep(0.12, 0.8, Bb[j] * 0.5 + A[j] * 0.5);
     return Bb;
   })();
-  const gokKapsam = kapsamBolge(kGok, GOKSET, 1, (x, y) => y < 812 + (nA(x / 30, 3) - 0.5) * 18);
+  // gök yıkaması yapıların ve çiçeklerin etrafından dolaşır ama sınırı gevşektir: kimi yerde yapıya taşar,
+  // kimi yerde geride kalıp ince bir kâğıt beyazı bırakır
+  const gokKapsam = (() => {
+    const n = W * 830, M = new Float32Array(n);
+    for (let i = 0; i < n; i++) if (yapiSet[BOL[i]] || CICEKR[i] > 0.5) M[i] = 1;
+    const G = gevsekMaske(kGok, M, { r: 4, tasma: 0.42, olcek: 18, kayip: 0.3, tohum: 2 });
+    for (let i = 0; i < n; i++) { const x = i % W, y = (i / W) | 0; G[i] = y < 812 + (nA(x / 30, 3) - 0.5) * 18 ? 1 - G[i] : 0; }
+    return G;
+  })();
   // binaların çevresi: gökyüzü yıkaması binaya yaklaşınca sert, koyu kenarla kurur
   const gunesIz = (x, y) => { const d = Math.hypot(x - 880, y - 140); return sstep(235, 120, d + (fbm(nE, x / 30, y / 30, 2) - 0.5) * 30); };
   yikama(kGok, gokKapsam.slice(), {
@@ -343,7 +422,7 @@
     const du = u - merkez;
     return du < 0 ? sstep(-gen - 0.015, -gen + 0.015, du) : sstep(gen + 0.09, gen - 0.02, du);
   };
-  yikama(kKubbe, kapsamBolge(kKubbe, KUBBESET, 1), {
+  yikama(kKubbe, gevsek(kKubbe, KUBBESET, { r: 4, tasma: 0.42, olcek: 20, kayip: 0.2, tohum: 11, kayipF: (x, y) => 0.7 * sstep(0.45, 0.9, kubbeU(x, y)) * sstep(545, 430, y) + 0.5 * sstep(330, 305, y) }), {
     pig: (x, y) => { const l = isikKubbe(x, y), t = 0.62 + 0.38 * l + 0.97 * (1 - l) + 0.12 * (1 - l); return karis(P.sap, (0.5 + 0.5 * l) / t * 1.15, P.vir, (0.85 * (1 - l) + 0.12) / t * 1.15, P.sie, 0.2 * l * l, P.ult, 0.12 * (1 - l) / t * 1.15); },
     yog: (x, y) => (0.3 + 0.78 * Math.pow(1 - isikKubbe(x, y), 1.35)) * (1 - 0.88 * parlak(x, y)),
     kenar: 0.75, gran: 0.3, dalga: 0.4, dalgaOlcek: 30, tohum: 11,
@@ -372,7 +451,7 @@
           const l = kubbeIsik(x, y);
           const ii = Math.round(y) * W + Math.round(x);
           c.lineWidth = (0.9 + 1.5 * nA(faz + s * 0.18, kn * 3.1)) * (1.3 - 0.6 * l) * (0.5 + 0.5 * sstep(0, 0.12, t));
-          c.globalAlpha = clamp(0.35 + 0.65 * (1 - l), 0, 1);
+          c.globalAlpha = clamp(0.35 + 0.65 * (1 - l), 0, 1) * sstep(0.3, 0.55, nG(faz + s * 0.11, kn * 2.7) + 0.25 * (1 - l) - 0.12 * Math.max(0, k.u));
           c.beginPath(); c.moveTo(x + DX[ii] * 0.25, y); c.lineTo(x2 + DX[ii] * 0.25, y2); c.stroke();
         }
       });
