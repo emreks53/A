@@ -1,0 +1,22 @@
+{
+  "kod": "S-100",
+  "no": 100,
+  "ad": "Islak Kâğıda Mürekkep",
+  "ad_en": "Ink on Wet Paper",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Açık, ıslak-ıslağa suluboya lavilerinin üstüne henüz kurumamış kâğıtta çekilmiş renkli mürekkep çizgileri: ıslak yerde tüylenip yumuşakça yayılır, kuruyan yerde keskin kalır.",
+  "tanim": "Islak kâğıda mürekkep, suluboya lavisi henüz kurumadan kâğıda kalem ya da ince fırçayla mürekkep çizgisi çekme tekniğidir. Mürekkep ıslak kâğıdın liflerine sızar: çizgi genişler, kenarı ince saçaklarla tüylenir, kalemin durduğu yerde yumuşak bir bulut gibi yayılır; kâğıdın kuruduğu yerde ise aynı kalem keskin, temiz bir çizgi bırakır. Böylece tek resimde hem dağılmış hem keskin çizgi bir arada bulunur. Az ve akışkan çizgi, bol beyaz kâğıt ve açık laviler ona ferah, şiirsel bir hava verir; botanik eskizlerde, seyahat defterlerinde ve şiir kitabı resimlerinde kullanılır.",
+  "koken": "Mürekkebin ıslak yüzeyde dağılması Doğu Asya'nın 'ıslak' mürekkep resminde (Çin ve Japon xieyi/haboku üslupları) bilinçli bir anlatım aracıydı; Batı'da 19. yüzyıl suluboyacıları ve 20. yüzyıl başı resimcileri (Arthur Rackham'ın kahverengi mürekkep lavileri, Raoul Dufy'nin renkli lavi üstüne akışkan çizgileri) çizgiyle lekeyi serbestçe ayırdı. Bugün renkli mürekkepler (indigo, yeşil, gül) ve suluboyayla çalışan çağdaş eskizciler 'wet-in-wet ink' adıyla tekniği yaygınlaştırdı.",
+  "ayirt_edici": [
+    "Aynı mürekkep çizgisi kâğıdın ıslaklığına göre değişiyor: kubbenin sol yanındaki kaburgalar, minaredeki zikzak ve sağ öndeki çiçek kümesinde çizgi genişleyip yumuşamış; kubbenin sağ üstü, kaide pencereleri ve minare tepesinde keskin",
+    "Islak yerlerde çizginin çevresinde bulutsu, düzensiz kenarlı yayılma halesi ve kâğıt liflerine sızan ince saçaklar (tüylenme); siyah değil renkli mürekkep: çivit mavisi yapı, yeşil kubbe ve bitkiler, gül pembesi çiçekler, turuncu güneş",
+    "Çok açık, ıslak-ıslağa laviler: gökte seruleum, lavanta ve açık mavi yumuşak lekeler birbirine akmış, güneş çevresinde sıcak sarıya dönüyor; toprakta aşı boyası, gül ve açık yeşil karışıyor",
+    "Bulutlar, çiçeklerin taç yaprakları ve kubbedeki ışık şeridi boyanmamış beyaz kâğıt; lavi yer yer çizgiden taşıyor ya da kayıyor",
+    "Az ve akışkan çizgi: tarama yok, gölgeler lavanta ve koyu yeşil lavilerle; çizgiler basınca göre incelip kalınlaşıyor, kubbe kaburgalarında yer yer kesiliyor",
+    "Soğuk preslenmiş suluboya kâğıdı: boyalı yerlerde belirginleşen ince tane ve lavide hafif dalgalanma"
+  ],
+  "palet": ["#FDFBF6", "#9FCFEE", "#C7C0EE", "#79C080", "#F2DBA4", "#25327F", "#1E7448", "#BE3F6C", "#DD8424"],
+  "kodla_cizim": "Önce düşük çözünürlüklü bir ıslaklık haritası (fbm gürültüsü + kubbenin sol yanı, ufuk, ön çiçek kümeleri gibi yerlere konan yumuşak lekeler) kurulur ve 2048'lik bulanık bir alfa maskesine büyütülür. Laviler: gürültüyle dalgalanan kenarlı biçimler ekran dışı katmanda doldurulur, kenara çok hafif pigment birikimi eklenir, biçimin kutusu kadar bulanıklaştırılıp ana resme 'multiply' basılır; küçük laviler tek katmanda toplanıp bir kez bulanıklaştırılır. Beyazlar (bulut, taç yaprak, ışık şeridi) kâğıt rengiyle yumuşakça kaldırılır. Mürekkep: her çizgi kısa parçalar hâlinde, basınç gürültüsü ve uçlarda incelmeyle iki katmana (keskin çekirdek ve 3 kat geniş kopya) çizilir; ıslak yerde parçalardan liflere sızan kısa rastgele yürüyüşlü saçaklar ve kalemin durduğu yerlerde yayılma bulutları eklenir. Öndeki biçimin silueti arkadaki çizgileri 'destination-out' ile siler. Birleştirmede geniş kopya ıslaklık maskesiyle kesilip bulanıklaştırılır ve bulutsu leke + lif ağından üretilen yayılma dokusuyla 'destination-in' uygulanarak hale olur; çekirdek kuru yerde keskin, ıslak yerde bulanık sürümüyle basılır. En sonda boyalı yerde belirginleşen kâğıt tanesi ve hafif lavi dalgalanması.",
+  "etiketler": ["mürekkep", "suluboya", "ıslak-ıslağa", "tüylenme", "renkli mürekkep", "lavi", "şiirsel", "eskiz"]
+}

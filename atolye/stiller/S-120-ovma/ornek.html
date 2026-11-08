@@ -77,7 +77,7 @@
   }
   // sürtme darbeleri: basınç haritasına dairesel ve uzun, yumuşak lekeler
   function surtme(c, yol, kutu, adet, deger, boy, aciFn, bl) {
-    c.save(); c.clip(yol); c.filter = `blur(${bl * K}px)`;
+    c.save(); c.clip(yol);
     const [x0, y0, w, h] = kutu;
     for (let k = 0; k < adet; k++) {
       const x = x0 + rnd() * w, y = y0 + rnd() * h;

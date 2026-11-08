@@ -291,15 +291,21 @@
   // renkli mürekkeple fırça hattı: basınçla kalınlaşıp incelen
   function hat(kutu, cizgiler, o) {
     const r = SAHNE.rng(o.tohum || 1);
+    // her hat tek bir değişken kalınlıklı çokgen olarak doldurulur (ek yerlerinde üst üste binme yok)
     const A = kapsamCiz(kutu, (c) => {
-      c.lineCap = 'round'; c.lineJoin = 'round';
       for (const pts of cizgiler) {
         const n = pts.length, faz = r() * 20;
-        for (let i = 0; i < n - 1; i++) {
+        if (n < 2) continue;
+        const sol = [], sag = [];
+        for (let i = 0; i < n; i++) {
           const t = i / (n - 1);
-          c.lineWidth = Math.max(1.15, o.gen * (0.6 + 0.4 * Math.sin(Math.PI * Math.min(1, t * 1.2))) * (0.85 + 0.3 * nA(faz + i * 0.04, 3)));
-          c.beginPath(); c.moveTo(pts[i][0], pts[i][1]); c.lineTo(pts[i + 1][0], pts[i + 1][1]); c.stroke();
+          const g = 0.5 * Math.max(1.15, o.gen * (0.6 + 0.4 * Math.sin(Math.PI * Math.min(1, t * 1.2))) * (0.85 + 0.3 * nA(faz + i * 0.04, 3)));
+          const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+          const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+          sol.push([pts[i][0] - (dy / l) * g, pts[i][1] + (dx / l) * g]);
+          sag.push([pts[i][0] + (dy / l) * g, pts[i][1] - (dx / l) * g]);
         }
+        cokgen(c, sol.concat(sag.reverse())); c.fill();
       }
     });
     if (o.carpM) { const w = kutu[2] - kutu[0]; for (let j = 0; j < A.length; j++) A[j] *= o.carpM[(kutu[1] + ((j / w) | 0)) * W + kutu[0] + (j % w)]; }
@@ -435,7 +441,7 @@
     hat(kMin, SAHNE.zikzakCizgileri(), { gen: 2.2, pig: karis(P.mac, 0.9, P.mor, 0.15), yog: 0.55, tohum: 45 });
     const A = kapsamCiz(kMin, (c) => { for (const p of SAHNE.minarePencereleri) c.fill(new Path2D(SAHNE.kemerYolu(p.x, p.y, p.w, p.h))); });
     murekkep(kMin, A, { pig: karis(P.mor, 0.7, P.kob, 0.4), yog: 0.4, tohum: 46 });
-    hat(kMin, SAHNE.yollar().minare.flatMap((d) => yolNoktalari(d, 3)), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 47, carpM: CRT });
+    hat(kMin, SAHNE.yollar().minare.flatMap((d) => yolNoktalari(d, 3)), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 47, carpM: CRT.map((v, i) => v * (1 - KAIDE_M[i]) * (1 - KASNAK_M[i])) });
     hat(kKai, yolNoktalari(SAHNE.yollar().kornis, 3).concat(yolNoktalari(SAHNE.yollar().kaide, 3)), { gen: 1.1, pig: karis(P.mor, 0.6, P.kob, 0.4), yog: 0.35, tohum: 48, carpM: CRT });
   }
   // alemler: parlak turuncu-sarı mürekkep

@@ -350,7 +350,8 @@
     for (let y = 0; y < W2; y++) for (let x = 0; x < W2; x++) { const v = fn(x, y); H[y * W2 + x] = v; if (v < mn) mn = v; if (v > mx) mx = v; }
     for (let i = 0; i < N2; i++) H[i] = sstep(lo || 0, hi || 1, (H[i] - mn) / (mx - mn));
   }
-  function kagitRengi(c) { RR = new Float32Array(N2).fill(c[0] / 255); RG = new Float32Array(N2).fill(c[1] / 255); RB = new Float32Array(N2).fill(c[2] / 255); }
+  let KAGIT = [1, 1, 1];
+  function kagitRengi(c) { KAGIT = [c[0] / 255, c[1] / 255, c[2] / 255]; RR = new Float32Array(N2).fill(KAGIT[0]); RG = new Float32Array(N2).fill(KAGIT[1]); RB = new Float32Array(N2).fill(KAGIT[2]); }
 
   const K = katmanTuvali(), KB = katmanTuvali();
   // katmanı (2048 tuval) kâğıda bırak.
@@ -379,6 +380,11 @@
         if (M) P *= M[row + (x >> 1)];
         if (P < 0.003) continue;
         const cr = v[j] / 255, cg = v[j + 1] / 255, cb = v[j + 2] / 255;
+        if (mod === 'kaldir') { // silgiyle pigment kaldırma: kâğıt rengine döner (dişin çukurunda biraz kalır)
+          const dep = Math.min(1, P) * (1 - granul * (1 - Hx[i]));
+          RR[i] += (KAGIT[0] - RR[i]) * dep; RG[i] += (KAGIT[1] - RG[i]) * dep; RB[i] += (KAGIT[2] - RB[i]) * dep;
+          continue;
+        }
         if (mod === 'lavi') {
           const dep = Math.min(1, P * (1 + granul * (0.5 - Hx[i]) * 2));
           RR[i] *= 1 - dep + dep * cr; RG[i] *= 1 - dep + dep * cg; RB[i] *= 1 - dep + dep * cb;
@@ -519,6 +525,56 @@
       strok(cx, pts, w, clamp(al * (0.85 + 0.3 * r()), 0, 1), c, o.bas === undefined ? 0.1 : o.bas, o.son === undefined ? 0.22 : o.son, o.uc === undefined ? 0.5 : o.uc);
     }
   }
+  // sünger sürme: yol boyunca geniş, kenarları yumuşak, içinde sünger dokusundan ince paralel izler olan bant.
+  // Pigment süngerin başında yoğun, sona doğru azalır (son). o: {sert (0 yumuşak kenar … 1 keskin), son, bas, iz (iz şiddeti)}
+  const nIz = gurultu(4242);
+  function sunger(cx, pts, w, a, c, r, o) {
+    o = o || {};
+    pts = sik(pts, 3);
+    if (pts.length < 2) return;
+    const n = Math.max(3, Math.round(w / 0.85)), faz = r() * 200, sert = o.sert || 0, iz = o.iz === undefined ? 0.8 : o.iz;
+    const NR = pts.map((p, i) => { const p0 = pts[Math.max(0, i - 1)], p1 = pts[Math.min(pts.length - 1, i + 1)]; let tx = p1[0] - p0[0], ty = p1[1] - p0[1]; const l = Math.hypot(tx, ty) || 1; return [-ty / l, tx / l]; });
+    for (let k = 0; k < n; k++) {
+      const v = (k / (n - 1) - 0.5) * w, e = Math.abs(v) / (w / 2);
+      const kenar = 1 - sstep(lerp(0.25, 0.92, sert), 1.0, e);
+      const izk = 1 - iz * 0.5 + iz * nIz(k * 0.5 + faz, faz * 0.3) * 1.0;
+      const al = a * kenar * izk;
+      if (al < 0.008) continue;
+      const line = pts.map((p, i) => [p[0] + NR[i][0] * v, p[1] + NR[i][1] * v]);
+      strok(cx, line, 1.45, al, c, o.bas === undefined ? 0.1 : o.bas, o.son === undefined ? 0.55 : o.son, 0.95);
+    }
+  }
+  // zikzak karalama (mum boya / pastel ile ileri-geri doldurma): merkez (px, py), vuruş yönü a, vuruş boyu L, adım s, geçiş n
+  function karala(cx, px, py, a, L, s, n, w, al, c, r, o) {
+    o = o || {};
+    const ux = Math.cos(a), uy = Math.sin(a), nx = -uy, ny = ux, pts = [];
+    const egik = o.egik || 0; // geçişler hafif kayık (el hareketi)
+    for (let k = 0; k <= n; k++) {
+      const side = k % 2 ? 1 : -1, t = (k - n / 2) * s, j = 0.82 + 0.3 * r();
+      const kk = side * (L / 2) * j + egik * t;
+      pts.push([px + ux * kk + nx * t + (r() - 0.5) * s * 0.3, py + uy * kk + ny * t + (r() - 0.5) * s * 0.3]);
+    }
+    cx.lineWidth = w; cx.lineJoin = 'round'; cx.lineCap = 'round'; cx.strokeStyle = rgba(c, al);
+    cx.beginPath(); cx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) cx.lineTo(pts[i][0], pts[i][1]);
+    cx.stroke();
+  }
+  // alan doldurma: bx içinde karalama öbekleri. o: {bx, ic, adim, aci, aciJ, boy, s, n, kal, alfa, renk}
+  function karalaAlan(cx, o, r) {
+    const [x1, y1, x2, y2] = o.bx, liste = [];
+    for (let gy = y1; gy < y2; gy += o.adim) for (let gx = x1; gx < x2; gx += o.adim) liste.push([gx + (r() - 0.5) * o.adim, gy + (r() - 0.5) * o.adim]);
+    karistir(liste, r);
+    const f = (v, x, y) => (typeof v === 'function' ? v(x, y) : v);
+    for (const [px, py] of liste) {
+      if (o.ic && !o.ic(px, py)) continue;
+      const al = f(o.alfa, px, py); if (al <= 0.01) continue;
+      const c = o.renk(px, py); if (!c) continue;
+      const a = f(o.aci, px, py) + (r() - 0.5) * (o.aciJ || 0.15);
+      karala(cx, px, py, a, f(o.boy, px, py), o.s, o.n + Math.round((r() - 0.5) * 3), f(o.kal, px, py), al, c, r, { egik: o.egik });
+    }
+  }
+  // ton maskesi: alfa = fn(x, y) (1024'te hesaplanır) olan 2048 tuval; katmanı kirp ile yumuşakça zayıflatmak için
+  function tonMaske(fn, bx) { const k = katmanTuvali(); haritaCiz(k.x, (x, y) => { const a = fn(x, y); return a > 0 ? [0, 0, 0, a] : null; }, bx); return k.c; }
 
   const r = SAHNE.rng(9101);
   const nA = gurultu(911), nB = gurultu(912), nC = gurultu(913), nD = gurultu(914), nE = gurultu(915), nF = gurultu(916);
@@ -872,9 +928,10 @@
     Object.assign({ sil: [MK.yaprakUstu], bx: [0, 500, W, W] }, KONTUR, { opq: 0.55 }));
   // yapraklar: iki tonlu taban (gölge yarısı koyu), damardan dışa tarama, yedirme, kontur
   katman((x) => {
+    const yr = SAHNE.rng(9177);
     for (const yp of B.yapraklar) {
-      const c = yp.uzunluk > 56 ? C.yaprakOrta : C.yaprak;
-      x.fillStyle = rgba(c, 0.6); x.fill(P2(SAHNE.yaprakYolu(yp)));
+      const t = yr(), c = t < 0.3 ? C.yaprak : t < 0.55 ? C.yaprakOrta : t < 0.75 ? mixc(C.yaprak, C.yesilSari, 0.5) : mixc(C.yaprakOrta, C.maviYesil, 0.35);
+      x.fillStyle = rgba(c, 0.62); x.fill(P2(SAHNE.yaprakYolu(yp)));
       // gölge yarısı
       x.save(); x.clip(P2(SAHNE.yaprakYolu(yp)));
       x.translate(yp.x, yp.y); x.rotate(yp.aci);
