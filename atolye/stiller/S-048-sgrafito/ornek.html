@@ -128,6 +128,29 @@
 
   const BOL1 = bolgeDizisi(1, true), BOL2 = bolgeDizisi(S, true);
 
+  // ------------------------------------------------------------ bulut yoğunluğu: düzensiz kabarcıklardan, tabanı yassı (1024)
+  const PUF = [];
+  for (const [bx, by, bs] of BULUTLAR) {
+    const rb = SAHNE.rng(bx * 5 + by * 11), n = Math.round(6 + bs * 5);
+    for (let k = 0; k < n; k++) {
+      const t = (rb() * 2 - 1), env = Math.pow(1 - t * t, 0.7), r = (18 + 32 * env) * bs * (0.7 + rb() * 0.6);
+      PUF.push({ x: bx + t * 140 * bs + (rb() - 0.5) * 20, y: by + 10 * bs - r * (0.4 + rb() * 0.35), r, taban: by + 12 * bs });
+    }
+  }
+  const BULUT = new Float32Array(W * W);
+  for (let y = 0; y < 640; y++) for (let x = 0; x < W; x++) {
+    let d = 0, gz = -1;
+    for (const p of PUF) {
+      const dx = x - p.x, dy = (y - p.y) * 1.15;
+      if (dx > p.r * 1.3 || dx < -p.r * 1.3 || dy > p.r * 1.3 || dy < -p.r * 1.3) continue;
+      if (gz < 0) gz = fbm(nE, x / 22, y / 18, 3);
+      const q = Math.sqrt(dx * dx + dy * dy) / p.r + (gz - 0.5) * 0.45;
+      d = Math.max(d, sstep(1.05, 0.5, q) * sstep(p.taban + 10 + (gz - 0.5) * 18, p.taban - 10, y));
+    }
+    BULUT[y * W + x] = d;
+  }
+  const bulut = (x, y) => (x < 0 || y < 0 || x >= W || y >= 640 ? 0 : BULUT[(y | 0) * W + (x | 0)]);
+
   // ------------------------------------------------------------ alt kat: gevşek boyanmış renk bölgeleri (1024)
   const UR = new Float32Array(W * W), UG = new Float32Array(W * W), UB = new Float32Array(W * W);
   for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
@@ -155,11 +178,12 @@
     UR[y * W + x] = c[0]; UG[y * W + x] = c[1]; UB[y * W + x] = c[2];
   }
   // bulutların altı açık mavi-beyaz, çiçek ortasına doğru pembe-beyaz
-  for (const [bx, by, bs] of BULUTLAR) for (let y = Math.max(0, by - 60) | 0; y < by + 50; y++) for (let x = Math.max(0, bx - 150 * bs) | 0; x < Math.min(W, bx + 150 * bs); x++) {
-    const i = y * W + x, b = ADLAR[BOL1[i]]; if (b !== 'gok') continue;
-    const d = Math.hypot((x - bx) / (120 * bs), (y - by) / (38 * bs));
-    const k = sstep(1.1, 0.6, d);
-    UR[i] = lerp(UR[i], 226, k); UG[i] = lerp(UG[i], 236, k); UB[i] = lerp(UB[i], 240, k);
+  for (let y = 0; y < 640; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x; if (ADLAR[BOL1[i]] !== 'gok') continue;
+    const k = sstep(0.05, 0.6, BULUT[i]); if (k <= 0) continue;
+    const ust = clamp(bulut(x, y + 14) - bulut(x, y - 10), -1, 1); // tepeye yakın: sıcak beyaz, tabana yakın: mor-gri
+    const c = mixc([250, 244, 228], [176, 170, 214], sstep(-0.1, -0.5, ust));
+    UR[i] = lerp(UR[i], c[0], k); UG[i] = lerp(UG[i], c[1], k); UB[i] = lerp(UB[i], c[2], k);
   }
   for (const c of SAHNE.bitki.cicekler) for (let y = Math.max(0, c.y - c.r) | 0; y < Math.min(W, c.y + c.r); y++) for (let x = Math.max(0, c.x - c.r) | 0; x < Math.min(W, c.x + c.r); x++) {
     const i = y * W + x; if (ADLAR[BOL1[i]] !== 'cicek') continue;
@@ -232,47 +256,31 @@
     const dd = Math.hypot(x - 880, y - 140);
     return clamp(0.18 + 0.5 * (y / 800) + 0.55 * Math.exp(-(dd * dd) / (2 * 230 * 230)) + (nD(x / 90, y / 90) - 0.5) * 0.2, 0, 1);
   };
-  tara(-0.06, 5.2, (x, y) => 0.7 + 2.7 * Math.pow(gokParlak(x, y), 1.1), [0, 0, W, 805], 5, 4);
-  // bulut ve güneş çevresindeki taramayı sil, sonra bulutları ve güneşi kazı
-  const bulutYol = [];
-  for (const [bx, by, bs] of BULUTLAR) {
-    const rb = SAHNE.rng(bx + by * 3), daireler = [];
-    const n = Math.round(5 + bs * 3);
-    for (let k = 0; k < n; k++) {
-      const t = k / (n - 1) - 0.5, r = (16 + 20 * Math.cos(t * Math.PI) + rb() * 8) * bs;
-      daireler.push([bx + t * 190 * bs, by + 10 * bs - r * 0.55 + rb() * 4, r]);
-    }
-    bulutYol.push({ by, bs, daireler });
-  }
+  // bulutlarda tarama kalınlaşıp birleşir (açık alt kat görünür); güneş çevresinde taramayı sil
+  tara(-0.06, 5.2, (x, y) => 0.7 + 2.7 * Math.pow(gokParlak(x, y), 1.1) + 3.4 * bulut(x, y), [0, 0, W, 805], 5, 4);
   kg.save(); kg.globalCompositeOperation = 'destination-out'; kg.fillStyle = '#000';
-  for (const b of bulutYol) {
-    kg.save(); const kes = new Path2D(); kes.rect(0, 0, W, b.by + 10 * b.bs + 7); kg.clip(kes);
-    kg.beginPath(); for (const [x, y, r] of b.daireler) { kg.moveTo(x + r + 7, y); kg.arc(x, y, r + 7, 0, Math.PI * 2); } kg.fill();
-    kg.restore();
-  }
-  kg.beginPath(); kg.arc(880, 140, 70, 0, Math.PI * 2); kg.fill();
+  kg.beginPath(); kg.arc(880, 140, 45, 0, Math.PI * 2); kg.fill();
   kg.restore();
-  for (const b of bulutYol) {
-    const p = new Path2D();
-    for (const [x, y, r] of b.daireler) { p.moveTo(x + r, y); p.arc(x, y, r, 0, Math.PI * 2); }
-    const xa = b.daireler[0][0], xb = b.daireler[b.daireler.length - 1][0];
-    const kes = new Path2D(); kes.rect(xa - 80, 0, xb - xa + 160, b.by + 10 * b.bs);
-    kg.save(); kg.clip(kes); kazi(p, -0.06, 3.2, [xa - 60, b.by - 70, xb + 60, b.by + 14 * b.bs]); kg.restore();
-    // ikinci kontur: tepe yayları
-    for (const [x, y, r] of b.daireler) {
-      kg.strokeStyle = derin(); kg.lineWidth = 1.3; kg.beginPath(); kg.arc(x, y, r + 4, Math.PI * 1.06, Math.PI * 1.94); kg.stroke();
+  // bulut kabarcıklarının ışıklı tepesinde, biçimi izleyen kısa yay kazımaları (kontur yok, yaylar kırık ve düzensiz)
+  for (const p of PUF) {
+    const n = Math.round(p.r / 5);
+    for (let k = 0; k < n; k++) {
+      const rr = p.r * (0.35 + 0.6 * (k / Math.max(1, n - 1))) + (R() - 0.5) * 3;
+      const a0 = Math.PI * (1.15 + R() * 0.25), a1 = Math.PI * (1.75 + R() * 0.3);
+      const pts = [];
+      for (let t = 0; t <= 1.001; t += 0.08) { const a = a0 + (a1 - a0) * t; const x = p.x + Math.cos(a) * rr, y = p.y + Math.sin(a) * rr * 0.87; if (bulut(x, y) > 0.35) pts.push([x, y]); else if (pts.length > 1) break; }
+      if (pts.length > 2) cizgi(pts, 1.1 + R() * 1.2, 0.5);
     }
-    kg.lineWidth = 1.2; kg.beginPath(); kg.moveTo(xa - 6, b.by + 10 * b.bs + 4); kg.lineTo(xb + 6, b.by + 10 * b.bs + 4); kg.stroke();
   }
-  // güneş: dairesel kazıma, halka, ışınlar
-  { const p = new Path2D(); p.arc(880, 140, 46, 0, Math.PI * 2);
+  // güneş: kazıyıcıyla açılmış disk; çevresinde boyları düzensiz, ince ve kalın iğne ışınları
+  { const p = new Path2D(); p.arc(880, 140, 44, 0, Math.PI * 2);
     kg.save(); kg.clip(p);
-    for (let r = 2; r < 48; r += 2.6) { kg.strokeStyle = derin(); kg.lineWidth = 3.2; kg.beginPath(); kg.arc(880, 140, r, 0, Math.PI * 2); kg.stroke(); }
+    tara(-0.06, 4.2, () => 4.6, [830, 90, 930, 190], 4, 1.2);
+    tara(Math.PI / 2 - 0.1, 6, () => 2.2, [830, 90, 930, 190], 4, 1);
     kg.restore();
-    kg.lineWidth = 1.6; kg.strokeStyle = derin(); kg.beginPath(); kg.arc(880, 140, 55, 0, Math.PI * 2); kg.stroke();
-    for (let k = 0; k < 36; k++) {
-      const a = (k / 36) * Math.PI * 2, L = k % 2 ? 46 : 92 + R() * 30;
-      cizgi([[880 + Math.cos(a) * 63, 140 + Math.sin(a) * 63], [880 + Math.cos(a) * (63 + L), 140 + Math.sin(a) * (63 + L)]], k % 2 ? 1.4 : 2.2, 0.6);
+    for (let k = 0; k < 74; k++) {
+      const a = R() * Math.PI * 2, r0 = 43 + R() * 8, L = 18 + Math.pow(R(), 1.6) * 120;
+      cizgi([[880 + Math.cos(a) * r0, 140 + Math.sin(a) * r0], [880 + Math.cos(a) * (r0 + L * 0.5) + (R() - 0.5) * 2, 140 + Math.sin(a) * (r0 + L * 0.5) + (R() - 0.5) * 2], [880 + Math.cos(a) * (r0 + L), 140 + Math.sin(a) * (r0 + L)]], 0.8 + R() * 1.6, 0.6);
     }
   }
   aktar(bolgeMaskesi(['gok', 'gunes'], 1.3));
