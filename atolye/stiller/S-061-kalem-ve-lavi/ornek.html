@@ -504,7 +504,7 @@
       { yol: new Path2D(SAHNE.daireYolu(880, 140, 92)), bulan: 26, guc: 0.9 }],
   });
   // güneş: kâğıt beyazı disk, çevresinde sert kenarlı sıcak sarı halka
-  lavi({ polis: [elips(880, 140, 66, 62, 24)], renk: '#f2c14e', renk2: '#ea8f3e', karis: (x, y) => Math.hypot(x - 880, y - 140) / 90 + (DN(x / 20, y / 20) - 0.5) * 0.3, yog: 0.3, kat: 10, varyans: 0.06, kenar: 2.2, dal: 0.35, cikar: [{ yol: new Path2D(SAHNE.daireYolu(880, 140, 35)), bulan: 1.5, guc: 1 }] });
+  lavi({ polis: [elips(870, 150, 60, 54, 20, 0.4)], renk: '#f2c14e', renk2: '#ea8f3e', karis: (x, y) => Math.hypot(x - 870, y - 150) / 80 + (DN(x / 20, y / 20) - 0.5) * 0.3, yog: 0.34, kat: 10, varyans: 0.09, derin: 4, kenar: 2.2, dal: 0.4, cikar: [{ yol: cokgenYolu(boz(elips(888, 134, 31, 30, 14), 2, 0.05, R)), bulan: 1.5, guc: 1 }] });
   lavi({ polis: [elips(880, 142, 128, 112, 24)], renk: '#f3cf72', yog: 0.08, kat: 8, varyans: 0.1, yumusak: 14, kenar: 0, dal: 0.3, cikar: [{ yol: new Path2D(SAHNE.daireYolu(880, 140, 60)), bulan: 4, guc: 1 }, { tuval: yapiPay }] });
   lavi({ polis: [[[40, 640], [990, 620], [996, 780], [30, 790]]], renk: '#e7b26a', yog: 0.14, kat: 8, varyans: 0.05, yumusak: 16, kenar: 0, cikar: [{ tuval: yapiPay }, { yol: birlesik([Y.kaide, Y.kornis]), cizgi: 6 }] });
 
@@ -729,8 +729,8 @@
 
   // --- güneş: tek hamlede çekilmiş, kapanmayan bir halka ve üstüne binen kısa ikinci darbe
   const yay = (cx, cy, r, a0, a1) => { const p = []; for (let a = a0; a <= a1; a += 0.05) p.push([cx + Math.cos(a) * r * (1 + 0.02 * Math.sin(a * 3)), cy + Math.sin(a) * r]); return p; };
-  kalem(yay(878, 141, 37, -2.2, 3.75), { w: 1.05, tit: 0.6, bas: 4, son: 18 });
-  kalem(yay(879, 140, 39.5, 3.3, 4.6), { w: 0.6, alfa: 0.6, son: 10 });
+  kalem(yay(880, 141, 36, -2.3, 3.6), { w: 1.05, tit: 1.1, dalga: 30, bas: 4, son: 22 });
+  kalem(yay(878, 139, 40, 3.2, 4.9), { w: 0.6, alfa: 0.6, tit: 0.9, son: 12 });
   // --- yer çizgisi: gevşek yatay darbeler
   kalem([[20, 801], [240, 799]], { w: 1.1, tit: 0.8 });
   kalem([[330, 800], [700, 802]], { w: 1.0, tit: 0.8 });

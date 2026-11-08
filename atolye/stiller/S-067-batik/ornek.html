@@ -160,10 +160,10 @@
   {
     const img = g.createImageData(W2, W2), v = img.data;
     const kad = [K.gok0, K.gok1, K.gok2, K.gok3, K.gok4].map(hex), kremR = hex(K.krem);
-    const esik = [190, 420, 610, 800];
+    const esik = [185, 400, 590, 790];
     for (let y = 0; y < W2; y++) for (let x = 0; x < W2; x++) {
       const X = x / S, Yy = y / S;
-      const f = Math.hypot(X - 880, Yy - 140) - 0.33 * (Yy - 140) + (fbm(nF, X / 150, Yy / 150, 3) - 0.5) * 80 + (nA(X / 14, Yy / 14) - 0.5) * 7;
+      const f = Math.hypot(X - 880, Yy - 140) - 0.15 * (Yy - 140) + (fbm(nF, X / 150, Yy / 150, 3) - 0.5) * 60 + (nA(X / 14, Yy / 14) - 0.5) * 7;
       let k = 0; while (k < 4 && f > esik[k]) k++;
       // kademe sınırında ince krem mum çizgisi (bir sonraki boya banyosundan önce çekilmiş)
       const sinir = Math.min(k > 0 ? f - esik[k - 1] : 99, k < 4 ? esik[k] - f : 99);
