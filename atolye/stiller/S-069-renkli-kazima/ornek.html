@@ -372,7 +372,7 @@
       }
       return false;
     };
-    const mesafe = (x, y) => lerp(10.5, 3.9, isikG(x, y));
+    const mesafe = (x, y) => lerp(12.5, 4.0, Math.pow(isikG(x, y), 0.9));
     const izle = (x0, y0, yonIsaret, Lmax) => {
       const out = []; let x = x0, y = y0, px = 0, py = 0;
       for (let s2 = 0; s2 < Lmax; s2 += 1.5) {
@@ -401,7 +401,7 @@
       for (let i = 1; i < n; i++) {
         const t = i / (n - 1), [x, y] = pts[i];
         const L = isikG(x, y), d = mesafe(x, y);
-        const w = clamp(d * (0.16 + 0.62 * Math.pow(L, 1.2)) * bas, 0.45, 3.4) * Math.pow(Math.sin(Math.PI * clamp(t * 0.94 + 0.03, 0, 1)), 0.45) * (0.85 + 0.3 * nC(ph + i * 0.05, 3.1));
+        const w = clamp(d * (0.12 + 0.62 * Math.pow(L, 1.25)) * bas, 0.42, 3.4) * Math.pow(Math.sin(Math.PI * clamp(t * 0.94 + 0.03, 0, 1)), 0.45) * (0.85 + 0.3 * nC(ph + i * 0.05, 3.1));
         sG.lineWidth = Math.max(0.35, w);
         sG.beginPath(); sG.moveTo(pts[i - 1][0], pts[i - 1][1]); sG.lineTo(x, y); sG.stroke();
       }
@@ -430,7 +430,11 @@
         const dd = BDER[i], bi = BNO[i], s = BUL[bi][2];
         const ust = sstep(BUL[bi][1] + 18 * s, BUL[bi][1] - 40 * s, Yy);
         const c = clamp(0.12 + 0.8 * ust - dd / (40 * s) * 0.3, 0.04, 0.9);
-        m = cizgiMaske(dd / 3.6 + (nA(X / 20, Yy / 20) - 0.5) * 0.25, 3.6 * S, c, kaba);
+        // dış kenarı izleyen birkaç kontur, içi yatay dalgalı tarama (ortada göz gibi kapanan halka kalmasın)
+        const kon = cizgiMaske(dd / 3.6 + (nA(X / 20, Yy / 20) - 0.5) * 0.25, 3.6 * S, c, kaba);
+        const ic = cizgiMaske((Yy + 2.2 * Math.sin(X / 13 + bi)) / 3.3, 3.3 * S, clamp(c * 0.85, 0.05, 0.8), kaba);
+        const kt = sstep(13 * s + 2, 9 * s + 1, dd);
+        m = kon * kt + ic * (1 - kt);
         if (dd < 1.6) m = 1;
         col = karR(col, [255, 255, 255], 0.35);
       } else {
@@ -472,8 +476,8 @@
       const N = Yy < 206 ? 18 : Yy < 300 ? 26 : 32, sp = Math.max(0.6, (Math.PI / N) * r * Math.cos(u)) * S;
       m = cizgiMaske((u + Math.PI / 2) / (Math.PI / N), sp, clamp(Math.pow(L, 1.4) * 0.92, 0, 0.92) * Math.min(1, sp / 3), kaba);
       // ışıklı yanda yatay çapraz tarama (silindiri saran hafif yaylar), gölgede seyrek benek
-      const yay = (Yy + Math.cos(u) * 3.5) / 3;
-      if (L > 0.5) m = Math.max(m, cizgiMaske(yay, 3 * S, (L - 0.5) * 1.2, kaba));
+      const yay = (X * 0.57 - Yy * 0.82 + Math.cos(u) * 4) / 2.8;
+      if (L > 0.66) m = Math.max(m, cizgiMaske(yay, 2.8 * S, (L - 0.66) * 1.6, kaba));
       else { const cs = 3, gx = X / cs, gy = Yy / cs, ix = Math.floor(gx), iy = Math.floor(gy); if (hash(ix + 77, iy + 5) < 0.2 * L + 0.04) m = Math.max(m, sstep(0.3, 0.1, Math.hypot(gx - ix - 0.5, gy - iy - 0.5))); }
       // taş sıraları: siyah derz, hemen altında ışıklı kazıma
       const per = Yy > 488 ? 19 : 17, fy = ((Yy - (Yy > 488 ? 500 : 334)) % per + per) % per;

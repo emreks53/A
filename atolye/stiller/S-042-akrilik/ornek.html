@@ -464,12 +464,12 @@
   }
   // çiçekler: her taç yaprak merkezden dışa 2–3 filbert darbesi; gölgedeki yapraklar leylak, ışıktakiler beyaz,
   // ışık alanların gölge kenarına ince leylak darbe, dibe pembe darbe; göbek kalın boya tıpışları
-  const pprof = (t) => 0.2 + 0.8 * Math.sin(Math.PI * Math.min(1, 0.1 + t * 0.78));
-  const leylakK = mixc(C.cicG, [150, 120, 200], 0.45);
+  const pprof = (t) => 0.35 + 0.65 * Math.sin(Math.PI * Math.min(1, 0.1 + t * 0.68));
+  const leylakK = mixc(C.cicG, [150, 120, 200], 0.25);
   for (const c of B.cicekler) {
     const ns = c.r > 40 ? 3 : 2, yap = SAHNE.tacYapraklari(c).map((e) => ({ e, isik: Math.cos(e.aci + Math.PI / 4) })).sort((a, b) => a.isik - b.isik);
     for (const { e, isik } of yap) {
-      const rx = e.rx, ry = e.ry, temel = isik > -0.15 ? C.cic : C.cicG, yayil = 1.2;
+      const rx = e.rx, ry = e.ry, temel = isik > -0.15 ? C.cic : C.cicG, yayil = 0.9;
       const dar = (dl, u0, u1, lat, n) => {
         const ca = Math.cos(e.aci + dl), sa = Math.sin(e.aci + dl), nx = -Math.sin(e.aci), ny = Math.cos(e.aci), bk = (R() - 0.5) * 0.08 * u1, pts = [];
         for (let j = 0; j <= n; j++) { const t = j / n, u = u0 + (u1 - u0) * t, b = bk * Math.sin(Math.PI * t) + lat * Math.sin(Math.PI * Math.min(1, 0.15 + t * 0.85)); pts.push([c.x + u * ca + nx * b, c.y + u * sa + ny * b]); }
@@ -478,11 +478,11 @@
       for (let k = 0; k < ns; k++) {
         const dl = ((k + 0.5) / ns - 0.5) * yayil / (ns === 3 ? 1.5 : 2) * 2 + (R() - 0.5) * 0.08, cd = Math.cos(dl), sd = Math.sin(dl);
         const sEnd = (2 * cd / rx) / (cd * cd / (rx * rx) + sd * sd / (ry * ry)) * (0.94 + R() * 0.06);
-        boyaFirca(dar(dl, c.r * 0.08, sEnd, 0, 14), ry * 2 * (1.05 / ns) * 1.25, temel, { prof: pprof, kuru: R() < 0.22, jit: 12 });
+        boyaFirca(dar(dl, c.r * 0.08, sEnd * 0.97, 0, 14), ry * 2 * (1.05 / ns) * 1.25, temel, { prof: pprof, kuru: R() < 0.12, jit: 12 });
       }
       if (isik > -0.15) {
         const nx = -Math.sin(e.aci), ny = Math.cos(e.aci), yan = nx * 0.7 - ny * 0.7 > 0 ? -1 : 1; // ışıktan uzak kenar
-        boyaFirca(dar(0, c.r * 0.22, rx * 1.85, yan * ry * 0.72, 12), ry * 0.34, leylakK, { prof: (t) => Math.sin(Math.PI * t), kuru: true, jit: 8, a: 0.85 });
+        boyaFirca(dar(0, c.r * 0.3, rx * 1.6, yan * ry * 0.66, 12), ry * 0.22, leylakK, { prof: (t) => Math.sin(Math.PI * t), kuru: false, jit: 6, a: 0.7 });
       } else {
         boyaFirca(dar(0.1, c.r * 0.25, rx * 1.7, 0, 12), ry * 0.5, mixc(C.cicG, C.cic, 0.55), { prof: (t) => Math.sin(Math.PI * t), kuru: true, jit: 8, a: 0.9 });
       }
