@@ -248,9 +248,20 @@ for (const x of [...MT.map((m) => m.x), RX, IH, TX]) { x.save(); x.beginPath(); 
   parca(SAHNE.daireYolu(880, 140, 46), 'karton', '#E2AE3A', 0.42, 1.55);
   for (const r of [58, 71, 85]) tutkal(SAHNE.daireYolu(880, 140, r), 3.4, 0.9);
 }
-// zemin: kum ve karborundum
-parca('M0,800 H1024 V1024 H0 Z', 'kum', null, [0, 800, 0, 1024, 0.62, 1.05], 0.5);
-{ const g = RX.createLinearGradient(0, 800, 0, 1024); g.addColorStop(0, '#B88E58'); g.addColorStop(1, '#996740'); RX.fillStyle = g; RX.fillRect(0, 800, 1024, 224); }
+// zemin: tutkala serpilmiş kum; üst kenarı düzensiz, birkaç tane kenarın dışına sıçramış
+const ZEMIN = (() => {
+  const rz = SAHNE.rng(7470), dz = fbmFn(7471, 3, 60), p = new Path2D();
+  p.moveTo(0, 1024); p.lineTo(0, 796);
+  for (let x = 0; x <= 1024; x += 3) {
+    const y = 799 - 7 * dz(x, 3) - 3.2 * Math.pow(rz(), 3) - 2 * Math.max(0, Math.sin(x * 0.045 + 1.3)) * dz(x * 3, 9);
+    p.lineTo(x, y);
+  }
+  p.lineTo(1024, 1024); p.closePath();
+  for (let i = 0; i < 70; i++) { const x = rz() * 1024, y = 784 + rz() * 12, r = 0.7 + rz() * 1.3; p.moveTo(x + r, y); p.arc(x, y, r, 0, TAU); }
+  return p;
+})();
+parca(ZEMIN, 'kum', null, [0, 790, 0, 1024, 0.62, 1.05], 0.5);
+{ const g = RX.createLinearGradient(0, 785, 0, 1024); g.addColorStop(0, '#B88E58'); g.addColorStop(1, '#996740'); RX.fillStyle = g; RX.fill(ZEMIN); }
 // yapının sola düşen gölgesi: zeminde daha yoğun mürekkep
 { IH.save(); IH.globalCompositeOperation = 'lighter'; const g = IH.createLinearGradient(0, 800, 0, 846); g.addColorStop(0, 'rgb(70,0,0)'); g.addColorStop(1, 'rgb(0,0,0)'); IH.fillStyle = g; IH.fill(P2('M300,800 L110,828 L300,846 L820,846 L820,800 Z')); IH.restore(); }
 // bulutlar: yırtık ipek kâğıdı
@@ -373,6 +384,9 @@ const macA = fbmFn(161, 3, 6), macB = fbmFn(162, 3, 60);
 const prof = SAHNE.kubbeProfili(400);
 const kubbeR = (y) => { if (y < 300 || y > 555) return 0; let lo = 0, hi = prof.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (prof[m].y > y) lo = m; else hi = m; } const t = (prof[lo].y - y) / (prof[lo].y - prof[hi].y || 1); return lerp(prof[lo].r, prof[hi].r, t); };
 const KR = new Float32Array(1024); for (let y = 0; y < 1024; y++) KR[y] = kubbeR(y);
+// her dilim ayrı kesilmiş bir oluklu karton parçası: oluk evresi, sıklığı, eğimi ve soyulmamış astar parçaları farklı
+const DIL = []; { const r = SAHNE.rng(7444); for (let i = 0; i < 17; i++) DIL.push({ ph: r() * TAU, fm: 0.9 + r() * 0.2, eg: (r() - 0.5) * 0.5, soy: r() < 0.7 ? 1 : 0, ox: r() * 300 }); }
+const lifF = fbmFn(181, 2, 2.2), astF = fbmFn(182, 4, 26);
 
 const H = new Float32Array(N * N), LT = new Float32Array(N * N);
 const TR = new Float32Array(N * N), TG = new Float32Array(N * N), TB = new Float32Array(N * N);
@@ -428,19 +442,30 @@ for (let y = 0; y < N; y++) {
       const r = KR[Math.min(1023, Yc | 0)] || 1;
       const uu = clamp((X - 560) / r, -1, 1);
       const fi = Math.asin(uu);
-      const oluk = 0.5 + 0.5 * Math.cos(fi * 52);
       const dilim = (fi + Math.PI / 2) / (Math.PI / 16);
       const yarik = 1 - smooth(0.0, 0.12, Math.abs(dilim - Math.round(dilim)));
       const egik = Math.sqrt(Math.max(0.05, 1 - uu * uu));
+      const sD = DIL[Math.max(0, Math.min(16, Math.floor(dilim)))];
+      // elle kesilmiş kartonun olukları: hafif dalgalı, yer yer ezik; lifler oluk boyunca
+      const wob = (kartM(X * 0.35 + sD.ox, Yc * 0.14) - 0.5) * 1.6;
+      const q = fi * 52 * sD.fm + sD.ph + wob + sD.eg * (Yc - 430) / 50;
+      const lifO = lifF(X * 1.6, Yc * 0.22);
+      const ezik = smooth(0.62, 0.8, kartI(X * 0.6 + sD.ox, Yc * 0.25));
+      const oluk = Math.pow(0.5 + 0.5 * Math.cos(q), 0.65) * (1 - 0.45 * ezik) + (lifO - 0.5) * 0.28;
+      // soyulmamış astar kâğıdı parçaları: düz, açık; yırtık kenarları mürekkep tutar
+      const ap = astF(X + sD.ox, Yc) + (lifO - 0.5) * 0.08;
+      const astar = sD.soy * smooth(0.6, 0.625, ap);
+      const yirtik = sD.soy * smooth(0.575, 0.6, ap) * (1 - smooth(0.625, 0.65, ap));
       // gölge yanına fırçayla sürülmüş karborundum: oluklar dolar, taneler sağa doğru seyrelir
       const kb = smooth(-0.12, -0.62, uu + (kumC(X * 1.6, Yc * 1.6) - 0.5) * 0.35);
       const w = kumB(x, y)[0];
       const tane = smooth(0.1, 0.6, w) * (0.5 + 0.5 * kumA(x / 1.2, y / 1.2));
       const seyrek = kb > 0 ? smooth(1 - kb, 1 - kb + 0.25, kumA(x / 2.3 + 50, y / 2.3)) : 0;
       const gr = Math.max(kb * kb, seyrek * 0.85);
-      const dOluk = 0.42 + 0.8 * (1 - oluk) * egik * (0.7 + 0.6 * kartI(X * 1.5, Yc * 0.4)) + 0.6 * yarik + 0.35 * (kartM(X, Yc) - 0.5);
-      d += m[5] * ink0 * lerp(dOluk, 1.15 + 0.9 * tane, gr);
-      h += m[5] * (h0 + lerp(0.26 * oluk * egik - 0.45 * yarik, 0.3 * (1 - tane), gr));
+      const dOluk0 = 0.36 + 0.95 * clamp(1 - oluk) * egik * (0.55 + 0.9 * lifO) + 0.25 * (kartM(X, Yc) - 0.5);
+      const dOluk = lerp(dOluk0, 0.5 + 0.35 * lifO, astar) + 0.85 * yirtik + 0.6 * yarik;
+      d += m[5] * ink0 * lerp(dOluk, 1.15 + 0.9 * tane, Math.min(0.9, gr));
+      h += m[5] * (h0 + lerp(lerp(0.26 * oluk * egik, 0.34 + 0.05 * lifO, astar) - 0.45 * yarik, 0.3 * (1 - tane), Math.min(0.9, gr)));
     }
     // zımpara: ince taneli
     if (m[6] > 0.004) {

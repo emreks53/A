@@ -176,7 +176,7 @@
       A.push([cx + Math.cos(th) * L * ic, cy + Math.sin(th) * L * ic]);
       B.push([cx + Math.cos(th) * rr, cy + Math.sin(th) * rr]);
     }
-    serit(A, B, cIc, cDis, { kil: o.kil === undefined ? 8 : o.kil, k1: 0.05, k2: 0.8 });
+    serit(A, B, cIc, cDis, { kil: o.kil === undefined ? 8 : o.kil, k1: o.k1 === undefined ? 0.05 : o.k1, k2: o.k2 === undefined ? 0.8 : o.k2 });
   }
   // C darbesi: yay boyunca, uçlarda keskiye incelen
   function cDarbe(cx, cy, r1, r2, t0, t1, cA, cB, o) {
@@ -212,6 +212,25 @@
     ctx.beginPath();
     ctx.arc(x + r * 0.3, y - r * 0.3, r * 0.3, 0, Math.PI * 2);
     ctx.fill();
+  }
+  // yan yüklü gölge (float): fırçanın bir köşesinde boya, öbür köşesinde yalnız su/medyum; boya
+  // bir kenardan öbürüne doğru saydamlaşarak söner, sert kenar bırakmaz
+  function yuzdur(x1, y1, x2, y2, c, a, yon) {
+    // yon: 'sol' | 'sag' | 'ust' | 'alt' | 'orta' (orta: iki yana sönen bant)
+    const g = yon === 'ust' || yon === 'alt' ? ctx.createLinearGradient(0, y1, 0, y2) : ctx.createLinearGradient(x1, 0, x2, 0);
+    const ters = yon === 'sag' || yon === 'alt';
+    if (yon === 'orta') {
+      g.addColorStop(0, css(c, 0));
+      g.addColorStop(0.5, css(c, a));
+      g.addColorStop(1, css(c, 0));
+    } else {
+      g.addColorStop(ters ? 1 : 0, css(c, a));
+      g.addColorStop(0.35, css(c, a * (ters ? 0.18 : 0.55)));
+      g.addColorStop(0.65, css(c, a * (ters ? 0.55 : 0.18)));
+      g.addColorStop(ters ? 0 : 1, css(c, 0));
+    }
+    ctx.fillStyle = g;
+    ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
   }
   // kıvrık filiz: incelen spiral (liner fırça)
   function filiz(x, y, aci, L, donus, w, c) {
@@ -396,10 +415,17 @@
   // ============================================================ 4. KAİDE: üç sıra yatay darbe (üstte beyaz, altta gölge rengi)
   {
     const Kd = S.kaide;
-    const sira = 3, hh = (Kd.y2 - Kd.y1) / sira;
-    for (let i = 0; i < sira; i++) yatayDarbe(Kd.x1, Kd.x2, Kd.y1 + i * hh - 0.5, Kd.y1 + (i + 1) * hh + 0.5, K.beyaz, mix(K.tasGolge, K.krem, 0.62), { kil: 9 });
-    // sol uçta gölge: yarı saydam koyu darbe
-    dikeyDarbe(Kd.x1, Kd.x1 + 90, Kd.y2, Kd.y1, K.tasGolge, K.krem, { alfa: 0.55, kil: 4 });
+    // taban boyası: duvar boyunca tek, uzun yatay darbe (üstte korniş altının gölge tonu, aşağıda beyaz)
+    yatayDarbe(Kd.x1, Kd.x2, Kd.y1, Kd.y2, mix(K.tasGolge, K.krem, 0.55), K.beyaz, { kil: 14, k1: 0.0, k2: 0.55 });
+    // yan yüklü gölgeler (float): solda yapının gölge yanı, altta zemine yakın sıcak koyuluk
+    yuzdur(Kd.x1, Kd.y1, Kd.x1 + 190, Kd.y2, K.tasGolge, 0.7, 'sol');
+    yuzdur(Kd.x1, Kd.y2 - 22, Kd.x2, Kd.y2, hex('#C9A878'), 0.45, 'alt');
+    yuzdur(Kd.x2 - 70, Kd.y1, Kd.x2, Kd.y2, K.beyaz, 0.6, 'sag');
+    // pencerelerin çevresinde ince gölge float'ı (sol yanda) ve ışık (sağ yanda)
+    for (const p of Kd.pencereler) {
+      yuzdur(p.x - p.w / 2 - 12, p.y - 4, p.x - p.w / 2, p.y + p.h, K.tasGolge, 0.5, 'sag');
+      yuzdur(p.x + p.w / 2, p.y - 4, p.x + p.w / 2 + 10, p.y + p.h, K.beyaz, 0.8, 'sol');
+    }
     const k = Kd.kornis;
     yatayDarbe(k.x1, k.x2, k.y1, k.y2, K.beyaz, K.tasGolge, { kil: 4 });
     for (const p of Kd.pencereler) {
@@ -412,8 +438,9 @@
   for (let kat = 1; kat >= 0; kat--) {
     const q = S.kasnak[kat];
     yatayDarbe(q.x1, q.x2, q.y1, q.y2, kat ? hex('#4EA05A') : hex('#5CB066'), K.kubbeKoyu, { kil: 10 });
-    dikeyDarbe(q.x1, q.x1 + (q.x2 - q.x1) * 0.28, q.y2, q.y1, K.kubbeKoyu, hex('#2E7A3E'), { alfa: 0.6, kil: 4 });
-    dikeyDarbe(q.x1 + (q.x2 - q.x1) * 0.62, q.x1 + (q.x2 - q.x1) * 0.84, q.y2, q.y1, hex('#3A8A48'), hex('#9AD27A'), { alfa: 0.45, kil: 3 });
+    yuzdur(q.x1, q.y1, q.x1 + (q.x2 - q.x1) * 0.34, q.y2, K.kubbeKoyu, 0.75, 'sol');
+    yuzdur(q.x1 + (q.x2 - q.x1) * 0.56, q.y1, q.x1 + (q.x2 - q.x1) * 0.9, q.y2, hex('#9AD27A'), 0.42, 'orta');
+    yuzdur(q.x2 - (q.x2 - q.x1) * 0.08, q.y1, q.x2, q.y2, K.kubbeKoyu, 0.35, 'sag');
     for (const p of S.kasnakPencereleri(kat)) {
       ctx.fillStyle = css(hex('#0E2E1A'));
       ctx.fill(new Path2D(S.kemerYolu(p.x, p.y, p.w + 1, p.h)));
@@ -570,7 +597,7 @@
   kivrim(PX + 44, PY + 44);
 
   // ============================================================ 9. BİTKİLER
-  const YK = hex('#1C4A2A'), YA = hex('#C8D86A'), YK2 = hex('#24553A'), YA2 = hex('#EDE6A8');
+  const YK = hex('#1C4A2A'), YA = hex('#C8D86A'), YK2 = hex('#1F5034'), YA2 = hex('#DCE08A');
   // saplar: ince çift yüklü darbeler
   for (const sp of S.bitki.saplar) {
     const P = sp.slice().reverse();
@@ -601,19 +628,19 @@
   function gul(x, y, Rr, koyu, acik, don) {
     const orta = mix(koyu, acik, 0.38);
     // arka taç yapraklar: dış kenarı açık kabuk darbeleri
-    for (let k = 0; k < 7; k++) kabuk(x, y - Rr * 0.04, don - Math.PI / 2 + (k - 3) * 0.86, 0.6, Rr, koyu, acik, { kivrim: 0.07, ic: 0.12, dis: 6 });
-    for (let k = 0; k < 4; k++) kabuk(x, y - Rr * 0.12, don - Math.PI / 2 + (k - 1.5) * 0.95, 0.55, Rr * 0.7, koyu, acik, { kivrim: 0.06, ic: 0.12 });
+    for (let k = 0; k < 7; k++) kabuk(x, y - Rr * 0.04, don - Math.PI / 2 + (k - 3) * 0.86, 0.6, Rr, koyu, acik, { kivrim: 0.07, ic: 0.12, dis: 6, k1: 0.3, k2: 0.93 });
+    for (let k = 0; k < 4; k++) kabuk(x, y - Rr * 0.12, don - Math.PI / 2 + (k - 1.5) * 0.95, 0.55, Rr * 0.7, koyu, acik, { kivrim: 0.06, ic: 0.12, k1: 0.28, k2: 0.92 });
     // gonca: koyu alt boya, üstüne kubbe (üst yarım) ve U (alt yarım) darbesi
     ctx.fillStyle = css(mix(koyu, [0, 0, 0], 0.1));
     ctx.beginPath();
     ctx.arc(x, y - Rr * 0.13, Rr * 0.24, 0, Math.PI * 2);
     ctx.fill();
-    cDarbe(x, y - Rr * 0.12, Rr * 0.02, Rr * 0.42, Math.PI * 1.0, Math.PI * 2.0, koyu, acik, { kil: 6, k1: 0.05, k2: 0.82 });
-    cDarbe(x, y - Rr * 0.14, Rr * 0.02, Rr * 0.38, Math.PI * 0.0, Math.PI * 1.0, orta, acik, { kil: 6, k1: 0.05, k2: 0.82 });
+    cDarbe(x, y - Rr * 0.12, Rr * 0.02, Rr * 0.42, Math.PI * 1.0, Math.PI * 2.0, koyu, acik, { kil: 6, k1: 0.25, k2: 0.9 });
+    cDarbe(x, y - Rr * 0.14, Rr * 0.02, Rr * 0.38, Math.PI * 0.0, Math.PI * 1.0, orta, acik, { kil: 6, k1: 0.15, k2: 0.88 });
     // önde birbirinin üstüne binen üç etek yaprağı: aşağı bakan kabuk darbeleri, kıvrımlı açık kenarlar
-    kabuk(x - Rr * 0.08, y + Rr * 0.08, Math.PI / 2 + 0.75, 0.62, Rr * 0.82, orta, acik, { kivrim: 0.1, ic: 0.25, dis: 5 });
-    kabuk(x + Rr * 0.08, y + Rr * 0.08, Math.PI / 2 - 0.75, 0.62, Rr * 0.82, orta, acik, { kivrim: 0.1, ic: 0.25, dis: 5 });
-    kabuk(x, y + Rr * 0.1, Math.PI / 2, 0.6, Rr * 0.8, mix(orta, acik, 0.25), acik, { kivrim: 0.1, ic: 0.28, dis: 5 });
+    kabuk(x - Rr * 0.08, y + Rr * 0.08, Math.PI / 2 + 0.75, 0.62, Rr * 0.82, koyu, acik, { kivrim: 0.1, ic: 0.25, dis: 5, k1: 0.12, k2: 0.9 });
+    kabuk(x + Rr * 0.08, y + Rr * 0.08, Math.PI / 2 - 0.75, 0.62, Rr * 0.82, koyu, acik, { kivrim: 0.1, ic: 0.25, dis: 5, k1: 0.12, k2: 0.9 });
+    kabuk(x, y + Rr * 0.1, Math.PI / 2, 0.6, Rr * 0.8, orta, acik, { kivrim: 0.1, ic: 0.28, dis: 5, k1: 0.1, k2: 0.9 });
   }
   // beş taç yapraklı kır çiçeği: her taç yaprak bir kabuk darbesi, ortası nokta işi
   function kirCicegi(c, koyu, acik) {
@@ -633,7 +660,7 @@
       yaprak(bx, by, a, c.r * (0.95 + r() * 0.3), 0.55, k % 2 ? YK : YK2, k % 2 ? YA : YA2, { dalga: 0.12, ters: nx * 0.7 - ny * 0.7 > 0, bukum: (r() - 0.5) * 0.3 });
     }
   });
-  const gulRenk = [[hex('#B0263E'), hex('#FFEFE6')], [K.gulKoyu, K.gulAcik], [hex('#C2452F'), hex('#FFF1DC')], [hex('#8E1F5C'), hex('#FBE3F0')], [K.gulKoyu, K.gulAcik]];
+  const gulRenk = [[hex('#9A1834'), hex('#FFEFE6')], [K.gulKoyu, K.gulAcik], [hex('#B23A22'), hex('#FFF1DC')], [hex('#7E1450'), hex('#FBE3F0')], [K.gulKoyu, K.gulAcik]];
   let gi = 0;
   S.bitki.cicekler.forEach((c, i) => {
     if (c.r >= 44) {
