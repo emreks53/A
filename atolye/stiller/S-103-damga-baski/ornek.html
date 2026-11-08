@@ -457,8 +457,8 @@ const HALE = (() => {
     for (let x = 2 + (r % 2) * 14 - 20; x < W; x += ADIM) {
       const s = S + jit(3);
       const cx = x + S / 2 + jit(4), cy = Math.min(y + S / 2 + jit(4), 800 - s / 2 - 1);
-      const d = Math.hypot(cx - gx, cy - gy);
-      const ink = d < 150 ? 'gokSari' : d < 215 ? 'gokSeft' : cy > 560 ? 'gokAcik' : 'gokMavi';
+      const d = Math.hypot(cx - gx, cy - gy) + jit(34);
+      const ink = d < 135 ? 'gokSari' : d < 195 ? 'gokSeft' : cy + jit(50) > 560 ? 'gokAcik' : 'gokMavi';
       const a = jit(0.16);
       damga(ink, [cx, cy, s * 0.75], (g) => { g.translate(cx, cy); g.rotate(a); yuvarlakDik(g, -s / 2, -s / 2, s, s, 7); }, { ort: HALE, yog: 0.55 + rD() * 0.2 });
     }
