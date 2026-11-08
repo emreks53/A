@@ -37,26 +37,42 @@
     const ref = rh.veri;
     const bolgeAt = (x, y) => bolge[Math.max(0, Math.min(W - 1, y | 0)) * W + Math.max(0, Math.min(W - 1, x | 0))];
 
-    // ---------------------------------------------------------------- hücre ızgarası (seviye L: genişlik 48 / 2^L)
+    // ---------------------------------------------------------------- hücre ızgarası (seviye L: genişlik 42 / 2^L)
+    // Mukarnas nişi: üstte sivri kemer başlık, dikey yan duvarlar, altta alttaki iki nişin kemerleri arasına sarkan
+    // sivri uç; sıralar yarım hücre kaydırılır, hücreler boşluksuz kenetlenir. Niş, genişliğinden uzundur (1,6 kat).
     const SEV = 4;
+    const W0 = 42;
     const GW = [];
     const GH = [];
     const GA = [];
     for (let L = 0; L < SEV; L++) {
-      GW.push(48 / Math.pow(2, L));
-      GH.push((48 / Math.pow(2, L)) * 0.8);
-      GA.push((48 / Math.pow(2, L)) * 0.4);
+      GW.push(W0 / Math.pow(2, L));
+      GH.push((W0 / Math.pow(2, L)) * 1.14); // sıra yüksekliği
+      GA.push((W0 / Math.pow(2, L)) * 0.58); // kemer yüksekliği
     }
-    const OX = -3;
-    const OY = -14;
-    // sivri kemer profili: s = 0 tepe, 1 üzengi; eşkenar kemerden
-    const kemer = (s) => Math.sqrt(Math.max(0, 1 - ((s + 1) / 2) * ((s + 1) / 2))) / 0.8660254;
-    const kemerEgim = (s) => {
+    const OX = -5;
+    const OY = -18;
+    // sivri kemer profili: s = 0 tepe, 1 üzengi; basık eşkenar kemere doğrusal bir pay katılarak tepe sivriltilir
+    // (tepede yaklaşık 35° eğim, üzengide dikey teğet: yan duvarlara yumuşak geçiş)
+    const kemer0 = (s) => Math.sqrt(Math.max(0, 1 - ((s + 1) / 2) * ((s + 1) / 2))) / 0.8660254;
+    const kemerEgim0 = (s) => {
       const q = (s + 1) / 2;
       const kok = Math.sqrt(Math.max(1e-4, 1 - q * q));
       return -q / (2 * kok * 0.8660254);
     };
-    const H = { r: 0, c: 0, xc: 0, yr: 0, d: 0 };
+    const kemer = (s) => 0.55 * kemer0(s) + 0.45 * (1 - s);
+    const kemerEgim = (s) => 0.55 * kemerEgim0(s) - 0.45;
+    const H = { r: 0, c: 0, xc: 0, yr: 0, d: 0, kase: 0, ox: 0, oy: 0 };
+    // nişin içbükey derinlik biçimi: u yatay (−1..1), v başlıktan tabana (0..1); kemer tepesindeki ve alt uçtaki
+    // kırık iç biçime taşınmasın diye orada yumuşatılmış |u| kullanılır (dikey dikiş olmaz)
+    function kaseBicimi(u, yTopY, yBotY, y) {
+      const v = Math.max(0, Math.min(1, (y - yTopY) / Math.max(1e-3, yBotY - yTopY)));
+      const au = Math.min(1, Math.abs(u));
+      const B = 1 - au * au * au * au;
+      const t = Math.pow(v, 0.62);
+      const C = Math.pow(Math.sin(Math.PI * t), 0.55);
+      return B * C;
+    }
     function hucre(x, y, L) {
       const w = GW[L];
       const h = GH[L];
@@ -75,13 +91,12 @@
         yr = OY + r * h;
         s = Math.abs(x - xc) / (w / 2);
       }
-      // sınıra uzaklık (yaklaşık dik uzaklık); kenarlar ayrı ayrı, sonra yumuşak en küçük
+      // sınıra uzaklık (yaklaşık dik uzaklık): keskin kenar çizgisi için
       const ux = x - xc;
       const dSol = w / 2 + ux;
       const dSag = w / 2 - ux;
       const eT = (a * kemerEgim(s) * 2) / w;
       const dUst = (y - (yr + a * (1 - kemer(s)))) / Math.sqrt(1 + Math.min(eT * eT, 3));
-      // alt kenar: alttaki iki hücrenin kemerleri (sol alt ve sağ alt)
       const sR = Math.min(1, Math.abs(x - (xc + w / 2)) / (w / 2));
       const sL = Math.min(1, Math.abs(x - (xc - w / 2)) / (w / 2));
       const eR = (a * kemerEgim(sR) * 2) / w;
@@ -89,23 +104,61 @@
       const dAltR = (yr + h + a * (1 - kemer(sR)) - y) / Math.sqrt(1 + Math.min(eR * eR, 3));
       const dAltL = (yr + h + a * (1 - kemer(sL)) - y) / Math.sqrt(1 + Math.min(eL * eL, 3));
       const dAlt = ux >= 0 ? Math.min(dAltR, dAltL + w) : Math.min(dAltL, dAltR + w);
-      const sert = Math.max(0, Math.min(dSol, dSag, dUst, dAlt));
-      const k = 0.1 * w;
-      const yum = -k * Math.log(Math.exp(-dSol / k) + Math.exp(-dSag / k) + Math.exp(-dUst / k) + Math.exp(-dAltR / k) + Math.exp(-dAltL / k));
       H.r = r;
       H.c = c;
       H.xc = xc;
       H.yr = yr;
-      H.d = sert; // keskin kenar çizgisi için
+      H.d = Math.max(0, Math.min(dSol, dSag, dUst, dAlt));
+      // niş: başlıktan (sivri kemer) düz tabana (alttaki kemerlerin tepe hizası) kadar içbükey kase;
+      // tabanın altı, alttaki iki nişin kemerleri arasına sarkan, yukarı bakan ve ortadan sırtlı pandantif yüzü
+      const u = ux / (w / 2);
+      const us = Math.min(1, Math.sqrt(u * u + 0.02));
+      const yTopY = yr + a * (1 - kemer(us));
+      const ySil = yr + h;
+      if (y < ySil) {
+        H.kase = kaseBicimi(u, yTopY, ySil, y);
+        H.pand = -1;
+      } else {
+        H.kase = 0;
+        H.pand = Math.min(1, (y - ySil) / a);
+      }
+      H.u = u;
       // hücre merkezinden dışa doğru yön (kenar sırtının ışık alıp almadığı)
       const my = yr + (h + a) * 0.5;
       const ol = Math.hypot(ux, y - my) || 1;
       H.ox = ux / ol;
       H.oy = (y - my) / ol;
-      H.dy = Math.max(0, yum + 0.35 * k); // kase biçimi için (iç kıvrımlarda kırışık yok)
       return H;
     }
-    const DERIN = [0.27, 0.23, 0.17, 0.13]; // küçük hücreler daha sığ: renk okunur kalsın
+    const DERIN = [0.34, 0.28, 0.21, 0.15]; // küçük hücreler daha sığ: renk okunur kalsın
+
+    // ---------------------------------------------------------------- pencereler: kendi biçiminde tek, derin niş hücresi
+    const pencereler = [];
+    for (const p of S.kasnakPencereleri(0).concat(S.kasnakPencereleri(1), S.kaide.pencereler, S.minarePencereleri)) pencereler.push(p);
+    const pencNo = new Uint8Array(W * W);
+    {
+      const c = S.yeniTuval();
+      const g = c.getContext('2d', { willReadFrequently: true });
+      pencereler.forEach((p, k) => {
+        const e = p.w > 20 ? 2.6 : 1.8; // kenar payı: çevresinde ışık alan sırt kalsın
+        g.fillStyle = `rgb(${k + 1},0,0)`;
+        g.fill(new Path2D(S.kemerYolu(p.x, p.y - e, p.w + 2 * e, p.h + e * 1.6)));
+      });
+      const v = g.getImageData(0, 0, W, W).data;
+      for (let i = 0; i < W * W; i++) if (v[i * 4 + 3] > 128) pencNo[i] = v[i * 4];
+    }
+    function pencereHucresi(k, x, y) {
+      const p = pencereler[k - 1];
+      const e = p.w > 20 ? 2.6 : 1.8;
+      const w = p.w + 2 * e;
+      const top = p.y - e;
+      const alt = p.y + p.h + e * 0.6;
+      const sp = top + Math.min(p.h + e * 1.6, w * 0.62);
+      const u = (x - p.x) / (w / 2);
+      const us = Math.min(1, Math.sqrt(u * u + 0.04));
+      const yTopY = top + (sp - top) * (1 - kemer(us));
+      return { kase: kaseBicimi(u, yTopY, alt, y), w, d: Math.max(0, Math.min(w / 2 - Math.abs(x - p.x), y - (top + (sp - top) * (1 - kemer(Math.min(1, Math.abs(u))))), alt - y)), u, ux: x - p.x, uy: y - (top + alt) / 2 };
+    }
     const anahtar = (L, r, c) => (L * 1024 + (r + 100)) * 1024 + (c + 100);
 
     // ---------------------------------------------------------------- ayrıntı ihtiyacı: hücre küçülsün mü?
@@ -156,14 +209,24 @@
       let z = 0;
       let ust = 0;
       let parca = 0;
+      const pk = pencNo[Math.max(0, Math.min(W - 1, y | 0)) * W + Math.max(0, Math.min(W - 1, x | 0))];
+      if (pk) {
+        // pencere: kendi kemer biçiminde derin niş (çevresindeki ince hücrelerden bir kademe geride)
+        const ph = pencereHucresi(pk, x, y);
+        Z.L = 3;
+        Z.parca = -pk;
+        Z.z = -2 - (0.55 * ph.w + 3) * ph.kase;
+        Z.dIc = ph.d;
+        Z.wIc = ph.w;
+        const ol = Math.hypot(ph.ux, ph.uy) || 1;
+        Z.yon = Math.max(0, (ph.ux / ol) * 0.7071 - (ph.uy / ol) * 0.7071);
+        return Z;
+      }
       for (;;) {
         const h = hucre(x, y, L);
         const w = GW[L];
-        const t = Math.min(1, h.dy / (0.4 * w));
-        const kase = 1 - (1 - t) * (1 - t);
-        // niş başlığı: üst kısım daha derin
-        const v = (y - h.yr) / (GH[L] + GA[L]);
-        const derin = DERIN[L] * w * kase * (1.25 - 0.55 * Math.min(1, Math.max(0, v)));
+        // pandantif yüzü öne çıkar (z artar): aşağı doğru yükselir, ortada sırt
+        const derin = DERIN[L] * w * h.kase - (h.pand >= 0 ? w * (0.17 * h.pand - 0.07 * Math.abs(h.u)) : 0);
         const k = anahtar(L, h.r, h.c);
         const bol = bolunsunMu(L, h.r, h.c, h.xc, h.yr);
         if (bol) {
@@ -204,10 +267,12 @@
     }
     // alçı krem ile boyalı renk
     const KREM = [238, 228, 206];
+    const AGIR = ADLAR.map((ad) => ({ sap: 3, yaprak: 1.7, cicek: 1.3, cicekOrta: 2, altin: 2, pencere: 1.5 })[ad] || 1);
     const rnd = S.rng(34);
     for (const p of parcalar.values()) {
+      // baskın bölge: ince öğeler (sap, yaprak, altın, pencere) ağırlıklı sayılır, küçük hücrelerde kaybolmasın
       let en = 0;
-      for (let i = 1; i < ADLAR.length; i++) if (p.say[i] > p.say[en]) en = i;
+      for (let i = 1; i < ADLAR.length; i++) if (p.say[i] * AGIR[i] > p.say[en] * AGIR[en]) en = i;
       const n = p.say[en] || 1;
       let r = p.r[en] / n;
       let g = p.g[en] / n;

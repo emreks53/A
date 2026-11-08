@@ -166,7 +166,7 @@ function seritEkle(run) {
     const a = run[Math.max(0, i - 1)], b = run[Math.min(n - 1, i + 1)];
     let nx = -(b[1] - a[1]), ny = b[0] - a[0];
     const m = Math.hypot(nx, ny) || 1; nx /= m; ny /= m;
-    const uc = Math.min(1, (i + 0.6) / 3, (n - i - 0.4) / 3); // uçlar iğne gibi incelir
+    const uc = Math.min(1, (i + 0.6) / 3, Math.pow(Math.min(1, (n - i - 0.4) / 6), 0.8)); // uçlar iğne gibi incelir
     const h = (run[i][2] * uc) / 2;
     L.push([run[i][0] + nx * h, run[i][1] + ny * h]);
     R.push([run[i][0] - nx * h, run[i][1] - ny * h]);
@@ -226,6 +226,24 @@ function noktala(n, alan, tonF, r0, kirp) {
     ctx.moveTo(x + r, y);
     ctx.arc(x, y, r, 0, TAU);
   }
+  ctx.fill();
+  ctx.restore();
+}
+/** Çizgi boyunca noktalama: noktalar taramanın sürdüğü yolda düzenli aralıkla dizilir, komşu çizgide yarım adım kayar. */
+function cizgiNokta(cizgiler, rF, adim, kirp) {
+  ctx.save();
+  if (kirp) ctx.clip(kirp);
+  ctx.fillStyle = MUREKKEP;
+  ctx.beginPath();
+  cizgiler.forEach((c, k) => {
+    const p = ornekle(c, 0.5);
+    const faz = (k % 2 ? 0.5 : 0) * adim, m = Math.round(adim / 0.5);
+    for (let i = Math.round(faz / 0.5) + ((rnd() * 2) | 0); i < p.length; i += m) {
+      const [x, y] = p[i], r = rF(x, y);
+      if (r < 0.22) continue;
+      ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, TAU);
+    }
+  });
   ctx.fill();
   ctx.restore();
 }
@@ -495,7 +513,7 @@ const kubbeTon = (x, y) => {
   const l = kubbeIsik(x, y);
   let t = 0.1 + 0.88 * Math.pow(clamp((0.97 - l) / 1.42), 0.92);
   t += 0.12 * smooth(535, 555, y);
-  t -= 0.13 * Math.exp(-(((x - 648) / 46) ** 2) - (((y - 400) / 62) ** 2)); // parıltı
+  t -= 0.21 * Math.exp(-(((x - 648) / 48) ** 2) - (((y - 404) / 64) ** 2)); // parıltı
   return clamp(t);
 };
 {
@@ -510,7 +528,12 @@ const kubbeTon = (x, y) => {
     }
     ez.push(q);
   }
-  aile(ez, (x, y) => gen(kubbeTon(x, y), 3.5, 0.045, 0.84), kubbeYol);
+  // parıltıya yaklaşınca çizgi incelir, sonra kesik kesik kısa vuruşlara (flick) bölünür
+  aile(ez, (x, y) => {
+    const t = kubbeTon(x, y), w = gen(t, 3.5, 0.045, 0.84);
+    if (w > 0 && t < 0.11) { const d = clamp((0.11 - t) / 0.065); if (Math.sin(x * 1.25 + y * 7.3 + 1.6 * Math.sin(x * 0.29 + y * 1.7)) < -1 + 1.5 * d) return 0; }
+    return w;
+  }, kubbeYol);
   // b) koyu yanda meridyenler (kaburgalarla aynı yön)
   const mz = [];
   for (let u = -1.01; u <= 1.01; u += 0.0165) {
@@ -522,7 +545,8 @@ const kubbeTon = (x, y) => {
   // c) en koyu yerde üçüncü yön
   aile(Array.from({ length: 200 }, (_, i) => [[300 + i * 3.0 - 200, 300], [300 + i * 3.0 + 60, 560]]), (x, y) => gen(kubbeTon(x, y) - 0.8, 3.0, 0.02, 0.5), kubbeYol);
   // d) ışıklı yerden gölgeye geçişte noktalama
-  noktala(7000, [560, 320, 740, 500], (x, y) => { const t = kubbeTon(x, y); return t > -0.02 && t < 0.07 ? 0.8 * Math.sin(((t + 0.02) / 0.09) * Math.PI) : 0; }, 0.4, kubbeYol);
+  // (noktalar enlem çizgilerinin devamında dizilir; parıltının ortasına doğru küçülüp kaybolur)
+  cizgiNokta(ez.map((q) => q.map(([x, y]) => [x, y + 1.75])).concat(ez), (x, y) => { const t = kubbeTon(x, y); if (t > 0.1 || t < -0.035) return 0; const k = clamp((t + 0.035) / 0.1); return rnd() < Math.pow(k, 1.3) ? 0.24 + 0.26 * k : 0; }, 3.4, kubbeYol);
   // kaburgalar: gölge yanında koyu, ışık yanında ince ışıklık
   for (const kb of SAHNE.kaburgalar(16, 80)) {
     const p = kb.noktalar.filter((q) => q[1] > 302);

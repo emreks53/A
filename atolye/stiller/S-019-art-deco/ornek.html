@@ -81,11 +81,22 @@
       ctx.strokeStyle = ALTIN; ctx.lineWidth = 0.9; ctx.stroke();
     }
     ctx.globalAlpha = 1;
-    // eş merkezli yaylar
-    for (const r of [298, 314]) { ctx.beginPath(); ctx.arc(GM.x, GM.y, r, Math.PI, TAU); ctx.strokeStyle = ALTIN; ctx.lineWidth = r === 298 ? 2 : 1.1; ctx.stroke(); }
+    // eş merkezli yaylar: solda minarenin ardından çıkar, sağda hız çizgilerinin üst çizgisine (y 500)
+    // iner ve baklava uçlukla biter
+    const YB = 500, YL = 440;
+    const ucA = (r) => [Math.PI + Math.asin((GM.y - YL) / r), TAU - Math.asin((GM.y - YB) / r)];
+    for (const r of [298, 314]) { const [a0, a1] = ucA(r); ctx.beginPath(); ctx.arc(GM.x, GM.y, r, a0, a1); ctx.strokeStyle = ALTIN; ctx.lineWidth = r === 298 ? 2 : 1.1; ctx.stroke(); }
+    const [b0, b1] = ucA(306);
+    {
+      ctx.save(); ctx.translate(GM.x + 306 * Math.cos(b1), YB); ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = ALTIN; ctx.fillRect(-6, -6, 12, 12);
+      ctx.strokeStyle = '#0d0e0d'; ctx.lineWidth = 1; ctx.strokeRect(-6, -6, 12, 12);
+      ctx.fillStyle = C.mercanAcik; ctx.fillRect(-2.4, -2.4, 4.8, 4.8);
+      ctx.restore();
+    }
     // iki yay arasında altın boncuk dizisi
-    for (let i = 0; i <= 60; i++) {
-      const a = Math.PI + (i / 60) * Math.PI;
+    for (let i = 0; i <= 52; i++) {
+      const a = b0 + ((i + 0.5) / 54) * (b1 - b0);
       ctx.beginPath(); ctx.arc(GM.x + Math.cos(a) * 306, GM.y + Math.sin(a) * 306, i % 5 === 0 ? 3.2 : 1.8, 0, TAU);
       ctx.fillStyle = i % 5 === 0 ? C.mercanAcik : ALTIN; ctx.fill();
     }

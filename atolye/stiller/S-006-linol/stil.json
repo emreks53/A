@@ -11,12 +11,12 @@
   "ayirt_edici": [
     "Mavi, okra ve yeşil düz renk kalıplarının üzerine basılmış kalın siyah ana kalıp",
     "Güneşten yayılan oyulmuş ışınlar ve ufka doğru sıklaşan yatay U oyukları",
-    "Kubbenin gölge yanındaki siyah kütleye enlem boyunca açılmış, incelerek biten kavisli V oyukları; ışıklı yanda yeşilden oyulmuş parıltı izleri",
+    "Kubbenin gölge yanındaki siyah kütleye enlem boyunca açılmış, incelerek biten kavisli V oyukları; sınırda ışığa doğru sivrilen, oyulmadan kalmış siyah dişler; ışıklı yanda yeşilden oyulmuş parıltı izleri",
     "Yapraklarda oyulmuş damarlar; çiçek, tomurcuk ve minarede kalın siyah konturlar",
     "Lekeli, benekli mürekkep ve yer yer görünen kâğıt; renk katmanları ile siyah arasında hafif kayma",
     "El oyması titrek kenarlar, düzensiz bulutlar ve baskı alanını çevreleyen kalıp kenarı"
   ],
   "palet": ["#F0E7D4", "#70A8CC", "#DAA03A", "#2E844E", "#353D33", "#1E1C1B"],
-  "kodla_cizim": "Her renk (mavi, okra, yeşil, siyah) 2048 px'lik ayrı bir kalıp tuvalidir. Biçimler Path2D ile doldurulur; oyma izleri V ya da U profilli, titreyen şeritler olarak 'destination-out' ile kalıptan oyulur: gökte güneşten çıkan ışınlar ve ufka doğru sıklaşan oyuklar, kubbenin gölge kütlesinde enlem yayları, gölgede yeşil, ışıkta siyah kaburgalar, ışıklı yanda parıltı izleri, yapraklarda damarlar. Öndeki biçim arkadakileri bütün kalıplarda boşaltır. Baskı adımında her kalıp 2–3 px kaydırılarak ve gürültüyle titretilmiş koordinatlardan okunur (el oyması kenar); kaplama geniş lekelenme, yatay merdane izi ve kâğıt gözeneklerinde mürekkebin tutmamasıyla değişir. Renkler sırayla yarı saydam (çarpma ve örtme karışımı) basılır; siyah en son ve en örtücü katmandır. Kâğıt lif ve gözenek gürültüsüyle dokulanır.",
+  "kodla_cizim": "Her renk (mavi, okra, yeşil, siyah) 2048 px'lik ayrı bir kalıp tuvalidir. Biçimler Path2D ile doldurulur; oyma izleri V ya da U profilli, titreyen şeritler olarak 'destination-out' ile kalıptan oyulur: gökte güneşten çıkan ışınlar ve ufka doğru sıklaşan oyuklar, kubbenin gölge kütlesinde enlem yayları (sınırda oyulmadan bırakılan dişlerle), gölgede yeşil, ışıkta siyah kaburgalar, ışıklı yanda parıltı izleri, yapraklarda damarlar. Öndeki biçim arkadakileri bütün kalıplarda boşaltır. Baskı adımında her kalıp 2–3 px kaydırılarak ve gürültüyle titretilmiş koordinatlardan okunur (el oyması kenar); kaplama geniş lekelenme ve yatay merdane iziyle değişir; kâğıt gözeneklerinde mürekkebin tutmadığı benekler, merdanenin az mürekkep bıraktığı geniş bölgelerde ve kalıp kenarına doğru yoğunlaşır, oralarda kümelenen küçük boşluklar da açılır. Renkler sırayla yarı saydam (çarpma ve örtme karışımı) basılır; siyah en son ve en örtücü katmandır. Kâğıt lif ve gözenek gürültüsüyle dokulanır.",
   "etiketler": ["linol", "oyma baskı", "eksiltme baskı", "el baskısı", "afiş", "doku", "kalın biçim", "geleneksel"]
 }

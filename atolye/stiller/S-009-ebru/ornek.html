@@ -452,8 +452,8 @@
   {
     const T = new Tabaka();
     const r = S.rng(906);
-    for (let i = 0; i < 90; i++) T.damla(250 + r() * 360, 70 + r() * 250, 3 + r() * 6, ['#D7A53E', '#E8C268', '#B9862C'][Math.floor(r() * 3)]);
-    boya(T, hedef, W, 260 * K, 76 * K, 600 * K, 312 * K, et([7]), null, false, 0.8);
+    for (let i = 0; i < 260; i++) T.damla(250 + r() * 360, 70 + r() * 250, 3 + r() * 6, ['#D7A53E', '#E8C268', '#B9862C'][Math.floor(r() * 3)]);
+    boya(T, hedef, W, 260 * K, 76 * K, 600 * K, 312 * K, et([7]), null, false, 0.8, '#D9A441');
   }
 
   // ------------------------------------------------------------ 7) şablon kenarları: akkâse şablonunun bıraktığı ince kâğıt çizgisi
@@ -519,6 +519,17 @@
         ctx.stroke(new Path2D(p.yol));
       }
     }
+    // kubbe dilimleri: her dilim ayrı bir akkâse parçası gibi; aralarında ince kâğıt çizgisi kalır
+    ctx.save();
+    ctx.clip(new Path2D(S.kubbeYolu));
+    ctx.strokeStyle = krem;
+    ctx.lineWidth = 1.25;
+    for (const kb of S.kaburgalar(16, 60)) {
+      ctx.beginPath();
+      kb.noktalar.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.stroke();
+    }
+    ctx.restore();
     // kasnak katları ve korniş arası
     ctx.strokeStyle = krem;
     ctx.lineWidth = 1.6;

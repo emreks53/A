@@ -414,38 +414,50 @@
         const b = y_(p.x + p.w / 2, p.y + p.h, 0.06);
         hat([a, t, b], 'yapi', { soluk: true });
       }
-      alem(300, 146, 0.62, false);
+      alem(300, 146, 0.56, false); // harita çemberine değmesin diye biraz küçük
     }
 
     // ---------------------------------------------------------------- bitkiler: altın takımyıldızlar
-    const icinde = (x, y, pay) => Math.hypot(x - MX, y - MY) < RI - (pay || 0);
-    // saplar
+    // Harita çemberinin dışına taşan bitki noktaları, çemberin kenarına doğru yumuşakça sıkıştırılır (kenara yakın
+    // bir balıkgözü izdüşümü gibi): R1 içi değişmez, dışı RI − 12 sınırına üstel olarak yaklaşır; hiçbir sap ya da
+    // yaprak kesilmez.
+    const R1 = 392;
+    const A1 = RI - 12 - R1;
+    const sikR = (r) => (r <= R1 ? r : R1 + A1 * (1 - Math.exp(-(r - R1) / A1)));
+    const sik = ([x, y]) => {
+      const r = Math.hypot(x - MX, y - MY);
+      if (r <= R1) return [x, y];
+      const k = sikR(r) / r;
+      return [MX + (x - MX) * k, MY + (y - MY) * k];
+    };
+    const uzakMi = (x, y, r) => Math.hypot(x - MX, y - MY) > r;
+    // saplar: çemberden çok uzaktaki dipleri (öndeki çiçeklerin ardında kalan kısım) çizilmez, kalanı sıkıştırılır
     for (const s of S.bitki.saplar) {
-      const pts = s.filter((_, i) => i % 3 === 0);
-      const kalan = pts.filter(([x, y]) => icinde(x, y, 6));
-      kalan.forEach(([x, y], i) => y_(x, y, i === kalan.length - 1 ? 0.2 : 0.07, 'altin'));
-      hat(kalan, 'altin', { soluk: true });
+      const pts = s.filter((q, i, a) => (i % 3 === 0 || i === a.length - 1) && !uzakMi(q[0], q[1], 530)).map(sik);
+      if (pts.length < 2) continue;
+      pts.forEach(([x, y], i) => y_(x, y, i === pts.length - 1 ? 0.2 : 0.07, 'altin'));
+      hat(pts, 'altin', { soluk: true });
     }
     // yan dallardaki yapraklar (ilk 36) ve öndeki yaprakların bir kısmı
     S.bitki.yapraklar.forEach((yp, i) => {
       if (i >= 36 && i % 3 !== 0) return;
+      if (uzakMi(yp.x, yp.y, 540)) return;
       const L = yp.uzunluk * (i >= 36 ? 0.8 : 1);
       const ca = Math.cos(yp.aci);
       const sa = Math.sin(yp.aci);
       const Wd = L * yp.genislik * 0.5;
-      const p = (u, v) => [yp.x + u * ca - v * sa, yp.y + u * sa + v * ca];
-      const noktalar = [p(0, 0), p(L * 0.45, -Wd), p(L, 0), p(L * 0.45, Wd)];
-      if (!noktalar.every(([x, y]) => icinde(x, y, 4))) return;
-      const [a, b, c, d] = noktalar;
+      const p = (u, v) => sik([yp.x + u * ca - v * sa, yp.y + u * sa + v * ca]);
+      const [a, b, c, d] = [p(0, 0), p(L * 0.45, -Wd), p(L, 0), p(L * 0.45, Wd)];
       y_(c[0], c[1], 0.07, 'altin');
       hat([a, b, c, d, a], 'altin', { soluk: true, ince: true });
     });
     // tomurcuklar
     for (const t of S.bitki.tomurcuklar) {
-      if (!icinde(t.x, t.y, 8)) continue;
-      y_(t.x + Math.cos(t.aci) * t.r * 1.2, t.y + Math.sin(t.aci) * t.r * 1.2, 0.16, 'altin');
+      const [x, y] = sik([t.x + Math.cos(t.aci) * t.r * 1.2, t.y + Math.sin(t.aci) * t.r * 1.2]);
+      y_(x, y, 0.16, 'altin');
     }
-    // çiçekler: beş taç yaprak ucu + merkez; harita çemberine sığacak biçimde öndekiler biraz içeri alınır
+    // çiçekler: beş taç yaprak ucu + merkez; öndeki büyük çiçekler harita çemberine sığacak biçimde biraz içeri alınır,
+    // ötekilerin merkezi sıkıştırılır ve gerekirse çiçek küçültülür
     const yeniYer = {
       4: { x: 252, y: 862, r: 44 },
       5: { x: 778, y: 858, r: 40 },
@@ -458,6 +470,11 @@
       const c = Object.assign({}, c0, on >= 0 && yeniYer[on] ? yeniYer[on] : {});
       if (on === 3) Object.assign(c, { x: 706, y: 836, r: 27 }); // sağ öndeki küçük çiçek komşularından ayrılsın
       if (on === 0) Object.assign(c, { x: 320, y: 816, r: 28 }); // sol öndeki küçük çiçek
+      const [mx, my] = sik([c.x, c.y]);
+      const rc = Math.hypot(mx - MX, my - MY);
+      c.x = mx;
+      c.y = my;
+      c.r = Math.min(c.r, Math.max(c.r * 0.6, RI - 10 - rc));
       const m = y_(c.x, c.y, 0.3 + c.r / 140, 'altin');
       for (let k = 0; k < 5; k++) {
         const a = c.aci + (k * Math.PI * 2) / 5;
@@ -505,7 +522,8 @@
     ctx.setLineDash([]);
     // yıldızlar (küçükten büyüğe)
     const liste = [...yildizlar.values()].sort((p, q) => p.k - q.k);
-    for (const s of liste) yildiz(s.x, s.y, s.k, s.tur);
+    const kenarda = (s) => s.k >= 0.8 && Math.hypot(s.x - MX, s.y - MY) > RI - 40;
+    for (const s of liste) if (!kenarda(s)) yildiz(s.x, s.y, s.k, s.tur);
     ctx.restore();
 
     // ---------------------------------------------------------------- harita çerçevesi: çift çember, derece çentikleri
@@ -567,6 +585,8 @@
       ctx.stroke();
     }
     ctx.restore();
+    // çembere yakın parlak yıldızlar en üstte: ışınları çerçevenin üstünden geçer, kesilmez
+    for (const s of liste) if (kenarda(s)) yildiz(s.x, s.y, s.k, s.tur);
 
     S.hazir();
   })();

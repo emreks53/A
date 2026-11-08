@@ -16,7 +16,7 @@
     "Geometrik yelpaze çiçekler ve şevron yaprak çiftleri; zeminde altın kenarlı pul (yelpaze) deseni",
     "Akış çizgili kapsül bulutlar ve ince paralel hız çizgileri"
   ],
-  "palet": ["#0D0E0D", "#08382C", "#0F6A4C", "#7CC4A0", "#E9CB72", "#B98C2C", "#F0E3C4", "#E07A5F"],
+  "palet": ["#0D0E0D", "#08382C", "#0F6A4C", "#64A584", "#E9CB72", "#B98C2C", "#F0E3C4", "#E07A5F"],
   "kodla_cizim": "Canvas 2048 px'de vektör olarak çizilir. Tuval boyunca açık ve koyu duraklar arasında dolaşan tek bir çapraz degrade, bütün altın çizgi ve dolgulara metalik parıltı verir. Gök on iki dikey degrade şeritten kurulur; güneş patlaması, kubbe tabanı merkezli dönüşümlü saydam kamalar ve altın ışın çizgileridir. Kubbe kaburga dilimleri, ışık yönüne göre altı basamaklı zümrüt tonundan biriyle boyanır (akış gölgesi). Minare konsolları basamaklara, pencere çerçeveleri ziguratlara, kaide ve kasnak frizleri şevron çizgilerine çevrilir. Çiçekler yay dilimlerinden ve kenar pullarından oluşan yelpazeler, zemin yarım daire pullardan bir desendir; çerçeve basamaklı bir çokgen, köşelerde yarım güneş yelpazeleri vardır. Sonunda hafif baskı dokusu çarpılır.",
   "etiketler": ["afiş", "geometrik", "güneş patlaması", "zigurat", "altın", "seyahat afişi", "1930'lar", "sanat akımı", "bakışım"]
 }

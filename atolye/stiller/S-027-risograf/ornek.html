@@ -326,7 +326,9 @@ const ISIK2 = [0.75, -0.66];
   const BANT = [0, 1, 2, 3].map((k) => {
     const r = SAHNE.rng(280 + k), out = new Float32Array(N >> 3);
     const f = [r() * 0.05 + 0.02, r() * 0.2 + 0.1], ph = [r() * TAU, r() * TAU];
-    for (let i = 0; i < out.length; i++) out[i] = 0.07 * Math.sin(i * f[0] + ph[0]) + 0.03 * Math.sin(i * f[1] + ph[1]);
+    // geniş, yumuşak bantlar + tamburun bir turunda bir kez gelen dar, aç (mürekkebi azalmış) şerit
+    const ac = 30 + r() * 180, acW = 2.5 + r() * 2;
+    for (let i = 0; i < out.length; i++) out[i] = 0.08 * Math.sin(i * f[0] + ph[0]) + 0.03 * Math.sin(i * f[1] + ph[1]) - 0.14 * Math.exp(-(((i - ac) / acW) ** 2));
     return out;
   });
   const W = TAU / (5.4 * O);
@@ -355,7 +357,7 @@ const ISIK2 = [0.75, -0.66];
         }
         // tam dolu alanlarda bile ince benekler (kâğıt tozu, mürekkep tutmayan lif)
         ink *= 1 - 0.85 * smooth(0.83, 0.9, benek[i]) * (0.6 + 0.4 * leke[hi]);
-        ink *= 0.88 + 0.1 * leke[hi];
+        ink *= (0.88 + 0.1 * leke[hi]) * (1 + by * 0.9);
         if (ink <= 0) continue;
         r *= 1 - ink * (1 - L.c[0] / 255);
         g *= 1 - ink * (1 - L.c[1] / 255);

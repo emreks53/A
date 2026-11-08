@@ -189,23 +189,23 @@ const BOLGE = new Array(1024 * 1024);
       let t = 0;
       if (b === 'kubbe') {
         const l = kubbeIsik(x, y);
-        t = 0.15 + 0.85 * Math.pow(clamp((0.98 - l) / 1.38), 0.78);
-        t += 0.06 * smooth(530, 555, y); // tabanda kasnağın gölgesi
+        t = 0.12 + 0.95 * Math.pow(clamp((0.98 - l) / 1.3), 0.85);
+        t += 0.1 * smooth(525, 555, y); // tabanda kasnağın gölgesi
       } else if (b === 'kasnak') {
         const k = y < 610 ? SAHNE.kasnak[0] : SAHNE.kasnak[1];
         const l = silindirIsik((x - 560) / ((k.x2 - k.x1) / 2));
-        t = 0.3 + 0.62 * Math.pow(clamp((1 - l) / 1.6), 0.9);
-        t += 0.22 * Math.exp(-(y - k.y1) / 5); // üst saçağın altı
+        t = 0.32 + 0.68 * Math.pow(clamp((1 - l) / 1.5), 0.9);
+        t += 0.4 * Math.exp(-(y - k.y1) / 6); // üst saçağın altı
       } else if (b === 'pencere') t = 0.95;
       else if (b === 'kaide') {
         t = 0.02 + 0.3 * Math.pow(clamp((820 - x) / 520), 1.8);
-        if (y >= 704) t += 0.42 * Math.exp(-(y - 704) / 7);
+        if (y >= 704) t += 0.62 * Math.exp(-(y - 704) / 8);
         else t = 0.03;
       } else if (b === 'minare') {
         const w = minareYari(y);
         const l = silindirIsik((x - 300) / Math.max(1, w));
-        t = 0.03 + 0.6 * Math.pow(clamp((0.9 - l) / 1.6), 1.1);
-        if ((y >= 468 && y < 488) || (y >= 300 && y < 316)) t += 0.5; // şerefe çıkmalarının altı
+        t = 0.03 + 0.7 * Math.pow(clamp((0.9 - l) / 1.6), 1.1);
+        if ((y >= 468 && y < 488) || (y >= 300 && y < 316)) t += 0.62; // şerefe çıkmalarının altı
         if (y >= 692) t += 0.12;
       } else if (b === 'altin') {
         t = 0.3 + 0.4 * clamp((x < 430 ? 300 - x : 560 - x) / 12 + 0.3);
@@ -352,6 +352,52 @@ function duzAile(x1, y1, x2, y2, aci, aralik) {
   return out;
 }
 
+/**
+ * Hale taraması: her kılavuz çizgisinde tonun eşiği aştığı kesim tek, kesintisiz bir kalem vuruşuyla çizilir;
+ * baskı tona göre degrade olarak azalır. Siluete yaslanan, dışa doğru düzgünce sönen derli toplu bir yama verir.
+ */
+function haleTara(kilavuzlar, o) {
+  const esik = o.esik || 0.03, alfa = o.alfa || 0.5, kalin = o.kalin || 1, tonF = o.tonF;
+  dc.save();
+  if (o.kirp) dc.clip(o.kirp);
+  for (const k of kilavuzlar) {
+    const p = ornekle(k, 2), T = p.map(([x, y]) => tonF(x, y));
+    let i = 0;
+    while (i < p.length) {
+      while (i < p.length && T[i] <= esik) i++;
+      let j = i;
+      while (j < p.length && T[j] > esik) j++;
+      // uzun kesim, elle çekilmiş ardışık vuruşlara bölünür
+      const parcalar = [];
+      if (o.maxL && (j - i) * 2 > o.maxL) {
+        let s0 = i;
+        while (s0 < j - 2) { const s1 = Math.min(j, s0 + Math.round((o.maxL * (0.6 + 0.4 * rnd())) / 2)); parcalar.push([s0, s1]); s0 = s1 + 1 + Math.round(rnd() * 2); }
+      } else parcalar.push([i, j]);
+      for (const [i, j] of parcalar) if (j - i >= 3) {
+        // uçlar elle kısalır/uzar
+        const a0 = Math.min(j - 2, i + Math.round(rnd() * 2)), a1 = Math.max(a0 + 2, j - 1 - Math.round(rnd() * 3));
+        const A = p[a0], B = p[a1], L = a1 - a0;
+        const tmax = Math.max(...T.slice(a0, a1 + 1));
+        const g = dc.createLinearGradient(A[0], A[1], B[0], B[1]);
+        for (let s = 0; s <= 6; s++) {
+          const q = a0 + Math.round((L * s) / 6);
+          const pr = clamp((T[q] - esik) / Math.max(0.05, tmax - esik));
+          const sol = solma(p[q][0], p[q][1]);
+          g.addColorStop(s / 6, `rgba(0,0,0,${(alfa * Math.pow(pr, 0.8) * (0.25 + 0.75 * tmax) * sol * (s === 0 || s === 6 ? 0.5 : 1)).toFixed(3)})`);
+        }
+        const jx = (rnd() - 0.5) * 0.8, jy = (rnd() - 0.5) * 0.8;
+        dc.strokeStyle = g;
+        dc.lineWidth = kalin * (0.8 + 0.4 * rnd());
+        dc.beginPath(); dc.moveTo(A[0] + jx, A[1] + jy);
+        for (let q = a0 + 1; q <= a1; q++) dc.lineTo(p[q][0] + jx, p[q][1] + jy);
+        dc.stroke();
+      }
+      i = j + 1;
+    }
+  }
+  dc.restore();
+}
+
 /** Parmakla yayılmış gölge: ton haritasından yumuşak bir leke, belirli bölgede. */
 function yayma(yol, bolgeler, kat, bulanik) {
   const c = SAHNE.yeniTuval(1024, 1024), cc = c.getContext('2d');
@@ -413,27 +459,27 @@ function gok() {
     let t = 0;
     if (y > 96 && y < 560) { // minarenin sağı
       const d = x - (300 + minareYari(y));
-      if (d > 0) t = Math.max(t, 0.62 * Math.exp(-d / 20) * smooth(96, 170, y));
+      if (d > 0) t = Math.max(t, 0.6 * Math.exp(-d / 15) * smooth(110, 190, y));
     }
     if (y > 296 && y < 556) { // kubbenin sağı ve üstü
       const r = kubbeR(Math.max(301, y));
       const d = x - 560 - r;
-      if (d > 0 && x > 600) t = Math.max(t, 0.5 * Math.exp(-d / 26) * smooth(300, 360, y));
+      if (d > 0 && x > 600) t = Math.max(t, 0.5 * Math.exp(-d / 18) * smooth(320, 400, y));
     }
     if (y < 330 && y > 230) { // kubbe tepesinin üstü, sağa doğru
       const r = kubbeR(Math.max(301, Math.min(555, y)));
       const d = Math.hypot(x - 560, y - 300) - 6;
-      if (x > 580 && y < 312) t = Math.max(t, 0.22 * Math.exp(-d / 40));
+      if (x > 580 && y < 312) t = Math.max(t, 0);
     }
-    if (y > 560 && y < 692) { const d = x - 786; if (d > 0) t = Math.max(t, 0.42 * Math.exp(-d / 22)); }
-    if (y > 692 && y < 800) { const d = x - 830; if (d > 0) t = Math.max(t, 0.36 * Math.exp(-d / 26)); }
+    if (y > 560 && y < 692) { const d = x - 786; if (d > 0) t = Math.max(t, 0.42 * Math.exp(-d / 16)); }
+    if (y > 692 && y < 800) { const d = x - 830; if (d > 0) t = Math.max(t, 0.36 * Math.exp(-d / 18)); }
     // minarenin solu: hafif
-    if (y > 120 && y < 800) { const d = 300 - minareYari(y) - x; if (d > 0) t = Math.max(t, 0.2 * Math.exp(-d / 18) * smooth(120, 200, y)); }
+    if (y > 120 && y < 800) { const d = 300 - minareYari(y) - x; if (d > 0) t = Math.max(t, 0.18 * Math.exp(-d / 12) * smooth(140, 230, y)); }
     return t;
   };
   const kirp = new Path2D(); kirp.rect(0, 0, 1024, 800);
-  tara(duzAile(0, 60, 1024, 800, -1.12, 3.0), { esik: 0.04, aralik: 0.5, alfa: 0.5, kalin: 1.0, minL: 14, maxL: 34, bosluk: 4, tonF: tonG, kirp });
-  tara(duzAile(0, 60, 1024, 800, -0.5, 3.2), { esik: 0.3, aralik: 0.3, alfa: 0.36, kalin: 0.95, minL: 12, maxL: 24, bosluk: 4, tonF: tonG, kirp });
+  haleTara(duzAile(0, 60, 1024, 800, -0.86, 2.7), { esik: 0.035, alfa: 0.62, kalin: 1.0, tonF: tonG, kirp });
+  haleTara(duzAile(0, 60, 1024, 800, -0.3, 3.0), { esik: 0.26, alfa: 0.4, kalin: 0.95, tonF: tonG, kirp });
   // ufukta hafif bir leke
   const g = dc.createLinearGradient(0, 760, 0, 800);
   g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.07)');
@@ -503,7 +549,7 @@ function S_pencere(liste, o) {
     const yol = P(SAHNE.kemerYolu(w.x, w.y, w.w, w.h));
     dc.save(); dc.clip(yol); dc.filter = 'blur(0.8px)';
     const gg = dc.createLinearGradient(w.x - w.w / 2, 0, w.x + w.w / 2, 0);
-    gg.addColorStop(0, 'rgba(0,0,0,0.62)'); gg.addColorStop(1, 'rgba(0,0,0,0.4)');
+    gg.addColorStop(0, 'rgba(0,0,0,0.8)'); gg.addColorStop(1, 'rgba(0,0,0,0.56)');
     dc.fillStyle = gg; dc.fill(yol); dc.restore();
     tara(duzAile(w.x - w.w, w.y - 2, w.x + w.w, w.y + w.h + 2, -1.0, 1.7), { esik: 0, aralik: 0.5, alfa: 0.6, kalin: 1.0, minL: 20, maxL: 40, bosluk: 0, kirp: yol, tonF: () => 0.9 });
     const k = [];
@@ -606,7 +652,7 @@ function kasnak() {
 // 6) Kubbe
 function kubbe() {
   sil(kubbeYol);
-  yayma(kubbeYol, ['kubbe'], 0.42, 5);
+  yayma(kubbeYol, ['kubbe'], 0.55, 5);
   // a) kaburgalar boyunca (meridyen) tarama
   const mer = (kaydir) => {
     const out = [];
@@ -627,9 +673,10 @@ function kubbe() {
   }
   tara(enl, { esik: 0.46, aralik: 0.35, alfa: 0.52, kalin: 0.95, minL: 22, maxL: 54, kirp: kubbeYol });
   // c) koyu yarıda sıkı meridyen
-  tara(mer(0.0077), { esik: 0.64, aralik: 0.25, alfa: 0.6, kalin: 1.0, minL: 20, maxL: 50, kirp: kubbeYol });
-  // d) en koyu yerde çapraz
-  tara(duzAile(358, 298, 762, 557, -2.25, 2.7), { esik: 0.78, aralik: 0.18, alfa: 0.6, kalin: 1.0, minL: 14, maxL: 30, kirp: kubbeYol });
+  tara(mer(0.0077), { esik: 0.56, aralik: 0.25, alfa: 0.68, kalin: 1.05, minL: 20, maxL: 50, kirp: kubbeYol });
+  // d) en koyu yerde çapraz; e) gölge yanının en derin kısmında bir kat daha, baskıyla
+  tara(duzAile(358, 298, 762, 557, -2.25, 2.6), { esik: 0.7, aralik: 0.2, alfa: 0.68, kalin: 1.05, minL: 14, maxL: 30, kirp: kubbeYol });
+  tara(mer(0.004), { esik: 0.82, aralik: 0.15, alfa: 0.75, kalin: 1.2, minL: 16, maxL: 40, kirp: kubbeYol });
   // kaburgalar: çizgi + gölge yanında ince eşlik çizgisi
   for (const k of SAHNE.kaburgalar(16, 60)) {
     const p = k.noktalar.filter((q) => q[1] > 304);
@@ -741,8 +788,8 @@ function bitkiler() {
   // bitkilerin arkasındaki derinlik: yaprak aralarında koyulaşan zemin
   const arka = new Path2D(); arka.rect(0, 806, 1024, 218);
   const tonA = (x, y) => clamp(0.55 * Math.exp(-(((x - 540) / 380) ** 2) - (((y - 925) / 110) ** 2)) + 0.25 * Math.exp(-(((x - 220) / 120) ** 2) - (((y - 930) / 80) ** 2)) + 0.25 * Math.exp(-(((x - 850) / 120) ** 2) - (((y - 930) / 80) ** 2)));
-  tara(duzAile(0, 806, 1024, 1024, -1.15, 3.0), { esik: 0.08, aralik: 0.5, alfa: 0.5, kalin: 1.0, minL: 14, maxL: 34, tonF: tonA, kirp: arka });
-  tara(duzAile(0, 806, 1024, 1024, -0.45, 3.2), { esik: 0.32, aralik: 0.3, alfa: 0.42, kalin: 0.95, minL: 12, maxL: 26, tonF: tonA, kirp: arka });
+  haleTara(duzAile(0, 806, 1024, 1024, -0.86, 2.8), { esik: 0.08, alfa: 0.55, kalin: 1.0, maxL: 90, tonF: tonA, kirp: arka });
+  haleTara(duzAile(0, 806, 1024, 1024, -0.3, 3.1), { esik: 0.3, alfa: 0.42, kalin: 0.95, maxL: 70, tonF: tonA, kirp: arka });
   // saplar: çift çizgi, arası hafif tonlu
   for (const s of B.saplar) {
     const p = ornekle(s, 3);

@@ -261,12 +261,11 @@
       case 'pencere': case 'altin': return Math.PI / 2;
       case 'zemin': return (nB(x / 50, y / 50) - 0.5) * 0.4;
       default: {
-        // gök: geniş, eğik süpürmeler; güneşin çevresinde hafif dönen
+        // gök: geniş, eğik süpürmeler (dönen girdaplar yok); güneşin çevresinde çapraz, kısa vuruşlar
         const dx = x - 880, dy = y - 140, d = Math.hypot(dx, dy);
-        const tan = Math.atan2(dy, dx) + Math.PI / 2;
-        const sup = -0.32 + (fbm(nC, x / 260, y / 260, 2) - 0.5) * 1.1;
-        const w = 0.8 * Math.exp(-d / 120);
-        return Math.atan2(Math.sin(tan) * w + Math.sin(sup) * (1 - w), Math.cos(tan) * w + Math.cos(sup) * (1 - w));
+        const sup = -0.28 + (fbm(nC, x / 300, y / 300, 2) - 0.5) * 0.55;
+        const capraz = 0.55 * Math.exp(-d / 110) * (nB(x / 14, y / 14) > 0.5 ? 1 : -1);
+        return sup + capraz;
       }
     }
   }
@@ -406,7 +405,7 @@
   sayac.push(kat(10, 16, { kenarAtla: true, uzunGok: 9, uzunKubbe: 7, uzun: 6, min: 2, maxFark: 70, yukseklik: 0.07, kuruOran: 0.15, sinifDur: true, tepe: 115, pencere: 12 }));
   sayac.push(kat(5, 20, { kenarAtla: true, uzunGok: 7, uzunKubbe: 8, uzun: 6, min: 1, maxFark: 55, yukseklik: 0.08, kuruOran: 0.1, sinifDur: true, tepe: 100, pencere: 12, darbeTitresim: 0.09 }));
   sayac.push(kat(2.6, 24, { kenarAtla: true, uzunGok: 5, uzunKubbe: 8, uzun: 5, min: 1, maxFark: 45, yukseklik: 0.09, kuruOran: 0.05, sinifDur: true, titresim: 0.05, tepe: 85, pencere: 10, darbeTitresim: 0.06 }));
-  sayac.push(kat(1.4, 18, { uzun: 4, min: 1, maxFark: 40, yukseklik: 0.09, sinifDur: true, titresim: 0.04, tepe: 70, pencere: 6, darbeTitresim: 0.04, maske: maskeOlustur('minare', 'altin', 'pencere', 'cicekOrta', 'kasnak') }));
+  sayac.push(kat(1.4, 18, { uzun: 4, min: 1, maxFark: 40, yukseklik: 0.09, sinifDur: true, titresim: 0.04, tepe: 70, pencere: 6, darbeTitresim: 0.04, maske: maskeOlustur('altin', 'pencere', 'cicekOrta') }));
 
   // ------------------------------------------------------------ son dokunuşlar: kaburgalar, ışık lekeleri (kalın beyaz)
   {
@@ -419,6 +418,32 @@
     // minare ayrıntıları: şerefe döşemesi, korkuluk dikmeleri, çıkma gölgesi, pencereler, topuz
     {
       const tas = (x, y, k) => rampa(RAMPA.tas, clamp(silindirIsik(x, 300, minareYari(y)) * (k || 1) * (1 - 0.5 * minareGolge(x, y)), 0, 1));
+      // gövde: silindiri izleyen uzun, dikey kıl demetleri (kaidenin arkasında kalan yer boyanmaz)
+      ctx.save(); hctx.save();
+      const kirp = new Path2D(); kirp.rect(0, 0, W, 692); kirp.rect(0, 692, 290, W - 692);
+      ctx.clip(kirp); hctx.clip(kirp);
+      for (const [x1, x2, y1, y2] of [[266, 334, 488, 800], [273, 327, 316, 436], [281, 319, 206, 272]]) {
+        const gk = new Path2D(); gk.rect(x1, y1, x2 - x1, y2 - y1);
+        ctx.save(); hctx.save(); ctx.clip(gk); hctx.clip(gk);
+        for (let x = x1 + 0.8; x < x2 + 0.5; x += 2.1 + R() * 0.5) {
+          let y = y2 + 2;
+          while (y > y1 - 2) {
+            const L = 16 + R() * 34, ye = Math.max(y1 - 3, y - L), xm = x + (R() - 0.5) * 0.8;
+            const c = tas(xm, (y + ye) / 2, 0.97 + R() * 0.06);
+            const acik = mixc(c, [255, 248, 230], 0.2), koyu = mixc(c, [60, 50, 70], 0.18);
+            darbe([[xm, y], [xm + (R() - 0.5) * 1.2, (y + ye) / 2], [xm + (R() - 0.5) * 1.2, ye]], 1.7 + R() * 0.5, c, { yukseklik: 0.11, ikinci: R() < 0.5 ? acik : koyu, ikinciOran: 0.25, sirt: R() < 0.35, darbeTitresim: 0.05, titresim: 0.04 });
+            if (ye <= y1 - 2.5) break;
+            y = ye + 2 + R() * 3;
+          }
+        }
+        ctx.restore(); hctx.restore();
+      }
+      // zikzak bant: koyu çizgi ve altında ışık yakalayan ince sırt
+      for (const z of SAHNE.zikzakCizgileri()) {
+        darbe(z.map(([x, y]) => [x, y + 2.2]), 1.0, [246, 236, 210], { yukseklik: 0.1, sirt: false, darbeTitresim: 0.03 });
+        darbe(z, 1.35, [104, 86, 84], { yukseklik: 0.12, sirt: false, darbeTitresim: 0.03, ikinci: [76, 62, 66], ikinciOran: 0.4 });
+      }
+      ctx.restore(); hctx.restore();
       const yatay = (x1, x2, y, Rb, k) => {
         for (let x = x1; x < x2; x += Rb * 5) darbe([[x, y + (R() - 0.5)], [Math.min(x2, x + Rb * 6), y + (R() - 0.5)]], Rb, tas(x + Rb * 3, y, k), { yukseklik: 0.13, darbeTitresim: 0.05 });
       };
@@ -460,11 +485,15 @@
     // alemler: küçük fırçayla altın
     const alemBoya = (a, s) => {
       const alt = (x) => rampa(RAMPA.altin, clamp(0.55 + (x - a.yaka.cx) / (14 * s), 0, 1));
-      for (let k = -2; k <= 2; k++) darbe([[a.cubuk.x1 + 2.6 * s + k * 0.8 * s, a.cubuk.y2], [a.cubuk.x1 + 2.6 * s + k * 0.8 * s, a.cubuk.y1]], 0.7 * s, alt(a.yaka.cx + k * 2 * s), { yukseklik: 0.12, sirt: false });
-      darbe([[a.yaka.cx - a.yaka.rx, a.yaka.cy], [a.yaka.cx + a.yaka.rx, a.yaka.cy]], a.yaka.ry * 0.9, [214, 160, 50], { ikinci: [255, 230, 140], ikinciOran: 0.35, yukseklik: 0.16 });
+      const cx = a.yaka.cx;
+      darbe([[cx - 0.8 * s, a.cubuk.y2], [cx - 0.8 * s, a.cubuk.y1]], 1.1 * s, [150, 98, 28], { yukseklik: 0.06, sirt: false, darbeTitresim: 0.02 });
+      darbe([[cx + 0.9 * s, a.cubuk.y2], [cx + 0.9 * s, a.cubuk.y1]], 0.9 * s, [246, 210, 110], { yukseklik: 0.06, sirt: false, darbeTitresim: 0.02 });
+      darbe([[cx - a.yaka.rx * 0.95, a.yaka.cy + 1], [cx + a.yaka.rx * 0.95, a.yaka.cy + 1]], a.yaka.ry * 0.75, [190, 134, 40], { yukseklik: 0.08, sirt: false });
+      darbe([[cx - a.yaka.rx * 0.4, a.yaka.cy - a.yaka.ry * 0.35], [cx + a.yaka.rx * 0.85, a.yaka.cy - a.yaka.ry * 0.35]], a.yaka.ry * 0.38, [255, 232, 150], { yukseklik: 0.08, sirt: false });
       for (const k of a.kureler) {
-        darbe([[k.cx - k.r * 0.5, k.cy], [k.cx + k.r * 0.5, k.cy]], k.r * 0.85, [196, 140, 40], { ikinci: [120, 76, 20], ikinciOran: 0.3, yukseklik: 0.16 });
-        darbe([[k.cx + k.r * 0.15, k.cy - k.r * 0.35], [k.cx + k.r * 0.45, k.cy - k.r * 0.1]], k.r * 0.32, [255, 238, 170], { yukseklik: 0.2, sirt: false });
+        darbe([[k.cx - k.r * 0.25, k.cy + k.r * 0.05], [k.cx + k.r * 0.25, k.cy - k.r * 0.05]], k.r * 0.95, [206, 150, 44], { yukseklik: 0.07, sirt: false, darbeTitresim: 0.02 });
+        darbe([[k.cx - k.r * 0.75, k.cy + k.r * 0.1], [k.cx - k.r * 0.35, k.cy + k.r * 0.6]], k.r * 0.28, [120, 76, 22], { yukseklik: 0.05, sirt: false });
+        darbe([[k.cx + k.r * 0.1, k.cy - k.r * 0.4], [k.cx + k.r * 0.45, k.cy - k.r * 0.2]], k.r * 0.3, [255, 240, 180], { yukseklik: 0.1, sirt: false });
       }
       const h = a.hilal, yolH = new Path2D(SAHNE.hilalYolu(h.cx, h.cy, h.R));
       ctx.save(); hctx.save(); ctx.clip(yolH); hctx.clip(yolH);
@@ -486,8 +515,8 @@
     }
     // güneş ve minarenin ışıklı yanı, çiçeklerde empasto beyaz
     for (let i = 0; i < 36; i++) {
-      const a = R() * Math.PI * 2, d = R() * 40, x = 880 + Math.cos(a) * d, y = 140 + Math.sin(a) * d, b = a + Math.PI / 2;
-      darbe([[x, y], [x + Math.cos(b) * 16, y + Math.sin(b) * 16]], 4, [255, 248, 222], { yukseklik: 0.22 });
+      const a = R() * Math.PI * 2, d = Math.sqrt(R()) * 42, x = 880 + Math.cos(a) * d, y = 140 + Math.sin(a) * d, b = -0.28 + (R() < 0.5 ? 0 : 1.15) + (R() - 0.5) * 0.4;
+      darbe([[x - Math.cos(b) * 8, y - Math.sin(b) * 8], [x + Math.cos(b) * 9, y + Math.sin(b) * 9]], 3.6, d < 26 ? [255, 250, 232] : [255, 238, 190], { yukseklik: 0.22 });
     }
     for (let i = 0; i < 40; i++) {
       const y = 210 + R() * 560, hw = minareYari(y), x = 300 + hw * (0.25 + R() * 0.45);

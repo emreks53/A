@@ -9,13 +9,14 @@
   "tanim": "Yumuşak pastel, az bağlayıcıyla sıkıştırılmış saf pigment çubuklarıdır; pürüzlü kâğıda sürtülünce pigment yalnız dişin tepelerine tutunur ve vuruşlar tozlu, kırık görünür. Çubuğun yan yüzüyle geniş alanlar, ucuyla tarama çizgileri yapılır; parmakla dağıtılan yerler yumuşak geçişler verir, üstüne gelen keskin vuruşlar onlarla karşıtlık kurar. Tonlu kâğıdın rengi vuruşların arasından görünerek resmin bir parçası olur.",
   "koken": "18. yüzyılda Rosalba Carriera ve Maurice Quentin de La Tour'un portreleriyle saygınlık kazandı; Jean-Siméon Chardin de ustalarındandır. 19. yüzyılda Edgar Degas katmanlı, taramalı pastelleriyle tekniği yeniden tanımladı; Mary Cassatt ve Odilon Redon onu izledi.",
   "ayirt_edici": [
-    "Sıcak gri, petek dokulu kâğıt: renk yalnız dişin tepelerinde, çukurlarda kâğıt görünüyor",
-    "Çubuğun yan yüzüyle geniş, düz uçlu vuruşlar (gök, kasnak, çiçeklerin taç yaprakları)",
-    "Gökte uçla atılmış paralel tarama öbekleri, kubbede kaburgalar boyunca keskin çizgiler",
-    "Gökte, güneş halesinde ve kubbenin gölgeli yanında parmakla dağıtılmış yumuşak geçişler",
-    "Kenarlarda boş bırakılmış kâğıt; tozlu, canlı ve sınırlı bir çubuk paleti"
+    "Sıcak gri, petek dokulu tonlu kâğıt her yerde işin parçası: renk yalnız dişin tepelerinde kalıyor, vuruşların arasından ve boş bırakılmış kenarlardan kâğıt görünüyor",
+    "Çubuğun yan yüzüyle geniş, düz uçlu vuruşlar (gök, kasnak, zemin) ve uçla atılmış paralel tarama öbekleri (gökte, kubbede ve kaidede çapraz)",
+    "Gökte ve güneş halesinde parmakla dağıtılmış yumuşak, puslu geçişler; hemen yanlarında dağıtılmamış keskin vuruşlar",
+    "Yapraklar boyunca uzanan, araları açık paralel çizgiler; taç yapraklar göbekten dışa basınçlı beyaz vuruşlar, gölge yanında lavanta tarama",
+    "Pastel kalemle atılmış birkaç keskin çizgi: kubbenin gölgeli silueti, pencereler, yaprak ve taç yaprak kenarları",
+    "Tozlu, açık değerli, tebeşirimsi renkler; yağlıboyanın parlaklığı ve kabartması yok"
   ],
-  "palet": ["#9D9487", "#5877C2", "#BDCC86", "#233338", "#DDD3BB", "#F9F5EB", "#A18356", "#3A543E"],
-  "kodla_cizim": "Kâğıt dişi, titreşimli altıgen petek ile çok ölçekli gürültüden kurulan 2048 piksellik bir yükseklik haritasıdır. Her katta vuruşlar ayrı bir tuvale basınç (saydamlık) olarak çizilir; pigment yalnız 'diş yüksekliği > 1 − basınç' olan piksellere yumuşak bir eşikle bırakılır. Renkler ışık modelli bir hedeften okunup kırk kadar çubuktan oluşan sınırlı bir kutuya yuvarlanır (bazen ikinci en yakın çubuk: kırık renk). Sırayla yan yüzle geniş alt kat, parmakla dağıtma (maskeli bulanıklaştırma), orta vuruşlar, güneş halesi, uçla tarama öbekleri, yapı ayrıntıları ve bitkiler gelir; en sonda kâğıt dişinin kabartma ışığı eklenir.",
+  "palet": ["#9D9487", "#88ADCF", "#D0DCA0", "#4C7671", "#F2EAD9", "#AD9FC8", "#E1B13C", "#498956"],
+  "kodla_cizim": "Kâğıt dişi, titreşimli altıgen petek ile çok ölçekli gürültüden kurulan 2048 piksellik bir yükseklik haritasıdır. Her katta vuruşlar ayrı bir tuvale basınç (saydamlık) olarak çizilir; pigment yalnız 'diş yüksekliği > 1 − basınç' olan piksellere yumuşak bir eşikle bırakılır, basınç düşük tutulduğu için kâğıt vuruşların içinden ve arasından görünür. Renkler ışık modelli, açık değerli bir hedeften okunur, tebeşir beyazıyla biraz açılır ve kırk kadar çubuktan oluşan sınırlı bir kutuya yuvarlanır (bazen ikinci en yakın çubuk: kırık renk). Sırayla yan yüzle seyrek alt kat, gökte gürültü maskeli parmakla dağıtma (bulanıklaştırma), orta vuruşlar, güneş halesi, uçla tarama öbekleri, pastel kalem ayrıntıları, zeminde yatay yan vuruşlar, paralel çizgilerle yapraklar ve basınçlı vuruşlarla çiçekler, en üstte yapılarda çapraz tarama öbekleri gelir; en sonda kâğıt dişinin kabartma ışığı eklenir (vuruş kabartması yoktur).",
   "etiketler": ["pastel", "kuru teknik", "tonlu kâğıt", "doku", "tarama", "geleneksel"]
 }

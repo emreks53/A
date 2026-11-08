@@ -5,18 +5,18 @@
   "ad_en": "Sumi-e Ink Wash",
   "aile": "Uzak Doğu",
   "ozgun": false,
-  "ozet": "Pirinç kâğıdına tek mürekkebin sulandırılmış tonlarıyla, az ve kendinden emin fırça vuruşları.",
+  "ozet": "Pirinç kâğıdına tek mürekkebin sulandırılmış tonlarıyla, az, kendinden emin fırça vuruşu ve bol boşluk.",
   "tanim": "Sumi-e (Çincede shuimo hua), çubuk mürekkebin suyla farklı yoğunluklarda açılıp yumuşak fırçayla emici pirinç kâğıdına uygulandığı resim geleneğidir. Her vuruş tek seferde ve düzeltilmeden yapılır: fırça bastırılıp kaldırılarak yaprak biçimlenir, kuruyan fırça 'kasure' denen beyaz çizgili izler bırakır, ıslak mürekkep kâğıdın liflerine yayılır. Boşluk (ma) resmin parçasıdır; sis, uzaklık ve ışık boş bırakılan kâğıtla anlatılır. Renk çok az kullanılır, resim çoğunlukla kırmızı bir mühürle tamamlanır.",
   "koken": "Tang ve Song Çin'inde gelişti; geleneği Wang Wei'ye bağlanır, Mu Qi ve Liang Kai gibi Chan (Zen) ressamlarıyla olgunlaştı. 13–14. yüzyıllarda Zen keşişleriyle Japonya'ya geçti ve Muromachi döneminde Sesshū Tōyō ile doruğa ulaştı. Bambu, erik çiçeği, orkide ve krizantem, yani 'dört soylu bitki', fırça eğitiminin temelidir.",
   "ayirt_edici": [
-    "Soluk gri lavlardan koyu siyah vurgulara uzanan mürekkep tonları; kubbenin solunda kendinden emin tek koyu vuruş",
-    "Bastırılıp kaldırılarak tek vuruşta yapılmış sivri yapraklar ve hızlı fırça çizgileriyle kaburgalar",
-    "Kasnaktaki geniş lav vuruşunda ve dallarda kuru fırçanın beyaz çizgili 'kasure' izi",
-    "Islak mürekkebin pirinç kâğıdının liflerine yumuşakça yayılması; kubbe lavında geri akma lekesi",
-    "Bol boşluk: kaide ve minarenin alt yanı sise karışıp kaybolur, güneş yalnızca soluk bir halkanın içindeki boşluktur",
-    "Çok az renk: kubbede soluk yeşil, alemlerde okra; yazısız, sekiz köşeli yıldız desenli küçük kırmızı mühür"
+    "Kubbenin gölge yanı tek bir yan fırça vuruşudur: fırçanın ucunda koyu, topuğunda soluk mürekkep; aşağıda kuruyup kıl kıl açılır",
+    "Tepeden inip kuruyarak sönen birkaç hızlı kaburga çizgisi; ışık yanında kubbenin sağ kenarı neredeyse kaybolur",
+    "Kasnak, yoğunluğu soldan sağa azalan fırça noktalarından bir bant; gölge yanında ıslak noktalar lavın içine akar",
+    "Kuru fırçanın 'kasure' izi erik gövdesinde, korniş ve kasnak çizgilerinde; ıslak vuruşların kenarında mürekkep liflere yayılır",
+    "Bol boşluk (ma): kaide ve minarenin alt yanı sise karışır, güneş boş bırakılmış soluk bir dairedir; sol alt köşeden giren erik dalında kümeler hâlinde çiçek, tomurcuk ve yosun noktaları",
+    "Çok az renk: kubbe ve kasnakta soluk yeşil, alem kürelerinde okra; sağ altta yazısız, geometrik desenli küçük kırmızı mühür"
   ],
-  "palet": ["#F4EFE3", "#DBD7CC", "#7E7C78", "#1A1814", "#C5CAB5", "#D0A051", "#BF4437"],
-  "kodla_cizim": "Canvas 2048 px. Fırça vuruşu bir omurga eğrisi ve basınç profiliyle çizilir: ıslak gövde, kuruyan uca doğru solan degradeli bir şerittir; üstünde 3–56 kıl kendi mürekkep miktarı ve sinüs gürültüsüyle ilerler, mürekkebi eşiğin altına düşünce kesilir (kasure). Yapı ve bitki vuruşları ayrı katmanlara yapılır. Lavlar (soluk gri, yeşil, okra) bulanıklaştırılmış maskelerden hesaplanan yoğunluk alanlarıdır: kenarları lif ve benek gürültüsüyle tırtıklanır, kenarda mürekkep birikir; taç yaprakları kemiksiz (mogu) lav lekeleridir. Birleştirmede vuruşların bulanık kopyası lif gürültüsüyle karıştırılarak mürekkebin kâğıda yayılması verilir; yapı katmanı gürültülü bir sis maskesiyle aşağıda söndürülür. Kâğıt uzamış lif gürültüsü ve gömülü kıvrık liflerle, mühür oyulmuş geometrik çizgiler ve damga dokusuyla çizilir; hepsi sıcak beyaz kâğıtla çarpılarak birleşir.",
+  "palet": ["#F3EDE0", "#C9CBB6", "#A09F90", "#5F6154", "#141415", "#D2AA69", "#BE4439"],
+  "kodla_cizim": "Canvas 2048 px; mürekkep bir yoğunluk alanında birikir ve kâğıt rengine Beer-Lambert benzeri üstel bir azalmayla uygulanır. Fırça vuruşu, omurga boyunca 0,5 px adımlarla enine taranır: fırça 5–76 kıldan oluşur, her kılın kendi mürekkep yükü ve kuruma hızı vardır (kenardaki kıllar önce kurur); kuruyan kıl kâğıdın ince tanesinin yalnız tepelerine değer, böylece kasure çizgileri ve tanecikli kuru fırça kendiliğinden oluşur. Kıllar arasında enine ton farkı yan fırçanın ucu koyu, topuğu soluk yüklemesini verir; bastırılan baş yuvarlanır, uç sivrilir. Vuruşun ıslak payı ayrı bir alana yazılır ve sonda iki kutu bulanıklığından uzamış lif gürültüsüyle seçilen bir saçak olarak kâğıda yayılır. Lavlar bulanık maskelerden hesaplanır: eşikleri gürültüyle tırtıklanır, kuruyan kenarda mürekkep birikir, içte tanelenir; birkaç geri akma (çiçeklenme) lekesi eklenir. Kaide ve minarenin alt yanı gürültülü bir sis maskesiyle söner. Erik çiçekleri iki kısa kavisli taç yaprağı çizgisi ve noktalı erciklerle, kendi düzleminde basıklaştırılarak çizilir; arkalarındaki dal silinir. Yeşil ve okra ayrı renk katmanlarıdır; mühür oyulmuş geometrik çizgiler ve damga dokusuyla çizilir.",
   "etiketler": ["sumi-e", "mürekkep", "lav", "fırça", "Uzak Doğu", "zen", "boşluk", "monokrom"]
 }

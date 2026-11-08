@@ -10,13 +10,13 @@
   "koken": "1890'larda Avrupa'da Arts and Crafts hareketi ve Japon baskılarının etkisiyle doğdu; Fransa'da Art Nouveau, Almanya'da Jugendstil, Avusturya'da Sezession, İtalya'da Stile Liberty adını aldı. Alfons Mucha'nın Paris afişleri (Gismonda, Mevsimler, Zodyak), Hector Guimard'ın metro girişleri, Victor Horta'nın Brüksel yapıları ve Gustav Klimt'in altınlı panoları akımın simgeleridir. İstanbul'da Raimondo D'Aronco'nun Karaköy ve Yıldız'daki yapıları Osmanlı'daki örneklerdendir.",
   "ayirt_edici": [
     "Kubbenin ardında Mucha usulü büyük hale: mozaik taşlı iki sıra bant, inci dizisi, dantel kemercikleri ve ince ışın çizgileri",
-    "Basık kemerli süslü çerçeve: iki sıra renkli kare taştan bant, altın çizgiler, madalyonlar ve kıvrık köşe süsleri",
-    "Uçları sarmal kıvrılan kamçı filizleri ve S biçimli zambak sapları",
+    "Basık kemerli süslü çerçeve: iki sıra renkli kare taştan bant, altın çizgiler, köşe gülleri, madalyonlar ve kıvrık köşe süsleri",
+    "Uçları sarmal kıvrılan kamçı filizleri ve S biçimli zambak sapları; çerçevenin içinden akıp ucu dalga gibi kıvrılan, kat kat şerit bulutlar",
     "Kalınlığı değişen koyu kahve konturlarla çevrilmiş düz renk alanları; kubbede ve yapılarda afiş usulü iki tonlu gölge",
     "Önde çerçeveyi taşan iri gelincikler, uzun kıvrık bıçak yapraklar; yanlarda altı yapraklı zambaklar",
     "Solgun zarif palet ve gök zemininde soluk dört yapraklı çiçeklerden şablon deseni"
   ],
   "palet": ["#A9B48F", "#6E6F3E", "#C99E4F", "#D3A49B", "#F3EAD3", "#C6A14B", "#79A06F", "#3B3122"],
-  "kodla_cizim": "Canvas 2048 px'de vektör olarak çizilir. Kalın-ince kontur, biçimin dışına kırpılmış ve sağ alta kaydırılmış kalın bir çizgiyle ince ana çizginin üst üste konmasıyla elde edilir. Kamçı kıvrımları, sinüslü bir S eğrisine eklenmiş logaritmik sarmalın, ortası şişen ve uca doğru incelen şeritlere çevrilmesidir. Çerçeve büyük yarıçaplı bir yaydan kurulan basık kemerdir; bantta yay ve kenarlar boyunca döndürülmüş renkli kareler mozaik dokusu verir. Hale eş merkezli halka dilimleri, inci daireleri ve kemerciklerle; kubbe, kaburga eğrilerinden kurulan parlak şerit ve elips dışı gölgeyle iki tonlu boyanır. Zambak ve gelincikler Bézier taç yapraklarla, yapraklar kıvrık eksen boyunca iki tonlu bıçak biçimleriyle çizilir; sonunda taş baskı kâğıdı dokusu çarpılır.",
+  "kodla_cizim": "Canvas 2048 px'de vektör olarak çizilir. Kalın-ince kontur, biçimin dışına kırpılmış ve sağ alta kaydırılmış kalın bir çizgiyle ince ana çizginin üst üste konmasıyla elde edilir. Kamçı kıvrımları, sinüslü bir S eğrisine teğeti kırılmadan eklenen logaritmik sarmalın, ortası şişen ve uca doğru incelen şeritlere çevrilmesidir; bulutlar da çerçeve kenarından başlayan, alt kenarı düz gölgeli üç kat böyle şerittir. Çerçeve büyük yarıçaplı bir yaydan kurulan basık kemerdir; bantta yay ve kenarlar boyunca döndürülmüş renkli kareler mozaik dokusu verir. Hale eş merkezli halka dilimleri, inci daireleri ve kemerciklerle; kubbe, kaburga eğrilerinden kurulan parlak şerit ve elips dışı gölgeyle iki tonlu boyanır. Zambak ve gelincikler Bézier taç yapraklarla, yapraklar kıvrık eksen boyunca iki tonlu bıçak biçimleriyle çizilir; sonunda taş baskı kâğıdı dokusu çarpılır.",
   "etiketler": ["afiş", "Mucha", "kamçı kıvrımı", "süsleme", "çiçek", "çerçeve", "hale", "1900", "sanat akımı"]
 }
