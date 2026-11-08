@@ -1,0 +1,40 @@
+{
+  "kod": "S-176",
+  "no": 176,
+  "ad": "Elle Boyanmış Kâğıt Kolaj",
+  "ad_en": "Hand-Painted Paper Collage",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Önce akrille boyanıp tarakla, fırçayla ve süngerle dokulandırılmış kâğıtlardan makasla titizce kesilip üst üste yapıştırılmış parçalar; her biçimin içinde boyanın kendi dokusu, kenarda keskin makas kesimi, altında ince gölge.",
+  "tanim": "Hayalî bir kolaj ressamının eli. Ressam önce kendi kâğıtlarını boyar: ince beyaz kâğıtlara zengin renkli akrille geniş fırça darbeleri sürer, boya ıslakken tarakla düzenli izler çeker (gökte güneşin çevresinde eş merkezli halkalar, kubbe ve kasnakta dikey, yapraklarda çapraz), fırça ucu ve süngerle benekler vurur; her kâğıtta bir ana renk ile onun açık ve koyu iki üç tonu karışır. Kuruyunca keskin bir makasla eskizine sadık, ölçülü ve temiz biçimler keser; makasın uzun kavisleri çok hafif dalgalanır, köşeler sivri kalır. Işığı kâğıt seçimiyle verir: aynı biçimi açık ve koyu iki kâğıttan ayrı keser (kasnakta sağdaki ışıklı parça, minarede soldaki leylak gölge şeridi, yaprakta orta damar boyunca açık yarım), kubbeyi koyu bir taban üstüne aralarında ince boşluk bırakarak gölgeden ışığa dört ayrı yeşil kâğıttan on altı dilim hâlinde dizer. Parçaları düz yapıştırır, altlarında yalnız ince ve yumuşak bir gölge kalır; pencereleri mor, alemleri sarı okr boyalı kâğıttan keser, beyaz çiçeklerin göbeklerine pembe loblu bir parça, sarı benekli bir daire ve küçük turuncu makas noktaları ekler.",
+  "koken": "Boyalı kâğıtla kolaj (painted paper collage) geleneğine dayanır: ressamın kendi boyadığı, tarak, fırça ve süngerle dokulandırdığı kâğıtları kesip yapıştırdığı resimli kitap tekniği; kâğıtların taraklı desenleri kitap ciltçiliğindeki tutkallı kâğıt (paste paper) boyamasından gelir. Belirli bir sanatçı taklit edilmez; bu, atölyenin tanımladığı hayalî bir ressamın elidir. S-106 Kesik Kâğıt'tan farkı tek renk guaş yerine çok tonlu, taraklı ve benekli boyalı kâğıtlar ve beyaz boşluklar yerine üst üste binen, ince gölgeli parçalardır; S-079 Yırtık Kâğıt Kolaj'dan farkı yırtık beyaz kenar yerine keskin makas kesimidir.",
+  "ayirt_edici": [
+    "Gök tek büyük boyalı kâğıt: kobalt-seruleum fırça darbelerinin üstünde güneşin çevresinde eş merkezli, düzenli aralıklı tarak halkaları ve yanlarındaki ince boya sırtları",
+    "Tırtıllı kenarlı sarı güneş halesi, tarak halkalı ve turuncu benekli güneş diski; arkasından leylak-mavi kâğıt payı görünen iki katlı beyaz bulutlar",
+    "Koyu yeşil taban üstüne ayrı ayrı kesilmiş on altı kubbe dilimi: gölgeden ışığa koyu deniz yeşilinden sarı-yeşile dört farklı boyalı kâğıt, aralarında koyu kaburga boşlukları",
+    "Kasnakta sağdaki açık yeşil kâğıdın makas dikişi, mor boyalı kâğıttan kemerli pencereler; minarede leylak gölge şeritleri ve mercan rengi zikzak şeritler",
+    "Arkada iki kat ada çayı yeşili tepe kâğıdı, önde benekli kum ve kayısı rengi zemin kâğıtları",
+    "Orta damar boyunca iki ayrı kâğıttan kesilmiş yapraklar ve pembe loblu, sarı benekli göbekli beyaz çiçekler; her parçanın altında ince, yumuşak gölge"
+  ],
+  "palet": [
+    "#3B7BC2",
+    "#F6B338",
+    "#2B8750",
+    "#84C157",
+    "#4B3D7E",
+    "#EDCD96",
+    "#DD6A4E",
+    "#F5ECDB"
+  ],
+  "kodla_cizim": "2× iç çözünürlükte canvas. Önce otuza yakın 'boyalı kâğıt' ekran dışı tuvallerde fırça, tarak ve benek ilkelleriyle boyanır: fırça darbesi bükümlü bir omurga boyunca kıl kıl ince eğrilerden, tarak izi bir yol boyunca normalde kaydırılmış, gürültüyle ara ara kopan açık çizgiler ve yanlarındaki koyu boya sırtından, benek küçük elips kümelerinden oluşur; döşenen küçük kâğıtlarda dikiş görünmesin diye kenardan taşan izler karşı kenarda tekrarlanır. Gök kâğıdı tek parça boyanır, tarak halkaları güneş (880,140) merkezlidir. Parçalar SAHNE yollarının yoğun örneklenip periyodik gürültüyle normal boyunca hafifçe oynatılmasıyla elde edilen makas yollarıdır; her parça ilgili kâğıdın deseniyle (createPattern + setTransform ile kaydırılıp döndürülmüş) doldurulur. Gölge, desenli dolguda çok yavaş olduğu için biçim tuval dışına kaydırılıp yalnız gölgesi geri getirilerek düz renkle çizilir. Sonda sağ üstten yumuşak 'soft-light' gün ışığı.",
+  "etiketler": [
+    "kolaj",
+    "boyalı kâğıt",
+    "makas kesimi",
+    "tarak dokusu",
+    "el yapımı",
+    "resimli kitap",
+    "canlı renk",
+    "katmanlı"
+  ]
+}

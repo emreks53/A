@@ -320,7 +320,8 @@ function varakDokusu(o) {
   const r = S.rng(tohum);
   const boy = o.boy * OLCEK;
   const satirOfs = [];
-  for (let j = 0; j < 400; j++) satirOfs.push(r() * boy);
+  const kay = o.kaydirma != null ? o.kaydirma : 1;
+  for (let j = 0; j < 400; j++) satirOfs.push(r() * boy * kay);
   const nz = gurultu(tohum + 5);
   const K = hex(o.koyu || '#A9832F');
   const M = hex(o.orta || '#D4AF55');
@@ -345,8 +346,9 @@ function varakDokusu(o) {
       if (o.isik) v += o.isik(x / OLCEK, y / OLCEK);
       v += 0.09 * (nz.n(x * 0.0035, y * 0.0035) - 0.5) + 0.06 * (nz.n(x * 0.0018 + 30, y * 0.028) - 0.5) + 0.03 * (nz.n(x * 0.02, y * 0.2) - 0.5);
       v += 0.05 * (fx / boy - 0.5) - 0.03 * (fy / boy - 0.5);
-      if (fx < dikis || fy < dikis) v -= 0.13;
-      else if (fx < dikis * 1.9 || fy < dikis * 1.9) v += 0.07;
+      const dk = o.dikis != null ? o.dikis : 1;
+      if (fx < dikis || fy < dikis) v -= 0.13 * dk;
+      else if (fx < dikis * 1.9 || fy < dikis * 1.9) v += 0.07 * dk;
       v += 0.02 * (karma(x, y, tohum + 9) - 0.5);
       const col = ramp(kenet(v, 0, 1));
       const k = (y * W2 + x) * 4;
@@ -467,15 +469,13 @@ function bulut(cx, cy, w, h, tohum) {
     p.moveTo(x + rx, y);
     p.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
   }
-  // iç kabarıklar: üst katın alt kenarı ikinci bir lavanta kalıbıyla belirir
-  const ic = new Path2D();
-  const icTaban = taban - h * 0.3;
+  // iç kabarıklar: her birinin alt kenarında hilal biçimli soluk lavanta (ikinci gölge kalıbı)
+  const icler = [];
+  const icTaban = taban - h * 0.26;
   for (let i = 0; i < 3; i++) {
-    const t = 0.22 + i * 0.28 + (r() - 0.5) * 0.1;
-    const ry = h * (0.24 + r() * 0.12);
-    const x = cx - w / 2 + w * t;
-    ic.moveTo(x + ry * 1.5, icTaban - ry * 0.6);
-    ic.ellipse(x, icTaban - ry * 0.6, ry * 1.5, ry, 0, 0, Math.PI * 2);
+    const t = 0.24 + i * 0.27 + (r() - 0.5) * 0.08;
+    const ry = h * (0.26 + r() * 0.1);
+    icler.push([cx - w / 2 + w * t, icTaban - ry * 0.7, ry * 1.45, ry]);
   }
   const kes = new Path2D();
   kes.rect(cx - w, cy - h * 3, w * 2, taban - (cy - h * 3) + 0.5);
@@ -493,14 +493,19 @@ function bulut(cx, cy, w, h, tohum) {
   g.addColorStop(1, 'rgba(190,190,214,0)');
   R.fillStyle = g;
   R.fillRect(cx - w, cy - h * 3, w * 2, h * 4);
-  R.save();
-  R.clip(ic);
-  g = R.createLinearGradient(0, icTaban, 0, icTaban - h * 0.4);
-  g.addColorStop(0, 'rgba(160,158,198,0.42)');
-  g.addColorStop(1, 'rgba(160,158,198,0)');
-  R.fillStyle = g;
-  R.fillRect(cx - w, icTaban - h, w * 2, h);
-  R.restore();
+  for (const [x, y, rx, ry] of icler) {
+    R.save();
+    R.translate(x, y);
+    R.scale(rx / ry, 1);
+    const gg = R.createRadialGradient(0, -ry * 0.45, ry * 0.95, 0, -ry * 0.45, ry * 1.45);
+    gg.addColorStop(0, 'rgba(156,154,196,0)');
+    gg.addColorStop(1, 'rgba(156,154,196,0.38)');
+    R.fillStyle = gg;
+    R.beginPath();
+    R.arc(0, 0, ry, 0, Math.PI * 2);
+    R.fill();
+    R.restore();
+  }
   g = R.createLinearGradient(cx + w * 0.55, cy - h * 0.9, cx - w * 0.05, cy + h * 0.1);
   g.addColorStop(0, 'rgba(250,212,168,0.5)');
   g.addColorStop(1, 'rgba(250,212,168,0)');
@@ -616,9 +621,15 @@ altin(Y.minareAlem);
 // ---- 5) kaide
 {
   const K = S.kaide;
-  tasBas(Y.kaide, K.x1, K.x2, (yol) => {
-    lavi(R, yol, 0, K.y1, 0, K.y1 + 30, [[0, GOLGE(0.55)], [1, GOLGE(0)]]);
-  });
+  {
+    const yol = kalip(Y.kaide, 0.45);
+    sil(yol);
+    R.fillStyle = 'rgba(253,240,220,0.5)';
+    R.fill(yol);
+    lavi(R, yol, K.x1, 0, K.x2, 0, [[0, GOLGE(0.5)], [0.12, GOLGE(0.2)], [0.3, GOLGE(0.04)], [0.7, 'rgba(250,226,186,0.1)'], [1, 'rgba(250,226,186,0.3)']]);
+    lavi(R, yol, 0, K.y1, 0, K.y1 + 34, [[0, GOLGE(0.6)], [0.4, GOLGE(0.25)], [1, GOLGE(0)]]);
+    ort(new Path2D(Y.kaide));
+  }
   oy(Y.kaide);
   const yk = kalip(Y.kornis, 0.3);
   sil(yk);

@@ -87,36 +87,53 @@
     mc.width = W; mc.height = W;
     const mx = mc.getContext('2d', { willReadFrequently: true });
 
-    function kutuBul(a) {
+    function kutuBul(a, k) {
       let x0 = W, y0 = W, x1 = -1, y1 = -1;
-      for (let y = 0; y < W; y++) {
+      const kx0 = k ? k[0] : 0, ky0 = k ? k[1] : 0, kx1 = k ? k[2] : W, ky1 = k ? k[3] : W;
+      for (let y = ky0; y < ky1; y++) {
         const o = y * W;
-        for (let x = 0; x < W; x++) if (a[o + x] > 0.001) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; y1 = y; }
+        for (let x = kx0; x < kx1; x++) if (a[o + x] > 0.001) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; y1 = y; }
       }
       return x1 < 0 ? { x0: 0, y0: 0, x1: 0, y1: 0, bos: true } : { x0, y0, x1: x1 + 1, y1: y1 + 1 };
     }
-    /** Maske: ciz(ctx) beyazla çizer; dönen {a, x0,y0,x1,y1}. o.olcek>1 → daha ince çizim için büyük tuval küçültülür. */
-    function maske(ciz) {
+    const kirp = (k) => k ? [clamp(Math.floor(k[0]), 0, W), clamp(Math.floor(k[1]), 0, W), clamp(Math.ceil(k[2]), 0, W), clamp(Math.ceil(k[3]), 0, W)] : null;
+    /** Maske: ciz(ctx) beyazla çizer; dönen {a, x0,y0,x1,y1}. kutu verilirse yalnız o bölge okunur. */
+    function maske(ciz, kutuA) {
+      const k = kirp(kutuA);
       mx.setTransform(1, 0, 0, 1, 0, 0);
       mx.globalCompositeOperation = 'source-over';
       mx.globalAlpha = 1;
       mx.filter = 'none';
-      mx.clearRect(0, 0, W, W);
+      if (k) mx.clearRect(k[0], k[1], k[2] - k[0], k[3] - k[1]); else mx.clearRect(0, 0, W, W);
       mx.fillStyle = '#fff'; mx.strokeStyle = '#fff';
       mx.lineCap = 'round'; mx.lineJoin = 'round';
+      mx.save();
+      if (k) { mx.beginPath(); mx.rect(k[0], k[1], k[2] - k[0], k[3] - k[1]); mx.clip(); }
       ciz(mx);
-      const d = mx.getImageData(0, 0, W, W).data;
+      mx.restore();
+      mx.setTransform(1, 0, 0, 1, 0, 0);
+      mx.globalCompositeOperation = 'source-over';
+      mx.globalAlpha = 1;
       const a = new Float32Array(N);
+      if (k) {
+        const w = k[2] - k[0], h = k[3] - k[1];
+        if (w <= 0 || h <= 0) return { a, x0: 0, y0: 0, x1: 0, y1: 0, bos: true };
+        const d = mx.getImageData(k[0], k[1], w, h).data;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) a[(y + k[1]) * W + x + k[0]] = d[(y * w + x) * 4 + 3] / 255;
+        mx.clearRect(k[0], k[1], w, h);
+        return Object.assign({ a }, kutuBul(a, k));
+      }
+      const d = mx.getImageData(0, 0, W, W).data;
       for (let i = 0; i < N; i++) a[i] = d[i * 4 + 3] / 255;
       return Object.assign({ a }, kutuBul(a));
     }
-    function yolMaske(yollar, kalinlik) {
+    function yolMaske(yollar, kalinlik, kutuA) {
       return maske((c) => {
         for (const y of [].concat(yollar)) {
           const p = typeof y === 'string' ? new Path2D(y) : y;
           if (kalinlik) { c.lineWidth = kalinlik; c.stroke(p); } else c.fill(p);
         }
-      });
+      }, kutuA);
     }
     /** İşlev maskesi: f(x, y) → 0..1, kutu içinde. */
     function fMaske(kutuA, f) {
@@ -125,15 +142,25 @@
       for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) a[y * W + x] = clamp(f(x, y), 0, 1);
       return { a, x0, y0, x1, y1 };
     }
-    function islem(m1, m2, f) {
+    /** İki maskeden yenisi; kutu: 'ilk' (m1 kutusu yeter), 'kesis' ya da birleşim (varsayılan). */
+    function islem(m1, m2, f, tur) {
       const a = new Float32Array(N);
-      for (let i = 0; i < N; i++) a[i] = clamp(f(m1.a[i], m2 ? m2.a[i] : 0, i), 0, 1);
-      return Object.assign({ a }, kutuBul(a));
+      let k;
+      if (tur === 'ilk' || !m2) k = [m1.x0, m1.y0, m1.x1, m1.y1];
+      else if (tur === 'kesis') k = [Math.max(m1.x0, m2.x0), Math.max(m1.y0, m2.y0), Math.min(m1.x1, m2.x1), Math.min(m1.y1, m2.y1)];
+      else if (tur === 'hepsi') k = [0, 0, W, W];
+      else k = [Math.min(m1.x0, m2.x0), Math.min(m1.y0, m2.y0), Math.max(m1.x1, m2.x1), Math.max(m1.y1, m2.y1)];
+      if (m1.bos && m2 && !m2.bos && tur !== 'ilk' && tur !== 'kesis') k = [m2.x0, m2.y0, m2.x1, m2.y1];
+      if (k[2] <= k[0] || k[3] <= k[1]) return { a, x0: 0, y0: 0, x1: 0, y1: 0, bos: true };
+      for (let y = k[1]; y < k[3]; y++) for (let x = k[0]; x < k[2]; x++) { const i = y * W + x; a[i] = clamp(f(m1.a[i], m2 ? m2.a[i] : 0, i), 0, 1); }
+      return Object.assign({ a }, kutuBul(a, k));
     }
-    const cikar = (m1, m2) => islem(m1, m2, (p, q) => p * (1 - q));
-    const kesis = (m1, m2) => islem(m1, m2, (p, q) => p * q);
+    const cikar = (m1, m2) => islem(m1, m2, (p, q) => p * (1 - q), 'ilk');
+    const kesis = (m1, m2) => islem(m1, m2, (p, q) => p * q, 'kesis');
     const birles = (m1, m2) => islem(m1, m2, (p, q) => p + q - p * q);
     function mBulanik(m, r) {
+      r = Math.max(1, Math.round(r));
+      if (m.bos) return m;
       const x0 = Math.max(0, m.x0 - 2 * r - 2), y0 = Math.max(0, m.y0 - 2 * r - 2), x1 = Math.min(W, m.x1 + 2 * r + 2), y1 = Math.min(W, m.y1 + 2 * r + 2);
       const w = x1 - x0, h = y1 - y0, L = new Float32Array(w * h);
       for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) L[(y - y0) * w + x - x0] = m.a[y * W + x];
@@ -160,7 +187,7 @@
       const yog = o.yog == null ? 1 : o.yog;
       const ab = T.map((c) => -Math.log(clamp(c / 255, 0.004, 1)) * yog);
       const kenar = o.kenar == null ? 0.3 : o.kenar, kr = o.kenarR || 4, gran = o.gran == null ? 0.2 : o.gran, akis = o.akis == null ? 0.14 : o.akis;
-      const titre = o.titre || 0, yum = o.yumusak || 0, kuru = o.kuru || 0, kuruY = o.kuruY || 0.07;
+      const titre = o.titre || 0, yum = o.yumusak || 0, kuru = o.kuru || 0, kuruY = o.kuruY || 0.07, tuy = o.tuy || 0;
       const pad = Math.ceil(titre + yum * 2 + kr * 2 + 3);
       const x0 = Math.max(0, m.x0 - pad), y0 = Math.max(0, m.y0 - pad), x1 = Math.min(W, m.x1 + pad), y1 = Math.min(W, m.y1 + pad);
       const w = x1 - x0, h = y1 - y0;
@@ -174,6 +201,17 @@
         } else L[j] = m.a[y * W + x];
       }
       if (yum) L = bulanik(L, w, h, yum);
+      if (tuy) {
+        // ıslak kâğıtta tüylenen kenar: bulanık maske gürültülü bir eşikle yumuşakça kesilir
+        const tg = o.tuyG || 0.22;
+        for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+          const j = (y - y0) * w + x - x0, v = L[j];
+          if (v <= 0.001 || v >= 0.999) continue;
+          const i = y * W + x;
+          const t = 0.5 + (AK[(i + ks * 613) % N] - 0.5) * tuy + (G[i] - 0.5) * tuy * 0.35;
+          L[j] = sstep(t - tg, t + tg, v);
+        }
+      }
       const Lb = kenar ? bulanik(L, w, h, kr) : null;
       const grad = o.grad, koru = o.koru ? o.koru.a : null;
       const tk = 1 - kenar * 0.45;
@@ -199,6 +237,7 @@
       const T = (typeof renk === 'string' ? hex(renk) : renk).map((c) => c / 255);
       const kap = o.kap == null ? 0.95 : o.kap, kuru = o.kuru || 0, kuruY = o.kuruY || 0.08, kalin = o.kalin == null ? 0.5 : o.kalin;
       const titre = o.titre || 0, yum = o.yumusak || 0, grad = o.grad, koru = o.koru ? o.koru.a : null, akis = o.akis == null ? 0.1 : o.akis;
+      const kirik = o.kirik || 0;
       const pad = Math.ceil(titre + yum * 2 + 3);
       const x0 = Math.max(0, m.x0 - pad), y0 = Math.max(0, m.y0 - pad), x1 = Math.min(W, m.x1 + pad), y1 = Math.min(W, m.y1 + pad);
       const w = x1 - x0, h = y1 - y0;
@@ -215,6 +254,7 @@
         let a = L[j];
         if (a <= 0.002) continue;
         const i = y * W + x;
+        if (kirik) a = sstep(0.4, 0.6, a + (H[i] - 0.5) * kirik + (AK[(i + 4409) % N] - 0.5) * 0.3 * kirik) * (0.75 + 0.25 * a);
         a *= kap;
         if (akis) a *= 1 + akis * (AK[(i + ks * 977) % N] - 0.5) * 2;
         if (grad) a *= grad(x, y);
@@ -370,7 +410,7 @@
     for (const b of bulutlar) { c.save(); bulutKlip(c, b); c.beginPath(); bulutYolu(c, b, 0, 0, 1); c.fill(); c.restore(); }
   });
   const GX = 880, GY = 140;
-  const korGok = M.islem(mBina, mBitki, (p, q, i) => Math.max(p, q, mBulut.a[i]));
+  const korGok = M.islem(mBina, mBitki, (p, q, i) => Math.max(p, q, mBulut.a[i]), "hepsi");
   const korOn = mBitki; // binanın ve zeminin önünde kalan bitkiler
 
   // ------------------------------------------------------------ 1. gök
@@ -654,7 +694,7 @@
     for (let k = 0; k < 5; k++) {
       const ust = f.tac[k], alt = tacM[(k + 1) % 5];
       const golge = M.maske((cx) => { cx.save(); cx.translate(-2.2, 2.6); cx.fill(P(ust.d)); cx.restore(); cx.globalCompositeOperation = 'destination-out'; cx.beginPath(); cx.arc(c.x, c.y, c.r * 0.34, 0, Math.PI * 2); cx.fill(); });
-      const ince = M.islem(alt, golge, (p, q, i) => p * q * (1 - tacM[k].a[i]));
+      const ince = M.islem(alt, golge, (p, q, i) => p * q * (1 - tacM[k].a[i]), "kesis");
       M.yika(ince, '#A9ADD8', { yog: 0.7, kenar: 0.2, titre: 0.2 });
     }
     // göbek çanağı: göbeğin çevresinde soluk sıcak-serin halka

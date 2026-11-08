@@ -119,15 +119,21 @@
     }
     return p;
   }
+  /** Nokta dizisini hep aynı dönüş yönüne çevirir (nonzero birleşimlerde örtüşen alt yollar delik açmasın). */
+  function yonlu(pts) {
+    let a = 0;
+    for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; a += p[0] * q[1] - q[0] * p[1]; }
+    return a < 0 ? pts.slice().reverse() : pts;
+  }
   /** SVG yolu → el titremeli Path2D */
   function elYolu(d, o) {
     o = o || {};
     let t = 0;
-    return yolu(ornekle(d, o.adim || 2).map((pts) => titret(pts, Object.assign({}, o, { tohum: (o.tohum || 1) + 31 * t++ }))));
+    return yolu(ornekle(d, o.adim || 2).map((pts) => yonlu(titret(pts, Object.assign({}, o, { tohum: (o.tohum || 1) + 31 * t++ })))));
   }
   function polyEl(pts, o) {
     o = o || {};
-    return yolu([titret(yogunlastir(pts, o.adim || 2), o)]);
+    return yolu([yonlu(titret(yogunlastir(pts, o.adim || 2), o))]);
   }
   const dikYol = (x1, y1, x2, y2) => S.yol(dikd(x1, y1, x2, y2), true);
 
@@ -290,7 +296,6 @@
 
   // ------------------------------------------------------------ kâğıtlar
   const KAGIT = {};
-  const t0 = performance.now();
   // gök: tek büyük kâğıt; kobalt-seruleum boya, güneşin çevresinde eş merkezli tarak halkaları
   KAGIT.gok = kagit(1024, 1024, 11, (g, r) => {
     const lg = g.createLinearGradient(0, 0, 160, 820);
@@ -312,7 +317,7 @@
       const yakin = clamp(1 - d / 820, 0, 1);
       const renk = yakin > 0.6 ? sec(r, ['#BFE2EE', '#A7D6EA', '#D3ECF3', '#94CAE4']) : yakin > 0.3 ? sec(r, ['#6AAADB', '#82BBE2', '#5598D2', '#9CCBE6']) : sec(r, ['#3A78BF', '#4C8ACA', '#3069B0', '#5B9AD3', '#6AA7DA']);
       const teg = Math.atan2(y - 140, x - 880) + Math.PI / 2;
-      firca(g, r, x, y, teg + (r() - 0.5) * 0.15, 90 + r() * 140, 12 + r() * 16, renk, 0.17, { bukum: 0.06 });
+      firca(g, r, x, y, teg + (r() - 0.5) * 0.15, 90 + r() * 140, 12 + r() * 16, renk, 0.12, { bukum: 0.06 });
     }
     // tarak halkaları: güneşin çevresinde düzenli aralıklı, açık alt boyayı açan eş merkezli izler
     let Rr = 100;
@@ -363,6 +368,13 @@
     for (let i = 0; i < 900; i++) benek(g, r, r() * 1024, r() * 512, 9, 16, sec(r, ['#D49A60', '#F4E2BE', '#E2A589', '#C98C55']), 0.42, 1.1);
     lif(g, r, 1024, 512, 4000, 0.05);
   });
+  KAGIT.ufuk2 = kagit(1024, 512, 41, (g, r) => {
+    g.fillStyle = '#CFDDB9';
+    g.fillRect(0, 0, 1024, 512);
+    for (let i = 0; i < 700; i++) firca(g, r, r() * 1024, r() * 512, (r() - 0.5) * 0.1, 80 + r() * 120, 8 + r() * 12, sec(r, ['#DCE6C6', '#BCCFA3', '#E6ECD2', '#C5D6AC']), 0.4, { bukum: 0.05 });
+    for (let i = 0; i < 500; i++) benek(g, r, r() * 1024, r() * 512, 8, 12, sec(r, ['#AFC48F', '#EEF2DC']), 0.35, 0.9);
+    lif(g, r, 1024, 512, 3000, 0.05);
+  });
   KAGIT.kum2 = kagit(1024, 600, 40, (g, r) => {
     g.fillStyle = '#E7AE7E';
     g.fillRect(0, 0, 1024, 600);
@@ -410,7 +422,6 @@
   KAGIT.halka = boyaliKagit(38, { taban: '#F4BACA', renkler: ['#F8CED9', '#EDA5B7', '#FBDCE3'], darbe: 220, L: 20, gen: 6, sapma: 3, alfa: 0.5 });
   const DESEN = {};
   for (const [ad, c] of Object.entries(KAGIT)) DESEN[ad] = Array.isArray(c) ? c.map((x) => ana.createPattern(x, 'repeat')) : ana.createPattern(c, 'repeat');
-  console.log('kagitlar', Math.round(performance.now() - t0), 'ms');
 
   // ------------------------------------------------------------ yapıştırma
   /** Bir parçayı kâğıt deseniyle doldurup ince gölgesiyle yapıştırır. */
@@ -463,6 +474,10 @@
   for (let x = -4; x <= 1028; x += 6) ufk.push([x, 548 - 26 * Math.sin(x / 210 + 0.9) - 9 * Math.sin(x / 77 + 2)]);
   ufk.push([1028, 900], [-4, 900]);
   yapistir(kesP(ufk, { genlik: 0.6, dalga: 70 }), DESEN.ufuk, { ox: 0, oy: 470, gb: 7, ga: 0.24, gx: -1, gy: -2.5 });
+  const ufk2 = [];
+  for (let x = -4; x <= 1028; x += 6) ufk2.push([x, 664 - 14 * Math.sin(x / 150 + 2.6) - 6 * Math.sin(x / 59 + 1)]);
+  ufk2.push([1028, 900], [-4, 900]);
+  yapistir(kesP(ufk2, { genlik: 0.6, dalga: 70 }), DESEN.ufuk2, { ox: 0, oy: 400, gb: 7, ga: 0.24, gx: -1, gy: -2.5 });
 
   // ------------------------------------------------------------ 2. bulutlar (arka mavi-lila + ön beyaz kâğıt)
   function bulutNoktalari(cx, cy, s, tepeler) {
@@ -699,7 +714,6 @@
   ana.fillStyle = isik;
   ana.fillRect(0, 0, 1024, 1024);
   ana.restore();
-  console.log('toplam', Math.round(performance.now() - t0), 'ms');
 
   S.hazir();
 

@@ -1,0 +1,43 @@
+{
+  "kod": "S-187",
+  "no": 187,
+  "ad": "Nihonga",
+  "ad_en": "Nihonga Mineral Painting",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Taneli, ışıkta parıldayan mineral boyalar, mat gofun beyazı, yumuşak geçişler ve altın varak bulutlar.",
+  "tanim": "Hayalî bir ressamın taneli mineral boya eli. Aletleri: ahşap panele gerilmiş kalın washi, hayvan tutkalı (nikawa), tane boyuna göre ayrılmış ezme mineral boyalar (iwa-enogu), yassı yumuşak fırçalar ve altın varak, toz ve pullar. Paleti: soluk azurit gök, fildişi ufuk, rokushō malakit, byakuroku açık yeşil, aşı boyası toprak, istiridye kabuğu beyazı (gofun) ve altın. Renk ince katlarla ve kenarları yumuşatılarak (bokashi) kurulur; koyu tonlara iri taneli boya sürüldüğü için tane orada irileşir, kristaller ışıkta tek tek parlar. Çizgi sönük ve yumuşaktır: soluk mürekkep biçimi kesmeden sezdirir. Kamelyalar kalın, mat, hafif kabarık gofunla boyanır, ercik halkaları beyaz iplikli altın başlardır. Bitirirken gökte el ile kesilmiş altın varak bulutlar serilir, kenarlarına altın tozu (sunago) elenir, kesik varak pulları (kirihaku) ve ince varak şeritleri (noge) serpilir.",
+  "koken": "20. yüzyıl Japon nihonga resmine (mineral pigment, gofun, nikawa tutkalı, yumuşak geçişli bokashi boyama) ve Japon altın süsleme tekniklerine (kinpaku varak, sunago altın tozu, kirihaku pullar, noge şeritler) dayanır. Hiçbir gerçek ressam taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Gökte, kubbede ve yapraklarda görünür mineral tanesi; koyu yeşillerde iri tane ve yer yer ışıkta parlayan kristaller",
+    "Soluk azurit gökte el ile kesilmiş, ince dikişli, dilimli altın varak bulutlar",
+    "Bulutların çevresine elenmiş altın tozu, kesik varak pulları ve ince varak şeritleri",
+    "Kalın, mat gofun beyazıyla boyanmış kamelyalar; beyaz iplikli altın ercik halkaları ve hafif kabarıklık gölgesi",
+    "Sönük, yumuşak mürekkep çizgileri ve kenarı yumuşatılmış renk geçişleri",
+    "Gofun beyazı disk güneş ve çevresinde altın tozu halesi"
+  ],
+  "palet": [
+    "#9DBDD3",
+    "#EDE8D9",
+    "#8FBEA4",
+    "#5B997F",
+    "#396B57",
+    "#D4AF55",
+    "#FBFAF4",
+    "#E2CCA2"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Gök ve yer çok duraklı degradelerle, bitki diplerindeki malakit bokashi bulanık elipslerle boyanır. Altın bulutlar elips öbeklerinden kurulur: bulanık geniş maske altın tozu yoğunluğunu verir (yoğunluğa göre kabul edilen 110 bin küçük döndürülmüş dörtgen), keskin çekirdek maskesi ise varakDokusu ile üretilen kare varak dokusunu (yaprak başına ton, bindirme dikişleri, perdah gürültüsü) 'destination-in' ile keser; maske kenarında pullar ve ince şeritler serpilir. Mimari ve bitkiler degradelerle, kubbe piksel başına ışık ve hafif dilim gölgesiyle boyanır; çizgiler geniş-soluk ve ince-orta iki şerit olarak 'yumuşak mürekkep' etkisiyle çizilir. Kamelyalar iki halka yuvarlak uçlu taç yaprağından, gofun dolgusu ve sola-aşağı kaymış ince gölgeyle çizilir. 1024'e indirildikten sonra 320 bin rastgele boyutlu tane diski bir tane haritasına (parlaklık ve ayrıca renk sapması) basılır; tane genliği koyu ve doygun piksellerde artar, seyrek pikseller kristal parıltısı olarak açılır, altın pullarına yumuşak ışık noktaları konur.",
+  "etiketler": [
+    "nihonga",
+    "mineral boya",
+    "gofun",
+    "altın varak",
+    "sunago",
+    "bokashi",
+    "kamelya",
+    "taneli doku",
+    "japon",
+    "uzak doğu",
+    "ressamın eli"
+  ]
+}

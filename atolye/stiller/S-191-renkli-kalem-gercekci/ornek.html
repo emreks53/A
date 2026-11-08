@@ -246,8 +246,8 @@
       // taban sırası
       const n1 = 6 + Math.floor(r() * 3);
       for (let i = 0; i < n1; i++) {
-        const t = i / (n1 - 1) - 0.5, rr = (17 + 8 * r()) * bs * (1 - Math.abs(t) * 0.5);
-        kabarcik(bx + t * 200 * bs + (r() - 0.5) * 14 * bs, taban - rr * 0.65, rr, taban);
+        const t = i / (n1 - 1) - 0.5, rr = (18 + 8 * r()) * bs * (1 - Math.abs(t) * 0.3);
+        kabarcik(bx + t * 175 * bs + (r() - 0.5) * 10 * bs, taban - rr * 0.65, rr, taban);
       }
       // orta kat
       const n2 = 3 + Math.floor(r() * 2);
@@ -319,6 +319,11 @@
             const parilti = Math.exp(-(d * d) / (2 * P.gunesR * P.gunesR)) * P.gunesG;
             const [sr, sg, sb] = P.gunes;
             r0 += (sr - r0) * parilti; g0 += (sg - g0) * parilti; b0 += (sb - b0) * parilti;
+            if (P.gunesIc) {
+              const pi = Math.exp(-(d * d) / (2 * P.gunesIcR * P.gunesIcR)) * P.gunesIcG;
+              const [ir, ig, ib] = P.gunesIc;
+              r0 += (ir - r0) * pi; g0 += (ig - g0) * pi; b0 += (ib - b0) * pi;
+            }
             if (P.gunesDisk) { const k = sstep(P.gunesDisk + 1.5, P.gunesDisk - 1.5, d); r0 += (sr - r0) * k; g0 += (sg - g0) * k; b0 += (sb - b0) * k; }
             // bulut
             const bw = P.bulutDalga || 1;
@@ -336,11 +341,36 @@
               lt = 0.75 + 0.25 * isik;
             } else lt = 0.9;
             cr = r0; cg = g0; cb = b0;
+            if (o.bulutOut) o.bulutOut[i] = yog;
             const ag = o.gokAci === undefined ? 0.62 : o.gokAci, ca = Math.cos(ag), sa = Math.sin(ag);
             fu = -px * sa + py * ca; fv = px * ca + py * sa;
             break;
           }
           case T_ZEMIN: {
+            if (P.mermer) {
+              // perspektifte mermer avlu: göz hizası y=600
+              const dd = Math.max(1, y - 600);
+              const xw = ((x - 512) / dd) * 3.3, zw = 1000 / dd;
+              const ti = Math.floor(xw), tj = Math.floor(zw), fx = xw - ti, fz = zw - tj;
+              const gen = 0.022 * (dd / 300) + 0.012;
+              const derzX = Math.min(fx, 1 - fx) / (dd / 300) * 90, derzZ = Math.min(fz, 1 - fz) / (dd / 300) * 90;
+              const derzV = Math.min(derzX, derzZ * 0.9);
+              let mv = 0.84 + (h2(ti, tj, 61) - 0.5) * 0.08;
+              const dmr = Math.abs(Math.sin((xw * 2.1 + zw * 1.3 + fbm(nz, xw * 1.7, zw * 1.7, 3) * 3.5) * Math.PI));
+              mv -= 0.07 * (1 - sstep(0.0, 0.07, dmr));
+              mv += 0.05 * sstep(820, 1000, y);
+              if (derzV < 1.4) mv -= 0.22 * (1 - derzV / 1.4);
+              if (y < 808 && x > 262 && x < 826) mv -= 0.2 * (1 - (y - 800) / 8) * (x < 300 ? sstep(262, 270, x) * sstep(338, 330, x) : 1);
+              if (GOL) mv -= GOL[clamp((y + 0.5) | 0, 0, 1023) * 1024 + clamp((x + 0.5) | 0, 0, 1023)] * P.zeminGolge;
+              // uzakta gökyüzü yansıması
+              rmp(P.mermer, clamp(mv, 0, 1));
+              const yk = (1 - sstep(800, 900, y)) * 0.12;
+              const [g0, g1, g2] = P.mermerGok;
+              cr += (g0 - cr) * yk; cg += (g1 - cg) * yk; cb += (g2 - cb) * yk;
+              lt = mv; fu = xw * 60 * K; fv = zw * 60 * K;
+              void gen;
+              break;
+            }
             const t = (y - 800) / 224;
             let zv = t + (fbm(nz, x / 9, y / 4, 2) - 0.5) * 0.25 + (fbm(nz2, x / 60, y / 14, 2) - 0.5) * 0.3;
             if (P.cakil) {
@@ -394,6 +424,10 @@
             if (el.kat === 1 && y < q.y1 + 9 && y >= q.y1 + 3.5) val *= 0.86 + 0.14 * sstep(q.y1 + 3.5, q.y1 + 9, y);
             val = clamp(val, 0, 1);
             rmp(P.kasnak, val);
+            if (P.kasParlak) {
+              const hn = Math.hypot(Hx, Hz), sp = Math.pow(Math.max(0, (Math.sin(phi) * Hx + Math.cos(phi) * Hz) / hn), 60) * P.kasParlak;
+              const [a0, a1, a2] = P.parlak; cr += (a0 - cr) * sp; cg += (a1 - cg) * sp; cb += (a2 - cb) * sp;
+            }
             lt = val; fu = phi * Rr * K; fv = py;
             break;
           }
@@ -733,21 +767,46 @@
       const seg = [];
       for (let i = 0; i < n; i++) if (cum[i] >= s0 - 2 && cum[i] <= s1 + 2) seg.push(pts[i]);
       if (seg.length > 1) kalemCizgi(c, seg, w, renk, alfa * (0.85 + 0.15 * rnd()), rnd, o);
+      if (s1 >= T - 0.01) break;
       s0 = s1 - 3 - rnd() * 3;
     }
   }
-  const t0 = performance.now();
+  // Bir kontur nokta dizisini, öğenin kimlik haritasında gerçekten görünen parçalarına böler.
+  // ids: kabul edilen kimlikler kümesi; yar: noktanın çevresinde bakılan yarıçap (sahne birimi).
+  function gorunur(H, pts, ids, yar) {
+    yar = yar === undefined ? 1.2 : yar;
+    const out = []; let cur = [];
+    const r = Math.max(1, Math.round(yar * K));
+    for (const p of pts) {
+      const x = Math.round(p[0] * K), y = Math.round(p[1] * K);
+      let ok = false;
+      for (let dy = -r; dy <= r && !ok; dy += r) for (let dx = -r; dx <= r && !ok; dx += r) {
+        const xx = clamp(x + dx, 0, WW - 1), yy = clamp(y + dy, 0, WW - 1);
+        if (ids.has(H.ID[yy * WW + xx])) ok = true;
+      }
+      if (ok) cur.push(p); else { if (cur.length > 2) out.push(cur); cur = []; }
+    }
+    if (cur.length > 2) out.push(cur);
+    return out;
+  }
+  // tip ve isteğe bağlı süzgeçle kimlik kümesi
+  function kimlikler(H, tipler, suz) {
+    const s = new Set();
+    H.EL.forEach((e, i) => { if (e && tipler.includes(e.tip) && (!suz || suz(e))) s.add(i); });
+    return s;
+  }
   const H = kimlikHaritasi();
   const IDW = titrekKimlik(H, 0.3, 40, 5);
   const P = {
-    gok: rampa([[0, '#5C9AD5'], [0.4, '#8DBCE6'], [0.75, '#C6DDF0'], [1, '#F2EEE2']]),
+    gok: rampa([[0, '#3D85D0'], [0.38, '#74AEE2'], [0.72, '#B9D8F0'], [1, '#EEF1EA']]),
     gunes: hex('#FFF9E8'), gunesR: 150, gunesG: 0.9, gunesDisk: 0,
     bulut: rampa([[0, '#98A7C6'], [0.4, '#C6D1E4'], [0.7, '#EEF2F8'], [1, '#FFFFFF']]), bulutOpak: 0.97, bulutEsik: 0.3, bulutYumusak: 0.16,
-    zemin: rampa([[0, '#EADDBF'], [0.5, '#DFCDA8'], [1, '#CDB892']]), cakil: 0.05,
+    zemin: rampa([[0, '#EADDBF'], [0.5, '#DFCDA8'], [1, '#CDB892']]),
+    mermer: rampa([[0, '#8E8C8E'], [0.5, '#C9C6C4'], [0.8, '#EDEAE4'], [1, '#FFFDF9']]), mermerGok: hex('#B9D3EC'),
     kubbe: rampa([[0, '#0C361C'], [0.28, '#1A6230'], [0.55, '#2C8A43'], [0.8, '#56B464'], [1, '#A6DC98']]),
     parlak: hex('#F1F9E2'), parlakUs: 34, parlakGuc: 0.55, kubbeAmb: 0.06, kubbeDif: 0.82, kubbeGok: 0.16,
     dilimBombe: 0.13, kaburgaGen: 1.9,
-    kasnak: rampa([[0, '#0F3B1F'], [0.35, '#1E6E36'], [0.65, '#36994D'], [0.88, '#5DB86A'], [1, '#93D58D']]), kasAmb: 0.14, kasDif: 0.82,
+    kasnak: rampa([[0, '#0F3B1F'], [0.35, '#1E6E36'], [0.65, '#36994D'], [0.88, '#5DB86A'], [1, '#93D58D']]), kasAmb: 0.12, kasDif: 0.86, kasParlak: 0.45,
     pencere: rampa([[0, '#081F10'], [0.4, '#143A20'], [1, '#4C8A5A']]),
     tas: rampa([[0, '#8C7F6C'], [0.38, '#C4B79E'], [0.68, '#E6DCC8'], [0.88, '#F6F1E5'], [1, '#FFFDF7']]),
     tasAmb: 0.3, tasDif: 0.68, derz: 0.025, cerceve: true, zeminGolge: 0.55,
@@ -765,10 +824,8 @@
     cobek: rampa([[0, '#857518'], [0.5, '#C7B338'], [1, '#EFE68E']]),
     erkek: rampa([[0, '#A2601A'], [0.6, '#E0A42E'], [1, '#F9DC7E']]),
   };
-  const S = golgele(H, IDW, P, { gokAci: 0.55 });
-  const t1 = performance.now();
+  const S = golgele(H, IDW, P, { gokAci: 0.55, bulut: bulutAlani(11, [[180, 245, 1.05], [520, 140, 0.85], [775, 320, 1.1], [945, 455, 0.7], [70, 455, 0.65]]) });
   const D = kagitDisi(191, { ince: 1.5, orta: 3.4, iri: 9, kontrast: 2.0 });
-  const t2 = performance.now();
   // ---------------------------------------------------------------- kalem katları
   // Her piksel için hedef renk (S.R/G/B) üst üste 3 kat taramayla örtülür. Örtü oranı (Ct) açık
   // alanlarda düşük (kâğıt dişi görünür), koyu alanlarda cilayla tam. Vuruş dokusu örtüyü
@@ -799,9 +856,7 @@
     OG[i] = (kagit[1] + (tg - kagit[1]) * C) * ust;
     OB[i] = (kagit[2] + (tb - kagit[2]) * C) * ust;
   }
-  const t3 = performance.now();
   bas(OR, OG, OB);
-  console.warn(`süre: sahne ${(t1 - t0) | 0} diş ${(t2 - t1) | 0} kalem ${(t3 - t2) | 0} toplam ${(performance.now() - t0) | 0}`);
   } finally {
     SAHNE.hazir();
   }

@@ -1,0 +1,40 @@
+{
+  "kod": "S-182",
+  "no": 182,
+  "ad": "Guaj Doğa Levhası",
+  "ad_en": "Gouache Natural-History Plate",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Soluk ılık zemin üstünde kontursuz, mat, örtücü guaj; ince fırça taramalarıyla yumuşak modelaj ve tek tek işlenmiş taş derzleri, damarlar ve ercikler: sakin bir doğa tarihi levhası.",
+  "tanim": "Hayalî bir doğa tarihi levha ressamının eli. Aletleri örtücü guaj ve en ince samur fırçalardır; zemini soluk, ılık devetüyü bir kâğıttır, göğü yukarıda çok açık mavimsi bir tonla başlayıp ufka doğru bu ılık zemine karışır. Hiç kontur çizmez: biçimleri guajın kendi ton farklarıyla, temiz ve sakin kenarlarla ayırır. Önce her biçimi yumuşak bir ışık geçişiyle düz örter, sonra form yönünde (kubbede kaburga boyunca, taşta dikey, yaprakta damardan kenara) binlerce kısa, ince fırça taramasıyla modelajı kurar. Ayrıntıyı tek tek işler: kubbe kaburgalarına bir ince koyu, bir ince açık çizgiyle sırt verir; kaidenin her taş bloğunu ayrı tonlar, açık derzin altına ince bir gölge çizgisi çeker; minarede sıra derzleri, çıkmalarda yivler ve tek tek modellenmiş korkuluk babaları vardır. Yapraklarda orta damar ve kıvrılan yan damarlar, taç yapraklarda ince ışınsal damarlar ve taç yapraklar arasında yumuşak soğuk gölgeler, göbekte tek tek saplı ve başçıklı ercikler bulunur. Son olarak kum yere ince çakıllar ve ot telleri ekler, levhayı ince sepya bir çift cetvelle çerçeveler.",
+  "koken": "18.–19. yüzyıl doğa tarihi ve botanik levha ressamlığına, örtücü guaj (bodycolour) ile ince fırça taramasıyla (hatching) yapılan modelaj geleneğine ve levhaların ince cetvel çerçevelerine dayanır. Hiçbir gerçek sanatçı taklit edilmez; bu, atölyenin tanımladığı hayalî bir ressamın elidir: soluk ılık zemin + kontursuz mat guaj + form yönünde ince tarama + tek tek işlenmiş ayrıntı.",
+  "ayirt_edici": [
+    "Hiç kontur yok: biçimler örtücü guajın ton farklarıyla, temiz ve sakin kenarlarla ayrılıyor",
+    "Form yönünde ince fırça taramalarıyla kurulmuş yumuşak modelaj; kubbede kaburga boyunca, taşta dikey",
+    "Kubbe kaburgalarında ince koyu ve açık çizgilerle sırt kabartması, hafif bombeli dilimler",
+    "Kesme taş kaide: ayrı tonlanmış bloklar, açık derz ve altında koyu gölge çizgisi; minarede sıra derzleri, yivli çıkmalar, tek tek modellenmiş korkuluk babaları",
+    "Botanik titizlikte çiçekler: ışınsal taç yaprak damarları, taç yapraklar arası soğuk gölgeler, tek tek saplı ve başçıklı ercikler; yan damarlı yapraklar",
+    "Mavimsi tepeden ılık devetüyüne geçen soluk levha zemini, ince çakıllı kum yer ve ince sepya çift cetvel çerçeve"
+  ],
+  "palet": [
+    "#D3E4EB",
+    "#F1E4CA",
+    "#337E58",
+    "#184A35",
+    "#EADFC8",
+    "#B9A889",
+    "#738F57",
+    "#DDB453"
+  ],
+  "kodla_cizim": "Tek canvas, 2× iç çözünürlük (2048 px), dış kaynak yok. Kâğıt tanesi dizisi ve ılık kâğıt tuvali üretilir. Her biçim için örtücü guaj işlevi piksel başına renk verir: renk, SAHNE geometrisinden hesaplanan ışık değerinin (kubbede profil + boylamdan Lambert ve dilim fazı, silindirlerde yatay ışık, yaprakta damara göre taraf) renk rampasından okunmasıyla bulunur; üstüne form yönünde anizotrop gürültüyle fırça izi ve kâğıt dişi eklenir. Ardından biçime kırpılmış binlerce kısa, ince, yarı saydam eğri çizgi o noktanın rengini hafif oynatarak form yönünde atılır (ince fırça taraması). Ayrıntılar değişken kalınlıklı ince çizgilerle çizilir: kaburga sırtları, taş derzleri ve gölge çizgileri, çıkma yivleri, yaprak damarları, taç yaprak damarları, ercik sapları; ercik başçıkları üç katlı elipslerdir. Taç yapraklar arasındaki yumuşak gölgeler ve bina gölgesi kutu boyutunda geçici tuvalde bulanıklaştırılıp bindirilir; bulutlar bulanık maskeli örtücü beyazdır. Çerçeve ince sepya çift cetveldir.",
+  "etiketler": [
+    "guaj",
+    "doğa tarihi",
+    "botanik levha",
+    "ince fırça",
+    "modelaj",
+    "mat",
+    "titiz",
+    "kontursuz"
+  ]
+}

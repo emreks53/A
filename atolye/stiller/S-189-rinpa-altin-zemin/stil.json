@@ -1,0 +1,43 @@
+{
+  "kod": "S-189",
+  "no": 189,
+  "ad": "Rinpa Altın Zemin",
+  "ad_en": "Rinpa Gold Ground",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Kare altın varak zemin üstünde kontursuz iri malakit ve azurit biçimler, tarashikomi yapraklar ve süslemeci çiçekler.",
+  "tanim": "Hayalî bir Rinpa ressamının eli. Aletleri: kâğıda sıra sıra serilmiş kare altın varak, gümüş varak, hayvan tutkalıyla bağlanmış kalın gövdeli mineral boyalar ve geniş yumuşak fırçalar. Paleti: altın, gümüş, malakit yeşili, azurit mavisi, gofun beyazı, soluk yeşil toprak. Biçimler kontursuz (mokkotsu), iri ve sadedir: kubbe tek parça malakit yüzey, kaburgalar ince koyu-açık çift çizgi; pencereler ve zikzak bant azurit vurgusu. Yapraklarda, süsen kılıçlarında ve toprak tümseğinde ıslak boyanın içine koyu boya damlatılır (tarashikomi): boya göllenir, kenarında ince koyu bir çizgi bırakır, biçimin kenarına toplanır. Çiçekler süslemecidir: beş tam yuvarlak taç yapraklı gofun beyazı erik çiçekleri, beyaz-sarı işaretli azurit süsenler. Gök yerine boş altın bırakılır, güneş gümüş varak bir disktir.",
+  "koken": "17-18. yüzyıl Japon Rinpa okulunun altın zeminli paravan ve panel resimlerine, tarashikomi tekniğine ve süslemeci çiçek biçimlerine (yuvarlak erik çiçeği, süsen) dayanır. Hiçbir ustanın eseri kopyalanmaz: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Bütün zemini kaplayan, ince dikişleri seçilen kare altın varak ve sağ üstte parlayan perdah ışığı",
+    "Gümüş varak disk güneş",
+    "Kontursuz, iri, düz malakit kubbe ve kasnak; azurit mavisi pencereler ve zikzak bant",
+    "Yapraklarda, süsen kılıçlarında ve tümseğin üst kenarında göllenip kenarı koyulaşan tarashikomi lekeleri",
+    "Beş tam yuvarlak taç yapraklı gofun beyazı erik çiçekleri ve ince altın ercikler",
+    "Yanlarda beyaz-sarı işaretli azurit mavisi süsen kümeleri"
+  ],
+  "palet": [
+    "#E0C375",
+    "#F1D990",
+    "#D3D7DA",
+    "#48A371",
+    "#2F8058",
+    "#2A5191",
+    "#FAF7EE",
+    "#B4CC94"
+  ],
+  "kodla_cizim": "Canvas 2048 px. Zemin varakDokusu ile piksel başına üretilir: 78 birimlik kare yapraklar, satır başına küçük kayma, yaprak başına hafif ton farkı, sol-üst kenarlarda koyu bindirme dikişi ve yanında açık çizgi, düşük frekanslı perdah gürültüsü, yatay perdah izleri ve sağ üstte Gauss biçimli parlama; güneş aynı işlevle gümüş renklerde üretilip daireyle kırpılır. Yapı biçimleri kenarı hafif oynatılmış (titrekYol) düz renk ve hafif degradelerle, kontursuz basılır. Tarashikomi her biçimde ayrı çizilir: düz renk dolgusu, biçimin içine kırpılmış kalın yarı saydam kenar çizgisi (boyanın kenara toplanması) ve gürültüyle bozulmuş daire 'göller' (merkezden kenara koyulaşan radyal degrade + ince koyu kenar çizgisi); tümsekte göller yatay olarak uzatılır. Süsen kılıçları gövde boyunca daralan çokgenler, çiçekler üç dik ve üç sarkık taç yaprağı (kübik eğri) olarak; erik çiçekleri beş tam daire, bindirme yerlerinde ince radyal gölgeyle çizilir. Sonda doygun piksellerde ince mineral tanesi eklenir.",
+  "etiketler": [
+    "rinpa",
+    "altın varak",
+    "gümüş varak",
+    "tarashikomi",
+    "mokkotsu",
+    "malakit",
+    "azurit",
+    "süsen",
+    "erik çiçeği",
+    "japon",
+    "ressamın eli"
+  ]
+}

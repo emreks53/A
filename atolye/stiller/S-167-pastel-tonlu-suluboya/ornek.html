@@ -106,9 +106,13 @@
       if (k) mx.clearRect(k[0], k[1], k[2] - k[0], k[3] - k[1]); else mx.clearRect(0, 0, W, W);
       mx.fillStyle = '#fff'; mx.strokeStyle = '#fff';
       mx.lineCap = 'round'; mx.lineJoin = 'round';
-      if (k) { mx.save(); mx.beginPath(); mx.rect(k[0], k[1], k[2] - k[0], k[3] - k[1]); mx.clip(); }
+      mx.save();
+      if (k) { mx.beginPath(); mx.rect(k[0], k[1], k[2] - k[0], k[3] - k[1]); mx.clip(); }
       ciz(mx);
-      if (k) mx.restore();
+      mx.restore();
+      mx.setTransform(1, 0, 0, 1, 0, 0);
+      mx.globalCompositeOperation = 'source-over';
+      mx.globalAlpha = 1;
       const a = new Float32Array(N);
       if (k) {
         const w = k[2] - k[0], h = k[3] - k[1];
@@ -154,6 +158,8 @@
     const kesis = (m1, m2) => islem(m1, m2, (p, q) => p * q, 'kesis');
     const birles = (m1, m2) => islem(m1, m2, (p, q) => p + q - p * q);
     function mBulanik(m, r) {
+      r = Math.max(1, Math.round(r));
+      if (m.bos) return m;
       const x0 = Math.max(0, m.x0 - 2 * r - 2), y0 = Math.max(0, m.y0 - 2 * r - 2), x1 = Math.min(W, m.x1 + 2 * r + 2), y1 = Math.min(W, m.y1 + 2 * r + 2);
       const w = x1 - x0, h = y1 - y0, L = new Float32Array(w * h);
       for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) L[(y - y0) * w + x - x0] = m.a[y * W + x];
@@ -230,6 +236,7 @@
       const T = (typeof renk === 'string' ? hex(renk) : renk).map((c) => c / 255);
       const kap = o.kap == null ? 0.95 : o.kap, kuru = o.kuru || 0, kuruY = o.kuruY || 0.08, kalin = o.kalin == null ? 0.5 : o.kalin;
       const titre = o.titre || 0, yum = o.yumusak || 0, grad = o.grad, koru = o.koru ? o.koru.a : null, akis = o.akis == null ? 0.1 : o.akis;
+      const kirik = o.kirik || 0;
       const pad = Math.ceil(titre + yum * 2 + 3);
       const x0 = Math.max(0, m.x0 - pad), y0 = Math.max(0, m.y0 - pad), x1 = Math.min(W, m.x1 + pad), y1 = Math.min(W, m.y1 + pad);
       const w = x1 - x0, h = y1 - y0;
@@ -246,6 +253,7 @@
         let a = L[j];
         if (a <= 0.002) continue;
         const i = y * W + x;
+        if (kirik) a = sstep(0.4, 0.6, a + (H[i] - 0.5) * kirik + (AK[(i + 4409) % N] - 0.5) * 0.3 * kirik) * (0.75 + 0.25 * a);
         a *= kap;
         if (akis) a *= 1 + akis * (AK[(i + ks * 977) % N] - 0.5) * 2;
         if (grad) a *= grad(x, y);
@@ -320,7 +328,7 @@
   const tuval = document.getElementById('tuval');
   tuval.width = 1024; tuval.height = 1024;
   const ctx = tuval.getContext('2d');
-  const M = Motor({ kagit: '#fffdfa', tohum: 167, doku: { olcek: 5.5, ince: 2.2, karisim: 0.7, kabartma: 0.085, ton: 0.03 } });
+  const M = Motor({ kagit: '#fffdfa', tohum: 167, doku: { olcek: 5.5, ince: 2.2, karisim: 0.72, kabartma: 0.065, ton: 0.022 } });
   const g = Geo();
   const { W, clamp, sstep } = M;
   const Y = SAHNE.yollar();
@@ -417,24 +425,29 @@
   // bulut biçimleri: kâğıt beyazı bırakılır (tüylü yumuşak kenar)
   const mBulut = M.mBulanik(M.maske((c) => {
     const rb = SAHNE.rng(31);
-    for (const [bx, by, s] of bulutlar) for (let i = 0; i < 10; i++) {
-      const k = (i + 0.5) / 10, x = bx + (k - 0.5) * 170 * s + (rb() - 0.5) * 14 * s, r = (12 + Math.sin(k * Math.PI) * 24 + rb() * 8) * s;
-      c.beginPath(); c.ellipse(x, by + 6 * s - r * 0.45, r * 1.15, r * 0.85, 0, 0, Math.PI * 2); c.fill();
+    for (const [bx, by, s] of bulutlar) {
+      // kabarık tepe: farklı boyda yuvarlaklar; taban: yassı elipsler
+      for (let i = 0; i < 7; i++) {
+        const k = (i + 0.5) / 7, z = Math.sin(k * Math.PI), x = bx + (k - 0.5) * 150 * s + (rb() - 0.5) * 12 * s, r = (13 + z * 26 + rb() * 7) * s;
+        c.beginPath(); c.arc(x, by + 10 * s - r * 0.75 - z * 8 * s * rb(), r, 0, Math.PI * 2); c.fill();
+      }
+      c.beginPath(); c.ellipse(bx, by + 4 * s, 100 * s, 15 * s, 0, 0, Math.PI * 2); c.fill();
     }
-  }), 5);
+  }), 4);
   const korGB = M.islem(korG, mBulut, (p, q) => Math.max(p, q), 'hepsi');
   // ufukta soluk altın-şeftali, ortada allık pembesi, tepede temiz soluk gök mavisi (ıslakta birbirine geçer)
-  M.yika(gok, '#FCE3C6', { yog: 0.8, yumusak: 2, grad: (x, y) => sstep(430, 790, y), koru: korG, kenar: 0.05, gran: 0.04, akis: 0.16, tuy: 0.5 });
-  M.yika(gok, '#F8D3DD', { yog: 0.6, yumusak: 2, grad: (x, y) => Math.exp(-(((y - 470) / 170) ** 2)) * (0.75 + 0.4 * M.fbm(nz, x / 160, y / 120, 3)), koru: M.islem(korG, mBulut, (p, q) => Math.max(p, q * 0.7), 'hepsi'), kenar: 0.05, gran: 0.04, akis: 0.18 });
+  M.yika(gok, '#FCE1C2', { yog: 0.75, yumusak: 2, grad: (x, y) => sstep(470, 795, y), koru: korG, kenar: 0.05, gran: 0.04, akis: 0.16, tuy: 0.5 });
+  M.yika(gok, '#F9D5DF', { yog: 0.45, yumusak: 2, grad: (x, y) => Math.exp(-(((y - 530) / 150) ** 2)) * (0.75 + 0.4 * M.fbm(nz, x / 160, y / 120, 3)), koru: M.islem(korG, mBulut, (p, q) => Math.max(p, q * 0.7), 'hepsi'), kenar: 0.05, gran: 0.04, akis: 0.18 });
   M.yika(M.fMaske([GX - 330, 0, W, GY + 330], (x, y) => vin(x, y) * clamp(1.15 - gUz(x, y) / 290, 0, 1) ** 1.2), '#FBE9B8', { yog: 0.6, yumusak: 3, koru: korGB, kenar: 0, gran: 0.03, akis: 0.1 });
-  const gokMavi = (x, y) => Math.pow(1 - sstep(-30, 500, y), 1.1) * (1 - 0.96 * Math.exp(-((gUz(x, y) / 230) ** 2)));
+  const gokMavi = (x, y) => Math.pow(1 - sstep(-30, 450, y), 1.0) * (1 - 0.96 * Math.exp(-((gUz(x, y) / 230) ** 2)));
   M.yika(gok, '#B9DCF0', { yog: 0.95, yumusak: 2, grad: gokMavi, koru: korGB, kenar: 0.08, kenarR: 5, gran: 0.05, akis: 0.18, tuy: 0.6 });
   // bulutların altında soluk leylak-pembe gölge
   M.yika(M.kesis(mBulut, M.mBulanik(M.maske((c) => {
-    for (const [bx, by, s] of bulutlar) { c.beginPath(); c.ellipse(bx - 6 * s, by + 10 * s, 95 * s, 14 * s, 0, 0, Math.PI * 2); c.fill(); }
-  }), 5)), '#E4D0E6', { yog: 0.8, yumusak: 1, koru: korG, kenar: 0.06, gran: 0.04, grad: vin });
+    const rb = SAHNE.rng(33);
+    for (const [bx, by, s] of bulutlar) { c.beginPath(); c.ellipse(bx - 4 * s, by + 8 * s, 100 * s, 14 * s, 0, 0, Math.PI * 2); c.fill(); for (let i = 0; i < 4; i++) { const x = bx + (rb() - 0.6) * 110 * s; c.beginPath(); c.arc(x, by - 4 * s, (10 + rb() * 10) * s, 0, Math.PI * 2); c.fill(); } }
+  }), 6)), '#E4D0E6', { yog: 0.75, yumusak: 1, koru: korG, kenar: 0.06, gran: 0.04, grad: vin });
   // güneş: yumuşak beyaz çekirdek etrafında soluk altın halka
-  M.yika(M.fMaske([GX - 120, GY - 120, GX + 120, GY + 120], (x, y) => { const d = gUz(x, y); return sstep(78, 40, d) * (1 - sstep(34, 27, d)); }), '#F7DD98', { yog: 0.4, yumusak: 3, kenar: 0.04, gran: 0.02 });
+  M.yika(M.fMaske([GX - 120, GY - 120, GX + 120, GY + 120], (x, y) => { const d = gUz(x, y); return sstep(90, 30, d) * (1 - 0.75 * sstep(26, 12, d)); }), '#F7DD98', { yog: 0.32, yumusak: 3, kenar: 0, gran: 0.02 });
 
   // ------------------------------------------------------------ 2. taş: krem, soluk altın; leylak-pembe gölgeler
   const korB = korOn;
@@ -480,10 +493,10 @@
     KU[i] = enk * isa;
   }
   const kubbeF = (f) => M.fMaske([356, 296, 766, 557], (x, y) => { const i = y * W + x, m = mKubbe.a[i]; return m > 0 ? m * f(KV[i], KU[i], x, y) : 0; });
-  M.yika(kubbeF((v) => 1 - 0.85 * sstep(0.8, 0.97, v)), '#BFE4CB', { yog: 0.95, yumusak: 1.2, koru: korB, kenar: 0.12, gran: 0.06, akis: 0.2 });
-  M.yika(kubbeF((v) => sstep(-0.82, -0.5, -v)), '#86C6A0', { yog: 0.8, yumusak: 3, koru: korB, kenar: 0.08, gran: 0.06, akis: 0.15 });
+  M.yika(kubbeF((v) => 1 - 0.9 * sstep(0.74, 0.93, v)), '#BFE4CB', { yog: 0.95, yumusak: 1.2, koru: korB, kenar: 0.12, gran: 0.06, akis: 0.2 });
+  M.yika(kubbeF((v) => sstep(-0.8, -0.45, -v)), '#86C6A0', { yog: 0.85, yumusak: 3, koru: korB, kenar: 0.08, gran: 0.06, akis: 0.15 });
   M.yika(kubbeF((v) => sstep(-0.45, -0.1, -v)), '#6FAE95', { yog: 0.6, yumusak: 3, koru: korB, kenar: 0.06, gran: 0.06 });
-  M.yika(kubbeF((v) => sstep(-0.1, 0.25, -v) * (1 - sstep(0.35, 0.55, -v) * 0.5)), '#ADA4CF', { yog: 0.5, yumusak: 3, koru: korB, kenar: 0.05, gran: 0.05 });
+  M.yika(kubbeF((v) => sstep(-0.2, 0.2, -v) * (1 - sstep(0.4, 0.6, -v) * 0.45)), '#A9A0CE', { yog: 0.6, yumusak: 3, koru: korB, kenar: 0.05, gran: 0.05 });
   // kaburgalar: yumuşak, biraz koyu nane çizgileri
   M.yika(kubbeF((v, d, x, y) => (y > 306 ? sstep(1.7, 0.6, Math.abs(d + 0.4)) : 0)), '#6EAE90', { yog: 0.5, yumusak: 0.5, koru: korB, kenar: 0, gran: 0.04, grad: (x, y) => 0.6 + 0.6 * (1 - clamp(KV[y * W + x], 0, 1)) });
   M.yika(M.fMaske([356, 540, 766, 557], (x, y) => mKubbe.a[y * W + x] * sstep(542, 555, y)), '#7AB49A', { yog: 0.4, koru: korB, kenar: 0.03 });
@@ -520,7 +533,7 @@
     const mUz = (x, y) => Math.hypot(x - c.x, y - c.y) / r;
     const katSay = 1 + Math.max(...f.yap.map((t) => t.kat));
     const taban = pembe ? '#F7D2D9' : '#F8E3E7';
-    const golgeR = pembe ? '#D6869F' : '#BDA6C6';
+    const golgeR = pembe ? '#D98AA3' : '#D2B9C8';
     const yM = f.yap.map((t) => M.yolMaske(t.d, 0, kt));
     // 1. her yaprak: dipte allık, kenara doğru beyaza açılan yıkama (pembede kenar payı korunur)
     f.yap.forEach((t, ti) => {
@@ -537,12 +550,12 @@
     f.yap.forEach((t, ti) => {
       const arka = M.maske((cx) => { f.yap.forEach((u, ui) => { if (u.kat < t.kat || (u.kat === t.kat && ui === (ti + 1) % f.yap.length && f.yap[(ti + 1) % f.yap.length].kat === t.kat)) cx.fill(P(u.d)); }); }, kt);
       if (arka.bos) return;
-      const kay = M.mBulanik(M.maske((cx) => { cx.translate(-r * 0.05, r * 0.065); cx.scale(1, 1); cx.lineWidth = r * 0.08; cx.fill(P(t.d)); cx.stroke(P(t.d)); }, kt), Math.max(3, r * 0.12));
+      const kay = M.mBulanik(M.maske((cx) => { cx.translate(-r * 0.04, r * 0.05); cx.lineWidth = r * 0.05; cx.fill(P(t.d)); cx.stroke(P(t.d)); }, kt), Math.max(2, r * 0.09));
       const on = yM[ti];
       // öndeki (daha iç) yapraklar da gölgeyi örter
       const ustte = M.maske((cx) => { f.yap.forEach((u, ui) => { if (u.kat > t.kat || ui === ti) cx.fill(P(u.d)); }); }, kt);
       const gol = M.islem(arka, kay, (p, q, i) => p * Math.pow(clamp(q * 1.7, 0, 1), 1.3) * (1 - ustte.a[i]), 'kesis');
-      M.yika(gol, golgeR, { yog: pembe ? 0.95 : 0.9, yumusak: 0.3, kenar: 0.12, kenarR: 2, gran: 0.04 });
+      M.yika(gol, golgeR, { yog: (pembe ? 0.5 : 0.4) * (t.kat ? 1 : 0.75), yumusak: 0.3, kenar: 0.15, kenarR: 2, gran: 0.04 });
     });
     // 3. ince damarlar: büyük çiçeklerin dış yapraklarında dipten açılan soluk çizgiler
     if (r > 40) {
@@ -558,7 +571,7 @@
     }
     // 4. çanak gölgesi: ışıktan uzak yanda (sol alt) yumuşak leylak
     const tum = M.maske((cx) => { for (const t of f.yap) cx.fill(P(t.d)); }, kt);
-    M.yika(M.kesis(tum, M.fMaske(kt, (x, y) => { const px = (x - c.x) / r, py = (y - c.y) / r; return sstep(0.05, -0.75, px * LX + py * LY) * sstep(1.0, 0.5, Math.hypot(px, py)); })), pembe ? '#DFA0B4' : '#D6C6DE', { yog: 0.32, yumusak: 3, kenar: 0.03, gran: 0.04 });
+    M.yika(M.kesis(tum, M.fMaske(kt, (x, y) => { const px = (x - c.x) / r, py = (y - c.y) / r; return sstep(0.05, -0.75, px * LX + py * LY) * sstep(1.0, 0.5, Math.hypot(px, py)); })), pembe ? '#DFA0B4' : '#DCC7D3', { yog: 0.32, yumusak: 3, kenar: 0.03, gran: 0.04 });
     // 5. gülün ortasında sarmal çanak yaprakları
     for (const h of f.hilal) {
       const m = M.maske((cx) => {

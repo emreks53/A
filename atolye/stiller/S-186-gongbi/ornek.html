@@ -305,6 +305,62 @@ function ekranaAktar(calisma) {
   ctx.drawImage(calisma.c, 0, 0, 1024, 1024);
   return ctx;
 }
+
+/**
+ * Altın (ya da gümüş) varak dokusu: kare varak yaprakları sıra sıra, her yaprağın tonu biraz farklı,
+ * bindirme yerlerinde ince koyu/açık dikiş, perdah izi ve ışık parlaması. Tam boy katman döner.
+ *  o: boy (varak kenarı, 1024 biriminde), tohum, koyu/orta/acik/parlak (hex), cesit (ton farkı), isik(x,y) → ek parlaklık
+ */
+function varakDokusu(o) {
+  const L = yeniKatman();
+  const W2 = 1024 * OLCEK;
+  const im = L.x.createImageData(W2, W2);
+  const d = im.data;
+  const tohum = o.tohum || 1;
+  const r = S.rng(tohum);
+  const boy = o.boy * OLCEK;
+  const satirOfs = [];
+  const kay = o.kaydirma != null ? o.kaydirma : 1;
+  for (let j = 0; j < 400; j++) satirOfs.push(r() * boy * kay);
+  const nz = gurultu(tohum + 5);
+  const K = hex(o.koyu || '#A9832F');
+  const M = hex(o.orta || '#D4AF55');
+  const A = hex(o.acik || '#EED48A');
+  const P = hex(o.parlak || '#FBF0C4');
+  const cesit = o.cesit != null ? o.cesit : 0.18;
+  const dikis = 1.3 * OLCEK;
+  const ramp = (v) => (v < 0.45 ? karistir(K, M, v / 0.45) : v < 0.78 ? karistir(M, A, (v - 0.45) / 0.33) : karistir(A, P, Math.min(1, (v - 0.78) / 0.22)));
+  const x0 = o.x0 != null ? o.x0 * OLCEK : 0;
+  const x1 = o.x1 != null ? o.x1 * OLCEK : W2;
+  const y0 = o.y0 != null ? o.y0 * OLCEK : 0;
+  const y1 = o.y1 != null ? o.y1 * OLCEK : W2;
+  for (let y = y0; y < y1; y++) {
+    const j = Math.floor(y / boy);
+    const fy = y - j * boy;
+    const ox = satirOfs[j % 400];
+    for (let x = x0; x < x1; x++) {
+      const xi = x + ox;
+      const i = Math.floor(xi / boy);
+      const fx = xi - i * boy;
+      let v = 0.55 + (karma(i + 500, j + 500, tohum) - 0.5) * cesit * 2;
+      if (o.isik) v += o.isik(x / OLCEK, y / OLCEK);
+      v += 0.09 * (nz.n(x * 0.0035, y * 0.0035) - 0.5) + 0.06 * (nz.n(x * 0.0018 + 30, y * 0.028) - 0.5) + 0.03 * (nz.n(x * 0.02, y * 0.2) - 0.5);
+      v += 0.05 * (fx / boy - 0.5) - 0.03 * (fy / boy - 0.5);
+      const dk = o.dikis != null ? o.dikis : 1;
+      if (fx < dikis || fy < dikis) v -= 0.13 * dk;
+      else if (fx < dikis * 1.9 || fy < dikis * 1.9) v += 0.07 * dk;
+      v += 0.02 * (karma(x, y, tohum + 9) - 0.5);
+      const col = ramp(kenet(v, 0, 1));
+      const k = (y * W2 + x) * 4;
+      d[k] = col[0];
+      d[k + 1] = col[1];
+      d[k + 2] = col[2];
+      d[k + 3] = 255;
+    }
+  }
+  L.x.putImageData(im, 0, 0);
+  return L;
+}
 // ---------------------------------------------------------------- S-186 Gongbi (titiz ipek resmi)
 // Hayalî ressamın eli: ince kurt kılı çizgi fırçası ve sulandırılmış çam isi mürekkebiyle "demir tel" kontur,
 // şaplanmış açık renkli ipek, malakit / azurit / istiridye beyazı / allık / gütta sarısı; her renk ayrı bir
@@ -323,8 +379,8 @@ c.fillRect(0, 0, 1024, 1024);
   const gk = yeniKatman();
   const q = gk.x;
   let g = q.createLinearGradient(0, 0, 0, 760);
-  g.addColorStop(0, 'rgba(112,160,200,0.50)');
-  g.addColorStop(0.42, 'rgba(138,180,212,0.24)');
+  g.addColorStop(0, 'rgba(120,166,196,0.46)');
+  g.addColorStop(0.42, 'rgba(146,184,206,0.22)');
   g.addColorStop(0.8, 'rgba(160,195,215,0.05)');
   g.addColorStop(1, 'rgba(160,195,215,0)');
   q.fillStyle = g;
@@ -731,22 +787,31 @@ for (const t of B.tomurcuklar) {
   c.fillStyle = g;
   c.fill(p);
   c.restore();
-  // çanak yaprakları
-  for (const s of [-0.55, 0, 0.55]) {
-    const a = t.aci + Math.PI + s;
-    const bx = t.x - ca * t.r * 0.55;
-    const by = t.y - sa * t.r * 0.55;
-    const ux = Math.cos(t.aci + s * 0.5);
-    const uy = Math.sin(t.aci + s * 0.5);
-    const tip = [bx + ux * t.r * 0.62, by + uy * t.r * 0.62];
-    const nx = -Math.sin(a) * t.r * 0.22;
-    const ny = Math.cos(a) * t.r * 0.22;
-    const ds = S.yol([[bx + nx, by + ny], tip, [bx - nx, by - ny]], true);
-    c.fillStyle = 'rgba(128,156,92,0.85)';
+  // tomurcuğun dibini saran üç sivri çanak yaprağı ve kısa sap
+  cizgiYol(c, d, { w: 0.75, renk: '#7A5058', titreme: 0.2, frek: 0.06, basinc: 0.3 });
+  const bx = t.x - ca * t.r * 0.82;
+  const by = t.y - sa * t.r * 0.82;
+  for (const s of [0, -0.62, 0.62]) {
+    const a = t.aci + s;
+    const ux = Math.cos(a);
+    const uy = Math.sin(a);
+    const L = t.r * (s ? 0.85 : 0.7);
+    const W = t.r * 0.3;
+    const P = (u, v) => [bx + ux * u - uy * v, by + uy * u + ux * v];
+    const pts = [];
+    for (let k = 0; k <= 10; k++) {
+      const q = k / 10;
+      pts.push(P(L * q, -W * Math.sin(Math.PI * Math.pow(q, 0.7)) * (1 - q * 0.3)));
+    }
+    for (let k = 10; k >= 0; k--) {
+      const q = k / 10;
+      pts.push(P(L * q, W * Math.sin(Math.PI * Math.pow(q, 0.7)) * (1 - q * 0.3) * 0.6));
+    }
+    const ds = S.yol(pts, true);
+    c.fillStyle = 'rgba(122,152,90,0.95)';
     c.fill(new Path2D(ds));
     cizgiYol(c, ds, { w: 0.5, renk: '#2F432C', titreme: 0.1 });
   }
-  cizgiYol(c, d, { w: 0.75, renk: '#7A5058', titreme: 0.2, frek: 0.06, basinc: 0.3 });
 }
 
 function tacYolu(cx, cy, r, a) {

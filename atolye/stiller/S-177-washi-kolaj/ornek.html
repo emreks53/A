@@ -119,15 +119,21 @@
     }
     return p;
   }
+  /** Nokta dizisini hep aynı dönüş yönüne çevirir (nonzero birleşimlerde örtüşen alt yollar delik açmasın). */
+  function yonlu(pts) {
+    let a = 0;
+    for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; a += p[0] * q[1] - q[0] * p[1]; }
+    return a < 0 ? pts.slice().reverse() : pts;
+  }
   /** SVG yolu → el titremeli Path2D */
   function elYolu(d, o) {
     o = o || {};
     let t = 0;
-    return yolu(ornekle(d, o.adim || 2).map((pts) => titret(pts, Object.assign({}, o, { tohum: (o.tohum || 1) + 31 * t++ }))));
+    return yolu(ornekle(d, o.adim || 2).map((pts) => yonlu(titret(pts, Object.assign({}, o, { tohum: (o.tohum || 1) + 31 * t++ })))));
   }
   function polyEl(pts, o) {
     o = o || {};
-    return yolu([titret(yogunlastir(pts, o.adim || 2), o)]);
+    return yolu([yonlu(titret(yogunlastir(pts, o.adim || 2), o))]);
   }
   const dikYol = (x1, y1, x2, y2) => S.yol(dikd(x1, y1, x2, y2), true);
 
@@ -143,7 +149,6 @@
   ana.lineCap = 'round';
   ana.lineJoin = 'round';
   const R = S.rng(1770);
-  const t0 = performance.now();
 
   // ------------------------------------------------------------ washi lif dokusu (döşenen desen)
   function washiDoku(tohum, acik, koyu) {
@@ -218,7 +223,6 @@
     ana.drawImage(BULUT, 0, 0, 1024, 1024);
     ana.restore();
   }
-  console.log('doku', Math.round(performance.now() - t0));
 
   // ------------------------------------------------------------ yırtık washi parçası
   const YIRTIK = { genlik: 1.5, dalga: 17, ince: 0.65, inceDalga: 3.2, adim: 1.2 };
@@ -549,7 +553,6 @@
   ana.fillStyle = bokashiR(GX, GY, 40, 1300, [[0, 'rgba(255,250,235,0.45)'], [0.6, 'rgba(255,250,235,0.05)'], [1, 'rgba(80,60,40,0.12)']]);
   ana.fillRect(0, 0, 1024, 1024);
   ana.restore();
-  console.log('toplam', Math.round(performance.now() - t0));
 
   S.hazir();
 

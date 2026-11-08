@@ -1,0 +1,43 @@
+{
+  "kod": "S-188",
+  "no": 188,
+  "ad": "Shin-hanga Ağaç Baskı",
+  "ad_en": "Shin-hanga Woodblock",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Oyulmuş ince ana kalıp çizgisi, silinerek derecelenen gök, ağaç damarı ve gerçekçi gün ışığı.",
+  "tanim": "Hayalî bir ressam-baskıcının eli. Aletleri: yaban kirazı kalıplar, ince uçlu oyma bıçağı, bambu kılıflı baren, pirinç nişastasıyla karıştırılmış suluboya ve kalın kizuki-hōsho washi. Paleti: çivit-mürekkep ana kalıp, prusya mavisi gök, şeftali ufuk, lavanta gölge, sarı-yeşil ve mavi-yeşil, aşı boyası, altın sarısı. Ana kalıp (sumi-ita) ince ve keskin kenarlıdır; eğrilerde bıçağın küçük köşeleri hissedilir. Her renk ayrı kalıptan basılır: gök kalıbı üstte koyulaşan şeritle (ichimonji bokashi) başlar ve ufukta şeftaliye silinerek derecelenir; bulutlar kâğıt boş bırakılıp altlarından lavanta kalıbıyla modellenir. Işık sağ üstten sıcak gelir; kubbede sarı-yeşil bir parlama, minare ve kaidede lavanta-mavi gölgeler, ufukta lavanta tepeler ve ince bir sis vardır. Bitirirken geniş alanlarda ağaç damarı ve baren lekelenmesi bırakılır, yere susam baskı (goma-zuri) yapılır; ana kalıp renklere göre bir iki piksel kayıktır.",
+  "koken": "20. yüzyıl Japon shin-hanga ('yeni baskı') hareketinin gerçekçi ışıklı, şiirsel manzara baskılarına ve ukiyo-e'den gelen ağaç kalıp baskı tekniklerine (bokashi, ichimonji bokashi, goma-zuri, mokume ağaç damarı, kentō kaydı) dayanır. S-014 Ukiyo-e'nin düz Edo renklerinden farkı ışık, hava perspektifi ve derecelemedir. Hiçbir gerçek sanatçı taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Üstte koyulaşan şeritle başlayıp ufukta şeftaliye silinen bokashi gök",
+    "Gökte ve geniş renk alanlarında dalgalı ağaç damarı çizgileri ve baren lekelenmesi",
+    "İnce, keskin kenarlı, hafif köşeli çivit-mürekkep ana kalıp çizgisi; renk alanlarına göre hafif kayık",
+    "Sağ üstten sıcak ışık: kubbede sarı-yeşil parlama, minare ve kaidede lavanta-mavi gölgeler",
+    "Kâğıt boş bırakılmış, altları ve iç kabarıkları lavanta kalıbıyla modellenmiş bulutlar; ufukta lavanta tepeler ve sis",
+    "Yerde susam baskı (goma-zuri) noktacıkları; lavanta gölgeli beyaz yaban gülleri"
+  ],
+  "palet": [
+    "#4C7AB2",
+    "#A6C8E1",
+    "#F5E2C9",
+    "#B1ACC9",
+    "#377158",
+    "#D1E6A3",
+    "#2B3547",
+    "#E3CBA2"
+  ],
+  "kodla_cizim": "Üç ayrı 2048 px katman: renk kalıpları, ana kalıp (çizgi) ve kâğıt. Renk alanları SAHNE yolları örneklenip kenarı gürültüyle hafifçe oynatılarak (kalıp kenarı) basılır; kâğıt rengi gereken yerlerde 'destination-out' ile renk kalıbı silinir (güneş, bulutlar, beyaz taş, taç yaprakları). Gök çok duraklı degrade + üst şerit, bulutlar elips öbeklerinden düz tabanlı biçim, altlarına doğrusal, iç kabarıklarına hilal biçimli radyal lavanta degradeleri. Kubbe piksel başına küre normali ile sağ üst ışık arasındaki açıdan beş duraklı rampa ve parlama ile boyanır. Ana kalıp çizgileri 2,4 birim adımla örneklenmiş (hafif köşeli) şeritlerdir; önde kalan her biçim arkadaki çizgileri ana kalıptan siler. Baskı geçişinde renk yoğunluğu (kâğıttan sapma) dalgalı yıllık halka fonksiyonuyla ağaç damarı, gürültüyle baren lekesi ve dairesel sürtme izi alacak biçimde değiştirilir; yerde küçük noktalar silinerek goma-zuri yapılır. Ana kalıp (0,9; −0,7) kaydırılarak basılır, sonda ince kâğıt tanesi eklenir.",
+  "etiketler": [
+    "ağaç baskı",
+    "shin-hanga",
+    "bokashi",
+    "ağaç damarı",
+    "baren",
+    "goma-zuri",
+    "gerçekçi ışık",
+    "washi",
+    "japon",
+    "uzak doğu",
+    "ressamın eli"
+  ]
+}

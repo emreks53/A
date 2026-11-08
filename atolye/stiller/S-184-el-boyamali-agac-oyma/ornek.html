@@ -545,8 +545,8 @@
 
   const MUR = '#2A1D15';
   const P = {
-    gok: '#7DB7DE', gok2: '#8FC6E4',
-    yesil: '#58A94E', yesil2: '#86B843', zumrut: '#2F9A62', zumrut2: '#3AA889',
+    gok: '#6DB1E2', gok2: '#86C3E8',
+    yesil: '#55AA4A', yesil2: '#8CBD40', zumrut: '#2C9F58', zumrut2: '#45AE72',
     altin: '#E6B43C', altin2: '#EFC85A', gul: '#E3788A', gul2: '#EC9AA0',
     toprak: '#DDBB72', tas: '#EBD9B4',
   };
@@ -584,8 +584,8 @@
   /** Renk lavisi: çizgiden biraz taşar ve kayar (elle renklendirme). */
   function boya(yol, renk, o) {
     o = Object.assign({}, o);
-    const dx = o.dx === undefined ? (R() - 0.3) * 4 : o.dx, dy = o.dy === undefined ? (R() - 0.3) * 3.4 : o.dy;
-    const tasma = o.tasma === undefined ? 1.6 : o.tasma;
+    const dx = o.dx === undefined ? 2.2 + (R() - 0.5) * 3 : o.dx, dy = o.dy === undefined ? -1.6 + (R() - 0.5) * 3 : o.dy;
+    const tasma = o.tasma === undefined ? 2.4 : o.tasma;
     lavi(C.x, (x) => {
       x.translate(dx, dy);
       if (o.ciz) o.ciz(x); else { x.fill(yol); if (tasma > 0) { x.lineWidth = tasma * 2; x.stroke(yol); } }
@@ -596,15 +596,8 @@
   // ================================================================ gök (boya) ve bulut, güneş (oyma)
   boya(null, P.gok, {
     ciz: (x) => { const g = x.createLinearGradient(0, 0, 0, 600); g.addColorStop(0, '#fff'); g.addColorStop(0.55, 'rgba(255,255,255,0.75)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 1024, 640); },
-    dx: 0, dy: 0, lavi: { alfa: 0.62, kenar: 0, tane: 0.3, dalga: 0.22, dalgaO: 0.005, renk2: P.gok2, karisO: 0.003 },
+    dx: 0, dy: 0, lavi: { alfa: 0.66, kenar: 0, tane: 0.3, dalga: 0.1, dalgaO: 0.005, renk2: P.gok2, karisO: 0.003, f: (x, y) => 0.82 + 0.36 * (nI(x * 0.004, y * 0.045) - 0.5) },
   });
-  // fırça izleri: gökte yatay, üst üste binen birkaç sürüş
-  for (let i = 0; i < 9; i++) {
-    const y = 40 + i * 62 + R() * 20;
-    const a = 0.28 * (1 - y / 640);
-    if (a <= 0.03) continue;
-    boya(null, P.gok, { ciz: (x) => { x.beginPath(); x.moveTo(-20, y); x.bezierCurveTo(300, y - 10 + R() * 20, 700, y + 10 - R() * 20, 1044, y + (R() - 0.5) * 16); x.lineWidth = 40 + R() * 30; x.stroke(); }, dx: 0, dy: 0, lavi: { alfa: a, kenar: 0.9, kenarR: 4, tane: 0.25, dalga: 0.15 } });
-  }
   // güneş
   {
     const gx = 880, gy = 140;
@@ -631,31 +624,38 @@
     boya(null, P.altin, { ciz: (x) => { x.lineWidth = 7; for (const s of isin) { yolCiz(x, s); x.stroke(); } }, kutu: [790, 50, 970, 230], lavi: { alfa: 0.5 } });
     for (const s of isin) oyma([s], 2.6, { kose: false, uc: 7, adim: 2 });
   }
-  // bulutlar: oyulmuş kıvrımlı kontur, içleri kâğıt beyazı, altı hafif mavi
-  const bulutlar = [[170, 250, 1.0], [462, 138, 0.82], [808, 340, 0.92], [950, 488, 0.6], [76, 478, 0.6]];
+  // bulutlar: oyma ustasının kıvrımlı, her yanı tırtıllı bulut kuşağı; alt yarıda yatay taramalar
+  const bulutlar = [[170, 246, 1.0], [462, 136, 0.82], [808, 336, 0.92], [952, 486, 0.58], [74, 476, 0.58]];
   for (const [bx, by, bs] of bulutlar) {
-    const b = bulutDaireleri(bx, by, bs, R, { n: 8, en: 190 });
-    const bb = bulutBicim(b);
-    const top = Math.min(...b.daireler.map((d) => d.y - d.r));
-    const kutu = [bx - 110 * bs, top - 6, bx + 110 * bs, b.taban + 6];
-    const kirpli = new Path2D();
-    kirpli.addPath(bb.dolgu);
-    C.x.save(); C.x.beginPath(); C.x.rect(0, 0, 1024, b.taban); C.x.clip();
-    ort(bb.dolgu, kutu);
-    C.x.restore();
-    boya(null, '#A9CBE6', { ciz: (x) => { x.save(); x.beginPath(); x.rect(0, 0, 1024, b.taban); x.clip(); const g = x.createLinearGradient(0, b.taban, 0, top); g.addColorStop(0, '#fff'); g.addColorStop(0.5, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fill(bb.dolgu); x.restore(); }, kutu, lavi: { alfa: 0.45 } });
-    oyma(bb.parcalar, 2.4, { kose: false, uc: 6, adim: 2.5 });
-    const xs = Math.min(...b.daireler.map((d) => d.x - d.r)), xe = Math.max(...b.daireler.map((d) => d.x + d.r));
-    oyma([[[xs + 4, b.taban], [xe - 4, b.taban]]], 2.2, { kose: false, uc: 10, adim: 4 });
-    // iç kıvrımlar ve tabana paralel kısa taramalar
-    for (const d of b.daireler.slice(-3)) {
-      const yay = [];
-      for (let a = 0.6 * Math.PI; a <= 0.95 * Math.PI; a += 0.05) yay.push([d.x + Math.cos(a) * d.r, d.y + Math.sin(a) * d.r]);
-      oyma([yay], 1.5, { kose: false, uc: 5, adim: 2 });
+    const a0 = 92 * bs, b0 = 22 * bs;
+    const pts = [];
+    const n = 240, tir = 9;
+    for (let i = 0; i < n; i++) {
+      const t = (i / n) * PI2;
+      const bump = Math.pow(Math.abs(Math.sin(t * tir / 2 + 0.3)), 0.6);
+      const ust = Math.sin(t) < 0 ? 1.0 : 0.55;
+      const rx = a0 + bump * 13 * bs * ust, ry = b0 + bump * 13 * bs * ust;
+      pts.push([bx + Math.cos(t) * rx, by + Math.sin(t) * ry * (Math.sin(t) < 0 ? 1.15 : 0.8)]);
     }
+    const yol = p2d(pts, true);
+    const kutu = [bx - a0 - 14, by - b0 * 1.3 - 14, bx + a0 + 14, by + b0 + 14];
+    ort(yol, kutu);
+    boya(yol, '#B9D6EC', { kutu, tasma: 1, lavi: { alfa: 0.35, f: (x, y) => sstep(by - b0 * 0.4, by + b0, y) } });
+    oyma([pts.concat([pts[0]])], 2.6, { kose: false, uc: 2, adim: 2 });
     const tr = [];
-    for (let x = xs + 18; x < xe - 18; x += 9) tr.push([[x, b.taban - 4], [x + 14, b.taban - 4]]);
-    tara(tr.filter((_, i) => i % 2 === 0).map((c) => [c[0], [c[1][0] - 4, c[1][1]]]), 1.0);
+    for (let k = 0; k < 3; k++) {
+      const y = by + 4 * bs + k * 6 * bs;
+      const half = a0 * Math.sqrt(Math.max(0, 1 - Math.pow((y - by) / (b0 * 0.95), 2))) - 10;
+      if (half > 10) tr.push([[bx - half, y], [bx + half, y]]);
+    }
+    tara(tr, 1.3);
+    // üstte iki iç kıvrım
+    for (const sg of [-1, 1]) {
+      const cx = bx + sg * a0 * 0.35, cy = by - b0 * 0.15;
+      const yay = [];
+      for (let t = Math.PI * 1.05; t < Math.PI * 1.75; t += 0.08) yay.push([cx + Math.cos(t) * 14 * bs, cy + Math.sin(t) * 10 * bs]);
+      oyma([yay], 1.5, { kose: false, uc: 4, adim: 2 });
+    }
   }
 
   // ================================================================ yer
@@ -717,7 +717,7 @@
       }
     }
     if (p.ad.startsWith('şerefe')) oyma([[[p.kx1 + 3, p.ky2 - 2.5], [p.kx2 - 3, p.ky2 - 2.5]]], 1.3, { kose: false });
-    oyma(p.d, 2.7);
+    oyma(p.d, 3.3);
   }
   // zikzak bandı
   {
@@ -754,11 +754,11 @@
     const d2 = SAHNE.kemerYolu(w.x, w.y - 6, w.w + 12, w.h + 6);
     oyma(duzlestir(d2, 1).map((p) => p.filter((q) => q[1] < w.y + w.h - 1)), 1.6, { kose: false });
   }
-  oyma(kaideD, 2.9);
+  oyma(kaideD, 3.6);
   const kornD = SAHNE.yol([[KA.kornis.x1, KA.kornis.y1], [KA.kornis.x2, KA.kornis.y1], [KA.kornis.x2, KA.kornis.y2], [KA.kornis.x1, KA.kornis.y2]], true);
   ort(new Path2D(kornD), [290, 692, 830, 704]);
   boya(new Path2D(kornD), P.altin, { kutu: [290, 692, 830, 704], tasma: 0.8, lavi: { alfa: 0.4 } });
-  oyma(kornD, 2.6);
+  oyma(kornD, 3.2);
 
   // ================================================================ kasnak
   for (let k = 1; k >= 0; k--) {
@@ -767,7 +767,7 @@
     const kutu = [q.x1, q.y1, q.x2, q.y2];
     const R0 = (q.x2 - q.x1) / 2, cx = (q.x1 + q.x2) / 2;
     ort(new Path2D(d), kutu);
-    boya(new Path2D(d), P.zumrut, { kutu, lavi: { alfa: 0.68, renk2: P.zumrut2, karisO: 0.01 } });
+    boya(new Path2D(d), P.zumrut, { kutu, lavi: { alfa: 0.7, renk2: P.zumrut2, karisO: 0.01, dalga: 0.12, dalgaO: 0.01 } });
     // gölgeli yanda dikey taramalar: uzunluk ışığa göre
     const tr = [];
     const ust = q.y1 + (k === 0 ? 7 : 8);
@@ -778,10 +778,10 @@
       if (pencere) tr.push([[x, q.y2 - 9], [x, q.y2 - 3]]);
       else tr.push([[x, ust + 3], [x, q.y2 - 3]]);
     }
-    tara(tr, 1.05);
+    tara(tr, 1.3);
     for (const w of SAHNE.kasnakPencereleri(k)) { K.x.fillStyle = MUR; K.x.fill(new Path2D(SAHNE.kemerYolu(w.x, w.y, w.w, w.h))); }
     oyma([[[q.x1, ust], [q.x2, ust]]], 1.7, { kose: false, sivri: false });
-    oyma(d, 2.9);
+    oyma(d, 3.6);
   }
 
   // ================================================================ kubbe
@@ -789,14 +789,14 @@
     const kubbe = new Path2D(SAHNE.kubbeYolu);
     const kk = [356, 296, 764, 557];
     ort(kubbe, kk);
-    boya(kubbe, P.zumrut, { kutu: kk, lavi: { alfa: 0.62, renk2: P.zumrut2, karisO: 0.006 } });
+    boya(kubbe, P.zumrut, { kutu: kk, lavi: { alfa: 0.64, renk2: P.zumrut2, karisO: 0.006, dalga: 0.12, dalgaO: 0.01 } });
     boya(kubbe, '#9BCB5A', { kutu: kk, dx: 0, dy: 0, tasma: 0, lavi: { alfa: 0.35, f: (x, y) => { const l = kubbeIsik(x, y); return l < 0 ? 0 : sstep(0.72, 0.95, l); } } });
     // kaburgalar ve gölgeli yanda ara meridyen taramaları
     const prof = SAHNE.kubbeProfili(60);
     const meridyen = (u, ymin) => prof.filter((q) => q.y >= ymin).map((q) => [560 + u * q.r, q.y]);
     for (let k = 1; k < 16; k++) {
       const lam = -Math.PI / 2 + (Math.PI * k) / 16;
-      oyma([meridyen(Math.sin(lam), 312)], 1.9, { kose: false, uc: 8, adim: 3 });
+      oyma([meridyen(Math.sin(lam), 312)], 2.3, { kose: false, uc: 8, adim: 3 });
     }
     for (let k = 0; k < 16; k++) {
       for (const f of [0.33, 0.66]) {
@@ -806,10 +806,10 @@
         let ymin = 556;
         for (const q of prof) { const l = kubbeIsik(560 + u * q.r, q.y); if (l < 0.5 - 0.15 * f) ymin = q.y; else break; }
         if (ymin > 540) continue;
-        oyma([meridyen(u, Math.max(ymin, 330))], 1.0, { kose: false, uc: 10, adim: 3 });
+        oyma([meridyen(u, Math.max(ymin, 330))], 1.25, { kose: false, uc: 10, adim: 3 });
       }
     }
-    oyma(SAHNE.kubbeYolu, 3.0, { kose: false, uc: 2 });
+    oyma(SAHNE.kubbeYolu, 3.8, { kose: false, uc: 2 });
   }
 
   // ================================================================ alemler (altın boyalı oyma)
@@ -848,8 +848,8 @@
     const kutu = kutuBul([p], 8);
     ort(yol, kutu);
     boya(yol, P.yesil, { kutu, tasma: 1.2, lavi: { alfa: 0.6 } });
-    oyma([sol], 1.8, { kose: false, uc: 10 });
-    oyma([sag], 1.4, { kose: false, uc: 10 });
+    oyma([sol], 2.2, { kose: false, uc: 10 });
+    oyma([sag], 1.8, { kose: false, uc: 10 });
   }
   B.yapraklar.forEach((y, i) => {
     const d = SAHNE.yaprakYolu(y);
@@ -857,7 +857,7 @@
     const kutu = kutuD(d, 5);
     ort(yol, kutu);
     boya(yol, i % 3 === 0 ? P.yesil2 : P.yesil, { kutu, lavi: { alfa: 0.62, renk2: i % 2 ? '#4E9E62' : '#7DB24A', karisO: 0.03 } });
-    oyma(d, y.uzunluk > 50 ? 2.4 : 2.0, { kose: true, uc: 4, adim: 2.4 });
+    oyma(d, y.uzunluk > 50 ? 3.0 : 2.5, { kose: true, uc: 4, adim: 2.8 });
     const [a, b] = SAHNE.yaprakDamari(y);
     oyma([[a, b]], 1.5, { kose: false, uc: 6, adim: 2 });
     // ışıktan uzak yarıda kısa paralel taramalar, diğer yarıda iki-üç damar
@@ -870,7 +870,7 @@
       const w = Wd * 0.62 * Math.sin(Math.PI * Math.min(1, t * 1.05)) * 0.75;
       tr.push([[ox + nx * yon * 2, oy + ny * yon * 2], [ox + ca * w * 0.5 + nx * yon * w, oy + sa * w * 0.5 + ny * yon * w]]);
     }
-    tara(tr, 1.0);
+    tara(tr, 1.25);
     for (const t of [0.35, 0.6]) {
       const ox = y.x + ca * L * t, oy = y.y + sa * L * t;
       const w = Wd * 0.4;
@@ -883,7 +883,7 @@
     const kutu = kutuD(d, 5);
     ort(yol, kutu);
     boya(yol, P.gul, { kutu, lavi: { alfa: 0.62, renk2: P.gul2 } });
-    oyma(d, 1.9, { kose: false, uc: 2, adim: 2 });
+    oyma(d, 2.4, { kose: false, uc: 2, adim: 2.2 });
     const ca = Math.cos(t.aci), sa = Math.sin(t.aci);
     // çanak: iki kısa V çizgisi
     const bx = t.x - ca * t.r * 0.6, by = t.y - sa * t.r * 0.6;
@@ -891,11 +891,11 @@
   });
   B.cicekler.forEach((c, ci) => {
     const kutu = [c.x - c.r * 1.25, c.y - c.r * 1.25, c.x + c.r * 1.25, c.y + c.r * 1.25];
-    const L = c.r * 1.06, G = c.r * 0.48;
-    const w = c.r > 40 ? 2.4 : 1.9;
+    const L = c.r * 1.04, G = c.r * 0.5;
+    const w = c.r > 40 ? 3.0 : 2.4;
     for (let i = 0; i < 5; i++) {
       const a = c.aci + (i * PI2) / 5;
-      const d = tacYolu(c.x, c.y, a, L, G, 0.1);
+      const d = tacYolu(c.x, c.y, a, L, G, -0.04);
       const yol = new Path2D(d);
       ort(yol, kutu);
       // taç yaprak: kâğıt beyazı, dipte gül; kenarı bir parça taşan pembe
@@ -904,11 +904,11 @@
       // dipte kısa ışınsal taramalar
       const tr = [];
       for (let k = -2; k <= 2; k++) {
-        const aa = a + k * 0.13;
-        const r1 = c.r * 0.3, r2 = c.r * (0.48 - Math.abs(k) * 0.05);
+        const aa = a + k * 0.14;
+        const r1 = c.r * 0.3, r2 = c.r * (0.62 - Math.abs(k) * 0.08);
         tr.push([[c.x + Math.cos(aa) * r1, c.y + Math.sin(aa) * r1], [c.x + Math.cos(aa) * r2, c.y + Math.sin(aa) * r2]]);
       }
-      tara(tr, c.r > 40 ? 1.0 : 0.8);
+      tara(tr, c.r > 40 ? 1.3 : 1.0);
     }
     const go = new Path2D(SAHNE.daireYolu(c.x, c.y, c.r * 0.22));
     ort(go, kutu);

@@ -1,0 +1,43 @@
+{
+  "kod": "S-190",
+  "no": 190,
+  "ad": "Mavi-Yeşil Manzara",
+  "ad_en": "Blue-Green Landscape",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Azurit doruklu, malakit yamaçlı kaya kümeleri, altın çizgili sırtlar ve bulut şeritleri, açık ipek.",
+  "tanim": "Hayalî bir ressamın altın çizgili mavi-yeşil manzara eli. Aletleri: şaplanmış açık tonlu ipek, ince kıl uçlu fırçalar, mürekkep, ezme mineral boyalar ve fırçayla sürülen altın boya. Paleti: azurit mavisi, malakit yeşili, aşı boyası, istiridye beyazı, altın ve ipeğin sıcak fildişi tonu. Önce ince mürekkeple desen çizilir; yamaç diplerine aşı boyası, üstüne malakit, doruklara azurit katmanları sürülür. Dağlar üst üste yığılmış yuvarlak başlı kaya kümeleri olarak kurulur; sırtlar içe daralan altın kıvrımlarla, kısa dik 'balta darbesi' çizgileriyle ve koyu yosun noktalarıyla işlenir. Bulutlar istiridye beyazı akıcı şeritlerdir; kenarları ve içlerindeki kıvrık uçlu akış çizgileri altınla çekilir. Mimari ince mürekkep cetvel çizgisiyle, kubbe kaburgaları ve kornişler altınla, önde kasımpatıları kat kat dar taç yapraklarla çizilir; mineral katlar ipekte hafif dalgalı yoğunlukta kalır.",
+  "koken": "Çin'in qinglü shanshui (mavi-yeşil manzara) ve jinbi shanshui (altın çizgili mavi-yeşil manzara) geleneğine; azurit ve malakit boyaların aşı boyası üzerine katman katman sürülmesine, sırtların altınla çizilmesine dayanır. Belirli bir eser ya da ressam kopyalanmaz: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Doruğu azurit, yamacı malakit, dibi aşı boyası; üst üste yığılmış yuvarlak başlı kaya kümelerinden dağlar",
+    "Bütün sırtlarda ince altın kontur, içe daralan altın kıvrımlar, kısa dik çizgiler ve koyu yosun noktaları",
+    "Altın kenarlı, içinde kıvrık uçlu akış çizgileri olan istiridye beyazı bulut şeritleri",
+    "Altın kaburgalı malakit kubbe, azurit pencereler ve ince mürekkep cetvel çizgileri",
+    "Açık, sıcak tonlu ipek gök; altın konturlu soluk güneş",
+    "Kat kat dar taç yapraklı beyaz kasımpatıları ve altın damarlı mavi-yeşil yapraklar"
+  ],
+  "palet": [
+    "#F2E8D2",
+    "#3E6DB0",
+    "#63B18F",
+    "#438768",
+    "#2C7458",
+    "#C9A34E",
+    "#FCFAF4",
+    "#DDBB86"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Dağlar 'kaya' işleviyle kurulur: tepe noktası rastgele kaymış, sinüs kuvveti + omuz dalgası + iki ölçekli gürültüden oluşan bir profil kapalı yola çevrilir, dikey degradeyle (azurit → malakit → aşı boyası) ve yatay ışık degradesiyle boyanır; büyük dağların içinde, onlara kırpılmış küçük kayalar arkadan öne yığılır. Sırtlar konturun doruğa doğru daraltılmış kopyalarıyla, kısa dik çizgiler mavi gölge şeridi + altın çizgiyle, kontur ise koyu altın gövde ve üstünde ince açık parıltı olan iki şeritli 'altın çizgi' ile çizilir. Bulut şeritleri dalga + Gauss başlı üst kenar ve dalgalı alt kenardan kurulur, içlerine koşut akış çizgileri ve sarmal uçlar eklenir. Kubbe piksel başına dilim gölgesi ve dorukta hafif azurit karışımıyla boyanır. Bütün çizgiler örneklenmiş SAHNE yollarından titrek şeritlerdir. Sonda pigment yoğunluğu ipek rengine göre gürültüyle dalgalandırılır; 1024'te atkı-çözgü ipek dokusu ve doygun yerlerde mineral tanesi basılır.",
+  "etiketler": [
+    "mavi-yeşil manzara",
+    "qinglü",
+    "jinbi",
+    "altın çizgi",
+    "azurit",
+    "malakit",
+    "ipek",
+    "bulut şeridi",
+    "kasımpatı",
+    "çin",
+    "ressamın eli"
+  ]
+}

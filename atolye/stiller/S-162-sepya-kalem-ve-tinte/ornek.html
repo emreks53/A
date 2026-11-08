@@ -249,7 +249,7 @@
     const out = o.ctx.createImageData(N2, N2);
     const od = out.data;
     const H = o.H, buf = o.L ? o.L.buf : null;
-    const kat = o.katmanlar.map((k) => ({ d: k.c.getContext('2d').getImageData(0, 0, N2, N2).data, mod: k.mod, dis: k.dis }));
+    const kat = o.katmanlar.map((k) => ({ d: k.c.getContext('2d').getImageData(0, 0, N2, N2).data, mod: k.mod, dis: k.dis, renk: k.renk }));
     const kab = o.kabartma || 0, cuk = o.cukur || 0;
     for (let Y = 0; Y < N2; Y++) {
       const sy = Math.min(N - 1.001, Math.max(0, (Y + 0.5) / 2 - 0.5));
@@ -272,7 +272,8 @@
           if (a <= 0) continue;
           if (K.dis) a = K.dis(X, Y, h, a, K.d[4 * I], K.d[4 * I + 1], K.d[4 * I + 2]);
           if (a <= 0) continue;
-          const cr = K.d[4 * I] / 255, cg = K.d[4 * I + 1] / 255, cb = K.d[4 * I + 2] / 255;
+          let cr = K.d[4 * I] / 255, cg = K.d[4 * I + 1] / 255, cb = K.d[4 * I + 2] / 255;
+          if (K.renk) { const c = K.renk(X, Y, h, cr, cg, cb); cr = c[0]; cg = c[1]; cb = c[2]; }
           if (K.mod === 'carp') { r *= 1 - a * (1 - cr); g *= 1 - a * (1 - cg); b *= 1 - a * (1 - cb); }
           else { r += (cr - r) * a; g += (cg - g) * a; b += (cb - b) * a; }
         }
@@ -805,7 +806,7 @@
     if (bolgeAd(x, y) !== 'kubbe') return 0;
     const l = kubbeIsik(x, y);
     const f = dilim(x, y);
-    return clamp((0.6 - l) * 1.25, 0, 0.85) + 0.22 * Math.pow(1 - f, 3) * (0.4 + 0.6 * (1 - l)) + 0.25 * sstep(538, 554, y);
+    return clamp((0.66 - l) * 1.4, 0, 0.9) + 0.24 * Math.pow(1 - f, 3) * (0.4 + 0.6 * (1 - l)) + 0.28 * sstep(536, 554, y);
   }, { aralik: 1.9 });
   noktala(330, 555, 790, 692, (x, y) => {
     if (bolgeAd(x, y) !== 'kasnak') return 0;
@@ -815,7 +816,7 @@
   noktala(240, 140, 360, 800, (x, y) => {
     if (bolgeAd(x, y) !== 'minare' || (x >= 289 && y >= 691.5)) return 0;
     const u = (x - 300) / mYari(y);
-    let d = clamp((0.05 - u) * 0.55, 0, 0.6);
+    let d = 0.62 * sstep(-0.12, -0.92, u);
     if ((y > 468 && y < 494) || (y > 300 && y < 321) || (y > 206 && y < 214)) d += 0.45;
     if ((y > 436 && y < 442) || (y > 272 && y < 277)) d += 0.3;
     return d;

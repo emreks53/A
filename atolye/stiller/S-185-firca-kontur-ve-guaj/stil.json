@@ -1,0 +1,40 @@
+{
+  "kod": "S-185",
+  "no": 185,
+  "ad": "Fırça Kontur ve Guaj",
+  "ad_en": "Brush-Inked Contour and Gouache",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Sivri fırçayla koyu yeşil-kahve mürekkeple çekilmiş kalın-ince konturlar ve mercan, petrol yeşili, krem tonlarında hafif fırça izli düz guaj: orta yüzyıl ders kitabı resmi.",
+  "tanim": "Hayalî bir orta yüzyıl ders kitabı ressamının eli. Krem bir resim kartonuna önce düz guaj dolguları sürer: her biçim tek renktir, içinde hafif fırça izleri seçilir ve kenarı konturla tam örtüşmez. Gölgeyi tek bir koyu tonla, keskin kenarlı düz bir biçim olarak verir: kubbede kıvrık bir ayrım çizgisiyle sol yarı koyu yeşil, minare ve kasnakta sol yan; ışıklı yana kaburga boyunca birkaç açık yeşil vurgu fırça izi ekler. Paleti sınırlıdır: krem ve açık petrol yeşili gök, petrol-zümrüt kubbe, mercan güneş, tomurcuk ve çiçek göbekleri, şeftali dip lekeli krem-beyaz taç yapraklar, mercan-kum yer ve zeytin yeşili ön bant. Dolgular kuruyunca sivri samur fırçayla koyu yeşil-kahve mürekkeple zarif konturlar çeker: fırçanın tutuluş açısından ötürü çizgi yönüne göre kalınlaşıp incelir, ince bir girişle başlar, sivri bir çıkışla biter; uzun çizgileri birkaç sürüşte tamamlar, kaburgaları ince fırçayla tepeye doğru inceltir. Bütün sayfa düzenli, sakin ve okunaklıdır.",
+  "koken": "1940–1960'ların ders kitabı ve ansiklopedi illüstrasyonuna, fırça-mürekkep kontur ile guaj ya da poster boyasıyla yapılan düz dolgu tekniğine ve o dönemin sınırlı, sıcak baskı paletlerine dayanır. Hiçbir gerçek sanatçı taklit edilmez; bu, atölyenin tanımladığı hayalî bir ressamın elidir: düz guaj + tek tonlu keskin gölge + yönüne göre kalın-ince fırça konturu.",
+  "ayirt_edici": [
+    "Sivri fırçayla çekilmiş, yönüne göre kalınlaşıp incelen, girişi ince çıkışı sivri koyu yeşil-kahve konturlar",
+    "Hafif fırça izli düz guaj dolgular; dolgu kenarları konturla tam örtüşmüyor (elde boyamanın küçük kaymaları)",
+    "Tek tonlu, keskin kenarlı gölge biçimleri: kubbede kıvrık ayrım çizgisiyle koyu sol yarı, minare ve kasnakta sol yan",
+    "Mercan, petrol yeşili ve krem paleti: mercan güneş, tomurcuklar ve göbekler; şeftali dip lekeli krem-beyaz taç yapraklar",
+    "Kubbenin ışıklı yanında kaburga boyunca açık yeşil vurgu fırça izleri, tepeye doğru incelen fırça kaburgalar",
+    "Açık petrol yeşilinden krem ufka geçen gök, altı açık petrol bantlı krem bulutlar, mercan-kum yer ve zeytin yeşili ön bant"
+  ],
+  "palet": [
+    "#2E3A25",
+    "#B4DCD2",
+    "#F7EAD0",
+    "#2E9468",
+    "#1F7050",
+    "#EA8466",
+    "#F6EBD3",
+    "#DDA540"
+  ],
+  "kodla_cizim": "Tek canvas, 2× iç çözünürlük, dış kaynak yok. Krem karton tanesi üretilir. Öğeler arkadan öne, örtücü guaj işleviyle boyanır: maske kutu boyutunda geçici tuvalde, hafif titretilmiş (konturla tam örtüşmeyen) SAHNE yolundan çizilir; renk piksel başına, keskin ama kenarı yumuşatılmış bir eşikle temel ton ve gölge tonu arasında seçilir (eşik kubbede profil + boylamdan Lambert ışığı, silindirlerde yatay ışık, yaprakta damar tarafı); fırça izi yön alanına göre anizotrop gürültüden, ton dalgası ve kâğıt dişi ise ayrı gürültülerden gelir. Kontur, SAHNE yolları düzleştirilip köşelerden ve 240 px'lik sürüşlere bölünerek, hafif titretilip değişken kalınlıklı çokgen olarak doldurulur: kalınlık, çizgi yönünün sabit fırça açısıyla yaptığı açının sinüsüne, ince girişe ve sivri çıkışa göre değişir. Kubbenin ışıklı yanındaki vurgu izleri profil meridyenleri boyunca açık yeşil fırça çizgileridir.",
+  "etiketler": [
+    "fırça kontur",
+    "guaj",
+    "düz renk",
+    "orta yüzyıl",
+    "ders kitabı",
+    "mercan",
+    "petrol yeşili",
+    "illüstrasyon"
+  ]
+}

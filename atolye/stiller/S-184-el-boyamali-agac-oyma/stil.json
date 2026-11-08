@@ -1,0 +1,40 @@
+{
+  "kod": "S-184",
+  "no": 184,
+  "ad": "El Boyamalı Ağaç Oyma Baskı",
+  "ad_en": "Hand-Colored Woodcut",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Kalıba oyulmuş kalın, uçları sivrilen siyah-kahve çizgiler ve sade taramalar; dökme kâğıda basılıp çizgiden hafifçe taşan saydam boyalarla elle renklendirilmiş eski bitki kitabı baskısı.",
+  "tanim": "Hayalî bir eski bitki kitabı (herbaryum) ustasının eli. Armut ağacı kalıba bıçak ve oluklu oyacakla çalışır: çizgiler kalın, temiz ve hafif köşelidir, bıçağın girip çıktığı yerde iki ucu sivrilir; pencere açıklıkları dolgun siyah kalır. Gölgeyi yalnız sade, düzenli paralel taramalarla verir: kubbede kaburgalar arasına meridyen çizgileri, kasnak ve minarenin sol yanına dikey çizgiler, yaprağın ışıktan uzak yarısına kısa eğik çizgiler, taç yaprak diplerine ışınsal kesikler. Kalıbı siyah-kahve mürekkeple ılık beyaz dökme kâğıda basar; mürekkep kâğıdın tepelerinde ince açık gözenekler bırakır, kâğıdın ince yatay çizgileri seçilir. Sonra baskıyı elle renklendirir: taze, saydam boyalarla (zümrüt ve taze yeşil, altın sarısı, gül pembesi, gök mavisi) geniş ve hızlı ama özenli fırça sürüşleri yapar; boya çizgiden birkaç piksel taşar ve hafifçe kayar, kenarda biraz birikir. Bulutları tırtıllı kenarlı ve altları taramalı, güneşi düz ve dalgalı ışınlarla oyar; resmi kalıba ait kalın-ince bir çift çerçeve çizgisiyle kapatır.",
+  "koken": "15.–16. yüzyıl Avrupa herbaryum (bitki kitabı) ağaç oyma baskılarına ve bu baskıların elle, fırça ya da şablonla renklendirilmesi geleneğine dayanır; linol baskıdan (S-006) farkı, büyük siyah kütleler yerine ince-kalın çizgi ve sade tarama ağırlığı, bol kâğıt beyazı ve çizgiden taşan saydam el boyasıdır. Hiçbir gerçek sanatçı taklit edilmez; bu, atölyenin tanımladığı hayalî bir ustanın elidir.",
+  "ayirt_edici": [
+    "Bıçakla oyulmuş gibi hafif köşeli, kalın, iki ucu sivrilen siyah-kahve çizgiler; dolgun siyah pencereler",
+    "Gölgeli yanlarda sade paralel taramalar: kubbede kaburgalar arası meridyen çizgileri, kasnakta dikey, yapraklarda yarım yaprak boyunca",
+    "Çizgiden belirgin biçimde taşan ve kayan saydam el boyaları: zümrüt yeşil, altın sarısı, gül pembesi, gök mavisi",
+    "Mürekkebin kâğıt tepelerinde bıraktığı ince açık gözenekler ve dökme kâğıdın ince yatay çizgileri",
+    "Tırtıllı kenarlı, altı yatay taramalı bulutlar; düz ve dalgalı ışınları sıralanan oyma güneş",
+    "Herbaryum üslubunda çiçekler (dipte ışınsal kesikler, noktalı göbek) ve kalıba ait kalın-ince çift çerçeve"
+  ],
+  "palet": [
+    "#2A1D15",
+    "#6DB1E2",
+    "#2C9F58",
+    "#55AA4A",
+    "#E6B43C",
+    "#E3788A",
+    "#DDBB72",
+    "#F7F0DE"
+  ],
+  "kodla_cizim": "Tek canvas, 2× iç çözünürlük, dış kaynak yok. Dökme kâğıt tanesi (ince yatay çizgiler ve seyrek zincir çizgileriyle) üretilir. İki ayrı katman tutulur: baskı (kalıp mürekkebi) ve renk. Öğeler arkadan öne işlenir: her öğenin silüeti baskı katmanından 'destination-out' ile silinir ve renk katmanında beyaza döndürülür, sonra o öğenin oyma çizgileri ve boyası eklenir. Oyma çizgi, SAHNE yollarının 3 px adımla yeniden örneklenmesiyle hafif köşeli hâle getirilir, köşelerden bölünür, hafif titretilir ve iki ucu sivrilen değişken kalınlıklı çokgen olarak doldurulur; taramalar kısa çift uçlu sivri çizgilerdir, kubbede ışığa göre uzunluğu değişen ara meridyenler. Boya, maskeyi birkaç piksel kaydırıp genişleten saydam lavi işleviyle (kenar birikmesi, tane, dalga) renk katmanına 'multiply' ile sürülür. Sonunda baskı katmanının alfası kâğıt tanesine göre azaltılarak gözenekli mürekkep dokusu verilir ve iki katman kâğıda 'multiply' ile basılır.",
+  "etiketler": [
+    "ağaç oyma",
+    "baskı",
+    "el boyaması",
+    "herbaryum",
+    "tarama",
+    "taşan boya",
+    "eski kitap",
+    "çizgi"
+  ]
+}
