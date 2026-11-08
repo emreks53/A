@@ -37,7 +37,7 @@
   // kalın-ince kontur: sağ altta kalın, sol üstte ince (çizer elinin baskısı)
   function kontur(p, w, renk) {
     p = typeof p === 'string' ? P2(p) : p;
-    w = w || 1.3;
+    w = (w || 1.3) * 1.18;
     ctx.save();
     const dis = new Path2D();
     dis.rect(-60, -60, 1144, 1144);
@@ -191,7 +191,7 @@
   }
   // süs bulutları: üstü sarmal kıvrımlı yatay kümeler
   function susBulut(x, y, s, ayna) {
-    ctx.save(); ctx.translate(x, y); ctx.scale(ayna ? -s : s, s);
+    ctx.save(); ctx.translate(x, y); ctx.scale(ayna ? -s * 1.35 : s * 1.35, s * 0.82);
     const p = new Path2D();
     p.moveTo(-80, 10);
     p.bezierCurveTo(-96, 10, -96, -10, -78, -10);

@@ -372,7 +372,7 @@
     const b = bolge(x, y);
     if (gokMu(b) && R() < 0.35) continue;
     let c = hedef(x + (R() - 0.5) * 6, y + (R() - 0.5) * 6);
-    if (gokMu(b) && R() < 0.2) c = mixc(c, R() < 0.35 ? [232, 190, 206] : [255, 244, 220], 0.4); // gökte sıcak kırık renk
+    if (gokMu(b) && R() < 0.2) c = mixc(c, R() < 0.35 && Math.hypot(x - 880, y - 140) > 320 ? [232, 190, 206] : [255, 244, 220], 0.4); // gökte sıcak kırık renk
     if (b === BI.kubbe && kubbeU(x, y) > 0.1 && R() < 0.18) c = mixc(c, [240, 214, 120], 0.4);
     if (b === BI.kubbe && kubbeU(x, y) < -0.3 && R() < 0.2) c = mixc(c, [62, 96, 182], 0.35);
     const k = cubukSec(c, 0.25), a = yon(x, y, 'yan') + (R() - 0.5) * 0.3;
@@ -394,12 +394,12 @@
     // gök: yer yer paralel çizgi öbekleri
     for (const [x, y] of noktalar(44, (x, y, b) => gokMu(b) && !kenarBos(x + 20, y + 20))) {
       const a = -1.0 + (R() - 0.5) * 0.9 + (R() < 0.25 ? 1.3 : 0), ca = Math.cos(a), sa = Math.sin(a);
-      const base = hedef(x, y), v = R();
-      const c = cubukSec(v < 0.45 ? mixc(base, [255, 252, 240], 0.35) : v < 0.62 ? mixc(base, [176, 160, 214], 0.2) : ton(base, 0.85), 0.15);
+      const base = hedef(x, y), v = R(), sicak = Math.hypot(x - 880, y - 140) < 300;
+      const c = cubukSec(v < 0.45 ? mixc(base, [255, 252, 240], 0.35) : v < 0.62 ? mixc(base, sicak ? [252, 230, 158] : [176, 160, 214], 0.22) : ton(base, sicak ? 0.95 : 0.85), 0.15);
       const adet = 4 + Math.floor(R() * 7), L0 = 16 + R() * 20;
       for (let k = 0; k < adet; k++) {
         const o = (k - adet / 2) * (4 + R() * 1.5), L = L0 * (0.7 + R() * 0.5), sx = x - sa * o + (R() - 0.5) * 4, sy = y + ca * o;
-        if (!gokMu(bolge(sx, sy))) continue;
+        if (!gokMu(bolge(sx, sy)) || kenarBos(sx - ca * L / 2, sy - sa * L / 2) || kenarBos(sx + ca * L / 2, sy + sa * L / 2)) continue;
         cizgi([[sx - ca * L / 2, sy - sa * L / 2], [sx, sy], [sx + ca * L / 2, sy + sa * L / 2]], 1.8 + R() * 1.4, c, 0.58 + R() * 0.2);
       }
     }
