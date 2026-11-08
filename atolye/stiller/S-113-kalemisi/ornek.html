@@ -96,10 +96,9 @@
   };
 
   // ------------------------------------------------------------ katmanlar
-  const BOYA = katman(); // düz mat boya
-  const NOKTA = katman(); // silkme noktaları
-  const TAHRIR = katman(); // el tahriri
-  const b = BOYA.g, t = TAHRIR.g, nk = NOKTA.g;
+  // boya, silkme noktaları ve tahrir aynı katmanda, çizim sırasıyla (sonraki öğe öncekini örter)
+  const BOYA = katman();
+  const b = BOYA.g, t = BOYA.g, nk = BOYA.g;
   const doldur = (p, renk) => { b.fillStyle = renk; b.fill(typeof p === 'string' ? new Path2D(p) : p); };
 
   // el tahriri: hafif titrek, kalınlığı değişen çizgi
@@ -128,7 +127,7 @@
   }
   // silkme: kalıp delikleri boyunca kömür tozu noktaları (çizginin hemen dışında, düzenli aralıklı)
   function silkme(pts, kayma) {
-    nk.fillStyle = 'rgba(70,70,82,0.32)';
+    nk.fillStyle = 'rgba(64,64,76,0.42)';
     let acc = 0;
     for (let i = 1; i < pts.length; i++) {
       const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
@@ -139,7 +138,7 @@
       const nx = -(y1 - y0) / (L || 1), ny = (x1 - x0) / (L || 1);
       const o = kayma + (R() - 0.5) * 0.5;
       nk.beginPath();
-      nk.arc(x1 + nx * o + (R() - 0.5) * 0.4, y1 + ny * o + (R() - 0.5) * 0.4, 0.42 + R() * 0.2, 0, 7);
+      nk.arc(x1 + nx * o + (R() - 0.5) * 0.4, y1 + ny * o + (R() - 0.5) * 0.4, 0.5 + R() * 0.22, 0, 7);
       nk.fill();
     }
   }
@@ -152,8 +151,8 @@
 
   // ------------------------------------------------------------ silkme kalıpları (motifler; yerel koordinat)
   // rumi: ucu kıvrık, çatal uçlu yaprak (dip 0,0; sağa uzanır)
-  const RUMI = ornekle('M0,0 C3,-8 13,-12 22,-9 C28,-7 32,-2 31,4 C28,0 24,-1 20,1 C24,4 23,9 17,10 C10,11 3,6 0,0 Z', 0.8);
-  const RUMI_GOZ = ornekle('M7,1 C10,-3 15,-4 19,-2 C16,-1 13,1 12,4 C10,4 8,3 7,1 Z', 0.8);
+  const RUMI = ornekle('M0,0 C2,-9 12,-14 22,-12 C30,-10 36,-4 38,2 C33,-1 29,-1 26,1 C29,3 30,7 27,10 C22,8 18,8 15,10 C9,12 2,7 0,0 Z', 0.8);
+  const RUMI_GOZ = ornekle('M8,0 C11,-5 17,-7 23,-5 C19,-3 15,-1 13,3 C11,3 9,2 8,0 Z', 0.8);
   // hatayi gülbezek: dilimli dış taç, iç halka, göbek
   function gulbezek(R0, dilim) {
     let d = '';
@@ -228,8 +227,8 @@
           const [rx, ry] = kn(u, vv);
           const dis = vv > 0 ? 1 : -1; // dalın dış yanına doğru açılır
           const yon = a + (yan > 0 ? 0 : Math.PI);
-          motif(RUMI, { x: rx, y: ry, a: yon + dis * yan * 0.55 * (yan > 0 ? 1 : -1), s: 0.82, fy: dis * yan < 0 }, RENK.firuze, 1.3);
-          motif(RUMI_GOZ, { x: rx, y: ry, a: yon + dis * yan * 0.55 * (yan > 0 ? 1 : -1), s: 0.82, fy: dis * yan < 0 }, RENK.lacivert, 0.9);
+          motif(RUMI, { x: rx, y: ry, a: yon + dis * yan * 0.5 * (yan > 0 ? 1 : -1), s: 0.66, fy: dis * yan < 0 }, RENK.firuze, 1.3);
+          motif(RUMI_GOZ, { x: rx, y: ry, a: yon + dis * yan * 0.5 * (yan > 0 ? 1 : -1), s: 0.66, fy: dis * yan < 0 }, RENK.lacivert, 0.9);
         }
         // kalıp sınırında küçük penç
         const [px, py] = kn(u0, 0);
@@ -318,6 +317,15 @@
     b.fillStyle = '#E8C985';
     b.beginPath(); b.moveTo(0, 860); for (let x = 0; x <= 1024; x += 16) b.lineTo(x, 860 + 3 * Math.sin(x * 0.02)); b.lineTo(1024, 1024); b.lineTo(0, 1024); b.fill();
     tahrir(ornekle('M0,800 L1024,800', 2), RENK.tahrir, 1.3, false);
+    // serpme: aynı kalıptan şaşırtmalı dizilmiş küçük üç yapraklı filizler ve lal benekler
+    const FILIZ = ornekle('M0,0 C-2,-4 -2,-9 0,-13 C2,-9 2,-4 0,0 Z', 0.6);
+    for (let j = 0; j < 7; j++) {
+      for (let i = 0; i < 18; i++) {
+        const x = 20 + i * 58 + (j % 2) * 29, y = 822 + j * 30;
+        for (const a of [-0.7, 0, 0.7]) motif(FILIZ, { x, y, a, s: 0.9 }, RENK.yesil, 0.8);
+        b.fillStyle = RENK.lal; b.beginPath(); b.arc(x + 29, y - 6, 2.2, 0, 7); b.fill();
+      }
+    }
   }
 
   // minare
@@ -520,15 +528,14 @@
     for (const e of ty) {
       // sivri uçlu taç yaprak (hatayi)
       const ca = Math.cos(e.aci), sa = Math.sin(e.aci);
-      const L = c.r * 1.08, W = c.r * 0.5;
+      // geniş, ucu çentikli (yürek biçimli) taç yaprak; içte paralel ikinci tahrir ve dipte pembe gölge
+      const L = c.r * 1.06, W = c.r * 0.6;
       const P = (u, v) => [c.x + u * ca - v * sa, c.y + u * sa + v * ca];
-      const d = [P(0, 0), P(L * 0.25, -W * 0.85), P(L * 0.78, -W * 0.85), P(L * 1.02, 0), P(L * 0.78, W * 0.85), P(L * 0.25, W * 0.85)];
-      const yol = `M${d[0]} C${d[1]} ${d[2]} ${d[3]} C${d[4]} ${d[5]} ${d[0]} Z`.replace(/(\d+\.\d+)/g, (m) => (+m).toFixed(2));
-      parca(yol, '#FFFFFF', c.r > 40 ? 1.7 : 1.3);
-      // taç yaprak ortasında firuze damar
-      const d1 = P(L * 0.3, 0), d2 = P(L * 0.75, 0);
-      b.strokeStyle = RENK.firuzeAcik; b.lineWidth = c.r * 0.06;
-      b.beginPath(); b.moveTo(d1[0], d1[1]); b.lineTo(d2[0], d2[1]); b.stroke();
+      const f = (q) => q[0].toFixed(2) + ',' + q[1].toFixed(2);
+      const yp = (k) => `M${f(P(0, 0))} C${f(P(L * 0.25 * k, -W * 0.7 * k))} ${f(P(L * 0.72 * k, -W * 1.0 * k))} ${f(P(L * 0.97 * k, -W * 0.5 * k))} C${f(P(L * 1.02 * k, -W * 0.18 * k))} ${f(P(L * 0.9 * k, -W * 0.05 * k))} ${f(P(L * 0.84 * k, 0))} C${f(P(L * 0.9 * k, W * 0.05 * k))} ${f(P(L * 1.02 * k, W * 0.18 * k))} ${f(P(L * 0.97 * k, W * 0.5 * k))} C${f(P(L * 0.72 * k, W * 1.0 * k))} ${f(P(L * 0.25 * k, W * 0.7 * k))} ${f(P(0, 0))} Z`;
+      parca(yp(1), '#FFFFFF', c.r > 40 ? 1.7 : 1.3);
+      doldur(new Path2D(yp(0.62)), '#F7D3D2');
+      tahrir(ornekle(yp(0.8), 1.6).slice(4, -4), '#B6574C', c.r > 40 ? 0.9 : 0.7, false);
     }
     parca(gulbezek(c.r * 0.42, 5).replace(/(-?\d+\.\d+),(-?\d+\.\d+)/g, (m, x, y) => (c.x + +x).toFixed(2) + ',' + (c.y + +y).toFixed(2)), RENK.lal, c.r > 40 ? 1.4 : 1.1);
     parca(S.daireYolu(c.x, c.y, c.r * 0.22), RENK.asi, 1.1);
@@ -542,12 +549,12 @@
     const c = S.yeniTuval(1024, 1024), x = c.getContext('2d');
     const im = x.createImageData(1024, 1024), d = im.data;
     for (let j = 0; j < 1024; j++) for (let i = 0; i < 1024; i++) {
-      const cizgi = n1(i / 26, j / 1.6) - 0.5; // yatay fırça çekişleri
-      const leke = fbm(n2, i / 70, j / 70) - 0.5; // boyanın yer yer ince/kalın sürülmesi
-      const v = cizgi * 0.6 + leke * 0.7 + (n3(i * 0.9, j * 0.9) - 0.5) * 0.35;
+      const cizgi = fbm(n1, i / 34, j / 4.5) - 0.5; // yatay, yumuşak fırça çekişleri
+      const leke = fbm(n2, i / 80, j / 80) - 0.5; // boyanın yer yer ince/kalın sürülmesi
+      const v = cizgi * 0.75 + leke * 0.6;
       const o = (j * 1024 + i) * 4;
-      if (v > 0) { d[o] = 255; d[o + 1] = 252; d[o + 2] = 240; } else { d[o] = 60; d[o + 1] = 40; d[o + 2] = 30; }
-      d[o + 3] = Math.min(255, Math.abs(v) * 120);
+      if (v > 0) { d[o] = 255; d[o + 1] = 253; d[o + 2] = 244; d[o + 3] = Math.min(255, v * 150); }
+      else { d[o] = 90; d[o + 1] = 70; d[o + 2] = 50; d[o + 3] = Math.min(255, -v * 55); }
     }
     x.putImageData(im, 0, 0);
     b.save();
@@ -577,10 +584,6 @@
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(BOYA.c, 0, 0);
-  ctx.drawImage(NOKTA.c, 0, 0);
-  ctx.globalAlpha = 0.92;
-  ctx.drawImage(TAHRIR.c, 0, 0);
-  ctx.globalAlpha = 1;
   // sıvanın dişi boyanın içinden de hafifçe görünür
   ctx.globalCompositeOperation = 'multiply';
   ctx.globalAlpha = 0.5;

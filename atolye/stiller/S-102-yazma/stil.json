@@ -1,0 +1,22 @@
+{
+  "kod": "S-102",
+  "no": 102,
+  "ad": "Yazma (Tahta Kalıp Baskı)",
+  "ad_en": "Woodblock Textile Print (Yazma)",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Krem pamuklu bezin üstüne oyulmuş tahta kalıplarla, her renk ayrı kalıptan elle basılan Tokat yazması.",
+  "tanim": "Yazma, ağartılmış pamuklu bezin üstüne armut ya da ıhlamur ağacından oyulmuş kalıpların boyaya batırılıp elle bastırılmasıyla desenlendirilen geleneksel Türk el baskısıdır. Desen önce dolgu kalıplarıyla (kök boya kırmızısı, cehri sarısı, çivit mavisi, yeşil), en son koyu kahve 'tahrir' kalıbıyla basılır; zemin küçük kare kalıpların yan yana tekrarıyla dolar, kenara ayrı kalıplarla süslü bir bordür ve oya kenarı basılır. Aynı kalıp yüzlerce kez kullanıldığı için motifler birebir tekrar eder, ama her basışta boya yoğunluğu, yeri ve kalıp birleşimleri biraz değişir; boya bezin içine işler ve dokuma görünür kalır. Başörtüsü, yemeni, bohça, sofra örtüsü ve perdelerde kullanılır.",
+  "koken": "Anadolu'da kalıpla bez basma Selçuklu ve Osmanlı dönemlerinden beri bilinir; Tokat, Kastamonu ve İstanbul yazma basmacılığının merkezleri oldu. Tokat yazmasında kalıplar armut ağacından oyulur, boyalar kök boya, cehri, çivit, nar kabuğu ve demir pasından elde edilirdi; yazmacılar 'basmacı' ve 'kalıpçı' olarak ayrı ustalıklar oluşturdu. Gelenek bugün Tokat'taki atölyelerde ve Hindistan'ın Rajasthan bölgesindeki benzer kalıp baskıları (dabu, bagru) ile sürüyor.",
+  "ayirt_edici": [
+    "Krem pamuklu bez ve görünür ince dokuma; boya bezin içine işlemiş, kenarları hafifçe yumuşamış",
+    "Gök, oyulmuş küçük çiçekli kare çivit kalıbının yan yana basılmasıyla dolmuş; kalıp birleşimlerinde ince bindirme çizgileri ve krem aralıklar",
+    "Önce dolgu (yeşil, kırmızı, sarı, çivit), en son koyu kahve tahrir kalıbı; dolgu ile kontur arasında hafif kayıklıklar",
+    "Aynı kalıbın tekrarı: dört çintemani bulutu, korniş altındaki kırmızı baklava şeridi, bordürde gül ve yaprak çifti motifleri",
+    "Kubbenin yeşil kalıbında oyulmuş ışık çizgileri altındaki cehri sarısını gösteriyor; kalıbın tam tutmadığı ince açıklar",
+    "Köşe rozetli, kırmızı çizgili ve iç kenarı kırmızı oya kemercikli, kalıpla basılmış bordür"
+  ],
+  "palet": ["#F8F2E2", "#AFC3D6", "#E8D6A4", "#4C9A5E", "#C03E32", "#E8AA2C", "#3A68A8", "#402A20"],
+  "kodla_cizim": "Her boya (seyreltik çivit ve cehri zemin, cehri, yeşil, çivit, pembe, kök boya, tahrir) ayrı bir tuval katmanıdır; her kalıp basışı bu katmana 'lighter' ile, rastgele birkaç piksellik kayma ve basışa özgü yoğunlukla eklenir, böylece kalıp birleşimlerinde bindirmeler koyulaşır. Tekrarlanan kalıplar (gök ve yer kare kalıpları, bulut, baklava, bordür gülleri, oya) 2× çözünürlükte küçük damga tuvallerine bir kez çizilip defalarca basılır; oyma çizgiler destination-out ile kalıptan çıkarılır. Bitkiler önden arkaya basılır ve her biçim bir örtme tuvaline eklenir; arkadaki kalıplar orada oyuk kalır. Gök ve yer kalıpları nesnelerin çevresinde bulanıklaştırılmış bir rezerv maskesiyle krem pay bırakır. Son aşamada krem bez tonu satır ve sütun düzensizlikli sinüs dokumasıyla kurulur; her katman hafif bulanıklaştırılıp basınç dalgalanması, kalıbın tutmadığı küçük açıklar, tahta lifi ve dokuma kabartısıyla oynatılarak çarpımla bezin üstüne uygulanır.",
+  "etiketler": ["yazma", "tahta kalıp", "el baskısı", "Tokat", "kök boya", "tekstil", "bordür", "geleneksel"]
+}

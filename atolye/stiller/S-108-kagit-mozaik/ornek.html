@@ -66,14 +66,14 @@
   // paletler
   const GOKP = palet(['#D6EEFB', '#BDE2F8', '#9FD2F4', '#82C1F0', '#68AFEC', '#529FE6', '#4290DF']);
   const SICAK = hex('#FFF3C8');
-  const BULUTP = palet(['#E3EDF8', '#EEF4FB', '#F8FBFE', '#FFFFFF']);
+  const BULUTP = palet(['#DCE8F6', '#E8F0FA', '#F2F7FC', '#FAFCFE']);
   const ZEMINP = palet(['#E2C68C', '#EBD5A2', '#F3E3BC', '#F8EDD2']);
-  const KREMP = palet(['#DCD5C4', '#E7E1D2', '#F1ECDF', '#F8F4EA', '#FFFDF6']);
+  const KREMP = palet(['#D6CDB9', '#E1D9C7', '#EAE3D3', '#F2ECDF', '#F8F3E8']);
   const ALTINP = palet(['#D19A26', '#E2B33A', '#F0C94E', '#F8DD7A']);
   const KUBBEP = palet(['#1C6A35', '#227A3D', '#2A8A45', '#35994E', '#43A85A', '#58B966', '#70C874', '#8AD584']);
   const YAPRAKP = [palet(['#3E8A3E', '#4C9A44', '#5AA84C']), palet(['#5AA84C', '#6CB654', '#7EC35C']), palet(['#2F7A3C', '#3C8A42', '#4A984A']), palet(['#79BA52', '#8CC85E', '#9ED36A'])];
   const PEMBE = palet(['#F6C2D0', '#F2AEC2', '#EE9AB4']);
-  const BEYAZP = palet(['#F7EEEC', '#FDF7F4', '#FFFFFF']);
+  const BEYAZP = palet(['#F1E8E6', '#F7F0EC', '#FCF6F1']);
 
   // gök
   const GOK = et({
@@ -167,22 +167,34 @@
   boya(KAS0, dikd(KS[0].x1, KS[0].y1, KS[0].x2, KS[0].y2));
   for (const p of S.kasnakPencereleri(0)) boya(KPEN2, S.kemerYolu(p.x, p.y, p.w, p.h));
 
+  let KUBBE_R = null;
   // kubbe: 16 dilim, her dilim ayrı bölge (sıralar dilim kenarlarını izler); kaburgalar ince koyu şerit
   {
     const prof = S.kubbeProfili(60);
     const kubbeRenk = (x, y, r) => {
       const t = clamp((x - 380) / 360, 0, 1) * 0.8 + clamp((520 - y) / 220, 0, 1) * 0.25 - 0.05;
-      return sec(KUBBEP, clamp(t, 0, 1), r, 1.5);
+      return sec(KUBBEP, clamp(t, 0, 1), r, 1.2);
     };
+    const kubbeR = new Float32Array(H);
+    for (let y = 0; y < H; y++) {
+      const yy = y / K;
+      kubbeR[y] = 0;
+      for (let i = 0; i < prof.length - 1; i++) if (yy <= prof[i].y && yy >= prof[i + 1].y) { const t = (prof[i].y - yy) / (prof[i].y - prof[i + 1].y || 1); kubbeR[y] = prof[i].r + (prof[i + 1].r - prof[i].r) * t; break; }
+    }
+    KUBBE_R = kubbeR;
     for (let k = 0; k < 16; k++) {
-      const u1 = Math.sin(-Math.PI / 2 + (Math.PI * k) / 16), u2 = Math.sin(-Math.PI / 2 + (Math.PI * (k + 1)) / 16);
+      const b1 = -Math.PI / 2 + (Math.PI * k) / 16, b2 = b1 + Math.PI / 16;
+      const u1 = Math.sin(b1), u2 = Math.sin(b2);
       const sol = prof.map((q) => [560 + u1 * q.r, q.y]);
       const sag = prof.map((q) => [560 + u2 * q.r, q.y]).reverse();
-      const id = et({ mod: 'kontur', h: 9, renk: kubbeRenk });
+      const id = et({ mod: 'kubbe', h: 12, b1, b2, ncol: u2 - u1 > 0.15 ? 2 : 1, renk: kubbeRenk });
       boya(id, S.yol(sol.concat(sag), true));
     }
-    const KAB = et({ mod: 'serit', h: 7, renk: (x, y, r) => sec(palet(['#164F2A', '#1A5C31', '#1F6838']), 0.5, r, 3) });
-    for (const k of S.kaburgalar(16)) boya(KAB, S.yol(k.noktalar.slice(0, -2)), 2.6 + 1.6 * Math.cos(k.boylam));
+    const KAB = et({ mod: 'serit', h: 8, renk: (x, y, r) => sec(palet(['#155028', '#195A2F', '#1D6535']), 0.5, r, 3) });
+    for (const k of S.kaburgalar(16)) boya(KAB, S.yol(k.noktalar.slice(0, -3)), 3.2 + 2.6 * Math.cos(k.boylam));
+    // tepe: kaburgaların birleştiği yerde halka sıralı küçük parçalar
+    const TEPE = et({ mod: 'kontur', h: 6, renk: kubbeRenk });
+    lc.save(); lc.beginPath(); lc.rect(0, 0, 1024, 342); lc.clip(); boya(TEPE, S.kubbeYolu); lc.restore();
   }
   alemCiz(S.alemParcalari(560, 300, 1));
 
@@ -201,7 +213,7 @@
   for (const c of bit.cicekler) {
     for (const e of S.tacYapraklari(c)) {
       const id = et({
-        mod: 'kontur', h: c.r > 40 ? 7 : 5, renk(x, y, r) {
+        mod: 'kontur', h: c.r > 40 ? 9 : 6, renk(x, y, r) {
           const d = Math.hypot(x - c.x, y - c.y) / c.r;
           return d < 0.42 ? sec(PEMBE, 0.2, r, 1.5) : sec(BEYAZP, 0.75, r, 1.8);
         },
@@ -257,6 +269,13 @@
       if (e.mod === 'gok' && ds < RS) { rho = ds; band = 1000 + Math.floor(ds / h); }
       else if (D[i] < 2 * h) band = Math.floor(D[i] / h);
       else { rho = y + 16 * K * Math.sin(x / W * Math.PI * 2 * 1.3 + 0.7) + 7 * K * Math.sin(x / W * Math.PI * 2 * 3.1 + 2.1); band = 2000 + Math.floor(rho / h); }
+    } else if (e.mod === 'kubbe') {
+      const R = KUBBE_R[y] || 1;
+      const u = clamp((x / K - 560) / R, -1, 1);
+      const f = clamp((Math.asin(u) - e.b1) / (e.b2 - e.b1), 0, 0.9999) * e.ncol;
+      band = Math.floor(f);
+      const kol = (R * (Math.sin(e.b2) - Math.sin(e.b1)) * K) / e.ncol;
+      rho = h / 2 + (f - band - 0.5) * kol;
     } else band = Math.floor(D[i] / h);
     RHO[i] = rho;
     KEY[i] = l * 4096 + clamp(band, 0, 4095);
@@ -268,7 +287,9 @@
   for (let i = 0; i < N; i++) {
     const l = L[i];
     if (!l || ET[l].mod === 'serit') continue;
-    const h = HH[l], f = RHO[i] % h;
+    const h = HH[l];
+    if (ET[l].mod === 'kubbe') { if (Math.abs(RHO[i] - h / 2) < 0.75) aday.push(i); continue; }
+    const f = RHO[i] % h;
     if (Math.abs(f - h / 2) < 0.75) aday.push(i);
   }
   aday = Int32Array.from(aday);
@@ -364,9 +385,9 @@
 
   // ------------------------------------------------------------ boyama
   const im = ctx.createImageData(W, H), d = im.data;
-  const ZR = 251, ZG = 249, ZB = 243; // beyaz zemin
-  const golgeKay = 2 * K;
-  const araBoy = (l) => (l ? Math.min(1.25 * K, HH[l] * 0.14) : 1.25 * K);
+  const ZR = 253, ZG = 252, ZB = 248; // beyaz zemin
+  const golgeKay = Math.round(1.5 * K);
+  const araBoy = (l) => (l ? Math.min(0.85 * K, HH[l] * 0.1) : 0.85 * K);
   const tane = S.rng(4242);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x, o = i * 4, t = T[i];
@@ -378,7 +399,7 @@
       // aralık: beyaz zemin; sağ üstündeki parçanın hafif gölgesi
       let k = 1;
       const j = i - golgeKay * W + golgeKay;
-      if (y >= golgeKay && x < W - golgeKay && T[j] >= 0 && E[j] >= gw) k = 0.86;
+      if (y >= golgeKay && x < W - golgeKay && T[j] >= 0 && E[j] >= gw) k = 0.84;
       d[o] = ZR * k + g; d[o + 1] = ZG * k + g; d[o + 2] = (ZB * k + g) * (k < 1 ? 1.02 : 1); d[o + 3] = 255;
       continue;
     }
@@ -389,8 +410,8 @@
     r *= m; gg *= m; b *= m;
     // yırtık kenar: kâğıdın açık özü (her kenarda değil, gürültüyle)
     const kenar = E[i] - gw;
-    if (kenar < 1.6 * K && yirtik > 0.52) {
-      const a = (1 - kenar / (1.6 * K)) * clamp((yirtik - 0.52) * 4, 0, 1) * 0.55;
+    if (kenar < 1.2 * K && yirtik > 0.6) {
+      const a = (1 - kenar / (1.2 * K)) * clamp((yirtik - 0.6) * 4, 0, 1) * 0.42;
       r += (255 - r) * a; gg += (252 - gg) * a; b += (246 - b) * a;
     } else if (kenar < 0.9 * K) {
       // kesik kenar: çok hafif koyu çizgi (kâğıdın kalınlığı)

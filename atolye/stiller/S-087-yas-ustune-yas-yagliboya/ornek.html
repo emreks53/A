@@ -210,7 +210,7 @@
     // köşeler biraz daha koyu (Ross'un "Prusya mavisi" köşeleri), güneş tarafı açık
     c = mixc(c, [40, 100, 180], 0.3 * sstep(380, 0, x) * sstep(300, 0, y));
     const d = gunes(x, y);
-    c = mixc(c, [255, 246, 214], 0.85 * Math.exp(-(d * d) / (2 * 190 * 190)));
+    c = mixc(c, [255, 242, 204], 0.82 * Math.exp(-(d * d) / (2 * 180 * 180)));
     c = mixc(c, [255, 250, 226], 0.6 * sstep(90, 36, d));
     c = mixc(c, [255, 254, 246], sstep(36, 31, d));
     return c;
@@ -222,7 +222,7 @@
   // iri fırçanın çapraz (X) darbeleri: renk yerel tonun hafif koyusu/açığı, yumuşak kenarlı
   for (let i = 0; i < 520; i++) {
     const x = R() * 1080 - 28, y = R() * 760 - 20;
-    if (gunes(x, y) < 90 && R() < 0.8) continue;
+    if (gunes(x, y) < 170 && R() < 0.85) continue;
     const yon = R() < 0.5 ? 1 : -1, a = yon * (0.62 + (R() - 0.5) * 0.3);
     const c = gokTaban(x, y), lum = (c[0] + c[1] + c[2]) / 3;
     const cc = lum > 215 ? mixc(c, [255, 252, 240], 0.5) : R() < 0.5 ? mixc(c, [40, 108, 190], 0.18) : mixc(c, [200, 228, 246], 0.22);
@@ -356,8 +356,6 @@
         const u = kubbeU(X, Y), r = Math.max(1, kubbeR[clamp(Math.round(Y), 300, 555)]);
         const faz = (Math.asin(u) + Math.PI / 2) / faz16, fr = faz - Math.round(faz);
         const px = Math.abs(fr) * faz16 * r * Math.sqrt(1 - u * u);
-        l *= 1 - 0.3 * sstep(3.4, 0, px);          // kaburga oluğu (yumuşak)
-        l += 0.05 * sstep(0.2, 0.45, fr) * sstep(0.5, 0.45, fr) * 0; // yer tutucu
         l += 0.08 * sstep(500, 555, Y) * sstep(0.2, -0.6, u);
         c = rampa(KUBBE, clamp(l, 0, 1));
       } else if (b === 'kasnak') {
@@ -406,6 +404,23 @@
       darbe({ x, y, a: Math.PI / 2 + (R() - 0.5) * 0.06, L: 30 + R() * 30, w: 6 + R() * 5, c: rampa(TAS, clamp(l + (R() - 0.5) * 0.1, 0, 1)), opak: 0.35, yum: 0.6, kalin: 0.1, m: mMinare, cizgi: 0.1 });
     }
   }
+  // kaburgalar: yaş boyaya liner fırçayla çekilmiş yumuşak oluk ve ışık tarafındaki açık bant
+  {
+    const faz16 = Math.PI / 16;
+    for (let y = 600; y < 1110; y++) for (let x = 716; x < 1524; x++) {
+      const X = x / 2, Y = y / 2;
+      if (BOL[Math.floor(Y) * W + Math.floor(X)] !== BI.kubbe) continue;
+      const u = kubbeU(X, Y), r = Math.max(1, kubbeR[clamp(Math.round(Y), 300, 555)]), cs = Math.sqrt(1 - u * u);
+      const faz = (Math.asin(u) + Math.PI / 2) / faz16, fr = faz - Math.round(faz);
+      const px = fr * faz16 * r * cs;                       // kaburgaya ekranda uzaklık (işaretli)
+      const ust = sstep(300, 330, Y);                        // tepeye yakın kaburgalar birleşir, yumuşat
+      const oluk = sstep(3.2, 0.4, Math.abs(px)) * ust * (0.55 + 0.45 * cs);
+      const bant = sstep(-0.4, 0.4, u) * sstep(1.6, 3.6, px) * sstep(9.5, 4.5, px) * ust;
+      const j = (y * W2 + x) * 3;
+      const f = 1 - 0.36 * oluk;
+      RGB[j] = RGB[j] * f + (196 - RGB[j]) * bant * 0.3; RGB[j + 1] = RGB[j + 1] * f + (236 - RGB[j + 1]) * bant * 0.3; RGB[j + 2] = RGB[j + 2] * f + (150 - RGB[j + 2]) * bant * 0.3;
+    }
+  }
   // ayrıntılar: korkuluk dikmeleri, zikzak, şerefe gölgeleri, kemer içleri
   {
     for (const [x1, x2, y1, y2] of [[252, 348, 436, 456], [260, 340, 272, 290]]) {
@@ -422,19 +437,14 @@
   // ------------------------------------------------------------ 6. spatula ışıkları: keskin, yer yer kopuk açık boya
   const mKubbeK = maske(['kubbe'], 0), mKasnakK = maske(['kasnak', 'pencere'], 0, [330, 552, 790, 694]);
   {
-    // kubbe kaburgaları: ışıklı yanda ince çizgi
+    // kubbe kaburgaları: yalnız en çok ışık alan kaburgalarda, ortada birkaç keskin spatula dokunuşu
     for (const kb of SAHNE.kaburgalar(16, 60)) {
-      if (kb.u < -0.05) continue;
+      if (kb.u < 0.2 || kb.u > 0.93) continue;
       const p = kb.noktalar;
-      const g = clamp((kb.u + 0.05) / 0.9, 0, 1);
-      for (let s = 0; s < 4; s++) {
-        const i0 = 3 + s * 13, i1 = Math.min(p.length - 2, i0 + 15);
-        const a0 = p[i0], a1 = p[i1];
-        const mx = (a0[0] + a1[0]) / 2 + 1.8, my = (a0[1] + a1[1]) / 2;
-        const l = kubbeIsik(mx, my);
-        const c = mixc(rampa(KUBBE, clamp(l + 0.22, 0, 1)), [214, 244, 170], 0.3 * g);
-        darbe({ x: mx, y: my, a: Math.atan2(a1[1] - a0[1], a1[0] - a0[0]), L: Math.hypot(a1[0] - a0[0], a1[1] - a0[1]) * 1.12, w: 1.8 + 1.4 * g, c, bicak: true, kalin: 0.7, opak: 0.5 + 0.5 * g, m: mKubbeK });
-      }
+      const i0 = 16 + Math.floor(R() * 6), i1 = i0 + 16 + Math.floor(R() * 8);
+      const a0 = p[i0], a1 = p[Math.min(p.length - 2, i1)];
+      const mx = (a0[0] + a1[0]) / 2 + 2.2, my = (a0[1] + a1[1]) / 2;
+      darbe({ x: mx, y: my, a: Math.atan2(a1[1] - a0[1], a1[0] - a0[0]), L: Math.hypot(a1[0] - a0[0], a1[1] - a0[1]), w: 2.2, c: [206, 240, 160], bicak: true, kalin: 0.3, opak: 0.85, m: mKubbeK });
     }
     // kubbenin sağ kenarı
     {
@@ -517,8 +527,8 @@
       for (const [e, iy] of tac) {
         const cx = c.x + Math.cos(e.aci) * c.r * 0.52, cy = c.y + Math.sin(e.aci) * c.r * 0.52;
         const dis = iy > -0.2 ? [255, 254, 250] : [234, 232, 244];
-        darbe({ x: cx, y: cy, a: e.aci + Math.PI, L: c.r * 1.02, w: c.r * 0.84, c: dis, c2: [244, 212, 226], karis: 0.4, prof: 'oval', kalin: 0.5, yum: 0.2, cizgi: 0.03 });
-        if (iy > -0.3) darbe({ x: cx + Math.cos(e.aci) * c.r * 0.12, y: cy + Math.sin(e.aci) * c.r * 0.12, a: e.aci + Math.PI, L: c.r * 0.6, w: c.r * 0.45, c: [255, 255, 255], prof: 'oval', kalin: 0.8, yum: 0.5, opak: 0.85, cizgi: 0.02 });
+        darbe({ x: cx, y: cy, a: e.aci + Math.PI, L: c.r * 1.02, w: c.r * 0.84, c: dis, c2: [244, 212, 226], karis: 0.4, prof: 'oval', kalin: 0.35, cizgi: 0.02 });
+        if (iy > -0.3) darbe({ x: cx + Math.cos(e.aci) * c.r * 0.14, y: cy + Math.sin(e.aci) * c.r * 0.14, a: e.aci + Math.PI, L: c.r * 0.55, w: c.r * 0.38, c: [255, 255, 255], prof: 'oval', kalin: 0.6, yum: 0.1, opak: 0.8, cizgi: 0.02 });
       }
       darbe({ x: c.x, y: c.y, a: 0, L: c.r * 0.42, w: c.r * 0.4, c: [246, 196, 56], c2: [214, 140, 40], karis: 0.6, prof: 'oval', kalin: 0.9 });
       darbe({ x: c.x + c.r * 0.06, y: c.y - c.r * 0.06, a: 0, L: c.r * 0.16, w: c.r * 0.14, c: [255, 240, 150], prof: 'oval', kalin: 1 });

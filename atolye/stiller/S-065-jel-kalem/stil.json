@@ -1,38 +1,39 @@
 {
   "kod": "S-065",
   "no": 65,
-  "ad": "Siyah Kâğıda Jel Kalem",
-  "ad_en": "Gel Pen on Black Paper",
+  "ad": "Renkli Kâğıda Jel Kalem",
+  "ad_en": "Gel Pen on Colored Paper",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Siyah kâğıt üstüne örtücü ve metalik jel kalemlerle ince çizgi, noktalama, tarama ve geometrik-bitkisel süs dolguları.",
-  "tanim": "Siyah kâğıda jel kalem çizimi, pigmentli, örtücü jel mürekkebin koyu zeminde parlak, opak ve net bir çizgi bırakmasına dayanır. Beyaz kâğıttaki mantığın tersine ışık eklenir: aydınlık yerler sık noktalama ve taramayla kurulur, gölgelerde kâğıdın siyahı açık bırakılır; metalik altın ve gümüş kalemler çizgi boyunca parıldar. Tekrarlanan desen dolguları, defter ve kart süslemesi, dekoratif illüstrasyon ve boyama çalışmalarında yaygındır.",
-  "koken": "Jel mürekkepli kalem 1984'te Japon Sakura şirketince geliştirildi; 1980'lerin sonundan itibaren Gelly Roll gibi opak beyaz, pastel ve metalik jel kalemler koyu kâğıda çizimi yaygın bir illüstrasyon ve hobi tekniğine dönüştürdü. Koyu ya da renkli zeminde açık renkle ışık kurma Rönesans'tan beri bilinir (renkli kâğıt üstüne beyaz tebeşirle ışıklandırma); 2000'lerde Rick Roberts ile Maria Thomas'ın Zentangle yöntemi tekrarlanan desen dolgularını bu kalemlerle popülerleştirdi.",
+  "ozet": "Açık gök mavisi kâğıt üstüne örtücü pastel ve metalik jel kalemler: ince çizgi, sıklıkla ton kurma, noktalama, tarama ve geometrik-bitkisel süs dolguları.",
+  "tanim": "Renkli kâğıda jel kalem çizimi, pigmentli, örtücü jel mürekkebin renkli zeminde de parlak ve net bir çizgi bırakmasına dayanır. Beyaz ve pastel kalemler kâğıdın renginin üstünde ışığı, koyu jel renkleri gölgeyi ve konturu verir; ton, çizgi ve noktaların sıklığıyla kurulur, metalik altın ve gümüş çizgi boyunca parıldar. Tekrarlanan desen dolguları, defter ve kart süslemesi, dekoratif illüstrasyon ve boyama çalışmalarında yaygındır.",
+  "koken": "Jel mürekkepli kalem 1984'te Japon Sakura şirketince geliştirildi; 1980'lerin sonundan itibaren Gelly Roll gibi opak beyaz, pastel ve metalik jel kalemler renkli ve kraft kâğıda çizimi yaygın bir illüstrasyon ve hobi tekniğine dönüştürdü. Renkli kâğıt üstünde açık renkle ışık kurma Rönesans'tan beri bilinir (mavi ya da boyalı kâğıt üstüne beyaz tebeşirle ışıklandırma); 2000'lerde Rick Roberts ile Maria Thomas'ın Zentangle yöntemi tekrarlanan desen dolgularını bu kalemlerle popülerleştirdi.",
   "ayirt_edici": [
-    "Zemin siyah kâğıt; renkler örtücü jel kalem: beyaz, pembe, turkuaz, fıstık yeşili, metalik altın ve gümüş; parlama ya da hare yok, çizgiler keskin",
-    "Işık noktalama ve taramayla eklenmiş: kubbenin sağ yanı sık ve fıstık yeşili, sol yanı seyrek ve turkuaz; ışıklı şeritte yoğun beyaz noktalar, kasnakta ışığa doğru sıklaşan noktalama",
-    "Kubbe dilimlerinde sırayla değişen süs dolguları: noktalama, balık pulu, zikzak sıraları ve noktalı halkalar",
-    "Kaidede baklava kafes ve gözlerinde dört noktalı küçük çiçekler, kornişte altın üçgen diş sırası; minarede gümüş baklava örgüsü ve altın-pembe zikzak bant",
-    "Metalik altın ve gümüş çizgilerde boyunca değişen parıltı ve küçük ışık noktaları; altın güneş iç içe halkalar, uzun-kısa ışınlar, üçgen diş halkası ve düzenli aralıklı nokta halkasıyla keskin sınırlı bir süs, çevresinde hare yok",
-    "Yapraklarda balıksırtı damar deseni, çiçeklerde merkezden yelpaze damarlar ve altın noktalı ortalar; bulutlar beyaz ve gümüş koşut yaylarla"
+    "Zemin açık gök mavisi renkli kâğıt; gök kâğıdın kendi rengi, ufka doğru sıklaşan beyaz nokta sıraları ve beyaz noktalamayla doldurulmuş, kabarık hatlı bulutlar",
+    "Örtücü pastel ve metalik kalemler (beyaz, pastel pembe, turkuaz, fıstık yeşili, açık sarı, altın, gümüş) ile kontrast için koyu yeşil ve koyu turkuaz; çizgiler keskin, parlama yok",
+    "Ton sıklıkla kurulmuş: kubbede meridyen taraması gölgede koyu yeşil ve sık, ışıkta fıstık yeşili ve seyrek; üstünde dilim dilim noktalama, balık pulu, zikzak ve noktalı halka dolguları",
+    "Kaidede beyaz yatay tarama üstüne gümüş baklava kafes ve gözlerinde dört noktalı pembe ve turkuaz çiçekler, kornişte altın diş sırası; minarede beyaz tarama, gümüş örgü, altın-pembe zikzak bant ve koyu turkuaz hat",
+    "Altın güneş: sarı-turuncu noktalanmış disk, iç içe altın halkalar, altın ve şeftali ışınlar, üçgen diş halkası ve dışa doğru seyrelen sarı nokta halkaları",
+    "Zeminde sık, hafif dalgalı açık sarı ve şeftali çizgiler; yapraklarda koyu yeşil konturlu balıksırtı dolgu, çiçeklerde örtücü beyaz yelpaze çizgiler, dipte pastel pembe, altın noktalı ortalar"
   ],
   "palet": [
-    "#141316",
-    "#F3F1EA",
-    "#B3EE48",
-    "#2FD0C4",
-    "#FF7DB4",
-    "#D6AE56",
-    "#C4C8CF"
+    "#D2E5F1",
+    "#F7FAFC",
+    "#F0A1C5",
+    "#2EB9C1",
+    "#A6DE47",
+    "#207745",
+    "#C8A24D",
+    "#F9DE83"
   ],
-  "kodla_cizim": "Siyah kâğıt, piksel başına düşük frekanslı lekelenme, ince gürültü ve seyrek liflerle üretilir. Jel kalem işaretleri ayrı bir katmanda örtücü (source-over) çizilir; çizgiler ve noktalar renk ve kalınlık kovalarına toplanıp toplu basılır. Metalik altın ve gümüş çizgiler her küçük parçada beş tonluk bir diziden gürültüyle seçilen renkle çizilir (çizgi boyunca parıltı) ve aralara rastgele açık ışık noktaları serpilir; düz renklerde darbe başına küçük mürekkep damlası olabilir. Süs dolguları işaret üreten desen işlevleridir (noktalama, paralel tarama, balık pulu, noktalı halka, zikzak); her işaret o noktadaki ışığa bağlı bir olasılıkla tutulur, böylece ton işaret sıklığıyla kurulur. Işık kubbede dönel yüzey normalinden, kasnak ve minarede silindirden gelir; kubbe dilimleri SAHNE.kaburgalar ile kurulup her dilime sırayla farklı desen verilir, renk ışığa göre fıstık yeşili, turkuaz ya da beyaz seçilir. Örtüşmeler önde duran biçimin silueti katmandan silinerek çözülür; bulanıklaştırma ya da parlama kullanılmaz.",
+  "kodla_cizim": "Açık gök mavisi kâğıt, piksel başına düşük frekanslı lekelenme, ince gürültü ve seyrek açık ve koyu liflerle üretilir. Jel kalem işaretleri 2048 iç çözünürlükte ayrı bir katmanda örtücü (source-over) çizilir; çizgiler ve noktalar renk ve kalınlık kovalarına toplanıp toplu basılır. Metalik altın ve gümüş çizgiler her küçük parçada beş tonluk bir diziden gürültüyle seçilen renkle çizilir (çizgi boyunca parıltı). Süs dolguları işaret üreten desen işlevleridir (noktalama, paralel tarama, balık pulu, noktalı halka, zikzak, nokta sıraları); her işaret o noktadaki ışığa bağlı bir olasılıkla tutulur. Açık kâğıtta ton iki yönlü kurulur: gölge koyu renkte sık tarama (kubbede ışığa göre seçilen renk ve olasılıkla kısa meridyen parçaları), ışık örtücü beyaz ve pastel işaretler. Işık kubbede dönel yüzey normalinden, kasnak ve minarede silindirden gelir; kubbe dilimleri SAHNE.kaburgalar ile kurulup her dilime sırayla farklı desen verilir. Taç yaprak ve yapraklar kendi biçimlerine kırpılmış yelpaze ve balıksırtı çizgilerle doldurulur. Örtüşmeler önde duran biçimin silueti katmandan silinerek çözülür; bulanıklaştırma ya da parlama kullanılmaz.",
   "etiketler": [
     "jel kalem",
-    "siyah kâğıt",
+    "renkli kâğıt",
     "metalik",
+    "pastel",
     "noktalama",
     "desen dolgu",
-    "dekoratif",
-    "kontrast"
+    "dekoratif"
   ]
 }

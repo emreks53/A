@@ -607,7 +607,7 @@
   const mPencere = maske((x) => x.fill(YOL.pencere));
   const ICGOK = icMaske(['gok', 'gunes'], 6), ICKUBBE = icMaske(['kubbe'], 4), ICZEMIN = icMaske(['zemin'], 3), ICTAS = icMaske(['kaide', 'minare'], 3);
 
-  const PASTEL = { mod: 'kuru', opq: 0.88, gren: 0.62, yumus: 0.2, us: 0.7 };
+  const PASTEL = { mod: 'kuru', opq: 0.86, gren: 0.88, yumus: 0.13, us: 0.85, bulanik: 1.4 };
   const YEDIR = { mod: 'kuru', opq: 1, gren: 0.1, yumus: 0.3, us: 1 };
   const SON = { mod: 'kuru', opq: 0.96, gren: 0.4, yumus: 0.16, us: 0.6 };
 
@@ -617,43 +617,58 @@
 
   // ================================================================ 2) GÖK: çubuğun yanıyla geniş vuruşlar, kırık renk
   const gokIc = (x, y) => { const b = bolge(x, y); return (b === 'gok' || b === 'gunes') && y < 806; };
-  const gokCesit = (px, py) => {
-    const d = gunesD(px, py), c = gokRenk(px, py), t = r(), bl = bulut(px, py);
-    if (bl > 0.45) return null;
+  const gokCesit = (k0) => (px, py) => {
+    const d = gunesD(px, py), c = gokRenk(px, py), t = r();
+    if (bulut(px, py) > 0.35) return null;
     let k;
     if (d < 170) k = t < 0.5 ? C.krem : t < 0.8 ? C.limon : C.beyaz;
-    else if (d < 330) k = t < 0.3 ? C.seftali : t < 0.5 ? C.pembe : t < 0.75 ? C.limon : C.turkuazAcik;
-    else if (d < 600) k = t < 0.3 ? C.turkuazAcik : t < 0.5 ? C.turkuaz : t < 0.65 ? C.leylak : t < 0.75 ? C.pembe : C.gokAcik;
-    else k = t < 0.3 ? C.gok : t < 0.48 ? C.kobalt : t < 0.62 ? C.leylak : t < 0.8 ? C.turkuaz : C.gokAcik;
-    return mixc(c, k, 0.45 + 0.35 * r());
+    else if (d < 330) k = t < 0.3 ? C.seftali : t < 0.45 ? C.pembe : t < 0.75 ? C.limon : C.turkuazAcik;
+    else if (d < 600) k = t < 0.3 ? C.turkuazAcik : t < 0.5 ? C.turkuaz : t < 0.62 ? C.leylak : t < 0.7 ? C.pembe : C.gokAcik;
+    else k = t < 0.3 ? C.gok : t < 0.46 ? C.kobalt : t < 0.6 ? C.leylak : t < 0.8 ? C.turkuaz : C.gokAcik;
+    return mixc(c, k, k0 + 0.3 * r());
   };
-  katman((x) => vurusAlani(x, { bx: [-20, -20, W + 20, 812], ic: gokIc, adim: 11, aci: (px, py) => -0.22 + 0.12 * Math.sin(px / 210 + py / 160), aciJ: 0.35, boy: 46, kal: 15, alfa: 0.62, renk: gokCesit, egri: 0.08 }, r),
+  const gokAci = (px, py) => -0.2 + 0.16 * Math.sin(px / 230 + py / 170);
+  // geniş, uzun yan vuruşlar
+  katman((x) => vurusAlani(x, { bx: [-40, -40, W + 40, 820], ic: gokIc, adim: 17, aci: gokAci, aciJ: 0.3, boy: 84, kal: 24, alfa: 0.6, renk: gokCesit(0.25), egri: 0.1 }, r),
     Object.assign({ kirp: mGok }, PASTEL));
-  // gökün alt yarısı ve güneş çevresi yeniden parmakla yedirilmiş: pürüzsüz geçiş
-  harmanla([0, 0, W, 812], 7, (x, y) => mOku(ICGOK, x, y) * clamp(sstep(380, 720, y) * 0.85 + (1 - sstep(120, 300, gunesD(x, y))) * 0.9 + 0.55 * sstep(0.5, 0.66, fbm(nF, x / 160, y / 120, 3)), 0, 0.95));
-  // ikinci, daha küçük vuruş katmanı (üst ve sol gök canlı kalır)
-  katman((x) => vurusAlani(x, { bx: [-20, -20, W + 20, 812], ic: gokIc, adim: 13, aci: (px, py) => -0.18 + 0.14 * Math.sin(px / 180 + py / 140), aciJ: 0.4, boy: 30, kal: 10,
-    alfa: (px, py) => 0.55 * (1 - sstep(460, 760, py) * 0.7) * sstep(100, 260, gunesD(px, py)), renk: gokCesit, egri: 0.1 }, r),
+  // parmakla yedirme: gökün büyük kısmı pürüzsüz geçiş olur, üst-solda vuruşlar seçilir
+  harmanla([0, 0, W, 812], 8, (x, y) => mOku(ICGOK, x, y) * clamp(0.5 + sstep(380, 720, y) * 0.4 + (1 - sstep(140, 320, gunesD(x, y))) * 0.5 - 0.35 * sstep(0.5, 0.66, fbm(nF, x / 160, y / 120, 3)), 0, 0.95));
+  // orta boy kırık renk vuruşları, yer yer
+  katman((x) => vurusAlani(x, { bx: [-20, -20, W + 20, 812], ic: gokIc, adim: 15, aci: gokAci, aciJ: 0.4, boy: 42, kal: 12,
+    alfa: (px, py) => 0.55 * (1 - sstep(480, 780, py) * 0.6) * sstep(120, 280, gunesD(px, py)) * sstep(0.38, 0.6, fbm(nB, px / 140, py / 140, 2)), renk: gokCesit(0.5), egri: 0.12 }, r),
     Object.assign({ kirp: mGok }, PASTEL));
-  // bulutlar: leylak-gri gölge tabanı üstüne krem-beyaz, kavisli vuruşlar
-  katman((x) => vurusAlani(x, { bx: [0, 90, W, 560], ic: (px, py) => bulut(px, py) > 0.2, adim: 6, aci: (px, py) => -0.1 + (bulutGolge(px, py) - 0.5) * 0.3, aciJ: 0.5, boy: 20, kal: 8,
-    alfa: (px, py) => 0.75 * bulut(px, py), renk: (px, py) => { const g = bulutGolge(px, py); const t = r(); return g > 0.55 ? (t < 0.4 ? C.tasGolge : t < 0.7 ? C.leylak : C.gokAcik) : (t < 0.55 ? C.beyaz : t < 0.8 ? C.krem : C.pembe); }, egri: 0.25 }, r),
+  harmanla([0, 0, W, 812], 4, (x, y) => mOku(ICGOK, x, y) * 0.4 * sstep(0.45, 0.62, fbm(nD, x / 120, y / 120, 2)));
+  // güneş: yedirilmiş parlak hale, beyaz kurs
+  katman((x) => haritaCiz(x, (px, py) => {
+    const d = gunesD(px, py); if (d > 150) return null;
+    const c = mixc(C.beyaz, C.limon, sstep(44, 120, d));
+    return [c[0], c[1], c[2], d < 46 ? 1 : 0.7 * (1 - sstep(50, 150, d))];
+  }, [720, 0, W, 300]), Object.assign({ kirp: mGok, bx: [720, 0, W, 300] }, YEDIR, { opq: 0.9 }));
+  // bulutlar: leylak-gri gölge tabanı, üstü krem-beyaz kavisli vuruşlar, yedirilmiş
+  katman((x) => vurusAlani(x, { bx: [0, 90, W, 560], ic: (px, py) => bulut(px, py) > 0.15, adim: 7, aci: (px, py) => -0.05 + (r() - 0.5) * 0.6, aciJ: 0.3, boy: 22, kal: 10,
+    alfa: (px, py) => 0.8 * bulut(px, py), renk: (px, py) => { const g = bulutGolge(px, py), t = r(); return g > 0.62 ? (t < 0.45 ? C.tasGolge : t < 0.75 ? C.leylak : C.gokAcik) : g > 0.45 ? (t < 0.5 ? C.krem : C.tasGolge) : (t < 0.6 ? C.beyaz : t < 0.95 ? C.krem : C.pembe); }, egri: 0.3 }, r),
     Object.assign({ kirp: mGok }, PASTEL));
-  harmanla([0, 90, W, 560], 3, (x, y) => mOku(ICGOK, x, y) * 0.45 * sstep(0.2, 0.6, bulut(x, y)));
-  // güneş: beyaz kurs ve çevresinde limon sarısı halka
+  harmanla([0, 90, W, 560], 4, (x, y) => mOku(ICGOK, x, y) * 0.75 * sstep(0.05, 0.4, bulut(x, y)));
+  // bulut tepelerinde keskin beyaz son vuruşlar
   katman((x) => {
-    for (let i = 0; i < 160; i++) {
-      const a = r() * Math.PI * 2, rad = Math.sqrt(r()) * 46, len = 12 + r() * 14, da = len / Math.max(16, rad) / 2, pts = [];
-      for (let t = -1; t <= 1; t += 0.5) pts.push([880 + Math.cos(a + t * da) * rad, 140 + Math.sin(a + t * da) * rad]);
-      strok(x, pts, 7, 0.85, rad < 30 ? C.beyaz : r() < 0.6 ? C.limon : C.krem, 0.1, 0.2, 0.5);
+    for (const b of bulutLop) for (const [lx, ly, lr] of b.l) {
+      const a0 = Math.PI * (1.1 + r() * 0.15), a1 = Math.PI * (1.9 - r() * 0.15), pts = [];
+      for (let t = 0; t <= 10; t++) { const a = lerp(a0, a1, t / 10); pts.push([lx + Math.cos(a) * lr * 0.78, ly + Math.sin(a) * lr * 0.78]); }
+      const ust = pts.filter((p) => p[1] < b.by - 4 * b.s && bulut(p[0], p[1] - 8) < 0.5);
+      if (ust.length > 2) strok(x, ust, 4.5, 0.85, C.beyaz, 0.2, 0.3, 0.4);
     }
-  }, Object.assign({ kirp: mGok, bx: [800, 60, 960, 220] }, PASTEL));
+  }, Object.assign({ kirp: mGok, bx: [0, 90, W, 560] }, SON));
+  // gökte seyrek, ince, keskin son vuruşlar (açık turkuaz, pembe, beyaz-mavi)
+  katman((x) => vurusAlani(x, { bx: [0, 0, W, 760], ic: gokIc, adim: 44, aci: gokAci, aciJ: 0.4, boy: 30, kal: 6,
+    alfa: (px, py) => 0.6 * sstep(260, 420, gunesD(px, py)) * (1 - sstep(520, 740, py)) * sstep(0.5, 0.62, fbm(nE, px / 100, py / 100, 2)),
+    renk: (px, py) => { const t = r(); return mixc(gokRenk(px, py), t < 0.4 ? C.turkuazAcik : t < 0.6 ? C.gokAcik : t < 0.85 ? C.leylak : C.pembe, 0.4); }, egri: 0.15, bas: 0.25, son: 0.4, uc: 0.35 }, r),
+    Object.assign({ kirp: mGok }, SON));
 
   // ================================================================ 3) ZEMİN
-  katman((x) => vurusAlani(x, { bx: [-10, 790, W + 10, W + 10], ic: (px, py) => bolge(px, py) === 'zemin' || py > 800, adim: 9, aci: (px, py) => (py > 860 ? -1.2 + (r() - 0.5) * 0.8 : -0.05), aciJ: 0.3, boy: (px, py) => (py > 860 ? 22 : 40), kal: (px, py) => (py > 860 ? 7 : 11), alfa: 0.7,
+  katman((x) => vurusAlani(x, { bx: [-10, 790, W + 10, W + 10], ic: (px, py) => bolge(px, py) === 'zemin' || py > 800, adim: 10, aci: (px, py) => (py > 860 ? -1.25 + (r() - 0.5) * 0.7 : -0.04), aciJ: 0.3, boy: (px, py) => (py > 860 ? 30 : 56), kal: (px, py) => (py > 860 ? 9 : 14), alfa: 0.62,
     renk: (px, py) => { const t = r(); const g = sstep(830, 900, py); if (r() < g) return t < 0.3 ? C.cimen : t < 0.55 ? C.yaprak : t < 0.7 ? C.yesilSari : t < 0.85 ? C.yaprakMavi : C.okra; return t < 0.3 ? C.kum : t < 0.5 ? C.okra : t < 0.65 ? C.seftali : t < 0.8 ? C.tasGolge : C.toprak; } }, r),
     Object.assign({ kirp: mZemin }, PASTEL));
-  harmanla([0, 790, W, W], 4, (x, y) => mOku(ICZEMIN, x, y) * 0.5 * sstep(0.45, 0.62, fbm(nF, x / 90, y / 70, 2)));
+  harmanla([0, 790, W, W], 5, (x, y) => mOku(ICZEMIN, x, y) * (0.35 + 0.4 * sstep(0.45, 0.62, fbm(nF, x / 90, y / 70, 2))));
 
   // ================================================================ 4) MİNARE ve KAİDE (beyaz taş: sıcak ışık, mavi-leylak gölge)
   const tasCesit = (px, py) => {
