@@ -167,7 +167,7 @@
     for (let i = n - 1; i >= 0; i--) p.lineTo(R[i][0], R[i][1]);
     p.closePath();
     const ax = pts[0][0], ay = pts[0][1], bx = pts[n - 1][0], by = pts[n - 1][1];
-    if (Math.hypot(bx - ax, by - ay) > 4) {
+    if (Math.hypot(bx - ax, by - ay) > Math.max(4, T * 0.7)) {
       const g = cx.createLinearGradient(ax, ay, bx, by);
       g.addColorStop(0, rgba(c, a * (bas > 0 ? 0.35 : 1)));
       g.addColorStop(Math.min(0.45, bas * 0.9 + 0.02), rgba(c, a));
@@ -180,6 +180,15 @@
   // bir yolu el çizgisi gibi birkaç parçada çiz (hafif titreme, örtüşen vuruşlar)
   function elCizgisi(cx, pts, w, a, c, r, o) {
     o = o || {};
+    // seyrek noktaları sıklaştır (uzun düz kenarlar da parça parça çizilebilsin)
+    if (pts.length >= 2) {
+      const yeni = [pts[0]];
+      for (let i = 1; i < pts.length; i++) {
+        const p0 = pts[i - 1], p1 = pts[i], L = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), k = Math.ceil(L / 3);
+        for (let j = 1; j <= k; j++) yeni.push([lerp(p0[0], p1[0], j / k), lerp(p0[1], p1[1], j / k)]);
+      }
+      pts = yeni;
+    }
     const titre = o.titre === undefined ? 0.35 : o.titre, parca = o.parca || 70;
     const n = pts.length;
     if (n < 2) return;
@@ -362,7 +371,7 @@
     // eski bir çiçek ve dalga çizgisi
     for (let k = 0; k < 5; k++) { const a = k * Math.PI * 0.4; x.strokeStyle = rgba(PEMBE, 0.5); x.lineWidth = 3; x.beginPath(); x.ellipse(160 + Math.cos(a) * 26, 330 + Math.sin(a) * 26, 22, 14, a, 0, Math.PI * 2); x.stroke(); }
     x.strokeStyle = rgba(SARI, 0.45); x.lineWidth = 3; x.beginPath(); for (let t = 0; t <= 60; t++) { const px = 560 + t * 7, py = 880 + Math.sin(t * 0.4) * 14; t ? x.lineTo(px, py) : x.moveTo(px, py); } x.stroke();
-  }, { ezme: 3, opq: 0.13, gren: 0.6 });
+  }, { ezme: 3, opq: 0.2, gren: 0.6 });
   katman((x) => {
     // silgi sürtmeleri: yatay, tozlu bulutlar
     for (let k = 0; k < 14; k++) { const y0 = 60 + r() * 900, x0 = 40 + r() * 500, L = 200 + r() * 450; leke(x, [[x0, y0], [x0 + L * 0.5, y0 + (r() - 0.5) * 20], [x0 + L, y0 + (r() - 0.5) * 30]], 40 + r() * 50, 0.5, C('#D8DED8')); }
@@ -370,16 +379,22 @@
 
   // ================================================================ 1) gök: yan yüzle sürülüp dağıtılmış mavi, yukarıda koyulaşır
   const gokIc = (x, y) => y < 806;
+  // gök bir vinyet içinde: köşelerde ve kenarlarda koyu tahta görünür kalır
+  // köşeleri yuvarlatılmış bir pano: içi tebeşirle dolu, dışı koyu tahta
+  const PANO = { cx: 512, cy: 450, hx: 446, hy: 392, rad: 118 };
+  const panoIci = (x, y) => { const qx = Math.abs(x - PANO.cx) - PANO.hx + PANO.rad, qy = Math.abs(y - PANO.cy) - PANO.hy + PANO.rad; return -(Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - PANO.rad); };
+  const vinyet = (x, y) => sstep(-6, 20, panoIci(x, y) + (fbm(nB, x / 40, y / 40, 3) - 0.5) * 22);
+  const panoYolu = (ic) => { const p = [], h = PANO.hx - ic, v = PANO.hy - ic, R = PANO.rad - ic; const kose = [[PANO.cx + h - R, PANO.cy - v + R, -Math.PI / 2], [PANO.cx + h - R, PANO.cy + v - R, 0], [PANO.cx - h + R, PANO.cy + v - R, Math.PI / 2], [PANO.cx - h + R, PANO.cy - v + R, Math.PI]]; for (const [kx, ky, a0] of kose) for (let t = 0; t <= 16; t++) { const a = a0 + (t / 16) * Math.PI / 2; p.push([kx + Math.cos(a) * R, ky + Math.sin(a) * R]); } p.push(p[0]); return p; };
   const gunesUzak = (x, y) => Math.hypot(x - 880, y - 140);
   katman((x) => {
-    yanDoldur(x, { bx: [20, 20, 1004, 800], ic: gokIc, aralik: 14, boy: 70, gen: 22, aci: -0.18, aciJ: 0.25, a: 0.85, renk: (px, py) => { const d = gunesUzak(px, py); if (d < 150) return null; if (d < 260) return r() < 0.5 ? C('#F8EEB0') : C('#CDE8F0'); return py < 330 ? (r() < 0.55 ? MAVI2 : MAVI) : py < 620 ? (r() < 0.8 ? MAVI : C('#B8E0F0')) : r() < 0.6 ? C('#C8E6F2') : C('#F2D8C8'); } });
-  }, { ezme: 9, opq: 0.85, gren: 0.4, guc: 1.6, sil: [MK.yapi, MK.bitki], maske: ton((b, l, px, py) => (py < 806 ? 0.55 + 0.4 * sstep(760, 60, py) : 0)) });
+    yanDoldur(x, { bx: [20, 20, 1004, 800], ic: gokIc, aralik: 14, boy: 70, gen: 22, aci: -0.18, aciJ: 0.25, a: 0.85, renk: (px, py) => { const d = gunesUzak(px, py); if (d < 92) return null; if (d < 170) return r() < 0.75 ? C('#FAF0B8') : C('#FFFBE8'); if (d < 270) return r() < sstep(270, 170, d) ? C('#F6EEC8') : C('#CDE8F0'); return py < 330 ? (r() < 0.55 ? MAVI2 : MAVI) : py < 620 ? (r() < 0.8 ? MAVI : C('#B8E0F0')) : r() < 0.6 ? C('#C8E6F2') : C('#F2D8C8'); } });
+  }, { ezme: 9, opq: 0.88, gren: 0.3, guc: 1.7, sil: [MK.yapi, MK.bitki], maske: ton((b, l, px, py) => (py < 806 ? (0.8 + 0.15 * sstep(760, 60, py)) * vinyet(px, py) : 0)) });
   katman((x) => {
     yanDoldur(x, { bx: [20, 20, 1004, 800], ic: (px, py) => py < 806 && gunesUzak(px, py) > 240, aralik: 26, boy: 60, gen: 16, aci: -0.18, aciJ: 0.3, a: 0.7, renk: (px, py) => (py < 380 ? (r() < 0.5 ? MAVI2 : MAVI) : r() < 0.7 ? MAVI : BEYAZ) });
-  }, { opq: 0.8, gren: 0.85, guc: 1.3, sil: [MK.yapi, MK.bitki], maske: ton((b, l, px, py) => (py < 806 ? 0.3 + 0.6 * sstep(760, 60, py) : 0)) });
+  }, { opq: 0.8, gren: 0.85, guc: 1.3, sil: [MK.yapi, MK.bitki], maske: ton((b, l, px, py) => (py < 806 ? (0.3 + 0.6 * sstep(760, 60, py)) * Math.min(1, vinyet(px, py) * 1.3) : 0)) });
   // güneş: sarı-turuncu hale (dağıtılmış), beyaz göbek, kısa ışın çizgileri
   katman((x) => {
-    for (let k = 0; k < 14; k++) { const rr = 10 + k * 10; x.strokeStyle = rgba(k < 5 ? BEYAZ : k < 10 ? SARI : SARI2, 0.9 * (1 - k / 16)); x.lineWidth = 12; x.beginPath(); x.arc(880, 140, rr, 0, Math.PI * 2); x.stroke(); }
+    for (let k = 0; k < 10; k++) { const rr = 8 + k * 10; x.strokeStyle = rgba(k < 5 ? BEYAZ : k < 8 ? SARI : C('#FAE6A0'), 0.95 - k * 0.03); x.lineWidth = 12; x.beginPath(); x.arc(880, 140, rr, 0, Math.PI * 2); x.stroke(); }
     x.fillStyle = rgba(BEYAZ, 1); x.beginPath(); x.arc(880, 140, 32, 0, Math.PI * 2); x.fill();
   }, { ezme: 8, opq: 0.92, gren: 0.35, guc: 1.4, sil: [MK.yapi, MK.bitki] });
   katman((x) => {
@@ -402,8 +417,8 @@
   }, { opq: 0.95, gren: 0.7, sil: [MK.yapi, MK.bitki] });
 
   // ================================================================ 2) zemin: okra ve sarı, yatay
-  katman((x) => { yanDoldur(x, { bx: [20, 800, 1004, 1004], aralik: 14, boy: 60, gen: 16, aci: -0.04, aciJ: 0.12, a: 0.7, renk: (px, py) => (py < 826 && px > 270 && px < 850 ? LILA : r() < 0.5 ? OKRA : r() < 0.6 ? SARI2 : C('#E8B880')) }); },
-    { ezme: 4, opq: 0.85, gren: 0.55, guc: 1.5, sil: [MK.yapi, MK.bitki], maske: ton((b, l, px, py) => (py >= 800 ? 0.8 : 0)) });
+  katman((x) => { yanDoldur(x, { bx: [20, 800, 1004, 1004], aralik: 14, boy: 60, gen: 16, aci: -0.04, aciJ: 0.12, a: 0.7, renk: (px, py) => (py < 826 && px > 270 && px < 850 ? LILA : r() < 0.45 ? C('#E2B46A') : r() < 0.6 ? SARI2 : C('#F0C890')) }); },
+    { ezme: 4, opq: 0.9, gren: 0.45, guc: 1.9, sil: [MK.yapi, MK.bitki], maske: ton((b, l, px, py) => (py >= 800 ? 0.8 * sstep(30, 110, Math.min(px, W - px) + (fbm(nB, px / 60, py / 60, 2) - 0.5) * 60) : 0)) });
 
   // ================================================================ 3) taş yapılar: beyaz ve krem, gölgede lila-mavi (dağıtılmış + vuruş)
   const tas = (b) => b === 'minare' || b === 'kaide';
@@ -422,8 +437,8 @@
   const kubbeAci = (px, py) => { const u = kubbeU(px, py); return Math.atan2(1, u * kubbeDr[clamp(Math.round(py), 300, 555)]); };
   katman((x) => {
     x.save(); x.clip(kubbeYolu); yanDoldur(x, { bx: [352, 292, 768, 560], aralik: 9, boy: 46, gen: 13, aci: kubbeAci, aciJ: 0.08, a: 0.85, renk: (px, py) => { const l = isik(px, py); return l > 0.8 ? YESIL2 : l > 0.5 ? YESIL : l > 0.22 ? KOYUYESIL : C('#2A6A6A'); } }); x.restore();
-    x.save(); x.clip(kasnakYolu); yanDoldur(x, { bx: [330, 553, 790, 694], aralik: 8, boy: 26, gen: 10, aci: Math.PI / 2, aciJ: 0.08, a: 0.85, renk: (px, py) => { const l = isik(px, py) * 0.9; return l > 0.7 ? YESIL : l > 0.35 ? KOYUYESIL : C('#2A6A6A'); } }); x.restore();
-  }, { ezme: 5, opq: 0.9, gren: 0.4, guc: 1.6, sil: [MK.bitki, MK.alem], maske: ton((b, l) => (b === 'kubbe' ? 0.7 + 0.3 * l : b === 'kasnak' ? 0.65 + 0.35 * l : 0)) });
+    x.save(); x.clip(kasnakYolu); yanDoldur(x, { bx: [330, 553, 790, 694], aralik: 8, boy: 26, gen: 10, aci: Math.PI / 2, aciJ: 0.08, a: 0.85, renk: (px, py) => { const l = isik(px, py) * 0.9; return l > 0.62 ? YESIL : l > 0.3 ? (r() < 0.6 ? KOYUYESIL : YESIL) : C('#2E7A6A'); } }); x.restore();
+  }, { ezme: 5, opq: 0.9, gren: 0.4, guc: 1.6, sil: [MK.bitki, MK.alem], maske: ton((b, l) => (b === 'kubbe' ? 0.75 + 0.25 * l : b === 'kasnak' ? 0.8 + 0.2 * l : 0)) });
   // kubbe: kaburga yönünde net vuruşlar (ışıkta açık yeşil, gölgede mavi)
   katman((x) => {
     x.save(); x.clip(kubbeYolu);
@@ -532,11 +547,10 @@
 
   // ================================================================ 7) iç bordür: ince çift çizgi ve köşe kıvrımları
   katman((x) => {
-    const m = 52, c = BEYAZ;
-    elCizgisi(x, [[m, m], [W - m, m]], 1.5, 0.75, c, r, { parca: 220, titre: 0.5 }); elCizgisi(x, [[m, W - m], [W - m, W - m]], 1.5, 0.75, c, r, { parca: 220, titre: 0.5 });
-    elCizgisi(x, [[m, m], [m, W - m]], 1.5, 0.75, c, r, { parca: 220, titre: 0.5 }); elCizgisi(x, [[W - m, m], [W - m, W - m]], 1.5, 0.75, c, r, { parca: 220, titre: 0.5 });
-    const m2 = 60;
-    for (const [a, b] of [[[m2 + 30, m2], [W - m2 - 30, m2]], [[m2 + 30, W - m2], [W - m2 - 30, W - m2]], [[m2, m2 + 30], [m2, W - m2 - 30]], [[W - m2, m2 + 30], [W - m2, W - m2 - 30]]]) elCizgisi(x, [a, b], 1.0, 0.45, SARI, r, { parca: 220, titre: 0.4 });
+    const c = BEYAZ, m2 = 60;
+    const parcala = (pts) => { const out = []; let cur = []; for (const q of pts) { if (q[1] < 798) cur.push(q); else { if (cur.length > 1) out.push(cur); cur = []; } } if (cur.length > 1) out.push(cur); return out; };
+    // sol üstten başlayan sırayla: ilk ve son parçaları birleştir
+    for (const [ic, w, a, renk] of [[-6, 1.6, 0.8, c], [3, 1.1, 0.55, SARI]]) { const pp = parcala(panoYolu(ic)); if (pp.length > 1) { const son = pp.pop(); pp[0] = son.concat(pp[0]); } for (const q of pp) elCizgisi(x, q, w, a, renk, r, { parca: 160, titre: 0.4 }); }
     // köşe kıvrımları: iki küçük sarmal ve bir yaprak
     for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
       const cx0 = sx > 0 ? m2 + 14 : W - m2 - 14, cy0 = sy > 0 ? m2 + 14 : W - m2 - 14;

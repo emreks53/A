@@ -1,0 +1,39 @@
+{
+  "kod": "S-048",
+  "no": 48,
+  "ad": "Sgrafito",
+  "ad_en": "Sgraffito",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Koyu üst kat kazınarak alttaki renkli katmanlar ortaya çıkarılır; resim kazıma çizgileri ve açılmış alanlardan oluşur.",
+  "tanim": "Sgrafito (İtalyanca 'kazınmış'), renkli bir alt katın üstüne zıt renkte, genellikle koyu bir boya ya da sıva katı sürülüp bu katın sivri uçlu ya da geniş ağızlı aletlerle kazınması tekniğidir. Kazınan yerden alttaki renk çıkar; ince iğne çizgileri taramayla ton verir, geniş kazıyıcı darbeleri alan açar. Kazıma yönleri ve alet izleri yüzeyde görünür, oyukların kenarları hafif kabartı ve gölge yapar. Cephe süslemesinde, seramikte ve resimde kullanılır.",
+  "koken": "Teknik Roma döneminden bilinir; Rönesans İtalya'sında saray cephelerinde (Floransa'da Palazzo Spinelli) yaygınlaştı ve Orta Avrupa'da, özellikle Bohemya ve İsviçre'de (Engadin evleri) cephe sanatının simgesi oldu. Seramikte Bizans ve Anadolu Selçuklu sgrafito kâseleri, 20. yüzyılda da Picasso'nun seramikleri tekniğin ünlü örnekleridir; çocukların renkli mum üstüne siyah boya kazıdığı 'kazıma resim' de aynı ilkeye dayanır.",
+  "ayirt_edici": [
+    "Neredeyse siyah, benekli mat üst kat bütün resmi kaplıyor; görüntü yalnız kazınarak açılmış yerlerden çıkıyor",
+    "Renkli alt katlar: gökte mavi, kubbe ve kasnakta yeşil, alemlerde altın, kaide ve minarede pembe-krem, çiçeklerde gül, yerde turuncu",
+    "Kazıma çizgilerinin kalınlığıyla kurulmuş ton: gökte güneşe ve ufka doğru kalınlaşan dalgalı yatay çizgiler, kubbede meridyen taraması ve ışıklı yanda enlem yaylarıyla çapraz tarama",
+    "Kazınmadan bırakılmış koyu kaburgalar, pencereler ve konturlar; kemerlerin çevresinde kazınmış ince çizgiler",
+    "Geniş kazıyıcıyla açılmış bulutlar, kaide ve taç yaprakları; aralarda kalan ince koyu artıklar, kopuk ve titrek çizgi uçları",
+    "Oyukların ışığa bakan duvarında gölge, karşı kenarında hafif parlama ve pürüzlü, ufalanmış kenarlar"
+  ],
+  "palet": [
+    "#24211F",
+    "#2A6EB4",
+    "#9ED2E0",
+    "#3E9A50",
+    "#9CC84A",
+    "#F0C44A",
+    "#E46C94",
+    "#F4D8B4"
+  ],
+  "kodla_cizim": "Önce 1024 piksellik renkli alt kat hazırlanır: bölge haritası gürültüyle kaydırılarak gevşek, taşkın lekeler hâlinde boyanır (gök mavi rampası ve güneşte turuncu-sarı, kubbede ışık modeline göre yeşil, kaide pembe-krem, çiçek gül ve ortası pembe-beyaz) ve bulanıklaştırılır. Kazıma ayrı bir 2048 piksellik maskede canvas çizgileriyle yapılır: iğne taraması her çizgide kalınlığı, eğimi ve kopuklukları değişen paralel çizgilerdir, kalınlık ton fonksiyonundan (gök parlaklığı, kubbe ve silindir ışığı) gelir; geniş kazıyıcı darbeleri bulut, kaide, korniş ve taç yapraklarını açar; kubbede meridyen çizgileri ve ışıklı yanda enlem yayları, kaburgalarda kazıntıyı silen koyu şeritler vardır. Her bölge kendi maskesiyle aktarılır, yeşil kanal alet izi derinliği olarak saklanır. Birleştirmede maske iki ölçekli gürültüyle pürüzlendirilir, kazınan yerde alt kat rengi alet izi ve çizik dokusuyla çarpılır, sağ üst komşuya göre oyuk gölgesi ve karşı kenar parlaması hesaplanır; kazınmayan yer benekli koyu sıva olarak kalır.",
+  "etiketler": [
+    "sgrafito",
+    "kazıma",
+    "katman",
+    "sıva",
+    "çizgi",
+    "tarama",
+    "geleneksel"
+  ]
+}

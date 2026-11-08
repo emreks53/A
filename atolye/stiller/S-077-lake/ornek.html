@@ -16,7 +16,8 @@
 // ortaya çıkarılmış alt katmanlar (yaldız, kırmızı); açık yerlerde kırık yumurta kabuğu kakması,
 // altın ve gümüş varak pulları, sedef parçaları (Vietnam sơn mài / Japon urushi havası).
 // Yöntem: boya katmanı (lake rengi) + malzeme katmanları (varak, yumurta kabuğu, sedef, alt lake).
-// Varak ve alt lake "zımpara" gürültüsüyle bulutlu kenarlarla ortaya çıkar; yumurta kabuğu bükülmüş
+// Varak ve alt lake biçimleri izleyen yumuşak, denetimli geçişlerle (yalnızca geçişte ince zımpara tanesi)
+// ortaya çıkar; kubbe dilim dilim gölgelenir; yumurta kabuğu bükülmüş
 // Voronoi ile kırık parçalara ayrılır; sedef ince film girişimi renkleriyle boyanır; parlaklık en üstte.
 (function () {
   const S = SAHNE;
@@ -238,7 +239,7 @@
     const q = KS[k];
     const yol = dik(q.x1, q.y1, q.x2, q.y2);
     parca(yol, 'lake', lin(q.x1, 0, q.x2, 0, k ? [[0, '#0A2414'], [0.5, '#14432A'], [0.85, '#1E5A36'], [1, '#143E26']] : [[0, '#0D2C19'], [0.5, '#185033'], [0.85, '#24683F'], [1, '#17462B']]));
-    ekle(A, yol, lin(q.x1, 0, q.x2, 0, [[0, 'rgba(150,34,18,0.55)'], [0.15, 'rgba(150,34,18,0)'], [0.85, 'rgba(150,34,18,0)'], [1, 'rgba(150,34,18,0.5)']]));
+    ekle(A, yol, lin(q.x1, 0, q.x2, 0, [[0, 'rgba(156,34,18,0.6)'], [0.09, 'rgba(156,34,18,0)'], [0.91, 'rgba(156,34,18,0)'], [1, 'rgba(156,34,18,0.5)']]));
     ekle(G, yol, lin(q.x1, 0, q.x2, 0, [[0, 'rgba(170,160,70,0)'], [0.55, 'rgba(170,160,70,0.1)'], [0.82, 'rgba(176,166,72,0.5)'], [1, 'rgba(170,160,70,0.15)']]));
     for (const p of S.kasnakPencereleri(k)) {
       parca(S.kemerYolu(p.x, p.y - 2, p.w + 4, p.h + 3), 'varak', 'rgba(222,178,72,1)');

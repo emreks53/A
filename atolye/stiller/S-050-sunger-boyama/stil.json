@@ -1,0 +1,39 @@
+{
+  "kod": "S-050",
+  "no": 50,
+  "ad": "Sünger Boyama",
+  "ad_en": "Sponge Painting",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Doğal süngerle tamponlanmış gözenekli, benekli renk katları; yumuşak bulut kenarları ve şablonla kesilmiş keskin mimari.",
+  "tanim": "Sünger boyamada renk fırça yerine doğal deniz süngeriyle yüzeye tamponlanır. Süngerin gözenekleri her basışta delikli, benekli, düzensiz bir iz bırakır; birkaç renk üst üste tamponlandıkça renkler birbirinin aralarından görünür ve biçim yumuşak, bulut gibi kenarlarla kurulur. Keskin kenar gereken yerlerde şablon (stencil) ya da maskeleme bandı kullanılır. Dekoratif duvar boyasında (faux finish), çocuk resminde ve el yapımı süslemede çok kullanılır.",
+  "koken": "Süngerle boya tamponlama, Antik Roma ve Rönesans duvar resimlerinde mermer ve taş taklidi için kullanılan yalancı mermer (marmorino, faux marbre) geleneğine uzanır. 19. yüzyılda süngerle süslenmiş İngiliz ve Amerikan halk seramiği (spongeware) yaygınlaştı; 20. yüzyılın sonunda iç mimaride 'sponge painting' duvar dokusu moda oldu. Sanat eğitiminde şablonla birlikte en temel baskı ve doku tekniklerinden biridir.",
+  "ayirt_edici": [
+    "Her basış gözenekli, delikli, benekli bir sünger izi; renk katları birbirinin boşluklarından görünüyor",
+    "Gökte üst üste tamponlanmış açık mavi, kobalt ve lavanta; güneşe doğru sarı ve şeftali; bulutlar yumuşak kenarlı beyaz kümeler",
+    "Kubbe, kasnak, kaide ve minare şablonla maskelenmiş: dış kenarlar ve pencereler keskin, içleri süngerle benekli",
+    "Kubbede koyu yeşil üstüne orta yeşil ve sağ üstte sarı-yeşil ışık tamponları; kaburgalar dar şablon yarıklarından basılmış koyu çizgiler",
+    "Önde yumuşak kenarlı, katmanlı yeşil yapraklık kütlesi; yapraklar ve taç yaprakları şablonla kesilmiş, içleri benekli",
+    "Krem astar ve fildişi taşın mat, kumlu dekoratif duvar boyası (faux finish) hissi"
+  ],
+  "palet": [
+    "#EFE4CF",
+    "#80BED6",
+    "#4E94CE",
+    "#A498D2",
+    "#2C7048",
+    "#96C654",
+    "#F0A82E",
+    "#EEA0BA"
+  ],
+  "kodla_cizim": "Önce on farklı sünger damgası üretilir: düzensiz, gürültüyle bozulmuş bir bulut kenarı içinde bükülmüş çok ölçekli gürültü eşiklenerek gözenekli doku çıkarılır, üstüne rastgele dairesel delikler açılır. Her renk katı ayrı bir tuvalde yüzlerce damga basışıyla (rastgele döndürme, ölçek ve opaklık) tamponlanır; mimari, yaprak ve taç yaprak katları sonra şablon tuvaliyle 'destination-in' karışımında keskin kenarla kesilir, gök ve yapraklık katları ise şablonsuz ya da yapıyı dışarıda bırakan bir maskeyle yumuşak kenarlı kalır. Krem astar, gök (açık mavi → kobalt → sıcak hale → beyaz bulut), güneş, yer, yapraklık, minare, kaide, kasnak, kubbe (koyu → orta → ışık, kaburgalar ince şablon yarıklarından), alemler ve bitkiler sırayla basılır; renk yoğunluğu ışık modeline (kubbe yüzey normali, silindir ışığı) göre basış olasılığıyla ayarlanır.",
+  "etiketler": [
+    "sünger",
+    "şablon",
+    "stencil",
+    "doku",
+    "faux finish",
+    "dekoratif",
+    "boya"
+  ]
+}

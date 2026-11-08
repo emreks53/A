@@ -133,7 +133,7 @@
     astar: hex('#E2582E'),
     gok: ['#1A3E99', '#2160B8', '#2E86CE', '#4AAEDB', '#93D6DD', '#F6E4A4'].map(hex),
     hale: hex('#5FB4E4'), gunesH: hex('#FFDD3C'), gunes: hex('#FFF6D2'),
-    bulut: hex('#FFFFFF'), bulutG: hex('#B3A9E2'),
+    bulut: hex('#FFFFFF'), bulutG: hex('#B3A9E2'), bulutO: hex('#E4DEF6'),
     k: ['#073D33', '#0B5A40', '#12844F', '#2EAD56', '#9ED64A', '#E2F27A'].map(hex),
     ks: ['#05302A', '#09483A', '#0F6C4A', '#1F8F51'].map(hex), ksP: hex('#032420'), ksI: hex('#46B062'),
     tas: ['#7466B8', '#A196D6', '#E8DBCB', '#FFF3D8', '#FFFFFF'].map(hex),
@@ -175,7 +175,7 @@
   function duzFirca(g, pts, w, o) {
     o = o || {};
     const L = pts.length; if (L < 2) return;
-    const v = o.v === undefined ? 128 + (R() - 0.5) * 60 : o.v, kal = o.kal === undefined ? 120 : o.kal;
+    const v = o.v === undefined ? 128 + (R() - 0.5) * 76 : o.v, kal = o.kal === undefined ? 120 : o.kal;
     const kuru = R() < 0.35;
     const son = Math.max(1, Math.floor((L - 1) * (o.govde || (kuru ? 0.84 + R() * 0.08 : 1))));
     const p = govde(pts, w, son);
@@ -213,8 +213,8 @@
     }
   }
   // güneş çevresi: dairesel darbeler
-  for (let k = 0; k < 120; k++) {
-    const r = 8 + R() * 190, a0 = R() * Math.PI * 2, sp = 0.5 + R() * 0.7, pts = [];
+  for (let k = 0; k < 70; k++) {
+    const r = 8 + R() * 190, a0 = R() * Math.PI * 2, sp = 1.3 + R() * 1.4, pts = [];
     for (let j = 0; j <= 16; j++) { const a = a0 + sp * (j / 16); pts.push([880 + Math.cos(a) * r, 140 + Math.sin(a) * r]); }
     duzFirca(dg, pts, 18 + R() * 16);
   }
@@ -319,18 +319,21 @@
     if (dgk < 112 + DR[i] * 26) return k < 2 ? C.hale : C.gok[Math.min(5, k + 1)];
     if (dgk < 168 + DR[i] * 30 && k < 3) return C.gok[k + 1];
     return C.gok[k];
-  }, { delik: arkaDelik, kuru: true });
+  }, { delik: arkaDelik, kuru: true, amp: 0.075 });
   // güneş
   katman(gunesM, C.gunesH, { amp: 0.03 });
   katman(maske((g) => g.fill(P(SAHNE.daireYolu(880, 140, 58)))), C.gunes, { amp: 0.02 });
   // bulutlar: önce lavanta gölge, üstüne sağ üste kaydırılmış beyaz
-  katman(bulutM, C.bulutG, { amp: 0.03, delik: onB });
-  katman(maske((g) => bulutCiz(g, 4, -6, 0.9)), C.bulut, { amp: 0.02, delik: onB });
+  katman(bulutM, C.bulutG, { amp: 0.05, delik: onB });
+  katman(maske((g) => bulutCiz(g, 4, -6, 0.9)), (x, y, i) => (DR[i] < -0.55 ? C.bulutO : C.bulut), { amp: 0.04, delik: onB });
 
   // ------------------------------------------------------------ yer
   const yerM = maske((g) => g.fillRect(0, 800, W, 224));
   katman(yerM, (x, y, i) => {
-    const t = (y - 800) / 224 + (nB(x / 70, y / 40) - 0.5) * 0.2 + DR[i] * 0.03;
+    const t = (y - 800) / 224 + (nB(x / 70, y / 40) - 0.5) * 0.2 + DR[i] * 0.05;
+    // kırık renk: darbe darbe sarı ışık ve mor-pembe gölge vuruşları
+    if (y > 840 && DR[i] > 0.85) return C.yer[3];
+    if (y > 860 && DR[i] < -0.9) return hex('#B44A5E');
     if (y < 826 && x > 236 - (y - 800) * 2.2 && x < 812 - (y - 800) * 1.1) return C.yer[0];
     return t < 0.06 ? C.yer[3] : t < 0.3 ? C.yer[2] : t < 0.62 ? C.yer[1] : C.yer[0];
   }, { delik: onB, kuru: true });
@@ -433,7 +436,7 @@
         boya(pe, isik ? C.cic : C.cicG);
         if (renkli) {
           g.save(); g.clip(pe);
-          const L = c.r * (isik ? 0.36 : 0.55), hw = e.ry * (isik ? 0.38 : 0.6);
+          const L = c.r * (isik ? 0.3 : 0.48), hw = e.ry * (isik ? 0.32 : 0.5);
           g.fillStyle = css(C.pembe, isik ? 0.7 : 0.9);
           g.beginPath(); g.moveTo(c.x - vx * 1.5, c.y - vy * 1.5); g.lineTo(c.x + ux * L + vx * hw, c.y + uy * L + vy * hw);
           g.quadraticCurveTo(c.x + ux * L * 1.18, c.y + uy * L * 1.18, c.x + ux * L - vx * hw, c.y + uy * L - vy * hw); g.closePath(); g.fill();

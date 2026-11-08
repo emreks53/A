@@ -58,8 +58,8 @@ const PUS = lin('#BFE2F6');                      // hava perspektifi
 
 const MAT = {
   tas: { ks: 0.1, shin: 16, ks2: 0, shin2: 1, wrap: 0.28, rim: 0.3, sss: 0.16, amb: 1.0 },
-  kasnak: { ks: 0.7, shin: 110, ks2: 0.05, shin2: 10, wrap: 0.14, rim: 0.42, sss: 0.3, amb: 1.0 },
-  kubbe: { ks: 1.1, shin: 150, ks2: 0.07, shin2: 12, wrap: 0.1, rim: 0.55, sss: 0.45, amb: 0.95 },
+  kasnak: { ks: 0.7, shin: 110, ks2: 0.05, shin2: 10, wrap: 0.14, rim: 0.34, rimUs: 7, rimC: [0.16, 0.62, 0.62], sss: 0.3, amb: 1.0 },
+  kubbe: { ks: 1.1, shin: 150, ks2: 0.07, shin2: 12, wrap: 0.1, rim: 0.5, rimUs: 4, rimC: [0.24, 0.66, 0.78], sss: 0.45, amb: 0.95 },
   altin: { metal: 1, ks: 1.1, shin: 34, ks2: 2.6, shin2: 260, wrap: 0, rim: 0.15, sss: 0, amb: 1 },
   yaprak: { ks: 0.22, shin: 28, ks2: 0, shin2: 1, wrap: 0.32, rim: 0.32, sss: 0.5, amb: 1.0 },
   tac: { ks: 0.1, shin: 16, ks2: 0, shin2: 1, wrap: 0.38, rim: 0.22, sss: 0.55, amb: 0.95 },
@@ -102,15 +102,16 @@ function golgele(s, M, o) {
   if (nh < 0) nh = 0;
   const sp = (M.ks * Math.pow(nh, M.shin) + (M.ks2 ? M.ks2 * Math.pow(nh, M.shin2) : 0)) * sh;
   const fz = 1 - (nz > 0 ? nz : 0);
-  const fr = M.rim * fz * fz * fz * ao * (0.55 + 0.45 * t);
+  const fr = M.rim * (M.rimUs ? Math.pow(fz, M.rimUs) : fz * fz * fz) * ao * (0.55 + 0.45 * t);
+  const RC = M.rimC || RIM;
   if (M.metal) {
     r += sp * (ar * 1.4 + 0.25); g += sp * (ag * 1.4 + 0.22); b += sp * (ab * 1.4 + 0.15);
   } else {
     r += sp * ANAHTAR[0] * 0.5; g += sp * ANAHTAR[1] * 0.5; b += sp * ANAHTAR[2] * 0.5;
   }
-  o[0] = r + fr * RIM[0];
-  o[1] = g + fr * RIM[1];
-  o[2] = b + fr * RIM[2];
+  o[0] = r + fr * RC[0];
+  o[1] = g + fr * RC[1];
+  o[2] = b + fr * RC[2];
 }
 
 // ------------------------------------------------------------------ mesafe alanı (Felzenszwalb EDT) ve kabartma
@@ -184,6 +185,8 @@ function ornekA(L, X, Y) { // maske alfasını 1024 koordinatında çift doğrus
 
 // ------------------------------------------------------------------ katman: maske → yüzey (normal, albedo) → gölgeleme → bileştirme
 const sv = new Float32Array(8), renkv = new Float32Array(3);
+// Kapsam: şimdiye dek çizilmiş katı biçimlerin alfası; temas gölgesi yalnız bunların üstüne düşer
+const kapsam = S.yeniTuval(N, N), kc = kapsam.getContext('2d');
 function katman(o) {
   const pad = 5;
   const x0 = Math.floor(o.bb[0]) - pad, y0 = Math.floor(o.bb[1]) - pad;
@@ -208,6 +211,8 @@ function katman(o) {
       const br = a.b * O, p = Math.ceil(br * 3) + 2;
       const t = S.yeniTuval(w + 2 * p, h + 2 * p), tc = t.getContext('2d');
       tc.filter = `blur(${br}px)`; tc.drawImage(c, p, p);
+      tc.filter = 'none'; tc.globalCompositeOperation = 'destination-in';
+      tc.drawImage(kapsam, p - (x0 + a.dx) * O, p - (y0 + a.dy) * O);
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalAlpha = a.a;
       ctx.drawImage(t, (x0 + a.dx) * O - p, (y0 + a.dy) * O - p);
@@ -237,7 +242,10 @@ function katman(o) {
     const t = S.yeniTuval(w + 2 * p, h + 2 * p), tc = t.getContext('2d');
     tc.filter = `blur(${br}px)`; tc.drawImage(c, p, p);
     ctx.drawImage(t, x0 * O - p, y0 * O - p);
-  } else ctx.drawImage(c, x0 * O, y0 * O);
+  } else {
+    ctx.drawImage(c, x0 * O, y0 * O);
+    if (!o.gokte) kc.drawImage(c, x0 * O, y0 * O);
+  }
   ctx.restore();
   return L;
 }
@@ -381,6 +389,7 @@ function zemin() {
     }
   }
   ctx.putImageData(img, 0, 800 * O);
+  kc.fillStyle = '#000'; kc.fillRect(0, 800 * O, N, N - 800 * O);
   // ufuk: uzak zemin göğün pusuna yumuşakça karışır (alan derinliği)
   { const g = ctx.createLinearGradient(0, 792, 0, 818); g.addColorStop(0, 'rgba(252,228,196,0)'); g.addColorStop(0.35, 'rgba(252,230,200,0.85)'); g.addColorStop(1, 'rgba(250,226,192,0)'); ctx.fillStyle = g; ctx.fillRect(0, 792, 1024, 26); }
   // yumuşak temas gölgeleri: kaidenin dibi ve sola düşen geniş gölge
@@ -593,24 +602,46 @@ function kaide() {
     yuzey(s, X, Y) {
       // köşelerde yumuşak yuvarlatma, düz ön yüz
       const sol = smooth(K.x1 + 7, K.x1, X), sag = smooth(K.x2 - 7, K.x2, X);
-      const tab = smooth(K.y2 - 10, K.y2 - 2, Y) * smooth(K.y2 + 1, K.y2 - 3, Y);
-      nset(s, -1.2 * sol + 1.2 * sag, -0.55 * tab, 1);
-      alb(s, R_.tas);
-      // pilastrlar: hafif kabarık dikey şeritler
-      for (const px of [365, 495, 625, 755]) {
-        const dx = X - px;
-        if (Math.abs(dx) < 9) {
-          const e = Math.abs(dx) > 6 ? Math.sign(dx) * (Math.abs(dx) - 6) / 3 : 0;
-          nset(s, s[0] + e * 0.9, s[1], s[2]);
-          if (Math.abs(Math.abs(dx) - 9) < 1.2) s[6] *= 0.88;
+      let nx = -1.2 * sol + 1.2 * sag, ny = 0;
+      const PL = 783; // dipte öne taşan süpürgelik (kaide silmesi)
+      if (Y > PL) {
+        ny -= 1.25 * smooth(PL + 3.2, PL + 0.3, Y);            // üst pahı ışığı yakalar
+        ny += 0.7 * smooth(K.y2 - 3, K.y2, Y);
+      }
+      // pilastrlar: öne çıkan dikey şeritler, iki yanda pah; sağdan gelen ışık sol yanlarına ince gölge düşürür
+      let golge = 1, ao = 1, pil = false;
+      if (Y < PL) {
+        for (const px of [365, 495, 625, 755]) {
+          const dx = X - px, ad = Math.abs(dx);
+          if (ad < 10.5) {
+            pil = true;
+            if (ad > 7.5) nx += Math.sign(dx) * (ad - 7.5) / 3 * 1.1;
+          } else if (ad < 13) ao *= 1 - 0.18 * smooth(13, 10.5, ad);
+          if (dx < -10.5 && dx > -19) golge *= 1 - 0.7 * smooth(-19, -10.8, dx) * smooth(704, 722, Y);
         }
       }
-      // kornişin düşürdüğü gölge ve kıvrım AO'su; zemine yakın AO
-      s[7] = smooth(704.5, 716, Y + (X - K.x1) * 0.004);
-      s[6] *= (1 - 0.32 * (1 - smooth(704, 728, Y))) * (1 - 0.32 * smooth(774, 800, Y));
-      s[7] *= 0.88 + 0.12 * smooth(K.x1, K.x2, X);
+      nset(s, nx, ny, 1);
+      // sıva: çok hafif, geniş lekeli albedo oynaması
+      const lek = 1 + 0.022 * Math.sin(X * 0.031 + Y * 0.017) * Math.sin(X * 0.013 - Y * 0.041 + 1.3);
+      alb(s, R_.tas, (pil ? 1.015 : 0.985) * lek);
+      // kornişin düşürdüğü gölge ve kıvrım AO'su; süpürgelik üstünde ve zemine yakın AO
+      s[7] = smooth(704.5, 716, Y + (X - K.x1) * 0.004) * golge;
+      s[6] *= ao * (1 - 0.32 * (1 - smooth(704, 728, Y)));
+      if (Y <= PL) s[6] *= 1 - 0.34 * smooth(PL - 7, PL, Y);
+      else s[6] *= 1 - 0.22 * smooth(PL + 6, K.y2, Y);
+      s[7] *= 0.86 + 0.14 * smooth(K.x1, K.x2, X);
     },
   });
+  // pencerelerin kabarık, yuvarlak kenarlı kemer çerçeveleri ve denizlikleri
+  for (const p of K.pencereler) {
+    const fw = p.w + 13, fy = p.y - 7, fh = p.h + 7, yb = p.y + p.h;
+    katman({
+      bb: [p.x - fw / 2 - 6, fy, p.x + fw / 2 + 6, yb + 6], M: MAT.tas, sisir: 2.8, yum: 1,
+      ao: { b: 2.6, dx: -2, dy: 2.2, a: 0.38 },
+      maske(m) { m.fill(new Path2D(S.kemerYolu(p.x, fy, fw, fh))); m.fillRect(p.x - fw / 2 - 5, yb - 1, fw + 10, 6); },
+      yuzey(s) { alb(s, R_.tas, 1.02); },
+    });
+  }
   for (const p of K.pencereler) oyuk(S.kemerYolu(p.x, p.y, p.w, p.h), [p.x - p.w / 2, p.y, p.x + p.w / 2, p.y + p.h], R_.tas, R_.tasIc, 9, 2.6, 0);
   // korniş: yuvarlak profilli silme
   katman({

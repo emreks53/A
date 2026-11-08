@@ -143,7 +143,7 @@
   // gök: turkuaz zemin, telden bulut kıvrımları
   hucre(dik(-10, -10, 1034, 800), lin(0, 0, 0, 800, [[0, '#16909C'], [0.6, C.turkuaz], [1, '#46C2B6']]));
   // dolgu telleri: dalgalı sarmaşık çizgileri, tepe ve çukurlarında kıvrılan sarmallar (emayeyi tutar)
-  function sarmasik(y0, x0, x1, A, lam, faz, rr) {
+  function sarmasik(y0, x0, x1, A, lam, faz, rr, seyrek) {
     const p = new Path2D();
     for (let x = x0; x <= x1; x += 2) { const y = y0 + A * Math.sin((2 * Math.PI * x) / lam + faz); x === x0 ? p.moveTo(x, y) : p.lineTo(x, y); }
     tel(p);
@@ -151,6 +151,7 @@
     for (let k = -2; k < (x1 - x0) / lam * 2 + 4; k++) {
       const x = ((k * 0.5 + 0.25) * 2 * Math.PI - faz) / (2 * Math.PI) * lam;
       if (x < x0 - 10 || x > x1 + 10) continue;
+      if (seyrek && ((k % seyrek) + seyrek) % seyrek !== 0) continue;
       const yuk = Math.sin((2 * Math.PI * x) / lam + faz) > 0; // aşağı tepe (ekran y'si büyük)
       const y = y0 + A * (yuk ? 1 : -1);
       const yon = k % 2 ? 1 : -1;
@@ -160,7 +161,8 @@
       tel(sarmal(cx, cy, rr, 1.3, dn, a0));
     }
   }
-  for (let r0 = 0, y = 48; y < 800; y += 80, r0++) sarmasik(y, -20, 1044, 9, 140, r0 * 1.7, 11.5);
+  // seyrek ve sakin: 118 birimde bir sıra, alçak dalga, yalnızca her üç tepeden birinde kıvrım
+  for (let r0 = 0, y = 64; y < 800; y += 118, r0++) sarmasik(y, -20, 1044, 6, 200, r0 * 2.3, 10.5, 3);
   // güneş
   const GX = 880, GY = 138;
   for (let i = 0; i < 16; i++) {
@@ -215,7 +217,7 @@
 
   // zemin: kobalt, telden küçük kıvrımlar
   hucre(dik(-10, 800, 1034, 1034), lin(0, 800, 0, 1024, [[0, C.kobalt], [1, C.kobaltKoyu]]));
-  for (let r0 = 0, y = 832; y < 1040; y += 56, r0++) sarmasik(y, -20, 1044, 7, 104, r0 * 2.1, 8.5);
+  for (let r0 = 0, y = 840; y < 1040; y += 64, r0++) sarmasik(y, -20, 1044, 6, 130, r0 * 2.1, 8.5, 2);
 
   // ------------------------------------------------------------ minare
   const mc = 300;

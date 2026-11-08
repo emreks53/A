@@ -1,0 +1,40 @@
+{
+  "kod": "S-047",
+  "no": 47,
+  "ad": "Klasik Sırlama (Sfumato)",
+  "ad_en": "Old Master Glazing",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Açık alt boya üstüne saydam renk sırları, dumanımsı geçişler, derin ışık-gölge, sararmış vernik ve ince çatlak ağı.",
+  "tanim": "Eski ustaların yağlıboya yönteminde resim önce sıcak, açık bir astar üstüne tek renkli bir değer çalışmasıyla (grizay ya da ölü renk) kurulur; renk sonra ince, saydam sırlar hâlinde kat kat sürülür. Alttaki açık katman sırların içinden parlar, gölgelerde sır kalınlaştıkça renk derinleşir. Kenarlar sfumato ile duman gibi erir, fırça izi görünmez; sıcak, koyu bir çevre konuyu ışık havuzunda öne çıkarır. Yüzyıllar içinde sararan vernik bütün renkleri bal tonuna çeker, boya katmanı ince bir çatlak ağıyla (krakle) kaplanır.",
+  "koken": "Sırlama tekniği 15. yüzyılda Jan van Eyck ve Flaman ustalarıyla olgunlaştı; Leonardo da Vinci gölgelerde sınırları dumanımsı eriten sfumatoyu (Mona Lisa, Kayalıklar Meryemi) tanımladı. Tiziano ve Venedik okulu renkli sırları zenginleştirdi; Caravaggio'nun keskin chiaroscurosu ve Rembrandt'ın sıcak karanlıktan doğan ışığı Barok dönemin imzası oldu. Müzelerdeki eski tabloların bal rengi ve çatlakları ise zamanın ve verniğin izidir.",
+  "ayirt_edici": [
+    "Kubbede açık alt boyanın içinden parlayan saydam yeşil sırlar: ışıkta sarı-yeşil, gölgede neredeyse siyaha varan derin yeşil",
+    "Fırça izi olmayan dumanımsı (sfumato) geçişler; gölgede kalan kenarlar zemine eriyor, ışıkta seçiliyor",
+    "Kubbeyi saran ışık havuzu ve köşelere doğru sıcak kahve-siyah karanlık (chiaroscuro); öndeki çiçekler koyudan ışığa çıkıyor",
+    "Bütün renkleri bal ve altın-kahve tonuna çeken sararmış vernik; gök mavisi yeşilimsi zeytine dönmüş",
+    "Bütün yüzeyi saran, hücreleri değişken ince çatlak ağı (krakle): açık yerlerde koyu, koyu yerlerde soluk çizgiler",
+    "Hava perspektifi: ufukta mavimsi puslu tepeler, geride kalan minare hafifçe soluk"
+  ],
+  "palet": [
+    "#0D0702",
+    "#422A12",
+    "#335612",
+    "#657C2A",
+    "#A9BE44",
+    "#C09A4F",
+    "#C4871D",
+    "#7B7D59"
+  ],
+  "kodla_cizim": "2048 piksellik görüntü piksel başına bir ışık modeliyle hesaplanır: kubbe dönel yüzey normali, kasnak ve minare silindir ışığı alır. Kubbe ve kasnak rengi sırlama formülüyle bulunur: renk = astar × değer × sır^kalınlık; değer düştükçe yeşil sırın kalınlığı artar, gürültüyle hafif dalgalanır ve ışıkta açık bir sürtme (scumble) katı ile dar bir parıltı eklenir. Gök dikey bir rampa, güneş halesi ve gürültüden kurulmuş, sağ üstten aydınlatılan bulut yoğunluğu ile boyanır; ufukta iki sıra puslu tepe vardır. Her şey kubbeyi saran ışık havuzu katsayısıyla çarpılarak çevre karartılır. Çiçek ve yapraklar ayrı bir tuvalde yumuşak gölgeli doğrusal ve dairesel geçişlerle çizilir. Sfumato için görüntünün iki bulanık kopyası alınır ve gölgelilik haritasına göre karıştırılır. Krakle, gürültüyle bükülmüş iki ölçekli Voronoi hücrelerinin kenar mesafesinden çıkar; hücreler hafifçe çanaklaşır. En sonda sararmış vernik (mavi azaltılır, koyular sıcak kahveye açılır), kenarlarda kir, hafif bez dokusu ve S biçimli ton eğrisi uygulanır.",
+  "etiketler": [
+    "yağlıboya",
+    "sırlama",
+    "sfumato",
+    "chiaroscuro",
+    "krakle",
+    "eski usta",
+    "Rönesans",
+    "Barok"
+  ]
+}

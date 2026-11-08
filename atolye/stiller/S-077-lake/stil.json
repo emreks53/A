@@ -5,18 +5,36 @@
   "ad_en": "Lacquer Painting",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Ayna gibi parlak siyah ve kırmızı lake; zımparayla ortaya çıkan alt katmanlar, yumurta kabuğu kakma, varak ve sedef.",
-  "tanim": "Lake resim, ağaç reçinesinden elde edilen lakenin bir pano üzerine kat kat sürülüp her kattan sonra kurutulması ve zımparalanmasıyla yapılır. Renkler, altın ve gümüş varaklar, ezilmiş yumurta kabuğu ve sedef katların arasına gömülür; son katlar zımpara ve cilayla aşındırıldığında alttaki renkler bulut gibi, keskin ve düzensiz kenarlarla yüzeye çıkar. Sonuç derin, ayna gibi parlak, mücevher etkili bir yüzeydir; pano resimlerinde, paravanlarda, kutularda ve iç mekân süslemesinde kullanılır.",
+  "ozet": "Ayna gibi parlak siyah ve kırmızı lake; cilayla açılan yaldızlı geçişler, yumurta kabuğu kakma, altın ve gümüş varak, sedef.",
+  "tanim": "Lake resim, ağaç reçinesinden elde edilen lakenin bir pano üzerine kat kat sürülüp her kattan sonra kurutulması ve zımparalanmasıyla yapılır. Renkler, altın ve gümüş varaklar, ezilmiş yumurta kabuğu ve sedef katların arasına gömülür; son katlar zımpara ve cilayla inceltildiğinde alttaki renkler ve varak, biçimleri izleyen yumuşak geçişlerle yüzeye çıkar. Sonuç derin, ayna gibi parlak, mücevher etkili bir yüzeydir; pano resimlerinde, paravanlarda, kutularda ve iç mekân süslemesinde kullanılır.",
   "koken": "Lake sanatı Çin'de Neolitik çağa uzanır, Japonya'da urushi (maki-e altın tozu, raden sedef kakma) olarak incelikli bir saray sanatına dönüştü. Vietnam'da sơn mài ('zımparalanmış boya') adıyla bilinen resim tekniği 1930'larda Hanoi'deki Çinhindi Güzel Sanatlar Okulu'nda geleneksel lake zanaatından geliştirildi; Nguyễn Gia Trí, Trần Văn Cẩn ve Nguyễn Sáng gibi ustalar siyah, kırmızı, altın, gümüş ve yumurta kabuğuyla büyük pano resimleri yaptı. Osmanlı'da 'lake' ya da 'Edirnekâri' adıyla bilinen yakın gelenek de cilt kapakları ve çekmeceleri süsledi.",
   "ayirt_edici": [
-    "Derin siyah lake gök ve kırmızı lake zemin; ufukta ve güneş çevresinde siyahın altından önce kırmızı, sonra kehribar yaldız çıkaran keskin kenarlı zımpara bulutları",
-    "Minarede, kaidede ve büyük çiçeklerde ezilmiş yumurta kabuğu kakması: aralarında koyu lake dolu çatlaklar, gölgede kahverengileşen, ışıkta beyaz parçalar",
-    "Altın varak güneş, şerefeler, alemler, saplar ve kaburgalar; gümüş varak bulutlar; gökte serpilmiş altın ve gümüş varak pulları",
-    "Küçük çiçeklerde ince film yanardönerliğiyle pembe, yeşil ve mavi parıldayan sedef taç yapraklar",
-    "Yeşil kubbede koyu yeşilin altından açık yeşil ve altın-yeşil katmanların bulut biçiminde açığa çıkması",
-    "Sol üst köşeden taşan, sağ alta doğru sönen pencere yansıması: ayna gibi cilalı yüzey"
+    "Kusursuz, derin siyah lake gök ve kırmızı lake zemin; güneş çevresinde ve ufukta siyahın altından önce koyu kırmızı, sonra kehribar lake altındaki altının yumuşak geçişlerle cilayla açılması",
+    "Yeşil kubbede her dilimin kendi ışığını alması ve ışıklı omuzda yeşil lakenin altından yeşim yeşili, altın-yeşil ve altın tonlarının biçimi izleyerek parlaması",
+    "Altın varak güneş, şerefeler, alemler, saplar ve kaburgalar; varak karelerinin ekleri ve ince çatlakları görünür; ufukta ve güneş çevresinde serpme altın pullar ve seyrek kesik varak kareleri",
+    "Üstü gümüş varak, altı kehribar lake altında altına dönüp siyahta sönen, altın konturlu bulutlar",
+    "Minarede, kaidede ve büyük çiçeklerde ezilmiş yumurta kabuğu kakması; küçük çiçeklerde pembe, yeşil ve mavi parıldayan sedef taç yapraklar",
+    "Sol üst köşede panelin ayna gibi cilalı yüzeyine düşen iki bölmeli pencere yansıması"
   ],
-  "palet": ["#0C0605", "#9A2416", "#1A5A33", "#C48430", "#E8BA4E", "#D6DADE", "#F4ECDA"],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Her parça bir malzemeyle beş ekran dışı katmandan birine çizilir: üst lake rengi, alt lake (ikinci renk ve miktarı), varak (ton ve miktar), yumurta kabuğu (ton) ve sedef (parça başına faz kayması); opak parçalar alttaki malzemeleri siler. Piksel geçişinde tek bir çok oktavlı 'zımpara' gürültü alanı, boyanmış miktara eklenir ve iki keskin eşikten geçer: önce alt lake (kırmızı ya da açık yeşil), biraz daha derinde varak ortaya çıkar; böylece yaldız lekelerinin çevresinde kırmızı haleler oluşur. Varak, şaşırtmalı kareler, ek çizgileri ve kırışıklık gürültüsüyle dokulanır. Yumurta kabuğu, gürültüyle bükülmüş koordinatlarda Voronoi parçalarına bölünür; parça kenarları koyu lake çatlağı olur, her parçaya ton, sarılık ve sağ üstten ışıklı hafif eğim verilir. Sedef, büyüme halkaları ve gürültüden türeyen fazla kosinüs paletli ince film girişim renkleri alır. En üstte 'screen' kipiyle bulanık pencere yansıması, çapraz cila ışığı ve kenar koyulaşması çizilir.",
-  "etiketler": ["lake", "sơn mài", "urushi", "varak", "yumurta kabuğu", "sedef", "parlak", "zanaat"]
+  "palet": [
+    "#0A0808",
+    "#8B2D18",
+    "#10311C",
+    "#2F703E",
+    "#CCB764",
+    "#D5AD50",
+    "#834B20",
+    "#EBEEF2"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Her parça bir malzemeyle beş ekran dışı katmandan birine çizilir: üst lake rengi, alt lake (ikinci renk ve miktarı), varak (ton ve miktar), yumurta kabuğu (ton) ve sedef (parça başına faz kayması); opak parçalar alttaki malzemeleri siler. Cilayla açılan alanlar yumuşak radyal ve doğrusal gradyanlarla boyanır; piksel geçişinde boyanan miktar doğrudan karışım oranı olur, yalnızca geçiş bölgelerinde ince bir 'zımpara tanesi' gürültüsü eklenir. Kubbe piksel piksel gölgelenir: her dilimin şişkinliği normali döndürür, ışık miktarı yeşil lake tonunu, yeşim yeşili alt katı ve altın varağın açılma oranını belirler. Varak, şaşırtmalı kareler, bindirme ve gölge çizgileri, kırışıklık ve gürültü konturlarından ince çatlaklarla dokulanır; bu ayrıntılar varak açıkça göründüğü yerde belirginleşir. Yumurta kabuğu, gürültüyle bükülmüş koordinatlarda Voronoi parçalarına bölünür; parça kenarları koyu lake çatlağı olur. Sedef, büyüme halkaları ve gürültüden türeyen kosinüs paletli ince film girişim renkleri alır. En üstte 'screen' kipiyle hafif bulanık pencere yansıması, çapraz cila ışığı ve kenar koyulaşması çizilir.",
+  "etiketler": [
+    "lake",
+    "sơn mài",
+    "urushi",
+    "varak",
+    "yumurta kabuğu",
+    "sedef",
+    "parlak",
+    "zanaat"
+  ]
 }

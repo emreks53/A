@@ -213,7 +213,7 @@ function cizgi(yol, renk, kal) { ctx.save(); ctx.strokeStyle = renk; ctx.lineWid
 // ================================================================== gök: üç düz bant, güneş halkaları
 function gok() {
   // üç bant; her bandın içinde hafif degrade, bantlar arasında sert sınır
-  const bant = [[0, 300, '#4590E2', '#58A2EA'], [300, 560, '#78BCF2', '#8FCAF5'], [560, 800, '#BDE5F8', '#F7EAD3']];
+  const bant = [[0, 252, '#4590E2', '#56A0EA'], [252, 560, '#76BAF2', '#8FCAF5'], [560, 800, '#BDE5F8', '#F7EAD3']];
   for (const [a, b, c1, c2] of bant) { const g = ctx.createLinearGradient(0, a, 0, b); g.addColorStop(0, c1); g.addColorStop(1, c2); ctx.fillStyle = g; ctx.fillRect(0, a, 1024, b - a); }
   // güneş: düz halkalar
   ctx.save();
@@ -384,7 +384,7 @@ function yapi() {
   // --- kubbe
   const DIL = Math.PI / 16;
   cel({
-    bb: [358, 298, 762, 556], P: P.kubbe, parlak: 0.962, esik: 0.1, rim: 4.5,
+    bb: [358, 298, 762, 556], P: P.kubbe, parlak: 0.977, esik: 0.1, rim: 4.5,
     maske(m) { m.fill(new Path2D(S.kubbeYolu)); },
     yuzey(s, X, Y) {
       const r = kp.r(Y), dr = kp.dr(Y);

@@ -143,10 +143,12 @@
   function birlesik(dizi) { const p = new Path2D(); for (const d of dizi) p.addPath(new Path2D(d)); return p; }
 
   // ---------------------------------------------------------------- vuruş (uçları incelen, basıncı değişen çizgi)
+  let KALINLIK = 1; // stil, bütün vuruşları kalınlaştırmak için değiştirebilir
   // pts: [[x,y],...]; w: genişlik; a: basınç (0..1); c: [r,g,b]; bas/son: uçlardaki incelme payı
   function strok(cx, pts, w, a, c, bas, son) {
     const n = pts.length;
     if (n < 2) return;
+    w *= KALINLIK;
     bas = bas === undefined ? 0.16 : bas; son = son === undefined ? 0.3 : son;
     const cum = [0];
     for (let i = 1; i < n; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
@@ -167,7 +169,7 @@
     for (let i = n - 1; i >= 0; i--) p.lineTo(R[i][0], R[i][1]);
     p.closePath();
     const ax = pts[0][0], ay = pts[0][1], bx = pts[n - 1][0], by = pts[n - 1][1];
-    if (Math.hypot(bx - ax, by - ay) > 4) {
+    if (Math.hypot(bx - ax, by - ay) > Math.max(4, T * 0.7)) {
       const g = cx.createLinearGradient(ax, ay, bx, by);
       g.addColorStop(0, rgba(c, a * (bas > 0 ? 0.35 : 1)));
       g.addColorStop(Math.min(0.45, bas * 0.9 + 0.02), rgba(c, a));
@@ -180,6 +182,15 @@
   // bir yolu el çizgisi gibi birkaç parçada çiz (hafif titreme, örtüşen vuruşlar)
   function elCizgisi(cx, pts, w, a, c, r, o) {
     o = o || {};
+    // seyrek noktaları sıklaştır (uzun düz kenarlar da parça parça çizilebilsin)
+    if (pts.length >= 2) {
+      const yeni = [pts[0]];
+      for (let i = 1; i < pts.length; i++) {
+        const p0 = pts[i - 1], p1 = pts[i], L = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), k = Math.ceil(L / 3);
+        for (let j = 1; j <= k; j++) yeni.push([lerp(p0[0], p1[0], j / k), lerp(p0[1], p1[1], j / k)]);
+      }
+      pts = yeni;
+    }
     const titre = o.titre === undefined ? 0.35 : o.titre, parca = o.parca || 70;
     const n = pts.length;
     if (n < 2) return;

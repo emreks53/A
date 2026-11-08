@@ -495,17 +495,21 @@
   const yapiPay = payMaskesi(yapiSiluet, 6, 0.06, 0.8, 18);
 
   // --- gök: güneşin çevresi kâğıt beyazı kalan, kenarları yırtık gevşek leke; içinde ultramarine–seruleum geçişi
-  const gokPol = [[90, 140], [190, 80], [330, 96], [470, 66], [600, 92], [680, 140], [706, 220], [770, 300], [870, 312], [960, 350], [948, 470], [968, 600], [912, 690], [790, 676], [560, 694], [330, 706], [170, 724], [76, 676], [58, 520], [80, 330]];
+  const gokPol = [[104, 214], [170, 150], [262, 158], [352, 118], [470, 124], [560, 104], [652, 150], [706, 214], [748, 270], [822, 300], [904, 338], [938, 430], [920, 540], [948, 632], [880, 694], [700, 684], [520, 700], [330, 704], [180, 716], [92, 668], [70, 540], [96, 420], [74, 320]];
+  const bulutYolu = (cx, cy, s) => { const p = []; const top = [[-1, 0.15], [-0.8, -0.25], [-0.45, -0.38], [-0.2, -0.7], [0.15, -0.62], [0.35, -0.85], [0.7, -0.5], [0.95, -0.2], [1.05, 0.15], [0.5, 0.3], [-0.4, 0.3]]; for (const [u, v] of top) p.push([cx + u * s, cy + v * s * 0.62]); return cokgenYolu(boz(p, 3, 0.08, R)); };
   lavi({
-    polis: [gokPol], renk: '#3c5fb6', renk2: '#64b0dc', karis: (x, y) => (x + y * 0.6) / 900 + (DN(x / 90, y / 90) - 0.5) * 0.5,
-    yog: 0.37, kat: 12, varyans: 0.07, derin: 4, dal: 0.45, dalO: 80, kenar: 1.7, gran: 0.7,
-    cikar: [{ tuval: yapiPay }, { yol: birlesik([...Y.alem, ...Y.minareAlem]), cizgi: 12 }, { yol: cokgenYolu(boz([[96, 250], [150, 222], [214, 228], [262, 246], [210, 262], [130, 266]], 4, 0.12, R)), guc: 0.8, bulan: 3 }, { yol: cokgenYolu(boz([[420, 190], [470, 160], [530, 172], [500, 196]], 4, 0.14, R)), guc: 0.6, bulan: 4 }, { yol: cokgenYolu(boz([[46, 478], [96, 456], [148, 470], [100, 488]], 4, 0.14, R)), guc: 0.7, bulan: 3 }],
+    polis: [gokPol], renk: '#4a72c2', renk2: '#7cc0e2', karis: (x, y) => (x + y * 0.5) / 860 + (DN(x / 90, y / 90) - 0.5) * 0.55,
+    yog: 0.27, kat: 12, varyans: 0.075, derin: 4, dal: 0.55, dalO: 70, kenar: 2.0, gran: 0.75,
+    cikar: [{ tuval: yapiPay }, { yol: bulutYolu(176, 246, 78), guc: 0.78, bulan: 9 }, { yol: bulutYolu(486, 186, 52), guc: 0.62, bulan: 8 }, { yol: bulutYolu(110, 470, 50), guc: 0.7, bulan: 8 }, { yol: bulutYolu(870, 470, 46), guc: 0.6, bulan: 8 },
+      { yol: new Path2D(SAHNE.daireYolu(880, 140, 92)), bulan: 26, guc: 0.9 }],
   });
-  lavi({ polis: [elips(876, 146, 120, 104, 22)], renk: '#f0c35a', renk2: '#e89a52', karis: (x, y) => Math.hypot(x - 880, y - 140) / 140, yog: 0.13, kat: 10, varyans: 0.1, yumusak: 22, kenar: 0, dal: 0.3, cikar: [{ yol: new Path2D(SAHNE.daireYolu(880, 140, 40)), bulan: 24, guc: 0.8 }, { tuval: yapiPay }] });
-  lavi({ polis: [[[40, 640], [990, 620], [996, 780], [30, 790]]], renk: '#e7b26a', yog: 0.14, kat: 8, varyans: 0.05, yumusak: 16, kenar: 0, cikar: [{ tuval: yapiPay }] });
+  // güneş: kâğıt beyazı disk, çevresinde sert kenarlı sıcak sarı halka
+  lavi({ polis: [elips(880, 140, 66, 62, 24)], renk: '#f2c14e', renk2: '#ea8f3e', karis: (x, y) => Math.hypot(x - 880, y - 140) / 90 + (DN(x / 20, y / 20) - 0.5) * 0.3, yog: 0.3, kat: 10, varyans: 0.06, kenar: 2.2, dal: 0.35, cikar: [{ yol: new Path2D(SAHNE.daireYolu(880, 140, 35)), bulan: 1.5, guc: 1 }] });
+  lavi({ polis: [elips(880, 142, 128, 112, 24)], renk: '#f3cf72', yog: 0.08, kat: 8, varyans: 0.1, yumusak: 14, kenar: 0, dal: 0.3, cikar: [{ yol: new Path2D(SAHNE.daireYolu(880, 140, 60)), bulan: 4, guc: 1 }, { tuval: yapiPay }] });
+  lavi({ polis: [[[40, 640], [990, 620], [996, 780], [30, 790]]], renk: '#e7b26a', yog: 0.14, kat: 8, varyans: 0.05, yumusak: 16, kenar: 0, cikar: [{ tuval: yapiPay }, { yol: birlesik([Y.kaide, Y.kornis]), cizgi: 6 }] });
 
   // --- kubbe: sağa-yukarı kaymış, sarı yeşilden mavi yeşile ıslakta geçen lavi; ışıklı şerit kâğıt beyazı
-  const isikSerit = meridyen(0.2, 548, 326).concat(meridyen(0.5, 548, 326).reverse());
+  const isikSerit = meridyen(0.22, 548, 330).concat(meridyen(0.43, 548, 330).reverse());
   lavi({
     polis: [donustur(kubbePol, 11, -7, 0.995)], renk: '#7fb53e', renk2: '#1f6a58', karis: (x, y) => 1.15 - kubbeIsik(x, y) * 1.55 + (DN(x / 40, y / 40) - 0.5) * 0.35,
     yog: 0.52, kat: 11, varyans: 0.03, dal: 0.4, dalO: 45, kenar: 2.0,
@@ -617,7 +621,7 @@
     q = titret(q, o.tit === undefined ? 0.5 : o.tit, o.dalga || 36, NF, faz);
     const Ls = uzunluk(q);
     const w0 = o.w || 1.3;
-    const w = w0 * (w0 >= 0.9 ? 1.8 : w0 >= 0.6 ? 1.6 : 1.55); // ana çizgiler kalın, tarama ince
+    const w = w0 * (w0 >= 0.9 ? 2.25 : w0 >= 0.6 ? 1.85 : 1.75); // ana çizgiler kalın, tarama ince
     const bas = o.bas === undefined ? 3 : o.bas, son = o.son === undefined ? 8 : o.son;
     const wk = o.wk;
     ix.fillStyle = o.renk || MUREKKEP;
@@ -723,6 +727,10 @@
     ix.restore();
   }
 
+  // --- güneş: tek hamlede çekilmiş, kapanmayan bir halka ve üstüne binen kısa ikinci darbe
+  const yay = (cx, cy, r, a0, a1) => { const p = []; for (let a = a0; a <= a1; a += 0.05) p.push([cx + Math.cos(a) * r * (1 + 0.02 * Math.sin(a * 3)), cy + Math.sin(a) * r]); return p; };
+  kalem(yay(878, 141, 37, -2.2, 3.75), { w: 1.05, tit: 0.6, bas: 4, son: 18 });
+  kalem(yay(879, 140, 39.5, 3.3, 4.6), { w: 0.6, alfa: 0.6, son: 10 });
   // --- yer çizgisi: gevşek yatay darbeler
   kalem([[20, 801], [240, 799]], { w: 1.1, tit: 0.8 });
   kalem([[330, 800], [700, 802]], { w: 1.0, tit: 0.8 });

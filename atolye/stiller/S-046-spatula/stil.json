@@ -1,0 +1,39 @@
+{
+  "kod": "S-046",
+  "no": 46,
+  "ad": "Spatula Resmi",
+  "ad_en": "Palette Knife Painting",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Spatulayla sürülmüş düz, keskin kenarlı, kalın boya levhaları; bir levhada yarım karışmış iki renk ve ışık yakalayan sırtlar.",
+  "tanim": "Spatula resminde boya fırça yerine esnek, mala biçimli çelik bir spatulayla tuvale yayılır, bastırılır ve sıyrılır. Her vuruş üstü pürüzsüz, kenarı keskin, kalın bir boya levhası bırakır; spatulanın kalktığı uçta ve taşan yanında ince boya sırtları oluşur. Spatulada tam karışmamış renkler levhanın içinde damar damar akar, levhalar yan yana gelince yüzey köşeli yüzlere (faset) bölünür. Kıl izi yoktur; renk cesur, doku heykelsidir. Manzara, natürmort ve çağdaş soyut resimde sevilir.",
+  "koken": "Spatula ressamın paletinde boya karıştırma aleti olarak doğdu; Rembrandt ve geç dönem Tiziano onu yer yer tuvalde de kullandı. 19. yüzyılda Gustave Courbet manzaralarında kayalık ve toprağı spatulayla kurarak tekniği bağımsızlaştırdı; Paul Cézanne'ın erken dönemi ve Nicolas de Staël'in kalın, düz renk levhalarından oluşan resimleri spatula resminin doruklarıdır.",
+  "ayirt_edici": [
+    "Gökte, yapıda ve yerde düz, köşeli, keskin kenarlı boya levhaları; levhaların üstü pürüzsüz ve kıl izi yok",
+    "Tek levhada spatulada yarım karışmış iki renk: gökte mavi ile krem-lavanta, kubbede yeşil ile sarı-yeşil damarlar sürme yönünde akıyor",
+    "Levhaların taşan yanında ve spatulanın kalktığı uçta sağ üstten ışık alan ince boya sırtları ve parlak çizgiler",
+    "Güneşin çevresinde dairesel dizilmiş kalın limon ve krem levhaları; bulutlar birkaç geniş beyaz basış",
+    "Kubbede kaburga boyunca dikey, kasnakta yatay, minarede uzun dikey levhalarla kurulmuş köşeli yüzler",
+    "Taç yaprakları iki basışlı beyaz levhalar (gölge tonu geniş, ışık tonu dar ve kayık), yapraklar tek basışlık sivri, kenarı sırtlı yeşil levhalar"
+  ],
+  "palet": [
+    "#192F92",
+    "#4A92D6",
+    "#FFE88A",
+    "#4EA143",
+    "#C8E25A",
+    "#0C4A4E",
+    "#F6D2B0",
+    "#D07F31"
+  ],
+  "kodla_cizim": "Doygun renkli bir hedef tablo (kubbe için dönel yüzey normali, kasnak ve minare için silindir ışığı) ve 2048 piksellik bir renk + yükseklik yüzeyi kurulur. Her spatula vuruşu bir levha fonksiyonudur: yönlendirilmiş dörtgen (uçları eğik ya da sivri, hafif yay ve daralmalı), çift sivri yaprak ya da taç yaprağı biçiminde bir mesafe alanı. Levhanın içinde gürültü eşiğiyle keskin geçişli iki renk damarı sürme yönüne paralel akar; ıslak boyaya basma etkisi için alttaki renk kısmen sürüklenir. Yükseklik düz bir üst, eğik bir yüz, taşan yanda sırt ve kalkış ucunda gürültüyle kırılmış bir dudak olarak yazılır; bazı ince levhalar yalnız alttaki tepelere boya bırakır. Gök, yapı ve yer üç katta (kaba → ince) bölgeye özgü yön alanlarında, levha bölge sınırına kadar uzatılarak boyanır; kubbe silüeti gök rengiyle kesilir, kaburgalar, pencereler, korniş, şerefe ve alemler ince levhalarla ayrıca basılır. En sonda yükseklikten normal hesaplanıp sağ üstten yayınık ve parlak ışık verilir.",
+  "etiketler": [
+    "spatula",
+    "empasto",
+    "yağlıboya",
+    "köşeli yüz",
+    "kabartı",
+    "boya",
+    "geleneksel"
+  ]
+}

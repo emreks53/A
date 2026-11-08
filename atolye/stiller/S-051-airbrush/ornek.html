@@ -446,6 +446,84 @@
       return g;
     })();
     ctx.fill(govde);
+    // geniş, yumuşak parlama: sağ üstten gelen ışığın duvarda süpürdüğü sıcak beyaz alan
+    puskurt(govde, (g) => {
+      g.save();
+      g.translate(700, 736);
+      g.scale(1, 0.42);
+      radyal(g, 0, 0, 230, [[0, 'rgba(255,252,240,0.95)'], [0.45, 'rgba(255,246,236,0.45)'], [1, 'rgba(255,246,236,0)']]);
+      g.restore();
+      // sol uçta soğuk çivit gölge
+      const sg = g.createLinearGradient(K.x1, 0, K.x1 + 150, 0);
+      sg.addColorStop(0, 'rgba(70,56,140,0.55)');
+      sg.addColorStop(1, 'rgba(70,56,140,0)');
+      g.fillStyle = sg;
+      g.fillRect(K.x1, K.y1, 150, K.y2 - K.y1);
+    }, { kutu: [K.x1, K.y1, K.x2, K.y2], benek: 0.03 });
+    // cetvelle çekilmiş taş sıraları: ince koyu derz, altında ışık çizgisi (yumuşak söner)
+    for (const yy of [728, 752, 776]) {
+      const sg = ctx.createLinearGradient(K.x1, 0, K.x2, 0);
+      sg.addColorStop(0, 'rgba(60,44,120,0.32)');
+      sg.addColorStop(0.6, 'rgba(110,90,160,0.2)');
+      sg.addColorStop(1, 'rgba(150,120,170,0.14)');
+      ctx.fillStyle = sg;
+      ctx.fillRect(K.x1, yy, K.x2 - K.x1, 1.2);
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillRect(K.x1, yy + 1.2, K.x2 - K.x1, 1);
+    }
+    // kenar payeleri: iki uçta hafif öne çıkan dikey bant (sağda ışık, solda gölge)
+    for (const [px1, px2] of [[K.x1, K.x1 + 22], [K.x2 - 22, K.x2]]) {
+      const pg = ctx.createLinearGradient(px1, 0, px2, 0);
+      pg.addColorStop(0, 'rgba(60,44,120,0.28)');
+      pg.addColorStop(0.18, 'rgba(255,255,255,0.0)');
+      pg.addColorStop(0.8, 'rgba(255,255,255,0.35)');
+      pg.addColorStop(1, 'rgba(255,255,255,0.0)');
+      ctx.fillStyle = pg;
+      ctx.fillRect(px1, K.y1, px2 - px1, K.y2 - K.y1);
+      ctx.fillStyle = 'rgba(60,40,120,0.4)';
+      ctx.fillRect(px1 === K.x1 ? px2 : px1 - 1, K.y1, 1, K.y2 - K.y1);
+    }
+    // pencere çerçeveleri: şablonla kesilmiş kemerli söve, sağı ışıkta, solu gölgede + denizlik
+    for (const p of K.pencereler) {
+      const fw = p.w + 14, fh = p.h + 9;
+      const fyol = P(S.kemerYolu(p.x, p.y - 7, fw, fh));
+      puskurt(fyol, (g) => {
+        const gr = g.createLinearGradient(p.x - fw / 2, 0, p.x + fw / 2, 0);
+        gr.addColorStop(0, '#9A8EC6');
+        gr.addColorStop(0.45, '#E4DDEC');
+        gr.addColorStop(1, '#FFFFFF');
+        g.fillStyle = gr;
+        g.fillRect(p.x - fw, p.y - 10, fw * 2, fh + 6);
+        const tg = g.createLinearGradient(0, p.y - 8, 0, p.y + 10);
+        tg.addColorStop(0, 'rgba(255,255,255,0.8)');
+        tg.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = tg;
+        g.fillRect(p.x - fw, p.y - 10, fw * 2, 22);
+      }, { kutu: [p.x - fw, p.y - 10, p.x + fw, p.y + p.h + 4], tane: 0.12, benek: 0.02 });
+      ctx.strokeStyle = 'rgba(70,50,130,0.45)';
+      ctx.lineWidth = 0.9;
+      ctx.stroke(fyol);
+      // denizlik
+      const sx1 = p.x - fw / 2 - 4, sx2 = p.x + fw / 2 + 4, sy = p.y + p.h + 1;
+      const dg = ctx.createLinearGradient(sx1, 0, sx2, 0);
+      dg.addColorStop(0, '#A79CCD');
+      dg.addColorStop(0.5, '#F2EDF2');
+      dg.addColorStop(1, '#FFFFFF');
+      ctx.fillStyle = dg;
+      ctx.fillRect(sx1, sy, sx2 - sx1, 5);
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.fillRect(sx1, sy, sx2 - sx1, 1);
+      puskurt(null, (g) => {
+        const gr = g.createLinearGradient(0, sy + 5, 0, sy + 16);
+        gr.addColorStop(0, 'rgba(56,38,112,0.42)');
+        gr.addColorStop(1, 'rgba(56,38,112,0)');
+        g.fillStyle = gr;
+        g.beginPath();
+        g.moveTo(sx1 + 1, sy + 5); g.lineTo(sx2 - 1, sy + 5); g.lineTo(sx2 - 9, sy + 16); g.lineTo(sx1 - 6, sy + 16);
+        g.closePath();
+        g.fill();
+      }, { kutu: [sx1 - 8, sy + 4, sx2 + 2, sy + 18], benek: 0.03 });
+    }
     puskurt(govde, (g) => {
       const gr = g.createLinearGradient(0, K.y1, 0, K.y1 + 46);
       gr.addColorStop(0, 'rgba(56,38,112,0.55)');
@@ -543,8 +621,14 @@
         const dif = Math.max(0, nx * Lv[0] + ny * Lv[1] + nz * Lv[2]);
         const sp = Math.pow(Math.max(0, nx * Hv[0] + ny * Hv[1] + nz * Hv[2]), 60);
         let c = rampa(YESIL, clamp(dif * 1.05, 0, 1));
-        // krom yansıma: yansıyan ışın yukarı bakıyorsa gök, aşağı bakıyorsa toprak; arada keskin ufuk
-        const ry = 2 * nz * ny, rx = 2 * nz * nx;
+        // krom yansıma: yansıyan ışın yukarı bakıyorsa gök, aşağı bakıyorsa toprak; arada keskin ufuk.
+        // Ufuk için dilim şişkinliği çok az alınır: çizgi kubbe boyunca tek, akıcı bir kavis olarak
+        // akar, kaburgalarda yalnızca küçük bir kırılma yapar (pul pul fisto dizisi gibi okunmaz).
+        const phr = ph + (t - 0.5) * 0.1;
+        let rnx = Math.sin(phr), rny = -rp, rnz = Math.cos(phr);
+        const rm = Math.hypot(rnx, rny, rnz);
+        rnx /= rm; rny /= rm; rnz /= rm;
+        const ry = 2 * rnz * rny + (t - 0.5) * 0.012, rx = 2 * nz * nx;
         // üslup gereği ufuk yansıması kubbenin alt üçte birine indirilir (krom gibi keskin çizgi)
         const H0 = 0.3;
         const ufuk = sstep(H0 - 0.012, H0 + 0.012, ry);

@@ -220,19 +220,19 @@ const poly = (pts, k) => P2(SAHNE.yol(pts, k));
 // ------------------------------------------------------------------ gök
 {
   const gok = P2('M0,0 H1024 V800 H0 Z');
-  bolge(gok, lgT(0, 0, 0, 800, [[0, 0.6], [0.35, 0.44], [0.7, 0.24], [1, 0.12]]), lgR(0, 0, 0, 800, [[0, '#1F5296'], [0.42, '#3F7DB8'], [0.7, '#86A2C4'], [0.86, '#D49A8C'], [1, '#D8A27A']]));
-  // sol üst köşe koyulaşır, güneş çevresi açılır
-  tonEkle(gok, (() => { const g = tx.createRadialGradient(0, 0, 0, 0, 0, 560); g.addColorStop(0, gri(0.2)); g.addColorStop(1, gri(0)); return g; })());
+  bolge(gok, lgT(0, 0, 0, 800, [[0, 0.8], [0.3, 0.66], [0.6, 0.5], [0.82, 0.36], [1, 0.26]]), lgR(0, 0, 0, 800, [[0, '#0F3A82'], [0.38, '#2465AC'], [0.66, '#4D8AC4'], [0.82, '#8E9CC0'], [0.92, '#CF8A7E'], [1, '#D6955E']]));
+  // sol üst köşe koyulaşır, güneş çevresi bir iki kademe açılır (gök yine mavi kalır)
+  tonEkle(gok, (() => { const g = tx.createRadialGradient(0, 0, 0, 0, 0, 560); g.addColorStop(0, gri(0.14)); g.addColorStop(1, gri(0)); return g; })());
   {
-    const g = tx.createRadialGradient(880, 140, 30, 880, 140, 360);
-    g.addColorStop(0, 'rgba(0,0,0,0.66)'); g.addColorStop(0.3, 'rgba(0,0,0,0.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    const g = tx.createRadialGradient(880, 140, 30, 880, 140, 270);
+    g.addColorStop(0, 'rgba(0,0,0,0.6)'); g.addColorStop(0.35, 'rgba(0,0,0,0.34)'); g.addColorStop(0.7, 'rgba(0,0,0,0.1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
     tx.fillStyle = g; tx.fill(gok);
-    const r = rx.createRadialGradient(880, 140, 40, 880, 140, 330);
-    r.addColorStop(0, 'rgba(222,160,60,1)'); r.addColorStop(0.45, 'rgba(220,150,100,0.6)'); r.addColorStop(1, 'rgba(220,150,100,0)');
+    const r = rx.createRadialGradient(880, 140, 40, 880, 140, 280);
+    r.addColorStop(0, 'rgba(228,166,40,1)'); r.addColorStop(0.32, 'rgba(232,150,60,0.92)'); r.addColorStop(0.62, 'rgba(214,120,120,0.5)'); r.addColorStop(1, 'rgba(150,110,170,0)');
     rx.fillStyle = r; rx.fill(gok);
   }
-  // güneş: hiç aşındırılmamış kâğıt beyazı, çevresinde ince bir halka
-  bolge(SAHNE.daireYolu(880, 140, 44), 0);
+  // güneş: en açık kademede ılık sarı disk, çevresinde ince bir halka
+  bolge(SAHNE.daireYolu(880, 140, 44), 0.2, '#E3B040');
   cizgi(SAHNE.daireYolu(880, 140, 44.5), 0.9, 0.55);
   // bulutlar: hafif aşındırma, alt yanları bir kademe koyu
   const rb = SAHNE.rng(31);
@@ -250,12 +250,12 @@ const poly = (pts, k) => P2(SAHNE.yol(pts, k));
   }
 }
 // zemin
-bolge('M0,800 H1024 V1024 H0 Z', lgT(0, 800, 0, 1024, [[0, 0.34], [0.12, 0.26], [1, 0.52]]), lgR(0, 800, 0, 1024, [[0, '#9A7454'], [1, '#8C5E3E']]));
-tonEkle('M300,800 L110,828 L300,846 L820,846 L820,800 Z', lgT(0, 800, 0, 846, [[0, 0.2], [1, 0]]));
+bolge('M0,800 H1024 V1024 H0 Z', lgT(0, 800, 0, 1024, [[0, 0.5], [0.12, 0.4], [1, 0.7]]), lgR(0, 800, 0, 1024, [[0, '#A87A44'], [0.5, '#9A6436'], [1, '#7E4A2C']]));
+tonEkle('M300,800 L110,828 L300,846 L820,846 L820,800 Z', lgT(0, 800, 0, 846, [[0, 0.24], [1, 0]]));
 
 // ------------------------------------------------------------------ minare
 {
-  const TAS = '#86705E';
+  const TAS = '#9A7A58';
   for (const p of SAHNE.minareParcalari()) {
     if (p.tip === 'alem') continue;
     if (p.tip === 'bant') { for (const z of SAHNE.zikzakCizgileri()) cizgi(poly(z), 1.6, 0.95); continue; }
@@ -264,7 +264,7 @@ tonEkle('M300,800 L110,828 L300,846 L820,846 L820,800 Z', lgT(0, 800, 0, 846, [[
     else if (p.tip === 'topuz') { d = p.yol; x1 = 266; x2 = 334; }
     else { d = SAHNE.yol([[p.x1, p.y1], [p.x2, p.y1], [p.x2, p.y2], [p.x1, p.y2]], true); x1 = p.x1; x2 = p.x2; }
     const cik = p.ad.startsWith('çıkma');
-    bolge(d, lgT(x1, 0, x2, 0, [[0, cik ? 0.66 : 0.5], [0.45, cik ? 0.48 : 0.26], [0.75, cik ? 0.36 : 0.1], [1, cik ? 0.44 : 0.2]]), TAS);
+    bolge(d, lgT(x1, 0, x2, 0, [[0, cik ? 0.76 : 0.68], [0.45, cik ? 0.6 : 0.42], [0.75, cik ? 0.46 : 0.26], [1, cik ? 0.54 : 0.34]]), lgR(x1, 0, x2, 0, [[0, '#605E88'], [0.45, TAS], [1, '#BA8A48']]));
     if (p.tip === 'korkuluk') for (let i = 0; i < 10; i++) { const x = p.x1 + 5 + ((p.x2 - p.x1 - 10) * i) / 9; bolge(SAHNE.yol([[x - 2.2, p.y1 + 4], [x + 2.2, p.y1 + 4], [x + 2.2, p.y2 - 3], [x - 2.2, p.y2 - 3]], true), 0.7); }
     if (p.ad.startsWith('şerefe')) tonEkle(SAHNE.yol([[x1, p.noktalar[2][1] - 3], [x2, p.noktalar[2][1] - 3], [x2, p.noktalar[2][1]], [x1, p.noktalar[2][1]]], true), gri(0.3));
     cizgi(d, 1.0, 0.8);
@@ -273,10 +273,10 @@ tonEkle('M300,800 L110,828 L300,846 L820,846 L820,800 Z', lgT(0, 800, 0, 846, [[
 }
 // ------------------------------------------------------------------ kaide
 {
-  const TAS = '#8A6E58';
-  bolge(Y.kaide, lgT(300, 0, 820, 0, [[0, 0.5], [0.35, 0.28], [0.75, 0.12], [1, 0.1]]), TAS);
-  tonEkle('M300,704 H820 V716 H300 Z', lgT(0, 704, 0, 716, [[0, 0.42], [1, 0]]));
-  bolge(Y.kornis, lgT(290, 0, 830, 0, [[0, 0.22], [1, 0.03]]), TAS);
+  const TAS = '#9C7C56';
+  bolge(Y.kaide, lgT(300, 0, 820, 0, [[0, 0.66], [0.35, 0.44], [0.75, 0.28], [1, 0.26]]), lgR(300, 0, 820, 0, [[0, '#625E88'], [0.4, TAS], [1, '#BC8C4C']]));
+  tonEkle('M300,704 H820 V718 H300 Z', lgT(0, 704, 0, 718, [[0, 0.46], [1, 0]]));
+  bolge(Y.kornis, lgT(290, 0, 830, 0, [[0, 0.34], [1, 0.12]]), TAS);
   for (const p of SAHNE.kaide.pencereler) { const d = SAHNE.kemerYolu(p.x, p.y, p.w, p.h); bolge(d, 0.84, '#6E4E4A'); cizgi(d, 1, 0.85); }
   cizgi(Y.kaide, 1.1, 0.75); cizgi(Y.kornis, 1, 0.75);
 }
@@ -284,14 +284,14 @@ tonEkle('M300,800 L110,828 L300,846 L820,846 L820,800 Z', lgT(0, 800, 0, 846, [[
 for (let k = 1; k >= 0; k--) {
   const q = SAHNE.kasnak[k];
   const d = k ? Y.kasnakAlt : Y.kasnakUst;
-  bolge(d, lgT(q.x1, 0, q.x2, 0, [[0, 0.82], [0.4, 0.66], [0.72, 0.44], [1, 0.6]]), '#22603F');
+  bolge(d, lgT(q.x1, 0, q.x2, 0, [[0, 0.9], [0.4, 0.74], [0.72, 0.52], [1, 0.68]]), '#1B6A3E');
   tonEkle(`M${q.x1},${q.y1} H${q.x2} V${q.y1 + 8} H${q.x1} Z`, lgT(0, q.y1, 0, q.y1 + 8, [[0, 0.3], [1, 0]]));
   for (const p of SAHNE.kasnakPencereleri(k)) { const dp = SAHNE.kemerYolu(p.x, p.y, p.w, p.h); bolge(dp, 1); cizgi(dp, 0.8, 0.6); }
   cizgi(d, 1.1, 0.8);
 }
 // ------------------------------------------------------------------ kubbe
 {
-  bolge(Y.kubbe, rgT(650, 380, 10, 590, 430, 290, [[0, 0.22], [0.4, 0.46], [0.75, 0.66], [1, 0.84]]), '#2A7A4E');
+  bolge(Y.kubbe, rgT(650, 380, 10, 590, 430, 290, [[0, 0.3], [0.4, 0.54], [0.75, 0.74], [1, 0.9]]), '#1E8048');
   tx.save(); tx.clip(P2(Y.kubbe));
   tonEkle(Y.kubbe, lgT(360, 0, 640, 0, [[0, 0.3], [0.6, 0.05], [1, 0]]));
   // kaburgaların gölge yanı: dar, bir kademe koyu şeritler
@@ -322,7 +322,7 @@ for (const [axx, taban, s] of [[560, 300, 1], [300, 146, 0.62]]) {
     const ca = Math.cos(yp.aci), sa = Math.sin(yp.aci), nx = -sa, ny = ca;
     const yon = nx * 0.6 - ny * 0.6 > 0 ? 1 : -1;
     const W = yp.uzunluk * 0.32, mx = yp.x + ca * yp.uzunluk * 0.5, my = yp.y + sa * yp.uzunluk * 0.5;
-    bolge(d, lgT(mx - nx * W * yon, my - ny * W * yon, mx + nx * W * yon, my + ny * W * yon, [[0, koyu ? 0.86 : 0.64], [0.5, koyu ? 0.68 : 0.46], [1, koyu ? 0.52 : 0.32]]), koyu ? '#3F6E36' : '#5E8A3A');
+    bolge(d, lgT(mx - nx * W * yon, my - ny * W * yon, mx + nx * W * yon, my + ny * W * yon, [[0, koyu ? 0.86 : 0.64], [0.5, koyu ? 0.68 : 0.46], [1, koyu ? 0.52 : 0.32]]), koyu ? '#2F6A30' : '#4E8A2C');
     cizgi(d, 0.8, 0.42);
     const [a, b] = SAHNE.yaprakDamari(yp); cizgi(poly([a, b]), 0.7, 0.5);
   });
@@ -330,7 +330,7 @@ for (const [axx, taban, s] of [[560, 300, 1], [300, 146, 0.62]]) {
   for (const c of BT.cicekler) {
     for (const e of SAHNE.tacYapraklari(c)) {
       const d = SAHNE.elipsYolu(e);
-      bolge(d, rgT(c.x, c.y, c.r * 0.15, c.x, c.y, c.r * 1.05, [[0, 0.24], [0.4, 0.1], [1, 0.03]]), '#C46E80');
+      bolge(d, rgT(c.x, c.y, c.r * 0.15, c.x, c.y, c.r * 1.05, [[0, 0.36], [0.45, 0.17], [1, 0.05]]), '#C8587A');
       cizgi(d, c.r > 40 ? 0.95 : 0.8, 0.62);
     }
     bolge(SAHNE.daireYolu(c.x, c.y, c.r * 0.2), 0.5, '#C08A28');
@@ -353,7 +353,7 @@ const ciz1 = gurultuFn(941);
 const fon = fbmFn(951, 3, 3), fonB = fbmFn(952, 3, 60);
 const KAGIT = hex('#F3EEE2'), FON = hex('#8F8B82'), LEVHATON = hex('#7A6655');
 const KADEME = 6;
-const YOG = [0, 0.5, 0.68, 0.88, 1.08, 1.28, 1.5];
+const YOG = [0, 0.56, 0.78, 1.0, 1.24, 1.5, 1.78];
 const RP = [1, 0.62, 0.52, 0.42, 0.33, 0.24, 0.15]; // kademe → reçine tanesi yarıçapı (hücre oranı)
 
 // kâğıt (tırtıllı kenar) maskesi ve levha izi yüksekliği

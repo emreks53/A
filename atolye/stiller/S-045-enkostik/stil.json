@@ -16,7 +16,7 @@
     "Kubbe kaburgaları, kasnak, kaide ve minare çevresinde, güneşin etrafında oyulup koyu boyayla doldurulmuş çizgiler",
     "Yumuşak, hafif bulanık kenarlar ve kabartılarda sağ üstten gelen saten parlama"
   ],
-  "palet": ["#5B9FA2", "#689690", "#E8B050", "#FFF5BB", "#4E8554", "#20372A", "#EFDCB6", "#B96E3F"],
+  "palet": ["#5B9FA2", "#689690", "#E89A4C", "#FFF5BB", "#4E8554", "#20372A", "#EFDCB6", "#B96E3F"],
   "kodla_cizim": "2048 px'lik renk tamponunun yanında bir mum kalınlığı (yükseklik) tamponu tutulur. Katlar sırayla eklenir: sıcak okra taban, renk blokları, saydam turkuaz gök (güneş çevresinde sarı-turuncu ışıltı), sütlü, sıcak ve serin perdeler, yumuşak beyaz bulutlar, yapı, kubbe ve bitkiler. Her kat Path2D'den çıkarılan maskenin bulanıklaştırılıp gürültüyle eşiklenmesiyle yumuşak kenarlı, kısmen saydam karışır, mum rengine doğru hafif sütleşir ve kalınlık ekler. Kazıyıcı, alt kat anındaki kopyaya dönen çapraz anizotrop gürültü şeritleriyle yapılır ve kalınlığı düşürür. Fırça yığınları kısa, kalın darbelerin bulanıklaştırılmış yükseklik izidir; perde sınırlarında ve biçim kenarlarında göllenmiş mum, gürültü eşiğine ve bulanık maskeye göre ince sırtlar olarak eklenir. Renk tamponu hafifçe bulanıklaştırılır, sonra oyulmuş çizgiler koyu dolguyla ve çukur olarak, damla ve benekler parlak kabartı olarak eklenir. Son geçişte yükseklik normallerinden sağ üstten yayınık ışık ve yumuşak, saten bir Blinn-Phong parlaması verilir; kalın mumda renk biraz ısınır.",
   "etiketler": ["enkostik", "balmumu", "katmanlı", "saydam", "doku", "kazıma", "ahşap pano", "geleneksel"]
 }
