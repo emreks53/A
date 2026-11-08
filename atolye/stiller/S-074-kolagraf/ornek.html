@@ -249,8 +249,8 @@ for (const x of [...MT.map((m) => m.x), RX, IH, TX]) { x.save(); x.beginPath(); 
   for (const r of [58, 71, 85]) tutkal(SAHNE.daireYolu(880, 140, r), 3.4, 0.9);
 }
 // zemin: kum ve karborundum
-parca('M0,800 H1024 V1024 H0 Z', 'kum', null, [0, 800, 0, 1024, 0.9, 1.35], 0.5);
-{ const g = RX.createLinearGradient(0, 800, 0, 1024); g.addColorStop(0, '#A87C4A'); g.addColorStop(1, '#8A5A36'); RX.fillStyle = g; RX.fillRect(0, 800, 1024, 224); }
+parca('M0,800 H1024 V1024 H0 Z', 'kum', null, [0, 800, 0, 1024, 0.62, 1.05], 0.5);
+{ const g = RX.createLinearGradient(0, 800, 0, 1024); g.addColorStop(0, '#B88E58'); g.addColorStop(1, '#996740'); RX.fillStyle = g; RX.fillRect(0, 800, 1024, 224); }
 // yapının sola düşen gölgesi: zeminde daha yoğun mürekkep
 { IH.save(); IH.globalCompositeOperation = 'lighter'; const g = IH.createLinearGradient(0, 800, 0, 846); g.addColorStop(0, 'rgb(70,0,0)'); g.addColorStop(1, 'rgb(0,0,0)'); IH.fillStyle = g; IH.fill(P2('M300,800 L110,828 L300,846 L820,846 L820,800 Z')); IH.restore(); }
 // bulutlar: yırtık ipek kâğıdı
@@ -285,18 +285,18 @@ parca('M0,800 H1024 V1024 H0 Z', 'kum', null, [0, 800, 0, 1024, 0.9, 1.35], 0.5)
     parca(d, cik || p.tip === 'korkuluk' ? 'karton' : 'ipek', cik ? '#8E8272' : '#A69A86', [x1, 0, x2, 0, cik ? 1.0 : 0.55, cik ? 0.55 : 0.16], (say++ % 2 ? 1.05 : 1.25) + (p.ad.startsWith('şerefe') ? 0.25 : 0));
     if (p.tip === 'korkuluk') for (let i = 0; i < 9; i++) { const x = p.x1 + 5 + ((p.x2 - p.x1 - 10) * (i + 0.5)) / 9; tutkal(`M${x},${p.y1 + 4} L${x},${p.y2 - 4}`, 2.4, 0.9); }
   }
-  for (const p of SAHNE.minarePencereleri) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#2C2722', 1.9, 0.1);
+  for (const p of SAHNE.minarePencereleri) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#3A3028', 1.6, 0.1);
 }
 // ------------------------------------------------------------------ kaide: fırçalanmış macun, korniş şeridi, kesik pencereler
 parca(Y.kaide, 'macun', '#ADA088', [300, 0, 820, 0, 0.72, 0.26], 1.1);
 parca('M300,704 H820 V714 H300 Z', 'macun', '#7E7466', 0.9, 1.0);
 parca(Y.kornis, 'karton', '#B6AA94', 0.3, 1.6);
-for (const p of SAHNE.kaide.pencereler) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#3A2A26', 1.9, 0.1);
+for (const p of SAHNE.kaide.pencereler) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#46302A', 1.6, 0.1);
 // ------------------------------------------------------------------ kasnak: zımpara, kesik pencereler
 for (let k = 1; k >= 0; k--) {
   const q = SAHNE.kasnak[k];
   parca(k ? Y.kasnakAlt : Y.kasnakUst, 'zimpara', '#2D6C43', [q.x1, 0, q.x2, 0, 1.45, 0.75], k ? 1.25 : 1.45);
-  for (const p of SAHNE.kasnakPencereleri(k)) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#14251A', 2.0, 0.15);
+  for (const p of SAHNE.kasnakPencereleri(k)) parca(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 'oyuk', '#183424', 1.75, 0.15);
 }
 // ------------------------------------------------------------------ kubbe: oluklu karton dilimleri, gölge yanında karborundum
 {
