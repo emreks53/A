@@ -272,10 +272,7 @@ Ex.fillStyle = '#fff';
 
 // ------------------------------------------------------------------ gök: boyalı vuruşlar ve silmeler
 // gökteki boya yapı siluetine girmez (sanatçı yapının biçimini önceden bezle almıştır)
-const disari = new Path2D('M0,0 H1024 V1024 H0 Z');
-[Y.kubbe, Y.kasnakUst, Y.kasnakAlt, Y.kaide, Y.kornis, ...Y.minare].forEach((d) => disari.addPath(P2(d)));
 const GOKK = [K.lac, K.mavi, K.gul, K.sari];
-for (const k of GOKK) { k.save(); k.clip(disari, 'evenodd'); }
 // sol üst köşe derinleşir: kuru fırçayla çapraz Prusya mavisi vuruşları
 for (let i = 0; i < 22; i++) {
   const y0 = 50 + rnd() * 360, x0 = 30 + rnd() * 200;
@@ -332,7 +329,11 @@ for (const [bx, by, bs] of BULUT) {
   if (bx > 450) yatayFirca(K.sari, bx - 70 * bs, bx + 100 * bs, by - 14 * bs, 12 * bs, 0.08, { kuru: 0.7, kil: 2.4 });
 }
 
-for (const k of GOKK) k.restore();
+for (const k of GOKK) {
+  k.save(); k.globalCompositeOperation = 'destination-out'; k.fillStyle = '#fff';
+  [Y.kubbe, Y.kasnakUst, Y.kasnakAlt, Y.kaide, Y.kornis, ...Y.minare].forEach((d) => k.fill(P2(d)));
+  k.restore();
+}
 
 // ------------------------------------------------------------------ kubbe
 const prof = SAHNE.kubbeProfili(48); // tabandan tepeye

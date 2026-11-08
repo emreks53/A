@@ -1,0 +1,22 @@
+{
+  "kod": "S-044",
+  "no": 44,
+  "ad": "Fresk",
+  "ad_en": "Fresco",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Yaş kireç sıvaya işlenmiş tebeşirimsi, solgun renkler; sıva dokusu, kılcal çatlaklar, dökülen yerlerde kırmızı sinopia ön çizimi.",
+  "tanim": "Fresk (buon fresco), suyla ezilmiş toprak pigmentlerinin henüz yaş olan ince kireç sıvaya (intonaco) sürüldüğü duvar resmi tekniğidir; kireç kuruyup karbonatlaşırken pigmenti duvara bağlar. Renkler bu yüzden mat, tebeşirimsi ve yumuşaktır, kireç beyazıyla açılır; sıva her gün yalnızca bir günde boyanabilecek kadar sürüldüğü için günlük bölümlerin (giornata) ve iskele katlarının (pontata) ekleri seçilir. Zamanla yüzeyde kılcal çatlaklar ve dökülmeler oluşur, dökülen yerlerde kaba alt sıva (arriccio) üzerindeki kırmızı toprakla yapılmış ön çizim (sinopia) ortaya çıkar. Kilise ve saray duvarlarında, tavanlarda kullanılır.",
+  "koken": "Minos Girit'i ve Pompei duvar resimleri yaş ve kuru sıva tekniklerini çok erken kullandı. Tekniğin klasik biçimi 13.–14. yüzyıl İtalya'sında kuruldu: Giotto'nun Padova'daki Scrovegni Şapeli ve Assisi freskleri, ardından Masaccio, Piero della Francesca ve Michelangelo'nun Sistina tavanı. Cennino Cennini sinopia, giornata ve kuru eklenen (a secco) maviyi anlatır; 20. yüzyılda Diego Rivera ve Meksika duvar ressamları tekniği yeniden canlandırdı.",
+  "ayirt_edici": [
+    "Kireç beyazıyla açılmış, solgun ve tebeşirimsi toprak renkleri: azurit mavisi gök, yeşil toprak kubbe, okra alemler",
+    "İnce kumlu kireç sıva dokusu, mala dalgası ve sağ üstten ışık alan hafif kabartı",
+    "Dökülen yamalarda kenarı kalkık intonaco, altında kumlu arriccio üzerinde kırmızı sinopia ön çizimi (kubbe, kasnak, pencereler, çiçekler) ve daha derinde duvar",
+    "Kubbe çevresinde giornata ekinin ince sırtı ve ton farkı; gökte yatay pontata eki",
+    "Dallanan kılcal çatlaklar, gökte a secco mavinin pul pul döküldüğü iki bölge",
+    "Kırmızı toprak şerit üstünde baklava ve dairelerle boyanmış süs bordürü; biçimlerde kırmızı-kahve, yer yer kesik kontur"
+  ],
+  "palet": ["#657CA1", "#C0CDAC", "#647763", "#E7DEC8", "#945347", "#BA946A", "#C3B59B", "#C85A40"],
+  "kodla_cizim": "2048 px'lik renk tamponu kireç beyazıyla başlar. Biçimler Path2D'den kapsama maskesine çevrilip geniş bulanıklık ve gürültülü eşikle yumuşak, sıvaya emmiş kenarlarla katman katman boyanır; ayrı bir yumuşak fırça haritası (gökte geniş yatay, kubbede kaburga boyunca darbeler) tonu oynatır, kubbeye ve çiçeklere görünür yarı saydam darbeler, biçimlere kesik kesik kırmızı-kahve kontur, çayıra ot darbeleri eklenir. Bordür ayrı tuvalde kırmızı toprak şerit, okra fileto, baklava ve dairelerle çizilir. Dökülme maskesi birkaç düzensiz yamanın gürültüyle bozulmuş uzaklık alanından ve çevresindeki kırıntılardan oluşur; sinopia, sahne geometrisinden elle titretilmiş çift çizgilerle ayrı bir maskeye çizilir ve yalnız dökülen yerde arriccio rengine karışır. Giornata eki kubbe çevresinde, pontata eki yatay bir hatta çizilip hem ton farkı hem sırt olarak işlenir; kılcal çatlaklar dallanan rastgele yürüyüşlerdir. Son geçişte renkler kireç beyazına doğru soldurulur ve doygunlukları azaltılır, sıva dokusu, dökülme çukurları ve ek sırtlarından kurulan yükseklik haritasıyla sağ üstten ışık verilir, kum tanesi beneği eklenir.",
+  "etiketler": ["fresk", "duvar resmi", "kireç sıva", "sinopia", "giornata", "Giotto", "Pompei", "geleneksel"]
+}

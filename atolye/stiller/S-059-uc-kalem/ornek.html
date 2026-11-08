@@ -302,7 +302,7 @@
       const leke = fbm(nF, xs / 140, ys / 140, 4) - 0.5;
       const kenarU = Math.min(xs, W - xs, ys, W - ys);
       const sarar = sstep(60, 0, kenarU + leke * 60) * 0.5 + 0.15 * sstep(0.2, 0.45, leke);
-      let k = 1 + leke * 0.08 - zincir * 0.035 + (H[i] - 0.5) * 0.035;
+      let k = 1 + leke * 0.08 - zincir * 0.016 + (H[i] - 0.5) * 0.035;
       KR[i] = (base[0] * k + 26 * sarar) / 255; KG[i] = (base[1] * k + 14 * sarar) / 255; KB_[i] = (base[2] * k - 16 * sarar) / 255;
     }
   }
@@ -365,51 +365,39 @@
     for (const kb of SAHNE.kaburgalar(8, 30)) elCizgisi(x, kb.noktalar.map(([a, b]) => [a + 2, b]), 1.0, 0.2, c, r, { parca: 200, titre: 1.4 });
   }, { cila: false, opq: 0.4, gren: 0.75 });
 
-  // ================================================================ 2) yapılar: kırmızı tebeşir modelleme (tarama + estompe)
-  // estompe: gölge taraflarında yumuşak kırmızı
+  // ================================================================ 2) taş yapılar (minare, kaide): kırmızı tebeşir modelleme (estompe + çapraz tarama)
   katman((x) => {
-    x.save(); x.clip(kubbeYolu);
-    for (let u = -1.05; u < 0.3; u += 0.05) { const pts = []; for (let t = 0; t <= 10; t++) { const yy = lerp(556, 304, t / 10); pts.push([560 + u * kubbeRy(yy), yy]); } leke(x, pts, 18, 0.12 + 0.3 * sstep(0.1, -1, u), KIRMIZI); }
-    x.restore();
-    x.save(); x.clip(kasnakYolu); for (let yy = 560; yy < 692; yy += 9) leke(x, [[334, yy], [470, yy], [560, yy]], 12, 0.3, KIRMIZI); x.restore();
     x.save(); x.clip(minareYolu); for (let xx = 266; xx < 300; xx += 6) leke(x, [[xx, 150], [xx, 800]], 9, 0.3, KIRMIZI); leke(x, [[270, 480], [334, 580]], 40, 0.25, KIRMIZI); x.restore();
     x.save(); x.clip(kaideYolu); for (let yy = 708; yy < 800; yy += 10) leke(x, [[300, yy], [420, yy], [520, yy]], 12, 0.22, KIRMIZI); leke(x, [[300, 710], [820, 710]], 10, 0.35, KIRMIZI); x.restore();
-    // zemin gölgesi
     for (let k = 0; k < 9; k++) leke(x, [[250 + r() * 30, 806 + k * 4], [560, 808 + k * 4], [860 - r() * 30, 806 + k * 4]], 8, 0.12, KIRMIZI);
-  }, { ezme: 9, opq: 0.4, gren: 0.35, maske: ton((b, l, x, y) => (yapiMi(b) ? 0.35 + 0.75 * golge(l) : y > 800 ? sstep(860, 805, y) * sstep(200, 320, x) * sstep(900, 800, x) : 0)), sil: [MK.bitki] });
-  // kırmızı tebeşir taraması: biçim boyunca paralel çapraz çizgiler, gölgede sık
+  }, { ezme: 9, opq: 0.4, gren: 0.35, maske: ton((b, l, x, y) => (b === 'minare' || b === 'kaide' ? 0.35 + 0.75 * golge(l) : y > 800 ? sstep(860, 805, y) * sstep(200, 320, x) * sstep(900, 800, x) : 0)), sil: [MK.bitki, MK.onYapi].slice(0, 1) });
   katman((x) => {
-    x.save(); x.clip(kubbeYolu); taraT(x, { bx: [356, 296, 764, 557], aci: egik, aralik: 3.1, boy: 34, kal: 1.9, alfa: 0.8, renk: KIRMIZI, obek: 30, sik: 0.85 }); x.restore();
-    x.save(); x.clip(kasnakYolu); taraT(x, { bx: [330, 553, 790, 694], aci: egik, aralik: 3.0, boy: 26, kal: 1.8, alfa: 0.8, renk: KIRMIZI, obek: 24, sik: 0.85 }); x.restore();
-    x.save(); x.clip(minareYolu); taraT(x, { bx: [244, 140, 358, 802], aci: egik, aralik: 2.8, boy: 18, kal: 1.7, alfa: 0.8, renk: KIRMIZI, obek: 18, sik: 0.85 }); x.restore();
-    x.save(); x.clip(kaideYolu); taraT(x, { bx: [286, 688, 834, 802], aci: egik, aralik: 3.0, boy: 30, kal: 1.8, alfa: 0.8, renk: KIRMIZI, obek: 26, sik: 0.85 }); x.restore();
-  }, { opq: 0.45, sil: [MK.bitki], maske: ton((b, l) => (yapiMi(b) && b !== 'pencere' && b !== 'altin' ? 0.12 + 0.95 * golge(l) : 0)) });
-  // kubbede ikinci, meridyen yönünde kırmızı tarama (gölge tarafı)
-  katman((x) => {
-    x.save(); x.clip(kubbeYolu);
-    for (let u = -1.0; u < 0.15; u += 0.022) {
-      let y = 556 - r() * 20;
-      while (y > 315) { const L = 26 + r() * 22, pts = []; for (let t = 0; t <= 4; t++) { const yy = y - L * t / 4; pts.push([560 + (u + (r() - 0.5) * 0.004) * kubbeRy(yy), yy]); } strok(x, pts, 1.7, 0.7 + 0.25 * r(), KIRMIZI, 0.1, 0.35); y -= L + r() * 14; }
-    }
-    x.restore();
-  }, { opq: 0.45, maske: ton((b, l) => (b === 'kubbe' ? sstep(0.5, 0.05, l) : 0)) });
+    x.save(); x.clip(minareYolu); taraT(x, { bx: [244, 140, 358, 802], aci: egik, aralik: 3.6, boy: 22, kal: 2.1, alfa: 0.9, renk: KIRMIZI, obek: 20, sik: 0.9 }); x.restore();
+    x.save(); x.clip(kaideYolu); taraT(x, { bx: [286, 688, 834, 802], aci: egik, aralik: 4.0, boy: 38, kal: 2.2, alfa: 0.9, renk: KIRMIZI, obek: 32, sik: 0.9 }); x.restore();
+  }, { opq: 0.45, sil: [MK.bitki], maske: ton((b, l) => (b === 'minare' || b === 'kaide' ? 0.1 + 0.95 * golge(l) : 0)) });
 
-  // ================================================================ 3) renkli pastel: kubbede yeşil (sürtülmüş + vuruşlar), kasnakta açık yeşil
+  // ================================================================ 3) yeşil pastel: kubbe ve kasnak (sürtülmüş zemin + kaburga boyunca vuruşlar + koyu yeşil tarama)
+  const KOYUYESIL = hex('#2C5E44');
   katman((x) => {
     x.save(); x.clip(kubbeYolu);
-    for (let u = -1.05; u < 1.05; u += 0.045) { const pts = []; for (let t = 0; t <= 10; t++) { const yy = lerp(556, 302, t / 10); pts.push([560 + u * kubbeRy(yy), yy]); } leke(x, pts, 16, 0.42, YESIL); }
+    for (let u = -1.05; u < 1.05; u += 0.045) { const pts = []; for (let t = 0; t <= 10; t++) { const yy = lerp(556, 302, t / 10); pts.push([560 + u * kubbeRy(yy), yy]); } leke(x, pts, 16, 0.5, YESIL); }
     x.restore();
-    x.save(); x.clip(kasnakYolu); for (let yy = 558; yy < 692; yy += 8) leke(x, [[334, yy], [786, yy]], 12, 0.4, YESIL); x.restore();
-  }, { ezme: 7, opq: 0.6, gren: 0.4, maske: ton((b, l, x, y) => (b === 'kubbe' ? 0.8 + 0.2 * l : b === 'kasnak' ? 0.65 + 0.3 * l : 0)) });
+    x.save(); x.clip(kasnakYolu); for (let yy = 558; yy < 692; yy += 8) leke(x, [[334, yy], [786, yy]], 12, 0.45, YESIL); x.restore();
+  }, { ezme: 7, opq: 0.6, gren: 0.4, maske: ton((b, l) => (b === 'kubbe' ? 0.75 + 0.25 * l : b === 'kasnak' ? 0.65 + 0.3 * l : 0)) });
   katman((x) => {
     x.save(); x.clip(kubbeYolu);
-    for (let u = -0.98; u < 1.0; u += 0.03) {
+    for (let u = -0.98; u < 1.0; u += 0.032) {
       let y = 556 - r() * 30;
-      while (y > 310) { const L = 30 + r() * 30, pts = []; for (let t = 0; t <= 4; t++) { const yy = y - L * t / 4; pts.push([560 + (u + (r() - 0.5) * 0.006) * kubbeRy(yy), yy]); } strok(x, pts, 2.6, 0.75, YESIL, 0.1, 0.35); y -= L + 6 + r() * 24; }
+      while (y > 310) { const L = 30 + r() * 30, pts = []; for (let t = 0; t <= 4; t++) { const yy = y - L * t / 4; pts.push([560 + (u + (r() - 0.5) * 0.006) * kubbeRy(yy), yy]); } strok(x, pts, 2.6, 0.8, YESIL, 0.1, 0.35); y -= L + 6 + r() * 24; }
     }
     x.restore();
-    x.save(); x.clip(kasnakYolu); taraT(x, { bx: [330, 553, 790, 694], aci: Math.PI / 2 - 0.1, aralik: 4, boy: 20, kal: 2.4, alfa: 0.7, renk: YESIL, obek: 20, sik: 0.9 }); x.restore();
+    x.save(); x.clip(kasnakYolu); taraT(x, { bx: [330, 553, 790, 694], aci: Math.PI / 2 - 0.1, aralik: 4, boy: 20, kal: 2.4, alfa: 0.75, renk: YESIL, obek: 20, sik: 0.9 }); x.restore();
   }, { opq: 0.65, gren: 0.75, maske: ton((b, l) => (b === 'kubbe' ? 0.7 + 0.3 * l : b === 'kasnak' ? 0.55 + 0.3 * l : 0)) });
+  // koyu yeşil pastel: gölge tarafında çapraz tarama (Watteau yönünde)
+  katman((x) => {
+    x.save(); x.clip(kubbeYolu); taraT(x, { bx: [356, 296, 764, 557], aci: egik, aralik: 3.8, boy: 36, kal: 2.2, alfa: 0.9, renk: KOYUYESIL, obek: 32, sik: 0.9 }); x.restore();
+    x.save(); x.clip(kasnakYolu); taraT(x, { bx: [330, 553, 790, 694], aci: egik, aralik: 3.6, boy: 26, kal: 2.1, alfa: 0.9, renk: KOYUYESIL, obek: 24, sik: 0.9 }); x.restore();
+  }, { opq: 0.6, gren: 0.7, maske: ton((b, l) => (b === 'kubbe' || b === 'kasnak' ? 0.08 + 0.95 * golge(l) : 0)) });
   // ışıkta açık yeşil pastel
   katman((x) => {
     x.save(); x.clip(kubbeYolu);
@@ -497,9 +485,9 @@
     sil(K, MK.onBitki);
   }
   katman((x) => yaprakTara(x, YESIL, 0.85, 2.8, 3.6, 0.55, false), { opq: 0.65, gren: 0.65, guc: 1.15 });
-  katman((x) => yaprakTara(x, KIRMIZI, 0.8, 1.6, 3.2, 0.7, false), { opq: 0.45 });
+  katman((x) => yaprakTara(x, KIRMIZI, 0.9, 1.8, 3.4, 0.7, false), { opq: 0.45, guc: 1.1 });
   katman((x) => yaprakTara(x, SIYAH, 0.75, 1.4, 4.4, 0.85, true), { opq: 0.55, maske: ton((b, l, px, py) => (py > 860 ? 0.9 : 0.5)) });
-  katman((x) => { B.yapraklar.forEach((yp, i) => { x.save(); x.globalCompositeOperation = 'destination-out'; x.fill(yaprakYollari[i]); x.restore(); const pts = ornekle(SAHNE.yaprakYolu(yp), 2)[0]; elCizgisi(x, pts, 1.3, 0.8, yp.y > 860 ? SIYAH : KIRMIZI, r, { parca: 50, titre: 0.35 }); const [a, b] = SAHNE.yaprakDamari(yp); strok(x, [a, [lerp(a[0], b[0], 0.5) + 0.5, lerp(a[1], b[1], 0.5)], b], 1.1, 0.6, KIRMIZI, 0.05, 0.4); }); sil(K, MK.onBitki); }, { opq: 0.5, gren: 0.6 });
+  katman((x) => { B.yapraklar.forEach((yp, i) => { x.save(); x.globalCompositeOperation = 'destination-out'; x.fill(yaprakYollari[i]); x.restore(); const pts = ornekle(SAHNE.yaprakYolu(yp), 2)[0]; elCizgisi(x, pts, 1.6, 0.9, yp.y > 860 ? SIYAH : KIRMIZI, r, { parca: 50, titre: 0.35 }); const [a, b] = SAHNE.yaprakDamari(yp); strok(x, [a, [lerp(a[0], b[0], 0.5) + 0.5, lerp(a[1], b[1], 0.5)], b], 1.1, 0.6, KIRMIZI, 0.05, 0.4); }); sil(K, MK.onBitki); }, { opq: 0.5, gren: 0.6 });
   // tomurcuklar: gül rengi
   katman((x) => { B.tomurcuklar.forEach((t, i) => { x.save(); x.clip(tomurcukYollari[i]); taraT(x, { bx: [t.x - 18, t.y - 18, t.x + 18, t.y + 18], aci: t.aci + 0.3, aralik: 2.2, boy: 14, kal: 2.2, alfa: 0.85, renk: GUL, obek: 14, sik: 0.5 }); x.restore(); elCizgisi(x, ornekle(SAHNE.tomurcukYolu(t), 1.5)[0], 1.1, 0.75, KIRMIZI, r, { parca: 60, titre: 0.2 }); }); }, { opq: 0.7 });
   // çiçekler: göbeğe doğru gül pastel, taçlar beyaz tebeşirle; kırmızı kontur
@@ -542,13 +530,15 @@
   // ================================================================ 7) beyaz tebeşir: ışıklar (yapılar, gök, bulutlar, güneş)
   katman((x) => {
     x.save(); x.clip(kubbeYolu);
-    for (let u = 0.05; u < 1.0; u += 0.03) { let y = 548 - r() * 30; while (y > 312) { const L = 24 + r() * 24, pts = []; for (let t = 0; t <= 4; t++) { const yy = y - L * t / 4; pts.push([560 + (u + 0.006) * kubbeRy(yy), yy]); } strok(x, pts, 1.8, 0.85, BEYAZ, 0.1, 0.4); y -= L + 8 + r() * 26; } }
+    taraT(x, { bx: [520, 296, 764, 557], aci: egik, aralik: 4.2, boy: 26, kal: 2.0, alfa: 0.85, renk: BEYAZ, obek: 24, sik: 0.95 });
     x.restore();
     x.save(); x.clip(minareYolu); taraT(x, { bx: [300, 140, 358, 802], aci: egik, aralik: 3.2, boy: 16, kal: 1.8, alfa: 0.85, renk: BEYAZ, obek: 14, sik: 0.85 }); x.restore();
     x.save(); x.clip(kaideYolu); taraT(x, { bx: [520, 688, 834, 802], aci: egik, aralik: 3.4, boy: 28, kal: 1.9, alfa: 0.8, renk: BEYAZ, obek: 24, sik: 0.9 }); x.restore();
     x.save(); x.clip(kasnakYolu); taraT(x, { bx: [600, 553, 790, 694], aci: Math.PI / 2, aralik: 4, boy: 16, kal: 1.8, alfa: 0.7, renk: BEYAZ, obek: 16, sik: 0.9 }); x.restore();
     const kr = SAHNE.kaide.kornis; elCizgisi(x, [[kr.x1 + 4, kr.y1 + 3], [kr.x2 - 2, kr.y1 + 3]], 3.2, 0.8, BEYAZ, r, { parca: 140 });
   }, { opq: 0.9, sil: [MK.bitki], maske: ton((b, l, px, py) => (b === 'kubbe' ? sstep(0.62, 0.95, l) : b === 'minare' || b === 'kaide' || b === 'kasnak' ? sstep(0.55, 0.92, l) : 0.9)) });
+  katman((x) => { x.save(); x.clip(kubbeYolu); for (let k = 0; k < 6; k++) leke(x, [[600 + k * 14, 330 + k * 10], [650 + k * 10, 400 + k * 12], [690 + k * 6, 480]], 16, 0.32, BEYAZ); x.restore(); },
+    { ezme: 10, opq: 0.85, gren: 0.4, maske: ton((b, l) => (b === 'kubbe' ? sstep(0.7, 0.98, l) : 0)) });
   // gök: beyaz tebeşirle hafifçe ezilmiş bulutlar ve güneş halesi; kenarları kâğıda karışır
   katman((x) => {
     for (const [bx, by, s] of [[170, 250, 1.0], [505, 150, 0.8], [770, 330, 1.05], [930, 470, 0.7], [92, 470, 0.7]]) {
@@ -571,7 +561,7 @@
         const mx = cx0 - uy * off, my = cy0 + ux * off, L = 2 * ry * Math.sqrt(Math.max(0, 1 - (k / 27) * (k / 27))) * (0.75 + 0.3 * r());
         if (L < 8) continue;
         const sh = (r() - 0.5) * 20;
-        strok(x, [[mx - ux * (L / 2 - sh), my - uy * (L / 2 - sh)], [mx + ux * (L / 2 + sh), my + uy * (L / 2 + sh)]], 1.5, al * (0.7 + 0.3 * r()), KIRMIZI2, 0.15, 0.35);
+        strok(x, [[mx - ux * (L / 2 - sh), my - uy * (L / 2 - sh)], [mx + ux * (L / 2 + sh), my + uy * (L / 2 + sh)]], 2.1, Math.min(1, al * 1.6) * (0.7 + 0.3 * r()), KIRMIZI2, 0.15, 0.35);
       }
     }
     for (let k = 0; k < 12; k++) leke(x, [[60 + r() * 60, 803 + k * 3], [500, 806 + k * 3], [960 - r() * 60, 803 + k * 3]], 2, 0.25, KIRMIZI);
