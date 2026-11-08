@@ -328,7 +328,7 @@
   {
     for (const [k, y1, y2] of [[0, 555, 610], [1, 610, 692]]) {
       const yc = (y1 + y2) / 2;
-      tara(0, 3.6, (x, y) => { const l = silindirIsik(x, 560, 226) * (k ? 1 : 0.85) * (y < y1 + 10 ? 0.5 : 1); return 0.2 + 2.6 * Math.pow(l, 1.5); }, [330, y1, 790, y2], 4, 0.6);
+      tara(0, 3.6, (x, y) => { const l = silindirIsik(x, 560, 226) * (k ? 1 : 0.9) * (y < y1 + 10 ? 0.6 : 1); return 0.5 + 2.5 * Math.pow(l, 1.2); }, [330, y1, 790, y2], 4, 0.6);
     }
     for (const k of [0, 1]) for (const p of SAHNE.kasnakPencereleri(k)) {
       kg.strokeStyle = derin(); kg.lineWidth = 0.9;

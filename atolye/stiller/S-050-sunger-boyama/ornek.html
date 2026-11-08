@@ -226,10 +226,10 @@
     for (let k = 0; k < 420; k++) { const x = R() * W, y = R() * 810; t(x, y, 34 + R() * 40, oyn(y < 400 ? [128, 190, 214] : [156, 206, 214], 0.06), 0.85); }
   });
   katman(gokS, (t) => {
-    for (let k = 0; k < 380; k++) {
-      const x = R() * W, y = Math.pow(R(), 1.5) * 700;
-      if (gunesD(x, y) < 210 || R() < y / 900) continue;
-      t(x, y, 22 + R() * 34, oyn(R() < 0.65 ? [78, 148, 206] : [52, 104, 186], 0.08), 0.85);
+    for (let k = 0; k < 900; k++) {
+      const x = R() * W, y = Math.pow(R(), 1.4) * 720;
+      if (gunesD(x, y) < 200 + R() * 60 || R() < y / 820) continue;
+      t(x, y, 14 + R() * 22, oyn(R() < 0.65 ? [78, 148, 206] : [52, 104, 186], 0.08), 0.6);
     }
     for (let k = 0; k < 70; k++) { const x = R() * W, y = 200 + R() * 500; if (gunesD(x, y) < 250) continue; t(x, y, 20 + R() * 25, oyn([164, 152, 210], 0.06), 0.6); }
   });
@@ -247,7 +247,7 @@
   });
   // güneş: şablonla keskin daire, altın ve limon
   katman(gunesS, (t) => {
-    for (let k = 0; k < 40; k++) { const a = R() * Math.PI * 2, r = R() * 46; t(880 + Math.cos(a) * r, 140 + Math.sin(a) * r, 14 + R() * 16, oyn(r > 30 ? [240, 172, 50] : [255, 220, 90], 0.06), 0.9); }
+    for (let k = 0; k < 120; k++) { const a = R() * Math.PI * 2, r = Math.sqrt(R()) * 50; t(880 + Math.cos(a) * r, 140 + Math.sin(a) * r, 12 + R() * 12, oyn(r > 32 ? [240, 168, 46] : [255, 214, 80], 0.06), 0.95); }
     for (let k = 0; k < 18; k++) { const a = R() * Math.PI * 2, r = R() * 26; t(880 + 8 + Math.cos(a) * r, 132 + Math.sin(a) * r, 10 + R() * 12, oyn([255, 248, 200], 0.03), 0.9); }
   });
 
@@ -264,10 +264,10 @@
   // ------------------------------------------------------------ minare (arkada): fildişi, gölge yanı taupe-lavanta
   const minareIsik = (x, y) => silindirIsik(x, 300, minareYari(y)) * (1 - 0.65 * minareGolge(x, y));
   katman(minareS, (t) => {
-    for (let k = 0; k < 150; k++) { const x = 250 + R() * 100, y = 140 + R() * 660; t(x, y, 12 + R() * 16, oyn([244, 232, 208], 0.04), 0.9); }
+    for (let k = 0; k < 420; k++) { const x = 250 + R() * 100, y = 140 + R() * 660; t(x, y, 10 + R() * 12, oyn([244, 232, 208], 0.04), 0.9); }
   });
   katman(minareS, (t) => {
-    for (let k = 0; k < 220; k++) { const x = 250 + R() * 100, y = 140 + R() * 660; const l = minareIsik(x, y); if (R() < l * 1.1) continue; t(x, y, 9 + R() * 12, oyn(l < 0.25 ? [150, 128, 140] : [196, 172, 156], 0.06), 0.85); }
+    for (let k = 0; k < 260; k++) { const x = 250 + R() * 100, y = 140 + R() * 660; const l = minareIsik(x, y); if (R() < l * 1.15) continue; t(x, y, 8 + R() * 10, oyn(l < 0.25 ? [170, 142, 146] : [214, 190, 166], 0.05), 0.75); }
     for (let k = 0; k < 60; k++) { const x = 300 + R() * 50, y = 140 + R() * 660; if (minareIsik(x, y) < 0.7) continue; t(x, y, 8 + R() * 10, oyn([255, 250, 238], 0.02), 0.85); }
   });
   // şablon şeritler: şerefe altı gölge, korkuluk parmakları, zikzak bant
@@ -281,37 +281,37 @@
     g.globalCompositeOperation = 'destination-out'; ondekiYapi(g);
   });
   katman(minareDetay, (t) => { for (let k = 0; k < 160; k++) t(250 + R() * 100, 190 + R() * 400, 8 + R() * 8, oyn([168, 104, 92], 0.08), 0.95); });
-  katman(minarePS, (t) => { for (const p of SAHNE.minarePencereleri) for (let k = 0; k < 4; k++) t(p.x + (R() - 0.5) * 6, p.y + R() * p.h, 9, oyn([70, 52, 60], 0.1), 1); });
+  for (let q = 0; q < 2; q++) katman(minarePS, (t) => { for (const p of SAHNE.minarePencereleri) for (let k = 0; k < 14; k++) t(p.x + (R() - 0.5) * 6, p.y + R() * p.h, 9, oyn([70, 52, 60], 0.1), 1); });
 
   // ------------------------------------------------------------ kaide: fildişi, sola doğru gölge, korniş ışığı
   katman(kaideS, (t) => {
-    for (let k = 0; k < 220; k++) { const x = 290 + R() * 540, y = 690 + R() * 112; t(x, y, 14 + R() * 18, oyn([246, 236, 214], 0.04), 0.9); }
+    for (let k = 0; k < 500; k++) { const x = 290 + R() * 540, y = 690 + R() * 112; t(x, y, 12 + R() * 14, oyn([246, 236, 214], 0.04), 0.9); }
   });
   katman(kaideS, (t) => {
-    for (let k = 0; k < 200; k++) { const x = 290 + Math.pow(R(), 1.6) * 420, y = 704 + R() * 98; t(x, y, 10 + R() * 16, oyn(x < 420 ? [176, 152, 150] : [214, 190, 166], 0.06), 0.8); }
+    for (let k = 0; k < 200; k++) { const x = 290 + Math.pow(R(), 1.8) * 420, y = 704 + R() * 98; t(x, y, 9 + R() * 12, oyn(x < 400 ? [196, 168, 156] : [226, 204, 176], 0.05), 0.7); }
     for (let k = 0; k < 60; k++) { const x = 560 + R() * 270, y = 690 + R() * 110; t(x, y, 10 + R() * 14, oyn([255, 251, 240], 0.02), 0.9); }
     for (let k = 0; k < 60; k++) { const x = 300 + R() * 520, y = 706 + R() * 8; t(x, y, 6 + R() * 6, oyn([168, 140, 128], 0.05), 0.85); }
   });
-  katman(kaidePS, (t) => { for (const p of SAHNE.kaide.pencereler) for (let k = 0; k < 10; k++) t(p.x + (R() - 0.5) * p.w, p.y + R() * p.h, 10, oyn([92, 58, 56], 0.1), 1); });
+  for (let q = 0; q < 2; q++) katman(kaidePS, (t) => { for (const p of SAHNE.kaide.pencereler) for (let k = 0; k < 30; k++) t(p.x + (R() - 0.5) * p.w, p.y + R() * p.h, 11, oyn(q ? [70, 42, 46] : [104, 66, 58], 0.1), 1); });
 
   // ------------------------------------------------------------ kasnak: koyu yeşil, sağa doğru açılan orta yeşil
   katman(kasnakS, (t) => {
-    for (let k = 0; k < 220; k++) { const x = 334 + R() * 452, y = 555 + R() * 137; t(x, y, 10 + R() * 14, oyn([22, 86, 62], 0.08), 0.95); }
+    for (let k = 0; k < 700; k++) { const x = 334 + R() * 452, y = 555 + R() * 137; t(x, y, 9 + R() * 12, oyn([22, 86, 62], 0.08), 0.95); }
   });
   katman(kasnakS, (t) => {
-    for (let k = 0; k < 220; k++) { const x = 334 + R() * 452, y = 560 + R() * 132; const l = silindirIsik(x, 560, 226); if (R() > l) continue; t(x, y, 8 + R() * 12, oyn(l > 0.8 ? [118, 178, 86] : [52, 136, 74], 0.08), 0.85); }
+    for (let k = 0; k < 500; k++) { const x = 334 + R() * 452, y = 560 + R() * 132; const l = silindirIsik(x, 560, 226); if (R() > l * l) continue; t(x, y, 8 + R() * 12, oyn(l > 0.8 ? [118, 178, 86] : [52, 136, 74], 0.08), 0.85); }
     for (let k = 0; k < 70; k++) { const x = 340 + R() * 440; t(x, 557 + R() * 3, 5 + R() * 4, oyn([150, 196, 104], 0.05), 0.9); t(x, 612 + R() * 3, 5 + R() * 4, oyn([150, 196, 104], 0.05), 0.9); }
   });
-  katman(kasnakPS, (t) => { for (const k of [0, 1]) for (const p of SAHNE.kasnakPencereleri(k)) for (let j = 0; j < 5; j++) t(p.x + (R() - 0.5) * 4, p.y + R() * p.h, 10, oyn([12, 38, 32], 0.1), 1); });
+  for (let q = 0; q < 2; q++) katman(kasnakPS, (t) => { for (const k of [0, 1]) for (const p of SAHNE.kasnakPencereleri(k)) for (let j = 0; j < 16; j++) t(p.x + (R() - 0.5) * 4, p.y + R() * p.h, 10, oyn([12, 38, 32], 0.1), 1); });
 
   // ------------------------------------------------------------ kubbe: koyu → orta → sarı-yeşil ışık; kaburgalar dar şablon yarıklarından
-  katman(kubbeS, (t) => { for (let k = 0; k < 300; k++) { const x = 360 + R() * 400, y = 300 + R() * 256; t(x, y, 14 + R() * 18, oyn([20, 82, 58], 0.08), 0.95); } });
+  katman(kubbeS, (t) => { for (let k = 0; k < 900; k++) { const x = 360 + R() * 400, y = 300 + R() * 256; t(x, y, 12 + R() * 14, oyn([20, 82, 58], 0.08), 0.95); } });
   katman(kubbeS, (t) => {
-    for (let k = 0; k < 520; k++) { const x = 360 + R() * 400, y = 300 + R() * 256; if (!SAHNE.kubbedeMi(x, y)) continue; const l = kubbeIsik(x, y); if (R() > l * 1.15) continue; t(x, y, 9 + R() * 14, oyn(l > 0.78 ? [150, 198, 84] : l > 0.55 ? [74, 156, 72] : [40, 116, 66], 0.07), 0.85); }
+    for (let k = 0; k < 1100; k++) { const x = 360 + R() * 400, y = 300 + R() * 256; if (!SAHNE.kubbedeMi(x, y)) continue; const l = kubbeIsik(x, y); if (R() > l * 1.1) continue; t(x, y, 9 + R() * 14, oyn(l > 0.78 ? [150, 198, 84] : l > 0.55 ? [74, 156, 72] : [40, 116, 66], 0.07), 0.85); }
     for (let k = 0; k < 70; k++) { const a = R() * Math.PI * 2, r = Math.sqrt(R()) * 46; t(632 + Math.cos(a) * r * 1.2, 394 + Math.sin(a) * r, 8 + R() * 10, oyn([214, 230, 140], 0.04), 0.8); }
   });
-  const kaburgaS = sablon((g) => { g.save(); g.clip(P(Y.kubbe)); for (const kb of SAHNE.kaburgalar(16, 40)) { g.lineWidth = 1.2 + 1.2 * Math.cos(kb.boylam); g.stroke(P(SAHNE.yol(kb.noktalar))); } g.restore(); });
-  katman(kaburgaS, (t) => { for (let k = 0; k < 360; k++) t(360 + R() * 400, 300 + R() * 256, 8 + R() * 10, oyn([10, 52, 40], 0.08), 0.95); });
+  const kaburgaS = sablon((g) => { g.save(); g.clip(P(Y.kubbe)); for (const kb of SAHNE.kaburgalar(16, 40)) { g.lineWidth = 1.5 + 1.3 * Math.cos(kb.boylam); g.stroke(P(SAHNE.yol(kb.noktalar))); } g.restore(); });
+  for (let q = 0; q < 2; q++) katman(kaburgaS, (t) => { for (let k = 0; k < 500; k++) t(360 + R() * 400, 300 + R() * 256, 8 + R() * 10, oyn([10, 52, 40], 0.08), 0.95); });
   const kaburgaIsikS = sablon((g) => { g.save(); g.clip(P(Y.kubbe)); for (const kb of SAHNE.kaburgalar(16, 40)) { if (kb.u < -0.3) continue; g.lineWidth = 1.1 * Math.cos(kb.boylam) + 0.3; g.stroke(P(SAHNE.yol(kb.noktalar.map(([x, y]) => [x + 2.4 * Math.cos(kb.boylam) + 0.3, y])))); } g.restore(); });
   katman(kaburgaIsikS, (t) => { for (let k = 0; k < 200; k++) { const x = 480 + R() * 280, y = 300 + R() * 256; t(x, y, 7 + R() * 8, oyn([170, 214, 110], 0.06), 0.8 * kubbeIsik(x, y)); } });
 

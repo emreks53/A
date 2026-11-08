@@ -667,7 +667,7 @@
   function ink(p, o) {
     ix.fillStyle = MUREKKEP;
     ix.globalAlpha = o.alfa || 0.96;
-    fircaDarbe(ix, p, Object.assign({ uc: 0.04, sis: 0.35, puruz: 0.07, kilEsik: 0.16, kuru: 0.6 }, o));
+    fircaDarbe(ix, p, Object.assign({ uc: 0.04, sis: 0.4, puruz: 0.07, kilEsik: 0.16, kuru: 0.6 }, o, { w: (o.w || 4) * 1.18 }));
     ix.globalAlpha = 1;
   }
   /** Mimari çizgi: köşede kalkar; her parça bir fırça darbesi (yön rastgele: baştan ya da sondan). */

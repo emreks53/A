@@ -527,18 +527,26 @@ for (const t of TAS) t.x.restore();
   {
     const cx = 512, cy = 986, w = 128, h = 26;
     const kart = `M${cx - w},${cy} C${cx - w},${cy - h * 0.7} ${cx - w + 18},${cy - h} ${cx - w + 34},${cy - h} L${cx + w - 34},${cy - h} C${cx + w - 18},${cy - h} ${cx + w},${cy - h * 0.7} ${cx + w},${cy} C${cx + w},${cy + h * 0.7} ${cx + w - 18},${cy + h} ${cx + w - 34},${cy + h} L${cx - w + 34},${cy + h} C${cx - w + 18},${cy + h} ${cx - w},${cy + h * 0.7} ${cx - w},${cy} Z`;
-    // kıvrık uçlar (volütler)
-    for (const yon of [-1, 1]) {
-      const vx = cx + yon * (w + 14);
-      const vol = `M${cx + yon * (w - 4)},${cy - 10} C${vx + yon * 6},${cy - 22} ${vx + yon * 18},${cy - 4} ${vx + yon * 6},${cy + 4} C${vx - yon * 2},${cy + 9} ${vx - yon * 8},${cy} ${vx},${cy - 4}`;
-      cizTas('okra', P2(vol), 5, 1); cizTas('anahat', P2(vol), 1.1, 0.9);
-      const vol2 = `M${cx + yon * (w - 4)},${cy + 10} C${vx + yon * 4},${cy + 20} ${vx + yon * 14},${cy + 14} ${vx + yon * 12},${cy + 8}`;
-      cizTas('okra', P2(vol2), 4, 1); cizTas('anahat', P2(vol2), 1, 0.9);
-    }
     hepsi(kart, { okra: 0.95, sari: 0.7 });
     const ic2 = `M${cx - w + 10},${cy} C${cx - w + 10},${cy - h * 0.5} ${cx - w + 24},${cy - h + 7} ${cx - w + 38},${cy - h + 7} L${cx + w - 38},${cy - h + 7} C${cx + w - 24},${cy - h + 7} ${cx + w - 10},${cy - h * 0.5} ${cx + w - 10},${cy} C${cx + w - 10},${cy + h * 0.5} ${cx + w - 24},${cy + h - 7} ${cx + w - 38},${cy + h - 7} L${cx - w + 38},${cy + h - 7} C${cx - w + 24},${cy + h - 7} ${cx - w + 10},${cy + h * 0.5} ${cx - w + 10},${cy} Z`;
     hepsi(ic2, { sari: 0.22, pembe: 0.06 });
     anahat(kart, 1.4); anahat(ic2, 0.9); cizTas('kirmizi', P2(ic2), 1.6, 0.6);
+    // kıvrık uçlar (volütler): kartuşun iki yanında içe kıvrılan kalın sarmallar ve küçük yapraklar
+    for (const yon of [-1, 1]) {
+      const vx = cx + yon * (w + 16), vy = cy;
+      const sarmal = [];
+      for (let k = 0; k <= 40; k++) { const t = k / 40, a = -Math.PI / 2 + yon * t * Math.PI * 2.1, r = 15 * (1 - t * 0.72); sarmal.push([vx + Math.cos(a) * r * yon * -1 * -1, vy + Math.sin(a) * r]); }
+      const sp = poly(sarmal);
+      cizTas('anahat', sp, 6.2, 0.95); cizTas('okra', sp, 4.2, 1); cizTas('sari', sp, 4.2, 0.8);
+      for (const t of TAS) if (t.ad !== 'okra' && t.ad !== 'sari' && t.ad !== 'anahat') cizTas(t.ad, sp, 4.2, 0);
+      cizTas('kirmizi', sp, 1.2, 0.8);
+      hepsiCiz(SAHNE.daireYolu(vx, vy, 3.4), 0.8, { kirmizi: 0.9 });
+      // kartuşa bağlanan yaprak
+      const yp = `M${cx + yon * (w - 6)},${cy - 13} C${cx + yon * (w + 8)},${cy - 22} ${vx + yon * 4},${cy - 18} ${vx},${cy - 15} C${vx - yon * 6},${cy - 10} ${cx + yon * (w + 2)},${cy - 6} ${cx + yon * (w - 6)},${cy - 13} Z`;
+      hepsiCiz(yp, 0.8, { yesil: 0.75, sari: 0.4 });
+      const yp2 = `M${cx + yon * (w - 6)},${cy + 13} C${cx + yon * (w + 8)},${cy + 22} ${vx + yon * 4},${cy + 18} ${vx},${cy + 15} C${vx - yon * 6},${cy + 10} ${cx + yon * (w + 2)},${cy + 6} ${cx + yon * (w - 6)},${cy + 13} Z`;
+      hepsiCiz(yp2, 0.8, { yesil: 0.75, sari: 0.4 });
+    }
   }
 }
 

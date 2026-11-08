@@ -143,10 +143,12 @@
   function birlesik(dizi) { const p = new Path2D(); for (const d of dizi) p.addPath(new Path2D(d)); return p; }
 
   // ---------------------------------------------------------------- vuruş (uçları incelen, basıncı değişen çizgi)
+  let KALINLIK = 1; // stil, bütün vuruşları kalınlaştırmak için değiştirebilir
   // pts: [[x,y],...]; w: genişlik; a: basınç (0..1); c: [r,g,b]; bas/son: uçlardaki incelme payı
   function strok(cx, pts, w, a, c, bas, son) {
     const n = pts.length;
     if (n < 2) return;
+    w *= KALINLIK;
     bas = bas === undefined ? 0.16 : bas; son = son === undefined ? 0.3 : son;
     const cum = [0];
     for (let i = 1; i < n; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
@@ -276,6 +278,7 @@
   const kemerNok = (p) => ornekle(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 2)[0];
 
   const r = SAHNE.rng(5901);
+  KALINLIK = 1.45; // tebeşir çizgisi kalemden kalın
   const tuval = document.getElementById('tuval');
   tuval.width = W2; tuval.height = W2;
   const ctx = tuval.getContext('2d');
@@ -319,7 +322,7 @@
     let v;
     if (o.ezme) { KB.temizle(); KB.x.setTransform(1, 0, 0, 1, 0, 0); KB.x.filter = `blur(${o.ezme}px)`; KB.x.drawImage(K.c, 0, 0); KB.x.filter = 'none'; v = KB.x.getImageData(X1, Y1, w, h).data; }
     else v = K.x.getImageData(X1, Y1, w, h).data;
-    const opq = o.opq === undefined ? 0.45 : o.opq, ys = o.yumus === undefined ? 0.2 : o.yumus, M = o.maske, guc = o.guc || 1, gren = o.gren === undefined ? 0.7 : o.gren;
+    const opq = o.opq === undefined ? 0.45 : o.opq, ys = o.yumus === undefined ? 0.16 : o.yumus, M = o.maske, guc = o.guc || 1, gren = o.gren === undefined ? 0.78 : o.gren;
     for (let yy = 0; yy < h; yy++) {
       const y = Y1 + yy, row = (y >> 1) * W;
       for (let xx = 0; xx < w; xx++) {
@@ -484,7 +487,9 @@
     });
     sil(K, MK.onBitki);
   }
-  katman((x) => yaprakTara(x, YESIL, 0.85, 2.8, 3.6, 0.55, false), { opq: 0.65, gren: 0.65, guc: 1.15 });
+  katman((x) => { B.yapraklar.forEach((yp, i) => { x.save(); x.globalCompositeOperation = 'destination-out'; x.fill(yaprakYollari[i]); x.restore(); x.save(); x.clip(yaprakYollari[i]); const [a, b] = SAHNE.yaprakDamari(yp); leke(x, [a, b], yp.uzunluk * yp.genislik * 0.8, yp.y > 860 ? 0.55 : 0.45, YESIL); x.restore(); }); sil(K, MK.onBitki); },
+    { ezme: 4, opq: 0.6, gren: 0.45 });
+  katman((x) => yaprakTara(x, YESIL, 0.85, 2.4, 4.6, 0.55, false), { opq: 0.65, gren: 0.7, guc: 1.15 });
   katman((x) => yaprakTara(x, KIRMIZI, 0.9, 1.8, 3.4, 0.7, false), { opq: 0.45, guc: 1.1 });
   katman((x) => yaprakTara(x, SIYAH, 0.75, 1.4, 4.4, 0.85, true), { opq: 0.55, maske: ton((b, l, px, py) => (py > 860 ? 0.9 : 0.5)) });
   katman((x) => { B.yapraklar.forEach((yp, i) => { x.save(); x.globalCompositeOperation = 'destination-out'; x.fill(yaprakYollari[i]); x.restore(); const pts = ornekle(SAHNE.yaprakYolu(yp), 2)[0]; elCizgisi(x, pts, 1.6, 0.9, yp.y > 860 ? SIYAH : KIRMIZI, r, { parca: 50, titre: 0.35 }); const [a, b] = SAHNE.yaprakDamari(yp); strok(x, [a, [lerp(a[0], b[0], 0.5) + 0.5, lerp(a[1], b[1], 0.5)], b], 1.1, 0.6, KIRMIZI, 0.05, 0.4); }); sil(K, MK.onBitki); }, { opq: 0.5, gren: 0.6 });
@@ -521,7 +526,8 @@
         for (const pp of parcalar) elCizgisi(x, pp, 1.2 * Math.max(0.85, c.r / 50), 0.8, KIRMIZI, r, { parca: 70, titre: 0.3 });
       });
       x.save(); x.beginPath(); x.arc(c.x, c.y, c.r * 0.22, 0, 7); x.clip();
-      taraT(x, { bx: [c.x - c.r * 0.3, c.y - c.r * 0.3, c.x + c.r * 0.3, c.y + c.r * 0.3], aci: egik, aralik: 1.8, boy: 12, kal: 2.2, alfa: 0.9, renk: OKRA, obek: 10, sik: 0.4 });
+      taraT(x, { bx: [c.x - c.r * 0.3, c.y - c.r * 0.3, c.x + c.r * 0.3, c.y + c.r * 0.3], aci: egik, aralik: 3.2, boy: 12, kal: 2.0, alfa: 0.9, renk: OKRA, obek: 10, sik: 0.5 });
+      taraT(x, { bx: [c.x - c.r * 0.3, c.y, c.x + c.r * 0.3, c.y + c.r * 0.3], aci: egik + 1.3, aralik: 3.6, boy: 10, kal: 1.6, alfa: 0.7, renk: KIRMIZI, obek: 8, sik: 0.6 });
       x.restore();
     });
   }, { opq: 0.7, bx: [0, 500, W, W] });
@@ -565,7 +571,7 @@
       }
     }
     for (let k = 0; k < 12; k++) leke(x, [[60 + r() * 60, 803 + k * 3], [500, 806 + k * 3], [960 - r() * 60, 803 + k * 3]], 2, 0.25, KIRMIZI);
-  }, { opq: 0.4, sil: [MK.yapi, MK.bitki], maske: ton((b, l, px, py) => sstep(20, 140, Math.min(px, W - px))) });
+  }, { opq: 0.45, guc: 1.6, gren: 0.6, sil: [MK.yapi, MK.bitki], maske: ton((b, l, px, py) => sstep(20, 140, Math.min(px, W - px))) });
 
   // ---------------------------------------------------------------- sonuç
   const img = ctx.createImageData(W2, W2), d = img.data;

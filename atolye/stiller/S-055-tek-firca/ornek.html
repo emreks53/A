@@ -395,7 +395,7 @@
   {
     const Kd = S.kaide;
     const sira = 3, hh = (Kd.y2 - Kd.y1) / sira;
-    for (let i = 0; i < sira; i++) yatayDarbe(Kd.x1, Kd.x2, Kd.y1 + i * hh - 0.5, Kd.y1 + (i + 1) * hh + 0.5, K.beyaz, mix(K.tasGolge, K.krem, 0.35), { kil: 9 });
+    for (let i = 0; i < sira; i++) yatayDarbe(Kd.x1, Kd.x2, Kd.y1 + i * hh - 0.5, Kd.y1 + (i + 1) * hh + 0.5, K.beyaz, mix(K.tasGolge, K.krem, 0.62), { kil: 9 });
     // sol uçta gölge: yarı saydam koyu darbe
     dikeyDarbe(Kd.x1, Kd.x1 + 90, Kd.y2, Kd.y1, K.tasGolge, K.krem, { alfa: 0.55, kil: 4 });
     const k = Kd.kornis;
@@ -531,17 +531,34 @@
     }
   }
   // köşe kıvrımları (S ve C darbeleri, altın-krem)
-  function kivrim(x, y, yon, k) {
-    const s = yon; // +1 sağa, -1 sola açılır
-    cDarbe(x + s * 30 * k, y + 26 * k, 12 * k, 26 * k, s > 0 ? Math.PI * 0.9 : Math.PI * 0.1, s > 0 ? Math.PI * 1.9 : -Math.PI * 0.9, K.oker, K.altinAcik, { kil: 0 });
-    virgul(x + s * 52 * k, y + 22 * k, x + s * 92 * k, y + 8 * k, s * 0.3, 3.2 * k, K.altinAcik, K.oker);
-    virgul(x + s * 44 * k, y + 40 * k, x + s * 70 * k, y + 62 * k, -s * 0.3, 2.6 * k, K.altinAcik, K.oker);
-    virgul(x + s * 14 * k, y + 52 * k, x + s * 8 * k, y + 88 * k, s * 0.25, 2.4 * k, K.altinAcik, K.oker);
-    nokta(x + s * 100 * k, y + 6 * k, 2 * k, K.altinAcik);
-    nokta(x + s * 108 * k, y + 2 * k, 1.4 * k, K.altinAcik);
-    nokta(x + s * 76 * k, y + 70 * k, 1.6 * k, K.altinAcik);
+  // S darbesi: keskiyle başla, bastır, kıvrılarak ilerle, keskiyle bitir
+  function sDarbe(p0, p1, p2, p3, gW, cA, cB) {
+    const P = [];
+    for (let i = 0; i <= 40; i++) {
+      const t = i / 40, u = 1 - t;
+      P.push([u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0], u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]]);
+    }
+    const prof = (t) => gW * Math.pow(Math.sin(Math.PI * t), 0.8);
+    omurgaSerit(P, prof, prof, cA, cB, { kil: 3, k1: 0.1, k2: 0.9 });
+    return P;
   }
-  kivrim(PX + 34, PY + 30, 1, 1);
+  function kivrim(x, y) {
+    // köşeden çıkan S darbesi, iki yanına sırayla küçülen virgüller, uçta nokta dizisi ve küçük çiçek
+    const P = sDarbe([x, y + 92], [x - 6, y + 20], [x + 70, y + 64], [x + 128, y + 2], 5, K.oker, K.altinAcik);
+    const ek = [[6, 1, 24], [12, -1, 22], [18, 1, 19], [24, -1, 16], [30, 1, 13], [35, -1, 10]];
+    for (const [i, yan, l] of ek) {
+      const a = P[i], b = P[i + 1];
+      let tx = b[0] - a[0], ty = b[1] - a[1];
+      const m = Math.hypot(tx, ty) || 1;
+      tx /= m; ty /= m;
+      const nx = -ty * yan, ny = tx * yan;
+      virgul(a[0] + nx * 3, a[1] + ny * 3, a[0] + nx * l + tx * l * 0.6, a[1] + ny * l + ty * l * 0.6, -yan * 0.3, 2.6, K.altinAcik, K.oker);
+    }
+    for (let i = 0; i < 4; i++) nokta(x + 136 + i * 8, y - 2 - i * 1.5, 2.2 - i * 0.4, K.altinAcik);
+    for (let k = 0; k < 5; k++) kabuk(x, y + 96, (k * Math.PI * 2) / 5 - Math.PI / 2, 0.6, 9, K.gulKoyu, K.gulAcik, { kil: 0, ic: 0.08 });
+    nokta(x, y + 96, 2, K.sari);
+  }
+  kivrim(PX + 44, PY + 44);
 
   // ============================================================ 9. BİTKİLER
   const YK = hex('#1C4A2A'), YA = hex('#C8D86A'), YK2 = hex('#24553A'), YA2 = hex('#EDE6A8');
@@ -573,13 +590,21 @@
   }
   // gül: arka taç yaprak halkası, iç halka, ortada kubbe C + U darbesi, önde etek darbeleri
   function gul(x, y, Rr, koyu, acik, don) {
-    for (let k = 0; k < 6; k++) kabuk(x, y - Rr * 0.05, don - Math.PI / 2 + (k - 2.5) * 0.98, 0.62, Rr, koyu, acik, { kivrim: 0.07, ic: 0.12, dis: 6 });
-    for (let k = 0; k < 4; k++) kabuk(x, y - Rr * 0.1, don - Math.PI / 2 + (k - 1.5) * 1.15, 0.55, Rr * 0.72, koyu, acik, { kivrim: 0.06, ic: 0.12 });
-    cDarbe(x, y - Rr * 0.08, Rr * 0.1, Rr * 0.4, Math.PI * 1.05, Math.PI * 1.95, koyu, acik, { kil: 6, k1: 0.05, k2: 0.8 });
-    cDarbe(x, y - Rr * 0.12, Rr * 0.12, Rr * 0.36, Math.PI * 0.05, Math.PI * 0.95, koyu, acik, { kil: 6, k1: 0.05, k2: 0.8 });
-    cDarbe(x, y + Rr * 0.02, Rr * 0.42, Rr * 0.82, Math.PI * 0.12, Math.PI * 0.88, koyu, acik, { kil: 8, k1: 0.05, k2: 0.8 });
-    cDarbe(x - Rr * 0.12, y + Rr * 0.1, Rr * 0.36, Rr * 0.7, Math.PI * 0.45, Math.PI * 1.05, koyu, acik, { kil: 6, k1: 0.05, k2: 0.8 });
-    cDarbe(x + Rr * 0.12, y + Rr * 0.1, Rr * 0.36, Rr * 0.7, -Math.PI * 0.05, Math.PI * 0.55, koyu, acik, { kil: 6, k1: 0.05, k2: 0.8 });
+    const orta = mix(koyu, acik, 0.38);
+    // arka taç yapraklar: dış kenarı açık kabuk darbeleri
+    for (let k = 0; k < 7; k++) kabuk(x, y - Rr * 0.04, don - Math.PI / 2 + (k - 3) * 0.86, 0.6, Rr, koyu, acik, { kivrim: 0.07, ic: 0.12, dis: 6 });
+    for (let k = 0; k < 4; k++) kabuk(x, y - Rr * 0.12, don - Math.PI / 2 + (k - 1.5) * 0.95, 0.55, Rr * 0.7, koyu, acik, { kivrim: 0.06, ic: 0.12 });
+    // gonca: koyu alt boya, üstüne kubbe (üst yarım) ve U (alt yarım) darbesi
+    ctx.fillStyle = css(mix(koyu, [0, 0, 0], 0.1));
+    ctx.beginPath();
+    ctx.arc(x, y - Rr * 0.13, Rr * 0.24, 0, Math.PI * 2);
+    ctx.fill();
+    cDarbe(x, y - Rr * 0.12, Rr * 0.02, Rr * 0.42, Math.PI * 1.0, Math.PI * 2.0, koyu, acik, { kil: 6, k1: 0.05, k2: 0.82 });
+    cDarbe(x, y - Rr * 0.14, Rr * 0.02, Rr * 0.38, Math.PI * 0.0, Math.PI * 1.0, orta, acik, { kil: 6, k1: 0.05, k2: 0.82 });
+    // önde birbirinin üstüne binen üç etek yaprağı: aşağı bakan kabuk darbeleri, kıvrımlı açık kenarlar
+    kabuk(x - Rr * 0.08, y + Rr * 0.08, Math.PI / 2 + 0.75, 0.62, Rr * 0.82, orta, acik, { kivrim: 0.1, ic: 0.25, dis: 5 });
+    kabuk(x + Rr * 0.08, y + Rr * 0.08, Math.PI / 2 - 0.75, 0.62, Rr * 0.82, orta, acik, { kivrim: 0.1, ic: 0.25, dis: 5 });
+    kabuk(x, y + Rr * 0.1, Math.PI / 2, 0.6, Rr * 0.8, mix(orta, acik, 0.25), acik, { kivrim: 0.1, ic: 0.28, dis: 5 });
   }
   // beş taç yapraklı kır çiçeği: her taç yaprak bir kabuk darbesi, ortası nokta işi
   function kirCicegi(c, koyu, acik) {
@@ -617,7 +642,7 @@
         const X = x / OL, Y2 = y / OL;
         // dikey damarlı çam: gürültüyle bükülen yıllık halkalar
         const bk = (nA(X * 0.004, Y2 * 0.0015) - 0.5) * 60 + (nB(X * 0.02, Y2 * 0.004) - 0.5) * 8;
-        const halka = Math.sin((X + bk) * 0.09 + Math.sin(Y2 * 0.01) * 0.6);
+        const halka = Math.sin((X + bk) * (0.06 + 0.03 * nB(X * 0.003, 3)) + Math.sin(Y2 * 0.01) * 0.6);
         const damar = Math.pow(Math.abs(halka), 6);
         const lif = (hash(x >> 1, (y >> 3), 3) - 0.5) * 0.05;
         const i = (y * B2 + x) * 4;
@@ -630,7 +655,7 @@
           d[i + 2] = clamp(d[i + 2] * f, 0, 255);
         } else {
           // ince boyanın altından ahşap damarı hafifçe seçilir
-          const f = 1 - damar * 0.06 + lif * 0.4;
+          const f = 1 - damar * 0.025 + lif * 0.25;
           d[i] = clamp(d[i] * f, 0, 255);
           d[i + 1] = clamp(d[i + 1] * f, 0, 255);
           d[i + 2] = clamp(d[i + 2] * f, 0, 255);
