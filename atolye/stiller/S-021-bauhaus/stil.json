@@ -11,13 +11,13 @@
   "ayirt_edici": [
     "Yalnız kırmızı, sarı, mavi, siyah, beyaz ve krem; tek istisna Yeşil Kubbe'yi temsil eden yeşil yarım daire",
     "Kubbe meridyen yaylarıyla bölünmüş bir yarım daire, minare üst üste dikdörtgenler, topuz yarım daire ile üçgen, hilaller daire kesimi",
-    "Kalın siyah çubuklar: yer çizgisi, pencereli kasnak bloğu ve şerefeler; kırmızı korniş bandı",
+    "Kalın siyah çubuklar: yer çizgisi, pencereli kasnak bloğu, şerefeler ve beyaz kaideyi iki uçtan çerçeveleyen dikmeler; kırmızı korniş bandı",
     "16 px ızgaraya oturan asimetrik denge: solda mavi dikey alan, sağ üstte büyük sarı güneş dairesi ve ince siyah çerçeve çizgisi",
-    "Çiçekler daire ve çeyrek dairelerden: dört çeyrek daireli fırıldak çiçekler, iki renkli yarım daireler, yarım daire yapraklı dallar",
+    "Çiçekler daire ve çeyrek dairelerden: dört çeyrek daireli fırıldak çiçekler, iki renkli yarım daireler, yarım daire yapraklı dallar ve ince saplarda çeyrek daire yapraklar",
     "Düz, gölgesiz renk alanları üzerinde çok hafif baskı greni"
   ],
   "palet": [
-    "#E9E1CF",
+    "#E5D9BE",
     "#FBF8F1",
     "#1B1A19",
     "#D7322B",

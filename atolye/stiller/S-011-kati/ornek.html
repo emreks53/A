@@ -176,7 +176,8 @@
       const [x2, y2] = pts[Math.min(n - 1, i + 2)];
       const a = Math.atan2(y2 - y, x2 - x);
       const s = R * (0.5 + 0.3 * (1 - i / n));
-      rumiEkle(x, y, s, a - yon * taraf * 0.55, -yon * taraf);
+      // sap boyunca dışa bakan badem yapraklar (orta damarı oyulmuş)
+      yaprak(x, y, s * 0.95, a - yon * taraf * 0.75, 0.42);
       taraf = -taraf;
     }
     const [ux, uy] = pts[n - 1];
@@ -498,6 +499,44 @@
     kivrikSap(262, 100 - 34 * 0.95, 262, AL.y1 - 2, 0);
     const h3 = helezonDal(78, 240, 22, -Math.PI * 0.5, 1);
     kivrikSap(h3[0][0], h3[0][1], AL.x1 - 2, 214, 3);
+  }
+  // üst ortada yarım şemse ve salbek (sarkıt)
+  {
+    const cx = 512;
+    const y0 = AL.y1 - 4;
+    const rx = 92;
+    const ry = 58;
+    const dis = new Path2D();
+    const n = 11;
+    dis.moveTo(cx - rx - 6, y0);
+    for (let i = 0; i < n; i++) {
+      const a0 = Math.PI - (Math.PI * i) / n;
+      const a1 = Math.PI - (Math.PI * (i + 1)) / n;
+      const am = (a0 + a1) / 2;
+      const p1 = [cx + Math.cos(a1) * rx, y0 + Math.sin(a1) * ry];
+      const pm = [cx + Math.cos(am) * (rx + 10), y0 + Math.sin(am) * (ry + 10)];
+      dis.quadraticCurveTo(pm[0], pm[1], p1[0], p1[1]);
+    }
+    dis.lineTo(cx + rx + 6, y0);
+    dis.closePath();
+    ekle(dis);
+    // salbek
+    ekleCizgi([[cx, y0 + ry], [cx, y0 + ry + 16]], KOPRU + 1);
+    ekle(P(`M${cx},${y0 + ry + 12} C${cx - 13},${y0 + ry + 22} ${cx - 10},${y0 + ry + 38} ${cx},${y0 + ry + 46} C${cx + 10},${y0 + ry + 38} ${cx + 13},${y0 + ry + 22} ${cx},${y0 + ry + 12} Z`));
+    const sd = new Path2D();
+    sd.ellipse(cx, y0 + ry + 30, 3.4, 7, 0, 0, Math.PI * 2);
+    kes(sd);
+    // iç oymalar: kesik iç kontur, iki yanda rumî delikler, ortada hatayî biçimli delik
+    const ic = new Path2D();
+    ic.ellipse(cx, y0, rx - 14, ry - 13, 0, 0.12, Math.PI - 0.12);
+    kesCizgi(ic, 1.5, [30, 6]);
+    for (const ayna of [1, -1]) {
+      kes(donusmusYol(RUMI, cx - ayna * 8, y0 + 20, 40, ayna > 0 ? Math.PI + 0.35 : -0.35, ayna > 0 ? -1 : 1));
+      const g = new Path2D();
+      g.arc(cx - ayna * 58, y0 + 14, 4, 0, Math.PI * 2);
+      kes(g);
+    }
+    kes(P(`M${cx},${y0 + 30} C${cx - 7},${y0 + 24} ${cx - 6},${y0 + 14} ${cx},${y0 + 8} C${cx + 6},${y0 + 14} ${cx + 7},${y0 + 24} ${cx},${y0 + 30} Z`));
   }
   // sağ üst: güneşin yanında helezonlar
   {

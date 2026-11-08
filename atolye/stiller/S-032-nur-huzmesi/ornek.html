@@ -24,34 +24,46 @@
     const ctx = tuval.getContext('2d');
     const rnd = S.rng(32);
 
-    // ---------------------------------------------------------------- bölge, ton ve ayrıntı haritaları
+    // ---------------------------------------------------------------- bölge, ton ve ayrıntı haritaları (2048 çözünürlük: kenarlar basamaksız)
     const ADLAR = Object.keys(S.BOLGE);
-    const bh = S.bolgeHaritasi();
-    const bolge = new Uint8Array(W * W);
-    for (let i = 0; i < W * W; i++) {
-      const v = bh.veri;
-      const ad = S.bolgeAdi(v[i * 4], v[i * 4 + 1], v[i * 4 + 2]);
-      bolge[i] = ADLAR.indexOf(ad === 'gunes' ? 'gok' : ad); // güneş yok: gök sayılır
+    const bolge = new Uint8Array(IC * IC);
+    {
+      const c = S.yeniTuval(IC, IC);
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.setTransform(2, 0, 0, 2, 0, 0);
+      S.ciz(g, { bolge: true });
+      const v = g.getImageData(0, 0, IC, IC).data;
+      const onbellek = new Map();
+      for (let i = 0; i < IC * IC; i++) {
+        const anahtar = (v[i * 4] << 16) | (v[i * 4 + 1] << 8) | v[i * 4 + 2];
+        let no = onbellek.get(anahtar);
+        if (no === undefined) {
+          const ad = S.bolgeAdi(v[i * 4], v[i * 4 + 1], v[i * 4 + 2]);
+          no = ADLAR.indexOf(ad === 'gunes' ? 'gok' : ad); // güneş yok: gök sayılır
+          onbellek.set(anahtar, no);
+        }
+        bolge[i] = no;
+      }
     }
     // kenar yumuşatmasından doğan yanlış bölge piksellerini komşu çoğunluğuyla düzelt; güneş diskini göğe kat
     {
       const gokNo = ADLAR.indexOf('gok');
-      for (let y = 0; y < W; y++) {
-        for (let x = 0; x < W; x++) {
-          const dx = x - S.gunes.x;
-          const dy = y - S.gunes.y;
-          if (dx * dx + dy * dy < 54 * 54) bolge[y * W + x] = gokNo;
+      for (let y = 0; y < IC; y++) {
+        for (let x = 0; x < IC; x++) {
+          const dx = x / 2 - S.gunes.x;
+          const dy = y / 2 - S.gunes.y;
+          if (dx * dx + dy * dy < 54 * 54) bolge[y * IC + x] = gokNo;
         }
       }
       const kopya = bolge.slice();
       const say = new Uint8Array(ADLAR.length);
-      for (let y = 1; y < W - 1; y++) {
-        for (let x = 1; x < W - 1; x++) {
-          const i = y * W + x;
+      for (let y = 1; y < IC - 1; y++) {
+        for (let x = 1; x < IC - 1; x++) {
+          const i = y * IC + x;
           const b = kopya[i];
-          if (kopya[i - 1] === b && kopya[i + 1] === b && kopya[i - W] === b && kopya[i + W] === b) continue;
+          if (kopya[i - 1] === b && kopya[i + 1] === b && kopya[i - IC] === b && kopya[i + IC] === b) continue;
           say.fill(0);
-          for (let v = -1; v <= 1; v++) for (let u = -1; u <= 1; u++) say[kopya[i + v * W + u]]++;
+          for (let v = -1; v <= 1; v++) for (let u = -1; u <= 1; u++) say[kopya[i + v * IC + u]]++;
           if (say[b] <= 2) {
             let en = b;
             for (let k = 0; k < say.length; k++) if (say[k] > say[en]) en = k;
@@ -68,8 +80,9 @@
     }
 
     // ayrıntı çizgileri (ışın buradan geçerken bir an parlar): kaburgalar, zikzak, korkuluk, taç yaprağı kenarı, damar
-    const ay = S.yeniTuval();
+    const ay = S.yeniTuval(IC, IC);
     const ac = ay.getContext('2d', { willReadFrequently: true });
+    ac.setTransform(2, 0, 0, 2, 0, 0);
     ac.strokeStyle = '#fff';
     ac.lineCap = 'round';
     ac.lineJoin = 'round';
@@ -106,25 +119,27 @@
       ac.lineTo(b[0], b[1]);
       ac.stroke();
     }
-    const av = ac.getImageData(0, 0, W, W).data;
-    const ayrinti = new Float32Array(W * W);
-    for (let i = 0; i < W * W; i++) ayrinti[i] = av[i * 4 + 3] / 255;
+    const av = ac.getImageData(0, 0, IC, IC).data;
+    const ayrinti = new Float32Array(IC * IC);
+    for (let i = 0; i < IC * IC; i++) ayrinti[i] = av[i * 4 + 3] / 255;
 
     // bölge sınırı (ışın bir biçime girip çıkarken kısa bir parlama)
-    const sinir = new Float32Array(W * W);
-    for (let y = 1; y < W - 1; y++) {
-      for (let x = 1; x < W - 1; x++) {
-        const i = y * W + x;
+    const sinir = new Float32Array(IC * IC);
+    for (let y = 1; y < IC - 1; y++) {
+      for (let x = 1; x < IC - 1; x++) {
+        const i = y * IC + x;
         const b = bolge[i];
-        if (bolge[i - 1] !== b || bolge[i + 1] !== b || bolge[i - W] !== b || bolge[i + W] !== b) sinir[i] = 1;
+        if (bolge[i - 1] !== b || bolge[i + 1] !== b || bolge[i - IC] !== b || bolge[i + IC] !== b) sinir[i] = 1;
       }
     }
-    // biraz yay (ışın adımı kaçırmasın)
-    const sinir2 = new Float32Array(W * W);
-    for (let y = 1; y < W - 1; y++) {
-      for (let x = 1; x < W - 1; x++) {
-        const i = y * W + x;
-        sinir2[i] = Math.max(sinir[i], 0.55 * Math.max(sinir[i - 1], sinir[i + 1], sinir[i - W], sinir[i + W]));
+    // biraz yay (ışın adımı kaçırmasın): iki piksel genişliğe
+    const sinir2 = new Float32Array(IC * IC);
+    for (let y = 2; y < IC - 2; y++) {
+      for (let x = 2; x < IC - 2; x++) {
+        const i = y * IC + x;
+        const m1 = Math.max(sinir[i - 1], sinir[i + 1], sinir[i - IC], sinir[i + IC]);
+        const m2 = Math.max(sinir[i - 2], sinir[i + 2], sinir[i - 2 * IC], sinir[i + 2 * IC]);
+        sinir2[i] = Math.max(sinir[i], 0.8 * m1, 0.45 * m2);
       }
     }
 
@@ -200,11 +215,12 @@
         const y = kaynak.y + dy * d;
         if (x < 0 || y < 0 || x >= W || y >= W) break;
         const i = (y | 0) * W + (x | 0);
-        const b = bolge[i];
+        const i2 = ((y * 2) | 0) * IC + ((x * 2) | 0);
+        const b = bolge[i2];
         const p = PR[b];
         let w = p[3] * guc * soluk[d | 0] * d * yogunluk * ADIM;
         if (yapisal[b]) w *= 0.5 + 0.75 * ton[i];
-        w *= 1 + 1.6 * sinir2[i] + 0.9 * ayrinti[i];
+        w *= 1 + 1.6 * sinir2[i2] + 0.9 * ayrinti[i2];
         // kaynağa yakın ışın altın-beyaz, uzaklaştıkça geçtiği biçimin rengini alır
         const t = d < 230 ? 1 - d / 230 : 0;
         const tt = t * t * 0.75;
@@ -264,9 +280,9 @@
     g.addColorStop(1, 'rgba(200,170,110,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, W);
-    g = ctx.createRadialGradient(kaynak.x, kaynak.y + 4, 0, kaynak.x, kaynak.y + 4, 40);
-    g.addColorStop(0, 'rgba(255,236,180,0.28)');
-    g.addColorStop(0.5, 'rgba(255,220,150,0.14)');
+    g = ctx.createRadialGradient(kaynak.x, kaynak.y + 2, 0, kaynak.x, kaynak.y + 2, 42);
+    g.addColorStop(0, 'rgba(255,226,160,0.5)');
+    g.addColorStop(0.4, 'rgba(255,220,150,0.26)');
     g.addColorStop(1, 'rgba(255,210,140,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, W);

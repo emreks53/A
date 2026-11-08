@@ -262,21 +262,20 @@
       '.uvvwww.',
       '..uvvw..',
     ], H);
-    // alem: çubuk, iki boğum, hilal
-    sprite(35, 7, [
-      '.b..c.',
-      'a....c',
-      'ab..cc',
-      '.abcc.',
-      '..bc..',
-    ], H);
-    sprite(35, 12, [
-      '..bc..',
-      '.bbcc.',
-      '.abc..',
-      '..bc..',
-      '.bbcc.',
-      '.abbc.',
+    // alem: hilal (uçları içe kıvrık, gövdesi altta kalın), çubuk ve iki küre
+    sprite(34, 5, [
+      '..b..c..',
+      '.a....c.',
+      '.a....c.',
+      '.ab..bc.',
+      '..abcc..',
+      '...bc...',
+      '...bc...',
+      '..abcB..',
+      '..abcc..',
+      '...bc...',
+      '..abcB..',
+      '.aabbcc.',
     ], H);
   })();
 
@@ -284,13 +283,16 @@
   (function kaide() {
     for (let y = 89; y <= 99; y++) for (let x = 37; x <= 102; x++) {
       // yatay ışık: sol gölgede, sağ açık; geçişler damalı
-      const u = (x - 37) / 65;
-      let c = u < 0.14 ? 't3' : u < 0.84 ? 't4' : 'B';
+      let c = 't4';
       if (y === 89) c = 't2'; // korniş altı gölge
+      else if (y === 90) c = x < 40 ? 't3' : desen(x, y, 2) ? 't3' : 't4'; // gölgenin damalı ucu
+      else if (y === 99) c = 't3'; // taban silmesi
       if (x === 37) c = 't2';
+      if (x === 38 && y > 89) c = 't3';
       px(x, y, c);
     }
     for (let y = 89; y <= 99; y++) px(102, y, 't3'); // ışık tarafında açık dış çizgi
+    for (let y = 90; y <= 98; y++) px(101, y, 'B');  // güneşe bakan köşede ince ışık
     // korniş
     for (let x = 36; x <= 103; x++) { px(x, 87, x < 46 ? 't4' : 'B'); px(x, 88, x < 46 ? 't3' : 't4'); }
     px(103, 87, 't4'); px(103, 88, 't3');
@@ -413,27 +415,27 @@
   })();
 
   // ------------------------------------------------------------ kubbe alemi (biraz abartılmış, okunur olsun diye)
-  sprite(66, 21, [
-    '.bb..cc.',
-    'ab....cc',
-    'ab....cc',
-    'abb..bcc',
-    '.abbbcc.',
-    '..abcc..',
-    '...bc...',
-  ], { a: 'a1', b: 'a2', c: 'a3' });
-  sprite(66, 28, [
-    '...bc...',
-    '..bbcc..',
-    '..abbc..',
-    '...bc...',
-    '..bbcc..',
-    '.abbccc.',
-    '..abbc..',
-    '...bc...',
-    '.aabbcc.',
-    'aabbbbcc',
-  ], { a: 'a1', b: 'a2', c: 'a3' });
+  sprite(65, 19, [
+    '...b..c...',
+    '..b....c..',
+    '.a......c.',
+    '.a......c.',
+    '.ab....bc.',
+    '..abbbcc..',
+    '...abcc...',
+    '....bc....',
+    '...abcB...',
+    '...abcc...',
+    '....bc....',
+    '...abcB...',
+    '..aabccc..',
+    '...abcc...',
+    '....bc....',
+    '..abbcBc..',
+    '..aabbcc..',
+    '...abcc...',
+    '..aabbcc..',
+  ], { a: 'a1', b: 'a2', c: 'a3', B: 'B' });
 
   // ------------------------------------------------------------ zemin
   (function zemin() {

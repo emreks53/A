@@ -301,6 +301,24 @@
   kat(5, 5.2, { kayma: 0.7, sapma: 0.35, yuk: 0.08, sart: (x, y, b) => detay(x, y, b) || R() < 0.1 });
   kat(2.6, 2.6, { kayma: 0.3, sapma: 0.25, yuk: 0.08, sart: (x, y, b) => b === 'pencere' || b === 'altin' || b === 'cicekOrta' || (b === 'minare' && R() < 0.5) });
 
+  // ------------------------------------------------------------ kubbe silueti: dışta gök, içte kubbe renginde teğet lekeler (yumuşak ama okunur)
+  {
+    const kn = SAHNE.kubbeNoktalari(90);
+    for (let i = 1; i < kn.length - 1; i++) {
+      const [x, y] = kn[i], [xa, ya] = kn[i - 1], [xb, yb] = kn[i + 1];
+      if (y > 548) continue;
+      const tx = xb - xa, ty = yb - ya, tl = Math.hypot(tx, ty) || 1, an = Math.atan2(ty, tx);
+      const nx = ty / tl, ny = -tx / tl; // dışa doğru normal
+      for (let k = 0; k < 2; k++) {
+        const d = 3 + R() * 4;
+        const ox = x + nx * d + (R() - 0.5) * 3, oy = y + ny * d + (R() - 0.5) * 3;
+        if (BOL[idx(ox, oy)] === BI.gok || BOL[idx(ox, oy)] === BI.gunes) leke(ox, oy, an + gauss() * 0.15, 9 + R() * 6, 4 + R() * 1.5, renkSec(ox, oy), 0.06);
+        const ix = x - nx * (3 + R() * 3), iy = y - ny * (3 + R() * 3);
+        leke(ix, iy, an + gauss() * 0.15, 8 + R() * 6, 3.6 + R() * 1.4, renkSec(ix, iy), 0.07);
+      }
+    }
+  }
+
   // ------------------------------------------------------------ son vurgular: titreşen ışık kıvılcımları ve yapı ayrıntıları
   {
     // kubbenin ışığında turuncu-sarı, gölgesinde mavi-mor kıvılcımlar

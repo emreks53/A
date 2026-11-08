@@ -247,7 +247,7 @@
         if (cs < 0.2) continue;
         const x = 560 + R * Math.sin(th);
         const v = aydinlik(x, y, 'kasnak');
-        const d = Math.min(cap(v, adim * 0.95), adim * cs * 1.05);
+        const d = Math.min(cap(v, adim * 0.95), adim * cs * 0.78);
         if (d < 2) continue;
         if (!sigar(x, y, d / 2 + 2.3, 'kasnak')) continue;
         if (k === 1 && s % 2 === 0 && d > 4.2) ekle({ t: 'yildiz', x, y, s: d * 1.12, a: 0 });
@@ -383,7 +383,7 @@
       const uz = Math.hypot(bx - ax, by - ay);
       for (let u = kalan; u < uz; u += 6.4) {
         const x = ax + ((bx - ax) * u) / uz, y = ay + ((by - ay) * u) / uz;
-        if (BH.bolge(x, y) === 'sap') ekle({ t: 'daire', x, y, s: 3.4, isik: 0.95 });
+        if (BH.bolge(x, y) === 'sap') ekle({ t: 'daire', x, y, s: 3.8, isik: 0.95 });
         kalan = u + 6.4 - uz;
       }
     }
@@ -394,7 +394,7 @@
     const ca = Math.cos(y.aci), sa = Math.sin(y.aci);
     const x0 = y.x + ca * L * 0.1, y0 = y.y + sa * L * 0.1;
     const Ly = L * 0.8;
-    ekle({ t: 'yol', p: new Path2D(SAHNE.yaprakYolu({ x: x0, y: y0, uzunluk: Ly, genislik: 0.25, aci: y.aci })), isik: 0.92 });
+    ekle({ t: 'yol', p: new Path2D(SAHNE.yaprakYolu({ x: x0, y: y0, uzunluk: Ly, genislik: 0.25, aci: y.aci })), isik: 0.84 });
     ekle({ damar: 1, x1: x0 - ca * 2, y1: y0 - sa * 2, x2: x0 + ca * Ly * 0.84, y2: y0 + sa * Ly * 0.84, w: Math.max(1.3, L * 0.03) });
   }
   for (const t of B.tomurcuklar) ekle({ t: 'damla', x: t.x + Math.cos(t.aci) * t.r * 0.3, y: t.y + Math.sin(t.aci) * t.r * 0.3, s: t.r * 2.0, a: t.aci, en: 0.8 });
@@ -520,7 +520,8 @@
         const ad = SAHNE.bolgeAdi(bv[i * 4], bv[i * 4 + 1], bv[i * 4 + 2]);
         const titre = 0.86 + 0.28 * fbm(x / 90, y / 90, 61, 3);
         let c;
-        if ((ad === 'kubbe' || ad === 'kasnak' || ad === 'pencere') && y > 290 && y < 700 && x > 320 && x < 800) {
+        const cerceve = x < CER || x > W - CER || y < CER || y > W - CER;
+        if (!cerceve && (ad === 'kubbe' || ad === 'kasnak' || ad === 'pencere') && y > 290 && y < 700 && x > 320 && x < 800) {
           const t = sinir(Math.hypot(x - 610, y - 420) / 300, 0, 1);
           const cam = fbm(x / 26, y / 26, 71, 3);
           c = karis([170, 255, 170], [26, 150, 74], t * 0.85 + (cam - 0.5) * 0.5);
@@ -531,7 +532,7 @@
           c = karis(c, [255, 252, 232], 0.85 * Math.exp(-(ds / 190) * (ds / 190)));
           if (ad === 'cicek' || ad === 'cicekOrta') c = karis(c, [255, 232, 180], 0.3);
           // yaprak ve sapların ardında sarımsı yeşil cam
-          if (ad === 'yaprak' || ad === 'sap') c = karis([214, 240, 140], [104, 176, 76], sinir(0.35 + (fbm(x / 30, y / 30, 73, 3) - 0.5) * 1.2 + (y - 800) / 600, 0, 1));
+          if (!cerceve && (ad === 'yaprak' || ad === 'sap')) c = karis([214, 240, 140], [104, 176, 76], sinir(0.35 + (fbm(x / 30, y / 30, 73, 3) - 0.5) * 1.2 + (y - 800) / 600, 0, 1));
         }
         d[i * 4] = sinir(c[0] * titre, 0, 255);
         d[i * 4 + 1] = sinir(c[1] * titre, 0, 255);
@@ -548,7 +549,12 @@
   const mg = maske.getContext('2d');
   mg.setTransform(OL, 0, 0, OL, 0, 0);
   mg.fillStyle = '#fff';
-  for (const h of delikler) {
+  // sahnenin delikleri çerçevenin içinde kalır (yaprak yarıkları bordüre taşmasın)
+  mg.save();
+  mg.beginPath();
+  mg.rect(CER + 6, CER + 6, W - 2 * CER - 12, W - 2 * CER - 12);
+  mg.clip();
+  for (const h of delikler.filter((h) => !h.cerceve)) {
     if (h.damar) {
       // yaprak damarı: yarığın ortasında bırakılan metal köprü
       mg.globalCompositeOperation = 'destination-out';
@@ -570,6 +576,12 @@
       mg.globalCompositeOperation = 'source-over';
       continue;
     }
+    mg.globalAlpha = h.isik || 1;
+    const p = delikYolu(mg, h);
+    if (p) mg.fill(p); else mg.fill();
+  }
+  mg.restore();
+  for (const h of delikler.filter((h) => h.cerceve)) {
     mg.globalAlpha = h.isik || 1;
     const p = delikYolu(mg, h);
     if (p) mg.fill(p); else mg.fill();
