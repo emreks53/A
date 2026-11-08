@@ -119,7 +119,7 @@
   dol(new Path2D('M0,0 H1024 V1024 H0 Z'), '#FBF8F0');
   {
     const gk = new Path2D('M0,0 H1024 V805 H0 Z');
-    dol(gk, lin(0, 0, 0, 805, [[0, '#3AA6E0'], [0.35, '#7DC6EC'], [0.72, '#C8E9F3'], [1, '#F8F3E6']]));
+    dol(gk, lin(0, 0, 0, 805, [[0, '#2C9CDC'], [0.35, '#6FC0EC'], [0.72, '#C4E8F3'], [1, '#F8F3E6']]));
     // güneş tarafında sıcak ışık (beyaz emaye)
     model(gk, (c) => { c.fillStyle = rad(880, 140, 10, 880, 140, 430, [[0, 'rgba(255,250,232,1)'], [0.35, 'rgba(255,246,226,0.6)'], [1, 'rgba(255,246,226,0)']]); c.fillRect(0, 0, 1024, 805); }, 0, 1);
     // geniş, yumuşak lavi sürmeleri
@@ -160,7 +160,8 @@
     for (const [dx, dy, r] of tum) { yol.moveTo(bx + dx * s + r * s, by + dy * s); yol.arc(bx + dx * s, by + dy * s, r * s, 0, Math.PI * 2); }
     yol.rect(bx - 66 * s, by + 4 * s, 140 * s, 28 * s);
     dol(yol, 'rgba(255,255,255,0.96)', 2.2);
-    model(yol, (c) => { c.fillStyle = 'rgba(176,196,232,0.9)'; c.fillRect(bx - 110 * s, by + 14 * s, 220 * s, 40 * s); }, 9, 0.55);
+    model(yol, (c) => { c.fillStyle = 'rgba(170,170,230,0.95)'; c.fillRect(bx - 110 * s, by + 14 * s, 220 * s, 40 * s); }, 9, 0.6);
+    model(yol, (c) => { c.fillStyle = 'rgba(250,190,210,0.9)'; c.beginPath(); c.ellipse(bx - 40 * s, by + 8 * s, 40 * s, 14 * s, 0, 0, Math.PI * 2); c.fill(); }, 10, 0.35);
     model(yol, (c) => { c.fillStyle = '#FFFFFF'; c.beginPath(); c.ellipse(bx + 14 * s, by - 18 * s, 50 * s, 16 * s, 0, 0, Math.PI * 2); c.fill(); }, 8, 0.9);
   }
   bulut(170, 250, 1.0); bulut(500, 150, 0.85); bulut(752, 336, 1.0); bulut(938, 472, 0.68); bulut(88, 472, 0.68);
@@ -168,7 +169,7 @@
   // ------------------------------------------------------------ 4. yer
   {
     const yer = new Path2D('M0,798 H1024 V1024 H0 Z');
-    dol(yer, lin(0, 798, 0, 1024, [[0, '#F3DDB4'], [0.4, '#EBC892'], [1, '#E2B57C']]), 1.2);
+    dol(yer, lin(0, 798, 0, 1024, [[0, '#F6DDB0'], [0.4, '#F0C58C'], [1, '#E8B074']]), 1.2);
     firca(yer, [0, 798, 1024, 226], 160, (x, y) => (rnd() < 0.5 ? rgba(210, 150, 88, 0.2) : rgba(255, 240, 210, 0.3)), 110, 14, () => (rnd() - 0.5) * 0.06, 9);
   }
 
@@ -286,7 +287,7 @@
     }, 1.2, 0.5);
     for (const k of kab) {
       const yp = new Path2D(); k.noktalar.forEach(([x, y], i) => (i ? yp.lineTo(x, y) : yp.moveTo(x, y)));
-      altinCizgi(yp, 1.0);
+      altinCizgi(yp, 1.35);
     }
     // taban: altın nokta dizisi
     for (let k = 0; k < 32; k++) { const ph = -Math.PI / 2 + ((k + 0.5) / 32) * Math.PI; altinNokta(560 + Math.sin(ph) * 192, 547, 1.8); }
@@ -445,7 +446,11 @@
       const kut = Math.pow(Math.pow(Math.abs(wx), 4) + Math.pow(Math.abs(wy), 4), 1 / 4);
       const kabuk = 0.85 + 0.3 * vnoise(x * 0.35, y * 0.35, 75); // portakal kabuğu yüzey
       const pencere = 0.5 * clamp((1 - kut) * 6, 0, 1) * (0.55 + 0.45 * clamp(1 - wy, 0, 2) / 2) * kabuk;
-      const sheen = genis + pencere;
+      // sol üstte ikinci, uzun ve kavisli yansıma şeridi (bombeli levha)
+      const kx = x + ox * 0.5, ky = y + oy2 * 0.5;
+      const kav = Math.hypot(kx - 980, ky - 1040);
+      const serit2 = 0.24 * clamp((1 - Math.abs(kav - 1010) / 22) * 3, 0, 1) * clamp((ky < 520 ? 1 : 0) * (1 - Math.abs(kx - 300) / 330) * 2.2, 0, 1) * kabuk;
+      const sheen = genis + pencere + serit2;
       r += (255 - r) * sheen; gg += (255 - gg) * sheen; bb += (255 - bb) * sheen;
       o[j] = clamp(r, 0, 255); o[j + 1] = clamp(gg, 0, 255); o[j + 2] = clamp(bb, 0, 255); o[j + 3] = 255;
     }

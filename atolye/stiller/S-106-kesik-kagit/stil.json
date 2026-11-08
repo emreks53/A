@@ -9,12 +9,12 @@
   "tanim": "Kesik kâğıt (papiers découpés) tekniğinde sanatçı önce büyük kâğıtları tek renk guaşla fırçayla boyar, kuruyunca bu renkli kâğıtları makasla doğrudan, eskiz çizmeden keser ve beyaz bir zemine yan yana, üst üste yerleştirir. Renk kâğıttan gelir: her parçanın içinde guaşın geniş fırça izleri ve boyanın kalın-ince sürüldüğü yerler görünür, kenar ise makasın bıraktığı keskin, hafif kırık çizgidir. Biçimler iri, sade ve neşelidir; parçalar düz durur, aralarında çoğu zaman beyaz zemin şeritleri kalır. Afişlerde, kitap kapaklarında, çocuk kitaplarında ve duvar panolarında sevilen, renkli ve ferah bir tekniktir.",
   "koken": "Henri Matisse 1940'larda hastalığı nedeniyle resim yapamaz hâle gelince asistanlarına kâğıtları guaşla boyatıp makasla kesmeye başladı ve buna 'makasla resim yapmak' dedi. Jazz (1947) albümü, Salyangoz (1953), Polinezya ve Okyanusya panoları ile Vence'teki Rosaire Şapeli'nin tasarımları bu tekniğin başyapıtlarıdır; yosun ve yaprak biçimli kesimleri, düzensiz uçlu yıldızları ve elle kesilmiş renk dikdörtgenleri tanınır işaretleridir. Teknik daha sonra afiş, resimli kitap ve grafik tasarımda yaygınlaştı.",
   "ayirt_edici": [
-    "Gökyüzünün elle kesilmiş dört büyük mavi-turkuaz kâğıt dikdörtgeninden kurulması; aralarında beyaz zemin şeritleri, önde mercan rengi zemin kâğıdı",
+    "Gökyüzünün elle kesilmiş dört büyük mavi-turkuaz kâğıt dikdörtgeninden kurulması; aralarında beyaz zemin şeritleri, önde açık mercan rengi zemin kâğıdı",
     "Makasın bıraktığı keskin, kısa düz kesitlerle hafifçe kırılan kenarlar; yırtık ya da lifli kenar yok",
     "Her kâğıdın içinde kendi yönünde geniş guaş fırça izleri ve boyanın kalın-ince sürüldüğü açık-koyu bölgeler",
     "Zümrüt yeşili kubbe kâğıdının üstüne ayrı kesilmiş, tabanda geniş ve tepeye doğru incelen limon-yeşili kaburga şeritleri; solda koyu yeşil, sağda açık yeşil ışık parçaları",
     "Ultramarin kemerli pencereler ve korkuluk, ayrı kesilmiş ultramarin ve mercan zikzak şeritler, limon sarısı şerefe, korniş ve alemler",
-    "Matisse'e özgü yuvarlak loblu yosun yaprakları, düzensiz uçlu sarı makas yıldızı, sade beyaz bulutlar ve limon-mercan göbekli beyaz çiçekler"
+    "Matisse'e özgü, iki yanda sırayla dizilmiş ve uca doğru eğilen parmak loblu yosun yaprakları; düzensiz uçlu sarı makas yıldızı, sade beyaz bulutlar ve limon-mercan göbekli beyaz çiçekler"
   ],
   "palet": [
     "#3A8FE0",
@@ -23,10 +23,10 @@
     "#B8EC7A",
     "#2A49B5",
     "#FFD23C",
-    "#F47B57",
+    "#FA9C7C",
     "#FFFDF6"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Her biçimin dış çizgisi gizli bir SVG yolunda getPointAtLength ile (ya da çokgen kenarları boyunca) sık örneklenir; 'makas' işlevi köşeleri koruyarak noktaları rastgele 2–10 birimlik aralıklarla seyrelterek kısa düz kesitler üretir ve kenarı yay uzunluğuna bağlı gürültüyle 0,3–1,8 birim dalgalandırır, parçayı da çok hafif döndürüp kaydırır. Her parça düz guaş rengiyle ve çok hafif bir gölgeyle doldurulur; içine rastgele açıyla döndürülmüş, döşenebilir gri fırça izi dokusu (bulanık geniş fırça gövdeleri ve ince kıl çizgileri, ön hesaplı) 'overlay' kipinde basılır ve birkaç yumuşak açık-koyu leke boyanın kalınlık farkını verir. Korkuluk boşlukları çift-tek dolgu kuralıyla oyulur; yosun yaprakları yarım daire tümsekli bir genişlik işleviyle, bulutlar daire birleşiminin kutupsal sınırıyla, çiçekler beş loblu kutupsal eğriyle kurulur. En sonda bütün yüzeye ince kâğıt dişi dokusu eklenir.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Her biçimin dış çizgisi gizli bir SVG yolunda getPointAtLength ile (ya da çokgen kenarları boyunca) sık örneklenir; 'makas' işlevi köşeleri koruyarak noktaları rastgele 2–10 birimlik aralıklarla seyrelterek kısa düz kesitler üretir ve kenarı yay uzunluğuna bağlı gürültüyle 0,3–1,8 birim dalgalandırır, parçayı da çok hafif döndürüp kaydırır. Her parça düz guaş rengiyle ve çok hafif bir gölgeyle doldurulur; içine rastgele açıyla döndürülmüş, döşenebilir gri fırça izi dokusu (bulanık geniş fırça gövdeleri ve ince kıl çizgileri, ön hesaplı) 'overlay' kipinde basılır ve birkaç yumuşak açık-koyu leke boyanın kalınlık farkını verir. Korkuluk boşlukları çift-tek dolgu kuralıyla oyulur; yosun yapraklarında iki yanda sırayla dizilen yarım daire loblu bir genişlik işlevinin dış noktaları uca doğru kaydırılarak öne eğik parmak loblar elde edilir; bulutlar daire birleşiminin kutupsal sınırıyla, çiçekler beş loblu kutupsal eğriyle kurulur. En sonda bütün yüzeye ince kâğıt dişi dokusu eklenir.",
   "etiketler": [
     "kolaj",
     "kâğıt",
