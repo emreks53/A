@@ -5,36 +5,36 @@
   "ad_en": "Album Page (Murakka)",
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
-  "ozet": "Osmanlı murakka sayfası: ortada parlak, ince işlenmiş bir resim; katman katman renkli kâğıt pervazlar ve altın, lacivert, kırmızı cetveller; dışta açık pastel renkli battal ebru kenar suyu. Yazı kıtası yok.",
-  "tanim": "Hayalî bir murakka ustasının eli. Orta resim ince fırçayla düz ve parlak boyanır: açık firuze-mavi gök ufka doğru krem-pembeye döner, uzun ince bulut şeritleri, altın güneş; parlak düz yeşil kubbe ince koyu kaburgalar ve eteğinde altın bir şeritle; beyaz minarede lacivert-kırmızı zikzak, kaidede lale motifli küçük panolar; kum renkli yerde beyaz çiçekler, dallarda kırmızı laleler ve karanfiller. Her biçim ince, koyu, hafif titrek bir kalemle çevrilir. Resim önce kırmızı bir cetvele, sonra altın cetvelli somon renkli bir pervaza, sonra altın halkâr noktalı açık lacivert bir pervaza oturtulur; köşelerde altın çiçekli lacivert kareler vardır. Dış kenar suyu, açık gül, açık mavi, krem ve soluk yeşil boyaların su yüzüne serpilip kâğıda alındığı ince battal ebrudur; renk taşları kenarlarında hafifçe koyulaşır ve hafif bir gelgitle dalgalanır.",
+  "ozet": "Osmanlı murakka sayfası: ortada nakkaş usulü düz ve parlak boyanmış bir resim; katman katman renkli kâğıt pervazlar ve altın, lacivert, kırmızı cetveller; dışta iri taşlı, çok açık pastel renkli sakin battal ebru kenar suyu. Yazı kıtası yok.",
+  "tanim": "Hayalî bir murakka ustasının eli. Orta resim nakkaş usulü, gölgesiz, düz ve parlak boyanır: düz açık firuze gök, lacivert-gri konturlu düz beyaz uzun bulut şeritleri, çevresi iki sıra altın noktalı altın güneş; dilimleri sırayla iki düz yeşille boyanmış kubbe ince koyu ve açık kaburga çizgileri ve eteğinde altın bir şeritle; biçim yalnız gölgedeki yamaçta ve kasnakta çok ince, koyu yeşil koşut çizgilerle (pardaz) hissettirilir; beyaz minarede lacivert-kırmızı zikzak, kaidede lale motifli küçük panolar; kum renkli yerde beyaz çiçekler, dallarda kırmızı laleler ve karanfiller. Her biçim ince, koyu, hafif titrek bir kalemle çevrilir. Resim önce kırmızı bir cetvele, sonra altın cetvelli somon renkli bir pervaza, sonra altın halkâr noktalı açık lacivert bir pervaza oturtulur; köşelerde altın çiçekli lacivert kareler vardır. Dış kenar suyu, çok açık gül, açık mavi ve krem boyaların su yüzüne serpilip kâğıda alındığı iri taşlı, sakin bir battal ebrudur; renkler orta resim öne çıksın diye çok açık tutulur, taşlar kenarlarında belli belirsiz koyulaşır ve hafif bir dalgayla kayar.",
   "koken": "Osmanlı murakka (albüm) geleneğine dayanır: resim ya da kıtaların renkli kâğıt pervazlara ve altın, lacivert, kırmızı cetvellere oturtulması ve kenar suyunda ebru kâğıdı kullanılması. Ebru, damlaların birbirini ittiği gerçek battal ebru dönüşümüyle hesaplanır. Belirli bir eser ya da usta kopyalanmaz; tarif hayalî bir murakka ustasının elidir ve sayfada yazı kıtası, hat ya da figür yoktur.",
   "ayirt_edici": [
-    "Dış kenar suyu açık gül, açık mavi, krem ve soluk yeşil taşlardan ince battal ebru; taşların arasında beyaz damarlar, hafif gelgit dalgası",
+    "Dış kenar suyu çok açık gül, açık mavi ve krem iri taşlardan sakin battal ebru; taşların arasında ince beyaz damarlar ve hafif bir dalga",
     "Katman katman pervazlar: altın halkâr noktalı açık lacivert kâğıt, altın cetveller, somon renkli kâğıt ve içinde ince lacivert çizgi, en içte kırmızı cetvel",
     "Köşelerde dört altın yapraklı, kırmızı göbekli küçük lacivert kareler",
-    "Orta resimde açık firuze-mavi gökten krem-pembe ufka geçiş, uzun ince bulut şeritleri ve altın güneş",
-    "Parlak düz yeşil, ince kaburgalı kubbe ve eteğinde altın şerit; lacivert-kırmızı zikzaklı minare, lale panolu kaide",
+    "Orta resimde gölgesiz, düz açık firuze gök; lacivert-gri konturlu düz beyaz bulut şeritleri ve çevresi altın noktalı altın güneş",
+    "Dilimleri sırayla iki düz yeşille boyanmış kubbe, gölgedeki yamaçta ve kasnakta ince pardaz çizgileri, eteğinde altın şerit; lacivert-kırmızı zikzaklı minare, lale panolu kaide",
     "Kum renkli yerde beyaz çiçekler, dallarda kırmızı laleler ve karanfiller; ince koyu el konturu"
   ],
   "palet": [
-    "#EAC3BD",
-    "#BDCDE2",
+    "#F3DFD8",
+    "#DFE5EC",
+    "#A1D1E6",
     "#9DB2DE",
     "#EDC3B0",
     "#CFA64A",
-    "#2C4C9E",
-    "#479F64",
+    "#33A05C",
     "#C8392E"
   ],
-  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Ebru: kenar suyu bölgesine 1900 damla (yarıçap 10–20) sırayla serpilir; her piksel için gelgit dalgası geri alınır, sonra damlalar sondan başa doğru tersine işlenir (dışarıdaki nokta p → c + (p − c)·√(1 − r²/|p − c|²)), içine düşülen ilk damlanın rengi alınır; taş kenarına doğru hafif koyulaşma ve lif gürültüsü eklenir. Pervazlar evenodd dolgulu dikdörtgen halkalar, cetveller strokeRect, halkâr rastgele altın noktalar; pano hafif gölgeyle ebru üstüne bindirilir. Orta resim sahne koordinatında ölçeklenip kırpılarak çizilir (degrade gök, Bézier bulut şeritleri, yatay degradeli kubbe ve titrek konturlu kaburgalar, SAHNE.bitki konumlarında lale ve karanfiller, bağlayıcı saplar). Son geçişte orta resme biçim yönünde ince fırça gürültüsü katılır.",
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Ebru: kenar suyu bölgesine 520 damla (yarıçap 22–40) sırayla serpilir; her piksel için hafif dalga geri alınır, sonra damlalar sondan başa doğru tersine işlenir (dışarıdaki nokta p → c + (p − c)·√(1 − r²/|p − c|²)), içine düşülen ilk damlanın rengi alınır; taş kenarına doğru çok hafif koyulaşma ve lif gürültüsü eklenir. Pervazlar evenodd dolgulu dikdörtgen halkalar, cetveller strokeRect, halkâr rastgele altın noktalar; pano hafif gölgeyle ebru üstüne bindirilir. Orta resim sahne koordinatında ölçeklenip kırpılarak düz renklerle çizilir (degrade yok denecek kadar az): Bézier bulut şeritleri, kaburgalar arasındaki dilimler sırayla iki yeşil, pardaz için kırpılmış ince titrek çizgiler (H.pen), SAHNE.bitki konumlarında lale ve karanfiller, bağlayıcı saplar. Son geçişte orta resme yalnız hafif bir perdahlı kâğıt dokusu katılır.",
   "etiketler": [
     "murakka",
     "albüm",
     "ebru",
     "cetvel",
     "Osmanlı",
+    "nakkaş",
     "kitap sanatı",
-    "ince işçilik",
     "ressamın eli"
   ]
 }

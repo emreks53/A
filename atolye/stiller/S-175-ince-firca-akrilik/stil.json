@@ -5,28 +5,28 @@
   "ad_en": "Fine-Brush Acrylic Realism",
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
-  "ozet": "Hayalî bir çağdaş gerçekçi ressamın akrilik eli: geçişleri minik paralel darbelerle kurulan doygun ve temiz renkler, parlak güneş, keskin mavi-mor gölgeler ve titiz çiçekler.",
-  "tanim": "Hayalî bir çağdaş gerçekçi ressamın akrilik eli. Zemini birkaç kat akrilik astarla kaplanıp zımparalanmış sert levha; aletleri ince sentetik yuvarlak fırçalar ve kıl inceliğinde bir kontur fırçası. Paleti doygun ve temizdir: ftalo mavisi, kobalt, serülyen, ftalo yeşili, kadmiyum sarısı, titanyum beyazı, gölgeler için ultramarin-menekşe karışımı. Akrilik çabuk kuruduğu için geçişleri karıştırmaz, binlerce minik paralel darbeyle kurar: gökte ve bulutlarda çapraz, kubbede meridyen boyunca, kasnak ve minarede dikey, kaidede yatay, yapraklarda damara açılı tarama, taç yapraklarda ışınsal. Önce kütleyi boyar, sonra gölgeleri keskin kenarlı, saydam mavi-mor katmanlarla düşürür (korniş, şerefe ve kasnak pervazı altları, döşemeye düşen yaprak ve çiçek gölgeleri), en sonda pencereleri, derzleri, kaburgaları ve altın vurguları ince fırçayla netleştirir. Çiçekleri tek tek, damarları ve erkek organlarıyla işler; avluyu perspektifli taş döşeme ve mermer bordürlü çakıl yatağıyla kurar.",
+  "ozet": "Hayalî bir çağdaş gerçekçi ressamın akrilik eli: bütün yüzeyi örten minik, paralel, opak darbeler; doygun ve temiz renkler, parlak güneş, keskin mavi-mor gölgeler ve titiz çiçekler; mat bir boya yüzeyi.",
+  "tanim": "Hayalî bir çağdaş gerçekçi ressamın akrilik eli. Zemini birkaç kat akrilik astarla kaplanıp zımparalanmış sert levha; aletleri ince sentetik yassı ve yuvarlak fırçalar, kıl inceliğinde bir kontur fırçası. Paleti doygun ve temizdir: ftalo mavisi, kobalt, serülyen, ftalo yeşili, kadmiyum sarısı, titanyum beyazı, gölgeler için ultramarin-menekşe karışımı. Akrilik çabuk kuruduğu için geçişleri karıştırmaz, binlerce minik, opak, paralel darbeyle kurar ve her darbeyi kendi tonunda bırakır: gökte, bulutlarda ve döşemede hafifçe sağa yükselen yatay, kubbede meridyen boyunca, kasnak, kaide ve minarede dikey, yapraklarda ve taç yapraklarda biçim boyunca. Önce kütleyi boyar, sonra gölgeleri keskin kenarlı, saydam mavi-mor katmanlarla düşürür (korniş, şerefe ve kasnak pervazı altları, döşemeye düşen yaprak ve çiçek gölgeleri), pencereleri, derzleri, kaburgaları ve altın vurguları ince fırçayla netleştirir; en son bütün yüzeyi yeniden minik darbelerle örerek mat, darbe sırtları seçilen bir yüzey bırakır. Çiçekleri tek tek, damarları ve erkek organlarıyla işler; avluyu perspektifli taş döşeme ve mermer bordürlü çakıl yatağıyla kurar.",
   "koken": "Çağdaş gerçekçi ve foto-gerçekçi akrilik resim geleneğine, akriliğin hızlı kurumasından doğan tarama ile geçiş kurma tekniğine ve sert zemin üstünde ince fırça işçiliğine dayanır. Gerçek bir ressamı taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
   "ayirt_edici": [
-    "Her geçişte görünen minik paralel darbeler: gökte çapraz tarama, kubbede meridyen boyunca, kasnak ve minarede dikey, kaidede yatay",
+    "Küçük resimde bile seçilen, bütün yüzeyi örten minik paralel opak darbeler: gökte ve bulutlarda hafifçe sağa yükselen yatay tarama, kubbede meridyen boyunca, minare, kasnak ve kaidede dikey",
     "Doygun kobalt-serülyen gök, keskin kenarlı beyaz kümülüs bulutlar ve parlak beyaz güneş",
     "Keskin kenarlı mavi-mor gölgeler: korniş, şerefe ve kasnak pervazları altında, döşemeye düşen yaprak ve çiçek gölgeleri",
     "Perspektifli açık renk taş döşemeli avlu, beyaz mermer bordürlü açık renk çakıl yatağı",
-    "Doygun zümrüt kubbe: keskin beyaz parlama ve ince fırçayla netleştirilmiş kaburgalar",
-    "Titiz çiçekler: mavi-mor gölgeli beyaz taç yapraklar, ince damarlar, doygun sarı göbek ve erkek organlar; yapraklarda damara açılı ince tarama"
+    "Doygun zümrüt-sarı yeşil kubbe: ışık parlamayla değil darbelerle kurulmuş, kaburgalar ince fırçayla netleştirilmiş",
+    "Titiz çiçekler: mavi-mor gölgeli beyaz taç yapraklar, doygun sarı göbek ve erkek organlar; mat yüzeyde her darbenin bıraktığı ince sırt"
   ],
   "palet": [
-    "#2878DA",
-    "#5EAAEE",
-    "#0F984E",
-    "#45C659",
-    "#F6F5F0",
-    "#7C8AB8",
-    "#FFD445",
-    "#2C9846"
+    "#3A83DB",
+    "#91C6F5",
+    "#C2E896",
+    "#15725B",
+    "#ECEFF2",
+    "#B1B6D5",
+    "#D6A438",
+    "#5CB458"
   ],
-  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Gök piksel başına doygun geçiş; bulutlar hafif bükülmüş, keskin eşikli yoğunluk alanı. Her bölge önce düz modelajla boyanır (silindir aydınlatmalı degradeler, dönel yüzey normalli kubbe, cephe degradesi), sonra kendi renkleri okunarak yoluna kırpılan, bölgeye özgü sabit açılı minik tek kıllı darbelerle (5–11 piksel, renk ve değer titreşimli) baştan sona taranır; bulut darbeleri uçları bulutun içinde kalacak biçimde seçilir. Keskin gölgeler 'multiply' karışımlı, kenarı yumuşatılmamış saydam mavi-mor şekillerdir; bitki gölgeleri yaprak ve taç yaprak yollarının kaydırılmış kopyalarıdır. Pencereler, derzler, korniş, korkuluk ve kaburgalar taramadan sonra keskin olarak yeniden çizilir. Döşeme kaçış noktalı derzlerle, çakıl gölgeli ve ışıklı küçük elipslerle kurulur. Sonda çok ince zemin dokusu ve hafif el titremesi uygulanır.",
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Gök piksel başına doygun geçiş; bulutlar hafif bükülmüş, keskin eşikli yoğunluk alanı. Her bölge önce düz modelajla boyanır (silindir aydınlatmalı degradeler, dönel yüzey normalli kubbe, cephe degradesi) ve bölgeye özgü sabit açılı minik tek kıllı darbelerle taranır. Keskin gölgeler 'multiply' karışımlı, kenarı yumuşatılmamış saydam mavi-mor şekillerdir; bitki gölgeleri yaprak ve taç yaprak yollarının kaydırılmış kopyalarıdır; pencereler, derzler, korniş, korkuluk ve kaburgalar keskin çizilir; döşeme kaçış noktalı derzlerle, çakıl gölgeli ve ışıklı küçük elipslerle kurulur. Sonra bütün resim 'ressam geçişi'yle yeniden örülür: alttaki renk örneklenip titreşimli ızgaralarda iki katman kare uçlu opak darbe atılır (genelde 2,7–3,5 piksel enli, 8–14 piksel boylu; ayrıntıda 1,2–1,9 piksel); yön çoğunlukla bölgenin sabit açısıdır (gökte −20°, kubbede meridyen, mimaride dikey), yalnız kenarlarda yapı tensörü akışına uyar; her darbe kendi açık-koyu ve sıcak-serin sapmasını alır, renk farkı eşiğinde ya da mimari bölge sınırında durur. Darbe yükseklik haritası parıltısız (mat) aydınlatılır; sonda hafif el titremesi uygulanır.",
   "etiketler": [
     "akrilik",
     "gerçekçi",

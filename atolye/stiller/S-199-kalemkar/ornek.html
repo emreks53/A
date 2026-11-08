@@ -358,15 +358,15 @@
     for (let y0 = -6; y0 < 790; y0 += 22 + rg() * 12) {
       let x = -60 - rg() * 120;
       while (x < 1060) {
-        const L = 170 + rg() * 220;
+        const L = 230 + rg() * 240;
         const Wd = 26 + rg() * 22;
         const yy = y0 + (rg() - 0.5) * 10;
         const egim = (rg() - 0.5) * 0.06;
         const pts = [];
         for (let t = 0; t <= 1.0001; t += 0.04) pts.push([x + t * L, yy + egim * t * L + 3 * Math.sin(t * 3 + y0)]);
-        const a = 0.3 * Math.pow(1 - H.clamp(yy / 820, 0, 1), 1.3) * (0.6 + 0.6 * rg());
+        const a = 0.24 * Math.pow(1 - H.clamp(yy / 820, 0, 1), 1.3) * (0.6 + 0.6 * rg());
         k.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`;
-        H.ribbon(k, H.wobble(pts, 2.5, 60, tohum++), (t) => Wd * (0.55 + 0.45 * Math.sin(Math.PI * Math.min(1, t * 1.15))));
+        H.ribbon(k, H.wobble(pts, 2.5, 60, tohum++), (t) => Wd * (0.12 + 0.88 * Math.pow(Math.sin(Math.PI * t), 0.6)));
         x += L * (0.6 + rg() * 0.35);
       }
     }

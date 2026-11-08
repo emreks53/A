@@ -6,12 +6,12 @@
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
   "ozet": "Krem pamuklu bez üstüne bambu kalemle elle çekilmiş demir karası konturlar ve elle doldurulmuş doğal boyalar: çivit, kök boya kırmızısı, zerdeçal sarısı ve yeşil; kök boya zeminli sarmaşık bordür.",
-  "tanim": "Hayalî bir kalemkâr ustasının eli. Destek: görünür dokumalı, ipliği yer yer kalınlaşan krem pamuklu bez. Alet: bambu kalem (kalam) ve fırça. Usta önce demir karasıyla bütün biçimleri elle, kalınlığı hafifçe değişen ve azıcık titreyen çizgilerle çizer; sonra boyaları elle doldurur: gök açık çivit, kubbe ve kasnak çivit üstüne sarı bindirilmiş yeşil, pencereler koyu çivit, korniş ve şerefeler kök boya kırmızısı, alemler ve güneş zerdeçal sarısı. Boya çizgiye tam oturmaz, bezin ipliklerine işler, alanın içinde hafifçe dalgalanır ve kenarlarında koyulaşır. Krem bırakılmış yerler ikinci bir kırmızı iç çizgiyle, noktalarla ve damarlarla süslenir: beyaz çiçeklerde kırmızı iç kontur ve kara damarlar, yapraklarda krem orta damar, yerde sıra sıra kara noktalar. Kenarda kök boya zeminli bir bordürde krem sarmaşık, sarı nilüferler, yeşil yaprak çiftleri ve köşe rozetleri, içte noktalı çift çizgi.",
+  "tanim": "Hayalî bir kalemkâr ustasının eli. Destek: görünür dokumalı, ipliği yer yer kalınlaşan krem pamuklu bez. Alet: bambu kalem (kalam) ve fırça. Usta önce demir karasıyla bütün biçimleri elle, kalınlığı hafifçe değişen ve azıcık titreyen çizgilerle çizer; sonra boyaları elle doldurur: gök, geniş fırçayla yan yana ve üst üste sürülmüş açık çivit bantlarıyla (bantların bindiği yerde boya koyulaşır, aralarda açık kalır), kubbe ve kasnak çivit üstüne sarı bindirilmiş yeşil, pencereler koyu çivit, korniş ve şerefeler kök boya kırmızısı, alemler ve güneş zerdeçal sarısı. Boya çizgiye tam oturmaz, bezin ipliklerine işler, alanın içinde hafifçe dalgalanır ve kenarlarında koyulaşır. Krem bırakılmış yerler ikinci bir kırmızı iç çizgiyle, noktalarla ve damarlarla süslenir: beyaz çiçeklerde kırmızı iç kontur ve kara damarlar, yapraklarda krem orta damar, yerde sıra sıra kara noktalar. Kenarda kök boya zeminli bir bordürde krem sarmaşık, sarı nilüferler, yeşil yaprak çiftleri ve köşe rozetleri, içte noktalı çift çizgi.",
   "koken": "Hindistan'ın kalamkari (Farsça kalem-kâr, 'kalem işi') geleneğine, özellikle Srikalahasti üslubundaki elle çizilip boyanan pamuklu bezlere ve doğal boyalarla (çivit, kök boya, zerdeçal, demir karası) çalışma usulüne dayanır; Osmanlı'da da bu tür boyalı bezler kalemkâr adıyla bilinirdi. Belirli bir eser taklit edilmez; tarif bu tekniklerden kurulmuş hayalî bir ustanın elidir ve figür, yazı ya da hat içermez.",
   "ayirt_edici": [
     "Elle çekilmiş, kalınlığı değişen demir karası konturlar; bulutlarda, çiçeklerde ve gökteki güneşte içte ikinci bir kök boya kırmızısı çizgi",
     "Doğal boya renkleri: açık çivit gök, çivit üstüne sarıyla yeşil kubbe ve kasnak, koyu çivit pencereler, kök boya korniş, zerdeçal sarısı alem ve güneş",
-    "Boyanın bezin içine işlemesi: alan içinde dalgalanan ton, kenarlarda koyulaşma ve çizgiden hafifçe taşan ya da geri kalan dolgu",
+    "Boyanın bezin içine işlemesi: gökte üst üste binen el fırçası çivit bantları, alan içinde dalgalanan ton, kenarlarda koyulaşma ve çizgiden hafifçe taşan ya da geri kalan dolgu",
     "Görünür pamuk dokuması; ipliklerin kalınlık farkı ve krem bezin sıcak tonu",
     "Kök boya zeminli bordür: krem dalgalı sarmaşık, sarı nilüferler, yeşil yaprak çiftleri, krem serpme noktalar ve köşe rozetleri; içte noktalı çift çizgi",
     "Kubbe dilimlerinde noktalı çizgiler ve krem damla dizisi; yerde sıra sıra kara noktalar ve kırmızı filizler; çiçeklerde kara damarlar"
@@ -19,14 +19,13 @@
   "palet": [
     "#F3EAD6",
     "#221915",
-    "#3D5FA6",
-    "#3F8EEA",
-    "#B5352B",
-    "#E9B52E",
-    "#3C8C56",
-    "#AE5245"
+    "#A6B9C5",
+    "#49618B",
+    "#588C5F",
+    "#AE5245",
+    "#CEA038"
   ],
-  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Her boya (gök çividi, çivit, kök boya, zerdeçal, yeşil, demir karası) ayrı bir ekran dışı maske katmanına çizilir; sahne bordür içine 0,862 ölçekle yerleşir. Dolgular, yolun titretilmiş (H.wobble) çokgenidir; konturlar titrek, basıncı değişen şeritlerdir (H.pen); öndeki nesne alanını bütün katmanlardan silerek arkadakini örter. Bordür mutlak koordinatta: kök boya halkası, destination-out ile oyulmuş krem sarmaşık, yordamsal nilüfer ve yaprak çiftleri, köşe rozetleri, nokta dizileri. Bileşimde krem bez rengi piksel piksel boyalarla çarpılır (Beer–Lambert benzeri): bulanık maskeyle kenar koyulaşması ve ipliğe sızma, değer gürültüsüyle lekelenme; en son çözgü-atkı kosinüs dokuması ve iplik kalınlığı (fitil) gürültüsü ile pamuk dokusu.",
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Her boya (gök çividi, çivit, kök boya, zerdeçal, yeşil, demir karası) ayrı bir ekran dışı maske katmanına çizilir; sahne bordür içine 0,862 ölçekle yerleşir. Gök çividi ince bir ilk kat üstüne, uçları incelen, titrek, yaklaşık yüz geniş şerit vuruşla sürülür; vuruşlar üst üste bindikçe koyulaşır. Dolgular, yolun titretilmiş (H.wobble) çokgenidir; konturlar titrek, basıncı değişen şeritlerdir (H.pen); öndeki nesne alanını bütün katmanlardan silerek arkadakini örter. Bordür mutlak koordinatta: kök boya halkası, destination-out ile oyulmuş krem sarmaşık, yordamsal nilüfer ve yaprak çiftleri, köşe rozetleri, nokta dizileri. Bileşimde krem bez rengi piksel piksel boyalarla çarpılır (Beer–Lambert benzeri): bulanık maskeyle kenar koyulaşması ve ipliğe sızma, değer gürültüsüyle lekelenme; en son çözgü-atkı kosinüs dokuması ve iplik kalınlığı (fitil) gürültüsü ile pamuk dokusu.",
   "etiketler": [
     "tekstil",
     "pamuklu",

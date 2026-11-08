@@ -1171,7 +1171,8 @@
         // ton sınırları fırça yönünde düzensiz (gökte yatay, başka yerde kısa lekeler)
         let dz;
         if (b === KB.gok || b === KB.zemin) dz = 0.75 * nq(x / 70, y / 5);
-        else if (b === KB.kubbe || b === KB.kasnak) dz = 0.6 * nq(x / 5, y / 34);
+        else if (b === KB.kubbe) dz = 0.6 * nq(x / 5, y / 34);
+        else if (b === KB.kasnak) dz = 0.4 * nq(x / 6, y / 26);
         else if (b === KB.minare || b === KB.kaide) dz = 0.4 * nq(x / 5, y / 30);
         else dz = 0.35 * nq(x / 7, y / 7);
         const Lq = (Math.floor(L / st + dz) + 0.5) * st;

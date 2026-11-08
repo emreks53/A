@@ -5,28 +5,28 @@
   "ad_en": "Painting with Gold-Flecked Floral Margins",
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
-  "ozet": "İnce işlenmiş, parlak bir orta resim; çevresinde altın serpilmiş geniş açık devetüyü kenar suyu ve kenarda doğadan çizilmiş, altın ve yumuşak renkli çiçekli bitkiler; arada altın, lacivert ve kırmızı ince cetveller.",
-  "tanim": "Hayalî bir albüm ressamının eli. Orta resim sincap kılı ince fırçayla, mühreyle perdahlanmış kâğıda örtücü suluboya (guaş) ile işlenir: berrak mavi gök, tepeleri ince altın çizgili beyaz bulutlar, altın güneş, beyaz mermer minare ve kaide, dilim dilim modellenmiş yeşil kubbe, çiçekli çayır; her biçim çok ince, hafif titrek koyu kontur alır ve fırça izi biçim yönünde seçilir. Kenar suyu açık devetüyü kâğıttır; üstüne köşeli altın pullar (zerefşan) serpilir. Kenarda aralıklı olarak lale, gül, süsen, karanfil, gelincik ve nergis dikilir: çoğu iki tonlu altınla (açık ve koyu altın, gölge yanında ince altın taraması), aralarındakiler soluk yeşil yaprak ve pembe, mavi, krem, şeftali çiçeklerle; her bitkinin altında küçük bir toprak öbeği, aralarda altın ot filizleri vardır. Resimle kenar arasında açık yeşil bir kâğıt şerit, altın, lacivert ve kırmızı ince cetveller, köşelerde küçük lacivert kareler bulunur.",
+  "ozet": "Örtücü guaş vuruşlarıyla elle boyanmış parlak bir orta resim; çevresinde altın serpilmiş geniş açık devetüyü kenar suyu ve kenarda doğadan çizilmiş, altın ve yumuşak renkli çiçekli bitkiler; arada altın, lacivert ve kırmızı ince cetveller.",
+  "tanim": "Hayalî bir albüm ressamının eli. Orta resim sincap kılı ince fırçayla, mühreyle perdahlanmış kâğıda örtücü suluboya (guaş) ile işlenir; ressam yumuşak geçiş yapmaz, her rengi birkaç ayrı tonda karıştırıp biçim yönünde kısa, örtücü ve kıl izli vuruşlarla yan yana sürer: gökte uzun yatay vuruşlarla lacivert-maviden ufukta sütlü beyaza inen gök, kubbede meridyen boyunca dilim dilim yeşiller, taşta ve kasnakta dikey vuruşlar, yapraklarda eksen boyunca, taç yapraklarda göbekten dışa; ton sınırları fırça izi olarak kalır. Tepeleri ince altın çizgili beyaz bulutlar, kabuk altını disk ve dalgalı alev ışınlı güneş, beyaz mermer minare ve kaide, çiçekli çayır; her biçim çok ince, hafif titrek koyu bir kontur alır. Kenar suyu açık devetüyü kâğıttır; üstüne köşeli altın pullar (zerefşan) serpilir. Kenarda aralıklı olarak lale, gül, süsen, karanfil, gelincik ve nergis dikilir: çoğu iki tonlu altınla (açık ve koyu altın, gölge yanında ince altın taraması), aralarındakiler soluk yeşil yaprak ve pembe, mavi, krem, şeftali çiçeklerle; her bitkinin altında küçük bir toprak öbeği, aralarda altın ot filizleri vardır. Resimle kenar arasında açık yeşil bir kâğıt şerit, altın, lacivert ve kırmızı ince cetveller, köşelerde küçük lacivert kareler bulunur.",
   "koken": "17. yüzyıl Babür albüm sayfalarının (murakka) altın serpmeli, doğadan çiçekli bitkilerle bezeli kenar suyu geleneğine, İran ve Osmanlı kitap sanatlarındaki zerefşan ve cetvel işçiliğine dayanır. Belirli bir eser ya da usta kopyalanmaz; burada tarif bu geleneklerden kurulmuş hayalî bir albüm ressamının elidir ve orta resim sahnenin kendisidir; yazı, figür ya da hat yoktur.",
   "ayirt_edici": [
     "Geniş açık devetüyü kenar suyunda yüzlerce düzensiz, köşeli altın pul; bazıları ışığı yakalıyor",
     "Kenarda aralıklı dizilmiş, doğadan çizilmiş çiçekli bitkiler: iki tonlu altın lale, gül, süsen, gelincik ile soluk yeşil yapraklı pembe, mavi, krem ve şeftali renkli çiçekler; dönük yaprak uçları ve toprak öbekleri",
     "Resim ile kenar arasında açık yeşil kâğıt şerit; altın, lacivert ve kırmızı ince cetveller, köşelerde lacivert kareler",
-    "Orta resimde berrak mavi gök, tepeleri ince altın çizgili beyaz bulutlar ve altın güneş",
+    "Orta resimde yatay guaş vuruşlarıyla boyanmış berrak mavi gök, tepeleri ince altın çizgili beyaz bulutlar ve dalgalı alev ışınlı, kabuk altını güneş",
     "Dilim dilim modellenmiş, altın kaburga çizgili yeşil kubbe; kırmızı-yeşil zikzaklı beyaz mermer minare ve kaidede kakma çiçek panoları",
-    "Çiçekli çayır ve ince koyu konturlu, damarlı beyaz çiçekler; biçim yönünde seçilen ince fırça izi"
+    "Orta resmin her yerinde seçilen örtücü guaş vuruşları: yan yana sürülmüş ayrı ton lekeleri, kubbede meridyen boyunca, taşta dikey, çiçekli çayırda yatay; ince koyu konturlu, damarlı beyaz çiçekler"
   ],
   "palet": [
     "#ECDDBB",
     "#D2AE52",
     "#F1D88A",
     "#2F4FA0",
-    "#B8402F",
     "#C9DCC4",
     "#6192D5",
-    "#3E9D58"
+    "#3E9D58",
+    "#B8402F"
   ],
-  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Kenar kâğıdı piksel döngüsüyle (iki ölçekli değer gürültüsü, dikey lif) üretilir; zerefşan, rastgele köşeli 4–6 kenarlı altın çokgenlerdir. Kenar bitkileri yordamsal: S eğrili sap, sinüs genişlikli ve kıvrık ortalı mızrak yapraklar (bir yarısı koyu ve ince taramalı, bazılarının ucu dönük), Bézier taç yapraklı lale, süsen, gelincik, karanfil, beş elipsli gül ve nergis; çizgiler titrek, basıncı değişen şeritlerdir (H.pen). Cetveller ve kâğıt şerit strokeRect/fillRect. Orta resim sahne koordinatında ölçeklenip kırpılarak çizilir: degrade gök, lob yaylı bulutlar, Lambert benzeri dilim degradeli kubbe, SAHNE.bitki konumlarında yapraklar ve çiçekler. Son geçişte orta resme bölge haritasından alınan yönde (kubbe meridyeni, dikey taş, yatay gök) uzayan ince gürültüyle fırça izi, kenara kâğıt dokusu katılır.",
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Kenar kâğıdı piksel döngüsüyle (iki ölçekli değer gürültüsü, dikey lif) üretilir; zerefşan, rastgele köşeli 4–6 kenarlı altın çokgenlerdir. Kenar bitkileri yordamsal: S eğrili sap, sinüs genişlikli ve kıvrık ortalı mızrak yapraklar (bir yarısı koyu ve ince taramalı, bazılarının ucu dönük), Bézier taç yapraklı lale, süsen, gelincik, karanfil, beş elipsli gül ve nergis; çizgiler titrek, basıncı değişen şeritlerdir (H.pen). Cetveller ve kâğıt şerit strokeRect/fillRect. Orta resim sahne koordinatında ölçeklenip kırpılarak önce düz renk ve degradelerle kurulur (güneş: alev biçimli şerit ışınlar, diskte yay biçimli altın vuruşlar). Sonra guaş geçişi: her bölgede parlaklık birkaç ayrı tona indirgenir ve ton sınırları fırça yönünde uzayan gürültüyle düzensizleşir; ardından yaklaşık 32 000 kıl izli, başı dolgun ve sonu kuru fırça gibi incelen vuruş, merkezindeki rengi küçük bir sapmayla alıp bölge yönünde (gök yatay, kubbe meridyeni, taş ve kasnak dikey, yaprak ekseni, taç yaprakta ışınsal) üç boyda sürülür; renk farkı eşiği vuruşun konturlara ve komşu renk alanına taşmasını engeller. En son kenara kâğıt dokusu katılır.",
   "etiketler": [
     "albüm sayfası",
     "zerefşan",

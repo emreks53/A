@@ -330,11 +330,13 @@
             const xf = x + (nz(x / 38, y / 38) - 0.5) * 12 * bw, yf = y + (nz(x / 38 + 50, y / 38) - 0.5) * 8 * bw;
             const f = bF(xf, yf) + (fbm(nz2, x / 34, y / 34, 2) - 0.5) * 0.26 * bw;
             const yog = sstep(P.bulutEsik || 0.2, (P.bulutEsik || 0.2) + (P.bulutYumusak || 0.2), f);
+            let bIsik = 1;
             if (yog > 0.001) {
               const f2 = bF(xf + 9, yf - 9) + (fbm(nz2, (x + 9) / 34, (y - 9) / 34, 2) - 0.5) * 0.26 * bw;
               const tb = bulut.TAB[clamp(yf | 0, 0, 1023) * 1024 + clamp(xf | 0, 0, 1023)];
               let isik = 0.62 + (f - f2) * 2.6 - (tb > 0 ? 0.32 * sstep(tb - 30, tb + 2, y) : 0) + (f - 0.5) * 0.25;
               isik = clamp(isik, 0, 1);
+              bIsik = isik;
               rmp(P.bulut, isik);
               const a = yog * P.bulutOpak;
               r0 += (cr - r0) * a; g0 += (cg - g0) * a; b0 += (cb - b0) * a;
@@ -342,6 +344,7 @@
             } else lt = 0.9;
             cr = r0; cg = g0; cb = b0;
             if (o.bulutOut) o.bulutOut[i] = yog;
+            if (o.bulutIsik) o.bulutIsik[i] = bIsik;
             const ag = o.gokAci === undefined ? 0.62 : o.gokAci, ca = Math.cos(ag), sa = Math.sin(ag);
             fu = -px * sa + py * ca; fv = px * ca + py * sa;
             break;
@@ -795,12 +798,52 @@
     H.EL.forEach((e, i) => { if (e && tipler.includes(e.tip) && (!suz || suz(e))) s.add(i); });
     return s;
   }
+
+  // ---------------------------------------------------------------- gerçek vuruşlar (kanvasta)
+  // Pastel çubuğunun yanı / ucuyla atılan vuruş: uçları yuvarlak incelen, hafif eğri bir şerit.
+  // Renk ve basınç (alfa) vuruş başınadır; katman sonra kâğıt dişine göre birleştirilir.
+  function vurusTuvali() {
+    const cv = SAHNE.yeniTuval(WW, WW), c = cv.getContext('2d', { willReadFrequently: true });
+    c.setTransform(K, 0, 0, K, 0, 0);
+    return { cv, c };
+  }
+  function yanVurus(c, x, y, ang, len, wid, renk, alfa, rnd, o) {
+    o = o || {};
+    const n = 12, ca = Math.cos(ang), sa = Math.sin(ang);
+    const bk = (rnd() - 0.5) * (o.bukum === undefined ? 0.22 : o.bukum), us = o.uc === undefined ? 0.45 : o.uc;
+    const w1 = 0.85 + 0.3 * rnd(), w2 = 0.85 + 0.3 * rnd(), f = rnd() * 6;
+    const Lp = [], Rp = [];
+    for (let k = 0; k <= n; k++) {
+      const t = k / n, s = (t - 0.5) * len;
+      const off = bk * len * ((t - 0.5) * (t - 0.5) - 0.083);
+      const prof = Math.pow(Math.max(0, Math.sin(Math.PI * (0.03 + 0.94 * t))), us);
+      const hw = wid * 0.5 * prof * lerp(w1, w2, t) * (0.94 + 0.06 * Math.sin(t * 9 + f));
+      const px = x + ca * s - sa * off, py = y + sa * s + ca * off;
+      Lp.push([px - sa * hw, py + ca * hw]); Rp.push([px + sa * hw, py - ca * hw]);
+    }
+    const p = new Path2D();
+    p.moveTo(Lp[0][0], Lp[0][1]);
+    for (let k = 1; k <= n; k++) p.lineTo(Lp[k][0], Lp[k][1]);
+    for (let k = n; k >= 0; k--) p.lineTo(Rp[k][0], Rp[k][1]);
+    p.closePath();
+    c.fillStyle = `rgba(${(renk[0] * 255) | 0},${(renk[1] * 255) | 0},${(renk[2] * 255) | 0},${alfa})`;
+    c.fill(p);
+  }
+  // form yönü: FU sabit kalacak doğrultu (FU gradyanına dik), aynı öğe içinde sonlu farkla
+  function formYonu(IDW, FU, x, y) {
+    const px = clamp(Math.round(x * K), 3, WW - 4), py = clamp(Math.round(y * K), 3, WW - 4), i = py * WW + px, id = IDW[i];
+    const a = IDW[i - 3] === id ? FU[i - 3] : FU[i], b = IDW[i + 3] === id ? FU[i + 3] : FU[i];
+    const c = IDW[i - 3 * WW] === id ? FU[i - 3 * WW] : FU[i], d = IDW[i + 3 * WW] === id ? FU[i + 3 * WW] : FU[i];
+    const gx = b - a, gy = d - c;
+    if (Math.abs(gx) + Math.abs(gy) < 1e-6) return 0;
+    return Math.atan2(gx, -gy); // gradyana dik
+  }
   const H = kimlikHaritasi();
   const IDW = titrekKimlik(H, 0.3, 40, 5);
   const P = {
     gok: rampa([[0, '#3D85D0'], [0.38, '#74AEE2'], [0.72, '#B9D8F0'], [1, '#EEF1EA']]),
     gunes: hex('#FFF9E8'), gunesR: 150, gunesG: 0.9, gunesDisk: 0,
-    bulut: rampa([[0, '#98A7C6'], [0.4, '#C6D1E4'], [0.7, '#EEF2F8'], [1, '#FFFFFF']]), bulutOpak: 0.97, bulutEsik: 0.3, bulutYumusak: 0.16,
+    bulut: rampa([[0, '#98A7C6'], [0.4, '#C6D1E4'], [0.7, '#EEF2F8'], [1, '#FFFFFF']]), bulutOpak: 0, bulutEsik: 0.3, bulutYumusak: 0.14,
     zemin: rampa([[0, '#EADDBF'], [0.5, '#DFCDA8'], [1, '#CDB892']]),
     mermer: rampa([[0, '#8E8C8E'], [0.5, '#C9C6C4'], [0.8, '#EDEAE4'], [1, '#FFFDF9']]), mermerGok: hex('#B9D3EC'),
     kubbe: rampa([[0, '#0C361C'], [0.28, '#1A6230'], [0.55, '#2C8A43'], [0.8, '#56B464'], [1, '#A6DC98']]),
@@ -824,8 +867,9 @@
     cobek: rampa([[0, '#857518'], [0.5, '#C7B338'], [1, '#EFE68E']]),
     erkek: rampa([[0, '#A2601A'], [0.6, '#E0A42E'], [1, '#F9DC7E']]),
   };
-  const S = golgele(H, IDW, P, { gokAci: 0.55, bulut: bulutAlani(11, [[180, 245, 1.05], [520, 140, 0.85], [775, 320, 1.1], [945, 455, 0.7], [70, 455, 0.65]]) });
-  const D = kagitDisi(191, { ince: 1.5, orta: 3.4, iri: 9, kontrast: 2.0 });
+  const BUL = new Float32Array(NN), BIS = new Float32Array(NN);
+  const S = golgele(H, IDW, P, { gokAci: 0.55, bulutOut: BUL, bulutIsik: BIS, bulut: bulutAlani(11, [[180, 245, 1.05], [520, 140, 0.85], [775, 320, 1.1], [945, 455, 0.7], [70, 455, 0.65]]) });
+  const D = kagitDisi(191, { ince: 1.8, orta: 4.2, iri: 11, kontrast: 2.2 });
   // ---------------------------------------------------------------- kalem katları
   // Her piksel için hedef renk (S.R/G/B) üst üste 3 kat taramayla örtülür. Örtü oranı (Ct) açık
   // alanlarda düşük (kâğıt dişi görünür), koyu alanlarda cilayla tam. Vuruş dokusu örtüyü
@@ -833,28 +877,47 @@
   const OR = new Float32Array(NN), OG = new Float32Array(NN), OB = new Float32Array(NN);
   const kagit = hex('#FDFBF5');
   const c1 = Math.cos(0.42), s1 = Math.sin(0.42), c2 = Math.cos(-0.55), s2 = Math.sin(-0.55);
+  const BG1 = hex('#8E9CC4'), BG2 = hex('#B2A8CC'), BG3 = hex('#C9D6EC');
   for (let i = 0; i < NN; i++) {
+    const tip = H.TIP[IDW[i]];
+    const gok = tip === T_GOK;
     const fu = S.FU[i], fv = S.FV[i];
-    const a = tarama(fu, fv, 4.2, 46, 0.5, 11);
-    const b = tarama(fu * c1 + fv * s1, -fu * s1 + fv * c1, 4.6, 52, 0.5, 21);
-    const c = tarama(fu * c2 + fv * s2, -fu * s2 + fv * c2, 4.4, 40, 0.5, 31);
+    // gökte vuruşlar daha seyrek ve uzun: katlar gözle seçilir
+    const ar = gok ? 6.4 : tip === T_KUBBE || tip === T_KASNAK ? 6.0 : 5.2;
+    const a = tarama(fu, fv, ar, gok ? 70 : 50, 0.5, 11);
+    const b = tarama(fu * c1 + fv * s1, -fu * s1 + fv * c1, ar * 1.08, gok ? 64 : 52, 0.5, 21);
+    const c = tarama(fu * c2 + fv * s2, -fu * s2 + fv * c2, ar * 1.04, gok ? 56 : 40, 0.5, 31);
     let r = S.R[i], g = S.G[i], bl = S.B[i];
+    let bu = 0;
+    if (gok) {
+      // bulut: kâğıdın beyazı korunur; gölge yanı mavi-gri ve leylak kalemle taranır
+      bu = sstep(0.04, 0.42, BUL[i]);
+      if (bu > 0) {
+        const gl = sstep(0.75, 0.3, BIS[i]);
+        const gr = BG3[0] + (BG1[0] - BG3[0]) * gl, gg = BG3[1] + (BG1[1] - BG3[1]) * gl, gb = BG3[2] + (BG1[2] - BG3[2]) * gl;
+        const k = bu;
+        r += (gr - r) * k; g += (gg - g) * k; bl += (gb - bl) * k;
+      }
+    }
     const lum = 0.3 * r + 0.59 * g + 0.11 * bl, koyu = 1 - lum;
-    const cila = sstep(0.3, 0.8, koyu);
+    // en koyu yerler cilalı (pürüzsüz, diş dolu); orta tonlarda vuruşlar ve diş seçilir
+    const cila = sstep(0.5, 0.92, koyu);
     const str = 0.5 * a + 0.3 * b + 0.2 * c;
-    const Ct = 0.8 + 0.2 * sstep(0.05, 0.55, koyu);
-    const gk = H.TIP[IDW[i]] === T_GOK ? 0.75 : 1;
-    let C = Ct + (str - 0.42) * 0.55 * gk * (1 - cila * 0.85) + (D[i] - 0.5) * 0.42 * (1 - cila * 0.9);
+    let Ct = 0.74 + 0.26 * sstep(0.05, 0.55, koyu);
+    if (bu > 0) Ct = Ct * (1 - bu) + bu * (0.04 + 0.5 * Math.pow(sstep(0.8, 0.3, BIS[i]), 1.3));
+    const kontrast = gok ? 0.95 : tip === T_KUBBE || tip === T_KASNAK ? 0.85 : 0.7;
+    let C = Ct + (str - 0.42) * kontrast * (1 - cila * 0.85) * Math.min(1, Ct * 1.6) + (D[i] - 0.5) * 0.5 * (1 - cila * 0.9) * Math.min(1, Ct * 2);
     C = C < 0 ? 0 : C > 1 ? 1 : C;
-    // katman renk oynaması (üst üste farklı tonda kalemler)
-    const hk = 0.12 * (b - c);
-    const r2 = r + hk * (bl - g), g2 = g + hk * (r - bl), b2 = bl + hk * (g - r);
-    // ortalama örtüyü telafi et
-    const tr = Math.max(0, kagit[0] + (r2 - kagit[0]) / Ct), tg = Math.max(0, kagit[1] + (g2 - kagit[1]) / Ct), tb = Math.max(0, kagit[2] + (b2 - kagit[2]) / Ct);
-    const ust = 1 - 0.05 * a * b * (1 - cila);
-    OR[i] = (kagit[0] + (tr - kagit[0]) * C) * ust;
-    OG[i] = (kagit[1] + (tg - kagit[1]) * C) * ust;
-    OB[i] = (kagit[2] + (tb - kagit[2]) * C) * ust;
+    // katman renk oynaması (üst üste farklı tonda kalemler: mor-mavi ve turkuaz)
+    const hk = (gok ? 0.22 : 0.12) * (b - c);
+    let r2 = r + hk * (bl - g), g2 = g + hk * (r - bl), b2 = bl + hk * (g - r);
+    if (bu > 0 && BIS[i] < 0.6) { const lv = sstep(0.6, 0.35, BIS[i]) * (0.5 + 0.5 * (b - c)) * bu * 0.4; r2 += (BG2[0] - r2) * lv; g2 += (BG2[1] - g2) * lv; b2 += (BG2[2] - b2) * lv; }
+    const ctD = Math.max(0.08, Ct);
+    const tr = Math.max(0, kagit[0] + (r2 - kagit[0]) / ctD), tg = Math.max(0, kagit[1] + (g2 - kagit[1]) / ctD), tb = Math.max(0, kagit[2] + (b2 - kagit[2]) / ctD);
+    const ust = 1 - 0.06 * a * b * (1 - cila);
+    OR[i] = clamp((kagit[0] + (tr - kagit[0]) * C) * ust, 0, 1);
+    OG[i] = clamp((kagit[1] + (tg - kagit[1]) * C) * ust, 0, 1);
+    OB[i] = clamp((kagit[2] + (tb - kagit[2]) * C) * ust, 0, 1);
   }
   bas(OR, OG, OB);
   } finally {

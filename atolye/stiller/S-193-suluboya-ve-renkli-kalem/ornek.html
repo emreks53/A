@@ -905,7 +905,9 @@
         let dn = lerp(0.82, 0.1, sstep(0.0, 1.0, Math.pow(t, 0.85))) * (0.78 + 0.44 * v1);
         const dg = Math.hypot(X - gx, Y - gy);
         dn *= 1 - 0.95 * Math.exp(-(dg * dg) / (2 * 135 * 135));
-        const cm = sstep(0.04, 0.3, BUL[i]);
+        // bulut: kâğıt korunur; kenarı düzensiz ve net (lavi kenarında birikme), alt yanı ıslakta yumuşak
+        const bn = (fbm(nC, X / 14, Y / 14, 2) - 0.5) * 0.16;
+        const cm = sstep(0.1, 0.16, BUL[i] + bn);
         dn *= 1 - cm;
         const m = YAKIN[(y >> 1) * 1024 + (x >> 1)], esik = 0.04 + 0.5 * nC(X / 20, Y / 20);
         dn *= 1 - sstep(esik, esik + 0.08, m);
@@ -923,23 +925,24 @@
         // parıltı: sağ üstte, kenarı düzensiz ama net korunmuş kâğıt
         // ışık alan dilimlerin ortasında, dilim boyunca uzanan kenarı net korunmuş kâğıt şeritleri
         const nz0 = (fbm(nC, X / 22, Y / 22, 2) - 0.5);
-        const sw = 0.24 * sstep(0.84, 0.95, lt + nz0 * 0.06), fc = Math.abs(f - 0.56 + nz0 * 0.05);
-        const hl = sstep(sw, sw - 0.04, fc) * sstep(0.0, 0.03, sw) + sstep(0.96, 0.97, lt + nz0 * 0.05);
+        const sw = 0.15 * sstep(0.88, 0.97, lt + nz0 * 0.06), fc = Math.abs(f - 0.56 + nz0 * 0.05);
+        const hl = sstep(sw, sw - 0.035, fc) * sstep(0.0, 0.03, sw);
         // 1. sır: açık sarı-yeşil, ıslakta mavi-yeşille karışarak (yumuşak çiçeklenme)
-        sir(i, mixc(KY1, KYM, sstep(0.38, 0.72, v2)), 0.9 * (1 - 0.92 * Math.min(1, hl)) * (0.86 + 0.28 * v1));
+        const tane = 1 + (0.5 - d) * 0.5 + (fbm(nB, X / 9, Y / 9, 2) - 0.5) * 0.22; // granülasyon ve pigment dalgası
+        sir(i, mixc(KY1, KYM, sstep(0.3, 0.7, v2)), 0.8 * (1 - 0.92 * Math.min(1, hl)) * (0.75 + 0.5 * v1) * tane);
         // 2. sır: her dilim ayrı bir lavi — dilim içinde sabit ton, sola doğru hafif koyulaşma
         const pay = gb > 0.45 ? sstep(0.025, 0.06, f) * sstep(1.0, 0.965, f) : 1;
-        let d2 = 0.12 + 0.8 * (1 - gb) + (0.5 - f) * 0.16 + (1 - yuk) * 0.12;
+        let d2 = 0.08 + 0.86 * Math.pow(1 - gb, 1.3) + (0.5 - f) * 0.2 + (1 - yuk) * 0.1 + (h2(gi, 3, 193) - 0.5) * 0.16;
         d2 *= pay * (1 - Math.min(1, hl)) * (0.9 + 0.2 * fbm(nC, X / 50 + gi * 7.3, Y / 70, 2));
         // her dilimin kurumuş kenarında pigment birikmesi
         const kn = 1 + 0.55 * (sstep(0.14, 0.0, f) + sstep(0.86, 1.0, f));
-        sir(i, KY2, clamp(d2 * kn, 0, 1) * 0.82 * (1 + (0.5 - d) * 0.4));
+        sir(i, KY2, clamp(d2 * kn, 0, 1) * 0.82 * tane);
         // 3. sır: gölge yanında koyu mavi-yeşil, kurumuş sert kenar
-        sir(i, KY3, 0.65 * sstep(0.36, 0.34, lt + (v1 - 0.5) * 0.1) * (1 + (0.5 - d) * 0.4));
+        sir(i, KY3, 0.65 * sstep(0.36, 0.34, lt + (v1 - 0.5) * 0.1) * tane);
         break;
       }
       case T_KASNAK: case T_KASPENC: {
-        sir(i, KY1, 0.88);
+        sir(i, mixc(KY1, KYM, sstep(0.3, 0.7, v2)), 0.85 * (0.85 + 0.3 * v1));
         sir(i, KY2, (0.2 + 0.7 * sstep(0.8, 0.4, lt + (v1 - 0.5) * 0.06)) * 0.85 * gran);
         sir(i, KY3, 0.7 * sstep(0.34, 0.3, lt));
         if (tip === T_KASPENC) { sir(i, KY3, 0.85); sir(i, PEN, 0.5); }
@@ -1030,15 +1033,15 @@
     const minI = kimlikler(H, [T_MGOVDE, T_MCIKMA, T_MSEREFE, T_MKORK, T_MTOPUZ, T_MPENC, T_ZIKZAK]);
     const altI = kimlikler(H, [T_ALTIN, T_HILAL]);
     // kubbe ve kaburgalar
-    ciz(Y.kubbe, kubbeI, 1.6, yesilK, 0.92);
+    ciz(Y.kubbe, kubbeI, 2.0, yesilK, 0.95);
     for (const k of SAHNE.kaburgalar(16)) {
       const pts = k.noktalar.filter((p) => p[1] > 303);
-      for (const seg of gorunur(H, pts, kubbeI)) parcaliCizgi(c, seg, 0.85, yesilA, 0.62, rnd, { parca: 64, titre: 0.25 });
+      for (const seg of gorunur(H, pts, kubbeI)) parcaliCizgi(c, seg, 1.05, yesilA, 0.72, rnd, { parca: 64, titre: 0.25 });
     }
-    ciz(Y.kasnakUst, kasI, 1.35, yesilK, 0.9); ciz(Y.kasnakAlt, kasI, 1.35, yesilK, 0.9);
+    ciz(Y.kasnakUst, kasI, 1.7, yesilK, 0.92); ciz(Y.kasnakAlt, kasI, 1.7, yesilK, 0.92);
     for (const d of Y.kasnakPencereleri) ciz(d, kasPI, 0.95, yesilK, 0.85);
     // kaide, korniş, derzler
-    ciz(Y.kaide, tasI, 1.25, tasK, 0.85); ciz(Y.kornis, tasI, 1.15, tasK, 0.85);
+    ciz(Y.kaide, tasI, 1.6, tasK, 0.88); ciz(Y.kornis, tasI, 1.4, tasK, 0.88);
     for (const d of Y.kaidePencereleri) ciz(d, kpI, 1.05, tasK, 0.85);
     for (let yy = 728; yy < 800; yy += 24) for (const seg of gorunur(H, sik([[302, yy], [818, yy]], 1.5), kaideI, 0.4)) parcaliCizgi(c, seg, 0.6, tasK, 0.3, rnd, { parca: 50, titre: 0.2 });
     for (let s = 0; s < 3; s++) {
@@ -1046,7 +1049,7 @@
       for (let x = 300 - ofs + 62; x < 820; x += 62) for (const seg of gorunur(H, [[x, y0 + 1], [x, Math.min(799, y1 - 1)]], kaideI, 0.4)) kalemCizgi(c, sik(seg, 1), 0.55, tasK, 0.28, rnd);
     }
     // minare ve alemler
-    for (const d of Y.minare) ciz(d, minI, 1.15, tasK, 0.85);
+    for (const d of Y.minare) ciz(d, minI, 1.4, tasK, 0.88);
     for (const d of Y.minarePencereleri) ciz(d, minI, 0.95, tasK, 0.85);
     for (const d of Y.alem.concat(Y.minareAlem)) ciz(d, altI, 0.8, altinK, 0.75);
     // gökte birkaç ince mavi kalem taraması (köşelerde)

@@ -372,14 +372,15 @@
       m.fillStyle = 'rgba(255,0,0,1)';
       m.fill(yol);
       m.restore();
-      g.filter = 'none';
-      g.clip(yol);
+      // gölge yanı: yumuşak kenarlı (sert kırpma çizgisi kalmasın)
       const ag = g.createLinearGradient(bx + 60 * bs, by - 70 * bs, bx - 40 * bs, by + 16 * bs);
       ag.addColorStop(0, griA(1, 0));
       ag.addColorStop(0.55, griA(0.82, 0.35));
       ag.addColorStop(1, griA(0.78, 0.8));
       g.fillStyle = ag;
-      g.fillRect(0, 0, 1024, 1024);
+      g.filter = 'blur(4px)';
+      g.fill(yol);
+      g.filter = 'none';
       g.restore();
     }
     m.globalCompositeOperation = 'source-over';
@@ -537,7 +538,7 @@
     const uy = Math.sin(y.aci);
     // yaprak boyuna ikiye ayrılır: bir yarısı ışıkta
     const lg = g.createLinearGradient(y.x - uy * 10, y.y + ux * 10, y.x + uy * 10, y.y - ux * 10);
-    const a = buyuk ? 0.5 : 0.6;
+    const a = buyuk ? 0.56 : 0.64;
     lg.addColorStop(0, gri(a));
     lg.addColorStop(0.5, gri(a + 0.06));
     lg.addColorStop(0.52, gri(a + 0.16));
@@ -1050,7 +1051,7 @@
             c = H.mix(c, gokAlt, t);
             const bulut = MV[q * 4] / 255;
             const gunes = MV[q * 4 + 1] / 255;
-            k *= 1 - 0.92 * bulut * H.smooth(0.8, 0.96, V[q]);
+            k *= 1 - 0.92 * bulut * H.smooth(0.7, 0.92, V[q]);
             if (gunes > 0) {
               c = H.mix(c, gunesC, gunes);
             }

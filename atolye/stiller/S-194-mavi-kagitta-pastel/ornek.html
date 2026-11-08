@@ -949,8 +949,8 @@
         yanVurus(c, x, y, -0.38 + (rnd() - 0.5) * 0.1, 20 + rnd() * 14, 6 + rnd() * 2, col, p, rnd, { uc: 0.5, bukum: 0.1 });
         return;
       }
-      else if (h < ust * 0.55) { col = rnd() < 0.5 * ust ? maviD : maviK; p = 0.3 + 0.3 * ust; }
-      else if (h < ust * 0.55 + alt * 0.5) { const q = rnd(); col = q < 0.45 ? maviA : q < 0.7 ? krem : q < 0.85 ? seftali : beyaz; p = 0.3 + 0.2 * alt; }
+      else if (h < ust * 0.5) { col = rnd() < 0.35 * ust ? maviD : maviK; p = 0.28 + 0.26 * ust; }
+      else if (h < ust * 0.5 + alt * 0.5) { const q = rnd(); col = q < 0.45 ? maviA : q < 0.7 ? krem : q < 0.85 ? seftali : beyaz; p = 0.3 + 0.2 * alt; }
       if (!col) return;
       yanVurus(c, x, y, -0.38 + (rnd() - 0.5) * 0.1, 36 + rnd() * 26, 7 + rnd() * 3, col, p, rnd, { uc: 0.5, bukum: 0.12 });
     });
@@ -993,8 +993,9 @@
     tara(280, 80, 840, 800, 11, 11, (x, y) => {
       if (GRUP[tipAt(x, y)] !== 3) return;
       const lt = S.LT[idx(x, y)];
-      if (lt > 0.5 || rnd() > 0.55) return;
-      yanVurus(c, x, y, -1.05 + (rnd() - 0.5) * 0.1, 16 + rnd() * 8, 4.5, rnd() < 0.5 ? lav : lav2, 0.5 * sstep(0.5, 0.3, lt), rnd);
+      const esk = x < 345 ? 0.66 : 0.5;
+      if (lt > esk || rnd() > 0.55) return;
+      yanVurus(c, x, y, -1.05 + (rnd() - 0.5) * 0.1, 16 + rnd() * 8, 4.5, rnd() < 0.5 ? lav : lav2, 0.5 * sstep(esk, esk - 0.2, lt), rnd);
     });
   }
   // kum: sıcak kum ve şeftali, yatay vuruşlar; kâğıt aralarda

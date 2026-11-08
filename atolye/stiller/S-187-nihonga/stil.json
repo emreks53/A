@@ -5,15 +5,15 @@
   "ad_en": "Nihonga Mineral Painting",
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
-  "ozet": "Taneli, ışıkta parıldayan mineral boyalar, mat gofun beyazı, yumuşak geçişler ve altın varak bulutlar.",
-  "tanim": "Hayalî bir ressamın taneli mineral boya eli. Aletleri: ahşap panele gerilmiş kalın washi, hayvan tutkalı (nikawa), tane boyuna göre ayrılmış ezme mineral boyalar (iwa-enogu), yassı yumuşak fırçalar ve altın varak, toz ve pullar. Paleti: soluk azurit gök, fildişi ufuk, rokushō malakit, byakuroku açık yeşil, aşı boyası toprak, istiridye kabuğu beyazı (gofun) ve altın. Renk ince katlarla ve kenarları yumuşatılarak (bokashi) kurulur; koyu tonlara iri taneli boya sürüldüğü için tane orada irileşir, kristaller ışıkta tek tek parlar. Çizgi sönük ve yumuşaktır: soluk mürekkep biçimi kesmeden sezdirir. Kamelyalar kalın, mat, hafif kabarık gofunla boyanır, ercik halkaları beyaz iplikli altın başlardır. Bitirirken gökte el ile kesilmiş altın varak bulutlar serilir, kenarlarına altın tozu (sunago) elenir, kesik varak pulları (kirihaku) ve ince varak şeritleri (noge) serpilir.",
-  "koken": "20. yüzyıl Japon nihonga resmine (mineral pigment, gofun, nikawa tutkalı, yumuşak geçişli bokashi boyama) ve Japon altın süsleme tekniklerine (kinpaku varak, sunago altın tozu, kirihaku pullar, noge şeritler) dayanır. Hiçbir gerçek ressam taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ozet": "Taneli, ışıkta parıldayan mineral boyalar, mat gofun beyazı, geniş fırça katlarıyla yumuşak geçişler ve kademeli altın varak bulut şeritleri.",
+  "tanim": "Hayalî bir ressamın taneli mineral boya eli. Aletleri: ahşap panele gerilmiş kalın washi, hayvan tutkalı (nikawa), tane boyuna göre ayrılmış ezme mineral boyalar (iwa-enogu), geniş yassı hake fırçası, yumuşak fırçalar, altın varak ve altın tozu. Paleti: soluk azurit gök, fildişi ufuk, rokushō malakit, byakuroku açık yeşil, aşı boyası toprak, istiridye kabuğu beyazı (gofun) ve altın. Gök hake fırçasıyla yatay, ince katlar hâlinde sürülür ve ufka doğru fildişine açılır (bokashi). Kubbede geniş yumuşak fırça kaburgalar boyunca iner, ton kat kat koyulaşır, kenarlarda kumadori ile derinleşir; koyu tonlara iri taneli boya sürüldüğü için tane orada irileşir, kristaller ışıkta tek tek parlar. Çizgi sönük ve yumuşaktır. Kamelyalar kalın, mat, hafif kabarık gofunla boyanır, ercik halkaları beyaz iplikli altın başlardır. Bitirirken gökte kademeli altın varak bulut şeritleri (suyari-gasumi) serilir: boyları farklı, uçları yuvarlak, iç köşeleri yumuşak kıvrımla birleşen şeritler; kenarları ince koyu altınla belirginleşir, çevrelerine seyrek altın tozu (sunago) elenir.",
+  "koken": "20. yüzyıl Japon nihonga resmine (mineral pigment, gofun, nikawa tutkalı, yumuşak geçişli bokashi ve kumadori boyama) ve Japon paravanlarındaki altın varak bulut şeritlerine (suyari-gasumi, kinpaku varak, sunago altın tozu) dayanır. Hiçbir gerçek ressam taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
   "ayirt_edici": [
     "Gökte, kubbede ve yapraklarda görünür mineral tanesi; koyu yeşillerde iri tane ve yer yer ışıkta parlayan kristaller",
-    "Soluk azurit gökte el ile kesilmiş, ince dikişli, dilimli altın varak bulutlar",
-    "Bulutların çevresine elenmiş altın tozu, kesik varak pulları ve ince varak şeritleri",
-    "Kalın, mat gofun beyazıyla boyanmış kamelyalar; beyaz iplikli altın ercik halkaları ve hafif kabarıklık gölgesi",
-    "Sönük, yumuşak mürekkep çizgileri ve kenarı yumuşatılmış renk geçişleri",
+    "Soluk azurit gökte kademeli, uçları yuvarlak, boyları ve basamakları farklı altın varak bulut şeritleri; varak kareleri hafifçe seçilir, kenarda ince koyu altın kontur ve hafif kabarıklık",
+    "Bulut şeritlerinin çevresine seyrek elenmiş altın tozu (sunago)",
+    "Kaburgalar boyunca inen geniş fırça katlarıyla derecelenmiş, kenarlarında koyulaşan taneli rokushō kubbe; kasnak ve taşta da görünür fırça katları",
+    "Kalın, mat gofun beyazıyla boyanmış kamelyalar; beyaz iplikli altın ercik halkaları ve sönük, yumuşak mürekkep çizgileri",
     "Gofun beyazı disk güneş ve çevresinde altın tozu halesi"
   ],
   "palet": [
@@ -22,11 +22,11 @@
     "#8FBEA4",
     "#5B997F",
     "#396B57",
-    "#D4AF55",
+    "#DCBA65",
     "#FBFAF4",
     "#E2CCA2"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Gök ve yer çok duraklı degradelerle, bitki diplerindeki malakit bokashi bulanık elipslerle boyanır. Altın bulutlar elips öbeklerinden kurulur: bulanık geniş maske altın tozu yoğunluğunu verir (yoğunluğa göre kabul edilen 110 bin küçük döndürülmüş dörtgen), keskin çekirdek maskesi ise varakDokusu ile üretilen kare varak dokusunu (yaprak başına ton, bindirme dikişleri, perdah gürültüsü) 'destination-in' ile keser; maske kenarında pullar ve ince şeritler serpilir. Mimari ve bitkiler degradelerle, kubbe piksel başına ışık ve hafif dilim gölgesiyle boyanır; çizgiler geniş-soluk ve ince-orta iki şerit olarak 'yumuşak mürekkep' etkisiyle çizilir. Kamelyalar iki halka yuvarlak uçlu taç yaprağından, gofun dolgusu ve sola-aşağı kaymış ince gölgeyle çizilir. 1024'e indirildikten sonra 320 bin rastgele boyutlu tane diski bir tane haritasına (parlaklık ve ayrıca renk sapması) basılır; tane genliği koyu ve doygun piksellerde artar, seyrek pikseller kristal parıltısı olarak açılır, altın pullarına yumuşak ışık noktaları konur.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Gök, yer, kubbe, kasnak ve taş 'katmanlayıcı' ile piksel başına boyanır: düzgün bir hedef koyuluk N fırça katına bölünür, her katın sınırı fırça yönü boyunca gürültüyle oynar ve yumuşatılır, katın içine fırça kılı izi, sınırına ince ıslak kenar eklenir (gökte yatay hake katları; kubbede meridyen boyunca inen katlar, dilim gölgesi ve kenarlarda kumadori). Altın bulut şeritleri yuvarlak uçlu dikdörtgen (roundRect) basamaklarla ek dairelerden kurulur; birleşim 3,2 birim bulanıklaştırılıp eşiklenince iç köşeler yumuşak kıvrımla birleşir. varakDokusu ile üretilen hizalı kare varak (yaprak başına ton, ince dikiş, perdah gürültüsü) tek bir piksel geçişinde maskeyle kesilir; maskenin yukarı/aşağı komşusuna göre üst kenar açılır, alt kenar koyulaşır, maske değerinin eşik çevresinde Gauss biçimli koyu altın kontur çizilir; altına hafif kaymış bulanık gölge konur. Altın tozu geniş bulanık maskeye göre kabul edilen küçük dörtgenlerdir. Çizgiler geniş-soluk ve ince-orta iki şerit olarak 'yumuşak mürekkep' etkisiyle çizilir. 1024'e indirildikten sonra 320 bin rastgele boyutlu tane diski bir tane haritasına basılır; tane genliği koyu ve doygun piksellerde artar, açık gökte çok incedir, altın tonlarında renk sapması uygulanmaz; seyrek pikseller kristal parıltısı olarak açılır.",
   "etiketler": [
     "nihonga",
     "mineral boya",

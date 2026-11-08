@@ -1774,7 +1774,7 @@ const H = (function () {
       yon: (x, y, b) => {
         if (b === 'kubbe') return H.meridyenYonu(x, y);
         if (b === 'minare') return Math.PI / 2;
-        if (b === 'gok' || b === 'gunes' || b === 'kaide' || b === 'kasnak') return 0.015 * Math.sin(x / 60 + y / 13);
+        if (b === 'gok' || b === 'gunes' || b === 'kaide' || b === 'kasnak') return 0.015 * Math.sin(x / 60 + y / 13) + 0.04 * Math.sin(x / 170 + y / 90);
         if (y > 790) return -Math.PI / 2 + 0.25 * Math.sin(x / 9 + y / 5);
         return 0;
       },
@@ -1786,7 +1786,7 @@ const H = (function () {
       kalin: (lum) => 0.35 + 0.5 * (lum / 255),
       oluk: 0,
       katmanlar: [
-        { aralik: 3.6, en: [2.2, 3.6], boy: [14, 34], alfa: [0.55, 0.72], esik: 16, detay: [0, 0.22], kil: 0, oynak: 9 },
+        { aralik: 3.2, en: [2.2, 3.8], boy: [12, 48], alfa: [0.36, 0.58], esik: 16, detay: [0, 0.22], kil: 0, oynak: 8 },
         { aralik: 2.7, en: [1.2, 2.2], boy: [4, 13], adim: 1.2, alfa: [0.72, 0.88], esik: 13, detay: [0.06, 1], kil: 0, oynak: 10 },
         { aralik: 1.9, en: [0.7, 1.2], boy: [2, 7], adim: 0.8, alfa: [0.88, 1], esik: 10, detay: [0.3, 1], kil: 0, oynak: 6 },
       ],

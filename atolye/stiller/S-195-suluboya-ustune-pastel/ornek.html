@@ -901,7 +901,7 @@
       const cm = sstep(0.04, 0.3, BUL[i]);
       const m = YAKIN[(y >> 1) * 1024 + (x >> 1)], esik = 0.05 + 0.55 * nC(X / 22, Y / 22);
       const pay = 1 - sstep(esik, esik + 0.1, m);
-      sir(i, mixc(MAVI, MAVI2, sstep(0.4, 0.8, v2) * (1 - t)), dn * (1 - cm) * pay * gran);
+      sir(i, mixc(MAVI, MAVI2, sstep(0.45, 0.85, v2) * (1 - t) * 0.6), dn * (1 - cm) * pay * gran);
       // güneşe ve ufka doğru ıslakta karışan altın sarısı
       sir(i, mixc(ALTIN, SEFT, sstep(0.4, 0.75, v2) * 0.5), (0.1 + 0.55 * isi) * (1 - cm * 0.6) * pay * (0.85 + 0.3 * v1));
       // bulut gölgesi: yumuşak lila
@@ -917,10 +917,11 @@
     else if (TAS.has(tip)) {
       sir(i, TAS1, 0.6);
       sir(i, OKR, 0.18 * (0.7 + 0.6 * v1));
-      sir(i, LILA, 0.8 * sstep(0.6, 0.5, lt + (v1 - 0.5) * 0.06) * gran);
+      const esk = tip === T_KAIDE || tip === T_KORNIS ? 0.55 : 0.68;
+      sir(i, LILA, 0.8 * sstep(esk + 0.05, esk - 0.05, lt + (v1 - 0.5) * 0.06) * gran);
     } else if (tip === T_YAPRAK || tip === T_SAP) {
-      sir(i, YP1, 0.9);
-      sir(i, YP2, (tip === T_SAP ? 0.6 : 0.8 * sstep(0.55, 0.45, lt)) * gran + 0.15);
+      sir(i, mixc(YP1, [0.62, 0.80, 0.62], sstep(0.4, 0.8, v2) * 0.6), 0.85);
+      sir(i, YP2, (tip === T_SAP ? 0.6 : 0.75 * sstep(0.55, 0.45, lt)) * gran + 0.12);
     } else if (tip === T_TOMURCUK) { sir(i, PEMBE, 0.85); sir(i, [0.8, 0.45, 0.58], 0.45 * sstep(0.55, 0.3, lt)); }
     else if (tip === T_TAC) {
       const e = H.EL[IDW[i]], rho = S.FV[i] / K / e.c.r;
@@ -967,7 +968,7 @@
       if (tipAt(x, y) !== T_GOK) return;
       const i = idx(x, y);
       if (BUL[i] > 0.1) return;
-      const dg = Math.hypot(x - gx, y - gy), gunes = sstep(250, 50, dg), ufuk = sstep(520, 790, y);
+      const dg = Math.hypot(x - gx, y - gy), gunes = Math.pow(sstep(230, 45, dg), 1.25), ufuk = sstep(520, 790, y);
       const h = rnd();
       let col = null, p = 0;
       if (h < gunes * 0.85) { const q = rnd(); col = q < 0.35 + 0.3 * gunes ? sar : q < 0.65 ? sar2 : beyaz; p = 0.35 + 0.5 * gunes; }
@@ -1010,7 +1011,7 @@
   // kum: şeftali ve krem yatay vuruşlar
   ogeKat(4, 14, 11, 34, 7, 0, (t, lt) => [rnd() < 0.5 ? seft : krem, 0.5]);
   // yapraklar: ışık yarısında açık yeşil
-  ogeKat(5, 5, 5, 12, 3.8, 0, (t, lt) => (lt > 0.5 ? [yesA, 0.55 + 0.35 * sstep(0.5, 0.85, lt)] : null));
+  ogeKat(5, 5, 5, 12, 3.8, 0, (t, lt) => (lt > 0.5 ? [yesA, 0.6 + 0.35 * sstep(0.5, 0.85, lt)] : (rnd() < 0.35 ? [cam, 0.45] : null)));
   // taç yaprakları: beyaz ve krem, ortaya doğru pembe
   ogeKat(6, 4.6, 4.6, 11, 3.8, 0, (t, lt, x, y, i) => {
     const e = H.EL[IDW[i]], rho = S.FV[i] / K / e.c.r;
@@ -1024,7 +1025,7 @@
     const dis = 0.55 * DP[i] + 0.45 * D[i];
     if (tip === T_GOK) {
       const X = (i % WW) / K, Y = ((i / WW) | 0) / K, dd = Math.hypot(X - gx, Y - gy);
-      const k = 0.95 * Math.exp(-(dd * dd) / (2 * 95 * 95)) * (0.55 + 0.45 * sstep(0.2, 0.65, dis)), t = sstep(10, 130, dd);
+      const k = 0.97 * Math.exp(-Math.pow(dd / 105, 2.6) * 0.5) * (0.6 + 0.4 * sstep(0.2, 0.65, dis)), t = sstep(20, 150, dd);
       const cr1 = 1, cg1 = 0.99 - 0.08 * t, cb1 = 0.95 - 0.36 * t;
       OR[i] += (cr1 - OR[i]) * k; OG[i] += (cg1 - OG[i]) * k; OB[i] += (cb1 - OB[i]) * k;
     }
