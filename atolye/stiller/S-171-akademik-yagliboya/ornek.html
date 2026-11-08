@@ -1257,7 +1257,15 @@ const H = (function () {
     return p;
   }
 
-  return { S, N, sat, yum, hex, kar, css, C, rampa, norm, nokta, gurultu, tuval2, KP, kubbeNormal, gokBoya, bulutBoya, bulutYogun, bantBulut, fircala, titret, meridyenYonu, minareYolu, golgele, malzeme, silindirDeg, dikdortgen, kubbeBoya, minareBoya, pencereBoya, kaideBoya, kasnakBoya, alemBoya, yaprakBoya, cicekBoya, tacYolu, tomurcukBoya, sapBoya, ekYapraklar, kabartmaUygula, tuvalBezi, ornekleyici, isikKur, get L() { return L; }, ISIK2 };
+  /** Ana tuval: 2048 iç çözünürlük, sık okumaya uygun bağlam, 1024 koordinatı. */
+  function anaTuval(tv) {
+    tv.width = N; tv.height = N;
+    const g = tv.getContext('2d', { willReadFrequently: true });
+    g.setTransform(2, 0, 0, 2, 0, 0);
+    return g;
+  }
+
+  return { S, N, anaTuval, sat, yum, hex, kar, css, C, rampa, norm, nokta, gurultu, tuval2, KP, kubbeNormal, gokBoya, bulutBoya, bulutYogun, bantBulut, fircala, titret, meridyenYonu, minareYolu, golgele, malzeme, silindirDeg, dikdortgen, kubbeBoya, minareBoya, pencereBoya, kaideBoya, kasnakBoya, alemBoya, yaprakBoya, cicekBoya, tacYolu, tomurcukBoya, sapBoya, ekYapraklar, kabartmaUygula, tuvalBezi, ornekleyici, isikKur, get L() { return L; }, ISIK2 };
 })();
 
 </script>
@@ -1270,7 +1278,7 @@ const H = (function () {
   'use strict';
   const { S, css, kar, C, malzeme, golgele } = H;
   const tuval = document.getElementById('tuval');
-  const ctx = S.tuval(tuval, 2);
+  const ctx = H.anaTuval(tuval);
   const R = S.rng(1710);
 
   // ------------------------------------------------------------ palet (ressamın paleti)

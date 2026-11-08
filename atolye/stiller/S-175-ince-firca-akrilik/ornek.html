@@ -1257,7 +1257,15 @@ const H = (function () {
     return p;
   }
 
-  return { S, N, sat, yum, hex, kar, css, C, rampa, norm, nokta, gurultu, tuval2, KP, kubbeNormal, gokBoya, bulutBoya, bulutYogun, bantBulut, fircala, titret, meridyenYonu, minareYolu, golgele, malzeme, silindirDeg, dikdortgen, kubbeBoya, minareBoya, pencereBoya, kaideBoya, kasnakBoya, alemBoya, yaprakBoya, cicekBoya, tacYolu, tomurcukBoya, sapBoya, ekYapraklar, kabartmaUygula, tuvalBezi, ornekleyici, isikKur, get L() { return L; }, ISIK2 };
+  /** Ana tuval: 2048 iç çözünürlük, sık okumaya uygun bağlam, 1024 koordinatı. */
+  function anaTuval(tv) {
+    tv.width = N; tv.height = N;
+    const g = tv.getContext('2d', { willReadFrequently: true });
+    g.setTransform(2, 0, 0, 2, 0, 0);
+    return g;
+  }
+
+  return { S, N, anaTuval, sat, yum, hex, kar, css, C, rampa, norm, nokta, gurultu, tuval2, KP, kubbeNormal, gokBoya, bulutBoya, bulutYogun, bantBulut, fircala, titret, meridyenYonu, minareYolu, golgele, malzeme, silindirDeg, dikdortgen, kubbeBoya, minareBoya, pencereBoya, kaideBoya, kasnakBoya, alemBoya, yaprakBoya, cicekBoya, tacYolu, tomurcukBoya, sapBoya, ekYapraklar, kabartmaUygula, tuvalBezi, ornekleyici, isikKur, get L() { return L; }, ISIK2 };
 })();
 
 </script>
@@ -1270,7 +1278,7 @@ const H = (function () {
   'use strict';
   const { S, css, kar, C, malzeme, golgele } = H;
   const tuval = document.getElementById('tuval');
-  const ctx = S.tuval(tuval, 2);
+  const ctx = H.anaTuval(tuval);
   const R = S.rng(1750);
   H.isikKur([0.58, 0.55, 0.6]);
 
@@ -1286,14 +1294,14 @@ const H = (function () {
   const tara = (kutu, yol, aci, o) => H.fircala(ctx, Object.assign({ kutu, yol, yogunluk: 70, boy: [6, 11], en: [1.2, 1.7], alfa: [0.65, 0.95], kil: 1, oynak: 15, kilOynak: 0, yon: () => aci + (R() - 0.5) * 0.06, tohum: Math.round(kutu[0] * 13 + kutu[1] * 7) }, o || {}));
 
   // ------------------------------------------------------------ gök: doygun mavi, keskin bulutlar
-  H.gokBoya(ctx, { ust: '#1C6CD4', orta: '#58A6EE', ufuk: '#D3ECF9', hale: '#F4FBFF', gunes: '#FFFFFF' },
+  H.gokBoya(ctx, { ust: '#2878DA', orta: '#5EAAEE', ufuk: '#D3ECF9', hale: '#F4FBFF', gunes: '#FFFFFF' },
     { haleR: 210, haleGuc: 0.8, gunesR: 30, gunesYum: 6, gurultu: 0, ortaT: 0.52, us: 0.9 });
   tara([0, 0, 1024, 802], null, -0.62, { yogunluk: 75, boy: [5, 10], en: [1.3, 1.8], oynak: 10 });
   const BUL = H.bulutYogun(ctx, [
-    { x: 170, y: 240, w: 320, h: 104, adet: 90, tohum: 71 },
-    { x: 525, y: 150, w: 210, h: 58, adet: 50, tohum: 75 },
-    { x: 776, y: 334, w: 290, h: 92, adet: 80, tohum: 73 },
-  ], { isik: '#FFFFFF', orta: '#EDF2F9', golge: '#9DB1D4' }, { esik: 0.5, kenar: 0.08, gOlcek: 22, gGuc: 0.12, sigma: 0.022, kure: 0.5, opaklik: 1, bulanik: 0.5, tohum: 74, burgu: 9, burguOlcek: 50, tabanYum: 12 });
+    { x: 165, y: 240, w: 340, h: 112, adet: 100, tohum: 71 },
+    { x: 525, y: 150, w: 220, h: 60, adet: 56, tohum: 76 },
+    { x: 780, y: 334, w: 300, h: 98, adet: 90, tohum: 73 },
+  ], { isik: '#FFFFFF', orta: '#ECF1F8', golge: '#9FB2D3' }, { esik: 0.5, kenar: 0.1, gOlcek: 24, gGuc: 0.2, sigma: 0.022, kure: 0.4, opaklik: 1, bulanik: 0.6, tohum: 74, burgu: 16, burguOlcek: 55, tabanYum: 14 });
   H.fircala(ctx, { kutu: [0, 80, 1024, 520], yogunluk: 75, boy: [5, 10], en: [1.2, 1.6], alfa: [0.55, 0.85], kil: 1, oynak: 7, kilOynak: 0, egri: false,
     icinde: (x, y) => BUL.kapsam(x, y) > 0.8, ucIcinde: true, yon: () => -0.62 + (R() - 0.5) * 0.06, tohum: 1751 });
 

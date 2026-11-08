@@ -710,6 +710,49 @@
         for (const sg of [-1, 1]) ince([{ pts: [[cx, cy], [cx + ux * w * 0.6 - uy * w * sg, cy + uy * w * 0.6 + ux * w * sg]], closed: false }], 0.32, 'rgba(210,230,180,0.6)', 0.05);
       }
     }
+    // laleler ve karanfiller için ince saplar (dala ya da yere bağlanır)
+    const sapCiz = (pts) => {
+      ctx.strokeStyle = '#5E8C4A';
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = 'round';
+      ctx.stroke(H.polyPath(pts));
+      ince([{ pts, closed: false }], 0.45, 'rgba(30,60,30,0.85)', 0.1);
+    };
+    const egri = (a, b, bk) => {
+      const pts = [];
+      for (let t = 0; t <= 1.0001; t += 0.1) {
+        const mx = (a[0] + b[0]) / 2 + bk;
+        const my = (a[1] + b[1]) / 2;
+        const u = 1 - t;
+        pts.push([u * u * a[0] + 2 * u * t * mx + t * t * b[0], u * u * a[1] + 2 * u * t * my + t * t * b[1]]);
+      }
+      return pts;
+    };
+    S.bitki.tomurcuklar.forEach((t, i) => {
+      const s = t.r / 9;
+      const ca = Math.cos(t.aci + Math.PI / 2);
+      const sa = Math.sin(t.aci + Math.PI / 2);
+      const taban = [t.x - 6 * s * sa, t.y + 6 * s * ca];
+      if (i < 8) {
+        if (i % 2 === 1) {
+          const dal = S.bitki.saplar[(i / 2) | 0];
+          sapCiz(egri(dal[19], taban, 0));
+        }
+      } else {
+        const alt = [taban[0] + (i % 2 ? 3 : -3), taban[1] + 34];
+        sapCiz(egri(alt, taban, i % 2 ? -4 : 4));
+        for (const sg of [-1, 1]) {
+          const d = yaprakYolu(alt[0], alt[1] - 6, -Math.PI / 2 + sg * 0.75, 18, 3.4, sg * 0.3);
+          doldur(d, '#5E9A64');
+          ince(d, 0.4, 'rgba(26,48,26,0.85)', 0.08);
+        }
+      }
+    });
+    S.bitki.cicekler.slice(0, 4).forEach((c, ci) => {
+      const dal = S.bitki.saplar[ci];
+      const k = c.r / 14;
+      sapCiz(egri(dal[14], [c.x, c.y + 12 * k], 0));
+    });
     // tomurcukların yerinde küçük kırmızı laleler
     for (const t of S.bitki.tomurcuklar) {
       const s = t.r / 9;
