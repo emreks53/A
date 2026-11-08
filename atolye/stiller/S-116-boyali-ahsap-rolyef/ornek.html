@@ -124,9 +124,9 @@
 
   // ------------------------------------------------------------ renkler (halk boyası)
   const C = {
-    gok: '#7FCBF0', gokAlt: '#CDEFF8', bulut: '#FFFFFF', bulutGolge: '#D9EEF6',
+    gok: '#86D0F4', gokAlt: '#D2F1FA', bulut: '#FFFFFF', bulutGolge: '#D9EEF6',
     gunes: '#FFD43B', gunesHalka: '#FF9F2E', isin: '#FFC233', isin2: '#FF8A3D',
-    zemin: '#F0C979',
+    zemin: '#F5D188',
     kubbe: '#25A04C', kubbe2: '#36B85E', kasnak: '#2A9A4A', kasnakAcik: '#45B865',
     pencere: '#2A5DB0', pencereKoyu: '#1F4890',
     tas: '#FBF6EA', tas2: '#F3E9D3',
@@ -690,7 +690,7 @@
       const NL = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]);
       const NH = Math.max(0, nx * Hv[0] + ny * Hv[1] + nz * Hv[2]);
       const sh = golgeY[i];
-      const ao = clamp(1 - (Hb[i] - H[i]) * 0.016, 0.74, 1.05);
+      const ao = clamp(1 - (Hb[i] - H[i]) * 0.011, 0.84, 1.05);
       let isik = (0.5 + 0.5 * NL / L[2]) * (1 - 0.3 * sh) * ao;
       let r = d[j], g = d[j + 1], b = d[j + 2];
       // altın mı? (boya rengine yakınlık)

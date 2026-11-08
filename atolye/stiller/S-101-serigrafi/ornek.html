@@ -267,7 +267,18 @@ function tasarim(g, hedef) {
     const xs = p.noktalar.map((q) => q[0]), ys = p.noktalar.map((q) => q[1]);
     const x1 = Math.min(...xs), x2 = Math.max(...xs), y1 = Math.min(...ys), y2 = Math.max(...ys);
     const d = SAHNE.yol(p.noktalar, true);
-    if (p.ad.startsWith('çıkma')) { doldur('gri', d); kirp(d, () => dikd(null, 300, y1, 60, y2 - y1)); continue; }
+    if (p.ad.startsWith('çıkma')) {
+      // çıkmanın gölge sınırı gövdenin gölge sınırını sürdürür (her iki uçta genişliğin %30'u)
+      doldur('gri', d);
+      const [[ax, ay], [bx, by], [cx2], [dx2]] = p.noktalar;
+      const alt = ax + (dx2 - ax) * 0.3, ust = bx + (cx2 - bx) * 0.3;
+      kirp(d, () => {
+        boya(null);
+        g.beginPath(); g.moveTo(alt, ay + 2); g.lineTo(ust, by - 2); g.lineTo(cx2 + 10, by - 2); g.lineTo(cx2 + 10, ay + 2);
+        g.closePath(); g.fill();
+      });
+      continue;
+    }
     doldur(null, d);
     if (p.ad.startsWith('gövde')) kirp(d, () => dikd('gri', x1, y1, (x2 - x1) * 0.3, y2 - y1));
     if (p.ad.startsWith('şerefe')) dikd('gri', x1, y2 - 3, x2 - x1, 3);
@@ -369,7 +380,7 @@ function ustBaskiMaskesi(dx, dy) {
     g.fillStyle = '#fff';
     for (let k = 1; k >= 0; k--) {
       const q = SAHNE.kasnak[k];
-      g.fillRect(q.x1, q.y1 + 5, payandaX(k, -0.66) - q.x1, q.y2 - q.y1 - 9);
+      g.fillRect(q.x1, q.y1 + 5, payandaX(k, -0.36) - q.x1, q.y2 - q.y1 - 9);
     }
   }, 3);
   const m = new Float32Array(N);

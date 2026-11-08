@@ -219,14 +219,16 @@
   gctx.fillStyle = '#FFFFFF'; gctx.fillRect(0, 0, 1024, 1024);
   ctx = gctx;
   LIFP = gctx.createPattern(LIF, 'repeat');
-  const MAVILER = ['#7CC4F2', '#5DB0EE', '#9AD8F2', '#86B4F4', '#6FD0E2', '#A6CCF6', '#B9B4F2'];
-  const GECIS = ['#F9C2DA', '#FBB8CF', '#F6C6E6'];
-  const SICAK = ['#FFE58A', '#FFEC9A', '#FFF0A6', '#FFD27A'];
+  const MAVILER = ['#7CC4F2', '#5DB0EE', '#9AD8F2', '#86B4F4', '#6FD0E2', '#A6CCF6', '#A8C2F6'];
+  const GECIS = ['#FFF3B4', '#FFF6C4', '#FFEFAE', '#FFE9B8'];
+  const SICAK = ['#FFE58A', '#FFEC9A', '#FFF0A6', '#FFD27A', '#FFDDAA'];
+  const ACIKMAVI = ['#BDE9F4', '#B2E2F6', '#C6EEF2', '#B8E4F8'];
   const gunes = S.gunes;
   const gokRengi = (x, y, r) => {
     const d = Math.hypot(x - gunes.x, y - gunes.y) + (r() - 0.5) * 50;
-    if (d < 175) return SICAK[Math.floor(r() * SICAK.length)];
+    if (d < 185) return SICAK[Math.floor(r() * SICAK.length)];
     if (d < 300) return GECIS[Math.floor(r() * GECIS.length)];
+    if (d < 410) return ACIKMAVI[Math.floor(r() * ACIKMAVI.length)];
     return MAVILER[Math.floor(r() * MAVILER.length)];
   };
   {
@@ -260,8 +262,8 @@
         }
       }
       const renk = gokRengi(q.cx, q.cy, r);
-      const pembe = GECIS.includes(renk);
-      PP(pts, { renk, alfa: (pembe ? 0.28 : 0.34) + r() * 0.14, kenar: kesik ? 'kesik' : 'yirtik', puruz: kesik ? 0.6 : 3, kirisik: 0 }, 2.5);
+      const pembe = GECIS.includes(renk) || ACIKMAVI.includes(renk);
+      PP(pts, { renk, alfa: (pembe ? 0.36 : 0.34) + r() * 0.14, kenar: kesik ? 'kesik' : 'yirtik', puruz: kesik ? 0.6 : 3, kirisik: 0 }, 2.5);
     }
   }
   // güneş: soluk sarı hale, turuncu ve sarı yırtık daireler, sivri ışın parçaları
@@ -393,46 +395,69 @@
 
   // ------------------------------------------------------------ kasnak
   const KS = S.kasnak;
-  PP(dikd(KS[1].x1, KS[1].y1, KS[1].x2, KS[1].y2), { renk: '#D6EC5A', alfa: 0.7, kenar: 'kesik' });
-  PP(dikd(KS[1].x1, KS[1].y1 + 2, KS[1].x2, KS[1].y2 - 2), { renk: '#3FC0A8', alfa: 0.55, kenar: 'kesik' });
-  PP([[KS[1].x1 + 1, KS[1].y1 + 2], [KS[1].x1 + 120, KS[1].y1 + 2], [KS[1].x1 + 100, KS[1].y2 - 1], [KS[1].x1 + 1, KS[1].y2 - 1]], { renk: '#6AA0E8', alfa: 0.4, puruz: 2.4 });
-  for (const p of S.kasnakPencereleri(1)) PD(S.kemerYolu(p.x, p.y, p.w + 1.5, p.h), { renk: '#3E7BD8', alfa: 0.62, kenar: 'kesik', puruz: 0.3 }, 1);
-  PP(dikd(KS[0].x1, KS[0].y1, KS[0].x2, KS[0].y2 + 3), { renk: '#E2F070', alfa: 0.7, kenar: 'kesik' });
-  PP(dikd(KS[0].x1, KS[0].y1 + 2, KS[0].x2, KS[0].y2), { renk: '#58C8A8', alfa: 0.45, kenar: 'kesik' });
-  PP([[KS[0].x1 + 1, KS[0].y1 + 2], [KS[0].x1 + 100, KS[0].y1 + 2], [KS[0].x1 + 88, KS[0].y2], [KS[0].x1 + 1, KS[0].y2]], { renk: '#6AA0E8', alfa: 0.36, puruz: 2.2 });
-  for (const p of S.kasnakPencereleri(0)) PD(S.kemerYolu(p.x, p.y, p.w + 1.5, p.h), { renk: '#3E7BD8', alfa: 0.58, kenar: 'kesik', puruz: 0.3 }, 1);
+  // her kat: sarı-yeşil taban pelürü, üstünde birbirine binen üç yırtık yeşil-turkuaz pelür (binen yerler koyulaşır)
+  function kasnakKat(q, kat) {
+    const rk = S.rng(700 + kat);
+    const y1 = q.y1, y2 = q.y2 + (kat === 0 ? 3 : 0);
+    PP(dikd(q.x1, y1, q.x2, y2), { renk: kat ? '#D6EC5A' : '#E2F070', alfa: 0.72, puruz: 1.1 }, 2);
+    const W = q.x2 - q.x1;
+    const kes = [0, 0.36 + rk() * 0.06, 0.66 + rk() * 0.06, 1];
+    const renkler = kat ? ['#3FC0A8', '#36B48C', '#4CC0A0'] : ['#58C8A8', '#5CC69A', '#4EC2AE'];
+    for (let i = 0; i < 3; i++) {
+      const a = q.x1 + W * kes[i] - (i ? 14 + rk() * 10 : 0), b = q.x1 + W * kes[i + 1] + (i < 2 ? 12 + rk() * 10 : 0);
+      const ea = i ? (rk() - 0.5) * 26 : 0, eb = i < 2 ? (rk() - 0.5) * 26 : 0;
+      PP([[a, y1 + 1.5 + rk() * 2], [b, y1 + 1 + rk() * 2], [b + eb, y2 - 1 - rk() * 2], [a + ea, y2 - 1 - rk() * 2]],
+        { renk: renkler[i], alfa: (kat ? 0.5 : 0.42) + rk() * 0.08, puruz: 1.6, kirisik: 0 }, 2);
+    }
+    // sol gölge: mavi pelür; sağda ışık: soluk sarı pelür
+    PP([[q.x1 + 1, y1 + 2], [q.x1 + (kat ? 120 : 100), y1 + 2], [q.x1 + (kat ? 100 : 88), y2 - 1], [q.x1 + 1, y2 - 1]], { renk: '#6AA0E8', alfa: kat ? 0.4 : 0.36, puruz: 2.4 });
+    PP([[q.x2 - (kat ? 150 : 130), y1 + 3], [q.x2 - 2, y1 + 2], [q.x2 - 2, y1 + (y2 - y1) * 0.55], [q.x2 - (kat ? 130 : 112), y1 + (y2 - y1) * 0.62]], { renk: '#FFF4A0', alfa: 0.35, puruz: 2.2 });
+    // üst ve alt kenarda dar, yırtık koyu yeşil pelür şeritleri (silme)
+    PP([[q.x1 - 1, y1], [q.x2 + 1, y1], [q.x2 + 1, y1 + 6], [q.x1 - 1, y1 + 7]], { renk: '#2FA070', alfa: 0.45, puruz: 1.1, kirisik: 0 }, 2);
+    PP([[q.x1 - 1, y2 - 6], [q.x2 + 1, y2 - 7], [q.x2 + 1, y2], [q.x1 - 1, y2]], { renk: '#3AA86A', alfa: 0.38, puruz: 1.1, kirisik: 0 }, 2);
+    for (const p of S.kasnakPencereleri(kat)) {
+      PD(S.kemerYolu(p.x, p.y, p.w + 1.5, p.h), { renk: '#3E7BD8', alfa: kat ? 0.62 : 0.58, kenar: 'kesik', puruz: 0.35 }, 1);
+    }
+  }
+  kasnakKat(KS[1], 1);
+  kasnakKat(KS[0], 0);
 
   // ------------------------------------------------------------ kubbe: sarı-yeşil taban + turkuaz dilimler → yeşil karışımlar
   {
-    PD(S.kubbeYolu, { renk: '#D8EE5C', alfa: 0.75, kenar: 'kesik' }, 2);
+    PD(S.kubbeYolu, { renk: '#D8EE5C', alfa: 0.75, kenar: 'yirtik', puruz: 1.2 }, 2);
     const prof = S.kubbeProfili(60);
     const boy = [];
     for (let k = 0; k <= 16; k++) boy.push(Math.sin(-Math.PI / 2 + (Math.PI * k) / 16));
+    const DREN = ['#36B8A0', '#4DBE86', '#2FAE8E', '#5CC6A4', '#3CB27E', '#46BCA8'];
+    const rk = S.rng(316);
     for (let k = 0; k < 16; k++) {
-      const u1 = Math.max(-1, boy[k] - 0.014), u2 = Math.min(1, boy[k + 1] + 0.014);
-      const sol = prof.slice(0, -1).map((q) => [560 + u1 * q.r, q.y]);
-      const sag = prof.slice(0, -1).map((q) => [560 + u2 * q.r, q.y]).reverse();
-      const renk = k % 2 === 0 ? '#36B8A0' : '#5CC6B4';
-      PP(sol.concat(sag), { renk, alfa: k % 2 === 0 ? 0.6 : 0.4, kenar: k % 3 === 1 ? 'yirtik' : 'kesik', puruz: k % 3 === 1 ? 1.1 : 0.7, kirisik: k % 4 === 2 ? 1 : 0 }, 2);
+      const gw = boy[k + 1] - boy[k];
+      const d1 = gw * (0.16 + rk() * 0.08), d2 = gw * (0.16 + rk() * 0.08);
+      const u1 = Math.max(-1.01, boy[k] - d1), u2 = Math.min(1.01, boy[k + 1] + d2);
+      const tepe = prof.length - 2 - Math.floor(rk() * 3);
+      const sol = prof.slice(0, tepe).map((q) => [560 + u1 * q.r, q.y]);
+      const sag = prof.slice(0, tepe).map((q) => [560 + u2 * q.r, q.y]).reverse();
+      const alt = [[560 + u2 * prof[0].r, prof[0].y + 2], [560 + u1 * prof[0].r, prof[0].y + 2]];
+      PP(sol.concat(sag).concat(alt), { renk: DREN[k % DREN.length], alfa: 0.42 + rk() * 0.14, kenar: 'yirtik', puruz: 1.3, kirisik: k % 5 === 2 ? 1 : 0 }, 2);
     }
     // sol gölge: mavi pelür; sağ ışık: soluk sarı pelür
     const g1 = prof.slice(0, -1).map((q) => [560 - q.r - 2, q.y]);
     const g2 = prof.slice(0, -1).map((q) => [560 - q.r * 0.5, q.y]).reverse();
-    PP(g1.concat(g2), { renk: '#6A9EE6', alfa: 0.42, puruz: 2.6, kirisik: 0 });
+    PP(g1.concat(g2), { renk: '#6A9EE6', alfa: 0.4, puruz: 2.6, kirisik: 0 });
     const h1 = prof.slice(4, -6).map((q) => [560 + q.r * 0.3, q.y - 4]);
     const h2 = prof.slice(4, -6).map((q) => [560 + q.r * 0.78, q.y - 4]).reverse();
     PP(h1.concat(h2), { renk: '#FFF4A0', alfa: 0.4, puruz: 3, kirisik: 0 });
-    // kaburgalar: dar zümrüt pelür şeritleri
+    // kaburgalar: binen yerleri vurgulayan çok dar, yırtık zümrüt pelür şeritleri
     for (const k of S.kaburgalar(16)) {
       const c = Math.cos(k.boylam);
       const sol = [], sag = [];
       prof.forEach((q, i) => {
         const t = i / (prof.length - 1);
-        const w = (0.9 + 1.8 * c) * (1 - 0.6 * t) + 0.3;
+        const w = (0.5 + 1.1 * c) * (1 - 0.55 * t) + 0.25;
         sol.push([560 + k.u * q.r - w, q.y]);
         sag.push([560 + k.u * q.r + w, q.y]);
       });
-      PP(sol.slice(0, -2).concat(sag.slice(0, -2).reverse()), { renk: '#1E9E62', alfa: 0.5, kenar: 'kesik', puruz: 0.3, kirisik: 0 }, 1.5);
+      PP(sol.slice(0, -3).concat(sag.slice(0, -3).reverse()), { renk: '#1E9E62', alfa: 0.32, kenar: 'yirtik', puruz: 0.5, kirisik: 0 }, 1.5);
     }
   }
   alem(S.alemParcalari(560, 300, 1));

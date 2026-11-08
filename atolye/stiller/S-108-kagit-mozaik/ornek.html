@@ -73,7 +73,10 @@
   const KUBBEP = palet(['#1C6A35', '#227A3D', '#2A8A45', '#35994E', '#43A85A', '#58B966', '#70C874', '#8AD584']);
   const YAPRAKP = [palet(['#3E8A3E', '#4C9A44', '#5AA84C']), palet(['#5AA84C', '#6CB654', '#7EC35C']), palet(['#2F7A3C', '#3C8A42', '#4A984A']), palet(['#79BA52', '#8CC85E', '#9ED36A'])];
   const PEMBE = palet(['#F6C2D0', '#F2AEC2', '#EE9AB4']);
-  const BEYAZP = palet(['#F1E8E6', '#F7F0EC', '#FCF6F1']);
+  const BEYAZP = palet(['#F3ECEA', '#F8F2EE', '#FDF9F5']);
+  const TACKENAR = palet(['#E9C9D6', '#E4C2D4', '#DDC4DC']);
+  const KREMKENAR = palet(['#CDBF9F', '#D4C6A8', '#DACDB1']);
+  const BULUTKENAR = palet(['#C3D9EF', '#CCDEF2', '#D3E3F4']);
 
   // gök
   const GOK = et({
@@ -113,7 +116,7 @@
     p.closePath();
     return p;
   }
-  const BULUT = et({ mod: 'kontur', h: 11, renk: (x, y, r) => sec(BULUTP, 0.7, r, 3) });
+  const BULUT = et({ mod: 'kontur', h: 11, kenar: BULUTKENAR, renk: (x, y, r) => sec(BULUTP, 0.7, r, 3) });
   for (const [cx, cy, s, t] of [[165, 252, 1.15, 0], [470, 150, 0.9, 1], [770, 330, 0.78, 0], [96, 498, 0.58, 1], [944, 470, 0.6, 0]]) boya(BULUT, bulutYolu(cx, cy, s, t));
   const ZEMIN = et({ mod: 'zemin', h: 13, renk: (x, y, r) => sec(ZEMINP, clamp((y - 800) / 224, 0, 1) * 0.4 + 0.45, r, 2.6) });
   lc.fillStyle = `rgb(${ZEMIN},0,0)`; lc.fillRect(0, 800, 1024, 224);
@@ -127,13 +130,13 @@
       const xs = p.noktalar.map((q) => q[0]);
       const x1 = Math.min(...xs), x2 = Math.max(...xs);
       const serefe = p.ad.startsWith('şerefe') || p.ad === 'bilezik';
-      const id = et({ mod: 'kontur', h: serefe ? 5 : p.ad.startsWith('çıkma') ? 6 : 8, renk: serefe ? (x, y, r) => sec(palet(['#D9C59C', '#E6D6B2', '#F0E4C8']), 0.5, r, 3) : kremX(x1, x2) });
+      const id = et({ mod: 'kontur', h: serefe ? 5 : p.ad.startsWith('çıkma') ? 6 : 8, kenar: serefe ? null : KREMKENAR, renk: serefe ? (x, y, r) => sec(palet(['#D2B887', '#DDC79C', '#E8D7B4']), 0.5, r, 3) : kremX(x1, x2) });
       boya(id, S.yol(p.noktalar, true));
     } else if (p.tip === 'korkuluk') {
       const id = et({ mod: 'kontur', h: 5, renk: kremX(p.x1, p.x2) });
       boya(id, dikd(p.x1, p.y1, p.x2, p.y2));
-      const cb = et({ mod: 'serit', h: 6, renk: (x, y, r) => sec(KAHVE, 0.5, r, 3) });
-      for (let i = 0; i < 9; i++) { const x = p.x1 + 6 + ((p.x2 - p.x1 - 12) * i) / 8; boya(cb, dikd(x - 2, p.y1 + 4, x + 2, p.y2 - 3)); }
+      const cb = et({ mod: 'tek', h: 4, ara: 0.45, renk: (x, y, r) => sec(KAHVE, 0.5, r, 3) });
+      for (let i = 0; i < 8; i++) { const x = p.x1 + 7 + ((p.x2 - p.x1 - 14) * i) / 7; boya(cb, dikd(x - 2.6, p.y1 + 3.5, x + 2.6, p.y2 - 2.5)); }
     } else if (p.tip === 'bant') {
       const id = et({ mod: 'kontur', h: 6, renk: kremX(p.x1, p.x2) });
       boya(id, dikd(p.x1, p.y1, p.x2, p.y2));
@@ -142,35 +145,37 @@
         boya(zi, S.yol(z), 5.2);
       });
     } else if (p.tip === 'topuz') {
-      const id = et({ mod: 'kontur', h: 7, renk: kremX(270, 330) });
+      const id = et({ mod: 'kontur', h: 7, kenar: KREMKENAR, renk: kremX(270, 330) });
       boya(id, p.yol);
     }
   }
-  const MPEN = et({ mod: 'kontur', h: 4, renk: (x, y, r) => sec(KAHVE, 0.5, r, 3) });
+  const MPEN = et({ mod: 'tek', h: 4, ara: 0.6, renk: (x, y, r) => sec(KAHVE, 0.5, r, 3) });
   for (const p of S.minarePencereleri) boya(MPEN, S.kemerYolu(p.x, p.y, p.w + 1, p.h + 1));
-  const ALTIN = et({ mod: 'kontur', h: 3.6, renk: (x, y, r) => sec(ALTINP, 0.6, r, 3) });
-  const alemCiz = (a) => {
-    boya(ALTIN, dikd(a.cubuk.x1 - 0.8, a.cubuk.y1, a.cubuk.x2 + 0.8, a.cubuk.y2));
-    boya(ALTIN, S.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx, ry: a.yaka.ry, aci: 0 }));
-    for (const k of a.kureler) boya(ALTIN, S.daireYolu(k.cx, k.cy, k.r));
-    boya(ALTIN, S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R * 1.12));
+  // alem: küçük ayrıntılar mozaikçinin elinde tek parça kesilir (çubuk, yaka, her küre, hilal ayrı altın kâğıt)
+  const altinEt = (t) => et({ mod: 'tek', h: 4, ara: 0.45, renk: (x, y, r) => sec(ALTINP, t, r, 1.2) });
+  const alemCiz = (a, kucuk) => {
+    const g = kucuk ? 1.3 : 0.8;
+    boya(altinEt(0.45), dikd(a.cubuk.x1 - g, a.cubuk.y1, a.cubuk.x2 + g, a.cubuk.y2));
+    boya(altinEt(0.55), S.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx + g * 0.6, ry: a.yaka.ry + g * 0.4, aci: 0 }));
+    a.kureler.forEach((k, i) => boya(altinEt(0.75 - i * 0.12), S.daireYolu(k.cx, k.cy, k.r + g * 0.5)));
+    boya(altinEt(0.85), S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R * (kucuk ? 1.3 : 1.15)));
   };
-  alemCiz(S.alemParcalari(300, 146, 0.62));
+  alemCiz(S.alemParcalari(300, 146, 0.62), true);
 
   // kaide
   const KA = S.kaide;
-  const KAIDE = et({ mod: 'kontur', h: 10, renk: (x, y, r) => sec(KREMP, clamp((x - 300) / 380, 0, 1), r, 1.4) });
+  const KAIDE = et({ mod: 'kontur', h: 10, kenar: KREMKENAR, renk: (x, y, r) => sec(KREMP, clamp((x - 300) / 380, 0, 1), r, 1.4) });
   boya(KAIDE, dikd(KA.x1, KA.y1, KA.x2, KA.y2));
-  const KORNIS = et({ mod: 'kontur', h: 6, renk: (x, y, r) => sec(KREMP, 0.85, r, 1.4) });
+  const KORNIS = et({ mod: 'kontur', h: 6, renk: (x, y, r) => sec(palet(['#D6C29A', '#DFCDA8', '#E7D8B8']), 0.5, r, 2.5) });
   boya(KORNIS, dikd(KA.kornis.x1, KA.kornis.y1, KA.kornis.x2, KA.kornis.y2));
-  const KPEN = et({ mod: 'kontur', h: 6, renk: (x, y, r) => sec(KAHVE, 0.5, r, 3) });
+  const KPEN = et({ mod: 'kontur', h: 9, ara: 0.7, renk: (x, y, r) => sec(KAHVE, 0.5, r, 3) });
   for (const p of KA.pencereler) boya(KPEN, S.kemerYolu(p.x, p.y, p.w, p.h));
 
   // kasnak
   const KS = S.kasnak;
   const KAS1 = et({ mod: 'kontur', h: 9, renk: (x, y, r) => sec(KUBBEP, clamp((x - 334) / 452, 0, 1) * 0.55 + 0.08, r, 1.6) });
   boya(KAS1, dikd(KS[1].x1, KS[1].y1, KS[1].x2, KS[1].y2));
-  const KPEN2 = et({ mod: 'kontur', h: 5, renk: (x, y, r) => sec(palet(['#0F3A1E', '#14462A', '#1A5232']), 0.5, r, 3) });
+  const KPEN2 = et({ mod: 'tek', h: 5, ara: 0.6, renk: (x, y, r) => sec(palet(['#0F3A1E', '#14462A', '#1A5232']), 0.5, r, 3) });
   for (const p of S.kasnakPencereleri(1)) boya(KPEN2, S.kemerYolu(p.x, p.y, p.w, p.h));
   const KAS0 = et({ mod: 'kontur', h: 8, renk: (x, y, r) => sec(KUBBEP, clamp((x - 352) / 416, 0, 1) * 0.6 + 0.18, r, 1.6) });
   boya(KAS0, dikd(KS[0].x1, KS[0].y1, KS[0].x2, KS[0].y2));
@@ -196,10 +201,10 @@
       const u1 = Math.sin(b1), u2 = Math.sin(b2);
       const sol = prof.map((q) => [560 + u1 * q.r, q.y]);
       const sag = prof.map((q) => [560 + u2 * q.r, q.y]).reverse();
-      const id = et({ mod: 'kubbe', h: 12, b1, b2, ncol: u2 - u1 > 0.15 ? 2 : 1, renk: kubbeRenk });
+      const id = et({ mod: 'kubbe', h: 12, ara: 0.68, b1, b2, ncol: u2 - u1 > 0.15 ? 2 : 1, renk: kubbeRenk });
       boya(id, S.yol(sol.concat(sag), true));
     }
-    const KAB = et({ mod: 'serit', h: 8, renk: (x, y, r) => sec(palet(['#155028', '#195A2F', '#1D6535']), 0.5, r, 3) });
+    const KAB = et({ mod: 'serit', h: 15, ara: 0.6, renk: (x, y, r) => sec(palet(['#185A2E', '#1D6535', '#22703B']), 0.5, r, 3) });
     for (const k of S.kaburgalar(16)) boya(KAB, S.yol(k.noktalar.slice(0, -3)), 4.2 + 2.8 * Math.cos(k.boylam));
     // tepe: kaburgaların birleştiği yerde halka sıralı küçük parçalar
     const TEPE = et({ mod: 'kontur', h: 6, renk: kubbeRenk });
@@ -222,7 +227,7 @@
   for (const c of bit.cicekler) {
     for (const e of S.tacYapraklari(c)) {
       const id = et({
-        mod: 'kontur', h: c.r > 40 ? 9 : 6, renk(x, y, r) {
+        mod: 'kontur', h: c.r > 40 ? 9 : 6, kenar: TACKENAR, renk(x, y, r) {
           const d = Math.hypot(x - c.x, y - c.y) / c.r;
           return d < 0.42 ? sec(PEMBE, 0.2, r, 1.5) : sec(BEYAZP, 0.75, r, 1.8);
         },
@@ -285,7 +290,8 @@
       band = Math.floor(f);
       const kol = (R * (Math.sin(e.b2) - Math.sin(e.b1)) * K) / e.ncol;
       rho = h / 2 + (f - band - 0.5) * kol;
-    } else band = Math.floor(D[i] / h);
+    } else if (e.mod === 'tek') band = 0;
+    else band = Math.floor(D[i] / h);
     RHO[i] = rho;
     KEY[i] = l * 4096 + clamp(band, 0, 4095);
   }
@@ -295,7 +301,7 @@
   let aday = [];
   for (let i = 0; i < N; i++) {
     const l = L[i];
-    if (!l || ET[l].mod === 'serit') continue;
+    if (!l || ET[l].mod === 'serit' || ET[l].mod === 'tek') continue;
     const h = HH[l];
     if (ET[l].mod === 'kubbe') { if (Math.abs(RHO[i] - h / 2) < 0.75) aday.push(i); continue; }
     const f = RHO[i] % h;
@@ -352,7 +358,7 @@
   const parcaTohum = tohumlar.slice();
   for (let i = 0; i < N; i++) {
     if (T[i] !== -1 || KEY[i] < 0) continue;
-    const key = KEY[i], lim = Math.round(HH[L[i]] * 1.25);
+    const key = KEY[i], lim = ET[L[i]].mod === 'tek' ? 1e9 : Math.round(HH[L[i]] * 1.25);
     const id = sonId++;
     parcaTohum.push(i);
     T[i] = id;
@@ -377,7 +383,8 @@
   for (let k = 0; k < sonId; k++) {
     const s = parcaTohum[k], l = L[s];
     const r = S.rng(k * 7 + 13);
-    const c = ET[l].renk((s % W) / K, ((s / W) | 0) / K, r);
+    const e = ET[l];
+    const c = e.kenar && e.mod === 'kontur' && D[s] < HH[l] ? sec(e.kenar, 0.5, r, 2.5) : e.renk((s % W) / K, ((s / W) | 0) / K, r);
     const p = 1 + (r() - 0.5) * 0.06;
     PR[k * 3] = c[0] * p; PR[k * 3 + 1] = c[1] * p; PR[k * 3 + 2] = c[2] * p;
     PO[k] = r() * 100;
@@ -396,7 +403,7 @@
   const im = ctx.createImageData(W, H), d = im.data;
   const ZR = 253, ZG = 252, ZB = 248; // beyaz zemin
   const golgeKay = Math.round(1.5 * K);
-  const araBoy = (l) => (l ? Math.min(0.85 * K, HH[l] * 0.1) : 0.85 * K);
+  const araBoy = (l) => (l ? (ET[l].ara !== undefined ? ET[l].ara * K : Math.min(0.85 * K, HH[l] * 0.1)) : 0.85 * K);
   const tane = S.rng(4242);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x, o = i * 4, t = T[i];

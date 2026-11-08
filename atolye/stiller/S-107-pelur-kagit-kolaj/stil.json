@@ -9,9 +9,9 @@
   "tanim": "Pelür (ipek) kâğıt kolajında çok ince, saydam renkli kâğıtlar elle yırtılır ya da makasla kesilir ve sulandırılmış tutkalla beyaz bir kâğıda katman katman yapıştırılır. Kâğıtlar saydam olduğu için üst üste binen yerlerde renkler boya gibi karışır: sarının üstüne turkuaz yeşil, pembenin üstüne mavi leylak verir; tek kat kalan yerler en açık ve parlaktır. Kenarlar yumuşak, yırtık parçalarda hafif saçaklıdır; tutkal kenarları ince bir çizgi hâlinde koyulaştırır. Sonuç, güneş gören bir vitray gibi aydınlık, ferah bir yüzeydir; okul ve atölye çalışmalarında, resimli kitaplarda ve pencere süslemelerinde sevilir.",
   "koken": "Renkli pelür kâğıt 19. yüzyıl sonunda yaygınlaştı; saydam kâğıt katmanlarıyla resim, okul sanat eğitiminde ve el işi geleneğinde 20. yüzyıl boyunca gelişti. Eric Carle kendi boyadığı ipek kâğıtlarla resimli kitaplarını kurdu; çağdaş kolaj sanatçıları ve resimleyiciler saydam kâğıdın renk karıştırma gücünü vitrayı andıran ışıklı yüzeyler için kullanır. Tarifin özü: yalnız saydam katmanlar, çıkarımlı (çarpımsal) renk karışımı ve kâğıdın beyazından gelen ışık.",
   "ayirt_edici": [
-    "Gökyüzünün onlarca yırtık yuvarlakça ve kesik kare mavi, turkuaz ve leylak pelür parçasından kurulması; binen yerlerde koyulaşan, tek katta parlayan tonlar",
-    "Güneş çevresinde sarı ve pembe pelürlerin karışarak şeftali ve somon tonlarına dönüşmesi; turuncu ve sarı yırtık daireler, kesik ışın üçgenleri",
-    "Kubbede sarı-yeşil taban pelürünün üstünde turkuaz dilimlerin karışarak iki tonlu yeşil vermesi; soluk mavi gölge ve soluk sarı ışık katmanları, dar zümrüt kaburga şeritleri",
+    "Gökyüzünün onlarca yırtık yuvarlakça ve kesik kare mavi, turkuaz ve camgöbeği pelür parçasından kurulması; binen yerlerde koyulaşan, tek katta parlayan tonlar",
+    "Güneş çevresinde sarı, kayısı ve limon pelürlerinin üst üste binerek sıcak bir ışık halesi kurması, dışa doğru soluk camgöbeği pelürlerle karışıp açık nane tonlarıyla maviye geçmesi; turuncu ve sarı yırtık daireler, kesik ışın üçgenleri",
+    "Kubbede sarı-yeşil taban pelürünün üstüne birbirine binen yırtık turkuaz ve yeşil dilim pelürleri: binen dar şeritler koyulaşarak kaburgaları verir; soluk mavi gölge ve soluk sarı ışık katmanları; kasnaklarda eğik kenarlarla birbirine binen yeşil pelür şeritleri",
     "Yarı saydam beyaz pelür taç yaprakları: üst üste binen yerlerde daha beyaz, alttaki yeşil yapraklar ve zemin içinden hafifçe görünür",
     "Yırtık parçalarda yumuşak saçaklı kenar ve tutkalın koyulaştırdığı ince kenar çizgisi; ince kâğıdın lifli, bulutlu dokusu; çok az tutkal kırışığı",
     "Binanın çevresinden yırtılmış gök: minare ve kaide kâğıdın beyazı ve krem pelürle aydınlık kalır; önde yatay yeşil ve sarı pelür şeritlerinden çayır"
@@ -19,14 +19,14 @@
   "palet": [
     "#7CC4F2",
     "#86B4F4",
-    "#FBB8CF",
     "#FFE58A",
     "#FFB347",
     "#D8EE5C",
     "#36B8A0",
+    "#FFB8CC",
     "#FFFFFF"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, beyaz kâğıt zemin. Her pelür parçasının dış çizgisi sık örneklenir; yırtık parçalarda yay uzunluğuna bağlı çok oktavlı gürültüyle 2,5–4 birim, kesik parçalarda 0,5 birim dalgalandırılır. Renkli pelürler 'multiply' kipinde 0,3–0,8 saydamlıkla basılır; böylece üst üste binen her parça gerçek çıkarımlı renk karışımı verir. Yırtık kenara iki katlı soluk dış saçak, bütün kenarlara tutkalın koyulaştırdığı ince çizgi çekilir; parçanın içine ön hesaplı, döşenebilir lif ve bulutlu yoğunluk dokusu 'overlay' ile, büyük parçalara seyrek ince kırışık eklenir. Gök ayrı bir katmanda kurulur: dört soluk taban pelürünün üstüne kaydırmalı ızgaradan karıştırılmış yaklaşık 120 küçük yuvarlak yırtık ve kesik kare parça konur; renk güneşe uzaklıkla seçilir (sarı, pembe, mavi kuşaklar) ve bulanık gri karışımlardan kaçınılır. Binanın silueti 'destination-out' ile gökten çıkarılır. Beyaz pelürler (bulut, taç yaprağı, tomurcuk) 'source-over' ile yarı saydam örter. En sonda beyaz kâğıdın ince dişi eklenir.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, beyaz kâğıt zemin. Her pelür parçasının dış çizgisi sık örneklenir; yırtık parçalarda yay uzunluğuna bağlı çok oktavlı gürültüyle 2,5–4 birim, kesik parçalarda 0,5 birim dalgalandırılır. Renkli pelürler 'multiply' kipinde 0,3–0,8 saydamlıkla basılır; böylece üst üste binen her parça gerçek çıkarımlı renk karışımı verir. Yırtık kenara iki katlı soluk dış saçak, bütün kenarlara tutkalın koyulaştırdığı ince çizgi çekilir; parçanın içine ön hesaplı, döşenebilir lif ve bulutlu yoğunluk dokusu 'overlay' ile, büyük parçalara seyrek ince kırışık eklenir. Gök ayrı bir katmanda kurulur: dört soluk taban pelürünün üstüne kaydırmalı ızgaradan karıştırılmış yaklaşık 120 küçük yuvarlak yırtık ve kesik kare parça konur; renk güneşe uzaklıkla seçilir (sarı, limon, soluk camgöbeği, mavi kuşaklar), böylece komşu kuşaklar karışınca bulanık gri ya da mor yerine açık nane tonları doğar. Kubbe dilimleri ve kasnak şeritleri komşusuna biraz taşacak genişlikte yırtılır; çarpımsal karışımda binen dar şeritler kendiliğinden koyulaşıp kaburgaları ve parça sınırlarını verir. Binanın silueti 'destination-out' ile gökten çıkarılır. Beyaz pelürler (bulut, taç yaprağı, tomurcuk) 'source-over' ile yarı saydam örter. En sonda beyaz kâğıdın ince dişi eklenir.",
   "etiketler": [
     "kolaj",
     "pelür",

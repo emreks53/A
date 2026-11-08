@@ -16,7 +16,7 @@
     "Düz, canlı halk renkleri ve beyaz boya noktaları; ince elle boyanmış, hafif titrek renk sınırları",
     "Panonun kendisine ait, sarı topuzlu kırmızı oyma çerçeve; pano bütün tuvali doldurur"
   ],
-  "palet": ["#7FCBF0", "#25A04C", "#36B85E", "#2A5DB0", "#E04B3C", "#F7C531", "#FBF6EA", "#F0C979"],
+  "palet": ["#86D0F4", "#25A04C", "#36B85E", "#2A5DB0", "#E04B3C", "#F7C531", "#FBF6EA", "#F5D188"],
   "kodla_cizim": "1024 px tuvalde her öğe aynı anda iki yere işlenir: düz halk renkleri bir boya tuvaline Path2D ile boyanır, biçim ise kayan noktalı bir yükseklik haritasına oyulur. Her öğenin maskesi kendi sınır kutusunda çizilip bulanıklaştırılır; keskin maske oyma duvarını, geniş bulanık maske yastık biçimli üstü verir; kubbe yüksekliği boylama göre dilimlenip kaburgalarda oluk açılarak, kasnak ve minare silindir kesitiyle, taç yapraklar elips kubbelerle hesaplanır; gök ve yer, oluklu keski izi gibi uzun ve sığ oyukların en derini alınarak kurulur. Yükseklikten normal çıkarılır, ışığa doğru yürüyen ışın yumuşak gölge, bulanık yükseklik farkı ortam örtmesi verir. Birleşimde boya rengi Lambert ışığı, gölge ve örtme ile çarpılır; gürültüyle bükülmüş sinüs bantlarından ince ahşap lifi ve gözenekler boyanın altından koyulaştırılır, boya katmanı ±1 px kaydırılarak elle boyamanın titrek sınırları verilir; altın alemlere metal parlaması eklenir.",
   "etiketler": ["ahşap oyma", "rölyef", "halk sanatı", "boyalı ahşap", "kabartma", "keski izi", "dokunsal", "neşeli"]
 }
