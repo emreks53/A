@@ -1,0 +1,40 @@
+{
+  "kod": "S-020",
+  "no": 20,
+  "ad": "Kübizm",
+  "ad_en": "Cubism",
+  "aile": "Sanat Akımları",
+  "ozgun": false,
+  "ozet": "Biçimler geometrik düzlemlere bölünür; aynı anda birden çok bakış açısı ve sınırlı toprak paleti.",
+  "tanim": "Kübizm, nesneyi tek bir bakış noktasından değil, parçalanıp yeniden kurulmuş düzlemler hâlinde gösterir. Biçimler köşeli yüzeylere ayrılır, düzlemler birbirine geçer ve kenarlar komşu yüzeye akar (passage); palet okr, gri ve kahverengilerle sınırlıdır. Sentetik evrede gazete kâğıdı ve ahşap damarı gibi kolaj dokuları da resme girer. Natürmort, portre ve kent görünümlerinde kullanılmış, modern resmin ve tasarımın temel dillerinden biri olmuştur.",
+  "koken": "1907–1914 yılları arasında Paris'te Pablo Picasso ile Georges Braque tarafından geliştirildi; Cézanne'ın doğayı silindir, küre ve koni üzerinden ele alışından beslendi. Analitik kübizm (1909–1912) neredeyse tek renkli, ince düzlemlere ayrılmış yüzeyleriyle; sentetik kübizm (1912–1914) kolaj, papier collé ve daha yalın, düz renkli düzlemleriyle bilinir. Juan Gris, Fernand Léger ve Albert Gleizes akımın öteki önemli adlarıdır.",
+  "ayirt_edici": [
+    "Kubbe, kasnak, kaide ve minare kesim çizgileriyle parçalara ayrılmış; parçalar birbirine göre kaymış ve hafifçe dönmüş",
+    "Aynı anda iki bakış: kubbe önden ve tepeden (ışınsal dilimli elips), şerefeler yandan ve üstten (halkalar), kaidenin sağa kaçan yan yüzü",
+    "Her düzlem bir kenarından koyulaşıp öbür yana açılan geçişle gölgelenmiş; kenarlar komşu düzleme akıyor (passage) ve yarı saydam düzlemler üst üste biniyor",
+    "Okr, gri, kahverengi ve kirli yeşille sınırlı analitik palet; ortası aydınlık, kenarlara doğru koyulaşan düzlem mozaiği",
+    "Sentetik kübizmden kolaj dokuları: ahşap damarı (faux bois), yazısız gazete rasteri ve nokta deseni",
+    "Yer yer koyu, fırçayla çekilmiş düzlem çizgileri ve her yüzeyde kısa, eğik fırça vuruşları"
+  ],
+  "palet": [
+    "#BE9452",
+    "#D9BA7C",
+    "#684C32",
+    "#34281E",
+    "#C9C3B2",
+    "#96928A",
+    "#56784E",
+    "#CCA03E"
+  ],
+  "kodla_cizim": "Canvas (2048 iç çözünürlük). Arka plan, birkaç yapı çizgisinden sonra hücreleri tek tek bölen BSP kesimleriyle yaklaşık 118 dışbükey düzleme ayrılır; her düzlem okr/gri/kahve tonlarından birini alır ve bir kenarından içeri doğrusal geçişle gölgelenir; üç hücre prosedürel ahşap damarı, yazısız gazete yarım tonu ve nokta deseniyle doldurulur. Minare, kaide, kasnak ve kubbe önce ekran dışı bir katmana düz kübist tonlarla (prizma yüzleri, 16 dilim, kaburgalar) çizilir; sonra kesim doğrularının oluşturduğu her hücre kaydırılıp döndürülerek ana tuvale taşınır ve kendi ton/ışık geçişini alır. Kubbenin tepeden görünüşü, şerefe halkaları ve kaidenin yan yüzü ikinci bakış olarak eklenir; ardından yarı saydam düzlemler, piksel renginden örneklenen 38 bin kısa fırça vuruşu, koyu düzlem çizgileri ve tuval dokusu gelir. Geometri SAHNE'den (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, bitki yerleri) alınır.",
+  "etiketler": [
+    "modern sanat",
+    "avangart",
+    "geometrik",
+    "parçalı",
+    "kolaj",
+    "analitik",
+    "sentetik",
+    "çok bakışlı"
+  ]
+}

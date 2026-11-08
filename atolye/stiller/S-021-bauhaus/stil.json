@@ -1,0 +1,39 @@
+{
+  "kod": "S-021",
+  "no": 21,
+  "ad": "Bauhaus",
+  "ad_en": "Bauhaus",
+  "aile": "Sanat Akımları",
+  "ozgun": false,
+  "ozet": "Ana renkler, kalın siyah çubuklar ve saf geometrik biçimlerle kurulmuş modernist afiş dili.",
+  "tanim": "Bauhaus üslubu biçimi işlevine ve en yalın geometrik öğelerine indirger: daire, kare, üçgen, yarım ve çeyrek daire. Kırmızı, sarı ve mavi; siyah, beyaz ve krem zeminle birlikte düz, gölgesiz alanlar hâlinde kullanılır; kompozisyon ızgaraya oturan asimetrik bir dengeyle kurulur. Afiş, tipografi, mimari ve ürün tasarımında modernizmin ortak dili olmuştur.",
+  "koken": "1919'da Walter Gropius'un Weimar'da kurduğu Bauhaus okulundan doğdu; Dessau (1925) ve Berlin (1932) dönemleriyle 1933'e kadar sürdü. Wassily Kandinsky'nin renk ve biçim kuramı, Johannes Itten'in renk dersleri, Josef Albers, László Moholy-Nagy, Herbert Bayer ve Joost Schmidt'in afiş ve tipografi çalışmaları üslubu biçimlendirdi; De Stijl ve Rus konstrüktivizmiyle akrabadır.",
+  "ayirt_edici": [
+    "Yalnız kırmızı, sarı, mavi, siyah, beyaz ve krem; tek istisna Yeşil Kubbe'yi temsil eden yeşil yarım daire",
+    "Kubbe meridyen yaylarıyla bölünmüş bir yarım daire, minare üst üste dikdörtgenler, topuz yarım daire ile üçgen, hilaller daire kesimi",
+    "Kalın siyah çubuklar: yer çizgisi, pencereli kasnak bloğu ve şerefeler; kırmızı korniş bandı",
+    "16 px ızgaraya oturan asimetrik denge: solda mavi dikey alan, sağ üstte büyük sarı güneş dairesi ve ince siyah çerçeve çizgisi",
+    "Çiçekler daire ve çeyrek dairelerden: dört çeyrek daireli fırıldak çiçekler, iki renkli yarım daireler, yarım daire yapraklı dallar",
+    "Düz, gölgesiz renk alanları üzerinde çok hafif baskı greni"
+  ],
+  "palet": [
+    "#ECE5D5",
+    "#FBF8F1",
+    "#1B1A19",
+    "#D7322B",
+    "#F2B81C",
+    "#1F4FA0",
+    "#1D7A4A"
+  ],
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG: yalnız rect, circle ve yay komutlu path öğeleri (yarım daire, çeyrek daire, yarım daire tepeli kemer, üçgen). Ölçüler 16 px ızgaraya oturtulur; kubbe meridyenleri çeyrek elips yaylarıyla, hilaller SAHNE.hilalYolu ile çizilir; çiçek ve dal yerleri SAHNE.bitki'den alınıp ızgaraya yuvarlanır. Baskı greni, feTurbulence gürültüsünün %8 saydamlıkla çarpma (multiply) karışımıdır.",
+  "etiketler": [
+    "modernizm",
+    "afiş",
+    "geometrik",
+    "ana renkler",
+    "düz renk",
+    "ızgara",
+    "asimetrik denge",
+    "minimal"
+  ]
+}

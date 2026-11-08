@@ -1,0 +1,39 @@
+{
+  "kod": "S-022",
+  "no": 22,
+  "ad": "Düz İllüstrasyon",
+  "ad_en": "Flat Illustration",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Konturu olmayan düz renk biçimler, sınırlı ve uyumlu palet, tek tonluk gölge.",
+  "tanim": "Düz illüstrasyon biçimleri geometrik olarak sadeleştirir ve kontursuz, düz renk alanlarıyla anlatır; derinlik yalnızca her biçimin gölgede kalan yanındaki tek bir koyu tonla verilir. Beş-sekiz renklik uyumlu bir palet, keskin kenarlar ve isteğe bağlı çok hafif bir gren çağdaş editoryal görünümü kurar. Dergi ve gazete illüstrasyonlarında, kurumsal anlatımlarda, uygulama ve web arayüzlerinde yaygındır.",
+  "koken": "Kökleri 20. yüzyıl ortasının modernist afiş ve çocuk kitabı illüstrasyonuna (Charley Harper, Mary Blair, Paul Rand) uzanır; 2010'larda dijital arayüzlerdeki düz tasarım (flat design) akımıyla birlikte vektör araçlarında olgunlaştı. Bugün editoryal illüstrasyonda Malika Favre ve Tom Haugomat gibi sanatçıların sade, sınırlı paletli işleri bu dilin örnekleridir.",
+  "ayirt_edici": [
+    "Hiçbir biçimde kontur yok; her öğe keskin kenarlı düz renk alanı",
+    "Tek tonluk gölge: ışık sağ üstten, kubbe, kasnak ve minarede gölge sınırı aynı boylamda; şerefe çıkmaları ve korniş altı gölge tonunda",
+    "Kaburgalar ve zikzak bant bir ton koyu ince şeritler; pencereler en koyu yeşil",
+    "Taç yapraklarında, bulutlarda ve alem kürelerinde kaydırmalı gölge: her biçimin sol alt kenarında ince koyu hilal",
+    "Yapraklar orta damar boyunca açık ve gölge iki yarıya bölünmüş; adaçayı yeşili ve kubbe yeşili iki yaprak tonu",
+    "Soluk mavi gök, büyük açık renkli güneş dairesi ve halesi, mercan göbekli beyaz çiçekler; çok hafif gren"
+  ],
+  "palet": [
+    "#C7DCDD",
+    "#FFF8EE",
+    "#EBD9C2",
+    "#2E7E5C",
+    "#21614A",
+    "#E8AE46",
+    "#7DA877",
+    "#EC8D73"
+  ],
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG, yalnız dolgulu (stroke'suz) yollar. Her biçim açık ve gölge tonda iki katmandır: kubbe ve kasnakta gölge bölgesi u = −0,38 meridyeninin solu (SAHNE.kubbeProfili'nden kurulan yol); minarede her parça kendi yarıçapına göre kırpılmış ikinci bir gölge geçişiyle yeniden çizilir; taç yaprakları, bulutlar ve alem kürelerinde biçim gölge renginde, üstüne sağ üste kaydırılmış açık kopyası clipPath ile kırpılarak konur. Gren, feTurbulence gürültüsünün %7 çarpma karışımıdır. Geometri SAHNE.minareParcalari, kasnakPencereleri, kaide, hilalYolu ve bitki'den gelir.",
+  "etiketler": [
+    "vektör",
+    "editoryal",
+    "düz renk",
+    "kontursuz",
+    "minimal",
+    "dijital",
+    "çağdaş"
+  ]
+}

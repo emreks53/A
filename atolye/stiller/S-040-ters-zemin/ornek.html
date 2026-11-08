@@ -514,14 +514,14 @@
       const x = r() * W, y = r() * W;
       if (uzak(x, y) < 34) continue;
       let uygun = true;
-      for (const m of merkezler) if (Math.hypot(m.x - x, m.y - y) < 132) { uygun = false; break; }
+      for (const m of merkezler) if (Math.hypot(m.x - x, m.y - y) < 116) { uygun = false; break; }
       if (uygun) for (const c of capalar) if (Math.hypot(c.x - x, c.y - y) < c.R + 64) { uygun = false; break; }
       if (uygun) merkezler.push({ x, y });
     }
   })();
   merkezler.forEach((m, idx) => {
     const yonu = ((Math.floor(m.x / 140) + Math.floor(m.y / 140)) % 2 ? 1 : -1);
-    const Rs = 62 + r() * 16;
+    const Rs = 56 + r() * 14;
     const th0 = r() * Math.PI * 2;
     const tur = 1.35 * Math.PI * 2;
     const R = Math.min(19 + r() * 7, uzak(m.x, m.y) - HALE - 2);
@@ -554,7 +554,7 @@
     }
   });
   // sarmalların süsleri (dallar işaretlendikten sonra)
-  for (const m of merkezler) if (m.nok) susle(m.nok, 5, true);
+  for (const m of merkezler) if (m.nok) susle(m.nok, 4, true);
   for (const d of dallar.slice()) if (d.kal >= 2) susle(d.nok, 6, false);
 
   // ------------------------------------------------------------ 4) seyrek dolgu: küçük yaprak, gonca, beşli çiçek; altın nokta üçlüleri
@@ -566,7 +566,7 @@
         const px = x + (r() - 0.5) * adim * 0.8, py = y + (r() - 0.5) * adim * 0.8;
         const R = [9.5, 6, 3][gec] * (0.85 + r() * 0.3);
         if (!bosMu(px, py, R + 2)) continue;
-        if (r() < [0.35, 0.5, 0.72][gec]) continue;
+        if (r() < [0.22, 0.42, 0.7][gec]) continue;
         isaretle(px, py, R + 1.5);
         const k = r();
         if (gec === 0) dolgu.push(k < 0.28 ? { t: 'penc', x: px, y: py, R, renk: r() < 0.5 ? P.gulAcik : P.firuzeAcik } : k < 0.45 ? { t: 'rumi', x: px - R, y: py, L: R * 2.2, a: r() * 6.28, ayna: r() < 0.5, renk: r() < 0.5 ? P.firuze : P.altin } : k < 0.75 ? { t: 'kucuk', x: px - R, y: py, L: R * 2.2, a: r() * 6.28 } : { t: 'gonca', x: px, y: py + R * 0.8, L: R * 1.9, a: r() * 6.28 });

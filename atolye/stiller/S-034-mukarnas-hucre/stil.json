@@ -1,0 +1,22 @@
+{
+  "kod": "S-034",
+  "no": 34,
+  "ad": "Mukarnas Hücre",
+  "ad_en": "Muqarnas Cells",
+  "aile": "Atölye Özgün",
+  "ozgun": true,
+  "ozet": "Bütün yüzey sivri kemerli küçük niş hücrelerine bölünür; sahne boyalı, oyma alçı bir kabartma gibi okunur.",
+  "tanim": "Resim yüzeyinin tamamı, bal peteği gibi yarım hücre kaydırılmış sıralar hâlinde dizilen küçük sivri kemerli niş hücrelerine bölünür; her hücrenin üstü sivri kemer, altı alttaki iki hücrenin kemerleriyle biçimlenir, böylece hücreler boşluksuz kenetlenir. Her hücre içbükey bir niştir: sağ üstten gelen ışıkla kenar sırtının sağ üstü parlar, kemerin altındaki kovuk gölgede kalır; hücrenin rengi sahnenin o noktasından alınıp alçı kremine biraz karıştırılır. Ayrıntı gereken yerlerde (alem, hilal, pencere sıraları, çiçek ortaları, siluet kenarları) hücre kendi içinde daha küçük hücrelere bölünür. Bazı hücrelerin kenarları ince altın yaldızla çizilir ve bütün yüzey oyulmuş, boyanmış alçı kabartma gibi görünür.",
+  "koken": "İlham, Selçuklu ve Osmanlı mimarisindeki mukarnaslardan (taç kapılarda, kubbe geçişlerinde ve mihrap kavsaralarında kademe kademe dizilen küçük niş hücreleri) ve boyalı alçı mukarnas tavanlarından geldi. Fikrin özü, mukarnasın üç boyutlu hücre dilini bir resmin piksel ızgarası gibi kullanmak: her hücre hem bir mimari niş hem de resmin bir renk noktasıdır.",
+  "ayirt_edici": [
+    "Bütün yüzeyi kaplayan, kaydırmalı sıralar hâlinde kenetlenmiş sivri kemerli niş hücreleri",
+    "Her hücrede ışık alan sağ üst kenar sırtı ve kemer altında gölgeli içbükey kovuk",
+    "Gökte büyük, alemde, hilalde, pencerelerde ve çiçek ortalarında iç içe küçülen hücreler",
+    "Lacivert-mavi boyalı gök, yeşil kubbe ve krem alçı minare ile kaide",
+    "Kubbe hücrelerinde, alemlerde ve güneşte ince altın yaldızlı kenarlar",
+    "İnce alçı tanesi ve hücreden hücreye hafifçe değişen boya tonu"
+  ],
+  "palet": ["#4680C4", "#A4BCD0", "#4E8F51", "#E9DFC8", "#D6AC52", "#2A3527", "#AF9B77"],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük, tamamen piksel işleme. Hücre ızgarası analitiktir: dört seviye (48, 24, 12 ve 6 piksel genişlik), her satır yarım hücre kaydırılır, hücre sınırı eşkenar sivri kemer eğrisinden hesaplanır. Bir hücrenin bölünüp bölünmeyeceği içine düşen SAHNE bölgelerinin çeşitliliği, pencere, alem ya da çiçek ortası bulunması ve ton varyansıyla belirlenir. Her piksel için hücre zinciri, kenarlara yumuşak en küçük uzaklık ve buna bağlı kase biçimli derinlik (iç içe hücrelerde toplanarak) hesaplanır; derinlik alanından normaller çıkarılır, sağ üstten Lambert ışığı, yükseklik alanında ışığa doğru yürüyerek atılan gölge, derinliğe bağlı ortam kapanması ve alçı tanesi eklenir. Hücre rengi, parçanın baskın bölgesindeki başvuru renklerinin ortalamasıdır (alçı kremiyle karıştırılmış, gök lacivert-turkuaza çekilmiş); altın hücrelere metal parlaklık, seçili hücrelerin sırtına altın yaldız çizgisi verilir.",
+  "etiketler": ["özgün", "mukarnas", "kabartma", "alçı", "geometrik", "mimari süsleme", "hücre"]
+}

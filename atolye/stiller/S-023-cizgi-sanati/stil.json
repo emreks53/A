@@ -1,0 +1,35 @@
+{
+  "kod": "S-023",
+  "no": 23,
+  "ad": "Çizgi Sanatı",
+  "ad_en": "Line Art",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Tek renk, eşit kalınlıkta çizgilerle; dolgusuz, bol boşluklu, zarif bir çizim.",
+  "tanim": "Çizgi sanatı (line art) konuyu yalnızca çizgiyle anlatır: ton, gölge ve dolgu yerine eşit kalınlıkta (monoline), tek renkli konturlar ve iç ayrıntı çizgileri kullanılır. Yuvarlak uçlu, temiz vektör çizgiler ve geniş beyaz alan sakin, zarif bir etki verir. Logo ve ikon tasarımında, ambalajda, davetiyelerde, boyama kitaplarında ve minimal duvar baskılarında yaygındır.",
+  "koken": "Kökü gravür, kalem çizimi ve teknik illüstrasyon geleneğine; modern biçimiyle Matisse ve Picasso'nun tek çizgi desenlerine ve 20. yüzyıl ortasının reklam çizimlerine dayanır. Bugünkü monoline biçim vektör araçları ve ikon tasarımıyla (eşit kalınlık, yuvarlak uç ve birleşim) yaygınlaştı.",
+  "ayirt_edici": [
+    "Bütün çizgiler aynı kalınlıkta (2,3 px) ve tek renk (koyu yeşil mürekkep); uçlar ve birleşimler yuvarlak",
+    "Dolgu yok; tek vurgu altın: iki hilalin dolgusu ve güneşin çizgisi",
+    "Ayrıntılar yalnız çizgiyle: kubbe kaburgaları, kemerli pencereler, şerefe korkuluk babaları, zikzak bant, topuz dilimleri, yaprak damarları, çiçek ercikleri",
+    "Kaburgalar tepede komşusuna fazla yaklaştığı yerde bitiyor; çizgiler üst üste yığılmıyor",
+    "Örtüşmeler gizli çizgi yöntemiyle temiz: arkadaki çizgi öndeki biçimin içinde görünmüyor",
+    "Geniş boş gök, ışınlı güneş ve iki sade bulut çizgisi; seyreltilmiş yapraklarla sakin ön plan"
+  ],
+  "palet": [
+    "#FAF6EE",
+    "#1F3B34",
+    "#C9A23A",
+    "#B08A2C"
+  ],
+  "kodla_cizim": "JavaScript ile üretilen satır içi SVG; bütün yollar stroke-width 2,3, stroke-linecap ve stroke-linejoin round. Gizli çizgiler ressam sırasıyla çözülür: arkadan öne çizilen her kapalı biçim kâğıt rengiyle doldurulur (görünürde dolgu yoktur). Kaburgalar SAHNE.kaburgalar'dan alınıp komşu kaburgaya 6 px'ten fazla yaklaştıkları yükseklikte kesilir; çiçekler taç uçlarında çentikli kutupsal bir eğriyle tek dış çizgi olarak, yapraklar orta ve yan damarlarıyla, bulutlar dairelerin üst zarfı olarak hesaplanır. Öndeki yapraklardan yalnız çiçeklerin arkasından çıkanlar seçilerek boşluk korunur.",
+  "etiketler": [
+    "çizgi",
+    "monoline",
+    "minimal",
+    "vektör",
+    "tek renk",
+    "zarif",
+    "ikon"
+  ]
+}
