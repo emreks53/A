@@ -332,19 +332,19 @@
   });
   KAGIT.hale = boyaliKagit(12, { taban: '#F8E58C', renkler: ['#FBF0B4', '#F5D466', '#FCEFA8', '#F2C55A'], darbe: 200, L: 60, gen: 12, sapma: 3.2, alfa: 0.4,
     benek: [{ kume: 160, yar: 7, adet: 10, renkler: ['#F0AE45', '#F6C760'], alfa: 0.45, boy: 0.9 }] });
-  // güneş: limon sarısı kâğıt, merkezden dışa ışınsal fırça darbeleri ve beyaz-sarı benekler
+  // güneş: limon sarısı kâğıt, merkez çevresinde dönen sakin, kısa fırça darbeleri ve seyrek açık benekler
   KAGIT.gunes = kagit(512, 512, 13, (g, r) => {
-    const rg = g.createRadialGradient(256, 256, 4, 256, 256, 80);
-    rg.addColorStop(0, '#FFF2A0');
-    rg.addColorStop(0.55, '#FBE14E');
-    rg.addColorStop(1, '#F5C931');
+    const rg = g.createRadialGradient(256, 256, 4, 256, 256, 58);
+    rg.addColorStop(0, '#FCEC88');
+    rg.addColorStop(0.42, '#FBE14E');
+    rg.addColorStop(1, '#F6CE3C');
     g.fillStyle = rg;
     g.fillRect(0, 0, 512, 512);
-    for (let i = 0; i < 300; i++) {
-      const a = r() * PI2, d = 6 + r() * 70;
-      firca(g, r, 256 + Math.cos(a) * d, 256 + Math.sin(a) * d, a + (r() - 0.5) * 0.2, 22 + r() * 26, 5 + r() * 6, sec(r, ['#FFF4AE', '#F6CF2E', '#FCE873', '#EFBE2A']), 0.4, { bukum: 0.15 });
+    for (let i = 0; i < 260; i++) {
+      const a = r() * PI2, d = 5 + r() * 52;
+      firca(g, r, 256 + Math.cos(a) * d, 256 + Math.sin(a) * d, a + Math.PI / 2 + (r() - 0.5) * 0.12, Math.min(8 + d * 0.8, 14 + r() * 12), 4 + r() * 4, sec(r, ['#FCE873', '#F9DA4C', '#FBE14E', '#F4CA3E', '#FFF0A0']), 0.24, { bukum: 0.05 });
     }
-    for (let i = 0; i < 200; i++) benek(g, r, 256 + (r() - 0.5) * 170, 256 + (r() - 0.5) * 170, 6, 9, sec(r, ['#FFFBE0', '#E9B52A']), 0.45, 0.8);
+    for (let i = 0; i < 70; i++) benek(g, r, 256 + (r() - 0.5) * 110, 256 + (r() - 0.5) * 110, 5, 7, sec(r, ['#FFFBE0', '#F0C440']), 0.3, 0.7);
     lif(g, r, 512, 512, 1200, 0.05);
   });
   // uzak tepeler: leylak-mavi akril, yatay uzun darbeler ve tarakla açılmış seyrek ince çizgiler
@@ -465,17 +465,17 @@
   DESEN.gok.setTransform(new DOMMatrix().scale(1 / OL));
   ana.fillRect(0, 0, 1024, 1024);
   const GX = 880, GY = 140;
-  function tirtilDaire(cx, cy, R0, dis, derin, faz) {
+  // güneş: ölçülü boyda, makasla düz (çok hafif dalgalı) kesilmiş açık sarı hale halkası ve limon sarısı disk
+  function dalgaliDaire(cx, cy, R0, gen, dalga, faz) {
     const pts = [];
     for (let i = 0; i < 360; i++) {
-      const t = (i / 360) * PI2;
-      const s = Math.abs(Math.sin((t * dis) / 2 + faz));
-      pts.push([cx + Math.cos(t) * (R0 - derin + derin * Math.pow(s, 0.45)), cy + Math.sin(t) * (R0 - derin + derin * Math.pow(s, 0.45))]);
+      const t = (i / 360) * PI2, rr = R0 + gen * Math.sin(t * dalga + faz);
+      pts.push([cx + Math.cos(t) * rr, cy + Math.sin(t) * rr]);
     }
     return pts;
   }
-  yapistir(kesP(tirtilDaire(GX, GY, 122, 18, 9, 0.2)), DESEN.hale, { ox: GX - 256, oy: GY - 256, gb: 6, ga: 0.26 });
-  yapistir(kesP(tirtilDaire(GX, GY, 72, 0, 0, 0).map(([x, y]) => [x, y])), DESEN.gunes, { ox: GX - 256, oy: GY - 256, gb: 5, ga: 0.32 });
+  yapistir(kesP(dalgaliDaire(GX, GY, 79, 0.6, 5, 0.7)), DESEN.hale, { ox: GX - 256, oy: GY - 256, gb: 5, ga: 0.22 });
+  yapistir(kesP(dalgaliDaire(GX, GY, 55, 0, 0, 0)), DESEN.gunes, { ox: GX - 256, oy: GY - 256, gb: 4, ga: 0.26 });
 
   // ufka yakın açık gök: ayrı boyanmış kâğıt, uzun dalgalı makas kesimi
   const ufk = [];

@@ -636,12 +636,12 @@ function tarashikomiAlan(ctx, yol, x0, y0, x1, y1, o) {
     acik: [190, 210, 156],
     koyu: [74, 128, 86],
     T: (x, y) => kenet(1 - (y - ust(x)) / 50, 0, 1) * 0.9 + 0.1,
-    taban: 0.18,
-    yogun: 0.36,
-    kenar: 0.16,
+    taban: 0.16,
+    yogun: 0.13,
+    kenar: 0.06,
     fq: 0.012,
     uzat: 3.5,
-    esik: 0.39,
+    esik: 0.45,
     tohum: 1893,
   });
 }
@@ -652,15 +652,60 @@ const AZURIT = '#2C559F';
 const AZURIT_ACIK = '#5A80C4';
 const _tasKat = katmanlayici({ N: 3, yum: 0.1, dalga: 0.1, df: 0.03, dfa: 0.01, lif: 0.16, lfa: 0.2, lfb: 0.02, kenar: 0.08, tohum: 1899 });
 const _tasProfil = rampa([[0, [0.7]], [0.22, [0.32]], [0.5, [0]], [1, [0.12]]]);
+const _fircaNZ = gurultu(1897);
+/**
+ * Geniş yumuşak fırçayla kat kat sürülmüş kalın boya: fırça şeritleri (genişlik bw), şerit başına hafif ton farkı,
+ * şerit içinde kıl izleri, iki şeridin bindiği yerde boyanın kalınlaştığı ince sırt. dikey: şeritler düşey mi.
+ * Dönen değer −1..1 civarında ton sapması (artı: koyu).
+ */
+function fircaKati(x, y, dikey, bw, tohum) {
+  const a = dikey ? x : y;
+  const b = dikey ? y : x;
+  const aw = a + 3.2 * (_fircaNZ.n(b * 0.011 + tohum, a * 0.03) - 0.5) + 1.2 * (_fircaNZ.n(b * 0.05, tohum + 3) - 0.5);
+  const j = Math.floor(aw / bw);
+  const f = aw / bw - j;
+  // şerit boyunca fırça sürüşleri: her sürüş 50–110 birim, başında boya biraz kalın (dolgun uç)
+  const uz = 50 + 60 * karma(j + 900, tohum & 255, 78);
+  const bb = b + uz * karma(j + 700, tohum & 255, 79);
+  const sn = Math.floor(bb / uz);
+  const fs = bb / uz - sn;
+  const ton = karma(j + 300, sn + 40, 77 + (tohum & 255)) - 0.5;
+  const kil = _fircaNZ.n(a * 0.7 + j * 7.1, b * 0.018 + tohum) - 0.5;
+  const sirt = Math.exp(-Math.pow((f - 0.03) / 0.045, 2));
+  const uc = 0.6 * Math.exp(-fs / 0.06) * (0.5 + karma(j, sn, 80));
+  return ton * 1.1 + kil * 0.9 + sirt * 1.0 + uc;
+}
 function gofunBas(d, x1, x2, y1, y2) {
-  const yol = titrekYol(d, 0.35, 0.05, 1.5);
+  const yol = titrekYol(d, 0.5, 0.05, 1.5);
   c.fillStyle = GOFUN;
   c.fill(yol);
+  const dikey = y2 - y1 > (x2 - x1) * 1.2;
+  const th = Math.floor(x1 * 3 + y1 * 7) % 97;
   pikselBoya(c, yol, x1 - 1, y1 - 1, x2 + 1, y2 + 1, (x, y, o) => {
-    o[0] = 176;
-    o[1] = 160;
-    o[2] = 128;
-    o[3] = Math.round(255 * 0.5 * _tasKat(_tasProfil(kenet((x - x1) / (x2 - x1 || 1), 0, 1))[0], x, y, x1));
+    // gölge katları (sol yan) + kalın gofunun fırça katları
+    const g = 0.5 * _tasKat(_tasProfil(kenet((x - x1) / (x2 - x1 || 1), 0, 1))[0], x, y, x1);
+    const f = 0.085 * fircaKati(x, y, dikey, dikey ? 8 : 11, th);
+    if (f > 0) {
+      const a = g + f * (1 - g);
+      o[0] = 170;
+      o[1] = 153;
+      o[2] = 120;
+      o[3] = Math.round(255 * kenet(a, 0, 1));
+    } else {
+      // açık fırça katı: daha kalın gofun (yalnız gölgesiz yerde belirgin)
+      const w = -f * 1.6 * (1 - g * 1.6);
+      if (w > g) {
+        o[0] = 255;
+        o[1] = 254;
+        o[2] = 248;
+        o[3] = Math.round(255 * kenet(w, 0, 1));
+      } else {
+        o[0] = 176;
+        o[1] = 160;
+        o[2] = 128;
+        o[3] = Math.round(255 * kenet(g, 0, 1));
+      }
+    }
   });
   return yol;
 }
@@ -698,11 +743,32 @@ for (const p of S.minareParcalari()) {
     ince(p.yol);
   }
 }
+const _azNZ = gurultu(1896);
+const AZ_KOYU = hex('#1F3F78');
+const AZ_ORTA = hex('#2F59A3');
+const AZ_ACIK = hex('#4A72BA');
+/** Taneli azurit: iri mineral taneleri kâğıdın dişine çöker; tepede koyu, dipte açılan kalın kat, fırça izi. */
 function azuritPencere(d) {
-  const yol = titrekYol(d, 0.25, 0.05, 1);
+  const yol = titrekYol(d, 0.45, 0.06, 1);
   const b = ornekle(d, 3)[0].pts;
+  const xs = b.map((q) => q[0]);
   const ys = b.map((q) => q[1]);
-  lavi(c, yol, 0, Math.min(...ys), 0, Math.max(...ys), [[0, '#22457F'], [1, '#3561AA']]);
+  const ya = Math.min(...ys);
+  const yb = Math.max(...ys);
+  pikselBoya(c, yol, Math.min(...xs) - 1, ya - 1, Math.max(...xs) + 1, yb + 1, (x, y, o) => {
+    const t = kenet((y - ya) / (yb - ya || 1), 0, 1);
+    let v = 0.62 - 0.5 * t;
+    v += 0.16 * (_azNZ.fbm(x * 0.09, y * 0.07, 2) - 0.5);
+    v += 0.1 * (_azNZ.n(x * 0.9 + 3, y * 0.05) - 0.5);
+    const g = karma(Math.floor(x * 2), Math.floor(y * 2), 61);
+    if (g > 0.86) v += 0.22 * (g - 0.86) / 0.14;
+    else if (g < 0.1) v -= 0.18 * (0.1 - g) / 0.1;
+    v = kenet(v, 0, 1);
+    const col = v > 0.5 ? karistir(AZ_ORTA, AZ_KOYU, (v - 0.5) / 0.5) : karistir(AZ_ACIK, AZ_ORTA, v / 0.5);
+    o[0] = col[0];
+    o[1] = col[1];
+    o[2] = col[2];
+  });
 }
 for (const p of S.minarePencereleri) azuritPencere(S.kemerYolu(p.x, p.y, p.w, p.h));
 function altinAlem(yollar) {
@@ -739,13 +805,28 @@ for (let k = 1; k >= 0; k--) {
     koyu: MALAKIT_KOYU,
     T: (x, y) => kenet(0.32 + 0.5 * (1 - (x - 560) / Rk) / 2 + 0.3 * kenet(1 - (y - q.y1) / 16, 0, 1), 0, 1),
     taban: 0.55,
-    yogun: 0.16,
-    kenar: 0.11,
+    yogun: 0.19,
+    kenar: 0.12,
     fq: 0.022,
     uzat: 0.3,
-    esik: 0.56,
-    gurultu: 0.55,
+    esik: 0.53,
+    gurultu: 0.6,
     tohum: 1900 + k,
+  });
+  // kalın malakitin geniş fırça katları (yatay şeritler, bindirme sırtları)
+  pikselBoya(c, yol, q.x1 - 2, q.y1 - 2, q.x2 + 2, q.y2 + 2, (x, y, o) => {
+    const f = 0.07 * fircaKati(x, y, false, 8, 40 + k * 13);
+    if (f > 0) {
+      o[0] = 18;
+      o[1] = 80;
+      o[2] = 52;
+      o[3] = Math.round(255 * kenet(f, 0, 1));
+    } else {
+      o[0] = 120;
+      o[1] = 196;
+      o[2] = 146;
+      o[3] = Math.round(255 * kenet(-f * 1.2, 0, 1));
+    }
   });
   for (const p of S.kasnakPencereleri(k)) azuritPencere(S.kemerYolu(p.x, p.y, p.w, p.h));
 }

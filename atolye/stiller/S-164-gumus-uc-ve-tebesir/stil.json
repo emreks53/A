@@ -20,13 +20,13 @@
     "#D3E2DA",
     "#596062",
     "#FBFCF7",
-    "#46A877",
-    "#A6C9EE",
-    "#F0B88E",
-    "#E58AA0",
-    "#DDAA45"
+    "#547F6A",
+    "#A9CADD",
+    "#C9BC98",
+    "#B89A9E",
+    "#B2A46B"
   ],
-  "kodla_cizim": "Astar 2048 px ince diş alanıdır, üstünde hafif yatay fırça dalgalanması; rengi düşük frekanslı gürültüyle hafifçe kayar. Önce 1024 px ton haritaları hesaplanır: gümüş koyuluğu, beyaz ışık ve tebeşir renkleri; yapıda dönel yüzey ve silindir aydınlanmasından, bitkilerde maskelerden (yaprağın gölge yarısı, çiçek merkezine uzaklık) gelir. Tarama üreteci tuvali verilen açıda koşut çizgilerle tarar; birkaç komşu çizgi aynı kırılma noktalarını paylaşarak bir 'yama' oluşturur, vuruşlar hafif yaylıdır ve yalnız tonun eşiği aştığı parçalarda, tona göre artan saydamlıkla çizilir. Gümüş uç üç açıda üç eşikle (çapraz tarama), beyaz guaş iki açıda ayrı katmanlara çizilir; bitkilerin gümüş taraması, bitki konturları arkadaki çizgileri sildikten sonra ayrıca yapılır. Tebeşirler ton haritalarından üretilen, kâğıt yüksekliğinin tepelerinde yoğunlaşan (ters granülasyonlu), bulanık kenarlı çarpımsal katlardır; kontur ve kaburgalar gümüş, kaburgaların ışık yanı beyazdır. birleştirmede gümüş çarpımsal, beyaz en üste konur. Öndeki bitkiler arkadaki gümüş konturu siler.",
+  "kodla_cizim": "Astar 2048 px ince diş alanıdır, üstünde hafif yatay fırça dalgalanması; rengi düşük frekanslı gürültüyle hafifçe kayar. Önce 1024 px ton haritaları hesaplanır: gümüş koyuluğu, beyaz ışık ve tebeşir renkleri; yapıda dönel yüzey ve silindir aydınlanmasından, bitkilerde maskelerden (yaprağın gölge yarısı, çiçek merkezine uzaklık) gelir. Tarama üreteci tuvali verilen açıda koşut çizgilerle tarar; birkaç komşu çizgi aynı kırılma noktalarını paylaşarak bir 'yama' oluşturur, vuruşlar hafif yaylıdır ve yalnız tonun eşiği aştığı parçalarda, tona göre artan saydamlıkla çizilir. Gümüş uç üç açıda üç eşikle (çapraz tarama), beyaz guaş iki açıda ayrı katmanlara çizilir; bitkilerin gümüş taraması, bitki konturları arkadaki çizgileri sildikten sonra ayrıca yapılır. Tebeşirler ton haritalarından üretilen, kâğıt yüksekliğinin tepelerinde yoğunlaşan (ters granülasyonlu), bulanık kenarlı çarpımsal katlardır; kontur ve kaburgalar gümüş, kaburgaların ışık yanı beyazdır. Birleştirmede gümüş çarpımsal, beyaz en üste konur. Öndeki bitkiler arkadaki gümüş konturu siler.",
   "etiketler": [
     "gümüş uç",
     "metal uç",

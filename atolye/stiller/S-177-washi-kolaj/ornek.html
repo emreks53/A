@@ -15,7 +15,7 @@
 // S-177 Washi Kolaj (Chigiri-e) — hayalî bir chigiri-e ustasının eli: bokashi tekniğiyle yumuşak geçişli
 // boyanmış washi kâğıtlarını makas kullanmadan, parmak uçlarıyla yırtar; yırtık kenarda kâğıdın rengi beyaza
 // açılır ve uzun kozo lifleri tüy gibi saçaklanır. Parçalar arkadan öne katman katman yapıştırılır: bokashi
-// sabah göğü, beni güneş ve kasumi sis bantları, uzak tepeler, yapı, kubbe, yırtık çayır parçaları ve önde
+// sabah göğü, soluk altın sarısı güneş ve kasumi sis bantları, uzak tepeler, yapı, kubbe, yırtık çayır parçaları ve önde
 // beyaz washi çiçekler. Yöntem: her parçanın dış çizgisi yırtık gürültüsüyle oynatılır; önce beyaza açılan
 // yarı saydam bir saçak, sonra bokashi degradeli dolgu, iç kenar açılması, washi lif dokusu ve kenardan dışa
 // taşan tek tek lifler çizilir; gölge neredeyse yoktur.
@@ -378,8 +378,9 @@
   // ------------------------------------------------------------ 2. güneş: hale ve disk
   const GX = 880, GY = 140;
   const daire = (cx, cy, r) => { const p = []; for (let i = 0; i < 160; i++) { const t = (i / 160) * PI2; p.push([cx + Math.cos(t) * r, cy + Math.sin(t) * r]); } return p; };
-  washi(yirt(daire(GX, GY, 112), { genlik: 2.6, dalga: 24 }), bokashiR(GX, GY, 40, 116, [[0, '#FFF1E2'], [1, '#FBE0CF']]), { saydam: 0.7, lif: 6, golge: false, kenar: 1.6 });
-  washi(yirt(daire(GX, GY, 64), { genlik: 1.6, dalga: 16 }), bokashiR(GX - 14, GY - 14, 6, 74, [[0, '#F7A08A'], [0.55, '#EC7A62'], [1, '#E0654F']]), { lif: 4.5, ga: 0.1 });
+  // gündüz güneşi: fildişi-şeftali hale üstünde soluk altın sarısı bokashi disk (ortası daha açık)
+  washi(yirt(daire(GX, GY, 112), { genlik: 2.6, dalga: 24 }), bokashiR(GX, GY, 40, 116, [[0, '#FFF4E0'], [1, '#FBE6CF']]), { saydam: 0.7, lif: 6, golge: false, kenar: 1.6 });
+  washi(yirt(daire(GX, GY, 64), { genlik: 1.6, dalga: 16 }), bokashiR(GX - 14, GY - 14, 6, 76, [[0, '#FAEBBC'], [0.5, '#F6DA8A'], [1, '#F1CB68']]), { lif: 4.5, ga: 0.1 });
 
   // ------------------------------------------------------------ 3. kasumi: uzun, yuvarlak uçlu sis bantları
   // kasumi (sis bandı): alt kenarı düz, üstü yumuşak tümsekli, uçları yuvarlak uzun şerit
@@ -426,9 +427,21 @@
   const mp = (ad) => MP.find((p) => p.ad === ad);
   const c = S.minare.cx;
   const tas = (x1, x2) => bokashi(x1, 0, x2, 0, [[0, '#D9CCB4'], [0.45, '#F0E8D8'], [1, '#FBF7EE']]);
+  const govdeTas = (x1, x2) => bokashi(x1, 0, x2, 0, [[0, '#C9BFC2'], [0.3, '#DED3C2'], [0.6, '#EEE5D3'], [1, '#F8F2E6']]);
   const INCE = { genlik: 0.7, dalga: 12, ince: 0.35 };
   for (const [x1, y1, x2, y2] of [[c - 34, 486, c + 34, 802], [c - 27, 314, c + 27, 458], [c - 19, 204, c + 19, 292]]) {
-    washi(yirt(dikd(x1, y1, x2, y2), INCE), tas(x1, x2), { lif: 3 });
+    const yol = yirt(dikd(x1, y1, x2, y2), INCE);
+    washi(yol, govdeTas(x1, x2), { lif: 3, ga: 0.2, gb: 3.5 });
+    // gövdenin gölgeli sol üçte biri: ayrı yırtılmış serin leylak-gri washi şerit (yarı saydam, lifli iç kenar)
+    const sx = x1 + (x2 - x1) * 0.36;
+    washi(yirt(dikd(x1 + 0.5, y1 + 1, sx, y2 - 1), { genlik: 0.8, dalga: 14, ince: 0.35 }),
+      bokashi(x1, 0, sx, 0, [[0, '#ACA9BA'], [0.55, '#BEBAC6'], [1, '#D0CBD1']]), { lif: 1.6, saydam: 0.6, golge: false, kenar: 0.45, lifAcik: 0.3, doku: 0.5 });
+    // aşağıya doğru biraz daha koyu krem (bokashi)
+    ana.save();
+    ana.clip(yolu(yol));
+    ana.fillStyle = bokashi(0, y1, 0, y2, [[0, 'rgba(214,196,160,0)'], [0.55, 'rgba(214,196,160,0.12)'], [1, 'rgba(206,186,148,0.32)']]);
+    ana.fillRect(x1 - 4, y1, x2 - x1 + 8, y2 - y1);
+    ana.restore();
   }
   // zikzak: üç ince yırtık şerit (soluk kiremit)
   for (const z of S.zikzakCizgileri()) {

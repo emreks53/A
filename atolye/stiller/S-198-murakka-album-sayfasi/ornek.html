@@ -432,7 +432,8 @@
   ctx.translate(RESIM.x, RESIM.y);
   ctx.scale(SC, SC);
   const Y = S.yollar();
-  const ince = (d, w, renk, amp) => H.pen(ctx, d, { w: w / SC * 0.85, color: renk, amp: amp === undefined ? 0.35 : amp, wl: 22, seed: tohum++, press: 0.4, taper: 0.12, step: 1.2 });
+  // kalem: basınç 0,6–1,4 kat arasında yavaşça değişir, çizgi çok hafif titrer (nakkaşın elle çektiği tahrir)
+  const ince = (d, w, renk, amp) => H.pen(ctx, d, { w: (w / SC) * 0.85 * 1.4, color: renk, amp: (amp === undefined ? 0.35 : amp) * 1.3, wl: 22, seed: tohum++, press: 0.57, plen: 0.035, taper: 0.12, step: 1.2 });
   const doldur = (d, f) => {
     ctx.fillStyle = f;
     ctx.fill(typeof d === 'string' ? P(d) : d);
@@ -825,7 +826,10 @@
   }
   ctx.restore();
 
-  // ------------------------------------------------ 5) son: ortada ince fırça izi (guaşın yönlü dokusu), kenarda kâğıt
+  // ------------------------------------------------ 5) son: ortada nakkaşın eli (guaş vuruşları, perdahlı kâğıt), kenarda kâğıt
+  // Düz renkler yerinde kalır; ama her alan ince fırçayla, biçim yönünde kısa vuruşlarla sürüldüğü için
+  // boyanın yoğunluğu vuruş vuruş 3–6 ton oynar. Aharlı kâğıt mühreyle perdahlandığından üstünde
+  // geniş, eğik ve çok hafif bir parıltı şeridi ile ince bir kâğıt tanesi seçilir.
   {
     const BH = H.bolgeHaritasi(1);
     const KB = BH.K;
@@ -833,36 +837,120 @@
     const o = img.data;
     const n = H.noise(808);
     const nf = H.noise(809);
+    const nk = H.noise(810);
+    // tamsayı karması → [0, 1)
+    const hs = (i, j, t) => {
+      let h = (Math.imul(i | 0, 374761393) + Math.imul(j | 0, 668265263) + Math.imul(t | 0, 1442695041)) | 0;
+      h = Math.imul(h ^ (h >>> 13), 1274126177);
+      h ^= h >>> 16;
+      return (h >>> 0) / 4294967296;
+    };
+    // fırça vuruşu dokusu: u'da 'ara' aralıklı şeritler, her şeritte v boyunca boyu değişen vuruşlar;
+    // her vuruşun kendi yoğunluğu (−1..1), enine yumuşak profil, uçlarda incelme
+    const vurus = (u, v, ara, boy, t) => {
+      const uk = u / ara;
+      const k = Math.floor(uk);
+      const f = uk - k;
+      const h1 = hs(k, 0, t);
+      const L = boy * (0.7 + 0.6 * h1);
+      const vv = v / L + h1 * 5.3;
+      const m = Math.floor(vv);
+      const tt = vv - m;
+      const ha = hs(k, m, t + 1);
+      const hb = hs(k, m, t + 2);
+      const mer = 0.5 + (hb - 0.5) * 0.3;
+      const en = Math.max(0, 1 - Math.abs(f - mer) / (0.42 + 0.12 * ha));
+      const uc = Math.min(1, tt / 0.15, (1 - tt) / 0.25);
+      return (ha * 2 - 1) * Math.sqrt(en) * (uc > 0 ? Math.sqrt(uc) : 0);
+    };
     const x0 = RESIM.x * 2;
     const x1 = (RESIM.x + RESIM.w) * 2;
+    const ca0 = Math.cos(-0.8);
+    const sa0 = Math.sin(-0.8);
     for (let y = 0; y < N2; y++) {
       for (let x = 0; x < N2; x++) {
         const i = (y * N2 + x) * 4;
         let f;
         if (x >= x0 && x < x1 && y >= x0 && y < x1) {
-          const sx = Math.min(1023, Math.max(0, ((x / 2 - RESIM.x) / SC) | 0));
-          const sy = Math.min(1023, Math.max(0, ((y / 2 - RESIM.y) / SC) | 0));
+          const sxf = (x / 2 - RESIM.x) / SC;
+          const syf = (y / 2 - RESIM.y) / SC;
+          const sx = Math.min(1023, Math.max(0, sxf | 0));
+          const sy = Math.min(1023, Math.max(0, syf | 0));
           const b = BH.kod[sy * 1024 + sx];
-          let a;
-          if (b === KB.gok || b === KB.gunes || b === KB.zemin) a = 0.04 * nf(x / 300, y / 300);
-          else if (b === KB.kubbe) {
-            const r = H.kubbeR(sy) || 1;
-            const u = (sx - 560) / r;
-            const dr = (H.kubbeR(sy - 2) - H.kubbeR(sy + 2)) / 4;
-            a = Math.atan2(-1, u * dr);
-          } else if (b === KB.kasnak || b === KB.minare || b === KB.kaide) a = Math.PI / 2;
-          else a = -0.8;
-          const ca = Math.cos(a);
-          const sa = Math.sin(a);
-          const u2 = x * ca + y * sa;
-          const v2 = -x * sa + y * ca;
-          f = 1 + 0.02 * nf(x / 70, y / 70) + 0.008 * n(x / 3, y / 3) + 0.011 * n(u2 / 14, v2 / 3);
+          // vuruş koordinatları (u: vuruşlar arası, v: vuruş boyunca), 2048 piksel ölçeğinde
+          let u;
+          let v;
+          let ara = 7;
+          let boy = 64;
+          if (b === KB.gok || b === KB.gunes || b === KB.zemin) {
+            u = y + 3 * n(x / 180, y / 90);
+            v = x;
+            ara = 8;
+            boy = 96;
+          } else if (b === KB.kubbe) {
+            const r = H.kubbeR(syf) || 1;
+            u = Math.asin(H.clamp((sxf - 560) / r, -1, 1)) * 2 * 200 * SC;
+            v = y;
+            ara = 6.5;
+            boy = 56;
+          } else if (b === KB.kasnak || b === KB.minare || b === KB.kaide || b === KB.pencere) {
+            u = x;
+            v = y;
+            ara = 6;
+            boy = 40;
+          } else if (b === KB.yaprak || b === KB.sap) {
+            // yaprakta vuruşlar en yakın yaprağın ekseni boyunca
+            let en = 1e9;
+            let a = -0.8;
+            for (const yp of S.bitki.yapraklar) {
+              const cx = yp.x + Math.cos(yp.aci) * yp.uzunluk * 0.5;
+              const cy = yp.y + Math.sin(yp.aci) * yp.uzunluk * 0.5;
+              const dd = (sxf - cx) * (sxf - cx) + (syf - cy) * (syf - cy);
+              if (dd < en) {
+                en = dd;
+                a = yp.aci;
+              }
+            }
+            const ca = Math.cos(a);
+            const sa = Math.sin(a);
+            u = -x * sa + y * ca;
+            v = x * ca + y * sa;
+            ara = 5;
+            boy = 30;
+          } else if (b === KB.cicek || b === KB.cicekOrta) {
+            // taç yapraklarında göbekten dışa
+            let en = 1e9;
+            let c0 = S.bitki.cicekler[0];
+            for (const c of S.bitki.cicekler) {
+              const dd = (sxf - c.x) * (sxf - c.x) + (syf - c.y) * (syf - c.y);
+              if (dd < en) {
+                en = dd;
+                c0 = c;
+              }
+            }
+            const rr = Math.sqrt(en) * 2 * SC;
+            u = Math.atan2(syf - c0.y, sxf - c0.x) * Math.max(8, rr);
+            v = rr;
+            ara = 5;
+            boy = 22;
+          } else {
+            u = -x * sa0 + y * ca0;
+            v = x * ca0 + y * sa0;
+            ara = 5;
+            boy = 26;
+          }
+          const fz = 0.6 * vurus(u, v, ara, boy, 11) + 0.4 * vurus(u + ara * 0.5, v + boy * 0.37, ara, boy, 23);
+          // kıl izi: vuruş boyunca uzayan çok ince çizgiler
+          const kil = n(u / 1.6, v / 22);
+          // perdah parıltısı: geniş eğik şeritler; kâğıt tanesi
+          const parilti = nk((x + y) / 90, (x - y) / 900);
+          f = 1 + 0.055 * fz + 0.012 * kil + 0.03 * nf(x / 70, y / 70) + 0.014 * n(x / 1.7, y / 1.7) + 0.014 * parilti;
         } else {
           f = 1 + 0.018 * n(x / 3.5, y / 3.5) + 0.01 * n(x / 40, y / 9);
         }
-        o[i] *= f;
-        o[i + 1] *= f;
-        o[i + 2] *= f;
+        o[i] = Math.min(255, o[i] * f);
+        o[i + 1] = Math.min(255, o[i + 1] * f);
+        o[i + 2] = Math.min(255, o[i + 2] * f);
       }
     }
     ctx.putImageData(img, 0, 0);

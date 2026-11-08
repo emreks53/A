@@ -604,13 +604,8 @@ function bulut(cx, cy, w, h, tohum) {
   const m = mk.getContext('2d', { willReadFrequently: true });
   m.setTransform(OLCEK, 0, 0, OLCEK, -x0 * OLCEK, -y0 * OLCEK);
   m.fillStyle = '#fff';
-  m.filter = `blur(${1.2 * OLCEK}px)`;
-  for (const [x, y, rad] of daireler) {
-    m.beginPath();
-    m.arc(x, y, rad, 0, Math.PI * 2);
-    m.fill();
-  }
-  m.filter = 'none';
+  // keskin kalıp kenarı: dairelerin birleşimi hafif oynak (≈1 px) bir kenarla, bulanıklık yok
+  for (const [x, y, rad] of daireler) m.fill(kalip(S.daireYolu(x, y, rad), 0.5));
   m.globalCompositeOperation = 'destination-out';
   m.beginPath();
   m.moveTo(x0 - 5, taban);
@@ -627,7 +622,8 @@ function bulut(cx, cy, w, h, tohum) {
   const hd = y2.getImageData(0, 0, W, H).data;
   const Hm = (px, py) => hd[(Math.min(H - 1, Math.max(0, py)) * W + Math.min(W - 1, Math.max(0, px))) * 4 + 3] / 255;
   // gölge katları (iki lavanta kalıbı) ve ışık kalıbı
-  const g1 = katmanlayici({ N: 2, yum: 0.09, dalga: 0.06, df: 0.03, dfa: 0.02, lif: 0, kenar: 0, tohum: tohum * 3 });
+  const g1 = katmanlayici({ N: 2, yum: 0.012, dalga: 0.05, df: 0.03, dfa: 0.02, lif: 0, kenar: 0, tohum: tohum * 3 });
+  const nIs = gurultu(tohum * 5 + 1);
   const sk = S.yeniTuval(W, H);
   const s2 = sk.getContext('2d', { willReadFrequently: true });
   const im = s2.createImageData(W, H);
@@ -649,9 +645,11 @@ function bulut(cx, cy, w, h, tohum) {
       const alt = kenet((y - (taban - h * 0.45)) / (h * 0.45), 0, 1);
       const T = kenet(0.62 - dif * 0.75 + 0.55 * alt * alt, 0, 1);
       const v = g1(T, x, y, tohum);
-      const isik = kenet((dif - 0.72) / 0.2, 0, 1) * (1 - alt);
-      // lavanta gölge; ışık yanında şeftali
-      const ga = 0.62 * v;
+      // ışık kalıbı: keskin kenarlı ayrı blok (kenarı ≈1 px oynar); içinde hafif bokashi
+      const isEsik = 0.8 + 0.05 * (nIs.n(x * 0.06, y * 0.06) - 0.5) * 2;
+      const isik = yumusak(-0.006, 0.006, dif - isEsik) * (alt < 0.35 ? 1 : 0) * (0.75 + 0.25 * kenet((dif - isEsik) / 0.12, 0, 1));
+      // lavanta gölge (iki katlı blok, içinde hafif bokashi); ışık yanında şeftali
+      const ga = 0.62 * v * (0.88 + 0.12 * kenet(T, 0, 1));
       const ia = 0.38 * isik;
       const top = ga + ia * (1 - ga);
       d[k] = (148 * ga + 252 * ia * (1 - ga)) / (top || 1);
@@ -689,23 +687,23 @@ bulut(952, 496, 156, 42, 35);
   tepe(sag, 'rgba(160,160,200,0.78)', 'rgba(212,194,206,0.55)');
   const zemin = new Path2D(S.yol([[0, 798], [1024, 798], [1024, 1024], [0, 1024]], true));
   lavi(R, zemin, 0, 798, 0, 1024, [[0, '#EAD7B4'], [0.4, '#E3CBA2'], [1, '#D9BE92']]);
-  // susam baskı (goma-zuri): baren hafif bastırılınca kâğıt nokta nokta görünür
+  // susam baskı (goma-zuri): az bastırılan barenle kum boyası seyrek, yumuşak benekler hâlinde biraz koyu ya da
+  // biraz açık basılır (kâğıt beyazı açılmaz)
   const r = S.rng(1883);
   R.save();
-  R.globalCompositeOperation = 'destination-out';
-  for (let k = 0; k < 16000; k++) {
+  for (let k = 0; k < 3600; k++) {
     const x = r() * 1024;
     const y = 802 + r() * 222;
-    R.fillStyle = `rgba(0,0,0,${0.25 + r() * 0.4})`;
+    R.fillStyle = r() < 0.6 ? `rgba(196,164,112,${0.16 + r() * 0.12})` : `rgba(246,232,206,${0.18 + r() * 0.14})`;
     R.beginPath();
-    R.ellipse(x, y, 0.5 + r() * 0.7, 0.35 + r() * 0.4, r() * 3, 0, Math.PI * 2);
+    R.ellipse(x, y, 0.55 + r() * 0.6, 0.4 + r() * 0.35, r() * 3, 0, Math.PI * 2);
     R.fill();
   }
   R.restore();
 }
 
 // ---- 3b) ağaç damarı: yalnız gök ve yer kalıplarında (geniş düz alanlar); kiraz kalıbın yıllık halkaları
-//          düzensiz aralıklı, budak çevresinde kıvrılır
+//          düzensiz aralıklı, budak noktalarında yer yer hafifçe dalgalanır
 {
   const nz = gurultu(1882);
   const budaklar = [[690, 60, 40], [60, 560, 34], [470, 940, 44]];

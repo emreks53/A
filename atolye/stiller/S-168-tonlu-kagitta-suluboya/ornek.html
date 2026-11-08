@@ -380,6 +380,21 @@
     for (let k = n; k >= 0; k--) c.lineTo(sag[k][0], sag[k][1]);
     c.closePath(); c.fill();
   }
+  // taş sırası için yassı fırça çekişi: düz üst ve alt kenar, köşesi pahsız kare uçlar; fırça kalkarken uçta kıllar
+  // farklı boyda biter (kuru kırık uç). rb: tohumlu rastgele.
+  function yassiCekis(c, x0, x1, y1, y2, rb) {
+    const kil = 9, h = y2 - y1, egB = (rb() - 0.5) * 1.6, egS = (rb() - 0.5) * 2;
+    for (let k = 0; k < kil; k++) {
+      const ya = y1 + (k / kil) * h, yb = y1 + ((k + 1) / kil) * h + 0.35, t = k / (kil - 1) - 0.5;
+      const bas = x0 + egB * t + (rb() - 0.5) * 0.5 + (rb() < 0.08 ? 1 + rb() * 1.5 : 0);
+      const son = x1 + egS * t + (rb() - 0.5) * 0.6 - (rb() < 0.12 ? 1 + rb() * 2 : 0);
+      const e1 = (nz(x0 * 0.13 + k, y1 * 0.2) - 0.5) * 0.5, e2 = (nz(x1 * 0.13 + k, y1 * 0.2 + 4) - 0.5) * 0.5;
+      c.beginPath();
+      c.moveTo(bas, ya + (k ? 0 : e1)); c.lineTo(son, ya + (k ? 0 : e2));
+      c.lineTo(son, yb + (k < kil - 1 ? 0 : e2)); c.lineTo(bas, yb + (k < kil - 1 ? 0 : e1));
+      c.closePath(); c.fill();
+    }
+  }
   function tacYol(c, a, L, Wd) {
     const ca = Math.cos(a), sa = Math.sin(a);
     const p = (u, v) => (c.x + u * ca - v * sa).toFixed(2) + ',' + (c.y + u * sa + v * ca).toFixed(2);
@@ -529,7 +544,12 @@
 
   // ------------------------------------------------------------ 4. zemin ve bitkiler (saydam)
   M.yika(M.fMaske([0, 796, W, W], (x, y) => (y >= 800 ? 1 : 0)), '#E4B48A', { yog: 0.5, koru: M.birles(korOn, mBina), kenar: 0.15, gran: 0.18, akis: 0.15, titre: 0.5, grad: (x, y) => 0.75 + 0.4 * sstep(800, 1024, y) });
-  M.yika(M.maske((c) => { c.translate(-5, 4); for (const d of Y.yapraklar) c.fill(P(d)); cicekAlan(c); }), '#9C93A8', { yog: 0.25, koru: M.birles(korOn, mBina), kenar: 0.2, titre: 0.6, grad: (x, y) => (y > 802 ? 1 : 0) });
+  const rgo = SAHNE.rng(1689);
+  M.yika(M.mBulanik(M.maske((c) => {
+    const tek = (cizF, px, py, alfa) => { const dx = -2 - rgo() * 3, dy = 1.5 + rgo() * 2.5, sk = (rgo() - 0.5) * 0.1; c.save(); c.globalAlpha = alfa; c.translate(px, py); c.transform(1, 0, sk, 0.85 + rgo() * 0.12, dx, dy); c.translate(-px, -py); cizF(); c.restore(); };
+    B.yapraklar.forEach((y, k) => tek(() => c.fill(P(Y.yapraklar[k])), y.x, y.y, 0.5 + rgo() * 0.5));
+    for (const f of cicekler) tek(() => { for (const t of f.tac) c.fill(P(t.d)); }, f.c.x, f.c.y + f.c.r, 0.6 + rgo() * 0.4);
+  }), 1.5), '#9C93A8', { yog: 0.24, koru: M.birles(korOn, mBina), kenar: 0.15, titre: 0.8, grad: (x, y) => sstep(802, 814, y) });
   M.yika(M.maske((c) => { c.lineWidth = 3.2; for (const s of Y.saplar) c.stroke(P(s)); }), '#5E8C4A', { yog: 0.85, koru: mOnde, kenar: 0.2, titre: 0.4 });
   const yapraklar = B.yapraklar.map((y, i) => ({ y, i, t: R() }));
   for (const grup of [0, 1, 2].map((k) => yapraklar.filter((o) => o.i % 3 === k))) {
@@ -611,27 +631,28 @@
   // kaide: ışıklı cephe taş sıra sıra yatay örtücü darbelerle; darbe araları (derzler) tonlu kâğıtta kalır
   const mKaideGuaj = M.maske((c) => {
     const rb = SAHNE.rng(79);
-    const siralar = [[706, 727.2], [728.8, 751.2], [752.8, 775.2], [776.8, 799]];
+    // dört sıra, yassı fırçanın uzun yatay çekişleri (40–120 px); derzler 1–1,5 px, bazıları guajın altında kaybolur
+    const siralar = [[705.6, 727.6], [728.9, 751.6], [752.9, 775.6], [776.9, 799.2]];
     siralar.forEach(([y1, y2], k) => {
-      let x = 302;
-      const ofs = (k % 2) * 34;
-      const derzler = []; for (let dx = 300 + ofs + 20; dx < 820; dx += 68) derzler.push(dx);
-      derzler.push(820);
-      for (const dx of derzler) {
-        const x2 = Math.min(818.5, dx - 0.8);
-        if (x2 - x > 6) {
-          c.globalAlpha = 0.55 + 0.45 * sstep(330, 620, (x + x2) / 2);
-          c.globalAlpha *= 0.82 + rb() * 0.18;
-          blok(c, x + 0.3, (y1 + y2) / 2 + (rb() - 0.5) * 0.4, x2 - 0.3, (y1 + y2) / 2 + (rb() - 0.5) * 0.4, (y2 - y1) - 0.6 - rb() * 0.6);
-        }
-        x = dx + 0.8;
+      let x = 301 + rb() * 3;
+      while (x < 817) {
+        const L = 40 + rb() * 80;
+        let x2 = Math.min(819, x + L);
+        if (819 - x2 < 30) x2 = 819;
+        const kayip = rb() < 0.3; // derz guajın altında kaybolur
+        c.globalAlpha = 0.86 + rb() * 0.14;
+        yassiCekis(c, x, x2, y1 - (kayip ? 0.9 : 0), y2 + (kayip ? 0.9 : 0), rb);
+        x = x2 + (rb() < 0.25 ? -1.5 : 1 + rb() * 0.6);
       }
     });
     c.globalAlpha = 1;
     blok(c, 292, 693.4, 829, 693.4, 3.2);
   });
   const kaideDelik = M.maske((c) => { for (const p of SAHNE.kaide.pencereler) c.fill(P(SAHNE.kemerYolu(p.x, p.y, p.w + 4, p.h + 3))); });
-  M.opak(M.cikar(M.kesis(mKaideGuaj, mKaide), kaideDelik), '#FAF6EC', { kap: 0.94, kirik: 0.08, kalin: 0.45, koru: korB, akis: 0.06 });
+  M.opak(M.cikar(M.kesis(mKaideGuaj, mKaide), kaideDelik), '#FAF6EC', { kap: 0.94, kirik: 0.1, kalin: 0.1, koru: korB, akis: 0.08 });
+  // guaj kuruyunca üstüne saydam serin sır: korniş altında gölge şeridi, sola doğru gölgeye dönen cephe
+  M.yika(M.cikar(M.fMaske([300, 703, 821, 722], (x, y) => (y >= 704 && y < 714 + (nz(x / 30, 3) - 0.5) * 1.5 ? mKaide.a[y * W + x] : 0)), kaideDelik), '#A9A4BC', { yog: 0.5, koru: korB, kenar: 0.3, kenarR: 2, gran: 0.1, titre: 0.5 });
+  M.yika(M.cikar(M.fMaske([300, 704, 820, 800], (x, y) => mKaide.a[y * W + x] * Math.pow(clamp((560 - x) / 260, 0, 1), 0.8)), kaideDelik), '#B2AEC3', { yog: 0.55, koru: korB, kenar: 0.05, gran: 0.12, akis: 0.15 });
   // kasnak: üst kenarlarda ışık çizgisi, pencere araları açık yeşil guaj
   const mKasGuaj = M.maske((c) => {
     for (const [x1, x2, y] of [[352, 768, 556.5], [334, 786, 611.5]]) {
@@ -713,20 +734,26 @@
           for (let q = 0; q <= 8; q++) { const u = 0.1 + q * 0.12; pts.push([c.x + Math.cos(t.a) * t.L * u - Math.sin(t.a) * v * c.r * 0.86 * 0.6 * Math.sin(Math.PI * Math.min(1, u * 0.95 + 0.1)), c.y + Math.sin(t.a) * t.L * u + Math.cos(t.a) * v * c.r * 0.86 * 0.6 * Math.sin(Math.PI * Math.min(1, u * 0.95 + 0.1))]); }
           darbe(cx, pts, Math.max(3, c.r * 0.2) * (0.9 + rb() * 0.3), 0.2);
         }
-        // taç yaprağın kenarı: içten, kenarı izleyen ince örtücü darbe
-        cx.globalAlpha = 0.75 + 0.2 * clamp(yon, 0, 1);
-        cx.lineWidth = Math.max(2, c.r * 0.07);
+        // taç yaprağın kenarı: yalnız ışık yanında kenarı izleyen ince örtücü darbe (gölge yanında kâğıt tonu kalır)
+        const ox = c.x + Math.cos(t.a) * t.L * 0.55, oy = c.y + Math.sin(t.a) * t.L * 0.55, gk = t.L * 0.5;
+        const gs = cx.createLinearGradient(ox - LX * gk, oy - LY * gk, ox + LX * gk, oy + LY * gk);
+        gs.addColorStop(0, 'rgba(255,255,255,0)'); gs.addColorStop(0.45, 'rgba(255,255,255,0.15)'); gs.addColorStop(1, 'rgba(255,255,255,0.9)');
+        cx.globalAlpha = 1;
+        cx.strokeStyle = gs;
+        cx.lineWidth = Math.max(2, c.r * 0.065);
         cx.stroke(P(t.d));
+        cx.strokeStyle = '#fff';
         cx.restore();
       }
     }, kt);
-    M.opak(mT, BEYAZ, { kap: 0.97, kirik: 0.12, kalin: 0.7, akis: 0.06 });
+    M.opak(mT, BEYAZ, { kap: 0.97, kirik: 0.2, kalin: 0.14, akis: 0.06 });
     // göbek: örtücü sarı guaj, siena noktalar (suluboya), beyaz parıltı
     const gr = c.r * 0.2;
-    M.opak(M.maske((cx) => { cx.beginPath(); cx.arc(c.x, c.y, gr, 0, Math.PI * 2); cx.fill(); }, kt), '#EDC24A', { kap: 0.95, kalin: 0.6, titre: 0.3 });
-    M.yika(M.kesis(M.maske((cx) => { cx.beginPath(); cx.arc(c.x, c.y, gr, 0, Math.PI * 2); cx.fill(); }, kt), M.fMaske(kt, (x, y) => sstep(0, -gr * 0.9, (x - c.x) * LX + (y - c.y) * LY))), '#B8772A', { yog: 0.45, kenar: 0.1 });
+    M.opak(M.maske((cx) => { cx.beginPath(); cx.arc(c.x, c.y, gr, 0, Math.PI * 2); cx.fill(); }, kt), '#EDC24A', { kap: 0.95, kalin: 0.1, kirik: 0.08, titre: 0.6 });
+    M.yika(M.kesis(M.maske((cx) => { cx.beginPath(); cx.arc(c.x, c.y, gr, 0, Math.PI * 2); cx.fill(); }, kt), M.fMaske(kt, (x, y) => sstep(-gr * 0.1, -gr * 0.45, (x - c.x) * LX + (y - c.y) * LY + (nz(x / 3.5 + c.x, y / 3.5) - 0.5) * gr * 0.4))), '#B8772A', { yog: 0.42, kenar: 0.25, titre: 0.4 });
     M.yika(M.maske((cx) => { for (let i = 0; i < 10; i++) { const a = (i / 10) * Math.PI * 2 + c.aci, rr = gr * 1.3; cx.beginPath(); cx.arc(c.x + Math.cos(a) * rr, c.y + Math.sin(a) * rr, Math.max(1.1, c.r * 0.03), 0, Math.PI * 2); cx.fill(); } }, kt), '#7E5326', { yog: 0.85, kenar: 0.1 });
-    M.opak(M.maske((cx) => { cx.beginPath(); cx.arc(c.x + gr * 0.35, c.y - gr * 0.38, Math.max(1, gr * 0.25), 0, Math.PI * 2); cx.fill(); }, kt), BEYAZ, { kap: 1, kalin: 0.7 });
+    // küçük, düzensiz beyaz dokunuş: ince fırçanın kısa bir çekişi (yuvarlak parıltı değil)
+    M.opak(M.maske((cx) => { darbe(cx, [[c.x + gr * 0.12, c.y - gr * 0.62], [c.x + gr * 0.42, c.y - gr * 0.5], [c.x + gr * 0.62, c.y - gr * 0.22]], Math.max(1.4, gr * 0.22), 0.4); }, kt), BEYAZ, { kap: 0.8, kirik: 0.15, kalin: 0.08 });
   }
   // tomurcuklarda küçük beyaz ışık
   M.opak(M.maske((c) => { for (const t of B.tomurcuklar) { c.beginPath(); c.arc(t.x + Math.cos(t.aci) * t.r * 0.3 + 1.5, t.y + Math.sin(t.aci) * t.r * 0.3 - 1, Math.max(1, t.r * 0.18), 0, Math.PI * 2); c.fill(); } }), BEYAZ, { kap: 0.9, kalin: 0.5 });

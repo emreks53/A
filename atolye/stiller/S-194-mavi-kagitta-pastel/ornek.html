@@ -874,18 +874,22 @@
   const kag = hex('#B3C8DD');
   const DIS = new Float32Array(NN), KR0 = new Float32Array(NN);
   {
-    const n1 = gurultu(1941), n2 = gurultu(1942), n3 = gurultu(1943), n4 = gurultu(1946), n5 = gurultu(1947);
-    const ARA = 6.2, ZINCIR = 118;
+    const n1 = gurultu(1941), n2 = gurultu(1942), n3 = gurultu(1943), n4 = gurultu(1946), n5 = gurultu(1947), n6 = gurultu(1948), n7 = gurultu(1949);
+    // el yapımı kâğıdın vergeleri düzensizdir: aralık (5–8 px) ve derinlik yavaşça değişir, sırtlar
+    // lif lif kesilir; zincir çizgileri neredeyse görünmez. Böylece tarama çizgisi gibi düzenli bir desen oluşmaz.
+    const ARA = 6.6, ZINCIR = 118;
     for (let y = 0; y < WW; y++) for (let x = 0; x < WW; x++) {
-      const yv = y + (n1(x / 90, y / 90) - 0.5) * 3.0;
-      const verge = 0.5 + 0.5 * Math.cos((2 * Math.PI * yv) / ARA);
+      const faz = (y + 60 * (fbm(n1, x / 420, y / 160, 2) - 0.5) + 2.4 * (n6(x / 60, y / 22) - 0.5)) / ARA;
+      const derin = 0.3 + 0.7 * sstep(0.22, 0.78, n7(x / 230, y / 140));
+      const kesik = 0.3 + 0.7 * sstep(0.3, 0.64, n2(x / 15, y / 3.4));
+      const verge = (0.5 + 0.5 * Math.cos(2 * Math.PI * faz)) * derin * kesik;
       const zx = x + (n2(x / 120, y / 200) - 0.5) * 6;
       const zf = (zx % ZINCIR) / ZINCIR, zincir = Math.exp(-Math.pow((zf - 0.5) * ZINCIR / 2.4, 2));
       const lif = 0.6 * n3(x / 2.0, y / 2.0) + 0.4 * n4(x / 5.5, y / 4.5);
       const i = y * WW + x;
-      DIS[i] = clamp(0.1 + 0.38 * Math.pow(verge, 1.2) + 0.44 * lif + 0.1 * zincir, 0, 1);
-      // kâğıdın kendi tonu: verge sırtları ve zincir çizgileri hafif açık, geniş hafif bulutlanma
-      KR0[i] = 0.955 + 0.05 * verge * 0.6 + 0.025 * zincir + (n5(x / 300, y / 300) - 0.5) * 0.035 + (lif - 0.5) * 0.03;
+      DIS[i] = clamp(0.12 + 0.24 * verge + 0.52 * lif + 0.015 * zincir, 0, 1);
+      // kâğıdın kendi tonu: verge sırtları çok hafif açık, geniş hafif bulutlanma
+      KR0[i] = 0.958 + 0.016 * verge + 0.004 * zincir + (n5(x / 300, y / 300) - 0.5) * 0.035 + (lif - 0.5) * 0.03;
     }
   }
   // ---------------------------------------------------------------- pastel çubuk paleti
@@ -907,7 +911,7 @@
     }
   }
   // toz yalnız basıncın yettiği diş / verge sırtlarına tutunur
-  const tut = (p, d) => sstep(1 - p - 0.11, 1 - p + 0.11, d);
+  const tut = (p, d) => sstep(1 - p - 0.17, 1 - p + 0.17, d);
   const gx = SAHNE.gunes.x, gy = SAHNE.gunes.y;
   const TAS = new Set([T_KAIDE, T_KORNIS, T_MGOVDE, T_MSEREFE, T_MCIKMA, T_MTOPUZ]);
   const INCE = new Set([T_ZIKZAK, T_ALTIN, T_HILAL, T_MPENC, T_KPENC, T_KASPENC, T_ERKEK, T_COBEK, T_MKORK, T_SAP]);

@@ -720,6 +720,7 @@
   tint(mFonk(kaide, (x, y) => (y >= 704 && y < 716 ? 1 : 0)), '#D9C39C', { guc: 0.45, kenar: 0.2 });
   tint(bolge(['pencere'], (x, y) => y >= 692 || x < 345), '#9C8467', { guc: 0.6 });
   tint(bolge(['zemin']), '#E6D2A6', { guc: 0.55, akis: 0.25, f: (x, y) => lerp(1, 0.7, sstep(800, 1024, y)) });
+  tint(bolge(['zemin']), '#E6D2A6', { guc: 0.32, akis: 0.3, f: (x, y) => sstep(850, 1024, y) * (0.75 + 0.5 * nf(x / 90, y / 40)) });
   const altin = bolge(['altin']);
   tint(altin, '#E2C062', { guc: 0.85, kenar: 0.4, oyna: 0.3 });
   tint(mFonk(altin, (x, y) => (x < (x < 430 ? 300 : 560) ? 1 : 0)), '#BE9440', { guc: 0.35, oyna: 0.3 });
@@ -837,8 +838,9 @@
   noktala(240, 200, 840, 800, (x, y) => (bolgeAd(x, y) === 'pencere' ? 0.7 : 0), { aralik: 2.0, r: 0.7 });
   // zemin: yapının dibinde sola düşen gölge, seyrek noktalar
   noktala(180, 800, 300, 822, (x, y) => (bolgeAd(x, y) !== 'zemin' ? 0 : 0.55 * sstep(820, 801, y) * sstep(180, 240, x)), { aralik: 2.4 });
-  // zemin: kumun sabırlı, seyrek noktalaması (ufka doğru sıklaşır)
-  noktala(0, 801, 1024, 1024, (x, y) => (bolgeAd(x, y) !== 'zemin' ? 0 : 0.16 * (1 - sstep(800, 1000, y)) * (0.5 + 0.9 * nf(x / 60, y / 25))), { aralik: 3.0, r: 0.7 });
+  // zemin: yalnız ufuk çizgisinin hemen altında, ~28 px içinde sıfıra inen dereceli noktalama (uzaklaşan kum);
+  // açık kumda tek başına kalan nokta yok, kumun dokusu ikinci, alta doğru koyulaşan bir tinte ile verilir
+  noktala(0, 801, 1024, 830, (x, y) => (bolgeAd(x, y) !== 'zemin' ? 0 : 0.4 * Math.pow(sstep(829, 801, y), 1.4) * (0.7 + 0.5 * nf(x / 60, 3))), { aralik: 2.6, r: 0.7 });
   // ---- kısa taramalar: kubbenin gölge kenarında meridyen boyunca, korniş altında, pencerelerde
   const kubbeX = (b, y) => 560 + Math.sin(b) * kubbeR(y);
   for (let k = 0; k < 16; k++) {

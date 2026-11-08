@@ -874,7 +874,7 @@
   const DP = kagitDisi(196, { ince: 1.6, orta: 3.6, iri: 12, kontrast: 2.0 });
   // ---------------------------------------------------------------- 1. suluboya alt katı (saydam sırlar)
   const TR = new Float32Array(NN).fill(1), TG = new Float32Array(NN).fill(1), TB = new Float32Array(NN).fill(1);
-  const nA = gurultu(1951), nB = gurultu(1952), nC = gurultu(1953);
+  const nA = gurultu(1951), nB = gurultu(1952), nC = gurultu(1953), nD = gurultu(1954);
   const sir = (i, c, d) => { if (d <= 0) return; d = d > 1 ? 1 : d; TR[i] *= 1 - d * (1 - c[0]); TG[i] *= 1 - d * (1 - c[1]); TB[i] *= 1 - d * (1 - c[2]); };
   const mixc = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
   const MAVI = [0.52, 0.72, 0.92], MAVI2 = [0.62, 0.66, 0.92], ALTIN = [1.0, 0.84, 0.48], SEFT = [1.0, 0.82, 0.70], LILA = [0.80, 0.74, 0.88];
@@ -884,7 +884,7 @@
   {
     const M = new Float32Array(1024 * 1024);
     for (let y = 0; y < 1024; y++) for (let x = 0; x < 1024; x++) { const t = H.TIP[H.ID[y * K * WW + x * K]]; if (t !== T_GOK && t !== T_ZEMIN) M[y * 1024 + x] = 1; }
-    const Mb = bulanik3(M, 1024, 1024, 1);
+    const Mb = bulanik3(M, 1024, 1024, 2);
     for (let i = 0; i < 1024 * 1024; i++) YAKIN[i] = Mb[i];
   }
   const gx = SAHNE.gunes.x, gy = SAHNE.gunes.y;
@@ -897,13 +897,18 @@
     if (tip === T_GOK) {
       const t = Y / 800, dg = Math.hypot(X - gx, Y - gy);
       const isi = Math.max(sstep(380, 60, dg), sstep(0.45, 1.0, t) * 0.85);
-      let dn = lerp(0.72, 0.16, sstep(0, 1, Math.pow(t, 0.9))) * (0.8 + 0.4 * v1) * (1 - 0.9 * sstep(330, 40, dg));
+      // mavi ufka inmeden biter (mavi ile sarı üst üste binip yeşile dönmesin); arada açık kâğıt ve şeftali kalır
+      let dn = lerp(0.72, 0.16, sstep(0, 1, Math.pow(t, 0.9))) * (0.8 + 0.4 * v1) * (1 - 0.9 * sstep(330, 40, dg)) * (1 - sstep(0.42, 0.66, t + (v1 - 0.5) * 0.08));
       const cm = sstep(0.04, 0.3, BUL[i]);
-      const m = YAKIN[(y >> 1) * 1024 + (x >> 1)], esik = 0.05 + 0.55 * nC(X / 22, Y / 22);
-      const pay = 1 - sstep(esik, esik + 0.1, m);
-      sir(i, mixc(MAVI, MAVI2, sstep(0.45, 0.85, v2) * (1 - t) * 0.6), dn * (1 - cm) * pay * gran);
-      // güneşe ve ufka doğru ıslakta karışan altın sarısı
-      sir(i, mixc(ALTIN, SEFT, sstep(0.4, 0.75, v2) * 0.5), (0.1 + 0.55 * isi) * (1 - cm * 0.6) * pay * (0.85 + 0.3 * v1));
+      // kâğıt payı yalnız yer yer ve değişen genişlikte kalır; başka yerlerde lavi kenara kadar gelir ve orada hafifçe toplanır
+      const m = YAKIN[(y >> 1) * 1024 + (x >> 1)], esik = 0.12 + 0.6 * nC(X / 22, Y / 22);
+      const kesik = sstep(0.5, 0.64, nD(X / 34, Y / 34));
+      const pay = 1 - kesik * sstep(esik, esik + 0.12, m);
+      const topla = 1 + 0.35 * (1 - kesik) * sstep(0.02, 0.4, m);
+      sir(i, mixc(MAVI, MAVI2, sstep(0.45, 0.85, v2) * (1 - t) * 0.6), dn * (1 - cm) * pay * gran * topla);
+      // güneşe ve ufka doğru ıslakta karışan altın sarısı; ufka yakın bantta şeftaliye döner
+      const ufukS = sstep(0.5, 0.85, t) * (1 - sstep(260, 120, dg));
+      sir(i, mixc(ALTIN, SEFT, Math.max(sstep(0.4, 0.75, v2) * 0.5, 0.75 * ufukS)), (0.1 + 0.55 * isi) * (1 - cm * 0.6) * pay * (0.85 + 0.3 * v1) * topla);
       // bulut gölgesi: yumuşak lila
       sir(i, LILA, sstep(0.04, 0.2, BUL[i]) * sstep(0.62, 0.45, BIS[i] + (v1 - 0.5) * 0.12) * 0.6);
     } else if (tip === T_KUBBE || tip === T_KASNAK || tip === T_KASPENC) {

@@ -1514,8 +1514,9 @@ const H = (function () {
     tom: C('#FBEAF0'), tomKok: C('#E9A9BD'), tomUc: C('#FFFFFF'), tomGolge: C('#A78A9E'), canak: C('#2F6A36') };
 
   // ------------------------------------------------------------ gök: ultramarinden gümüşî ufka
-  H.gokBoya(ctx, { ust: '#2C4C9C', orta: '#7EA2D6', ufuk: '#F3EDD8', hale: '#F8F4E6', gunes: '#FFFFFF' },
-    { haleR: 200, haleGuc: 0.7, gunesR: 26, gunesYum: 9, gurultu: 0.012, ortaT: 0.46, us: 0.85 });
+  // güneş: kurşun-kalay sarısına çalan krem çekirdek ve geniş, sıcak gümüşî-krem hale (gündüz güneşi; ay gibi soğuk değil)
+  H.gokBoya(ctx, { ust: '#3459A8', orta: '#84A8DA', ufuk: '#F3EDD8', hale: '#FFF6DA', gunes: '#FFF4C8' },
+    { haleR: 235, haleGuc: 0.9, gunesR: 27, gunesYum: 10, gurultu: 0.012, ortaT: 0.46, us: 0.85 });
   // ufka yakın, yatay, ince bulut bantları; alttan serin gri, üstten ışıklı
   H.bantBulut(ctx, [
     { x: 150, y: 430, w: 320, h: 30, adet: 50, tohum: 51 },

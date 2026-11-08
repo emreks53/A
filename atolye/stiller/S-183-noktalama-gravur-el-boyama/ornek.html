@@ -616,6 +616,7 @@
   const IR = new Float32Array(N * N), IG = new Float32Array(N * N), IB = new Float32Array(N * N);
   const WR = new Float32Array(N * N).fill(255), WG = new Float32Array(N * N).fill(255), WB = new Float32Array(N * N).fill(255), WA = new Float32Array(N * N);
   const O = new Int16Array(N * N); // her pikseli en son örten öğenin sıra numarası
+  const BOS = new Uint8Array(N * N); // noktasız bırakılacak çizgiler (yaprak damarları): nokta buraya taşmaz
   let SIRA = 0;
   const KN = []; // kontur noktaları: [x, y, yarıçap, r, g, b, sıra]
   const nI = gurultu(1831);
@@ -644,7 +645,9 @@
       if (a > 0.5 && ton) O[id] = sira;
       const yk = ykF ? yika(X + 0.5, Y + 0.5) : yika;
       if (!ton) { if (yk) { const ya = yaF ? yA(X + 0.5, Y + 0.5) : yA; WR[id] = WR[id] * (1 - a) + yk[0] * a; WG[id] = WG[id] * (1 - a) + yk[1] * a; WB[id] = WB[id] * (1 - a) + yk[2] * a; WA[id] = WA[id] * (1 - a) + ya * a; } continue; }
-      const t = clamp(ton(X + 0.5, Y + 0.5), 0, 1);
+      const tr = ton(X + 0.5, Y + 0.5);
+      if (a > 0.5) BOS[id] = tr < 0 ? 1 : 0; // eksi ton: bu piksel noktasız kalır
+      const t = clamp(tr, 0, 1);
       T[id] = T[id] * (1 - a) + t * a;
       IR[id] = IR[id] * (1 - a) + ink[0] * a; IG[id] = IG[id] * (1 - a) + ink[1] * a; IB[id] = IB[id] * (1 - a) + ink[2] * a;
       if (yk) {
@@ -673,10 +676,11 @@
   // ================================================================ gök, güneş, bulutlar
   const gunesU = (x, y) => Math.hypot(x - 880, y - 140);
   oge((x) => x.fillRect(0, 0, 1024, 805), [0, 0, 1024, 805],
-    (x, y) => { const g = Math.exp(-Math.pow(gunesU(x, y) / 170, 2)); return (0.02 + 0.36 * Math.pow(1 - y / 805, 1.6)) * (1 - 0.92 * g); },
-    MUR.gok, (() => { const m = hex('#8CC0EA'), o = hex('#F3D9A4'); return (x, y) => { const t = sstep(430, 790, y); return [lerp(m[0], o[0], t), lerp(m[1], o[1], t), lerp(m[2], o[2], t)]; }; })(),
-    // kolorist göğü iki renkle bitirir: tepede gök mavisi, ufka doğru ılık açık okra
-    (x, y) => Math.max((0.3 + 0.62 * Math.pow(1 - y / 805, 0.8)) * (1 - 0.85 * Math.exp(-Math.pow(gunesU(x, y) / 150, 2))), 0.5 * sstep(430, 790, y)));
+    // gökte yalnız üst kenara doğru koyulaşan bir nokta kuşağı; ortası ve ufku çıplak kâğıt + saydam boya
+    (x, y) => { const g = Math.exp(-Math.pow(gunesU(x, y) / 190, 2)); return 0.5 * Math.pow(clamp(1 - y / 300, 0, 1), 1.5) * (1 - g); },
+    MUR.gok, (() => { const m = hex('#B4D3EE'), o = hex('#F4E2BE'); return (x, y) => { const t = sstep(380, 790, y); return [lerp(m[0], o[0], t), lerp(m[1], o[1], t), lerp(m[2], o[2], t)]; }; })(),
+    // kolorist göğü iki renkle, saydam ve açık bitirir: tepede soluk gök mavisi, ufka doğru ılık açık okra
+    (x, y) => Math.max((0.42 + 0.5 * Math.pow(1 - y / 805, 0.8)) * (1 - 0.8 * Math.exp(-Math.pow(gunesU(x, y) / 150, 2))), 0.45 * sstep(380, 790, y)));
   // güneş: açık disk, kenarına doğru yoğunlaşan noktalar, altın boya
   oge((x) => { x.beginPath(); x.arc(880, 140, 44, 0, PI2); x.fill(); }, [830, 90, 930, 190], (x, y) => 0.03 + 0.22 * sstep(30, 44, gunesU(x, y)), MUR.altin, hex('#F4CB52'), 0.85);
   kontur([duzlestir(SAHNE.daireYolu(880, 140, 44), 1)[0]], 0.9, MUR.altin, 0.7);
@@ -700,9 +704,9 @@
 
   // ================================================================ yer
   oge((x) => x.fillRect(0, 800, 1024, 224), [0, 800, 1024, 1024],
-    (x, y) => 0.1 + 0.18 * sstep(800, 1000, y) + (nI(x * 0.03, y * 0.06) - 0.5) * 0.06 + (y < 814 && x > 255 && x < 822 ? 0.22 * (1 - (y - 800) / 14) : 0),
-    MUR.toprak, hex('#E2BE76'), (x, y) => 0.58 + 0.12 * sstep(820, 1000, y));
-  oge((x) => { const g = x.createLinearGradient(0, 860, 0, 1024); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, '#fff'); x.fillStyle = g; x.fillRect(0, 840, 1024, 184); }, [0, 840, 1024, 1024], (x, y) => 0.18 + 0.12 * sstep(860, 1024, y), MUR.yaprak, hex('#86BE66'), 0.6);
+    (x, y) => 0.3 * sstep(830, 1024, y) + (nI(x * 0.03, y * 0.06) - 0.5) * 0.08 + (y < 816 && x > 255 && x < 822 ? 0.45 * (1 - (y - 800) / 16) : 0),
+    MUR.toprak, hex('#E9CC8E'), (x, y) => 0.55 + 0.12 * sstep(820, 1000, y));
+  oge((x) => { const g = x.createLinearGradient(0, 860, 0, 1024); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, '#fff'); x.fillStyle = g; x.fillRect(0, 840, 1024, 184); }, [0, 840, 1024, 1024], (x, y) => 0.05 + 0.3 * sstep(860, 1024, y), MUR.yaprak, hex('#9CCB7E'), 0.55);
   kontur([[[0, 800.5], [1024, 800.5]]], 0.8, MUR.toprak, 0.55);
 
   // ================================================================ minare
@@ -732,7 +736,7 @@
   }
   for (const w of SAHNE.minarePencereleri) {
     const d = SAHNE.kemerYolu(w.x, w.y, w.w, w.h);
-    oge((x) => x.fill(new Path2D(d)), kutuD(d), (x) => 0.82 + 0.16 * (1 - (x - (w.x - w.w / 2)) / w.w), MUR.sepya, hex('#86A9C6'), 0.65);
+    oge((x) => x.fill(new Path2D(d)), kutuD(d), (x) => 0.9 + 0.1 * (1 - (x - (w.x - w.w / 2)) / w.w), MUR.sepya, hex('#3B4F70'), 0.85);
     kontur(duz(d), 0.9, MUR.sepya, 0.9);
   }
 
@@ -740,11 +744,11 @@
   const K = SAHNE.kaide;
   const kaideD = SAHNE.yol([[K.x1, K.y1], [K.x2, K.y1], [K.x2, K.y2], [K.x1, K.y2]], true);
   oge((x) => x.fill(new Path2D(kaideD)), [K.x1, K.y1, K.x2, K.y2],
-    (x, y) => 0.04 + 0.62 * Math.exp(-(y - 704) / 9) + 0.16 * Math.pow(1 - (x - 300) / 520, 2) + (Math.abs(((y - 704) % 24) - 0) < 0.8 && y > 712 ? 0.25 : 0),
-    MUR.sepya, tas, 0.45);
+    (x, y) => 0.66 * Math.exp(-(y - 704) / 9) + 0.3 * Math.pow(1 - (x - 300) / 520, 2.2) + (Math.abs(((y - 704) % 24) - 0) < 0.8 && y > 712 ? 0.25 : 0),
+    MUR.sepya, tas, 0.42);
   for (const w of K.pencereler) {
     const d = SAHNE.kemerYolu(w.x, w.y, w.w, w.h);
-    oge((x) => x.fill(new Path2D(d)), kutuD(d), (x) => 0.8 + 0.18 * (1 - (x - (w.x - w.w / 2)) / w.w), MUR.sepya, hex('#86A9C6'), 0.65);
+    oge((x) => x.fill(new Path2D(d)), kutuD(d), (x) => 0.9 + 0.1 * (1 - (x - (w.x - w.w / 2)) / w.w), MUR.sepya, hex('#34486A'), 0.85);
     kontur(duz(d), 1.0, MUR.sepya, 0.9);
     const d2 = SAHNE.kemerYolu(w.x, w.y - 5, w.w + 10, w.h + 5);
     kontur(duz(d2).map((p) => p.filter((q) => q[1] < w.y + w.h - 1)), 0.8, MUR.sepya, 0.6);
@@ -766,11 +770,11 @@
     const R0 = (q.x2 - q.x1) / 2, cx = (q.x1 + q.x2) / 2;
     const ust = q.y1 + (k === 0 ? 5 : 6);
     oge((x) => x.fill(new Path2D(d)), [q.x1, q.y1, q.x2, q.y2],
-      (x, y) => { const l = silindirIsik(x, cx, R0); let t = 0.2 + 0.75 * Math.pow(1 - l, 1.3); if (y < ust) t *= 0.35; if (y > q.y2 - 5) t += 0.2; return t; },
-      MUR.yesil, hex('#2E9E66'), 0.8);
+      (x, y) => { const l = silindirIsik(x, cx, R0); let t = 0.03 + 0.92 * Math.pow(1 - l, 1.4); if (y < ust) t *= 0.35; if (y > q.y2 - 5) t += 0.2; return t; },
+      MUR.yesil, hex('#52B482'), 0.78);
     for (const w of SAHNE.kasnakPencereleri(k)) {
       const wd = SAHNE.kemerYolu(w.x, w.y, w.w, w.h);
-      oge((x) => x.fill(new Path2D(wd)), kutuD(wd), () => 0.97, MUR.yesil, hex('#2F7A60'), 0.6);
+      oge((x) => x.fill(new Path2D(wd)), kutuD(wd), () => 1, MUR.yesil, hex('#1D4A38'), 0.9);
       kontur(duz(wd), 0.7, MUR.yesil, 0.95);
     }
     kontur([[[q.x1, ust], [q.x2, ust]]], 0.8, MUR.yesil, 0.8);
@@ -786,9 +790,9 @@
         const L = l < 0 ? 0.6 : l;
         const r0 = kubbeYaricap(y);
         const g = r0 > 2 ? goreGolge(x, r0, 560, 16) : 0;
-        return 0.04 + 0.95 * Math.pow(1 - L, 1.3) + 0.24 * g * (0.35 + 0.65 * (1 - L));
+        return Math.max(0, 1.08 * Math.pow(1 - L, 1.25) - 0.07) + 0.26 * g * (0.3 + 0.7 * (1 - L));
       },
-      MUR.yesil, hex('#2AA068'), 0.8);
+      MUR.yesil, hex('#55B884'), 0.78);
     for (const kb of SAHNE.kaburgalar(16)) kontur([kb.noktalar.filter((q) => q[1] > 308)], 0.8, MUR.yesil, 0.7);
     kontur(duz(SAHNE.kubbeYolu), 1.1, MUR.yesil, 0.92);
   }
@@ -832,20 +836,23 @@
     const ca = Math.cos(y.aci), sa = Math.sin(y.aci), nx = -sa, ny = ca;
     const yon = nx * isik2[0] + ny * isik2[1] > 0 ? -1 : 1;
     const L = y.uzunluk, Wd = L * y.genislik;
-    oge((x) => x.fill(new Path2D(d)), kutuD(d, 2), (x, yy) => {
+    // damar: orta damar ve dört çift yan damar; gravürcü onları noktasız, kolorist daha soluk boyar
+    const damar = (x, yy) => {
       const u = ((x - y.x) * ca + (yy - y.y) * sa) / L;
       const v = ((x - y.x) * nx + (yy - y.y) * ny);
-      let t = 0.2 + (v * yon > 0 ? 0.45 : 0.0) + 0.15 * (1 - Math.abs(v) / (Wd * 0.5 + 0.01));
-      // damarlar boş bırakılır (açık çizgiler)
-      if (Math.abs(v) < 0.9) t *= 0.25;
+      const vv = Math.abs(v);
+      if (vv < 1.35 && u > 0.05 && u < 0.9) return true;
       for (let k = 1; k <= 4; k++) {
-        const u0 = 0.15 + k * 0.17;
-        const vv = Math.abs(v);
-        const uu = u0 + vv / L * 1.1;
-        if (Math.abs(u - uu) * L < 0.75 && vv > 1.5) t *= 0.3;
+        const uu = 0.15 + k * 0.17 + vv / L * 1.1;
+        if (Math.abs(u - uu) * L < 0.95 && vv > 1.2 && vv < Wd * 0.36) return true;
       }
-      return t;
-    }, MUR.yaprak, hex('#6CB654'), 0.72);
+      return false;
+    };
+    oge((x) => x.fill(new Path2D(d)), kutuD(d, 2), (x, yy) => {
+      if (damar(x, yy)) return -1;
+      const v = ((x - y.x) * nx + (yy - y.y) * ny);
+      return 0.22 + (v * yon > 0 ? 0.34 : 0.0) + 0.1 * (1 - Math.abs(v) / (Wd * 0.5 + 0.01));
+    }, MUR.yaprak, hex('#6CB654'), (x, yy) => (damar(x, yy) ? 0.38 : 0.72));
     kontur(duz(d), 0.85, MUR.yaprak, 0.9);
   });
   B.tomurcuklar.forEach((t) => {
@@ -931,7 +938,7 @@
     const D = dd.data;
     const KAP = new Float32Array(DW * DH);
     const CR = new Float32Array(DW * DH), CG = new Float32Array(DW * DH), CB = new Float32Array(DW * DH);
-    const ar = 1.85;
+    const ar = 2.6;
     const rr = SAHNE.rng(1839);
     for (let gy = 0; gy < N; gy += ar) {
       for (let gx = 0; gx < N; gx += ar) {
@@ -939,10 +946,21 @@
         if (x < 0 || y < 0 || x >= N || y >= N) continue;
         const id = (y | 0) * N + (x | 0);
         const t = T[id];
-        if (t <= 0.004) continue;
-        const p = clamp(Math.pow(t, 0.85) * 1.25, 0, 1);
-        if (rr() > p) continue;
-        const rad = (0.32 + 0.78 * t) * (0.85 + rr() * 0.3) * OL * 0.68;
+        const pr = rr(), jr = rr();
+        if (t <= 0.06) continue;
+        const p = clamp(Math.pow((t - 0.06) / 0.94, 0.8) * 1.35, 0, 1);
+        if (pr > p) continue;
+        const rad = (0.5 + 0.85 * t) * (0.88 + jr * 0.24) * OL;
+        {
+          // nokta noktasız çizgiye (damar) taşmasın
+          const r1 = rad / OL;
+          let bos = false;
+          for (let q = 0; q < 9 && !bos; q++) {
+            const ax = q === 8 ? x : x + r1 * Math.cos(q * 0.785), ay = q === 8 ? y : y + r1 * Math.sin(q * 0.785);
+            if (ax >= 0 && ay >= 0 && ax < N && ay < N && BOS[(ay | 0) * N + (ax | 0)]) bos = true;
+          }
+          if (bos) continue;
+        }
         const cx = x * OL, cy = y * OL;
         const x0 = Math.max(0, Math.floor(cx - rad - 1)), x1 = Math.min(DW - 1, Math.ceil(cx + rad + 1));
         const y0 = Math.max(0, Math.floor(cy - rad - 1)), y1 = Math.min(DH - 1, Math.ceil(cy + rad + 1));

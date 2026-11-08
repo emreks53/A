@@ -907,6 +907,11 @@
   const kb = hex('#FCF9F1'), kmavi = hex('#C9DDEB');
   const gx = SAHNE.gunes.x, gy = SAHNE.gunes.y;
   const cw = Math.cos(-0.55), sw = Math.sin(-0.55), cx2 = Math.cos(-0.75), sx2 = Math.sin(-0.75);
+  // gök: ressam göğü bölüm bölüm tarar; her bölümde açı biraz değişir (±10°), vuruşlar kısa ve boyu değişken.
+  // Üstte ikinci, daha yatık bir mavi kat tarama sıklaşarak temiz bir kobalt verir.
+  const GA = [-0.92 - 0.17, -0.92, -0.92 + 0.15].map((a) => [Math.cos(a), Math.sin(a)]);
+  const GC = [Math.cos(-0.3), Math.sin(-0.3)], GW = [Math.cos(-0.19), Math.sin(-0.19)];
+  const nGok = gurultu(1925);
   const TAS = new Set([T_KAIDE, T_KORNIS, T_MGOVDE, T_MSEREFE, T_MCIKMA, T_MTOPUZ, T_MKORK]);
   const KUCUK = new Set([T_ALTIN, T_HILAL, T_MPENC, T_KPENC, T_KASPENC, T_ZIKZAK, T_COBEK, T_ERKEK, T_SAP]);
   for (let i = 0; i < NN; i++) {
@@ -921,12 +926,13 @@
       const gunes = Math.exp(-(dg * dg) / (2 * 150 * 150));
       const ufuk = sstep(330, 790, Y);
       const bu = sstep(0.04, 0.5, BUL[i]), bi = BIS[i];
-      c1 = (0.88 - 0.5 * ufuk) * (1 - 0.95 * gunes) * (1 - bu);
-      c2 = sstep(330, 40, Y) * 0.55 * (1 - gunes) * (1 - bu);
+      c1 = (0.95 - 0.55 * ufuk) * (1 - 0.95 * gunes) * (1 - bu);
+      c2 = (0.22 + 0.6 * sstep(560, 40, Y)) * (1 - gunes) * (1 - bu);
       w = 0.05 + 0.45 * ufuk * ufuk + 0.8 * gunes;
       if (bu > 0) w = w * (1 - bu) + bu * (0.38 + 0.8 * Math.pow(bi, 1.1));
-      wu = -x * sw + y * cw; wv = x * cw + y * sw;
-      ar = 7.2; boy = 130;
+      // beyaz kalem gökte daha yatık gider ve mavi taramayı çaprazlar (ufukta açık, temiz bir gök)
+      wu = -x * GW[1] + y * GW[0]; wv = x * GW[0] + y * GW[1];
+      ar = 7.2; boy = 66;
     } else if (tip === T_ZEMIN) {
       // çıplak kraft; ufka yakın ve bitki gölgesinde birkaç yatay sepya tarama
       const t = (Y - 800) / 224;
@@ -965,7 +971,17 @@
       w = tip === T_ALTIN || tip === T_HILAL ? sstep(0.7, 1, lt) * 0.8 : 0;
       ar = 5; boy = 30;
     }
-    const a = tarama(fu, fv, ar, boy, 0.46, 51);
+    let a;
+    if (tip === T_GOK) {
+      const q = fbm(nGok, X / 170, Y / 170, 2);
+      const w0 = sstep(0.47, 0.33, q), w2 = sstep(0.53, 0.67, q), w1 = 1 - Math.max(w0, w2);
+      a = 0;
+      [w0, w1, w2].forEach((wk, k) => {
+        if (wk <= 0.01) return;
+        const [ca, sa] = GA[k];
+        a = Math.max(a, wk * tarama(-x * sa + y * ca, x * ca + y * sa, ar, 66, 0.46, 51 + k * 7));
+      });
+    } else a = tarama(fu, fv, ar, boy, 0.46, 51);
     let fr = PR[i], fg = PG[i], fb = PB[i];
     if (tip === T_MPENC || tip === T_KPENC || tip === T_KASPENC) {
       // pencere içleri: koyu kalemle sık, iki yönde sıkıca doldurulmuş (kenarı net)
@@ -978,7 +994,13 @@
       const k = dep(a * c1, d) * (KUCUK.has(tip) ? 1 : 0.94);
       fr += (r - fr) * k; fg += (g - fg) * k; fb += (bl - fb) * k;
     }
-    if (c2 > 0) {
+    if (c2 > 0 && tip === T_GOK) {
+      // gökte çapraz kat: aynı mavi kalem, daha yatık, kısa vuruşlar
+      const b = tarama(-x * GC[1] + y * GC[0], x * GC[0] + y * GC[1], ar * 1.05, 58, 0.44, 52);
+      const k = dep(b * c2, d) * 0.85;
+      const dr = r * 0.9, dgc = g * 0.93, db = bl * 0.97;
+      fr += (dr - fr) * k; fg += (dgc - fg) * k; fb += (db - fb) * k;
+    } else if (c2 > 0) {
       const b = tarama(fu * cx2 + fv * sx2, -fu * sx2 + fv * cx2, ar * 1.1, boy * 0.8, 0.44, 52);
       const k = dep(b * c2, d) * 0.85;
       const dr = r * 0.62, dgc = g * 0.66, db = bl * 0.7;

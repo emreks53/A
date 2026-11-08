@@ -17,14 +17,14 @@
     "Yapraklar orta damardan uca kıvrılan zümrüt çizgilerle, gölge yarısında çam yeşili ve kobalt; toprak ve kaide yatay okra-altın çizgiler"
   ],
   "palet": [
-    "#0A8A52",
-    "#0D7884",
-    "#2A57BC",
-    "#3593D6",
-    "#D8436F",
-    "#D69A10",
-    "#C2701E",
-    "#7651BF"
+    "#538A73",
+    "#356B63",
+    "#5A7796",
+    "#9DB3C8",
+    "#953752",
+    "#B79869",
+    "#B9936A",
+    "#866D8F"
   ],
   "kodla_cizim": "Tek mürekkep katmanı 2048 px'te 'multiply' bileşimle çizilir; kesişen renkler üst üste koyulaşır. Her vuruş el titremesiyle bozulmuş bir yoldur ve değişken kalınlıklı şerit olarak doldurulur: başta hafif basınç, sonda incelme, kalınlıkta gürültülü dalgalanma; bölge haritasında bir koşulun sağlandığı parçalara kırpılır ve kırpılan uçlar da kısa bir incelmeyle biter. Uzun çizgiler 45–210 px'lik, uçları binen ya da aralık bırakan vuruşlara bölünür. Kubbe 256 meridyen yuvasıdır: her çizginin düzeyi indeksinin ikiye bölünebilirliğinden gelir, boylamı biraz kaydırılır; seyrek düzeyler her yerde, sık düzeyler kendi rastgele eşiklerini aydınlanma aştığında çizilir; yakınsayan çizgiler izdüşümdeki aralık kendi alt sınırının altına düşünce biter. Enlemler 18–56 px'lik kısa yaylardır, her biri kendi eşiğiyle; en koyu yerlerde eğik kısa öbekler eklenir. Kasnakta 192, minarede gövde başına 24–43 sütun vardır; sütunların açısı ve eğimi hafifçe sapar, gölge yanında eğik öbekler her vuruşun kendi eşiğiyle biter (sert sınır olmaz). Gök ve toprak, 60–170 px'lik, hafif yaylı vuruş sıralarıdır; sıra aralıkları rastgele değişir, renk güneşe uzaklıkla seçilir. Bitkilerde her öğe önce arkasındaki mürekkebi siler, sonra kendi yoluna kırpılmış taramasını taşır: taç yaprakta merkezden ışınlar, yaprakta damardan uca eğriler, tomurcukta eksene koşut çizgiler.",
   "etiketler": [

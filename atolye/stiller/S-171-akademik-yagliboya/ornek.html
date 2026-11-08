@@ -1054,6 +1054,35 @@ const H = (function () {
       D.set(D2); NX.set(N2); NY.set(M2);
     }
     const esik = O.esik || 0.5, ken = O.kenar || 0.12, sig = O.sigma || 0.03, st = 4;
+    if (O.minParca) {
+      // bükmeden kopup gökte tek başına kalan küçük bulut adacıklarını sil (başıboş leke kalmasın):
+      // görünür eşikte parçalar etiketlenir, soluk etek pikselleri yoğunluk içinden en yakın parçaya
+      // bağlanır (eş zamanlı yayılma), küçük parçalar eteğiyle birlikte silinir
+      const esik0 = esik - ken, esik1 = esik - ken * 0.3;
+      const ET = new Int32Array(W * W), kuyruk = new Int32Array(W * W), alan = [0];
+      let bas = 0, son = 0, etiket = 0;
+      for (let i0 = 0; i0 < W * W; i0++) {
+        if (ET[i0] || D[i0] < esik1) continue;
+        etiket++; alan.push(0);
+        const b0 = son;
+        kuyruk[son++] = i0; ET[i0] = etiket;
+        for (let q = b0; q < son; q++) {
+          const i = kuyruk[q]; alan[etiket]++;
+          const x = i % W, y = (i / W) | 0;
+          for (const j of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, y > 0 ? i - W : -1, y < W - 1 ? i + W : -1]) {
+            if (j >= 0 && !ET[j] && D[j] >= esik1) { ET[j] = etiket; kuyruk[son++] = j; }
+          }
+        }
+      }
+      for (bas = 0; bas < son; bas++) {
+        const i = kuyruk[bas], e = ET[i];
+        const x = i % W, y = (i / W) | 0;
+        for (const j of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, y > 0 ? i - W : -1, y < W - 1 ? i + W : -1]) {
+          if (j >= 0 && !ET[j] && D[j] >= esik0 * 0.5) { ET[j] = e; kuyruk[son++] = j; }
+        }
+      }
+      for (let i = 0; i < W * W; i++) if (ET[i] && alan[ET[i]] < O.minParca) D[i] = 0;
+    }
     const lx = 0.72, ly = -0.69;
     const c = S.yeniTuval(W, W), g = c.getContext('2d');
     const im = g.createImageData(W, W), d = im.data;
@@ -1522,7 +1551,7 @@ const H = (function () {
     { x: 150, y: 240, w: 380, h: 140, adet: 80, tohum: 31 },
     { x: 530, y: 146, w: 230, h: 60, adet: 40, tohum: 32 },
     { x: 790, y: 336, w: 330, h: 112, adet: 70, tohum: 33 },
-  ], { isik: '#FFFDF4', orta: '#F2EADF', golge: '#B4B6C8' }, { esik: 0.5, kenar: 0.3, gOlcek: 30, gGuc: 0.5, sigma: 0.018, kure: 0.22, opaklik: 0.9, bulanik: 2.2, tohum: 18, burgu: 22, burguOlcek: 60, tabanYum: 22 });
+  ], { isik: '#FFFDF4', orta: '#F2EADF', golge: '#B4B6C8' }, { esik: 0.5, kenar: 0.3, gOlcek: 30, gGuc: 0.5, sigma: 0.018, kure: 0.22, opaklik: 0.9, bulanik: 2.2, tohum: 18, burgu: 22, burguOlcek: 60, tabanYum: 22, minParca: 900 });
   // ufka yakın ince, uzun bulut şeritleri (stratus)
   {
     const r = S.rng(3535);

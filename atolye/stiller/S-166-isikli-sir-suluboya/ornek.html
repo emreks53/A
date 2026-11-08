@@ -633,7 +633,19 @@
   M.yika(M.fMaske([0, 798, W, 822], (x, y) => (y >= 800 && y < 806 + (nz(x / 30, 7) - 0.5) * 3 ? 1 : 0)), '#C9A77E', { yog: 0.55, koru: M.birles(korOn, mBina), kenar: 0.3, titre: 0.5 });
   M.yika(M.fMaske([0, 798, W, W], (x, y) => (y >= 800 ? 1 : 0)), '#D7B385', { yog: 0.35, koru: M.birles(korOn, mBina), kenar: 0.2, titre: 0.5, grad: (x, y) => sstep(850, 1024, y) });
   // bitkilerin zemine düşen serin gölgeleri
-  M.yika(M.mBulanik(M.maske((c) => { c.translate(-9, 7); for (const d of Y.yapraklar) c.fill(P(d)); for (const f of cicekler) for (const t of f.tac) c.fill(P(t.d)); }), 1), '#A9ABD6', { yog: 0.7, koru: M.birles(korOn, mBina), kenar: 0.3, titre: 0.6, grad: (x, y) => (y > 800 ? 1 : 0) });
+  // her yaprak ve çiçek için ayrı, kısa ve biçimi hafifçe bozulmuş bir gölge; yalnız yere yakın alt kısımlarda belirgin
+  const rg = SAHNE.rng(1669);
+  const gMaske = M.maske((c) => {
+    const tek = (d, px, py, alfa) => {
+      const dx = -3 - rg() * 3, dy = 2 + rg() * 2.5, sk = (rg() - 0.5) * 0.12, sy = 0.82 + rg() * 0.16;
+      c.save(); c.globalAlpha = alfa;
+      c.translate(px, py); c.transform(1, 0, sk, sy, dx, dy); c.translate(-px, -py);
+      c.fill(P(d)); c.restore();
+    };
+    B.yapraklar.forEach((y, k) => tek(Y.yapraklar[k], y.x, y.y, 0.55 + rg() * 0.45));
+    for (const f of cicekler) { const a = 0.6 + rg() * 0.4; for (const t of f.tac) tek(t.d, f.c.x, f.c.y + f.c.r, a); }
+  });
+  M.yika(M.mBulanik(gMaske, 2), '#A9ABD6', { yog: 0.32, koru: M.birles(korOn, mBina), kenar: 0.15, titre: 1.2, gran: 0.12, grad: (x, y) => sstep(801, 816, y) * (0.55 + 0.45 * sstep(830, 960, y)) * (0.75 + 0.5 * M.fbm(nz, x / 40, y / 40, 2)) });
 
   // ------------------------------------------------------------ 7. bitkiler: saplar, yapraklar (iki yarım, ortada korunmuş damar), tomurcuklar
   M.yika(M.maske((c) => { c.lineWidth = 3.4; for (const s of Y.saplar) c.stroke(P(s)); }), '#79A64A', { yog: 0.9, koru: mOnde, kenar: 0.3, titre: 0.4 });
@@ -646,15 +658,17 @@
     const dk = damarKoru(grup);
     const korY = M.birles(mOnde, dk);
     const sicak = grup.filter((o) => o.tonR < 0.55), serin = grup.filter((o) => o.tonR >= 0.55);
-    M.yika(M.yolMaske(sicak.map((o) => SAHNE.yaprakYolu(o.y))), '#B4D467', { yog: 0.85, koru: korY, kenar: 0.35, kenarR: 2.5, gran: 0.15, titre: 0.45 });
-    M.yika(M.yolMaske(serin.map((o) => SAHNE.yaprakYolu(o.y))), '#93C878', { yog: 0.85, koru: korY, kenar: 0.35, kenarR: 2.5, gran: 0.15, titre: 0.45 });
+    // sır yaprak boyunca eşit dağılmaz: uca ya da dibe doğru toplanır, kurumuş kenarda pigment birikir
+    const yGrad = (x, y) => 0.78 + 0.42 * M.fbm(nz, x / 23 + 40, y / 23 + 11, 3);
+    M.yika(M.yolMaske(sicak.map((o) => SAHNE.yaprakYolu(o.y))), '#B4D467', { yog: 0.85, koru: korY, kenar: 0.55, kenarR: 3, gran: 0.18, akis: 0.28, titre: 0.45, grad: yGrad });
+    M.yika(M.yolMaske(serin.map((o) => SAHNE.yaprakYolu(o.y))), '#93C878', { yog: 0.85, koru: korY, kenar: 0.55, kenarR: 3, gran: 0.18, akis: 0.28, titre: 0.45, grad: yGrad });
     // gölge yarısı: ışıktan uzak yan
     const golgeYari = grup.map((o) => {
       const nx = -Math.sin(o.y.aci), ny = Math.cos(o.y.aci);
       const taraf = nx * LX + ny * LY > 0 ? -1 : 1;
       return yaprakYarisi(o.y, taraf);
     });
-    M.yika(M.yolMaske(golgeYari), '#2E7E5E', { yog: 0.75, koru: korY, kenar: 0.4, kenarR: 2, gran: 0.15, titre: 0.4 });
+    M.yika(M.yolMaske(golgeYari), '#2E7E5E', { yog: 0.72, koru: korY, kenar: 0.6, kenarR: 2.5, gran: 0.18, akis: 0.3, titre: 0.5, grad: (x, y) => 0.7 + 0.5 * M.fbm(nz, x / 17 + 90, y / 17 + 3, 3) });
     M.yika(M.yolMaske(grup.filter((o) => o.tonG < 0.35).map((o) => SAHNE.yaprakYolu(o.y))), '#3C7A57', { yog: 0.35, koru: korY, kenar: 0.3, titre: 0.4 });
   }
   // tomurcuklar: gül pembesi, gölge yanı koyu gül, dipte yeşil çanak
@@ -700,9 +714,25 @@
     // göbek: kadmiyum sarısı disk, gölge yanı siena, ercik noktaları, korunmuş parıltı
     const gr = c.r * 0.2;
     const gob = M.maske((cx) => { cx.beginPath(); cx.arc(c.x, c.y, gr, 0, Math.PI * 2); cx.fill(); });
-    const parilti = M.maske((cx) => { cx.beginPath(); cx.arc(c.x + gr * 0.35, c.y - gr * 0.38, gr * 0.28, 0, Math.PI * 2); cx.fill(); });
-    M.yika(gob, '#F2C437', { yog: 0.95, koru: parilti, kenar: 0.35, kenarR: 1.5, titre: 0.3 });
-    M.yika(M.kesis(gob, M.fMaske([c.x - gr - 2, c.y - gr - 2, c.x + gr + 2, c.y + gr + 2], (x, y) => ((x - c.x) * LX + (y - c.y) * LY < -gr * 0.15 ? 1 : 0))), '#C07A22', { yog: 0.65, kenar: 0.3, titre: 0.2 });
+    // korunmuş küçük, düzensiz kâğıt payı (yuvarlak parıltı değil): sağ üst kenara yakın, eğik ve kırık bir leke
+    const rp = SAHNE.rng((c.x * 7 + c.y) | 0);
+    const parilti = M.maske((cx) => {
+      const px = c.x + gr * 0.42, py = c.y - gr * 0.4, n = 7;
+      cx.beginPath();
+      for (let k = 0; k < n; k++) {
+        const a = (k / n) * Math.PI * 2, rr = gr * (0.12 + rp() * 0.14);
+        const ex = Math.cos(a) * rr * 1.5, ey = Math.sin(a) * rr * 0.75;
+        const qx = px + ex * 0.75 + ey * 0.66, qy = py - ex * 0.66 + ey * 0.75;
+        if (k) cx.lineTo(qx, qy); else cx.moveTo(qx, qy);
+      }
+      cx.closePath(); cx.fill();
+    });
+    M.yika(gob, '#F2C437', { yog: 0.9, koru: M.islem(parilti, null, (p) => p * 0.8, 'ilk'), kenar: 0.45, kenarR: 1.5, gran: 0.12, akis: 0.2, titre: 0.6 });
+    // ikinci sır: sol alt yarıya, düzensiz eğri sınırla siena
+    M.yika(M.kesis(gob, M.fMaske([c.x - gr - 2, c.y - gr - 2, c.x + gr + 2, c.y + gr + 2], (x, y) => {
+      const d = (x - c.x) * LX + (y - c.y) * LY, dik = (x - c.x) * LY - (y - c.y) * LX;
+      return sstep(-gr * 0.05, -gr * 0.2, d + (dik * dik) / (gr * 3.2) + (nz(x / 3.5 + c.x, y / 3.5) - 0.5) * gr * 0.35);
+    })), '#C07A22', { yog: 0.55, koru: parilti, kenar: 0.35, kenarR: 1.2, gran: 0.1, titre: 0.4 });
     M.yika(M.maske((cx) => {
       for (let i = 0; i < 11; i++) {
         const a = (i / 11) * Math.PI * 2 + c.aci, rr = gr * (1.25 + ((i * 7) % 3) * 0.1);
