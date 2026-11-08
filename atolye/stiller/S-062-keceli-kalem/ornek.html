@@ -584,9 +584,12 @@
       darbe(x, [[x1, y], [x2, y + (R() - 0.5) * 3]], { w: 14, renk: '#ecdcb8', alfa: 0.85 - k * 0.25, hizli: 0.7 });
     }
     for (let y = 812; y < 870; y += 14) darbe(x, [[380 + R() * 200, y], [700 + R() * 250, y + 1]], { w: 12, renk: '#dcc79e', alfa: 0.7, hizli: 0.8 });
-    for (let y = 804; y < 840; y += 10) darbe(x, [[150 + (y - 804) * 2, y], [330, y]], { w: 12, renk: '#b4bcc4', alfa: 0.8, hizli: 0.5 });
-    darbe(x, [[250, 806], [800, 806]], { w: 11, renk: '#b4bcc4', alfa: 0.85, hizli: 0.8, tit: 0.3 });
-    darbe(x, [[230, 814], [560, 815]], { w: 8, renk: '#b4bcc4', alfa: 0.6, hizli: 0.9, tit: 0.3 });
+    // yapının sola düşen gölgesi: soğuk gri (C3 + C5) üst üste, sert kenarlı
+    for (let y = 804; y < 846; y += 9) darbe(x, [[96 + (y - 804) * 2.4, y], [312 - (y - 804) * 0.4, y]], { w: 11, renk: '#b4bcc4', alfa: 0.85, hizli: 0.5 });
+    for (let y = 804; y < 834; y += 9) darbe(x, [[150 + (y - 804) * 2.6, y], [300, y]], { w: 10, renk: '#8e98a1', alfa: 0.75, hizli: 0.6 });
+    darbe(x, [[250, 806], [820, 806]], { w: 12, renk: '#b4bcc4', alfa: 0.9, hizli: 0.8, tit: 0.3 });
+    darbe(x, [[262, 806], [700, 807]], { w: 7, renk: '#8e98a1', alfa: 0.7, hizli: 0.9, tit: 0.3 });
+    darbe(x, [[230, 815], [600, 816]], { w: 8, renk: '#b4bcc4', alfa: 0.65, hizli: 0.9, tit: 0.3 });
   }, { beyaz: false, tasma: 0 });
 
   // --- minare: sol yarı sıcak gri, şerefe altları soğuk gri, sağ kenar beyaz
@@ -595,20 +598,18 @@
     for (const [ad, cx, Rr] of [['gövde-alt', 300, 34], ['gövde-orta', 300, 27], ['gövde-üst', 300, 19]]) {
       const p = mp(ad);
       const y1 = p.noktalar[0][1], y2 = p.noktalar[2][1];
-      for (let xx = cx - Rr + 4; xx < cx + Rr * 0.2; xx += 7) {
-        const u = (xx - cx) / Rr;
-        darbe(x, [[xx, y2 + 2], [xx, y1 - 2]], { w: 9, renk: u < -0.55 ? '#c9c2b6' : '#e3ddd2', alfa: 0.85, hizli: 0.3, tit: 0.3 });
-      }
-      darbe(x, [[cx - Rr + 4, y2], [cx - Rr + 4, y1]], { w: 8, renk: '#aab3ba', alfa: 0.8, hizli: 0.2, tit: 0.3 });
-      darbe(x, [[cx - Rr * 0.45, y2], [cx - Rr * 0.45, y1]], { w: 6, renk: '#c4cbd0', alfa: 0.6, hizli: 0.4, tit: 0.3 });
+      // soğuk gri katmanlar: C1 geniş, C3 gölge yarısı, C5 sol kenar
+      for (let xx = cx - Rr + 3; xx < cx + Rr * 0.3; xx += 6.5) darbe(x, [[xx, y2 + 2], [xx, y1 - 2]], { w: 8.5, renk: '#dfe3e7', alfa: 0.85, hizli: 0.3, tit: 0.3 });
+      for (let xx = cx - Rr + 3; xx < cx - Rr * 0.25; xx += 6.5) darbe(x, [[xx + 1, y2 + 2], [xx + 1, y1 - 2]], { w: 8.5, renk: '#bcc4cb', alfa: 0.8, hizli: 0.35, tit: 0.3 });
+      darbe(x, [[cx - Rr + 4, y2], [cx - Rr + 4, y1]], { w: Rr > 25 ? 9 : 7, renk: '#97a1aa', alfa: 0.8, hizli: 0.2, tit: 0.3 });
     }
     for (const [y1, y2, x1, x2] of [[488, 500, 266, 334], [316, 325, 273, 327], [206, 212, 281, 319], [468, 488, 248, 352], [300, 316, 257, 343]]) {
-      darbe(x, [[x1 - 2, (y1 + y2) / 2], [x2 + 2, (y1 + y2) / 2]], { w: y2 - y1 + 2, renk: '#b9c0c6', alfa: 0.8, hizli: 0.2, tit: 0.2 });
+      darbe(x, [[x1 - 2, (y1 + y2) / 2], [x2 + 2, (y1 + y2) / 2]], { w: y2 - y1 + 2, renk: '#a9b2ba', alfa: 0.85, hizli: 0.2, tit: 0.2 });
     }
     for (const ad of ['şerefe-1', 'şerefe-2', 'bilezik']) {
       const p = mp(ad);
       const y1 = p.noktalar[0][1], y2 = p.noktalar[2][1], x1 = p.noktalar[0][0], x2 = p.noktalar[1][0];
-      darbe(x, [[x1, (y1 + y2) / 2], [x1 + (x2 - x1) * 0.45, (y1 + y2) / 2]], { w: y2 - y1, renk: '#ddd6ca', alfa: 0.85, hizli: 0.5, tit: 0.2 });
+      darbe(x, [[x1, (y1 + y2) / 2], [x1 + (x2 - x1) * 0.45, (y1 + y2) / 2]], { w: y2 - y1, renk: '#d3d9de', alfa: 0.85, hizli: 0.5, tit: 0.2 });
     }
     for (const ad of ['korkuluk-1', 'korkuluk-2']) {
       const p = mp(ad);
@@ -621,7 +622,7 @@
     // topuz: kıvrık darbeler
     for (let k = 0; k < 5; k++) {
       const xx = 280 + k * 5;
-      darbe(x, [[xx, 199], [xx - 6 + k, 178], [298 + k * 0.5, 152]], { w: 7, renk: k < 2 ? '#c9c2b6' : '#e3ddd2', alfa: 0.85, hizli: 0.6, tit: 0.2 });
+      darbe(x, [[xx, 199], [xx - 6 + k, 178], [298 + k * 0.5, 152]], { w: 7, renk: k < 2 ? '#b4bcc4' : '#dfe3e7', alfa: 0.85, hizli: 0.6, tit: 0.2 });
     }
     // pencereler: koyu sıcak gri
     for (const p of SAHNE.minarePencereleri) {
@@ -635,14 +636,16 @@
   // --- kaide ve korniş: beyaz taş, solda sıcak gri yatay darbeler, korniş altında soğuk gri gölge
   const kaideYol = birlesik([Y.kaide, Y.kornis]);
   bolge(kaideYol, (x) => {
-    for (let y = 710; y < 800; y += 11) {
-      const x2 = 470 + 160 * NF(y / 20, 4) - (y - 710) * 0.3;
-      darbe(x, [[302, y], [x2, y + 1]], { w: 13, renk: '#e8e2d6', alfa: 0.85, hizli: 0.85 });
+    // taş: C1 yatay hızlı darbeler (uçları açılıyor), solda sıcak gri dokunuş, sol uçta C3
+    for (let y = 710; y < 800; y += 10.5) {
+      const x2 = 520 + 180 * NF(y / 20, 4) - (y - 710) * 0.5;
+      darbe(x, [[302, y], [x2, y + 1]], { w: 12.5, renk: '#e1e5e8', alfa: 0.9, hizli: 0.85 });
     }
-    for (let y = 716; y < 800; y += 12) darbe(x, [[302, y], [340 + R() * 30, y]], { w: 12, renk: '#d4cdc0', alfa: 0.8, hizli: 0.5 });
-    darbe(x, [[300, 709], [822, 709]], { w: 11, renk: '#b6bdc4', alfa: 0.85, hizli: 0.4, tit: 0.2 });
-    darbe(x, [[300, 712], [600, 713]], { w: 6, renk: '#b6bdc4', alfa: 0.6, hizli: 0.8, tit: 0.2 });
-    darbe(x, [[292, 701], [500, 701]], { w: 6, renk: '#e3ddd2', alfa: 0.8, hizli: 0.9, tit: 0.2 });
+    for (let y = 716; y < 800; y += 11) darbe(x, [[302, y], [356 + R() * 40, y]], { w: 11.5, renk: '#bcc4cb', alfa: 0.8, hizli: 0.6 });
+    for (let y = 720; y < 800; y += 22) darbe(x, [[600 + R() * 60, y], [760 + R() * 50, y + 1]], { w: 11, renk: '#e6dfd2', alfa: 0.7, hizli: 0.85 });
+    darbe(x, [[300, 709], [822, 709]], { w: 11, renk: '#a9b2ba', alfa: 0.88, hizli: 0.4, tit: 0.2 });
+    darbe(x, [[300, 713], [640, 714]], { w: 6, renk: '#97a1aa', alfa: 0.6, hizli: 0.8, tit: 0.2 });
+    darbe(x, [[292, 701], [500, 701]], { w: 6, renk: '#dfe3e7', alfa: 0.8, hizli: 0.9, tit: 0.2 });
     for (const p of K.pencereler) {
       x.save();
       x.clip(new Path2D(SAHNE.kemerYolu(p.x, p.y, p.w, p.h)));
