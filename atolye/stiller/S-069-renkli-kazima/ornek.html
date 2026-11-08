@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-069 Renkli Kazıma — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #0b0a0c; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #a8d2ee; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -12,13 +12,14 @@
 <canvas id="tuval"></canvas>
 <script src="../../sahne/sahne.js"></script>
 <script>
-// S-069 Renkli Kazıma — siyah yüzey kazınarak alttaki renk açığa çıkarılır. Gökte gökkuşağı kazıma kâğıdı
-// (güneşten dışa sarı, turuncu, macenta, mor, mavi, turkuaz), yapıda ve bitkilerde beyaz kil üstüne
-// sürülmüş renkli mürekkepler. Ton, kazıma çizgilerinin sıklığı ve kalınlığıyla kurulur: ışıklı yerde çizgiler
-// kalınlaşıp birleşir, gölgede incelip kesik noktalara döner.
+// S-069 Renkli Kazıma — beyaz kil kaplı kazıma levhası (clayboard) açık ve orta tonlu renkli mürekkeplerle
+// boyanır (gök mavisi, yeşiller, altın sarısı, gül pembesi), sonra sivri uçla kazınır: her kazıma çizgisi
+// alttaki beyaz kili açığa çıkarır. Ton, beyaz çizgilerin sıklığı ve kalınlığıyla kurulur: ışıklı yerde çizgiler
+// kalınlaşıp birleşir (neredeyse beyaz), gölgede incelir ve mürekkebin rengi baskın kalır.
 // Taramalar piksel başına "çizgiye uzaklık" alanından hesaplanır (her öğe kendi biçimini izleyen çizgi
 // ailesiyle: kubbede meridyen + paralel, minarede ve kasnakta silindir çizgileri, gökte yatay dalgalı çizgiler,
 // taç yapraklarda ışınsal çizgiler, yapraklarda damar yönünde balıksırtı); kontur ve vurgu kazımaları tuvale çizilir.
+// Kazınmayan ince çizgiler (kaburgalar, derzler, konturlar) mürekkebin biraz koyulaştığı renkli çizgi olarak kalır.
 (function () {
   'use strict';
   // ------------------------------------------------------------ ortak yardımcılar
@@ -272,15 +273,17 @@
   // ------------------------------------------------------------ alttaki renk
   const rgb = (h) => hex(h);
   const rampa = (cs, t) => { t = clamp(t, 0, 0.9999) * (cs.length - 1); const k = Math.floor(t); return karR(cs[k], cs[k + 1], t - k); };
-  const GOKK = ['#FFF6B0', '#FFD23A', '#FF9A2E', '#FF4F6E', '#E040B8', '#9A4FF0', '#4F6CFF', '#2EB8F0', '#3CE0C8'].map(rgb);
-  const KUBBE = ['#1E4FC8', '#1495A0', '#18B868', '#5EDC5A', '#C8F25A', '#F4FFB0'].map(rgb);
-  const TAS = ['#C86AD8', '#FF8A8C', '#FFB45E', '#FFDA78', '#FFF6D8'].map(rgb);
-  const YAPR = ['#0E8F7A', '#22B85A', '#7ADC3C', '#D6F25A'].map(rgb);
-  const CIC = ['#C21E8C', '#FF4FA0', '#FF9CCB', '#FFE0EE'].map(rgb);
-  const CIC2 = ['#7A2EE0', '#B06CFF', '#DDB8FF', '#F6EAFF'].map(rgb);
-  const CIC3 = ['#E8402E', '#FF7A3C', '#FFB878', '#FFE6C8'].map(rgb);
-  const ZEM = ['#B8401E', '#F07A26', '#FFB43A', '#FFE08A'].map(rgb);
-  const ALT = ['#C87A10', '#FFC22E', '#FFF0A0'].map(rgb);
+  // açık ve orta tonlu mürekkepler (kazınan çizgi beyaz kili gösterir)
+  const GOKK = ['#F6D36E', '#F7DE9A', '#F2EACB', '#B9DDF2', '#8CC6EC', '#6CB2E6', '#58A3DE', '#4F9AD8'].map(rgb);
+  const KUBBE = ['#2B8C5E', '#35A563', '#52BB5C', '#86D058', '#BEE46A', '#E2F29A'].map(rgb);
+  const TAS = ['#B9A3D6', '#DFA6B2', '#ECBE92', '#F2D69C', '#F7E9C8'].map(rgb);
+  const YAPR = ['#2A9668', '#3FAE5A', '#80CA4C', '#C2E26C'].map(rgb);
+  const CIC = ['#D45C8C', '#E883A8', '#F3B0C8', '#FADCE7'].map(rgb);
+  const CIC2 = ['#9C7FD6', '#B8A0E8', '#D6C8F4', '#EEE8FB'].map(rgb);
+  const CIC3 = ['#E8885E', '#F2A87E', '#F7C9A6', '#FCE6D4'].map(rgb);
+  const ZEM = ['#C99558', '#DCAE6C', '#EAC686', '#F4DCA6'].map(rgb);
+  const ALT = ['#BC8526', '#DFAA3C', '#F4D57E'].map(rgb);
+  const PENCERE = rgb('#3E739A'), KIL = [252, 250, 244];
 
   // ------------------------------------------------------------ tarama alanı: çizgiye uzaklık → kazıma kapsaması
   // v: çizgi koordinatı (tam sayılar çizgi merkezi), sp: iki çizgi arası piksel, c: kapsama (0..1)
@@ -405,14 +408,6 @@
         sG.lineWidth = Math.max(0.35, w);
         sG.beginPath(); sG.moveTo(pts[i - 1][0], pts[i - 1][1]); sG.lineTo(x, y); sG.stroke();
       }
-    }
-    // koyu üst gökte seyrek kazınmış noktalar (benek), güneşe doğru küçük çapraz kırpıntılar
-    for (let k = 0; k < 2600; k++) {
-      const x = rr() * 1024, y = rr() * 560;
-      if (!gokMu(x, y)) continue;
-      const L = isikG(x, y);
-      if (rr() > (0.55 - L) * 1.4) continue;
-      sG.fillStyle = '#fff'; sG.beginPath(); sG.arc(x, y, 0.45 + rr() * 0.6, 0, Math.PI * 2); sG.fill();
     }
   }
   const sv = sG.getImageData(0, 0, W2, W2).data;

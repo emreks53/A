@@ -399,7 +399,7 @@
     kes.rect(cx - 400, cy - 300, 800, 300 + 18 * s);
     ctx.save();
     ctx.clip(kes);
-    guaj(yol, C.bulut, [sol - 80 * s, cy - 120 * s, sag + 80 * s, cy + 40 * s], { aci: 0.05 });
+    guaj(yol, C.bulut, [sol - 80 * s, cy - 120 * s, sag + 80 * s, cy + 40 * s], { aci: 0.05, iz: 0.6 });
     ctx.restore();
     // kalem: bulutun üst yayları boyunca gevşek çizgi, altta lila tarama
     for (const [x, y, r] of daireler) {
@@ -601,7 +601,7 @@
       g.addColorStop(0.42, C.kubbe);
       g.addColorStop(1, C.kubbeKoyu);
       return g;
-    }, bb, { aci: -1.2, olcek: 1.2 });
+    }, bb, { aci: -Math.PI / 2, olcek: 1.2, iz: 0.75 });
     // guajla sürülmüş açık yeşil ışık lekesi (kaburga yönünde)
     const prof = S.kubbeProfili(60);
     const mer = (u, t1, t2) => prof.slice(Math.round(t1 * 60), Math.round(t2 * 60) + 1).map((q) => [560 + u * q.r, q.y]);

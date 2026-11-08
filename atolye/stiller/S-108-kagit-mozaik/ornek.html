@@ -67,7 +67,7 @@
   const GOKP = palet(['#D6EEFB', '#BDE2F8', '#9FD2F4', '#82C1F0', '#68AFEC', '#529FE6', '#4290DF']);
   const SICAK = hex('#FFF3C8');
   const BULUTP = palet(['#DCE8F6', '#E8F0FA', '#F2F7FC', '#FAFCFE']);
-  const ZEMINP = palet(['#E2C68C', '#EBD5A2', '#F3E3BC', '#F8EDD2']);
+  const ZEMINP = palet(['#DDBF82', '#E6CC97', '#EED9B0', '#F4E5C6']);
   const KREMP = palet(['#D6CDB9', '#E1D9C7', '#EAE3D3', '#F2ECDF', '#F8F3E8']);
   const ALTINP = palet(['#D19A26', '#E2B33A', '#F0C94E', '#F8DD7A']);
   const KUBBEP = palet(['#1C6A35', '#227A3D', '#2A8A45', '#35994E', '#43A85A', '#58B966', '#70C874', '#8AD584']);
@@ -191,10 +191,10 @@
       boya(id, S.yol(sol.concat(sag), true));
     }
     const KAB = et({ mod: 'serit', h: 8, renk: (x, y, r) => sec(palet(['#155028', '#195A2F', '#1D6535']), 0.5, r, 3) });
-    for (const k of S.kaburgalar(16)) boya(KAB, S.yol(k.noktalar.slice(0, -3)), 3.2 + 2.6 * Math.cos(k.boylam));
+    for (const k of S.kaburgalar(16)) boya(KAB, S.yol(k.noktalar.slice(0, -3)), 4.2 + 2.8 * Math.cos(k.boylam));
     // tepe: kaburgaların birleştiği yerde halka sıralı küçük parçalar
     const TEPE = et({ mod: 'kontur', h: 6, renk: kubbeRenk });
-    lc.save(); lc.beginPath(); lc.rect(0, 0, 1024, 342); lc.clip(); boya(TEPE, S.kubbeYolu); lc.restore();
+    lc.save(); lc.clip(new Path2D(S.daireYolu(560, 302, 34))); boya(TEPE, S.kubbeYolu); lc.restore();
   }
   alemCiz(S.alemParcalari(560, 300, 1));
 
