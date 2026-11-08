@@ -411,8 +411,9 @@
         motif(GUL_DIS, { x, y, s: 0.5 }, RENK.lal, 1);
         motif(ornekle('M-3,0 A3,3 0 1,0 3,0 A3,3 0 1,0 -3,0 Z', 0.6), { x, y, s: 1 }, RENK.firuze, 0.8);
       } else {
-        motif(RUMI, { x: x - 1, y: y + 1, a: 0, s: 0.42 }, RENK.firuze, 0.9);
-        motif(RUMI, { x: x + 1, y: y + 1, a: Math.PI, s: 0.42, fy: true }, RENK.firuze, 0.9);
+        // karşılıklı rumi çifti: dipleri dışta, uçları ortada buluşur
+        rumi({ x: x - 13, y: y + 2, a: -0.18, s: 0.26 }, RENK.firuze, 0.8);
+        rumi({ x: x + 13, y: y + 2, a: Math.PI + 0.18, s: 0.26, fy: true }, RENK.firuze, 0.8);
       }
     }
   }
@@ -473,9 +474,14 @@
       b.save(); b.clip(kb);
       b.fillStyle = RENK.asiAcik; b.fillRect(350, 532, 420, 23);
       b.restore();
+      // dönüşümlü: küçük hatayi ve uçları yukarıda buluşan karşılıklı rumi çifti (tepelik)
       for (let k = 0; k < 13; k++) {
         const x = 386 + k * 29, y = 545;
-        motif(PENC, { x, y: y + 3, s: 0.62 }, k % 2 ? RENK.lal : RENK.firuze, 1);
+        if (k % 2 === 0) hatayi({ x, y: y + 2.5, s: 0.5 }, RENK.lal, RENK.firuzeAcik, 0.9);
+        else {
+          rumi({ x: x - 7, y: y + 8, a: -1.05, s: 0.27 }, RENK.firuze, 0.8);
+          rumi({ x: x + 7, y: y + 8, a: -Math.PI + 1.05, s: 0.27, fy: true }, RENK.firuze, 0.8);
+        }
       }
       tahrir(ornekle('M361,532 L759,532', 2), RENK.tahrir, 1.1, false);
     }

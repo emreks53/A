@@ -171,8 +171,8 @@
       p1: lin(P1, 0, 0, 0, 806, [[0, gri(0.56)], [0.6, gri(0.62)], [1, gri(0.7)]]),
       p1d: { adet: 1500, deger: (x, y) => 0.52 + 0.2 * (y / 806) + 0.2 * gunesYakin(x, y, 260), boy: 34, aci: gokYon },
       s2: '#FFFBEE',
-      p2: 0.0,
-      p2d: { adet: 320, deger: (x, y) => { const g = gunesYakin(x, y, 280); return g > 0.06 ? 0.25 + 0.6 * g : null; }, boy: 56, aci: gokYon },
+      // ışık ovması: güneşin çevresinde yumuşak, düzgün azalan krem pus (halka yok)
+      p2: rad(P2, S.gunes.x, S.gunes.y, 30, 430, [[0, gri(0.92)], [0.22, gri(0.66)], [0.5, gri(0.32)], [0.78, gri(0.1)], [1, gri(0)]]),
     });
     // güneşin çevresindeki sıcak alt boya hâlesi
     U.save(); U.globalCompositeOperation = 'source-atop';
@@ -280,7 +280,7 @@
     }
     for (const w of S.minarePencereleri) {
       const yol = P(S.kemerYolu(w.x, w.y, w.w, w.h));
-      alan(yol, { kutu: [w.x - 10, w.y - 4, 20, w.h + 8], u: '#4A3FA8', s1: '#9AA8DA', p1: 0.28, p2: 0 });
+      alan(yol, { kutu: [w.x - 10, w.y - 4, 20, w.h + 8], u: '#4A3FA8', s1: '#A8B6E4', p1: 0.36, p1d: { adet: 6, deger: 0.42, boy: 5, aci: () => Math.PI / 2 }, p2: 0 });
     }
   }
 
@@ -304,7 +304,7 @@
     P1.save(); P1.fillStyle = gri(0.3); P1.fillRect(Kd.x1, Kd.y1, Kd.x2 - Kd.x1, 9); P1.restore();
     for (const w of Kd.pencereler) {
       const yol = P(S.kemerYolu(w.x, w.y, w.w, w.h));
-      alan(yol, { kutu: [w.x - 20, w.y - 4, 40, w.h + 8], u: '#4A3FA8', ud: { adet: 10, renk: ['#5A4AB8', '#3A54B0'], boy: 20, en: 6, aci: () => Math.PI / 2, alfa: 0.5 }, s1: '#A4B0E0', p1: 0.26, p2: 0 });
+      alan(yol, { kutu: [w.x - 20, w.y - 4, 40, w.h + 8], u: '#4A3FA8', ud: { adet: 10, renk: ['#5A4AB8', '#3A54B0', '#6A50C0'], boy: 20, en: 6, aci: () => Math.PI / 2, alfa: 0.5 }, s1: '#AEB8E6', p1: 0.36, p1d: { adet: 10, deger: 0.44, boy: 7, aci: () => Math.PI / 2 }, p2: 0 });
     }
   }
 
@@ -325,7 +325,7 @@
     });
     for (const w of S.kasnakPencereleri(kat)) {
       const p = P(S.kemerYolu(w.x, w.y, w.w, w.h));
-      alan(p, { kutu: [w.x - 12, w.y - 4, 24, w.h + 8], u: '#3A3C9E', s1: '#7E8ED0', p1: 0.22, p2: 0 });
+      alan(p, { kutu: [w.x - 12, w.y - 4, 24, w.h + 8], u: '#3A3C9E', s1: '#8E9CD8', p1: 0.3, p1d: { adet: 4, deger: 0.36, boy: 4, aci: () => Math.PI / 2 }, p2: 0 });
     }
   }
 
@@ -437,7 +437,7 @@
       // kuru fırça kılları (yön alanını izleyen ince çizgiler) ve çok ince tane
       const kil = Kv[j] / 255;
       const ince = vnoise(x * 0.9, y * 0.9, 19);
-      const doku = orgu * 0.3 + kil * 0.55 + ince * 0.15;
+      const doku = orgu * 0.22 + kil * 0.6 + ince * 0.18;
       // birinci ovma: her yerde ince bir pus örtüsü + kıl ve örgü tepelerinde kırık boya
       const p1 = P1v[j] / 255;
       const e1 = 1.02 - p1;
@@ -455,7 +455,7 @@
         r += (S2v[j] - r) * c2; g += (S2v[j + 1] - g) * c2; b += (S2v[j + 2] - b) * c2;
       }
       // bezin dokusu ince boyanın altından hafifçe ışıklanır (sağ üstten)
-      const ishik = (orgu - 0.55) * 0.06 + (Math.sin(Math.PI * (fx - 0.2)) - Math.sin(Math.PI * (fy + 0.2))) * 0.01;
+      const ishik = (orgu - 0.55) * 0.035 + (Math.sin(Math.PI * (fx - 0.2)) - Math.sin(Math.PI * (fy + 0.2))) * 0.01;
       const f = 1 + ishik;
       o[j] = clamp(r * f, 0, 255); o[j + 1] = clamp(g * f, 0, 255); o[j + 2] = clamp(b * f, 0, 255); o[j + 3] = 255;
     }

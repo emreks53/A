@@ -722,7 +722,7 @@
   }, Object.assign({ kirp: mGok }, TARAMA));
   // bulut kenarları: ince leylak-gri kontur parçaları ve alt taraması
   katman((x) => {
-    tara(x, { bx: [0, 90, W, 560], ic: (px, py) => bulutAlt(px, py) > 0.25, aci: -1.0, aralik: 4.6, boy: 18, kal: KAL * 0.8, obek: 16, sik: 0.7,
+    tara(x, { bx: [0, 90, W, 560], ic: (px, py) => bulutAlt(px, py) > 0.25, aci: -0.3, aciJ: 0.25, aralik: 4.6, boy: 18, kal: KAL * 0.8, obek: 16, sik: 0.7,
       alfa: (px, py) => 0.42 * bulutAlt(px, py), renk: () => (r() < 0.5 ? C.leylak : C.leylakGri) }, r);
     for (const b of bulutLop) for (const [lx, ly, lr] of b.l) {
       const a0 = Math.PI * (1.05 + r() * 0.2), a1 = Math.PI * (1.95 - r() * 0.2), pts = [];
@@ -741,7 +741,7 @@
 
   // bulut tepeleri beyaz pastel kalemle: mavinin üstüne tebeşirsi ışık
   katman((x) => {
-    tara(x, { bx: [0, 90, W, 560], ic: (px, py) => bulut(px, py) > 0.3 && bulutAlt(px, py) < 0.35, aci: -1.0, aciJ: 0.2, aralik: 3.6, boy: 14, kal: KAL, obek: 12, sik: 0.7,
+    tara(x, { bx: [0, 90, W, 560], ic: (px, py) => bulut(px, py) > 0.3 && bulutAlt(px, py) < 0.35, aci: -0.45, aciJ: 0.3, aralik: 3.6, boy: 14, kal: KAL, obek: 12, sik: 0.7,
       alfa: (px, py) => 0.7 * bulut(px, py), renk: () => (r() < 0.8 ? C.beyaz : C.krem) }, r);
   }, Object.assign({ kirp: mGok }, TARAMA, { opq: 0.9 }));
 
