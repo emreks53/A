@@ -21,11 +21,6 @@ export const KULLIYAT = [
 /** Külliyat'ın bütün ciltleri bu renktedir (Güneş rafı, Menba rafı, Kenz, açılan kapak). CSS'te: var(--cilt) */
 export const CILT = '#D7787B';
 
-/** Geçici: eski çağıranlar için (bütün ciltler tek renk) */
-export function ciltRengi(_kitap: string): string {
-  return CILT;
-}
-
 type KulliyatEseri = (typeof KULLIYAT)[number];
 
 /** RNK Neşriyat baskısının sayfa sayısı: kitabın kalınlığı buna göre */

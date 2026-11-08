@@ -14,9 +14,6 @@ const f = (v: number): string => (+v).toFixed(2).replace(/\.?0+$/, '');
 /** SVG metninde & ve < kaçışı */
 const kac = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
-/** Geçici: src/gunes/gunes.ts bu adı içe aktarıyor; bütünleştirmede silinecek (bütün ciltler artık tek renk: CILT) */
-export const RENKLER: [string, string, string][] = [[CILT, CILT, CILT]];
-
 /** Çizim alanı: genişlik, rafın sol ve sağ boşluğu, ciltler arası */
 const W = 390;
 const SOL = 22;

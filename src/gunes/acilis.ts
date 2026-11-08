@@ -7,9 +7,8 @@ import { kapakSvg } from './kapak';
 export interface AcilisSecenek {
   /** Dokunulan cilt (raftaki sırt) */
   kaynak: HTMLElement;
-  /** Kitabın adı (kapakta) ve cilt renkleri [orta, koyu, açık] */
+  /** Kitabın adı (kapakta) */
   ad: string;
-  renk: readonly [string, string, string];
   /** Okuyucuda sayfanın duracağı yer (ekran px) */
   hedef: { x: number; y: number; w: number; h: number };
   /** Okuyucunun zemini ve kâğıdı */
@@ -54,9 +53,8 @@ export function kitapAcilisi(o: AcilisSecenek): void {
   sayfa.style.background = o.kagit;
   const kapak = el('acilis__kapak');
   const on = el('acilis__kapak-on');
-  on.innerHTML = kapakSvg(`acilis${++sayac}`, o.renk, o.ad);
+  on.innerHTML = kapakSvg(`acilis${++sayac}`, o.ad);
   const arka = el('acilis__kapak-arka');
-  arka.style.setProperty('--cilt', o.renk[1]);
   kapak.append(on, arka);
   // sırt: raftaki cildin kopyası, tam aynı görünsün diye kendi boyunda çizilip ölçeklenir
   const sirt = el('acilis__sirt');
@@ -66,6 +64,8 @@ export function kitapAcilisi(o: AcilisSecenek): void {
   kopya.removeAttribute('aria-label');
   kopya.querySelector('.cilt__kurdele')?.remove();
   kopya.classList.remove('cilt--kaldigin');
+  // (sırtın ölçüleri Güneş'in --sirt-h değişkenine bağlı; katman Güneş'in dışında olduğu için kopyaya taşınır)
+  kopya.style.setProperty('--sirt-h', `${o.kaynak.parentElement?.getBoundingClientRect().height || r.height}px`);
   Object.assign(kopya.style, { position: 'absolute', left: '0', top: '0', width: `${r.width}px`, height: `${r.height}px`, margin: '0', transform: `scale(${1 / s})`, transformOrigin: '0 0' });
   sirt.append(kopya);
   kitap.append(sayfa, kapak, sirt);

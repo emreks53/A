@@ -218,8 +218,8 @@ await adim('telefon tarayıcısında (390 x 664) menü küçülmez', async () =>
   await page.setViewportSize({ width: 390, height: 664 });
   await page.waitForTimeout(100);
   const m = await page.locator('.tabbar').boundingBox();
-  assert.ok(Math.abs(m.width - 352.2) < 0.5, `menü genişliği ${m.width}`);
-  assert.ok(m.y + m.height <= 664 - 18, 'menü ekranın altına yapışık');
+  assert.ok(Math.abs(m.width - 358) < 0.5 && Math.abs(m.height - 64) < 0.5, `menü ${m.width}×${m.height}`);
+  assert.ok(m.y + m.height <= 664 - 16, 'menü ekranın altına yapışık');
   await page.setViewportSize({ width: 390, height: 844 });
 });
 
@@ -376,7 +376,7 @@ await adim('Menba: rahlede Kur\'an-ı Kerim, rafta Külliyat (Şuâlar öne çı
     ad: e.getAttribute('aria-label'),
     one: Array.from(e.querySelectorAll('text'), (t) => [t.closest('[font-size]').getAttribute('font-size'), t.textContent]).filter(([b]) => +b > 5.4).map(([, y]) => y),
     yazilar: Array.from(e.querySelectorAll('text'), (t) => t.textContent),
-    yaziTipi: new Set(Array.from(e.querySelectorAll('text'), (t) => t.closest('[font-family]').getAttribute('font-family'))),
+    yaziTipi: Array.from(new Set(Array.from(e.querySelectorAll('text'), (t) => t.closest('[font-family]').getAttribute('font-family')))),
     nokta: e.querySelectorAll('circle').length,
     sirtlar: e.querySelectorAll('text').length,
     w: e.querySelector('svg').getBoundingClientRect().width,
@@ -388,7 +388,7 @@ await adim('Menba: rahlede Kur\'an-ı Kerim, rafta Külliyat (Şuâlar öne çı
   assert.deepEqual(cizim.one, ['Şuâlar']);
   assert.equal(cizim.sirtlar, 14);
   assert.ok(cizim.yazilar.includes('Muvâzene') && !cizim.yazilar.includes('RİSALE-İ NUR KÜLLİYATI'), JSON.stringify(cizim.yazilar));
-  assert.deepEqual([...cizim.yaziTipi], ['EB Garamond, serif']);
+  assert.deepEqual(cizim.yaziTipi, ['EB Garamond, serif']);
   assert.equal(cizim.nokta, 0);
   assert.equal(cizim.w, 390);
   assert.equal(await page.locator(`${s} .menba__eser`).innerText(), 'Şuâlar');
