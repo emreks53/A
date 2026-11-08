@@ -1,0 +1,22 @@
+{
+  "kod": "S-038",
+  "no": 38,
+  "ad": "Tesbih Dizisi",
+  "ad_en": "Bead Strings",
+  "aile": "Atölye Özgün",
+  "ozgun": true,
+  "ozet": "Resim, biçimin yönünü izleyen ince iplere dizilmiş, gölgeli küçük kürelerden (tesbih tanelerinden) oluşur.",
+  "tanim": "Kural: her iz, görünür bir ipe dizilmiş bir tanedir ve ipler biçimi izler: kubbede meridyenler (kaburgalar) boyunca, kasnak ve kaidede yatay sıralar, minarede gövdeyi saran halkalar, gökte hafif dalgalı yataylar, çiçeklerde merkezin çevresinde dönen sarmallar, yapraklarda uca doğru birleşen damar ipleri. Her tane, ışığı sağ üstten alan küçük bir küredir: sağ üstte parlak nokta, sol altta gölge ve zemine düşen minik temas gölgesi; rengi sahnenin o noktasından alınır, boyu ip boyunca değişebilir. İpin bittiği her yerde (yapının kenarı, kubbede seyrelen meridyenler, yaprak ucu, çiçek sarmalının sonu) uzun bir imame tanesi durur; kapalı halkalarda (minare, güneş) imame yoktur. Zemin açık keten bezidir ve taneler arasında görünür.",
+  "koken": "Fikir, tesbihin kendisinden doğdu: elde çekilen, ipe dizili tanelerin ritmi ve dizinin sonunu bildiren imame. Boncuk işi, oya ve çeyiz işlemelerindeki tane dizme geleneğiyle birleşince, bir resmi noktalarla değil iplere dizili tanelerle örme kuralı ortaya çıktı. Noktacılıktan farkı, tanelerin hacimli olması ve hepsinin biçimin akışına yerleştirilmiş görünür iplere bağlı durmasıdır; ipin yönü resmin çizgisini, tanenin rengi tonunu taşır.",
+  "ayirt_edici": [
+    "Kubbe, tepeye doğru seyrelen yeşil meridyen ipleriyle örülü; biten iplerin ucunda imame taneleri, kubbe eteğinde imame saçağı",
+    "Gök, ucunda imame bulunan hafif dalgalı yatay mavi tane dizileri; ipler yapıya değdiği yerde imameyle biter",
+    "Minare, göz hizasının üstünde hafifçe kıvrılan halka halka taş rengi taneler; korkuluklar dik duran uzun taneler, zikzak bandı zikzağı izleyen iplerdir",
+    "Güneş iç içe tesbih halkalarından; alemler dikey ipe dizili altın küreler, hilal yay boyunca dizilmiş minik tanelerdir",
+    "Çiçekler beş loblu sarmal ipler (altın göbek, pembe iç, beyaz dış), yapraklar uca doğru birleşen yeşil ipler, tomurcuklar sap ucundaki pembe imameler",
+    "Her tane parlak noktalı, gölgeli ve temas gölgeli küçük bir küre; aralarından ince ip ve keten dokusu görünür"
+  ],
+  "palet": ["#ECE4D4", "#6098D8", "#DEE4E2", "#2E803C", "#164822", "#EEE6D3", "#ECC454", "#ECB0C0"],
+  "kodla_cizim": "Canvas 2B, 2048 iç çözünürlük. Keten zemin piksel piksel dama örgüsü, gürültülü iplik boğumları ve geniş lekelerle üretilir. Bir kez çizilen küre gölgelendirme kalıbı (parlak nokta, sol alt gölge, yansıyan ışık) ve yumuşak temas gölgesi kalıbı her taneye uygulanır; tane önce sahnenin renginde doldurulur, sonra kalıp çizilir. İpler geometriden kurulur: kubbe profili Bezier'inden meridyenler (ipin seviyesi ikinin kuvvetleriyle seçilir, komşu ipe 3B uzaklık tane boyunun altına düşünce ip biter), silindir izdüşümüyle kasnak sıraları ve göz hizasına göre eğilen minare halkaları, bölge haritasıyla göğün yapıdan ayrılan parçaları, Arşimet sarmalının beş loblu zarfla biçimlendirilmesiyle çiçekler. Taneler her ip boyunca yay uzunluğuna göre aralıklanır; her grupta önce bütün gölgeler, sonra ipler, sonra taneler çizilir; uçlarda dipte boğumlu, uca doğru incelen imameler eklenir. Yaklaşık 15.800 tane.",
+  "etiketler": ["özgün", "tesbih", "boncuk", "ip", "akış alanı", "hacimli", "keten", "el işi"]
+}

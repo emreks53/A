@@ -1,0 +1,22 @@
+{
+  "kod": "S-012",
+  "no": 12,
+  "ad": "Vitray",
+  "ad_en": "Stained Glass",
+  "aile": "Türk-İslam Sanatları",
+  "ozgun": false,
+  "ozet": "Kurşun çubuklarla birleştirilmiş, içinden ışık geçen renkli cam parçaları.",
+  "tanim": "Vitray, renkli cam parçalarının H kesitli kurşun çubuklarla birleştirilip bir pencereye takılmasıyla yapılan ışık resmidir. Resim, arkadan gelen ışıkla parlar; biçimleri kalın ve eşit kalınlıktaki koyu kurşun çizgileri çevreler, yüz ve süs gibi ince ayrıntılar cama grizay boyayla yazılır. Cami, kilise ve saray pencerelerinde, kubbe kasnaklarında ve tavan fenerlerinde kullanılır.",
+  "koken": "Renkli camı alçı ya da kurşun kafes içine yerleştirme geleneği Bizans ve erken İslam yapılarına uzanır; Orta Çağ Avrupa katedrallerinde (Chartres, Sainte-Chapelle) kurşunlu vitray doruğuna ulaştı. Osmanlı mimarisinde alçı kafesli renkli cam pencereler (revzen, şemse) Süleymaniye ve Sultanahmet camilerinde ünlüdür; 19. yüzyılda Tiffany ve Arts and Crafts ustaları opal camla akımı yeniledi.",
+  "ayirt_edici": [
+    "Her renk alanını ayıran, her yerde aynı kalınlıkta koyu kurşun çizgileri",
+    "Göğün düzensiz cam parçalarına bölünmesi; güneş çevresinde sarı ve amber camlar, ışın biçimli parçalar",
+    "Arkadan gelen ışıkla parlayan doygun renkler ve parlak camların kurşun üstüne taşan hafif ışıltısı",
+    "Camın kendi dokusu: çekme izleri, dalgalı katedral camı, kabarcıklar ve kenarlara doğru koyulaşan yoğunluk",
+    "Grizay boyayla yazılmış ayrıntılar: kubbedeki ara kaburgalar, kasnak nişleri, minare zikzağı, yaprak damarları",
+    "Kırmızı, mavi ve altın sarısı küçük camlardan bordür; koyu taş duvardaki sivri kemerli pencere çerçevesi"
+  ],
+  "palet": ["#1A389C", "#1E58B6", "#14803A", "#B0142C", "#E8AC2E", "#CE9C4E", "#F6F4F0", "#18171B"],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte çizilir; sahne sivri kemere sığsın diye %84 ölçeklenir. Her cam parçası (Voronoi ile bölünmüş gök, kaburgalara ve enlemlere göre kesilmiş kubbe, kasnak şeritleri, minare ve kaide parçaları, ikiye bölünmüş yapraklar, taç yapraklar, bordür camları) gizli bir kimlik haritasına kendi rengiyle, kurşunun yarısı kadar şişirilerek çizilir. Kimliğin değiştiği kenarlardan Öklid uzaklık dönüşümü (Felzenszwalb) ile tek kalınlıkta, ortası hafif parlak kurşun üretilir. Cam piksel piksel renklendirilir: parça rengi ve degrade, yönlü değer gürültüsüyle çekme izleri, geniş gürültüyle yoğunluk farkı, sinüs ve gürültüyle katedral dalgası. Üstüne grizay boya, kabarcıklar, bulanık kurşunla kenar koyulaşması ve parlak camlardan 'screen' ışıltı eklenir; dışta taş duvar, kemer taşları, kilit taşı ve denizlik vektörle çizilip gürültü dokusuyla çarpılır.",
+  "etiketler": ["cam", "ışık", "kurşun", "pencere", "geleneksel", "zanaat", "mimari", "parlak renk"]
+}

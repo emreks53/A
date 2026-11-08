@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>S-021 Bauhaus — Atölye örnek görseli</title>
+<style>
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #ECE5D5; }
+  canvas, svg { display: block; }
+</style>
+</head>
+<body>
+<div id="sahne"></div>
+<script src="../../sahne/sahne.js"></script>
+<script>
+  // S-021 Bauhaus — yalnız ana renkler (kırmızı, sarı, mavi) + siyah, beyaz ve krem zemin; tek istisna
+  // kubbenin yeşili. Saf geometrik ilkel biçimler (daire, yarım daire, çeyrek daire, dikdörtgen, üçgen),
+  // 16 px ızgaraya oturan asimetrik denge, kalın siyah çubuklar, düz baskı ve çok hafif baskı greni.
+  const S = SAHNE;
+  const f = (n) => Math.round(n * 100) / 100;
+  const R = {
+    krem: '#ECE5D5',
+    beyaz: '#FBF8F1',
+    siyah: '#1B1A19',
+    kirmizi: '#D7322B',
+    sari: '#F2B81C',
+    mavi: '#1F4FA0',
+    yesil: '#1D7A4A',
+  };
+  const out = [];
+  const dol = (d, renk) => out.push(`<path d="${d}" fill="${renk}"/>`);
+  const dik = (x1, y1, x2, y2, renk) => out.push(`<rect x="${f(x1)}" y="${f(y1)}" width="${f(x2 - x1)}" height="${f(y2 - y1)}" fill="${renk}"/>`);
+  const daire = (cx, cy, r, renk) => out.push(`<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" fill="${renk}"/>`);
+  /** yarım daire tepeli dikdörtgen (kemer): x orta, y tepe, w genişlik, h yükseklik */
+  const kemer = (x, y, w, h) => `M${f(x - w / 2)},${f(y + h)} L${f(x - w / 2)},${f(y + w / 2)} A${f(w / 2)},${f(w / 2)} 0 0,1 ${f(x + w / 2)},${f(y + w / 2)} L${f(x + w / 2)},${f(y + h)} Z`;
+  /** çeyrek daire: köşe (cx,cy), yarıçap r, a açısından a+90°'ye */
+  const ceyrek = (cx, cy, r, a) =>
+    `M${f(cx)},${f(cy)} L${f(cx + r * Math.cos(a))},${f(cy + r * Math.sin(a))} A${f(r)},${f(r)} 0 0,1 ${f(cx + r * Math.cos(a + Math.PI / 2))},${f(cy + r * Math.sin(a + Math.PI / 2))} Z`;
+  /** yarım daire: düz kenar ortası (cx,cy), a yönüne bakan kubbe */
+  const yarim = (cx, cy, r, a) => {
+    const x1 = cx + r * Math.cos(a - Math.PI / 2), y1 = cy + r * Math.sin(a - Math.PI / 2);
+    const x2 = cx + r * Math.cos(a + Math.PI / 2), y2 = cy + r * Math.sin(a + Math.PI / 2);
+    return `M${f(x1)},${f(y1)} A${f(r)},${f(r)} 0 0,1 ${f(x2)},${f(y2)} Z`;
+  };
+  const ucgen = (pts) => S.yol(pts, true);
+  const PI = Math.PI;
+
+  // ---------------------------------------------------------------- zemin ve büyük alanlar
+  dik(0, 0, 1024, 1024, R.krem);
+  // mavi dikey alan (minarenin gök fonu)
+  const MAVI = { x1: 160, x2: 432, y1: 80, y2: 800 };
+  dik(MAVI.x1, MAVI.y1, MAVI.x2, MAVI.y2, R.mavi);
+  // güneş: büyük sarı daire, sağ üstte
+  daire(848, 192, 128, R.sari);
+  // ince siyah yapı çizgileri
+  dik(MAVI.x2, 80, 1024 - 64, 88, R.siyah);
+  dik(1024 - 72, 80, 1024 - 64, 480, R.siyah);
+
+  // ---------------------------------------------------------------- minare (eksen x = 300)
+  const mx = 300;
+  dik(mx - 32, 480, mx + 32, 800, R.beyaz); // alt gövde
+  // zikzak: iki sıra siyah üçgen
+  for (let row = 0; row < 2; row++) {
+    const y0 = 512 + row * 32;
+    for (let i = 0; i < 4; i++) {
+      const x0 = mx - 32 + i * 16;
+      dol(ucgen([[x0, y0 + 24], [x0 + 8, y0], [x0 + 16, y0 + 24]]), R.siyah);
+    }
+  }
+  dik(mx - 56, 464, mx + 56, 480, R.siyah); // şerefe 1
+  dik(mx - 48, 432, mx + 48, 464, R.beyaz); // korkuluk 1
+  for (let i = 0; i < 6; i++) dik(mx - 40 + i * 16 + 4, 440, mx - 40 + i * 16 + 12, 464, R.mavi);
+  dik(mx - 24, 304, mx + 24, 432, R.beyaz); // orta gövde
+  dik(mx - 48, 288, mx + 48, 304, R.siyah); // şerefe 2
+  dik(mx - 40, 264, mx + 40, 288, R.beyaz); // korkuluk 2
+  for (let i = 0; i < 5; i++) dik(mx - 36 + i * 16 + 6, 270, mx - 36 + i * 16 + 14, 288, R.mavi);
+  dik(mx - 16, 208, mx + 16, 264, R.beyaz); // üst gövde
+  dik(mx - 24, 200, mx + 24, 208, R.siyah); // bilezik
+  dol(yarim(mx, 200, 24, -PI / 2), R.beyaz); // topuz: yarım daire
+  dol(ucgen([[mx - 13, 180], [mx + 13, 180], [mx, 150]]), R.beyaz); // + üçgen uç
+  dik(mx - 2, 104, mx + 2, 152, R.siyah); // alem çubuğu
+  daire(mx, 140, 6, R.kirmizi);
+  daire(mx, 124, 4.5, R.kirmizi);
+  dol(S.hilalYolu(mx, 100, 11), R.sari);
+  for (const [y, w, h] of [[220, 12, 28], [344, 16, 44], [592, 18, 52]]) dol(kemer(mx, y, w, h), R.siyah);
+
+  // ---------------------------------------------------------------- kaide, korniş, kasnak
+  dik(304, 704, 816, 800, R.beyaz); // kaide
+  dik(300, 704, 306, 800, R.krem); // minare ile kaide arasında ince ayrım
+  for (const [x, w, h] of [[432, 32, 56], [560, 36, 64], [688, 32, 56]]) dol(kemer(x, 800 - 20 - h, w, h), R.mavi);
+  dik(288, 688, 832, 704, R.kirmizi); // korniş: kırmızı çubuk
+  dik(336, 608, 784, 688, R.siyah); // alt kasnak
+  dik(352, 560, 768, 608, R.siyah); // üst kasnak
+  dik(352, 604, 768, 608, R.krem); // katları ayıran ince çizgi
+  // pencereler: düz aralıklı kemer yarıklar
+  const sira = (adet, x1, x2, y, w, h) => {
+    for (let i = 0; i < adet; i++) dol(kemer(x1 + ((x2 - x1) * (i + 0.5)) / adet, y, w, h), R.krem);
+  };
+  sira(13, 368, 752, 570, 10, 26);
+  sira(11, 352, 768, 622, 18, 50);
+
+  // ---------------------------------------------------------------- kubbe: yeşil yarım daire + meridyen çizgileri
+  const kx = 560, ky = 560, kr = 200;
+  dol(yarim(kx, ky, kr, -PI / 2), R.yesil);
+  for (let k = 1; k < 8; k++) {
+    const u = Math.sin(-PI / 2 + (PI * k) / 8);
+    if (Math.abs(u) < 1e-6) {
+      dik(kx - 1.5, ky - kr, kx + 1.5, ky, R.krem);
+      continue;
+    }
+    const a = Math.abs(u) * kr;
+    // çeyrek elips: tabandan (kx + u·r, ky) tepeye (kx, ky - r)
+    const sw = u < 0 ? 1 : 0;
+    out.push(`<path d="M${f(kx + u * kr)},${ky} A${f(a)},${kr} 0 0,${sw} ${kx},${ky - kr}" fill="none" stroke="${R.krem}" stroke-width="3"/>`);
+  }
+  // alem
+  dik(kx - 20, ky - kr - 6, kx + 20, ky - kr + 2, R.siyah); // yaka
+  dik(kx - 3, ky - kr - 96, kx + 3, ky - kr - 6, R.siyah); // çubuk
+  daire(kx, ky - kr - 22, 12, R.kirmizi);
+  daire(kx, ky - kr - 48, 9, R.kirmizi);
+  daire(kx, ky - kr - 68, 7, R.kirmizi);
+  dol(S.hilalYolu(kx, ky - kr - 100, 17), R.sari);
+
+  // ---------------------------------------------------------------- yer çubuğu
+  dik(0, 800, 1024, 816, R.siyah);
+
+  // ---------------------------------------------------------------- bitkiler
+  const maviMi = (x, y) => x > MAVI.x1 && x < MAVI.x2 && y > MAVI.y1 && y < MAVI.y2;
+
+  function cicek(x, y, r, tur) {
+    if (tur === 'dortlu') {
+      // dört çeyrek daire, aralıklı: kırmızı ve sarı dönüşümlü + siyah göbek
+      const g = Math.max(3, r * 0.06);
+      [R.kirmizi, R.sari, R.kirmizi, R.sari].forEach((renk, i) => {
+        const a = -PI + (i * PI) / 2;
+        dol(ceyrek(x + Math.cos(a + PI / 4) * g * 1.41, y + Math.sin(a + PI / 4) * g * 1.41, r, a), renk);
+      });
+      daire(x, y, r * 0.2, R.siyah);
+    } else if (tur === 'yarim') {
+      // üst yarım sarı, alt yarım mavi (araları açık), ortada beyaz daire
+      dol(yarim(x, y - 2, r, -PI / 2), R.sari);
+      dol(yarim(x, y + 2, r, PI / 2), R.mavi);
+      daire(x, y, r * 0.3, R.beyaz);
+    } else {
+      daire(x, y, r, R.kirmizi);
+      daire(x, y, r * 0.38, R.sari);
+    }
+  }
+
+  // yan dallar: yer çubuğunda duran düz siyah sap, dönüşümlü yarım daire yapraklar (aşağı doğru büyür), tepede çiçek
+  const dallar = [
+    { x: 112, ust: 544, yon: -1 },
+    { x: 228, ust: 656, yon: 1 },
+    { x: 896, ust: 544, yon: 1 },
+  ];
+  for (const d of dallar) {
+    dik(d.x - 3, d.ust, d.x + 3, 800, R.siyah);
+    let taraf = d.yon;
+    let j = 0;
+    for (let y = d.ust + 64; y <= 768; y += 48, j++) {
+      const r = 18 + Math.min(12, j * 3);
+      const zemin = maviMi(d.x + taraf * r * 0.6, y - r * 0.5);
+      const renk = zemin ? (j % 2 ? R.beyaz : R.sari) : j % 2 ? R.mavi : R.siyah;
+      // yarım daire yaprak: düz kenarı sapta, kubbesi dışa
+      dol(yarim(d.x + taraf * 3, y, r, taraf > 0 ? 0 : PI), renk);
+      taraf = -taraf;
+    }
+    cicek(d.x, d.ust, 26, 'kucuk');
+  }
+
+  // öndeki çiçek dizisi: ızgaraya oturan saplar, üç boy
+  const on = [
+    { x: 288, y: 864, r: 28, tur: 'kucuk' },
+    { x: 440, y: 872, r: 26, tur: 'kucuk' },
+    { x: 624, y: 864, r: 26, tur: 'kucuk' },
+    { x: 752, y: 856, r: 28, tur: 'kucuk' },
+    { x: 368, y: 960, r: 48, tur: 'yarim' },
+    { x: 688, y: 960, r: 48, tur: 'yarim' },
+    { x: 192, y: 912, r: 64, tur: 'dortlu' },
+    { x: 528, y: 928, r: 68, tur: 'dortlu' },
+    { x: 848, y: 912, r: 64, tur: 'dortlu' },
+  ];
+  for (const c of on) dik(c.x - 3, c.y, c.x + 3, 1024, R.siyah);
+  // ince saplarda birer çeyrek daire yaprak
+  for (const [x, a, renk] of [[288, -PI / 2, R.mavi], [440, PI, R.siyah], [624, PI, R.mavi], [752, -PI / 2, R.siyah]]) dol(ceyrek(x, 1000, 28, a), renk);
+  for (const c of on) cicek(c.x, c.y, c.r, c.tur);
+
+  // ---------------------------------------------------------------- SVG + hafif baskı greni
+  document.getElementById('sahne').innerHTML =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">` +
+    `<defs><filter id="gren" x="0" y="0" width="100%" height="100%">` +
+    `<feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="21" stitchTiles="stitch"/>` +
+    `<feColorMatrix type="saturate" values="0"/></filter></defs>` +
+    out.join('') +
+    `<rect width="1024" height="1024" filter="url(#gren)" opacity="0.08" style="mix-blend-mode:multiply"/></svg>`;
+  requestAnimationFrame(() => requestAnimationFrame(() => S.hazir()));
+</script>
+</body>
+</html>

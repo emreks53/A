@@ -1,0 +1,22 @@
+{
+  "kod": "S-025",
+  "no": 25,
+  "ad": "İzometrik",
+  "ad_en": "Isometric Illustration",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Perspektifsiz 30° eksenlerle çizilmiş, havada duran bir zemin karosunun üstünde küçük bir maket dünya.",
+  "tanim": "İzometrik illüstrasyon, nesneleri birbirine 120° açılı üç eksen üzerinde, uzaklaştıkça küçülmeden çizen teknik bir izdüşümdür; paralel çizgiler hep paralel kalır. Bugün bilgi grafiklerinde, oyun ve uygulama arayüzlerinde, kurumsal sunumlarda sık görülen 'masa üstü diorama' görünümünü verir. Yüzeyler düz renklerle, ışığa göre üç tonla boyanır; temiz vektör kenarlar ve küçük, sevimli ayrıntılar (fener, çalı, tarh) sahneyi oyuncak bir maket gibi okutur.",
+  "koken": "Kökü mühendislik ve mimarlık çizimindeki aksonometrik izdüşümlere (19. yüzyılda William Farish'in izometrik perspektifi) uzanır. 1980'lerin bilgisayar oyunları (Marble Madness, Populous, sonra SimCity 2000) bu bakışı ekranlara taşıdı; 2010'larda düz tasarım akımıyla birlikte vektör izometrik illüstrasyon web ve marka dünyasının gözde dili oldu.",
+  "ayirt_edici": [
+    "Perspektifsiz gerçek izometrik bakış: bütün yatay kenarlar 30° eğik, düşeyler dik ve paralel",
+    "Kalınlığı görünen, havada duran kare zemin karosu: taş döşeme şeridi, çakıllı toprak ve kırık kaya katmanı",
+    "Üç tonlu yüzey gölgelemesi: üst yüzler en açık, sağ (güneşe bakan) yüzler açık, sol yüzler koyu",
+    "Kubbe izometrik elipslerden kurulmuş dönel yüzey; 32 dilim düz tonlarla ve ince kaburga çizgileriyle",
+    "Sekizgen prizma minare, korkuluklu iki şerefe ve soğan topuz; zemine sola düşen düz yarı saydam gölgeler",
+    "Karonun üstünde yükseltilmiş çiçek tarhları, yuvarlak çalılar ve küçük yol fenerleri"
+  ],
+  "palet": ["#1F693C", "#46A057", "#F4EEDF", "#C3B597", "#D9AC40", "#9FCB72", "#A9764A", "#BFE0EE"],
+  "kodla_cizim": "Tek canvas (2× iç çözünürlük). Kendi izdüşüm fonksiyonu P(x,y,z) = (512 + (x−y)·cos30°, OY + (x+y)·sin30° − z) ile bütün öğeler dünya koordinatında kuruldu. Kutular, n kenarlı prizmalar ve kesik koniler yüzey normali ile ışık vektörünün (sağ üst) iç çarpımına göre rampadan düz ton alır; arkaya bakan yüzler çizilmez. Kubbe SAHNE.kubbeProfili()'nden alınan profille dönel yüzey olarak 32 dilime bölündü, her dilimin yalnız izleyiciye bakan kısmı görünürlük sınırında kesilip hafif dikey geçişle dolduruldu; kasnak pencereleri silindir yüzeyine sarılmış sivri kemerler, kaide pencereleri yüz düzlemine eğilmiş kemerlerdir. Gölgeler ışık yönünde zemine izdüşürülen noktaların dışbükey zarfıyla ekran dışı tuvalde birleştirilip karo üstüne kırpıldı. Tarh, çalı, çiçek ve fenerler derinliğe (x+y) göre sıralanıp ressam algoritmasıyla çizildi.",
+  "etiketler": ["izometrik", "vektör", "diorama", "düz renk", "üç ton", "maket", "dijital illüstrasyon"]
+}

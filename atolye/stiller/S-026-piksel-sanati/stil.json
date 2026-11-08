@@ -1,0 +1,22 @@
+{
+  "kod": "S-026",
+  "no": 26,
+  "ad": "Piksel Sanatı",
+  "ad_en": "Pixel Art",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "128 × 128 piksellik ızgarada, 22 renkle, her noktası elle konmuş gibi keskin kare piksellerle çizim.",
+  "tanim": "Piksel sanatı, görüntünün çok düşük çözünürlükte, pikseller tek tek bilinçli olarak yerleştirilerek kurulduğu dijital bir resim dilidir. Sınırlı palet, kenar yumuşatmasının olmayışı, düz renk kümeleri ve gökte ya da geçişlerde damalı titreklik (dithering) başlıca araçlarıdır. Bağımsız oyunların arka planlarında, simgelerde ve retro esintili illüstrasyonlarda kullanılır; büyütüldüğünde her piksel net bir kare olarak görünür.",
+  "koken": "1970'lerin ve 80'lerin oyun makineleri ile ev bilgisayarlarının (Atari, Commodore 64, NES, Amiga) donanım sınırlarından doğdu; az renk ve düşük çözünürlük sanatçıları her pikseli düşünerek koymaya zorladı. Mark Ferrari'nin palet döngülü manzaraları, LucasArts macera oyunları ve 16 bit dönemi bu dilin klasikleridir; 2000'lerden sonra Fez, Celeste, Eastward gibi bağımsız oyunlarla bilinçli bir estetik olarak yeniden doğdu.",
+  "ayirt_edici": [
+    "128 × 128 ızgara, 8× en yakın komşu büyütme: her piksel keskin bir kare, hiçbir yerde kenar yumuşatması yok",
+    "22 renklik sınırlı palet; gölgeler maviye-mora, ışıklar sarıya kaydırılmış tonlar",
+    "Gök degradesi düz bantlar ve aralarında damalı (ordered) titreklik geçişleriyle; güneşin halesi de damalı halkalar",
+    "Kubbede bantlı ışık kümeleri ve bir ton koyu piksel çizgilerle kaburgalar; gölge tarafında en koyu, ışık tarafında açık seçici dış çizgi",
+    "Elle yerleştirilmiş ayrıntılar: içe kıvrık uçlu hilaller, küre boğumlu alemler, minaredeki V zikzak bant ve korkuluk dikmeleri",
+    "Pembe kenarlı beyaz çiçekler, sarı göbekler ve koyu kenarlı iki tonlu yapraklar; ufukta uzak tepe katmanı"
+  ],
+  "palet": ["#3B6CB4", "#8DB9E4", "#2A7A42", "#8DCB6B", "#F6D86E", "#E9DEC6", "#C4668A", "#FFFDF4"],
+  "kodla_cizim": "Çizim 128 × 128'lik bir dizin tamponunda (her hücre 22 renklik paletten bir numara) yapıldı; tarayıcının çizim fonksiyonları kullanılmadı. Kendi rutinleri: piksel merkezine göre tarama çizgisiyle çokgen doldurma, Bresenham çizgisi, harf haritalı elle çizilmiş sprite'lar (hilaller, alemler, soğan topuz, pencereler) ve %25/%50/%75 damalı desenler. Kubbe SAHNE.kubbeProfili()'nden piksel piksel maskelenip yüzey normaline göre dört düz banda ayrıldı, kaburgalar meridyen boyunca bir ton koyu piksellerle işlendi; dış çizgi rengi kenarın yönüne göre seçildi. Yaprak, tomurcuk ve çiçekler SAHNE.bitki konumlarından 128 uzayına rasterleştirilip iki tonla ve seçici kenarla boyandı. Sonunda tampon ImageData'ya çevrilip imageSmoothingEnabled=false ile 8× büyütüldü.",
+  "etiketler": ["piksel", "8 bit", "16 bit", "retro", "oyun", "dithering", "sınırlı palet", "dijital"]
+}

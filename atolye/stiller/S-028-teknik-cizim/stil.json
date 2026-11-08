@@ -1,0 +1,22 @@
+{
+  "kod": "S-028",
+  "no": 28,
+  "ad": "Teknik Çizim (Mavi Kopya)",
+  "ad_en": "Blueprint",
+  "aile": "Grafik ve Dijital",
+  "ozgun": false,
+  "ozet": "Prusya mavisi kâğıt üzerinde beyaz, kusursuz çizgilerle ölçülü bir mimari ön görünüş.",
+  "tanim": "Mavi kopya, mimari ve mühendislik çizimlerinin ışığa duyarlı kâğıda çoğaltılmasıyla ortaya çıkan, koyu mavi zemin üzerinde beyaz çizgili baskıdır. Ortografik görünüşler, oklu ölçü çizgileri, kesik-noktalı eksenler, kesitlerde tarama ve sağ alttaki antet bu dilin vazgeçilmezleridir. Kullanılmış paftalarda katlama izleri, kenar aşınması ve kimyasal lekeler de görünür; bugün teknik ve 'mühendislik' estetiğini çağrıştırmak için grafik tasarımda sıkça kullanılır.",
+  "koken": "Siyanotipi 1842'de Sir John Herschel buldu; demir tuzlarıyla kaplı kâğıt ışıkta Prusya mavisine döner, çizgilerin gölgede kalan yerleri beyaz kalır. 1870'lerden 1940'lara kadar tersane, demiryolu ve mimarlık bürolarında çizimleri çoğaltmanın standart yolu oldu; sonra yerini amonyakla banyo edilen diazo kopyalara ve bilgisayar çıktılarına bıraktı, ama 'blueprint' sözcüğü plan anlamında dilde kaldı.",
+  "ayirt_edici": [
+    "Prusya mavisi, lekeli ve dokulu kâğıt üzerinde hafif dağılmış beyaz/açık camgöbeği çizgiler",
+    "Ortografik güney cephesi: kubbe kaburgaları, kasnak pencereleri, kaide taş dizileri, kaidenin arkasında kalan minare kenarı kesik (gizli) çizgiyle",
+    "Oklu ölçü çizgileri ve sayılar (16,00 · 28,72 · zincir ölçüler), kot işaretleri, kesik-noktalı eksenler ve kubbenin yapım daireleri",
+    "Soluk yapı ızgarası, bölge harfli pafta çerçevesi ve temel kesitinde 45° tarama",
+    "Sağ üstte büyütülmüş alem detayı (DETAY A · 1:50), sağ altta antet ve çizgisel ölçek",
+    "Katlama izleri, aşınmış kenarlar, amonyak lekeleri; ön planda damarlı ve taramalı ince botanik çiçek etütleri"
+  ],
+  "palet": ["#0F3063", "#1B488C", "#3A66A7", "#335587", "#537099", "#819EC5", "#EAF6FF"],
+  "kodla_cizim": "Kâğıt 1024 × 1024 ImageData olarak piksel piksel hesaplandı: merkezden kenara Prusya mavisi geçişi, üç ölçekli değer gürültüsüyle beneklenme, gürültüyle bozulmuş dairesel maskelerle açık içli koyu halkalı lekeler ve aşınmış kenarlar. Bütün çizim 2× çözünürlükte ayrı, saydam bir 'çizgi katmanına' beyazla yapıldı; SAHNE.yollar() ve SAHNE.minareParcalari() geometrisi Path2D ile çizildi, öndeki öğe çizilmeden önce kendi biçimi destination-out ile silinerek arkadaki çizgiler örtüldü. Ölçü okları, kot işaretleri, eksen simgesi, tarama, pafta çerçevesi, antet ve ölçek çubuğu kendi yardımcılarımızla; yazılar DejaVu Sans ve Liberation Mono. Botanik etütler SAHNE.bitki konumlarından kontur, orta ve yan damar, gölge yarısında ince tarama ve ercik çizgileriyle kuruldu. Katman gürültü maskesiyle hafifçe düzensizleştirilip önce bulanık (dağılma), sonra keskin olarak kâğıda basıldı; en son katlama sırtları ve köşe aşınması eklendi.",
+  "etiketler": ["teknik çizim", "mavi kopya", "siyanotipi", "mimari", "ölçülü", "çizgi", "pafta", "mühendislik"]
+}

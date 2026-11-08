@@ -1,0 +1,22 @@
+{
+  "kod": "S-013",
+  "no": 13,
+  "ad": "Mozaik",
+  "ad_en": "Mosaic (Tesserae)",
+  "aile": "Türk-İslam Sanatları",
+  "ozgun": false,
+  "ozet": "Biçimlerin çevresinden dolanan sıralarla dizilmiş küçük taş ve cam kareler, altın smalti zemin.",
+  "tanim": "Mozaik, küçük taş, mermer ve renkli cam (smalti) parçalarının harç yatağına tek tek gömülmesiyle yapılan kalıcı duvar ve döşeme resmidir. Taşların diziliş yönü (andamento) resmin bir parçasıdır: biçimlerin çevresinde konturu izleyen kıvrık sıralar, arka planda düz sıralar görülür. Altın varaklı cam taşlar ışığı her açıda farklı yakalayarak zemini titreştirir; cami, kilise ve saray duvarlarında, kubbe ve mihraplarda kullanılır.",
+  "koken": "Helenistik ve Roma döşeme mozaiklerinden (opus tessellatum, opus vermiculatum) doğdu; Bizans'ta altın smalti zeminli duvar mozaiklerine dönüştü (Ravenna, Ayasofya). Emevî döneminde Kubbetü's-Sahra (691) ve Şam Emevî Camii'nin (715) altın zeminli ağaç, köşk ve nehir manzaraları İslam sanatının en erken başyapıtları arasındadır; Kurtuba Camii mihrabı da aynı geleneği sürdürür.",
+  "ayirt_edici": [
+    "Her biri hafif düzensiz ve eğik oturmuş küçük kare taşlar, aralarında görünür açık renkli derz",
+    "Kubbe dilimlerinde, pencere kemerlerinde, çiçek taç yapraklarında konturu izleyen kıvrık sıralar (opus vermiculatum)",
+    "Gökte düz yatay sıralar (opus tessellatum) ve figürlerin çevresini iki sıra dolanan altın taşlar",
+    "Parlaklığı taştan taşa değişen, yer yer ışığı yakalayıp parlayan altın smalti zemin; eş merkezli sıralarla dizilmiş güneş",
+    "Figürleri çevreleyen koyu kontur sırası; kubbe kaburgaları, minare zikzağı ve saplar tek sıra taşla çizilmiş",
+    "Sınırlı taş ve cam paleti: yeşil cam, beyaz ve krem mermer, toprak sarısı, pembe; üç sıralı bordür"
+  ],
+  "palet": ["#D3A646", "#F0D077", "#20703E", "#0D3820", "#EFE8D9", "#E8C2C8", "#B0804E", "#807460"],
+  "kodla_cizim": "Sahne, her öğe ve alt bölge (kubbe dilimleri, pencereler, taç yaprakları, alem parçaları) ayrı kimlik rengiyle bir etiket haritasına çizilir. Etiket kenarlarından Öklid uzaklık dönüşümü (Felzenszwalb) alınır; her bölgede taş boyunun yarım katlarındaki eş uzaklık çizgileri gradyana dik yürünerek taşlar sıra sıra dizilir (andamento). Gök, zemin ve kaidede ilk bir iki sıradan sonra hafif dalgalı yatay sıralar, kaburga, zikzak, sap ve damarlarda çizgi boyunca tek sıra taş kullanılır; kalan boşluklar yerel ağırlık merkezine konan ara taşlarla doldurulur. Renk, başvuru çiziminin parlaklığına göre malzeme rampasından titreşimli seçilir; altın taşlara rastgele ışık yakalama verilir. Son çizim 2048 px'de piksel piksel yapılır: her piksel kendi bölgesindeki en yakın döndürülmüş kareye (köşesi hafif kırık, kenarı gürültüyle dalgalı) atanır, kareler dışı derz olur, taş kenarlarında ışığa göre pah gölgesi verilir.",
+  "etiketler": ["mozaik", "tessera", "altın", "andamento", "geleneksel", "zanaat", "doku", "Bizans", "Emevî"]
+}

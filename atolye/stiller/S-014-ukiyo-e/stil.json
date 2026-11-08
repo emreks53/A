@@ -1,0 +1,22 @@
+{
+  "kod": "S-014",
+  "no": 14,
+  "ad": "Ukiyo-e",
+  "ad_en": "Ukiyo-e Woodblock Print",
+  "aile": "Uzak Doğu",
+  "ozgun": false,
+  "ozet": "Japon ağaç baskısı: düz renk kalıpları, kalın siyah çizgiler, bokashi geçişli gök ve pembe sis kuşakları.",
+  "tanim": "Ukiyo-e, her rengin ayrı bir kiraz tahtası kalıba oyulup elle, sırayla washi kâğıdına basıldığı Japon ağaç baskı resmidir. Biçimleri ana kalıbın (sumi) kalın, eşit siyah çizgileri belirler; renk alanları düzdür, gökte ve kenarlarda kalıbın ıslak silinmesiyle elde edilen bokashi geçişleri görülür. Manzaralarda yatay sis kuşakları (kasumi) derinlik verir; tahtanın damarı ve hafif kayık baskı her nüshada sezilir.",
+  "koken": "17. yüzyıl Edo'sunda kitap resimleriyle başladı, 18. yüzyılda çok renkli baskı (nishiki-e) Suzuki Harunobu ile yerleşti. 1820'lerden sonra Avrupa'dan gelen Prusya mavisi gökleri değiştirdi; Katsushika Hokusai'nin 'Fuji'nin Otuz Altı Görünümü' ve Utagawa Hiroshige'nin 'Tōkaidō'nun Elli Üç Durağı' ile 'Edo'nun Yüz Ünlü Manzarası' manzara baskısının doruğudur. 19. yüzyıl sonunda Japonizm akımıyla Van Gogh ve Monet'yi derinden etkiledi.",
+  "ayirt_edici": [
+    "Kubbe, kasnak, minare ve çiçekleri çevreleyen kalın, eşit siyah ana kalıp çizgileri; pencereler düz siyah",
+    "Üstte koyu Prusya mavisinden aşağı doğru açılan bokashi gök; kubbede yukarıdan aşağı yeşil bokashi",
+    "Minarenin önünden ve kubbenin arkasından geçen, üst kenarı pembe alt kenarı silinmiş kasumi sis kuşakları",
+    "Düz kırmızı güneş teker, çizgisiz mavi-gri uzak tepeler, sakura biçimli çentikli beyaz çiçekler ve kiraz dalları",
+    "Renk alanlarında ağaç damarı ve baren lekeleri; renklerin çizgiden hafifçe kaydığı kayık baskı",
+    "Lifli sıcak bej washi kâğıdı, siyah çerçeve çizgisi ve yazısız kırmızı ve sarı kartuşlar"
+  ],
+  "palet": ["#1E3A74", "#C43C2A", "#367446", "#D4766C", "#EFE2C6", "#221D1A", "#D65C76", "#DCAA3A"],
+  "kodla_cizim": "Canvas 2048 px'de baskı sırası taklit edilir: önce lifli washi kâğıdı, sonra her renk kalıbı ayrı ekran dışı tuvale çizilip 'multiply' ile ve birkaç piksel kaydırılarak (kayık baskı) basılır. Ağaç damarı, alan bükmeli değer gürültüsünden üretilen bir alfa maskesinin her kalıpta farklı açıyla 'destination-out' uygulanmasıdır. Nesneler (minare, yapı, bitkiler) gruplar hâlinde ressam sırasıyla işlenir: her öğe renk ve çizgi tuvallerinde önce kendi biçimini siler, sonra renklenip çizilir; böylece öndeki biçim arkadaki çizgileri örter. Önde duranın silueti kâğıt rengine döndürülür. Gök, kubbe ve kasumi bokashi'leri doğrusal degradelerle, sakura taç yaprakları çentikli Bézier biçimleriyle, kiraz dalları incelen şeritlerle çizilir; en sonda kâğıt dokusu çarpılır, kenar boşluğu ve kartuşlar eklenir.",
+  "etiketler": ["ağaç baskı", "Japon", "Hiroshige", "bokashi", "kasumi", "düz renk", "kalın çizgi", "washi", "Uzak Doğu"]
+}

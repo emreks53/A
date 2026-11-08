@@ -1,0 +1,22 @@
+{
+  "kod": "S-039",
+  "no": 39,
+  "ad": "Havuz Aksi",
+  "ad_en": "Pool Reflection",
+  "aile": "Atölye Özgün",
+  "ozgun": true,
+  "ozet": "Yapının kendisi görünmez; sahne yalnızca avludaki durgun havuzun suyunda, yukarıdan bakılan ters aksiyle anlatılır.",
+  "tanim": "Kural: konu hiçbir zaman doğrudan çizilmez, yalnızca yukarıdan bakılan durgun bir suyun yüzündeki aksi gösterilir. Aks yalnız dikeyde ters döner (kubbe sağda, minare solda kalır); ince yatay dalga bantları ve hafif kırılma onu bozar, dikey çizgiler titrek kıvrımlara döner. Su aksi boyar: kenarlarda koyu deniz yeşili, ortada berrak; dalga sırtlarında gökten kırık parıltılar, güneşin aksinde pırıltılar vardır. Su yüzünde kendi küçük gölgeleri ve çevrelerinde halka halka dalgacıklar olan gül ve beyaz yapraklar ile yuvarlak yapraklar yüzer; çerçeveyi üstte ve altta ince kakma bantlı, dilimli ağızlı oyma mermer havuz kenarı kurar.",
+  "koken": "İlham, Osmanlı ve Endülüs avlularının durgun havuzları ile şadırvanlardır: Elhamra'nın Mersin Avlusu'ndaki havuzda yapının aksi, Türk bahçelerindeki havuzlarda gökle kubbe aynı yüzeyde buluşur. Fikrin özü, bakışı yere çevirmek: konu suyun aynasında, yaprakların ve dalgacıkların arasından, bir anlığına titreyen bir görüntü olarak okunur. Kural her konuya uygulanabilir: neyi çizerseniz çizin, yalnızca onun sudaki aksi ve suyun yüzü görünür.",
+  "ayirt_edici": [
+    "Kubbe, kasnak, kaide ve minare yalnızca ters dönmüş aks olarak görünür; kubbe sağda, minare solda kalır",
+    "Yatay dalga bantları kaburgaları ve minare kenarlarını titrek kıvrımlara çevirir; dalga sırtlarında kırık gök parıltıları",
+    "Su rengi kenarlarda koyu deniz yeşili, ortada daha berrak; ortada havuz dibine düşen silik ışık ağı",
+    "Yüzen gül ve beyaz yapraklar ile çentikli yuvarlak yapraklar; her birinin küçük gölgesi ve çevresinde halka halka dalgacıklar",
+    "Güneşin sudaki aksinde parlama ve pırıltılar",
+    "Üstte ve altta damarlı, oyma basamaklı, dilimli ağızlı mermer havuz kenarı; içinde yeşil sekiz köşeli yıldız ve gül renkli baklavalardan ince kakma bant"
+  ],
+  "palet": ["#226866", "#0C383A", "#5E97CF", "#2F7D3B", "#EEE6D3", "#F0ECE4", "#2F6B52", "#B4566A"],
+  "kodla_cizim": "Canvas 2B, 2048 iç çözünürlük. Sahne ekran dışı bir tuvale çizilir (kendi doygun göğüm, bulutlar ve güneş parıltısı; yapı ve bitkiler SAHNE.ciz ile), hafifçe yumuşatılır. Suyun her pikseli için ters koordinat (Y = 960 − y) hesaplanır; yer değiştirme, uzun bir kabarma, evresi düşük frekanslı gürültüyle bükülen ince yatay dalgacıklar, 16 piksellik ızgaradan çift doğrusal okunan kırılma alanı ve yüzen her şeyin çevresinde ışınsal sinüs halkalarından oluşur; kaynak üç dikey örnekle sıvazlanarak çift doğrusal okunur. Renk kenara uzaklığa göre koyu deniz yeşiline karıştırılır, aks karartılır, dalga sırtlarında gürültüyle kırılan parıltılar eklenir, üst kenarın gölgesi düşer. Üstüne havuz dibindeki ışık ağı (gürültü farkı), güneş parlaması ve pırıltılar, dalgacık halkaları, gölgeli gül yaprakları ve damarlı yuvarlak yapraklar çizilir. Mermer piksel piksel damar gürültüsüyle üretilir; profil, pervaz çizgileri, oluk, yuvarlatılmış ağız, dilimli kenar ve yıldız-baklava kakma bandı vektörle eklenir.",
+  "etiketler": ["özgün", "yansıma", "su", "havuz", "mermer", "kakma", "yukarıdan bakış", "dalga"]
+}
