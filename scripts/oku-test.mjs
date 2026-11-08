@@ -1314,7 +1314,7 @@ await adim('telefon tarayıcısında (360 x 640) iki yığın ve kart menünün 
 });
 
 await adim('kısa telefonlarda (375 x 553, 360 x 560, 320 x 568 çentikli) kart ve iki yığın menünün üstüne sığar; yatay telefonda Kur\'an solda, yığınlar sağda, kart okunur, kaydırma yok', async () => {
-  for (const [w, h, ust, yan = 0] of [[375, 553, 0], [360, 560, 0], [320, 568, 20], [844, 390, 0], [740, 360, 0], [568, 320, 0], [640, 360, 0], [667, 375, 0, 47], [740, 280, 0]]) {
+  for (const [w, h, ust, yan = 0] of [[375, 553, 0], [360, 560, 0], [320, 568, 20], [844, 390, 0], [740, 360, 0], [568, 320, 0], [640, 360, 0], [667, 375, 0, 47], [740, 280, 0], [568, 250, 0]]) {
     const c2 = await browser.newContext({ viewport: { width: w, height: h }, isMobile: true, hasTouch: true });
     try {
       const p2 = await c2.newPage();
@@ -1334,6 +1334,8 @@ await adim('kısa telefonlarda (375 x 553, 360 x 560, 320 x 568 çentikli) kart 
         const kartE = document.querySelector('#view-gunes .gunes__devam');
         const kart = kartE.getBoundingClientRect();
         const ad = document.querySelector('#view-gunes .gunes__devam-ad');
+        const yer = document.querySelector('#view-gunes .gunes__devam-yer');
+        const ustYazi = document.querySelector('#view-gunes .gunes__devam-ust');
         const dugme = document.querySelector('#view-gunes .gunes__devam-dugme').getBoundingClientRect();
         // Mushaf: çizimin (viewBox 240 x 190, ortalanmış) x 60..180 aralığı
         const r = document.querySelector('#view-gunes .gunes__sahne-svg').getBoundingClientRect();
@@ -1343,7 +1345,8 @@ await adim('kısa telefonlarda (375 x 553, 360 x 560, 320 x 568 çentikli) kart 
         return {
           menu, enAlt: Math.max(...ciltler.map((c) => c.bottom), kart.bottom), kaydirma: g.scrollHeight - g.clientHeight, yatay: document.documentElement.scrollWidth - innerWidth,
           mushafSol: cx - 60 * k, mushafSag: cx + 60 * k, yiginSol: Math.min(...ciltler.map((c) => c.left)),
-          adSigar: ad.clientWidth > 0 && ad.scrollWidth <= ad.clientWidth, dugmeIcinde: dugme.right <= kart.right + 0.5, kartTasmaz: kartE.scrollWidth <= kartE.clientWidth,
+          adSigar: ad.clientWidth > 0 && ad.scrollWidth <= ad.clientWidth && yer.scrollWidth <= yer.clientWidth && ustYazi.getBoundingClientRect().height < 14,
+          dugmeIcinde: dugme.right <= kart.right + 0.5, kartTasmaz: kartE.scrollWidth <= kartE.clientWidth,
         };
       });
       assert.ok(o.kaydirma <= 0 && o.yatay <= 0 && o.enAlt <= o.menu - 15, `${w}x${h} ${JSON.stringify(o)}`);

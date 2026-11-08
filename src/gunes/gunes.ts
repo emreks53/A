@@ -105,9 +105,11 @@ function ciltKur(ad: (typeof KULLIYAT)[number], kitap: Kitap | undefined, dis: s
 
 export function gunesBaslat(gorunum: HTMLElement, s: GunesSecenek = {}): Gunes {
   const kitaplik = el('div', 'gunes');
-  // uzun yığının oran toplamı: yatay ekranda ölçek (--S) yığın yüksekliğinden bulunur
-  const yiginBoyu = Math.max(...[KULLIYAT.slice(0, YIGIN_SUTUN), KULLIYAT.slice(YIGIN_SUTUN)].map((a) => a.reduce((t, ad) => t + KALINLIK[ad], 0)));
-  kitaplik.style.setProperty('--yigin-boy', yiginBoyu.toFixed(4));
+  // yığınların oran toplamı: yatay ekranda ölçek (--S) yüksekliğe sığmaktan bulunur (uzun yığın; kısa yığın ve
+  // üstündeki etiket)
+  const toplamlar = [KULLIYAT.slice(0, YIGIN_SUTUN), KULLIYAT.slice(YIGIN_SUTUN)].map((a) => a.reduce((t, ad) => t + KALINLIK[ad], 0));
+  kitaplik.style.setProperty('--yigin-boy', Math.max(...toplamlar).toFixed(4));
+  kitaplik.style.setProperty('--kisa-boy', Math.min(...toplamlar).toFixed(4));
   const ic = el('div', 'gunes__ic');
 
   const sahne = el('div', 'gunes__sahne');

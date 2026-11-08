@@ -1383,6 +1383,7 @@
   font: 600 10px/1.1 var(--sans);
   letter-spacing: 0.22em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .gunes__devam-ad {
   overflow: hidden;
@@ -1486,8 +1487,8 @@
 /* ---------- yatay ekran (telefon, tablet, masaüstü): Kur'an solda, yığınlar sağda ----------
    Yükseklik azdır: üst üste sığmazlar. Ölçek yığının sığdığı yükseklikten (--yigin-boy: uzun yığının oran
    toplamı, gunes.ts); kart Kur'an'ın altına iner, yığınları küçültmez. Dar yatay telefonda bant eni, Kur'an ve
-   kart sütunu en az 220 px kalacak kadar daralır. Çok kısa ekranda (tarayıcı çubukları açık) bantlar incelir
-   ama hepsi menünün üstünde kalır. */
+   kart sütunu en az 220 px (kart açıkken 250 px) kalacak kadar daralır. Çok kısa ekranda (tarayıcı çubukları açık)
+   bantlar incelir ama hepsi, kısa yığının üstündeki etiketle birlikte, menünün üstünde kalır. */
 @media (orientation: landscape) and (min-aspect-ratio: 4 / 3) {
   .view--gunes {
     --yan: calc(
@@ -1497,7 +1498,14 @@
     --B: clamp(110px, calc((100vw - var(--yan) - clamp(12px, 4vw, 64px) - var(--ara) - 220px) / 2), 205px);
   }
   .gunes {
-    --S: clamp(180px, min(calc((var(--bos) - 12px) / var(--yigin-boy, 0.85)), calc(var(--B) * 2.6)), 560px);
+    --S: clamp(
+      120px,
+      min(calc((var(--bos) - 12px) / var(--yigin-boy, 0.85)), calc((var(--bos) - 62px) / var(--kisa-boy, 0.62)), calc(var(--B) * 2.6)),
+      560px
+    );
+  }
+  .gunes[data-devam] {
+    --B: clamp(110px, calc((100vw - var(--yan) - clamp(12px, 4vw, 64px) - var(--ara) - 250px) / 2), 205px);
   }
   .gunes__ic {
     display: grid;
@@ -1525,6 +1533,7 @@
     grid-column: 1;
     grid-row: 2;
     justify-self: center;
+    width: min(100%, 362px);
   }
   .gunes__kulliyat {
     grid-column: 2;
