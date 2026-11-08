@@ -13,14 +13,16 @@ uygulama simgesi `design/logo-kaynak.png` sarı logodur.
 ```
 index.html                 Uygulama iskeleti (arka plan, alıntı, ekranlar, alt menü)
 src/main.ts                Yönlendirme (#/ ana ekran, #/oku, #/kenz, #/gunes, #/gunes/<kitap>/<sayfa>), geri tuşu, Capacitor ve PWA kurulumu
-src/styles.css             Ana ekran ve alt menü ölçüleri (390 genişliğe göre, --u ile ölçeklenir)
+src/styles.css             Renkler, yazı tipleri, ana ekran ve alt menü ölçüleri (390 genişliğe göre, --u ile ölçeklenir)
 src/assets/bg/             Temizlenmiş arka plan (dikey + geniş ekran; AVIF / WebP / JPG)
-src/assets/icons/          Dünya (Oku), düğüm (Kenz) ve güneş (Güneş) simgeleri; videolardaki soluk im
-src/assets/fonts/          Tinos Bold Italic (alıntı, başlıklar) ve Encode Sans 500/600/700 (arayüz) — kendi sunucumuzdan
+src/assets/icons/          Düğüm (kullanıcının logosu; videolardaki soluk im). Alt menünün dünya ve güneş simgeleri
+                           ve düğüm (#dugum) index.html'in içindedir
+src/assets/fonts/          EB Garamond 500/600/500 italik (başlıklar, kitap sırtları), Tinos Bold Italic (alıntı) ve
+                           Encode Sans 500/600/700 (arayüz) — kendi sunucumuzdan
 src/kenz/                  Kenz ekranı: kitap kitap video kütüphanesi (kutuphane.ts, kenz.ts)
 src/gunes/                 Güneş: Risale-i Nur kütüphanesi (gunes.ts) ve PDF okuyucu (okuyucu.ts, pdf.ts: pdf.js)
 src/oku/                   Oku: dikey video akışı (akis.ts), sağa kaydırıp çıkma (kaydir-cik.ts), Neşret, Menba
-                           (menba.ts; Kur'an-ı Kerim ve Külliyat rafı çizimi menba-cizim.ts)
+                           (menba.ts; Külliyat rafı çizimi menba-cizim.ts; rahledeki Kur'an-ı Kerim kuran-cizim.ts)
 content/oku/videolar.json  Oku akışındaki videolar, sırasıyla; aşağıdaki "Oku: video ekleme" bölümüne bakın
 public/videolar/           Videolar (720×1280 H.264), kapak ve paylaşım önizleme görselleri
 content/kitaplar/kitaplar.json  Güneş'te okunabilen kitaplar (PDF, sayfa farkı, içindekiler); "Güneş: kitap ekleme"
@@ -46,11 +48,11 @@ Güneş arasında geçmek geçmişe kayıt eklemez (geri hep ana ekrana gider); 
 
 ## Kenz
 
-Ayrı bir ekran: gece mavisi bir kütüphane ("gece kütüphanesi"). Videolar geçtiği **Risale-i Nur kitabına**,
+Ayrı bir ekran: mürekkep laciverti, sade bir kütüphane (kutusuz satırlar, ince çizgiler). Videolar geçtiği **Risale-i Nur kitabına**,
 kitapta da **bölümüne** göre gruplanır.
 
 - Kitaplar Külliyat sırasıyla gelir (Sözler, Mektubat, Lem’alar, Şuâlar, …); her kitabın başında Menba
-  rafındakiyle aynı renkte küçük bir cilt sırtı, adı ve video sayısı vardır. Altında bölümler (ör. **ON YEDİNCİ
+  rafındakiyle aynı küçük bir cilt sırtı (#D7787B, kalınlığı kitabınkiyle orantılı), adı ve video sayısı vardır. Altında bölümler (ör. **ON YEDİNCİ
   LEM’A**), bölümlerde videolar.
 - Kartta önizleme görseli ve süre, videonun adı (geçtiği yer: *On Yedinci Lem’a’dan*), kısım ve sayfa
   (*Altıncı Mesele · 203. sayfa*) ve üç etiket (*#ihlas #muhabbet #kurtuluş*) bulunur. Kartın tamamına
@@ -62,12 +64,15 @@ kitapta da **bölümüne** göre gruplanır.
 
 ## Güneş
 
-Menba'daki gibi: şafak vakti, güneş rahledeki büyük Kur’an-ı Kerim'in ardından doğar (Kur'an yalnız süstür,
-dokunulmaz); altında ceviz rafta Risale-i Nur Külliyatı'nın 14 eseri Külliyat sırasıyla (Sözler, Mektubat,
-Lem’alar, … İman ve Küfür Muvâzeneleri). Arka plan ana ekranın gökyüzü fotoğrafıdır; ufku rahlenin hizasına gelir.
+Mürekkep laciverti zeminde, yumuşak bir ışığın altında rahle üzerinde inci beyazı bir Kur’an-ı Kerim (tek ince
+yaldız pervaz, aynı tonda kabartma şemse; Kur'an yalnız süstür, dokunulmaz); altında iki rafta Risale-i Nur
+Külliyatı'nın 14 eseri Külliyat sırasıyla (üstte Sözler … Mesnevî-i Nûriye, altta Asâ-yı Mûsâ … İman ve Küfür
+Muvâzeneleri).
 
-- Her eser büyük bir cilt sırtıdır (Menba rafıyla aynı renkler, altın şeritler, dikey ad); dokunma alanı en az
-  44 × 44 px (354 px'ten dar ekranlarda sırtlar daralır, raf ekrana sığar).
+- Her eser gerçekçi bir bez cilt sırtıdır: hepsi aynı renk (#D7787B), mafsal olukları, kör baskı çizgiler ve soluk
+  altın varakla dikey ad (aşağıdan yukarı okunur). Kalınlıklar gerçektir: RNK baskısının sayfa sayısından
+  (6 mm + sayfa başına 0,05 mm; `oku/ortak.ts`, `SAYFA`), iki rafta aynı ölçekle. En kalın Sözler, en ince
+  Muhâkemat (390 px'lik ekranda 24 px).
 - PDF'i okuyucuda olmayan eser, listede bağlantısı varsa yayınevinin okuma sitesinde açılır (şimdi RNK Neşriyat'ın
   okuma sitesi `rnk.tr`; tarayıcıda yeni sekmede, telefon uygulamasında sistem tarayıcısında; rafın altındaki not
   bunu söyler). Ne PDF'i ne bağlantısı olan eser soluk görünür ve "yakında" yazar; dokunulmaz.
@@ -145,8 +150,8 @@ vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görün
     Bağlantı `https://emreks53.github.io/A/v/<video>/` biçimindedir; mesajlaşma uygulamaları önizlemeyi o
     videonun görseli ve adıyla çizer, bağlantıyı açan kişi doğrudan o videoya gelir. Paylaşım menüsü olmayan
     tarayıcıda bağlantı panoya kopyalanır.
-  - **Menba** — videonun kaynağı: nur içinde, rahle üzerinde büyük bir Kur’an-ı Kerim; altında rafta Risale-i
-    Nur Külliyatı'nın on dört eseri dizili, videonun geçtiği eser raftan öne çekilmiş ve aydınlanmış. Altında
+  - **Menba** — videonun kaynağı: rahle üzerinde inci beyazı bir Kur’an-ı Kerim; altında rafta Risale-i Nur
+    Külliyatı'nın on dört eseri gerçek kalınlıklarında dizili, videonun geçtiği eser raftan öne çekilmiş. Altında
     eser, bölüm, (varsa) kısım ve sayfa (*Şuâlar · On Birinci Şuâ · Altıncı Mesele · 203. sayfa*), **Kitapta
     oku** (kitabı o sayfada açar: PDF'i varsa Güneş'in okuyucusunda, yoksa RNK Neşriyat'ın okuma sitesinde), üç
     etiket ve varsa görüntü ve ses künyesi (lisansın gerektirdiği atıflar). Sayfa üstteki tutamağa dokunarak, aşağı
@@ -291,7 +296,8 @@ npm run assets:native
 
 - Uygulama kimliği `com.nuruhakikat.app`, adı `Nur-u Hakikat` (`capacitor.config.ts`, Android `build.gradle` /
   `strings.xml`, iOS proje dosyası). Mağazaya ilk gönderimden sonra kimlik değiştirilemez.
-- Alıntı yazı tipi Tinos (Apache 2.0), menü yazı tipi Encode Sans (OFL); ikisi de uygulamayla birlikte gelir.
+- Alıntı yazı tipi Tinos (Apache 2.0), başlık ve sırt yazı tipi EB Garamond (OFL), menü yazı tipi Encode Sans (OFL);
+  hepsi uygulamayla birlikte gelir.
 - Videolar `emreks53/B` deposundan: *On Birinci Şuâ'dan* (Altıncı Mesele, fenler Hâlık'ı tanıttırır;
   `claude/kurzgesagt-style-turkish-video-2on8vi` dalı) ve *On Yedinci Lem'a'dan* (ihlas;
   `claude/kurzgesagt-style-video-p5a1gi` dalı). Kaynakları ve lisansları o dallarda; künyesi Menba'da.
