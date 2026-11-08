@@ -9,7 +9,7 @@
   "tanim": "Nokta boyama tekniğinde akrilik boya, ucu yuvarlak nokta çubukları, fırça sapları ya da bilyeli kalemlerle tek tek damla olarak konur. Damlalar kuruyunca kabarık, parlak birer inci gibi durur; boyutları ve renkleri sıra sıra değiştirilerek biçimler çizilir, iç içe halkalar ve kenarı izleyen sıralarla süsleyici bir ritim kurulur. Göz karışımı amaçlanmaz: her damla ayrı ve okunur kalır. Mandala taşları, süs eşyaları ve dekoratif panolarda yaygındır.",
   "koken": "Nokta nokta süsleme pek çok halk sanatında görülür; Avustralya Yerli sanatındaki nokta resmi de 1970'lerde Papunya Tula ressamlarıyla tuvale taşınmıştır. Bu örnek o topluluğa ait geleneği taklit etmez; akrilik boya ve nokta çubuklarıyla 2010'lardan bu yana yaygınlaşan dekoratif 'mandala nokta boyama' akımını izler. Puantilizmden (S-017) farkı, noktaların göz karışımı için küçük ve sık değil, iri, kabarık ve sıralı süs öğeleri olarak kullanılmasıdır.",
   "ayirt_edici": [
-    "Güneş iri turuncu bir damla ve çevresindeki sarı-turuncu halkalar; gök baştan sona güneşi merkez alan iç içe nokta halkalarıyla dolu, halkalar mavi, turkuaz, beyaz ve lavanta tonlarında sıra sıra değişiyor",
+    "Güneş iri turuncu bir damla ve çevresindeki sarı-turuncu halkalar; gök baştan sona güneşi merkez alan iç içe nokta halkalarıyla dolu: halkalar uzaklaştıkça açık turkuaz-maviden gök mavisine yavaşça koyulaşıyor, her dördüncüsü beyaz, aralarda tek tük turkuaz ve lavanta halka",
     "Kubbede her kaburga ve kaburga arası boyunca dizilmiş damla sıraları; damlalar tepeye doğru küçülüyor, ışık tarafı açık, sol yanı koyu yeşil; kubbe altın damla sırasıyla çerçeveli",
     "Bulutlar lavanta-mavi damlalarla çerçevelenmiş, içleri düzenli beyaz damlalarla dolu, tabana yakın sıralar hafif lavanta",
     "Kaide ve kasnak pencereleri kiremit, altın ve açık yeşil damla çerçevelerle çevrili; kornişte altın ve beyaz damlalar sırayla, minarede zikzak kiremit ve lacivert damlalarla",
@@ -18,7 +18,7 @@
   ],
   "palet": [
     "#D6ECFA",
-    "#5AACE8",
+    "#60ACE8",
     "#FAB646",
     "#5CBB72",
     "#ECBA40",
@@ -26,7 +26,7 @@
     "#F096B4",
     "#9670A0"
   ],
-  "kodla_cizim": "Önce her bölge SAHNE yollarıyla açık, mat düz renklere boyanır. Sonra damlalar katman katman eklenir: her damla düz renkli bir daire, üstüne önceden çizilmiş iki sprite (kenarı koyulaştıran kabarıklık ve sağ üstte parlak ışık lekesi) ve altında sol alta kaymış yumuşak bir gölge sprite'ıdır; bir katmandaki bütün gölgeler damlalardan önce çizilir. Damla yerleri biçimi izleyen eğriler boyunca eşit aralıkla hesaplanır: gökte güneşi merkez alan ve bölge haritasıyla kırpılan iç içe halkalar (yakında sıcak, uzakta serin renk dizisi; damla boyu dışa doğru küçülür), bulutlarda lob dairelerinin birleşik dış çizgisi ve içte kaydırmalı ızgara, minarede dikey sütunlar ve şerefelerde yatay sıralar, kaide ve kasnakta yatay sıralar ile sivri kemer çizgisini izleyen çerçeveler, kubbede 31 meridyen (kaburgalar ve araları; damla boyu tepeye ve kenarlara doğru küçülür), yapraklarda iki yanda içe çekilmiş kenar eğrileri ve orta damar, taç yapraklarında içe doğru küçülen elipsler, çiçek ortasında altın açılı (phyllotaxis) sarmal. Son olarak bütün yüzeye hafif bir tane gürültüsü eklenir.",
+  "kodla_cizim": "Önce her bölge SAHNE yollarıyla açık, mat düz renklere boyanır. Sonra damlalar katman katman eklenir: her damla düz renkli bir daire, üstüne önceden çizilmiş iki sprite (kenarı koyulaştıran kabarıklık ve sağ üstte parlak ışık lekesi) ve altında sol alta kaymış yumuşak bir gölge sprite'ıdır; bir katmandaki bütün gölgeler damlalardan önce çizilir. Damla yerleri biçimi izleyen eğriler boyunca eşit aralıkla hesaplanır: gökte güneşi merkez alan ve bölge haritasıyla kırpılan iç içe halkalar (yakında sıcak renkler; uzakta mesafeyle açık turkuaz-maviden gök mavisine geçen, her dördüncüsü beyaz, düşük zıtlıklı serin dizi; damla boyu dışa doğru hafifçe küçülür), bulutlarda lob dairelerinin birleşik dış çizgisi ve içte kaydırmalı ızgara, minarede dikey sütunlar ve şerefelerde yatay sıralar, kaide ve kasnakta yatay sıralar ile sivri kemer çizgisini izleyen çerçeveler, kubbede 31 meridyen (kaburgalar ve araları; damla boyu tepeye ve kenarlara doğru küçülür), yapraklarda iki yanda içe çekilmiş kenar eğrileri ve orta damar, taç yapraklarında içe doğru küçülen elipsler, çiçek ortasında altın açılı (phyllotaxis) sarmal. Son olarak bütün yüzeye hafif bir tane gürültüsü eklenir.",
   "etiketler": [
     "nokta boyama",
     "akrilik",

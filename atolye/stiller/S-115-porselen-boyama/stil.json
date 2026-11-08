@@ -10,23 +10,23 @@
   "koken": "Avrupa'da sert porselen 1710'da Meissen'de üretilmeye başlanınca sır üstü emaye boyaması da gelişti; Meissen'in 'Deutsche Blumen' çiçek buketleri, Sèvres ve Viyana manifaktürlerinin manzara ve çiçekli levhaları ölçü oldu. 19. yüzyılda Limoges ve Berlin KPM porselen levhaları resim gibi çerçevelenip asıldı; aynı yüzyılın sonunda ABD ve İngiltere'de amatör porselen boyama kulüpleri yaygınlaştı. Osmanlı'da Yıldız Çini ve Porselen Fabrikası (1894) altın yaldızlı, çiçek ve manzaralı sır üstü porselenler üretti; teknik bugün de atölyelerde sürüyor.",
   "ayirt_edici": [
     "Bütün yüzeyin parlak beyaz sırlı porselen olması; beyaz alanların boya değil sırrın kendisi olması",
-    "Saydam emaye katlarının tamponla yumuşatılmış geçişleri: yukarıdan ufka beyaza açılan mavi gök, güneş çevresinde silinmiş sarı hale, alt yanı leylak gölgeli silinmiş bulutlar",
-    "Kubbede katman katman yeşil emaye, sağ üstte silinerek açılmış yumuşak ışık ve kaburga yanlarında ince beyaz ışık çizgileri",
-    "Beyaz çiçeklerde yalnız leylak-gri gölge ve dipte pembe allık; damarları silinerek açılmış, üst üste binince koyulaşan saydam yapraklar; dilimli pembe güller ve unutmabeniler",
-    "Kenarda parlatılmış altın şerit, beyaz sır üstünde kıvrık altın dantel, pembe emaye benekler ve ince gül pembesi filet; altın alemler ve kubbe eteğinde ince altın çizgi",
-    "Sol üstte çapraz, yumuşak sır yansıması ve altın üzerinde küçük parıltılar"
+    "Saydam emaye katlarının ipek tamponla yumuşatılmış geçişleri ve ince benekli tampon izi: yukarıdan ufka beyaza açılan mavi gök, güneş çevresinde sarı hale, alt yanı leylak gölgeli silinmiş bulutlar",
+    "Kubbede dilim dilim fırça darbeleriyle koyulaşan yeşil emaye; kaburgaların ışık yanında silinerek açılmış ince ışıklar ve sağ üstte yumuşak parıltı",
+    "Beyaz çiçeklerde ucu çentikli, kenarı dalgalı taç yapraklar; yalnız leylak-gri gölge, dipten yelpaze gibi açılan silinmiş beyaz darbeler ve pembe allık; gölge yanında koyu darbeli, damarları silinmiş saydam yapraklar",
+    "Beyaz sır kenar şeridinde küçük pembe güller, unutmabeniler ve yaprakçıklarla boyalı ince çiçek çelengi; parlatılmış altın şerit, içte yarım daire kıvrımlı altın dantel ve köşelerde altın gülbezek",
+    "Sol üstte geniş, yumuşak sır yansıması ve altın alemlerle altın çizgiler üzerinde küçük parıltılar"
   ],
   "palet": [
     "#FDFDFB",
     "#6C9FD8",
     "#9DD3A0",
-    "#2E6E47",
+    "#2E6847",
     "#F2B8C3",
     "#B8B2D4",
     "#F2CF5C",
     "#D9B25A"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte beyaz sır zemini üzerine çalışılır. Gök ve yer piksel döngüsüyle hesaplanan saydam emaye yoğunluklarından kurulur: her renk beyazı çarpımsal olarak boyar (1 − yoğunluk × (1 − renk)); mavi yoğunluğu yukarıdan aşağı ve güneş çevresinde azalır, fBm ile tampon izi gibi hafifçe dalgalanır, bulutlar loblu yumuşak maskelerle silinir ve alt yarılarına leylak gölge, güneş çevresine sarı, ufka pembe katlar eklenir. Diğer öğelerde her emaye katı 'multiply' kipinde (gerektiğinde bulanıklık filtresiyle tamponlanmış) çizilir, ışıklar beyazla silinerek açılır, ince sepya, yeşil ve pembe fırça çizgileri düşük saydamlıkla eklenir. Boyanacak yer önce beyaza silinir ki emaye alttaki katla karışmasın. Güller dilim sayısı azalan dört kutupsal taç halkasıyla, beyaz çiçekler radyal degrade gölge ve allıkla boyanır. Altın metalik çok duraklı degradeyle, kenar danteli dönüşümlü tekrar eden Bézier kıvrımlarıyla çizilir. En sonda çapraz Gauss bantlarından sır yansıması 'screen' kipinde ve altın üzerinde küçük parıltılar basılır.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte beyaz sır zemini üzerine çalışılır. Gök ve yer piksel döngüsüyle hesaplanan saydam emaye yoğunluklarından kurulur: her renk beyazı çarpımsal olarak boyar (1 − yoğunluk × (1 − renk)); mavi yoğunluğu yukarıdan aşağı ve güneş çevresinde azalır, fBm ile tampon izi gibi dalgalanır, ince gürültüyle ipek tamponun benekli izi ve çapraz fırça çekişleri eklenir; bulutlar loblu yumuşak maskelerle silinir, alt yarılarına leylak gölge, güneş çevresine sarı, ufka pembe katlar biner. Diğer öğelerde her emaye katı 'multiply' kipinde çizilir (büyük yıkamalarda bulanıklık filtresiyle tamponlanır), ışıklar beyazla silinerek açılır. Kubbe dilimleri, yapraklar ve taç yapraklar iki ucu sivrilen fırça darbeleriyle boyanır: gölge yanında koyu emaye darbeleri, ışık yanında silinmiş beyaz darbeler, kenarda emayenin hafif birikmesi. Taç yapraklar ucu çentikli, kenarı dalgalı kutupsal eğriyle; güller dilim sayısı azalan dört taç halkasıyla kurulur. Kenar şeridinde dönüşümlü dört yöne çevrilen yerel koordinatlarda dalgalı dal, yaprakçıklar, minik güller ve unutmabeniler boyanır, iç kenara yarım daire dizisinden altın dantel çekilir; altın metalik çok duraklı degradeyle verilir. En sonda Gauss bantlarından sır yansıması 'screen' kipinde ve altın üzerinde küçük parıltılar basılır.",
   "etiketler": [
     "porselen",
     "sır üstü",

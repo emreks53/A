@@ -323,7 +323,7 @@
     const t = new Float32Array(N), S1b = bulanik(S1, W, W, 12);
     // iki yanda dalların arkasında yükselen çalı kütleleri
     const calı = (x, y, cx, cy, rx, ry) => { const d = Math.hypot((x - cx) / rx, (y - cy) / ry) + (fbm(nA, x / 50, y / 50, 3) - 0.5) * 0.35; return sstep(1.0, 0.9, d); };
-    for (let y = 440; y < W; y++) for (let x = 0; x < W; x++) { const i = y * W + x; t[i] = Math.max(sstep(0.04, 0.22, S1b[i]), sstep(ustOn(x), ustOn(x) + 30, y), calı(x, y, 95, 905, 210, 300), calı(x, y, 935, 905, 200, 300)); }
+    for (let y = 440; y < W; y++) for (let x = 0; x < W; x++) { const i = y * W + x; t[i] = Math.max(sstep(0.04, 0.22, S1b[i]), sstep(ustOn(x), ustOn(x) + 30, y), calı(x, y, 95, 905, 210, 300), calı(x, y, 935, 905, 200, 300), sstep(790, 806, y) * sstep(240, 290, x) * sstep(880, 830, x)); }
     const b = bulanik(t, W, W, 22), o = new Float32Array(N);
     for (let y = 420; y < W; y++) for (let x = 0; x < W; x++) { const i = y * W + x; o[i] = sstep(0.12, 0.5, b[i] + (fbm(nE, x / 40, y / 40, 3) - 0.5) * 0.2); }
     return o;
@@ -333,27 +333,40 @@
 
   // ============================================================ GÖK: bulutlar sırların arasından açılır
   const kGok = [0, 0, W, W];
-  const bulutTanim = [[170, 250, 1.05], [500, 152, 0.85], [765, 330, 1.05], [945, 468, 0.72], [88, 470, 0.72]];
+  // bulutlar: elle çizilmiş, düzensiz loblu kümeler (her bulut farklı); çekirdek ışıklı sağ üst yana kaymış
+  const bulutTanim = [[170, 250, 1.05, 0], [500, 152, 0.85, 1], [765, 330, 1.05, 2], [945, 468, 0.72, 3], [88, 470, 0.72, 4]];
   function bulutCiz(c, cekirdek) {
-    const r = SAHNE.rng(55);
-    for (const [bx, by, bs] of bulutTanim) {
-      const adet = 7;
+    for (const [bx, by, bs, id] of bulutTanim) {
+      const r = SAHNE.rng(55 + id * 17);
+      const adet = 5 + Math.floor(r() * 3);
+      // taban: yatık, düzensiz bir gövde
+      const govde = damla(bx + (r() - 0.5) * 20 * bs, by + 8 * bs, (100 + r() * 30) * bs, (20 + r() * 6) * bs, (r() - 0.5) * 0.08, 11, r);
+      if (!cekirdek) hobbsCiz(c, govde, 12, 0.09, r, 0.32);
       for (let k = 0; k < adet; k++) {
-        const t = k / (adet - 1), ox = (t - 0.5) * 190 * bs, h = Math.sin(Math.PI * t);
-        const rr = (22 + 26 * h + r() * 8) * bs, oy = -h * 22 * bs + (r() - 0.5) * 6;
-        if (cekirdek) { c.beginPath(); c.arc(bx + ox + rr * 0.18, by + oy - rr * 0.2, rr * 0.78, 0, Math.PI * 2); c.fill(); }
-        else { c.beginPath(); c.arc(bx + ox, by + oy, rr, 0, Math.PI * 2); c.fill(); }
+        const t = (k + 0.3 + r() * 0.4) / adet, ox = (t - 0.5) * (170 + r() * 50) * bs, h = Math.pow(Math.sin(Math.PI * t), 0.8);
+        const rr = (16 + 30 * h * (0.6 + r() * 0.7)) * bs, oy = Math.min(-4 * bs, -h * (14 + r() * 16) * bs + (r() - 0.5) * 6 * bs);
+        if (cekirdek) hobbsCiz(c, damla(bx + ox + rr * 0.22, by + oy - rr * 0.28, rr * 0.72, rr * 0.62, r() * 3, 9, r), 10, 0.1, r, 0.5);
+        else hobbsCiz(c, damla(bx + ox, by + oy, rr * (1 + r() * 0.25), rr * (0.82 + r() * 0.2), r() * 3, 9, r), 10, 0.1, r, 0.5);
       }
-      if (!cekirdek) { c.beginPath(); c.ellipse(bx, by + 10 * bs, 112 * bs, 22 * bs, 0, 0, Math.PI * 2); c.fill(); }
     }
   }
   const nW1 = gurultu(57), nW2 = gurultu(58);
   const bur = (M, gen, ol) => { const o = new Float32Array(N); for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
     const sx = clamp(Math.round(x + (fbm(nW1, x / ol, y / ol, 3) - 0.5) * 2 * gen), 0, W - 1), sy = clamp(Math.round(y + (fbm(nW2, x / ol, y / ol, 3) - 0.5) * 2 * gen), 0, W - 1);
     o[y * W + x] = M[sy * W + sx]; } return bulanik(o, W, W, 0.7); };
-  const C1 = bur(kapsamCiz(TAM, (c) => bulutCiz(c, true)), 9, 22);
-  const C2 = bur(kapsamCiz(TAM, (c) => bulutCiz(c, false)), 8, 26);
-  for (let i = 0; i < N; i++) C1[i] = Math.min(C1[i], C2[i]);
+  const esik = (M, a, b) => { for (let i = 0; i < N; i++) M[i] = sstep(a, b, M[i]); return M; };
+  const C1 = bur(esik(kapsamCiz(TAM, (c) => bulutCiz(c, true)), 0.3, 0.6), 5, 18);
+  const C2r = bur(esik(kapsamCiz(TAM, (c) => bulutCiz(c, false)), 0.3, 0.6), 4, 20);
+  for (let i = 0; i < N; i++) C1[i] = Math.min(C1[i], C2r[i]);
+  // bulutun alt yanında sırın ucu suyla yumuşatılmış (kayıp kenar); üst ve yanlarda keskin
+  const C2 = (() => {
+    const b = bulanik(C2r, W, W, 9), o = new Float32Array(N);
+    for (let y = 4; y < W - 4; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x, alt = sstep(0.0, -0.05, b[i + 4 * W] - b[i - 4 * W]) * sstep(0.35, 0.6, fbm(nW1, x / 40 + 3, y / 40, 2) + 0.2);
+      o[i] = Math.max(C2r[i], Math.min(1, b[i] * 1.6) * alt);
+    }
+    return o;
+  })();
   // uzak, ince bulut şeritleri (üçüncü katta açılır)
   const C3 = bur(kapsamCiz(TAM, (c) => {
     const r = SAHNE.rng(56);
@@ -524,10 +537,10 @@
       pig: pg, yog: yg, kenar: 1.0, kenarR: 1.8, gran: 0.35, dalga: 0.3, dalgaOlcek: 40, tohum,
     });
   }
-  sir(ac1, 0.04, 0.22, (x, y) => lerpK(karis(P.sap, 0.8, P.lim, 0.3), karis(P.sap, 0.6, P.tur, 0.3), sstep(0.4, 0.65, fbm(nE, x / 100, y / 100, 2))), 0.14, 62);
-  sir(ac2, 0.12, 0.34, (x, y) => lerpK(karis(P.sap, 0.55, P.vir, 0.45), karis(P.vir, 0.55, P.sap, 0.3, P.tur, 0.2), sstep(0.4, 0.65, fbm(nC, x / 110 + 5, y / 110, 2))), 0.16, 63);
-  sir(ac3, 0.22, 0.46, (x, y) => lerpK(karis(P.tur, 0.8, P.cer, 0.3), karis(P.cer, 0.7, P.tur, 0.35), sstep(0.38, 0.62, fbm(nB, x / 110, y / 110 + 3, 2))), 0.22, 64);
-  sir(ac4, 0.34, 0.6, (x, y) => lerpK(karis(P.ult, 0.75, P.cer, 0.4, P.mor, 0.1), karis(P.cer, 0.6, P.ult, 0.55), sstep(0.38, 0.62, fbm(nA, x / 90 + 9, y / 90, 2))), 0.27, 65);
+  sir(ac1, 0.04, 0.22, (x, y) => lerpK(karis(P.sap, 0.8, P.lim, 0.3), karis(P.sap, 0.6, P.tur, 0.3), sstep(0.4, 0.65, fbm(nE, x / 100, y / 100, 2))), 0.15, 62);
+  sir(ac2, 0.12, 0.34, (x, y) => lerpK(karis(P.sap, 0.55, P.vir, 0.45), karis(P.vir, 0.55, P.sap, 0.3, P.tur, 0.2), sstep(0.4, 0.65, fbm(nC, x / 110 + 5, y / 110, 2))), 0.18, 63);
+  sir(ac3, 0.22, 0.46, (x, y) => lerpK(karis(P.tur, 0.8, P.cer, 0.3), karis(P.cer, 0.7, P.tur, 0.35), sstep(0.38, 0.62, fbm(nB, x / 110, y / 110 + 3, 2))), 0.25, 64);
+  sir(ac4, 0.34, 0.6, (x, y) => lerpK(karis(P.ult, 0.75, P.cer, 0.4, P.mor, 0.1), karis(P.cer, 0.6, P.ult, 0.55), sstep(0.38, 0.62, fbm(nA, x / 90 + 9, y / 90, 2))), 0.31, 65);
 
   // açılan ön yapraklara hafif yeşil, tomurcuklara gül pembesi (pozitif dokunuş)
   {
@@ -548,7 +561,17 @@
       const q = ((x - c.x) * isikYon[0] + (y - c.y) * isikYon[1]) / c.r;
       return cf(x, y) * sstep(-0.05 + (nE(x / 7, y / 7) - 0.5) * 0.2, -0.25, q);
     });
-    yikama(kutu, A, { pig: karis(P.ult, 0.5, P.mor, 0.3, P.ros, 0.2), yog: 0.1, kenar: 0.9, kenarR: 1.4, gran: 0.25, tohum: 70 + n });
+    yikama(kutu, A, { pig: karis(P.ult, 0.5, P.mor, 0.3, P.ros, 0.2), yog: 0.13, kenar: 0.9, kenarR: 1.4, gran: 0.25, tohum: 70 + n });
+    // göbekten dışa soluk, sıcak bir sarı-yeşil yıkama ve taç yaprakların birbirine bindiği yerlerde ince gölge çizgisi
+    const Ic = kapsamAlan(kutu, (x, y) => cf(x, y) * sstep(0.62, 0.22, Math.hypot(x - c.x, y - c.y) / c.r + (nE(x / 6, y / 6) - 0.5) * 0.18));
+    yikama(kutu, Ic, { pig: karis(P.lim, 0.6, P.sap, 0.3, P.gam, 0.2), yog: 0.1, kenar: 0.7, kenarR: 1.2, gran: 0.2, tohum: 75 + n });
+    const Ek = kapsamCiz(kutu, (cc) => {
+      const rr = c.r * 1.04, el = (k) => { const a = c.aci + (k * Math.PI * 2) / 5; cc.beginPath(); cc.ellipse(c.x + Math.cos(a) * rr * 0.5, c.y + Math.sin(a) * rr * 0.5, rr * 0.52, rr * 0.4, a, 0, Math.PI * 2); };
+      cc.lineWidth = Math.max(1, c.r * 0.03);
+      for (let k = 0; k < 5; k++) { cc.save(); el((k + 1) % 5); cc.clip(); el(k); cc.stroke(); cc.restore(); }
+    });
+    for (let j = 0; j < Ek.length; j++) { const x = kutu[0] + (j % (kutu[2] - kutu[0])), y = kutu[1] + ((j / (kutu[2] - kutu[0])) | 0); Ek[j] *= cf(x, y) * sstep(c.r * 0.22, c.r * 0.34, Math.hypot(x - c.x, y - c.y)); }
+    yikama(kutu, Ek, { pig: karis(P.ult, 0.5, P.mor, 0.35, P.ros, 0.15), yog: 0.22, kenar: 0, gran: 0.1, tohum: 78 + n });
     const G = kapsamCiz(kutu, (cc) => { cc.beginPath(); cc.arc(c.x, c.y, c.r * 0.19, 0, Math.PI * 2); cc.fill(); });
     yikama(kutu, G, { pig: (x, y) => lerpK(karis(P.gam, 1, P.sie, 0.15), karis(P.sie, 0.8, P.gam, 0.4), clamp(((x - c.x) * -isikYon[0] + (y - c.y) * -isikYon[1]) / (c.r * 0.2) * 0.5 + 0.5, 0, 1)), yog: 0.6, kenar: 0.9, kenarR: 1.2, gran: 0.3, tohum: 90 + n });
     const D = kapsamCiz(kutu, (cc) => {

@@ -231,6 +231,33 @@
       boya(s, { renkF: (px) => (px > x ? [64, 140, 70] : [34, 98, 54]), aci: -Math.PI / 2, sapma: 0.4, L: 9, w: 3, yog: 2.4, oyn: 14 });
       kontur(s, [22, 66, 38], 1.2);
     };
+    // uzakta yuvarlak tepeler: tarla tarla bölünmüş yamalar, her tarlada sürülmüş izler, aralarında çit sıraları
+    const TARLA = [[198, 224, 112], [234, 216, 124], [160, 206, 96], [218, 234, 154], [240, 204, 116], [182, 216, 104]];
+    const tepe = (d, ox, oy, aU, aV, adim) => {
+      const s = el(d, 4);
+      duz(s, [190, 220, 120]);
+      g.save(); g.clip(s.yol);
+      const u = [Math.cos(aU), Math.sin(aU)], v = [Math.cos(aV), Math.sin(aV)];
+      for (let i = -6; i < 6; i++) for (let j = -2; j < 7; j++) {
+        const a0 = i * adim[0], a1 = (i + 1) * adim[0], b0 = j * adim[1], b1 = (j + 1) * adim[1];
+        const q = (a, b) => [ox + u[0] * a + v[0] * b, oy + u[1] * a + v[1] * b];
+        const kose = [q(a0, b0), q(a1, b0), q(a1, b1), q(a0, b1)];
+        const t = el(`M${kose.map((k) => k.join(',')).join(' L')} Z`, 3);
+        const renk = TARLA[Math.floor(R() * TARLA.length)];
+        boya(t, { renk, aci: (i + j) % 2 ? aU : aV, sapma: 0.08, L: 16, w: 3.2, yog: 2, oyn: 16 });
+        // sürülmüş izler: tarlanın bir kenarına koşut ince çizgiler
+        const yon = (i + j) % 2 ? 0 : 1;
+        for (let k = 1; k < 6; k++) {
+          const f = k / 6, A = yon ? q(a0, b0 + (b1 - b0) * f) : q(a0 + (a1 - a0) * f, b0), B = yon ? q(a1, b0 + (b1 - b0) * f) : q(a0 + (a1 - a0) * f, b1);
+          cizgi([A, B], mixc(renk, [110, 130, 50], 0.35), 0.8, 0.7);
+        }
+        kontur(t, [92, 150, 64], 1.4);
+      }
+      g.restore();
+      kontur(s, [70, 128, 64], 1.6);
+    };
+    tepe('M-20,804 C10,740 70,694 140,690 C220,686 290,720 340,804 Z', 140, 690, 0.22, 1.25, [46, 30]);
+    tepe('M690,804 C740,730 820,700 900,698 C970,696 1030,724 1048,804 Z', 900, 698, -0.2, 1.9, [44, 30]);
     for (let x = 10; x < 290; x += 19) agac(x, 801, 34 + ((x * 7) % 9), (x / 19) % 2 < 1);
     for (let x = 842; x < 1024; x += 19) agac(x, 801, 34 + ((x * 5) % 9), (x / 19) % 2 < 1);
     for (const x of [44, 266, 852, 1002]) servi(x, 803, 64);

@@ -631,12 +631,27 @@
       alfa: (px, py) => 0.5 * (1 - sstep(110, 290, gunesD(px, py))) + 0.1,
       renk: (px, py) => { const d = gunesD(px, py), t = r(); return d < 120 ? (t < 0.75 ? C.limon : C.sari) : d < 200 ? (t < 0.45 ? C.limon : t < 0.75 ? C.seftali : C.sari) : (t < 0.3 ? C.seftali : t < 0.65 ? C.turkuaz : C.gokAcik); } }, r);
   }, Object.assign({ kirp: mGok, bx: [500, 0, W, 520] }, MUM));
+  // güneş kursu: dairesel limon-sarı karalama (benekli), sol altında turuncu gölge katı, sağ üstte beyaz cila, kırık turuncu-kırmızı kontur
+  const mGunes = maske((x) => { x.beginPath(); x.arc(880, 140, 44, 0, 7); x.fill(); });
   katman((x) => {
-    for (let i = 0; i < 12; i++) karala(x, 880 + (r() - 0.5) * 30, 140 + (r() - 0.5) * 30, r() * Math.PI, 70, S * 0.8, 12, KAL * 1.1, 0.95, C.sari, r);
-  }, Object.assign({ kirp: maske((x) => { x.beginPath(); x.arc(880, 140, 44, 0, 7); x.fill(); }), bx: [830, 90, 930, 190] }, CILA));
+    // iki yönde zikzak doldurma: önce limon, üstüne sarı (benekler arada kalır)
+    for (let i = 0; i < 5; i++) karala(x, 880 + (r() - 0.5) * 16, 140 + (r() - 0.5) * 16, 0.5 + (r() - 0.5) * 0.3, 96, S * 0.85, 15, KAL * 1.1, 0.75, C.limon, r);
+    for (let i = 0; i < 4; i++) karala(x, 880 + (r() - 0.5) * 16, 140 + (r() - 0.5) * 16, -0.9 + (r() - 0.5) * 0.3, 96, S * 0.95, 13, KAL * 1.1, 0.7, C.sari, r);
+  }, Object.assign({ kirp: mGunes, bx: [830, 90, 930, 190] }, MUM, { opq: 0.45 }));
   katman((x) => {
-    const pts = []; for (let t = 0; t <= 60; t++) { const a = (t / 60) * Math.PI * 2.1; pts.push([880 + Math.cos(a) * 45, 140 + Math.sin(a) * 45]); }
-    elCizgisi(x, pts, 4.2, 0.9, C.turuncu, r, { parca: 60, titre: 0.6, bas: 0.02, son: 0.05, uc: 0.6 });
+    // sol altta turuncu ve şeftali gölge katı; ton maskesiyle yumuşakça azalır
+    for (let i = 0; i < 4; i++) karala(x, 870 + (r() - 0.5) * 10, 150 + (r() - 0.5) * 10, 0.75 + (r() - 0.5) * 0.4, 92, S * 0.9, 14, KAL, 0.7, r() < 0.65 ? C.turuncu : C.seftali, r);
+    kirp(K, tonMaske((px, py) => { const d = Math.hypot(px - 880, py - 140) / 44, t = ((880 - px) * 0.7 + (py - 140) * 0.7) / 44; return sstep(0.55, 1.0, d) * (0.55 + 0.4 * sstep(-0.6, 0.8, t)); }, [830, 90, 930, 190]));
+  }, Object.assign({ kirp: mGunes, bx: [830, 90, 930, 190] }, MUM));
+  katman((x) => {
+    // ortası sert bastırılmış limon ve beyaz: mumlu, parlak çekirdek
+    for (let i = 0; i < 3; i++) karala(x, 882 + (r() - 0.5) * 8, 138 + (r() - 0.5) * 8, 0.6 + (r() - 0.5) * 0.5, 34, S * 0.7, 6, KAL, 0.6, i ? C.limon : C.beyaz, r);
+  }, Object.assign({ kirp: mGunes, bx: [830, 90, 930, 190] }, CILA, { opq: 0.7 }));
+  katman((x) => {
+    for (const [a0, a1, rad, c, w] of [[0.5, 3.6, 45.5, C.turuncu, 3.6], [2.0, 4.6, 46.5, C.kirmizi, 2.6], [4.2, 6.9, 45, C.turuncu, 3.2]]) {
+      const pts = []; for (let t = 0; t <= 30; t++) { const a = lerp(a0, a1, t / 30); pts.push([880 + Math.cos(a) * rad, 140 + Math.sin(a) * rad]); }
+      elCizgisi(x, pts, w, 0.85, c, r, { parca: 50, titre: 0.5, bas: 0.12, son: 0.2, uc: 0.5 });
+    }
   }, Object.assign({ bx: [820, 80, 940, 200] }, CIZGI));
   // 4) bulutlar: kâğıdın beyazı, altında leylak-gri gölge, üst kenarında açık mavi kontur
   katman((x) => {
@@ -672,16 +687,26 @@
     for (let x0 = 300; x0 < 820; x0 += 26) karala(x, x0, 709, 0.05, 30, 3.2, 3, KAL * 0.9, 0.7, C.leylak, r);
   }, Object.assign({ kirp: maskePuruz(MK.kaide, 1.5, 0.4, 3, -0.03, 44), bx: [286, 688, 834, 802] }, MUM));
 
-  // ================================================================ KASNAK
-  const yesilT = (l) => (l < 0.35 ? C.maviYesil : l < 0.55 ? C.zumrut : l < 0.8 ? C.yesil : C.yesilSari);
+  // ================================================================ KASNAK (silindir: sağda sarı-yeşil ışık, solda mavi-yeşil gölge; aralarda kâğıt benekleri)
+  const kasL = (px, py) => silindirIsik(px, 560, py < 610 ? 208 : 226) / 0.83;
   katman((x) => {
-    // önce sarı-yeşil taban, sonra yeşil, gölgede mavi
-    karalaAlan(x, { bx: [330, 553, 790, 694], adim: 13, aci: Math.PI / 2, aciJ: 0.08, boy: 34, s: S * 0.95, n: 4, kal: KAL, alfa: 0.5, renk: () => (r() < 0.6 ? C.yesilSari : C.limon) }, r);
+    // önce açık sarı-yeşil taban (sağda daha çok)
+    karalaAlan(x, { bx: [330, 553, 790, 694], adim: 13, aci: Math.PI / 2, aciJ: 0.08, boy: 34, s: S * 1.05, n: 4, kal: KAL, alfa: (px, py) => 0.3 + 0.2 * kasL(px, py), renk: () => (r() < 0.55 ? C.yesilSari : C.limon) }, r);
   }, Object.assign({ kirp: MK.kasnak, bx: [330, 553, 790, 694] }, MUM));
   katman((x) => {
-    karalaAlan(x, { bx: [330, 553, 790, 694], adim: 12, aci: Math.PI / 2 + 0.25, aciJ: 0.08, boy: 34, s: S * 0.95, n: 4, kal: KAL,
-      alfa: (px, py) => 0.3 + 0.45 * (1 - silindirIsik(px, 560, 220)), renk: (px) => { const l = silindirIsik(px, 560, 220); return l < 0.5 ? (r() < 0.5 ? C.maviYesil : C.zumrut) : l > 0.85 ? C.yesilSari : C.yesil; } }, r);
+    karalaAlan(x, { bx: [330, 553, 790, 694], adim: 13, aci: (px, py) => Math.PI / 2 + (py < 610 ? 0.25 : -0.2), aciJ: 0.1, boy: 34, s: S * 1.1, n: 4, kal: KAL,
+      alfa: (px, py) => 0.14 + 0.5 * Math.pow(1 - kasL(px, py), 1.3), renk: (px, py) => { const l = kasL(px, py); return l < 0.35 ? (r() < 0.6 ? C.maviYesil : C.zumrut) : l < 0.62 ? (r() < 0.5 ? C.zumrut : C.yesil) : l < 0.85 ? C.yesil : C.yesilSari; } }, r);
   }, Object.assign({ kirp: MK.kasnak, bx: [330, 553, 790, 694] }, MUM));
+  // gölge tarafında üçüncü kat: leylak-mavi (soğuk gölge, renkler üst üste karışır)
+  katman((x) => {
+    karalaAlan(x, { bx: [330, 553, 600, 694], adim: 16, aci: Math.PI / 2 + 0.5, aciJ: 0.1, boy: 30, s: S * 1.2, n: 3, kal: KAL * 0.9,
+      alfa: (px, py) => 0.4 * Math.pow(1 - kasL(px, py), 2), renk: () => (r() < 0.6 ? C.mavi : C.leylak) }, r);
+  }, Object.assign({ kirp: MK.kasnak, bx: [330, 553, 790, 694] }, MUM));
+  // katların üst kenarı: cilalı limon ışık çizgisi
+  katman((x) => {
+    elCizgisi(x, [[356, 559], [766, 559]], 3.6, 0.8, C.limon, r, { parca: 70, titre: 0.4, uc: 0.6 });
+    elCizgisi(x, [[338, 615], [784, 615]], 4, 0.8, C.limon, r, { parca: 70, titre: 0.4, uc: 0.6 });
+  }, Object.assign({ kirp: MK.kasnak, bx: [330, 553, 790, 694] }, CILA, { opq: 0.7 }));
 
   // ================================================================ KUBBE: her dilim, kaburga boyunca geçişlerle doldurulmuş
   const kTon = (x, y) => Math.pow(clamp((kubbeIsik(x, y) - 0.2) / 0.78, 0, 1), 1.2);
@@ -799,7 +824,7 @@
   }, Object.assign({ kirp: MK.cicek, bx: [0, 500, W, W] }, CILA, { opq: 0.9 }));
   katman((x) => {
     for (const c of B.cicekler) {
-      for (const p of tacKenarlari(c)) elCizgisi(x, p, Math.max(2, c.r * 0.055), 0.82, C.magenta, r, { parca: 40, titre: 0.3, uc: 0.6 });
+      for (const p of tacKenarlari(c)) elCizgisi(x, p, Math.max(1.8, c.r * 0.042), 0.72, mixc(C.magenta, C.leylak, 0.25), r, { parca: 40, titre: 0.3, uc: 0.6 });
       karala(x, c.x, c.y, 0.6, c.r * 0.36, 2.6, Math.round(c.r * 0.36 / 2.6), 3.2, 0.95, C.sari, r);
       for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2 + r() * 0.3; strok(x, [[c.x + Math.cos(a) * c.r * 0.24, c.y + Math.sin(a) * c.r * 0.24], [c.x + Math.cos(a) * c.r * 0.3, c.y + Math.sin(a) * c.r * 0.3]], Math.max(2.4, c.r * 0.06), 0.9, C.turuncu, 0.1, 0.1, 0.7); }
     }

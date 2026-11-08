@@ -5,18 +5,36 @@
   "ad_en": "Painted Enamel",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Beyaz emaye zemin üzerine fırçayla boyanıp fırınlanmış, tel kullanılmayan resim emayesi: camsı, parlak yüzey, birbirine yumuşakça akan renkler ve ince altın vurgular.",
+  "ozet": "Süt beyazı emaye zemin üzerine fırçayla boyanıp fırınlanmış, tel kullanılmayan resim emayesi: kenarlarında birikip yuvarlanmış doygun renkler, derin ve camsı parlak yüzey, ince altın boya ve folyo üstünde saydam emaye taşlar.",
   "tanim": "Boyalı emaye (resim emayesi), bakır bir levhanın beyaz emayeyle kaplanıp üzerine ince öğütülmüş emaye renklerinin fırçayla, bir resim gibi sürüldüğü ve her katın fırında cama dönüştürüldüğü tekniktir. Kloazone ya da şamplövede olduğu gibi renkleri ayıran teller ya da oyuklar yoktur: renkler fırında hafifçe akıp birbirine yumuşak geçişlerle karışır, yüzey cam gibi düzgün ve parlaktır. Altın en son ince çizgi, nokta ve kontür olarak sürülüp düşük ısıda pişirilir; bazı yerlerde saydam emaye altın folyo (paillon) üstüne konarak mücevher gibi parlatılır. Saat kadranları, madalyonlar, kutu kapakları, ikona ve süs levhalarında kullanılır.",
   "koken": "Resim emayesi 15. yüzyıl sonunda Fransa'nın Limoges kentinde doğdu; Nardon Pénicaud, Léonard Limosin ve Jean de Court gibi ustalar dinî ve mitolojik sahneleri bakır levhalara boyadı, altın folyolu saydam emayeleri mücevher gibi kullandı. 17. ve 18. yüzyılda Cenevre ve Blois'da saat ve minyatür portre emayesi, Çin'in Kanton atölyelerinde beyaz zeminli 'yangcai' emayeler, İngiltere'de Battersea kutuları, Rusya'da Rostov finifti bu geleneği sürdürdü.",
   "ayirt_edici": [
-    "Fırında akmış gibi yumuşak renk sınırları ve ressamca geçişler; tel ya da kontür ayırıcı yok",
-    "Camsı, parlak yüzey: kubbenin sağ üstünde hafif dalgalı, portakal kabuğu dokulu pencere yansıması ve emayenin içten parlaması",
-    "Mücevher gibi doygun renkler: zümrüt kubbe ve kasnak, safir pencereler, gül pembesi taç yaprak dipleri, beyaz emaye zemin ve bulutlar",
-    "İnce altın vurgular: kaburga çizgileri, güneş ışınları, kontürler ve nokta dizileri; altına metal tozu pırıltısı",
-    "Altın folyo üstünde saydam turuncu emaye çiçek göbekleri ve köşelerde yakut mücevherler",
-    "Levhanın kendi turkuaz emaye kenar şeridi; beyaz emaye noktalar ve iki altın çizgi"
+    "Tel ya da oyuk yok: renk alanları fırında hafifçe akmış, kenarları yuvarlanmış; kenar boyunca biriken emaye rengi koyulaştırıyor",
+    "Kalın, camsı yüzey: renk kenarlarında ışığa dönük ince parıltılar ve sağ üstte, yüzeyin dalgasıyla kırılan kayıtlı pencere yansıması",
+    "Süt beyazı emaye zemin üzerinde mücevher doygunluğunda renkler: zümrüt kubbe ve kasnak, kobalt pencereler, gül pembesi taç yaprak dipleri, turkuaz korkuluk ve kenar şeridi",
+    "Minyatürcü modelleme: gökte, kubbede ve kasnakta ince noktalama; kubbenin ışık yanında beyaz emaye taramalar",
+    "İnce altın boya: kubbe kaburgaları, nokta dizileri, minare halkaları ve zikzakı, güneş ışınları; altında metal tozu pırıltısı",
+    "Altın folyo (paillon) üstünde saydam emaye taşlar: buruşuk folyolu güneş, kehribar çiçek göbekleri, kenar şeridinde yakut ve zümrüt taşlar arasında beyaz emaye inciler"
   ],
-  "palet": ["#8ACBE8", "#22814D", "#BAE6C8", "#2F58A8", "#E8708F", "#F8F3E6", "#4CB6CA", "#CCA652"],
-  "kodla_cizim": "2048 iç çözünürlükte üç katman kurulur: boya, altın ve folyo. Boya katmanı Path2D alanlarına doğrusal ve dairesel geçişlerle, kırpılmış ve bulanıklaştırılmış modelleme lekeleriyle (gölgede koyu, ışıkta beyaz emaye), gökte geniş lavi sürmeleriyle ve taç yapraklarda dipten uca ince pembe fırça lekeleriyle boyanır; kubbe kaburgalarının ışık yanına ince beyaz emaye çizgileri çekilir. Altın çizgi, nokta ve alemler ayrı bir maskeye; altın folyo göbekler ve köşe taşları ayrı bir maskeye çizilir, öndeki biçimler arkadaki altını ve folyoyu siler. Fırın etkisi için boya katmanı bulanıklaştırılır ve 'screen' ile içten parlama eklenir. Piksel döngüsünde renkli yerlere emaye kalınlığı dalgası ve doygunluk, folyoya Worley hücreli buruşuk metal parıltısı, altına bulanık maskeden kabartma normali, Lambert ışığı ve pırıltı, bütün yüzeye geniş bombe parıltısı ve gürültüyle dalgalandırılmış yumuşak köşeli pencere yansıması eklenir.",
-  "etiketler": ["emaye", "resim emayesi", "Limoges", "camsı", "parlak", "altın", "mücevher", "fırınlanmış"]
+  "palet": [
+    "#1C86D0",
+    "#9ED6F0",
+    "#159855",
+    "#58C988",
+    "#1D3F96",
+    "#D23F76",
+    "#FBF9F3",
+    "#1A9AC4"
+  ],
+  "kodla_cizim": "2048 iç çözünürlükte dört katman kurulur: boya, altın maskesi, folyo maskesi ve emaye kalınlığı (gri yükseklik haritası). Boya katmanı Path2D alanlarına doğrusal ve dairesel geçişlerle, alanın içine kırpılmış geçişli gölge katlarıyla ve binlerce ince noktayla (gök, kubbe, kasnak, bulut ve kum) boyanır; taç yapraklara dipten uca ince gül ve beyaz çizgiler, kubbenin ışık yanına beyaz taramalar çekilir, kontürler koyu emaye rengiyle ince çizilir. Her alan kalınlık haritasına kendi düzeyiyle, folyo taşları ve inciler dairesel geçişli kabarık damlalar olarak işlenir; öndeki biçimler arkadaki altını ve folyoyu siler. Fırın için boya katmanı hafifçe bulanıklaştırılıp 'screen' ile içten parlatılır; kalınlık haritası iki yarıçapla bulanıklaştırılır. Piksel döngüsünde iki bulanıklığın farkı renk kenarında birikme (koyulaşma, doygunluk), küçük bulanıklığın eğimi yüzey normali olur: Lambert gölgesi ve Blinn-Phong parıltısı, normal ve portakal kabuğu gürültüsüyle kaydırılan yumuşak köşeli, dikme ve kayıtlı pencere yansıması, levhanın geniş parlaklığı eklenir; folyoya Worley hücreli buruşuk metal parıltısı, altına kendi bulanık maskesinden kabartma ve pırıltı verilir.",
+  "etiketler": [
+    "emaye",
+    "resim emayesi",
+    "Limoges",
+    "camsı",
+    "parlak",
+    "altın",
+    "mücevher",
+    "fırınlanmış"
+  ]
 }

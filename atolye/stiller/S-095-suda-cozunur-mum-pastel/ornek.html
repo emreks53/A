@@ -608,15 +608,15 @@
     // lavi: pigment suyla yayılır
     KB.temizle(); KB.x.setTransform(1, 0, 0, 1, 0, 0); KB.x.filter = `blur(${o.yay || 9}px)`; KB.x.drawImage(K.c, 0, 0); KB.x.drawImage(K.c, 0, 0); KB.x.filter = 'none'; kirp(KB, isl);
     if (o.firca) kirp(KB, o.firca);
-    birak(KB.c, { mod: 'lavi', guc: o.guc || 1.1, granul: 0.3, bx });
+    birak(KB.c, { mod: 'lavi', guc: o.guc || 1.1, granul: o.granul === undefined ? 0.07 : o.granul, bx });
     // kuruyan kenarda biriken koyu çizgi
     if (o.kenar !== 0) {
       KC.temizle(); KC.x.setTransform(1, 0, 0, 1, 0, 0); KC.x.drawImage(KB.c, 0, 0); kirp(KC, o.kenarM || kenarMaske(isl, 3));
-      birak(KC.c, { mod: 'lavi', guc: o.kenar || 0.7, granul: 0.2, bx });
+      birak(KC.c, { mod: 'lavi', guc: o.kenar || 0.7, granul: 0.05, bx });
     }
     // vuruş izleri lavinin içinde (erimiş ama yoğun kalan pigment)
     KC.temizle(); KC.x.setTransform(1, 0, 0, 1, 0, 0); KC.x.filter = 'blur(1.6px)'; KC.x.drawImage(K.c, 0, 0); KC.x.filter = 'none'; kirp(KC, isl);
-    birak(KC.c, { mod: 'lavi', guc: o.iz || 0.5, granul: 0.35, bx });
+    birak(KC.c, { mod: 'lavi', guc: o.iz || 0.5, granul: 0.1, bx });
   }
 
   // ıslak fırçanın izi: lavinin içinde geniş, yönlü ton farkları
@@ -635,12 +635,15 @@
   // ================================================================ GÖK
   const mGokB = maskeCikar(MK.gokS, [mBulut]);
   // ıslak alan: gökün büyük kısmı; sol üst köşede ve üst kenarın bir kısmında vuruşlar kuru ve kalın kalır
-  const islakGok = maskeCikar(maskePuruz(tonMaske((x, y) => {
+  const islakGok = maskeCikar(tonMaske((x, y) => {
     if (y > 812) return 0;
-    const g = (fbm(nD, x / 90, y / 90, 3) - 0.5) * 90;
-    const kuru = Math.hypot(x * 0.9, y * 1.2) < 190 + g * 0.8;
-    return kuru ? 0 : 1;
-  }), 5, 0.7, 8, 0, 52), [mBulut]);
+    const g = (fbm(nD, x / 70, y / 70, 3) - 0.5) * 120 + (nC(x / 18, y / 18) - 0.5) * 30;
+    // sol üst köşeden içeri doğru: kuru → yarı erimiş → tam lavi
+    const sol = sstep(100, 300, Math.hypot(x * 0.95, y * 1.25) + g);
+    // sağ kenarda, ufka yakın küçük bir yarı erimiş geçiş daha
+    const sag = sstep(40, 190, Math.hypot((W - x) * 1.3, (y - 650) * 0.8) + g * 0.8);
+    return Math.min(sol, sag);
+  }), [mBulut]);
   const gokIc = (x, y) => { const b = bolge(x, y); return (b === 'gok' || b === 'gunes') && y < 806 && !bulutIc(x, y); };
   // gök: mum pastelle gevşek, yatay dalgalı uzun çizgiler; suyla eritilince yatay fırça izli lavi olur
   const fircaY = tonMaske((x, y) => { const a = (x + y * 0.12) / 190, b = (y - x * 0.12) / 20; return 0.5 + 0.5 * sstep(0.25, 0.75, fbm(nE, a, b, 3)); });
@@ -688,13 +691,14 @@
   }, { kirp: MK.zeminS, islak: islakZemin, yay: 26, guc: 0.8, iz: 0.32, kenar: 0.4, bx: [0, 790, W, W], firca });
 
   // ================================================================ MİNARE ve KAİDE: kâğıdın beyazı, gölgede eritilmiş leylak, ışıkta kuru sarı vuruş
-  const islakTas = maskePuruz(tonMaske((x, y) => { const b = bolge(x, y); return (b === 'minare' || b === 'kaide') && isik(x, y) < 0.62 ? 1 : 0; }), 4, 0.8, 6, 0.02, 55);
+  // ıslak alan: gölge tarafı tamamen eritilmiş, ışığa doğru vuruşlar yavaş yavaş kuru kalıyor (yumuşak geçiş)
+  const islakTas = tonMaske((x, y) => { const b = bolge(x, y); if (b !== 'minare' && b !== 'kaide') return 0; return 1 - sstep(0.5, 0.66, isik(x, y) + (nD(x / 40, y / 40) - 0.5) * 0.08); });
   erit((x) => {
     tara(x, { bx: [236, 130, 364, 800], ic: (px, py) => bolge(px, py) === 'minare' && isik(px, py) < 0.62, aci: Math.PI / 2, aciJ: 0.12, aralik: 8, boy: 34, kal: KAL * 0.9, obek: 20, sik: 0.8, uc: 0.6,
       alfa: 0.8, renk: () => (r() < 0.6 ? C.leylak : C.gokAcik) }, r);
-    tara(x, { bx: [286, 690, 834, 802], ic: (px, py) => bolge(px, py) === 'kaide' && isik(px, py) < 0.62, aci: -0.95, aciJ: 0.15, aralik: 9, boy: 40, kal: KAL, obek: 30, sik: 0.8, uc: 0.6,
-      alfa: 0.75, renk: () => (r() < 0.6 ? C.leylak : C.gokAcik) }, r);
-  }, { kirp: maskeBirlestir([MK.minare, MK.kaide]), islak: islakTas, yay: 14, guc: 0.6, iz: 0.28, kenar: 0.35, bx: [236, 120, 836, 802] });
+    tara(x, { bx: [286, 690, 834, 802], ic: (px, py) => bolge(px, py) === 'kaide' && isik(px, py) < 0.64, aci: -0.15, aciJ: 0.12, aralik: 9, boy: 46, kal: KAL, obek: 30, sik: 0.8, uc: 0.6,
+      alfa: (px, py) => 0.78 * (1 - sstep(0.5, 0.64, isik(px, py))) + 0.1, renk: () => (r() < 0.55 ? C.leylak : r() < 0.7 ? C.gokAcik : C.pembe) }, r);
+  }, { kirp: maskeBirlestir([MK.minare, MK.kaide]), islak: islakTas, yay: 14, guc: 0.55, iz: 0.24, kenar: 0, bx: [236, 120, 836, 802] });
   katman((x) => {
     tara(x, { bx: [236, 130, 364, 800], ic: (px, py) => bolge(px, py) === 'minare' && isik(px, py) > 0.66, aci: Math.PI / 2, aciJ: 0.1, aralik: 11, boy: 30, kal: KAL * 0.7, obek: 18, sik: 1.0, uc: 0.6, alfa: 0.6, renk: () => (r() < 0.6 ? C.limon : C.seftali) }, r);
     tara(x, { bx: [286, 690, 834, 802], ic: (px, py) => bolge(px, py) === 'kaide' && isik(px, py) > 0.66, aci: Math.PI / 2, aciJ: 0.12, aralik: 13, boy: 30, kal: KAL * 0.75, obek: 24, sik: 1.1, uc: 0.6, alfa: 0.45, renk: () => (r() < 0.6 ? C.limon : C.seftali) }, r);
@@ -739,7 +743,7 @@
   // pencereler: kalın, örtücü koyu vuruşlarla doldurulmuş
   katman((x) => {
     for (const p of [0, 1].flatMap((k) => SAHNE.kasnakPencereleri(k))) karala(x, p.x, p.y + p.h / 2, Math.PI / 2, p.h + 8, 3, Math.ceil(p.w / 3) + 2, 4.5, 0.98, hex('#23407A'), r);
-    for (const p of [...SAHNE.kaide.pencereler, ...SAHNE.minarePencereleri]) karala(x, p.x, p.y + p.h / 2, Math.PI / 2, p.h + 8, 3, Math.ceil(p.w / 3) + 2, 4.5, 0.95, C.menekse, r);
+    for (const p of [...SAHNE.kaide.pencereler, ...SAHNE.minarePencereleri]) karala(x, p.x, p.y + p.h / 2, Math.PI / 2, p.h + 8, 3, Math.ceil(p.w / 3) + 2, 4.5, 0.95, mixc(C.menekse, hex('#23407A'), 0.4), r);
   }, Object.assign({ kirp: maskeCikar(maske((x) => x.fill(YOL.pencere)), [MK.bitki]), bx: [280, 200, 830, 800] }, MUM, { opq: 0.8, gren: 0.5 }));
   // taş konturları ve minare ayrıntıları (kalın kahve vuruş)
   katman((x) => {
@@ -770,6 +774,8 @@
   const islakYaprak = maskePuruz(maske((x) => {
     for (const yp of B.yapraklar) { x.save(); x.clip(P2(SAHNE.yaprakYolu(yp))); x.translate(yp.x, yp.y); x.rotate(yp.aci); x.fillRect(-5, -60, yp.uzunluk * (0.6 + 0.3 * r()), 120); x.restore(); }
   }), 2, 0.6, 4, 0, 58);
+  katman((x) => { x.fillStyle = rgba(mixc(C.yesilSari, C.limon, 0.3), 0.55); for (const p of yaprakYollari) x.fill(p); },
+    { mod: 'lavi', granul: 0.05, kirp: MK.yaprakG, bulanik: 1.2, bx: [0, 500, W, W] });
   erit((x) => {
     for (const yp of B.yapraklar) {
       const L = yp.uzunluk, a = yp.aci, ca = Math.cos(a), sa = Math.sin(a), Wd = L * yp.genislik;

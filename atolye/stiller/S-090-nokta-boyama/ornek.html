@@ -144,13 +144,21 @@
     for (const [r, d, c] of gr) for (const [x, y] of daire(880, 140, r, Math.round((2 * Math.PI * r) / (d * 2.35)))) nokta(x, y, d, c);
     // ışınlar: halkaların arasında dışa uzanan nokta sıraları
     const SICAK = [[255, 214, 80], [255, 240, 170], [250, 182, 70], [255, 250, 220], [255, 226, 110], [255, 246, 200]];
-    const SERIN = [[136, 204, 240], [255, 255, 255], [90, 172, 232], [176, 226, 246], [110, 206, 220], [255, 255, 255], [70, 152, 224], [150, 212, 244], [190, 196, 240], [255, 255, 255], [104, 184, 236], [120, 214, 222]];
+    // serin halkalar: uzaklaştıkça açık turkuaz-maviden gök mavisine yavaş geçen sakin bir dizi; her dördüncü
+    // halka beyaz, araya yer yer turkuaz ya da lavanta bir halka girer (göz yorulmasın diye zıtlık düşük tutulur)
+    const serin = (r, k) => {
+      const t = clamp((r - 190) / 820, 0, 1), taban = mixc([168, 220, 246], [96, 172, 232], t);
+      if (k % 4 === 3) return [252, 253, 255];
+      if (k % 8 === 1) return mixc(taban, [128, 212, 222], 0.55);
+      if (k % 8 === 5) return mixc(taban, [182, 188, 240], 0.45);
+      return k % 2 ? mixc(taban, [255, 255, 255], 0.18) : taban;
+    };
     let r = 52, k = 0, ks = 0;
     while (r < 1400) {
       const t = clamp((r - 52) / 700, 0, 1);
-      const d = 4.6 - 1.2 * t + (k % 3 === 0 ? 0.5 : 0);
-      const c = r < 150 ? SICAK[k % SICAK.length] : r < 190 ? [255, 250, 230] : SERIN[ks++ % SERIN.length];
-      const n = Math.round((2 * Math.PI * r) / (d * 2.5));
+      const d = 4.7 - 0.8 * t + (k % 3 === 0 ? 0.4 : 0);
+      const c = r < 150 ? SICAK[k % SICAK.length] : r < 190 ? [255, 250, 230] : serin(r, ks++);
+      const n = Math.round((2 * Math.PI * r) / (d * (r < 190 ? 2.5 : 2.75)));
       const faz = (k % 2) * 0.5;
       for (let i = 0; i < n; i++) {
         const a = ((i + faz) / n) * Math.PI * 2;
@@ -158,7 +166,7 @@
         if (x < -6 || x > W + 6 || y < -6 || y > 806) continue;
         if (icinde(x, y, d + 1.5, GOK) && !buluttaMi(x, y, -(d + 2))) nokta(x, y, d, c);
       }
-      r += d * (r < 190 ? 2.5 : 2.65);
+      r += d * (r < 190 ? 2.5 : 2.8);
       k++;
     }
     damlalariCiz();

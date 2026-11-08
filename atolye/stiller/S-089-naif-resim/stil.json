@@ -12,7 +12,7 @@
     "Elle çekilmiş, kalınlığı yer yer değişen koyu fırça konturları; minare, kaide ve kubbe hatları cetvel düzgünlüğünde değil, hafifçe eğri büğrü",
     "Her alan yassı fırçayla örtücü boyanmış: gökte yatay, kubbede kaburga yönünde, minarede dikey, taç yapraklarında ışınsal fırça izleri; biraz düzensiz kapama ve tuval örgüsü seçiliyor",
     "Kubbe dilim dilim düz tonlarla modellenmiş (sol yan koyu, sağ üst açık); kasnak pencereleri silindirde daralmadan, eşit aralıkla ve eşit büyüklükte dizilmiş",
-    "Kaidenin taşları, avlunun döşeme taşları, ufuktaki yuvarlak ağaçların yaprak lekeleri ve hurma ağaçlarının boğumları tek tek boyanmış",
+    "Uzakta tarla tarla yamalanmış, her tarlası sürülmüş izli yuvarlak tepeler; kaidenin taşları, avlunun döşeme taşları, yuvarlak ağaçların yaprak lekeleri ve hurma ağaçlarının boğumları tek tek boyanmış",
     "Önde iki tonlu, damarları ince fırçayla çizilmiş sık yaprak halısı; çayırda sıra sıra küçük papatyalar ve kırmızı gelincikler",
     "Damarlı taç yapraklı beyaz çiçekler ve noktalı sarı göbekler; sivri ışınlı yuvarlak güneş, düz tabanlı ve konturlu tampon bulutlar"
   ],
@@ -26,7 +26,7 @@
     "#644662",
     "#F8BA2E"
   ],
-  "kodla_cizim": "Çizim 2048 piksellik ekran dışı bir tuvalde yapılır. Her biçim (SAHNE yolları ve elle kurulan yollar) gizli bir SVG yolunda getPointAtLength ile örneklenir ve yavaş değişen bir gürültü kaydırma alanıyla eğilir; komşu biçimler aynı eğriyi paylaştığı için aralarında boşluk açılmaz, ama hiçbir çizgi cetvel düzgünlüğünde kalmaz. Her alan önce düz bir zeminle örtülür, sonra alana kırpılmış yassı fırça darbeleriyle boyanır: darbe yönü bölgeye göre seçilir (gökte yatay, kubbede meridyen boyunca, minarede dikey, çiçekte ışınsal) ve her darbe uçları düzensiz, renkleri hafifçe ayrışan 3–9 kıl izinden oluşur. Konturlar aynı örnek noktalarından, kalınlığı gürültüyle değişen kısa çizgi parçalarıyla çekilir. Kubbe dilimleri ışık yönüne göre düz tonlarla; taşlar, döşemeler, ağaç yaprakları, yapraklar ve çiçekler tek tek boyanır. Son geçişte parlaklık farkından hafif bir boya kabartısı ve düz örgülü tuval dokusu eklenir.",
+  "kodla_cizim": "Çizim 2048 piksellik ekran dışı bir tuvalde yapılır. Her biçim (SAHNE yolları ve elle kurulan yollar) gizli bir SVG yolunda getPointAtLength ile örneklenir ve yavaş değişen bir gürültü kaydırma alanıyla eğilir; komşu biçimler aynı eğriyi paylaştığı için aralarında boşluk açılmaz, ama hiçbir çizgi cetvel düzgünlüğünde kalmaz. Her alan önce düz bir zeminle örtülür, sonra alana kırpılmış yassı fırça darbeleriyle boyanır: darbe yönü bölgeye göre seçilir (gökte yatay, kubbede meridyen boyunca, minarede dikey, çiçekte ışınsal) ve her darbe uçları düzensiz, renkleri hafifçe ayrışan 3–9 kıl izinden oluşur. Konturlar aynı örnek noktalarından, kalınlığı gürültüyle değişen kısa çizgi parçalarıyla çekilir. Uzaktaki tepeler, eğik iki eksenli bir ızgaranın paralelkenar tarlalarına bölünür; her tarla ayrı renkle boyanıp sürülmüş izlerle çizilir. Kubbe dilimleri ışık yönüne göre düz tonlarla; taşlar, döşemeler, ağaç yaprakları, yapraklar ve çiçekler tek tek boyanır. Son geçişte parlaklık farkından hafif bir boya kabartısı ve düz örgülü tuval dokusu eklenir.",
   "etiketler": [
     "naif",
     "halk resmi",

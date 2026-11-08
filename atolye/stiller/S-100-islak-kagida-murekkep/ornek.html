@@ -115,7 +115,7 @@
         // kubbenin gölgeli sol yanı (koyu yeşil ıslak-ıslağa leke), minaredeki zikzak, iki yandaki yaprak kümeleri
         w += blob(440, 455, 85, 120, 1.3);
         w += blob(120, 955, 150, 115, 1.05) + blob(905, 905, 125, 135, 1.1) + blob(80, 690, 70, 110, 0.75);
-        w += blob(255, 700, 55, 80, 0.6) + blob(790, 700, 50, 70, 0.55) + blob(150, 805, 160, 22, 0.8);
+        w += blob(255, 700, 55, 80, 0.6) + blob(790, 700, 50, 70, 0.55);
         v[j * W + i] = Math.max(0, Math.min(1, w * 1.6));
       }
     }
@@ -157,20 +157,28 @@
   })();
 
   // ------------------------------------------------------------ lavi (ıslak-ıslağa suluboya)
-  const T = yeni();
+  // lavi katmanı tuvalden geniştir: kenara taşan lavi bulanıklaşınca tuval kenarında açık bir şerit kalmaz
+  const PAD = 96;
+  const T = (() => {
+    const c = S.yeniTuval(PX + 2 * PAD, PX + 2 * PAD);
+    const h = c.getContext('2d');
+    h.setTransform(K, 0, 0, K, PAD, PAD);
+    h.lineJoin = 'round';
+    return { c, h };
+  })();
   /** Bir lavi lekesi: dalgalı kenar, ıslaklığa göre yumuşak kenar, çok hafif kuruma çizgisi; çarparak birikir. */
   function lavi(yol, renk, alfa, o) {
     o = o || {};
     const yum = o.yumusak || 1.4;
     const bb = o.bb || yol.bb || [0, 0, 1024, 1024];
     const m = yum * 3 + 6;
-    const rx = Math.max(0, Math.floor((bb[0] - m) * K)), ry = Math.max(0, Math.floor((bb[1] - m) * K));
-    const rw = Math.min(PX, Math.ceil((bb[2] + m) * K)) - rx, rh = Math.min(PX, Math.ceil((bb[3] + m) * K)) - ry;
+    const rx = Math.max(-PAD, Math.floor((bb[0] - m) * K)), ry = Math.max(-PAD, Math.floor((bb[1] - m) * K));
+    const rw = Math.min(PX + PAD, Math.ceil((bb[2] + m) * K)) - rx, rh = Math.min(PX + PAD, Math.ceil((bb[3] + m) * K)) - ry;
     if (rw <= 0 || rh <= 0) return;
     const h = T.h;
     h.save();
     h.setTransform(1, 0, 0, 1, 0, 0);
-    h.clearRect(rx, ry, rw, rh);
+    h.clearRect(rx + PAD, ry + PAD, rw, rh);
     h.restore();
     h.save();
     h.fillStyle = typeof renk === 'function' ? renk(h) : renk;
@@ -194,12 +202,15 @@
     ctx.globalAlpha = alfa;
     // kuru kâğıtta (küçük yumuşaklık) lavi kenarı keskin kalır; filtre yalnız ıslak, yumuşak lekelerde
     ctx.filter = yum > 1.5 ? `blur(${yum * K}px)` : 'none';
-    ctx.drawImage(T.c, rx, ry, rw, rh, rx, ry, rw, rh);
+    ctx.drawImage(T.c, rx + PAD, ry + PAD, rw, rh, rx, ry, rw, rh);
     ctx.restore();
   }
   /** Çok sayıda küçük lavi: hepsi bir katmanda çarpılarak birikir, tek bulanıklıkla basılır (hızlı). */
   function laviGrup(ogeler, yumusak) {
-    temizle(T.h);
+    T.h.save();
+    T.h.setTransform(1, 0, 0, 1, 0, 0);
+    T.h.clearRect(0, 0, PX + 2 * PAD, PX + 2 * PAD);
+    T.h.restore();
     const h = T.h;
     for (const { yol, renk, alfa, kenar } of ogeler) {
       h.save();
@@ -218,7 +229,7 @@
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'multiply';
     ctx.filter = yumusak > 1.5 ? `blur(${yumusak * K}px)` : 'none';
-    ctx.drawImage(T.c, 0, 0);
+    ctx.drawImage(T.c, -PAD, -PAD);
     ctx.restore();
   }
   /** Beyaz bırakılan yer: kâğıt rengiyle yumuşakça kaldır. */
@@ -308,8 +319,8 @@
         TUY.h.restore();
       }
     }
-    lh.lineWidth = 0.45;
-    lh.globalAlpha = 0.4;
+    lh.lineWidth = 0.5;
+    lh.globalAlpha = 0.55;
     lh.stroke();
     lh.globalAlpha = 1;
   }
@@ -694,7 +705,7 @@
     // 1) yayılma: geniş kopya bulanıklaştırılır, sonra lif dokusuyla eşiklenir. Böylece hale bulanık bir parıltı
     //    değil, kenarı belirgin, liflere doğru dallanan düzensiz bir mürekkep lekesi olur.
     piksel(tmp.h, (h) => {
-      h.filter = `blur(${3 * K}px)`;
+      h.filter = `blur(${3.6 * K}px)`;
       h.drawImage(TUY.c, 0, 0);
     });
     {
@@ -721,7 +732,7 @@
           const f = L[i + 3] / 255;
           const e = (a * (1.5 + 0.9 * w) - 0.5 + (q - 0.5) * 0.9 + f * 0.22) * 6;
           const m = Math.max(0, Math.min(1, e));
-          bd[i + 3] = m * (0.3 + 0.3 * Math.min(1, a * 1.5)) * 255;
+          bd[i + 3] = m * (0.36 + 0.34 * Math.min(1, a * 1.5)) * 255;
         }
       }
       tmp.h.putImageData(B, 0, 0);
@@ -738,7 +749,7 @@
     });
     piksel(ctx, (h) => {
       h.globalCompositeOperation = 'multiply';
-      h.globalAlpha = 0.7;
+      h.globalAlpha = 0.85;
       h.filter = `blur(${0.35 * K}px)`;
       h.drawImage(LIF.c, 0, 0);
     });

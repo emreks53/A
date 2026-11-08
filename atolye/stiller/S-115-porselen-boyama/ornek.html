@@ -498,7 +498,13 @@
       kat(() => { g.strokeStyle = 'rgba(170,158,190,0.4)'; g.lineWidth = 1.6; g.stroke(d); });
       g.restore();
     });
-    // göbek: sarı emaye, kahve noktalı başçıklar
+    // göbek: önce silinir, sonra sarı emaye; kahve noktalı başçıklar
+    sil(() => { g.beginPath(); g.arc(c.x, c.y, c.r * 0.3, 0, 7); g.fill(); }, 0, 1);
+    kat(() => {
+      const gr = g.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r * 0.34);
+      gr.addColorStop(0, 'rgba(236,150,172,0.75)'); gr.addColorStop(1, 'rgba(244,190,204,0.2)');
+      g.fillStyle = gr; g.beginPath(); g.arc(c.x, c.y, c.r * 0.3, 0, 7); g.fill();
+    });
     kat(() => { g.fillStyle = '#F2CF5C'; g.beginPath(); g.arc(c.x, c.y, c.r * 0.2, 0, 7); g.fill(); });
     kat(() => { g.fillStyle = 'rgba(200,140,40,0.6)'; g.beginPath(); g.arc(c.x - c.r * 0.05, c.y + c.r * 0.05, c.r * 0.12, 0, 7); g.fill(); }, 1);
     sil(() => { g.beginPath(); g.arc(c.x + c.r * 0.06, c.y - c.r * 0.07, c.r * 0.06, 0, 7); g.fill(); }, 0, 0.6);
@@ -554,22 +560,22 @@
       const pts = [];
       for (let i = 0; i <= 260; i++) { const u = u0 + (boy * i) / 260; pts.push([u, c + 4.2 * Math.sin((2 * Math.PI * (u - u0)) / P)]); }
       const dal = new Path2D(); pts.forEach(([x, y], i) => (i ? dal.lineTo(x, y) : dal.moveTo(x, y)));
-      kat(() => { g.strokeStyle = 'rgba(112,150,96,0.85)'; g.lineWidth = 1.1; g.stroke(dal); });
+      kat(() => { g.strokeStyle = 'rgba(112,150,96,0.9)'; g.lineWidth = 1.4; g.stroke(dal); });
       // yaprakçıklar: dal boyunca sırayla iki yana
-      for (let i = 8, k = 0; i < 252; i += 9, k++) {
+      for (let i = 6, k = 0; i < 254; i += 6, k++) {
         const [px, py] = pts[i], [qx, qy] = pts[i + 1];
         const tan = Math.atan2(qy - py, qx - px);
-        const yy = { x: px, y: py, uzunluk: 6.5, genislik: 0.45, aci: tan + (k % 2 ? 0.9 : -0.9) };
+        const yy = { x: px, y: py, uzunluk: 7.5, genislik: 0.45, aci: tan + (k % 2 ? 0.9 : -0.9) };
         kat(() => { g.fillStyle = k % 3 ? '#9CC48A' : '#7FB28E'; g.fill(P2(S.yaprakYolu(yy))); });
       }
       // tepelerde küçük güller, çukurlarda unutmabeni kümeleri
       for (let k = 0; k < 10; k++) {
         const ut = u0 + P / 4 + k * P;
-        kucukGul(ut, c + 4.2, 4.6);
+        kucukGul(ut, c + 4.2, 5.6);
         const uc = u0 + (3 * P) / 4 + k * P;
         for (const [dx, dy] of [[-3.2, 1], [2.8, -1.6], [0.6, 3]]) {
           const x = uc + dx, y = c - 4.2 + dy;
-          for (let p = 0; p < 5; p++) { const a = (p / 5) * Math.PI * 2; kat(() => { g.fillStyle = '#9DBBE8'; g.beginPath(); g.arc(x + Math.cos(a) * 1.3, y + Math.sin(a) * 1.3, 1.15, 0, 7); g.fill(); }); }
+          for (let p = 0; p < 5; p++) { const a = (p / 5) * Math.PI * 2; kat(() => { g.fillStyle = '#9DBBE8'; g.beginPath(); g.arc(x + Math.cos(a) * 1.5, y + Math.sin(a) * 1.5, 1.35, 0, 7); g.fill(); }); }
           kat(() => { g.fillStyle = '#F2D36B'; g.beginPath(); g.arc(x, y, 0.6, 0, 7); g.fill(); });
         }
       }

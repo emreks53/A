@@ -160,10 +160,10 @@
       cizgi(p.yol, KONTUR, 1.6);
     } else if (p.tip === 'korkuluk') {
       const d = yol(S.yol([[p.x1, p.y1], [p.x2, p.y1], [p.x2, p.y2], [p.x1, p.y2]], true));
-      doldur(d, '#F4ECDC');
+      doldur(d, '#FBF5E8');
       for (let i = 0; i < 9; i++) {
         const x = p.x1 + 5 + ((p.x2 - p.x1 - 10) * (i + 0.5)) / 9;
-        g.fillStyle = '#B79B74'; g.fillRect(x - 2, p.y1 + 4, 4, p.y2 - p.y1 - 8);
+        g.fillStyle = '#9C7B52'; g.fillRect(x - 2, p.y1 + 4, 4, p.y2 - p.y1 - 8);
       }
       cizgi(d, '#A58C68', 1.8);
     }
@@ -306,8 +306,71 @@
   g.strokeStyle = '#EC7A5E'; g.lineWidth = 4; g.strokeRect(17, 17, 990, 990);
   g.strokeStyle = '#38B3AE'; g.lineWidth = 3; g.strokeRect(27.5, 27.5, 969, 969);
 
+  // ------------------------------------------------------------ ince ayrıntı maskesi: korkuluklar, pencereler, zikzak,
+  // alemler ve kaburgalar ince kumla, az saçılarak dökülür (dar ağızlı huniyle çekilen kum çizgisi gibi)
+  const MK = (function () {
+    const c = S.yeniTuval(W2, W2), m = c.getContext('2d');
+    m.setTransform(K, 0, 0, K, 0, 0);
+    m.fillStyle = '#fff'; m.strokeStyle = '#fff'; m.lineJoin = 'round'; m.lineCap = 'round';
+    const fs = (d, w) => { const pp = new Path2D(d); m.fill(pp); m.lineWidth = w; m.stroke(pp); };
+    for (const p of S.minareParcalari()) {
+      if (p.tip === 'korkuluk') fs(S.yol([[p.x1, p.y1], [p.x2, p.y1], [p.x2, p.y2], [p.x1, p.y2]], true), 4);
+      else if (p.tip === 'poligon' && (p.ad.startsWith('şerefe') || p.ad === 'bilezik' || p.ad.startsWith('çıkma'))) fs(S.yol(p.noktalar, true), 3);
+      else if (p.tip === 'poligon' || p.tip === 'topuz') { m.lineWidth = 4; m.stroke(new Path2D(p.tip === 'topuz' ? p.yol : S.yol(p.noktalar, true))); }
+    }
+    for (const p of S.minarePencereleri) fs(S.kemerYolu(p.x, p.y, p.w, p.h), 4);
+    for (const k of [0, 1]) for (const p of S.kasnakPencereleri(k)) fs(S.kemerYolu(p.x, p.y, p.w, p.h), 3.5);
+    for (const p of S.kaide.pencereler) fs(S.kemerYolu(p.x, p.y, p.w, p.h), 5);
+    const kr = S.kaide.kornis; fs(S.yol([[kr.x1, kr.y1], [kr.x2, kr.y1], [kr.x2, kr.y2], [kr.x1, kr.y2]], true), 3);
+    S.zikzakCizgileri().forEach((z) => { m.lineWidth = 9; m.stroke(new Path2D(S.yol(z))); });
+    for (const a of [S.alemParcalari(560, 300, 1), S.minareParcalari().find((p) => p.tip === 'alem').alem]) {
+      fs(S.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx, ry: a.yaka.ry, aci: 0 }), 3);
+      fs(S.yol([[a.cubuk.x1, a.cubuk.y1], [a.cubuk.x2, a.cubuk.y1], [a.cubuk.x2, a.cubuk.y2], [a.cubuk.x1, a.cubuk.y2]], true), 3);
+      for (const k of a.kureler) fs(S.daireYolu(k.cx, k.cy, k.r), 3);
+      fs(S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R), 3);
+    }
+    m.lineWidth = 5;
+    for (const kb of S.kaburgalar(16, 40)) m.stroke(new Path2D(S.yol(kb.noktalar)));
+    for (const k of [0, 1]) { const q = S.kasnak[k]; m.fillRect(q.x1, q.y1 - 1, q.x2 - q.x1, 5); m.fillRect(q.x1, q.y2 - 4, q.x2 - q.x1, 5); }
+    const v = m.getImageData(0, 0, W2, W2).data;
+    const out = new Uint8Array(W2 * W2);
+    for (let i = 0; i < out.length; i++) out[i] = v[i * 4 + 3] > 40 ? 1 : 0;
+    return out;
+  })();
+
   // ------------------------------------------------------------ kum taneleri
   const dv = g.getImageData(0, 0, W2, W2).data;
+  // tane rengi: haritadan, rastgele kaydırılmış bir noktadan; tane tane küçük ton farkları
+  function taneRengi(x, y, sg, cr, cg, cb, k) {
+    const sx = clamp(Math.round(x + gauss() * sg * K), 0, W2 - 1), sy = clamp(Math.round(y + gauss() * sg * K), 0, W2 - 1);
+    const o = (sy * W2 + sx) * 4;
+    let r = dv[o], gg = dv[o + 1], b = dv[o + 2];
+    const l = 1 + (R() - 0.5) * 0.14;
+    r *= l; gg *= l; b *= l;
+    const h = (R() - 0.5) * 12;
+    r += h; b -= h;
+    const p = R();
+    if (p < 0.03) { r = lerp(r, 255, 0.4); gg = lerp(gg, 255, 0.4); b = lerp(b, 255, 0.4); }
+    else if (p < 0.065) { r *= 0.8; gg *= 0.8; b *= 0.8; }
+    else if (p < 0.095) { r = lerp(r, 120, 0.3); gg = lerp(gg, 100, 0.3); b = lerp(b, 80, 0.3); }
+    cr[k] = r; cg[k] = gg; cb[k] = b;
+  }
+  // ince ayrıntı kumu: daha küçük taneler, çok az saçılma
+  const C2 = 2.3;
+  const GW2 = Math.ceil(W2 / C2) + 2;
+  const NT2 = GW2 * GW2;
+  const fx = new Float32Array(NT2), fy = new Float32Array(NT2), fr = new Float32Array(NT2);
+  const fcr = new Float32Array(NT2), fcg = new Float32Array(NT2), fcb = new Float32Array(NT2);
+  for (let j = 0; j < GW2; j++) {
+    for (let i = 0; i < GW2; i++) {
+      const k = j * GW2 + i;
+      const x = (i - 1 + 0.15 + 0.7 * R()) * C2, y = (j - 1 + 0.15 + 0.7 * R()) * C2;
+      fx[k] = x; fy[k] = y;
+      fr[k] = C2 * (0.6 + 0.25 * R());
+      const mx = clamp(Math.round(x), 0, W2 - 1), my = clamp(Math.round(y), 0, W2 - 1);
+      if (MK[my * W2 + mx] || MK[clamp(my + 2, 0, W2 - 1) * W2 + mx] || MK[clamp(my - 2, 0, W2 - 1) * W2 + mx]) taneRengi(x, y, 0.22, fcr, fcg, fcb, k);
+    }
+  }
   const C = 3.7; // tane hücresi (2048 px)
   const GW = Math.ceil(W2 / C) + 2;
   const NT = GW * GW;
@@ -320,20 +383,7 @@
       tx[k] = x; ty[k] = y;
       tr[k] = C * (0.58 + 0.3 * R() + (R() < 0.08 ? 0.2 : 0));
       // rengi haritadan, rastgele kaydırılmış bir noktadan al: renk sınırlarında taneler birbirine karışır
-      const sg = R() < 0.05 ? 6 : 1.05;
-      const sx = clamp(Math.round(x + gauss() * sg * K), 0, W2 - 1), sy = clamp(Math.round(y + gauss() * sg * K), 0, W2 - 1);
-      const o = (sy * W2 + sx) * 4;
-      let r = dv[o], gg = dv[o + 1], b = dv[o + 2];
-      // tane tane renk farkı: kum karışımında açık, koyu ve renkli taneler
-      const l = 1 + (R() - 0.5) * 0.14;
-      r *= l; gg *= l; b *= l;
-      const h = (R() - 0.5) * 12;
-      r += h; b -= h;
-      const p = R();
-      if (p < 0.03) { r = lerp(r, 255, 0.4); gg = lerp(gg, 255, 0.4); b = lerp(b, 255, 0.4); }
-      else if (p < 0.065) { r *= 0.8; gg *= 0.8; b *= 0.8; }
-      else if (p < 0.095) { r = lerp(r, 120, 0.3); gg = lerp(gg, 100, 0.3); b = lerp(b, 80, 0.3); }
-      cr[k] = r; cg[k] = gg; cb[k] = b;
+      taneRengi(x, y, R() < 0.05 ? 6 : 1.05, cr, cg, cb, k);
     }
   }
   // hafif kabartı: kumun yer yer kalın, yer yer ince serilmesi (düşük frekanslı yükseklik)
@@ -346,25 +396,43 @@
     const gy0 = Math.floor(py / C) + 1;
     const hy = Math.min(1022, py >> 1);
     for (let px = 0; px < W2; px++) {
-      const gx0 = Math.floor(px / C) + 1;
       let en = 1e9, ek = 0, enx = 0, eny = 0;
-      for (let dj = -1; dj <= 1; dj++) {
-        const jj = gy0 + dj;
-        if (jj < 0 || jj >= GW) continue;
-        for (let di = -1; di <= 1; di++) {
-          const ii = gx0 + di;
-          if (ii < 0 || ii >= GW) continue;
-          const k = jj * GW + ii;
-          const dx = px + 0.5 - tx[k], dy = py + 0.5 - ty[k];
-          const dn = (dx * dx + dy * dy) / (tr[k] * tr[k]);
-          if (dn < en) { en = dn; ek = k; enx = dx / tr[k]; eny = dy / tr[k]; }
+      let CR = cr, CG = cg, CB = cb;
+      if (MK[py * W2 + px]) {
+        CR = fcr; CG = fcg; CB = fcb;
+        const gx2 = Math.floor(px / C2) + 1, gy2 = Math.floor(py / C2) + 1;
+        for (let dj = -1; dj <= 1; dj++) {
+          const jj = gy2 + dj;
+          if (jj < 0 || jj >= GW2) continue;
+          for (let di = -1; di <= 1; di++) {
+            const ii = gx2 + di;
+            if (ii < 0 || ii >= GW2) continue;
+            const k = jj * GW2 + ii;
+            const dx = px + 0.5 - fx[k], dy = py + 0.5 - fy[k];
+            const dn = (dx * dx + dy * dy) / (fr[k] * fr[k]);
+            if (dn < en) { en = dn; ek = k; enx = dx / fr[k]; eny = dy / fr[k]; }
+          }
+        }
+      } else {
+        const gx0 = Math.floor(px / C) + 1;
+        for (let dj = -1; dj <= 1; dj++) {
+          const jj = gy0 + dj;
+          if (jj < 0 || jj >= GW) continue;
+          for (let di = -1; di <= 1; di++) {
+            const ii = gx0 + di;
+            if (ii < 0 || ii >= GW) continue;
+            const k = jj * GW + ii;
+            const dx = px + 0.5 - tx[k], dy = py + 0.5 - ty[k];
+            const dn = (dx * dx + dy * dy) / (tr[k] * tr[k]);
+            if (dn < en) { en = dn; ek = k; enx = dx / tr[k]; eny = dy / tr[k]; }
+          }
         }
       }
       const hx = Math.min(1022, px >> 1);
       const hi = hy * 1024 + hx;
       const egim = (H[hi + 1] - H[hi]) * Lx * -1 + (H[hi + 1024] - H[hi]) * Ly * -1;
       const kab = 1 + egim * 2.2;
-      let r = cr[ek], gg = cg[ek], b = cb[ek];
+      let r = CR[ek], gg = CG[ek], b = CB[ek];
       let sh;
       if (en < 1) {
         const nz = Math.sqrt(1 - en);

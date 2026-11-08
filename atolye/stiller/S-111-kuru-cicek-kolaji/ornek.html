@@ -323,21 +323,28 @@
   {
     const L = katman();
     const g = L.g;
-    // alt kat: iri, soluk delphinium yaprakları (göğün yumuşak zemini)
-    for (let k = 0; k < 760; k++) {
-      const x = -30 + R() * 1084, y = -30 + R() * 860;
-      const c = sap(gokRenk(x, y), 6, 5);
-      tac(g, {
-        x, y, a: R() * Math.PI * 2, L: 36 + R() * 30, phi: 0.6 + R() * 0.3, e: 0.35, n: 30,
-        renk: [acik(c, 0.2), acik(c, 0.06), c], alfa: 0.62, damar: 9, damarA: 0.24, damarK: 0.06, kenar: 0.1,
-      });
+    // alt kat: iri, çok soluk ve ince delphinium yaprakları (göğün yumuşak zemini); aralarında kâğıt görünür
+    {
+      const hc = 38;
+      for (let j = -1; j < 830 / hc; j++) {
+        for (let i = -1; i < 1060 / hc; i++) {
+          const x = (i + 0.5 + (R() - 0.5) * 0.85) * hc, y = (j + 0.5 + (R() - 0.5) * 0.85) * hc;
+          const yog = 1.05 - clamp((y - 180) / 640, 0, 0.72);
+          if (R() > yog) continue;
+          const c = sap(acik(gokRenk(x, y), 0.08), 5, 4);
+          tac(g, {
+            x, y, a: R() * Math.PI * 2, L: 46 + R() * 26, phi: 0.6 + R() * 0.3, e: 0.35, n: 34,
+            renk: [acik(c, 0.28), acik(c, 0.12), c], alfa: 0.46, damar: 11, damarA: 0.28, damarK: 0.05, kenar: 0.08,
+          });
+        }
+      }
     }
     // üst kat: dört yapraklı ortanca çiçekçikleri; aşağıda ve bulutlarda seyrekleşir
-    const hucre = 33;
+    const hucre = 44;
     for (let j = -1; j < 800 / hucre + 1; j++) {
       for (let i = -1; i < 1024 / hucre + 1; i++) {
         const x = (i + 0.5 + (R() - 0.5) * 0.9) * hucre, y = (j + 0.5 + (R() - 0.5) * 0.9) * hucre;
-        const yog = 1 - clamp((y - 380) / 520, 0, 0.75) - bulutta(x, y) * 0.9 - clamp(1 - Math.hypot(x - 880, y - 140) / 120, 0, 1);
+        const yog = 0.62 - clamp((y - 60) / 560, 0, 0.62) - bulutta(x, y) * 1.4 - clamp(1.2 - Math.hypot(x - 880, y - 140) / 170, 0, 1);
         if (R() > yog) continue;
         let c = gokRenk(x, y);
         const tur = R();
@@ -575,28 +582,28 @@
     g.beginPath(); g.moveTo(Kd.x1, Kd.y1 + 1.2); g.lineTo(Kd.x2, Kd.y1 + 1.2); g.stroke();
     for (const p of Kd.pencereler) menekse(g, new Path2D(S.kemerYolu(p.x, p.y, p.w, p.h)), p.x, p.y, p.h);
 
-    // kasnak: yatay serilmiş ince çimen yaprakları (paralel damarlı)
+    // kasnak: balıksırtı gibi sıra sıra dizilmiş küçük, damarlı preslenmiş yapraklar (şimşir yaprağı)
     for (let kat = 1; kat >= 0; kat--) {
       const q = S.kasnak[kat];
       kesik(g, dikd(q.x1, q.y1, q.x2, q.y2), () => {
-        const sira = kat === 1 ? 7 : 5;
-        for (let s = 0; s < sira; s++) {
-          let x = q.x1 - 60 - R() * 40;
-          const y = q.y1 + ((s + 0.5) / sira) * (q.y2 - q.y1) + (R() - 0.5) * 3;
-          while (x < q.x2 + 40) {
-            const Lb = 70 + R() * 70;
-            const t = clamp((x + Lb / 2 - q.x1) / (q.x2 - q.x1), 0, 1);
+        const sira = kat === 1 ? 4 : 3;
+        const hs = (q.y2 - q.y1) / sira;
+        // altta yer yer kâğıt görünmesin diye soluk yeşil zemin yaprağı
+        g.fillStyle = 'rgba(70,128,62,0.92)'; g.fillRect(q.x1, q.y1, q.x2 - q.x1, q.y2 - q.y1);
+        for (let sr = 0; sr < sira; sr++) {
+          const yc = q.y1 + (sr + 0.5) * hs;
+          const yon = sr % 2 ? 1 : -1;
+          for (let x = q.x1 - 14; x < q.x2 + 6; x += hs * 0.5) {
+            const t = clamp((x - q.x1) / (q.x2 - q.x1), 0, 1);
             const ti = 0.5 - 0.5 * Math.cos(Math.PI * clamp((t - 0.05) / 0.85, 0, 1));
-            let cc = karis(hex('#2E6A32'), hex('#7DB257'), ti * 0.9 + (kat === 0 ? 0.08 : 0));
-            cc = sap(cc, 9, 6);
-            const yon = R() < 0.5;
-            yaprak(g, { x: yon ? x : x + Lb, y: y + (R() - 0.5) * 2, a: (yon ? 0 : Math.PI) + (R() - 0.5) * 0.04, L: Lb, W: (q.y2 - q.y1) / sira * 0.95, p: 0.45, q: 0.45, renk: [koyu(cc, 0.08), cc, acik(cc, 0.12)], alfa: 0.92, damar: 0, damarA: 0.2 });
-            x += Lb * (0.55 + R() * 0.25);
+            let cc = karis(hex('#2E6A32'), hex('#86BC5C'), ti * 0.92 + (kat === 0 ? 0.06 : 0));
+            const tur = R();
+            if (tur < 0.14) cc = karis(cc, hex('#B7C95A'), 0.3); else if (tur < 0.26) cc = karis(cc, hex('#2F7A5E'), 0.28);
+            cc = sap(cc, 12, 6);
+            const an = yon * (0.5 + (R() - 0.5) * 0.14);
+            yaprak(g, { x: x, y: yc + (R() - 0.5) * 1.5 - Math.sin(an) * hs * 0.55, a: an, L: hs * 1.25, W: hs * 0.36, p: 0.7, q: 0.8, renk: [koyu(cc, 0.08), cc, acik(cc, 0.12)], alfa: 0.95, damar: 3, damarA: 0.26 });
           }
         }
-        // paralel ince damarlar
-        g.strokeStyle = 'rgba(230,250,200,0.13)'; g.lineWidth = 0.5;
-        for (let yy = q.y1 + 2; yy < q.y2; yy += 2.6) { g.beginPath(); g.moveTo(q.x1, yy + (R() - 0.5)); g.lineTo(q.x2, yy + (R() - 0.5)); g.stroke(); }
       }, 'rgba(30,60,25,0.4)');
       // katlar arası açık sap
       g.strokeStyle = 'rgba(205,215,150,0.85)'; g.lineWidth = 1.6;

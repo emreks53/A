@@ -322,7 +322,8 @@
   const CRT = CR.map((v) => 1 - v);
   // ============================================================ GÖK
   const kGok = [0, 0, W, 860];
-  const pay = (() => { const b = bulanik(yapiM, W, W, 3.5), o = new Float32Array(N); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; o[i] = Math.max(CR[i], sstep(0.05, 0.25, b[i] + (fbm(nD, x / 26, y / 26, 2) - 0.5) * 0.3)); } return o; })();
+  // yapının çevresinde fırçanın bıraktığı ince, düzensiz kâğıt payı: kimi yerde kıl kadar, kimi yerde hiç yok
+  const pay = (() => { const b = bulanik(yapiM, W, W, 2.4), o = new Float32Array(N); for (let i = 0; i < N; i++) { const x = i % W, y = (i / W) | 0; const e = 0.12 + 0.5 * sstep(0.3, 0.75, fbm(nD, x / 22, y / 22, 2)); o[i] = Math.max(CR[i], sstep(e - 0.03, e + 0.03, b[i])); } return o; })();
   // bulutlar: yuvarlak kümülüs tepeleri, düzce alt; mürekkep etraflarından dolaşır
   const BUL = (() => {
     const r = SAHNE.rng(55);
@@ -492,34 +493,58 @@
     const A = kapsamCiz(kOn, (c) => { for (const t of B.tomurcuklar) c.fill(new Path2D(SAHNE.tomurcukYolu(t))); });
     murekkep(kOn, A, { pig: (x, y) => gecis(karis(P.mac, 0.9, P.gul, 0.2), karis(P.gul, 0.6, P.tur3, 0.5), x, y, 8, 61), yog: 0.45, tohum: 62 });
   }
-  // çiçekler: beyaz; göbekten dışa ıslakta yayılan gül pembesi, gölge yanında soluk leylak, ince macenta kontur
+  // çiçekler: beyaz taç yaprakların dibine damlatılmış mürekkep ıslakta uca doğru yayılır, yarı yolda keskin
+  // bir kuruma çizgisiyle durur; taç yaprakların dış kenarı renkli mürekkeple, yer yer kopan, kalınlığı değişen
+  // bir kalem hattıyla çizilmiş (hat lekeye tam oturmaz). Göbek turuncu-sarı, ercikler macenta noktalar.
+  const cicekRenk = [
+    [karis(P.mac, 0.85, P.mor, 0.15), karis(P.gul, 0.9, P.tur3, 0.15), karis(P.mac, 0.6, P.mor, 0.5)],
+    [karis(P.mor, 0.75, P.lac, 0.35), karis(P.mor, 0.5, P.gul, 0.5), karis(P.mor, 0.7, P.kob, 0.4)],
+    [karis(P.gul, 0.8, P.tur3, 0.35), karis(P.tur3, 0.7, P.lim, 0.4), karis(P.mac, 0.65, P.tur3, 0.3)],
+  ];
   B.cicekler.forEach((c, n) => {
-    const kutu = kutuDuz([c.x - c.r * 1.4, c.y - c.r * 1.4, c.x + c.r * 1.4, c.y + c.r * 1.4]);
-    const w = kutu[2] - kutu[0];
-    // göbekten dışa yayılmış pembe: taç yaprak biçimini izleyen, kenarı düzgün kurumuş bir leke
-    const pemb = kapsamCiz(kutu, (cc) => {
-      const k = 0.5;
-      for (const e of SAHNE.tacYapraklari(c)) { cc.beginPath(); cc.ellipse(c.x + (e.cx - c.x) * k, c.y + (e.cy - c.y) * k, e.rx * k * 1.1, e.ry * k * 1.15, e.aci, 0, Math.PI * 2); cc.fill(); }
-    });
-    for (let j = 0; j < pemb.length; j++) { const x = kutu[0] + (j % w), y = kutu[1] + ((j / w) | 0); pemb[j] *= 0.55 + 0.45 * sstep(c.r * 0.55, c.r * 0.15, Math.hypot(x - c.x, y - c.y)); }
-    murekkep(kutu, pemb, { pig: n % 2 ? karis(P.gul, 0.9, P.mac, 0.15) : karis(P.mac, 0.6, P.gul, 0.5), yog: 0.12, kenar: 1.2, kenarR: 1.4, dalga: 0.08, tohum: 300 + n });
+    const kutu = kutuDuz([c.x - c.r * 1.45, c.y - c.r * 1.45, c.x + c.r * 1.45, c.y + c.r * 1.45]);
+    const w = kutu[2] - kutu[0], h = kutu[3] - kutu[1];
+    const r = SAHNE.rng(300 + n);
+    const [kDip, kUc, kHat] = cicekRenk[n % 3];
     const CF = kapsamCiz(kutu, (cc) => { for (const e of SAHNE.tacYapraklari(c)) { cc.beginPath(); cc.ellipse(e.cx, e.cy, e.rx * 1.04, e.ry * 1.1, e.aci, 0, Math.PI * 2); cc.fill(); } cc.beginPath(); cc.arc(c.x, c.y, c.r * 0.3, 0, Math.PI * 2); cc.fill(); });
-    const cf = (x, y) => CF[(y - kutu[1]) * (kutu[2] - kutu[0]) + x - kutu[0]];
-    const golge = kapsamAlan(kutu, (x, y) => cf(x, y) * sstep(-0.05, -0.3, ((x - c.x) * isik[0] + (y - c.y) * isik[1]) / c.r + (fbm(nD, x / 10, y / 10, 2) - 0.5) * 0.25));
-    murekkep(kutu, golge, { pig: karis(P.mor, 0.6, P.lac, 0.4), yog: 0.07, tohum: 320 + n });
-    const gob = kapsamCiz(kutu, (cc) => { cc.beginPath(); cc.arc(c.x, c.y, c.r * 0.19, 0, Math.PI * 2); cc.fill(); });
-    murekkep(kutu, gob, { pig: (x, y) => lerpK(P.lim, karis(P.tur3, 0.9, P.mac, 0.15), clamp(((x - c.x) * -isik[0] + (y - c.y) * -isik[1]) / (c.r * 0.19) * 0.5 + 0.5, 0, 1)), yog: 0.5, tohum: 340 + n });
-    // kontur: taç yaprakların dış kenarında ince macenta hat (birleşimin dış sınırı)
-    const kontur = kapsamAlan(kutu, (x, y) => { const i = y * W + x; return CR[i] > 0.5 ? 0 : 1; });
-    const Kb = bulanik(Float32Array.from(CF), w, kutu[3] - kutu[1], 1.1);
-    for (let j = 0; j < kontur.length; j++) {
-      const x = kutu[0] + (j % w), y = kutu[1] + ((j / w) | 0);
-      const golgeYan = sstep(0.3, -0.4, ((x - c.x) * isik[0] + (y - c.y) * isik[1]) / c.r);
-      kontur[j] = sstep(0.12, 0.4, Kb[j]) * sstep(0.9, 0.62, Kb[j]) * (Math.hypot(x - c.x, y - c.y) < c.r * 1.25 ? 1 : 0) * sstep(0.35, 0.5, nE(x / 9 + n * 7, y / 9) * 0.6 + golgeYan * 0.5);
+    const fz = r() * 10;
+    // her taç yaprak ayrı, çok açık bir mürekkep sırrıyla: renk dipte yoğun, uca doğru açılır; kenarda kuruyan
+    // mürekkep ince, keskin bir çizgi bırakır; üst üste binen yaprakların kesişimi saydamlıktan koyulaşır
+    SAHNE.tacYapraklari(c).forEach((e, k) => {
+      const ca = Math.cos(e.aci), sa = Math.sin(e.aci);
+      const A = kapsamCiz(kutu, (cc) => {
+        const pts = [];
+        for (let i = 0; i < 40; i++) {
+          const t = (i / 40) * Math.PI * 2, rr = 1 + 0.06 * (fbm(nE, Math.cos(t) * 1.3 + fz + k * 3, Math.sin(t) * 1.3 + n, 2) - 0.5) * 2;
+          const u = Math.cos(t) * e.rx * 1.04 * rr, v = Math.sin(t) * e.ry * 1.1 * rr;
+          pts.push([e.cx + u * ca - v * sa, e.cy + u * sa + v * ca]);
+        }
+        cokgen(cc, pts); cc.fill();
+      });
+      murekkep(kutu, A, {
+        pig: (x, y) => lerpK(kDip, kUc, sstep(c.r * 0.2, c.r * 0.95, Math.hypot(x - c.x, y - c.y) + (fbm(nC, x / 8 + n, y / 8 + k, 2) - 0.5) * c.r * 0.35)),
+        yog: (x, y) => { const d = Math.hypot(x - c.x, y - c.y) / c.r; return 0.035 + 0.13 * sstep(0.62, 0.18, d + (fbm(nB, x / 7 + k, y / 7 + n, 2) - 0.5) * 0.25); },
+        kenar: 2.2, kenarR: 1.3, dalga: 0.25, dalgaOlcek: 10, tohum: 300 + n * 7 + k,
+      });
+    });
+    // gölge yanındaki taç yapraklarda çok soluk, serin bir mürekkep sırrı
+    const golge = kapsamAlan(kutu, (x, y) => CF[(y - kutu[1]) * w + x - kutu[0]] * sstep(-0.05, -0.3, ((x - c.x) * isik[0] + (y - c.y) * isik[1]) / c.r + (fbm(nD, x / 10, y / 10, 2) - 0.5) * 0.25));
+    murekkep(kutu, golge, { pig: karis(P.lac, 0.6, P.mor, 0.4), yog: 0.05, kenar: 1.0, tohum: 320 + n });
+    // kalem hattı: birkaç taç yaprağın dış yayında ince, kopuk renkli mürekkep çizgisi (lekeye tam oturmaz)
+    const hatlar = [];
+    for (const e of SAHNE.tacYapraklari(c)) {
+      if (r() < 0.25) continue;
+      const ca = Math.cos(e.aci), sa = Math.sin(e.aci), ox = (r() - 0.5) * 3, oy = (r() - 0.5) * 3;
+      const a0 = -1.25 + r() * 0.5, a1 = a0 + 0.9 + r() * 1.3, pts = [];
+      for (let t = a0; t <= a1 + 1e-6; t += 0.07) { const u = Math.cos(t) * e.rx * 1.06, v = Math.sin(t) * e.ry * 1.12; pts.push([e.cx + u * ca - v * sa + ox, e.cy + u * sa + v * ca + oy]); }
+      hatlar.push(pts);
     }
-    murekkep(kutu, kontur, { pig: karis(P.mac, 0.65, P.mor, 0.45), yog: 0.24, kenar: 0, tohum: 360 + n });
-    const nok = kapsamCiz(kutu, (cc) => { const r = SAHNE.rng(380 + n); for (let k = 0; k < 8; k++) { const a = r() * 6.3, d = c.r * (0.2 + r() * 0.1); cc.beginPath(); cc.arc(c.x + Math.cos(a) * d, c.y + Math.sin(a) * d, Math.max(1, c.r * 0.035), 0, Math.PI * 2); cc.fill(); } });
-    murekkep(kutu, nok, { pig: karis(P.mac, 0.6, P.tur3, 0.5), yog: 0.6, kenar: 0.4, tohum: 390 + n });
+    hat(kutu, hatlar, { gen: Math.max(1.2, c.r * 0.032), pig: kHat, yog: 0.4, tohum: 340 + n });
+    // göbek ve ercikler
+    const gob = kapsamCiz(kutu, (cc) => { cc.beginPath(); cc.arc(c.x, c.y, c.r * 0.19, 0, Math.PI * 2); cc.fill(); });
+    murekkep(kutu, gob, { pig: (x, y) => lerpK(P.lim, karis(P.tur3, 0.9, P.mac, 0.15), clamp(((x - c.x) * -isik[0] + (y - c.y) * -isik[1]) / (c.r * 0.19) * 0.5 + 0.5, 0, 1)), yog: 0.5, kenar: 1.4, tohum: 360 + n });
+    const nok = kapsamCiz(kutu, (cc) => { for (let k = 0; k < 9; k++) { const a = r() * 6.3, d = c.r * (0.22 + r() * 0.1); cc.beginPath(); cc.arc(c.x + Math.cos(a) * d, c.y + Math.sin(a) * d, Math.max(1, c.r * 0.035), 0, Math.PI * 2); cc.fill(); } });
+    murekkep(kutu, nok, { pig: karis(P.mac, 0.6, P.mor, 0.4), yog: 0.6, kenar: 0.4, tohum: 390 + n });
   });
 
   const img = bitir([253, 252, 248], { kabartma: 0.09, vadi: 0.025 });

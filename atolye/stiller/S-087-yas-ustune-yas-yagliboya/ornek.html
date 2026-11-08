@@ -393,6 +393,14 @@
       const l = kubbeIsik(x, y);
       darbe({ x, y, a, L: 40 + R() * 40, w: 12 + R() * 10, c: rampa(KUBBE, clamp(l + (R() - 0.5) * 0.12, 0, 1)), opak: 0.35, yum: 0.7, kalin: 0.15, m: mKubbe, cizgi: 0.12 });
     }
+    // ikinci kat: fırçanın iki rengi (yerel ton ve komşu dilimin tonu) tuvalde yaşken karışır; kıl izleri görünür
+    for (let i = 0; i < 900; i++) {
+      const y = 304 + R() * 250, x = 360 + R() * 400;
+      if (!SAHNE.kubbedeMi(x, y)) continue;
+      const u = kubbeU(x, y), a = Math.atan2(1, u * kubbeDr[clamp(Math.round(y), 300, 555)]) + (R() - 0.5) * 0.08;
+      const l = kubbeIsik(x, y), l2 = kubbeIsik(x + (R() - 0.5) * 50, y + (R() - 0.5) * 30);
+      darbe({ x, y, a, L: 30 + R() * 34, w: 7 + R() * 6, k: (R() - 0.5) * 0.3, c: rampa(KUBBE, clamp(l + (R() - 0.5) * 0.1, 0, 1)), c2: rampa(KUBBE, clamp(l2, 0, 1)), karis: 0.5, opak: 0.62, yum: 0.3, kalin: 0.32, m: mKubbe, cizgi: 0.22 });
+    }
     for (let i = 0; i < 160; i++) {
       const x = 300 + R() * 520, y = 706 + R() * 92;
       const l = (0.6 + 0.34 * clamp((x - 300) / 520, 0, 1)) * (0.62 + 0.38 * sstep(704, 722, y));
@@ -402,6 +410,29 @@
       const y = 150 + R() * 650, x = 300 + (R() - 0.5) * 2 * minareYari(y);
       let l = silindirIsik(x, 300, minareYari(y)) * (y > 692 ? 0.75 : 1);
       darbe({ x, y, a: Math.PI / 2 + (R() - 0.5) * 0.06, L: 30 + R() * 30, w: 6 + R() * 5, c: rampa(TAS, clamp(l + (R() - 0.5) * 0.1, 0, 1)), opak: 0.35, yum: 0.6, kalin: 0.1, m: mMinare, cizgi: 0.1 });
+    }
+    // görünür yağlıboya fırçası: kasnakta silindir boyunca yatay, kaidede geniş yatay, minarede dikey darbeler;
+    // her darbede iki ton yaşken karışır, kıl izleri ve boya sırtı kabartıda seçilir
+    const mKasnakB = maske(['kasnak'], 0, [330, 552, 790, 694]);
+    const kasnakL = (x, y) => { const ust = y < 610; let l = silindirIsik(x, 560, ust ? 208 : 226) * (ust ? 0.9 : 1); if (ust) l *= 0.62 + 0.38 * sstep(555, 574, y); else l *= 0.7 + 0.3 * sstep(610, 624, y); return l; };
+    for (let y = 556; y < 692; y += 6) for (let x = 330; x < 790; x += 15) {
+      const px = x + R() * 15, py = y + R() * 6;
+      const l = kasnakL(px, py), l2 = kasnakL(px + (R() - 0.5) * 60, py);
+      const a = 0.07 * clamp((px - 560) / 220, -1, 1) * (py < 610 ? -1 : 1) + (R() - 0.5) * 0.1;
+      darbe({ x: px, y: py, a, L: 28 + R() * 30, w: 6 + R() * 5, k: (R() - 0.5) * 0.4, c: rampa(KASNAK, clamp(l + (R() - 0.5) * 0.12, 0, 1)), c2: rampa(KASNAK, clamp(l2, 0, 1)), karis: 0.5, opak: 0.7, yum: 0.25, kalin: 0.34, m: mKasnakB, cizgi: 0.22 });
+    }
+    const kaideL = (x, y) => (0.6 + 0.34 * clamp((x - 300) / 520, 0, 1)) * (0.62 + 0.38 * sstep(704, 722, y));
+    for (let y = 704; y < 800; y += 7) for (let x = 296; x < 824; x += 26) {
+      const px = x + R() * 26, py = y + R() * 7;
+      darbe({ x: px, y: py, a: (R() - 0.5) * 0.08, L: 44 + R() * 44, w: 8 + R() * 6, k: (R() - 0.5) * 0.3, c: rampa(TAS, clamp(kaideL(px, py) + (R() - 0.5) * 0.12, 0, 1)), c2: rampa(TAS, clamp(kaideL(px + (R() - 0.5) * 90, py), 0, 1)), karis: 0.45, opak: 0.68, yum: 0.25, kalin: 0.34, m: mKaide, cizgi: 0.2 });
+    }
+    for (let y = 150; y < 800; y += 9) {
+      const yr = minareYari(y);
+      for (let x = 300 - yr; x < 300 + yr; x += 9) {
+        const px = x + R() * 9, py = y + R() * 9, l = silindirIsik(px, 300, minareYari(py)) * (py > 692 ? 0.75 : 1);
+        const yatay = (py > 430 && py < 492) || (py > 268 && py < 320) || (py > 194 && py < 210);
+        darbe({ x: px, y: py, a: yatay ? (R() - 0.5) * 0.1 : Math.PI / 2 + (R() - 0.5) * 0.08, L: yatay ? 14 + R() * 12 : 20 + R() * 22, w: 4.5 + R() * 3, c: rampa(TAS, clamp(l + (R() - 0.5) * 0.12, 0, 1)), opak: 0.6, yum: 0.25, kalin: 0.3, m: mMinare, cizgi: 0.2 });
+      }
     }
   }
   // kaburgalar: yaş boyaya liner fırçayla çekilmiş yumuşak oluk ve ışık tarafındaki açık bant

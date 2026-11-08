@@ -12,7 +12,7 @@
     "Bütün yüzeyin tek tek seçilebilen, ışığı sağ üstten alan küçük yuvarlak kum tanelerinden oluşması; taneler arasında ince, gölgeli boşluklar",
     "Renkler arasında keskin kenar yerine tanelerin birbirine karıştığı yumuşak, serpintili sınırlar ve sınırın ötesine düşmüş başıboş taneler",
     "Gökyüzünün ve yerin kum şişesi gibi dalgalı katmanlardan kurulması: maviler, turkuaz, leylak ve pembe ince şeritler; şeftali ve kum sarısı yer katmanları",
-    "Kubbe ve kasnakta basamak basamak açılan yeşil kum alanlarıyla gölgeleme, kaburgalar koyu yeşil kum çizgileri",
+    "Kubbe ve kasnakta basamak basamak açılan yeşil kum alanlarıyla gölgeleme; kaburgalar, pencereler, şerefe korkulukları, zikzak ve alemler daha ince, az saçılmış kumla keskin çekilmiş",
     "Her rengin içinde tane tane küçük ton farkları ve yer yer açık, koyu taneler; kum karışımının canlı, doğal görünümü",
     "Beyaz kum kenar üzerinde mercan ve turkuaz ince kum çizgilerinden çerçeve; pembe dipli beyaz çiçekler, sarı göbekler"
   ],
@@ -26,7 +26,7 @@
     "#F9C9D6",
     "#FBF8F1"
   ],
-  "kodla_cizim": "Önce 2048 px ekran dışı tuvalde düz renkli bir tasarım haritası çizilir: gök ve yer, sinüs toplamlarıyla dalgalanan sınırlar arasında doldurulan kum katmanları; güneş iç içe halkalar ve ışınlar; minare, kaide, kasnak ve kubbe basamaklı açık-koyu alanlar ve ince kontur çizgileri; bitkiler SAHNE geometrisinden. Sonra titreşimli bir ızgarada (yaklaşık 300 bin) kum tanesi kurulur: her tane rengini haritadan Gauss dağılımıyla kaydırılmış bir noktadan alır (tanelerin %5'i daha uzağa saçılır), rengi parlaklık ve tonca hafifçe saptırılır, az sayıda tane açık ya da koyu yapılır. Son geçişte her piksel için en yakın tane (yarıçapa göre ölçeklenmiş mesafe, 3×3 komşu hücre) bulunur; tane içi küre normaliyle sağ üstten aydınlatılır, küçük bir parıltı eklenir, taneler arası boşluk gölgede kalan kum rengiyle doldurulur. Düşük frekanslı fBm yükseklik haritası yüzeye çok hafif kabartı verir.",
+  "kodla_cizim": "Önce 2048 px ekran dışı tuvalde düz renkli bir tasarım haritası çizilir: gök ve yer, sinüs toplamlarıyla dalgalanan sınırlar arasında doldurulan kum katmanları; güneş iç içe halkalar ve ışınlar; minare, kaide, kasnak ve kubbe basamaklı açık-koyu alanlar ve ince kontur çizgileri; bitkiler SAHNE geometrisinden. Sonra titreşimli bir ızgarada (yaklaşık 300 bin) kum tanesi kurulur: her tane rengini haritadan Gauss dağılımıyla kaydırılmış bir noktadan alır (tanelerin %5'i daha uzağa saçılır), rengi parlaklık ve tonca hafifçe saptırılır, az sayıda tane açık ya da koyu yapılır. Korkuluklar, pencereler, zikzak, korniş, alemler ve kaburgalar ayrı bir maskeye çizilir; maskede ikinci, daha sık bir ızgaradan (tane hücresi 3,7 yerine 2,3 px) küçük taneler kurulur ve renklerini neredeyse saçılmadan alır, böylece ince ayrıntılar dar ağızlı huniyle dökülmüş kum çizgisi gibi keskin kalır. Son geçişte her piksel için en yakın tane (yarıçapa göre ölçeklenmiş mesafe, 3×3 komşu hücre) bulunur; tane içi küre normaliyle sağ üstten aydınlatılır, küçük bir parıltı eklenir, taneler arası boşluk gölgede kalan kum rengiyle doldurulur. Düşük frekanslı fBm yükseklik haritası yüzeye çok hafif kabartı verir.",
   "etiketler": [
     "kum",
     "taneli doku",

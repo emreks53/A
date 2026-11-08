@@ -713,7 +713,7 @@
     for (let y = 690; y < 808; y += 12) for (let x0 = 230; x0 < 840; x0 += 120) {
       const len = 170 + r() * 90, pts = [[x0 + (r() - 0.5) * 40, y + (r() - 0.5) * 4], [x0 + len, y + (r() - 0.5) * 4]];
       const l = clamp((x0 + len / 2 - 300) / 520, 0, 1);
-      sunger(x, pts, 26, 0.26 + 0.12 * l, mixc(mixc(C.tas, C.seftali, 0.3 + 0.6 * l), C.sari, 0.25 * l), r, { son: 0.55, iz: 0.7 });
+      sunger(x, pts, 26, 0.2 + 0.16 * l, mixc(mixc(C.tasAcik, C.seftali, 0.15 + 0.6 * l), C.sari, 0.22 * l), r, { son: 0.55, iz: 0.7 });
     }
   }, Object.assign({ kirp: MK.kaide, bx: [286, 688, 834, 802] }, TOZ, { opq: 0.5 }));
   katman((x) => {
@@ -723,13 +723,12 @@
       while (x0 < 700) {
         const len = 90 + r() * 110, pts = [[x0, y + (r() - 0.5) * 3], [x0 + len, y + (r() - 0.5) * 3]];
         const g = 1 - clamp((x0 - 300) / 420, 0, 1);
-        sunger(x, pts, 16 + r() * 6, 0.05 + 0.42 * Math.pow(g, 1.6), r() < 0.55 ? C.tasGolge : r() < 0.6 ? C.tasMavi : C.leylak, r, { son: 0.75, iz: 0.8 });
+        sunger(x, pts, 16 + r() * 6, 0.03 + 0.36 * g * g, r() < 0.5 ? C.tasMavi : r() < 0.7 ? C.tasGolge : C.leylak, r, { son: 0.75, iz: 0.8 });
         x0 += len * (0.7 + r() * 0.4);
       }
     }
     // korniş altı gölge (şablon kenarına dayalı keskin üst kenar, aşağı solan)
-    sunger(x, [[296, 711], [824, 711]], 14, 0.55, C.tasGolge, r, { son: 0.35, sert: 0.5, iz: 0.5 });
-    sunger(x, [[296, 717], [824, 717]], 10, 0.25, C.tasMavi, r, { son: 0.5, iz: 0.6 });
+    sunger(x, [[296, 710], [824, 710]], 12, 0.5, C.tasGolge, r, { son: 0.45, sert: 0.5, iz: 0.5 });
     // dipte kumdan yansıyan sıcak ışık
     sunger(x, [[300, 794], [820, 794]], 16, 0.24, C.okra, r, { son: 0.4, iz: 0.7 });
     // korniş: alt yüzü serin, ön yüzü sıcak

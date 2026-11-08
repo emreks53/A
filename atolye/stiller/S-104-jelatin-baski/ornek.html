@@ -135,6 +135,8 @@ const R = new Float32Array(N), G = new Float32Array(N), Bm = new Float32Array(N)
 }
 // plaka alanı: köşeleri yuvarlak, kenarda boya incelir
 const plakaM = maske((g) => { g.beginPath(); g.roundRect(PLAKA.x1, PLAKA.y1, PLAKA.x2 - PLAKA.x1, PLAKA.y2 - PLAKA.y1, PLAKA.r); g.fill(); });
+// plakanın kenarında merdanenin bıraktığı boya sırtı: kenar boyunca ince, koyuca bir çerçeve
+const plakaKenar = (() => { const b = bulanik(plakaM, 4); return plakaM.map((v, i) => clamp((v - b[i]) * 3.2)); })();
 
 /**
  * Bir jel plaka çekimi. o.renk(x,y) → [r,g,b] ya da sabit renk; o.ac(g) şablon açıklığı; o.kapa(g) kâğıt maskeleri;
@@ -151,15 +153,22 @@ function cek(o) {
     g.restore();
     if (o.kapa) { g.globalCompositeOperation = 'destination-out'; o.kapa(g); }
   });
-  const bl = bulanik(m, 2);
-  const yumus = bulanik(m, 1);
+  // jel yumuşaktır, ince ayrıntıyı keskin tutmaz: kenarlar birkaç piksel yumuşak ve hafif saçaklı,
+  // incecik biçimler (korkuluk, nokta, ince çizgi) daha soluk ve bulanık çıkar
+  const yr = o.yr === undefined ? 2 : o.yr;
+  const yumus = bulanik(m, yr);
+  const bl = bulanik(m, yr + 3);
+  const nk = fbmFn(tohum + 4, 2, 4.2);
   const n1 = gurultuFn(tohum), n2 = gurultuFn(tohum + 1), n3 = fbmFn(tohum + 2, 3, 22), n4 = fbmFn(tohum + 3, 3, 150);
+  const n5 = fbmFn(tohum + 5, 3, 5.5); // jelin ince portakal kabuğu dokusu
   const yon = o.yon || 0, ca = Math.cos(yon), sa = Math.sin(yon);
   const C = o.cevre || 205, BW = o.bant || 190;
   const sabit = Array.isArray(o.renk) ? o.renk : null;
   const r0 = n1(3.1, 7.7) * C;
   for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
-    let a = yumus[i] * 0.6 + m[i] * 0.4;
+    const a0 = yumus[i];
+    if (a0 <= 0.003) continue;
+    let a = clamp((a0 - 0.5) * 1.35 + 0.5 + (nk(x, y) - 0.5) * 1.1 * a0 * (1 - a0));
     if (a <= 0.003) continue;
     a *= plakaM[i];
     if (a <= 0.003) continue;
@@ -169,16 +178,17 @@ function cek(o) {
     const durma = Math.exp(-(um - 3) * (um - 3) / 7) * 0.26 - Math.exp(-(um - 13) * (um - 13) / 60) * 0.12 + Math.exp(-(um - C * 0.52) * (um - C * 0.52) / 6) * 0.07;
     const bi = Math.floor((v + 4000) / BW);
     const bv = (v + 4000) - bi * BW;
-    const bant = (n2(bi * 1.7, 0.3) - 0.5) * 0.24 + Math.exp(-(bv - 2.5) * (bv - 2.5) / 8) * 0.12 - Math.exp(-(bv - 9) * (bv - 9) / 30) * 0.06;
+    const bant = (n2(bi * 1.7, 0.3) - 0.5) * (o.bantG || 0.34) + Math.exp(-(bv - 2.5) * (bv - 2.5) / 8) * 0.12 - Math.exp(-(bv - 9) * (bv - 9) / 30) * 0.06;
     // jel dokusu: merdane yönünde uzamış çizgiler, ince portakal kabuğu benekleri, eşit olmayan çekim
-    const cizgi = (n1(u / 90 + 30, v / 4.5) - 0.5) * 0.13 + (n2(u / 30 + 9, v / 9) - 0.5) * 0.08;
-    const benek = (n3(x, y) - 0.5) * 0.26;
+    const cizgi = (n1(u / 90 + 30, v / 4.5) - 0.5) * 0.18 + (n2(u / 30 + 9, v / 9) - 0.5) * 0.1;
+    const ince = n5(x, y);
+    const benek = (n3(x, y) - 0.5) * 0.26 + (ince - 0.5) * 0.3 - 0.3 * smooth(0.64, 0.8, ince);
     const cekis = (n4(x, y) - 0.5) * 0.36;
     let d = (o.yog || 0.7) * (1 + durma + bant + cizgi + benek + cekis);
     if (o.tarak) d *= 1 - o.tarak(x, y);
     // maske kenarında biriken boya
-    const kenar = clamp((m[i] - bl[i]) * 2.6);
-    d = clamp(d * a * (1 + 0.35 * kenar));
+    const kenar = clamp((a0 - bl[i]) * 3);
+    d = clamp(d * a * (1 + 0.35 * kenar + 0.45 * plakaKenar[i]));
     const col = sabit || o.renk(x, y);
     R[i] *= 1 - d * (1 - col[0] / 255);
     G[i] *= 1 - d * (1 - col[1] / 255);
@@ -219,14 +229,14 @@ cek({
     const t = smooth(40, 780, y + 40 * (Math.sin(x / 160) - 0.5));
     return [lerp(96, 160, t), lerp(184, 226, t), lerp(236, 232, t)];
   },
-  yog: 0.5, yon: 0, cevre: 214, bant: 170, kapa: skyKapa,
+  yog: 0.5, yon: 0, cevre: 214, bant: 170, bantG: 0.5, kapa: skyKapa,
 });
 cek({
   renk: (x, y) => {
     const t = smooth(0, 800, y);
     return [lerp(146, 226, t), lerp(162, 204, t), lerp(244, 240, t)];
   },
-  yog: 0.42, yon: 0.12, cevre: 188, bant: 150, plakaKay: [1.4, -0.8],
+  yog: 0.46, yon: 0.12, cevre: 188, bant: 150, bantG: 0.5, plakaKay: [1.4, -0.8],
   kapa: (g) => { skyKapa(g); for (const e of EGRELTILER) egrelti(g, ...e); },
 });
 // 2) güneş: sarı daire şablonu, içte şeftali ikinci çekim
@@ -279,6 +289,7 @@ cek({
 const yesilAc = (g) => { g.fill(P2(SAHNE.kubbeYolu)); g.fill(P2(Y.kasnakUst)); g.fill(P2(Y.kasnakAlt)); };
 cek({ renk: [160, 220, 104], yog: 0.72, yon: 0.4, cevre: 200, plakaKay: [2.2, -1.6], ac: yesilAc, kapa: (g) => bitkiMaskesi(g, false) });
 const PROF = SAHNE.kubbeProfili(120);
+const tarakN = fbmFn(77, 2, 1);
 const profR = (y) => {
   if (y >= 555) return 200;
   if (y <= 300) return 0;
@@ -302,7 +313,8 @@ cek({
     const r = profR(y);
     const u = clamp((x - 560) / Math.max(1, r), -1, 1);
     const f = ((Math.asin(u) / Math.PI + 0.5) * 16) % 1;
-    const dis = Math.exp(-(f - 0.5) * (f - 0.5) / 0.006) * 0.0 + Math.exp(-Math.pow(Math.min(f, 1 - f), 2) / 0.0028) * 0.75;
+    // tarak dişi boyayı geniş ve düzensiz açar: iz kenarı saçaklı, boyu boyunca yer yer kesik
+    const dis = Math.exp(-Math.pow(Math.min(f, 1 - f), 2) / 0.0065) * 0.62 * (0.6 + 0.6 * tarakN(x / 3, y / 9));
     const yuk = smooth(555, 330, y); // üstte ve sağda boya daha çok açılır: ışık
     return clamp(dis + 0.55 * smooth(-0.2, 0.75, u) + 0.35 * smooth(0, 0.9, u) * yuk);
   },
@@ -346,9 +358,9 @@ function yaprakBaskisi(g, y) {
   const ca = Math.cos(y.aci), sa = Math.sin(y.aci);
   const P = (u, v) => [y.x + u * ca - v * sa, y.y + u * sa + v * ca];
   const L = y.uzunluk, Wd = L * y.genislik;
-  g.globalAlpha = 0.34; g.lineWidth = Math.max(1.1, L * 0.028); g.lineCap = 'round';
+  g.globalAlpha = 0.4; g.lineWidth = Math.max(1.1, L * 0.028); g.lineCap = 'round';
   g.beginPath(); g.moveTo(...P(0, 0)); g.lineTo(...P(L * 0.95, 0)); g.stroke();
-  g.lineWidth = Math.max(0.7, L * 0.014); g.globalAlpha = 0.26;
+  g.lineWidth = Math.max(0.9, L * 0.016); g.globalAlpha = 0.32;
   for (let t = 0.16; t < 0.86; t += 0.13) {
     for (const s of [-1, 1]) {
       g.beginPath(); g.moveTo(...P(L * t, 0));
@@ -375,7 +387,7 @@ function yaprakBaskisi(g, y) {
   yesiller.forEach((renk, k) => {
     const c = tuvaller[k];
     cek({
-      renk, yog: 1.0, yon: 0.8 + k, cevre: 260, bant: 400,
+      renk, yog: 1.0, yon: 0.8 + k, cevre: 260, bant: 400, yr: 1, // jel gerçek yaprağın damar dokusunu iyi tutar
       ac: (g) => g.drawImage(c, 0, 0),
       kapa: (g) => { cicekMaskesi(g); for (const t of Y.tomurcuklar) g.fill(P2(t)); },
     });

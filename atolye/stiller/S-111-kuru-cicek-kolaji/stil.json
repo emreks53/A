@@ -9,9 +9,9 @@
   "tanim": "Kuru çiçek kolajında (oshibana) boya kullanılmaz: kitap arasında ya da preste düzleştirilip kurutulmuş taç yapraklar, yapraklar ve küçük çiçekler kesilip kâğıda yapıştırılır, renkler ve dokular bitkinin kendisinden gelir. Preslenmiş yaprak incelir ve yarı saydamlaşır; damarları açık çizgiler olarak görünür, aynı türün yaprakları bile tonca birbirinden ayrılır. Sanatçı gökyüzünü mavi ortanca çiçekçikleriyle, binaları kesilmiş gül yapraklarıyla, bulutları beyaz çiçeklerle kurarak bir manzara resmi gibi çalışır. Tebrik kartlarında, çerçeveli hatıra panolarında ve el sanatı sergilerinde sevilen, taze ve narin bir tekniktir.",
   "koken": "Bitki preslemek Rönesans'tan beri herbaryumlarda bilim için yapılıyordu; Viktorya döneminde İngiltere'de preslenmiş çiçeklerle albüm ve kart süslemek salonlarda yaygın bir uğraş oldu. Japonya'da 16. yüzyılda samurayların sabır ve gözlem çalışması olarak başladığı anlatılan oshibana, 20. yüzyılda çiçeklerden manzara ve natürmort kuran ayrı bir sanata dönüştü; Japon, Kore ve İngiliz kulüpleri bugün de sergiler açıyor. Tekniğin özü: çiçeği kurutup rengini koruyacak biçimde düzleştirmek, sonra parçaları kesip üst üste yapıştırarak renk ve ton geçişlerini bitkinin doğal çeşitliliğinden elde etmek.",
   "ayirt_edici": [
-    "Göğün mavi, leylak ve turkuaza çalan dört yapraklı ortanca çiçekçiklerinden ve altlarındaki iri, soluk delphinium yapraklarından kurulması; yukarıda sık, ufka doğru seyrek",
+    "Göğün üst üste binen iri, ince ve soluk mavi delphinium taç yapraklarından kurulması; aralarından açık kâğıt görünür, üstte seyrek serpilmiş mavi, leylak ve turkuaza çalan dört yapraklı ortanca çiçekçikleri, ufka doğru giderek seyrelir",
     "Kubbenin her dilimde tepeye bakan, pul gibi dizilmiş damarlı yeşil yapraklardan oluşması; ışık tarafında sarıya çalan açık, gölge tarafında koyu yapraklar ve kaburga yerine ince kuru saplar",
-    "Kaide ve minarenin damarları görünen fildişi gül yapraklarından kesilmiş parçalar; pencerelerin koyu menekşe (hercai) yaprağı, kasnağın yatay serilmiş çimen yaprakları",
+    "Kaide ve minarenin damarları görünen fildişi gül yapraklarından kesilmiş parçalar; pencerelerin koyu menekşe (hercai) yaprağı, kasnağın balıksırtı gibi sıra sıra dizilmiş küçük, damarlı şimşir yaprakları",
     "Güneşin preslenmiş sarı bir koreopsis, alemlerin sarı solucanotu düğmeleri ve kesilmiş sarı taç yaprak hilaller olması",
     "Önde yarı saydam, ince damarlı beş yapraklı beyaz çiçekler, sarı başçıklı göbekler; eğrelti, tırtıklı gül yaprağı, adaçayı, pembe goncalar, unutmabeni ve cipsofila",
     "Açık el yapımı kâğıt üzerinde parçaların yalnız çok ince, yumuşak gölgesi; zeminin damarlı şeftali-bej yapraklar ve tohumlu kuru otlar"
@@ -19,14 +19,14 @@
   "palet": [
     "#97BBE6",
     "#B7A6E0",
-    "#4F9445",
+    "#5EA544",
     "#A6D166",
     "#F8F1E2",
     "#5A2A4E",
     "#F8C932",
     "#EBCFA0"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, her öğe grubu ayrı bir ekran dışı katmanda çizilip gölgesiyle (katmanın alfası renklendirilip bulanıklaştırılarak, sola-aşağı kaydırılarak) ana tuvale basılır. Taç yapraklar dipten kutupsal bir eğriyle (kosinüs üslü yarıçap, uçta çentik ya da diş, gürültüyle dalgalı kenar) kurulur, dipten uca radyal degradeyle %55–95 saydamlıkta doldurulur ve dipten yelpaze gibi açılan açık/koyu ince damarlar kırpılarak çizilir. Yapraklar orta damarlı, yan damarlı, isteğe göre tırtıklı ayrı bir biçim işleviyle çizilir. Gök renk alanından (degrade ve güneş ışıltısı) örneklenen renklerle titreşimli ızgarada yüzlerce ortanca çiçekçiği dağıtılır; kubbe 16 meridyen dilimine bölünüp her dilim kırpılarak meridyen yönünde tepeye bakan yaprak sıralarıyla doldurulur. Binalar kesilmiş parçalar gibi kırpma yoluyla gül yapraklarıyla doldurulur, kesik kenara ince çizgi çekilir. Yeşil parçalara fBm gürültüsünden açık/koyu benek dokusu 'source-atop' ile basılır; kâğıt piksel döngüsüyle gürültülü krem zemin ve ince lif çizgileriyle üretilir.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, her öğe grubu ayrı bir ekran dışı katmanda çizilip gölgesiyle (katmanın alfası renklendirilip bulanıklaştırılarak, sola-aşağı kaydırılarak) ana tuvale basılır. Taç yapraklar dipten kutupsal bir eğriyle (kosinüs üslü yarıçap, uçta çentik ya da diş, gürültüyle dalgalı kenar) kurulur, dipten uca radyal degradeyle %55–95 saydamlıkta doldurulur ve dipten yelpaze gibi açılan açık/koyu ince damarlar kırpılarak çizilir. Yapraklar orta damarlı, yan damarlı, isteğe göre tırtıklı ayrı bir biçim işleviyle çizilir. Gök renk alanından (degrade ve güneş ışıltısı) örneklenen renklerle titreşimli ızgarada önce yarı saydam, iri delphinium yaprakları (aşağı doğru seyrelerek, aralarda kâğıt kalacak biçimde), sonra daha seyrek bir ızgarada bulut ve güneş çevresinden kaçınan ortanca çiçekçikleri dağıtılır; kasnak sıra sıra, yönü sırayla değişen küçük damarlı yapraklarla balıksırtı düzeninde döşenir; kubbe 16 meridyen dilimine bölünüp her dilim kırpılarak meridyen yönünde tepeye bakan yaprak sıralarıyla doldurulur. Binalar kesilmiş parçalar gibi kırpma yoluyla gül yapraklarıyla doldurulur, kesik kenara ince çizgi çekilir. Yeşil parçalara fBm gürültüsünden açık/koyu benek dokusu 'source-atop' ile basılır; kâğıt piksel döngüsüyle gürültülü krem zemin ve ince lif çizgileriyle üretilir.",
   "etiketler": [
     "kuru çiçek",
     "oshibana",

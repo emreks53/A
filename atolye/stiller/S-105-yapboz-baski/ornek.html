@@ -283,20 +283,29 @@ function alem(a) {
 }
 
 // 7) bitkiler: saplar, ortadan testereyle ikiye bölünmüş iki tonlu yapraklar, tomurcuklar, beş parçalı çiçekler
-for (const s of Y.saplar) parca('#2E9A55', (g) => { g.lineWidth = 6.5; g.stroke(P2(s)); });
+// Saplar dallardaki yapraklardan sonra kesilir: testere izi yaprağın dibine düşer, ince sap kesintisiz tek parça
+// kalır. Öndeki yaprak yelpazesi saplardan sonra gelir.
 {
   const r = SAHNE.rng(9);
   const tonlar = [['#2F9E58', '#4FB865'], ['#1B8752', '#33A05C'], ['#6CC261', '#8ED26C']];
-  for (const y of B.yapraklar) {
+  const DAL_YAPRAK = B.yapraklar.length - 54; // sahne.js: önce dallardaki yapraklar, sonra öndeki 54 yaprak
+  B.yapraklar.forEach((y, i) => {
+    if (i === DAL_YAPRAK) for (const s of Y.saplar) parca('#2E9A55', (g) => { g.lineWidth = 7; g.stroke(P2(s)); });
     const p = P2(SAHNE.yaprakYolu(y));
     const t = tonlar[y.uzunluk > 50 ? (r() < 0.6 ? 1 : 0) : (r() < 0.5 ? 0 : 2)];
     parca(t[0], () => p);
     parca(t[1], (g) => { g.clip(p); g.translate(y.x, y.y); g.rotate(y.aci); g.fillRect(-10, 0, y.uzunluk + 20, y.uzunluk); });
-  }
+  });
 }
 for (const t of B.tomurcuklar) parca('#F27A70', () => SAHNE.tomurcukYolu(t));
 for (const c of B.cicekler) {
-  for (const e of SAHNE.tacYapraklari(c)) parca('#FADDE4', () => SAHNE.elipsYolu(e));
+  // beyaz taç yaprakları: ışığa (sağ üst) bakanlar sıcak beyaz, gölgedekiler soluk leylak-beyaz mürekkep
+  for (const e of SAHNE.tacYapraklari(c)) {
+    const isik = Math.cos(Math.atan2(e.cy - c.y, e.cx - c.x) - (-Math.PI / 4));
+    const t = smooth(-0.9, 0.9, isik);
+    const ton = '#' + [[230, 255], [220, 246], [240, 238]].map(([a, b]) => Math.round(lerp(a, b, t)).toString(16).padStart(2, '0')).join('');
+    parca(ton, () => SAHNE.elipsYolu(e));
+  }
   parca('#F6B7C6', () => P2(SAHNE.daireYolu(c.x, c.y, c.r * 0.34)));
   parca('#FFC43A', () => P2(SAHNE.daireYolu(c.x, c.y, c.r * 0.2)));
 }
