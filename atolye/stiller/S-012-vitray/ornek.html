@@ -422,30 +422,47 @@
     const ri = RR - BAND, ro = RR;
     const aLo = Math.atan2(apexAt(0) - YS, CX - CLx) + Math.PI * 2, aLi = Math.atan2(apexAt(BAND) - YS, CX - CLx) + Math.PI * 2;
     const aRo = Math.atan2(apexAt(0) - YS, CX - CRx), aRi = Math.atan2(apexAt(BAND) - YS, CX - CRx);
-    // parça fonksiyonları: t∈[0,1] → [dış nokta, iç nokta]
-    const parcalarB = [
-      { L: RR * (aLo - Math.PI), f: (t) => { const ao = Math.PI + t * (aLo - Math.PI), ai = Math.PI + t * (aLi - Math.PI); return [[CLx + ro * Math.cos(ao), YS + ro * Math.sin(ao)], [CLx + ri * Math.cos(ai), YS + ri * Math.sin(ai)]]; } },
-      { L: RR * -aRo, f: (t) => { const ao = t * aRo, ai = t * aRi; return [[CRx + ro * Math.cos(ao), YS + ro * Math.sin(ao)], [CRx + ri * Math.cos(ai), YS + ri * Math.sin(ai)]]; } },
-      { L: WBOT - BAND - YS, f: (t) => { const y = YS + t * (WBOT - BAND - YS); return [[WX1, y], [WX1 + BAND, y]]; } },
-      { L: WBOT - BAND - YS, f: (t) => { const y = YS + t * (WBOT - BAND - YS); return [[WX2, y], [WX2 - BAND, y]]; } },
-      { L: CX - WX1 - BAND, f: (t) => { const x = WX1 + BAND + t * (CX - WX1 - BAND); return [[x, WBOT], [x, WBOT - BAND]]; } },
-      { L: CX - WX1 - BAND, f: (t) => { const x = WX2 - BAND - t * (CX - WX1 - BAND); return [[x, WBOT], [x, WBOT - BAND]]; } },
-    ];
-    parcalarB.forEach((pr, pi) => {
-      const n = Math.max(1, Math.round(pr.L / 70));
-      const kes = [];
-      for (let i = 0; i < n; i++) { kes.push([i / n, (i + 0.66) / n, 'uzun', i]); kes.push([(i + 0.66) / n, (i + 1) / n, 'kisa', i]); }
-      for (const [t0, t1, tur, i] of kes) {
-        const m = 6;
+    // Kemer boyunca tek ve sürekli bir dizi: sol köşeden yukarı, tepe, sağ köşeye. Tepede ve alt ortada
+    // altın kilit camı; uzun camlar kırmızı/mavi sırayla, iki yan simetrik (aynı renk yan yana gelmez).
+    const Ls = WBOT - BAND - YS, La = RR * (aLo - Math.PI), Hu = Ls + La;
+    const ust = (u) => {
+      if (u <= Ls) { const y = WBOT - BAND - u; return [[WX1, y], [WX1 + BAND, y]]; }
+      if (u <= Hu) { const t = (u - Ls) / La, ao = Math.PI + t * (aLo - Math.PI), ai = Math.PI + t * (aLi - Math.PI); return [[CLx + ro * Math.cos(ao), YS + ro * Math.sin(ao)], [CLx + ri * Math.cos(ai), YS + ri * Math.sin(ai)]]; }
+      if (u <= Hu + La) { const t = 1 - (u - Hu) / La, ao = t * aRo, ai = t * aRi; return [[CRx + ro * Math.cos(ao), YS + ro * Math.sin(ao)], [CRx + ri * Math.cos(ai), YS + ri * Math.sin(ai)]]; }
+      const y = YS + (u - Hu - La); return [[WX2, y], [WX2 - BAND, y]];
+    };
+    const Hb = CX - WX1 - BAND;
+    const alt = (u) => { const x = WX1 + BAND + u; return [[x, WBOT], [x, WBOT - BAND]]; };
+    // yarı uzunluk H = g/2 + k·Lg + (k−1)·g (ortada altın, köşeye bitişik son cam uzun)
+    function dizi(f, H, kirik) {
+      const k = Math.max(1, Math.round((H + 24 - 12) / 70));
+      const birim = H / (12 + k * 46 + (k - 1) * 24);
+      const g = 24 * birim, Lg = 46 * birim;
+      const kes = [[H - g / 2, H + g / 2, 'kisa', -1]];
+      let u = H - g / 2;
+      for (let j = 0; j < k; j++) {
+        kes.push([u - Lg, u, 'uzun', j], [2 * H - u, 2 * H - u + Lg, 'uzun', j]);
+        u -= Lg;
+        if (j < k - 1) { kes.push([u - g, u, 'kisa', j], [2 * H - u, 2 * H - u + g, 'kisa', j]); u -= g; }
+      }
+      for (const [u0, u1, tur, j] of kes) {
+        const m = 8, us = [];
+        for (let q = 0; q <= m; q++) us.push(u0 + ((u1 - u0) * q) / m);
+        if (kirik && u0 < H && u1 > H) { us.push(H); us.sort((a, b) => a - b); }
         const dis = [], ic = [];
-        for (let k = 0; k <= m; k++) { const [o, q] = pr.f(t0 + ((t1 - t0) * k) / m); dis.push(o); ic.push(q); }
+        for (const uu of us) { const [o, q] = f(uu); dis.push(o); ic.push(q); }
         const poly = dis.concat(ic.reverse());
-        let c = tur === 'kisa' ? altinB : i % 2 ? kobalt : yakut;
+        let c = tur === 'kisa' ? altinB : j % 2 ? yakut : kobalt;
         c = scl(c, 0.9 + rnd() * 0.18);
         koy(cam(c, { rp: 0.35, st: 0.8 }), polyYol(poly), { sisir: false });
-        if (tur === 'kisa') { const cxm = poly.reduce((a, p) => a + p[0], 0) / poly.length, cym = poly.reduce((a, p) => a + p[1], 0) / poly.length; bordurAltinlari.push([cxm, cym]); }
+        if (tur === 'kisa') {
+          const [o, q] = f((u0 + u1) / 2);
+          bordurAltinlari.push([(o[0] + q[0]) / 2, (o[1] + q[1]) / 2]);
+        }
       }
-    });
+    }
+    dizi(ust, Hu, true);
+    dizi(alt, Hb, false);
     for (const x of [WX1, WX2 - BAND]) {
       koy(cam(scl(altinB, 0.95), { rp: 0.3 }), polyYol([[x, WBOT - BAND], [x + BAND, WBOT - BAND], [x + BAND, WBOT], [x, WBOT]]), { sisir: false });
       bordurAltinlari.push([x + BAND / 2, WBOT - BAND / 2]);
