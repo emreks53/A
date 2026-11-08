@@ -171,10 +171,17 @@
       for (const e of SAHNE.tacYapraklari(c)) {
         const p = new Path2D(SAHNE.elipsYolu(e));
         const yon = Math.cos(e.aci) * 0.74 + Math.sin(e.aci) * -0.67;
-        const g = h0.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
-        g.addColorStop(0, 'rgb(244,176,196)'); g.addColorStop(0.4, 'rgb(255,250,242)'); g.addColorStop(1, 'rgb(255,252,246)');
+        // taç yaprağın içinde ışık geçişi: gölge yanı serin mavi-leylak, ışık yanı sıcak krem
+        const lx = 0.74, ly = -0.67;
+        const g = h0.createLinearGradient(e.cx - lx * e.rx, e.cy - ly * e.rx, e.cx + lx * e.rx, e.cy + ly * e.rx);
+        g.addColorStop(0, 'rgb(192,198,242)'); g.addColorStop(0.5, 'rgb(246,244,248)'); g.addColorStop(1, 'rgb(255,246,214)');
         h0.fillStyle = g; h0.fill(p);
-        h0.fillStyle = `rgba(170,160,226,${clamp(-yon * 0.6 + 0.1, 0, 0.7)})`; h0.fill(p);
+        h0.fillStyle = `rgba(160,150,226,${clamp(-yon * 0.6 + 0.05, 0, 0.6)})`; h0.fill(p);
+        const gp = h0.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r * 0.6);
+        gp.addColorStop(0, 'rgba(240,160,190,0.9)'); gp.addColorStop(1, 'rgba(240,160,190,0)');
+        h0.fillStyle = gp; h0.fill(p);
+        // üst üste binen taç yaprakları ayıran serin kenar
+        h0.strokeStyle = 'rgba(140,132,212,0.6)'; h0.lineWidth = Math.max(2, c.r * 0.06); h0.stroke(p);
       }
       h0.fillStyle = 'rgb(246,180,50)'; h0.beginPath(); h0.arc(c.x, c.y, c.r * 0.22, 0, Math.PI * 2); h0.fill();
       h0.fillStyle = 'rgb(220,110,40)'; h0.beginPath(); h0.arc(c.x - c.r * 0.05, c.y + c.r * 0.05, c.r * 0.1, 0, Math.PI * 2); h0.fill();
@@ -325,6 +332,30 @@
     for (const [x, y] of altin) if (BOL[Math.round(y) * W + Math.round(x)] === BI.altin) nokta(x, y, 1.25, noktaRengi(x, y));
   }
 
+  // ------------------------------------------------------------ alemler: çevresindeki gök küçük noktalarla temizlenir, hilal ve küreler
+  // ince noktalarla yeniden kurulur (biçim okunsun)
+  {
+    const ALT = (x, y) => BOL[clamp(Math.round(y), 0, W - 1) * W + clamp(Math.round(x), 0, W - 1)] === BI.altin;
+    const GOK = (x, y) => { const b = BOL[clamp(Math.round(y), 0, W - 1) * W + clamp(Math.round(x), 0, W - 1)]; return b === BI.gok || b === BI.gunes; };
+    const yakin = (x, y, r) => { for (let a = 0; a < 12; a++) { const an = (a / 12) * Math.PI * 2; for (const d of [r * 0.5, r]) if (ALT(x + Math.cos(an) * d, y + Math.sin(an) * d)) return true; } return false; };
+    for (const [x0, y0, x1, y1] of [[526, 172, 594, 312], [278, 68, 322, 150]]) {
+      // önceki iri noktaları sil: astar rengi ve düz yükseklik
+      ctx.fillStyle = '#e2d8c3'; hctx.globalCompositeOperation = 'source-over'; hctx.fillStyle = '#000'; hctx.globalAlpha = 1;
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+        if (ALT(x, y) || (GOK(x, y) && yakin(x, y, 4))) { ctx.fillRect(x - 0.5, y - 0.5, 1, 1); hctx.fillRect(x - 0.5, y - 0.5, 1, 1); }
+      }
+      hctx.globalCompositeOperation = 'lighter'; hctx.fillStyle = '#fff';
+      for (const [x, y] of poisson(1.9, x0, y0, x1, y1)) if (GOK(x, y) && !ALT(x, y) && yakin(x, y, 5)) nokta(x, y, 1.2, noktaRengi(x, y));
+      const cx = (x0 + x1) / 2;
+      for (const [x, y] of poisson(1.35, x0, y0, x1, y1)) {
+        if (!ALT(x, y)) continue;
+        const r = R(), isik = x > cx - 1;
+        const c = isik ? (r < 0.5 ? PALET[1] : r < 0.8 ? PALET[12] : PALET[2]) : (r < 0.5 ? PALET[2] : r < 0.82 ? PALET[1] : PALET[3]);
+        nokta(x, y, 0.9, c);
+      }
+    }
+  }
+
   // ------------------------------------------------------------ boyalı çerçeve: komşu rengin tamamlayıcısıyla noktalanmış
   {
     // önce bezi kapat, sonra çerçeve noktaları
@@ -349,8 +380,16 @@
       nokta(x, y, 2.2 + R() * 0.3, PALET[sec]);
     }
     // resimle çerçeve arasında ince koyu çizgi (noktalarla)
-    for (let t = CERCEVE; t <= W - CERCEVE; t += 3.2) {
-      for (const [x, y] of [[t, CERCEVE - 1], [t, W - CERCEVE + 1], [CERCEVE - 1, t], [W - CERCEVE + 1, t]]) nokta(x, y, 1.5, R() < 0.6 ? PALET[6] : PALET[5]);
+    // elle noktalanmış gibi: aralık, boy ve hiza biraz oynak, yer yer çift nokta ya da küçük boşluk
+    for (let kenar = 0; kenar < 4; kenar++) {
+      let t = CERCEVE - 2 + R() * 2;
+      while (t <= W - CERCEVE + 2) {
+        const sap = (R() - 0.5) * 1.4 + Math.sin(t / 37 + kenar) * 0.5;
+        const q = [[t, CERCEVE - 1 + sap], [t, W - CERCEVE + 1 + sap], [CERCEVE - 1 + sap, t], [W - CERCEVE + 1 + sap, t]][kenar];
+        const r0 = R();
+        nokta(q[0], q[1], 1.25 + R() * 0.55, r0 < 0.5 ? PALET[6] : r0 < 0.8 ? PALET[5] : PALET[11]);
+        t += 2.6 + R() * 1.6 + (R() < 0.04 ? 2.5 : 0);
+      }
     }
   }
 

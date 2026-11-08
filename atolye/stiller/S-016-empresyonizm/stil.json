@@ -10,12 +10,13 @@
   "koken": "1860'ların sonunda Paris'te doğdu; adını Claude Monet'nin 1874 sergisindeki 'İzlenim, Gün Doğumu' tablosundan aldı. Camille Pissarro, Alfred Sisley, Pierre-Auguste Renoir ve Berthe Morisot akımın öncülerindendir; Monet'nin saman yığınları ve Rouen Katedrali dizileri aynı konunun farklı ışıklardaki izlenimlerini işler.",
   "ayirt_edici": [
     "Yan yana konmuş kısa, kırık, karıştırılmamış saf renk lekeleri; renkler gözde karışıyor",
-    "Kubbenin ışığında sarı-yeşil ve turuncu, gölgesinde viridyen, ultramarin ve mor kıvılcımlar",
-    "Renkli gölgeler: taş yapıların gölgesi leylak-mavi, ışıklı yanı krem ve açık sarı",
+    "Kubbenin ışığında sarı-yeşil ve açık zümrüt, gölgesinde viridyen, ultramarin ve mor kıvılcımlar; yer yer sıcak turuncu-sarı ışık lekeleri",
+    "Renkli gölgeler: taş yapıların gölgesi leylak-mavi ve serin gri, ışıklı yanı krem ve açık sarı",
     "Güneşin çevresinde titreşen sıcak ışık ve havadaki parıltı",
-    "Yönü ve boyu değişen canlı fırça izleri; yumuşak, kayıp kenarlar"
+    "Yönü ve boyu değişen canlı fırça izleri: gökte daha iri, çiçek tarlasında küçük ve sık; dallarda saplar boyunca koyu yeşil, kesik lekeler",
+    "Yumuşak, kayıp kenarlar"
   ],
   "palet": ["#6AA8DE", "#289E60", "#AACE4C", "#1C7668", "#F0963E", "#805CB0", "#BEAADE", "#FCEEC6"],
-  "kodla_cizim": "Işık modeli her piksel için bir bölge ve 0–1 arası bir aydınlık değeri verir. Her leke, bölgesinin ışık, orta ya da gölge kümesinden (değerleri birbirine yakın, tonları farklı saf renkler) ağırlıklı rastgele seçilir. Lekeler 2048 piksellik tuvalde birkaç kıllık kısa fırça vuruşlarıdır; yönü bölgeye göre (kubbede meridyen, kasnakta yatay, gökte eğik, yapraklarda eksen) belirlenip gürültüyle saptırılır, rengi biraz kaydırılmış bir noktadan okunduğu için kenarlar kaybolur. Seyreltik bir ön boyanın üstüne üç boyda leke katı, ardından tamamlayıcı kıvılcımlar, yapı ayrıntıları, güneş ve çiçekler gelir; hafif boya kabartısı ve bez dokusu son ışıkta eklenir.",
+  "kodla_cizim": "Işık modeli her piksel için bir bölge ve 0–1 arası bir aydınlık değeri verir. Her leke, bölgesinin ışık, orta ya da gölge kümesinden (değerleri birbirine yakın, tonları farklı saf renkler) ağırlıklı rastgele seçilir. Lekeler 2048 piksellik tuvalde birkaç kıllık kısa fırça vuruşlarıdır; yönü bölgeye göre (kubbede meridyen, kasnakta yatay, gökte eğik, yapraklarda eksen) belirlenip gürültüyle saptırılır, rengi biraz kaydırılmış bir noktadan okunduğu için kenarlar kaybolur. Seyreltik bir ön boyanın üstüne üç boyda leke katı gelir (gökte ince katlar seyrek tutulur), ardından tamamlayıcı kıvılcımlar, yapı ayrıntıları, saplar boyunca ve yan dallardaki yapraklarda koyu lekeler, güneş ve çiçekler; hafif boya kabartısı ve bez dokusu son ışıkta eklenir.",
   "etiketler": ["empresyonizm", "sanat akımı", "ışık", "fırça izi", "renkli gölge", "19. yüzyıl"]
 }

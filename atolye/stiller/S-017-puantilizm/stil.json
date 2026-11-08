@@ -9,13 +9,14 @@
   "tanim": "Puantilizm (noktacılık), resmi küçük, ayrı ve karıştırılmamış renk noktalarıyla kurar; renkler tuvalde değil izleyicinin gözünde karışır. Sınırlı bir saf renk paleti kullanılır, tamamlayıcı renkler yan yana konarak titreşim yaratılır. Renk kuramına dayanan bu yöntem düzenli, sakin ve ışıklı bir yüzey verir.",
   "koken": "Georges Seurat 1880'lerde Michel Eugène Chevreul ve Ogden Rood'un renk kuramlarından yola çıkarak geliştirdi; 'La Grande Jatte Adası'nda Bir Pazar Öğleden Sonrası' (1884–1886) akımın simgesidir. Paul Signac, Henri-Edmond Cross ve Théo van Rysselberghe yöntemi Yeni Empresyonizm adıyla sürdürdü; Seurat bazı tablolarına noktalarla boyanmış çerçeveler ekledi.",
   "ayirt_edici": [
-    "Resmin tamamı küçük, ayrı ve hemen hemen eş boyda saf renk noktalarından oluşuyor",
+    "Resmin tamamı küçük, ayrı ve hemen hemen eş boyda saf renk noktalarından oluşuyor; alemler gibi ince ayrıntılarda noktalar küçülüyor",
     "Yeşil kubbe yeşil, sarı ve mavi noktalarla kurulmuş; ışıkta ve gölgede turuncu ve mor tamamlayıcı noktalar",
     "Kontur boyunca ışınım halesi: kubbe ve minarenin kenarında gök daha açık, yapının kenarı daha koyu",
+    "Beyaz çiçeklerde ışık yanı krem-sarı, gölge yanı mavi-leylak noktalar; taç yapraklar serin bir nokta sırasıyla ayrılıyor",
     "Noktaların arasından görünen astarlı bez",
-    "Komşu rengin tamamlayıcısıyla noktalanmış, ince koyu bir sırayla resimden ayrılan boyalı çerçeve"
+    "Komşu rengin tamamlayıcısıyla noktalanmış, elle atılmış ince koyu bir nokta sırasıyla resimden ayrılan boyalı çerçeve"
   ],
   "palet": ["#FAE240", "#F49628", "#E03A2C", "#7E4AB0", "#303CAC", "#68B6E2", "#22965C", "#96C63A"],
-  "kodla_cizim": "Işık modelli, renkli gölgeli bir hedef tabloya bulanık kopyasından farkı eklenerek kontur halesi (ışınım) verilir; güneş çevresindeki yumuşak geçiş bunun dışında tutulur. Bridson Poisson diski üç ölçekte nokta üretir: seyrek bir alt kat, ana kat ve kontur ile küçük öğelerde daha ince noktalar. Her noktanın hedef rengi, on iki saf renk ve üç açık tondan oluşan paletin en iyi üçlü karışımına ayrıştırılır (doğrusal ışıkta optik karışım; değeri hedeften uzak boyalar ve tek renge yığılma cezalandırılır) ve ağırlıklara göre tek bir renk seçilir; yüzde beş olasılıkla tamamlayıcı renk konur. Çerçeve noktaları iç kenarın ortalama renginin tamamlayıcısından ayrıştırılır. Noktalar hafif bir kabartma ve bez dokusuyla ışıklandırılır.",
+  "kodla_cizim": "Işık modelli, renkli gölgeli bir hedef tabloya (taç yapraklarda ışık geçişi ve serin kenar çizgisi dahil) bulanık kopyasından farkı eklenerek kontur halesi (ışınım) verilir; güneş çevresindeki yumuşak geçiş bunun dışında tutulur. Bridson Poisson diski üç ölçekte nokta üretir: seyrek bir alt kat, ana kat ve kontur ile küçük öğelerde daha ince noktalar. Her noktanın hedef rengi, on iki saf renk ve üç açık tondan oluşan paletin en iyi üçlü karışımına ayrıştırılır (doğrusal ışıkta optik karışım; değeri hedeften uzak boyalar ve tek renge yığılma cezalandırılır) ve ağırlıklara göre tek bir renk seçilir; yüzde beş olasılıkla tamamlayıcı renk konur. Alemlerin çevresi silinip gök ve altın çok küçük noktalarla yeniden kurulur (hilal okunsun diye). Çerçeve noktaları iç kenarın ortalama renginin tamamlayıcısından ayrıştırılır; iç sınır aralığı ve hizası oynak noktalarla elle atılmış gibi çizilir. Noktalar hafif bir kabartma ve bez dokusuyla ışıklandırılır.",
   "etiketler": ["puantilizm", "yeni empresyonizm", "nokta", "optik karışım", "sanat akımı", "19. yüzyıl"]
 }
