@@ -1,0 +1,40 @@
+{
+  "kod": "S-036",
+  "no": 36,
+  "ad": "Kil Hamuru",
+  "ad_en": "Clay Render",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Plastilinden elle biçimlendirilmiş, şişkin ve yumuşak kenarlı parçalardan kurulup stüdyo ışığında çekilmiş bir stop-motion maketi.",
+  "tanim": "Kil Hamuru, sahnedeki her öğeyi ayrı bir plastilin parçası gibi işleyen bir render tarifidir. Biçimler hafifçe şişkin, kenarları geniş ve yuvarlak pahlıdır; yüzey mattır, üzerinde ince parmak izi halkaları, spatula ve iğne izleri, küçük topakçıklar ve hafif el titremesi görülür. Işık büyük bir yumuşak kutudan gelen sıcak anahtar ışık (sağ üst), serin bir dolgu ve gök/yer ortam ışığından oluşur; parçalar birbirine temas gölgesi ve ortam örtmesiyle oturur, kilin gölge tarafında renk koyulaşıp doygunlaşır, ışık tarafında geniş ve sönük bir parlaklık belirir. Palet doygun pasteldir (nane yeşili kubbe, krem taş, tereyağı sarısı altın, pembe-şeftali-lila çiçekler); arka fon da kilden bir dekor olarak kurulur ve sığ alan derinliğiyle bulanık kalır. Çiçekler bastırılmış kil taç yapraklarıdır; tavır el yapımı ve sevimlidir, komik değildir.",
+  "koken": "Plastilin stop-motion geleneği (Aardman, Laika gibi stüdyoların el yapımı kil karakter ve dekorları) ile 2020'lerde yaygınlaşan 'clay render' 3B illüstrasyon akımına (Blender ve Cinema 4D'de mat kil malzemesi, yumuşak stüdyo ışığı, alan derinliği) dayanır. Atölye tarifi şunları sabitler: uzaklık dönüşümünden yuvarlatılmış şişkin yükseklik ve hafif el titremesi; parmak izi, alet izi ve topakçık kabartmaları; sarmalayan anahtar ışık + serin dolgu + yarım küre ortam ışığı ve geniş mat parlaklık; her parçanın altında temas gölgesi; bulanık kil arka fon; doygun pastel palet.",
+  "ayirt_edici": [
+    "Her öğe ayrı, şişkin bir kil parçası: geniş yuvarlak pahlı kenarlar, mat yüzey, hafif yumru ve el titremesi",
+    "Yakından görülen parmak izi halkaları, spatula ve iğne izleri, küçük topakçıklar",
+    "Dilimleri ayrı ayrı şişkin, aralarında oluk bulunan nane yeşili kubbe; kemerli pencereleri bastırılmış iki kat kasnak",
+    "Bastırılmış kil taç yapraklı pembe, şeftali, lila ve krem çiçekler; yapraklarda alet olukları, delik delik sarı göbekler",
+    "Yumuşak stüdyo ışığı: parçalar arasında temas gölgeleri, sola düşen yumuşak gölgeler, gölge tarafında doygunlaşan renk",
+    "Kil bulutlu, güneşli ve tepeli dekor arka fonun alan derinliğiyle bulanık kalması"
+  ],
+  "palet": [
+    "#5BBE76",
+    "#4FAF6B",
+    "#F6E8D2",
+    "#F4C24E",
+    "#8FCDEB",
+    "#F3D7B4",
+    "#F7A9BF",
+    "#86C97C"
+  ],
+  "kodla_cizim": "Tek canvas, 2× iç çözünürlük. Her öğe bir 'kil katmanı'dır: maske SAHNE yollarından çizilip düşük frekanslı gürültüyle kaydırılarak el titremesi alır; Felzenszwalb uzaklık dönüşümünden çeyrek daire profilli şişkin yükseklik (minare parçaları, kasnak ve kubbe için satır satır dönel yükseklik) hesaplanır ve kutu bulanıklığıyla basamakları yumuşatılır. Üstüne fbm topaklılık, eliptik parmak izi halkaları, uçları sönen dudaklı alet olukları ve küçük çukurlar eklenir; kubbe dilimleri boylama göre şişirilir, pencere ve korkuluk yuvaları uzaklık dönüşümlü oyuklarla basılır. Yükseklikten normal alınıp doğrusal renk uzayında sarmalayan anahtar ışık, serin dolgu, gök/yer yarım küre ortamı, iki loblu mat parlaklık ve gölge tarafında doygunluk artışıyla gölgelenir. Her katmandan önce küçük ekran dışı tuvalde bulanıklaştırılmış, sola-aşağı kaydırılmış temas gölgesi basılır. Arka fon (kil gök, bulutlar, güneş, tepeler) aynı yöntemle ayrı tuvalde kurulup bulanıklaştırılır; en sonda hafif vinyet.",
+  "etiketler": [
+    "kil",
+    "plastilin",
+    "stop-motion",
+    "3B",
+    "pastel",
+    "alan derinliği",
+    "el yapımı",
+    "render"
+  ]
+}

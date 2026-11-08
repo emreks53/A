@@ -21,8 +21,7 @@
 setTimeout(function () {
   'use strict';
   const S = SAHNE;
-  const T0 = performance.now();
-  const zaman = (ad) => console.warn(ad + ' ' + Math.round(performance.now() - T0));
+  const zaman = () => {};
   const K = 2;
   const N = 1024 * K;
   const tuval = document.getElementById('tuval');
@@ -545,7 +544,7 @@ setTimeout(function () {
   const TAS = { renk: '#E4D3B6', ks: 0.06, g: 20, rim: 1.4 };
   const TASK = { renk: '#D3C0A0', ks: 0.05, g: 20, rim: 1.4 };
   const ALTIN = { renk: '#D6A643', ks: 1.1, g: 70, rim: 2.2, yansima: 0.5 };
-  const KUBBE = { renk: '#2A8A49', ks: 0.35, g: 50, rim: 2.2, yansima: 0.1, amb: 0.62 };
+  const KUBBE = { renk: '#2A8A49', ks: 0.55, g: 34, rim: 2.4, yansima: 0.1, amb: 0.5 };
   const KASNAK = { renk: '#267C43', ks: 0.25, g: 36, rim: 2, yansima: 0.06, amb: 0.75 };
   const parcalar = S.minareParcalari();
   const minPen = S.minarePencereleri;
@@ -712,19 +711,19 @@ setTimeout(function () {
     px.globalCompositeOperation = 'source-atop';
     const hg = px.createLinearGradient(0, 80 * K, 0, 800 * K);
     hg.addColorStop(0, 'rgba(120,150,156,0.05)');
-    hg.addColorStop(1, 'rgba(176,160,136,0.18)');
+    hg.addColorStop(1, 'rgba(150,150,140,0.1)');
     px.fillStyle = hg;
     px.fillRect(0, 0, N, N);
     ana.drawImage(pc, 0, 0);
   }
   // yapının dibinde yer pusu
   {
-    const pg = ana.createLinearGradient(0, 720 * K, 0, 840 * K);
-    pg.addColorStop(0, 'rgba(232,202,160,0)');
-    pg.addColorStop(0.6, 'rgba(236,206,164,0.42)');
-    pg.addColorStop(1, 'rgba(230,198,156,0.15)');
+    const pg = ana.createLinearGradient(0, 750 * K, 0, 850 * K);
+    pg.addColorStop(0, 'rgba(214,176,132,0)');
+    pg.addColorStop(0.55, 'rgba(220,182,136,0.3)');
+    pg.addColorStop(1, 'rgba(210,172,128,0.08)');
     ana.fillStyle = pg;
-    ana.fillRect(0, 720 * K, N, 120 * K);
+    ana.fillRect(0, 750 * K, N, 100 * K);
   }
 
   // ================================================================== 4. bitkiler: arkadan ışık alan yarı saydam taç yapraklar

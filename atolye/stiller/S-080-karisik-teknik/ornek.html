@@ -420,20 +420,51 @@
   // ------------------------------------------------------------ 7) gök öğeleri: güneş halkası, bulutlar (kuru fırça beyaz)
   // güneş: varak üstünde mercan halka ve kalemle ışınlar
   ctx.save(); ctx.strokeStyle = 'rgba(232,102,78,0.8)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(880, 140, 80, 0, 7); ctx.stroke(); ctx.restore();
+  // Bulut: neredeyse kuru fırçayla beyaz akrilik. Loblar içinde teğet, kıvrık kısa darbelerle ovarak sürülür;
+  // boya yalnız gesso dokusunun tepelerine tutunur: çok geçilen gövde dolgun, kenarlar kırık ve çizik.
+  const gesV = xGes.getImageData(0, 0, W, H).data;
+  const nDis = gurultu(91), nDis2 = gurultu(92);
   function bulut(cx, cy, s, tohum) {
     const [c, x] = katman();
     const rr = S.rng(tohum);
-    // kabarık tepeler: yay biçimli kuru fırça darbeleri, alt kısım düz ve mavimsi
-    const tepeler = [[-62, 4, 30], [-24, -12, 36], [20, -16, 34], [58, -2, 28]];
-    for (const [ox, oy, r0] of tepeler) {
-      for (let k = 0; k < 7; k++) {
-        const rad = r0 * s * (0.45 + k * 0.09), a0 = Math.PI * (1.05 + rr() * 0.1), a1 = Math.PI * (1.95 - rr() * 0.1);
-        const pts = [];
-        for (let t = 0; t <= 12; t++) { const a = a0 + (a1 - a0) * (t / 12); pts.push([cx + ox * s + Math.cos(a) * rad, cy + oy * s + 6 * s + Math.sin(a) * rad * 0.8]); }
-        firca(x, pts, 9 * s, rr() < 0.8 ? '#FFFFFF' : '#EEF4F8', 0.8, rr);
+    const lob = [[-62, 3, 27], [-28, -11, 35], [14, -18, 34], [52, -6, 28], [80, 5, 17], [-88, 8, 15]];
+    // gölge: her lobun alt yarısında kısa, yatay gri-mavi darbeler
+    for (const [ox, oy, r0] of lob) {
+      const R = r0 * s, lx = cx + ox * s, ly = cy + oy * s + 4 * s;
+      for (let k = 0; k < 4; k++) {
+        const dy = R * (0.1 + 0.55 * rr()), yarim = R * (0.75 + 0.35 * rr()) * Math.sqrt(Math.max(0.15, 1 - (dy / R) * (dy / R)));
+        const pts = []; for (let t = 0; t <= 10; t++) pts.push([lx - yarim + 2 * yarim * t / 10, ly + dy + Math.sin(Math.PI * t / 10) * R * 0.09]);
+        firca(x, pts, (3 + rr() * 4) * s, k % 2 ? '#B6C8D8' : '#94ABC2', 0.52, rr);
       }
     }
-    for (let k = 0; k < 6; k++) firca(x, dogru(cx - 86 * s, cy + (4 + k * 3) * s, cx + 84 * s, cy + (4 + k * 3) * s, 8), 6 * s, k > 3 ? '#C9DAE6' : '#F6FAFC', 0.75, rr);
+    // gövde: loblarda ovarak sürülmüş beyaz; ortaya doğru daha çok geçiş
+    for (const [ox, oy, r0] of lob) {
+      const n = Math.round(14 + r0 * 0.8);
+      for (let k = 0; k < n; k++) {
+        const rho = r0 * s * (0.12 + 0.86 * Math.pow(rr(), 0.75));
+        const th = Math.PI * (0.88 + rr() * 1.24);
+        const span = 0.45 + rr() * 0.8, yon = rr() < 0.5 ? 1 : -1;
+        const pts = [];
+        for (let t = 0; t <= 10; t++) { const aa = th + yon * span * (t / 10 - 0.5); pts.push([cx + ox * s + Math.cos(aa) * rho, cy + oy * s + Math.sin(aa) * rho * 0.8]); }
+        firca(x, pts, (6 + rr() * 6) * s, rr() < 0.8 ? '#FFFFFF' : '#F6F2EA', 0.9, rr);
+      }
+    }
+    // taban: ortada iki üç kısa yatay beyaz darbe
+    for (let k = 0; k < 3; k++) { const y = cy + (rr() * 6 - 1) * s, xm = cx + (rr() - 0.5) * 30 * s, yl = (34 + rr() * 22) * s; firca(x, dogru(xm - yl, y, xm + yl, y + (rr() - 0.5) * 2, 8), (5 + rr() * 3) * s, '#FFFFFF', 0.7, rr); }
+    // kuru fırça süzgeci: gesso tepeleri + ince yatay lif çizikleri
+    const x0 = Math.max(0, Math.floor((cx - 125 * s) * K)), x1 = Math.min(W, Math.ceil((cx + 125 * s) * K));
+    const y0 = Math.max(0, Math.floor((cy - 75 * s) * K)), y1 = Math.min(H, Math.ceil((cy + 34 * s) * K));
+    const im = x.getImageData(x0, y0, x1 - x0, y1 - y0), d = im.data, ww = x1 - x0;
+    for (let j = 0; j < y1 - y0; j++) for (let i = 0; i < ww; i++) {
+      const o = (j * ww + i) * 4, al = d[o + 3] / 255;
+      if (al < 0.01) continue;
+      const X = x0 + i, Y = y0 + j, px = X / K, py = Y / K;
+      const gN = clamp((gesV[(Y * W + X) * 4] - 96) / 64, 0, 1);
+      const dis = 0.45 * gN + 0.35 * nDis(px * 0.9, py * 0.22) + 0.2 * nDis2(px * 2.2, py * 1.1);
+      const T = 0.78 - 0.62 * al;
+      d[o + 3] = 255 * sstep(T - 0.07, T + 0.07, dis) * Math.min(1, al * 1.5);
+    }
+    x.putImageData(im, x0, y0);
     bas(c);
   }
   bulut(160, 258, 1.0, 71); bulut(470, 150, 0.8, 72); bulut(750, 352, 0.75, 73); bulut(100, 474, 0.55, 74); bulut(944, 470, 0.55, 75);
@@ -538,10 +569,10 @@
     bit.yapraklar.forEach((y, i) => { if (i % 2 === 0) murYol(S.yaprakYolu(y), 1, 800 + i); const [a, b] = S.yaprakDamari(y); murDogru(a[0], a[1], b[0], b[1], 0.7, 0, 900 + i); });
     bit.cicekler.forEach((cc, ci) => { for (const e of S.tacYapraklari(cc)) { const ex = { ...e, cx: e.cx + 2, cy: e.cy - 1.5 }; murYol(S.elipsYolu(ex), cc.r > 40 ? 1.4 : 1, 1000 + ci); } murYol(S.daireYolu(cc.x, cc.y, cc.r * 0.22), 1, 1100 + ci); });
     for (const t of bit.tomurcuklar) murYol(S.tomurcukYolu(t), 0.9, 1200);
-    // bulut kıvrımları
+    // bulut tepelerinde gevşek, kırık ince mürekkep kıvrımı
     for (const [bx, by, s] of [[160, 258, 1], [470, 150, 0.8], [750, 352, 0.75]]) {
       const p = new Path2D();
-      murekkep(ornekle(`M${bx - 80 * s},${by + 10 * s} Q${bx - 60 * s},${by - 30 * s} ${bx - 20 * s},${by - 14 * s} Q${bx},${by - 44 * s} ${bx + 36 * s},${by - 18 * s} Q${bx + 80 * s},${by - 26 * s} ${bx + 86 * s},${by + 8 * s}`, 2.5), 1.1, 'rgba(40,50,70,0.7)', 1300 + bx);
+      murekkep(ornekle(`M${bx - 52 * s},${by - 22 * s} Q${bx - 30 * s},${by - 48 * s} ${bx - 4 * s},${by - 34 * s} Q${bx + 18 * s},${by - 58 * s} ${bx + 46 * s},${by - 34 * s}`, 2.5), 0.8, 'rgba(50,58,80,0.5)', 1300 + bx);
     }
   }
 

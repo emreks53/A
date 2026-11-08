@@ -6,17 +6,35 @@
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
   "ozet": "Elle boyanmış ve renkli kâğıtlardan yırtılıp yapıştırılmış biçimler; yırtık kenarda kâğıdın beyaz, lifli özü.",
-  "tanim": "Yırtık kâğıt kolajında biçimler makasla kesilmez, elle yırtılır: kâğıt yırtılınca yüzeyin altındaki beyaz öz ince, lifli bir kenar olarak görünür ve her parçanın çevresine düzensiz bir ışık çizgisi çeker. Sanatçı önceden süngerle, fırçayla ya da tarakla boyadığı kâğıtları, el yapımı lifli kâğıtları ve saydam ipek kâğıtları üst üste yapıştırır; renkler ve dokular kâğıttan gelir. Parçalar düz durur, aralarında yalnız çok ince bir gölge vardır. Çocuk kitabı resimlerinde, afişlerde ve atölye çalışmalarında sevilen sıcak, el yapımı bir tekniktir.",
+  "tanim": "Yırtık kâğıt kolajında biçimler makasla kesilmez, elle yırtılır: kâğıt yırtılınca yüzeyin altındaki beyaz öz ince, lifli bir kenar olarak görünür ve her parçanın çevresine düzensiz bir ışık çizgisi çeker. Sanatçı önceden süngerle, fırçayla ya da tarakla boyadığı kâğıtları, el yapımı lifli kâğıtları, dergi sayfalarını, kraft ve saydam ipek kâğıtları üst üste yapıştırır; renkler ve dokular kâğıttan gelir. Parçalar düz durur, aralarında yalnız çok ince bir gölge vardır. Çocuk kitabı resimlerinde, afişlerde ve atölye çalışmalarında sevilen sıcak, el yapımı bir tekniktir.",
   "koken": "Kâğıt kolajı 1912'de Picasso ve Braque'ın papier collé denemeleriyle sanata girdi; Dada sanatçısı Jean Arp yırtık kâğıtları rastlantıyla yerleştiren kolajlar yaptı, Matisse geç döneminde boyalı kâğıt kesmelerine yöneldi. Yırtık ve elle boyanmış kâğıt kolajını en tanınır biçimine Eric Carle getirdi: sünger, fırça ve tarakla dokulandırdığı ipek kâğıtlardan resimli kitaplar yaptı. Romare Bearden ve Ezra Jack Keats de kolajı resimlemede kullandı.",
   "ayirt_edici": [
     "Her parçanın çevresinde genişliği değişen beyaz, lifli yırtık kenar ve dışa taşan ince kâğıt tüyleri",
     "Gökyüzünün yatay yırtılmış koyudan açığa mavi kâğıt şeritleriyle, kubbenin sekiz yeşil kâğıt diliminden kurulması; dilimler arasındaki beyaz yırtık kenarların kaburga gibi okunması",
-    "Kâğıt dokusu çeşitliliği: fırça izli, süngerli ve lifli el yapımı kâğıtlar, saydam ipek kâğıttan gölge ve hale parçaları",
+    "Kâğıt dokusu çeşitliliği: suluboya lekeli, fırça izli, süngerli ve lifli el yapımı kâğıtlar; uzun lifli dut kâğıdı, buruşturulup düzeltilmiş kâğıt, dergiden kesilmiş yarım ton noktalı baskı, benekli kraft; saydam ipek kâğıttan gölge ve hale parçaları",
     "Elle boyanmış zikzak şerit, süngerle pembe vurulmuş taç yaprak dipleri, turuncu noktalı çiçek göbekleri",
     "Parçalar arasında yalnız çok hafif gölge, elle yerleştirmenin küçük kaymaları ve tutkal kırışıkları",
-    "Kum ve toprak renkli iki yırtık zemin şeridi üzerinde lifli yeşil yaprak kâğıtları ve beyaz çiçekler"
+    "Kraft ve toprak renkli iki yırtık zemin şeridi üzerinde farklı dokulu yeşil yaprak kâğıtları ve beyaz çiçekler"
   ],
-  "palet": ["#2C5BA6", "#6FA3D8", "#2E7E3E", "#62BA5E", "#F3ECDC", "#FFD447", "#D9B77C", "#E58AA4"],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Her biçimin dış çizgisi gizli bir SVG yolunda getPointAtLength ile 1–2 birim aralıkla örneklenir; elle yerleştirme için çok hafif döndürülüp kaydırılır. Örnek noktalar dış normal boyunca yay uzunluğuna bağlı çok oktavlı gürültüyle itilerek yırtık dış kenar, ikinci bir gürültüyle genişliği 0–5 birim arasında değişen bir payla içeri çekilerek renkli yüzün kenarı elde edilir. Dış kenar kâğıt özü rengiyle ve sola-aşağı düşen hafif gölgeyle doldurulur, kenardan dışa ince eğri lif çizgileri çekilir; renkli yüz üstüne çizilir. Döşenebilir gri dokular (yatay fırça izi, sünger lekeleri, lifli el yapımı kâğıt, taraklı çizgi) her parçaya rastgele açı ve kaymayla 'overlay' kipinde basılır, büyük parçalara açık-koyu ton lekeleri ve bulanık açık-koyu çizgi çiftlerinden tutkal kırışıkları eklenir. Saydam ipek kâğıtlar 'multiply' kipiyle çizilir.",
-  "etiketler": ["kolaj", "kâğıt", "yırtık", "el yapımı", "doku", "ipek kâğıt", "sıcak", "çocuk kitabı"]
+  "palet": [
+    "#2C5BA6",
+    "#6FA3D8",
+    "#2C7E40",
+    "#62BA5E",
+    "#F3ECDC",
+    "#FFD447",
+    "#D3AE74",
+    "#E58AA4"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Her biçimin dış çizgisi gizli bir SVG yolunda getPointAtLength ile 1–2 birim aralıkla örneklenir; elle yerleştirme için çok hafif döndürülüp kaydırılır. Örnek noktalar dış normal boyunca yay uzunluğuna bağlı çok oktavlı gürültüyle itilerek yırtık dış kenar, ikinci bir gürültüyle genişliği 0–5 birim arasında değişen bir payla içeri çekilerek renkli yüzün kenarı elde edilir. Dış kenar kâğıt özü rengiyle ve sola-aşağı düşen hafif gölgeyle doldurulur, kenardan dışa ince eğri lif çizgileri çekilir; renkli yüz üstüne çizilir. Döşenebilir gri dokular (yatay fırça izi, sünger lekeleri, lifli el yapımı kâğıt, taraklı çizgi, kurumuş kenarlı suluboya lekesi, 45° yarım ton baskı noktaları, kısa lifli ve benekli kraft, uzun kıvrık lifli dut kâğıdı, periyodik Voronoi yüzeyli buruşuk kâğıt) her parçaya rastgele açı ve kaymayla 'overlay' kipinde basılır, büyük parçalara açık-koyu ton lekeleri ve bulanık açık-koyu çizgi çiftlerinden tutkal kırışıkları eklenir. Saydam ipek kâğıtlar 'multiply' kipiyle çizilir; en sonda bütün yüzeye ince kâğıt dişi dokusu ve çok hafif kenar koyulaşması eklenir.",
+  "etiketler": [
+    "kolaj",
+    "kâğıt",
+    "yırtık",
+    "el yapımı",
+    "doku",
+    "ipek kâğıt",
+    "sıcak",
+    "çocuk kitabı"
+  ]
 }

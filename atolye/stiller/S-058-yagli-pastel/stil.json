@@ -1,0 +1,39 @@
+{
+  "kod": "S-058",
+  "no": 58,
+  "ad": "Yağlı Pastel",
+  "ad_en": "Oil Pastel",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Kalın, mumlu, örtücü ve doygun vuruşlar; üstten sürtülen kırık renkler, parmakla ezilmiş geçişler ve kalın kattan kazınarak açılan alt renk çizgileri.",
+  "tanim": "Yağlı pastel, pigmentin mum ve mineral yağla bağlandığı yumuşak, tereyağı kıvamında çubuklardır; tozumaz, kalın ve örtücü katlar verir. Renkler kâğıt üzerinde üst üste sürülerek, hafifçe sürtülerek (scumble) ya da parmakla ezilerek karıştırılır; kalın katlar sivri bir uçla kazınınca (sgraffito) alttaki renk çizgi olarak açığa çıkar. Pürüzlü kâğıtta mum dişin tepelerine tutunur, çukurlarda zemin rengi kalır. Canlı, doygun ve dışavurumcu bir görüntü verir; resim eğitiminde ve çağdaş resimde yaygındır.",
+  "koken": "Profesyonel yağlı pastel 1949'da Sennelier tarafından Pablo Picasso'nun isteğiyle üretildi; öncesinde Japonya'da Sakura'nın 1925'te çıkardığı Cray-Pas okul pastelleri vardı. Picasso, sonra Henry Moore ve birçok 20. yüzyıl ressamı tekniği kullandı; kazıma ve katmanlama oyunları onu yağlıboyaya yakın, ama çizim kadar dolaysız bir araç yaptı.",
+  "ayirt_edici": [
+    "Her yerde tıknaz, kalın, boyuna çizgili mum vuruşları; uçlarında çubuğun bıraktığı kırık bitişler",
+    "Doygun, parlak renkler: kobalt ve gök mavisi, zümrüt ve sarı-yeşil kubbe, limon sarısı güneş, okra zemin, beyaz-leylak çiçekler",
+    "Kazıma (sgraffito): kubbe kaburgaları, güneş halkaları, yaprak damarları ve taç yaprağı çizgileri kalın kattan kazınmış, alttaki altın sarısı ve pembe kat görünüyor",
+    "Gökte ve kubbede parmakla ezilmiş yumuşak geçiş şeritleri; hemen yanlarında ezilmemiş keskin vuruşlar",
+    "Pürüzlü kâğıdın dişi mumu yakalıyor: vuruşların içinde koyu benekler, kabartmalı yüzey ve hafif mum parlaklığı",
+    "Üstten hafifçe sürtülen açık renklerin (beyaz, açık mavi, sarı-yeşil) alttakini kırık kırık göstermesi"
+  ],
+  "palet": [
+    "#2846BE",
+    "#5CB8E6",
+    "#138C4E",
+    "#B8E454",
+    "#FFE060",
+    "#EEB43C",
+    "#9C9AE8",
+    "#F0388A"
+  ],
+  "kodla_cizim": "2048 piksellik pürüzlü karton dişi bir yükseklik haritasıdır; renk ve mum kalınlığı ayrı dizilerde tutulur. Vuruşlar dokuz 'kıl' şeridinden oluşan, uçları incelen tıknaz şeritlerdir; renkler ışık modelinden türetilen tonla renk rampalarından (iki durak arasında rastgele karışım) seçilir. Katmanlar örtücü olarak bırakılır: pigment diş yüksekliği ve önceden birikmiş mum kalınlığına bağlı eşikle tutunur, mum kalınlığı artar. Sıra: parlak alt kat (kopyası saklanır), ana kat, düşük basınçlı sürtme katı, parmakla ezme (ince bir şerit içinde görüntünün kayan kopyalarıyla bulaştırma, orada mum düzleşir), net ayrıntılar (pencereler, korkuluk, korniş, zikzak), kazıma (kazınan çizgilerde üst kat alt katın kopyasıyla değiştirilir, mum oluk açar ve kenarlarda sırt yapar). En sonda mum kalınlığı ve kâğıt dişinden normal hesaplanıp yaygın ışık ve yumuşak bir parlama (speküler) eklenir.",
+  "etiketler": [
+    "yağlı pastel",
+    "kuru teknik",
+    "kazıma",
+    "sgraffito",
+    "doygun renk",
+    "doku",
+    "dışavurumcu"
+  ]
+}

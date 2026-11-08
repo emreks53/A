@@ -1,0 +1,40 @@
+{
+  "kod": "S-039",
+  "no": 39,
+  "ad": "Masal Kitabı",
+  "ad_en": "Storybook Render",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Guaj tanesi ve kuru fırça kenarlı sıcak dolgular, her rengin koyusuyla çizilmiş renkli kalem konturlar: çağdaş bir resimli çocuk kitabı sayfası.",
+  "tanim": "Masal Kitabı, çağdaş resimli kitap illüstrasyonunun dijital görünümünü veren render tarifidir. Her biçim opak, sıcak bir guaj dolgusudur: içinde yumuşak bir ışık geçişi ve biçimi izleyen görünür fırça vuruşları bulunur; boya kâğıdın dişine göre hafif tanelenir, kenarda pigment birikir ve kenar kuru fırçayla yer yer kopar. Her dolgu, kendi renginin koyu tonunda, iki titrek geçişle çizilmiş ve kâğıt dişinde kırılan bir renkli kalem/pastel boya konturuyla çevrilir. Biçimler yumuşakça yuvarlatılır ama oranlar korunur; palet sıcak ve samimidir, ışık sağ üstten yumuşak gelir. Ön plan bol ve süslü çiçeklerle (gül, papatya, bahar çiçekleri, unutmabeni kümeleri) doludur; bütün sayfa krem bir kâğıt dokusu taşır.",
+  "koken": "Çağdaş resimli kitap illüstrasyonuna ve bunun Procreate, Photoshop gibi programlarda guaj, kuru fırça ve renkli kalem fırçalarıyla yapılan dijital 'storybook' tarzına dayanır; geleneksel guaj ve renkli kalem karışık tekniğinin dijital karşılığıdır. Atölye tarifi şunları sabitler: degrade + maskeye kırpılmış fırça vuruşlu guaj dolgu, kâğıt dişinde kopan kuru fırça kenarı ve kenarda pigment birikmesi, dolgunun koyu tonunda iki geçişli titrek kalem kontur, sıcak palet, yuvarlatılmış biçimler, bol çiçek, kâğıt dişi ve lif dokusu.",
+  "ayirt_edici": [
+    "Guaj tanesi olan, içinde fırça vuruşları görünen ve kenarı kuru fırçayla kâğıt dişinde kopan sıcak dolgular",
+    "Her dolgunun koyu tonunda, titrek, kâğıt dişinde kırılan renkli kalem konturları (yeşil kubbeye koyu yeşil, krem taşa kahve, güle koyu pembe)",
+    "Meridyen boyunca guaj vuruşlu kubbe ve koyu yeşil kalemle çizilmiş kaburgalar",
+    "Bol süslü çiçekler: sarmal taç yapraklı güller, papatya, beş yapraklı pembe, şeftali ve lila bahar çiçekleri, unutmabeni kümeleri",
+    "Düz tabanlı yuvarlak bulutlar, sıcak sarı güneş, leylak ve adaçayı yeşili tepeler, ot tutamlı toprak",
+    "Krem kâğıt dişi ve lif dokusu, sağ üstten yumuşak sıcak ışık"
+  ],
+  "palet": [
+    "#9CC7DD",
+    "#F4E6CB",
+    "#3C9A57",
+    "#1A5230",
+    "#A47A52",
+    "#F39A9E",
+    "#B98BD6",
+    "#EED3A6"
+  ],
+  "kodla_cizim": "Tek canvas, 2× iç çözünürlük. Önce 2048 px'lik bir kâğıt dişi dokusu (bilinear büyütülmüş kaba gürültü + piksel gürültüsü) üretilir. Her biçim bir guaj katmanıdır: SAHNE yollarından maske; ayrı tuvalde degrade ve maskeye kırpılmış yarı saydam fırça vuruşlarıyla boya (kubbede vuruşlar SAHNE kubbe profilinden hesaplanan meridyen yönünde); maskenin bulanık hâli ile kâğıt dişi birleştirilerek kuru fırça kenarı ve kenarda pigment birikmesi, ikinci bir diş örneğiyle guaj tanesi piksel düzeyinde işlenir. Kontur, dolgunun koyu tonunda üç kaydırılmış geçişle çizilir ve alfa değeri kâğıt dişine göre eşiklenerek renkli kalem dokusu kazanır; bulutlarda iç yaylar 'destination-out' ile silinip yalnız dış çizgi kalır. Çiçekler türlerine göre ayrı kurulur (yedi loblu gül + sarmal kalem, on dört yapraklı papatya, çentikli beş yapraklı bahar çiçeği, unutmabeni kümeleri). En sonda kâğıt dişi ve ince lif dokusu bütün resme çarpılır, sağ üstten sıcak 'soft-light' ışık ve kenarlarda hafif kararma eklenir.",
+  "etiketler": [
+    "resimli kitap",
+    "guaj",
+    "renkli kalem",
+    "kuru fırça",
+    "kâğıt dokusu",
+    "sıcak palet",
+    "çiçekler",
+    "illüstrasyon"
+  ]
+}

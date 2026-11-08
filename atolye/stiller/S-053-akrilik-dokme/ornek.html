@@ -63,6 +63,11 @@
   {
     const v = harita.veri;
     for (let i = 0; i < N; i++) bol0[i] = IX[S.bolgeAdi(v[i * 4], v[i * 4 + 1], v[i * 4 + 2])];
+    // güneş diskinin kenarındaki yumuşatma pikselleri başka bölge sanılmasın (halkada koyu benek bırakır)
+    for (let y = 0; y < 280; y++) for (let x = 740; x < W; x++) {
+      const i = y * W + x;
+      if (Math.hypot(x - 880, y - 140) < 130 && bol0[i] !== IX.gok) bol0[i] = IX.gunes;
+    }
   }
   // akışkan sınır: bölge, düşük frekanslı gürültüyle kaydırılmış noktadan okunur (yapıda az, gök/zeminde çok)
   const bol = new Uint8Array(N);
@@ -173,21 +178,22 @@
   // GÖK: yukarıdan aşağı lacivert → kobalt → gök mavisi → açık mavi/beyaz; ince beyaz ve gümüş damarlar
   const tGok = tablo(11, -260, 1100, (t, r) => {
     if (r() < 0.36) return secAgirlik(r, [{ p: 3, c: C.beyaz, w: [1.2, 4], h: 0.7 }, { p: 1.2, c: C.gumus, w: [1, 2.5], h: 0.4 }, { p: 1.4, c: C.lacivert, w: [1, 3], h: 0.2 }, { p: 1, c: C.turkuaz, w: [1, 3], h: 0.5 }]);
-    if (t < 0.3) return secAgirlik(r, [{ p: 3, c: C.lacivert, w: [14, 40], h: 0.1 }, { p: 2, c: C.kobalt, w: [10, 30] }, { p: 0.6, c: C.turkuaz, w: [4, 10], hc: 0.4, ic: C.lacivert }]);
-    if (t < 0.55) return secAgirlik(r, [{ p: 2, c: C.kobalt, w: [10, 28] }, { p: 3, c: C.gokmavi, w: [12, 36] }, { p: 1, c: C.turkuaz, w: [5, 14], hc: 0.6, ic: C.lacivert }, { p: 0.7, c: C.lacivert, w: [4, 10] }]);
-    return secAgirlik(r, [{ p: 2.2, c: C.gokmavi, w: [8, 24] }, { p: 2.5, c: C.acikmavi, w: [10, 30], hc: 0.5, ic: C.kobalt }, { p: 1, c: C.turkuaz, w: [5, 14], hc: 0.5, ic: C.lacivert }, { p: 1.4, c: C.beyaz, w: [6, 18], hc: 1.0, ic: C.kobalt, h: 0.7 }]);
+    if (t < 0.3) return secAgirlik(r, [{ p: 3, c: C.lacivert, w: [14, 40], h: 0.1 }, { p: 2, c: C.kobalt, w: [10, 30] }, { p: 0.6, c: C.turkuaz, w: [4, 10], hc: 0.3, ic: C.lacivert }]);
+    if (t < 0.55) return secAgirlik(r, [{ p: 2, c: C.kobalt, w: [10, 28] }, { p: 3, c: C.gokmavi, w: [12, 36] }, { p: 1, c: C.turkuaz, w: [5, 14], hc: 0.4, ic: C.kobalt }, { p: 0.7, c: C.lacivert, w: [4, 10] }]);
+    return secAgirlik(r, [{ p: 2.2, c: C.gokmavi, w: [8, 24] }, { p: 2.5, c: C.acikmavi, w: [10, 30], hc: 0.22, ic: C.gokmavi }, { p: 1, c: C.turkuaz, w: [5, 14], hc: 0.3, ic: C.kobalt }, { p: 1.4, c: C.beyaz, w: [6, 18], hc: 0.8, ic: C.gokmavi, h: 0.7 }]);
   });
   // güneş çevresi: beyaz-krem halka dökmesi (puddle)
   const tGunes = tablo(12, 0, 220, (t, r) => {
     if (t < 0.2) return { c: C.beyaz, w: [44, 44], h: 0.6 };
-    if (t < 0.24) return { c: C.altinAcik, w: [2.5, 3.5], h: 0.9 };
-    if (t < 0.3) return secAgirlik(r, [{ p: 3, c: C.krem, w: [3, 6], h: 0.7 }, { p: 1, c: C.altin, w: [1.2, 2.4], h: 0.9 }]);
-    return secAgirlik(r, [{ p: 2, c: C.krem, w: [3, 9], hc: 0.8, ic: C.altin }, { p: 2, c: C.beyaz, w: [4, 12], hc: 1.0, ic: C.gokmavi }, { p: 1, c: C.altinAcik, w: [1.5, 4], h: 0.9 }, { p: 1.6, c: C.acikmavi, w: [5, 14], hc: 0.6, ic: C.kobalt }]);
+    if (t < 0.215) return { c: C.altinAcik, w: [3, 3.5], h: 0.9 };
+    if (t < 0.36) return secAgirlik(r, [{ p: 3, c: C.krem, w: [4, 8], h: 0.6 }, { p: 2, c: C.beyaz, w: [3, 7], h: 0.7 }, { p: 1, c: C.altin, w: [1.2, 2.2], h: 0.9 }]);
+    if (t < 0.46) return secAgirlik(r, [{ p: 2, c: C.beyaz, w: [4, 8], h: 0.7, hc: 0.3, ic: C.altin }, { p: 1.4, c: C.acikmavi, w: [3, 7], h: 0.5 }, { p: 1, c: C.altinAcik, w: [1.5, 3], h: 0.9 }]);
+    return secAgirlik(r, [{ p: 2, c: C.beyaz, w: [4, 9], h: 0.7, hc: 0.75, ic: C.gokmavi }, { p: 1, c: C.altin, w: [1.2, 2.4], h: 0.9 }, { p: 1.4, c: C.turkuaz, w: [3, 7], h: 0.5, hc: 0.3, ic: C.kobalt }]);
   });
   // ZEMİN: kum, bakır, toprak, beyaz damarlar
   const tZemin = tablo(13, 700, 1150, (t, r) => secAgirlik(r, [{ p: 3, c: C.kum, w: [6, 20], hc: 0.5, ic: C.bakir }, { p: 1.5, c: C.bakir, w: [4, 12] }, { p: 1, c: C.toprak, w: [3, 10] }, { p: 1.2, c: C.beyaz, w: [1.5, 5], hc: 0.9, ic: C.toprak, h: 0.7 }, { p: 0.6, c: C.altin, w: [1.5, 4], h: 0.8 }, { p: 1.5, c: C.krem, w: [4, 12], hc: 0.7, ic: C.bakir }]));
   // TAŞ (kaide, minare): fildişi, beyaz, gri, bej ve ince altın damar
-  const tTas = tablo(14, -100, 1200, (t, r) => secAgirlik(r, [{ p: 3, c: C.fildisi, w: [6, 18], hc: 0.4, ic: C.bej }, { p: 2.4, c: C.beyaz, w: [5, 14], hc: 0.5, ic: C.griAcik, h: 0.6 }, { p: 1.2, c: C.griAcik, w: [2, 6] }, { p: 1.4, c: C.bej, w: [2, 7], hc: 0.3, ic: C.bronz }, { p: 0.5, c: C.altin, w: [1, 2.5], h: 0.9 }, { p: 0.5, c: C.gumus, w: [1, 3] }]));
+  const tTas = tablo(14, -100, 1200, (t, r) => secAgirlik(r, [{ p: 3, c: C.fildisi, w: [6, 18], hc: 0.4, ic: C.bej }, { p: 2.4, c: C.beyaz, w: [5, 14], hc: 0.5, ic: C.griAcik, h: 0.6 }, { p: 1.2, c: C.griAcik, w: [2, 6] }, { p: 0.7, c: C.bej, w: [2, 7], hc: 0.3, ic: C.bronz }, { p: 0.5, c: C.altin, w: [1, 2.5], h: 0.9 }, { p: 0.5, c: C.gumus, w: [1, 3] }]));
   // KASNAK: yatay yeşil akıntılar
   const tKasnak = tablo(15, 500, 720, (t, r) => secAgirlik(r, [{ p: 3, c: C.zumrut, w: [3, 9] }, { p: 2, c: C.koyuYesil, w: [3, 8] }, { p: 1.2, c: C.petrol, w: [2, 5] }, { p: 1, c: C.cimen, w: [2, 6], hc: 0.6, ic: C.koyuYesil }, { p: 0.5, c: C.beyaz, w: [0.8, 2], h: 0.7 }, { p: 0.4, c: C.altin, w: [0.8, 1.6], h: 0.9 }]));
   // KUBBE: her dilim kendi şerit dizisi; kaburga yanında koyu yeşil, ortada fıstık/çağla ve hücreler
@@ -266,7 +272,7 @@
         const dx = x - 880, dy = y - 140, d = Math.hypot(dx, dy);
         const q1 = fbm(nC, x * 0.0028, y * 0.0035, 3), q2 = fbm(nD, x * 0.0028 + 5, y * 0.0035 + 5, 3);
         const w = fbm(nA, x * 0.0035 + 2.2 * q1, y * 0.005 + 2.2 * q2, 4) - 0.5;
-        const dg = d + (fbm(nE, x * 0.02, y * 0.02, 3) - 0.5) * 26 + Math.sin(Math.atan2(dy, dx) * 3 + 1) * 3;
+        const dg = d + (fbm(nE, x * 0.012, y * 0.012, 3) - 0.5) * 12 + Math.sin(Math.atan2(dy, dx) * 3 + 1) * 3;
         if (dg < 118) return [dg, 1];
         return [y + w * 260 + (fbm(nB, x * 0.006, y * 0.008, 2) - 0.5) * 14, 0];
       }
@@ -395,8 +401,8 @@
   const KOVA = 32, KW = W / KOVA;
   const kovalar = Array.from({ length: KW * KW }, () => []);
   const hucreler = [];
-  const BOLGE_HUCRE = { [IX.gok]: 1, [IX.gunes]: 1, [IX.zemin]: 0.6, [IX.kubbe]: 1.1, [IX.kaide]: 0.5, [IX.minare]: 0.45, [IX.kasnak]: 0.35, [IX.yaprak]: 0.4, [IX.cicek]: 0.55, [IX.altin]: 0.2 };
-  const BOLGE_RMAX = { [IX.gok]: 11, [IX.gunes]: 9, [IX.zemin]: 7, [IX.kubbe]: 9, [IX.kaide]: 6, [IX.minare]: 4.5, [IX.kasnak]: 3.5, [IX.yaprak]: 5, [IX.cicek]: 7, [IX.altin]: 2.5 };
+  const BOLGE_HUCRE = { [IX.gok]: 0.6, [IX.gunes]: 0.7, [IX.zemin]: 0.45, [IX.kubbe]: 1.0, [IX.kaide]: 0.18, [IX.minare]: 0.15, [IX.kasnak]: 0.35, [IX.yaprak]: 0.4, [IX.cicek]: 0.55, [IX.altin]: 0.2 };
+  const BOLGE_RMAX = { [IX.gok]: 10, [IX.gunes]: 5, [IX.zemin]: 7, [IX.kubbe]: 9, [IX.kaide]: 6, [IX.minare]: 4.5, [IX.kasnak]: 3.5, [IX.yaprak]: 5, [IX.cicek]: 7, [IX.altin]: 2.5 };
   {
     const r = S.rng(77);
     const ARA = 4;

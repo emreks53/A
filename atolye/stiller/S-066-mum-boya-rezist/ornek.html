@@ -187,11 +187,12 @@
   // öndeki öğe, arkadaki çizgileri siler (ressam arkadakini öndekinin içine çizmez)
   function sil(d) { const p = typeof d === 'string' ? new Path2D(d) : d; basG.globalCompositeOperation = 'source-over'; basG.fillStyle = '#000'; basG.fill(p); basG.globalCompositeOperation = 'lighten'; }
   // dolgu karalaması: kapalı yolun içini sıkı, yön değiştiren mum taramasıyla doldur
-  function karala(d, renk, aci, aralik, gen, bas) {
+  function karala(d, renk, aci, aralik, gen, bas, kes) {
     const p = new Path2D(d);
     yolEl.setAttribute('d', d);
     const bb = yolEl.getBBox();
     renkG.save(); basG.save(); renkG.clip(p); basG.clip(p);
+    if (kes) { const q = new Path2D(); q.rect(kes[0], kes[1], kes[2] - kes[0], kes[3] - kes[1]); renkG.clip(q); basG.clip(q); }
     const ca = Math.cos(aci), sa = Math.sin(aci), cx = bb.x + bb.width / 2, cy = bb.y + bb.height / 2, Rr = Math.hypot(bb.width, bb.height) / 2 + 4;
     for (let s = -Rr; s <= Rr; s += aralik) {
       const pts = [];
@@ -273,6 +274,8 @@
   {
     sil('M246,800 L246,140 L354,140 L354,800 Z');
     const MP = SAHNE.minareParcalari();
+    // ışıklı yan: hafif basınçla krem mum taraması (kâğıt tanesinin tepelerini tutar)
+    for (const d of Y.minare) { karala(d, MUM.krem, 1.15, 3.6, 2.6, 0.52, [298, 60, 360, 800]); karala(d, MUM.beyaz, -0.4, 4.4, 2.4, 0.42, [306, 60, 360, 800]); }
     for (const d of Y.minare) mumYol(d, MUM.beyaz, 2.8, 1);
     const cx = 300;
     for (let y = 500; y < 800; y += 19) { if (y > 516 && y < 590) continue; mum(cizgi(cx - 33, y, cx + 33, y), MUM.beyaz, 1.7, 0.6); }
@@ -295,6 +298,10 @@
   {
     const K = SAHNE.kaide;
     sil(Y.kaide); sil(Y.kornis);
+    // beyaz taş: duvar hafif basınçlı beyaz ve krem mum taramasıyla örtülür, boya yalnız kâğıt çukurlarına iner
+    karala(Y.kaide, MUM.beyaz, -0.42, 7.2, 2.6, 0.6);
+    karala(Y.kaide, MUM.beyaz, -0.36, 7.8, 2.4, 0.58, [395, 700, 830, 802]);
+    karala(Y.kaide, MUM.krem, 1.05, 8.6, 2.2, 0.52, [470, 700, 830, 802]);
     mumYol(Y.kornis, MUM.beyaz, 3, 1);
     mum(cizgi(K.x1, K.y1 + 1, K.x1, 800), MUM.beyaz, 3, 1); mum(cizgi(K.x2, K.y1 + 1, K.x2, 800), MUM.beyaz, 3, 1);
     let sira = 0;
@@ -348,12 +355,19 @@
   // --- zemin: ot vuruşları
   {
     const rr = SAHNE.rng(52);
-    for (let i = 0; i < 420; i++) {
+    for (let i = 0; i < 640; i++) {
       const x = 10 + rr() * 1004, y = 806 + Math.pow(rr(), 0.8) * 214;
       const a = -Math.PI / 2 + (rr() - 0.5) * 0.9, L = 8 + rr() * 14;
       const pts = []; for (let t = 0; t <= 1; t += 0.2) pts.push([x + Math.cos(a) * L * t + Math.sin(t * 2) * 2, y + Math.sin(a) * L * t]);
       const q = rr();
       mum(pts, q < 0.45 ? MUM.yesil : q < 0.8 ? MUM.sari : MUM.beyaz, 2.2, 0.85, { jit: 0.3 });
+    }
+    // toprak dokusu: hafif basınçlı yatay mum karalamaları (sarı, krem, açık turuncu) — yıkama aralarında kalır
+    for (let i = 0; i < 260; i++) {
+      const x = rr() * 1024, y = 812 + rr() * 208, L = 26 + rr() * 50, a = (rr() - 0.5) * 0.25;
+      const pts = []; for (let t = 0; t <= 1.0001; t += 0.05) pts.push([x + Math.cos(a) * L * t, y + Math.sin(a) * L * t + Math.sin(t * 9 + i) * 1.6]);
+      const q = rr();
+      mum(pts, q < 0.45 ? MUM.sari : q < 0.75 ? MUM.krem : MUM.turuncu, 3.4, 0.5 + rr() * 0.18, { jit: 0.5 });
     }
     // yer çizgisinin hemen altında taş-çakıl noktaları
     for (let i = 0; i < 90; i++) { const x = rr() * 1024, y = 803 + rr() * 30; mum(cizgi(x, y, x + 2 + rr() * 3, y + rr(), 2), rr() < 0.5 ? MUM.krem : MUM.turuncu, 3.2, 0.9, { jit: 0.2 }); }
@@ -489,11 +503,12 @@
     yika(A, [240, 70, 360, 805], (x, y, i, d) => {
       const r = minareYari(y), L = silindirIsik(x, 300, r + 1);
       const w = n1(x, y, 60, 5);
-      ekle(i, d * (0.32 + 0.14 * w), P.och);
-      ekle(i, d * 0.08, P.ros);
-      const g = clamp(1 - L * 1.3, 0, 1);
-      ekle(i, d * g * 0.5, P.ult); ekle(i, d * g * 0.25, P.vio);
-      if (y < 300 && y > 268 || y > 450 && y < 470) ekle(i, d * 0.25, P.vio);
+      const ust = sstep(330, 150, y);
+      ekle(i, d * (0.2 + 0.1 * w + 0.1 * ust), P.och);
+      ekle(i, d * (0.08 * (1 - w) + 0.08 * ust), P.gam); ekle(i, d * 0.05, P.ros);
+      const g = clamp(1 - L * 1.55, 0, 1) * (1 - 0.45 * ust);
+      ekle(i, d * g * 0.3, P.ult); ekle(i, d * g * 0.08, P.vio); ekle(i, d * g * 0.1, P.ros);
+      if (y < 300 && y > 268 || y > 450 && y < 470) ekle(i, d * 0.2, P.ult);
     }, { kenar: 1, gran: 0.5, tohum: 2 });
   }
   // KAİDE: okra + gül, solda gölge; korniş altında mor gölge şeridi
@@ -501,12 +516,12 @@
     const A = maske(kume('kaide'), 4, 0.4, 18, 3);
     yika(A, [284, 684, 836, 806], (x, y, i, d) => {
       const t = (x - 300) / 520, w = n1(x, y, 80, 9);
-      ekle(i, d * (0.5 - 0.15 * t) * (0.8 + 0.4 * w), P.och);
-      ekle(i, d * (0.1 + 0.12 * (1 - w)), P.ros);
-      ekle(i, d * 0.12 * t * t, P.gam);
-      const gl = Math.pow(clamp(1 - t * 1.6, 0, 1), 1.5);
-      ekle(i, d * gl * 0.32, P.vio); ekle(i, d * gl * 0.22, P.ult);
-      if (y > 704 && y < 718) ekle(i, d * 0.5 * sstep(718, 705, y), P.vio);
+      ekle(i, d * (0.26 - 0.08 * t) * (0.75 + 0.5 * w), P.och);
+      ekle(i, d * 0.05 * (1 - w), P.ros);
+      ekle(i, d * 0.14 * t * t, P.gam);
+      const gl = Math.pow(clamp(1 - t * 2.4, 0, 1), 1.4);
+      ekle(i, d * gl * 0.12, P.vio); ekle(i, d * gl * 0.34, P.ult);
+      if (y > 704 && y < 718) ekle(i, d * 0.32 * sstep(718, 705, y), P.ult);
     }, { kenar: 1, gran: 0.5, tohum: 3 });
   }
   // KASNAK: koyu ftalo yeşili + ultramarin, silindir gölgesi
@@ -558,14 +573,17 @@
     const YB = bulanik(YAP, W2, W2, 16);
     yika(A, [0, 780, 1024, 1024], (x, y, i, d) => {
       const w = n1(x, y, 90, 8), t = clamp((y - 800) / 224, 0, 1);
-      ekle(i, d * (0.3 + 0.15 * w) * (0.6 + 0.6 * t), P.och);
-      ekle(i, d * (0.08 + 0.38 * t) * (0.6 + 0.8 * w), P.ora);
-      ekle(i, d * 0.32 * t * t * sstep(0.4, 0.7, w), P.sie);
-      ekle(i, d * 0.5 * YB[i] * sstep(0.35, 0.7, 1 - w * 0.6 + t * 0.2), P.vio);
-      ekle(i, d * 0.18 * sstep(0.5, 0.2, w), P.gam);
+      const v = n1(x, y, 55, 13);
+      ekle(i, d * (0.3 + 0.18 * w) * (0.6 + 0.6 * t), P.och);
+      ekle(i, d * (0.05 + 0.26 * t) * (0.5 + 0.9 * w), P.ora);
+      ekle(i, d * 0.3 * t * t * sstep(0.45, 0.75, w), P.sie);
+      ekle(i, d * 0.42 * sstep(0.52, 0.78, v) * (1 - 0.5 * t), P.sap);
+      ekle(i, d * 0.18 * YB[i] * sstep(0.35, 0.7, 1 - w * 0.6 + t * 0.2), P.ult);
+      ekle(i, d * 0.06 * YB[i], P.vio);
+      ekle(i, d * 0.22 * sstep(0.5, 0.2, w), P.gam);
       // yapının sola düşen gölgesi
       const gol = sstep(150, 260, x) * sstep(840, 700, x) * sstep(842 + (w - 0.5) * 30, 806, y) * sstep(790, 801, y);
-      ekle(i, d * gol * 0.5, P.vio); ekle(i, d * gol * 0.3, P.ult);
+      ekle(i, d * gol * 0.12, P.vio); ekle(i, d * gol * 0.24, P.ult);
     }, { kenar: 1, gran: 0.7, tohum: 8 });
   }
   // YAPRAKLAR ve SAPLAR: sap yeşili + ftalo + ultramarin, ıslakta değişen

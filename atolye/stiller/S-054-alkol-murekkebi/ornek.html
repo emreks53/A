@@ -235,7 +235,7 @@
 
   // ============================================================ 3. MİNARE (soluk leylak-kum, kontrollü kenar)
   const minareHaric = (g) => { g.fillStyle = '#000'; for (const d of [Y.kaide, Y.kornis, Y.kasnakAlt, Y.kasnakUst, Y.kubbe]) g.fill(P(d)); };
-  murekkep({ kutu: [240, 140, 360, 800], ciz: (g) => { for (const d of Y.minare) g.fill(P(d)); }, haric: minareHaric, bul: 2.4, gen: 0.12, olc: 0.05, renk: [C('#A68AE8'), C('#FAD0B0')], yon: (x) => clamp((x - 262) / 76, 0, 1), renkOlc: 0.01, yog: 0.55, kenar: C('#4A2A9A'), kenarG: 0.9, kenarW: 1.5, bant: 6 });
+  murekkep({ kutu: [240, 140, 360, 800], ciz: (g) => { for (const d of Y.minare) g.fill(P(d)); }, haric: minareHaric, bul: 2.4, gen: 0.12, olc: 0.05, renk: [C('#A68AE8'), C('#FAD0B0')], yon: (x) => clamp((x - 262) / 76, 0, 1), renkOlc: 0.01, yog: 0.62, kenar: C('#4A2A9A'), kenarG: 0.9, kenarW: 1.5, bant: 6 });
   // şerefe ve korkulukların koyu bandı
   for (const p of S.minareParcalari()) {
     if (p.tip === 'korkuluk') {
@@ -249,8 +249,8 @@
   // ============================================================ 4. KAİDE (açık kum rengi, sola doğru koyulaşan)
   {
     const K = S.kaide;
-    murekkep({ kutu: [K.kornis.x1, K.kornis.y1, K.kornis.x2, K.y2], ciz: (g) => { g.fill(P(Y.kaide)); g.fill(P(Y.kornis)); }, bul: 2.4, gen: 0.12, olc: 0.04, renk: [C('#FFC870'), C('#F7A0A0')], renkOlc: 0.01, yog: 0.5, kenar: C('#A8501A'), kenarG: 0.9, kenarW: 1.6, bant: 9, halka: [[16, 0.15]] });
-    murekkep({ kutu: [K.x1, K.y1, K.x1 + 180, K.y2], ciz: (g) => { g.save(); g.beginPath(); g.rect(K.x1, K.y1, 150, 96); g.clip(); g.fill(P(Y.kaide)); g.restore(); }, bul: 10, gen: 0.25, olc: 0.03, renk: [C('#C9A0D8')], yog: 0.3, kenar: C('#7A4A9A'), kenarG: 0.45, bant: 8, kaldir: 0.3 });
+    murekkep({ kutu: [K.kornis.x1, K.kornis.y1, K.kornis.x2, K.y2], ciz: (g) => { g.fill(P(Y.kaide)); g.fill(P(Y.kornis)); }, bul: 2.4, gen: 0.12, olc: 0.04, renk: [C('#FFBE5C'), C('#F59A7C')], renkOlc: 0.01, yog: 0.62, kenar: C('#A8501A'), kenarG: 0.95, kenarW: 1.7, bant: 9, halka: [[14, 0.2], [34, 0.14]], altin: 0.2 });
+    murekkep({ kutu: [K.x1, K.y1, K.x1 + 200, K.y2], ciz: (g) => { g.save(); g.clip(P(Y.kaide)); elips(K.x1 + 40, 760, 140, 78, -0.15)(g); g.restore(); }, bul: 10, gen: 0.25, olc: 0.03, renk: [C('#B48ADB')], yog: 0.45, kenar: C('#6A3A9A'), kenarG: 0.6, bant: 8, kaldir: 0.3 });
     // korniş altı gölgesi
     murekkep({ kutu: [K.x1, K.y1, K.x2, K.y1 + 14], ciz: (g) => g.fillRect(K.x1, K.y1, K.x2 - K.x1, 9), bul: 1.6, gen: 0.15, olc: 0.06, renk: [C('#B48AD0')], yog: 0.45, kenar: C('#6A3F9A'), kenarG: 0.6, kenarW: 1.2, bant: 4, kaldir: 0.2 });
   }
@@ -258,17 +258,34 @@
   // ============================================================ 5. KASNAK (derin petrol yeşili, zümrüt)
   murekkep({ kutu: [334, 610, 786, 692], ciz: yolCiz(Y.kasnakAlt), bul: 2.4, gen: 0.12, olc: 0.04, renk: [C('#065A4A'), C('#0FA06A')], yon: (x) => clamp((x - 360) / 420, 0, 1), renkOlc: 0.012, yog: 1, kenar: C('#03392A'), kenarG: 0.9, kenarW: 1.6, bant: 10, halka: [[14, 0.2]] });
   murekkep({ kutu: [352, 555, 768, 610], ciz: yolCiz(Y.kasnakUst), bul: 2.4, gen: 0.12, olc: 0.04, renk: [C('#087050'), C('#2AB46A')], yon: (x) => clamp((x - 370) / 400, 0, 1), renkOlc: 0.012, yog: 1, kenar: C('#04402C'), kenarG: 0.9, kenarW: 1.6, bant: 9 });
-  // ışık tarafı: alkolle açılmış (kaldırılmış) dikey şerit
-  murekkep({ kutu: [610, 560, 720, 690], ciz: (g) => { g.save(); g.beginPath(); g.rect(334, 555, 452, 137); g.clip(); elips(675, 620, 46, 80, 0)(g); g.restore(); }, bul: 10, gen: 0.3, olc: 0.03, renk: [C('#3DBA6A')], yog: 0.5, kenar: C('#06503A'), kenarG: 0.6, kaldir: 0.6, bant: 8 });
 
   // ============================================================ 6. KUBBE: kontrollü yeşil çiçeklenmeler
   const kubbeIc = (fn) => (g) => { g.save(); g.clip(P(S.kubbeYolu)); fn(g); g.restore(); };
   // tek büyük, yönlü çiçeklenme: solda derin petrol yeşili → sağ üstte fıstık yeşili; kubbe biçimine uyan gelgit halkaları
   const kubbeYon = (x, y) => clamp(0.5 + (x - 560) / 330 - (y - 430) / 520, 0, 1);
   murekkep({ kutu: [355, 296, 766, 556], ciz: yolCiz(S.kubbeYolu), bul: 3, gen: 0.12, olc: 0.03, renk: [C('#06604A'), C('#3DBA3A')], yon: kubbeYon, renkOlc: 0.012, yog: 1, kenar: C('#023A26'), kenarG: 0.95, kenarW: 1.9, bant: 22, halka: [[24, 0.22], [52, 0.16], [84, 0.12]] });
-  murekkep({ kutu: [560, 320, 766, 500], ciz: kubbeIc(elips(655, 395, 80, 92, -0.35)), bul: 22, gen: 0.32, olc: 0.014, renk: [C('#9ED83A'), C('#D8EA40')], renkOlc: 0.012, yog: 0.8, kenar: C('#3F7A10'), kenarG: 0.8, kenarW: 1.5, bant: 10, kaldir: 0.75, halka: [[16, 0.2]], altin: 0.35 });
-  murekkep({ kutu: [355, 380, 520, 556], ciz: kubbeIc(elips(388, 480, 56, 118, 0.12)), bul: 22, gen: 0.3, olc: 0.012, renk: [C('#0A6A50'), C('#0B5A6A')], renkOlc: 0.012, yog: 0.75, kenar: C('#02362A'), kenarG: 0.8, kenarW: 1.5, bant: 10, kaldir: 0.5 });
-  murekkep({ kutu: [470, 296, 650, 380], ciz: kubbeIc(elips(560, 330, 70, 34, 0)), bul: 12, gen: 0.3, olc: 0.02, renk: [C('#2EB07A')], yog: 0.75, kenar: C('#05553A'), kenarG: 0.8, kenarW: 1.4, bant: 8, kaldir: 0.7 });
+  // dilim dilim damlatılmış ikinci kat: her kaburga arası kendi damlası; komşu damlaların kuru kenarları
+  // kaburga çizgisinde buluşur. Renk, dilimin ışığa bakışına göre soldaki petrol yeşilinden sağdaki fıstık
+  // yeşiline döner; üst kısımlar açıktır (lekeli değil, kubbenin biçimini izleyen çiçeklenmeler)
+  {
+    const prof = S.kubbeProfili(60);
+    const mixC = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+    for (let k = 0; k < 16; k++) {
+      const u1 = Math.sin(-Math.PI / 2 + (Math.PI * k) / 16), u2 = Math.sin(-Math.PI / 2 + (Math.PI * (k + 1)) / 16);
+      const ph = -Math.PI / 2 + (Math.PI * (k + 0.5)) / 16;
+      const isik = clamp(Math.sin(ph) * 0.62 + Math.cos(ph) * 0.78, 0, 1);
+      const pts = prof.map((q) => [560 + u1 * q.r, q.y]).concat(prof.slice().reverse().map((q) => [560 + u2 * q.r, q.y]));
+      const xs = pts.map((q) => q[0]);
+      const koyu = mixC(C('#034A3A'), C('#14904A'), isik * isik);
+      const acik = mixC(C('#0A7258'), C('#9FD83A'), Math.pow(isik, 1.6));
+      murekkep({
+        kutu: [Math.min(...xs) - 2, 298, Math.max(...xs) + 2, 556], ciz: kubbeIc(yolCiz(S.yol(pts, true))), bul: 1.6, gen: 0.1, olc: 0.04,
+        renk: [koyu, acik], yon: (x, y) => clamp(0.15 + (555 - y) / 255 * 0.85, 0, 1), renkOlc: 0.02,
+        yog: 0.7 + (k % 2) * 0.08, kenar: C('#023A26'), kenarG: 0.7, kenarW: 1.3, bant: 12, kaldir: 0.85,
+        halka: [[20, 0.14], [46, 0.1]], altin: k % 4 === 1 ? 0.25 : 0,
+      });
+    }
+  }
   // kaburgalar: alkol kalemiyle çekilmiş açık çizgiler (boyayı kaldırır, iki yanında koyu kenar)
   for (const kb of S.kaburgalar(16, 60)) {
     const d = S.yol(kb.noktalar);

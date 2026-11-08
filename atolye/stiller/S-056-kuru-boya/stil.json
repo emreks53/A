@@ -1,0 +1,39 @@
+{
+  "kod": "S-056",
+  "no": 56,
+  "ad": "Kuru Boya",
+  "ad_en": "Colored Pencil",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Beyaz kâğıtta uçları incelen, yönlü renkli kalem taramaları; üst üste binen renkler gözde karışır, cilalanmış yerler mumlu ve pürüzsüz.",
+  "tanim": "Kuru boya (renkli kalem), mumlu ya da yağlı bağlayıcıyla sıkıştırılmış pigment uçlarıyla çizilir; renk karıştırılmaz, ince taramalar üst üste bindirilerek gözde karıştırılır. Hafif bastırılan yerlerde pigment yalnız kâğıt dişinin tepelerinde kalır ve vuruşların arasından beyaz kâğıt benekleri görünür; açık renk bir kalemle sertçe üstünden geçilen (cilalanan) yerlerde diş dolar, yüzey mumlu ve pürüzsüz olur. Kitap resminde, botanik ve mimari çizimde, illüstrasyonda yaygındır.",
+  "koken": "Mumlu renkli kalemler 20. yüzyılın başında (Caran d'Ache 1924'te, Faber-Castell ve Derwent aynı yıllarda) yaygınlaştı. Uzun süre eskiz aracı sayıldı; 20. yüzyılın ikinci yarısında katmanlama ve cilalama teknikleriyle bağımsız bir resim tekniğine dönüştü. Bugün botanik illüstrasyonda ve çağdaş gerçekçi çizimde (ör. Colored Pencil Society of America çevresi) ustaca kullanılır.",
+  "ayirt_edici": [
+    "Her yerde kısa, paralel, uçları incelen tarama öbekleri; gökte ve kaidede çapraz, kubbede kaburga boyunca uzanan vuruşlar",
+    "Renkler karıştırılmadan katmanlanmış: kubbede sarı-yeşil, yeşil ve kobalt üst üste; gökte gök mavisi, kobalt, lila ve şeftali",
+    "Hafif bastırılan alanlarda (gök, zemin, minare) vuruşların içinden ve arasından beyaz kâğıt benekleri görünüyor",
+    "Kubbenin ışıklı omzu ve alemler cilalanmış: diş dolmuş, krem beyazıyla parlatılmış mumlu, pürüzsüz yüzey; hemen yanında dokulu tarama",
+    "Kubbe kaburgaları ve yaprak damarları kâğıda bastırılarak açılmış ince beyaz çizgiler olarak kalıyor",
+    "Yapı, yaprak ve taç yaprakları ince, net, renkli kalem konturlarıyla çizili (koyu yeşil, sepya, mor); kenarlar boş beyaz kâğıda açılıyor"
+  ],
+  "palet": [
+    "#FBF9F3",
+    "#86BEE6",
+    "#F5D64E",
+    "#46A04E",
+    "#185E44",
+    "#D2427E",
+    "#E3C38A",
+    "#9C88C4"
+  ],
+  "kodla_cizim": "2048 piksellik iç çözünürlükte ince taneli bir kâğıt dişi (çok ölçekli gürültü) yükseklik haritası kurulur. Her renk kalemi ayrı bir katman tuvaline çizilir: öbek taraması (kısa, paralel, uçları saydamlaşıp incelen çokgen vuruşlar), kubbede profil eğrisinden üretilen meridyen vuruşları, yapraklarda damardan dışa açılı, çiçeklerde göbekten dışa vuruşlar. Katman, önde kalan öğelerin maskeleriyle silinir ve basınç haritası olarak kâğıda bırakılır: pigment çarpma (subtractive) karışımıyla, diş yüksekliği ile basınca bağlı yumuşak bir eşikle tutunur, böylece beyaz benekler kalır. Önceden boyanmış bir cila maskesinde katmanın bulanıklaştırılmış kopyası kullanılır ve diş doldurulur (cilalama); kaburga ve damarlar için ayrı bir 'çukur çizgi' haritası pigmenti engeller. En sonda titreşimli el çizgisi parçalarıyla konturlar çizilir; renkler sahnenin ışık modelinden (kubbe normali, silindir ışığı) türetilen ton maskeleriyle dağıtılır.",
+  "etiketler": [
+    "kuru boya",
+    "renkli kalem",
+    "kuru teknik",
+    "tarama",
+    "optik karışım",
+    "cilalama",
+    "beyaz kâğıt"
+  ]
+}

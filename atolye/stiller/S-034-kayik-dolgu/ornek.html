@@ -33,7 +33,7 @@ const P2 = (d) => new Path2D(d);
 
 // ------------------------------------------------------------------ palet (6 renk)
 const C = { kagit: '#F6F0E3', murekkep: '#1E2A57', yesil: '#35A27A', mercan: '#F08A7E', hardal: '#F3B23E', gok: '#A3CFEA' };
-const KAYMA = [6, 4.5];            // dolgu levhasının çizgi levhasına göre kayması
+const KAYMA = [9, 6.5];            // dolgu levhasının çizgi levhasına göre kayması
 const KAL = 1.7;                   // tek, eşit çizgi kalınlığı
 const Lv = nrm([0.66, -0.6, 0.45]);
 
@@ -137,7 +137,7 @@ function gok() {
 // ================================================================== zemin
 function zemin() {
   // zemin: kâğıt üstünde seyrek hardal noktalarıyla açık kum tonu (dolgu levhasında renkli tram)
-  hardalTram(P2(dik(0, 800, 1024, 1024)), [0, 800, 1024, 1024], (X, Y) => 0.12 + 0.2 * smooth(800, 1024, Y));
+  hardalTram(P2(dik(0, 800, 1024, 1024)), [0, 800, 1024, 1024], (X, Y) => 0.05 + 0.17 * smooth(800, 1024, Y));
   cizgi('M0,800 L1024,800');
   const g = new Path2D(); g.moveTo(300, 800); g.lineTo(822, 800); g.lineTo(790, 826); g.lineTo(232, 834); g.closePath();
   yarimTon(g, [228, 800, 826, 836], (X, Y) => 0.7 * smooth(838, 800, Y), 6.2, 2.2);
@@ -266,7 +266,7 @@ function bitkiler() {
     const L = y.uzunluk, W = L * y.genislik;
     yarimTon(yy, [Math.min(y.x, y.x + ca * L) - W, Math.min(y.y, y.y + sa * L) - W, Math.max(y.x, y.x + ca * L) + W, Math.max(y.y, y.y + sa * L) + W], (X, Y) => {
       const v = -(X - y.x) * sa + (Y - y.y) * ca;
-      return v * yan > 0 ? 0.42 : 0;
+      return v * yan > 0 ? 0.34 : 0;
     }, 5.2, 1.8);
     cizgi(yy);
     const [a, b] = S.yaprakDamari(y);
@@ -282,8 +282,6 @@ function bitkiler() {
       const ic = { cx: e.cx - Math.cos(e.aci) * e.rx * 0.2, cy: e.cy - Math.sin(e.aci) * e.rx * 0.2, rx: e.rx * 0.7, ry: e.ry * 0.68, aci: e.aci };
       dolgu(P2(S.elipsYolu(ic)), C.mercan);
       ort(y);
-      const yon = Math.cos(e.aci) * Lv[0] + Math.sin(e.aci) * Lv[1];
-      if (yon < -0.2) yarimTon(y, [e.cx - e.rx, e.cy - e.rx, e.cx + e.rx, e.cy + e.rx], () => 0.32, 5.2, 1.8);
       cizgi(y);
       const ca = Math.cos(e.aci), sa = Math.sin(e.aci);
       cizgi(`M${c.x + ca * c.r * 0.32},${c.y + sa * c.r * 0.32} L${c.x + ca * c.r * 0.62},${c.y + sa * c.r * 0.62}`, 1.2);

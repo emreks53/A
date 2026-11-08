@@ -1,0 +1,40 @@
+{
+  "kod": "S-038",
+  "no": 38,
+  "ad": "Sinematik Sis",
+  "ad_en": "Cinematic Haze",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Altın saatte pus katmanları ve güneşten süzülen ışık huzmeleriyle boyanmış, sakin ve görkemli bir sinematik dijital mat boyama.",
+  "tanim": "Sinematik Sis, sahneyi bir film sahnesinin arka plan resmi (matte painting) gibi kuran render tarifidir. Derinlik hava perspektifiyle (uzak tepeler açık, soğuk ve puslu; ön plan koyu) ve üst üste pus katmanlarıyla verilir. Güneş sağ üstte, biraz arkada durur; bulut boşluklarından ve minarenin çevresinden geçen hacimsel ışık huzmeleri yelpaze gibi açılır, aralarında pus koyulaşır. Yapılar gerçekçi ışıkla boyanır: sıcak güneş tarafı, camgöbeği gök ışığı alan gölge tarafı ve silüetlerde sıcak kenar ışığı; ince taç yaprakları arkadan ışık geçirir, yapı yere uzun bir gölge düşürür. Üstüne alttaki resimden renk alan dokulu dijital fırça vuruşları atılır; en sonda sinematik renk düzeltmesi (sıcak açık tonlar, camgöbeği gölgeler, S eğrisi), ışıltı, ince film greni ve vinyet uygulanır.",
+  "koken": "Sinema ve oyun yapımındaki dijital mat boyama ve konsept sanatı geleneğine (hava perspektifi, 'god rays' denen hacimsel ışık, siluet ve kenar ışığıyla derinlik kurma) ve sinemada yaygın 'teal & orange' renk düzeltmesine dayanır. Atölye tarifi şunları sabitler: altın saat gökyüzü ve güneşe göre ışıklanan hacimli bulutlar; ekran uzayında güneşe doğru örtü yürütmesiyle hesaplanan huzme ve hacimsel gölge; normal tabanlı sıcak güneş + camgöbeği gök ışığı + sıcak kenar ışığı + arkadan geçen ışık; pus katmanları; renk örnekleyen fırça geçişi; bölünmüş tonlama, ışıltı, gren ve vinyet.",
+  "ayirt_edici": [
+    "Güneşten sol aşağıya yelpaze gibi açılan hacimsel ışık huzmeleri; minarenin ve kubbenin çevresinde ışık ve gölge şeritleri",
+    "Güneşe göre ışıklanan hacimli bulutlar: koyu arduvaz gövdeler, güneşe bakan altın renkli kenarlar",
+    "Hava perspektifi: puslu uzak tepeler, ufukta sıcak sis bandı, yapının dibinde yer pusu, koyu ön plan",
+    "Sağda güneşle ısınan, solda camgöbeği gölgede kalan kubbe; silüetlerde sıcak kenar ışığı ve yere düşen uzun gölge",
+    "Arkadan ışık alan, kenarları parlayan yarı saydam taç yaprakları",
+    "Görünür dijital fırça dokusu, sıcak/soğuk renk düzeltmesi, ince film greni ve vinyet"
+  ],
+  "palet": [
+    "#10283A",
+    "#2F5C6C",
+    "#FFD49A",
+    "#C99566",
+    "#2A8A49",
+    "#E4D3B6",
+    "#2E5530",
+    "#D6C8BE"
+  ],
+  "kodla_cizim": "Tek canvas, 2× iç çözünürlük. Gök 1024 px'de piksel piksel hesaplanır: degrade + güneş ışıltısı, alan bükülmeli fbm ile tasarlanmış bulut kütleleri (sol üstte kümülüs, güneşin önünde kırık şeritler, ufukta alçak bant); bulut yoğunluğunun güneş yönündeki farkıyla aydınlık kenar ve gümüş astar verilir. Uzak tepeler degrade siluetler ve pus degradeleridir. Yapı ve çiçekler yükseklik alanı katmanlarıdır (uzaklık dönüşümü pahı, dönel yükseklik, kaburga ve zikzak kabartmaları); normalden sıcak güneş (arkadan-sağdan), camgöbeği gök ortamı, sıcak sekme ışığı, kenar ışığı, gök yansıması ve taç yapraklarında arkadan geçen ışıkla gölgelenir. Yapı silueti makaslama dönüşümüyle yere uzun gölge olarak izdüşürülür. Huzmeler 512 px'de her pikselden güneşe doğru 90 adımlık örtü yürütmesiyle (bulut + yapı + bitki) görünürlük, açıya bağlı yumuşak demet profiliyle çarpılarak 'screen' karışımla eklenir; demet aralarına ve örtü gölgesine camgöbeği pus basılır. Ardından alttaki resimden renk alan, kenara duyarlı yaklaşık 50 bin üç kıllı fırça vuruşu atılır; en sonda ışıltı, S eğrisi, bölünmüş tonlama, film greni ve vinyet piksel düzeyinde uygulanır.",
+  "etiketler": [
+    "sinematik",
+    "mat boyama",
+    "pus",
+    "ışık huzmesi",
+    "altın saat",
+    "dijital boyama",
+    "renk düzeltme",
+    "atmosfer"
+  ]
+}

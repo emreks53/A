@@ -20,8 +20,7 @@
 setTimeout(function () {
   'use strict';
   const S = SAHNE;
-  const T0 = performance.now();
-  const zaman = (ad) => console.warn(ad + ' ' + Math.round(performance.now() - T0));
+  const zaman = () => {};
   const K = 2; // iç ölçek (2048 px iç çözünürlük)
   const N = 1024 * K;
   const tuval = document.getElementById('tuval');
@@ -197,9 +196,7 @@ setTimeout(function () {
     altin: { ks: 0.22, g: 26, wrap: 0.25 },
     fon: { ks: 0.03, g: 8, wrap: 0.45 },
   };
-  const TT = {maske:0, edt:0, yuk:0, gol:0, bir:0, n:0};
   function katman(o) {
-    let tq = performance.now(); TT.n++;
     const b = sinir(o.ciz);
     if (!b) return;
     const pay = o.pay != null ? o.pay : 8;
@@ -236,7 +233,6 @@ setTimeout(function () {
         }
       A = B;
     }
-    TT.maske += performance.now() - tq; tq = performance.now();
     const ic = new Uint8Array(w * h);
     for (let i = 0; i < w * h; i++) ic[i] = A[i] > 0.5 ? 1 : 0;
     const D = edt(ic, w, h);
@@ -324,8 +320,6 @@ setTimeout(function () {
     const puruz = kil.puruz != null ? kil.puruz : 0.45;
     const ince = kil.ince != null ? kil.ince : 0.3;
     const nS = rnd() * 200;
-
-    TT.edt += performance.now() - tq; tq = performance.now();
     const bevel = o.bevel || 6;
     const yuk = o.yuk != null ? o.yuk : 1;
     const zs = o.zs != null ? o.zs : 1;
@@ -417,8 +411,6 @@ setTimeout(function () {
         KAV[i] = kav;
       }
     }
-
-    TT.yuk += performance.now() - tq; tq = performance.now();
     // gölgeleme
     const img = new ImageData(w, h);
     const P = img.data;
@@ -466,7 +458,6 @@ setTimeout(function () {
         P[j + 3] = Math.round(Math.min(1, A[i]) * 255);
       }
     }
-    TT.gol += performance.now() - tq; tq = performance.now();
     const kc = tuvalYap(w, h);
     kc.getContext('2d').putImageData(img, 0, 0);
     const hedef = o.hedef || ana;
@@ -498,7 +489,6 @@ setTimeout(function () {
       hedef.restore();
     }
     hedef.drawImage(kc, X0, Y0);
-    TT.bir += performance.now() - tq;
   }
 
   // ------------------------------------------------------------------ biçim yardımcıları
@@ -915,7 +905,7 @@ setTimeout(function () {
     });
   }
 
-  zaman('8.'); console.warn(JSON.stringify(TT));
+  zaman('8.');
   // ================================================================== 8. son: hafif sıcak ton ve yumuşak kenar kararması
   ana.save();
   const vg = ana.createRadialGradient(560 * K, 520 * K, 300 * K, 512 * K, 512 * K, 760 * K);
@@ -925,7 +915,6 @@ setTimeout(function () {
   ana.fillRect(0, 0, N, N);
   ana.restore();
 
-  console.warn('sure ' + Math.round(performance.now()) + ' ms');
   S.hazir();
 }, 0);
 </script>
