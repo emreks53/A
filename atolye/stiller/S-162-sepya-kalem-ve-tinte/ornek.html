@@ -736,9 +736,15 @@
   });
   tint(mCarp(yarim, BM.yaprak), '#7FA674', { guc: 0.35, kenar: 0.15 });
   tint(BM.sap, '#93AE76', { guc: 0.7 });
-  tint(BM.tomurcuk, '#EDB2BC', { guc: 0.8 });
+  // çiçekler tek tip değil: gül, kayısı, leylak, limon sarısı ve krem-beyaz tinteler
+  const CTINT = ['#EFB3BF', '#F5C59A', '#D3BFEA', '#F0DC8C', '#F0DC8C', '#D3BFEA', '#EFB3BF', '#F5C59A', '#EFB3BF', '#F5C59A', '#D3BFEA', '#F0DC8C', '#F4E4D2'];
+  const TTINT = ['#EBA9B6', '#F2BE90', '#CDB6E6'];
+  for (let g = 0; g < 3; g++) tint(mCarp(yolMaske((x) => { for (const e of liste) if (e.tur === 'tomurcuk' && e.i % 3 === g) x.fill(noktaYolu(e.p)); }), BM.tomurcuk), TTINT[g], { guc: 0.85 });
   const CD = cicekUzaklik(liste);
-  tint(BM.cicek, '#F2C2CA', { guc: 0.55, kenar: 0.15, f: (x, y) => { const d = CD[y * N + x]; return sstep(0.14, 0.3, d) * (0.35 + 0.65 * (1 - sstep(0.3, 1.0, d))); } });
+  for (const renk of [...new Set(CTINT)]) {
+    const m = yolMaske((x) => { for (const e of liste) if (e.tur === 'cicek' && CTINT[e.i] === renk) { for (const t of e.taclar) x.fill(noktaYolu(t)); } });
+    tint(mCarp(m, BM.cicek), renk, { guc: renk === '#F4E4D2' ? 0.5 : 0.68, kenar: 0.2, f: (x, y) => { const d = CD[y * N + x]; return sstep(0.14, 0.3, d) * (0.45 + 0.55 * (1 - sstep(0.3, 1.05, d))); } });
+  }
   tint(yolMaske((x) => { for (const e of liste) if (e.tur === 'cicek') { x.beginPath(); x.arc(e.c.x, e.c.y, e.c.r * 0.19, 0, PI2); x.fill(); } }), '#EBC85E', { guc: 0.85 });
 
   // ================================================================ sepya kalem
@@ -784,7 +790,7 @@
   // ---- noktalama: koyuluk işlevine göre titrek ızgarada nokta; her nokta elle konmuş, biraz farklı
   const ign = (i, j) => { const v = 52.9829189 * ((((0.06711056 * i + 0.00583715 * j) % 1) + 1) % 1); return v % 1; };
   function noktala(x0, y0, x1, y1, D, o) {
-    o = Object.assign({ aralik: 2.0, r: 0.55, yogun: 1, us: 1.1 }, o);
+    o = Object.assign({ aralik: 2.5, r: 0.78, yogun: 1, us: 1.0 }, o);
     const a = o.aralik;
     for (let j = Math.floor(y0 / a); j * a < y1; j++) for (let i = Math.floor(x0 / a); i * a < x1; i++) {
       const px = (i + 0.5 + (hashF(i, j, 5) - 0.5) * 0.75) * a, py = (j + 0.5 + (hashF(i, j, 9) - 0.5) * 0.75) * a;
@@ -806,31 +812,33 @@
     if (bolgeAd(x, y) !== 'kubbe') return 0;
     const l = kubbeIsik(x, y);
     const f = dilim(x, y);
-    return clamp((0.66 - l) * 1.4, 0, 0.9) + 0.24 * Math.pow(1 - f, 3) * (0.4 + 0.6 * (1 - l)) + 0.28 * sstep(536, 554, y);
-  }, { aralik: 1.9 });
+    return clamp((0.74 - l) * 1.55, 0, 0.92) + 0.3 * Math.pow(1 - f, 3) * (0.35 + 0.65 * (1 - l)) + 0.3 * sstep(532, 554, y);
+  }, { aralik: 2.45 });
   noktala(330, 555, 790, 692, (x, y) => {
     if (bolgeAd(x, y) !== 'kasnak') return 0;
     const u = cylU(x, y);
-    return clamp((0.6 - silindirIsik(u)) * 1.3, 0, 0.8) + (y < 568 ? 0.55 * sstep(568, 556, y) : 0) + (y >= 610 && y < 620 ? 0.4 * sstep(620, 611, y) : 0);
-  }, { aralik: 2.2 });
+    return clamp((0.7 - silindirIsik(u)) * 1.4, 0, 0.85) + (y < 570 ? 0.6 * sstep(570, 556, y) : 0) + (y >= 610 && y < 622 ? 0.45 * sstep(622, 611, y) : 0);
+  }, { aralik: 2.5 });
   noktala(240, 140, 360, 800, (x, y) => {
     if (bolgeAd(x, y) !== 'minare' || (x >= 289 && y >= 691.5)) return 0;
     const u = (x - 300) / mYari(y);
-    let d = 0.62 * sstep(-0.12, -0.92, u);
+    let d = 0.18 + 0.62 * sstep(-0.05, -0.92, u);
     if ((y > 468 && y < 494) || (y > 300 && y < 321) || (y > 206 && y < 214)) d += 0.45;
     if ((y > 436 && y < 442) || (y > 272 && y < 277)) d += 0.3;
     return d;
-  }, { aralik: 2.0 });
+  }, { aralik: 2.4 });
   noktala(288, 690, 832, 800, (x, y) => {
     if (bolgeAd(x, y) !== 'kaide') return 0;
-    let d = 0.16 * sstep(340, 300, x);
-    if (y >= 704 && y < 718) d += 0.6 * sstep(718, 705, y);
+    let d = 0.34 * sstep(380, 300, x) + 0.08;
+    if (y >= 704 && y < 720) d += 0.62 * sstep(720, 705, y);
     return d;
-  }, { aralik: 2.2 });
+  }, { aralik: 2.5 });
   // pencere ve nişlerin içi: sık noktalama
-  noktala(240, 200, 840, 800, (x, y) => (bolgeAd(x, y) === 'pencere' ? 0.6 : 0), { aralik: 1.8 });
+  noktala(240, 200, 840, 800, (x, y) => (bolgeAd(x, y) === 'pencere' ? 0.7 : 0), { aralik: 2.0, r: 0.7 });
   // zemin: yapının dibinde sola düşen gölge, seyrek noktalar
-  noktala(180, 800, 300, 820, (x, y) => (bolgeAd(x, y) !== 'zemin' ? 0 : 0.5 * sstep(816, 801, y) * sstep(180, 240, x)), { aralik: 2.0 });
+  noktala(180, 800, 300, 822, (x, y) => (bolgeAd(x, y) !== 'zemin' ? 0 : 0.55 * sstep(820, 801, y) * sstep(180, 240, x)), { aralik: 2.4 });
+  // zemin: kumun sabırlı, seyrek noktalaması (ufka doğru sıklaşır)
+  noktala(0, 801, 1024, 1024, (x, y) => (bolgeAd(x, y) !== 'zemin' ? 0 : 0.2 * (1 - sstep(800, 1000, y)) * (0.55 + 0.9 * nf(x / 60, y / 25))), { aralik: 3.0, r: 0.72 });
   // ---- kısa taramalar: kubbenin gölge kenarında meridyen boyunca, korniş altında, pencerelerde
   const kubbeX = (b, y) => 560 + Math.sin(b) * kubbeR(y);
   for (let k = 0; k < 16; k++) {
@@ -872,7 +880,7 @@
   }
 
   // ---- yapı konturu
-  const yapW = { kubbe: 1.35, kaburga: 0.72, kasnak: 1.2, kasnakH: 1.1, pencere: 0.8, nis: 0.7, kornis: 1.1, kaide: 1.2, kpencere: 0.95, mgovde: 1.15, zikzak: 0.9, cikma: 1.0, serefe: 1.0, korkuluk: 0.9, parmak: 0.75, bilezik: 0.9, topuz: 1.05, mpencere: 0.85 };
+  const yapW = { kubbe: 1.75, kaburga: 0.95, kasnak: 1.5, kasnakH: 1.4, pencere: 1.0, nis: 0.85, kornis: 1.4, kaide: 1.5, kpencere: 1.2, mgovde: 1.45, zikzak: 1.1, cikma: 1.25, serefe: 1.25, korkuluk: 1.1, parmak: 0.9, bilezik: 1.1, topuz: 1.3, mpencere: 1.05 };
   for (const e of yapiCizgileri()) {
     const w = yapW[e.tur] || 1;
     if (e.tur === 'kaburga') {

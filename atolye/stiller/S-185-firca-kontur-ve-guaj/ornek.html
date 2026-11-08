@@ -650,11 +650,14 @@
         const q = titret(q0, o.gen === undefined ? 0.4 : o.gen, o.dalga || 40, nI, faz, false);
         const L = uzunluk(q);
         const bas = Math.min(o.bas || 6, L * 0.3), son = Math.min(o.son || 11, L * 0.42);
-        const yonEtki = o.yonEtki === undefined ? 0.72 : o.yonEtki;
+        const yonEtki = o.yonEtki === undefined ? 0.8 : o.yonEtki;
+        // ana biçimlerde fırça daha dolu tutulur: kalın çizgiler orantısız kalınlaşır, ince ayrıntı ince kalır
+        const W = w * (1 + 0.5 * sstep(1.5, 3.3, w));
         cizgi(ctx, q, (t, a, s) => {
           const yon = 1 - yonEtki + yonEtki * Math.abs(Math.sin(a - PHI));
-          const giris = 0.3 + 0.7 * sstep(0, bas, s), cikis = 0.12 + 0.88 * sstep(0, son, L - s);
-          return w * 1.15 * yon * Math.min(giris, cikis) * (0.86 + 0.28 * nI(s / 45 + faz, 4.4));
+          const giris = 0.25 + 0.75 * sstep(0, bas, s), cikis = 0.08 + 0.92 * sstep(0, son, L - s);
+          const basinc = 0.72 + 0.5 * Math.sin(Math.PI * clamp(s / L, 0, 1)); // sürüşün ortasında fırça şişer
+          return W * 1.15 * yon * basinc * Math.min(giris, cikis) * (0.86 + 0.28 * nI(s / 45 + faz, 4.4));
         }, o.renk || rgba(P.fir, 0.95));
       }
     }
