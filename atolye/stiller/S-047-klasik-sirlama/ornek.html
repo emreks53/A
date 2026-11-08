@@ -172,7 +172,7 @@
   function gokRenk(x, y) {
     const dd = Math.hypot(x - 880, y - 140);
     const t = clamp(y / 790, 0, 1) + (fbm(nC, x / 170, y / 110, 3) - 0.5) * 0.06 + 0.12 * Math.exp(-(dd * dd) / (2 * 320 * 320));
-    let c = rampa([[0, [0.12, 0.2, 0.36]], [0.26, [0.24, 0.38, 0.54]], [0.52, [0.5, 0.58, 0.62]], [0.78, [0.82, 0.79, 0.66]], [1, [0.97, 0.88, 0.66]]], t);
+    let c = rampa([[0, [0.12, 0.22, 0.42]], [0.26, [0.22, 0.38, 0.6]], [0.52, [0.48, 0.6, 0.7]], [0.78, [0.82, 0.8, 0.7]], [1, [0.97, 0.88, 0.66]]], t);
     c = mixc(c, [1.0, 0.94, 0.74], 0.85 * Math.exp(-(dd * dd) / (2 * 150 * 150)));
     c = mixc(c, [0.98, 0.9, 0.68], 0.5 * Math.exp(-(dd * dd) / (2 * 380 * 380)));
     c = mixc(c, [1.0, 0.99, 0.93], sstep(48, 24, dd));
@@ -194,11 +194,12 @@
         const T = Math.exp(-acc * 0.36);
         const lit = clamp(0.5 * lam + 0.62 * T - 0.06, 0, 1);
         const yakin = Math.exp(-(dd * dd) / (2 * 430 * 430));
-        const litC = mixc([0.97, 0.9, 0.78], [1.0, 0.97, 0.88], yakin);
-        let shC = mixc(c, [0.46, 0.43, 0.48], 0.62);
+        const litC = mixc([0.98, 0.91, 0.78], [1.0, 0.97, 0.86], yakin);
+        let shC = mixc(c, mixc([0.36, 0.34, 0.4], [0.62, 0.52, 0.46], yakin * 0.6), 0.72);
         shC = mixc(shC, [0.78, 0.6, 0.44], 0.22 * sstep(0.2, 0.8, ny / nl)); // alttan yansıyan sıcak ışık
         let cc = mixc(shC, litC, Math.pow(lit, 1.2));
-        cc = mixc(cc, [1.0, 0.97, 0.86], 0.5 * (1 - al) * sstep(0.3, 0.9, lam) * yakin); // gümüş kenar
+        cc = mixc(cc, shC, 0.35 * yakin * sstep(0.4, 1.0, al)); // güneşe yakın bulutun gövdesi ters ışıkta koyulaşır
+        cc = mixc(cc, [1.0, 0.98, 0.9], 0.75 * (1 - al) * sstep(0.2, 0.8, lam) * (0.35 + yakin)); // gümüş kenar
         c = mixc(c, cc, al * 0.97);
       }
     }
@@ -225,8 +226,8 @@
   const altinRenk = (V) => rampa([[0, [0.16, 0.08, 0.02]], [0.4, [0.5, 0.3, 0.07]], [0.75, [0.88, 0.64, 0.22]], [1, [1.0, 0.92, 0.6]]], V);
   /** Yeşil sır: bakır yeşili ↔ sap yeşili; gölgede kahveleşmiş reçineli yeşil. */
   function yesilSir(x, y, V) {
-    const m1 = fbm(nB, x / 70, y / 88, 4), m2 = fbm(nC, x / 46 + 9, y / 58, 3);
-    let T = mixc([0.24, 0.55, 0.42], [0.45, 0.6, 0.15], sstep(0.3, 0.7, m1));
+    const m1 = fbm(nB, x / 60, y / 76, 4), m2 = fbm(nC, x / 40 + 9, y / 50, 3);
+    let T = mixc([0.2, 0.54, 0.46], [0.48, 0.62, 0.13], sstep(0.28, 0.72, m1));
     T = mixc(T, [0.52, 0.43, 0.2], (1 - V) * 0.6 * sstep(0.3, 0.68, m2));
     return [T, m2];
   }
@@ -258,7 +259,7 @@
       gol = 1 - V;
     } else if (b === KASNAK) {
       const ust = y < 610;
-      let V = silindirIsik(x, 560, ust ? 208 : 226) * (ust ? 0.9 : 1.0);
+      let V = silindirIsik(x, 560, ust ? 208 : 226) * (ust ? 1.0 : 1.1);
       if (ust && y < 574) V *= 0.42 + 0.58 * sstep(555, 574, y);
       if (!ust && y < 613.5) V = Math.min(1, V * 1.25 + 0.06);
       else if (!ust && y < 628) V *= 0.6 + 0.4 * sstep(613, 628, y);
@@ -269,7 +270,7 @@
       }
       V = clamp(V, 0, 1);
       const [T, m2] = yesilSir(x * 1.3, y * 1.3, V);
-      c = sir(V, mixc(T, [0.42, 0.5, 0.2], 0.25), 1.15 + 1.7 * (1 - V) + (m2 - 0.5) * 0.4);
+      c = sir(V, mixc(T, [0.42, 0.5, 0.2], 0.25), 0.95 + 1.55 * (1 - V) + (m2 - 0.5) * 0.4);
       c = mixc(c, [0.7, 0.74, 0.44], Math.pow(V, 7) * 0.3);
       gol = 1 - V;
     } else if (b === PENCERE) {
@@ -488,14 +489,17 @@
   // ------------------------------------------------------------ fırça izi: biçimi izleyen, kıl çizgili, kenarları eriyen vuruşlar
   {
     const P = {
-      1: { cs: 14, L: [30, 54], w: [8, 13], mx: 0.55, st: 0.05 },
-      2: { cs: 8, L: [16, 28], w: [5, 8], mx: 0.5, st: 0.05 },
-      3: { cs: 7, L: [8, 14], w: [4, 6], mx: 0.42, st: 0.04 },
-      4: { cs: 9, L: [16, 28], w: [5, 8], mx: 0.5, st: 0.05 },
-      5: { cs: 7, L: [9, 15], w: [3.5, 5.5], mx: 0.42, st: 0.04 },
-      6: { cs: 11, L: [20, 34], w: [6, 10], mx: 0.5, st: 0.05 },
-      7: { cs: 6, L: [7, 13], w: [3, 5], mx: 0.4, st: 0.035 },
+      1: { cs: 13, L: [30, 56], w: [8, 13], mx: 0.6, st: 0.08 },
+      2: { cs: 7, L: [16, 30], w: [5, 8], mx: 0.6, st: 0.09 },
+      3: { cs: 6, L: [8, 15], w: [4, 6], mx: 0.5, st: 0.08 },
+      4: { cs: 8, L: [16, 30], w: [5, 8], mx: 0.6, st: 0.09 },
+      5: { cs: 6, L: [9, 16], w: [3.5, 5.5], mx: 0.5, st: 0.08 },
+      6: { cs: 10, L: [20, 36], w: [6, 10], mx: 0.55, st: 0.07 },
+      7: { cs: 5, L: [7, 13], w: [3, 5], mx: 0.45, st: 0.06 },
     };
+    // önce resmin bilgisayar keskinliği alınır: yarı yarıya hafif bulanık kopyayla karışır
+    { const y1 = [bulanik3(CR, W, W, 1), bulanik3(CG, W, W, 1), bulanik3(CB, W, W, 1)];
+      for (let i = 0; i < N; i++) { CR[i] += (y1[0][i] - CR[i]) * 0.45; CG[i] += (y1[1][i] - CG[i]) * 0.45; CB[i] += (y1[2][i] - CB[i]) * 0.45; } }
     const BR = [bulanik3(CR, W, W, 2), bulanik3(CG, W, W, 2), bulanik3(CB, W, W, 2)];
     function yon(s, x, y) {
       if (s === 1) {
@@ -519,11 +523,17 @@
     for (let s = 1; s <= 7; s++) {
       const p = P[s];
       for (let gy = 0; gy < W; gy += p.cs) for (let gx = 0; gx < W; gx += p.cs) {
-        const x = gx + R() * p.cs, y = gy + R() * p.cs, i = (y | 0) * W + (x | 0);
+        const x = gx + R() * p.cs, y = gy + R() * p.cs;
+        if (x >= W || y >= W) continue;
+        const i = (y | 0) * W + (x | 0);
         if (SINIF[i] !== s) continue;
-        const v = 1 + (R() - 0.5) * 0.08, sc = (R() - 0.5) * 0.04;
-        vur.push({ x, y, s, a: yon(s, x, y), hl: (p.L[0] + R() * (p.L[1] - p.L[0])) / 2, hw: (p.w[0] + R() * (p.w[1] - p.w[0])) / 2,
-          r: BR[0][i] * v + sc, g: BR[1][i] * v, b: BR[2][i] * v - sc, mx: p.mx * (0.8 + R() * 0.4), st: p.st, tohum: (R() * 4096) | 0, dal: R() * 6 });
+        const a = yon(s, x, y), hl = (p.L[0] + R() * (p.L[1] - p.L[0])) / 2, hw = (p.w[0] + R() * (p.w[1] - p.w[0])) / 2;
+        // boya vuruşun başından alınır ve vuruş boyunca sürüklenir; her vuruşta değer ve sıcak-soğuk renk biraz oynar
+        const sx = clamp(x - Math.cos(a) * hl * 0.6, 0, W - 1), sy = clamp(y - Math.sin(a) * hl * 0.6, 0, W - 1);
+        let j = (sy | 0) * W + (sx | 0); if (SINIF[j] !== s) j = i;
+        const v = 1 + (R() - 0.5) * 0.12, h1 = (R() - 0.5) * 0.06, h2 = (R() - 0.5) * 0.05;
+        vur.push({ x, y, s, a, hl, hw, r: BR[0][j] * v * (1 + h1), g: BR[1][j] * v * (1 + h2 * 0.5), b: BR[2][j] * v * (1 - h1 + h2),
+          mx: p.mx * (0.8 + R() * 0.4), st: p.st, tohum: (R() * 4096) | 0, dal: R() * 6 });
       }
     }
     for (let k = vur.length - 1; k > 0; k--) { const j = Math.floor(R() * (k + 1)); const t = vur[k]; vur[k] = vur[j]; vur[j] = t; }
@@ -561,7 +571,7 @@
     // kabartı: verniğin altında, sağ üstten gelen ışıkla çok hafif
     for (let y = 1; y < W - 1; y++) for (let x = 1; x < W - 1; x++) {
       const i = y * W + x, rel = 0.35 * (H[i - 1] - H[i + 1] + H[i + W] - H[i - W]);
-      const k = 1 + rel * 0.09 * (1 - GOLGE[i] * 0.7);
+      const k = 1 + rel * 0.16 * (1 - GOLGE[i] * 0.7);
       CR[i] *= k; CG[i] *= k; CB[i] *= k;
     }
   }
@@ -592,15 +602,15 @@
         if (d < f1) { f2 = f1; f1 = d; q1 = q; } else if (d < f2) f2 = d;
       }
       const e = (Math.sqrt(f2) - Math.sqrt(f1)) * 0.5, i = py * W + px;
-      const yog = sstep(0.22, 0.66, nC(px / 130 + tohum * 3, py / 130));
+      const yog = sstep(0.25, 0.7, fbm(nC, px / 160 + tohum * 3, py / 160, 2));
       const gg = gen * (0.6 + 0.8 * nD(px / 36 + tohum, py / 36));
-      CAT[i] = Math.max(CAT[i], guc * (0.3 + 0.7 * yog) * (1 - sstep(gg * 0.3, gg, e)));
+      CAT[i] = Math.max(CAT[i], guc * (0.12 + 0.88 * yog) * (1 - sstep(gg * 0.3, gg, e)));
       const vx = wx - PX[q1], vy = wy - PY[q1], vl = Math.hypot(vx, vy) || 1;
       CUP[i] += ((vx * 0.7 - vy * 0.7) / vl) * sstep(hucre * 0.35, 0, e) * 0.03 * guc;
     }
   }
-  krakle(15, 0.95, 1.0, 71, 0.9, 1.06);
-  krakle(6.5, 0.6, 0.38, 72, 1.0, 1.0);
+  krakle(12, 0.55, 1.0, 71, 0.9, 1.06);
+  krakle(5, 0.42, 0.3, 72, 1.0, 1.0);
 
   // ------------------------------------------------------------ sararmış vernik, kir, bez dokusu, çatlaklar, son ton
   {
@@ -615,7 +625,7 @@
       // vernik: maviyi yeşile, beyazı bal rengine çeker; kenar ve altta daha kalın, eşitsiz
       const ex = Math.min(x, W - x, y, W - y);
       const kal = 0.1 * (1 - sstep(0, 230, ex)) + 0.05 * sstep(600, 1024, y) + 0.06 * (fbm(nE, x / 150, y / 150, 3) - 0.5);
-      r = r * (0.99 - kal * 0.2) + 0.03; g = g * (0.9 - kal * 0.3) + 0.018; b = b * (0.64 - kal * 0.45) + 0.005;
+      r = r * (0.99 - kal * 0.2) + 0.028; g = g * (0.92 - kal * 0.3) + 0.017; b = b * (0.7 - kal * 0.45) + 0.005;
       // kir ve kararmış tuval kenarı
       const kir = 0.8 + 0.2 * sstep(0, 170, ex) - 0.07 * (fbm(nB, x / 110, y / 110, 3) - 0.5) - 0.12 * sstep(10, 0, ex);
       r *= kir; g *= kir * 0.985; b *= kir * 0.95;
@@ -624,7 +634,7 @@
       const dok = 1 + (0.022 * orgu + 0.02 * (nA(x * 0.8, y * 0.8) - 0.5)) * (0.4 + 0.6 * sstep(0.1, 0.5, lum));
       // çatlaklar: açıkta koyu, koyuda hafif açık çizgi; hücre kenarları kalkık
       const cat = CAT[i];
-      const cg = 1 - 0.3 * cat * sstep(0.05, 0.4, lum) + 0.1 * cat * sstep(0.14, 0.03, lum);
+      const cg = 1 - 0.2 * cat * sstep(0.05, 0.4, lum) + 0.06 * cat * sstep(0.14, 0.03, lum);
       const k = dok * cg * (1 + CUP[i] * sstep(0.03, 0.3, lum));
       d[i * 4] = ton(r * k) * 255; d[i * 4 + 1] = ton(g * k) * 255; d[i * 4 + 2] = ton(b * k) * 255; d[i * 4 + 3] = 255;
     }

@@ -456,7 +456,7 @@ const RENK = {
   tas: rampa([[0, [240, 230, 212]], [0.5, [226, 210, 186]], [1, [200, 180, 160]]]), // sıcak taş
   altin: rampa([[0, [232, 204, 126]], [0.5, [206, 160, 74]], [1, [154, 112, 52]]]), // aşı boyası altın
   yaprak: rampa([[0.15, [150, 190, 100]], [0.45, [92, 152, 86]], [0.85, [48, 110, 80]]]),
-  gul: rampa([[0, [234, 186, 190]], [0.45, [214, 136, 152]], [1, [172, 88, 116]]]), // tozlu gül
+  gul: rampa([[0, [232, 180, 186]], [0.45, [212, 128, 146]], [1, [170, 82, 110]]]), // tozlu gül
   gok: [104, 146, 204],
   gokKoyu: [92, 124, 186],
   sicak: [232, 208, 156],
@@ -786,8 +786,8 @@ function kubbe() {
   // kaburgalar: çizgi + gölge yanında ince eşlik çizgisi
   for (const k of SAHNE.kaburgalar(16, 60)) {
     const p = k.noktalar.filter((q) => q[1] > 304);
-    const al = 0.38 + 0.25 * clamp(0.5 - k.u);
-    kontur(p, { alfa: al, kalin: 1.0, gecis: 2, titrek: 0.6, tasma: 0, kalinF: (x, y) => (y < 360 ? 0.75 : 1) });
+    const al = 0.5 + 0.3 * clamp(0.5 - k.u);
+    kontur(p, { alfa: al, kalin: 1.1, gecis: 2, titrek: 0.6, tasma: 0, kalinF: (x, y) => (y < 360 ? 0.75 : 1) });
     kontur(p.map(([x, y]) => [x - 2.2 * Math.sqrt(1 - k.u * k.u) * clamp((y - 320) / 80), y]), { alfa: al * 0.4, kalin: 0.8, gecis: 1, titrek: 0.5, tasma: 0 });
   }
   // dış kontur: gölge yanı daha kalın ve koyu
@@ -849,7 +849,7 @@ function yaprakCiz(y, buyuk) {
     const ox = y.x + ca * s, oy = y.y + sa * s;
     kr.push([[ox - dx * L * 0.45, oy - dy * L * 0.45], [ox + dx * L * 0.45, oy + dy * L * 0.45]]);
   }
-  boya(kr, { esik: 0, aralik: 1, alfa: 0.85, kalin: 1.8, minL: 30, maxL: 60, bosluk: 0, tonF: () => 0.95, renkF: (x, yy) => RENK.yaprak(tonY(x, yy) + (buyuk ? 0.05 : 0)), kirp: yol });
+  boya(kr, { esik: 0, aralik: 1, alfa: 0.95, kalin: 1.9, minL: 30, maxL: 60, bosluk: 0, tonF: () => 0.95, renkF: (x, yy) => RENK.yaprak(tonY(x, yy) + (buyuk ? 0.05 : 0)), kirp: yol });
   const [s] = yolNoktalari(SAHNE.yaprakYolu(y), 2);
   kontur(s.p, { alfa: 0.62, kalin: 1.0, gecis: 2, titrek: 0.6, tasma: 2 });
   const [a, b] = SAHNE.yaprakDamari(y);
@@ -983,7 +983,7 @@ kontur(elipsNoktalari(880, 140, 42, 42, 0.4, 60), { alfa: 0.16, kalin: 0.8, geci
   const grafit = [42, 43, 49];
   const isilti = [128, 132, 142];
   const RG = 1.0;  // renkli kalem sırlarının gücü
-  const GT = 0.75; // grafitin altındaki renge çalma oranı
+  const GT = 0.85; // grafitin altındaki renge çalma oranı
   for (let y = 0; y < N; y++) {
     for (let x = 0; x < N; x++) {
       const i = y * N + x;
@@ -1001,7 +1001,8 @@ kontur(elipsNoktalari(880, 140, 42, 42, 0.4, 60), { alfa: 0.16, kalin: 0.8, geci
       const tutR = RG * clamp(lerp(0.3 + 0.8 * di, 1, smooth(0.08, 0.55, bas)));
       r *= 1 - (1 - lr) * tutR; gg *= 1 - (1 - lgc) * tutR; b *= 1 - (1 - lb) * tutR;
       // renkli grafit: grafit değerleri taşımayı sürdürür, boyalı yerde altındaki rengin koyusuna biraz çalar
-      const ren = smooth(0.03, 0.3, bas);
+      // bastırılmış koyu çizgiler (konturlar, kaburgalar, pencereler) nötr grafit kalır
+      const ren = smooth(0.03, 0.3, bas) * (1 - 0.75 * smooth(0.45, 0.9, g));
       const gR = lerp(grafit[0], r * 0.36, GT * ren), gG = lerp(grafit[1], gg * 0.36, GT * ren), gB = lerp(grafit[2], b * 0.36, GT * ren);
       r = lerp(r, gR, g); gg = lerp(gg, gG, g); b = lerp(b, gB, g);
       // en koyu yerlerde grafitin metalik parlaklığı
