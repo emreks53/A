@@ -427,6 +427,8 @@
     G(198, 984, 46, 1.4, ALLIK);
     C(166, 872, 26, 0.3); C(26, 1004, 22, 1.0); C(276, 1008, 20, 0.7); C(18, 730, 16, 0.4);
     T(138, 800, 9, -1.1, PEMBE); T(248, 948, 9, -0.6, MERCAN); T(126, 750, 8, -1.4, ALLIK);
+    // --- alt kenar sarmaşığı: ana sarmaşığın dibinden simetri eksenine
+    saplar.push([[[80, 1010], [150, 1000], [230, 1012], [320, 1016], [420, 1012], [520, 1016]], 3.4]);
     // --- alt kenar dizisi
     for (const q of [[338, 1012, 40, -0.2, 1], [370, 1014, 36, -2.9, 0], [408, 1010, 38, -0.35, 0], [446, 1016, 34, -2.7, 1], [476, 1012, 30, -0.5, 0]]) Y(...q);
     C(390, 1010, 18, 0.5); C(458, 1016, 14, 1.2);
@@ -447,7 +449,10 @@
       for (let k = 1; k <= 8; k++) ekle(cx0 + ((lx - cx0) * k) / 8, cy0 + ((ly - cy0) * k) / 8);
     }
     const saplik = [];
-    function bagla(bx, by, esik) {
+    // gül ve beyaz çiçeklerin arkasından çıkan yaprak / tomurcuk o çiçeğe bağlı sayılır
+    const cicekBag = (bx, by) => guller.some(([x, y, R]) => Math.hypot(x - bx, y - by) < R + 3) || cicekler.some(([x, y, r]) => Math.hypot(x - bx, y - by) < r * 0.85);
+    function bagla(bx, by, esik, cicegeBagli) {
+      if (cicegeBagli && cicekBag(bx, by)) return;
       let en = null, ed = 1e9;
       for (const [x, y] of sapNokta) { const d = Math.hypot(x - bx, y - by); if (d < ed) { ed = d; en = [x, y]; } }
       if (ed <= esik) return;
@@ -455,10 +460,10 @@
       const nx = -(by - en[1]) / ed, ny = (bx - en[0]) / ed;
       saplik.push([en, [mx0 + nx * ed * 0.18, my0 + ny * ed * 0.18], [bx, by]]);
     }
-    for (const [x, y] of yapraklar) bagla(x, y, 3);
-    for (const [x, y, r, a] of tomurcuklar) bagla(x - Math.cos(a) * r * 0.9, y - Math.sin(a) * r * 0.9, 3);
-    for (const [x, y, r] of cicekler) bagla(x, y, r * 0.9);
-    for (const [x, y, R] of guller) bagla(x, y, R * 0.9);
+    for (const [x, y] of yapraklar) bagla(x, y, 3, true);
+    for (const [x, y, r, a] of tomurcuklar) bagla(x - Math.cos(a) * r * 0.9, y - Math.sin(a) * r * 0.9, 3, true);
+    for (const [x, y, r] of cicekler) bagla(x, y, r * 0.9, false);
+    for (const [x, y, R] of guller) bagla(x, y, R * 0.9, false);
     // çizim sırası: sap → saplık → yaprak → tomurcuk → beyaz çiçek → gül
     for (const [pts, w] of saplar) sap(c, pts, w);
     c.strokeStyle = '#5A8F4C';

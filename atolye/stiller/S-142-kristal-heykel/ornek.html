@@ -1098,11 +1098,13 @@ stil.tac = function (X, Y, out, c, p, k, L) {
   const rx = Math.cos(a), ry = Math.sin(a);
   nset(px * 0.38 - rx * 0.3 * G.rho, py * 0.38 - ry * 0.3 * G.rho, 0.85);
   const isikta = px * 0.7 - py * 0.7 > 0;
-  kristal(X, Y, out, { tint: PEMBE_K, ic: isikta ? 1.2 : 0.75, k: c.r * 0.3, disp: 0.22, govde: [0.03, 0.01, 0.02], spec: 0.25, ici: [side * 0.7, G.rho - 0.6], iciw: 0.38 });
+  kristal(X, Y, out, { tint: PEMBE_K, ic: isikta ? 1.4 : 0.95, k: c.r * 0.3, disp: 0.22, govde: [0.03, 0.01, 0.02], spec: 0.25, ici: [side * 0.7, G.rho - 0.6], iciw: 0.38 });
   sirt(out, Math.abs(G.pv) * c.r, !isikta, 0.8);
   const D = L.D[k];
-  if (D < 2.4) cizgi(out, 0.35 * smooth(2.4, 0.7, D), [0.45, 0.2, 0.32]);
-  if (D < 0.7) cizgi(out, 0.55, BEYAZ_IS);
+  if (D < 2.4) cizgi(out, 0.3 * smooth(2.4, 0.7, D), [0.5, 0.24, 0.36]);
+  if (D < 0.7) cizgi(out, 0.6, BEYAZ_IS);
+  // ışığa bakan yarıda sırta paralel ince parlak iç yansıma çizgisi
+  if (isikta) { const q = Math.abs(Math.abs(G.pv) * c.r - c.r * 0.12); if (q < 0.9 && G.rho > 0.3 && G.rho < 0.9) cizgi(out, 0.45 * smooth(0.9, 0.2, q), BEYAZ_IS); }
 };
 stil.orta = function (c) {
   const r = c.r * 0.2;
@@ -1200,8 +1202,8 @@ function kostik(c) {
     if (d > 1) continue;
     const an = Math.atan2(dy, dx);
     const petal = Math.pow(Math.max(0, Math.cos((an - c.aci) * 2.5)), 3);
-    const ring = Math.exp(-Math.pow((d - 0.42) / 0.12, 2)) * (0.4 + 0.6 * petal) + Math.exp(-Math.pow(d / 0.12, 2)) * 0.8;
-    const a = ring * 1.3;
+    const ring = Math.exp(-Math.pow((d - 0.42) / 0.07, 2)) * (0.3 + 0.7 * petal) + Math.exp(-Math.pow(d / 0.09, 2)) * 0.8;
+    const a = ring * 0.8;
     const hue = (an - c.aci) * 0.8 + d * 3;
     FB[g * 3] += a * (1.0 + 0.35 * Math.sin(hue)); FB[g * 3 + 1] += a * (0.85 + 0.3 * Math.sin(hue + 2.1)); FB[g * 3 + 2] += a * (0.95 + 0.35 * Math.sin(hue + 4.2));
   }

@@ -232,49 +232,152 @@
   const tasM = (ao, golge) => (n) => golgele(n, TAS, { ao: ao || 1, golge: golge === undefined ? 1 : golge, ks: 0.05, us: 14, fr: 0.06 });
 
   // ================================================================ GÖK
-  dol(dik(0, 0, 1024, 1024), lin(0, 0, 0, 800, [[0, '#5E9FDC'], [0.35, '#8DBDE8'], [0.7, '#C5DCEE'], [1, '#EEF0EA']]));
-  dol(dik(0, 0, 1024, 1024), rad(880, 140, 0, 880, 140, 560, [[0, 'rgba(255,252,240,1)'], [0.08, 'rgba(255,250,232,0.85)'], [0.25, 'rgba(255,244,222,0.38)'], [0.55, 'rgba(255,240,220,0.1)'], [1, 'rgba(255,240,220,0)']]));
-  dol(S.daireYolu(880, 140, 44), rad(880, 140, 0, 880, 140, 44, [[0, '#FFFFFF'], [0.7, '#FFFEF8'], [1, '#FFF8E2']]));
+  // gerçekçi gök: tepede derin mavi, ufukta sıcak, puslu açık ton; güneşin çevresinde parlama
+  dol(dik(0, 0, 1024, 1024), lin(0, 0, 0, 800, [[0, '#3F86D6'], [0.28, '#64A2E2'], [0.58, '#9CC6EC'], [0.84, '#D2E4F1'], [1, '#EEF1EC']]));
+  dol(dik(0, 0, 1024, 1024), rad(880, 140, 0, 880, 140, 600, [[0, 'rgba(255,253,244,1)'], [0.07, 'rgba(255,250,236,0.9)'], [0.2, 'rgba(255,246,228,0.45)'], [0.5, 'rgba(255,242,224,0.12)'], [1, 'rgba(255,240,220,0)']]));
+  dol(S.daireYolu(880, 140, 40), rad(880, 140, 0, 880, 140, 40, [[0, '#FFFFFF'], [0.75, '#FFFFFB'], [1, '#FFF9E6']]));
 
-  // bulutlar: keskin kenarlı kümülüs topakları; her topak kendi yumuşak ağ degradesiyle (güneşe bakan
-  // tepe sıcak beyaz, alt-sol serin gri-mavi), düz ve serin bir taban
-  function bulut(x, y, s, tohum) {
+  /**
+   * Kümülüs: kürelerden kurulmuş bir yükseklik alanı (h = max küre yüksekliği), keskin vektör siluet.
+   * Her pikselin normali yükseklik alanından çıkar; güneş (yumuşak sarmalı Lambert + ince gümüş kenar),
+   * gök dolgusu ve düz, serin bir taban ile ışıklandırılır → kabarık, gerçekçi hacim.
+   */
+  function kumulus(x0, y0, s, tohum) {
     const r = S.rng(tohum);
-    const topak = [];
-    // arka sıra (yüksek, küçük) → ön sıra (alçak, büyük)
-    const kule = [[-44, -40, 24], [-8, -56, 32], [30, -44, 26], [58, -30, 18]];
-    const alt = [[-78, -14, 18], [-52, -20, 24], [-18, -24, 28], [20, -22, 27], [52, -16, 22], [80, -10, 15]];
-    for (const [dx, dy, rr] of kule) topak.push([x + (dx + (r() - 0.5) * 6) * s, y + (dy + (r() - 0.5) * 4) * s, rr * s * (0.92 + r() * 0.16)]);
-    for (const [dx, dy, rr] of alt) topak.push([x + (dx + (r() - 0.5) * 6) * s, y + (dy + (r() - 0.5) * 3) * s, rr * s * (0.92 + r() * 0.14)]);
-    const siluet = new Path2D();
-    for (const [cx, cy, rr] of topak) {
-      siluet.moveTo(cx + rr, cy);
-      siluet.arc(cx, cy, rr, 0, Math.PI * 2);
+    const kure = [];
+    // ana gövde: tabanda geniş, yukarı doğru daralan bir kubbe; yüzeyine irili ufaklı kabarcıklar dizilir
+    const G = 108 * s, Hh = 74 * s;
+    for (let k = 0; k < 9; k++) {
+      const t = k / 8;
+      kure.push([x0 + (t - 0.5) * 2 * G * 0.86, y0 - 18 * s, (22 + 16 * Math.sin(Math.PI * t)) * s, 0]);
     }
-    const taban = dik(x - 120 * s, y - 140 * s, x + 120 * s, y);
-    kirp(taban, () => {
-      for (const [cx, cy, rr] of topak) {
-        dol(S.daireYolu(cx, cy, rr), rad(cx + rr * 0.4, cy - rr * 0.5, rr * 0.05, cx + rr * 0.1, cy - rr * 0.1, rr * 1.25, [[0, '#FFFFFF'], [0.45, '#FFFDF9'], [0.78, '#F0F2F4'], [1, '#E2E8EF']]));
+    for (let k = 0; k < 46; k++) {
+      const a = Math.PI * (0.06 + 0.88 * r());
+      const yar = 0.55 + 0.45 * r();
+      const ex = x0 + Math.cos(a) * G * yar * (a > Math.PI / 2 ? 0.95 : 1);
+      const ey = y0 - 14 * s - Math.sin(a) * Hh * yar * (0.75 + 0.35 * Math.sin(a));
+      const rr = (8 + 20 * r() * Math.sin(a) + 6 * Math.sin(a)) * s;
+      kure.push([ex, ey, rr, (yar - 0.6) * 18 * s]);
+    }
+    kure.push([x0 + 8 * s, y0 - 52 * s, 40 * s, 6 * s], [x0 - 34 * s, y0 - 38 * s, 32 * s, 4 * s], [x0 + 48 * s, y0 - 34 * s, 30 * s, 2 * s]);
+    let bx1 = 1e9, by1 = 1e9, bx2 = -1e9, by2 = y0;
+    for (const [cx, cy, rr] of kure) {
+      bx1 = Math.min(bx1, cx - rr); bx2 = Math.max(bx2, cx + rr); by1 = Math.min(by1, cy - rr);
+    }
+    const x1 = Math.floor(bx1 - 2), y1 = Math.floor(by1 - 2), x2 = Math.ceil(bx2 + 2), y2 = Math.ceil(by2 + 1);
+    const W = (x2 - x1) * OL, H = (y2 - y1) * OL;
+    // siluet maskesi (kenar yumuşatmalı), tabanı düz kesilmiş
+    const c = S.yeniTuval(W, H);
+    const cc = c.getContext('2d', { willReadFrequently: true });
+    cc.setTransform(OL, 0, 0, OL, -x1 * OL, -y1 * OL);
+    cc.beginPath();
+    for (const [cx, cy, rr] of kure) {
+      cc.moveTo(cx + rr, cy);
+      cc.arc(cx, cy, rr, 0, Math.PI * 2);
+    }
+    cc.save();
+    cc.clip();
+    cc.fillStyle = '#fff';
+    cc.fillRect(x1, y1, x2 - x1, y0 - y1);
+    cc.restore();
+    const id = cc.getImageData(0, 0, W, H);
+    const m = id.data;
+    const h = new Float32Array(W * H);
+    for (let j = 0; j < H; j++) {
+      const y = y1 + (j + 0.5) / OL;
+      for (let i = 0; i < W; i++) {
+        if (m[(j * W + i) * 4 + 3] === 0) continue;
+        const x = x1 + (i + 0.5) / OL;
+        let best = 0;
+        for (const [cx, cy, rr, z] of kure) {
+          const d2 = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+          if (d2 < rr * rr) best = Math.max(best, Math.sqrt(rr * rr - d2) + z);
+        }
+        h[j * W + i] = best;
       }
-      kirp(siluet, () => {
-        // serin taban ve gök yansıması
-        dol(dik(x - 130 * s, y - 52 * s, x + 130 * s, y), lin(0, y - 52 * s, 0, y, [[0, 'rgba(196,210,228,0)'], [0.55, 'rgba(190,204,224,0.38)'], [1, 'rgba(176,192,216,0.8)']]));
-        // sol yan (güneşten uzak) hafif serin
-        dol(dik(x - 130 * s, y - 140 * s, x + 130 * s, y), lin(x - 110 * s, 0, x + 20 * s, 0, [[0, 'rgba(186,200,222,0.45)'], [1, 'rgba(186,200,222,0)']]));
-        // güneş yanında sıcak ışıltı
-        yumusak(14 * s, () => dol(S.elipsYolu({ cx: x + 40 * s, cy: y - 56 * s, rx: 52 * s, ry: 22 * s, aci: -0.3 }), 'rgba(255,244,226,0.45)'));
-      });
-    });
+    }
+    const LDb = norm([0.62, 0.62, 0.48]);
+    for (let j = 0; j < H; j++) {
+      const y = y1 + (j + 0.5) / OL;
+      for (let i = 0; i < W; i++) {
+        const o = (j * W + i) * 4;
+        if (m[o + 3] === 0) continue;
+        const k = j * W + i;
+        const hx = (h[Math.min(W * H - 1, k + 1)] - h[Math.max(0, k - 1)]) * OL * 0.5;
+        const hy = (h[Math.max(0, k - W)] - h[Math.min(W * H - 1, k + W)]) * OL * 0.5; // yukarı pozitif
+        const n = norm([-hx, -hy, 1.6]);
+        const wrap = Math.max(0, (nokta(n, LDb) + 0.45) / 1.45);
+        const tabanT = ss(y0 - 30 * s, y0, y); // tabana doğru serin, düz gölge
+        const kenar = Math.pow(1 - Math.max(0, n[2]), 3) * Math.max(0, n[0] * 0.6 + n[1] * 0.6); // gümüş kenar
+        const out = [];
+        const gun = [1.0, 0.97, 0.9], gok = [0.42, 0.52, 0.7], alt = [0.5, 0.52, 0.56];
+        for (let q = 0; q < 3; q++) {
+          const amb = gok[q] * (0.55 + 0.45 * n[1]) + alt[q] * 0.25;
+          out[q] = (gun[q] * wrap * 0.78 * (1 - 0.55 * tabanT) + amb * 0.62) * 0.98 + kenar * 0.5 * gun[q];
+        }
+        m[o] = kod(out[0]);
+        m[o + 1] = kod(out[1]);
+        m[o + 2] = kod(out[2]);
+      }
+    }
+    cc.setTransform(1, 0, 0, 1, 0, 0);
+    cc.putImageData(id, 0, 0);
+    ctx.drawImage(c, x1, y1, W / OL, H / OL);
   }
-  bulut(176, 262, 1.05, 11);
-  bulut(476, 156, 0.68, 12);
-  bulut(820, 378, 0.9, 13);
-  bulut(70, 474, 0.48, 14);
+  kumulus(176, 270, 1.0, 11);
+  kumulus(478, 160, 0.62, 12);
+  kumulus(822, 386, 0.86, 13);
+  kumulus(76, 480, 0.44, 14);
 
-  // ================================================================ YER
-  dol(dik(0, 800, 1024, 1024), lin(0, 800, 0, 1024, [[0, '#EADCC2'], [0.4, '#E3D0B0'], [1, '#D8C19B']]));
-  // ufukta açık, sıcak bir pus; önde bitkilerin yere düşen yumuşak gölge havuzları
-  dol(dik(0, 800, 1024, 840), lin(0, 800, 0, 840, [[0, 'rgba(250,244,230,0.7)'], [1, 'rgba(250,244,230,0)']]));
+  // ================================================================ YER: ince rüzgâr dalgacıklı kum
+  // perspektifli yer düzlemi; dalgacıklar (asimetrik sırtlar) yükseklik alanından ışıklandırılır,
+  // uzağa doğru incelip ufuk pusunda kaybolur
+  {
+    const W = 1024 * OL, H = 224 * OL;
+    const c = S.yeniTuval(W, H);
+    const cc = c.getContext('2d', { willReadFrequently: true });
+    const id = cc.createImageData(W, H);
+    const m = id.data;
+    const KUM = hexL('#E9D6B4');
+    const PUS = hexL('#EEEDE6');
+    const Lk = norm([0.55, 0.6, 0.58]);
+    const sirt = (ph) => {
+      // asimetrik dalgacık: rüzgâr yanı yatık, kuytu yanı dik
+      const f = ph - Math.floor(ph);
+      return f < 0.72 ? f / 0.72 : (1 - f) / 0.28;
+    };
+    const yuk = (X, Z) => {
+      const ph = (Z * 0.9 + X * 0.16 + 0.35 * Math.sin(X * 0.21 + Z * 0.13) + 0.2 * Math.sin(X * 0.57 - Z * 0.3)) / 1.0;
+      const dalga = 0.6 * Math.sin(X * 0.035 + 1.3) + 0.5 * Math.sin(Z * 0.05 + X * 0.012);
+      return sirt(ph) * 0.09 + dalga * 0.5;
+    };
+    for (let j = 0; j < H; j++) {
+      const y = 800 + (j + 0.5) / OL;
+      const dy = y - 798;
+      const Z = 1400 / dy; // derinlik
+      const sonum = ss(26, 4, Z * 0.18); // uzakta dalgacık sönümü
+      for (let i = 0; i < W; i++) {
+        const x = (i + 0.5) / OL;
+        const X = ((x - 560) * Z) / 260;
+        const e = 0.06;
+        const h0 = yuk(X, Z), hx = (yuk(X + e, Z) - h0) / e, hz = (yuk(X, Z + e) - h0) / e;
+        const n = norm([-hx * sonum, 1, hz * sonum * 0.9]); // y yukarı, z izleyiciye (uzak = -z)
+        const nn = [n[0], n[1], n[2]];
+        const ndl = Math.max(0, nokta(nn, Lk));
+        const o = (j * W + i) * 4;
+        const pus = ss(0, 40, dy) ;
+        for (let q = 0; q < 3; q++) {
+          const v = KUM[q] * (0.86 * ndl / Lk[1] * 0.92 + 0.2);
+          const t = 1 - pus;
+          m[o + q] = kod(v * (1 - t * 0.7) + PUS[q] * t * 0.7);
+        }
+        m[o + 3] = 255;
+      }
+    }
+    cc.putImageData(id, 0, 0);
+    ctx.drawImage(c, 0, 800, 1024, 224);
+  }
+  // önde bitkilerin yere düşen yumuşak gölge havuzları
   yumusak(26, () => {
     for (const [x, y, rx, ry] of [[170, 960, 170, 60], [520, 990, 230, 50], [860, 960, 170, 60], [360, 905, 110, 30], [690, 905, 110, 30]]) {
       dol(S.elipsYolu({ cx: x, cy: y, rx, ry, aci: 0 }), 'rgba(140,110,70,0.16)');
