@@ -388,6 +388,16 @@
     return 0;
   }, 1);
 
+  // ------------------------------------------------------------ güneş halesi: açık sarı ve krem, yan yüzle, sonra parmakla
+  katBaslat();
+  for (const [x, y] of noktalar(9, (x, y, b) => gokMu(b) && Math.hypot(x - 880, y - 140) < 300 && !kenarBos(x + 6, y + 6))) {
+    const d = Math.hypot(x - 880, y - 140);
+    const c = d < 80 ? [255, 250, 238] : d < 170 ? (R() < 0.6 ? [250, 242, 206] : [252, 230, 158]) : (R() < 0.5 ? [238, 234, 192] : [228, 224, 204]);
+    yanVurus(x, y, (R() - 0.5) * 0.6 - 0.2, 20 + R() * 26, 12 + R() * 8, c, (0.85 - d / 420) * (0.8 + R() * 0.3));
+  }
+  katUygula(0.95);
+  dagit(6, (x, y) => (gokMu(bolge(x, y)) ? sstep(300, 90, Math.hypot(x - 880, y - 140)) * 0.75 : 0), 1);
+
   // ------------------------------------------------------------ KAT 3: uçla tarama öbekleri (keskin, dağıtılmamış)
   katBaslat();
   {
