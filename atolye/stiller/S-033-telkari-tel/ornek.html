@@ -650,6 +650,31 @@
       for (let k = 0; k <= 24; k++) dm.push([a[0] + ((b[0] - a[0]) * k) / 24, a[1] + ((b[1] - a[1]) * k) / 24]);
       for (const r of parcala(dm, gizli)) tel(bitki, r, ESKI, 1.2);
       if (!gizli(a[0], a[1])) boncuk(bitki, a[0], a[1], 1.9, ALTIN);
+      // balık sırtı dolgu: damardan kenara, uca doğru eğik sık yassı teller
+      const yol = new Path2D(S.yaprakYolu(yp));
+      const ux = (b[0] - a[0]) / Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const uy = (b[1] - a[1]) / Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const ARA = yp.uzunluk > 50 ? 3.1 : 2.7;
+      for (const yan of [1, -1]) {
+        const ca = Math.cos(0.95 * yan);
+        const sa = Math.sin(0.95 * yan);
+        const dx = ux * ca - uy * sa;
+        const dy = ux * sa + uy * ca;
+        for (let u = ARA * 1.2; u < L - ARA * 0.6; u += ARA) {
+          const x0 = a[0] + ux * u + dx * 1.6;
+          const y0 = a[1] + uy * u + dy * 1.6;
+          const pts = [];
+          for (let t = 0; t < 60; t += 0.6) {
+            const x = x0 + dx * t;
+            const y = y0 + dy * t;
+            if (!oc.isPointInPath(yol, x + dx * 2.1, y + dy * 2.1)) break;
+            pts.push([x, y]);
+          }
+          if (pts.length < 2) continue;
+          for (const r of parcala(pts, gizli)) tel(bitki, r, ESKI, 0.95);
+        }
+      }
     });
     S.bitki.tomurcuklar.forEach((t, i) => {
       const gizli = ortuluMu(1000 + i);
@@ -700,8 +725,7 @@
     for (let i = 0; i < W * W; i++) {
       if (bitkiSinir[i]) continue;
       const b = tumH[i];
-      if (b === NO.yaprak) bitkiMalzeme[i] = 3;
-      else if (b === NO.cicek) bitkiMalzeme[i] = 2;
+      if (b === NO.cicek) bitkiMalzeme[i] = 2; // yapraklar balık sırtıyla dolu, spiral yalnız taç yapraklarında
     }
     doldur(bitki, bitkiMalzeme, (x, y, m) => (m === 3 ? 4.0 : 5.0), null);
 

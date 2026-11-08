@@ -482,28 +482,62 @@
   });
 
   // ============================================================ KASNAK
-  const kKas = [328, 552, 792, 696];
-  const KASSET = kume('kasnak');
-  yikama(kKas, kapsamBolge(kKas, KASSET, 0.9, (x, y) => y < 610), {
+  const kKas = [318, 548, 802, 700];
+  const KASSET = kume('kasnak', 'pencere');
+  // pencere ve nişler: kalemle çizilen kemerin üstüne tek fırça darbesiyle konmuş koyu lekeler; dipte boya
+  // birikir, ışıklı yandakiler soluk kalır, en sağdakiler yalnız kalemle bırakılmıştır
+  function kemerLeke(c, p, r, kalinlik) {
+    const w = p.w * (0.86 + r() * 0.26), x = p.x + (r() - 0.5) * 1.6, y = p.y + (r() - 0.5) * 2, h = p.h * (0.94 + r() * 0.1);
+    const l = x - w / 2, sg = x + w / 2, b = y + h, s = y + Math.min(h, w * 0.62);
+    const pts = [[l, b], [l - 0.5, (b + s) / 2], [l, s], [x - w * 0.32, y + w * 0.2], [x + (r() - 0.5) * 1.5, y], [x + w * 0.32, y + w * 0.2], [sg, s], [sg + 0.5, (b + s) / 2], [sg, b], [x, b + 1.5]]
+      .map((q) => [q[0], q[1], 1]);
+    hobbsCiz(c, pts, kalinlik || 9, 0.15, r, 0.16);
+  }
+  function lekeler(kutu, liste, tohum, sec) {
+    const r = SAHNE.rng(tohum);
+    return kapsamCiz(kutu, (c) => { for (const p of liste) { if (sec && !sec(p, r)) continue; c.globalAlpha = 1; kemerLeke(c, p, r); } c.globalAlpha = 1; });
+  }
+  yikama(kKas, gevsek(kKas, KASSET, { r: 3, tasma: 0.4, olcek: 16, kayip: 0.15, tohum: 21, kayipF: (x) => 0.7 * sstep(700, 768, x) }, (x, y) => y < 610), {
     pig: karis(P.vir, 0.55, P.sap, 0.4),
     yog: (x, y) => 0.38 + 1.0 * Math.pow(1 - silindirIsik(x, 560, 208), 1.3),
     kenar: 1.0, gran: 0.35, tohum: 21,
   });
-  yikama(kKas, kapsamBolge(kKas, KASSET, 0.9, (x, y) => y >= 609), {
+  yikama(kKas, gevsek(kKas, KASSET, { r: 3, tasma: 0.4, olcek: 16, kayip: 0.15, tohum: 22, kayipF: (x) => 0.7 * sstep(715, 786, x) }, (x, y) => y >= 609), {
     pig: (x, y) => karis(P.vir, 0.5, P.sap, 0.5, P.sie, 0.08 * silindirIsik(x, 560, 226)),
     yog: (x, y) => 0.32 + 1.05 * Math.pow(1 - silindirIsik(x, 560, 226), 1.3),
     kenar: 1.0, gran: 0.35, tohum: 22, acilma: [{ x: 452, y: 660, r: 18, e: 1.2 }],
   });
-  // alt kasnağın üst kenarında gölge şeridi
-  yikama(kKas, kapsamAlan(kKas, (x, y) => (BOL[y * W + x] === BI.kasnak && y >= 610 && y < 617 + (nB(x / 7, 2) - 0.5) * 4 ? 1 : 0)), {
-    pig: karis(P.vir, 0.6, P.ult, 0.5), yog: 0.7, kenar: 0.6, gran: 0.4, tohum: 23,
-  });
+  // kubbenin kasnağa düşürdüğü gölge ve alt kasnağın üst kenarı: kalınlığı değişen, yer yer kesilen tek fırça izi
+  {
+    const r = SAHNE.rng(23);
+    const A = kapsamCiz(kKas, (c) => {
+      c.lineCap = 'round';
+      for (const [y0, x1, x2, k] of [[613.5, 336, 784, 1], [557, 354, 762, 0.8]]) {
+        let x = x1;
+        while (x < x2) {
+          const uz = 30 + r() * 90, xe = Math.min(x2, x + uz);
+          c.globalAlpha = 0.55 + r() * 0.45 * k;
+          c.lineWidth = (3 + r() * 4.5) * k;
+          c.beginPath(); c.moveTo(x, y0 + (r() - 0.5) * 2); c.quadraticCurveTo((x + xe) / 2, y0 + (r() - 0.5) * 3, xe, y0 + (r() - 0.5) * 2); c.stroke();
+          x = xe + (r() < 0.35 ? 4 + r() * 14 : -2);
+        }
+      }
+      c.globalAlpha = 1;
+    });
+    const w = kKas[2] - kKas[0];
+    for (let j = 0; j < A.length; j++) { const x = kKas[0] + (j % w); A[j] *= 0.35 + 0.65 * sstep(780, 560, x); }
+    yikama(kKas, A, { pig: karis(P.vir, 0.6, P.ult, 0.5), yog: 0.62, kenar: 0.8, kenarR: 1.6, gran: 0.45, tohum: 23 });
+  }
   // pencereler ve nişler
-  yikama(kKas, kapsamBolge(kKas, kume('pencere'), 0.9), {
-    pig: (x, y) => karis(P.vir, 0.65, P.ult, 0.55, P.sie, 0.35 + 0.2 * (1 - silindirIsik(x, 560, 226))),
-    yog: (x, y) => (0.75 + 0.55 * (1 - silindirIsik(x, 560, 226))) * (0.55 + 0.9 * nB(x / 9 + 3, 7)) * sstep(0.0, 0.25, nC(x / 5, y / 6) + 0.12),
-    kenar: 1.0, kenarR: 1.6, gran: 0.55, dalga: 0.6, dalgaOlcek: 8, tohum: 24,
-  });
+  {
+    const liste = SAHNE.kasnakPencereleri(0).concat(SAHNE.kasnakPencereleri(1));
+    const A = lekeler(kKas, liste, 24, (p, r) => !(p.x > 745 && r() < 0.6));
+    yikama(kKas, A, {
+      pig: (x, y) => karis(P.vir, 0.65, P.ult, 0.55, P.sie, 0.35 + 0.2 * (1 - silindirIsik(x, 560, 226))),
+      yog: (x, y) => (0.62 + 0.6 * (1 - silindirIsik(x, 560, 226))) * (0.75 + 0.6 * nB(x / 9 + 3, 7)) * (y < 610 ? 0.6 + 0.6 * clamp((y - 567) / 30, 0, 1) : 0.6 + 0.6 * clamp((y - 628) / 48, 0, 1)),
+      kenar: 1.1, kenarR: 1.6, gran: 0.55, dalga: 0.5, dalgaOlcek: 8, tohum: 24,
+    });
+  }
 
   // ============================================================ KAİDE (beyaz taş)
   const kKai = [286, 688, 834, 806];
