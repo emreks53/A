@@ -24,7 +24,7 @@
 
   // ---------------------------------------------------------------- palet
   const P = {
-    gokHalka: ['#FFF5D9', '#FBF1D8', '#F3EEDB', '#E9ECDF', '#DEE9E3', '#D3E5E7', '#C9E0E9', '#BFDAE8', '#B6D4E6'],
+    gokHalka: ['#FFF4D8', '#FDEDD3', '#F8E9D5', '#EFE8D9', '#E3E8DC', '#D6E7DF', '#C9E3E2', '#BDDEE3', '#B2D8E2'],
     gunes: '#FFE7A6', gunesIc: '#FFDB86',
     bulut: '#FFFFFF', bulutG: '#E7EFF0',
     yesil: ['#17503D', '#1B5D47', '#206B51', '#26795B', '#2D8866', '#369671', '#43A47C', '#55B188'],
@@ -112,20 +112,34 @@
     p.closePath();
     return p;
   }
-  // bulut: aynı yarıçaplı hap dizileri; satırlar arasında eşit, ince gök aralığı
-  function bulut(x, y, s, sira) {
-    const r = 11 * s, ara = 2.4 * s;
-    sira.forEach(([a, b], i) => {
-      const yy = y + i * (2 * r + ara);
-      const son = i === sira.length - 1;
-      dol(hap(x + a * s, x + b * s, yy, r), son ? P.bulutG : P.bulut);
+  // pergel izleri: kubbeyi kuran iki büyük daire (merkezleri taban çizgisinde) gökte ince beyaz yay olarak görünür
+  ctx.save();
+  ctx.lineWidth = 1.3;
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  for (const cx of [560 - 62.58, 560 + 62.58]) { ctx.beginPath(); ctx.arc(cx, 555, 262.58, Math.PI, TAU); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(560, 40); ctx.lineTo(560, 300); ctx.stroke();
+  ctx.restore();
+
+  // bulut: aynı taban çizgisine oturan, yarıçapları altın oranla küçülen daireler; düz taban, yatay gölge şeridi
+  function bulut(x, y, s) {
+    const r2 = 26 * s, r1 = r2 / 1.618, r3 = r1 / 1.618;
+    const p = new Path2D();
+    p.addPath(daire(x - r2 * 0.95, y - r1, r1));
+    p.addPath(daire(x, y - r2, r2));
+    p.addPath(daire(x + r2 * 1.05, y - r1, r1));
+    p.addPath(daire(x + r2 * 1.75, y - r3, r3));
+    p.addPath(daire(x - r2 * 1.65, y - r3, r3));
+    const kes = dik(x - 200 * s, y - 200 * s, x + 200 * s, y);
+    kirpli(kes, () => {
+      dol(p, P.bulut);
+      kirpli(p, () => dol(dik(x - 200 * s, y - r3 * 0.9, x + 200 * s, y), P.bulutG));
     });
   }
-  bulut(168, 236, 1.05, [[-18, 52], [-64, 30], [-30, 70]]);
-  bulut(484, 132, 0.78, [[-20, 34], [-52, 50]]);
-  bulut(812, 352, 0.95, [[-6, 56], [-60, 34], [-26, 74]]);
-  bulut(86, 452, 0.62, [[-30, 30], [-56, 46]]);
-  bulut(958, 470, 0.6, [[-34, 26], [-20, 52]]);
+  bulut(170, 268, 1.05);
+  bulut(478, 156, 0.72);
+  bulut(820, 382, 0.9);
+  bulut(80, 480, 0.6);
+  bulut(962, 496, 0.55);
 
   // ---------------------------------------------------------------- yer
   dol(dik(0, 800, 1024, 1024), P.zemin);
