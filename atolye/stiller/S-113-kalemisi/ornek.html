@@ -193,8 +193,6 @@
   }
   const GUL_DIS = ornekle(gulbezek(15.5, 8), 0.8);
   const GUL_IC = ornekle(gulbezek(9.4, 6), 0.8);
-  // penç (yelpaze biçimli palmet)
-  const PENC = ornekle('M0,6 C-9,6 -13,-1 -11,-7 C-8,-4 -6,-4 -5,-6 C-6,-11 -3,-15 0,-16 C3,-15 6,-11 5,-6 C6,-4 8,-4 11,-7 C13,-1 9,6 0,6 Z', 0.8);
 
   // bir motif örneği: kalıptan dönüştür, boya, silkme noktaları, tahrir
   function motif(pts, m, renk, tw) {
@@ -231,11 +229,11 @@
       const sapP = [];
       for (let i = 0; i <= 400; i++) {
         const u = (uz * i) / 400;
-        const v = 10 * Math.sin((u / T) * Math.PI * 2);
+        const v = 12 * Math.sin((u / T) * Math.PI * 2);
         const [x, y] = kn(u, v);
         sapP.push([x, y]);
       }
-      b.strokeStyle = RENK.lacivert; b.lineWidth = 2.6;
+      b.strokeStyle = RENK.lacivert; b.lineWidth = 2.2;
       b.beginPath(); sapP.forEach(([x, y], i) => (i ? b.lineTo(x, y) : b.moveTo(x, y))); b.stroke();
       silkme(sapP, 2.6);
       for (let k = 0; k < adet; k++) {
@@ -243,20 +241,18 @@
         const a = kn(0, 0)[2];
         // dalın tepesinde (iç kenara yakın) dışa doğru açılan hatayi; çukurunda koynuna oturan gülbezek (penç)
         {
-          const [hx, hy] = kn(u0 + T / 4, 10);
+          const [hx, hy] = kn(u0 + T / 4, 12);
           hatayi({ x: hx, y: hy, a, s: 0.82 }, RENK.lal, RENK.asiAcik, 1.2);
-          const [cx, cy] = kn(u0 + (3 * T) / 4, 1);
+          const [cx, cy] = kn(u0 + (3 * T) / 4, 4);
           motif(GUL_DIS, { x: cx, y: cy, a, s: 0.82 }, RENK.lal, 1.3);
           motif(GUL_IC, { x: cx, y: cy, a, s: 0.82 }, RENK.asiAcik, 1.1);
           motif(ornekle('M-4,0 A4,4 0 1,0 4,0 A4,4 0 1,0 -4,0 Z', 0.7), { x: cx, y: cy, a, s: 0.85 }, RENK.lacivert, 1);
         }
-        // dalın orta çizgiyi kestiği yerlerde iki yana çatallanan karşılıklı rumiler (dal yönünde uzanır)
-        for (const uz of [u0, u0 + T / 2]) {
+        // dalın orta çizgiyi kestiği yerlerde, iki motifin arasındaki boşluğa açılan rumi (ucu dal yönüne kıvrık)
+        for (const [uz, yon] of [[u0, -1], [u0 + T / 2, 1]]) {
           if (uz < 6) continue;
-          const egim = Math.atan(10 * ((2 * Math.PI) / T) * Math.cos((uz / T) * Math.PI * 2));
           const [rx, ry] = kn(uz, 0);
-          rumi({ x: rx, y: ry, a: a + egim - 0.62, s: 0.4 }, RENK.firuze, 1.1);
-          rumi({ x: rx, y: ry, a: a + egim + 0.62, s: 0.4, fy: true }, RENK.firuze, 1.1);
+          rumi({ x: rx, y: ry, a: a + (yon < 0 ? -Math.PI / 2 + 0.35 : Math.PI / 2 - 0.35), s: 0.34, fy: yon > 0 }, RENK.firuze, 1.0);
         }
       }
     }

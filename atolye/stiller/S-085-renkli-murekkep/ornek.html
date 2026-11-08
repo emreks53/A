@@ -353,7 +353,7 @@
     const A = kapsamAlan(kGok, (x, y) => (1 - pay[y * W + x]) * (1 - bulut(x, y)) * sstep(840, 760, y + (fbm(nA, x / 60, 3, 2) - 0.5) * 60));
     murekkep(kGok, A, {
       pig: (x, y) => {
-        const d = gd(x, y) + (fbm(nE, x / 90, y / 90, 3) - 0.5) * 80;
+        const d0 = gd(x, y), d = d0 + (fbm(nE, x / 90, y / 90, 3) - 0.5) * (14 + 60 * sstep(90, 200, d0));
         const sicak = d < 110 ? lerpK(P.lim, karis(P.lim, 0.7, P.tur3, 0.5), sstep(50, 110, d)) : lerpK(karis(P.tur3, 0.7, P.gul, 0.4), karis(P.gul, 0.8, P.mor, 0.25), sstep(110, 190, d));
         const soguk = lerpK(gecis(P.tur, P.lac, x, y, 170, 3), karis(P.kob, 0.8, P.mor, 0.25), sstep(0.62, 0.8, fbm(nB, x / 220, y / 200, 3)) * sstep(500, 100, y));
         return lerpK(sicak, soguk, sstep(170, 270, d));
@@ -369,10 +369,10 @@
   {
     const ust = (x) => 200 + (fbm(nA, x / 150, 9, 3) - 0.5) * 150 + 10 * sstep(320, 0, x);
     const A = kapsamAlan(kGok, (x, y) => (1 - pay[y * W + x]) * (1 - bulut(x, y)) * sstep(ust(x) + 2, ust(x) - 2, y) * sstep(232, 236, gd(x, y) + (fbm(nE, x / 90, y / 90, 2) - 0.5) * 40));
-    murekkep(kGok, A, { pig: (x, y) => gecis(karis(P.kob, 0.6, P.tur, 0.5), karis(P.mor, 0.55, P.kob, 0.5), x, y, 170, 8), yog: 0.17, kenar: 1.8, tohum: 2 });
+    murekkep(kGok, A, { pig: (x, y) => gecis(karis(P.kob, 0.6, P.tur, 0.5), karis(P.mor, 0.55, P.kob, 0.5), x, y, 170, 8), yog: 0.14, kenar: 1.8, tohum: 2 });
     const ust2 = (x) => 90 + (fbm(nA, x / 110, 19, 3) - 0.5) * 120;
     const A2 = kapsamAlan(kGok, (x, y) => (1 - pay[y * W + x]) * (1 - bulut(x, y)) * sstep(ust2(x) + 2, ust2(x) - 2, y) * sstep(560, 520, x + (fbm(nD, x / 60, y / 60, 2) - 0.5) * 120));
-    murekkep(kGok, A2, { pig: karis(P.mor, 0.6, P.mac, 0.15, P.kob, 0.35), yog: 0.14, kenar: 1.8, tohum: 5 });
+    murekkep(kGok, A2, { pig: karis(P.mor, 0.6, P.mac, 0.15, P.kob, 0.35), yog: 0.11, kenar: 1.8, tohum: 5 });
     // ufukta turkuaz-limon ikinci havuz
     const alt = (x) => 640 + (fbm(nA, x / 120, 29, 3) - 0.5) * 120;
     const A3 = kapsamAlan(kGok, (x, y) => (1 - pay[y * W + x]) * (1 - bulut(x, y)) * sstep(alt(x) - 2, alt(x) + 2, y) * sstep(840, 780, y + (fbm(nA, x / 60, 3, 2) - 0.5) * 60));
@@ -382,9 +382,9 @@
   murekkep(kGok, kapsamAlan(kGok, (x, y) => { const b = bulut(x, y); return b * sstep(0.45, 0.7, fbm(nE, x / 40, y / 16, 3)) * sstep(180, 300, gd(x, y)) * (1 - pay[y * W + x]); }), { pig: karis(P.mor, 0.5, P.gul, 0.5), yog: 0.05, yumusak: 3, kenar: 0.6, tohum: 3 });
   // güneş: limon sarısı disk, kenarı keskin
   {
-    const gs = (x, y) => { const a = Math.atan2(y - 140, x - 880); return 47 + (fbm(nB, Math.cos(a) * 1.5 + 7, Math.sin(a) * 1.5 + 3, 3) - 0.5) * 9; };
+    const gs = (x, y) => { const a = Math.atan2(y - 140, x - 880); return 47 + (fbm(nB, Math.cos(a) * 1.5 + 7, Math.sin(a) * 1.5 + 3, 3) - 0.5) * 5; };
     const ic = (x, y) => Math.hypot(x - 868, y - 128) + (fbm(nE, x / 9, y / 9, 2) - 0.5) * 9;
-    murekkep([790, 50, 970, 230], kapsamAlan([790, 50, 970, 230], (x, y) => sstep(gs(x, y) + 1, gs(x, y) - 1, gd(x, y)) * sstep(15, 17, ic(x, y))), { pig: (x, y) => lerpK(P.lim, karis(P.lim, 0.75, P.tur3, 0.45), sstep(14, 48, gd(x, y))), yog: 0.24, kenar: 1.8, tohum: 4 });
+    murekkep([790, 50, 970, 230], kapsamAlan([790, 50, 970, 230], (x, y) => sstep(gs(x, y) + 1, gs(x, y) - 1, gd(x, y))), { pig: (x, y) => lerpK(P.lim, karis(P.lim, 0.75, P.tur3, 0.45), sstep(14, 48, gd(x, y))), yog: 0.24, kenar: 1.8, tohum: 4 });
   }
 
   // ============================================================ KUBBE: zümrüt, limon yeşili ve turkuaz ıslakta
@@ -427,9 +427,14 @@
   // ============================================================ KASNAK
   const kKas = [320, 548, 800, 700];
   const kasM = KASNAK_M;
+  // açık turkuaz-limon ıslak kat, üstüne gölge yanında kenarı keskin kuruyan zümrüt-kobalt havuzu
   murekkep(kKas, kapsamAlan(kKas, (x, y) => kasM[y * W + x] * (y > 553 ? 1 : 0)), {
-    pig: (x, y) => lerpK(gecis(karis(P.tur2, 0.7, P.zum, 0.4), karis(P.tur, 0.7, P.tur2, 0.4), x, y, 60, 21), karis(P.tur2, 0.6, P.kob, 0.4), sstep(0.5, 0.15, silindirIsik(x, 560, 226))),
-    yog: (x) => 0.3 + 0.45 * Math.pow(1 - silindirIsik(x, 560, 226), 1.3), tohum: 21,
+    pig: (x, y) => gecis(karis(P.tur, 0.7, P.yes, 0.3), karis(P.tur2, 0.7, P.tur, 0.4), x, y, 50, 21),
+    yog: (x) => 0.24 + 0.16 * (1 - silindirIsik(x, 560, 226)), kenar: 1.2, tohum: 21,
+  });
+  murekkep(kKas, kapsamAlan(kKas, (x, y) => kasM[y * W + x] * (y > 553 ? 1 : 0) * sstep(0.62, 0.58, silindirIsik(x, 560, 226) + (fbm(nC, x / 26, y / 18, 3) - 0.5) * 0.35)), {
+    pig: (x, y) => gecis(karis(P.tur2, 0.7, P.zum, 0.35), karis(P.kob, 0.55, P.tur2, 0.5), x, y, 46, 24),
+    yog: (x) => 0.16 + 0.3 * Math.pow(1 - silindirIsik(x, 560, 226), 1.3), kenar: 1.9, tohum: 25,
   });
   murekkep(kKas, kapsamAlan(kKas, (x, y) => kasM[y * W + x] * ((y > 610 && y < 619) || (y > 553 && y < 560) ? 1 : 0)), { pig: karis(P.kob, 0.6, P.tur2, 0.4), yog: 0.3, tohum: 22 });
   {
@@ -503,9 +508,19 @@
         pig: (x, yy) => { const t = ((x - y.x) * ca + (yy - y.y) * sa) / L; return lerpK(k1, k2, sstep(0.25 + fz, 0.75 + fz, t + (fbm(nE, x / 12 + k, yy / 12, 2) - 0.5) * 0.5)); },
         yog: (x, yy) => 0.36 + 0.14 * fbm(nB, x / 14 + k, yy / 14, 2), kenarR: 1.4, tohum: 100 + k,
       });
+      // ikinci mürekkep: yaprağın gölge yarısında, damar boyunca keskin kenarlı koyu havuz
+      const nx = -sa, ny = ca, taraf = nx * isik[0] + ny * isik[1] > 0 ? -1 : 1;
+      const H = kapsamAlan(kutu, (x, yy) => { const j = (yy - kutu[1]) * w + x - kutu[0], v = ((x - y.x) * nx + (yy - y.y) * ny) * taraf; return A[j] * sstep(-1, 1.5, v + (fbm(nD, x / 9 + k, yy / 9, 2) - 0.5) * 7); });
+      if (r() < 0.75) murekkep(kutu, H, { pig: (x, yy) => lerpK(k2, karis(P.tur2, 0.6, P.kob, 0.5), sstep(0.4, 0.65, fbm(nC, x / 10 + k, yy / 10, 2))), yog: 0.18 + 0.1 * r(), kenar: 1.8, kenarR: 1.2, tohum: 150 + k });
       const [a, b] = SAHNE.yaprakDamari(y);
       const dam = [[a[0], a[1]], [(a[0] + b[0]) / 2 - sa * 1.5, (a[1] + b[1]) / 2 + ca * 1.5], [b[0], b[1]]];
       hat(kutu, [dam], { gen: 1.2, pig: karis(P.zum, 0.6, P.kob, 0.5), yog: 0.45, tohum: 200 + k, carpM: CRt });
+      // dış kenarın bir yanında, lekeye tam oturmayan kopuk kalem hattı
+      if (r() < 0.55) {
+        const Wd = L * y.genislik, ox = (r() - 0.5) * 3, oy = (r() - 0.5) * 3, tr = r() < 0.5 ? 1 : -1, t0 = 0.08 + r() * 0.2, t1 = t0 + 0.45 + r() * 0.3, pts = [];
+        for (let t = t0; t <= Math.min(0.97, t1); t += 0.04) { const v = tr * Wd * 0.5 * Math.pow(Math.sin(Math.PI * Math.pow(t, 0.9)), 0.85); pts.push([y.x + ca * t * L - sa * v + ox, y.y + sa * t * L + ca * v + oy]); }
+        hat(kutu, [pts], { gen: 1.3, pig: karis(P.zum, 0.5, P.kob, 0.5, P.tur2, 0.2), yog: 0.42, tohum: 250 + k, carpM: CRt });
+      }
     });
   }
   // tomurcuklar: macenta → turuncu

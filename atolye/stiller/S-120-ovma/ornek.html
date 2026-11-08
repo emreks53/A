@@ -168,11 +168,11 @@
       u: lin(U, 0, 0, 0, 806, [[0, '#6A78E0'], [0.45, '#4FB3E0'], [0.8, '#F2A27A'], [1, '#F6C46A']]),
       ud: { adet: 900, renk: ['#7A6CE0', '#46A6E6', '#F08C8C', '#F7B65E', '#5FC4D8'], boy: 80, en: 22, aci: () => (rnd() - 0.5) * 1.4, alfa: 0.3 },
       s1: lin(S1, 0, 0, 0, 806, [[0, '#BFE0F6'], [0.5, '#DDF0F8'], [0.85, '#FFF4E4'], [1, '#FFF1D8']]),
-      p1: lin(P1, 0, 0, 0, 806, [[0, gri(0.56)], [0.6, gri(0.62)], [1, gri(0.7)]]),
-      p1d: { adet: 1500, deger: (x, y) => 0.52 + 0.2 * (y / 806) + 0.2 * gunesYakin(x, y, 260), boy: 34, aci: gokYon },
+      p1: lin(P1, 0, 0, 0, 806, [[0, gri(0.5)], [0.6, gri(0.55)], [1, gri(0.62)]]),
+      p1d: { adet: 1500, deger: (x, y) => 0.48 + 0.18 * (y / 806) + 0.22 * gunesYakin(x, y, 260), boy: 34, aci: gokYon },
       s2: '#FFFBEE',
       // ışık ovması: güneşin çevresinde yumuşak, düzgün azalan krem pus (halka yok)
-      p2: rad(P2, S.gunes.x, S.gunes.y, 30, 430, [[0, gri(0.92)], [0.22, gri(0.66)], [0.5, gri(0.32)], [0.78, gri(0.1)], [1, gri(0)]]),
+      p2: rad(P2, S.gunes.x, S.gunes.y, 30, 430, [[0, gri(0.8)], [0.16, gri(0.6)], [0.4, gri(0.34)], [0.7, gri(0.12)], [1, gri(0)]]),
     });
     // güneşin çevresindeki sıcak alt boya hâlesi
     U.save(); U.globalCompositeOperation = 'source-atop';
@@ -186,9 +186,9 @@
     alan(d, {
       kutu: [gx - 50, gy - 50, 100, 100], yumusak: 2.5,
       u: '#F27A3C', ud: { adet: 60, renk: ['#F59A2E', '#EF5F4A', '#F7C33C'], boy: 30, en: 10, aci: null, alfa: 0.6 },
-      s1: '#FFF3B0', p1: 0.82,
-      p1d: { adet: 80, deger: 0.85, boy: 30, bl: 2 },
-      s2: '#FFFFF4', p2: 0.6,
+      s1: '#FFE680', p1: 0.8,
+      p1d: { adet: 50, deger: 0.85, boy: 22, aci: gokYon },
+      s2: '#FFF6C4', p2: 0.45,
     });
   }
   // bulutlar: pembe-lila alt boya, beyaz ovma
@@ -377,8 +377,8 @@
         u: lin(U, a[0], a[1], c[0], c[1], [[0, '#2A5AA0'], [0.5, '#1E8A5A'], [1, '#6CC048']]),
         s1: lin(S1, a[0], a[1], c[0], c[1], [[0, '#88B8B0'], [1, '#C8EAB0']]),
         ud: { adet: Math.round(L * 0.4), renk: ['#2E9A5E', '#3A70B0', '#7CC64A'], boy: L * 0.3, en: L * 0.08, aci: () => y.aci, alfa: 0.5 },
-        p1: 0.46,
-        p1d: { adet: Math.round(L * 0.3), deger: 0.5, boy: L * 0.3, aci: () => y.aci, bl: 1 },
+        p1: 0.34,
+        p1d: { adet: Math.round(L * 0.5), deger: 0.62, boy: L * 0.22, aci: () => y.aci },
         s2: '#F0FFE0',
         p2: 0.1,
       });
@@ -441,7 +441,7 @@
       // birinci ovma: her yerde ince bir pus örtüsü + kıl ve örgü tepelerinde kırık boya
       const p1 = P1v[j] / 255;
       const e1 = 1.02 - p1;
-      const c1 = clamp(p1 * 0.36 + sstep(e1 - 0.2, e1 + 0.2, doku) * (0.5 + 0.32 * p1), 0, 0.97);
+      const c1 = clamp(p1 * 0.32 + sstep(e1 - 0.2, e1 + 0.2, doku) * (0.5 + 0.34 * p1), 0, 0.97);
       let r = Uv[j] + (S1v[j] - Uv[j]) * c1;
       let g = Uv[j + 1] + (S1v[j + 1] - Uv[j + 1]) * c1;
       let b = Uv[j + 2] + (S1v[j + 2] - Uv[j + 2]) * c1;
@@ -451,7 +451,7 @@
         const kil2 = j + kay < Kv.length ? Kv[j + kay] / 255 : kil;
         const doku2 = orgu * 0.25 + kil2 * 0.6 + ince * 0.15;
         const e2 = 1.05 - p2;
-        const c2 = clamp(p2 * 0.22 + sstep(e2 - 0.16, e2 + 0.16, doku2) * 0.78, 0, 0.95);
+        const c2 = clamp(p2 * 0.32 + sstep(e2 - 0.3, e2 + 0.3, doku2) * 0.66, 0, 0.95);
         r += (S2v[j] - r) * c2; g += (S2v[j + 1] - g) * c2; b += (S2v[j + 2] - b) * c2;
       }
       // bezin dokusu ince boyanın altından hafifçe ışıklanır (sağ üstten)

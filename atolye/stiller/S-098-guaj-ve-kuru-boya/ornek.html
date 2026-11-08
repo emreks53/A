@@ -103,11 +103,12 @@
   // ------------------------------------------------------------ dokular
   // guaj fırça izi deseni: ince, uzun, açık-koyu çizgiler + geniş lekeli dalgalanma
   const firca = (() => {
-    const c = S.yeniTuval(512, 512);
-    const h = c.getContext('2d');
+    const c0 = S.yeniTuval(512, 512);
+    const h0 = c0.getContext('2d');
     const r = S.rng(55);
-    h.filter = 'blur(1.5px)';
-    // geniş, yumuşak, düşük karşıtlıklı fırça darbeleri (yükü azalan fırçanın açık-koyu izleri)
+    // geniş, yumuşak, düşük karşıtlıklı fırça darbeleri (yükü azalan fırçanın açık-koyu izleri);
+    // önce keskin çizilir, sonra döşeme bütünüyle bir kez bulanıklaştırılır (hızlı)
+    let h = h0;
     for (let i = 0; i < 420; i++) {
       const y = r() * 512, x = r() * 512, L = 50 + r() * 140, wv = 8 + r() * 22;
       const ac = r() < 0.5;
@@ -122,8 +123,18 @@
         }
       }
     }
+    // döşemeyi 3 × 3 yan yana koyup bir kez bulanıklaştır, ortasını al (kenarda dikiş kalmaz)
+    const c3 = S.yeniTuval(1536, 1536);
+    const h3 = c3.getContext('2d');
+    for (const ox of [0, 512, 1024]) for (const oy of [0, 512, 1024]) h3.drawImage(c0, ox, oy);
+    const c3b = S.yeniTuval(1536, 1536);
+    const h3b = c3b.getContext('2d');
+    h3b.filter = 'blur(1.5px)';
+    h3b.drawImage(c3, 0, 0);
+    const c = S.yeniTuval(512, 512);
+    h = c.getContext('2d');
+    h.drawImage(c3b, 512, 512, 512, 512, 0, 0, 512, 512);
     // fırça kılı izleri: darbe içinde çok ince, kısa paralel çizgiler
-    h.filter = 'none';
     for (let i = 0; i < 260; i++) {
       const y = r() * 512, x = r() * 512, L = 30 + r() * 70;
       h.strokeStyle = `rgba(255,255,250,${0.04 + r() * 0.05})`;
