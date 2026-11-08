@@ -15,7 +15,25 @@
     "Yeşim yeşili kubbe, fildişi minare ve kaide; ince kaburga çizgileri, altın alemler ve narin altın kemercik süsü",
     "Zeminde ipek atkı ipliklerinin ince yatay dokusu, düğümlü iplikler ve çapraz yumuşak ipek parıltısı"
   ],
-  "palet": ["#D3E6EC", "#F2EEDF", "#76B98A", "#A6D7AE", "#F7F2E7", "#E8A3AE", "#8DB38E", "#9A8873"],
+  "palet": [
+    "#E7F5F4",
+    "#F2EEDF",
+    "#96D1A5",
+    "#BEE4C1",
+    "#6FAB88",
+    "#E8A3AE",
+    "#8DB38E",
+    "#9A8873"
+  ],
   "kodla_cizim": "2048 iç çözünürlükte Canvas ile çizilir. Zemin dikey pastel geçiş, güneş yanında sıcak ışık ve döşenebilir fbm dokusuyla (soft-light) benekli guaj olarak sürülür. Mimari Path2D yollarıyla doğrusal geçişli dolgular, kenarda bulanık boya birikimi ve iki geçişli (biri kesik) ince fırça kontürüyle boyanır; kubbe kaburgaları koyu çizgi ve ışık yanında beyaz guaj çizgiyle çekilir. Dallar Catmull-Rom eğrilerinden değişken genişlikli fırça şeritleri olarak kurulur; ışık ve gölge kenarları bulanık şeritlerle, kabuk kısa kuru fırça çizgileriyle, yosun benekleriyle işlenir; ince dalcıklar tohumlu rastgelelikle mimariye taşmadan çıkarılır. Yapraklar Bézier biçimli, dipten uca renk geçişli, damarlı; şakayıklar üç halka hafif dalgalı taç yaprağıyla dörtte üç görünüşte; erik çiçekleri beş taç yaprak ve ercik çizgileriyle çizilir. En sonda piksel döngüsünde ipek atkı iplikleri (iplik başına ton, yuvarlak kesit, düğüm), ince çözgü ve çapraz ipek parıltısı eklenir.",
-  "etiketler": ["duvar kâğıdı", "chinoiserie", "ipek", "guaj", "elle boyama", "dekoratif", "pastel", "çiçekli dal"]
+  "etiketler": [
+    "duvar kâğıdı",
+    "chinoiserie",
+    "ipek",
+    "guaj",
+    "elle boyama",
+    "dekoratif",
+    "pastel",
+    "çiçekli dal"
+  ]
 }

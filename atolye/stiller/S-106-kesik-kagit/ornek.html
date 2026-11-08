@@ -236,7 +236,7 @@
   PP([[600, -30], [1054, -30], [1054, 346], [604, 352]], { renk: TURKUAZ, olcek: 0.9, dalga: 1.4 }, 3);
   PP([[-30, 452], [178, 455], [182, 790], [-30, 788]], { renk: ACIK, olcek: 0.9, dalga: 1.4 }, 3);
   PP([[190, 456], [600, 456], [612, 362], [1054, 356], [1054, 790], [192, 792]], { renk: MAVI2, olcek: 0.9, dalga: 1.4 }, 3);
-  PP([[-30, 800], [1054, 798], [1054, 1054], [-30, 1054]], { renk: MERCAN, olcek: 0.9, dalga: 1.4 }, 3);
+  PP([[-30, 800], [1054, 798], [1054, 1054], [-30, 1054]], { renk: '#FA9C7C', olcek: 0.9, dalga: 1.4 }, 3);
 
   // güneş: limon sarısı, düzensiz uçlu makas yıldızı; arkasında mercan daire
   PK(polar(880, 140, () => 60, 140), { renk: '#FF9B3D', olcek: 0.45 });
@@ -277,7 +277,7 @@
   bulut(165, 252, 1.15, 0); bulut(470, 150, 0.9, 1); bulut(772, 322, 0.78, 0); bulut(96, 500, 0.55, 1); bulut(942, 466, 0.58, 0);
 
   // ------------------------------------------------------------ minare
-  const BEYAZ = '#FFF8EA', GOLGE = '#D3DCF6';
+  const BEYAZ = '#FFF8EA', GOLGE = '#D2E7F8';
   const mc = 300;
   for (const p of S.minareParcalari()) {
     if (p.tip === 'alem') continue;
@@ -378,26 +378,32 @@
     PP(sol.concat(sag.reverse()), { renk: '#1C9A55', olcek: 0.3, faset: 4, dalga: 0.6 }, 2);
   }
   const yRenk = ['#1C9E5A', '#7DCB3E', '#14A39A', '#3DB45A', '#A6D93E', '#0E8C5A'];
+  // Matisse yosun yaprağı: ortada bir eksen, iki yanda sırayla dizilmiş, uca doğru eğilen yuvarlak uçlu
+  // parmak loblar ve aralarında derin makas çentikleri; diğerleri sade sivri uçlu yapraklar.
   function yaprakSekli(y, i) {
     const lob = i % 3 === 1;
-    const olc = lob ? 1.32 : y.uzunluk > 50 ? 1.15 : 1.06;
-    const L = y.uzunluk * olc, W = L * (lob ? 0.42 : 0.27);
+    const olc = lob ? 1.38 : y.uzunluk > 50 ? 1.15 : 1.06;
+    const L = y.uzunluk * olc, W = L * (lob ? 0.44 : 0.27);
     const ca = Math.cos(y.aci), sa = Math.sin(y.aci);
     const egri = (rnd() - 0.5) * 0.25;
-    const nl = 2.5 + Math.floor(rnd() * 2), ph = rnd() * 0.5;
+    const nl = 3.6 + Math.floor(rnd() * 2) * 0.8, ph = 0.15 + rnd() * 0.2;
+    const egim = 0.6 + rnd() * 0.3; // lobların uca doğru eğilmesi
     const pts = [];
-    const N = 90;
-    const wf = (t, taraf) => {
-      let w = W * Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.02)), 0.8) * (1 - 0.2 * t);
-      if (lob) {
-        const f = t * nl + (taraf > 0 ? ph : ph + 0.45);
+    const N = lob ? 180 : 90;
+    const zarf = (t) => Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.02)), lob ? 0.55 : 0.8) * (1 - (lob ? 0.3 : 0.2) * t);
+    const nokta = (t, taraf) => {
+      let w = W * zarf(t), u = t * L;
+      if (lob && t > 0.06) {
+        const f = t * nl + (taraf > 0 ? ph : ph + 0.5);
         const q = 2 * (f - Math.floor(f)) - 1;
-        w *= 0.32 + 0.68 * Math.sqrt(Math.max(0, 1 - q * q));
+        const lp = Math.sqrt(Math.max(0, 1 - q * q));
+        w *= 0.13 + 0.87 * Math.pow(lp, 0.8);
+        u += egim * w * (1 - t * 0.5);
       }
-      return w;
+      return [u, taraf * w + egri * Math.sin(Math.PI * t) * L];
     };
-    for (let k = 0; k <= N; k++) { const t = k / N; pts.push([t * L, -wf(t, -1) + egri * Math.sin(Math.PI * t) * L]); }
-    for (let k = N - 1; k > 0; k--) { const t = k / N; pts.push([t * L, wf(t, 1) + egri * Math.sin(Math.PI * t) * L]); }
+    for (let k = 0; k <= N; k++) pts.push(nokta(k / N, -1));
+    for (let k = N - 1; k > 0; k--) pts.push(nokta(k / N, 1));
     return pts.map(([u, v]) => [y.x + u * ca - v * sa, y.y + u * sa + v * ca]);
   }
   bit.yapraklar.forEach((y, i) => {

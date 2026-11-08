@@ -109,12 +109,14 @@
     for (let j = 0; j < W; j++) {
       for (let i = 0; i < W; i++) {
         const x = (i / W) * 1024, y = (j / W) * 1024;
-        let w = fbm(n1, x * 0.0045 + 11, y * 0.0045 + 3) - 0.47;
-        // lavinin daha geç kuruduğu yerler: kubbenin sol yanı, ufuk, öndeki çiçek kümeleri, bulut altları
-        const blob = (cx, cy, r, g) => g * Math.max(0, 1 - Math.hypot(x - cx, y - cy) / r);
-        w += blob(450, 470, 170, 0.5) + blob(250, 640, 140, 0.35) + blob(150, 960, 170, 0.35) + blob(900, 960, 160, 0.3) + blob(170, 270, 120, 0.35) + blob(770, 350, 120, 0.3) + blob(560, 960, 140, 0.25);
-        w -= blob(640, 360, 120, 0.45) + blob(300, 160, 110, 0.5) + blob(560, 240, 70, 0.8) + blob(560, 740, 120, 0.4);
-        v[j * W + i] = Math.max(0, Math.min(1, (w + 0.1) * 2.4));
+        // kâğıdın büyük kısmı kurumuş; mürekkep yalnız seçilmiş, hâlâ ıslak lavili yerlerde dağılır
+        let w = (fbm(n1, x * 0.006 + 11, y * 0.006 + 3) - 0.5) * 0.5 - 0.25;
+        const blob = (cx, cy, rx, ry, g) => g * Math.max(0, 1 - Math.hypot((x - cx) / rx, (y - cy) / ry));
+        // kubbenin gölgeli sol yanı (koyu yeşil ıslak-ıslağa leke), minaredeki zikzak, iki yandaki yaprak kümeleri
+        w += blob(440, 455, 85, 120, 1.25) + blob(300, 552, 40, 42, 1.3);
+        w += blob(120, 955, 150, 115, 1.05) + blob(905, 905, 125, 135, 1.1) + blob(80, 690, 70, 110, 0.75);
+        w += blob(255, 700, 55, 80, 0.6) + blob(790, 700, 50, 70, 0.55) + blob(150, 805, 160, 22, 0.8);
+        v[j * W + i] = Math.max(0, Math.min(1, w * 1.6));
       }
     }
     const c = S.yeniTuval(W, W);
@@ -232,6 +234,7 @@
   const CEK = yeni(); // çekirdek (keskin) çizgiler
   const TUY = yeni(); // tüylenecek geniş kopya
   const LIF = yeni(); // ıslak kâğıtta liflere sızan ince saçaklar
+  const KURU = yeni(); // lavi kuruduktan sonra çekilmiş, her zaman keskin çizgiler (ana yapı)
   const rT = S.rng(4242);
   let mTohum = 1;
   /** Daldırma uçlu kalem/ince fırça çizgisi: basınca göre kalınlık değişir, uçlar incelir, yer yer kesilir. */
@@ -242,7 +245,8 @@
     if (n < 2) return;
     let L = 0;
     const top = pts.reduce((s, q, i) => (i ? s + Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]) : 0), 0) || 1;
-    for (const [h, carp] of [[CEK.h, 1], [TUY.h, (o.tuy === undefined ? 3.2 : o.tuy) * (0.7 + 0.8 * n4(faz, 2))]]) {
+    const katmanlar = o.kuru ? [[KURU.h, 1]] : [[CEK.h, 1], [TUY.h, (o.tuy === undefined ? 3.2 : o.tuy) * (0.7 + 0.8 * n4(faz, 2))]];
+    for (const [h, carp] of katmanlar) {
       h.strokeStyle = renk;
       L = 0;
       for (let i = 1; i < n; i++) {
@@ -262,6 +266,7 @@
         h.stroke();
       }
     }
+    if (o.kuru) return;
     // ıslak yerde: çizgiden liflere sızan saçaklar ve kalemin durduğu yerde yumuşak yayılma bulutları
     const lh = LIF.h;
     lh.strokeStyle = renk;
@@ -312,7 +317,7 @@
   }
   /** Öndeki biçimin arkasında kalan çizgileri sil (ressam sırası). */
   function ortu(yol) {
-    for (const h of [CEK.h, TUY.h, LIF.h]) {
+    for (const h of [CEK.h, TUY.h, LIF.h, KURU.h]) {
       h.save();
       h.globalCompositeOperation = 'destination-out';
       h.fillStyle = '#000';
