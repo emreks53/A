@@ -13,7 +13,7 @@
     "Gökte üst üste tamponlanmış açık mavi, kobalt ve lavanta; güneşe doğru sarı ve şeftali; bulutlar yumuşak kenarlı beyaz kümeler",
     "Kubbe, kasnak, kaide ve minare şablonla maskelenmiş: dış kenarlar ve pencereler keskin, içleri süngerle benekli",
     "Kubbede koyu yeşil üstüne orta yeşil ve sağ üstte sarı-yeşil ışık tamponları; kaburgalar dar şablon yarıklarından basılmış koyu çizgiler",
-    "Önde yumuşak kenarlı, katmanlı yeşil yapraklık kütlesi; yapraklar ve taç yaprakları şablonla kesilmiş, içleri benekli",
+    "Önde yumuşak kenarlı, katmanlı yeşil yapraklık kütlesi; yapraklar ve beyaz taç yaprakları şablonla keskin kesilmiş, taç yaprağının şablon kenarında ince lavanta gölge, içleri benekli",
     "Krem astar ve fildişi taşın mat, kumlu dekoratif duvar boyası (faux finish) hissi"
   ],
   "palet": [
@@ -26,7 +26,7 @@
     "#F0A82E",
     "#EEA0BA"
   ],
-  "kodla_cizim": "Önce on farklı sünger damgası üretilir: düzensiz, gürültüyle bozulmuş bir bulut kenarı içinde bükülmüş çok ölçekli gürültü eşiklenerek gözenekli doku çıkarılır, üstüne rastgele dairesel delikler açılır. Her renk katı ayrı bir tuvalde yüzlerce damga basışıyla (rastgele döndürme, ölçek ve opaklık) tamponlanır; mimari, yaprak ve taç yaprak katları sonra şablon tuvaliyle 'destination-in' karışımında keskin kenarla kesilir, gök ve yapraklık katları ise şablonsuz ya da yapıyı dışarıda bırakan bir maskeyle yumuşak kenarlı kalır. Krem astar, gök (açık mavi → kobalt → sıcak hale → beyaz bulut), güneş, yer, yapraklık, minare, kaide, kasnak, kubbe (koyu → orta → ışık, kaburgalar ince şablon yarıklarından), alemler ve bitkiler sırayla basılır; renk yoğunluğu ışık modeline (kubbe yüzey normali, silindir ışığı) göre basış olasılığıyla ayarlanır.",
+  "kodla_cizim": "Önce on farklı sünger damgası üretilir: düzensiz, gürültüyle bozulmuş bir bulut kenarı içinde bükülmüş çok ölçekli gürültü eşiklenerek gözenekli doku çıkarılır, üstüne rastgele dairesel delikler açılır. Her renk katı ayrı bir tuvalde yüzlerce damga basışıyla (rastgele döndürme, ölçek ve opaklık) tamponlanır; mimari, yaprak ve taç yaprak katları sonra şablon tuvaliyle 'destination-in' karışımında keskin kenarla kesilir, gök ve yapraklık katları ise şablonsuz ya da yapıyı dışarıda bırakan bir maskeyle yumuşak kenarlı kalır. Krem astar, gök (açık mavi → kobalt → sıcak hale → beyaz bulut), güneş, yer, yapraklık, minare, kaide, kasnak, kubbe (koyu → orta → ışık, kaburgalar ince şablon yarıklarından), alemler ve bitkiler sırayla basılır (taç yaprakları beyaz tamponlarla uçlarına kadar örtülür, şablon kenarından içeri doğru ince bir şeride lavanta gölge basılır); renk yoğunluğu ışık modeline (kubbe yüzey normali, silindir ışığı) göre basış olasılığıyla ayarlanır.",
   "etiketler": [
     "sünger",
     "şablon",
