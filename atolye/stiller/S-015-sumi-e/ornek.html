@@ -432,10 +432,11 @@ lav((x) => {
       if ((kat === 0 && (j === 9 || j === 12)) || (kat === 1 && j === 10)) return;
       const dalga = 0.5 + 0.5 * Math.sin(j * 1.7 + kat * 2.1);
       const ink = lerp(1.7, 0.3, Math.pow(yan, 0.8)) * (0.55 + 0.55 * dalga + 0.25 * R());
-      const h = w.h * (0.7 + 0.32 * R()), y1 = w.y + w.h - 1 + (R() - 0.3) * 3;
-      const ww = Math.max(3.2, w.w * (0.75 + 0.4 * R()));
-      const egik = (R() - 0.5) * 2.5;
-      v([[w.x + (R() - 0.5) * 2, y1], [w.x + egik, y1 - h]], { w: ww, prof: (t) => (t < 0.58 ? 1 - 0.15 * t : Math.sqrt(Math.max(0, 1 - ((t - 0.58) / 0.42) ** 2))) * Math.min(1, 0.65 + t / 0.05), ink, kuru: lerp(0.1, 0.8, yan) * (0.6 + 0.6 * R()), kuruBas: 0.25, islak: lerp(0.9, 0.3, yan), K: 10, basKoyu: 0.5, kenar: 0.6 });
+      // fırçanın ucu kemerin tepesine değer, bastırılarak iner, altta kuruyup kalkar
+      const h = w.h * (0.72 + 0.3 * R()), y0 = w.y + (R() - 0.5) * 2;
+      const ww = Math.max(3.4, w.w * (0.8 + 0.4 * R()));
+      const egik = (R() - 0.5) * 3;
+      v([[w.x + egik * 0.3, y0], [w.x - egik, y0 + h]], { w: ww, prof: (t) => (t < 0.32 ? Math.pow(t / 0.32, 0.55) : 1 - 0.18 * (t - 0.32) / 0.68), ink, kuru: lerp(0.35, 0.9, yan) * (0.7 + 0.5 * R()), kuruBas: 0.45, islak: lerp(0.85, 0.3, yan), K: 11, basKoyu: 0.15, kenar: 0.7 });
     });
   }
   // kasnakta soluk yeşil: solda, sağa doğru kâğıda açılır
@@ -454,7 +455,7 @@ lav((x) => {
     const g = x.createLinearGradient(360, 0, 600, 0);
     g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.5, 'rgba(0,0,0,0.4)'); g.addColorStop(1, 'rgba(0,0,0,0)');
     x.fillStyle = g; x.fillRect(340, 290, 300, 280); x.restore();
-  }, { bul: 6, ton: 0.2, esik: 0.08, yum: 0.05, kenar: 0.3, tirtik: 0.45, gam: 1.1, hedef: 'W', kutu: KK, cicek: [{ x: 448, y: 470, r: 26, sy: 0.85, ac: 0.45, koyu: 0.45 }] });
+  }, { bul: 8, ton: 0.2, esik: 0.06, yum: 0.1, kenar: 0.12, tirtik: 0.3, gam: 1.2, hedef: 'W', kutu: KK, cicek: [{ x: 430, y: 488, r: 22, sy: 0.85, ac: 0.5, koyu: 0.55 }] });
   // kubbenin sol dış çizgisi ve gölgesi: tek yan fırça vuruşu (ucu koyu, topuğu soluk), aşağıda kurur
   const sol = SAHNE.kubbeNoktalari(240).slice(0, 241).reverse(); // tepeden sol tabana
   const w1 = 44, pr1 = (t) => 0.22 + 0.78 * smooth(0, 0.42, t);
@@ -653,7 +654,7 @@ function muhur(x0, y0, s) {
     }
     return a;
   }
-  const B1 = bulanik(WET, 1), B2 = bulanik(WET, 4);
+  const B1 = bulanik(WET, 1), B2 = bulanik(WET, 5);
   const mh = muhur(904, 868, 36);
   const muhurDoku = gurultu(N / 2, N / 2, 2, 157, 0.6);
   // kâğıda gömülü kıvrık uzun lifler
@@ -685,7 +686,7 @@ function muhur(x0, y0, s) {
       const fn = FN[i], mo = MO[q];
       // kâğıt: sıcak beyaz, hafif bulutlanma, lifler; kenarlara doğru çok hafif kararır
       const ex = Math.min(x, y, N - 1 - x, N - 1 - y) / N;
-      let kt = 1 - 0.02 * (mo - 0.5) * 2 - 0.035 * LIFC[i] + 0.012 * smooth(0.6, 0.85, fn) - 0.025 * (1 - smooth(0, 0.12, ex));
+      let kt = 1 - 0.01 * (mo - 0.5) * 2 - 0.035 * LIFC[i] + 0.012 * smooth(0.6, 0.85, fn) - 0.025 * (1 - smooth(0, 0.12, ex));
       let r = kagit[0] * kt, g = kagit[1] * kt, b = kagit[2] * kt;
       const ye = YESIL[q] * 0.62, ok = OKRA[q] * 0.85;
       r *= lerp(1, yesil[0] / 255, ye); g *= lerp(1, yesil[1] / 255, ye); b *= lerp(1, yesil[2] / 255, ye);
@@ -693,7 +694,7 @@ function muhur(x0, y0, s) {
       // mürekkep: kuru + ıslak + liflere yayılan hale
       const w = WET[i];
       const yay = smooth(0.32, 0.72, fn);
-      let D = DRY[i] + w + Math.max(0, B1[i] - w) * 0.55 + Math.max(0, B2[i] - w) * 0.5 * yay;
+      let D = DRY[i] + w + Math.max(0, B1[i] - w) * 0.6 + Math.max(0, B2[i] - w) * 0.7 * yay;
       D *= 0.93 + 0.14 * fn - 0.08 * LIFC[i];
       if (D > 0.0005) {
         r = dip[0] + (r - dip[0]) * Math.exp(-kab[0] * D);

@@ -14,7 +14,7 @@
 <script>
   // S-028 Teknik Çizim (Mavi Kopya) — Prusya mavisi kâğıt üzerinde beyaz/açık camgöbeği çizgiler: ortografik
   // ön görünüş, oklu ölçü çizgileri, kesik-noktalı eksenler, soluk yapı ızgarası, temelde kesit taraması,
-  // sağ altta antet; kâğıt aşınması, amonyak lekeleri ve katlama izleri; çiçekler ince botanik etütler.
+  // sağ altta antet; kâğıt aşınması, su lekeleri ve katlama izleri; çiçekler ince botanik etütler.
   const OL = 2; // iç çözünürlük
   const ana = SAHNE.tuval(document.getElementById('tuval'), OL);
   const rng = SAHNE.rng(28);
@@ -60,10 +60,10 @@
       let r = merkez[0] + (kenar[0] - merkez[0]) * v, gg = merkez[1] + (kenar[1] - merkez[1]) * v, b = merkez[2] + (kenar[2] - merkez[2]) * v;
       const m = (n1(x, y) - 0.5) * 0.16 + (n2(x, y) - 0.5) * 0.07 + (n3(x, y) - 0.5) * 0.05;
       r *= 1 + m; gg *= 1 + m; b *= 1 + m;
-      // amonyak lekeleri: solmuş açık iç, koyu halka
+      // su lekeleri: solmuş açık iç, koyu kuruma halkası
       const l = lekeDegeri(x, y);
-      if (l > 0.62) { const t = Math.min(1, (l - 0.62) * 2.2); r += (88 - r) * t * 0.45; gg += (112 - gg) * t * 0.45; b += (150 - b) * t * 0.4; }
-      else if (l > 0.55) { const t = 1 - Math.abs(l - 0.585) / 0.035; r *= 1 - 0.18 * t; gg *= 1 - 0.16 * t; b *= 1 - 0.1 * t; }
+      if (l > 0.62) { const t = Math.min(1, (l - 0.62) * 2.2); r += (88 - r) * t * 0.32; gg += (112 - gg) * t * 0.32; b += (150 - b) * t * 0.28; }
+      else if (l > 0.55) { const t = 1 - Math.abs(l - 0.585) / 0.035; r *= 1 - 0.13 * t; gg *= 1 - 0.11 * t; b *= 1 - 0.07 * t; }
       // kenar aşınması: kenara yakın açılma ve pürüz
       const ke = Math.min(x, y, 1023 - x, 1023 - y);
       if (ke < 22) { const t = (1 - ke / 22) * (0.6 + 0.6 * n2(x * 3, y * 3)); r += (110 - r) * t * 0.35; gg += (138 - gg) * t * 0.35; b += (170 - b) * t * 0.3; }
