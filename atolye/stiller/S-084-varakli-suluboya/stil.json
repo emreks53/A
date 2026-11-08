@@ -6,14 +6,14 @@
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
   "ozet": "Beyaz kâğıtta taze, gevşek suluboya darbeleri; hilaller, kaburgalar, güneş ve çiçek göbeklerinde parıldayan gerçek altın varak.",
-  "tanim": "Varaklı suluboyada gevşek ve ışıklı suluboya darbeleri, kâğıda yapıştırıcı (mixtion) sürülüp üzerine basılan ince altın varakla birleşir. Boya geniş, tek hamlelik darbelerle ve bol kâğıt beyazı bırakılarak sürülür; ayrıntılar az, renkler tazedir. Varak ise küçük alanlarda kullanılır: ışığa göre parlayıp kararan metalik yüzey, varak yapraklarının birbirine bindiği ince ek yerleri ve kenarda kırılıp kopmuş küçük varak uçlarıyla elle yapılmış bir zarafet katar. Davetiye ve kutlama kartlarında, dekoratif duvar resimlerinde ve çağdaş çiçek suluboyasında çok sevilir.",
+  "tanim": "Varaklı suluboyada gevşek ve ışıklı suluboya darbeleri, kâğıda yapıştırıcı (mixtion) sürülüp üzerine basılan ince altın varakla birleşir. Boya geniş, tek hamlelik darbelerle ve bol kâğıt beyazı bırakılarak sürülür; ayrıntılar az, renkler tazedir. Varak ise küçük alanlarda kullanılır: perdahlanınca ışığa göre parlayıp kararan, yer yer pırıldayan temiz metalik yüzeyi elle yapılmış bir zarafet katar. Davetiye ve kutlama kartlarında, dekoratif duvar resimlerinde ve çağdaş çiçek suluboyasında çok sevilir.",
   "koken": "Altın varak Orta Çağ el yazması tezhibinde, Bizans ikonalarında ve Osmanlı tezhip sanatında boyayla birlikte kullanıldı; Gustav Klimt altın varağı resimle birleştiren en ünlü modern ressam oldu. Suluboyayı varakla birleştiren gevşek, dekoratif üslup 2010'larda kaligrafi, davetiye tasarımı ve çiçek suluboyası yapan çağdaş sanatçılarla yaygınlaştı; imitasyon ve gerçek altın varak, yaldız kalemleri ve mixtion yapıştırıcılarıyla uygulanır.",
   "ayirt_edici": [
-    "Güneş büyük bir altın varak disk: tuğla gibi sıralanmış varak yaprakları, ince parlak ek yerleri, hafif kırışıklardan gelen parıltı ve kenarda kırık küçük varak uçları; çevresinde gevşek, sıcak sarı bir hale",
-    "Kubbe kaburgaları ve kubbe tabanı ince altın varak çizgileri: ışıklı sağ yanda parlak, gölge yanda koyu bal rengi",
-    "Hilaller ve alemler ile çiçek göbekleri altın varak; göbeklerin kenarı kırık, düzensiz",
-    "Gök geniş, gevşek darbelerle boyanmış: ıslak bir ilk kat, üstünde eğik, kuru uçlu ikinci darbeler; bulutlar ve yapıların çevresi kâğıt beyazı bırakılmış",
-    "Yapraklar tek darbelik, ortada bastırılıp uçta kaldırılan fırça izleri (ada çayı yeşili, zeytin, turkuaz); bazılarının ucu kuru fırçayla kırılmış",
+    "Güneş büyük, temiz kenarlı bir altın varak disk: perdahlanmış yüzeyde çapraz bir parlama bandı, ince dövme dokusundan gelen ışıltı ve dört kollu küçük parıltılar; çevresinde gevşek, sıcak sarı bir hale",
+    "Kubbe kaburgaları ve kubbe tabanı ince altın varak çizgileri: ışıklı sağ yanda parlak limon altını, gölge yanda daha koyu bal rengi altın",
+    "Hilaller, alemler ve çiçek göbekleri altın varak; hilallerde ve alemin büyük küresinde küçük parıltılar",
+    "Gök geniş, gevşek darbelerle boyanmış: ıslak bir ilk kat, üstünde başta basılıp sonda incelen, ucu kuru fırçayla kıl kıl kırılan eğik darbeler; birkaçı nemliyken çekildiği için yumuşak kenarlı; bulutlar ve yapıların çevresi kâğıt beyazı",
+    "Yapraklar tek darbelik, ortada bastırılıp uçta kaldırılan fırça izleri (ada çayı yeşili, zeytin, turkuaz); iki yanda dalların arkasında soluk, eğik çalı darbeleri",
     "Bol beyaz kâğıt, açık ve zarif renkler; beyaz çiçeklerde yalnız gölge yanına soluk leylak bir darbe"
   ],
   "palet": [
@@ -21,12 +21,12 @@
     "#3EB5AB",
     "#A2CA8A",
     "#78B36E",
-    "#C59A3C",
-    "#E8C873",
+    "#DEAF3D",
+    "#E6BB4A",
     "#F8E7AB",
     "#FBF9F4"
   ],
-  "kodla_cizim": "Suluboya katmanı optik yoğunluk modeliyle (renk = kâğıt × exp(−Σ yoğunluk)) boyanır. Gevşek darbeler, omurga noktalarından iki yanı ayrı gürültüyle dalgalanan değişken genişlikli çokgenlerdir; ikinci bir tuvale her darbe parçasının darbe boyunca konumu, kuruluğu ve yönü renk kanalı olarak yazılır, böylece darbenin sonunda ve kenarında boya, fırça yönünde gerilmiş gürültü ve kâğıt yüksekliğiyle eşiklenerek kıl kıl kırılır. Gök ıslak bir ilk yıkama ve eğik ikinci darbelerdir; bulutlar, güneş halkası ve yapıların çevresindeki gürültülü pay boş bırakılır. Varak, boya bittikten sonra görüntünün üstüne bindirilir: alemler, kaburga çizgileri, güneş diski ve çiçek göbekleri bir maskeye çizilir, öğeye göre değişen genlikte gürültüyle eşiklenip kırık kenar ve kopuk parçacıklar elde edilir. Her piksel tuğla dizilimli 46 px'lik bir varak yaprağına düşer; yaprağın kendi ton farkı ve kırışık yönü, düşük frekanslı fbm yüzeyinin eğiminden gelen parıltı, biçime göre ışık (küre, silindir ya da disk), ek yerinde ince parlak çizgi ve kenarda kalkmış varak ışığı toplanıp koyu bal renginden açık altına uzanan bir renk rampasına eşlenir.",
+  "kodla_cizim": "Suluboya katmanı optik yoğunluk modeliyle (renk = kâğıt × exp(−Σ yoğunluk)) boyanır. Gevşek darbeler, omurga noktalarından iki yanı ayrı gürültüyle dalgalanan değişken genişlikli çokgenlerdir (başta basılan, ortada genişleyen, sonda incelen); ikinci bir tuvale her darbe parçasının darbe boyunca konumu ve kuruluğu, üçüncü bir tuvale fırça yönü çift açı (cos 2θ, sin 2θ) olarak yazılır, böylece darbenin sonunda ve kenarında boya, fırça yönünde gerilmiş gürültü ve kâğıt yüksekliğiyle eşiklenerek kıl kıl kırılır. Gök ıslak bir ilk yıkama, keskin kenarlı eğik ikinci darbeler ve bulanıklaştırılmış (nemliyken çekilmiş) birkaç darbedir; bulutlar, güneş halkası ve yapıların çevresindeki gürültülü pay boş bırakılır. Varak, boya bittikten sonra görüntünün üstüne bindirilir: alemler, kaburga çizgileri, güneş diski ve çiçek göbekleri bir maskeye çizilir, kenar hafif gürültüyle eşiklenir (güneşte ve göbeklerde temiz). Yüzey ışığı düşük frekanslı fbm ile çok ince bir dövme gürültüsünün eğiminden gelen parıltı, biçime göre ışık (küre, silindir ya da disk), 58 px'lik varak yapraklarının çok küçük ton farkı ve güneşte çapraz perdah bandı toplanıp sıcak bal renginden beyaza yakın parlak altına uzanan bir rampaya eşlenir; en sonda en parlak noktalara dört kollu küçük ışık yıldızları eklenir.",
   "etiketler": [
     "suluboya",
     "altın varak",

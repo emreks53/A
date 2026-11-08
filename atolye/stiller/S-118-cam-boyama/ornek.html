@@ -259,6 +259,7 @@
   const idV = idX.getImageData(0, 0, N, N).data;
   const olV = olX.getImageData(0, 0, N, N).data;
   const olB = bulanikKopya(olC, 2.2 * K); // kabartma yüksekliği
+  const olI = bulanikKopya(olC, 1.1 * K); // tüpten sıkılan kontürün düzensiz kalınlığı için
   const olH = bulanikKopya(olC, 9 * K); // boya birikimi (kontür yakını)
   const olG = bulanikKopya(olC, 2.5 * K, -4 * K, 4 * K); // kontürün kartona gölgesi
 
@@ -341,7 +342,14 @@
       const yt = Math.min(0.5, yans + yans2);
       r += (255 - r) * yt; g += (255 - g) * yt; b += (255 - b) * yt;
       // kabarık altın kontür
-      const a = olV[j + 3] / 255;
+      // tüpten elle sıkılmış kontür: kalınlığı yavaşça dalgalanır, yer yer boncuklanır
+      const oi = olI[j + 3] / 255;
+      let a = olV[j + 3] / 255;
+      if (oi > 0.02) {
+        const esik = 0.42 + 0.2 * (vnoise(x * 0.04, y * 0.04, 41) - 0.5) + 0.1 * (vnoise(x * 0.15, y * 0.15, 42) - 0.5);
+        const t = clamp((oi - esik + 0.12) / 0.24, 0, 1);
+        a = Math.max(a * 0.0, t * t * (3 - 2 * t));
+      }
       if (a > 0.004) {
         const xm = px > 0 ? j - 4 : j, xp = px < N - 1 ? j + 4 : j;
         const ym = py > 0 ? j - N * 4 : j, yp = py < N - 1 ? j + N * 4 : j;

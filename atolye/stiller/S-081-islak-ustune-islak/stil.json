@@ -5,19 +5,19 @@
   "ad_en": "Wet-on-Wet Watercolor",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Önceden ıslatılmış kâğıda düşürülen boyalar: her yerde yumuşak, lif lif dağılan kenarlar, ıslakta birbirine akan ışıklı renkler.",
+  "ozet": "Önceden ıslatılmış kâğıda düşürülen boyalar: her yerde yumuşak, buğulu dağılan kenarlar, ıslakta birbirine akan ışıklı renkler.",
   "tanim": "Islak üstüne ıslak (wet-on-wet, wet-in-wet) suluboyada kâğıt önce temiz suyla bütünüyle ıslatılır, boya bu nemli yüzeye düşürülür. Pigment kâğıdın liflerine yayılarak yumuşak, tüylü kenarlarla açılır; yan yana konan renkler kendi kendine karışıp birbirine erir, sert çizgi neredeyse hiç kalmaz. Görüntü rüya gibi, ışıklı ve buğuludur; yalnız birkaç son ayrıntı kâğıt kuruduktan sonra ince fırçayla keskin olarak eklenir. Gökyüzü, sis, çiçek ve atmosfer çalışmalarında ve gevşek manzara suluboyasında çok kullanılır.",
   "koken": "Yöntem 18. ve 19. yüzyıl İngiliz suluboya okulunda, özellikle J. M. W. Turner'ın ıslak kâğıda boya akıttığı gök ve deniz etütlerinde olgunlaştı. 20. yüzyılda Emil Nolde'nin Japon kâğıdına ıslak yaptığı çiçek ve bulut suluboyaları, Charles Reid ve Jean Haines gibi çağdaş ustaların gevşek, ışıklı çalışmaları tekniği tanınır kıldı; bugün de suluboya eğitiminde ilk öğretilen temel yöntemlerdendir.",
   "ayirt_edici": [
-    "Neredeyse hiçbir yerde kesin kenar yok: kubbe, kasnak, minare ve yaprakların sınırı kâğıdın liflerine yayılmış tüylü, yumuşak saçaklarla bitiyor",
+    "Neredeyse hiçbir yerde kesin kenar yok: kubbe, kasnak, minare ve yaprakların sınırı ıslak kâğıtta yumuşak, buğulu saçaklarla eriyor",
     "Kubbenin yeşili ıslak göğe taşıp sağda ve tepede yumuşak bir yeşil hale açıyor; kubbe içinde turkuaz ve limon sarısı damlalar ıslakta açılıp eriyor",
-    "Gökte seruleum, ultramarin, mor, gül ve gamboj birbirine akıyor; bulutlar ve güneş kenarsız, ıslakta bırakılmış beyaz açıklıklar",
-    "Ön planda yeşil, mavi-mor ve gül pembesi ıslak bir kütle; beyaz çiçekler kâğıt beyazı kalmış, göbeklerinden dışa pembe ve sarı yayılıyor",
+    "Gökte seruleum, turkuaz, soluk mor ve gül birbirine akıyor; güneşin çevresinde sıcak, şeftali-altın bir ışıma; bulutlar ve güneş kenarsız, ıslakta bırakılmış beyaz açıklıklar",
+    "Ön planda yeşil, mavi ve yer yer gül pembesi ıslak bir kütle; beyaz çiçekler kâğıt beyazı kalmış, göbeklerinden dışa pembe ve sarı yayılıyor",
     "Kâğıt kuruduktan sonra eklenmiş az sayıda keskin ayrıntı: altın okru hilaller, birkaç pencere, korkuluk çizgileri, çiçek göbeklerindeki siena noktalar ve birkaç yaprak darbesi",
-    "Bol kâğıt beyazı, açık ve aydınlık değerler; soğuk preslenmiş kâğıdın dokusunda hafif pigment çökelmesi"
+    "Bol kâğıt beyazı, açık ve aydınlık değerler; kâğıdın dokusunda hafif pigment çökelmesi"
   ],
   "palet": [
-    "#7391CD",
+    "#EBDDB8",
     "#67ABCE",
     "#75BF80",
     "#1D7674",
@@ -26,7 +26,7 @@
     "#AA93B2",
     "#DCAB46"
   ],
-  "kodla_cizim": "Boya piksel başına optik yoğunluk olarak biriktirilir ve renk = kâğıt × exp(−Σ yoğunluk × pigment soğurması) ile çarpımsal karışır (seruleum, ultramarin, gamboj, kinakridon gül, ada yeşili, viridyen, turkuaz, siena, mor, limon). Islak kâğıt etkisi için her alanın kapsaması (bölge haritası, SVG yolları ya da bozulmuş Hobbs çokgenleri) geniş yarıçapla bulanıklaştırılır, sonra büyük ölçekli fbm ile dalgalanan ve 4 px ölçekli gürültüyle liflere saçaklanan bir kaydırma alanından örneklenip yumuşak bir eşikle kesilir; böylece kenarlar her yerde tüylü ve yumuşak kalır. Kubbenin yeşili 20 px yarıçaplı ayrı bir hale yıkamasıyla göğe taşar; gök, kubbe ve ön planda Hobbs damlalarından yapılmış renk damlaları ıslakta açılır, temiz su açılmaları (ortası açık, saçağı hafif koyu) çarpanla uygulanır. Son aşamada kuru kâğıda keskin kenarlı birkaç yıkama (alemler, seçilmiş pencereler, korkuluk, çiçek göbeği noktaları, birkaç yaprak) kenar pigment birikimiyle eklenir; kâğıt dokusu kabartma ışığıyla en sonda verilir.",
+  "kodla_cizim": "Boya piksel başına optik yoğunluk olarak biriktirilir ve renk = kâğıt × exp(−Σ yoğunluk × pigment soğurması) ile çarpımsal karışır (seruleum, ultramarin, gamboj, kinakridon gül, ada yeşili, viridyen, turkuaz, siena, mor, limon). Islak kâğıt etkisi için her alanın kapsaması (bölge haritası, SVG yolları ya da bozulmuş Hobbs çokgenleri) geniş yarıçapla bulanıklaştırılır, sonra büyük ölçekli fbm ile dalgalanan ve 7 px ölçekli hafif bir gürültüyle saçaklanan bir kaydırma alanından örneklenip yumuşak bir eşikle kesilir; böylece kenarlar her yerde yumuşak ve buğulu kalır. Gökte güneşin çevresine sıcak gamboj-gül, yukarıdan aşağı açılan seruleum-turkuaz ve ıslakta açılan renk damlaları sürülür; kubbenin yeşili 20 px yarıçaplı ayrı bir hale yıkamasıyla göğe taşar; temiz su açılmaları (ortası açık, saçağı hafif koyu) çarpanla uygulanır. Son aşamada kuru kâğıda keskin kenarlı birkaç yıkama (alemler, seçilmiş pencereler, korkuluk, çiçek göbeği noktaları, birkaç yaprak) kenar pigment birikimiyle eklenir; kâğıt dokusu kabartma ışığıyla en sonda verilir.",
   "etiketler": [
     "suluboya",
     "ıslak teknik",

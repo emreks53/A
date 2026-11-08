@@ -9,14 +9,32 @@
   "tanim": "Cam boyamada desen önce camın üstüne tüpten sıkılan kabarık kontür boyasıyla (altın, gümüş ya da siyah) çizilir; kontür kuruyunca kapalı alanlar fırça ya da damlalıkla saydam cam boyasıyla doldurulur. Boya kendi kendine yayılsa da fırça izleri, iki katın üst üste geldiği daha koyu bantlar ve kontür dibinde biriken koyu kenarlar kalır; buzlu beyaz boya sütlü, ince taneli bir yüzey verir. Beyaz bir zeminin ya da ışığın önüne konan levhada renkler parlak ve ışıklı görünür, kontür ise kabarık, parlak bir çizgi olarak öne çıkar. Pencere, kapı camı, kavanoz, ayna ve süs levhalarında kullanılan, kurşunsuz ve hafif bir vitray benzetmesidir.",
   "koken": "Kontür boyası ve saydam solvent ya da su bazlı cam boyalarıyla yapılan bu teknik, 20. yüzyılın ikinci yarısında (Pébéo Vitrail, Marabu gibi hazır boyalarla) el sanatı ve hobi atölyelerinde yaygınlaştı; Türkiye'de 'cam boyama' adıyla halk eğitim kurslarının sevilen dallarından biridir. Kökeni kurşun çerçeveli vitrayı ve Orta Avrupa'nın camaltı resmini taklit etme isteğine dayanır; ancak kurşun yerine kabarık kontür, fırınlanan cam boyası yerine kuruyan saydam boya kullanılır.",
   "ayirt_edici": [
-    "Her renk alanını çeviren kabarık, parlak altın kontür; sağ üstten ışık alan sırt, metal tozu pırıltısı ve kontür noktalarından süs dizileri",
+    "Her renk alanını çeviren, tüpten elle sıkılmış kabarık altın kontür: kalınlığı yer yer dalgalanır; sağ üstten ışık alan sırt, metal tozu pırıltısı ve kontür noktalarından süs dizileri",
     "Saydam cam boyasında fırça izleri, iki katın üst üste geldiği koyu bantlar ve kontür dibinde biriken koyu renk",
     "Beyaz kartonun içinden parlayan ışıklı, saydam renkler; gökte açılan, ufka doğru incelen mavi",
     "Camın altındaki kartona sola ve aşağı düşen hafif renkli gölge ve kontür gölgesi",
     "Buzlu beyaz boyalı bulutlar, dipten uca açılan pembe taç yaprakları, kabarık altın alemler ve çiçek göbekleri",
     "Camda yumuşak çapraz yansımalar; kurşun çerçeve ya da koyu zemin yok, levhanın kendi altın çerçeve çizgisi"
   ],
-  "palet": ["#74C1E9", "#4AAF5E", "#6DD084", "#3E64D5", "#FCEBC6", "#EAD69C", "#FBB5CA", "#D2A046"],
-  "kodla_cizim": "2048 iç çözünürlükte çalışılır. Her renk alanı arkadan öne, kendine özgü bir renkle bir kimlik haritasına doldurulur ve aynı anda ayrı bir kontür maskesine çizilir; öndeki alan önce arkadaki kontürleri siler, sonra kendi kontürünü çizer. Alanların saydam boya rengi, yoğunluğu, fırça yönü (gök yatay, kubbe kaburga boyunca, taç yaprakları ve güneş merkezden dışa, yapraklar eksen boyunca) ve geçiş eğimi bir tabloda tutulur. Piksel döngüsünde yön boyunca uzatılmış gürültüden fırça izi ve iki kat bantları, kontür maskesinin geniş bulanık kopyasından kontür dibinde birikme hesaplanır; yoğunluk geçirgenliğe (renk^yoğunluk) çevrilir, buzlu beyaz için ince tane eklenir. Geçirgenlik haritasının sola-aşağı kaydırılmış bulanık kopyası kartona düşen renkli gölgeyi, kontürün kaydırılmış kopyası kontür gölgesini verir. Kontür maskesinin dar bulanık kopyasından normal çıkarılır; Lambert ve iki katlı parlama, metal tozu gürültüsüyle altın kontür boyanır; en sonda çapraz cam yansımaları eklenir.",
-  "etiketler": ["cam boyama", "kontür boyası", "saydam boya", "altın kontür", "hobi sanatı", "vitray taklidi", "parlak", "ışıklı"]
+  "palet": [
+    "#74C1E9",
+    "#4AAF5E",
+    "#6DD084",
+    "#3E64D5",
+    "#FCEBC6",
+    "#EAD69C",
+    "#FBB5CA",
+    "#D2A046"
+  ],
+  "kodla_cizim": "2048 iç çözünürlükte çalışılır. Her renk alanı arkadan öne, kendine özgü bir renkle bir kimlik haritasına doldurulur ve aynı anda ayrı bir kontür maskesine çizilir; öndeki alan önce arkadaki kontürleri siler, sonra kendi kontürünü çizer. Alanların saydam boya rengi, yoğunluğu, fırça yönü (gök yatay, kubbe kaburga boyunca, taç yaprakları ve güneş merkezden dışa, yapraklar eksen boyunca) ve geçiş eğimi bir tabloda tutulur. Piksel döngüsünde yön boyunca uzatılmış gürültüden fırça izi ve iki kat bantları, kontür maskesinin geniş bulanık kopyasından kontür dibinde birikme hesaplanır; yoğunluk geçirgenliğe (renk^yoğunluk) çevrilir, buzlu beyaz için ince tane eklenir. Geçirgenlik haritasının sola-aşağı kaydırılmış bulanık kopyası kartona düşen renkli gölgeyi, kontürün kaydırılmış kopyası kontür gölgesini verir. Kontür maskesinin çok dar bulanık kopyası gürültüyle dalgalanan bir eşikle yeniden kesilerek tüpten sıkılmış kontürün düzensiz kalınlığı elde edilir; dar bulanık kopyadan normal çıkarılır; Lambert ve iki katlı parlama, metal tozu gürültüsüyle altın kontür boyanır; en sonda çapraz cam yansımaları eklenir.",
+  "etiketler": [
+    "cam boyama",
+    "kontür boyası",
+    "saydam boya",
+    "altın kontür",
+    "hobi sanatı",
+    "vitray taklidi",
+    "parlak",
+    "ışıklı"
+  ]
 }

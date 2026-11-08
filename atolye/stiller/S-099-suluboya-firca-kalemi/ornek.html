@@ -243,7 +243,7 @@
   /** Beyaz bırakma: önceki boyayı yumuşakça kaldırır (çiçek, bulut, ışık) — boyanmamış kâğıt. */
   function beyazBirak(yol, yumusak) {
     ctx.save();
-    ctx.filter = `blur(${(yumusak || 1) * K}px)`;
+    ctx.filter = yumusak > 0 ? `blur(${yumusak * K}px)` : 'none';
     ctx.fillStyle = '#FFFEFB';
     ctx.fill(yol);
     ctx.restore();
@@ -423,7 +423,7 @@
       }
       yol.rect(bx - 80 * bs, by - 4 * bs, 160 * bs, 22 * bs);
       yollar.push([yol, bx, by, bs]);
-      beyazBirak(yol, 1.8);
+      beyazBirak(yol, 0);
     }
     bolge(
       (h) => {
@@ -794,11 +794,11 @@
     null,
     { bulanik: 1, su: 0 }
   );
-  // çiçekler: beyaz kâğıt taç yaprak; dipte pembe-eflatun darbe, suyla kenara doğru çekilmiş
+  // çiçekler: beyaz kâğıt taç yaprak; dipte açık gül pembesi darbe, suyla kenara doğru çekilmiş
   {
     const tacYol = new Path2D();
     for (const c of B.cicekler) for (const e of S.tacYapraklari(c)) tacYol.addPath(P(S.elipsYolu(e)));
-    beyazBirak(tacYol, 0.9);
+    beyazBirak(tacYol, 0);
     bolge(
       (h) => {
         for (const c of B.cicekler) {

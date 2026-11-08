@@ -11,9 +11,9 @@
   "ayirt_edici": [
     "Ön planda ve iki yandaki çalılarda katman katman açılmış yaprak ve çiçek silüetleri: en öndekiler soluk sarı-yeşil, arkadakiler yeşil, turkuaz ve en dipte mavi zeminden çıkıyor",
     "Açılan her biçimin kenarı keskin, sırın kurumuş kenarında ince pigment çizgisi; sırların dış ucu ise suyla yumuşatılmış",
-    "Beyaz çiçekler, saplar ve tomurcuklar hiç boyanmadan, çevrelerindeki yeşil sırlarla kâğıt beyazı olarak bırakılmış",
+    "Beyaz çiçekler, saplar ve tomurcuklar çevrelerindeki yeşil sırlarla kâğıt beyazı olarak açılmış; çiçeklerde yalnız göbek çevresine soluk sarı-yeşil, gölge yanına leylak ve taç yaprakların birleştiği yerlere ince gölge çizgisi",
     "Kubbenin açık kaburgaları da negatif boyanmış: yeşil sır ince şeritlerin ve parlak şeridin etrafından dolaşıyor, gölge yanında ikinci bir sır kaburgaları daha ince bırakıyor",
-    "Gökte bulutlar sırların arasından açılıyor: çekirdek kâğıt beyazı, alt yanı leylak gölge sırı, çevresi seruleum; güneş açılmış soluk sarı bir disk",
+    "Gökte düzensiz loblu bulutlar sırların arasından açılıyor: üst kenarları keskin, alt kenarlarında sırın ucu suyla yumuşatılmış; çekirdek kâğıt beyazı, alt yanı leylak gölge sırı, çevresi seruleum; güneş açılmış soluk sarı bir disk",
     "Beyaz minare ve kaide kâğıt; yalnız gölgeleri keskin kenarlı leylak-gri sırlarla verilmiş"
   ],
   "palet": [
@@ -26,7 +26,7 @@
     "#BA707E",
     "#E7B03F"
   ],
-  "kodla_cizim": "Optik yoğunluk modeli: her sır piksel başına soğurma vektörüyle birikir, renk = kâğıt × exp(−Σ yoğunluk). Ön plan bölgesi sahnedeki yaprak ve sapların bulanık kapsaması, dalgalı bir ön şerit ve iki yandaki gürültülü elips çalılardan kurulur; bulanık kopyası 'derinlik' alanını verir. Açılan biçimler dört kattır: çiçekler ve sahnenin yaprak-sap-tomurcukları, sonra derinliğe göre rastgele yerleştirilmiş badem yapraklar, beş yapraklı çiçek ve saplı dallardan üç ayrı silüet katmanı; kenarları fbm kaydırmasıyla hafifçe titretilir. Alt kat (gamboj, gül, açık yeşil) bölgeyi doldurur; ardından dört sır (sarı-yeşil, yeşil, turkuaz, ultramarin-seruleum) sırasıyla 1 − (o ana kadar açılan biçimlerin birleşimi) maskesiyle sürülür, derinlik eşiğiyle dışa doğru suyla yumuşatılır; keskin kenarlarda kuruyan kenar pigment birikimi hesaplanır. Gökte bulut çekirdekleri ve bütünleri daire birleşimleri olarak çizilip gürültüyle bozulur; leylak, seruleum ve ultramarin sırlar sırayla bunların, güneşin, yapıların ve bitkilerin etrafından dolaşır. Kubbede açık kaburga şeritleri ve parlak şerit çizgisel maskelerle hariç tutulan üç sırla açılır.",
+  "kodla_cizim": "Optik yoğunluk modeli: her sır piksel başına soğurma vektörüyle birikir, renk = kâğıt × exp(−Σ yoğunluk). Ön plan bölgesi sahnedeki yaprak ve sapların bulanık kapsaması, dalgalı bir ön şerit, yapının dibinde yer çizgisi boyunca uzanan bir bant ve iki yandaki gürültülü elips çalılardan kurulur; bulanık kopyası 'derinlik' alanını verir. Açılan biçimler dört kattır: çiçekler ve sahnenin yaprak-sap-tomurcukları, sonra derinliğe göre rastgele yerleştirilmiş badem yapraklar, beş yapraklı çiçek ve saplı dallardan üç ayrı silüet katmanı; kenarları fbm kaydırmasıyla hafifçe titretilir. Alt kat (gamboj, gül, açık yeşil) bölgeyi doldurur; ardından dört sır (sarı-yeşil, yeşil, turkuaz, ultramarin-seruleum) sırasıyla 1 − (o ana kadar açılan biçimlerin birleşimi) maskesiyle sürülür, derinlik eşiğiyle dışa doğru suyla yumuşatılır; keskin kenarlarda kuruyan kenar pigment birikimi hesaplanır. Bulutlar her biri farklı tohumla, Hobbs usulü bozulmuş damla çokgenlerinden loblu kümeler olarak çizilip eşiklenir ve gürültüyle bozulur; alt kenarlarda bulanık kopya kapsamaya karıştırılarak sırın ucu yumuşatılır. Leylak, seruleum ve ultramarin sırlar sırayla bulutların, güneşin, yapıların ve bitkilerin etrafından dolaşır. Kubbede açık kaburga şeritleri ve parlak şerit çizgisel maskelerle hariç tutulan üç sırla açılır; çiçeklerde taç yaprak elipslerinin birbirine binen kenarları kırpılarak ince gölge çizgisi olarak yıkanır.",
   "etiketler": [
     "suluboya",
     "negatif boyama",
