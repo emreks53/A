@@ -159,7 +159,7 @@
   }
   // bulutlar: beyaz boya kümeleri, alt kenarda soluk gri-mavi, dış siluette altın kontur
   {
-    const bulutlar = [[185, 250, 0.95], [500, 150, 0.8], [760, 330, 1.05], [892, 470, 0.62], [150, 470, 0.62]];
+    const bulutlar = [[185, 250, 0.95], [500, 150, 0.8], [760, 330, 1.05]];
     for (const [bx, by, bs] of bulutlar) {
       const daireler = [[-64, 8, 20], [-36, -4, 27], [0, -12, 32], [36, -3, 26], [64, 8, 19], [-20, 10, 24], [22, 10, 24]];
       const p = new Path2D();
@@ -190,12 +190,12 @@
     const ds = L / N;
     for (let i = 1; i <= N; i++) {
       const t = i / N;
-      a += yon * (0.004 + 0.13 * t * t * t) * (ds / s) * 1.0;
+      a += yon * (0.003 + 0.11 * Math.pow(t, 5)) * (ds / s);
       x += Math.cos(a) * ds; y += Math.sin(a) * ds;
       pts.push([x, y]);
     }
     g.strokeStyle = renkDal; g.lineWidth = 1.1 * s; g.stroke(acikYol(pts));
-    for (let i = 5, k = 0; i < N - 6; i += 6, k++) {
+    for (let i = 4, k = 0; i < N - 5; i += 4, k++) {
       const [px, py] = pts[i], [qx, qy] = pts[i + 1];
       const an = Math.atan2(qy - py, qx - px) + (k % 2 ? 1 : -1) * 0.75;
       const yy = { x: px, y: py, uzunluk: (9 - (i / N) * 4) * s, genislik: 0.42, aci: an };
@@ -211,11 +211,12 @@
   // panonun sol üst köşesinde halkâri köşebent (sağ üstte güneş)
   {
     const cx = PX1 + 6, cy = PX1 + 6;
-    halkari(cx, cy, 0.12, 150, 1, 1.15);
-    halkari(cx, cy, 1.45, 150, -1, 1.15);
-    halkari(cx + 4, cy + 4, 0.78, 92, 1, 1.0);
-    halkari(cx + 30, cy + 8, 0.3, 70, -1, 0.85);
-    halkari(cx + 8, cy + 30, 1.27, 70, 1, 0.85);
+    halkari(cx, cy, 0.1, 170, 1, 1.15);
+    halkari(cx, cy, 1.47, 170, -1, 1.15);
+    halkari(cx + 4, cy + 4, 0.78, 110, 1, 1.0);
+    halkari(cx + 4, cy + 4, 0.78, 100, -1, 1.0);
+    halkari(cx + 60, cy + 10, 0.55, 70, 1, 0.8);
+    halkari(cx + 10, cy + 60, 1.02, 70, -1, 0.8);
     // köşe gülbezeği
     for (let k = 0; k < 8; k++) {
       const an = Math.PI / 4 + ((k - 3.5) / 8) * (Math.PI / 2) * 0.9;
@@ -236,9 +237,13 @@
     }
     altinCizgi('M0,800 L1024,800', 1);
     const rh = S.rng(77);
-    for (let k = 0; k < 18; k++) {
-      const x0 = 250 + rh() * 530, y0 = 812 + rh() * 128;
-      halkari(x0, y0, rh() * 6.28, 40 + rh() * 20, rh() < 0.5 ? 1 : -1, 0.7);
+    for (let k = 0; k < 40; k++) {
+      const x = 240 + rh() * 544, y = 812 + rh() * 130;
+      for (let m = 0; m < 3; m++) {
+        const an = (m / 3) * Math.PI * 2 + k;
+        const px = x + Math.cos(an) * 3, py = y + Math.sin(an) * 3;
+        altinDoldur(S.daireYolu(px, py, 1.6), px - 2, py - 2, px + 2, py + 2);
+      }
     }
   }
 
@@ -338,6 +343,13 @@
       const lc = -Math.PI / 2 + (Math.PI * (j + 0.55)) / 16;
       const pts = prof.filter((q) => q.y < 520 && q.y > 318).map((q) => [560 + Math.sin(lc) * q.r, q.y]).reverse();
       firca(pts, j === 10 ? 4.2 : 2.6, j === 10 ? 'rgba(235,255,215,0.6)' : 'rgba(220,250,200,0.35)');
+    }
+    // her dilimde elle boyanmış gölge ve ışık fırçaları: kaburganın solunda koyu, ışık yanında açık
+    for (const k of S.kaburgalar(16, 40)) {
+      const sc = Math.cos(k.boylam);
+      const pts = k.noktalar.filter((q) => q[1] > 306).reverse();
+      firca(pts.map(([x, y]) => [x - 4 * sc - 1, y]), 2.6 * sc + 0.8, 'rgba(24,84,44,0.26)');
+      if (k.u > -0.2) firca(pts.map(([x, y]) => [x + 5 * sc + 1, y]).slice(4), 1.6 * sc + 0.5, `rgba(225,255,205,${(0.12 + 0.2 * Math.max(0, k.u)).toFixed(2)})`);
     }
     for (const k of S.kaburgalar(16, 40)) altinCizgi(S.yol(k.noktalar), 1.1);
     // kubbe eteğinde varak altın şerit ve üstünde boyalı küçük çiçek dizisi
@@ -640,26 +652,28 @@
 
   // vazodaki demet: simetrik; orta ekseninde lale, büyük gül ve beyaz gül, iki yanda eşli öğeler
   const DEMET_ORTA = [
-    { t: 'lale', dx: 0, dy: -282, s: 1.75, a: 0, renk: 'kirmizi' },
-    { t: 'papatya', dx: 0, dy: -222, r: 15 },
-    { t: 'gul', dx: 0, dy: -160, r: 37, renk: 'pembe' },
-    { t: 'gul', dx: 0, dy: -64, r: 23, renk: 'beyaz' },
+    { t: 'lale', dx: 0, dy: -292, s: 1.9, a: 0, renk: 'kirmizi' },
+    { t: 'papatya', dx: 0, dy: -232, r: 17 },
+    { t: 'gul', dx: 0, dy: -168, r: 43, renk: 'pembe' },
+    { t: 'gul', dx: 0, dy: -70, r: 28, renk: 'beyaz' },
   ];
   const DEMET_YAN = [
-    { t: 'gonca', dx: -50, dy: -262, r: 8, a: -Math.PI / 2 - 0.5, renk: '#EE8C9E' },
-    { t: 'sumbul', dx: -30, dy: -206, s: 1.3, a: -Math.PI / 2 - 0.3 },
-    { t: 'karanfil', dx: -58, dy: -168, r: 24, a: -0.45 },
-    { t: 'lale', dx: -68, dy: -104, s: 1.2, a: -0.62, renk: 'sari' },
-    { t: 'gul', dx: -38, dy: -96, r: 24, renk: 'mercan' },
-    { t: 'papatya', dx: -66, dy: -42, r: 15, a: 0.5 },
+    { t: 'gonca', dx: -54, dy: -272, r: 8.5, a: -Math.PI / 2 - 0.5, renk: '#EE8C9E' },
+    { t: 'sumbul', dx: -32, dy: -214, s: 1.45, a: -Math.PI / 2 - 0.3 },
+    { t: 'karanfil', dx: -62, dy: -180, r: 27, a: -0.45 },
+    { t: 'lale', dx: -70, dy: -112, s: 1.35, a: -0.62, renk: 'sari' },
+    { t: 'gul', dx: -42, dy: -104, r: 28, renk: 'mercan' },
+    { t: 'papatya', dx: -70, dy: -46, r: 17, a: 0.5 },
   ];
   const DEMET_DOLGU = [
-    { t: 'sukufe', dx: -22, dy: -126, r: 7, renk: '#9DB8EE' },
-    { t: 'sukufe', dx: -76, dy: -136, r: 6.5, renk: '#FFFFFF' },
-    { t: 'sukufe', dx: -18, dy: -244, r: 6, renk: '#FFFFFF' },
-    { t: 'sukufe', dx: -40, dy: -60, r: 6, renk: '#F7D36A' },
-    { t: 'sukufe', dx: -84, dy: -78, r: 6, renk: '#F6B7C2' },
-    { t: 'sukufe', dx: -26, dy: -30, r: 5.5, renk: '#9DB8EE' },
+    { t: 'sukufe', dx: -24, dy: -134, r: 7.5, renk: '#9DB8EE' },
+    { t: 'sukufe', dx: -82, dy: -144, r: 7, renk: '#FFFFFF' },
+    { t: 'sukufe', dx: -20, dy: -256, r: 6.5, renk: '#FFFFFF' },
+    { t: 'sukufe', dx: -48, dy: -238, r: 6, renk: '#F6B7C2' },
+    { t: 'sukufe', dx: -44, dy: -62, r: 6.5, renk: '#F7D36A' },
+    { t: 'sukufe', dx: -86, dy: -84, r: 6.5, renk: '#F6B7C2' },
+    { t: 'sukufe', dx: -24, dy: -30, r: 6, renk: '#9DB8EE' },
+    { t: 'sukufe', dx: -78, dy: -212, r: 6, renk: '#F7D36A' },
   ];
   function demet(vx, agiz) {
     const ox = vx, oy = agiz;
@@ -673,6 +687,17 @@
       const x0 = ox + o.dx * ay * 0.12, y0 = oy + 8;
       const pts = egri(x0, y0, ox + o.dx * ay * 0.55, oy + (uy - oy) * 0.45, ux, uy);
       sapList.push([pts, o, ay]);
+    }
+    // demetin gövdesini dolduran yaprak kütlesi: ağızdan yelpaze gibi açılan kavisli yapraklar
+    for (let k = 0; k < 13; k++) {
+      const t = k / 12;
+      const an = -Math.PI / 2 - 0.08 - t * 1.25;   // sol yarı: yukarıdan sola
+      const L = lerp(150, 70, t) + ((k * 23) % 17);
+      for (const ay of [-1, 1]) {
+        const a2 = ay < 0 ? an : -Math.PI - an;
+        const bx = ox + ay * (6 + t * 10), by = oy - 10 - (k % 3) * 18;
+        kyaprak(bx + Math.cos(a2) * 20, by + Math.sin(a2) * 20, L * 0.62, a2, ay * 0.2, 0.17);
+      }
     }
     for (const [pts] of sapList) sap(pts, 3);
     // ağızdan sarkan ve yükselen büyük yapraklar
@@ -725,32 +750,41 @@
   // ------------------------------------------------------------ önde simetrik çiçek kuşağı
   {
     const ox = 512, oy = 888;
-    const ORTA = [{ t: 'gul', dx: 0, dy: 0, r: 52, renk: 'pembe' }];
+    const ORTA = [{ t: 'gul', dx: 0, dy: -2, r: 57, renk: 'pembe' }];
     const YAN = [
-      { t: 'lale', dx: -250, dy: -48, s: 1.15, a: -0.22, renk: 'sari' },
-      { t: 'sumbul', dx: -108, dy: -46, s: 1.25, a: -Math.PI / 2 - 0.22 },
-      { t: 'gonca', dx: -46, dy: -64, r: 9, a: -Math.PI / 2 - 0.35, renk: '#EE8C9E' },
-      { t: 'lale', dx: -196, dy: -22, s: 1.55, a: -0.42, renk: 'kirmizi' },
-      { t: 'karanfil', dx: -82, dy: -14, r: 30, a: -0.38 },
-      { t: 'gul', dx: -146, dy: 26, r: 34, renk: 'beyaz' },
-      { t: 'papatya', dx: -236, dy: 40, r: 20, a: 0.2 },
-      { t: 'papatya', dx: -62, dy: 50, r: 17, a: 0.6 },
+      { t: 'lale', dx: -256, dy: -56, s: 1.25, a: -0.22, renk: 'sari' },
+      { t: 'sumbul', dx: -112, dy: -50, s: 1.35, a: -Math.PI / 2 - 0.22 },
+      { t: 'gonca', dx: -46, dy: -70, r: 9.5, a: -Math.PI / 2 - 0.35, renk: '#EE8C9E' },
+      { t: 'lale', dx: -200, dy: -30, s: 1.65, a: -0.42, renk: 'kirmizi' },
+      { t: 'karanfil', dx: -88, dy: -16, r: 33, a: -0.38 },
+      { t: 'gul', dx: -154, dy: 22, r: 39, renk: 'beyaz' },
+      { t: 'gul', dx: -240, dy: 18, r: 26, renk: 'mercan' },
+      { t: 'papatya', dx: -206, dy: 50, r: 19, a: 0.2 },
+      { t: 'papatya', dx: -70, dy: 50, r: 19, a: 0.6 },
     ];
     const DOLGU = [
-      { t: 'sukufe', dx: -128, dy: -22, r: 7, renk: '#9DB8EE' },
-      { t: 'sukufe', dx: -200, dy: 30, r: 7, renk: '#F6B7C2' },
-      { t: 'sukufe', dx: -30, dy: -60, r: 6, renk: '#FFFFFF' },
-      { t: 'sukufe', dx: -100, dy: 52, r: 6.5, renk: '#F7D36A' },
-      { t: 'sukufe', dx: -168, dy: -40, r: 6, renk: '#FFFFFF' },
-      { t: 'sukufe', dx: -222, dy: -10, r: 6, renk: '#9DB8EE' },
-      { t: 'sukufe', dx: -276, dy: 10, r: 6, renk: '#FFFFFF' },
+      { t: 'sukufe', dx: -128, dy: -26, r: 7.5, renk: '#9DB8EE' },
+      { t: 'sukufe', dx: -112, dy: 54, r: 7.5, renk: '#F6B7C2' },
+      { t: 'sukufe', dx: -30, dy: -62, r: 6.5, renk: '#FFFFFF' },
+      { t: 'sukufe', dx: -150, dy: -32, r: 6.5, renk: '#F7D36A' },
+      { t: 'sukufe', dx: -176, dy: -46, r: 6, renk: '#FFFFFF' },
+      { t: 'sukufe', dx: -234, dy: -22, r: 6.5, renk: '#9DB8EE' },
+      { t: 'sukufe', dx: -282, dy: 40, r: 7, renk: '#FFFFFF' },
+      { t: 'sukufe', dx: -248, dy: 56, r: 6, renk: '#F7D36A' },
     ];
-    // arkada yelpaze gibi açılan yapraklar
-    for (let k = 0; k < 11; k++) {
+    // arkada yelpaze gibi açılan yaprak kütlesi
+    for (let k = 0; k < 14; k++) {
       for (const ay of [-1, 1]) {
-        const dx = 14 + k * 25, L = 62 + ((k * 37) % 23);
-        const an = -Math.PI / 2 - (0.12 + k * 0.1) * ay;
-        kyaprak(ox + dx * ay, 958 - (k % 2) * 16, L, an, -ay * 0.18, 0.18);
+        const dx = 8 + k * 20, L = 70 + ((k * 37) % 26) - k * 1.5;
+        const an = -Math.PI / 2 - (0.1 + k * 0.085) * ay;
+        kyaprak(ox + dx * ay, 962 - (k % 3) * 12, L, an, -ay * 0.2, 0.19);
+      }
+    }
+    for (let k = 0; k < 9; k++) {
+      for (const ay of [-1, 1]) {
+        const dx = 30 + k * 30, L = 48 + ((k * 29) % 18);
+        const an = -Math.PI / 2 - (0.5 + (k % 3) * 0.25) * ay;
+        kyaprak(ox + dx * ay, 930 - (k % 2) * 30, L, an, ay * 0.22, 0.2);
       }
     }
     const hepsi = [];
@@ -918,10 +952,11 @@
         r *= 1.0; gg *= 0.972; b *= 0.905;
         // vernik parlaklığı: geniş ve dar çapraz bantlar, lif dokusuyla dalgalanır
         const u = (x - y * 0.72) / 1024;
-        const b1 = Math.exp(-Math.pow((u - 0.29) / 0.075, 2));
-        const b2 = Math.exp(-Math.pow((u - 0.45) / 0.022, 2)) * 0.85;
-        const son = clamp(1 - Math.abs(y - 360) / 720, 0, 1);
-        const pa = (b1 * 0.27 + b2 * 0.2) * son * (0.78 + 0.35 * (lf - 0.3));
+        const b1 = yumusak(0.17, 0.2, u) * (1 - yumusak(0.29, 0.32, u));
+        const b2 = Math.exp(-Math.pow((u - 0.355) / 0.011, 2));
+        const b3 = Math.exp(-Math.pow((u - 0.25) / 0.14, 2));
+        const son = yumusak(-150, 260, y) * (1 - yumusak(640, 1060, y));
+        const pa = (b1 * 0.17 + b2 * 0.3 + b3 * 0.09) * son * (0.75 + 0.45 * (lf - 0.3));
         r += (255 - r) * pa; gg += (253 - gg) * pa; b += (244 - b) * pa;
         d[o] = r; d[o + 1] = gg; d[o + 2] = b;
       }

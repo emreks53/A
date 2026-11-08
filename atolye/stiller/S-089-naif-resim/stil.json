@@ -5,36 +5,36 @@
   "ad_en": "Naive Painting",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Cepheden, perspektifsiz bakış; her taşı, her pencereyi, her yaprağı tek tek ve özenle boyanmış, parlak ve temiz renkli, biraz katı ama sevimli biçimli naif resim.",
-  "tanim": "Naif resim, akademik eğitim almamış ya da akademik kuralları bilerek bir yana bırakan ressamların doğrudan ve içten bir bakışla yaptığı resimdir. Perspektif ve oranlar sezgiyle kurulur; biçimler cepheden, düz ve biraz katı durur, uzaktaki şeyler de öndekiler kadar net ve ayrıntılıdır. Yapraklar, çiçekler, taşlar ve pencereler sabırla tek tek boyanır, sıra sıra dizilir; renkler parlak ve temiz, boya düzgün sürülmüştür.",
+  "ozet": "Cepheden, perspektifsiz bakış; elle biraz eğri büğrü çizilmiş biçimler, örtücü ama hafif düzensiz sürülmüş yağlıboya, ince fırçayla çekilmiş koyu konturlar ve tek tek boyanmış taşlar, yapraklar, çiçekler.",
+  "tanim": "Naif resim, akademik eğitim almamış ya da akademik kuralları bilerek bir yana bırakan ressamların doğrudan ve içten bir bakışla yaptığı resimdir. Perspektif ve oranlar sezgiyle kurulur; biçimler cepheden, düz ve biraz katı durur, uzaktaki şeyler de öndekiler kadar net ve ayrıntılıdır. Yapraklar, çiçekler, taşlar ve pencereler sabırla tek tek boyanır, sıra sıra dizilir; renkler parlak ve temizdir. Boya tuvale örtücü ama yer yer düzensiz sürülür, fırça izleri ve tuval dokusu seçilir; çizgiler pergel ve cetvel düzgünlüğünde değil, elin titrekliğini taşır.",
   "koken": "Henri Rousseau'nun (1844–1910) cangıl ve kent resimleriyle tanındı; Séraphine Louis, Hırvat Hlebine okulundan Ivan Generalić ve Grandma Moses türün bilinen adlarıdır. Türkiye'de 18. ve 19. yüzyıl Anadolu cami ve konaklarındaki kent ve manzara tasvirli duvar resimleri naif bakışın yerli kökü sayılır; Cihat Burak gibi ressamlar da bu içten, ayrıntıcı dili sürdürmüştür.",
   "ayirt_edici": [
-    "Kasnak pencereleri silindirde daralmadan eşit aralıkla ve eşit büyüklükte dizilmiş; her birinde ince orta kayıt ve açık renk denizlik",
-    "Kaidenin taşları kaydırmalı sıralar hâlinde tek tek boyanmış; dişli korniş, kafesli ve kilit taşlı pencereler",
-    "Ufukta yan yana dizilmiş küçük yuvarlak ağaçlar, serviler ve boğumları tek tek çizilmiş hurma ağaçları; önde tek tek boyanmış döşeme taşları",
-    "İki tonlu yapraklar: orta damarın bir yanı açık, öbür yanı koyu, yan damarlar ince fırçayla; önde iri yuvarlak yapraklar ve sivri çimen demetleri sık bir halı oluşturuyor",
-    "Beyaz çiçeklerin taç yapraklarında tek tek ince damarlar, ortada noktalı sarı göbek; çayırda küçük papatyalar ve kırmızı gelincikler",
-    "Düzgün mavi gök, ince ışınlı yuvarlak güneş, tamponları dizili, düz tabanlı ve konturlu bulutlar; hafif titrek el çizgisi konturlar ve tuval dokusu"
+    "Elle çekilmiş, kalınlığı yer yer değişen koyu fırça konturları; minare, kaide ve kubbe hatları cetvel düzgünlüğünde değil, hafifçe eğri büğrü",
+    "Her alan yassı fırçayla örtücü boyanmış: gökte yatay, kubbede kaburga yönünde, minarede dikey, taç yapraklarında ışınsal fırça izleri; biraz düzensiz kapama ve tuval örgüsü seçiliyor",
+    "Kubbe dilim dilim düz tonlarla modellenmiş (sol yan koyu, sağ üst açık); kasnak pencereleri silindirde daralmadan, eşit aralıkla ve eşit büyüklükte dizilmiş",
+    "Kaidenin taşları, avlunun döşeme taşları, ufuktaki yuvarlak ağaçların yaprak lekeleri ve hurma ağaçlarının boğumları tek tek boyanmış",
+    "Önde iki tonlu, damarları ince fırçayla çizilmiş sık yaprak halısı; çayırda sıra sıra küçük papatyalar ve kırmızı gelincikler",
+    "Damarlı taç yapraklı beyaz çiçekler ve noktalı sarı göbekler; sivri ışınlı yuvarlak güneş, düz tabanlı ve konturlu tampon bulutlar"
   ],
   "palet": [
-    "#449ADF",
-    "#BFE2F3",
-    "#FFD24A",
-    "#43A760",
-    "#2C964A",
-    "#FAF4E6",
-    "#684A64",
-    "#C8573C"
+    "#2C7ED4",
+    "#C4E4F2",
+    "#2C9A4E",
+    "#7ED070",
+    "#124C2A",
+    "#FDF8EC",
+    "#644662",
+    "#F8BA2E"
   ],
-  "kodla_cizim": "Çizim 2048 piksellik ekran dışı bir tuvalde vektör yollarla (Path2D ve SAHNE yolları) yapılır. Gök dikey geçişle boyanır, kırpılmış alanda yarı saydam ince fırça izleriyle düzgün sürülmüş boya hissi verilir; güneş üçgen ışınlar ve geçişli bir disk, bulutlar düz tabanlı yuvarlak tamponların birleşimidir (iç çizgiler kapatılır, yalnız dış hat konturlanır). Ufukta küçük ağaçlar, serviler ve boğumlarıyla yaprakçıkları tek tek çizilen hurma ağaçları, önde tek tek döşeme taşları ve düzenli çimen tutamları yer alır. Yapıda taş blokları kaydırmalı sıralarla tek tek, korniş dişleri, kemer çerçeveleri, kafes çizgileri ve kilit taşları ayrı ayrı çizilir; kasnak pencereleri silindir daralması olmadan eşit aralıkla dizilir. Yapraklar orta damar boyunca ikiye bölünüp iki tonla boyanır, yan damarları çizilir; taç yapraklarında ışınsal ince damarlar, göbekte nokta halkası vardır. Son geçişte her piksel düşük frekanslı gürültüyle birkaç piksel kaydırılarak çizgilere el titremesi verilir; üstüne bez dokusu, bölgeye göre yatay ya da dikey fırça izi gürültüsü ve hafif boya dalgalanması eklenir.",
+  "kodla_cizim": "Çizim 2048 piksellik ekran dışı bir tuvalde yapılır. Her biçim (SAHNE yolları ve elle kurulan yollar) gizli bir SVG yolunda getPointAtLength ile örneklenir ve yavaş değişen bir gürültü kaydırma alanıyla eğilir; komşu biçimler aynı eğriyi paylaştığı için aralarında boşluk açılmaz, ama hiçbir çizgi cetvel düzgünlüğünde kalmaz. Her alan önce düz bir zeminle örtülür, sonra alana kırpılmış yassı fırça darbeleriyle boyanır: darbe yönü bölgeye göre seçilir (gökte yatay, kubbede meridyen boyunca, minarede dikey, çiçekte ışınsal) ve her darbe uçları düzensiz, renkleri hafifçe ayrışan 3–9 kıl izinden oluşur. Konturlar aynı örnek noktalarından, kalınlığı gürültüyle değişen kısa çizgi parçalarıyla çekilir. Kubbe dilimleri ışık yönüne göre düz tonlarla; taşlar, döşemeler, ağaç yaprakları, yapraklar ve çiçekler tek tek boyanır. Son geçişte parlaklık farkından hafif bir boya kabartısı ve düz örgülü tuval dokusu eklenir.",
   "etiketler": [
     "naif",
     "halk resmi",
     "Rousseau",
-    "ayrıntı",
-    "düz perspektif",
     "yağlıboya",
-    "temiz renk",
-    "sevimli"
+    "tuval",
+    "fırça izi",
+    "el çizgisi",
+    "ayrıntı"
   ]
 }

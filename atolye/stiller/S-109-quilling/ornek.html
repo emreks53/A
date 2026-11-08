@@ -182,26 +182,26 @@
     const rmax = kademeler[0];
     const yerler = [];
     for (const rk of kademeler) {
-      const deneme = Math.round((alan / (rk * rk)) * 2.2);
+      const deneme = Math.round((alan / (rk * rk)) * 2.2 * (o.seyrek || 1));
       for (let k = 0; k < deneme; k++) {
         const px = Math.floor(r() * w), py = Math.floor(r() * h);
         const f = F[py * w + px];
         if (f < rk) continue;
         const R = Math.min(f, rk * (1 + r() * 0.22));
         yerler.push([px + 0.5, py + 0.5, R]);
-        const ext = Math.ceil(R + rmax * 1.25 + 2);
+        const ext = Math.ceil(R + rmax * 1.25 + 2 + (o.ara || 0));
         for (let yy = Math.max(0, py - ext); yy < Math.min(h, py + ext); yy++) for (let xx = Math.max(0, px - ext); xx < Math.min(w, px + ext); xx++) {
-          const dd = Math.hypot(xx - px, yy - py) - R - 0.6;
+          const dd = Math.hypot(xx - px, yy - py) - R - (o.ara || 0.6);
           const j = yy * w + xx;
           if (dd < F[j]) F[j] = dd;
         }
       }
     }
     for (const [cx, cy, R] of yerler) {
-      const siki = R < 4.2 || r() < (o.siki || 0.12);
+      const siki = R < (o.sikiAlt !== undefined ? o.sikiAlt : 4.2) || r() < (o.siki !== undefined ? o.siki : 0.12);
       const ga = r() * Math.PI * 2, gm = 0.2 + r() * 0.22;
       const damla = !siki && r() < (o.damla || 0);
-      kivrim(cx, cy, R, o.renk(cx, cy, R, r), { tip: siki ? 'siki' : 'gevsek', goz: damla ? [-0.3, 0] : [Math.cos(ga) * gm, Math.sin(ga) * gm], baslangic: r() * 6.28, sekil: damla ? DAMLA(0.85) : null, aci: r() * 6.28, yumusak: true, acik: 0.3 });
+      kivrim(cx, cy, R, o.renk(cx, cy, R, r), { tip: siki ? 'siki' : 'gevsek', goz: damla ? [-0.3, 0] : [Math.cos(ga) * gm, Math.sin(ga) * gm], baslangic: r() * 6.28, sekil: damla ? DAMLA(0.85) : null, aci: r() * 6.28, yumusak: true, acik: o.acik !== undefined ? o.acik : 0.3, w: o.w });
     }
     return yerler;
   }
@@ -220,7 +220,7 @@
   {
     const Y = S.yollar();
     const bulutlar = [[165, 252, 1.15, 0], [470, 150, 0.9, 1], [770, 330, 0.78, 0], [96, 498, 0.58, 1], [944, 470, 0.6, 0]];
-    const GOKR = ['#86C0EC', '#9BCCF0', '#B0D8F4', '#C4E3F7', '#D6EDFA'].map(hex);
+    const GOKR = ['#9CCBEF', '#ABD3F2', '#BADCF5', '#C8E4F8', '#D6ECFA'].map(hex);
     const ISIK = hex('#FFF3CC');
     genisDoldur((x) => {
       x.fillRect(0, 0, 1024, 799);
@@ -235,7 +235,7 @@
       for (const [cx, cy, sc, t] of bulutlar) { const pts = bulutNoktalari(cx, cy, sc, t); const p = new Path2D(); pts.forEach((q, i) => (i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1]))); p.closePath(); x.fill(p); x.stroke(p); }
       x.beginPath(); x.arc(S.gunes.x, S.gunes.y, 104, 0, 7); x.fill();
     }, {
-      tohum: 501, kademeler: [14, 12, 10, 8.4, 7, 5.8, 4.8, 3.9], pay: 0.6, siki: 0.1, damla: 0.12,
+      tohum: 501, kademeler: [24, 21, 18, 15.5, 13], pay: 2.5, ara: 7, seyrek: 0.55, siki: 0, sikiAlt: 0, damla: 0.16, acik: 1.1, w: 2.1,
       renk: (x, y, R, r) => {
         let c = sec(GOKR, clamp(y / 800, 0, 1), r, 1.6);
         const d = Math.hypot(x - S.gunes.x, y - S.gunes.y);
@@ -244,7 +244,7 @@
       },
     });
     const YERR = ['#E6D8B6', '#EEE3C6', '#DCE6C2', '#E8EED0', '#F3ECD6'].map(hex);
-    genisDoldur((x) => x.fillRect(0, 809, 1024, 215), { tohum: 502, kademeler: [13, 11, 9, 7.4, 6, 4.8, 3.9], pay: 0.4, siki: 0.12, renk: (x, y, R, r) => sec(YERR, 0.5, r, 4.5) });
+    genisDoldur((x) => x.fillRect(0, 809, 1024, 215), { tohum: 502, kademeler: [17, 14.5, 12, 10, 8.5], pay: 1.5, ara: 3.5, seyrek: 0.8, siki: 0.08, sikiAlt: 0, acik: 0.7, renk: (x, y, R, r) => sec(YERR, 0.5, r, 4.5) });
   }
   {
     const g = S.gunes;
@@ -455,7 +455,7 @@
     ana.drawImage(kat.c, 0, 0);
     ana.restore();
   }
-  bas(KAT.gok, 0.6); bas(KAT.bina); bas(KAT.bitki);
+  bas(KAT.gok, 0.5); bas(KAT.bina); bas(KAT.bitki);
   S.hazir();
 })();
 </script>

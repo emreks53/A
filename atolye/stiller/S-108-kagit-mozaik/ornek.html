@@ -68,14 +68,14 @@
   const SICAK = hex('#FFF3C8');
   const BULUTP = palet(['#DCE8F6', '#E8F0FA', '#F2F7FC', '#FAFCFE']);
   const ZEMINP = palet(['#DDBF82', '#E6CC97', '#EED9B0', '#F4E5C6']);
-  const KREMP = palet(['#D6CDB9', '#E1D9C7', '#EAE3D3', '#F2ECDF', '#F8F3E8']);
+  const KREMP = palet(['#E0D5BE', '#E9E0CC', '#F1EADA', '#F8F3E6', '#FDFAF2']);
   const ALTINP = palet(['#D19A26', '#E2B33A', '#F0C94E', '#F8DD7A']);
   const KUBBEP = palet(['#1C6A35', '#227A3D', '#2A8A45', '#35994E', '#43A85A', '#58B966', '#70C874', '#8AD584']);
   const YAPRAKP = [palet(['#3E8A3E', '#4C9A44', '#5AA84C']), palet(['#5AA84C', '#6CB654', '#7EC35C']), palet(['#2F7A3C', '#3C8A42', '#4A984A']), palet(['#79BA52', '#8CC85E', '#9ED36A'])];
   const PEMBE = palet(['#F6C2D0', '#F2AEC2', '#EE9AB4']);
   const BEYAZP = palet(['#F8F5F2', '#FCFAF7', '#FFFEFC']);
   const TACKENAR = palet(['#E9DFE2', '#E5DCE4', '#EDE2E0']);
-  const KREMKENAR = palet(['#CDBF9F', '#D4C6A8', '#DACDB1']);
+  const KREMKENAR = palet(['#D3C39F', '#D9CAA8', '#DED1B2']);
   const BULUTKENAR = palet(['#C3D9EF', '#CCDEF2', '#D3E3F4']);
 
   // gök
@@ -141,8 +141,8 @@
       const id = et({ mod: 'kontur', h: 6, renk: kremX(p.x1, p.x2) });
       boya(id, dikd(p.x1, p.y1, p.x2, p.y2));
       S.zikzakCizgileri().forEach((z, k) => {
-        const zi = et({ mod: 'serit', h: 6, renk: k === 1 ? (x, y, r) => sec(palet(['#2F86B8', '#3A96C4', '#4AA4D0']), 0.5, r, 3) : (x, y, r) => sec(palet(['#D0603E', '#DC7048', '#E67F55']), 0.5, r, 3) });
-        boya(zi, S.yol(z), 5.2);
+        const zi = et({ mod: 'serit', h: 11, ara: 0.55, renk: k === 1 ? (x, y, r) => sec(palet(['#2F86B8', '#3A96C4', '#4AA4D0']), 0.5, r, 3) : (x, y, r) => sec(palet(['#D0603E', '#DC7048', '#E67F55']), 0.5, r, 3) });
+        boya(zi, S.yol(z), 6);
       });
     } else if (p.tip === 'topuz') {
       const id = et({ mod: 'kontur', h: 7, kenar: KREMKENAR, renk: kremX(270, 330) });

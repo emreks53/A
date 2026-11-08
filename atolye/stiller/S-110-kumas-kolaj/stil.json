@@ -5,16 +5,16 @@
   "ad_en": "Fabric Appliqué",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Kesilmiş küçük desenli pamuklu, keten ve keçe parçalarının açık renkli bir kumaş zemine elle dikilmesi; kenarlarda düzgün görünen dikişler, dokuma ve baskı desenleri, nakış ayrıntıları.",
+  "ozet": "Kesilmiş küçük desenli pamuklu, keten ve keçe parçalarının açık renkli bir kumaş zemine elle dikilmesi; kenarlarda elle atılmış görünür dikişler, dokuma ve baskı desenleri, tüylü keçe ve nakış ayrıntıları.",
   "tanim": "Aplikede resim, kesilmiş kumaş parçalarının bir zemin kumaşına dikilmesiyle kurulur. Küçük çiçekli, puanlı, kareli ve ince çizgili pamuklular, keten ve kalın keçe yan yana kullanılır; parçaların kenarı ya içe kıvrılıp gizli dikilir ya da teyel ve battaniye dikişleri gibi görünen, süs olarak bırakılan dikişlerle tutturulur. Ayrıntılar nakışla işlenir: gövdeler sap işiyle, ışınlar düz iğneyle, çiçek göbekleri Fransız düğümleriyle. Zemin çoğu zaman kapitone edilir; dikiş sıraları arasında kumaş hafifçe kabarır. Yorgan, duvar örtüsü, yastık ve çocuk odası panolarında sevilen sıcak, el yapımı bir tekniktir.",
   "koken": "Aplike çok eski bir tekniktir: Mısır'da çadır ve sancak süslerinde, Orta Asya keçe halılarında, Osmanlı çadır ve otağ işlemelerinde kullanıldı. Amerika'da 19. yüzyılda Baltimore albüm yorganları ve Hawaii yorganlarıyla, Hindistan'da kantha ve Gujarat aplikeleriyle zenginleşti; 20. yüzyılda Matisse'in kesik kâğıtlarından da etkilenen çağdaş tekstil sanatçıları ve resimleyiciler kumaş kolajını yaygınlaştırdı.",
   "ayirt_edici": [
     "Açık mavi, seyrek beyaz puan baskılı keten zemin: görünür dokuma ve dalgalı kapitone dikiş sıraları, aralarında hafif kabarma",
     "Kubbenin dönüşümlü iki yeşil pamukludan (küçük çiçekli ve puanlı) dikilmiş dilimleri; kaburgalarda koyu yeşil geri dikiş",
     "Kareli ve puanlı yeşil pamuklu kasnaklar, koyu yeşil keçe kemer pencereler; küçük çiçekli krem keten kaide ve battaniye dikişli kahve puanlı pencereler",
-    "Her parçanın kenarında düzgün koşu (teyel) dikişi; keçe bulutlarda ve güneşte battaniye dikişi; iplikte ışık ve küçük gölge",
+    "Her parçanın kenarında elle atılmış, boyu, aralığı ve yönü hafifçe değişen koşu (teyel) dikişi; keçe bulutlarda ve güneşte düzensiz aralıklı battaniye dikişi; iplikte ışık ve küçük gölge",
     "İnce çizgili krem minare, hardal keçe şerefeler, iplikle işlenmiş korkuluk ve kırmızı-turkuaz zikzak nakışı; düz iğneyle işlenmiş güneş ışınları",
-    "Yeşil kareli zeminde damarı teyellenmiş keçe yapraklar, sap işi gövdeler, pembe dikişli beyaz keçe çiçekler ve Fransız düğümlü sarı göbekler"
+    "Yeşil kareli zeminde damarı teyellenmiş, lifli yüzeyli ve kesik kenarından ince tüyler taşan keçe yapraklar; sap işi gövdeler, pembe dikişli beyaz keçe çiçekler ve Fransız düğümlü sarı göbekler"
   ],
   "palet": [
     "#BFDDF3",
@@ -26,7 +26,7 @@
     "#FFC93C",
     "#F2A2BA"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Dokuma dokusu piksel düzeyinde üretilir: çözgü ve atkı iplikleri dama düzeninde üst üste geçer, iplik kesiti kosinüs profiliyle gölgelenir, ketende iplik kalınlığı ve tonu iplik başına dalgalanır; keçe dokusu gürültü ve kısa kıvrık liflerden oluşur. Baskı desenleri (puan, beş noktalı küçük çiçek, kareli, ince çizgi) döşenebilir küçük tuvallerden desen olarak basılır. Her kumaş parçası düz renk ve gölgeyle doldurulur, kırpılarak baskı deseni, 'overlay' ve hafif 'multiply' dokuma/keçe dokusu, ortada hafif ışık, kenarlarda dolgu koyuluğu ve sağ-üst ışıklı, sol-alt gölgeli kalınlık kenarı eklenir. Dikişler yay uzunluğuyla örneklenen yollar üzerinde Path2D'de toplanıp gölge, iplik ve ışık geçişleriyle çizilir: içe kaydırılmış koşu dikişi (iğne delikleriyle), kenara dik battaniye dikişi, eğik ve üst üste binen sap işi, düz iğne ışınlar; Fransız düğümleri gölgeli küçük dairelerdir. Zemin keteni seyrek beyaz puan baskısı alır; kapitone çizgileri hafif koyu-açık bant çiftleri ve beyaz koşu dikişleriyle çizilir.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte. Dokuma dokusu piksel düzeyinde üretilir: çözgü ve atkı iplikleri dama düzeninde üst üste geçer, iplik kesiti kosinüs profiliyle gölgelenir, ketende iplik kalınlığı ve tonu iplik başına dalgalanır; keçe dokusu gürültü ve kısa kıvrık liflerden oluşur; ayrıca saydam zeminli bir lif katmanı (açık ve koyu kıvrık lifler, açık topaklar) keçenin üstüne doğrudan basılır, böylece beyaz keçede de tüy görünür. Baskı desenleri (puan, beş noktalı küçük çiçek, kareli, ince çizgi) döşenebilir küçük tuvallerden desen olarak basılır. Her kumaş parçası düz renk ve gölgeyle doldurulur, kırpılarak baskı deseni, 'overlay' ve hafif 'multiply' dokuma/keçe dokusu, ortada hafif ışık, kenarlarda dolgu koyuluğu ve sağ-üst ışıklı, sol-alt gölgeli kalınlık kenarı eklenir. Keçe parçalarının kenarına dış normal yönünde taşan kısa, kıvrık tüyler çizilir. Dikişler yay uzunluğuyla örneklenen yollar üzerinde Path2D'de toplanıp gölge, iplik ve ışık geçişleriyle çizilir; el işi düzensizliği için her dikişin boyu, aralığı, yanal kayması ve iplik kalınlığı tohumlu rastgele sayılarla değişir: içe kaydırılmış koşu dikişi (iğne delikleriyle), kenara dik battaniye dikişi, eğik ve üst üste binen sap işi, düz iğne ışınlar; Fransız düğümleri gölgeli küçük dairelerdir. Zemin keteni seyrek beyaz puan baskısı alır; kapitone çizgileri hafif koyu-açık bant çiftleri ve beyaz koşu dikişleriyle çizilir.",
   "etiketler": [
     "aplike",
     "kumaş",

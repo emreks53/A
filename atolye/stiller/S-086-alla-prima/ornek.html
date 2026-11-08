@@ -166,7 +166,7 @@
     const d = Math.hypot(x - 880, y - 140);
     c = mixc(c, [255, 236, 176], 0.8 * Math.exp(-(d * d) / (2 * 165 * 165)));
     c = mixc(c, [255, 222, 140], 0.75 * sstep(110, 50, d));
-    c = mixc(c, [255, 252, 236], sstep(44, 38, d));
+    c = mixc(c, [255, 240, 178], sstep(44, 38, d));
     const b = bul(x, y);
     if (b > 0.3) {
       const lit = clamp((bul(x - 10, y + 12) - bul(x + 10, y - 12)) * 1.6 + 0.35 - (y - 0) * 0, 0, 1);
@@ -369,11 +369,28 @@
       const x = 880 + Math.cos(aa) * rr, y = 140 + Math.sin(aa) * rr;
       darbe({ x, y, a: aa + Math.PI / 2 + (R() - 0.5) * 1.4, L: 46 + R() * 50, w: 22 + R() * 14, k: (R() - 0.5) * 0.4, c: oyna(gokRenk(x, y), 0.03, 6), kuru: 0.5, kalin: 0.3, m: mGok });
     }
+    // güneş: kenarı yer yer kaybolan, sıcak sarıdan krem-beyaza kalın, kıvrık darbeler (tek darbe düz disk değil)
     const mGunes = new Float32Array(N);
-    for (let y = 80; y < 200; y++) for (let x = 820; x < 940; x++) { const d = Math.hypot(x - 880, y - 140) + (nE(x / 6, y / 6) - 0.5) * 4; mGunes[y * W + x] = sstep(41, 38, d); }
-    for (let i = 0; i < 7; i++) {
-      const y = 108 + i * 10.5;
-      darbe({ x: 880 + (R() - 0.5) * 6, y, a: (R() - 0.5) * 0.2, L: 96, w: 16, c: oyna([255, 253, 240], 0.02, 3), c2: [255, 240, 190], karis: 0.3, kalin: 0.9, m: mGunes });
+    for (let y = 70; y < 210; y++) for (let x = 810; x < 950; x++) { const d = Math.hypot(x - 880, y - 140) + (nE(x / 7, y / 7) - 0.5) * 12; mGunes[y * W + x] = sstep(50, 40, d); }
+    // önce kenarda sıcak sarı-turuncu bir halka: teğet yönde kısa kalın darbeler
+    for (let i = 0; i < 16; i++) {
+      const aa = (i / 16) * Math.PI * 2 + R() * 0.3, rr = 34 + R() * 10;
+      darbe({ x: 880 + Math.cos(aa) * rr, y: 140 + Math.sin(aa) * rr, a: aa + Math.PI / 2 + (R() - 0.5) * 0.3, L: 30 + R() * 14, w: 13 + R() * 5, k: 0.5, c: oyna([255, 214, 112], 0.04, 6), c2: [255, 234, 160], karis: 0.5, kuru: 0.35, kalin: 0.5, m: mGunes });
+    }
+    // sonra ortaya doğru açılan krem-sarı, en ortada sıcak beyaz: kıvrık, üst üste binen darbeler
+    for (let i = 0; i < 13; i++) {
+      const aa = R() * Math.PI * 2, rr = 6 + R() * 22;
+      darbe({ x: 880 + Math.cos(aa) * rr, y: 140 + Math.sin(aa) * rr, a: aa + Math.PI / 2 + (R() - 0.5) * 0.6, L: 34 + R() * 18, w: 15 + R() * 6, k: (R() - 0.5) * 0.9, c: oyna([255, 236, 158], 0.03, 5), c2: [255, 246, 204], karis: 0.6, kuru: 0.25, kalin: 0.7, m: mGunes });
+    }
+    for (let i = 0; i < 4; i++) {
+      const aa = R() * Math.PI * 2, rr = R() * 8;
+      darbe({ x: 880 + Math.cos(aa) * rr, y: 140 + Math.sin(aa) * rr, a: (R() - 0.5) * 1.6, L: 22 + R() * 10, w: 12 + R() * 4, k: (R() - 0.5) * 0.8, c: oyna([255, 248, 214], 0.02, 3), kuru: 0.2, kalin: 0.7, prof: 'oval', m: mGunes });
+    }
+    // kenarı göğe bağlayan birkaç sıcak sarı dokunuş (kenar yer yer kaybolur)
+    for (let i = 0; i < 12; i++) {
+      const aa = R() * Math.PI * 2, rr = 46 + R() * 22;
+      const x = 880 + Math.cos(aa) * rr, y = 140 + Math.sin(aa) * rr;
+      darbe({ x, y, a: aa + Math.PI / 2 + (R() - 0.5) * 0.8, L: 26 + R() * 20, w: 10 + R() * 6, c: oyna(mixc(gokRenk(x, y), [255, 220, 120], 0.45), 0.04, 6), kuru: 0.55, kalin: 0.45, m: mGok });
     }
   }
 
@@ -446,7 +463,10 @@
     // kasnak pencereleri: tek dikey koyu darbe; kemer için üstte kısa darbe
     for (let kat = 0; kat < 2; kat++) for (const p of SAHNE.kasnakPencereleri(kat)) {
       const c = oyna([28, 64, 76], 0.08, 6);
-      darbe({ x: p.x, y: p.y + p.h * 0.5, a: -Math.PI / 2, L: p.h, w: p.w * 1.05, c, c2: [52, 96, 96], karis: 0.3, kalin: 0.45, prof: 'kemer' });
+      // üst kattaki küçük nişler: tek darbede ama okunur genişlik ve boyda; kenara doğru daralma korunur
+      const w = kat ? p.w * 1.05 : Math.max(6, p.w * 1.35), h = kat ? p.h : p.h + 5;
+      darbe({ x: p.x, y: p.y + h * 0.5 - (kat ? 0 : 2.5), a: -Math.PI / 2, L: h, w, c, c2: [52, 96, 96], karis: 0.3, kalin: 0.45, prof: 'kemer' });
+      if (!kat) darbe({ x: p.x, y: p.y + h + 0.5, a: 0, L: w * 1.5, w: 2.4, c: [110, 176, 100], kalin: 0.6, kuru: 0.2 });
     }
     // kasnak katlarının üst ışık çizgisi ve alt gölgesi
     for (const [y, c, wd] of [[557, [26, 76, 74], 4], [612, [26, 80, 76], 4], [608, [104, 170, 92], 2.4], [690, [118, 182, 96], 2.4]]) {

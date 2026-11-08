@@ -92,7 +92,7 @@ const BOYA = {
   zeminSari: [236, 196, 108],  // seyreltik cehri: yer kalıbı
   gokCivit:  [118, 166, 214],  // seyreltik çivit: gök kalıbı
   sari:      [232, 170, 44],   // cehri sarısı
-  yesil:     [70, 160, 96],    // yeşil (çivit + cehri)
+  yesil:     [30, 152, 98],    // yeşil (çivit + cehri)
   civit:     [58, 104, 168],   // çivit
   pembe:     [228, 150, 140],  // seyreltik kök boya
   kirmizi:   [192, 62, 50],    // kök boya kırmızısı
@@ -139,7 +139,10 @@ function bas(ad, ciz, o) {
   } else {
     g.save();
     if (ALAN) { g.beginPath(); g.rect(ALAN.x, ALAN.y, ALAN.w, ALAN.h); g.clip(); }
-    g.globalCompositeOperation = 'lighter'; g.globalAlpha = yog;
+    if (o.birlesim === 'lighten') {
+      // zemin kalıpları: komşu basışların bindiği şerit koyulaşmaz (boya bir kez tutar), yoğunluk kalıba özgü
+      g.globalCompositeOperation = 'lighten'; g.globalAlpha = 1; g.filter = `brightness(${yog})`;
+    } else { g.globalCompositeOperation = 'lighter'; g.globalAlpha = yog; }
     g.translate(dx, dy);
     g.fillStyle = g.strokeStyle = '#fff';
     g.lineCap = 'round'; g.lineJoin = 'round';
@@ -253,7 +256,8 @@ const rezerv = (() => {
   for (const s of Y.saplar) g.stroke(P2(s));
   for (const y of B.yapraklar) { g.fill(P2(SAHNE.yaprakYolu(y))); g.lineWidth = 3; g.stroke(P2(SAHNE.yaprakYolu(y))); }
   for (const t of B.tomurcuklar) g.fill(P2(SAHNE.tomurcukYolu(t)));
-  for (const f of B.cicekler) { daire(g, f.x, f.y, f.r * 1.08); g.fill(); }
+  g.lineWidth = 7;
+  for (const f of B.cicekler) for (let i = 0; i < 5; i++) { const p = tacYolu(f.x, f.y, f.r, f.aci + (i * TAU) / 5); g.fill(p); g.stroke(p); }
   const m = okuKanal(c, 3);
   const b = bulanik(m, 2);
   for (let i = 0; i < N; i++) m[i] = Math.max(m[i], clamp(b[i] * 3));
@@ -262,8 +266,11 @@ const rezerv = (() => {
 function BULUTLAR() { return [[172, 244, 0.95], [505, 156, 0.8], [772, 336, 1.0], [930, 476, 0.62], [104, 470, 0.62]]; }
 
 // ------------------------------------------------------------------ 1) zemin kalıpları: gök (çivit) ve yer (cehri)
-for (let y = 32; y < 800; y += GAD) for (let x = 14; x < W; x += GAD) kalipBas('gokCivit', gadGok, x + GAD / 2, y + GAD / 2, 0, { kayma: 1.0, yog: 0.38 + rIz() * 0.12 });
-for (let y = 800; y < H; y += GAD) for (let x = 14; x < W; x += GAD) kalipBas('zeminSari', gadZemin, x + GAD / 2, y + GAD / 2, 0, { kayma: 1.0, yog: 0.42 + rIz() * 0.12 });
+// kalıplar bir öncekinin kenarına biraz bindirilerek basılır (adım kalıptan 1,5 px kısa): birleşimler çoğu yerde
+// kaybolur, yalnız kalıbın kaydığı yerlerde kısa, kesik krem aralıklar ve kalıptan kalıba hafif yoğunluk farkı kalır
+const GADIM = GAD - 1.5;
+for (let y = 32; y < 800; y += GADIM) for (let x = 14; x < W; x += GADIM) kalipBas('gokCivit', gadGok, x + GAD / 2, y + GAD / 2, 0, { kayma: 1.1, yog: 0.43 + rIz() * 0.05, birlesim: 'lighten' });
+for (let y = 800; y < H; y += GADIM) for (let x = 14; x < W; x += GADIM) kalipBas('zeminSari', gadZemin, x + GAD / 2, y + GAD / 2, 0, { kayma: 1.1, yog: 0.47 + rIz() * 0.05, birlesim: 'lighten' });
 // gök kalıbının yer çizgisini aşan kısmı ve yer kalıbının yukarı taşan kısmı silinir (kalıplar çizgiye dayanır)
 {
   const g = KAT.gokCivit.g; g.fillStyle = '#000'; g.fillRect(0, 801, W, H);
@@ -357,11 +364,11 @@ for (const [y1, y2] of minareBolum) {
   const kesit = (g) => { g.beginPath(); g.rect(200, y1, 200, y2 - y1); g.clip(); };
   const kx = (rIz() - 0.5) * 2.4;
   // dolgu: sol yanda açık çivit gölge, korkuluk ve zikzak kırmızı, alem sarı
-  bas('gokCivit', (g) => {
+  bas('civit', (g) => {
     g.translate(kx, 0); kesit(g);
     for (const p of MP) if (p.ad.startsWith('gövde')) { const xs = p.noktalar.map((q) => q[0]); g.fillRect(Math.min(...xs) + 3, Math.min(...p.noktalar.map((q) => q[1])), (Math.max(...xs) - Math.min(...xs)) * 0.28, 999); }
     g.save(); g.clip(P2(MP.find((p) => p.ad === 'topuz').yol)); g.fillRect(260, 140, 36, 70); g.restore();
-  }, { yog: 0.45 });
+  }, { yog: 0.24 });
   bas('kirmizi', (g) => {
     g.translate(kx, 0); kesit(g);
     g.lineWidth = 3.4; g.lineJoin = 'miter';
@@ -392,7 +399,7 @@ for (const [y1, y2] of minareBolum) {
 // ------------------------------------------------------------------ 6) kaide: krem taş (rezerv), kırmızı pencereler, baklava şeridi
 {
   const K = SAHNE.kaide;
-  bas('gokCivit', (g) => { g.fillRect(K.x1 + 3, K.y1 + 3, 22, K.y2 - K.y1 - 6); g.fillRect(K.x1 + 3, K.y1 + 3, K.x2 - K.x1 - 6, 7); }, { yog: 0.42 });
+  bas('civit', (g) => { g.fillRect(K.x1 + 3, K.y1 + 3, 22, K.y2 - K.y1 - 6); g.fillRect(K.x1 + 3, K.y1 + 3, K.x2 - K.x1 - 6, 7); }, { yog: 0.22 });
   bas('kirmizi', (g) => { for (const d of Y.kaidePencereleri) g.fill(P2(d)); });
   // aynı küçük baklava kalıbı korniş altında tekrar tekrar
   const baklava = kalip(16, 12, (g) => { g.beginPath(); g.moveTo(8, 1); g.lineTo(15, 6); g.lineTo(8, 11); g.lineTo(1, 6); g.closePath(); g.fill(); });
@@ -410,7 +417,7 @@ for (const [y1, y2] of minareBolum) {
 // ------------------------------------------------------------------ 7) kasnak ve kubbe
 {
   // sarı alt kalıp (yeşilin altına; kayınca bir yanda sarı kenar görünür)
-  bas('sari', (g) => { g.fill(P2(SAHNE.kubbeYolu)); g.fill(P2(Y.kasnakUst)); g.fill(P2(Y.kasnakAlt)); }, { yog: 0.28, kayma: 2.2 });
+  bas('sari', (g) => { g.fill(P2(SAHNE.kubbeYolu)); g.fill(P2(Y.kasnakUst)); g.fill(P2(Y.kasnakAlt)); }, { yog: 0.13, kayma: 2.2 });
   // yeşil dolgu: sağ dilimlerde oyulmuş ışık çizgileri krem kalır
   bas('yesil', (g) => {
     g.fill(P2(SAHNE.kubbeYolu));

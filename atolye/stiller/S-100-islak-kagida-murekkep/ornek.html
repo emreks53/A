@@ -113,7 +113,7 @@
         let w = (fbm(n1, x * 0.006 + 11, y * 0.006 + 3) - 0.5) * 0.5 - 0.25;
         const blob = (cx, cy, rx, ry, g) => g * Math.max(0, 1 - Math.hypot((x - cx) / rx, (y - cy) / ry));
         // kubbenin gölgeli sol yanı (koyu yeşil ıslak-ıslağa leke), minaredeki zikzak, iki yandaki yaprak kümeleri
-        w += blob(440, 455, 85, 120, 1.25);
+        w += blob(440, 455, 85, 120, 1.3);
         w += blob(120, 955, 150, 115, 1.05) + blob(905, 905, 125, 135, 1.1) + blob(80, 690, 70, 110, 0.75);
         w += blob(255, 700, 55, 80, 0.6) + blob(790, 700, 50, 70, 0.55) + blob(150, 805, 160, 22, 0.8);
         v[j * W + i] = Math.max(0, Math.min(1, w * 1.6));
@@ -192,7 +192,8 @@
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'multiply';
     ctx.globalAlpha = alfa;
-    ctx.filter = `blur(${yum * K}px)`;
+    // kuru kâğıtta (küçük yumuşaklık) lavi kenarı keskin kalır; filtre yalnız ıslak, yumuşak lekelerde
+    ctx.filter = yum > 1.5 ? `blur(${yum * K}px)` : 'none';
     ctx.drawImage(T.c, rx, ry, rw, rh, rx, ry, rw, rh);
     ctx.restore();
   }
@@ -216,7 +217,7 @@
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'multiply';
-    ctx.filter = `blur(${yumusak * K}px)`;
+    ctx.filter = yumusak > 1.5 ? `blur(${yumusak * K}px)` : 'none';
     ctx.drawImage(T.c, 0, 0);
     ctx.restore();
   }
@@ -333,9 +334,9 @@
     gok: '#9FCFEE',
     gokMor: '#C7C0EE',
     gunes: '#FBE3A0',
-    kubbe: '#79C080',
+    kubbe: '#6DBE7C',
     kubbeKoyu: '#3F9466',
-    kubbeAcik: '#C3E38E',
+    kubbeAcik: '#CBE68C',
     kasnak: '#5EA877',
     tas: '#F1E2C6',
     tasGolge: '#C9C3EA',
@@ -356,7 +357,7 @@
   // ================================================================ LAVİLER
   // gök: üstte açık seruleum, sol üstte lavanta, güneşe doğru sıcak sarıya geçer; ufka doğru beyazlaşır
   {
-    const gok = dalgaliYol(kutu(-30, -30, 1054, 790), 14, 3);
+    const gok = dalgaliYol(kutu(-80, -80, 1104, 790), 14, 3);
     lavi(gok, (h) => {
       const g = h.createLinearGradient(0, 0, 0, 800);
       g.addColorStop(0, '#8CC6EC');
@@ -397,25 +398,39 @@
       // taban (dairelerle aynı yönde dolaşır ki birleşimde delik kalmasın)
       d += `M${bx - 80 * bs},${by - 2} L${bx - 80 * bs},${by + 18 * bs} L${bx + 80 * bs},${by + 18 * bs} L${bx + 80 * bs},${by - 2} Z`;
       // boyanmamış kâğıt: üst kenar keskin ve düzensiz (gök lavisi bulutun çevresinden dolaştırılmış),
-      // alt kenar ıslakta yumuşamış
-      const bulut = dalgaliYol(d, 3, bx);
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(bx - 200, by - 120, 400, 120 + 2 * bs);
-      ctx.clip();
-      kaldir(bulut, 0.8);
-      ctx.restore();
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(bx - 200, by + 2 * bs, 400, 120);
-      ctx.clip();
-      kaldir(bulut, 4);
-      ctx.restore();
+      // altına ıslak-ıslağa lavanta gölge
+      const bulut = dalgaliYol(d, 4, bx);
+      {
+        // tek biçim, iki kenar: üstte keskin (gök lavisi bulutun çevresinden dolaştırılmış), altta ıslakta yumuşamış
+        const B = yeni();
+        const g1 = by - 30 * bs, g2 = by + 14 * bs;
+        const kat = (bulanik, ustOpak) => {
+          temizle(B.h);
+          B.h.save();
+          B.h.fillStyle = C.kagit;
+          B.h.filter = bulanik > 1 ? `blur(${bulanik * K}px)` : 'none';
+          B.h.fill(bulut);
+          B.h.filter = 'none';
+          B.h.globalCompositeOperation = 'destination-in';
+          const g = B.h.createLinearGradient(0, g1, 0, g2);
+          g.addColorStop(0, `rgba(0,0,0,${ustOpak ? 1 : 0})`);
+          g.addColorStop(1, `rgba(0,0,0,${ustOpak ? 0 : 1})`);
+          B.h.fillStyle = g;
+          B.h.fillRect(bx - 220, by - 160, 440, 320);
+          B.h.restore();
+          ctx.save();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.drawImage(B.c, 0, 0);
+          ctx.restore();
+        };
+        kat(5, false);
+        kat(0.7, true);
+      }
       lavi(dalgaliYol(S.elipsYolu({ cx: bx, cy: by + 16 * bs, rx: 80 * bs, ry: 9 * bs, aci: 0 }), 4, bx), C.gokMor, 0.45, { yumusak: 6, kenar: 0 });
     }
   }
   // yer: açık sarı aşı boyası, ufukta biraz koyu
-  lavi(dalgaliYol(kutu(-30, 800, 1054, 1054), 6, 31), (h) => {
+  lavi(dalgaliYol(kutu(-60, 800, 1084, 1084), 6, 31), (h) => {
     const g = h.createLinearGradient(0, 800, 0, 1024);
     g.addColorStop(0, '#EBCB8E');
     g.addColorStop(0.3, C.zemin);
@@ -433,26 +448,29 @@
       else if (p.tip === 'topuz') silParca.push(p.yol);
       else if (p.tip !== 'alem') silParca.push(kutu(p.x1 + 3, p.y1 - 2, p.x2 + 3, p.y2 - 2));
     }
-    laviGrup(silParca.map((d, i) => ({ yol: dalgaliYol(d, 1.5, 41 + i), renk: C.tas, alfa: 0.75 })), 1);
+    // tek lavi: parçalar birleştirilip bir kez boyanır (üst üste binen yerde koyu kutu kalmaz)
+    const minareLavi = new Path2D();
+    silParca.forEach((d, i) => minareLavi.addPath(dalgaliYol(d, 1.5, 41 + i)));
+    lavi(minareLavi, C.tas, 0.75, { yumusak: 1, kenar: 0, bb: [mc - 70, 60, mc + 70, 805] });
     // gölge yanı: minarenin sol yarısı lavanta (silüete kırpılmış)
     {
       const kes = new Path2D();
       for (const d of silParca) kes.addPath(P(d));
       ctx.save();
       ctx.clip(kes);
-      lavi(dalgaliYol(kutu(mc - 60, 140, mc - 6, 800), 4, 42), C.tasGolge, 0.75, { yumusak: 4, kenar: 0 });
+      lavi(dalgaliYol(kutu(mc - 60, 140, mc - 6, 800), 4, 42), C.tasGolge, 0.55, { yumusak: 4, kenar: 0 });
       ctx.restore();
     }
     const KD = S.kaide;
     lavi(dalgaliYol(kutu(KD.x1 - 4, KD.kornis.y1 - 2, KD.x2 + 3, KD.y2 + 2), 3, 43), (h) => {
       const g = h.createLinearGradient(KD.x1, 0, KD.x2, 0);
-      g.addColorStop(0, '#F3E6D8');
-      g.addColorStop(0.35, C.tas);
-      g.addColorStop(1, '#FBF1DD');
+      g.addColorStop(0, '#F6E4CC');
+      g.addColorStop(0.35, '#F6E6C8');
+      g.addColorStop(1, '#FCF2DC');
       return g;
-    }, 0.75, { yumusak: 1 });
-    lavi(dalgaliYol(kutu(KD.x1, KD.y1, KD.x2 - 6, KD.y1 + 14), 2, 44), C.tasGolge, 0.7, { yumusak: 3 });
-    lavi(dalgaliYol(kutu(KD.x1 - 2, KD.y1, KD.x1 + 120, KD.y2), 6, 45), C.tasGolge, 0.4, { yumusak: 8, kenar: 0 });
+    }, 0.8, { yumusak: 1 });
+    lavi(dalgaliYol(kutu(KD.x1, KD.y1, KD.x2 - 6, KD.y1 + 12), 2, 44), C.tasGolge, 0.45, { yumusak: 2.2 });
+    lavi(dalgaliYol(kutu(KD.x1 - 2, KD.y1, KD.x1 + 110, KD.y2), 6, 45), C.tasGolge, 0.32, { yumusak: 8, kenar: 0 });
     // pencereler: lavanta-çivit lavi
     laviGrup(KD.pencereler.map((p) => ({ yol: dalgaliYol(S.kemerYolu(p.x + 2, p.y + 2, p.w, p.h), 1.5, p.x), renk: '#8F8CC8', alfa: 0.75 })).concat(S.minarePencereleri.map((p) => ({ yol: dalgaliYol(S.kemerYolu(p.x + 1, p.y + 1, p.w, p.h), 1, p.y), renk: '#8F8CC8', alfa: 0.7 }))), 1.3);
   }
@@ -471,7 +489,7 @@
   }
   // kubbe: yeşil lavi biraz sağa-yukarı kaymış; solda koyu yeşil ıslakta akmış, sağ üstte açık sarı-yeşil, ışık beyaz kâğıt
   {
-    const kubbe = dalgaliYol(S.yol(S.kubbeNoktalari(60).map(([x, y]) => [x + 5, y - 3]), true), 3, 61);
+    const kubbe = dalgaliYol(S.yol(S.kubbeNoktalari(60).map(([x, y]) => [x + 2.5, y - 1]), true), 2, 61);
     lavi(kubbe, (h) => {
       const g = h.createRadialGradient(650, 380, 10, 600, 430, 320);
       g.addColorStop(0, C.kubbeAcik);
@@ -480,7 +498,7 @@
       return g;
     }, 0.92, { yumusak: 1.1 });
     ctx.save();
-    ctx.clip(dalgaliYol(S.yol(S.kubbeNoktalari(60).map(([x, y]) => [560 + (x - 560) * 1.02, y - 2]), true), 2.5, 63));
+    ctx.clip(dalgaliYol(S.yol(S.kubbeNoktalari(60).map(([x, y]) => [560 + (x - 560) * 0.995, y + 1]), true), 1.5, 63));
     lavi(dalgaliYol(S.elipsYolu({ cx: 430, cy: 470, rx: 70, ry: 120, aci: 0.25 }), 18, 62), C.kubbeKoyu, 0.6, { yumusak: 14, kenar: 0 });
     ctx.restore();
     // ışık şeridi: boyanmamış kâğıt (kaldırılmış)
@@ -589,7 +607,7 @@
     yol.addPath(P(kutu(KD.x1, KD.y1, KD.x2, KD.y2)));
     yol.addPath(P(kutu(kr.x1, kr.y1, kr.x2, kr.y2)));
     ortu(yol);
-    cizgi([[kr.x1 - 6, kr.y1], [kr.x2 + 6, kr.y1 + 1]], C.civit, 1.8, KRU);
+    cizgi([[kr.x1 - 4, kr.y1], [kr.x2 + 3, kr.y1 + 0.5]], C.civit, 1.8, KRU);
     cizgi([[kr.x1, kr.y2], [kr.x2, kr.y2]], C.civit, 1.4, KRU);
     cizgi([[kr.x1, kr.y1], [kr.x1, kr.y2]], C.civit, 1.3, KRU);
     cizgi([[kr.x2, kr.y1], [kr.x2, kr.y2]], C.civit, 1.3, KRU);

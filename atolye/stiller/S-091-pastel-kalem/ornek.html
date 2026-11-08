@@ -682,13 +682,18 @@
     if (d < 260) return t < 0.3 ? C.seftali : t < 0.45 ? C.pembe : t < 0.55 ? C.sari : C.gokAcik;
     return t < 0.13 ? C.leylak : t < 0.22 ? C.lacivertAcik : t < 0.3 ? C.turkuaz : d > 600 && t < 0.66 ? C.gokMavi : C.gokAcik;
   };
+  // tarama yönü öbekten öbeğe değişir (elin döndüğü küçük alanlar): yaklaşık 10°–60° arası, yer yer yataya yakın
+  const nG = gurultu(917), nH = gurultu(918);
+  const gokAci = (px, py) => -0.6 + 1.25 * (fbm(nG, px / 210, py / 210, 2) - 0.5) * 2 + 0.35 * (nH(px / 60, py / 60) - 0.5);
   katman((x) => {
-    tara(x, { bx: [-10, -10, W + 10, 815], ic: gokIc, aci: -1.0, aciJ: 0.22, aralik: 4.9, boy: 24, kal: KAL, obek: 22, sik: 0.62, alfa: gokAlfa, renk: gokRenk }, r);
+    tara(x, { bx: [-10, -10, W + 10, 815], ic: gokIc, aci: gokAci, aciJ: 0.16, aralik: 4.4, boy: 17, kal: KAL, obek: 17, sik: 0.7, egri: 0.06,
+      alfa: (px, py) => gokAlfa(px, py) * 0.86, renk: gokRenk, bas: 0.25, son: 0.35 }, r);
   }, Object.assign({ kirp: mGok }, TARAMA));
-  // ikinci yön (gökün üst ve sol kısmında, daha seyrek)
+  // çapraz ikinci kat: koyu mavi bölgelerde öncekine dik, kısa ve seyrek
   katman((x) => {
-    tara(x, { bx: [-10, -10, W + 10, 760], ic: gokIc, aci: -0.3, aciJ: 0.2, aralik: 5.4, boy: 20, kal: KAL * 0.9, obek: 18, sik: 0.85,
-      alfa: (px, py) => gokAlfa(px, py) * 0.75 * sstep(300, 640, gunesD(px, py)), renk: () => (r() < 0.3 ? C.lacivertAcik : r() < 0.4 ? C.leylak : C.gokMavi) }, r);
+    tara(x, { bx: [-10, -10, W + 10, 760], ic: gokIc, aci: (px, py) => gokAci(px, py) + 1.35, aciJ: 0.18, aralik: 5.2, boy: 14, kal: KAL * 0.9, obek: 14, sik: 1.0, egri: 0.06,
+      alfa: (px, py) => gokAlfa(px, py) * 0.62 * sstep(320, 660, gunesD(px, py)) * sstep(0.45, 0.62, fbm(nH, px / 150 + 7, py / 150, 2)),
+      renk: () => (r() < 0.3 ? C.lacivertAcik : r() < 0.45 ? C.leylak : C.gokMavi), bas: 0.25, son: 0.35 }, r);
   }, Object.assign({ kirp: mGok }, TARAMA));
   // güneş çevresinde dairesel, kısa sarı-şeftali vuruşlar
   katman((x) => {
@@ -709,11 +714,11 @@
     }
   }, Object.assign({ kirp: mGok }, TARAMA));
   // 3) yedirme: gökün alt yarısı ve rastgele öbekler kâğıt kalemle yumuşatılmış
-  harmanla([0, 0, W, 810], 5, (x, y) => mOku(ICGOK, x, y) * clamp(sstep(0.42, 0.62, fbm(nF, x / 140, y / 140, 3)) * 0.95 + sstep(420, 760, y) * 0.7 - (1 - sstep(60, 140, gunesD(x, y))), 0, 0.95));
+  harmanla([0, 0, W, 810], 6, (x, y) => mOku(ICGOK, x, y) * clamp(sstep(0.36, 0.56, fbm(nF, x / 150, y / 150, 3)) * 0.97 + sstep(380, 740, y) * 0.75 - (1 - sstep(60, 140, gunesD(x, y))), 0, 0.97));
   // 4) yedirilen yerlerin üstüne yeniden keskin, seyrek vuruşlar
   katman((x) => {
-    tara(x, { bx: [-10, -10, W + 10, 815], ic: gokIc, aci: -1.0, aciJ: 0.14, aralik: 6.5, boy: 26, kal: KAL * 0.95, obek: 18, sik: 1.25,
-      alfa: (px, py) => gokAlfa(px, py) * 0.75, renk: gokRenk }, r);
+    tara(x, { bx: [-10, -10, W + 10, 815], ic: gokIc, aci: (px, py) => gokAci(px, py) + 0.25, aciJ: 0.16, aralik: 5.6, boy: 16, kal: KAL * 0.95, obek: 15, sik: 1.15, egri: 0.06,
+      alfa: (px, py) => gokAlfa(px, py) * 0.62 * (1 - 0.8 * sstep(0.4, 0.56, fbm(nF, px / 150, py / 150, 3))), renk: gokRenk, bas: 0.25, son: 0.35 }, r);
   }, Object.assign({ kirp: mGok }, TARAMA));
   // bulut kenarları: ince leylak-gri kontur parçaları ve alt taraması
   katman((x) => {
@@ -927,35 +932,50 @@
   katman((x) => { for (const s of sapNoktalari) elCizgisi(x, s, 2.5, 0.82, C.sap, r, { parca: 50, titre: 0.4 }); },
     Object.assign({ sil: [MK.yaprakUstu], bx: [0, 500, W, W] }, KONTUR, { opq: 0.55 }));
   // yapraklar: iki tonlu taban (gölge yarısı koyu), damardan dışa tarama, yedirme, kontur
+  // her yaprağın kendi yeşili (sarı-yeşilden mavi-yeşile) ve ışığa göre aydınlık/gölge yarısı
+  const yaprakTon = (() => {
+    const yr = SAHNE.rng(9177), tonlar = [hex('#94C65A'), hex('#6FB24E'), hex('#4E9A4C'), hex('#3F8C62'), hex('#5FA878'), hex('#86BE48')];
+    return B.yapraklar.map((yp) => {
+      const ca = Math.cos(yp.aci), sa = Math.sin(yp.aci);
+      // +v yarısının normali (-sa, ca); ışık sağ üstten (0.7, -0.7)
+      const isikli = -sa * 0.7 + ca * -0.7 > 0 ? 1 : -1;
+      const uzak = sstep(780, 560, yp.y) * 0.5; // dallardaki yukarı yapraklar biraz daha açık
+      return { c: mixc(tonlar[Math.floor(yr() * tonlar.length)], C.yesilSari, uzak * 0.35), isikli, koyu: 0.4 + 0.25 * yr() };
+    });
+  })();
   katman((x) => {
-    const yr = SAHNE.rng(9177);
-    for (const yp of B.yapraklar) {
-      const t = yr(), c = t < 0.3 ? C.yaprak : t < 0.55 ? C.yaprakOrta : t < 0.75 ? mixc(C.yaprak, C.yesilSari, 0.5) : mixc(C.yaprakOrta, C.maviYesil, 0.35);
-      x.fillStyle = rgba(c, 0.62); x.fill(P2(SAHNE.yaprakYolu(yp)));
-      // gölge yarısı
+    B.yapraklar.forEach((yp, k) => {
+      const T = yaprakTon[k];
+      x.fillStyle = rgba(T.c, 0.82); x.fill(P2(SAHNE.yaprakYolu(yp)));
+      // gölge yarısı (ışığa göre)
       x.save(); x.clip(P2(SAHNE.yaprakYolu(yp)));
       x.translate(yp.x, yp.y); x.rotate(yp.aci);
-      x.fillStyle = rgba(C.yaprakKoyu, 0.45); x.fillRect(0, 0, yp.uzunluk, yp.uzunluk);
+      x.fillStyle = rgba(C.yaprakKoyu, T.koyu);
+      if (T.isikli > 0) x.fillRect(-5, -yp.uzunluk, yp.uzunluk + 10, yp.uzunluk); else x.fillRect(-5, 0, yp.uzunluk + 10, yp.uzunluk);
       x.restore();
-    }
+    });
   }, Object.assign({ kirp: mYaprak, bx: [0, 500, W, W] }, TABAN));
   katman((x) => {
-    for (const yp of B.yapraklar) {
+    B.yapraklar.forEach((yp, k) => {
+      const T = yaprakTon[k];
       const ca = Math.cos(yp.aci), sa = Math.sin(yp.aci), L = yp.uzunluk, Wd = L * yp.genislik;
-      const n = Math.round(L / 3.4);
+      const n = Math.round(L / 3.2);
       for (let i = 0; i < n; i++) {
         const t = (i + 0.5) / n, half = Wd * 0.55 * Math.sin(Math.PI * Math.min(1, t * 1.05));
         for (const side of [-1, 1]) {
-          if (side < 0 && r() < 0.5) continue;
+          const acik = side === T.isikli;
+          if (acik && r() < 0.35) continue;
           const u0 = t * L, p0 = [yp.x + u0 * ca, yp.y + u0 * sa];
-          const u1 = u0 + half * 0.7, v1 = side * half;
+          const u1 = u0 + half * 0.7, v1 = side * half * (0.75 + 0.25 * r());
           const p1 = [yp.x + u1 * ca - v1 * sa, yp.y + u1 * sa + v1 * ca];
-          strok(x, [p0, [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2], p1], KAL * 0.75, 0.55, side > 0 ? C.yaprakKoyu : r() < 0.5 ? C.yesilSari : C.yaprakOrta, 0.1, 0.4);
+          const c = acik ? (r() < 0.55 ? C.yesilSari : mixc(T.c, C.beyaz, 0.25)) : (r() < 0.6 ? C.yaprakKoyu : mixc(C.yaprakKoyu, C.maviYesil, 0.5));
+          strok(x, [p0, [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2], p1], KAL * 0.8, acik ? 0.62 : 0.72, c, 0.1, 0.4);
         }
       }
-    }
+    });
   }, Object.assign({ kirp: mYaprak, bx: [0, 500, W, W] }, TARAMA));
-  harmanla([0, 500, W, W], 3, (x, y) => mOku(ICYAPRAK, x, y) * 0.5);
+  // yaprakların bir kısmı yedirilmiş, bir kısmı keskin taramalı kalmış
+  harmanla([0, 500, W, W], 3, (x, y) => mOku(ICYAPRAK, x, y) * 0.55 * sstep(0.42, 0.6, fbm(nF, x / 70 + 20, y / 70, 2)));
   katman((x) => {
     for (const yp of B.yapraklar) {
       const [a, b] = SAHNE.yaprakDamari(yp);

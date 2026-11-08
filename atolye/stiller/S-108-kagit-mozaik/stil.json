@@ -5,16 +5,16 @@
   "ad_en": "Paper Mosaic",
   "aile": "Boya ve Kuru Teknikler",
   "ozgun": false,
-  "ozet": "Küçük yırtık ve kesik renkli kâğıt parçalarının mozaik taşları gibi, biçimlerin çizgisini sıra sıra izleyerek dizilmesi; parçaların arasında beyaz zeminin ince aralıkları.",
-  "tanim": "Kâğıt mozaikte resim, tırnak büyüklüğünde yırtılmış ya da kesilmiş renkli kâğıt parçalarından kurulur. Parçalar taş mozaikteki gibi sıralar hâlinde yapıştırılır: biçimlerin kenarını birkaç sıra izler, arka plan dalgalı düz sıralarla ya da halkalarla doldurulur; aralarında zeminin ince beyaz derzleri kalır. Kâğıt mattır, kenarları yumuşak ve düzensizdir; yırtık kenarlarda kâğıdın açık özü belirir, tonlar her parçada biraz değişir. Okul ve atölye çalışmalarında, resimli kitaplarda ve dekoratif panolarda kullanılan sabırlı, renkli bir tekniktir.",
+  "ozet": "Küçük yırtık ve kesik renkli kâğıt parçalarının mozaik taşları gibi, biçimlerin çizgisini sıra sıra izleyerek dizilmesi; parçaların arasında açık renkli zeminin ince aralıkları.",
+  "tanim": "Kâğıt mozaikte resim, tırnak büyüklüğünde yırtılmış ya da kesilmiş renkli kâğıt parçalarından kurulur. Parçalar taş mozaikteki gibi sıralar hâlinde yapıştırılır: biçimlerin kenarını birkaç sıra izler, arka plan dalgalı düz sıralarla ya da halkalarla doldurulur; aralarında zeminin ince, açık renkli derzleri kalır; çok küçük ayrıntılar (alem, pencere, korkuluk) tek parça kesilir. Kâğıt mattır, kenarları yumuşak ve düzensizdir; yırtık kenarlarda kâğıdın açık özü belirir, tonlar her parçada biraz değişir. Okul ve atölye çalışmalarında, resimli kitaplarda ve dekoratif panolarda kullanılan sabırlı, renkli bir tekniktir.",
   "koken": "Teknik, antik Roma ve Bizans mozaiklerinin dizim düzenlerini (opus vermiculatum: biçimi izleyen sıralar, opus tessellatum: düzenli sıralar) taş ve cam yerine kâğıtla uygular. 19. yüzyıl sonundan beri el işi ve sanat eğitiminde, dergi kâğıdından yapılan mozaiklerle 20. yüzyıl kolaj sanatında yaygınlaştı. Taş mozaikten farkı mat, ince kâğıt yüzeyi, yumuşak yırtık kenarları ve beyaz kâğıt zeminidir.",
   "ayirt_edici": [
     "Her biçimin dış çizgisini izleyen kâğıt parçası sıraları: bulutların, minarenin ve kubbenin çevresinde iki sıra mavi hale, sonra dalgalı yatay gök sıraları",
     "Güneşin çevresinde sarıdan kreme, beyaza ve gök mavisine geçen geniş halka sıraları (her ikinci halka biraz daha sıcak ya da serin), güneş diskinde turuncu-sarı halkalar",
-    "Kubbede meridyen yönünde dikey sütunlar hâlinde dizilmiş yeşil parçalar, dilimler arasında koyu yeşil kaburga parçacıkları ve tepede küçük halka sıralı başlık",
-    "Parçalar arasında ince beyaz zemin derzleri ve sağ üstten gelen ışıkla derzlere düşen çok hafif gölge",
+    "Kubbede meridyen yönünde dikey sütunlar hâlinde dizilmiş yeşil parçalar, dilimler arasında koyu yeşil kaburga parçaları ve tepede küçük halka sıralı başlık; kasnaklarda tek parça kesilmiş koyu yeşil kemerli pencereler ve çevrelerini izleyen sıralar",
+    "Parçalar arasında kirli beyaz zemin kâğıdının ince derzleri ve sağ üstten gelen ışıkla derzlere düşen çok hafif gölge",
     "Mat kâğıt yüzeyi: her parçada hafif lif bulutları ve ton farkı, bazı yırtık kenarlarda açık kâğıt özü",
-    "Krem parçalardan kaide ve minare, kum rengi zemin üzerinde yeşil yapraklar ve pembe göbekli, krem-beyaz parçalı çiçekler"
+    "Fildişi parçalardan kaide ve minare, dış sıraları kum tonunda; tek parça altın kâğıttan alem küreleri ve hilaller; kum rengi zeminde yeşil yapraklar ve her taç yaprağı soluk gül kurusu bir kenar sırasıyla çevrili, pembe göbekli beyaz çiçekler"
   ],
   "palet": [
     "#2F84DA",
@@ -22,11 +22,11 @@
     "#FFE07A",
     "#2A8A45",
     "#70C874",
-    "#F2ECDF",
+    "#F1EADA",
     "#E6CC97",
     "#F2AEC2"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, piksel düzeyinde. Sahne önce ekran dışı bir tuvale bölge kimlikleriyle (renk = kimlik numarası) çizilir: gök, güneş, bulutlar, minare parçaları, kaide, kasnaklar, 16 kubbe dilimi, kaburgalar, her yaprak ve her taç yaprağı ayrı bölgedir. Bölge sınırlarına tam Öklid uzaklık dönüşümü (Felzenszwalb) hesaplanır; uzaklık / sıra yüksekliği sıra numarasını verir (opus vermiculatum). Gökte nesnelerin çevresinde iki sıra hale, güneş çevresinde halka sıraları, ötede dalgalı yatay sıralar; kubbe dilimlerinde ise boylam açısından elde edilen dikey sütunlar kullanılır. Her sıranın orta çizgisi üzerinde karıştırılmış adaylardan, aynı sıradaki komşulara asgari uzaklık koşuluyla tohumlar seçilir; aynı sıra içinde katman katman (4/8 komşuluk karışık) çok kaynaklı büyütme her piksele bir parça kimliği verir, tohumsuz ince şeritler sınırlı derinlikte oyularak parçalanır. Parça sınırlarına ikinci bir uzaklık dönüşümüyle, gürültüyle genişliği değişen beyaz derzler, derzlerde sağ üstteki parçanın hafif gölgesi, yırtık kenarlarda açık kâğıt özü ve parça başına lif gürültüsü hesaplanır.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, piksel düzeyinde. Sahne önce ekran dışı bir tuvale bölge kimlikleriyle (renk = kimlik numarası) çizilir: gök, güneş, bulutlar, minare parçaları, kaide, kasnaklar, 16 kubbe dilimi, kaburgalar, her yaprak ve her taç yaprağı ayrı bölgedir. Bölge sınırlarına tam Öklid uzaklık dönüşümü (Felzenszwalb) hesaplanır; uzaklık / sıra yüksekliği sıra numarasını verir (opus vermiculatum). Gökte nesnelerin çevresinde iki sıra hale, güneş çevresinde halka sıraları, ötede dalgalı yatay sıralar; kubbe dilimlerinde ise boylam açısından elde edilen dikey sütunlar kullanılır. Her sıranın orta çizgisi üzerinde karıştırılmış adaylardan, aynı sıradaki komşulara asgari uzaklık koşuluyla tohumlar seçilir; aynı sıra içinde katman katman (4/8 komşuluk karışık) çok kaynaklı büyütme her piksele bir parça kimliği verir, tohumsuz ince şeritler sınırlı derinlikte oyularak parçalanır. Alem parçaları, kasnak ve minare pencereleri ve korkuluk çubukları 'tek' kipindedir: tohum almaz, bağlı her bölge tek parça olur ve derzi daha incedir. Beyaz ve krem biçimlerde bölge kenarına bitişik ilk sıranın parçaları ayrı bir kenar paletinden (soluk gül kurusu, kum, açık gök mavisi) renk alır; böylece beyaz taç yaprakları ve kaide derzden ayrılır. Parça sınırlarına ikinci bir uzaklık dönüşümüyle, gürültüyle genişliği değişen kirli beyaz derzler, derzlerde sağ üstteki parçanın hafif gölgesi, yırtık kenarlarda açık kâğıt özü ve parça başına lif gürültüsü hesaplanır.",
   "etiketler": [
     "mozaik",
     "kâğıt",

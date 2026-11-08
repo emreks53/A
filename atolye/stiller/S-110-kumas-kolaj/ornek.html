@@ -150,7 +150,34 @@
     }
     return c;
   }
+  // keçenin tüyü: saydam zemin üzerinde kısa, kıvrık açık ve koyu lifler ve hafif açık topaklar (beyaz keçede de görünür)
+  function keceLifi(tohum) {
+    const N = 256;
+    const c = S.yeniTuval(N, N), x = c.getContext('2d');
+    const r = S.rng(tohum);
+    x.lineCap = 'round';
+    x.filter = 'blur(3px)';
+    for (let k = 0; k < 70; k++) {
+      const px = r() * N, py = r() * N, rr = 6 + r() * 14;
+      x.fillStyle = `rgba(255,255,255,${0.08 + r() * 0.1})`;
+      for (const ox of [-N, 0, N]) for (const oy of [-N, 0, N]) { x.beginPath(); x.arc(px + ox, py + oy, rr, 0, 7); x.fill(); }
+    }
+    x.filter = 'none';
+    for (let k = 0; k < 2600; k++) {
+      const px = r() * N, py = r() * N, a = r() * 6.28, L = 2.5 + r() * 7, kv = (r() - 0.5) * 2.4;
+      const ac = r() < 0.48;
+      x.strokeStyle = ac ? `rgba(255,255,255,${0.22 + r() * 0.3})` : `rgba(80,65,55,${0.05 + r() * 0.08})`;
+      x.lineWidth = 0.5 + r() * 0.6;
+      for (const ox of [-N, 0, N]) for (const oy of [-N, 0, N]) {
+        const X = px + ox, Y = py + oy;
+        if (X < -L || Y < -L || X > N + L || Y > N + L) continue;
+        x.beginPath(); x.moveTo(X, Y); x.quadraticCurveTo(X + Math.cos(a + kv) * L * 0.6, Y + Math.sin(a + kv) * L * 0.6, X + Math.cos(a) * L, Y + Math.sin(a) * L); x.stroke();
+      }
+    }
+    return c;
+  }
   const DOKU = { pamuk: ctx.createPattern(dokuma(4, false, 5), 'repeat'), keten: ctx.createPattern(dokuma(6, true, 6), 'repeat'), kece: ctx.createPattern(keceDokusu(7), 'repeat') };
+  const LIF = ctx.createPattern(keceLifi(8), 'repeat');
   // baskı desenleri (renkli, döşenebilir)
   function desen(tur, renkler) {
     const T = { puan: 26, cicek: 44, kareli: 28, cizgili: 14, dal: 56 }[tur];
@@ -199,17 +226,26 @@
     let yol = pts;
     if (o.kapali !== false && iceri) { const nn = normaller(pts); yol = pts.map((q, i) => [q[0] - nn[i][0] * iceri, q[1] - nn[i][1] * iceri]); }
     const y = yayli(yol, o.kapali !== false);
-    const p = new Path2D(), del = new Path2D();
+    const p = new Path2D(), p2 = new Path2D(), del = new Path2D();
     const n = Math.max(1, Math.round(y.L / (boy + ara)));
     const adim = y.L / n;
+    const rj = S.rng(Math.round(Math.abs(yol[0][0] * 17 + yol[0][1] * 31 + y.L)) + 7);
+    const kay = Math.min(0.9, kal * 0.55); // elle dikişte iğnenin yanlara sapması
     for (let k = 0; k < n; k++) {
-      const s0 = k * adim + ara / 2, s1 = s0 + adim - ara;
+      const s0 = k * adim + ara / 2 + (rj() - 0.5) * ara * 0.6;
+      const s1 = s0 + (adim - ara) * (0.78 + rj() * 0.36);
       const a = y.at(s0), m = y.at((s0 + s1) / 2), b = y.at(s1);
-      p.moveTo(a[0], a[1]); p.quadraticCurveTo(m[0] * 2 - (a[0] + b[0]) / 2, m[1] * 2 - (a[1] + b[1]) / 2, b[0], b[1]);
-      for (const q of [a, b]) { del.moveTo(q[0] + 0.7, q[1]); del.arc(q[0], q[1], 0.7, 0, 7); }
+      let tx = b[0] - a[0], ty = b[1] - a[1]; const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+      const ja = (rj() - 0.5) * 2 * kay, jb = (rj() - 0.5) * 2 * kay;
+      const A = [a[0] - ty * ja, a[1] + tx * ja], B = [b[0] - ty * jb, b[1] + tx * jb];
+      const M = [m[0] - ty * (ja + jb) * 0.5, m[1] + tx * (ja + jb) * 0.5];
+      const hedef = rj() < 0.5 ? p : p2;
+      hedef.moveTo(A[0], A[1]); hedef.quadraticCurveTo(M[0] * 2 - (A[0] + B[0]) / 2, M[1] * 2 - (A[1] + B[1]) / 2, B[0], B[1]);
+      for (const q of [A, B]) { del.moveTo(q[0] + 0.7, q[1]); del.arc(q[0], q[1], 0.7, 0, 7); }
     }
     ctx.save(); ctx.fillStyle = 'rgba(40,30,20,0.18)'; ctx.fill(del); ctx.restore();
-    iplikCiz(p, renk, kal);
+    iplikCiz(p, renk, kal * 0.9);
+    iplikCiz(p2, renk, kal * 1.1);
   }
   // battaniye dikişi: kenara dik kısa dikişler, kenar boyunca uzanan iplik
   function battaniye(pts, renk, o) {
@@ -220,13 +256,15 @@
     const yn = yayli(nn.map((q) => [q[0], q[1]]), true);
     const p = new Path2D();
     const n = Math.max(3, Math.round(y.L / ara));
+    const rj = S.rng(Math.round(Math.abs(pts[0][0] * 13 + pts[0][1] * 29)) + 3);
     let onceki = null;
     for (let k = 0; k <= n; k++) {
-      const s = (k / n) * y.L;
+      const s = k === 0 || k === n ? (k / n) * y.L : ((k + (rj() - 0.5) * 0.45) / n) * y.L;
       const a = y.at(s);
       let nv = yn.at((s / y.L) * yn.L); const l = Math.hypot(nv[0], nv[1]) || 1; nv = [nv[0] / l, nv[1] / l];
       const e = [a[0] + nv[0] * 0.6, a[1] + nv[1] * 0.6];
-      const ic = [a[0] - nv[0] * boy, a[1] - nv[1] * boy];
+      const bb = boy * (0.78 + rj() * 0.44), eg = (rj() - 0.5) * boy * 0.5;
+      const ic = [a[0] - nv[0] * bb - nv[1] * eg, a[1] - nv[1] * bb + nv[0] * eg];
       if (k < n) { p.moveTo(ic[0], ic[1]); p.lineTo(e[0], e[1]); }
       if (onceki) { p.moveTo(onceki[0], onceki[1]); p.lineTo(e[0], e[1]); }
       onceki = e;
@@ -239,10 +277,11 @@
     const L = o.boy || 7, kal = o.kal || 1.8;
     const y = yayli(pts, false);
     const p = new Path2D();
-    for (let s = 0; s < y.L - 1; s += L * 0.5) {
-      const a = y.at(s), b = y.at(Math.min(y.L, s + L));
+    const rj = S.rng(Math.round(Math.abs(pts[0][0] * 7 + pts[0][1] * 11)) + 5);
+    for (let s = 0; s < y.L - 1; s += L * (0.42 + rj() * 0.18)) {
+      const a = y.at(s), b = y.at(Math.min(y.L, s + L * (0.88 + rj() * 0.24)));
       const tx = b[0] - a[0], ty = b[1] - a[1], l = Math.hypot(tx, ty) || 1;
-      const nx = -ty / l, ny = tx / l, k = kal * 0.55;
+      const nx = -ty / l, ny = tx / l, k = kal * (0.4 + rj() * 0.3);
       p.moveTo(a[0] + nx * k, a[1] + ny * k); p.lineTo(b[0] - nx * k, b[1] - ny * k);
     }
     iplikCiz(p, renk, kal);
@@ -255,6 +294,32 @@
     ctx.strokeStyle = rgb(karis(c, [0, 0, 0], 0.25)); ctx.lineWidth = r * 0.28;
     ctx.beginPath(); ctx.arc(x, y, r * 0.55, 0.6, 3.8); ctx.stroke();
     ctx.fillStyle = rgb(karis(c, [255, 255, 255], 0.6), 0.9); ctx.beginPath(); ctx.arc(x + r * 0.32, y - r * 0.32, r * 0.32, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+
+  // keçenin kesik kenarından taşan kısa, kıvrık lifler
+  function tuyler(pts, c, r) {
+    const nn = normaller(pts);
+    const ac = rgb(karis(c, [255, 255, 255], 0.35), 0.5), koyu = rgb(c, 0.6);
+    const p1 = new Path2D(), p2 = new Path2D();
+    let birikim = 0;
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i], b = pts[(i + 1) % pts.length];
+      birikim += Math.hypot(b[0] - a[0], b[1] - a[1]);
+      while (birikim > 1.1) {
+        birikim -= 1.1 + r() * 0.9;
+        const t = r();
+        const x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t;
+        const [nx, ny] = nn[i];
+        const L = 0.5 + Math.pow(r(), 2.2) * 1.8, yan = (r() - 0.5) * 1.8, ic = 0.5 + r() * 0.7;
+        const hedef = r() < 0.35 ? p2 : p1;
+        hedef.moveTo(x - nx * ic, y - ny * ic);
+        hedef.quadraticCurveTo(x + nx * L * 0.5 - ny * yan * 0.3, y + ny * L * 0.5 + nx * yan * 0.3, x + nx * L - ny * yan, y + ny * L + nx * yan);
+      }
+    }
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.lineWidth = 0.55; ctx.strokeStyle = koyu; ctx.stroke(p1);
+    ctx.lineWidth = 0.45; ctx.strokeStyle = ac; ctx.stroke(p2);
     ctx.restore();
   }
 
@@ -290,6 +355,10 @@
     ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = kece ? 0.13 : 0.1;
     ctx.fillRect(x1 - 2, y1 - 2, x2 - x1 + 4, y2 - y1 + 4);
     ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    if (kece) {
+      LIF.setTransform(new DOMMatrix().translate(r() * 100, r() * 100).rotate(r() * 360).scale(0.55));
+      ctx.globalAlpha = o.lifGuc || 0.9; ctx.fillStyle = LIF; ctx.fillRect(x1 - 2, y1 - 2, x2 - x1 + 4, y2 - y1 + 4); ctx.globalAlpha = 1;
+    }
     // dolgu kabarıklığı: kenarlara doğru yumuşak koyuluk, ortada ışık
     const R0 = Math.max(x2 - x1, y2 - y1);
     const g = ctx.createRadialGradient(x1 + (x2 - x1) * 0.62, y1 + (y2 - y1) * 0.38, 0, x1 + (x2 - x1) * 0.55, y1 + (y2 - y1) * 0.45, R0 * 0.75);
@@ -303,6 +372,7 @@
     ctx.save(); ctx.translate(kk, -kk); ctx.strokeStyle = 'rgba(50,35,25,0.16)'; ctx.lineWidth = kk * 2; ctx.stroke(p); ctx.restore();
     if (o.ek) o.ek(ctx, [x1, y1, x2, y2]);
     ctx.restore();
+    if (kece && o.tuy !== false) tuyler(pts, c, r);
     // dikiş
     const d = o.dikis || 'kosu';
     if (d === 'kosu') kosu(pts, o.iplik || rgb(karis(c, [0, 0, 0], 0.35)), o.dikisO);

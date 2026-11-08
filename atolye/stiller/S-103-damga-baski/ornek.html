@@ -106,7 +106,8 @@ const MUR = {
   y4:       [160, 216, 96],
   petrol:   [34, 92, 128],
   mercan:   [244, 104, 96],
-  pembe:    [246, 176, 198],
+  inci:     [226, 230, 244],   // beyaz taç yaprakların soluk inci-gri dolgu damgası
+  pembe:    [232, 122, 150],   // taç yaprağı kontur damgası (gül kurusu)
   altin:    [240, 168, 40],
 };
 const KAT = {};
@@ -187,11 +188,29 @@ for (const c of B.cicekler.slice().reverse()) {
   }
   // göbek ve noktalar taç yapraklarının önünde
   ortEkle((g) => { g.beginPath(); g.arc(c.x, c.y, c.r * 0.21, 0, TAU); g.fill(); }, 0);
+  // iki aşamalı damga: önce çiçeğin tamamının kontur damgası (beş taç yaprağının dış çizgisi, hafif kayık),
+  // sonra her taç yaprağı soluk inci-gri dolgu damgasıyla; beyaz çiçek kâğıdın beyazından kontur ve gölgeyle ayrılır
+  {
+    const kx = jit(1.4), ky = jit(1.4), kal = Math.max(1.5, c.r * 0.05);
+    damga('pembe', [c.x, c.y, c.r * 1.05 + 3], (g) => {
+      g.translate(kx, ky);
+      g.beginPath();
+      for (const e of taclar) { g.moveTo(e.cx + e.rx * Math.cos(e.aci), e.cy + e.rx * Math.sin(e.aci)); g.ellipse(e.cx, e.cy, e.rx, e.ry, e.aci, 0, TAU); }
+    }, {
+      yog: 0.8, ort: ORT, fark: 0.15,
+      oyma: (g) => {
+        g.save(); g.translate(kx, ky);
+        g.beginPath();
+        for (const e of taclar) { g.moveTo(e.cx + (e.rx - kal) * Math.cos(e.aci), e.cy + (e.rx - kal) * Math.sin(e.aci)); g.ellipse(e.cx, e.cy, e.rx - kal, e.ry - kal, e.aci, 0, TAU); }
+        g.fill(); g.restore();
+      },
+    });
+  }
   for (const e of taclar) {
-    damga('pembe', [e.cx, e.cy, e.rx + 2], (g) => {
+    damga('inci', [e.cx, e.cy, e.rx + 2], (g) => {
       g.beginPath(); g.ellipse(e.cx + jit(0.8), e.cy + jit(0.8), e.rx, e.ry, e.aci + jit(0.04), 0, TAU);
     }, {
-      yog: 0.46 + rD() * 0.1, ort: ORT,
+      yog: 0.42 + rD() * 0.1, ort: ORT,
       oyma: (g) => { // taç yaprağına oyulmuş ince çizgi
         g.lineWidth = Math.max(1, c.r * 0.03); g.lineCap = 'round';
         g.beginPath();
@@ -451,16 +470,27 @@ const HALE = (() => {
 })();
 {
   const gx = SAHNE.gunes.x, gy = SAHNE.gunes.y;
-  // kare sünger-kauçuk damga: düzensiz yerleşim, hafif dönme; komşular yer yer biner (binen yer koyulaşır)
-  const S = 44, ADIM = 41;
-  for (let r = 0, y = 2; y < 800; r++, y += ADIM) {
-    for (let x = 2 + (r % 2) * 14 - 20; x < W; x += ADIM) {
-      const s = S + jit(3);
-      const cx = x + S / 2 + jit(4), cy = Math.min(y + S / 2 + jit(4), 800 - s / 2 - 1);
-      const d = Math.hypot(cx - gx, cy - gy) + jit(34);
-      const ink = d < 135 ? 'gokSari' : d < 195 ? 'gokSeft' : cy + jit(50) > 560 ? 'gokAcik' : 'gokMavi';
-      const a = jit(0.16);
-      damga(ink, [cx, cy, s * 0.75], (g) => { g.translate(cx, cy); g.rotate(a); yuvarlakDik(g, -s / 2, -s / 2, s, s, 7); }, { ort: HALE, yog: 0.55 + rD() * 0.2 });
+  // gök: tek bir uzun yuvarlak kauçuk damga, güneşin çevresinde halkalar boyunca uç uca basılır; halkalar güneşten
+  // uzaklaştıkça sarıdan şeftaliye ve maviye döner. Uçların bindiği yerde saydam mürekkep koyulaşır, halkalar arasında
+  // ince kâğıt aralıkları kalır.
+  const DL = 46, DH = 14, HALKA = 19;
+  for (let rr = 104, h = 0; rr < 1320; rr += HALKA + jit(1.5), h++) {
+    const faz = rD() * TAU;
+    let t = 0;
+    while (t < TAU) {
+      const l = DL + jit(5);
+      const a = faz + t;
+      t += (l + 2 + jit(5)) / rr;
+      const r0 = rr + jit(1.6);
+      const cx = gx + Math.cos(a) * r0, cy = gy + Math.sin(a) * r0;
+      if (cx < -30 || cx > W + 30 || cy < -30 || cy > 805) continue;
+      const d = r0 + jit(22);
+      const ink = d < 150 ? 'gokSari' : d < 218 ? 'gokSeft' : cy + jit(50) > 560 ? 'gokAcik' : 'gokMavi';
+      const don = a + Math.PI / 2 + jit(0.03);
+      damga(ink, [cx, cy, l * 0.6], (g) => {
+        g.beginPath(); g.rect(0, 0, W, 799); g.clip(); // yer çizgisinde kâğıt maskesi
+        g.translate(cx, cy); g.rotate(don); yuvarlakDik(g, -l / 2, -DH / 2, l, DH, DH / 2);
+      }, { ort: HALE, yog: 0.5 + rD() * 0.18 });
     }
   }
   for (let r = 0, y = 806; y < H; r++, y += 26) {

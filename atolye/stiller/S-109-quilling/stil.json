@@ -14,11 +14,11 @@
     "Beş damla biçimli beyaz taç yaprağı, içlerinde pembe küçük damlalar ve saçaklı şeritten sarılmış sarı göbeklerle çiçekler; göz biçimli gevşek kıvrım yapraklar, pembe damla tomurcuklar",
     "Fildişi kıvrımlarla dolu kaide ve minare; damla biçimli büyük kıvrımdan minare topuzu, sıkı altın disklerden alem küreleri ve şerit hilaller",
     "Sıkı turuncu disk çevresinde uçları dışa bakan sarı-turuncu damla ışınlı güneş; beyaz kıvrımlarla dolu, beyaz şeritle çevrili bulutlar",
-    "Bütün yüzeyin kıvrımlarla dolması: gökte açık maviden kreme geçen gevşek kıvrım ve damlalar (güneş çevresinde boş kalan aydınlık hale), yerde soluk kum ve adaçayı yeşili kıvrımlar; kasnaklarda koyu yeşil kemer şeritleri içinde sıkı kıvrımlı pencereler, mercan ve turkuaz zikzak şeritler"
+    "Gökte aralarından açık mavi kartonun göründüğü seyrek, iri, soluk mavi ve açık sarımlı kıvrımlar ve damlalar (güneşe doğru kremleşir, güneş çevresinde boş aydınlık hale); yerde soluk kum ve adaçayı yeşili kıvrımlar; kasnaklarda koyu yeşil kemer şeritleri içinde sıkı kıvrımlı pencereler, mercan ve turkuaz zikzak şeritler"
   ],
   "palet": [
-    "#9BCCF0",
-    "#D6EDFA",
+    "#ABD3F2",
+    "#D6ECFA",
     "#2B8146",
     "#5FBC6F",
     "#1E6436",
@@ -26,7 +26,7 @@
     "#DDA93A",
     "#F6B6C8"
   ],
-  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, üç ayrı katmanda (gök, bina, bitkiler). Her şerit, alt-sola kaydırılmış koyu bir çizgi, üstte ana renk ve sağ-üste kaydırılmış ince açık çizgiden oluşan üç geçişli bir çizgiyle çizilir. Kıvrımlar parametrik sarmaldır: yarıçap tur boyunca iç yarıçaptan dışa doğru büyür, gevşek kıvrımlarda merkez (göz) rastgele kayar, dış turlar birim biçime (damla: x = cos t, y = k·sin t·√((1−cos t)/2); göz: y = k·sin t·|sin t|) yarıçapın karesiyle harmanlanarak sıkıştırılır ve son tur kapanır. Bölgeler (kubbe dilimleri, kasnaklar, kaide, minare gövdesi, bulutlar) ekran dışı bir maskeye çizilir; maskenin uzaklık dönüşümü üzerinde açgözlü 'en büyük boş daire' yerleşimiyle kıvrımlar sığdırılır, pencereler delik olarak çıkarılır. Gök ve yer gibi büyük bölgeler, binanın ve bulutların silueti çıkarılmış maskede büyükten küçüğe yarıçap kademeleriyle rastgele denenerek (uzaklık alanı her yerleşimde yerel olarak güncellenir) 1600 dolayında gevşek ve sıkı kıvrım ve damlayla doldurulur. Çiçek göbekleri kısa ışınsal şeritlerle saçaklı sarım olarak çizilir. Her katmanın silueti gölge rengiyle doldurulup iki kademe bulanıklık ve kaydırmayla açık mavi-krem degrade kartona basılır (gök katmanında daha hafif), sonra katman üstüne çizilir; kartona ince lif dokusu eklenir.",
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, üç ayrı katmanda (gök, bina, bitkiler). Her şerit, alt-sola kaydırılmış koyu bir çizgi, üstte ana renk ve sağ-üste kaydırılmış ince açık çizgiden oluşan üç geçişli bir çizgiyle çizilir. Kıvrımlar parametrik sarmaldır: yarıçap tur boyunca iç yarıçaptan dışa doğru büyür, gevşek kıvrımlarda merkez (göz) rastgele kayar, dış turlar birim biçime (damla: x = cos t, y = k·sin t·√((1−cos t)/2); göz: y = k·sin t·|sin t|) yarıçapın karesiyle harmanlanarak sıkıştırılır ve son tur kapanır. Bölgeler (kubbe dilimleri, kasnaklar, kaide, minare gövdesi, bulutlar) ekran dışı bir maskeye çizilir; maskenin uzaklık dönüşümü üzerinde açgözlü 'en büyük boş daire' yerleşimiyle kıvrımlar sığdırılır, pencereler delik olarak çıkarılır. Gök ve yer gibi büyük bölgeler, binanın ve bulutların silueti çıkarılmış maskede büyükten küçüğe yarıçap kademeleriyle rastgele denenerek doldurulur (uzaklık alanı her yerleşimde yerel olarak güncellenir): gökte yalnız iri kademeler (13–24 birim), seyrek deneme ve kıvrımlar arasında 7 birimlik boşluk kullanılır; kıvrımlar açık sarımlı ve soluk mavidir, böylece karton aralardan görünür ve gök ferah kalır. Yer biraz daha sık, yine iri kıvrımlarla dolar. Çiçek göbekleri kısa ışınsal şeritlerle saçaklı sarım olarak çizilir. Her katmanın silueti gölge rengiyle doldurulup iki kademe bulanıklık ve kaydırmayla açık mavi-krem degrade kartona basılır (gök katmanında daha hafif), sonra katman üstüne çizilir; kartona ince lif dokusu eklenir.",
   "etiketler": [
     "quilling",
     "kâğıt",

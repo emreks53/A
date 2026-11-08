@@ -721,10 +721,34 @@
     Object.assign({ kirp: mGok }, SON));
 
   // ================================================================ 3) ZEMİN
-  katman((x) => vurusAlani(x, { bx: [-10, 790, W + 10, W + 10], ic: (px, py) => bolge(px, py) === 'zemin' || py > 800, adim: 10, aci: (px, py) => (py > 860 ? -1.25 + (r() - 0.5) * 0.7 : -0.04), aciJ: 0.3, boy: (px, py) => (py > 860 ? 30 : 56), kal: (px, py) => (py > 860 ? 9 : 14), alfa: 0.62,
-    renk: (px, py) => { const t = r(); const g = sstep(830, 900, py); if (r() < g) return t < 0.3 ? C.cimen : t < 0.55 ? C.yaprak : t < 0.7 ? C.yesilSari : t < 0.85 ? C.yaprakMavi : C.okra; return t < 0.3 ? C.kum : t < 0.5 ? C.okra : t < 0.65 ? C.seftali : t < 0.8 ? C.tasGolge : C.toprak; } }, r),
+  // ufuktaki kum şeridi: sıcak kum, şeftali ve okra yan vuruşları; yapının sola düşen leylak gölgesi; güneşli yerde krem ışık
+  const kumIc = (px, py) => (bolge(px, py) === 'zemin' || py > 800) && py < 872;
+  katman((x) => vurusAlani(x, { bx: [-10, 792, W + 10, 872], ic: kumIc, adim: 8, aci: (px, py) => -0.03 + 0.05 * Math.sin(px / 90), aciJ: 0.12, boy: 46, kal: 11, alfa: 0.7,
+    renk: (px, py) => { const t = r(); return t < 0.28 ? C.kum : t < 0.48 ? C.okra : t < 0.62 ? C.seftali : t < 0.74 ? C.toprak : t < 0.87 ? mixc(C.kum, C.krem, 0.5) : C.pembe; } }, r),
     Object.assign({ kirp: mZemin }, PASTEL));
-  harmanla([0, 790, W, W], 5, (x, y) => mOku(ICZEMIN, x, y) * (0.35 + 0.4 * sstep(0.45, 0.62, fbm(nF, x / 90, y / 70, 2))));
+  const kumGolge = (px, py) => {
+    // yapının dibinde ve solunda gölge: ışık sağ üstten, gölge sola uzanır
+    const dip = sstep(828, 802, py) * sstep(214, 300, px) * sstep(830, 760, px);
+    return clamp(dip, 0, 1);
+  };
+  katman((x) => vurusAlani(x, { bx: [180, 796, 860, 836], ic: kumIc, adim: 6, aci: -0.02, aciJ: 0.1, boy: 34, kal: 7,
+    alfa: (px, py) => 0.75 * kumGolge(px, py), renk: () => { const t = r(); return t < 0.4 ? C.tasGolge : t < 0.7 ? C.leylak : t < 0.85 ? C.tasMavi : C.menekse; } }, r),
+    Object.assign({ kirp: mZemin }, PASTEL));
+  harmanla([0, 790, W, 880], 4, (x, y) => mOku(ICZEMIN, x, y) * 0.35 * sstep(0.48, 0.64, fbm(nF, x / 90, y / 40, 2)));
+  // kumda sonradan atılmış keskin, kısa ışık ve sıcak vuruşlar
+  katman((x) => vurusAlani(x, { bx: [0, 800, W, 862], ic: kumIc, adim: 22, aci: -0.03, aciJ: 0.15, boy: 26, kal: 5,
+    alfa: (px, py) => 0.75 * (1 - kumGolge(px, py)), renk: () => { const t = r(); return t < 0.4 ? C.krem : t < 0.65 ? C.limon : t < 0.85 ? C.seftali : C.toprak; }, bas: 0.25, son: 0.4, uc: 0.35 }, r),
+    Object.assign({ kirp: mZemin }, SON));
+  // çayır: geride açık sarı-yeşil, önde zengin çimen yeşili; geniş, uyumlu yan vuruşlar ve yedirme
+  const cayirT = (py) => sstep(852, 1010, py);
+  katman((x) => vurusAlani(x, { bx: [-10, 840, W + 10, W + 10], ic: (px, py) => (bolge(px, py) === 'zemin' || py > 800) && py > 846, adim: 11, aci: (px, py) => -1.3 + 0.25 * Math.sin(px / 140), aciJ: 0.35, boy: 34, kal: 11, alfa: 0.62,
+    renk: (px, py) => { const t = r(), g = cayirT(py); return t < 0.35 ? mixc(C.yesilSari, C.cimen, g) : t < 0.7 ? mixc(C.cimen, C.yaprak, g * 0.8) : t < 0.88 ? mixc(C.yesilSari, C.limon, 0.4) : mixc(C.yaprak, C.yaprakMavi, 0.4 + 0.4 * g); }, egri: 0.12 }, r),
+    Object.assign({ kirp: mZemin }, PASTEL));
+  harmanla([0, 840, W, W], 6, (x, y) => mOku(ICZEMIN, x, y) * (0.55 + 0.3 * sstep(0.45, 0.62, fbm(nF, x / 110, y / 70, 2))));
+  // birkaç keskin ot vuruşu (çubuğun ucu), yalnız önde ve seyrek
+  katman((x) => vurusAlani(x, { bx: [0, 880, W, W], ic: (px, py) => bolge(px, py) === 'zemin', adim: 26, aci: (px, py) => -1.4 + (r() - 0.5) * 0.5, aciJ: 0.2, boy: 22, kal: 3.4,
+    alfa: (px, py) => 0.7 * sstep(880, 960, py), renk: () => { const t = r(); return t < 0.45 ? C.yesilSari : t < 0.75 ? C.cimen : C.yaprakKoyu; }, egri: 0.25, bas: 0.1, son: 0.6, uc: 0.25 }, r),
+    Object.assign({ kirp: mZemin }, SON));
 
   // ================================================================ 4) MİNARE ve KAİDE (beyaz taş: sıcak ışık, mavi-leylak gölge)
   const tasCesit = (px, py) => {
@@ -759,12 +783,41 @@
     }
   }, Object.assign({ kirp: mKubbe, bx: [356, 296, 764, 557] }, PASTEL));
   harmanla([356, 296, 764, 557], 4, (x, y) => mOku(ICKUBBE, x, y) * (0.3 + 0.4 * sstep(0.45, 0.62, fbm(nF, x / 70, y / 80, 2))));
+  // sağ omuzda parmakla yedirilmiş sıcak parıltı (sarı-yeşilden limona)
+  katman((x) => haritaCiz(x, (px, py) => {
+    if (!SAHNE.kubbedeMi(px, py)) return null;
+    const l = kTon(px, py), a = sstep(0.7, 0.97, l);
+    if (a <= 0.01) return null;
+    const c = mixc(C.yesilSari, C.limon, sstep(0.86, 1, l) * 0.7);
+    return [c[0], c[1], c[2], 0.6 * a];
+  }, [356, 296, 764, 557]), Object.assign({ kirp: mKubbe, bx: [356, 296, 764, 557] }, YEDIR, { opq: 0.85 }));
+  harmanla([356, 296, 764, 557], 5, (x, y) => mOku(ICKUBBE, x, y) * 0.8 * sstep(0.6, 0.85, kTon(x, y)));
 
-  // ================================================================ 6) PENCERELER
+  // ================================================================ 6) PENCERELER (derin ama ışıklı: üstü koyu, dibi açık, sol iç yüzde yansıyan ışık)
+  function pencereBoya(x, p, koyu, orta, acik, sicak) {
+    const yol = P2(SAHNE.kemerYolu(p.x, p.y, p.w, p.h));
+    x.save(); x.clip(yol);
+    const g = x.createLinearGradient(0, p.y, 0, p.y + p.h);
+    g.addColorStop(0, rgba(koyu, 1)); g.addColorStop(0.55, rgba(mixc(koyu, orta, 0.5), 1)); g.addColorStop(1, rgba(orta, 1));
+    x.fillStyle = g; x.fillRect(p.x - p.w, p.y - 2, p.w * 2, p.h + 4);
+    // dikey kısa vuruşlar: koyu içte kırık renk
+    const n = Math.max(3, Math.round(p.w / 3));
+    for (let i = 0; i < n; i++) {
+      const xx = p.x - p.w / 2 + (p.w * (i + 0.5)) / n + (r() - 0.5) * 2, y0 = p.y + p.h * (0.25 + r() * 0.3);
+      strok(x, [[xx, y0], [xx + (r() - 0.5) * 2, p.y + p.h + 2]], Math.max(2, p.w * 0.22), 0.4, r() < 0.5 ? orta : mixc(orta, acik, 0.4), 0.2, 0.1, 0.5);
+    }
+    // sol iç yüz (sağ üstten gelen ışığı alır)
+    const sx = p.x - p.w / 2 + Math.max(1.2, p.w * 0.12);
+    strok(x, [[sx, p.y + p.w * 0.45], [sx, p.y + p.h + 2]], Math.max(1.8, p.w * 0.2), 0.75, acik, 0.25, 0.05, 0.6);
+    // dipte sıcak ışık payı
+    if (sicak) strok(x, [[p.x - p.w / 2, p.y + p.h - 2], [p.x + p.w / 2, p.y + p.h - 2]], 3, 0.6, sicak, 0.1, 0.1, 0.7);
+    x.restore();
+  }
   katman((x) => {
-    x.fillStyle = rgba(C.pencereYesil, 0.95); x.fill(YOL.kasnakPencere);
-    x.fillStyle = rgba(C.pencereTas, 0.95); x.fill(YOL.kaidePencere); x.fill(YOL.minarePencere);
-  }, Object.assign({ kirp: maskeCikar(mPencere, [MK.bitki, MK.yapiOn].slice(0, 1)), bx: [280, 200, 830, 800] }, PASTEL, { gren: 0.3 }));
+    for (const p of [0, 1].flatMap((k) => SAHNE.kasnakPencereleri(k))) pencereBoya(x, p, C.cam, C.pencereYesil, mixc(C.viridyan, C.turkuaz, 0.45), null);
+    for (const p of SAHNE.kaide.pencereler) pencereBoya(x, p, mixc(C.pencereTas, C.cam, 0.25), mixc(C.pencereTas, C.menekse, 0.55), C.leylak, C.seftali);
+    for (const p of SAHNE.minarePencereleri) pencereBoya(x, p, mixc(C.pencereTas, C.cam, 0.25), mixc(C.pencereTas, C.menekse, 0.5), C.leylak, null);
+  }, Object.assign({ kirp: maskeCikar(mPencere, [MK.bitki]), bx: [280, 200, 830, 800] }, PASTEL, { gren: 0.6, opq: 0.92 }));
 
   // ================================================================ 7) ÇİÇEK VE YAPRAKLAR
   katman((x) => { for (const s of sapNoktalari) strok(x, sik(s, 4), 4.5, 0.9, C.yaprak, 0.02, 0.1, 0.6); },
@@ -812,10 +865,13 @@
       if (kb.u > -0.25) elCizgisi(x, pts.map(([px, py]) => [px + 2.6, py]).filter((p) => p[1] > 312), 2.0, 0.55 + 0.35 * clamp(kb.u, 0, 1), C.yesilSari, r, { parca: 50, titre: 0.3 });
     }
     // ışık: kubbenin sağ omzunda krem-limon parıltı vuruşları
-    for (let i = 0; i < 70; i++) {
-      const u = 0.12 + r() * 0.6, y0 = 322 + r() * 150, y1 = y0 + 14 + r() * 32, ym = (y0 + y1) / 2;
-      if (kTon(560 + u * kubbeRy(ym), ym) < 0.8) continue;
-      strok(x, meridyen(u, y0, y1, 4), 4 + r() * 2, 0.8, r() < 0.5 ? C.limon : C.krem, 0.15, 0.3, 0.4);
+    // birkaç ince, uzun parıltı vuruşu: kaburgalar arasında, meridyen boyunca
+    const kbU = SAHNE.kaburgalar(16, 80).map((kb) => kb.u).sort((a, b) => a - b);
+    for (let i = 0; i < 26; i++) {
+      const j = 1 + Math.floor(r() * (kbU.length - 2)), u = lerp(kbU[j], kbU[j + 1] ?? kbU[j], 0.35 + r() * 0.3);
+      const y0 = 318 + r() * 140, y1 = y0 + 26 + r() * 40, ym = (y0 + y1) / 2;
+      if (u < 0.1 || kTon(560 + u * kubbeRy(ym), ym) < 0.82) continue;
+      strok(x, meridyen(u, y0, y1, 4), 2.6 + r() * 1.2, 0.7, r() < 0.5 ? C.limon : C.krem, 0.3, 0.4, 0.3);
     }
   }, Object.assign({ kirp: MK.kubbe, bx: [356, 296, 764, 557] }, SON));
   katman((x) => {

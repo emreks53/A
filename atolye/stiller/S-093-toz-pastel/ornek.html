@@ -695,6 +695,10 @@
       }
     }
   }, Object.assign({ kirp: MK.minare, bx: [236, 70, 364, 802] }, TOZ));
+  // minarenin ışık tarafında silgiyle açılmış dikey parıltı
+  katman((x) => {
+    for (const [xx, y0, y1, w] of [[318, 498, 790, 4], [314, 322, 430, 3.4], [308, 210, 268, 2.6]]) strok(x, [[xx, y0], [xx, y1]], w, 0.6, [255, 255, 255], 0.2, 0.3, 0.4);
+  }, Object.assign({ kirp: maskeCikar(MK.minare, [mPencere]), bx: [236, 70, 364, 802] }, SILGI, { bulanik: 1.4 }));
   // korkuluk altındaki çıkma gölgesi (aplikatörle leylak)
   katman((x) => {
     for (const p of SAHNE.minareParcalari()) if (p.ad.startsWith('çıkma')) {
@@ -703,16 +707,40 @@
     }
   }, Object.assign({ kirp: MK.minare, bx: [236, 260, 364, 492] }, TOZ));
 
-  // ================================================================ KAİDE
+  // ================================================================ KAİDE (beyaz taş: sağda sıcak güneş, solda serin leylak-mavi gölge)
   katman((x) => {
-    for (let y = 694; y < 806; y += 7) for (let x0 = 250; x0 < 840; x0 += 70) {
-      const len = 110 + r() * 60, pts = [[x0 + (r() - 0.5) * 30, y + (r() - 0.5) * 3], [x0 + len, y + (r() - 0.5) * 3]];
-      const l = 0.45 + 0.5 * clamp((x0 + len / 2 - 300) / 520, 0, 1), c = mixc(mixc(C.tas, C.seftali, sstep(0.75, 0.95, l) * 0.5), C.tasGolge, y < 704 ? 0 : (1 - l) * 0.9);
-      sunger(x, pts, 18, 0.2 + 0.16 * (1 - l), c, r, { son: 0.55, iz: 0.5 });
+    // 1) bütün yüzeye sıcak krem-şeftali taban: geniş, yatay sünger geçişleri
+    for (let y = 690; y < 808; y += 12) for (let x0 = 230; x0 < 840; x0 += 120) {
+      const len = 170 + r() * 90, pts = [[x0 + (r() - 0.5) * 40, y + (r() - 0.5) * 4], [x0 + len, y + (r() - 0.5) * 4]];
+      const l = clamp((x0 + len / 2 - 300) / 520, 0, 1);
+      sunger(x, pts, 26, 0.24, mixc(C.tas, C.seftali, 0.25 + 0.45 * l), r, { son: 0.55, iz: 0.7 });
     }
-    // korniş altı gölge
-    sunger(x, [[296, 709], [824, 709]], 9, 0.5, C.tasGolge, r, { son: 0.3, sert: 0.4 });
-  }, Object.assign({ kirp: MK.kaide, bx: [286, 688, 834, 802] }, TOZ));
+  }, Object.assign({ kirp: MK.kaide, bx: [286, 688, 834, 802] }, TOZ, { opq: 0.5 }));
+  katman((x) => {
+    // 2) gölge tarafı: soldan sağa azalan leylak ve mavi süngerler (kısa sürmeler, sonları solan)
+    for (let y = 708; y < 806; y += 9) {
+      let x0 = 270 + r() * 20;
+      while (x0 < 700) {
+        const len = 90 + r() * 110, pts = [[x0, y + (r() - 0.5) * 3], [x0 + len, y + (r() - 0.5) * 3]];
+        const g = 1 - clamp((x0 - 300) / 420, 0, 1);
+        sunger(x, pts, 16 + r() * 6, 0.12 + 0.3 * g * g, r() < 0.55 ? C.tasGolge : r() < 0.6 ? C.tasMavi : C.leylak, r, { son: 0.75, iz: 0.8 });
+        x0 += len * (0.7 + r() * 0.4);
+      }
+    }
+    // korniş altı gölge (şablon kenarına dayalı keskin üst kenar, aşağı solan)
+    sunger(x, [[296, 711], [824, 711]], 14, 0.55, C.tasGolge, r, { son: 0.35, sert: 0.5, iz: 0.5 });
+    sunger(x, [[296, 717], [824, 717]], 10, 0.25, C.tasMavi, r, { son: 0.5, iz: 0.6 });
+    // dipte kumdan yansıyan sıcak ışık
+    sunger(x, [[300, 794], [820, 794]], 16, 0.24, C.okra, r, { son: 0.4, iz: 0.7 });
+    // korniş: alt yüzü serin, ön yüzü sıcak
+    sunger(x, [[288, 701], [832, 701]], 7, 0.35, C.tasGolge, r, { son: 0.3, sert: 0.6, iz: 0.4 });
+    sunger(x, [[288, 696], [832, 696]], 6, 0.3, C.seftali, r, { son: 0.25, sert: 0.6, iz: 0.4 });
+  }, Object.assign({ kirp: MK.kaide, bx: [286, 688, 834, 802] }, TOZ, { opq: 0.5 }));
+  // 3) silgiyle kaldırılmış ışıklar: kornişin üst kenarı ve güneşli yüzde yatay silgi izleri
+  katman((x) => {
+    strok(x, [[300, 693.5], [828, 693.5]], 2.6, 0.8, [255, 255, 255], 0.0, 0.25, 0.6);
+    for (const [x0, x1, y, w] of [[600, 800, 742, 5], [640, 812, 764, 4], [560, 760, 786, 3.5], [720, 816, 728, 3]]) strok(x, [[x0, y], [x1, y + 1]], w, 0.55, [255, 255, 255], 0.35, 0.45, 0.3);
+  }, Object.assign({ kirp: maskeCikar(MK.kaide, [mPencere]), bx: [286, 688, 834, 802] }, SILGI, { bulanik: 1.6 }));
 
   // ================================================================ KASNAK
   const yesilRenk = (l) => rampa([[0, C.maviYesil], [0.25, C.yesilKoyu], [0.45, C.zumrut], [0.65, C.yesil], [0.85, C.yesilAcik], [1, C.yesilSari]], l);
