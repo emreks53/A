@@ -380,7 +380,7 @@
       const ek = r > 12 * s ? 1 + Math.floor(R() * 2.4) : 0;
       for (let j = 0; j < ek; j++) { const a = -Math.PI / 2 + (R() - 0.35) * 2.0, rr = r * (0.28 + R() * 0.22); t.push([lx + Math.cos(a) * r * 0.86, taban - h + r + Math.sin(a) * r * 0.86, rr, 2]); }
     }
-    return { bx, s, H, t, kule, taban, egim: (R() - 0.5) * 0.04, kutu: [Math.floor(bx - gen / 2 - 50 * s), Math.floor(taban - H * 1.6 - 30), Math.ceil(bx + gen / 2 + 50 * s), Math.ceil(taban + 12)] };
+    return { bx, s, H, t, kule, taban, gen, egim: (R() - 0.5) * 0.04, kutu: [Math.floor(bx - gen / 2 - 50 * s), Math.floor(taban - H * 1.6 - 30), Math.ceil(bx + gen / 2 + 50 * s), Math.ceil(taban + 12)] };
   });
   const BF = new Float32Array(W * W), BG = new Float32Array(W * W), BT = new Float32Array(W * W), BL = new Float32Array(W * W);
   for (const b of bulutlar) {
@@ -396,8 +396,9 @@
         isik = Math.max(isik, sstep(r * 0.92, r * 0.82, d) * sstep(-0.05 * r - 1.5, -0.05 * r + 1.5, yon));
         if (ust === 1 && r > 14 * b.s) hilal = Math.max(hilal, sstep(r * 1.0, r * 0.9, d) * sstep(-0.4 * r + 1.5, -0.4 * r - 1.5, yon));
       }
-      const tb = b.taban + (x - b.bx) * b.egim + (nz(x / 34, b.taban) - 0.5) * 5 * b.s;
-      const kes = sstep(tb + 2, tb - 3, wy);
+      const uu = (x - b.bx) / (b.gen / 2 + 14 * b.s);
+      const tb = b.taban + (x - b.bx) * b.egim + (nz(x / 34, b.taban) - 0.5) * 5 * b.s - Math.pow(clamp(Math.abs(uu), 0, 1), 4) * 12 * b.s;
+      const kes = sstep(tb + 2, tb - 3, wy) * sstep(1.0, 0.9, Math.abs(uu));
       const e = 0.5 + (nz(x / 3, y / 3) - 0.5) * 0.035;
       const v = sstep(e - 0.03, e + 0.03, F * kes);
       if (v > BF[i]) {

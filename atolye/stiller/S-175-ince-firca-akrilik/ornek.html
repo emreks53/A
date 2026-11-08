@@ -1631,8 +1631,7 @@ const H = (function () {
     let c = golgele(n, YESIL);
     const hv = H.norm([H.L[0], H.L[1], H.L[2] + 1]);
     const nh = Math.max(0, H.nokta(n, hv));
-    c = kar(c, [215, 250, 200], Math.pow(nh, 18) * 0.4);
-    c = kar(c, [255, 255, 250], Math.pow(nh, 90) * 0.7);
+    c = kar(c, [215, 250, 200], Math.pow(nh, 10) * 0.32);
     if (kn.kab > 0) c = kar(c, kn.d > 0 ? [190, 245, 190] : [5, 45, 50], kn.kab * 0.3);
     return c;
   }, { kaburga: 0.7, dilim: 0.13, kaburgaEni: 0.05 });
@@ -1720,13 +1719,13 @@ const H = (function () {
       },
       renkFn: (c, x, y, r, b, lum) => {
         // her darbe kendi tonunda: açık/koyu ve sıcak/serin küçük sapmalar (elle karılmış boya)
-        const j = (r() - 0.5) * 2 * (b === 'gok' ? 11 : 15), h = (r() - 0.5) * 8;
+        const j = (r() - 0.5) * 2 * (b === 'gok' ? 15 : 16), h = (r() - 0.5) * 9;
         return [c[0] + j + h, c[1] + j, c[2] + j - h];
       },
       kalin: (lum) => 0.7 + 0.3 * (lum / 255),
       oluk: 1,
       katmanlar: [
-        { aralik: 4.2, en: [2.5, 3.3], boy: [7, 13], adim: 1.5, alfa: [0.92, 1], esik: 34, detay: [0, 1], detayEn: false, kil: 0, oynak: 0 },
+        { aralik: 4.4, en: [2.7, 3.5], boy: [8, 14], adim: 1.5, alfa: [0.92, 1], esik: 34, detay: [0, 1], detayEn: false, kil: 0, oynak: 0 },
         { aralik: 2.6, en: [1.2, 1.9], boy: [4, 9], adim: 1, alfa: [0.9, 1], esik: 16, detay: [0.3, 1], kil: 0, oynak: 0 },
       ],
     });

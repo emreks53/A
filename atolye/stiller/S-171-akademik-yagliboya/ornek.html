@@ -1507,7 +1507,7 @@ const H = (function () {
   // ------------------------------------------------------------ palet (ressamın paleti)
   const TAS = malzeme({ rampa: [[0, '#957E62'], [0.3, '#BBA381'], [0.55, '#E0CFAE'], [0.8, '#F4E7CC'], [1, '#FFF8E8']], ortam: 0.18, gok: '#A9B4C8', gokGuc: 0.22 });
   const ALTIN = { vurgu: C('#FFF0BC'), isik: C('#E8C468'), orta: C('#BF922F'), koyu: C('#7A561B'), yansima: C('#A88B5A') };
-  const YESIL = malzeme({ rampa: [[0, '#163C2B'], [0.28, '#1F5838'], [0.5, '#2C7A44'], [0.75, '#5AA257'], [0.92, '#9CCB78'], [1, '#C8E096']], ortam: 0.06, gok: '#7CA6B4', gokGuc: 0.22 });
+  const YESIL = malzeme({ rampa: [[0, '#1C3F31'], [0.28, '#285C40'], [0.5, '#3A7A4A'], [0.75, '#6E9E5E'], [0.92, '#A8C484'], [1, '#D6DEA6']], ortam: 0.08, gok: '#86A8B8', gokGuc: 0.24 });
   const YAPRAK = { koyu: C('#3A5532'), orta: C('#5F7F48'), acik: C('#B3C386') };
   const CICEK = { isik: C('#FFFDF7'), orta: C('#F7EFE6'), golge: C('#B7AEBD'), kok: C('#EFCDC2'), gobek: C('#B8A847'), ercik: C('#F3C64A'), ercikKoyu: C('#A8741C'),
     tom: C('#F6DCDC'), tomKok: C('#E9B8BC'), tomUc: C('#FFF4F1'), tomGolge: C('#B98F99'), canak: C('#5C7A45') };
@@ -1592,8 +1592,8 @@ const H = (function () {
         pg.beginPath(); pts.forEach((p, i) => (i ? pg.lineTo(p[0], p[1]) : pg.moveTo(p[0], p[1]))); pg.stroke();
       }
       // hurma salkımı
-      pg.fillStyle = '#9A6E3A';
-      pg.beginPath(); pg.ellipse(tx + 3, ty + boy * 0.06, boy * 0.04, boy * 0.06, 0.3, 0, Math.PI * 2); pg.fill();
+      pg.fillStyle = '#8F7A56';
+      pg.beginPath(); pg.ellipse(tx + 2, ty + boy * 0.05, boy * 0.022, boy * 0.034, 0.3, 0, Math.PI * 2); pg.fill();
     };
     palmiye(44, 794, 126, 12);
     palmiye(200, 798, 158, -14);
@@ -1731,7 +1731,7 @@ const H = (function () {
       kalin: (lum, b) => (b === 'gok' ? 0.55 : 1) * (0.2 + 1.1 * Math.pow(lum / 255, 2.6)),
       katmanlar: [
         { aralik: 6.5, en: [7, 14], boy: [22, 60], alfa: [0.4, 0.6], esik: 28, detay: [0, 0.22], kil: 4, kilOynak: 6, oynak: 4 },
-        { aralik: 5, en: [3, 6], boy: [10, 26], alfa: [0.75, 0.9], esik: 20, detay: [0.07, 1], kil: 2, kilOynak: 7, oynak: 4 },
+        { aralik: 5, en: [3.4, 7], boy: [10, 28], alfa: [0.75, 0.9], esik: 20, detay: [0.07, 1], kil: 2, kilOynak: 8, oynak: 5 },
         { aralik: 2.4, en: [1.1, 2.0], boy: [3, 9], adim: 1, alfa: [0.88, 1], esik: 13, detay: [0.28, 1], kil: 0, oynak: 2, }
       ],
     });

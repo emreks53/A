@@ -451,29 +451,66 @@
   M.yika(M.fMaske([GX - 120, GY - 120, GX + 120, GY + 120], (x, y) => { const d = gUz(x, y); return sstep(90, 30, d) * (1 - 0.75 * sstep(26, 12, d)); }), '#F7DD98', { yog: 0.32, yumusak: 3, kenar: 0, gran: 0.02 });
 
   // ------------------------------------------------------------ 2. taş: krem, soluk altın; leylak-pembe gölgeler
+  // Ressam taşı da nemli kâğıtta yumuşak geçişlerle modeller: ışık yanında sıcak şeftali, gölge yanında leylak,
+  // en kenarda soluk yansıyan ışık; çıkıntıların altında yumuşak gölge bantları, pencerelerde derinlik.
   const korB = korOn;
   const tas = M.birles(mMinare, mKaide);
-  M.yika(tas, '#F7E8D0', { yog: 0.75, yumusak: 0.8, koru: korB, kenar: 0.12, gran: 0.06, akis: 0.18 });
-  const minG = (e1) => M.fMaske([250, 140, 352, 800], (x, y) => {
+  M.yika(tas, '#F7E8D0', { yog: 0.7, yumusak: 0.8, koru: korB, kenar: 0.12, gran: 0.06, akis: 0.18 });
+  const minU = (x, y) => (x - 300) / g.minareYari(y);
+  const minF = (f) => M.fMaske([250, 140, 352, 800], (x, y) => {
     const i = y * W + x, m = mMinare.a[i] * (1 - mKaide.a[i]);
-    if (m <= 0) return 0;
-    const yr = g.minareYari(y), u = (x - 300) / yr;
-    return m * sstep(e1 - 0.25, e1 + 0.25, -u);
+    return m > 0 ? m * f(minU(x, y), x, y) : 0;
   });
-  M.yika(minG(0.05), '#E2CEE0', { yog: 0.85, yumusak: 1.5, koru: korB, kenar: 0.08, gran: 0.05 });
-  M.yika(minG(0.6), '#D5C2DC', { yog: 0.45, yumusak: 2, koru: korB, kenar: 0.05, gran: 0.05 });
+  // ışık yanında sıcak şeftali-altın, gölge yanında iki kat leylak, kenarda yansıyan ışık
+  M.yika(minF((u) => sstep(-0.1, 0.45, u) * (1 - 0.6 * sstep(0.7, 0.95, u))), '#FBDDBE', { yog: 0.55, yumusak: 2, koru: korB, kenar: 0.04, gran: 0.05 });
+  M.yika(minF((u, x, y) => sstep(0.12, -0.22, u + (nz(x / 9, y / 40) - 0.5) * 0.08)), '#E0C9DE', { yog: 0.9, yumusak: 1.8, koru: korB, kenar: 0.08, gran: 0.05, akis: 0.12 });
+  M.yika(minF((u) => sstep(-0.3, -0.62, u) * (1 - 0.65 * sstep(-0.8, -0.97, u))), '#CDB6D6', { yog: 0.6, yumusak: 2, koru: korB, kenar: 0.05, gran: 0.05 });
   const parcalar = SAHNE.minareParcalari();
-  M.yika(M.yolMaske(parcalar.filter((p) => p.ad.startsWith('çıkma')).map((p) => SAHNE.yol(p.noktalar, true))), '#D8C3DA', { yog: 0.8, yumusak: 1, kenar: 0.1 });
-  M.yika(M.kesis(M.maske((c) => { c.fillRect(273, 316, 54, 8); c.fillRect(266, 488, 68, 10); c.fillRect(281, 206, 38, 5); }), mMinare), '#D9C5DC', { yog: 0.6, yumusak: 2, koru: korB, kenar: 0.05 });
+  M.yika(M.yolMaske(parcalar.filter((p) => p.ad.startsWith('çıkma')).map((p) => SAHNE.yol(p.noktalar, true))), '#D6BED9', { yog: 0.85, yumusak: 1, kenar: 0.1, grad: (x) => 0.75 + 0.4 * clamp((310 - x) / 50, 0, 1) });
+  // çıkma, şerefe ve bilezik altına düşen yumuşak gölge bantları (aşağı doğru erir)
+  M.yika(M.kesis(M.fMaske([255, 200, 345, 520], (x, y) => {
+    let v = 0;
+    for (const [y0, h] of [[316, 18], [488, 20], [206, 11], [456, 6], [290, 5]]) if (y >= y0 && y < y0 + h) v = Math.max(v, Math.pow(1 - (y - y0) / h, 1.4));
+    return v;
+  }), mMinare), '#D2BBD8', { yog: 0.75, yumusak: 1.2, koru: korB, kenar: 0.03 });
+  // kubbe ve kasnağın minareye düşürdüğü yumuşak eğri gölge
+  const golgeKenar = (x) => 546 + (334 - x) * 0.5 + 0.0045 * (334 - x) * (334 - x);
+  M.yika(M.fMaske([262, 520, 340, 800], (x, y) => { const i = y * W + x; return sstep(golgeKenar(x) - 4, golgeKenar(x) + 6, y) * mMinare.a[i] * (1 - mKaide.a[i]); }), '#D9C4DE', { yog: 0.7, yumusak: 2.5, koru: korB, kenar: 0.04, gran: 0.05 });
   const korkuluklar = parcalar.filter((p) => p.tip === 'korkuluk');
-  M.yika(M.maske((c) => { for (const k of korkuluklar) { const adet = 10, w = (k.x2 - k.x1) / adet; for (let i = 0; i < adet; i++) c.fillRect(k.x1 + i * w + w * 0.4, k.y1 + 4, w * 0.45, k.y2 - k.y1 - 6); } }), '#CDB6D2', { yog: 0.75, yumusak: 0.6, kenar: 0.08 });
-  M.yika(M.maske((c) => { c.lineWidth = 2.6; for (const z of Y.zikzak) c.stroke(P(z)); }), '#D3A9AE', { yog: 0.7, yumusak: 0.6, kenar: 0.08 });
-  M.yika(M.yolMaske([...Y.minarePencereleri, ...Y.kaidePencereleri]), '#B7A1C1', { yog: 0.85, yumusak: 0.8, koru: korB, kenar: 0.15, kenarR: 2 });
-  M.yika(M.fMaske([270, 140, 330, 202], (x, y) => { const m = mMinare.a[y * W + x]; if (y < 146 || y > 200 || m <= 0) return 0; return m * sstep(300, 290, x + (y - 175) * 0.12); }), '#DCC8DE', { yog: 0.7, yumusak: 1.5, kenar: 0.05 });
-  // kaide: korniş altı yumuşak gölge, sola doğru serin leylak, dipte sıcak şeftali
-  M.yika(M.fMaske([300, 700, 820, 730], (x, y) => (y >= 704 ? sstep(726, 706, y) : 0)), '#DCC9DE', { yog: 0.8, koru: korB, kenar: 0.04, gran: 0.04 });
-  M.yika(M.fMaske([300, 704, 820, 800], (x) => clamp((600 - x) / 300, 0, 1)), '#E3D3E3', { yog: 0.55, yumusak: 1, koru: korB, kenar: 0, gran: 0.05 });
-  M.yika(M.fMaske([300, 760, 820, 800], (x, y) => sstep(765, 800, y)), '#F4D6C4', { yog: 0.55, koru: korB, kenar: 0, gran: 0.04 });
+  M.yika(M.maske((c) => { for (const k of korkuluklar) { const adet = 10, w = (k.x2 - k.x1) / adet; for (let i = 0; i < adet; i++) c.fillRect(k.x1 + i * w + w * 0.4, k.y1 + 4, w * 0.45, k.y2 - k.y1 - 6); } }), '#C5ACCB', { yog: 0.8, yumusak: 0.6, kenar: 0.1, grad: (x) => 0.7 + 0.45 * clamp((310 - x) / 50, 0, 1) });
+  // korkuluk üst tırabzanı ve şerefe ağzında ince sıcak ışık payı (kâğıt rengi kalır), altında soluk gölge çizgisi
+  M.yika(M.maske((c) => { for (const k of korkuluklar) c.fillRect(k.x1, k.y2 - 2.5, k.x2 - k.x1, 2.5); }), '#D3BCD7', { yog: 0.6, yumusak: 0.6, kenar: 0.05 });
+  M.yika(M.maske((c) => { c.lineWidth = 2.6; for (const z of Y.zikzak) c.stroke(P(z)); }), '#D3A3AB', { yog: 0.75, yumusak: 0.6, kenar: 0.08, grad: (x) => 0.75 + 0.4 * clamp((310 - x) / 40, 0, 1) });
+  // zikzak bandın üst ve alt kenarında ince pembe şerit
+  M.yika(M.kesis(M.maske((c) => { c.fillRect(262, 519, 76, 3); c.fillRect(262, 581, 76, 3); }), mMinare), '#DDB4BC', { yog: 0.6, yumusak: 0.6, kenar: 0.04 });
+  const pencereAll = [...SAHNE.minarePencereleri, ...SAHNE.kaide.pencereler];
+  M.yika(M.yolMaske([...Y.minarePencereleri, ...Y.kaidePencereleri]), '#B9A2C3', { yog: 0.85, yumusak: 0.7, koru: korB, kenar: 0.16, kenarR: 2 });
+  // pencere derinliği: kemer tepesi ve sağ iç kenar koyu (ışık sağ üstten içeri düşer), dipte soluk sıcak yansıma
+  M.yika(M.kesis(M.yolMaske(pencereAll.map((p) => SAHNE.kemerYolu(p.x, p.y, p.w, p.h))), M.fMaske([260, 200, 720, 800], (x, y) => {
+    for (const p of pencereAll) if (Math.abs(x - p.x) < p.w && y > p.y - 4 && y < p.y + p.h + 2) return Math.max(sstep(p.y + p.h * 0.55, p.y, y), sstep(p.x + p.w * 0.05, p.x + p.w * 0.45, x) * 0.8);
+    return 0;
+  })), '#A58FB5', { yog: 0.55, yumusak: 1, koru: korB, kenar: 0.04 });
+  M.yika(M.maske((c) => { for (const p of SAHNE.kaide.pencereler) { c.fillRect(p.x - p.w / 2 - 3, p.y + p.h, p.w + 6, 3); } }), '#DCC6D9', { yog: 0.6, yumusak: 0.8, koru: korB, kenar: 0.04 });
+  M.yika(M.fMaske([270, 140, 330, 202], (x, y) => { const m = mMinare.a[y * W + x]; if (y < 146 || y > 200 || m <= 0) return 0; return m * sstep(301, 289, x + (y - 175) * 0.12); }), '#D9C3DD', { yog: 0.8, yumusak: 1.5, kenar: 0.05 });
+  M.yika(M.fMaske([270, 140, 330, 202], (x, y) => { const m = mMinare.a[y * W + x]; if (y < 146 || y > 200 || m <= 0) return 0; return m * sstep(298, 312, x - (y - 175) * 0.1) * 0.8; }), '#FADCBC', { yog: 0.5, yumusak: 1.5, kenar: 0.03 });
+  // kaide: korniş üstü ışıkta (kâğıt), ön yüzü soluk şeftali; korniş altında yumuşak leylak gölge; cephe sağdan
+  // sola sıcaktan serine döner, dipte sıcak yansıma; soluk, nemli fırça izi gibi yumuşak taş sıraları
+  M.yika(M.fMaske([288, 690, 832, 706], (x, y) => (y >= 696 && y < 704 ? mKaide.a[y * W + x] : 0)), '#F2D3BE', { yog: 0.55, koru: korB, kenar: 0.08, gran: 0.04, grad: (x) => 0.7 + 0.5 * clamp((640 - x) / 340, 0, 1) });
+  M.yika(M.fMaske([300, 700, 820, 740], (x, y) => (y >= 704 ? mKaide.a[y * W + x] * Math.pow(sstep(734, 704, y), 1.3) : 0)), '#D7C1DB', { yog: 0.85, koru: korB, kenar: 0.04, gran: 0.04 });
+  M.yika(M.fMaske([300, 704, 820, 800], (x, y) => mKaide.a[y * W + x] * (0.25 + 0.75 * clamp((700 - x) / 400, 0, 1))), '#E1D0E2', { yog: 0.6, yumusak: 1, koru: korB, kenar: 0, gran: 0.05, akis: 0.2 });
+  M.yika(M.fMaske([300, 704, 820, 800], (x, y) => mKaide.a[y * W + x] * sstep(560, 820, x) * sstep(800, 730, y)), '#FBE0C2', { yog: 0.5, yumusak: 1, koru: korB, kenar: 0, gran: 0.04 });
+  M.yika(M.fMaske([300, 750, 820, 800], (x, y) => sstep(756, 800, y)), '#F3D2C2', { yog: 0.6, koru: korB, kenar: 0, gran: 0.04 });
+  M.yika(M.mBulanik(M.maske((c) => {
+    c.lineWidth = 1.6;
+    for (const y of [728, 752, 776]) { c.beginPath(); c.moveTo(302, y + (nz(y, 1) - 0.5) * 1.5); c.lineTo(818, y + (nz(y, 2) - 0.5) * 1.5); c.stroke(); }
+    const sira = [708, 728, 752, 776, 800];
+    c.lineWidth = 1.3;
+    for (let k = 0; k < 4; k++) for (let x = 300 + (k % 2) * 34 + 20; x < 820; x += 68) { c.beginPath(); c.moveTo(x, sira[k] + 1); c.lineTo(x, sira[k + 1] - 1); c.stroke(); }
+    c.globalCompositeOperation = 'destination-out';
+    for (const p of SAHNE.kaide.pencereler) c.fill(new Path2D(SAHNE.kemerYolu(p.x, p.y - 3, p.w + 10, p.h + 7)));
+  }), 1), '#D8BFCF', { yog: 0.42, koru: korB, kenar: 0, gran: 0.05, akis: 0.25, grad: (x) => 0.6 + 0.5 * clamp((720 - x) / 400, 0, 1) });
+  // kaidenin zemine sola düşen yumuşak gölgesi
+  M.yika(M.mBulanik(M.maske((c) => { c.beginPath(); c.moveTo(300, 800); c.lineTo(300, 788); c.lineTo(220, 806); c.lineTo(232, 814); c.closePath(); c.fill(); }), 3), '#DCC5DD', { yog: 0.6, koru: korB, kenar: 0.02 });
 
   // ------------------------------------------------------------ 3. kasnak ve kubbe: nane yeşili
   const kIs = (x) => g.silindir(x, 560, 226);
@@ -481,7 +518,9 @@
   M.yika(M.fMaske([330, 553, 790, 694], (x, y) => mKasnak.a[y * W + x] * sstep(-0.55, -0.15, -kIs(x))), '#86C1A0', { yog: 0.7, yumusak: 1.5, koru: korB, kenar: 0.08, gran: 0.06 });
   M.yika(M.fMaske([330, 553, 790, 694], (x, y) => mKasnak.a[y * W + x] * sstep(-0.2, 0.25, -kIs(x))), '#B2A9D2', { yog: 0.45, yumusak: 2, koru: korB, kenar: 0.05, gran: 0.05 });
   M.yika(M.fMaske([330, 550, 790, 620], (x, y) => ((y >= 555 && y < 563) || (y >= 610 && y < 617) ? mKasnak.a[y * W + x] : 0)), '#7FB59B', { yog: 0.45, yumusak: 1.2, koru: korB, kenar: 0.05 });
-  M.yika(M.yolMaske(Y.kasnakPencereleri), '#5E9C8C', { yog: 0.85, yumusak: 0.7, koru: korB, kenar: 0.18, kenarR: 2 });
+  M.yika(M.yolMaske(Y.kasnakPencereleri), '#5E9C8C', { yog: 0.85, yumusak: 0.35, koru: korB, kenar: 0.22, kenarR: 2 });
+  // pencere kemerlerinin tepesinde biraz daha koyu, nemli fırçayla aşağı eritilmiş ikinci kat
+  M.yika(M.kesis(M.yolMaske(Y.kasnakPencereleri), M.fMaske([330, 560, 790, 690], (x, y) => { for (const k of [0, 1]) for (const p of SAHNE.kasnakPencereleri(k)) if (Math.abs(x - p.x) < p.w && y > p.y - 2 && y < p.y + p.h) return sstep(p.y + p.h * 0.7, p.y, y); return 0; })), '#4E8C80', { yog: 0.45, yumusak: 0.5, koru: korB, kenar: 0.03 });
   // kubbe
   const kab = SAHNE.kaburgalar(16);
   const KV = new Float32Array(W * W), KU = new Float32Array(W * W);
