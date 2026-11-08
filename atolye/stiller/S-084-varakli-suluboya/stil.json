@@ -1,0 +1,39 @@
+{
+  "kod": "S-084",
+  "no": 84,
+  "ad": "Varaklı Suluboya",
+  "ad_en": "Watercolor with Gold Leaf",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Beyaz kâğıtta taze, gevşek suluboya darbeleri; hilaller, kaburgalar, güneş ve çiçek göbeklerinde parıldayan gerçek altın varak.",
+  "tanim": "Varaklı suluboyada gevşek ve ışıklı suluboya darbeleri, kâğıda yapıştırıcı (mixtion) sürülüp üzerine basılan ince altın varakla birleşir. Boya geniş, tek hamlelik darbelerle ve bol kâğıt beyazı bırakılarak sürülür; ayrıntılar az, renkler tazedir. Varak ise küçük alanlarda kullanılır: ışığa göre parlayıp kararan metalik yüzey, varak yapraklarının birbirine bindiği ince ek yerleri ve kenarda kırılıp kopmuş küçük varak uçlarıyla elle yapılmış bir zarafet katar. Davetiye ve kutlama kartlarında, dekoratif duvar resimlerinde ve çağdaş çiçek suluboyasında çok sevilir.",
+  "koken": "Altın varak Orta Çağ el yazması tezhibinde, Bizans ikonalarında ve Osmanlı tezhip sanatında boyayla birlikte kullanıldı; Gustav Klimt altın varağı resimle birleştiren en ünlü modern ressam oldu. Suluboyayı varakla birleştiren gevşek, dekoratif üslup 2010'larda kaligrafi, davetiye tasarımı ve çiçek suluboyası yapan çağdaş sanatçılarla yaygınlaştı; imitasyon ve gerçek altın varak, yaldız kalemleri ve mixtion yapıştırıcılarıyla uygulanır.",
+  "ayirt_edici": [
+    "Güneş büyük bir altın varak disk: tuğla gibi sıralanmış varak yaprakları, ince parlak ek yerleri, hafif kırışıklardan gelen parıltı ve kenarda kırık küçük varak uçları; çevresinde gevşek, sıcak sarı bir hale",
+    "Kubbe kaburgaları ve kubbe tabanı ince altın varak çizgileri: ışıklı sağ yanda parlak, gölge yanda koyu bal rengi",
+    "Hilaller ve alemler ile çiçek göbekleri altın varak; göbeklerin kenarı kırık, düzensiz",
+    "Gök geniş, gevşek darbelerle boyanmış: ıslak bir ilk kat, üstünde eğik, kuru uçlu ikinci darbeler; bulutlar ve yapıların çevresi kâğıt beyazı bırakılmış",
+    "Yapraklar tek darbelik, ortada bastırılıp uçta kaldırılan fırça izleri (ada çayı yeşili, zeytin, turkuaz); bazılarının ucu kuru fırçayla kırılmış",
+    "Bol beyaz kâğıt, açık ve zarif renkler; beyaz çiçeklerde yalnız gölge yanına soluk leylak bir darbe"
+  ],
+  "palet": [
+    "#79C0D6",
+    "#3EB5AB",
+    "#A2CA8A",
+    "#78B36E",
+    "#C59A3C",
+    "#E8C873",
+    "#F8E7AB",
+    "#FBF9F4"
+  ],
+  "kodla_cizim": "Suluboya katmanı optik yoğunluk modeliyle (renk = kâğıt × exp(−Σ yoğunluk)) boyanır. Gevşek darbeler, omurga noktalarından iki yanı ayrı gürültüyle dalgalanan değişken genişlikli çokgenlerdir; ikinci bir tuvale her darbe parçasının darbe boyunca konumu, kuruluğu ve yönü renk kanalı olarak yazılır, böylece darbenin sonunda ve kenarında boya, fırça yönünde gerilmiş gürültü ve kâğıt yüksekliğiyle eşiklenerek kıl kıl kırılır. Gök ıslak bir ilk yıkama ve eğik ikinci darbelerdir; bulutlar, güneş halkası ve yapıların çevresindeki gürültülü pay boş bırakılır. Varak, boya bittikten sonra görüntünün üstüne bindirilir: alemler, kaburga çizgileri, güneş diski ve çiçek göbekleri bir maskeye çizilir, öğeye göre değişen genlikte gürültüyle eşiklenip kırık kenar ve kopuk parçacıklar elde edilir. Her piksel tuğla dizilimli 46 px'lik bir varak yaprağına düşer; yaprağın kendi ton farkı ve kırışık yönü, düşük frekanslı fbm yüzeyinin eğiminden gelen parıltı, biçime göre ışık (küre, silindir ya da disk), ek yerinde ince parlak çizgi ve kenarda kalkmış varak ışığı toplanıp koyu bal renginden açık altına uzanan bir renk rampasına eşlenir.",
+  "etiketler": [
+    "suluboya",
+    "altın varak",
+    "yaldız",
+    "gevşek",
+    "dekoratif",
+    "metalik",
+    "zarif"
+  ]
+}

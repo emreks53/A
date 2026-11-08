@@ -1,0 +1,39 @@
+{
+  "kod": "S-083",
+  "no": 83,
+  "ad": "Botanik Suluboya",
+  "ad_en": "Botanical Watercolor",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Bilimsel resim inceliğinde suluboya: parlak beyaz kâğıtta denetimli ince sırlar, kuru fırça ayrıntısı, zarif kurşun kalem altlığı.",
+  "tanim": "Botanik suluboya, bitkileri bilimsel doğrulukla tanıtmak için yapılan resim geleneğidir. Parlak beyaz, sıcak preslenmiş kâğıda önce ince ve sürekli bir kurşun kalem çizimi yapılır; renk, kenarları keskin tutulan çok sayıda ince, denetimli sırla katman katman kurulur, en sonda kuru fırçayla damar, tüy ve doku gibi ayrıntılar işlenir. Taç yaprak geçişleri, yaprak damarları, dişli kenarlar ve ercikler tek tek incelenir; arka plan çoğunlukla boş, temiz beyaz kâğıttır. Bilimsel levhalarda, flora kitaplarında ve botanik sanat sergilerinde kullanılır.",
+  "koken": "Geleneğin kökleri Dürer'in doğa etütlerine ve 16. yüzyıl bitki kitaplarına uzanır; 18. ve 19. yüzyılda Georg Dionysius Ehret, Pierre-Joseph Redouté ve Ferdinand Bauer bilimsel botanik resmi doruğuna taşıdı. Kew Botanik Bahçesi'nde Walter Hood Fitch ve 20. yüzyılda Margaret Mee gibi ressamlarla süren bu disiplin, bugün botanik sanatçılar derneklerinin sergileri ve bilimsel yayınlarla yaşamaktadır.",
+  "ayirt_edici": [
+    "Elma çiçeği gibi incelenmiş beyaz çiçekler: ters yumurta biçimli, uçları yuvarlak taç yapraklar; tabanda soluk serin gölge, uçlarda hafif pembe, ince damarlar, üstteki yaprağın alttakine düşürdüğü ince gölge",
+    "Çiçek göbeklerinde yeşil-sarı disk ve halka hâlinde ince sapçıklı, okru başçıklı ercikler",
+    "Dişli kenarlı yapraklar: ışıklı yarısı açık sarı-yeşil, gölge yarısı koyu; orta ve yan damarlar açık bırakılmış, damarlar arasında kuru fırça izleri",
+    "Kubbenin 16 dilimi tek tek modellenmiş: her dilim ışığa bakan yanında açık, ince koyu kaburgaların sağında kâğıttan bir ışık payı, gölgede kuru fırça dokusu",
+    "Yapıların her yerinde görünen ince, sürekli kurşun kalem altlığı, eksen ve yer çizgileri, kaide taş sıraları",
+    "Arka planda düzgün dereceli tek bir soluk gök yıkaması, kenarlarda ve ön planda temiz beyaz kâğıt"
+  ],
+  "palet": [
+    "#AFD6E9",
+    "#ACCC72",
+    "#539644",
+    "#1A473A",
+    "#E2C2CF",
+    "#DDB467",
+    "#F6EBD8",
+    "#FAFAF7"
+  ],
+  "kodla_cizim": "Optik yoğunluk modeli (renk = kâğıt × exp(−Σ yoğunluk)), çok düşük granülasyon ve akış dalgalanmasıyla; kâğıt ince, az kabartmalı sıcak preslenmiş doku. Gök tek bir yuvarlatılmış kare maskeyle kenarlara doğru eriyen dereceli bir yıkamadır, bulutlar kaldırma (lift) işlemidir. Kubbede her pikselin iki kaburga arasındaki konumu boylamdan hesaplanır; dilim kemerinin ışığa göre eğimi küre ışığına eklenerek her dilim ayrı gölgelenir; kaburgalar ince koyu çizgi ve sağında kaldırılmış açık çizgi, gölgeli dilimlerde kâğıt yüksekliğiyle eşiklenmiş kısa fırça izleri. Bitkiler önden arkaya işlenir ve dolu maskesiyle örtüşme yönetilir (öndeki bitince arkadaki onun kenarında durur). Taç yaprakları ters yumurta biçimli eğrilerdir; gölge, damar (piksel uzaklığıyla kenar yumuşatılmış yelpaze çizgiler), pembe uç ve üstteki yaprağın gölgesi ayrı ayrı yıkanır; ercikler ince eğri çizgi ve elips başçıklardır. Yapraklar dişli kenarlı çokgenlerdir; orta ve eğik yan damarlar piksel uzaklığıyla hesaplanıp ikinci sırdan hariç tutulur, damarların gölge yanına ince koyu çizgi ve kâğıtla eşiklenmiş kuru fırça darbeleri eklenir. Kurşun kalem ayrı tuvalde ince sürekli çizgilerle çizilir; görünmeyen taç yaprak çizgileri kırpılarak silinir ve grafit yoğunluğu olarak boyaya katılır.",
+  "etiketler": [
+    "suluboya",
+    "botanik",
+    "bilimsel resim",
+    "kurşun kalem",
+    "ayrıntılı",
+    "beyaz kâğıt",
+    "çiçek"
+  ]
+}

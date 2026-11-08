@@ -1,0 +1,39 @@
+{
+  "kod": "S-082",
+  "no": 82,
+  "ad": "Negatif Boyama",
+  "ad_en": "Negative Painting",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Biçimler boyanmaz, çevreleri boyanarak açığa çıkarılır: üst üste sırlarla katman katman derinleşen açık silüetler.",
+  "tanim": "Negatif boyama, suluboyada bir biçimi kendisini boyayarak değil, etrafındaki boşluğu boyayarak ortaya çıkarma yöntemidir. Ressam önce açık, çok renkli bir alt kat sürer; kuruyunca yaprak ve çiçek biçimlerini çizip onların etrafını bir ton koyu sırla boyar, sonra yeni biçimler çizip yine çevrelerini sırlar. Her turda açılan biçimler bir önceki katın rengini korur; önde ilk açılanlar en açık, arkadakiler giderek koyulaşan zeminin içinden çıkar ve keskin kenarlı, katman katman bir derinlik oluşur. Çiçek, yaprak ve orman sahnelerinde, desenli soyut suluboyada sık kullanılır.",
+  "koken": "Kâğıdın beyazını ışık olarak 'saklama' geleneği İngiliz suluboya okulundan gelir; biçimleri art arda sırlarla negatif olarak açma yöntemini 20. yüzyıl sonunda Linda Kemp ('Watercolor Painting on the Wild Side') ve Jean Haines, Ann Blockley gibi çağdaş ressamlar kitaplarıyla sistemleştirdi. Bugün suluboya atölyelerinde katmanlı yaprak ve çiçek çalışmalarının temel alıştırmasıdır.",
+  "ayirt_edici": [
+    "Ön planda ve iki yandaki çalılarda katman katman açılmış yaprak ve çiçek silüetleri: en öndekiler soluk sarı-yeşil, arkadakiler yeşil, turkuaz ve en dipte mavi zeminden çıkıyor",
+    "Açılan her biçimin kenarı keskin, sırın kurumuş kenarında ince pigment çizgisi; sırların dış ucu ise suyla yumuşatılmış",
+    "Beyaz çiçekler, saplar ve tomurcuklar hiç boyanmadan, çevrelerindeki yeşil sırlarla kâğıt beyazı olarak bırakılmış",
+    "Kubbenin açık kaburgaları da negatif boyanmış: yeşil sır ince şeritlerin ve parlak şeridin etrafından dolaşıyor, gölge yanında ikinci bir sır kaburgaları daha ince bırakıyor",
+    "Gökte bulutlar sırların arasından açılıyor: çekirdek kâğıt beyazı, alt yanı leylak gölge sırı, çevresi seruleum; güneş açılmış soluk sarı bir disk",
+    "Beyaz minare ve kaide kâğıt; yalnız gölgeleri keskin kenarlı leylak-gri sırlarla verilmiş"
+  ],
+  "palet": [
+    "#89C1DA",
+    "#EFE0A0",
+    "#BBDBAF",
+    "#5BAF5A",
+    "#4FA07F",
+    "#418F87",
+    "#BA707E",
+    "#E7B03F"
+  ],
+  "kodla_cizim": "Optik yoğunluk modeli: her sır piksel başına soğurma vektörüyle birikir, renk = kâğıt × exp(−Σ yoğunluk). Ön plan bölgesi sahnedeki yaprak ve sapların bulanık kapsaması, dalgalı bir ön şerit ve iki yandaki gürültülü elips çalılardan kurulur; bulanık kopyası 'derinlik' alanını verir. Açılan biçimler dört kattır: çiçekler ve sahnenin yaprak-sap-tomurcukları, sonra derinliğe göre rastgele yerleştirilmiş badem yapraklar, beş yapraklı çiçek ve saplı dallardan üç ayrı silüet katmanı; kenarları fbm kaydırmasıyla hafifçe titretilir. Alt kat (gamboj, gül, açık yeşil) bölgeyi doldurur; ardından dört sır (sarı-yeşil, yeşil, turkuaz, ultramarin-seruleum) sırasıyla 1 − (o ana kadar açılan biçimlerin birleşimi) maskesiyle sürülür, derinlik eşiğiyle dışa doğru suyla yumuşatılır; keskin kenarlarda kuruyan kenar pigment birikimi hesaplanır. Gökte bulut çekirdekleri ve bütünleri daire birleşimleri olarak çizilip gürültüyle bozulur; leylak, seruleum ve ultramarin sırlar sırayla bunların, güneşin, yapıların ve bitkilerin etrafından dolaşır. Kubbede açık kaburga şeritleri ve parlak şerit çizgisel maskelerle hariç tutulan üç sırla açılır.",
+  "etiketler": [
+    "suluboya",
+    "negatif boyama",
+    "katmanlı sır",
+    "silüet",
+    "keskin kenar",
+    "boya",
+    "çiçek"
+  ]
+}

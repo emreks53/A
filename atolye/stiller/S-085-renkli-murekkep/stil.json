@@ -1,0 +1,39 @@
+{
+  "kod": "S-085",
+  "no": 85,
+  "ad": "Renkli Mürekkep",
+  "ad_en": "Liquid Ink Painting",
+  "aile": "Boya ve Kuru Teknikler",
+  "ozgun": false,
+  "ozet": "Beyaz kâğıda fırçayla sürülmüş saydam sıvı mürekkepler: ışıldayan doygun mücevher renkleri, pürüzsüz yıkamalar, keskin kuru kenarlar.",
+  "tanim": "Renkli mürekkep resmi, pigment yerine boyar madde içeren sıvı suluboya mürekkepleriyle (konsantre suluboya, Ecoline gibi) yapılır. Mürekkep kâğıdı lekeleyerek içine işler; granülasyon yapmaz, son derece doygun ve ışıklı, pürüzsüz yıkamalar verir. Islakken renkler birbirine akıp karışır, kuruyunca her yıkamanın kenarı ince, keskin ve biraz koyu bir çizgi bırakır; üst üste binen havuzlar cam gibi saydam katmanlar oluşturur. Aynı mürekkeplerle ince fırça ya da uçla renkli hatlar da çekilir. Resimli kitaplarda, illüstrasyonda, el yazısı ve tasarım çalışmalarında kullanılır.",
+  "koken": "Anilin boyar maddelerin 19. yüzyıl sonunda bulunmasıyla parlak sıvı renkler yaygınlaştı; 20. yüzyılda Hollanda'da Talens'in Ecoline'ı (1930'lar) ve ABD'de Dr. Ph. Martin's konsantre suluboyaları (1934'ten) illüstratörlerin ve reklam ressamlarının vazgeçilmezi oldu. Ünlü resimli kitap ve dergi illüstratörleri canlı renk lekelerini bu mürekkeplerle elde etti; bugün de el çizimi illüstrasyonda ve kaligrafide yaygındır.",
+  "ayirt_edici": [
+    "Son derece doygun, ışıldayan renkler: turkuaz, kobalt, mor, macenta, limon sarısı, turuncu ve zümrüt; yine de görüntü açık ve aydınlık",
+    "Granülasyonsuz, pürüzsüz ve cam gibi saydam yıkamalar; her yıkamanın kurumuş kenarında ince, koyu bir çizgi",
+    " Islakta geçişler: güneşin çevresinde limondan turuncuya ve güle, kubbede limon yeşilinden zümrüte ve turkuaza akan renkler",
+    "Üst gökte ve ufukta üst üste binmiş keskin kenarlı kobalt-mor ve turkuaz-limon mürekkep havuzları; bulutlar etraflarından boyanmış beyaz kümülüsler",
+    "Renkli mürekkeple çekilmiş ince fırça hatları: zümrüt kaburgalar ve saplar, kobalt korkuluklar, macenta zikzak, mor kontur ve yaprak damarları",
+    "Beyaz çiçeklerin göbeğinden dışa yayılmış çiçek biçimli pembe leke, turuncu-sarı göbek, gölge yanında yer yer kesilen ince macenta kontur"
+  ],
+  "palet": [
+    "#53A2E4",
+    "#95DAF1",
+    "#F7EC51",
+    "#C5E46E",
+    "#2EA875",
+    "#1A51B2",
+    "#957CC6",
+    "#D43587"
+  ],
+  "kodla_cizim": "Optik yoğunluk modeli boyar madde gibi çok doygun soğurma vektörleriyle kullanılır (turkuaz, kobalt, mor, macenta, limon, turuncu, zümrüt, yaprak yeşili, gül); granülasyon kapalı, kuruyan kenar birikimi güçlü ve dar yarıçaplıdır, böylece her yıkama pürüzsüz ve keskin kenarlı olur. Islakta geçişler iki mürekkebin fbm alanıyla yumuşak eşiklenmiş karışımıdır; güneş çevresinde uzaklığa bağlı limon-turuncu-gül-turkuaz rampası, kubbede ışık modeline bağlı limon yeşili-zümrüt-turkuaz karışımı kullanılır. Gök bir ilk ıslak kat, yatay akış izli yoğunluk ve gürültülü sınırlarla kesilmiş üç keskin kenarlı havuzdan oluşur; bulutlar gürültüyle bozulmuş daire birleşimlerinden yapılan, mürekkebin etrafından dolaştığı beyaz alanlardır. Renkli hatlar, noktalar boyunca basınç gürültüsüyle genişliği değişen tek bir çokgen olarak doldurulup mürekkep yıkaması olarak eklenir (kaburgalar, saplar, korkuluk, zikzak, yapı ve yaprak damarları). Çiçekler kâğıt beyazıdır; küçültülmüş taç yaprak biçiminde pembe leke, ışık yönüne göre leylak gölge, gölge yanında gürültüyle kesilen macenta kontur eklenir; kâğıt dokusu en sonda hafif kabartmayla verilir.",
+  "etiketler": [
+    "mürekkep",
+    "sıvı suluboya",
+    "doygun renk",
+    "illüstrasyon",
+    "saydam",
+    "keskin kenar",
+    "canlı"
+  ]
+}
