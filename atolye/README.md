@@ -31,7 +31,7 @@ tarayıcıda açılıp 1024 × 1024 görüntüye çevrilir.
 | Uzak Doğu | S-014 – S-015 |
 | Sanat Akımları | S-016 – S-021 |
 | Grafik ve Dijital | S-022 – S-030, S-121 – S-160 |
-| Atölye Render Üslupları | S-031 – S-040 |
+| Atölye Render Üslupları | S-031 – S-040, S-161 – S-200 |
 
 Aile `stil.json` içinde yazar; galeri ve katalog stilleri ailelerine göre gruplar.
 
@@ -99,6 +99,8 @@ Atölyenin örnekleri müşterinin açıkça belirttiği zevke göre çizilir:
 - **Grafik ve Dijital'de:** en sevilenler S-029 Katmanlı Kâğıt ve S-022 Düz İllüstrasyon; S-025 İzometrik,
   S-026 Piksel, S-028 Teknik Çizim ve S-030 Neon beğenilmedi. Cepheden düz görünüm korunur; oyuncak, oyun,
   düşük çözünürlük, teknik çizim ve karanlık parıltı yok.
+- **Ressamın eli:** S-161–S-200 render üslupları, her biri hayalî ama tutarlı bir insan ressamın elidir
+  (kendi aleti, kâğıdı, paleti ve alışkanlıklarıyla); vektör kusursuzluğu yerine görünür ama usta işi el izi.
 - **Gevşek üslup yok:** konu mukaddes olduğu için her üslup titiz, özenli ve vakurdur; eskiz, karalama,
   çizgi film, çocuksu, şakacı, kitsch ya da dağınık görünüm kullanılmaz.
 - **Taşıyıcı görünmez:** eser 1024 × 1024 tuvali kenardan kenara doldurur; masa, keten, duvar şeridi ya da
