@@ -9,14 +9,14 @@
   "tanim": "Empasto, yağlıboyanın tüpten çıktığı kıvamda ya da daha kalın sürülerek fırça ve spatula izlerinin yüzeyde kabartı olarak kaldığı tekniktir. Darbeler biçimi izler, boya sırtları ışığı yakalar; renk doygun, ışık-gölge (chiaroscuro) güçlüdür. Boyanın ince sürüldüğü yerlerde tuval bezinin dokusu ve alttaki astar seçilir.",
   "koken": "Yağlıboya 15. yüzyılda Flaman ressamlarınca (Jan van Eyck) olgunlaştırıldı; kalın boya sürme Tiziano'nun geç dönemi ve Rembrandt'ın ışıklı empastolarıyla öne çıktı. 19. yüzyılda Van Gogh hareketli, kalın darbeleri bir anlatım aracına dönüştürdü; 20. yüzyılda Frank Auerbach ve Leon Kossoff boyanın maddesini resmin konusu hâline getirdi.",
   "ayirt_edici": [
-    "Biçimi izleyen darbeler: kubbede kaburgalar boyunca, kasnakta yatay, gökte geniş ve eğik süpürmeler",
+    "Biçimi izleyen darbeler: kubbede kaburgalar boyunca, kasnakta yatay, minarede silindir boyunca dikey, gökte geniş ve eğik süpürmeler",
     "Her darbede kıl izleri: rengi hafifçe değişen paralel çizgiler ve fırçada tam karışmamış ikinci renk",
     "Sağ üstten ışık alan kabartmalı boya sırtları, darbe sonlarında yığılan boya",
     "Kubbenin koyu yeşil gölgesinden sarı-yeşil ışığına uzanan güçlü ışık-gölge",
-    "Çiçeklerde, güneşte ve minarenin ışıklı yanında kalın beyaz empasto vuruşları",
+    "Çiçeklerde, minarenin ışıklı yanında ve güneşte çapraz atılmış kalın beyaz empasto vuruşları",
     "Kenarlara doğru ince sürülmüş boyanın arasından görünen sıcak astar ve tuval bezi dokusu"
   ],
   "palet": ["#154394", "#518CCB", "#C0D683", "#2B6B30", "#07251F", "#E8D6B1", "#F5EFD4", "#3F622B"],
-  "kodla_cizim": "Işık modeliyle (kubbe için dönel yüzey normali, kasnak ve minare için silindir) doygun renkli bir hedef tablo kurulur. Hertzmann usulü beş katta (fırça yarıçapı 18 → 1,4) boyanır: her katta tuval ile hedef arasındaki fark pencere ortalamasıyla ölçülür; fark büyük yerden başlayan darbe bölgeye özgü bir yön alanında (kaburga meridyeni, yatay, eğik süpürme, yaprak ekseni) ilerler ve renk sapınca durur. Darbe 3–26 kıllık bir demettir; aynı Path2D'ler ayrı bir yükseklik tuvaline toplamalı çizilir. Yükseklik yumuşatılıp yüksek geçiren süzgeçten geçirilir, ince boyalı yerlere bez dokusu eklenir ve normal haritasıyla sağ üstten yayınık ve parlak ışık verilir. Kaburgalar, minare ayrıntıları ve alemler küçük fırçayla ayrıca işlenir.",
+  "kodla_cizim": "Işık modeliyle (kubbe için dönel yüzey normali, kasnak ve minare için silindir) doygun renkli bir hedef tablo kurulur. Hertzmann usulü beş katta (fırça yarıçapı 18 → 1,4) boyanır: her katta tuval ile hedef arasındaki fark pencere ortalamasıyla ölçülür; fark büyük yerden başlayan darbe bölgeye özgü bir yön alanında (kaburga meridyeni, yatay, eğik süpürme, yaprak ekseni) ilerler ve renk sapınca durur. Darbe 3–26 kıllık bir demettir; aynı Path2D'ler ayrı bir yükseklik tuvaline toplamalı çizilir. Minare gövdesi silindir ışığına göre renklenen uzun dikey kıl demetleriyle, kaburgalar, şerefeler, zikzak bant ve alemler küçük fırçayla ayrıca işlenir. Yükseklik yumuşatılıp yüksek geçiren süzgeçten geçirilir, ince boyalı yerlere düz dokuma bez dokusu eklenir ve normal haritasıyla sağ üstten yayınık ve parlak ışık verilir.",
   "etiketler": ["yağlıboya", "empasto", "fırça darbesi", "kabartı", "tuval", "geleneksel"]
 }
