@@ -10,11 +10,11 @@
   "koken": "18. yüzyılda Rosalba Carriera ve Maurice-Quentin de La Tour pastel portreyi saygın bir sanata dönüştürdü; 19. yüzyılda Edgar Degas katman katman işlediği pastellerle tekniği yağlıboyanın eşiti yaptı, Mary Cassatt ve Odilon Redon parlak renkli pasteller üretti. 20. yüzyılın sonlarında zımparalı ve kumlu yüzeyli pastel kâğıtlarının yaygınlaşması, çok katmanlı ve bütünüyle örtülü çağdaş pastel manzara resmini doğurdu.",
   "ayirt_edici": [
     "Kâğıt hiçbir yerde boşluk olarak görünmüyor: bütün yüzey baştan sona pastelle örtülü, ince kum dişi yüzeye kadifemsi, mat bir doku veriyor",
-    "Gök parmakla yedirilmiş pürüzsüz bir geçiş: güneş çevresinde krem ve limon sarısından şeftaliye, açık turkuaza ve gök mavisine; üstünde çubuğun yanıyla atılmış, kenarları kumlu kâğıtta kırılan geniş vuruşlar",
+    "Gök parmakla yedirilmiş pürüzsüz bir geçiş: güneşin beyaz kursu ve parlak halesinden krem, limon ve şeftaliye, açık turkuaza ve gök mavisine; üstünde çubuğun yanıyla geniş vuruşlar, krem-beyaz bulutların altında leylak-gri gölge, tepelerinde keskin beyaz son vuruşlar",
     "Kırık renk: mavi gökte turkuaz, leylak ve pembe; kubbede zümrüt, sarı-yeşil ve gölgede petrol mavisi; beyaz taşta sıcak krem ışık ile mavi-leylak gölge vuruşları yan yana",
-    "Kubbede kaburga boyunca geniş meridyen vuruşları ve kısmen yedirilmiş gövde; çubuğun keskin ucuyla çizilmiş koyu ve açık kaburga çizgileri, sağ omuzda limon-krem parıltı vuruşları",
-    "Krem-beyaz bulutların altında leylak-gri gölge, tepelerinde keskin beyaz son vuruşlar; güneş yedirilmiş parlak bir hale içinde beyaz kurs",
-    "Beyaz çiçeklerde göbekten dışa krem, leylak ve pembe vuruşlar, taç kenarlarında parlak beyaz çizgi; çimen ve yapraklarda sarı-yeşilden mavi-yeşile kısa, katmanlı vuruşlar"
+    "Kubbede kaburga boyunca geniş meridyen vuruşları ve kısmen yedirilmiş gövde; çubuğun keskin ucuyla çizilmiş koyu ve açık kaburga çizgileri, sağ omuzda parmakla yedirilmiş sarı-yeşil, limon parıltı ve kaburgalar arasında ince krem ışık vuruşları",
+    "Ufukta sıcak kum, okra ve şeftali yan vuruşlarından bir şerit, yapının dibinde leylak gölge; derin pencerelerin içi yukarıdan aşağı açılan koyu renkte, sol iç yüzleri ışık alıyor",
+    "Beyaz çiçeklerde göbekten dışa krem, leylak ve pembe vuruşlar, taç kenarlarında parlak beyaz çizgi; çayır geride sarı-yeşil, önde çimen yeşili, yedirilmiş zemin üstünde seyrek keskin ot vuruşları"
   ],
   "palet": [
     "#FFF3D2",
@@ -26,7 +26,7 @@
     "#BDB6DE",
     "#F4B9C2"
   ],
-  "kodla_cizim": "2048 piksellik iç çözünürlükte çok ince, düzgün bir kum dişi yükseklik haritası kurulur. Önce bölge haritasından ve ışık modelinden türetilen ton haritası tam yoğunlukla, diş etkisi çok az olarak bırakılır ve bütün yüzey bulanıklaştırılıp yedirilir; böylece kâğıt hiç görünmez. Sonra çubuğun yanı vuruşları üretilir: rastgele sırayla dağıtılmış, uçları hafif incelen, kavisli geniş şeritler; renkleri yerel taban tonu ile bir kırık renk paletinin karışımıdır. Her vuruş katmanı 1,4 piksel bulanıklaştırılıp kum dişine yüksek örtücülükle ve keskin bir eşikle bırakılır, böylece vuruş kenarları kumlu kırılır. Gök, taş, kubbe ve zemin gürültü öbekleri ve yükseklikle değişen oranlarla yeniden yedirilir; ikinci, daha küçük vuruş katmanları ve bulutlarda kavisli vuruşlar eklenir. En sonda örtücü son vuruşlar atılır: kubbe kaburgaları ve parıltıları, kasnak ve korniş ışıkları, bulut tepeleri, yalnız görünen taç kenarları, yaprak damarları, alem parıltıları. Sonuçta dişe hafif kabartma ışığı ve çok ince bir tane verilir.",
+  "kodla_cizim": "2048 piksellik iç çözünürlükte çok ince, düzgün bir kum dişi yükseklik haritası kurulur. Önce bölge haritasından ve ışık modelinden türetilen ton haritası tam yoğunlukla, diş etkisi çok az olarak bırakılır ve bütün yüzey bulanıklaştırılıp yedirilir; böylece kâğıt hiç görünmez. Sonra çubuğun yanı vuruşları üretilir: rastgele sırayla dağıtılmış, uçları hafif incelen, kavisli geniş şeritler; renkleri yerel taban tonu ile bir kırık renk paletinin karışımıdır. Her vuruş katmanı 1,4 piksel bulanıklaştırılıp kum dişine yüksek örtücülükle ve keskin bir eşikle bırakılır, böylece vuruş kenarları kumlu kırılır. Gök, taş, kubbe ve zemin gürültü öbekleri ve yükseklikle değişen oranlarla yeniden yedirilir; ikinci, daha küçük vuruş katmanları ve bulutlarda kavisli vuruşlar eklenir. Pencereler yukarıdan aşağı açılan koyu bir geçiş, kısa dikey kırık renk vuruşları ve ışık alan sol iç yüzle boyanır; ufuk şeridinde kum renkli yatay vuruşlar ve yapının dibinde leylak gölge vuruşları kullanılır. En sonda örtücü son vuruşlar atılır: kubbe kaburgaları ve parıltıları, kasnak ve korniş ışıkları, bulut tepeleri, yalnız görünen taç kenarları, yaprak damarları, alem parıltıları. Sonuçta dişe hafif kabartma ışığı ve çok ince bir tane verilir.",
   "etiketler": [
     "pastel",
     "yumuşak pastel",

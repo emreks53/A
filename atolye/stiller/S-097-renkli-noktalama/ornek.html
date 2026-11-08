@@ -309,8 +309,8 @@
     const q = S.kasnak[k];
     const yol = P(kutu(q.x1, q.y1, q.x2, q.y2));
     bolge(yol, {
-      yesil: dogrusal(q.x1, 0, q.x2, 0, [[0, 0.62], [0.45, 0.48], [0.78, 0.32], [1, 0.46]]),
-      mavi: dogrusal(q.x1, 0, q.x2, 0, [[0, 0.3], [0.4, 0.12], [0.75, 0.02], [1, 0.1]]),
+      yesil: dogrusal(q.x1, 0, q.x2, 0, [[0, 0.52], [0.45, 0.38], [0.78, 0.24], [1, 0.36]]),
+      mavi: dogrusal(q.x1, 0, q.x2, 0, [[0, 0.2], [0.4, 0.07], [0.75, 0.0], [1, 0.05]]),
       sari: dogrusal(q.x1, 0, q.x2, 0, [[0, 0.0], [0.6, 0.04], [0.8, 0.14], [1, 0.03]]),
       camgobegi: dogrusal(q.x1, 0, q.x2, 0, [[0, 0.0], [0.7, 0.06], [1, 0.02]]),
     });
@@ -318,8 +318,22 @@
     sil(P(kutu(q.x1, q.y1, q.x2, q.y1 + 3)), 0.7, ['yesil', 'mavi']);
     ekle(P(kutu(q.x1, q.y2 - 4, q.x2, q.y2)), { yesil: 0.25, mavi: 0.2 });
     ekle(yol, { yesil: 0.35, mavi: 0.2 }, 2);
+    // pencereler: daha ince uçlu kalemle sık, koyu lacivert; çevresinde noktasız ince bir taş pervaz
     for (const p of S.kasnakPencereleri(k)) {
-      bolge(P(S.kemerYolu(p.x, p.y, p.w, p.h)), { mavi: 0.75, yesil: 0.55, mor: 0.22 });
+      const pd = S.kemerYolu(p.x, p.y, p.w, p.h);
+      for (const ad of ['yesil', 'mavi', 'sari', 'camgobegi']) {
+        const { h } = harita[ad];
+        h.save();
+        h.globalCompositeOperation = 'destination-out';
+        h.strokeStyle = 'rgba(0,0,0,0.8)';
+        h.lineWidth = 3.4;
+        h.stroke(P(pd));
+        h.restore();
+      }
+      bolge(P(pd), {});
+      harita = inceHarita;
+      bolge(P(pd), { mavi: 0.8, yesil: 0.3, mor: 0.28 });
+      harita = anaHarita;
     }
   }
 

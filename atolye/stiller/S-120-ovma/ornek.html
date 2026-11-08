@@ -156,7 +156,7 @@
   const gokYon = (x, y) => {
     const dx = x - S.gunes.x, dy = y - S.gunes.y, r = Math.hypot(dx, dy);
     const tan = Math.atan2(dy, dx) + Math.PI / 2, hor = yatayYon(x, y);
-    const w = sstep(240, 520, r);
+    const w = sstep(130, 380, r);
     const c = (1 - w) * Math.cos(2 * tan) + w * Math.cos(2 * hor), sn = (1 - w) * Math.sin(2 * tan) + w * Math.sin(2 * hor);
     return Math.atan2(sn, c) / 2;
   };
@@ -169,10 +169,10 @@
       ud: { adet: 900, renk: ['#7A6CE0', '#46A6E6', '#F08C8C', '#F7B65E', '#5FC4D8'], boy: 80, en: 22, aci: () => (rnd() - 0.5) * 1.4, alfa: 0.3 },
       s1: lin(S1, 0, 0, 0, 806, [[0, '#BFE0F6'], [0.5, '#DDF0F8'], [0.85, '#FFF4E4'], [1, '#FFF1D8']]),
       p1: lin(P1, 0, 0, 0, 806, [[0, gri(0.56)], [0.6, gri(0.62)], [1, gri(0.7)]]),
-      p1d: { adet: 1500, deger: (x, y) => 0.5 + 0.22 * (y / 806) + 0.26 * gunesYakin(x, y, 260), boy: 34, aci: gokYon },
+      p1d: { adet: 1500, deger: (x, y) => 0.52 + 0.2 * (y / 806) + 0.2 * gunesYakin(x, y, 260), boy: 34, aci: gokYon },
       s2: '#FFFBEE',
       p2: 0.0,
-      p2d: { adet: 700, deger: (x, y) => { const g = gunesYakin(x, y, 300); return g > 0.06 ? 0.3 + 0.65 * g : null; }, boy: 30, aci: gokYon },
+      p2d: { adet: 320, deger: (x, y) => { const g = gunesYakin(x, y, 280); return g > 0.06 ? 0.25 + 0.6 * g : null; }, boy: 56, aci: gokYon },
     });
     // güneşin çevresindeki sıcak alt boya hâlesi
     U.save(); U.globalCompositeOperation = 'source-atop';
@@ -409,9 +409,10 @@
 
   // ------------------------------------------------------------ 8. birleşim: bez örgüsü + kuru fırça kılları + basınç eşiği
   const Uv = U.getImageData(0, 0, N, N).data;
-  const S1v = S1.getImageData(0, 0, N, N).data;
-  const S2v = S2.getImageData(0, 0, N, N).data;
   const bulanik = (c, r) => { const k = yeni(); const x = k.getContext('2d', { willReadFrequently: true }); x.filter = `blur(${r * K}px)`; x.drawImage(c, 0, 0); return x.getImageData(0, 0, N, N).data; };
+  // ovma boyası kenarların üstünden hafifçe geçer: kayıp, yumuşak kenarlar
+  const S1v = bulanik(S1c, 1.2);
+  const S2v = bulanik(S2c, 1.2);
   const P1v = bulanik(P1c, 3.5);
   const P2v = bulanik(P2c, 4.0);
   const Kv = bulanik(Kc, 0.35);

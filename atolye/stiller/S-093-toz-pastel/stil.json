@@ -12,9 +12,9 @@
     "Gökte geniş, kenarları yumuşak yatay sünger bantları; içlerinde süngerin bıraktığı ince paralel izler, bant sonlarında pigmentin azalıp solması",
     "Güneş çevresinde dairesel sünger hareketiyle sürülmüş krem-sarı hale ve şablonla kaldırılmış keskin, beyaz güneş kursu",
     "Bulutlar silgiyle kaldırılmış: tepeleri keskin, altları sürtülerek yumuşamış, içlerinde silgi izi ve hafifçe kalan mavi; altlarında küçük süngerle sürülmüş leylak gölge",
-    "Kubbe, minare, kaide, yaprak ve çiçeklerde şablon kenarı: içte yumuşak geçiş, dışta bıçak gibi keskin kenar; kubbenin sağ omzunda silgiyle açılmış parıltı çizgileri",
-    "Az ve ince pastel kalem ayrıntısı: kaburgalar, kasnak kenarları, pencere kemerleri, korkuluk çubukları, zikzak bant, yalnız görünen taç kenarları ve göbek noktaları",
-    "Kâğıdın kenarında maskeleme bandından kalmış düz, ince beyaz pay; renk bant kenarında hafifçe birikmiş"
+    "Kubbe, minare, kaide, yaprak ve çiçeklerde şablon kenarı: içte yumuşak geçiş, dışta bıçak gibi keskin kenar; kubbenin sağ omzunda, minarenin ışık tarafında ve kaidenin güneşli yüzünde silgiyle açılmış parıltı çizgileri",
+    "Beyaz taş yatay sünger bantlarıyla modellenmiş: sağda güneşli krem-şeftali, sola doğru artan serin mavi-leylak gölge, korniş altında keskin üst kenarlı gölge bandı, dipte kumdan yansıyan sıcak ışık",
+    "Az ve ince pastel kalem ayrıntısı (kaburgalar, kasnak kenarları, pencere kemerleri, korkuluklar, zikzak bant, taç kenarları); kâğıdın kenarında maskeleme bandından kalmış düz, ince beyaz pay"
   ],
   "palet": [
     "#FCFBF7",
@@ -26,7 +26,7 @@
     "#36966A",
     "#C7C1E1"
   ],
-  "kodla_cizim": "2048 piksellik iç çözünürlükte ince, kadifemsi bir kâğıt dişi kurulur. Sünger sürme yordamı bir yol boyunca geniş bir bant üretir: bant 0,85 piksel aralıklı çok sayıda ince paralel çizgiden oluşur; her çizginin yoğunluğu bant kenarına doğru yumuşakça düşer ve tek boyutlu gürültüyle değişir (sünger izi), çizgi boyunca başta yoğun, sonda azalan bir geçişle çizilir (pigmentin tükenmesi). Katmanlar az örtücü, diş etkisi düşük toz olarak kâğıda bırakılır. Gök üç geçişte rastgele sıralı, hafif açılı yatay bantlarla, güneş çevresi dairesel yaylarla kurulur; yapılar ve bitkiler kesin öğe maskeleriyle (şablon) kırpılır: kubbede meridyen bantları, kasnakta aplikatörle sürülmüş ton haritası ve dikey bantlar, kaidede yatay bantlar. Kaldırma kipi kâğıttaki rengi kâğıt rengine geri çeker: bulutlar (üstü keskin, altı yumuşak loplar, yönlü gürültüden silgi izi), şablon dairesi güneş ve kubbedeki bulanık parıltı çizgileri böyle açılır. Ayrıntılar tozlu, dişe tutunan ince pastel kalem çizgileridir. En sonda 18 piksellik kenar payı kâğıt rengine döndürülür ve bant kenarına çok hafif bir toz birikimi eklenir.",
+  "kodla_cizim": "2048 piksellik iç çözünürlükte ince, kadifemsi bir kâğıt dişi kurulur. Sünger sürme yordamı bir yol boyunca geniş bir bant üretir: bant 0,85 piksel aralıklı çok sayıda ince paralel çizgiden oluşur; her çizginin yoğunluğu bant kenarına doğru yumuşakça düşer ve tek boyutlu gürültüyle değişir (sünger izi), çizgi boyunca başta yoğun, sonda azalan bir geçişle çizilir (pigmentin tükenmesi). Katmanlar az örtücü, diş etkisi düşük toz olarak kâğıda bırakılır. Gök üç geçişte rastgele sıralı, hafif açılı yatay bantlarla, güneş çevresi dairesel yaylarla kurulur; yapılar ve bitkiler kesin öğe maskeleriyle (şablon) kırpılır: kubbede meridyen bantları, kasnakta aplikatörle sürülmüş ton haritası ve dikey bantlar, kaidede sıcak taban bantlarının üstüne soldan sağa azalan serin gölge bantları, korniş gölgesi ve dipte sıcak yansıma. Kaldırma kipi kâğıttaki rengi kâğıt rengine geri çeker: bulutlar (üstü keskin, altı yumuşak loplar, yönlü gürültüden silgi izi), şablon dairesi güneş ve kubbe, minare ve kaidedeki bulanık parıltı çizgileri böyle açılır. Ayrıntılar tozlu, dişe tutunan ince pastel kalem çizgileridir. En sonda 18 piksellik kenar payı kâğıt rengine döndürülür ve bant kenarına çok hafif bir toz birikimi eklenir.",
   "etiketler": [
     "toz pastel",
     "pan pastel",
