@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const kok = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dizin = path.join(kok, 'stiller');
 const ALANLAR = ['kod', 'no', 'ad', 'ad_en', 'aile', 'ozgun', 'ozet', 'tanim', 'koken', 'ayirt_edici', 'palet', 'kodla_cizim', 'etiketler'];
-const AILE_SIRASI = ['Boya ve Kuru Teknikler', 'Türk-İslam Sanatları', 'Uzak Doğu', 'Sanat Akımları', 'Grafik ve Dijital', 'Atölye Özgün'];
+const AILE_SIRASI = ['Boya ve Kuru Teknikler', 'Türk-İslam Sanatları', 'Uzak Doğu', 'Sanat Akımları', 'Grafik ve Dijital', 'Atölye Render Üslupları'];
 
 const sorunlar = [];
 const stiller = [];
@@ -55,20 +55,20 @@ fs.writeFileSync(path.join(kok, 'katalog.json'), JSON.stringify(stiller, null, 2
 // KATALOG.md
 const ozgunSayisi = stiller.filter((s) => s.ozgun).length;
 let md = `# Atölye kataloğu\n\n`;
-md += `${stiller.length} stil · ${new Set(stiller.map((s) => s.aile)).size} aile · ${ozgunSayisi} atölye özgün stili. `;
+md += `${stiller.length} stil · ${new Set(stiller.map((s) => s.aile)).size} aile · ${ozgunSayisi} atölye render üslubu. `;
 md += `Bütün örnekler aynı sahneyi çizer (bkz. [sahne/SAHNE.md](sahne/SAHNE.md)). `;
 md += `Bu dosya \`node atolye/araclar/katalog.mjs\` ile üretilir; elle düzenlemeyin.\n\n`;
 md += `![Bütün stiller tek paftada](pafta.webp)\n\n`;
 md += `| Kod | Stil | Aile |\n| --- | --- | --- |\n`;
 for (const s of stiller) md += `| [${s.kod}](#${s.kod.toLowerCase()}) | ${s.ad}${s.ozgun ? ' ✦' : ''} | ${s.aile} |\n`;
-md += `\n✦ atölyenin sıfırdan ürettiği stil\n`;
+md += `\n✦ atölyenin tanımladığı render üslubu\n`;
 for (const aile of AILE_SIRASI) {
   const grup = stiller.filter((s) => s.aile === aile);
   if (!grup.length) continue;
   md += `\n## ${aile}\n`;
   for (const s of grup) {
     md += `\n### ${s.kod}\n\n`;
-    md += `**${s.ad}** · *${s.ad_en}*${s.ozgun ? ' · ✦ atölye özgün' : ''}\n\n`;
+    md += `**${s.ad}** · *${s.ad_en}*${s.ozgun ? ' · ✦ atölye üslubu' : ''}\n\n`;
     md += `<img src="${s.gorsel}" width="360" alt="${s.kod} ${s.ad} örnek görseli">\n\n`;
     md += `${s.tanim}\n\n`;
     md += `- **Köken:** ${s.koken}\n`;
@@ -105,7 +105,7 @@ if (fs.existsSync(sablonYolu)) {
   }
 }
 
-console.log(`${stiller.length} stil kataloğa yazıldı (${ozgunSayisi} özgün).`);
+console.log(`${stiller.length} stil kataloğa yazıldı (${ozgunSayisi} atölye üslubu).`);
 if (sorunlar.length) {
   console.log(`\n${sorunlar.length} sorun:`);
   for (const s of sorunlar) console.log(`  - ${s}`);

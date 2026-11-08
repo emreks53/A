@@ -169,7 +169,7 @@
     $('#olcu').innerHTML = [
       `<li><b>${stiller.length}</b> stil</li>`,
       `<li><b>${KATALOG.aileler.length}</b> aile</li>`,
-      `<li><b>${ozgunSayisi}</b> atölye özgün ✦</li>`,
+      `<li><b>${ozgunSayisi}</b> atölye üslubu ✦</li>`,
       `<li>örnekler <b>1024 × 1024</b> px</li>`,
       `<li>kodlar <b>${stiller[0].kod}</b>–<b>${stiller[stiller.length - 1].kod}</b></li>`,
     ].join('');
@@ -237,13 +237,13 @@
           <div class="bilgi">
             <div class="ust">
               <span class="kod">${s.kod} · ${kacis(s.aile)}</span>
-              ${s.ozgun ? '<span class="rozet">✦ atölye özgün</span>' : ''}
+              ${s.ozgun ? '<span class="rozet">✦ atölye üslubu</span>' : ''}
             </div>
             <h2 id="ayrinti-ad" tabindex="-1" autofocus>${kacis(s.ad)}</h2>
             <div class="en">${kacis(s.ad_en)}</div>
             <p>${kacis(s.tanim)}</p>
             <div><h4>Ayırt edici özellikler</h4><ul>${s.ayirt_edici.map((a) => `<li>${kacis(a)}</li>`).join('')}</ul></div>
-            <div><h4>${s.ozgun ? 'Fikir ve ilham' : 'Köken'}</h4><p>${kacis(s.koken)}</p></div>
+            <div><h4>${s.ozgun ? 'Tarif ve dayandığı teknikler' : 'Köken'}</h4><p>${kacis(s.koken)}</p></div>
             <div><h4>Palet</h4><div class="palet">${s.palet.map((r) => `<button class="renk" type="button" data-renk="${r}" title="${r} kopyala"><span style="background:${r}"></span><span>${r}</span></button>`).join('')}</div><div class="bildirim" id="bildirim"></div></div>
             <div><h4>Kodla nasıl çizildi</h4><p>${kacis(s.kodla_cizim)}</p></div>
             <div class="etiketler">${(s.etiketler || []).map((e) => `<span>${kacis(e)}</span>`).join('')}</div>

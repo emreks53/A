@@ -43,7 +43,7 @@ for s in KATALOG:
     im.save(KOK / s["kucuk"], "WEBP", quality=86, method=6)
 
 # pafta
-SUTUN = 8
+SUTUN = 8 if len(KATALOG) <= 48 else 10
 KARE = 240
 ARA = 18
 ETIKET = 46
@@ -55,7 +55,7 @@ pafta = Image.new("RGB", (genislik, yukseklik), ZEMIN)
 ciz = ImageDraw.Draw(pafta)
 ciz.text((ARA, 26), "Atölye · Stil Kataloğu", font=yazi_tipi(FONT_KALIN, 38), fill=MUREKKEP)
 ozgun = sum(1 for s in KATALOG if s["ozgun"])
-alt_baslik = f"{len(KATALOG)} stil · {ozgun} atölye özgün (✦) · hepsi aynı sahne: Yeşil Kubbe, minare ve çiçekler"
+alt_baslik = f"{len(KATALOG)} stil · {ozgun} atölye üslubu (✦) · hepsi aynı sahne: Yeşil Kubbe, minare ve çiçekler"
 ciz.text((ARA, 74), alt_baslik, font=yazi_tipi(FONT, 19), fill=SOLUK)
 
 f_kod = yazi_tipi(FONT_MONO, 15)
