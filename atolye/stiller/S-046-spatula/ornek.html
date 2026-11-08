@@ -549,7 +549,10 @@
       const isik = clamp(0.5 + 0.5 * Math.cos(a + 0.75), 0, 1); // sağ üste bakan taç yaprak aydınlık
       const c1 = mixc([196, 186, 226], [255, 254, 248], 0.35 + isik * 0.65);
       const c2 = R() < 0.6 ? [246, 170, 196] : [255, 236, 170];
-      levha({ x: c.x + Math.cos(a) * c.r * 0.52, y: c.y + Math.sin(a) * c.r * 0.52, a, L: c.r * 1.08, G: c.r * 0.86, sekil: 2, c1, c2, t: 1.8, rg: 0.9, re: 1.4, surt: 0.25, sf: 0.07 * (30 / c.r), th: 0.62 + R() * 0.12, so: R() * 99, tv: (R() - 0.5) * 0.6, kenar: 0.6 });
+      // iki basış: önce gölge tonu geniş levha, sonra ışık yanına kayık, daha dar beyaz levha (köşeli yüzler)
+      levha({ x: c.x + Math.cos(a) * c.r * 0.52, y: c.y + Math.sin(a) * c.r * 0.52, a, L: c.r * 1.08, G: c.r * 0.86, sekil: 2, c1: mixc(c1, [180, 168, 214], 0.35), c2, t: 1.6, rg: 1.0, re: 1.6, surt: 0.1, sf: 0.16 * (30 / c.r), th: 0.66, so: R() * 99, tv: (R() - 0.5) * 0.6, kenar: 0.7 });
+      const ox = -Math.sin(a) * c.r * 0.1 * (Math.sin(a + 0.75) > 0 ? -1 : 1);
+      levha({ x: c.x + Math.cos(a) * c.r * 0.56 + ox, y: c.y + Math.sin(a) * c.r * 0.56 + Math.cos(a) * c.r * 0.1 * (Math.sin(a + 0.75) > 0 ? -1 : 1), a: a + (R() - 0.5) * 0.25, L: c.r * 0.92, G: c.r * 0.5, sekil: 2, c1, c2: [255, 255, 252], t: 2.0, rg: 1.1, re: 1.8, sf: 0.2 * (30 / c.r), th: 0.5, so: R() * 99, tv: (R() - 0.5) * 0.8, kenar: 0.6 });
     }
     levha({ x: c.x, y: c.y, a: R() * 3, L: c.r * 0.42, G: c.r * 0.38, sekil: 1, c1: [255, 196, 30], c2: [230, 120, 20], t: 2.2, rg: 0.8, re: 0.8, sf: 0.5, th: 0.55, so: R() * 99, kenar: 0.4 });
     for (let k = 0; k < 7; k++) {

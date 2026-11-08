@@ -204,9 +204,13 @@ function katman(o) {
   // önce öndeki biçimin arkadakilere düşürdüğü yumuşak temas gölgesi (AO)
   if (o.ao) {
     for (const a of [].concat(o.ao)) {
+      // bulanıklık yalnız katmanın payı kadar küçük bir tuvalde yapılır (tüm tuvalde süzgeç çok yavaş)
+      const br = a.b * O, p = Math.ceil(br * 3) + 2;
+      const t = S.yeniTuval(w + 2 * p, h + 2 * p), tc = t.getContext('2d');
+      tc.filter = `blur(${br}px)`; tc.drawImage(c, p, p);
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.filter = `blur(${a.b * O}px)`; ctx.globalAlpha = a.a;
-      ctx.drawImage(c, (x0 + a.dx) * O, (y0 + a.dy) * O);
+      ctx.globalAlpha = a.a;
+      ctx.drawImage(t, (x0 + a.dx) * O - p, (y0 + a.dy) * O - p);
       ctx.restore();
     }
   }
@@ -228,8 +232,12 @@ function katman(o) {
   }
   m.putImageData(img, 0, 0);
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-  if (o.bulanik) ctx.filter = `blur(${o.bulanik * O}px)`;
-  ctx.drawImage(c, x0 * O, y0 * O);
+  if (o.bulanik) {
+    const br = o.bulanik * O, p = Math.ceil(br * 3) + 2;
+    const t = S.yeniTuval(w + 2 * p, h + 2 * p), tc = t.getContext('2d');
+    tc.filter = `blur(${br}px)`; tc.drawImage(c, p, p);
+    ctx.drawImage(t, x0 * O - p, y0 * O - p);
+  } else ctx.drawImage(c, x0 * O, y0 * O);
   ctx.restore();
   return L;
 }

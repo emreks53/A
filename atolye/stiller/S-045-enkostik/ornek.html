@@ -237,16 +237,19 @@
   katman(maske((g) => g.fillRect(0, 798, W, 226)), (x, y, i) => (y < 826 ? [206, 128, 64] : [...rampa([[0, [44, 96, 52]], [0.5, [92, 140, 62]], [0.75, [170, 160, 72]], [1, [214, 150, 70]]], fbm(nD, x / 60, y / 36, 3)), 0.82]), { yum: 3, op: 0.92, kal: 0.15 });
   katman(maske((g) => { g.beginPath(); g.moveTo(300, 800); g.lineTo(820, 800); g.lineTo(792, 822); g.lineTo(240, 822); g.closePath(); g.fill(); }), [132, 66, 36], { yum: 4, op: 0.6, kal: 0 });
 
+  // yapı maskesi: kazıma ve fırça yığınları yapının üstüne taşmaz
+  const yapiM = maske((g) => { g.fill(minareP); g.fill(kaideP); g.fill(kasnakP); g.fill(kubbeP); Y.alem.forEach((d) => g.fill(P(d))); Y.minareAlem.forEach((d) => g.fill(P(d))); });
+  const yb = bulanik(yapiM.m, WW, WW, 3, 2);
   // ------------------------------------------------------------ kazıyıcı: gökte ve yerde, alt kat şeritler hâlinde açılır
   {
     const a = -0.32, ca = Math.cos(a), sa = Math.sin(a);
     for (let y = 0; y < WW; y++) for (let x = 0; x < WW; x++) {
       const i = y * WW + x, X = x / S, Yy = y / S;
       const bolge = Math.max(sstep(150, 60, Math.hypot((X - 150) * 0.6, Yy - 640)), sstep(150, 60, Math.hypot((X - 930) * 0.7, Yy - 640)), sstep(120, 40, Math.hypot((X - 640) * 0.5, Yy - 60)));
-      if (bolge <= 0.01) continue;
+      if (bolge <= 0.01 || yb[i] > 0.6) continue;
       const u = X * ca + Yy * sa, v = -X * sa + Yy * ca;
       const serit = nA(u / 70, v / 3.2) * 0.7 + nC(u / 20, v / 1.4) * 0.3;
-      const k = sstep(0.48, 0.56, serit) * bolge;
+      const k = sstep(0.48, 0.56, serit) * bolge * (1 - sstep(0.05, 0.5, yb[i]));
       if (k <= 0) continue;
       CR[i] += (ALT.R[i] - CR[i]) * k * 0.9; CG[i] += (ALT.G[i] - CG[i]) * k * 0.9; CB[i] += (ALT.B[i] - CB[i]) * k * 0.9;
       H[i] -= k * 0.5;
@@ -283,23 +286,21 @@
     const d = g.getImageData(0, 0, WW, WW).data, t = new Float32Array(N);
     for (let i = 0; i < N; i++) t[i] = d[i * 4 + 3] / 255;
     const tb = bulanik(t, WW, WW, 2, 2);
-    for (let i = 0; i < N; i++) H[i] += tb[i] * 1.5;
+    for (let i = 0; i < N; i++) H[i] += tb[i] * 1.5 * (1 - sstep(0.05, 0.5, yb[i]));
   }
   // sır perdelerinin kenarında göllenmiş mum: perde sınırları boyunca ince, parlak sırtlar (yalnız gökte)
   {
-    const yapiM = maske((g) => { g.fill(minareP); g.fill(kaideP); g.fill(kasnakP); g.fill(kubbeP); Y.alem.forEach((d) => g.fill(P(d))); Y.minareAlem.forEach((d) => g.fill(P(d))); });
-    const yb = bulanik(yapiM.m, WW, WW, 3, 2);
     for (let y = 0; y < WW; y++) for (let x = 0; x < WW; x++) {
       const i = y * WW + x, X = x / S, Yy = y / S;
       if (Yy > 790) continue;
       const gz = 1 - sstep(0.02, 0.3, yb[i]);
       if (gz <= 0) continue;
       const f1 = fbm(nC, X / 120, Yy / 60, 3), f2 = fbm(nD, X / 140, Yy / 110, 3), f3 = fbm(nA, X / 160 + 7, Yy / 120, 3);
-      let sirt = Math.exp(-Math.pow((f1 - 0.63) / 0.012, 2)) * (Yy < 760 ? 1 : 0) + Math.exp(-Math.pow((f2 - 0.65) / 0.012, 2)) * 0.8 + Math.exp(-Math.pow((f3 - 0.61) / 0.012, 2)) * sstep(700, 200, X) * (Yy < 560 ? 0.8 : 0);
+      let sirt = Math.exp(-Math.pow((f1 - 0.63) / 0.01, 2)) * (Yy < 760 ? 1 : 0) + Math.exp(-Math.pow((f2 - 0.65) / 0.01, 2)) * 0.35 + Math.exp(-Math.pow((f3 - 0.61) / 0.01, 2)) * sstep(700, 200, X) * (Yy < 560 ? 0.6 : 0);
       sirt = Math.min(1, sirt) * gz;
       if (sirt < 0.01) continue;
       CR[i] += (MUM[0] - CR[i]) * sirt * 0.25; CG[i] += (MUM[1] - CG[i]) * sirt * 0.25; CB[i] += (MUM[2] - CB[i]) * sirt * 0.2;
-      H[i] += sirt * 0.8;
+      H[i] += sirt * 0.5;
     }
   }
   // ısıyla kaynaşmış pürüzsüz alanlar ve göllenmiş kenar sırtları
@@ -324,9 +325,8 @@
     for (const q of SAHNE.kasnak) cz([[q.x1, q.y1], [q.x2, q.y1], [q.x2, q.y2], [q.x1, q.y2], [q.x1, q.y1]], 1.1);
     cz([[290, 692], [830, 692], [830, 704], [290, 704], [290, 692]], 1); cz([[300, 704], [300, 800]], 1); cz([[820, 704], [820, 800]], 1);
     for (const p of SAHNE.minareParcalari()) if (p.noktalar) cz([...p.noktalar, p.noktalar[0]], 0.9);
-    // güneş çevresinde oyulmuş halkalar, yerde karık çizgileri
+    // güneş çevresinde oyulmuş halkalar
     for (const r of [72, 84, 104]) { const pts = []; for (let k = 0; k <= 90; k++) { const a = (k / 90) * Math.PI * 1.7 + 2.2 + r * 0.03; pts.push([880 + Math.cos(a) * r, 140 + Math.sin(a) * r]); } cz(pts, 0.9); }
-    for (let k = 0; k < 7; k++) { const y = 806 + k * 3.2, pts = []; for (let x = 60 + k * 20; x < 300 - k * 10; x += 6) pts.push([x, y + Math.sin(x * 0.03 + k) * 1.2]); cz(pts, 0.8); }
     const d = g.getImageData(0, 0, WW, WW).data;
     for (let i = 0; i < N; i++) {
       const a = d[i * 4 + 3] / 255; if (!a) continue;
@@ -378,12 +378,12 @@
     const xa = x > 1 ? i - 2 : i, xb = x < WW - 2 ? i + 2 : i, ya = y > 1 ? i - 2 * WW : i, yb = y < WW - 2 ? i + 2 * WW : i;
     const gx = (Hb[xb] - Hb[xa]) * 2.2, gy = (Hb[yb] - Hb[ya]) * 2.2, nl = Math.hypot(gx, gy, 1);
     const dif = (-gx * LV[0] - gy * LV[1] + LV[2]) / nl;
-    const sp = Math.pow(Math.max(0, (-gx * Hv[0] - gy * Hv[1] + Hv[2]) / nl), 30);
+    const sp = Math.pow(Math.max(0, (-gx * Hv[0] - gy * Hv[1] + Hv[2]) / nl), 20);
     const k = 1 + (dif - LV[2]) * 0.45;
     // içten ışıltı: kalın mumda renk biraz daha sıcak ve doygun
     const derin = clamp(H[i] * 0.12, 0, 0.12);
     const r = CR[i] * (1 + derin * 0.25), g = CG[i] * (1 + derin * 0.08), b = CB[i] * (1 - derin * 0.2);
-    const par = sp * 70;
+    const par = sp * 50;
     d[i * 4] = clamp(r * k + par, 0, 255); d[i * 4 + 1] = clamp(g * k + par * 0.98, 0, 255); d[i * 4 + 2] = clamp(b * k + par * 0.9, 0, 255); d[i * 4 + 3] = 255;
   }
   ctx.putImageData(img, 0, 0);

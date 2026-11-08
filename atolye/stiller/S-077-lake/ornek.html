@@ -94,7 +94,7 @@
   // kehribar lake altındaki altın varak (cánh gián) yumuşak geçişle çıkar.
   A.fillStyle = rad(880, 140, 60, 330, [[0, 'rgba(150,40,18,0.95)'], [0.35, 'rgba(128,30,14,0.62)'], [0.7, 'rgba(100,22,10,0.22)'], [1, 'rgba(90,20,10,0)']]);
   A.fillRect(480, 0, 544, 560);
-  G.fillStyle = rad(880, 140, 58, 230, [[0, 'rgba(236,184,86,1)'], [0.2, 'rgba(216,150,64,0.86)'], [0.5, 'rgba(178,104,40,0.48)'], [0.8, 'rgba(140,72,28,0.14)'], [1, 'rgba(120,60,24,0)']]);
+  G.fillStyle = rad(880, 140, 60, 240, [[0, 'rgba(206,134,52,0.84)'], [0.25, 'rgba(188,114,44,0.6)'], [0.55, 'rgba(160,90,34,0.32)'], [0.82, 'rgba(130,66,26,0.1)'], [1, 'rgba(120,60,24,0)']]);
   G.fillRect(560, 0, 464, 460);
   // ufuk: koyu kırmızıdan kehribara yumuşak bant (binaların arkasında)
   A.fillStyle = lin(0, 470, 0, 800, [[0, 'rgba(118,26,12,0)'], [0.55, 'rgba(118,26,12,0.42)'], [1, 'rgba(132,32,14,0.78)']]);
@@ -103,8 +103,8 @@
   G.fillRect(0, 610, 1024, 190);
 
   // güneş: altın varak disk, gümüş halka
-  parca(S.daireYolu(880, 140, 58), 'varak', 'rgba(232,186,78,1)');
-  parca(S.daireYolu(880, 140, 73), 'varak', 'rgba(206,210,214,1)', { cizgi: 3.2 });
+  parca(S.daireYolu(880, 140, 60), 'varak', 'rgba(242,196,90,1)');
+  parca(S.daireYolu(880, 140, 72), 'varak', 'rgba(214,218,222,1)', { cizgi: 2.4 });
   parca(S.daireYolu(880, 140, 84), 'varak', 'rgba(226,180,74,1)', { cizgi: 1.4 });
 
   // bulutlar: gümüş varak, alt kenarları zımparayla eriyen; içlerinde altın kıvrım çizgisi
@@ -132,14 +132,17 @@
     const p = bulutYolu(bx, by, bw, bh, bn);
     bulutYollari.push(p);
     G.save(); G.globalCompositeOperation = 'destination-out'; G.fillStyle = '#000'; G.fill(p); G.restore();
-    G.fillStyle = lin(0, by - bh * 1.1, 0, by + bh * 0.35, [[0, 'rgba(214,218,222,1)'], [0.55, 'rgba(206,210,214,0.95)'], [1, 'rgba(196,200,206,0.25)']]);
+    // üstte parlak gümüş varak; aşağı doğru kehribar lake altında altına dönüp siyahın içinde yumuşakça söner
+    G.fillStyle = lin(0, by - bh * 1.15, 0, by + bh * 0.36, [[0, 'rgba(226,229,233,1)'], [0.45, 'rgba(212,216,220,1)'], [0.68, 'rgba(218,192,128,0.96)'], [0.84, 'rgba(196,138,60,0.62)'], [1, 'rgba(150,90,36,0)']]);
     G.fill(p);
-    // altın kıvrım
-    const k = new Path2D();
-    k.moveTo(bx - bw * 0.36, by - bh * 0.05);
-    k.bezierCurveTo(bx - bw * 0.1, by - bh * 0.32, bx + bw * 0.12, by + bh * 0.1, bx + bw * 0.3, by - bh * 0.2);
-    k.arc(bx + bw * 0.3 - bh * 0.12, by - bh * 0.2, bh * 0.12, 0, Math.PI * 1.6, true);
-    G.lineWidth = 1.6; G.strokeStyle = 'rgba(232,184,80,1)'; G.stroke(k);
+    // maki-e altın çizgi: üst kontur ve içe doğru yinelenen ikinci kontur
+    G.save();
+    G.beginPath(); G.rect(bx - bw, by - bh * 2, bw * 2, bh * 1.8); G.clip();
+    G.lineWidth = 1.5; G.strokeStyle = 'rgba(234,188,84,1)'; G.stroke(p);
+    G.clip(p);
+    G.translate(bx, by + bh * 0.06); G.scale(0.8, 0.66); G.translate(-bx, -by);
+    G.lineWidth = 1.2 / 0.72; G.strokeStyle = 'rgba(228,182,80,1)'; G.stroke(p);
+    G.restore();
   }
 
   // nashiji: güneş çevresinde ve ufukta yoğunlaşan ince altın pullar; birkaç kesik varak karesi (kirikane)
@@ -259,7 +262,7 @@
     const cb = S.yeniTuval(w, h), ca = S.yeniTuval(w, h), cg = S.yeniTuval(w, h);
     const ib = new ImageData(w, h), ia = new ImageData(w, h), ig = new ImageData(w, h);
     const db = ib.data, da = ia.data, dg = ig.data;
-    const Lx = 0.66, Ly = 0.5, Lz = 0.56, Ln = Math.hypot(Lx, Ly, Lz);
+    const Lx = 0.6, Ly = 0.64, Lz = 0.48, Ln = Math.hypot(Lx, Ly, Lz);
     for (let py = 0; py < h; py++) {
       const yy = (y0 + py + 0.5) / K;
       const R = rAt(yy); if (R <= 0) continue;
@@ -276,8 +279,8 @@
         db[o] = 5 + 30 * kk; db[o + 1] = 22 + 86 * kk; db[o + 2] = 13 + 44 * kk; db[o + 3] = 255;
         const ja = sstep(0.3, 0.78, d) * 0.72;
         da[o] = 54; da[o + 1] = 126; da[o + 2] = 70; da[o + 3] = ja * 255;
-        const ga = sstep(0.62, 0.97, d), gm = sstep(0.15, 1, ga);
-        dg[o] = 116 + 124 * gm; dg[o + 1] = 150 + 56 * gm; dg[o + 2] = 56 + 54 * gm; dg[o + 3] = ga * 0.95 * 255;
+        const ga = sstep(0.7, 0.995, d), gm = sstep(0.2, 1, ga);
+        dg[o] = 92 + 146 * gm; dg[o + 1] = 146 + 60 * gm; dg[o + 2] = 62 + 50 * gm; dg[o + 3] = ga * 0.93 * 255;
       }
     }
     for (const [c, d, x] of [[cb, ib, B], [ca, ia, A], [cg, ig, G]]) {
@@ -303,12 +306,13 @@
     const [a, b] = S.yaprakDamari(y);
     const g = G.createLinearGradient(a[0] - Math.sin(y.aci) * 20, a[1] + Math.cos(y.aci) * 20, a[0] + Math.sin(y.aci) * 20, a[1] - Math.cos(y.aci) * 20);
     const yon = Math.sin(y.aci) * 1 + Math.cos(y.aci) * 1 > 0 ? 1 : -1; // sağ üste bakan taraf
-    g.addColorStop(0, `rgba(190,170,70,${yon > 0 ? 0.15 : 0.8})`);
-    g.addColorStop(1, `rgba(190,170,70,${yon > 0 ? 0.8 : 0.15})`);
+    g.addColorStop(0, `rgba(184,170,70,${yon > 0 ? 0.04 : 0.78})`);
+    g.addColorStop(0.5, 'rgba(160,160,64,0.3)');
+    g.addColorStop(1, `rgba(184,170,70,${yon > 0 ? 0.78 : 0.04})`);
     ekle(G, yol, g, yol);
     const g2 = A.createLinearGradient(a[0] - Math.sin(y.aci) * 20, a[1] + Math.cos(y.aci) * 20, a[0] + Math.sin(y.aci) * 20, a[1] - Math.cos(y.aci) * 20);
-    g2.addColorStop(0, `rgba(70,96,40,${yon > 0 ? 0.15 : 0.8})`);
-    g2.addColorStop(1, `rgba(70,96,40,${yon > 0 ? 0.8 : 0.15})`);
+    g2.addColorStop(0, `rgba(44,104,52,${yon > 0 ? 0.1 : 0.85})`);
+    g2.addColorStop(1, `rgba(44,104,52,${yon > 0 ? 0.85 : 0.1})`);
     ekle(A, yol, g2, yol);
     parca(`M${a[0]},${a[1]} L${b[0]},${b[1]}`, 'varak', 'rgba(228,184,80,1)', { cizgi: 1.3 });
   }
@@ -350,32 +354,33 @@
       const xx = x / K;
       let r = bd[i], g = bd[i + 1], b = bd[i + 2];
       // ince zımpara tanesi: yalnızca geçiş bölgelerinde (alfa 0 ile 1 arasında) hissedilir
-      const zg = n5(xx * 0.42, yy * 0.42) - 0.5 + 0.5 * (n4(xx * 1.1, yy * 1.1) - 0.5);
+      const zg = n5(xx * 0.32, yy * 0.32) - 0.5 + 0.3 * (n4(xx * 0.7, yy * 0.7) - 0.5);
       // lakenin derinliği: çok hafif dalgalı yoğunluk
       const dk = 1 + 0.06 * (n2(xx * 0.006, yy * 0.006) - 0.5);
       r *= dk; g *= dk; b *= dk;
       // alt lake
       const aa = ad[i + 3] / 255;
       if (aa > 0.004) {
-        const m = clamp(aa + zg * 0.55 * aa * (1 - aa), 0, 1);
+        const m = clamp(aa + zg * 0.3 * aa * (1 - aa), 0, 1);
         r += (ad[i] - r) * m; g += (ad[i + 1] - g) * m; b += (ad[i + 2] - b) * m;
       }
       // varak
       const ga = gd[i + 3] / 255;
       if (ga > 0.004) {
-        const m = ga > 0.97 ? 1 : clamp(ga + zg * 0.7 * ga * (1 - ga), 0, 1);
+        const m = ga > 0.97 ? 1 : clamp(ga + zg * 0.4 * ga * (1 - ga), 0, 1);
         if (m > 0) {
           // varak kareleri (yaklaşık 30 birim, sıraları kaydırılmış): bindirme payı, ince gölge, kırışık, çatlak
           const Ls = 30, v = (yy + 11) / Ls, vi = Math.floor(v);
           const u = (xx + 5) / Ls + (vi & 1) * 0.5, ui = Math.floor(u);
           const fu = u - ui, fv = v - vi;
-          let t = 0.93 + 0.12 * hash(ui, vi, 3);
+          const gk = ga * ga; // ekler ve çatlaklar varak açıkça görünen yerde belirgin
+          let t = 1 + gk * (0.12 * hash(ui, vi, 3) - 0.07);
           const ek = Math.min(fu * Ls, fv * Ls);
           const ek2 = Math.min((1 - fu) * Ls, (1 - fv) * Ls);
-          if (ek < 0.7) t *= 1.08; else if (ek < 1.3) t *= 0.86;
-          if (ek2 < 0.45) t *= 0.9;
+          if (ek < 0.7) t *= 1 + 0.08 * gk; else if (ek < 1.3) t *= 1 - 0.14 * gk;
+          if (ek2 < 0.45) t *= 1 - 0.1 * gk;
           t *= 0.95 + 0.1 * n4(xx * 0.16 + ui * 3.1, yy * 0.16 + vi * 1.7);
-          if (hash(ui, vi, 9) > 0.45) { const cr = Math.abs(n3(xx * 0.06 + ui * 7, yy * 0.06 + vi * 5) - 0.5); if (cr < 0.012) t *= 0.6 + 0.4 * (cr / 0.012); }
+          if (hash(ui, vi, 9) > 0.62) { const cr = Math.abs(n3(xx * 0.05 + ui * 7, yy * 0.05 + vi * 5) - 0.5); if (cr < 0.009) t *= 1 - 0.38 * gk * (1 - cr / 0.009); }
           // kehribar lake altında (alfa düşükken) koyulaşma: cánh gián
           t *= 0.72 + 0.28 * Math.min(1, ga * 1.25);
           const vr = gd[i] * t, vg = gd[i + 1] * t, vb = gd[i + 2] * t;
@@ -433,19 +438,19 @@
   ctx.globalCompositeOperation = 'screen';
   // yumuşak, geniş çapraz cila ışığı
   let g = ctx.createLinearGradient(0, 0, 1024, 1024);
-  g.addColorStop(0, 'rgba(255,250,240,0.10)'); g.addColorStop(0.35, 'rgba(255,250,240,0.02)'); g.addColorStop(1, 'rgba(255,250,240,0)');
+  g.addColorStop(0, 'rgba(255,250,240,0.05)'); g.addColorStop(0.35, 'rgba(255,250,240,0.01)'); g.addColorStop(1, 'rgba(255,250,240,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, 1024, 1024);
   // pencere yansıması (dört bölmeli), keskin kenarlı ama yumuşak düşüşlü
   const pen = S.yeniTuval(W, H), px = pen.getContext('2d');
   px.setTransform(K, 0, 0, K, 0, 0);
-  px.filter = 'blur(12px)';
+  px.filter = 'blur(3px)';
   // panelin dışındaki büyük bir pencerenin yansıması: sol üst köşeden taşar, sağ alta doğru söner
   const pg = px.createLinearGradient(-40, -40, 330, 360);
-  pg.addColorStop(0, 'rgba(236,242,255,0.2)'); pg.addColorStop(0.55, 'rgba(236,242,255,0.07)'); pg.addColorStop(1, 'rgba(236,242,255,0)');
+  pg.addColorStop(0, 'rgba(236,242,255,0.17)'); pg.addColorStop(0.5, 'rgba(236,242,255,0.06)'); pg.addColorStop(1, 'rgba(236,242,255,0)');
   px.fillStyle = pg;
   px.beginPath();
-  px.moveTo(-40, -40); px.lineTo(150, -40); px.lineTo(118, 380); px.lineTo(-40, 400); px.closePath();
-  px.moveTo(166, -40); px.lineTo(300, -40); px.lineTo(268, 360); px.lineTo(134, 378); px.closePath();
+  px.moveTo(-40, -40); px.lineTo(132, -40); px.lineTo(104, 330); px.lineTo(-40, 346); px.closePath();
+  px.moveTo(146, -40); px.lineTo(262, -40); px.lineTo(236, 314); px.lineTo(118, 328); px.closePath();
   px.fill();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(pen, 0, 0);

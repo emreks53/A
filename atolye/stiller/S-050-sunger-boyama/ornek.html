@@ -322,10 +322,13 @@
 
   // ------------------------------------------------------------ bitkiler: şablonla kesilmiş yaprak ve taç yapraklar
   const sapS = sablon((g) => { g.lineWidth = 4; for (const d of Y.saplar) g.stroke(P(d)); });
-  katman(sapS, (t) => { for (const s of B.saplar) for (const [x, y] of s) t(x, y, 6, oyn([52, 110, 60], 0.08), 0.95); });
+  for (let q = 0; q < 2; q++) katman(sapS, (t) => { for (const s of B.saplar) for (let k = 0; k < s.length - 1; k++) for (let j = 0; j < 3; j++) { const f = j / 3; t(s[k][0] + (s[k + 1][0] - s[k][0]) * f, s[k][1] + (s[k + 1][1] - s[k][1]) * f, 7, oyn([52, 110, 60], 0.08), 0.95); } });
   const yaprakS = sablon((g) => { for (const d of Y.yapraklar) g.fill(P(d)); g.globalCompositeOperation = 'destination-out'; for (const d of Y.cicekler) g.fill(P(d)); });
   katman(yaprakS, (t) => {
-    for (const y of B.yapraklar) { const L = y.uzunluk; for (let k = 0; k < 4; k++) { const f = 0.2 + 0.6 * R(); t(y.x + Math.cos(y.aci) * L * f, y.y + Math.sin(y.aci) * L * f, L * 0.28, oyn(R() < 0.5 ? [44, 112, 62] : [32, 92, 70], 0.08), 0.95); } }
+    for (const y of B.yapraklar) { const L = y.uzunluk; for (let k = 0; k < 9; k++) { const f = 0.1 + 0.8 * (k / 8); t(y.x + Math.cos(y.aci) * L * f, y.y + Math.sin(y.aci) * L * f, L * 0.26, oyn(R() < 0.5 ? [44, 112, 62] : [32, 92, 70], 0.08), 0.95); } }
+  });
+  katman(yaprakS, (t) => {
+    for (const y of B.yapraklar) { const L = y.uzunluk; for (let k = 0; k < 5; k++) { const f = 0.15 + 0.7 * R(); t(y.x + Math.cos(y.aci) * L * f, y.y + Math.sin(y.aci) * L * f, L * 0.22, oyn([24, 72, 56], 0.08), 0.6); } }
   });
   katman(yaprakS, (t) => {
     for (const y of B.yapraklar) { const L = y.uzunluk, nx = -Math.sin(y.aci), ny = Math.cos(y.aci), sd = nx * 0.75 - ny * 0.66 > 0 ? 1 : -1; for (let k = 0; k < 2; k++) { const f = 0.3 + 0.5 * R(); t(y.x + Math.cos(y.aci) * L * f + nx * sd * L * 0.1, y.y + Math.sin(y.aci) * L * f + ny * sd * L * 0.1, L * 0.18, oyn([146, 190, 86], 0.08), 0.85); } }
