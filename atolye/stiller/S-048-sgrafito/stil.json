@@ -12,8 +12,8 @@
     "Neredeyse siyah, benekli mat üst kat bütün resmi kaplıyor; görüntü yalnız kazınarak açılmış yerlerden çıkıyor",
     "Renkli alt katlar: gökte mavi, kubbe ve kasnakta yeşil, alemlerde altın, kaide ve minarede pembe-krem, çiçeklerde gül, yerde turuncu",
     "Kazıma çizgilerinin kalınlığıyla kurulmuş ton: gökte güneşe ve ufka doğru kalınlaşan dalgalı yatay çizgiler, kubbede meridyen taraması ve ışıklı yanda enlem yaylarıyla çapraz tarama",
-    "Kazınmadan bırakılmış koyu kaburgalar, pencereler ve konturlar; kemerlerin çevresinde kazınmış ince çizgiler",
-    "Geniş kazıyıcıyla açılmış bulutlar, kaide ve taç yaprakları; aralarda kalan ince koyu artıklar, kopuk ve titrek çizgi uçları",
+    "Kazınmadan bırakılmış koyu kaburgalar, pencereler ve konturlar; geniş kazıyıcıyla açılmış kaide ve taç yapraklarında ince koyu artıklar, kopuk ve titrek çizgi uçları",
+    "Bulutlarda kalınlaşıp birleşen tarama çizgileri ve kabarcıkların ışıklı tepesini izleyen kırık yay kazımaları; güneş kazıyıcıyla açılmış bir disk, çevresinde boyları düzensiz iğne ışınları",
     "Oyukların ışığa bakan duvarında gölge, karşı kenarında hafif parlama ve pürüzlü, ufalanmış kenarlar"
   ],
   "palet": [
@@ -26,7 +26,7 @@
     "#E46C94",
     "#F4D8B4"
   ],
-  "kodla_cizim": "Önce 1024 piksellik renkli alt kat hazırlanır: bölge haritası gürültüyle kaydırılarak gevşek, taşkın lekeler hâlinde boyanır (gök mavi rampası ve güneşte turuncu-sarı, kubbede ışık modeline göre yeşil, kaide pembe-krem, çiçek gül ve ortası pembe-beyaz) ve bulanıklaştırılır. Kazıma ayrı bir 2048 piksellik maskede canvas çizgileriyle yapılır: iğne taraması her çizgide kalınlığı, eğimi ve kopuklukları değişen paralel çizgilerdir, kalınlık ton fonksiyonundan (gök parlaklığı, kubbe ve silindir ışığı) gelir; geniş kazıyıcı darbeleri bulut, kaide, korniş ve taç yapraklarını açar; kubbede meridyen çizgileri ve ışıklı yanda enlem yayları, kaburgalarda kazıntıyı silen koyu şeritler vardır. Her bölge kendi maskesiyle aktarılır, yeşil kanal alet izi derinliği olarak saklanır. Birleştirmede maske iki ölçekli gürültüyle pürüzlendirilir, kazınan yerde alt kat rengi alet izi ve çizik dokusuyla çarpılır, sağ üst komşuya göre oyuk gölgesi ve karşı kenar parlaması hesaplanır; kazınmayan yer benekli koyu sıva olarak kalır.",
+  "kodla_cizim": "Önce 1024 piksellik renkli alt kat hazırlanır: bölge haritası gürültüyle kaydırılarak gevşek, taşkın lekeler hâlinde boyanır (gök mavi rampası, güneşte turuncu-sarı ve bulut yoğunluğuna göre tepede sıcak beyaz, tabanda mor-gri, kubbede ışık modeline göre yeşil, kaide pembe-krem, çiçek gül ve ortası pembe-beyaz) ve bulanıklaştırılır. Kazıma ayrı bir 2048 piksellik maskede canvas çizgileriyle yapılır: iğne taraması her çizgide kalınlığı, eğimi ve kopuklukları değişen paralel çizgilerdir, kalınlık ton fonksiyonundan (gök parlaklığı, kubbe ve silindir ışığı) gelir; bulutlar, düzensiz kabarcıklardan kurulan bir yoğunluk alanında gök taramasının kalınlaşmasıyla ve kabarcık tepelerini izleyen kırık yaylarla açılır; güneş diski kazıyıcıyla açılır, çevresine boyları rastgele iğne ışınları çizilir; geniş kazıyıcı darbeleri kaide, korniş ve taç yapraklarını açar; kubbede meridyen çizgileri ve ışıklı yanda enlem yayları, kaburgalarda kazıntıyı silen koyu şeritler vardır. Her bölge kendi maskesiyle aktarılır, yeşil kanal alet izi derinliği olarak saklanır. Birleştirmede maske iki ölçekli gürültüyle pürüzlendirilir, kazınan yerde alt kat rengi alet izi ve çizik dokusuyla çarpılır, sağ üst komşuya göre oyuk gölgesi ve karşı kenar parlaması hesaplanır; kazınmayan yer benekli koyu sıva olarak kalır.",
   "etiketler": [
     "sgrafito",
     "kazıma",

@@ -283,7 +283,11 @@
       cizgi([[880 + Math.cos(a) * r0, 140 + Math.sin(a) * r0], [880 + Math.cos(a) * (r0 + L * 0.5) + (R() - 0.5) * 2, 140 + Math.sin(a) * (r0 + L * 0.5) + (R() - 0.5) * 2], [880 + Math.cos(a) * (r0 + L), 140 + Math.sin(a) * (r0 + L)]], 0.8 + R() * 1.6, 0.6);
     }
   }
-  aktar(bolgeMaskesi(['gok', 'gunes'], 1.3));
+  { // güneş diski ile gök arasındaki kenar yumuşatma pikselleri başka bölge sayılmasın: disk çevresi gök maskesine katılır
+    const mg = bolgeMaskesi(['gok', 'gunes'], 1.3);
+    for (let py = (60 * S) | 0; py < 220 * S; py++) for (let px = (800 * S) | 0; px < 960 * S; px++) if (Math.hypot(px / S - 880, py / S - 140) < 60) mg[py * W2 + px] = 1;
+    aktar(mg);
+  }
 
   // ---- kubbe: meridyen boyunca tarama, kaburgalar koyu kalır; ışıklı yanda kaburga yanına parlak çizgi
   {

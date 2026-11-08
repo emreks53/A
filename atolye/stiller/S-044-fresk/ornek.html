@@ -491,7 +491,7 @@
     const i = y * WW + x, X = x / S, Yy = y / S;
     let h = GL[i] * 0.9 + nC(X * 1.3, Yy * 1.3) * 0.1 + nD(X * 3.1, Yy * 3.1) * 0.05 + fbm(nA, X / 45 + 9, Yy / 9, 2) * 0.35;
     h -= KAYb[i] * 0.5 + BKb[i] * 0.9 + DERb[i] * 0.5;
-    h += EKb[i] * 0.3 - CAT[i] * 0.15;
+    h += EKb[i] * 0.18 - CAT[i] * 0.15;
     H[i] = h;
   }
   const Hb = bulanik(H, WW, WW, 1, 1);
@@ -518,7 +518,7 @@
       r = lerp(r, ar[0], kk); g = lerp(g, ar[1], kk); b = lerp(b, ar[2], kk);
     }
     // ek yeri ve çatlak kiri
-    const ek = EKb[i] * (1 - kk) * 0.07, ct = CAT[i] * 0.24;
+    const ek = EKb[i] * (1 - kk) * 0.05, ct = CAT[i] * 0.24;
     r *= 1 - ek - ct * 0.7; g *= 1 - ek - ct * 0.72; b *= 1 - ek - ct * 0.75;
     // sıva ışığı (sağ üstten)
     const xa = x > 0 ? i - 1 : i, xb = x < WW - 1 ? i + 1 : i, ya = y > 0 ? i - WW : i, yb = y < WW - 1 ? i + WW : i;
