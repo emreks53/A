@@ -289,7 +289,7 @@
     }
     p.closePath();
     ekle(p);
-    for (const [rr, faz] of [[13, 0.3], [7.5, 1.4]]) {
+    for (const [rr, faz] of s < 0.75 ? [[12, 0.3]] : [[13, 0.3], [7.5, 1.4]]) {
       const R = rr * s;
       const bosluk = (KOPRU + 3) / R; // köprü için açı
       const c = new Path2D();
@@ -322,6 +322,7 @@
   function yaprak(x, y, L, aci, gen) {
     const yy = { x, y, uzunluk: L, genislik: gen || 0.36, aci };
     ekle(S.yaprakYolu(yy));
+    ekle(S.daireYolu(x, y, KOPRU * 0.8)); // sapa bağlanan dip
     const [a, b] = S.yaprakDamari(yy);
     // orta damar yarığı, uçlara değmez
     const t0 = 0.22;
@@ -558,29 +559,37 @@
     ekleCizgi(pts, KOPRU + 0.6);
     return pts;
   }
-  for (const ayna of [1, -1]) {
-    const X = (x) => (ayna > 0 ? x : 1024 - x);
-    const d1 = dal(X(150), 972, X(126), 566, -24 * ayna);
-    lale(d1[30][0], d1[30][1] - 8, 1.2, -0.1 * ayna);
-    for (let i = 7; i < 27; i += 4) {
-      const [x, y] = d1[i];
-      const taraf = (i / 4) % 2 < 1 ? 1 : -1;
-      yaprak(x, y, 34, -Math.PI / 2 + taraf * 1.0, 0.4);
-    }
-    const d2 = dal(X(214), 972, X(236), 690, 14 * ayna);
-    karanfil(d2[30][0], d2[30][1] - 10, 1.0, 0.1 * ayna);
-    for (let i = 8; i < 26; i += 6) {
-      const [x, y] = d2[i];
-      yaprak(x, y, 28, -Math.PI / 2 + (i % 12 ? 1 : -1) * 0.9 * ayna, 0.4);
-    }
-    // gül dalı
+  // sol: uzun lale dalı, karanfil dalı, gül
+  {
+    const d1 = dal(150, 972, 126, 566, -24);
+    lale(d1[30][0], d1[30][1] - 8, 1.25, -0.1);
+    for (let i = 7; i < 27; i += 4) yaprak(d1[i][0], d1[i][1], 36, -Math.PI / 2 + ((i / 4) % 2 < 1 ? 1 : -1) * 1.0, 0.42);
+    const d2 = dal(214, 972, 236, 690, 14);
+    karanfil(d2[30][0], d2[30][1] - 10, 1.05, 0.1);
+    for (let i = 8; i < 26; i += 6) yaprak(d2[i][0], d2[i][1], 30, -Math.PI / 2 + (i % 12 ? 1 : -1) * 0.9, 0.42);
     const d3 = [];
     for (let i = 0; i <= 12; i++) {
       const t = i / 12;
-      d3.push([d1[14][0] + (X(88) - d1[14][0]) * t, d1[14][1] + (670 - d1[14][1]) * t - Math.sin(Math.PI * t) * 12]);
+      d3.push([d1[14][0] + (98 - d1[14][0]) * t, d1[14][1] + (672 - d1[14][1]) * t - Math.sin(Math.PI * t) * 12]);
     }
     ekleCizgi(d3, KOPRU);
-    gul(X(88), 668, 0.85);
+    gul(98, 670, 0.8);
+  }
+  // sağ: uzun lale dalı, sümbül, gül (binanın korniş ucundan uzak)
+  {
+    const d1 = dal(900, 972, 920, 566, 20);
+    lale(d1[30][0], d1[30][1] - 8, 1.25, 0.1);
+    for (let i = 7; i < 27; i += 4) yaprak(d1[i][0], d1[i][1], 34, -Math.PI / 2 + ((i / 4) % 2 < 1 ? -1 : 1) * 1.0, 0.42);
+    const d2 = dal(858, 972, 862, 700, -8);
+    sumbul(862, 668, 1.0);
+    yaprak(d2[16][0], d2[16][1], 28, -Math.PI / 2 - 0.9, 0.42);
+    const d3 = [];
+    for (let i = 0; i <= 12; i++) {
+      const t = i / 12;
+      d3.push([d1[13][0] + (930 - d1[13][0]) * t, d1[13][1] + (712 - d1[13][1]) * t - Math.sin(Math.PI * t) * 8]);
+    }
+    ekleCizgi(d3, KOPRU);
+    gul(930, 712, 0.68);
   }
   // ön demet
   saz(116, 975, 200, -1.2, -1.0);
@@ -588,21 +597,21 @@
   saz(330, 975, 150, -1.95, -0.8);
   saz(694, 975, 150, -1.19, 0.8);
   const on = [
-    { x: 512, y: 868, tur: 'lale', s: 1.75 },
-    { x: 408, y: 896, tur: 'karanfil', s: 1.15 },
-    { x: 616, y: 896, tur: 'karanfil', s: 1.15 },
-    { x: 300, y: 868, tur: 'gul', s: 1.0 },
-    { x: 724, y: 868, tur: 'gul', s: 1.0 },
-    { x: 220, y: 886, tur: 'sumbul', s: 1.05 },
-    { x: 804, y: 886, tur: 'sumbul', s: 1.05 },
-    { x: 452, y: 830, tur: 'lale', s: 0.9 },
-    { x: 572, y: 830, tur: 'lale', s: 0.9 },
+    { x: 512, y: 866, tur: 'lale', s: 1.95 },
+    { x: 404, y: 892, tur: 'karanfil', s: 1.3 },
+    { x: 620, y: 892, tur: 'karanfil', s: 1.3 },
+    { x: 298, y: 866, tur: 'gul', s: 1.12 },
+    { x: 726, y: 866, tur: 'gul', s: 1.12 },
+    { x: 212, y: 884, tur: 'sumbul', s: 1.15 },
+    { x: 812, y: 884, tur: 'sumbul', s: 1.15 },
+    { x: 452, y: 832, tur: 'lale', s: 1.0 },
+    { x: 572, y: 832, tur: 'lale', s: 1.0 },
   ];
   for (const c of on) {
     const alt = c.tur === 'gul' ? 22 * c.s : c.tur === 'sumbul' ? 30 * c.s : 12 * c.s;
     ekleCizgi([[c.x, c.y + alt], [c.x + (c.x < 512 ? -4 : c.x > 512 ? 4 : 0), (c.y + 975) / 2], [c.x, 975]], KOPRU + 0.4);
   }
-  for (const [x, y, L, a] of [[512, 940, 52, -2.3], [512, 940, 52, -0.84], [408, 945, 42, -2.2], [616, 945, 42, -0.94], [300, 935, 44, -0.6], [724, 935, 44, -2.54], [452, 905, 34, -2.4], [572, 905, 34, -0.74], [220, 945, 40, -0.7], [804, 945, 40, -2.44]]) yaprak(x, y, L, a, 0.38);
+  for (const [x, y, L, a] of [[512, 940, 52, -2.3], [512, 940, 52, -0.84], [408, 945, 42, -2.2], [616, 945, 42, -0.94], [300, 935, 44, -0.6], [724, 935, 44, -2.54], [452, 905, 34, -2.4], [572, 905, 34, -0.74], [212, 945, 40, -0.7], [812, 945, 40, -2.44]]) yaprak(x, y, L, a, 0.38);
   for (const c of on) {
     if (c.tur === 'lale') lale(c.x, c.y, c.s, 0);
     else if (c.tur === 'karanfil') karanfil(c.x, c.y, c.s, 0);

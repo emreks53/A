@@ -155,9 +155,9 @@
       altin: [1.0, 0.78, 0.36, 1.25],
       cicek: [1.0, 0.84, 0.92, 1.25], // pembe-beyaz
       cicekOrta: [1.0, 0.76, 0.28, 1.05],
-      yaprak: [0.42, 0.78, 0.46, 0.68],
-      sap: [0.46, 0.80, 0.46, 0.7],
-      zemin: [0.86, 0.64, 0.40, 0.34], // sıcak kum: ışık yere düşüp söner
+      yaprak: [0.44, 0.82, 0.46, 0.82],
+      sap: [0.48, 0.84, 0.46, 0.84],
+      zemin: [0.86, 0.64, 0.40, 0.24], // sıcak kum: ışık yere düşüp söner
     };
     const PR = ADLAR.map((ad) => P[ad]);
     const yapisal = ADLAR.map((ad) => !['gok', 'gunes', 'zemin'].includes(ad));
@@ -288,8 +288,8 @@
     ctx.fillRect(0, 0, W, W);
     // ışınların başladığı halkanın içi: kaynağın dolgun parıltısı (hilalin ardında boşluk kalmasın)
     g = ctx.createRadialGradient(kaynak.x, kaynak.y, 0, kaynak.x, kaynak.y, 24);
-    g.addColorStop(0, 'rgba(255,222,150,0.62)');
-    g.addColorStop(0.55, 'rgba(255,218,146,0.45)');
+    g.addColorStop(0, 'rgba(255,214,140,0.4)');
+    g.addColorStop(0.55, 'rgba(255,214,140,0.3)');
     g.addColorStop(1, 'rgba(255,214,140,0)');
     ctx.fillStyle = g;
     ctx.fillRect(kaynak.x - 24, kaynak.y - 24, 48, 48);

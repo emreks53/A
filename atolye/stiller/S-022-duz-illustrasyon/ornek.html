@@ -212,8 +212,18 @@
     dol(negatif, pozAcik ? GOLGE : ACIK);
     dol(pozitif, pozAcik ? ACIK : GOLGE);
   }
-  // öndeki yaprak yelpazesinde her üç yapraktan biri kubbenin yeşilinde: derinlik ve palet birliği
-  B.yapraklar.forEach((y, i) => yaprak(y, i >= 36 && i % 3 === 0));
+  // öndeki yaprak yelpazesi seyreltilir: birbirine çok yakın yapraklar atlanır, kalanlar biraz büyür;
+  // böylece çiçek tarhı kalabalık değil, okunaklı birkaç büyük biçimden kurulur
+  const merkezi = (y) => [y.x + Math.cos(y.aci) * y.uzunluk * 0.5, y.y + Math.sin(y.aci) * y.uzunluk * 0.5];
+  const secili = [];
+  B.yapraklar.forEach((y, i) => {
+    if (i < 36) return yaprak(y, false);
+    const [cx, cy] = merkezi(y);
+    if (secili.some(([x, yy]) => Math.hypot(x - cx, yy - cy) < 78)) return;
+    secili.push([cx, cy]);
+    // her üç yapraktan biri kubbenin yeşilinde: derinlik ve palet birliği
+    yaprak({ ...y, uzunluk: y.uzunluk * 1.12 }, secili.length % 3 === 0);
+  });
 
   function tomurcuk(t) {
     golgeli(S.tomurcukYolu(t), P.mercan, P.mercanG, t.r * 0.28);
