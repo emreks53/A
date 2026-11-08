@@ -755,6 +755,7 @@ RAMP_U0 = 0.006      # kivrim, sol yigin uzerinde 6 mm sonra biter (tumsek yok)
 THIN_U = 0.026       # cilt dibinde blok incelmesi (eski deger)
 BLANK_UB = 0.017     # yalniz bos kenar (u<17 mm) gerilir; s.80 metni u=19.1 mm'de baslar -> metin asla kivrimda degil
 HB_DX, HB_R = 0.0006, 0.00115   # kapitalbent tupu: sirta 0.3 mm daha yakin, 0.1 mm ince (kivrima >= 1 mm pay)
+TUCK_Y = 0.1155      # acikken mafsal seridi + sirt kabugu ust kismi bas/kuyrukta bu y'ye toplanir (sayfa basi 0.117)
 N_LEAVES = 0         # ucusan yapraklar kaldirildi: kitap kurdelesinden acilir, kapak + ince sol blok birlikte doner
 # yogun anahtarlar (acik poza yakin): komsu anahtar karisimi kagidi sirt kenarina suremesin
 RAMP_ANGLES = [30.0, 60.0, 90.0, 120.0, 140.0, 155.0, 166.0, 175.0, 182.0, 188.0, TH_OPEN]
@@ -909,6 +910,30 @@ def left_ramp_keys(lb, xsp, zl0, z1, zr):
             sk.data[i].co = (loc.x, c.y, loc.y)
         keys.append((th, sk))
     return keys
+
+def head_tuck_keys(book):
+    """Bas/kuyruk 'kep' toplamasi: kitap acikken on mafsal seridi ve sirt kabugunun mafsala yakin ust kismi,
+    sayfa blogunun basinin 1.5 mm icine cekilir; boylece alcak oluk kivriminin ustunde/arkasinda kesik deri
+    uclari (pembe 'blok') gorunmez. Kapali kitapta (anahtar 0) sekil aynen korunur."""
+    f = TUCK_Y / (HB / 2)
+    keys = []
+    jf = book['joint_f']
+    jf.shape_key_add(name='Basis')
+    k = jf.shape_key_add(name='bas_ic', from_mix=False)
+    for i, v in enumerate(jf.data.vertices):
+        k.data[i].co = (v.co.x, v.co.y * f, v.co.z)
+    keys.append(k)
+    sp = book['spine']
+    sp.shape_key_add(name='Basis')
+    k2 = sp.shape_key_add(name='bas_ic', from_mix=False)
+    for i, v in enumerate(sp.data.vertices):
+        w = smoothstep(0.50, 0.85, v.co.z / T)
+        k2.data[i].co = (v.co.x, v.co.y * (1 - w * (1 - f)), v.co.z)
+    keys.append(k2)
+    return keys
+
+def tuck_value(th):
+    return smoothstep(60.0, 135.0, th)
 
 def ramp_weights(th):
     angs = [0.0] + RAMP_ANGLES
@@ -1067,6 +1092,7 @@ def build():
     for k in ('front', 'joint_f', 'left'):
         parent_keep(book[k], pivot)
     lsk = left_ramp_keys(book['left'], book['xsp'], book['zl0'], book['z1'], book['zr'])
+    tuck = head_tuck_keys(book)
     rib = ribbon('kurdele'); rib.data.materials.append(MATS['kurdele'])
     # ucusan yapraklar
     leaves = []
@@ -1179,7 +1205,7 @@ def build():
 
     S = dict(sc=sc, book=book, pivot=pivot, leaves=leaves, vols=vols, vcoll=vcoll, dust=dz, cam=cam, aim=aim,
              foc=foc, key=key, fill=fill, rim=rim, sweep=sweep, glowL=glowL, glowO=glowO, lsk=lsk,
-             rib=rib, desk=desk)
+             rib=rib, desk=desk, tuck=tuck)
     return S
 
 # ------------------------------------------------------------------ animasyon
@@ -1199,7 +1225,7 @@ def key_open(S, f, th):
 def key_sk(sk, f, v):
     sk.value = v; sk.keyframe_insert('value', frame=f)
 
-def sweep_path(S, cam_pos, f0, f1, p_start, p_end, dist=0.7, energy=55.0):
+def sweep_path(S, cam_pos, f0, f1, p_start, p_end, dist=0.7, energy=55.0, ekeys=None):
     sw = S['sweep']
     cz = T
     for f in range(f0, f1 + 1, 2):
@@ -1218,7 +1244,7 @@ def sweep_path(S, cam_pos, f0, f1, p_start, p_end, dist=0.7, energy=55.0):
         sw.rotation_euler = Matrix((x_ax, y_ax, z_ax)).transposed().to_euler()
         sw.keyframe_insert('location', frame=f); sw.keyframe_insert('rotation_euler', frame=f)
     L = sw.data
-    for f, e in ((f0 - 1, 0.0), (f0 + 1, energy), (f1 - 2, energy), (f1, 0.0)):
+    for f, e in (ekeys or ((f0 - 1, 0.0), (f0 + 1, energy), (f1 - 2, energy), (f1, 0.0))):
         L.energy = e; L.keyframe_insert('energy', frame=f)
 
 TEXT_C = (0.0835, -0.004, 0.0)
@@ -1243,11 +1269,14 @@ def apply_book_anim(S, theta_fn, n):
         w = ramp_weights(th)
         for a, sk in S['lsk']:
             sk.value = w[a]; sk.keyframe_insert('value', frame=f)
+        for tk in S['tuck']:
+            tk.value = tuck_value(th); tk.keyframe_insert('value', frame=f)
         for k, (lp, lf, sd) in enumerate(S['leaves']):
             lp.location = (GUT_X, 0.0, book['zr'] + 0.00008 * (k + 1) - GD * rval(th))
             lp.keyframe_insert('location', frame=f)
     set_interp(piv, 'LINEAR')
     set_interp(book['right'].data.shape_keys, 'LINEAR'); set_interp(book['left'].data.shape_keys, 'LINEAR')
+    set_interp(book['joint_f'].data.shape_keys, 'LINEAR'); set_interp(book['spine'].data.shape_keys, 'LINEAR')
     for lp, lf, sd in S['leaves']:
         set_interp_path(lp, 'location', 'LINEAR')
 
@@ -1323,7 +1352,9 @@ def anim_outro(S):
     set_interp(cam.data)
     # kapandiktan sonra baslikta yumusak parilti
     cp = sph(fin_t, f_az + 0.8, f_el - 0.3, f_d * 0.985)
-    sweep_path(S, cp, 84, 120, (0.02, 0.09, T), (0.17, -0.08, T), 0.8, 4.0)
+    # parilti yumusak soner (f106 -> f128, Bezier yumusak egri; eski f118->f120 basamagi yok)
+    sweep_path(S, cp, 84, 120, (0.02, 0.09, T), (0.17, -0.08, T), 0.8, 4.0,
+               ekeys=((83, 0.0), (85, 4.0), (106, 4.0), (128, 0.0)))
 
 def setup_hero(S):
     sc = S['sc']; sc.frame_start = 0; sc.frame_end = 0
@@ -1570,6 +1601,20 @@ def main():
     render_setup(S, samples)
     if arg('--verify', False) or FRAMES:
         verify_left_page(S)
+    if arg('--idcolor', False):   # nesne kimligi testi: duz renkli emisyon
+        cols = {'on_mafsal': (0, 1, 0), 'on_karton': (0, 0.3, 1), 'sirt': (1, 1, 0), 'arka_karton': (0, 1, 1),
+                'arka_mafsal': (1, 0.5, 0), 'kapitalbent_ust': (1, 0, 1), 'kapitalbent_alt': (0.6, 0, 1),
+                'sol_blok': (1, 1, 1), 'sag_blok': (0.5, 0.5, 0.5)}
+        for nm, c in cols.items():
+            ob = bpy.data.objects.get(nm)
+            if not ob: continue
+            m = mat_simple('id_' + nm, (0, 0, 0), 1.0, c, 3.0)
+            ob.data.materials.clear(); ob.data.materials.append(m)
+            if ob.type == 'MESH':
+                for poly in ob.data.polygons: poly.material_index = 0
+            for md in ob.modifiers:
+                if md.type == 'SOLIDIFY': md.material_offset = 0; md.material_offset_rim = 0
+        print('[idcolor] on', flush=True)
     for nm in [x for x in str(arg('--off', '') or '').split(',') if x]:
         bpy.data.objects[nm].data.energy = 0.0
         print('[off]', nm)
@@ -1592,6 +1637,8 @@ def main():
         sc.render.filepath = os.path.join(d, '####')
         if arg('--start', None) is not None:
             sc.frame_start = int(arg('--start', 0, int))
+        if arg('--end', None) is not None:
+            sc.frame_end = int(arg('--end', 0, int))
         state = {'t': time.time()}
         def post(scene, *a):
             now = time.time()
