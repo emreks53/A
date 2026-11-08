@@ -282,7 +282,7 @@
     p.lineTo(1024, 1024); p.closePath();
     return p;
   }
-  katman('tepe1', (g) => { g.fill(tepe(668, 24, 0.6)); }, '#E1EFD8', { hale: { x: -4, y: 6, b: 12, a: 0.12 } });
+  katman('tepe1', (g) => { g.fill(tepe(668, 24, 0.6)); }, '#D9EDCE', { hale: { x: -4, y: 6, b: 12, a: 0.12 } });
   // uzak hurma ağaçları: iki tepe katı arasında ince siluetler (gövde dipleri öndeki tepenin arkasında kalır)
   function hurma(g, x, y, h, egik) {
     const tx = x + egik, ty = y - h;
@@ -306,7 +306,7 @@
   katman('hurma', (g) => {
     for (const [x, y, h, e] of [[40, 726, 112, 6], [104, 732, 88, -5], [206, 724, 124, -8], [836, 730, 116, 7], [912, 726, 92, -4], [988, 728, 120, -6]]) hurma(g, x, y, h, e);
   }, '#D4E8CC', { hale: { x: -3, y: 4, b: 8, a: 0.1 }, kenar: 0.4, isilti: 0.35, isiltiB: 6 });
-  katman('tepe2', (g) => { g.fill(tepe(730, 18, 2.3)); }, '#C6DFB9', { hale: { x: -4, y: 6, b: 12, a: 0.13 } });
+  katman('tepe2', (g) => { g.fill(tepe(730, 18, 2.3)); }, '#BCDCAC', { hale: { x: -4, y: 6, b: 12, a: 0.13 } });
 
   // ------------------------------------------------------------ 5–9: minare ve kaide — ince beyaz kâğıt, oyma pencereler parlar
   // pencerelerin arkasında amber ipek kâğıt (pencereler sıcak ışıkla yanar)
@@ -314,7 +314,10 @@
     for (const w of SAHNE.minarePencereleri) g.fill(P(dik(w.x - w.w / 2 - 2, w.y - 2, w.x + w.w / 2 + 2, w.y + w.h + 2)));
     for (const w of K.pencereler) g.fill(P(dik(w.x - w.w / 2 - 2, w.y - 2, w.x + w.w / 2 + 2, w.y + w.h + 2)));
     for (const k of [0, 1]) for (const p of SAHNE.kasnakPencereleri(k)) g.fill(P(dik(p.x - p.w / 2 - 1.5, p.y - 1.5, p.x + p.w / 2 + 1.5, p.y + p.h + 1.5)));
-  }, '#FFDF96', { hale: { a: 0 }, kenar: 0 });
+  }, '#FFE3A0', { hale: { a: 0 }, kenar: 0 });
+  for (const d of Yl.minarePencereleri) parla(d, 0, '#FFD780', 0.95);
+  for (const d of Yl.kaidePencereleri) parla(d, 0, '#FFD780', 0.95);
+  for (const d of Yl.kasnakPencereleri) parla(d, 0, '#FFD780', 0.95);
   katman('bina', (g) => {
     for (const d of Yl.minare) g.fill(P(d));
     g.fill(P(Yl.kaide)); g.fill(P(Yl.kornis));
@@ -324,14 +327,15 @@
     const zz = new Path2D();
     for (const z of SAHNE.zikzakCizgileri()) zz.addPath(P(SAHNE.yol(z.map(([x, y]) => [Math.max(271, Math.min(329, x)), y]))));
     yarik(g, zz, 1.8);
+    parla(zz, 1.8, '#FFF1D0', 0.8);
     // korkuluklarda kemer delikleri
     for (const [ad, n, w, h] of [['korkuluk-1', 9, 5.5, 11], ['korkuluk-2', 8, 5, 10]]) {
       const k = mp(ad);
-      for (let i = 0; i < n; i++) delik(g, SAHNE.kemerYolu(k.x1 + ((k.x2 - k.x1) * (i + 0.5)) / n, k.y1 + 4, w, h));
+      for (let i = 0; i < n; i++) { const kp = SAHNE.kemerYolu(k.x1 + ((k.x2 - k.x1) * (i + 0.5)) / n, k.y1 + 4, w, h); delik(g, kp); parla(kp, 0, '#FFF1D0', 0.8); }
     }
     // kaidede kör kemer frizi: küçük kemer delikleri
-    for (let x = 311; x <= 812; x += 15.6) delik(g, SAHNE.kemerYolu(x, 708, 6, 7));
-  }, '#FDF7EE', { hale: { x: -5, y: 7, b: 14, a: 0.16 }, kenar: 0.5, isilti: 0.55, isiltiB: 9 });
+    for (let x = 311; x <= 812; x += 15.6) { const kp = SAHNE.kemerYolu(x, 708, 6, 7); delik(g, kp); parla(kp, 0, '#FFF1D0', 0.8); }
+  }, '#FDF7EE', { hale: { x: -5, y: 7, b: 14, a: 0.16 }, kenar: 0.5, isilti: 0.8, isiltiB: 10 });
   // ikinci kat beyaz kâğıt: şerefeler, çıkmalar, bilezik, korniş, pilastrlar, taban silmesi (iki kat → daha tok)
   katman('bina', (g) => {
     for (const ad of ['çıkma-1', 'çıkma-2', 'şerefe-1', 'şerefe-2', 'bilezik']) g.fill(P(SAHNE.yol(mp(ad).noktalar, true)));
@@ -349,10 +353,16 @@
   katman('bina', (g) => {
     g.fill(P(Yl.kasnakAlt)); g.fill(P(Yl.kasnakUst));
     for (const d of Yl.kasnakPencereleri) delik(g, d);
+    delik(g, IGNE);
   }, '#9FD39B', { hale: { x: -5, y: 7, b: 14, a: 0.18 }, kenar: 0.45, isilti: 0.4, isiltiB: 9 });
+  const IGNE = new Path2D();
+  for (let x = 340; x <= 780; x += 9) { IGNE.moveTo(x + 1.5, 610); IGNE.arc(x, 610, 1.5, 0, TAU); }
+  for (let x = 358; x <= 762; x += 9) { IGNE.moveTo(x + 1.4, 553); IGNE.arc(x, 553, 1.4, 0, TAU); }
+  parla(IGNE, 0, '#FFF4D6', 0.95);
   katman('bina', (g) => {
     g.fill(P(dik(334, 605, 786, 615))); g.fill(P(dik(352, 547, 768, 559)));
     g.fill(P(dik(334, 610, 360, 692))); g.fill(P(dik(352, 555, 374, 610)));
+    delik(g, IGNE);
   }, '#C2E3BC', { hale: { x: -2, y: 3, b: 5, a: 0.12 }, kenar: 0.3 });
 
   // ------------------------------------------------------------ 13–17: kubbe — dilim dilim üst üste ipek kâğıt (sol tarafta katlar artar → gölge)
@@ -367,11 +377,14 @@
     }
     return sol.length > 1 ? P(SAHNE.yol(sol.concat(sag.reverse()), true)) : new Path2D();
   }
-  katman('bina', (g) => { g.fill(P(Yl.kubbe)); }, '#A7D8A2', { hale: { x: -6, y: 8, b: 16, a: 0.18 }, kenar: 0.45, isilti: 0.6, isiltiB: 11 });
-  katman('bina', (g) => { for (let k = 0; k < 16; k++) g.fill(dilimYolu(k, 16, 0.9)); }, '#DDF0D8', { hale: { a: 0 }, kenar: 0.35 });
-  katman('bina', (g) => { for (let k = 0; k < 10; k++) g.fill(dilimYolu(k, 16, 0.9)); }, '#D3EBCD', { hale: { a: 0 }, kenar: 0.25 });
-  katman('bina', (g) => { for (let k = 0; k < 5; k++) g.fill(dilimYolu(k, 16, 0.9)); }, '#CFE8C9', { hale: { a: 0 }, kenar: 0.2 });
-  katman('bina', (g) => { for (let k = 0; k < 2; k++) g.fill(dilimYolu(k, 16, 0.9)); }, '#CFE8C9', { hale: { a: 0 }, kenar: 0.2 });
+  const KABURGA = new Path2D();
+  for (const k of SAHNE.kaburgalar(16, 80)) KABURGA.addPath(kesikCizgi(k.noktalar.filter((q) => q[1] > 312 && q[1] < 551), 15, 4.5));
+  parla(KABURGA, 1.9, '#FFF6DC', 1);
+  katman('bina', (g) => { g.fill(P(Yl.kubbe)); yarik(g, KABURGA, 1.9); }, '#A7D8A2', { hale: { x: -6, y: 8, b: 16, a: 0.18 }, kenar: 0.45, isilti: 0.6, isiltiB: 11 });
+  katman('bina', (g) => { for (let k = 0; k < 16; k++) g.fill(dilimYolu(k, 16, 0.9)); yarik(g, KABURGA, 1.9); }, '#DDF0D8', { hale: { a: 0 }, kenar: 0.35 });
+  katman('bina', (g) => { for (let k = 0; k < 10; k++) g.fill(dilimYolu(k, 16, 0.9)); yarik(g, KABURGA, 1.9); }, '#D3EBCD', { hale: { a: 0 }, kenar: 0.25 });
+  katman('bina', (g) => { for (let k = 0; k < 5; k++) g.fill(dilimYolu(k, 16, 0.9)); yarik(g, KABURGA, 1.9); }, '#CFE8C9', { hale: { a: 0 }, kenar: 0.2 });
+  katman('bina', (g) => { for (let k = 0; k < 2; k++) g.fill(dilimYolu(k, 16, 0.9)); yarik(g, KABURGA, 1.9); }, '#CFE8C9', { hale: { a: 0 }, kenar: 0.2 });
 
   // ------------------------------------------------------------ 18: zemin — kum rengi kâğıt
   katman('zemin', (g) => {
@@ -379,13 +392,13 @@
     for (let x = 0; x <= 1024; x += 4) p.lineTo(x, 797 + 6 * Math.sin(x / 88 + 0.4) + 3 * Math.sin(x / 29));
     p.lineTo(1024, 1024); p.closePath();
     g.fill(p);
-  }, '#F9EDD2', { hale: { x: -4, y: 6, b: 12, a: 0.14 } });
+  }, '#F7E3BC', { hale: { x: -4, y: 6, b: 12, a: 0.14 } });
   katman('zemin', (g) => {
     const p = new Path2D(); p.moveTo(0, 1024);
     for (let x = 0; x <= 1024; x += 4) p.lineTo(x, 904 - 18 * Math.sin(x / 150 + 1.2) - 7 * Math.sin(x / 47 + 0.3));
     p.lineTo(1024, 1024); p.closePath();
     g.fill(p);
-  }, '#F9F0DE', { hale: { x: -4, y: 6, b: 12, a: 0.12 } });
+  }, '#F1D9AC', { hale: { x: -4, y: 6, b: 12, a: 0.12 } });
 
   // ------------------------------------------------------------ 19–24: bitkiler — yeşil kâğıt yapraklar (damarları kesik), parlayan beyaz çiçekler
   function damarlar(g, liste) {
@@ -395,6 +408,7 @@
       p.moveTo(a[0] + (b[0] - a[0]) * 0.12, a[1] + (b[1] - a[1]) * 0.12); p.lineTo(a[0] + (b[0] - a[0]) * 0.85, a[1] + (b[1] - a[1]) * 0.85);
     }
     yarik(g, p, 1.1);
+    parla(p, 1.1, '#F6FFE8', 0.55);
   }
   katman('bitki', (g) => {
     g.lineCap = 'round'; g.lineWidth = 4.5; g.stroke(SAPLAR);
@@ -423,8 +437,9 @@
         ks.lineTo(c.x + Math.cos(a) * c.r * 0.66, c.y + Math.sin(a) * c.r * 0.66);
       }
       yarik(g, ks, Math.max(1, c.r * 0.035));
+      parla(ks, Math.max(1, c.r * 0.035), '#FFF8EC', 0.8);
     }
-  }, '#FFF9F2', { hale: { x: -5, y: 7, b: 12, a: 0.2 }, kenar: 0.5, isilti: 0.45, isiltiB: 7 });
+  }, '#FFF9F2', { hale: { x: -5, y: 7, b: 12, a: 0.2 }, kenar: 0.5, isilti: 0.7, isiltiB: 8 });
   katman('cicek', (g) => { for (const c of B.cicekler) { g.beginPath(); g.arc(c.x, c.y, c.r * 0.4, 0, TAU); g.fill(); } }, '#F9D6DE', { hale: { a: 0 }, kenar: 0.3 });
   katman('cicek', (g) => { for (const c of B.cicekler) { g.beginPath(); g.arc(c.x, c.y, c.r * 0.2, 0, TAU); g.fill(); } }, '#F6CF6E', { hale: { x: -1, y: 2, b: 3, a: 0.14 }, kenar: 0.3 });
   katman('cicek', (g) => {
@@ -436,20 +451,26 @@
 
   isle();
 
-  // ------------------------------------------------------------ ışık taşması: parlak delik ve kâğıtların çevresinde yumuşak parıltı
+  // ------------------------------------------------------------ ışık taşması: kesiklerden doğrudan geçen ışık parlar ve çevresine taşar
   (function parilti() {
-    const n = 512, t = SAHNE.yeniTuval(n, n), tg = t.getContext('2d', { willReadFrequently: true });
-    tg.drawImage(ana.canvas, 0, 0, n, n);
-    const im = tg.getImageData(0, 0, n, n), D = im.data;
-    for (let i = 0; i < D.length; i += 4) {
-      const l = (D[i] * 0.3 + D[i + 1] * 0.59 + D[i + 2] * 0.11) / 255;
-      const k = Math.max(0, (l - 0.86) / 0.14);
-      D[i] = 255; D[i + 1] = 244; D[i + 2] = 220; D[i + 3] = k * 255;
+    // çekirdek: kesiklerin içi neredeyse beyaz, sıcak
+    ana.save(); ana.setTransform(1, 0, 0, 1, 0, 0);
+    ana.globalCompositeOperation = 'screen';
+    ana.globalAlpha = 0.75; ana.drawImage(ISIK, 0, 0);
+    // üç yarıçapta taşma: dar (keskin parıltı), orta, geniş (yumuşak hale)
+    const n = 1024, t = SAHNE.yeniTuval(n, n), tg = t.getContext('2d');
+    for (const [b, a] of [[2.5, 0.85], [7, 0.6], [18, 0.42]]) {
+      tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, n, n);
+      tg.filter = `blur(${b}px)`; tg.drawImage(ISIK, 0, 0, n, n); tg.filter = 'none';
+      ana.globalAlpha = a; ana.drawImage(t, 0, 0, W2, W2);
     }
-    tg.putImageData(im, 0, 0);
-    const b = SAHNE.yeniTuval(n, n), bg = b.getContext('2d');
-    bg.filter = 'blur(5px)'; bg.drawImage(t, 0, 0);
-    ana.save(); ana.globalCompositeOperation = 'screen'; ana.globalAlpha = 0.6; ana.drawImage(b, 0, 0, 1024, 1024); ana.restore();
+    ana.restore();
+    // güneşin çevresinde sıcak ışık taşması
+    ana.save(); ana.globalCompositeOperation = 'screen';
+    const g = ana.createRadialGradient(GX, GY, 40, GX, GY, 300);
+    g.addColorStop(0, 'rgba(255,240,200,0.55)'); g.addColorStop(0.4, 'rgba(255,240,205,0.18)'); g.addColorStop(1, 'rgba(255,240,210,0)');
+    ana.fillStyle = g; ana.fillRect(0, 0, 1024, 1024);
+    ana.restore();
   })();
 
   SAHNE.hazir();
