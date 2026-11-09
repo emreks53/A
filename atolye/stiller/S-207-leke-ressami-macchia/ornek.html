@@ -1562,33 +1562,33 @@ K.cicekOrta = function (c, cx, cy, r, renk, R, o) {
   // ----------------------------------------------------------------- alemler: altın lekeler
   const alem = (a) => {
     const cw = a.cubuk.x2 - a.cubuk.x1;
-    K.firca(ctx, [[a.cubuk.x1 + cw / 2, a.cubuk.y2], [a.cubuk.x1 + cw / 2, a.cubuk.y1]], { w: cw * 1.1, renk: P.altin, a: 0.95, r: R, kil: 2, jit: 6, bas: 0.02, son: 0.04, uc: 0.8, h, hv: 0.44, sirt: 0.03 });
+    K.firca(ctx, [[a.cubuk.x1 + cw / 2, a.cubuk.y2], [a.cubuk.x1 + cw / 2, a.cubuk.y1]], { w: cw * 1.1, renk: P.altin, a: 0.95, r: R, kil: 2, jit: 6, bas: 0.02, son: 0.04, uc: 0.8, h, hv: 0.34, sirt: 0.03 });
     K.firca(ctx, [[a.cubuk.x2 - cw * 0.2, a.cubuk.y2], [a.cubuk.x2 - cw * 0.2, a.cubuk.y1]], { w: cw * 0.45, renk: P.altinIsik, a: 0.95, r: R, kil: 0, bas: 0.02, son: 0.04, uc: 0.8 });
     const y = a.yaka;
     const ep = [];
     for (let i = 0; i < 16; i++) ep.push([y.cx + Math.cos((i / 16) * 6.283) * y.rx, y.cy + Math.sin((i / 16) * 6.283) * y.ry]);
-    leke(ep, P.altin, { yon: 0, en: 6, boyK: 3, titre: 0.3, hv: 0.44, adim: 10, sirt: 0.03 });
-    leke([[y.cx, y.cy - y.ry], [y.cx + y.rx, y.cy - y.ry * 0.2], [y.cx + y.rx * 0.6, y.cy + y.ry * 0.3], [y.cx, y.cy]], P.altinIsik, { yon: 0, en: 5, titre: 0.3, adim: 8, hv: 0.45, sirt: 0 });
+    leke(ep, P.altin, { yon: 0, en: 6, boyK: 3, titre: 0.3, hv: 0.34, adim: 10, sirt: 0.03 });
+    leke([[y.cx, y.cy - y.ry], [y.cx + y.rx, y.cy - y.ry * 0.2], [y.cx + y.rx * 0.6, y.cy + y.ry * 0.3], [y.cx, y.cy]], P.altinIsik, { yon: 0, en: 5, titre: 0.3, adim: 8, hv: 0.35, sirt: 0 });
     for (const k of a.kureler) {
       const kp2 = [];
       for (let i = 0; i < 14; i++) kp2.push([k.cx + Math.cos((i / 14) * 6.283) * k.r, k.cy + Math.sin((i / 14) * 6.283) * k.r]);
-      leke(kp2, P.altinKoyu, { yon: 0.5, en: 6, boyK: 2, titre: 0.3, hv: 0.44, adim: 8, sirt: 0.03 });
+      leke(kp2, P.altinKoyu, { yon: 0.5, en: 6, boyK: 2, titre: 0.3, hv: 0.34, adim: 8, sirt: 0.03 });
       const ip = [];
       for (let i = 0; i <= 8; i++) {
         const an = -2.2 + (i / 8) * 2.9;
         ip.push([k.cx + Math.cos(an) * k.r, k.cy + Math.sin(an) * k.r]);
       }
       ip.push([k.cx - k.r * 0.2, k.cy + k.r * 0.25]);
-      leke(ip, P.altin, { yon: 0.5, en: 6, boyK: 2, titre: 0.2, hv: 0.44, adim: 8, sirt: 0.03 });
+      leke(ip, P.altin, { yon: 0.5, en: 6, boyK: 2, titre: 0.2, hv: 0.34, adim: 8, sirt: 0.03 });
       const sp = [];
       for (let i = 0; i < 8; i++) sp.push([k.cx + k.r * 0.35 + Math.cos((i / 8) * 6.283) * k.r * 0.28, k.cy - k.r * 0.35 + Math.sin((i / 8) * 6.283) * k.r * 0.28]);
-      leke(sp, P.altinIsik, { yon: 0.5, en: 4, boyK: 2, titre: 0.2, hv: 0.45, sirt: 0, adim: 6 });
+      leke(sp, P.altinIsik, { yon: 0.5, en: 4, boyK: 2, titre: 0.2, hv: 0.35, sirt: 0, adim: 6 });
     }
     const hp = G.hilal(a);
-    leke(hp, P.altin, { yon: 0.3, en: 6, boyK: 2, titre: 0.2, hv: 0.44, adim: 8, sirt: 0.03 });
+    leke(hp, P.altin, { yon: 0.3, en: 6, boyK: 2, titre: 0.2, hv: 0.34, adim: 8, sirt: 0.03 });
     const H = a.hilal;
     const sag = hp.filter(([x]) => x > H.cx + H.R * 0.2);
-    if (sag.length > 3) leke(sag, P.altinIsik, { yon: 0.3, en: 4, boyK: 2, titre: 0.2, sirt: 0, adim: 6, hv: 0.45 });
+    if (sag.length > 3) leke(sag, P.altinIsik, { yon: 0.3, en: 4, boyK: 2, titre: 0.2, sirt: 0, adim: 6, hv: 0.35 });
   };
   alem(G.alemK);
   alem(G.alemM);
