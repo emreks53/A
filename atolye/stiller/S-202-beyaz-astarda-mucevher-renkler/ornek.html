@@ -715,14 +715,15 @@ const M = (function () {
     // iki maskeyi birleştir: bulut + güneş
     BMg.save(); BMg.setTransform(1, 0, 0, 1, 0, 0); BMg.drawImage(GM, 0, 0); BMg.restore();
   }
-  // sırlar: az sayıda, geniş (8–14 px), kısa, saydam darbe; çoğu yatay, aralarında beyaz astar parlar.
-  // Güneşin çevresinde darbeler teğet döner. Üst üste binen yerler koyulaşır (el izi görünür).
-  const gYon = (x, y, r, sap) => { const d = Math.hypot(x - gunes.x, y - gunes.y); return d < 90 ? Math.atan2(y - gunes.y, x - gunes.x) + Math.PI / 2 + (r() - 0.5) * 0.2 : (r() - 0.5) * sap; };
+  // sırlar: az sayıda, geniş (8–14 px), saydam darbe; çoğu yatay, aralarında beyaz astar parlar. Her sır katı kendi
+  // içinde üst üste yığılmaz (bir kat = bir film), katlar birbirinin üstüne çarpılır. Güneşin çevresinde darbeler teğet döner.
+  const gYon = (x, y, r, sap) => { const d = Math.hypot(x - gunes.x, y - gunes.y); return d < 80 ? Math.atan2(y - gunes.y, x - gunes.x) + Math.PI / 2 + (r() - 0.5) * 0.2 : (r() - 0.5) * sap; };
   const gRenk = (us, jj) => (x, y, r) => { const c = kok(gokHedef(x, y), us); const j = (r() - 0.5) * jj, h = (r() - 0.5) * jj * 0.6; return [c[0] + j - Math.abs(h) * 0.3, c[1] + j + h * 0.4, c[2] + j * 0.35]; };
-  sir((k) => gokKat(k, { kutu: [-30, -20, 1054, 806], aralik: 15, boy: [40, 90], en: [11, 14], yon: (x, y, r) => gYon(x, y, r, 0.08), icinde: gokIc, renk: gRenk(0.56, 14), egri: 0.06, darbe: { a: 0.9, govde: 0.9, kil: 6, kilK: 6, kilA: 0.3, yuk: 0.75, uc: 'sivri', bas: 0.85, govdeSon: 0.8 }, tohum: 2 }), [0, 0, 1024, 810], { sil: BM });
-  sir((k) => gokKat(k, { kutu: [-20, -20, 1044, 806], aralik: 19, boy: [30, 64], en: [9, 13], yon: (x, y, r) => gYon(x, y, r, 0.3), icinde: gokIc, renk: gRenk(0.3, 12), egri: 0.08, darbe: { a: 0.9, govde: 0.9, kil: 4, kilK: 5, kilA: 0.3, yuk: 0.85, uc: 'sivri', bas: 0.8, govdeSon: 0.85 }, tohum: 3 }), [0, 0, 1024, 810], { birikim: true, sil: BM });
+  const gunesUzak = (d0) => (x, y) => gokIc(x, y) && Math.hypot(x - gunes.x, y - gunes.y) > d0;
+  sir((k) => gokKat(k, { kutu: [-30, -20, 1054, 806], aralik: 14, boy: [70, 150], en: [11, 14], yon: (x, y, r) => gYon(x, y, r, 0.07), icinde: gokIc, renk: gRenk(0.64, 12), egri: 0.05, darbe: { a: 0.92, govde: 0.9, kil: 6, kilK: 6, kilA: 0.3, yuk: 0.7, uc: 'kare', bas: 0.9, govdeSon: 0.8 }, tohum: 2 }), [0, 0, 1024, 810], { sil: BM });
+  sir((k) => gokKat(k, { kutu: [-20, -20, 1044, 806], aralik: 20, boy: [50, 110], en: [9, 13], yon: (x, y, r) => (r() - 0.5) * 0.25, icinde: gunesUzak(70), renk: gRenk(0.26, 10), egri: 0.08, darbe: { a: 0.9, govde: 0.9, kil: 4, kilK: 5, kilA: 0.3, yuk: 0.75, uc: 'kare', bas: 0.85, govdeSon: 0.8 }, tohum: 3 }), [0, 0, 1024, 810], { sil: BM });
   // hafif ikinci geçiş: tek bir açıda, seyrek
-  sir((k) => gokKat(k, { kutu: [-20, -20, 1044, 806], aralik: 30, boy: [24, 44], en: [8, 11], yon: (x, y, r) => 0.5 + (r() - 0.5) * 0.2, icinde: (x, y) => gokIc(x, y) && Math.hypot(x - gunes.x, y - gunes.y) > 60, renk: gRenk(0.12, 8), egri: 0.1, darbe: { a: 0.85, govde: 0.9, kil: 3, kilK: 5, kilA: 0.25, yuk: 0.85, uc: 'sivri', bas: 0.8, govdeSon: 0.85 }, tohum: 4 }), [0, 0, 1024, 810], { birikim: true, sil: BM });
+  sir((k) => gokKat(k, { kutu: [-20, -20, 1044, 806], aralik: 30, boy: [24, 44], en: [8, 11], yon: (x, y, r) => 0.5 + (r() - 0.5) * 0.2, icinde: gunesUzak(80), renk: gRenk(0.1, 8), egri: 0.1, darbe: { a: 0.85, govde: 0.9, kil: 3, kilK: 5, kilA: 0.25, yuk: 0.85, uc: 'sivri', bas: 0.8, govdeSon: 0.85 }, tohum: 4 }), [0, 0, 1024, 810], { sil: BM });
   // güneş: astarın beyazı; içine soluk sarı ince bir sır, kenarına kısa teğet darbeler
   sir((k) => {
     M.alan(k, { kutu: [gunes.x - 32, gunes.y - 32, gunes.x + 32, gunes.y + 32], aralik: 5, boy: [12, 22], en: [5, 7], yon: (x, y) => Math.atan2(y - gunes.y, x - gunes.x) + Math.PI / 2, icinde: (x, y) => Math.hypot(x - gunes.x, y - gunes.y) < 24, renk: (x, y, r) => kar('#FFFAE6', '#FFF5D6', r()), darbe: { a: 0.8, kil: 2, kilK: 3 }, tohum: 5 });
