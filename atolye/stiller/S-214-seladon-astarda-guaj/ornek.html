@@ -831,33 +831,54 @@ const arka = (() => {
   x.setTransform(OL, 0, 0, OL, 0, 0);
   return x;
 })();
+// gök kısmında astar biraz daha mavi ve açık sürülmüştür: darbe aralarından görünen ince şeritler serin bir alt ton
+alanBoya(arka, {
+  kutu: [-60, -20, 1084, 800],
+  aralik: 60,
+  aralikY: 22,
+  boy: [200, 340],
+  en: [34, 44],
+  yon: () => (RD() - 0.5) * 0.03,
+  renk: (x, y, r) => oyna(karis(karis(hex('#B9D5DD'), hex('#CFE3E6'), clamp(y / 560, 0, 1)), hex('#C9DDDD'), clamp((y - 600) / 200, 0, 1)), r, 3, 2),
+  alfa: [0.85, 0.95],
+  darbe: { bas: 0.03, son: 0.08, basinc: 0.06, titreme: 1.5, kil: 6, kilFark: 5, kilAlfa: 0.2 },
+  tohum: 3,
+});
 // ---------------------------------------------------------------- 1. gök: açık mavi ve beyaz ayrı darbeler
-const BULUT = bulutKur(31);
-const bulutIc = (x, y) => BULUT.some((B) => bulutYog(B, x, y) > 0.12);
+const BULUT = bulutKur(214);
+const bulutIc = (x, y) => BULUT.some((B) => bulutYog(B, x, y) > 0.2);
 const gunesD = (x, y) => Math.hypot(x - 880, y - 140);
 const gokYon = (x, y) => -0.05 + (NZ.n(x * 0.004, y * 0.005) - 0.5) * 0.22 + (karma(Math.round(x * 3), Math.round(y * 3), 11) - 0.5) * 0.16;
-// gök: üstte doygun açık mavi, aşağı doğru açılır; arada beyaz darbeler; darbeler arasından astar görünür
-alanBoya(arka, {
-  kutu: [-40, -20, 1064, 806],
-  aralik: 46,
-  aralikY: 12.5,
-  boy: [45, 140],
-  en: [14, 19],
-  yon: gokYon,
-  atla: (x, y) => bulutIc(x, y) || gunesD(x, y) < 30,
-  renk: (x, y, r) => {
-    const t = clamp(y / 800, 0, 1);
-    const g = Math.exp(-(gunesD(x, y) ** 2) / (2 * 75 * 75));
-    let c;
-    if (r() < Math.max(0, t - 0.78) * 0.9 + g * 0.18) c = karis(P.beyaz, P.maviAcik, 0.25 + r() * 0.2);
-    else c = karis(karis(P.maviK, P.mavi, clamp(t * 1.6, 0, 1)), P.maviAcik, clamp(t * 1.4 - 0.4, 0, 1));
-    c = karis(c, hex('#E4EFF3'), g * 0.8);
-    return oyna(c, r, 5, 4);
-  },
-  alfa: [0.92, 1],
-  darbe: YASSI,
-  tohum: 12,
-});
+// gök: üstte doygun açık mavi, aşağı doğru açılır; arada beyaz darbeler. Darbeler yatay sıralar hâlinde, uçları
+// birbirine binerek sürülür; sıralar arasında astar yalnız ince, uzun, yatay şeritler hâlinde görünür.
+function gokRenk(x, y, r) {
+  const t = clamp(y / 800, 0, 1);
+  const g = Math.exp(-(gunesD(x, y) ** 2) / (2 * 75 * 75));
+  let c;
+  if (r() < Math.max(0, t - 0.78) * 0.9) c = karis(P.beyaz, P.maviAcik, 0.25 + r() * 0.2);
+  else c = karis(karis(P.maviK, P.mavi, clamp(t * 1.6, 0, 1)), P.maviAcik, clamp(t * 1.4 - 0.4, 0, 1));
+  c = karis(c, hex('#E4EFF3'), g * 0.8);
+  return oyna(c, r, 5, 4);
+}
+{
+  const r = S.rng(12);
+  arka.save();
+  for (let y = -14; y < 808; y += 14.2) {
+    let x = -40 - r() * 90;
+    while (x < 1064) {
+      const l = 60 + r() * 85;
+      const yy = y + (r() - 0.5) * 2.4;
+      const mx = x + l / 2;
+      if (!bulutIc(mx, yy) && gunesD(mx, yy) > 34) {
+        const a = gokYon(mx, yy) * 0.5;
+        const w = 12.4 + r() * 3;
+        darbe(arka, [[x, yy - (Math.sin(a) * l) / 2], [x + l, yy + (Math.sin(a) * l) / 2]], w, gokRenk(mx, yy, r), Object.assign({}, YASSI, { alfa: 0.93 + r() * 0.07, kuyruk: 0.6, r }));
+      }
+      x += l * (0.4 + r() * 0.1);
+    }
+  }
+  arka.restore();
+}
 // güneş: kalın beyaz ve soluk sarı kısa darbeler
 alanBoya(arka, {
   kutu: [842, 102, 918, 178],
@@ -879,12 +900,12 @@ for (const B of BULUT) {
   const golge = (x, y) => clamp(((y - top) / (B.taban - top)) * 1.1 - ((x - B.x) / B.gen) * 0.2 - 0.15, 0, 1);
   alanBoya(arka, {
     kutu: [B.x - B.gen - 60, top - 6, B.x + B.gen + 60, B.taban + 6],
-    aralik: 26,
-    aralikY: 10,
+    aralik: 19,
+    aralikY: 8,
     boy: [34, 70],
     en: [11, 15],
     yon: (x, y) => -0.04 + ((x - B.x) / B.gen) * 0.1 - ((y - (top + B.taban) / 2) / (B.taban - top)) * 0.08,
-    atla: (x, y, r) => yog(x, y) < 0.14 + r() * 0.06,
+    atla: (x, y, r) => yog(x, y) < 0.22 + r() * 0.06,
     renk: (x, y, r) => {
       const g = golge(x, y);
       return oyna(g > 0.62 ? hex('#C6D6E6') : g > 0.38 ? hex('#E6ECF0') : P.beyaz, r, 4);
@@ -898,8 +919,8 @@ for (const B of BULUT) {
 // ---------------------------------------------------------------- 2. yer: kum rengi darbeler
 alanBoya(arka, {
   kutu: [-40, 800, 1064, 1044],
-  aralik: 60,
-  aralikY: 16,
+  aralik: 42,
+  aralikY: 12.5,
   boy: [60, 120],
   en: [13, 17],
   yon: () => 0.03 + (RD() - 0.5) * 0.08,
@@ -947,45 +968,47 @@ function minareIsik(x, y) {
   return clamp(v, 0, 1);
 }
 {
-  const yer = yerYap(30);
-  alanBoya(ctx, {
-    aralik: 5.5,
-    aralikY: 17,
-    kutu: [240, 140, 360, 802],
-    klip: minareKlip,
-    yer,
-    icinde: (x, y) => mIc(minareMaske, x, y),
-    yon: (x, y) => -PI / 2,
-    boy: [18, 34],
-    en: [6, 8.5],
-    bosluk: 1.5,
-    renk: (x, y, r) => {
-      const v = minareIsik(x, y);
-      if (v < 0.25 + r() * 0.3) return null; // gölgede astar kalır
-      return oyna(v > 0.78 ? P.beyaz : P.krem, r, 4, 3);
-    },
-    alfa: [0.9, 1],
-    darbe: YASSI,
-    deneme: 12,
-    tohum: 31,
-  });
-  // gölgede birkaç saydam darbe
-  alanBoya(ctx, {
-    aralik: 10,
-    aralikY: 30,
-    kutu: [240, 140, 360, 802],
-    klip: minareKlip,
-    icinde: (x, y) => mIc(minareMaske, x, y) && minareIsik(x, y) < 0.3,
-    yon: (x, y) => -PI / 2,
-    boy: [20, 40],
-    en: [6, 9],
-    bosluk: 3,
-    renk: (x, y, r) => oyna(P.golgeSaydam, r, 4),
-    alfa: [0.35, 0.5],
-    darbe: SAYDAM,
-    deneme: 2,
-    tohum: 32,
-  });
+  // dikey sütunlar hâlinde yassı darbeler: ışık alan sağ yanda geniş, örtücü, birbirine binen krem-beyaz;
+  // gölge yanında darbeler daralır ve serinleşir, sütunlar arasında astar ince dikey şeritler hâlinde görünür
+  const r = S.rng(31);
+  // gölge yanına önce saydam bir yeşil-gri lav (şeritler koyulaşır, beyaz parlamaz)
+  ctx.save();
+  ctx.clip(minareKlip);
+  for (let x = 244; x < 358; x += 9) {
+    for (let y = 136; y < 806; ) {
+      const l = 50 + r() * 60;
+      const v = minareIsik(x + 4, y + l / 2);
+      if (v < 0.35) darbe(ctx, [[x + 4, y + l], [x + 4 + (r() - 0.5) * 1.5, y]], 12, oyna(P.golgeSaydam, r, 3), Object.assign({}, SAYDAM, { alfa: 0.25 + (0.35 - v) * 0.6, r }));
+      y += l * 0.9;
+    }
+  }
+  let sut = 0;
+  for (let x = 243; x < 358; x += 5.4, sut++) {
+    let y = 136 - r() * 30;
+    while (y < 806) {
+      const l = 30 + r() * 34;
+      const cx = x + (r() - 0.5) * 1.2;
+      const v = clamp(minareIsik(cx, y + l / 2) + (r() - 0.5) * 0.06, 0, 1);
+      let c;
+      let w;
+      if (v > 0.78) {
+        c = karis(P.beyaz, hex('#FFFFFA'), r());
+        w = 7 + r() * 1.5;
+      } else if (v > 0.5) {
+        c = karis(P.krem, P.beyaz, r() * 0.5);
+        w = 6.4 + r() * 1.4;
+      } else if (v > 0.25) {
+        c = karis(P.krem, hex('#D9DCCD'), 0.45 + r() * 0.2);
+        w = 4.4 + r() * 1.2;
+      } else {
+        c = karis(hex('#D3D9CC'), P.seladonK, 0.3 + r() * 0.3);
+        w = 3.4 + r() * 1.1;
+      }
+      darbe(ctx, [[cx, y + l], [cx + (r() - 0.5) * 1, y]], w, oyna(c, r, 3, 2), Object.assign({}, YASSI, { alfa: v > 0.25 ? 0.96 : 0.85, kuyruk: 0.45, r }));
+      y += l * (0.5 + r() * 0.08);
+    }
+  }
+  ctx.restore();
 }
 // minare ayrıntıları: şerefe kenarları, korkuluk, zikzak, pencereler (yuvarlak ince fırça)
 for (const p of S.minareParcalari()) {
@@ -1108,43 +1131,44 @@ for (let k = 1; k >= 0; k--) {
     if (y < q.y1 + 9) v -= 0.3;
     return clamp(v, 0, 1);
   };
+  // önce gölge yanına (sol üçte bir) geniş saydam koyu yeşil lav
   alanBoya(ctx, {
-    aralik: 60,
-    aralikY: 16,
+    aralik: 50,
+    aralikY: 14,
     kutu: [q.x1 - 2, q.y1 - 2, q.x2 + 2, q.y2 + 2],
     klip,
-    icinde: (x, y) => mIc(maske, x, y),
+    icinde: (x, y) => mIc(maske, x, y) && isik(x, y) < 0.55,
     yon: () => 0.015,
     boy: [70, 130],
     en: [16, 22],
-    renk: (x, y, r) => oyna(isik(x, y) < 0.4 ? P.yesilK : P.yesil, r, 4),
+    renk: (x, y, r) => oyna(isik(x, y) < 0.35 ? P.yesilK : P.yesil, r, 4),
     alfa: [0.5, 0.62],
     darbe: SAYDAM,
     tohum: 49 + k,
   });
-  const yer = yerYap(50);
-  alanBoya(ctx, {
-    aralik: 46,
-    aralikY: 9,
-    kutu: [q.x1 - 2, q.y1 - 2, q.x2 + 2, q.y2 + 2],
-    klip,
-    yer,
-    icinde: (x, y) => mIc(maske, x, y),
-    yon: () => 0.015,
-    boy: [34, 70],
-    en: [8, 11],
-    bosluk: 1.8,
-    ucBosluk: 0.52,
-    renk: (x, y, r) => {
-      const v = isik(x, y);
-      if (v < 0.3) return r() < 0.5 ? oyna(P.yesilK, r, 5, 3) : null;
-      return oyna(v > 0.8 ? P.yesilI : v > 0.6 ? P.yesilA : P.yesil, r, 5, 4);
-    },
-    alfa: [0.9, 1],
-    darbe: YASSI,
-    deneme: 12,
-    tohum: 51 + k,
-  });
+  // yatay sıralar hâlinde yassı darbeler; renk soldan sağa düzenli açılır (beş karışım); sol üçte birde darbeler
+  // daralır, sıralar arasında astar ince yatay şeritler hâlinde görünür, ortada ve sağda sıralar birbirine biner
+  {
+    const r = S.rng(51 + k);
+    const boya = [P.yesilK, karis(P.yesilK, P.yesil, 0.5), P.yesil, P.yesilA, P.yesilI];
+    ctx.save();
+    ctx.clip(klip);
+    for (let y = q.y1 + 1; y < q.y2 + 3; y += 7.6) {
+      let x = q.x1 - 6 - r() * 30;
+      while (x < q.x2 + 4) {
+        const l = 34 + r() * 40;
+        const mx = x + l / 2;
+        const v = isik(mx, y);
+        const kk = clamp(Math.floor(v * 4.6 + (r() - 0.5) * 0.7), 0, 4);
+        const golgeUc = mx < q.x1 + (q.x2 - q.x1) * 0.33;
+        const w = golgeUc ? 5.6 + r() * 1.2 : 8.6 + r() * 1.6;
+        const yy = y + (r() - 0.5) * 1.2;
+        darbe(ctx, [[x, yy], [x + l, yy + (r() - 0.5) * 1.2]], w, oyna(boya[kk], r, 5, 4), Object.assign({}, YASSI, { alfa: 0.95, kuyruk: 0.5, r }));
+        x += l * (golgeUc ? 0.62 : 0.55);
+      }
+    }
+    ctx.restore();
+  }
   // pencereler: darbelerin üstüne saydam koyu yeşil
   for (const p of S.kasnakPencereleri(k)) {
     const py = titrekYol(S.kemerYolu(p.x, p.y, p.w, p.h), 0.4, 0.12, 0.8);
@@ -1186,22 +1210,22 @@ const kubbeIsik = (x, y) => {
   });
   const yer = yerYap(40);
   alanBoya(ctx, {
-    aralik: 8.5,
-    aralikY: 28,
+    aralik: 7,
+    aralikY: 21,
     kutu: [356, 296, 764, 558],
     klip: kubbeKlip,
     yer,
     icinde: (x, y) => mIc(kubbeMaske, x, y),
     yon: kubbeYon,
     egri: true,
-    boy: [28, 52],
+    boy: [30, 54],
     en: [8, 12],
     bosluk: 1.5,
     ucBosluk: 0.5,
     renk: (x, y, r) => {
       const v = kubbeIsik(x, y);
-      if (v < 0.25) return r() < 0.35 ? oyna(P.yesil, r, 5, 3) : null;
-      if (v < 0.42 && r() < 0.3) return null;
+      // gölge yanında astar ancak darbe aralarında, ince şeritler hâlinde görünür
+      if (v < 0.25) return r() < 0.75 ? oyna(r() < 0.6 ? P.yesilK : P.yesil, r, 5, 3) : null;
       return oyna(v > 0.82 ? P.yesilI : v > 0.62 ? P.yesilA : P.yesil, r, 6, 4);
     },
     alfa: [0.9, 1],

@@ -791,8 +791,8 @@
         gen: [7, 11],
         aci: () => (yatay ? 0 : Math.PI / 2),
         renk: (x) => silindirRenk(((x - x1) / (x2 - x1)) * 2 - 1, TAS_ACIK, TAS, TAS_GOLGE),
-        alfa: [0.45, 0.8],
-        oyna: 0.08,
+        alfa: [0.55, 0.88],
+        oyna: 0.15,
         amp: 0.4,
       });
       if (p.ad.startsWith('çıkma')) {
@@ -845,11 +845,12 @@
     sur(yol, [K.x1, K.y1, K.x2, K.y2], {
       ara: 10,
       uzun: [60, 120],
-      gen: [12, 18],
-      aci: () => 0,
-      renk: (x, y) => H.mix(TAS, TAS_ACIK, H.smooth(K.x1, K.x2, x) * 0.6) .map((q, i) => q - (y < K.y1 + 12 ? (1 - (y - K.y1) / 12) * 22 : 0) * [1, 1.05, 0.9][i]),
-      alfa: [0.4, 0.8],
-      oyna: 0.08,
+      gen: [14, 20],
+      aci: (x, y) => 0.04 * Math.sin(x / 70 + y / 20),
+      // geniş, tebeşirimsi yatay vuruşlar; sol yan bir ton koyu, korniş altı gölgeli
+      renk: (x, y) => H.mix(H.mix(TAS_GOLGE, TAS, H.smooth(K.x1, K.x1 + 110, x)), TAS_ACIK, H.smooth(K.x1 + 110, K.x2, x) * 0.6).map((q, i) => q - (y < K.y1 + 12 ? (1 - (y - K.y1) / 12) * 22 : 0) * [1, 1.05, 0.9][i]),
+      alfa: [0.5, 0.85],
+      oyna: 0.16,
       amp: 0.5,
     });
     // korniş
@@ -882,12 +883,12 @@
     const yol = doldur(d, rgb(YE), 0.4);
     sur(yol, [q.x1, q.y1, q.x2, q.y2], {
       ara: 7,
-      uzun: [30, 60],
-      gen: [9, 13],
+      uzun: [22, 44],
+      gen: [10, 14],
       aci: () => Math.PI / 2,
       renk: (x) => silindirRenk((x - cxk) / ((q.x2 - q.x1) / 2), YE_ACIK, YE, YE_GOLGE),
-      alfa: [0.45, 0.8],
-      oyna: 0.07,
+      alfa: [0.55, 0.88],
+      oyna: 0.2,
       amp: 0.4,
     });
     for (const p of S.kasnakPencereleri(kat)) {
@@ -912,16 +913,21 @@
       return Math.atan2(1, u * -dr);
     };
     sur(yol, [360, 300, 760, 556], {
-      ara: 8,
-      uzun: [50, 100],
-      gen: [10, 15],
+      ara: 7,
+      uzun: [40, 90],
+      gen: [10, 16],
       aci: meridyenAci,
       renk: (x, y) => {
+        // her dilim üç tonla: kaburganın gölge yanında koyu, ortada orta, ışık yanında açık
         const l = H.kubbeIsik(x, y);
-        return l > 0.68 ? H.mix(YE, YE_ACIK, H.smooth(0.68, 0.85, l)) : H.mix(YE_GOLGE, YE, H.smooth(0.25, 0.6, l));
+        const r0 = Math.max(1, H.kubbeR(y));
+        const fr = (((Math.asin(H.clamp((x - 560) / r0, -1, 1)) + Math.PI / 2) / Math.PI) * 16) % 1;
+        const c = l > 0.66 ? H.mix(YE, YE_ACIK, H.smooth(0.66, 0.85, l)) : H.mix(YE_GOLGE, YE, H.smooth(0.22, 0.6, l));
+        const k = fr < 0.3 ? 0.9 : fr > 0.68 ? 1.07 : 1;
+        return c.map((q) => q * k);
       },
-      alfa: [0.45, 0.8],
-      oyna: 0.075,
+      alfa: [0.55, 0.88],
+      oyna: 0.2,
       amp: 0.5,
     });
     for (const kb of S.kaburgalar(16)) {
@@ -969,47 +975,64 @@
     cizgi([[x, y], [x + ca * L * 0.85, y + sa * L * 0.85]], 0.6, 'rgba(50,90,60,0.7)', { taper: 0.4, amp: 0.2 });
   }
   function gul(x, y, r, renk) {
-    // duvar ressamının birkaç vuruşluk gülü: yuvarlak gövde, gölge yanı, ortada koyu bir sarmal vuruş
-    // (kadeh), çevresinde açık taç yaprağı kavisleri. Ortada delik gibi duran koyu leke yok.
-    const R0 = { pembe: ['#E4A2AA', '#C06C79', '#F7D9DB'], kirmizi: ['#CC5E5C', '#9C3C40', '#EBA49B'], beyaz: ['#F2EEE6', '#CFC4BD', '#FFFFFF'] }[renk];
+    // duvar ressamının birkaç vuruşluk gülü: düzensiz bir gövde lekesi, çevresinde 5–6 geniş hilal taç
+    // yaprağı vuruşu (gölge yanı koyu, ışık yanı açık), ortada iki-üç kısa kavisli koyu vuruşla çukur kâse,
+    // kâsenin önünde açık bir dudak ve birkaç açık kenar dokunuşu. Tek parça sarmal yok.
+    const R0 = { pembe: ['#E4A2AA', '#BF6977', '#F7D9DB'], kirmizi: ['#CC5E5C', '#983A3E', '#EBA49B'], beyaz: ['#F2EEE6', '#C9BFB8', '#FFFFFF'] }[renk];
     const rr = S.rng(Math.floor(x * 13 + y * 7));
-    const don = (rr() - 0.5) * 0.6;
-    const govde = H.elYolu(S.elipsYolu({ cx: x, cy: y, rx: r, ry: r * 0.9, aci: don }), r * 0.06, T(), 10);
+    const don = (rr() - 0.5) * 0.8;
+    const f1 = rr() * 6;
+    const f2 = rr() * 6;
+    const kont = [];
+    for (let i = 0; i < 40; i++) {
+      const a = (i / 40) * Math.PI * 2;
+      const q = r * (1 + 0.1 * Math.sin(3 * a + f1) + 0.06 * Math.sin(5 * a + f2));
+      kont.push([x + Math.cos(a) * q, y + Math.sin(a) * q * 0.88]);
+    }
+    const govde = H.polyPath(H.wobble(kont.concat([kont[0]]), r * 0.04, 10, T()), true);
     ctx.fillStyle = R0[0];
     ctx.fill(govde);
-    const yay = (cx2, cy2, rx, ry, a0, a1) => {
+    const yay = (cx2, cy2, rx, ry, a0, a1, n) => {
       const p = [];
-      const st = (a1 - a0) / 14;
-      for (let t = a0; st > 0 ? t <= a1 + 1e-6 : t >= a1 - 1e-6; t += st) p.push([cx2 + Math.cos(t + don) * rx, cy2 + Math.sin(t + don) * ry]);
+      n = n || 12;
+      for (let i = 0; i <= n; i++) {
+        const t = a0 + ((a1 - a0) * i) / n;
+        p.push([cx2 + Math.cos(t + don) * rx, cy2 + Math.sin(t + don) * ry]);
+      }
       return p;
     };
     ctx.save();
     ctx.clip(govde);
-    // sol alt gölge
-    ctx.globalAlpha = 0.5;
-    H.firca(ctx, yay(x, y, r * 0.85, r * 0.78, 1.4, 3.6), { w: r * 0.36, color: R0[1], bas: 0.3, uc: 0.5, seed: T() });
-    ctx.restore();
-    // kadeh: içe doğru sarılan koyu sarmal vuruş (tek hamle) ve üstünde açık bir kavis
-    {
-      const pts = [];
-      for (let t = 0; t <= 1.0001; t += 0.03) {
-        const a = -0.6 + t * Math.PI * 2.1;
-        const q = r * (0.42 - 0.3 * t);
-        pts.push([x + r * 0.04 + Math.cos(a + don) * q, y - r * 0.2 + Math.sin(a + don) * q * 0.62]);
-      }
-      ctx.globalAlpha = 0.9;
-      H.firca(ctx, pts, { w: r * 0.13, color: R0[1], bas: 0.15, uc: 0.5, jit: 0.3, seed: T() });
+    // dış taç yaprakları: geniş hilal vuruşlar, her biri ayrı boyda; sol alt gölgede koyu, sağ üst ışıkta açık
+    const adet = 5 + Math.floor(rr() * 2);
+    for (let i = 0; i < adet; i++) {
+      const a = (i / adet) * Math.PI * 2 + rr() * 0.4;
+      const isik = Math.cos(a + don + 0.9);
+      const q = r * (0.7 + rr() * 0.12);
+      const span = 0.9 + rr() * 0.5;
+      ctx.globalAlpha = 0.85;
+      const c = isik < -0.3 ? R0[1] : isik > 0.35 ? R0[2] : H.rgba(H.mix(H.hex(R0[0]), H.hex(R0[1]), 0.3));
+      H.firca(ctx, yay(x, y, q, q * 0.88, a - span / 2, a + span / 2), { w: r * (0.3 + rr() * 0.1), color: c, bas: 0.35, uc: 0.45, jit: 0.3, seed: T() });
     }
+    ctx.restore();
+    // kâse: ortada biraz yukarıda, iki-üç kısa kavisli koyu vuruş (kâsenin arka duvarı ve çukuru)
+    const kx = x + r * 0.05;
+    const ky = y - r * 0.16;
+    ctx.globalAlpha = 0.9;
+    H.firca(ctx, yay(kx, ky, r * 0.36, r * 0.22, Math.PI + 0.3, Math.PI * 2 - 0.3, 10), { w: r * 0.16, color: R0[1], bas: 0.3, uc: 0.45, seed: T() });
+    H.firca(ctx, yay(kx - r * 0.04, ky + r * 0.04, r * 0.2, r * 0.13, 0.4, Math.PI - 0.2, 8), { w: r * 0.13, color: R0[1], bas: 0.3, uc: 0.5, seed: T() });
+    H.firca(ctx, yay(kx + r * 0.06, ky - r * 0.02, r * 0.12, r * 0.08, Math.PI * 1.1, Math.PI * 1.9, 6), { w: r * 0.09, color: R0[1], bas: 0.3, uc: 0.5, seed: T() });
+    // kâsenin önünde açık dudak (kısa, tek kavis)
     ctx.globalAlpha = 0.95;
-    H.firca(ctx, yay(x + r * 0.04, y - r * 0.12, r * 0.42, r * 0.24, 0.2, Math.PI - 0.2), { w: r * 0.13, color: R0[2], bas: 0.3, uc: 0.4, seed: T() });
-    // sağ üstte ışık
-    H.firca(ctx, yay(x, y, r * 0.8, r * 0.72, -1.4, -0.4), { w: r * 0.12, color: R0[2], bas: 0.3, uc: 0.5, seed: T() });
-    // yan taç yaprakları: iki yanda açık C vuruşları; altta geniş açık yay
-    H.firca(ctx, yay(x + r * 0.1, y + r * 0.05, r * 0.7, r * 0.6, 1.9, 3.4), { w: r * 0.14, color: R0[2], bas: 0.3, uc: 0.45, seed: T() });
-    H.firca(ctx, yay(x - r * 0.1, y + r * 0.05, r * 0.7, r * 0.6, -0.25, 1.25), { w: r * 0.14, color: R0[2], bas: 0.3, uc: 0.45, seed: T() });
-    H.firca(ctx, yay(x, y + r * 0.12, r * 0.52, r * 0.42, 0.6, Math.PI - 0.6), { w: r * 0.11, color: R0[2], bas: 0.3, uc: 0.45, seed: T() });
+    H.firca(ctx, yay(kx, ky + r * 0.08, r * 0.4, r * 0.2, 0.35, Math.PI - 0.35, 10), { w: r * 0.12, color: R0[2], bas: 0.35, uc: 0.45, seed: T() });
+    // açık kenar dokunuşları: sağ üstte iki-üç kısa vuruş
+    for (let i = 0; i < 3; i++) {
+      const a = -1.6 + i * 0.55 + rr() * 0.25;
+      const q = r * (0.78 + rr() * 0.1);
+      H.firca(ctx, yay(x, y, q, q * 0.88, a - 0.22, a + 0.22, 5), { w: r * 0.09, color: R0[2], bas: 0.3, uc: 0.5, seed: T() });
+    }
     ctx.globalAlpha = 1;
-    cizgi(S.elipsYolu({ cx: x, cy: y, rx: r, ry: r * 0.9, aci: don }), 0.55, 'rgba(120,70,70,0.4)', { amp: 0.4 });
+    cizgi(kont.slice(14, 36), 0.55, 'rgba(120,70,70,0.4)', { amp: 0.4, taper: 0.2 });
   }
   function lale(x, y, s, renk) {
     const c = { kirmizi: ['#CF5B56', '#A63E3D', '#E99089'], pembe: ['#E7A3AE', '#C77584', '#F5CDD3'], beyaz: ['#F4F0E8', '#D6CEC6', '#FFFFFF'] }[renk];

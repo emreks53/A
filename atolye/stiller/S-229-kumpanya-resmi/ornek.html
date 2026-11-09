@@ -962,8 +962,8 @@ kagitDisi(B, { tohum: 229, tane: 0.6, lif: 0.15, olcek: 0.45 });
 B.disGuc = 0.2;
 
 const C = {
-  gok: hex('#B4D8F2'),
-  gokK: hex('#9CC8EC'),
+  gok: hex('#AAD0EE'),
+  gokK: hex('#93BFE6'),
   tas: hex('#F3EDE0'),
   golge: hex('#A8B6C6'),
   golgeK: hex('#8E9FB3'),
@@ -973,15 +973,15 @@ const C = {
   pencere: hex('#3F6B5A'),
   tasPencere: hex('#7D8C9F'),
   altin: hex('#D8B45E'),
-  zemin: hex('#EADFC2'),
-  zeminK: hex('#DCCDA6'),
+  zemin: hex('#DCE8D0'),
+  zeminK: hex('#C7D9B5'),
   yaprak: hex('#A9CF96'),
   yaprakK: hex('#74AC6A'),
   pembe: hex('#EFC6CC'),
   sari: hex('#EBCB6A'),
   gunes: hex('#FBF1C9'),
 };
-const murekkep = 'rgba(106,74,54,0.93)';
+const murekkep = 'rgba(106,74,54,0.96)';
 const murekkepA = 'rgba(106,74,54,0.62)';
 
 /** Düz soluk lavi: biraz kaymış maske (renk çizgiyi tam tutturmaz), yumuşak kenar, kenarda birikme. */
@@ -1049,13 +1049,16 @@ for (let k = 0; k < ayrim.length; k++) ayrim[k] = 1 - cicekM[k];
     sira: 0,
     yogFn: (x, y) => {
       // fırça geçişleri: her geçiş geniş, yatay bir bant; tonları biraz farklı, alt kenarında hafif boya boncuğu
-      const q = (y + (NZ.n(x * 0.0035, y * 0.008) - 0.5) * 44 + 18 * Math.sin(y * 0.011)) / 60;
+      // dört geniş yatay fırça geçişi: her biri bir öncekinin alt kenarına biner (bindiği yer koyulaşır),
+      // tonları belirgin biçimde farklı, alt kenarında boncuklanan boya
+      const q = (y + 40 + (NZ.n(x * 0.0035, y * 0.008) - 0.5) * 50 + 14 * Math.sin(x * 0.006 + y * 0.004)) / 200;
       const i = Math.floor(q);
       const f = q - i;
-      const dA = (karma(i, 7, 3) - 0.5) * 0.12;
-      const dB = (karma(i + 1, 7, 3) - 0.5) * 0.12;
-      const boncuk = 0.08 * yumusak(0.8, 0.95, f) * (1 - yumusak(0.95, 1, f));
-      let d = 0.84 - 0.48 * Math.pow(y / 800, 1.2) + lerp(dA, dB, yumusak(0.85, 1, f)) + boncuk + 0.05 * (NZ.n(x * 0.01, y * 0.004) - 0.5);
+      const dA = (karma(i, 7, 3) - 0.5) * 0.34;
+      const dB = (karma(i + 1, 7, 3) - 0.5) * 0.34;
+      const boncuk = 0.26 * yumusak(0.9, 0.975, f) * (1 - yumusak(0.975, 1, f));
+      const bindir = 0.14 * (1 - yumusak(0, 0.06, f)) * (i > 0 ? 1 : 0);
+      let d = 0.86 - 0.3 * Math.pow(y / 800, 1.3) + lerp(dA, dB, yumusak(0.93, 1, f)) + boncuk + bindir + 0.06 * (NZ.n(x * 0.01, y * 0.004) - 0.5);
       // bezle kaldırılmış iki ince bulut: yatay, kenarı lif lif
       for (const [cx, cy, rx, ry] of [[230, 196, 150, 9], [720, 250, 165, 10]]) {
         const u = (x - cx) / rx;
@@ -1081,19 +1084,19 @@ for (let k = 0; k < ayrim.length; k++) ayrim[k] = 1 - cicekM[k];
 yika([(x) => { x.beginPath(); x.arc(S.gunes.x, S.gunes.y, 31, 0, Math.PI * 2); x.fill(); }, [840, 100, 920, 180]], C.gunes, 0.8, { kay: [0, 0], havuz: 0.4 });
 
 // ------------------------------------------------------------------ zemin: dar düz bant (yapının önü) ve soluk zemin
-yika(dik(-5, 800, 1030, 1030), C.zemin, 0.75, { kay: [0, 0], havuz: 0.3, sira: 0.12, siraEn: 52, carp: ayrim, dalga: 0.12 });
-yika([(x) => { x.beginPath(); x.moveTo(-5, 800); x.lineTo(1030, 800); x.lineTo(1030, 826); for (let X = 1030; X >= -5; X -= 20) x.lineTo(X, 826 + Math.sin(X * 0.03) * 1.5); x.closePath(); x.fill(); }, [-5, 798, 1030, 830]], C.zeminK, 0.55, { kay: [0, 0], havuz: 0.6, carp: ayrim });
+yika(dik(-5, 800, 1030, 1030), C.zemin, 0.62, { kay: [0, 0], havuz: 0.3, sira: 0.2, siraEn: 60, carp: ayrim, dalga: 0.16, dis: 3 });
+yika([(x) => { x.beginPath(); x.moveTo(-5, 800); x.lineTo(1030, 800); x.lineTo(1030, 826); for (let X = 1030; X >= -5; X -= 20) x.lineTo(X, 830 + Math.sin(X * 0.03) * 2); x.closePath(); x.fill(); }, [-5, 798, 1030, 834]], C.zeminK, 0.85, { kay: [0, 0], havuz: 0.8, havuzEn: 3, carp: ayrim, dis: 3 });
 
 // ------------------------------------------------------------------ mimari lavileri
 for (const p of MP) {
   if (p.tip === 'alem' || p.tip === 'bant') continue;
   const d = p.tip === 'topuz' ? p.yol : S.yol(p.tip === 'poligon' ? p.noktalar : [[p.x1, p.y1], [p.x2, p.y1], [p.x2, p.y2], [p.x1, p.y2]], true);
-  yika(yolA(d), C.tas, 0.55, { kay: [0, 0], havuz: 0.35 });
+  yika(yolA(d), C.tas, 0.62, { kay: [2.5 + r(), 1 + r()], havuz: 1.1, havuzEn: 3.2 });
 }
-yika(yolA(Y.kaide), C.tas, 0.55, { kay: [0, 0], havuz: 0.35 });
-yika(yolA(Y.kornis), C.tas, 0.4, { kay: [0, 0], havuz: 0.3 });
+yika(yolA(Y.kaide), C.tas, 0.62, { kay: [3, 2], havuz: 1.1, havuzEn: 3.2, sira: 0.1, siraEn: 34 });
+yika(yolA(Y.kornis), C.tas, 0.5, { kay: [3, 1.5], havuz: 0.9, havuzEn: 2 });
 // gölge yanları: gri-mavi tek düz lavi
-const golge = (x1, y1, x2, y2, d) => yika(dik(x1, y1, x2, y2), C.golge, d || 0.5, { aci: Math.PI / 2 + 0.01, havuz: 0.65 });
+const golge = (x1, y1, x2, y2, d) => yika(dik(x1, y1, x2, y2), C.golge, (d || 0.5) * 1.3, { aci: Math.PI / 2 + 0.01, havuz: 1.0, havuzEn: 3 });
 golge(266, 488, 290, 692, 0.55);
 golge(266, 692, 300, 800, 0.55);
 golge(273, 316, 292, 436, 0.55);
@@ -1108,13 +1111,13 @@ yika(dik(246, 465, 354, 468), C.golge, 0.4, { havuz: 0.3 });
 yika(dik(255, 297.5, 345, 300), C.golge, 0.4, { havuz: 0.3 });
 yika([(x) => { x.save(); x.clip(new Path2D(parca('topuz').yol)); x.fillRect(260, 140, 38, 62); x.restore(); }, [262, 140, 300, 202]], C.golge, 0.45, { havuz: 0.5 });
 yika(dik(300, 704, 820, 711), C.golge, 0.5, { havuz: 0.5 });
-yika(dik(300, 711, 326, 800), C.golge, 0.4, { havuz: 0.5, aci: Math.PI / 2 });
+yika(dik(300, 711, 330, 800), C.golge, 0.5, { havuz: 1.0, havuzEn: 3, aci: Math.PI / 2 });
 for (const p of S.minarePencereleri.concat(S.kaide.pencereler)) yika(yolA(S.kemerYolu(p.x, p.y, p.w, p.h)), C.tasPencere, 0.75, { havuz: 0.5 });
 // kasnak: düz yeşil, sol yanda ikinci düz kat
-yika(yolA(Y.kasnakAlt), C.kasnak, 0.78, { kay: [0, 0], havuz: 0.5 });
-yika(yolA(Y.kasnakUst), C.kasnak, 0.82, { kay: [0, 0], havuz: 0.5 });
-yika(dik(334, 610, 462, 692), C.kasnak, 0.38, { havuz: 0.6, aci: Math.PI / 2 });
-yika(dik(352, 555, 474, 610), C.kasnak, 0.38, { havuz: 0.6, aci: Math.PI / 2 });
+yika(yolA(Y.kasnakAlt), C.kasnak, 0.78, { kay: [2.5, 1.5], havuz: 1.0, havuzEn: 3, sira: 0.12, siraEn: 28, aci: Math.PI / 2 });
+yika(yolA(Y.kasnakUst), C.kasnak, 0.82, { kay: [2.5, 1.5], havuz: 1.0, havuzEn: 3, sira: 0.12, siraEn: 28, aci: Math.PI / 2 });
+yika(dik(334, 610, 474, 692), C.kasnak, 0.55, { havuz: 1.0, havuzEn: 3, aci: Math.PI / 2 });
+yika(dik(352, 555, 486, 610), C.kasnak, 0.55, { havuz: 1.0, havuzEn: 3, aci: Math.PI / 2 });
 yika(dik(352, 555, 768, 563), C.kasnak, 0.3, { havuz: 0.4 });
 for (const k of [0, 1]) for (const p of S.kasnakPencereleri(k)) yika(yolA(S.kemerYolu(p.x, p.y, p.w, p.h)), C.pencere, 0.82, { havuz: 0.4, kay: [(r() - 0.5) * 0.8, 0] });
 // kubbe: soluk yeşil tek lavi, sol üçte bir ikinci kat
@@ -1125,8 +1128,9 @@ function dilimYolu(u1, u2) {
   const p = S.kubbeProfili(60);
   return S.yol(p.map((q) => [560 + u1 * q.r, q.y]).concat(p.map((q) => [560 + u2 * q.r, q.y]).reverse()), true);
 }
-yika(yolA(Y.kubbe), C.kubbe, 0.85, { kay: [0, 0], havuz: 0.55, aci: Math.PI / 2 + 0.02, siraEn: 30 });
-yika(yolA(dilimYolu(ub[0], ub[5])), C.kubbeG, 0.42, { kay: [0.5, 0], havuz: 0.6 });
+yika(yolA(Y.kubbe), C.kubbe, 0.88, { kay: [3, 2], havuz: 1.1, havuzEn: 3.5, aci: Math.PI / 2 + 0.02, sira: 0.14, siraEn: 34 });
+yika(yolA(dilimYolu(ub[0], ub[5])), C.kubbeG, 0.62, { kay: [2, 1], havuz: 1.1, havuzEn: 3 });
+yika(yolA(dilimYolu(ub[0], ub[2])), C.kubbeG, 0.45, { kay: [1.5, 1], havuz: 1.0, havuzEn: 2.5 });
 // altın
 for (const d of Y.alem.concat(Y.minareAlem)) yika(yolA(d), C.altin, 0.75, { kay: [0, 0], havuz: 0.4 });
 
@@ -1202,8 +1206,8 @@ const LC = S.yeniTuval(2048, 2048);
 const L = LC.getContext('2d');
 L.setTransform(2, 0, 0, 2, 0, 0);
 const ortu = (p) => { L.save(); L.globalCompositeOperation = 'destination-out'; L.fillStyle = '#000'; L.fill(p); L.restore(); };
-const ko = { renk: murekkep, w: 1.3, titreme: 0.13, frek: 0.035, basinc: 0.38, civi: 1.2 };
-const ince = { renk: murekkepA, w: 0.75, titreme: 0.1, frek: 0.04, basinc: 0.25 };
+const ko = { renk: murekkep, w: 1.9, titreme: 0.15, frek: 0.035, basinc: 0.55, civi: 2.2 };
+const ince = { renk: murekkepA, w: 1.0, titreme: 0.12, frek: 0.04, basinc: 0.35 };
 const cet = (x1, y1, x2, y2, o) => cetvelUzun(L, x1, y1, x2, y2, Object.assign({}, ko, o || {}));
 const yolC = (d, o) => cizgiYol(L, d, Object.assign({}, ko, o || {}));
 const noktaC = (pts, o) => cizgiNokta(L, pts, Object.assign({}, ko, o || {}));

@@ -1372,15 +1372,26 @@
     if (r >= 44) return i % 2 ? 'karanfil' : 'lale';
     return ['lale', 'karanfil', 'laleSari', 'lale'][i % 4];
   };
+  // çiçek sapı: soluk yeşil lavi şeridi ve iki yanında fırça-kalem çizgisi; aşağıda yaprak öbeğine ya da
+  // kâğıdın kenarına kadar iner (çiçek havada kalmaz)
+  const cicekSapi = (xu, yu, bukum) => {
+    const pts = H.kavis(xu + bukum * 0.4, 1032, xu, yu, bukum, 14);
+    const k = PIG.yesilAcik.k;
+    k.globalAlpha = 0.75;
+    H.firca(k, pts, { w: 4.2, color: '#fff', bas: 0.02, uc: 0.04, jit: 0.25, seed: T() });
+    k.globalAlpha = 1;
+    cizgi(pts.map(([x, y]) => [x - 1.7, y]), 1.25, { taper: 0.04, amp: 0.3, wf: (t) => 0.75 + 0.25 * t });
+    cizgi(pts.map(([x, y]) => [x + 1.7, y]), 0.9, { taper: 0.06, amp: 0.3 });
+  };
   B.cicekler.forEach((c, i) => {
     const tur = cicekTur(c, i);
     if (tur === 'gul') yabanGulu(c);
     else if (tur === 'karanfil') {
       // sap ve çiçek: aşağıdan
-      cizgi([[c.x + 2, c.y + c.r * 1.8], [c.x, c.y + c.r * 0.3]], 1.6, { taper: 0.1 });
+      cicekSapi(c.x, c.y + c.r * 0.88, (i % 2 ? 1 : -1) * 3);
       karanfil(c.x, c.y + c.r * 0.25, c.r * 1.2, -Math.PI / 2 + (c.x - 512) / 2000);
     } else {
-      cizgi([[c.x - 2, c.y + c.r * 1.9], [c.x, c.y + c.r * 0.6]], 1.6, { taper: 0.1 });
+      cicekSapi(c.x, c.y + c.r * 0.72, (i % 2 ? -1 : 1) * 3);
       lale(c.x, c.y + c.r * 0.7, c.r * 1.2, -Math.PI / 2 + (c.x - 512) / 2400, tur === 'laleSari' ? 'sari' : 'gul');
     }
   });

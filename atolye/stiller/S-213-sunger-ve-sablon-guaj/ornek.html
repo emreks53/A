@@ -728,9 +728,10 @@ const DIS = S.yeniTuval(W * OL, W * OL);
 
 // ---------------------------------------------------------------- elle kesilmiş şablon
 /** Yolu bıçakla kesilmiş gibi kısa düz parçalara böler, köşeleri hafifçe oynatır. */
-function kesik(d, adim, oyn) {
+function kesik(d, adim, oyn, tas) {
   adim = adim || 6;
   oyn = oyn == null ? 0.5 : oyn;
+  tas = tas || 0;
   const p2 = new Path2D();
   for (const p of ornekle(d, 0.8)) {
     const pts = p.pts;
@@ -754,6 +755,16 @@ function kesik(d, adim, oyn) {
         const j = oyn * (NZ.n(i * 0.31 + ofs, ofs) - 0.5) * 2;
         const j2 = oyn * (NZ.n(i * 0.31 + ofs, ofs + 9) - 0.5) * 2;
         out.push([pts[i][0] + j, pts[i][1] + j2]);
+        // köşede bıçak biraz ileri kaçar: şablonda ince bir yarık kalır, boya oradan kıl gibi sızar
+        if (donus && tas > 0 && RD() < 0.7) {
+          const ux = pts[i][0] - pts[i - 1][0];
+          const uy = pts[i][1] - pts[i - 1][1];
+          const ul = Math.hypot(ux, uy) || 1;
+          const t2 = tas * (0.5 + RD() * 0.8);
+          const cx = pts[i][0] + j + (ux / ul) * t2;
+          const cy = pts[i][1] + j2 + (uy / ul) * t2;
+          out.push([cx - (uy / ul) * 0.55, cy + (ux / ul) * 0.55], [cx + (uy / ul) * 0.55, cy - (ux / ul) * 0.55], [pts[i][0] + j, pts[i][1] + j2]);
+        }
         acc = 0;
         hedef = adim * (0.6 + RD() * 0.8);
       }
@@ -837,8 +848,9 @@ function sunger(o) {
       k.fill();
     }
   }
-  // şablon: yalnız açık yerler kalır
-  k.setTransform(OL, 0, 0, OL, -x1 * OL, -y1 * OL);
+  // şablon: yalnız açık yerler kalır (o.kay: şablonun bu kat için biraz kaymış oturuşu, ince ek yeri bırakır)
+  const kay = o.kay || [0, 0];
+  k.setTransform(OL, 0, 0, OL, (kay[0] - x1) * OL, (kay[1] - y1) * OL);
   if (o.ic) {
     k.globalCompositeOperation = 'destination-in';
     k.fillStyle = '#000';
@@ -869,7 +881,7 @@ ctx.fillStyle = rgba(P.kagit);
 ctx.fillRect(0, 0, W, W);
 
 // ---------------------------------------------------------------- şablon biçimleri
-const BULUT = bulutKur(31);
+const BULUT = bulutKur(213);
 function bulutYolu(B) {
   const xs = [];
   const x0 = Math.min(...B.lobs.map((l) => l.x - l.rx));
@@ -899,76 +911,46 @@ function bulutYolu(B) {
   return S.yol(pts, true);
 }
 const bulutD = BULUT.map(bulutYolu);
-const bulutK = bulutD.map((d) => kesik(d, 11, 0.9));
-const gunesK = kesik(S.daireYolu(880, 140, 36), 12, 1.1);
+const bulutK = bulutD.map((d) => kesik(d, 16, 1.1));
+const gunesK = kesik(S.daireYolu(880, 140, 36), 21, 1.3);
 const minareD = Y.minare.join(' ');
-const minareK = kesik(minareD, 6, 0.4);
-const kaideK = kesik(Y.kaide, 8, 0.4);
-const kornisK = kesik(Y.kornis, 8, 0.35);
-const kasnakUK = kesik(Y.kasnakUst, 8, 0.4);
-const kasnakAK = kesik(Y.kasnakAlt, 8, 0.4);
-const kubbeK = kesik(Y.kubbe, 7, 0.45);
+const minareK = kesik(minareD, 14, 0.7, 3.5);
+const kaideK = kesik(Y.kaide, 16, 0.8, 4);
+const kornisK = kesik(Y.kornis, 16, 0.6, 4);
+const kasnakUK = kesik(Y.kasnakUst, 16, 0.7, 3.5);
+const kasnakAK = kesik(Y.kasnakAlt, 16, 0.7, 3.5);
+const kubbeK = kesik(Y.kubbe, 15, 0.9);
 const alemD = Y.alem.join(' ');
 const minareAlemD = Y.minareAlem.join(' ');
 const mimariDis = [minareK, kaideK, kornisK, kasnakUK, kasnakAK, kubbeK, kesik(alemD, 3, 0.25), kesik(minareAlemD, 3, 0.25)];
 
 // ---------------------------------------------------------------- 1. gök
-// a) açık mavi taban: her yer, ince sünger
-const gokKenar = [...bulutD.flatMap((d) => kontur(d)), ...kontur(Y.kubbe), ...kontur(minareD, 3)];
-sunger({
-  kutu: [0, 0, 1024, 806],
-  ic: [new Path2D(dikd(-5, -5, 1029, 801.5))],
-  dis: [...bulutK, gunesK, ...mimariDis],
-  renk: P.maviAcik,
-  aralik: 12,
-  boyut: [18, 30],
-  damga: 'ince',
-  alfa: [0.6, 0.9],
-  yog: () => 1,
-  tohum: 11,
-});
-// a2) alt gökte ikinci açık mavi kat (boşlukları kapatır)
-sunger({
-  kutu: [0, 300, 1024, 806],
-  ic: [new Path2D(dikd(-5, -5, 1029, 801.5))],
-  dis: [...bulutK, gunesK, ...mimariDis],
-  renk: hex('#BFDDF1'),
-  aralik: 15,
-  boyut: [18, 30],
-  damga: 'ince',
-  alfa: [0.5, 0.8],
-  yog: (x, y) => clamp((y - 300) / 300, 0, 0.85),
-  tohum: 16,
-});
-// b) serulyum: tepede sık, aşağı indikçe seyrek; bulut ve mimari kenarlarına sık bastırılmış
+// gök üç üst üste şablon kuşağıyla: (a) bütün göğe açık mavi; (b) üstte, ufka yakın dalgalı düz bıçak kesikli
+// ikinci şablondan orta mavi; (c) tepede, yine dalgalı kesikli üçüncü şablondan serulyum. Her kuşakta sünger
+// kesik kenara sık bastırılır: kenarda yoğun gözenekli bir şerit, içeri doğru seyrek gözenek.
 const gunesUzak = (x, y) => Math.hypot(x - 880, y - 140);
-sunger({
-  kutu: [0, 0, 1024, 806],
-  ic: [new Path2D(dikd(-5, -5, 1029, 801.5))],
-  dis: [...bulutK, gunesK, ...mimariDis],
-  renk: P.seruleum,
-  aralik: 13,
-  boyut: [16, 28],
-  damga: 'iri',
-  alfa: [0.55, 0.85],
-  yog: (x, y) => clamp(1.05 - (y / 800) * 1.1, 0.06, 1) * clamp((gunesUzak(x, y) - 50) / 120, 0.1, 1),
-  kenar: gokKenar,
-  kenarYog: 0.65,
-  tohum: 12,
-});
-// c) tepede bir kat daha koyu serulyum
-sunger({
-  kutu: [0, 0, 1024, 420],
-  ic: [new Path2D(dikd(-5, -5, 1029, 801.5))],
-  dis: [...bulutK, gunesK, ...mimariDis],
-  renk: P.seruleumKoyu,
-  aralik: 19,
-  boyut: [16, 26],
-  damga: 'iri',
-  alfa: [0.55, 0.85],
-  yog: (x, y) => clamp(0.85 - (y / 420) * 1.0, 0, 1) * clamp((gunesUzak(x, y) - 80) / 120, 0, 1),
-  tohum: 13,
-});
+function kusakKes(yOrt, genlik, tohum) {
+  const r = S.rng(tohum);
+  const pts = [[-12, -12], [1036, -12]];
+  const cizgi = [];
+  for (let x = 1036; x >= -12; x -= 15 + r() * 12) {
+    const q = [x, yOrt + Math.sin(x * 0.0105 + tohum) * genlik + Math.sin(x * 0.031 + tohum * 2) * genlik * 0.25 + (r() - 0.5) * 2.5];
+    pts.push(q);
+    cizgi.push(q);
+  }
+  return { yol: kesik(S.yol(pts, true), 18, 0.7), cizgi: yenidenOrnekle(cizgi, 2) };
+}
+const gokDis = [...bulutK, gunesK, ...mimariDis];
+const gokIc = [new Path2D(dikd(-5, -5, 1029, 801.5))];
+sunger({ kutu: [0, 0, 1024, 806], ic: gokIc, dis: gokDis, renk: P.maviAcik, aralik: 13, boyut: [18, 30], damga: 'ince', alfa: [0.55, 0.85], yog: () => 0.95, tohum: 11 });
+sunger({ kutu: [0, 0, 1024, 806], ic: gokIc, dis: gokDis, renk: hex('#C4DFF2'), aralik: 17, boyut: [16, 26], damga: 'iri', alfa: [0.45, 0.75], yog: (x, y) => clamp(0.3 + (y - 300) / 500, 0.2, 0.8), tohum: 16 });
+const K2 = kusakKes(505, 9, 7);
+sunger({ kutu: [0, 0, 1024, 560], ic: [K2.yol], ic2: gokIc[0], dis: gokDis, renk: hex('#A3CBEC'), aralik: 15, boyut: [16, 27], damga: 'ince', alfa: [0.5, 0.82], yog: (x, y) => clamp((gunesUzak(x, y) - 45) / 90, 0.25, 0.85), kenar: [K2.cizgi], kenarYog: 1, kenarAralik: 4, tohum: 12 });
+const K3 = kusakKes(262, 11, 3);
+sunger({ kutu: [0, 0, 1024, 320], ic: [K3.yol], ic2: gokIc[0], dis: gokDis, renk: P.seruleum, aralik: 15, boyut: [16, 28], damga: 'iri', alfa: [0.55, 0.85], yog: (x, y) => clamp(0.95 - y / 600, 0.4, 0.95) * clamp((gunesUzak(x, y) - 45) / 80, 0.15, 1), kenar: [K3.cizgi], kenarYog: 1, kenarAralik: 4, tohum: 13 });
+sunger({ kutu: [0, 0, 1024, 320], ic: [K3.yol], ic2: gokIc[0], dis: gokDis, renk: P.seruleumKoyu, aralik: 22, boyut: [14, 24], damga: 'iri', alfa: [0.45, 0.75], yog: (x, y) => clamp(0.75 - y / 240, 0, 0.75) * clamp((gunesUzak(x, y) - 70) / 90, 0, 1), tohum: 18 });
+// bulut ve mimari kenarlarına da sünger sık bastırılmıştır
+sunger({ kutu: [0, 0, 1024, 806], ic: gokIc, dis: gokDis, renk: P.seruleum, aralik: 400, boyut: [8, 12], damga: 'ince', alfa: [0.4, 0.7], yog: () => 0, kenar: [...bulutD.flatMap((d) => kontur(d)), ...kontur(Y.kubbe), ...kontur(minareD, 3)], kenarYog: 0.55, kenarAralik: 5, tohum: 19 });
 // güneş: soluk sarı, çok hafif bastırılmış
 sunger({ kutu: [836, 96, 924, 184], ic: [gunesK], renk: P.gunes, aralik: 11, boyut: [12, 18], damga: 'ince', alfa: [0.45, 0.75], yog: () => 0.7, kenar: kontur(S.daireYolu(880, 140, 35)), kenarYog: 0.95, tohum: 14 });
 sunger({ kutu: [836, 96, 924, 184], ic: [gunesK], renk: hex('#F1E09A'), aralik: 12, boyut: [10, 15], damga: 'iri', alfa: [0.35, 0.6], yog: (x, y) => clamp(((x - 880) * -0.6 + (y - 140) * 0.8) / 30, 0, 0.8), tohum: 17 });
@@ -1038,7 +1020,9 @@ function minareYari(y) {
   if (y >= 198) return 25;
   return 22;
 }
-sunger({ kutu: [240, 140, 360, 802], ic: [minareK], renk: P.krem, aralik: 13, boyut: [12, 22], damga: 'ince', alfa: [0.7, 0.95], yog: () => 0.9, kenar: kontur(minareD, 3), kenarYog: 0.7, tohum: 31 });
+const MK = [-1.8, 1.2]; // minare şablonunun bu katta kaymış oturuşu
+sunger({ kutu: [236, 136, 364, 806], ic: [minareK], kay: MK, renk: P.krem, aralik: 15, boyut: [12, 20], damga: 'ince', alfa: [0.55, 0.85], yog: () => 0.85, kenar: kontur(minareD, 3), kenarYog: 0.95, kenarAralik: 4, tohum: 31 });
+sunger({ kutu: [236, 136, 364, 806], ic: [minareK], kay: MK, renk: hex('#E9DCBE'), aralik: 22, boyut: [12, 20], damga: 'iri', alfa: [0.45, 0.75], yog: () => 0.6, tohum: 37 });
 // gölge şablonu: gövdenin sol şeridi ve çıkmaların altları
 {
   const parca = [];
@@ -1051,8 +1035,8 @@ sunger({ kutu: [240, 140, 360, 802], ic: [minareK], renk: P.krem, aralik: 13, bo
   parca.push(dikd(256, 448, 344, 456));
   parca.push(dikd(260, 282, 340, 290));
   parca.push(S.yol([[278, 200], [270, 190], [274, 176], [286, 162], [300, 150], [296, 170], [292, 200]], true));
-  const golgeK = parca.map((d) => kesik(d, 6, 0.4));
-  sunger({ kutu: [240, 140, 360, 802], ic: golgeK, dis: [], renk: hex('#CECCDD'), aralik: 11, boyut: [11, 18], damga: 'ince', alfa: [0.6, 0.9], yog: () => 0.9, kenar: parca.flatMap((d) => kontur(d, 3)), kenarYog: 0.8, tohum: 32 });
+  const golgeK = parca.map((d) => kesik(d, 13, 0.6, 3));
+  sunger({ kutu: [236, 136, 364, 806], ic: golgeK, ic2: minareK, kay: MK, renk: hex('#C9C6DC'), aralik: 14, boyut: [11, 18], damga: 'iri', alfa: [0.5, 0.85], yog: () => 0.8, kenar: parca.flatMap((d) => kontur(d, 3)), kenarYog: 1, kenarAralik: 4, tohum: 32 });
   // şerefelerin gövdeye düşen gölgesi (ikinci kat, daha dar)
   const golge2 = [dikd(266, 488, 334, 497), dikd(273, 316, 327, 323)].map((d) => kesik(d, 6, 0.3));
   sunger({ kutu: [260, 310, 340, 500], ic: golge2, renk: P.lilaKoyu, aralik: 9, boyut: [9, 14], damga: 'ince', alfa: [0.6, 0.9], yog: () => 0.9, tohum: 33 });
@@ -1101,13 +1085,15 @@ sunger({ kutu: [240, 140, 360, 802], ic: [minareK], renk: P.krem, aralik: 13, bo
 }
 
 // ---------------------------------------------------------------- 4. kaide
-sunger({ kutu: [294, 690, 830, 804], ic: [kaideK, kornisK], renk: P.krem, aralik: 14, boyut: [14, 24], damga: 'ince', alfa: [0.7, 0.95], yog: () => 0.85, kenar: kontur(Y.kaide, 3), kenarYog: 0.7, tohum: 51 });
+const KK2 = [1.6, -1.2];
+sunger({ kutu: [290, 686, 834, 806], ic: [kaideK, kornisK], kay: KK2, renk: P.krem, aralik: 16, boyut: [13, 22], damga: 'ince', alfa: [0.55, 0.85], yog: () => 0.82, kenar: [...kontur(Y.kaide, 3), ...kontur(Y.kornis, 3)], kenarYog: 0.95, kenarAralik: 4, tohum: 51 });
+sunger({ kutu: [290, 686, 834, 806], ic: [kaideK, kornisK], kay: KK2, renk: hex('#E9DCBE'), aralik: 24, boyut: [12, 22], damga: 'iri', alfa: [0.45, 0.75], yog: () => 0.6, tohum: 57 });
 {
-  const golge = [kesik(S.yol([[300, 704], [820, 704], [820, 712], [560, 716], [300, 713]], true), 9, 0.4), kesik(dikd(300, 704, 318, 800), 8, 0.3)];
-  sunger({ kutu: [294, 700, 826, 804], ic: golge, renk: P.lila, aralik: 9, boyut: [9, 15], damga: 'ince', alfa: [0.65, 0.9], yog: () => 0.95, tohum: 52 });
+  const golge = [kesik(S.yol([[300, 704], [820, 704], [820, 712], [560, 716], [300, 713]], true), 16, 0.7, 3), kesik(dikd(300, 704, 318, 800), 16, 0.6, 3)];
+  sunger({ kutu: [290, 696, 830, 806], ic: golge, kay: KK2, renk: P.lila, aralik: 11, boyut: [9, 15], damga: 'iri', alfa: [0.55, 0.85], yog: () => 0.85, kenar: [[[300, 713], [820, 713]]], kenarYog: 1, kenarAralik: 4, tohum: 52 });
   sunger({ kutu: [286, 698, 834, 706], ic: [kesik(dikd(290, 700.5, 830, 704), 10, 0.2)], renk: P.lilaKoyu, aralik: 6, boyut: [6, 9], damga: 'ince', alfa: [0.6, 0.9], yog: () => 0.9, tohum: 53 });
-  const pen = S.kaide.pencereler.map((p) => kesik(S.kemerYolu(p.x, p.y, p.w, p.h), 4, 0.3));
-  sunger({ kutu: [410, 712, 710, 784], ic: pen, renk: P.pencereTas, aralik: 6, boyut: [8, 12], damga: 'ince', alfa: [0.85, 1], yog: () => 1, kenar: S.kaide.pencereler.flatMap((p) => kontur(S.kemerYolu(p.x, p.y, p.w, p.h), 2)), kenarYog: 1, tohum: 54 });
+  const pen = S.kaide.pencereler.map((p) => kesik(S.kemerYolu(p.x, p.y, p.w, p.h), 7, 0.45, 2.5));
+  sunger({ kutu: [410, 712, 710, 784], ic: pen, kay: [0.8, 0.6], renk: P.pencereTas, aralik: 9, boyut: [8, 12], damga: 'ince', alfa: [0.7, 0.95], yog: () => 0.9, kenar: S.kaide.pencereler.flatMap((p) => kontur(S.kemerYolu(p.x, p.y, p.w, p.h), 2)), kenarYog: 1, tohum: 54 });
   // pencerelerin içinde sağ yarı koyu (ikinci kesik)
   const penSag = S.kaide.pencereler.map((p) => kesik(S.kemerYolu(p.x + p.w * 0.18, p.y + 6, p.w * 0.64, p.h - 6), 4, 0.3));
   sunger({ kutu: [410, 712, 710, 784], ic: penSag, renk: hex('#5F5670'), aralik: 6, boyut: [7, 10], damga: 'ince', alfa: [0.6, 0.9], yog: () => 0.9, tohum: 55 });
@@ -1120,7 +1106,7 @@ for (let k = 1; k >= 0; k--) {
   const d = k ? Y.kasnakAlt : Y.kasnakUst;
   const kutu = [q.x1 - 4, q.y1 - 4, q.x2 + 4, q.y2 + 4];
   const pen = S.kasnakPencereleri(k).map((p) => kesik(S.kemerYolu(p.x, p.y, p.w, p.h), 3, 0.25));
-  sunger({ kutu, ic: [KK], dis: pen, renk: P.yesil, aralik: 10, boyut: [12, 20], damga: 'ince', alfa: [0.6, 0.88], yog: () => 1, kenar: kontur(d, 3), kenarYog: 0.8, tohum: 61 + k });
+  sunger({ kutu, ic: [KK], dis: pen, kay: [k ? 1.4 : -1.2, k ? 0.9 : -0.8], renk: P.yesil, aralik: 12, boyut: [12, 20], damga: 'ince', alfa: [0.6, 0.88], yog: () => 0.95, kenar: kontur(d, 3), kenarYog: 1, kenarAralik: 4, tohum: 61 + k });
   // gölge şablonu: sol bölüm ve üstteki çıkıntının altı
   const w = q.x2 - q.x1;
   const golge = [
@@ -1136,7 +1122,7 @@ for (let k = 1; k >= 0; k--) {
 }
 
 // ---------------------------------------------------------------- 6. kubbe: taban yeşili, dilim gölgeleri, ışık şablonları
-sunger({ kutu: [354, 294, 766, 560], ic: [kubbeK], renk: P.yesil, aralik: 10, boyut: [13, 22], damga: 'ince', alfa: [0.6, 0.88], yog: () => 1, kenar: kontur(Y.kubbe, 3), kenarYog: 0.85, tohum: 71 });
+sunger({ kutu: [350, 290, 770, 562], ic: [kubbeK], kay: [1.5, -1], renk: P.yesil, aralik: 12, boyut: [13, 22], damga: 'ince', alfa: [0.6, 0.88], yog: () => 0.95, kenar: kontur(Y.kubbe, 3), kenarYog: 1, kenarAralik: 4, tohum: 71 });
 {
   const KB = S.kaburgalar(16, 40);
   const prof = S.kubbeProfili(40);
@@ -1144,7 +1130,7 @@ sunger({ kutu: [354, 294, 766, 560], ic: [kubbeK], renk: P.yesil, aralik: 10, bo
   const k5 = KB[4].noktalar;
   const solGolge = S.yol(prof.map((q) => [560 - q.r - 3, q.y]).concat(k5.slice().reverse()), true);
   const taban = S.yol([[356, 556], [764, 556], [764, 540], [560, 546], [356, 540]], true);
-  sunger({ kutu: [354, 294, 766, 560], ic: [kesik(solGolge, 9, 0.4), kesik(taban, 9, 0.4)], dis: [], renk: P.yesilKoyu, aralik: 12, boyut: [12, 19], damga: 'iri', alfa: [0.6, 0.85], yog: () => 0.85, tohum: 72 });
+  sunger({ kutu: [350, 290, 770, 562], ic: [kesik(solGolge, 15, 0.7), kesik(taban, 15, 0.6)], dis: [], kay: [-1, 1.2], renk: P.yesilKoyu, aralik: 14, boyut: [12, 19], damga: 'iri', alfa: [0.55, 0.85], yog: () => 0.8, kenar: [k5], kenarYog: 1, kenarAralik: 4, tohum: 72 });
   // dilim gölgeleri: her kaburganın solunda dar şerit
   const seritler = [];
   for (let i = 0; i < KB.length; i++) {
@@ -1152,9 +1138,9 @@ sunger({ kutu: [354, 294, 766, 560], ic: [kubbeK], renk: P.yesil, aralik: 10, bo
     const onc = i > 0 ? KB[i - 1].noktalar : prof.map((q) => [560 - q.r, q.y]);
     const genis = 0.2 + (KB[i].u < 0 ? 0.08 : 0);
     const sol = a.map((p, j) => [p[0] + (onc[j][0] - p[0]) * genis, p[1]]);
-    seritler.push(kesik(S.yol(a.concat(sol.reverse()), true), 8, 0.35));
+    seritler.push(kesik(S.yol(a.concat(sol.reverse()), true), 14, 0.6));
   }
-  sunger({ kutu: [354, 294, 766, 560], ic: seritler, dis: [], renk: P.yesilKoyu, aralik: 8, boyut: [8, 13], damga: 'ince', alfa: [0.5, 0.8], yog: () => 0.65, tohum: 73 });
+  sunger({ kutu: [350, 290, 770, 562], ic: seritler, ic2: kubbeK, dis: [], kay: [0.8, 0.8], renk: P.yesilKoyu, aralik: 10, boyut: [8, 13], damga: 'ince', alfa: [0.5, 0.8], yog: () => 0.6, kenar: KB.map((k) => k.noktalar), kenarYog: 1, kenarAralik: 4, tohum: 73 });
   // ışık şablonları: sağ üstteki dilimlerin ortasında mercek biçimli kesikler
   const mercek = [];
   for (let i = 7; i < 13; i++) {
@@ -1209,7 +1195,7 @@ sunger({ kutu: [354, 294, 766, 560], ic: [kubbeK], renk: P.yesil, aralik: 10, bo
   const kenar = [];
   for (const yp of S.bitki.yapraklar) {
     const d = S.yaprakYolu(yp);
-    taban.push(kesik(d, 6, 0.35));
+    taban.push(kesik(d, 11, 0.6, 2.5));
     kenar.push(...kontur(d, 3));
     const ca = Math.cos(yp.aci);
     const sa = Math.sin(yp.aci);
@@ -1225,8 +1211,8 @@ sunger({ kutu: [354, 294, 766, 560], ic: [kubbeK], renk: P.yesil, aralik: 10, bo
     isik.push(kesik(S.yol([p(L * 0.18, isikYan * Wd * 0.12), p(L * 0.45, isikYan * Wd * 0.34), p(L * 0.72, isikYan * Wd * 0.2), p(L * 0.6, isikYan * Wd * 0.08)], true), 5, 0.3));
   }
   const tabanYol = yolBirlestir(taban);
-  sunger({ kutu: [0, 500, 1024, 1024], ic: taban, renk: P.yesil, aralik: 8, boyut: [10, 16], damga: 'ince', alfa: [0.65, 0.92], yog: () => 1, kenar, kenarYog: 0.6, tohum: 82 });
-  sunger({ kutu: [0, 500, 1024, 1024], ic: golge, ic2: tabanYol, renk: P.yesilKoyu, aralik: 9, boyut: [9, 14], damga: 'iri', alfa: [0.65, 0.9], yog: () => 0.85, tohum: 83 });
+  sunger({ kutu: [0, 500, 1024, 1024], ic: taban, renk: P.yesil, aralik: 10, boyut: [10, 16], damga: 'ince', alfa: [0.6, 0.88], yog: () => 0.92, kenar, kenarYog: 1, kenarAralik: 4, tohum: 82 });
+  sunger({ kutu: [0, 500, 1024, 1024], ic: golge, ic2: tabanYol, kay: [1, -1], renk: P.yesilKoyu, aralik: 10, boyut: [9, 14], damga: 'iri', alfa: [0.6, 0.88], yog: () => 0.85, tohum: 83 });
   sunger({ kutu: [0, 500, 1024, 1024], ic: isik, ic2: tabanYol, renk: P.yesilSari, aralik: 7, boyut: [7, 11], damga: 'ince', alfa: [0.6, 0.9], yog: () => 0.9, tohum: 84 });
 }
 // tomurcuklar: kâğıt beyazı, lila gölge ve yeşil çanak
@@ -1262,17 +1248,20 @@ sunger({ kutu: [354, 294, 766, 560], ic: [kubbeK], renk: P.yesil, aralik: 10, bo
   for (const c of S.bitki.cicekler) {
     const ts = S.tacYapraklari(c);
     for (const e of ts) {
-      tac.push(kesik(S.elipsYolu(e), Math.max(3, c.r * 0.12), 0.3));
+      tac.push(kesik(S.elipsYolu(e), Math.max(4, c.r * 0.16), 0.45));
       const isik = Math.cos(e.aci - ISIK_ACI);
-      // gölge: göbeğe yakın, taç yaprağın içinde kalan küçük kesik
-      const g = 0.5 + 0.3 * (1 - isik) / 2;
-      if (isik < -0.35) {
-        const ca = Math.cos(e.aci);
-        const sa = Math.sin(e.aci);
-        const yan = Math.sign(-sa * ISIK[0] + ca * ISIK[1]) || 1;
-        golge.push(kesik(S.elipsYolu({ cx: e.cx - sa * yan * e.ry * 0.45, cy: e.cy + ca * yan * e.ry * 0.45, rx: e.rx * 0.85, ry: e.ry * 0.45, aci: e.aci }), Math.max(3, c.r * 0.1), 0.3));
+      const ca = Math.cos(e.aci);
+      const sa = Math.sin(e.aci);
+      const p = (u, v) => [c.x + ca * c.r * u - sa * e.ry * v, c.y + sa * c.r * u + ca * e.ry * v];
+      // gölge şablonu taç yaprağın dibini izler: göbekten çıkan sivri uçlu bir dil; gölge yanındaki taç
+      // yapraklarında dil uzar ve yaprağın gölge yarısına (orta damardan bir yana) yayılır
+      const boy = 0.42 + (1 - isik) * 0.16;
+      const yan = Math.sign(-sa * ISIK[0] + ca * ISIK[1]) || 1;
+      if (isik < -0.2) {
+        golge.push(kesik(S.yol([p(0.12, -0.35 * yan), p(0.35, -0.7 * yan), p(0.62, -0.8 * yan), p(0.86, -0.45 * yan), p(0.8, 0.05 * yan), p(0.4, 0.2 * yan), p(0.12, 0.3 * yan)], true), Math.max(4, c.r * 0.13), 0.4));
+      } else {
+        golge.push(kesik(S.yol([p(0.12, -0.42), p(boy * 0.6, -0.5), p(boy, -0.12), p(boy * 1.04, 0.08), p(boy * 0.6, 0.45), p(0.12, 0.38)], true), Math.max(3, c.r * 0.1), 0.35));
       }
-      golge.push(kesik(S.elipsYolu({ cx: c.x + Math.cos(e.aci) * c.r * 0.3 * g + Math.cos(e.aci + 1.4) * c.r * 0.05, cy: c.y + Math.sin(e.aci) * c.r * 0.3 * g + Math.sin(e.aci + 1.4) * c.r * 0.05, rx: c.r * 0.34 * g + c.r * 0.08, ry: e.ry * 0.62, aci: e.aci }), Math.max(3, c.r * 0.1), 0.3));
     }
     gobek.push(kesik(S.daireYolu(c.x, c.y, c.r * 0.2), Math.max(2, c.r * 0.07), 0.25));
     gobekGolge.push(kesik(S.yol([[c.x - c.r * 0.25, c.y - c.r * 0.04], [c.x + c.r * 0.06, c.y + c.r * 0.06], [c.x + c.r * 0.12, c.y + c.r * 0.25], [c.x - c.r * 0.25, c.y + c.r * 0.25]], true), 3, 0.2));
@@ -1284,7 +1273,7 @@ sunger({ kutu: [354, 294, 766, 560], ic: [kubbeK], renk: P.yesil, aralik: 10, bo
   ctx.fill(tacY);
   ctx.restore();
   // taç yaprakları birbirinden ayıran çok ince lila kesik payı
-  sunger({ kutu: [80, 600, 960, 1024], ic: golge, ic2: tacY, renk: P.lila, aralik: 8, boyut: [8, 13], damga: 'ince', alfa: [0.45, 0.75], yog: () => 0.8, tohum: 91 });
+  sunger({ kutu: [80, 600, 960, 1024], ic: golge, ic2: tacY, kay: [1.2, 1], renk: P.lila, aralik: 9, boyut: [8, 13], damga: 'ince', alfa: [0.5, 0.82], yog: () => 0.85, kenar: golge.length ? [] : [], tohum: 91 });
   const gobekY = yolBirlestir(gobek);
   sunger({ kutu: [80, 600, 960, 1024], ic: gobek, renk: P.sari, aralik: 5, boyut: [6, 10], damga: 'ince', alfa: [0.85, 1], yog: () => 1, tohum: 92 });
   sunger({ kutu: [80, 600, 960, 1024], ic: gobekGolge, ic2: gobekY, renk: P.okrKoyu, aralik: 5, boyut: [5, 8], damga: 'ince', alfa: [0.6, 0.9], yog: () => 0.9, tohum: 93 });

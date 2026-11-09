@@ -863,11 +863,19 @@ const M = (function () {
     const L = y.uzunluk, ca = Math.cos(y.aci), sa = Math.sin(y.aci);
     const p = (u, v) => [y.x + u * ca - v * sa, y.y + u * sa + v * ca];
     const isikV = (-sa) * 0.7 - ca * 0.7 > 0 ? 1 : -1;
+    // her yarı, eksen boyunca bir iki yüklü düz fırça darbesi: dolu, boya birikintili başlangıç; kuruyup incelen uç;
+    // dış kenar fırçanın kendi kenarı (çizilmiş kontur yok); güneşli yarı sarı-yeşil, gölge yarısı mavi-yeşil
     for (const yari of [isikV * -1, isikV]) {
-      const pts = [];
-      for (let i = 0; i <= 8; i++) { const t = i / 8; pts.push(p(L * t, yari * L * 0.1 * Math.sin(Math.PI * Math.min(1, t * 1.05)))); }
-      const c = yari === isikV ? kar('#8FCB5E', '#B5DE76', R() * 0.5) : kar('#2F7F6A', '#3A8F78', R());
-      M.darbe(g, pts, L * 0.26, c, yuklu({ r: R, kil: 8, uc: 'sivri', bas: 0.55, hk: yari === isikV ? 0.8 : 0.4 }));
+      const gunesli = yari === isikV;
+      const ana = gunesli ? kar('#8FCB5E', '#B0DB72', R() * 0.6) : kar('#2F7F6A', '#3A8F78', R());
+      const ikinci = gunesli ? kar('#BCE07E', '#CFE892', R()) : kar('#246C59', '#2C7766', R());
+      const yol = (v, boy, bas0) => {
+        const pts = [];
+        for (let i = 0; i <= 8; i++) { const t = bas0 + (boy - bas0) * (i / 8); pts.push(p(L * t, yari * L * v * Math.sin(Math.PI * Math.min(1, t * 1.05)))); }
+        return pts;
+      };
+      M.darbe(g, yol(0.1, 1.0, 0.0), L * 0.23, ana, yuklu({ r: R, kil: 10, kilK: 24, kilA: 0.6, uc: 'sivri', bas: 0.5, govdeSon: 0.72, yuk: 0.45, kenar: 0.22, hk: gunesli ? 0.8 : 0.45 }));
+      M.darbe(g, yol(0.16, 0.8, 0.1), L * 0.11, ikinci, yuklu({ r: R, kil: 6, kilK: 20, kilA: 0.6, uc: 'sivri', bas: 0.7, govdeSon: 0.65, yuk: 0.4, kenar: 0.25, a: 0.92, hk: gunesli ? 0.9 : 0.5 }));
     }
   }
   for (const t of B.tomurcuklar) {

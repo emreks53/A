@@ -381,6 +381,9 @@
 const tv = document.getElementById('tuval');
 const ctx = SAHNE.tuval(tv, 1);
 const S = sahneKur({ genlik: 1.0, tohum: 31 });
+// minare ve kasnak siluetleri daha sakin: kadife kenar yumuşak ama kesin kalsın (topuzda yumru, kasnakta çit kenarı olmasın)
+S.yol.minare = elYolu(S.Y.minare, 0.3, 60, 31 + 9);
+S.yol.kasnak = elYolu([S.Y.kasnakUst, S.Y.kasnakAlt], 0.35, 70, 31 + 2);
 const R = SAHNE.rng(231);
 const N1 = gurultu(2311), N2 = gurultu(2312), N3 = gurultu(2313);
 
@@ -550,7 +553,7 @@ const kMin = katman();
   for (const [x, y] of nok) {
     const v = S.isik('minare', x, y);
     let t = 0.04 + Math.pow(v, 1.5) * 0.98 + (R() - 0.5) * 0.08;
-    vur(k, x, y, Math.PI / 2 + (R() - 0.5) * 0.12, 12 + R() * 12, 7 + R() * 3, P.tas(ton(t, 7)), 0.93, { egri: 0.1, bas: 0.2, uc: 0.35 });
+    vur(k, x, y, Math.PI / 2 + (R() - 0.5) * 0.1, (y < 200 ? 9 : 12) + R() * (y < 200 ? 7 : 12), y < 200 ? 6 : 7 + R() * 3, P.tas(ton(t, 7, y < 200 ? 0.5 : 0.9)), 0.93, { egri: 0.1, bas: 0.2, uc: 0.35 });
   }
   // şerefe altı gölgeler ve korkuluk dikmeleri
   const par = SAHNE.minareParcalari();
@@ -623,19 +626,19 @@ const kKas = katman();
     const v = S.isik('kasnak', x, y);
     let t = 0.05 + v * 0.92 + (R() - 0.5) * 0.06;
     if (y < 562 || (y > 610 && y < 617)) t += 0.12;
-    if ((y > 602 && y < 610) || y > 684) t -= 0.18;
-    vur(k, x, y, Math.PI / 2 + (R() - 0.5) * 0.15, 11 + R() * 10, 7 + R() * 3, P.kasnak(ton(t, 7)), 0.93);
+    if ((y > 602 && y < 610) || y > 684) t -= 0.12;
+    vur(k, x, y, Math.PI / 2 + (R() - 0.5) * 0.1, 15 + R() * 11, 7 + R() * 3, P.kasnak(ton(t, 7, 0.5)), 0.93, { egri: 0.1, bas: 0.18, uc: 0.35 });
   }
   // katların üst ışık çizgisi, alt gölge çizgisi
   for (const [ka, y1, y2] of [[0, 555, 610], [1, 610, 692]]) {
     const q = SAHNE.kasnak[ka];
-    cizgi(k, duzCizgi(q.x1 + 2, y1 + 2, q.x2 - 2, y1 + 2, R, 0.6), 3, P.kasnak(0.97), 0.85);
-    cizgi(k, duzCizgi(q.x1 + 2, y2 - 2, q.x2 - 2, y2 - 2, R, 0.6), 3.4, P.kasnak(0.02), 0.6);
+    cizgi(k, duzCizgi(q.x1 + 2, y1 + 2, q.x2 - 2, y1 + 2, R, 0.6), 3, P.kasnak(0.97), 0.85, { bas: 0.04, uc: 0.08, titre: 0.12 });
+    cizgi(k, duzCizgi(q.x1 + 2, y2 - 2.5, q.x2 - 2, y2 - 2.5, R, 0.6), 4, P.kasnak(0.04), 0.5, { bas: 0.04, uc: 0.08, titre: 0.1 });
   }
   // pencereler
   for (const ka of [0, 1]) {
     for (const p of SAHNE.kasnakPencereleri(ka)) {
-      const yol = elYolu(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 0.4, 10, 50 + p.x * 3 + ka, 1.2);
+      const yol = elYolu(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 0.22, 10, 50 + p.x * 3 + ka, 1.2);
       k.x.save(); k.x.clip(yol);
       k.x.fillStyle = rgba(P.pencereK); k.x.fillRect(p.x - p.w, p.y - 2, p.w * 2, p.h + 4);
       vur(k, p.x - p.w * 0.25, p.y + p.h * 0.6, Math.PI / 2, p.h * 0.8, Math.max(2, p.w * 0.3), P.pencereK2, 0.7);

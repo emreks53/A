@@ -1056,17 +1056,20 @@ function guajDoldur(m, o) {
     return [c, 0.97];
   };
   taban(gm, gokRenk);
+  // örtücü, uçları net yatay guaj darbeleri (yaklaşık 14 px); tonu darbeden darbeye ±%7, ufka doğru açılır
   guajDoldur(gm, {
-    en: 7.5,
-    aralik: 9,
-    boy: 130,
+    en: 7,
+    aralik: 9.5,
+    boy: 88,
     egri: 2,
+    kal: 1.3,
     renkFn: (x, y, rr) => {
       const t = kenet(y / 800, 0, 1);
       let c = t < 0.55 ? karistir(P.maviK, P.mavi, t / 0.55) : karistir(P.mavi, P.maviA, Math.pow((t - 0.55) / 0.45, 0.9));
       const gq = Math.hypot(x - S.gunes.x, y - S.gunes.y);
-      c = karistir(c, rr() < 0.5 ? P.maviO : P.maviK, rr() * 0.1);
-      return [c, 0.55 * yumusak(40, 70, gq)];
+      const v = 1 + (rr() - 0.5) * 0.15;
+      c = karistir(c, rr() < 0.5 ? P.maviO : P.maviK, rr() * 0.1).map((q) => Math.min(1, q * v));
+      return [c, 0.92 * yumusak(40, 70, gq)];
     },
   });
   // güneş çevresinde kısa, açık mavi-beyaz fırça darbeleriyle ışık halkası
@@ -1093,7 +1096,7 @@ function guajDoldur(m, o) {
   const gs = ymaske(B, (x) => { x.beginPath(); x.arc(S.gunes.x, S.gunes.y, 34, 0, Math.PI * 2); x.fill(); }, [840, 100, 920, 180]);
   guajDoldur(gs, { en: 3, aralik: 3.6, boy: 20, renkFn: (x, y, rr) => [karistir(hex('#FFF4CC'), P.beyaz, rr() * 0.6), 0.98] });
   // birkaç düzgün, uzun beyaz bulut (alt yanı soluk mavi-gri)
-  for (const [cx, cy, rx, ry] of [[236, 200, 70, 11], [200, 214, 124, 14], [736, 286, 74, 11], [690, 300, 134, 13], [496, 110, 46, 8], [470, 120, 84, 10]]) {
+  for (const [cx, cy, rx, ry] of [[236, 200, 70, 11], [200, 214, 124, 14], [806, 272, 74, 11], [760, 286, 134, 13], [496, 110, 46, 8], [470, 120, 84, 10]]) {
     const bm = ymaske(B, (x) => {
       x.beginPath();
       for (let X = cx - rx; X <= cx + rx; X += 3) x.lineTo(X, cy - ry * Math.pow(Math.sin(Math.PI * (X - cx + rx) / (2 * rx)), 0.6) * (0.85 + 0.15 * Math.sin(X * 0.05)));
@@ -1138,7 +1141,7 @@ for (const p of MP) {
     taban(m, (x, y) => [karistir(P.golge, P.golgeK, 0.4), 1]);
   } else {
     taban(m, tasRenk(k[0], k[2]));
-    guajDoldur(m, { en: 3.4, aralik: 4.6, boy: 40, aci: Math.PI / 2, renkFn: (x, y, rr) => { const q = tasRenk(k[0], k[2])(x, y, rr); return [q[0], 0.5]; } });
+    guajDoldur(m, { en: 4.2, aralik: 5.6, boy: 36, aci: Math.PI / 2, kal: 1.2, renkFn: (x, y, rr) => { const q = tasRenk(k[0], k[2])(x, y, rr); return [rr() < 0.3 ? karistir(q[0], P.golge, 0.55) : q[0], 0.88]; } });
   }
 }
 // şerefe altları ve korkuluk babaları
@@ -1163,9 +1166,9 @@ for (const p of S.minarePencereleri) guajDoldur(ym(S.kemerYolu(p.x, p.y, p.w, p.
     return [karistir(karistir(P.beyaz, P.beyazK, rr() * 0.5), P.golge, kenet(gol, 0, 1)), 0.97];
   };
   taban(ym(Y.kaide, 1), kaideRenk);
-  guajDoldur(ym(Y.kaide, 1), { en: 4, aralik: 5.5, boy: 60, renkFn: (x, y, rr) => {
-    const gol = 0.8 * Math.exp(-Math.pow((y - 704) / 10, 2)) + 0.6 * Math.pow(Math.max(0, 1 - (x - 300) / 50), 2);
-    return [karistir(karistir(P.beyaz, P.beyazK, rr() * 0.5), P.golge, kenet(gol, 0, 1)), 0.5];
+  guajDoldur(ym(Y.kaide, 1), { en: 4.6, aralik: 6.2, boy: 52, kal: 1.2, renkFn: (x, y, rr) => {
+    const gol = 0.8 * Math.exp(-Math.pow((y - 704) / 10, 2)) + 0.7 * Math.pow(Math.max(0, 1 - (x - 300) / 70), 2);
+    return [karistir(karistir(P.beyaz, P.beyazK, rr() * 0.6), P.golge, kenet(gol + (rr() < 0.22 ? 0.45 : 0), 0, 1)), 0.88];
   } });
   guajDoldur(ym(Y.kornis, 1), { en: 2.2, aralik: 2.8, boy: 30, renkFn: (x, y, rr) => [karistir(P.beyaz, P.beyazK, rr() * 0.3), 0.98] });
   g({ pts: [[K.kornis.x1, K.kornis.y2 - 1], [K.kornis.x2, K.kornis.y2 - 1]], w: 1.2, c1: P.golgeK, c2: P.golgeK, d1: 0.8, d2: 0.8 });
@@ -1185,13 +1188,13 @@ for (const kat of [1, 0]) {
     return [c, 1];
   };
   taban(ym(kat ? Y.kasnakAlt : Y.kasnakUst, 1), kr);
-  guajDoldur(ym(kat ? Y.kasnakAlt : Y.kasnakUst, 1), { en: 3.4, aralik: 4.6, boy: 30, aci: Math.PI / 2, renkFn: (x, y, rr) => {
+  guajDoldur(ym(kat ? Y.kasnakAlt : Y.kasnakUst, 1), { en: 4.2, aralik: 6, boy: 28, aci: Math.PI / 2, renkFn: (x, y, rr) => {
     const s = kenet((x - cx) / R, -1, 1);
     const isik = kenet(0.5 + 0.5 * Math.cos(Math.asin(s) - 0.7), 0, 1);
     let c = isik < 0.5 ? karistir(P.derin, P.zumrut, isik * 2) : karistir(P.zumrut, P.zumrutA, (isik - 0.5) * 2);
     c = karistir(c, P.derin, 0.45 * Math.exp(-Math.pow((y - q.y1) / 7, 2)));
-    return [karistir(c, rr() < 0.5 ? P.zumrutA : P.derin, rr() * 0.15), 0.55];
-  } });
+    return [karistir(c, rr() < 0.5 ? P.zumrutA : P.derin, rr() * 0.3), 0.9];
+  }, kal: 1.2 });
   g({ pts: [[q.x1, q.y1 + 1.2], [q.x2, q.y1 + 1.2]], w: 1.3, c1: P.zumrutP, c2: P.zumrutP, d1: 0.85, d2: 0.85, kil: 0.1 });
   for (const p of S.kasnakPencereleri(kat)) guajDoldur(ym(S.kemerYolu(p.x, p.y, p.w, p.h), 1), { en: 1.5, aralik: 1.9, boy: 12, aci: Math.PI / 2, renkFn: (x, y, rr) => [karistir(P.pencereY, hex('#1A5E3C'), rr() * 0.4), 0.98] });
 }
@@ -1207,7 +1210,7 @@ for (const kat of [1, 0]) {
   });
   const ub = [];
   for (let k = 0; k <= 16; k++) ub.push(Math.sin(-Math.PI / 2 + (Math.PI * k) / 16));
-  for (let u = -1.0; u <= 1.0; u += 0.042 + r() * 0.008) {
+  for (let u = -1.0; u <= 1.0; u += 0.05 + r() * 0.01) {
     let y = 558;
     while (y > 300) {
       const L = 30 + r() * 30;
@@ -1223,24 +1226,27 @@ for (const kat of [1, 0]) {
       const lon = Math.asin(kenet(u, -1, 1));
       const fr = ((lon + Math.PI / 2) / (Math.PI / 16)) % 1;
       const kab = Math.exp(-Math.pow((fr - 0.03) / 0.08, 2)) + Math.exp(-Math.pow((fr - 1.03) / 0.08, 2));
-      let c = isik < 0.5 ? karistir(P.derin, P.zumrut, isik * 2) : karistir(P.zumrut, P.zumrutA, (isik - 0.5) * 2);
+      // basamaklı ton: solda derin yeşil, sağ üstte açık zümrüt; her darbe kendi tonunda (±%12)
+      const kademe = Math.round(isik * 4) / 4;
+      let c = kademe < 0.5 ? karistir(P.derin, P.zumrut, kademe * 2) : karistir(P.zumrut, hex('#3CC283'), (kademe - 0.5) * 2);
       c = karistir(c, P.derinK, kab * 0.25);
-      c = karistir(c, r() < 0.5 ? P.zumrutA : P.derin, r() * 0.14);
-      g({ pts, w: (t, x, yy) => (1.0 + 3.4 * (kubbeR(yy) / 200) * Math.sqrt(Math.max(0.06, 1 - u * u))) * PROFIL.yaprak(t * 0.9 + 0.05), c1: c, c2: c, d1: 0.6, d2: 0.6, maske: km });
+      const v = 1 + (r() - 0.5) * 0.24;
+      c = karistir(c, r() < 0.5 ? P.zumrutA : P.derin, r() * 0.18).map((q) => Math.min(1, q * v));
+      g({ pts, w: (t, x, yy) => (1.6 + 3.4 * (kubbeR(yy) / 200) * Math.sqrt(Math.max(0.06, 1 - u * u))) * PROFIL.yaprak(t * 0.9 + 0.05), c1: c, c2: c, d1: 0.92, d2: 0.92, maske: km, kal: 1.3 });
       if (y2 <= 300) break;
       y = y2 + 4 + r() * 3;
     }
   }
   // parlak vurgular: sağ üstte açık zümrüt kısa darbeler
-  for (let i = 0; i < 140; i++) {
+  for (let i = 0; i < 110; i++) {
     const u = 0.15 + r() * 0.6;
     const y = 330 + r() * 170;
     const yv = Math.hypot((u - 0.42) / 0.3, (y - 400) / 85);
     if (yv > 1 || r() > 1 - yv * 0.7) continue;
-    const L = 8 + r() * 8;
+    const L = 14 + r() * 14;
     const pts = [[560 + u * kubbeR(y), y], [560 + u * kubbeR(y - L), y - L]];
-    const hc = karistir(P.zumrutA, P.zumrutP, r() * 0.4);
-    g({ pts, w: (t) => 1.6 * PROFIL.yaprak(t), c1: hc, c2: hc, d1: 0.6, d2: 0.6, maske: km, kal: 0.8 });
+    const hc = karistir(hex('#3CC283'), hex('#7FDCA6'), r() * 0.6);
+    g({ pts, w: (t) => (3 + r() * 1.5) * PROFIL.yaprak(t), c1: hc, c2: hc, d1: 0.85, d2: 0.85, maske: km, kal: 1.4 });
   }
   // kaburgalar: ince açık çizgi ve yanında koyu
   for (const k of S.kaburgalar(16, 60)) {
@@ -1403,7 +1409,7 @@ ctx.drawImage(B.tuval(), 0, 0, 1024, 1024);
 }
 // pith kâğıdı: ince, uzunca hücreli, kadifemsi doku (düzgün ve sağlam; kabarcık değil)
 {
-  const hucre = 9; // 2048 pikselde hücre boyu
+  const hucre = 13; // 2048 pikselde hücre boyu
   const sx = 1.7; // yatay uzama
   const rr = S.rng(2302);
   const nx = Math.ceil(2048 / (hucre * sx)) + 2;
@@ -1444,7 +1450,7 @@ ctx.drawImage(B.tuval(), 0, 0, 1024, 1024);
     const ton = hucreTon[i1] * w1 + hucreTon[i2] * (1 - w1);
     const saten = nz.fbm(x * 0.0018, y * 0.0026, 2) - 0.5;
     const isik = (d[idx] + d[idx + 1] + d[idx + 2]) / 765;
-    const gg = 1 + 0.045 * (ton - 0.5) * (0.4 + 0.6 * isik) + 0.03 * saten;
+    const gg = 1 + 0.07 * (ton - 0.5) * (0.4 + 0.6 * isik) + 0.03 * saten;
     d[idx] = Math.min(255, d[idx] * gg + 2);
     d[idx + 1] = Math.min(255, d[idx + 1] * gg + 2);
     d[idx + 2] = Math.min(255, d[idx + 2] * gg + 2);

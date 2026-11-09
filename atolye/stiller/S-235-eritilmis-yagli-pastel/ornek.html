@@ -402,20 +402,23 @@ function surme(k, x, y, a, L, W, c, al, o) {
   const ca = Math.cos(a), sa = Math.sin(a);
   const gL = L * 0.86, gx = x - ca * L * 0.07, gy = y - sa * L * 0.07;
   k.x.fillStyle = rgba(c, al);
-  k.x.fill(serit(gx, gy, a, gL, W, R, { egri: o.egri === undefined ? 0.08 : o.egri, bas: 0.03, uc: 0.04, titre: 0.03, n: 12 }));
+  // gövde küt başlar ve küt biter (yassı fırçanın kare ağzı); kuyruk aşağıdaki ayrışan kıllardan oluşur
+  k.x.fill(serit(gx, gy, a, gL, W, R, { egri: o.egri === undefined ? 0.08 : o.egri, bas: 0, uc: 0, titre: 0.09, n: 16 }));
+  // küt başın köşeleri fırçanın yumuşak kıllarıyla hafifçe yuvarlanır
+  { const sx = gx - ca * gL / 2, sy = gy - sa * gL / 2; k.x.save(); k.x.translate(sx, sy); k.x.rotate(a); k.x.scale(0.32, 1); k.x.beginPath(); k.x.arc(0, 0, W * 0.47, 0, 6.283); k.x.fill(); k.x.restore(); }
   const n = Math.max(3, Math.round(W / 3.5));
   for (let i = 0; i < n; i++) {
     const off = (i / (n - 1) - 0.5) * W * 0.92;
     // uçta ayrışan kıl
-    const tl = L * (0.06 + R() * 0.16);
+    const tl = L * (0.03 + R() * 0.2);
     const ex = gx + ca * gL / 2 - sa * off, ey = gy + sa * gL / 2 + ca * off;
     k.x.fillStyle = rgba(c, al * 0.9);
     k.x.fill(serit(ex + ca * tl / 2, ey + sa * tl / 2, a + (R() - 0.5) * 0.06, tl * 1.2, W / n * 1.1, R, { egri: 0.05, bas: 0.05, uc: 0.8, titre: 0.1, n: 6 }));
     // kıl izi
     if (R() < (o.iz === undefined ? 0.7 : 1 - o.iz)) continue;
-    const LL = L * (0.5 + R() * 0.45), s0 = -L / 2 + LL / 2 + R() * (L - LL) * 0.4;
-    const cc = R() < 0.4 ? karis(c, [10, 30, 50], 0.1) : karis(c, [255, 255, 255], 0.4);
-    kIz.x.fillStyle = rgba(cc, al * (0.35 + R() * 0.3));
+    const LL = clamp(L * (0.2 + R() * 0.4), 30, 150), s0 = -L / 2 + LL / 2 + R() * (L - LL) * 0.8;
+    const cc = R() < 0.3 ? karis(c, [10, 30, 50], 0.05) : karis(c, [255, 255, 255], 0.3);
+    kIz.x.fillStyle = rgba(cc, al * (0.25 + R() * 0.2));
     kIz.x.fill(serit(x + ca * s0 - sa * off, y + sa * s0 + ca * off, a, LL, 1.1 + R() * 1.4, R, { egri: 0.04, bas: 0.05, uc: 0.4, titre: 0.25, n: 8 }));
   }
 }
@@ -461,11 +464,11 @@ const gokT = (x, y) => clamp(Math.pow(clamp(y / 800, 0, 1), 1.1) + Math.pow(Math
     surme(k, x, y, (R() - 0.5) * 0.03, 340, 70, P.gok(clamp(gokT(x, y) + 0.12, 0, 1)), 0.32, { egri: 0.03, iz: 0 });
   }
   for (let gec = 0; gec < 2; gec++) {
-    for (let y = -20; y < 820; y += 26 + R() * 8) {
-      for (let x = -140 + R() * 90; x < 1120; x += 150 + R() * 70) {
+    for (let y = -20; y < 820; y += 19 + R() * 7) {
+      for (let x = -140 + R() * 120; x < 1120; x += 120 + R() * 110) {
         if (gec && (y > 520 || R() < 0.55)) continue;
         const t = clamp(gokT(x, y) + (R() - 0.5) * 0.14 + (gec ? 0.1 : 0), 0, 1);
-        surme(k, x, y + (R() - 0.5) * 6, (R() - 0.5) * 0.06, 200 + R() * 110, 40 + R() * 16, P.gok(t), gec ? 0.3 : 0.52, { egri: 0.06, iz: 0.12 });
+        surme(k, x, y + (R() - 0.5) * 8, (R() - 0.5) * 0.1, 200 + R() * 170, 28 + R() * 14, P.gok(t), gec ? 0.32 : 0.55, { egri: 0.06, iz: 0.05 });
       }
     }
   }
@@ -479,8 +482,8 @@ for (const [bx, by, w] of BULUT) {
     q.x.save(); q.x.globalCompositeOperation = 'destination-out';
     for (let j = 0; j < 7; j++) {
       const sat = j / 6, yy = by - 14 + sat * 26, ww = w * (0.45 + 0.5 * Math.sin(Math.PI * (0.25 + sat * 0.6)));
-      q.x.fillStyle = `rgba(0,0,0,${0.55 + 0.25 * (1 - Math.abs(sat - 0.4))})`;
-      q.x.fill(serit(bx + (R() - 0.5) * w * 0.2, yy, (R() - 0.5) * 0.05, ww, 14 + R() * 6, R, { egri: 0.1, bas: 0.03, uc: 0.12, titre: 0.05, n: 12 }));
+      q.x.fillStyle = `rgba(0,0,0,${0.45 + 0.25 * (1 - Math.abs(sat - 0.4))})`;
+      q.x.fill(serit(bx + (R() - 0.5) * w * 0.2, yy, (R() - 0.5) * 0.04, ww, 15 + R() * 5, R, { egri: 0.03, bas: 0.12, uc: 0.18, titre: 0.04, n: 14 }));
     }
     q.x.restore();
   }
@@ -559,12 +562,12 @@ for (const T of S.tomurcuklar) sil(kSu, T.yol);
   const k = kMum;
   // bulutlar: kaldırılmış sürmenin üstünde kalın beyaz mum vuruşları (üstte kısa, altta uzun), altlarında lila
   for (const [bx, by, w] of BULUT) {
-    for (let j = 0; j < 3; j++) mum(k, bx + (R() - 0.5) * w * 0.3, by + 13 + j * 2.5 + R() * 2, (R() - 0.5) * 0.05, w * (0.25 + R() * 0.25), 4.5 + R() * 2, P.lila, 0.55);
-    for (let j = 0; j < 8; j++) {
-      const sat = j / 7, yy = by + 10 - sat * 24 + (R() - 0.5) * 2;   // alttan üste
-      const ww = w * (0.62 - 0.4 * sat) * (0.85 + R() * 0.3);
+    mum(k, bx + (R() - 0.5) * w * 0.1, by + 15, (R() - 0.5) * 0.04, w * 0.55, 5.5, P.lila, 0.85, { egri: 0.15, bas: 0.12, uc: 0.25 });
+    for (let j = 0; j < 7; j++) {
+      const sat = j / 6, yy = by + 9 - sat * 26 + (R() - 0.5) * 2;   // alttan üste: alttakiler uzun, yukarı doğru kısalır
+      const ww = w * (0.66 - 0.46 * sat) * (0.85 + R() * 0.3);
       const ox = (R() - 0.5) * w * 0.12 + (sat - 0.5) * w * 0.06;
-      mum(k, bx + ox, yy, (R() - 0.5) * 0.08, ww, 9 + R() * 4, R() < 0.25 ? hex('#F3F5FB') : P.beyaz, 1.0, { egri: 0.35, bas: 0.25, uc: 0.35 });
+      mum(k, bx + ox, yy, (R() - 0.5) * 0.08, ww, 12 + R() * 4, R() < 0.25 ? hex('#F3F5FB') : P.beyaz, 1.0, { egri: 0.3, bas: 0.2, uc: 0.3 });
     }
     // tepede bir iki kıvrık vuruş (bulutun yuvarlak sırtı)
     for (let j = 0; j < 2; j++) mum(k, bx + (j - 0.5) * w * 0.18 + (R() - 0.5) * 8, by - 14 - R() * 4, (R() - 0.5) * 0.3, w * 0.16, 9, P.beyaz, 1.0, { egri: 0.6, bas: 0.3, uc: 0.35 });
@@ -623,17 +626,17 @@ for (const T of S.tomurcuklar) sil(kSu, T.yol);
   for (const alt of elNoktalari([S.Y.kaide, S.Y.kornis], 0.6, 30, 62, 2)) mumHat(k, alt.pts, 2.2, P.cizgi, 0.7, 40, 90);
   // kasnak: kat çizgileri, ışık yanında sarı-yeşil dikey vuruşlar
   for (const q of SAHNE.kasnak) {
-    mumHat(k, ince(duzCizgi(q.x1 + 2, q.y1 + 2.5, q.x2 - 2, q.y1 + 2.5, R, 0.6), 3), 3.6, P.yesilA, 0.95, 40, 90);
-    mumHat(k, ince(duzCizgi(q.x1 + 2, q.y2 - 2, q.x2 - 2, q.y2 - 2, R, 0.6), 3), 3.6, P.yesilK, 0.95, 40, 90);
+    mumHat(k, ince(duzCizgi(q.x1 + 2, q.y1 + 3, q.x2 - 2, q.y1 + 3, R, 0.6), 3), 5.2, P.yesilA, 0.95, 40, 90);
+    mumHat(k, ince(duzCizgi(q.x1 + 2, q.y2 - 2.5, q.x2 - 2, q.y2 - 2.5, R, 0.6), 3), 5.2, P.yesilK, 0.95, 40, 90);
     for (const p of SAHNE.kasnakPencereleri(SAHNE.kasnak.indexOf(q))) if (p.aci > -0.2) mum(k, p.x + p.w * 0.5 + 5, p.y + p.h * 0.5, Math.PI / 2, p.h * 0.8, 3.4, P.yesilA, 0.85, { egri: 0.03 });
   }
   for (const alt of elNoktalari([S.Y.kasnakUst, S.Y.kasnakAlt], 0.6, 30, 63, 2)) mumHat(k, alt.pts, 2.6, P.yesilK, 0.85, 40, 90);
   // kubbe: kaburgalar koyu yeşil mum, ışık yanında sarı-yeşil eş vuruş; ışık bölgesinde kısa açık vuruşlar
   for (const kb of SAHNE.kaburgalar(16, 60)) {
     const pts = ince(titret({ pts: kb.noktalar.filter((p) => p[1] > 304), kapali: false, L: 260 }, 0.6, 40, 900 + Math.round(kb.u * 100)).pts, 3);
-    mumHat(k, pts, 3.4 + (1 - Math.abs(kb.u)) * 1.2, P.yesilK, 0.92, 50, 110);
+    mumHat(k, pts, 4.8 + (1 - Math.abs(kb.u)) * 1.6, P.yesilK, 0.92, 50, 110);
     const sh = 4.5 * Math.sqrt(1 - kb.u * kb.u);
-    if (kb.u > -0.5) mumHat(k, pts.map((p) => [p[0] + sh, p[1]]).filter((p) => p[1] > 320), 2.6, P.yesilS, 0.85, 30, 70);
+    if (kb.u > -0.5) mumHat(k, pts.map((p) => [p[0] + sh + 0.8, p[1]]).filter((p) => p[1] > 320), 3.8, P.yesilS, 0.88, 30, 70);
   }
   izgara(380, 310, 760, 552, 16, R, (x, y) => {
     if (!SAHNE.kubbedeMi(x, y)) return;
@@ -641,7 +644,7 @@ for (const T of S.tomurcuklar) sil(kSu, T.yol);
     if (q.d < 0.82 || R() > 0.6) return;
     mum(k, x, y, S.kubbeYon(x, y), 26 + R() * 18, 3.2 + R() * 1.4, karis(P.yesilA, P.yesilS, R()), 0.9, { egri: 0.03, bas: 0.1, uc: 0.4 });
   });
-  for (const alt of elNoktalari(S.Y.kubbe, 0.6, 40, 64, 2)) mumHat(k, alt.pts, 3.6, P.yesilK, 0.9, 50, 110);
+  for (const alt of elNoktalari(S.Y.kubbe, 0.6, 40, 64, 2)) mumHat(k, alt.pts, 4.6, P.yesilK, 0.9, 50, 110);
   // alemler
   for (const alt of elNoktalari(S.Y.alem.concat(S.Y.minareAlem), 0.25, 10, 65, 1)) mumCizgi(k, alt.pts, 1.6, P.altinK, 0.9, { kapali: true, bas: 0, uc: 0 });
   k.x.save(); k.x.clip(S.yol.alem);
@@ -657,7 +660,7 @@ for (const T of S.tomurcuklar) sil(kSu, T.yol);
       const s = 0.7 + (y - 800) / 230;
       const r = R();
       const c = r < 0.4 ? P.yesilS : r < 0.75 ? P.yesilA : karis(P.yesil, P.yesilA, 0.5);
-      mum(k, x, y, -0.06 + (R() - 0.5) * 0.14, (22 + R() * 20) * s, (3.4 + R() * 1.6) * s, c, 0.8, { egri: 0.12, bas: 0.15, uc: 0.45 });
+      mum(k, x, y, -0.06 + (R() - 0.5) * 0.14, (24 + R() * 22) * s, (4.6 + R() * 2.2) * s, c, 0.88, { egri: 0.12, bas: 0.15, uc: 0.45 });
     });
     k.x.restore();
   }
@@ -731,14 +734,14 @@ ctx.fillStyle = rgba(P.kagit); ctx.fillRect(0, 0, 1024, 1024);
   kSu.x.putImageData(sd, 0, 0);
   // mum: yalnız dişin tepelerine tutunur, çukurlarda kâğıt seçilir
   const md = kMum.x.getImageData(0, 0, W2, W2), m = md.data;
-  for (let i = 0, j = 0; i < m.length; i += 4, j++) if (m[i + 3]) m[i + 3] = m[i + 3] * sstep(0.22, 0.38, dis[j] + (m[i + 3] / 255) * 0.06);
+  for (let i = 0, j = 0; i < m.length; i += 4, j++) if (m[i + 3]) m[i + 3] = m[i + 3] * sstep(0.27, 0.41, dis[j] + (m[i + 3] / 255) * 0.06);
   kMum.x.putImageData(md, 0, 0);
   // kâğıdın kendi dokusu
   const kd = ctx.getImageData(0, 0, W2, W2), q = kd.data;
   for (let i = 0, j = 0; i < q.length; i += 4, j++) { const f = 0.975 + 0.05 * dis[j]; q[i] *= f; q[i + 1] *= f; q[i + 2] *= f; }
   ctx.putImageData(kd, 0, 0);
 }
-ctx.save(); ctx.filter = 'blur(4px)'; bas(ctx, kSu, 1, 'multiply'); ctx.restore();
+ctx.save(); ctx.filter = 'blur(1.6px)'; bas(ctx, kSu, 1, 'multiply'); ctx.restore();
 ctx.save(); ctx.filter = 'blur(1.1px)'; bas(ctx, kIz, 1, 'multiply'); ctx.restore();
 bas(ctx, kMum);
 SAHNE.hazir();

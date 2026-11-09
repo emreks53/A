@@ -729,7 +729,16 @@ const KAL = katman();
 /** Kalem çizgisi: ince, basınçlı, uçları incelen; köşelerde hafifçe taşar. */
 function kalem(pts, o) {
   o = o || {};
-  cizgiNokta(KAL, pts, { w: (o.w || 1.35) * 1.38, renk: rgba(o.renk || P.grafit, o.alfa == null ? 0.92 : Math.min(1, o.alfa * 1.15)), titreme: o.titreme == null ? 0.3 : o.titreme, frek: 0.03, basinc: 0.35, sivri: o.sivri == null ? 8 : o.sivri, adim: 1 });
+  // basınç çizgi boyunca yavaşça değişir (yaklaşık 0,8–2,2 px); uzun çizgilerde kalem ara ara kalkar
+  const L = pts.length;
+  if (!o.surekli && L > 70 && RD() < 0.75) {
+    const k = Math.floor(L * (0.3 + RD() * 0.4));
+    const bos = 2 + Math.floor(RD() * 4);
+    kalem(pts.slice(0, k), Object.assign({}, o, { surekli: true }));
+    kalem(pts.slice(k + bos), Object.assign({}, o, { surekli: true }));
+    return;
+  }
+  cizgiNokta(KAL, pts, { w: (o.w || 1.35) * 1.55, renk: rgba(o.renk || P.grafit, o.alfa == null ? 0.9 : Math.min(1, o.alfa * 1.12)), titreme: o.titreme == null ? 0.3 : o.titreme, frek: 0.018, basinc: 0.55, sivri: o.sivri == null ? 8 : o.sivri, adim: 1 });
 }
 /** SVG yolunu kalemle çizer; kapalı eğriler iki üç parçada, parçalar birbirine hafifçe biner. */
 function kalemYol(d, o) {
@@ -783,26 +792,41 @@ function cetvel(x1, y1, x2, y2) {
   cizgiNokta(KAL, [[x1, y1], [x2, y2]], { w: 1.0, renk: rgba(P.grafit, 0.5), titreme: 0.08, frek: 0.01, basinc: 0.25, sivri: 20 });
 }
 
-/** Kalemle gölge taraması: aci yönünde, aralik px arayla paralel kısa çizgiler; yalnız icinde(x,y) olan yerlerde. */
+/**
+ * Kalemle gölge taraması, serbest elle: aci yönünde kısa grafit çizgileri; aralık 0,7–1,7 × aralik arasında
+ * oynar, her çizginin açısı biraz sapar ve hafifçe kavislenir, iki ucu incelir; renk gümüşi gri tonları arasında
+ * değişir ve çizgi kâğıdın dişinde kırılır (dişe tutunma son geçişte). Yalnız icinde(x,y) olan yerlerde.
+ */
 function kalemTara(kutu, icinde, aci, aralik, alfa, w) {
   const [x1, y1, x2, y2] = kutu;
-  const ca = Math.cos(aci);
-  const sa = Math.sin(aci);
-  const nx = -sa;
-  const ny = ca;
   const cx = (x1 + x2) / 2;
   const cy = (y1 + y2) / 2;
   const R = Math.hypot(x2 - x1, y2 - y1) / 2;
-  for (let v = -R; v <= R; v += aralik * (0.85 + RD() * 0.3)) {
+  const gri = [hex('#6E6E72'), hex('#7A7A7F'), hex('#8C8C90')];
+  for (let v = -R; v <= R; v += aralik * (0.7 + RD() * 1.0)) {
+    const a = aci + (RD() - 0.5) * 0.12;
+    const ca = Math.cos(a);
+    const sa = Math.sin(a);
+    const nx = -sa;
+    const ny = ca;
     let run = [];
     const bitir = () => {
       if (run.length > 3) {
-        // uzun çizgiler 20–40 px'lik parçalara bölünür
         for (let k = 0; k < run.length; ) {
-          const n = 14 + Math.floor(RD() * 14);
+          const n = 9 + Math.floor(RD() * 16);
           const parca = run.slice(k, k + n);
-          if (parca.length > 3) cizgiNokta(KAL, parca, { w: w || 0.85, renk: rgba(P.grafit, (alfa || 0.5) * (0.75 + RD() * 0.5)), titreme: 0.25, frek: 0.05, basinc: 0.3, sivri: 4 });
-          k += n + 1;
+          if (parca.length > 3) {
+            const bel = (RD() - 0.5) * 2.6; // kavis
+            const m = parca.length - 1;
+            const pts = parca.map((q, i) => {
+              const t = i / m;
+              const o = bel * Math.sin(PI * t);
+              return [q[0] + nx * o, q[1] + ny * o];
+            });
+            const c = gri[Math.floor(RD() * 3)];
+            cizgiNokta(KAL, pts, { w: (w || 0.85) * (0.8 + RD() * 0.5), renk: rgba(c, (alfa || 0.5) * (0.7 + RD() * 0.6)), titreme: 0.3, frek: 0.06, basinc: 0.45, sivri: 5 + RD() * 4 });
+          }
+          k += n + 1 + Math.floor(RD() * 3);
         }
       }
       run = [];
@@ -856,11 +880,61 @@ const gunesNokta = (R, kay) => {
   return pts;
 };
 const gunesYolu = S.yol(gunesNokta(34, 0), true);
+/**
+ * Doğal taç yaprağı: göbekten çıkan, ortasının biraz ötesinde genişleyen, ucu hafif çentikli ya da sivrice,
+ * bir yana hafifçe dönük (beş yaprak birlikte hafif bir fırıldak) biçim. Elips değil; her yaprak biraz farklı.
+ */
+const TAC_CACHE = new Map();
+function tacYolu(c, e) {
+  const key = c.x + ',' + c.y + ',' + e.aci;
+  if (TAC_CACHE.has(key)) return TAC_CACHE.get(key);
+  const ca = Math.cos(e.aci);
+  const sa = Math.sin(e.aci);
+  const h = (k) => {
+    const v = Math.sin(c.x * 12.9898 + c.y * 78.233 + e.aci * 37.719 + k * 11.3) * 43758.5453;
+    return v - Math.floor(v);
+  };
+  const L = c.r * (0.98 + h(1) * 0.12);
+  const Wm = c.r * (0.4 + h(2) * 0.06);
+  const centik = h(3) < 0.6 ? 0.05 + h(4) * 0.05 : -0.03; // çentikli ya da sivrice uç
+  const don = 0.1 + h(5) * 0.08; // fırıldak dönüşü
+  // eksen boyunca (u: 0..1) yarı genişlik profili; sağ ve sol yan biraz farklı
+  const prof = [[0.12, 0.1], [0.24, 0.42], [0.42, 0.78], [0.62, 0.98], [0.8, 0.94], [0.92, 0.7], [0.985, 0.36]];
+  const sag = prof.map(([u, v]) => [u, v * (1 + (h(6) - 0.5) * 0.12)]);
+  const sol = prof.map(([u, v]) => [u, v * (1 + (h(7) - 0.5) * 0.12)]);
+  const ham = [];
+  for (const [u, v] of sag) ham.push([u, v]);
+  ham.push([1 - centik, 0]);
+  for (let i = sol.length - 1; i >= 0; i--) ham.push([sol[i][0], -sol[i][1]]);
+  const nok = ham.map(([u, v]) => {
+    const vv = v * Wm + don * Wm * u * u; // uca doğru bir yana kayar
+    return [c.x + ca * u * L - sa * vv, c.y + sa * u * L + ca * vv];
+  });
+  // Catmull-Rom ile yumuşat (kapalı)
+  const out = [];
+  const n = nok.length;
+  for (let i = 0; i < n; i++) {
+    const p0 = nok[(i - 1 + n) % n];
+    const p1 = nok[i];
+    const p2 = nok[(i + 1) % n];
+    const p3 = nok[(i + 2) % n];
+    for (let k = 0; k < 6; k++) {
+      const t = k / 6;
+      const t2 = t * t;
+      const t3 = t2 * t;
+      const f = (a, b, cc, d) => 0.5 * (2 * b + (-a + cc) * t + (2 * a - 5 * b + 4 * cc - d) * t2 + (-a + 3 * b - 3 * cc + d) * t3);
+      out.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]);
+    }
+  }
+  const d = S.yol(out, true);
+  TAC_CACHE.set(key, d);
+  return d;
+}
 const bitkiOrtusu = (() => {
   const p = new Path2D();
   for (const d of Y.yapraklar) p.addPath(new Path2D(d));
   for (const d of Y.tomurcuklar) p.addPath(new Path2D(d));
-  for (const c of S.bitki.cicekler) for (const e of S.tacYapraklari(c)) p.addPath(new Path2D(S.elipsYolu(e)));
+  for (const c of S.bitki.cicekler) for (const e of S.tacYapraklari(c)) p.addPath(new Path2D(tacYolu(c, e)));
   return p;
 })();
 
@@ -1007,19 +1081,10 @@ for (const c of S.bitki.cicekler) {
   const ts = S.tacYapraklari(c);
   ts.sort((a, b) => Math.cos(a.aci - ISIK_ACI) - Math.cos(b.aci - ISIK_ACI));
   for (const e of ts) {
-    ort(S.elipsYolu(e));
-    kalemYol(S.elipsYolu(e), { w: 1.05, yumusak: true, parca: 400 });
+    ort(tacYolu(c, e));
+    kalemYol(tacYolu(c, e), { w: 0.85, alfa: 0.62, yumusak: true, parca: 60, seyrek: 0.28 });
   }
   kalemYol(S.daireYolu(c.x, c.y, c.r * 0.2), { w: 0.9, yumusak: true });
-}
-for (const c of S.bitki.cicekler) {
-  for (const e of S.tacYapraklari(c)) {
-    const isik = Math.cos(e.aci - ISIK_ACI);
-    const em = new Path2D(S.elipsYolu(e));
-    const kt = [e.cx - e.rx, e.cy - e.rx, e.cx + e.rx, e.cy + e.rx];
-    if (c.r < 40) continue;
-    kalemTara(kt, (x, y) => KAL.isPointInPath(em, x * OL, y * OL) && Math.hypot(x - c.x, y - c.y) < c.r * (0.42 + (1 - isik) * 0.2), -PI / 4 + 0.2, 3.2, 0.42, 0.75);
-  }
 }
 // grafit kâğıdın dişine tutunur: çizgi tane tane kırılır
 {
@@ -1030,8 +1095,8 @@ for (const c of S.bitki.cicekler) {
     for (let x = 0; x < W * OL; x++) {
       const i = (y * W * OL + x) * 4;
       if (!d[i + 3]) continue;
-      const t = 0.55 + 0.45 * (nz.n(x * 0.7, y * 0.7) * 0.6 + karma(x, y, 3) * 0.4);
-      d[i + 3] = d[i + 3] * clamp(t * 1.3, 0, 1);
+      const t = 0.4 + 0.6 * (nz.n(x * 0.7, y * 0.7) * 0.55 + karma(x, y, 3) * 0.45);
+      d[i + 3] = d[i + 3] * clamp(t * 1.35, 0, 1);
     }
   KAL.putImageData(im, 0, 0);
 }
@@ -1294,7 +1359,7 @@ BOYA.globalCompositeOperation = 'destination-out';
 BOYA.fillStyle = '#000';
 for (const d of Y.yapraklar) BOYA.fill(kaymaYol(d, -0.3, 1.5, 0.05));
 for (const d of Y.tomurcuklar) BOYA.fill(kaymaYol(d, -0.4, 1, 0.06));
-for (const c of S.bitki.cicekler) for (const e of S.tacYapraklari(c)) BOYA.fill(kaymaYol(S.elipsYolu(e), -0.4, 1.4, 0.05));
+for (const c of S.bitki.cicekler) for (const e of S.tacYapraklari(c)) BOYA.fill(kaymaYol(tacYolu(c, e), -0.4, 1.4, 0.05));
 for (const sp of S.bitki.saplar) cizgiNokta(BOYA, sp, { w: 4.6, renk: '#000', titreme: 1, frek: 0.05 });
 BOYA.restore();
 bindir(BOYA);
@@ -1356,7 +1421,7 @@ S.bitki.cicekler.forEach((c, ci) => {
   // çiçeğin yeri yaprak boyanırken boş bırakılmıştı: önce kâğıt (ve altındaki kalem çizgisi) geri gelir
   {
     const yer = new Path2D();
-    for (const e of ts) yer.addPath(kaymaYol(S.elipsYolu(e), -0.2, 0.6, 0.05));
+    for (const e of ts) yer.addPath(kaymaYol(tacYolu(c, e), -0.2, 0.6, 0.05));
     ctx.save();
     ctx.clip(yer);
     ctx.fillStyle = rgba(P.kagit);
@@ -1368,8 +1433,8 @@ S.bitki.cicekler.forEach((c, ci) => {
   for (const e of ts) {
     const isik = Math.cos(e.aci - ISIK_ACI);
     alan(ctx, {
-      d: S.elipsYolu(e),
-      ice: 1,
+      d: tacYolu(c, e),
+      ice: 0.4,
       amp: 0.9,
       fr: 0.06,
       kutu: [e.cx - e.rx - 3, e.cy - e.rx - 3, e.cx + e.rx + 3, e.cy + e.rx + 3],
@@ -1380,13 +1445,26 @@ S.bitki.cicekler.forEach((c, ci) => {
       yon: (x, y) => Math.atan2(y - c.y, x - c.x),
       renk: (x, y, r) => {
         const rr = Math.hypot(x - c.x, y - c.y) / c.r;
-        const g = clamp(0.55 - rr * 0.7 + (1 - isik) * 0.25, 0, 1);
+        const g = clamp(0.3 - rr * 0.4 + (1 - isik) * 0.12, 0, 1);
         return oyna(karis(hex('#FFFFFF'), P.griMavi, g), r, 2);
       },
       alfa: [0.82, 0.95],
       darbe: { kil: 3, kilFark: 6 },
       tohum: 200 + ci * 7 + Math.round(e.aci * 5),
     });
+  }
+  // gölge: göbeğe yakın, gölge yanındaki taç yapraklarında daha uzun, tek bir yarı örtücü mavimsi guaj darbesi
+  for (const e of ts) {
+    const isik = Math.cos(e.aci - ISIK_ACI);
+    const ca = Math.cos(e.aci);
+    const sa = Math.sin(e.aci);
+    const yan = Math.sign(-sa * ISIK[0] + ca * ISIK[1]) || 1;
+    const uz = 0.42 + (1 - isik) * 0.18;
+    const p = (u, v) => [c.x + ca * c.r * u - sa * c.r * v, c.y + sa * c.r * u + ca * c.r * v];
+    ctx.save();
+    ctx.clip(new Path2D(tacYolu(c, e)));
+    darbe(ctx, [p(0.12, -0.05 * yan), p(uz * 0.6, -0.12 * yan), p(uz, -0.16 * yan)], c.r * (0.2 + (1 - isik) * 0.07), oyna(karis(P.griMavi, hex('#A9B9CE'), (1 - isik) * 0.4), RD, 3), Object.assign({}, FIRCA, { alfa: 0.55 + (1 - isik) * 0.15, son: 0.6, kil: 3, kilFark: 8 }));
+    ctx.restore();
   }
   alan(ctx, { d: S.daireYolu(c.x, c.y, c.r * 0.2), ice: 0.6, amp: 0.5, aralik: 4, aralikY: 4, boy: [c.r * 0.15, c.r * 0.3], en: [3, 5], yon: () => -0.6, renk: (x, y, r) => oyna(x - c.x - (y - c.y) < -c.r * 0.08 ? P.okr : P.sari, r, 4), alfa: [0.85, 0.95], darbe: { kil: 0 }, tohum: 300 + ci });
 });
@@ -1395,7 +1473,7 @@ S.bitki.cicekler.forEach((c, ci) => {
 ctx.save();
 ctx.setTransform(1, 0, 0, 1, 0, 0);
 ctx.globalCompositeOperation = 'multiply';
-ctx.globalAlpha = 0.6;
+ctx.globalAlpha = 0.5;
 ctx.drawImage(KAL.canvas, 0, 0);
 ctx.restore();
 

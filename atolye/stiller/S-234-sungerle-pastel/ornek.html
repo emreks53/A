@@ -390,7 +390,7 @@ const P = {
   gok: rampa([[0, '#6FB2E3'], [0.3, '#8CC3EA'], [0.65, '#B8DAF2'], [1, '#DCEDF7']]),
   bulutG: hex('#C9C9E6'), bulutA: hex('#E4E6F4'), gunes: hex('#FFF7D6'),
   kubbe: rampa([[0, '#1F6449'], [0.25, '#2E7D57'], [0.55, '#4FAA6C'], [0.8, '#7FC783'], [1, '#C4E7A6']]),
-  tas: rampa([[0, '#B4AFD8'], [0.35, '#D3CFE8'], [0.65, '#F4EBD8'], [1, '#FFFFFF']]),
+  tas: rampa([[0, '#B4AFD8'], [0.35, '#D3CFE8'], [0.72, '#F4EBD8'], [1, '#FCF8EE']]),
   krem: hex('#F4EBD8'), lila: hex('#C5BFE4'),
   pencereY: hex('#1D4C40'), pencereT: hex('#7A73A3'),
   altin: rampa([[0, '#B98A2C'], [0.5, '#E9BF48'], [1, '#FFF0B5']]),
@@ -498,11 +498,54 @@ function yirtik(x1, x2, y0, genlik, tohum) {
   return pts;
 }
 
+/**
+ * Sünger gözeneği: yoğunluk (alfa) katmanını gözenek eşiğinden geçirir. Yoğun yerde gözenekler kapanır, seyrek
+ * yerde 3–8 px'lik gözenek kümeleri açılır ve kâğıt (ya da alttaki kat) görünür; renk sonra 'source-in' ile verilir.
+ */
+function gozenek(k, tohum, s) {
+  const n1 = gurultu(tohum), n2 = gurultu(tohum + 1);
+  s = s || 5;
+  const id = k.x.getImageData(0, 0, 1024, 1024), d = id.data;
+  for (let y = 0; y < 1024; y++) for (let x = 0; x < 1024; x++) {
+    const i = (y * 1024 + x) * 4;
+    if (!d[i + 3]) continue;
+    const a = d[i + 3] / 255;
+    const pn = 0.62 * n1(x / s, y / s) + 0.38 * n2(x / (s * 0.42) + 31, y / (s * 0.42) + 7);
+    d[i + 3] = 255 * sstep(pn - 0.1, pn + 0.1, a * 1.12 - 0.06);
+  }
+  k.x.putImageData(id, 0, 0);
+}
+/** katmanı tek renge ya da dikey renk geçişine boyar (yoğunluk korunur) */
+function renklendir(k, renk) {
+  k.x.save(); k.x.setTransform(1, 0, 0, 1, 0, 0); k.x.globalCompositeOperation = 'source-in';
+  k.x.fillStyle = renk; k.x.fillRect(0, 0, 1024, 1024); k.x.restore();
+}
+/** yoğunluk lekesi: ortası dolu, kenara doğru azalan eliptik iz */
+function leke(k, x, y, r, a, sx, sy, aci, sert) {
+  k.x.save(); k.x.translate(x, y); k.x.rotate(aci || 0); k.x.scale(sx || 1, sy || 1);
+  const g = k.x.createRadialGradient(0, 0, 0, 0, 0, r);
+  if (sert) { g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(0.72, `rgba(0,0,0,${a * 0.96})`); g.addColorStop(0.9, `rgba(0,0,0,${a * 0.5})`); g.addColorStop(1, 'rgba(0,0,0,0)'); }
+  else { g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(0.5, `rgba(0,0,0,${a * 0.9})`); g.addColorStop(0.82, `rgba(0,0,0,${a * 0.45})`); g.addColorStop(1, 'rgba(0,0,0,0)'); }
+  k.x.fillStyle = g; k.x.beginPath(); k.x.arc(0, 0, r, 0, 6.283); k.x.fill(); k.x.restore();
+}
+/** sünger basıp süpürme: dolu, yuvarlak bir baskı; süngerin çekildiği yönde incelip pudralaşan, kırık bir kuyruk */
+function basSupur(k, x, y, r, a, yon, boy, egri) {
+  leke(k, x, y, r, a, 1.08, 0.86, (R() - 0.5) * 0.3);
+  const n = Math.max(4, Math.round(boy / (r * 0.28)));
+  for (let i = 1; i <= n; i++) {
+    const t = i / n;
+    const px = x + yon * boy * t, py = y + egri * boy * 4 * t * (1 - t) - egri * boy * t * 0.3;
+    leke(k, px + (R() - 0.5) * r * 0.15, py + (R() - 0.5) * r * 0.15, r * (1 - 0.35 * t), a * (0.72 - 0.55 * t), 1.15, 0.8, (R() - 0.5) * 0.2);
+  }
+}
+
 const ana = katman(1);
-// ---------------------------------------------------------------- gök (yırtık maskeli bulutlar, silinmiş güneş)
+// ---------------------------------------------------------------- gök: süngerle basılıp süpürülmüş yuvarlak lekeler
+// üç değer adımında gök mavisi: önce en açık, sonra orta, en son tepede koyu; her lekenin dolu bir baskısı ve
+// pudralaşan bir kuyruğu var, kenarlarında süngerin gözenekleri açılır; ufka yakın lekeler arasında kâğıt kalır
 const bulutlar = [[50, 310, 240, 46], [405, 600, 150, 36], [630, 910, 330, 50], [860, 1030, 468, 32], [-10, 205, 468, 32]];
 const bulutYollari = bulutlar.map(([x1, x2, y0, h], i) => {
-  // üst kenar yırtık; alt kenar yumuşak bir yayla kapanır (sonra süngerle yumuşatılır)
+  // üst kenar yırtık maske; alt kenar yumuşak bir yay (sonra süngerle gözenekli bırakılır)
   const ust = yirtik(x1, x2, y0, 4, 50 + i * 7).map(([x, y]) => [x, y - h * 0.38 * Math.pow(Math.sin(Math.PI * clamp((x - x1) / (x2 - x1), 0, 1)), 0.8) * (0.6 + 0.8 * N3(x / 38, i * 3.1))]);
   const p = new Path2D();
   p.moveTo(ust[0][0], ust[0][1]);
@@ -515,66 +558,61 @@ const bulutYollari = bulutlar.map(([x1, x2, y0, h], i) => {
   p.closePath();
   return { p, x1, x2, y0, h, ust };
 });
-const gokTon = (x, y) => {
-  const gd = Math.hypot(x - 880, y - 140);
-  return clamp(Math.pow(clamp(y / 800, 0, 1), 1.2) + Math.pow(Math.max(0, 1 - gd / 300), 1.6) * 0.5, 0, 1);
-};
-const kGok = grup(ana, null, 1.1, (a, b, tk) => {
-  // ilk kat: bütün göğü kaplayan geniş yay süpürüşler; her sıra bir öncekinin üstüne biner,
-  // süngerin kenarında biriken pigment her süpürüşün yayını belli eder
-  // örtü katı: en geniş süngerle düz, uzun süpürüşler; kâğıt beyazı arada kalmaz
-  for (let y = -40; y < 840; y += 46 + R() * 10) {
-    for (let x = -160 + R() * 80; x < 1180; x += 170 + R() * 50) {
-      const t = clamp(gokTon(x, y) + (R() - 0.5) * 0.1, 0, 1);
-      a.x.fillStyle = rgba(P.gok(t), 1);
-      a.x.fill(serit(x, y, (R() - 0.5) * 0.06, 300 + R() * 80, 96 + R() * 20, R, { egri: 0.08, bas: 0.12, uc: 0.18, titre: 0.05, n: 16 }));
-    }
-  }
-  let sira = 0;
-  for (let y = -30; y < 830; y += 34 + R() * 10, sira++) {
-    for (let x = -120 + R() * 90; x < 1140; x += 150 + R() * 60) {
-      const L = 190 + R() * 110, W = 48 + R() * 16;
-      const R0 = (R() < 0.5 ? 1 : -1) * (260 + R() * 360);
-      const t = clamp(gokTon(x, y) + (R() - 0.5) * 0.3, 0, 1);
-      const c = P.gok(t);
-      yaySupur(a, x, y + (R() - 0.5) * 10, L, W, R0, c, 0.95, karis(c, [40, 90, 150], 0.2));
-    }
-  }
-  // ikinci kat: daha küçük, yarı saydam açık ve koyu süpürüşler (pan pastelin üst üste pudralı katı)
-  for (let i = 0; i < 70; i++) {
-    const x = R() * 1100 - 40, y = R() * 760;
-    const t = clamp(gokTon(x, y) + (R() < 0.5 ? -0.2 : 0.18), 0, 1);
-    const c = P.gok(t);
-    yaySupur(tk, x, y, 110 + R() * 90, 30 + R() * 14, (R() < 0.5 ? 1 : -1) * (160 + R() * 220), c, 0.55, karis(c, [40, 90, 150], 0.12));
-  }
-});
-// güneş: silgiyle kaldırılmış disk (kâğıt beyazına iner), üstüne soluk sarı sünger ucu; hale yok,
-// güneşin çevresi yalnız daha açık süpürüşlerle açılmıştır
+const gunesUz = (x, y) => Math.hypot(x - 880, y - 140);
 {
-  const k = ana;
-  const disk = elYolu(SAHNE.daireYolu(880, 140, 33), 0.45, 45, 4500);
-  sil(k, disk);
-  const g = katman(1);
-  for (let i = 0; i < 7; i++) dokun(g, 880 + (R() - 0.5) * 22, 140 + (R() - 0.5) * 22, R() * 3, 30, 20, karis(P.gunes, P.beyaz, R() * 0.4), 0.7);
-  const gy = yumusat(g, 3); sungerle(gy, 3, 3); kirp(gy, disk);
-  k.x.drawImage(gy.c, 0, 0);
+  const katlar = [
+    { y0: -60, y1: 790, ar: 118, r: [92, 140], a: (y) => lerp(0.95, 0.5, sstep(260, 790, y)), renk: ['#B9DCF4', '#D9EDF8'], tohum: 23401, s: 5.5 },
+    { y0: -60, y1: 620, ar: 142, r: [70, 108], a: (y) => lerp(0.98, 0.4, sstep(200, 620, y)) * (0.7 + 0.3 * R()), renk: ['#8CC3EA', '#A9D2F0'], tohum: 23403, s: 5 },
+    { y0: -60, y1: 330, ar: 176, r: [58, 92], a: (y) => lerp(0.92, 0.35, sstep(40, 330, y)) * (0.6 + 0.4 * R()), renk: ['#6CAFE2', '#7DBAE6'], tohum: 23405, s: 4.6 },
+  ];
+  katlar.forEach((K, ki) => {
+    const k = katman(1);
+    let sira = 0;
+    for (let y = K.y0; y < K.y1; y += K.ar * (0.62 + 0.2 * R()), sira++) {
+      for (let x = -120 + (sira % 2) * K.ar * 0.5 + R() * 40; x < 1160; x += K.ar * (0.85 + 0.35 * R())) {
+        const cx = x + (R() - 0.5) * 40, cy = y + (R() - 0.5) * 30;
+        const gd = gunesUz(cx, cy);
+        let a = K.a(cy);
+        if (ki > 0) a *= sstep(90 + ki * 50, 240 + ki * 70, gd); // güneşin çevresi açık kalır
+        if (a < 0.08) continue;
+        const r = lerp(K.r[0], K.r[1], R());
+        basSupur(k, cx, cy, r, a, R() < 0.5 ? 1 : -1, r * (0.5 + 0.8 * R()), (R() - 0.5) * 0.25);
+      }
+    }
+    gozenek(k, K.tohum, K.s);
+    const g = k.x.createLinearGradient(0, 0, 0, 800);
+    g.addColorStop(0, K.renk[0]); g.addColorStop(1, K.renk[1]);
+    renklendir(k, g);
+    ana.x.drawImage(k.c, 0, 0);
+  });
 }
-// bulutlar: yırtık maske altı beyaz kâğıt; alt yarısı lila-gri sünger, alt kenar mavi süpürüşle yumuşatılır
+// güneş: silgiyle kaldırılmış, kenarı biraz düzensiz disk (kâğıt beyazına iner); içine tek, soluk sarı sünger
+// ucu dokunuşu (gözenekli; ışınsal geçiş yok)
+{
+  const disk = elYolu(SAHNE.daireYolu(880, 140, 34), 1.3, 26, 4500);
+  sil(ana, disk);
+  const g = katman(1);
+  leke(g, 876, 143, 30, 0.95, 1.05, 0.95, 0.4);
+  gozenek(g, 23407, 3.6);
+  renklendir(g, '#FBF0BC');
+  kirp(g, disk);
+  ana.x.drawImage(g.c, 0, 0);
+}
+// bulutlar: yırtık maskenin altında beyaz kâğıt (üst kenar keskin); alt yanda gözenekli leylak-gri sünger ve
+// alttan buluta gözenekli, yumuşak biçimde giren gök mavisi
 for (const B of bulutYollari) {
   sil(ana, B.p);
   const a = katman(1);
-  for (let x = B.x1 + 15; x < B.x2 - 10; x += 28 + R() * 16) {
-    supur(a, null, x, B.y0 + B.h * 0.25, (R() - 0.5) * 0.1, 60 + R() * 30, B.h * 0.35, P.bulutG, 0.6);
-    supur(a, null, x + 10, B.y0 - B.h * 0.05, (R() - 0.5) * 0.1, 50 + R() * 30, B.h * 0.3, P.bulutA, 0.5);
-  }
-  const ya = yumusat(a, 4);
-  kirp(ya, B.p);
-  ana.x.drawImage(ya.c, 0, 0);
-  // alt kenar: mavi süpürüş bulutun altına biner (yumuşak geçiş)
+  for (let x = B.x1 + 18; x < B.x2 - 12; x += 26 + R() * 14) leke(a, x, B.y0 + B.h * 0.22 + (R() - 0.5) * 4, B.h * (0.34 + R() * 0.1), 0.75, 1.6, 0.7, (R() - 0.5) * 0.1);
+  gozenek(a, 23410 + Math.round(B.x1), 5.5);
+  renklendir(a, rgba(P.bulutG));
+  kirp(a, B.p);
+  ana.x.drawImage(a.c, 0, 0);
   const c = katman(1);
-  for (let x = B.x1; x < B.x2; x += 34 + R() * 20) supur(c, null, x, B.y0 + B.h * 0.36 + 4, (R() - 0.5) * 0.06, 90, B.h * 0.32, P.gok(0.6 + R() * 0.2), 0.6);
-  const yc = yumusat(c, 7);
-  ana.x.drawImage(yc.c, 0, 0);
+  for (let x = B.x1 + 6; x < B.x2 - 6; x += 22 + R() * 12) leke(c, x, B.y0 + B.h * 0.46 + 3, B.h * (0.3 + R() * 0.1), 0.7, 1.7, 0.75, (R() - 0.5) * 0.08);
+  gozenek(c, 23440 + Math.round(B.x1), 5.5);
+  renklendir(c, '#B9DBF2');
+  ana.x.drawImage(c.c, 0, 0);
 }
 // ---------------------------------------------------------------- zemin
 {
@@ -775,20 +813,32 @@ grup(ana, kubbeYol, 1.8, (a, b, tk) => {
     a.x.restore();
     dokun(a, t.x - Math.cos(t.aci) * t.r * 0.7, t.y - Math.sin(t.aci) * t.r * 0.7, t.aci, t.r * 1.2, t.r, P.yaprak(0.4), 0.9);
   });
+  // taç yaprakları: her yaprak dört beş yuvarlak sünger ucu dokunuşundan; dışta beyaz, göbeğe yakın soluk leylak,
+  // dokunuş kenarlarında süngerin gözenekleri açılır (dış çizgi ya da düz beyaz kenar yok)
+  {
+    const kb = katman(1), kl = katman(1);
+    for (const C of S.cicekler) {
+      const c = C.c;
+      for (const T of C.taclar) {
+        const e = T.e, aci = e.aci, ca = Math.cos(aci), sa = Math.sin(aci);
+        const isik = 0.5 + 0.5 * (Math.cos(aci) * 0.7 - Math.sin(aci) * 0.7);
+        const nok = (d, v) => [c.x + ca * d * c.r - sa * v * c.r, c.y + sa * d * c.r + ca * v * c.r];
+        for (const [d, v, rr] of [[0.46, -0.12, 0.24], [0.48, 0.12, 0.24], [0.72, -0.13, 0.22], [0.74, 0.13, 0.22], [0.88, 0.0, 0.18]]) {
+          const [px, py] = nok(d + (R() - 0.5) * 0.04, v + (R() - 0.5) * 0.04);
+          leke(kb, px, py, rr * c.r * 1.0, 0.98, 1.0, 0.9, aci, true);
+        }
+        const [lx, ly] = nok(0.3, (R() - 0.5) * 0.06);
+        leke(kl, lx, ly, 0.24 * c.r, 0.8, 1.2, 0.85, aci, true);
+        if (isik < 0.5) { const [sx, sy] = nok(0.62, (R() < 0.5 ? -1 : 1) * 0.12); leke(kl, sx, sy, 0.2 * c.r, 0.45, 1.1, 0.85, aci); }
+      }
+    }
+    gozenek(kb, 23460, 3.4); renklendir(kb, rgba(P.beyaz));
+    gozenek(kl, 23462, 3.0); renklendir(kl, rgba(karis(P.lila, P.beyaz, 0.25)));
+    a.x.drawImage(kb.c, 0, 0);
+    a.x.drawImage(kl.c, 0, 0);
+  }
   for (const C of S.cicekler) {
     const c = C.c;
-    for (const T of C.taclar) {
-      const e = T.e, aci = Math.atan2(e.cy - c.y, e.cx - c.x);
-      const isik = 0.5 + 0.5 * (Math.cos(aci) * 0.7 - Math.sin(aci) * 0.7);
-      sil(a, T.yol);
-      a.x.save(); a.x.clip(T.yol);
-      a.x.fillStyle = rgba(karis(P.beyaz, P.lila, 0.25 * (1 - isik))); a.x.fill(T.yol);
-      // göbekten dışa iki üç yuvarlak sünger ucu dokunuşu: içte lila, dışta beyaz
-      dokun(a, c.x + Math.cos(aci) * c.r * 0.38, c.y + Math.sin(aci) * c.r * 0.38, aci, c.r * 0.6, c.r * 0.5, P.lila, 0.75);
-      dokun(a, e.cx + Math.cos(aci) * c.r * 0.12, e.cy + Math.sin(aci) * c.r * 0.12, aci + (R() - 0.5) * 0.3, c.r * 0.7, c.r * 0.55, P.beyaz, 0.85);
-      if (isik < 0.45) dokun(a, e.cx, e.cy, aci, c.r * 0.8, c.r * 0.6, P.lila, 0.4);
-      a.x.restore();
-    }
     // göbek
     const gr = c.r * 0.2;
     for (let j = 0; j < 4; j++) dokun(a, c.x + (R() - 0.5) * gr * 0.6, c.y + (R() - 0.5) * gr * 0.6, R() * 3, gr * 1.6, gr * 1.2, karis(P.sari, P.beyaz, R() * 0.3), 0.85);
@@ -811,7 +861,7 @@ ctx.fillStyle = rgba(P.kagit); ctx.fillRect(0, 0, 1024, 1024);
     if (!d[i + 3]) continue;
     const t = 0.65 * N1(x / 1.3, y / 1.3) + 0.35 * N2(x / 3.1, y / 3.1);
     const a = d[i + 3] / 255;
-    d[i + 3] = 255 * clamp(a * (0.74 + 0.42 * t) - 0.1 * (1 - t) * (1 - a), 0, 1);
+    d[i + 3] = 255 * clamp(a * (0.9 + 0.16 * t) - 0.04 * (1 - t) * (1 - a), 0, 1);
   }
   ana.x.putImageData(id, 0, 0);
 }

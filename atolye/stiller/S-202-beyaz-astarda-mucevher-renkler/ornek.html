@@ -678,14 +678,14 @@ const M = (function () {
   const silMsk = mask(siluet);
 
   // ------------------------------------------------------------ 2. gök: iki kat kısa çapraz darbe, yukarıda kobalt, ufukta beyaza yakın
-  const gokR = rampa([[0, '#4475C8'], [0.22, '#5686D0'], [0.5, '#88AADD'], [0.78, '#C6D7EF'], [1, '#F1F5F9']]);
+  const gokR = rampa([[0, '#5A86CC'], [0.25, '#6C95D3'], [0.55, '#9DBBE3'], [0.8, '#D0DFF1'], [1, '#F4F7FA']]);
   const gunes = S.gunes;
   function gokHedef(x, y) {
     const t = sat(y / 800 + (nz(x * 0.005, y * 0.005) - 0.5) * 0.06);
     let c = gokR(t);
     return kar(c, '#FFFEF6', parilti(x, y));
   }
-  function parilti(x, y) { const d = Math.hypot(x - gunes.x, y - gunes.y); return Math.pow(sat(1 - (d - 20) / 190), 1.6) * 0.9; }
+  function parilti(x, y) { const d = Math.hypot(x - gunes.x, y - gunes.y); return Math.pow(sat(1 - (d - 28) / 95), 1.8) * 0.6; }
   const gokIc = (x, y) => !silMsk(x, y);
   const disari = new Path2D(); disari.rect(-10, -10, 1044, 1044); disari.addPath(siluet);
   const gokKat = (k, o) => { k.save(); k.clip(disari, 'evenodd'); M.alan(k, o); k.restore(); };
@@ -715,12 +715,14 @@ const M = (function () {
     // iki maskeyi birleştir: bulut + güneş
     BMg.save(); BMg.setTransform(1, 0, 0, 1, 0, 0); BMg.drawImage(GM, 0, 0); BMg.restore();
   }
-  // ilk sır: yatay, geniş darbeler (beyaz astar parlar)
-  sir((k) => gokKat(k, { kutu: [-30, -20, 1054, 806], aralik: 9, boy: [50, 110], en: [9, 14], yon: (x, y, r) => (r() - 0.5) * 0.06, renk: (x, y, r) => { const c = kok(gokHedef(x, y), 0.6); const j = (r() - 0.5) * 12 * (1 - parilti(x, y)); return [c[0] + j, c[1] + j, c[2] + j * 0.5]; }, darbe: { a: 0.9, govde: 0.85, kil: 5, kilK: 6, yuk: 0.75 }, tohum: 2 }), [0, 0, 1024, 810], { sil: BM });
-  // iki kat kısa çapraz sır darbesi: her darbe saydam, üst üste binen yerler koyulaşır (el izi görünür)
-  for (const [aci, tohum] of [[-0.62, 3], [0.62, 4]]) {
-    sir((k) => gokKat(k, { kutu: [-20, -20, 1044, 806], aralik: 12, boy: [24, 40], en: [6.5, 9], yon: (x, y, r) => aci + (r() - 0.5) * 0.18, icinde: gokIc, renk: (x, y, r) => { const c = kok(gokHedef(x, y), 0.115); const p = 1 - parilti(x, y) * 0.7; const j = (r() - 0.5) * 12 * p, h = (r() - 0.5) * 8 * p; return [c[0] + j - Math.abs(h) * 0.3, c[1] + j + h * 0.5, c[2] + j * 0.2]; }, egri: 0.12, darbe: { a: 0.9, govde: 0.9, kil: 3, kilK: 5, kilA: 0.3, yuk: 0.85, uc: 'sivri', bas: 0.8, govdeSon: 0.85 }, tohum }), [0, 0, 1024, 810], { birikim: true, sil: BM });
-  }
+  // sırlar: az sayıda, geniş (8–14 px), kısa, saydam darbe; çoğu yatay, aralarında beyaz astar parlar.
+  // Güneşin çevresinde darbeler teğet döner. Üst üste binen yerler koyulaşır (el izi görünür).
+  const gYon = (x, y, r, sap) => { const d = Math.hypot(x - gunes.x, y - gunes.y); return d < 90 ? Math.atan2(y - gunes.y, x - gunes.x) + Math.PI / 2 + (r() - 0.5) * 0.2 : (r() - 0.5) * sap; };
+  const gRenk = (us, jj) => (x, y, r) => { const c = kok(gokHedef(x, y), us); const j = (r() - 0.5) * jj, h = (r() - 0.5) * jj * 0.6; return [c[0] + j - Math.abs(h) * 0.3, c[1] + j + h * 0.4, c[2] + j * 0.35]; };
+  sir((k) => gokKat(k, { kutu: [-30, -20, 1054, 806], aralik: 15, boy: [40, 90], en: [11, 14], yon: (x, y, r) => gYon(x, y, r, 0.08), icinde: gokIc, renk: gRenk(0.56, 14), egri: 0.06, darbe: { a: 0.9, govde: 0.9, kil: 6, kilK: 6, kilA: 0.3, yuk: 0.75, uc: 'sivri', bas: 0.85, govdeSon: 0.8 }, tohum: 2 }), [0, 0, 1024, 810], { sil: BM });
+  sir((k) => gokKat(k, { kutu: [-20, -20, 1044, 806], aralik: 19, boy: [30, 64], en: [9, 13], yon: (x, y, r) => gYon(x, y, r, 0.3), icinde: gokIc, renk: gRenk(0.3, 12), egri: 0.08, darbe: { a: 0.9, govde: 0.9, kil: 4, kilK: 5, kilA: 0.3, yuk: 0.85, uc: 'sivri', bas: 0.8, govdeSon: 0.85 }, tohum: 3 }), [0, 0, 1024, 810], { birikim: true, sil: BM });
+  // hafif ikinci geçiş: tek bir açıda, seyrek
+  sir((k) => gokKat(k, { kutu: [-20, -20, 1044, 806], aralik: 30, boy: [24, 44], en: [8, 11], yon: (x, y, r) => 0.5 + (r() - 0.5) * 0.2, icinde: (x, y) => gokIc(x, y) && Math.hypot(x - gunes.x, y - gunes.y) > 60, renk: gRenk(0.12, 8), egri: 0.1, darbe: { a: 0.85, govde: 0.9, kil: 3, kilK: 5, kilA: 0.25, yuk: 0.85, uc: 'sivri', bas: 0.8, govdeSon: 0.85 }, tohum: 4 }), [0, 0, 1024, 810], { birikim: true, sil: BM });
   // güneş: astarın beyazı; içine soluk sarı ince bir sır, kenarına kısa teğet darbeler
   sir((k) => {
     M.alan(k, { kutu: [gunes.x - 32, gunes.y - 32, gunes.x + 32, gunes.y + 32], aralik: 5, boy: [12, 22], en: [5, 7], yon: (x, y) => Math.atan2(y - gunes.y, x - gunes.x) + Math.PI / 2, icinde: (x, y) => Math.hypot(x - gunes.x, y - gunes.y) < 24, renk: (x, y, r) => kar('#FFFAE6', '#FFF5D6', r()), darbe: { a: 0.8, kil: 2, kilK: 3 }, tohum: 5 });

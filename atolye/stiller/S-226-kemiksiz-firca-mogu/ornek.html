@@ -1463,13 +1463,27 @@ function alemBoya(a) {
     darbe(B, { pts, w: (t) => k.r * Math.pow(Math.sin(Math.PI * t), 0.5), c1: P.sariC, c2: P.okr, d1: 0.85, d2: 0.95, gecis: 1.4, havuz: 0.3, kil: 0.1, kenar: 0.02, yumusak: 0.6 });
   }
   // hilal: alt yay boyunca, ortası kalın uçları sivri
+  // tek kemiksiz darbe, boynuzdan boynuza hilalin orta çizgisi boyunca; genişliği hilalin kalınlığını izler,
+  // fırça iki tonla yüklü: bir kenarı açık altın (#E8C25A), öbür kenarı koyu altın (#B8902E)
   const h = a.hilal;
+  const R = h.R;
+  const r2 = R * 0.85;
+  const dd = R * 0.4;
+  const yk = (r2 * r2 - R * R - dd * dd) / (2 * dd);
+  const xk = Math.sqrt(Math.max(0, R * R - yk * yk));
+  const th0 = Math.atan2(yk, xk);
+  const th1 = Math.PI - th0;
+  const ic = (th) => -dd * Math.sin(th) + Math.sqrt(Math.max(0, dd * dd * Math.sin(th) * Math.sin(th) - dd * dd + r2 * r2));
   const pts = [];
-  for (let i = 0; i <= 30; i++) {
-    const ang = Math.PI - 0.5 - ((Math.PI - 1.0) * i) / 30;
-    pts.push([h.cx + Math.cos(ang) * h.R * 0.8, h.cy + Math.sin(ang) * h.R * 0.8]);
+  const kal = [];
+  for (let i = 0; i <= 40; i++) {
+    const th = th0 + 0.02 + ((th1 - th0 - 0.04) * i) / 40;
+    const t = Math.min(R, ic(th));
+    const m = (R + t) / 2;
+    pts.push([h.cx + Math.cos(th) * m, h.cy + Math.sin(th) * m]);
+    kal.push(Math.max(0.15, (R - t) / 2));
   }
-  darbe(B, { pts, w: (t) => h.R * 0.27 * Math.pow(Math.sin(Math.PI * t), 0.8), c1: P.okr, c2: P.sariC, d1: 0.95, d2: 0.85, havuz: 0.25, kil: 0.1, kenar: 0.02, yumusak: 0.6 });
+  darbe(B, { pts, w: (t) => kal[Math.min(40, Math.round(t * 40))] * 1.08 + 0.15, c1: hex('#E8C25A'), c2: hex('#B8902E'), d1: 0.95, d2: 0.95, havuz: 0.2, kil: 0.08, kenar: 0.02, yumusak: 0.5, opak: true });
 }
 alemBoya(S.alemParcalari(560, 300, 1));
 alemBoya(S.alemParcalari(300, 146, 0.62));

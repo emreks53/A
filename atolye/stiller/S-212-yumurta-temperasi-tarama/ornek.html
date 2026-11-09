@@ -709,6 +709,41 @@ function tara(c, o) {
   for (const [x, y] of L) demet(c, x, y, o, r);
   c.restore();
 }
+/**
+ * Düzenli örgü tarama: kaydırılmış (tuğla dizili) bir hücre ızgarasının her hücresine bir demet konur; tonu,
+ * demetin kaç darbeden oluştuğu verir (o.n(x,y) → ondalık darbe sayısı). Demetler rastgele kümelenmez,
+ * bu yüzden ton değişimi leke değil, darbe sıklığıdır.
+ */
+function orgu(c, o) {
+  const r = S.rng(o.tohum || 1);
+  const [x1, y1, x2, y2] = o.kutu;
+  const [hw, hh] = o.hucre;
+  const L = [];
+  let sira = 0;
+  for (let y = y1; y < y2; y += hh, sira++) {
+    const kay = (sira % 2) * hw * 0.5 + (r() - 0.5) * hw * 0.3;
+    for (let x = x1 - kay; x < x2; x += hw) {
+      const px = x + (r() - 0.5) * hw * 0.45;
+      const py = y + (r() - 0.5) * hh * 0.45;
+      if (o.icinde && !o.icinde(px, py)) continue;
+      L.push([px, py]);
+    }
+  }
+  for (let i = L.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    const t = L[i];
+    L[i] = L[j];
+    L[j] = t;
+  }
+  c.save();
+  if (o.klip) c.clip(o.klip);
+  for (const [x, y] of L) {
+    const n = Math.floor(o.n(x, y) + r());
+    if (n <= 0) continue;
+    demet(c, x, y, Object.assign({}, o, { n: [n, n] }), r);
+  }
+  c.restore();
+}
 /** Elde ince fırçayla çekilmiş kontur. */
 function kontur(d, w, renk, alfa) {
   cizgiYol(ctx, d, { w, renk: rgba(renk, alfa == null ? 0.9 : alfa), titreme: 0.25, frek: 0.06, basinc: 0.35, adim: 1 });
@@ -744,75 +779,56 @@ alanBoya(ctx, {
 });
 
 // ---------------------------------------------------------------- 1. gök: sığ açıyla kesişen mavi taramalar
-const BULUT = bulutKur(31);
+const BULUT = bulutKur(212);
 const gokKat = katman();
 const gokTon = (x, y) => {
   const t = clamp(y / 800, 0, 1);
   const d = Math.hypot(x - 880, y - 140);
-  const g = Math.exp(-(d * d) / (2 * 100 * 100));
+  const g = Math.exp(-(d * d) / (2 * 58 * 58));
   return { t, g };
 };
-// serulyum taban taraması: her yerde, ufka doğru açılır ama mavi kalır
-tara(gokKat, {
+// iki yönlü örgü: serulyum −8°, ultramarin +12°; tepede sık, ufka doğru darbe sayısı azalır ve renk açılır,
+// aralardan giderek daha çok alçı beyazı görünür (ufukta neredeyse beyaz)
+orgu(gokKat, {
   kutu: [-30, -20, 1054, 812],
-  aralik: 11,
-  yog: (x, y) => {
-    const { g } = gokTon(x, y);
-    return clamp(1 - g * 0.35, 0.08, 1);
+  hucre: [17, 12],
+  n: (x, y) => {
+    const { t, g } = gokTon(x, y);
+    return (5 - t * 2.8) * (1 - g * 0.4);
   },
-  yon: (x, y) => -0.12 + (NZ.n(x * 0.004, y * 0.004) - 0.5) * 0.08,
-  sapma: 0.07,
-  n: [4, 6],
-  boy: [18, 28],
-  ara: [3.4, 4.2],
-  en: [2.3, 3.1],
+  yon: (x, y) => -0.14 + (NZ.n(x * 0.004, y * 0.004) - 0.5) * 0.05,
+  sapma: 0.05,
+  boy: [17, 23],
+  ara: [3.5, 4],
+  en: [2.3, 2.9],
+  oyna: 5,
   renk: (x, y, r) => {
     const { t, g } = gokTon(x, y);
-    const c = karis(P.seruleum, P.seruleumAcik, clamp(t * 1.1 - 0.1, 0, 0.85) + (r() - 0.5) * 0.15);
-    return karis(c, hex('#F4F0DC'), clamp(g * 1.25, 0, 1));
+    const c = karis(P.seruleum, P.seruleumAcik, clamp(t * 1.25 - 0.2, 0, 0.9) + (r() - 0.5) * 0.08);
+    return karis(karis(c, hex('#E4EEF6'), clamp((t - 0.72) * 2.4, 0, 0.7)), hex('#DDEBF6'), clamp(g * 1.5, 0, 0.95));
   },
-  alfa: [0.8, 0.95],
+  alfa: [0.85, 0.97],
   tohum: 11,
 });
-// ultramarin çapraz tarama: tepede yoğun ve koyu; aşağı indikçe serulyuma döner (seyrelmek yerine açılır)
-tara(gokKat, {
+orgu(gokKat, {
   kutu: [-30, -20, 1054, 812],
-  aralik: 11,
-  yog: (x, y) => {
+  hucre: [17, 12],
+  n: (x, y) => {
     const { t, g } = gokTon(x, y);
-    return clamp(1.15 - t * 0.75 - g * 0.9, 0, 1);
+    return clamp(4.8 - t * 4.8, 0, 4.8) * (1 - g * 0.75);
   },
-  yon: (x, y) => 0.14 + (NZ.n(x * 0.004 + 9, y * 0.004) - 0.5) * 0.08,
-  sapma: 0.07,
-  n: [4, 6],
-  boy: [16, 26],
-  ara: [3.6, 4.6],
-  en: [2, 2.8],
+  yon: (x, y) => 0.21 + (NZ.n(x * 0.004 + 9, y * 0.004) - 0.5) * 0.05,
+  sapma: 0.05,
+  boy: [16, 22],
+  ara: [3.6, 4.2],
+  en: [2, 2.6],
+  oyna: 5,
   renk: (x, y, r) => {
-    const { t } = gokTon(x, y);
-    const { g } = gokTon(x, y);
-    return karis(karis(karis(P.ultra, P.ultraKoyu, r() * 0.35), P.seruleum, clamp(t * 1.25 - 0.15 + (r() - 0.5) * 0.2, 0, 0.9)), P.seruleumAcik, clamp(g * 1.6, 0, 1));
-  },
-  alfa: [0.72, 0.9],
-  tohum: 12,
-});
-// üçüncü kat: tepede serulyum, ara boşlukları kapatır
-tara(gokKat, {
-  kutu: [-30, -20, 1054, 560],
-  aralik: 12,
-  yog: (x, y) => {
     const { t, g } = gokTon(x, y);
-    return clamp(0.9 - t * 1.5 - g * 1.4, 0, 1);
+    return karis(karis(karis(P.ultra, P.ultraKoyu, r() * 0.3), P.seruleum, clamp(t * 1.4 - 0.1, 0, 0.9)), P.seruleumAcik, clamp(g * 1.8, 0, 1));
   },
-  yon: () => -0.02,
-  sapma: 0.07,
-  n: [3, 5],
-  boy: [16, 24],
-  ara: [3.8, 4.6],
-  en: [2, 2.8],
-  renk: (x, y, r) => karis(P.seruleum, P.ultra, r() * 0.3),
-  alfa: [0.65, 0.88],
-  tohum: 13,
+  alfa: [0.78, 0.92],
+  tohum: 12,
 });
 // bulutlar alçı beyazı olarak bırakılır: gök taramasını bulut biçiminde sil (kesin kenar)
 {
@@ -851,7 +867,7 @@ tara(gokKat, {
   gokKat.save();
   gokKat.globalCompositeOperation = 'destination-out';
   gokKat.fillStyle = '#000';
-  gokKat.fill(titrekYol(S.daireYolu(880, 140, 40), 1, 0.06, 2));
+  gokKat.fill(titrekYol(S.daireYolu(880, 140, 33), 0.9, 0.06, 2));
   gokKat.restore();
 }
 bindir(gokKat);
@@ -885,27 +901,12 @@ for (const B of BULUT) {
     tohum: 520 + B.x,
   }));
 }
-// güneşin çevresi: göğün kendi yönünde soluk limon sarısı tarama; uzaklaştıkça seyrelir (ışın yok)
+// güneş: küçük, alçı beyazı bir disk; içine yalnız çok soluk limon sarısı birkaç demet (çevresinde hale yok)
 tara(ctx, {
-  kutu: [770, 40, 990, 240],
-  aralik: 9,
-  icinde: (x, y) => Math.hypot(x - 880, y - 140) > 40,
-  yog: (x, y) => clamp(0.75 - (Math.hypot(x - 880, (y - 140) * 1.15) - 40) / 70, 0, 0.75),
-  yon: () => -0.12,
-  sapma: 0.07,
-  n: [3, 5],
-  boy: [14, 22],
-  ara: [3.4, 4.2],
-  en: [1.8, 2.4],
-  renk: (x, y, r) => karis(hex('#F6EFCF'), hex('#EDE3B4'), r() * 0.6),
-  alfa: [0.55, 0.85],
-  tohum: 25,
-});
-tara(ctx, {
-  kutu: [840, 100, 920, 180],
+  kutu: [846, 106, 914, 174],
   aralik: 8,
-  klip: titrekYol(S.daireYolu(880, 140, 36), 0.8, 0.06, 2),
-  yog: (x, y) => 0.55,
+  klip: titrekYol(S.daireYolu(880, 140, 30), 0.8, 0.06, 2),
+  yog: (x, y) => 0.5,
   yon: () => -0.6,
   sapma: 0.15,
   n: [3, 5],
@@ -993,28 +994,30 @@ function minareTon(x, y) {
   return clamp(t, 0, 1);
 }
 const minareYol = titrekYol(Y.minare.join(' '), 0.45, 0.06, 1.5);
-const minareOrt = { kutu: [236, 140, 364, 806], klip: minareYol, aralik: 9, n: [3, 5], boy: [10, 18], ara: [3, 3.8], en: [1.6, 2.3], egri: false };
-tara(ctx, Object.assign({}, minareOrt, {
-  yog: (x, y) => 0.42 + minareTon(x, y) * 0.5,
+const minareOrt = { kutu: [236, 140, 364, 806], klip: minareYol, hucre: [10, 14], boy: [11, 16], ara: [2.7, 3.1], en: [1.4, 1.9], egri: false, sapma: 0.04, oyna: 4 };
+const golgeBandi = (y) => (y > 466 && y < 504) || (y > 298 && y < 330) || (y > 196 && y < 210);
+// taş: ince, keskin dikey tarama; gölge yanında gri-mavi dike yakın ikinci kat; gül yalnız şerefe altlarının gölgesinde
+orgu(ctx, Object.assign({}, minareOrt, {
+  n: (x, y) => 1.7 + minareTon(x, y) * 1.6,
   yon: () => -PI / 2,
-  sapma: 0.08,
-  renk: (x, y, r) => karis(P.okrAcik, hex('#E2CFA6'), r() * 0.6 + minareTon(x, y) * 0.4),
-  alfa: [0.7, 0.9],
+  renk: (x, y, r) => karis(P.okrAcik, hex('#E2CFA6'), r() * 0.4 + minareTon(x, y) * 0.5),
+  alfa: [0.75, 0.92],
   tohum: 41,
 }));
-tara(ctx, Object.assign({}, minareOrt, {
-  yog: (x, y) => clamp((minareTon(x, y) - 0.3) * 1.6, 0, 1),
-  yon: () => -PI / 2 + 0.4,
+orgu(ctx, Object.assign({}, minareOrt, {
+  n: (x, y) => clamp((minareTon(x, y) - 0.3) * 5, 0, 3.4),
+  yon: () => -PI / 2 + 0.28,
+  renk: () => P.griMavi,
+  alfa: [0.7, 0.9],
+  tohum: 43,
+}));
+orgu(ctx, Object.assign({}, minareOrt, {
+  icinde: (x, y) => golgeBandi(y),
+  n: (x, y) => 1.5 + minareTon(x, y) * 2,
+  yon: () => -PI / 2 - 0.3,
   renk: () => P.gul,
   alfa: [0.65, 0.88],
   tohum: 42,
-}));
-tara(ctx, Object.assign({}, minareOrt, {
-  yog: (x, y) => clamp((minareTon(x, y) - 0.55) * 2, 0, 1),
-  yon: () => -PI / 2 - 0.4,
-  renk: () => P.griMavi,
-  alfa: [0.65, 0.88],
-  tohum: 43,
 }));
 // topuz: kıvrık tarama
 {
@@ -1089,10 +1092,10 @@ const kaideTon = (x, y) => {
   if (y < 718) t += 0.55 * (1 - (y - 704) / 14);
   return clamp(t, 0, 1);
 };
-const kaideOrt = { kutu: [296, 700, 826, 802], klip: kaideYol, aralik: 11, n: [3, 5], boy: [14, 24], ara: [3.2, 4], en: [1.7, 2.4] };
-tara(ctx, Object.assign({}, kaideOrt, { yog: (x, y) => 0.42 + kaideTon(x, y), yon: () => 0.04, sapma: 0.06, renk: (x, y, r) => karis(hex('#EFE4CB'), hex('#E2CFA6'), r() * 0.6), alfa: [0.7, 0.9], tohum: 51 }));
-tara(ctx, Object.assign({}, kaideOrt, { yog: (x, y) => clamp((kaideTon(x, y) - 0.2) * 1.4, 0, 1), yon: () => -0.35, renk: () => P.gul, alfa: [0.6, 0.85], tohum: 52 }));
-tara(ctx, Object.assign({}, kaideOrt, { yog: (x, y) => clamp((kaideTon(x, y) - 0.45) * 2.2, 0, 1), yon: () => 0.35, renk: () => P.griMavi, alfa: [0.65, 0.9], tohum: 53 }));
+const kaideOrt = { kutu: [296, 700, 826, 802], klip: kaideYol, hucre: [16, 9], boy: [14, 20], ara: [2.8, 3.2], en: [1.5, 2] , sapma: 0.04, oyna: 4 };
+orgu(ctx, Object.assign({}, kaideOrt, { n: (x, y) => 1.6 + kaideTon(x, y) * 2, yon: () => 0.03, renk: (x, y, r) => karis(hex('#EFE4CB'), hex('#E2CFA6'), r() * 0.5), alfa: [0.72, 0.9], tohum: 51 }));
+orgu(ctx, Object.assign({}, kaideOrt, { n: (x, y) => clamp((kaideTon(x, y) - 0.22) * 4.5, 0, 3), yon: () => 0.3, renk: () => P.griMavi, alfa: [0.65, 0.88], tohum: 53 }));
+orgu(ctx, Object.assign({}, kaideOrt, { icinde: (x, y) => y < 720, n: (x, y) => clamp((kaideTon(x, y) - 0.3) * 5, 0, 3), yon: () => -0.3, renk: () => P.gul, alfa: [0.6, 0.85], tohum: 52 }));
 const kornisYol = titrekYol(Y.kornis, 0.4, 0.06, 1.5);
 tara(ctx, { kutu: [286, 690, 834, 706], klip: kornisYol, aralik: 9, n: [2, 3], boy: [14, 22], ara: [3, 3.6], en: [1.6, 2.2], yog: (x, y) => (y > 698 ? 0.9 : 0.25), yon: () => 0, renk: (x, y) => (y > 698 ? P.gul : P.okrAcik), alfa: [0.7, 0.9], tohum: 54 });
 kontur(Y.kornis, 1.1, hex('#9A8270'), 0.75);
@@ -1124,10 +1127,10 @@ for (let k = 1; k >= 0; k--) {
     if (y < q.y1 + 10) t += 0.35 * (1 - (y - q.y1) / 10);
     return clamp(t, 0, 1);
   };
-  const ort = { kutu: [q.x1 - 3, q.y1 - 3, q.x2 + 3, q.y2 + 3], klip: yol, aralik: 9, n: [3, 5], boy: [12, 22], ara: [3, 3.8], en: [1.8, 2.5] };
-  tara(ctx, Object.assign({}, ort, { yog: () => 1, yon: () => 0.03, renk: (x, y, r) => yesilTon(clamp(ton(x, y) * 0.7 + 0.25 + (r() - 0.5) * 0.15, 0, 1)), alfa: [0.85, 1], tohum: 61 + k }));
-  tara(ctx, Object.assign({}, ort, { yog: (x, y) => clamp(0.4 + ton(x, y) * 0.8, 0, 1), yon: () => -0.4, renk: (x, y, r) => yesilTon(clamp(ton(x, y) * 0.8 + 0.3, 0, 1)), alfa: [0.75, 0.95], tohum: 63 + k }));
-  tara(ctx, Object.assign({}, ort, { yog: (x, y) => clamp((ton(x, y) - 0.45) * 2, 0, 1), yon: () => 0.4, renk: (x, y, r) => karis(P.yesilDerin, P.ultraKoyu, r() * 0.3), alfa: [0.6, 0.85], tohum: 65 + k }));
+  const ort = { kutu: [q.x1 - 3, q.y1 - 3, q.x2 + 3, q.y2 + 3], klip: yol, hucre: [17, 10], boy: [14, 20], ara: [3, 3.4], en: [1.9, 2.4], sapma: 0.05, oyna: 5 };
+  orgu(ctx, Object.assign({}, ort, { n: (x, y) => 3.4 + ton(x, y) * 1.6, yon: () => 0.03, renk: (x, y, r) => yesilTon(clamp(ton(x, y) * 0.6 + 0.38 + (r() - 0.5) * 0.08, 0, 1)), alfa: [0.86, 1], tohum: 61 + k }));
+  orgu(ctx, Object.assign({}, ort, { n: (x, y) => clamp((ton(x, y) - 0.2) * 5, 0, 3.6), yon: () => -0.42, renk: (x, y, r) => yesilTon(clamp(ton(x, y) * 0.8 + 0.3, 0, 1)), alfa: [0.78, 0.95], tohum: 63 + k }));
+  orgu(ctx, Object.assign({}, ort, { n: (x, y) => clamp((ton(x, y) - 0.5) * 6, 0, 3.4), yon: () => 0.42, renk: (x, y, r) => karis(P.yesilDerin, P.ultraKoyu, r() * 0.3), alfa: [0.62, 0.85], tohum: 65 + k }));
   for (const p of S.kasnakPencereleri(k)) {
     const pd = S.kemerYolu(p.x, p.y, p.w, p.h);
     const py = titrekYol(pd, 0.25, 0.12, 0.8);
@@ -1149,11 +1152,14 @@ const kubbeTon = (x, y) => {
   if (y > 540) v -= ((y - 540) / 15) * 0.2;
   return clamp(1 - (v + 0.02), 0, 1);
 };
-const kubbeOrt = { kutu: [354, 294, 766, 558], klip: kubbeYol, aralik: 10, n: [3, 5], boy: [14, 24], ara: [3.2, 4], en: [2, 2.8], egri: true, sapma: 0.08 };
-tara(ctx, Object.assign({}, kubbeOrt, { yog: () => 1, yon: kubbeYon, renk: (x, y, r) => yesilTon(clamp(kubbeTon(x, y) * 0.8 + 0.15 + (r() - 0.5) * 0.12, 0, 1)), alfa: [0.85, 1], tohum: 71 }));
-tara(ctx, Object.assign({}, kubbeOrt, { yog: (x, y) => clamp(0.25 + kubbeTon(x, y) * 0.9, 0, 1), yon: (x, y) => kubbeYon(x, y) + 0.32, renk: (x, y, r) => yesilTon(clamp(kubbeTon(x, y) * 0.75 + 0.3, 0, 1)), alfa: [0.75, 0.95], tohum: 72 }));
-tara(ctx, Object.assign({}, kubbeOrt, { yog: (x, y) => clamp((kubbeTon(x, y) - 0.42) * 2, 0, 1), yon: (x, y) => kubbeYon(x, y) - 0.32, renk: (x, y, r) => karis(P.yesilDerin, hex('#28525E'), r() * 0.5), alfa: [0.6, 0.85], tohum: 73 }));
-tara(ctx, Object.assign({}, kubbeOrt, { aralik: 13, n: [2, 4], en: [1.6, 2.2], yog: (x, y) => clamp((0.42 - kubbeTon(x, y)) * 2.2, 0, 0.9), yon: kubbeYon, renk: (x, y, r) => karis(P.yesilIsik, hex('#EEF3D2'), r() * 0.5), alfa: [0.7, 0.95], tohum: 74 }));
+// kubbe: önce her dilimin meridyeni boyunca kesintisiz bir taban taraması (dilimle birlikte kıvrılır), sonra
+// gölge ±25° çapraz katlarla, darbe sıklığı soldaki dilimlerden sağdakilere düzenli azalarak kurulur; ışık
+// alan sağ dilimlerde darbeler seyrek, aralardan alçı beyazı görünür. Rastgele küme yok.
+const kubbeOrt = { kutu: [354, 294, 766, 558], klip: kubbeYol, hucre: [12, 16], boy: [17, 24], ara: [2.9, 3.3], en: [2.1, 2.6], egri: true, sapma: 0.04, oyna: 5 };
+orgu(ctx, Object.assign({}, kubbeOrt, { n: (x, y) => 3.3 + kubbeTon(x, y) * 1.8, yon: kubbeYon, renk: (x, y, r) => yesilTon(clamp(kubbeTon(x, y) * 0.6 + 0.4 + (r() - 0.5) * 0.06, 0, 1)), alfa: [0.88, 1], tohum: 71 }));
+orgu(ctx, Object.assign({}, kubbeOrt, { boy: [14, 20], n: (x, y) => clamp((kubbeTon(x, y) - 0.2) * 5.5, 0, 4), yon: (x, y) => kubbeYon(x, y) + 0.44, renk: (x, y, r) => yesilTon(clamp(kubbeTon(x, y) * 0.6 + 0.45, 0, 1)), alfa: [0.78, 0.95], tohum: 72 }));
+orgu(ctx, Object.assign({}, kubbeOrt, { boy: [14, 20], n: (x, y) => clamp((kubbeTon(x, y) - 0.5) * 7, 0, 4), yon: (x, y) => kubbeYon(x, y) - 0.44, renk: (x, y, r) => karis(P.yesilDerin, hex('#28525E'), r() * 0.4), alfa: [0.62, 0.85], tohum: 73 }));
+orgu(ctx, Object.assign({}, kubbeOrt, { hucre: [14, 17], boy: [12, 18], n: (x, y) => clamp((0.42 - kubbeTon(x, y)) * 6, 0, 2.6), yon: kubbeYon, en: [1.6, 2.1], renk: (x, y, r) => karis(P.yesilIsik, hex('#EEF3D2'), r() * 0.5), alfa: [0.75, 0.95], tohum: 74 }));
 ctx.save();
 ctx.clip(kubbeYol);
 for (const kb of S.kaburgalar(16, 60)) {

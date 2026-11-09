@@ -1075,7 +1075,7 @@
   // geniş vuruşlar (binen yerler koyulaşır), aşağıda incelip seyrekleşen açık vuruşlar, ufukta neredeyse çıplak sır
   {
     const r = SAHNE.rng(23901);
-    let y = 8;
+    let y = -6; // ilk sıra tuvalin üst kenarından taşar (üstte boş sır şeridi kalmaz)
     while (y < 735) {
       const t = clamp(y / 735, 0, 1);
       const w = lerp(34, 13, Math.pow(t, 0.75)) * (0.88 + 0.24 * r());
@@ -1133,18 +1133,16 @@
     }
   }
 
-  // güneş: antimon sarısı, kursu dolanan iki üç yuvarlak vuruş; ince okra kenar
+  // güneş: tek, geniş, soluk antimon vuruşu (binme bandı yok); kısa bir yayda kırık, ince okra kenar
   {
     SAR.x.save();
     SAR.x.beginPath(); for (let a = 0; a < PI2; a += 0.03) { const rr = gunesR(a); SAR.x.lineTo(GX + Math.cos(a) * rr, GY + Math.sin(a) * rr); } SAR.x.closePath(); SAR.x.clip();
-    for (const [dy, ww, a0, eg] of [[-14, 44, 0.5, 0.08], [15, 44, 0.46, -0.05]]) {
-      const p = [];
-      for (let s = -48; s <= 48; s += 2) p.push([GX + s, GY + dy + eg * s - 0.0035 * s * s * Math.sign(dy || 1)]);
-      fv(SAR, ornekle(p, 1), ANTIMON, { w: ww, a0, a1: a0 * 0.85, havuz: 0.14, bas: 10, son: 6, kil: 3, kilA: 0.06 });
-    }
+    { const p = []; for (let s = -50; s <= 50; s += 2) p.push([GX + s, GY + 1 + 0.03 * s]); fv(SAR, ornekle(p, 1), '#F1DE96', { w: 86, a0: 0.5, a1: 0.44, havuz: 0.06, bas: 12, son: 8, kil: 3, kilA: 0.04 }); }
     SAR.x.restore();
-    const p = []; for (let a = 0.3; a < PI2 - 0.15; a += 0.02) { const rr = gunesR(a) + 0.5; p.push([GX + Math.cos(a) * rr, GY + Math.sin(a) * rr]); }
-    fv(SAR, elA(p, 0.4), OKRA, { w: 2.6, a0: 0.5, a1: 0.42, havuz: 0.2, kil: 0, bas: 6, son: 10 });
+    for (const [a0, a1] of [[1.75, 2.45], [2.62, 3.15]]) {
+      const p = []; for (let a = a0; a < a1; a += 0.02) { const rr = gunesR(a) + 0.5; p.push([GX + Math.cos(a) * rr, GY + Math.sin(a) * rr]); }
+      fv(SAR, elA(p, 0.3), OKRA, { w: 2.2, a0: 0.4, a1: 0.32, havuz: 0.15, kil: 0, bas: 6, son: 10 });
+    }
   }
 
   // ---------------------------------------------------------------- kubbe: bakır yeşili, dilim boyunca tarama vuruşları

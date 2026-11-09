@@ -475,6 +475,22 @@ function bulut(x, y) {
     const t = y / 800;
     return [0.6 - 0.45 * t, t < 0.5 ? sec([[P.ult, 0.2], [P.ser, 0.5], [P.serK, 0.3]]) : sec([[P.serA, 0.75], [P.ultA, 0.25]])];
   };
+  // taramanın altında çok açık, yumuşak bir pastel sürtme: çizgi aralarında beyaz kıymık değil, açık mavi kalır
+  {
+    const m = SAHNE.yeniTuval(1024, 1024), mx = m.getContext('2d');
+    const id = mx.createImageData(1024, 1024), d = id.data;
+    const c0 = P.serA, c1 = P.ultA;
+    for (let y = 0; y < 812; y++) for (let x = 0; x < 1024; x++) {
+      const gd = Math.hypot(x - 880, y - 140);
+      const b = bulut(x, y)[0];
+      const a = (0.62 - 0.22 * (y / 800)) * sstep(48, 96, gd) * (1 - sstep(0.06, 0.16, b));
+      if (a <= 0) continue;
+      const i = (y * 1024 + x) * 4, t = y / 800;
+      d[i] = lerp(c0[0], c1[0], t); d[i + 1] = lerp(c0[1], c1[1], t); d[i + 2] = lerp(c0[2], c1[2], t); d[i + 3] = 255 * a;
+    }
+    mx.putImageData(id, 0, 0);
+    k.x.save(); k.x.setTransform(1, 0, 0, 1, 0, 0); k.x.drawImage(m, 0, 0, 2048, 2048); k.x.restore();
+  }
   tara(k, -20, -20, 1044, 815, 10.5, () => true, () => -0.2, gokRenk, gokCap);
   // güneş: diskin içi sık beyaz ve soluk sarı takımlar, kenarında soluk sarı bir halka
   const gunesYol = elYolu(SAHNE.daireYolu(880, 140, 40), 1.4, 20, 4400);
@@ -567,18 +583,18 @@ parca(k, S.yol.kasnak, () => {
 });
 // ---------------------------------------------------------------- kubbe
 parca(k, S.yol.kubbe, () => {
-  k.x.fillStyle = rgba(P.yesil, 0.55); k.x.fill(S.yol.kubbe);
+  k.x.fillStyle = rgba(P.yesilA, 0.42); k.x.fill(S.yol.kubbe);
   const v = (x, y) => { const q = S.kubbe(x, y); const f = q.dilim - Math.floor(q.dilim); return q.d + (f - 0.5) * 0.1; };
   // ton kademeleri yerine sürekli ağırlık: renkler gözde yavaşça karışır, alacalı yamalar oluşmaz
   const renk = (x, y) => tonSec(v(x, y) + (R() - 0.5) * 0.05, [
-    [P.yesilK, (t) => 1 - sstep(0.15, 0.55, t)],
-    [P.mavYes, tepe(0.38, 0.13)],
-    [P.yesil, tepe(0.62, 0.17)],
+    [P.yesilK, (t) => 0.55 * (1 - sstep(0.15, 0.55, t))],
+    [P.mavYes, (t) => Math.max(tepe(0.38, 0.13)(t), 0.32 * (1 - sstep(0.2, 0.4, t)))],
+    [P.yesil, (t) => Math.max(tepe(0.62, 0.17)(t), 0.22 * (1 - sstep(0.2, 0.4, t)))],
     [P.yesilA, (t) => sstep(0.55, 0.95, t)],
     [P.sari, (t) => 0.18 * sstep(0.8, 1, t)],
   ]);
-  tara(k, 352, 292, 768, 560, 7, (x, y) => SAHNE.kubbedeMi(x, y), (x, y) => S.kubbeYon(x, y), renk,
-    (x, y) => { const t = v(x, y); return [1 - sstep(0.35, 0.7, t), tonSec(t, [[P.yesilK, (u) => 1 - sstep(0.2, 0.5, u)], [P.mavYes, tepe(0.4, 0.12)], [P.yesil, tepe(0.6, 0.1)]])]; }, { L: 16 + R() * 10, sp: 3.7 });
+  tara(k, 352, 292, 768, 560, 8.6, (x, y) => SAHNE.kubbedeMi(x, y), (x, y) => S.kubbeYon(x, y), renk,
+    (x, y) => { const t = v(x, y); return [0.55 * (1 - sstep(0.35, 0.7, t)), tonSec(t, [[P.yesilK, (u) => 0.6 * (1 - sstep(0.2, 0.5, u))], [P.mavYes, (u) => Math.max(tepe(0.4, 0.12)(u), 0.4)], [P.yesil, tepe(0.6, 0.1)]])]; }, { L: 16 + R() * 10, sp: 4.3, W: 2.3 + R() * 0.6 });
   // kaburgalar: kaburga boyunca kesik koyu yeşil tarama, ışık yanında sarı-yeşil eş
   for (const kb of SAHNE.kaburgalar(16, 60)) {
     const pts = titret({ pts: kb.noktalar.filter((p) => p[1] > 305), kapali: false, L: 260 }, 0.5, 40, 900 + Math.round(kb.u * 100)).pts;
@@ -673,8 +689,10 @@ ctx.fillStyle = rgba(P.kagit); ctx.fillRect(0, 0, 1024, 1024);
   for (let y = 0; y < 2048; y++) for (let x = 0; x < 2048; x++) {
     const i = (y * 2048 + x) * 4;
     if (!d[i + 3]) continue;
-    const dis = 0.6 * N2(x / 2.2, y / 2.2) + 0.4 * N3(x / 5.5, y / 5.5);
-    d[i + 3] = d[i + 3] * (0.72 + 0.28 * sstep(0.22, 0.42, dis));
+    // diş boşlukları çizginin boyunca uzanır (kırık pastel çizgisi), tek tük beyaz kıymık bırakmaz
+    const u = x * 0.98 - y * 0.2, w = x * 0.2 + y * 0.98;
+    const dis = 0.6 * N2(u / 7, w / 1.8) + 0.4 * N3(x / 5.5, y / 5.5);
+    d[i + 3] = d[i + 3] * (0.88 + 0.12 * sstep(0.22, 0.42, dis));
   }
   k.x.putImageData(id, 0, 0);
   // kâğıdın kendi hafif dokusu

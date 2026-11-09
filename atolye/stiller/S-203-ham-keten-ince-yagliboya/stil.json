@@ -5,28 +5,28 @@
   "ad_en": "Thin Oil on Raw Linen",
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
-  "ozet": "İri dokulu, ince ve açık astarlı keten bezde sert kıl fırçayla ince ve kuru ovalanmış boya: renk dokunun tepelerine takılır, çukurlarda açık keten kalır; darbeler biçimi izler, yalnız en parlak ışıklar kalındır.",
-  "tanim": "Hayalî bir ressamın eli; boyayı ince ve kuru sürer. Taşıyıcısı iri, düzensiz dokulu, yer yer düğümlü keten bezdir; ince ve açık bir astar dokuyu kapatmaz. Aletleri sert kıl düz fırçalardır; boyayı fırçada az tutup bezin üstünde ovalar, böylece renk ipliklerin tepelerine takılır, aralarda açık keten seçilir ve renk dokuyla kırılır. Darbeleri geniştir ve biçimi izler: gökte ve yerde yatay, kubbede dilimler boyunca, minare, kasnak ve kaidede dikey; kuru uçları tüylenerek biter. Paleti açıktır: ovalanmış açık serülyen ve beyaz gök, ovalanmış beyaz bulutlar, sıcak beyaz taş ve serin gri-mavi gölge, yumuşak yeşil kubbe ve koyu yeşil vurgular, okr-altın alemler. Güneşi sağ üstte ovalanmış soluk sarı-beyaz bir disk ve çevresinde gök rengine karışan teğet ovalanmış ışıltıyla boyar. Kenarları temiz tutar ama doku onları yumuşatır; kaburgaları ve pencereleri aynı sert fırçayla, koyu yeşil ince darbelerle çeker. Yalnız en parlak ışıklarda (kubbenin ışık yüzü, minarenin güneşli kenarı, çiçeklerin ışık alan taç yaprakları, bulut tepeleri, güneşin ortası, alem küreleri) dokuyu örten kalın, küçük vurgular koyar. Çiçekleri ince beyaz ovalamayla kurar, ışık kenarlarını keskin, kalın beyazla, göbekleri sarı okr tuşlarla bitirir.",
+  "ozet": "İri dokulu, sıcak saman renkli, ince ve açık astarlı keten bezde sert kıl fırçayla ince ve kuru ovalanmış boya: renk dokunun tepelerine takılır, kuru fırçanın atladığı şeritlerde keten açık kalır; darbeler biçimi izler, yalnız en parlak ışıklar kalındır.",
+  "tanim": "Hayalî bir ressamın eli; boyayı ince ve kuru sürer. Taşıyıcısı iri (iplik aralığı yaklaşık 9 piksel), düzensiz dokulu, yer yer düğümlü, sıcak saman renkli keten bezdir; ince ve açık bir astar dokuyu kapatmaz. Aletleri sert kıl düz fırçalardır; boyayı fırçada az tutup bezin üstünde ovalar, böylece renk ipliklerin tepelerine takılır, aralarda açık keten seçilir ve renk dokuyla kırılır. Darbeleri geniştir ve biçimi izler: gökte ve yerde yatay, kubbede dilimler boyunca, minare, kasnak ve kaidede dikey; kuru uçları tüylenerek biter. Paleti açıktır: ovalanmış açık serülyen ve beyaz gök (kuru fırçanın atladığı yatay şeritlerde, gökün dörtte biri kadar yerde sıcak keten görünür, gök yine açıkça mavidir), kuru fırçayla yumuşakça ovalanmış iki yassı beyaz bulut, sıcak beyaz taş ve serin gri-mavi gölge, yumuşak yeşil kubbe ve koyu yeşil vurgular, okr-altın alemler. Güneşi sağ üstte ovalanmış, kenarı düzensiz soluk sarı-beyaz bir disk olarak boyar; çevresine halka koymaz. Kenarları temiz tutar ama doku onları yumuşatır; kaburgaları aynı sert fırçayla, eni 1,5–3,5 piksel arasında değişen, uçları incelen, aralarında küçük kuru boşluklar kalan iki üç parçalı koyu yeşil darbelerle, pencereleri koyu yeşil ince darbelerle çeker. Yalnız en parlak ışıklarda (kubbenin ışık yüzü, minarenin güneşli kenarı, çiçeklerin ışık alan taç yaprakları, bulut tepeleri, güneşin ortası, alem küreleri) dokuyu örten kalın, küçük vurgular koyar. Çiçeklerin yerini ham ketene ayırır; her taç yaprağını merkezden dışa iki üç kuru, ovalanmış beyaz darbeyle kurar (keten aralarından seçilir), ışık kenarına keskin, kalın bir beyaz tuş koyar, göbekleri sarı okr tuşlarla bitirir.",
   "koken": "Ham ya da ince astarlı keten bezde kuru fırçayla ovalama (scumbling) ve ince yağlıboya geleneğine dayanır: dokuyu resmin parçası olarak kullanan kuru fırça tekniği ve ışıkta kalın, gölgede ince boya ilkesi. Gerçek bir ressamı taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
   "ayirt_edici": [
-    "Her yerde boyanın içinden seçilen iri, düzensiz, düğümlü keten dokusu",
-    "Dokunun tepelerine takılan, çukurlarda açık keteni bırakan ince, kuru ovalanmış renk",
+    "Her yerde boyanın içinden seçilen iri, düzensiz, düğümlü, sıcak saman renkli keten dokusu",
+    "Dokunun tepelerine takılan ince, kuru ovalanmış renk; gökte kuru fırçanın atladığı yatay şeritlerde açık kalan keten",
     "Biçimi izleyen geniş darbeler: gökte ve yerde yatay, kubbede dilim boyunca, taşta dikey; tüylenen kuru uçlar",
-    "Ovalanmış açık serülyen gök, düzensiz yassı beyaz bulutlar ve teğet ovalanmış ışıltılı soluk sarı-beyaz güneş",
-    "Sert fırçayla çekilmiş koyu yeşil kaburgalar ve pencereler",
-    "Yalnız en parlak ışıklarda dokuyu örten kalın küçük vurgular; keskin beyaz kenarlı çiçekler"
+    "Ovalanmış açık serülyen gök, kuru fırçayla yumuşakça ovalanmış iki yassı beyaz bulut ve halkasız, ovalanmış soluk sarı-beyaz güneş",
+    "Sert fırçayla çekilmiş, eni değişen, parça parça kesilen koyu yeşil kaburgalar",
+    "Taç yaprakları ham keten üstüne iki üç kuru beyaz darbeyle ovalanmış, ışık kenarında kalın beyaz tuşlu çiçekler"
   ],
   "palet": [
     "#86B4D8",
     "#C8D9E3",
-    "#D1CFB3",
+    "#D8CCB0",
     "#E7E7E1",
     "#72A076",
     "#3F7753",
     "#C2A561",
     "#9DA4AF"
   ],
-  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Önce düzensiz bir keten yükseklik haritası üretilir: iplik enleri ve aralıkları tek tek rastgele, yer yer kalın iplikler, iplik boyunca düğümler ve hafif kıvrım; zemin bu haritadan açık keten rengiyle boyanır. Her boya geçişi ayrı bir katmana kuru fırça darbeleriyle (gövdesi az, kıl çizgileri çok) çizilir, sonra her pikselde katmanın örtücülüğü dokunun yüksekliğiyle karşılaştırılarak bindirilir: ince boya yalnız iplik tepelerine tutar, çukurlarda keten kalır (yoğun boyada çukurlara da biraz iner, açık noktalar ızgara gibi dizilmesin); eşik düşük frekanslı gürültüyle yer yer değişir. Darbe yönleri bölgeye göre (yatay, meridyen akışı, dikey) verilir; renkler bölgenin ışık modelinden gelir. Kalın vurgular doğrudan ve kalınlık haritasına çizilir; sonunda doku ile boya kalınlığı birleştirilip sağ üstten aydınlatılır.",
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Önce düzensiz bir keten yükseklik haritası üretilir: iplik enleri ve aralıkları tek tek rastgele, yer yer kalın iplikler, iplik boyunca düğümler ve hafif kıvrım; zemin bu haritadan açık keten rengiyle boyanır. Her boya geçişi ayrı bir katmana kuru fırça darbeleriyle (gövdesi az, kıl çizgileri çok) çizilir, sonra her pikselde katmanın örtücülüğü dokunun yüksekliğiyle karşılaştırılarak bindirilir: ince boya yalnız iplik tepelerine tutar, çukurlarda keten kalır (yoğun boyada çukurlara da biraz iner, açık noktalar ızgara gibi dizilmesin); eşik düşük frekanslı gürültüyle yer yer değişir; gök geçişlerinde boşluğun biçimini yatay, düzensiz bir kuru fırça şerit alanı belirler (keten ancak şeritlerin kenarını kırar, gökün yaklaşık %25'inde keten görünür). Çiçeklerin yeri boyamadan önce saklanan çıplak keten görüntüsüyle geri doldurulur, taç yaprakları buna kırpılmış iki üç kuru darbeyle ovalanır; kaburgalar iki üç parçalı, eni değişen damla profilli darbelerdir. Darbe yönleri bölgeye göre (yatay, meridyen akışı, dikey) verilir; renkler bölgenin ışık modelinden gelir. Kalın vurgular doğrudan ve kalınlık haritasına çizilir; sonunda doku ile boya kalınlığı birleştirilip sağ üstten aydınlatılır.",
   "etiketler": [
     "yağlıboya",
     "keten",
