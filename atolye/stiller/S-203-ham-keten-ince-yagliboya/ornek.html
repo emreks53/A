@@ -830,12 +830,12 @@ const M = (function () {
       for (let i = 0; i < 5; i++) {
         const a = c.aci + (i * Math.PI * 2) / 5, ux = Math.cos(a), uy = Math.sin(a);
         const isik = ux * 0.72 - uy * 0.7;
-        const col = isik > -0.3 ? C('#F7F4EC') : C('#DCDCDA');
-        for (const off of [-0.4, -0.14, 0.14, 0.4]) {
+        const col = isik > -0.3 ? C('#F7F4EC') : C('#D6D8DC');
+        for (const off of [-0.32, -0.1, 0.12, 0.32]) {
           const x0 = c.x + ux * c.r * 0.12, y0 = c.y + uy * c.r * 0.12;
           const uz = 1 - Math.abs(off) * 0.45;
-          const x1 = c.x + ux * c.r * uz + (-uy) * off * c.r * 0.95, y1 = c.y + uy * c.r * uz + ux * off * c.r * 0.95;
-          M.darbe(k, [[x0, y0], [(x0 * 0.45 + x1 * 0.55) + (-uy) * off * c.r * 0.12, (y0 * 0.45 + y1 * 0.55) + ux * off * c.r * 0.12], [x1, y1]], c.r * 0.33, col, kuru({ a: 1, govde: 0.85, kil: 5, kilK: 8, yuk: 0.8, uc: 'yuvarlak', r: R }));
+          const x1 = c.x + ux * c.r * uz + (-uy) * off * c.r * 0.82, y1 = c.y + uy * c.r * uz + ux * off * c.r * 0.82;
+          M.darbe(k, [[x0, y0], [(x0 * 0.45 + x1 * 0.55) + (-uy) * off * c.r * 0.12, (y0 * 0.45 + y1 * 0.55) + ux * off * c.r * 0.12], [x1, y1]], c.r * 0.29, col, kuru({ a: 1, govde: 0.85, kil: 5, kilK: 8, yuk: 0.8, uc: 'yuvarlak', r: R }));
         }
       }
     }

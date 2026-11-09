@@ -1555,6 +1555,16 @@ for (const c of cicekler) {
   ortu(new Path2D(S.daireYolu(c.x, c.y, c.r * 0.16)));
   kc(S.daireYolu(c.x, c.y, c.r * 0.16), { w: 0.6, renk: 'rgba(150,100,40,0.9)' });
 }
+{
+  const cer = new Path2D();
+  cer.rect(-5, -5, 1034, 1034);
+  cer.rect(14, 14, 996, 996);
+  L.save();
+  L.globalCompositeOperation = 'destination-out';
+  L.fillStyle = '#000';
+  L.fill(cer, 'evenodd');
+  L.restore();
+}
 ctx.save();
 ctx.setTransform(1, 0, 0, 1, 0, 0);
 ctx.globalCompositeOperation = 'multiply';
