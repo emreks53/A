@@ -1,0 +1,39 @@
+{
+  "kod": "S-240",
+  "no": 240,
+  "ad": "Yeşil Altboya (Verdaccio)",
+  "ad_en": "Green Underpainting (Verdaccio)",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Beyaz alçı astarlı panoda resim önce açık, yeşilimsi gri bir altboyayla, biçimi izleyen ince ve düzenli taramalarla modellenir; üstüne saydam yerel renk sırları: berrak mavi gök, zümrüt kubbe, sıcak beyaz taş, gümüşî yeşil çayır. Yeşil-gri altboya gölgelerde ve yarı tonlarda görünür kalır; serin, gümüşî yeşil bir bütünlük.",
+  "tanim": "Hayalî bir tempera ressamının eli. Yüzey: beyaz alçı (gesso) astarlı ahşap pano, çok hafif yatay mala izleri. Alet: ince samur fırçalar. Çalışma sırası: 1) Verdaccio: yeşilimsi gri altboya; önce ışıkta çok ince, gölgede dolgun yumuşak bir kat, sonra biçimi izleyen koşut, kesik kesik ince taramalar: kubbede meridyenler boyunca, kasnakta ve minarede dikey, korniş ve şerefe altlarında yatay, çayırda yatay, bulutların gölgeli yanında tek yönde eğik; koyu yerde bütün çizgiler, açık yerde yalnız birkaçı çizilir. Altboyanın ince yeşil-gri çizimi biçim sınırlarında görünür kalır. 2) Sırlar: yerel renkler ince ve saydam sürülür; ışıkta dolgun, gölgede ince olduğu için altboya gölgelerde gümüşî yeşil olarak okunur: gök berrak mavi: ince bir kat ve üstünde yumuşak, geniş fırçayla gidip gelen yarı saydam vuruşlar (kıl izleri ve binen yerler seçilir), ufka doğru açılır; kubbe ve kasnak zümrüt, taş ışıkta sıcak beyaz, çayır gümüşî yeşil, yapraklar taze yeşil; güneş alçı beyazı bırakılıp soluk sarımsı bir sırla boyanır. 3) Bitiriş: bulutların ışıklı yanına yumuşak, opak bir kurşun beyazı sürme ve tek yönlü kısa ışık taramaları; minarenin ışık yanına, korniş üstüne, kubbenin en ışıklı dilimlerine ve taç yapraklarının ışık yanlarına birkaç opak beyaz tarama. Palet: verdaccio, gümüşî yeşil, gök mavisi, soluk gök, taş beyazı, zümrüt, altın.",
+  "koken": "İtalyan Gotik ve erken Rönesans yumurta temperasında biçimin önce terra verde / verdaccio ile modellenip üstünden yerel renklerle sırlanması yöntemine (Cennino Cennini'nin anlattığı biçimiyle) ve yağlıboyadaki yeşil altboya aşamasına dayanır. Gerçek bir sanatçıyı taklit etmez; bu yöntemi tek bir hayalî ressamın tutarlı eline bağlayan atölye tarifidir.",
+  "ayirt_edici": [
+    "Kubbede meridyenler boyunca koşut, kesik kesik ince yeşil-gri taramalar: sol dilimlerde sık, ışıklı sağ dilimlerde seyrek; en ışıklı dilimlerde birkaç açık yeşil-beyaz ışık çizgisi",
+    "Gölgeler ve yarı tonlar serin, gümüşî yeşil: minarenin ve kaidenin sol yanı dikey, korniş ve şerefe altları yatay, kasnağın gölge yanı dikey taramalı",
+    "Berrak açık mavi gök sırrı ufka doğru açılıyor: soluk altboyanın üstünde yumuşak, geniş fırçanın gidip gelen yarı saydam vuruşları; kıl izleri ve vuruşların bindiği yerler seçiliyor",
+    "Bulutların ışıklı yanı yumuşak, opak kurşun beyazı sürme ve tek yönlü kısa beyaz taramalar; gölgeli alt ve sol yanı yeşil-gri altboya ve ters yönde düzenli taramalar; güneş alçı beyazı bırakılmış soluk sarımsı bir kurs",
+    "Renkler ışıkta temiz (zümrüt kubbe ve kasnak, sıcak beyaz taş), gölgede altboyanın yeşil-grisine çekiliyor; gümüşî yeşil çayırın altından yatay yeşil-gri taramalar seçiliyor",
+    "Beyaz taç yapraklarında göbeğe doğru ışınsal yeşil-gri taramalı gölge, ışık yanında opak beyaz kısa vuruşlar ve sarı göbek"
+  ],
+  "palet": [
+    "#9AADA4",
+    "#759371",
+    "#87B2CB",
+    "#B5CCD5",
+    "#BAC6A1",
+    "#6BAC81",
+    "#AF9A55",
+    "#E4DEC8"
+  ],
+  "kodla_cizim": "Alçı astar 2048 px'lik düşük genlikli yükseklik alanıdır (yatay mala izi gürültüsüyle). Üç katman çarpımsal birleşir, en üstte opak ışık katmanı: 1) Altboya: 1024 px lavi motoruyla (S-161 kitinden uyarlanmış) her biçimin koyuluk alanına göre yumuşak verdaccio katı (kubbede yüzey normali ve ışıkla hesaplanan aydınlanma, kasnak ve minarede silindir ışığı, kaidede korniş altı ve sol uç, bulutlarda alt ve sol yan; bulutlar Gauss kümeleri toplamından kurulan bir yoğunluk alanıdır); üstüne 2048 px'te düzenli tarama: biçimi izleyen koşut çizgiler (kubbe meridyenleri, dikey ve yatay çizgi takımları; bulut gölgelerinde ve çayırda düzensiz ızgaradan tek yönlü kısa çizgiler) kesik parçalara bölünür, her çizginin kendi eşiği vardır ve parça yalnız orta noktasındaki koyuluk eşiği aşınca, koyulukla artan saydamlıkta, uçları incelen şerit olarak çizilir. 2) Sırlar: yerel renkler çarpımsal laviler olarak, ışıkla artan güçte (gölgede ince) sürülür; gökte ince bir kat ve üstüne geniş (45–65 px), uzun, yarı saydam fırça vuruşları: yükü baştan sona azalan şeritler, içlerinde çok sayıda ince kıl izi; güneş kursu bu katmandan temizlenir. Yaprak ve sap sırları biçimden biraz taşar (kenarda kâğıt çizgisi kalmaz). 3) Bulutların ışıklı yanına yoğunluk alanından ve gölge koyuluğundan hesaplanan yumuşak, opak beyaz bir sürme ve tek yönlü kısa taramalar konur; opak kurşun beyazı ışık taramaları aynı çizgi takımlarıyla kubbenin en ışıklı dilimlerine, minare ve korniş ışık yanlarına ve taç yapraklarına konur. Biçim sınırlarında altboyanın ince yeşil-gri çizimi değişken kalınlıklı şeritlerle; öndeki bitkiler arkadaki tarama ve çizgileri örter.",
+  "etiketler": [
+    "verdaccio",
+    "yeşil altboya",
+    "tempera",
+    "tarama",
+    "sır",
+    "alçı astar",
+    "ressamın eli"
+  ]
+}

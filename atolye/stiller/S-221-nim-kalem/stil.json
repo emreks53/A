@@ -1,0 +1,40 @@
+{
+  "kod": "S-221",
+  "no": 221,
+  "ad": "Nim Kalem",
+  "ad_en": "Nīm-qalam (Half-Pen Tinted Drawing)",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Perdahlı fildişi kâğıt üstünde, kalem gibi kullanılan çok ince fırçayla çekilmiş kahve-siyah mürekkep çizimi; gölgeler ince paralel taramayla verilir, renk yalnız birkaç soluk ve saydam lavide kalır: açık mavi gök, açık yeşil kubbe ve yapraklar, gül pembesi ve sarı çiçekler, alemlerde küçük altın dokunuşlar.",
+  "tanim": "Hayalî bir nim kalem ustasının eli. Destek: perdahlı, fildişi beyazı kâğıt; büyük kısmı açık bırakılır. Alet: kalem gibi tutulan çok ince samur fırça ve kahve-siyah mürekkep. Usta önce bütün biçimleri kalın-ince ritimli, bastırınca şişen ve ucunda incelen çizgilerle çizer; gölgede kalan sol kenarları daha dolgun çeker. Modellemeyi renkle değil taramayla yapar: kubbede her dilimin içinde iki kaburga arasına sığan, hafif kavisli kısa paralel vuruşlar gölgeye doğru sıklaşır, en koyu yerde ikinci bir çapraz tarama gelir; minare gövdelerinde, kasnakta ve pencerelerde dikey ve eğik ince taramalar vardır; tarama çizgileri cetvelle değil elle çekilir, yer yer kesilip sivrilerek biter. Yaprakların gölgeli yarısı da eğik taramayla, kaidenin dibindeki kısa gölge kısa çapraz vuruşlarla verilir. Sonra az ve saydam renk sürer: gökte birbirine karışan geniş yatay açık mavi lavi geçişleri (ıslak kenarlarında pigment birikir, ufka doğru iyice solar ama yer çizgisine kadar iner), kubbe ve kasnakta kaburga yönünde açık yeşil lavi ve yalnız gölgeli yanda bir kat yeşil, yapraklarda açık yeşil, çiçeklerde göbekten dışa çekilmiş gül pembesi ve sarı vuruşlar. Gökte uçları sarmal kıvrımlı, ortasından kendi üstüne kıvrılan bir filiz (düğüm) çıkan Fars usulü bulut kuşakları ince mürekkep çizgisiyle, içleri beyaz-mavi; güneş iki yay vuruşuyla çizilmiş soluk sarı bir teker. Çiçekler lale, karanfil ve yaban gülüdür; son dokunuş alemlerde küçük altın lekeleri.",
+  "koken": "Safevi ve Osmanlı sanatındaki nim kalem (Farsça nīm-qalam, 'yarım kalem') geleneğine dayanır: mürekkeple çizilmiş, gölgesi tarama ve ince fırça işiyle verilmiş, yalnız yer yer hafif renk ve altınla tamamlanmış çizimler; Timurlu-Safevi süslemesindeki çi (Çin kökenli) bulut kuşağı ile Osmanlı lale, karanfil ve gül motifleri buna eklenmiştir. Belirli bir eser ya da sanatçı taklit edilmez; tarif bu tekniklerden kurulmuş hayalî bir ressamın elidir; figür, yazı ya da hat içermez.",
+  "ayirt_edici": [
+    "Kalın-ince ritimli, şişip incelen kahve-siyah fırça-kalem konturları; gölge yanlarında daha dolgun çizgi",
+    "Kubbede dilim dilim, kaburgalar arasına sığan kısa kavisli tarama ve en koyu sol yanda çapraz tarama; minare, kasnak ve pencerelerde ince taramalar",
+    "Açık mavi gök lavisi: üst üste binen ıslak yatay geçişler, kenarlarında pigment birikmesi, ufka doğru iyice solan mavi",
+    "İnce mürekkep çizgili, uçları sarmal, ortasında düğüm kıvrımı olan, içi beyaz-mavi Fars bulut kuşakları ve iki yay vuruşuyla çizilmiş soluk sarı güneş",
+    "İnce çizgiyle çizilip soluk gül pembesi ve sarıyla boyanmış laleler, karanfiller ve yaban gülleri; damarlı, gölgeli yarısı taralı yapraklar",
+    "Geniş açık kâğıt alanları (beyaz kaide ve minare), soluk toprak lavili yer ve alemlerde küçük altın dokunuşları"
+  ],
+  "palet": [
+    "#F9F4E8",
+    "#4C4839",
+    "#C5D7E1",
+    "#C9DAB6",
+    "#587B54",
+    "#EBCDBF",
+    "#F2DFAC",
+    "#AE9040"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Her pigment (gök mavisi, açık yeşil, yeşil, gül, sarı, toprak, sulandırılmış mürekkep) ayrı bir alfa katmanına fırça vuruşlarıyla boyanır: gökte bulanıklaştırılmış geniş ıslak bantlar ve uçları incelen kuru geçişler, kubbede meridyen yönünü izleyen vuruşlar (yoğunluk kubbe aydınlatmasına göre), kasnakta yatay ve gölgede dikey vuruşlar. Önde kalan biçimler arkadakinin lavisini ve mürekkebini siler (örtme). Mürekkep katmanı titrek, basıncı gürültüyle değişen şerit çizgilerdir; kubbe taraması her kaburga aralığında ayrı ayrı, kademeli eşiklerle (gölge arttıkça daha çok vuruş) çizilir, diğer taramalar paralel çizgilerin yoğunluk fonksiyonuyla kesilmesinden gelir; yoğunluğa eklenen düşük genlikli gürültü çizgileri yer yer böler, böylece cetvel izi kalmaz. Bulut kuşakları dalgalı orta çizgi, düğümlü genişlik, iki uçta sarmal kıvrım ve gövdenin ortasından yukarı ayrılıp kendi üstüne kıvrılan incelen bir filizle kurulur (filizin gövde içinde kalan mürekkebi silinir). Bileşimde fildişi kâğıt piksel piksel pigmentlerle çarpılır (Beer–Lambert benzeri), bulanık maskeyle ıslak kenar birikmesi ve kâğıt dişine oturan granülasyon eklenir; mürekkep hafifçe yayılır, altın örtücü ve tanelidir.",
+  "etiketler": [
+    "nim kalem",
+    "mürekkep",
+    "tarama",
+    "lavi",
+    "fildişi kâğıt",
+    "Safevi",
+    "Osmanlı",
+    "ressamın eli"
+  ]
+}

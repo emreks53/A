@@ -254,6 +254,15 @@ function cizgiNokta(c, pts, o) {
 function titrekYol(d, amp, fr, adim) {
   const p2 = new Path2D();
   for (const p of ornekle(d, adim || 2)) {
+    if (p.kapali) {
+      let alan = 0;
+      for (let i = 0; i < p.pts.length; i++) {
+        const a = p.pts[i];
+        const b = p.pts[(i + 1) % p.pts.length];
+        alan += a[0] * b[1] - b[0] * a[1];
+      }
+      if (alan < 0) p.pts.reverse();
+    }
     const N = normaller(p.pts, p.kapali);
     const ofs = (_ofs += 7.9);
     p.pts.forEach((q, i) => {
@@ -734,6 +743,9 @@ alanBoya(ctx, {
 // bulutlar: kontur boyunca kıvrılan kısa örtücü darbeler; alt yanlar mavi-gri, üst ve sağ yanlar beyaz
 const BULUT = bulutKur(31);
 for (const B of BULUT) {
+  const oc = S.yeniTuval(W * OL, W * OL);
+  const ox = oc.getContext('2d', { willReadFrequently: true });
+  ox.setTransform(OL, 0, 0, OL, 0, 0);
   const top = Math.min(...B.lobs.map((l) => l.y - l.ry));
   const yog = (x, y) => bulutYog(B, x, y);
   const yon = (x, y) => {
@@ -749,7 +761,7 @@ for (const B of BULUT) {
   const golge = (x, y) => clamp(((y - top) / (B.taban - top)) * 0.95 - ((x - B.x) / B.gen) * 0.22 + 0.05, 0, 1);
   const kutu = [B.x - B.gen - 50 * B.s, top - 10, B.x + B.gen + 50 * B.s, B.taban + 8];
   // gövde (gölgeli)
-  alanBoya(ctx, {
+  alanBoya(ox, {
     kutu,
     aralik: 4.2,
     boy: [14, 30],
@@ -763,7 +775,7 @@ for (const B of BULUT) {
     tohum: 40 + B.x,
   });
   // ışık alan üst kısım
-  alanBoya(ctx, {
+  alanBoya(ox, {
     kutu,
     aralik: 5,
     boy: [10, 22],
@@ -776,6 +788,27 @@ for (const B of BULUT) {
     darbe: { bas: 0.2, son: 0.4 },
     tohum: 60 + B.x,
   });
+  // fırça uçları kenarda tüylenmesin: darbeler bulut biçiminin içinde yumuşakça biter
+  {
+    const x1 = Math.max(0, Math.floor(kutu[0] * OL));
+    const y1 = Math.max(0, Math.floor(kutu[1] * OL));
+    const x2 = Math.min(W * OL, Math.ceil(kutu[2] * OL));
+    const y2 = Math.min(W * OL, Math.ceil(kutu[3] * OL));
+    const im = ox.getImageData(x1, y1, x2 - x1, y2 - y1);
+    const d = im.data;
+    for (let py = 0; py < y2 - y1; py++)
+      for (let px = 0; px < x2 - x1; px++) {
+        const i = (py * (x2 - x1) + px) * 4;
+        if (!d[i + 3]) continue;
+        const v = yog((x1 + px + 0.5) / OL, (y1 + py + 0.5) / OL);
+        d[i + 3] *= yumusak(0.05, 0.16, v);
+      }
+    ox.putImageData(im, x1, y1);
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(oc, 0, 0);
+    ctx.restore();
+  }
 }
 
 // ---------------------------------------------------------------- 2. yer: açık sıcak toprak, yeşil lekeler
@@ -813,8 +846,8 @@ alanBoya(ctx, {
         return dx * dx + dy * dy > 1 - rr() * 0.25;
       },
       renk: (x, y, rr) => {
-        const l = clamp(0.5 + ((x - o.x) / o.rx) * 0.3 - ((y - o.y) / o.ry) * 0.45 + (rr() - 0.5) * 0.35, 0, 1);
-        return oyna(l < 0.33 ? P.yaprak1 : l < 0.68 ? P.yaprak2 : P.yaprak3, rr, 6, 4);
+        const l = clamp(0.64 + ((x - o.x) / o.rx) * 0.3 - ((y - o.y) / o.ry) * 0.4 + (rr() - 0.5) * 0.35, 0, 1);
+        return oyna(l < 0.3 ? P.yaprak2 : l < 0.66 ? hex('#5FA45C') : P.yaprak3, rr, 6, 4);
       },
       alfa: [0.9, 1],
       darbe: { bas: 0.2, son: 0.5, basinc: 0.3 },
@@ -1140,38 +1173,41 @@ for (const s of S.bitki.saplar) {
   cizgiNokta(ctx, s, { w: 3.6, renk: rgba(P.sap), titreme: 0.5, frek: 0.03, basinc: 0.2, sonSivri: 60 });
   cizgiNokta(ctx, s.map(([x, y]) => [x + 1.1, y - 0.5]), { w: 1, renk: rgba(P.yaprak3, 0.6), titreme: 0.4, sonSivri: 60 });
 }
-// yapraklar: yaprak biçimi içinde iki üç yeşilin küçük lekeleri
+// yapraklar: samur fırçanın orta damardan kenara giden küçük örtücü darbeleri; ışık yanı açık, gölge yanı koyu yeşil
 function yaprakBoya(yp, r) {
   const yol = titrekYol(S.yaprakYolu(yp), 0.4, 0.12, 1);
   const ca = Math.cos(yp.aci);
   const sa = Math.sin(yp.aci);
   const L = yp.uzunluk;
   const Wd = L * yp.genislik;
-  const koyu = r() < 0.45;
-  ctx.fillStyle = rgba(koyu ? P.yaprak1 : P.yaprak2);
-  ctx.fill(yol);
-  ctx.save();
-  ctx.clip(yol);
-  // ışık sağ üstten: yaprağın ışığa bakan yarısı
   const nx = -sa;
   const ny = ca;
   const isikYan = nx * 0.6 - ny * 0.8 > 0 ? 1 : -1;
-  const adet = 3 + Math.floor(L / 22);
-  for (let i = 0; i < adet; i++) {
-    const t = 0.12 + (i / adet) * 0.75;
-    const yan = (i % 2 ? 1 : -1) * (0.15 + r() * 0.2) * Wd;
-    const x = yp.x + ca * L * t + nx * yan;
-    const y = yp.y + sa * L * t + ny * yan;
-    const c = yan * isikYan > 0 ? (koyu ? P.yaprak2 : P.yaprak3) : koyu ? hex('#1A5733') : P.yaprak1;
-    darbe(ctx, [[x - ca * L * 0.16, y - sa * L * 0.16], [x + ca * L * 0.16, y + sa * L * 0.16]], Wd * (0.38 + r() * 0.2), oyna(c, r, 6), { alfa: 0.9, bas: 0.25, son: 0.4, r });
+  const koyu = r() < 0.42;
+  const tonG = koyu ? hex('#1A5733') : P.yaprak1;
+  const tonI = koyu ? P.yaprak2 : hex('#5FA45C');
+  ctx.fillStyle = rgba(karis(tonG, P.yaprak2, 0.35));
+  ctx.fill(yol);
+  ctx.save();
+  ctx.clip(yol);
+  const adet = Math.max(3, Math.round(L / 6.5));
+  for (const yan of [-1, 1]) {
+    const isikta = yan === isikYan;
+    for (let i = 0; i < adet; i++) {
+      const t = 0.04 + ((i + r() * 0.7) / adet) * 0.9;
+      const hw = Wd * 0.68 * Math.sin(PI * Math.pow(clamp(t, 0, 1), 0.8)) + 1;
+      const mx = yp.x + ca * L * t + nx * yan * 0.6;
+      const my = yp.y + sa * L * t + ny * yan * 0.6;
+      const ex = mx + ca * L * 0.13 + nx * yan * hw * 1.15;
+      const ey = my + sa * L * 0.13 + ny * yan * hw * 1.15;
+      const ort = [(mx + ex) / 2 + ca * L * 0.025, (my + ey) / 2 + sa * L * 0.025];
+      const c = isikta ? karis(tonI, P.yaprak3, r() * 0.55) : karis(tonG, P.yaprak2, r() * 0.35);
+      darbe(ctx, [[mx, my], ort, [ex, ey]], Math.max(1.8, hw * 0.62), oyna(c, r, 5, 3), { alfa: 0.93, bas: 0.12, son: 0.5, basinc: 0.25, r });
+    }
   }
-  // ışık dokunuşu
-  const tx = yp.x + ca * L * 0.5 + nx * isikYan * Wd * 0.22;
-  const tyy = yp.y + sa * L * 0.5 + ny * isikYan * Wd * 0.22;
-  darbe(ctx, [[tx - ca * L * 0.2, tyy - sa * L * 0.2], [tx + ca * L * 0.15, tyy + sa * L * 0.15]], Math.max(1.4, Wd * 0.13), hex('#B9DD95'), { alfa: 0.75, bas: 0.3, son: 0.5, r });
   ctx.restore();
   const [a, b] = S.yaprakDamari(yp);
-  cizgiNokta(ctx, [a, [(a[0] + b[0]) / 2 + nx * 0.8, (a[1] + b[1]) / 2 + ny * 0.8], b], { w: 0.9, renk: rgba(hex('#16482B'), 0.55), titreme: 0.2, sonSivri: L * 0.4 });
+  cizgiNokta(ctx, [a, [(a[0] + b[0]) / 2 + nx * 0.8, (a[1] + b[1]) / 2 + ny * 0.8], b], { w: 0.9, renk: rgba(koyu ? hex('#5E9E5E') : hex('#174A2C'), 0.6), titreme: 0.2, sonSivri: L * 0.4 });
 }
 {
   const r = S.rng(71);
@@ -1199,54 +1235,72 @@ function tomurcukBoya(t, i, r) {
   const r = S.rng(72);
   S.bitki.tomurcuklar.forEach((t, i) => tomurcukBoya(t, i, r));
 }
-// çiçekler: örtücü beyaz taç yapraklar, göbeğe ve sol alta doğru mavimsi gölge, sarı göbek
+// çiçekler: mavimsi gri altlık üstüne uçtan göbeğe çekilen örtücü beyaz samur darbeleri; göbek küçük sarı lekeler
 const ISIK_ACI = Math.atan2(ISIK[1], ISIK[0]);
 function cicekBoya(c, r) {
   const taclar = S.tacYapraklari(c);
   taclar.sort((a, b) => Math.cos(a.aci - ISIK_ACI) - Math.cos(b.aci - ISIK_ACI));
   for (const e of taclar) {
-    const yol = titrekYol(S.elipsYolu(e), Math.max(0.3, c.r * 0.012), 0.12, 0.8);
-    ctx.fillStyle = rgba(P.beyaz);
+    const yol = titrekYol(S.elipsYolu(e), Math.max(0.3, c.r * 0.014), 0.12, 0.8);
+    const isik = Math.cos(e.aci - ISIK_ACI); // 1: ışığa bakan taç yaprak
+    const gol = (1 - isik) / 2;
+    ctx.fillStyle = rgba(karis(hex('#E6ECF4'), P.cicekGolge, 0.15 + gol * 0.6));
     ctx.fill(yol);
     ctx.save();
     ctx.clip(yol);
     const ca = Math.cos(e.aci);
     const sa = Math.sin(e.aci);
-    const isik = Math.cos(e.aci - ISIK_ACI); // 1: ışığa bakan taç yaprak
-    const g = 0.35 + 0.45 * (1 - isik) / 2;
-    // göbekten dışa doğru gölge darbesi (gölge yanındaki taç yapraklarda daha uzun)
-    darbe(ctx, [[c.x + ca * c.r * 0.1, c.y + sa * c.r * 0.1], [c.x + ca * c.r * (0.55 + 0.35 * (1 - isik) / 2), c.y + sa * c.r * (0.55 + 0.35 * (1 - isik) / 2)]], e.ry * 1.05, oyna(P.cicekGolge, r, 4), { alfa: g, bas: 0.1, son: 0.6, r });
-    // ışık alan uçta örtücü beyaz dokunuş
-    darbe(ctx, [[c.x + ca * c.r * 0.55, c.y + sa * c.r * 0.55], [c.x + ca * c.r * 0.98, c.y + sa * c.r * 0.98]], e.ry * 0.75, hex('#FFFFFB'), { alfa: 0.6 + 0.35 * (1 + isik) / 2, bas: 0.2, son: 0.5, r });
+    const p = (t, l) => [c.x + ca * c.r * t - sa * l, c.y + sa * c.r * t + ca * l];
+    const n = Math.max(4, Math.round(c.r / 4.2));
+    for (let k = 0; k < n; k++) {
+      const v = ((k + 0.5) / n - 0.5) * 2;
+      const lat = v * e.ry * 0.9 + (r() - 0.5) * e.ry * 0.12;
+      const t0 = 0.16 + gol * 0.36 + Math.abs(v) * 0.1 + r() * 0.12;
+      const a = p(1.06, lat * 0.55);
+      const m = p((t0 + 1.06) / 2, lat * 1.02);
+      const b = p(t0, lat * 0.62);
+      const renk = karis(hex('#FFFFFB'), hex('#E8EDF3'), clamp(gol * 0.55 + r() * 0.25, 0, 1));
+      darbe(ctx, [a, m, b], e.ry * (0.36 + r() * 0.1), oyna(renk, r, 3), { alfa: 0.9, bas: 0.12, son: 0.55, basinc: 0.2, r });
+    }
+    // göbeğe yakın, gölge yanında ince mavi dokunuş
+    darbe(ctx, [p(0.18, -e.ry * 0.25), p(0.45, -e.ry * 0.4)], e.ry * 0.28, P.cicekGolge, { alfa: 0.35 + gol * 0.35, bas: 0.2, son: 0.6, r });
     ctx.restore();
-    // aşağıya bakan kenarda ince koyu vurgu (renk kenarının altını çizer)
-    const pts = ornekle(S.elipsYolu(e), 1)[0].pts;
-    const parca = [];
-    for (const q of pts) if ((q[0] - e.cx) * -0.55 + (q[1] - e.cy) * 0.83 > e.ry * 0.3) parca.push(q);
-    if (parca.length > 4) {
-      const m = [e.cx, e.cy];
-      parca.sort((a, b) => ((Math.atan2(a[1] - m[1], a[0] - m[0]) - 0.6 + 4 * PI) % (2 * PI)) - ((Math.atan2(b[1] - m[1], b[0] - m[0]) - 0.6 + 4 * PI) % (2 * PI)));
-      cizgiNokta(ctx, parca, { w: Math.max(0.8, c.r * 0.028), renk: rgba(hex('#8FA4C4'), 0.55), titreme: 0.2, sivri: 5 });
+    // gölgede kalan taç yaprakların alt kenarında kırık, ince koyu vurgu
+    if (gol > 0.35) {
+      const pts = ornekle(S.elipsYolu(e), 1)[0].pts;
+      const parca = [];
+      for (const q of pts) if ((q[0] - e.cx) * -0.55 + (q[1] - e.cy) * 0.83 > e.ry * 0.55) parca.push(q);
+      if (parca.length > 6) {
+        const m = [e.cx, e.cy];
+        parca.sort((a, b) => ((Math.atan2(a[1] - m[1], a[0] - m[0]) - 0.6 + 4 * PI) % (2 * PI)) - ((Math.atan2(b[1] - m[1], b[0] - m[0]) - 0.6 + 4 * PI) % (2 * PI)));
+        const k0 = Math.floor(parca.length * (0.1 + r() * 0.2));
+        const k1 = Math.floor(parca.length * (0.6 + r() * 0.3));
+        cizgiNokta(ctx, parca.slice(k0, k1), { w: Math.max(0.7, c.r * 0.022), renk: rgba(hex('#8399BC'), 0.5), titreme: 0.2, sivri: 6 });
+      }
     }
   }
+  // göbek: üst üste küçük sarı lekeler; sol altta okra, sağ üstte açık sarı (parlak nokta yok)
   const gr = c.r * 0.2;
-  const gyol = titrekYol(S.daireYolu(c.x, c.y, gr), 0.3, 0.2, 0.7);
-  ctx.fillStyle = rgba(P.sari);
+  const gyol = titrekYol(S.daireYolu(c.x, c.y, gr * 0.92), 0.35, 0.2, 0.7);
+  ctx.fillStyle = rgba(karis(P.sari, P.sariKoyu, 0.25));
   ctx.fill(gyol);
-  ctx.save();
-  ctx.clip(gyol);
-  darbe(ctx, [[c.x - gr * 0.9, c.y - gr * 0.2], [c.x - gr * 0.1, c.y + gr * 0.95]], gr * 0.8, P.sariKoyu, { alfa: 0.75, r });
-  ctx.restore();
-  ctx.fillStyle = rgba(hex('#FFFBE6'), 0.95);
-  ctx.beginPath();
-  ctx.ellipse(c.x + gr * 0.35, c.y - gr * 0.35, gr * 0.22, gr * 0.16, -0.5, 0, PI * 2);
-  ctx.fill();
+  for (let k = 0; k < 14; k++) {
+    const a = r() * PI * 2;
+    const rr = Math.sqrt(r()) * gr * 0.75;
+    const x = c.x + Math.cos(a) * rr;
+    const y = c.y + Math.sin(a) * rr;
+    const sh = ((Math.cos(a) * -0.6 + Math.sin(a) * 0.8) * rr) / gr;
+    const col = sh > 0.2 ? P.sariKoyu : sh < -0.3 ? hex('#F6DD70') : P.sari;
+    const ta = r() * PI;
+    const l = gr * 0.32;
+    darbe(ctx, [[x - Math.cos(ta) * l, y - Math.sin(ta) * l], [x + Math.cos(ta) * l, y + Math.sin(ta) * l]], gr * 0.42, oyna(col, r, 5), { alfa: 0.9, bas: 0.3, son: 0.5, r });
+  }
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * PI * 2 + r();
-    ctx.fillStyle = rgba(P.sariKoyu, 0.85);
-    ctx.beginPath();
-    ctx.arc(c.x + Math.cos(a) * gr * 1.45, c.y + Math.sin(a) * gr * 1.45, Math.max(0.8, c.r * 0.03), 0, PI * 2);
-    ctx.fill();
+    const x = c.x + Math.cos(a) * gr * 1.45;
+    const y = c.y + Math.sin(a) * gr * 1.45;
+    const l = Math.max(0.9, c.r * 0.035);
+    darbe(ctx, [[x - Math.cos(a) * l, y - Math.sin(a) * l], [x + Math.cos(a) * l, y + Math.sin(a) * l]], Math.max(1.3, c.r * 0.05), P.sariKoyu, { alfa: 0.85, bas: 0.3, son: 0.4, r });
   }
 }
 {

@@ -1,0 +1,42 @@
+{
+  "kod": "S-220",
+  "no": 220,
+  "ad": "Yassı Fırça Suluboya",
+  "ad_en": "Flat-Brush Watercolour",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Bütün resim tek bir 2,5 cm'lik yassı fırça ve onun ağzıyla: düz başlayan, kenarları paralel, sonu kuruyup kaba kâğıdın dişine takılan dikdörtgen vuruşlar.",
+  "tanim": "Hayalî bir ressamın yassı fırça suluboya eli. Aletleri: kaba (rough) beyaz suluboya kâğıdı ve tek bir 2,5 cm'lik yassı fırça; yuvarlak fırça ya da kalem kullanmaz, ince çizgileri fırçanın keskin ağzıyla çeker. Her vuruş düz bir kenarla başlar (başlangıçta boya hafifçe birikir), kenarları paralel ilerler, sonuna doğru boyası azalır ve kâğıdın dişine takılarak kıl izleriyle kırık, kuru bir uçla biter; vuruşlar saydamdır, bindikleri yerde koyulaşır. Gök iki kattır: önce bütün göğe sulu, açık bir seruleum katı (ıslakken birleşir, ufka ve güneşe doğru açılır); kuruyunca üstüne dağınık yerleşmiş, her biri fırçanın tam genişliğinde, hafif eğik ve farklı uzunlukta koyu seruleum ve kobalt vuruşlar. Bulutlar kâğıt beyazı kalır: vuruşlar bulutun yanında boyası azalmış fırçayla kâğıt dişine takılarak biter, böylece bulutun kenarı kırık, kuru fırça kenarıdır; bulutun alt yarısına düz ağızlı geniş bir açık menekşe-gri vuruş, tabana daha koyu dar bir vuruş konur. Kubbe her dilimde tabandan tepeye kıvrılan tek bir dikey vuruşla kurulur; fırça dilimin genişliğinde başlar, kubbe daraldıkça ağzına döndürülür; kaburgalar fırça ağzıyla çekilir, sol yan geniş ikinci bir kıvrık katla koyulaşır. Kasnak yatay vuruşlarla boyanır; pencereler tek birer dikey vuruştur: eşikten düz ağızla başlar, kemerde fırça ağzına döndürülerek sivri biter; minare ve kaide üst üste yığılmış yatay vuruşlardır, toprak geniş, açık kum rengi yatay vuruşlardır, korkuluk dikmeleri ve zikzak bant ağızla çekilir. Yapraklar yan yana iki kısa vuruştur, uca doğru fırça ağzına döndürülerek sivrilir; çiçekler kâğıt beyazıdır, taç yapraklarının gölge yanına ağızla menekşe-gri birer vuruş, göbeğe çapraz iki sarı dokunuş konur.",
+  "koken": "Suluboyada yassı fırça (flat / one-stroke) tekniğine, mimari suluboya etütlerindeki düz kenarlı lavilere ve kaba kâğıtta kuru fırça (dry brush) etkisine dayanır. Hiçbir gerçek ressam taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Açık bir ilk katın üstüne dağınık yerleşmiş, düz başlayıp kuru, kıl izli uçla biten geniş dikdörtgen gök vuruşları; binen yerlerde koyulaşma",
+    "Dilim başına tabandan tepeye kıvrılan tek bir yassı fırça vuruşundan kurulmuş, fırça ağzına dönerek daralan dilimlerle kubbe",
+    "Eşikten düz ağızla başlayıp kemerde sivri biten tek vuruşluk pencereler ve yatay vuruşlarla kurulmuş kasnak",
+    "Üst üste yığılmış yatay vuruşlarla boyanmış minare ve kaide; korkuluk dikmeleri ve zikzak bant fırça ağzıyla",
+    "Yan yana iki kısa vuruştan oluşan, uca doğru sivrilen yapraklar ve ağız vuruşlarıyla gölgelenmiş kâğıt beyazı çiçekler",
+    "Kenarı kuru fırçayla kırık, kâğıt beyazı bulutlar; altlarında düz ağızlı menekşe-gri vuruşlar"
+  ],
+  "palet": [
+    "#9EC5E4",
+    "#6DA0D4",
+    "#50965D",
+    "#2A6D35",
+    "#E9DDC3",
+    "#D5D3E2",
+    "#E1B039",
+    "#F9F8F4"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte boyanıp 1024'e indirilir. Kaba kâğıt dokusu iri dişli değer gürültüsüyle bir yükseklik alanıdır. Her yassı fırça vuruşu bir orta çizgi (kırık çizgi), genişlik ve renkle tanımlanır; kutusundaki her piksel için en yakın parça bulunur, vuruş boyunca uzaklık s ve yanal konum hesaplanır. Piksel, başlangıç kenarı düz, yan kenarları paralel (hafif titrek) şeridin içindeyse boyanır; yan kenarlarda ve başlangıçta boya birikimi, kıl izi gürültüsü eklenir. Vuruşun son üçte birinde boya yükü azalır ve yalnız kâğıt dişinin tepeleri ile kıl izlerinin tuttuğu yerler boyanır (kuru fırça), uç düzensiz kesilir. Fırça ağzına döndürme, s'ye bağlı genişlik çarpanıyla yapılır (kubbe diliminde kubbe profilinden, pencerede sivri kemer eğrisinden). Rezervler (yapı, çiçekler, güneş) ve kırpma (kubbe, kasnak) piksel maskeleridir; göğün ilk katı lavi motoruyla (bulutların üstü sert, altı bulanık rezerv) sürülür; ikinci kattaki vuruşlar bulutların bulanık maskesinde boyayı yalnız kâğıt dişinin tepelerine bırakır, böylece bulut kenarı kuru fırçayla kırılır. Bulutlar birkaç elle titretilmiş yassı elipsin birleşimidir. Renkler RGB optik yoğunluk olarak toplanır, saydam vuruşlar bindiği yerde koyulaşır; sonda kâğıt rengiyle çarpılır ve kâğıt dişi sağ üstten gelen ışıkla gölgelenir.",
+  "etiketler": [
+    "suluboya",
+    "yassı fırça",
+    "fırça ağzı",
+    "kuru fırça",
+    "kaba kâğıt",
+    "dikdörtgen vuruş",
+    "mimari",
+    "saydam",
+    "gün ışığı",
+    "el yapımı"
+  ]
+}

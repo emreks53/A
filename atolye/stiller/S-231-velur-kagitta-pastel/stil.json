@@ -1,0 +1,39 @@
+{
+  "kod": "S-231",
+  "no": 231,
+  "ad": "Velur Kâğıtta Pastel",
+  "ad_en": "Pastel on Velour Paper",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Açık gri-mavi velur kâğıda yumuşak pastel: kâğıdın havı pigmenti bütünüyle tuttuğu için renkler derin, kadifemsi ve mat; kenarları yumuşak ama belirli kısa vuruşlar üst üste binerek harmanlanır, kâğıt dişi hiç görünmez.",
+  "tanim": "Hayalî bir pastel ressamının eli. Kâğıdı açık gri-mavi velur (kadife yüzeyli, havlı) pastel kâğıdı; aletleri sınırlı bir yumuşak pastel çubuk takımı: birkaç gök mavisi, bir mor-mavi, bir yeşil-mavi, beş yeşil, kadife beyaz, krem, açık lila, mavi-mor, sarı ve altın. Velur pigmenti bütünüyle tuttuğu için parmakla yedirmez; harmanlamayı 10–40 px'lik kısa, kenarları yumuşak ama belirli vuruşları komşu tonlarla üst üste bindirerek yapar, her vuruş tek bir çubuğun tek tonudur ve komşusundan tonca biraz ayrılır, böylece geçişler vuruş vuruş okunur ama yumuşak kalır. Göğe önce çubuğun yan yüzüyle geniş, yatay bir örtü katı atar; üstüne yatay, kısa vuruşlarla yukarıda gök mavisinden ufka doğru açık maviye iner, aralara mor-mavi ve yeşil-mavi vuruşlar serpiştirir. Güneşin çevresini soluk mavi-beyaz kısa vuruşlardan bir ışıltıyla açar, güneşin özünü teğet kısa vuruşlarla soluk sarı-beyaz bir disk olarak kurar; basık bulut kümelerini kenarda gökle karışan yarı saydam lila-mavi, altta mavi-lila gölge, üstte biçime kıvrılan kadife beyaz vuruşlarla yapar. Kubbeyi kaburga yönünde uzunca vuruşlarla, gölge yanında derin yeşil ve yer yer yeşil-mavi, ışık yanında açık sarı-yeşille modeller; kaburgaları koyu kadife bir çizgi ve ışık yanında açık yeşil bir eş çizgiyle tanımlar. Taşı kadife beyaz, krem ve açık lila eğik ya da dikey vuruşlarla, gölgeyi mavi-mor ile atar; yaprakları iki yarıda koyu ve açık yeşil vuruşlarla, taç yapraklarını göbekten dışa beyaz vuruşlarla ve göbeğe yakın mavi-mor gölgeyle kurar. Yeri yatay, iri, yeşil ve sarı-yeşil vuruşlarla sürer. Geniş alanlarda velurun havından gelen çok hafif, yönlü bir kadife parıltısı kalır; açık gri-mavi kâğıt neredeyse hiç görünmez.",
+  "koken": "Velur (flok) pastel kâğıdı üzerinde yumuşak pastel tekniğine, pastelde parmakla yedirmek yerine kısa vuruşları üst üste bindirerek optik harmanlamaya ve sınırlı bir çubuk takımıyla basamaklı ton kurma alışkanlığına dayanır. Gerçek bir sanatçı örnek alınmamıştır; tarif, velurun pigmenti tümüyle tutan havından yararlanan hayalî bir ressamın tutarlı elidir.",
+  "ayirt_edici": [
+    "Kâğıt dişi hiç görünmüyor: renkler derin, doygun ve mat; vuruşlar kenarları yumuşak ama belirli kadifemsi lekeler",
+    "Gök yatay, kısa, kenarı yumuşak mavi vuruşlardan; komşu vuruşlar tonca ayrıldığı için küçük görselde de vuruş vuruş okunuyor",
+    "Kubbe kaburga yönünde üst üste binen yeşil vuruşlarla modellenmiş; gölgede derin yeşil ve yeşil-mavi, ışıkta açık sarı-yeşil",
+    "Kaburgalar koyu kadife bir çizgi ve ışık yanında açık yeşil bir eş çizgiyle tanımlanmış",
+    "Basık bulut kümeleri biçime kıvrılan beyaz vuruşlardan, altları lila-mavi gölgeli; güneş soluk mavi-beyaz vuruşlarla çevrili soluk sarı-beyaz disk",
+    "Taç yaprakları göbekten dışa beyaz vuruşlu, göbeğe yakın mavi-mor gölgeli; yumuşak sarı göbek"
+  ],
+  "palet": [
+    "#589DD5",
+    "#C4DFF2",
+    "#1C6444",
+    "#4DA96A",
+    "#A8D894",
+    "#AFAED4",
+    "#F9F8F1",
+    "#E6BE50"
+  ],
+  "kodla_cizim": "Ortak sahne yolları el titremesiyle (normal yönünde periyodik harmonik kaydırma) Path2D'ye çevrilir; öğe maskeleri ve satır koşularından silindir koordinatı çıkarılır. Kubbede kubbeProfili'nden dönel yüzey normali, kasnak ve minarede silindir normali ile sağ üstten yayınık ışık hesaplanır. Her öğe kendi katmanında, titreşimli ızgaradan seçilip karıştırılan merkezlere atılan şerit vuruşlarla (uçları incelen, hafif bükük 10 parçalı çokgen) boyanır; ton ışıktan alınır ve her vuruşa kendi küçük sapması eklenir (komşu vuruşlar ayrışır, posterleşme olmaz). Gökte geniş bir örtü katının üstüne iki vuruş katı biner; güneşin çevresindeki ışıltı da vuruşlardan oluşur. Bulutlar birkaç basık elipsin gürültüyle kırılan birleşiminden; vuruşlar elipsin üst kavsine teğet, altta yataydır. Katmanlar öğe yoluyla kırpılır ve 0,6–1,4 px bulanıklıkla birleştirilir (yumuşak ama belirli kenar). Kaburgalar, korniş, korkuluk, zikzak ve saplar basınçlı çokgen çizgilerdir. Bitirişte döndürülmüş koordinatlarda düşük genlikli, yönlü değer gürültüsüyle hafif hav parıltısı verilir. Math.random yok, SAHNE.rng.",
+  "etiketler": [
+    "pastel",
+    "velur kâğıt",
+    "kadife yüzey",
+    "yumuşak pastel",
+    "optik harmanlama",
+    "ressamın eli",
+    "gün ışığı"
+  ]
+}

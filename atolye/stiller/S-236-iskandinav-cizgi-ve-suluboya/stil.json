@@ -1,0 +1,39 @@
+{
+  "kod": "S-236",
+  "no": 236,
+  "ad": "İskandinav Çizgi ve Suluboya",
+  "ad_en": "Nordic Line and Watercolour",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "İnce uçlu kalemin sakin, okunaklı koyu gri çizgisi ve içinde düz, açık, taze suluboya lavileri: berrak mavi gök, zümrüt kubbe, krem taş, açık çayır; bol kâğıt beyazı ve azıcık açık kırmızı.",
+  "tanim": "Hayalî bir İskandinav ev ressamının eli. Alet: koyu gri mürekkepli ince uçlu kalem ve yuvarlak sulu fırça; kâğıt: düz, beyaz, çok ince dişli suluboya kâğıdı. Çizgi alışkanlığı: her biçim önce kalemle, düzgün ama elle çekilmiş ince bir hatla çizilir; gölge yanına (ışıktan uzak sol ve alt kenarlar) gelen yerde çizgi biraz kalınlaşır, ışık yanında incelir; dikdörtgenlerin kenarları ayrı vuruşlarla çekilir ve köşelerde hafifçe taşar; korkuluk parmakları, pencere kemerleri ve eşikler küçük, düzenli, okunaklı süslerle belirtilir. Boya alışkanlığı: lavi düz ve açıktır, çizginin içinde kalır; kuruyan boya kenarında ince, biraz koyu bir ıslak kenar bırakır, yer yer çizgiyle boya arasında kılcal bir kâğıt beyazı kalır. Modelleme çok hafiftir: kubbede kaburgaya oturan bir iki ikinci kat, minarede ve kaidede sert kenarlı açık mavi-gri bir gölge şeridi. Gök tek bir düz mavi lavidir: büyük fırçanın hafif eğik gidip gelişleri ve kâğıdın dişine çöken pigment tanesi seçilir. Bulutlar düz tabanlı, bakışımsız yığınlar olarak kâğıt beyazı bırakılır, açık gri-mavi kalemle iki üç yerde kalem kalkarak çevrelenir, alt üçte birine keskin kenarlı soluk mavi-gri bir gölge lavisi konur; güneş soluk limon sarısı bir kurstur, ince açık gri kalemle tam kapanmayan bir çemberle çizilir. Pencereler önce duvarla birlikte boyanır, koyu kat üstüne gelir; böylece çevrelerinde kâğıt çizgisi kalmaz. Çiçekler kalemle çizilip beyaz bırakılır, göbeğe yakın soluk mavi gölge ve sarı göbek alır. Palet: berrak mavi, taze yeşil, zümrüt, krem, açık kırmızı (tomurcuklar ve minarenin zikzak bandı) ve bol kâğıt beyazı.",
+  "koken": "İskandinav ev resmi ve kitap resimlemesindeki ince kalem çizgisi ile düz, açık suluboya (çizgi ve lavi, line and wash) geleneğine; ayrıca kalemle çizilip suluboyayla renklendirilen botanik ve mimari levha alışkanlığına dayanır. Gerçek bir sanatçıyı taklit etmez; bu teknikleri tek bir hayalî ressamın tutarlı eline (çizgi kalınlığı kuralı, düz lavi, ıslak kenar, aydınlık palet) bağlayan atölye tarifidir.",
+  "ayirt_edici": [
+    "Bütün biçimleri çevreleyen ince, düzgün, koyu gri kalem çizgisi; kubbenin, minarenin ve kaidenin sol (gölge) kenarlarında belirgin biçimde kalın, sağ kenarlarında ince; dikdörtgen kenarları köşelerde hafifçe taşıyor",
+    "Gök tek, düz, açık mavi bir lavi: büyük fırçanın hafif eğik gidip gelişleri ve kâğıdın dişine çöken pigment tanesi; bulutların ve yapının çevresinde ince, biraz koyu ıslak kenar",
+    "Bulutlar kâğıt beyazı, düz tabanlı, bakışımsız yığınlar: açık gri-mavi kalemle iki üç yerde kopan bir çizgiyle çevrili, alt üçte birinde keskin kenarlı soluk mavi-gri gölge lavisi; güneş soluk limon sarısı, hafif oynayan, tam kapanmayan ince açık gri kalem çemberli",
+    "Düz zümrüt yeşili kubbe: sol dilimlerde kaburgaya oturan sert kenarlı ikinci ve üçüncü kat, kaburgalar ince kalem; kasnak pencereleri koyu mavi-yeşil, kaide pencereleri mavi-gri",
+    "Krem minare ve kaide: gölge yanında düz, sert kenarlı açık mavi-gri şerit; minarenin zikzak bandı açık kırmızı kalemle, korkuluk parmakları küçük düzenli çizgilerle",
+    "Kalemle çizilmiş beyaz çiçekler: göbeğe yakın soluk mavi gölge, sarı göbek ve koyu noktalar; taze yeşil yapraklarda koyu gölge yarısı, açık kırmızı tomurcuklar, öndeki tomurcuklara kısa sap"
+  ],
+  "palet": [
+    "#32393E",
+    "#9BC5E3",
+    "#468F62",
+    "#649B7B",
+    "#F5F0E3",
+    "#D2887D",
+    "#E0EBD1",
+    "#FBF9F2"
+  ],
+  "kodla_cizim": "Kâğıt 2048 px'lik üç ölçekli gürültü yükseklik alanıdır (düşük genlik: düz kâğıt). Laviler 1024 px'te çarpımsal birikir (S-161 kitinden uyarlanan lavi motoru): maskeler bitkisiz bölge haritasından ve bitki yollarından çizilir, her kat gürültüyle titretilip biraz kaydırılır (çizgiyle boya arasında yer yer kâğıt beyazı), maskenin dar bulanık kopyasından farkla kuruyan kenarda pigment birikir; gök tek kat: yüksek granülasyon, düşük akış ve yassı fırçanın gidip gelişini veren hafif eğik bant gürültüsüyle; pencereler duvar lavisiyle birlikte boyanıp koyu kat üstüne gelir; kubbe katları kaburga boylamlarına göre eşiklenir. Kalem çizgisi 2048 px'te değişken kalınlıklı tek parça şerittir: her noktada dış normalin ışık yönüyle iç çarpımına göre gölge yanında kalınlaşır, ışık yanında incelir, basınç gürültüsüyle hafifçe oynar ve el titremesiyle bozulur; kapalı biçimlerde ortak kenarlar görünürlük koşuluyla atlanır, dikdörtgen kenarları köşede taşan ayrı vuruşlardır. Bulutlar bir yoğunluk alanıdır: gövdede yatay uzamış alçak Gauss kümeleri, kütlenin bir yana kaymış yerinde farklı boyda birkaç yuvarlak yığın, düşük frekanslı kenar gürültüsü ve neredeyse düz, hafif dalgalı taban; siluet alanın eşiğidir. Kalem çizgisi bu eşiğin kare yürütmeyle çıkarılıp düzeltilen konturundan çizilir, iki üç yerden kesilir ve yalnız gök üstünde kalacak biçimde kırpılır; bulut gölgesi tabana yakın, gürültüyle dalgalanan bir sınırın altındaki düz lavidir. Öndeki bitki, arkasındaki çizgiyi kalem katmanından silip kendi çizgisini çizer. Sonda kâğıt kabartma ışığı eklenir.",
+  "etiketler": [
+    "kalem",
+    "suluboya",
+    "çizgi ve lavi",
+    "düz lavi",
+    "ıslak kenar",
+    "İskandinav",
+    "ressamın eli"
+  ]
+}

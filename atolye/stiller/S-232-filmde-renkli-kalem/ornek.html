@@ -388,7 +388,7 @@ const P = {
   film: hex('#FBFCFC'),
   // arka yüz (buğulu) renkleri
   aGok: hex('#CFE3F3'), aGunes: hex('#FFF6CF'), aKubbe: hex('#A9D9B4'), aTas: hex('#F3EAD6'), aLila: hex('#D9D5EE'),
-  aYaprak: hex('#A2D69E'), aAltin: hex('#F6DE8A'), aZemin: hex('#EEE6CC'),
+  aYaprak: hex('#A2D69E'), aAltin: hex('#F6DE8A'), aZemin: hex('#E4EDC6'),
   // ön yüz kalemleri
   gok: hex('#86BCE6'), gokK: hex('#5E9ED8'), gokU: hex('#9AAAE0'),
   yesil: hex('#45A46A'), yesilK: hex('#2C7650'), yesilA: hex('#9CCB6A'), yesilM: hex('#3B8F86'),
@@ -467,7 +467,7 @@ function yamalar(k, x1, y1, x2, y2, ara, a0, tonF, gecis, W) {
     izgara(x1, y1, x2, y2, ara, R, (cx, cy) => {
       if (tonF(cx, cy) < esik - 0.1) return;
       const a = a0 + (da || 0) + (R() - 0.5) * 0.14, ca = Math.cos(a), sa = Math.sin(a);
-      const Lp = ara * (1.3 + R() * 0.8), Wp = ara * (0.7 + R() * 0.4), sp = 1.9 + R() * 0.6;
+      const Lp = ara * (1.6 + R() * 1.0), Wp = ara * (0.7 + R() * 0.4), sp = 1.9 + R() * 0.6;
       const egim = (R() - 0.5) * 0.6;
       for (let o = -Wp / 2; o <= Wp / 2; o += sp * (0.8 + R() * 0.4)) {
         const L = Lp * (0.75 + R() * 0.25), bas = -L / 2 + egim * o + (R() - 0.5) * 6;
@@ -492,11 +492,11 @@ function bulut(x, y) {
   return m;
 }
 function gokTon(x, y) {
-  let t = 0.5 * Math.pow(1 - clamp(y / 800, 0, 1), 1.1) + 0.15 + (fbm(N2, x / 160, y / 110, 3) - 0.5) * 0.09;
-  const gd = Math.hypot(x - 880, y - 140) + (fbm(N3, x / 20, y / 20, 2) - 0.5) * 10;
-  t *= sstep(46, 240, gd);
-  if (gd < 48) t = 0;
-  t -= sstep(0.05, 0.3, bulut(x, y)) * 0.9;
+  let t = 0.42 * Math.pow(1 - clamp(y / 800, 0, 1), 1.1) + 0.16 + (fbm(N2, x / 160, y / 110, 3) - 0.5) * 0.05;
+  const gd = Math.hypot(x - 880, y - 140) + (fbm(N3, x / 20, y / 20, 2) - 0.5) * 8;
+  t *= 0.35 + 0.65 * sstep(40, 150, gd);
+  if (gd < 40) t = 0;
+  t -= sstep(0.06, 0.16, bulut(x, y)) * 0.9;
   return t;
 }
 
@@ -506,16 +506,31 @@ const kArka = katman(2);
   const k = kArka;
   const leke = (x, y, a, L, W, c, al) => { k.x.fillStyle = rgba(c, al); k.x.fill(serit(x, y, a, L, W, R, { egri: 0.2, bas: 0.25, uc: 0.35 })); };
   // gök: geniş yatay sürmeler, ufka doğru seyrekleşir
-  izgara(-40, -40, 1064, 760, 34, R, (x, y) => {
-    if (R() > 0.35 + 0.65 * (1 - y / 820)) return;
-    if (Math.hypot(x - 880, y - 140) < 110 || bulut(x, y) > 0.1) return;
-    leke(x, y, -0.35 + (R() - 0.5) * 0.2, 90 + R() * 80, 40 + R() * 30, P.aGok, 0.55);
+  izgara(-40, -40, 1064, 800, 24, R, (x, y) => {
+    if (R() > 0.55 + 0.45 * (1 - y / 820)) return;
+    if (Math.hypot(x - 880, y - 140) < 40 || bulut(x, y) > 0.08) return;
+    leke(x, y, -0.36 + (R() - 0.5) * 0.12, 110 + R() * 80, 36 + R() * 20, P.aGok, 0.42);
   });
+  // bulutlar arka yüzde de boş kalır: bulut biçimi silinir (kenarı kalemle değil, filmin buğusuyla yumuşar)
+  {
+    const m = SAHNE.yeniTuval(1024, 1024), mx = m.getContext('2d');
+    const id = mx.createImageData(1024, 1024), d = id.data;
+    for (let y = 60; y < 560; y++) for (let x = 0; x < 1024; x++) {
+      const b = bulut(x, y);
+      if (b > 0.0) { const i = (y * 1024 + x) * 4; d[i + 3] = 255 * sstep(0.0, 0.12, b); }
+    }
+    mx.putImageData(id, 0, 0);
+    k.x.save(); k.x.setTransform(1, 0, 0, 1, 0, 0); k.x.globalCompositeOperation = 'destination-out';
+    k.x.drawImage(m, 0, 0, k.c.width, k.c.height); k.x.restore();
+  }
   // güneş: soluk sarı-beyaz buğu
   for (let i = 0; i < 10; i++) { const aa = R() * 6.28, rr = R() * 18; leke(880 + Math.cos(aa) * rr, 140 + Math.sin(aa) * rr, aa + 1.57, 40, 24, P.aGunes, 0.35); }
   // bulut altları lila
   // zemin
-  izgara(-20, 790, 1044, 1044, 40, R, (x, y) => leke(x, y, (R() - 0.5) * 0.2, 100, 40, P.aZemin, 0.7));
+  { const z = new Path2D(); z.rect(0, 800, 1024, 230); k.x.save(); k.x.clip(z);
+    k.x.fillStyle = rgba(P.aZemin, 0.6); k.x.fill(z);
+    izgara(-20, 790, 1044, 1044, 40, R, (x, y) => leke(x, y, (R() - 0.5) * 0.2, 100, 40, karis(P.aZemin, P.aYaprak, R() * 0.4), 0.45));
+    k.x.restore(); }
   sil(k, S.yol.yapi);
   // yapı
   const yapiLeke = (yol, c, x1, y1, x2, y2, a, al) => {
@@ -547,16 +562,17 @@ const kGok = katman(2);
 {
   const k = kGok;
   k.x.globalCompositeOperation = 'multiply';
-  yamalar(k, -30, -30, 1054, 810, 30, -0.4, gokTon, [[0.1, P.gok, 0.3, 0], [0.24, P.gok, 0.26, 0.22], [0.4, P.gokK, 0.22, -0.1], [0.5, P.gokU, 0.16, 0.3]], 1.5);
+  yamalar(k, -30, -30, 1054, 810, 34, -0.38, gokTon, [[0.1, P.gok, 0.27, 0], [0.26, P.gok, 0.2, 0.12], [0.44, P.gokK, 0.11, -0.06]], 1.5);
   // perdah: göğün üst bandında çok sık, hafif bastırılmış çizgilerle pürüzsüz, saten bir ton
   const perdah = (x, y) => gokTon(x, y) * sstep(330, 60, y) * (0.6 + 0.8 * fbm(N1, x / 200, y / 120, 2));
   for (const pts of demet(0, 0, 1024, 340, -0.36, 1.25, 80, 220, 0.03)) for (const run of kosular(pts, perdah, 0.2 + (R() - 0.5) * 0.05, 20)) kalem(k, run, 1.3, P.gok, 0.16, { bas: 0.2, uc: 0.3, titre: 0.15 });
   // güneş: çıplak film disk, içinde soluk sarı kısa tarama ve titrek ince kenar
   const gunesYol = elYolu(SAHNE.daireYolu(880, 140, 32), 0.8, 18, 4321);
   k.x.save(); k.x.clip(gunesYol);
-  for (const pts of demet(840, 100, 920, 180, -0.4, 2.4, 20, 50, 0.04)) for (const run of kosular(pts, (x, y) => 1 - Math.hypot(x - 892, y - 128) / 46, 0.25, 6)) kalem(k, run, 1.3, hex('#F5E7B0'), 0.4);
+  for (const pts of demet(840, 100, 920, 180, -0.4, 2.2, 20, 50, 0.04)) for (const run of kosular(pts, (x, y) => 1 - Math.hypot(x - 888, y - 132) / 50, 0.15, 6)) kalem(k, run, 1.4, hex('#F2DC8E'), 0.55);
+  for (const pts of demet(840, 100, 920, 180, 0.15, 2.8, 16, 40, 0.04)) for (const run of kosular(pts, (x, y) => 1 - Math.hypot(x - 872, y - 150) / 44, 0.35, 6)) kalem(k, run, 1.3, hex('#F6E6A8'), 0.4);
   k.x.restore();
-  kontur(k, SAHNE.daireYolu(880, 140, 32), 1.0, hex('#EAD898'), 0.45, 0.8, 4322);
+  kontur(k, SAHNE.daireYolu(880, 140, 32), 1.1, hex('#F0DD9C'), 0.28, 1.0, 4322);
   // bulut altları: birkaç yumuşak gri-mavi çizgi
   for (const [bx, by, rx, ry] of bul) {
     const c3 = demet(bx - rx * 1.2, by - ry, bx + rx * 1.2, by + ry * 1.2, -0.12, 3, 30, 70, 0.05);
@@ -571,8 +587,8 @@ const kZem = katman(2);
 {
   const k = kZem;
   k.x.globalCompositeOperation = 'multiply';
-  const c = demet(0, 800, 1024, 1024, -0.08, 3.4, 40, 120, 0.05);
-  katmanli(k, c, (x, y) => 0.3 + 0.4 * ((y - 800) / 224) + (fbm(N3, x / 70, y / 30, 2) - 0.5) * 0.5, [[0.3, P.tas, 0.4], [0.5, P.yesilA, 0.3], [0.62, P.yesil, 0.22]], 1.5);
+  const zt = (x, y) => 0.3 + 0.45 * ((y - 800) / 224) + (fbm(N3, x / 90, y / 40, 2) - 0.5) * 0.35;
+  yamalar(k, -20, 790, 1044, 1044, 26, -0.06, zt, [[0.2, hex('#C9DC98'), 0.4, 0], [0.42, P.yesilA, 0.32, 0.2], [0.6, P.yesil, 0.22, -0.15]], 1.5);
   k.x.globalCompositeOperation = 'source-over';
   kirp(k, (() => { const p = new Path2D(); p.rect(0, 800, 1024, 230); return p; })());
   sil(k, S.yol.bitki);

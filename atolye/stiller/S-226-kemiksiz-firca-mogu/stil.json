@@ -1,0 +1,42 @@
+{
+  "kod": "S-226",
+  "no": 226,
+  "ad": "Kemiksiz Fırça (Mogu)",
+  "ad_en": "Boneless Brush (Mogu)",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Hiç kontur çizmeden, her dilimi, yaprağı ve taç yaprağını tek ve iki tonlu yüklenmiş fırça darbesiyle kuran, kâğıdın beyazını ışık olarak bırakan saydam boya.",
+  "tanim": "Hayalî bir ressamın 'kemiksiz' (konturu olmayan) fırça eli. Aletleri: perdahlı, düz yüzeyli beyaz kâğıt, yumuşak keçi kılı fırçalar; fırçanın bir yanı koyu, öbür yanı sulu ve açık yüklenir, böylece her darbe kendi içinde bir kenardan öbürüne koyulaşır. Paleti: taze ve koyu yeşil, soluk taş rengi, soluk gri-mor, gök mavisi, altın sarısı. Gök geniş, yatay, bindirmeli darbelerle sürülür; darbelerin yuvarlak topuğu, kuruyarak incelen ucu ve kıl izleri görünür, bulutlar ve güneşin çevresi kâğıt olarak bırakılır, kenarında ıslak boya birikir. Kubbe yelpaze gibi açılan geniş eğri darbelerle boyanır: her dilim tabandan tepeye tek darbedir, sol kenarı koyu, sağ kenarı açık; dilimler arasında kalan ince kâğıt aralıkları kaburga olur. Minare ve kaide neredeyse çizgisiz, soluk dikey ve yatay darbelerle; pencereler alttan yukarı çekilen, ucu sivrilen tek koyu darbelerdir. Büyük yapraklar iki yarım darbeyle (ortada kâğıttan bir damar kalır), küçükleri tek sivri darbeyle; beyaz çiçeklerin taç yaprakları ortadan dışa tek darbe, bir kenarı soluk gri-mor, dibi soluk sarı-yeşil, gövdesi kâğıt beyazıdır.",
+  "koken": "Çin resmindeki 'kemiksiz' (mogu) çiçek resmine ve fırçayı iki tonla yükleyip tek darbede derecelendirme alışkanlığına dayanır; Japon resmindeki benzer tek darbe yaprak ve taç yaprağı geleneğinden de beslenir. Hiçbir gerçek ressam taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Hiç kontur yok: bütün biçimler fırça darbesinin kendi kenarıyla bitiyor",
+    "Her dilimi tabandan tepeye tek, iki tonlu darbe olan yelpaze kubbe; dilimler arasındaki ince kâğıt aralıkları kaburga gibi okunuyor",
+    "Gökte yuvarlak topuklu, ucu kuruyan geniş yatay darbeler; bulutlar ve güneş halesi boyanmadan kâğıt bırakılmış, kenarlarında ıslak boya birikintisi",
+    "Ortasında kâğıttan damar kalan iki yarım darbeli yapraklar; bindirme yerlerinde saydam koyulaşma",
+    "Kâğıt beyazı taç yaprakları: bir kenarında soluk gri-mor, dibinde soluk sarı-yeşil tek darbe",
+    "Minare ve kaide soluk taş ve gri-mor dikey/yatay darbelerle, pencereler ucu sivrilen tek darbeler"
+  ],
+  "palet": [
+    "#96BEDE",
+    "#C2DAEA",
+    "#2E764A",
+    "#3E8652",
+    "#9AC29A",
+    "#6EA27E",
+    "#EACA6A",
+    "#FEFAF6"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte, kayan noktalı bir boya tamponuna çizilir. Her darbe piksel başına taranır: orta çizgi 1 px aralıkla örneklenir, her nokta için iki kenarın yarı genişliği gürültüyle oynatılır, her piksel en yakın parçaya göre darbe boyu (u) ve enine konum (v) alır. Renk v'ye göre iki ton arasında karışır (iki tonlu yükleme), yoğunluk boyuna kıl izi gürültüsüyle, kenarda ıslak kenar birikmesiyle, uçta kuru fırça kırılmasıyla ve kâğıt dişiyle oynar; boya saydam olarak kâğıt rengini çarpar, bindirmeler koyulaşır. Kubbe dilimleri SAHNE.kubbeProfili ve dilim boylamlarından hesaplanan, tepede sıfıra inen genişlikli tek darbelerdir; gök satırları bulut maskesi (elips öbeklerinin gürültüyle eşiklenmiş bulanık maskesi) ve yapı ayrımıyla kesilir. Çiçek alanları önceden ayrılır, böylece taç yaprakları kâğıt beyazı kalır.",
+  "etiketler": [
+    "kemiksiz fırça",
+    "mogu",
+    "kontursuz",
+    "iki tonlu fırça",
+    "suluboya",
+    "saydam",
+    "kâğıt beyazı",
+    "uzak doğu",
+    "çiçek resmi",
+    "ressamın eli"
+  ]
+}

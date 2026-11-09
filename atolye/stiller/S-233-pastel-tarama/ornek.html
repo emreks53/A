@@ -387,10 +387,10 @@ const N1 = gurultu(2331), N2 = gurultu(2332), N3 = gurultu(2333);
 const H = (s) => hex(s);
 const P = {
   kagit: H('#F6F1E6'),
-  ser: H('#79B6E2'), serK: H('#5E9FD6'), serA: H('#A9D2EF'), ult: H('#9AAEE3'), ultA: H('#C2CBEF'), beyaz: H('#FAF8F2'),
-  gunes: H('#FFF8DA'), gunesS: H('#F7E9A6'), lila: H('#B9B5E0'),
+  ser: H('#79B6E2'), serK: H('#5E9FD6'), serA: H('#A9D2EF'), ult: H('#8DB0E6'), ultA: H('#C4D6F2'), beyaz: H('#FAF8F2'),
+  gunes: H('#FFF8DA'), gunesS: H('#F7E9A6'), lila: H('#B7BCE6'),
   yesil: H('#44A262'), yesilA: H('#B2D36E'), yesilK: H('#2A7449'), mavYes: H('#3E8F86'), sari: H('#F2CF55'), ultK: H('#6E7CC6'),
-  krem: H('#F1E6CC'), kum: H('#E3D2AC'), mor: H('#A9A3D6'), okr: H('#C9AE7A'), pencere: H('#5A5687'), pencereY: H('#1F5A4A'),
+  krem: H('#F1E6CC'), zeminA: H('#D3E3A2'), kum: H('#E3D2AC'), mor: H('#A9A3D6'), okr: H('#C9AE7A'), pencere: H('#5A5687'), pencereY: H('#1F5A4A'),
   altin: H('#EDC24A'), altinK: H('#B48A2E'), altinA: H('#FCEFB4'), turuncu: H('#E09A3A'),
 };
 const sec = (liste) => { let t = 0; for (const [, w] of liste) t += w; let r = R() * t; for (const [c, w] of liste) { r -= w; if (r <= 0) return c; } return liste[0][0]; };
@@ -431,15 +431,18 @@ function parca(k, yol, ciz) {
 }
 function cizgiH(k, pts, W, c, al) { k.x.fillStyle = rgba(c, al || 0.9); k.x.fill(cizgiYolu(pts, W, R, { bas: 0.06, uc: 0.18, titre: 0.2 })); }
 /** bir yol boyunca kesik kesik kısa tarama çizgileri (kontur değil, takım dilinde) */
-function kesikHat(k, pts, W, c, al, Lmin, Lmax) {
+function kesikHat(k, pts, W, c, al, Lmin, Lmax, bitisik) {
   let i = 0;
   while (i < pts.length - 2) {
     const n = Math.max(2, Math.round((Lmin + R() * (Lmax - Lmin)) / 3));
     const seg = pts.slice(i, Math.min(pts.length, i + n));
     if (seg.length > 1) cizgiH(k, seg, W * (0.8 + R() * 0.4), c, al);
-    i += n + (R() < 0.5 ? 1 : 0);
+    i += bitisik ? n - 1 : n + (R() < 0.5 ? 1 : 0);
   }
 }
+/** sürekli ağırlıklarla renk: ton arttıkça bir rengin takımları yavaşça seyrekleşir, ötekininki sıklaşır */
+const tonSec = (t, liste) => sec(liste.map(([c, f]) => [c, Math.max(0, f(t))]));
+const tepe = (m, w) => (t) => Math.exp(-((t - m) * (t - m)) / (2 * w * w));
 
 const k = katman(2);
 // ---------------------------------------------------------------- gök
@@ -458,20 +461,27 @@ function bulut(x, y) {
     const t = clamp(y / 800 + (fbm(N2, x / 150, y / 100, 2) - 0.5) * 0.08, 0, 1);
     const gd = Math.hypot(x - 880, y - 140);
     if (gd < 44 + (N3(x / 9, y / 9) - 0.5) * 8) return sec([[P.gunes, 0.55], [P.beyaz, 0.35], [P.gunesS, 0.1]]);
-    if (gd < 150 && R() < Math.pow(1 - (gd - 44) / 106, 1.3)) return sec([[P.beyaz, 0.55], [P.gunes, 0.2], [P.serA, 0.25]]);
+    if (gd < 92 && R() < Math.pow(1 - (gd - 44) / 48, 1.2)) return gd < 60 ? sec([[P.beyaz, 0.6], [P.gunes, 0.4]]) : sec([[P.beyaz, 0.25], [P.serA, 0.75]]);
     const [m, rel] = bulut(x, y);
-    if (m > 0.12) return rel > 0.05 && R() < 0.55 ? sec([[P.lila, 0.6], [P.ultA, 0.4]]) : sec([[P.beyaz, 0.8], [P.ultA, 0.1], [P.serA, 0.1]]);
-    if (t < 0.35) return sec([[P.ser, 0.6], [P.ult, 0.22], [P.beyaz, 0.1], [P.serK, 0.08]]);
-    if (t < 0.7) return sec([[P.ser, 0.45], [P.serA, 0.25], [P.ult, 0.15], [P.beyaz, 0.15]]);
-    return sec([[P.serA, 0.45], [P.beyaz, 0.35], [P.ultA, 0.12], [P.ser, 0.08]]);
+    if (m > 0.12) return rel > 0.05 && R() < 0.5 ? sec([[P.lila, 0.35], [P.serA, 0.35], [P.ultA, 0.3]]) : sec([[P.beyaz, 0.85], [P.serA, 0.15]]);
+    if (t < 0.3) return sec([[P.ser, 0.68], [P.serK, 0.22], [P.ult, 0.1]]);
+    if (t < 0.55) return sec([[P.ser, 0.66], [P.ult, 0.08], [P.serA, 0.26]]);
+    if (t < 0.78) return sec([[P.serA, 0.6], [P.ser, 0.32], [P.ultA, 0.08]]);
+    return sec([[P.serA, 0.5], [P.ultA, 0.15], [P.beyaz, 0.35]]);
   };
   const gokCap = (x, y) => {
     const gd = Math.hypot(x - 880, y - 140);
-    if (gd < 150 || bulut(x, y)[0] > 0.0) return [0, null];
+    if (gd < 92 || bulut(x, y)[0] > 0.0) return [0, null];
     const t = y / 800;
-    return [0.55 - 0.4 * t, t < 0.5 ? sec([[P.ult, 0.45], [P.ser, 0.35], [P.beyaz, 0.2]]) : sec([[P.beyaz, 0.45], [P.ultA, 0.3], [P.serA, 0.25]])];
+    return [0.6 - 0.45 * t, t < 0.5 ? sec([[P.ult, 0.2], [P.ser, 0.5], [P.serK, 0.3]]) : sec([[P.serA, 0.75], [P.ultA, 0.25]])];
   };
-  tara(k, -20, -20, 1044, 815, 12, () => true, () => -0.2, gokRenk, gokCap);
+  tara(k, -20, -20, 1044, 815, 10.5, () => true, () => -0.2, gokRenk, gokCap);
+  // güneş: diskin içi sık beyaz ve soluk sarı takımlar, kenarında soluk sarı bir halka
+  const gunesYol = elYolu(SAHNE.daireYolu(880, 140, 40), 1.4, 20, 4400);
+  k.x.save(); k.x.clip(gunesYol);
+  k.x.fillStyle = rgba(P.beyaz); k.x.fill(gunesYol);
+  tara(k, 834, 94, 926, 186, 6, () => true, () => -0.2, (x, y) => (Math.hypot(x - 880, y - 140) > 30 ? sec([[P.gunesS, 0.6], [P.gunes, 0.4]]) : sec([[P.beyaz, 0.6], [P.gunes, 0.4]])), null, { n: 4, sp: 3.4, L: 14 + R() * 6, W: 2.3 });
+  k.x.restore();
   // bulut takımları: beyaz üstte, lila altta
   for (const [bx, by, rx, ry] of bul) {
     tara(k, bx - rx * 1.2, by - ry * 1.4, bx + rx * 1.2, by + ry * 1.1, 11, (x, y) => bulut(x, y)[0] > 0.18, () => -0.1,
@@ -483,8 +493,8 @@ function bulut(x, y) {
   const z = new Path2D(); z.rect(0, 800, 1024, 230);
   parca(k, z, () => {
     tara(k, -20, 790, 1044, 1044, 15, () => true, () => -0.12 + (R() - 0.5) * 0.1,
-      (x, y) => sec([[P.krem, 0.4], [P.kum, 0.25], [P.beyaz, 0.2], [P.yesilA, 0.15]]),
-      (x, y) => [0.3, sec([[P.kum, 0.5], [P.yesilA, 0.5]])]);
+      (x, y) => (y < 830 ? sec([[P.krem, 0.5], [P.yesilA, 0.35], [P.kum, 0.15]]) : sec([[P.yesilA, 0.5], [P.krem, 0.35], [P.zeminA, 0.15]])),
+      (x, y) => [0.18, sec([[P.zeminA, 0.5], [P.yesilA, 0.5]])]);
   });
 }
 // ---------------------------------------------------------------- minare
@@ -514,14 +524,14 @@ parca(k, S.yol.minare, () => {
 parca(k, S.yol.kaide, () => {
   k.x.fillStyle = rgba(P.kagit); k.x.fill(S.yol.kaide);
   const renk = (x, y) => {
-    let v = 0.45 + 0.5 * ((x - 300) / 520) + (R() - 0.5) * 0.2;
+    let v = 0.55 + 0.45 * ((x - 300) / 520) + (R() - 0.5) * 0.16;
     if (y > 704 && y < 722) v -= 0.45;
     if (y < 704) v = 0.95;
     if (v > 0.7) return sec([[P.beyaz, 0.55], [P.krem, 0.35], [P.gunes, 0.1]]);
     if (v > 0.4) return sec([[P.krem, 0.45], [P.beyaz, 0.35], [P.ultA, 0.2]]);
-    return sec([[P.lila, 0.45], [P.ultA, 0.4], [P.krem, 0.15]]);
+    return sec([[P.ultA, 0.5], [P.lila, 0.3], [P.krem, 0.2]]);
   };
-  tara(k, 286, 688, 834, 806, 10, icMaske('kaide'), (x, y) => (y < 704 ? 0 : -0.95), renk, (x, y) => [(y > 704 && y < 724) ? 0.8 : x < 380 ? 0.4 : 0, sec([[P.lila, 0.5], [P.ultA, 0.5]])], { L: 16 + R() * 10, sp: 3.9 });
+  tara(k, 286, 688, 834, 806, 10, icMaske('kaide'), (x, y) => (y < 704 ? 0 : -0.95), renk, (x, y) => [(y > 704 && y < 722) ? 0.7 : x < 360 ? 0.3 : 0, sec([[P.lila, 0.5], [P.ultA, 0.5]])], { L: 16 + R() * 10, sp: 3.9 });
   kesikHat(k, duzCizgi(300, 706, 820, 706, R, 0.8), 3, P.mor, 0.8, 20, 40);
   kesikHat(k, duzCizgi(292, 693.5, 828, 693.5, R, 0.8), 2.4, P.beyaz, 0.95, 24, 40);
   for (const p of SAHNE.kaide.pencereler) {
@@ -538,44 +548,45 @@ parca(k, S.yol.kasnak, () => {
     let v = S.isik('kasnak', x, y) + (R() - 0.5) * 0.15;
     if (y < 562 || (y > 610 && y < 618)) v += 0.25;
     if ((y > 600 && y < 610) || y > 684) v -= 0.25;
-    if (v > 0.75) return sec([[P.yesilA, 0.5], [P.yesil, 0.35], [P.sari, 0.15]]);
+    if (v > 0.75) return sec([[P.yesilA, 0.55], [P.yesil, 0.4], [P.sari, 0.05]]);
     if (v > 0.45) return sec([[P.yesil, 0.6], [P.yesilA, 0.2], [P.mavYes, 0.2]]);
     return sec([[P.yesilK, 0.55], [P.mavYes, 0.3], [P.yesil, 0.15]]);
   };
-  tara(k, 330, 551, 790, 696, 7.5, icMaske('kasnak'), () => Math.PI / 2, renk, (x, y) => [S.isik('kasnak', x, y) < 0.55 ? 0.8 : 0.15, sec([[P.yesilK, 0.5], [P.mavYes, 0.3], [P.ultK, 0.2]])], { L: 14 + R() * 10, W: 2.2 + R(), sp: 3.6 });
+  tara(k, 330, 551, 790, 696, 7.5, icMaske('kasnak'), () => Math.PI / 2, renk, (x, y) => [S.isik('kasnak', x, y) < 0.35 ? 0.7 : 0, sec([[P.yesilK, 0.6], [P.mavYes, 0.4]])], { L: 14 + R() * 10, W: 2.2 + R(), sp: 3.6 });
   for (const ka of [0, 1]) {
     const q = SAHNE.kasnak[ka];
     kesikHat(k, duzCizgi(q.x1 + 2, q.y1 + 2, q.x2 - 2, q.y1 + 2, R, 0.5), 2.6, P.yesilA, 0.9, 18, 36);
     kesikHat(k, duzCizgi(q.x1 + 2, q.y2 - 2, q.x2 - 2, q.y2 - 2, R, 0.5), 2.8, P.yesilK, 0.85, 18, 36);
     for (const p of SAHNE.kasnakPencereleri(ka)) {
       const yol = elYolu(SAHNE.kemerYolu(p.x, p.y, p.w, p.h), 0.3, 10, 2200 + p.x * 3 + ka, 1);
-      k.x.save(); k.x.clip(yol);
-      for (let j = 0; j < 3; j++) takim(k, p.x, p.y + p.h / 2, Math.PI / 2 + (j === 2 ? 0.52 : (j - 0.5) * 0.08), j === 2 ? P.ultK : P.pencereY, { n: Math.max(3, Math.round(p.w / 2.6) + 2), sp: 2.6, L: p.h + 8, W: 2.4 });
+      k.x.save(); k.x.clip(yol); k.x.fillStyle = rgba(H('#1A4A3E')); k.x.fill(yol);
+      for (let j = 0; j < 4; j++) takim(k, p.x, p.y + p.h / 2, Math.PI / 2 + (j >= 2 ? 0.52 * (j - 2.5) * 2 : (j - 0.5) * 0.08), j === 3 ? P.mavYes : H('#163F36'), { n: Math.max(3, Math.round(p.w / 2.4) + 2), sp: 2.4, L: p.h + 8, W: 2.4 });
       k.x.restore();
     }
   }
 });
 // ---------------------------------------------------------------- kubbe
 parca(k, S.yol.kubbe, () => {
-  k.x.fillStyle = rgba(P.yesilA, 0.45); k.x.fill(S.yol.kubbe);
-  const v = (x, y) => { const q = S.kubbe(x, y); const f = q.dilim - Math.floor(q.dilim); return q.d + (f - 0.5) * 0.14; };
-  const renk = (x, y) => {
-    const t = v(x, y) + (R() - 0.5) * 0.12;
-    if (t > 0.82) return sec([[P.yesilA, 0.55], [P.yesil, 0.25], [P.sari, 0.12], [P.beyaz, 0.08]]);
-    if (t > 0.6) return sec([[P.yesil, 0.55], [P.yesilA, 0.3], [P.sari, 0.07], [P.mavYes, 0.08]]);
-    if (t > 0.38) return sec([[P.yesil, 0.6], [P.mavYes, 0.2], [P.yesilK, 0.15], [P.yesilA, 0.05]]);
-    return sec([[P.yesilK, 0.55], [P.mavYes, 0.25], [P.yesil, 0.12], [P.ultK, 0.08]]);
-  };
-  tara(k, 352, 292, 768, 560, 8, (x, y) => SAHNE.kubbedeMi(x, y), (x, y) => S.kubbeYon(x, y), renk,
-    (x, y) => { const t = v(x, y); return [t < 0.5 ? 0.9 : t < 0.65 ? 0.35 : 0, sec([[P.yesilK, 0.5], [P.mavYes, 0.35], [P.ultK, 0.15]])]; }, { L: 16 + R() * 10, sp: 3.7 });
+  k.x.fillStyle = rgba(P.yesil, 0.55); k.x.fill(S.yol.kubbe);
+  const v = (x, y) => { const q = S.kubbe(x, y); const f = q.dilim - Math.floor(q.dilim); return q.d + (f - 0.5) * 0.1; };
+  // ton kademeleri yerine sürekli ağırlık: renkler gözde yavaşça karışır, alacalı yamalar oluşmaz
+  const renk = (x, y) => tonSec(v(x, y) + (R() - 0.5) * 0.05, [
+    [P.yesilK, (t) => 1 - sstep(0.15, 0.55, t)],
+    [P.mavYes, tepe(0.38, 0.13)],
+    [P.yesil, tepe(0.62, 0.17)],
+    [P.yesilA, (t) => sstep(0.55, 0.95, t)],
+    [P.sari, (t) => 0.18 * sstep(0.8, 1, t)],
+  ]);
+  tara(k, 352, 292, 768, 560, 7, (x, y) => SAHNE.kubbedeMi(x, y), (x, y) => S.kubbeYon(x, y), renk,
+    (x, y) => { const t = v(x, y); return [1 - sstep(0.35, 0.7, t), tonSec(t, [[P.yesilK, (u) => 1 - sstep(0.2, 0.5, u)], [P.mavYes, tepe(0.4, 0.12)], [P.yesil, tepe(0.6, 0.1)]])]; }, { L: 16 + R() * 10, sp: 3.7 });
   // kaburgalar: kaburga boyunca kesik koyu yeşil tarama, ışık yanında sarı-yeşil eş
   for (const kb of SAHNE.kaburgalar(16, 60)) {
     const pts = titret({ pts: kb.noktalar.filter((p) => p[1] > 305), kapali: false, L: 260 }, 0.5, 40, 900 + Math.round(kb.u * 100)).pts;
     const ince = [];
     for (let i = 0; i < pts.length - 1; i++) for (let s = 0; s < 1; s += 0.34) ince.push([lerp(pts[i][0], pts[i + 1][0], s), lerp(pts[i][1], pts[i + 1][1], s)]);
-    kesikHat(k, ince, 2.6, P.yesilK, 0.9, 18, 34);
+    kesikHat(k, ince, 2.6, P.yesilK, 0.9, 18, 34, true);
     const sh = 3.4 * Math.sqrt(1 - kb.u * kb.u);
-    if (kb.u > -0.6) kesikHat(k, ince.map((p) => [p[0] + sh, p[1]]), 2, P.yesilA, 0.8, 14, 26);
+    if (kb.u > -0.6) kesikHat(k, ince.map((p) => [p[0] + sh, p[1]]), 2, P.yesilA, 0.8, 14, 26, true);
   }
 });
 // ---------------------------------------------------------------- alemler
@@ -597,9 +608,9 @@ S.yapraklar.forEach((Y, i) => {
       const lit = sd === yan;
       for (let s = 0.15; s < 1; s += 0.3) {
         const x = y.x + ca * L * s - sa * sd * W * 0.25, yy = y.y + sa * L * s + ca * sd * W * 0.25;
-        const c = lit ? sec(on ? [[P.yesil, 0.4], [P.yesilA, 0.4], [P.sari, 0.2]] : [[P.yesilA, 0.6], [P.yesil, 0.25], [P.sari, 0.15]]) : sec([[P.yesilK, 0.4], [P.mavYes, 0.35], [P.yesil, 0.25]]);
+        const c = lit ? sec(on ? [[P.yesil, 0.55], [P.yesilA, 0.4], [P.sari, 0.05]] : [[P.yesilA, 0.6], [P.yesil, 0.35], [P.sari, 0.05]]) : sec([[P.yesilK, 0.45], [P.mavYes, 0.3], [P.yesil, 0.25]]);
         takim(k, x, yy, y.aci + sd * 0.6, c, { n: 5, sp: 3.4, L: W * 0.75, W: 2.4 });
-        if (!lit && R() < 0.8) takim(k, x, yy, y.aci + sd * 0.6 + 0.52, sec([[P.yesilK, 0.6], [P.ultK, 0.4]]), { n: 4, sp: 3.6, L: W * 0.6, W: 2 });
+        if (!lit && R() < 0.8) takim(k, x, yy, y.aci + sd * 0.6 + 0.52, sec([[P.yesilK, 0.7], [P.mavYes, 0.3]]), { n: 4, sp: 3.6, L: W * 0.6, W: 2 });
       }
     }
   });
@@ -639,7 +650,7 @@ for (const C of S.cicekler) {
   // taç yaprak sınırları: her taç yaprağın görünen kenarında kesik mavi-mor ince tarama
   C.taclar.forEach((T, j) => {
     const alt = elNoktalari(SAHNE.elipsYolu(T.e), 0.5, 14, 3000 + j + Math.round(c.x), 2)[0];
-    kesikHat(k, alt.pts.concat([alt.pts[0]]), Math.max(1.6, c.r * 0.04), P.mor, 0.75, 12, 24);
+    kesikHat(k, alt.pts.concat([alt.pts[0]]), Math.max(1.6, c.r * 0.04), P.mor, 0.75, 22, 44);
   });
   const gr = c.r * 0.2;
   const gy = elYolu(SAHNE.daireYolu(c.x, c.y, gr), Math.min(0.6, gr * 0.06), 8, 800 + Math.round(c.x), 1);
@@ -663,7 +674,7 @@ ctx.fillStyle = rgba(P.kagit); ctx.fillRect(0, 0, 1024, 1024);
     const i = (y * 2048 + x) * 4;
     if (!d[i + 3]) continue;
     const dis = 0.6 * N2(x / 2.2, y / 2.2) + 0.4 * N3(x / 5.5, y / 5.5);
-    d[i + 3] = d[i + 3] * (0.5 + 0.5 * sstep(0.2, 0.42, dis));
+    d[i + 3] = d[i + 3] * (0.72 + 0.28 * sstep(0.22, 0.42, dis));
   }
   k.x.putImageData(id, 0, 0);
   // kâğıdın kendi hafif dokusu

@@ -1,0 +1,40 @@
+{
+  "kod": "S-210",
+  "no": 210,
+  "ad": "Kuzey Gün Işığı Yağlıboya",
+  "ad_en": "Northern Daylight Oil",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Hayalî, sessiz bir açık hava ressamının eli: inci grisi astarlı ince tuvalde serin ve temiz kuzey gün ışığı; ince yatay darbelerle boyanmış ışıklı soluk gök, keskin kenarlı mimari, dilim dilim yumuşak geçişli berrak yeşil kubbe.",
+  "tanim": "Serin ve temiz kuzey gün ışığını seven sessiz bir açık hava ressamının eli. Zemini inci grisi astarlı ince tuvaldir; aletleri küçük yuvarlak ve yassı fırçalardır. Paleti serin, aydınlık ve az kontrastlıdır: serin gök mavisi, ufukta neredeyse beyaz inci, taş beyazı, serin gri-mavi gölge ve gölge kenarlarında gökten yansıyan açık mavi, berrak serin yeşil, adaçayı yeşili yapraklar, soluk altın. Göğü küçük panoda yine seçilen uzun, yatay darbelerle tepede serin maviden ufukta inciye indirir; havaya en fazla küçük, düz tabanlı tek bir bulut koyar. Mimariyi küçük, kaynaşmış ama yakından seçilen darbelerle boyar; kenarları kesin keser, gölge yanlarının en kenarına gökten yansıyan serin bir ışık koyar. Kubbeyi her dilimde bir kaburgadan ötekine yumuşak ve kesin bir geçişle modeller, kaburgaları çok ince çizer. Işıkları küçük ve kesin tutar; kalın boya, parıltı noktası ya da sert gölge kullanmaz. Çiçekleri narin, altı taç yapraklı beyaz çiçekler olarak serin gri gölgeyle boyar; ışıktan uzak taç yapraklarının kenarını ince, sivrilen gri bir darbeyle keser, yaprakların kenarlarını da iki ince darbeyle kapatır.",
+  "koken": "19. yüzyıl İskandinav ve Kuzey Avrupa açık hava resminin serin, berrak ve sessiz gün ışığı anlayışına ve küçük boyutlu, kaynaştırılmış ama yakından seçilen darbelerle yapılmış etütlerine dayanır; açık gri astar, az kontrast ve gölgede gökten gelen serin yansıma bu geleneğin alışkanlıklarıdır. Gerçek bir ressamı taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Tepede serin maviden ufukta inciye inen, uzun ince yatay darbelerle boyanmış ışıklı soluk gök",
+    "Gökte küçük, düz tabanlı tek bir bulut; güneşin çevresinde dar, serin bir açılma",
+    "Her dilimde bir kaburgadan ötekine yumuşak ve kesin geçişli berrak serin yeşil kubbe, çok ince kaburgalar",
+    "Keskin kenarlı mimari; minarenin ve kubbenin gölge kenarında gökten yansıyan serin mavi ışık",
+    "Altı taç yapraklı narin beyaz çiçekler: serin gri gölge, gölge yanında ince sivrilen kenar darbesi, ince erkek organlar",
+    "Az kontrast, aydınlık değerler ve küçük, kaynaşmış darbelerin arasından seçilen inci grisi astarlı ince tuval dokusu"
+  ],
+  "palet": [
+    "#8DB8DD",
+    "#DDE5EA",
+    "#E7E5DF",
+    "#9EADB9",
+    "#549E7D",
+    "#97C8B0",
+    "#C7B366",
+    "#77A590"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Alt boya (model): gök dikey geçiş ve güneşin çevresinde dar serin açılma; tek küçük bulut küre yığını yükseklik alanından, düz tabanlı; minare ve kasnak silindir ışığıyla ve gölge kenarında serin yansımayla, kubbe dilim başına güçlü oluk eğimli dönel yüzey normaliyle (her dilimde bir yandan öbürüne geçiş). Gök, bulutsuz bir gök işlevinden renk alan iki katman uzun yatay darbeyle (14–19 ve 8–12 piksel enli, 60–200 piksel boylu, iki ölçekli gürültüyle hafifçe eğilen) boyanır; bulut ayrı bir katmanda kısa yatay darbelerle boyanıp yükseklik alanının örtüsüyle maskelenir. Mimari parça parça kırpılarak 4,5–8,5 piksel enli, düşük renk sapmalı darbelerle (kasnak darbeleri rengini kornişin üstünden alır); kaburgalar, pencereler, korkuluklar ve alemler ince fırça darbeleriyle işlenir. Yapraklar ince boyanır ve kenarları iki ince, sivrilen darbeyle kapatılır; altı taç yapraklı çiçekler merkezden dışa darbelerle ve gölge yanında sivrilen ince gri bir kenar darbesiyle, tomurcuklar üç gövde ve iki çanak yaprak darbesiyle boyanır. Güneş dolu bir disk üstüne kısa yatay darbelerle konur. Kabartı ışığı zayıf tutulur (empasto yok); ince düzensiz keten dokusu ve hafif el titremesi eklenir.",
+  "etiketler": [
+    "yağlıboya",
+    "açık hava",
+    "kuzey ışığı",
+    "serin",
+    "az kontrast",
+    "inci astar",
+    "ressamın eli",
+    "tuval"
+  ]
+}

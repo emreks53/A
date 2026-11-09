@@ -1,0 +1,42 @@
+{
+  "kod": "S-228",
+  "no": 228,
+  "ad": "Pahari Minyatürü",
+  "ad_en": "Pahari Miniature",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Soluk yeşil, dalgalı çayırlar, sırtlarda sıra sıra çiçekli çalılar ve kenarlarda ince boylu çiçekli ağaçlar arasında yumuşak beyaz mimari; ince kızıl-kahve kontur ve noktalamayla yumuşak modelaj.",
+  "tanim": "Hayalî bir tepe sarayı minyatürcüsünün lirik ve narin eli. Aletleri: perdahlanmış fildişi kâğıt, çok ince sincap kılı fırçalar, örtücü sulu boya. Paleti: soluk ve çayır yeşili, kubbe yeşili, sıcak beyaz, gri-mavi gölge, kızıl-kahve kontur, çiçek pembesi, soluk gök mavisi. Gök soluk mavi düz bir kat üzerine üstte koyulaşan yumuşak yatay fırça geçişleriyle, ufukta beyazımsı pusla boyanır; bulutlar uzun, yumuşak beyaz yığınlardır, içlerinde bir ucu küçük bir kıvrımla biten ince mavi-gri çizgiler vardır. Arka plan üç dalgalı tepe katıdır; her tepenin eteği bir sonrakinin sırtına doğru ince noktalamayla koyulaşır, sırtlarda küçük yuvarlak çalılar sıra sıra dizilir, her biri gölgeli yanında noktalanmış, üstünde minik pembe ve beyaz çiçekler. İki yanda ince gövdeli, uzun taçlı ağaçlar küçük yaprak darbeleri ve beş noktalı çiçeklerle örülür. Mimari yumuşak beyazlarla, gölgeler soluk gri-mavi ince darbe ve noktalamayla; kubbe meridyen boyunca tonu soldan sağa açılan darbelerle, üstüne ince noktalama. Bütün biçimler ince kızıl-kahve (yeşillerde koyu yeşil) konturla çevrilir. Ön çayırda sıra sıra çiçekli ot tutamları, beyaz çiçeklerin dibinde pembe ışınsal fırça izleri.",
+  "koken": "Kuzey Hindistan'ın tepe saraylarında gelişen Pahari minyatür resmine, özellikle yumuşak yeşil peyzajı, çiçekli ağaçları, ince kontur ve noktalamayla (pardaht) modelaj alışkanlığıyla tanınan lirik koluna dayanır. Hiçbir gerçek ressam taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Üç kat dalgalı soluk yeşil tepe; eteklerinde ince noktalamayla yumuşak koyulaşma, sırtlarında sıra sıra küçük çiçekli çalılar",
+    "Kenarlarda küçük yaprak darbeleri ve pembe-beyaz beş noktalı çiçeklerle örülmüş ince boylu çiçekli ağaçlar",
+    "Mimaride ve çiçeklerde ince kızıl-kahve kontur, yeşillerde koyu yeşil kontur",
+    "Soldan sağa açılan darbelerle ve ince noktalamayla modellenmiş kubbe, kaburgaların yanında ince açık çizgi",
+    "İçlerinde bir ucu küçük kıvrımla biten ince çizgiler bulunan uzun, yumuşak beyaz bulutlar",
+    "Ön çayırda sıra sıra küçük çiçekli ot tutamları; büyük beyaz çiçeklerin dibinde pembe ışınsal fırça izleri"
+  ],
+  "palet": [
+    "#CEE2F2",
+    "#B2D29A",
+    "#76AE6A",
+    "#3E9666",
+    "#26563E",
+    "#FAFAF2",
+    "#EABAC2",
+    "#734035"
+  ],
+  "kodla_cizim": "Boyama 2048 px kayan noktalı tamponda yapılır. Geniş alanlar yerel maskelerle kesilen yan yana örtücü ince fırça darbeleriyle (kıl izi, ton oynaması) ya da önce düz taban kat, sonra darbelerle boyanır. Tepeler sinüs toplamı sırt eğrilerinden kurulur; eteklerdeki noktalama titrek bir ızgarada, her hücrede gölge fonksiyonu olasılığıyla konan küçük eliptik yumuşak noktalardan oluşur. Çalılar sırt boyunca örneklenen birkaç dairesel parçadan, ağaç taçları elips içinde rastgele konan yüzlerce kısa yaprak darbesinden ve beş noktalı çiçeklerden kurulur. Kubbe meridyen darbelerinin rengi boylamdan hesaplanan ışıkla değişir. Konturlar ayrı bir çizgi katmanında elle çekilmiş şerit olarak çizilir; öndeki biçimden önce kendi alanındaki eski çizgiler silinir ve katman çarpma kipinde basılır. Bulut çizgileri bulut gövdesinin içinden geçen eğriler ve uçlarındaki küçük spirallerdir.",
+  "etiketler": [
+    "pahari",
+    "minyatür",
+    "hint resmi",
+    "noktalama",
+    "pardaht",
+    "ince kontur",
+    "çiçekli ağaç",
+    "yeşil çayır",
+    "lirik",
+    "ressamın eli"
+  ]
+}

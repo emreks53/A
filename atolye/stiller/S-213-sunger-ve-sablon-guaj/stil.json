@@ -1,0 +1,39 @@
+{
+  "kod": "S-213",
+  "no": 213,
+  "ad": "Sünger ve Şablon Guaj",
+  "ad_en": "Sponge-and-Stencil Gouache",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Elle kesilmiş kâğıt şablonların içinden deniz süngeriyle bastırılmış guaj: her biçimin kenarı bıçakla kesilmiş gibi keskin, içi canlı sünger gözeneği dokusu; biçimler taban, gölge ve ışık şablonlarıyla katman katman kurulur, bulutlar ve çiçekler kâğıt beyazı kalır.",
+  "tanim": "Hayalî bir şablon ressamının eli. Parlak beyaz soğuk preslenmiş kâğıt kullanır; her biçim için ince kartondan elle şablon keser (kenarlar temiz ama kısa düz bıçak kesiklerinden oluşur, eğriler hafif köşeli), guajı iki gözenek iriliğindeki deniz süngerlerine alıp şablonun içinden bastırır. Süngeri şablon kenarına daha sık bastırdığı için doku kenarlarda yoğunlaşır, içeride ağ gibi gözenekler ve boşluklar kalır. Her biçimi 2–3 şablon katıyla kurar: kubbede önce yeşil taban, sonra sol bölüm ve her kaburganın solundaki dar şeritler için koyu yeşil gölge şablonları, sonra sağ üst dilimlerin ortasına mercek biçimli sarı-yeşil ışık şablonları; kasnakta yeşil taban, solda ve çıkıntı altlarında koyu yeşil, sağ-ortada sarı-yeşil, pencerelerde koyu yeşil. Göğü önce açık mavi ince süngerle, sonra tepede yoğunlaşan iri gözenekli serulyumla basar; bulut ve güneş şablonlarını örtü olarak koyup kâğıt beyazı bırakır; bulutların içine önce bulut şablonundan alta doğru sıklaşan soluk lila-mavi, sonra üst kenarı lobları izleyerek dalgalı kesilmiş ikinci bir şablondan lila basar; güneşe soluk sarı, sol alt yanına biraz daha koyu sarı basar. Minareyi ve kaideyi krem, sol yanlarını, çıkıntı altlarını ve korniş altını lila gölge şablonuyla; zikzakları ve korkuluk babalarını dar kesilmiş yuvalardan basar. Çiçekleri kâğıt beyazı bırakır, göbeğe yakın küçük kesiklerden lila gölge ve sarı göbek basar; yapraklarda gölge yarısı ve ışık şeridi ayrı şablonlardır.",
+  "koken": "Şablonla elle renklendirme (pochoir), dekoratif şablon boyama ve sünger boyama tekniklerinin birleşimine dayanır: kesik şablonun keskin kenarı ile süngerin gözenekli baskısı aynı biçimde bir arada kullanılır, biçimler üst üste binen şablon katlarıyla kurulur. Gerçek bir ressam taklit edilmemiştir; tarif atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Her biçimin kenarı kısa düz kesiklerden oluşan keskin, elle kesilmiş şablon kenarı; içi ağ gibi sünger gözeneği dokusu",
+    "Gök iki kat sünger: açık mavi taban ve tepede yoğunlaşan iri gözenekli serulyum; bulutlar kâğıt beyazı, içlerinde alta doğru sıklaşan soluk lila-mavi sünger ve dalgalı kesilmiş ikinci şablondan lila gölge; güneş köşeli kesilmiş soluk sarı",
+    "Kubbede koyu yeşil gölge şablonları (sol bölüm ve her kaburganın solunda dar şerit) ve sağ üst dilimlerde sarı-yeşil mercek biçimli ışık şablonları",
+    "Krem minare ve kaide; sol yanlar, çıkıntı altları ve korniş altı lila gölge şablonu; pencereler gri-mor",
+    "Çiçekler kâğıt beyazı bırakılmış, göbeğe yakın lila gölge ve sarı göbek; yapraklarda gölge yarısı ve ışık şeridi ayrı şablon",
+    "Sünger şablon kenarına sık bastırıldığı için doku kenarlarda yoğun, içeride daha açık ve gözenekli"
+  ],
+  "palet": [
+    "#FCFCF8",
+    "#9AC7E8",
+    "#C3DEF1",
+    "#418B5E",
+    "#6FAF7A",
+    "#C2C4E2",
+    "#EEE4CC",
+    "#D4AA3D"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; SAHNE geometrisi kullanılır, SAHNE.ciz çağrılmaz. Sünger damgaları: iki gözenek iriliğinde altışar adet 120 px alfa damgası; gürültüyle dalgalanan yuvarlak dış kenar, rastgele dairesel gözenekler ve alan bükmeli fbm eşiğinden bağlantılı ağ boşlukları, kırık dış kenar. Şablonlar: SAHNE yolları 0,8 px adımla örneklenip 3–10 px'lik rastgele aralıklarla, keskin dönüşler korunarak kısa düz kesiklere indirgenir, köşeler hafifçe oynatılır, tüm parçalar aynı dönüş yönüne çevrilir. Her şablon katı ayrı bir ekran dışı tuvalde: sarsılmış ızgaraya döndürülmüş, ölçeklenmiş, saydamlığı değişen damgalar basılır, şablon kenarı boyunca ek damgalar, ardından source-in ile tek renk, destination-in ile açık yerler (ve ikinci şablonla kesişim), destination-out ile örtülen yerler, son olarak kâğıt dişi alfa maskesi uygulanıp ana tuvale bindirilir. Bulutlar yassı tabanlı lob birleşiminden hafif yumuşatılmış üst kenarlı kesik çokgen; içlerinde yoğunluğu yükseklikle artan bir sünger katı ve üst lobları aşağı kaydıran dalgalı ikinci şablon; çiçek taç yaprakları sonradan kâğıt rengiyle geri açılır (şablonla korunmuş gibi). Math.random yok, SAHNE.rng ve tamsayı karması.",
+  "etiketler": [
+    "guaj",
+    "şablon",
+    "pochoir",
+    "sünger",
+    "elle kesilmiş şablon",
+    "katmanlı baskı",
+    "ressamın eli"
+  ]
+}

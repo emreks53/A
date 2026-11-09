@@ -1,0 +1,38 @@
+{
+  "kod": "S-212",
+  "no": 212,
+  "ad": "Yumurta Temperası Tarama",
+  "ad_en": "Egg Tempera Hatching",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Parlak beyaz alçı astarlı panoda yumurta temperası: her biçim biçimi izleyen sayısız kısa tarama darbesinden kurulur, renkler karışmadan üst üste binen taramalarla gözde karışır; gök sığ açıyla kesişen ultramarin ve serulyum taramalarla dokunmuştur, altın yoktur.",
+  "tanim": "Hayalî bir yumurta temperası ressamının eli. Zemin, tutkallı alçıyla astarlanıp zımparalanmış parlak beyaz bir pano; aletleri minicik yuvarlak fırçalar. Tempera çabuk kuruduğu için renkleri karıştırmaz, 10–25 px'lik kısa, iki ucu sivri darbeleri 3–6'lık demetler hâlinde yan yana koyar ve tonu demetlerin sıklığıyla, katların üst üste binmesiyle kurar; açık yerlerde darbeler arasından alçı beyazı görünür. Göğü serulyum bir taban taramasının üstüne sığ açıyla kesişen ultramarin taramalarla dokur; ultramarin aşağı indikçe serulyuma döner, güneşin çevresinde taramalar soluk sarı-beyaza açılır; güneşi alçı beyazı bir disk olarak bırakır, içine ve çevresine göğün kendi yönünde, uzaklaştıkça seyrelen soluk limon sarısı taramalar koyar. Bulutların ışık alan üstünü alçı beyazı bırakır, alt yanlarına biçimi izleyen, aşağı doğru sıklaşan ve ikinci bir açıyla çaprazlanan gri-mavi tarama koyar. Kubbeyi dilim yönünde malakit taramalarla, gölgede çapraz koyu yeşil ve yeşil-mavi katlarla, ışıkta açık yeşil-krem taramalarla kurar; kasnağı yatay, minareyi dikey tarar. Beyaz taşı aradan alçı görünen okr-krem taramalarla, gölgelerini gül ve gri-mavi çapraz taramalarla verir. Yeri açık okr taramaların üstüne aşağı doğru sıklaşan ikinci bir okr çapraz taramayla, en önde dik malakit ve açık yeşil tarama öbekleriyle kurar. Taç yapraklarını alçı beyazı bırakıp göbeğe ve gölge yanına doğru soluk mavi-mor kavisli taramayla, göbekleri okr taramayla boyar. Biçimleri ince yuvarlak fırçayla çekilmiş koyu konturla keser; altın kullanmaz, alemleri okr sarısıyla tarar.",
+  "koken": "Orta Çağ ve erken Rönesans İtalyan pano resmindeki yumurta temperası tekniğine dayanır: alçı (gesso) astar, çabuk kuruyan boyanın karıştırılmadan ince paralel ve çapraz tarama (tratteggio) darbeleriyle katmanlanması ve tonun optik karışımla kurulması. Geleneğin altın varak zemini bilerek dışarıda bırakılmış, gök gündüz mavisiyle taranmıştır. Gerçek bir ressam taklit edilmemiştir; tarif atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Gök, sığ açıyla kesişen kısa ultramarin ve serulyum tarama demetlerinden dokunmuş sakin bir örgü; tepede koyu, ufka doğru açık; güneşin çevresinde göğün yönünde, seyrelerek açılan soluk limon sarısı tarama",
+    "Bulutların üstü alçı beyazı, alt yanları biçimi izleyen, aşağı doğru sıklaşan çapraz gri-mavi taramayla gölgeli",
+    "Kubbe dilimler boyunca malakit taramalarla, gölgede çapraz koyu yeşil-mavi katlarla, ışıkta açık yeşil-krem taramalarla; ince koyu kaburga ve kontur çizgileri",
+    "Beyaz taş aradan alçı görünen okr-krem taramalarla; korniş altında ve sol yanlarda gül ve gri-mavi çapraz taramalar",
+    "Taç yaprakları alçı beyazı, göbeğe ve gölge yanına doğru soluk mavi-mor kavisli tarama; okr göbek ve ince mor kontur",
+    "Altın yok: alemler okr sarısı boya taramasıyla"
+  ],
+  "palet": [
+    "#F3EEE0",
+    "#5B7FCC",
+    "#8DBBE0",
+    "#7EA7D7",
+    "#63A47C",
+    "#2F6D57",
+    "#E3B7B7",
+    "#E6DBBE"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; SAHNE geometrisi kullanılır, SAHNE.ciz çağrılmaz. Temel öğe 'tarama demeti': aynı yöne çekilmiş 3–6 kısa, iki ucu sivri, hafif basınçlı darbe (tek darbe dolu bir şerit). Demet merkezleri sarsılmış ızgaradan, ton işlevine göre olasılıkla seçilir; yön her öğede biçimi izler (gökte sığ açılı iki kat, kubbede meridyen yönünü izleyen eğri darbeler ve ±0,32 rad çapraz katlar, kasnakta yatay, minarede dikey, taç yapraklarda göbekten dışa kavisli, yapraklarda orta damardan kenara). Gök ayrı bir katta taranır; bulutlar yoğunluk alanından maske, güneş ve mimari biçimler destination-out ile silinip alçı beyazı bırakılır. Her öğede 2–4 kat: taban rengi, gölge rengi (gül, gri-mavi ya da koyu yeşil) ve ışık rengi; renkler karıştırılmaz, üst üste binen katlar gözde karışır. Konturlar ve kaburgalar elle titreyen basınçlı ince çizgiler. Son geçişte çok ince mat alçı tanesi. Math.random yok, SAHNE.rng ve tamsayı karması.",
+  "etiketler": [
+    "yumurta temperası",
+    "tarama",
+    "alçı astar",
+    "pano resmi",
+    "optik karışım",
+    "ressamın eli"
+  ]
+}

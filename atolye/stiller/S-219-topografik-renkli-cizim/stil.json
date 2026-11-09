@@ -1,0 +1,42 @@
+{
+  "kod": "S-219",
+  "no": 219,
+  "ad": "Topoğrafik Renkli Çizim",
+  "ad_en": "Tinted Topographical Drawing",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Krem kâğıtta ince gri-kahve kalem çizgisi, bütün gölgeleri kuran soğuk gri-mavi alt lavi ve üstünde saydam, açık yerel renkler.",
+  "tanim": "Hayalî bir topoğrafya ressamının eski usul renkli çizim eli. Aletleri: düzgün, krem-beyaz vergeli olmayan (wove) kâğıt, ince çelik uç, gri-kahve mürekkep, düz lavi fırçaları ve üç kaplık bir palet: soğuk gri-mavi, soluk gök mavisi ve birkaç açık yerel renk. Önce bütün sahneyi hafifçe kalınlığı değişen, uçları incelen ince kalem çizgisiyle çizer: minarenin bütün kuşakları ve korkuluk dikmeleri, kasnak ve kaide pencereleri, seyrek taş sıraları, kubbenin dış çizgisi ve ince kaburgaları, yaprak kenarları ve orta damarları, taç yapraklarının önde kalan kenarları; arkada kalan çizgiyi öndeki biçimin içine taşırmaz. Sonra bütün gölge yapısını tek bir soğuk gri-mavi laviyle, kenarı keskin düz katlar hâlinde modeller: minarenin ve kasnağın sol yanı, şerefe altları, korniş gölgesi, kubbenin sol yanı ve her dilimin sol yarısındaki hafif oluk gölgesi, yaprakların gölge yarısı, çiçeklerin gölgesi, bulutların tümsekleri izleyen alt yüzü (tabanı ıslakken yumuşatılmış). En son saydam, açık yerel renkleri bütünün üstüne sürer: ufka doğru sulandırılan soluk gök mavisi (üstte ikinci, kenarı keskin bir katla; bulutların üstü sert, altı yumuşak kenarla bırakılır), krem taş, orta yeşil kubbe, soluk yeşil yapraklar, soluk altın alem, açık sarı göbekler; renk lavileri kalem çizgisine tam oturmaz, yer yer taşar, yer yer ince kâğıt bırakır. Bulutlar kâğıt rengi bırakılır, yalnız altları gri-mavidir.",
+  "koken": "18. yüzyıl İngiliz topoğrafik renkli çizim (tinted drawing) geleneğine dayanır: kalemle çizim, gri ya da gri-mavi tek renk alt laviyle gölge modelleme ve üstüne açık yerel renk sürme sırası bu gelenekten gelir. Hiçbir gerçek ressam taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Bütün biçimleri saran ince, kalınlığı hafifçe değişen gri-kahve kalem çizgisi; arkadaki çizgiler öndeki yaprak ve çiçeklerin içine taşmaz",
+    "Gölgelerin hepsi soğuk gri-mavi: minare ve kasnağın sol yanı, şerefe altları, korniş gölgesi, bulut altları",
+    "Gri-mavi oluk gölgeleriyle dilim dilim modellenmiş, üstüne saydam orta yeşil sürülmüş kubbe",
+    "Kalem çizgisine tam oturmayan, yer yer taşan, yer yer ince kâğıt bırakan açık yerel renk lavileri",
+    "Krem kâğıt üstünde açık, havadar genel ton; üstte kenarı keskin ikinci bir soluk mavi katla derinleşen gök",
+    "Kalemle çizilmiş, kâğıt beyazı taç yaprakları gri-mavi gölgeli çiçekler ve soluk yeşil yapraklar"
+  ],
+  "palet": [
+    "#6B6258",
+    "#9CADC8",
+    "#848F99",
+    "#A5C0D2",
+    "#74A58B",
+    "#4A6C55",
+    "#E8D8B6",
+    "#F7F3E9"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte boyanıp 1024'e indirilir. Krem kâğıt dokusu ince değer gürültüsü ve hafif lif çizgileridir. Kalem çizgileri SAHNE yollarından örneklenip basınç ve titreme gürültülü şeritler olarak nesne nesne (yapı, arka yapraklar, saplar, yapraklar, tomurcuklar, çiçekler) toplanır; her nesnenin çizgisi, kendisinden sonra gelen ve kutusu kesişen nesnelerin biçimleri maskeden çıkarılarak mürekkep yoğunluğu (#5F564C, açık yerlerde #6B6258'e yakın) olarak RGB optik yoğunluk tamponuna yazılır. Gri-mavi alt lavi ve yerel renkler aynı lavi motoruyla eklenir: elle titretilmiş çokgen maske, iki bulanık kopyadan kuruyan kenar ve ince birikinti çizgisi, alt kenarda havuzlanma, geniş ölçekli düzgünsüzlük, kâğıt çukuru granülasyonu. Yerel renkler, biçimleri daha yüksek genlikle yeniden titretilmiş ve 1–1,5 piksel kaydırılmış ikinci bir sahne biçim kümesiyle sürülür; böylece renk çizgiye tam oturmaz. Bulutlar birkaç elle titretilmiş yassı elipsin birleşimidir; gök lavisi üst yarılarında sert, alt kenarlarında bulanık bir rezerv maskesiyle yumuşak bırakılır, gri-mavi gölgeleri tümsek yüksekliğini izleyen dalgalı bir sınırla sürülür. Sonda yoğunluk krem kâğıt rengiyle (Beer–Lambert) çarpılır.",
+  "etiketler": [
+    "renkli çizim",
+    "topoğrafik",
+    "kalem ve lavi",
+    "gri-mavi alt lavi",
+    "18. yüzyıl",
+    "krem kâğıt",
+    "açık renk",
+    "havadar",
+    "suluboya",
+    "titiz"
+  ]
+}

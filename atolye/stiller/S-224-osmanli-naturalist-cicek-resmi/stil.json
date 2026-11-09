@@ -1,0 +1,40 @@
+{
+  "kod": "S-224",
+  "no": 224,
+  "ad": "Osmanlı Natüralist Çiçek Resmi",
+  "ad_en": "Ottoman Naturalistic Flower Painting",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "18. yüzyıl Osmanlı çiçek ressamlarının natüralist üslubu: perdahlı kâğıtta guaş; allı ve beyaz güller, alacalı laleler, mavi sümbüller ve karanfiller her taç yaprağının yönünü izleyen ince pardaz vuruşlarıyla modellenir; ön planın yıldızı çiçeklerdir, mimari sade ve yumuşak gölgelidir.",
+  "tanim": "Hayalî bir 18. yüzyıl Osmanlı çiçek ressamının eli. Destek: perdahlı, sıcak beyaz kâğıt. Alet: çok ince fırçalar ve guaş. Usta her biçimi önce düz bir taban renkle doldurur, sonra 'pardaz' yapar: taç yaprağının ya da yaprağın omurgasına paralel, tabanda koyu, ortada orta, uçta açık sayısız ince vuruşla hacmi kurar; gölge yanını koyulaştırır, taç kenarının içine açık ince bir ışık çizgisi çeker. Güller önden ve biraz yukarıdan görülür: üç halka taç yaprağı arkadan öne biner, her taç dipte koyu, kenarda açık pardazla boyanır, her halkanın kenarının hemen dışına bir alttaki halkada yumuşak bir gölge düşer; ortada sıkı sarılmış küçük iç taçlar ve koyu bir yarık; laleler sivri bademi taçlı ve kırmızı-krem ya da turuncu-krem alacalı; sümbüller dolgun başaklar: yanlarda ağzı geriye kıvrık üç yuvarlak uçlu, hafif sarkık çanlar, önde altı yuvarlak uçlu, koyu boğazlı çan ağızları; karanfiller dişli, çizgili. Yapraklarda orta damardan kenara eğik damar vuruşları, açık ince orta damar ve bir kenarda kıvrılmış, mavimsi açık yeşil ters yüz. Gök açık gün mavisi, yönü yavaşça değişen ince vuruşlarla, küçük öbekler hâlinde bir ton açık ya da koyu döşenerek ve ufka doğru açılarak boyanır; bulutlar ince beyaz vuruş kümeleri, güneş ince yatay vuruşlarla doldurulmuş soluk sarı-beyaz bir teker. Mimari daha sade: yumuşak gölgeli düzlemler, dikey ince vuruşlar, ince kontur.",
+  "koken": "18. yüzyıl Osmanlı (Lale Devri ve sonrası) natüralist çiçek resmine, çiçek albümleri ve murakka sayfalarındaki guaş çiçek tasvirlerine ve minyatürdeki 'pardaz' (ince fırça vuruşlarıyla modelleme) tekniğine dayanır. Belirli bir eser ya da sanatçı taklit edilmez; tarif bu geleneklerden kurulmuş hayalî bir ressamın elidir; figür ya da yazı içermez.",
+  "ayirt_edici": [
+    "Önde iri allı, pembe ve beyaz güller: üç halka taç yaprağı, dipten kenara koyudan açığa ince pardaz vuruşları, halkalar arasında yumuşak gölge, ortada sıkı sarılmış iç taçlar",
+    "Kırmızı-krem ve turuncu-krem alacalı, sivri taçlı laleler",
+    "Ağzı kıvrık yuvarlak uçlu küçük çanlardan dolgun mavi sümbül başakları ve dişli pembe karanfiller",
+    "Eğik damar vuruşlu, açık orta damarlı, bir kenarı mavimsi açık yeşille kıvrılmış yapraklar",
+    "Yönü yavaşça değişen ince vuruşlarla, küçük öbekler hâlinde boyanmış, ufka doğru açılan gün mavisi gök ve ince vuruş kümesi bulutlar",
+    "Yumuşak gölgeli düzlemler ve ince dikey vuruşlarla sade mimari; ince çimen vuruşlu açık yer"
+  ],
+  "palet": [
+    "#93C0E5",
+    "#DD818E",
+    "#903146",
+    "#D34C41",
+    "#6D85CE",
+    "#4F8E55",
+    "#3D9A66",
+    "#DBDABA"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; guaş doğrudan ana tuvale sürülür. Lale taçları ve yapraklar bükümlü bir omurga ile genişlik işlevinden kurulan 'loft' biçimlerdir; her biri titretilmiş konturla taban renge boyanır, sonra kırpma içinde omurgaya paralel (yana göre v ∈ [−1, 1]) uçları incelen ince vuruşlarla, renk omurga boyunca koyu–orta–açık ve gölge yanına göre seçilerek modellenir. Güller kutupsal taç yapraklarından kurulur: üç halka (5, 5, 4 taç) ve ortada üç küçük taç; her taç kırpma içinde dipten kenara uzanan, renk dipte koyu–kenarda açık ve gölge yanına göre seçilen ince vuruşlarla boyanır, kenarına içe doğru açık ince bir kıvrım çekilir; her halkadan sonra, boyanmış taçlarla kırpılmış dairesel koyu vuruşlar bir sonraki halkanın kenarının dışında gölge bırakır; laleler üç loft ve alaca şeridi; sümbüller önde altı yuvarlak uçlu çan ağızları, yanlarda ağzı üç kıvrık uçlu, hafif sarkık yandan çanlar; yapraklar orta damardan kenara eğik vuruşlar ve kıvrık kenar şeridiyle çizilir. Gök ve yapı alanları, yönü düşük frekanslı gürültüyle değişen kısa ince vuruşlarla doldurulur. Bileşimde perdahlı kâğıt için çok hafif lif ve benek gürültüsü uygulanır.",
+  "etiketler": [
+    "Osmanlı",
+    "çiçek resmi",
+    "natüralist",
+    "pardaz",
+    "guaş",
+    "gül",
+    "lale",
+    "ressamın eli"
+  ]
+}

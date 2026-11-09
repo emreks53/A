@@ -254,6 +254,15 @@ function cizgiNokta(c, pts, o) {
 function titrekYol(d, amp, fr, adim) {
   const p2 = new Path2D();
   for (const p of ornekle(d, adim || 2)) {
+    if (p.kapali) {
+      let alan = 0;
+      for (let i = 0; i < p.pts.length; i++) {
+        const a = p.pts[i];
+        const b = p.pts[(i + 1) % p.pts.length];
+        alan += a[0] * b[1] - b[0] * a[1];
+      }
+      if (alan < 0) p.pts.reverse();
+    }
     const N = normaller(p.pts, p.kapali);
     const ofs = (_ofs += 7.9);
     p.pts.forEach((q, i) => {
@@ -771,7 +780,7 @@ tara(gokKat, {
   aralik: 11,
   yog: (x, y) => {
     const { t, g } = gokTon(x, y);
-    return clamp(1.15 - t * 0.75 - g * 1.4, 0, 1);
+    return clamp(1.15 - t * 0.75 - g * 0.9, 0, 1);
   },
   yon: (x, y) => 0.14 + (NZ.n(x * 0.004 + 9, y * 0.004) - 0.5) * 0.08,
   sapma: 0.07,
@@ -781,7 +790,8 @@ tara(gokKat, {
   en: [2, 2.8],
   renk: (x, y, r) => {
     const { t } = gokTon(x, y);
-    return karis(karis(P.ultra, P.ultraKoyu, r() * 0.35), P.seruleum, clamp(t * 1.25 - 0.15 + (r() - 0.5) * 0.2, 0, 0.9));
+    const { g } = gokTon(x, y);
+    return karis(karis(karis(P.ultra, P.ultraKoyu, r() * 0.35), P.seruleum, clamp(t * 1.25 - 0.15 + (r() - 0.5) * 0.2, 0, 0.9)), P.seruleumAcik, clamp(g * 1.6, 0, 1));
   },
   alfa: [0.72, 0.9],
   tohum: 12,
@@ -845,43 +855,50 @@ tara(gokKat, {
   gokKat.restore();
 }
 bindir(gokKat);
-// bulutların gölgeli alt yanları: seyrek gri-mavi tarama
+// bulutların gölgeli alt yanları: biçimi izleyen gri-mavi tarama, altta sık ve çapraz, üstte alçı beyazı kalır
 for (const B of BULUT) {
   const top = Math.min(...B.lobs.map((l) => l.y - l.ry));
-  tara(ctx, {
+  const gol = (x, y) => ((y - top) / (B.taban - top)) * 1.35 - 0.4 - ((x - B.x) / B.gen) * 0.25;
+  const ort = {
     kutu: [B.x - B.gen - 60 * B.s, top, B.x + B.gen + 60 * B.s, B.taban + 4],
-    aralik: 11,
-    icinde: (x, y) => bulutYog(B, x, y) > 0.2,
-    yog: (x, y) => clamp(((y - top) / (B.taban - top)) * 1.3 - 0.45 - ((x - B.x) / B.gen) * 0.25, 0, 0.9),
-    yon: (x, y) => -0.1,
-    sapma: 0.25,
-    n: [3, 5],
-    boy: [10, 18],
-    ara: [3.4, 4.4],
-    en: [1.8, 2.6],
-    renk: (x, y, r) => karis(P.griMavi, P.seruleum, r() * 0.4),
-    alfa: [0.55, 0.85],
+    aralik: 9,
+    icinde: (x, y) => bulutYog(B, x, y) > 0.16,
+    sapma: 0.06,
+    n: [4, 6],
+    boy: [16, 26],
+    ara: [2.9, 3.5],
+    en: [1.8, 2.5],
+    oyna: 4,
+  };
+  tara(ctx, Object.assign({}, ort, {
+    yog: (x, y) => clamp(gol(x, y), 0, 0.95),
+    yon: () => -0.06,
+    renk: (x, y, r) => karis(hex('#C9D3E6'), P.griMavi, clamp(gol(x, y), 0, 1) * 0.8 + r() * 0.15),
+    alfa: [0.6, 0.85],
     tohum: 20 + B.x,
-  });
+  }));
+  tara(ctx, Object.assign({}, ort, {
+    yog: (x, y) => clamp(gol(x, y) - 0.35, 0, 0.9),
+    yon: () => 0.22,
+    renk: (x, y, r) => karis(P.griMavi, P.seruleum, r() * 0.35),
+    alfa: [0.5, 0.8],
+    tohum: 520 + B.x,
+  }));
 }
-// güneş halkası
+// güneşin çevresi: göğün kendi yönünde soluk limon sarısı tarama; uzaklaştıkça seyrelir (ışın yok)
 tara(ctx, {
-  kutu: [800, 60, 960, 220],
+  kutu: [770, 40, 990, 240],
   aralik: 9,
-  icinde: (x, y) => {
-    const d = Math.hypot(x - 880, y - 140);
-    return d > 38 && d < 66;
-  },
-  yog: (x, y) => 0.7 - (Math.hypot(x - 880, y - 140) - 38) / 50,
-  yon: (x, y) => Math.atan2(y - 140, x - 880) + PI / 2,
-  egri: true,
-  sapma: 0.05,
-  n: [2, 4],
-  boy: [8, 14],
+  icinde: (x, y) => Math.hypot(x - 880, y - 140) > 40,
+  yog: (x, y) => clamp(0.75 - (Math.hypot(x - 880, (y - 140) * 1.15) - 40) / 70, 0, 0.75),
+  yon: () => -0.12,
+  sapma: 0.07,
+  n: [3, 5],
+  boy: [14, 22],
   ara: [3.4, 4.2],
-  en: [1.6, 2.2],
-  renk: () => hex('#F1E6B8'),
-  alfa: [0.6, 0.85],
+  en: [1.8, 2.4],
+  renk: (x, y, r) => karis(hex('#F6EFCF'), hex('#EDE3B4'), r() * 0.6),
+  alfa: [0.55, 0.85],
   tohum: 25,
 });
 tara(ctx, {
@@ -911,21 +928,38 @@ tara(ctx, {
   boy: [16, 26],
   ara: [3.6, 4.6],
   en: [2.1, 2.9],
-  renk: (x, y, r) => karis(hex('#F0E5C6'), P.okr, clamp((y - 800) / 400, 0, 0.3) + r() * 0.14),
+  renk: (x, y, r) => karis(hex('#F2E9CF'), P.okr, clamp((y - 800) / 450, 0, 0.25) + r() * 0.12),
   alfa: [0.7, 0.92],
   tohum: 31,
 });
 tara(ctx, {
+  kutu: [-30, 798, 1054, 1034],
+  aralik: 12,
+  yog: (x, y) => clamp(0.15 + (y - 800) / 300, 0, 0.8),
+  yon: () => -0.32,
+  sapma: 0.07,
+  n: [3, 5],
+  boy: [16, 24],
+  ara: [3.6, 4.6],
+  en: [2, 2.7],
+  renk: (x, y, r) => karis(P.okrAcik, P.okr, 0.35 + r() * 0.4),
+  alfa: [0.55, 0.8],
+  tohum: 33,
+});
+tara(ctx, {
   kutu: [-30, 820, 1054, 1034],
-  aralik: 13,
-  yog: (x, y) => clamp((NZ.fbm(x * 0.008, y * 0.014, 3) - 0.55) * 3 + (y - 860) / 600, 0, 0.7),
+  aralik: 10,
+  yog: (x, y) => clamp((NZ.fbm(x * 0.005, y * 0.009, 3) - 0.5) * 6 + (y - 955) / 80, 0, 0.95),
   yon: (x, y) => -1.3 + (NZ.n(x * 0.01, y * 0.01) - 0.5) * 0.4,
   sapma: 0.08,
   n: [3, 6],
   boy: [12, 22],
   ara: [3.4, 4.4],
   en: [2, 2.8],
-  renk: (x, y, r) => [P.malakit, P.yesilAcik, P.yesilKoyu][Math.floor(r() * 3)],
+  renk: (x, y, r) => {
+    const t = clamp((y - 900) / 130, 0, 1) + (r() - 0.5) * 0.55;
+    return t < 0.3 ? P.yesilAcik : t < 0.75 ? P.malakit : P.yesilKoyu;
+  },
   alfa: [0.75, 0.95],
   tohum: 32,
 });

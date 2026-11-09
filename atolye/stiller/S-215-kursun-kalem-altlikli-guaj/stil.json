@@ -1,0 +1,39 @@
+{
+  "kod": "S-215",
+  "no": 215,
+  "ad": "Kurşun Kalem Altlıklı Guaj",
+  "ad_en": "Gouache over a Visible Pencil Drawing",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Önce HB kalemle titizlikle çizilmiş sahne, sonra küçük yassı fırçalarla yarı örtücü guajla alan alan boyanmış; kalem çizgisi kenarlarda ve açık renklerin altından görünür, renk alanları çizginin bir kıl içinde ya da biraz dışında durur.",
+  "tanim": "Hayalî bir ressamın eli. Düzgün beyaz kâğıda önce bütün sahneyi HB kalemle çizer: temiz, kendinden emin, uçlarında incelen kontur çizgileri (köşelerde çizgi bir iki piksel taşar), kubbenin kaburgaları, pencereler, korkuluk babaları, yapraklar ve önde duranın arkasını çizmeden taç yaprakları; cetvelle birkaç soluk yapı çizgisi (minare ekseni, kubbenin orta çizgisi, kornişin ve ufkun yatayları) ve minarenin sol yanına, korniş altına, bulutların alt yanına, büyük taç yapraklarının gölge yanına ince kalem gölge taramaları. Sonra yarı örtücü guajı küçük yassı fırçalarla alan alan sürer; fırça yönü görünür, örtücülük hafifçe dengesizdir, renk alanı kalem çizgisinin bir kıl içinde durur ya da yer yer biraz üstüne biner, bazı yerlerde çizgiyle alan arasında ince bir kâğıt aralığı kalır. Kubbenin her dilimini ayrı boyar, böylece kaburga çizgileri boyunca kâğıt ve kalem seçilir. Göğü yatay yarı örtücü serulyum darbelerle, ufka doğru açarak boyar; bulutların üstüne yarı örtücü beyaz guajı fırça yönü görünecek biçimde sürer, alt yanlarına soluk mavi-gri koyar; bulutların yalnız üst konturu kalemle, kesik kesik çizilmiştir. Güneşi serbest elle iki geçişte, tam kapanmayan hafif yumurta biçimli bir daire olarak çizer ve soluk sarı, sol altı biraz daha sıcak kısa darbelerle doldurur. Taşı krem, gölgeyi serin gri-krem, kubbe ve kasnağı ışığa göre yeşillerle, pencereleri koyu yeşil ve sıcak griyle doldurur. Çiçekleri kalem konturunun içinde beyaz guajla, göbeğe doğru soluk mavi-gri gölgeyle ve sarı göbekle boyar. Grafit, yarı örtücü boyanın altından her yerde seçilir.",
+  "koken": "Botanik ve mimari etüt geleneğinde, önce kalemle altlık çizim (underdrawing) yapılıp sonra yarı örtücü suluboya ya da guajla renklendirilen ve çizimin bilerek görünür bırakıldığı çalışma biçimine dayanır. Gerçek bir ressam taklit edilmemiştir; tarif, sürecini görünür bırakan hayalî bir ressamın tutarlı elidir.",
+  "ayirt_edici": [
+    "Her biçimin çevresinde grafit kontur: kubbe kaburgaları, pencereler, korkuluk babaları, yapraklar, taç yaprakları; çizgiler yarı örtücü boyanın altından seçiliyor",
+    "Kubbenin her dilimi ayrı boyanmış: kaburga çizgileri boyunca yer yer kâğıt beyazı ve kalem",
+    "Cetvelle çekilmiş soluk yapı çizgileri: minare ekseni, kubbenin orta çizgisi, ufuk ve korniş yatayları",
+    "Kalem gölge taramaları açık guajın altından görünüyor: minarenin sol yanı, korniş altı, bulutların alt yanı, büyük taç yapraklarının gölge yanı",
+    "Gök yatay yarı örtücü serulyum darbeler, ufka doğru açık; bulutların yalnız üst kalem konturu kesik kesik; güneş serbest elle çizilmiş, tam daire olmayan kalem halkasının içinde",
+    "Renk alanı ile kalem çizgisi arasında yer yer ince kâğıt aralıkları, yer yer çizgiye binen boya"
+  ],
+  "palet": [
+    "#F6F4EF",
+    "#706E70",
+    "#79B5E0",
+    "#BBDAEF",
+    "#6FAA7E",
+    "#398358",
+    "#E5DBC4",
+    "#EBC955"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; SAHNE geometrisi kullanılır, SAHNE.ciz çağrılmaz. Kalem katı: SAHNE yolları örneklenip kalem çizgisi olarak çizilir (uçları incelen, basınçlı, hafif titrek dolu şerit); köşeli yollarda her kenar ayrı ve köşeden biraz taşan, eğrilerde üst üste binen parçalar. Önde duran biçimin içi önce destination-out ile silinir (bulut çizgisi binanın, bina çizgisi bitkilerin, alttaki taç yaprağı üsttekinin arkasında kalır); cetvel çizgileri ve maskeyle sınırlı paralel kalem taramaları eklenir; grafit piksel başına kâğıt dişine göre kırılır. Boya: her alan, SAHNE yolunun normali boyunca 'bir kıl içe' kaydırılmış ve gürültüyle ±1–2 px oynatılmış bir kırpma yolu içinde, sarsılmış ızgaraya dağıtılan yarı saydam yassı fırça darbeleriyle (alfa 0,6–0,9, kıl izleri) boyanır; kubbe 16 ayrı dilim alanı, kasnak pencereleri ayrı alanlar. Arka plan (gök, yer, mimari) ayrı bir katta boyanıp bitki biçimleri dışa kaydırılmış yollarla boşaltılır; çiçek yeri kâğıt ve kalemle geri açılır. Sonunda kalem katı çarpma kipinde %60 saydamlıkla boyanın üstüne bindirilir (grafit yarı örtücü guajın altından seçilir); çok ince kâğıt tanesi. Math.random yok, SAHNE.rng ve tamsayı karması.",
+  "etiketler": [
+    "guaj",
+    "kurşun kalem",
+    "altlık çizim",
+    "yarı örtücü",
+    "etüt",
+    "süreç görünür",
+    "ressamın eli"
+  ]
+}

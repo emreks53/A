@@ -55,6 +55,16 @@
       return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
     };
   };
+  /** Vuruşlar için ortak gürültü havuzu: her vuruşta yeni tablo kurmamak için tohuma göre kaydırılmış paylaşılan tablolar. */
+  H._havuz = [];
+  H.nz = function (seed) {
+    const j = Math.abs(seed | 0) % 8;
+    if (!H._havuz[j]) H._havuz[j] = H.noise(9001 + j * 31);
+    const f = H._havuz[j];
+    const ox = ((seed * 37.17) % 256 + 256) % 256;
+    const oy = ((seed * 91.73) % 256 + 256) % 256;
+    return (x, y) => f(x + ox, y + oy);
+  };
   H.fbm = function (n, x, y, oct) {
     let s = 0;
     let a = 0.5;
@@ -128,7 +138,7 @@
   /** Elin titremesi: noktaları çizgiye dik yönde yavaş bir gürültüyle kaydırır. */
   H.wobble = function (pts, amp, wl, seed) {
     if (!amp) return pts;
-    const n = H.noise(seed || 1);
+    const n = H.nz(seed || 1);
     const out = [];
     let s = 0;
     const oy = ((seed || 1) * 37.7) % 200;
@@ -187,7 +197,7 @@
       if (sp.closed) pts = pts.concat([pts[0], pts[1]]);
       if (pts.length < 2) continue;
       pts = H.wobble(pts, o.amp === undefined ? 0.5 : o.amp, o.wl || 26, seed + k * 13);
-      const nz = H.noise(seed * 7 + k * 3 + 1);
+      const nz = H.nz(seed * 7 + k * 3 + 1);
       const press = o.press === undefined ? 0.35 : o.press;
       const taper = sp.closed ? (o.ctaper || 0) : o.taper === undefined ? 0.15 : o.taper;
       const plen = o.plen || 0.06;
@@ -296,7 +306,7 @@
     if (pts.length < 2) return;
     const seed = o.seed || 1;
     const p2 = o.amp ? H.wobble(pts, o.amp, o.wl || 40, seed) : pts;
-    const nz = H.noise(seed * 3 + 7);
+    const nz = H.nz(seed * 3 + 7);
     const bas = o.bas === undefined ? 0.12 : o.bas;
     const uc = o.uc === undefined ? 0.3 : o.uc;
     const jit = o.jit === undefined ? 0.2 : o.jit;
@@ -482,7 +492,7 @@
 
   // ---- boya (lavi) katmanları: her biri bir pigment; alfa = yoğunluk
   const PIG = {
-    gok: { renk: H.hex('#B4D3EC') },
+    gok: { renk: H.hex('#8ABCEC') },
     yesilAcik: { renk: H.hex('#A3CC98') },
     yesil: { renk: H.hex('#5E9F78') },
     gul: { renk: H.hex('#E7A9AE') },
@@ -539,6 +549,9 @@
   // tarama: ince paralel çizgiler, yoğunluk f ile
   const tara = (o) => H.tara(MUR.k, Object.assign({ color: 'rgba(255,255,255,0.9)', w: 0.8, amp: 0.5, taper: 0.35, seed: T() }, o));
   const Yl = S.yollar();
+  // elle çekilen tarama: çizgiler cetvel gibi baştan sona gitmez, yer yer kesilir ve sivrilerek biter
+  const kirikN = H.noise(2290);
+  const kirik = (x, y) => 0.17 * kirikN(x / 4.5, y / 24) + 0.06 * kirikN(x / 2 + 40, y / 7);
 
   // ================================================================ GÖK
   // açık mavi lavi: önce ıslak, birbirine karışan geniş yatay bantlar; sonra kuru kâğıtta birkaç
@@ -547,12 +560,12 @@
     const k = PIG.gok.k;
     const rg = S.rng(2211);
     const islak = H.katman();
-    for (let y0 = -40; y0 < 600; y0 += 70 + rg() * 30) {
-      const sat = Math.pow(1 - H.clamp(y0 / 640, 0, 1), 0.9);
+    for (let y0 = -40; y0 < 790; y0 += 64 + rg() * 26) {
+      const sat = 0.32 + 0.68 * Math.pow(1 - H.clamp(y0 / 700, 0, 1), 0.9);
       const pts = [];
       const eg = (rg() - 0.5) * 30;
       for (let t = 0; t <= 1.0001; t += 0.02) pts.push([-60 + t * 1150, y0 + eg * t + 9 * Math.sin(t * 5 + y0)]);
-      islak.k.globalAlpha = (0.3 + 0.18 * rg()) * (0.3 + 0.7 * sat);
+      islak.k.globalAlpha = (0.46 + 0.2 * rg()) * (0.3 + 0.7 * sat);
       H.firca(islak.k, pts, { w: 110 + rg() * 50, color: '#fff', bas: 0, uc: 0, jit: 0.5, seed: T(), amp: 10, wl: 160 });
     }
     k.save();
@@ -561,6 +574,12 @@
     k.drawImage(islak.c, 0, 0);
     k.restore();
     k.setTransform(2, 0, 0, 2, 0, 0);
+    // lavi yer çizgisinde durur
+    k.save();
+    k.globalCompositeOperation = 'destination-out';
+    k.fillStyle = '#000';
+    k.fill(H.elYolu(H.kutu(-10, 801, 1034, 1040), 1.2, T(), 40));
+    k.restore();
     // kuru geçişler: sivri uçlu, kenarı belirgin
     for (let i = 0; i < 26; i++) {
       const y0 = 10 + Math.pow(rg(), 1.4) * 560;
@@ -584,15 +603,12 @@
       const k = PIG.gok.k;
       k.save();
       k.globalCompositeOperation = 'destination-out';
-      k.filter = 'blur(1.5px)';
-      k.fillStyle = 'rgba(0,0,0,0.85)';
-      k.fill(H.elYolu(S.daireYolu(GX, GY, 68), 8, T(), 45));
       k.filter = 'none';
       k.fillStyle = '#000';
-      k.fill(H.elYolu(S.daireYolu(GX, GY, 40), 1.5, T(), 30));
+      k.fill(H.elYolu(S.daireYolu(GX, GY, 31.5), 1.0, T(), 24));
       k.restore();
     }
-    lavi('sari', S.daireYolu(GX, GY, 31), 0.42, 1.2);
+    lavi('sari', S.daireYolu(GX, GY, 32.5), 0.42, 0.8);
     lavi('sari', S.daireYolu(GX + 4, GY - 3, 18), 0.18, 1.5);
     // daire iki yay vuruşuyla: biri üstten sağa, biri alttan sola; uçlar biraz biner
     const yay = (a0, a1, rr) => {
@@ -646,7 +662,8 @@
       if (i < nL) return Wb * 0.62 * Math.pow(i / nL, 0.9);
       if (i >= nL + n + 1) return Wb * 0.62 * Math.pow(1 - (i - nL - n - 1) / (M - nL - n - 1), 0.9);
       const t = (i - nL) / n;
-      return Wb * (0.62 + 0.38 * Math.abs(Math.sin(t * Math.PI * 3 + faz)));
+      // uçlarda sarmalın genişliğine yumuşakça bağlanır (basamak yok)
+      return Wb * (0.62 + 0.38 * Math.abs(Math.sin(t * Math.PI * 3 + faz)) * Math.pow(Math.sin(Math.PI * t), 0.6));
     };
     const Lp = [];
     const Rp = [];
@@ -663,7 +680,39 @@
       Rp.push([orta[i][0] + ty * w, orta[i][1] - tx * w]);
     }
     const kont = Lp.concat(Rp.reverse());
-    return { kont, orta, Lp, Rp: Rp.reverse() };
+    // gövdenin tepesinden ayrılıp kendi üstüne kıvrılan ince bir filiz (çi bulutunun düğümü)
+    const m = Math.floor(n * 0.5);
+    const ta = Math.atan2(govde[m + 1][1] - govde[m - 1][1], govde[m + 1][0] - govde[m - 1][0]);
+    // filiz hep yukarı (gövdeden dışarı) çıkar
+    const fy0 = Math.sin(ta - 0.95) < Math.sin(ta + 0.95) ? -1 : 1;
+    let fa = ta + fy0 * 0.95;
+    let fx = govde[m][0];
+    let fy = govde[m][1];
+    const fil = [];
+    const Lf = Wb * 4.4;
+    for (let s2 = 0; s2 <= Lf; s2 += 1.2) {
+      const t = s2 / Lf;
+      fa += -fy0 * (0.012 + 0.19 * t * t) * 1.2;
+      fx += Math.cos(fa) * 1.2;
+      fy += Math.sin(fa) * 1.2;
+      fil.push([fx, fy]);
+    }
+    const FL = [];
+    const FR = [];
+    for (let i = 0; i < fil.length; i++) {
+      const a = fil[Math.max(0, i - 1)];
+      const b = fil[Math.min(fil.length - 1, i + 1)];
+      let tx = b[0] - a[0];
+      let ty = b[1] - a[1];
+      const tl = Math.hypot(tx, ty) || 1;
+      tx /= tl;
+      ty /= tl;
+      const w = (Wb * 0.5 * Math.pow(1 - i / fil.length, 0.85)) / 2;
+      FL.push([fil[i][0] - ty * w, fil[i][1] + tx * w]);
+      FR.push([fil[i][0] + ty * w, fil[i][1] - tx * w]);
+    }
+    const fkont = FL.concat(FR.slice().reverse());
+    return { kont, orta, Lp, Rp: Rp.reverse(), fkont, FL, FR };
   }
   const BULUTLAR = [
     [146, 242, 166, 22, 0.3, 1],
@@ -675,15 +724,20 @@
   for (const [bx, by, bl, bw, fz, yn] of BULUTLAR) {
     const b = bulutKusak(bx, by, bl, bw, fz, yn);
     const yol = H.polyPath(b.kont, true);
-    // bulutun etrafı: lavi kenarı bulutun biraz dışında durur (beyaz kâğıt payı)
-    const pay = new Path2D();
-    pay.addPath(yol);
+    const fyol = H.polyPath(b.fkont, true);
+    const birlesik = new Path2D();
+    birlesik.addPath(yol);
+    birlesik.addPath(fyol);
     const kk = PIG.gok.k;
     kk.save();
     kk.globalCompositeOperation = 'destination-out';
-    kk.fill(yol);
+    kk.fill(birlesik);
     kk.restore();
-    lavi('gok', yol, 0.2);
+    lavi('gok', birlesik, 0.2);
+    // filiz önce çizilir; gövdenin içinde kalan mürekkebi silinir
+    cizgi(b.FL, 1.25, { taper: 0.15, amp: 0.2 });
+    cizgi(b.FR, 1.05, { taper: 0.15, amp: 0.2 });
+    msil(yol);
     // kontur: iki kenar çizgisi ayrı ayrı (kalın-ince), ortada ince iç çizgi
     cizgi(b.Lp, 1.7, { taper: 0.2, amp: 0.25 });
     cizgi(b.Rp, 1.45, { taper: 0.2, amp: 0.25 });
@@ -724,7 +778,7 @@
         kirp: H.P(H.kutu(x1 + 0.5, y1, x2, y2)),
         f: (x, y) => {
           const u = ((x - x1) / w) * 2 - 1;
-          return H.smooth(0.12, 0.85, 1 - H.silindirIsik(u)) * 0.95;
+          return H.smooth(0.12, 0.85, 1 - H.silindirIsik(u)) * 0.95 + kirik(x, y);
         },
       });
     }
@@ -883,7 +937,7 @@
       ara: 3.0,
       w: 0.85,
       kirp: H.P(d),
-      f: (x) => H.smooth(0.18, 0.9, 1 - H.silindirIsik((x - cxk) / (W / 2))) * 0.95,
+      f: (x, y) => H.smooth(0.18, 0.9, 1 - H.silindirIsik((x - cxk) / (W / 2))) * 0.95 + kirik(x, y + kat * 300),
     });
     for (const p of S.kasnakPencereleri(kat)) {
       const wd = S.kemerYolu(p.x, p.y, p.w, p.h);
@@ -1056,6 +1110,7 @@
     cizgi([[60, 812], [200, 812.6]], 0.6, { taper: 0.4 });
     cizgi([[840, 813], [990, 812.2]], 0.6, { taper: 0.4 });
     // kaide önünde gölge taraması (güneş tepede: kısa gölge)
+    tara({ box: [296, 801, 824, 812], aci: -1.15, ara: 2.6, w: 0.6, kirp: H.P(H.kutu(296, 801.5, 824, 812)), taper: 0.4, f: (x, y) => 0.85 - (y - 801) / 13 + kirik(x, y) });
     // küçük çimen öbekleri
     const tutam = (x, y, s) => {
       for (let j = 0; j < 5; j++) {
@@ -1092,7 +1147,9 @@
     // bir yarısı: koyu yeşil
     const n = 20;
     const yarim = H.polyPath(pts.slice(0, n + 1).concat(H.kavis(pts[n][0], pts[n][1], y.x, y.y, 0, 8)), true);
-    lavi('yesil', yarim, 0.38, 0.6);
+    lavi('yesil', yarim, 0.3, 0.6);
+    // gölgeli yarıda ince eğik tarama (renk değil, kalem modeller)
+    tara({ box: [y.x - L, y.y - L, y.x + L, y.y + L], aci: y.aci + (sira % 2 ? 0.75 : -0.75), ara: 2.5, w: 0.5, kirp: yarim, taper: 0.4, f: (x2, y2) => 0.7 + kirik(x2 * 2, y2 * 2) });
     cizgi(pts, 1.6, { kapali: true, ctaper: 0, press: 0.65, amp: 0.25 });
     // orta damar (kavisli)
     const ca = Math.cos(y.aci);

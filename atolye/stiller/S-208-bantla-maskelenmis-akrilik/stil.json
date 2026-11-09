@@ -1,0 +1,40 @@
+{
+  "kod": "S-208",
+  "no": 208,
+  "ad": "Bantla Maskelenmiş Akrilik",
+  "ad_en": "Tape-Masked Acrylic",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Hayalî çağdaş bir ressamın eli: alçı astarlı panoda bant ve şablon filmiyle maskelenmiş keskin kenarlı düz akrilik alanlar; her alanın içinde fırça izi, komşu alanlarda değişen yön, kenarlarda boya sırtı.",
+  "tanim": "Biçimleri bantla maskeleyen çağdaş bir ressamın eli. Zemini alçı astarlı ahşap panodur; aletleri düşük yapışkanlı kâğıt bant, elle kesilmiş şablon filmi ve yassı sentetik fırçalardır. Paleti güneşli ve temizdir: gök mavisi, açık ve soluk mavi, alçı beyazı, serin mavi-gri gölge, nane, açık yeşil, koyu yeşil, kum ve altın sarısı. Her biçimi önce maskeler, sonra düz akrilikle tek renk boyar: kubbenin her dilimi ayrı bir şerittir ve ışığa göre dört yeşilden birini alır, komşu dilimler iki yakın ton arasında gidip gelir; kasnakta pencere araları dikey şeritler, minarede gölge ve ışık şeritleri, yapraklarda damar boyunca iki ton. Fırçayı her alanda tek yönde, uzun ve üst üste binen geçişlerle çeker; geçişlerin düz yassı fırça uçları ve geçişten geçişe hafif ton farkı görünür kalır. Komşu alanda yönü çevirir: gök bantlarında hafifçe yukarı ve aşağı eğik yatay geçişler, kubbede balıksırtı doku. Akrilik çabuk kuruduğu için darbe ve kıl izleri kalır; bazı bant kenarlarında boya ince bir sırt yapar, yer yer bandın altına kıl inceliğinde sızar. Gökte üç düz bant boyar ve aralarında ince alçı çizgileri bırakır; güneşi elle kesilmiş bir şablonla, alemleri ve çiçek göbeklerini düz bir kesimle iki tonlu boyar.",
+  "koken": "20. yüzyılın ikinci yarısındaki keskin kenarlı (hard-edge) resmin ve çağdaş akrilik ressamlarının maskeleme bandı ile şablon filmi kullanma pratiğine dayanır: maskelenmiş düz alan, görünür fırça izi, kenarda boya sırtı ve bant altına sızma bu tekniğin doğal izleridir. Gerçek bir ressamı taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Kubbenin 16 dilimi ayrı maskelenmiş şeritler: dört yeşil arasında ışığa göre değişen, komşudan komşuya gidip gelen tonlar",
+    "Her düz alanın içinde uzun, üst üste binen yassı fırça geçişleri: düz uçlar, geçişten geçişe hafif ton farkı ve ince kıl izleri; komşu alanlarda yön değişir, kubbede balıksırtı doku",
+    "Bant ve şablonla kesilmiş keskin kenarlar; bazı kenarlarda boya sırtı, yer yer kıl inceliğinde sızıntı",
+    "Üç düz gök bandı ve aralarında bırakılmış ince alçı çizgileri",
+    "Minare ve kaidede düz beyaz ve serin mavi-gri gölge şeritleri; şablonla kesilmiş zikzak şeritler",
+    "Damar boyunca iki tona bölünmüş yapraklar; düz beyaz taç yaprakları, tek serin gölge biçimi ve iki tonlu sarı göbek"
+  ],
+  "palet": [
+    "#64B2E7",
+    "#C0E2F3",
+    "#F9F9F7",
+    "#C6D5E3",
+    "#9FD9B5",
+    "#63BE86",
+    "#217248",
+    "#EBD5AC"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; her biçim keskin kenarlı bir maske alanı olarak boyanır. Alan işlevi biçimi kırpar, düz renkle doldurur, sonra verilen yönde sıra sıra yassı fırça geçişleri çeker: her sıra 60–380 piksel uzunluğunda, birbirine hafifçe binen geçişlerden oluşur (en 4–44 piksel, geçiş başına renk sapması, enle artan sayıda ince kıl izi, düz baş, hafif kuru uç, küçük kavis); darbeler yükseklik tuvaline oluklarıyla birlikte çizilir. Kenar boyunca rastgele seçilen parçalara yükseklik tuvalinde ince bir sırt, başka parçalara 0,55 piksellik koyu bir sızıntı çizgisi eklenir. İki tonlu biçimler, alanın bir yarım düzlemle kesilip ikinci bir maske alanı olarak boyanmasıyla elde edilir. Kubbe dilimleri kaburga meridyenlerinden kurulur; renk, dilim ortasındaki normalin ışıkla çarpımından dört tona nicemlenir ve tek ve çift dilimlerde ±0,07 kaydırılır; fırça yönü meridyene göre ±0,4 radyan döner. Gök üç bant (fırça yönü ±0,07 radyan), aralarında 3 piksel alçı boşluğu. Yükseklik sağ üstten aydınlatılır, ince alçı dokusu eklenir, çok hafif bir el titremesi verilir.",
+  "etiketler": [
+    "akrilik",
+    "maskeleme bandı",
+    "keskin kenar",
+    "şablon",
+    "çağdaş",
+    "fırça izi",
+    "alçı astar",
+    "ressamın eli"
+  ]
+}

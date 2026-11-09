@@ -1,0 +1,39 @@
+{
+  "kod": "S-211",
+  "no": 211,
+  "ad": "Napoli Guajı",
+  "ad_en": "Neapolitan Gouache",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Grand Tour hatıra ressamının örtücü guajı: ince yatay darbelerle kurulmuş doygun masmavi gök, çizgiyle değil renk kenarlarıyla keskin çizilmiş mimari, minik beyaz ışık dokunuşları ve resmin çevresinde cetvelle çekilmiş tek ince koyu çizgi.",
+  "tanim": "Hayalî bir Grand Tour hatıra ressamının eli. Düzgün yüzeyli vergeli kâğıda küçük samur fırçalarla örtücü, mat ve hafif tebeşirimsi guaj sürer; hiçbir biçimi konturla çizmez, biçimler renk kenarlarıyla ayrılır. Göğü tepede doygun masmavi, ufka doğru açık maviye inen ince yatay darbelerle örer; önce 8–12 px'lik geniş darbelerle kaplar, sonra üstüne 2–4 px'lik ince darbelerle titreşim verir, güneşin çevresini soluk sarı-beyaz kısa yatay darbelerle açar ve güneşi kısa dairesel darbelerle soluk bir disk olarak koyar. Bulutları yassı tabanlı küçük kümeler hâlinde, kontur boyunca kıvrılan kısa darbelerle modeller; darbeleri bulutun biçimi içinde bitirir, kenarı tüylendirmez: alt yanlar mavi-gri, üst ve sağ yanlar beyaz. Kubbeyi dilim yönünde darbelerle, ışığa göre koyu yeşilden açık yeşile kurar; kaburgalara ince koyu yeşil vurgu, ışık yanlarına açık yeşil çizgi çeker. Taşı yatay ve dikey krem darbelerle, gölgeyi serin gri ile boyar; korniş, şerefe ve pencere kenarlarına minik örtücü beyaz dokunuşlar, pencerelerin ışık alan iç yanına açık bir şerit koyar. Yaprakları orta damardan kenara doğru öne eğik çekilmiş küçük samur darbeleriyle kurar: ışık yanı açık, gölge yanı koyu yeşil; ön plandaki alçak yeşillik öbeklerini iki üç yeşilin üstü ışık alan küçük örtücü lekeleriyle yapar. Çiçeklerde taç yaprağına önce mavimsi gri bir altlık koyar, üstüne uçtan göbeğe doğru örtücü beyaz darbeler çeker; gölgedeki taç yapraklarında darbeler kısa kalır, altlığın mavisi göbeğe ve sol alta doğru görünür. Göbeği üst üste konmuş küçük sarı, okra ve açık sarı lekelerle yapar; parlak nokta koymaz. Resmi kenardan kenara doldurur ve çevresine cetvelle tek ince koyu çizgi çeker.",
+  "koken": "18. ve 19. yüzyılda Napoli'de Grand Tour gezginlerine satılan örtücü guaj manzaralara (gouache napoletana) dayanır: doygun gök, keskin ve aydınlık mimari, küçük örtücü beyaz ışıklar ve resmin çevresindeki ince siyah çerçeve çizgisi bu geleneğin özellikleridir. Gerçek bir ressam taklit edilmemiştir; tarif atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Tepede doygun masmavi, ufka doğru açık maviye inen gök; küçük boyutta da seçilen ince yatay guaj darbeleri",
+    "Kontursuz mimari: kubbe, kasnak ve taş yalnız renk kenarlarıyla ayrılıyor; kaburgalarda ince koyu yeşil vurgu ve ışık yanında açık yeşil çizgi",
+    "Alt yanı mavi-gri, üstü kısa kıvrık beyaz darbelerle modellenmiş yassı tabanlı bulutlar; güneşin çevresinde soluk yatay darbelerden ışıltı",
+    "Korniş, şerefe ve pencere kenarlarında minik örtücü beyaz dokunuşlar; pencerelerin ışık alan iç yanında açık şerit",
+    "Orta damardan kenara çekilmiş küçük samur darbelerinden yapraklar ve iki üç yeşilin lekelerinden alçak yeşillik öbekleri; uçtan göbeğe beyaz darbelerle boyanmış, altlığın mavisi göbeğe doğru görünen çiçekler ve küçük sarı lekelerden göbek",
+    "Resmin çevresinde cetvelle çekilmiş tek ince koyu çizgi; resim çizginin ötesinde de kenara kadar sürüyor"
+  ],
+  "palet": [
+    "#3D8AD8",
+    "#94C0E7",
+    "#C3DEF0",
+    "#F4F1E8",
+    "#DBCFB0",
+    "#63A863",
+    "#276F42",
+    "#D4A239"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; SAHNE geometrisi (kubbe profili, kaburgalar, kasnak pencereleri, minare parçaları, bitki yerleri) kullanılır, SAHNE.ciz çağrılmaz. Bütün dolgular tek tek çizilen fırça darbeleridir: darbe, ana çizgi boyunca genişliği başta inişle şişen, sonda incelen, kenarı gürültüyle oynayan dolu bir şerit ve üstünde ton farklı 2–3 kıl izidir. Alanlar sarsılmış ızgaraya karışık sırayla dağıtılan darbelerle doldurulur; renk her darbenin merkezinde ışık modelinden (sağ üstten ışık; kubbede dilim düz yüzü ile yuvarlak yüzey karışımı, kasnak ve minarede silindir) okunur ve küçük oynamayla çekilir. Gök iki kat yatay darbe (geniş taban + ince üst kat), güneş ışıltısı soluk yatay darbeler, bulutlar yoğunluk alanının kontur yönünü izleyen kıvrık darbeler (ayrı katta çizilip bulut yoğunluğuyla yumuşak bir alfa maskesinden geçirilir, darbe uçları biçimin dışına taşmaz); kubbede meridyen yönünü izleyen eğri darbeler, kaburgalar elle titreyen basınçlı çizgiler. Yapraklar biçim içine kırpılmış, orta damardan kenara giden üç noktalı eğri darbeler (yarısı ışık, yarısı gölge tonu); çiçeklerde mavimsi gri taç yaprak altlığı üstüne uçtan göbeğe 4–12 örtücü beyaz darbe, göbek 14 küçük sarı-okra leke. Çerçeve dört cetvel çizgisi; son geçişte ince mat kâğıt tanesi. Math.random yok, SAHNE.rng ve tamsayı karması.",
+  "etiketler": [
+    "guaj",
+    "örtücü boya",
+    "Grand Tour",
+    "Napoli",
+    "hatıra resmi",
+    "ince fırça",
+    "ressamın eli"
+  ]
+}

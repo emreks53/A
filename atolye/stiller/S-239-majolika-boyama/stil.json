@@ -1,0 +1,39 @@
+{
+  "kod": "S-239",
+  "no": 239,
+  "ad": "Majolika Boyama",
+  "ad_en": "Maiolica Painting",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Süt beyazı çiğ kalay sırına metal oksit boyalarla tek tek vuruşlar: mangan moru-kahvesi kontur, tepede koyu ufukta açık yatay kobalt fırça izleriyle gök, kaburgalar boyunca bakır yeşili taramalı kubbe, antimon sarısı güneş ve alemler; vuruşların sırda yumuşamış kenarları ve göllenmiş uçları.",
+  "tanim": "Hayalî bir majolika ressamının eli. Yüzey: pürüzsüz, süt beyazı kalay sırı (fırınlanmış, çok hafif camsı; çatlak ya da iğne deliği yok); resim tuvalin tamamını dolduran düz bir panodur, tabak ya da çini ızgarası yoktur. Alet: bol boya alan yumuşak yuvarlak fırçalar; boyalar dört metal oksit: kobalt mavisi, bakır yeşili, antimon sarısı (azıcık okra) ve mangan moru-kahvesi. Çiğ sır boyayı anında emdiği için vuruş düzeltilemez: her vuruş incecik başlar, ortada dolgunlaşır, sonunda boya göllenir; kıllar ince koyu izler bırakır; fırında pigment sırda hafifçe dağılır ve kenarlar yumuşar. Sıra: önce mangan konturu (kalınlığı basınçla değişen, gölge yanında dolgun), sonra renkler. Gök soldan sağa yatay kobalt vuruşlarıdır: tepede geniş vuruşlar birbirine biner ve binen yerler koyulaşır, aşağı doğru vuruşlar incelir, açılır ve açık kobalta döner, ufka yakın sır neredeyse çıplak kalır; vuruşların içinde kıl izleri ve sırın boyayı düzensiz emmesinden doğan ince tane seçilir. Bulutlar düz tabanlı yığınlar olarak sır beyazı bırakılır, gölge yanında dolgun, iki üç yerde kopan açık kobalt bir konturla çevrelenir, tabanlarına tek bir kıvrık açık kobalt vuruş konur. Kubbede her dilime meridyen boyunca üç bakır yeşili vuruş, gölge dilimlerine ikinci kat; kasnakta silindiri izleyen dikey bakır yeşili vuruşlar (kenarlara doğru sıklaşır), üst ve alt kenarda saran birer yatay vuruş; pencereler sır beyazı bırakılıp saf kobaltla boyanır. Taş sır beyazı, gölge yanı açık kobalt; alemler antimon sarısı, gölge yanı okra; güneş iki geniş antimon sarısı vuruşla boyanmış, ince okra kenarlı bir kurstur, çevresinde sır beyazı bir halka bırakılır. Yer ufukta açık antimon sarısı, önde seyrek bakır yeşili yatay vuruşlar; çiçekler sır beyazı, manganla çevrili, antimon sarısı göbekli; yapraklar tek basışta bakır yeşili.",
+  "koken": "İtalyan Rönesans majolikası, İspanyol-Mağrip ve Delft kalay sırlı seramik boyamasındaki çiğ sır üstüne boyama (in-glaze) tekniğine ve klasik dört renkli majolika paletine (kobalt, bakır, antimon, mangan) dayanır. Gerçek bir sanatçıyı ya da atölyeyi taklit etmez; tekniği nesne görüntüsü olmadan düz bir pano resmine taşıyan hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Gök yatay kobalt fırça vuruşlarından: tepede geniş vuruşlar birbirine biniyor ve binen yerler koyulaşıyor, aşağıda incelip seyrekleşen açık vuruşlar, ufka yakın neredeyse çıplak sır; her vuruş ince başlayıp dolgunlaşıyor, sonunda göllenmiş, içinde kıl izleri ve ince emilim tanesi",
+    "Bütün biçimleri çevreleyen mangan moru-kahvesi kontur; kalınlığı basınçla değişiyor ve sırda hafifçe dağılmış",
+    "Kubbe dilim dilim meridyen boyunca bakır yeşili taramalı vuruşlar; gölge dilimlerinde ikinci kat, kaburgalar ince mangan",
+    "Kasnakta silindiri izleyen dikey bakır yeşili vuruşlar: kenarlara doğru sıklaşıyor, gölge yanında ikinci kat; üst ve alt kenarda saran birer koyu yatay vuruş; pencereler sır beyazı bırakılıp saf kobaltla boyanmış",
+    "Süt beyazı sır taşta, bulutlarda ve taç yapraklarında boş bırakılmış; düz tabanlı bulutlar gölge yanında dolgun, iki üç yerde kopan açık kobalt konturla çevrili, tabanlarında tek kıvrık açık kobalt vuruş; minare ve kaidenin gölge yanında açık kobalt vuruşlar",
+    "İki geniş antimon sarısı vuruşla boyanmış, ince okra kenarlı güneş kursu ve çevresinde sır beyazı halka; sarı-okra alemler; yerde ufukta açık sarı, önde kaydırmalı, öne doğru sıklaşan bakır yeşili yatay vuruşlar; tek basışta boyanmış bakır yeşili yapraklar"
+  ],
+  "palet": [
+    "#F7F6F0",
+    "#5F75AC",
+    "#8095C4",
+    "#B9C5DB",
+    "#4D8C61",
+    "#9CB7A2",
+    "#E3BD66",
+    "#7C6572"
+  ],
+  "kodla_cizim": "Sır, 2048 px'lik düşük frekanslı yükseklik alanıyla çok hafif dalgalanan süt beyazı bir zemindir (çatlak, iğne deliği yok). Dört pigment (kobalt, bakır yeşili, antimon sarısı, mangan) ayrı 2048 px beyaz katmanlara 'multiply' ile boyanır; her vuruş tek parça bir şerittir: kalınlık profili baştaki incecik dokunuştan ortada dolgunluğa ve sonda hafif daralmaya giden bir basınç eğrisi, dolgu baştan sona yükü azalan ve sonda göllenen doğrusal bir renk geçişi, üstüne birkaç ince kıl izi. Gök vuruşları kaydırmalı yatay sıralar hâlinde yerleştirilir: sıra aralığı tepede vuruş genişliğinin yarısından azdır (vuruşlar biner), aşağı doğru iki katına çıkar; genişlik, yük, boy ve vuruşlar arası boşluk yükseklikle değişir; vuruşlar bulut, güneş halkası, yapı ve bitki sınırlarında kırpılıp her parça kendi uçlarıyla biter. Bulutlar Gauss kümeleri toplamından kurulan bir yoğunluk alanının eşiğidir; konturları bu eşiğin kare yürütmeyle çıkarılan çizgisinden fırça kalemle çekilir. Kubbede vuruşlar meridyenler boyunca, dilim genişliğine göre noktadan noktaya değişen kalınlıkla; kasnakta silindir açısına eşit aralıklı dikey vuruşlar (izdüşümde kenarlara doğru sıklaşır), sonra pencereler yeşil katmanda sır beyazıyla geri alınıp kemer içinde kırpılmış kobalt vuruşlarla boyanır. Mangan konturu basınçla kabaran, gölge yanında kalınlaşan fırça kalem vuruşlarıdır. Öndeki bitkiler arkadaki boyayı sır beyazıyla örter. Fırın etkisi: her pigment katmanı birleştirmeden önce çok hafifçe bulanıklaştırılır (kobalt en çok), birleştirmede ince bir gürültüyle (kobaltta yatay uzamış) boya yoğunluğu ±%15 oynatılır, sonra sır rengiyle çarpılır.",
+  "etiketler": [
+    "majolika",
+    "kalay sırı",
+    "kobalt",
+    "bakır yeşili",
+    "seramik boyama",
+    "fırça vuruşu",
+    "ressamın eli"
+  ]
+}

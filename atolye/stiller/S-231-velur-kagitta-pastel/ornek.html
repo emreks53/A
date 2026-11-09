@@ -405,7 +405,8 @@ const P = {
 };
 const jit = (c, a) => { const k = (R() - 0.5) * a; return [c[0] + k * 255, c[1] + k * 255, c[2] + k * 255]; };
 /** basamaklı ton: ressam sınırlı çubuk takımıyla çalışır */
-const ton = (t, n, d) => clamp(Math.round(clamp(t, 0, 1) * n + (R() - 0.5) * (d || 0.9)) / n, 0, 1);
+/** sürekli ton + vuruşa özgü sapma: komşu vuruşlar birbirinden ayrılır, posterleşme olmaz */
+const ton = (t, n, d) => clamp(t + (R() - 0.5) * (d || 0.9) * 1.6 / n, 0, 1);
 
 function vur(k, x, y, a, L, W, c, al, o) {
   k.x.fillStyle = rgba(c, al === undefined ? 0.92 : al);
@@ -420,59 +421,100 @@ function cizgi(k, pts, W, c, al, o) {
 const kGok = katman();
 {
   const k = kGok;
-  const bul = [[150, 248, 90, 22], [235, 238, 80, 20], [190, 262, 120, 14], [480, 152, 70, 17], [545, 146, 60, 15], [740, 332, 95, 22], [820, 326, 85, 19], [780, 346, 130, 13], [945, 468, 80, 15], [95, 470, 85, 15]];
-  const bulutYog = (x, y) => {
-    let m = 0, rel = 0;
-    for (const [bx, by, rx, ry] of bul) {
-      const dx = (x - bx) / rx, dy = (y - by) / (y < by ? ry * 1.3 : ry * 0.75);
-      const n = (fbm(N1, x / 30, y / 16, 3) - 0.5) * 0.75;
-      const v = 1 - Math.hypot(dx, dy) + n;
-      if (v > m) { m = v; rel = (y - by) / ry; }
+  // küme bulutları: düz tabanlı, yuvarlak tümsekli; vuruşlar tümseklerin biçimine göre kıvrılır
+  // bulut kümeleri: üst üste binen birkaç basık elips; kenar gürültüyle kırılır (tümsek tümsek değil)
+  const BUL = [
+    [[165, 250, 105, 24], [215, 238, 62, 20], [120, 258, 60, 14]],
+    [[500, 150, 78, 18], [535, 142, 44, 15]],
+    [[780, 334, 108, 23], [830, 322, 58, 19], [735, 342, 60, 14]],
+    [[940, 468, 72, 15], [962, 461, 36, 12]],
+    [[95, 468, 72, 15], [72, 462, 38, 12]],
+  ];
+  /** bulut yoğunluğu, en yakın elips ve gölge payı */
+  const bulutBil = (x, y) => {
+    let m = -9, tb = null, alt = 0;
+    for (const grup of BUL) for (const [bx, by, rx, ry] of grup) {
+      const dx = (x - bx) / rx, dy = (y - by) / (y < by ? ry * 1.25 : ry * 0.7);
+      const v = 1 - Math.hypot(dx, dy);
+      if (v > m) { m = v; tb = [bx, by, rx, ry]; alt = clamp((y - (by - ry)) / (ry * 1.7), 0, 1); }
     }
-    return [m, rel];
+    if (m < -0.6) return null;
+    m += (fbm(N1, x / 24, y / 13, 3) - 0.5) * 0.7;
+    return { m, tb, alt };
   };
-  // taban kat: yatay, kadifemsi gök vuruşları; ikinci kat komşu tonla üst üste binerek harmanlar
-  for (const kat of [0, 1]) {
+  // ilk kat: çubuğun yan yüzüyle geniş, yatay örtü vuruşları (velur pigmenti bütünüyle tutar, boşluk kalmaz)
+  {
     const nok = [];
-    izgara(-20, -20, 1044, 830, kat ? 13 : 10, R, (x, y) => nok.push([x, y]));
+    izgara(-40, -30, 1064, 830, 22, R, (x, y) => nok.push([x, y]));
     karistir(nok, R);
     for (const [x, y] of nok) {
       const gd = Math.hypot(x - 880, y - 140);
-      let t = Math.pow(clamp(y / 790, 0, 1), 1.1) + (fbm(N2, x / 160, y / 110, 3) - 0.5) * 0.16;
-      t += Math.pow(Math.max(0, 1 - gd / 360), 1.4) * 0.6;
-      let c = P.gok(ton(t + (kat ? (R() - 0.5) * 0.2 : 0), 9, 0.6));
-      const r = R();
-      if (r < 0.07 && t < 0.7) c = karis(c, P.gokMor, 0.3);
-      else if (r < 0.14 && t < 0.8) c = karis(c, P.gokYesil, 0.25);
-      vur(k, x, y, (R() - 0.5) * 0.14, 22 + R() * 20, 10 + R() * 6, jit(c, 0.025), kat ? 0.55 : 0.92);
+      let t = Math.pow(clamp(y / 790, 0, 1), 1.15) + Math.pow(Math.max(0, 1 - gd / 330), 1.5) * 0.55;
+      vur(k, x, y, -0.05 + (R() - 0.5) * 0.1, 70 + R() * 30, 30 + R() * 8, P.gok(ton(t, 9, 0.5)), 1, { egri: 0.1, bas: 0.1, uc: 0.2 });
     }
   }
-  k.x.fillStyle = rgba(karis(P.gunes, P.gunesSari, 0.3)); k.x.fill(elYolu(SAHNE.daireYolu(880, 140, 33), 1.2, 20, 4242));
-  // güneş: gök vuruşları çevresinde zaten açılır; özü teğet, sık, soluk sarı-beyaz kısa vuruşlar
-  for (let i = 0; i < 700; i++) {
-    const rr = Math.sqrt(R()) * 64, aa = R() * Math.PI * 2;
-    if (rr > 40 && R() > 1 - (rr - 40) / 24) continue;
-    const x = 880 + Math.cos(aa) * rr, y = 140 + Math.sin(aa) * rr;
-    const yer = P.gok(clamp(0.82 + 0.3 * (1 - rr / 64), 0, 1));
-    const c = rr < 34 ? karis(P.gunes, hex('#FFFFFF'), R() * 0.6) : karis(karis(P.gunes, P.gunesSari, 0.5), yer, 0.35 + 0.5 * (rr - 34) / 30);
-    vur(k, x, y, aa + Math.PI / 2 + (R() - 0.5) * 0.3, 9 + R() * 8, 6 + R() * 4, c, rr < 36 ? 0.95 : 0.8, { egri: 0.25, bas: 0.2, uc: 0.4 });
+  // taban kat: yatay, kadifemsi gök vuruşları; ikinci kat komşu tonla üst üste binerek harmanlar
+  for (const kat of [0, 1]) {
+    const nok = [];
+    izgara(-30, -20, 1054, 830, kat ? 21 : 17, R, (x, y) => nok.push([x, y]));
+    karistir(nok, R);
+    for (const [x, y] of nok) {
+      const gd = Math.hypot(x - 880, y - 140);
+      let t = Math.pow(clamp(y / 790, 0, 1), 1.15) + (fbm(N2, x / 170, y / 120, 3) - 0.5) * 0.14;
+      t += Math.pow(Math.max(0, 1 - gd / 330), 1.5) * 0.55;
+      let c = P.gok(ton(t, 9, 1.7));
+      const r = R();
+      if (r < 0.14 && t < 0.8) c = karis(c, P.gokMor, 0.5);
+      else if (r < 0.3 && t < 0.85) c = karis(c, P.gokYesil, 0.45);
+      else if (r < 0.36) c = P.gok(ton(t + 0.1, 9, 0.6));
+      const L = kat ? 26 + R() * 22 : 38 + R() * 32, W = kat ? 11 + R() * 6 : 15 + R() * 8;
+      vur(k, x, y, -0.05 + (R() - 0.5) * 0.18, L, W, jit(c, 0.02), kat ? 0.78 : 0.96);
+    }
   }
-  // bulutlar: kenarda gökle karışan yarı saydam yatay vuruşlar, altta lila-mavi gölge, üstte beyaz
+  // güneş: soluk sarı-beyaz disk; teğet kısa vuruşlarla dolar, kenarı daire boyunca yumuşak ama belirli
+  {
+    const gx = 880, gy = 140, gr = 34;
+    // çevresinde açık gök: güneşi saran, kenarı gökle karışan soluk mavi-beyaz kısa vuruşlar (ışıltı vuruşla)
+    for (let i = 0; i < 360; i++) {
+      const aa = R() * Math.PI * 2, f = Math.pow(R(), 1.3), rr = gr - 2 + f * 32;
+      const c = karis(hex('#EEF5F6'), P.gok(0.7), clamp(Math.pow(f, 0.7) * 1.1 + (R() - 0.5) * 0.12, 0, 1));
+      const yon = R() < 0.5 ? aa + Math.PI / 2 : (R() - 0.5) * 0.3;
+      vur(k, gx + Math.cos(aa) * rr, gy + Math.sin(aa) * rr, yon + (R() - 0.5) * 0.3, 14 + R() * 10, 7 + R() * 4, c, 0.8, { egri: 0.3, bas: 0.3, uc: 0.4 });
+    }
+    for (let i = 0; i < 260; i++) {
+      const rr = Math.sqrt(R()) * (gr - 6), aa = R() * Math.PI * 2;
+      const c = karis(P.gunes, hex('#FFFFFF'), 0.2 + R() * 0.6);
+      vur(k, gx + Math.cos(aa) * rr, gy + Math.sin(aa) * rr, aa + Math.PI / 2 + (R() - 0.5) * 0.4, 12 + R() * 8, 7 + R() * 3, c, 0.95, { egri: 0.2, bas: 0.25, uc: 0.4 });
+    }
+    for (let i = 0; i < 40; i++) {
+      const aa = (i / 40) * Math.PI * 2 + R() * 0.1, rr = gr - 4 + R() * 3;
+      const c = karis(P.gunes, P.gunesSari, 0.15 + R() * 0.3);
+      vur(k, gx + Math.cos(aa) * rr, gy + Math.sin(aa) * rr, aa + Math.PI / 2, 12 + R() * 6, 5 + R() * 2, c, 0.85, { egri: 0.3, bas: 0.3, uc: 0.4 });
+    }
+  }
+  // bulutlar: önce gökle karışan açık mavi-lila taban, sonra tümsek biçimine kıvrılan beyaz vuruşlar;
+  // alt ve sol yanlar (güneşe uzak) lila-gri gölge
   const bn = [];
-  izgara(0, 100, 1024, 520, 6, R, (x, y) => bn.push([x, y]));
+  izgara(0, 100, 1024, 520, 6.5, R, (x, y) => bn.push([x, y]));
   for (const kat of [0, 1, 2]) {
     karistir(bn, R);
     for (const [x, y] of bn) {
-      const [m, rel] = bulutYog(x, y);
-      const esik = [0.1, 0.26, 0.4][kat];
-      if (m < esik || R() > sstep(esik, esik + 0.22, m) * 0.85) continue;
-      const kenar = sstep(esik, esik + 0.3, m);
+      const q = bulutBil(x, y);
+      if (!q) continue;
+      const esik = [0.02, 0.14, 0.3][kat];
+      if (q.m < esik || R() > sstep(esik, esik + 0.2, q.m) * 0.9) continue;
+      const [cx, cy, rx, ry] = q.tb;
+      const aci = Math.atan2((y - cy) / ry, (x - cx) / rx);
+      const isik = 0.5 + 0.5 * (Math.cos(aci) * 0.5 - Math.sin(aci) * 0.85);
+      const golge = clamp(q.alt * 0.95 + (1 - isik) * 0.3 - 0.3, 0, 1);
       let c, al;
-      if (kat === 0) { c = karis(P.gok(0.95), P.bulutLila, 0.5 * R()); al = 0.35 + 0.35 * kenar; }
-      else if (kat === 1) { c = rel > -0.2 ? karis(P.bulutGolge, P.bulutLila, R()) : karis(P.bulut, P.bulutLila, 0.35 * R()); al = 0.5 + 0.4 * kenar; }
-      else { if (rel > 0.25 + R() * 0.35) continue; c = karis(P.bulut, hex('#FFFDF2'), R()); al = 0.6 + 0.35 * kenar; }
-      const L = kat === 0 ? 22 + R() * 22 : 14 + R() * 18;
-      vur(k, x, y - (kat === 2 ? 3 : 0), (R() - 0.5) * 0.1, L, 6 + R() * 4, c, al);
+      if (kat === 0) { c = karis(P.gok(0.92), P.bulutLila, 0.35 + 0.3 * R()); al = 0.55; }
+      else if (kat === 1) { c = karis(karis(P.bulut, P.bulutLila, 0.3), P.bulutGolge, golge * 0.9); al = 0.85; }
+      else { if (golge > 0.4 + R() * 0.2) continue; c = karis(P.bulut, hex('#FFFDF2'), R()); al = 0.92; }
+      // vuruşlar elipsin üst kavsine teğet, altta yatay
+      const tg = Math.atan2(Math.cos(aci) * ry, -Math.sin(aci) * rx) * 0.45 + (R() - 0.5) * 0.25;
+      const yat = q.alt > 0.6 ? (R() - 0.5) * 0.12 : tg;
+      vur(k, x, y, yat, (kat === 0 ? 20 : 13) + R() * 14, (kat === 0 ? 10 : 7) + R() * 4, c, al, { egri: 0.3, bas: 0.2, uc: 0.4 });
     }
   }
 }
@@ -481,11 +523,19 @@ const kZem = katman();
 {
   const k = kZem;
   const nok = [];
-  izgara(-10, 792, 1034, 1034, 9, R, (x, y) => nok.push([x, y]));
-  karistir(nok, R);
-  for (const [x, y] of nok) {
-    const t = 0.35 + 0.6 * Math.pow(1 - clamp((y - 795) / 230, 0, 1), 1.4) + (fbm(N3, x / 90, y / 40, 2) - 0.5) * 0.35;
-    vur(k, x, y, (R() - 0.5) * 0.25, 18 + R() * 16, 9 + R() * 4, jit(P.zemin(ton(t, 6, 0.7)), 0.03));
+  for (const kat of [0, 1]) {
+    nok.length = 0;
+    izgara(-30, 788, 1054, 1040, kat ? 15 : 12, R, (x, y) => nok.push([x, y]));
+    karistir(nok, R);
+    for (const [x, y] of nok) {
+      const t = 0.3 + 0.62 * Math.pow(1 - clamp((y - 795) / 230, 0, 1), 1.3) + (fbm(N3, x / 110, y / 45, 2) - 0.5) * 0.3;
+      let c = P.zemin(ton(t, 6, 1.1));
+      const r = R();
+      if (r < 0.14) c = karis(c, hex('#C9DC86'), 0.45);
+      else if (r < 0.26) c = karis(c, hex('#3E8F6A'), 0.3);
+      const L = kat ? 22 + R() * 18 : 34 + R() * 26, W = kat ? 9 + R() * 5 : 13 + R() * 6;
+      vur(k, x, y, -0.08 + (R() - 0.5) * 0.3, L, W, jit(c, 0.02), kat ? 0.8 : 1);
+    }
   }
   kirp(k, (() => { const p = new Path2D(); p.rect(0, 798, 1024, 230); return p; })());
 }
@@ -499,7 +549,7 @@ const kMin = katman();
   karistir(nok, R);
   for (const [x, y] of nok) {
     const v = S.isik('minare', x, y);
-    let t = 0.08 + v * 0.95 + (R() - 0.5) * 0.08;
+    let t = 0.04 + Math.pow(v, 1.5) * 0.98 + (R() - 0.5) * 0.08;
     vur(k, x, y, Math.PI / 2 + (R() - 0.5) * 0.12, 12 + R() * 12, 7 + R() * 3, P.tas(ton(t, 7)), 0.93, { egri: 0.1, bas: 0.2, uc: 0.35 });
   }
   // şerefe altı gölgeler ve korkuluk dikmeleri
@@ -676,8 +726,8 @@ const kBit = katman();
       for (const sd of [-1, 1]) {
         const lit = sd === yan;
         const ox = y.x + ca * L * s - sa * sd * W * 0.22, oy = y.y + sa * L * s + ca * sd * W * 0.22;
-        const c = P.yaprak(ton(temel + (lit ? 0.22 : -0.14) + (R() - 0.5) * 0.08, 6));
-        vur(k, ox, oy, y.aci + sd * 0.5, W * 0.9, W * 0.42, c, 0.85, { egri: 0.2, bas: 0.2, uc: 0.45 });
+        const c = P.yaprak(ton(temel + (lit ? 0.38 : -0.14) + (R() - 0.5) * 0.08, 6));
+        vur(k, ox, oy, y.aci + sd * 0.5, W * (lit ? 1.05 : 0.9), W * (lit ? 0.5 : 0.42), c, 0.88, { egri: 0.2, bas: 0.2, uc: 0.45 });
       }
     }
     k.x.restore();

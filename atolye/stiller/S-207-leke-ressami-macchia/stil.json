@@ -1,0 +1,40 @@
+{
+  "kod": "S-207",
+  "no": 207,
+  "ad": "Leke Ressamı (Macchia)",
+  "ad_en": "Macchia Painter",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Hayalî bir leke ressamının eli: açık okr astarlı küçük ahşap panoda, güçlü öğle güneşinde iki üç düz renk lekesine indirgenmiş biçimler; güneşli beyaza karşı leylak gölgeler, her leke kısa ve dolu yassı fırça darbelerinden.",
+  "tanim": "Güneşi düz lekelerle gören bir ressamın eli. Zemini açık okr astarlı küçük ahşap panodur; aletleri dolu yassı kıl fırçalardır. Paleti sade ve aydınlıktır: serülyen ve soluk mavi gök, güneşli beyaz, serin leylak gölge, güneşli, orta ve gölge yeşili, kum okru, altın sarısı. Her biçimi iki üç düz renk lekesine indirger: minareyi ve kaideyi güneşli beyaz ve leylak gölge lekeleri olarak, kubbeyi dilimleri izleyen güneşli, orta ve gölge yeşili lekeleri olarak, kasnağı dört yeşil lekeyle kurar. Her lekeyi kısa, geniş ve dolu darbelerle doldurur; darbe yönü lekenin yönünü izler, uçlar kurur, leke sınırında boya hafifçe sırt yapar. Kenarları fırçanın ucuyla kesin keser, köşeler hafifçe kırık kalır. Lekeler arasında, kubbe kaburgalarında ve biçimlerin çevresinde yer yer okr astarı ince ve kırık çizgiler hâlinde açık bırakır. Gökte üç düz bant boyar; bulutları geniş fırçanın birkaç uzun, yatay, dolu darbesiyle atar, uçlarını kuru fırçayla inceltir, tabanına leylak-gri bir gölge darbesi çeker. Kumu iki üç geniş, açık ve sıcak lekeye böler; çiçeklerde beyaz leke, ışıktan uzak bir iki taç yaprağında soluk leylak gölge lekesi ve sarı bir nokta kullanır; her çiçeğin hemen altına kısa, yassı bir leylak gölge darbesi düşürür.",
+  "koken": "19. yüzyıl ortasında Floransa'da açık havada çalışan leke (macchia) ressamlarının güçlü güneşi düz, keskin kenarlı ışık ve gölge lekeleriyle görme tavrına ve küçük ahşap pano üstüne açık astarla yaptıkları etütlere dayanır; renkli gölge ve astarın yer yer açık bırakılması bu geleneğin alışkanlıklarıdır. Gerçek bir ressamı taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Her biçim iki üç düz lekeye indirgenmiş: minare ve kaide güneşli beyaz ve leylak gölge, kubbe dilimleri boyunca güneşli, orta ve gölge yeşili",
+    "Lekelerin içinde kısa, geniş, dolu fırça darbelerinden bir mozaik: gökte yatay, kubbede meridyen boyunca",
+    "Fırça ucuyla kesilmiş, hafif kırık köşeli keskin leke kenarları ve kenarlarda hafif boya sırtı",
+    "Kaburgalarda ve biçimlerin çevresinde yer yer açık bırakılmış ince, kırık okr astar çizgileri",
+    "Üç düz gök bandı; geniş fırçanın birkaç uzun yatay darbesinden kurulmuş, uçları kuru fırçayla incelen, tabanı leylak-gri gölgeli bulutlar",
+    "Beyaz leke çiçekler: ışıktan uzak bir iki taç yaprağı soluk leylak gölge lekesi, ortada sarı nokta; altlarında kumda kısa, yassı leylak gölge darbeleri"
+  ],
+  "palet": [
+    "#79B4E0",
+    "#CEE2EF",
+    "#F8F4EA",
+    "#A7A5CD",
+    "#61A866",
+    "#2E7350",
+    "#EAD8AF",
+    "#D2AC4C"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; alt boya kullanılmaz, her biçim doğrudan leke olarak boyanır. Leke işlevi biçimin çevresini 2,5–15 piksellik düz parçalara bölüp köşeleri hafifçe oynatır (fırçayla kesilmiş kenar), alanı kırpar, önce düz renkle doldurur, sonra lekenin yönünde sıralanmış kısa, geniş darbelerle (en 4–40 piksel, boy enin yaklaşık 1,3–3,5 katı, ±0,2–0,3 radyan sapma, darbe başına renk sapması) bir darbe mozaiği atar; her darbede enle artan sayıda ince kıl izi, kuru uç, sıcak-soğuk renk kayması ve yükseklik tuvaline sığ oluklar çizilir, leke sınırına ince bir boya sırtı eklenir. Gök üç dalgalı bant; bulutlar, alttan üste kısalan ve hafifçe kavislenen uzun yatay fırça darbeleri, tabanda leylak-gri bir gölge darbesi ve sağ üstte kısa sıcak beyaz bir darbe; kum, üstüne atılmış üç geniş açık ve sıcak lekeyle bölünür; kubbe, okr astarla kapatılmış siluetin üstüne 16 dilim lekesi (renk, dilim ortasındaki normalin ışıkla çarpımına göre üç yeşilden biri); minare parçaları dikey bir çizgiyle bölünmüş gölge ve ışık lekeleri; yapraklar damar boyunca iki leke. Okr astar, lekeler arasına kırık, ince fırça çizgileriyle geri getirilir. Yükseklik sağ üstten aydınlatılır, düşük frekanslı yer değiştirmeyle el titremesi verilir.",
+  "etiketler": [
+    "macchia",
+    "leke",
+    "yağlıboya",
+    "ahşap pano",
+    "okr astar",
+    "renkli gölge",
+    "öğle güneşi",
+    "ressamın eli"
+  ]
+}

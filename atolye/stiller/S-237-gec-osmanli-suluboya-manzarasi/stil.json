@@ -1,0 +1,39 @@
+{
+  "kod": "S-237",
+  "no": 237,
+  "ad": "Geç Osmanlı Suluboya Manzarası",
+  "ad_en": "Late Ottoman Watercolour Landscape",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Krem-beyaz suluboya kâğıdında ince kurşun kalem ön çizimi üstüne yumuşak, saydam laviler: ıslak üstüne ıslak denetimli bulutlar, ufka doğru soluklaşan gök mavisi, sap ve zeytin yeşili çayır, mavi-gri gölgeli sıcak beyaz taş; sakin, şiirsel bir öğle ışığı.",
+  "tanim": "Hayalî bir geç Osmanlı asker ressamının eli. Alet: ince kurşun kalem, yumuşak yuvarlak suluboya fırçaları ve ince uçlu bir ayrıntı fırçası; kâğıt: dişi belirgin, krem-beyaz soğuk preslenmiş suluboya kâğıdı. Çalışma sırası: önce kurşun kalemle ölçülü, kesin bir ön çizim (yapı, alemler, yer çizgisi, güneş halkası, çiçek ve yaprak dış çizgileri; yer yer ikinci bir arama çizgisi); kalem izi kâğıdın dişine takılıp tanecikli kalır ve lavilerin altından görünür. Gök yukarıda yumuşak gök mavisi, ufka doğru soluklaşan derecelenmiş bir lavidir; bulutlar düz tabanlı, bakışımsız yığınlardır ve ıslak üstüne ıslak ama denetimli çalışılır: kenarları çoğu yerde kuru kâğıda değen sert, biraz koyulaşmış bir çizgidir, gölgeli alt ve sol yanda ıslakta yumuşakça dağılır; altlarına ıslakken soğuk gri-mavi bir gölge bırakılır. Güneş kâğıt beyazı bırakılıp çok soluk limon sarısıyla boyanır, çevresinde ince kalem halkası kalır. Çayır lavisi yaprakların altından da geçer; yalnız beyaz çiçekler kâğıt bırakılır. Yapı sıcak beyaz taş ve mavi-gri gölgedir; kubbe dilim dilim kendi tonunda, sağ üstten gelen ışıkla yumuşak modellenir, gölge yanı mavi-yeşil; koyu, ince vurgular yalnız pencerelerdedir. Manzara: ufukta soluk mavi-yeşil bir koru, yumuşak sap ve zeytin yeşili çayır, yatay fırça geçişleri ve ince ot vuruşları, kümeler hâlinde küçük beyaz kır çiçekleri. Palet: soluk gök mavisi, açık ufuk mavisi, sap yeşili, mavi-yeşil, kubbe yeşili, sıcak beyaz, kurşun grisi.",
+  "koken": "19. yüzyıl sonu ve 20. yüzyıl başında Osmanlı askerî okullarında resim dersleriyle yetişen asker ressamların belgesel ve şiirsel manzara suluboyalarına ve Avrupa topografik suluboya geleneğine (kurşun kalem ön çizimi üstüne saydam lavi) dayanır. Gerçek bir sanatçıyı taklit etmez; bu gelenekleri tek bir hayalî ressamın tutarlı eline bağlayan atölye tarifidir.",
+  "ayirt_edici": [
+    "Lavilerin altından yer yer görünen ince, tanecikli kurşun kalem ön çizimi: minare ve kaide kenarları, güneşin çevresindeki kalem halkası, taç yaprakları ve yaprak dış çizgileri, kimi yerde ikinci bir arama çizgisi",
+    "Yukarıda yumuşak gök mavisi, ufka doğru soluklaşan derecelenmiş gök; düz tabanlı, bakışımsız bulutların kenarı çoğu yerde sert ve biraz koyulaşmış, gölgeli alt yanda ıslakta dağılıyor; altlarında soğuk gri-mavi gölge; güneş kâğıt bırakılmış soluk limon sarısı bir kurs",
+    "Kubbe dilim dilim kendi tonunda: sağ üstte açık sap yeşili, sol dilimlerde mavi-yeşil gölge; kaburgalar ince fırça, koyu ve ince vurgular yalnız pencerelerde",
+    "Sıcak beyaz taş; minarenin sol yanında, şerefe ve korniş altında yumuşak mavi-gri gölge; ufukta iki yanda soluk mavi-yeşil koru",
+    "Sap ve zeytin yeşili çayır: yatay fırça geçişleri, öne doğru ince ot vuruşları ve kümeler hâlinde küçük beyaz kır çiçekleri",
+    "Kâğıt beyazı bırakılmış taç yaprakları, göbeğe doğru gri-yeşil gölge ve okra-sarı göbek; saydam, üst üste binen yaprakların bindiği yerde koyulaşan yeşil"
+  ],
+  "palet": [
+    "#88AFC6",
+    "#D8DCD1",
+    "#A5B778",
+    "#7FA69A",
+    "#4C744E",
+    "#F0ECDF",
+    "#949A7A",
+    "#C0A959"
+  ],
+  "kodla_cizim": "Kâğıt 2048 px'lik belirgin dişli yükseklik alanıdır. Laviler 1024 px'te çarpımsal birikir (S-161 kitinden uyarlanan lavi motoru, düşük granülasyon). Gök: bulutlar Gauss kümeleri toplamından kurulan bir yoğunluk alanıdır (yatay uzamış alçak gövde, bir yana kaymış yuvarlak yığınlar, neredeyse düz dalgalı taban); kenar yumuşaklığı gürültüyle ve bulutun alt-sol yanına doğru artarak yerden yere değişir, geçiş bölgesi ince gürültüyle tırtıklanır (çoğu yerde biraz koyulaşan sert kuru kenar, gölgeli yanda lif lif ıslak kenar; düzgün bulanıklık değil). Gök lavisi yukarıdan ufka derecelenir, ikinci bir üst geçiş ıslakta yumuşak biter; bulut altlarına ıslakta dağılan soğuk gri-mavi gölge; güneş kursu lavilerden boşaltılıp soluk limon sarısıyla boyanır. Arka laviler yalnız beyaz çiçeklerden boşaltılır, yeşil biçimlerin altından geçer (kenarlarında kâğıt çizgisi kalmaz). Kubbe tonu dilim merkezindeki ışığa göre dilim dilim belirlenir, dilim sınırlarında dar geçişle; kasnak ve minare silindir ışığıyla modellenir. Uzak koru gürültülü bir tepe çizgisiyle, çayır yatay bant gürültüsüyle iki katta boyanır; küçük kır çiçekleri lavilerden boşaltılıp kâğıt bırakılır. Kurşun kalem katmanı yapı çizgileri ve bitki dış çizgilerinden titretilmiş ince şeritlerdir (kimi çizgide kaydırılmış ikinci arama çizgisi); birleştirmede kâğıt yüksekliğine göre tanecikli seyreltilir ve öndeki bitki arkasındaki kalem izini siler. İnce fırça katmanı kaburgaları, pencere kemerlerini, korkulukları, zikzak bandını, sapları, damarları ve ot vuruşlarını değişken kalınlıklı şeritlerle çizer; bitkiler ressam sırasıyla arkalarındaki izleri örter.",
+  "etiketler": [
+    "suluboya",
+    "kurşun kalem ön çizimi",
+    "manzara",
+    "ıslak üstüne ıslak",
+    "geç Osmanlı",
+    "asker ressam",
+    "ressamın eli"
+  ]
+}

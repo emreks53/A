@@ -456,7 +456,7 @@ const M = (function () {
       const M2 = N + 64;
       const idx = new Int32Array(M2), bas = [], en = [];
       let x = -32, i = 0;
-      while (x < N + 32) { const w = sp * (1 + (r() - 0.5) * 2 * du); bas.push(x); en.push(w); x += w; i++; }
+      while (x < N + 32) { let w = sp * (1 + (r() - 0.5) * 2 * du); if (r() < (o.kalin || 0)) w *= 1.45 + r() * 0.4; bas.push(x); en.push(w); x += w; i++; }
       let j = 0;
       for (let p = 0; p < M2; p++) { const X = p - 32; while (j < bas.length - 1 && bas[j] + en[j] <= X) j++; idx[p] = j; }
       return { idx, bas, en, kal: en.map(() => 1 + (r() - 0.5) * 2 * du * 0.8) };
@@ -582,10 +582,11 @@ const M = (function () {
   function tus(g, x, y, rx, ry, aci, c, o) {
     o = o || {};
     const r = o.r || RR;
-    const n = 14, pts = [];
+    const n = Math.max(14, Math.min(48, Math.round((rx + ry) * 2))), pts = [];
+    const pz = o.puruz === undefined ? 0.35 : o.puruz;
     let e = 0;
     for (let i = 0; i < n; i++) {
-      e = e * 0.5 + (r() - 0.5) * 0.35;
+      e = e * (n > 20 ? 0.75 : 0.5) + (r() - 0.5) * pz * (n > 20 ? 0.5 : 1);
       const t = (i / n) * Math.PI * 2;
       const u = Math.cos(t) * rx * (1 + e), v = Math.sin(t) * ry * (1 + e);
       pts.push([x + u * Math.cos(aci) - v * Math.sin(aci), y + u * Math.sin(aci) + v * Math.cos(aci)]);
@@ -688,44 +689,51 @@ const M = (function () {
     }
   }
 
-  // küçük, sakin beyaz bulutlar: düz taban, boyalı (bulanık olmayan) kenar
+  // öğle güneşi: sağ üstte, soluk sarı-beyaz; kalın kurşun beyazı tuşlarla dolu disk, çevresinde teğet kısa darbeler
+  {
+    const gx = gunes.x, gy = gunes.y;
+    // ışıltı halkası: güneşin çevresinde teğet yönde kısa, çok açık darbeler (boyalı, bulanık değil)
+    M.alan(g, { kutu: [gx - 120, gy - 110, gx + 120, gy + 110], aralik: 5, boy: [18, 36], en: [6, 10], yon: (x, y) => Math.atan2(y - gy, x - gx) + Math.PI / 2, icinde: (x, y) => { const d = Math.hypot(x - gx, y - gy); return d > 28 && R() < Math.pow(sat(1 - (d - 28) / 70), 1.3); }, renk: (x, y, r) => { const d = Math.hypot(x - gx, y - gy); return kar(kar('#F4F6EC', '#FFFBEA', r() * 0.5), gokRenk(x, y, r, 4), Math.pow(sat((d - 30) / 66), 0.8)); }, darbe: { a: 0.8, kil: 6, kilK: 5, yuk: 0.7, hk: 0.15 }, tohum: 31 });
+    // disk: kıvrımı izleyen kalın tuşlar
+    M.alan(g, { kutu: [gx - 34, gy - 34, gx + 34, gy + 34], aralik: 3.5, boy: [10, 18], en: [5, 8], yon: (x, y) => Math.atan2(y - gy, x - gx) + Math.PI / 2, icinde: (x, y) => Math.hypot(x - gx, y - gy) < 31, renk: (x, y, r) => kar('#FFFFFA', '#FFF6D6', sat(Math.hypot(x - gx, y - gy) / 31) * 0.8 + r() * 0.1), darbe: { a: 0.95, kil: 5, kilK: 3, yuk: 0.8, uc: 'yuvarlak', hk: 0.3 }, tohum: 32 });
+  }
+
+  // sakin, yassı öğle bulutları: düzensiz kütle, ışığa bakan üst kenarda kalın beyaz, altta serin gri-mavi;
+  // kenar gök rengiyle geri boyanır (boyalı kenar, bulanık değil)
   const bulutlar = [
-    { x: 165, y: 252, w: 230, h: 58, k: [[-0.45, 0.1, 0.42, 0.55], [-0.05, -0.15, 0.38, 0.85], [0.35, 0.05, 0.4, 0.6]] },
-    { x: 452, y: 132, w: 160, h: 40, k: [[-0.3, 0.05, 0.45, 0.65], [0.15, -0.1, 0.45, 0.85]] },
-    { x: 805, y: 335, w: 240, h: 60, k: [[-0.4, 0.1, 0.4, 0.55], [0, -0.2, 0.4, 0.9], [0.4, 0, 0.38, 0.62]] },
-    { x: 955, y: 540, w: 110, h: 26, k: [[-0.2, 0, 0.55, 0.7], [0.25, 0.05, 0.4, 0.55]] },
-    { x: 80, y: 505, w: 120, h: 26, k: [[-0.2, 0.05, 0.5, 0.65], [0.25, 0, 0.45, 0.6]] },
+    { x: 170, y: 252, w: 270, h: 46, t: 1 },
+    { x: 470, y: 128, w: 170, h: 30, t: 2 },
+    { x: 790, y: 338, w: 250, h: 44, t: 3 },
   ];
   for (const b of bulutlar) {
+    const bn = M.gurultu(4100 + b.t);
     const f = (x, y) => {
-      const u = (x - b.x) / (b.w / 2), v = (y - b.y) / (b.h);
-      if (v > 0.3) return 9 + v;
-      let m = 9;
-      for (const [cx, cy, rx, ry] of b.k) m = Math.min(m, ((u - cx) / (rx * 1.1)) ** 2 + ((v - cy) / ry) ** 2);
-      return m + Math.max(0, v - 0.18) * 4;
+      const u = (x - b.x) / (b.w / 2), v = (y - b.y) / b.h;
+      const zarf = 1 - u * u - (v < 0 ? (v / 1.05) ** 2 : (v / 0.32) ** 2);
+      return zarf + (bn.fbm(x * 0.03 + b.t, y * 0.04, 3) - 0.5) * 1.3 + (v < 0 ? (bn(x * 0.045 + b.t * 3, 1.7) - 0.5) * 0.9 * -v : 0);
     };
-    const kutu = [b.x - b.w * 0.65, b.y - b.h * 1.25, b.x + b.w * 0.65, b.y + b.h * 0.55];
-    const yon = (x, y) => {
-      const e = 1.5; const gx = f(x + e, y) - f(x - e, y), gy = f(x, y + e) - f(x, y - e);
-      let a = Math.atan2(gy, gx) + Math.PI / 2;
-      while (a > Math.PI / 2) a -= Math.PI; while (a < -Math.PI / 2) a += Math.PI;
-      return Math.max(-0.55, Math.min(0.55, a));
-    };
+    const kutu = [b.x - b.w * 0.6, b.y - b.h * 1.25, b.x + b.w * 0.6, b.y + b.h * 0.5];
+    const isikF = (x, y) => { const e = 3; return sat(0.5 + (f(x + e, y - e) - f(x - e, y + e)) * 4); };
     const renk = (x, y, r) => {
       const v = (y - b.y) / b.h;
-      let c = kar('#FFFDF8', '#D3DAE3', sat((v + 0.1) / 0.42));
-      if (x > b.x - b.w * 0.1 && v < 0.05) c = kar(c, '#FFFFFF', 0.5);
-      const j = (r() - 0.5) * 7;
+      let c = kar('#FFFFFB', '#C9D3DF', sat((v + 0.25) / 0.55));
+      c = kar(c, '#FFFDF6', isikF(x, y) * 0.5 * sat(1 - v * 2));
+      const j = (r() - 0.5) * 6;
       return [c[0] + j, c[1] + j, c[2] + j];
     };
-    const esik = (r) => 0.7 + r() * 0.35;
-    // serin gri-mavi taban kütlesi (yatay darbeler)
-    M.alan(g, { kutu, aralik: 5, boy: [20, 44], en: [7, 11], yon: (x, y, r) => (r() - 0.5) * 0.12, icinde: (x, y) => f(x, y) < esik(R), renk: (x, y, r) => { const v = (y - b.y) / b.h; const c = kar(gokRenk(x, y, r, 4), v > -0.1 ? '#D9DFE7' : '#EEF0F2', 0.7); return c; }, darbe: { a: 0.9, kil: 7, kilK: 5, yuk: 0.7, hk: 0.15 }, tohum: 40 + b.x });
-    // ışıklı beyaz kütleler: biçimi izleyen darbeler, kenardan geride
-    M.alan(g, { kutu, aralik: 5, boy: [16, 34], en: [6, 10], yon, icinde: (x, y) => f(x, y) < 0.62 + R() * 0.15 && (y - b.y) / b.h < 0.02, renk, darbe: { a: 0.92, kil: 7, kilK: 6, yuk: 0.7, hk: 0.35 }, tohum: 50 + b.x });
-    M.alan(g, { kutu, aralik: 7, boy: [12, 26], en: [5, 8], yon, icinde: (x, y) => f(x, y) < 0.45 && x > b.x - b.w * 0.15, renk: (x, y, r) => kar('#FFFFFF', '#FFF9EC', r()), darbe: { a: 0.85, kil: 5, kilK: 5, yuk: 0.6, hk: 0.55 }, tohum: 70 + b.x });
-    // kenar: gök rengiyle geri kesilir (boyalı kenar, bulanık değil)
-    M.alan(g, { kutu: [kutu[0] - 10, kutu[1] - 6, kutu[2] + 10, kutu[3] + 6], aralik: 6, boy: [22, 46], en: [6, 10], yon: (x, y, r) => (r() - 0.5) * 0.08, icinde: (x, y) => { const m = f(x, y); return m > 0.78 && m < 1.5; }, renk: (x, y, r) => gokRenk(x, y, r, 8), darbe: { a: 0.75, kil: 6, kilK: 8, yuk: 0.6 }, tohum: 80 + b.x });
+    const yon = (x, y, r) => (r() - 0.5) * 0.25 + Math.sin((x - b.x) * 0.02) * 0.12;
+    // gövde: yatay, kısa, kıvrık darbeler
+    M.alan(g, { kutu, aralik: 4.5, boy: [18, 40], en: [6, 10], yon, egri: 0.3, icinde: (x, y) => f(x, y) > 0.08, renk, darbe: { a: 0.92, kil: 7, kilK: 5, yuk: 0.75, hk: 0.12 }, tohum: 40 + b.t });
+    // üst ışık: daha kalın beyaz tuşlar (sağ üst kenar)
+    M.alan(g, { kutu, aralik: 5, boy: [10, 24], en: [5, 8], yon, egri: 0.4, icinde: (x, y) => f(x, y) > 0.22 && (y - b.y) / b.h < -0.05 && isikF(x, y) > 0.48, renk: (x, y, r) => kar('#FFFFFF', '#FBFBF6', r()), darbe: { a: 0.85, kil: 5, kilK: 4, yuk: 0.6, hk: 0.22 }, tohum: 50 + b.t });
+    // alt taban: serin gri-mavi, yatay
+    M.alan(g, { kutu, aralik: 4, boy: [24, 50], en: [4, 7], yon: (x, y, r) => (r() - 0.5) * 0.06, icinde: (x, y) => f(x, y) > 0.05 && R() < sat(((y - b.y) / b.h + 0.3) / 0.5), renk: (x, y, r) => kar(kar('#E4E9EF', '#C3CEDB', sat(((y - b.y) / b.h + 0.2) / 0.5)), '#D3DBE4', r() * 0.4), darbe: { a: 0.55, kil: 5, kilK: 5, yuk: 0.6 }, tohum: 60 + b.t });
+    // kenar: gök rengiyle içeri çekilen kısa darbeler
+    M.alan(g, { kutu: [kutu[0] - 12, kutu[1] - 8, kutu[2] + 12, kutu[3] + 8], aralik: 6, boy: [16, 34], en: [5, 8], yon: (x, y, r) => (r() - 0.5) * 0.1, icinde: (x, y) => { const m = f(x, y); return m < 0.1 && m > -0.18; }, renk: (x, y, r) => gokRenk(x, y, r, 6), darbe: { a: 0.6, kil: 6, kilK: 6, yuk: 0.55 }, tohum: 70 + b.t });
+  }
+  // ufka yakın iki ince, yatay beyaz bulut şeridi
+  for (const [x1, x2, y0] of [[30, 230, 520], [840, 1010, 548]]) {
+    for (let i = 0; i < 3; i++) { const pts = []; const xa = x1 + R() * 30, xb = x2 - R() * 30, yy = y0 + i * 5; for (let k = 0; k <= 8; k++) { const t = k / 8; pts.push([xa + (xb - xa) * t, yy + Math.sin(t * 3 + i) * 1.5]); } M.darbe(g, pts, 7 - i * 1.5, kar('#F4F6F7', '#DCE3EA', i / 2), { a: 0.6, kil: 6, kilK: 5, yuk: 0.5, uc: 'sivri', r: R }); }
   }
 
   // ------------------------------------------------------------ 3. uzak plan: ufukta soluk, serin alçak tepeler
@@ -733,8 +741,14 @@ const M = (function () {
   M.alan(g, { kutu: [-20, 740, 1044, 806], aralik: 7, boy: [30, 70], en: [6, 10], yon: () => (R() - 0.5) * 0.06, icinde: (x, y) => y > tepe(x), renk: (x, y, r) => { const c = kar('#B6C3D0', '#C9D2D8', sat((y - 760) / 40)); const j = (r() - 0.5) * 8; return [c[0] + j, c[1] + j, c[2] + j]; }, darbe: { a: 0.85, kil: 6, kilK: 6, yuk: 0.7 }, tohum: 70 });
 
   // ------------------------------------------------------------ 4. zemin: açık kum taşı avlu
-  M.alan(g, { kutu: [-40, 796, 1064, 1040], aralik: 9, boy: [50, 120], en: [9, 15], yon: () => (R() - 0.5) * 0.04, renk: (x, y, r) => { const c = kar('#EDE3CF', '#DCCDAE', sat((y - 800) / 220)); const j = (r() - 0.5) * 12; return [c[0] + j, c[1] + j, c[2] + j * 0.8]; }, darbe: { a: 0.9, kil: 8, kilK: 10, yuk: 0.75, hk: 0.25 }, tohum: 80 });
-  M.alan(g, { kutu: [-40, 800, 1064, 1040], aralik: 16, boy: [40, 90], en: [6, 10], yon: () => (R() - 0.5) * 0.05, renk: (x, y, r) => (r() < 0.5 ? C('#F4ECDB') : C('#D4C6A8')), darbe: { a: 0.45, kil: 6, kilK: 10, yuk: 0.5, hk: 0.2 }, tohum: 82 });
+  M.alan(g, { kutu: [-40, 796, 1064, 1040], aralik: 9, boy: [50, 120], en: [9, 15], yon: () => (R() - 0.5) * 0.04, renk: (x, y, r) => { const c = kar('#ECE6D9', '#D6CDBB', sat((y - 800) / 220)); const j = (r() - 0.5) * 12; return [c[0] + j, c[1] + j, c[2] + j * 0.9]; }, darbe: { a: 0.9, kil: 8, kilK: 10, yuk: 0.75, hk: 0.25 }, tohum: 80 });
+  M.alan(g, { kutu: [-40, 800, 1064, 1040], aralik: 16, boy: [40, 90], en: [6, 10], yon: () => (R() - 0.5) * 0.05, renk: (x, y, r) => (r() < 0.5 ? C('#F5F0E5') : C('#CEC6B6')), darbe: { a: 0.45, kil: 6, kilK: 10, yuk: 0.5, hk: 0.2 }, tohum: 82 });
+  // taş döşeme derzleri: kontur fırçasıyla, yakına doğru açılan sıralar ve kaçış noktasına koşan ince çizgiler
+  {
+    let y = 808, ad = 7;
+    while (y < 1030) { let x = -10; while (x < 1034) { const l = 40 + R() * 120; M.cizgi(g, [[x, y + (R() - 0.5)], [x + l, y + (R() - 0.5)]], 0.8 + (y - 800) / 260, C('#B9B1A2'), { a: 0.45, r: R, titreme: 0.15 }); x += l + 4 + R() * 14; } y += ad; ad *= 1.32; }
+    for (let k = -9; k <= 9; k++) { const xb = 560 + k * 130, xt = 560 + k * 22; M.cizgi(g, [[xt, 806], [xb, 1030]], 0.9, C('#BDB5A6'), { a: 0.32, r: R, titreme: 0.2 }); }
+  }
   // bitkilerin dibinde kısa öğle gölgeleri (serin, saydam)
   for (const c of S.bitki.cicekler) if (c.y > 820) M.darbe(g, [[c.x - c.r * 1.4, c.y + c.r * 0.9], [c.x + c.r * 0.6, c.y + c.r * 0.95]], c.r * 0.7, C('#A9AFAE'), { a: 0.3, kil: 5, kilK: 6, uc: 'yuvarlak', r: R });
   // kaidenin dibinde kısa, serin öğle gölgesi
@@ -999,8 +1013,12 @@ const M = (function () {
     for (const yari of [1, -1]) {
       const pts = [];
       for (let i = 0; i <= 8; i++) { const t = i / 8; pts.push(p(L * t, yari * Wd * 0.26 * Math.sin(Math.PI * Math.min(1, t * 1.05)))); }
-      M.darbe(g, pts, Wd * 0.55, yari === isikYarisi ? tonA : tonG, { a: 0.97, kil: 6, kilK: 10, uc: 'sivri', bas: 0.55, r: R, hk: yari === isikYarisi ? 0.55 : 0.2 });
+      M.darbe(g, pts, Wd * 0.55, yari === isikYarisi ? tonA : tonG, { a: 0.97, kil: 7, kilK: 18, uc: 'sivri', bas: 0.55, r: R, hk: yari === isikYarisi ? 0.55 : 0.2 });
     }
+    // ışık yarısında ucu kuru, daha açık ikinci tuş
+    const pp = [];
+    for (let i = 1; i <= 7; i++) { const t = i / 9; pp.push(p(L * t, isikYarisi * Wd * 0.18 * Math.sin(Math.PI * t))); }
+    M.darbe(g, pp, Wd * 0.26, acik(tonA, 0.18), { a: 0.85, kil: 4, kilK: 14, yuk: 0.4, uc: 'sivri', bas: 0.7, r: R, hk: 0.5 });
     // orta damar
     M.cizgi(g, [p(L * 0.05, 0), p(L * 0.5, 0), p(L * 0.88, 0)], 1, acik(tonA, 0.25), { a: 0.6, r: R, titreme: 0.15 });
   }
@@ -1041,10 +1059,11 @@ const M = (function () {
       M.darbe(g, [[c.x + ux * c.r * 0.12, c.y + uy * c.r * 0.12], [c.x + ux * c.r * 0.42, c.y + uy * c.r * 0.42]], Wp * 0.36, C('#C9C5D5'), { a: 0.4, kil: 3, uc: 'sivri', r: R });
     }
     // göbek: sarı tuş, sol altta okr, sağ üstte ışık
-    M.tus(g, c.x, c.y, c.r * 0.17, c.r * 0.16, R() * 3, C('#DDB33A'), { r: R, hk: 0.6 });
-    for (let i = 0; i < 9; i++) { const a = R() * Math.PI * 2, d = R() * c.r * 0.1; const sh = Math.cos(a) * 0.7 - Math.sin(a) * 0.7; M.tus(g, c.x + Math.cos(a) * d, c.y + Math.sin(a) * d, c.r * 0.06 + 0.8, c.r * 0.05 + 0.7, a, sh > 0 ? C('#F2D255') : C('#C99A2C'), { r: R, hk: 0.9 }); }
+    M.darbe(g, [[c.x - c.r * 0.12, c.y + c.r * 0.06], [c.x + c.r * 0.12, c.y - c.r * 0.06]], c.r * 0.26, C('#DDB33A'), { a: 1, kil: 4, kilK: 10, uc: 'yuvarlak', govdeSon: 1, r: R, hk: 0.5 });
+    M.darbe(g, [[c.x - c.r * 0.05, c.y - c.r * 0.12], [c.x + c.r * 0.05, c.y + c.r * 0.12]], c.r * 0.22, C('#E6BE44'), { a: 0.9, kil: 4, kilK: 10, uc: 'yuvarlak', govdeSon: 1, r: R, hk: 0.5 });
+    for (let i = 0; i < 12; i++) { const a = R() * Math.PI * 2, d = Math.sqrt(R()) * c.r * 0.13; const sh = Math.cos(a) * 0.7 - Math.sin(a) * 0.7; M.tus(g, c.x + Math.cos(a) * d, c.y + Math.sin(a) * d, c.r * 0.04 + 0.7, c.r * 0.035 + 0.6, a, sh > 0.2 ? C('#F4D65E') : sh < -0.2 ? C('#C2922A') : C('#E2B53E'), { r: R, hk: 0.7 }); }
     for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2 + R(); M.tus(g, c.x + Math.cos(a) * c.r * 0.24, c.y + Math.sin(a) * c.r * 0.24, c.r * 0.035 + 0.6, c.r * 0.03 + 0.5, a, C('#B0832A'), { r: R, a: 0.85 }); }
-    M.tus(g, c.x + c.r * 0.07, c.y - c.r * 0.07, c.r * 0.06, c.r * 0.045, -0.5, C('#FFF4C2'), { r: R, hk: 0.9 });
+    M.tus(g, c.x + c.r * 0.07, c.y - c.r * 0.07, c.r * 0.035 + 0.5, c.r * 0.03 + 0.4, -0.5, C('#FFF4C2'), { r: R, hk: 0.9 });
   }
   B.cicekler.forEach((c, k) => cicek(c, k));
 

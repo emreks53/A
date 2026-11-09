@@ -1,0 +1,40 @@
+{
+  "kod": "S-209",
+  "no": 209,
+  "ad": "Elle Boyanmış Animasyon Fonu",
+  "ad_en": "Hand-Painted Animation Background",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Klasik elle çizilmiş animasyon filmlerinin hayalî bir fon ressamının eli: illüstrasyon kartonuna opak guaj; fırçayla kurulmuş büyük kümülüsler, açık düzlemli mimari, katman katman leke yeşillik ve kuru fırça ışıkları.",
+  "tanim": "Elle çizilmiş animasyon filmlerinde çalışan bir fon ressamının eli. Zemini düz illüstrasyon kartonudur; aletleri yassı ve yuvarlak kıl fırçalar ve opak afiş boyasıdır (guaj). Paleti parlak ve davetkârdır: doygun gök mavisi, ufukta soluk turkuaz-beyaz, bulut beyazı, mavi-gri bulut gölgesi, güneşli krem taş, serin mavi-gri taş gölgesi, berrak kubbe yeşili, yaprak yeşilleri ve sarı-yeşil ışıklar. Göğü geniş, hafif dalgalı yatay darbelerle tepede doygun maviden ufukta açık turkuaza indirir; darbe kenarları seçilir ama yüzey düzgündür. Büyük kümülüsleri önce mavi-gri gövdeleriyle, sonra kıvrımı izleyen beyaz darbelerle ışıklı tepeleriyle kurar; göğe ve güneşe bakan üst kenarı doğrudan beyazla keser (çevreyi saran bir gölge şeridi bırakmaz), mavi-gri gölgeyi yalnız düz tabana ve alt yüzlere koyar. Mimariyi açık düzlemlerle ve yumuşak renk kaymalarıyla boyar: ışık yanı krem, gölge yanı serin mavi-gri, kubbede kaburga boyunca darbeler ve ışıklı yüzde kuru fırça. Yeşilliği katman katman lekeyle kurar: önce koyu, sonra orta, sonra ışık yanında sarı-yeşil, en son kuru fırça ışıkları; arkadaki ağaç kütlelerini hava perspektifiyle soluklaştırır, ön köşeleri alçak çalılarla çerçeveler. Beyaz çiçekleri her taç yaprağında iki üç darbeyle, kapalı tomurcukları beyaz ve serin mavi iki üç darbe ve dibini saran iki yeşil çanak yaprakla boyar.",
+  "koken": "20. yüzyılın klasik elle çizilmiş animasyon filmlerinde fon ressamlarının illüstrasyon kartonu üstüne guaj ve afiş boyasıyla yaptığı fon resmine dayanır: ressamca ama kesin biçimler, iki değerli kümülüs modellemesi, katmanlı leke yeşillik ve kuru fırça dokusu bu mesleğin alışkanlıklarıdır. Gerçek bir ressamı ya da stüdyoyu taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Fırçayla kurulmuş büyük kümülüsler: kıvrımı izleyen beyaz darbelerle göğe kadar beyaz kalan ışıklı tepeler, mavi-gri gölge yalnız düz tabanlarda ve alt yüzlerde",
+    "Tepede doygun maviden ufukta soluk turkuaz-beyaza inen geniş, hafif dalgalı yatay guaj darbeleri",
+    "Katman katman leke yeşillik: arkada hava perspektifiyle soluklaşan ağaç kütleleri, önde köşeleri çerçeveleyen alçak çalılar",
+    "Yapraklarda, ağaçlarda ve kubbenin ışıklı yüzünde kuru fırça ışıkları",
+    "Açık düzlemli mimari: krem ışık yüzleri, serin mavi-gri gölgeler, kaburga boyunca darbelerle boyanmış berrak yeşil kubbe",
+    "Her taç yaprağı iki üç darbeyle boyanmış beyaz çiçekler ve mat sarı göbekler"
+  ],
+  "palet": [
+    "#4D9DDD",
+    "#A6D4EE",
+    "#FAFAF5",
+    "#89A3C2",
+    "#EFE6CF",
+    "#3FA762",
+    "#3C775A",
+    "#E9DAB5"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Alt boya (model): gök dikey geçiş; bulutlar küre yığını yükseklik alanından, dar geçişli iki değerli ışıkla ve tabana doğru güçlenen gölgeyle; siluetin üst kenarında (yukarısı ve sağ üstü gök olan noktalarda) ışık beyaza zorlanır, böylece mavi-gri yalnız taban ve alt yüzlerde kalır; minare ve kasnak silindir ışığıyla, kubbe dönel yüzey normaliyle. Açık gök, bulutsuz bir gök işlevinden renk alan 16–36 piksel enli, 60–180 piksel boylu, gürültüyle hafifçe dalgalanan iki katman darbeyle; bulutlar örtüleri içinde önce gövde, sonra ışıklı yerlerde beyaza çekilmiş, kıvrım yönünü (yükseklik alanının izohips teğeti) izleyen darbelerle, üst kenarlarda kısa kıvrımlı beyaz darbelerle boyanır. Mimari kırpılarak 5–10 piksel enli yön alanlı darbelerle, ayrıntılar ince fırça darbeleriyle işlenir. Ağaç ve çalı kütleleri lob kürelerinden ışık hesaplanarak dört katmanda (koyu, orta, ışık lekeleri ve dolgusuz kuru fırça kıl izleri) atılır; arkadakiler gök rengine doğru soluklaştırılır. Bitkiler ve çiçekler birkaç geniş darbeyle boyanır, göbekler mat lekelerdir; tomurcuklar üç gövde darbesi ve iki çanak yaprak darbesidir. Güneş dolu bir disk üstüne kısa yatay darbelerle boyanır. Guaj mat olduğu için kabartı ışığı çok zayıf tutulur; ince karton dokusu ve hafif el titremesi eklenir.",
+  "etiketler": [
+    "guaj",
+    "afiş boyası",
+    "animasyon fonu",
+    "kümülüs",
+    "yeşillik",
+    "kuru fırça",
+    "illüstrasyon kartonu",
+    "ressamın eli"
+  ]
+}

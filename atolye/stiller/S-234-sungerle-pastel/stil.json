@@ -1,0 +1,39 @@
+{
+  "kod": "S-234",
+  "no": 234,
+  "ad": "Süngerle Pastel",
+  "ad_en": "Sponge-Applied Pastel",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Zımparalı beyaz pastel kâğıdına süngerle sürülmüş kap pastel: pudralı, ışıklı, yumuşak katlar; mimaride kesik maskelerin keskin kenarları, bulutların üstünde yırtık kâğıt maskenin kırık çizgisi, yaprak ve taç yapraklarında yuvarlak sünger ucu dokunuşları.",
+  "tanim": "Hayalî bir pastel ressamının eli. Kâğıdı beyaz, çok ince ve eşit dişli zımparalı pastel kâğıdı; aletleri kap pastelleri (pan pastel), çeşitli boylarda yumuşak sünger aplikatörler, sünger uçlu kalemler, silgi ve kesik ya da yırtık kâğıt maskeler. Geniş alanlara önce en geniş süngerle düz bir örtü katı atar, sonra bilekle çevrilen yay biçimli süpürüşlerle kat kat sürer; süngerin kenarında biriken pigment her süpürüşün yayını ince, biraz koyu bir kenarla belli eder, süpürüş dolu başlar, incelip pudralaşarak biter; hafif bastırdığı yerlerde süngerin gözenekli izi seçilir. Göğü üstte gök mavisinden ufka doğru çok açık maviye, güneşe doğru da açılarak sürer; yeri önde yeşil, ufukta açık krem-yeşil aynı yay süpürüşlerle kurar. Bulutların üstüne yırtık kâğıt maske koyar: bulutun üst kenarı maskenin kırık çizgisi, gövdesi beyaz kâğıt, altı lila-gri süngerle ve mavi bir süpürüşle yumuşatılmıştır. Güneşi silgiyle kâğıdın beyazına kadar açar ve içine soluk sarı bir sünger dokunuşu koyar; hale yapmaz. Mimaride kubbe silueti, kaide, korniş, minare ve kasnak kesik maskelerle sürülür; renk maskenin kenarında keskin biter, içte yumuşak geçer. Kubbenin her dilimini ayrı maskeyle çalışır: kaburga çizgisinde koyu yeşil keskin bir kenar, dilimin içine doğru yumuşak açılım. Şerefe, korniş ve kasnak katlarının altındaki gölgeler maskenin keskin üst kenarından başlayıp aşağı yumuşar. Yaprakları ve taç yapraklarını küçük, yuvarlak sünger ucu dokunuşlarıyla kurar: yaprakta iki yarıda açık ve koyu yeşil, taç yaprağında göbeğe yakın lila, dışta beyaz; göbekleri sarı dokunuşlar ve koyu sarı noktalarla bitirir.",
+  "koken": "Kap pastellerin (pan pastel) sünger aplikatörlerle sürülmesine, zımparalı pastel kâğıdına, pastel ve püskürtme resimde kullanılan kesik ve yırtık kâğıt maskelere (şablonlama) ve silgiyle ışık açma yöntemine dayanır. Gerçek bir sanatçı örnek alınmamıştır; tarif hayalî bir ressamın tutarlı elidir.",
+  "ayirt_edici": [
+    "Gök ve yer yay biçimli, pudralı sünger süpürüşlerinden; her süpürüşün kenarında biriken pigmentin ince, biraz koyu çizgisi",
+    "Kubbe dilim dilim maskeyle çalışılmış: kaburgada keskin koyu kenar, dilim içine doğru yumuşak açılım",
+    "Bulutların üst kenarı yırtık kâğıt maskenin kırık çizgisi, altı lila-gri ve mavi süpürüşle yumuşatılmış",
+    "Siluetlerde, kornişte ve şerefelerde maskenin keskin kenarı; altlarında keskin başlayıp yumuşayan gölge şeritleri",
+    "Güneş silgiyle kâğıt beyazına açılmış bir disk, içinde soluk sarı sünger dokunuşu",
+    "Yapraklar ve taç yaprakları yuvarlak sünger ucu dokunuşlarından"
+  ],
+  "palet": [
+    "#8CC2E9",
+    "#D4E8F5",
+    "#7DB883",
+    "#39815D",
+    "#E1E5F1",
+    "#D6D3E5",
+    "#F3D36F",
+    "#F9F5EB"
+  ],
+  "kodla_cizim": "1024 çözünürlük. Maske kenarları için sahne yolları çok az (0,25 px) titreşimle Path2D'ye çevrilir. Her grup üç katmanda çizilir: taban dolgusu, sünger süpürüşleri (uçları yumuşak, kavisli 14–18 parçalı şerit) ve seyrek lif izleri; katmanlar ctx.filter bulanıklığıyla 1,1–2,5 px yumuşatılır, süpürüş katmanının alfası iki ölçekli değer gürültüsünden türetilen gözenek dokusuyla özellikle düşük alfalı kenarlarda kırılır, sonra grup maskesi yoluyla keskin kırpılır (destination-in) ve ana katmana basılır. Gök ve yer: düz örtü şeritlerinin üstüne yay süpürüşler (160–620 px yarıçaplı çember yayı boyunca, bir ucu dolu öbür ucu incelen şerit; iki kenarı boyunca biraz koyu, basınçlı ince kenar çizgisi). Bulutlar: düşük frekanslı gürültüyle dalgalanan yırtık kenar çizgisinin altı silinir, lila-gri süpürüşler ve alt kenarı yumuşatan bulanık mavi süpürüşler eklenir. Güneş: titrek disk destination-out ile silinir, soluk sarı dokunuş diske kırpılır. Kubbe dilimleri ardışık kaburga meridyenleri arasındaki çokgenlerle maskelenir; her dilimde kaburga boyunca koyu süpürüş bulanıklaştırılıp dilime kırpılır. Gölge şeritleri dikdörtgen maskeyle üstten keskin kırpılan bulanık süpürüşlerdir. Bitirişte ince zımpara dişi alfaya hafif tanecik verir. Math.random yok, SAHNE.rng.",
+  "etiketler": [
+    "pastel",
+    "kap pastel",
+    "sünger",
+    "maske",
+    "yırtık kâğıt maske",
+    "zımparalı kâğıt",
+    "ressamın eli"
+  ]
+}

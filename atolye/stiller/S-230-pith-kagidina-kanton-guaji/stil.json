@@ -1,0 +1,42 @@
+{
+  "kod": "S-230",
+  "no": 230,
+  "ad": "Pith Kâğıdına Kanton Guajı",
+  "ad_en": "Canton Gouache on Pith Paper",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Kadifemsi, ince hücreli pith kâğıdında parlak ve örtücü guaj: keskin kenarlar, küçük kabarık darbelerle modelaj, ışıl ışıl zümrüt kubbe, şakayıklar ve kenarda ince boyalı mavi bant.",
+  "tanim": "Hayalî bir Kanton ihraç ressamının parlak, süslü eli. Aletleri: yumuşak beyaz, çok ince ve düzgün hücreli, hafif yarı saydam pith kâğıdı; ince fırçalar; parlak, örtücü guaj. Paleti: parlak ve soluk mavi, zümrüt ve derin yeşil, parlak beyaz, şakayık pembesi, altın sarısı, kenar mavisi. Her alan önce örtücü bir gövde rengiyle düz kapatılır, sonra modelaj küçük, hafif kabarık darbelerle üstüne işlenir: gök yatay, düzgün ama seçilen darbelerle tepeden ufka açılır, güneşin çevresinde teğet kısa darbelerden bir ışık halkası vardır; kubbe meridyen boyunca kısa zümrüt darbelerle, solda derin yeşil, sağ üstte açık zümrüt vurgularla; kasnak dikey darbelerle, beyaz minare ve kaide serin gri-mavi gölgeli parlak beyazla, zikzak bandı parlak maviyle süslenir. Kenarlar keskin ve temizdir. Öndeki şakayıklar dört-beş halka taç yaprağından, her taç yaprağı dipte koyu, uçta açık; beyazlar gri-mor gölgeli, pembeler koyu pembe dipli. Yapraklar doygun yeşil iki yarım darbe ve açık sarı-yeşil damarlarla. Bitirirken kâğıdın kenarına ihraç albümlerindeki gibi ince, fırça izli mavi bir bant ve içinde ince beyaz çizgi çekilir; pith kâğıdının kadifemsi hücre beneği boyanın altından hafifçe seçilir.",
+  "koken": "On dokuzuncu yüzyılda Kanton'da ihraç için pith (özlü bitki) kâğıdına yapılan parlak guaj resimlere ve bu albümlerin ince boyalı kenar bantlarına dayanır; kâğıdın kadifemsi, ışığı içine alan yüzeyi ve örtücü, parlak renk alışkanlığı bu gelenekten gelir. Hiçbir gerçek ressam taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Parlak, doygun, örtücü renkler ve keskin kenarlar; her alan önce gövde rengiyle kapatılıp küçük darbelerle modellenmiş",
+    "Kısa zümrüt darbelerle modellenmiş ışıl ışıl kubbe: solda derin yeşil, sağ üstte açık zümrüt vurgular",
+    "Yatay, düzgün ama seçilen darbelerle tepeden ufka açılan parlak mavi gök ve güneşin çevresinde teğet darbelerden ışık halkası",
+    "Halka halka taç yapraklı beyaz ve pembe şakayıklar, doygun yeşil yapraklarda açık sarı-yeşil damarlar",
+    "Kâğıdın kenarında ince, fırça izli mavi bant ve içinde ince beyaz çizgi",
+    "Boyanın altından hafifçe seçilen kadifemsi, ince ve düzgün hücre beneği; darbelerde hafif kabartı"
+  ],
+  "palet": [
+    "#4A96DE",
+    "#C6E2F6",
+    "#269A66",
+    "#228256",
+    "#FEFEFE",
+    "#F6B2C6",
+    "#3E7ACA",
+    "#E6B63E"
+  ],
+  "kodla_cizim": "2048 px kayan noktalı tamponda her alan önce yerel maskeyle düz, örtücü bir gövde rengiyle kapatılır; ardından maske içine yan yana kısa guaj darbeleri (renk konumdan hesaplanır, tonu biraz oynatılır) basılır. Darbeler aynı zamanda bir yükseklik alanına kalınlık yazar; bu alan yumuşatılıp sağ üstten gelen ışıkla çok hafif aydınlatılır (darbe kabartısı). Kubbe meridyen boyunca parçalı kısa darbelerle, şakayıklar ortadan dışa genişleyen, rengi dipten uca değişen taç yaprağı darbelerinden halkalar hâlinde kurulur. Kenar bandı düz mavi ve üzerinde ince ton çizgileriyle boyanır. Sonda pith kâğıdı dokusu uygulanır: uzunca hücreli bir Voronoi ızgarasında her hücreye bir ton verilir ve en yakın iki hücrenin tonu sınırda yumuşakça karıştırılır (çizgi ya da kabarcık oluşmaz), üstüne çok hafif saten parlaklığı eklenir.",
+  "etiketler": [
+    "kanton",
+    "ihraç resmi",
+    "pith kâğıdı",
+    "guaj",
+    "örtücü",
+    "parlak renk",
+    "şakayık",
+    "kenar bandı",
+    "uzak doğu",
+    "ressamın eli"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "kod": "S-217",
+  "no": 217,
+  "ad": "Beyaz Mürekkep Konturlu Suluboya",
+  "ad_en": "Watercolour with White Ink Line",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Orta açıklıkta temiz suluboya lavileri; bütün tanımlayıcı çizgiler kuruyan rengin üstüne dip kalemle opak beyaz mürekkeple çizilmiş.",
+  "tanim": "Hayalî bir ressamın beyaz mürekkep konturlu suluboya eli. Aletleri: sıcak preslenmiş pürüzsüz suluboya kâğıdı, yassı ve yuvarlak lavi fırçaları, opak beyaz mürekkep ve ince uçlu bir dip kalem. Önce orta açıklıkta, temiz ve iyi modellenmiş lavileri sürer: göğü elle derecelendirilmiş, hafif dalgalı tek bir seruleum lavisiyle (yatay fırça sıralarının izi seçilir) boyar ve bulutların yerini boş bırakmaz: lavi ıslakken nemli fırçayla açılır, bulutlar soluk mavi kalır, altlarına açık leylak-gri gölge sürülür; kubbeyi düz bir orta yeşil ve solda iki koyu yeşil katla, taşı sıcak açık bej, gri-bej gölgeler ve ikinci sıcak bir sırla, toprağı üst üste üç açık sırla, çiçekleri soluk leylak-mavi katlarla boyar; beyaz çizgi görünsün diye hiçbir yeri kâğıt beyazına yakın bırakmaz. Boya kuruyunca bütün tanımlayıcı çizgileri beyaz mürekkeple çizer: kubbe kaburgaları ve dış çizgisi, kasnak ve kaide pencerelerinin kemerleri, şerefe korkuluğunun tek tek dikmeleri, zikzak bant, yaprakların orta ve yan damarları ve ışık tarafındaki kenarı, taç yaprağı kenarları ve damarları, göbek halkası. Kalem basıncıyla çizgi yaklaşık 1,5–3,5 piksel arasında kalınlaşıp incelir, uçları sivrilir, kalemin konduğu yerde küçük bir düğüm kalır; kapalı biçimler kalem kaldırılmadan dolaşılır ve sonda hafifçe taşar. Bulutların biçimini de beyaz mürekkep çizer: tümseklerin tepesini izleyen, kalemin yer yer kalkmasıyla kopan bir üst kenar, önde duran tümseklerin iç kıvrımları ve tabanda kısa, kesik bir çizgi. Güneş soluk sarı diskin çevresine elle çekilmiş, ucu biraz binen beyaz bir halkayla belirtilir; kubbenin dış çizgisi tek hamlede değil, üç dört çekişte çizilir.",
+  "koken": "Renkli zemin üstüne beyaz mürekkep ya da beyaz guaşla çizme (beyaz kalem vurgusu) alışkanlığına, suluboya illüstrasyonda dip kalemle sonradan kontur çekme tekniğine ve sıcak preslenmiş kâğıtta düz, derecelendirilmiş lavi sürmeye dayanır. Hiçbir gerçek ressam taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Orta yeşil kubbenin üstünde parlayan, uca doğru incelen elle çekilmiş beyaz kaburga çizgileri ve birkaç çekişte çizilmiş beyaz dış çizgi",
+    "Koyu yeşil kasnak pencerelerinin ve kaide pencerelerinin kemerlerini dolaşan ince beyaz mürekkep konturlar",
+    "Şerefe korkuluklarında tek tek beyaz dikmeler, minarede beyaz zikzak bant",
+    "Soluk leylak taç yaprakları beyaz kenar ve damar çizgileriyle; sarı göbek beyaz halka ve kısa etamin çizgileriyle",
+    "Yaprakların beyaz orta ve yan damarları, ışık tarafında beyaz kenar; arkadaki soluk yapraklarda yalnız damar",
+    "Yatay fırça sıraları seçilen seruleum gök; lavisi açılmış soluk mavi bulutların beyaz mürekkeple çizilmiş tepe ve iç kıvrım çizgileri, soluk sarı güneşin çevresinde elle çekilmiş beyaz halka"
+  ],
+  "palet": [
+    "#72AED9",
+    "#9AC7E4",
+    "#4A8256",
+    "#236135",
+    "#E2D4B4",
+    "#CDC8E2",
+    "#E0B438",
+    "#FFFFFF"
+  ],
+  "kodla_cizim": "Canvas 2048 px iç çözünürlükte boyanıp 1024'e indirilir. Pürüzsüz (sıcak pres) kâğıt dokusu düşük genlikli değer gürültüsüdür. Laviler, SAHNE yollarından elle titretilmiş çokgen maskelerle RGB optik yoğunluk tamponuna eklenir (her lavinin kuruyan kenarı, ince birikinti çizgisi, alt kenarda havuzlanma, geniş ölçekli düzgünsüzlük); gök lavisinin yoğunluğu yukarıdan aşağı azalır, düzensiz aralıklı yatay fırça sıralarıyla dalgalanır ve bulanık bir bulut maskesinin içinde %70 azaltılır (ıslakken açma). Bulutlar birkaç elle titretilmiş yassı elipsin birleşimidir; gölgeleri tümsek yüksekliğini kısmen izleyen dalgalı bir sınırla sürülür, alt kenarı yumuşak rezervle açılır. Sonda yoğunluk kâğıt rengiyle çarpılarak görüntüye çevrilir. Beyaz mürekkep ayrı bir 2048 px katmana çizilir: her çizgi eşit aralıklı noktalara örneklenen yolun iki yanına, basınç gürültüsüyle değişen kalınlıkta ve uçları sivrilen bir şerit olarak doldurulur (dışta %82, içte daha yoğun ikinci şerit). Örtme için ressamın sırası izlenir: önce yapı çizilir, sonra arkadan öne her yaprak, sap, tomurcuk ve çiçek kendi alanındaki eski çizgileri destination-out ile silip kendi çizgisini çizer. Bulut çizgileri tümseklerin tepe eğrisinden (üst kenar, parça parça) ve öndeki tümseklerin üst yaylarından (iç kıvrım) türetilir. Katman sonda lavilerin üstüne konur.",
+  "etiketler": [
+    "suluboya",
+    "beyaz mürekkep",
+    "dip kalem",
+    "kontur",
+    "sıcak pres kâğıt",
+    "derecelendirilmiş lavi",
+    "leylak çiçek",
+    "el çizgisi",
+    "gün ışığı",
+    "illüstrasyon"
+  ]
+}

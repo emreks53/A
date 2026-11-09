@@ -1,0 +1,39 @@
+{
+  "kod": "S-238",
+  "no": 238,
+  "ad": "Mürekkep ve Ekolin",
+  "ad_en": "Ink and Liquid Watercolour",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Siyah-kahve mürekkepli fırça kalemin kabaran, incelen konturu ve parlak beyaz bristolde ışıyan sıvı suluboya (ekolin) geçişleri: turkuaz-mavi gök keskin kuruma kenarlı katlarla derecelenir, kubbe parlak zümrüt, güneş limon sarısı, gölgeler leylak.",
+  "tanim": "Hayalî bir kitap resimcisinin eli. Alet: siyah-kahve mürekkepli fırça kalem ve yoğun sıvı suluboya (ekolin) için yumuşak bir fırça; kâğıt: pürüzsüz, parlak beyaz bristol karton. Çizgi alışkanlığı: kontur fırça kalemle, kendinden emin vuruşlarla çekilir; her vuruş incecik başlar, basınçla kabarır, kalkarken incelir; gölge yanında (sol ve alt kenarlar) belirgin kalın, ışık yanında kıl inceliğinde; uzun hatlar birbirine hafifçe binen vuruşlara bölünür, taç yaprağı ve yaprak kenarları tek, kıvrık vuruşlarla çekilir. Boya alışkanlığı: ekolin bristole emilmez; her geçiş düzgün, pürüzsüz yayılır ve kururken kenarında keskin, biraz koyulaşmış bir boya çerçevesi bırakır; renkler hiç karıştırılmaz, saydam katlar üst üste binerek koyulaşır. Gök birbirine binen beş geçişle derecelenir: tepede beş kat, ufukta tek kat, aralarında dalgalı, keskin kuruma kenarları; üst geçişler güneşin biraz uzağında durur, böylece güneşin çevresindeki ışık boyanın daha az kat almasından doğar. Güneş konturu olmayan limon sarısı bir kurstur. Bulutlar düz tabanlı yığınlar olarak kâğıt beyazı bırakılır, alt yanlarına keskin kenarlı leylak gölge konur; fırça kalem yalnız gölge yanında birkaç kısa, incelen vuruşla dokunur. Kubbe dilim dilim üst üste binen zümrüt katlarla modellenir; taş ve bulut gölgeleri ışıyan açık leylaktır. Palet: turkuaz-mavi, soluk mavi, zümrüt, koyu yeşil, limon sarısı, leylak, mürekkep ve çok parlak beyaz kâğıt.",
+  "koken": "20. yüzyıl kitap ve dergi resimlemesindeki fırça kalem konturu ile konsantre sıvı suluboya (anilin esaslı 'liquid watercolour'; Türkiye'de yaygın bir marka adından gelen 'ekolin' adıyla bilinir) tekniğine dayanır; bristolde boyanın emilmeden kuruyup keskin, koyulaşmış kenar bırakması tekniğin kendi davranışıdır. Gerçek bir sanatçıyı taklit etmez; hayalî bir ressamın tutarlı eline bağlanmış atölye tarifidir.",
+  "ayirt_edici": [
+    "Fırça kalemle kabaran, incelen siyah-kahve kontur: vuruşlar ince başlayıp kabarıyor, uçta inceliyor; kubbenin, minarenin, kaidenin ve taç yapraklarının gölge yanında kalın, ışık yanında kıl inceliğinde",
+    "Turkuaz-mavi gök birbirine binen beş düzgün geçişle derecelenmiş: tepede koyu, ufukta soluk; geçişler arasında dalgalı, keskin ve koyulaşmış kuruma kenarları",
+    "Parlak zümrüt kubbe: sağ üst dilimler açık, sola doğru kaburgalara oturan keskin kenarlı katlarla dilim dilim koyulaşıyor; kasnak pencereleri koyu yeşil",
+    "Bulutlar kâğıt beyazı, düz tabanlı yığınlar: alt yanları keskin kenarlı açık leylak gölgeli, sol alt (gölge) yanda birkaç kısa, incelen fırça kalem vuruşu; minare ve kaidenin gölge yanı da ışıyan leylak",
+    "Konturu olmayan limon sarısı güneş kursu, kenarında koyulaşan boya çerçevesi; çevresinde üst gök geçişlerinin durduğu iki düzensiz halka hâlinde açılan daha açık mavi bir ışık",
+    "Beyaz taç yaprakları, göbeğe yakın parlak leylak gölge ve limon sarısı göbek; açık limon yeşili çimen, önde dalgalı keskin kenarlı ikinci yeşil kat"
+  ],
+  "palet": [
+    "#63ABDC",
+    "#BADEF1",
+    "#188850",
+    "#70CEA3",
+    "#165532",
+    "#FAEBA3",
+    "#DBBAEA",
+    "#2E2729"
+  ],
+  "kodla_cizim": "Kâğıt 2048 px'lik çok düşük genlikli yükseklik alanıdır (pürüzsüz bristol). Renkler 1024 px'te çarpımsal laviler olarak birikir (S-161 kitinden uyarlanan motor): granülasyon ve akış çok düşük, kenar birikmesi yüksek ve dar bulanıklıkla, böylece her kat düzgün dolup kuruma kenarında keskin ve koyu bir çerçeve bırakır. Gök bir taban katı ile alt sınırları düşük frekanslı gürültüyle dalgalanan dört üst üste binen kattır; üst katlar güneşin çevresinde iki farklı yarıçaplı düzensiz bir halkada durur, güneş konturu olmayan, kenarı koyulaşan bir kattır. Kubbe, kasnak ve gölgeler kaburga boylamına ya da silindir koordinatına göre eşiklenen sert maskeli katlardır; bulutlar Gauss kümeleri toplamından kurulan bir yoğunluk alanının eşiğidir (bakışımsız yığınlar, neredeyse düz taban); gölgeleri tabana yakın, gürültüyle dalgalanan, sol yanda yükselen bir sınırın altındaki tek katlı leylaktır; bulutlara dokunan fırça kalem vuruşları eşik konturunun sol-alt parçasından çizilir. Fırça kalem 2048 px'te çizilir: yol önce görünür parçalara, sonra birbirine binen vuruşlara bölünür; her vuruşta kalınlık dış normalin ışıkla iç çarpımına göre (gölge yanında kalın), uçlarda sinüs incelmesiyle ve basınç gürültüsüyle değişir, tek parça bir şerit olarak doldurulur. Öndeki bitki arkasındaki konturu siler.",
+  "etiketler": [
+    "fırça kalem",
+    "mürekkep",
+    "sıvı suluboya",
+    "ekolin",
+    "kitap resmi",
+    "keskin kenar",
+    "ressamın eli"
+  ]
+}

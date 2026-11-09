@@ -1,0 +1,40 @@
+{
+  "kod": "S-202",
+  "no": 202,
+  "ad": "Beyaz Astarda Mücevher Renkler",
+  "ad_en": "Jewel Colours on a White Ground",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Parlak beyaz astar üstünde ince saydam sırlarla çalışan titiz, hayalî bir ressamın eli: saf zümrüt ve viridyen yeşiller, kısa çapraz darbelerle örülmüş kobalt gök ve önde damarı, dişi, ışık-gölge yarısıyla tek tek incelenmiş yapraklar ve beyaz yabani güller.",
+  "tanim": "Hayalî, titiz bir ressamın eli; küçük çalışır, taze sürülmüş parlak beyaz astarın üstüne saf mücevher renkleriyle. Taşıyıcısı düz bir pano, aletleri küçük samur fırçalardır; boyayı ince, saydam sırlar hâlinde sürer, böylece beyaz astar her rengin altından parlar. Önce mimariyi ince sepya samur çizgileriyle çizer; taşı sıcak, çok açık bir sırla, gölgeyi leylak-mavi sırla, kubbeyi dilimler boyunca ince darbeli, katman katman parlak zümrüt-viridyen sırlarla boyar; kaburgaların yanına ince koyu sır, üstlerine astarın parladığı ince ışık çizgisi koyar. Göğü önce yatay ince bir sırla, sonra iki yönde kısa çapraz darbelerle örer: tepede berrak kobalt, ufka doğru beyaza yakın; güneşin çevresinde astarın sıcak beyazı parlar. Bir iki küçük, keskin kenarlı, düz tabanlı beyaz bulut ekler. Ön planda her yaprağı doğadan inceler: tırtıklı kenar, açık orta damar, yan damarlar, ışık ve gölge yarısı; çayırı tek tek çekilmiş ot tutamları, ufku küçük yuvarlak ağaç tepeleri tamamlar. Çiçekleri beyaz yabani güller olarak boyar: çentikli, geniş taç yaprakları beyaz astarda bırakır, dibe ve gölge yanına damar yönünde leylak-mavi sır çeker, altın sarısı erkek organları teker teker çizer.",
+  "koken": "19. yüzyıl ortasında doğaya sadakati ilke edinen İngiliz ressamların (Pre-Raphaelite kardeşliği) tekniklerine dayanır: taze beyaz astar üstüne saf, parlak renkler, ince samur fırça, saydam sırlar ve ön planda botanik kesinlik. Gerçek bir ressamı taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "İki yönde kısa çapraz darbelerle örülmüş kobalt gök; güneşin çevresinde beyaz astarın sıcak parıltısı",
+    "Dilimler boyunca ince darbeli, beyaz astarın içinden parlayan saydam zümrüt-viridyen kubbe sırları",
+    "İnce sepya samur çizgileriyle çizilmiş mimari; leylak-mavi gölge sırları ve mor-mavi pencereler",
+    "Tırtıklı kenarlı, orta ve yan damarlı, ışık-gölge yarılı, tek tek incelenmiş zümrüt yapraklar ve ot tutamları",
+    "Çentikli geniş taç yapraklı beyaz yabani güller; leylak-mavi gölge ve teker teker çizilmiş altın sarısı erkek organlar",
+    "Keskin kenarlı, düz tabanlı küçük beyaz bulutlar ve ufukta küçük yuvarlak ağaç tepeleri"
+  ],
+  "palet": [
+    "#406DB3",
+    "#9BB2CB",
+    "#E8E1D4",
+    "#44A16E",
+    "#207254",
+    "#B8B3CD",
+    "#D7B456",
+    "#D1DBAF"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Sırlar ayrı bir katmana normal karışımla (her darbe gövde ve kıl çizgileriyle) boyanır, sonra katman tek seferde çarpma (multiply) ile beyaz astarın üstüne bindirilir; böylece üst üste binen sırlar saydam kalır ve beyaz astar alttan parlar. Hedef renge iki üç sırla varılsın diye her katın rengi hedef rengin kökü alınarak hesaplanır. Gök bir yatay ve iki çapraz (yaklaşık ±35°) kısa darbe katıdır; mimari siluet çift-tek kuralıyla kırpılarak gökten ayrılır. Mimari ince samur çizgileri değişken enli, titrek bir kontur işleviyle çizilir; kubbe darbeleri meridyen akış alanını izler, renk dönel yüzey normalinden gelir. Yapraklar tırtıklı kenar yoluyla kırpılıp yan damar yönünde sır darbeleriyle, güller çentikli taç yaprak yollarıyla kurulur; erkek organlar tek tek çizgi ve tuşlarla çizilir. Bulutlar gürültüyle biçimlenen düzensiz bir tepe çizgisinden kırpılır.",
+  "etiketler": [
+    "yağlıboya",
+    "beyaz astar",
+    "saydam sır",
+    "mücevher renkler",
+    "botanik kesinlik",
+    "ressamın eli",
+    "pano",
+    "yabani gül"
+  ]
+}

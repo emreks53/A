@@ -1,0 +1,40 @@
+{
+  "kod": "S-206",
+  "no": 206,
+  "ad": "Hollanda Şehir Manzarası",
+  "ad_en": "Dutch Townscape Oil",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Hayalî bir şehir manzarası ressamının eli: açık gri astarlı tuvalde serin kuzey gün ışığı, büyük ve yüksek bir gök, beyaz ve mavi-gri kümülüsler; altında, taşta ve yaprakta parıldayan küçük, kabarık ışık noktaları.",
+  "tanim": "Sakin bir şehir manzarası ressamının eli. Zemini açık gri astarlı ince keten tuvaldir; aletleri orta boy yuvarlak ve yassı kıl fırçalar, ışık noktaları için ince bir samurdur. Paleti serin ve berraktır: azur ve serülyen gök, ufka doğru soluk mavi-beyaz, bulut beyazı, mavi-gri bulut gölgesi, serin taş beyazı ve mavi-gri gölgesi, berrak kubbe yeşili, mavimsi yaprak yeşili, açık altın okr. Göğü resmin yarısını taşıyan bir sahne gibi kurar: açık havayı kısa, hafif eğik darbelerle kaynaştırır; kümülüsleri yuvarlak kıvrımlarını izleyen darbelerle modeller, ışık alan tepeleri biraz kalın beyazla, tabanları serin mavi-griyle boyar, gölge yanında kenarı göğe eritir, ışık yanında keskin keser. Mimariyi biçimi izleyen küçük darbelerle sakin ve sağlam boyar: minarede dikey, kaide ve kasnakta yatay, kubbede kaburga boyunca; kaburgaları, pencereleri ve korkulukları ince samurla keser, gölgeleri yumuşak ama keskin tutar. En son imzası olan ışık noktalarını (pointillé) koyar: altın alemlerde, pencere eşiklerinde ve camlarında, korniş ve şerefe kenarlarında, kubbe kaburgalarının ışıklı yanında, yapraklarda ve çiçek göbeklerinin çevresinde kümeler hâlinde küçük, opak, kabarık noktalar.",
+  "koken": "17. yüzyıl Hollanda şehir manzarası resminin (Delft ve Haarlem çevresi) serin gün ışığına, büyük gök kompozisyonuna ve ışığı kabarık küçük boya noktalarıyla gösteren pointillé alışkanlığına dayanır; gri astarlı tuval, kaynaştırılmış küçük darbeler ve bulutların ince boya üstüne kalın beyazla modellenmesi bu geleneğin atölye uygulamasıdır. Gerçek bir ressamı taklit etmez; atölyenin tanımladığı hayalî bir ressamın elidir.",
+  "ayirt_edici": [
+    "Resmin yarısını taşıyan yüksek gök: kıvrımları izleyen darbelerle modellenmiş büyük beyaz kümülüsler, ışıklı tepeleri kalın beyaz, tabanları serin mavi-gri",
+    "Altın alemlerde, pencere eşiklerinde, korniş ve şerefe kenarlarında, kubbe kaburgalarının ışıklı yanında ve yapraklarda kümelenen küçük, kabarık ışık noktaları",
+    "Kaynaştırılmış küçük darbeler: minarede dikey, kaide ve kasnakta yatay, kubbede kaburga boyunca",
+    "Serin kuzey ışığı: mavi-gri taş gölgeleri, berrak yeşil kubbe, mavimsi yeşil yapraklar",
+    "Gölge yanında göğe eriyen, ışık yanında keskin kesilmiş bulut kenarları",
+    "İnce boyanın altından seçilen gri astarlı keten dokusu; pencere içlerinde serin koyu darbeler ve camda tek bir ışık noktası"
+  ],
+  "palet": [
+    "#70A3D2",
+    "#C0D6E8",
+    "#F6F6F1",
+    "#9EAABA",
+    "#4A9968",
+    "#306351",
+    "#D3B45E",
+    "#70A085"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük. Önce bir alt boya (model) kurulur: gök piksel başına dikey geçiş ve güneşin çevresinde serin açılma; bulutlar küre yığını bir yükseklik alanından (düz tabanlı, gürültüyle bükülen kenarlı) çıkarılıp yüzey normaliyle sağ üstten aydınlatılır, gölge yanında kenar yumuşatılır; minare ve kasnak silindir ışığıyla, kubbe 16 dilimli dönel yüzey normaliyle renklenir. Sonra resim titreşimli ızgaralardan başlayan darbelerle yeniden boyanır: gökte iki katman (14–21 ve 9–14 piksel enli, uzun ve kaynaşık, kabartısı düşük), darbe yönü bulut yükseklik alanının izohips teğetiyle yatay yönün karışımı; bulut tepelerinde kalın beyaz, gölgelerde mavi-gri ek darbeler. Mimari parça parça kırpılarak dikey, yatay ve meridyen yönlü 3,5–8 piksel enli darbelerle boyanır; kaburgalar, pencereler, korkuluklar, zikzak bant ve alemler ince fırça darbeleriyle elle işlenir. Yapraklar eksenleri boyunca boyanır ve kenarları iki ince, sivrilen darbeyle kapatılır; taç yaprakları merkezden dışa darbelerle, kapalı tomurcuklar ışıklı ve gölgeli darbelerle ve iki yeşil çanak yaprakla boyanır. Pointillé noktaları kümelenme gürültüsüyle seyrelen düzensiz küçük çokgenler olarak atılır; kubbede yalnız ışık bölgesindeki birkaç kaburganın sırtında kısa diziler hâlindedir. Her darbe kıl izleriyle birlikte ayrı bir yükseklik tuvaline de çizilir; yükseklik sağ üstten aydınlatılır, düzensiz keten bezi dokusu eklenir ve düşük frekanslı yer değiştirmeyle el titremesi verilir.",
+  "etiketler": [
+    "yağlıboya",
+    "şehir manzarası",
+    "pointillé",
+    "kümülüs",
+    "serin gün ışığı",
+    "gri astar",
+    "ressamın eli",
+    "tuval"
+  ]
+}

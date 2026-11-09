@@ -1,0 +1,39 @@
+{
+  "kod": "S-233",
+  "no": 233,
+  "ad": "Pastel Tarama",
+  "ad_en": "Hatched Pastel",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Bütün resim paralel pastel taramasından: sert pastelin keskin kenarıyla atılmış kısa, renkli çizgi takımları; renkler hiç ezilmeden kesişen takımlarla gözde karışır, yüzey ince dokunmuş gibi titreşir.",
+  "tanim": "Hayalî bir pastel ressamının eli. Kâğıdı krem-beyaz, ince dişli pastel kâğıdı; aletleri keskin kenarlı sert pastel çubuklar: gök mavisi, koyu gök mavisi, açık gök mavisi, açık lacivert, çok açık lacivert, beyaz, soluk sarı, lila; dört yeşil, sarı-yeşil, yeşil-mavi, sarı; krem, kum, mavi-mor, altın sarısı ve oker. Her çizgi 2–4 px eninde, 15–40 px boyunda; çizgileri 4–6'lık takımlar hâlinde, 4 px kadar arayla ve bir alan içinde tek bir açıyla atar, koyu yerlerde ikinci bir takımı yaklaşık 30° kesecek biçimde üstüne bindirir. Hiç yedirmez, ezmez; ara tonları farklı renkteki takımları yan yana ve üst üste getirerek gözde karıştırır. Göğü sığ eğik açıyla gök mavisi ve açık lacivert takımlarla kurar, ufka doğru açık mavi ve beyaz takımlara geçer, kesen ikinci takımı yukarıda sık, aşağıda seyrek atar; güneşi sık beyaz ve soluk sarı takımlarla, çevresini dar bir halkada açık mavi ve beyaz takımlarla, bulutları beyaz takımlar ve altlarında lila takımlarla yapar. Kubbeyi kaburga yönünde yeşil takımlarla örer; renklerin oranını ışığa göre kademesiz değiştirir: gölge yanında koyu yeşil ve yeşil-mavi, ortada yeşil, ışık yanında sarı-yeşil ve seyrek sarı çizgiler; kaburgaları uç uca eklenen kısa koyu yeşil çizgiler ve ışık yanında sarı-yeşil eş çizgilerle belirtir. Kasnak ve minarede takımlar dikey, kaidede eğiktir; kontur çizmez, biçimler tarama yönünün değiştiği yerde belirir. Taç yapraklarını göbekten dışa beyaz takımlarla, göbeğe yakın ve gölge yanında kesen lila takımlarla kurar; taç yaprak sınırlarını kesik mavi-mor çizgilerle, göbekleri sarı ve turuncu kısa taramayla bitirir.",
+  "koken": "Pastelde ve renkli kalemde paralel ve çapraz tarama geleneğine, sert pastel çubuğun keskin kenarıyla çizgi çizme yöntemine ve yan yana konan saf renklerin gözde karışması (optik karışım) ilkesine dayanır. Gerçek bir sanatçı örnek alınmamıştır; tarif, yalnız tarama takımlarıyla çalışan hayalî bir ressamın tutarlı elidir.",
+  "ayirt_edici": [
+    "Bütün yüzey 2–4 px enli, kısa, keskin pastel çizgilerinden; çizgiler 4–6'lık paralel takımlar hâlinde",
+    "Her alanda tek tarama açısı; koyu yerlerde yaklaşık 30° kesen ikinci takım; hiçbir yerde yedirme yok",
+    "Gök sığ eğik gök mavisi, açık lacivert ve beyaz takımlardan titreşen bir doku; güneş sık beyaz ve soluk sarı takımlar",
+    "Kubbe kaburga yönündeki yeşil takımlarla ışıktan gölgeye kademesiz modellenmiş: ışıkta sarı-yeşil, gölgede yeşil-mavi ve koyu yeşil; uç uca kısa çizgilerden koyu kaburgalar",
+    "Kontur yok: biçimler tarama yönünün değiştiği yerde beliriyor",
+    "Taç yaprakları beyaz takımlardan, göbeğe yakın kesen lila takımlar ve kesik mavi-mor sınır çizgileri"
+  ],
+  "palet": [
+    "#80B5E2",
+    "#C0D6EF",
+    "#B1D06E",
+    "#68AB6D",
+    "#3C8C7A",
+    "#F4EDDC",
+    "#F0CC54",
+    "#6C77B6"
+  ],
+  "kodla_cizim": "2048 iç çözünürlük. Ortak sahne yolları el titremesiyle Path2D'ye çevrilir; öğe maskeleri, silindir koordinatları ve kubbeProfili'nden dönel yüzey ışığı hesaplanır. Tek bir boya katmanında öğeler sırayla çizilir: her öğe önce kendi alanını katmandan siler, sonra kendi yolu içinde kırpılarak taranır. Tarama takımı 4–6 paralel şerit çizgidir (2,3–3,1 px en, 16–28 px boy); takım içinde aralık ve boy hafifçe titreşir, uçlar eğik bir sınırda kayar. Alanlar titreşimli ızgaradan (gökte 10,5 px) seçilen takım merkezleriyle kaplanır; takım rengi bölgenin ışık ya da yükseklik değerine göre ağırlıklı bir renk listesinden seçilir (kubbede ağırlıklar ışığın sürekli işlevleridir: yumuşak basamak ve çan eğrileri); koyu bölgelerde olasılıkla +0,52 rad kesen ikinci takım eklenir. Kaburgalar yol boyunca uç uca, korniş, şerefe gölgesi ve taç sınırları kesik kısa çizgilerdir. Bitirişte katmanın alfası iki ölçekli değer gürültüsünden kâğıt dişine göre %72–100 arasında kırılır; kâğıdın kendi tonu hafif gürültülüdür. Math.random yok, SAHNE.rng.",
+  "etiketler": [
+    "pastel",
+    "tarama",
+    "çapraz tarama",
+    "sert pastel",
+    "optik karışım",
+    "ressamın eli",
+    "gün ışığı"
+  ]
+}

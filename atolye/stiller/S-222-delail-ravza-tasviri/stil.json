@@ -1,0 +1,40 @@
+{
+  "kod": "S-222",
+  "no": 222,
+  "ad": "Delâil Ravza Tasviri",
+  "ad_en": "Dalāʾil Prayer-Book Medina Painting",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Delâilü'l-Hayrât sayfalarındaki Medine tasvirleri gibi: perdahlı kâğıtta örtücü maden boyalar ve ince altın konturlar; düz, aydınlık mavi gök, taze koyu yeşil kubbe, kırmızı-altın süslü temiz beyaz yapı, iki uçta selviler ve önde tertipli sıralar hâlinde lale, karanfil ve güller.",
+  "tanim": "Hayalî bir Osmanlı kitap ressamının eli. Destek: perdahlı kâğıt; bütün sayfa boyanır, kenarda ince altın cetvel ve iki kıl çizgi. Alet: maden boyalar (örtücü), çok ince fırça ve fırçayla sürülen altın. Usta sahneyi cepheden, bakışımlı ve düzleştirilmiş bir görünüş olarak kurar. Düz alanları örtücü bir taban katla kapatır, sonra aynı rengin biraz açık ve koyu tonlarıyla kısa vuruşlar atar; gökte vuruşlar uzun ve hafif eğiktir, üstüne ters yönde ince ikinci bir kat gelir; yüzeyde elin izi görünür kalır. Kubbe taze koyu yeşil, kaburga yönünde vuruşlarla ve hafif ışık-gölge ayrımıyla boyanır; kaburgalar ve dış kontur ince altın çizgidir. Kasnak yeşil, pencereler koyu yeşil-siyah ve altın kenarlıdır; kaide ile minare temiz beyaz, kornişte ve şerefelerde altın baklavalı kırmızı bantlar, kırmızı-yeşil zikzak, kırmızı kemer bordürlü pencereler. Altın her yerde fırçayla çekilir, kalınlığı hafifçe değişir ve taneli bir parıltı taşır. Gökte uçları kıvrık, ortasından küçük bir düğüm kıvrımı çıkan beyaz bulut kurdeleleri ince altın konturla; sağ üstte düz ve alev biçimli altın ışınlar arasında beyaz bir güneş teker; iki uçta alev biçimli vuruşlarla boyanmış ince selviler; açık yeşil düz yer bandında, yarım adım kaydırılmış sıralar hâlinde kırmızı laleler, pembe karanfiller ve beyaz güller (iki halka yuvarlak taç, diplerine pembe çekilmiş, ortada kırmızı sarmal çizgili pembe kadeh); her bitki elle yeniden çizilir, boyu, eğimi, yaprakları ve türlerin sırası biraz değişir; aralarında küçük çimen öbekleri.",
+  "koken": "18.–19. yüzyıl Osmanlı Delâilü'l-Hayrât yazmalarındaki Mekke ve Medine tasvirlerine, Osmanlı kitap resminin örtücü boya, altın tahrir (kontur) ve düzleştirilmiş cephe anlatımına, selvi ve tertipli çiçek sırası motiflerine dayanır. Belirli bir yazma ya da sanatçı taklit edilmez; tarif bu geleneklerden kurulmuş hayalî bir ressamın elidir; yazı, kartuş, hat ya da figür içermez.",
+  "ayirt_edici": [
+    "Kubbe kaburgalarında, kasnakta, kaidede ve minarede fırçayla çekilmiş, kalınlığı hafifçe değişen taneli altın konturlar",
+    "Düz, aydınlık mavi gök; örtücü, uzun ve hafif eğik fırça vuruşlarıyla görünür el dokusu",
+    "Kornişte ve şerefelerde altın baklavalı kırmızı bantlar, kırmızı-yeşil zikzak ve kırmızı kemer bordürlü koyu pencereler",
+    "Altın konturlu, düğüm kıvrımlı beyaz bulut kurdeleleri; düz ve alev ışınlı altın-beyaz güneş; iki uçta alev vuruşlu ince selviler",
+    "Açık yeşil yer bandında yarım adım kaydırılmış sıralar hâlinde, her biri elle biraz farklı çizilmiş lale, karanfil ve pembe kadehli beyaz güller; yan saplarda lale, karanfil ve gonca",
+    "Kenarda iki kıl çizgi arasında ince altın cetvel"
+  ],
+  "palet": [
+    "#71A7DB",
+    "#279655",
+    "#CEAE4E",
+    "#F7F5EE",
+    "#C8463B",
+    "#E7A0A5",
+    "#2F6B45",
+    "#E3E7C7"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; boya doğrudan ana tuvale sahne sırasıyla sürülür, böylece önde kalan boya arkadaki altını da örter. Her düz alan titretilmiş bir yolla örtücü taban kat olarak doldurulur, sonra aynı alan rengi rastgele ±%5–6 açılıp koyulaştırılmış, uçları incelen kısa şerit vuruşlarla kaplanır (gökte düşük frekanslı gürültüyle yönü oynayan uzun eğik vuruşlar ve ters yönde ince ikinci kat, kubbede meridyen yönünde, kasnakta dikey). Altın, aynı tohumla hem ana tuvale altın renginde hem ayrı bir maske katmanına çizilir; bileşimde yalnız rengi gerçekten altına yakın kalan piksellere tane, kenarda koyulaşma ve gürültüyle yer yer ışık eklenir. Bulutlar uçları kıvrık, ortasından sarmal bir filiz çıkan şeritlerdir, konturları altınla çekilir; güneşin ışınları sırayla sivri üçgen ve dalgalı altın şerittir; selviler alev biçimli küçük vuruşlarla dokulanır; çiçek sıraları yordamsal lale, karanfil ve gül işlevleriyle çizilir; her bitkinin ölçüsü, yeri, sap dibinden döndürülen eğimi, yaprak sayısı ve tür sırası (komşu iki bitki aynı olmaz) tohumlu rastgelelikle değişir. En sonda perdahlı kâğıt için çok hafif lif ve benek gürültüsü uygulanır.",
+  "etiketler": [
+    "Osmanlı",
+    "kitap resmi",
+    "Delâilü'l-Hayrât",
+    "altın kontur",
+    "örtücü boya",
+    "selvi",
+    "lale",
+    "ressamın eli"
+  ]
+}

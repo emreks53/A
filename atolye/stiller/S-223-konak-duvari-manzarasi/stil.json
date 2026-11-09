@@ -1,0 +1,40 @@
+{
+  "kod": "S-223",
+  "no": 223,
+  "ad": "Konak Duvarı Manzarası",
+  "ad_en": "Ottoman Mansion Wall Landscape",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "19. yüzyıl Osmanlı konak odalarındaki duvar manzaraları gibi: kireç sıva üstüne tutkallı boya; çapraz geniş fırça vuruşlu pudra mavisi gök, uzak tepelerde selviler ve yuvarlak ağaçlar, pastel düzlemler hâlinde mimari, gül ve lale demetleri; kenarda aşı boyası bant üstünde gül çelengi ve ince kırmızı çizgi.",
+  "tanim": "Hayalî bir 19. yüzyıl Osmanlı duvar ressamının eli. Destek: düz, ince, mat ve hafif gözenekli kireç sıva (sağlam, çatlaksız). Alet: geniş, yumuşak duvar fırçaları ve ince kontur fırçası; boya tutkallı, mat ve tebeşirimsi. Usta gökü ufka doğru beyazımsı açılan pudra mavisinde, iki yönde çaprazlanan geniş yumuşak vuruşlarla sürer; vuruşların bir kısmı tebeşirimsi açık, bir kısmı bir ton koyu kalır. Bulutları iki üç yuvarlak kütle hâlinde, kütlenin kavsini izleyen kısa, yumuşak beyaz vuruşlarla doldurur; alt kenar yassı ve soluk gri-mavidir. Ufukta soluk mavi-yeşil iki kat tepe, üstlerinde küçük selviler ve yuvarlak ağaçlar; çayır açık nane yeşili, yatay vuruşlarla ve öne doğru biraz koyulaşarak; tertipli yuvarlak çalılar lekelerle; kaidenin önünde alçak çimen ve küçük çiçek tutamları. Mimariyi pastel düzlemler hâlinde, silindirlerde açık-orta-gölge üç tonla dikey vuruşlarla boyar ve ince koyu bir çizgiyle çevreler; kubbe dilimlerinde ince koyu kaburga ve ışık yanında açık bir çizgi vardır. Çiçekler demetler hâlindedir: birkaç vuruşluk güller (yuvarlak gövde, gölge yanı, ortada içe sarılan tek koyu sarmal vuruş, çevresinde açık taç yayları) ve laleler, düzgün yapraklar. Kenarda en çok 34 piksellik aşı boyası bantta dalgalı ince sarmaşık, küçük güller ve yaprak çiftleri, köşe gülleri; bandın iç kenarında ince kırmızı çizgi.",
+  "koken": "18.–19. yüzyıl Osmanlı konak, köşk ve evlerindeki duvar ve tavan manzaralarına (kireç sıva üstüne tutkallı boya ya da kalem işi; Batı etkili manzara, selvi, köşk ve çiçek çelengi süslemeleri) dayanır. Belirli bir yapı ya da usta taklit edilmez; tarif bu tekniklerden kurulmuş hayalî bir ressamın elidir; figür ya da yazı içermez.",
+  "ayirt_edici": [
+    "Pudra mavisinden ufukta beyazımsıya inen gökte iki yönde çaprazlanan geniş, yumuşak fırça vuruşları",
+    "İki üç yuvarlak kütleden, kütlenin kavsini izleyen kısa beyaz vuruşlarla kurulmuş, altı yassı ve soluk gri-mavi bulutlar",
+    "Uzak soluk tepeler üstünde küçük selviler ve yuvarlak ağaçlar; nane yeşili çayırda düzgün yuvarlak çalılar",
+    "Pastel düzlemler ve ince koyu konturlarla mimari; kubbede açık, orta ve gölge yeşil dilimler",
+    "Birkaç vuruşla yapılmış, ortasında koyu sarmal vuruş olan pembe, kırmızı ve beyaz güller ile laleler; düzgün yaprak yelpazeleri",
+    "Aşı boyası bant üstünde sarmaşık, küçük güller ve yapraklardan çelenk; iç kenarda ince kırmızı çizgi; mat, tebeşirimsi sıva yüzeyi"
+  ],
+  "palet": [
+    "#A6C8E4",
+    "#D5E4EC",
+    "#F1ECDF",
+    "#C1DCB4",
+    "#548D63",
+    "#E3A3AB",
+    "#BD564E",
+    "#E3CF9E"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; boya doğrudan ana tuvale sahne sırasıyla, çok sayıda yarı saydam, uçları incelen şerit vuruşla sürülür. Gök önce ince yatay bantlarla kurulur, sonra yönü gürültüyle oynayan ±0,55 radyan iki yönde çapraz vuruşlarla kaplanır (vuruşların bir kısmı açık, bir kısmı koyu tonda); bulutlar, üç elips kütlesinin içine serpilen ve en yakın kütlenin kavsine teğet yönelen kısa kavisli vuruşlardır, alt kenarda yatay ve gri-mavi. Uzak tepeler titretilmiş eğri dolgular, selvi ve ağaçlar küçük dolgu ve leke vuruşlarıdır. Mimaride silindir aydınlatmasıyla seçilen üç tonlu dikey vuruşlar, kubbede meridyen yönlü vuruşlar ve titrek ince konturlar vardır. Güller dolgu elips, gölge hilali, içe sarılan koyu sarmal vuruş ve açık yay vuruşlarından; laleler yol dolgusu ve iki vuruştan kurulur. Kenar bandı evenodd kırpmasıyla boyanır; çelenk dalgalı sarmaşık, yaprak çiftleri ve mini güllerdir. Bileşimde ince lif/benek gürültüsü, sığ, iki yönlü ince gözenek dokusu (tek tek koyu nokta yok), çok geniş hafif mala dalgası ve renkleri az beyaza çeken tebeşir matlığı piksel piksel uygulanır.",
+  "etiketler": [
+    "duvar resmi",
+    "tutkallı boya",
+    "kireç sıva",
+    "Osmanlı",
+    "konak",
+    "manzara",
+    "pastel",
+    "ressamın eli"
+  ]
+}

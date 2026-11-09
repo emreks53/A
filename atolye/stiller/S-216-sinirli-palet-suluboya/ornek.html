@@ -357,6 +357,18 @@ function lavi(sk, o) {
   bx.drawImage(_mc, 0, 0);
   const b1 = bx.getImageData(0, 0, bw, bh).data;
   bx.filter = 'none';
+  // yumuşak kenarla bırakılan yerler (ıslakken kenarı nemli fırçayla açılmış): kenar koyulaşması yok
+  let hy = null;
+  if (o.haricYum) {
+    bx.clearRect(0, 0, bw, bh);
+    bx.setTransform(OL, 0, 0, OL, -x0 * OL, -y0 * OL);
+    bx.filter = `blur(${(o.haricYumR || 6) * OL}px)`;
+    bx.fillStyle = '#fff';
+    for (const h of o.haricYum) bx.fill(h.yol, h.kural || 'nonzero');
+    bx.filter = 'none';
+    bx.setTransform(1, 0, 0, 1, 0, 0);
+    hy = bx.getImageData(0, 0, bw, bh).data;
+  }
   const ox = (o.dalgaOfs != null ? o.dalgaOfs : (_ofs += 37.1)) % 400;
   const oy = (ox * 1.7 + 91) % 400;
   const sc = 1 / (2 * OL * dalgaO);
@@ -385,6 +397,7 @@ function lavi(sk, o) {
         const t = b0[k] / 255 + (P - 0.5) * kuru;
         a = t <= 0.38 ? 0 : t >= 0.62 ? 1 : yumusak(0.38, 0.62, t);
       } else a = ma / 255;
+      if (hy) a *= 1 - hy[k] / 255;
       if (a <= 0.003) continue;
       const e1 = kenet((1 - b1[k] / 255) * 2, 0, 1) * kenarYumusak;
       const e0 = kenet((1 - b0[k] / 255) * 2, 0, 1) * kenarYumusak;
@@ -703,17 +716,30 @@ function bulutBandi(x0, x1, taban, h, tohum) {
   const ust = [];
   const alt = [];
   const yuk = [];
-  const tepe = 0.3 + r() * 0.4;
+  const tum = [];
+  const nt = 3 + Math.floor(r() * 3);
+  for (let i = 0; i < nt; i++) tum.push({ c: 0.18 + (0.64 * (i + 0.2 + r() * 0.6)) / nt, s: 0.09 + r() * 0.09, a: 0.45 + r() * 0.55 });
+  tum[Math.floor(r() * nt)].a = 1;
+  let enb = 0;
+  const ham = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    let v = 0;
+    for (const b of tum) v = Math.max(v, b.a * Math.exp(-Math.pow((t - b.c) / b.s, 2)));
+    let v2 = 0;
+    for (const b of tum) v2 += b.a * Math.exp(-Math.pow((t - b.c) / b.s, 2));
+    ham.push(0.65 * v + 0.35 * Math.min(1.2, v2));
+    enb = Math.max(enb, ham[i]);
+  }
   for (let i = 0; i <= N; i++) {
     const t = i / N;
     const x = x0 + w * t;
-    const kuyruk = Math.pow(Math.sin(Math.PI * t), 0.7);
-    const dag = Math.exp(-Math.pow((t - tepe) / 0.42, 2));
-    let ht = h * kuyruk * (0.3 + 0.28 * dag + 0.7 * Math.pow(nz.fbm(t * 7.5 + 3, 1.7, 3), 1.6) * (0.6 + dag));
-    ht = Math.max(ht, h * 0.08 * kuyruk);
+    const kuyruk = Math.pow(Math.sin(Math.PI * t), 0.3);
+    let ht = h * kuyruk * (0.26 + 0.74 * (ham[i] / enb)) + h * 0.04 * (nz.n(t * 9, 1.3) - 0.5) * 2 * kuyruk;
+    ht = Math.max(ht, h * 0.16 * kuyruk);
     yuk.push(ht);
     ust.push([x, taban - ht]);
-    alt.push([x, taban + h * 0.1 * kuyruk * (0.6 + 0.8 * nz.n(t * 6 + 20, 4))]);
+    alt.push([x, taban + h * 0.12 * Math.pow(Math.sin(Math.PI * t), 0.5) * (0.6 + 0.8 * nz.n(t * 6 + 20, 4))]);
   }
   const pts = ust.concat(alt.slice().reverse());
   function golge(oran, ek) {
@@ -726,6 +752,65 @@ function bulutBandi(x0, x1, taban, h, tohum) {
     return g.concat(alt.slice().reverse());
   }
   return { pts, golge, taban, x0, x1, h, yuk, ust, alt };
+}
+
+/**
+ * Bulut kümesi: tabanı düz, farklı boyda birkaç tümseğin birleşimi (her tümsek elle titretilmiş yassı elips).
+ * Döner: {sk: bütün bulut (birleşim), lobes, golge(oran, ek): tabandan oran·h yüksekliğe kadar alt kısım (birleşim)}
+ * Gölgenin üst sınırı tümseklerin çizgisini izlemez, hafif dalgalı yatay bir çizgidir (ışık tepeleri açık bırakır).
+ */
+function bulutKumesi(x0, x1, taban, h, tohum, o) {
+  o = o || {};
+  const r = S.rng(tohum);
+  const nz = gurultu(tohum);
+  const w = x1 - x0;
+  const lob = [];
+  const n = Math.max(3, Math.round(w / (o.lobBoy || 58)));
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5 + (r() - 0.5) * 0.7) / n;
+    const env = Math.pow(Math.sin(Math.PI * kenet(t, 0.02, 0.98)), 0.7);
+    const ry = h * (0.3 + 0.7 * env * (0.55 + 0.45 * r()));
+    const rx = Math.min(w * 0.3, ry * (1.05 + 0.7 * r()));
+    lob.push({ cx: x0 + w * t, cy: taban - ry * (0.62 + 0.15 * r()), rx, ry });
+  }
+  lob.push({ cx: x0 + w * 0.5, cy: taban - h * 0.12, rx: w * 0.5, ry: h * 0.26 });
+  const tabanY = (x) => taban + h * 0.035 * (nz.n(x / 40, 3) - 0.5) * 2;
+  const pz = o.puruz != null ? o.puruz : 0.07;
+  const ham = lob.map((L, j) => {
+    const pts = [];
+    const m = 72;
+    for (let k = 0; k < m; k++) {
+      const a = (k / m) * Math.PI * 2;
+      const q = 1 + pz * (nz.n(Math.cos(a) * 1.5 + j * 3.1, Math.sin(a) * 1.5 + j) - 0.5) * 2 + pz * 0.5 * (nz.n(Math.cos(a) * 4 + j * 1.3, Math.sin(a) * 4 + 9) - 0.5) * 2;
+      pts.push([L.cx + Math.cos(a) * L.rx * q, L.cy + Math.sin(a) * L.ry * q]);
+    }
+    return titret(pts, true, o.amp != null ? o.amp : 0.9, 0.05, 1.5);
+  });
+  const kes = (dy) => ham.map((p) => p.map(([x, y]) => [x, Math.min(y, tabanY(x) + (dy || 0))]));
+  const titrek = kes(0);
+  /** x'teki bulut tepesinin yüksekliği (0..1, h'ye göre). */
+  const tepeHam = (x) => {
+    let t = 0;
+    for (const L of lob) {
+      const d = (x - L.cx) / L.rx;
+      if (d * d < 1) t = Math.max(t, taban - (L.cy - L.ry * Math.sqrt(1 - d * d)));
+    }
+    return t / h;
+  };
+  const tepe = (x) => kenet(tepeHam(x), 0, 1.2);
+  /** Alt (gölge) kısım: üst sınırı tepeyi kısmen izleyen dalgalı çizgi; uzat > 0 → tabanın altına taşar. */
+  function golge(oran, ek, uzat, izle) {
+    const cizgi = izle
+      ? (x) => taban - h * oran * tepeHam(x) + h * 0.07 * (nz.n(x / 45 + (ek || 0) * 5.3, 7 + (ek || 0)) - 0.5) * 2
+      : (x) => taban - h * oran * (0.45 + 0.75 * tepe(x)) + h * 0.11 * (nz.n(x / 55 + (ek || 0) * 5.3, 7 + (ek || 0)) - 0.5) * 2;
+    return sekil(kes(uzat || 0).map((p) => p.map(([x, y]) => [x, Math.max(y, Math.min(cizgi(x), tabanY(x) - 0.5))])));
+  }
+  function ust(oran, ek) {
+    const cizgi = (x) => taban - h * oran + h * 0.07 * (nz.n(x / 60 + (ek || 0) * 3.7, 17 + (ek || 0)) - 0.5) * 2;
+    return sekil(titrek.map((p) => p.map(([x, y]) => [x, Math.min(y, cizgi(x))])));
+  }
+  const alt = (dy) => sekil([[[x0 - 60, taban + (dy || 0)], [x1 + 60, taban + (dy || 0)], [x1 + 60, taban + 260], [x0 - 60, taban + 260]]]);
+  return { sk: sekil(titrek), lob, golge, ust, alt, tepe, tepeHam, taban, h, x0, x1 };
 }
 
 // ======================================================================= S-216 Sınırlı Palet Suluboya
@@ -823,60 +908,61 @@ const G = sahneSekilleri(0.55);
 
 const rez = [G.yapi, G.cicekSekil, G.tomurcukSekil];
 
-// ---------------------------------------------------------------- gök: üst üste binen dört düz lavi
+// ---------------------------------------------------------------- gök: üst üste binen dört ultramarin sırrı
+// Ressam gökü yukarıdan aşağı, her biri bir öncekinin kuruması beklenerek sürülen dört düz sırla kurar. Her sırrın
+// alt kenarı serbest elle çekilmiş dalgalı bir çizgidir ve kuruyunca koyu bir kenar bırakır; sağ üstte güneşe
+// doğru sırlar tek tek yarıda bırakılır, böylece ışık tarafı açık kalır. Bulutlar ve güneş boş kâğıttır.
 const gunes = { x: 880, y: 140 };
-function haleSekli(R, tohum, ox, oy) {
-  const nz = gurultu(tohum);
-  const pts = [];
-  for (let i = 0; i < 90; i++) {
-    const t = (i / 90) * Math.PI * 2;
-    const k = 1 + 0.2 * (nz.n(Math.cos(t) * 1.3 + 3, Math.sin(t) * 1.3 + 3) - 0.5) * 2;
-    pts.push([gunes.x + (ox || 0) + Math.cos(t) * R * k * 1.2, gunes.y + (oy || 0) + Math.sin(t) * R * k * 0.95]);
-  }
-  return sekilPoli(pts, 1.2, 0.05);
-}
-const gunesDisk = sekilPoli(elips(gunes.x, gunes.y, 41, 40, 0.2, 60), 1.0, 0.06, 1);
-// her bulut iki üç alçak bandın kümesi: biri ötekinin üstüne biner, her bandın altı gölgeli
+const gunesDisk = sekilPoli(elips(gunes.x + 1, gunes.y - 1, 42, 41, 0.2, 60), 1.6, 0.05, 1);
 const bulutlar = [
-  bulutBandi(40, 330, 266, 46, 31),
-  bulutBandi(120, 300, 236, 34, 37),
-  bulutBandi(420, 620, 164, 30, 32),
-  bulutBandi(470, 590, 146, 22, 38),
-  bulutBandi(670, 950, 352, 38, 33),
-  bulutBandi(720, 880, 326, 28, 39),
-  bulutBandi(840, 1060, 498, 26, 34),
-  bulutBandi(-40, 180, 486, 26, 36),
+  bulutKumesi(46, 330, 318, 104, 41, { puruz: 0.12, lobBoy: 36 }),
+  bulutKumesi(452, 668, 168, 62, 52, { puruz: 0.12, lobBoy: 34 }),
+  bulutKumesi(646, 944, 440, 96, 43, { puruz: 0.12, lobBoy: 36 }),
+  bulutKumesi(-50, 170, 542, 50, 44, { puruz: 0.12, lobBoy: 34 }),
+  bulutKumesi(846, 1066, 592, 46, 45, { puruz: 0.12, lobBoy: 34 }),
 ];
-const bulutSekil = sekil(bulutlar.map((b) => titret(b.pts, true, 0.9, 0.05, 1.5)));
+const bulutSekil = birlesik(bulutlar.map((b) => b.sk));
+const bulutUst = birlesik(bulutlar.map((b, i) => b.ust(0.42, i)));
 
-function gokKati(altY, egim, dalgaG, tohum, sagUc) {
+/** Gök sırrı: tepeden alt kenarına kadar; sağ ucu (xSon) elle bırakılmış eğik, pürüzlü bir kenar. */
+function gokKati(altY, egim, dalgaG, tohum, xSon) {
   const nz = gurultu(tohum);
-  const pts = [[-30, -30], [1054, -30]];
-  for (let x = 1054; x >= -30; x -= 6) {
-    let y = altY + egim * (x - 512) + (nz.n(x / 140, 1) - 0.5) * 2 * dalgaG + (nz.n(x / 38, 5) - 0.5) * dalgaG * 0.35 + (nz.n(x / 11, 8) - 0.5) * 3.5;
-    if (sagUc && x > sagUc - 160) y = Math.min(y, -30 + (y + 30) * Math.pow(kenet((sagUc - x) / 160, 0, 1), 0.55));
-    pts.push([x, y]);
+  const altKenar = (x) => altY + egim * (x - 512) + (nz.n(x / 150, 1) - 0.5) * 2 * dalgaG + (nz.n(x / 41, 5) - 0.5) * dalgaG * 0.4 + (nz.n(x / 12, 8) - 0.5) * 3.2;
+  const pts = [[-30, -30]];
+  if (xSon == null) {
+    pts.push([1054, -30]);
+    for (let x = 1054; x >= -30; x -= 5) pts.push([x, altKenar(x)]);
+  } else {
+    // sağ uç: yukarıdan aşağı sola doğru eğik inen, fırçanın kalktığı yerde pürüzlü kenar
+    const yb = altKenar(xSon);
+    const n = 60;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const y = -30 + (yb + 30) * t;
+      const x = xSon + (1 - t) * 130 + (nz.n(t * 3.5 + 3, 11) - 0.5) * 30 + (nz.n(t * 14 + 9, 13) - 0.5) * 4;
+      pts.push([x, y]);
+    }
+    for (let x = xSon - 6; x >= -30; x -= 5) pts.push([x, altKenar(x)]);
   }
   return sekil([pts]);
 }
 const katlar = [
-  { alt: 812, v: [0.15, 0, 0.004], carp: (x, y) => 1.05 - 0.45 * kenet(y / 800, 0, 1), hale: null },
-  { alt: 600, egim: -0.07, d: 26, v: [0.14, 0, 0.006], hale: null },
-  { alt: 380, egim: -0.06, d: 22, v: [0.15, 0, 0.007], sagUc: 1060, hale: haleSekli(150, 42, -20, 40) },
-  { alt: 182, egim: 0.02, d: 18, v: [0.16, 0, 0.008], sagUc: 760 },
+  { alt: 812, v: [0.15, 0, 0.004], carp: (x, y) => (1.05 - 0.5 * kenet(y / 800, 0, 1)) * (1 - 0.32 * Math.exp(-Math.pow(Math.hypot(x - gunes.x, y - gunes.y) / 260, 2))) },
+  { alt: 600, egim: -0.05, d: 30, v: [0.13, 0, 0.007], xSon: 830 },
+  { alt: 388, egim: -0.07, d: 26, v: [0.14, 0, 0.008], xSon: 716 },
+  { alt: 176, egim: 0.03, d: 20, v: [0.15, 0, 0.009], xSon: 596 },
 ];
+const gokHaric = rez.concat([bulutUst, gunesDisk]);
 katlar.forEach((k, i) => {
-  const sk = i === 0 ? sekil([dikd(-30, -30, 1054, 812)]) : gokKati(k.alt, k.egim, k.d, 300 + i, k.sagUc);
-  const haric = rez.concat([bulutSekil, gunesDisk]);
-  if (k.hale) haric.push(k.hale);
-  lavi(sk, { v: k.v, rim: 0.7, rimR: 3.4, boncuk: 0.5, gran: 0.3, dalga: 0.3, dalgaO: 2.6, yatay: 2.5, carp: k.carp, haric, havuz: 0.9 });
+  const sk = i === 0 ? sekil([dikd(-30, -30, 1054, 812)]) : gokKati(k.alt, k.egim, k.d, 300 + i, k.xSon);
+  lavi(sk, { v: k.v, rim: 0.75, rimR: 3.4, boncuk: 0.6, gran: 0.32, dalga: 0.3, dalgaO: 2.6, yatay: 2.5, carp: k.carp, haric: gokHaric, haricYum: [bulutSekil], haricYumR: 4.5, havuz: 0.9 });
 });
-// güneşin soluk sarı ışığı (çok açık aureolin)
-lavi(sekilPoli(elips(gunes.x, gunes.y, 38, 37, 0.4, 60), 0.8, 0.07, 1), { v: [0, 0.13, 0.0], rim: 0.5, rimR: 2, boncuk: 0.4, gran: 0.1, dalga: 0.1 });
-// bulut gölgeleri: menekşe gri, iki kat (alt kısım ve en alt)
+// güneş: kâğıt bırakılmış diskin içine çok açık aureolin; sır diske tam oturmaz (bir yanda ince, öbür yanda geniş kâğıt)
+lavi(sekilPoli(elips(gunes.x - 1.6, gunes.y + 1.4, 39, 38.5, 0.4, 60), 1.0, 0.07, 1), { v: [0, 0.14, 0.0], rim: 0.5, rimR: 2, boncuk: 0.45, gran: 0.1, dalga: 0.1 });
+// bulut gölgeleri: ultramarin + gül (+ az aureolin) = menekşe gri; iki kat, sert kurumuş kenarlı
 bulutlar.forEach((b, i) => {
-  lavi(sekil([titret(b.golge(0.55, i), true, 0.8, 0.06, 1.5)]), { v: MX.bulutGolge, rim: 0.6, rimR: 2.5, boncuk: 0.45, gran: 0.3, dalga: 0.15, haric: rez });
-  lavi(sekil([titret(b.golge(0.22, i + 7), true, 0.7, 0.06, 1.5)]), { v: MX.bulutGolge.map((q) => q * 0.85), rim: 0.6, rimR: 2.2, boncuk: 0.45, gran: 0.3, dalga: 0.15, haric: rez });
+  lavi(b.golge(0.5, i, 14), { v: MX.bulutGolge, rim: 0.65, rimR: 2.6, boncuk: 0.55, gran: 0.32, dalga: 0.15, haric: rez, haricYum: [b.alt(1)], haricYumR: 4.5 });
+  lavi(b.golge(0.24, i + 7, 14), { v: MX.bulutGolge.map((q) => q * 0.8), rim: 0.65, rimR: 2.2, boncuk: 0.55, gran: 0.32, dalga: 0.15, haric: rez, haricYum: [b.alt(1)], haricYumR: 4.5 });
 });
 
 // ---------------------------------------------------------------- minare
@@ -958,41 +1044,43 @@ S.kaide.pencereler.forEach((p, i) => {
 
 // ---------------------------------------------------------------- kasnak ve kubbe: önce sarı alt kat, üstüne mavi sırlar
 const yesilAlan = birlesik([G.kubbe, ...G.kasnak]);
-const parlak = sekilPoli(
-  (function () {
-    const pts = [];
-    for (let i = 0; i <= 30; i++) {
-      const t = i / 30;
-      const y = 334 + t * 150;
-      const w = Math.sin(Math.PI * Math.pow(t, 0.8));
-      pts.push([560 + Math.sin(0.43 - 0.13 * w) * kubbeR(y), y]);
-    }
-    for (let i = 30; i >= 0; i--) {
-      const t = i / 30;
-      const y = 334 + t * 150;
-      const w = Math.sin(Math.PI * Math.pow(t, 0.8));
-      pts.push([560 + Math.sin(0.43 + 0.15 * w) * kubbeR(y), y]);
-    }
-    return pts;
-  })(),
-  0.9,
-  0.05
-);
 lavi(yesilAlan, { v: MX.sari, rim: 0.4, rimR: 3, boncuk: 0.35, gran: 0.15, dalga: 0.15, haric: bitkiRez });
-// kubbe dilimleri: her dilim ayrı lavi; komşu dilimler hafifçe bindiği için kaburgalar koyu çizgi olarak doğar
+// kubbe dilimleri: her dilim ayrı lavi; komşu dilimler hafifçe bindiği için kaburgalar koyu çizgi olarak doğar.
+// Işık tarafındaki dilimlerde sarı alt kat daha çok görünür (sarımsı yeşil), gölge tarafında mavi ve gül artar.
+// Her dilimin mavisi elde karıştırıldığı için biraz farklıdır; bazı dilimlere tabandan yukarı ikinci bir mavi sır
+// sürülüp yarıda bırakılır: kuruyan üst kenarı dilimin içinde sert bir çizgi olarak kalır.
 const DILIM = 16;
 const isikB = 0.62;
+const rD = SAHNE.rng(2160);
 for (let k = 0; k < DILIM; k++) {
   const b1 = -Math.PI / 2 + (Math.PI * k) / DILIM;
   const b2 = b1 + Math.PI / DILIM;
   const bm = (b1 + b2) / 2;
   const lit = Math.max(0, Math.cos(bm - isikB));
-  const u = 0.36 + 0.5 * (1 - lit);
-  const rose = 0.01 + 0.05 * (1 - lit) * (1 - lit);
+  const u = (0.3 + 0.56 * (1 - lit)) * (0.86 + rD() * 0.28);
+  const rose = 0.01 + 0.06 * (1 - lit) * (1 - lit);
   const pts = kubbeDilimi(b1, b2, 301, 556, 50);
   const n2 = pts.length / 2;
   const sk = sekilPoli(pts.map(([x, y], j) => [x + (j < n2 ? -0.9 : 0.9), y]), 0.45, 0.05, 1.2);
-  lavi(sk, { v: [u, 0, rose], rim: 0.45, rimR: 2.2, boncuk: 0.55, gran: 0.22, dalga: 0.12, dalgaO: 1.4, haric: bitkiRez.concat(k >= 9 && k <= 12 ? [parlak] : []) });
+  lavi(sk, { v: [u, 0, rose], rim: 0.5, rimR: 2.2, boncuk: 0.6, gran: 0.24, dalga: 0.12, dalgaO: 1.4, haric: bitkiRez });
+  if (rD() < 0.62) {
+    const ust = 372 + rD() * 120;
+    const nz = gurultu(5100 + k);
+    const yarim = [];
+    for (let i = 0; i <= 30; i++) {
+      const y = 556 - ((556 - ust) * i) / 30;
+      yarim.push([560 + Math.sin(b1 - 0.004) * kubbeR(y), y]);
+    }
+    for (let i = 0; i <= 12; i++) {
+      const bb = b1 + ((b2 - b1) * i) / 12;
+      yarim.push([560 + Math.sin(bb) * kubbeR(ust), ust + (nz.n(i / 3, 2) - 0.5) * 9 + 4 * Math.sin(Math.PI * i / 12)]);
+    }
+    for (let i = 30; i >= 0; i--) {
+      const y = 556 - ((556 - ust) * i) / 30;
+      yarim.push([560 + Math.sin(b2 + 0.004) * kubbeR(y), y]);
+    }
+    lavi(sekilPoli(yarim, 0.5, 0.06, 1.2), { v: [0.1 + 0.12 * (1 - lit), 0.0, 0.015 * (1 - lit)], rim: 0.6, rimR: 2.2, boncuk: 0.6, gran: 0.25, dalga: 0.1, haric: bitkiRez });
+  }
 }
 // kubbenin gölgeli yanı (ultramarin + gül = menekşe) ve alt kenar
 function meridyenSekli(bA, bB, ya, yb, tohum) {
@@ -1009,7 +1097,6 @@ function meridyenSekli(bA, bB, ya, yb, tohum) {
   }
   return sekilPoli(pts, 0.8, 0.05);
 }
-lavi(parlak, { v: [0.14, 0.05, 0], rim: 0.5, rimR: 2, boncuk: 0.45, gran: 0.2, dalga: 0.1 });
 lavi(meridyenSekli(-Math.PI / 2 - 0.05, -0.3, 304, 556, 61), { v: [0.13, 0.0, 0.06], rim: 0.55, rimR: 2.8, boncuk: 0.5, gran: 0.25, dalga: 0.12, dalgaO: 1.5 });
 lavi(meridyenSekli(-Math.PI / 2 - 0.05, -0.98, 330, 556, 62), { v: [0.13, 0.02, 0.05], rim: 0.55, rimR: 2.4, boncuk: 0.5, gran: 0.25, dalga: 0.1, dalgaO: 1.5 });
 lavi(sekilPoli(kubbeDilimi(-Math.PI / 2 - 0.02, Math.PI / 2 + 0.02, 530, 556, 20), 0.8, 0.05), { v: [0.12, 0.02, 0.05], rim: 0.5, rimR: 2.4, boncuk: 0.5, gran: 0.25, dalga: 0.12 });
@@ -1028,9 +1115,25 @@ for (const kb of S.kaburgalar(16, 60)) {
   });
 }
 // kasnak: mavi sır (sağda açık), solda menekşe gölge, kubbenin gölgesi
-lavi(birlesik(G.kasnak), { v: [0.48, 0.0, 0.01], rim: 0.5, rimR: 2.6, boncuk: 0.5, gran: 0.4, dalga: 0.15, haric: bitkiRez });
-lavi(sekilPoli([[330, 552], [640, 552], [655, 694], [330, 694]], 0.9, 0.04), { v: [0.2, 0.0, 0.04], rim: 0.5, rimR: 2.6, boncuk: 0.5, gran: 0.4, dalga: 0.15, haric: bitkiRez.concat([sekilPoli(dikd(0, 0, 1024, 552.5), 0, 0)]) });
-lavi(sekilPoli([[330, 552], [450, 552], [440, 694], [330, 694]], 0.9, 0.04), { v: [0.16, 0.0, 0.07], rim: 0.5, rimR: 2.4, boncuk: 0.5, gran: 0.4, dalga: 0.12, haric: bitkiRez.concat([sekilPoli(dikd(0, 0, 1024, 552.5), 0, 0)]) });
+// kasnak bölme bölme sırlanır: her pencere arası ayrı mavi sır (silindirde sağa doğru daha az mavi, sarı alt kat
+// görünür); komşu bölmeler hafifçe bindiği için aralarında ince koyu dikey dikiş kalır
+G.kasnakPencereP.forEach((Lp, kat) => {
+  const q = S.kasnak[kat];
+  const sinir = [q.x1];
+  for (let i = 0; i < Lp.length - 1; i++) sinir.push((Lp[i].x + Lp[i + 1].x) / 2);
+  sinir.push(q.x2);
+  const Rk = (q.x2 - q.x1) / 2;
+  for (let i = 0; i < sinir.length - 1; i++) {
+    const xa = sinir[i] - (i ? 0.9 : 0);
+    const xb = sinir[i + 1] + (i < sinir.length - 2 ? 0.9 : 0);
+    const bm = Math.asin(kenet(((xa + xb) / 2 - 560) / Rk, -1, 1));
+    const lit = Math.max(0, Math.cos(bm - isikB));
+    const u = (0.3 + 0.36 * (1 - lit)) * (0.9 + rD() * 0.2);
+    lavi(sekilPoli(dikd(xa, q.y1, xb, q.y2), 0.5, 0.06, 1.2), { v: [u, 0.0, 0.01 + 0.03 * (1 - lit)], rim: 0.5, rimR: 2.2, boncuk: 0.55, gran: 0.22, dalga: 0.12, haric: bitkiRez });
+  }
+});
+lavi(sekilPoli([[330, 552], [640, 552], [655, 694], [330, 694]], 0.9, 0.04), { v: [0.2, 0.0, 0.04], rim: 0.5, rimR: 2.6, boncuk: 0.5, gran: 0.25, dalga: 0.15, haric: bitkiRez.concat([sekilPoli(dikd(0, 0, 1024, 552.5), 0, 0)]) });
+lavi(sekilPoli([[330, 552], [450, 552], [440, 694], [330, 694]], 0.9, 0.04), { v: [0.16, 0.0, 0.07], rim: 0.5, rimR: 2.4, boncuk: 0.5, gran: 0.25, dalga: 0.12, haric: bitkiRez.concat([sekilPoli(dikd(0, 0, 1024, 552.5), 0, 0)]) });
 lavi(sekilPoli(dikd(350, 555, 770, 563), 0.6, 0.05), { v: [0.3, 0.05, 0.12], rim: 0.45, rimR: 1.8, boncuk: 0.45, gran: 0.35 });
 lavi(sekilPoli(dikd(334, 610, 786, 617), 0.6, 0.05), { v: [0.3, 0.06, 0.12], rim: 0.45, rimR: 1.8, boncuk: 0.45, gran: 0.35, haric: bitkiRez });
 lavi(sekilPoli(dikd(334, 686, 786, 692), 0.5, 0.05), { v: [0.25, 0.05, 0.1], rim: 0.45, rimR: 1.6, boncuk: 0.45, gran: 0.35, haric: bitkiRez });
@@ -1053,6 +1156,15 @@ const zemin = (function () {
   return sekil([pts]);
 })();
 lavi(zemin, { v: [0.035, 0.11, 0.06], rim: 0.45, rimR: 3, boncuk: 0.4, gran: 0.35, dalga: 0.2, dalgaO: 1.4, yatay: 2.5, haric: [G.kaide, G.minare, G.cicekSekil, G.tomurcukSekil] });
+// toprağın ikinci sırrı: biraz daha gül ve sarı, üst kenarı serbest elle; altta üçüncü, yeşilimsi sır (mavi + sarı)
+(function () {
+  for (const [y0, amp, v, t] of [[858, 18, [0.02, 0.07, 0.045], 78], [950, 22, [0.06, 0.12, 0.02], 79]]) {
+    const nz = gurultu(t);
+    const pts = [[-30, 1054], [1054, 1054]];
+    for (let x = 1054; x >= -30; x -= 6) pts.push([x, y0 + (nz.n(x / 120, 1) - 0.5) * 2 * amp + (nz.n(x / 30, 4) - 0.5) * 6]);
+    lavi(sekil([pts]), { v, rim: 0.55, rimR: 3, boncuk: 0.5, gran: 0.3, dalga: 0.2, dalgaO: 1.4, yatay: 2.5, haric: [G.cicekSekil, G.tomurcukSekil] });
+  }
+})();
 lavi(sekilPoli([[230, 798], [300, 798], [300, 812], [236, 814]], 0.8, 0.05), { v: MX.tasGolge.map((q) => q * 0.9), rim: 0.5, rimR: 2, boncuk: 0.45, gran: 0.4, haric: bitkiRez });
 lavi(sekilPoli([[300, 799], [820, 799], [826, 806], [300, 809]], 0.8, 0.05), { v: MX.tasGolge.map((q) => q * 0.7), rim: 0.5, rimR: 2, boncuk: 0.45, gran: 0.4, haric: bitkiRez });
 

@@ -1,0 +1,39 @@
+{
+  "kod": "S-232",
+  "no": 232,
+  "ad": "Filmde Renkli Kalem",
+  "ad_en": "Coloured Pencil on Drafting Film",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Mat polyester çizim filminde renkli kalem: dişsiz yüzeyde pürüzsüz, saten ve hafif saydam çizgiler; arkadan sürülen yumuşak renk önden buğulu bir ışıltı verir, konturlar yerel rengin koyu kalemiyle temiz ve keskin.",
+  "tanim": "Hayalî bir renkli kalem ressamının eli. Desteği beyaz üstüne konmuş mat polyester çizim filmi; aletleri sivri renkli kalemler (iki gök mavisi, açık lacivert, üç yeşil, yeşil-mavi, krem, sıcak gri, lila, koyu lila, sarı, turuncu-oker) ve her yerel renk için bir koyu kontur kalemi. Önce filmin arkasından geniş, yumuşak lekelerle açık renkleri sürer (gök için açık mavi, kubbe için açık yeşil, taş için krem, taç yaprakları için lila); bu katman önden filmin matlığından buğulanmış, ışıklı bir taban gibi görünür. Önde tonu uçları incelen, tek yönlü çizgilerle kurar; film diş tutmadığı için çizgiler tanesiz, saten ve hafif saydamdır, üst üste geldikçe renk koyulaşır, çizgi tonun bittiği yerde kalkar. Göğü birbirine binen eğik çizgi yamalarıyla, üst bantta sık ve hafif bastırılmış perdahlı çizgilerle pürüzsüz bir tona getirir, ufka doğru seyreltir, güneşin hemen çevresinde dar bir halkada açar; güneşi ve bulutları çıplak film bırakır (bulutların yerini arka yüzde de boş bırakır), güneşin içine soluk sarı kısa tarama, bulut altlarına lila çizgiler koyar. Kubbeyi kaburga yönünde eğri çizgilerle, gölge yanında koyu yeşil ve yeşil-mavi katlarla tarar; kasnak ve minarede çizgiler dikey, kaidede eğik, zeminde yatay yamalar hâlindedir. Yaprakları orta damardan kenara yan damar yönünde çizgilerle, taç yapraklarını göbekten dışa birkaç lila çizgiyle tarar, gerisini çıplak film bırakır. En sonda kubbe, kasnak, kaburgalar, pencereler, taş, yaprak ve taç yaprak konturlarını yerel rengin koyu kalemiyle temiz, basıncı hafifçe değişen çizgilerle çizer.",
+  "koken": "Mimarlık ve mühendislik çiziminde kullanılan mat polyester çizim filmi (drafting film) üzerinde renkli kalem çalışmasına, filmin iki yüzüne de çizilebilmesinden yararlanan arka yüzden renklendirme yöntemine ve renkli kalemde katman katman tek yönlü tarama ile perdahlama tekniklerine dayanır. Gerçek bir sanatçı örnek alınmamıştır; tarif hayalî bir ressamın tutarlı elidir.",
+  "ayirt_edici": [
+    "Kâğıt dişi yok: bütün tonlar tanesiz, saten, hafif saydam kalem çizgilerinden; çizgilerin yönü ve basıncı her yerde seçiliyor",
+    "Arkadan sürülmüş buğulu açık renkler (gök mavisi, kubbe yeşili, krem, lila) ön çizgilerin altında yumuşak bir ışıltı veriyor",
+    "Gök birbirine binen eğik çizgi yamalarından; üst bantta perdahlı pürüzsüz ton, güneş ve bulutlar çıplak film",
+    "Kubbe kaburga yönünde eğri çizgilerle taranmış; gölgede koyu yeşil ve yeşil-mavi katlar",
+    "Taç yaprakları çıplak beyaz film: göbekten dışa birkaç lila çizgi ve keskin lila kontur",
+    "Yerel rengin koyu kalemiyle temiz konturlar: koyu yeşil kubbe ve kaburgalar, sıcak gri taş, koyu yeşil yapraklar"
+  ],
+  "palet": [
+    "#98BCE0",
+    "#C3DBED",
+    "#3E7C4F",
+    "#93C690",
+    "#ECE5D4",
+    "#D6CEE7",
+    "#5A995E",
+    "#F7F9F9"
+  ],
+  "kodla_cizim": "2048 iç çözünürlük. Ortak sahne yolları el titremesiyle Path2D'ye çevrilir, öğe maskeleri ve silindir koordinatları çıkarılır. Arka yüz katmanı: öğe sırasıyla silinip yeniden boyanan geniş şerit lekeler; bulut biçimi bu katmandan gürültülü bir maskeyle silinir; birleştirmede 6 px bulanıklık ve çarpımla (multiply) basılır. Ön yüz: her alan için bir ton haritası (ışık hesabı, yükseklik, güneş ve bulut uzaklığı); çizgiler ton eşiğini aştıkları koşulara bölünür ve her koşu uçları incelen, genişliği sinüs karışımıyla değişen çokgen bir kalem darbesi olur. Gökte titreşimli ızgaradan yamalar (her yamada 1,9–2,5 px aralıklı paralel çizgiler) üç geçişte farklı eşik, renk ve açıyla atılır; üst bantta 1,25 px aralıklı perdah; kubbede kubbeProfili'nden meridyen çizgileri; yapraklarda orta damardan kenara eğik çizgiler. Çizgiler katman içinde çarpımla üst üste biner; her öğe çizilmeden önce kendi alanı katmandan silinir, böylece öndeki arkadakini örter. Konturlar örneklenmiş yollar boyunca basınçlı çokgen çizgilerdir. Math.random yok, SAHNE.rng.",
+  "etiketler": [
+    "renkli kalem",
+    "çizim filmi",
+    "polyester film",
+    "arka yüz boyama",
+    "saten",
+    "kontur",
+    "ressamın eli"
+  ]
+}

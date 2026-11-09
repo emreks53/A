@@ -1,0 +1,40 @@
+{
+  "kod": "S-225",
+  "no": 225,
+  "ad": "Safevi Minyatürü",
+  "ad_en": "Safavid Miniature",
+  "aile": "Atölye Render Üslupları",
+  "ozgun": true,
+  "ozet": "Safevi saray minyatürlerinin lirik eli: açık lacivertten soluk maviye inen gündüz göğünde beyaz Çin bulut kıvrımları, yüksek ufuklu nane yeşili çayıra düzenli serpilmiş minik çiçek demetleri, çiçek açmış badem ağaççıkları, uçlarda lavanta ve mercan süngerimsi kayalar; firuze çini vurgulu, altın konturlu mimari.",
+  "tanim": "Hayalî bir Safevi saray musavvirinin eli. Destek: mühreyle perdahlanmış kâğıt. Alet: maden boyalar, çok ince fırçalar, koyu ve altın kontur. Usta gökü açık lacivertten ufukta soluk maviye inen ince örtücü vuruşlarla boyar; içine düğümlü, uçları geniş kıvrılan beyaz Çin bulut kurdeleleri koyar; kurdeleler mat ve örtücüdür, bir kenarı boyunca çok soluk mavi bir gölge şeridi taşır, kenarları kalın-ince mavi çizgiyle çekilir. Ufku yüksek ve hafif dalgalı tutar: altında bütün sahneyi taşıyan açık nane yeşili çayır, üstüne aşağı yukarı eşit aralıklarla, ama ızgara gibi değil, minik çiçek demetleri serper (her biri iki yapraklı ince bir sap ve üç-dört beyaz, pembe, mavi ya da sarı çiçekçik). Uçlarda küçük lavanta ve soluk mercan süngerimsi kayalar, iki yanda koyu kahve dallı, beyaz ve pembe beş yapraklı çiçeklerle dolu badem ağaççıkları. Mimaride düz renk alanları süslemeyle zenginleşir: firuze üst kasnakta beyaz kafes, firuze minare topuzu ve şerefe bantları, lacivert zeminde firuze baklavalar, kaidede lacivert-firuze gülçeli friz, firuze çerçeveli pencereler; yeşil kubbede altın kaburgalar ve altın nokta dizileri. Önde tek tek boyanmış yapraklar arasında pembe göbekli beyaz güller. Kenarlar keskin, renkler düz ve lirik, bakışım özenli.",
+  "koken": "16. yüzyıl Safevi saray resmine (Tebriz, Kazvin ve İsfahan nakkaşhaneleri) dayanır: yüksek ufuk, çiçekli ağaçlar, çayıra serpilmiş çiçek demetleri, Çin kökenli bulut kıvrımları (çi), süngerimsi kayalar, firuze çinili mimari ve perdahlı kâğıtta maden boyalar. Belirli bir eser ya da sanatçı taklit edilmez; tarif bu geleneklerden kurulmuş hayalî bir ressamın elidir; figür, yazı ya da hat içermez.",
+  "ayirt_edici": [
+    "Yüksek, hafif dalgalı ufuk ve aşağı yukarı eşit aralıklarla minik çiçek demetleri serpilmiş nane yeşili çayır",
+    "Açık lacivertten soluk maviye inen, ince vuruşlu gündüz göğünde düğümlü, uçları geniş kıvrılan mat beyaz bulut kurdeleleri",
+    "Koyu dallı, beyaz ve pembe beş yapraklı çiçeklerle dolu badem ağaççıkları; uçlarda lavanta ve mercan süngerimsi kayalar",
+    "Firuze vurgular: beyaz kafesli üst kasnak, minare topuzu ve şerefeler, lacivert zeminde firuze baklavalar, lacivert-firuze friz",
+    "Yeşil kubbede altın kaburgalar ve kaburga aralarında altın nokta dizileri",
+    "Önde tek tek boyanmış koyu yapraklar arasında pembe göbekli beyaz güller"
+  ],
+  "palet": [
+    "#6D97D9",
+    "#CCDEF2",
+    "#9ACBA3",
+    "#3FB3B3",
+    "#359562",
+    "#2F4F9A",
+    "#EEC2CD",
+    "#CCB8DC"
+  ],
+  "kodla_cizim": "Canvas, 2048 iç çözünürlük; boya doğrudan ana tuvale sahne sırasıyla sürülür. Gök önce kat kat yatay bantlar, sonra rengi yüksekliğe göre seçilip ±%4 oynatılmış kısa ince örtücü vuruşlarla kaplanır; ufuk düşük frekanslı bir eğridir ve çayır kırpma içinde yatay vuruşlarla boyanır. Bulut kurdeleleri dalgalı orta çizgi, ortada ilmik ve iki uçta sarmal kıvrımla kurulan mat beyaz dolgu ve fırça şeritleri, bir kenarda soluk mavi gölge şeridi ve kalın-ince mavi kenar çizgileridir. Kayalar yumuşak loblu konturlar ve içlerinde kıvrık vuruşlar; badem ağaçları yukarı yönlendirilmiş, sınırlandırılmış özyinelemeli dallar, küçük yapraklar ve beş elipsli çiçekler; çayır demetleri kaydırmalı bir ızgaradan başlayıp belirgin oynamalarla (yer, ölçü, tür sırası, yer yer boşluk) dağıtılır ve yapının arkasına düşenler atlanır. Mimari süsler (kafes, baklava, gülçe, nokta dizileri) yordamsal çizilir. Altın aynı tohumla ana tuvale ve bir maske katmanına çizilir; bileşimde yalnız altın renkli piksellere tane ve ışık, bütün yüzeye perdahlı kâğıt için çok hafif lif gürültüsü uygulanır.",
+  "etiketler": [
+    "Safevi",
+    "Fars minyatürü",
+    "firuze",
+    "çiçek demetleri",
+    "badem çiçeği",
+    "bulut kıvrımı",
+    "maden boya",
+    "ressamın eli"
+  ]
+}
