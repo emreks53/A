@@ -1014,7 +1014,7 @@ const gunesKose = (function () {
     for (let k = 0; k < 4; k++) {
       const t = k / 4;
       const aa = a + (a2 - a) * t;
-      const RR = R0 + Math.sin(Math.PI * t) * 1.6;
+      const RR = R0 + Math.sin(Math.PI * t) * 0.5;
       pts.push([gunes.x + Math.cos(aa) * RR, gunes.y + Math.sin(aa) * RR]);
     }
   }
@@ -1127,7 +1127,7 @@ for (const [dy, x0, x1, w, k] of [[-30, 690, 1080, 34, 0.24], [2, 640, 1080, 38,
   firca([[x0, gunes.y + dy], [(x0 + x1) / 2, gunes.y + dy + (rr() - 0.5) * 4], [x1, gunes.y + dy + (rr() - 0.5) * 4]], { w, v: olc(C.ser, k), kuru: 0.45 + rr() * 0.2, haric: [M_GUNES, M_YAPI, M_BULUT_S], kuruMaske: M_BULUT, kenar: 0.05, lif: 0.08, bas: 0.12 });
 }
 // güneş: kâğıt, içinde çok açık sarı tek geniş vuruş
-const M_DISK = maske([sekilPoli(gunesKose.map(([x, y]) => [gunes.x + (x - gunes.x) * 1.03, gunes.y + (y - gunes.y) * 1.03]), 0.3, 0.06, 1)]);
+const M_DISK = maske([sekilPoli(gunesKose, 0.3, 0.06, 1)]);
 firca([[gunes.x - 42, gunes.y + 1], [gunes.x + 44, gunes.y - 1]], { w: 84, v: olc(C.sari, 0.22), kuru: 0.1, ici: M_DISK, kenar: 0.1 });
 
 /** Sivri kemerli pencere tek vuruşta: eşikten düz ağızla başlar, kemerde fırça ağzına döndürülerek sivri biter. */
