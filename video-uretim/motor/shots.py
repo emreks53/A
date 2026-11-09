@@ -80,7 +80,7 @@ def shot_table():
     ]
     # ---- F: the eye
     T += [
-        S('F01', 's20/4203016637.mp4', cut(62.29), cut(65.39), t_in=0.3, cx=0.53, z0=1.0, z1=1.12, trans=dict(type='iris', dur=0.7, cy=880)),
+        S('F01', 's20/1102376593.mp4', cut(62.29), cut(65.39), t_in=0.3, cx=0.465, cy=0.42, z0=1.18, z1=1.32, trans=dict(type='iris', dur=0.7, cy=880)),
         S('F02', 's21/3987163217.mp4', cut(65.39), cut(66.89), t_in=12.0, cx=0.5, z0=1.0, z1=1.06, trans=dict(type='blur', dur=0.3)),
         S('F03', 's21/3828180025.mp4', cut(66.89), cut(68.45), t_in=0.5, cx=0.45, z0=1.0, z1=1.06, trans=dict(type='blur', dur=0.3)),
         S('F04', 's21/4064709237.mp4', cut(68.45), cut(70.05), t_in=3.2, cx=0.42, z0=1.0, z1=1.06, trans=dict(type='blur', dur=0.3)),
