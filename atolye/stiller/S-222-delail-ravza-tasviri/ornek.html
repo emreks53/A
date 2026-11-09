@@ -601,13 +601,13 @@
     // örtücü kat: kısa-orta yatay vuruşlar; tonu fırçadan fırçaya azıcık değişir, ufka doğru hafif açılır
     H.vurusDoldur(ctx, {
       box: [0, 0, 1024, 812],
-      ara: 12,
-      uzun: [70, 150],
-      gen: [16, 24],
-      aci: (x, y) => 0.03 * Math.sin(x / 140 + y / 60),
+      ara: 11,
+      uzun: [50, 110],
+      gen: [14, 22],
+      aci: (x, y) => 0.06 * Math.sin(x / 90 + y / 40),
       renk: (x, y, q, r) => {
         const c = H.mix(H.hex('#72A9DC'), H.hex('#9AC4E8'), H.smooth(300, 800, y));
-        const v = (r() - 0.5) * 0.075;
+        const v = (r() - 0.5) * 0.12;
         return H.rgba(c.map((q2) => H.clamp(q2 * (1 + v), 0, 255)));
       },
       alfa: [0.6, 0.9],
@@ -1112,28 +1112,37 @@
     });
     B.cicekler.slice(0, 4).forEach((c) => gul(c.x, c.y, 19));
   }
-  // ön sıralar: tertipli, birbirine yakın; arka sırada küçük, öne doğru büyüyen bitkiler (yarım adım kaydırmalı)
+  // ön sıralar: tertipli, birbirine yakın; arka sırada küçük, öne doğru büyüyen bitkiler (yarım adım kaydırmalı);
+  // aralarda küçük çimen öbekleri
   {
+    const rr = S.rng(2225);
+    const cimen = (x, y, s) => {
+      for (let j = 0; j < 5; j++) {
+        const a = -Math.PI / 2 + (j - 2) * 0.35;
+        H.firca(ctx, H.kavis(x + (j - 2) * 1.5, y, x + (j - 2) * 1.5 + Math.cos(a) * s, y + Math.sin(a) * s, (j - 2) * 1.5, 6), { w: 2, color: j % 2 ? '#4F8D59' : '#3B7748', bas: 0.1, uc: 0.8, seed: T() });
+      }
+    };
     const sira = [
-      { y: 852, ara: 58, s: 15, kay: 8, sapL: 28 },
-      { y: 912, ara: 70, s: 20, kay: 43, sapL: 34 },
-      { y: 978, ara: 82, s: 25, kay: 6, sapL: 40 },
-      { y: 1046, ara: 94, s: 29, kay: 50, sapL: 44 },
+      { y: 858, ara: 54, s: 16, kay: 10, sapL: 28 },
+      { y: 918, ara: 68, s: 22, kay: 44, sapL: 34 },
+      { y: 986, ara: 84, s: 30, kay: 4, sapL: 38 },
     ];
     sira.forEach((r, si) => {
+      // önce çimenler (bitkilerin arasında)
+      for (let x = r.kay; x < 1024; x += r.ara) cimen(x + (rr() - 0.5) * 6, r.y + r.sapL * 0.75, 8 + si * 3);
       let j = 0;
-      for (let x = r.kay + r.ara / 2; x < 1024 + 20; x += r.ara, j++) {
-        const yb = r.y;
-        // yan saplar ve selvilerle çakışmayı önle (arka sıralarda)
+      for (let x = r.kay + r.ara / 2; x < 1024 - 16; x += r.ara, j++) {
+        const s2 = r.s * (0.92 + rr() * 0.16);
+        const yb = r.y + (rr() - 0.5) * 4;
         if (si < 2 && (x < 82 || x > 942)) continue;
         if (si === 0 && ((x > 96 && x < 170) || (x > 854 && x < 928))) continue;
         const tur = (j + si * 2) % 3;
-        sap(x, yb + r.sapL * 0.7, yb - r.s * 0.2, 2.4 + si * 0.4);
-        yaprakCift(x, yb + r.sapL * 0.45, r.s * 1.35, 0.95, '#3B7748');
-        yaprakCift(x, yb + r.sapL * 0.05, r.s * 1.0, 0.62, '#3B7748');
-        if (tur === 0) lale(x, yb - r.s * 0.15, r.s);
-        else if (tur === 1) karanfil(x, yb - r.s * 0.2, r.s * 0.92);
-        else gul(x, yb - r.s * 0.45, r.s * 0.66);
+        sap(x, yb + r.sapL * 0.75, yb - s2 * 0.2, 2.4 + si * 0.5);
+        yaprakCift(x, yb + r.sapL * 0.45, s2 * 1.35, 0.9 + (rr() - 0.5) * 0.2, '#3B7748');
+        yaprakCift(x, yb + r.sapL * 0.05, s2 * 1.0, 0.6 + (rr() - 0.5) * 0.15, '#3B7748');
+        if (tur === 0) lale(x, yb - s2 * 0.15, s2);
+        else if (tur === 1) karanfil(x, yb - s2 * 0.2, s2 * 0.92);
+        else gul(x, yb - s2 * 0.45, s2 * 0.66);
       }
     });
   }
