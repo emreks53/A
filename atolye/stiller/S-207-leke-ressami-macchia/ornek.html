@@ -935,6 +935,9 @@ K.cicekOrta = function (c, cx, cy, r, renk, R, o) {
   // ----------------------------------------------------------------- astar: açık okr pano
   ctx.fillStyle = K.rk(P.okr);
   ctx.fillRect(0, 0, 1024, 1024);
+  // gök bantlarının altı düz mavi alt kat: dalgalı bant sınırları arasında okr astar delik gibi görünmesin
+  ctx.fillStyle = K.rk(P.orta);
+  ctx.fillRect(0, 0, 1024, 680);
 
   /**
    * Leke: elle kesilmiş düz renk alanı, yassı fırçanın paralel darbeleriyle doldurulur.
@@ -1322,7 +1325,7 @@ K.cicekOrta = function (c, cx, cy, r, renk, R, o) {
   astarCizgi([[785.5, 612], [785.5, 690]], 1.8);
   astarCizgi([[334, 555], [352, 555], [352, 610]], 1.6);
   astarCizgi([[830.5, 694], [820.5, 704], [820.5, 798]], 1.8);
-  astarCizgi([[334.5, 790], [334.5, 492]], 1.6);
+  astarCizgi([[334.5, 688], [334.5, 492]], 1.6);
   astarCizgi([[327.5, 436], [327.5, 318]], 1.5);
   astarCizgi([[319.5, 270], [319.5, 208]], 1.4);
 

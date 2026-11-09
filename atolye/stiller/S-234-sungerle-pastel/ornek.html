@@ -573,7 +573,9 @@ const gunesUz = (x, y) => Math.hypot(x - 880, y - 140);
         const cx = x + (R() - 0.5) * 40, cy = y + (R() - 0.5) * 30;
         const gd = gunesUz(cx, cy);
         let a = K.a(cy);
-        if (ki > 0) a *= sstep(90 + ki * 50, 240 + ki * 70, gd); // güneşin çevresi açık kalır
+        // güneşin hemen çevresi açık kalır; orta kat güneşe daha çok yaklaşır ki açık gök düz bir dolgu gibi kalmasın
+        if (ki === 1) a *= sstep(92, 205, gd);
+        else if (ki > 1) a *= sstep(90 + ki * 50, 240 + ki * 70, gd);
         if (a < 0.08) continue;
         const r = lerp(K.r[0], K.r[1], R());
         basSupur(k, cx, cy, r, a, R() < 0.5 ? 1 : -1, r * (0.5 + 0.8 * R()), (R() - 0.5) * 0.25);

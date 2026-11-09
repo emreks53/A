@@ -1001,10 +1001,29 @@ const C = {
 
 // ---------------------------------------------------------------- rezervler
 const gunes = { x: 880, y: 140 };
-const gunesDisk = sekilPoli(elips(gunes.x, gunes.y, 40, 40, 0, 64), 0.8, 0.05, 1);
+// güneş: yassı fırçanın ağzıyla çevresinden kısa kavisli vuruşlarla kesilmiş, hafif çokgen bir kâğıt diski
+const gunesKose = (function () {
+  const r0 = S.rng(2201);
+  const n = 10;
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + (r0() - 0.5) * 0.18;
+    const a2 = ((i + 1) / n) * Math.PI * 2;
+    const R0 = 40 + (r0() - 0.5) * 3;
+    // her kenar hafif kavisli kısa bir ağız kesimi
+    for (let k = 0; k < 4; k++) {
+      const t = k / 4;
+      const aa = a + (a2 - a) * t;
+      const RR = R0 + Math.sin(Math.PI * t) * 1.6;
+      pts.push([gunes.x + Math.cos(aa) * RR, gunes.y + Math.sin(aa) * RR]);
+    }
+  }
+  return pts;
+})();
+const gunesDisk = sekilPoli(gunesKose, 0.3, 0.05, 1);
 const M_YAPI = maske([G.yapi]);
 const M_CICEK = maske([G.cicekSekil, G.tomurcukSekil]);
-const M_GUNES = maske([gunesDisk], 0.6);
+const M_GUNES = maske([gunesDisk]);
 /**
  * Yassı fırçanın ağzıyla kesilmiş bulut: üst kenarı birkaç düz, kısa ağız kesiminden oluşan köşeli bir çizgi
  * (tümseklerin tepesini izler), tabanı neredeyse düz. Kâğıt beyazı bırakılır.
@@ -1033,22 +1052,48 @@ function yassiBulut(x0, x1, taban, h, tohum) {
   const pts = ust.concat(alt);
   return { pts, sk: sekilPoli(pts, 0.35, 0.05, 1), ust, x0, x1, taban, h, prof };
 }
+/**
+ * Kâğıt bırakılan bulut: yatay vuruşların arasında boş kalan yer. Tabandan yukarı üç dört sıra; her sıra yukarıdakinden
+ * geniş, uçları fırça ağzının eğik, düz kesimi; üst kenar basamaklı, taban düz.
+ */
+function basamakBulut(xm, taban, gen, sira, rh, tohum) {
+  const r2 = S.rng(tohum);
+  const polys = [];
+  const satirlar = [];
+  let w = gen;
+  let kay = 0;
+  for (let k = 0; k < sira; k++) {
+    const y2 = taban - k * rh + (k ? 2 : 0);
+    const y1 = taban - (k + 1) * rh - (r2() - 0.5) * 3;
+    const xa = xm - w / 2 + kay;
+    const xb = xm + w / 2 + kay;
+    const e1 = (r2() - 0.3) * rh * 0.6;
+    const e2 = (r2() - 0.3) * rh * 0.6;
+    polys.push([[xa + e1, y1], [xb - e2, y1 + (r2() - 0.5) * 2], [xb + e2 * 0.4, y2], [xa - e1 * 0.4, y2]]);
+    satirlar.push({ xa, xb, y1, y2 });
+    w *= 0.58 + r2() * 0.2;
+    kay += (r2() - 0.35) * w * 0.35;
+  }
+  const sk = sekil(polys.map((p) => titret(p, true, 1.5, 0.045, 1.2)));
+  return { sk, satirlar, x0: xm - gen / 2, x1: xm + gen / 2, taban, h: sira * rh };
+}
 const bulutlar = [
-  bulutKumesi(36, 346, 300, 96, 141, { puruz: 0.16, lobBoy: 52 }),
-  bulutKumesi(430, 650, 168, 58, 142, { puruz: 0.16, lobBoy: 48 }),
-  bulutKumesi(650, 958, 436, 88, 143, { puruz: 0.16, lobBoy: 52 }),
-  bulutKumesi(-50, 182, 548, 46, 144, { puruz: 0.16, lobBoy: 48 }),
-  bulutKumesi(836, 1066, 598, 42, 145, { puruz: 0.16, lobBoy: 48 }),
+  basamakBulut(180, 296, 330, 4, 22, 2202),
+  basamakBulut(560, 160, 230, 3, 20, 2203),
+  basamakBulut(820, 432, 320, 4, 21, 2204),
+  basamakBulut(60, 540, 230, 2, 20, 2205),
+  basamakBulut(955, 594, 210, 2, 19, 2206),
 ];
-const M_BULUT = maske(bulutlar.map((b) => b.sk), 0, 3.5);
+const M_BULUT = maske(bulutlar.map((b) => b.sk), 3, 6);
 const M_BULUT_C = maske(bulutlar.map((b) => b.sk), 3);
+const M_BULUT_S = maske(bulutlar.map((b) => b.sk));
 
 // ---------------------------------------------------------------- gök: geniş yatay vuruşlar (fırçanın tam genişliği)
 // Önce bütün göğe sulu, açık bir kat: geniş sıralar ıslakken birbirine karışır. Kuruyunca üstüne daha koyu,
 // dağınık yerleşmiş geniş vuruşlar: her biri düz bir ağızla başlar, kenarları paralel gider, sonunda boya azalınca
 // kaba kâğıdın dişine takılır; binen yerler koyulaşır. Ufka doğru vuruşlar seyrekleşir ve sulanır, güneşin yanı açık kalır.
-const gokHaric = [M_YAPI, M_CICEK, M_GUNES];
-lavi(sekil([dikd(-30, -30, 1054, 808)]), { v: C.ser.map((q) => q * 0.4), rim: 0.3, rimR: 3, boncuk: 0.25, gran: 0.15, dalga: 0.22, dalgaO: 2.4, yatay: 3, kuru: 0.45, carp: (x, y) => (1.12 - 0.55 * kenet(y / 800, 0, 1)) * (1 - 0.3 * Math.exp(-Math.pow(Math.hypot(x - gunes.x, y - gunes.y) / 240, 2))), haric: [G.yapi, G.cicekSekil, G.tomurcukSekil, gunesDisk].concat(bulutlar.map((b) => b.ust(0.5))), haricYum: bulutlar.map((b) => b.sk), haricYumR: 5 });
+const gokHaric = [M_YAPI, M_CICEK, M_GUNES, M_BULUT_S];
+lavi(sekil([dikd(-30, -30, 1054, 808)]), { v: C.ser.map((q) => q * 0.4), rim: 0.3, rimR: 3, boncuk: 0.25, gran: 0.15, dalga: 0.22, dalgaO: 2.4, yatay: 3, kuru: 0.45, carp: (x, y) => (1.12 - 0.55 * kenet(y / 800, 0, 1)) * (1 - 0.3 * Math.exp(-Math.pow(Math.hypot(x - gunes.x, y - gunes.y) / 240, 2))), haric: [G.yapi, G.cicekSekil, G.tomurcukSekil, gunesDisk].concat(bulutlar.map((b) => b.sk)) });
 (function () {
   // ikinci kat: dağınık geniş vuruşlar
   for (let i = 0; i < 64; i++) {
@@ -1068,21 +1113,21 @@ lavi(sekil([dikd(-30, -30, 1054, 808)]), { v: C.ser.map((q) => q * 0.4), rim: 0.
     firca([[x, yc], [xm, (yc + ye) / 2 + (rr() - 0.5) * 5], [xe, ye]], { w: W, v: olc(renk, k), kuru: 0.55 + rr() * 0.35, haric: gokHaric, kuruMaske: M_BULUT, kenar: 0.06, lif: 0.1, bas: 0.18 });
   }
 })();
-// bulut gölgeleri: tabana paralel iki üç geniş, düz menekşe-gri vuruş ve ağızla çekilmiş ince bir alt çizgi
-bulutlar.forEach((b, bi) => {
-  const w = b.x1 - b.x0;
+// bulut gölgeleri: alt sıraya ağızla bir iki düz, yatay leylak-gri vuruş (bulutun içinde kalır)
+bulutlar.forEach((b) => {
   const M_B = maske([b.sk]);
-  // önce bulutun alt yarısına tek geniş vuruş (üst kenarı fırçanın düz ağzı), sonra tabana yakın daha koyu dar vuruş
-  for (let k = 0; k < 2; k++) {
-    const a = b.x0 - 10 + w * rr() * 0.1;
-    const e = b.x1 + 10 - w * rr() * 0.1;
-    const Wk = b.h * (k ? 0.2 : 0.46);
-    const yb = b.taban - Wk * 0.5 + 6;
-    firca([[a, yb + (rr() - 0.5) * 3], [e, yb + (rr() - 0.5) * 3]], { w: Wk, v: olc(C.mor, k ? 0.5 : 0.62), kuru: 0.45 + rr() * 0.25, ici: M_B, haric: [M_YAPI], kenar: 0.15, lif: 0.1 });
-  }
+  const alt = b.satirlar[0];
+  const st = b.satirlar[1] || alt;
+  firca([[alt.xa - 4, (alt.y1 + alt.y2) / 2 + 3], [alt.xb + 4, (alt.y1 + alt.y2) / 2 + 3 + (rr() - 0.5) * 2]], { w: (alt.y2 - alt.y1) * 0.8, v: olc(C.mor, 0.62), kuru: 0.35 + rr() * 0.2, ici: M_B, haric: [M_YAPI], kenar: 0.15, lif: 0.1 });
+  if (rr() < 0.7) firca([[st.xa + (st.xb - st.xa) * 0.05, st.y2 - 4], [st.xa + (st.xb - st.xa) * (0.5 + rr() * 0.3), st.y2 - 4]], { w: 8, v: olc(C.mor, 0.45), kuru: 0.45, ici: M_B, haric: [M_YAPI], kenar: 0.1 });
 });
+// güneşin çevresi: göğün açık kalan yerine birkaç yatay geniş vuruş; diski kâğıt olarak bırakmak için ressam vuruşları
+// diskin kenarında, ağzı kavise döndürerek bitirir (disk çevresinde hafif köşeli bir kesik kalır)
+for (const [dy, x0, x1, w, k] of [[-30, 690, 1080, 34, 0.24], [2, 640, 1080, 38, 0.2], [34, 700, 1060, 32, 0.22], [-62, 760, 1070, 30, 0.2]]) {
+  firca([[x0, gunes.y + dy], [(x0 + x1) / 2, gunes.y + dy + (rr() - 0.5) * 4], [x1, gunes.y + dy + (rr() - 0.5) * 4]], { w, v: olc(C.ser, k), kuru: 0.45 + rr() * 0.2, haric: [M_GUNES, M_YAPI, M_BULUT_S], kuruMaske: M_BULUT, kenar: 0.05, lif: 0.08, bas: 0.12 });
+}
 // güneş: kâğıt, içinde çok açık sarı tek geniş vuruş
-const M_DISK = maske([sekilPoli(elips(gunes.x, gunes.y, 39, 39, 0, 64), 0.6, 0.06, 1)]);
+const M_DISK = maske([sekilPoli(gunesKose.map(([x, y]) => [gunes.x + (x - gunes.x) * 1.03, gunes.y + (y - gunes.y) * 1.03]), 0.3, 0.06, 1)]);
 firca([[gunes.x - 42, gunes.y + 1], [gunes.x + 44, gunes.y - 1]], { w: 84, v: olc(C.sari, 0.22), kuru: 0.1, ici: M_DISK, kenar: 0.1 });
 
 /** Sivri kemerli pencere tek vuruşta: eşikten düz ağızla başlar, kemerde fırça ağzına döndürülerek sivri biter. */
@@ -1220,28 +1265,41 @@ alemFirca(G.alemP, 1);
 
 // ---------------------------------------------------------------- toprak ve bitkiler
 (function () {
+  // sıraların kalınlığı ve bindirmesi değişir, her vuruş kendi yüksekliğinde biraz oynar: dikişler düzenli değil;
+  // vuruşun kuru ucu bir sonrakinin ıslak başlangıcının altında kalır
   let y = 796;
   while (y < 1030) {
-    const W = 52 + rr() * 18;
-    let x = -60 - rr() * 60;
+    const W = 38 + rr() * 42;
+    let x = -60 - rr() * 90;
     while (x < 1064) {
-      const L = 180 + rr() * 240;
-      firca([[x, y + W / 2], [x + L, y + W / 2 + (rr() - 0.5) * 6]], { w: W, v: olc(C.kum, 0.78 + rr() * 0.2), kuru: 0.5 + rr() * 0.3, haric: [M_YAPI, M_CICEK], kenar: 0.0, lif: 0.05, bas: 0.08 });
-      x += L - 20 + rr() * 16;
+      const L = 150 + rr() * 260;
+      const yy = y + W / 2 + (rr() - 0.5) * 10;
+      firca([[x, yy], [x + L, yy + (rr() - 0.5) * 8]], { w: W * (0.9 + rr() * 0.2), v: olc(C.kum, 0.74 + rr() * 0.24), kuru: 0.18 + rr() * 0.2, haric: [M_YAPI, M_CICEK], kenar: 0.0, lif: 0.05, bas: 0.08 });
+      x += L - 34 - rr() * 30;
     }
-    y += W * 0.9;
+    y += W * (0.72 + rr() * 0.22);
   }
 })();
-// arka yapraklar: soluk, geniş kısa ağız vuruşları
+// bitkilerin dibinde ot öbekleri: fırçanın ağzıyla yukarı doğru açılan iki üç kısa, soluk yeşil vuruş
 (function () {
-  for (let i = 0; i < 34; i++) {
-    const x = -10 + rr() * 1044;
-    const y = 900 + rr() * 140;
-    const a = -Math.PI / 2 + (x - 512) / 1100 + (rr() - 0.5) * 1.4;
-    const L = 34 + rr() * 26;
-    const w = 20 + rr() * 10;
-    firca([[x, y], [x + Math.cos(a) * L, y + Math.sin(a) * L]], { w, v: olc(rr() < 0.5 ? C.sap : karis(C.sap, C.ser, 0.3), 0.36 + rr() * 0.14), kuru: 0.5, wp: (u) => 1 - 0.45 * Math.pow(u, 1.6), haric: [M_CICEK] });
+  const dipler = S.bitki.yapraklar.filter((y) => y.y > 840).map((y) => [y.x, y.y]);
+  for (const sp of G.saplar) {
+    const son = sp[sp.length - 1];
+    const bas = sp[0];
+    const dip = son[1] > bas[1] ? son : bas;
+    if (dip[1] > 840 && dip[1] < 1030) dipler.push(dip);
   }
+  dipler.forEach(([x0, y0], i) => {
+    if (i % 2) return;
+    const n = 2 + Math.floor(rr() * 2);
+    for (let k = 0; k < n; k++) {
+      const a = -Math.PI / 2 + (k - (n - 1) / 2) * 0.42 + (rr() - 0.5) * 0.2;
+      const L = 22 + rr() * 20;
+      const bx = x0 + (rr() - 0.5) * 8;
+      const by = y0 + 10 + rr() * 6;
+      firca([[bx, by], [bx + Math.cos(a) * L, by + Math.sin(a) * L]], { w: 6 + rr() * 3, v: olc(rr() < 0.5 ? C.sap : karis(C.sap, C.ser, 0.25), 0.55 + rr() * 0.2), kuru: 0.3, wp: (u) => 1 - 0.7 * Math.pow(u, 1.4), haric: [M_CICEK] });
+    }
+  });
 })();
 // saplar: ağızla ince çizgi
 for (const s of G.saplar) {

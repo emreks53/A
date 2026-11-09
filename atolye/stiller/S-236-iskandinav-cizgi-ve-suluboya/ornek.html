@@ -1158,8 +1158,12 @@
   // pencereler önce zeminle birlikte boyanır (çevrelerinde kâğıt çizgisi kalmasın), koyu kat üstüne gelir
   const kasnak = mBirles(bolge(['kasnak']), bolge(['pencere'], (x, y) => y >= 555 && y < 692 && x > 334));
   const cylU = (x, y) => (x - 560) / (y < 610 ? 208 : 226);
-  seritLavi(L, pay(kasnak, 0.25, 2370), '#3C9A65', { y0: 549, y1: 694, h: 34, bin: 6, aci: 0.004, dal: 2, guc: 0.74, kenar: 0.9, alt: 0.12, ust: 4, oyna: 1.2, yay: 1.5, tohum: 2371,
-    f: (x, y) => 1 - 0.3 * sstep(0.25, 0.55, cylU(x, y)) * (1 - sstep(0.8, 0.95, cylU(x, y))) });
+  // her kat tek, yatay bir fırça geçişi (şerit kenarları pencerelerin içinden geçmesin)
+  const kasnakP = pay(kasnak, 0.25, 2370);
+  for (const [ya, yb, tt] of [[549, 610, 2371], [610, 694, 2376]]) {
+    seritLavi(L, mFonk(kasnakP, (x, y) => (y >= ya && y < yb ? 1 : 0)), '#3C9A65', { y0: ya - 10, y1: yb, h: 400, bin: 6, aci: 0.004, dal: 2, guc: 0.74, kenar: 0.9, alt: 0.12, ust: 4, oyna: 1.2, yay: 1.5, tohum: tt,
+      f: (x, y) => 1 - 0.3 * sstep(0.25, 0.55, cylU(x, y)) * (1 - sstep(0.8, 0.95, cylU(x, y))) });
+  }
   lavi(L, mFonk(kasnak, (x, y) => sstep(-0.4, -0.5, cylU(x, y))), '#2E8456', { guc: 0.36, kenar: 1.2, oyna: 1.4, yay: 2 });
   lavi(L, mFonk(kasnak, (x, y) => ((y >= 555 && y < 563) || (y >= 610 && y < 617) ? 1 : 0)), '#2E7A55', { guc: 0.3, kenar: 0.9, oyna: 1, yay: 2 });
   // kasnak pencereleri: koyu mavi-yeşil, berrak

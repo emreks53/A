@@ -1063,7 +1063,7 @@ G.cicekler.forEach((C) => {
   const c = C.c;
   const R0 = c.r * 0.22;
   const gobek = [sekilPoli(elips(c.x, c.y, R0 * 1.05, R0, c.aci, 40), 0, 0)];
-  C.taclar.forEach((t) => lavi(sekilPoli(genisPoli(t, Math.min(2.2, 0.9 + c.r * 0.025)), 0.3, 0.08, 1), { v: RGB(LILA, 0.6), rim: 0.28, rimR: Math.max(1.5, c.r * 0.06), boncuk: 0.18, gran: 0.12, dalga: 0.3, dalgaO: 0.5, carp: (x, y) => 1.15 - 0.45 * kenet(Math.hypot(x - c.x, y - c.y) / c.r, 0, 1), haric: gobek }));
+  C.taclar.forEach((t) => lavi(sekilPoli(genisPoli(t, c.y < 805 ? 0.9 : Math.min(2.2, 0.9 + c.r * 0.025)), 0.3, 0.08, 1), { v: RGB(LILA, 0.6), rim: 0.28, rimR: Math.max(1.5, c.r * 0.06), boncuk: 0.18, gran: 0.12, dalga: 0.3, dalgaO: 0.5, carp: (x, y) => 1.15 - 0.45 * kenet(Math.hypot(x - c.x, y - c.y) / c.r, 0, 1), haric: gobek }));
   C.golgeler.forEach((g) => lavi(sekilPoli(g, 0.3, 0.08, 1), { v: RGB(LILA, 0.42), rim: 0.3, rimR: Math.max(1.4, c.r * 0.05), boncuk: 0.2, gran: 0.12, dalga: 0.25, yumusak: 0.8, haric: gobek }));
   lavi(sekilPoli(elips(c.x, c.y, R0 * 1.45, R0 * 1.38, c.aci, 40), 0.6, 0.1, 0.8), { v: RGB('#8D86C2', 0.3), rim: 0.2, rimR: 1.5, boncuk: 0.1, gran: 0.08, yumusak: 1.5, haric: gobek });
   lavi(sekilPoli(elips(c.x, c.y, R0, R0 * 0.94, c.aci, 40), 0.3, 0.12, 0.8), { v: RGB('#EBC94F', 1), rim: 0.45, rimR: 1.4, boncuk: 0.4, gran: 0.05 });
