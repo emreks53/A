@@ -31,7 +31,7 @@ tarayıcıda açılıp 1024 × 1024 görüntüye çevrilir.
 | Uzak Doğu | S-014 – S-015 |
 | Sanat Akımları | S-016 – S-021 |
 | Grafik ve Dijital | S-022 – S-030, S-121 – S-160 |
-| Atölye Render Üslupları | S-031 – S-040, S-161 – S-200 |
+| Atölye Render Üslupları | S-031 – S-040, S-161 – S-240 |
 
 Aile `stil.json` içinde yazar; galeri ve katalog stilleri ailelerine göre gruplar.
 
@@ -94,13 +94,17 @@ Atölyenin örnekleri müşterinin açıkça belirttiği zevke göre çizilir:
   renkler, temiz yüzeyler, belirgin el yapımı doku, sahnenin bütün tuvali doldurması.
 - **Aydınlık:** koyu zemin, siyah kâğıt, gece göğü, ağır karanlık (chiaroscuro) ve koyu kenar gölgesi yok;
   görselin geneli açık tonlarda kalır.
+- **Hep aydınlık gündüz:** güneş yüksekte, soluk sarı-beyaz; gök gün ışığı mavisi. Gün batımı, altın saat,
+  şafak, alacakaranlık, turuncu-pembe-mor ya da altın varak gök kullanılmaz.
 - **Bozukluk efekti yok:** sıva dökülmesi, çatlak, kraklör, batik çatlak damarı, hücre/kabarcık, sıçrama,
   akıntı, çizik, leke, eskime, kir kullanılmaz. Doku tekniğin kendisinden gelir.
 - **Grafik ve Dijital'de:** en sevilenler S-029 Katmanlı Kâğıt ve S-022 Düz İllüstrasyon; S-025 İzometrik,
   S-026 Piksel, S-028 Teknik Çizim ve S-030 Neon beğenilmedi. Cepheden düz görünüm korunur; oyuncak, oyun,
   düşük çözünürlük, teknik çizim ve karanlık parıltı yok.
-- **Ressamın eli:** S-161–S-200 render üslupları, her biri hayalî ama tutarlı bir insan ressamın elidir
+- **Ressamın eli:** S-161–S-240 render üslupları, her biri hayalî ama tutarlı bir insan ressamın elidir
   (kendi aleti, kâğıdı, paleti ve alışkanlıklarıyla); vektör kusursuzluğu yerine görünür ama usta işi el izi.
+  Elle yapıldığı ilk bakışta, küçük görselde bile anlaşılır: dolgular yumuşak dijital geçişlerden değil
+  ressamın vuruşlarından kurulur.
 - **Gevşek üslup yok:** konu mukaddes olduğu için her üslup titiz, özenli ve vakurdur; eskiz, karalama,
   çizgi film, çocuksu, şakacı, kitsch ya da dağınık görünüm kullanılmaz.
 - **Taşıyıcı görünmez:** eser 1024 × 1024 tuvali kenardan kenara doldurur; masa, keten, duvar şeridi ya da
