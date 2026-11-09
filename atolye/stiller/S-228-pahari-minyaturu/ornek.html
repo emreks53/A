@@ -1272,7 +1272,7 @@ for (const k of [0, 1]) for (const p of S.kasnakPencereleri(k)) duz(sekilYol(S.k
     }
     // ton: sol koyu, sağ üçte biri açık, en sağ kenar hafif döner
     const isik = kenet(0.5 + 0.48 * u - 0.35 * yumusak(0.82, 1.0, u), 0, 1);
-    const c0 = isik < 0.5 ? karistir(P.kubbeK, P.kubbe, isik * 2) : karistir(P.kubbe, hex('#5BAE7E'), (isik - 0.5) * 2);
+    const c0 = isik < 0.5 ? karistir(P.kubbeK, P.kubbe, isik * 2) : karistir(P.kubbe, hex('#6CBD8B'), (isik - 0.5) * 2);
     const c = karistir(c0, r() < 0.5 ? hex('#5AAE7C') : P.kubbeK, r() * 0.22);
     darbe(B, { pts, w: (t, x, y) => 1.4 + 5.2 * (kubbeR(y) / 200) * Math.sqrt(Math.max(0.05, 1 - u * u)), c1: c, c2: c, d1: 0.95, d2: 0.95, opak: true, havuz: 0.05, kil: 0.15, kenar: 0.04, yumusak: 1.2, puruz: 0, maske: km });
   }
@@ -1285,8 +1285,8 @@ for (const k of [0, 1]) for (const p of S.kasnakPencereleri(k)) duz(sekilYol(S.k
   yesilGolge([358, 298, 762, 556], golgeF, 0.5);
   yesilIsik([358, 298, 762, 556], (x, y) => {
     if (!S.kubbedeMi(x, y)) return 0;
-    const q = Math.hypot((x - 628) / 70, (y - 380) / 90);
-    return 0.55 * Math.exp(-q * q);
+    const q = Math.hypot((x - 630) / 95, (y - 390) / 120);
+    return 0.7 * Math.exp(-q * q);
   });
 }
 // altın alemler

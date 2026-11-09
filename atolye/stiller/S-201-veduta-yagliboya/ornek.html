@@ -1009,7 +1009,7 @@ const M = (function () {
     // ışık sağ üstten: yaprağın hangi yarısı ışıkta?
     const nUst = [-sa, ca]; // v>0 yönü
     const isikYarisi = nUst[0] * 0.7 - nUst[1] * 0.7 > 0 ? 1 : -1;
-    const tonA = yapR(0.62 + (R() - 0.5) * 0.15), tonG = yapR(0.18 + (R() - 0.5) * 0.12);
+    const tonA = yapR(0.64 + (R() - 0.5) * 0.15), tonG = yapR(0.3 + (R() - 0.5) * 0.12);
     for (const yari of [1, -1]) {
       const pts = [];
       for (let i = 0; i <= 8; i++) { const t = i / 8; pts.push(p(L * t, yari * Wd * 0.26 * Math.sin(Math.PI * Math.min(1, t * 1.05)))); }
@@ -1018,9 +1018,9 @@ const M = (function () {
     // ışık yarısında ucu kuru, daha açık ikinci tuş
     const pp = [];
     for (let i = 1; i <= 7; i++) { const t = i / 9; pp.push(p(L * t, isikYarisi * Wd * 0.18 * Math.sin(Math.PI * t))); }
-    M.darbe(g, pp, Wd * 0.26, acik(tonA, 0.18), { a: 0.85, kil: 4, kilK: 14, yuk: 0.4, uc: 'sivri', bas: 0.7, r: R, hk: 0.5 });
+    M.darbe(g, pp, Wd * 0.24, acik(tonA, 0.1), { a: 0.65, kil: 4, kilK: 14, yuk: 0.4, uc: 'sivri', bas: 0.7, r: R, hk: 0.35 });
     // orta damar
-    M.cizgi(g, [p(L * 0.05, 0), p(L * 0.5, 0), p(L * 0.88, 0)], 1, acik(tonA, 0.25), { a: 0.6, r: R, titreme: 0.15 });
+    M.cizgi(g, [p(L * 0.05, 0), p(L * 0.5, 0), p(L * 0.88, 0)], 1.3, acik(tonA, 0.3), { a: 0.75, r: R, titreme: 0.15 });
   }
   B.yapraklar.forEach((y, k) => yaprak(y, k));
   // tomurcuklar

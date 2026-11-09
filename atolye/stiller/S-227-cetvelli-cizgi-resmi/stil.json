@@ -6,27 +6,27 @@
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
   "ozet": "Soluk krem ipek üzerinde cetvel kılavuzuyla çekilmiş yoğun, denetimli mürekkep çizgisi ve açık, düz mineral renkler: mimarinin her silmesi, penceresi, korkuluk babası tek tek çizilmiş.",
-  "tanim": "Hayalî bir saray mimari ressamının titiz eli. Aletleri: gerilmiş soluk krem ipek, cetvel kılavuzu ve ince kurt kılı çizgi fırçası, sulandırılmış mürekkep; renkler ezilmiş azurit, malakit, istiridye beyazı ve soluk aşı boyası. Önce bütün mimari çizilir: düz çizgiler cetvelle, başında küçük bir fırça düğümü, ucunda hafif incelmeyle; uzun çizgiler fırça yeniden yüklendikçe birleşen parçalardan oluşur, köşelerde hafifçe taşar. Kubbenin her kaburgası çift ince çizgi, kasnakta diş sırası ve pilastr çiftleri, pencerelerde çift kemer ve kafes, kaidede korniş silmeleri, diş sırası ve soluk taş derzleri, minarede mukarnas kemercikleri ve tek tek çizilmiş korkuluk babaları bulunur. Sonra renk, örtücü mineral boyayla ve görünür fırça izleriyle düz sürülür; gölge yanlarına ikinci, düz bir kat gelir; renk çizgiyi her yerde tam tutturmaz. Gök azuritle yatay katlar hâlinde, her geçiş ufka doğru biraz daha açık, bindirme yerlerinde dalgalı ince koyu kenarlarla boyanır; bulutlar soluk çivit ince çizgiyle çekilip içleri kabuk beyazı bırakılır. Bitkiler ince yeşil konturla, açık malakit dolgu ve damarlarla; çiçekler kabuk beyazı, dipte soluk okr fırça izleri ve tek tek çizilmiş ercikler.",
+  "tanim": "Hayalî bir saray mimari ressamının titiz eli. Aletleri: gerilmiş soluk krem ipek, cetvel kılavuzu ve ince kurt kılı çizgi fırçası, sulandırılmış mürekkep; renkler ezilmiş azurit, malakit, istiridye beyazı ve soluk aşı boyası. Önce bütün mimari çizilir: düz çizgiler cetvelle, başında küçük bir fırça düğümü, ucunda hafif incelmeyle; uzun çizgiler fırça yeniden yüklendikçe birleşen parçalardan oluşur, köşelerde hafifçe taşar. Kubbenin her kaburgası çift ince çizgi, kasnakta diş sırası ve pilastr çiftleri, pencerelerde çift kemer ve kafes, kaidede korniş silmeleri, diş sırası ve soluk taş derzleri, minarede mukarnas kemercikleri ve tek tek çizilmiş korkuluk babaları bulunur. Sonra renk, örtücü mineral boyayla ve görünür fırça izleriyle düz sürülür; gölge yanlarına ikinci, düz bir kat gelir; renk çizgiyi her yerde tam tutturmaz. Gök azuritle yatay katlar hâlinde, her geçiş ufka doğru biraz daha açık, bindirme yerlerinde dalgalı ince koyu kenarlarla boyanır; gök tepede doygun azurit, ufka doğru açık mavidir. Bulutlar kabarık ve dilimli değil, saray resmindeki gibi yatay katlıdır: üst kenarı geniş bir yay, alt kenarı neredeyse düz, iki ucu incelen mercek biçimli iki-üç kat; dış çizgileri soluk çivit ince fırçayla çekilir, içleri kabuk beyazıyla dolar, her katın içinde üst yayı izleyip ucunda kıvrılan tek ince çizgi bulunur. Güneş konturla çevrilmez: soluk sarı-beyaz örtücü bir disk, kenarında hafif boya birikmesi. Bitkiler ince yeşil konturla, açık malakit dolgu ve damarlarla; çiçekler kabuk beyazı, dipte soluk okr fırça izleri ve tek tek çizilmiş ercikler.",
   "koken": "Çin resmindeki jiehua ('cetvelle çizilen resim') geleneğine, yani saray ressamlarının mimariyi cetvel kılavuzu ve ince fırçayla çizip açık mineral renklerle boyama yöntemine dayanır; ipek üzerinde azurit-malakit paleti de bu gelenekten gelir. Hiçbir gerçek ressam taklit edilmez: üslup, atölyenin tanımladığı hayalî bir ressamın elidir.",
   "ayirt_edici": [
     "Mimarinin çok yoğun ince mürekkep çizgileri: çift çizgili kaburgalar, diş sıraları, pilastr çiftleri, kafesli pencereler, tek tek korkuluk babaları",
     "Uçlarında fırça düğümü olan, parça parça birleşen ve köşelerde hafifçe taşan cetvel çizgileri",
-    "Azurit gökte ufka doğru açılan yatay fırça katları ve kat sınırlarında dalgalı ince koyu kenarlar",
+    "Tepede doygun, ufka doğru açılan azurit gök; yatay fırça katları ve kat sınırlarında dalgalı ince koyu kenarlar",
     "Örtücü malakit kubbe ve kasnakta görünür fırça izleri, solda ikinci düz gölge katı; renk çizgiyi tam tutturmuyor",
-    "Soluk çivit ince çizgiyle çekilmiş, içi kabuk beyazı uzun bulutlar",
+    "Soluk çivit ince çizgiyle çekilmiş, mercek biçimli, yatay katlı kabuk beyazı bulutlar; her katın içinde ucu kıvrılan tek ince çizgi",
     "İnce konturlu, damarlı açık malakit yapraklar ve okr dipli kabuk beyazı çiçekler; ipeğin atkı yönünde hafif lif dokusu"
   ],
   "palet": [
+    "#679CD8",
     "#8EBAE6",
     "#DEE6EA",
     "#B6D6B6",
     "#66B28A",
     "#E6D6B2",
     "#CAAA56",
-    "#5A5240",
-    "#F6F6EE"
+    "#5A5240"
   ],
-  "kodla_cizim": "Renkler 2048 px kayan noktalı tamponda boyanır: yerel (kutu boyutunda) maskeler biraz kaydırılıp bulanıklaştırılır ve ya düz lavi (kat sınırlı, dalgalı yoğunluk, kenar birikmesi) ya da maskeyle kesilen yan yana örtücü fırça darbeleriyle (kıl izi, ton oynaması) doldurulur; kubbe meridyen boyunca darbelerle boyanır. Gök, bulut ve yapı maskeleriyle kesilen iki azurit katıdır; kat sınırları gürültüyle titreyen satırlardan, bindirme koyulaşmasından gelir. Bütün mürekkep çizgileri ayrı bir çizgi katmanında elle çekilmiş şerit olarak çizilir (SAHNE yolları getPointAtLength ile örneklenir; genişlik ve konum tohumlu gürültüyle oynar; cetvel çizgileri parçalı, uçları düğümlü); öndeki biçim çizilmeden önce kendi alanındaki eski çizgiler silinir. Çizgi katmanının mürekkep yükü düşük frekanslı gürültüyle değiştirilip çarpma kipinde basılır; sonda ipeğin atkı yönündeki kalın-ince iplik dokusu çok hafifçe uygulanır.",
+  "kodla_cizim": "Renkler 2048 px kayan noktalı tamponda boyanır: yerel (kutu boyutunda) maskeler biraz kaydırılıp bulanıklaştırılır ve ya düz lavi (kat sınırlı, dalgalı yoğunluk, kenar birikmesi) ya da maskeyle kesilen yan yana örtücü fırça darbeleriyle (kıl izi, ton oynaması) doldurulur; kubbe meridyen boyunca darbelerle boyanır. Gök, bulut ve yapı maskeleriyle kesilen iki azurit katıdır (yoğunluk tepeden ufka satır satır azalır); bulutlar üst kenarı yay, alt kenarı düz, uçları sivri mercek çokgenleridir, iç çizgileri üst yayı izleyip spiralle biter; kat sınırları gürültüyle titreyen satırlardan, bindirme koyulaşmasından gelir. Bütün mürekkep çizgileri ayrı bir çizgi katmanında elle çekilmiş şerit olarak çizilir (SAHNE yolları getPointAtLength ile örneklenir; genişlik ve konum tohumlu gürültüyle oynar; cetvel çizgileri parçalı, uçları düğümlü); öndeki biçim çizilmeden önce kendi alanındaki eski çizgiler silinir. Çizgi katmanının mürekkep yükü düşük frekanslı gürültüyle değiştirilip çarpma kipinde basılır; sonda ipeğin atkı yönündeki kalın-ince iplik dokusu çok hafifçe uygulanır.",
   "etiketler": [
     "jiehua",
     "cetvel çizgisi",
