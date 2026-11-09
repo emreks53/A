@@ -5,36 +5,36 @@
   "ad_en": "Cinematic Haze",
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
-  "ozet": "Altın saatte, pusun içinden süzülen ışık huzmeleriyle boyanmış film konsept sanatı tadında bir dijital mat boyama.",
-  "tanim": "Sinematik Sis, sahneyi bir filmin arka plan resmi (matte painting) gibi kuran render tarifidir. Tarif üç plan ister: koyu ve soğuk ön plan (gölgede kalan çiçekler, güneşe bakan kenarlarında sıcak ışık şeridi), keskin ve en çok ışık alan orta plan (yapı) ve puslu, açık değerli arka plan (uzak tepeler, bulutlar). Güneş sağ üstte, biraz arkada durur: gök onun çevresinde altın-şeftali, sol üstte derin camgöbeğidir; bulutlar arkadan ışık alır, gövdeleri arduvaz, güneşe bakan kenarları altındır. Biçimler beş tonla boyanır (ışık, yarı ton, çekirdek gölge, yansıyan ışık, düşen gölge): kubbenin sağı sıcak zümrüt, solu camgöbeği gölge; altın alemler koyu yansıma bantlı, beyaz parlamalı metal gibi parlar. Boyama katmanında silüetler keskin kalır, içleri biçime uyan dijital fırça vuruşlarıyla doldurulur (kubbede meridyen boyunca, taşta yatay ve dikey, taç yaprakta merkezden dışa); gölgedeki sol kenarlar pusa karışır (kayıp kenar). En sonda ayrı bir ışık katmanıyla hacimsel huzmeler, ışıltı, sıcak açık / camgöbeği koyu renk düzeltmesi, ince gren ve vinyet eklenir.",
-  "koken": "Sinema ve oyun yapımındaki dijital mat boyama ve konsept sanatı geleneğine dayanır: üç planlı derinlik kurgusu ve hava perspektifi, ressamın beş tonlu biçim boyaması ve değer gruplaması, 'kayıp ve bulunmuş kenar' denetimi, 'god rays' denen hacimsel ışık ve sinemada yaygın 'teal & orange' renk düzeltmesi. Kodla yeniden kurulurken iki bilinen tekniğe yaslanır: ışık huzmeleri için ekran uzayında güneşe doğru radyal örnekleme (hacimsel ışık saçılması son işlemi), fırça katmanı için vuruşların alttaki resimden renk alıp eş-ton çizgileri ve biçim yönü boyunca uzandığı vuruş tabanlı boyama (Hertzmann'ın eğri vuruşlu boyamasına yakın). Atölye tarifi şunları sabitler: altın saat ışık kurgusu, arkadan ışıklı kabarcık bulutlar, koyu ön plan, bölgeye kırpılan yön alanlı vuruşlar, metal altın alemler ve son ışık katmanı.",
+  "ozet": "Aydınlık, puslu bir kuşluk-öğle vaktinde, sisin içinden süzülen yumuşak ışık huzmeleriyle boyanmış film konsept sanatı tadında bir dijital mat boyama.",
+  "tanim": "Sinematik Sis, sahneyi bir filmin arka plan resmi (matte painting) gibi kuran render tarifidir. Tarif üç plan ister: güneşte duran, en önde hafif serin bir tona geçen aydınlık ön plan (beyaz çiçekler, açık yeşil yapraklar), keskin ve en çok ışık alan orta plan (yapı) ve beyaz sabah sisine gömülen, açık değerli arka plan (mavi-gri uzak tepeler). Güneş sağ üstte yüksekte durur ve beyaz-sarı bir ışıltı olarak parlar; gök sol üstte gök mavisi, ufka doğru beyaz sise açılır; kümülüsler önden ışık alır, gövdeleri beyaz, alt yüzleri mavi-gri gölgelidir. Biçimler beş tonla boyanır (ışık, yarı ton, çekirdek gölge, yansıyan ışık, düşen gölge): kubbenin büyük kısmı güneşte parlak zümrüt, sol kenarı gök mavisi yansımalı açık gölgede; beyaz taşın gölgeleri mavi-gridir; altın alemler koyu yansıma bantlı, beyaz parlamalı metal gibi parlar. Boyama katmanında silüetler keskin kalır, içleri biçime uyan dijital fırça vuruşlarıyla doldurulur (kubbede meridyen boyunca, taşta yatay ve dikey, taç yaprakta merkezden dışa); gölgedeki sol kenarlar pusa karışır (kayıp kenar). En sonda ayrı bir ışık katmanıyla açık renkli, yumuşak hacimsel huzmeler, sis ışıltısı, hafif renk düzeltme ve ince gren eklenir; görüntü karartılmaz, vinyet yoktur.",
+  "koken": "Sinema ve oyun yapımındaki dijital mat boyama ve konsept sanatı geleneğine dayanır: üç planlı derinlik kurgusu ve hava perspektifi, ressamın beş tonlu biçim boyaması ve değer gruplaması, 'kayıp ve bulunmuş kenar' denetimi ve 'god rays' denen hacimsel ışık. Kodla yeniden kurulurken iki bilinen tekniğe yaslanır: ışık huzmeleri için ekran uzayında güneşe doğru radyal örnekleme (hacimsel ışık saçılması son işlemi), fırça katmanı için vuruşların alttaki resimden renk alıp eş-ton çizgileri ve biçim yönü boyunca uzandığı vuruş tabanlı boyama (Hertzmann'ın eğri vuruşlu boyamasına yakın). Atölye tarifi şunları sabitler: aydınlık, puslu kuşluk-öğle ışık kurgusu, önden ışıklı beyaz kabarcık bulutlar, ufukta beyaz sis, bölgeye kırpılan yön alanlı vuruşlar, metal altın alemler ve açık renkli son ışık katmanı.",
   "ayirt_edici": [
-    "Güneşten sol aşağıya açılan yumuşak hacimsel ışık huzmeleri; sağ üstte parlayan güneş ve altın-şeftali gök",
-    "Arkadan ışık alan kabarcık bulutlar: koyu arduvaz gövde, güneşe bakan altın kenar",
-    "Üç planlı derinlik: koyu, soğuk ön plan çiçekleri; keskin ve aydınlık yapı; puslu, açık arka plan tepeleri",
-    "Sağı sıcak zümrüt, solu camgöbeği gölgede kubbe; gölge tarafındaki sol kenarların pusa karışması",
-    "Keskin silüetlerin içinde görünen dijital fırça vuruşları: kubbede meridyen boyunca, taç yapraklarda merkezden dışa",
-    "Koyu yansıma bantlı, beyaz parlamalı ve yıldız ışıltılı altın alemler"
+    "Sağ üstte yüksekte parlayan beyaz-sarı güneş ışıltısı ve ondan sol aşağıya açılan açık renkli, yumuşak hacimsel ışık huzmeleri",
+    "Sol üstte gök mavisinden ufukta beyaz sabah sisine açılan gök; önden ışık alan beyaz, alt yüzleri mavi-gri gölgeli kabarcık bulutlar",
+    "Üç planlı derinlik: güneşteki beyaz ön plan çiçekleri; keskin ve aydınlık yapı; sise gömülen soluk mavi-gri uzak tepeler",
+    "Büyük kısmı güneşte parlak zümrüt, sol kenarı mavi yansımalı açık gölgede kubbe; gölge tarafındaki sol kenarların pusa karışması",
+    "Keskin silüetlerin içinde görünen dijital fırça vuruşları: kubbede meridyen boyunca, taşta yatay ve dikey, taç yapraklarda merkezden dışa",
+    "Koyu yansıma bantlı, beyaz parlamalı ve yıldız ışıltılı altın alemler; meydanda kısa, yumuşak öğle gölgesi"
   ],
   "palet": [
-    "#33535E",
-    "#BB9465",
-    "#FFEFAC",
-    "#8DD561",
-    "#1E5750",
-    "#FFDF9F",
-    "#355832",
-    "#5E5A64"
+    "#589AD5",
+    "#95C9ED",
+    "#DEE8F0",
+    "#BBCFDC",
+    "#92E081",
+    "#307B6A",
+    "#F7F2E6",
+    "#CCC8B3"
   ],
-  "kodla_cizim": "Tek canvas, 2× iç çözünürlük; iki aşama. Alt boya: gök 1024 px'de piksel piksel hesaplanır (soğuk dikey degrade ile güneş çevresindeki sıcak ışınsal degradenin karışımı, eklenerek verilen güneş ışıltısı); kümülüsler rastgele ama tohumlu kabarcık kümelerinin yumuşak birleşimiyle (log-toplam-üs) bir yükseklik alanı olur, normali arkadan gelen güneşe göre ışıklanır; ince şerit bulutlar fbm ile. Uzak tepeler degrade siluet + pus; yapı ve çiçekler yükseklik alanı katmanlarıdır (uzaklık dönüşümü pahı, dönel yükseklik, kaburga ve zikzak kabartmaları) ve beş tonlu malzeme paletiyle (ışık, yarı ton, gölge, çekirdek gölge, yansıyan ışık) boyanır; çiçeklerde güneşe bakan kenara ışık şeridi eklenir, yapı silueti makaslamayla yere gölge olarak düşer. Boya geçişi: arka plan uzun, yataya yatkın, eş-ton çizgisini izleyen vuruşlarla; yapı ve bitkiler kendi yollarına kırpılmış, yön alanlı (kubbe meridyeni, kasnakta yatay, minarede dikey, yaprak ekseni, taç yaprakta ışınsal) ve renk sıçramasında duran vuruşlarla boyanır; vuruş yuvarlak uçlu gövde + açık/koyu kıl izleridir. Kaburgalar kesintisiz açık/koyu çizgi çiftidir; gölgedeki sol siluetler kısa karışım vuruşlarıyla yumuşatılır. Altın alemler metal degradeleriyle yeniden çizilir ve yıldız parıltısı alır. Huzmeler 512 px'de güneşe doğru 96 adımlık radyal örneklemeyle (yakın ışıltı + yapı ve bitki örtüsüyle maskelenen, açısı seçilmiş altı demet) ayrı katmanda 'screen' ile eklenir; örtü gölgesine camgöbeği pus basılır. En sonda ışıltı, S eğrisi, canlılık, bölünmüş tonlama, film greni ve vinyet piksel düzeyinde uygulanır.",
+  "kodla_cizim": "Tek canvas, 2× iç çözünürlük; iki aşama. Alt boya: gök 1024 px'de piksel piksel hesaplanır (gök mavisinden ufukta beyaz sise giden dikey degrade, güneş çevresinde dar bir beyaz-sarı ışınsal hale ve eklenerek verilen güneş ışıltısı); kümülüsler rastgele ama tohumlu kabarcık kümelerinin yumuşak birleşimiyle (log-toplam-üs) bir yükseklik alanı olur, normali sağ üstten ve önden gelen güneşe göre ışıklanır (beyaz ışık, mavi-gri gölge, alt yüzlerde gök yansıması); ince şerit bulutlar fbm ile. Uzak tepeler mavi-gri degrade siluet + beyaz ufuk sisi; yapı ve çiçekler yükseklik alanı katmanlarıdır (uzaklık dönüşümü pahı, dönel yükseklik, kaburga ve zikzak kabartmaları) ve beş tonlu malzeme paletiyle (ışık, yarı ton, gölge, çekirdek gölge, yansıyan ışık) boyanır; gölgede yukarı bakan yüzeylere mavi gök yansıması eklenir, yapı silueti makaslamayla yere kısa bir öğle gölgesi olarak düşer. Boya geçişi: arka plan uzun, yataya yatkın, eş-ton çizgisini izleyen vuruşlarla; yapı ve bitkiler kendi yollarına kırpılmış, yön alanlı (kubbe meridyeni, kasnakta yatay, minarede dikey, yaprak ekseni, taç yaprakta ışınsal) ve renk sıçramasında duran vuruşlarla boyanır; vuruş yuvarlak uçlu gövde + açık/koyu kıl izleridir. Kaburgalar kesintisiz açık/koyu çizgi çiftidir; gölgedeki sol siluetler kısa karışım vuruşlarıyla yumuşatılır. Altın alemler metal degradeleriyle yeniden çizilir ve yıldız parıltısı alır. Huzmeler 512 px'de güneşe doğru 96 adımlık radyal örneklemeyle (yakın ışıltı + yapı ve bitki örtüsüyle maskelenen, açısı seçilmiş altı demet) ayrı katmanda beyaza yakın renkte 'screen' ile eklenir; demet aralarına çok hafif mavi-gri pus basılır. En sonda sis ışıltısı, hafif S eğrisi, canlılık, serin gölge tonlaması ve ince film greni piksel düzeyinde uygulanır.",
   "etiketler": [
     "sinematik",
     "mat boyama",
     "konsept sanatı",
     "pus",
+    "sabah sisi",
     "ışık huzmesi",
-    "altın saat",
-    "dijital boyama",
-    "renk düzeltme"
+    "gün ışığı",
+    "dijital boyama"
   ]
 }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-121 Yarı Düz Vektör — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #FADFC4; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #B8DCF4; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -23,9 +23,9 @@
 
   // ---------------------------------------------------------------- düz palet
   const P = {
-    gok: '#FADFC4', gunes: '#FFD983',
-    bulut: '#FFFFFF', bulutAO: '#F0D6C8',
-    tas: '#FBF5EA', tasAO: '#DCCBB0', tasAlt: '#EADCC6', tasAltAO: '#CDB89A',
+    gok: '#B8DCF4', gunes: '#FFF7CF',
+    bulut: '#FFFFFF', bulutAO: '#D9E7F2',
+    tas: '#FCFAF4', tasAO: '#D5D3CF', tasAlt: '#ECE8E0', tasAltAO: '#C9C6C2',
     yesil: '#2EA26C', yesilAO: '#167A4E', kasnak: '#25945F', kasnakAO: '#11683F', silme: '#1D8253',
     pencere: '#0F4A33', pencereAO: '#072C1E',
     altin: '#EDB140', altinAO: '#C3832A', altinIsik: '#FFDA7A',
@@ -113,9 +113,9 @@
 
   // ================================================================ GÖK: düz renk, düz güneş
   dol(dik(0, 0, 1024, 1024), P.gok);
-  // düz güneş diski; çevresinde yumuşak, sıcak bir ışıma (halka yok)
-  yumusak(40, () => dol(S.daireYolu(880, 140, 124), 'rgba(255,248,232,0.7)'));
-  yukselti(S.daireYolu(880, 140, 62), P.gunes, 'rgba(255,240,190,0.9)', 26, 0, 0);
+  // düz, soluk sarı-beyaz öğle güneşi; çevresinde yumuşak, beyaz bir ışıma (halka yok)
+  yumusak(40, () => dol(S.daireYolu(880, 140, 124), 'rgba(250,253,255,0.75)'));
+  yukselti(S.daireYolu(880, 140, 62), P.gunes, 'rgba(255,255,236,0.95)', 26, 0, 0);
 
   // bulutlar: düz beyaz birleşik biçim; altında yumuşak yükselti gölgesi, alt-solda iç AO
   function bulutYolu(x, y, s) {
@@ -130,7 +130,7 @@
   }
   function bulut(x, y, s) {
     const d = bulutYolu(x, y, s);
-    yukselti(d, P.bulut, 'rgba(190,116,76,0.3)', 16 * s, -4 * s, 11 * s);
+    yukselti(d, P.bulut, 'rgba(70,118,166,0.26)', 16 * s, -4 * s, 11 * s);
     hacim(d, P.bulut, P.bulutAO, 7 * s, -9 * s, 7 * s);
   }
   bulut(176, 262, 1.12);
@@ -164,7 +164,7 @@
         dol(dik(x - bw / 2, p.y1 + 4, x + bw / 2, p.y2), P.tas);
       }
       dol(dik(p.x1, p.y1, p.x2, p.y1 + 4.5), P.tas);
-      temasAO(p.x1, p.x2, p.y1 + 4.5, 5, 'rgba(150,118,80,0.35)', d);
+      temasAO(p.x1, p.x2, p.y1 + 4.5, 5, 'rgba(104,110,126,0.35)', d);
     } else if (p.tip === 'topuz') {
       hacim(d, P.tas, P.tasAO, 9, -6, 6);
     } else {
@@ -173,7 +173,7 @@
   }
   // gövdelerde çıkma / bilezik altı temas AO'su; korkuluk dibinde yukarı doğru hafif AO
   for (const [x1, x2, y, h] of [[mx - 34, mx + 34, 488, 18], [mx - 27, mx + 27, 316, 16], [mx - 19, mx + 19, 206, 12], [mx - 27, mx + 27, 436, -9], [mx - 19, mx + 19, 272, -8]]) {
-    temasAO(x1, x2, y, h, 'rgba(140,108,70,0.34)');
+    temasAO(x1, x2, y, h, 'rgba(104,110,126,0.34)');
   }
   // zikzak bant: düz, ince oyma çizgileri
   {
@@ -181,7 +181,7 @@
     kirp(dik(b.x1, b.y1 - 2, b.x2, b.y2 + 2), () => {
       ctx.lineJoin = 'miter';
       ctx.lineWidth = 2.6;
-      ctx.strokeStyle = '#C8B08C';
+      ctx.strokeStyle = '#BDB7AC';
       for (const z of S.zikzakCizgileri()) ctx.stroke(P2(S.yol(z.map(([x, y]) => [x, y + 2]))));
     });
   }
@@ -191,7 +191,7 @@
     yumusak(9, () => {
       ctx.globalAlpha = 0.32;
       ctx.translate(-14, 10);
-      dol('M352,555 L352,610 L334,610 L334,692 L300,692 L300,800 L760,800 L760,400 Z', '#8C7353');
+      dol('M352,555 L352,610 L334,610 L334,692 L300,692 L300,800 L760,800 L760,400 Z', '#6F7480');
     });
   });
   alem(minare.find((p) => p.tip === 'alem').alem);
@@ -202,18 +202,18 @@
     const govde = dik(K.x1, K.y1, K.x2, K.y2);
     hacim(govde, P.tas, P.tasAO, 16, -4, 9);
     // dikmeler: düz, hafif kabarık; sol yanlarında yumuşak AO
-    for (const x of [365, 495, 625, 755]) yukselti(dik(x - 7, K.y1, x + 7, K.y2 - 12), P.tas, 'rgba(150,118,78,0.32)', 6, -3, 0);
+    for (const x of [365, 495, 625, 755]) yukselti(dik(x - 7, K.y1, x + 7, K.y2 - 12), P.tas, 'rgba(104,110,126,0.32)', 6, -3, 0);
     // korniş altı temas AO'su
-    temasAO(K.x1, K.x2, K.y1, 22, 'rgba(150,115,72,0.36)');
+    temasAO(K.x1, K.x2, K.y1, 22, 'rgba(104,110,126,0.36)');
     // süpürgelik
-    yukselti(dik(K.x1, K.y2 - 13, K.x2, K.y2), P.tasAlt, 'rgba(150,118,78,0.3)', 5, 0, -2);
+    yukselti(dik(K.x1, K.y2 - 13, K.x2, K.y2), P.tasAlt, 'rgba(104,110,126,0.3)', 5, 0, -2);
     for (const p of K.pencereler) {
-      yukselti(S.kemerYolu(p.x, p.y - 6, p.w + 14, p.h + 9), P.tas, 'rgba(150,118,78,0.34)', 7, -3, 3);
+      yukselti(S.kemerYolu(p.x, p.y - 6, p.w + 14, p.h + 9), P.tas, 'rgba(104,110,126,0.34)', 7, -3, 3);
       pencere(p.x, p.y, p.w, p.h);
-      yukselti(dik(p.x - p.w / 2 - 6, p.y + p.h, p.x + p.w / 2 + 6, p.y + p.h + 4), P.tas, 'rgba(140,108,70,0.38)', 4, -1.5, 2.5);
+      yukselti(dik(p.x - p.w / 2 - 6, p.y + p.h, p.x + p.w / 2 + 6, p.y + p.h + 4), P.tas, 'rgba(104,110,126,0.38)', 4, -1.5, 2.5);
     }
     // korniş: düz, altında belirgin yumuşak AO
-    yukselti(dik(K.kornis.x1, K.kornis.y1, K.kornis.x2, K.kornis.y2), P.tas, 'rgba(130,98,60,0.42)', 8, -2, 5);
+    yukselti(dik(K.kornis.x1, K.kornis.y1, K.kornis.x2, K.kornis.y2), P.tas, 'rgba(104,110,126,0.42)', 8, -2, 5);
   }
 
   // ================================================================ KASNAK
@@ -221,7 +221,7 @@
     const q = S.kasnak[k];
     const d = dik(q.x1, q.y1, q.x2, q.y2);
     ctx.save();
-    if (k === 1) golgeAyar('rgba(80,60,30,0.3)', 8, -3, 4);
+    if (k === 1) golgeAyar('rgba(40,62,70,0.3)', 8, -3, 4);
     dol(d, P.kasnak);
     ctx.restore();
     hacim(d, P.kasnak, P.kasnakAO, 22, 6, 11);

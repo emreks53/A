@@ -5,28 +5,28 @@
   "ad_en": "Frosted Glass",
   "aile": "Atölye Render Üslupları",
   "ozgun": true,
-  "ozet": "Canlı, bulanık bir renk zemininin önünde renklendirilmiş, yarı saydam buzlu cam panellerden kurulmuş sahne.",
-  "tanim": "Önce iri, yumuşak renk lekelerinden (camgöbeği, mor, pembe, şeftali, turkuaz) oluşan, güçlüce bulanıklaştırılmış canlı bir zemin hazırlanır. Her öğe bu zeminin önünde bir buzlu cam paneldir: arkasındaki görüntünün bulanık ve hafifçe büyütülmüş (kırılma) kopyasını gösterir; bu kopyanın doygunluğu renkli camda artırılır, beyaz taş camda ise azaltılır ki taş pembeye çalmadan sıcak beyaz kalsın, üstüne kendi rengiyle (zümrüt kubbe ve kasnak, sıcak beyaz minare ve kaide, altın alemler, gül rengi çiçekler, yeşil yapraklar) renklendirilir ve çok ince bir buz tanesi alır. Panelin içinde sağ üstten sol alta aydınlıktan renkli koyuluğa giden bir kırılma degradesi ve dış sınırdan içe sızan yumuşak bir ışık, kenarında sağ üstte parlak, sol altta sönen 1–2 px'lik bir yansıma vardır; her panel sola-aşağı yumuşak bir gölge düşürerek katmanları ayırır. Biçimler sade ve okunur tutulur: kubbe kaburgaları camdaki ince ışık-gölge çizgileri, pencereler daha koyu renkli küçük cam panellerdir.",
+  "ozet": "Canlı, bulanık bir öğle göğü zemininin önünde renklendirilmiş, yarı saydam buzlu cam panellerden kurulmuş aydınlık sahne.",
+  "tanim": "Önce iri, yumuşak renk lekelerinden (kobalt, gök mavisi, camgöbeği, turkuaz, nane; güneşin çevresinde beyaz ışık ve soluk sarı çekirdek) oluşan, güçlüce bulanıklaştırılmış canlı bir öğle göğü zemini hazırlanır: üstte gök mavisi, ufka doğru beyaza yakın açık camgöbeği, altta açık turkuaz bir zemin. Her öğe bu zeminin önünde bir buzlu cam paneldir: arkasındaki görüntünün bulanık ve hafifçe büyütülmüş (kırılma) kopyasını gösterir; bu kopyanın doygunluğu renkli camda artırılır, beyaz taş camda ise azaltılır ki taş maviye çalmadan beyaz kalsın, üstüne kendi rengiyle (zümrüt kubbe ve kasnak, beyaz minare ve kaide, altın alemler, beyaz-pembe çiçekler, yeşil yapraklar, camgöbeği pencereler) renklendirilir ve çok ince bir buz tanesi alır. Panelin içinde sağ üstten sol alta aydınlıktan renkli koyuluğa giden bir kırılma degradesi ve dış sınırdan içe sızan yumuşak bir ışık, kenarında sağ üstte parlak, sol altta sönen 1–2 px'lik bir yansıma vardır; her panel sola-aşağı yumuşak mavi-gri bir gölge düşürerek katmanları ayırır. Biçimler sade ve okunur tutulur: kubbe kaburgaları camdaki ince ışık-gölge çizgileri, pencereler daha koyu renkli küçük cam panellerdir.",
   "koken": "Kullanıcı arayüzü tasarımında 2020 civarında \"glassmorphism\" adıyla yaygınlaşan buzlu cam görünümüne (Apple'ın macOS Big Sur ve iOS arayüzlerindeki arka plan bulanıklığı, Microsoft Fluent Design'ın \"acrylic\" malzemesi) ve CSS backdrop-filter tekniğine dayanır. Atölye tarifi bu arayüz malzemesini illüstrasyona taşır: canlı bulanık renk zemini, her öğede arka plan bulanıklığı, doygunluk artışı ve hafif büyütme, öğeye özgü renk tonu, iç kırılma degradesi, iç kenar ışıması, sağ üstte parlayan ince kenar ve katmanlar arası yumuşak gölge.",
   "ayirt_edici": [
-    "Camgöbeğinden mora, pembeye ve şeftaliye geçen canlı, bulanık renk zemini",
-    "Zümrüt camdan kubbe: arkadaki renkler bulanık sızar, kaburgalar camdaki ince ışık çizgileri, sağ üstte keskin yansıma",
-    "Sıcak beyaz cam minare ve kaide; korkuluk babaları ve zikzak bant cama kazınmış ışık çizgileri",
-    "Her panelin sağ üst kenarında parlak, ince yansıma ve içte kenardan sızan ışık",
-    "Gül rengi cam taç yapraklar ve yeşil cam yapraklar; arkalarındaki yapraklar bulanık görünür",
-    "Katmanları ayıran yumuşak mor gölgeler; zemin geniş bir buzlu cam levha"
+    "Sol üstte kobalttan gök mavisine, ufukta beyaza yakın açık camgöbeğine geçen canlı, bulanık öğle göğü; sağ üstte beyaz hale içinde soluk sarı cam güneş",
+    "Zümrüt camdan kubbe: arkadaki mavi bulanık sızar, kaburgalar camdaki ince ışık çizgileri, sağ üstte keskin yansıma",
+    "Beyaz cam minare ve kaide, soluk gri-camgöbeği cam pencereler; korkuluk babaları ve zikzak bant cama kazınmış ışık çizgileri",
+    "Her panelin sağ üst kenarında parlak, ince yansıma ve içte kenardan sızan ışık; arkasındaki gök mavisini gösteren beyaz cam bulutlar",
+    "Dibi gül rengi, ucu beyaz cam taç yapraklar ve yeşil cam yapraklar; arkalarındaki yapraklar bulanık görünür",
+    "Katmanları ayıran yumuşak mavi-gri gölgeler; zemin açık turkuaz geniş bir buzlu cam levha"
   ],
   "palet": [
-    "#4EC5FE",
-    "#6B8EFE",
-    "#CE7FE2",
-    "#F190BE",
-    "#5DBB9A",
-    "#EBDAD9",
-    "#FEBB62",
-    "#FAB9BD"
+    "#227CFE",
+    "#6AB9FE",
+    "#90E3FE",
+    "#F9F1C1",
+    "#43C090",
+    "#EEF2EC",
+    "#F0C2D5",
+    "#8AF4DF"
   ],
-  "kodla_cizim": "Zemin, taşma paylı ekran dışı bir tuvalde doğrusal degrade ve renk lekelerinden (dış durak aynı rengin saydamı olduğu için koyu hale oluşmaz) çizilip yaklaşık 80 px bulanıklaştırılır. Her cam panelde o anki tuvalin panel çevresindeki bölgesi 'blur() saturate() brightness()' süzgeciyle kopyalanır (doygunluk renkli panellerde 1,45, kubbe ve kasnakta 0,9, minarede 0,75, kaide ve kornişte 0,45) ve %4–6 büyütülerek yolun içine basılır; üstüne panel rengi, ince beyaz film, döşenmiş tane deseni, doğrusal kırılma degradesi ve iç ayrıntılar (kaburga, zikzak, korkuluk babaları, pilastrlar) çizilir; iç kenar ışıması, biçimin dışı beyazla doldurulup bulanıklaştırılarak elde edilir. Gölge, biçimin panel payı kadar küçük bir tuvalde bulanıklaştırılmış, kaydırılmış kopyasıdır ve cam basılmadan önce konur; zemin levhasında iki yumuşak çapraz ışık şeridi vardır; kenar yansıması degradeli çift kalın çizginin yalnız dış yarısıdır, bu yüzden birleşik biçimlerde (bulutlar) iç sınırlar görünmez. Paneller ressam sırasıyla basıldığı için öndeki cam arkadaki paneli de bulanık gösterir.",
+  "kodla_cizim": "Zemin, taşma paylı ekran dışı bir tuvalde doğrusal degrade (gök mavisi → açık camgöbeği → ufukta beyaz → turkuaz zemin) ve renk lekelerinden (dış durak aynı rengin saydamı olduğu için koyu hale oluşmaz; güneşte beyaz hale ve soluk sarı çekirdek) çizilip yaklaşık 80 px bulanıklaştırılır. Her cam panelde o anki tuvalin panel çevresindeki bölgesi 'blur() saturate() brightness()' süzgeciyle kopyalanır (doygunluk renkli panellerde 1,45, kubbe ve kasnakta 0,9, minarede 0,75, kaide ve kornişte 0,45) ve %4–6 büyütülerek yolun içine basılır; üstüne panel rengi, ince beyaz film, döşenmiş tane deseni, doğrusal kırılma degradesi ve iç ayrıntılar (kaburga, zikzak, korkuluk babaları, pilastrlar) çizilir; iç kenar ışıması, biçimin dışı beyazla doldurulup bulanıklaştırılarak elde edilir. Gölge, biçimin panel payı kadar küçük bir tuvalde bulanıklaştırılmış, kaydırılmış mavi-gri kopyasıdır ve cam basılmadan önce konur; zemin levhasında iki yumuşak çapraz ışık şeridi vardır; kenar yansıması degradeli çift kalın çizginin yalnız dış yarısıdır, bu yüzden birleşik biçimlerde (bulutlar) iç sınırlar görünmez. Paneller ressam sırasıyla basıldığı için öndeki cam arkadaki paneli de bulanık gösterir.",
   "etiketler": [
     "buzlu cam",
     "glassmorphism",
@@ -35,6 +35,7 @@
     "canlı renk",
     "arayüz estetiği",
     "parlak kenar",
-    "katmanlı"
+    "katmanlı",
+    "öğle göğü"
   ]
 }

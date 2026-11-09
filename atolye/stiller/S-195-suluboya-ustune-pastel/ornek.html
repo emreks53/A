@@ -13,11 +13,11 @@
 <script src="../../sahne/sahne.js"></script>
 <script>
 // S-195 Suluboya Üstüne Pastel — hayalî bir ressamın karışık teknik eli.
-// Pürüzlü (rough) beyaz suluboya kâğıdına önce saydam, sıcak ışıklı suluboya lavileri (gök yukarıda
-// mavi, güneşe ve ufka doğru altın sarısı; kubbede yeşil, taşta lila-gri gölge, kumda okr). Lavi
+// Pürüzlü (rough) beyaz suluboya kâğıdına önce saydam, aydınlık öğle ışığında suluboya lavileri (gök
+// yukarıda berrak mavi, ufka doğru açılan; kubbede yeşil, taşta serin mavi-gri gölge, kumda açık okr). Lavi
 // kuruyunca üstüne yumuşak pastel: çubuğun yanıyla form yönünde kısa, tebeşirimsi vuruşlar yalnız
-// kâğıt dişinin tepelerine tutunur, çukurlarda alttaki lavi görünür. Güneşin çevresi sarı ve beyaz
-// pastelle işlenip parmakla yedirilmiş altın bir parıltı. Kontur çizgisi yoktur.
+// kâğıt dişinin tepelerine tutunur, çukurlarda alttaki lavi görünür. Yüksekteki güneşin çevresi beyaz ve
+// soluk sarı pastelle işlenip parmakla yedirilmiş beyaz bir ışık. Kontur çizgisi yoktur.
 (function () {
   'use strict';
   try {
@@ -843,7 +843,7 @@
   const IDW = titrekKimlik(H, 0.6, 50, 9);
   // palet: pastel çubuklarının hedef renkleri (lavi renkleri aşağıda sır olarak verilir)
   const P = {
-    gok: rampa([[0, '#BFD8F0'], [0.5, '#DCE8F2'], [1, '#FFF2D6']]),
+    gok: rampa([[0, '#A9CDEC'], [0.5, '#CFE3F3'], [1, '#EEF5FA']]),
     gunes: hex('#FFFCF3'), gunesR: 215, gunesG: 0, gunesDisk: 0,
     bulut: rampa([[0, '#FFFFFF'], [1, '#FFFFFF']]), bulutOpak: 0, bulutEsik: 0.3, bulutYumusak: 0.12,
     zemin: rampa([[0, '#FCE9C2'], [0.5, '#F6DCAA'], [1, '#EFCB90']]), zeminGolge: 0.6,
@@ -877,7 +877,7 @@
   const nA = gurultu(1951), nB = gurultu(1952), nC = gurultu(1953), nD = gurultu(1954);
   const sir = (i, c, d) => { if (d <= 0) return; d = d > 1 ? 1 : d; TR[i] *= 1 - d * (1 - c[0]); TG[i] *= 1 - d * (1 - c[1]); TB[i] *= 1 - d * (1 - c[2]); };
   const mixc = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-  const MAVI = [0.52, 0.72, 0.92], MAVI2 = [0.62, 0.66, 0.92], ALTIN = [1.0, 0.84, 0.48], SEFT = [1.0, 0.82, 0.70], LILA = [0.80, 0.74, 0.88];
+  const MAVI = [0.50, 0.73, 0.93], MAVI2 = [0.54, 0.80, 0.90], LIMON = [1.0, 0.97, 0.80], LILA = [0.80, 0.74, 0.88], GRIMAVI = [0.80, 0.85, 0.93], TASG = [0.75, 0.76, 0.87];
   const KY1 = [0.70, 0.84, 0.46], KY2 = [0.36, 0.62, 0.42], KY3 = [0.30, 0.44, 0.52];
   const OKR = [0.97, 0.84, 0.60], TAS1 = [1.0, 0.94, 0.84], YP1 = [0.72, 0.85, 0.48], YP2 = [0.38, 0.60, 0.40], PEMBE = [0.96, 0.76, 0.84];
   const YAKIN = new Float32Array(1024 * 1024);
@@ -896,34 +896,32 @@
     const gran = 1 + (0.5 - d) * 0.3;
     if (tip === T_GOK) {
       const t = Y / 800, dg = Math.hypot(X - gx, Y - gy);
-      const isi = Math.max(sstep(380, 60, dg), sstep(0.45, 1.0, t) * 0.85);
-      // mavi ufka inmeden biter (mavi ile sarı üst üste binip yeşile dönmesin); arada açık kâğıt ve şeftali kalır
-      let dn = lerp(0.72, 0.16, sstep(0, 1, Math.pow(t, 0.9))) * (0.8 + 0.4 * v1) * (1 - 0.9 * sstep(330, 40, dg)) * (1 - sstep(0.42, 0.66, t + (v1 - 0.5) * 0.08));
+      // berrak öğle mavisi: yukarıda dolgun, ufka doğru açılır ama ufka kadar iner; güneşin çevresinde kâğıt beyazı kalır
+      let dn = lerp(0.8, 0.2, sstep(0, 1, Math.pow(t, 0.85))) * (0.8 + 0.4 * v1) * (1 - 0.94 * sstep(200, 45, dg));
       const cm = sstep(0.04, 0.3, BUL[i]);
       // kâğıt payı yalnız yer yer ve değişen genişlikte kalır; başka yerlerde lavi kenara kadar gelir ve orada hafifçe toplanır
       const m = YAKIN[(y >> 1) * 1024 + (x >> 1)], esik = 0.12 + 0.6 * nC(X / 22, Y / 22);
       const kesik = sstep(0.5, 0.64, nD(X / 34, Y / 34));
       const pay = 1 - kesik * sstep(esik, esik + 0.12, m);
       const topla = 1 + 0.35 * (1 - kesik) * sstep(0.02, 0.4, m);
-      sir(i, mixc(MAVI, MAVI2, sstep(0.45, 0.85, v2) * (1 - t) * 0.6), dn * (1 - cm) * pay * gran * topla);
-      // güneşe ve ufka doğru ıslakta karışan altın sarısı; ufka yakın bantta şeftaliye döner
-      const ufukS = sstep(0.5, 0.85, t) * (1 - sstep(260, 120, dg));
-      sir(i, mixc(ALTIN, SEFT, Math.max(sstep(0.4, 0.75, v2) * 0.5, 0.75 * ufukS)), (0.1 + 0.55 * isi) * (1 - cm * 0.6) * pay * (0.85 + 0.3 * v1) * topla);
-      // bulut gölgesi: yumuşak lila
-      sir(i, LILA, sstep(0.04, 0.2, BUL[i]) * sstep(0.62, 0.45, BIS[i] + (v1 - 0.5) * 0.12) * 0.6);
+      sir(i, mixc(MAVI, MAVI2, sstep(0.4, 0.8, v2) * 0.7), dn * (1 - cm) * pay * gran * topla);
+      // yalnız güneşin hemen çevresinde ıslakta açılan çok soluk limon sarısı
+      sir(i, LIMON, 0.5 * sstep(130, 30, dg) * (0.85 + 0.3 * v1));
+      // bulut gölgesi: yumuşak mavi-gri
+      sir(i, GRIMAVI, sstep(0.04, 0.2, BUL[i]) * sstep(0.62, 0.45, BIS[i] + (v1 - 0.5) * 0.12) * 0.7);
     } else if (tip === T_KUBBE || tip === T_KASNAK || tip === T_KASPENC) {
       sir(i, KY1, 0.9 * (0.88 + 0.24 * v1));
       sir(i, KY2, (0.25 + 0.65 * sstep(0.85, 0.3, lt + (v1 - 0.5) * 0.08)) * 0.85 * gran);
       sir(i, KY3, 0.6 * sstep(0.4, 0.3, lt + (v1 - 0.5) * 0.08) * gran);
       if (tip === T_KASPENC) { sir(i, KY3, 0.85); sir(i, [0.5, 0.48, 0.62], 0.4); }
-    } else if (tip === T_KPENC || tip === T_MPENC) { sir(i, LILA, 0.85); sir(i, [0.55, 0.5, 0.66], 0.7); }
+    } else if (tip === T_KPENC || tip === T_MPENC) { sir(i, GRIMAVI, 0.85); sir(i, [0.52, 0.56, 0.70], 0.7); }
     else if (tip === T_ALTIN || tip === T_HILAL) { sir(i, [0.97, 0.80, 0.42], 0.92); sir(i, [0.72, 0.50, 0.26], 0.8 * sstep(0.6, 0.25, lt)); }
     else if (tip === T_ZIKZAK) sir(i, [0.84, 0.70, 0.52], 0.85);
     else if (TAS.has(tip)) {
       sir(i, TAS1, 0.6);
-      sir(i, OKR, 0.18 * (0.7 + 0.6 * v1));
+      sir(i, OKR, 0.1 * (0.7 + 0.6 * v1));
       const esk = tip === T_KAIDE || tip === T_KORNIS ? 0.55 : 0.68;
-      sir(i, LILA, 0.8 * sstep(esk + 0.05, esk - 0.05, lt + (v1 - 0.5) * 0.06) * gran);
+      sir(i, TASG, 0.9 * sstep(esk + 0.05, esk - 0.05, lt + (v1 - 0.5) * 0.06) * gran);
     } else if (tip === T_YAPRAK || tip === T_SAP) {
       sir(i, mixc(YP1, [0.62, 0.80, 0.62], sstep(0.4, 0.8, v2) * 0.6), 0.85);
       sir(i, YP2, (tip === T_SAP ? 0.6 : 0.75 * sstep(0.55, 0.45, lt)) * gran + 0.12);
@@ -936,9 +934,9 @@
     else if (tip === T_ERKEK) sir(i, [0.93, 0.62, 0.28], 0.9);
     else if (tip === T_ZEMIN) {
       const lum = 0.3 * S.R[i] + 0.59 * S.G[i] + 0.11 * S.B[i];
-      sir(i, OKR, 0.65 * (0.75 + 0.5 * v1) * gran);
-      sir(i, [0.86, 0.68, 0.48], clamp((0.9 - lum) * 3.5, 0, 0.6) * gran);
-      sir(i, LILA, clamp((0.86 - lum) * 4, 0, 0.5));
+      sir(i, OKR, 0.42 * (0.75 + 0.5 * v1) * gran);
+      sir(i, [0.84, 0.74, 0.58], clamp((0.9 - lum) * 3.5, 0, 0.55) * gran);
+      sir(i, GRIMAVI, clamp((0.86 - lum) * 4, 0, 0.55));
     }
   }
   const AL = new Float32Array(NN);
@@ -951,7 +949,7 @@
     OR[i] = kag * (1 - clamp((1 - TR[i]) * k, 0, 1)); OG[i] = kag * (1 - clamp((1 - TG[i]) * k, 0, 1)); OB[i] = (kag - 0.008) * (1 - clamp((1 - TB[i]) * k, 0, 1));
   }
   // ---------------------------------------------------------------- 2. pastel üst katı (kanvasta gerçek vuruşlar)
-  const sar = hex('#FFE69C'), sar2 = hex('#FFD978'), beyaz = hex('#FFFBEF'), krem = hex('#FFF1D6'), seft = hex('#F9D2B0'), lav = hex('#D8CBE6'),
+  const sar = hex('#FFF4C4'), mavB = hex('#EAF3FB'), beyaz = hex('#FFFDF6'), krem = hex('#FFF4DE'), kumP = hex('#F5E6C4'), griM = hex('#CCD9EA'), mavO = hex('#A8CDEE'),
     naneA = hex('#EDF7B8'), naneB = hex('#C8E89A'), yesM = hex('#7FBF7A'), cam = hex('#4E8C84'), pembe = hex('#F9C6D4'), yesA = hex('#D2EAA0'), mavA = hex('#D4E6F6');
   const GRUP = new Uint8Array(64);
   // ince bantlar (korniş, şerefe, korkuluk) pastelsiz, temiz lavide kalır
@@ -966,19 +964,19 @@
     let sira = 0;
     for (let yy = y0; yy < y1; yy += ay, sira++) for (let xx = x0 + (sira % 2) * ax * 0.5; xx < x1; xx += ax) f(xx + (0.2 + 0.6 * rnd()) * ax, yy + (0.2 + 0.6 * rnd()) * ay);
   };
-  // gök: güneş çevresinde sarı-beyaz, ufukta krem-şeftali kısa çapraz vuruşlar; bulutlarda krem/beyaz ışık, lila gölge
+  // gök: güneş çevresinde beyaz ve soluk sarı, gökte açık ve orta mavi, ufukta mavi-beyaz kısa çapraz vuruşlar; bulutlarda beyaz ışık, mavi-gri gölge
   {
     const c = tuv[1].c;
     tara(0, 0, 1024, 800, 10, 8, (x, y) => {
       if (tipAt(x, y) !== T_GOK) return;
       const i = idx(x, y);
       if (BUL[i] > 0.1) return;
-      const dg = Math.hypot(x - gx, y - gy), gunes = Math.pow(sstep(230, 45, dg), 1.25), ufuk = sstep(520, 790, y);
+      const dg = Math.hypot(x - gx, y - gy), gunes = Math.pow(sstep(200, 40, dg), 1.25), ufuk = sstep(500, 790, y);
       const h = rnd();
       let col = null, p = 0;
-      if (h < gunes * 0.85) { const q = rnd(); col = q < 0.35 + 0.3 * gunes ? sar : q < 0.65 ? sar2 : beyaz; p = 0.35 + 0.5 * gunes; }
-      else if (h < gunes * 0.85 + ufuk * 0.45) { col = rnd() < 0.5 ? krem : seft; p = 0.4; }
-      else if (h < gunes * 0.85 + ufuk * 0.45 + 0.06 * (1 - ufuk)) { col = mavA; p = 0.35; }
+      if (h < gunes * 0.85) { col = rnd() < 0.55 ? beyaz : sar; p = 0.35 + 0.5 * gunes; }
+      else if (h < gunes * 0.85 + ufuk * 0.42) { col = rnd() < 0.6 ? mavB : mavA; p = 0.4; }
+      else if (h < gunes * 0.85 + ufuk * 0.42 + 0.14 * (1 - ufuk)) { col = y < 330 && rnd() < 0.45 ? mavO : mavA; p = 0.36; }
       if (!col) return;
       yanVurus(c, x, y, -0.62 + (rnd() - 0.5) * 0.12, 16 + rnd() * 10, 5.5 + rnd() * 2, col, p, rnd, { uc: 0.5 });
     });
@@ -988,8 +986,8 @@
       if (bu < 0.1) return;
       const isik = sstep(0.3, 0.85, bi);
       let col, p;
-      if (kat === 0) { if (isik > 0.4) return; col = lav; p = 0.45 * sstep(0.1, 0.5, bu); }
-      else { if (isik < 0.3) return; col = rnd() < 0.55 ? beyaz : krem; p = (0.5 + 0.45 * isik) * sstep(0.12, 0.55, bu); }
+      if (kat === 0) { if (isik > 0.4) return; col = griM; p = 0.45 * sstep(0.1, 0.5, bu); }
+      else { if (isik < 0.3) return; col = rnd() < 0.7 ? beyaz : mavB; p = (0.5 + 0.45 * isik) * sstep(0.12, 0.55, bu); }
       yanVurus(c, x, y, -0.3 + (rnd() - 0.5) * 0.15, 15 + rnd() * 10, 5 + rnd() * 2, col, p, rnd, { uc: 0.45 });
     });
   }
@@ -1011,10 +1009,10 @@
     if (lt > 0.45) return rnd() < 0.3 ? [yesM, 0.42] : null;
     return rnd() < 0.3 ? [cam, 0.45] : null;
   });
-  // taş: ışıkta krem ve beyaz, sıcak şeftali ara ton; gölge lavide kalır
-  ogeKat(3, 8, 9, 22, 5.5, 0, (t, lt) => (lt > 0.5 ? [rnd() < 0.6 ? beyaz : krem, 0.35 + 0.6 * sstep(0.5, 0.85, lt)] : (rnd() < 0.25 ? [lav, 0.4] : null)), -1.0);
-  // kum: şeftali ve krem yatay vuruşlar
-  ogeKat(4, 14, 11, 34, 7, 0, (t, lt) => [rnd() < 0.5 ? seft : krem, 0.5]);
+  // taş: ışıkta beyaz ve krem; gölge lavide kalır, seyrek mavi-gri vuruş alır
+  ogeKat(3, 8, 9, 22, 5.5, 0, (t, lt) => (lt > 0.5 ? [rnd() < 0.7 ? beyaz : krem, 0.35 + 0.6 * sstep(0.5, 0.85, lt)] : (rnd() < 0.25 ? [griM, 0.4] : null)), -1.0);
+  // kum: açık kum ve krem yatay vuruşlar
+  ogeKat(4, 14, 11, 34, 7, 0, (t, lt) => [rnd() < 0.5 ? kumP : krem, 0.5]);
   // yapraklar: ışık yarısında açık yeşil
   ogeKat(5, 5, 5, 12, 3.8, 0, (t, lt) => (lt > 0.5 ? [yesA, 0.6 + 0.35 * sstep(0.5, 0.85, lt)] : (rnd() < 0.35 ? [cam, 0.45] : null)));
   // taç yaprakları: beyaz ve krem, ortaya doğru pembe
@@ -1024,22 +1022,25 @@
     return [col, 0.4 + 0.5 * sstep(0.55, 0.9, lt)];
   });
   const TV = []; for (let g = 1; g < NG; g++) TV[g] = tuv[g].c.getImageData(0, 0, WW, WW).data;
-  // pastel yalnız kâğıt dişinin tepelerine tutunur; güneşin özü parmakla yedirilir
+  // pastel yalnız kâğıt dişinin tepelerine tutunur; güneşin özü parmakla beyaz bir ışığa yedirilir
   for (let i = 0; i < NN; i++) {
     const tip = H.TIP[IDW[i]], g = GRUP[tip];
     const dis = 0.55 * DP[i] + 0.45 * D[i];
+    if (g) {
+      const v = TV[g], a = v[i * 4 + 3] / 255;
+      if (a >= 0.003) {
+        const p = a * 0.86;
+        const k = sstep(1 - p - 0.12, 1 - p + 0.12, dis);
+        OR[i] += (v[i * 4] / 255 - OR[i]) * k; OG[i] += (v[i * 4 + 1] / 255 - OG[i]) * k; OB[i] += (v[i * 4 + 2] / 255 - OB[i]) * k;
+      }
+    }
     if (tip === T_GOK) {
+      // güneşin özü: vuruşlar parmakla beyaz-soluk sarı bir ışığa yedirilir (dişe göre hafif kırık)
       const X = (i % WW) / K, Y = ((i / WW) | 0) / K, dd = Math.hypot(X - gx, Y - gy);
-      const k = 0.97 * Math.exp(-Math.pow(dd / 105, 2.6) * 0.5) * (0.6 + 0.4 * sstep(0.2, 0.65, dis)), t = sstep(20, 150, dd);
-      const cr1 = 1, cg1 = 0.99 - 0.08 * t, cb1 = 0.95 - 0.36 * t;
+      const k = 0.96 * Math.exp(-Math.pow(dd / 80, 2.6) * 0.5) * (0.7 + 0.3 * sstep(0.2, 0.65, dis)), t = sstep(15, 110, dd);
+      const cr1 = 1, cg1 = 1 - 0.012 * t, cb1 = 0.975 - 0.13 * t;
       OR[i] += (cr1 - OR[i]) * k; OG[i] += (cg1 - OG[i]) * k; OB[i] += (cb1 - OB[i]) * k;
     }
-    if (!g) continue;
-    const v = TV[g], a = v[i * 4 + 3] / 255;
-    if (a < 0.003) continue;
-    const p = a * 0.86;
-    const k = sstep(1 - p - 0.12, 1 - p + 0.12, dis);
-    OR[i] += (v[i * 4] / 255 - OR[i]) * k; OG[i] += (v[i * 4 + 1] / 255 - OG[i]) * k; OB[i] += (v[i * 4 + 2] / 255 - OB[i]) * k;
   }
   bas(OR, OG, OB);
   } finally {

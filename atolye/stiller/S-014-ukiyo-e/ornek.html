@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-014 Ukiyo-e — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #efe2c6; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #f3ede0; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -13,7 +13,8 @@
 <script src="../../sahne/sahne.js"></script>
 <script>
 // S-014 Ukiyo-e — ağaç baskı: düz renk kalıpları, kalın siyah ana kalıp çizgileri, bokashi geçişleri
-// (gökte Prusya mavisi), pembe kasumi sis kuşakları, kalıpta ağaç damarı, hafif kayık baskı, washi kâğıdı.
+// (öğle göğü: üstte Prusya mavisi, ufka doğru açılan mavi), beyaz kasumi sis kuşakları, soluk sarı güneş,
+// kalıpta ağaç damarı, hafif kayık baskı, washi kâğıdı.
 (function () {
   const S = SAHNE;
   const K = 2, W2 = 2048;
@@ -35,7 +36,7 @@
   }
   const n1 = gurultu(3), n2 = gurultu(9), n3 = gurultu(27);
 
-  const KAGIT = '#efe2c6';
+  const KAGIT = '#f3ede0';
   const MUREKKEP = '#221d1a';
   const CER = { x1: 26, y1: 26, x2: 998, y2: 998 }; // baskı alanı (çerçeve çizgisi)
 
@@ -203,25 +204,26 @@
     ctx.restore();
   }
 
-  // ------------------------------------------------------------ 2. gök: üstte Prusya mavisi bokashi, ufukta şeftali
+  // ------------------------------------------------------------ 2. gök: öğle vakti, üstte Prusya mavisi bokashi, ufka doğru açılan mavi
   {
     const G = yeniKatman();
     const x = G.x;
-    // ichimonji bokashi: üstte düz koyu Prusya mavisi şerit, sonra silinerek açılan gök
-    x.fillStyle = dikeyGrad(x, CER.y1, 520, [[0, 'rgba(22,42,92,1)'], [0.1, 'rgba(26,52,108,0.98)'], [0.16, 'rgba(36,70,130,0.8)'], [0.36, 'rgba(60,100,156,0.42)'], [0.7, 'rgba(92,128,172,0.2)'], [1, 'rgba(110,140,178,0.1)']]);
-    x.fillRect(0, 0, 1024, 560);
-    x.fillStyle = dikeyGrad(x, 470, 800, [[0, 'rgba(232,160,128,0)'], [0.5, 'rgba(232,160,128,0.32)'], [1, 'rgba(228,150,118,0.62)']]);
-    x.fillRect(0, 470, 1024, 340);
+    // ichimonji bokashi: üstte düz Prusya mavisi şerit, sonra silinerek açılan gök mavisi
+    x.fillStyle = dikeyGrad(x, CER.y1, 560, [[0, 'rgba(30,86,160,1)'], [0.1, 'rgba(34,94,170,0.97)'], [0.17, 'rgba(44,120,196,0.8)'], [0.38, 'rgba(62,146,218,0.56)'], [0.7, 'rgba(92,168,230,0.38)'], [1, 'rgba(112,180,234,0.3)']]);
+    x.fillRect(0, 0, 1024, 600);
+    // ufka doğru açık mavi silinme: ufukta kâğıdın beyazına yakın soluk gök
+    x.fillStyle = dikeyGrad(x, 540, 800, [[0, 'rgba(112,180,234,0.3)'], [0.55, 'rgba(136,194,238,0.22)'], [1, 'rgba(166,210,242,0.12)']]);
+    x.fillRect(0, 560, 1024, 250);
     x.globalCompositeOperation = 'destination-out';
     x.fillStyle = '#000';
     x.fill(P2(S.daireYolu(S.gunes.x, S.gunes.y, 52)));
     damarla(G.c, 0.02, 0.6, 0);
     bas(G.c, 0, 0);
-    // güneş: düz kırmızı teker
+    // güneş: yüksekte soluk sarı düz teker
     const R = yeniKatman();
-    R.x.fillStyle = '#c63e2b';
+    R.x.fillStyle = '#fdf3c2';
     R.x.fill(P2(S.daireYolu(S.gunes.x, S.gunes.y, 51)));
-    damarla(R.c, 0.03, 0.4, 120);
+    damarla(R.c, 0.03, 0.3, 120);
     bas(R.c, -1.5, 1.2);
   }
 
@@ -280,10 +282,10 @@
     kagitlaOrt(M.c);
     bas(R.c, 0, dy);
   }
-  const PEMBE = ['rgba(206,108,98,0.9)', 'rgba(230,160,140,0.42)', 'rgba(240,204,172,0.04)'];
+  const AK = ['rgba(66,116,174,0.88)', 'rgba(166,198,226,0.36)', 'rgba(236,242,246,0.03)']; // beyaz kasumi, üst kenarı gök mavisi
 
   // kasumi C: güneşin altından geçen
-  kasumi([[600, 1080, 180, 214], [760, 1080, 202, 236], [-80, 236, 262, 292], [-80, 150, 282, 314]], PEMBE, 1);
+  kasumi([[600, 1080, 180, 214], [760, 1080, 202, 236], [-80, 236, 262, 292], [-80, 150, 282, 314]], AK, 1);
 
   // ------------------------------------------------------------ 4. minare
   const parcalar = S.minareParcalari();
@@ -320,7 +322,7 @@
   }
 
   // kasumi A: minarenin önünden, kubbenin arkasından
-  kasumi([[-80, 430, 382, 414], [150, 560, 404, 440], [660, 1080, 438, 470], [830, 1080, 460, 494]], PEMBE, 1.2);
+  kasumi([[-80, 430, 382, 414], [150, 560, 404, 440], [660, 1080, 438, 470], [830, 1080, 460, 494]], AK, 1.2);
 
   // ------------------------------------------------------------ 5. yapı: kaide, kasnak, kubbe, alem
   {
@@ -368,7 +370,7 @@
     damarla(Z.c, 0.03, 0.85, 700);
     bas(Z.c, -1, 1);
   }
-  kasumi([[-80, 690, 774, 804], [300, 1080, 792, 828]], ['rgba(210,120,104,0.86)', 'rgba(234,176,148,0.4)', 'rgba(240,206,172,0.04)'], 1.4);
+  kasumi([[-80, 690, 774, 804], [300, 1080, 792, 828]], ['rgba(74,124,176,0.84)', 'rgba(172,202,228,0.34)', 'rgba(236,242,246,0.03)'], 1.4);
 
   // ------------------------------------------------------------ 7. bitkiler: kiraz dalları, yapraklar, sakura
   {

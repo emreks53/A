@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-019 Art Deco — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #0d0e0d; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #f2e8cf; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -12,8 +12,9 @@
 <canvas id="tuval"></canvas>
 <script src="../../sahne/sahne.js"></script>
 <script>
-// S-019 Art Deco — 1920-30'lar seyahat afişi: geometrik bakışım, kubbenin ardında güneş patlaması,
-// basamaklı (zigurat) çerçeve, şeritli gök, metalik altın çizgiler, yelpaze ve pul motifleri, hız çizgileri.
+// S-019 Art Deco — 1920-30'lar seyahat afişi, aydınlık öğle vakti: geometrik bakışım, kubbenin ardında
+// güneş patlaması, basamaklı (zigurat) krem çerçeve, gök mavisinden beyaza şeritli gök, ışınlı soluk sarı
+// güneş, metalik altın çizgiler, yelpaze ve pul motifleri, hız çizgileri; krem, yeşim, gök mavisi ve altın.
 (function () {
   const S = SAHNE;
   const K = 2;
@@ -26,8 +27,9 @@
   const mixHex = (a, b, t) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`; };
 
   const C = {
-    siyah: '#0d0e0d', zumrutKoyu: '#08382c', zumrut: '#0f6a4c', zumrut2: '#13805c', yesim: '#3fa47c', yesimAcik: '#7cc4a0',
-    krem: '#f0e3c4', kremGolge: '#d2be90', kremAcik: '#fbf3dc', mercan: '#e07a5f', mercanAcik: '#efa58a',
+    siyah: '#173f48', zumrutKoyu: '#11604a', zumrut: '#1a8462', zumrut2: '#22916a', yesim: '#4fb08a', yesimAcik: '#9fd6bc',
+    krem: '#f4e9cc', kremGolge: '#dccb9c', kremAcik: '#fdf8e8', mavi: '#2f86c4', maviAcik: '#8cc8ea',
+    cerceve: '#f2e8cf', lacivert: '#1f5f96',
   };
   // metalik altın: tuval boyunca parlayıp sönen degrade
   const ALTIN = ctx.createLinearGradient(0, 0, 1024, 1024);
@@ -38,17 +40,17 @@
   // ------------------------------------------------------------ çerçeve: basamaklı (zigurat) tepe
   const IC = [[30, 1000], [30, 74], [246, 74], [246, 54], [368, 54], [368, 34], [656, 34], [656, 54], [778, 54], [778, 74], [994, 74], [994, 1000]];
   const icYol = P2(S.yol(IC, true));
-  ctx.fillStyle = C.siyah;
+  ctx.fillStyle = C.cerceve;
   ctx.fillRect(0, 0, 1024, 1024);
 
   ctx.save();
   ctx.clip(icYol);
   // ------------------------------------------------------------ 1. şeritli gök (seyahat afişi)
   const SERIT = [
-    [34, 136, '#0a1d22', '#0c2a2a'], [136, 222, '#0c2e2c', '#0e3d34'], [222, 300, '#0f4337', '#13563f'],
-    [300, 372, '#145c45', '#1d7255'], [372, 438, '#22795a', '#3c9473'], [438, 498, '#4a9e7d', '#79bb98'],
-    [498, 552, '#8cc4a2', '#bcd8b4'], [552, 604, '#cfe0bb', '#ecdfb6'], [604, 652, '#f0dcb0', '#f2cfa2'],
-    [652, 700, '#f1c69c', '#eeb08c'], [700, 752, '#eca584', '#e8967a'], [752, 800, '#e58c72', '#df7c66'],
+    [34, 136, '#3f92d2', '#4b9bd8'], [136, 222, '#56a4dc', '#63ade1'], [222, 300, '#6fb6e5', '#7dbfe9'],
+    [300, 372, '#8bc8ec', '#98cfee'], [372, 438, '#a5d6f0', '#b0dcf1'], [438, 498, '#bbe1f2', '#c5e6f3'],
+    [498, 552, '#cfeaf3', '#d7eef3'], [552, 604, '#ddf0f2', '#e2f2f1'], [604, 652, '#e5f3f0', '#e8f4ef'],
+    [652, 700, '#eaf4ee', '#ecf5ee'], [700, 752, '#edf5ed', '#eef5ec'], [752, 800, '#eff5eb', '#f0f5ea'],
   ];
   for (const [y1, y2, c1, c2] of SERIT) {
     const g = ctx.createLinearGradient(0, y1, 0, y2);
@@ -56,7 +58,7 @@
     ctx.fillStyle = g;
     ctx.fillRect(0, y1, 1024, y2 - y1 + 0.6);
   }
-  for (const [y1] of SERIT.slice(1)) { ctx.fillStyle = 'rgba(10,14,12,0.35)'; ctx.fillRect(0, y1 - 0.6, 1024, 1.2); }
+  for (const [y1] of SERIT.slice(1)) { ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillRect(0, y1 - 0.6, 1024, 1.2); }
 
   // ------------------------------------------------------------ 2. güneş patlaması (kubbenin ardında)
   const GM = { x: 560, y: 560 };
@@ -69,7 +71,7 @@
       p.lineTo(GM.x + Math.cos(a0) * 1400, GM.y + Math.sin(a0) * 1400);
       p.lineTo(GM.x + Math.cos(a1) * 1400, GM.y + Math.sin(a1) * 1400);
       p.closePath();
-      ctx.fillStyle = i % 2 ? 'rgba(255,236,190,0.075)' : 'rgba(0,20,15,0.07)';
+      ctx.fillStyle = i % 2 ? 'rgba(255,255,255,0.16)' : 'rgba(20,80,130,0.05)';
       ctx.fill(p);
     }
     ctx.globalAlpha = 0.55;
@@ -90,31 +92,41 @@
     {
       ctx.save(); ctx.translate(GM.x + 306 * Math.cos(b1), YB); ctx.rotate(Math.PI / 4);
       ctx.fillStyle = ALTIN; ctx.fillRect(-6, -6, 12, 12);
-      ctx.strokeStyle = '#0d0e0d'; ctx.lineWidth = 1; ctx.strokeRect(-6, -6, 12, 12);
-      ctx.fillStyle = C.mercanAcik; ctx.fillRect(-2.4, -2.4, 4.8, 4.8);
+      ctx.strokeStyle = C.lacivert; ctx.lineWidth = 1; ctx.strokeRect(-6, -6, 12, 12);
+      ctx.fillStyle = C.maviAcik; ctx.fillRect(-2.4, -2.4, 4.8, 4.8);
       ctx.restore();
     }
     // iki yay arasında altın boncuk dizisi
     for (let i = 0; i <= 52; i++) {
       const a = b0 + ((i + 0.5) / 54) * (b1 - b0);
       ctx.beginPath(); ctx.arc(GM.x + Math.cos(a) * 306, GM.y + Math.sin(a) * 306, i % 5 === 0 ? 3.2 : 1.8, 0, TAU);
-      ctx.fillStyle = i % 5 === 0 ? C.mercanAcik : ALTIN; ctx.fill();
+      ctx.fillStyle = i % 5 === 0 ? C.maviAcik : ALTIN; ctx.fill();
     }
   }
 
-  // ------------------------------------------------------------ 3. güneş: çizgilerle kesilmiş disk
+  // ------------------------------------------------------------ 3. güneş: yüksekte, ışın taçlı soluk sarı disk
   {
-    const { x, y } = S.gunes;
-    const d = P2(S.daireYolu(x, y, 50));
-    const g = ctx.createLinearGradient(0, y - 50, 0, y + 50);
-    g.addColorStop(0, '#f6dc8e'); g.addColorStop(0.55, '#efa86f'); g.addColorStop(1, C.mercan);
+    // ışın tacı zigurat çerçevenin altında kesilmeden sığsın diye disk biraz küçük ve 14 px aşağıda
+    const x = S.gunes.x, y = S.gunes.y + 14;
+    // basamaklı ışın tacı: uzun ve kısa üçgen ışınlar dönüşümlü
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * TAU + TAU / 48, w = 0.085, r1 = 53, r2 = i % 2 ? 64 : 74;
+      const p = new Path2D();
+      p.moveTo(x + Math.cos(a - w) * r1, y + Math.sin(a - w) * r1);
+      p.lineTo(x + Math.cos(a) * r2, y + Math.sin(a) * r2);
+      p.lineTo(x + Math.cos(a + w) * r1, y + Math.sin(a + w) * r1);
+      p.closePath();
+      doldur(p, i % 2 ? '#fdf6d2' : '#fbeeb0');
+      altinCizgi(p, 0.8);
+    }
+    const d = P2(S.daireYolu(x, y, 46));
+    const g = ctx.createRadialGradient(x - 13, y - 13, 4, x, y, 48);
+    g.addColorStop(0, '#fffdf2'); g.addColorStop(0.6, '#fdf4c8'); g.addColorStop(1, '#f8e7a0');
     doldur(d, g);
-    ctx.save(); ctx.clip(d);
-    let yy = y + 2;
-    for (let k = 0; k < 6; k++) { const h = 2 + k * 1.2; ctx.fillStyle = '#0e3a31'; ctx.fillRect(x - 60, yy, 120, h); yy += h + 6 - k * 0.4; }
-    ctx.restore();
+    // eş merkezli ince halkalar (Deco güneşi)
+    for (const r of [20, 33]) { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.strokeStyle = 'rgba(214,176,80,0.55)'; ctx.lineWidth = 0.9; ctx.stroke(); }
     altinCizgi(d, 1.6);
-    ctx.beginPath(); ctx.arc(x, y, 60, 0, TAU); ctx.strokeStyle = ALTIN; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, 53, 0, TAU); ctx.strokeStyle = ALTIN; ctx.lineWidth = 0.8; ctx.stroke();
   }
 
   // ------------------------------------------------------------ 4. akış çizgili bulutlar ve hız çizgileri
@@ -124,7 +136,7 @@
       const xx = ayna ? x - dx - w : x + dx;
       const p = new Path2D();
       p.roundRect(xx, y + dy, w, h, h / 2);
-      doldur(p, 'rgba(240,227,196,0.92)');
+      doldur(p, 'rgba(255,255,255,0.94)');
       altinCizgi(p, 1);
     }
   }
@@ -234,10 +246,10 @@
   for (let kat = 1; kat >= 0; kat--) {
     const q = S.kasnak[kat];
     const g = P2(dik(q.x1, q.y1, q.x2, q.y2));
-    doldur(g, kat ? '#0b5340' : C.zumrut);
+    doldur(g, kat ? '#14785a' : C.zumrut);
     ctx.save(); ctx.clip(g);
     ctx.fillStyle = C.zumrutKoyu; ctx.fillRect(q.x1, q.y1, (q.x2 - q.x1) * 0.2, q.y2 - q.y1);
-    ctx.fillStyle = 'rgba(124,196,160,0.35)'; ctx.fillRect(q.x1 + (q.x2 - q.x1) * 0.64, q.y1, (q.x2 - q.x1) * 0.1, q.y2 - q.y1);
+    ctx.fillStyle = 'rgba(170,226,196,0.4)'; ctx.fillRect(q.x1 + (q.x2 - q.x1) * 0.64, q.y1, (q.x2 - q.x1) * 0.1, q.y2 - q.y1);
     ctx.restore();
     for (const p of S.kasnakPencereleri(kat)) { const y = P2(S.kemerYolu(p.x, p.y, p.w, p.h)); doldur(y, C.siyah); altinCizgi(y, 0.9); }
     if (kat === 1) { // alt kasnağın üstünde şevron friz
@@ -257,7 +269,7 @@
     const kp = P2(S.kubbeYolu);
     const prof = S.kubbeProfili(60);
     const kab = (u) => prof.map((q) => [560 + u * q.r, q.y]);
-    const tonlar = ['#08382c', '#0a4a38', '#0f6a4c', '#13805c', '#2f9a70', '#5cb68c'];
+    const tonlar = ['#11604a', '#16735a', '#1d8a64', '#2b9e74', '#4fb48a', '#82cca8'];
     const L = [0.62, -0.5, 0.6];
     for (let i = 0; i < 16; i++) {
       const u0 = Math.sin(-Math.PI / 2 + (Math.PI * i) / 16), u1 = Math.sin(-Math.PI / 2 + (Math.PI * (i + 1)) / 16);
@@ -268,7 +280,7 @@
     }
     ctx.save(); ctx.clip(kp);
     // yatay basamak bantları (tepeye doğru açılan)
-    for (const [y, a] of [[505, 0.18], [455, 0.12], [400, 0.08]]) { ctx.fillStyle = `rgba(0,15,10,${a})`; ctx.fillRect(340, y, 440, 555 - y); }
+    for (const [y, a] of [[505, 0.13], [455, 0.09], [400, 0.06]]) { ctx.fillStyle = `rgba(0,40,30,${a})`; ctx.fillRect(340, y, 440, 555 - y); }
     ctx.strokeStyle = ALTIN; ctx.lineWidth = 1;
     for (const k of S.kaburgalar(16)) ctx.stroke(P2(S.yol(k.noktalar)));
     ctx.restore();
@@ -280,7 +292,7 @@
   {
     ctx.save();
     ctx.beginPath(); ctx.rect(0, 800, 1024, 224); ctx.clip();
-    ctx.fillStyle = C.siyah; ctx.fillRect(0, 800, 1024, 224);
+    ctx.fillStyle = '#1b7a5a'; ctx.fillRect(0, 800, 1024, 224);
     const r = 24;
     for (let j = 0; j < 12; j++) {
       const y = 812 + j * 15;
@@ -289,9 +301,9 @@
         const p = new Path2D();
         p.arc(x, y + r, r, Math.PI, TAU);
         p.closePath();
-        doldur(p, j % 2 ? C.zumrutKoyu : '#0b4a39');
+        doldur(p, j % 2 ? '#2a9670' : '#36a37b');
         ctx.beginPath(); ctx.arc(x, y + r, r, Math.PI, TAU); ctx.strokeStyle = ALTIN; ctx.lineWidth = 1.1; ctx.stroke();
-        ctx.beginPath(); ctx.arc(x, y + r, r * 0.55, Math.PI, TAU); ctx.strokeStyle = 'rgba(214,180,90,0.45)'; ctx.lineWidth = 0.8; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, y + r, r * 0.55, Math.PI, TAU); ctx.strokeStyle = 'rgba(232,206,120,0.6)'; ctx.lineWidth = 0.8; ctx.stroke();
       }
     }
     ctx.restore();
@@ -307,9 +319,9 @@
       p.moveTo(cx, cy);
       p.arc(cx, cy, r, a, b);
       p.closePath();
-      doldur(p, i % 2 ? C.mercanAcik : C.krem);
+      doldur(p, i % 2 ? C.maviAcik : C.krem);
       ctx.save(); ctx.clip(p);
-      doldur(P2(S.daireYolu(cx, cy, r * 0.55)), i % 2 ? C.mercan : C.kremGolge);
+      doldur(P2(S.daireYolu(cx, cy, r * 0.55)), i % 2 ? C.mavi : C.kremGolge);
       ctx.restore();
       ctx.strokeStyle = ALTIN; ctx.lineWidth = 1.1; ctx.stroke(p);
       // dış kenarda pul
@@ -317,7 +329,7 @@
       const pul = new Path2D();
       pul.arc(cx + Math.cos(am) * r * 0.98, cy + Math.sin(am) * r * 0.98, rr, am - Math.PI / 2, am + Math.PI / 2);
       pul.closePath();
-      doldur(pul, i % 2 ? C.mercan : C.kremAcik);
+      doldur(pul, i % 2 ? C.mavi : C.kremAcik);
       ctx.stroke(pul);
     }
     ctx.beginPath(); ctx.arc(cx, cy, r * 0.55, a0, a0 + yay); ctx.strokeStyle = ALTIN; ctx.lineWidth = 1; ctx.stroke();
@@ -353,7 +365,7 @@
         yaprak(x, y, L, -Math.PI / 2 - 0.75, C.yesim);
         yaprak(x, y, L, -Math.PI / 2 + 0.75, C.zumrut2);
       }
-      for (const dy of [26, 42]) { const t = P2(S.yol([[x, ust + dy - 9], [x + 5, ust + dy], [x, ust + dy + 9], [x - 5, ust + dy]], true)); doldur(t, C.mercan); altinCizgi(t, 0.8); }
+      for (const dy of [26, 42]) { const t = P2(S.yol([[x, ust + dy - 9], [x + 5, ust + dy], [x, ust + dy + 9], [x - 5, ust + dy]], true)); doldur(t, C.mavi); altinCizgi(t, 0.8); }
       yelpaze(x, ust, r, 7);
     }
     // ön yelpazeler (bakışımlı dizilim)
@@ -381,7 +393,7 @@
         const a0 = Math.PI + (i / 9) * Math.PI, a1 = Math.PI + ((i + 1) / 9) * Math.PI;
         const p = new Path2D();
         p.moveTo(cx, cy); p.arc(cx, cy, 44, a0, a1); p.closePath();
-        doldur(p, i % 2 ? '#0b4a39' : C.zumrutKoyu);
+        doldur(p, i % 2 ? C.yesim : C.zumrut2);
         ctx.strokeStyle = ALTIN; ctx.lineWidth = 0.9; ctx.stroke(p);
       }
       for (const r of [44, 30, 14]) { ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, TAU); ctx.strokeStyle = ALTIN; ctx.lineWidth = r === 44 ? 1.6 : 1; ctx.stroke(); }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-038 Sinematik Sis — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #3a5560; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #cfe0ea; }
   canvas, svg { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -13,12 +13,13 @@
 <script src="../../sahne/sahne.js"></script>
 <script>
 // S-038 Sinematik Sis (Cinematic Haze) — film konsept sanatı / dijital mat boyama (matte painting) tarifi.
-// İki aşama: (1) "alt boya": sahne, sanatçının değer ve renk kararlarıyla kurulur — altın saat göğü ve tasarlanmış
-// bulut kütleleri, hava perspektifiyle puslu uzak tepeler, yükseklik alanından normal alınıp beş tonlu biçim
-// boyamasıyla (ışık, yarı ton, çekirdek gölge, yansıyan ışık, düşen gölge) ışıklanan yapı, koyu ön plan çiçekleri,
-// güneşe doğru radyal örneklemeyle hacimsel ışık huzmeleri. (2) "boya geçişi": alt boyadan renk alan, büyükten
-// küçüğe katman katman eğri fırça vuruşları (kaba fırça gökte ve arka planda, ince fırça yalnız odak yapıda: kayıp
-// ve bulunmuş kenarlar). En sonda vurgu parıltıları, ışıltı, sıcak/camgöbeği renk düzeltme, gren ve vinyet.
+// İki aşama: (1) "alt boya": sahne, sanatçının değer ve renk kararlarıyla kurulur — puslu, aydınlık bir kuşluk-öğle
+// göğü (üstte gök mavisi, ufukta beyaz sis) ve güneşin önden aydınlattığı beyaz kümülüsler, hava perspektifiyle sise
+// gömülen mavi-gri uzak tepeler, yükseklik alanından normal alınıp beş tonlu biçim boyamasıyla (ışık, yarı ton, çekirdek
+// gölge, yansıyan ışık, düşen gölge) ışıklanan yapı, aydınlık ön plan çiçekleri, güneşe doğru radyal örneklemeyle
+// açık renkli, yumuşak hacimsel ışık huzmeleri. (2) "boya geçişi": alt boyadan renk alan, büyükten küçüğe katman
+// katman eğri fırça vuruşları (kaba fırça gökte ve arka planda, ince fırça yalnız odak yapıda: kayıp ve bulunmuş
+// kenarlar). En sonda vurgu parıltıları, sis ışıltısı, hafif renk düzeltme ve ince gren.
 setTimeout(function () {
   'use strict';
   const S = SAHNE;
@@ -189,13 +190,13 @@ setTimeout(function () {
   };
   const karis = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 
-  // ------------------------------------------------------------------ ışık kurgusu: altın saat, güneş sağ üstte
-  // Işık sağdan ve yukarıdan, kameraya hafif dönük: kubbenin sağ üçte ikisi güneşte, sol kenarı camgöbeği gölgede.
-  const LS = nrm([0.78, -0.48, 0.2]);
+  // ------------------------------------------------------------------ ışık kurgusu: aydınlık kuşluk-öğle, güneş sağ üstte yüksekte
+  // Işık sağdan, yukarıdan ve önden: kubbenin büyük kısmı güneşte, sol kenarı gök mavisi yansımalı açık gölgede.
+  const LS = nrm([0.66, -0.55, 0.45]);
   const HV = nrm([LS[0], LS[1], LS[2] + 1]);
-  const KENAR = [1.0, 0.66, 0.36]; // sıcak kenar ışığı
-  const GOKYAN = [0.05, 0.11, 0.15]; // gölgede yukarı bakan yüzeylere gök yansıması (camgöbeği)
-  const PARLA = [1.0, 0.86, 0.62];
+  const KENAR = [0.92, 0.9, 0.84]; // beyaza yakın kenar ışığı
+  const GOKYAN = [0.12, 0.2, 0.32]; // gölgede yukarı bakan yüzeylere gök yansıması (mavi)
+  const PARLA = [1.0, 0.97, 0.9];
 
   /** Malzeme: beş tonlu boya paleti (ışık L, yarı ton M, gölge D, çekirdek gölge C, yansıyan ışık R). */
   function malz(o) {
@@ -420,7 +421,7 @@ setTimeout(function () {
   const alt = tuvalYap(N, N);
   const ag = alt.getContext('2d', { willReadFrequently: true });
 
-  // ------------------------------------------------------------------ 1. gök: altın saat, tasarlanmış bulut kütleleri
+  // ------------------------------------------------------------------ 1. gök: aydınlık kuşluk-öğle, tasarlanmış bulut kütleleri
   const GW = 1024;
   const gokT = tuvalYap(GW, GW);
   const gokX = gokT.getContext('2d');
@@ -491,17 +492,17 @@ setTimeout(function () {
       const ser2 = ss(0.0, 0.28, ns + b2 * 0.58 - 0.4) * b2 * 0.8;
       return Math.max(ser, ser2);
     };
-    const LC = nrm([0.62, -0.5, -0.15]); // bulutlar arkadan ışık alır
-    const g0 = hex('#11374E'), g1 = hex('#4F8A9C'), g2 = hex('#C9D2C4'), g3 = hex('#F0AE74');
-    const sA = hex('#F8D296'), sB = hex('#E3A47E');
-    const sic = hex('#FFCF90');
-    const bS = hex('#36485A'), bO = hex('#7E6C7C'), bI = hex('#FFC27C'), bK = hex('#FFF2D8'), bU = hex('#5E88A0');
+    const LC = nrm([0.55, -0.6, 0.55]); // bulutlar sağ üstten ve önden ışık alır (öğle)
+    const g0 = hex('#3C88CC'), g1 = hex('#7FB8E2'), g2 = hex('#DCEAF2'), g3 = hex('#EEF4F6');
+    const sA = hex('#FFFCF0'), sB = hex('#CFE4F3');
+    const sic = hex('#FFF6DE');
+    const bS = hex('#9DB2C6'), bO = hex('#C2D0DD'), bI = hex('#F3F6F9'), bK = hex('#FFFFFF'), bU = hex('#A9C6DE');
     for (let j = 0; j < GW; j++) {
       const y = j;
       for (let i = 0; i < GW; i++) {
         const x = i;
-        // gök iki degradenin karışımı: soğuk dikey degrade (sol üst derin camgöbeği → ufukta açık) ve güneşin
-        // çevresinde sıcak ışınsal degrade (altın → şeftali); ikisi de açık değerde buluştuğu için ara bölge çamurlaşmaz
+        // gök iki degradenin karışımı: dikey degrade (sol üstte gök mavisi → ufukta beyaz sis) ve güneşin
+        // çevresinde ışınsal beyaz-sarı ışık halesi (→ açık mavi); ikisi de açık değerde buluşur
         const t = Math.max(0, Math.min(1, (y + (1024 - x) * 0.08) / 830));
         let s;
         if (t < 0.5) s = karis(g0, g1, ss(0, 0.5, t));
@@ -509,15 +510,15 @@ setTimeout(function () {
         const dx = x - GX0, dy = y - GY0;
         const dd = Math.sqrt(dx * dx + dy * dy);
         const sicak = karis(sA, sB, ss(80, 560, dd));
-        s = karis(s, sicak, ss(940, 260, dd) * 0.92);
-        if (y > 560) s = karis(s, g3, ss(560, 800, y) * 0.55);
+        s = karis(s, sicak, ss(400, 40, dd) * 0.6);
+        if (y > 520) s = karis(s, g3, ss(520, 800, y) * 0.7);
         // güneş ışıltısı eklenerek (karıştırılmadan) verilir: gök ışıldar
-        const parla = Math.exp(-dd / 60) * 2.0 + Math.exp(-dd / 180) * 0.55;
-        let r = s[0] + sic[0] * parla, g = s[1] + sic[1] * parla * 0.94, b = s[2] + sic[2] * parla * 0.78;
+        const parla = Math.exp(-dd / 24) * 1.1 + Math.exp(-dd / 110) * 0.14;
+        let r = s[0] + sic[0] * parla, g = s[1] + sic[1] * parla * 0.98, b = s[2] + sic[2] * parla * 0.92;
         const disk = ss(27, 21, dd);
         r += disk * 3;
-        g += disk * 2.7;
-        b += disk * 2.2;
+        g += disk * 2.95;
+        b += disk * 2.7;
         const yakin = Math.exp(-dd / 300);
         // kümülüs: hacimli, arkadan ışıklı kabarcıklar
         const u = y < 560 ? kabarcik(x, y) : 0;
@@ -531,15 +532,15 @@ setTimeout(function () {
             let cc = karis(bS, bO, ss(-0.5, -0.05, lam));
             cc = karis(cc, bI, ss(-0.12, 0.42, lam) * (0.7 + 0.3 * yakin));
             cc = karis(cc, bK, ss(0.35, 0.8, lam) * yakin);
-            // üste bakan yüzler gökten mavi ışık alır; ince kenarlar ışığı geçirir
-            cc = karis(cc, bU, Math.max(0, -n[1]) * 0.25 * (1 - ss(0.0, 0.5, lam)));
-            // güneşe yakın bulutlar ışıkla dolar: gövdeleri de ısınır
+            // gölgedeki alt yüzler gökten mavi yansıma alır; ince kenarlar ışığı geçirir
+            cc = karis(cc, bU, Math.max(0, n[1]) * 0.3 * (1 - ss(0.0, 0.5, lam)));
+            // güneşe yakın bulutlar ışıkla dolar: gövdeleri de beyazlaşır
             const yakin2 = Math.exp(-dd / 520);
             cc = karis(cc, bI, ss(0.25, 0.7, yakin2) * 0.5 * (0.4 + 0.6 * ss(-0.3, 0.3, lam)));
             const gec = (1 - ku) * (0.35 + yakin);
             r = r * (1 - ku) + (cc[0] + sic[0] * gec * 0.5) * ku;
-            g = g * (1 - ku) + (cc[1] + sic[1] * gec * 0.45) * ku;
-            b = b * (1 - ku) + (cc[2] + sic[2] * gec * 0.3) * ku;
+            g = g * (1 - ku) + (cc[1] + sic[1] * gec * 0.5) * ku;
+            b = b * (1 - ku) + (cc[2] + sic[2] * gec * 0.48) * ku;
           }
         }
         // ince şerit bulutlar: güneşe yakın olanlar ışık geçirir, uzaktakiler koyulaşır
@@ -553,8 +554,8 @@ setTimeout(function () {
           const kenar = Math.pow(1 - sd, 3) * yakin * 2.4;
           const dk = ss(0.0, 0.6, sd) * 0.92;
           r = r * (1 - dk) + (cc[0] + kenar) * dk;
-          g = g * (1 - dk) + (cc[1] + kenar * 0.82) * dk;
-          b = b * (1 - dk) + (cc[2] + kenar * 0.55) * dk;
+          g = g * (1 - dk) + (cc[1] + kenar * 0.97) * dk;
+          b = b * (1 - dk) + (cc[2] + kenar * 0.9) * dk;
         }
         BULUT[j * GW + i] = Math.max(ku, sd);
         const p = (j * GW + i) * 4;
@@ -593,23 +594,23 @@ setTimeout(function () {
     ag.fill();
     ag.restore();
   }
-  tepeCiz(sirt(650, 150, 0.0032, 2.0, 4), '#B49A92', '#D9B48E', 820); // en uzak sıra: güneşe karşı solgun
-  tepeCiz(sirt(705, 95, 0.005, 7.3, 4), '#7F8C8E', '#BFA084', 820);
-  tepeCiz(sirt(752, 60, 0.008, 3.7, 3), '#55666A', '#9A8068', 820);
+  tepeCiz(sirt(650, 150, 0.0032, 2.0, 4), '#B9CCDA', '#DCE7EE', 820); // en uzak sıra: sise gömülü, soluk mavi
+  tepeCiz(sirt(705, 95, 0.005, 7.3, 4), '#9CB3C2', '#CCDAE0', 820);
+  tepeCiz(sirt(752, 60, 0.008, 3.7, 3), '#87A098', '#BCCAC0', 820);
   {
-    // ufuk pusu: tepeleri sıcak sisle eritir
+    // ufuk pusu: tepeleri beyaz sabah sisiyle eritir
     const pg = ag.createLinearGradient(0, 560 * K, 0, 820 * K);
-    pg.addColorStop(0, 'rgba(232,184,128,0)');
-    pg.addColorStop(0.55, 'rgba(236,190,134,0.26)');
-    pg.addColorStop(1, 'rgba(240,198,140,0.55)');
+    pg.addColorStop(0, 'rgba(236,243,247,0)');
+    pg.addColorStop(0.55, 'rgba(238,244,248,0.34)');
+    pg.addColorStop(1, 'rgba(242,246,248,0.62)');
     ag.fillStyle = pg;
     ag.fillRect(0, 560 * K, N, 260 * K);
-    // yer: güneşli taş meydan; öne doğru koyulaşır ve soğur
+    // yer: güneşli açık taş meydan; öne doğru biraz koyulaşır ve soğur (derinlik)
     const yg2 = ag.createLinearGradient(0, 798 * K, 0, N);
-    yg2.addColorStop(0, '#D2A272');
-    yg2.addColorStop(0.18, '#A27A56');
-    yg2.addColorStop(0.55, '#4A3C34');
-    yg2.addColorStop(1, '#1A1C1E');
+    yg2.addColorStop(0, '#ECE4D0');
+    yg2.addColorStop(0.18, '#DDD2B8');
+    yg2.addColorStop(0.55, '#C6BCA2');
+    yg2.addColorStop(1, '#AEAA94');
     ag.fillStyle = yg2;
     ag.fillRect(0, 798 * K, N, N - 798 * K);
     // meydana düşen güneş havuzları (huzmelerin yere değdiği yerler)
@@ -618,8 +619,8 @@ setTimeout(function () {
     ag.globalCompositeOperation = 'screen';
     for (const [x, y, rx, ry, a] of [[700, 822, 190, 16, 0.5], [930, 842, 150, 20, 0.45], [470, 860, 120, 12, 0.22]]) {
       const hg = ag.createRadialGradient(0, 0, 0, 0, 0, 1);
-      hg.addColorStop(0, `rgba(255,196,120,${a})`);
-      hg.addColorStop(1, 'rgba(255,196,120,0)');
+      hg.addColorStop(0, `rgba(255,252,238,${a * 0.6})`);
+      hg.addColorStop(1, 'rgba(255,252,238,0)');
       ag.save();
       ag.translate(x, y);
       ag.scale(rx, ry);
@@ -635,11 +636,11 @@ setTimeout(function () {
   // ------------------------------------------------------------------ 3. yapı (ayrı tuvalde: gölge ve ışın örtüsü için)
   const yapi = tuvalYap(N, N);
   const yg = yapi.getContext('2d');
-  const TAS = malz({ L: '#FFE4B8', M: '#E6CBA0', D: '#7F959B', C: '#56686F', R: '#B09886', ks: 0.08, g: 20, rim: 1.3 });
-  const TASK = malz({ L: '#F6DDB2', M: '#DDC198', D: '#6F8489', C: '#4A5A60', R: '#A08A78', ks: 0.06, g: 20, rim: 1.3 });
+  const TAS = malz({ L: '#FFFAF0', M: '#EAE4D8', D: '#A3B4C2', C: '#8293A2', R: '#CAC4BA', ks: 0.08, g: 20, rim: 1.3 });
+  const TASK = malz({ L: '#F6F1E6', M: '#DFD8CA', D: '#96A8B6', C: '#76889A', R: '#BCB6AC', ks: 0.06, g: 20, rim: 1.3 });
   const ALTIN = malz({ L: '#FFF0B0', M: '#E8B24A', D: '#7A5220', C: '#40290E', R: '#B0782E', ks: 2.6, g: 80, rim: 2.2, t0: -0.15, t1: 0.3, sk: 1.4 });
-  const KUBBE = malz({ L: '#62B455', M: '#1E8046', D: '#154F45', C: '#0C352D', R: '#256446', ks: 0.12, g: 60, y0: 0.3, y1: 1.05, rim: 1.8, leke: 0.05 });
-  const KASNAK = malz({ L: '#58AA50', M: '#1C7A42', D: '#13483E', C: '#0B2E27', R: '#215C3E', ks: 0.1, g: 50, y0: 0.25, y1: 1.0, rim: 1.6 });
+  const KUBBE = malz({ L: '#7CCB68', M: '#2F9655', D: '#286A5C', C: '#1C5246', R: '#3A7E5E', ks: 0.12, g: 60, y0: 0.3, y1: 1.05, rim: 1.8, leke: 0.05 });
+  const KASNAK = malz({ L: '#70C062', M: '#2A8E50', D: '#256458', C: '#1A4C42', R: '#36785A', ks: 0.1, g: 50, y0: 0.25, y1: 1.0, rim: 1.6 });
   const parcalar = S.minareParcalari();
   const minPen = S.minarePencereleri;
   const penIcinde = (y1, y2) => minPen.filter((p) => p.y >= y1 && p.y + p.h <= y2);
@@ -719,8 +720,8 @@ setTimeout(function () {
     yg.save();
     yg.globalCompositeOperation = 'source-atop';
     const hg = yg.createLinearGradient(0, 80 * K, 0, 800 * K);
-    hg.addColorStop(0, 'rgba(214,176,140,0.16)');
-    hg.addColorStop(1, 'rgba(200,170,140,0.08)');
+    hg.addColorStop(0, 'rgba(222,234,242,0.22)');
+    hg.addColorStop(1, 'rgba(222,234,242,0.1)');
     yg.fillStyle = hg;
     yg.fillRect(0, 0, N, N);
     yg.restore();
@@ -786,13 +787,13 @@ setTimeout(function () {
   });
   alem(S.alemParcalari(560, 300, 1), 1);
 
-  // yerde uzun gölge: yapının silueti güneşin tersine (sola ve öne) izdüşürülür
+  // yerde kısa öğle gölgesi: yapının silueti güneşin tersine (biraz sola ve öne) izdüşürülür
   {
     const sil = tuvalYap(N, N);
     const sx = sil.getContext('2d');
     sx.drawImage(yapi, 0, 0);
     sx.globalCompositeOperation = 'source-in';
-    sx.fillStyle = '#16262c';
+    sx.fillStyle = '#5C7282';
     sx.fillRect(0, 0, N, N);
     const gg = tuvalYap(N, N);
     const gx = gg.getContext('2d');
@@ -800,13 +801,13 @@ setTimeout(function () {
     gx.beginPath();
     gx.rect(0, 798 * K, N, N);
     gx.clip();
-    gx.filter = `blur(${4 * K}px)`;
+    gx.filter = `blur(${3 * K}px)`;
     gx.setTransform(K, 0, 0, K, 0, 0);
-    gx.transform(1, 0, 1.1, -0.2, -880, 960);
+    gx.transform(1, 0, 0.3, -0.1, -240, 880); // öğle: kısa gölge, biraz sola ve öne
     gx.drawImage(sil, 0, 0, 1024, 1024);
     gx.restore();
     ag.save();
-    ag.globalAlpha = 0.62;
+    ag.globalAlpha = 0.5;
     ag.globalCompositeOperation = 'multiply';
     ag.drawImage(gg, 0, 0);
     ag.restore();
@@ -818,28 +819,28 @@ setTimeout(function () {
   // yapının dibinde yer pusu
   const yerPusu = (g) => {
     const pg = g.createLinearGradient(0, 735 * K, 0, 850 * K);
-    pg.addColorStop(0, 'rgba(232,192,140,0)');
-    pg.addColorStop(0.55, 'rgba(236,196,144,0.4)');
-    pg.addColorStop(1, 'rgba(222,182,134,0)');
+    pg.addColorStop(0, 'rgba(236,243,247,0)');
+    pg.addColorStop(0.55, 'rgba(238,244,248,0.42)');
+    pg.addColorStop(1, 'rgba(232,240,244,0)');
     g.fillStyle = pg;
     g.fillRect(0, 735 * K, N, 115 * K);
   };
   yerPusu(ag);
 
-  // ------------------------------------------------------------------ 4. bitkiler: koyu ön plan, arkadan ışık alan taç yapraklar
+  // ------------------------------------------------------------------ 4. bitkiler: güneşte aydınlık ön plan, kenarı ışıldayan taç yapraklar
   const bitki = tuvalYap(N, N);
   const bg2 = bitki.getContext('2d');
   const B = S.bitki;
-  // ön planın büyük kısmı kadraj dışındaki bir gölgede; yer yer güneş lekeleri düşer
+  // ön plan güneşte; en önde yer yer kadraj dışındaki bir ağacın hafif, açık gölgesi düşer (derinlik)
   const onGolge = (x, y) => {
     const leke = ss(0.18, 0.42, fbm(x / 140 + 3, y / 110 + 1, 3));
-    const derin = ss(790, 930, y);
-    return (1 - derin) * (0.5 + 0.5 * leke) + derin * 0.85 * leke;
+    const derin = ss(820, 980, y);
+    return (1 - derin) * (0.78 + 0.22 * leke) + derin * (0.55 + 0.4 * leke);
   };
-  const YAPRAK = malz({ L: '#A8B65C', M: '#58803E', D: '#18322C', C: '#0E201B', R: '#283E32', ks: 0.3, g: 26, rim: 3.0, arka: true, gecir: 0.12, t0: -0.1, t1: 0.25 });
-  const SAP = malz({ L: '#9AA858', M: '#557A3A', D: '#22402F', C: '#14281E', R: '#34503A', ks: 0.1, g: 20, rim: 1.8 });
-  const TACY = malz({ L: '#FAEAD0', M: '#E6D2BE', D: '#5E6480', C: '#474C64', R: '#80747E', ks: 0.15, g: 22, rim: 5.5, arka: true, gecir: 0.22, t0: -0.12, t1: 0.22, leke: 0.03 });
-  const TOMUR = malz({ L: '#FFD2D6', M: '#E8A6B4', D: '#7E6C86', C: '#5A4C66', R: '#B08690', ks: 0.2, g: 30, rim: 2, gecir: 0.25 });
+  const YAPRAK = malz({ L: '#B6D46E', M: '#5E9C48', D: '#3C6A52', C: '#2C5442', R: '#4E7C5E', ks: 0.3, g: 26, rim: 3.0, arka: true, gecir: 0.12, t0: -0.1, t1: 0.25 });
+  const SAP = malz({ L: '#A6C462', M: '#5A8E42', D: '#3C6450', C: '#2C4E3E', R: '#4E7458', ks: 0.1, g: 20, rim: 1.8 });
+  const TACY = malz({ L: '#FFFDF8', M: '#EFEDE8', D: '#A8B4C8', C: '#8C98AE', R: '#C6C8D0', ks: 0.15, g: 22, rim: 5.5, arka: true, gecir: 0.22, t0: -0.12, t1: 0.22, leke: 0.03 });
+  const TOMUR = malz({ L: '#FFD6DA', M: '#ECAAB8', D: '#BE96A6', C: '#A48092', R: '#D0A4B0', ks: 0.2, g: 30, rim: 2, gecir: 0.25 });
   const ORTA = malz({ L: '#FFE08A', M: '#DCA23C', D: '#6E5022', C: '#4A3414', R: '#A07432', ks: 0.4, g: 30, rim: 1.6 });
   for (const s of B.saplar)
     katman({ hedef: bg2, ciz: (g) => { g.lineWidth = 4.5; g.lineCap = 'round'; g.lineJoin = 'round'; g.stroke(P2(S.yol(s))); }, mat: SAP, bevel: 2.2, golgede: onGolge, golge: { dx: -2, dy: 2, blur: 2, alfa: 0.35 } });
@@ -960,7 +961,7 @@ setTimeout(function () {
         const v = (top / ADIM) * 4.0 * (0.3 + 0.7 * Math.exp(-dd / 380));
         const obj = od[(j * RW2 + i) * 4 + 3] / 255;
         const bit = bd[(j * RW2 + i) * 4 + 3] / 255;
-        OUT[j * RW2 + i] = Math.min(1.2, v + dm * visY * uz * 1.15) * (1 - 0.88 * obj) * (1 - 0.75 * bit);
+        OUT[j * RW2 + i] = Math.min(1.2, v * (0.12 + 0.88 * ss(40, 260, dd)) + dm * visY * uz * 1.15) * (1 - 0.88 * obj) * (1 - 0.75 * bit);
         // demet aralarında ve örtülerin gölgesinde pus koyulaşır: hacimsel gölge
         const yel = ss(1.5, 1.9, an) * ss(3.3, 2.9, an);
         KOY[j * RW2 + i] = (1 - obj) * yel * ss(120, 360, dd) * (0.7 * (1 - visY) + 0.25 * (1 - Math.min(1, dm))) * 0.8;
@@ -970,30 +971,30 @@ setTimeout(function () {
     const rd = rx.createImageData(RW2, RW2);
     for (let i = 0; i < RW2 * RW2; i++) {
       rd.data[i * 4] = 255;
-      rd.data[i * 4 + 1] = 210;
-      rd.data[i * 4 + 2] = 150;
-      rd.data[i * 4 + 3] = Math.round(Math.min(1, OUT[i]) * 255);
+      rd.data[i * 4 + 1] = 252;
+      rd.data[i * 4 + 2] = 240;
+      rd.data[i * 4 + 3] = Math.round(Math.min(1, OUT[i]) * 0.8 * 255);
     }
     rx.putImageData(rd, 0, 0);
     const kc2 = tuvalYap(RW2, RW2);
     const kx2 = kc2.getContext('2d');
     const kd2 = kx2.createImageData(RW2, RW2);
     for (let i = 0; i < RW2 * RW2; i++) {
-      kd2.data[i * 4] = 22;
-      kd2.data[i * 4 + 1] = 46;
-      kd2.data[i * 4 + 2] = 60;
-      kd2.data[i * 4 + 3] = Math.round(Math.min(0.5, KOY[i]) * 255);
+      kd2.data[i * 4] = 120;
+      kd2.data[i * 4 + 1] = 150;
+      kd2.data[i * 4 + 2] = 176;
+      kd2.data[i * 4 + 3] = Math.round(Math.min(0.16, KOY[i] * 0.4) * 255);
     }
     kx2.putImageData(kd2, 0, 0);
     ISIN.rc = rc;
     ISIN.kc2 = kc2;
     ag.drawImage(bitki, 0, 0);
   }
-  // ön planın en altı: kadraj dışı gölge (koyu çerçeve)
+  // ön planın en altı: hafif serin ton (derinlik; karartma yok)
   const onKoyu = (g) => {
-    const pg = g.createLinearGradient(0, 830 * K, 0, N);
-    pg.addColorStop(0, 'rgba(12,22,26,0)');
-    pg.addColorStop(1, 'rgba(12,22,26,0.55)');
+    const pg = g.createLinearGradient(0, 860 * K, 0, N);
+    pg.addColorStop(0, 'rgba(70,100,120,0)');
+    pg.addColorStop(1, 'rgba(70,100,120,0.12)');
     g.fillStyle = pg;
     g.fillRect(0, 830 * K, N, N - 830 * K);
   };
@@ -1389,8 +1390,8 @@ setTimeout(function () {
       g.globalCompositeOperation = 'lighter';
       const hg = g.createRadialGradient(x, y, 0, x, y, r * 2.4);
       hg.addColorStop(0, `rgba(255,246,214,${0.9 * a})`);
-      hg.addColorStop(0.25, `rgba(255,210,130,${0.35 * a})`);
-      hg.addColorStop(1, 'rgba(255,200,120,0)');
+      hg.addColorStop(0.25, `rgba(255,236,180,${0.35 * a})`);
+      hg.addColorStop(1, 'rgba(255,236,180,0)');
       g.fillStyle = hg;
       g.fillRect(x - r * 2.5, y - r * 2.5, r * 5, r * 5);
       for (const [dx, dy, l] of [[1, 0, 1], [0, 1, 0.8], [0.7, -0.7, 0.35], [0.7, 0.7, 0.35]]) {
@@ -1428,29 +1429,29 @@ setTimeout(function () {
     ana.filter = `blur(${2 * K}px)`;
     ana.drawImage(ISIN.rc, 0, 0, N, N);
     ana.restore();
-    // güneş çekirdeği: şerit bulutların arasından görünen kızgın disk
+    // güneş çekirdeği: yüksekte, ince bulutların arasından görünen beyaz-sarı disk
     ana.save();
     ana.setTransform(K, 0, 0, K, 0, 0);
     ana.globalCompositeOperation = 'lighter';
     const sg = ana.createRadialGradient(GX0, GY0, 0, GX0, GY0, 70);
     sg.addColorStop(0, 'rgba(255,252,240,0.95)');
-    sg.addColorStop(0.28, 'rgba(255,244,214,0.8)');
-    sg.addColorStop(0.36, 'rgba(255,214,150,0.22)');
-    sg.addColorStop(1, 'rgba(255,190,120,0)');
+    sg.addColorStop(0.3, 'rgba(255,248,222,0.85)');
+    sg.addColorStop(0.36, 'rgba(255,250,228,0.12)');
+    sg.addColorStop(1, 'rgba(255,248,226,0)');
     ana.fillStyle = sg;
     ana.fillRect(GX0 - 70, GY0 - 70, 140, 140);
     ana.restore();
   }
 
-  // ================================================================== SON: ışıltı, renk düzeltme, gren, vinyet
+  // ================================================================== SON: sis ışıltısı, hafif renk düzeltme, gren
   {
     const bc = tuvalYap(512, 512);
     const bx = bc.getContext('2d');
-    bx.filter = 'brightness(0.62) contrast(4) blur(9px)';
+    bx.filter = 'brightness(0.55) contrast(4) blur(12px)';
     bx.drawImage(tuval, 0, 0, 512, 512);
     ana.save();
     ana.globalCompositeOperation = 'screen';
-    ana.globalAlpha = 0.22;
+    ana.globalAlpha = 0.18;
     ana.drawImage(bc, 0, 0, N, N);
     ana.restore();
     const id = ana.getImageData(0, 0, N, N);
@@ -1463,7 +1464,7 @@ setTimeout(function () {
         let r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
         const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
         const sl = l * l * (3 - 2 * l);
-        const k = l > 0.001 ? (l + (sl - l) * 0.45) / l : 1;
+        const k = l > 0.001 ? (l + (sl - l) * 0.25) / l : 1;
         r *= k;
         g *= k;
         b *= k;
@@ -1474,12 +1475,13 @@ setTimeout(function () {
         g = l + (g - l) * cv;
         b = l + (b - l) * cv;
         const ko = (1 - l) * (1 - l), ac = l * l;
-        r += -0.045 * ko + 0.07 * ac;
-        g += 0.02 * ko + 0.02 * ac;
-        b += 0.06 * ko - 0.06 * ac;
+        // hafif bölünmüş tonlama: gölgeler serin mavi, ışıklar nötr
+        r += -0.03 * ko + 0.012 * ac;
+        g += 0.005 * ko + 0.01 * ac;
+        b += 0.04 * ko + 0.004 * ac;
         const vx = (x / N - 0.5) * 2;
         const vd = Math.sqrt(vx * vx * 0.9 + vy * vy);
-        const vf = 1 - 0.38 * ss(0.6, 1.4, vd);
+        const vf = 1 - 0.04 * ss(0.8, 1.4, vd); // vinyet yok denecek kadar hafif
         const gr = (rg() + rg() - 1) * 0.026;
         d[i] = Math.max(0, Math.min(255, (r * vf + gr) * 255));
         d[i + 1] = Math.max(0, Math.min(255, (g * vf + gr) * 255));

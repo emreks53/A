@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-185 Fırça Kontur ve Guaj — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #F5EEDF; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #EDF5F1; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -612,14 +612,14 @@
 
   const P = {
     fir: '#2E3A25',
-    gokUst: '#B4DCD2', gokAlt: '#F7EAD0',
+    gokUst: '#96CFE6', gokAlt: '#EDF5F1',
     mercan: '#EA8466', mercanKoyu: '#C9614A', seftali: '#F6D2B8',
     petrol: '#2E9468', petrolKoyu: '#1F7050', petrolAcik: '#86CBA0',
     kasnak: '#2A8963', kasnakKoyu: '#1D664D', kasnakAcik: '#5FAE88',
     pencere: '#21483F',
-    krem: '#F6EBD3', kremGolge: '#DCC39C', kremAcik: '#FCF6E8',
+    krem: '#F7EFDC', kremGolge: '#D0CDC0', kremAcik: '#FCF8EE',
     hardal: '#DDA540', hardalKoyu: '#AE7C2A',
-    kum: '#EDCDA6', kumGolge: '#DBB089', zeytin: '#93A85E',
+    kum: '#EEDFBE', kumGolge: '#D6C6A2', zeytin: '#93A85E',
     yaprak: '#3F8E77', yaprakKoyu: '#2C705E', yaprak2: '#8AA35A', yaprak2Koyu: '#6A8442',
     beyaz: '#FFF9EE',
   };
@@ -696,11 +696,11 @@
     f: (x, y) => { const t = sstep(90, 470, y + (nI(x * 0.006, y * 0.02) - 0.5) * 60); return [lerp(RGB.gokUst[0], RGB.gokAlt[0], t), lerp(RGB.gokUst[1], RGB.gokAlt[1], t), lerp(RGB.gokUst[2], RGB.gokAlt[2], t)]; },
     yon: 0.02, doku: 0.013, along: 0.012, across: 0.1, leke: 0.018, lekeO: 0.006, tohum: 2, alfa: 1,
   });
-  // güneş: şeftali hale, mercan disk
-  dolgu(new Path2D(SAHNE.daireYolu(880, 140, 66)), '#F8DEC0', { kutu: [810, 70, 950, 210], guaj: { yon: 0.3, doku: 0.03 } });
-  dolgu(new Path2D(SAHNE.daireYolu(880, 140, 40)), P.mercan, { kutu: [836, 96, 924, 184], guaj: { yon: 0.3, doku: 0.04, renk2: '#EE946E' } });
+  // güneş: soluk krem-beyaz hale, soluk sarı öğle güneşi diski
+  dolgu(new Path2D(SAHNE.daireYolu(880, 140, 66)), '#FBF5D3', { kutu: [810, 70, 950, 210], guaj: { yon: 0.3, doku: 0.03 } });
+  dolgu(new Path2D(SAHNE.daireYolu(880, 140, 40)), '#F8E585', { kutu: [836, 96, 924, 184], guaj: { yon: 0.3, doku: 0.035, renk2: '#FBEFAE' } });
   firca(SAHNE.daireYolu(880, 140, 40), 2.2, { kose: false, maxL: 130 });
-  // bulutlar: krem düz biçim, alt kısmında açık petrol gölge, yalnız üst kontur
+  // bulutlar: krem düz biçim, alt kısmında açık mavi-gri gölge, yalnız üst kontur
   const bulutlar = [[170, 248, 1.0], [462, 136, 0.8], [808, 338, 0.92], [950, 486, 0.6], [76, 476, 0.6]];
   for (const [bx, by, bs] of bulutlar) {
     const b = bulutDaireleri(bx, by, bs, R, { n: 7, en: 190 });
@@ -709,7 +709,7 @@
     const kutu = [bx - 110 * bs, top - 4, bx + 110 * bs, b.taban + 4];
     const kirp = (x) => { x.beginPath(); x.rect(0, 0, 1024, b.taban); x.clip(); };
     guaj(ctx, (x) => { kirp(x); x.fill(bb.dolgu); }, P.kremAcik, { kutu, yon: 0.05, doku: 0.03, tohum: 30 + bx,
-      f: (x, y) => (y > b.taban - 9 * bs + Math.sin(x * 0.07) * 1.5 ? [200, 226, 216] : [255, 251, 242]) });
+      f: (x, y) => (y > b.taban - 9 * bs + Math.sin(x * 0.07) * 1.5 ? [196, 222, 228] : [255, 253, 247]) });
     firca(bb.parcalar, 2.0, { kose: false, maxL: 120 });
     firca([[[Math.min(...b.daireler.map((d) => d.x - d.r)) + 8, b.taban], [Math.max(...b.daireler.map((d) => d.x + d.r)) - 8, b.taban]]], 1.3, { kose: false, yonEtki: 0.2 });
   }

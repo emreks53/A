@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>S-035 Buzlu Cam — Atölye örnek görseli</title>
 <style>
-  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #4a3fb8; }
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; background: #4fa8ff; }
   canvas { display: block; width: 1024px; height: 1024px; }
 </style>
 </head>
@@ -13,10 +13,11 @@
 <script src="../../sahne/sahne.js"></script>
 <script>
 'use strict';
-// S-035 Buzlu Cam — her öğe, canlı ve yumuşakça bulanık bir renk zemininin önünde yarı saydam buzlu cam
-// paneldir: arkası bulanık görünür (arka plan bulanıklığı), her panel renklendirilmiştir (zümrüt kubbe, sıcak
-// beyaz minare ve kaide, altın alemler, gül rengi çiçekler); parlak ince kenar yansımaları, iç kırılma
-// degradeleri ve katmanları ayıran yumuşak gölgeler (illüstrasyona uygulanmış glassmorphism).
+// S-035 Buzlu Cam — her öğe, canlı ve yumuşakça bulanık bir öğle göğü zemininin (gök mavisi, camgöbeği,
+// turkuaz, ufukta beyaz) önünde yarı saydam buzlu cam paneldir: arkası bulanık görünür (arka plan bulanıklığı),
+// her panel renklendirilmiştir (zümrüt kubbe, beyaz minare ve kaide, altın alemler, gül rengi çiçekler);
+// parlak ince kenar yansımaları, iç kırılma degradeleri ve katmanları ayıran yumuşak mavi-gri gölgeler
+// (illüstrasyona uygulanmış glassmorphism).
 // Ortak sahne ve yardımcılar: ../../sahne/SAHNE.md
 
 const S = SAHNE;
@@ -45,19 +46,20 @@ function zeminRenk() {
   const t = S.yeniTuval(TN, TN), c = t.getContext('2d');
   c.setTransform(O, 0, 0, O, PAY * O, PAY * O);
   const g = c.createLinearGradient(0, 0, 0, 1024);
-  g.addColorStop(0, '#5574FF'); g.addColorStop(0.32, '#7A6CFF'); g.addColorStop(0.58, '#C27CFF'); g.addColorStop(0.76, '#FF9EC8'); g.addColorStop(0.79, '#FFB4B4'); g.addColorStop(0.83, '#A070FF'); g.addColorStop(1, '#6A4CF2');
+  // öğle göğü: üstte gök mavisi, ufka doğru camgöbeği ve beyaz; zemin turkuaz-nane
+  g.addColorStop(0, '#2C86FF'); g.addColorStop(0.3, '#46A2FF'); g.addColorStop(0.55, '#74C6FF'); g.addColorStop(0.72, '#B4E6FF'); g.addColorStop(0.78, '#E4F7FF'); g.addColorStop(0.82, '#B8F0E2'); g.addColorStop(1, '#7AD9C6');
   c.fillStyle = g; c.fillRect(-PAY, -PAY, 1024 + 2 * PAY, 1024 + 2 * PAY);
   const leke = (x, y, r, renk, a) => { const rg = c.createRadialGradient(x, y, 0, x, y, r); const q = [1, 3, 5].map((i) => parseInt(renk.slice(i, i + 2), 16)); rg.addColorStop(0, renk); rg.addColorStop(1, `rgba(${q[0]},${q[1]},${q[2]},0)`); c.globalAlpha = a; c.fillStyle = rg; c.fillRect(x - r, y - r, 2 * r, 2 * r); c.globalAlpha = 1; };
-  leke(860, 170, 560, '#FF86D2', 0.85);    // güneş tarafı: önce pembe (mavinin üstünde griye dönmesin)
-  leke(880, 140, 360, '#FFB49A', 0.9);     // şeftali hale
-  leke(880, 140, 200, '#FFF4C8', 1);       // güneş çekirdeği
-  leke(680, 340, 280, '#FF7CC4', 0.45);    // sıcak pembe
-  leke(110, 170, 420, '#55E2FF', 0.85);    // sol üst camgöbeği
-  leke(150, 640, 360, '#4CF0CC', 0.55);    // sol alt turkuaz
-  leke(990, 620, 320, '#FF9C7E', 0.6);     // sağ alt mercan
-  leke(520, 1000, 440, '#6A44FF', 0.7);    // zemin: canlı mor
-  leke(140, 980, 320, '#FF5CCB', 0.55);
-  leke(900, 990, 320, '#4FA8FF', 0.55);
+  leke(860, 170, 560, '#8ED4FF', 0.75);    // güneş tarafı: açık gök mavisi
+  leke(880, 140, 360, '#FFFFFF', 0.8);     // beyaz ışık halesi
+  leke(880, 140, 190, '#FFF9DC', 1);       // güneş çekirdeği: soluk sarı-beyaz
+  leke(680, 340, 280, '#9FE6FF', 0.4);     // açık camgöbeği
+  leke(110, 170, 420, '#2A6CFF', 0.7);     // sol üst kobalt
+  leke(150, 640, 360, '#4CF0D8', 0.5);     // sol alt turkuaz
+  leke(990, 620, 320, '#86EAF4', 0.5);     // sağ alt açık camgöbeği
+  leke(520, 1000, 440, '#3CC8B0', 0.45);   // zemin: açık turkuaz
+  leke(140, 980, 320, '#6FE0A4', 0.45);    // nane yeşili
+  leke(900, 990, 320, '#6CC0FF', 0.4);
   const b = S.yeniTuval(TN, TN), bc = b.getContext('2d');
   bc.filter = `blur(${40 * O}px) saturate(1.15)`; bc.drawImage(t, 0, 0);
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(b, -PAY * O, -PAY * O); ctx.restore();
@@ -88,7 +90,7 @@ function cam(yol, bb, o) {
   const [sekil, sc] = yeni(); kur(sc);
   if (o.golge !== false) {
     const g = Object.assign({ dx: -5, dy: 9, b: 9, a: 0.3 }, o.golge || {});
-    sc.fillStyle = `rgba(40,10,90,${g.a})`; sc.fill(yol);
+    sc.fillStyle = `rgba(16,62,118,${g.a})`; sc.fill(yol);
     // bulanıklık yalnız panel payı kadar küçük bir tuvalde (tüm tuvalde süzgeç çok yavaş)
     const br = g.b * O, pp = Math.ceil(br * 3) + 2;
     const gt = S.yeniTuval(w + 2 * pp, h + 2 * pp), gc = gt.getContext('2d');
@@ -132,13 +134,13 @@ function cam(yol, bb, o) {
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(ken, x0, y0); ctx.restore();
 }
 const C_ = {
-  zumrut: [8, 196, 92], zumrutK: [0, 92, 62], beyaz: [255, 242, 222], altin: [255, 178, 30], gul: [255, 110, 165],
-  yaprak: [40, 205, 120], amber: [205, 110, 40], orta: [255, 200, 60],
+  zumrut: [8, 196, 92], zumrutK: [0, 92, 62], beyaz: [255, 249, 238], altin: [255, 178, 30], gul: [255, 116, 168],
+  yaprak: [40, 205, 120], pencere: [24, 112, 150], orta: [255, 200, 60],
 };
 
 // ================================================================== 3. sahne
 function gunesBulut() {
-  cam(P2(S.daireYolu(880, 140, 54)), [826, 86, 934, 194], { renk: [255, 214, 96], yog: 0.48, bul: 8, golge: { a: 0.18, b: 12 }, kenar: 1.6, isik: 0.6 });
+  cam(P2(S.daireYolu(880, 140, 54)), [826, 86, 934, 194], { renk: [255, 238, 150], yog: 0.5, bul: 8, golge: { a: 0.18, b: 12 }, kenar: 1.6, isik: 0.6 });
   const bulutlar = [[180, 248, 1.0], [520, 150, 0.68], [830, 392, 0.95], [94, 488, 0.6], [958, 566, 0.52]];
   for (const [cx, cy, sc] of bulutlar) {
     const p = new Path2D();
@@ -153,7 +155,7 @@ function gunesBulut() {
 function zeminCam() {
   const p = new Path2D(); p.roundRect(-20, 800, 1064, 260, [26, 26, 0, 0]);
   cam(p, [0, 800, 1024, 1024], {
-    renk: [255, 236, 226], yog: 0.16, bul: 18, golge: { dx: 0, dy: -4, b: 14, a: 0.22 }, kenar: 1.6, isik: 0.3,
+    renk: [236, 252, 250], yog: 0.16, bul: 18, golge: { dx: 0, dy: -4, b: 14, a: 0.22 }, kenar: 1.6, isik: 0.3,
     ic(kc) {
       kc.save(); kc.filter = `blur(${10 * O}px)`; kc.fillStyle = 'rgba(255,255,255,0.13)';
       kc.beginPath(); kc.moveTo(560, 800); kc.lineTo(680, 800); kc.lineTo(560, 1024); kc.lineTo(440, 1024); kc.closePath(); kc.fill();
@@ -179,12 +181,12 @@ function minare() {
         if (p.ad === 'gövde-alt') {
           // zikzak bandı camın içine kazınmış ışık çizgileri
           kc.save(); kc.lineWidth = 1.6; kc.lineJoin = 'miter';
-          for (const z of S.zikzakCizgileri()) { const d = P2(S.yol(z)); kc.strokeStyle = 'rgba(70,40,120,0.28)'; kc.save(); kc.translate(0.8, 1); kc.stroke(d); kc.restore(); kc.strokeStyle = 'rgba(255,255,255,0.85)'; kc.stroke(d); }
+          for (const z of S.zikzakCizgileri()) { const d = P2(S.yol(z)); kc.strokeStyle = 'rgba(30,70,120,0.28)'; kc.save(); kc.translate(0.8, 1); kc.stroke(d); kc.restore(); kc.strokeStyle = 'rgba(255,255,255,0.85)'; kc.stroke(d); }
           kc.restore();
         }
         if (p.tip === 'korkuluk') {
           kc.save(); const R = (p.x2 - p.x1) / 2;
-          for (let i = 1; i < 9; i++) { const th = -Math.PI / 2 + (Math.PI * i) / 9; const x = c + Math.sin(th) * R; kc.fillStyle = 'rgba(255,255,255,0.7)'; kc.fillRect(x - 1, p.y1 + 4, 2, p.y2 - p.y1 - 6); kc.fillStyle = 'rgba(60,30,110,0.22)'; kc.fillRect(x + 1, p.y1 + 4, 1.6, p.y2 - p.y1 - 6); }
+          for (let i = 1; i < 9; i++) { const th = -Math.PI / 2 + (Math.PI * i) / 9; const x = c + Math.sin(th) * R; kc.fillStyle = 'rgba(255,255,255,0.7)'; kc.fillRect(x - 1, p.y1 + 4, 2, p.y2 - p.y1 - 6); kc.fillStyle = 'rgba(30,60,110,0.22)'; kc.fillRect(x + 1, p.y1 + 4, 1.6, p.y2 - p.y1 - 6); }
           kc.restore();
         }
         // silindir hissi: dikey parıltı şeridi
@@ -196,7 +198,7 @@ function minare() {
       },
     });
   }
-  for (const p of S.minarePencereleri) cam(P2(S.kemerYolu(p.x, p.y, p.w, p.h)), [p.x - p.w / 2, p.y, p.x + p.w / 2, p.y + p.h], { renk: C_.amber, yog: 0.55, bul: 4, golge: { dx: -1, dy: 2, b: 2, a: 0.3 }, kenar: 0.9, isik: 0.3 });
+  for (const p of S.minarePencereleri) cam(P2(S.kemerYolu(p.x, p.y, p.w, p.h)), [p.x - p.w / 2, p.y, p.x + p.w / 2, p.y + p.h], { renk: C_.pencere, yog: 0.55, bul: 4, golge: { dx: -1, dy: 2, b: 2, a: 0.3 }, kenar: 0.9, isik: 0.3 });
   alem(S.alemParcalari(c, 146, 0.62), 0.62);
 }
 function alem(a, s) {
@@ -213,13 +215,13 @@ function kaide() {
     renk: C_.beyaz, yog: 0.74, doy: 0.45, bul: 14, golge: { dx: -6, dy: 10, b: 12, a: 0.3 }, kenar: 1.4,
     ic(kc) {
       // pilastrlar: camda ince ışık ve gölge çizgileri
-      for (const px of [365, 495, 625, 755]) { kc.fillStyle = 'rgba(255,255,255,0.55)'; kc.fillRect(px, 708, 1.6, 90); kc.fillStyle = 'rgba(70,40,120,0.16)'; kc.fillRect(px + 1.6, 708, 6, 90); }
+      for (const px of [365, 495, 625, 755]) { kc.fillStyle = 'rgba(255,255,255,0.55)'; kc.fillRect(px, 708, 1.6, 90); kc.fillStyle = 'rgba(30,70,120,0.16)'; kc.fillRect(px + 1.6, 708, 6, 90); }
       // kornişin camdaki gölgesi
-      const g = kc.createLinearGradient(0, 704, 0, 724); g.addColorStop(0, 'rgba(60,30,110,0.28)'); g.addColorStop(1, 'rgba(60,30,110,0)');
+      const g = kc.createLinearGradient(0, 704, 0, 724); g.addColorStop(0, 'rgba(30,60,110,0.28)'); g.addColorStop(1, 'rgba(30,60,110,0)');
       kc.fillStyle = g; kc.fillRect(K.x1, 704, K.x2 - K.x1, 20);
     },
   });
-  for (const p of K.pencereler) cam(P2(S.kemerYolu(p.x, p.y, p.w, p.h)), [p.x - p.w / 2, p.y, p.x + p.w / 2, p.y + p.h], { renk: C_.amber, yog: 0.5, bul: 6, golge: { dx: -2, dy: 3, b: 3, a: 0.3 }, kenar: 1.1, isik: 0.35 });
+  for (const p of K.pencereler) cam(P2(S.kemerYolu(p.x, p.y, p.w, p.h)), [p.x - p.w / 2, p.y, p.x + p.w / 2, p.y + p.h], { renk: C_.pencere, yog: 0.5, bul: 6, golge: { dx: -2, dy: 3, b: 3, a: 0.3 }, kenar: 1.1, isik: 0.35 });
   cam(P2(dik(kr.x1, kr.y1, kr.x2, kr.y2)), [kr.x1, kr.y1, kr.x2, kr.y2], { renk: C_.beyaz, yog: 0.76, doy: 0.45, bul: 8, golge: { dx: -3, dy: 6, b: 5, a: 0.32 }, kenar: 1.3, isik: 0.6 });
 }
 function kasnakKubbe() {
@@ -278,15 +280,15 @@ function bitkiler() {
       ic(kc) { const [a, b] = S.yaprakDamari(y); kc.lineWidth = 1.2; kc.strokeStyle = 'rgba(235,255,240,0.75)'; kc.beginPath(); kc.moveTo(a[0], a[1]); kc.lineTo(b[0], b[1]); kc.stroke(); },
     });
   }
-  for (const t of B.tomurcuklar) cam(P2(S.tomurcukYolu(t)), [t.x - 1.6 * t.r, t.y - 1.6 * t.r, t.x + 1.6 * t.r, t.y + 1.6 * t.r], { renk: C_.gul, yog: 0.55, bul: 4, golge: { dx: -1.5, dy: 3, b: 3, a: 0.28 }, kenar: 1 });
+  for (const t of B.tomurcuklar) cam(P2(S.tomurcukYolu(t)), [t.x - 1.6 * t.r, t.y - 1.6 * t.r, t.x + 1.6 * t.r, t.y + 1.6 * t.r], { renk: C_.gul, yog: 0.7, bul: 4, golge: { dx: -1.5, dy: 3, b: 3, a: 0.28 }, kenar: 1 });
   for (const c of B.cicekler) {
     for (const e of S.tacYapraklari(c)) {
       cam(P2(S.elipsYolu(e)), [e.cx - e.rx, e.cy - e.rx, e.cx + e.rx, e.cy + e.rx], {
-        renk: C_.gul, yog: 0.42, bul: 7, golge: { dx: -2, dy: Math.max(3, c.r * 0.08), b: Math.max(3, c.r * 0.09), a: 0.26 }, kenar: c.r > 40 ? 1.4 : 1.1, isik: 0.5,
+        renk: [255, 236, 244], yog: 0.62, bul: 7, golge: { dx: -2, dy: Math.max(3, c.r * 0.08), b: Math.max(3, c.r * 0.09), a: 0.26 }, kenar: c.r > 40 ? 1.4 : 1.1, isik: 0.5,
         ic(kc) {
           // taç yaprak dibinde koyu gül rengi, uçta açık
           const g = kc.createRadialGradient(c.x, c.y, c.r * 0.1, c.x, c.y, c.r * 1.05);
-          g.addColorStop(0, 'rgba(220,40,110,0.5)'); g.addColorStop(0.5, 'rgba(255,120,170,0.08)'); g.addColorStop(1, 'rgba(255,255,255,0.22)');
+          g.addColorStop(0, 'rgba(232,52,124,0.62)'); g.addColorStop(0.42, 'rgba(255,120,170,0.2)'); g.addColorStop(0.75, 'rgba(255,255,255,0.08)'); g.addColorStop(1, 'rgba(255,255,255,0.3)');
           kc.fillStyle = g; kc.fillRect(c.x - c.r * 1.2, c.y - c.r * 1.2, c.r * 2.4, c.r * 2.4);
         },
       });

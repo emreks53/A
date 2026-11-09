@@ -5,18 +5,38 @@
   "ad_en": "Ukiyo-e Woodblock Print",
   "aile": "Uzak Doğu",
   "ozgun": false,
-  "ozet": "Japon ağaç baskısı: düz renk kalıpları, kalın siyah çizgiler, bokashi geçişli gök ve pembe sis kuşakları.",
-  "tanim": "Ukiyo-e, her rengin ayrı bir kiraz tahtası kalıba oyulup elle, sırayla washi kâğıdına basıldığı Japon ağaç baskı resmidir. Biçimleri ana kalıbın (sumi) kalın siyah çizgileri belirler; renk alanları düzdür, gökte ve kenarlarda kalıbın ıslak silinmesiyle elde edilen bokashi geçişleri görülür. Manzaralarda yatay sis kuşakları (kasumi) derinlik verir; tahtanın damarı ve hafif kayık baskı her nüshada sezilir.",
+  "ozet": "Japon ağaç baskısı: düz renk kalıpları, kalın siyah çizgiler, öğle göğünde Prusya mavisi bokashi ve beyaz sis kuşakları.",
+  "tanim": "Ukiyo-e, her rengin ayrı bir kiraz tahtası kalıba oyulup elle, sırayla washi kâğıdına basıldığı Japon ağaç baskı resmidir. Biçimleri ana kalıbın (sumi) kalın siyah çizgileri belirler; renk alanları düzdür, gökte ve kenarlarda kalıbın ıslak silinmesiyle elde edilen bokashi geçişleri görülür. Bu örnekte sahne aydınlık bir öğle vaktidir: gök üstteki Prusya mavisi şeritten ufka doğru açık maviye silinir, güneş yüksekte soluk sarı bir tekerdir. Yatay sis kuşakları (kasumi) kâğıdın beyazında bırakılır ve derinlik verir; tahtanın damarı ve hafif kayık baskı her nüshada sezilir.",
   "koken": "17. yüzyıl Edo'sunda kitap resimleriyle başladı, 18. yüzyılda çok renkli baskı (nishiki-e) Suzuki Harunobu ile yerleşti. 1820'lerden sonra Avrupa'dan gelen Prusya mavisi gökleri değiştirdi; Katsushika Hokusai'nin 'Fuji'nin Otuz Altı Görünümü' ve Utagawa Hiroshige'nin 'Tōkaidō'nun Elli Üç Durağı' ile 'Edo'nun Yüz Ünlü Manzarası' manzara baskısının doruğudur. 19. yüzyıl sonunda Japonizm akımıyla Van Gogh ve Monet'yi derinden etkiledi.",
   "ayirt_edici": [
     "Kubbe, kasnak, minare ve çiçekleri çevreleyen kalın siyah ana kalıp çizgileri: kalınlığı yer yer değişir, kenarları oymanın izini taşıyan hafif tırtıklıdır; pencereler düz siyah",
-    "Üstte düz koyu Prusya mavisi şeritten (ichimonji bokashi) aşağı doğru açılan gök, ufukta şeftali bokashi; kubbede yukarıdan aşağı yeşil bokashi",
-    "Basamak basamak üst üste binen, alt ve üst kenarı düz, uçları üslupça yuvarlatılmış kasumi sis kuşakları; her katın üst kenarı koyu pembe, aşağısı silik; minareyi ortasından örter",
-    "Gök, güneş, zemin ve kubbede açıkça görülen kiraz tahtası damarı (dalgalı ince halkalar, düğüm çevresinde kıvrılan çizgiler) ve baren basıncının eşitsizliğinden kalan lekeler",
-    "Düz kırmızı güneş teker, çizgisiz mavi-gri uzak tepeler, sakura biçimli çentikli beyaz çiçekler ve kiraz dalları; renklerin çizgiden hafifçe kaydığı kayık baskı",
-    "Lifli sıcak bej washi kâğıdı, siyah çerçeve çizgisi ve yazısız kırmızı ve sarı kartuşlar"
+    "Üstte düz Prusya mavisi şeritten (ichimonji bokashi) aşağı doğru açılan öğle göğü: ortada gök mavisi, ufukta kâğıdın beyazına yakın soluk mavi; kubbede yukarıdan aşağı yeşil bokashi",
+    "Basamak basamak üst üste binen, alt ve üst kenarı düz, uçları üslupça yuvarlatılmış beyaz kasumi sis kuşakları; her katın üst kenarı gök mavisi, aşağısı kâğıdın beyazına silinir; minareyi ortasından örter",
+    "Gök, güneş, zemin ve kubbede açıkça görülen kiraz tahtası damarı (dalgalı ince halkalar, düğüm çevresinde kıvrılan çizgiler) ve baren basıncının eşitsizliğinden kalan açık lekeler",
+    "Yüksekte duran soluk sarı düz güneş teker, çizgisiz mavi-gri uzak tepeler, sakura biçimli çentikli beyaz-pembe çiçekler ve kiraz dalları; renklerin çizgiden hafifçe kaydığı kayık baskı",
+    "Lifli açık fildişi washi kâğıdı, siyah çerçeve çizgisi ve yazısız kırmızı ve sarı kartuşlar"
   ],
-  "palet": ["#1D2F4E", "#B63F29", "#476742", "#CA8A71", "#E4D6B9", "#221D1A", "#B08A5E", "#C99633"],
-  "kodla_cizim": "Canvas 2048 px'de baskı sırası taklit edilir: önce lifli washi kâğıdı, sonra her renk kalıbı ayrı ekran dışı tuvale çizilip 'multiply' ile ve birkaç piksel kaydırılarak (kayık baskı) basılır. Kiraz tahtasının damarı iki dokudan gelir: bükülmüş değer gürültüsüyle dalgalandırılmış, düğüm çevresinde kıvrılan sinüs halkalarının açık tepeleri boyayı siler ('destination-out', baren basıncının geniş lekeleriyle birlikte), koyu tepeleri katmanın bir kopyasını yalnız oralarda bir kez daha basar; her kalıp farklı açıyla damarlanır. Ana kalıp çizgileri önce vektörle, bir de 1,5 kat kalın olarak çizilir; kalın kopya ikili bir leke maskesinde kalır, sonra katman 1,25 px bulanıklaştırılıp gürültüyle değişen bir eşikten geçirilir: kalınlık yer yer değişir, kenarlar hafif tırtıklanır, mürekkep yoğunluğu eşitsizleşir. Nesneler gruplar hâlinde ressam sırasıyla işlenir; önde duranın silueti kâğıt rengine döndürülür, böylece öndeki biçim arkadaki çizgileri örter. Gök (ichimonji), kubbe ve kasumi bokashi'leri doğrusal degradelerle; kasumi kuşakları basamaklı katlar hâlinde, alttaki kat üsttekinin silik ucunu örterek; sakura taç yaprakları çentikli Bézier biçimleriyle, kiraz dalları incelen şeritlerle çizilir; en sonda kâğıt dokusu çarpılır, kenar boşluğu ve kartuşlar eklenir.",
-  "etiketler": ["ağaç baskı", "Japon", "Hiroshige", "bokashi", "kasumi", "düz renk", "kalın çizgi", "washi", "Uzak Doğu"]
+  "palet": [
+    "#27578C",
+    "#99B7C6",
+    "#CED5CF",
+    "#E7D7A3",
+    "#4D734C",
+    "#B09A74",
+    "#BC5444",
+    "#221D1A"
+  ],
+  "kodla_cizim": "Canvas 2048 px'de baskı sırası taklit edilir: önce lifli washi kâğıdı, sonra her renk kalıbı ayrı ekran dışı tuvale çizilip 'multiply' ile ve birkaç piksel kaydırılarak (kayık baskı) basılır. Kiraz tahtasının damarı iki dokudan gelir: bükülmüş değer gürültüsüyle dalgalandırılmış, düğüm çevresinde kıvrılan sinüs halkalarının açık tepeleri boyayı siler ('destination-out', baren basıncının geniş lekeleriyle birlikte), koyu tepeleri katmanın bir kopyasını yalnız oralarda bir kez daha basar; her kalıp farklı açıyla damarlanır. Ana kalıp çizgileri önce vektörle, bir de 1,5 kat kalın olarak çizilir; kalın kopya ikili bir leke maskesinde kalır, sonra katman 1,25 px bulanıklaştırılıp gürültüyle değişen bir eşikten geçirilir: kalınlık yer yer değişir, kenarlar hafif tırtıklanır, mürekkep yoğunluğu eşitsizleşir. Nesneler gruplar hâlinde ressam sırasıyla işlenir; önde duranın silueti kâğıt rengine döndürülür, böylece öndeki biçim arkadaki çizgileri örter. Gök iki doğrusal bokashi ile basılır: üstte tam örtücü Prusya mavisi şerit, aşağı doğru saydamlaşan gök mavisi ve ufukta soluk mavi; güneşin yeri gök kalıbından oyulur, soluk sarı teker ayrı kalıpla basılır. Kasumi kuşakları basamaklı katlar hâlinde, alttaki kat üsttekinin silik ucunu örterek kâğıdın beyazında kalır, yalnız üst kenarlarına mavi bokashi basılır; kubbe bokashi'si de doğrusal degradedir; sakura taç yaprakları çentikli Bézier biçimleriyle, kiraz dalları incelen şeritlerle çizilir; en sonda kâğıt dokusu çarpılır, kenar boşluğu ve kartuşlar eklenir.",
+  "etiketler": [
+    "ağaç baskı",
+    "Japon",
+    "Hiroshige",
+    "bokashi",
+    "kasumi",
+    "düz renk",
+    "kalın çizgi",
+    "washi",
+    "öğle göğü",
+    "Uzak Doğu"
+  ]
 }

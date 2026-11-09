@@ -10,23 +10,23 @@
   "koken": "2010'ların düz tasarım (flat design) akımının ardından, tamamen düz biçimlerin derinlik anlatmakta yetersiz kaldığı yerlerde gelişen \"semi-flat\" ya da \"flat 2.0\" yaklaşımından gelir: Google'ın Material Design'ı (2014) düz yüzeylere yumuşak \"yükselti\" gölgesi ve katman derinliği ekledi; editoryal illüstratörler vektör araçlarındaki bulanık gölge ve iç gölge efektleriyle bu dili olgunlaştırdı. Tarifin özü: düz renkli biçim, içte degrade yerine kenarda yumuşak ortam kapanması, nesnelerin altında bulanık yükselti gölgesi, ışık yanında ince kenar ışığı ve her zaman keskin vektör kenar.",
   "ayirt_edici": [
     "Gök, çimen, kubbe, kasnak ve taş tek düz renk; hiçbir biçimde kontur ya da iç degrade yok",
-    "Kubbenin ve kasnakların sol ve alt kenarında yumuşak, koyu yeşil ortam kapanması, sağ kenarda ince kenar ışığı; kaburgalar ince düz yivler",
+    "Kubbenin ve kasnakların sol ve alt kenarında yumuşak, koyu yeşil ortam kapanması, sağ kenarda ince kenar ışığı; kaburgalar ince düz yivler; beyaz taşta serin gri-mavi temas gölgeleri",
     "Korniş, şerefe ve bilezik altlarında, pencere silmelerinin ve dikmelerin yanında dar, bulanık temas gölgeleri",
-    "Düz beyaz bulutların altında göğe düşen yumuşak yükselti gölgesi, alt-sol kenarlarında iç ortam kapanması",
+    "Düz beyaz bulutların altında göğe düşen yumuşak, mavi-gri yükselti gölgesi, alt-sol kenarlarında açık mavi-gri iç ortam kapanması",
     "Taç yaprakları düz beyaz; göbeğe doğru lavanta tonlu ortam kapanması, alttaki taç yaprağına ve yapraklara düşen yumuşak gölge",
-    "Açık kayısı rengi düz gök, sıcak ışımalı sarı güneş diski ve düz yeşil çimen; bitkilerin altında yumuşak gölge havuzları"
+    "Açık gök mavisi düz gök, beyaz ışımalı soluk sarı öğle güneşi diski ve düz açık yeşil çimen; bitkilerin altında yumuşak gölge havuzları"
   ],
   "palet": [
-    "#FADFC4",
-    "#FFD983",
+    "#B8DCF4",
+    "#FEF7CF",
     "#2EA26C",
-    "#167A4E",
-    "#FBF5EA",
-    "#BEDFA2",
-    "#EDB140",
-    "#5DB16C"
+    "#187E51",
+    "#FCFAF4",
+    "#B8DA9D",
+    "#ECB03F",
+    "#5BAF6B"
   ],
-  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Bütün biçimler SAHNE yollarından (kubbeYolu, kaburgalar, kasnakPencereleri, minareParcalari, kaide, bitki) Path2D olarak tek düz renkle doldurulur. Ortam kapanması için biçim önce AO rengiyle, ardından kendi yoluna kırpılıp ışığa doğru kaydırılmış ve filter: blur ile bulanıklaştırılmış bir kopyasıyla düz renginde yeniden doldurulur; böylece içi düz kalır, yalnızca ışıktan uzak kenarları yumuşakça koyulaşır. Temas gölgeleri kenar boyunca dar, saydam degrade bantlar; yükselti gölgeleri canvas shadowBlur / shadowOffset (2× ölçekli); kenar ışığı kırpılmış, bulanık, yönlü degradeli bir kontur. Bant oluşmasın diye son adımda ±1 düzeyli görünmez titreşim eklenir.",
+  "kodla_cizim": "Canvas 2D, 2048 iç çözünürlük. Gök tek düz açık mavi, güneş soluk sarı-beyaz düz disk ve çevresinde bulanık beyaz ışıma. Bütün biçimler SAHNE yollarından (kubbeYolu, kaburgalar, kasnakPencereleri, minareParcalari, kaide, bitki) Path2D olarak tek düz renkle doldurulur. Ortam kapanması için biçim önce AO rengiyle, ardından kendi yoluna kırpılıp ışığa doğru kaydırılmış ve filter: blur ile bulanıklaştırılmış bir kopyasıyla düz renginde yeniden doldurulur; böylece içi düz kalır, yalnızca ışıktan uzak kenarları yumuşakça koyulaşır. Temas gölgeleri kenar boyunca dar, saydam degrade bantlar; yükselti gölgeleri canvas shadowBlur / shadowOffset (2× ölçekli; taşta ve bulutlarda serin gri-mavi); kenar ışığı kırpılmış, bulanık, yönlü degradeli bir kontur. Bant oluşmasın diye son adımda ±1 düzeyli görünmez titreşim eklenir.",
   "etiketler": [
     "vektör",
     "yarı düz",
