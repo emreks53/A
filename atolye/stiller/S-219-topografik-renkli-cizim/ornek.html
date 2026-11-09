@@ -879,7 +879,7 @@ const hat = (x1, y1, x2, y2, n) => {
 // üstüne saydam, açık yerel renkleri sürer. Gölgeler soğuk gri-mavi, ışıklar temiz ve açık yerel renktir.
 
 const r = SAHNE.rng(219);
-kagitKur({ tohum: 219, tane: 1.8, iri: 0.1, lif: 0.15 });
+kagitKur({ tohum: 219, tane: 2.8, iri: 0.16, lif: 0.12 });
 const G = sahneSekilleri(0.35);
 const bitkiRez = [G.cicekSekil, G.tomurcukSekil];
 const rez = [G.yapi, G.cicekSekil, G.tomurcukSekil];
@@ -1097,6 +1097,13 @@ function bulutKutlesi(x0, x1, taban, h, tohum) {
     const rx = ry * (1.5 + 0.7 * rr());
     lob.push({ cx: x0 + w * t, cy: taban - ry * (0.45 + 0.2 * rr()), rx, ry });
   }
+  // tepeye doğru üst üste binen iki üç tümsek: bulut yassı bir şerit değil, sağa doğru kabaran bir yığın
+  const tepeT = 0.5 + rr() * 0.2;
+  const m = 2 + Math.floor(rr() * 2);
+  for (let i = 0; i < m; i++) {
+    const ry = h * (0.42 - i * 0.08) * (0.85 + 0.3 * rr());
+    lob.push({ cx: x0 + w * (tepeT + (i - (m - 1) / 2) * 0.17 + (rr() - 0.5) * 0.05), cy: taban - h * (0.72 + 0.12 * rr()) + i * h * 0.06, rx: ry * (1.2 + 0.4 * rr()), ry });
+  }
   const govde = { cx: x0 + w * 0.5, cy: taban - h * 0.12, rx: w * 0.5, ry: h * 0.22 };
   const tabanY = (x) => {
     const t = kenet((x - x0) / w, 0, 1);
@@ -1130,11 +1137,11 @@ function bulutKutlesi(x0, x1, taban, h, tohum) {
   return b;
 }
 const bulutlar = [
-  bulutKutlesi(24, 430, 284, 104, 2191),
-  bulutKutlesi(498, 772, 152, 70, 2192),
-  bulutKutlesi(700, 1006, 432, 92, 2193),
-  bulutKutlesi(-50, 205, 530, 42, 2194),
-  bulutKutlesi(834, 1080, 603, 38, 2195),
+  bulutKutlesi(30, 410, 290, 92, 2191),
+  bulutKutlesi(505, 760, 152, 60, 2192),
+  bulutKutlesi(712, 1000, 436, 80, 2193),
+  bulutKutlesi(-50, 196, 532, 40, 2194),
+  bulutKutlesi(840, 1076, 604, 36, 2195),
 ];
 const bulutSekil = birlesik(bulutlar.map((b) => b.sk));
 // gök lavisinin keskin bittiği ışıklı üst kısım ve yumuşak bittiği orta kısım (tabanın altı gökle birleşir)
@@ -1323,7 +1330,7 @@ G.cicekler.forEach((C) => {
     const isaret = vx * 0.66 + vy * -0.75 > 0 ? -1 : 1; // gölge yanı
     const P = (u, v) => [c.x + u * ca - v * sa * isaret, c.y + u * sa + v * ca * isaret];
     const ust = C.taclar[(i + 1) % 5];
-    const op = Object.assign({}, gmF, { kirp: sekil([t]), haric: [sekil([ust])], rimR: Math.max(1.2, c.r * 0.045) });
+    const op = Object.assign({}, gmF, { kirp: sekil([t]), haric: [sekil([ust]), sekil([elips(c.x, c.y, c.r * 0.19, c.r * 0.18, c.aci, 28)])], rimR: Math.max(1.2, c.r * 0.045) });
     const R = c.r;
     const g = (1 - isik) / 2; // 0 ışık … 1 gölge
     const U = R * (0.32 + 0.46 * g);
@@ -1448,7 +1455,7 @@ const gunesDisk = sekilPoli(elips(gunes.x, gunes.y, 40, 39, 0.3, 64), 2.2, 0.07,
     const iy = kenet(Math.floor((py * AW) / 1024), 0, AW - 1);
     return fd[(iy * AW + ix) * 4 + ch] / 255;
   };
-  const egim = (py) => 1.22 - 0.9 * kenet(py / 800, 0, 1);
+  const egim = (py) => 1.38 - 1.05 * Math.pow(kenet(py / 800, 0, 1), 0.85);
   const gunesK = (px, py) => 1 - 0.42 * Math.exp(-Math.pow(Math.hypot(px - gunes.x, py - gunes.y) / 190, 2));
   const gokSk = (function () {
     const nzU = gurultu(2203);
