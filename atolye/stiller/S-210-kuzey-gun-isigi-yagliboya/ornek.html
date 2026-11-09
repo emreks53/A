@@ -1415,7 +1415,7 @@ K.cicekOrta = function (c, cx, cy, r, renk, R, o) {
   const kasnakYol = K.p2d(G.kasnak);
   ctx.fillStyle = K.rk(P.yesil);
   ctx.fill(kasnakYol);
-  sirala(ctx, { kutu: [326, 550, 794, 698], satir: 7.2, en: [8, 10.5], boy: [22, 46], aci: (x, y, r) => (r() - 0.5) * 0.03, renk: (x, y, r) => tonla(model(K.kenet(x, 335, 785), K.kenet(y, 556, 690)), 10, r, 0.5), klip: kasnakYol, firca: fMim, h, hv: 0.38, tohum: 8, yay: 1 });
+  sirala(ctx, { kutu: [326, 550, 794, 698], satir: 7.2, en: [8, 10.5], boy: [22, 46], aci: (x, y, r) => (r() - 0.5) * 0.03, renk: (x, y, r) => tonla(model(y < 610 ? K.kenet(x, 356, 764) : K.kenet(x, 338, 782), K.kenet(y, 556, 690)), 10, r, 0.5), klip: kasnakYol, firca: fMim, h, hv: 0.38, tohum: 8, yay: 1 });
 
   // kubbe: her dilim iki üç şeritte, tabandan tepeye çekilmiş, üst üste binen kısa-orta boy darbelerle boyanır (her darbe
   // altta dolu ve yuvarlakça başlar, yukarıda incelir ve kurur; bir sonraki darbe onun ucunun üstünden başlar). Darbenin rengi

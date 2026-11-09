@@ -628,11 +628,11 @@
       ctx.fillRect(-5, y, 1034, 18);
     }
     // örtücü lapis, düz bir alan gibi sabırla kaplanır: ressam alanı küçük yamalar hâlinde boyar; her yamada kısa,
-    // geniş vuruşlar aynı yöne gider, komşu yamada yön değişir (yataydan ±55°; rüzgâr ya da su akışı gibi tek yön yok); başı dolgun,
-    // sonu kuru ve incelir; tonu ve rengi fırçadan fırçaya değişir; vuruşların yarısı kenarında ince, koyuca bir hat bırakır
+    // geniş vuruşlar aynı yöne gider, komşu yamada yön zıt yana eğilir (yataydan 6–26°; rüzgâr ya da su akışı gibi tek yön yok); başı dolgun,
+    // sonu kuru ve incelir; tonu ve rengi fırçadan fırçaya değişir; vuruşların %40'ı kenarında ince, koyuca bir hat bırakır
     const yr = S.rng(22507);
     const yamalar = [];
-    // yamalar: konum, açı (yataydan en çok ±34°; komşu yamalar çaprazlaşır) ve fırçanın o yamadaki yükü (ton kayması)
+    // yamalar: konum, açı (yataydan 6–26°, komşu yamalar zıt yöne eğilir) ve fırçanın o yamadaki yükü (ton kayması)
     for (let y = -30; y < 700; y += 74) {
       for (let x = -30 + (yr() - 0.5) * 30; x < 1070; x += 74 + (yr() - 0.5) * 20) {
         const sg = yamalar.length % 2 ? 1 : -1;

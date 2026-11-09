@@ -603,23 +603,6 @@ function cicekBicimi(c) {
   }
   return out;
 }
-/** Düzensiz, yatay uzanan bulut biçimi (tabanı düzce, üstü yumuşak dalgalı; pul pul değil). */
-function bulutBicimi(cx, cy, rx, ry, tohum) {
-  const nz = gurultu(tohum);
-  const pts = [];
-  const n = 120;
-  for (let i = 0; i < n; i++) {
-    const t = (i / n) * Math.PI * 2;
-    const c = Math.cos(t);
-    const s = Math.sin(t);
-    let r = 1 + 0.22 * (nz.n(c * 1.6 + 5, s * 1.6 + 5) - 0.5) * 2 + 0.08 * (nz.n(c * 4 + 9, s * 4 + 2) - 0.5) * 2;
-    let x = cx + c * rx * r;
-    let y = cy + s * ry * r * (s < 0 ? 1.05 : 0.55);
-    if (s > 0) y = Math.min(y, cy + ry * 0.38 + (nz.n(c * 3, 7) - 0.5) * ry * 0.15);
-    pts.push([x, y]);
-  }
-  return pts;
-}
 /** Sahnedeki bütün biçimler (titreme genliği amp). */
 function sahneSekilleri(amp) {
   amp = amp == null ? 0.6 : amp;
@@ -664,163 +647,6 @@ function sahneSekilleri(amp) {
   G.tomurcukSekil = sekil(G.tomurcuklar.map((t) => t.pts));
   G.saplar = B.saplar;
   return G;
-}
-
-/**
- * Kümülüs bulutu: birkaç farklı boyda tümseğin yumuşak birleşimi (pul pul değil), tabanı düzce.
- * Döner: {pts: dış çizgi, ust(x): üst kenar yüksekliği, taban, x0, x1, golge(oran, tohum): alt kısmın çokgeni}
- */
-function kumulus(x0, x1, taban, h, tohum) {
-  const r = S.rng(tohum);
-  const nz = gurultu(tohum);
-  const w = x1 - x0;
-  const k = 3 + Math.floor(r() * 2);
-  const tum = [{ c: x0 + w * (0.36 + 0.26 * r()), s: w * (0.26 + 0.06 * r()), h }];
-  for (let i = 1; i < k; i++) tum.push({ c: x0 + w * (0.14 + 0.72 * r()), s: w * (0.13 + 0.14 * r()), h: h * (0.42 + 0.4 * r()) });
-  const tau = h * 0.14;
-  const N = 90;
-  const ust = [];
-  const alt = [];
-  const yuk = [];
-  for (let i = 0; i <= N; i++) {
-    const t = i / N;
-    const x = x0 + w * t;
-    let s = 0;
-    for (const b of tum) {
-      const d = (x - b.c) / b.s;
-      const v = d * d < 1 ? b.h * Math.pow(1 - d * d, 0.85) : 0;
-      s += Math.exp(v / tau);
-    }
-    let ht = tau * Math.log(Math.max(1, s - (tum.length - 1)));
-    ht *= Math.pow(Math.sin(Math.PI * t), 0.35);
-    ht += h * 0.05 * (nz.n(t * 7, 1) - 0.5) * 2 * Math.sin(Math.PI * t);
-    ht = Math.max(ht, h * 0.1 * Math.pow(Math.sin(Math.PI * t), 0.5));
-    yuk.push(ht);
-    ust.push([x, taban - ht]);
-    alt.push([x, taban + h * 0.07 * Math.pow(Math.sin(Math.PI * t), 0.6) + h * 0.03 * (nz.n(t * 5, 9) - 0.5)]);
-  }
-  const pts = ust.concat(alt.slice().reverse());
-  function golge(oran, ek) {
-    const g = [];
-    for (let i = 0; i <= N; i++) {
-      const t = i / N;
-      const kes = taban - yuk[i] * oran + h * 0.09 * (nz.n(t * 4 + ek, 3 + ek) - 0.5) * 2;
-      g.push([ust[i][0], Math.max(ust[i][1], Math.min(alt[i][1] - 0.5, kes))]);
-    }
-    return g.concat(alt.slice().reverse());
-  }
-  return { pts, golge, taban, x0, x1, h, yuk, ust, alt };
-}
-
-/**
- * Yatay bulut kümesi (stratokümülüs): uzun, alçak; üstü düzensiz dalgalı, uçları ince kuyruklu, tabanı düz.
- * Döner kumulus ile aynı biçimde nesne.
- */
-function bulutBandi(x0, x1, taban, h, tohum) {
-  const nz = gurultu(tohum);
-  const r = S.rng(tohum);
-  const w = x1 - x0;
-  const N = 110;
-  const ust = [];
-  const alt = [];
-  const yuk = [];
-  const tum = [];
-  const nt = 3 + Math.floor(r() * 3);
-  for (let i = 0; i < nt; i++) tum.push({ c: 0.18 + (0.64 * (i + 0.2 + r() * 0.6)) / nt, s: 0.09 + r() * 0.09, a: 0.45 + r() * 0.55 });
-  tum[Math.floor(r() * nt)].a = 1;
-  let enb = 0;
-  const ham = [];
-  for (let i = 0; i <= N; i++) {
-    const t = i / N;
-    let v = 0;
-    for (const b of tum) v = Math.max(v, b.a * Math.exp(-Math.pow((t - b.c) / b.s, 2)));
-    let v2 = 0;
-    for (const b of tum) v2 += b.a * Math.exp(-Math.pow((t - b.c) / b.s, 2));
-    ham.push(0.65 * v + 0.35 * Math.min(1.2, v2));
-    enb = Math.max(enb, ham[i]);
-  }
-  for (let i = 0; i <= N; i++) {
-    const t = i / N;
-    const x = x0 + w * t;
-    const kuyruk = Math.pow(Math.sin(Math.PI * t), 0.3);
-    let ht = h * kuyruk * (0.26 + 0.74 * (ham[i] / enb)) + h * 0.04 * (nz.n(t * 9, 1.3) - 0.5) * 2 * kuyruk;
-    ht = Math.max(ht, h * 0.16 * kuyruk);
-    yuk.push(ht);
-    ust.push([x, taban - ht]);
-    alt.push([x, taban + h * 0.12 * Math.pow(Math.sin(Math.PI * t), 0.5) * (0.6 + 0.8 * nz.n(t * 6 + 20, 4))]);
-  }
-  const pts = ust.concat(alt.slice().reverse());
-  const ortYuk = yuk.reduce((a, v) => a + v, 0) / yuk.length;
-  function golge(oran, ek) {
-    const g = [];
-    for (let i = 0; i <= N; i++) {
-      const t = i / N;
-      // gölgenin üst sınırı tümseklerin tepesini izlemez (sırt gibi görünmesin): ortalama yüksekliğe yakın, dalgalı
-      const kes = taban - (0.3 * yuk[i] + 0.7 * ortYuk * Math.pow(Math.sin(Math.PI * t), 0.3)) * oran + h * 0.12 * (nz.n(t * 6 + ek, 3 + ek) - 0.5) * 2;
-      g.push([ust[i][0], Math.max(ust[i][1], Math.min(alt[i][1] - 0.5, kes))]);
-    }
-    return g.concat(alt.slice().reverse());
-  }
-  return { pts, golge, taban, x0, x1, h, yuk, ust, alt };
-}
-
-/**
- * Bulut kümesi: tabanı düz, farklı boyda birkaç tümseğin birleşimi (her tümsek elle titretilmiş yassı elips).
- * Döner: {sk: bütün bulut (birleşim), lobes, golge(oran, ek): tabandan oran·h yüksekliğe kadar alt kısım (birleşim)}
- * Gölgenin üst sınırı tümseklerin çizgisini izlemez, hafif dalgalı yatay bir çizgidir (ışık tepeleri açık bırakır).
- */
-function bulutKumesi(x0, x1, taban, h, tohum, o) {
-  o = o || {};
-  const r = S.rng(tohum);
-  const nz = gurultu(tohum);
-  const w = x1 - x0;
-  const lob = [];
-  const n = Math.max(3, Math.round(w / (o.lobBoy || 58)));
-  for (let i = 0; i < n; i++) {
-    const t = (i + 0.5 + (r() - 0.5) * 0.7) / n;
-    const env = Math.pow(Math.sin(Math.PI * kenet(t, 0.02, 0.98)), 0.7);
-    const ry = h * (0.3 + 0.7 * env * (0.55 + 0.45 * r()));
-    const rx = Math.min(w * 0.3, ry * (1.05 + 0.7 * r()));
-    lob.push({ cx: x0 + w * t, cy: taban - ry * (0.62 + 0.15 * r()), rx, ry });
-  }
-  lob.push({ cx: x0 + w * 0.5, cy: taban - h * 0.12, rx: w * 0.5, ry: h * 0.26 });
-  const tabanY = (x) => taban + h * 0.035 * (nz.n(x / 40, 3) - 0.5) * 2;
-  const pz = o.puruz != null ? o.puruz : 0.07;
-  const ham = lob.map((L, j) => {
-    const pts = [];
-    const m = 72;
-    for (let k = 0; k < m; k++) {
-      const a = (k / m) * Math.PI * 2;
-      const q = 1 + pz * (nz.n(Math.cos(a) * 1.5 + j * 3.1, Math.sin(a) * 1.5 + j) - 0.5) * 2 + pz * 0.5 * (nz.n(Math.cos(a) * 4 + j * 1.3, Math.sin(a) * 4 + 9) - 0.5) * 2;
-      pts.push([L.cx + Math.cos(a) * L.rx * q, L.cy + Math.sin(a) * L.ry * q]);
-    }
-    return titret(pts, true, o.amp != null ? o.amp : 0.9, 0.05, 1.5);
-  });
-  const kes = (dy) => ham.map((p) => p.map(([x, y]) => [x, Math.min(y, tabanY(x) + (dy || 0))]));
-  const titrek = kes(0);
-  /** x'teki bulut tepesinin yüksekliği (0..1, h'ye göre). */
-  const tepeHam = (x) => {
-    let t = 0;
-    for (const L of lob) {
-      const d = (x - L.cx) / L.rx;
-      if (d * d < 1) t = Math.max(t, taban - (L.cy - L.ry * Math.sqrt(1 - d * d)));
-    }
-    return t / h;
-  };
-  const tepe = (x) => kenet(tepeHam(x), 0, 1.2);
-  /** Alt (gölge) kısım: üst sınırı tepeyi kısmen izleyen dalgalı çizgi; uzat > 0 → tabanın altına taşar. */
-  function golge(oran, ek, uzat, izle) {
-    const cizgi = izle
-      ? (x) => taban - h * oran * tepeHam(x) + h * 0.07 * (nz.n(x / 45 + (ek || 0) * 5.3, 7 + (ek || 0)) - 0.5) * 2
-      : (x) => taban - h * oran * (0.45 + 0.75 * tepe(x)) + h * 0.11 * (nz.n(x / 55 + (ek || 0) * 5.3, 7 + (ek || 0)) - 0.5) * 2;
-    return sekil(kes(uzat || 0).map((p) => p.map(([x, y]) => [x, Math.max(y, Math.min(cizgi(x), tabanY(x) - 0.5))])));
-  }
-  function ust(oran, ek) {
-    const cizgi = (x) => taban - h * oran + h * 0.07 * (nz.n(x / 60 + (ek || 0) * 3.7, 17 + (ek || 0)) - 0.5) * 2;
-    return sekil(titrek.map((p) => p.map(([x, y]) => [x, Math.min(y, cizgi(x))])));
-  }
-  const alt = (dy) => sekil([[[x0 - 60, taban + (dy || 0)], [x1 + 60, taban + (dy || 0)], [x1 + 60, taban + 260], [x0 - 60, taban + 260]]]);
-  return { sk: sekil(titrek), lob, golge, ust, alt, tepe, tepeHam, taban, h, x0, x1 };
 }
 
 
@@ -956,6 +782,15 @@ for (const [ya, yb, yr, ad] of [[598, 796, 34, 25], [330, 430, 27, 24]]) {
     yy += ad + (r() - 0.5) * 4;
   }
 }
+/** Dikdörtgen: dört kenar ayrı ayrı çekilir, köşelerde kalem birkaç piksel taşar (çizerin alışkanlığı). */
+const kutu = (x1, y1, x2, y2, w, o) => {
+  const e = () => 2 + rP() * 3.5;
+  const dy = () => (rP() - 0.5) * 0.8;
+  cz([[x1 - e(), y1 + dy()], [x2 + e(), y1 + dy()]], w, Object.assign({ basSivri: 2, sonSivri: 3 }, o || {}));
+  cz([[x1 - e(), y2 + dy()], [x2 + e(), y2 + dy()]], w, Object.assign({ basSivri: 2, sonSivri: 3 }, o || {}));
+  cz([[x1 + dy(), y1 - e()], [x1 + dy(), y2 + e()]], w, Object.assign({ basSivri: 2, sonSivri: 3 }, o || {}));
+  cz([[x2 + dy(), y1 - e()], [x2 + dy(), y2 + e()]], w, Object.assign({ basSivri: 2, sonSivri: 3 }, o || {}));
+};
 const alemCizgi = (A, k) => {
   kapali(elips(A.yaka.cx, A.yaka.cy, A.yaka.rx, A.yaka.ry, 0, 40), 1.0 * k);
   cz([[A.cubuk.x1, A.cubuk.y1], [A.cubuk.x1, A.cubuk.y2]], 0.8 * k);
@@ -970,7 +805,7 @@ alemCizgi(G.alemP, 1.1);
 const K = S.kaide;
 cz([[K.x1, K.y1], [K.x1, K.y2]], 1.6);
 cz([[K.x2, K.y1], [K.x2, K.y2]], 1.6);
-kapali(dikd(K.kornis.x1, K.kornis.y1, K.kornis.x2, K.kornis.y2), 1.3);
+kutu(K.kornis.x1, K.kornis.y1, K.kornis.x2, K.kornis.y2, 1.3);
 for (const p of K.pencereler) kapali(kemerPoli(p.x, p.y, p.w, p.h), 1.2);
 for (const yy of [724, 741, 758, 775, 790]) {
   let x = K.x1 + 4 + r() * 20;
@@ -982,7 +817,7 @@ for (const yy of [724, 741, 758, 775, 790]) {
   }
 }
 // kasnak
-for (const q of S.kasnak) kapali(dikd(q.x1, q.y1, q.x2, q.y2), 1.6);
+for (const q of S.kasnak) kutu(q.x1, q.y1, q.x2, q.y2, 1.6);
 G.kasnakPencereP.forEach((Lp) => Lp.forEach((p) => kapali(kemerPoli(p.x, p.y, p.w, p.h), p.w > 12 ? 1.05 : 0.9)));
 // kubbe
 cz(S.kubbeNoktalari(120), 1.85);
@@ -1025,6 +860,13 @@ G.tomurcuklar.forEach((T) => {
     T.sap = [[ax, ay], [ax - 2, ay + 18], [ax - 3, ay + 30]];
     cz(T.sap.map(([x, y]) => [x - 1.3, y]), 0.8, { sonSivri: 10 });
     cz(T.sap.map(([x, y]) => [x + 1.3, y]), 0.8, { sonSivri: 10 });
+  } else if (T.i % 2 === 1) {
+    // yan tomurcuk: saptan ona uzanan kısa bir dal
+    const st = G.saplar[(T.i - 1) / 2][20];
+    const ax = t.x - Math.cos(t.aci) * t.r * 0.8;
+    const ay = t.y - Math.sin(t.aci) * t.r * 0.8;
+    T.sap = [[st[0], st[1] + 2], [(st[0] + ax) / 2, (st[1] + ay) / 2 + 2.5], [ax, ay]];
+    cz(T.sap, 0.9, { basSivri: 2, sonSivri: 3, surekli: true });
   }
   kapali(T.pts, 0.95);
 });
@@ -1143,27 +985,29 @@ const bulutlar = [
   bulutKutlesi(-50, 196, 532, 40, 2194),
   bulutKutlesi(840, 1076, 604, 36, 2195),
 ];
-const bulutSekil = birlesik(bulutlar.map((b) => b.sk));
 // gök lavisinin keskin bittiği ışıklı üst kısım ve yumuşak bittiği orta kısım (tabanın altı gökle birleşir)
 const bulutUst = birlesik(bulutlar.map((b) => b.ustunde((x) => b.taban - b.h * (0.3 + 0.35 * b.tepe(x)) + b.h * 0.06 * (b.nz.n(x / 50, 21) - 0.5) * 2)));
 const bulutOrta = birlesik(bulutlar.map((b) => b.ustunde((x) => b.tabanY(x) - b.h * 0.12)));
 bulutlar.forEach((b, bi) => {
   const op = Object.assign({}, gmF, { haric: rez, kuru: 0.3, rim: 0.75 });
   const nzb = b.nz;
-  // gölgeli alt yarı: üst sınırı tümseklerin biçimini kısmen izleyen dalgalı çizgi, kurumuş kenarlı tek kat
-  L(b.altinda((x) => b.taban - b.h * (0.06 + 0.62 * b.tepe(x)) + b.h * 0.07 * (nzb.n(x / 45, 31) - 0.5) * 2), GM(0.12), Object.assign({}, op, { rimR: 2.6 }));
-  // her tümseğin sol alt yanı: kısa, geniş bir fırça darbesi
-  for (const Lb of b.lob) {
-    if (Lb.ry < b.h * 0.3) continue;
-    const ins = Lb.ry * 0.38;
-    const pts = [];
-    const a0 = Math.PI * (0.5 + rW() * 0.1);
-    const a1 = Math.PI * (0.95 + rW() * 0.12);
-    for (let i = 0; i <= 16; i++) {
-      const a = a0 + ((a1 - a0) * i) / 16;
-      pts.push([Lb.cx + Math.cos(a) * (Lb.rx - ins), Lb.cy + Math.sin(a) * (Lb.ry - ins)]);
+  // gölgeli alt yarı: üst sınırı tümseklerin biçimini kısmen izleyen dalgalı çizgi, çok açık tek kat
+  L(b.altinda((x) => b.taban - b.h * (0.1 + 0.55 * b.tepe(x)) + b.h * 0.07 * (nzb.n(x / 45, 31) - 0.5) * 2), GM(0.07), Object.assign({}, op, { rimR: 2.6 }));
+  // alt kısım gökteki gibi yatay fırça geçişleriyle modellenir: tabana yakın uzun, yukarı doğru kısa ve dar
+  {
+    const w0 = b.x1 - b.x0;
+    const ns = 4 + Math.floor(rW() * 3);
+    for (let i = 0; i < ns; i++) {
+      const q = i / (ns - 1);
+      const uzun = w0 * (0.75 - 0.4 * q) * (0.8 + 0.3 * rW());
+      const xa = b.x0 + w0 * 0.04 + rW() * Math.max(0, w0 * 0.92 - uzun);
+      const pts = [];
+      for (let k = 0; k <= 24; k++) {
+        const x = xa + (uzun * k) / 24;
+        pts.push([x, b.tabanY(x) - b.h * (0.1 + 0.36 * q) * (0.75 + 0.5 * b.tepe(x)) + (nzb.n(x / 60, 40 + i) - 0.5) * b.h * 0.06]);
+      }
+      L(firca(pts, b.h * (0.24 - 0.09 * q), { son: 0.4, bas: 0.08, puruz: 0.12 }), GM(0.07 + 0.05 * (1 - q) + rW() * 0.03), Object.assign({}, op, { kirp: b.sk }));
     }
-    L(firca(pts.reverse(), Lb.ry * 0.62, { son: 0.5, bas: 0.2, puruz: 0.1 }), GM(0.1 + rW() * 0.05), Object.assign({}, op, { kirp: b.sk }));
   }
   // taban: bulutun altı boyunca yatay bir darbe; alt kenarı gök mavisinin içine biraz taşar
   const w = b.x1 - b.x0;
@@ -1197,11 +1041,7 @@ L(sekilYol(`M278,200 C266,182 288,160 300,146 C296,160 290,182 300,200 Z`, 0.4, 
 L(sekilPoli(dikd(299, 704, 821, 717), 0.5, 0.04), GM(0.6), Object.assign({ haric: bitkiRez }, gm));
 L(sekilPoli(dikd(289, 700, 831, 704.5), 0.4, 0.06), GM(0.4), Object.assign({ haric: bitkiRez }, gm));
 K.pencereler.forEach((p, i) => L(G.kaidePencere[i], GM(0.8), Object.assign({ haric: bitkiRez }, gm)));
-for (const [x1, x2, y, d] of [[300, 470, 789, 0.1]]) {
-  L(firca(hat(x1 + 4, y + (rW() - 0.5) * 3, x2, y + (rW() - 0.5) * 3), 12 + rW() * 5, { son: 0.3 }), GM(d), Object.assign({}, gmF, { kirp: G.kaide, haric: bitkiRez }));
-}
 // kasnak: silindir; sol yandan sağa doğru seyrekleşen dikey darbeler (keskin bir gölge sınırı yok)
-const kasnakSk = birlesik(G.kasnak);
 S.kasnak.forEach((q, qi) => {
   const bant = G.kasnak[qi];
   let x = q.x1 + 1;
@@ -1248,10 +1088,10 @@ const kubbeOp = Object.assign({}, gmF, { kirp: G.kubbe, rimR: 2.2 });
 for (let k = 0; k < 16; k++) {
   const b1 = -Math.PI / 2 + GW * k;
   const sf = 1 - (k + 0.5) / 16; // 1 solda, 0 sağda
-  if (k <= 6) L(dilimDarbesi(b1 - GW * 0.06, GW * 1.1, 316 + rW() * 30, 557, 5100 + k, false), GM(0.08 + 0.36 * Math.pow(1 - k / 7, 1.2)), kubbeOp);
+  if (k <= 6) L(dilimDarbesi(b1 - GW * 0.06, GW * 1.1, 316 + rW() * 30, 557, 5100 + k, false), GM(0.08 + 0.46 * Math.pow(1 - k / 7, 1.15)), kubbeOp);
   if (rW() < 0.12 && k > 6) continue;
   const gen = GW * (0.32 + rW() * 0.28);
-  L(dilimDarbesi(b1, gen, 312 + rW() * 50, 557, 5200 + k, true), GM(0.1 + 0.24 * sf), kubbeOp);
+  L(dilimDarbesi(b1, gen, 312 + rW() * 50, 557, 5200 + k, true), GM(0.1 + 0.26 * sf), kubbeOp);
 }
 L(sekilPoli(kubbeDilimi(-Math.PI / 2 - 0.02, Math.PI / 2 + 0.02, 534, 557, 20), 0.5, 0.05), GM(0.26), gm);
 // alemler: sol yarı
@@ -1364,7 +1204,7 @@ G.cicekler.forEach((C) => {
     const t = 0.55 * Math.PI + (i / 20) * Math.PI;
     pts.push([c.x + Math.cos(t) * c.r * 0.2, c.y + Math.sin(t) * c.r * 0.19]);
   }
-  L(sekilPoli(pts, 0.3, 0.1, 0.8), GM(0.35), Object.assign({}, gm, { rimR: 1.2 }));
+  L(sekilPoli(pts, 0.3, 0.1, 0.8), GM(0.17), Object.assign({}, gm, { rimR: 1.2 }));
 });
 // tomurcukların gölge yanı
 G.tomurcuklar.forEach((T) => {
@@ -1423,17 +1263,17 @@ const gunesDisk = sekilPoli(elips(gunes.x, gunes.y, 40, 39, 0.3, 64), 2.2, 0.07,
         alt.push([xx, m + hh / 2 + (nzG.n(xx / 22, ii + 9) - 0.5) * 6]);
       }
       const pts = ust.concat(alt.reverse());
-      const v = Math.round(128 * (0.62 + 0.76 * rr()));
+      const v = Math.round(128 * (0.55 + 0.9 * rr()));
       const hu = Math.round(255 * rr());
       fx.fillStyle = `rgb(${v},${hu},0)`;
       fx.beginPath();
       pts.forEach(([px, py], j) => (j ? fx.lineTo(px, py) : fx.moveTo(px, py)));
       fx.closePath();
       fx.fill();
-      if (rr() < 0.5) {
+      if (rr() < 0.65) {
         // kuruyan kenar
         fx.strokeStyle = `rgba(${v},${hu},255,0.9)`;
-        fx.lineWidth = 2.2;
+        fx.lineWidth = 2.6;
         fx.beginPath();
         alt.forEach(([px, py], j) => (j ? fx.lineTo(px, py) : fx.moveTo(px, py)));
         fx.stroke();
@@ -1463,12 +1303,12 @@ const gunesDisk = sekilPoli(elips(gunes.x, gunes.y, 40, 39, 0.3, 64), 2.2, 0.07,
     for (let x = 1064; x >= -40; x -= 8) pts.push([x, 800 + (nzU.n(x / 70, 2) - 0.5) * 4]);
     return sekil([pts]);
   })();
-  const ortak = Object.assign({}, yerel, { rim: 0.4, rimR: 2.4, boncuk: 0.3, gran: 0.3, dalga: 0.2, dalgaO: 1.5, yatay: 4, kuru: 0.2, haric: rez.concat([bulutUst]), haricYum: [bulutOrta, gunesDisk], haricYumR: 3.5, havuz: 0 });
+  const ortak = Object.assign({}, yerel, { rim: 0.4, rimR: 2.4, boncuk: 0.3, gran: 0.3, dalga: 0.2, dalgaO: 1.5, yatay: 4, kuru: 0.2, haric: rez.concat([bulutUst, gunesDisk]), haricYum: [bulutOrta], haricYumR: 3.5, havuz: 0 });
   const yuk = (px, py) => egim(py) * gunesK(px, py) * alan(px, py, 0) * 2 * (1 + 0.9 * alan(px, py, 2));
   L(gokSk, od('#7FBFF0', 0.76), Object.assign({}, ortak, { carp: (px, py) => yuk(px, py) * alan(px, py, 1) }));
   L(gokSk, od('#93BCF2', 0.76), Object.assign({}, ortak, { carp: (px, py) => yuk(px, py) * (1 - alan(px, py, 1)) }));
 }
-L(sekilPoli(elips(gunes.x - 0.8, gunes.y + 0.6, 41, 40, 0.3, 64), 2.0, 0.07, 1), od('#F4E7B0', 0.7), Object.assign({}, yerel, { yumusak: 0.8, dalga: 0.25 }));
+L(sekilPoli(elips(gunes.x - 0.6, gunes.y + 0.4, 38, 37, 0.3, 64), 1.6, 0.07, 1), od('#F7EDBC', 0.55), Object.assign({}, yerel, { rim: 0.5, boncuk: 0.25, dalga: 0.25 }));
 // taş
 L(kay(birlesik([G2.minare, G2.kaide, G2.kornis]), 1.2, -0.6), od('#F3E8D0', 1.0), Object.assign({ haric: bitkiRez }, yerel));
 // kubbe: önce bütün yüzeye soluk özsu yeşili, sonra dilim dilim ikinci yeşil kat (dilimler kaburgada hafifçe
@@ -1518,7 +1358,7 @@ L(zemin, od('#F0E5C6', 0.85), Object.assign({ haric: yapiRez.concat(bitkiHepsi) 
       const uz = 80 + rz() * 160;
       const ust = y < 975;
       const yy = y + (nzc.n(x / 120, y) - 0.5) * 22 * (ust ? 1 : 0.4);
-      if (!ust || rz() < 0.85) L(firca(hat(x, yy, x + uz, yy + (rz() - 0.5) * 4), 12 + rz() * 8, { son: 0.4, puruz: 0.12 }), od(rz() < 0.5 ? '#B3D68C' : '#A6CF86', 0.45 + rz() * 0.3), Object.assign({}, yerelF, { haric: bitkiHepsi }));
+      if (!ust || rz() < 0.85) L(firca(hat(x, yy, x + uz, yy + (rz() - 0.5) * 4), 12 + rz() * 8, { son: 0.4, puruz: 0.12 }), od(rz() < 0.5 ? '#B3D68C' : '#A6CF86', 0.4 + rz() * 0.35), Object.assign({}, yerelF, { haric: bitkiHepsi, rim: 0.45, boncuk: 0.2 }));
       x += uz - 10 - rz() * 20;
     }
   }
