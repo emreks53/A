@@ -1073,17 +1073,19 @@ K.cicekOrta = function (c, cx, cy, r, renk, R, o) {
   // tek küçük, ince, düz tabanlı bulut: yatay, kaynaşmış birkaç darbe; tabanda serin gri, tepede beyaz
   {
     const rb = S.rng(2101);
-    const sira = [
-      { y: 446, x0: 52, x1: 238, w: 13, c: K.hex('#C9D2DB') },
-      { y: 436, x0: 64, x1: 226, w: 14, c: K.hex('#DFE4E8') },
-      { y: 426, x0: 86, x1: 210, w: 14, c: K.hex('#EEF0EE') },
-      { y: 416, x0: 108, x1: 186, w: 12, c: K.hex('#F7F6F1') },
-    ];
+    // sıralar sık ve birbirine binerek dizilir; uçları düzensiz kaydırılır ki siluet basamaklı değil, yassı bir mercek olsun
+    const renkler = [K.hex('#C9D2DB'), K.hex('#D6DDE3'), K.hex('#DFE4E8'), K.hex('#E8EBEB'), K.hex('#EEF0EE'), K.hex('#F3F3EF'), K.hex('#F7F6F1')];
+    const sira = renkler.map((c, i) => {
+      const t = i / (renkler.length - 1);
+      const yari = 96 * Math.pow(1 - t * 0.78, 0.55);
+      const cx = 146 + t * 6;
+      return { y: 447 - i * 5.2, x0: cx - yari * (1 - t * 0.12), x1: cx + yari, w: 11 - t * 2, c };
+    });
     for (const q of sira) {
       for (let k = 0; k < 2; k++) {
-        const o = (rb() - 0.5) * 16;
-        const pts = [[q.x0 + o + k * 6, q.y + (rb() - 0.5) * 2], [(q.x0 + q.x1) / 2, q.y - 1 + (rb() - 0.5) * 2], [q.x1 + o - k * 8, q.y + (rb() - 0.5) * 2]];
-        fn(ctx, pts, { w: q.w * (k ? 0.75 : 1), renk: K.kay(q.c, (rb() - 0.5) * 6), a: 0.93, jit: 3, kuru: 0.9, ucBoy: 0.3, h, hv: 0.34, ha: 0.7 });
+        const o0 = (rb() - 0.5) * 22, o1 = (rb() - 0.5) * 22;
+        const pts = [[q.x0 + o0 + k * 10, q.y + (rb() - 0.5) * 2], [(q.x0 + q.x1) / 2, q.y - 1 + (rb() - 0.5) * 2], [q.x1 + o1 - k * 12, q.y + (rb() - 0.5) * 2]];
+        fn(ctx, pts, { w: q.w * (k ? 0.75 : 1), renk: K.kay(q.c, (rb() - 0.5) * 6), a: 0.9, jit: 3, kuru: 0.95, ucBoy: 0.42, h, hv: 0.34, ha: 0.7 });
       }
     }
   }

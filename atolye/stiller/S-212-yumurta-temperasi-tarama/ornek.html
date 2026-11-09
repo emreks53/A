@@ -1094,7 +1094,7 @@ const kaideTon = (x, y) => {
 };
 const kaideOrt = { kutu: [296, 700, 826, 802], klip: kaideYol, hucre: [16, 9], boy: [14, 20], ara: [2.8, 3.2], en: [1.5, 2] , sapma: 0.04, oyna: 4 };
 orgu(ctx, Object.assign({}, kaideOrt, { n: (x, y) => 1.6 + kaideTon(x, y) * 2, yon: () => 0.03, renk: (x, y, r) => karis(hex('#EFE4CB'), hex('#E2CFA6'), r() * 0.5), alfa: [0.72, 0.9], tohum: 51 }));
-orgu(ctx, Object.assign({}, kaideOrt, { n: (x, y) => clamp((kaideTon(x, y) - 0.22) * 4.5, 0, 3), yon: () => 0.3, renk: () => P.griMavi, alfa: [0.65, 0.88], tohum: 53 }));
+orgu(ctx, Object.assign({}, kaideOrt, { n: (x, y) => clamp((kaideTon(x, y) - 0.3) * 4.5, 0, 3), yon: () => 0.3, renk: () => P.griMavi, alfa: [0.65, 0.88], tohum: 53 }));
 orgu(ctx, Object.assign({}, kaideOrt, { icinde: (x, y) => y < 720, n: (x, y) => clamp((kaideTon(x, y) - 0.3) * 5, 0, 3), yon: () => -0.3, renk: () => P.gul, alfa: [0.6, 0.85], tohum: 52 }));
 const kornisYol = titrekYol(Y.kornis, 0.4, 0.06, 1.5);
 tara(ctx, { kutu: [286, 690, 834, 706], klip: kornisYol, aralik: 9, n: [2, 3], boy: [14, 22], ara: [3, 3.6], en: [1.6, 2.2], yog: (x, y) => (y > 698 ? 0.9 : 0.25), yon: () => 0, renk: (x, y) => (y > 698 ? P.gul : P.okrAcik), alfa: [0.7, 0.9], tohum: 54 });
