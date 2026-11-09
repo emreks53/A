@@ -636,7 +636,7 @@
     for (let y = -30; y < 700; y += 74) {
       for (let x = -30 + (yr() - 0.5) * 30; x < 1070; x += 74 + (yr() - 0.5) * 20) {
         const sg = yamalar.length % 2 ? 1 : -1;
-        yamalar.push([x + (yr() - 0.5) * 36, y + (yr() - 0.5) * 36, sg * (0.12 + yr() * 0.47), (yr() - 0.5) * 0.07]);
+        yamalar.push([x + (yr() - 0.5) * 36, y + (yr() - 0.5) * 36, sg * (0.1 + yr() * 0.36), (yr() - 0.5) * 0.05]);
       }
     }
     const yama = (x, y) => {
@@ -682,10 +682,10 @@
       const a = 0.72 + r() * 0.25;
       const sd = 225010 + k * 7;
       const fo = { bas: 0.12, uc: 0.38, jit: 0.22, seed: sd, amp: 0.35, wl: 50 };
-      if (r() < 0.55) {
+      if (r() < 0.4) {
         // kuruyan kenar: önce biraz koyu tam genişlik, sonra içi
         ctx.globalAlpha = a * 0.9;
-        H.firca(ctx, pts, Object.assign({ w: W, color: rgb(c, v - 0.075) }, fo));
+        H.firca(ctx, pts, Object.assign({ w: W, color: rgb(c, v - 0.07) }, fo));
         ctx.globalAlpha = a;
         H.firca(ctx, pts, Object.assign({ w: W - 2.4, color: rgb(c, v) }, fo));
       } else {
@@ -779,6 +779,44 @@
       Lp.push([tum[i][0] - ty * w, tum[i][1] + tx * w]);
       Rp.push([tum[i][0] + ty * w, tum[i][1] - tx * w]);
     }
+    // kurdeleden filizlenen ince, kıvrık sürgünler (Çin bulut kıvrımının süsü): kökü kurdelenin altında kalır
+    const filiz = (i0, sg, Lf) => {
+      const a = tum[Math.max(0, i0 - 2)];
+      const b = tum[Math.min(M - 1, i0 + 2)];
+      let aa = Math.atan2(b[1] - a[1], b[0] - a[0]) - sg * 0.9;
+      let [fx, fy] = tum[i0];
+      const yolF = [[fx, fy]];
+      for (let q = 0; q < Lf; q += 1) {
+        aa += sg * (0.006 + 0.11 * Math.pow(q / Lf, 1.6));
+        fx += Math.cos(aa);
+        fy += Math.sin(aa);
+        yolF.push([fx, fy]);
+      }
+      const nF = yolF.length;
+      const A = [];
+      const B = [];
+      for (let q = 0; q < nF; q++) {
+        const p0 = yolF[Math.max(0, q - 1)];
+        const p1 = yolF[Math.min(nF - 1, q + 1)];
+        let ux = p1[0] - p0[0];
+        let uy = p1[1] - p0[1];
+        const ul = Math.hypot(ux, uy) || 1;
+        ux /= ul;
+        uy /= ul;
+        const wq = (W * 0.42 * Math.pow(1 - q / nF, 0.8) + 0.4) / 2;
+        A.push([yolF[q][0] - uy * wq, yolF[q][1] + ux * wq]);
+        B.push([yolF[q][0] + uy * wq, yolF[q][1] - ux * wq]);
+      }
+      ctx.fillStyle = '#F7F8F8';
+      ctx.fill(H.polyPath(H.wobble(A, 0.3, 10, T()).concat(H.wobble(B, 0.3, 10, T()).reverse()), true));
+      ctx.globalAlpha = 0.85;
+      H.firca(ctx, yolF.slice(0, Math.floor(nF * 0.8)), { w: W * 0.2, color: '#FFFFFF', bas: 0.1, uc: 0.5, seed: T() });
+      ctx.globalAlpha = 1;
+      cizgi(A.slice(4), 1.2, 'rgba(38,62,128,0.9)', { taper: 0.15, press: 0.9, amp: 0.2 });
+      cizgi(B.slice(4), 0.95, 'rgba(38,62,128,0.9)', { taper: 0.15, press: 0.9, amp: 0.2 });
+    };
+    filiz(ns + Math.floor(n * 0.24), -yon, W * 3.4);
+    filiz(ns + Math.floor(n * 0.8), yon, W * 2.8);
     // Ressam kurdeleyi örtücü beyazla, kurdele boyunca sürülen kısa, üst üste binen vuruşlarla doldurur (sıcak,
     // saf ve azıcık serin beyazlar; her vuruşun başı ve kuru ucu seçilir); bir kenarına koşut ince, kesik soluk
     // lacivert bir iç çizgi çeker; en son kalın-ince lacivert kontur. Gövde kenarı ile kontur aynı titremeyi
@@ -792,7 +830,7 @@
     ctx.fill(govdeYol);
     ctx.save();
     ctx.clip(govdeYol);
-    const beyazlar = ['#FFFFFF', '#FCF9F0', '#EDF2F8', '#FFFFFF', '#F7F4EA'];
+    const beyazlar = ['#FFFFFF', '#FCFAF3', '#EDF2F8', '#FFFFFF', '#F8F6EF'];
     let k = 0;
     for (let i = 0; i < M - 4; ) {
       const adim = 10 + Math.floor(r() * 12);
@@ -821,11 +859,11 @@
     cizgi(H.wobble(Lp, 0.3, 20, T()), 1.8, 'rgba(38,62,128,0.92)', { taper: 0.1, press: 0.95, amp: 0.2 });
     cizgi(H.wobble(Rp, 0.3, 20, T()), 1.45, 'rgba(38,62,128,0.92)', { taper: 0.1, press: 0.95, amp: 0.2 });
   }
-  bulut(132, 238, 180, 16, 1);
-  bulut(520, 118, 200, 15, -1);
-  bulut(790, 300, 220, 16, 1);
-  bulut(120, 432, 150, 13, -1);
-  bulut(912, 468, 124, 12, 1);
+  bulut(128, 238, 176, 17, 1);
+  bulut(520, 118, 200, 16.5, -1);
+  bulut(790, 300, 220, 17.5, 1);
+  bulut(118, 432, 150, 14, -1);
+  bulut(906, 454, 124, 13, 1);
 
   // ================================================================ UÇLARDA SÜNGERİMSİ KAYALAR (lavanta, soluk mercan)
   // Safevi kayası: farklı boyda, tepesi şişkin, hafif eğik dik loblar; uzundakiler arkada. Her lob gölge yanında
@@ -1155,6 +1193,40 @@
       doldur(d, '#2B3550', 0.2);
       cizgi(S.kemerYolu(p.x, p.y - 7, p.w + 14, p.h + 7), 0.9, ALTIN);
       cizgi(d, 0.9, ALTIN);
+    }
+    // pencere aralarında sığ kör kemerler: soluk serin iç, ışık sağ üstten geldiği için sağ iç kenarda ve kemer
+    // altında gölge vuruşu; firuze çerçeve, içte altın kıl çizgi, kemer tepesinde küçük firuze gülçe
+    for (const [nx, nw] of [[355, 44], [494, 32], [626, 32], [765, 44]]) {
+      const ny = 734;
+      const nh = 44;
+      const dd = S.kemerYolu(nx, ny, nw, nh);
+      const yol = doldur(dd, '#E2EAF0', 0.25);
+      ctx.save();
+      ctx.clip(yol);
+      const rk = S.rng(T());
+      for (let x = nx - nw / 2 + 2; x < nx + nw / 2; x += 10) {
+        ctx.globalAlpha = 0.6;
+        H.firca(ctx, [[x, ny + nh + 4], [x + (rk() - 0.5) * 2, ny + 6 + rk() * 10]], { w: 11, color: rgb(H.mix(hx('#E8EEF2'), hx('#F1F0EA'), rk()), (rk() - 0.5) * 0.02), bas: 0.1, uc: 0.5, jit: 0.3, seed: T() });
+      }
+      ctx.globalAlpha = 0.75;
+      H.firca(ctx, [[nx + nw / 2 - 3, ny + nh + 4], [nx + nw / 2 - 3.5, ny + nw * 0.5]], { w: 6, color: '#C9D4E0', bas: 0.05, uc: 0.25, seed: T() });
+      const ust = [];
+      for (let k = 0; k <= 12; k++) {
+        const t = k / 12;
+        ust.push([nx - nw * 0.42 + nw * 0.84 * t, ny + 4 + nw * 0.42 * Math.pow(Math.abs(t - 0.5) * 2, 1.6)]);
+      }
+      H.firca(ctx, ust, { w: 5, color: '#CFD9E4', bas: 0.2, uc: 0.3, seed: T() });
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      cizgi(dd, 1.1, FIRUZE, { press: 0.6, amp: 0.2 });
+      cizgi(S.kemerYolu(nx, ny + 3, nw - 6, nh - 3), 0.55, ALTIN, { taper: 0.05 });
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        ctx.fillStyle = FIRUZE;
+        nokta(ctx, nx + Math.cos(a) * 2.6, ny + 13 + Math.sin(a) * 2.6, 1.7);
+      }
+      ctx.fillStyle = '#FFFFFF';
+      nokta(ctx, nx, ny + 13, 1.1);
     }
     cizgi(H.kutu(K.x1, K.y1, K.x2, K.y2), 1.9, KONTUR, { press: 0.65, amp: 0.5 });
   }

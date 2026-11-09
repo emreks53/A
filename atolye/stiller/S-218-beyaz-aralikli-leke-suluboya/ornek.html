@@ -688,7 +688,7 @@ for (const [ya, yb, h0, h1, g0, g1] of [[-20, 830, 30, 34, 60, 120], [790, 1040,
   }
 }
 /**
- * Fırça lekeleri (gök ve toprak): ressam lekeleri yukarıdan aşağı sıra sıra, her sırada karışık bir düzenle koyar.
+ * Fırça lekeleri (toprak): ressam lekeleri yukarıdan aşağı sıra sıra, her sırada karışık bir düzenle koyar.
  * Her leke yatay uzamış, uçları yuvarlak ya da incelen, üst ve alt kenarı hafif dalgalı bir lavi lekesidir; sıralar
  * yumuşak akış eğrileri boyunca kıvrılır. Sonra sürülen leke önce sürülenin üstüne binmez, onun kenarında durur
  * (önce sürülen kazanır): her birleşme çizgisi bir lekenin kendi yumuşak, kavisli kenarıdır; düz kesik, sivri parça,
@@ -1045,7 +1045,7 @@ for (let py = 0; py < WW; py++) {
 }
 // Kırıntı temizliği: önce sürülen lekeler sonrakileri böldüğü için gökte, toprakta ve bulutlarda küçük leke
 // parçaları kalabilir; bunlar boyanınca toz gibi beyaz nokta ya da ok ucu biçimli kırıntı olur. Ressam böyle bir yeri
-// komşu lekeyle birlikte sürer: 900 çalışma pikselinden küçük parçalar en uzun sınırı paylaştığı komşuya katılır
+// komşu lekeyle birlikte sürer: 900 (bulut gölgesinde 1500) çalışma pikselinden küçük parçalar en uzun sınırı paylaştığı komşuya katılır
 // (iki geçiş: kenar yumuşatmasından kalan tek piksellik bölge kırıntıları da birbirine değil, asıl lekeye katılsın).
 // hedef ailesi: toprak yalnız toprağa, gök yalnız göğe; bulut ve gölgesinin kırıntısı göğe ya da buluta katılabilir
 // (bulut gölgesinin kırıntısı göğe değil bulutun beyazına katılır: gökte mavi ya da leylak lekecik kalmasın)
@@ -1242,7 +1242,7 @@ for (let py = 0; py < WW; py++) {
     const bb = Math.round(bolgeVeri[i * 4] / 8);
     let gw = 0.9 + 1.6 * NZ2.n(x / 34, y / 34) + 0.45 * NZ2.n(x / 7, y / 7);
     if (bb === R.gok || bb === R.zemin) {
-      // gökte ve toprakta aralık daha ince (0–1,9 px) ve yumuşakça açılıp kapanır: lekelerin üçte biri komşusuna değer
+      // gökte ve toprakta aralık daha ince (0–1,9 px) ve yumuşakça açılıp kapanır: gürültünün en düşük yerlerinde lekeler birbirine değer
       const n = NZ2.n(x / 62 + 50, y / 40 + 20);
       gw = 1.9 * kenet((n - 0.26) / 0.62, 0, 1) + 0.3 * (NZ2.n(x / 9, y / 9) - 0.5);
       if (bb === R.zemin) gw *= 1.1;

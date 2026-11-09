@@ -1024,7 +1024,7 @@
   function alemCiz(a) {
     const ys = [S.elipsYolu({ cx: a.yaka.cx, cy: a.yaka.cy, rx: a.yaka.rx, ry: a.yaka.ry, aci: 0 }), H.kutu(a.cubuk.x1, a.cubuk.y1, a.cubuk.x2, a.cubuk.y2), ...a.kureler.map((k) => S.daireYolu(k.cx, k.cy, k.r)), S.hilalYolu(a.hilal.cx, a.hilal.cy, a.hilal.R)];
     // önce yaka ve çubuk (konturuyla), sonra küreler ve hilal üstüne: çubuğun konturu kürelerin içinden geçmez
-    const alt = ys.slice(0, 2);
+    const alt = [ys[1], ys[0]];
     const ust = ys.slice(2);
     for (const d of alt) doldur(d, '#C9A246', 0.2);
     for (const d of alt) cizgi(d, 0.6, 'rgba(110,82,30,0.8)', { taper: 0, amp: 0.1 });

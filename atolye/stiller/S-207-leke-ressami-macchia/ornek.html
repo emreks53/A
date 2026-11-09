@@ -1335,11 +1335,11 @@ K.cicekOrta = function (c, cx, cy, r, renk, R, o) {
       const q = 31 * (0.97 + (nzs(Math.cos(a) * 1.4 + 3, Math.sin(a) * 1.4 + 3) - 0.5) * 0.12);
       disk.push([sx + Math.cos(a) * q, sy + Math.sin(a) * q]);
     }
-    leke(disk, K.hex('#FFF7DE'), { yon: -0.5, en: 13, boyK: 3, titre: 0.4, seg: 7, hv: 0.5, adim: 6, sic: 4, mix: [K.hex('#FFFCF0'), K.hex('#FAEDC0')], mixP: 0.35, kuru: 0.15, sirt: 0.06 });
+    leke(disk, K.hex('#FFF7DE'), { yon: -0.5, en: 13, boyK: 3, titre: 0.4, seg: 7, hv: 0.4, hvJ: 0.12, adim: 6, sic: 4, mix: [K.hex('#FFFCF0'), K.hex('#FAEDC0')], mixP: 0.35, kuru: 0.15, sirt: 0.06 });
     ctx.save();
     ctx.clip(K.p2d([disk]));
-    darbe(ctx, [[sx - 4, sy - 22], [sx + 26, sy - 6]], { w: 12, renk: K.hex('#FFFCF0'), jit: 3, kuru: 0.2, h, hv: 0.52 });
-    darbe(ctx, [[sx - 28, sy + 6], [sx - 2, sy + 26]], { w: 12, renk: K.hex('#F8E7AE'), jit: 3, kuru: 0.2, h, hv: 0.5 });
+    darbe(ctx, [[sx - 4, sy - 22], [sx + 26, sy - 6]], { w: 12, renk: K.hex('#FFFCF0'), jit: 3, kuru: 0.2, h, hv: 0.42 });
+    darbe(ctx, [[sx - 28, sy + 6], [sx - 2, sy + 26]], { w: 12, renk: K.hex('#F8E7AE'), jit: 3, kuru: 0.2, h, hv: 0.4 });
     ctx.restore();
   }
 
@@ -1526,8 +1526,8 @@ K.cicekOrta = function (c, cx, cy, r, renk, R, o) {
   ctx.fill(G.kubbeYol);
   // dilim grupları: gölge (sol), orta, güneşli (sağ), sağ kenarda dönen orta-güneşli
   const gruplar = [
-    { a: 0, b: 5, renk: K.hex('#2C6C54'), mix: [P.ortaYesil, K.hex('#2E6C64')] },
-    { a: 5, b: 8, renk: P.ortaYesil, mix: [P.golgeYesil, P.gunesYesil] },
+    { a: 0, b: 6, renk: K.hex('#30725A'), mix: [K.hex('#3B805C'), K.hex('#2F6E64')] },
+    { a: 6, b: 8, renk: P.ortaYesil, mix: [P.golgeYesil, P.gunesYesil] },
     { a: 8, b: 15, renk: P.gunesYesil, mix: [P.ortaYesil, P.isikYesil] },
     { a: 15, b: 16, renk: K.rkar(P.ortaYesil, P.gunesYesil, 0.45), mix: [P.gunesYesil] },
   ];
@@ -1544,7 +1544,7 @@ K.cicekOrta = function (c, cx, cy, r, renk, R, o) {
   // kaburgalar: her biri yassı fırçanın kenarıyla çekilmiş, aşağıdan yukarı incelen, yer yer kesilen tek çizgi
   for (let k = 1; k < kab.length - 1; k++) {
     const u = kab[k];
-    const renk = k <= 4 ? K.rkar(P.golgeYesil, P.gunesYesil, 0.3) : k <= 7 ? K.rkar(P.golgeYesil, P.derinYesil, 0.3) : k >= 11 && k <= 12 ? K.rkar(P.ortaYesil, P.gunesYesil, 0.4) : K.rkar(P.ortaYesil, P.golgeYesil, 0.45);
+    const renk = k <= 5 ? K.rkar(P.golgeYesil, P.gunesYesil, 0.3) : k <= 7 ? K.rkar(P.golgeYesil, P.derinYesil, 0.3) : k >= 11 && k <= 12 ? K.rkar(P.ortaYesil, P.gunesYesil, 0.4) : K.rkar(P.ortaYesil, P.golgeYesil, 0.45);
     const kesit = [[2, 22, 4.6], [21, 40, 3.4], [39, 55, 2.3]];
     for (const [i0, i1, w] of kesit) {
       if (R() < 0.12) continue;
