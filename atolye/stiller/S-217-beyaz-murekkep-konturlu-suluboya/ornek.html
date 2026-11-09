@@ -829,11 +829,11 @@ const gunes = { x: 880, y: 140 };
 // bulutlar boş bırakılmaz: lavi bulutun içinde ıslakken temiz, nemli fırçayla açılır (soluk mavi kalır), altına
 // açık leylak-gri gölge sürülür; bulutun biçimini sonradan beyaz mürekkep çizer
 const bulutlar = [
-  bulutKumesi(60, 400, 244, 84, 1711, { puruz: 0.22, lobBoy: 90, amp: 1.7, tabanDalga: 0.13 }),
-  bulutKumesi(392, 612, 120, 52, 1712, { puruz: 0.22, lobBoy: 80, amp: 1.5, tabanDalga: 0.13 }),
-  bulutKumesi(700, 1010, 372, 80, 1713, { puruz: 0.22, lobBoy: 92, amp: 1.7, tabanDalga: 0.13 }),
-  bulutKumesi(-70, 200, 486, 44, 1714, { puruz: 0.2, lobBoy: 70, amp: 1.3, tabanDalga: 0.12 }),
-  bulutKumesi(800, 1080, 560, 40, 1715, { puruz: 0.2, lobBoy: 70, amp: 1.3, tabanDalga: 0.12 }),
+  bulutKumesi(60, 400, 244, 84, 1711, { puruz: 0.15, lobBoy: 90, amp: 1.7, tabanDalga: 0.13 }),
+  bulutKumesi(392, 612, 120, 52, 1712, { puruz: 0.15, lobBoy: 80, amp: 1.5, tabanDalga: 0.13 }),
+  bulutKumesi(700, 1010, 372, 80, 1713, { puruz: 0.15, lobBoy: 92, amp: 1.7, tabanDalga: 0.13 }),
+  bulutKumesi(-70, 200, 486, 44, 1714, { puruz: 0.14, lobBoy: 70, amp: 1.3, tabanDalga: 0.12 }),
+  bulutKumesi(800, 1080, 560, 40, 1715, { puruz: 0.14, lobBoy: 70, amp: 1.3, tabanDalga: 0.12 }),
 ];
 const bulutSekil = birlesik(bulutlar.map((b) => b.sk));
 const gunesDisk = sekilPoli(elips(gunes.x, gunes.y, 41, 40, 0.3, 64), 1.8, 0.06, 1);
@@ -1179,7 +1179,18 @@ bulutlar.forEach((b, bi) => {
     const m = Math.floor(ust.length * (0.35 + 0.6 * (k + rM() * 0.6) / adet));
     const L = 14 + Math.floor(rM() * 20);
     const parca = ust.slice(Math.max(0, m - L), Math.min(ust.length, m + L));
-    if (parca.length > 6) murekkep(parca, { w: 1.6 + rM() * 0.7, sonSivri: 12, basSivri: 6, kir: false });
+    // tümsekler arasındaki dik inişte kalem kalkar: parçayı orada böl, en uzun kesintisiz bölümü çiz
+    let enUzun = [];
+    let cur = [];
+    parca.forEach((q, j) => {
+      if (j && Math.abs(q[1] - parca[j - 1][1]) > 3) cur = [];
+      cur.push(q);
+      if (cur.length > enUzun.length) enUzun = cur;
+    });
+    if (parca.length > 6) {
+      const w = 1.6 + rM() * 0.7;
+      if (enUzun.length > 6) murekkep(enUzun, { w, sonSivri: 12, basSivri: 6, kir: false });
+    }
   }
 });
 

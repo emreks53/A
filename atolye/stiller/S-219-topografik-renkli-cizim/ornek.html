@@ -742,11 +742,13 @@ function bulutBandi(x0, x1, taban, h, tohum) {
     alt.push([x, taban + h * 0.12 * Math.pow(Math.sin(Math.PI * t), 0.5) * (0.6 + 0.8 * nz.n(t * 6 + 20, 4))]);
   }
   const pts = ust.concat(alt.slice().reverse());
+  const ortYuk = yuk.reduce((a, v) => a + v, 0) / yuk.length;
   function golge(oran, ek) {
     const g = [];
     for (let i = 0; i <= N; i++) {
       const t = i / N;
-      const kes = taban - yuk[i] * oran + h * 0.12 * (nz.n(t * 6 + ek, 3 + ek) - 0.5) * 2;
+      // gölgenin üst sınırı tümseklerin tepesini izlemez (sırt gibi görünmesin): ortalama yüksekliğe yakın, dalgalı
+      const kes = taban - (0.3 * yuk[i] + 0.7 * ortYuk * Math.pow(Math.sin(Math.PI * t), 0.3)) * oran + h * 0.12 * (nz.n(t * 6 + ek, 3 + ek) - 0.5) * 2;
       g.push([ust[i][0], Math.max(ust[i][1], Math.min(alt[i][1] - 0.5, kes))]);
     }
     return g.concat(alt.slice().reverse());
