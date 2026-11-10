@@ -124,7 +124,9 @@ formu doğrulaması, üst menünün kaydırmada titrememesi denendi. Bulunup dü
 ## Kullanıcı kararları (özet)
 
 - Hero: "Herkese faydalı, prestijli gayrimenkul projelerini ideal şekilde gerçekleştirmek." / EN "…that benefit
-  everyone, in an ideal way." (05.10.2026; "Ülkemize" → "Herkese" 10.11.2026; "ideal" italik, 2026-11-10b).
+  everyone, in an ideal way." (05.10.2026; "Ülkemize" → "Herkese" 10.11.2026). "ideal" kelimesinin yerinde logodaki
+  "ideal" yazısı (gri, vektör; araclar/logo-ideal/, 2026-11-10c). Başlık önceden kelimelere ayrılmış yazılır
+  (data-split="1"); başlık metni değişirse kur.py → hero_bol ile yeniden üretilmeli.
 - İçerik notlarındaki B18–B21 (Komiteler çelişkisi, T.C. kimlik no, 01.01.0000 tarihleri, yazım hataları): dokunma.
   15.10.2026: 01.01.0000 yazan yerlerde hiç tarih yazmasın (kaldırıldı).
 - Hero görseli: denizi ve binanın tamamını gösteren en yüksek çözünürlüklü kadraj; masaüstünde ufuk çizgisi menü

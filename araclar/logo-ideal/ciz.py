@@ -1,0 +1,71 @@
+# -*- coding: utf-8 -*-
+"""
+Logodaki "idealist" yazısının "ideal" kısmını vektöre (SVG) çevirir → araclar/logo-ideal/ideal-logo.svg
+(kullanıcı isteği 10.11.2026: ana sayfa başlığındaki "ideal" kelimesi yerine logodaki "ideal" yazısı).
+
+Kaynak: sitedeki logo (site/logo/idealist-gyo-logo-330.jpg) küçük olduğu için aynı logonun şirket belgesindeki büyük
+kopyası kullanıldı: site/belgeler/2019/ozel-durum-aciklamalari/Faaliyet_Raporu_Mart2019docdocson.pdf, 1. sayfa üst
+bilgi görseli (965×433 JPEG; "idealist" ~410 px genişlik, sitedeki logonun ~4,5 katı). Harf biçimleri sitedeki logoyla
+aynı; renk sitede ayrıca verilir (sitedeki logonun gri tonu).
+
+Adımlar: kırmızı olmayan koyu pikseller → bağlantılı bileşenler (i gövdesi + noktası, d, e, a, l) → yumuşak kenar
+(alfa) → 8× büyütme + hafif bulanıklaştırma → eşik → potrace (CLI: apt-get install potrace) → sıkı viewBox.
+Çalıştırma: python3 araclar/logo-ideal/ciz.py   (çıktı aynı dosyanın üstüne yazılır)
+"""
+import os, re, subprocess, tempfile
+from collections import deque
+import numpy as np
+from PIL import Image, ImageFilter
+
+KOK = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PDF = os.path.join(KOK, 'site/belgeler/2019/ozel-durum-aciklamalari/Faaliyet_Raporu_Mart2019docdocson.pdf')
+CIKTI = os.path.join(KOK, 'araclar/logo-ideal/ideal-logo.svg')
+K = 8
+
+with tempfile.TemporaryDirectory() as g:
+    subprocess.run(['pdfimages', '-f', '1', '-l', '1', '-j', PDF, os.path.join(g, 'r')], check=True)
+    im = np.asarray(Image.open(os.path.join(g, 'r-000.jpg')).convert('RGB')).astype(float)
+    assert im.shape[:2] == (433, 965), im.shape
+    R, G, B = im[..., 0], im[..., 1], im[..., 2]
+    lum = 0.299 * R + 0.587 * G + 0.114 * B
+    kirmizi = (R - np.maximum(G, B)) > 30
+    harf = (lum < 200) & ~((R - np.maximum(G, B)) > 45)
+    # bağlantılı bileşenler (üst bölge); "ideal" = soldan ilk beş harf (i noktası ayrı bileşen)
+    H, W = 215, im.shape[1]
+    lab = np.zeros((H, W), int); bil = []; n = 0
+    for y in range(H):
+        for x in range(W):
+            if harf[y, x] and not lab[y, x]:
+                n += 1; q = deque([(y, x)]); lab[y, x] = n; pts = []
+                while q:
+                    cy, cx = q.popleft(); pts.append((cy, cx))
+                    for dy in (-1, 0, 1):
+                        for dx in (-1, 0, 1):
+                            yy, xx = cy + dy, cx + dx
+                            if 0 <= yy < H and 0 <= xx < W and harf[yy, xx] and not lab[yy, xx]:
+                                lab[yy, xx] = n; q.append((yy, xx))
+                p = np.array(pts)
+                if len(p) > 30:
+                    bil.append((p[:, 1].min(), p[:, 1].max(), n))
+    bil.sort()
+    # i gövdesi, i noktası, d, e, a, l (x başlangıcına göre ilk altı bileşen; l'nin sağ kenarı ≤ 450)
+    sec_id = [b[2] for b in bil if b[1] <= 450][:6]
+    assert len(sec_id) == 6, bil
+    sec = np.zeros(im.shape[:2], bool); sec[:H] = np.isin(lab, sec_id)
+    m = np.asarray(Image.fromarray((sec * 255).astype('uint8')).filter(ImageFilter.MaxFilter(5))) > 0
+    alfa = np.clip((255 - lum) / (255 - 116), 0, 1) * m * (~kirmizi)
+    x0, x1, y0, y1 = 154, 452, 12, 158
+    A = Image.fromarray((alfa[y0:y1, x0:x1] * 255).astype('uint8'))
+    A = A.resize((A.width * K, A.height * K), Image.BICUBIC).filter(ImageFilter.GaussianBlur(K * 0.6))
+    b = np.asarray(A) >= 128
+    pbm = os.path.join(g, 'i.pbm'); svg = os.path.join(g, 'i.svg')
+    Image.fromarray(((~b) * 255).astype('uint8')).convert('1').save(pbm)
+    subprocess.run(['potrace', pbm, '-s', '-o', svg, '--alphamax', '1.15', '--opttolerance', '0.6',
+                    '--turdsize', '60', '-u', '1'], check=True)
+    ds = [re.sub(r'\s+', ' ', d).strip() for d in re.findall(r'<path d="([^"]+)"', open(svg).read())]
+    yuk = A.height  # potrace y ekseni yukarı; aşağıdaki dönüşüm ters çevirir
+# viewBox: harflerin dış sınırı (i alt-sol … l üst-sağ; d/l üstü … e/a alt taşması). Taban çizgisi y=1115.
+out = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="46 53 2301 1074">'
+       '<g transform="translate(0 %d) scale(1 -1)">' % yuk + ''.join('<path d="%s"/>' % d for d in ds) + '</g></svg>\n')
+open(CIKTI, 'w').write(out)
+print('yazıldı', CIKTI, len(out))

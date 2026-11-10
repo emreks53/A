@@ -35,6 +35,7 @@ Tailwind sınıfları sayfalara gömülü CSS'te hazır durur, yeni stiller elle
 | `araclar/panel-sayfasi/` | Yönetim paneli sayfasının parçaları ve üreticisi (`olustur.py`) |
 | `araclar/yonlendirme-haritasi.py` | Eski site → yeni site 301 haritasını yeniden üretir |
 | `araclar/ceviri/` | İngilizce sayfaların TR asıldan kurulması: `kur.py` (sayfalar), `ozel.py` (arama/kütüphane verisi, panel haritası, TR hreflang, sitemap), `og.mjs` (paylaşım görselleri); çeviriler `bellek/` altında (bkz. NOTLAR.md) |
+| `araclar/logo-ideal/` | Ana sayfa başlığındaki logo "ideal" yazısı: `ideal-logo.svg` ve onu logonun büyük kopyasından üreten `ciz.py` (başlığa `ceviri/kur.py` → `hero_bol` yerleştirir) |
 | `araclar/dogrula.py` | Yayındaki site ile `site/` klasörünü dosya dosya karşılaştırır |
 | `araclar/yayinla.sh` | Yayın (Cloudflare Pages) |
 | `wrangler.toml` | Pages yapılandırması: değişkenler, R2 (`BELGELER`) ve D1 (`DB`) bağları |

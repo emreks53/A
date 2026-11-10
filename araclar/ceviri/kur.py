@@ -377,10 +377,23 @@ def sayfa_kur(tr, en):
     return s, k.eksik, og
 
 # Ana sayfa büyük başlığı (#heroTitle): sitenin betiği başlığı düz metinden kelime kelime ayırır (giriş animasyonu) ve
-# biçimi siler; "ideal" kelimesi italik olsun diye (kullanıcı isteği 10.11.2026) başlık aynı biçimde önceden ayrılmış
-# yazılır ve data-split="1" ile betiğin yeniden ayırması önlenir.
+# biçimi siler; bu yüzden başlık aynı yapıyla önceden ayrılmış yazılır ve data-split="1" ile yeniden ayrılmaz.
+# "ideal" kelimesinin yerinde logodaki "ideal" yazısı durur (kullanıcı isteği 10.11.2026; araclar/logo-ideal/):
+# satır içi SVG, logo grisi; ekran okuyucu ve kopyalama için kelime gizli metin olarak da yazılır. Kelime kutusu
+# (.w, overflow:hidden) sağda .12em iç boşlukla genişletilir (eğik "l"nin üst ucu kesilmesin) ve -.17em dış boşlukla
+# geri çekilir: net -.05em, "l"nin altında kalan fazla aralığı dengeler.
 HERO = re.compile(r'(<h1 id="heroTitle"[^>]*?)( data-split="1")?>(.*?)</h1>', re.S)
-HERO_ITALIK = 'ideal'
+HERO_LOGO_KELIME = 'ideal'
+_logo = open(os.path.join(os.path.dirname(CEVIRI), 'logo-ideal', 'ideal-logo.svg'), encoding='utf-8').read().strip()
+_LOGO_VB = (46, 53, 2301, 1074)          # viewBox (logo birimi); taban çizgisi y=1115, x yüksekliği 556 birim
+_LOGO_X = 0.47                           # logonun x yüksekliği / yazı boyu (Frank Ruhl Libre x yüksekliği 0,484)
+_s = _LOGO_X / 556
+HERO_LOGO = ('<svg viewBox="%d %d %d %d" aria-hidden="true" focusable="false" style="display:inline-block;'
+             'width:%.3fem;height:%.3fem;vertical-align:-%.3fem;margin-top:-.1em;fill:#636466">%s</svg>'
+             '<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%%);'
+             'white-space:nowrap">%s</span>') % (
+    _LOGO_VB + (_LOGO_VB[2] * _s, _LOGO_VB[3] * _s, (_LOGO_VB[1] + _LOGO_VB[3] - 1115) * _s,
+                re.search(r'<g[^>]*>.*</g>', _logo, re.S).group(0), HERO_LOGO_KELIME))
 
 def hero_duz(s):
     """Ayrılmış başlığı düz metne çevirir (çeviri ve başlık karşılaştırması için)."""
@@ -391,8 +404,10 @@ def hero_bol(s):
         metin = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', m.group(3))).strip()
         parca = []
         for i, k in enumerate(metin.split(' ')):
-            ic = '<em>%s</em>' % k if k == HERO_ITALIK else k
-            parca.append('<span class="w"><span style="transition-delay:%dms">%s</span></span>' % (i * 55, ic))
+            if k == HERO_LOGO_KELIME:
+                parca.append('<span class="w" style="padding-right:.12em;margin-right:-.17em"><span style="transition-delay:%dms">%s</span></span>' % (i * 55, HERO_LOGO))
+            else:
+                parca.append('<span class="w"><span style="transition-delay:%dms">%s</span></span>' % (i * 55, k))
         return m.group(1) + ' data-split="1">' + ' '.join(parca) + '</h1>'
     s, n = HERO.subn(bol, s, count=1)
     if n != 1:
