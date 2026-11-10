@@ -29,6 +29,10 @@ K = 8
 TABAN, XUST = 1115, 559        # 8× kırpık uzayda taban çizgisi ve x yüksekliği üstü (i gövdesi üstü, düz)
 ASC_ORAN = 0.703 / 0.484       # çıkıntı / x yüksekliği (Frank Ruhl Libre ile aynı oran)
 PAY = 24
+# İnceltme: rapor kopyası sitedeki logodan kalın basılmış (gövde / x yüksekliği: sitedeki logo 0,264, rapor 0,296;
+# kullanıcı 10.11.2026: "orijinal logoda harfler biraz daha ince"). Harfler her yandan INCELT birim aşındırılır
+# (8× uzay; 11 birimde ölçülen oran 0,263); taban çizgisi ve x yüksekliği buna göre data-taban / data-x yazılır.
+INCELT = 11
 
 with tempfile.TemporaryDirectory() as g:
     subprocess.run(['pdfimages', '-f', '1', '-l', '1', '-j', PDF, os.path.join(g, 'r')], check=True)
@@ -65,10 +69,16 @@ with tempfile.TemporaryDirectory() as g:
     x0, x1, y0, y1 = 154, 452, 12, 158
     A = Image.fromarray((alfa[y0:y1, x0:x1] * 255).astype('uint8'))
     A = A.resize((A.width * K, A.height * K), Image.BICUBIC)
-    kes = round(TABAN - (TABAN - XUST) * ASC_ORAN)       # d ve l çıkıntılarının yeni üstü (bu satırın üstü silinir)
+    # d ve l çıkıntılarının yeni üstü (bu satırın üstü silinir); aşındırma sonrası çıkıntı / x yüksekliği = ASC_ORAN
+    kes = round(TABAN - ((TABAN - XUST - 2 * INCELT) * ASC_ORAN + 2 * INCELT))
     a8 = np.asarray(A).copy(); a8[:kes] = 0
     A = Image.fromarray(a8).filter(ImageFilter.GaussianBlur(K * 0.6))
     b = np.asarray(A) >= 128
+    # aşındırma: kare (3×3) ve artı (+) adımları dönüşümlü → yaklaşık daire, her adım ~1 birim
+    for adim in range(INCELT):
+        p_ = np.pad(b, 1, constant_values=False); h, w = b.shape
+        komsu = [(0, 1), (1, 0), (1, 1), (1, 2), (2, 1)] + ([(0, 0), (0, 2), (2, 0), (2, 2)] if adim % 2 == 0 else [])
+        b = np.logical_and.reduce([p_[dy:dy + h, dx:dx + w] for dy, dx in komsu])
     pbm = os.path.join(g, 'i.pbm'); svg = os.path.join(g, 'i.svg')
     Image.fromarray(((~b) * 255).astype('uint8')).convert('1').save(pbm)
     subprocess.run(['potrace', pbm, '-s', '-o', svg, '--alphamax', '1.15', '--opttolerance', '0.6',
@@ -78,7 +88,7 @@ with tempfile.TemporaryDirectory() as g:
     ys, xs = np.nonzero(b)
 # viewBox: harflerin dış sınırı (i alt-sol … l üst-sağ; d/l üstü … e/a alt taşması) + PAY
 vb = (xs.min() - PAY, ys.min() - PAY, xs.max() + 1 - xs.min() + 2 * PAY, ys.max() + 1 - ys.min() + 2 * PAY)
-out = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="%d %d %d %d" data-taban="%d" data-x="%d">' % (vb + (TABAN, TABAN - XUST))
+out = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="%d %d %d %d" data-taban="%d" data-x="%d">' % (vb + (TABAN - INCELT, TABAN - XUST - 2 * INCELT))
        + '<g transform="translate(0 %d) scale(1 -1)">' % yuk + ''.join('<path d="%s"/>' % d for d in ds) + '</g></svg>\n')
 open(CIKTI, 'w').write(out)
 print('yazıldı', CIKTI, len(out))
