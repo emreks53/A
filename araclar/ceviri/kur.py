@@ -376,9 +376,32 @@ def sayfa_kur(tr, en):
         s = site_haritasi_sirala(s)
     return s, k.eksik, og
 
+# Ana sayfa büyük başlığı (#heroTitle): sitenin betiği başlığı düz metinden kelime kelime ayırır (giriş animasyonu) ve
+# biçimi siler; "ideal" kelimesi italik olsun diye (kullanıcı isteği 10.11.2026) başlık aynı biçimde önceden ayrılmış
+# yazılır ve data-split="1" ile betiğin yeniden ayırması önlenir.
+HERO = re.compile(r'(<h1 id="heroTitle"[^>]*?)( data-split="1")?>(.*?)</h1>', re.S)
+HERO_ITALIK = 'ideal'
+
+def hero_duz(s):
+    """Ayrılmış başlığı düz metne çevirir (çeviri ve başlık karşılaştırması için)."""
+    return HERO.sub(lambda m: m.group(1) + '>' + re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', m.group(3))).strip() + '</h1>', s, count=1)
+
+def hero_bol(s):
+    def bol(m):
+        metin = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', m.group(3))).strip()
+        parca = []
+        for i, k in enumerate(metin.split(' ')):
+            ic = '<em>%s</em>' % k if k == HERO_ITALIK else k
+            parca.append('<span class="w"><span style="transition-delay:%dms">%s</span></span>' % (i * 55, ic))
+        return m.group(1) + ' data-split="1">' + ' '.join(parca) + '</h1>'
+    s, n = HERO.subn(bol, s, count=1)
+    if n != 1:
+        raise SystemExit('ana sayfa başlık kalıbı tutmadı')
+    return s
+
 def ana_sayfa_kur():
     """EN ana sayfa: TR ana sayfadan (aynı yerleşim, profil metni CEVRILEN_METIN'den), <head> değerleri mevcut EN ana sayfadan."""
-    s_tr = oku('index.html'); eski = oku('en/index.html')
+    s_tr = hero_duz(oku('index.html')); eski = oku('en/index.html')
     k = Kurucu('/', '/en/')
     s = k.cevir(s_tr)
     s, n = DIL_TR.subn('<b aria-current="true" data-astro-cid-nen7h5rs>EN</b><a href="/" hreflang="tr" lang="tr" data-astro-cid-nen7h5rs>TR</a>', s)
@@ -386,6 +409,7 @@ def ana_sayfa_kur():
         raise SystemExit('ana sayfa dil seçici kalıbı tutmadı')
     s = s.replace('<html lang="tr"', '<html lang="en"', 1)
     s = metin_cevir(s, '/')
+    s = hero_bol(s)
     # Yatırımcı Köşesi kutusu: kısa ad (sunucu kodundaki EN adla aynı; kutu yüksekliği TR ile eşit kalsın)
     s, n = re.subn(r'(<a data-ek="ir-mali"[^>]*>)Financial Statements and Reports, ', r'\1Financial Statements, ', s)
     if n != 1:
