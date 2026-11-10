@@ -9,7 +9,12 @@ bilgi görseli (965×433 JPEG; "idealist" ~410 px genişlik, sitedeki logonun ~4
 aynı; renk sitede ayrıca verilir (sitedeki logonun gri tonu).
 
 Adımlar: kırmızı olmayan koyu pikseller → bağlantılı bileşenler (i gövdesi + noktası, d, e, a, l) → yumuşak kenar
-(alfa) → 8× büyütme + hafif bulanıklaştırma → eşik → potrace (CLI: apt-get install potrace) → sıkı viewBox.
+(alfa) → 8× büyütme → d ve l'nin uzun çıkıntıları (logoda "GYO"yu çevrelemek için uzatılmış) standart boya kısaltılır:
+kullanıcı isteği 10.11.2026, çıkıntı x yüksekliğinin ASC_ORAN katı (başlık yazı tipi Frank Ruhl Libre: 0,703/0,484)
+→ hafif bulanıklaştırma (köşeler logodaki gibi hafif yuvarlak) → eşik → potrace (CLI: apt-get install potrace)
+→ viewBox: harflerin dış sınırı + her yanda PAY birim boşluk (kenara değen yuvarlak altlar ve "l"nin ucu bazı
+tarayıcılarda kırpılmasın). SVG'de data-taban (taban çizgisi y) ve data-x (x yüksekliği) yazılır; kur.py bunlarla
+yerleştirir.
 Çalıştırma: python3 araclar/logo-ideal/ciz.py   (çıktı aynı dosyanın üstüne yazılır)
 """
 import os, re, subprocess, tempfile
@@ -21,6 +26,9 @@ KOK = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))
 PDF = os.path.join(KOK, 'site/belgeler/2019/ozel-durum-aciklamalari/Faaliyet_Raporu_Mart2019docdocson.pdf')
 CIKTI = os.path.join(KOK, 'araclar/logo-ideal/ideal-logo.svg')
 K = 8
+TABAN, XUST = 1115, 559        # 8× kırpık uzayda taban çizgisi ve x yüksekliği üstü (i gövdesi üstü, düz)
+ASC_ORAN = 0.703 / 0.484       # çıkıntı / x yüksekliği (Frank Ruhl Libre ile aynı oran)
+PAY = 24
 
 with tempfile.TemporaryDirectory() as g:
     subprocess.run(['pdfimages', '-f', '1', '-l', '1', '-j', PDF, os.path.join(g, 'r')], check=True)
@@ -56,16 +64,21 @@ with tempfile.TemporaryDirectory() as g:
     alfa = np.clip((255 - lum) / (255 - 116), 0, 1) * m * (~kirmizi)
     x0, x1, y0, y1 = 154, 452, 12, 158
     A = Image.fromarray((alfa[y0:y1, x0:x1] * 255).astype('uint8'))
-    A = A.resize((A.width * K, A.height * K), Image.BICUBIC).filter(ImageFilter.GaussianBlur(K * 0.6))
+    A = A.resize((A.width * K, A.height * K), Image.BICUBIC)
+    kes = round(TABAN - (TABAN - XUST) * ASC_ORAN)       # d ve l çıkıntılarının yeni üstü (bu satırın üstü silinir)
+    a8 = np.asarray(A).copy(); a8[:kes] = 0
+    A = Image.fromarray(a8).filter(ImageFilter.GaussianBlur(K * 0.6))
     b = np.asarray(A) >= 128
     pbm = os.path.join(g, 'i.pbm'); svg = os.path.join(g, 'i.svg')
     Image.fromarray(((~b) * 255).astype('uint8')).convert('1').save(pbm)
     subprocess.run(['potrace', pbm, '-s', '-o', svg, '--alphamax', '1.15', '--opttolerance', '0.6',
                     '--turdsize', '60', '-u', '1'], check=True)
     ds = [re.sub(r'\s+', ' ', d).strip() for d in re.findall(r'<path d="([^"]+)"', open(svg).read())]
-    yuk = A.height  # potrace y ekseni yukarı; aşağıdaki dönüşüm ters çevirir
-# viewBox: harflerin dış sınırı (i alt-sol … l üst-sağ; d/l üstü … e/a alt taşması). Taban çizgisi y=1115.
-out = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="46 53 2301 1074">'
-       '<g transform="translate(0 %d) scale(1 -1)">' % yuk + ''.join('<path d="%s"/>' % d for d in ds) + '</g></svg>\n')
+    yuk = A.height  # potrace y ekseni yukarı; aşağıdaki dönüşüm ters çevirir (dış koordinat = 8× kırpık piksel)
+    ys, xs = np.nonzero(b)
+# viewBox: harflerin dış sınırı (i alt-sol … l üst-sağ; d/l üstü … e/a alt taşması) + PAY
+vb = (xs.min() - PAY, ys.min() - PAY, xs.max() + 1 - xs.min() + 2 * PAY, ys.max() + 1 - ys.min() + 2 * PAY)
+out = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="%d %d %d %d" data-taban="%d" data-x="%d">' % (vb + (TABAN, TABAN - XUST))
+       + '<g transform="translate(0 %d) scale(1 -1)">' % yuk + ''.join('<path d="%s"/>' % d for d in ds) + '</g></svg>\n')
 open(CIKTI, 'w').write(out)
 print('yazıldı', CIKTI, len(out))
