@@ -2,7 +2,7 @@
 # Kalıplı başlıklar (tarihli özel durum açıklaması, yıl sayfaları, portföy tabloları) kalip.py içindeki kurallarla üretilir.
 
 #### /
-Realising prestigious real estate projects that benefit our country, in an ideal way.
+Realising prestigious real estate projects that benefit everyone, in an ideal way.
 
 #### /arama/
 Search
