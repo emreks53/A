@@ -111,8 +111,6 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
     art.setAttribute('aria-posinset', String(i + 1));
     art.setAttribute('aria-setsize', String(videolar.length));
     art.setAttribute('aria-label', tipografik(v.baslik));
-    // CSS değişkenindeki göreli adres stil dosyasına göre çözülür; bu yüzden tam adres verilir.
-    art.style.setProperty('--kapak', `url("${new URL(import.meta.env.BASE_URL + v.kapak, document.baseURI).href}")`);
 
     const sahne = el('div', 'reel__sahne');
     const video = el('video', 'reel__video');
@@ -120,7 +118,7 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
     video.setAttribute('webkit-playsinline', '');
     video.loop = true;
     video.preload = 'none';
-    video.poster = import.meta.env.BASE_URL + v.kapak;
+    // kapak (poster) yalnız aktif videoda ve iki yanındakilerde: afisHazirla()
     video.disableRemotePlayback = true;
     // Görünür bir düğme eklemeden klavye ve ekran okuyucuyla da durdurulabilsin
     video.tabIndex = 0;
@@ -322,8 +320,18 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
     cerceve = requestAnimationFrame(adim);
   }
 
+  /** Kapak görselini aktif video ve iki yanındakiler için verir: video sayısı arttıkça açılışta bütün kapaklar
+      indirilmesin; kaydırınca gelen videonun kapağı hazırdır. */
+  function afisHazirla(i: number): void {
+    for (let j = Math.max(0, i - 1); j <= Math.min(ogeler.length - 1, i + 1); j++) {
+      const o = ogeler[j];
+      if (!o.video.getAttribute('poster')) o.video.poster = import.meta.env.BASE_URL + o.v.kapak;
+    }
+  }
+
   /** Kaynağı yalnız aktif video ve bir sonraki için yükler (açılışta ve öteki sekmelerde ağ kullanılmaz). */
   function hazirla(i: number): void {
+    afisHazirla(i);
     for (const [j, o] of ogeler.entries()) {
       const yakin = j === i || j === i + 1;
       if (yakin && !o.video.getAttribute('src')) o.video.src = import.meta.env.BASE_URL + o.v.video;
@@ -398,7 +406,9 @@ export function akisBaslat(kok: HTMLElement, { adresDegisti, cik, ipucuGosterild
     for (const x of ogeler) x.kok.toggleAttribute('data-aktif', x === o);
     // Klavyeyle video değişince odak yeni videonun aynı denetimine geçer (eski, görünmeyen videoda kalmaz).
     if (odak) o.kok.querySelector<HTMLElement>(`.${odak}`)?.focus({ preventScroll: true });
-    // Sekme gizliyken (ana ekrandayken) ne video indirilir ne de adres değişir.
+    // Sekme gizliyken (ana ekrandayken) ne video indirilir ne de adres değişir; yalnız açılınca ilk görünecek
+    // videonun kapağı hazır olur (Oku kayarak açılırken siyah kare görünmesin).
+    afisHazirla(i);
     if (!etkin) return;
     hazirla(i);
     adresDegisti(o.v.id);

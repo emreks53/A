@@ -1,0 +1,32 @@
+{
+  "site": "https://emreks53.github.io/A/",
+  "videolar": [
+    {
+      "id": "fenler-haliki-tanittirir",
+      "baslik": "On Birinci Şuâ'dan",
+      "kitap": "Şuâlar",
+      "bolum": "On Birinci Şuâ",
+      "kisim": "Altıncı Mesele",
+      "sayfa": 203,
+      "etiketler": ["fenler", "marifetullah", "tefekkür"],
+      "video": "videolar/fenler-haliki-tanittirir.mp4",
+      "kapak": "videolar/fenler-haliki-tanittirir-kapak.jpg",
+      "onizleme": "videolar/fenler-haliki-tanittirir-onizleme.jpg",
+      "kunye": [
+        "3B modeller, HDRI'lar ve dokular: Poly Haven (CC0)",
+        "Dünya görüntüleri: NASA Blue Marble ve GEBCO (kamu malı)"
+      ]
+    },
+    {
+      "id": "ihlas",
+      "baslik": "On Yedinci Lem'a'dan",
+      "kitap": "Lem'alar",
+      "bolum": "On Yedinci Lem'a",
+      "sayfa": 154,
+      "etiketler": ["ihlas", "muhabbet", "kurtuluş"],
+      "video": "videolar/ihlas.mp4",
+      "kapak": "videolar/ihlas-kapak.jpg",
+      "onizleme": "videolar/ihlas-onizleme.jpg"
+    }
+  ]
+}

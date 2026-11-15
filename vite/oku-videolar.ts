@@ -185,7 +185,8 @@ ${[
 export function okuVideolar(dosya = 'content/oku/videolar.json'): Plugin {
   let kok = process.cwd();
   let publicDizini = resolve(kok, 'public');
-  const yol = () => resolve(kok, dosya);
+  // Uçtan uca denemeler kendi listesiyle derler (VIDEOLAR_JSON); öbür durumlarda content/ altındaki liste.
+  const yol = () => resolve(kok, process.env.VIDEOLAR_JSON || dosya);
   return {
     name: 'oku-videolar',
     configResolved(config) {

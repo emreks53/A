@@ -54,7 +54,8 @@ kitapta da **bölümüne** göre gruplanır.
 
 - Kitaplar RNK Neşriyat kütüphanesindeki sırayla gelir (Sözler, Mektubat, Lem’alar, Şuâlar, …); her kitabın başında
   Güneş'teki yığınlarla aynı küçük, yatık bir cilt sırtı (#D7787B, kalınlığı fotoğraftaki orandan), adı ve video sayısı vardır. Altında bölümler (ör. **ON YEDİNCİ
-  LEM’A**), bölümlerde videolar.
+  LEM’A**), bölümlerde videolar; ikisi de kitaptaki sayfa sırasıyla (ör. Onuncu Söz, sonra Yirmi Birinci Söz'ün
+  287, 288 ve 289. sayfaları).
 - Kartta önizleme görseli ve süre, videonun adı (geçtiği yer: *On Yedinci Lem’a’dan*), kısım ve sayfa
   (*Altıncı Mesele · 203. sayfa*) ve üç etiket (*#ihlas #muhabbet #kurtuluş*) bulunur. Kartın tamamına
   dokununca video Oku'da açılır; sağa kaydırınca kütüphanede aynı yere dönülür.
@@ -188,7 +189,7 @@ vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görün
    ```
 
 2. `content/oku/videolar.json` listesine ekleyin (sıra Oku akışındaki sıradır; Kenz'de kitap ve bölüme göre
-   gruplanır):
+   gruplanır, kitapta bölümler ve videolar sayfa sırasıyla gelir):
 
    ```json
    {
@@ -217,7 +218,7 @@ vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görün
      okunur. `kapak` video yüklenirken görünen ilk kare, `onizleme` Kenz kartının ve paylaşılan bağlantının
      önizleme görselidir.
 
-Şimdilik videolar uygulamayla birlikte gelir (iki video ≈ 59 MB). Video sayısı artınca bir video barındırma
+Şimdilik videolar uygulamayla birlikte gelir (dokuz video ≈ 185 MB). Video sayısı artınca bir video barındırma
 hizmetine (Cloudflare Stream, Bunny vb.) taşınmalı; `video` alanına tam adres yazılabilecek şekilde
 genişletilir.
 
@@ -257,7 +258,8 @@ npm run build        # dist/ klasörüne üretim derlemesi
 npm run test:visual  # derlemeyi tasarım ölçüsünde (854 × 1842) ekran görüntüsü olarak alır
 npm test             # birim testleri (video ve kitap listesi, paylaşım sayfası, yönlendirme)
 npm run test:oku     # deneme derlemesi yapıp gerçek tarayıcıda dener: ana ekran, Oku, Neşret, Menba, Kenz, Güneş,
-                     # okuyucu (örnek PDF: scripts/fixtures/; Risale metni değildir), geri dönüşler
+                     # okuyucu (örnek PDF ve sabit kitap/video listeleri: scripts/fixtures/; Risale metni
+                     # değildir), geri dönüşler; gerçek video listesinin Oku ve Kenz'de doğru dizildiğini de dener
 ```
 
 ## Web sitesi (GitHub Pages)
