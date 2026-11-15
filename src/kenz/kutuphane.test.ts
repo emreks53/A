@@ -16,7 +16,7 @@ const v = (id: string, kitap: string, bolum: string, ek: Partial<Video> = {}): V
 });
 
 describe('Kenz kütüphanesi', () => {
-  it('kitaplar Külliyat sırasıyla, bölümler ve videolar listedeki sırayla gruplanır', () => {
+  it('kitaplar Külliyat sırasıyla; sayfası yazılmamış bölümler ve videolar listedeki sırayla gruplanır', () => {
     const g = kitapGruplari([
       v('s1', 'Şuâlar', 'Yedinci Şuâ'),
       v('l1', "Lem'alar", "On Yedinci Lem'a"),
@@ -28,6 +28,21 @@ describe('Kenz kütüphanesi', () => {
       ['Sözler', [['On Dokuzuncu Söz', ['z1']]]],
       ["Lem'alar", [["On Yedinci Lem'a", ['l1']]]],
       ['Şuâlar', [['Yedinci Şuâ', ['s1', 's3']], ['On Birinci Şuâ', ['s2']]]],
+    ]);
+  });
+
+  it('kitapta bölümler ve videolar sayfa sırasıyla; sayfasız olan sona', () => {
+    const g = kitapGruplari([
+      v('y288', 'Sözler', 'Yirmi Birinci Söz', { sayfa: 288 }),
+      v('y287', 'Sözler', 'Yirmi Birinci Söz', { sayfa: 287 }),
+      v('o81', 'Sözler', 'Onuncu Söz', { sayfa: 81 }),
+      v('x', 'Sözler', 'Yirmi Altıncı Söz'),
+      v('y289', 'Sözler', 'Yirmi Birinci Söz', { sayfa: 289 }),
+    ]);
+    expect(g[0].bolumler.map((b) => [b.bolum, b.videolar.map((x) => x.id)])).toEqual([
+      ['Onuncu Söz', ['o81']],
+      ['Yirmi Birinci Söz', ['y287', 'y288', 'y289']],
+      ['Yirmi Altıncı Söz', ['x']],
     ]);
   });
 

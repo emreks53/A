@@ -2,6 +2,17 @@
   "site": "https://emreks53.github.io/A/",
   "videolar": [
     {
+      "id": "ihlas",
+      "baslik": "On Yedinci Lem'a'dan",
+      "kitap": "Lem'alar",
+      "bolum": "On Yedinci Lem'a",
+      "sayfa": 154,
+      "etiketler": ["ihlas", "muhabbet", "kurtuluş"],
+      "video": "videolar/ihlas.mp4",
+      "kapak": "videolar/ihlas-kapak.jpg",
+      "onizleme": "videolar/ihlas-onizleme.jpg"
+    },
+    {
       "id": "fenler-haliki-tanittirir",
       "baslik": "On Birinci Şuâ'dan",
       "kitap": "Şuâlar",
@@ -18,15 +29,82 @@
       ]
     },
     {
-      "id": "ihlas",
-      "baslik": "On Yedinci Lem'a'dan",
+      "id": "namaz-ve-nefis",
+      "baslik": "Yirmi Birinci Söz'den",
+      "kitap": "Sözler",
+      "bolum": "Yirmi Birinci Söz",
+      "sayfa": 287,
+      "etiketler": ["namaz", "nefis", "ibadet"],
+      "video": "videolar/namaz-ve-nefis.mp4",
+      "kapak": "videolar/namaz-ve-nefis-kapak.jpg",
+      "onizleme": "videolar/namaz-ve-nefis-onizleme.jpg"
+    },
+    {
+      "id": "namaz-hayat-suyu",
+      "baslik": "Yirmi Birinci Söz'den",
+      "kitap": "Sözler",
+      "bolum": "Yirmi Birinci Söz",
+      "sayfa": 288,
+      "etiketler": ["namaz", "ruh", "kalp"],
+      "video": "videolar/namaz-hayat-suyu.mp4",
+      "kapak": "videolar/namaz-hayat-suyu-kapak.jpg",
+      "onizleme": "videolar/namaz-hayat-suyu-onizleme.jpg"
+    },
+    {
+      "id": "dunya-misafirhanesi",
+      "baslik": "Yirmi Birinci Söz'den",
+      "kitap": "Sözler",
+      "bolum": "Yirmi Birinci Söz",
+      "sayfa": 289,
+      "etiketler": ["ahiret", "saadet", "kulluk"],
+      "video": "videolar/dunya-misafirhanesi.mp4",
+      "kapak": "videolar/dunya-misafirhanesi-kapak.jpg",
+      "onizleme": "videolar/dunya-misafirhanesi-onizleme.jpg"
+    },
+    {
+      "id": "rizik-ve-kulluk",
+      "baslik": "Beşinci Söz'den",
+      "kitap": "İman ve Küfür Muvâzeneleri",
+      "bolum": "Beşinci Söz",
+      "sayfa": 22,
+      "etiketler": ["rızık", "tevekkül", "kulluk"],
+      "video": "videolar/rizik-ve-kulluk.mp4",
+      "kapak": "videolar/rizik-ve-kulluk-kapak.jpg",
+      "onizleme": "videolar/rizik-ve-kulluk-onizleme.jpg"
+    },
+    {
+      "id": "nimet-ve-sukur",
+      "baslik": "Otuzuncu Lem'a'dan",
       "kitap": "Lem'alar",
-      "bolum": "On Yedinci Lem'a",
-      "sayfa": 154,
-      "etiketler": ["ihlas", "muhabbet", "kurtuluş"],
-      "video": "videolar/ihlas.mp4",
-      "kapak": "videolar/ihlas-kapak.jpg",
-      "onizleme": "videolar/ihlas-onizleme.jpg"
+      "bolum": "Otuzuncu Lem'a",
+      "sayfa": 381,
+      "etiketler": ["hayat", "nimet", "şükür"],
+      "video": "videolar/nimet-ve-sukur.mp4",
+      "kapak": "videolar/nimet-ve-sukur-kapak.jpg",
+      "onizleme": "videolar/nimet-ve-sukur-onizleme.jpg"
+    },
+    {
+      "id": "hastaya-teselli",
+      "baslik": "Yirmi Beşinci Lem'a'dan",
+      "kitap": "Lem'alar",
+      "bolum": "Yirmi Beşinci Lem'a",
+      "kisim": "Birinci Deva",
+      "sayfa": 239,
+      "etiketler": ["hastalık", "sabır", "ömür"],
+      "video": "videolar/hastaya-teselli.mp4",
+      "kapak": "videolar/hastaya-teselli-kapak.jpg",
+      "onizleme": "videolar/hastaya-teselli-onizleme.jpg"
+    },
+    {
+      "id": "gul-ve-beka",
+      "baslik": "Onuncu Söz'den",
+      "kitap": "Sözler",
+      "bolum": "Onuncu Söz",
+      "sayfa": 81,
+      "etiketler": ["haşir", "rahmet", "beka"],
+      "video": "videolar/gul-ve-beka.mp4",
+      "kapak": "videolar/gul-ve-beka-kapak.jpg",
+      "onizleme": "videolar/gul-ve-beka-onizleme.jpg"
     }
   ]
 }

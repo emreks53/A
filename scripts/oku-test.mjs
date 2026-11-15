@@ -28,9 +28,12 @@ const root = resolve('dist-test');
 const rootGercek = resolve('dist-test-gercek');
 if (!process.argv.includes('--derleme')) {
   const { build } = await import('vite');
+  // deneme derlemesi: sabit kitap ve video listeleri (adımlar bunlara göre); gerçek derleme: content/ altındakiler
   process.env.KITAPLAR_JSON = 'scripts/fixtures/kitaplar.json';
+  process.env.VIDEOLAR_JSON = 'scripts/fixtures/videolar.json';
   await build({ logLevel: 'warn', build: { outDir: root, emptyOutDir: true } });
   delete process.env.KITAPLAR_JSON;
+  delete process.env.VIDEOLAR_JSON;
   await build({ logLevel: 'warn', build: { outDir: rootGercek, emptyOutDir: true } });
 }
 /** Örnek kitap PDF'leri: deneme listesindeki https://kitap.deneme/… adresleri buradan verilir (Risale metni
@@ -1530,6 +1533,50 @@ await adim('gerçek kitap listesiyle (PDF yok): 14 eser RNK Neşriyat\'ın okuma
     assert.equal(await p2.evaluate(() => document.getElementById('app').dataset.sekme), 'oku');
     assert.equal(new URL(p2.url()).hash, `#/oku/${F}`);
     assert.equal(await p2.locator('.alt-sayfa.acik').count(), 1);
+  } finally {
+    await c2.close();
+  }
+});
+
+await adim('gerçek video listesiyle: Oku akışı listedeki sırayla, her videonun paylaşım sayfası ve önizlemesi var; Kenz\'de kitaplar Külliyat sırasıyla, bölümler ve videolar sayfa sırasıyla', async () => {
+  const { videolar: liste } = JSON.parse(await readFile(resolve('content/oku/videolar.json'), 'utf8'));
+  const c2 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  try {
+    const p2 = await c2.newPage();
+    p2.on('pageerror', (e) => hatalar.push(String(e)));
+    p2.on('response', (r) => r.status() >= 400 && hatalar.push(`${r.status()} ${r.url()}`));
+    await p2.goto(baseGercek + `#/oku/${liste[0].id}`);
+    await p2.waitForSelector('.reel[data-aktif]');
+    assert.deepEqual(await p2.locator('.reel').evaluateAll((l) => l.map((r) => r.dataset.id)), liste.map((v) => v.id));
+    for (const v of liste) {
+      const sayfa = await (await fetch(`${baseGercek}v/${v.id}/`)).text();
+      assert.match(sayfa, new RegExp(`og:image" content="[^"]*${v.onizleme.replace(/[.]/g, '\\.')}"`), v.id);
+      assert.equal((await fetch(baseGercek + v.onizleme)).status, 200, v.onizleme);
+      assert.equal((await fetch(baseGercek + v.kapak)).status, 200, v.kapak);
+    }
+    // Kenz: beklenen gruplar listeden (Külliyat sırası; kitapta ilk sayfaya göre bölümler, sayfaya göre videolar)
+    const KULLIYAT = ['Sözler', 'Mektubat', "Lem'alar", 'Şuâlar', 'Mesnevî-i Nûriye', "İşârâtü'l-İ'câz", 'Barla Lâhikası', 'Kastamonu Lâhikası', 'Emirdağ Lâhikası', 'Sikke-i Tasdîk-i Gaybî', 'Tarihçe-i Hayat', 'Asâ-yı Mûsâ', 'İman ve Küfür Muvâzeneleri', 'Muhâkemat'];
+    const tip = (x) => x.replace(/'/g, '’');
+    const beklenen = [...new Set(liste.map((v) => v.kitap))]
+      .sort((a, b) => KULLIYAT.indexOf(a) - KULLIYAT.indexOf(b))
+      .map((kitap) => {
+        const bolumler = [...new Set(liste.filter((v) => v.kitap === kitap).map((v) => v.bolum))].map((bolum) =>
+          liste.filter((v) => v.kitap === kitap && v.bolum === bolum).sort((a, b) => (a.sayfa ?? Infinity) - (b.sayfa ?? Infinity)),
+        );
+        bolumler.sort((a, b) => (a[0].sayfa ?? Infinity) - (b[0].sayfa ?? Infinity));
+        return [tip(kitap), bolumler.map((vs) => [tip(vs[0].bolum).toLocaleUpperCase('tr'), vs.map((v) => `#/oku/${v.id}`)])];
+      });
+    await p2.goto(baseGercek + '#/kenz');
+    await p2.waitForSelector('.kart');
+    const kenz = await p2.locator('.kitap').evaluateAll((l) =>
+      l.map((k) => [
+        k.querySelector('.kitap__ad').textContent,
+        Array.from(k.querySelectorAll('.bolum'), (b) => [b.querySelector('.bolum__ad span').textContent.toLocaleUpperCase('tr'), Array.from(b.querySelectorAll('a.kart'), (a) => a.getAttribute('href'))]),
+      ]),
+    );
+    assert.deepEqual(kenz, beklenen);
+    // üç ve daha çok kitap: başta fihrist
+    if (beklenen.length >= 3) assert.equal(await p2.locator('.fihrist__kitap').count(), beklenen.length);
   } finally {
     await c2.close();
   }

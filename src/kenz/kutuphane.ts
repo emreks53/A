@@ -1,5 +1,6 @@
 // Kenz: videolar geçtiği Risale-i Nur kitabına, kitapta da bölümüne göre gruplanır.
-// Kitaplar Külliyat sırasıyla, bölümler ve videolar listedeki sırayla gelir. Karta dokununca video Oku'da açılır.
+// Kitaplar Külliyat sırasıyla; kitapta bölümler ve videolar sayfa sırasıyla (sayfası yazılmamış olan, listedeki
+// sırasıyla sona). Karta dokununca video Oku'da açılır.
 import { videolar } from 'virtual:oku-videolar';
 import { etiketYazisi, kalinlikMm, kimlikYap, KULLIYAT, sureYazisi, tipografik, type Video } from '../oku/ortak';
 
@@ -14,9 +15,10 @@ export interface KitapGrubu {
   bolumler: BolumGrubu[];
 }
 
-/** Videosu olan kitaplar (Külliyat sırasıyla) ve her kitapta bölümler */
+/** Videosu olan kitaplar (Külliyat sırasıyla) ve her kitapta bölümler (sayfa sırasıyla) */
 export function kitapGruplari(liste: Video[] = videolar): KitapGrubu[] {
   const sira = (k: string) => (KULLIYAT as readonly string[]).indexOf(k);
+  const sayfa = (v: Video) => v.sayfa ?? Infinity;
   const kitaplar = [...new Set(liste.map((v) => v.kitap))].sort((a, b) => sira(a) - sira(b));
   return kitaplar.map((kitap) => {
     const bolumler: BolumGrubu[] = [];
@@ -27,6 +29,9 @@ export function kitapGruplari(liste: Video[] = videolar): KitapGrubu[] {
       g.videolar.push(v);
       if (v.kisim && !g.kisimlar.includes(v.kisim)) g.kisimlar.push(v.kisim);
     }
+    // kitaptaki sırayla: bölüm ilk videosunun sayfasına, videolar kendi sayfasına göre (sıralama kararlıdır)
+    for (const b of bolumler) b.videolar.sort((x, y) => sayfa(x) - sayfa(y));
+    bolumler.sort((x, y) => sayfa(x.videolar[0]) - sayfa(y.videolar[0]));
     return { kitap, bolumler };
   });
 }
