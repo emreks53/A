@@ -1517,6 +1517,8 @@ await adim('gerçek kitap listesiyle (PDF yok): 14 eser RNK Neşriyat\'ın okuma
     await p2.waitForSelector('.reel[data-aktif]');
     await p2.locator('.reel[data-aktif] .reel__dugme--menba').click();
     await p2.waitForSelector('.alt-sayfa.acik');
+    // sayfa aşağıdan kayarak açılır (gerçek listede video ikinci sırada: önce akış ona kayar); açılış bitince ölç
+    await p2.waitForFunction(() => getComputedStyle(document.querySelector('.alt-sayfa.acik')).transform === 'none');
     const oku = p2.locator('.alt-sayfa.acik .menba__oku');
     assert.equal(await oku.getAttribute('href'), 'https://rnk.tr/r?s=tr&b=sualar&p=203');
     assert.equal(await oku.getAttribute('target'), '_blank');

@@ -218,7 +218,7 @@ vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görün
      okunur. `kapak` video yüklenirken görünen ilk kare, `onizleme` Kenz kartının ve paylaşılan bağlantının
      önizleme görselidir.
 
-Şimdilik videolar uygulamayla birlikte gelir (iki video ≈ 59 MB). Video sayısı artınca bir video barındırma
+Şimdilik videolar uygulamayla birlikte gelir (dokuz video ≈ 178 MB). Video sayısı artınca bir video barındırma
 hizmetine (Cloudflare Stream, Bunny vb.) taşınmalı; `video` alanına tam adres yazılabilecek şekilde
 genişletilir.
 
