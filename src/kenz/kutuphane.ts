@@ -67,7 +67,9 @@ function kart(v: Video): HTMLAnchorElement {
   a.setAttribute('aria-label', kartEtiketi(v));
   const afis = el('span', 'kart__afis');
   const img = el('img', 'kart__img');
-  img.src = import.meta.env.BASE_URL + v.onizleme;
+  // önizleme Kenz ilk açılınca yüklenir (kenz.ts): gizli ekranlar yerleşimde kaldığı için loading="lazy" açılışta
+  // bütün görselleri indirirdi
+  img.dataset.src = import.meta.env.BASE_URL + v.onizleme;
   img.alt = '';
   img.loading = 'lazy';
   img.decoding = 'async';

@@ -218,7 +218,7 @@ vardır; yalnız klavyeyle odaklanınca belirir, dokunmatik ekranda hiç görün
      okunur. `kapak` video yüklenirken görünen ilk kare, `onizleme` Kenz kartının ve paylaşılan bağlantının
      önizleme görselidir.
 
-Şimdilik videolar uygulamayla birlikte gelir (dokuz video ≈ 178 MB). Video sayısı artınca bir video barındırma
+Şimdilik videolar uygulamayla birlikte gelir (dokuz video ≈ 185 MB). Video sayısı artınca bir video barındırma
 hizmetine (Cloudflare Stream, Bunny vb.) taşınmalı; `video` alanına tam adres yazılabilecek şekilde
 genişletilir.
 
@@ -259,7 +259,7 @@ npm run test:visual  # derlemeyi tasarım ölçüsünde (854 × 1842) ekran gör
 npm test             # birim testleri (video ve kitap listesi, paylaşım sayfası, yönlendirme)
 npm run test:oku     # deneme derlemesi yapıp gerçek tarayıcıda dener: ana ekran, Oku, Neşret, Menba, Kenz, Güneş,
                      # okuyucu (örnek PDF ve sabit kitap/video listeleri: scripts/fixtures/; Risale metni
-                     # değildir), geri dönüşler; ayrıca gerçek video listesinin Oku ve Kenz'de doğru dizildiği
+                     # değildir), geri dönüşler; gerçek video listesinin Oku ve Kenz'de doğru dizildiğini de dener
 ```
 
 ## Web sitesi (GitHub Pages)

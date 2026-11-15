@@ -38,4 +38,22 @@ export function kenzBaslat(gorunum: HTMLElement): void {
   ic.className = 'kenz__ic';
   ic.append(bas, kutuphaneCiz(), son);
   kaydirma.append(kalkan('ust'), ic, kalkan('alt'));
+
+  // Kart önizlemeleri Kenz ilk görününce yüklenir (açılışta ana ekrandayken indirilmez); sonra loading="lazy"
+  // yalnız ekrana yaklaşanları indirir.
+  const onizlemeleriYukle = () => {
+    for (const img of kaydirma.querySelectorAll<HTMLImageElement>('img[data-src]')) {
+      img.src = img.dataset.src!;
+      img.removeAttribute('data-src');
+    }
+  };
+  if (!gorunum.hidden) onizlemeleriYukle();
+  else {
+    const izle = new MutationObserver(() => {
+      if (gorunum.hidden) return;
+      izle.disconnect();
+      onizlemeleriYukle();
+    });
+    izle.observe(gorunum, { attributes: true, attributeFilter: ['hidden'] });
+  }
 }

@@ -1,7 +1,8 @@
 // Uygulamayı (ana ekran, Oku akışı, Kenz, Güneş ve okuyucu) gerçek tarayıcıda baştan sona dener.
-// Önce dist-test/ altına deneme derlemesi yapar: kitap listesi scripts/fixtures/kitaplar.json (örnek PDF; Risale
-// metni değildir), gerisi uygulamanın kendisi. dist-test-gercek/ altına da gerçek kitap listesiyle derler (PDF'siz:
-// kitaplar RNK Neşriyat'ın okuma sitesinde açılır).
+// Önce dist-test/ altına deneme derlemesi yapar: kitap ve video listeleri scripts/fixtures/kitaplar.json (örnek PDF;
+// Risale metni değildir) ve scripts/fixtures/videolar.json, gerisi uygulamanın kendisi. dist-test-gercek/ altına da
+// content/ altındaki gerçek kitap ve video listeleriyle derler (PDF'siz: kitaplar RNK Neşriyat'ın okuma sitesinde
+// açılır).
 // Kullanım: npm run test:oku                            (Playwright + Chromium gerekir)
 //           node scripts/oku-test.mjs --ekran <klasör>  (ayrıca her adımın ekran görüntüsünü kaydeder)
 //           node scripts/oku-test.mjs --derleme       (deneme derlemelerini atlar; dist-test/ ve dist-test-gercek/ hazırsa)
@@ -1517,7 +1518,7 @@ await adim('gerçek kitap listesiyle (PDF yok): 14 eser RNK Neşriyat\'ın okuma
     await p2.waitForSelector('.reel[data-aktif]');
     await p2.locator('.reel[data-aktif] .reel__dugme--menba').click();
     await p2.waitForSelector('.alt-sayfa.acik');
-    // sayfa aşağıdan kayarak açılır (gerçek listede video ikinci sırada: önce akış ona kayar); açılış bitince ölç
+    // Oku kayarak açılır, Menba sayfası da aşağıdan kayar: ölçüm açılış bittikten sonra
     await p2.waitForFunction(() => getComputedStyle(document.querySelector('.alt-sayfa.acik')).transform === 'none');
     const oku = p2.locator('.alt-sayfa.acik .menba__oku');
     assert.equal(await oku.getAttribute('href'), 'https://rnk.tr/r?s=tr&b=sualar&p=203');
