@@ -67,8 +67,9 @@ function adamDurumu(t) {
 let kamYan;
 function kameraKur() {
   kamYan = kameraYolu([
-    { t: T.gecis, x: 790, y: 960, z: 1.32 },
-    { t: T.tan + 0.2, x: 760, y: 945, z: 1.16, e: ease.outCubic },
+    // yeni dünya açılmaya başlarken kamera zaten yavaşça geri çekiliyor (geçişin ortasında ani hızlanma yok)
+    { t: GECIS.bas, x: 800, y: 964, z: 1.4 },
+    { t: T.tan + 0.2, x: 760, y: 945, z: 1.16, e: ease.outSine },
     { t: T.o + 0.1, x: 735, y: 930, z: 1.1, e: ease.inOutSine },
     { t: T.ilt, x: 700, y: 860, z: 0.98, e: ease.inOutCubic },
     { t: T.kud - 0.05, x: 680, y: 880, z: 1.0, e: ease.inOutSine },

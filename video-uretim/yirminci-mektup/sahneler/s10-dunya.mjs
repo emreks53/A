@@ -121,11 +121,11 @@ function dagOge() {
   const R1T = new Float32Array(700);
   for (let i = 0; i < 700; i++) R1T[i] = xAt(R1, -1300 + i * 4);
   const r1x = (y) => R1T[Math.max(0, Math.min(699, Math.round((y + 1300) / 4)))];
-  const ortaTon = TON.gurultulu((x, y) => clamp(0.46 + 0.22 * clamp(1 - (r1x(y) - x) / 260) + 0.16 * clamp((y + 300) / 1600) - 0.25 * clamp(1 - (y - DORUK[1]) / 420)), 0.08, 0.006, 57);
+  const ortaTon = TON.gurultulu((x, y) => clamp(0.52 + 0.22 * clamp(1 - (r1x(y) - x) / 260) + 0.16 * clamp((y + 300) / 1600) - 0.25 * clamp(1 - (y - DORUK[1]) / 420)), 0.08, 0.006, 57);
   const R = [[0, '#F3EADC'], [0.3, '#D6D3E2'], [0.6, '#A0A2C4'], [1, '#62669A']];
   const RS = [[0, '#C8C6DE'], [0.5, '#8E90BC'], [1, '#55588C']]; // çapraz tarama (gölgede)
   return oge({
-    ad: 's10-dag5', olcek: 0.88, sekil, arka: '#DCDBE8', arkaAlfa: 0.9, arkaBulanik: 12,
+    ad: 's10-dag6', olcek: 0.88, sekil, arka: '#DCDBE8', arkaAlfa: 0.9, arkaBulanik: 12,
     arkaCiz: (g, yol) => {
       const gr = g.createLinearGradient(0, DORUK[1], 0, 1330);
       gr.addColorStop(0, 'rgba(253,240,210,0.95)');
@@ -386,7 +386,7 @@ export function yakinHazirla() {
   D.ortaYesil = sirtOge({ ad: 's10-orta-yesil', x0: -800, x1: 2900, ust: tumsek(1290, [[500, 60, 260], [900, 95, 220], [1400, 50, 260], [1900, 80, 260], [2500, 60, 240]]), alt: 1800, P: PAL.ortaYesil, olcek: 0.8, tohum: 7 });
   D.dag = dagOge();
   D.kar = karOge();
-  D.dagSis = sisSeridi('s10-dag-sis', { w: 2400, h: 300, renk: '#F7F5FC', cizgi: '#9C98C0', kume: 6, tohum: 71, yogun: 1.5, cizgiA: 0.24 });
+  D.dagSis = sisSeridi('s10-dag-sis', { w: 2400, h: 300, renk: '#F7F5FC', cizgi: '#9C98C0', kume: 6, tohum: 71, yogun: 1.5, cizgiA: 0.32 });
   D.taslar = [
     { o: tasOge(170, 70, 3), x: -90, y: 1790, f: 1.15 },
     { o: tasOge(120, 52, 5), x: 1180, y: 1760, f: 1.15 },
