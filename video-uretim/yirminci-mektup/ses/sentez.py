@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Ses efektlerini yordamsal olarak sentezler ve okuyucunun sesiyle karıştırır (müzik yok).
-Efektler kısıktır: tepe ~ -26 dBFS; konuşma sürerken ayrıca 4 dB kısılır (yan zincir). Çıktı 48 kHz stereo WAV.
+Efektler kısıktır: tepe ~ -22 dBFS; konuşma sürerken ayrıca 5 dB kısılır (yan zincir). Çıktı 48 kHz stereo WAV.
 Kullanım: python3 sentez.py veri/sesler.json veri/ses.mp3 cikti/ses-miks.wav [toplam_sure]"""
 import json, sys, subprocess, numpy as np
 from scipy import signal
@@ -236,13 +236,19 @@ def main():
     for c in range(2):
         efekt[:, c] = efekt[:, c] * 0.82 + signal.fftconvolve(efekt[:, c], ir)[:N] * 0.18
     # efekt seviyesi: tepe -26 dBFS civarı; konuşma varken 4 dB daha kısık (yan zincir)
-    efekt *= 10 ** (-26 / 20) / (np.max(np.abs(efekt)) + 1e-9) * 1.0
+    efekt *= 10 ** (-22 / 20) / (np.max(np.abs(efekt)) + 1e-9) * 1.0
     kenv = alcak(np.abs(kon).mean(axis=1), 6)
     kenv = kenv / (np.max(kenv) + 1e-9)
-    kis = 10 ** (-4 * np.clip(kenv * 6, 0, 1) / 20)
+    kis = 10 ** (-5 * np.clip(kenv * 6, 0, 1) / 20)
     efekt *= kis[:, None]
     # konuşma: hafif seviye düzeltme (tepe -1 dBFS)
     kon *= 10 ** (-1 / 20) / (np.max(np.abs(kon)) + 1e-9)
+    import os
+    if os.environ.get('EFEKT_AYRI'):
+        import wave as _w
+        e16 = (np.clip(efekt, -1, 1) * 32767).astype(np.int16)
+        with _w.open(cikti.replace('.wav', '-efekt.wav'), 'wb') as w:
+            w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR); w.writeframes(e16.tobytes())
     miks = kon + efekt
     miks /= max(1.0, np.max(np.abs(miks)) / 0.98)
     pcm = (np.clip(miks, -1, 1) * 32767).astype(np.int16)
