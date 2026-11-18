@@ -574,17 +574,48 @@ export function desenMerkezden(ctx, x, y, Rr, t, { cizim = 1, dolgu = 0, dolguYa
   ctx.restore();
 }
 
-/** Kapalı yolu eşit yay uzunluğunda n açık parçaya böler (her parça bir sonrakinin başına kadar) */
+/**
+ * Kapalı yolu merkezden dışa çizilecek açık parçalara böler: merkeze en yakın noktalardan (kenar ortaları, yıldızın iç
+ * köşeleri) iki yana, en uzak noktalara (köşeler, uçlar) doğru. Daire için n eşit parça (ileri yönde).
+ */
 const parcaOnbellek = new Map();
 function simetrikParcalar(pts, n) {
   const key = pts.length + ':' + pts[0][0].toFixed(2) + ',' + pts[0][1].toFixed(2) + ':' + n + ':' + pts[1][0].toFixed(2);
   if (parcaOnbellek.has(key)) return parcaOnbellek.get(key);
   const q = yenidenOrnekle(pts, 2, true);
-  const L = q.length - 1;
+  q.pop(); // son nokta ilkinin tekrarı
+  const N_ = q.length;
+  const r = q.map(([x, y]) => Math.hypot(x, y));
+  const rmax = Math.max(...r), rmin = Math.min(...r);
   const out = [];
-  for (let j = 0; j < n; j++) {
-    const a = Math.round((j * L) / n), b = Math.round(((j + 1) * L) / n);
-    out.push(q.slice(a, b + 1));
+  if ((rmax - rmin) / rmax < 0.03) {
+    for (let j = 0; j < n; j++) {
+      const a = Math.round((j * N_) / n), b = Math.round(((j + 1) * N_) / n);
+      const parca = [];
+      for (let k = a; k <= b; k++) parca.push(q[k % N_]);
+      out.push(parca);
+    }
+  } else {
+    // yerel en küçükler (merkeze en yakın) ve aralarındaki en büyükler
+    const at = (k) => r[((k % N_) + N_) % N_];
+    const W_ = 3;
+    const minler = [];
+    for (let k = 0; k < N_; k++) {
+      let m = true;
+      for (let d = 1; d <= W_; d++) if (at(k) > at(k - d) || at(k) > at(k + d)) { m = false; break; }
+      if (m && (!minler.length || k - minler[minler.length - 1] > W_)) minler.push(k);
+    }
+    if (minler.length > 1 && minler[0] + N_ - minler[minler.length - 1] <= W_) minler.pop();
+    for (let i = 0; i < minler.length; i++) {
+      const a = minler[i], b = i + 1 < minler.length ? minler[i + 1] : minler[0] + N_;
+      let M_ = a, best = -1;
+      for (let k = a; k <= b; k++) if (at(k) > best) { best = at(k); M_ = k; }
+      const ileri = [], geri = [];
+      for (let k = a; k <= M_; k++) ileri.push(q[k % N_]);
+      for (let k = b; k >= M_; k--) geri.push(q[k % N_]);
+      if (ileri.length > 1) out.push(ileri);
+      if (geri.length > 1) out.push(geri);
+    }
   }
   if (parcaOnbellek.size > 400) parcaOnbellek.clear();
   parcaOnbellek.set(key, out);

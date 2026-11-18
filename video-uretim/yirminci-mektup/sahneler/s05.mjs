@@ -195,7 +195,7 @@ export default {
     kusG = Object.fromEntries(Object.entries(kus).map(([k, o]) => [k, Y.griSurum(o)]));
     dal = Y.dalOgeleri();
     dalG = { dal: Y.griSurum(dal.dal), yapraklar: dal.yapraklar.map((p) => Y.griSurum(p.oge)), cicekler: dal.cicekler.map((p) => Y.griSurum(p.oge)) };
-    narK = Y.narOge('kapali'); narA = Y.narOge('acik');
+    narK = Y.narOge('kapali'); narA = Y.narOge('acik'); narAG = Y.griSurum(narA);
     narKuruG = Y.griSurum(Y.narOge('kuru'), { parlak: 1.04 });
     petek = Y.petekOge(); petekG = Y.griSurum(petek); petekP = Y.petekOge(true);
     damla = M.nektarDamla(8, Y.OL * 1.2); damlaG = Y.griSurum(damla);
@@ -624,7 +624,11 @@ function narCiz(g, t, { t0, bg, ol, gri, i }) {
   const x = 0, y = 10;
   if (acil < 1) ogeCiz(g, narK, x, y, opt);
   if (acil > 0 && acil < 1) ogeAcarak(g, narA, x, y, acil, { s: 1.1, mod: 'daire', merkez: Y.NAR_ACIK_MERKEZ, yumusak: 0.25 });
-  if (acil >= 1) cift(g, narA, narKuruG, x, y, ol, opt);
+  if (acil >= 1) {
+    ogeCiz(g, narA, x, y, opt);
+    if (gri - ol > 0.005) ogeCiz(g, narAG, x, y, { ...opt, alfa: gri - ol });
+    if (ol > 0.001) ogeCiz(g, narKuruG, x, y, { ...opt, alfa: ol });
+  }
   // tane parıltıları
   const pr = acil * (1 - ol);
   if (pr > 0.05) {
