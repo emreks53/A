@@ -27,32 +27,34 @@ const T = {
 // ---------------------------------------------------------------- dünya yerleşimi (nötr görünüş = geniş plan)
 const { PERS } = Y;
 const VP = [PERS.vx, PERS.hy];
-const ust = (x) => 1240 + 1.05e-4 * (x - 330) ** 2 + 3 * Math.sin(x * 0.013 + 1); // sırtın üst kenarı
-const ADAM = { x: 360, s: 0.8 };
-const AG = { x: 150, boy: 600, tohum: 37 };
-AG.y = ust(AG.x) + 2;
-const TOH = { x: AG.x + 2, y: AG.y + 58 };
-const NUR = { x: VP[0], y0: 985, y1: 792, r: 80 };
-const KAPILAR = [[515, 0.62], [598, 0.72], [805, 0.72], [888, 0.62]];
-const KAPI_Y = 885;
+const ZM = 4.6; // adamın ve ağacın derinliği
+const ZEMIN = PERS.hy + PERS.k / ZM; // onların bastığı yer (y)
+const ADAM = { x: 436, y: ZEMIN, s: (PERS.F * 1.78) / (ZM * 384) };
+const AG = { x: 128, y: ZEMIN + 1, boy: 600, tohum: 37 };
+const TOH = { x: AG.x + 3, y: ZEMIN + 62 };
+const KESIT = { cx: 150, y0: ZEMIN, rx: 255, ry: 172 };
+const NUR = { x: VP[0], y0: 990, y1: 765, r: 78 };
+const KAPILAR = [[505, 0.86], [592, 0.98], [810, 0.98], [898, 0.86]];
+const KAPI_Y = 886;
+const YOL_NOKTA = [[-0.9, 1.2], [-1.3, 3.0], [-1.35, ZM], [0.3, 5.6], [2.4, 7.5], [2.8, 11], [1.0, 18], [-1.5, 30], [0.5, 50], [1.5, 90]];
 
 // paralaks
-const F = { gok: 0.92, dag: 0.96, tepe: 0.98, ova: 1 };
+const F = { gok: 0.92, dag: 0.96, tepe: 0.98, ova: 1, on: 1.08 };
 
 // kamera: tek, akıcı yolculuk (hız anahtarlarda sürekli)
 const KAM = Y.puruzsuzYol([
-  { t: 46.4, x: 466, y: 1010, z: 1.52 },
-  { t: 47.8, x: 471, y: 1006, z: 1.57 },
-  { t: 48.95, x: 478, y: 1001, z: 1.63 },
-  { t: 50.45, x: 585, y: 962, z: 1.0 },
-  { t: 51.75, x: 602, y: 940, z: 1.045 },
-  { t: 52.5, x: 640, y: 805, z: 1.03 },
-  { t: 53.3, x: 700, y: 852, z: 2.2 },
-  { t: 53.62, x: 700, y: 856, z: 2.28 },
-  { t: 54.3, x: 250, y: 1062, z: 1.35 },
-  { t: 55.4, x: 252, y: 1058, z: 1.41 },
-  { t: 56.05, x: 256, y: 1050, z: 1.39 },
-  { t: 57.4, x: 330, y: 992, z: 1.18 },
+  { t: 46.4, x: 538, y: 1112, z: 1.28 },
+  { t: 47.8, x: 540, y: 1106, z: 1.31 },
+  { t: 48.95, x: 544, y: 1100, z: 1.36 },
+  { t: 50.5, x: 600, y: 992, z: 0.95 },
+  { t: 51.75, x: 612, y: 968, z: 0.99 },
+  { t: 52.5, x: 650, y: 832, z: 0.98 },
+  { t: 53.3, x: 700, y: 872, z: 2.1 },
+  { t: 53.62, x: 700, y: 875, z: 2.18 },
+  { t: 54.35, x: 278, y: 1222, z: 1.35 },
+  { t: 55.4, x: 280, y: 1216, z: 1.41 },
+  { t: 56.05, x: 284, y: 1210, z: 1.39 },
+  { t: 57.4, x: 380, y: 1130, z: 1.16 },
 ]);
 
 let gok, bulutlar, dagUzak, dagYakin, seritler, sirt, yol, yolSp, kandilS, kandilY, agacTur, nesneler, kapi, toprak, tohum,
