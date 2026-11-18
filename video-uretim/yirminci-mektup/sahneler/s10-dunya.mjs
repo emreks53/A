@@ -90,7 +90,7 @@ function dagOge() {
   const yogun = (v0) => TON.gurultulu((x, y) => clamp(v0 + 0.16 * clamp((y + 300) / 1600) - 0.25 * clamp(1 - (y - DORUK[1]) / 420)), 0.08, 0.006, Math.round(v0 * 100));
   const R = [[0, '#F3EADC'], [0.3, '#D6D3E2'], [0.6, '#A0A2C4'], [1, '#686C9A']];
   return oge({
-    ad: 's10-dag4', olcek: 0.95, sekil, arka: '#DCDBE8', arkaAlfa: 0.9, arkaBulanik: 12,
+    ad: 's10-dag4', olcek: 0.88, sekil, arka: '#DCDBE8', arkaAlfa: 0.9, arkaBulanik: 12,
     arkaCiz: (g, yol) => {
       const gr = g.createLinearGradient(0, DORUK[1], 0, 1330);
       gr.addColorStop(0, 'rgba(253,240,210,0.95)');
@@ -190,7 +190,7 @@ function zeminOge(ad, P, catlak) {
   for (let k = 0; k <= n; k++) { const x = x0 + (k / n) * (x1 - x0); pts.push([x, ust(x)]); }
   pts.push([x1, alt], [x0, alt]);
   return oge({
-    ad, olcek: 1, sekil: cokgen(pts), arka: P.arka, arkaAlfa: 0.85, arkaBulanik: 8,
+    ad, olcek: 0.85, sekil: cokgen(pts), arka: P.arka, arkaAlfa: 0.85, arkaBulanik: 8,
     tarama: { ton: TON.gurultulu((x, y) => clamp(0.38 + 0.35 * clamp((y - G) / 900)), 0.2, 0.005, ad.length), renkler: P.tara, yon: catlak ? -0.04 : -0.1, aralik: 3.5, boy: catlak ? [40, 130] : [30, 90], kal: 1.2, alfa: 0.5, esikler: [0.22, 0.5, 0.78] },
     kontur: P.kontur, konturKal: 2.0, titreme: 0.5, konturAtla: [],
     detay: (c, api) => {
@@ -227,12 +227,18 @@ function cimenOge(tohum, renk = 'yesil') {
 
 // ---------------------------------------------------------------- hazırlık
 export const D = {};
-export function dunyaHazirla() {
-  D.gok = gokTuvali({ w: 2100, h: 2650, olcek: 0.95, ad: 's10-gok', gunes: { x: NUR.x + 300, y: NUR.y + 450, r: 120 }, parilti: '#F4E2B0', arkaUst: '#B9D0EC', arkaAlt: '#E8DDEB', tohum: 31 });
+export function uzakHazirla() {
+  if (D.uzakHazir) return;
+  D.uzakHazir = true;
+  D.gok = gokTuvali({ w: 2100, h: 2650, olcek: 0.85, ad: 's10-gok', gunes: { x: NUR.x + 300, y: NUR.y + 450, r: 120 }, parilti: '#F4E2B0', arkaUst: '#B9D0EC', arkaAlt: '#E8DDEB', tohum: 31 });
   D.gokX = -300; D.gokY = -450;
-  D.uzak = sirtOge({ ad: 's10-uzak', x0: -900, x1: 2500, ust: tumsek(1240, [[-300, 160, 260], [250, 70, 200], [700, 120, 260], [1150, 60, 200], [1650, 150, 280], [2150, 90, 230]]), alt: 1700, P: PAL.uzak, olcek: 0.9, tohum: 4 });
-  D.ortaKuru = sirtOge({ ad: 's10-orta-kuru', x0: -800, x1: 2900, ust: tumsek(1290, [[500, 60, 260], [900, 95, 220], [1400, 50, 260], [1900, 80, 260], [2500, 60, 240]]), alt: 1800, P: PAL.ortaKuru, olcek: 0.95, tohum: 7 });
-  D.ortaYesil = sirtOge({ ad: 's10-orta-yesil', x0: -800, x1: 2900, ust: tumsek(1290, [[500, 60, 260], [900, 95, 220], [1400, 50, 260], [1900, 80, 260], [2500, 60, 240]]), alt: 1800, P: PAL.ortaYesil, olcek: 0.95, tohum: 7 });
+  D.uzak = sirtOge({ ad: 's10-uzak', x0: -900, x1: 2500, ust: tumsek(1240, [[-300, 160, 260], [250, 70, 200], [700, 120, 260], [1150, 60, 200], [1650, 150, 280], [2150, 90, 230]]), alt: 1700, P: PAL.uzak, olcek: 0.8, tohum: 4 });
+}
+export function yakinHazirla() {
+  if (D.yakinHazir) return;
+  D.yakinHazir = true;
+  D.ortaKuru = sirtOge({ ad: 's10-orta-kuru', x0: -800, x1: 2900, ust: tumsek(1290, [[500, 60, 260], [900, 95, 220], [1400, 50, 260], [1900, 80, 260], [2500, 60, 240]]), alt: 1800, P: PAL.ortaKuru, olcek: 0.8, tohum: 7 });
+  D.ortaYesil = sirtOge({ ad: 's10-orta-yesil', x0: -800, x1: 2900, ust: tumsek(1290, [[500, 60, 260], [900, 95, 220], [1400, 50, 260], [1900, 80, 260], [2500, 60, 240]]), alt: 1800, P: PAL.ortaYesil, olcek: 0.8, tohum: 7 });
   D.dag = dagOge();
   D.kar = karOge();
   D.taslar = [
@@ -358,6 +364,9 @@ import { insanYanSikis } from './s10-yardim.mjs';
 
 /** Yan dünyayı çizer (kamera g'ye uygulanır). S: durum */
 export function yanCiz(g, cam, t, S) {
+  uzakHazirla();
+  const yakin = S.yakin !== false;
+  if (yakin) yakinHazirla();
   // gök
   g.save(); kameraUygula(g, cam, F.gok); ogeCiz(g, D.gok, D.gokX, D.gokY); g.restore();
   if (S.gokKoyu > 0.003) {
@@ -373,6 +382,7 @@ export function yanCiz(g, cam, t, S) {
   }
   // uzak sırt
   g.save(); kameraUygula(g, cam, F.uzak); ogeCiz(g, D.uzak, 0, 0); g.restore();
+  if (!yakin) return;
   // rahmet bulutları
   if (S.bulut > 0.003) {
     g.save(); kameraUygula(g, cam, F.bulut);

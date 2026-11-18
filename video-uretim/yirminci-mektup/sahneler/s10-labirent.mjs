@@ -139,7 +139,7 @@ function duvarSprite(rects, P, S) {
 
 function zeminSprite(ad, sicak) {
   return oge({
-    ad, olcek: 0.9, sekil: dikdortgen(SX0, SY0, SW, SH), arka: sicak ? '#F8EDCD' : '#D2CED8', arkaAlfa: 0.85, arkaBulanik: 10,
+    ad, olcek: 0.8, sekil: dikdortgen(SX0, SY0, SW, SH), arka: sicak ? '#F8EDCD' : '#D2CED8', arkaAlfa: 0.85, arkaBulanik: 10,
     tarama: {
       ton: TON.gurultulu(() => 0.5, 0.22, 0.004, sicak ? 9 : 5), renkler: sicak ? [[0, '#F6E6B8'], [1, '#DDBB6A']] : [[0, '#C6C1CC'], [1, '#8C849A']],
       yon: -0.42, aralik: 3.6, boy: [40, 110], kal: 1.15, alfa: sicak ? 0.4 : 0.45, esikler: [0.25, 0.55],
@@ -211,10 +211,13 @@ function bulutUstten(w, tohum, koyu) {
 
 // ---------------------------------------------------------------- hazırlık ve çizim
 let rects, duvarGri, duvarAltin, zeminGri, zeminSicak, adam, bulutlar, yolOge;
+let labHazir = false;
 export function labirentHazirla() {
+  if (labHazir) return;
+  labHazir = true;
   rects = labirentUret(2024);
-  duvarGri = duvarSprite(rects, P_GRI, 1.35);
-  duvarAltin = duvarSprite(rects, P_ALTIN, 1.0);
+  duvarGri = duvarSprite(rects, P_GRI, 1.15);
+  duvarAltin = duvarSprite(rects, P_ALTIN, 0.8);
   zeminGri = zeminSprite('s10-lab-zemin-gri', false);
   zeminSicak = zeminSprite('s10-lab-zemin-sicak', true);
   adam = adamUstten();
@@ -233,6 +236,7 @@ export function labirentHazirla() {
  * erime yarıçapı R: bul'dan itibaren büyür.
  */
 export function labirentCiz(ctx, t, Z) {
+  labirentHazirla();
   const kam = kameraYolu([
     { t: 96.1, x: 540, y: 960, z: 0.9, r: 0 },
     { t: Z.egr, x: 540, y: 955, z: 0.94, e: ease.inOutSine },

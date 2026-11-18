@@ -79,16 +79,13 @@ function adamPoz(t) {
 // ---------------------------------------------------------------- hazırlık
 export default {
   sesler: [
-    { t: 46.55, tur: 'ruzgar', guc: 0.18, sure: 2.2 },
     { t: T.cenab, tur: 'nur', guc: 0.4, sure: 2.4 },
     { t: T.taniyan + 0.05, tur: 'parilti', guc: 0.3, tekrar: 4, ara: 0.11 },
-    { t: T.seven + 0.1, tur: 'kalp', guc: 0.22 },
-    { t: T.nihayet, tur: 'whoosh', guc: 0.3, sure: 1.3 },
     { t: T.saadet + 0.05, tur: 'pop', guc: 0.2, tekrar: 8, ara: 0.09 },
     { t: T.nimet + 0.04, tur: 'pop', guc: 0.24, tekrar: 6, ara: 0.07 },
-    { t: T.envar, tur: 'parilti', guc: 0.32, sure: 1.2 },
-    { t: T.esrar, tur: 'kapi', guc: 0.25 },
-    { t: 53.6, tur: 'whoosh', guc: 0.34, sure: 0.8 },
+    { t: T.envar, tur: 'parilti', guc: 0.28, sure: 1.0 },
+    { t: T.esrar + 0.06, tur: 'nur', guc: 0.24, sure: 1.2 },
+    { t: 53.68, tur: 'whoosh', guc: 0.32, sure: 0.75 },
     { t: T.kuvve, tur: 'kalem', guc: 0.4, sure: 0.9 },
     { t: T.fiil + 0.05, tur: 'firca', guc: 0.35, sure: 0.8 },
     { t: T.mazhar, tur: 'nur', guc: 0.55, sure: 2.4 },
@@ -339,16 +336,19 @@ export default {
         // kökler
         for (const k of kokler) {
           const u = an(t, k.t0, 0.7, ease.outCubic);
-          if (u > 0) konturCiz(g, k.pts, { renk: '#7A5536', kal: 2.0, alfa: 0.85 * acil, kapali: false, cizim: u, tohum: 9 });
+          if (u > 0) {
+            konturCiz(g, k.pts, { renk: '#4E3420', kal: 4.2, alfa: 0.85 * acil, kapali: false, cizim: u, tohum: 9 });
+            konturCiz(g, k.pts, { renk: '#EAD5AC', kal: 2.0, alfa: 0.95 * acil, kapali: false, cizim: u * 0.985, tohum: 9 });
+          }
         }
         // filiz (tohumdan yüzeye)
         const fz = an(t, T.fiil, 0.3, ease.inOutSine);
-        if (fz > 0) konturCiz(g, [[TOH.x, TOH.y - 6], [TOH.x - 3, TOH.y - 26], [TOH.x + 1, AG.y - 2]], { renk: '#4E7A3A', kal: 3.2, alfa: acil, kapali: false, cizim: fz, tohum: 3 });
+        if (fz > 0) konturCiz(g, [[TOH.x, TOH.y - 6], [TOH.x - 3, TOH.y - 26], [TOH.x + 1, AG.y - 2]], { renk: '#4E7A3A', kal: 4.2, alfa: acil, kapali: false, cizim: fz, tohum: 3 });
         // tohum ve içindeki saklı ışık
         const ta = an(t, 54.15, 0.35, ease.outCubic) * acil;
         if (ta > 0) {
-          const parla = 0.5 + 0.2 * Math.sin(t * 3.2) + 0.9 * Math.exp(-Math.max(0, t - T.fiil) * 3) * (t > T.fiil ? 1 : 0);
-          tohumHale(g, TOH.x, TOH.y - 2, 78 * (0.9 + 0.1 * parla), 0.55 * ta * Math.min(1.4, parla));
+          const parla = 0.78 + 0.18 * Math.sin(t * 3.2) + 0.9 * Math.exp(-Math.max(0, t - T.fiil) * 3) * (t > T.fiil ? 1 : 0);
+          tohumHale(g, TOH.x, TOH.y - 2, 92 * (0.9 + 0.1 * parla), 0.8 * ta * Math.min(1.25, parla));
           Y.isikNokta(g, TOH.x, TOH.y - 2, 95, 0.6 * ta * parla);
           ogeCiz(g, tohum, TOH.x, TOH.y, { s: 1.9, r: -0.12, alfa: ta });
         }
@@ -552,9 +552,9 @@ function envarCiz(g, t) {
     if (d <= 0) continue;
     const y = z0.y - d * z0.v * z0.b - d * d * 6;
     const x = z0.x + Math.sin(d * 1.6 + z0.faz) * z0.gen * z0.b;
-    const a = an(t, z0.t0, 0.3) * clamp((y + 100) / 400) * (1 - an(t, z0.t0 + 3.8, 1.2));
+    const a = an(t, z0.t0, 0.18) * clamp((y + 100) / 400) * (1 - an(t, z0.t0 + 3.8, 1.2));
     if (a <= 0) continue;
-    const R = (13 + 5 * Math.sin(d * 3 + z0.faz)) * z0.b + 5;
+    const R = (17 + 6 * Math.sin(d * 3 + z0.faz)) * z0.b + 6;
     Y.isikNokta(g, x, y, R, 0.9 * a);
     if (z0.b > 0.7) Y.isikNokta(g, x, y, R * 0.4, 0.8 * a, 'lighter');
   }
@@ -565,7 +565,7 @@ function envarCiz(g, t) {
     const x = f.x + Math.sin(d * 0.9 + f.faz) * 14 * f.b;
     const a = an(t, f.t0, 0.4) * clamp((y + 300) / 400);
     if (a <= 0) continue;
-    const s = f.b * 1.35;
+    const s = 0.75 + f.b * 1.05;
     Y.isikNokta(g, x, y - 12 * s, 70 * s, 0.75 * a);
     ogeCiz(g, fener, x, y, { s, r: Math.sin(d * 1.2 + f.faz) * 0.06, alfa: a });
   }

@@ -566,7 +566,8 @@ function silgiUcu(t) {
   return { x: lerp(x, S.cikis[0], u), y: lerp(y, S.cikis[1], u), a: ac0 + 0.3 * u, basinc: 1 - u };
 }
 
-const SILGI_ACI = -0.62; // gövde sağ üste yatık; temas kenarı bu açıda
+const SILGI_ACI = -0.62; // gövde sağ üste yatık
+const IZ_ACI = -0.28; // temas izinin açısı (bileğin hafif dönüşü: iz daha yatay, şeridin kenarları düzgün)
 /** Silinen alanı maskeye çizer (dünya koordinatında; çağıran kamerayı uygular): silginin düz temas izi yol boyunca
  *  damgalanır (yuvarlak leke değil, düz kenarlı şerit) */
 export function silgiMaske(g, t) {
@@ -577,14 +578,14 @@ export function silgiMaske(g, t) {
   g.save();
   g.fillStyle = '#fff';
   let i = 1;
-  for (let d = 0; d <= hedef; d += 3) {
+  for (let d = 0; d <= hedef; d += 2) {
     while (i < z.s.length - 1 && z.s[i] < d) i++;
     const k = (d - z.s[i - 1]) / (z.s[i] - z.s[i - 1] || 1);
     const x = lerp(z.pts[i - 1][0], z.pts[i][0], k), y = lerp(z.pts[i - 1][1], z.pts[i][1], k);
     g.save();
     g.translate(x, y);
-    g.rotate(SILGI_ACI);
-    g.fillRect(-w / 2, -dz, w, dz * 1.15);
+    g.rotate(IZ_ACI);
+    g.fillRect(-w / 2, -dz * 0.6, w, dz * 1.2);
     g.restore();
   }
   g.restore();
@@ -596,14 +597,14 @@ export function silgiIzi(g, t, alfa = 1) {
   if (o <= 0) return;
   const p = yolParca(silgi.z, o);
   if (p.length < 3) return;
-  const cx = Math.cos(SILGI_ACI), cy = Math.sin(SILGI_ACI);
+  const cx = Math.cos(IZ_ACI), cy = Math.sin(IZ_ACI);
   g.save();
   g.lineCap = 'round';
   g.lineJoin = 'round';
   const r = rng(17);
-  for (let q = 0; q < 6; q++) {
-    const off = (q / 5 - 0.5) * silgi.en * 0.8 + r.ara(-3, 3);
-    g.strokeStyle = `rgba(112,104,124,${(alfa * r.ara(0.05, 0.11)).toFixed(3)})`;
+  for (let q = 0; q < 4; q++) {
+    const off = (q / 3 - 0.5) * silgi.en * 0.75 + r.ara(-3, 3);
+    g.strokeStyle = `rgba(112,104,124,${(alfa * r.ara(0.03, 0.065)).toFixed(3)})`;
     g.lineWidth = r.ara(0.8, 2);
     g.beginPath();
     for (let i = 0; i < p.length; i++) {

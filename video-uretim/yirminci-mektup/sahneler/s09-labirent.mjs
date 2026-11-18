@@ -259,7 +259,6 @@ export function seviyeOlustur(s, i0, j0, i1, j1, { cizgiAyri = false, tohum = 1 
       g.closePath();
     }
   };
-  const r = rng(tohum + 5);
   // 1) zemin: film + buğu + lekeler
   ctx.fillStyle = FILM;
   ctx.fillRect(0, 0, Wp, Hp);
@@ -268,9 +267,11 @@ export function seviyeOlustur(s, i0, j0, i1, j1, { cizgiAyri = false, tohum = 1 
   ctx.globalAlpha = 0.75;
   ctx.fillRect(0, 0, Wp, Hp);
   ctx.globalAlpha = 1;
-  const leke = Math.max(6, Math.round((Wp * Hp) / (c * c * 3)));
-  for (let k = 0; k < Math.min(leke, 900); k++) {
-    const x = r() * Wp, y = r() * Hp, R = c * r.ara(0.8, 2.6);
+  // lekeler: dünya hücrelerine bağlı (bölgeden bağımsız: aynı yer her seviyede/bölgede aynı)
+  for (let j = j0 - 2; j < j1 + 2; j++) for (let i = i0 - 2; i < i1 + 2; i++) {
+    if (((i * 73856093) ^ (j * 19349663)) % 3 !== 0) continue;
+    const r = rng(((i + 512) * 4099 + (j + 512)) >>> 0);
+    const x = ox + (i + r()) * c, y = oy + (j + r()) * c, R = c * r.ara(0.8, 2.6);
     const g = ctx.createRadialGradient(x, y, 0, x, y, R);
     const a = r.ara(0.03, 0.08);
     g.addColorStop(0, `rgba(146,138,160,${a})`);
@@ -278,16 +279,15 @@ export function seviyeOlustur(s, i0, j0, i1, j1, { cizgiAyri = false, tohum = 1 
     ctx.fillStyle = g;
     ctx.fillRect(x - R, y - R, 2 * R, 2 * R);
   }
-  // zemin taraması
-  ctx.fillStyle = ctx.createPattern(D.zemin, 'repeat');
-  ctx.fillRect(0, 0, Wp, Hp);
-  ctx.fillStyle = ctx.createPattern(D.zemin2, 'repeat');
-  ctx.fillRect(0, 0, Wp, Hp);
+  // zemin taraması (desen dünya başlangıcına hizalı)
+  const desen = (g, doku) => { g.save(); g.translate(ox, oy); g.fillStyle = g.createPattern(doku, 'repeat'); g.fillRect(-ox, -oy, Wp, Hp); g.restore(); };
+  desen(ctx, D.zemin);
+  desen(ctx, D.zemin2);
   // zemin ayrıntısı (yakın seviyelerde): ince çatlaklar ve çakıllar
   if (s >= 0.4) {
     ctx.globalCompositeOperation = 'source-over';
-    const ar = rng(tohum * 7 + 11);
     for (let j = j0; j < j1; j++) for (let i = i0; i < i1; i++) {
+      const ar = rng(((i + 512) * 7919 + (j + 512) * 31 + 11) >>> 0);
       const v = ar();
       const cx = ox + (i + 0.5) * c + ar.ara(-0.22, 0.22) * c, cy = oy + (j + 0.5) * c + ar.ara(-0.22, 0.22) * c;
       if (v < 0.22) {
@@ -330,8 +330,7 @@ export function seviyeOlustur(s, i0, j0, i1, j1, { cizgiAyri = false, tohum = 1 
     yol(ctx, gdx * 0.92, gdy * 0.92);
     ctx.clip('evenodd');
     ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = ctx.createPattern(D.golge, 'repeat');
-    ctx.fillRect(0, 0, Wp, Hp);
+    desen(ctx, D.golge);
     ctx.restore();
   }
   // 3) duvar üstü: film + buğu + tarama
@@ -346,8 +345,7 @@ export function seviyeOlustur(s, i0, j0, i1, j1, { cizgiAyri = false, tohum = 1 
   ctx.globalAlpha = 0.8;
   ctx.fillRect(0, 0, Wp, Hp);
   ctx.globalAlpha = 1;
-  ctx.fillStyle = ctx.createPattern(D.duvar, 'repeat');
-  ctx.fillRect(0, 0, Wp, Hp);
+  desen(ctx, D.duvar);
   // ışık alan sol-üst kenarda ince açık şerit (duvar üstünün yüksekliği hissi)
   ctx.globalCompositeOperation = 'screen';
   ctx.strokeStyle = 'rgba(255,255,255,0.35)';

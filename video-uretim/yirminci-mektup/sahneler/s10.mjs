@@ -8,7 +8,7 @@ import { DURUS, pozKaristir } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 import { labirentHazirla, labirentCiz } from './s10-labirent.mjs';
 import { tampon, radyalMaske, isikBas, dalgaHalkasi, huzme, zerreler, yurumePlani, bilekX } from './s10-yardim.mjs';
-import { dunyaHazirla, yanCiz, yagmurCiz, D, G, AGAC, NUR, F } from './s10-dunya.mjs';
+import { yanCiz, yagmurCiz, D, G, AGAC, NUR, F } from './s10-dunya.mjs';
 import { bahceHazirla, karanlikCizV, bahceCizV, bahceOnPlan, alisverisciler, katman, refEkran, V, YOL, CV, CESME } from './s10-bahce.mjs';
 import { insanYan } from '../motor/insan.mjs';
 
@@ -98,6 +98,7 @@ function yanDurum(t) {
     sayvan: an(t, T.ilt + 0.3, 0.8) * (1 - 0.6 * an(t, T.ist, 0.8)),
     adam: adamDurumu(t),
     adamIsik: an(t, T.ist + 0.3, 0.8),
+    yakin: t < T.vah + 0.55,
   };
 }
 
@@ -172,8 +173,9 @@ function varis(sx, sy) {
   return T.ten + DALGA.sure * (1 - Math.cbrt(1 - d / DALGA.Rmax));
 }
 /** V bölgesinin sol sınırı: dünya x 1060..1330 (f = 1) arasında yumuşak geçiş */
-function bolgeMaske(g, cam) {
-  const xa = ekranda(cam, 1060, 0)[0], xb = ekranda(cam, 1330, 0)[0];
+function bolgeMaske(g, cam, t) {
+  if (t >= T.vah + 0.55) return true;
+  const xa = ekranda(cam, 880, 0)[0], xb = ekranda(cam, 1170, 0)[0];
   if (xa > W) { g.clearRect(0, 0, W, H); return false; }
   if (xb < 0) return true;
   g.save();
@@ -196,6 +198,7 @@ function bahceDurum(t) {
   };
 }
 function vBolumu(ctx, cam, t, S) {
+  bahceHazirla();
   const B = bahceDurum(t);
   const dalgaU = clamp((t - T.ten) / DALGA.sure);
   const [dx, dy, dz] = refEkran(cam, DALGA.sx, DALGA.sy, 1);
@@ -205,7 +208,7 @@ function vBolumu(ctx, cam, t, S) {
     const KV = tampon('s10-v-kara');
     const k = KV.getContext('2d');
     karanlikCizV(k, cam, t, T);
-    if (bolgeMaske(k, cam)) g.drawImage(KV, 0, 0);
+    if (bolgeMaske(k, cam, t)) g.drawImage(KV, 0, 0);
   };
   const aydinlik = (g) => {
     yanCiz(g, cam, t, S);
@@ -216,7 +219,7 @@ function vBolumu(ctx, cam, t, S) {
     adamSepetli(k, cam, t);
     bahceOnPlan(k, cam, t, B);
     kuslar(k, cam, t);
-    if (bolgeMaske(k, cam)) g.drawImage(KB, 0, 0);
+    if (bolgeMaske(k, cam, t)) g.drawImage(KB, 0, 0);
   };
   if (dalgaU <= 0) {
     karanlik(ctx);
@@ -268,13 +271,10 @@ function kuslar(g, cam, t) {
 export default {
   sesler: [],
   hazirla() {
-    labirentHazirla();
-    dunyaHazirla();
     yuru1 = yurumePlani({ t0: T.ilt + 0.02, t1: T.ilt + 1.0, n: 2, s: S_ADAM, yon: -1, x0: 760, duruA: POZ.yagmur, duruB: POZ.sayvan });
     yuru2 = yurumePlani({ t0: T.kud - 0.18, t1: T.ist + 0.02, n: 2, s: S_ADAM, yon: -1, x0: yuru1.x1, duruA: POZ.sayvan, duruB: POZ.duz });
     // kaya, adamın yaslanacağı yere: kalça hizasında sırtı kayanın sağ yüzüne değsin
     D.kayaDx = yuru2.x1 - (bilekX(POZ.yaslan, 0) - bilekX(POZ.duz, 0)) * S_ADAM - 15 - 318;
-    bahceHazirla();
     // bahçede keyifle yürüyüş (sepetli): soldan girer, çarşıya doğru
     yuru3 = yurumePlani({ t0: T.ten + 0.3, t1: 111.6, n: 12, s: 0.7, yon: 1, x0: -10, sabitHiz: true, kol: 0.3, egim: 0.03,
       pozF: (p) => ({ ...p, bas: -0.08, omuz: [p.omuz[0], 0.1 + 0.04 * Math.sin(p.omuz[0] * 3)], dirsek: [p.dirsek[0], 1.45] }) });

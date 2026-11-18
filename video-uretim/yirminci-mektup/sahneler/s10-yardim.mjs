@@ -228,3 +228,50 @@ export function bilekX(poz, i = 0) {
   const p = { ...DURUS, ...poz };
   return bilekRel(p, i)[0];
 }
+
+// ---------------------------------------------------------------- maskeli açılış (kare başına tuval ayırmadan)
+// motorun ogeAcarak'ı her çağrıda yeni tuval ayırır; bu bağlamada yerli bellek geri verilmediğinden uzun render'da
+// bellek şişer. Burada her sprite için tek bir maske tuvali önbelleğe alınır ve her karede yeniden kullanılır.
+const maskeTuvalleri = new Map();
+export function acarak(ctx, o, x, y, ilerleme, { s = 1, sx = s, sy = s, r = 0, alfa = 1, mod = 'sil', yon = -Math.PI / 2, merkez = null, yumusak = 0.12 } = {}) {
+  if (ilerleme <= 0 || alfa <= 0) return;
+  const ciz = (tv) => {
+    ctx.save();
+    ctx.translate(x, y);
+    if (r) ctx.rotate(r);
+    ctx.scale(sx / o.olcek, sy / o.olcek);
+    ctx.globalAlpha *= clamp(alfa);
+    ctx.drawImage(tv, -o.ox * o.olcek, -o.oy * o.olcek);
+    ctx.restore();
+  };
+  if (ilerleme >= 1) return ciz(o.tuval);
+  let m = maskeTuvalleri.get(o);
+  if (!m) { m = tuval(o.tuval.width, o.tuval.height); maskeTuvalleri.set(o, m); }
+  const mc = m.getContext('2d');
+  const W0 = m.width, H0 = m.height, S = o.olcek, b = o.sinir;
+  mc.setTransform(1, 0, 0, 1, 0, 0);
+  mc.globalCompositeOperation = 'source-over';
+  mc.clearRect(0, 0, W0, H0);
+  mc.drawImage(o.tuval, 0, 0);
+  mc.globalCompositeOperation = 'destination-in';
+  let g;
+  const e = ilerleme * (1 + yumusak);
+  if (mod === 'daire') {
+    const [mx, my] = merkez || [b.cx, b.cy];
+    const px = (mx + o.ox) * S, py = (my + o.oy) * S;
+    const R = Math.hypot(Math.max(px, W0 - px), Math.max(py, H0 - py));
+    g = mc.createRadialGradient(px, py, 0, px, py, R);
+  } else {
+    const ux = Math.cos(yon), uy = Math.sin(yon);
+    const R = (Math.abs(ux) * W0 + Math.abs(uy) * H0) / 2;
+    g = mc.createLinearGradient(W0 / 2 - ux * R, H0 / 2 - uy * R, W0 / 2 + ux * R, H0 / 2 + uy * R);
+  }
+  g.addColorStop(0, 'rgba(0,0,0,1)');
+  g.addColorStop(clamp(e - yumusak), 'rgba(0,0,0,1)');
+  g.addColorStop(clamp(e), 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  mc.fillStyle = g;
+  mc.fillRect(0, 0, W0, H0);
+  mc.globalCompositeOperation = 'source-over';
+  ciz(m);
+}

@@ -2,9 +2,10 @@
 // bulmazsa ne kadar bîçare sergerdan olduğunu herkes anlar."
 // s08'in sonundan (gri dünyada yerde oturan yalnız adam, savrulan toz) kamera geri çekilir: tepeye kıvrıla kıvrıla
 // çıkıp sisin içinde kaybolan uzun bir yolda, farklı derinliklerde sağa sola yürüyen, durup geri dönen, kendi
-// etrafında dönen ve hiçbir yere varmayan adamlar (İşte bu âvâre nev-i beşer içinde). Adamın önünde bir sıra çiçek
-// açar ve hemen solar, kuru ağacın son yaprakları düşer (bu perişan fâni); çizim silgi darbeleriyle çıplak filme
-// döner (dünyada). Boş filmde kuşbakışı adam belirir, çevresinde labirent çizilir (insan); adam yürür, çıkmaz bir
+// etrafında dönen ve hiçbir yere varmayan adamlar (İşte bu âvâre nev-i beşer içinde). Kamera adama döner: önünde bir
+// sıra çiçek açar ve hemen solar, kuru ağacın son yaprakları savrulur (bu perişan fâni); beyaz bir silgi çiçekleri ve
+// adamı silerek çıplak filme döndürür, kamera silinen boşluğa dalar (dünyada). Boş filmde kuşbakışı adam belirir,
+// çevresinde labirent önce çizgi, sonra tarama olarak çizilir (insan); adam yürür, çıkmaz bir
 // yola girer ve duvara dayanır (sahibini tanımazsa). Çevresinde her yönü gösteren yazısız levhalar biter, adam dönüp
 // durur (mâlikini bulmazsa). Labirent yavaşça döner, levhalar fırıl fırıl; adam ellerini başına koyar (ne kadar
 // bîçare sergerdan). Kamera dönerek çok yükseğe çekilir: uçsuz bucaksız labirentte küçücük bir adam (herkes anlar).
@@ -49,7 +50,7 @@ const C = LB.HUCRE;
 const P0 = [JX, JY + 0.55 * C];
 const SON_X = 62 * C - C * LB.DUVAR / 2 - 34; // çıkmazda durduğu yer (x)
 const ADAM_SON = [SON_X, JY];
-const YURU = { t0: T.insan + 0.32, t1: 90.3 };
+const YURU = { t0: T.sahibini, t1: 90.3 }; // "sahibini"de yürümeye başlar, "tanımazsa"da çıkmaza döner
 const R_DON = 70;
 const YOL = (() => {
   const L1 = P0[1] - (JY + R_DON), L2 = (Math.PI / 2) * R_DON, L3 = SON_X - (JX + R_DON);
@@ -297,6 +298,7 @@ function dunyaBolumu(ctx, t) {
   kameraIle(mctx, cam, (g) => D.silgiMaske(g, t), 1);
   dctx.save();
   dctx.globalCompositeOperation = 'destination-out';
+  dctx.filter = 'blur(1.2px)';
   dctx.drawImage(maskeT, 0, 0);
   dctx.restore();
   const iz = 1 - an(t, 87.9, 0.3, ease.inOutSine); // dalışta hayalet, iz ve kırıntılar söner
@@ -343,7 +345,7 @@ function labirentBolumu(ctx, t) {
   // levhalar ve adam (dünya koordinatında)
   ctx.save();
   LB.labKameraUygula(ctx, cam);
-  // levhalar adamdan alçakta olanlar önce (adam omuz hizasında, levhalar daha yüksek: adamdan sonra)
+  // adam, sonra levhalar (levhalar direk boyunda: adamın üstünde kalır)
   const ap = pop(t, T.insan, 0.42);
   // çok yükseklerde bile seçilebilsin: ekrandaki boyu yavaşça alt sınıra yaklaşır
   const buyut = Math.max(1, Math.pow(0.2 / cam.z, 0.55));

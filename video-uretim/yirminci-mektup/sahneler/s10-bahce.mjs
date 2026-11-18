@@ -5,7 +5,8 @@
 // Yerleşim "referans ekran" koordinatlarıyla yapılır: kamera (1750, 900), z = 1 iken ekranda görülen yer. Paralaks
 // katmanına çevirme: Xw = sx + 1210·f, Yw = sy − 60·f.
 import { tuval, W, H, clamp, lerp, ease, an, rng, TAU, rgba, smooth, pop } from '../motor/temel.mjs';
-import { oge, ogeCiz, ogeAcarak, konturCiz, darbe, TON, PALET, FILM } from '../motor/kalem.mjs';
+import { oge, ogeCiz, konturCiz, darbe, TON, PALET, FILM } from '../motor/kalem.mjs';
+import { acarak } from './s10-yardim.mjs';
 import { svg, elips, cokgen, dikdortgen, sivriKemer, yumusat, donustur, yuvarlakDikdortgen } from '../motor/sekil.mjs';
 import { kameraUygula, ekranda } from '../motor/sahne.mjs';
 import { insanYan, insanOn, DURUS, ON_DURUS } from '../motor/insan.mjs';
@@ -64,9 +65,9 @@ function tacliAgac({ ad, boy, tohum, palet = 'yesil', olcek = 1, meyve = null })
   for (let i = 0; i < 4; i++) yer.push({ x: tx + r.ara(-TW * 0.3, TW * 0.3), y: ty + r.ara(-TH * 0.3, TH * 0.2), R: boy * r.ara(0.15, 0.19) });
   yer.sort((a, b) => a.y - b.y);
   const kumeler = yer.map((k, i) => ({
-    ...k, t: i / yer.length,
+    ...k, R: Math.round(k.R / 16) * 16, t: i / yer.length,
     oge: oge({
-      ad: `${ad}-k${i % 4}-${Math.round(k.R / 4)}`, olcek, sekil: bulutsu(k.R, tohum * 7 + (i % 4)), arka: P.arka, arkaAlfa: 0.85,
+      ad: `s10-tackume-${palet}-${i % 3}-${Math.round(k.R / 16)}`, olcek, sekil: bulutsu(Math.round(k.R / 16) * 16, 900 + (i % 3)), arka: P.arka, arkaAlfa: 0.85,
       tarama: { ton: TON.gurultulu(TON.kure(k.R * 0.25, -k.R * 0.3, k.R * 1.3, { lz: 0.8, ortam: 0.18 }), 0.1, 0.03, i), renkler: P.tara, yonF: (x, y) => Math.atan2(y, x) * 0.3 - 0.9, aralik: 3.0, boy: [10, 28], esikler: [0.14, 0.44, 0.72], alfa: 0.55 },
       kontur: P.kontur, konturKal: 1.8, konturAlfa: 0.8,
     }),
@@ -188,9 +189,9 @@ function cicekliAgac(K, boy, tohum, olcek, renk = 'pembe') {
   const P = TAC_PAL[renk];
   const r = rng(tohum + 9);
   const kumeler = Gm.uclar.map(([x, y, a, d], i) => {
-    const R = boy * r.ara(0.06, 0.09) * (d < 3 ? 1.3 : 1);
+    const R = Math.round((boy * r.ara(0.06, 0.09) * (d < 3 ? 1.3 : 1)) / 20) * 20;
     return { x, y, R, t: r(), oge: oge({
-      ad: `s10-cicekkume-${renk}-${Math.round(R)}-${i % 5}`, olcek, sekil: bulutsu(R, 300 + (i % 5), 8, 0.85), arka: P.arka, arkaAlfa: 0.85,
+      ad: `s10-cicekkume-${renk}-${R}-${i % 3}`, olcek, sekil: bulutsu(R, 300 + (i % 3), 8, 0.85), arka: P.arka, arkaAlfa: 0.85,
       tarama: { ton: TON.kure(R * 0.25, -R * 0.3, R * 1.3, { lz: 0.8, ortam: 0.18 }), renkler: P.tara, yonF: (px, py) => Math.atan2(py, px) * 0.3 - 0.9, aralik: 2.8, boy: [8, 22], esikler: [0.14, 0.44, 0.72], alfa: 0.55 },
       kontur: P.kontur, konturKal: 1.7, konturAlfa: 0.8,
       detay: (c, api) => {
@@ -230,7 +231,7 @@ function cicekliCiz(g, C, x, y, s, t, u, faz) {
 // ---------------------------------------------------------------- zeminler
 function zeminKaranlik() {
   return oge({
-    ad: 's10-v-zemin-kara', olcek: 0.9, sekil: cokgen([[-260, 1112], [300, 1120], [900, 1106], [1500, 1116], [2100, 1110], [2100, 2300], [-260, 2300]]),
+    ad: 's10-v-zemin-kara', olcek: 0.75, sekil: cokgen([[-460, 1110], [300, 1120], [900, 1106], [1500, 1116], [2100, 1110], [2100, 2300], [-460, 2300]]),
     arka: '#ABA5B9', arkaAlfa: 0.85,
     tarama: { ton: TON.gurultulu((x, y) => clamp(0.45 + 0.35 * clamp((y - 1100) / 900)), 0.2, 0.006, 3), renkler: [[0, '#9E98AE'], [0.6, '#6E6784'], [1, '#4A4458']], yon: -0.06, aralik: 3.3, boy: [30, 100], esikler: [0.22, 0.5, 0.78], alfa: 0.52 },
     kontur: null,
@@ -239,7 +240,7 @@ function zeminKaranlik() {
 function zeminBahce() {
   // çimen: ufukta açık, öne doğru zengin yeşil; ortada çakıl yürüme yolu
   return oge({
-    ad: 's10-v-zemin-bahce', olcek: 0.9, sekil: cokgen([[-260, 1112], [300, 1120], [900, 1106], [1500, 1116], [2100, 1110], [2100, 2300], [-260, 2300]]),
+    ad: 's10-v-zemin-bahce', olcek: 0.75, sekil: cokgen([[-460, 1110], [300, 1120], [900, 1106], [1500, 1116], [2100, 1110], [2100, 2300], [-460, 2300]]),
     arka: '#C4E3AE', arkaAlfa: 0.85,
     tarama: { ton: TON.gurultulu((x, y) => clamp(0.3 + 0.4 * clamp((y - 1100) / 900)), 0.16, 0.006, 5), renkler: [[0, '#B4DB9C'], [0.55, '#79B571'], [1, '#3E7C4F']], yon: -0.08, aralik: 3.4, boy: [30, 90], esikler: [0.22, 0.5, 0.8], alfa: 0.5 },
     kontur: null,
@@ -613,6 +614,8 @@ function sehirOge() {
 export const CESME = { sx: 470, sy: 1288, s: 1.3 };
 export const V = {};
 export function bahceHazirla() {
+  if (V.hazir) return;
+  V.hazir = true;
   V.zKara = zeminKaranlik();
   V.zBahce = zeminBahce();
   V.yol = yolOge();
@@ -637,11 +640,11 @@ export function bahceHazirla() {
   V.karaArka = [-20, 150, 330, 520, 700, 880, 1060, 1250, 1450, 1650].map((sx, i) => ({ sx: sx + r.ara(-25, 25), sy: 1130 + r.ara(-8, 8), f: 0.78, s: r.ara(0.85, 1.1), K: karanlikAgac(560, 120 + (i % 5), 1.0, 'sisli', { derin: 4 }), faz: r() * TAU }));
   V.karaOrta = [60, 260, 700, 900, 1120, 1380, 1600].map((sx, i) => ({ sx: sx + r.ara(-20, 20), sy: 1228 + r.ara(-6, 6), f: 0.88, s: r.ara(0.9, 1.15), K: karanlikAgac(760, 140 + (i % 4), 1.0, 'kara', { derin: 4 }), faz: r() * TAU }));
   V.karaOrtaAgac = karanlikAgac(720, 171, 1.0, 'kara', { derin: 4, dalSay: 3 });
-  const devSol = karanlikAgac(1500, 181, 0.9, 'kara', { derin: 5, govdeAci: 0.22, yayilim: 0.7, kalin: 0.06 });
-  const devSag = karanlikAgac(1400, 191, 0.9, 'kara', { derin: 5, govdeAci: -0.25, yayilim: 0.7, kalin: 0.06 });
+  const devSol = karanlikAgac(1500, 181, 0.8, 'kara', { derin: 5, govdeAci: 0.22, yayilim: 0.7, kalin: 0.06 });
+  const devSag = karanlikAgac(1400, 191, 0.8, 'kara', { derin: 5, govdeAci: -0.25, yayilim: 0.7, kalin: 0.06 });
   V.dev = [{ sx: -70, sy: 1600, f: 1.1, K: devSol, faz: 1 }, { sx: 1170, sy: 1610, f: 1.1, K: devSag, faz: 2 }];
   // BAHÇE: soldaki dev ağaç çiçek açar (çerçeve); arkada taçlı ağaçlar, ortada çiçekli ağaçlar, serviler
-  V.cicekDev = cicekliAgac(devSol, 1500, 181, 0.9, 'pembe');
+  V.cicekDev = cicekliAgac(devSol, 1500, 181, 0.8, 'pembe');
   const paletler = ['beyaz', 'yesil', 'pembe', 'yesil', 'beyaz', 'yesil', 'pembe'];
   V.tacArka = [0, 190, 360, 560, 760, 960, 1160, 1380, 1600].map((sx, i) => ({ sx: sx + r.ara(-15, 15), sy: 1136 + r.ara(-6, 6), f: 0.78, s: r.ara(0.72, 0.85), A: tacliAgac({ ad: `s10-tacA-${i % 4}`, boy: 520, tohum: 61 + (i % 4) * 5, palet: ['yesil', 'beyaz', 'yesil', 'pembe'][i % 4], olcek: 0.9 }), faz: r() * TAU }));
   V.tacOrta = [{ sx: 110, p: 'pembe' }, { sx: 840, p: 'yesil' }, { sx: 1080, p: 'beyaz' }, { sx: 1340, p: 'pembe' }, { sx: 1580, p: 'yesil' }].map((o, i) => ({ sx: o.sx, sy: 1232, f: 0.88, s: r.ara(1.0, 1.12), A: tacliAgac({ ad: `s10-tacO-${o.p}-${i}`, boy: 560, tohum: 81 + i * 7, palet: o.p, olcek: 1.0, meyve: o.p === 'yesil' ? V.portakal : null }), faz: r() * TAU }));
@@ -750,11 +753,11 @@ export function bahceCizV(g, cam, t, B) {
   // uzak şehir ve minare (çarşıyla belirir)
   if (B.carsi > 0) {
     g.save(); katman(g, cam, 0.86);
-    ogeAcarak(g, V.minare, 1290, 1180, an(B.carsi, 0.18, 0.55, ease.outCubic), { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.12 });
+    acarak(g, V.minare, 1290, 1180, an(B.carsi, 0.18, 0.55, ease.outCubic), { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.12 });
     g.restore();
   }
   g.save(); katman(g, cam, 1); ogeCiz(g, V.zBahce, 0, 0);
-  if (B.carsi > 0) ogeAcarak(g, V.kaldirim, 0, 0, an(B.carsi, 0.02, 0.6), { mod: 'daire', merkez: [1000, 1320], yumusak: 0.3 });
+  if (B.carsi > 0) acarak(g, V.kaldirim, 0, 0, an(B.carsi, 0.02, 0.6), { mod: 'daire', merkez: [1000, 1320], yumusak: 0.3 });
   g.restore();
   for (const a of V.tacArka) {
     const u = clamp((t - va(a.sx, a.sy)) / 0.7);
@@ -784,7 +787,7 @@ export function bahceCizV(g, cam, t, B) {
     }
   }
   g.save(); katman(g, cam, 1);
-  ogeAcarak(g, V.yol, 0, 0, clamp((t - va(CESME.sx, YOL)) / 0.9), { mod: 'daire', merkez: [CESME.sx, 1340], yumusak: 0.3 });
+  acarak(g, V.yol, 0, 0, clamp((t - va(CESME.sx, YOL)) / 0.9), { mod: 'daire', merkez: [CESME.sx, 1340], yumusak: 0.3 });
   for (const l of V.tarh) {
     const u = pop(t, va(l.sx, l.sy) + 0.1, 0.45);
     if (u > 0) ogeCiz(g, l.o, l.sx, l.sy, { s: u * l.s, r: Math.sin(t * 1.5 + l.sx) * 0.05 });
@@ -840,8 +843,8 @@ function carsiCiz(g, cam, t, B) {
     const ku = an(c, 0.32 + i * 0.05, 0.4, ease.outBack);
     if (ku > 0) ogeCiz(g, V.kubbe, cx, ust + 4, { sy: ku, sx: lerp(0.85, 1, clamp(ku)) });
   }
-  ogeAcarak(g, V.kemerIc, 0, 0, kur, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.12 });
-  ogeAcarak(g, V.kemer, 0, 0, kur, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.12 });
+  acarak(g, V.kemerIc, 0, 0, kur, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.12 });
+  acarak(g, V.kemer, 0, 0, kur, { mod: 'sil', yon: -Math.PI / 2, yumusak: 0.12 });
   for (let i = 0; i < n; i++) {
     const cx = x0 + ayak + i * aci + (aci - ayak) / 2;
     const inis = an(c, 0.36 + i * 0.06, 0.4, ease.outBack);
