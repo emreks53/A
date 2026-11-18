@@ -26,14 +26,16 @@ const NUR = G.NUR;
 const ZEND = 1150 / NUR.r; // nurun içine girildiğinde (ekranı dolduran yarıçap)
 const ITME = { t0: T_.iman, sure: 1.2 }; // kamera nura itilir
 
+// hızlı başlayıp uzun yavaşlayan geri çekilme (Kurzgesagt kamerası)
+function geriCekil(u) { return ease.inOutCubic(Math.pow(u, 0.7)); }
 // kamera (itmeden önce): dünya anahtarları
 const KAM = kameraYolu([
   { t: 7.4, x: 540, y: NUR.y + 100 / (156 / NUR.r), z: 156 / NUR.r }, // s01 devri: nur ekranda (540, 860), r 156
-  { t: 7.5, x: 540, y: NUR.y + 100 / (156 / NUR.r), z: 156 / NUR.r * 0.996, e: ease.inOutSine },
-  { t: 8.38, x: 300, y: 877, z: 1.4, e: ease.inOutCubic }, // geri çekilme: merdivenin dibi + nur
+  { t: 7.48, x: 540, y: NUR.y + 100 / (156 / NUR.r), z: 156 / NUR.r * 0.997, e: ease.inOutSine },
+  { t: 8.45, x: 300, y: 877, z: 1.4, e: geriCekil }, // geri çekilme: merdivenin dibi + nur
   { t: 9.2, x: 310, y: 868, z: 1.415, e: ease.inOutSine },
   { t: 12.55, x: 540, y: 658, z: 1.55, e: ease.inOutSine }, // adamı izler, zirvede kemer ortada
-  { t: 13.3, x: 540, y: 654, z: 1.575, e: ease.outSine },
+  { t: ITME.t0, x: 540, y: 655, z: 1.57, e: ease.inOutSine },
 ]);
 const kamOnce = KAM(ITME.t0);
 const nurEkran0 = ekranda(kamOnce, NUR.x, NUR.y);
@@ -52,20 +54,20 @@ function kamera(t) {
 // paralaks çarpanları
 const F = { gok: 0.35, uzak: 0.5, bulutArka: 0.7, bulutOrta: 0.85, yapi: 1, bulutOn: 1.12, on: 1.3 };
 
-let gok, yapi, kemer, kemerG, bdArka, bdOrta, bdOn, zemin, bulutlar, dolguOge, onBulutlar;
+let gok, yapi, kemer, kemerG, bdArka, bdOrta, bdOn, zemin, bulutlar, dolguOge, kumuluslar;
 
 export default {
   sesler: [
     { t: 7.62, tur: 'whoosh', guc: 0.3, sure: 1.0 },
-    { t: ADAM.gorun + 0.02, tur: 'parilti', guc: 0.25 },
-    { t: ADAM.inis[0] - 0.02, tur: 'adim', guc: 0.18, tekrar: 8, ara: 0.43 },
-    { t: T_.ali, tur: 'parilti', guc: 0.22, tekrar: 3, ara: 0.86 },
+    { t: ADAM.gorun + 0.02, tur: 'parilti', guc: 0.22 },
+    ...ADAM.inis.map((ti) => ({ t: +(ti - 0.02).toFixed(2), tur: 'adim', guc: 0.14 })),
+    { t: +ADAM.basamakInis[2].toFixed(2), tur: 'parilti', guc: 0.2, tekrar: 3, ara: 0.84 },
     { t: T_.besEr, tur: 'kalem', guc: 0.4, sure: 0.8 },
     { t: T_.makam, tur: 'nur', guc: 0.4, sure: 1.6 },
     { t: T_.iman, tur: 'whoosh', guc: 0.38, sure: 1.1 },
     { t: T_.icindeki, tur: 'kalem', guc: 0.4, sure: 1.0 },
     { t: T_.marifet, tur: 'nur', guc: 0.5, sure: 2.2 },
-    { t: 15.25, tur: 'parilti', guc: 0.32 },
+    { t: 15.6, tur: 'parilti', guc: 0.3 },
   ],
   hazirla() {
     nurHazirla();
@@ -82,7 +84,11 @@ export default {
       { o: M.bulutOge(320, 23, 1.2), x: 1060, y: 960, f: F.uzak, hiz: 4 },
       { o: M.bulutOge(180, 31, 1.2), x: -40, y: 1000, f: F.uzak, hiz: 6 },
     ];
-    onBulutlar = [M.bulutOge(380, 41, 1.3), M.bulutOge(300, 47, 1.3)];
+    kumuluslar = [
+      { o: M.bulutOge(620, 41, 1.1), x: -120, y: 1185, hiz: 3 },
+      { o: M.bulutOge(540, 47, 1.1), x: 560, y: 1175, hiz: -2 },
+      { o: M.bulutOge(680, 53, 1.1), x: 1260, y: 1190, hiz: 2.5 },
+    ];
     zemin = isikZemini();
     dolguOge = M.marifetDolgu(400, 1.25);
   },
@@ -137,17 +143,22 @@ function dunyaCiz(ctx, t, cam, nsx, nsy, nr) {
   kameraIle(ctx, cam, (g) => ogeCiz(g, gok, -210, -330), F.gok);
   // nurun göğe vuran sıcak ışığı (gökte, bulutların arkasında)
   M.hale(ctx, nsx, nsy, Math.min(1500, nr * 11), '#FFF2CF', 0.32);
+  huzmeler(ctx, t, nsx, nsy, nr);
   // uzak bulutlar
   kameraIle(ctx, cam, (g) => {
     for (const b of bulutlar) ogeCiz(g, b.o, b.x + (t - 7.4) * b.hiz, b.y, { alfa: 0.95 });
   }, F.uzak);
   // bulut denizi: arka ve orta katman (köprü kemerinin içinden görünür)
-  kameraIle(ctx, cam, (g) => ogeCiz(g, bdArka.oge, -560 + (t - 7.4) * 3, 1150), F.bulutArka);
+  kameraIle(ctx, cam, (g) => {
+    for (const k of kumuluslar) ogeCiz(g, k.o, k.x + (t - 7.4) * k.hiz, k.y, { alfa: 0.97 });
+    ogeCiz(g, bdArka.oge, -560 + (t - 7.4) * 3, 1150);
+  }, F.bulutArka);
   kameraIle(ctx, cam, (g) => ogeCiz(g, bdOrta.oge, -620 - (t - 7.4) * 4, 1225), F.bulutOrta);
 
   // merdiven-köprü, fenerler, kemer, adam
+  const yapiA = an(t, 7.6, 0.42, ease.inOutSine); // s01 geçişinde köprü sonradan belirir
   kameraIle(ctx, cam, (g) => {
-    ogeCiz(g, yapi, 0, 0);
+    ogeCiz(g, yapi, 0, 0, { alfa: yapiA });
     // fenerler: bastığı basamakta yanar
     for (const f of FENERLER) {
       let t0 = f.k === 0 ? ADAM.gorun + 0.25 : ADAM.basamakInis[f.k];
@@ -166,6 +177,38 @@ function dunyaCiz(ctx, t, cam, nsx, nsy, nr) {
 
   // ön bulut denizi (merdivenin dibini örter)
   kameraIle(ctx, cam, (g) => ogeCiz(g, bdOn.oge, -720 + (t - 7.4) * 6, 1290), F.bulutOn);
+}
+
+// ---------------------------------------------------------------- nurdan inen yumuşak ışık huzmeleri
+// [açı (tuval: y aşağı; π/2 dik aşağı), yarım genişlik, güç]
+const HUZME = [[2.08, 0.05, 0.9], [1.8, 0.035, 0.7], [2.4, 0.045, 0.8], [1.5, 0.03, 0.55], [2.72, 0.04, 0.6]];
+function huzmeler(ctx, t, x, y, r) {
+  const A = an(t, 7.9, 0.9, ease.inOutSine) * (1 - an(t, ITME.t0 + 0.1, 0.5, ease.inOutSine));
+  if (A <= 0) return;
+  const L = Math.min(2200, r * 26);
+  const P = (a, d) => [x + Math.cos(a) * d, y + Math.sin(a) * d];
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  HUZME.forEach(([a0, en, guc], i) => {
+    const a = a0 + 0.05 * Math.sin(t * 0.35 + i * 1.7);
+    const [ex, ey] = P(a, L);
+    const g = ctx.createLinearGradient(x, y, ex, ey);
+    g.addColorStop(0, `rgba(255,244,214,${0.22 * guc * A})`);
+    g.addColorStop(0.45, `rgba(255,244,214,${0.09 * guc * A})`);
+    g.addColorStop(1, 'rgba(255,244,214,0)');
+    ctx.fillStyle = g;
+    const w = en * (1 + 0.25 * Math.sin(t * 0.5 + i));
+    const b1 = P(a + Math.PI / 2, r * 0.5), b2 = P(a - Math.PI / 2, r * 0.5);
+    const c1 = P(a - w, L), c2 = P(a + w, L);
+    ctx.beginPath();
+    ctx.moveTo(b1[0], b1[1]);
+    ctx.lineTo(c2[0], c2[1]);
+    ctx.lineTo(c1[0], c1[1]);
+    ctx.lineTo(b2[0], b2[1]);
+    ctx.closePath();
+    ctx.fill();
+  });
+  ctx.restore();
 }
 
 // ---------------------------------------------------------------- kemer (makam)

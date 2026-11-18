@@ -38,13 +38,13 @@ const PAL = {
 
 // ---------------------------------------------------------------- dağ
 // iki doruklu heybetli kütle: ana doruk (-480, -1250), yan doruk (-60, -640); etekleri sağa doğru kayaya iner
-const DORUK = [-480, -1250];
+const DORUK = [-600, -1262];
 function dagSekli() {
   const ana = [
-    [-1650, 1330], [-1650, 160], [-1480, -90], [-1330, -300], [-1180, -470], [-1030, -690], [-900, -870], [-780, -1000],
-    [-670, -1120], [-575, -1195], [-480, -1252], [-410, -1196], [-345, -1086], [-290, -960], [-236, -842], [-175, -770],
-    [-112, -700], [-60, -642], [-8, -566], [30, -470], [52, -360], [62, -200], [58, -40], [72, 130], [96, 330],
-    [124, 520], [156, 700], [182, 860], [204, 1010], [222, 1160], [234, 1330],
+    [-1750, 1330], [-1750, 120], [-1580, -130], [-1420, -340], [-1270, -530], [-1130, -730], [-1000, -905], [-880, -1045],
+    [-780, -1150], [-690, -1218], [-600, -1264], [-536, -1206], [-478, -1108], [-420, -990], [-366, -902], [-318, -852],
+    [-268, -806], [-226, -782], [-178, -732], [-130, -652], [-92, -542], [-64, -420], [-46, -290], [-24, -140], [4, 20],
+    [40, 190], [78, 360], [116, 530], [152, 700], [182, 870], [206, 1030], [226, 1180], [238, 1330],
   ];
   const r = rng(41);
   const p = [];
@@ -63,76 +63,80 @@ function dagSekli() {
   return cokgen(p);
 }
 // ışığı bölen sırt çizgileri (sağı aydınlık): ana sırt doruktan sağ aşağı, yan doruğun sırtı
-const sirtX = (y) => lerp(DORUK[0], 190, clamp((y - DORUK[1]) / 2500)) + 70 * Math.sin(y * 0.0052 + 0.6) + 30 * Math.sin(y * 0.017);
+const sirtX = (y) => lerp(DORUK[0] + 30, 150, clamp((y - DORUK[1]) / 2500)) + 80 * Math.sin(y * 0.0048 + 0.9) + 26 * Math.sin(y * 0.017);
 function dagTon(x, y) {
   const d = (x - sirtX(y)) / 260;
   let v = 0.62 - 0.4 * Math.tanh(d * 1.6); // sağ aydınlık
   // yan doruğun sol yamacı gölge
-  const yd = Math.hypot((x + 150) / 220, (y + 700) / 260);
-  if (yd < 1 && x < -60) v += 0.12 * (1 - yd);
+  const yd = Math.hypot((x + 300) / 220, (y + 700) / 260);
+  if (yd < 1 && x < -226) v += 0.12 * (1 - yd);
   v += 0.14 * clamp((y - 300) / 1000); // etekler koyulaşır
   v -= 0.3 * clamp(1 - (y - DORUK[1]) / 520); // doruk ışıkta
   return clamp(v);
 }
+// yüzeyler (faset): sırt çizgileriyle ayrılmış düzlemler; her biri kendi tonu ve tarama yönüyle
+const R1 = [[-600, -1262], [-566, -1110], [-526, -970], [-486, -810], [-426, -630], [-356, -430], [-276, -210], [-186, 30], [-86, 290], [34, 620], [116, 900], [176, 1150], [200, 1340]];
+const R2 = [[-600, -1262], [-614, -1130], [-652, -970], [-697, -800], [-772, -620], [-842, -430], [-932, -200], [-1022, 60], [-1102, 400], [-1152, 800], [-1200, 1340]];
+const OLUK = [[-586, -1180], [-556, -1040], [-536, -900], [-520, -760], [-486, -600], [-436, -420], [-372, -230], [-300, -20], [-226, 200], [-150, 440], [-60, 720], [10, 980], [60, 1340]];
+function serit(sol, sag) { return cokgen([...sol, ...[...sag].reverse()]); }
 function dagOge() {
   const sekil = dagSekli();
+  const sagUzak = R1.map(([x, y]) => [x + 900, y]);
+  const solUzak = R2.map(([x, y]) => [x - 900, y]);
+  const aydinlik = serit(R1, sagUzak);
+  const orta = serit(R2, R1);
+  const golge = serit(solUzak, R2);
+  const oluk = serit(OLUK, R1.map(([x, y], i) => [x - 4, y]));
+  const yogun = (v0) => TON.gurultulu((x, y) => clamp(v0 + 0.16 * clamp((y + 300) / 1600) - 0.25 * clamp(1 - (y - DORUK[1]) / 420)), 0.08, 0.006, Math.round(v0 * 100));
+  const R = [[0, '#F3EADC'], [0.3, '#D6D3E2'], [0.6, '#A0A2C4'], [1, '#686C9A']];
   return oge({
-    ad: 's10-dag2', olcek: 0.95, sekil, arka: '#CDCDE3', arkaAlfa: 0.9, arkaBulanik: 12,
+    ad: 's10-dag4', olcek: 0.95, sekil, arka: '#DCDBE8', arkaAlfa: 0.9, arkaBulanik: 12,
     arkaCiz: (g, yol) => {
       const gr = g.createLinearGradient(0, DORUK[1], 0, 1330);
-      gr.addColorStop(0, 'rgba(252,238,206,0.95)');
-      gr.addColorStop(0.16, 'rgba(232,222,230,0.9)');
-      gr.addColorStop(0.5, 'rgba(206,206,228,0.9)');
-      gr.addColorStop(1, 'rgba(190,192,214,0.9)');
+      gr.addColorStop(0, 'rgba(253,240,210,0.95)');
+      gr.addColorStop(0.15, 'rgba(236,228,234,0.9)');
+      gr.addColorStop(0.5, 'rgba(212,212,230,0.9)');
+      gr.addColorStop(1, 'rgba(196,198,218,0.9)');
       g.fillStyle = gr;
       g.fill(yol);
-      g.strokeStyle = 'rgba(200,200,222,0.9)';
+      g.strokeStyle = 'rgba(206,206,226,0.9)';
       g.lineWidth = 26;
       g.stroke(yol);
     },
     tarama: [
-      { ton: TON.gurultulu(dagTon, 0.1, 0.006, 3), renkler: [[0, '#F1E5D2'], [0.32, '#CFC9DC'], [0.62, '#9C9AC0'], [1, '#6A6A98']], yonF: (x, y) => (x > sirtX(y) ? 1.0 : 2.2) + 0.1 * Math.sin(y * 0.003 + x * 0.002), aralik: 3.5, boy: [22, 70], kal: 1.15, alfa: 0.5, esikler: [0.3, 0.56, 0.8], gecisAci: 0.2 },
+      { sekil: aydinlik, ton: yogun(0.16), renkler: R, yon: 1.02, aralik: 3.6, boy: [30, 80], kal: 1.15, alfa: 0.42, esikler: [0.18, 0.5, 0.8] },
+      { sekil: orta, ton: yogun(0.56), renkler: R, yon: 1.95, aralik: 3.3, boy: [30, 80], kal: 1.2, alfa: 0.5, esikler: [0.18, 0.5, 0.8] },
+      { sekil: golge, ton: yogun(0.86), renkler: R, yon: 2.28, aralik: 3.1, boy: [30, 80], kal: 1.2, alfa: 0.52, esikler: [0.18, 0.5, 0.8] },
+      { sekil: oluk, ton: yogun(0.8), renkler: R, yon: 1.3, aralik: 3.0, boy: [16, 40], kal: 1.15, alfa: 0.52, esikler: [0.18, 0.5, 0.8] },
     ],
-    kontur: '#56578A', konturKal: 2.4, titreme: 0.7,
+    kontur: '#5A5C8C', konturKal: 2.4, titreme: 0.7,
     detay: (c, api) => {
-      // sırt çizgileri
-      const cizgiler = [
-        [[-480, -1244], [-492, -1120], [-530, -960], [-575, -790], [-650, -610], [-720, -420]],
-        [[-470, -1240], [-440, -1100], [-400, -960], [-370, -800], [-320, -620], [-260, -420], [-190, -200], [-110, 40], [-20, 300]],
-        [[-60, -636], [-80, -520], [-96, -380], [-90, -220], [-60, -40]],
-        [[-236, -838], [-250, -700], [-232, -560]],
-        [[-780, -996], [-830, -820], [-900, -640], [-990, -430]],
-        [[-1030, -686], [-1080, -520], [-1130, -330]],
-      ];
-      for (const s of cizgiler) api.cizgi(yumusat(s, 2, false), { renk: '#5C5D8E', kal: 1.6, alfa: 0.5 });
-      // kısa, kırık katman çizgileri
+      api.cizgi(yumusat(R1.slice(0, 11), 2, false), { renk: '#5C5D8E', kal: 1.7, alfa: 0.55 });
+      api.cizgi(yumusat(R2.slice(0, 9), 2, false), { renk: '#5C5D8E', kal: 1.6, alfa: 0.5 });
       const r = rng(9);
-      for (let i = 0; i < 60; i++) {
-        const y = r.ara(-1100, 1200);
+      for (let i = 0; i < 40; i++) {
+        const y = r.ara(-1050, 1200);
         const w = clamp((y - DORUK[1]) / 2500);
-        const sol = lerp(DORUK[0] - 60, -1500, w), sag = lerp(DORUK[0] + 60, 200, w);
-        const x = r.ara(sol, sag - 60);
-        const L = r.ara(26, 80);
-        api.cizgi([[x, y], [x + L * 0.5, y + r.ara(-3, 6)], [x + L, y + r.ara(-1, 10)]], { renk: '#5E5F8E', kal: 1.15, alfa: 0.35 });
-      }
-      // eteklerde çalı kümeleri
-      for (let i = 0; i < 26; i++) {
-        const y = r.ara(500, 1260);
-        const w = clamp((y - DORUK[1]) / 2500);
-        const x = r.ara(lerp(-1500, -1500, w), lerp(DORUK[0], 190, w) - 40);
-        const R = r.ara(14, 30) * (0.6 + 0.6 * w);
-        const sek = elips(x, y, R * 1.3, R * 0.8);
-        api.tara(sek, { ton: () => 0.6, renkler: [[0, '#9CC79A'], [1, '#4E8A5C']], yon: -0.8, aralik: 2.6, boy: [6, 14], kal: 1.0, alfa: 0.6, esikler: [0.2, 0.55] });
-        api.halka(sek[0].pts, { renk: '#3E7C4F', kal: 1.3, alfa: 0.7 });
+        const x = r.ara(lerp(DORUK[0] - 60, -1600, w), lerp(DORUK[0] + 60, 180, w) - 60);
+        const L = r.ara(26, 70);
+        api.cizgi([[x, y], [x + L * 0.5, y + r.ara(-3, 6)], [x + L, y + r.ara(-1, 10)]], { renk: '#5E5F8E', kal: 1.15, alfa: 0.3 });
       }
     },
   });
 }
+function karOge() {
+  const pts = [[-600, -1268], [-548, -1196], [-506, -1112], [-478, -1060], [-500, -1044], [-530, -1062], [-548, -1020], [-574, -1050], [-596, -990], [-622, -1040], [-650, -1006], [-676, -1060], [-708, -1040], [-740, -1100], [-704, -1190], [-650, -1236]];
+  return oge({
+    ad: 's10-kar', olcek: 1, sekil: cokgen(pts), zemin: '#FBFAF6', arka: '#EDEAF4', arkaAlfa: 0.5, arkaTasma: false, arkaBulanik: 6,
+    tarama: { ton: (x, y) => (x < -596 + (y + 1268) * 0.05 ? 0.6 : 0.1), renkler: [[0, '#E6E2EE'], [1, '#A9A7C8']], yon: 2.2, aralik: 3, boy: [12, 30], kal: 1.1, alfa: 0.5, esikler: [0.3] },
+    kontur: '#8D8BB4', konturKal: 1.8,
+  });
+}
 function kayaOge() {
   // dağın dibindeki büyük, yuvarlak kaya; adam sağ yüzüne yaslanır
-  const sekil = svg('M-40 1310C-46 1226 -26 1142 14 1086C52 1032 110 1002 172 1006C236 1010 284 1046 304 1108C320 1162 318 1240 308 1310Z');
+  const sekil = cokgen([[-44, 1312], [-38, 1214], [-12, 1136], [34, 1076], [96, 1030], [170, 1008], [232, 1022], [278, 1064], [304, 1124], [316, 1196], [314, 1262], [308, 1312]]);
   return oge({
-    ad: 's10-kaya2', olcek: 1.25, sekil, arka: '#C9C8DE', arkaAlfa: 0.9,
+    ad: 's10-kaya3', olcek: 1.25, sekil, arka: '#C9C8DE', arkaAlfa: 0.9,
     tarama: [
       { ton: TON.gurultulu(TON.kure(220, 1070, 290, { lx: 0.75, ly: -0.55, ortam: 0.16, sert: 1.3 }), 0.12, 0.02, 5), renkler: [[0, '#E6E1EC'], [0.45, '#A9A8C8'], [1, '#62638F']], yon: -1.05, aralik: 3.0, boy: [14, 40], kal: 1.15, alfa: 0.55, esikler: [0.2, 0.45, 0.7], gecisAci: 0.35 },
       { sekil: svg('M-4 1146C24 1076 84 1028 162 1022C228 1018 274 1046 292 1092C244 1068 186 1064 124 1078C72 1090 32 1116 -4 1146Z'), ton: () => 0.5, renkler: [[0, '#B4DA9C'], [1, '#5A995E']], yon: -0.35, aralik: 2.7, boy: [6, 16], kal: 1.05, alfa: 0.62, esikler: [0.2, 0.5] },
@@ -169,11 +173,11 @@ export function agacCiz2(g, x, y, yaprak, cicekA, t) {
     const u = clamp((yaprak - k.t * 0.55) / 0.45);
     if (u <= 0) return;
     const sl = Math.sin(t * 1.1 + i) * 0.014;
-    ogeCiz(g, k.oge, x + k.x, y + k.y + 70, { s: ease.outBack(u, 1.5), r: sl });
+    ogeCiz(g, k.oge, x + k.x, y + k.y - 30, { s: ease.outBack(u, 1.5) * 1.08, r: sl });
   });
   if (cicekA > 0) A.meyveler.forEach((m, i) => {
     const u = clamp((cicekA - (i % 5) * 0.08) / 0.5);
-    if (u > 0) ogeCiz(g, D.meyve, x + m[0], y + m[1] + 70, { s: ease.outBack(u, 1.8), r: Math.sin(t + i) * 0.1 });
+    if (u > 0) ogeCiz(g, D.meyve, x + m[0], y + m[1] - 30, { s: ease.outBack(u, 1.8), r: Math.sin(t + i) * 0.1 });
   });
 }
 
@@ -230,6 +234,7 @@ export function dunyaHazirla() {
   D.ortaKuru = sirtOge({ ad: 's10-orta-kuru', x0: -800, x1: 2900, ust: tumsek(1290, [[500, 60, 260], [900, 95, 220], [1400, 50, 260], [1900, 80, 260], [2500, 60, 240]]), alt: 1800, P: PAL.ortaKuru, olcek: 0.95, tohum: 7 });
   D.ortaYesil = sirtOge({ ad: 's10-orta-yesil', x0: -800, x1: 2900, ust: tumsek(1290, [[500, 60, 260], [900, 95, 220], [1400, 50, 260], [1900, 80, 260], [2500, 60, 240]]), alt: 1800, P: PAL.ortaYesil, olcek: 0.95, tohum: 7 });
   D.dag = dagOge();
+  D.kar = karOge();
   D.taslar = [
     { o: tasOge(170, 70, 3), x: -90, y: 1790, f: 1.15 },
     { o: tasOge(120, 52, 5), x: 1180, y: 1760, f: 1.15 },
@@ -311,13 +316,13 @@ export function yesilMaske(g, cam, tg) {
 export function yagmurCiz(ctx, t, guc, { zeminY = 1380, siper = null, tohum = 9 } = {}) {
   if (guc <= 0.003) return;
   const r = rng(tohum);
-  const n = Math.round(170 * guc);
+  const n = Math.round(230 * guc);
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
   const egim = 0.16;
-  for (let i = 0; i < 200; i++) {
-    const x0 = r.ara(-200, W + 100), faz = r(), hiz = r.ara(1500, 2100), boy = r.ara(34, 64), renk = r() < 0.4 ? '#FFF0C4' : '#EEF5FF';
-    const k = r.ara(1.3, 2.1), a = r.ara(0.45, 0.85);
+  for (let i = 0; i < 230; i++) {
+    const x0 = r.ara(-260, W + 60), faz = r(), hiz = r.ara(1500, 2100), boy = r.ara(44, 88), renk = r() < 0.45 ? '#FFEFC2' : '#F4F8FF';
+    const k = r.ara(1.6, 2.6), a = r.ara(0.55, 0.95);
     if (i >= n) continue;
     const yol = zeminY + 160;
     const y = ((faz * yol + t * hiz) % yol) - 120;
@@ -354,6 +359,17 @@ import { insanYanSikis } from './s10-yardim.mjs';
 export function yanCiz(g, cam, t, S) {
   // gök
   g.save(); kameraUygula(g, cam, F.gok); ogeCiz(g, D.gok, D.gokX, D.gokY); g.restore();
+  if (S.gokKoyu > 0.003) {
+    g.save();
+    g.globalCompositeOperation = 'multiply';
+    const gr = g.createLinearGradient(0, 0, 0, H);
+    gr.addColorStop(0, `rgba(150,158,196,${0.55 * S.gokKoyu})`);
+    gr.addColorStop(0.6, `rgba(190,190,214,${0.35 * S.gokKoyu})`);
+    gr.addColorStop(1, `rgba(214,210,226,${0.15 * S.gokKoyu})`);
+    g.fillStyle = gr;
+    g.fillRect(0, 0, W, H);
+    g.restore();
+  }
   // uzak sırt
   g.save(); kameraUygula(g, cam, F.uzak); ogeCiz(g, D.uzak, 0, 0); g.restore();
   // rahmet bulutları
@@ -374,9 +390,10 @@ export function yanCiz(g, cam, t, S) {
   // ana katman
   g.save(); kameraUygula(g, cam, F.ana);
   ogeCiz(g, D.dag, 0, 0);
+  ogeCiz(g, D.kar, 0, 0);
   if (S.dagIsik > 0.003) {
-    M.hale(g, -455, -1180, 520, '#FFE7A8', 0.5 * S.dagIsik);
-    M.isinlar(g, -455, -1220, 120, 700, t, { sayi: 24, alfa: 0.35 * S.dagIsik, kal: 3.2, tohum: 13, hiz: 0.03 });
+    M.hale(g, -600, -1200, 560, '#FFE7A8', 0.5 * S.dagIsik);
+    M.isinlar(g, -600, -1240, 120, 700, t, { sayi: 24, alfa: 0.35 * S.dagIsik, kal: 3.2, tohum: 13, hiz: 0.03 });
   }
   ogeCiz(g, D.zKuru, 0, 0);
   g.restore();
@@ -393,8 +410,9 @@ export function yanCiz(g, cam, t, S) {
   g.save(); kameraUygula(g, cam, F.ana);
   // ağaç (adamın arkasında)
   if (S.sayvan > 0.003) M.hale(g, AGAC.x + 20, AGAC.y - 330, 520, '#FFF2C6', 0.4 * S.sayvan);
-  M.agacCiz(g, D.agac, AGAC.x, AGAC.y, { buyume: 1, yaprak: S.yaprak, meyveA: S.cicek ?? 0, t, meyveOge: D.meyve, salinim: 1.4 });
-  ogeCiz(g, D.kaya, 0, 0);
+  agacCiz2(g, AGAC.x, AGAC.y, S.yaprak, S.cicek ?? 0, t);
+  ogeCiz(g, D.kaya, D.kayaDx || 0, 0);
+  for (const ts of D.taslar) if (ts.f === 1) ogeCiz(g, ts.o, ts.x, ts.y);
   // bitkiler: arkadakiler
   const bitki = (on) => {
     if (S.yesil <= 0) return;
@@ -413,5 +431,9 @@ export function yanCiz(g, cam, t, S) {
     insanYanSikis(g, a.x, G, a.poz, { s: a.s, yon: a.yon, k: a.k ?? 1, olcek: 1.2 });
   }
   bitki(true);
+  g.restore();
+  // ön plan taşları
+  g.save(); kameraUygula(g, cam, F.on);
+  for (const ts of D.taslar) if (ts.f !== 1) ogeCiz(g, ts.o, ts.x, ts.y);
   g.restore();
 }

@@ -387,7 +387,7 @@ export function petekOge(parlak = false) {
 }
 
 // ---------------------------------------------------------------- yardımcı: duman kıvrımı
-export function duman(ctx, x, y, u, t, { renk = '#8D869A', alfa = 0.6 } = {}) {
+export function duman(ctx, x, y, u, t, { renk = '#7C7589', alfa = 0.6 } = {}) {
   // u: 0..1 yaşam; iki ince kıvrım yükselir, uzar ve solar
   if (u <= 0 || u >= 1) return;
   for (let k = 0; k < 2; k++) {
@@ -399,7 +399,17 @@ export function duman(ctx, x, y, u, t, { renk = '#8D869A', alfa = 0.6 } = {}) {
       const xx = x + Math.sin(s * 5.2 + t * 2.1 + k * 2.2) * (3 + s * 11) + s * (k ? -8 : 10);
       pts.push([xx, yy]);
     }
-    konturCiz(ctx, pts, { renk, kal: 1.8 - k * 0.4, alfa: alfa * (1 - u) * (k ? 0.7 : 1), kapali: false, titreme: 0.2, tohum: 300 + k, uc: 0.3 });
+    const a = alfa * (1 - u) * (k ? 0.7 : 1) * clamp(u * 8);
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+    ctx.strokeStyle = rgba('#A8A2B4', 0.22 * a);
+    ctx.lineWidth = 9 - k * 2;
+    ctx.stroke();
+    ctx.restore();
+    konturCiz(ctx, pts, { renk, kal: 2.3 - k * 0.5, alfa: a, kapali: false, titreme: 0.2, tohum: 300 + k, uc: 0.3 });
   }
 }
 
@@ -408,14 +418,14 @@ export function sesYaylari(ctx, x, y, t, guc, { renk = '#C99A35', yon = -0.35 } 
   if (guc <= 0.01) return;
   for (let k = 0; k < 3; k++) {
     const u = ((t * 1.3 + k / 3) % 1 + 1) % 1;
-    const r = 10 + u * 34;
+    const r = 8 + u * 30;
     const a0 = yon - 0.55, a1 = yon + 0.55;
     const pts = [];
     for (let i = 0; i <= 14; i++) {
       const a = lerp(a0, a1, i / 14);
       pts.push([x + Math.cos(a) * r, y + Math.sin(a) * r]);
     }
-    konturCiz(ctx, pts, { renk, kal: 2.0, alfa: 0.85 * guc * Math.sin(u * Math.PI), kapali: false, titreme: 0.2, tohum: 500 + k, uc: 0.35 });
+    konturCiz(ctx, pts, { renk, kal: 2.6, alfa: 0.95 * guc * Math.sin(u * Math.PI), kapali: false, titreme: 0.2, tohum: 500 + k, uc: 0.35 });
   }
 }
 

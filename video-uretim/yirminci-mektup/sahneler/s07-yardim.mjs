@@ -72,46 +72,47 @@ export function agirBulut(w, tohum, olcek = 1, koyu = 0) {
 }
 
 // ---------------------------------------------------------------- kuruntu gölgesi (yüzsüz, belirsiz)
-/** Uzun, kubbeli, omuzları belli belirsiz, eteği sise karışan yumuşak kütle. Yüz, göz, uzuv yok. (0,0) taban ortası */
-export function golgeOge(h, w, tohum, olcek = 1) {
+/**
+ * Sisten yükselen, öne eğik, kambur ve belirsiz bir kütle: üst üste binmiş yumuşak kümelerden oluşan yoğunluk alanı.
+ * Kenarı yoktur (tarama yoğunluğu kenara doğru söner, arka buğu bulanıktır); yüz, göz, uzuv yoktur.
+ * egim: tepenin yana (adama doğru) eğilmesi. (0,0) taban ortası.
+ */
+export function golgeOge(h, w, tohum, olcek = 1, egim = 0.25) {
   const r = rng(tohum);
-  const n = gurultu2(tohum);
-  const yariEn = (v) => {
-    // v: 0 tepe .. 1 taban
-    const kubbe = v < 0.14 ? Math.sqrt(v / 0.14) * 0.42 : 0.42;
-    const omuz = 0.42 + 0.2 * smooth(0.12, 0.3, v);
-    const etek = 0.62 + 0.16 * smooth(0.5, 1, v);
-    return (w / 2) * (v < 0.14 ? kubbe : v < 0.3 ? omuz : etek);
-  };
-  const sol = [], sag = [];
-  const N = 60;
-  const egim = r.ara(-0.05, 0.05);
-  for (let k = 0; k <= N; k++) {
-    const v = k / N, y = -h + v * h;
-    const hw = yariEn(v) * (1 + 0.06 * n(v * 4, 1.3));
-    const ox = egim * (h - (y + h)) * 0.5;
-    sol.push([ox - hw * (1 + 0.05 * n(v * 6, 7.1)), y]);
-    sag.push([ox + hw * (1 + 0.05 * n(v * 6, 3.7)), y]);
+  const bloblar = [];
+  const N = 7;
+  for (let i = 0; i < N; i++) {
+    const v = i / (N - 1);
+    bloblar.push([egim * h * 0.38 * v * v + r.ara(-0.04, 0.04) * w, -v * h * 0.8, w * lerp(0.44, 0.3, v) * r.ara(0.9, 1.08)]);
   }
-  const pts = [...sag, ...sol.reverse()];
-  const ton = (x, y) => {
-    const v = clamp((y + h) / h);
-    const hw = yariEn(v);
-    const kenar = smooth(0, 0.45, 1 - Math.abs(x) / hw);
-    return clamp((0.85 - 0.45 * v) * kenar * (1 - smooth(0.62, 0.95, v)));
+  const tp = bloblar[N - 1];
+  bloblar.push([tp[0] - w * 0.3 - egim * w * 0.2, tp[1] + h * 0.13, w * 0.23], [tp[0] + w * 0.28 + egim * w * 0.2, tp[1] + h * 0.16, w * 0.21]);
+  bloblar.push([tp[0] + egim * w * 0.35, tp[1] - h * 0.06, w * 0.24]);
+  const yogun = (x, y) => {
+    let m = 0;
+    for (const [bx, by, R] of bloblar) m = Math.max(m, 1 - Math.hypot(x - bx, (y - by) * 0.92) / R);
+    return m;
   };
+  const sonum = (y) => 1 - smooth(-h * 0.36, -h * 0.02, y);
+  const ton = (x, y) => clamp(yogun(x, y) * 2.0) * sonum(y) * 0.95;
+  const ex = egim * h * 0.38;
+  const x0 = -w * 0.8 + Math.min(0, ex) - w * 0.1, x1 = w * 0.8 + Math.max(0, ex) + w * 0.1;
+  const sek = cokgen([[x0, -h * 1.12], [x1, -h * 1.12], [x1, w * 0.3], [x0, w * 0.3]]);
   return oge({
-    ad: `s07-golge-${h}-${w}-${tohum}`, olcek, sekil: cokgen(pts), zemin: null, pay: 40,
-    arka: '#5D5569', arkaBulanik: 22, arkaTasma: false,
-    arkaCiz: (t, yol) => {
-      const g = t.createLinearGradient(0, -h, 0, 0);
-      g.addColorStop(0, 'rgba(93,85,105,0.75)');
-      g.addColorStop(0.55, 'rgba(93,85,105,0.6)');
-      g.addColorStop(1, 'rgba(93,85,105,0)');
-      t.fillStyle = g;
-      t.fill(yol);
+    ad: `s07-golge2-${h}-${w}-${tohum}-${egim}`, olcek, sekil: sek, zemin: null, pay: 10,
+    arka: '#5D5569', arkaBulanik: 24, arkaTasma: false,
+    arkaCiz: (t) => {
+      for (const [bx, by, R] of bloblar) {
+        const a = 0.5 * sonum(by);
+        const g = t.createRadialGradient(bx, by, 0, bx, by, R * 1.08);
+        g.addColorStop(0, rgba('#5D5569', a));
+        g.addColorStop(0.6, rgba('#5D5569', a * 0.75));
+        g.addColorStop(1, rgba('#5D5569', 0));
+        t.fillStyle = g;
+        t.fillRect(bx - R * 1.1, by - R * 1.1, R * 2.2, R * 2.2);
+      }
     },
-    tarama: { ton, renkler: [[0, '#A39CB3'], [0.6, '#6C6480'], [1, '#463F56']], yon: -1.05, aralik: 3.4, boy: [24, 80], esikler: [0.2, 0.48, 0.72], alfa: 0.42, karisim: 'source-over' },
+    tarama: { ton, renkler: [[0, '#A39CB3'], [0.6, '#6C6480'], [1, '#463F56']], yon: -1.05, aralik: 3.5, boy: [22, 70], esikler: [0.16, 0.4, 0.66], alfa: 0.38, karisim: 'source-over' },
     kontur: null,
   });
 }
@@ -401,4 +402,29 @@ export function sarmal(zincir, { tur = 2.5, r0 = 14, r1 = 10, faz = 0, adim = 3 
     out.push({ x: ax - ty * rr * Math.cos(th), y: ay + tx * rr * Math.cos(th), on: Math.sin(th) });
   }
   return out;
+}
+
+// ---------------------------------------------------------------- ön plan otu (alt kenarı çerçeveler)
+import { yaprak as yaprakSekli, donustur } from '../motor/sekil.mjs';
+/** Uzun ot öbeği: dipten yelpaze gibi açılan ince yapraklar. kuru: soluk, uçları bükük gri-kahve */
+export function otOge(boy, tohum, kuru = false, olcek = 1.2) {
+  const r = rng(tohum);
+  const sek = [];
+  const n = 9;
+  for (let i = 0; i < n; i++) {
+    const u = i / (n - 1) - 0.5;
+    const L = boy * r.ara(0.55, 1) * (1 - Math.abs(u) * 0.5);
+    const en = r.ara(9, 14);
+    const egri = (kuru ? r.ara(4, 10) : r.ara(-4, 4)) * (u < 0 ? -1 : 1);
+    const a = -Math.PI / 2 + u * 1.1 + r.ara(-0.08, 0.08) + (kuru ? u * 0.5 : 0);
+    sek.push(...donustur(yaprakSekli(L, en, egri), { x: u * 18, y: 0, r: a }));
+  }
+  const P = kuru
+    ? { arka: '#C6BEBA', tara: [[0, '#B9B0AB'], [1, '#6F6563']], kontur: '#5E5552' }
+    : { arka: '#A9D49A', tara: [[0, PALET.yesilAcik], [0.6, PALET.yesilOrta], [1, PALET.yesil]], kontur: PALET.yesilKoyu };
+  return oge({
+    ad: `s07-ot-${boy}-${tohum}-${kuru}`, olcek, sekil: sek, arka: P.arka, arkaAlfa: 0.8,
+    tarama: { ton: TON.dogrusal(0, -boy, 0, 0, 0.25, 0.85), renkler: P.tara, yon: -Math.PI / 2, aralik: 2.8, boy: [16, 50], esikler: [0.2, 0.5, 0.75], alfa: 0.55 },
+    kontur: P.kontur, konturKal: 1.9, titreme: 0.4,
+  });
 }

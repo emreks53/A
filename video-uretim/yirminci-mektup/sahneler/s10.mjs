@@ -68,8 +68,8 @@ function kameraKur() {
     { t: T.o + 0.1, x: 640, y: 930, z: 1.1, e: ease.inOutSine },
     { t: T.ilt, x: 600, y: 860, z: 0.98, e: ease.inOutCubic },
     { t: T.kud - 0.05, x: 590, y: 880, z: 1.0, e: ease.inOutSine },
-    { t: T.ist + 0.1, x: 160, y: 380, z: 0.56, e: ease.inOutCubic },
-    { t: T.ist + 0.25, x: 170, y: 400, z: 0.57, e: ease.lin },
+    { t: T.ist + 0.1, x: 40, y: 250, z: 0.5, e: ease.inOutCubic },
+    { t: T.ist + 0.3, x: 50, y: 270, z: 0.51, e: ease.lin },
     { t: T.eder2 + 0.55, x: 430, y: 1010, z: 1.06, e: ease.inOutCubic },
     { t: T.o2 - 0.25, x: 440, y: 1000, z: 1.1, e: ease.outSine },
     { t: 110.9, x: 440, y: 1000, z: 1.1, e: ease.lin },
@@ -85,6 +85,7 @@ function yanDurum(t) {
     cicek: an(t, T.ilt + 0.4, 1.0),
     ortaYesil: an(t, T.rah + 0.4, 1.4),
     bulut: an(t, T.o - 0.05, 0.9, ease.outCubic) * (1 - an(t, T.kud + 0.1, 0.9)),
+    gokKoyu: an(t, T.o + 0.1, 0.7) * (1 - an(t, T.kud + 0.05, 0.8)),
     dagIsik: an(t, T.kud, 0.9),
     sayvan: an(t, T.ilt + 0.3, 0.8) * (1 - 0.6 * an(t, T.ist, 0.8)),
     adam: adamDurumu(t),
@@ -157,8 +158,10 @@ export default {
   hazirla() {
     labirentHazirla();
     dunyaHazirla();
-    yuru1 = yurumePlani({ t0: T.ilt + 0.02, t1: T.ilt + 0.95, n: 2, s: S_ADAM, yon: -1, x0: 760, duruA: POZ.yagmur, duruB: POZ.sayvan });
-    yuru2 = yurumePlani({ t0: T.kud - 0.15, t1: T.ist + 0.02, n: 2, s: S_ADAM, yon: -1, x0: yuru1.x1, duruA: POZ.sayvan, duruB: POZ.duz });
+    yuru1 = yurumePlani({ t0: T.ilt + 0.02, t1: T.ilt + 1.0, n: 2, s: S_ADAM, yon: -1, x0: 760, duruA: POZ.yagmur, duruB: POZ.sayvan });
+    yuru2 = yurumePlani({ t0: T.kud - 0.18, t1: T.ist + 0.02, n: 2, s: S_ADAM, yon: -1, x0: yuru1.x1, duruA: POZ.sayvan, duruB: POZ.duz });
+    // kaya, adamın yaslanacağı yere: kalça hizasında sırtı kayanın sağ yüzüne değsin
+    D.kayaDx = yuru2.x1 - (bilekX(POZ.yaslan, 0) - bilekX(POZ.duz, 0)) * S_ADAM - 15 - 318;
     kameraKur();
   },
   ciz(ctx, t) {

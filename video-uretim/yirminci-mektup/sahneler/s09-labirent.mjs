@@ -383,7 +383,7 @@ export function seviyeCiz(ctx, cam, S, { alfa = 1, tuvalAd = 'tuval' } = {}) {
 
 /**
  * Seviyeleri yakınlaşmaya göre karıştırarak çizer. seviyeler: doğal ölçeğe göre büyükten küçüğe sıralı.
- * Geçiş: z, S[k].s * 0.62 ile S[k].s * 0.45 arasında k'dan k+1'e (yukarı ölçeklemede bulanıklık kısa sürer).
+ * Geçiş: z, S[k].s * 0.75 ile S[k].s * 0.55 arasında k'dan k+1'e (yukarı ölçeklemede bulanıklık kısa sürer).
  */
 export function labirentCiz(ctx, cam, seviyeler) {
   // her seviyenin ağırlığı
@@ -393,7 +393,7 @@ export function labirentCiz(ctx, cam, seviyeler) {
   for (let k = 0; k < n; k++) {
     if (k === n - 1) { wts[k] = kalan; break; }
     const S = seviyeler[k];
-    const a = clamp((cam.z / S.s - 0.45) / (0.66 - 0.45));
+    const a = clamp((cam.z / S.s - 0.55) / (0.75 - 0.55));
     wts[k] = kalan * a;
     kalan -= wts[k];
     if (kalan <= 0) break;

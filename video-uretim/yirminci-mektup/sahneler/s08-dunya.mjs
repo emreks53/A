@@ -312,44 +312,50 @@ export function savrulma(p, t) {
 }
 
 // ---------------------------------------------------------------- yolu kaplayan çatlak zemin
-/** Perspektifli çatlak ağı: yUfuk'tan y1'e; dünya koordinatında çoklu çizgiler [{pts, kal}] */
-export function catlakAgi({ x0, x1, yUfuk, y1, tohum = 1, hucre = 70, K = 260, xc = 540, olasilik = 0.82 }) {
+/**
+ * Perspektifli çamur çatlağı ağı (ekran/dünya uzayında): ufuktan (yUfuk) aşağı (y1) satırlar. Hücre eni ufka uzaklıkla
+ * doğru orantılı (wK · dy), boyu en × dy / f (perspektif basıklığı). Düğümler titrek; her düğüm satırdaki komşusuna ve
+ * alt satırdaki en yakın düğüme bağlanır. Döner: [{ pts, kal, alfa }]
+ */
+export function catlakAgi({ x0, x1, yUfuk, y1, tohum = 1, wK = 0.28, f = 1100, dyMin = 55, olasilik = 0.86, wMin = 16 }) {
   const r = rng(tohum);
-  // zemin düzlemi: v derinlik (yakın küçük). ekran y = yUfuk + K * 100 / v ; x = xc + u * 100 / v
-  const vMin = (K * 100) / (y1 - yUfuk), vMax = (K * 100) / 6;
   const out = [];
-  const pr = (u, v) => [xc + (u * 100) / v, yUfuk + (K * 100) / v];
   const satirlar = [];
-  // v'yi logaritmik adımla (her satır yaklaşık eşit ekran yüksekliğine değil, eşit zemin adımına)
-  const adimV = hucre * 0.55;
-  for (let v = vMin; v < Math.min(vMax, vMin + 4000); v += adimV * (v / vMin) ** 0.35) satirlar.push(v);
-  const noktalar = satirlar.map((v) => {
-    const uMin = ((x0 - xc) * v) / 100, uMax = ((x1 - xc) * v) / 100;
+  let dy = dyMin;
+  while (yUfuk + dy < y1 + 200) {
+    const w = Math.max(wMin, wK * dy);
+    const h = Math.max(5, (w * dy) / f);
+    const y = yUfuk + dy;
     const sira = [];
-    for (let u = uMin - hucre; u < uMax + hucre; u += hucre * r.ara(0.8, 1.25)) sira.push([u + r.ara(-hucre * 0.25, hucre * 0.25), v + r.ara(-adimV * 0.3, adimV * 0.3)]);
-    return sira;
-  });
-  const kenar = (a, b) => {
-    const A = pr(a[0], a[1]), B = pr(b[0], b[1]);
-    if (Math.max(A[1], B[1]) < yUfuk + 4) return;
-    const kal = clamp(2.6 * (vMin / Math.min(a[1], b[1])) ** 0.8, 0.7, 2.6);
-    const n = Math.max(2, Math.round(Math.hypot(B[0] - A[0], B[1] - A[1]) / 14));
-    out.push({ pts: zikzak(r, A[0], A[1], B[0], B[1], n, Math.min(6, kal * 2.2)), kal });
+    for (let x = x0 - w * r.ara(0, 1); x < x1 + w; x += w * r.ara(0.75, 1.3)) sira.push([x + r.ara(-w, w) * 0.22, y + r.ara(-h, h) * 0.3, w, h]);
+    satirlar.push(sira);
+    dy += h;
+  }
+  const kalOf = (yy) => clamp((yy - yUfuk) / 150, 0.55, 2.3);
+  const kenar = (A, B) => {
+    const kal = kalOf((A[1] + B[1]) / 2);
+    const L = Math.hypot(B[0] - A[0], B[1] - A[1]);
+    const n = Math.max(2, Math.round(L / 10));
+    out.push({ pts: zikzakYumusak(r, A[0], A[1], B[0], B[1], n, Math.min(L * 0.12, 3 + kal * 1.5)), kal, alfa: clamp(0.35 + (A[1] - yUfuk) / 500, 0.35, 0.8) });
   };
-  for (let i = 0; i < noktalar.length; i++) {
-    const s = noktalar[i];
+  for (let i = 0; i < satirlar.length; i++) {
+    const s = satirlar[i];
+    const alt = satirlar[i + 1];
+    let k = 0;
     for (let j = 0; j < s.length; j++) {
       if (j + 1 < s.length && r() < olasilik) kenar(s[j], s[j + 1]);
-      if (i + 1 < noktalar.length) {
-        const alt = noktalar[i + 1];
-        // en yakın komşuya bağla
-        let en = null, d = 1e9;
-        for (const q of alt) { const dd = Math.abs(q[0] - s[j][0]); if (dd < d) { d = dd; en = q; } }
-        if (en && r() < olasilik) kenar(s[j], en);
+      if (alt && r() < olasilik * 0.85) {
+        while (k + 1 < alt.length && Math.abs(alt[k + 1][0] - s[j][0]) < Math.abs(alt[k][0] - s[j][0])) k++;
+        kenar(s[j], alt[k]);
       }
     }
   }
   return out;
+}
+function zikzakYumusak(r, x0, y0, x1, y1, n, sap) {
+  const pts = zikzak(r, x0, y0, x1, y1, n, sap);
+  // hafif yumuşat (köşeli kırılma yerine kıvrımlı çatlak)
+  return pts.map((p, i) => (i === 0 || i === pts.length - 1 ? p : [(pts[i - 1][0] + 2 * p[0] + pts[i + 1][0]) / 4, (pts[i - 1][1] + 2 * p[1] + pts[i + 1][1]) / 4]));
 }
 
 /** Kuru toprak zemin (çatlaklı): dünya dikdörtgeni [x0,x1]×[yUst,yAlt]; çatlaklar dünya koordinatında verilir */
@@ -370,7 +376,7 @@ export function toprakOge({ ad, x0, x1, yUst, yAlt, catlaklar = [], olcek = 1, t
     detay: (c, api) => {
       for (const k of catlaklar) {
         if (k.pts.every(([x, y]) => x < x0 - 20 || x > x1 + 20 || y < yUst - 20 || y > yAlt + 20)) continue;
-        api.cizgi(k.pts, { renk: renk.kontur, kal: k.kal, alfa: 0.75, titreme: 0.2 });
+        api.cizgi(k.pts, { renk: renk.kontur, kal: k.kal, alfa: k.alfa ?? 0.75, titreme: 0.2 });
       }
     },
   });

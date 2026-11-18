@@ -48,6 +48,7 @@ function canlilik(t) {
   const son = an(t, T.onsuz, 0.6, ease.inOutCubic);
   return lerp(CAN_DUSUK, 1, yan) * (1 - son);
 }
+const cizimIlerleme = (t) => an(t, T.evet - 0.02, 0.95, ease.outCubic);
 const kaynakOlcek = (t) => lerp(0.8, 1, an(t, T.elbette - 0.04, 0.75, ease.outBack));
 const olum = (t) => an(t, T.onsuz + 0.02, 0.7, ease.inOutSine); // kaynağın grileşmesi
 const losluk = (t) => an(t, T.onsuz + 0.1, 1.0, ease.inOutSine); // zeminin loşlaşması
@@ -153,8 +154,8 @@ function kaynakCiz(t) {
   g.setTransform(1, 0, 0, 1, 0, 0);
   g.clearRect(0, 0, kTuval.width, kTuval.height);
   g.setTransform(KO, 0, 0, KO, (KS * KO) / 2, (KS * KO) / 2);
-  const cizim = an(t, T.evet, 1.15, ease.inOutCubic);
-  const dolgu = an(t, T.evet + 0.35, 0.8, ease.inOutSine);
+  const cizim = cizimIlerleme(t);
+  const dolgu = an(t, T.evet + 0.3, 0.7, ease.inOutSine);
   const don = 0.05 * (t - T.bas) + 0.02 * Math.sin(t * 0.5);
   const kb2 = kaynakOlcek(t);
   g.scale(kb2, kb2);
@@ -242,16 +243,18 @@ export default {
 
     // 2) alt bulut yatağı (sakin; altyazı bandının arkasında yumuşak)
     kameraIle(ctx, cam, (g) => {
-      const rg = g.createLinearGradient(0, 1560, 0, 2000);
-      rg.addColorStop(0, 'rgba(232,226,242,0)');
-      rg.addColorStop(1, 'rgba(228,222,242,0.4)');
-      g.save();
-      g.globalCompositeOperation = 'multiply';
+      // bulutların altında soluk sis: sıralar arasındaki boşluklar koyu bant gibi görünmesin
+      const rg = g.createLinearGradient(0, 1590, 0, 1980);
+      rg.addColorStop(0, 'rgba(247,244,248,0)');
+      rg.addColorStop(0.45, 'rgba(246,243,248,0.7)');
+      rg.addColorStop(1, 'rgba(244,241,247,0.88)');
       g.fillStyle = rg;
-      g.fillRect(-200, 1560, 1480, 600);
-      g.restore();
-      const gb = an(t, T.bas, 0.01);
-      bulutlar.forEach((b, k) => ogeCiz(g, b.oge, b.x + Math.sin(t * 0.21 + k * 1.7) * 14 + (t - 40) * (k % 2 ? -3 : 3), b.y, { alfa: gb * (1 - 0.35 * los) }));
+      g.fillRect(-200, 1590, 1480, 600);
+      // bulutlar aşağıdan süzülerek yerleşir (önce arkadakiler)
+      bulutlar.forEach((b, k) => {
+        const yuk = an(t, T.bas + 0.05 + (bulutlar.length - 1 - k) * 0.06, 1.5, ease.outCubic);
+        ogeCiz(g, b.oge, b.x + Math.sin(t * 0.21 + k * 1.7) * 14 + (t - 40) * (k % 2 ? -3 : 3), b.y + (1 - yuk) * 300);
+      });
     }, 0.85);
 
     // s04'ten devralınan altın halkalar: ekran uzayında, s04'le aynı biçim ve zamanlama; yeni halka doğmaz, söner
@@ -384,10 +387,17 @@ export default {
         const prl = lerp(0.98, 1.03, parlak) * (1 - 0.1 * ol);
         g.save();
         g.filter = `saturate(${doy.toFixed(3)}) brightness(${prl.toFixed(3)})`;
-        g.globalAlpha = lerp(0.8, 1, parlak) * (1 - 0.18 * ol);
+        g.globalAlpha = lerp(0.84 + 0.16 * (1 - an(t, T.evet + 0.7, 0.8)), 1, parlak) * (1 - 0.18 * ol);
         g.drawImage(kTuval, K.x - KS / 2, K.y - KS / 2, KS, KS);
         g.restore();
 
+        // çizim sırasında kalemin ucunda küçük ışıltı (dış halka)
+        const u0 = clamp(cizimIlerleme(t) / 0.3);
+        if (u0 > 0 && u0 < 1) {
+          const ko = kaynakOlcek(t), don = 0.05 * (t - T.bas) + 0.02 * Math.sin(t * 0.5);
+          const a = -Math.PI / 2 + ease.inOutCubic(u0) * TAU + don;
+          Y.parilti(g, K.x + Math.cos(a) * K.R * ko, K.y + Math.sin(a) * K.R * ko, 16, Math.sin(u0 * Math.PI));
+        }
         // "marifetullah": dış halka parlar, çevresinde ışık dolaşır
         const fl = an(t, T.marifet - 0.02, 0.22, ease.outCubic);
         if (fl > 0) {
@@ -511,10 +521,11 @@ function simgeCiz(g, i, p, t) {
   const vA = altinVaris(i), vG = gulVaris(i);
   const sicra = 0.08 * Math.sin(Math.PI * clamp((t - vA + 0.04) / 0.38)) + 0.07 * Math.sin(Math.PI * clamp((t - vG + 0.04) / 0.38));
   for (const [tv, renk] of [[vA, '#D9A93F'], [vG, '#D9718E']]) {
-    const dv = clamp((t - tv + 0.04) / 0.7);
+    const dv = clamp((t - tv + 0.04) / 0.55);
     if (dv > 0 && dv < 1 && ol < 0.5) {
       const e = ease.outCubic(dv);
-      konturCiz(g, elips(x, y, LR * lerp(1.0, 1.42, e), LR * lerp(1.0, 1.42, e))[0].pts, { renk, kal: 2.6 * (1 - e * 0.5), alfa: 0.75 * (1 - dv), kapali: true, titreme: 0.4, tohum: 90 + i });
+      const R = LR * lerp(1.0, 1.26, e);
+      konturCiz(g, elips(x, y, R, R)[0].pts, { renk, kal: 2.8 * (1 - e * 0.5), alfa: 0.8 * (1 - dv) ** 1.6, kapali: true, titreme: 0.4, tohum: 90 + i });
       M.hale(g, x, y - LR * 0.2, LR * 1.4, renk === '#D9A93F' ? '#FFF0BC' : '#FFE0E8', 0.5 * (1 - dv));
     }
   }
@@ -525,14 +536,16 @@ function simgeCiz(g, i, p, t) {
   g.translate(x, y);
   g.rotate(rr);
   g.scale(s * SIMGE_OLCEK, s * SIMGE_OLCEK);
-  [kandilCiz, kusCiz, narCiz, balCiz][i](g, t, { t0, bg, ol, i });
+  // bağlanmadan önce hafif soluk; iplik ulaşınca tam renk (canlanma)
+  const gri = Math.max(ol, 0.2 * (1 - clamp(bg / 0.55)));
+  [kandilCiz, kusCiz, narCiz, balCiz][i](g, t, { t0, bg, ol, gri, i });
   g.restore();
 }
 
 // --- kandil
-function kandilCiz(g, t, { t0, bg, ol }) {
+function kandilCiz(g, t, { t0, bg, ol, gri }) {
   const lx = 0, ly = 26;
-  cift(g, kandil, kandilG, lx, ly, ol);
+  cift(g, kandil, kandilG, lx, ly, gri);
   const fx = lx + Y.FITIL[0], fy = ly + Y.FITIL[1];
   // alev: girişten hemen sonra tutuşur, "onsuz"da titreyip söner
   const tut = ease.outBack(an(t, t0 + 0.32, 0.45, ease.lin), 1.8);
@@ -548,20 +561,20 @@ function kandilCiz(g, t, { t0, bg, ol }) {
     ogeCiz(g, alev, fx, fy + 1, { sx: boy * (2 - tit) * 0.95, sy: boy * tit, r: yan });
   }
   // duman: söndükten sonra ince kıvrımlar yükselir
-  const du = (t - (karaVaris(0) + 0.22)) / 1.9;
-  if (du > 0 && du < 1) Y.duman(g, fx, fy - 4, du, t, { alfa: 0.7 });
+  const du = (t - (karaVaris(0) + 0.16)) / 1.6;
+  if (du > 0 && du < 1) Y.duman(g, fx, fy - 4, du, t, { alfa: 0.9 });
 }
 
 // --- kuş
 const BAS_POZ = [0.0, -0.18, 0.06, -0.1, 0.16, -0.22, 0.02, 0.12, -0.06];
-function kusCiz(g, t, { t0, bg, ol }) {
+function kusCiz(g, t, { t0, bg, ol, gri }) {
   g.save();
   g.translate(0, 34);
   g.scale(0.9, 0.9);
   // dal, yapraklar, çiçekler (hafif salınım)
-  cift(g, dal.dal, dalG.dal, 0, 0, ol);
-  dal.yapraklar.forEach((y, k) => cift(g, y.oge, dalG.yapraklar[k], y.x, y.y, ol, { r: y.r + Math.sin(t * 1.6 + k) * 0.05 }));
-  dal.cicekler.forEach((c, k) => cift(g, c.oge, dalG.cicekler[k], c.x, c.y, ol, { s: c.s * (1 - 0.12 * ol), r: Math.sin(t * 1.2 + k * 2) * 0.08 }));
+  cift(g, dal.dal, dalG.dal, 0, 0, gri);
+  dal.yapraklar.forEach((y, k) => cift(g, y.oge, dalG.yapraklar[k], y.x, y.y, gri, { r: y.r + Math.sin(t * 1.6 + k) * 0.05 }));
+  dal.cicekler.forEach((c, k) => cift(g, c.oge, dalG.cicekler[k], c.x, c.y, gri, { s: c.s * (1 - 0.12 * ol), r: Math.sin(t * 1.2 + k * 2) * 0.08 }));
   // kuş: baş kesik kesik döner (kuş gibi), ötme patlamaları
   const bx = -6, by = 2;
   const canli = an(t, t0 + 0.25, 0.3) * (1 - ol);
@@ -581,15 +594,15 @@ function kusCiz(g, t, { t0, bg, ol }) {
   g.save();
   g.translate(bx, by + cok);
   g.rotate(0.04 * ol);
-  cift(g, kus.govde, kusG.govde, 0, 0, ol, { sy: 1 + 0.015 * Math.sin(t * 3.2), pivot: [0, 0] });
-  cift(g, kus.kanat, kusG.kanat, 20, -50, ol, { r: -0.05 * ot * Math.sin(t * 9), pivot: [20, -50] });
+  cift(g, kus.govde, kusG.govde, 0, 0, gri, { sy: 1 + 0.015 * Math.sin(t * 3.2), pivot: [0, 0] });
+  cift(g, kus.kanat, kusG.kanat, 20, -50, gri, { r: -0.05 * ot * Math.sin(t * 9), pivot: [20, -50] });
   g.save();
   g.translate(Y.KUS.boyun[0], Y.KUS.boyun[1]);
   g.rotate(basA);
   g.translate(-Y.KUS.boyun[0], -Y.KUS.boyun[1]);
-  cift(g, kus.gagaAlt, kusG.gagaAlt, Y.KUS.gaga[0], Y.KUS.gaga[1], ol, { pivot: Y.KUS.gaga, r: gaga });
-  cift(g, kus.gagaUst, kusG.gagaUst, Y.KUS.gaga[0], Y.KUS.gaga[1], ol, { pivot: Y.KUS.gaga, r: -gaga * 0.35 });
-  cift(g, kus.bas, kusG.bas, 0, 0, ol);
+  cift(g, kus.gagaAlt, kusG.gagaAlt, Y.KUS.gaga[0], Y.KUS.gaga[1], gri, { pivot: Y.KUS.gaga, r: gaga });
+  cift(g, kus.gagaUst, kusG.gagaUst, Y.KUS.gaga[0], Y.KUS.gaga[1], gri, { pivot: Y.KUS.gaga, r: -gaga * 0.35 });
+  cift(g, kus.bas, kusG.bas, 0, 0, gri);
   // göz
   g.fillStyle = ol > 0.5 ? '#4A4656' : '#1E2240';
   g.beginPath(); g.arc(Y.KUS.goz[0], Y.KUS.goz[1], 3.4, 0, TAU); g.fill();
@@ -603,7 +616,7 @@ function kusCiz(g, t, { t0, bg, ol }) {
 }
 
 // --- nar
-function narCiz(g, t, { t0, bg, ol, i }) {
+function narCiz(g, t, { t0, bg, ol, gri, i }) {
   const acil = an(t, t0 + 0.36, 0.42, ease.outCubic);
   const ez = Math.sin(Math.PI * clamp((t - t0 - 0.36) / 0.4)) * 0.06; // açılırken esneme
   const kur = 1 - 0.05 * ol;
@@ -625,9 +638,9 @@ function narCiz(g, t, { t0, bg, ol, i }) {
 }
 
 // --- bal
-function balCiz(g, t, { t0, bg, ol }) {
+function balCiz(g, t, { t0, bg, ol, gri }) {
   const x = 0, y = -8, s = 1.12, r = -0.08;
-  cift(g, petek, petekG, x, y, ol, { s, r });
+  cift(g, petek, petekG, x, y, gri, { s, r });
   const parl = 1 - ol;
   if (parl > 0.01) ogeCiz(g, petekP, x, y, { s, r, alfa: parl });
   // damlanın petekteki yeri (dönüş ve ölçekle)
@@ -649,11 +662,11 @@ function balCiz(g, t, { t0, bg, ol }) {
         const v = u / 0.62;
         const sc = 0.25 + 0.75 * ease.inOutSine(v);
         const sy = 1 + 0.4 * v * v;
-        ogeCiz(g, damla, dx, dy + 2.3 * R * sc * sy, { sx: sc, sy: sc * sy });
+        cift(g, damla, damlaG, dx, dy + 2.3 * R * sc * sy, gri, { sx: sc, sy: sc * sy });
       } else {
         const v = (u - 0.62) / 0.38;
         const yy = dy + 2.3 * R * 1.4 + (zemin - dy - 2.3 * R * 1.4) * v * v;
-        ogeCiz(g, damla, dx, yy, { s: 1, sy: 1.12, alfa: 1 - smooth(0.8, 1, v) });
+        cift(g, damla, damlaG, dx, yy, gri, { s: 1, sy: 1.12, alfa: 1 - smooth(0.8, 1, v) });
       }
     }
     // önceki damlanın sıçraması

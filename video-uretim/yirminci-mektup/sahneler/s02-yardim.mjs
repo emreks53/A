@@ -521,9 +521,21 @@ export function desenMerkezden(ctx, x, y, Rr, t, { cizim = 1, dolgu = 0, dolguYa
     if (u <= 0) return;
     const kal = Math.max(1.6, Rr * (yol.katman === 4 ? 0.006 : 0.009));
     const renk = yol.katman >= 3 ? M.ALTIN_KOYU : '#2F6F67';
-    let pts = yol.pts;
-    if (!yol.kapali && u < 1) pts = [pts[1], pts[0]]; // kollar merkezden dışa doğru çizilir
-    konturCiz(ctx, pts, { renk, kal, alfa: 0.88, kapali: yol.kapali, titreme: 0.4, tohum: 40 + i, cizim: u >= 1 ? 1 : ease.inOutCubic(u) });
+    if (u >= 1) {
+      konturCiz(ctx, yol.pts, { renk, kal, alfa: 0.88, kapali: yol.kapali, titreme: 0.4, tohum: 40 + i });
+      return;
+    }
+    const e = ease.inOutCubic(u);
+    if (!yol.kapali) {
+      // kollar merkezden dışa doğru çizilir
+      konturCiz(ctx, [yol.pts[1], yol.pts[0]], { renk, kal, alfa: 0.88, kapali: false, titreme: 0.4, tohum: 40 + i, cizim: e });
+      return;
+    }
+    // kapalı yollar simetrik olarak birden çok noktadan aynı anda çizilir
+    const n = yol.katman === 1 ? 4 : yol.katman === 4 ? 4 : 8;
+    for (const [j, parca] of simetrikParcalar(yol.pts, n).entries()) {
+      konturCiz(ctx, parca, { renk, kal, alfa: 0.88, kapali: false, titreme: 0.4, tohum: 40 + i * 13 + j, cizim: e, uc: 0.0 });
+    }
   });
   // kollar boyunca merkeze akan ışık (bütün çizgiler merkezdeki noktaya çıkar)
   if (kolIsik >= 0 && kolIsik <= 1) {
@@ -560,6 +572,23 @@ export function desenMerkezden(ctx, x, y, Rr, t, { cizim = 1, dolgu = 0, dolguYa
     M.hale(ctx, 0, 0, Rr * 0.08, '#FFFFFF', 0.9 * merkezIsik);
   }
   ctx.restore();
+}
+
+/** Kapalı yolu eşit yay uzunluğunda n açık parçaya böler (her parça bir sonrakinin başına kadar) */
+const parcaOnbellek = new Map();
+function simetrikParcalar(pts, n) {
+  const key = pts.length + ':' + pts[0][0].toFixed(2) + ',' + pts[0][1].toFixed(2) + ':' + n + ':' + pts[1][0].toFixed(2);
+  if (parcaOnbellek.has(key)) return parcaOnbellek.get(key);
+  const q = yenidenOrnekle(pts, 2, true);
+  const L = q.length - 1;
+  const out = [];
+  for (let j = 0; j < n; j++) {
+    const a = Math.round((j * L) / n), b = Math.round(((j + 1) * L) / n);
+    out.push(q.slice(a, b + 1));
+  }
+  if (parcaOnbellek.size > 400) parcaOnbellek.clear();
+  parcaOnbellek.set(key, out);
+  return out;
 }
 
 // ================================================================ altın-krem ışık zemini (s03 başlangıcıyla aynı)

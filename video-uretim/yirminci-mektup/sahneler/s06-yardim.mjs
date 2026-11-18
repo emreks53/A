@@ -422,7 +422,7 @@ export function kesikCiz(api, pts, { tire = 11, bosluk = 7, kapali = false, ...o
  * Ağacın kesik çizgili hayali: M.agac verisinden (aynı tohum) gövde hattı, dallar, taç dış hattı ve meyve yerleri.
  * Yerel (0,0) gövde dibi. Döner oge (yukarı doğru silerek açılır).
  */
-export function hayalOge(A, { boy, tohum, olcek = 1.6, renk = '#C99A2E' }) {
+export function hayalOge(A, { boy, tohum, olcek = 1.6, renk = '#B98316' }) {
   const r = rng(tohum);
   const gk = boy * 0.075, gy = boy * 0.5;
   const egri = r.ara(-0.04, 0.04) * boy; // M.agac'taki ilk rastgele çağrıyla aynı
@@ -449,7 +449,7 @@ export function hayalOge(A, { boy, tohum, olcek = 1.6, renk = '#C99A2E' }) {
   return oge({
     ad: 's06-hayal-' + boy + '-' + tohum, olcek, sekil, zemin: null, arka: null, tarama: null, kontur: null, pay: 6,
     detay: (ctx, api) => {
-      const o = { renk, kal: 2.5, alfa: 0.95, titreme: 0.3, uc: 0.02 };
+      const o = { renk, kal: 3.0, alfa: 1, titreme: 0.3, uc: 0.02 };
       kesikCiz(api, solHat, { ...o, tire: 12, bosluk: 7 });
       kesikCiz(api, sagHat, { ...o, tire: 12, bosluk: 7 });
       for (const d of A.dallar) {

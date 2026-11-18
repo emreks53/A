@@ -41,6 +41,7 @@ const pUzak = (x) => 1080 + 3 * Math.sin(x * 0.017 + 1) - tumsek(x, 920, 120, 27
 let sim, gokR, gokG, uzakR, uzakG, ortaR, ortaG, onR, onG, agacR, agacG, cicekR, cicekG, bulutlarR, agirlar, yagmurBulutu;
 let kucukAgacR, kucukAgacG, kuruAgac, uzakKuru, calilar, taslar, golgeler, sisU, sisO, huzme, kamera, onDallar, renkTuval, adamTuval;
 let XDUR; // adamın durduğu yer
+let onPlan, otlar;
 
 // ---------------------------------------------------------------- yardımcılar
 function griKopya(c, { sat = 0.22, parlak = 0.94, tint = '#E4DFEA' } = {}) {
@@ -96,7 +97,9 @@ function tasOge(w, tohum) {
 }
 
 // ---------------------------------------------------------------- adam: poz ve durum
-const DIZ_C = { kalca: [0.12, 0.26], a2: [-1.8, -1.86], a3: [-Math.PI / 2, -Math.PI / 2] };
+const DIZ_C = { kalca: [0.06, 0.2], a2: [-1.82, -1.9], a3: [-Math.PI / 2, -Math.PI / 2] };
+const DIZ_SURE = 0.56;
+const DIZ_CARPMA = kb('müptela') + 0.02 + DIZ_SURE;
 
 function ustKaristir(p, h, w) {
   if (w <= 0) return p;
@@ -131,24 +134,26 @@ function adamDurum(t) {
   // nefes / omuz inip kalkması
   poz.govde += 0.012 * nefes * an(t, 62.8, 0.5);
   let X = o.X;
-  const k = an(t, T.muptela + 0.02, 0.62, ease.inQuad);
+  const k = an(t, T.muptela + 0.02, DIZ_SURE, ease.inQuad);
   if (k > 0) {
     const kd = { ...poz };
     // dizler: uyluk önce öne çıkar sonra dikleşir; baldır geriye yatar; ayak parmak üstüne döner
     const sk0 = Y.iskelet(poz);
-    kd.kalca = [0, 1].map((i) => lerp(poz.kalca[i], DIZ_C.kalca[i], k) + 0.42 * Math.sin(Math.PI * k));
+    kd.kalca = [0, 1].map((i) => lerp(poz.kalca[i], DIZ_C.kalca[i], k) + 0.36 * Math.sin(Math.PI * k));
     const a2 = [0, 1].map((i) => lerp(sk0.bacak[i].a2, DIZ_C.a2[i], k));
     const a3 = [0, 1].map((i) => lerp(sk0.bacak[i].a3, DIZ_C.a3[i], ease.inOutSine(k)));
     kd.diz = [0, 1].map((i) => a2[i] - kd.kalca[i]);
     kd.bilek = [0, 1].map((i) => a3[i] - a2[i]);
-    // çarpma sonrası: gövde öne düşer, baş sarkar, sonra yavaşça toparlanır (gecikmeli ikincil hareket)
-    const sonra = an(t, T.muptela + 0.64, 0.7, ease.outCubic);
-    const salla = Math.sin(clamp((t - T.muptela - 0.64) / 0.9) * Math.PI) * (1 - an(t, T.muptela + 0.64, 1.2));
-    kd.govde = lerp(poz.govde, 0.3, k) + 0.1 * salla + 0.06 * sonra;
-    kd.bas = lerp(poz.bas, 0.62, ease.inOutSine(k)) + 0.08 * salla;
-    kd.omuz = [lerp(poz.omuz[0], 0.18, k) + 0.12 * salla, lerp(poz.omuz[1], 0.3, k) + 0.15 * salla];
-    kd.dirsek = [lerp(poz.dirsek[0], 0.1, k), lerp(poz.dirsek[1], 0.14, k)];
-    kd.govde += 0.01 * nefes * sonra;
+    // düşüşte gövde öne savrulur, kollar ataletle öne gelir; çarpmadan sonra gövde geri oturur, kollar sarkar,
+    // baş gecikmeyle daha da düşer (ikincil hareket)
+    const sonra = an(t, DIZ_CARPMA, 0.9, ease.outCubic);
+    const bas2 = an(t, DIZ_CARPMA + 0.1, 1.1, ease.inOutSine);
+    kd.govde = lerp(lerp(poz.govde, 0.36, k), 0.15, sonra);
+    kd.bas = lerp(lerp(poz.bas, 0.5, k), 0.64, bas2);
+    kd.omuz = [0, 1].map((i) => lerp(lerp(poz.omuz[i], [0.2, 0.3][i], k), [-0.1, -0.03][i], sonra));
+    kd.dirsek = [0, 1].map((i) => lerp(lerp(poz.dirsek[i], 0.2, k), [0.12, 0.2][i], sonra));
+    kd.govde += 0.014 * nefes * sonra;
+    kd.omuz = kd.omuz.map((v) => v - 0.01 * nefes * sonra);
     poz = kd;
     // ayak parmakları yerinde kalsın: kalçayı buna göre kaydır
     const parmak = (p) => {
@@ -158,8 +163,7 @@ function adamDurum(t) {
     X = o.X - S * (parmak(sk0Poz(o)) - parmak(poz)); // yon -1: yerel ileri = dünya -x
     const zp = Y.zeminZipla(poz) + 1;
     // çarpma: dizler yere değdiğinde küçük sekme
-    const sek = Math.sin(clamp((t - T.muptela - 0.64) / 0.22) * Math.PI) * 5 * (t > T.muptela + 0.64 ? 1 : 0);
-    poz.zipla = zp + sek;
+    poz.zipla = zp;
     poz.serbest = true;
     return { mod: 'yan', X, yon: -1, sx, poz, Xkam: o.X };
   }
@@ -228,7 +232,7 @@ export default {
     { t: T.evham, tur: 'ruzgar', guc: 0.26, sure: 1.8 },
     { t: T.manen + 0.05, tur: 'kalp', guc: 0.24 },
     { t: T.maddeten, tur: 'yagmur', guc: 0.32, sure: 2.7 },
-    { t: T.muptela + 0.66, tur: 'toz', guc: 0.22 },
+    { t: DIZ_CARPMA, tur: 'toz', guc: 0.22 },
   ],
   hazirla() {
     // yürüyüş
@@ -237,9 +241,9 @@ export default {
     sim = Y.yuruyusSim({ t0: T.bas - 0.2, t1: T.son + 0.2, x0: X0, yon: -1, s: S, S0: 118, wF, omF, L0: 24 });
     XDUR = sim.sonX;
 
-    KS = Y.egri([[57.0, 398], [57.75, 402], [59.4, 606], [60.4, 628], [61.95, 702], [62.5, 700], [64.9, 600], [67.6, 548]]);
-    KY = Y.egri([[57.0, 1330], [60.4, 1326], [61.95, 1302], [62.5, 1302], [64.9, 1316], [67.6, 1302]]);
-    KZ = Y.egri([[57.0, Math.log(1.12)], [57.75, Math.log(1.135)], [60.4, Math.log(1.1)], [61.95, Math.log(0.8)], [62.4, Math.log(0.805)], [63.6, Math.log(0.97)], [64.9, Math.log(1.15)], [65.6, Math.log(1.21)], [67.6, Math.log(1.45)]]);
+    KS = Y.egri([[57.0, 398], [57.75, 402], [59.4, 606], [60.4, 640], [61.95, 765], [62.5, 760], [64.9, 610], [67.6, 556]]);
+    KY = Y.egri([[57.0, 1330], [60.4, 1326], [61.95, 1290], [62.5, 1290], [64.9, 1316], [67.6, 1302]]);
+    KZ = Y.egri([[57.0, Math.log(1.12)], [57.75, Math.log(1.135)], [60.4, Math.log(1.1)], [61.95, Math.log(0.72)], [62.4, Math.log(0.725)], [63.6, Math.log(0.93)], [64.9, Math.log(1.14)], [65.6, Math.log(1.22)], [67.6, Math.log(1.5)]]);
 
     // gökler
     gokR = gokTuvali({ w: 1800, h: 1750, olcek: 1.05, ad: 's07-gok-renk', gunes: { x: ISIK.x + 420, y: ISIK.y + 320, r: 70 }, parilti: '#F6E7B9', arkaAlt: '#E4DEEE', tohum: 21 });
@@ -340,9 +344,9 @@ export default {
 
     // kuruntu gölgeleri
     golgeler = [
-      { o: Y.golgeOge(860, 380, 5, 1), dx: -380, dy: -36, t0: T.evham + 0.02, faz: 0.3, R: 70 },
-      { o: Y.golgeOge(780, 340, 8, 1), dx: 360, dy: -52, t0: T.evham + 0.2, faz: 2.1, R: 60 },
-      { o: Y.golgeOge(1040, 470, 13, 1), dx: -20, dy: -92, t0: T.evham + 0.4, faz: 4.0, R: 90 },
+      { o: Y.golgeOge(620, 400, 5, 1, 0.32), dx: -330, dy: -40, t0: T.evham + 0.02, faz: 0.3, R: 50 },
+      { o: Y.golgeOge(560, 380, 8, 1, -0.3), dx: 330, dy: -55, t0: T.evham + 0.22, faz: 2.1, R: 46 },
+      { o: Y.golgeOge(820, 560, 13, 1, 0.12), dx: 40, dy: -110, t0: T.evham + 0.44, faz: 4.0, R: 70, uzak: true },
     ];
     sisU = Y.sisTuvali(2400, 260, 3, '#EEEBF2');
     sisO = Y.sisTuvali(2400, 220, 9, '#E8E5EE');
@@ -362,12 +366,32 @@ export default {
       g.fill();
     }
 
-    // zeminden fışkıran dikenli dallar (adamın durduğu yerin çevresinde; dz: derinlik, + önde)
+    // zeminden fışkıran dikenli dallar (adamın durduğu yerin çevresinde; dz: derinlik, + önde), yan dallarıyla
     const dr = rng(909);
-    onDallar = [
-      [-92, -10, 150, 0.42, 1.6], [-58, 12, 120, 0.3, -1.4], [-24, -16, 170, 0.12, 1.2], [30, 14, 135, -0.2, -1.5],
-      [64, -8, 160, -0.36, 1.4], [104, 10, 112, -0.5, -1.2], [-128, 4, 95, 0.6, 1.8], [136, -4, 100, -0.62, -1.6],
-    ].map(([dx, dz, boy, aci, kv], i) => ({ dx, dz, pts: Y.dalYolu(boy, aci, kv, 300 + i), t0: T.alam + i * 0.045 + dr.ara(0, 0.05), sure: dr.ara(0.55, 0.8), faz: dr() }));
+    onDallar = [];
+    [-150, -118, -88, -62, -38, -16, 10, 32, 56, 82, 108, 138, -178, 166].forEach((dx, i) => {
+      const sg = dx < 0 ? 1 : -1; // adama doğru yatar ve kıvrılır
+      const yakin = 1 - Math.min(1, Math.abs(dx) / 185);
+      const boy = dr.ara(85, 130) + 135 * yakin;
+      const aci = sg * dr.ara(0.1, 0.42) + dr.ara(-0.08, 0.08);
+      const kv = sg * dr.ara(0.8, 1.8);
+      const pts = Y.dalYolu(boy, aci, kv, 300 + i);
+      const dallar = [];
+      for (let j = 0; j < (boy > 150 ? 2 : 1); j++) {
+        const f = dr.ara(0.3, 0.6);
+        const [bx, by] = pts[Math.floor(f * (pts.length - 1))];
+        const yonA = aci + (j % 2 ? 1 : -1) * dr.ara(0.55, 0.95);
+        dallar.push({ f, pts: Y.dalYolu(boy * dr.ara(0.3, 0.45), yonA, -sg * dr.ara(0.4, 1.3), 500 + i * 7 + j).map(([x, y]) => [x + bx, y + by]) });
+      }
+      onDallar.push({ dx, dz: (i % 2 ? 1 : -1) * dr.ara(5, 18), pts, dallar, t0: T.alam + i * 0.028 + dr.ara(0, 0.05), sure: dr.ara(0.55, 0.85), faz: dr() });
+    });
+    // ön plan: alt kenarı çerçeveleyen otlar ve taşlar (renkli dünyada yeşil, gri dünyada kuru)
+    onPlan = [
+      { x: -1320, s: 1.0, tip: 0 }, { x: -1060, s: 0.8, tip: 2 }, { x: -820, s: 0.9, tip: 1 }, { x: -520, s: 1.05, tip: 0 },
+      { x: -300, s: 0.75, tip: 2 }, { x: -60, s: 0.9, tip: 1 }, { x: 260, s: 1.0, tip: 0 }, { x: 520, s: 0.8, tip: 2 },
+      { x: 760, s: 0.95, tip: 1 }, { x: 1080, s: 1.0, tip: 0 }, { x: 1340, s: 0.85, tip: 1 },
+    ];
+    otlar = { renk: [Y.otOge(230, 3, false), Y.otOge(190, 8, false)], kuru: [Y.otOge(230, 3, true), Y.otOge(190, 8, true)], tas: tasOge(110, 21) };
 
     renkTuval = tuval(W, H);
     adamTuval = tuval(W, H);
@@ -453,10 +477,10 @@ function dunya(g, t, durum, gri) {
     ogeCiz(c, gri ? ortaG : ortaR, 0, 0);
     for (const x of [330, 760, 1220]) ogeCiz(c, gri ? kucukAgacG : kucukAgacR, x, pOrta(x) + 14, { s: x === 760 ? 0.85 : 1 });
     if (gri) {
-      ogeCiz(c, kuruAgac, -650, pOrta(-650) + 18, { s: 1 });
+      ogeCiz(c, kuruAgac, -540, pOrta(-540) + 18, { s: 1 });
       ogeCiz(c, calilar[1], -380, pOrta(-380) + 24, { s: 0.7 });
       ogeCiz(c, calilar[3], -930, pOrta(-930) + 24, { s: 0.75 });
-      ogeCiz(c, taslar[3], -520, pOrta(-520) + 30, { s: 0.8 });
+      ogeCiz(c, taslar[3], -420, pOrta(-420) + 30, { s: 0.8 });
     }
   }, F.orta);
   if (gri) kameraIle(g, cam, (c) => sisCiz(c, sisO, 1130, -t * 14, 0.7), F.sisO);
@@ -512,6 +536,7 @@ function dunya(g, t, durum, gri) {
       gogusBulutu(c, t, durum);
       yagmurCiz(c, t, 1);
     }, F.on);
+    onPlanCiz(g, cam, true);
     renkAyari(g, t);
   } else {
     kameraIle(g, cam, (c) => { durum.gogus = adamCiz(c, d); }, F.on);
@@ -548,6 +573,21 @@ function dunya(g, t, durum, gri) {
       }
       g.restore();
     }
+    onPlanCiz(g, cam, false);
+  }
+}
+
+/** ön plan: yatayda paralaksla kayan, dikeyde alt kenara bağlı otlar/taşlar (altyazı bandının altında kalır) */
+function onPlanCiz(g, cam, gri) {
+  const f = 1.3;
+  const zf = Math.pow(cam.z, 0.45);
+  const merkez = 540 + (cam.x - 540) * f;
+  for (const o of onPlan) {
+    const x = 540 + (o.x - merkez) * zf * 1.05;
+    if (x < -260 || x > W + 260) continue;
+    const y = H + 12 + (1 - zf) * 30;
+    if (o.tip === 2) ogeCiz(g, otlar.tas, x, y + 10, { s: o.s * zf });
+    else ogeCiz(g, (gri ? otlar.kuru : otlar.renk)[o.tip], x, y, { s: o.s * zf, r: Math.sin(o.x + cam.x * 0.002) * 0.03 });
   }
 }
 
@@ -589,8 +629,10 @@ function gogusIsigi(ctx, t, durum) {
     // yandan: ışık göğsün önünde (adamın baktığı yana kaymış)
     const x = gx + d.yon * 4, y = gy - 4;
     if (guc > 0.01) {
-      M.hale(c, x, y, 70, '#FFE7A6', 0.55 * guc);
-      M.hale(c, x, y, 26, '#FFF7DA', 0.9 * guc);
+      M.hale(c, x, y, 110, '#FFE9B0', 0.5 * guc);
+      M.hale(c, x, y, 36, '#F2BE55', 0.6 * guc, 'source-over');
+      M.isinlar(c, x, y, 15, 44, t, { sayi: 12, alfa: 0.5 * guc, kal: 1.7, renk: '#E2AE3E', tohum: 5, hiz: 0.3 });
+      M.hale(c, x, y, 15, '#FFF9E6', 0.95 * guc, 'source-over');
     }
     // sönüşten sonra yükselen ince gri duman
     const du = clamp((t - T.sevmeyen - 0.62) / 1.2);
@@ -616,13 +658,15 @@ function golgeCiz(c, t) {
   for (const gl of golgeler) {
     const u = an(t, gl.t0, 1.1, ease.outCubic);
     if (u <= 0) continue;
-    const son = an(t, T.muptela + 0.5, 1.6, ease.inOutSine);
-    const a = 0.58 * u * (1 - 0.45 * son);
+    const son = an(t, T.muptela + 0.4, 1.7, ease.inOutSine); // sona doğru sise çekilir: ıssızlık
+    const a = (gl.uzak ? 0.4 : 0.55) * u * (1 - 0.75 * son);
     const w = 0.42 * (t - gl.t0) + gl.faz;
     const x = XDUR + gl.dx + Math.sin(w) * gl.R;
-    const y = ZEMIN + gl.dy + 30 * son;
-    const nefes = 1 + 0.025 * Math.sin(t * 1.4 + gl.faz);
-    ogeCiz(c, gl.o, x, y, { sx: (0.86 + 0.14 * u) / nefes, sy: (0.55 + 0.45 * u) * nefes, r: 0.035 * Math.sin(w * 1.3), alfa: a });
+    const y = ZEMIN + gl.dy + 60 * son;
+    const nefes = 1 + 0.03 * Math.sin(t * 1.4 + gl.faz);
+    // yükselir ve adama doğru eğilir
+    const egil = 0.05 * Math.sin(w * 1.3) + (gl.dx < 0 ? 1 : -1) * 0.05 * u;
+    ogeCiz(c, gl.o, x, y, { sx: (0.8 + 0.2 * u) / nefes, sy: (0.5 + 0.5 * u) * nefes * (1 - 0.15 * son), r: egil, alfa: a });
   }
 }
 
@@ -643,14 +687,14 @@ function seritler(c, t, taraf, cx) {
     const A = s.a * ac, B = s.b * ac;
     const cy = ZEMIN + s.dy * S;
     const th0 = s.f0 + s.w * (t - T.evham);
-    for (let k = 0; k < 4; k++) {
-      const off = (k - 1.5) * 6;
+    for (let k = 0; k < 6; k++) {
+      const off = (k - 2.5) * 6.5;
       const span = s.span * (0.7 + 0.3 * ((k * 37) % 5) / 5);
       const st = th0 + k * 0.12;
       let parca = [];
       const bitir = () => {
         if (parca.length > 2) {
-          c.fillStyle = rgba('#4F4860', (0.17 + 0.06 * (k % 2)) * u * (1 - 0.5 * son));
+          c.fillStyle = rgba('#4F4860', (0.2 + 0.08 * (k % 2)) * u * (1 - 0.6 * son));
           darbe(c, parca, s.kal * (0.7 + 0.15 * k), { incelme: 0.4, sivri: 0.5 });
         }
         parca = [];
@@ -674,13 +718,17 @@ function dikenler(c, t, d, taraf) {
     if ((dl.dz > 0 ? 1 : -1) !== taraf) continue;
     const u = an(t, dl.t0, dl.sure, ease.outCubic);
     if (u <= 0) continue;
-    const pts = dl.pts.map(([x, y]) => [XDUR + dl.dx + x * S, ZEMIN + dl.dz + y * S]);
-    Y.dikenliDal(c, pts, u, { k0: 4.6 * S, k1: 1.3, aralik: 12, dikenBoy: 6, faz: dl.faz });
+    const tr = ([x, y]) => [XDUR + dl.dx + x * S, ZEMIN + dl.dz + y * S];
+    Y.dikenliDal(c, dl.pts.map(tr), u, { k0: 6.2 * S, k1: 1.4, aralik: 13, dikenBoy: 7.5, faz: dl.faz });
+    for (const al of dl.dallar) {
+      const us = clamp((u - al.f) / (1 - al.f));
+      if (us > 0) Y.dikenliDal(c, al.pts.map(tr), us, { k0: 3.8 * S, k1: 1.2, aralik: 12, dikenBoy: 6.5, faz: 1 - dl.faz });
+    }
   }
   // sarmallar: ön bacak (iki yarı) ve arka bacak (yalnız arkada)
   const bacaklar = [
-    { i: 1, t0: T.alam + 0.16, tur: 2.4, oran: 0.62, r0: 21, r1: 25, faz: 0.6 },
-    { i: 0, t0: T.alam + 0.26, tur: 1.8, oran: 0.4, r0: 20, r1: 23, faz: 2.2 },
+    { i: 1, t0: T.alam + 0.16, tur: 2.4, oran: 0.66, r0: 22, r1: 27, faz: 0.6 },
+    { i: 0, t0: T.alam + 0.26, tur: 1.8, oran: 0.45, r0: 22, r1: 25, faz: 2.2 },
   ];
   for (const b of bacaklar) {
     const u = an(t, b.t0, 0.95, ease.outCubic);
@@ -695,7 +743,7 @@ function sarmalCiz(c, sp, u, taraf, hepsi) {
   const s = [0];
   for (let i = 1; i < sp.length; i++) s.push(s[i - 1] + Math.hypot(sp[i].x - sp[i - 1].x, sp[i].y - sp[i - 1].y));
   const L = s[s.length - 1], Lb = L * u;
-  const k0 = 4.2 * S, k1 = 1.4;
+  const k0 = 5.6 * S, k1 = 1.6;
   let i = 0;
   while (i < sp.length - 1) {
     const yan = sp[i].on > 0 ? 1 : -1;
@@ -725,7 +773,7 @@ function sarmalCiz(c, sp, u, taraf, hepsi) {
             ps += l;
             if (ps > 11) {
               ps = 0;
-              Y.dikenCiz(c, pts[k][0], pts[k][1], dx / l, dy / l, yon, 5.5 * lerp(1, 0.7, a0), renk);
+              Y.dikenCiz(c, pts[k][0], pts[k][1], dx / l, dy / l, yon, 7 * lerp(1, 0.7, a0), renk);
               yon = -yon;
             }
           }

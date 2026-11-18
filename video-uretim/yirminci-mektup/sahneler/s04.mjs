@@ -53,8 +53,8 @@ function zKalp(t) {
   const p = 0.2 * pop(t, T.kalb, 0.42);
   const g = 0.8 * an(t, Z.iris + 0.06, 0.8, ease.inOutCubic);
   const d = 0.06 * an(t, 29.1, 2.0, ease.inOutSine);
-  const zm = Math.log(2.4 / 1.06) * an(t, Z.zum, 0.88, ease.inOutCubic);
-  const s = 0.08 * an(t, Z.zum + 0.88, 1.0, ease.outSine);
+  const zm = Math.log(2.4 / 1.06) * an(t, Z.zum, 1.0, ease.inOutSine);
+  const s = 0.08 * an(t, Z.zum + 1.0, 1.0, ease.outSine);
   return (p + g + d) * Math.exp(zm + s);
 }
 // kalp atışı: "lup-dup" (0..1)
@@ -102,12 +102,15 @@ export default {
     const r = rng(404);
     cicekler = [];
     // (x, sırta göre derinlik): sırtta ince bir sıra; bant yanlarında birkaç; altta (ekranın alt şeridi) daha büyükler
-    const yer = [[120, 6], [206, 14], [300, 4], [388, 22], [700, 20], [782, 6], [872, 16], [962, 8], [60, 18], [1030, 14],
-      [110, 110], [40, 170], [990, 120], [1060, 190],
-      [70, 250], [190, 300], [330, 270], [460, 320], [600, 285], [740, 315], [880, 265], [1000, 300], [130, 360], [950, 370], [540, 370]];
-    for (const [x, dy] of yer) {
+    // [x, derinlik, ölçek]; en öndeki büyükler ekranın alt kenarından taşar
+    const yer = [[120, 6, 1], [206, 14, 1], [300, 4, 0.9], [388, 22, 1], [700, 20, 1], [782, 6, 0.9], [872, 16, 1], [962, 8, 1], [60, 18, 1], [1030, 14, 1],
+      [176, 118, 1.05], [150, 178, 1.1], [906, 128, 1.05], [935, 186, 1.1],
+      [160, 236, 1.0], [262, 318, 1.2], [372, 258, 0.9], [488, 336, 1.15], [618, 268, 0.95], [742, 326, 1.2], [858, 250, 0.95],
+      [168, 404, 1.7], [918, 412, 1.75], [596, 428, 1.5], [355, 446, 1.6]];
+    for (const [x, dy, k] of yer) {
       const renk = r.sec(['beyaz', 'beyaz', 'pembe', 'sari', 'beyaz', 'lila']);
-      cicekler.push({ x, y: tOn.ust(x) + dy, s: r.ara(0.85, 1.15) * (dy > 200 ? 1.3 : 1), faz: r() * TAU, oge: M.cicekOge(dy > 200 ? 26 : 22, dy > 200 ? 1.9 : 1.6, renk) });
+      const buyuk = dy > 200;
+      cicekler.push({ x, y: tOn.ust(x) + dy, s: k * r.ara(0.92, 1.08) * (buyuk ? 1.22 : 1), faz: r() * TAU, oge: M.cicekOge(buyuk ? 26 : 22, buyuk ? (k > 1.4 ? 2.6 : 1.9) : 1.6, renk) });
     }
     cicekler.sort((a, b) => a.y - b.y);
     insanHazirla(3);
@@ -267,6 +270,11 @@ function adamDunyasi(ctx, t, cam, gsx, gsy) {
     ogeCiz(g, tOn.oge, tOn.X0, tOn.Y0);
     for (const c of cicekler) ogeCiz(g, c.oge, c.x, c.y, { s: c.s, r: Math.sin(t * 1.2 + c.faz) * 0.05 });
   }, F.on);
+  // nabız dalgaları: hâlis ve sürur vuruşlarında göğüsten havaya yayılan yumuşak ışık (çizgisiz)
+  for (const t0 of [T.halis, T.surur]) {
+    const v = an(t, t0, 1.1, ease.lin);
+    if (v > 0 && v < 1) isikHalkasi(ctx, gsx, gsy, lerp(60, 1000, ease.outCubic(v)) * zz, 130 * zz, '#FFF0D6', 0.32 * Math.pow(1 - v, 1.4), 'screen');
+  }
   // göğüsteki ışık (ruh)
   if (ruhA > 0) ruhIsigi(ctx, gsx, gsy, zz, ruhA, t, nb);
   // ışık zerreleri (süruru izler)
@@ -299,7 +307,7 @@ function kalpDunyasi(ctx, t, katmanAdi, gogus = null) {
   const gy = gogus ? lerp(gogus[1], 900, an(t, Z.iris, 0.7, ease.inOutCubic)) : 900;
   const atisK = 1 + 0.022 * atis(t, T.kalb + 0.5, 0.95) * (1 - an(t, Z.zum, 0.5));
   const sc = zh * atisK;
-  const kalpA = 1 - smooth(1.4, 2.0, zh);
+  const kalpA = 1 - smooth(1.3, 2.0, zh);
   const cx = gx, cy = gy + 0.12 * R0 * sc;
   if (kalpA > 0.002) {
     // kalbin altında yumuşak gölge-buğu, çevresinde pembe ışık
@@ -323,6 +331,9 @@ function kalpDunyasi(ctx, t, katmanAdi, gogus = null) {
       });
     }
   }
+  // havada süzülen yumuşak ışık zerreleri (ikincil hareket)
+  const zA = an(t, Z.iris + 0.4, 0.6) * (1 - an(t, Z.dus, 0.3));
+  if (zA > 0) M.parcaciklar(ctx, 0, 120, W, 1260, t, { sayi: 26, renk: '#FFFFFF', boy: 2.6, alfa: 0.75 * zA, hiz: 16, tohum: 19 });
   // nektar damlası
   damlaCiz(ctx, t, gx, gy, zh);
   // halkalar
