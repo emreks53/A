@@ -30,14 +30,20 @@ const T = {
   kac: kb('kaç'), para: kb('para'), eder: kb('eder'), son: 82.9,
 };
 // plaka geçişleri
-const GB = { t: T.avare - 0.06, sure: 0.36 }; // sokak → meydan
-const GD = { t: T.semere - 0.22, sure: 0.4 }; // meydan → ağaç/ova
+const GB = { t: T.avare - 0.08, sure: 0.12 }; // sokak → meydan (göğe savrulma, gökte kısa karışım)
+const GD = { t: T.semere - 0.1, sure: 0.36 }; // meydan → ağaç/ova
 const GRI = 'saturate(0.42) brightness(0.96) contrast(0.95)';
 
 // ---------------------------------------------------------------- katman (ekran dışı tampon; filtre ve saydamlık)
 const havuz = [];
 let derinlik = 0;
-function katman(ctx, fn, { alfa = 1, filtre = null } = {}) {
+// kamera hızından hareket bulanıklığı (px): yalnız savrulmalarda
+function bulanik(kam, t) {
+  const a = kam(t - 1 / 60), b = kam(t + 1 / 60);
+  const v = Math.hypot((b.y - a.y) * b.z, (b.x - a.x) * b.z) / 2; // px/kare (60 fps adımı)
+  return clamp((v - 12) / 9, 0, 14);
+}
+function katman(ctx, fn, { alfa = 1, filtre = null, olcekle = 1 } = {}) {
   if (alfa <= 0.003) return;
   const m = ctx.getTransform();
   const sc = Math.hypot(m.a, m.b);
@@ -55,7 +61,8 @@ function katman(ctx, fn, { alfa = 1, filtre = null } = {}) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = alfa;
   if (filtre) ctx.filter = filtre;
-  ctx.drawImage(b, m.e, m.f);
+  if (olcekle !== 1) ctx.drawImage(b, m.e - (w * (olcekle - 1)) / 2, m.f - (h * (olcekle - 1)) / 2, w * olcekle, h * olcekle);
+  else ctx.drawImage(b, m.e, m.f);
   ctx.restore();
 }
 
@@ -72,10 +79,10 @@ function ruzgarlar(ctx, t, liste, guc = 1) {
   for (const w of liste) {
     const u = (t - w.t0) / w.sure;
     if (u <= 0 || u >= 1.45) continue;
-    D.ruzgarCizgisi(ctx, w.pts, u - 0.45, u, { renk: w.renk || '#8F89A3', kal: w.kal, alfa: w.alfa * guc, tohum: w.tohum });
+    D.ruzgarCizgisi(ctx, w.pts, u - 0.45, u, { renk: w.renk || '#F4F2F8', kal: w.kal, alfa: Math.min(0.85, w.alfa * 1.45) * guc, tohum: w.tohum });
   }
 }
-function ruzgarListesi(tohum, baslar, { y0 = 300, y1 = 1300, L = [500, 900], sure = [1.0, 1.5], kal = [1.5, 2.2], alfa = 0.5 } = {}) {
+function ruzgarListesi(tohum, baslar, { y0 = 300, y1 = 1300, L = [500, 900], sure = [1.0, 1.5], kal = [2.0, 3.0], alfa = 0.5 } = {}) {
   const r = rng(tohum);
   return baslar.map((t0, i) => {
     const x0 = r.ara(-220, 200), y = r.ara(y0, y1);
@@ -102,32 +109,32 @@ const kamA = kameraYolu([
   { t: 67.2, x: 622, y: 1105, z: 1.47 },
   { t: T.evet + 0.05, x: 618, y: 1100, z: 1.52, e: ease.inOutSine },
   { t: T.dunyada + 0.55, x: 566, y: 1080, z: 1.08, e: ease.inOutCubic },
-  { t: GB.t, x: 576, y: 1072, z: 1.05, e: ease.inOutSine },
-  { t: GB.t + GB.sure + 0.05, x: 582, y: 640, z: 0.98, e: ease.inCubic },
+  { t: GB.t - 0.24, x: 576, y: 1070, z: 1.05, e: ease.inOutSine },
+  { t: GB.t + 0.1, x: 586, y: -380, z: 0.95, e: ease.inCubic },
 ]);
 
 // ================================================================ PLAKA B: yüksekten meydan
 const MEYDAN = { cesmeX: 540, cesmeY: 868 };
 const kamB = kameraYolu([
-  { t: GB.t - 0.05, x: 540, y: 1330, z: 1.1 },
-  { t: GB.t + 0.62, x: 545, y: 912, z: 1.07, e: ease.outCubic },
+  { t: GB.t - 0.02, x: 540, y: -420, z: 1.0 },
+  { t: GB.t + 0.55, x: 545, y: 912, z: 1.07, e: ease.outCubic },
   { t: GD.t, x: 566, y: 890, z: 1.0, e: ease.inOutSine },
   { t: GD.t + GD.sure + 0.05, x: 572, y: 880, z: 1.2, e: ease.inCubic },
 ]);
 
 // ================================================================ PLAKA C/D: ağaç ve ova
-const OVA = { ufuk: 985, adamX: 430, adamY: 1235, agacX: 820, agacY: 1120, agacBoy: 470, S: 0.36 };
+const OVA = { ufuk: 985, adamX: 430, adamY: 1235, agacX: 875, agacY: 1120, agacBoy: 470, S: 0.36 };
 const kamD = kameraYolu([
-  { t: GD.t - 0.05, x: 822, y: 932, z: 2.16 },
-  { t: GD.t + 0.6, x: 820, y: 935, z: 2.03, e: ease.outCubic },
-  { t: T.sahip - 0.04, x: 812, y: 952, z: 1.95, e: ease.inOutSine },
-  { t: T.hami + 0.36, x: 575, y: 1000, z: 0.95, e: ease.inOutCubic },
-  { t: T.aciz - 0.6, x: 566, y: 1004, z: 1.0, e: ease.inOutSine },
-  { t: T.aciz + 0.8, x: 431, y: 1168, z: 2.8, e: ease.inOutCubic },
+  { t: GD.t - 0.05, x: 877, y: 932, z: 2.16 },
+  { t: GD.t + 0.6, x: 875, y: 935, z: 2.03, e: ease.outCubic },
+  { t: T.sahip - 0.04, x: 867, y: 952, z: 1.95, e: ease.inOutSine },
+  { t: T.hami + 0.36, x: 600, y: 1000, z: 0.95, e: ease.inOutCubic },
+  { t: T.aciz - 0.15, x: 520, y: 1060, z: 1.3, e: ease.inOutSine },
+  { t: T.aciz + 0.85, x: 431, y: 1168, z: 2.8, e: ease.inOutCubic },
   { t: T.butun, x: 430, y: 1170, z: 3.02, e: ease.inOutSine },
   { t: T.dunyanin, x: 430, y: 1168, z: 2.96, e: ease.inOutSine },
-  { t: T.da + 0.08, x: 432, y: 1046, z: 1.72, e: ease.inOutCubic },
-  { t: T.kac + 0.15, x: 432, y: 1043, z: 1.8, e: ease.inOutSine },
+  { t: T.da + 0.08, x: 422, y: 1046, z: 1.72, e: ease.inOutCubic },
+  { t: T.kac + 0.15, x: 422, y: 1043, z: 1.8, e: ease.inOutSine },
   { t: 82.55, x: 430, y: 1166, z: 2.45, e: ease.inOutCubic },
   { t: 82.95, x: 430, y: 1168, z: 2.5, e: ease.lin },
 ]);
@@ -140,7 +147,7 @@ const SVT = {
 let R = null;
 
 function hazirlaA() {
-  R.gokA = D.griGok({ w: 1750, h: 1750, ad: 's08-gokA', olcek: 1.0, tohum: 31, koyu: 1 });
+  R.gokA = D.griGok({ w: 1750, h: 2100, ad: 's08-gokA2', olcek: 1.0, tohum: 31, koyu: 1 });
   R.bulutA = [D.firtinaBulutOge(760, 5, 1, false), D.firtinaBulutOge(560, 12, 1, false), D.firtinaBulutOge(680, 17, 1, false)];
   R.evler = EVLER.map((e, i) => ({ ...e, o: D.evOge({ ad: `s08-ev${i}`, ...e, tohum: 40 + i, olcek: 1.8 }) }));
   R.fici = D.ficiOge(1.8);
@@ -174,7 +181,7 @@ function hazirlaA() {
 }
 
 function hazirlaB() {
-  R.gokB = D.griGok({ w: 1700, h: 900, ad: 's08-gokB', olcek: 1.0, tohum: 33 });
+  R.gokB = D.griGok({ w: 1700, h: 1900, ad: 's08-gokB2', olcek: 1.0, tohum: 33 });
   R.meydan = D.meydanOge({ ad: 's08-meydan', x0: -320, x1: 1400, y0: 300, y1: 2050, vx: 560, vy: -1700, olcek: 1.0, tohum: 4 });
   R.cesme = D.kuruCesmeOge(1.4);
   R.onCati = D.onCatiOge({ ad: 's08-oncati', w: 1700, h: 520, olcek: 1.0 });
@@ -184,7 +191,7 @@ function hazirlaB() {
   const N = 27;
   for (let i = 0; i < N; i++) {
     let y = lerp(430, 1290, (i + r.ara(0.1, 0.9)) / N);
-    if (y > 770 && y < 910) y = r() < 0.5 ? 765 - r.ara(0, 30) : 912 + r.ara(0, 40);
+    if (y > 755 && y < 990) y = r() < 0.5 ? 752 - r.ara(0, 30) : 992 + r.ara(0, 40);
     const s = lerp(0.2, 0.4, (y - 430) / 860);
     const x0 = r.ara(-40, 1120);
     const yon = r() < 0.5 ? 1 : -1;
@@ -229,7 +236,7 @@ function hazirlaD() {
     }
   }
   R.zeminD = D.toprakOge({ ad: 's08-ova-buyuk', x0: -760, x1: 1960, yUst: OVA.ufuk, yAlt: 2500, catlaklar: catlak, olcek: 1.2, tohum: 22, ustDalga: 5 });
-  R.yamaD = D.toprakOge({ ad: 's08-ova-yama', x0: 30, x1: 860, yUst: 1000, yAlt: 1720, catlaklar: catlak, olcek: 2.4, tohum: 22, kenarYumusat: 70 });
+  R.yamaD = D.toprakOge({ ad: 's08-ova-yama', x0: 30, x1: 860, yUst: 1000, yAlt: 1720, catlaklar: catlak, olcek: 2.4, tohum: 22, kenarYumusat: 70, kalCarpan: 0.5 });
   const A = M.agac({ boy: OVA.agacBoy, tohum: 41, yaprakli: false, meyve: false, olcek: 2.3, kuru: true });
   R.agac = { ...A, govde: D.filtreli(A.govde, 'saturate(0.5) brightness(0.98)'), dallarOge: D.filtreli(A.dallarOge, 'saturate(0.5) brightness(0.98)') };
   // son yaprak: sağ üstte bir dal ucunda
@@ -305,7 +312,7 @@ function plakaA(ctx, t) {
   const sl = salinim(t, 3, 0.3, 8);
   const cam = { x: c.x + sl.x / c.z, y: c.y + sl.y / c.z, z: c.z, r: sl.r };
   kameraIle(ctx, cam, (g) => {
-    ogeCiz(g, R.gokA, -330, -420);
+    ogeCiz(g, R.gokA, -330, -770);
     const bx = [[60, 420], [620, 300], [1180, 520]];
     R.bulutA.forEach((b, i) => ogeCiz(g, b, bx[i][0] + (t - 67) * (10 + i * 4), bx[i][1]));
   }, 0.3);
@@ -353,7 +360,7 @@ function plakaB(ctx, t) {
   const sl = salinim(t, 2.5, 0.3, 12);
   const cam = { x: c.x + sl.x / c.z, y: c.y + sl.y / c.z, z: c.z, r: sl.r };
   kameraIle(ctx, cam, (g) => {
-    ogeCiz(g, R.gokB, -320, -560);
+    ogeCiz(g, R.gokB, -320, -1560);
     ogeCiz(g, R.meydan, 0, 0);
     const ev = [3, 0, 5, 2, 6, 4, 1];
     ev.forEach((k, i) => ogeCiz(g, R.evler[k].o, -230 + i * 225, 352 + (i % 3) * 6, { s: 0.74, r: R.evler[k].r * 0.8 }));
@@ -393,7 +400,7 @@ function adamPozu(t) {
   p = { ...AYAKTA, bas: lerp(AYAKTA.bas, -0.12, bak) };
   const siper = an(t, T.hami - 0.02, 0.45, ease.outCubic);
   if (siper > 0) p = pozKaristir(p, SIPER, siper);
-  const cok = an(t, T.aciz - 0.62, 0.85, ease.inOutCubic);
+  const cok = an(t, T.aciz - 0.32, 0.8, ease.inOutCubic);
   if (cok > 0) p = pozKaristir(p, BUZUL, cok);
   // titreme (yağmurda)
   if (cok > 0.5 && t < SVT.yigin) {
@@ -420,8 +427,8 @@ function inis(t) {
   if (t < SVT.dag) return 0;
   const u = clamp((t - SVT.dag) / SVT.dagSure);
   const b = R.tozB;
-  const yuzey = b.y0 + b.h * clamp((u - 0.12) / 0.7);
-  const k = clamp((yuzey - R.tahtY) / (OVA.adamY - R.tahtY));
+  const yuzey = b.y0 + b.h * clamp((1.07 * u - 0.19) / 0.68);
+  const k = clamp((yuzey + 46 - R.tahtY) / (OVA.adamY - R.tahtY));
   return ease.inOutSine(k);
 }
 function yiginDurum(t) {
@@ -485,6 +492,19 @@ function plakaD(ctx, t) {
     g.restore();
     sonYaprak(g, t, sal);
   }, 1);
+  // fırtına gölgesi: soldan gelen bulutların zemine düşen gölgesi
+  const golge = firtina * (1 - 0.55 * an(t, T.butun - 0.3, 0.6));
+  if (golge > 0.01) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    const gr = ctx.createLinearGradient(0, 0, W, 0);
+    gr.addColorStop(0, rgba('#8E87A3', 0.55 * golge));
+    gr.addColorStop(0.6, rgba('#B3ADC3', 0.28 * golge));
+    gr.addColorStop(1, rgba('#D8D4E0', 0.12 * golge));
+    ctx.fillStyle = gr;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
   // altın ışıltısı (servetin arkasında)
   const parla = an(t, SVT.yigin + 0.1, 0.6) * (1 - an(t, SVT.gri, SVT.griSure));
   const yd = yiginDurum(t);
@@ -648,11 +668,18 @@ export default {
     const aD = an(t, GD.t, GD.sure, ease.inOutSine);
     if (aD >= 1) return plakaD(ctx, t);
     if (aB >= 1) {
-      plakaB(ctx, t);
+      const bB = bulanik(kamB, t);
+      if (bB > 0.6) katman(ctx, (g) => plakaB(g, t), { filtre: `blur(${bB.toFixed(1)}px)`, olcekle: 1 + bB / 300 });
+      else plakaB(ctx, t);
       if (aD > 0) katman(ctx, (g) => plakaD(g, t), { alfa: aD });
       return;
     }
-    plakaA(ctx, t);
-    if (aB > 0) katman(ctx, (g) => plakaB(g, t), { alfa: aB });
+    const bA = bulanik(kamA, t);
+    if (bA > 0.6) katman(ctx, (g) => plakaA(g, t), { filtre: `blur(${bA.toFixed(1)}px)`, olcekle: 1 + bA / 300 });
+    else plakaA(ctx, t);
+    if (aB > 0) {
+      const bB = bulanik(kamB, t);
+      katman(ctx, (g) => plakaB(g, t), { alfa: aB, filtre: bB > 0.6 ? `blur(${bB.toFixed(1)}px)` : null, olcekle: 1 + bB / 300 });
+    }
   },
 };

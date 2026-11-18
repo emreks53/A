@@ -35,10 +35,13 @@ const kamA = kameraYolu([
   { t: T.iste + 1.45, x: 540, y: 975, z: 1.0, e: ease.inOutCubic },
   { t: T.bu2 - 0.04, x: 566, y: 990, z: 1.045, e: ease.inOutSine },
   { t: T.bu2 + 0.55, ...KAM_B, e: ease.inOutCubic },
-  { t: 100, ...KAM_B, e: ease.lin },
+  { t: 87.88, ...KAM_B, e: ease.lin },
+  { t: 88.42, x: 775, y: 1830, z: 10, e: ease.inOutQuad }, // silinen boşluğa dalış: ekran çıplak film olur
+  { t: 100, x: 775, y: 1830, z: 10, e: ease.lin },
 ]);
-const SIL_BAS = T.fani + 0.33; // silgi ilk darbesi
-const SIL_TEMIZ = 88.24; // kalan kırıntıların temizlenmesi
+const SIL_BAS = T.dunyada - 0.04; // silgi ilk darbesi ("dünyada")
+const SIL_SON = 87.92;
+const SIL_TEMIZ = 88.26; // dalışın sonunda kenarda kalanlar sönsün
 
 // ---------------------------------------------------------------- bölüm C-F: kuşbakışı labirent
 const [JX, JY] = LB.hucreMerkez(60, 60); // kavşak
@@ -171,7 +174,7 @@ function levhaAci(l, t) {
 }
 
 // ---------------------------------------------------------------- hazırlık
-let dunyaT, maskeT, hayaletT, tA, tB, seviyeler, S0;
+let dunyaT, maskeT, hayT, tA, tB, seviyeler, S0;
 function seviyeBolgeleri() {
   const S = [1, 0.48, 0.23, 0.113];
   const kutular = S.map(() => ({ x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }));
@@ -195,7 +198,8 @@ export default {
     { t: T.iste + 0.05, tur: 'whoosh', guc: 0.28, sure: 1.4 },
     { t: T.perisan + 0.05, tur: 'pop', guc: 0.22, tekrar: 7, ara: 0.065 },
     { t: T.fani + 0.05, tur: 'ruzgar', guc: 0.2, sure: 1.2 },
-    { t: SIL_BAS, tur: 'firca', guc: 0.34, tekrar: 4, ara: 0.24 },
+    { t: SIL_BAS, tur: 'firca', guc: 0.34, tekrar: 4, ara: 0.18 },
+    { t: 87.9, tur: 'whoosh', guc: 0.25, sure: 0.6 },
     { t: T.insan, tur: 'pop', guc: 0.24 },
     { t: T.insan + 0.1, tur: 'kalem', guc: 0.45, sure: 0.9 },
     { t: YURU.t0 + 0.1, tur: 'adim', guc: 0.16, tekrar: 4, ara: 0.36 },
@@ -209,18 +213,13 @@ export default {
     maskeT = tuval(W, H);
     tA = tuval(W, H);
     tB = tuval(W, H);
-    // silgi darbeleri: çiçek çerçevesindeki (sabit kamera) ekran konumlarına göre
-    const ek = (x, y) => [W / 2 + (x - KAM_B.x) * KAM_B.z, H / 2 + (y - KAM_B.y) * KAM_B.z];
+    // silgi: çiçek sırasını soldan sağa, sonra adamı siler (dünya koordinatında)
     const ck = D.cicekKutusu();
-    const [cx0, cy0] = ek(ck.x0, ck.y0), [cx1, cy1] = ek(ck.x1, ck.y1 + 60);
-    const [ax0, ay0] = ek(D.ADAM.x - 70, D.ADAM.y - 130), [, ay1] = ek(0, D.ADAM.y + 25);
-    D.silgiKur([
-      { x0: Math.max(0, cx0), y0: cy0 - 10, x1: Math.min(ax0, cx1 + 20), y1: cy1, en: 150, t0: SIL_BAS, sure: 0.6, kirinti: true },
-      { x0: ax0 - 10, y0: ay0 - 20, x1: W, y1: ay1 + 40, en: 160, t0: SIL_BAS + 0.14, sure: 0.56, kirinti: true },
-      { x0: 0, y0: 0, x1: W, y1: 480, en: 240, t0: SIL_BAS + 0.3, sure: 0.6, kirinti: true },
-      { x0: 0, y0: 450, x1: W, y1: Math.min(cy0, ay0) + 30, en: 240, t0: SIL_BAS + 0.36, sure: 0.56 },
-      { x0: 0, y0: Math.max(cy1, ay1) - 40, x1: W, y1: H, en: 270, t0: SIL_BAS + 0.42, sure: 0.62, kirinti: true },
-    ]);
+    D.silgiKur({
+      bolge: [{ x0: ck.x0 + 8, x1: D.ADAM.x - 72, yUst: ck.y0 + 8, yAlt: 1950 }, { x0: D.ADAM.x - 72, x1: D.ADAM.x + 128, yUst: 1680, yAlt: 1982 }],
+      adim: 58, en: 100, t0: SIL_BAS, t1: SIL_SON, giris: [120, 1600], cikis: [1060, 1480],
+    });
+    hayT = tuval(W, H);
     // labirent seviyeleri (kamera yolunun gördüğü bölgelere göre)
     LB.labirentHazirla();
     seviyeler = seviyeBolgeleri().map((b, k) => LB.seviyeOlustur(b.s, b.x0 / C - 1, b.y0 / C - 1, b.x1 / C + 1, b.y1 / C + 1, { cizgiAyri: k === 0, tohum: 3 + k }));
@@ -265,16 +264,6 @@ function dunyaYaz(g, t) {
   D.sonYaprakCiz(g, kamIle, t, T.fani + 0.04);
   D.cicekCiz(g, kamIle, t, T.perisan + 0.02, T.fani);
 }
-function hayaletAl() {
-  if (hayaletT) return hayaletT;
-  const g0 = tuval(W, H);
-  dunyaYaz(g0.getContext('2d'), 87.95);
-  hayaletT = tuval(W, H);
-  const g = hayaletT.getContext('2d');
-  g.filter = 'blur(2px)';
-  g.drawImage(g0, 0, 0);
-  return hayaletT;
-}
 function acilisPusu(g, t) {
   // s08'in gökyüzünden gelen soluk pus: toz yatışınca açılır, arkadaki yol ve yürüyenler belirir
   const a = 1 - an(t, 82.75, 0.85, ease.inOutSine);
@@ -294,41 +283,39 @@ function dunyaBolumu(ctx, t) {
   if (t < 83.7) acilisPusu(dctx, t);
   if (t < SIL_BAS) {
     ctx.drawImage(dunyaT, 0, 0);
+    if (t > SIL_BAS - 0.3) kameraIle(ctx, dunyaKamerasi(t), (g) => D.silgiCiz(g, t), 1);
     return;
   }
-  // silinen yerler: çıplak film + çizimin soluk hayaleti
+  const cam = dunyaKamerasi(t);
+  // hayalet: çizimin soluk, hafif dağılmış izi (silinen yerde kalır)
+  const hg = hayT.getContext('2d');
+  hg.clearRect(0, 0, W, H);
+  hg.filter = 'blur(2px)';
+  hg.drawImage(dunyaT, 0, 0);
+  hg.filter = 'none';
+  // silinen yerler (dünya koordinatında maske)
   const mctx = maskeT.getContext('2d');
   mctx.clearRect(0, 0, W, H);
-  D.silgiMaske(mctx, t);
+  kameraIle(mctx, cam, (g) => D.silgiMaske(g, t), 1);
   dctx.save();
   dctx.globalCompositeOperation = 'destination-out';
   dctx.drawImage(maskeT, 0, 0);
   dctx.restore();
-  const hay = 0.13;
+  const iz = 1 - an(t, 87.9, 0.3, ease.inOutSine); // dalışta hayalet, iz ve kırıntılar söner
   ctx.save();
-  ctx.globalAlpha = hay;
-  ctx.drawImage(hayaletAl(), 0, 0);
+  ctx.globalAlpha = 0.13 * iz;
+  ctx.drawImage(hayT, 0, 0);
   ctx.globalAlpha = 1;
-  D.silgiIzi(ctx, t, 1);
-  ctx.globalAlpha = 1 - an(t, SIL_TEMIZ, 0.2, ease.inOutSine);
+  kameraIle(ctx, cam, (g) => D.silgiIzi(g, t, iz), 1);
+  ctx.globalAlpha = 1 - an(t, SIL_TEMIZ, 0.16, ease.inOutSine);
   ctx.drawImage(dunyaT, 0, 0);
   ctx.restore();
-  D.kirintiCiz(ctx, t);
+  kameraIle(ctx, cam, (g) => { D.kirintiCiz(g, t, iz); D.silgiCiz(g, t); }, 1);
 }
 
 // ---------------------------------------------------------------- C-F: labirent
 function labirentBolumu(ctx, t) {
   const cam = kamL(t);
-  // boş film: silinen çizimin hayaleti ve savrulan kırıntılar
-  const hay = 0.13 * (1 - an(t, T.insan, 1.0, ease.inOutSine));
-  if (hay > 0.003) {
-    ctx.save();
-    ctx.globalAlpha = hay;
-    ctx.drawImage(hayaletAl(), 0, 0);
-    ctx.restore();
-  }
-  if (hay > 0.003) D.silgiIzi(ctx, t, hay / 0.13);
-  if (t < T.insan + 1.2) D.kirintiCiz(ctx, t);
   // labirent: adamdan dışa doğru önce çizgiler, sonra taramalar
   const a = adamDurum(t);
   const [ax, ay] = LB.labEkranda(cam, a.x, a.y);

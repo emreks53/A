@@ -152,8 +152,10 @@ export function yuruyenPlan({ t0, x0, yon = 1, s = 1, bolumler, hz = 240 }) {
       w = Math.min(gir, cik);
       w = w * w * (3 - 2 * w);
     } else if (b.tur === 'don') {
+      // dönüş: yatay basıklıkla (en dar 0,32; ortada yön sıçrar, figür çizgiye inmez)
       const u = clamp((t - b.t0) / b.sure);
-      k = b.yon * Math.cos(Math.PI * u);
+      const c = Math.cos(Math.PI * u);
+      k = b.yon * (c >= 0 ? 1 : -1) * Math.max(0.32, Math.abs(c));
     }
     const poz = pozAl(faz, w);
     const yonS = k >= 0 ? 1 : -1;
@@ -171,7 +173,8 @@ export function yuruyenPlan({ t0, x0, yon = 1, s = 1, bolumler, hz = 240 }) {
     const i = Math.floor(f), u = f - i, j = Math.min(N - 1, i + 1);
     const w = lerp(ws[i], ws[j], u);
     const faz = Math.abs(fz[j] - fz[i]) > 1 ? fz[i] : lerp(fz[i], fz[j], u);
-    return { x: lerp(xs[i], xs[j], u), k: lerp(ks[i], ks[j], u), poz: pozAl(faz, w), w };
+    const k = Math.sign(ks[i]) !== Math.sign(ks[j]) ? (u < 0.5 ? ks[i] : ks[j]) : lerp(ks[i], ks[j], u);
+    return { x: lerp(xs[i], xs[j], u), k, poz: pozAl(faz, w), w };
   };
   plan.tSon = tSon;
   return plan;

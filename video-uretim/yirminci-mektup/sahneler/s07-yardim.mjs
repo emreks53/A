@@ -40,17 +40,25 @@ const ZPAL = {
   gri: { arka: '#CBC6CF', tara: [[0, '#B7B1BE'], [0.55, '#8E8699'], [1, '#625A6E']], kontur: '#5F576B', es: [0.18, 0.42, 0.64, 0.84], alfa: 0.52 },
   griUzak: { arka: '#D8D4DE', tara: [[0, '#CBC6D3'], [1, '#958DA4']], kontur: '#8C849A', es: [0.3, 0.6], alfa: 0.42 },
   griOrta: { arka: '#CDC8D3', tara: [[0, '#BAB4C3'], [0.6, '#8F879D'], [1, '#6E667C']], kontur: '#6E667C', es: [0.22, 0.48, 0.72], alfa: 0.48 },
+  dag: { arka: '#CBC4E4', tara: [[0, '#C2BBE0'], [0.6, '#A49CCB'], [1, '#8279B0']], kontur: '#7D74A8', es: [0.3, 0.6], alfa: 0.42 },
+  dagGri: { arka: '#D6D2DC', tara: [[0, '#CAC5D2'], [1, '#9C95AA']], kontur: '#928B9F', es: [0.3, 0.6], alfa: 0.4 },
+  yol: { arka: '#EAD8B0', tara: [[0, '#E3CC9C'], [0.6, '#C9A66E'], [1, '#A88350']], kontur: '#9A7A4A', es: [0.25, 0.55, 0.8], alfa: 0.5 },
+  yolGri: { arka: '#D9D3D3', tara: [[0, '#C9C1C2'], [0.6, '#A39A9E'], [1, '#7F767C']], kontur: '#6E6670', es: [0.25, 0.55, 0.8], alfa: 0.5 },
 };
 /** profil(x) üst kenar; aynı profil iki paletle çizilince renk süpürmesinde biçim kaymaz */
-export function zeminOge({ ad, profil, x0, x1, yAlt, palet, olcek = 1, tohum = 1, detay = null }) {
-  const pts = [];
-  for (let x = x0; x <= x1 + 0.01; x += 16) pts.push([x, profil(x)]);
-  pts.push([x1, yAlt], [x0, yAlt]);
+export function zeminOge({ ad, profil, x0, x1, yAlt, palet, olcek = 1, tohum = 1, detay = null, sekilPts = null, yon = -0.05 }) {
+  let pts = sekilPts;
+  if (!pts) {
+    pts = [];
+    for (let x = x0; x <= x1 + 0.01; x += 16) pts.push([x, profil(x)]);
+    pts.push([x1, yAlt], [x0, yAlt]);
+  }
   const P = ZPAL[palet];
   const ust = Math.min(...pts.map((p) => p[1]));
+  yAlt = yAlt ?? Math.max(...pts.map((p) => p[1]));
   return oge({
     ad, olcek, sekil: cokgen(pts), arka: P.arka, arkaAlfa: 0.85,
-    tarama: { ton: TON.gurultulu(TON.dogrusal(0, ust, 0, ust + Math.min(700, (yAlt - ust) * 0.7), 0.32, 0.82), 0.18, 0.006, tohum), renkler: P.tara, yon: -0.05, aralik: 3.3, boy: [40, 130], esikler: P.es, alfa: P.alfa },
+    tarama: { ton: TON.gurultulu(TON.dogrusal(0, ust, 0, ust + Math.min(700, (yAlt - ust) * 0.7), 0.32, 0.82), 0.18, 0.006, tohum), renkler: P.tara, yon, aralik: 3.3, boy: [40, 130], esikler: P.es, alfa: P.alfa },
     kontur: P.kontur, konturKal: 2.0, titreme: 0.6, detay,
   });
 }
@@ -99,20 +107,20 @@ export function golgeOge(h, w, tohum, olcek = 1, egim = 0.25) {
   const x0 = -w * 0.8 + Math.min(0, ex) - w * 0.1, x1 = w * 0.8 + Math.max(0, ex) + w * 0.1;
   const sek = cokgen([[x0, -h * 1.12], [x1, -h * 1.12], [x1, w * 0.3], [x0, w * 0.3]]);
   return oge({
-    ad: `s07-golge2-${h}-${w}-${tohum}-${egim}`, olcek, sekil: sek, zemin: null, pay: 10,
+    ad: `s07-golge3-${h}-${w}-${tohum}-${egim}`, olcek, sekil: sek, zemin: null, pay: 10,
     arka: '#5D5569', arkaBulanik: 24, arkaTasma: false,
     arkaCiz: (t) => {
       for (const [bx, by, R] of bloblar) {
-        const a = 0.5 * sonum(by);
+        const a = 0.62 * sonum(by);
         const g = t.createRadialGradient(bx, by, 0, bx, by, R * 1.08);
-        g.addColorStop(0, rgba('#5D5569', a));
-        g.addColorStop(0.6, rgba('#5D5569', a * 0.75));
-        g.addColorStop(1, rgba('#5D5569', 0));
+        g.addColorStop(0, rgba('#4A4259', a));
+        g.addColorStop(0.6, rgba('#4A4259', a * 0.75));
+        g.addColorStop(1, rgba('#4A4259', 0));
         t.fillStyle = g;
         t.fillRect(bx - R * 1.1, by - R * 1.1, R * 2.2, R * 2.2);
       }
     },
-    tarama: { ton, renkler: [[0, '#A39CB3'], [0.6, '#6C6480'], [1, '#463F56']], yon: -1.05, aralik: 3.5, boy: [22, 70], esikler: [0.16, 0.4, 0.66], alfa: 0.38, karisim: 'source-over' },
+    tarama: { ton, renkler: [[0, '#8F88A2'], [0.6, '#5C5470'], [1, '#3A3349']], yon: -1.05, aralik: 3.2, boy: [22, 70], esikler: [0.12, 0.34, 0.56, 0.76], alfa: 0.5, karisim: 'source-over' },
     kontur: null,
   });
 }

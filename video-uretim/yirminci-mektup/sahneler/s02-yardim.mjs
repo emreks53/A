@@ -81,14 +81,7 @@ function kakmaYolu() {
   const ofs = D + 46; // burun çizgisinden yatay uzaklık
   const x = (y) => PX0 - (y - YP) * (D / R) + ofs;
   const yh = YP + 24; // sahanlık yüzündeki yatay çizgi
-  const yk = YP + (PX0 + ofs - (AX - 0)) * (R / D); // yatay çizgiye değdiği yer
-  const pts = [[x(YALT - 40), YALT - 40]];
-  const ykes = YP + (PX0 + ofs - x(yh)) * 0; void yk; void ykes;
-  // eğik çizginin yatay çizgiyle kesişimi
-  const xk = x(yh);
-  pts.push([xk, yh]);
-  pts.push([AX, yh]);
-  return yenidenOrnekle(pts, 3, false);
+  return yenidenOrnekle([[x(YALT - 40), YALT - 40], [x(yh), yh], [AX, yh]], 3, false);
 }
 
 export function yapiOge(olcek = 1.4) {
@@ -119,8 +112,8 @@ export function yapiOge(olcek = 1.4) {
           api.tara(cokgen(p), { ton: () => 0.6, renkler: TAS.tara, yon: ay ? Math.PI - 0.1 : 0.1, aralik: 2.4, boy: [10, 30], esikler: [0.3], alfa: 0.3 });
         }
       }
-      // köprü kemerinin içinde koyu gölge (alt yüz) şeridi
-      const ic = INTRADOS.map(([x, y]) => [x, y]);
+      // köprü kemerine paralel altın archivolt çizgisi
+      const ic = INTRADOS;
       const ofsYol = (yol, d) => yol.map((p, i) => {
         const a = yol[Math.max(0, i - 1)], b = yol[Math.min(yol.length - 1, i + 1)];
         let tx = b[0] - a[0], ty = b[1] - a[1];

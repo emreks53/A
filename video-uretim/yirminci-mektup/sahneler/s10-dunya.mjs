@@ -263,8 +263,9 @@ export function dunyaHazirla() {
   for (let i = 0; i < 26; i++) {
     D.lekeler.push({ x: r.ara(-1300, 1400), y: G + 30 + Math.pow(r(), 1.3) * 900, t0: r.ara(0, 1.15), R: r.ara(320, 560), sure: r.ara(0.8, 1.2) });
   }
-  // ağacın dibinden ilk yeşerme
+  // ağacın dibinden ilk yeşerme; sonunda her yer yeşil
   D.lekeler.push({ x: AGAC.x, y: G + 40, t0: -0.05, R: 700, sure: 1.3 });
+  D.lekeler.push({ x: 300, y: G + 300, t0: 1.0, R: 3400, sure: 1.3 });
   const cimenler = [0, 1, 2, 3].map((k) => cimenOge(50 + k));
   const cicekler = ['beyaz', 'pembe', 'sari', 'lila'].map((c) => M.cicekOge(18, 1.5, c));
   D.bitkiler = [];
@@ -397,7 +398,9 @@ export function yanCiz(g, cam, t, S) {
   }
   ogeCiz(g, D.zKuru, 0, 0);
   g.restore();
-  if (S.yesil > 0) {
+  if (S.yesil > 2.3) {
+    g.save(); kameraUygula(g, cam, F.ana); ogeCiz(g, D.zYesil, 0, 0); g.restore();
+  } else if (S.yesil > 0) {
     const tb = tampon('s10-yesil');
     const tg = tb.getContext('2d');
     tg.save(); kameraUygula(tg, cam, F.ana); ogeCiz(tg, D.zYesil, 0, 0); tg.restore();

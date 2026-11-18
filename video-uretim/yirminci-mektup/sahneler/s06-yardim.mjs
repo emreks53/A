@@ -411,18 +411,22 @@ export function toprakOge({ rx, ry, olcek = 1.6 }) {
   });
 }
 /** Kesik çizgi: polyline'ı yay boyunca tire/boşluk dizisine bölüp kalemle çizer */
-export function kesikCiz(api, pts, { tire = 11, bosluk = 7, kapali = false, ...o } = {}) {
+export function kesikCiz(api, pts, { tire = 11, bosluk = 7, kapali = false, hale = null, ...o } = {}) {
   const p = yenidenOrnekle(pts, 1.5, kapali);
   let parca = [], acc = 0, cizgide = true;
+  const ciz = (q) => {
+    if (hale) api.cizgi(q, { ...o, renk: hale, kal: (o.kal || 2) * 3.2, alfa: 0.5, uc: 0.2 });
+    api.cizgi(q, o);
+  };
   for (let i = 1; i < p.length; i++) {
     const d = Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]);
     acc += d;
     if (cizgide) {
       parca.push(p[i - 1]);
-      if (acc >= tire) { parca.push(p[i]); if (parca.length > 1) api.cizgi(parca, o); parca = []; acc = 0; cizgide = false; }
+      if (acc >= tire) { parca.push(p[i]); if (parca.length > 1) ciz(parca); parca = []; acc = 0; cizgide = false; }
     } else if (acc >= bosluk) { acc = 0; cizgide = true; }
   }
-  if (cizgide && parca.length > 1) api.cizgi(parca, o);
+  if (cizgide && parca.length > 1) ciz(parca);
 }
 /**
  * Ağacın kesik çizgili hayali: M.agac verisinden (aynı tohum) gövde hattı, dallar, taç dış hattı ve meyve yerleri.
@@ -455,7 +459,7 @@ export function hayalOge(A, { boy, tohum, olcek = 1.6, renk = '#B98316' }) {
   return oge({
     ad: 's06-hayal-' + boy + '-' + tohum, olcek, sekil, zemin: null, arka: null, tarama: null, kontur: null, pay: 6,
     detay: (ctx, api) => {
-      const o = { renk, kal: 3.0, alfa: 1, titreme: 0.3, uc: 0.02 };
+      const o = { renk, kal: 3.0, alfa: 1, titreme: 0.3, uc: 0.02, hale: '#FFF6DC' };
       kesikCiz(api, solHat, { ...o, tire: 12, bosluk: 7 });
       kesikCiz(api, sagHat, { ...o, tire: 12, bosluk: 7 });
       for (const d of A.dallar) {

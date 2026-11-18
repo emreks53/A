@@ -29,32 +29,32 @@ const { PERS } = Y;
 const VP = [PERS.vx, PERS.hy];
 const ZM = 4.6; // adamın ve ağacın derinliği
 const ZEMIN = PERS.hy + PERS.k / ZM; // onların bastığı yer (y)
-const ADAM = { x: 485, y: ZEMIN, s: (PERS.F * 1.78) / (ZM * 384) };
-const AG = { x: 175, y: ZEMIN + 1, boy: 600, tohum: 37 };
+const ADAM = { x: 546, y: ZEMIN, s: (PERS.F * 1.78) / (ZM * 384) };
+const AG = { x: 220, y: ZEMIN + 1, boy: 600, tohum: 37 };
 const TOH = { x: AG.x + 3, y: ZEMIN + 62 };
-const KESIT = { cx: 192, y0: ZEMIN, rx: 238, ry: 172 };
+const KESIT = { cx: 236, y0: ZEMIN, rx: 236, ry: 172 };
 const NUR = { x: VP[0], y0: 990, y1: 765, r: 78 };
 const KAPILAR = [[-44, 1.0], [76, 1.12], [196, 1.0]];
 const KAPI_Y = 886;
-const YOL_NOKTA = [[-0.55, 1.3], [-0.95, 3.0], [-1.1, ZM], [0.45, 5.6], [2.4, 7.5], [2.8, 11], [1.0, 18], [-1.5, 30], [0.5, 50], [1.5, 90]];
+const YOL_NOKTA = [[-0.45, 1.3], [-0.85, 3.0], [-0.95, 4.1], [-0.6, 4.9], [0.35, 5.6], [1.6, 6.9], [2.1, 9.5], [1.7, 13], [0.4, 19], [-1.3, 30], [0.4, 50], [1.4, 90]];
 
 // paralaks
 const F = { gok: 0.92, dag: 0.96, tepe: 0.98, ova: 1, on: 1.08 };
 
 // kamera: tek, akıcı yolculuk (hız anahtarlarda sürekli)
 const KAM = Y.puruzsuzYol([
-  { t: 46.4, x: 573, y: 1112, z: 1.28 },
-  { t: 47.8, x: 575, y: 1106, z: 1.31 },
-  { t: 48.95, x: 579, y: 1100, z: 1.36 },
-  { t: 50.5, x: 600, y: 992, z: 0.95 },
-  { t: 51.75, x: 612, y: 968, z: 0.99 },
-  { t: 52.4, x: 620, y: 838, z: 0.98 },
+  { t: 46.4, x: 612, y: 1112, z: 1.28 },
+  { t: 47.8, x: 614, y: 1106, z: 1.31 },
+  { t: 48.95, x: 618, y: 1100, z: 1.36 },
+  { t: 50.5, x: 610, y: 992, z: 0.95 },
+  { t: 51.75, x: 618, y: 968, z: 0.99 },
+  { t: 52.4, x: 620, y: 908, z: 0.94 },
   { t: 53.3, x: 86, y: 778, z: 2.3 },
   { t: 53.62, x: 82, y: 782, z: 2.38 },
-  { t: 54.35, x: 330, y: 1222, z: 1.33 },
-  { t: 55.4, x: 332, y: 1216, z: 1.39 },
-  { t: 56.05, x: 336, y: 1210, z: 1.37 },
-  { t: 57.4, x: 410, y: 1130, z: 1.16 },
+  { t: 54.35, x: 383, y: 1222, z: 1.3 },
+  { t: 55.4, x: 385, y: 1216, z: 1.36 },
+  { t: 56.05, x: 389, y: 1210, z: 1.34 },
+  { t: 57.4, x: 455, y: 1130, z: 1.14 },
 ]);
 
 let gok, bulutlar, dagUzak, dagYakin, seritler, yol, yolYakin, yolUzak, kandilS, kandilY, agacTur, nesneler, kapi, toprak, tohum,
@@ -135,7 +135,7 @@ export default {
     const sAdam = yol.sBul(ZM);
     kandilS = Y.kandilLod(false, 2.0);
     kandilY = Y.kandilLod(true, 2.0);
-    meyveY = M.meyveOge(9, 2.4, 'kirmizi');
+    meyveY = M.meyveOge(11, 2.4, 'kirmizi');
     agacTur = [51, 63, 77].map((t) => Y.yolAgaci(t, { meyve: meyveY }));
 
     // yol boyu nesneler (kandiller ve ağaçlar), derinliğe göre sıralı
@@ -150,27 +150,30 @@ export default {
       }
     }
     const ar = rng(4242);
-    for (let s = sAdam + 6.5, j = 0; s < 260; s += 6.5 + ar() * 2.5, j++) {
+    for (let s = sAdam + 5.5, j = 0; s < 260; s += (s < 40 ? 4.2 : 6.5) + ar() * 2, j++) {
       const yan = j % 2 ? -1 : 1;
       const d = yan * (yol.gen / 2 + 2.3 + ar() * 1.2);
       const p = yol.yan(s, d);
       const [x, y] = Y.proj(p.X, p.Z);
       const boyM = 3.8 + ar() * 1.0;
-      const u = s - sAdam - 6.5;
-      if (x > 400 && x < 900 && p.Z < 30) continue; // nurun önü açık kalsın
+      const u = s - sAdam - 5.5;
+      if (x > 612 && x < 795 && p.Z < 40) continue; // nurun önü açık kalsın
+      if (x > 465 && x < 628 && p.Z < 26) continue; // adamın başının arkası sakin
+      if (x > -90 && x < 495 && p.Z < 70) continue; // tohumun hayal ağacının arkası sakin
       nesneler.push({ tur: 'agac', s: u, Z: p.Z, x, y, sc: (PERS.F * boyM) / (p.Z * 363), v: j % 3, faz: ar() * TAU, tMeyve: T.nimet + 0.03 + 0.24 * Math.log(1 + u / 6) });
     }
     // ovada dağınık korular (kapıların ve adamın başının çevresi sakin kalır)
-    for (let i = 0; i < 40; i++) {
-      const Z = 10 + Math.pow(ar(), 1.5) * 140;
+    for (let i = 0; i < 60; i++) {
+      const Z = 9 + Math.pow(ar(), 1.6) * 120;
       const sY = yol.sBul(Z);
       const yc = yol.at(sY);
       const X = yc.X + (ar() < 0.5 ? -1 : 1) * (6 + ar() * (8 + Z * 0.55));
       const [x, y] = Y.proj(X, Z);
       if (x < -150 || x > 1350) continue;
-      if (x < 560 && Z < 45) continue;
-      if (Z > 30 && x < 440) continue; // kapıların çevresi
-      if (Z > 35 && x > 440 && x < 960) continue;
+      if (x > 465 && x < 628 && Z < 26) continue; // adamın başının arkası
+      if (x > 612 && x < 795 && Z < 60) continue; // nurun önü
+      if (Z > 30 && x < 330) continue; // kapıların çevresi
+      if (x > -90 && x < 495 && Z < 70) continue; // tohumun hayal ağacının arkası
       const boyM = 3.4 + ar() * 1.4;
       nesneler.push({ tur: 'agac', s: Z, Z, x, y, sc: (PERS.F * boyM) / (Z * 363), v: i % 3, faz: ar() * TAU, tMeyve: T.nimet + 0.1 + 0.24 * Math.log(1 + Z / 6) + ar() * 0.1 });
     }
@@ -200,31 +203,41 @@ export default {
 
     // çiçekler (adamın çevresinde ve ön köşelerde)
     cicekler = [
-      { x: 262, y: ZEMIN + 4, s: 0.6, renk: 'sari', isik: true },
-      { x: 812, y: ZEMIN + 32, s: 0.62, renk: 'beyaz', isik: true },
-      { x: 58, y: ZEMIN + 10, s: 0.58, renk: 'beyaz' },
-      { x: -40, y: ZEMIN + 28, s: 0.62, renk: 'pembe' },
-      { x: 930, y: ZEMIN + 16, s: 0.5, renk: 'pembe' },
-      { x: 108, y: ZEMIN + 34, s: 0.5, renk: 'pembe' },
+      { x: 316, y: ZEMIN + 6, s: 0.6, renk: 'sari', isik: true },
+      { x: 862, y: ZEMIN + 34, s: 0.62, renk: 'beyaz', isik: true },
+      { x: 92, y: ZEMIN + 10, s: 0.58, renk: 'beyaz' },
+      { x: -20, y: ZEMIN + 28, s: 0.62, renk: 'pembe' },
+      { x: 975, y: ZEMIN + 18, s: 0.5, renk: 'pembe' },
+      { x: 150, y: ZEMIN + 36, s: 0.5, renk: 'pembe' },
       { x: 60, y: 1835, s: 1.1, renk: 'pembe', on: true },
       { x: 140, y: 1890, s: 0.9, renk: 'beyaz', on: true },
       { x: 1000, y: 1800, s: 1.05, renk: 'beyaz', on: true },
       { x: 1075, y: 1880, s: 1.15, renk: 'sari', on: true },
     ].map((c) => ({ ...c, oge: M.cicekOge(26, 1.9, c.renk) }));
 
-    // envar: yükselen ışık zerreleri ve fenerler
+    // envar: kandillerden ve bütün ovadan göğe yükselen ışık zerreleri, fenerler
     const zr = rng(515);
     const yakin = nesneler.filter((n) => n.tur === 'kandil' && n.s < 60);
-    zerreler = Array.from({ length: 48 }, (_, i) => {
+    zerreler = [];
+    for (let i = 0; i < 30; i++) {
       const n = yakin[Math.floor(zr() * yakin.length)];
-      return { x: n.x, y: n.y + Y.KANDIL_ISIK_Y * n.sc, b: 0.45 + n.sc * 0.55, t0: T.envar - 0.05 + zr() * 0.45, v: 70 + zr() * 90, faz: zr() * TAU, gen: 8 + zr() * 18 };
-    });
-    fenerler = Array.from({ length: 9 }, (_, i) => {
-      const s = yol.sBul(ZM) + 6 + i * 4.2 + zr() * 2;
-      const p = yol.yan(s, (i % 2 ? 1 : -1) * (1.6 + zr() * 1.6));
-      const [x, y] = Y.proj(p.X, p.Z, 1.2);
-      return { x, y, b: Math.min(1.25, (PERS.F / (100 * p.Z)) * 1.1), t0: T.envar + 0.04 + i * 0.075, v: 45 + zr() * 30, faz: zr() * TAU };
-    });
+      zerreler.push({ x: n.x, y: n.y + Y.KANDIL_ISIK_Y * n.sc, b: clamp(0.45 + n.sc * 0.5, 0.4, 1.1), t0: T.envar - 0.06 + zr() * 0.4, v: 95 + zr() * 80, faz: zr() * TAU, gen: 8 + zr() * 18 });
+    }
+    for (let i = 0; i < 74; i++) {
+      const x = -260 + zr() * 1520;
+      // kapıların çevresinde (sol) yalnız ufka yakın tarlalardan: kapı planında altyazı bandına düşmesinler
+      const y = x < 380 ? 892 + zr() * 60 : 950 + Math.pow(zr(), 0.8) * 400;
+      if (Math.abs(x - ADAM.x) < 70 && y > ZEMIN - 380) continue;
+      const b = clamp((y - 880) / 420, 0.3, 1.1);
+      zerreler.push({ x, y, b, t0: T.envar + zr() * 0.55 + (x < 350 ? 0.15 : 0), v: 85 + zr() * 90, faz: zr() * TAU, gen: 8 + zr() * 20 });
+    }
+    fenerler = [];
+    for (let i = 0; i < 13; i++) {
+      const x = i < 5 ? -200 + i * 120 + zr() * 60 : 400 + (i - 5) * 100 + zr() * 60;
+      const y = i < 5 ? 900 + zr() * 50 : 1010 + zr() * 260;
+      const b = clamp((y - 880) / 380, 0.4, 1.1);
+      fenerler.push({ x, y: y - 40, b, t0: T.envar + 0.02 + zr() * 0.5, v: 95 + zr() * 40, faz: zr() * TAU });
+    }
     kus0 = { t0: 46.9, t1: 50.6 };
   },
 
@@ -280,7 +293,8 @@ export default {
           }
           if (L > 0) {
             const parla = t > n.tYan ? Math.exp(-(t - n.tYan) * 5) : 0;
-            Y.isikNokta(g, n.x, ly, Math.max(2.2 / z, 95 * n.sc * (1 + 0.6 * parla)), L * (0.8 + 0.2 * parla));
+            Y.isikNokta(g, n.x, ly, Math.max(2.4 / z, 125 * n.sc * (1 + 1.1 * parla)), L * (0.85 + 0.15 * parla));
+            if (n.sc > 0.25) { g.save(); g.translate(n.x, n.y); g.scale(1, 0.25); Y.isikNokta(g, 0, 0, 150 * n.sc, 0.45 * L); g.restore(); }
           }
         } else {
           const tr = agacTur[n.v];
@@ -331,8 +345,8 @@ export default {
         const ta = an(t, 54.15, 0.35, ease.outCubic) * acil;
         if (ta > 0) {
           const parla = 0.5 + 0.2 * Math.sin(t * 3.2) + 0.9 * Math.exp(-Math.max(0, t - T.fiil) * 3) * (t > T.fiil ? 1 : 0);
-          Y.isikNokta(g, TOH.x, TOH.y - 2, 95, 0.75 * ta * parla);
-          M.hale(g, TOH.x, TOH.y - 2, 70, '#FFE7A8', 0.35 * ta * parla);
+          tohumHale(g, TOH.x, TOH.y - 2, 78 * (0.9 + 0.1 * parla), 0.55 * ta * Math.min(1.4, parla));
+          Y.isikNokta(g, TOH.x, TOH.y - 2, 95, 0.6 * ta * parla);
           ogeCiz(g, tohum, TOH.x, TOH.y, { s: 1.9, r: -0.12, alfa: ta });
         }
       }
@@ -412,6 +426,16 @@ export default {
 };
 
 // ---------------------------------------------------------------- yardımcı çizimler
+/** Tohumdaki saklı ışık: toprak üstünde de seçilen sıcak altın buğu (normal karışım) */
+function tohumHale(g, x, y, R, a) {
+  if (a <= 0) return;
+  const gr = g.createRadialGradient(x, y, 0, x, y, R);
+  gr.addColorStop(0, `rgba(255,226,140,${0.85 * a})`);
+  gr.addColorStop(0.45, `rgba(246,200,100,${0.4 * a})`);
+  gr.addColorStop(1, 'rgba(240,190,90,0)');
+  g.fillStyle = gr;
+  g.fillRect(x - R, y - R, R * 2, R * 2);
+}
 function kusYeri(t) {
   const u = (t - 46.9) / 3.7;
   return [lerp(-90, 1180, u), 655 - 120 * u + Math.sin(u * 9) * 14];
@@ -525,7 +549,9 @@ function envarCiz(g, t) {
     const x = z0.x + Math.sin(d * 1.6 + z0.faz) * z0.gen * z0.b;
     const a = an(t, z0.t0, 0.3) * clamp((y + 100) / 400) * (1 - an(t, z0.t0 + 3.8, 1.2));
     if (a <= 0) continue;
-    Y.isikNokta(g, x, y, (7 + 5 * Math.sin(d * 3 + z0.faz)) * z0.b + 4, 0.85 * a);
+    const R = (13 + 5 * Math.sin(d * 3 + z0.faz)) * z0.b + 5;
+    Y.isikNokta(g, x, y, R, 0.9 * a);
+    if (z0.b > 0.7) Y.isikNokta(g, x, y, R * 0.4, 0.8 * a, 'lighter');
   }
   for (const f of fenerler) {
     const d = t - f.t0;
@@ -534,8 +560,8 @@ function envarCiz(g, t) {
     const x = f.x + Math.sin(d * 0.9 + f.faz) * 14 * f.b;
     const a = an(t, f.t0, 0.4) * clamp((y + 300) / 400);
     if (a <= 0) continue;
-    const s = f.b * 0.95;
-    Y.isikNokta(g, x, y - 12 * s, 60 * s, 0.7 * a);
+    const s = f.b * 1.35;
+    Y.isikNokta(g, x, y - 12 * s, 70 * s, 0.75 * a);
     ogeCiz(g, fener, x, y, { s, r: Math.sin(d * 1.2 + f.faz) * 0.06, alfa: a });
   }
 }
@@ -551,7 +577,7 @@ function kivilcim(ctx, cam, t) {
     const v = clamp(u - k * 0.022);
     const [wx, wy] = at(v);
     const [sx, sy] = ekranda(cam, wx, wy, 1);
-    if (k === 0) Y.yildizcik(ctx, sx, sy, 15, son);
-    else Y.isikNokta(ctx, sx, sy, 22 - k * 2, (0.6 - k * 0.07) * son);
+    if (k === 0) { Y.yildizcik(ctx, sx, sy, 26, son); Y.isikNokta(ctx, sx, sy, 60, 0.6 * son); }
+    else Y.isikNokta(ctx, sx, sy, 34 - k * 3, (0.7 - k * 0.08) * son);
   }
 }

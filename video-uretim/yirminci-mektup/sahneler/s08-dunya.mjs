@@ -359,7 +359,7 @@ function zikzakYumusak(r, x0, y0, x1, y1, n, sap) {
 }
 
 /** Kuru toprak zemin (çatlaklı): dünya dikdörtgeni [x0,x1]×[yUst,yAlt]; çatlaklar dünya koordinatında verilir */
-export function toprakOge({ ad, x0, x1, yUst, yAlt, catlaklar = [], olcek = 1, tohum = 1, ustDalga = 0, renk = G.toprak, kenarYumusat = 0 }) {
+export function toprakOge({ ad, x0, x1, yUst, yAlt, catlaklar = [], olcek = 1, tohum = 1, ustDalga = 0, renk = G.toprak, kenarYumusat = 0, kalCarpan = 1 }) {
   const r = rng(tohum);
   const pts = [];
   const n = 60;
@@ -376,7 +376,7 @@ export function toprakOge({ ad, x0, x1, yUst, yAlt, catlaklar = [], olcek = 1, t
     detay: (c, api) => {
       for (const k of catlaklar) {
         if (k.pts.every(([x, y]) => x < x0 - 20 || x > x1 + 20 || y < yUst - 20 || y > yAlt + 20)) continue;
-        api.cizgi(k.pts, { renk: renk.kontur, kal: k.kal, alfa: k.alfa ?? 0.75, titreme: 0.2 });
+        api.cizgi(k.pts, { renk: renk.kontur, kal: Math.max(0.6, k.kal * kalCarpan), alfa: k.alfa ?? 0.75, titreme: 0.2 });
       }
     },
   });
@@ -431,7 +431,7 @@ export function firtinaBulutOge(w, tohum, olcek = 1, perde = true) {
   const ph = w * 0.9;
   const perdeO = oge({
     ad: `s08-perde-${w}-${tohum}`, olcek, sekil: dikdortgen(-w * 0.38, 0, w * 0.76, ph), zemin: null, arka: null,
-    tarama: { ton: (x, y) => clamp((1 - y / ph) * (1 - Math.pow(Math.abs(x) / (w * 0.38), 2)) * 1.1), renkler: [[0, '#B8B2C6'], [1, '#7D7690']], yon: Math.PI / 2 + 0.3, aralik: 4.2, boy: [30, 90], kal: 1.1, alfa: 0.4, esikler: [0.2, 0.5], karisim: 'source-over' },
+    tarama: { ton: (x, y) => clamp((1 - y / ph) * (1 - Math.pow(Math.abs(x) / (w * 0.38), 2)) * 1.15), renkler: [[0, '#9E97B0'], [1, '#6A6380']], yon: Math.PI / 2 + 0.3, aralik: 3.6, boy: [30, 90], kal: 1.2, alfa: 0.5, esikler: [0.15, 0.45], karisim: 'source-over' },
     kontur: null, pay: 4,
   });
   return birlestir([{ o: perdeO, x: 0, y: -4 }, { o: govde, x: 0, y: 0 }], olcek);

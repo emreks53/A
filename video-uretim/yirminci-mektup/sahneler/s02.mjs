@@ -5,14 +5,14 @@
 // adam kemerin altına varır, nur kemerin içinde parlar (beşeriyetin en büyük makamı). Kamera nura itilir, ışığın
 // içine girilir (iman-ı billah); nurun içinde marifet deseni merkezden dışa çizilir, dolgusu yayılır, yavaşça döner,
 // bütün çizgiler merkezdeki parlayan noktaya çıkar (içindeki marifetullahtır). Bitiş: desen (540, 900), R 400.
-import { W, H, clamp, lerp, ease, an, pop, rng, TAU, tuval } from '../motor/temel.mjs';
-import { ogeCiz, ogeAcarak, gokTuvali, konturCiz, PALET } from '../motor/kalem.mjs';
+import { W, H, clamp, lerp, ease, an, tuval } from '../motor/temel.mjs';
+import { ogeCiz, ogeAcarak, gokTuvali, konturCiz } from '../motor/kalem.mjs';
 import { kameraYolu, kameraIle, salinim, ekranda } from '../motor/sahne.mjs';
-import { kb, ks } from '../motor/zaman.mjs';
+import { kb } from '../motor/zaman.mjs';
 import { insanYan } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 import {
-  G, S, Y, T, FENERLER, GUL_PENCERE, ADAM, yapiOge, kemerOge, kemerGeo, bulutDenizi, nurHazirla, nurCiz, adamDurum,
+  G, S, FENERLER, GUL_PENCERE, ADAM, yapiOge, kemerOge, kemerGeo, bulutDenizi, nurHazirla, nurCiz, adamDurum,
   desenMerkezden, isikZemini, fenerCiz,
 } from './s02-yardim.mjs';
 
@@ -31,9 +31,9 @@ function geriCekil(u) { return ease.inOutCubic(Math.pow(u, 0.7)); }
 // kamera (itmeden önce): dünya anahtarları
 const KAM = kameraYolu([
   { t: 7.4, x: 540, y: NUR.y + 100 / (156 / NUR.r), z: 156 / NUR.r }, // s01 devri: nur ekranda (540, 860), r 156
-  { t: 7.48, x: 540, y: NUR.y + 100 / (156 / NUR.r), z: 156 / NUR.r * 0.997, e: ease.inOutSine },
-  { t: 8.45, x: 300, y: 877, z: 1.4, e: geriCekil }, // geri çekilme: merdivenin dibi + nur
-  { t: 9.2, x: 310, y: 868, z: 1.415, e: ease.inOutSine },
+  { t: 7.6, x: 540, y: NUR.y + 100 / (156 / NUR.r), z: 156 / NUR.r * 0.997, e: ease.inOutSine },
+  { t: 8.5, x: 300, y: 877, z: 1.4, e: geriCekil }, // geri çekilme: merdivenin dibi + nur
+  { t: 9.25, x: 310, y: 868, z: 1.415, e: ease.inOutSine },
   { t: 12.55, x: 540, y: 658, z: 1.55, e: ease.inOutSine }, // adamı izler, zirvede kemer ortada
   { t: ITME.t0, x: 540, y: 655, z: 1.57, e: ease.inOutSine },
 ]);
@@ -58,7 +58,7 @@ let gok, yapi, kemer, kemerG, bdArka, bdOrta, bdOn, zemin, bulutlar, dolguOge, k
 
 export default {
   sesler: [
-    { t: 7.62, tur: 'whoosh', guc: 0.3, sure: 1.0 },
+    { t: 7.66, tur: 'whoosh', guc: 0.3, sure: 1.0 },
     { t: ADAM.gorun + 0.02, tur: 'parilti', guc: 0.22 },
     { t: +(ADAM.inis[0] - 0.02).toFixed(2), tur: 'adim', guc: 0.14, tekrar: ADAM.inis.length, ara: +((ADAM.inis[ADAM.inis.length - 1] - ADAM.inis[0]) / (ADAM.inis.length - 1)).toFixed(3) },
     { t: +ADAM.basamakInis[2].toFixed(2), tur: 'parilti', guc: 0.2, tekrar: 3, ara: 0.84 },
@@ -156,7 +156,7 @@ function dunyaCiz(ctx, t, cam, nsx, nsy, nr) {
   kameraIle(ctx, cam, (g) => ogeCiz(g, bdOrta.oge, -620 - (t - 7.4) * 4, 1225), F.bulutOrta);
 
   // merdiven-köprü, fenerler, kemer, adam
-  const yapiA = an(t, 7.6, 0.42, ease.inOutSine); // s01 geçişinde köprü sonradan belirir
+  const yapiA = an(t, 7.68, 0.4, ease.inOutSine); // s01 geçişinde köprü sonradan belirir
   kameraIle(ctx, cam, (g) => {
     ogeCiz(g, yapi, 0, 0, { alfa: yapiA });
     // fenerler: bastığı basamakta yanar
@@ -177,6 +177,15 @@ function dunyaCiz(ctx, t, cam, nsx, nsy, nr) {
 
   // ön bulut denizi (merdivenin dibini örter)
   kameraIle(ctx, cam, (g) => ogeCiz(g, bdOn.oge, -720 + (t - 7.4) * 6, 1290), F.bulutOn);
+  // zirveye yaklaştıkça ışık ısınır
+  const sicak = 0.1 * an(t, 10.6, 2.4, ease.inOutSine);
+  if (sicak > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'soft-light';
+    ctx.fillStyle = `rgba(255,214,140,${sicak * 2.2})`;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
 }
 
 // ---------------------------------------------------------------- nurdan inen yumuşak ışık huzmeleri

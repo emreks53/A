@@ -236,12 +236,12 @@ export function dunyaHazirla() {
     const y = 1850 + cr.ara(-6, 8) + (k % 2) * 8;
     const d = derinlik(y);
     cicekler.push({
-      x, y, h: pxm(d) * cr.ara(0.5, 0.66), lean: cr.ara(-6, 6), renk: ['lila', 'pembe', 'beyaz', 'lila', 'pembe', 'beyaz'][k],
-      k: cx.length - 1 - k, faz: cr() * TAU, yon: cr() < 0.5 ? -1 : 1,
+      x, y, h: pxm(d) * cr.ara(0.58, 0.72), lean: cr.ara(-6, 6), renk: ['lila', 'pembe', 'beyaz', 'lila', 'pembe', 'beyaz'][k],
+      k, faz: cr() * TAU, yon: cr() < 0.5 ? -1 : 1,
     });
   });
-  cicekSprite = { pembe: M.cicekOge(17, 2.2, 'pembe'), lila: M.cicekOge(17, 2.2, 'lila'), beyaz: M.cicekOge(17, 2.2, 'beyaz') };
-  solgunSprite = solgunCicek(17, 2.2);
+  cicekSprite = { pembe: M.cicekOge(21, 2.2, 'pembe'), lila: M.cicekOge(21, 2.2, 'lila'), beyaz: M.cicekOge(21, 2.2, 'beyaz') };
+  solgunSprite = solgunCicek(21, 2.2);
   tacSprite = { pembe: tacYapragiOge(9, 'pembe', 2.4), lila: tacYapragiOge(9, 'lila', 2.4), beyaz: tacYapragiOge(9, 'lila', 2.4) };
   kirintiSp = [0, 1, 2].map((k) => oge({
     ad: 's09-kirinti-' + k, olcek: 2, sekil: svg(`M-${5 + k} -2C-${5 + k} -4 ${5 + k} -4.5 ${5 + k} -1.5C${5 + k} 2 -${5 + k} 3 -${5 + k} -2Z`),
@@ -316,6 +316,7 @@ export function dunyaCiz(ctx, kamIle, t) {
   kamIle((g) => ogeCiz(g, uzakTepe, -460, YH - 78), 0.6);
   kamIle((g) => {
     ogeCiz(g, zemin, -510, YH - 12);
+    g.drawImage(catlakHazirla(), CATLAK.x0, CATLAK.y0);
     ogeCiz(g, yol, 0, 0);
     // ufuk sisi: uzak katlar sise karışır
     const sis = g.createLinearGradient(0, YH - 20, 0, 800);
@@ -456,50 +457,12 @@ export function tozCiz(ctx, kamIle, t, alfa) {
   }, 1);
 }
 
-// ---------------------------------------------------------------- silgi
-/** Dikdörtgen bölgeyi süpüren zikzak silgi yolu (ekran koordinatı) */
-function zikzak(x0, y0, x1, y1, en, { yatay = true, tohum = 1, egim = 0.18 } = {}) {
-  const r = rng(tohum);
-  const pts = [];
-  if (yatay) {
-    const ara = en * 0.62;
-    let y = y0 + en * 0.3, sag = r() < 0.5;
-    while (y < y1 + en * 0.3) {
-      const xa = sag ? x0 - en * 0.2 + r.ara(0, 30) : x1 + en * 0.2 - r.ara(0, 30);
-      const xb = sag ? x1 + en * 0.2 - r.ara(0, 30) : x0 - en * 0.2 + r.ara(0, 30);
-      pts.push([xa, y - ara * egim], [xb, y + ara * egim]);
-      y += ara * r.ara(0.85, 1.1);
-      sag = !sag;
-    }
-  } else {
-    const ara = en * 0.62;
-    let x = x0 + en * 0.3, asagi = r() < 0.5;
-    while (x < x1 + en * 0.3) {
-      const ya = asagi ? y0 - en * 0.2 + r.ara(0, 20) : y1 + en * 0.2 - r.ara(0, 20);
-      const yb = asagi ? y1 + en * 0.2 - r.ara(0, 20) : y0 - en * 0.2 + r.ara(0, 20);
-      pts.push([x - ara * egim, ya], [x + ara * egim, yb]);
-      x += ara * r.ara(0.85, 1.1);
-      asagi = !asagi;
-    }
-  }
-  // köşeleri yuvarla (Chaikin)
-  let p = pts;
-  for (let k = 0; k < 2; k++) {
-    const q = [p[0]];
-    for (let i = 0; i < p.length - 1; i++) {
-      const a = p[i], b = p[i + 1];
-      q.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25], [a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]);
-    }
-    q.push(p[p.length - 1]);
-    p = q;
-  }
-  // yay uzunluğu
-  const s = [0];
-  for (let i = 1; i < p.length; i++) s.push(s[i - 1] + Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]));
-  return { pts: p, s, L: s[s.length - 1], en };
-}
+// ---------------------------------------------------------------- silgi (dünya koordinatında)
+// Beyaz vinil silgi (kâğıt kılıflı, yazısız) çiçek sırasını soldan sağa dikey zikzaklarla siler, sonra adamı;
+// ardından sağ üste çekilir. Silinen yer çıplak film olur; çizimin soluk hayaleti ve sürtme izleri kalır.
+let silgi = null, silgiSp = null;
 function yolParca(z, oran) {
-  const hedef = z.L * oran;
+  const hedef = z.L * clamp(oran);
   const out = [z.pts[0]];
   for (let i = 1; i < z.pts.length; i++) {
     if (z.s[i] >= hedef) {
@@ -511,103 +474,218 @@ function yolParca(z, oran) {
   }
   return out;
 }
-
-let silgiler = null;
-/** Silgi darbelerini (ekran koordinatlarında) kurar. alanlar: [{x0,y0,x1,y1,en,t0,sure,yatay,kirinti}] */
-export function silgiKur(alanlar) {
-  silgiler = alanlar.map((a, k) => {
-    const z = zikzak(a.x0, a.y0, a.x1, a.y1, a.en, { yatay: a.yatay !== false, tohum: 50 + k * 13 });
-    // kırıntı noktaları
-    const kr = rng(900 + k);
-    const kir = [];
-    if (a.kirinti) {
-      for (let s = 60; s < z.L; s += kr.ara(80, 150)) {
-        const p = yolParca(z, s / z.L);
-        const q = p[p.length - 1];
-        kir.push({ s, x: q[0] + kr.ara(-0.4, 0.4) * a.en, y: q[1] + kr.ara(-0.4, 0.4) * a.en, r0: kr() * TAU, tip: kr.tam(0, 2), vx: kr.ara(40, 130), vy: kr.ara(-30, 40), don: kr.ara(-5, 5), sc: kr.ara(1.1, 1.7) });
-      }
+/**
+ * bolge: [{x0, x1, yUst, yAlt}] soldan sağa sıralı alt bölgeler; adim: yarım darbe başına x ilerlemesi; en: silgi eni.
+ * t0..t1 silme süresi; giris/cikis: silginin gelip gittiği noktalar.
+ */
+export function silgiKur({ bolge, adim = 58, en = 100, t0, t1, giris, cikis }) {
+  const pts = [];
+  let x = bolge[0].x0, ust = true;
+  const bul = (xx) => bolge.find((b) => xx <= b.x1) || bolge[bolge.length - 1];
+  const r = rng(61);
+  while (x <= bolge[bolge.length - 1].x1 + 1) {
+    const b = bul(x);
+    pts.push([x + r.ara(-4, 4), (ust ? b.yUst : b.yAlt) + r.ara(-6, 6)]);
+    ust = !ust;
+    x += adim * r.ara(0.9, 1.1);
+  }
+  // yuvarlat
+  let p = pts;
+  for (let k = 0; k < 2; k++) {
+    const q = [p[0]];
+    for (let i = 0; i < p.length - 1; i++) {
+      const a = p[i], b = p[i + 1];
+      q.push([a[0] * 0.78 + b[0] * 0.22, a[1] * 0.78 + b[1] * 0.22], [a[0] * 0.22 + b[0] * 0.78, a[1] * 0.22 + b[1] * 0.78]);
     }
-    return { ...a, z, kir };
+    q.push(p[p.length - 1]);
+    p = q;
+  }
+  const s = [0];
+  for (let i = 1; i < p.length; i++) s.push(s[i - 1] + Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]));
+  const z = { pts: p, s, L: s[s.length - 1] };
+  // kırıntılar
+  const kr = rng(907);
+  const kir = [];
+  for (let d = 40; d < z.L; d += kr.ara(55, 110)) {
+    const q = yolParca(z, d / z.L).pop();
+    kir.push({ s: d, x: q[0] + kr.ara(-0.45, 0.45) * en, y: q[1] + kr.ara(-0.2, 0.2) * en, r0: kr() * TAU, tip: kr.tam(0, 2), vx: kr.ara(20, 70), vy: kr.ara(-35, 10), don: kr.ara(-5, 5), sc: kr.ara(0.6, 0.95) });
+  }
+  silgi = { z, en, t0, t1, giris, cikis, kir };
+  silgiSp = silgiOge(en);
+  return silgi;
+}
+const silIlerleme = (t) => (silgi ? an(t, silgi.t0, silgi.t1 - silgi.t0, (u) => ease.inOutSine(u) * 0.2 + u * 0.8) : 0);
+
+function silgiOge(en) {
+  // yerel: temas kenarı (0,0) çevresinde, gövde -y yönünde uzanır
+  const w = en * 0.92, L = en * 1.55, r = en * 0.12;
+  const govde = svg(`M${-w / 2 + r} 0L${w / 2 - r} 0Q${w / 2} 0 ${w / 2} ${-r}L${w / 2} ${-L}L${-w / 2} ${-L}L${-w / 2} ${-r}Q${-w / 2} 0 ${-w / 2 + r} 0Z`);
+  const kilif = svg(`M${-w / 2 - 3} ${-L * 0.4}L${w / 2 + 3} ${-L * 0.4}L${w / 2 + 3} ${-L - 3}L${-w / 2 - 3} ${-L - 3}Z`);
+  const g = oge({
+    ad: 's09-silgi-govde-' + en, olcek: 1.6, sekil: govde, arka: '#F1EEEA', arkaAlfa: 0.6,
+    tarama: { ton: TON.silindir(-w / 2, w / 2, { sag: true, ortam: 0.1 }), renkler: [[0, '#E8E3DE'], [1, '#B9B0B4']], yon: -Math.PI / 2, aralik: 3, boy: [14, 36], esikler: [0.45, 0.75], alfa: 0.45 },
+    kontur: '#8B8290', konturKal: 1.9,
   });
-  return silgiler;
+  const k = oge({
+    ad: 's09-silgi-kilif-' + en, olcek: 1.6, sekil: kilif, arka: '#A9AFCB', arkaAlfa: 0.85,
+    tarama: { ton: TON.gurultulu(TON.silindir(-w / 2, w / 2, { sag: true, ortam: 0.2 }), 0.05, 0.05, 3), renkler: [[0, '#9EA5C4'], [0.6, '#7C84A8'], [1, '#5E6588']], yon: -0.35, aralik: 2.7, boy: [16, 40], esikler: [0.15, 0.5, 0.78], alfa: 0.5 },
+    kontur: '#4E5476', konturKal: 1.9,
+    detay: (c, api) => {
+      api.cizgi([[-w / 2 + 2, -L * 0.4 - 7], [w / 2 - 2, -L * 0.4 - 7]], { renk: '#E4E6F0', kal: 1.6, alfa: 0.7 });
+      api.cizgi([[-w / 2 + 2, -L + 8], [w / 2 - 2, -L + 8]], { renk: '#E4E6F0', kal: 1.4, alfa: 0.5 });
+    },
+  });
+  const gt = tuval(Math.ceil(w + 60), Math.ceil(L + 60));
+  const gc = gt.getContext('2d');
+  gc.filter = 'blur(6px)';
+  gc.fillStyle = 'rgba(60,54,80,0.32)';
+  gc.fillRect(30, 30, w, L);
+  return { govde: g, kilif: k, golge: gt, w, L };
 }
-const silIlerleme = (s, t) => an(t, s.t0, s.sure, (u) => ease.inOutSine(u) * 0.15 + u * 0.85);
 
-/** Maskeye (ekran) silinmiş alanı çizer: beyaz = silindi */
-export function silgiMaske(mctx, t) {
-  mctx.save();
-  mctx.lineCap = 'round';
-  mctx.lineJoin = 'round';
-  mctx.strokeStyle = '#fff';
-  mctx.filter = 'blur(2.5px)';
-  for (const s of silgiler) {
-    const o = silIlerleme(s, t);
-    if (o <= 0) continue;
-    const p = yolParca(s.z, o);
-    if (p.length < 2) continue;
-    mctx.lineWidth = s.en;
-    mctx.beginPath();
-    mctx.moveTo(p[0][0], p[0][1]);
-    for (let i = 1; i < p.length; i++) mctx.lineTo(p[i][0], p[i][1]);
-    mctx.stroke();
+/** Silgi ucunun dünya konumu ve açısı (giriş, silme, çıkış). null: görünmez */
+function silgiUcu(t) {
+  if (!silgi) return null;
+  const S = silgi, gs = 0.16, cs = 0.2;
+  const ac0 = SILGI_ACI;
+  if (t < S.t0 - gs || t > S.t1 + cs) return null;
+  if (t < S.t0) {
+    const u = ease.outCubic(clamp((t - (S.t0 - gs)) / gs));
+    const [x, y] = S.z.pts[0];
+    return { x: lerp(S.giris[0], x, u), y: lerp(S.giris[1], y, u), a: ac0 - 0.25 * (1 - u), basinc: u };
   }
-  mctx.restore();
+  if (t <= S.t1) {
+    const o = silIlerleme(t);
+    const p = yolParca(S.z, o);
+    const q = p[p.length - 1], q0 = p[Math.max(0, p.length - 3)];
+    const vy = q[1] - q0[1];
+    return { x: q[0], y: q[1], a: ac0 + clamp(vy / 30, -1, 1) * 0.07, basinc: 1 };
+  }
+  const u = ease.inCubic(clamp((t - S.t1) / cs));
+  const [x, y] = S.z.pts[S.z.pts.length - 1];
+  return { x: lerp(x, S.cikis[0], u), y: lerp(y, S.cikis[1], u), a: ac0 + 0.3 * u, basinc: 1 - u };
 }
-/** Silgi izleri: silinen bantta, silgi yönünde ince, soluk grafit sürtme çizgileri (alfa: genel saydamlık) */
-export function silgiIzi(ctx, t, alfa = 1) {
-  if (alfa <= 0.003) return;
-  ctx.save();
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  for (const s of silgiler) {
-    const o = silIlerleme(s, t);
-    if (o <= 0) continue;
-    const p = yolParca(s.z, o);
-    if (p.length < 3) continue;
-    const r = rng(17 + Math.round(s.en));
-    for (let q = 0; q < 5; q++) {
-      const off = (q / 4 - 0.5) * s.en * 0.8 + r.ara(-6, 6);
-      ctx.strokeStyle = `rgba(112,104,124,${(alfa * r.ara(0.05, 0.11)).toFixed(3)})`;
-      ctx.lineWidth = r.ara(1.2, 3.5);
-      ctx.beginPath();
-      for (let i = 0; i < p.length; i++) {
-        const a = p[Math.max(0, i - 1)], b = p[Math.min(p.length - 1, i + 1)];
-        let nx = -(b[1] - a[1]), ny = b[0] - a[0];
-        const l = Math.hypot(nx, ny) || 1;
-        nx /= l; ny /= l;
-        const x = p[i][0] + nx * off, y = p[i][1] + ny * off;
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+
+const SILGI_ACI = -0.62; // gövde sağ üste yatık; temas kenarı bu açıda
+/** Silinen alanı maskeye çizer (dünya koordinatında; çağıran kamerayı uygular): silginin düz temas izi yol boyunca
+ *  damgalanır (yuvarlak leke değil, düz kenarlı şerit) */
+export function silgiMaske(g, t) {
+  const o = silIlerleme(t);
+  if (o <= 0) return;
+  const z = silgi.z, hedef = z.L * o;
+  const w = silgi.en * 0.95, dz = silgi.en * 0.34;
+  g.save();
+  g.fillStyle = '#fff';
+  let i = 1;
+  for (let d = 0; d <= hedef; d += 3) {
+    while (i < z.s.length - 1 && z.s[i] < d) i++;
+    const k = (d - z.s[i - 1]) / (z.s[i] - z.s[i - 1] || 1);
+    const x = lerp(z.pts[i - 1][0], z.pts[i][0], k), y = lerp(z.pts[i - 1][1], z.pts[i][1], k);
+    g.save();
+    g.translate(x, y);
+    g.rotate(SILGI_ACI);
+    g.fillRect(-w / 2, -dz, w, dz * 1.15);
+    g.restore();
+  }
+  g.restore();
+}
+/** Silgi izleri: silinen şeritte silgi yönünde ince, soluk grafit sürtmeleri */
+export function silgiIzi(g, t, alfa = 1) {
+  if (alfa <= 0.003 || !silgi) return;
+  const o = silIlerleme(t);
+  if (o <= 0) return;
+  const p = yolParca(silgi.z, o);
+  if (p.length < 3) return;
+  const cx = Math.cos(SILGI_ACI), cy = Math.sin(SILGI_ACI);
+  g.save();
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  const r = rng(17);
+  for (let q = 0; q < 6; q++) {
+    const off = (q / 5 - 0.5) * silgi.en * 0.8 + r.ara(-3, 3);
+    g.strokeStyle = `rgba(112,104,124,${(alfa * r.ara(0.05, 0.11)).toFixed(3)})`;
+    g.lineWidth = r.ara(0.8, 2);
+    g.beginPath();
+    for (let i = 0; i < p.length; i++) {
+      const x = p[i][0] + cx * off, y = p[i][1] + cy * off - silgi.en * 0.12;
+      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.stroke();
+  }
+  g.restore();
+}
+/** Silgi kırıntıları (dünya): darbe geçtikçe belirir, düşüp rüzgârla savrulur */
+export function kirintiCiz(g, t, alfa = 1) {
+  if (!silgi || alfa <= 0.003) return;
+  const o = silIlerleme(t);
+  if (o <= 0) return;
+  for (const k of silgi.kir) {
+    if (k.s > o * silgi.z.L) continue;
+    // ters ilerleme: kırıntının oluştuğu an (ikiye bölmeyle)
+    let a = silgi.t0, b = silgi.t1;
+    for (let i = 0; i < 14; i++) { const m = (a + b) / 2; if (silIlerleme(m) * silgi.z.L < k.s) a = m; else b = m; }
+    const u = t - a;
+    if (u < 0 || u > 1.5) continue;
+    const al = clamp(u / 0.05) * (1 - clamp((u - 0.9) / 0.6));
+    const x = k.x + k.vx * u + 40 * u * u, y = k.y + k.vy * u + 90 * u * u;
+    ogeCiz(g, kirintiSp[k.tip], x, y, { r: k.r0 + k.don * u, s: k.sc, alfa: al * alfa });
+  }
+}
+/** Silginin kendisi (dünya koordinatında, gölgesiyle) */
+export function silgiCiz(g, t) {
+  const u = silgiUcu(t);
+  if (!u) return;
+  const sp = silgiSp;
+  const kalk = (1 - u.basinc) * 14; // havadayken gölge uzaklaşır
+  g.save();
+  g.translate(u.x + 9 + kalk, u.y + 13 + kalk);
+  g.rotate(u.a);
+  g.drawImage(sp.golge, -sp.w / 2 - 30, -sp.L - 30);
+  g.restore();
+  ogeCiz(g, sp.govde, u.x, u.y, { r: u.a });
+  ogeCiz(g, sp.kilif, u.x, u.y, { r: u.a });
+}
+export const silgiVar = () => !!silgi;
+export const silgiSonu = () => (silgi ? silgi.t1 : 0);
+
+// ---------------------------------------------------------------- çatlak ağı (yer düzleminde, perspektifli)
+let catlakT = null;
+export const CATLAK = { x0: -560, y0: 1370, w: 2300, h: 1250 };
+export function catlakHazirla() {
+  if (catlakT) return catlakT;
+  catlakT = tuval(CATLAK.w, CATLAK.h);
+  const g = catlakT.getContext('2d');
+  g.translate(-CATLAK.x0, -CATLAK.y0);
+  const r = rng(4321);
+  // perturbe ızgara (metre): derinlik 6..12 m, x -14..18 m
+  const satirlar = [];
+  for (let d = 5.6; d < 11.8; d += r.ara(1.0, 1.5)) {
+    const sira = [];
+    for (let x = -16 + r.ara(0, 1.2); x < 20; x += r.ara(1.2, 2.0)) sira.push([x + r.ara(-0.3, 0.3), d + r.ara(-0.25, 0.25)]);
+    satirlar.push(sira);
+  }
+  const kenar = (A, B) => {
+    const n = 7;
+    const pts = [];
+    for (let i = 0; i <= n; i++) {
+      const u = i / n;
+      const sap = i === 0 || i === n ? 0 : r.ara(-0.12, 0.12);
+      const x = lerp(A[0], B[0], u) + sap * 0.8, d = lerp(A[1], B[1], u) + sap * 0.3;
+      pts.push(proj(x, d));
+    }
+    const dm = (A[1] + B[1]) / 2;
+    konturCiz(g, pts, { renk: '#655D72', kal: clamp(16 / dm, 1.2, 2.4), alfa: clamp(0.85 - dm * 0.03, 0.45, 0.75), kapali: false, titreme: 0.4, tohum: r.tam(1, 9999), uc: 0.15 });
+  };
+  for (let i = 0; i < satirlar.length; i++) {
+    const s = satirlar[i], alt = satirlar[i + 1];
+    let k = 0;
+    for (let j = 0; j < s.length; j++) {
+      if (j + 1 < s.length && r() < 0.8) kenar(s[j], s[j + 1]);
+      if (alt && r() < 0.7) {
+        while (k + 1 < alt.length && Math.abs(alt[k + 1][0] - s[j][0]) < Math.abs(alt[k][0] - s[j][0])) k++;
+        kenar(s[j], alt[k]);
       }
-      ctx.stroke();
     }
   }
-  ctx.restore();
-}
-/** Silgi ucu konumları (ekran) – ilerleyen darbelerin uçları */
-export function silgiUclari(t) {
-  const out = [];
-  for (const s of silgiler) {
-    const o = silIlerleme(s, t);
-    if (o <= 0 || o >= 1) continue;
-    const p = yolParca(s.z, o);
-    out.push({ x: p[p.length - 1][0], y: p[p.length - 1][1], en: s.en });
-  }
-  return out;
-}
-/** Silgi kırıntıları: darbe geçtikçe belirir, rüzgârla savrulup söner */
-export function kirintiCiz(ctx, t) {
-  for (const s of silgiler) {
-    const o = silIlerleme(s, t);
-    if (o <= 0) continue;
-    // ilerleme -> zaman: kırıntının oluştuğu an (yaklaşık, doğrusal ters)
-    for (const k of s.kir) {
-      if (k.s > o * s.z.L) continue;
-      const tk = s.t0 + (k.s / s.z.L) * s.sure;
-      const u = t - tk;
-      if (u < 0 || u > 1.6) continue;
-      const a = clamp(u / 0.06) * (1 - clamp((u - 0.8) / 0.8));
-      const x = k.x + k.vx * u * u * 0.9 + u * 25, y = k.y + k.vy * u + 60 * u * u;
-      ogeCiz(ctx, kirintiSp[k.tip], x, y, { r: k.r0 + k.don * u, s: k.sc, alfa: a });
-    }
-  }
+  return catlakT;
 }
