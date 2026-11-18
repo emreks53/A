@@ -113,27 +113,27 @@ export function desenCiz(ctx, x, y, R, t, { r = 0, alfa = 1, dolgu = 1, acilma =
   ctx.restore();
 }
 
-// ---------------------------------------------------------------- cin: dumansız ateş kıvrımları
+// ---------------------------------------------------------------- cin: dumansız ateş dilleri
 const ALEV_RENK = {
-  lila: { arka: '#CDC6EE', tara: [[0, '#DCD6F3'], [0.6, '#B3ACDF'], [1, '#8B83C5']], kontur: '#8F87C8', ic: '#F1EEFC' },
-  mavi: { arka: '#C3D1F0', tara: [[0, '#D3DDF4'], [0.6, '#A8BAE4'], [1, '#7D93CC']], kontur: '#8197CC', ic: '#EEF3FC' },
+  lila: { arka: '#CFC6F0', tara: [[0, '#E2DCF7'], [0.6, '#B6ADE3'], [1, '#8A80C8']], kontur: '#948BD0', ic: '#F6F3FF' },
+  mavi: { arka: '#C4D6F4', tara: [[0, '#DCE6F8'], [0.6, '#A9BEE8'], [1, '#7C95D0']], kontur: '#8AA1D6', ic: '#F2F7FF' },
 };
 /**
- * Kıvrık alev dili: tabandan (0,0) yukarı yükselen, ucu bir yana kıvrılan (boteh/paisley gibi) ince uçlu dil.
- * Orta çizgi açısı θ(u) = -π/2 + yon·(s·sin(1.6πu) + kivrim·u³); yarı genişlik yuvarlak tabanlı, uca doğru incelir.
+ * Alev dili: yuvarlak, şişkin taban; uca doğru incelen, S kıvrımlı ve ucu hafifçe bir yana kıvrılan sivri dil.
+ * Orta çizgi x(u) = yon·h·(s1·sin(1.6πu + faz)·u + kv·u^2.6); yarı genişlik tabanU'da en geniş.
  */
-function alevGeo(h, w, { kivrim = 2.4, s = 0.28, yon = 1 } = {}) {
-  const N = 72;
-  const ds = (h * 1.18) / N;
-  const c = [[0, 0]], th = [];
-  let x = 0, y = 0;
+function dilGeo(h, w, { s1 = 0.1, kv = 0.15, faz = 0, yon = 1, tabanU = 0.32 } = {}) {
+  const N = 80;
+  const c = [], th = [];
   for (let i = 0; i <= N; i++) {
     const u = i / N;
-    const a = -Math.PI / 2 + yon * (s * Math.sin(Math.PI * u * 1.25) + kivrim * Math.pow(u, 3.6));
-    th.push(a);
-    if (i < N) { x += Math.cos(a) * ds; y += Math.sin(a) * ds; c.push([x, y]); }
+    c.push([yon * h * (s1 * Math.sin(Math.PI * 1.6 * u + faz) * Math.pow(u, 1.1) + kv * Math.pow(u, 2.6)), -h * u]);
   }
-  const hw = (u) => (w / 2) * Math.sqrt(Math.max(0, 1 - Math.pow(1 - Math.min(1, u / 0.2), 2))) * Math.pow(1 - u, 0.9);
+  for (let i = 0; i <= N; i++) {
+    const a = c[Math.min(N, i + 1)], b = c[Math.max(0, i - 1)];
+    th.push(Math.atan2(a[1] - b[1], a[0] - b[0]));
+  }
+  const hw = (u) => (w / 2) * Math.sqrt(Math.sin((Math.PI / 2) * Math.min(1, u / tabanU))) * (u <= tabanU ? 1 : Math.pow((1 - u) / (1 - tabanU), 1.15));
   const sol = [], sag = [];
   for (let i = 0; i <= N; i++) {
     const u = i / N, nx = -Math.sin(th[i]), ny = Math.cos(th[i]), r = hw(u);
@@ -141,7 +141,6 @@ function alevGeo(h, w, { kivrim = 2.4, s = 0.28, yon = 1 } = {}) {
     sag.push([c[i][0] - nx * r, c[i][1] - ny * r]);
   }
   const sekil = cokgen([...sol, ...sag.reverse()]);
-  // en yakın orta çizgi noktası: (yön, kenara göre uzaklık oranı)
   const yakin = (px, py) => {
     let bi = 0, bd = Infinity;
     for (let i = 0; i <= N; i += 2) { const d = (px - c[i][0]) ** 2 + (py - c[i][1]) ** 2; if (d < bd) { bd = d; bi = i; } }
@@ -150,32 +149,22 @@ function alevGeo(h, w, { kivrim = 2.4, s = 0.28, yon = 1 } = {}) {
   return { sekil, yakin, c, hw, N };
 }
 /** Alev dili sprite'ı. ic=true: içteki açık, kontursuz çekirdek */
-export function alevOge(h, w, { kivrim = 2.4, s = 0.28, yon = 1, renk = 'lila', olcek = 1, ic = false } = {}) {
+export function alevOge(h, w, { s1 = 0.1, kv = 0.15, faz = 0, yon = 1, tabanU = 0.32, renk = 'lila', olcek = 1, ic = false } = {}) {
   const P = ALEV_RENK[renk];
-  const G = alevGeo(h, w, { kivrim, s, yon });
-  const ad = `s03-alev2-${h}-${w}-${kivrim}-${s}-${yon}-${renk}-${ic}`;
+  const G = dilGeo(h, w, { s1, kv, faz, yon, tabanU });
+  const ad = `s03-alev3-${h}-${w}-${s1}-${kv}-${faz.toFixed(2)}-${yon}-${tabanU}-${renk}-${ic}`;
   if (ic) {
     return oge({
-      ad, olcek, sekil: G.sekil, zemin: null, arka: P.ic, arkaAlfa: 0.95, arkaTasma: false, arkaBulanik: w * 0.14,
-      tarama: { ton: (x, y) => clamp(0.15 + 0.6 * G.yakin(x, y).oran), renkler: [[0, '#FFFFFF'], [1, '#E2DEF6']], yonF: (x, y) => G.yakin(x, y).a, aralik: 3.2, boy: [10, 24], esikler: [0.35], alfa: 0.35, karisim: 'source-over' },
-      kontur: null, pay: 12,
+      ad, olcek, sekil: G.sekil, zemin: null, arka: P.ic, arkaAlfa: 0.9, arkaTasma: false, arkaBulanik: w * 0.12,
+      tarama: { ton: (x, y) => clamp(0.2 + 0.6 * G.yakin(x, y).oran), renkler: [[0, '#FFFFFF'], [1, '#E4E0F8']], yonF: (x, y) => G.yakin(x, y).a, aralik: 3.2, boy: [10, 26], esikler: [0.4], alfa: 0.3, karisim: 'source-over' },
+      kontur: null, pay: 14,
     });
   }
   return oge({
-    ad, olcek, sekil: G.sekil, zemin: null, arka: P.arka, arkaAlfa: 0.62, arkaBulanik: w * 0.08, arkaTasma: false,
-    tarama: { ton: (x, y) => { const q = G.yakin(x, y); return clamp(0.18 + 0.72 * Math.pow(q.oran, 1.6) + 0.15 * (1 - q.u)); },
-      renkler: P.tara, yonF: (x, y) => G.yakin(x, y).a, aralik: 2.9, boy: [12, 30], kal: 1.15, esikler: [0.3, 0.58, 0.82], alfa: 0.5, karisim: 'source-over' },
-    kontur: P.kontur, konturKal: 1.7, konturAlfa: 0.62, titreme: 0.35, pay: 12,
-    detay: (c, api) => {
-      // iç kıvrım çizgisi: orta çizginin yanında, uca doğru kıvrılan ince kalem
-      const pts = [];
-      for (let i = Math.round(G.N * 0.3); i <= Math.round(G.N * 0.93); i++) {
-        const u = i / G.N, [px, py] = G.c[i], [qx, qy] = G.c[Math.min(G.N, i + 1)];
-        const L = Math.hypot(qx - px, qy - py) || 1, k = -0.35 * G.hw(u) * yon;
-        pts.push([px - ((qy - py) / L) * k, py + ((qx - px) / L) * k]);
-      }
-      api.cizgi(pts, { renk: P.kontur, kal: 1.3, alfa: 0.45, uc: 0.3 });
-    },
+    ad, olcek, sekil: G.sekil, zemin: null, arka: P.arka, arkaAlfa: 0.6, arkaBulanik: w * 0.1, arkaTasma: false,
+    tarama: { ton: (x, y) => { const q = G.yakin(x, y); return clamp(0.15 + 0.7 * Math.pow(q.oran, 1.5) + 0.2 * (1 - q.u)); },
+      renkler: P.tara, yonF: (x, y) => G.yakin(x, y).a, aralik: 2.9, boy: [14, 36], kal: 1.15, esikler: [0.3, 0.58, 0.82], alfa: 0.5, karisim: 'source-over' },
+    kontur: P.kontur, konturKal: 1.6, konturAlfa: 0.55, titreme: 0.35, pay: 14,
   });
 }
 /** Alev dilini salınımla çizer: k yatay eğme (uç kayar), sx/sy ölçek; (x, y) taban */
@@ -188,16 +177,23 @@ export function alevCiz(ctx, o, x, y, { k = 0, sx = 1, sy = 1, alfa = 1 } = {}) 
   ctx.restore();
 }
 
-// ---------------------------------------------------------------- altın taç yaprağı (ışıklı)
+// ---------------------------------------------------------------- ışıklı taç yaprağı (altından güle çalan)
+/** Işıklı gül taç yaprağı: dar dip, yuvarlak ve uçta hafifçe dalgalı; ortası krem-altın, kenarı gül pembesi */
 export function tacYapragi(L, olcek = 1) {
-  const W0 = L * 0.62;
+  const W0 = L * 0.86;
   return oge({
-    ad: `s03-tacyaprak-${L}`, olcek,
-    sekil: svg(`M0 0C${-W0 * 0.62} ${-L * 0.2} ${-W0 * 0.62} ${-L * 0.82} ${-W0 * 0.12} ${-L * 0.98}C${-W0 * 0.04} ${-L * 1.01} ${W0 * 0.04} ${-L * 1.01} ${W0 * 0.12} ${-L * 0.98}C${W0 * 0.62} ${-L * 0.82} ${W0 * 0.62} ${-L * 0.2} 0 0Z`),
-    arka: '#F8DF94', arkaAlfa: 0.85,
-    tarama: { ton: TON.dogrusal(0, 0, 0, -L, 0.85, 0.15), renkler: [[0, '#F7E3A1'], [0.6, '#E8C062'], [1, '#C38F2E']], yon: -Math.PI / 2, aralik: 2.6, boy: [6, 16], kal: 1.05, esikler: [0.3, 0.62], alfa: 0.55 },
-    kontur: '#B0832A', konturKal: 1.5, konturAlfa: 0.85,
-    detay: (c, api) => api.cizgi([[0, -L * 0.1], [0, -L * 0.6]], { renk: '#C8963E', kal: 1, alfa: 0.55 }),
+    ad: `s03-tacyaprak3-${L}`, olcek,
+    sekil: svg(`M0 0C${-W0 * 0.5} ${-L * 0.16} ${-W0 * 0.66} ${-L * 0.78} ${-W0 * 0.3} ${-L * 0.97}C${-W0 * 0.14} ${-L * 1.04} ${-W0 * 0.05} ${-L * 0.99} 0 ${-L * 0.97}C${W0 * 0.05} ${-L * 0.99} ${W0 * 0.14} ${-L * 1.04} ${W0 * 0.3} ${-L * 0.97}C${W0 * 0.66} ${-L * 0.78} ${W0 * 0.5} ${-L * 0.16} 0 0Z`),
+    arka: '#FDE7DA', arkaAlfa: 0.9,
+    tarama: [
+      { ton: TON.gurultulu(TON.radyal(0, -L * 0.6, L * 0.62, 0.05, 0.9), 0.05, 0.06, L), renkler: [[0, '#FCEBD2'], [0.5, '#F7C6AE'], [1, '#EC97A0']], yonF: (x, y) => Math.atan2(y + L * 0.6, x), aralik: 2.5, boy: [8, 18], kal: 1.05, esikler: [0.35, 0.68], alfa: 0.5 },
+      { ton: TON.dogrusal(0, 0, 0, -L * 0.45, 0.9, 0), renkler: [[0, '#F6D79A'], [1, '#E3AE55']], yon: -Math.PI / 2, aralik: 2.4, boy: [6, 14], kal: 1, esikler: [0.4], alfa: 0.45 },
+    ],
+    kontur: '#D88A8E', konturKal: 1.3, konturAlfa: 0.7,
+    detay: (c, api) => {
+      api.cizgi([[0, -L * 0.08], [L * 0.015, -L * 0.4], [0, -L * 0.66]], { renk: '#E2A08E', kal: 0.9, alfa: 0.45 });
+      api.dolgu(elips(-W0 * 0.17, -L * 0.64, W0 * 0.09, L * 0.15), '#FFFDF6', 0.75);
+    },
   });
 }
 

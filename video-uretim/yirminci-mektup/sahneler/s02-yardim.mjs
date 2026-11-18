@@ -1,193 +1,196 @@
-// s02 yardımcıları: göğe yükselen krem taş merdiven (iki kanatlı, ortada sahanlık), altın konturlu sivri kemer
-// (makam), bulut denizi, ölçeklenebilir nur küresi, merdiven çıkan adamın ters kinematiği (ayak basamağa basar,
-// kayma yok), merkezden dışa çizilen marifet deseni ve altın-krem ışık zemini. Motor dosyalarına dokunmaz.
-import { tuval, rng, clamp, lerp, ease, TAU, rgba, smooth, W, H, gurultu2 } from '../motor/temel.mjs';
-import { oge, ogeCiz, konturCiz, tara, TON, PALET, FILM, darbe } from '../motor/kalem.mjs';
-import { svg, elips, cokgen, path2d, yolCiz, yenidenOrnekle } from '../motor/sekil.mjs';
+// s02 yardımcıları: bulut denizinden göğe yükselen krem taş merdiven-köprü (iki kanat, üstte sahanlık, altta sivri
+// köprü kemeri), altın konturlu sivri kemer (makam), bulut denizi, ölçeklenebilir nur küresi (s01 ile aynı motif),
+// merdiven çıkan adamın ters kinematiği (her adımda ayak basamağa basar, kayma yok), merkezden dışa çizilen marifet
+// deseni ve altın-krem ışık zemini (s03 başlangıcıyla aynı). Motor dosyalarına dokunmaz.
+import { tuval, rng, clamp, lerp, ease, TAU, rgba, W, H, gurultu2 } from '../motor/temel.mjs';
+import { oge, ogeCiz, konturCiz, tara, darbe, TON, PALET, FILM } from '../motor/kalem.mjs';
+import { svg, elips, cokgen, yenidenOrnekle } from '../motor/sekil.mjs';
 import * as M from '../motor/motifler.mjs';
 
 // ================================================================ dünya geometrisi
 export const S = 0.62; // adamın ölçeği (boy ~238 px)
 export const LEG = 184 * S; // kalça ekleminden ayak bileğine
-export const ANK = 11 * S; // ayak bileği (insanYan 'bil' noktası) ile taban arası
+export const ANK = 11 * S; // ayak bileği ile taban arası
 
-const R = 40, D = 50, N = 7; // basamak yüksekliği, derinliği, kanat başına basamak
-const Yp = 760; // sahanlık üstü
-const Px0 = 560; // sahanlığın sol kenarı (sol kanadın tepesi)
-const Y = (k) => Yp + (N + 1 - k) * R; // k. seviyenin yüzeyi (0: alt sahanlık, N+1: üst sahanlık)
-const T = (k) => Px0 - (N + 1 - k) * D; // k. basamağın basış yüzeyinin sol kenarı
-const F = (k) => T(k) + 15; // k. basamakta ayak bileğinin x'i
-const FA = 660, FB = 650; // üst sahanlıkta son duruş (yakın ayak A, uzak ayak B)
-const Ax = 655; // adamın son duruşu = kemer ve nur ekseni
-const Px1 = 2 * Ax - Px0;
+const R = 40, D = 50, N = 7; // basamak yüksekliği, derinliği, sahanlığa kadar kanat başına basamak
+const AX = 540, YP = 800, LW = 200; // eksen, sahanlık üstü, sahanlık eni
+const PX0 = AX - LW / 2, PX1 = AX + LW / 2;
+const KMIN = -10; // bulutların içine inen en alt basamak
+const YALT = 1600; // yapının (bulutlara gömülü) alt ucu
+const TH = 230; // kanat kalınlığı (basamak burun çizgisinden köprü kemerine yatay uzaklık)
+export const Y = (k) => YP + (N + 1 - k) * R; // k. basamağın üst yüzü (N+1: sahanlık)
+export const T = (k) => PX0 - (N + 1 - k) * D; // k. basamağın basış yüzünün sol kenarı
+export const F = (k) => T(k) + 14; // k. basamakta ayak bileğinin x'i
+const ayna = (x) => 2 * AX - x;
 
 export const G = {
-  R, D, N, Yp, Px0, Px1, Ax, Y, T, F,
-  XL: -120, // sol alt sahanlığın (bulutlara gömülen) ucu
-  NUR: { x: Ax, y: 418, r: 56 }, // nur küresinin dünya yeri
-  KEMER: { w: 192, h: 330, k: 165, kal: 21 }, // dış en, düz gövde boyu, sivri kısım boyu, ayak kalınlığı
+  R, D, N, AX, YP, PX0, PX1, Y, T, F,
+  NUR: { x: AX, y: 450, r: 56 }, // nur küresinin dünya yeri (kemerin içinde, üstte)
+  KEMER: { w: 200, h: 330, k: 175, kal: 22 }, // dış en, düz gövde boyu, sivri kısım boyu, ayak kalınlığı
+  APEX: 880, // köprü kemerinin tepe noktası (sahanlığın altında)
 };
-G.XR = 2 * Ax - G.XL;
 
-/** Sol kanatta x noktasındaki yürüme yüzeyi (y) */
+/** x noktasındaki yürüme yüzeyi (y) */
 export function yuzey(x) {
-  if (x >= Px0 && x <= Px1) return Yp;
-  if (x > Px1) return yuzey(2 * Ax - x);
-  if (x < T(1)) return Y(0);
-  const k = Math.min(N, Math.floor((x - T(1)) / D) + 1);
-  return Y(k);
+  if (x > AX) return yuzey(ayna(x));
+  if (x >= PX0) return YP;
+  const k = Math.floor((x - T(0)) / D);
+  return Y(Math.max(KMIN, Math.min(N, k)));
 }
 
-// fener (ışık) yerleri: her basamağın yan yüzünde, basış kenarının hemen altında
-export const FENERLER = Array.from({ length: N }, (_, i) => {
-  const k = i + 1;
-  return { k, x: T(k) + D * 0.5, y: Y(k) + R * 0.46 };
-});
+// fener yerleri: sol kanatta her basamağın yan yüzünde, basış kenarının altında
+export const FENERLER = [];
+for (let k = -3; k <= N; k++) FENERLER.push({ k, x: T(k) + D * 0.5, y: Y(k) + R * 0.52 });
 
-// ================================================================ merdiven yapısı (tek sprite)
-const SICAK = { arka: '#EFE5CF', tara: [[0, '#EADFC6'], [0.45, '#D6C6A8'], [1, '#A39581']], kontur: '#8A7964' };
-const KALINLIK = 78; // kanat (kiriş) kalınlığı, dikey
+// ================================================================ merdiven-köprü (tek sprite)
+const TAS = { arka: '#EBDDC0', tara: [[0, '#EADCC1'], [0.45, '#D4BF9B'], [1, '#9A8468']], kontur: '#86735C' };
+
+/** Köprü kemeri: iki merkezli sivri kemer (tepe G.APEX, üzengi YS, yarı açıklık KA), altında dikey ayaklar */
+const YS = 1250, KA = 262;
+const KH = YS - 880, KC = (KH * KH - KA * KA) / (2 * KA), KRHO = KA + KC;
+/** Sol yarıda y yüksekliğinde köprü kemerinin iç hattının x'i */
+export function kemerX(y) {
+  if (y >= YS) return AX - KA;
+  if (y <= 880) return AX;
+  return AX + KC - Math.sqrt(KRHO * KRHO - (YS - y) * (YS - y));
+}
+function intrados() {
+  const sol = [[AX - KA, YALT]];
+  for (let y = YALT - 20; y > YS; y -= 20) sol.push([AX - KA, y]);
+  const ta = Math.atan2(-KH, -KC);
+  const n = 70;
+  for (let i = 0; i <= n; i++) {
+    const th = -Math.PI + (ta + Math.PI) * (i / n);
+    sol.push([AX + KC + KRHO * Math.cos(th), YS + KRHO * Math.sin(th)]);
+  }
+  const sag = sol.map(([x, y]) => [ayna(x), y]).reverse().slice(1);
+  return [...sol, ...sag];
+}
+export const INTRADOS = intrados();
 
 function yapiSekli() {
-  const k = KALINLIK;
-  const ust = [];
-  ust.push([G.XL, Y(0)]);
-  for (let i = 1; i <= N; i++) { ust.push([T(i), Y(i - 1)]); ust.push([T(i), Y(i)]); }
-  ust.push([Px0, Y(N)]); ust.push([Px0, Yp]);
-  // sağ kanat (ayna)
-  const sag = ust.map(([x, y]) => [2 * Ax - x, y]).reverse();
-  const tepe = [...ust, ...sag];
-  // alt: kanat altları iç köşe çizgisine paralel; sahanlık altında yumuşak bir omurga ve sarkıt
-  const egim = R / D;
-  const altSol = (x) => Y(0) + k - Math.max(0, x - T(1)) * egim;
-  const omurgaY = Yp + 92;
-  const xm = T(1) + (Y(0) + k - omurgaY) / egim; // sol kanat altı omurgaya burada değer
-  const d = [];
-  d.push(`M${G.XR} ${Y(0)}`);
-  // tepe zinciri sağdan sola değil: önce tepe soldan sağa çizildi, burada sağ uçtan aşağı iniyoruz
-  const alt = [];
-  alt.push([G.XR, Y(0) + k]);
-  alt.push([2 * Ax - T(1), Y(0) + k]);
-  // sağ kanat altı → omurga (yumuşak geçiş)
-  const xmR = 2 * Ax - xm;
-  const egri = (x0, y0, x1, y1, cx, cy, n = 14) => {
-    for (let i = 1; i <= n; i++) {
-      const u = i / n, v = 1 - u;
-      alt.push([v * v * x0 + 2 * v * u * cx + u * u * x1, v * v * y0 + 2 * v * u * cy + u * u * y1]);
-    }
-  };
-  const gir = 46; // geçiş uzunluğu
-  alt.push([xmR + gir, omurgaY + gir * egim]);
-  egri(xmR + gir, omurgaY + gir * egim, xmR - gir * 0.6, omurgaY + 2, xmR, omurgaY);
-  // sarkıt: ortada aşağı doğru sivri, yumuşak bir damla
-  const sw = 58;
-  alt.push([Ax + sw, omurgaY + 2]);
-  egri(Ax + sw, omurgaY + 2, Ax, omurgaY + 66, Ax + sw * 0.25, omurgaY + 8, 16);
-  egri(Ax, omurgaY + 66, Ax - sw, omurgaY + 2, Ax - sw * 0.25, omurgaY + 8, 16);
-  alt.push([xm + gir * 0.6, omurgaY + 2]);
-  egri(xm + gir * 0.6, omurgaY + 2, xm - gir, omurgaY + gir * egim, xm, omurgaY);
-  alt.push([T(1), Y(0) + k]);
-  alt.push([G.XL, Y(0) + k]);
-  void altSol; void d;
-  return { pts: [...tepe, ...alt], omurgaY };
+  const sol = [[T(KMIN), YALT]];
+  for (let k = KMIN; k <= N; k++) { sol.push([T(k), Y(k)]); sol.push([T(k + 1), Y(k)]); }
+  sol.push([PX0, YP]);
+  const sag = sol.map(([x, y]) => [ayna(x), y]).reverse();
+  return [...sol, ...sag, ...INTRADOS.slice().reverse()];
+}
+
+/** Basamak dizisine paralel altın kakma yolu (sol kanat, aşağıdan yukarı, sahanlık ortasına kadar) */
+function kakmaYolu() {
+  const ofs = D + 46; // burun çizgisinden yatay uzaklık
+  const x = (y) => PX0 - (y - YP) * (D / R) + ofs;
+  const yh = YP + 24; // sahanlık yüzündeki yatay çizgi
+  const yk = YP + (PX0 + ofs - (AX - 0)) * (R / D); // yatay çizgiye değdiği yer
+  const pts = [[x(YALT - 40), YALT - 40]];
+  const ykes = YP + (PX0 + ofs - x(yh)) * 0; void yk; void ykes;
+  // eğik çizginin yatay çizgiyle kesişimi
+  const xk = x(yh);
+  pts.push([xk, yh]);
+  pts.push([AX, yh]);
+  return yenidenOrnekle(pts, 3, false);
 }
 
 export function yapiOge(olcek = 1.4) {
-  const { pts, omurgaY } = yapiSekli();
-  const sekil = [{ pts, kapali: true }];
+  const sekil = [{ pts: yapiSekli(), kapali: true }];
   const n = gurultu2(41);
   const ton = (x, y) => {
-    const ust = yuzey(x < Px0 || x > Px1 ? x : x);
-    const derin = clamp((y - ust) / 118);
-    let v = 0.1 + 0.62 * Math.pow(derin, 0.9);
-    // sahanlık gövdesi biraz daha aydınlık (nur yukarıda)
-    if (x > Px0 - 30 && x < Px1 + 30) v -= 0.07 * (1 - clamp((y - Yp) / 140));
-    return clamp(v + 0.07 * n.fbm(x * 0.012, y * 0.012, 3));
+    const ust = yuzey(x);
+    const derin = clamp((y - ust) / 170);
+    let v = 0.1 + 0.52 * Math.pow(derin, 0.8);
+    // köprü kemerinin kenarına doğru (alt yüz) koyulaşır
+    const xl = x <= AX ? x : ayna(x);
+    const kx = kemerX(y);
+    if (y > 870) v += 0.22 * clamp(1 - Math.abs(kx - xl) / 85);
+    // aşağı indikçe bulut buğusu: ton hafifler
+    v -= 0.2 * clamp((y - 1200) / 260);
+    return clamp(v + 0.08 * n.fbm(x * 0.012, y * 0.012, 3));
   };
   return oge({
-    ad: 's02-yapi', olcek, sekil, arka: SICAK.arka, arkaAlfa: 0.8, arkaBulanik: 6,
-    tarama: [
-      { ton, renkler: SICAK.tara, yon: -0.12, aralik: 3.2, boy: [26, 80], kal: 1.15, alfa: 0.48, esikler: [0.2, 0.46, 0.7] },
-    ],
-    kontur: SICAK.kontur, konturKal: 2.3, titreme: 0.45,
+    ad: 's02-kopru', olcek, sekil, arka: TAS.arka, arkaAlfa: 0.8, arkaBulanik: 6,
+    tarama: [{ ton, renkler: TAS.tara, yon: -0.12, aralik: 3.1, boy: [26, 80], kal: 1.15, alfa: 0.52, esikler: [0.16, 0.42, 0.68] }],
+    kontur: TAS.kontur, konturKal: 2.3, titreme: 0.45,
     detay: (ctx, api) => {
-      // basamak burunlarının altında ince gölge şeridi (kısa tarama)
-      for (let i = 1; i <= N; i++) {
-        for (const ayna of [false, true]) {
-          const x0 = T(i), x1 = T(i) + D;
-          const p = [[x0, Y(i) + 2], [x1, Y(i) + 2], [x1, Y(i) + 9], [x0, Y(i) + 7]].map(([x, y]) => (ayna ? [2 * Ax - x, y] : [x, y]));
-          api.tara(cokgen(p), { ton: () => 0.6, renkler: SICAK.tara, yon: ayna ? Math.PI - 0.1 : 0.1, aralik: 2.4, boy: [10, 30], esikler: [0.3], alfa: 0.3 });
+      // basamak burunlarının altında ince gölge şeridi
+      for (let k = KMIN + 1; k <= N; k++) {
+        for (const ay of [false, true]) {
+          const x0 = T(k), x1 = T(k) + D;
+          const p = [[x0, Y(k) + 2], [x1, Y(k) + 2], [x1, Y(k) + 9], [x0, Y(k) + 6]].map(([x, y]) => (ay ? [ayna(x), y] : [x, y]));
+          api.tara(cokgen(p), { ton: () => 0.6, renkler: TAS.tara, yon: ay ? Math.PI - 0.1 : 0.1, aralik: 2.4, boy: [10, 30], esikler: [0.3], alfa: 0.3 });
         }
       }
-      // altın kakma çizgisi: kiriş boyunca, basamak çizgisine paralel
-      const kakma = kakmaYolu();
-      api.cizgi(kakma, { renk: M.ALTIN_KOYU, kal: 1.6, alfa: 0.72, titreme: 0.3 });
-      api.cizgi(kakma.map(([x, y]) => [2 * Ax - x, y]), { renk: M.ALTIN_KOYU, kal: 1.6, alfa: 0.72, titreme: 0.3 });
-      // sahanlık yüzünde ince çift altın çizgi ve ortada küçük gül pencere
-      api.cizgi([[Px0 + 6, Yp + 16], [Px1 - 6, Yp + 16]], { renk: M.ALTIN_KOYU, kal: 1.4, alfa: 0.7 });
-      api.cizgi([[Px0 + 26, omurgaY - 6], [Px1 - 26, omurgaY - 6]], { renk: M.ALTIN_KOYU, kal: 1.3, alfa: 0.55 });
-      const rc = 15, ry = Yp + 50;
-      api.dolgu(elips(Ax, ry, rc, rc), '#F6E6B8', 0.55);
-      api.halka(elips(Ax, ry, rc, rc)[0].pts, { renk: M.ALTIN_KOYU, kal: 1.6, alfa: 0.85 });
+      // köprü kemerinin içinde koyu gölge (alt yüz) şeridi
+      const ic = INTRADOS.map(([x, y]) => [x, y]);
+      const ofsYol = (yol, d) => yol.map((p, i) => {
+        const a = yol[Math.max(0, i - 1)], b = yol[Math.min(yol.length - 1, i + 1)];
+        let tx = b[0] - a[0], ty = b[1] - a[1];
+        const tl = Math.hypot(tx, ty) || 1;
+        // normal: kemerin dışına (taşın içine) doğru
+        return [p[0] + (ty / tl) * d, p[1] - (tx / tl) * d];
+      });
+      const arc1 = ofsYol(ic, 18).filter(([, y]) => y < YALT - 30);
+      api.cizgi(arc1, { renk: M.ALTIN_KOYU, kal: 1.6, alfa: 0.75, titreme: 0.3 });
+      // kilit taşı
+      const ky = G.APEX;
+      const kilit = [[AX - 13, ky - 2], [AX - 17, ky - 40], [AX + 17, ky - 40], [AX + 13, ky - 2]];
+      api.tara(cokgen(kilit), { ton: () => 0.55, renkler: [[0, '#EAD9B0'], [1, '#C7A764']], yon: -1.4, aralik: 2.6, boy: [10, 26], esikler: [0.3], alfa: 0.4 });
+      api.halka(kilit, { renk: M.ALTIN_KOYU, kal: 1.5, alfa: 0.75, titreme: 0.25 });
+      // altın kakma: kanatlar boyunca, sahanlıkta yatay
+      const kak = kakmaYolu();
+      api.cizgi(kak, { renk: M.ALTIN_KOYU, kal: 1.6, alfa: 0.72, titreme: 0.3 });
+      api.cizgi(kak.map(([x, y]) => [ayna(x), y]).reverse(), { renk: M.ALTIN_KOYU, kal: 1.6, alfa: 0.72, titreme: 0.3 });
+      // sahanlık yüzünde ince ikinci çizgi
+      api.cizgi([[PX0 + 2, YP + 6], [PX1 - 2, YP + 6]], { renk: TAS.kontur, kal: 1.1, alfa: 0.5 });
+      // söner fener yuvaları: küçük kakma halkalar (iki kanatta)
+      for (const f of FENERLER) {
+        for (const x of [f.x, ayna(f.x)]) {
+          api.dolgu(elips(x, f.y, 7.5, 7.5), '#F4ECDA', 0.92);
+          api.halka(elips(x, f.y, 7.5, 7.5)[0].pts, { renk: '#9C8250', kal: 1.4, alfa: 0.85 });
+        }
+      }
+      // sahanlık ortasında gül pencere yuvası
+      const rc = 13, ry = YP + 52;
+      api.dolgu(elips(AX, ry, rc, rc), '#F3EAD6', 0.9);
+      api.halka(elips(AX, ry, rc, rc)[0].pts, { renk: M.ALTIN_KOYU, kal: 1.5, alfa: 0.85 });
       for (let j = 0; j < 8; j++) {
         const a = (j / 8) * TAU;
-        api.cizgi([[Ax + Math.cos(a) * 4, ry + Math.sin(a) * 4], [Ax + Math.cos(a) * (rc - 3), ry + Math.sin(a) * (rc - 3)]], { renk: M.ALTIN_KOYU, kal: 1.1, alfa: 0.65 });
-      }
-      // sarkıtın ucunda küçük altın damla
-      api.dolgu(elips(Ax, omurgaY + 70, 5, 6), '#E7C565', 0.9);
-      api.halka(elips(Ax, omurgaY + 70, 5, 6)[0].pts, { renk: M.ALTIN_KOYU, kal: 1.3 });
-      // söner fenerler (yuva): küçük kakma halkalar
-      for (const f of FENERLER) {
-        for (const x of [f.x, 2 * Ax - f.x]) {
-          api.dolgu(elips(x, f.y, 6.5, 6.5), '#F3EAD6', 0.9);
-          api.halka(elips(x, f.y, 6.5, 6.5)[0].pts, { renk: '#9C8250', kal: 1.3, alfa: 0.8 });
-        }
+        api.cizgi([[AX + Math.cos(a) * 3.5, ry + Math.sin(a) * 3.5], [AX + Math.cos(a) * (rc - 2.5), ry + Math.sin(a) * (rc - 2.5)]], { renk: M.ALTIN_KOYU, kal: 1.0, alfa: 0.6 });
       }
     },
   });
 }
-
-/** Sol kanadın altın kakma yolu (alttan üste) */
-export function kakmaYolu() {
-  const ofs = 40;
-  const pts = [[G.XL + 30, Y(0) + ofs - 22]];
-  pts.push([T(1) - 18, Y(0) + ofs - 22]);
-  // basamak iç köşe çizgisine paralel, aşağıda
-  const egim = R / D;
-  const x1 = Px0 - 4;
-  pts.push([T(1) + 4, Y(0) + ofs - 22 - 4 * egim + 6]);
-  pts.push([x1, Y(0) + ofs - (x1 - T(1)) * egim]);
-  return yenidenOrnekle(pts, 3, false);
-}
+export const GUL_PENCERE = { x: AX, y: YP + 52 };
 
 // ================================================================ kemer (makam)
-/** Sivri kemer yolu: taban ortası (cx, y), en w, düz gövde h, sivri kısım k. Sol tabandan saat yönünde. */
+/** Sivri kemer yolu: taban ortası (cx, y), en w, düz gövde h, sivri kısım k. Sol tabandan saat yönünde, açık yol. */
 function kemerYolu(cx, y, w, h, k) {
   const x = cx - w / 2, r = w / 2;
   return svg(`M${x} ${y}V${y - h}C${x} ${y - h - k * 0.58} ${x + r * 0.5} ${y - h - k * 0.9} ${x + r} ${y - h - k}C${x + r * 1.5} ${y - h - k * 0.9} ${x + w} ${y - h - k * 0.58} ${x + w} ${y - h}V${y}`, 2)[0].pts;
 }
 export function kemerGeo() {
   const { w, h, k, kal } = G.KEMER;
-  const dis = kemerYolu(Ax, Yp, w, h, k);
-  const ic = kemerYolu(Ax, Yp, w - 2 * kal, h, k - kal * 0.95);
-  const ic2 = kemerYolu(Ax, Yp, w - 2 * kal + 8, h, k - kal * 0.95 + 4); // içteki ince ikinci çizgi
+  const dis = kemerYolu(AX, YP, w, h, k);
+  const ic = kemerYolu(AX, YP, w - 2 * kal, h, k - kal * 0.95);
+  const ic2 = kemerYolu(AX, YP, w - 2 * kal + 9, h, k - kal * 0.95 + 4.5);
   return { dis, ic, ic2 };
 }
-/** Kemerin taş çerçevesi (kontursuz; kontur canlı çizilir) */
-export function kemerOge(olcek = 1.4) {
+/** Kemerin taş çerçevesi (dış kontur canlı çizilir) */
+export function kemerOge(olcek = 2.2) {
   const { dis, ic } = kemerGeo();
   const cerceve = [{ pts: [...dis, ...ic.slice().reverse()], kapali: true }];
+  const { w, h, kal } = G.KEMER;
   return oge({
-    ad: 's02-kemer', olcek, sekil: cerceve, arka: '#F4ECD8', arkaAlfa: 0.75, arkaBulanik: 4,
-    tarama: { ton: TON.gurultulu(TON.dogrusal(Ax - 90, 0, Ax + 90, 0, 0.55, 0.25), 0.1, 0.03, 7), renkler: [[0, '#F1E3BC'], [0.6, '#DCC48D'], [1, '#B9974F']], yon: -Math.PI / 2 + 0.08, aralik: 2.8, boy: [14, 40], kal: 1.1, alfa: 0.45, esikler: [0.3, 0.6] },
+    ad: 's02-kemer', olcek, sekil: cerceve, arka: '#F4EAD2', arkaAlfa: 0.8, arkaBulanik: 4,
+    tarama: { ton: TON.gurultulu(TON.dogrusal(AX - 100, 0, AX + 100, 0, 0.62, 0.3), 0.1, 0.03, 7), renkler: [[0, '#F1E3BC'], [0.6, '#DCC48D'], [1, '#B9974F']], yon: -Math.PI / 2 + 0.08, aralik: 2.7, boy: [14, 40], kal: 1.1, alfa: 0.46, esikler: [0.28, 0.58] },
     kontur: null, pay: 16,
     detay: (ctx, api) => {
-      // ayak kaideleri ve başlık bilezikleri
-      const { w, h, kal } = G.KEMER;
       for (const s of [-1, 1]) {
-        const x0 = Ax + s * (w / 2 - kal / 2);
-        api.cizgi([[x0 - kal / 2 - 3, Yp - 14], [x0 + kal / 2 + 3, Yp - 14]], { renk: M.ALTIN_KOYU, kal: 1.4, alfa: 0.8 });
-        api.cizgi([[x0 - kal / 2 - 2, Yp - h + 10], [x0 + kal / 2 + 2, Yp - h + 10]], { renk: M.ALTIN_KOYU, kal: 1.4, alfa: 0.8 });
+        const x0 = AX + s * (w / 2 - kal / 2);
+        // kaide ve başlık bilezikleri
+        api.cizgi([[x0 - kal / 2 - 3, YP - 16], [x0 + kal / 2 + 3, YP - 16]], { renk: M.ALTIN_KOYU, kal: 1.5, alfa: 0.85 });
+        api.cizgi([[x0 - kal / 2 - 3, YP - 22], [x0 + kal / 2 + 3, YP - 22]], { renk: M.ALTIN_KOYU, kal: 1.1, alfa: 0.6 });
+        api.cizgi([[x0 - kal / 2 - 3, YP - h + 8], [x0 + kal / 2 + 3, YP - h + 8]], { renk: M.ALTIN_KOYU, kal: 1.5, alfa: 0.85 });
+        api.cizgi([[x0 - kal / 2 - 3, YP - h + 14], [x0 + kal / 2 + 3, YP - h + 14]], { renk: M.ALTIN_KOYU, kal: 1.1, alfa: 0.6 });
       }
     },
   });
@@ -195,20 +198,18 @@ export function kemerOge(olcek = 1.4) {
 
 // ================================================================ bulut denizi
 const BULUT_RENK = {
-  arka: { arka: '#DCD7EC', tara: [[0, '#D4CEE8'], [0.6, '#B4B4DD'], [1, '#8E93C8']], alfa: 0.4, esik: [0.12, 0.42, 0.7] },
-  orta: { arka: '#E7E3F2', tara: [[0, PALET.lila], [1, PALET.lilaMavi]], alfa: 0.36, esik: [0.25, 0.55] },
-  on: { arka: null, tara: [[0, PALET.lila], [1, PALET.lilaMavi]], alfa: 0.32, esik: [0.3, 0.6] },
+  arka: { arka: '#DCD7EC', tara: [[0, '#D4CEE8'], [0.6, '#B4B4DD'], [1, '#8E93C8']], alfa: 0.38, esik: [0.12, 0.42, 0.7] },
+  orta: { arka: '#E7E3F2', tara: [[0, PALET.lila], [1, PALET.lilaMavi]], alfa: 0.34, esik: [0.25, 0.55] },
+  on: { arka: '#EEEBF6', tara: [[0, PALET.lila], [1, PALET.lilaMavi]], alfa: 0.3, esik: [0.3, 0.6] },
 };
-/** Bulut denizi: üst kenarı kabarık, (0,0) sol üst; ust(x) kenar yüksekliği. kenarY(x) ile çağıran tarafa döner */
-export function bulutDenizi({ w, h, tohum, tur = 'orta', olcek = 1, ad, rMin = 50, rMax = 120, genlik = 50, kase = 0 }) {
+/** Bulut denizi: üst kenarı kabarık, (0,0) sol üst. Döner { oge, kenar(x) } */
+export function bulutDenizi({ w, h, tohum, tur = 'orta', olcek = 1, ad, rMin = 50, rMax = 120, genlik = 50 }) {
   const r = rng(tohum);
   const puflar = [];
   let x = -rMax;
   while (x < w + rMax) {
     const Rr = r.ara(rMin, rMax);
-    const u = clamp(x / w);
-    const kaseY = kase * (1 - Math.pow(Math.sin(u * Math.PI), 1.4)); // kenarlar yukarıda (kase: uçlar ne kadar yüksek)
-    puflar.push({ cx: x + Rr * 0.7, cy: Rr * 0.75 + r.ara(0, genlik) + kase - kaseY, R: Rr });
+    puflar.push({ cx: x + Rr * 0.7, cy: Rr * 0.75 + r.ara(0, genlik), R: Rr });
     x += Rr * r.ara(1.0, 1.45);
   }
   const kenar = (px) => {
@@ -225,14 +226,15 @@ export function bulutDenizi({ w, h, tohum, tur = 'orta', olcek = 1, ad, rMin = 5
   const P = BULUT_RENK[tur];
   const n = gurultu2(tohum + 5);
   const ton = (px, py) => {
-    // pufun altına doğru koyulaşır; her pufun alt yarısında ayrıca hafif gölge
     const e = kenar(px);
-    let v = clamp((py - e - 16) / 150) * 0.75;
+    let v = clamp((py - e - 16) / 150) * 0.7;
     for (const p of puflar) {
       const dx = px - p.cx, dy = py - p.cy;
       const d = Math.hypot(dx, dy) / p.R;
-      if (d < 1 && dy > 0) v = Math.max(v, 0.32 * (dy / p.R) * (1 - d * 0.4));
+      if (d < 1 && dy > -p.R * 0.1) v = Math.max(v, 0.5 * clamp((dy + p.R * 0.1) / p.R) * (1 - d * 0.35));
     }
+    // en alt kısım yine açılır (sis)
+    v *= 1 - 0.45 * clamp((py - e - 260) / 300);
     return clamp(v + 0.08 * n.fbm(px * 0.01, py * 0.01, 3));
   };
   const o = oge({
@@ -240,46 +242,58 @@ export function bulutDenizi({ w, h, tohum, tur = 'orta', olcek = 1, ad, rMin = 5
     tarama: { ton, renkler: P.tara, yon: -0.157, aralik: 3.5, boy: [40, 130], kal: 1.2, alfa: P.alfa, esikler: P.esik, esikYay: 0.12, yumusak: 0.22 },
     kontur: null,
     detay: (ctx, api) => {
-      // pufların arasında çok ince lila hatlar (yalnız üstteki birkaç puf)
       for (const p of puflar) {
         if (p.cx < 0 || p.cx > w) continue;
         const pts2 = [];
         for (let a = Math.PI * 1.08; a <= Math.PI * 1.62; a += 0.05) pts2.push([p.cx + Math.cos(a) * p.R * 0.96, p.cy + Math.sin(a) * p.R * 0.96 + p.R * 0.5]);
-        if (pts2.length > 2) api.cizgi(pts2, { renk: '#A9A6D2', kal: 1.2, alfa: 0.25 });
+        if (pts2.length > 2) api.cizgi(pts2, { renk: '#A39FD0', kal: 1.25, alfa: 0.3 });
       }
     },
   });
   return { oge: o, kenar };
 }
 
-// ================================================================ nur küresi (ölçeklenebilir, kontur canlı)
-let nurIc = null, nurHale = null;
-const NB = 120; // taban yarıçap
+// ================================================================ nur küresi (s01'in motifiyle aynı, ölçeklenebilir)
+let NURS = null, nurPush = null;
 export function nurHazirla() {
-  nurIc = oge({
-    ad: 's02-nur-ic', olcek: 1.3, sekil: elips(0, 0, NB, NB), arka: '#FFF1C9', arkaAlfa: 0.55, arkaBulanik: NB * 0.25, arkaTasma: false,
-    tarama: { ton: TON.radyal(0, 0, NB, 0, 0.9), renkler: [[0, '#F8E7A8'], [1, '#E7C565']], yonF: (x, y) => Math.atan2(y, x) + Math.PI / 2, aralik: 3.2, boy: [10, 26], kal: 1.1, alfa: 0.45, esikler: [0.45, 0.75] },
+  // s01 sonundaki nur küresi tam bu sprite'lardır (r≈156 → rk 155, olcek 1.3); küçük boy için 60'lık takım
+  NURS = [155, 60].map((NB) => ({ NB, ic: M.nurCekirdek(NB, 1.3), aura: M.nurAura(NB, 1.3) }));
+  // yakın plan (itme) için kontursuz çekirdek: kontur canlı çizilir
+  nurPush = oge({
+    ad: 's02-nur-push', olcek: 1.3, sekil: elips(0, 0, 155, 155), arka: '#FFF1C9', arkaAlfa: 0.55, arkaBulanik: 155 * 0.25, arkaTasma: false,
+    tarama: { ton: TON.radyal(0, 0, 155, 0, 0.9), renkler: [[0, '#F8E7A8'], [1, '#E7C565']], yonF: (x, y) => Math.atan2(y, x) + Math.PI / 2, aralik: 3.2, boy: [10, 26], kal: 1.1, alfa: 0.45, esikler: [0.45, 0.75] },
     kontur: null,
   });
-  nurHale = M.nurAura(NB, 1.1);
 }
-/** Nur küresi: (x, y) ekran/dünya merkezi, r yarıçap; kontur ve ışınlar her ölçekte keskin */
-export function nurCiz(ctx, x, y, r, t, { guc = 1, alfa = 1, isin = 1, kontur = 1 } = {}) {
+/** Nur küresi: (x, y) merkez, r yarıçap (ekran px); s01'deki M.nurKuresi ile aynı katmanlar */
+export function nurCiz(ctx, x, y, r, t, { guc = 1, alfa = 1, isin = 1, hale = 1 } = {}) {
   if (alfa <= 0.002 || r < 0.5) return;
   ctx.save();
   ctx.globalAlpha *= alfa;
   const nefes = 1 + 0.018 * Math.sin(t * 2.1);
-  M.hale(ctx, x, y, r * 4.6 * (0.8 + 0.2 * guc), '#FFF0B8', 0.42 * guc);
-  M.hale(ctx, x, y, r * 2.1, '#FFFBEA', 0.6 * guc);
-  ogeCiz(ctx, nurHale, x, y, { s: (r / NB) * nefes * (0.92 + 0.08 * guc), r: t * 0.04, alfa: 0.85 * guc });
-  if (isin > 0) {
-    M.isinlar(ctx, x, y, r * 1.25, r * 2.7 * (0.7 + 0.3 * guc), t, { sayi: 26, alfa: 0.45 * guc * isin, kal: clamp(r * 0.02, 1.5, 4), tohum: 7 });
-    M.isinlar(ctx, x, y, r * 1.2, r * 1.9 * (0.7 + 0.3 * guc), -t * 0.6, { sayi: 18, renk: '#EBC867', alfa: 0.35 * guc * isin, kal: clamp(r * 0.015, 1.2, 3), tohum: 11 });
+  M.hale(ctx, x, y, r * 4.6 * (0.8 + 0.2 * guc), '#FFF0B8', 0.42 * guc * hale);
+  M.hale(ctx, x, y, r * 2.1, '#FFFBEA', 0.6 * guc * hale);
+  const w155 = clamp((r - 82) / 40); // büyük takımın ağırlığı
+  const auraAlfa = 0.85 * guc * (1 - clamp((r - 260) / 300));
+  for (const [i, wa] of [[1, 1 - w155], [0, w155]]) {
+    if (wa <= 0.003 || auraAlfa <= 0.003) continue;
+    const N_ = NURS[i];
+    ogeCiz(ctx, N_.aura, x, y, { s: (r / N_.NB) * nefes * (0.92 + 0.08 * guc), r: t * 0.04, alfa: auraAlfa * wa });
   }
-  ogeCiz(ctx, nurIc, x, y, { s: (r / NB) * nefes });
-  if (kontur > 0) {
-    const pts = elips(x, y, r * nefes, r * nefes, Math.max(48, Math.ceil(r * 0.8)))[0].pts;
-    konturCiz(ctx, pts, { renk: M.ALTIN_KOYU, kal: clamp(1.7 + r * 0.004, 1.8, 3.4), alfa: 0.75 * kontur, kapali: true, titreme: 0.45, tohum: 77 });
+  if (isin > 0) {
+    M.isinlar(ctx, x, y, r * 1.25, r * 2.7 * (0.7 + 0.3 * guc), t, { sayi: 26, alfa: 0.45 * guc * isin, kal: clamp(r * 0.02, 1.6, 4.2), tohum: 7 });
+    M.isinlar(ctx, x, y, r * 1.2, r * 1.9 * (0.7 + 0.3 * guc), -t * 0.6, { sayi: 18, renk: '#EBC867', alfa: 0.35 * guc * isin, kal: clamp(r * 0.015, 1.3, 3.4), tohum: 11 });
+  }
+  // çekirdek: küçükte 60'lık, ortada s01'inki, büyükte kontursuz + canlı kontur
+  const wPush = clamp((r - 175) / 60);
+  if (w155 < 1) ogeCiz(ctx, NURS[1].ic, x, y, { s: (r / 60) * nefes });
+  if (w155 > 0) {
+    if (wPush < 1) ogeCiz(ctx, NURS[0].ic, x, y, { s: (r / 155) * nefes, alfa: w155 });
+    if (wPush > 0) ogeCiz(ctx, nurPush, x, y, { s: (r / 155) * nefes, alfa: w155 * wPush });
+  }
+  if (wPush > 0) {
+    const pts = elips(x, y, r * nefes, r * nefes, Math.max(64, Math.ceil(r * 0.9)))[0].pts;
+    konturCiz(ctx, pts, { renk: M.ALTIN_KOYU, kal: clamp(2.4 + r * 0.0015, 2.4, 3.6), alfa: 0.75 * wPush, kapali: true, titreme: 0.45, tohum: 77 });
   }
   M.hale(ctx, x - r * 0.2, y - r * 0.25, r * 0.95, '#FFFFFF', 0.55 * guc);
   ctx.restore();
@@ -288,49 +302,73 @@ export function nurCiz(ctx, x, y, r, t, { guc = 1, alfa = 1, isin = 1, kontur = 
 // ================================================================ merdiven çıkan adam (ters kinematik)
 const P_ADIM = 0.42; // basamak periyodu
 const SW = 0.34; // salınım süresi
-const S1 = 8.4; // ilk salınım
+export const S1 = 8.5; // ilk salınımın başlangıcı
 const kaydir = (j) => S1 + (j - 1) * P_ADIM;
+const AYAK0 = [T(0) + 12, T(0) + 22]; // başlangıçta [uzak, yakın] ayak bileği x
+const FA = AX + 9, FB = AX - 11; // sahanlıkta son duruş (yakın ayak önde)
 // salınımlar: f: 1 yakın (ön) ayak, 0 uzak (arka) ayak; x0,k0 → x1,k1; s başlangıç, d süre; th: topuk kalkışı
 const SALINIM = [];
-SALINIM.push({ f: 1, x0: 180, k0: 0, x1: F(1), k1: 1, s: kaydir(1), d: SW, th: 0.3, lift: 14 });
-SALINIM.push({ f: 0, x0: 170, k0: 0, x1: F(2), k1: 2, s: kaydir(2), d: SW, th: 0.4, lift: 22 });
-for (let j = 3; j <= N; j++) SALINIM.push({ f: j % 2, x0: F(j - 2), k0: j - 2, x1: F(j), k1: j, s: kaydir(j), d: SW, th: 0.42, lift: 22 });
-SALINIM.push({ f: 0, x0: F(N - 1), k0: N - 1, x1: F(N + 1), k1: N + 1, s: kaydir(N + 1), d: SW, th: 0.42, lift: 22 });
-SALINIM.push({ f: 1, x0: F(N), k0: N, x1: FA, k1: N + 1, s: kaydir(N + 1) + SW + 0.1, d: 0.38, th: 0.38, lift: 18 });
-SALINIM.push({ f: 0, x0: F(N + 1), k0: N + 1, x1: FB, k1: N + 1, s: kaydir(N + 1) + SW + 0.1 + 0.46, d: 0.3, th: 0.22, lift: 7 });
+SALINIM.push({ f: 1, x0: AYAK0[1], k0: 0, x1: F(1), k1: 1, s: kaydir(1), d: SW, th: 0.28, lift: 26 });
+SALINIM.push({ f: 0, x0: AYAK0[0], k0: 0, x1: F(2), k1: 2, s: kaydir(2), d: SW, th: 0.4, lift: 20 });
+for (let j = 3; j <= N + 1; j++) SALINIM.push({ f: j % 2, x0: F(j - 2), k0: j - 2, x1: F(j), k1: j, s: kaydir(j), d: SW, th: 0.42, lift: 20 });
+{
+  const son = SALINIM[SALINIM.length - 1]; // sahanlığa basış (j = N+1, uzak ayak)
+  const s9 = son.s + son.d + 0.06;
+  SALINIM.push({ f: 1, x0: F(N), k0: N, x1: FA, k1: N + 1, s: s9, d: 0.36, th: 0.38, lift: 26 });
+  SALINIM.push({ f: 0, x0: F(N + 1), k0: N + 1, x1: FB, k1: N + 1, s: s9 + 0.36 + 0.02, d: 0.32, th: 0.24, lift: 8 });
+}
 const HR = 0.12; // topuk kalkışı penceresi
 export const ADAM = {
   gorun: 8.16, // belirme
   inis: SALINIM.map((s) => s.s + s.d), // ayak basma anları
-  basamakInis: [], // k. basamağa ilk basış zamanı
+  basamakInis: {}, // k. basamağa ilk basış zamanı
   dur: 0,
+  salinimlar: SALINIM,
 };
 for (const s of SALINIM) if (ADAM.basamakInis[s.k1] === undefined) ADAM.basamakInis[s.k1] = s.s + s.d;
 ADAM.dur = SALINIM[SALINIM.length - 1].s + SALINIM[SALINIM.length - 1].d;
 
-// kalça anahtarları (dünya px): basma anlarında arka ayak üzerinden hesaplanır
-const ETA = 0.96, BETA = 0.45;
-const hYuk = Math.sqrt((ETA * LEG) ** 2 - (BETA * D) ** 2);
-const KALCA = [];
-KALCA.push({ t: 7.0, x: 176, y: Y(0) - ANK - 0.99 * LEG });
-KALCA.push({ t: 8.12, x: 176, y: Y(0) - ANK - 0.99 * LEG });
-KALCA.push({ t: S1 - 0.06, x: 178, y: Y(0) - ANK - 0.965 * LEG });
-KALCA.push({ t: SALINIM[0].s + SW, x: 170 + BETA * D, y: Y(0) - ANK - hYuk });
-for (let j = 2; j <= N + 1; j++) KALCA.push({ t: SALINIM[j - 1].s + SW, x: F(j - 1) + BETA * D, y: Y(j - 1) - ANK - hYuk });
-{
-  const s9 = SALINIM[N + 1], s10 = SALINIM[N + 2];
-  KALCA.push({ t: s9.s + s9.d, x: F(N + 1) + 0.45 * (FA - F(N + 1)), y: Yp - ANK - 100 });
-  KALCA.push({ t: s10.s + s10.d, x: (FA + FB) / 2 + 0.5, y: Yp - ANK - 0.972 * LEG });
-  KALCA.push({ t: s10.s + s10.d + 0.38, x: Ax, y: Yp - ANK - 0.99 * LEG });
-  KALCA.push({ t: 30, x: Ax, y: Yp - ANK - 0.99 * LEG });
+// ayakların t anındaki duruş konumu (salınımda değilken)
+function ayakYer(f, t) {
+  let x = AYAK0[f], k = 0;
+  for (const s of SALINIM) if (s.f === f && t >= s.s + s.d) { x = s.x1; k = s.k1; }
+  return { x, k };
 }
-// Catmull-Rom (zaman düğümlü) Hermite
+// kalça anahtarları: her basışta arka (destek) ayak üzerinden
+const ETA = 0.955, BETA = 0.45;
+const KALCA = [];
+{
+  const x0 = (AYAK0[0] + AYAK0[1]) / 2;
+  const yDur = Y(0) - ANK - 0.99 * LEG;
+  KALCA.push({ t: 7.0, x: x0, y: yDur });
+  KALCA.push({ t: S1 - 0.2, x: x0, y: yDur });
+  KALCA.push({ t: S1 - 0.02, x: x0 + 3, y: Y(0) - ANK - 0.975 * LEG });
+  const sonIki = SALINIM.length - 2;
+  SALINIM.forEach((s, j) => {
+    if (j >= sonIki) return;
+    const tb = s.s + s.d;
+    const destek = ayakYer(1 - s.f, tb);
+    const hx = destek.x + BETA * D;
+    const dx = hx - destek.x;
+    KALCA.push({ t: tb, x: hx, y: Y(destek.k) - ANK - Math.sqrt((ETA * LEG) ** 2 - dx * dx) });
+  });
+  // sahanlıkta son iki adım: kalça iki ayağın arasında, arka ayak kalkmadan yükselmez
+  const s9 = SALINIM[sonIki], s10 = SALINIM[sonIki + 1];
+  const yuk = (dx, oran) => YP - ANK - Math.sqrt((oran * LEG) ** 2 - dx * dx);
+  const m9 = (s9.x1 + s10.x0) / 2;
+  KALCA.push({ t: s9.s + s9.d, x: m9, y: yuk(Math.abs(s9.x1 - s10.x0) / 2, 0.965) });
+  const xm = lerp(m9, (FA + FB) / 2, 0.45);
+  KALCA.push({ t: s10.s + s10.d * 0.5, x: xm, y: yuk(Math.abs(FA - xm), 0.965) });
+  KALCA.push({ t: s10.s + s10.d, x: (FA + FB) / 2 + 1, y: yuk(Math.abs(FA - FB) / 2, 0.97) });
+  KALCA.push({ t: s10.s + s10.d + 0.45, x: (FA + FB) / 2 + 1, y: YP - ANK - 0.99 * LEG });
+  KALCA.push({ t: 30, x: (FA + FB) / 2 + 1, y: YP - ANK - 0.99 * LEG });
+}
+// zaman düğümlü Catmull-Rom (Hermite)
 const egimler = KALCA.map((k, i) => {
   if (i === 0 || i === KALCA.length - 1) return { x: 0, y: 0 };
   const a = KALCA[i - 1], b = KALCA[i + 1];
   return { x: (b.x - a.x) / (b.t - a.t), y: (b.y - a.y) / (b.t - a.t) };
 });
-// anahtar 1-2 (bekleme) ve sondaki duruş: teğet sıfır
 egimler[1] = { x: 0, y: 0 };
 egimler[KALCA.length - 2] = { x: 0, y: 0 };
 export function kalcaTaban(t) {
@@ -348,34 +386,21 @@ export function kalcaTaban(t) {
   const z = KALCA[KALCA.length - 1];
   return { x: z.x, y: z.y };
 }
-function kalca(t) {
-  const b = kalcaTaban(t);
-  // basamaklarda duruş ortasında hafif yükselme
-  const L = ADAM.inis;
-  for (let j = 0; j < N; j++) {
-    if (t > L[j] && t < L[j + 1]) {
-      const u = (t - L[j]) / (L[j + 1] - L[j]);
-      b.y -= 2.4 * Math.sin(Math.PI * u);
-      break;
-    }
-  }
-  return b;
-}
 
 // ayak tabanı noktaları (ayak sprite'ının yerel koordinatı; çizim noktası bil - (0,2))
-const TABAN = [[-13, 12], [8, 13], [33, 12.5], [39, 8]];
+const TABAN = [[-13, 13], [8, 13], [33, 12.5], [39, 8]];
 const UC = [31, 13]; // topuk kalkarken dönülen burun noktası
 const rotP = ([x, y], a) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)];
-/** Topuğu θ kadar kalkmış ayağın 'bil' noktası (dünya) */
+/** Topuğu θ kadar kalkmış ayağın bilek noktası (dünya) */
 function topukKalkik(x, k, th) {
   const toe = [x + UC[0] * S, Y(k) - 13 * S + UC[1] * S];
   const q = rotP(UC, th);
-  return [toe[0] - q[0] * S, toe[1] - q[1] * S + 2 * S];
+  return [toe[0] - q[0] * S, toe[1] - q[1] * S];
 }
-/** t anında f ayağının durumu: { x, y (bil noktası), a3 (ayak açısı; + burun yukarı) } */
+/** t anında f ayağının durumu: { x, y (bilek), a3 (ayak açısı; - topuk kalkık) } */
 export function ayak(f, t) {
   const liste = SALINIM.filter((s) => s.f === f);
-  let x = f === 1 ? 180 : 170, k = 0;
+  let x = AYAK0[f], k = 0;
   for (const s of liste) {
     if (t < s.s - HR) break;
     if (t < s.s) {
@@ -411,11 +436,9 @@ function ik(hx, hy, ax, ay) {
   const d = Math.min(d0, 2 * L1 * 0.9995);
   const adir = Math.atan2(dx, dy);
   const al = Math.acos(clamp(d / (2 * L1), -1, 1));
-  const a1 = adir + al, a2 = adir - al;
-  return { a1, a2, oran: d0 / (2 * L1) };
+  return { a1: adir + al, a2: adir - al, oran: d0 / (2 * L1) };
 }
-const zamanEgri = (t, noktalar) => {
-  // [[t, v], ...] arası yumuşak geçiş
+export const zamanEgri = (t, noktalar) => {
   if (t <= noktalar[0][0]) return noktalar[0][1];
   for (let i = 1; i < noktalar.length; i++) {
     if (t <= noktalar[i][0]) return lerp(noktalar[i - 1][1], noktalar[i][1], ease.inOutSine((t - noktalar[i - 1][0]) / (noktalar[i][0] - noktalar[i - 1][0])));
@@ -424,7 +447,12 @@ const zamanEgri = (t, noktalar) => {
 };
 /** t anında adamın çizim parametreleri: insanYan(ctx, x, y, poz, { s: S }) */
 export function adamDurum(t) {
-  const h = kalca(t);
+  const h = kalcaTaban(t);
+  // basamaklarda duruş ortasında hafif yükselme
+  const L = ADAM.inis;
+  for (let j = 0; j < L.length - 1; j++) {
+    if (t > L[j] && t < L[j + 1]) { h.y -= 2.2 * Math.sin(Math.PI * (t - L[j]) / (L[j + 1] - L[j])); break; }
+  }
   const ox = h.x, oy = h.y + 196 * S; // figür kökü (kalça yerelde (0,-196))
   const kx = [-3, 3];
   const poz = { serbest: true, zipla: 0, kalca: [0, 0], diz: [0, 0], bilek: [0, 0] };
@@ -439,15 +467,15 @@ export function adamDurum(t) {
     poz.bilek[i] = a.a3 - s.a2;
     maxOran = Math.max(maxOran, s.oran);
   }
-  // kollar: bacak ayrıklığına karşı salınır
-  const yuru = zamanEgri(t, [[8.25, 0], [8.55, 1], [12.3, 1], [12.75, 0]]);
+  const t1 = S1 - 0.1, t2 = ADAM.dur;
+  const yuru = zamanEgri(t, [[t1, 0], [t1 + 0.3, 1], [t2 - 0.35, 1], [t2 + 0.1, 0]]);
   const ayr = clamp((ayaklar[1].x - ayaklar[0].x) / (2.2 * D), -1, 1);
   const kolOn = lerp(0.06, 0.05 - 0.34 * ayr, yuru), kolArka = lerp(-0.05, 0.02 + 0.34 * ayr, yuru);
   poz.omuz = [kolArka, kolOn];
   poz.dirsek = [lerp(0.12, 0.22 + 0.3 * Math.max(0, kolArka), yuru), lerp(0.16, 0.22 + 0.3 * Math.max(0, kolOn), yuru)];
   const nefes = 0.006 * Math.sin(t * 2.2);
-  poz.govde = zamanEgri(t, [[8.2, 0.0], [8.5, 0.13], [11.7, 0.13], [12.25, 0.05], [12.7, 0.0]]) + nefes;
-  poz.bas = zamanEgri(t, [[8.3, 0], [8.6, 0.05], [11.05, 0.05], [11.45, -0.12], [11.95, -0.03], [12.72, -0.03], [13.12, -0.36]]);
+  poz.govde = zamanEgri(t, [[S1 - 0.2, -0.02], [S1 + 0.15, 0.13], [t2 - 0.75, 0.13], [t2 - 0.2, 0.04], [t2 + 0.25, 0.0], [t2 + 0.6, -0.035]]) + nefes;
+  poz.bas = zamanEgri(t, [[8.2, -0.16], [S1 + 0.2, 0.04], [t2 - 0.6, 0.04], [t2 - 0.1, -0.06], [t2 + 0.25, -0.06], [t2 + 0.75, -0.38]]);
   poz.el = [0, 0];
   return { x: ox, y: oy, poz, maxOran, ayaklar };
 }
@@ -462,20 +490,27 @@ export function desenMerkezden(ctx, x, y, Rr, t, { cizim = 1, dolgu = 0, dolguYa
   ctx.translate(x, y);
   ctx.rotate(r);
   ctx.globalAlpha *= alfa;
-  if (dolgu > 0 && dolguOge) {
+  if (dolgu > 0 && dolguOge && dolguYari > 0) {
     if (dolguYari >= 0.999) ogeCiz(ctx, dolguOge, 0, 0, { s: Rr / 400, alfa: dolgu });
-    else if (dolguYari > 0) {
-      // dolgu merkezden yayılır
-      ctx.save();
-      const rr = Rr * dolguYari;
-      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(1, rr));
+    else {
+      // dolgu merkezden yumuşak kenarlı bir daireyle yayılır
+      const rr = Rr * 1.02 * dolguYari;
+      const m = tuval(W, H);
+      const mc = m.getContext('2d');
+      mc.setTransform(ctx.getTransform());
+      ogeCiz(mc, dolguOge, 0, 0, { s: Rr / 400, alfa: dolgu });
+      mc.globalCompositeOperation = 'destination-in';
+      const g = mc.createRadialGradient(0, 0, 0, 0, 0, Math.max(1, rr));
       g.addColorStop(0, 'rgba(0,0,0,1)');
-      g.addColorStop(0.82, 'rgba(0,0,0,1)');
+      g.addColorStop(0.8, 'rgba(0,0,0,1)');
       g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.beginPath();
-      ctx.arc(0, 0, rr, 0, TAU);
-      ctx.clip();
-      ogeCiz(ctx, dolguOge, 0, 0, { s: Rr / 400, alfa: dolgu });
+      mc.fillStyle = g;
+      mc.beginPath();
+      mc.arc(0, 0, Math.max(1, rr), 0, TAU);
+      mc.fill();
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(m, 0, 0);
       ctx.restore();
     }
   }
@@ -493,14 +528,31 @@ export function desenMerkezden(ctx, x, y, Rr, t, { cizim = 1, dolgu = 0, dolguYa
   // kollar boyunca merkeze akan ışık (bütün çizgiler merkezdeki noktaya çıkar)
   if (kolIsik >= 0 && kolIsik <= 1) {
     const e = ease.inOutSine(kolIsik);
+    const a0 = Math.sin(Math.PI * clamp(kolIsik * 1.06));
     for (let k = 0; k < 16; k++) {
       const a = (k / 16) * TAU + Math.PI / 8;
       const r0 = k % 2 ? Rr * 0.44 : Rr * 0.6;
-      const d = lerp(r0 * 1.02, Rr * 0.09, e);
-      const gx = Math.cos(a) * d, gy = Math.sin(a) * d;
-      const a0 = Math.sin(Math.PI * clamp(kolIsik * 1.15));
-      M.hale(ctx, gx, gy, 16, '#FFF6D2', 0.85 * a0);
-      M.hale(ctx, gx, gy, 6, '#FFFFFF', 0.9 * a0);
+      const d = lerp(r0, Rr * 0.085, e);
+      const iz = lerp(r0, Rr * 0.085, ease.inOutSine(clamp(kolIsik - 0.16)));
+      const cx = Math.cos(a), cy = Math.sin(a);
+      // ışık izi: arkasında incelen altın çizgi
+      if (iz - d > 3) {
+        ctx.save();
+        ctx.fillStyle = rgba('#EDBE45', 0.8 * a0);
+        darbe(ctx, [[cx * iz, cy * iz], [cx * (iz + d) / 2, cy * (iz + d) / 2], [cx * d, cy * d]], 4.6, { incelme: 0.5, sivri: 0.7 });
+        ctx.restore();
+      }
+      M.hale(ctx, cx * d, cy * d, 22, '#F3C955', 0.45 * a0, 'source-over');
+      M.hale(ctx, cx * d, cy * d, 9, '#FFFFFF', 0.95 * a0, 'source-over');
+    }
+  }
+  // ışıklar merkeze ulaşınca yayılan yumuşak altın halka
+  if (kolIsik > 0.92) {
+    const u = clamp((kolIsik - 0.92) / 0.6);
+    if (u < 1) {
+      const rr = Rr * lerp(0.09, 0.62, ease.outCubic(u));
+      konturCiz(ctx, elips(0, 0, rr, rr)[0].pts, { renk: '#E9C35C', kal: lerp(4, 1.5, u), alfa: 0.7 * (1 - u), kapali: true, titreme: 0.3, tohum: 91 });
+      M.hale(ctx, 0, 0, rr * 1.1, '#FFF6D8', 0.35 * (1 - u));
     }
   }
   if (merkezIsik > 0) {
@@ -533,23 +585,22 @@ export function isikZemini() {
 }
 
 // ================================================================ küçük yardımcılar
-/** Yanan fener: küçük altın ışık (dünya koordinatı) */
+/** Yanan fener: küçük altın ışık (dünya koordinatı). yanma: yanmadan bu yana geçen süre (sn) */
 export function fenerCiz(ctx, x, y, t, yanma, { tohum = 1, guc = 1 } = {}) {
   if (yanma <= 0) return;
-  const p = ease.outBack(clamp(yanma / 0.6), 2.0);
+  const p = ease.outBack(clamp(yanma / 0.35), 2.0);
   const titres = 0.92 + 0.08 * Math.sin(t * 7.3 + tohum * 2.1) * Math.sin(t * 3.1 + tohum);
-  const parlama = Math.exp(-Math.max(0, yanma - 0.25) * 2.2); // ilk anda parlak, sonra sakin
-  M.hale(ctx, x, y, 34 * (0.7 + 0.5 * parlama) * guc, '#FFE9A6', (0.42 + 0.35 * parlama) * titres * clamp(yanma * 3));
+  const parlama = Math.exp(-Math.max(0, yanma - 0.12) * 3.2); // ilk anda parlak, sonra sakin
+  const gir = clamp(yanma * 5);
+  M.hale(ctx, x, y, 38 * (0.75 + 0.6 * parlama) * guc, '#FFE6A0', (0.42 + 0.4 * parlama) * titres * gir);
   ctx.save();
-  ctx.globalAlpha *= clamp(yanma * 4);
+  ctx.globalAlpha *= gir;
   ctx.fillStyle = rgba('#FFF4CF', 0.95);
   ctx.beginPath();
-  ctx.arc(x, y, 5.6 * p, 0, TAU);
+  ctx.arc(x, y, 6.2 * p, 0, TAU);
   ctx.fill();
-  konturCiz(ctx, elips(x, y, 6.6 * p, 6.6 * p, 28)[0].pts, { renk: M.ALTIN_KOYU, kal: 1.5, alfa: 0.9, kapali: true, titreme: 0.2, tohum });
+  konturCiz(ctx, elips(x, y, 7.5 * p, 7.5 * p, 28)[0].pts, { renk: M.ALTIN_KOYU, kal: 1.5, alfa: 0.9, kapali: true, titreme: 0.2, tohum });
   ctx.restore();
-  M.hale(ctx, x, y, 9, '#FFFFFF', 0.7 * titres * clamp(yanma * 3));
-  if (parlama > 0.05) M.isinlar(ctx, x, y, 9, 22 + 8 * parlama, t, { sayi: 8, alfa: 0.5 * parlama, kal: 1.4, tohum: 5 + tohum, hiz: 0.3 });
+  M.hale(ctx, x, y, 9, '#FFFFFF', 0.65 * titres * gir);
+  if (parlama > 0.05) M.isinlar(ctx, x, y, 9, 20 + 9 * parlama, t, { sayi: 8, alfa: 0.55 * parlama, kal: 1.4, tohum: 5 + tohum, hiz: 0.3 });
 }
-
-export { yolCiz, path2d };
