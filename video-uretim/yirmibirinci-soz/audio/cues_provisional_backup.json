@@ -1,0 +1,26 @@
+{
+  "_comment": "PROVISIONAL cue sheet for testing the mixer. The lead replaces it with the real one. Format: see README.md. t = video seconds of the perceptual hit.",
+  "duration": 29.6,
+  "voice": "voice_trim.wav",
+  "cues": [
+    {"t": 0.22, "sound": "dab_flurry",   "gain_db": 0,  "pan": 0.0,  "params": {"n": 5, "duration": 0.55, "seed": 1}, "note": "figure dabbed in before 'Ey nefis'"},
+    {"t": 1.45, "sound": "whoosh",       "gain_db": 0,  "pan": 0.0,  "params": {"duration": 0.7, "direction": "lr", "seed": 2}, "note": "camera drift in the pause"},
+    {"t": 3.72, "sound": "puff",         "gain_db": 0,  "pan": 0.2,  "params": {"seed": 3}, "note": "yesterday leaves the hand (leads 'çıktı')"},
+    {"t": 3.80, "sound": "specks",       "gain_db": 0,  "pan": 0.2,  "params": {"duration": 1.1, "seed": 4}, "note": "...and disperses into specks"},
+    {"t": 6.04, "sound": "paper",        "gain_db": 0,  "pan": -0.2, "params": {"duration": 0.35, "seed": 5}, "note": "the deed (senet)"},
+    {"t": 6.40, "sound": "puff",         "gain_db": -2, "pan": -0.2, "params": {"seed": 6, "duration": 0.18}, "note": "'yok' - the deed is not there"},
+    {"t": 8.30, "sound": "whoosh",       "gain_db": 0,  "pan": 0.0,  "params": {"duration": 0.9, "direction": "up", "seed": 7}, "note": "move to 'today'"},
+    {"t": 11.35, "sound": "shimmer",     "gain_db": 0,  "pan": 0.0,  "params": {"duration": 1.8, "seed": 8}, "note": "today lights up ('bulunduğun gün')"},
+    {"t": 12.20, "sound": "pop_flurry",  "gain_db": 0,  "pan": 0.0,  "params": {"n": 4, "duration": 0.5, "seed": 9}, "note": "small flowers appear"},
+    {"t": 14.02, "sound": "coin_ting",   "gain_db": 0,  "pan": 0.1,  "params": {"seed": 10}, "note": "the hour becomes a coin ('saatini')"},
+    {"t": 15.40, "sound": "coin_land",   "gain_db": 0,  "pan": 0.0,  "params": {"seed": 11}, "note": "coin caught in the palm ('akçesi')"},
+    {"t": 16.35, "sound": "whoosh",      "gain_db": -1, "pan": 0.0,  "params": {"duration": 0.6, "direction": "rl", "seed": 12}},
+    {"t": 18.86, "sound": "wood_knock",  "gain_db": 0,  "pan": 0.0,  "params": {"style": "set", "seed": 13}, "note": "the little chest is set down"},
+    {"t": 20.36, "sound": "dab_flurry",  "gain_db": -1, "pan": -0.2, "params": {"n": 7, "duration": 0.6, "seed": 14}, "note": "mosque dabbed in"},
+    {"t": 21.78, "sound": "cloth_unroll","gain_db": 0,  "pan": 0.2,  "params": {"duration": 0.75, "seed": 15}, "note": "prayer rug unrolls, flap lands just before 'seccadeye'"},
+    {"t": 22.60, "sound": "coin_drop_in","gain_db": 0,  "pan": 0.0,  "params": {"seed": 16}, "note": "'at' - the coin goes in"},
+    {"t": 23.35, "sound": "rise",        "gain_db": 0,  "pan": 0.0,  "params": {"duration": 2.4, "seed": 17}, "note": "swell into the end card"},
+    {"t": 23.00, "sound": "room_tone",   "gain_db": 0,  "pan": 0.0,  "align": "start", "params": {"duration": 6.6, "seed": 18}, "note": "end-card air"},
+    {"t": 24.70, "sound": "book_slide",  "gain_db": 0,  "pan": -0.15, "params": {"duration": 0.5, "seed": 19}, "note": "a volume settles on the shelf"}
+  ]
+}
