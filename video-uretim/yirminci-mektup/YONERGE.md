@@ -34,7 +34,10 @@ Hedef: Kurzgesagt'ın kalitesine yetişmek ve geçmek. Her kare özenli, kompozi
   `oge({...})` ile yapılır. Düz vektör dolgu (tek renk, taramasız alan) kullanmayın; ışık ve hale efektleri hariç.
 - Gök: `gokTuvali` (uzun, ~-9° eğimli saten süpürüşler, ufka doğru leylağa çalan parıltı). Bulut: `bulutOge`
   (çıplak film, altında lila çizgiler). Güneş: `gunesOge`.
-- Palet: `PALET` (kalem.mjs) — gök mavileri, yeşiller, krem, sıcak gri, lila, koyu lila, sarı, oker, gül.
+- Renkler: **katalogdaki S-232 paletiyle sınırlı değilsiniz** (kullanıcı açıkça izin verdi). Üslubu belirleyen
+  renk listesi değil tekniktir (çizim filmi, arka yüz buğusu, saten tarama, yerel rengin koyu konturu). Manaya
+  hizmet eden her rengi (sıcak altın, gül, nar kırmızısı, bal, gece mavisi, şafak turuncusu, çarşı renkleri…)
+  uyumlu ve zevkli biçimde kullanın. `PALET` (kalem.mjs) yalnız bir başlangıçtır.
   Işık: çıplak film + soluk sarı tarama + altın kontur + yumuşak hale (`hale`, `isinlar`, `nurKuresi`).
 - Karanlık/hüzünlü sahneler (s07–s09): yine çizim filmi üzerinde kalem; gök gri-lila (`#A7A1BA`, `#6E6784`,
   `#5E5752`), zemin `tepeOge({renk:'gri'})`, renk doygunluğu düşük, tarama yoğun. Siyah zemin YOK. Ölçülü bir
