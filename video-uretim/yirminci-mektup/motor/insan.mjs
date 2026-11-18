@@ -123,27 +123,41 @@ function onParcalar(olcek) {
 export const DURUS = { govde: 0, bas: 0, kalca: [-0.02, 0.03], diz: [0, -0.02], bilek: [0.02, -0.01], omuz: [-0.05, 0.06], dirsek: [0.12, 0.16], zipla: 0, el: [0, 0] };
 
 export function yuruyus(faz, { adim = 0.42, kol = 0.36, egim = 0.05 } = {}) {
-  const leg = (f) => {
-    const kalca = adim * Math.sin(f);
-    const diz = -(0.95 * Math.pow(Math.max(0, Math.cos(f + 0.45)), 1.6) + 0.06 + 0.14 * Math.max(0, Math.sin(f - 0.2)) * Math.max(0, -Math.cos(f)));
-    const bilek = -(kalca + diz) * 0.85 - 0.1 * Math.max(0, -Math.sin(f)) * Math.max(0, Math.cos(f + 0.6) * -1);
-    return { kalca, diz, bilek };
+  // Basış (yarım döngü): bacak düz, uyluk açısı +adim'den -adim'e DOĞRUSAL iner; böylece basan ayağın kalçaya göre
+  // yeri zamanla neredeyse doğrusal değişir ve gövde sabit hızla ilerlerken ayak yerde kaymaz (DONGU_YOLU).
+  // Salınım (yarım döngü): uyluk yumuşakça öne gelir, diz bükülerek ayak yerden kalkar, topukta bacak yine düzdür.
+  const bacak = (f) => {
+    const u = ((((f - Math.PI / 2) % TAU) + TAU) % TAU) / TAU; // 0: topuk basışı
+    if (u < 0.5) {
+      const v = u / 0.5;
+      const kalca = adim * (1 - 2 * v);
+      const diz = -0.012 * Math.sin(Math.PI * v);
+      return { kalca, diz, bilek: -(kalca + diz) };
+    }
+    const v = (u - 0.5) / 0.5;
+    const kalca = adim * (-1 + 2 * (0.5 - 0.5 * Math.cos(Math.PI * v)));
+    const diz = -1.05 * Math.sin(Math.PI * Math.pow(v, 0.75));
+    return { kalca, diz, bilek: -(kalca + diz) + 0.28 * Math.sin(Math.PI * v) * (1 - v) };
   };
-  const on = leg(faz), arka = leg(faz + Math.PI);
+  const on = bacak(faz), arka = bacak(faz + Math.PI);
+  const sal = (k) => (k.kalca / adim); // -1..1, bacağın öne çıkışı
+  // zemine basan bacak: ön bacağın basış yarısındaysa 1, değilse 0 (insanYan figürü bu ayağa oturtur)
+  const uOn = ((((faz - Math.PI / 2) % TAU) + TAU) % TAU) / TAU;
   return {
     govde: egim,
     bas: 0.02,
     kalca: [arka.kalca, on.kalca],
     diz: [arka.diz, on.diz],
     bilek: [arka.bilek, on.bilek],
-    omuz: [kol * Math.sin(faz) * 0.95, -kol * Math.sin(faz)],
-    dirsek: [0.22 + 0.2 * Math.max(0, Math.sin(faz)), 0.22 + 0.2 * Math.max(0, -Math.sin(faz))],
-    zipla: 3.5 * Math.cos(2 * faz) - 1,
+    omuz: [-kol * sal(arka), -kol * sal(on)],
+    dirsek: [0.22 + 0.2 * Math.max(0, -sal(arka)), 0.22 + 0.2 * Math.max(0, -sal(on))],
+    zipla: 0,
     el: [0, 0],
+    zemin: uOn < 0.5 ? 1 : 0,
   };
 }
-/** Bir yürüyüş döngüsünde (2 adım) alınan yol */
-export const DONGU_YOLU = 2 * 2 * (OLCU.uyluk + OLCU.baldir) * Math.sin(0.42) * 0.93;
+/** Bir yürüyüş döngüsünde (2 adım) alınan yol: basan bacak +adim'den -adim'e iner */
+export const DONGU_YOLU = 4 * (OLCU.uyluk + OLCU.baldir) * Math.sin(0.42);
 
 /** İki pozun karışımı */
 export function pozKaristir(a, b, t) {
@@ -152,6 +166,8 @@ export function pozKaristir(a, b, t) {
     const va = a[k] ?? DURUS[k], vb = b[k] ?? DURUS[k];
     o[k] = Array.isArray(va) ? va.map((v, i) => lerp(v, vb[i], t)) : lerp(va, vb, t);
   }
+  const z = t >= 0.5 ? (b.zemin ?? a.zemin) : (a.zemin ?? b.zemin);
+  if (z !== undefined) o.zemin = z;
   return o;
 }
 
@@ -179,7 +195,7 @@ export function insanYan(ctx, x, y, poz = DURUS, { s = 1, yon = 1, olcek = 1, al
     return { a1, a2, a3, diz, bilek };
   };
   const B = [bacak(0), bacak(1)];
-  const tabanY = Math.max(B[0].bilek[1], B[1].bilek[1]) + OLCU.bilek;
+  const tabanY = (p.zemin === 0 || p.zemin === 1 ? B[p.zemin].bilek[1] : Math.max(B[0].bilek[1], B[1].bilek[1])) + OLCU.bilek;
   const dy = poz.serbest ? 0 : -tabanY; // ayak zemine
   const kx = [-3, 3]; // arka/ön kalça kayması (derinlik)
   const govdeA = p.govde;
