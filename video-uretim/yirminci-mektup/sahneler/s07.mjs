@@ -210,7 +210,7 @@ function bacakZinciri(d, i, oran) {
 
 // ---------------------------------------------------------------- kamera
 let KS, KY, KZ;
-const YAKIN = Math.log(1.1); // evham–maddeten arası ek yakınlaşma (figür kalabalıkta okunur kalsın)
+const YAKIN = Math.log(1.15); // evham–maddeten arası ek yakınlaşma (figür kalabalıkta okunur kalsın)
 function kameraAl(t) {
   const d = adamDurum(t);
   const z = Math.exp(KZ(t) + YAKIN * smooth(62.7, 63.75, t) * (1 - smooth(64.45, 66.0, t)));
@@ -373,9 +373,9 @@ export default {
 
     // kuruntu gölgeleri
     golgeler = [
-      { o: Y.kuruntuOge({ h: 560, w: 250, tohum: 5, yon: 1, egil: 0.7 }), yon: 1, dx: -330, dy: -30, t0: T.evham + 0.02, faz: 0.3, R: 26 },
-      { o: Y.kuruntuOge({ h: 530, w: 236, tohum: 8, yon: -1, egil: 0.68 }), yon: -1, dx: 330, dy: -45, t0: T.evham + 0.26, faz: 2.1, R: 24 },
-      { o: Y.kuruntuOge({ h: 640, w: 270, tohum: 13, yon: 1, egil: 0.45 }), yon: 1, dx: -120, dy: -120, t0: T.evham + 0.5, faz: 4.0, R: 34, uzak: true },
+      { o: Y.kuruntuOge({ h: 520, w: 250, tohum: 5, yon: 1, egil: 0.72 }), yon: 1, dx: -300, dy: -30, t0: T.evham + 0.02, faz: 0.3, R: 22 },
+      { o: Y.kuruntuOge({ h: 495, w: 236, tohum: 8, yon: -1, egil: 0.7 }), yon: -1, dx: 300, dy: -45, t0: T.evham + 0.26, faz: 2.1, R: 20 },
+      { o: Y.kuruntuOge({ h: 510, w: 240, tohum: 13, yon: -1, egil: 0.5 }), yon: -1, dx: 150, dy: -125, t0: T.evham + 0.5, faz: 4.0, R: 28, uzak: true },
     ];
     golgeSis = Y.sisTuvali(2400, 260, 15, '#E6E2EC');
     sisU = Y.sisTuvali(2400, 260, 3, '#EEEBF2');
@@ -725,7 +725,7 @@ function golgeCiz(c, t) {
     const { giris, cek, varlik } = golgeEvre(t, gl);
     if (varlik <= 0.003) continue;
     enCok = Math.max(enCok, varlik);
-    const a = (gl.uzak ? 0.55 : 0.82) * varlik;
+    const a = (gl.uzak ? 0.5 : 0.95) * varlik;
     const w = 0.42 * (t - gl.t0) + gl.faz;
     // çekilirken biraz dışarı ve geriye kayar, sise çöker
     const x = XDUR + gl.dx * (1 + 0.12 * cek) + Math.sin(w) * gl.R;
@@ -749,12 +749,12 @@ const SERIT = [
 function seritler(c, t, taraf, cx) {
   for (let i = 0; i < SERIT.length; i++) {
     const s = SERIT[i];
-    const u = an(t, T.evham + i * 0.12, 0.9, ease.outCubic) * (1 - an(t, T.manen - 0.16 + i * 0.05, 0.62, ease.inOutSine));
+    const u = an(t, T.evham + 0.25 + i * 0.12, 0.8, ease.outCubic) * (1 - an(t, T.manen - 0.16 + i * 0.05, 0.62, ease.inOutSine));
     if (u <= 0.003) continue;
     const ac = 1.6 - 0.6 * u; // dışarıdan daralarak yaklaşır
     const A = s.a * ac, B = s.b * ac;
     const cy = ZEMIN + s.dy * S;
-    const th0 = s.f0 + s.w * (t - T.evham);
+    const th0 = s.f0 + s.w * (t - T.evham - 0.25);
     for (let k = 0; k < 4; k++) {
       const off = (k - 1.5) * 7;
       const span = s.span * (0.7 + 0.3 * ((k * 37) % 5) / 5);
@@ -762,8 +762,8 @@ function seritler(c, t, taraf, cx) {
       let parca = [];
       const bitir = () => {
         if (parca.length > 2) {
-          // öndeki yarıda adamın önünden geçerken incelir: figür okunur kalsın
-          c.fillStyle = rgba('#4E4760', (0.17 + 0.07 * (k % 2)) * u * (taraf > 0 ? 0.75 : 1));
+          // öndeki yarı biraz daha açık (figürün önünde ağırlık yapmasın)
+          c.fillStyle = rgba('#4E4760', (0.21 + 0.07 * (k % 2)) * u * (taraf > 0 ? 0.75 : 1));
           darbe(c, parca, s.kal * (0.75 + 0.15 * k), { incelme: 0.42, sivri: 0.5 });
         }
         parca = [];
@@ -873,7 +873,7 @@ function gogusBulutu(c, t, durum) {
   c.fillStyle = rg;
   c.fillRect(x - R * 1.7, y - R * 1.7, R * 3.4, R * 3.4);
   c.restore();
-  ogeCiz(c, kucukBulut, x + Math.sin(t * 1.7) * 1.5, y + 2, { s: 0.8 * u * (0.85 + 0.15 * sakin), r: Math.sin(t * 1.1) * 0.05, alfa: 0.94 * (0.55 + 0.45 * sakin) });
+  ogeCiz(c, kucukBulut, x + Math.sin(t * 1.7) * 1.5, y + 2, { s: 0.72 * u * (0.85 + 0.15 * sakin), r: Math.sin(t * 1.1) * 0.05, alfa: 0.94 * clamp(sakin * 1.25 - 0.1) });
   // bulutun üstünden kopup kıvrılan iki kısa kalem yayı (dönen, huzursuz)
   for (let k = 0; k < 2; k++) {
     const a0 = t * (1.4 + k * 0.35) * (k ? -1 : 1) + k * 2.6;

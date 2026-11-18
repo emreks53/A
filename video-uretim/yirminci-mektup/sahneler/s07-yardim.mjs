@@ -82,10 +82,10 @@ export function agirBulut(w, tohum, olcek = 1, koyu = 0) {
 // ---------------------------------------------------------------- kuruntu gölgesi (yüzsüz, uzun, eğilen)
 /**
  * Sisten yükselen uzun, adama doğru eğilen bir sis gölgesi (kalem taraması, bulanık leke değil). Biçim: dipte
- * geniş, yukarı doğru incelen ve tepesi öne kıvrılan iki sis dili (biri uzun, dışarıda biri kısa) tabanda
- * birleşir; kenarları dumana benzer biçimde hafifçe dalgalanır. Yüz, baş, uzuv yoktur. Kenar, taramanın bittiği
- * yerde ve üst yarıda yer yer kesik bir kalem konturuyla seçilir; alt kısım tarama seyrelerek sise karışır
- * (tabanda birkaç ince sis kıvrımı yana akar).
+ * geniş, yukarı doğru incelen ve tepesi öne bükülen iki sis dili (biri uzun, dışarıda biri kısa) tabanda
+ * birleşir; eğilmenin dışı hafifçe kamburlaşır, kenarlar dumana benzer biçimde dalgalanır. Yüz, baş, uzuv yoktur.
+ * Kontur yok: kenar, taramanın son birkaç pikselde düzensiz bittiği yerde seçilir (kesik çıkartma gibi durmaz);
+ * arka buğu kenardan içeri çekilir. Alt kısım tarama seyrelerek sise karışır (tabanda ince sis kıvrımları).
  * yon: +1 sağa (adama doğru) eğilir, -1 sola. (0,0) taban ortası (zeminde), yukarı -y.
  */
 export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
@@ -93,7 +93,8 @@ export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
   // bir sis dili: omurga boyunca, dipten tepeye incelen yarı genişlik; tepe yumuşak yuvarlak
   const dil = (x0, H, W, eg, f) => {
     const N = 90;
-    const sag = [], sol = [];
+    const sag = [], sol = [], icS = [], icL = [];
+    const ICE = 26; // buğunun kenardan içeri çekilme payı (px)
     let x = x0, y = W * 0.18;
     const L = H + W * 0.18;
     for (let i = 0; i <= N; i++) {
@@ -111,10 +112,12 @@ export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
       const nx = Math.cos(a), ny = Math.sin(a);
       sag.push([x + nx * hw * dS, y + ny * hw * dS, v]);
       sol.push([x - nx * hw * dL, y - ny * hw * dL, v]);
+      const iS = Math.max(0, hw * dS - ICE), iL = Math.max(0, hw * dL - ICE);
+      if (iS + iL > 2) { icS.push([x + nx * iS, y + ny * iS]); icL.push([x - nx * iL, y - ny * iL]); }
       x += (Math.sin(a) * L) / N;
       y -= (Math.cos(a) * L) / N;
     }
-    return { pts: [...sag, ...sol.reverse()], H };
+    return { pts: [...sag, ...sol.reverse()], ic: [...icS, ...icL.reverse()], H };
   };
   const ana = dil(0, h, w, egil, r() * TAU);
   const yan = dil(-yon * w * 0.28, h * r.ara(0.5, 0.62), w * 0.62, egil * 0.85, r() * TAU);
@@ -143,13 +146,19 @@ export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
     for (const q of seyrek) { const d = (px - q[0]) ** 2 + (py - q[1]) ** 2; if (d < en) en = d; }
     gK[j * gw + i] = Math.sqrt(en);
   }
-  const hucre = (x, y) => clamp(Math.floor((y - gy0) / G), 0, gh - 1) * gw + clamp(Math.floor((x - gx0) / G), 0, gw - 1);
+  // kenar uzaklığı: ızgaradan çift doğrusal ara değer (basamak basamak kenar olmasın)
+  const kenarUz = (x, y) => {
+    const fx = clamp((x - gx0) / G - 0.5, 0, gw - 1.001), fy = clamp((y - gy0) / G - 0.5, 0, gh - 1.001);
+    const i = Math.floor(fx), j = Math.floor(fy), u = fx - i, v = fy - j;
+    const a = gK[j * gw + i], b2 = gK[j * gw + i + 1], c = gK[(j + 1) * gw + i], d = gK[(j + 1) * gw + i + 1];
+    return lerp(lerp(a, b2, u), lerp(c, d, u), v);
+  };
   // ton: yukarıda dolu; kenar şeridi biraz koyu (biçim seçilsin); aşağıda önce kenarlar sonra iç söner; gürültü
   // tabana doğru artar: etek düz bir çizgiyle kesilmez, tüy tüy sise dağılır
   const gr = gurultu2(tohum + 3);
   const ton = (x, y) => {
     const vv = -y / h;
-    const kd = gK[hucre(x, y)];
+    const kd = kenarUz(x, y);
     const nn = gr.fbm(x * 0.013, y * 0.013, 3);
     const alt = 1 - smooth(0.04, 0.55, vv + 0.2 * nn);
     const kenar = 1 - smooth(8, 34, kd);
@@ -157,7 +166,7 @@ export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
     const dolu = smooth(0.06, 0.56, vv + 0.2 * nn);
     const n2 = gr.fbm(x * 0.03 + 7, y * 0.008, 2);
     // dış kenar kesik bir çizgi değil: taramalar son 4–20 px içinde düzensiz biter (yumuşak ama seçilen kenar)
-    const yumusak = smooth(5, 24, kd + 12 * gr.fbm(x * 0.06 + 3, y * 0.06, 2));
+    const yumusak = smooth(4, 22, kd + 9 * gr.fbm(x * 0.045 + 3, y * 0.045, 2));
     return clamp((dolu * (0.52 + 0.4 * kenar) + 0.12 * nn + 0.12 * n2) * kenarSon * yumusak);
   };
   // tabanda yana akan ince sis kıvrımları
@@ -174,7 +183,7 @@ export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
     kivrim.push(pts);
   }
   return oge({
-    ad: `s07-kuruntu10-${h}-${w}-${tohum}-${yon}-${egil}`, olcek, sekil: sek, zemin: null, pay: 150,
+    ad: `s07-kuruntu12-${h}-${w}-${tohum}-${yon}-${egil}`, olcek, sekil: sek, zemin: null, pay: 150,
     arka: '#80788F', arkaBulanik: 8, arkaTasma: false,
     arkaCiz: (t, yol) => {
       const g = t.createLinearGradient(0, b.y0, 0, 0);
@@ -182,16 +191,8 @@ export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
       g.addColorStop(0.5, rgba('#80788F', 0.17));
       g.addColorStop(1, rgba('#80788F', 0));
       t.fillStyle = g;
-      t.fill(yol);
-      globalThis.__sek = sek;
-      // buğu kenardan içeri çekilir: taramanın düzensiz bittiği kenarda açık bir hale şeridi kalmaz
-      t.globalCompositeOperation = 'destination-out';
-      t.lineWidth = 60;
-      t.lineJoin = 'round';
-      t.strokeStyle = '#000';
-      t.stroke(yol);
-      t.globalCompositeOperation = 'source-over';
-      { const d = t.getImageData(0, 0, t.canvas.width, t.canvas.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; console.log('DBG arka px', n, t.lineWidth, t.getTransform()); }
+      // buğu kenardan içeri çekilmiş biçime sürülür: taramanın düzensiz bittiği kenarda açık bir hale şeridi kalmaz
+      t.fill(path2d(diller.filter((d) => d.ic.length > 3).map((d) => ({ pts: d.ic, kapali: true }))));
     },
     tarama: [
       // açık geçiş: gök, bulut ve sis gibi yatıka yakın saten süpürüş (biçim atmosfere karışır)
@@ -307,8 +308,8 @@ export function gogusBulutuOge(w, tohum, olcek = 2.4) {
     if (yay.length) yaylar.push(yay);
   });
   return oge({
-    ad: `s07-gogus-bulut3-${w}-${tohum}`, olcek, sekil: sek, zemin: '#CFC9D8', arka: '#6F6882', arkaAlfa: 0.8, arkaBulanik: 3, pay: 8,
-    tarama: { ton: (x, y) => clamp(0.42 + (y + R * 0.1) / (R * 0.9)), renkler: [[0, '#857E98'], [0.5, '#5A536C'], [1, '#3A3348']], yon: -0.157, aralik: 2.2, boy: [8, 24], esikler: [0.1, 0.34, 0.58, 0.8], alfa: 0.62, gecisAci: 0.3 },
+    ad: `s07-gogus-bulut4-${w}-${tohum}`, olcek, sekil: sek, zemin: '#D3CDDC', arka: '#77708A', arkaAlfa: 0.75, arkaBulanik: 3, pay: 8,
+    tarama: { ton: (x, y) => clamp(0.36 + (y + R * 0.1) / (R * 0.9)), renkler: [[0, '#8C85A0'], [0.5, '#625B76'], [1, '#433C52']], yon: -0.157, aralik: 2.2, boy: [8, 24], esikler: [0.1, 0.34, 0.58, 0.8], alfa: 0.62, gecisAci: 0.3 },
     kontur: null,
     detay: (c, api) => { for (const y of yaylar) if (y.length > 2) api.cizgi(y, { renk: '#3E3749', kal: 1.3, alfa: 0.62, titreme: 0.25 }); },
   });

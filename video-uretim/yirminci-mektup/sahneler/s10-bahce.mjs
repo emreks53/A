@@ -9,7 +9,7 @@ import { oge, ogeCiz, konturCiz, darbe, TON, PALET, FILM } from '../motor/kalem.
 import { acarak, yerGolgesi, yurumePlani, sisSeridi, sisCiz, sallanma } from './s10-yardim.mjs';
 import { svg, elips, cokgen, dikdortgen, sivriKemer, yumusat, donustur, yuvarlakDikdortgen } from '../motor/sekil.mjs';
 import { kameraUygula, ekranda } from '../motor/sahne.mjs';
-import { insanYan, insanOn, DURUS, ON_DURUS } from '../motor/insan.mjs';
+import { insanYan, insanOn, DURUS, ON_DURUS, pozKaristir } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 
 export const CV = { x: 1750, y: 900 };
@@ -77,12 +77,15 @@ function tacliAgac({ ad, boy, tohum, palet = 'yesil', olcek = 1, meyve = null })
   return { govde, kumeler, meyveler, meyve };
 }
 function tacliCiz(g, A, x, y, { s = 1, u = 1, t = 0, faz = 0 } = {}) {
+  if (u <= 0) return;
   g.save();
   g.translate(x, y);
-  g.scale(s, s);
-  if (u > 0) ogeCiz(g, A.govde, 0, 0, { sy: ease.outBack(clamp(u * 2.6), 1.2) });
+  // ağaç bir bütün olarak dibinden büyür (gövde ve taç birlikte): tacı gelmemiş çıplak gövde hiç görünmez
+  const b = clamp(u / 0.5);
+  g.scale(s * lerp(0.55, 1, ease.outCubic(b)), s * ease.outBack(b, 1.3));
+  ogeCiz(g, A.govde, 0, 0);
   A.kumeler.forEach((k, i) => {
-    const v = clamp((u - 0.02 - (1 - k.t) * 0.2) / 0.38);
+    const v = clamp((u - (1 - k.t) * 0.16) / 0.36);
     if (v <= 0) return;
     ogeCiz(g, k.oge, k.x, k.y, { s: ease.outBack(v, 1.7), r: Math.sin(t * 1.2 + i + faz) * 0.015 });
   });
@@ -989,19 +992,27 @@ export function alisverisciler(g, cam, t, B) {
   if (B.carsi <= 0) return;
   const { x0, ayak, aci } = KEMER;
   g.save(); katman(g, cam, 0.99);
+  // birinci tezgâhta, dükkâncının biraz sağında (üst üste binmez), arkası dönük bir müşteri
   const a1 = an(B.carsi, 0.5, 0.14);
-  if (a1 > 0) yerGolgesi(g, x0 + ayak + aci * 0.5 + 56, 1332, 60, 0.2 * a1);
-  if (a1 > 0) insanOn(g, x0 + ayak + aci * 0.5 + 50, 1330, { ...ON_DURUS, kol: [0.15, 0.5], dirsek: [0.2, 1.1], bas: Math.sin(t * 1.1) * 0.04 }, { s: 0.64, arka: true, alfa: a1 });
-  // arkada sola yürüyen bir adam (çarşının akışı)
-  if (!V.gezgin) V.gezgin = yurumePlani({ t0: B.tCarsi + 0.55, t1: B.tCarsi + 4.4, n: 9, s: 0.6, yon: -1, x0: 1600, sabitHiz: true, kol: 0.3 });
-  if (t > V.gezgin.t0) {
-    const r = V.gezgin(t);
-    yerGolgesi(g, r.x - 6, 1318, 56, 0.18);
-    insanYan(g, r.x, 1316, { ...r.poz, bas: 0.04 }, { s: 0.6, yon: -1 });
+  const x1 = x0 + ayak + aci * 0.5 + 72;
+  if (a1 > 0) yerGolgesi(g, x1 + 6, 1332, 60, 0.2 * a1);
+  if (a1 > 0) insanOn(g, x1, 1330, { ...ON_DURUS, kol: [0.15, 0.5], dirsek: [0.2, 1.1], bas: Math.sin(t * 1.1) * 0.04 }, { s: 0.64, arka: true, alfa: a1 });
+  // ikinci tezgâha sağdan yürüyerek gelen müşteri: durur, dükkâncıya elini uzatır. Yolu başka figürü kesmez
+  // (önceki karşıdan geçen yaya dükkâncının ve müşterinin üstünden geçiyordu).
+  const hedef = x0 + ayak + aci * 1.5 + 118;
+  if (!V.musteri) {
+    const p = yurumePlani({ t0: B.tCarsi + 0.85, t1: B.tCarsi + 2.0, n: 5, s: 0.64, yon: -1, x0: 0, kol: 0.3 });
+    V.musteri = { p, dx: hedef - p.x1 };
   }
-  const a3 = an(B.carsi, 0.6, 0.14);
-  if (a3 > 0) yerGolgesi(g, x0 + ayak + aci * 1.5 + 124, 1336, 60, 0.2 * a3);
-  if (a3 > 0) insanYan(g, x0 + ayak + aci * 1.5 + 118, 1334, { ...DURUS, bas: -0.05 + Math.sin(t * 1.3) * 0.04, omuz: [-0.05, 0.75], dirsek: [0.2, 0.9] }, { s: 0.64, yon: -1, alfa: a3 });
+  const M3 = V.musteri;
+  if (t > M3.p.t0) {
+    const r = M3.p(t);
+    const uzan = an(t, M3.p.t1 + 0.05, 0.45, ease.outBack);
+    const poz = pozKaristir(r.poz, { ...DURUS, bas: -0.05 + Math.sin(t * 1.3) * 0.04, omuz: [-0.05, 0.75], dirsek: [0.2, 0.9] }, uzan);
+    const x = r.x + M3.dx;
+    yerGolgesi(g, x + 6, 1336, 60, 0.2);
+    insanYan(g, x, 1334, poz, { s: 0.64, yon: -1 });
+  }
   g.restore();
 }
 
