@@ -1,0 +1,9 @@
+{
+  "name": "yirminci-mektup-video",
+  "private": true,
+  "type": "module",
+  "description": "Yirminci Mektup'tan (Mektubat, 243. sayfa) dikey animasyon videosu: S-232 Filmde Renkli Kalem üslubu",
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.65"
+  }
+}

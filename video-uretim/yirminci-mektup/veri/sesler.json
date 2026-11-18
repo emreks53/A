@@ -1,0 +1,114 @@
+[
+ {
+  "t": 0.16,
+  "tur": "kalem",
+  "guc": 0.6,
+  "sure": 0.7,
+  "sahne": "s01"
+ },
+ {
+  "t": 0.84,
+  "tur": "firca",
+  "guc": 0.4,
+  "sahne": "s01"
+ },
+ {
+  "t": 1.44,
+  "tur": "pop",
+  "guc": 0.35,
+  "tekrar": 6,
+  "ara": 0.07,
+  "sahne": "s01"
+ },
+ {
+  "t": 1.64,
+  "tur": "kanat",
+  "guc": 0.25,
+  "sahne": "s01"
+ },
+ {
+  "t": 2.18,
+  "tur": "whoosh",
+  "guc": 0.35,
+  "sure": 1.2,
+  "sahne": "s01"
+ },
+ {
+  "t": 3.9099999999999997,
+  "tur": "pop",
+  "guc": 0.3,
+  "tekrar": 5,
+  "ara": 0.08,
+  "sahne": "s01"
+ },
+ {
+  "t": 4.699999999999999,
+  "tur": "parilti",
+  "guc": 0.35,
+  "sahne": "s01"
+ },
+ {
+  "t": 5.78,
+  "tur": "nur",
+  "guc": 0.55,
+  "sure": 2.2,
+  "sahne": "s01"
+ },
+ {
+  "t": 16.45,
+  "tur": "whoosh",
+  "guc": 0.28,
+  "sure": 1.1,
+  "sahne": "s03"
+ },
+ {
+  "t": 16.981,
+  "tur": "firca",
+  "guc": 0.22,
+  "sure": 0.9,
+  "sahne": "s03"
+ },
+ {
+  "t": 17.381,
+  "tur": "pop",
+  "guc": 0.2,
+  "tekrar": 6,
+  "ara": 0.08,
+  "sahne": "s03"
+ },
+ {
+  "t": 17.921,
+  "tur": "nur",
+  "guc": 0.5,
+  "sure": 2.2,
+  "sahne": "s03"
+ },
+ {
+  "t": 19.601000000000003,
+  "tur": "parilti",
+  "guc": 0.32,
+  "tekrar": 3,
+  "ara": 0.38,
+  "sahne": "s03"
+ },
+ {
+  "t": 21.242,
+  "tur": "whoosh",
+  "guc": 0.4,
+  "sure": 0.8,
+  "sahne": "s03"
+ },
+ {
+  "t": 22.052000000000003,
+  "tur": "parilti",
+  "guc": 0.3,
+  "sahne": "s03"
+ },
+ {
+  "t": 22.682000000000002,
+  "tur": "nur",
+  "guc": 0.42,
+  "sure": 2,
+  "sahne": "s03"
+ }
+]

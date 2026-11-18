@@ -1,0 +1,290 @@
+{
+ "aciklama": "Günümüz Türkçesinde kullanılmayan kelime/ifadeler ve ekranda çıkacak karşılıkları. kelime: hizalama.json'daki ilk kelimenin normal biçimi, kac: kaçıncı geçişi, uzunluk: ifadedeki kelime sayısı. ayri: bu mana bir önceki manayla aynı gruba (satıra) alınmaz.",
+ "liste": [
+  {
+   "kelime": "hilkatin",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "yaratmanın"
+  },
+  {
+   "kelime": "fıtratın",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "yaratılışın"
+  },
+  {
+   "kelime": "imanı",
+   "kac": 1,
+   "uzunluk": 2,
+   "mana": "Allah’a imandır"
+  },
+  {
+   "kelime": "ali",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "yüksek"
+  },
+  {
+   "kelime": "beşeriyetin",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "insanlığın"
+  },
+  {
+   "kelime": "imanı",
+   "kac": 2,
+   "uzunluk": 2,
+   "mana": "Allah’a iman"
+  },
+  {
+   "kelime": "marifetullahtır",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "Allah’ı tanımaktır"
+  },
+  {
+   "kelime": "insin",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "insanın"
+  },
+  {
+   "kelime": "marifetullah",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "Allah’ı tanıma"
+  },
+  {
+   "kelime": "muhabbetullahtır",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "Allah sevgisidir"
+  },
+  {
+   "kelime": "ruhu",
+   "kac": 1,
+   "uzunluk": 2,
+   "mana": "insan ruhu"
+  },
+  {
+   "kelime": "halis",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "saf"
+  },
+  {
+   "kelime": "sürur",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "sevinç"
+  },
+  {
+   "kelime": "kalbi",
+   "kac": 1,
+   "uzunluk": 2,
+   "mana": "insan kalbi",
+   "ayri": true
+  },
+  {
+   "kelime": "safi",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "saf"
+  },
+  {
+   "kelime": "muhabbetullah",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "Allah sevgisi"
+  },
+  {
+   "kelime": "lezzeti",
+   "kac": 1,
+   "uzunluk": 2,
+   "mana": "ruhani lezzettir"
+  },
+  {
+   "kelime": "sürur",
+   "kac": 2,
+   "uzunluk": 1,
+   "mana": "sevinç"
+  },
+  {
+   "kelime": "safi",
+   "kac": 2,
+   "uzunluk": 1,
+   "mana": "saf"
+  },
+  {
+   "kelime": "marifetullah",
+   "kac": 2,
+   "uzunluk": 1,
+   "mana": "Allah’ı tanıma"
+  },
+  {
+   "kelime": "muhabbetullahtadır",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "Allah sevgisindedir"
+  },
+  {
+   "kelime": "cenabı",
+   "kac": 1,
+   "uzunluk": 2,
+   "mana": "Allah’ı"
+  },
+  {
+   "kelime": "envara",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "nurlara"
+  },
+  {
+   "kelime": "esrara",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "sırlara"
+  },
+  {
+   "kelime": "bilkuvve",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "potansiyel olarak",
+   "ayri": true
+  },
+  {
+   "kelime": "bilfiil",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "fiilen"
+  },
+  {
+   "kelime": "mazhardır",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "erişmiştir"
+  },
+  {
+   "kelime": "şakavete",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "mutsuzluğa"
+  },
+  {
+   "kelime": "alama",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "acılara"
+  },
+  {
+   "kelime": "evhama",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "kuruntulara"
+  },
+  {
+   "kelime": "avare",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "başıboş"
+  },
+  {
+   "kelime": "nevi",
+   "kac": 1,
+   "uzunluk": 2,
+   "mana": "insanlık"
+  },
+  {
+   "kelime": "semeresiz",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "meyvesiz"
+  },
+  {
+   "kelime": "hamisiz",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "koruyucusuz"
+  },
+  {
+   "kelime": "aciz",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "güçsüz"
+  },
+  {
+   "kelime": "avare",
+   "kac": 2,
+   "uzunluk": 1,
+   "mana": "başıboş"
+  },
+  {
+   "kelime": "nevi",
+   "kac": 2,
+   "uzunluk": 2,
+   "mana": "insanlık"
+  },
+  {
+   "kelime": "fani",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "sonlu"
+  },
+  {
+   "kelime": "malikini",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "sahibini"
+  },
+  {
+   "kelime": "biçare",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "çaresiz"
+  },
+  {
+   "kelime": "sergerdan",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "şaşkın"
+  },
+  {
+   "kelime": "malikini",
+   "kac": 2,
+   "uzunluk": 1,
+   "mana": "sahibini"
+  },
+  {
+   "kelime": "iltica",
+   "kac": 1,
+   "uzunluk": 2,
+   "mana": "sığınır"
+  },
+  {
+   "kelime": "istinad",
+   "kac": 1,
+   "uzunluk": 2,
+   "mana": "dayanır"
+  },
+  {
+   "kelime": "vahşetgah",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "ıssız ve korkunç yer",
+   "ayri": true
+  },
+  {
+   "kelime": "tenezzühgaha",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "gezinti yerine"
+  },
+  {
+   "kelime": "ticaretgah",
+   "kac": 1,
+   "uzunluk": 1,
+   "mana": "ticaret yeri"
+  }
+ ]
+}
