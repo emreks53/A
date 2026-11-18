@@ -29,32 +29,32 @@ const { PERS } = Y;
 const VP = [PERS.vx, PERS.hy];
 const ZM = 4.6; // adamın ve ağacın derinliği
 const ZEMIN = PERS.hy + PERS.k / ZM; // onların bastığı yer (y)
-const ADAM = { x: 436, y: ZEMIN, s: (PERS.F * 1.78) / (ZM * 384) };
-const AG = { x: 128, y: ZEMIN + 1, boy: 600, tohum: 37 };
+const ADAM = { x: 485, y: ZEMIN, s: (PERS.F * 1.78) / (ZM * 384) };
+const AG = { x: 175, y: ZEMIN + 1, boy: 600, tohum: 37 };
 const TOH = { x: AG.x + 3, y: ZEMIN + 62 };
-const KESIT = { cx: 150, y0: ZEMIN, rx: 255, ry: 172 };
+const KESIT = { cx: 192, y0: ZEMIN, rx: 238, ry: 172 };
 const NUR = { x: VP[0], y0: 990, y1: 765, r: 78 };
 const KAPILAR = [[-44, 1.0], [76, 1.12], [196, 1.0]];
 const KAPI_Y = 886;
-const YOL_NOKTA = [[-2.6, 1.3], [-1.75, 3.0], [-1.35, ZM], [0.3, 5.6], [2.4, 7.5], [2.8, 11], [1.0, 18], [-1.5, 30], [0.5, 50], [1.5, 90]];
+const YOL_NOKTA = [[-0.55, 1.3], [-0.95, 3.0], [-1.1, ZM], [0.45, 5.6], [2.4, 7.5], [2.8, 11], [1.0, 18], [-1.5, 30], [0.5, 50], [1.5, 90]];
 
 // paralaks
 const F = { gok: 0.92, dag: 0.96, tepe: 0.98, ova: 1, on: 1.08 };
 
 // kamera: tek, akıcı yolculuk (hız anahtarlarda sürekli)
 const KAM = Y.puruzsuzYol([
-  { t: 46.4, x: 538, y: 1112, z: 1.28 },
-  { t: 47.8, x: 540, y: 1106, z: 1.31 },
-  { t: 48.95, x: 544, y: 1100, z: 1.36 },
+  { t: 46.4, x: 573, y: 1112, z: 1.28 },
+  { t: 47.8, x: 575, y: 1106, z: 1.31 },
+  { t: 48.95, x: 579, y: 1100, z: 1.36 },
   { t: 50.5, x: 600, y: 992, z: 0.95 },
   { t: 51.75, x: 612, y: 968, z: 0.99 },
-  { t: 52.5, x: 620, y: 835, z: 0.98 },
-  { t: 53.3, x: 84, y: 860, z: 2.0 },
-  { t: 53.62, x: 80, y: 866, z: 2.06 },
-  { t: 54.35, x: 278, y: 1222, z: 1.35 },
-  { t: 55.4, x: 280, y: 1216, z: 1.41 },
-  { t: 56.05, x: 284, y: 1210, z: 1.39 },
-  { t: 57.4, x: 380, y: 1130, z: 1.16 },
+  { t: 52.4, x: 620, y: 838, z: 0.98 },
+  { t: 53.3, x: 86, y: 778, z: 2.3 },
+  { t: 53.62, x: 82, y: 782, z: 2.38 },
+  { t: 54.35, x: 330, y: 1222, z: 1.33 },
+  { t: 55.4, x: 332, y: 1216, z: 1.39 },
+  { t: 56.05, x: 336, y: 1210, z: 1.37 },
+  { t: 57.4, x: 410, y: 1130, z: 1.16 },
 ]);
 
 let gok, bulutlar, dagUzak, dagYakin, seritler, yol, yolYakin, yolUzak, kandilS, kandilY, agacTur, nesneler, kapi, toprak, tohum,
@@ -200,12 +200,12 @@ export default {
 
     // çiçekler (adamın çevresinde ve ön köşelerde)
     cicekler = [
-      { x: 232, y: ZEMIN + 12, s: 0.6, renk: 'sari', isik: true },
-      { x: 662, y: ZEMIN + 22, s: 0.62, renk: 'beyaz', isik: true },
-      { x: 18, y: ZEMIN + 8, s: 0.58, renk: 'beyaz' },
-      { x: -64, y: ZEMIN + 26, s: 0.62, renk: 'pembe' },
-      { x: 760, y: ZEMIN + 6, s: 0.5, renk: 'pembe' },
-      { x: 300, y: ZEMIN + 30, s: 0.5, renk: 'pembe' },
+      { x: 262, y: ZEMIN + 4, s: 0.6, renk: 'sari', isik: true },
+      { x: 812, y: ZEMIN + 32, s: 0.62, renk: 'beyaz', isik: true },
+      { x: 58, y: ZEMIN + 10, s: 0.58, renk: 'beyaz' },
+      { x: -40, y: ZEMIN + 28, s: 0.62, renk: 'pembe' },
+      { x: 930, y: ZEMIN + 16, s: 0.5, renk: 'pembe' },
+      { x: 108, y: ZEMIN + 34, s: 0.5, renk: 'pembe' },
       { x: 60, y: 1835, s: 1.1, renk: 'pembe', on: true },
       { x: 140, y: 1890, s: 0.9, renk: 'beyaz', on: true },
       { x: 1000, y: 1800, s: 1.05, renk: 'beyaz', on: true },
@@ -331,8 +331,9 @@ export default {
         const ta = an(t, 54.15, 0.35, ease.outCubic) * acil;
         if (ta > 0) {
           const parla = 0.5 + 0.2 * Math.sin(t * 3.2) + 0.9 * Math.exp(-Math.max(0, t - T.fiil) * 3) * (t > T.fiil ? 1 : 0);
-          Y.isikNokta(g, TOH.x, TOH.y - 2, 75, 0.6 * ta * parla);
-          ogeCiz(g, tohum, TOH.x, TOH.y, { s: 1.5, r: -0.12, alfa: ta });
+          Y.isikNokta(g, TOH.x, TOH.y - 2, 95, 0.75 * ta * parla);
+          M.hale(g, TOH.x, TOH.y - 2, 70, '#FFE7A8', 0.35 * ta * parla);
+          ogeCiz(g, tohum, TOH.x, TOH.y, { s: 1.9, r: -0.12, alfa: ta });
         }
       }
       // gerçek ağaç (bilfiil)
@@ -462,12 +463,12 @@ function nurSutunu(g, t, ni) {
   g.save();
   g.globalCompositeOperation = 'screen';
   const gr = g.createLinearGradient(0, yUst, 0, yAlt);
-  gr.addColorStop(0, 'rgba(255,240,196,0)');
-  gr.addColorStop(0.3, 'rgba(255,236,186,0.5)');
-  gr.addColorStop(1, 'rgba(255,226,160,0.62)');
+  gr.addColorStop(0, 'rgba(255,232,170,0)');
+  gr.addColorStop(0.3, 'rgba(255,226,150,0.7)');
+  gr.addColorStop(1, 'rgba(255,214,128,0.85)');
   g.fillStyle = gr;
   g.filter = 'blur(22px)';
-  for (const [k, a] of [[1.0, 0.34], [0.5, 0.36]]) {
+  for (const [k, a] of [[1.0, 0.5], [0.5, 0.5]]) {
     g.globalAlpha = a * nefes * ni;
     g.beginPath();
     g.moveTo(x - gen0 * k, yUst);
@@ -488,8 +489,8 @@ function nurSutunu(g, t, ni) {
     const a0 = r.ara(0.0, 0.25), a1 = r.ara(0.55, 0.95);
     const pts = [];
     for (let q = 0; q <= 10; q++) { const v = lerp(a0, a1, q / 10); pts.push([lerp(x0, x1, v), yUst + L * v]); }
-    g.fillStyle = rgba('#F3CF78', 0.4 * ni * (0.6 + 0.4 * Math.sin(t * 1.7 + i * 1.3)));
-    darbe(g, pts, 2.2, { incelme: 0.4, sivri: 0.6 });
+    g.fillStyle = rgba('#EDBE55', 0.55 * ni * (0.6 + 0.4 * Math.sin(t * 1.7 + i * 1.3)));
+    darbe(g, pts, 2.6, { incelme: 0.4, sivri: 0.6 });
   }
   g.restore();
 }

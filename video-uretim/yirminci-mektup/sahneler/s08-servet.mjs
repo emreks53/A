@@ -266,7 +266,7 @@ export function parilti(ctx, x, y, R, a, { renk = '#FFF3C4', donus = 0 } = {}) {
  * ciz(ctx, griyeDonus 0..1, dagilma 0..1, sure): ctx dünya dönüşümünde olmalı.
  */
 export class TozaDagilma {
-  constructor({ altin, x0, y0, res, tohum = 5, sayi = 2600, harita = null, sure = 0.85 }) {
+  constructor({ altin, x0, y0, res, tohum = 5, sayi = 2600, harita = null, sure = 0.85, kum = 0.07, boy = 1 }) {
     this.x0 = x0; this.y0 = y0; this.res = res; this.sure = sure;
     const w = altin.width, h = altin.height;
     this.w = w; this.h = h;
@@ -288,7 +288,8 @@ export class TozaDagilma {
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       const i = y * w + x;
       if (A[i * 4 + 3] < 4) { M[i] = 9; continue; }
-      const v = harita ? harita(x / w, y / h, n) : 0.6 * (y / h) + 0.35 * (x / w) + 0.22 * n.fbm(x * 0.012, y * 0.012, 3);
+      const hs = (Math.imul(x * 73856093 ^ y * 19349663, 83492791) >>> 0) / 4294967296;
+      const v = (harita ? harita(x / w, y / h, n) : 0.6 * (y / h) + 0.35 * (x / w) + 0.22 * n.fbm(x * 0.012, y * 0.012, 3)) + kum * (hs - 0.5);
       M[i] = v; if (v < mn) mn = v; if (v > mx) mx = v;
     }
     for (let i = 0; i < M.length; i++) if (M[i] < 9) M[i] = (M[i] - mn) / (mx - mn);
@@ -306,9 +307,9 @@ export class TozaDagilma {
       this.P.push({
         x: x0 + x / res, y: y0 + y / res, m: M[i],
         c: [Gd[i * 4], Gd[i * 4 + 1], Gd[i * 4 + 2]],
-        vx: agir ? r.ara(40, 120) : r.ara(140, 330), vy: agir ? r.ara(-10, 30) : r.ara(-95, -15),
-        ay: agir ? 260 : -20, ax: agir ? 40 : r.ara(120, 260),
-        omur: r.ara(0.55, 1.25), L: r.ara(2.2, 6.5), kal: r.ara(0.9, 1.7), faz: r() * TAU, f: r.ara(2, 5),
+        vx: agir ? r.ara(50, 140) : r.ara(170, 420), vy: agir ? r.ara(-10, 30) : r.ara(-110, -15),
+        ay: agir ? 280 : -30, ax: agir ? 60 : r.ara(150, 320),
+        omur: r.ara(0.6, 1.35), L: r.ara(2.5, 8) * boy, kal: r.ara(1.1, 2.2) * boy, faz: r() * TAU, f: r.ara(2, 5),
       });
     }
     this.cikis = tuval(w, h);
@@ -320,7 +321,7 @@ export class TozaDagilma {
       const c = this.cikis.getContext('2d');
       const img = c.createImageData(w, h);
       const d = img.data;
-      const bant = 0.05;
+      const bant = 0.035;
       for (let y = 0; y < h; y++) {
         // griye dönüş dalgası soldan sağa
         for (let x = 0; x < w; x++) {
@@ -360,7 +361,7 @@ export class TozaDagilma {
       const vx = p.vx + p.ax * yas, vy = p.vy + p.ay * yas;
       const vl = Math.hypot(vx, vy) || 1;
       const L = p.L * (1 - k * 0.5);
-      const a = (1 - k) * (k < 0.08 ? k / 0.08 : 1) * 0.85;
+      const a = (1 - k * k) * (k < 0.06 ? k / 0.06 : 1) * 0.92;
       const [cr, cg, cb] = p.c;
       const lc = k * 0.35;
       ctx.fillStyle = `rgba(${(cr + (225 - cr) * lc) | 0},${(cg + (221 - cg) * lc) | 0},${(cb + (230 - cb) * lc) | 0},${a})`;
@@ -380,7 +381,7 @@ export function tozBulutu(ctx, merkezler, u, { renk = '#9D97A8', sure = 1.2 } = 
     const k = yas / b.omur;
     const x = b.x + b.vx * yas + 60 * yas * yas, y = b.y + b.vy * yas;
     const R = b.R * (0.5 + k * 1.3);
-    const a = 0.32 * Math.sin(Math.PI * Math.min(1, k * 1.15)) * b.a;
+    const a = 0.42 * Math.sin(Math.PI * Math.min(1, k * 1.15)) * b.a;
     const g = ctx.createRadialGradient(x, y, 0, x, y, R);
     g.addColorStop(0, rgba(renk, a));
     g.addColorStop(0.55, rgba(renk, a * 0.45));

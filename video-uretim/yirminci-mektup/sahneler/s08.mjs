@@ -85,8 +85,8 @@ function ruzgarListesi(tohum, baslar, { y0 = 300, y1 = 1300, L = [500, 900], sur
 }
 
 // ================================================================ PLAKA A: perişan sokak
-const SOKAK = { yer: 1190, adamX: 540, adamY: 1330, s: 0.62 };
-const EVLER = [
+const SOKAK = { yer: 1190, adamX: 540, adamY: 1330, s: 0.8, evS: 1.35 };
+const EV_TANIM = [
   { x: -330, w: 230, h: 300, catiH: 115, egri: 14, sarkma: 12, renk: 2, r: 0.03, pencereler: [{ x: 34, y: 170, w: 44, h: 56, tur: 'kirik' }, { x: 140, y: 170, w: 44, h: 56, tur: 'tahta' }] },
   { x: -95, w: 220, h: 280, catiH: 110, egri: -12, sarkma: 10, renk: 1, r: -0.045, pencereler: [{ x: 30, y: 150, w: 44, h: 56, tur: 'tahta' }, { x: 140, y: 160, w: 44, h: 56, tur: 'kirik' }], kapi: { x: 84, w: 48, h: 96, aralik: 0.4 } },
   { x: 150, w: 200, h: 340, catiH: 105, egri: 16, sarkma: 14, renk: 0, r: 0.035, baca: { x: 50, h: 70, egim: 0.12 }, pencereler: [{ x: 28, y: 210, w: 42, h: 58, tur: 'kirik' }, { x: 122, y: 210, w: 42, h: 58, tur: 'saglam' }, { x: 28, y: 80, w: 42, h: 58, tur: 'bos' }, { x: 122, y: 80, w: 42, h: 58, tur: 'tahta' }] },
@@ -96,12 +96,14 @@ const EVLER = [
   { x: 1180, w: 220, h: 320, catiH: 110, egri: 10, sarkma: 10, renk: 2, r: 0.04, baca: { x: -40, h: 64, egim: 0.1 }, pencereler: [{ x: 30, y: 190, w: 44, h: 56, tur: 'kirik' }, { x: 140, y: 190, w: 44, h: 56, tur: 'bos' }, { x: 30, y: 70, w: 44, h: 56, tur: 'tahta' }] },
   { x: 1420, w: 230, h: 280, catiH: 115, egri: -10, sarkma: 8, renk: 1, r: -0.03, pencereler: [{ x: 34, y: 150, w: 44, h: 56, tur: 'tahta' }] },
 ];
+// sokak dizilişi: evler 1,35 kat büyük çizilir
+const EVLER = EV_TANIM.map((e) => ({ ...e, x: 560 + (e.x - 560) * SOKAK.evS }));
 const kamA = kameraYolu([
-  { t: 67.2, x: 540, y: 1185, z: 1.52 },
-  { t: T.evet + 0.05, x: 540, y: 1178, z: 1.58, e: ease.inOutSine },
-  { t: T.dunyada + 0.55, x: 562, y: 1008, z: 1.0, e: ease.inOutCubic },
-  { t: GB.t, x: 578, y: 996, z: 0.97, e: ease.inOutSine },
-  { t: GB.t + GB.sure + 0.05, x: 582, y: 560, z: 0.92, e: ease.inCubic },
+  { t: 67.2, x: 622, y: 1105, z: 1.47 },
+  { t: T.evet + 0.05, x: 618, y: 1100, z: 1.52, e: ease.inOutSine },
+  { t: T.dunyada + 0.55, x: 566, y: 1080, z: 1.08, e: ease.inOutCubic },
+  { t: GB.t, x: 576, y: 1072, z: 1.05, e: ease.inOutSine },
+  { t: GB.t + GB.sure + 0.05, x: 582, y: 640, z: 0.98, e: ease.inCubic },
 ]);
 
 // ================================================================ PLAKA B: yüksekten meydan
@@ -121,9 +123,9 @@ const kamD = kameraYolu([
   { t: T.sahip - 0.04, x: 812, y: 952, z: 1.95, e: ease.inOutSine },
   { t: T.hami + 0.36, x: 575, y: 1000, z: 0.95, e: ease.inOutCubic },
   { t: T.aciz - 0.6, x: 566, y: 1004, z: 1.0, e: ease.inOutSine },
-  { t: T.aciz + 0.8, x: 431, y: 1158, z: 2.58, e: ease.inOutCubic },
-  { t: T.butun, x: 430, y: 1160, z: 2.76, e: ease.inOutSine },
-  { t: T.dunyanin, x: 430, y: 1158, z: 2.72, e: ease.inOutSine },
+  { t: T.aciz + 0.8, x: 431, y: 1168, z: 2.8, e: ease.inOutCubic },
+  { t: T.butun, x: 430, y: 1170, z: 3.02, e: ease.inOutSine },
+  { t: T.dunyanin, x: 430, y: 1168, z: 2.96, e: ease.inOutSine },
   { t: T.da + 0.08, x: 432, y: 1046, z: 1.72, e: ease.inOutCubic },
   { t: T.kac + 0.15, x: 432, y: 1043, z: 1.8, e: ease.inOutSine },
   { t: 82.55, x: 430, y: 1166, z: 2.45, e: ease.inOutCubic },
@@ -140,18 +142,21 @@ let R = null;
 function hazirlaA() {
   R.gokA = D.griGok({ w: 1750, h: 1750, ad: 's08-gokA', olcek: 1.0, tohum: 31, koyu: 1 });
   R.bulutA = [D.firtinaBulutOge(760, 5, 1, false), D.firtinaBulutOge(560, 12, 1, false), D.firtinaBulutOge(680, 17, 1, false)];
-  R.evler = EVLER.map((e, i) => ({ ...e, o: D.evOge({ ad: `s08-ev${i}`, ...e, tohum: 40 + i, olcek: 1.6 }) }));
-  R.uzakEvler = [0, 3, 5, 2, 6, 1, 4].map((k, i) => ({ o: R.evler[k].o, x: -260 + i * 245 + (i % 2) * 30, s: 0.62, r: (i % 2 ? 0.04 : -0.05) }));
-  R.kepenk = D.kepenkOge(36, 54, 1.6);
-  R.fener = D.fenerOge(1.6);
+  R.evler = EVLER.map((e, i) => ({ ...e, o: D.evOge({ ad: `s08-ev${i}`, ...e, tohum: 40 + i, olcek: 1.8 }) }));
+  R.fici = D.ficiOge(1.8);
+  R.tekerlek = D.tekerlekOge(1.8);
+  R.ksandik = D.kirikSandikOge(1.8);
+  R.uzakEvler = [0, 3, 5, 2, 6, 1, 4, 7].map((k, i) => ({ o: R.evler[k].o, x: -380 + i * 260 + (i % 2) * 40, s: 0.8, r: (i % 2 ? 0.04 : -0.05) }));
+  R.kepenk = D.kepenkOge(36, 54, 2.2);
+  R.fener = D.fenerOge(2.0);
   const catlak = D.catlakAgi({ x0: -450, x1: 1650, yUfuk: 1120, y1: 2350, wK: 0.36, f: 900, dyMin: 70, tohum: 9, olasilik: 0.8 });
   const r = rng(91);
   // kaldırım kenarı (kırık)
   for (let x = -450; x < 1650; x += r.ara(120, 220)) catlak.push({ pts: [[x, 1224 + r.ara(-2, 2)], [x + r.ara(90, 170), 1226 + r.ara(-2, 2)]], kal: 2.0 });
   for (let x = -440; x < 1650; x += r.ara(60, 90)) catlak.push({ pts: [[x, 1196], [x - 4, 1222]], kal: 1.2 });
   R.yolA = D.toprakOge({ ad: 's08-yolA', x0: -450, x1: 1650, yUst: 1150, yAlt: 2350, catlaklar: catlak, olcek: 1.25, tohum: 12, renk: { ...D.G.toprak, kontur: '#655B6B' } });
-  R.citSol = D.citOge({ ad: 's08-cit-sol', w: 470, tohum: 3, olcek: 1.5 });
-  R.citSag = D.citOge({ ad: 's08-cit-sag', w: 460, tohum: 8, olcek: 1.5, eksik: 0.35 });
+  R.citSol = D.citOge({ ad: 's08-cit-sol', w: 420, tohum: 3, olcek: 1.6 });
+  R.citSag = D.citOge({ ad: 's08-cit-sag', w: 440, tohum: 8, olcek: 1.6, eksik: 0.35 });
   const kagitlar = [0, 1, 2, 3, 4].map((k) => D.kagitOge(k, 2));
   const yapraklar = [0, 1, 2, 3, 4, 5].map((k) => D.kuruYaprakOge(k, 2));
   const rr = rng(17);
@@ -176,11 +181,11 @@ function hazirlaB() {
   // kalabalık: farklı derinliklerde, rastgele yürüyen, dönüp duran küçük adamlar
   const r = rng(808);
   R.kalabalik = [];
-  const N = 34;
+  const N = 27;
   for (let i = 0; i < N; i++) {
-    let y = lerp(420, 1290, (i + r.ara(0.1, 0.9)) / N);
-    if (y > 770 && y < 900) y = r() < 0.5 ? 760 - r.ara(0, 30) : 905 + r.ara(0, 40);
-    const s = lerp(0.135, 0.27, (y - 420) / 870);
+    let y = lerp(430, 1290, (i + r.ara(0.1, 0.9)) / N);
+    if (y > 770 && y < 910) y = r() < 0.5 ? 765 - r.ara(0, 30) : 912 + r.ara(0, 40);
+    const s = lerp(0.2, 0.4, (y - 430) / 860);
     const x0 = r.ara(-40, 1120);
     const yon = r() < 0.5 ? 1 : -1;
     // sınırlar içinde kalacak bölümler
@@ -210,8 +215,8 @@ function hazirlaD() {
   R.gokDk = D.griGok({ w: 1900, h: 1700, ad: 's08-gokDk', olcek: 1.15, tohum: 36, koyu: 1 });
   R.bulutD = [M.bulutOge(420, 23, 1.1, true), M.bulutOge(320, 27, 1.1, true)];
   R.firtina = [D.firtinaBulutOge(980, 3, 1.1), D.firtinaBulutOge(760, 9, 1.1), D.firtinaBulutOge(860, 14, 1.1)];
-  R.tepeUzak = D.uzakTepeOge({ ad: 's08-tepe-uzak', w: 3200, h: 520, tohum: 5, dalga: 70, olcek: 1.0 });
-  R.tepeOrta = D.uzakTepeOge({ ad: 's08-tepe-orta', w: 3200, h: 520, tohum: 11, dalga: 40, olcek: 1.0, renk: 'orta' });
+  R.tepeUzak = D.uzakTepeOge({ ad: 's08-tepe-uzak2', w: 3400, h: 620, tohum: 5, dalga: 150, olcek: 1.0 });
+  R.tepeOrta = D.uzakTepeOge({ ad: 's08-tepe-orta2', w: 3400, h: 560, tohum: 11, dalga: 75, olcek: 1.0, renk: 'orta' });
   const catlak = D.catlakAgi({ x0: -760, x1: 1960, yUfuk: OVA.ufuk - 8, y1: 2500, wK: 0.28, f: 1100, dyMin: 45, tohum: 21, olasilik: 0.86 });
   const r = rng(55);
   // kuru ot tutamları (seyrek)
@@ -248,7 +253,7 @@ function hazirlaD() {
   const tahtY = OVA.adamY + 2 + R.ustY - SV.KAIDE * OVA.S + 3;
   R.tahtY = tahtY;
   const tam = D.birlestir([{ o: R.yigin.oge, x: OVA.adamX, y: OVA.adamY + 2 }, { o: R.taht, x: OVA.adamX, y: tahtY }], 2.0);
-  R.toz = new SV.TozaDagilma({ altin: tam.tuval, x0: -tam.ox, y0: -tam.oy, res: 2.0, tohum: 61, sayi: 2600, sure: SVT.dagSure + 0.25 });
+  R.toz = new SV.TozaDagilma({ altin: tam.tuval, x0: -tam.ox, y0: -tam.oy, res: 2.0, tohum: 61, sayi: 5200, sure: SVT.dagSure + 0.3, kum: 0.08, harita: (x, y, n) => 0.68 * y + 0.24 * x + 0.12 * n.fbm(x * 9, y * 9, 3) });
   R.tozB = tam.sinir;
   // taç tozu: tahttaki baş açısıyla döndürülmüş taç
   const basA = TAHT.govde * 0.6 + TAHT.bas;
@@ -301,37 +306,43 @@ function plakaA(ctx, t) {
   const cam = { x: c.x + sl.x / c.z, y: c.y + sl.y / c.z, z: c.z, r: sl.r };
   kameraIle(ctx, cam, (g) => {
     ogeCiz(g, R.gokA, -330, -420);
-    const bx = [[60, 380], [620, 250], [1180, 470]];
+    const bx = [[60, 420], [620, 300], [1180, 520]];
     R.bulutA.forEach((b, i) => ogeCiz(g, b, bx[i][0] + (t - 67) * (10 + i * 4), bx[i][1]));
   }, 0.3);
   kameraIle(ctx, cam, (g) => {
-    g.globalAlpha = 0.42;
-    for (const e of R.uzakEvler) ogeCiz(g, e.o, e.x, SOKAK.yer - 34, { s: e.s, r: e.r });
+    g.globalAlpha = 0.5;
+    for (const e of R.uzakEvler) ogeCiz(g, e.o, e.x, SOKAK.yer - 40, { s: e.s, r: e.r });
     g.globalAlpha = 1;
   }, 0.62);
   kameraIle(ctx, cam, (g) => {
     ogeCiz(g, R.yolA, 0, 0);
-    for (const e of R.evler) ogeCiz(g, e.o, e.x, SOKAK.yer, { r: e.r });
-    // kırık kepenk (ev 2'nin sağ üst penceresinde, menteşesinden sallanır)
-    const e = R.evler[2], p = e.pencereler[1];
-    const lx = -e.w / 2 + p.x + p.w + e.egri * ((p.y + p.h) / e.h) + 2, ly = -p.y - p.h;
+    for (const e of R.evler) ogeCiz(g, e.o, e.x, SOKAK.yer, { r: e.r, s: SOKAK.evS });
+    // kırık kepenk (ev 3'ün sağ üst penceresinde, tek menteşesinden sallanır)
+    const e = R.evler[2], p = e.pencereler[1], S = SOKAK.evS;
+    const lx = (-e.w / 2 + p.x + p.w + e.egri * ((p.y + p.h) / e.h) + 2) * S, ly = (-p.y - p.h) * S;
     const hx = e.x + lx * Math.cos(e.r) - ly * Math.sin(e.r), hy = SOKAK.yer + lx * Math.sin(e.r) + ly * Math.cos(e.r);
     const ruz = an(t, T.perisan, 0.5, ease.outCubic);
     const aci = -0.15 - 0.22 * Math.sin(t * 2.6) - ruz * (0.35 + 0.25 * Math.sin(t * 5.3 + 1));
-    ogeCiz(g, R.kepenk, hx, hy, { r: e.r + aci });
-    ogeCiz(g, R.fener, 812, 1214, { r: 0.02 });
+    ogeCiz(g, R.kepenk, hx, hy, { r: e.r + aci, s: S });
+    ogeCiz(g, R.fener, 900, 1222, { r: 0.02, s: 1.3 });
+    // sokak döküntüleri
+    ogeCiz(g, R.ksandik, 830, 1300, { r: 0.08, s: 1.1 });
+    ogeCiz(g, R.tekerlek, 300, 1262, { r: -0.5, sy: 0.55, sx: 1.05 });
+    ogeCiz(g, R.fici, 180, 1404, { r: -0.1, s: 1.15 });
   }, 1);
   // adam: diz çökmüş (s07'den), perişan dünyaya bakarken başını hafifçe kaldırır
   katman(ctx, (g) => kameraIle(g, cam, (gg) => {
     const bak = an(t, T.perisan, 0.7) * (1 - an(t, T.dunyada + 0.6, 0.9));
     const nefes = Math.sin(t * 2.2) * 0.012;
     const poz = { ...DIZ_COK, govde: DIZ_COK.govde + nefes - bak * 0.06, bas: DIZ_COK.bas - bak * 0.4 };
-    insanYan(gg, SOKAK.adamX, SOKAK.adamY, yereOturt(poz), { s: SOKAK.s, yon: -1, olcek: 1 });
+    insanYan(gg, SOKAK.adamX, SOKAK.adamY, yereOturt(poz), { s: SOKAK.s, yon: -1, olcek: 1.2 });
   }, 1), { filtre: GRI });
   kameraIle(ctx, cam, (g) => {
-    ogeCiz(g, R.citSol, -150, 1612);
-    ogeCiz(g, R.citSag, 800, 1640);
+    ogeCiz(g, R.citSol, -190, 1630, { s: 1.15 });
+    ogeCiz(g, R.citSag, 760, 1660, { s: 1.15 });
   }, 1.12);
+  // s07'den süren yağmur dinerken
+  D.yagmur(ctx, t, 1 - an(t, 67.3, 1.3), { sayi: 150, tohum: 23 });
   savrulanlar(ctx, t, R.savA);
   ruzgarlar(ctx, t, R.ruzA);
 }
@@ -353,7 +364,7 @@ function plakaB(ctx, t) {
     gg.save();
     for (const { f, q } of durum) {
       const gr = gg.createRadialGradient(q.x + 6 * f.s, f.y + 2, 0, q.x + 6 * f.s, f.y + 2, 80 * f.s);
-      gr.addColorStop(0, 'rgba(84,76,100,0.22)');
+      gr.addColorStop(0, 'rgba(76,68,94,0.32)');
       gr.addColorStop(1, 'rgba(84,76,100,0)');
       gg.fillStyle = gr;
       gg.save(); gg.translate(q.x + 6 * f.s, f.y + 2); gg.scale(1, 0.24); gg.translate(-(q.x + 6 * f.s), -(f.y + 2));
@@ -396,13 +407,22 @@ function adamPozu(t) {
   if (taht > 0) p = pozKaristir(p, TAHT, taht);
   const gurur = an(t, T.sultan, 0.4) * (1 - an(t, T.kac, 0.25));
   if (gurur > 0) p = { ...p, bas: p.bas - 0.1 * gurur, govde: p.govde - 0.03 * gurur };
-  const in0 = an(t, SVT.in0 + 0.05, SVT.inSure, ease.inOutCubic);
+  const in0 = t >= SVT.dag ? clamp(inis(t) * 1.15) : 0;
   if (in0 > 0) p = pozKaristir(p, { ...BUZUL, bas: BUZUL.bas + 0.04 }, in0);
-  if (t > SVT.in0 + SVT.inSure) {
+  if (inis(t) >= 1) {
     const nefes = Math.sin(t * 2.0) * 0.01;
     p = { ...p, govde: p.govde + nefes };
   }
   return p;
+}
+// dağılan yüzeyle birlikte iniş (0 tahtta, 1 yerde)
+function inis(t) {
+  if (t < SVT.dag) return 0;
+  const u = clamp((t - SVT.dag) / SVT.dagSure);
+  const b = R.tozB;
+  const yuzey = b.y0 + b.h * clamp((u - 0.12) / 0.7);
+  const k = clamp((yuzey - R.tahtY) / (OVA.adamY - R.tahtY));
+  return ease.inOutSine(k);
 }
 function yiginDurum(t) {
   const u = clamp((t - SVT.yigin) / SVT.yiginSure);
@@ -425,7 +445,18 @@ function plakaD(ctx, t) {
   // gök
   kameraIle(ctx, cam, (g) => {
     ogeCiz(g, R.gokD, -420, -560);
-    if (firtina > 0) ogeCiz(g, R.gokDk, -420, -560, { alfa: firtina * 0.85 });
+    if (firtina > 0) {
+      ogeCiz(g, R.gokDk, -420, -560, { alfa: firtina * 0.9 });
+      g.save();
+      g.globalCompositeOperation = 'multiply';
+      const gr = g.createLinearGradient(-400, 0, 1300, 0);
+      gr.addColorStop(0, rgba('#857D9B', 0.75 * firtina));
+      gr.addColorStop(0.55, rgba('#A39CB5', 0.35 * firtina));
+      gr.addColorStop(1, rgba('#C9C4D4', 0));
+      g.fillStyle = gr;
+      g.fillRect(-420, -560, 1900, 1700);
+      g.restore();
+    }
   }, 0.25);
   kameraIle(ctx, cam, (g) => {
     ogeCiz(g, R.bulutD[0], 980 + (t - 72) * 9, 360, { alfa: 1 - firtina * 0.6 });
@@ -437,8 +468,8 @@ function plakaD(ctx, t) {
       ogeCiz(g, b, x, fx[i][1], { alfa: clamp(gelir * 1.5) });
     });
   }, 0.32);
-  kameraIle(ctx, cam, (g) => ogeCiz(g, R.tepeUzak, -1100, 905), 0.5);
-  kameraIle(ctx, cam, (g) => ogeCiz(g, R.tepeOrta, -1100, 948), 0.72);
+  kameraIle(ctx, cam, (g) => ogeCiz(g, R.tepeUzak, -1200, 858), 0.5);
+  kameraIle(ctx, cam, (g) => ogeCiz(g, R.tepeOrta, -1200, 922), 0.72);
   // zemin + ağaç + taşlar
   kameraIle(ctx, cam, (g) => {
     ogeCiz(g, R.zeminD, 0, 0);
@@ -479,7 +510,7 @@ function plakaD(ctx, t) {
   const poz = yereOturt(adamPozu(t));
   let adamY = OVA.adamY;
   if (t >= SVT.yigin) adamY = Math.min(OVA.adamY, yd.tahtY);
-  if (t >= SVT.in0) adamY = lerp(R.tahtY, OVA.adamY, an(t, SVT.in0, SVT.inSure, ease.inOutCubic));
+  if (t >= SVT.dag) adamY = lerp(R.tahtY, OVA.adamY, inis(t));
   let bas = null;
   katman(ctx, (g) => kameraIle(g, cam, (gg) => {
     const e = insanYan(gg, OVA.adamX, adamY, poz, { s: OVA.S, yon: -1, olcek: 1.2 });
@@ -516,7 +547,7 @@ function plakaD(ctx, t) {
     if (tp > 0 && t < SVT.tac + 0.6) SV.parilti(g, tx + 4, ty - 6, 16, Math.sin(Math.PI * clamp((t - SVT.tac - 0.08) / 0.45)), { donus: 0.3 });
   }, 1);
   // yağmur, savrulanlar, rüzgâr
-  D.yagmur(ctx, t, yagmurG, { sayi: 170, tohum: 21 });
+  D.yagmur(ctx, t, yagmurG, { sayi: 230, tohum: 21 });
   savrulanlar(ctx, t, R.savD, 1);
   ruzgarlar(ctx, t, R.ruzD, 1 - an(t, T.butun - 0.4, 0.4));
   ruzgarlar(ctx, t, R.ruzSon);

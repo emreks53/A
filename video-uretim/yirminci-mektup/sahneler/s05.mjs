@@ -1,12 +1,15 @@
 // 5. cümle: "Evet, bütün hakiki saadet ve hâlis sürur ve şirin nimet ve safi lezzet, elbette marifetullah ve
 // muhabbetullahtadır. Onlar, onsuz olamaz."
-// Yazısız, temiz bir infografik. s04'ün altın halkaları solarken üstte kaynak çizilir: merkezinde gül olan marifet
-// madalyonu (küçük, loş). Kaynağı çevreleyen büyük noktalı yörüngenin alt yayında dört levha kelimelerinde birer birer
-// belirir: kandil (saadet), çiçekli dalda öten kuş (sürur), yarılan nar (nimet), bal peteği ve damlası (lezzet).
-// "elbette": kaynak aydınlanır; "marifetullah": madalyonun halkası parlar, halkadan dört simgeye altın ışık iplikleri
-// akar; "muhabbetullahtadır": gül parlar, ipliklere gül rengi bir ikinci iplik sarılır; simgeler canlanır, parlar.
-// "Onlar, onsuz olamaz": kaynağın ışığı içine çekilir, madalyon solar ve örtülür; karanlık ipliklerden aşağı iner;
-// kandil söner (duman), kuş susar (başı düşer), nar kurur, bal donuklaşır. Bitiş: loş, soluk zemin, gri simgeler.
+// Yazısız, temiz bir infografik; altta sakin bir bulut yatağı. s04'ün altın halkaları (aynı biçim ve zamanlamayla)
+// sürüp solarken üstte kaynak çizilir: merkezinde gül olan marifet madalyonu (küçük, loş), kalemin ucunda ışıltı.
+// "bütün": dört levhanın oturacağı noktalı yay alttan iki yana çizilir. Levhalar kelimelerinde taşmalı pop ile
+// belirir: turkuaz kandil (saadet, alev tutuşur ve titrer), çiçekli dalda öten kuş (sürur, başını kesik kesik oynatır,
+// gagasından ses yayları), yarılan nar (nimet, tanelerde parıltı), bal peteği ve damlası (lezzet, damla düşer).
+// "elbette": kaynak büyür ve aydınlanır; "marifetullah": madalyonun halkası parlar, dalga vurur, halkadan dört simgeye
+// altın ışık iplikleri akar; "muhabbetullahtadır": gül parlar, pembe dalga, ipliklere örülerek ikinci bir gül ipliği
+// akar; varışta levhalarda halka dalgası, simgeler tam renge gelip parlar. "Onlar": levhalar birlikte nefes alır.
+// "onsuz olamaz": kaynağın ışığı çekilir, madalyon solar ve örtülür; karanlık ipliklerden aşağı iner; kandil söner
+// (duman), kuş susar (başı düşer), nar kurur, bal donuklaşır; zemin loşlaşır. Bitiş: loş, soluk zemin, gri simgeler.
 import { W, H, clamp, lerp, ease, an, pop, TAU, rgba, tuval, smooth } from '../motor/temel.mjs';
 import { ogeCiz, ogeAcarak, konturCiz } from '../motor/kalem.mjs';
 import { kameraYolu, kameraIle, salinim } from '../motor/sahne.mjs';
@@ -65,7 +68,7 @@ const karaVaris = (i) => KARA_BAS + IPLIK_SIRA[i] * 0.05 + KARA_SURE;
 const bagli = (t, i) => (0.55 * an(t, altinVaris(i) - 0.05, 0.35, ease.outCubic) + 0.45 * an(t, gulVaris(i) - 0.05, 0.35, ease.outCubic)) * (1 - an(t, karaVaris(i) - 0.12, 0.3));
 const simgeOlum = (t, i) => an(t, karaVaris(i) - 0.06, 0.5, ease.inOutSine);
 
-let zSicak, zLos, bulutlar, levha, levhaG, kandil, kandilG, alev, kus, kusG, dal, dalG, narK, narA, narKuruG, narKG, narAG, petek, petekG, petekP, damla, damlaG;
+let zSicak, zLos, bulutlar, levha, levhaG, kandil, kandilG, alev, kus, kusG, dal, dalG, narK, narA, narKuruG, narAG, petek, petekG, petekP, damla, damlaG;
 let iplikler = [], narYildiz = [];
 let kam;
 

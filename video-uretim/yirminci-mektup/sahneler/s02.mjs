@@ -60,7 +60,7 @@ export default {
   sesler: [
     { t: 7.62, tur: 'whoosh', guc: 0.3, sure: 1.0 },
     { t: ADAM.gorun + 0.02, tur: 'parilti', guc: 0.22 },
-    ...ADAM.inis.map((ti) => ({ t: +(ti - 0.02).toFixed(2), tur: 'adim', guc: 0.14 })),
+    { t: +(ADAM.inis[0] - 0.02).toFixed(2), tur: 'adim', guc: 0.14, tekrar: ADAM.inis.length, ara: +((ADAM.inis[ADAM.inis.length - 1] - ADAM.inis[0]) / (ADAM.inis.length - 1)).toFixed(3) },
     { t: +ADAM.basamakInis[2].toFixed(2), tur: 'parilti', guc: 0.2, tekrar: 3, ara: 0.84 },
     { t: T_.besEr, tur: 'kalem', guc: 0.4, sure: 0.8 },
     { t: T_.makam, tur: 'nur', guc: 0.4, sure: 1.6 },
@@ -249,9 +249,23 @@ function kemerCiz(g, t) {
     if (u <= 0) continue;
     for (const [i, yol] of yarim(pts).entries()) konturCiz(g, yol, { renk: M.ALTIN_KOYU, kal: kal * (1 + 0.25 * parla), alfa, kapali: false, titreme: 0.35, tohum: tohum + i, cizim: u, uc: 0.01 });
   }
-  // makam: kemer altın bir ışıkla parlar
-  if (parla > 0) {
-    M.hale(g, AX, YP - G.KEMER.h - G.KEMER.k * 0.5, 260, '#FFE9A8', 0.35 * parla);
+  // makam: kemer altın bir ışıkla parlar (dış hattında yumuşak ışıma; sonra hafifçe kalır)
+  const isima = Math.max(parla, 0.35 * an(t, T_.makam + 0.3, 0.6, ease.inOutSine));
+  if (isima > 0.01) {
+    g.save();
+    g.globalCompositeOperation = 'screen';
+    g.lineJoin = 'round';
+    g.beginPath();
+    const d = kemerG.dis;
+    g.moveTo(d[0][0], d[0][1]);
+    for (const p of d) g.lineTo(p[0], p[1]);
+    g.strokeStyle = `rgba(255,226,140,${0.55 * isima})`;
+    g.shadowColor = `rgba(255,214,110,${0.9 * isima})`;
+    g.shadowBlur = 28 * g.getTransform().a;
+    g.lineWidth = 7;
+    g.stroke();
+    g.restore();
+    M.hale(g, AX, YP - G.KEMER.h - G.KEMER.k * 0.5, 280, '#FFE9A8', 0.3 * parla);
   }
 }
 

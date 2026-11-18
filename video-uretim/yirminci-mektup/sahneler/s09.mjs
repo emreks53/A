@@ -26,10 +26,12 @@ const T = {
 };
 
 // ---------------------------------------------------------------- bölüm A-B: yan görünüş dünyası
-const KAM_B = { x: 520, y: 1764, z: 1.55 }; // çiçek çerçevesi (silinme boyunca sabit)
+const KAM_B = { x: 550, y: 1760, z: 1.5 }; // çiçek çerçevesi (silinme boyunca sabit)
+// açılış: s08'in son karesindeki gibi adam ekranın ortasında (540, 1127), ekran ölçeği 0,9
+const KAM_0 = { x: D.ADAM.x, y: D.ADAM.y - (1127.5 - 960) / 1.5, z: 1.5 };
 const kamA = kameraYolu([
-  { t: 82.3, x: 300, y: 1692, z: 1.76 },
-  { t: T.iste, x: 306, y: 1686, z: 1.72, e: ease.lin },
+  { t: 82.3, ...KAM_0 },
+  { t: T.iste, x: KAM_0.x - 2, y: KAM_0.y - 4, z: 1.49, e: ease.lin },
   { t: T.iste + 1.45, x: 540, y: 975, z: 1.0, e: ease.inOutCubic },
   { t: T.bu2 - 0.04, x: 566, y: 990, z: 1.045, e: ease.inOutSine },
   { t: T.bu2 + 0.55, ...KAM_B, e: ease.inOutCubic },
@@ -210,13 +212,14 @@ export default {
     // silgi darbeleri: çiçek çerçevesindeki (sabit kamera) ekran konumlarına göre
     const ek = (x, y) => [W / 2 + (x - KAM_B.x) * KAM_B.z, H / 2 + (y - KAM_B.y) * KAM_B.z];
     const ck = D.cicekKutusu();
-    const [cx0, cy0] = ek(ck.x0, ck.y0), [cx1, cy1] = ek(ck.x1, ck.y1 + 70);
+    const [cx0, cy0] = ek(ck.x0, ck.y0), [cx1, cy1] = ek(ck.x1, ck.y1 + 60);
+    const [ax0, ay0] = ek(D.ADAM.x - 70, D.ADAM.y - 130), [, ay1] = ek(0, D.ADAM.y + 25);
     D.silgiKur([
-      { x0: cx0, y0: cy0 - 10, x1: Math.min(W, cx1), y1: cy1, en: 150, t0: SIL_BAS, sure: 0.62, kirinti: true },
-      { x0: 0, y0: 160, x1: cx0 - 20, y1: cy1 + 40, en: 165, t0: SIL_BAS + 0.16, sure: 0.66, kirinti: true },
-      { x0: 0, y0: 0, x1: W, y1: 470, en: 240, t0: SIL_BAS + 0.3, sure: 0.62, kirinti: true },
-      { x0: cx0 - 30, y0: 440, x1: W, y1: cy0 + 40, en: 240, t0: SIL_BAS + 0.38, sure: 0.58 },
-      { x0: 0, y0: cy1 - 30, x1: W, y1: H, en: 270, t0: SIL_BAS + 0.44, sure: 0.62, kirinti: true },
+      { x0: Math.max(0, cx0), y0: cy0 - 10, x1: Math.min(ax0, cx1 + 20), y1: cy1, en: 150, t0: SIL_BAS, sure: 0.6, kirinti: true },
+      { x0: ax0 - 10, y0: ay0 - 20, x1: W, y1: ay1 + 40, en: 160, t0: SIL_BAS + 0.14, sure: 0.56, kirinti: true },
+      { x0: 0, y0: 0, x1: W, y1: 480, en: 240, t0: SIL_BAS + 0.3, sure: 0.6, kirinti: true },
+      { x0: 0, y0: 450, x1: W, y1: Math.min(cy0, ay0) + 30, en: 240, t0: SIL_BAS + 0.36, sure: 0.56 },
+      { x0: 0, y0: Math.max(cy1, ay1) - 40, x1: W, y1: H, en: 270, t0: SIL_BAS + 0.42, sure: 0.62, kirinti: true },
     ]);
     // labirent seviyeleri (kamera yolunun gördüğü bölgelere göre)
     LB.labirentHazirla();
@@ -272,9 +275,23 @@ function hayaletAl() {
   g.drawImage(g0, 0, 0);
   return hayaletT;
 }
+function acilisPusu(g, t) {
+  // s08'in gökyüzünden gelen soluk pus: toz yatışınca açılır, arkadaki yol ve yürüyenler belirir
+  const a = 1 - an(t, 82.75, 0.85, ease.inOutSine);
+  if (a <= 0) return;
+  g.save();
+  const gr = g.createLinearGradient(0, 0, 0, 900);
+  gr.addColorStop(0, `rgba(214,210,224,${0.92 * a})`);
+  gr.addColorStop(0.55, `rgba(214,210,224,${0.8 * a})`);
+  gr.addColorStop(1, 'rgba(214,210,224,0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, W, 900);
+  g.restore();
+}
 function dunyaBolumu(ctx, t) {
   const dctx = dunyaT.getContext('2d');
   dunyaYaz(dctx, t);
+  if (t < 83.7) acilisPusu(dctx, t);
   if (t < SIL_BAS) {
     ctx.drawImage(dunyaT, 0, 0);
     return;
@@ -291,6 +308,8 @@ function dunyaBolumu(ctx, t) {
   ctx.save();
   ctx.globalAlpha = hay;
   ctx.drawImage(hayaletAl(), 0, 0);
+  ctx.globalAlpha = 1;
+  D.silgiIzi(ctx, t, 1);
   ctx.globalAlpha = 1 - an(t, SIL_TEMIZ, 0.2, ease.inOutSine);
   ctx.drawImage(dunyaT, 0, 0);
   ctx.restore();
@@ -308,6 +327,7 @@ function labirentBolumu(ctx, t) {
     ctx.drawImage(hayaletAl(), 0, 0);
     ctx.restore();
   }
+  if (hay > 0.003) D.silgiIzi(ctx, t, hay / 0.13);
   if (t < T.insan + 1.2) D.kirintiCiz(ctx, t);
   // labirent: adamdan dışa doğru önce çizgiler, sonra taramalar
   const a = adamDurum(t);

@@ -6,7 +6,7 @@
 import { tuval, rng, clamp, lerp, ease, an, pop, TAU, W, H, rgba, renkKaristir, renkHex } from '../motor/temel.mjs';
 import { oge, ogeCiz, konturCiz, gokTuvali, TON, PALET } from '../motor/kalem.mjs';
 import { svg, elips, yaprak as yaprakSekli, donustur, cokgen } from '../motor/sekil.mjs';
-import { insanYan, yuruyus, DURUS, pozKaristir, DONGU_YOLU } from '../motor/insan.mjs';
+import { insanYan, yuruyus, DURUS, pozKaristir, DONGU_YOLU, OLCU } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 
 // ---------------------------------------------------------------- perspektif
@@ -91,18 +91,18 @@ function programUret(r, kat, tip, t0, t1) {
         mesafe += Math.abs(hedef - x); x = hedef; t += s2;
       }
     } else {
-      let sure = r.ara(1.1, 2.6);
+      let sure = r.ara(1.5, 3.2);
       let hedef = x + yon * v * sure;
       if (hedef < xa || hedef > xb) { hedef = clamp(hedef, xa, xb); sure = Math.abs(hedef - x) / v; }
       if (sure > 0.15) {
         seg.push({ t0: t, t1: t + sure, x0: x, yon, yuru: true, v, m0: mesafe });
         mesafe += Math.abs(hedef - x); x = hedef; t += sure;
       }
-      const dur = r.ara(0.35, 0.9);
+      const dur = r.ara(0.3, 0.75);
       seg.push({ t0: t, t1: t + dur, x0: x, yon, yuru: false, m0: mesafe });
       t += dur;
       const kenar = x <= xa + 0.3 || x >= xb - 0.3;
-      if (kenar || r() < 0.55) yon = -yon;
+      if (kenar || r() < 0.5) yon = -yon;
     }
   }
   return { d, seg, olc: olcekD(d), faz0: r() * TAU };
@@ -120,7 +120,6 @@ function durum(p, t) {
   const onceki = i > 0 ? S[i - 1] : null;
   if (onceki && onceki.yon !== s.yon) {
     const k = clamp((t - s.t0) / 0.18);
-    yonG = s.yon * ease.inOutSine(k) * 2 - s.yon;
     yonG = s.yon * (-1 + 2 * ease.inOutSine(k));
     if (Math.abs(yonG) < 0.08) yonG = 0.08 * Math.sign(yonG || s.yon);
   }
@@ -132,9 +131,40 @@ function durum(p, t) {
 }
 
 // ---------------------------------------------------------------- sprite'lar ve yerleşim
-let gok, uzakTepe, zemin, yol, agacB, agacK1, agacK2, sonYapraklar, yuruyenler, cicekler, cicekSprite, solgunSprite, tacSprite, yaprakSp, bulutlar, kirintiSp, cimenler;
-export const ADAM = { x: 232, y: 1878, s: 0.6 };
-export const AGAC = { x: 168, y: 1612, boy: 330 };
+let gok, uzakTepe, zemin, yol, agacB, agacK1, agacK2, sonYapraklar, yuruyenler, cicekler, cicekSprite, solgunSprite, tacSprite, yaprakSp, bulutlar, kirintiSp, cimenler, cit;
+// s08'in son karesiyle aynı: adam (s08 kamerasında ekran 540, 1127; ekran ölçeği 0,9), sola bakar, yere büzülmüş
+export const ADAM = { x: 760, y: 1878, s: 0.6 };
+export const AGAC = { x: 110, y: 1500, boy: 330 };
+
+// ---------------------------------------------------------------- oturuş (s08-insan.mjs'teki BUZUL ve yereOturt'un kopyası)
+const KX = [-3, 3];
+function kin(poz) {
+  const p = { ...DURUS, ...poz };
+  const hy = -OLCU.kalca;
+  const bacak = (i) => {
+    const a1 = p.kalca[i];
+    const diz = [KX[i] + Math.sin(a1) * OLCU.uyluk, hy + Math.cos(a1) * OLCU.uyluk];
+    const a2 = a1 + p.diz[i];
+    const bilek = [diz[0] + Math.sin(a2) * OLCU.baldir, diz[1] + Math.cos(a2) * OLCU.baldir];
+    return { diz, bilek, a1, a2, a3: a2 + p.bilek[i] };
+  };
+  return { kalca: [0, hy], b: [bacak(0), bacak(1)] };
+}
+function yereOturt(poz, { kalcaTemas = 16, dizTemas = 13, ayakTemas = 12 } = {}) {
+  const k = kin(poz);
+  let m = k.kalca[1] + kalcaTemas;
+  for (const b of k.b) {
+    m = Math.max(m, b.diz[1] + dizTemas, b.bilek[1] + ayakTemas);
+    const uc = [b.bilek[0] + Math.cos(b.a3) * 34, b.bilek[1] - Math.sin(b.a3) * 34];
+    m = Math.max(m, uc[1] + 6);
+  }
+  return { ...DURUS, ...poz, serbest: true, zipla: m };
+}
+const BUZUL = { govde: 0.42, bas: 0.66, kalca: [2.32, 2.42], diz: [-2.2, -2.3], bilek: [-0.12, -0.12], omuz: [-0.42, -0.5], dirsek: [1.7, 1.82], el: [0.2, 0.2] };
+export function oturus(t) {
+  const n = 0.018 * Math.sin(t * 1.1); // nefes
+  return yereOturt({ ...BUZUL, govde: BUZUL.govde + n, bas: BUZUL.bas + n * 0.6 });
+}
 
 /** Solmuş çiçek başı: dar, kıvrık, gri-kahve taç yaprakları */
 function solgunCicek(r, olcek) {
@@ -159,7 +189,7 @@ function tacYapragiOge(r, renk, olcek) {
 }
 
 export function dunyaHazirla() {
-  gok = gokTuvali({ w: 1700, h: 1050, olcek: 1, ad: 's09-gok', ust: '#6E6784', orta: '#A39DB5', alt: '#D3CFDC', parilti: '#CEC9DA', arkaUst: '#ABA5BC', arkaAlt: '#DEDBE5', tohum: 29, yogunluk: 1.05 });
+  gok = gokTuvali({ w: 1700, h: 1050, olcek: 1, ad: 's09-gok', ust: '#5F5876', orta: '#948DA8', alt: '#CBC6D5', parilti: '#CEC9DA', arkaUst: '#9C96AE', arkaAlt: '#D6D2DE', tohum: 29, yogunluk: 1.15 });
   uzakTepe = M.tepeOge({ w: 2000, h: 300, tohum: 13, renk: 'gri', dalga: 85, ad: 's09-uzaktepe', olcek: 1 });
   zemin = M.tepeOge({ w: 2100, h: 2150, tohum: 7, renk: 'gri', dalga: 26, ad: 's09-zemin', olcek: 1 });
   const ys = yolSekli();
@@ -168,7 +198,7 @@ export function dunyaHazirla() {
     tarama: { ton: TON.gurultulu(TON.dogrusal(0, YH, 0, 1400, 0.25, 0.55), 0.12, 0.01, 4), renkler: [[0, '#D4CCC2'], [0.6, '#B3A99C'], [1, '#8C8276']], yon: -0.03, aralik: 3.0, boy: [24, 80], kal: 1.15, alfa: 0.5, esikler: [0.2, 0.5] },
     kontur: '#7E746C', konturKal: 1.8, titreme: 0.4,
   });
-  bulutlar = [M.bulutOge(330, 31, 1.1, true), M.bulutOge(260, 8, 1.1, true), M.bulutOge(300, 17, 1.1, true), M.bulutOge(220, 5, 1.1, true)];
+  bulutlar = [M.bulutOge(460, 31, 1.1, true), M.bulutOge(340, 8, 1.1, true), M.bulutOge(420, 17, 1.1, true), M.bulutOge(300, 5, 1.1, true)];
   agacB = M.agac({ boy: AGAC.boy, tohum: 77, yaprakli: false, kuru: true, olcek: 1.7 });
   agacK1 = M.agac({ boy: 170, tohum: 52, yaprakli: false, kuru: true, olcek: 1.2 });
   agacK2 = M.agac({ boy: 110, tohum: 64, yaprakli: false, kuru: true, olcek: 1.2 });
@@ -201,13 +231,13 @@ export function dunyaHazirla() {
   // çiçek sırası (adamın sağında, önde)
   cicekler = [];
   const cr = rng(66);
-  const cx = [372, 448, 532, 612, 694, 778, 858];
+  const cx = [300, 372, 444, 516, 588, 660];
   cx.forEach((x, k) => {
-    const y = 1846 + cr.ara(-10, 12) + (k % 2) * 8;
+    const y = 1850 + cr.ara(-6, 8) + (k % 2) * 8;
     const d = derinlik(y);
     cicekler.push({
-      x, y, h: pxm(d) * cr.ara(0.5, 0.66), lean: cr.ara(-6, 6), renk: ['pembe', 'lila', 'beyaz', 'pembe', 'lila', 'beyaz', 'pembe'][k],
-      k, faz: cr() * TAU, yon: cr() < 0.5 ? -1 : 1,
+      x, y, h: pxm(d) * cr.ara(0.5, 0.66), lean: cr.ara(-6, 6), renk: ['lila', 'pembe', 'beyaz', 'lila', 'pembe', 'beyaz'][k],
+      k: cx.length - 1 - k, faz: cr() * TAU, yon: cr() < 0.5 ? -1 : 1,
     });
   });
   cicekSprite = { pembe: M.cicekOge(17, 2.2, 'pembe'), lila: M.cicekOge(17, 2.2, 'lila'), beyaz: M.cicekOge(17, 2.2, 'beyaz') };
@@ -226,15 +256,45 @@ export function dunyaHazirla() {
     if (Math.abs(x - ADAM.x) < 110 && Math.abs(y - ADAM.y) < 60) continue;
     cimenler.push({ x, y, s: olcekD(derinlik(y)) / 0.6, n: gr.tam(3, 6), tohum: gr.tam(1, 999) });
   }
+  // kırık çit: yolun yakın kenarında, sol yarıda
+  const ctr = rng(313);
+  const dC = derinlik(1384), pm = pxm(dC);
+  const direk = oge({ ad: 's09-cit-direk', olcek: 1.4, sekil: svg(`M${-0.06 * pm} 0L${-0.06 * pm} ${-1.0 * pm}L0 ${-1.08 * pm}L${0.06 * pm} ${-1.0 * pm}L${0.06 * pm} 0Z`),
+    arka: '#BDB4AE', arkaAlfa: 0.85, tarama: { ton: TON.silindir(-0.06 * pm, 0.06 * pm), renkler: [[0, '#B3A9A2'], [1, '#6E645E']], yon: -Math.PI / 2, aralik: 2.6, boy: [10, 30], esikler: [0.25, 0.55] },
+    kontur: '#5E5650', konturKal: 1.7 });
+  const tahta = oge({ ad: 's09-cit-tahta', olcek: 1.4, sekil: svg(`M0 ${-0.045 * pm}L${1.75 * pm} ${-0.045 * pm}L${1.75 * pm} ${0.045 * pm}L0 ${0.045 * pm}Z`),
+    arka: '#C4BBB5', arkaAlfa: 0.85, tarama: { ton: () => 0.5, renkler: [[0, '#B8AFA8'], [1, '#7A706A']], yon: 0, aralik: 2.6, boy: [16, 40], esikler: [0.3, 0.6] },
+    kontur: '#5E5650', konturKal: 1.6 });
+  cit = { direk, tahta, pm, direkler: [], tahtalar: [] };
+  for (let k = 0, x = -80; x < 640; k++, x += 1.75 * pm * ctr.ara(0.94, 1.06)) {
+    if (k === 3) continue; // eksik direk
+    cit.direkler.push({ x, y: 1384 + ctr.ara(-3, 3), r: ctr.ara(-0.08, 0.08) + (k === 5 ? -0.32 : 0) + (k === 2 ? 0.2 : 0) });
+  }
+  cit.direkler.forEach((d, k) => {
+    const e = cit.direkler[k + 1];
+    if (!e) return;
+    const bos = e.x - d.x > 2.5 * pm;
+    for (const h of [0.35, 0.72]) {
+      const yd = [d.x + Math.sin(d.r) * h * pm, d.y - Math.cos(d.r) * h * pm];
+      if (bos || (k === 4 && h > 0.5)) { // kırık: aşağı sarkan tahta
+        if (h < 0.5) cit.tahtalar.push({ x: yd[0], y: yd[1], r: 0.52, s: 0.62 });
+        continue;
+      }
+      const ye = [e.x + Math.sin(e.r) * h * pm, e.y - Math.cos(e.r) * h * pm];
+      cit.tahtalar.push({ x: yd[0] - 0.08 * pm, y: yd[1], r: Math.atan2(ye[1] - yd[1], ye[0] - yd[0]), s: (Math.hypot(ye[0] - yd[0], ye[1] - yd[1]) + 0.16 * pm) / (1.75 * pm) });
+    }
+  });
   // önbellekleri ısıt
   const sc = tuval(8, 8).getContext('2d');
   insanYan(sc, 0, 0, DURUS, { s: 0.3, olcek: 1 });
   insanYan(sc, 0, 0, DURUS, { s: 0.3, olcek: 0.5 });
 }
 
-// oturan adam pozu (dizleri kucaklar, başı eğik)
-export const OTURUS = { serbest: true, govde: 0.2, bas: 0.42, kalca: [2.28, 2.36], diz: [-2.12, -2.2], bilek: [-0.12, -0.1], omuz: [0.95, 1.08], dirsek: [0.75, 0.62], zipla: -152 };
 
+function citCiz(g) {
+  for (const d of cit.direkler) ogeCiz(g, cit.direk, d.x, d.y, { r: d.r });
+  for (const k of cit.tahtalar) ogeCiz(g, cit.tahta, k.x, k.y, { r: k.r, sx: k.s, sy: 1 });
+}
 function cimenCiz(g, c) {
   const r = rng(c.tohum);
   for (let k = 0; k < c.n; k++) {
@@ -250,7 +310,7 @@ export function dunyaCiz(ctx, kamIle, t) {
   // gök + bulutlar (uzak)
   kamIle((g) => {
     ogeCiz(g, gok, -310, -560);
-    const bx = [[170, 175], [690, 95], [1040, 260], [430, 330]];
+    const bx = [[150, 190], [700, 90], [1060, 270], [460, 345]];
     bulutlar.forEach((b, i) => ogeCiz(g, b, bx[i][0] + (t - 82) * (i % 2 ? 7 : 10), bx[i][1], { alfa: 0.95 }));
   }, 0.35);
   kamIle((g) => ogeCiz(g, uzakTepe, -460, YH - 78), 0.6);
@@ -267,8 +327,9 @@ export function dunyaCiz(ctx, kamIle, t) {
     for (const c of cimenler) if (c.y < 1700) cimenCiz(g, c);
     // derinliğe göre sıralı çizim: uzak ağaçlar, yürüyenler, kuru ağaç, oturan adam
     const ogeler = [];
-    ogeler.push({ y: 905, ciz: () => M.agacCiz(g, agacK1, 742, 905, { s: 1, t, salinim: 0 }) });
-    ogeler.push({ y: 712, ciz: () => M.agacCiz(g, agacK2, 300, 712, { s: 1, t, salinim: 0 }) });
+    ogeler.push({ y: 975, ciz: () => M.agacCiz(g, agacK1, 640, 975, { s: 1, t, salinim: 0 }) });
+    ogeler.push({ y: 702, ciz: () => M.agacCiz(g, agacK2, 455, 702, { s: 1, t, salinim: 0 }) });
+    ogeler.push({ y: 1384, ciz: () => citCiz(g) });
     for (const w of yuruyenler) {
       const st = durum(w, t);
       const [x, y] = proj(st.x, w.d);
@@ -279,7 +340,7 @@ export function dunyaCiz(ctx, kamIle, t) {
       } });
     }
     ogeler.push({ y: AGAC.y, ciz: () => M.agacCiz(g, agacB, AGAC.x, AGAC.y, { s: 1, t, salinim: 0 }) });
-    ogeler.push({ y: ADAM.y, ciz: () => insanYan(g, ADAM.x, ADAM.y, { ...OTURUS, bas: OTURUS.bas + 0.03 * Math.sin(t * 0.9) }, { s: ADAM.s, yon: 1, olcek: 1.2 }) });
+    ogeler.push({ y: ADAM.y, ciz: () => insanYan(g, ADAM.x, ADAM.y, oturus(t), { s: ADAM.s, yon: -1, olcek: 1.2 }) });
     ogeler.sort((a, b) => a.y - b.y);
     for (const o of ogeler) o.ciz();
     for (const c of cimenler) if (c.y >= 1700) cimenCiz(g, c);
@@ -297,11 +358,11 @@ export function sonYaprakCiz(ctx, kamIle, t, tDus) {
         ogeCiz(g, sp, y.x, y.y, { r: y.r0 + Math.sin(t * 2 + y.faz) * 0.12, pivot: [0, 0] });
         return;
       }
-      const a = 1 - clamp((u - 0.9) / 0.5);
+      const a = 1 - clamp((u - 1.5) / 0.4);
       if (a <= 0) return;
-      const x = y.x + u * 70 + Math.sin(u * 5 + y.faz) * 16 * Math.min(1, u * 2);
-      const yy = y.y + u * 105 + u * u * 25;
-      ogeCiz(g, sp, x, yy, { r: y.r0 + u * 3.2 * (k % 2 ? 1 : -1), alfa: a });
+      const x = y.x + u * 260 + u * u * 60 + Math.sin(u * 4.2 + y.faz) * 22 * Math.min(1, u * 2);
+      const yy = y.y + u * 120 + u * u * 70 + Math.sin(u * 6.5 + y.faz) * 8;
+      ogeCiz(g, sp, x, yy, { r: y.r0 + u * 3.4 * (k % 2 ? 1 : -1), alfa: a, s: 1.35 });
     });
   }, 1);
 }
@@ -460,10 +521,10 @@ export function silgiKur(alanlar) {
     const kr = rng(900 + k);
     const kir = [];
     if (a.kirinti) {
-      for (let s = 30; s < z.L; s += kr.ara(26, 60)) {
+      for (let s = 60; s < z.L; s += kr.ara(80, 150)) {
         const p = yolParca(z, s / z.L);
         const q = p[p.length - 1];
-        kir.push({ s, x: q[0] + kr.ara(-0.4, 0.4) * a.en, y: q[1] + kr.ara(-0.4, 0.4) * a.en, r0: kr() * TAU, tip: kr.tam(0, 2), vx: kr.ara(60, 170), vy: kr.ara(-20, 60), don: kr.ara(-5, 5), sc: kr.ara(0.8, 1.35) });
+        kir.push({ s, x: q[0] + kr.ara(-0.4, 0.4) * a.en, y: q[1] + kr.ara(-0.4, 0.4) * a.en, r0: kr() * TAU, tip: kr.tam(0, 2), vx: kr.ara(40, 130), vy: kr.ara(-30, 40), don: kr.ara(-5, 5), sc: kr.ara(1.1, 1.7) });
       }
     }
     return { ...a, z, kir };
@@ -491,6 +552,36 @@ export function silgiMaske(mctx, t) {
     mctx.stroke();
   }
   mctx.restore();
+}
+/** Silgi izleri: silinen bantta, silgi yönünde ince, soluk grafit sürtme çizgileri (alfa: genel saydamlık) */
+export function silgiIzi(ctx, t, alfa = 1) {
+  if (alfa <= 0.003) return;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const s of silgiler) {
+    const o = silIlerleme(s, t);
+    if (o <= 0) continue;
+    const p = yolParca(s.z, o);
+    if (p.length < 3) continue;
+    const r = rng(17 + Math.round(s.en));
+    for (let q = 0; q < 5; q++) {
+      const off = (q / 4 - 0.5) * s.en * 0.8 + r.ara(-6, 6);
+      ctx.strokeStyle = `rgba(112,104,124,${(alfa * r.ara(0.05, 0.11)).toFixed(3)})`;
+      ctx.lineWidth = r.ara(1.2, 3.5);
+      ctx.beginPath();
+      for (let i = 0; i < p.length; i++) {
+        const a = p[Math.max(0, i - 1)], b = p[Math.min(p.length - 1, i + 1)];
+        let nx = -(b[1] - a[1]), ny = b[0] - a[0];
+        const l = Math.hypot(nx, ny) || 1;
+        nx /= l; ny /= l;
+        const x = p[i][0] + nx * off, y = p[i][1] + ny * off;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
 }
 /** Silgi ucu konumları (ekran) – ilerleyen darbelerin uçları */
 export function silgiUclari(t) {

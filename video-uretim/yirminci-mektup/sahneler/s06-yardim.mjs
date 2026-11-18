@@ -172,7 +172,7 @@ export function yolOge(Y, { olcek = 2.2, Zmin = 0, Zmax = 3000, ad = 's06-yol' }
   return oge({
     ad, olcek, sekil: cokgen(pts), arka: '#F2E4C6', arkaAlfa: 0.85, arkaBulanik: 3,
     tarama: [
-      { ton: TON.gurultulu((x, y) => clamp(0.12 + (y - hy) / 900), 0.08, 0.02, 4), renkler: [[0, '#F1E1BC'], [0.6, '#DAC092'], [1, '#B9986A']], yonF: (x, y) => Math.atan2(hy - y, vx - x), aralik: 3.0, boy: [16, 70], kal: 1.15, alfa: 0.48, esikler: [0.25, 0.5, 0.75] },
+      { ton: TON.gurultulu((x, y) => clamp(0.14 + (y - hy) / 1500, 0, 0.62), 0.06, 0.02, 4), renkler: [[0, '#F1E2C0'], [0.6, '#DDC59A'], [1, '#C2A274']], yonF: (x, y) => Math.atan2(hy - y, vx - x), aralik: 3.0, boy: [14, 46], kal: 1.15, alfa: 0.42, esikler: [0.22, 0.48] },
     ],
     kontur: null,
     detay: (ctx, api) => {
@@ -330,18 +330,24 @@ export function kapiCiz(ctx, K, x, y, s, { acik = 0, isik = 0, cizim = 1, t = 0,
   if (isik > 0) {
     // aralıktan sızan ışık: hale + ince kalem ışınları
     const cy = y - 24 * s;
-    isikNokta(ctx, x, cy, 70 * s * (0.6 + 0.4 * isik), 0.75 * isik);
-    isikNokta(ctx, x, y - 6 * s, 34 * s, 0.6 * isik);
+    isikNokta(ctx, x, cy, 95 * s * (0.6 + 0.4 * isik), 0.85 * isik);
+    isikNokta(ctx, x, y - 10 * s, 40 * s, 0.75 * isik);
+    // önündeki toprağa düşen ışık
+    ctx.save();
+    ctx.translate(x, y + 3 * s);
+    ctx.scale(1, 0.22);
+    isikNokta(ctx, 0, 0, 80 * s, 0.55 * isik);
+    ctx.restore();
     const r = rng(tohum);
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
     for (let i = 0; i < 9; i++) {
       const a = -Math.PI / 2 + (i - 4) * 0.3 + r.ara(-0.08, 0.08) + Math.sin(t * 0.7 + i) * 0.02;
-      const r0 = 30 * s, r1 = (52 + r() * 34) * s * isik;
+      const r0 = 30 * s, r1 = (60 + r() * 50) * s * isik;
       const pts = [];
       for (let q = 0; q <= 8; q++) { const d = lerp(r0, r0 + r1, q / 8); pts.push([x + Math.cos(a) * d, cy + Math.sin(a) * d * 0.9]); }
-      ctx.fillStyle = rgba('#F6D27A', 0.55 * isik * r.ara(0.6, 1));
-      darbe(ctx, pts, Math.max(0.8, 1.6 * s * 0.5), { incelme: 0.45, sivri: 0.6 });
+      ctx.fillStyle = rgba('#F2C860', 0.7 * isik * r.ara(0.6, 1));
+      darbe(ctx, pts, Math.max(1.0, 1.4 * s), { incelme: 0.45, sivri: 0.6 });
     }
     ctx.restore();
   }

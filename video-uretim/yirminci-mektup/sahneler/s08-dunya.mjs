@@ -10,15 +10,15 @@ export const G = {
   gokUst: '#6E6784', gokOrta: '#A7A1BA', gokAlt: '#CFCAD8', arkaUst: '#B9B3C7', arkaAlt: '#DCD8E2',
   kontur: '#4F4A5C', konturAcik: '#6A6276', koyu: '#5E5752',
   duvar: [
-    { arka: '#D4CCC4', tara: [[0, '#CFC6BD'], [0.6, '#AFA59D'], [1, '#857A78']] },
-    { arka: '#CDC8D6', tara: [[0, '#C9C3D3'], [0.6, '#A49DB2'], [1, '#7C7490']] },
-    { arka: '#D8D1C2', tara: [[0, '#D2CABA'], [0.6, '#B1A796'], [1, '#867B6E']] },
+    { arka: '#C9C2CF', tara: [[0, '#C2BACB'], [0.6, '#9D95AB'], [1, '#726A84']] },
+    { arka: '#C0BACB', tara: [[0, '#B9B2C6'], [0.6, '#938BA6'], [1, '#6A6280']] },
+    { arka: '#CEC6C8', tara: [[0, '#C7BEC2'], [0.6, '#A0979F'], [1, '#756C7A']] },
   ],
-  cati: { arka: '#A69EB4', tara: [[0, '#A59DB4'], [0.6, '#7F7893'], [1, '#575069']], kontur: '#423C50' },
-  tahta: { arka: '#C4B9AC', tara: [[0, '#BDB1A3'], [1, '#7E7266']], kontur: '#55493F' },
-  cam: { arka: '#7E7790', tara: [[0, '#8C85A0'], [1, '#4A4459']] },
-  tas: { arka: '#CFCAD3', tara: [[0, '#C8C3CE'], [0.6, '#A29BAC'], [1, '#7A7286']], kontur: '#5E5770' },
-  toprak: { arka: '#D3CCC6', tara: [[0, '#CCC4BD'], [0.55, '#A89E99'], [1, '#7D7380']], kontur: '#685E6E' },
+  cati: { arka: '#968EA9', tara: [[0, '#9890AA'], [0.6, '#716988'], [1, '#4C4561']], kontur: '#3F3950' },
+  tahta: { arka: '#BEB3AD', tara: [[0, '#B6ABA5'], [1, '#756B6B']], kontur: '#524748' },
+  cam: { arka: '#79728D', tara: [[0, '#8A83A0'], [1, '#463F57']] },
+  tas: { arka: '#CBC6D1', tara: [[0, '#C4BFCC'], [0.6, '#9E97AB'], [1, '#756D84']], kontur: '#5A536C' },
+  toprak: { arka: '#C9C2CC', tara: [[0, '#C2BAC6'], [0.55, '#9D94A6'], [1, '#716880']], kontur: '#5E5570' },
 };
 
 /** Gri-lila taranmış gök */
@@ -401,8 +401,8 @@ export function toprakOge({ ad, x0, x1, yUst, yAlt, catlaklar = [], olcek = 1, t
 export function uzakTepeOge({ ad, w, h, tohum = 1, olcek = 1, dalga = 60, renk = 'uzak' }) {
   const r = rng(tohum);
   const P = renk === 'uzak'
-    ? { arka: '#D6D2DF', tara: [[0, '#D0CCDA'], [1, '#9F98B0']], kontur: '#9B94AD' }
-    : { arka: '#CBC5D3', tara: [[0, '#C3BCCB'], [1, '#8A8299']], kontur: '#857D96' };
+    ? { arka: '#CCC7D8', tara: [[0, '#C7C1D3'], [1, '#958DA8']], kontur: '#8E87A3' }
+    : { arka: '#BEB7C8', tara: [[0, '#B8B1C3'], [1, '#7E7591']], kontur: '#776F8C' };
   const pts = [];
   const f = [r() * TAU, r() * TAU, r() * TAU];
   for (let k = 0; k <= 80; k++) {
@@ -459,18 +459,6 @@ export function meydanOge({ ad, x0, x1, y0, y1, vx = 540, vy = -1600, olcek = 1,
           pts.push([vx + (xb - vx) * u + r.ara(-1, 1), y]);
         }
         api.cizgi(pts, { renk: '#8F879E', kal: 1.0, alfa: 0.4 });
-      }
-      // kırık, eksik taşlar
-      for (let i = 0; i < 14; i++) {
-        const y = r.ara(y0 + 100, y1 - 60);
-        const sy = satir.find((q) => q > y) || y1;
-        const d = clamp(26 * Math.pow(1.075, satir.indexOf(sy)), 20, 90);
-        const u = (y - vy) / (y1 - vy);
-        const tw = 64 * u;
-        const x = r.ara(x0, x1);
-        const tas = cokgen([[x, y], [x + tw, y], [x + tw * 1.02, y + d * 0.9], [x + tw * 0.02, y + d * 0.9]]);
-        api.dolgu(tas, '#9B94A8', 0.35, 'multiply');
-        api.tara(tas, { ton: () => 0.7, renkler: [[0, '#A59EB1'], [1, '#6A6378']], yon: -0.6, aralik: 2.6, boy: [8, 20], kal: 1.0, alfa: 0.5, esikler: [0.3, 0.6], minUc: 3 });
       }
       for (let i = 0; i < 9; i++) {
         const x = r.ara(x0, x1), y = r.ara(y0 + 80, y1 - 40);
@@ -583,7 +571,7 @@ export function ruzgarYolu(x0, y0, L, { genlik = 18, kivrim = true, tohum = 1 } 
 }
 
 /** Ekran uzayında eğik yağmur. guc 0..1; bant: altyazı bandında seyrelt */
-export function yagmur(ctx, t, guc, { sayi = 150, aci = 0.32, hiz = 1500, tohum = 21, renk = '#8C86A0' } = {}) {
+export function yagmur(ctx, t, guc, { sayi = 150, aci = 0.32, hiz = 1500, tohum = 21, renk = '#7C7591' } = {}) {
   if (guc <= 0.01) return;
   const r = rng(tohum);
   const ux = Math.sin(aci), uy = Math.cos(aci);
@@ -597,10 +585,69 @@ export function yagmur(ctx, t, guc, { sayi = 150, aci = 0.32, hiz = 1500, tohum 
     const d = (y0 + t * v) % (H + 200);
     const y = d - 100;
     const x = ((x0 + d * (ux / uy)) % (W + 600) + (W + 600)) % (W + 600) - 300;
-    let a = r.ara(0.28, 0.5) * Math.min(1, guc * 1.4);
+    let a = r.ara(0.34, 0.62) * Math.min(1, guc * 1.4);
     if (y > 1360 && y < 1660) a *= 0.35;
     ctx.fillStyle = rgba(renk, a);
-    darbe(ctx, [[x, y], [x + ux * L * 0.5, y + uy * L * 0.5], [x + ux * L, y + uy * L]], r.ara(1.1, 1.6), { incelme: 0.45, sivri: 0.6 });
+    darbe(ctx, [[x, y], [x + ux * L * 0.5, y + uy * L * 0.5], [x + ux * L, y + uy * L]], r.ara(1.3, 2.0), { incelme: 0.45, sivri: 0.6 });
   }
   ctx.restore();
+}
+
+// ---------------------------------------------------------------- sokak döküntüleri
+/** Devrik fıçı (yan yatmış): merkez taban (0,0) */
+export function ficiOge(olcek = 1) {
+  const w = 96, h = 62;
+  return oge({
+    ad: 's08-fici', olcek, sekil: svg(`M${-w / 2} ${-h}C${-w / 2 - 10} ${-h * 0.7} ${-w / 2 - 10} ${-h * 0.3} ${-w / 2} 0L${w / 2} 0C${w / 2 + 10} ${-h * 0.3} ${w / 2 + 10} ${-h * 0.7} ${w / 2} ${-h}Z`), arka: G.tahta.arka, arkaAlfa: 0.88,
+    tarama: { ton: TON.gurultulu((x, y) => clamp(0.3 + 0.55 * Math.pow((y + h / 2) / (h / 2), 2) * 0.5 + (y > -h * 0.3 ? 0.25 : 0)), 0.08, 0.05, 2), renkler: G.tahta.tara, yon: 0, aralik: 2.4, boy: [16, 44], kal: 1.0, alfa: 0.55, esikler: [0.2, 0.5, 0.75], minUc: 4 },
+    kontur: G.tahta.kontur, konturKal: 1.8,
+    detay: (c, api) => {
+      for (const x of [-w * 0.3, w * 0.3]) api.cizgi([[x, -h + 1], [x + 3, -h * 0.5], [x, -1]], { renk: G.kontur, kal: 2.2 });
+      api.halka(elips(w / 2 + 2, -h / 2, 9, h / 2 - 2)[0].pts, { renk: G.tahta.kontur, kal: 1.6 });
+      for (let k = 1; k < 4; k++) api.cizgi([[-w / 2 + 6, -h * k / 4], [w / 2 - 8, -h * k / 4 + 2]], { renk: G.tahta.kontur, kal: 0.9, alfa: 0.5 });
+    },
+  });
+}
+/** Kırık araba tekerleği (duvara yaslanmış gibi eğik dursun diye merkezli): merkez (0,0), yarıçap 58 */
+export function tekerlekOge(olcek = 1) {
+  const R = 58;
+  const dis = elips(0, 0, R, R), ic = elips(0, 0, R - 9, R - 9);
+  return oge({
+    ad: 's08-tekerlek', olcek, sekil: [...dis, ...ic.map((p) => ({ ...p, pts: [...p.pts].reverse() }))], arka: G.tahta.arka, arkaAlfa: 0.9, kural: 'evenodd',
+    tarama: { ton: () => 0.55, renkler: G.tahta.tara, yonF: (x, y) => Math.atan2(y, x) + Math.PI / 2, aralik: 2.4, boy: [10, 26], kal: 1.0, alfa: 0.55, esikler: [0.25, 0.6], minUc: 3 },
+    kontur: G.tahta.kontur, konturKal: 1.8,
+    detay: (c, api) => {
+      const r = rng(4);
+      for (let k = 0; k < 8; k++) {
+        if (k === 3 || k === 6) continue; // kırık parmaklar
+        const a = (k / 8) * TAU + 0.2;
+        const pa = [Math.cos(a) * 10, Math.sin(a) * 10], pb = [Math.cos(a) * (R - 9), Math.sin(a) * (R - 9)];
+        const nx = -Math.sin(a) * 3.2, ny = Math.cos(a) * 3.2;
+        const p = cokgen([[pa[0] + nx, pa[1] + ny], [pb[0] + nx, pb[1] + ny], [pb[0] - nx, pb[1] - ny], [pa[0] - nx, pa[1] - ny]]);
+        api.dolgu(p, G.tahta.arka, 0.95);
+        api.halka(p[0].pts, { renk: G.tahta.kontur, kal: 1.2 });
+      }
+      const a = (3 / 8) * TAU + 0.2;
+      api.cizgi([[Math.cos(a) * 10, Math.sin(a) * 10], [Math.cos(a) * 26, Math.sin(a) * 26 + 3]], { renk: G.tahta.kontur, kal: 2.4 });
+      api.dolgu(elips(0, 0, 12, 12), '#9E948F', 0.95);
+      api.halka(elips(0, 0, 12, 12)[0].pts, { renk: G.tahta.kontur, kal: 1.5 });
+      api.cizgi([[R * 0.6, -R * 0.62], [R * 0.75, -R * 0.4]], { renk: '#3E3446', kal: 2.0 });
+    },
+  });
+}
+/** Kırık sandık: taban ortası (0,0) */
+export function kirikSandikOge(olcek = 1) {
+  const w = 84, h = 64;
+  return oge({
+    ad: 's08-ksandik', olcek, sekil: cokgen([[-w / 2, 0], [w / 2, 0], [w / 2, -h * 0.7], [w * 0.2, -h * 0.55], [0, -h], [-w / 2, -h]]), arka: G.tahta.arka, arkaAlfa: 0.88,
+    tarama: { ton: TON.dogrusal(-w / 2, -h, w / 2, 0, 0.3, 0.75), renkler: G.tahta.tara, yon: 0, aralik: 2.4, boy: [14, 40], kal: 1.0, alfa: 0.55, esikler: [0.25, 0.55, 0.8], minUc: 4 },
+    kontur: G.tahta.kontur, konturKal: 1.8,
+    detay: (c, api) => {
+      for (const y of [-h * 0.33, -h * 0.66]) api.cizgi([[-w / 2, y], [w / 2 - (y < -h * 0.5 ? w * 0.3 : 0), y]], { renk: G.tahta.kontur, kal: 1.3 });
+      api.cizgi([[-w / 2 + 4, -2], [w / 2 - 4, -h * 0.66]], { renk: G.tahta.kontur, kal: 1.6 });
+      // içi karanlık kırık köşe
+      const b = cokgen([[w * 0.2, -h * 0.55], [w / 2, -h * 0.7], [w / 2 - 6, -h * 0.5], [w * 0.22, -h * 0.42]]);
+      api.dolgu(b, '#4E4659', 0.8);
+    },
+  });
 }
