@@ -7,7 +7,7 @@ import { kameraYolu, kameraUygula, ekranda, salinim } from '../motor/sahne.mjs';
 import { DURUS, pozKaristir } from '../motor/insan.mjs';
 import * as M from '../motor/motifler.mjs';
 import { labirentHazirla, labirentCiz } from './s10-labirent.mjs';
-import { tampon, radyalMaske, isikBas, dalgaHalkasi, huzme, zerreler, yurumePlani, bilekX } from './s10-yardim.mjs';
+import { tampon, radyalMaske, isikBas, dalgaHalkasi, huzme, zerreler, yurumePlani, bilekX, yerGolgesi } from './s10-yardim.mjs';
 import { yanCiz, yagmurCiz, D, G, AGAC, NUR, F } from './s10-dunya.mjs';
 import { bahceHazirla, karanlikCizV, bahceCizV, bahceOnPlan, alisverisciler, katman, refEkran, V, YOL, CV, CESME } from './s10-bahce.mjs';
 import { insanYan } from '../motor/insan.mjs';
@@ -24,13 +24,14 @@ T.gecis = T.mal - 0.12; // labirentten yan görünüşe ışık geçişi (tepe n
 
 // ---------------------------------------------------------------- adam (yan görünüş)
 const S_ADAM = 0.72;
+const X0_ADAM = 860;
 const POZ = {
   cokuk: { ...DURUS, govde: 0.1, bas: 0.42, omuz: [0.04, 0.1], dirsek: [0.08, 0.12] },
   bakis: { ...DURUS, govde: -0.05, bas: -0.4, omuz: [-0.12, 0.2], dirsek: [0.18, 0.24] },
   yagmur: { ...DURUS, govde: -0.06, bas: -0.5, omuz: [-0.3, 0.62], dirsek: [0.3, 0.75], el: [0, -0.5] },
   sayvan: { ...DURUS, govde: -0.03, bas: -0.46, omuz: [-0.08, 0.1], dirsek: [0.15, 0.2] },
   duz: { ...DURUS, govde: 0.0, bas: -0.05 },
-  yaslan: { ...DURUS, govde: -0.13, bas: -0.14, kalca: [0.17, 0.26], diz: [-0.06, -0.12], bilek: [-0.11, -0.14], omuz: [-0.32, -0.22], dirsek: [0.42, 0.5] },
+  yaslan: { ...DURUS, govde: -0.2, bas: -0.2, kalca: [0.24, 0.34], diz: [-0.04, -0.16], bilek: [-0.2, -0.18], omuz: [-0.42, -0.3], dirsek: [0.36, 0.44] },
 };
 let yuru1, yuru2;
 
@@ -39,7 +40,7 @@ function adamDurumu(t) {
     // çökük → başını kaldırır → yağmura yüzünü verir
     let p = pozKaristir(POZ.cokuk, POZ.bakis, an(t, T.tan - 0.02, 0.75, ease.outBack));
     p = pozKaristir(p, POZ.yagmur, an(t, T.rah + 0.1, 0.6, ease.inOutCubic));
-    return { x: 760, poz: p, yon: -1, s: S_ADAM };
+    return { x: X0_ADAM, poz: p, yon: -1, s: S_ADAM };
   }
   if (t < yuru2.t0) {
     const r = yuru1(t);
@@ -66,19 +67,19 @@ function adamDurumu(t) {
 let kamYan;
 function kameraKur() {
   kamYan = kameraYolu([
-    { t: T.gecis, x: 690, y: 960, z: 1.32 },
-    { t: T.tan + 0.2, x: 660, y: 945, z: 1.16, e: ease.outCubic },
-    { t: T.o + 0.1, x: 640, y: 930, z: 1.1, e: ease.inOutSine },
-    { t: T.ilt, x: 600, y: 860, z: 0.98, e: ease.inOutCubic },
-    { t: T.kud - 0.05, x: 590, y: 880, z: 1.0, e: ease.inOutSine },
+    { t: T.gecis, x: 790, y: 960, z: 1.32 },
+    { t: T.tan + 0.2, x: 760, y: 945, z: 1.16, e: ease.outCubic },
+    { t: T.o + 0.1, x: 735, y: 930, z: 1.1, e: ease.inOutSine },
+    { t: T.ilt, x: 700, y: 860, z: 0.98, e: ease.inOutCubic },
+    { t: T.kud - 0.05, x: 680, y: 880, z: 1.0, e: ease.inOutSine },
     { t: T.ist + 0.1, x: 40, y: 250, z: 0.5, e: ease.inOutCubic },
     { t: T.ist + 0.3, x: 50, y: 270, z: 0.51, e: ease.lin },
-    { t: T.eder2 + 0.5, x: 430, y: 1010, z: 1.08, e: ease.inOutCubic },
-    { t: T.o2 - 0.32, x: 436, y: 1004, z: 1.12, e: ease.outSine },
+    { t: T.eder2 + 0.5, x: 560, y: 1010, z: 1.08, e: ease.inOutCubic },
+    { t: T.o2 - 0.32, x: 566, y: 1004, z: 1.12, e: ease.outSine },
     { t: T.o2 + 0.12, x: 1000, y: 860, z: 0.78, e: ease.inCubic },
     { t: T.vah + 0.55, x: CV.x, y: CV.y, z: 0.96, e: ease.outCubic },
-    { t: T.ten, x: CV.x + 10, y: CV.y + 6, z: 1.0, e: ease.inOutSine },
-    { t: T.ve, x: CV.x + 40, y: CV.y, z: 1.0, e: ease.inOutSine },
+    { t: T.ten, x: CV.x + 10, y: CV.y + 12, z: 1.05, e: ease.inOutSine },
+    { t: T.ve, x: CV.x + 40, y: CV.y + 4, z: 1.02, e: ease.inOutSine },
     { t: T.olur + 0.5, x: 2060, y: 890, z: 0.95, e: ease.inOutCubic },
     { t: 110.9, x: 2090, y: 884, z: 0.93, e: ease.outSine },
   ]);
@@ -146,7 +147,8 @@ function yanSahne(ctx, t) {
   // nur (gökte) ve adamın üzerine inen huzme: her zaman sıcak ışık
   const [nx, ny, nz] = ekranda(cam, NUR.x, NUR.y, F.nur);
   const nurA = 1 - 0.55 * an(t, T.o, 0.8) + 0.4 * an(t, T.kud, 0.8);
-  M.nurKuresi(ctx, nx, ny, NUR.r * nz, t, { guc: clamp(nurA), olcek: 1 });
+  const nurSon = 1 - an(t, T.o2 - 0.3, 0.45);
+  M.nurKuresi(ctx, nx, ny, NUR.r * nz, t, { guc: clamp(nurA), olcek: 1, alfa: nurSon });
   const huzmeA = (1 - an(t, T.rah + 0.2, 0.9)) + 0.6 * an(t, T.ist + 0.15, 0.7) * (1 - an(t, T.o2 - 0.4, 0.4));
   if (huzmeA > 0.01) {
     const [hx, hy] = ekranda(cam, S.adam.x, G - 20);
@@ -175,7 +177,9 @@ function varis(sx, sy) {
 /** V bölgesinin sol sınırı: dünya x 1060..1330 (f = 1) arasında yumuşak geçiş */
 function bolgeMaske(g, cam, t) {
   if (t >= T.vah + 0.55) return true;
-  const xa = ekranda(cam, 880, 0)[0], xb = ekranda(cam, 1170, 0)[0];
+  // sınır, kaydırma başlayana dek yakın çekimin dışında; kaydırmayla sola kayar (E'de tamamen ekran dışı)
+  const sx0 = lerp(1080, 880, an(t, T.o2 - 0.32, 0.6, ease.inOutSine));
+  const xa = ekranda(cam, sx0, 0)[0], xb = ekranda(cam, sx0 + 290, 0)[0];
   if (xa > W) { g.clearRect(0, 0, W, H); return false; }
   if (xb < 0) return true;
   g.save();
@@ -251,13 +255,21 @@ function adamSepetli(g, cam, t) {
   const r = yuru3(t);
   g.save(); katman(g, cam, 1);
   const s = 0.7;
+  yerGolgesi(g, r.x + 6, YOL + 2, 66);
   const p = insanYan(g, r.x, YOL, r.poz, { s, yon: 1, olcek: 1.1 });
   // sepet ön elde (dünya = katman koordinatı)
   const sal = Math.sin(r.faz * 2) * 0.05;
-  ogeCiz(g, V.sepet, p.el[0], p.el[1] - 4, { s: s * 1.05, r: sal });
+  ogeCiz(g, V.sepet, p.el[0] + 2, p.el[1] - 6, { s: s * 1.35, r: sal });
   g.restore();
 }
 function kuslar(g, cam, t) {
+  // çarşı kurulunca ikinci bir sürü sağ üstten geçer
+  for (let i = 0; i < 5; i++) {
+    const u = (t - T.olur - i * 0.1) / 2.6;
+    if (u <= 0 || u >= 1) continue;
+    const x = lerp(1180, 380, u) + i * 26, y = 520 - u * 240 - (i % 2) * 34 + Math.sin(u * 8 + i) * 10;
+    M.kus(g, x, y, 0.95 + (i % 3) * 0.12, t, { faz: i * 2.1, yon: -1, alfa: clamp(u * 8) * (1 - clamp((u - 0.85) / 0.15)), renk: '#4A5B7A' });
+  }
   const t0 = T.ten + 0.55;
   for (let i = 0; i < 6; i++) {
     const u = (t - t0 - i * 0.12) / 3.2;
@@ -269,25 +281,36 @@ function kuslar(g, cam, t) {
 }
 
 export default {
-  sesler: [],
+  sesler: [
+    { t: T.egr, tur: 'nur', guc: 0.45, sure: 2.0 },
+    { t: T.bul + 0.05, tur: 'parilti', guc: 0.38 },
+    { t: T.gecis - 0.2, tur: 'whoosh', guc: 0.3, sure: 0.8 },
+    { t: T.rah, tur: 'yagmur', guc: 0.3, sure: 1.9 },
+    { t: T.kud, tur: 'whoosh', guc: 0.28, sure: 1.0 },
+    { t: T.vah, tur: 'ruzgar', guc: 0.25, sure: 1.6 },
+    { t: T.ten, tur: 'nur', guc: 0.4, sure: 1.8 },
+    { t: T.ten + 0.6, tur: 'kus', guc: 0.2 },
+    { t: T.tic, tur: 'pop', guc: 0.24, tekrar: 4, ara: 0.12 },
+    { t: T.olur, tur: 'parilti', guc: 0.3 },
+  ],
   hazirla() {
-    yuru1 = yurumePlani({ t0: T.ilt + 0.02, t1: T.ilt + 1.0, n: 2, s: S_ADAM, yon: -1, x0: 760, duruA: POZ.yagmur, duruB: POZ.sayvan });
+    yuru1 = yurumePlani({ t0: T.ilt + 0.02, t1: T.ilt + 1.0, n: 2, s: S_ADAM, yon: -1, x0: X0_ADAM, duruA: POZ.yagmur, duruB: POZ.sayvan });
     yuru2 = yurumePlani({ t0: T.kud - 0.18, t1: T.ist + 0.02, n: 2, s: S_ADAM, yon: -1, x0: yuru1.x1, duruA: POZ.sayvan, duruB: POZ.duz });
     // kaya, adamın yaslanacağı yere: kalça hizasında sırtı kayanın sağ yüzüne değsin
     D.kayaDx = yuru2.x1 - (bilekX(POZ.yaslan, 0) - bilekX(POZ.duz, 0)) * S_ADAM - 15 - 318;
     // bahçede keyifle yürüyüş (sepetli): soldan girer, çarşıya doğru
     yuru3 = yurumePlani({ t0: T.ten + 0.3, t1: 111.6, n: 12, s: 0.7, yon: 1, x0: -10, sabitHiz: true, kol: 0.3, egim: 0.03,
-      pozF: (p) => ({ ...p, bas: -0.08, omuz: [p.omuz[0], 0.1 + 0.04 * Math.sin(p.omuz[0] * 3)], dirsek: [p.dirsek[0], 1.45] }) });
+      pozF: (p) => ({ ...p, bas: -0.1, omuz: [p.omuz[0], 0.06 + 0.05 * p.omuz[0]], dirsek: [p.dirsek[0], 0.22] }) });
     kameraKur();
   },
   ciz(ctx, t) {
     const tepe = T.gecis; // ışık geçişinin doruğu
     if (t < tepe) {
       labirentCiz(ctx, t, T);
-      isikBas(ctx, 0.95 * an(t, tepe - 0.42, 0.42, ease.inQuad));
+      isikBas(ctx, 0.9 * an(t, tepe - 0.42, 0.42, ease.inQuad), '#FFF4DA');
     } else {
       yanSahne(ctx, t);
-      isikBas(ctx, 0.95 * (1 - an(t, tepe, 0.5, ease.outQuad)));
+      isikBas(ctx, 0.9 * (1 - an(t, tepe, 0.5, ease.outQuad)), '#FFF4DA');
     }
   },
 };

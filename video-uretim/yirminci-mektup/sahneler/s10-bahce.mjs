@@ -6,7 +6,7 @@
 // katmanına çevirme: Xw = sx + 1210·f, Yw = sy − 60·f.
 import { tuval, W, H, clamp, lerp, ease, an, rng, TAU, rgba, smooth, pop } from '../motor/temel.mjs';
 import { oge, ogeCiz, konturCiz, darbe, TON, PALET, FILM } from '../motor/kalem.mjs';
-import { acarak } from './s10-yardim.mjs';
+import { acarak, yerGolgesi, yurumePlani } from './s10-yardim.mjs';
 import { svg, elips, cokgen, dikdortgen, sivriKemer, yumusat, donustur, yuvarlakDikdortgen } from '../motor/sekil.mjs';
 import { kameraUygula, ekranda } from '../motor/sahne.mjs';
 import { insanYan, insanOn, DURUS, ON_DURUS } from '../motor/insan.mjs';
@@ -82,7 +82,7 @@ function tacliCiz(g, A, x, y, { s = 1, u = 1, t = 0, faz = 0 } = {}) {
   g.scale(s, s);
   if (u > 0) ogeCiz(g, A.govde, 0, 0, { sy: ease.outBack(clamp(u * 3.2), 1.2) });
   A.kumeler.forEach((k, i) => {
-    const v = clamp((u - 0.12 - k.t * 0.28) / 0.45);
+    const v = clamp((u - 0.12 - (1 - k.t) * 0.28) / 0.45);
     if (v <= 0) return;
     ogeCiz(g, k.oge, k.x, k.y, { s: ease.outBack(v, 1.7), r: Math.sin(t * 1.2 + i + faz) * 0.015 });
   });
@@ -167,6 +167,12 @@ function egriGeometri(boy, tohum, { dalSay = 3, derin = 4, egrilik = 0.32, yayil
   parca.push({ pts: kok, kapali: true });
   const yarim = Math.floor(kok.length / 2);
   kenarlar.push(svg(`M${-k * 1.7} 2C${-k * 0.9} ${-boy * 0.01} ${-k * 0.6} ${-boy * 0.04} ${-k * 0.48} ${-boy * 0.1}`)[0].pts, svg(`M${k * 1.7} 2C${k * 0.9} ${-boy * 0.01} ${k * 0.6} ${-boy * 0.04} ${k * 0.48} ${-boy * 0.1}`)[0].pts);
+  // birleşim doğru dolsun (nonzero): bütün çokgenler aynı yönde
+  for (const p of parca) {
+    let a = 0;
+    for (let i = 0, n = p.pts.length; i < n; i++) { const [x0, y0] = p.pts[i], [x1, y1] = p.pts[(i + 1) % n]; a += x0 * y1 - x1 * y0; }
+    if (a < 0) p.pts.reverse();
+  }
   return { parca, uclar, dikenler, kenarlar };
 }
 const AGAC_PAL = {
@@ -452,7 +458,8 @@ function kemerSirasiOge() {
         for (let k = 0; k < parca; k++) {
           const a0 = Math.floor((k / parca) * 24), a1 = Math.floor(((k + 1) / parca) * 24);
           const poly = [...ic.slice(a0, a1 + 1), ...dis.slice(a0, a1 + 1).reverse()];
-          api.tara([{ pts: poly, kapali: true }], { ton: () => (k % 2 ? 0.3 : 0.75), renkler: k % 2 ? [[0, '#F4E9D6'], [1, '#D8C3A0']] : [[0, '#E9A08F'], [1, '#A84A3E']], yon: -0.6, aralik: 2.2, boy: [6, 16], kal: 1.0, alfa: 0.7, esikler: [0.2, 0.5] });
+          if (k % 2 === 0) api.dolgu([{ pts: poly, kapali: true }], '#E7A08E', 0.55, 'multiply');
+          api.tara([{ pts: poly, kapali: true }], { ton: () => (k % 2 ? 0.3 : 0.85), renkler: k % 2 ? [[0, '#F4E9D6'], [1, '#D8C3A0']] : [[0, '#D9796A'], [1, '#9E3B31']], yon: -0.6, aralik: 2.0, boy: [6, 16], kal: 1.05, alfa: 0.8, esikler: [0.2, 0.5, 0.75] });
           api.cizgi([ic[a0], dis[a0]], { renk: '#8A5A44', kal: 1.2, alfa: 0.8 });
         }
         api.cizgi(dis, { renk: '#8A5A44', kal: 1.7, alfa: 0.85 });
@@ -577,7 +584,7 @@ function kubbeOge() {
   return oge({
     ad: 's10-kubbe', olcek: 1.2, sekil, arka: '#C9D0E2', arkaAlfa: 0.88,
     tarama: [
-      { sekil: svg('M-58 -26C-58 -78 -30 -104 0 -106C30 -104 58 -78 58 -26Z'), ton: TON.kure(18, -70, 70, { lx: 0.6, ly: -0.6 }), renkler: [[0, '#DCE2EE'], [0.55, '#97A2C2'], [1, '#5E6A92']], yonF: (x, y) => Math.atan2(y + 26, x) + Math.PI / 2, aralik: 2.6, boy: [10, 26], kal: 1.05, alfa: 0.6, esikler: [0.2, 0.5, 0.75] },
+      { sekil: svg('M-58 -26C-58 -78 -30 -104 0 -106C30 -104 58 -78 58 -26Z'), ton: TON.kure(18, -70, 70, { lx: 0.6, ly: -0.6 }), renkler: [[0, '#DCE2EE'], [0.55, '#97A2C2'], [1, '#5E6A92']], yonF: (x, y) => Math.PI / 2 + x * 0.014, aralik: 2.6, boy: [10, 26], kal: 1.05, alfa: 0.6, esikler: [0.2, 0.5, 0.75] },
       { sekil: svg('M-62 0L-62 -26L62 -26L62 0Z'), ton: () => 0.45, renkler: [[0, '#EFE2CA'], [1, '#B49A76']], yon: -0.05, aralik: 2.8, boy: [12, 30], kal: 1.05, alfa: 0.5, esikler: [0.3, 0.6] },
     ],
     kontur: '#56607E', konturKal: 1.9,
@@ -664,11 +671,12 @@ export function bahceHazirla() {
   ].map((o, k) => ({ ...o, f: 1.15, kara: caliOge(o.R, 11 + k, 'kara'), bahce: caliOge(o.R, 11 + k, 'bahce') }));
   // lale tarhları: yolun gerisinde, çeşmenin iki yanında
   V.tarh = [];
-  for (let i = 0; i < 60; i++) {
-    const sx = -140 + i * 21 + r.ara(-5, 5);
-    if (sx > 740) break;
-    if (Math.abs(sx - CESME.sx) < 240) continue;
-    V.tarh.push({ sx, sy: 1290 + r.ara(-5, 4), o: V.laleler[i % 4], s: r.ara(1.0, 1.25) });
+  for (let i = 0; i < 120; i++) {
+    const sx = -160 + i * 17 + r.ara(-4, 4);
+    if (sx > 760) break;
+    if (Math.abs(sx - CESME.sx) < 236) continue;
+    V.tarh.push({ sx, sy: 1282 + r.ara(-3, 3), o: V.laleler[(i * 3) % 4], s: r.ara(0.9, 1.1) });
+    V.tarh.push({ sx: sx + 8, sy: 1294 + r.ara(-3, 3), o: V.laleler[(i * 3 + 1) % 4], s: r.ara(1.05, 1.25) });
   }
   // gözler (karanlıkta, koyu boşluklarda)
   V.gozler = [[150, 1150, 0.8], [420, 1090, 0.78], [620, 1170, 0.84], [860, 1112, 0.8], [1000, 1196, 0.88], [330, 1240, 0.88], [780, 1250, 0.9]].map(([sx, sy, f], k) => ({ sx, sy, f, k }));
@@ -924,9 +932,18 @@ export function alisverisciler(g, cam, t, B) {
   const { x0, ayak, aci } = KEMER;
   g.save(); katman(g, cam, 0.99);
   const a1 = an(B.carsi, 0.5, 0.14);
+  if (a1 > 0) yerGolgesi(g, x0 + ayak + aci * 0.5 + 56, 1332, 60, 0.2 * a1);
   if (a1 > 0) insanOn(g, x0 + ayak + aci * 0.5 + 50, 1330, { ...ON_DURUS, kol: [0.15, 0.5], dirsek: [0.2, 1.1], bas: Math.sin(t * 1.1) * 0.04 }, { s: 0.64, arka: true, alfa: a1 });
+  // arkada sola yürüyen bir adam (çarşının akışı)
+  if (!V.gezgin) V.gezgin = yurumePlani({ t0: B.tCarsi + 0.55, t1: B.tCarsi + 4.4, n: 9, s: 0.6, yon: -1, x0: 1600, sabitHiz: true, kol: 0.3 });
+  if (t > V.gezgin.t0) {
+    const r = V.gezgin(t);
+    yerGolgesi(g, r.x - 6, 1318, 56, 0.18);
+    insanYan(g, r.x, 1316, { ...r.poz, bas: 0.04 }, { s: 0.6, yon: -1 });
+  }
   const a3 = an(B.carsi, 0.6, 0.14);
-  if (a3 > 0) insanYan(g, x0 + ayak + aci * 1.5 + 40, 1334, { ...DURUS, bas: -0.05 + Math.sin(t * 1.3) * 0.04, omuz: [-0.05, 0.75], dirsek: [0.2, 0.9] }, { s: 0.64, yon: -1, alfa: a3 });
+  if (a3 > 0) yerGolgesi(g, x0 + ayak + aci * 1.5 + 124, 1336, 60, 0.2 * a3);
+  if (a3 > 0) insanYan(g, x0 + ayak + aci * 1.5 + 118, 1334, { ...DURUS, bas: -0.05 + Math.sin(t * 1.3) * 0.04, omuz: [-0.05, 0.75], dirsek: [0.2, 0.9] }, { s: 0.64, yon: -1, alfa: a3 });
   g.restore();
 }
 

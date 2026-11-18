@@ -17,14 +17,14 @@ const T = {
 // dünya yerleşimi
 const UFUK = 1480;
 const AGAC = { x: 560, y: 1395, boy: 980 };
-let gok, tepeArka, tepeOrta, tepeOn, A, kirmiziMeyve, altinMeyve, cicekler, gunes, bulutlar, cimenler;
+let gok, tepeArka, tepeOrta, tepeOn, A, kirmiziMeyve, altinMeyve, cicekler, gunes, bulutlar, cimenler, yaprakSp, yapraklar;
 let altinYer; // altın meyvenin dünya konumu
 
 const kamera = () => kameraYolu([
   { t: 0, x: 540, y: 990, z: 1.0 },
   { t: T.hilkat, x: 540, y: 975, z: 1.02 },
   { t: T.gaye + 0.6, x: 548, y: 660, z: 1.22, e: ease.inOutCubic },
-  { t: T.netice + 0.45, x: altinYer[0], y: altinYer[1] + 260 / 1.7, z: 1.7, e: ease.inOutCubic },
+  { t: T.netice + 0.45, x: altinYer[0], y: altinYer[1] + 330 / 1.5, z: 1.5, e: ease.inOutCubic },
   { t: T.son + 0.3, x: altinYer[0], y: altinYer[1] + 100 / 2.4, z: 2.4, e: ease.inOutQuart },
   { t: 7.8, x: altinYer[0], y: altinYer[1] + 100 / 2.5, z: 2.5, e: ease.lin },
 ]);
@@ -62,6 +62,10 @@ export default {
     }
     cicekler.sort((a, b) => a.y - b.y);
     cicekler.forEach((c) => (c.oge = M.cicekOge(26, 1.6, c.renk)));
+    // tacın çevresinde süzülen yapraklar (yaratılışın canlılığı)
+    yaprakSp = [M.yaprakOge(30, 13, 2, 'yesil'), M.yaprakOge(26, 11, 2, 'koyu')];
+    const ry = rng(77);
+    yapraklar = Array.from({ length: 9 }, (_, i) => ({ x: AGAC.x + ry.ara(-380, 380), y: AGAC.y - AGAC.boy * ry.ara(0.55, 0.95), t0: T.hilkat + 0.6 + i * 0.35, hiz: ry.ara(55, 85), sal: ry.ara(30, 60), f: ry() * TAU, r0: ry() * TAU, sp: i % 2 }));
   },
   ciz(ctx, t) {
     const c = kam(t);
@@ -127,6 +131,31 @@ export default {
         if (u > 0) ogeCiz(g, cc.oge, cc.x, cc.y, { s: u * cc.s, r: Math.sin(t * 1.4 + cc.x) * 0.04 });
       }
     }, 1);
+
+    // tacın çevresinde süzülen yapraklar ve dönen iki kuş; güneşten taca ince ışık huzmeleri
+    kameraIle(ctx, cam, (g) => {
+      for (const y of yapraklar) {
+        const u = t - y.t0;
+        if (u <= 0 || u > 7) continue;
+        const a = Math.min(1, u / 0.4) * Math.min(1, (7 - u) / 0.8);
+        const px = y.x + Math.sin(u * 1.3 + y.f) * y.sal + u * 18;
+        const py = y.y + u * y.hiz;
+        ogeCiz(g, yaprakSp[y.sp], px, py, { r: y.r0 + Math.sin(u * 2.1 + y.f) * 0.9, alfa: a * 0.95 });
+      }
+      for (let i = 0; i < 2; i++) {
+        const u = t - (T.yuksek + 0.2 + i * 0.5);
+        if (u <= 0) continue;
+        const a = Math.min(1, u / 0.5) * (1 - an(t, T.iman - 0.3, 0.6));
+        const ang = u * 0.9 + i * Math.PI;
+        const cx = AGAC.x + Math.cos(ang) * (440 - i * 60), cy = AGAC.y - AGAC.boy * 0.78 + Math.sin(ang) * 120;
+        M.kus(g, cx, cy, 1.15 - i * 0.15, t, { faz: i * 2.1, yon: Math.sin(ang) > 0 ? -1 : 1, alfa: a });
+      }
+    }, 1);
+    const huzme = an(t, T.fitrat - 0.2, 1.4, ease.inOutSine) * (1 - an(t, T.iman + 0.2, 0.8));
+    if (huzme > 0) {
+      // sağ üstten taca vuran sıcak, yumuşak gün ışığı (çizgi değil, geniş buğu)
+      M.hale(ctx, W * 1.05, -H * 0.05, H * 0.85, '#FFF1C8', 0.34 * huzme);
+    }
 
     // ön tepe + insan + ön çiçekler (paralaks 1.15)
     kameraIle(ctx, cam, (g) => {

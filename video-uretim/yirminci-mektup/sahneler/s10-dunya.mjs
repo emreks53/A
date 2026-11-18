@@ -8,7 +8,7 @@ import * as M from '../motor/motifler.mjs';
 import { tampon, cizgiDarbe } from './s10-yardim.mjs';
 
 export const G = 1300; // zemin çizgisi (paralaks 1)
-export const AGAC = { x: 520, y: G + 4, boy: 820 };
+export const AGAC = { x: 640, y: G + 4, boy: 820 };
 export const KAYA = { x: 200, sag: 318 }; // kayanın sağ yüzü (adam buraya yaslanır)
 export const NUR = { x: 380, y: 130, r: 56 }; // gök katmanında (f = 0.3)
 export const F = { gok: 0.3, nur: 0.3, uzak: 0.5, orta: 0.72, bulut: 0.6, dag: 0.92, ana: 1, on: 1.15 };
@@ -78,15 +78,26 @@ function dagTon(x, y) {
 const R1 = [[-600, -1262], [-566, -1110], [-526, -970], [-486, -810], [-426, -630], [-356, -430], [-276, -210], [-186, 30], [-86, 290], [34, 620], [116, 900], [176, 1150], [200, 1340]];
 const R2 = [[-600, -1262], [-614, -1130], [-652, -970], [-697, -800], [-772, -620], [-842, -430], [-932, -200], [-1022, 60], [-1102, 400], [-1152, 800], [-1200, 1340]];
 const OLUK = [[-586, -1180], [-556, -1040], [-536, -900], [-520, -760], [-486, -600], [-436, -420], [-372, -230], [-300, -20], [-226, 200], [-150, 440], [-60, 720], [10, 980], [60, 1340]];
+function puruz(pts, gen = 26, tohum = 1) {
+  const r = rng(tohum);
+  const out = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [ax, ay] = pts[i], [bx, by] = pts[i + 1];
+    for (let k = 0; k < 4; k++) { const u = k / 4; out.push([lerp(ax, bx, u) + (i || k ? r.ara(-gen, gen) : 0), lerp(ay, by, u)]); }
+  }
+  out.push(pts[pts.length - 1]);
+  return out;
+}
 function serit(sol, sag) { return cokgen([...sol, ...[...sag].reverse()]); }
 function dagOge() {
   const sekil = dagSekli();
   const sagUzak = R1.map(([x, y]) => [x + 900, y]);
   const solUzak = R2.map(([x, y]) => [x - 900, y]);
-  const aydinlik = serit(R1, sagUzak);
-  const orta = serit(R2, R1);
-  const golge = serit(solUzak, R2);
-  const oluk = serit(OLUK, R1.map(([x, y], i) => [x - 4, y]));
+  const r1 = puruz(R1, 22, 3), r2 = puruz(R2, 26, 5), ol = puruz(OLUK, 30, 7);
+  const aydinlik = serit(r1, sagUzak);
+  const orta = serit(r2, r1);
+  const golge = serit(solUzak, r2);
+  const oluk = serit(ol, r1.map(([x, y]) => [x - 4, y]));
   const yogun = (v0) => TON.gurultulu((x, y) => clamp(v0 + 0.16 * clamp((y + 300) / 1600) - 0.25 * clamp(1 - (y - DORUK[1]) / 420)), 0.08, 0.006, Math.round(v0 * 100));
   const R = [[0, '#F3EADC'], [0.3, '#D6D3E2'], [0.6, '#A0A2C4'], [1, '#686C9A']];
   return oge({
@@ -111,8 +122,21 @@ function dagOge() {
     ],
     kontur: '#5A5C8C', konturKal: 2.4, titreme: 0.7,
     detay: (c, api) => {
-      api.cizgi(yumusat(R1.slice(0, 11), 2, false), { renk: '#5C5D8E', kal: 1.7, alfa: 0.55 });
-      api.cizgi(yumusat(R2.slice(0, 9), 2, false), { renk: '#5C5D8E', kal: 1.6, alfa: 0.5 });
+      api.cizgi(puruz(R1, 22, 3).slice(0, 44), { renk: '#5C5D8E', kal: 1.7, alfa: 0.55 });
+      api.cizgi(puruz(R2, 26, 5).slice(0, 36), { renk: '#5C5D8E', kal: 1.6, alfa: 0.5 });
+      // eteklerde kaya çatlakları ve çıkıntılar (yakın çekimde görünür)
+      const rc = rng(21);
+      for (let i = 0; i < 34; i++) {
+        const y = rc.ara(-200, 1250);
+        const w = clamp((y - DORUK[1]) / 2500);
+        const xs = lerp(DORUK[0], 230, w);
+        const x = rc.ara(xs - 520, xs - 20);
+        const pts = [[x, y]];
+        let px = x, py = y;
+        for (let k = 0; k < 4; k++) { px += rc.ara(-16, 10); py += rc.ara(14, 34); pts.push([px, py]); }
+        api.cizgi(pts, { renk: '#55578A', kal: 1.3, alfa: 0.45 });
+        if (i % 3 === 0) api.cizgi([[x - 30, y], [x + 26, y + rc.ara(-4, 6)]], { renk: '#55578A', kal: 1.2, alfa: 0.4 });
+      }
       const r = rng(9);
       for (let i = 0; i < 40; i++) {
         const y = r.ara(-1050, 1200);
@@ -210,6 +234,19 @@ function zeminOge(ad, P, catlak) {
   });
 }
 
+function kuruOtOge(tohum) {
+  const r = rng(tohum);
+  const yollar = [];
+  for (let i = 0; i < 7; i++) {
+    const x = r.ara(-12, 12), h = r.ara(14, 28), e = r.ara(-12, 12);
+    yollar.push(...svg(`M${x - 2} 0Q${x + e * 0.4} ${-h * 0.5} ${x + e} ${-h}Q${x + e * 0.4 + 1.2} ${-h * 0.5} ${x + 2} 0Z`));
+  }
+  return oge({
+    ad: `s10-kuruot-${tohum}`, olcek: 1.6, sekil: yollar, arka: '#E3CC92', arkaAlfa: 0.8,
+    tarama: { ton: TON.dogrusal(0, -26, 0, 0, 0.2, 0.8), renkler: [[0, '#E2C987'], [1, '#9C7A3E']], yon: -Math.PI / 2, aralik: 2.4, boy: [6, 14], kal: 1, alfa: 0.6, esikler: [0.3, 0.6] },
+    kontur: '#8C6A34', konturKal: 1.2, pay: 6,
+  });
+}
 function cimenOge(tohum, renk = 'yesil') {
   const r = rng(tohum);
   const yollar = [];
@@ -276,13 +313,22 @@ export function yakinHazirla() {
   const cicekler = ['beyaz', 'pembe', 'sari', 'lila'].map((c) => M.cicekOge(18, 1.5, c));
   D.bitkiler = [];
   for (let i = 0; i < 70; i++) {
-    const y = G + 6 + Math.pow(r(), 1.6) * 520;
+    const yu = r();
+    const y = yu < 0.55 ? G + 6 + yu * 90 : G + 330 + (yu - 0.55) * 520;
     const x = r.ara(-1100, 1450);
     if (Math.abs(x - KAYA.x) < 170 && y < G + 40) continue;
     const cicek = r() < 0.35;
     D.bitkiler.push({ x, y, s: (0.55 + (y - G) / 500) * r.ara(0.8, 1.15), o: cicek ? r.sec(cicekler) : r.sec(cimenler), cicek, faz: r() * TAU });
   }
   D.bitkiler.sort((a, b) => a.y - b.y);
+  const kuru = [0, 1, 2].map((k) => kuruOtOge(70 + k));
+  D.kuruOt = [];
+  for (let i = 0; i < 30; i++) {
+    const yu = r();
+    const y = yu < 0.6 ? G + 8 + yu * 70 : G + 360 + (yu - 0.6) * 500;
+    D.kuruOt.push({ x: r.ara(-1000, 1450), y, s: (0.6 + (y - G) / 500) * r.ara(0.8, 1.2), o: r.sec(kuru) });
+  }
+  D.kuruOt.sort((a, b) => a.y - b.y);
 }
 
 /** Yeşerme lekesinin (x, y) noktasına varış zamanı (göreli) */
@@ -329,7 +375,7 @@ export function yagmurCiz(ctx, t, guc, { zeminY = 1380, siper = null, tohum = 9 
   const egim = 0.16;
   for (let i = 0; i < 230; i++) {
     const x0 = r.ara(-260, W + 60), faz = r(), hiz = r.ara(1500, 2100), boy = r.ara(44, 88), renk = r() < 0.45 ? '#FFEFC2' : '#F4F8FF';
-    const k = r.ara(1.6, 2.6), a = r.ara(0.55, 0.95);
+    const k = r.ara(1.8, 2.9), a = r.ara(0.65, 1);
     if (i >= n) continue;
     const yol = zeminY + 160;
     const y = ((faz * yol + t * hiz) % yol) - 120;
@@ -360,7 +406,7 @@ export function yagmurCiz(ctx, t, guc, { zeminY = 1380, siper = null, tohum = 9 
 }
 
 // ---------------------------------------------------------------- çizim
-import { insanYanSikis } from './s10-yardim.mjs';
+import { insanYanSikis, yerGolgesi } from './s10-yardim.mjs';
 
 /** Yan dünyayı çizer (kamera g'ye uygulanır). S: durum */
 export function yanCiz(g, cam, t, S) {
@@ -407,6 +453,7 @@ export function yanCiz(g, cam, t, S) {
     M.isinlar(g, -600, -1240, 120, 700, t, { sayi: 24, alfa: 0.35 * S.dagIsik, kal: 3.2, tohum: 13, hiz: 0.03 });
   }
   ogeCiz(g, D.zKuru, 0, 0);
+  for (const k of D.kuruOt) ogeCiz(g, k.o, k.x, k.y, { s: k.s, r: Math.sin(t * 1.3 + k.x) * 0.04 });
   g.restore();
   if (S.yesil > 2.3) {
     g.save(); kameraUygula(g, cam, F.ana); ogeCiz(g, D.zYesil, 0, 0); g.restore();
@@ -441,6 +488,7 @@ export function yanCiz(g, cam, t, S) {
   if (S.adam) {
     const a = S.adam;
     if (S.adamIsik > 0.003) M.hale(g, a.x, G - 150, 260, '#FFF0C0', 0.35 * S.adamIsik);
+    yerGolgesi(g, a.x + 8, G + 2, 70);
     insanYanSikis(g, a.x, G, a.poz, { s: a.s, yon: a.yon, k: a.k ?? 1, olcek: 1.2 });
   }
   bitki(true);

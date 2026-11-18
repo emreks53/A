@@ -275,3 +275,17 @@ export function acarak(ctx, o, x, y, ilerleme, { s = 1, sx = s, sy = s, r = 0, a
   mc.globalCompositeOperation = 'source-over';
   ciz(m);
 }
+
+/** Figürün ayağı altında yumuşak yer gölgesi (dünya koordinatında) */
+export function yerGolgesi(ctx, x, y, w, alfa = 0.22) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1, 0.22);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, w);
+  g.addColorStop(0, `rgba(70,62,92,${alfa})`);
+  g.addColorStop(0.6, `rgba(70,62,92,${alfa * 0.5})`);
+  g.addColorStop(1, 'rgba(70,62,92,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(-w, -w, 2 * w, 2 * w);
+  ctx.restore();
+}

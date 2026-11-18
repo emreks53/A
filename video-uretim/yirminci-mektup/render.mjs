@@ -84,7 +84,7 @@ async function videoYaz(k0, k1, dosya, sesli) {
     kare(k / fps);
     const buf = c.data();
     if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r));
-    if ((k - k0) % 30 === 0) process.stderr.write(`\r${dosya}: ${k - k0}/${k1 - k0} kare, ${((Date.now() - t0) / Math.max(1, k - k0 + 1)).toFixed(0)} ms/kare   `);
+    if ((k - k0) % 30 === 0) process.stderr.write(`${dosya}: ${k - k0}/${k1 - k0} kare, ${((Date.now() - t0) / Math.max(1, k - k0 + 1)).toFixed(0)} ms/kare, bellek ${(process.memoryUsage().rss / 1e9).toFixed(2)} GB\n`);
   }
   ff.stdin.end();
   await new Promise((r) => ff.on('close', r));

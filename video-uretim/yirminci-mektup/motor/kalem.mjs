@@ -378,13 +378,20 @@ export function ogeCiz(ctx, o, x, y, { s = 1, sx = s, sy = s, r = 0, alfa = 1, p
   ctx.restore();
 }
 
+const acmaTuvalleri = new WeakMap();
 /** Çizerek giriş: öğeyi bir maskeyle açar. mod: 'sil' (doğrusal silme, yon açısında), 'daire' (merkezden) */
 export function ogeAcarak(ctx, o, x, y, ilerleme, { s = 1, r = 0, alfa = 1, pivot = [0, 0], mod = 'sil', yon = -Math.PI / 2, merkez = null, yumusak = 0.12 } = {}) {
   if (ilerleme <= 0) return;
   if (ilerleme >= 1) return ogeCiz(ctx, o, x, y, { s, r, alfa, pivot });
   const b = o.sinir;
-  const m = tuval(o.tuval.width, o.tuval.height);
+  // maske tuvali sprite başına bir kez ayrılır ve yeniden kullanılır (her karede yeni tuval yerli belleği şişirir)
+  let m = acmaTuvalleri.get(o.tuval);
+  if (!m) { m = tuval(o.tuval.width, o.tuval.height); acmaTuvalleri.set(o.tuval, m); }
   const mc = m.getContext('2d');
+  mc.setTransform(1, 0, 0, 1, 0, 0);
+  mc.globalCompositeOperation = 'source-over';
+  mc.globalAlpha = 1;
+  mc.clearRect(0, 0, m.width, m.height);
   mc.drawImage(o.tuval, 0, 0);
   mc.globalCompositeOperation = 'destination-in';
   const S = o.olcek;
