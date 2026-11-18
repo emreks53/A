@@ -6,7 +6,14 @@ modeli (tema uzay değil, metnin manası). Üslup: Atölye Stil Kataloğu **S-23
 polyester çizim filminde renkli kalem: arka yüzden buğulu açık renk, önde saten kalem taraması, yerel rengin koyu
 kalemiyle kontur).
 
-- Çıktı: `cikti/yirminci-mektup.mp4` — 1080 × 1920 (9:16, Shorts), 30 fps, ~117 sn, H.264 + AAC.
+- Çıktı: `cikti/yirminci-mektup.mp4` — 1080 × 1920 (9:16, Shorts), 30 fps, 117 sn, H.264 (iki geçiş, ~6,5 Mbps) +
+  AAC 192 kbps, 95 MB. `cikti/kapak.jpg` ve `cikti/onizleme.jpg` örnek kareler.
+- Sahneler: s01 yaratılış ağacı ve en yüce meyve → iman nuru; s02 mertebe merdiveni, makam kemeri, nurun içinde
+  marifet deseni; s03 cin ve ins, madalyon, muhabbet gülü; s04 ruh ışığı, kalp, saf su, nektar ve altın halkalar;
+  s05 saadet, sürur, nimet, lezzet simgeleri ve kaynakları (onsuz olamaz); s06 şafak, sonsuz yol, nurlar, sırlar,
+  tohumdan ağaca (bi'l-kuvve → bilfiil); s07 ışığa sırt dönüş, renklerin çekilmesi, dikenler, kuruntular; s08
+  perişan dünya, âvâre kalabalık, meyvesiz ağaç, toza dönen saltanat; s09 fânilik silgisi ve labirent; s10 ışıkla
+  eriyen labirent, rahmet yağmuru, dağa dayanış, vahşetgâhın gezinti bahçesine ve çarşıya dönüşü; kapanış.
 - Müzik yok; ses efektleri yordamsal olarak sentezlenir ve kısıktır (konuşma baskın; konuşma sırasında efektler
   ayrıca kısılır).
 - Günümüz Türkçesinde kullanılmayan kelimelerin karşılığı, kelimenin ilk harfi okunduğu an alt bantta zarif bir
@@ -45,6 +52,7 @@ YONERGE.md             sahne yönergesi (kurallar, üslup, senaryo)
 ```bash
 npm install
 ./uret.sh                                   # PY=<numpy+scipy olan python> ISCI=4
+./bolum.sh 3 4                              # yalnız belirli bölümleri yeniden render et
 node render.mjs --png deneme/ --kareler 3.2,40,100     # tek kareler
 node render.mjs --sahne s05 --cikti deneme/s05.mp4 --olcek 0.5 --ses   # sahne önizlemesi
 ```

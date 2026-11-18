@@ -23,7 +23,10 @@ for ((i=0; i<${#S[@]}-1; i++)); do
   echo "file '$(realpath "$b")'" >> cikti/bolumler/liste.txt
 done
 ffmpeg -y -loglevel error -f concat -safe 0 -i cikti/bolumler/liste.txt -c copy cikti/goruntu.mp4
-ffmpeg -y -loglevel error -i cikti/goruntu.mp4 -i cikti/ses-miks.wav \
-  -c:v libx264 -preset slow -profile:v high -crf 16 -pix_fmt yuv420p -movflags +faststart \
-  -c:a aac -b:a 192k -ar 48000 -shortest -metadata title="Yirminci Mektup'tan" cikti/yirminci-mektup.mp4
+# iki geçişli H.264 (~6,5 Mbps): ince kalem taraması korunur, dosya 100 MB'ın altında kalır
+( cd cikti && ffmpeg -y -loglevel error -i goruntu.mp4 -c:v libx264 -preset slow -profile:v high -b:v 6250k -maxrate 14M -bufsize 20M \
+    -pix_fmt yuv420p -pass 1 -passlogfile ikigecis -an -f mp4 /dev/null && \
+  ffmpeg -y -loglevel error -i goruntu.mp4 -i ses-miks.wav -c:v libx264 -preset slow -profile:v high -b:v 6250k -maxrate 14M -bufsize 20M \
+    -pix_fmt yuv420p -pass 2 -passlogfile ikigecis -movflags +faststart -c:a aac -b:a 192k -ar 48000 -shortest \
+    -metadata title="Yirminci Mektup'tan" yirminci-mektup.mp4 && rm -f ikigecis* )
 ffprobe -v error -show_entries format=duration,size -of default=nw=1 cikti/yirminci-mektup.mp4
