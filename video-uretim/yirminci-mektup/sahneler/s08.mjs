@@ -30,20 +30,21 @@ const T = {
   kac: kb('kaç'), para: kb('para'), eder: kb('eder'), son: 82.9,
 };
 // plaka geçişleri
-const GB = { t: T.avare - 0.08, sure: 0.12 }; // sokak → meydan (göğe savrulma, gökte kısa karışım)
+const GB = { t: T.avare - 0.1, sure: 0.1 }; // sokak → meydan (göğe savrulma, gökte kısa karışım)
 const GD = { t: T.semere - 0.1, sure: 0.36 }; // meydan → ağaç/ova
 const GRI = 'saturate(0.42) brightness(0.96) contrast(0.95)';
 
-// ---------------------------------------------------------------- katman (ekran dışı tampon; filtre ve saydamlık)
-const havuz = [];
-let derinlik = 0;
-// kamera hızından hareket bulanıklığı (px): yalnız savrulmalarda
+// ---------------------------------------------------------------- katman (ekran dışı tampon; filtre, saydamlık, hareket bulanıklığı)
+// kamera hızından yönlü hareket bulanıklığı: içerik kayma vektörü (ekran px; 180° perde: kare başına yolun yarısı)
 function bulanik(kam, t) {
   const a = kam(t - 1 / 60), b = kam(t + 1 / 60);
-  const v = Math.hypot((b.y - a.y) * b.z, (b.x - a.x) * b.z) / 2; // px/kare (60 fps adımı)
-  return clamp((v - 12) / 9, 0, 14);
+  const z = (a.z + b.z) / 2;
+  const dx = -(b.x - a.x) * z * 0.5, dy = -(b.y - a.y) * z * 0.5;
+  return Math.hypot(dx, dy) > 10 ? [dx, dy] : null;
 }
-function katman(ctx, fn, { alfa = 1, filtre = null, olcekle = 1 } = {}) {
+const havuz = [];
+let derinlik = 0;
+function katman(ctx, fn, { alfa = 1, filtre = null, hareket = null } = {}) {
   if (alfa <= 0.003) return;
   const m = ctx.getTransform();
   const sc = Math.hypot(m.a, m.b);
@@ -59,10 +60,20 @@ function katman(ctx, fn, { alfa = 1, filtre = null, olcekle = 1 } = {}) {
   try { fn(g); } finally { derinlik--; }
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.globalAlpha = alfa;
   if (filtre) ctx.filter = filtre;
-  if (olcekle !== 1) ctx.drawImage(b, m.e - (w * (olcekle - 1)) / 2, m.f - (h * (olcekle - 1)) / 2, w * olcekle, h * olcekle);
-  else ctx.drawImage(b, m.e, m.f);
+  if (hareket) {
+    // kayma yönünde kopyaların ortalaması (yönlü bulanıklık)
+    const [hx, hy] = hareket;
+    const N = Math.max(2, Math.min(9, Math.ceil((Math.hypot(hx, hy) * sc) / 5)));
+    for (let k = 0; k < N; k++) {
+      const u = k / (N - 1) - 0.5;
+      ctx.globalAlpha = alfa / (k + 1);
+      ctx.drawImage(b, m.e + hx * sc * u, m.f + hy * sc * u);
+    }
+  } else {
+    ctx.globalAlpha = alfa;
+    ctx.drawImage(b, m.e, m.f);
+  }
   ctx.restore();
 }
 
@@ -109,15 +120,15 @@ const kamA = kameraYolu([
   { t: 67.2, x: 622, y: 1105, z: 1.47 },
   { t: T.evet + 0.05, x: 618, y: 1100, z: 1.52, e: ease.inOutSine },
   { t: T.dunyada + 0.55, x: 566, y: 1080, z: 1.08, e: ease.inOutCubic },
-  { t: GB.t - 0.24, x: 576, y: 1070, z: 1.05, e: ease.inOutSine },
-  { t: GB.t + 0.1, x: 586, y: -380, z: 0.95, e: ease.inCubic },
+  { t: GB.t - 0.32, x: 576, y: 1070, z: 1.05, e: ease.inOutSine },
+  { t: GB.t + 0.04, x: 586, y: -420, z: 0.96, e: ease.inCubic },
 ]);
 
 // ================================================================ PLAKA B: yüksekten meydan
 const MEYDAN = { cesmeX: 540, cesmeY: 868 };
 const kamB = kameraYolu([
-  { t: GB.t - 0.02, x: 540, y: -420, z: 1.0 },
-  { t: GB.t + 0.55, x: 545, y: 912, z: 1.07, e: ease.outCubic },
+  { t: GB.t, x: 540, y: -460, z: 1.0 },
+  { t: GB.t + 0.58, x: 545, y: 912, z: 1.07, e: ease.outCubic },
   { t: GD.t, x: 566, y: 890, z: 1.0, e: ease.inOutSine },
   { t: GD.t + GD.sure + 0.05, x: 572, y: 880, z: 1.2, e: ease.inCubic },
 ]);
@@ -668,18 +679,15 @@ export default {
     const aD = an(t, GD.t, GD.sure, ease.inOutSine);
     if (aD >= 1) return plakaD(ctx, t);
     if (aB >= 1) {
-      const bB = bulanik(kamB, t);
-      if (bB > 0.6) katman(ctx, (g) => plakaB(g, t), { filtre: `blur(${bB.toFixed(1)}px)`, olcekle: 1 + bB / 300 });
+      const hB = bulanik(kamB, t);
+      if (hB) katman(ctx, (g) => plakaB(g, t), { hareket: hB });
       else plakaB(ctx, t);
       if (aD > 0) katman(ctx, (g) => plakaD(g, t), { alfa: aD });
       return;
     }
-    const bA = bulanik(kamA, t);
-    if (bA > 0.6) katman(ctx, (g) => plakaA(g, t), { filtre: `blur(${bA.toFixed(1)}px)`, olcekle: 1 + bA / 300 });
+    const hA = bulanik(kamA, t);
+    if (hA) katman(ctx, (g) => plakaA(g, t), { hareket: hA });
     else plakaA(ctx, t);
-    if (aB > 0) {
-      const bB = bulanik(kamB, t);
-      katman(ctx, (g) => plakaB(g, t), { alfa: aB, filtre: bB > 0.6 ? `blur(${bB.toFixed(1)}px)` : null, olcekle: 1 + bB / 300 });
-    }
+    if (aB > 0) katman(ctx, (g) => plakaB(g, t), { alfa: aB, hareket: bulanik(kamB, t) });
   },
 };
