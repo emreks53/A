@@ -9,7 +9,7 @@ tar cf - \
   --exclude='video/out' --exclude='node_modules' --exclude='__pycache__' --exclude='*.wav' \
   --exclude='endcard/plates*' --exclude='endcard/assets' --exclude='audio/sfx_demo' \
   --exclude='ref/*.png' --exclude='HANDOVER*' --exclude='*.log' \
-  BIBLE.md storyboard.md storyboard.json timing.json tools fonts ref audio video endcard | (cd "$DST" && tar xf -)
+  README.md BIBLE.md storyboard.md storyboard.json timing.json tools fonts ref audio video endcard | (cd "$DST" && tar xf -)
 cd /home/user/A
 git add video-uretim
 if git diff --cached --quiet; then echo "nothing to back up"; exit 0; fi
