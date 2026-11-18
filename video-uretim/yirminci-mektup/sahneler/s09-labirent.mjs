@@ -16,11 +16,11 @@ export const DUVAR = 0.2; // duvar kalınlığı / hücre
 export const MERKEZ = 60; // tasarlanmış bölgenin ortası (hücre)
 
 export const RENK = {
-  zemin: '#DCD8E2', // zemin buğusu
-  zeminTara: [[0, '#D3CEDB'], [0.6, '#B7B0C6'], [1, '#9D95B0']],
+  zemin: '#E2DEDE', // zemin buğusu (sıcak açık gri)
+  zeminTara: [[0, '#D5CFD4'], [0.6, '#B6AEBC'], [1, '#9A91A6']],
   golge: '#8B83A0',
   golgeTara: [[0, '#A8A0BA'], [1, '#6E6784']],
-  duvar: '#C4BED0',
+  duvar: '#BBB4CB',
   duvarTara: [[0, '#B5AEC6'], [0.6, '#968EAB'], [1, '#756D8C']],
   kontur: '#544C68',
 };
@@ -233,6 +233,7 @@ export function dokulariAl() {
   return dokular;
 }
 
+const q0 = (i, j, k) => i * 977 + j * 131 + k * 17;
 // ---------------------------------------------------------------- seviye sprite'ı
 /**
  * Bir ayrıntı seviyesi: s = doğal ölçek (yakın = 1). [i0,i1) × [j0,j1) hücre bölgesini kapsar.
@@ -271,9 +272,9 @@ export function seviyeOlustur(s, i0, j0, i1, j1, { cizgiAyri = false, tohum = 1 
   for (let k = 0; k < Math.min(leke, 900); k++) {
     const x = r() * Wp, y = r() * Hp, R = c * r.ara(0.8, 2.6);
     const g = ctx.createRadialGradient(x, y, 0, x, y, R);
-    const a = r.ara(0.05, 0.13);
-    g.addColorStop(0, `rgba(150,142,170,${a})`);
-    g.addColorStop(1, 'rgba(150,142,170,0)');
+    const a = r.ara(0.03, 0.08);
+    g.addColorStop(0, `rgba(146,138,160,${a})`);
+    g.addColorStop(1, 'rgba(146,138,160,0)');
     ctx.fillStyle = g;
     ctx.fillRect(x - R, y - R, 2 * R, 2 * R);
   }
@@ -282,6 +283,35 @@ export function seviyeOlustur(s, i0, j0, i1, j1, { cizgiAyri = false, tohum = 1 
   ctx.fillRect(0, 0, Wp, Hp);
   ctx.fillStyle = ctx.createPattern(D.zemin2, 'repeat');
   ctx.fillRect(0, 0, Wp, Hp);
+  // zemin ayrıntısı (yakın seviyelerde): ince çatlaklar ve çakıllar
+  if (s >= 0.4) {
+    ctx.globalCompositeOperation = 'source-over';
+    const ar = rng(tohum * 7 + 11);
+    for (let j = j0; j < j1; j++) for (let i = i0; i < i1; i++) {
+      const v = ar();
+      const cx = ox + (i + 0.5) * c + ar.ara(-0.22, 0.22) * c, cy = oy + (j + 0.5) * c + ar.ara(-0.22, 0.22) * c;
+      if (v < 0.22) {
+        const a = ar() * TAU, L = c * ar.ara(0.18, 0.34);
+        const pts = [];
+        for (let k = 0; k <= 5; k++) {
+          const u = k / 5 - 0.5;
+          pts.push([cx + Math.cos(a) * L * u + ar.ara(-1, 1) * c * 0.02, cy + Math.sin(a) * L * u + ar.ara(-1, 1) * c * 0.02]);
+        }
+        konturCiz(ctx, pts, { renk: '#8A8298', kal: clamp(c * 0.005, 0.9, 1.4), alfa: 0.55, kapali: false, titreme: 0.3, tohum: i * 131 + j, uc: 0.3 });
+        if (ar() < 0.5) { const m = pts[2 + (ar() < 0.5 ? 1 : 0)]; const b = a + ar.ara(0.6, 1.2) * (ar() < 0.5 ? 1 : -1); konturCiz(ctx, [m, [m[0] + Math.cos(b) * L * 0.3, m[1] + Math.sin(b) * L * 0.3]], { renk: '#8A8298', kal: clamp(c * 0.004, 0.8, 1.2), alfa: 0.45, kapali: false, titreme: 0.2, tohum: i * 7 + j * 3, uc: 0.4 }); }
+      } else if (v < 0.36) {
+        const n = 1 + Math.floor(ar() * 3);
+        for (let k = 0; k < n; k++) {
+          const px = cx + ar.ara(-0.08, 0.08) * c, py = cy + ar.ara(-0.08, 0.08) * c, rr = c * ar.ara(0.012, 0.026);
+          ctx.fillStyle = 'rgba(214,208,220,0.9)';
+          ctx.beginPath(); ctx.ellipse(px, py, rr * 1.3, rr, ar() * 3, 0, TAU); ctx.fill();
+          const pts = [];
+          for (let q = 0; q < 14; q++) { const aa = (q / 14) * TAU; pts.push([px + Math.cos(aa) * rr * 1.3, py + Math.sin(aa) * rr]); }
+          konturCiz(ctx, pts, { renk: '#7E7690', kal: clamp(c * 0.005, 0.9, 1.3), alfa: 0.7, kapali: true, titreme: 0.15, tohum: q0(i, j, k) });
+        }
+      }
+    }
+  }
   // 2) duvar gölgesi (ışık sol üstten): bulanık buğu + taranmış gölge
   const gdx = c * 0.085, gdy = c * 0.115;
   {

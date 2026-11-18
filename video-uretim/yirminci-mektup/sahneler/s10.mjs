@@ -9,7 +9,7 @@ import * as M from '../motor/motifler.mjs';
 import { labirentHazirla, labirentCiz } from './s10-labirent.mjs';
 import { tampon, radyalMaske, isikBas, dalgaHalkasi, huzme, zerreler, yurumePlani, bilekX } from './s10-yardim.mjs';
 import { dunyaHazirla, yanCiz, yagmurCiz, D, G, AGAC, NUR, F } from './s10-dunya.mjs';
-import { bahceHazirla, karanlikCizV, bahceCizV, alisverisciler, katman, refEkran, V, YOL, CV } from './s10-bahce.mjs';
+import { bahceHazirla, karanlikCizV, bahceCizV, bahceOnPlan, alisverisciler, katman, refEkran, V, YOL, CV, CESME } from './s10-bahce.mjs';
 import { insanYan } from '../motor/insan.mjs';
 
 const kb = (i) => ki(i).bas - 0.04;
@@ -79,8 +79,8 @@ function kameraKur() {
     { t: T.vah + 0.55, x: CV.x, y: CV.y, z: 0.96, e: ease.outCubic },
     { t: T.ten, x: CV.x + 10, y: CV.y + 6, z: 1.0, e: ease.inOutSine },
     { t: T.ve, x: CV.x + 40, y: CV.y, z: 1.0, e: ease.inOutSine },
-    { t: T.olur + 0.5, x: 1980, y: 890, z: 0.92, e: ease.inOutCubic },
-    { t: 110.9, x: 2010, y: 880, z: 0.9, e: ease.outSine },
+    { t: T.olur + 0.5, x: 2060, y: 890, z: 0.95, e: ease.inOutCubic },
+    { t: 110.9, x: 2090, y: 884, z: 0.93, e: ease.outSine },
   ]);
 }
 
@@ -165,7 +165,7 @@ function yanSahne(ctx, t) {
 }
 
 // ---------------------------------------------------------------- vahşetgâh → tenezzühgâh → ticaretgâh
-const DALGA = { sx: 540, sy: 1180, Rmax: 1500, sure: 1.25 };
+const DALGA = { sx: 470, sy: 1150, Rmax: 1600, sure: 1.3 };
 function varis(sx, sy) {
   const d = Math.hypot(sx - DALGA.sx, sy - DALGA.sy);
   if (d >= DALGA.Rmax) return T.ten + DALGA.sure;
@@ -214,7 +214,7 @@ function vBolumu(ctx, cam, t, S) {
     bahceCizV(k, cam, t, B);
     alisverisciler(k, cam, t, B);
     adamSepetli(k, cam, t);
-    onPlanBahce(k, cam, t);
+    bahceOnPlan(k, cam, t, B);
     kuslar(k, cam, t);
     if (bolgeMaske(k, cam)) g.drawImage(KB, 0, 0);
   };
@@ -247,19 +247,11 @@ function adamSepetli(g, cam, t) {
   if (t < yuru3.t0) return;
   const r = yuru3(t);
   g.save(); katman(g, cam, 1);
-  const s = 0.62;
+  const s = 0.7;
   const p = insanYan(g, r.x, YOL, r.poz, { s, yon: 1, olcek: 1.1 });
   // sepet ön elde (dünya = katman koordinatı)
   const sal = Math.sin(r.faz * 2) * 0.05;
   ogeCiz(g, V.sepet, p.el[0], p.el[1] - 4, { s: s * 1.05, r: sal });
-  g.restore();
-}
-function onPlanBahce(g, cam, t) {
-  g.save(); katman(g, cam, 1.15);
-  for (const o of V.on) {
-    const u = pop(t, varis(o.sx, Math.min(o.sy, 1600)) + 0.05, 0.5);
-    if (u > 0) ogeCiz(g, o.bahce, o.sx, o.sy, { s: u });
-  }
   g.restore();
 }
 function kuslar(g, cam, t) {
@@ -284,7 +276,7 @@ export default {
     D.kayaDx = yuru2.x1 - (bilekX(POZ.yaslan, 0) - bilekX(POZ.duz, 0)) * S_ADAM - 15 - 318;
     bahceHazirla();
     // bahçede keyifle yürüyüş (sepetli): soldan girer, çarşıya doğru
-    yuru3 = yurumePlani({ t0: T.ten + 0.38, t1: 111.6, n: 12, s: 0.62, yon: 1, x0: -60, sabitHiz: true, kol: 0.3, egim: 0.03,
+    yuru3 = yurumePlani({ t0: T.ten + 0.3, t1: 111.6, n: 12, s: 0.7, yon: 1, x0: -10, sabitHiz: true, kol: 0.3, egim: 0.03,
       pozF: (p) => ({ ...p, bas: -0.08, omuz: [p.omuz[0], 0.1 + 0.04 * Math.sin(p.omuz[0] * 3)], dirsek: [p.dirsek[0], 1.45] }) });
     kameraKur();
   },

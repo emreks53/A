@@ -585,9 +585,10 @@ export function yagmur(ctx, t, guc, { sayi = 150, aci = 0.32, hiz = 1500, tohum 
     const d = (y0 + t * v) % (H + 200);
     const y = d - 100;
     const x = ((x0 + d * (ux / uy)) % (W + 600) + (W + 600)) % (W + 600) - 300;
-    let a = r.ara(0.34, 0.62) * Math.min(1, guc * 1.4);
+    const acik = r() < 0.55;
+    let a = (acik ? r.ara(0.42, 0.7) : r.ara(0.34, 0.62)) * Math.min(1, guc * 1.4);
     if (y > 1360 && y < 1660) a *= 0.35;
-    ctx.fillStyle = rgba(renk, a);
+    ctx.fillStyle = rgba(acik ? '#EEECF4' : renk, a);
     darbe(ctx, [[x, y], [x + ux * L * 0.5, y + uy * L * 0.5], [x + ux * L, y + uy * L]], r.ara(1.3, 2.0), { incelme: 0.45, sivri: 0.6 });
   }
   ctx.restore();

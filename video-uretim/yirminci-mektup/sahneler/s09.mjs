@@ -47,7 +47,7 @@ const SIL_TEMIZ = 88.26; // dalışın sonunda kenarda kalanlar sönsün
 const [JX, JY] = LB.hucreMerkez(60, 60); // kavşak
 const C = LB.HUCRE;
 const P0 = [JX, JY + 0.55 * C];
-const SON_X = 62 * C - C * LB.DUVAR / 2 - 30; // çıkmazda durduğu yer (x)
+const SON_X = 62 * C - C * LB.DUVAR / 2 - 34; // çıkmazda durduğu yer (x)
 const ADAM_SON = [SON_X, JY];
 const YURU = { t0: T.insan + 0.32, t1: 90.3 };
 const R_DON = 70;
@@ -154,7 +154,7 @@ const LEVHALAR = (() => {
     { x: JX, y: JY - 1.2 * C, a: Math.PI / 2 + 0.08, s: 0.78, yk: 1.0, dt: 0.3, w: 15 },
     { x: JX - 1.2 * C, y: JY, a: 0.06, s: 0.78, yk: 1.0, dt: 0.37, w: -10.5 },
     { x: JX, y: JY + 1.25 * C, a: -Math.PI / 2 - 0.1, s: 0.78, yk: 1.0, dt: 0.44, w: 13 },
-    { x: JX + 2 * C, y: JY - 0.1 * C, a: Math.PI + 0.05, s: 0.78, yk: 1.0, dt: 0.51, w: -16 },
+    { x: JX + 2 * C, y: JY + 0.35 * C, a: Math.PI / 2 + 0.12, s: 0.78, yk: 1.0, dt: 0.51, w: -16 },
     { x: JX, y: JY - 2.15 * C, a: -Math.PI / 2 + 0.2, s: 0.78, yk: 1.0, dt: 0.58, w: 12 },
   ];
   const r = rng(77);
@@ -196,15 +196,13 @@ export default {
   sesler: [
     { t: 82.62, tur: 'ruzgar', guc: 0.22, sure: 2.6 },
     { t: T.iste + 0.05, tur: 'whoosh', guc: 0.28, sure: 1.4 },
-    { t: T.perisan + 0.05, tur: 'pop', guc: 0.22, tekrar: 7, ara: 0.065 },
-    { t: T.fani + 0.05, tur: 'ruzgar', guc: 0.2, sure: 1.2 },
+    { t: T.perisan + 0.05, tur: 'pop', guc: 0.2, tekrar: 6, ara: 0.065 },
     { t: SIL_BAS, tur: 'firca', guc: 0.34, tekrar: 4, ara: 0.18 },
-    { t: 87.9, tur: 'whoosh', guc: 0.25, sure: 0.6 },
+    { t: 87.92, tur: 'whoosh', guc: 0.24, sure: 0.6 },
     { t: T.insan, tur: 'pop', guc: 0.24 },
     { t: T.insan + 0.1, tur: 'kalem', guc: 0.45, sure: 0.9 },
     { t: YURU.t0 + 0.1, tur: 'adim', guc: 0.16, tekrar: 4, ara: 0.36 },
     { t: T.malikini, tur: 'pop', guc: 0.2, tekrar: 5, ara: 0.12 },
-    { t: T.bicare, tur: 'whoosh', guc: 0.22, sure: 1.8 },
     { t: T.herkes - 0.02, tur: 'whoosh', guc: 0.42, sure: 1.5 },
   ],
   hazirla() {
@@ -217,7 +215,7 @@ export default {
     const ck = D.cicekKutusu();
     D.silgiKur({
       bolge: [{ x0: ck.x0 + 8, x1: D.ADAM.x - 72, yUst: ck.y0 + 8, yAlt: 1950 }, { x0: D.ADAM.x - 72, x1: D.ADAM.x + 128, yUst: 1680, yAlt: 1982 }],
-      adim: 58, en: 100, t0: SIL_BAS, t1: SIL_SON, giris: [120, 1600], cikis: [1060, 1480],
+      adim: 47, en: 100, t0: SIL_BAS, t1: SIL_SON, giris: [120, 1600], cikis: [1060, 1480],
     });
     hayT = tuval(W, H);
     // labirent seviyeleri (kamera yolunun gördüğü bölgelere göre)
@@ -319,22 +317,25 @@ function labirentBolumu(ctx, t) {
   // labirent: adamdan dışa doğru önce çizgiler, sonra taramalar
   const a = adamDurum(t);
   const [ax, ay] = LB.labEkranda(cam, a.x, a.y);
-  const rC = lerp(0, 1750, an(t, T.insan + 0.08, 0.78, ease.inOutSine));
-  const rT = lerp(0, 1750, an(t, T.insan + 0.24, 0.82, ease.inOutSine));
-  if (rT < 1749) {
+  const rC = lerp(0, 1750, an(t, T.insan + 0.08, 0.72, ease.inOutSine));
+  const dolgu = an(t, T.insan + 0.42, 0.55, ease.inOutSine); // çizgilerden sonra tarama ve gölgeler gelir
+  if (dolgu < 1) {
     if (rC > 1) {
       const gb = tB.getContext('2d');
       gb.clearRect(0, 0, W, H);
       LB.seviyeCiz(gb, cam, S0, { tuvalAd: 'cizgi' });
-      maskele(gb, ax, ay, rC, 90);
+      maskele(gb, ax, ay, rC, 120);
       ctx.drawImage(tB, 0, 0);
     }
-    if (rT > 1) {
+    if (dolgu > 0) {
       const ga = tA.getContext('2d');
       ga.clearRect(0, 0, W, H);
       LB.labirentCiz(ga, cam, seviyeler);
-      maskele(ga, ax, ay, rT, 160);
+      maskele(ga, ax, ay, rC, 420);
+      ctx.save();
+      ctx.globalAlpha = dolgu;
       ctx.drawImage(tA, 0, 0);
+      ctx.restore();
     }
   } else {
     LB.labirentCiz(ctx, cam, seviyeler);
@@ -344,16 +345,36 @@ function labirentBolumu(ctx, t) {
   LB.labKameraUygula(ctx, cam);
   // levhalar adamdan alçakta olanlar önce (adam omuz hizasında, levhalar daha yüksek: adamdan sonra)
   const ap = pop(t, T.insan, 0.42);
-  tepeAdam(ctx, a.x, a.y, a.h, a.poz, { s: 1.1 * ap, ekranOlcek: cam.z });
+  // çok yükseklerde bile seçilebilsin: ekrandaki boyu yavaşça alt sınıra yaklaşır
+  const buyut = Math.max(1, Math.pow(0.2 / cam.z, 0.55));
+  tepeAdam(ctx, a.x, a.y, a.h, a.poz, { s: 1.24 * ap * buyut, ekranOlcek: cam.z, golgeYon: [11 * buyut, 15 * buyut] });
+  const levhaA = clamp((cam.z - 0.24) / 0.3); // kamera yükselince levhalar söner
   for (const l of LEVHALAR) {
     const s = pop(t, l.t0, 0.45) * l.s;
-    if (s <= 0) continue;
+    if (s <= 0 || levhaA <= 0) continue;
     const ac = levhaAci(l, t);
     // hızlı dönüşte hareket izi
     const hiz = t > T.bicare ? Math.min(1, (t - T.bicare) / 0.7) : 0;
-    if (hiz > 0.2) for (let k = 2; k >= 1; k--) levhaCiz(ctx, l.x, l.y, ac - l.w * 0.012 * k, { s, alfa: 0.18 * hiz, yukseklik: l.yk });
-    levhaCiz(ctx, l.x, l.y, ac, { s, yukseklik: l.yk });
+    if (hiz > 0.2) for (let k = 2; k >= 1; k--) levhaCiz(ctx, l.x, l.y, ac - l.w * 0.012 * k, { s, alfa: 0.18 * hiz * levhaA, yukseklik: l.yk });
+    levhaCiz(ctx, l.x, l.y, ac, { s, yukseklik: l.yk, alfa: levhaA });
   }
+  ctx.restore();
+  yukseklikCiz(ctx, t, cam);
+}
+
+// yükselişte: kenarlar kararır, ışık adamın çevresinde toplanır (uçsuz bucaksızlık, göz adamı bulur)
+function yukseklikCiz(ctx, t, cam) {
+  const yuk = clamp((1.2 - cam.z) / 1.0); // 0 yakında, 1 yüksekte
+  if (yuk <= 0) return;
+  // kenar kararması
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  const g = ctx.createRadialGradient(W / 2, H / 2, 160, W / 2, H / 2, 1150);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.55, `rgba(${255 - 40 * yuk},${255 - 44 * yuk},${255 - 30 * yuk},1)`);
+  g.addColorStop(1, `rgba(${255 - 95 * yuk},${255 - 100 * yuk},${255 - 75 * yuk},1)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
   ctx.restore();
 }
 function maskele(g, x, y, r, yumusak) {
@@ -367,4 +388,34 @@ function maskele(g, x, y, r, yumusak) {
   g.fillStyle = gr;
   g.fillRect(0, 0, W, H);
   g.restore();
+}
+
+// ---------------------------------------------------------------- s10'a devir: son kareyi birebir çizmek için
+// s10 (veya başka bir dosya) şunları içe aktarabilir: SON, sonKareHazirla(), sonKareCiz(ctx, t).
+// SON.kamera: labirent dünyasında ekran ortasına gelen nokta (adam), z (yakın seviyeye göre ölçek), r (dönüş: 90°,
+// eksenlere hizalı). Hücre ekranda SON.hucreEkran px; duvar kalınlığı hücrenin %20'si.
+export const SON = {
+  kamera: SON_KAMERA,
+  hucreEkran: LB.HUCRE * SON_KAMERA.z,
+  adamEkran: [W / 2, H / 2],
+};
+let sonSeviye = null;
+export function sonKareHazirla() {
+  if (seviyeler) { sonSeviye = [seviyeler[seviyeler.length - 1]]; return; }
+  LB.labirentHazirla();
+  const b = LB.gorusKutusu(SON_KAMERA, 80);
+  sonSeviye = [LB.seviyeOlustur(0.113, b.x0 / C - 1, b.y0 / C - 1, b.x1 / C + 1, b.y1 / C + 1, { tohum: 6 })];
+}
+/** s09'un 96,28 sn sonrasındaki karesi (labirent + adam + kenar kararması); t yalnız adamın salınımı için */
+export function sonKareCiz(ctx, t = 96.5) {
+  if (!sonSeviye) sonKareHazirla();
+  const cam = SON_KAMERA;
+  LB.labirentCiz(ctx, cam, sonSeviye);
+  const a = adamDurum(Math.max(96.3, t));
+  ctx.save();
+  LB.labKameraUygula(ctx, cam);
+  const buyut = Math.max(1, Math.pow(0.2 / cam.z, 0.55));
+  tepeAdam(ctx, a.x, a.y, a.h, a.poz, { s: 1.24 * buyut, ekranOlcek: cam.z, golgeYon: [11 * buyut, 15 * buyut] });
+  ctx.restore();
+  yukseklikCiz(ctx, t, cam);
 }

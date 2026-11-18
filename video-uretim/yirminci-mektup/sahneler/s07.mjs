@@ -109,7 +109,7 @@ function ustKaristir(p, h, w) {
   if (w <= 0) return p;
   const o = { ...p };
   for (const k of ['govde', 'bas']) if (h[k] !== undefined) o[k] = lerp(p[k], h[k], w);
-  for (const k of ['omuz', 'dirsek']) if (h[k]) o[k] = p[k].map((v, i) => lerp(v, h[k][i], w));
+  for (const k of ['omuz', 'dirsek', 'el']) if (h[k]) o[k] = (p[k] || [0, 0]).map((v, i) => lerp(v, h[k][i], w));
   return o;
 }
 
@@ -121,8 +121,9 @@ function adamDurum(t) {
     if (u < 0.36) {
       const k = ease.inQuad(u / 0.36);
       const el = an(t, T.onu - 0.1, 0.32, ease.inOutSine); // göğüsteki el iner
-      const poz = { ...DURUS, bas: lerp(-0.12 + 0.012 * nefes, 0.08, an(t, T.onu - 0.08, 0.32)), govde: -0.02 + 0.012 * nefes + 0.03 * k,
-        omuz: [-0.04 - 0.08 * k, lerp(0.5, 0.06, ease.outQuad(el)) - 0.12 * Math.sin(Math.PI * el) + 0.1 * k], dirsek: [0.12, lerp(2.0, 0.18, ease.inQuad(el))] };
+      // s06'nın son pozu (eli göğsünde); el inerken dirsek hafifçe geriye kaçar, ön kol aşağı düşer
+      const poz = { ...DURUS, bas: lerp(-0.17 + 0.012 * nefes, 0.08, an(t, T.onu - 0.08, 0.32)), govde: -0.015 + 0.01 * nefes + 0.03 * k,
+        omuz: [-0.05 - 0.07 * k, lerp(-0.34, 0.06, el) - 0.22 * Math.sin(Math.PI * el) + 0.1 * k], dirsek: [0.12, lerp(2.82, 0.18, el)], el: [0, lerp(0.32, 0, el)] };
       return yanPoz({ mod: 'yan', X: X0, yon: 1, sx: 1 - 0.32 * k, poz });
     }
     const k = (u - 0.36) / 0.3;
@@ -135,8 +136,8 @@ function adamDurum(t) {
   // duruş ve ruh hâli (yalnız üst gövde)
   poz = ustKaristir(poz, { govde: 0.1, bas: 0.3 }, an(t, 62.35, 0.6, ease.inOutSine));
   poz = ustKaristir(poz, { govde: 0.04, bas: -0.02, omuz: [-0.12, -0.2], dirsek: [0.3, 0.36] }, an(t, T.evham, 0.45, ease.outCubic));
-  poz = ustKaristir(poz, { govde: 0.08, bas: 0.34, omuz: [-0.02, 0.52], dirsek: [0.2, 1.95] }, an(t, T.manen - 0.02, 0.4, ease.inOutCubic));
-  poz = ustKaristir(poz, { govde: 0.22, bas: 0.52, omuz: [0.05, 0.1], dirsek: [0.06, 0.1] }, an(t, T.maddeten + 0.04, 0.55, ease.outCubic));
+  poz = ustKaristir(poz, { govde: 0.08, bas: 0.34, omuz: [-0.04, -0.34], dirsek: [0.2, 2.82], el: [0, 0.32] }, an(t, T.manen - 0.02, 0.4, ease.inOutCubic));
+  poz = ustKaristir(poz, { govde: 0.22, bas: 0.52, omuz: [0.05, 0.1], dirsek: [0.06, 0.1], el: [0, 0] }, an(t, T.maddeten + 0.04, 0.55, ease.outCubic));
   // nefes / omuz inip kalkması
   poz.govde += 0.012 * nefes * an(t, 62.8, 0.5);
   let X = o.X;
@@ -231,6 +232,7 @@ export default {
     { t: T.sevmeyen + 0.05, tur: 'kalp', guc: 0.3 },
     { t: T.nihayet, tur: 'whoosh', guc: 0.24, sure: 1.4 },
     { t: T.sakavet + 0.05, tur: 'gok', guc: 0.34, sure: 2.6 },
+    { t: T.sakavet + 0.3, tur: 'ruzgar', guc: 0.2, sure: 1.8 },
     { t: T.alam, tur: 'kalem', guc: 0.34, sure: 0.8 },
     { t: T.evham, tur: 'ruzgar', guc: 0.26, sure: 1.8 },
     { t: T.manen + 0.05, tur: 'kalp', guc: 0.24 },
@@ -340,6 +342,7 @@ export default {
       { o: Y.agirBulut(980, 47, 1.05, 1), x: 640, y: 700, t0: T.sakavet + 0.15, dy: -440, alcak: true },
     ];
     yagmurBulutu = Y.agirBulut(640, 53, 1.3, 1);
+    kucukBulut = Y.agirBulut(84, 61, 2.2, 1);
 
     // orta katmanda küçük ağaçlar: renkli dünyada yeşil, gri dünyada aynı yerde kuru
     const ka = M.agac({ boy: 150, tohum: 61, olcek: 1.2 });
@@ -369,9 +372,9 @@ export default {
 
     // kuruntu gölgeleri
     golgeler = [
-      { o: Y.golgeOge(620, 400, 5, 1, 0.32), dx: -330, dy: -40, t0: T.evham + 0.02, faz: 0.3, R: 50 },
-      { o: Y.golgeOge(560, 380, 8, 1, -0.3), dx: 330, dy: -55, t0: T.evham + 0.22, faz: 2.1, R: 46 },
-      { o: Y.golgeOge(820, 560, 13, 1, 0.12), dx: 40, dy: -110, t0: T.evham + 0.44, faz: 4.0, R: 70, uzak: true },
+      { o: Y.golgeOge(540, 360, 5, 1, 0.34), dx: -360, dy: -40, t0: T.evham + 0.02, faz: 0.3, R: 44 },
+      { o: Y.golgeOge(500, 340, 8, 1, -0.32), dx: 350, dy: -55, t0: T.evham + 0.24, faz: 2.1, R: 40 },
+      { o: Y.golgeOge(640, 440, 13, 1, 0.1), dx: -40, dy: -120, t0: T.evham + 0.46, faz: 4.0, R: 60, uzak: true },
     ];
     sisU = Y.sisTuvali(2400, 260, 3, '#EEEBF2');
     sisBlob = tuval(1120, 900);
@@ -507,7 +510,7 @@ function dunya(g, t, durum, gri) {
   kameraIle(g, cam, (c) => {
     ogeCiz(c, gri ? uzakG : uzakR, 0, 0);
     if (gri) {
-      for (const [x, s] of [[-470, 0.38], [-230, 0.3], [-760, 0.33]]) ogeCiz(c, uzakKuru, x, pUzak(x) + 8, { s });
+      for (const [x, s] of [[-470, 0.38], [-230, 0.3], [-760, 0.33], [-610, 0.22], [-340, 0.18], [-905, 0.26]]) ogeCiz(c, uzakKuru, x, pUzak(x) + 8, { s });
     }
   }, F.uzak);
   if (gri) kameraIle(g, cam, (c) => sisCiz(c, sisU, 1000, t * 10, 0.85), F.sisU);
@@ -528,8 +531,8 @@ function dunya(g, t, durum, gri) {
   // ön zemin, ağaç, çiçekler, çalı ve taşlar
   kameraIle(g, cam, (c) => {
     ogeCiz(c, gri ? onG : onR, 0, 0);
-    ogeCiz(c, gri ? yolG : yolR, 0, 0);
-    const agacSis = gri ? an(t, 60.3, 2.4, ease.inOutSine) : 0; // geride kalan ağaç sise gömülür
+    const agacSis = gri ? an(t, 60.3, 2.4, ease.inOutSine) : 0; // geride kalan ağaç ve nura giden yol sise gömülür
+    ogeCiz(c, gri ? yolG : yolR, 0, 0, { alfa: 1 - 0.72 * agacSis });
     ogeCiz(c, gri ? agacG : agacR, AGAC.x, AGAC.y, { r: Math.sin(t * 0.9) * 0.004, alfa: 1 - 0.82 * agacSis });
     if (agacSis > 0) {
       c.save();
@@ -538,6 +541,7 @@ function dunya(g, t, durum, gri) {
       c.restore();
     }
     for (const cc of gri ? cicekG : cicekR) {
+      if (gri && cc.x < 160) continue; // çorak ovada çiçek kalmaz
       const egil = gri ? 0.5 + 0.2 * Math.sin(cc.faz) : 0;
       ogeCiz(c, cc.oge, cc.x, cc.y, { s: cc.s * (gri ? 0.9 : 1), sy: cc.s * (gri ? 0.7 : 1), r: (gri ? egil * (cc.faz > 3 ? 1 : -1) : 0) + Math.sin(t * 1.3 + cc.faz) * 0.04 });
     }
@@ -555,6 +559,7 @@ function dunya(g, t, durum, gri) {
     // kuruntu gölgeleri (adamın ardında, sisin içinde)
     kameraIle(g, cam, (c) => golgeCiz(c, t), F.golge);
     kameraIle(g, cam, (c) => {
+      ruzgarCiz(c, t);
       dikenler(c, t, d, -1);
       seritler(c, t, -1, d.X);
       yagmurCiz(c, t, 0);
@@ -706,8 +711,8 @@ function golgeCiz(c, t) {
   for (const gl of golgeler) {
     const u = an(t, gl.t0, 1.1, ease.outCubic);
     if (u <= 0) continue;
-    const son = an(t, T.muptela + 0.4, 1.7, ease.inOutSine); // sona doğru sise çekilir: ıssızlık
-    const a = (gl.uzak ? 0.6 : 0.85) * u * (1 - 0.75 * son);
+    const son = an(t, T.muptela + 0.25, 1.5, ease.inOutSine); // sona doğru sise çekilir: ıssızlık
+    const a = (gl.uzak ? 0.42 : 0.72) * u * (1 - 0.88 * son);
     const w = 0.42 * (t - gl.t0) + gl.faz;
     const x = XDUR + gl.dx + Math.sin(w) * gl.R;
     const y = ZEMIN + gl.dy + 60 * son;
@@ -719,10 +724,10 @@ function golgeCiz(c, t) {
 }
 
 const SERIT = [
-  { a: 210, b: 38, dy: -80, w: 1.0, f0: 0.4, span: 2.2, kal: 5.0 },
-  { a: 270, b: 52, dy: -165, w: 0.82, f0: 2.6, span: 1.9, kal: 6.0 },
-  { a: 190, b: 30, dy: -245, w: 1.15, f0: 4.4, span: 1.8, kal: 4.4 },
-  { a: 320, b: 58, dy: -30, w: 0.7, f0: 5.6, span: 1.6, kal: 6.4 },
+  { a: 200, b: 34, dy: -120, w: 1.0, f0: 0.4, span: 1.5, kal: 5.0 },
+  { a: 250, b: 44, dy: -200, w: 0.82, f0: 2.6, span: 1.3, kal: 5.6 },
+  { a: 180, b: 28, dy: -275, w: 1.15, f0: 4.4, span: 1.2, kal: 4.4 },
+  { a: 290, b: 48, dy: -160, w: 0.7, f0: 5.6, span: 1.1, kal: 6.0 },
 ];
 /** evham: adamın çevresinde dönen koyu sis şeritleri (taraf: -1 arkadaki yarı, 1 öndeki yarı) */
 function seritler(c, t, taraf, cx) {
@@ -730,7 +735,7 @@ function seritler(c, t, taraf, cx) {
     const s = SERIT[i];
     const u = an(t, T.evham + i * 0.12, 0.9, ease.outCubic);
     if (u <= 0) continue;
-    const son = an(t, T.muptela + 0.6, 1.4);
+    const son = an(t, T.muptela + 0.3, 1.5, ease.inOutSine);
     const ac = 1.6 - 0.6 * u; // dışarıdan daralarak yaklaşır
     const A = s.a * ac, B = s.b * ac;
     const cy = ZEMIN + s.dy * S;
@@ -742,7 +747,7 @@ function seritler(c, t, taraf, cx) {
       let parca = [];
       const bitir = () => {
         if (parca.length > 2) {
-          c.fillStyle = rgba('#453E56', (0.24 + 0.1 * (k % 2)) * u * (1 - 0.6 * son));
+          c.fillStyle = rgba('#453E56', (0.24 + 0.1 * (k % 2)) * u * (1 - 0.92 * son));
           darbe(c, parca, s.kal * (0.7 + 0.15 * k), { incelme: 0.4, sivri: 0.5 });
         }
         parca = [];
@@ -860,8 +865,46 @@ function gogusBulutu(c, t, durum) {
       const rr = R * (0.25 + 0.75 * v) * (0.8 + 0.1 * k);
       pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.8]);
     }
-    c.fillStyle = rgba('#3E3749', 0.5);
-    darbe(c, pts, 2.6, { incelme: 0.4 });
+    c.fillStyle = rgba('#3E3749', 0.42);
+    darbe(c, pts, 2.4, { incelme: 0.4 });
+  }
+  ogeCiz(c, kucukBulut, x + Math.sin(t * 1.7) * 2, y + 4, { s: 0.62 * u * son, r: Math.sin(t * 1.1) * 0.06, alfa: 0.9 });
+}
+
+/** şakavet: ovada esen rüzgâr: uzun, ince kalem çizgileri ve savrulan kuru yaprak kırıntıları (gri dünya) */
+function ruzgarCiz(c, t) {
+  const zarf0 = an(t, T.sakavet - 0.3, 0.8) * (1 - an(t, 64.2, 1.2));
+  if (zarf0 <= 0) return;
+  const r = rng(808);
+  for (let i = 0; i < 9; i++) {
+    const y = r.ara(1120, 1300), hiz = r.ara(320, 470), faz = r(), L = r.ara(120, 230);
+    const yol = 1900;
+    const x = XDUR + 700 - ((t * hiz + faz * yol) % yol);
+    const a = 0.22 * zarf0 * Math.sin(clamp((XDUR + 700 - x) / yol) * Math.PI);
+    if (a <= 0.01) continue;
+    const pts = [];
+    for (let k = 0; k <= 16; k++) {
+      const v = k / 16;
+      pts.push([x + v * L, y + Math.sin(v * 5 + t * 3 + i) * 5 - (v > 0.7 ? (v - 0.7) * 30 : 0)]);
+    }
+    c.fillStyle = rgba('#5E5670', a);
+    darbe(c, pts, 1.8, { incelme: 0.45 });
+  }
+  for (let i = 0; i < 7; i++) {
+    const hiz = r.ara(260, 400), faz = r(), y0 = r.ara(1180, 1310);
+    const yol = 1900;
+    const x = XDUR + 700 - ((t * hiz + faz * yol) % yol);
+    const y = y0 - Math.abs(Math.sin(t * 4 + i * 2)) * 22;
+    const a = 0.7 * zarf0 * Math.sin(clamp((XDUR + 700 - x) / yol) * Math.PI);
+    if (a <= 0.01) continue;
+    c.save();
+    c.translate(x, y);
+    c.rotate(t * 6 + i);
+    c.fillStyle = rgba('#5A5163', a);
+    c.beginPath();
+    c.ellipse(0, 0, 5, 2.2, 0, 0, TAU);
+    c.fill();
+    c.restore();
   }
 }
 

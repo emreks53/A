@@ -77,6 +77,43 @@ export function lodCiz(ctx, lod, x, y, sc, z = 1, { alfa = 1, r = 0, sx = 1 } = 
   ctx.restore();
 }
 
+// ---------------------------------------------------------------- çizerek açılış (yeniden kullanılan maske tuvaliyle)
+// motor/kalem.mjs ogeAcarak her karede yeni bir tuval açar; büyük sprite'larda yerel bellek şişmesin diye her sprite
+// için tek bir maske tuvali tutulur ve her karede yeniden doldurulur.
+const maskeler = new WeakMap();
+export function acarakCiz(ctx, o, x, y, ilerleme, { alfa = 1, mod = 'sil', yon = -Math.PI / 2, merkez = null, yumusak = 0.12 } = {}) {
+  if (ilerleme <= 0 || alfa <= 0.003) return;
+  if (ilerleme >= 1) return ogeCiz(ctx, o, x, y, { alfa });
+  const W0 = o.tuval.width, H0 = o.tuval.height, S = o.olcek, b = o.sinir;
+  let m = maskeler.get(o);
+  if (!m) { m = tuval(W0, H0); maskeler.set(o, m); }
+  const mc = m.getContext('2d');
+  mc.save();
+  mc.globalCompositeOperation = 'copy';
+  mc.drawImage(o.tuval, 0, 0);
+  mc.globalCompositeOperation = 'destination-in';
+  let g;
+  const e = ilerleme * (1 + yumusak);
+  if (mod === 'daire') {
+    const [mx, my] = merkez || [b.cx, b.cy];
+    const px = (mx + o.ox) * S, py = (my + o.oy) * S;
+    const R = Math.hypot(Math.max(px, W0 - px), Math.max(py, H0 - py));
+    g = mc.createRadialGradient(px, py, 0, px, py, R);
+  } else {
+    const ux = Math.cos(yon), uy = Math.sin(yon);
+    const R = (Math.abs(ux) * W0 + Math.abs(uy) * H0) / 2;
+    g = mc.createLinearGradient(W0 / 2 - ux * R, H0 / 2 - uy * R, W0 / 2 + ux * R, H0 / 2 + uy * R);
+  }
+  g.addColorStop(0, 'rgba(0,0,0,1)');
+  g.addColorStop(clamp(e - yumusak), 'rgba(0,0,0,1)');
+  g.addColorStop(clamp(e), 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  mc.fillStyle = g;
+  mc.fillRect(0, 0, W0, H0);
+  mc.restore();
+  ogeCiz(ctx, { ...o, tuval: m }, x, y, { alfa });
+}
+
 // ---------------------------------------------------------------- ışık sprite'ı
 let parlakSprite = null;
 export function parlak() {
@@ -172,7 +209,7 @@ export function yolOge(Y, { olcek = 2.2, Zmin = 0, Zmax = 3000, ad = 's06-yol' }
   return oge({
     ad, olcek, sekil: cokgen(pts), arka: '#F2E4C6', arkaAlfa: 0.85, arkaBulanik: 3,
     tarama: [
-      { ton: TON.gurultulu((x, y) => clamp(0.14 + (y - hy) / 1500, 0, 0.62), 0.06, 0.02, 4), renkler: [[0, '#F1E2C0'], [0.6, '#DDC59A'], [1, '#C2A274']], yonF: (x, y) => Math.atan2(hy - y, vx - x), aralik: 3.0, boy: [14, 46], kal: 1.15, alfa: 0.42, esikler: [0.22, 0.48] },
+      { ton: TON.gurultulu((x, y) => clamp(0.14 + (y - hy) / 1500, 0, 0.62), 0.06, 0.02, 4), renkler: [[0, '#F1E2C0'], [0.6, '#DDC59A'], [1, '#C2A274']], yonF: (x, y) => Math.atan2(hy - y, vx - x), aralik: 3.0, boy: [12, 38], kal: 1.15, alfa: 0.36, esikler: [0.22, 0.48] },
     ],
     kontur: null,
     detay: (ctx, api) => {

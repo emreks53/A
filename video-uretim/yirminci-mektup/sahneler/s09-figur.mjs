@@ -110,7 +110,7 @@ export function tepeAdam(ctx, x, y, h, poz = {}, { s = 1, ekranOlcek = 1, alfa =
     const S = [yonk * 35, 1];
     const Ey = sv >= 0 ? -11 * sv : 10 * -sv, Hy = sv >= 0 ? -28 * sv : 23 * -sv;
     const E0 = [yonk * (40 + 2 * Math.abs(sv)), 2 + Ey], H0 = [yonk * (40 + 1 * Math.abs(sv)), 2 + Hy];
-    const E1 = [yonk * 61, -9], H1 = [yonk * 13, -6];
+    const E1 = [yonk * 52, -22], H1 = [yonk * 12, -9];
     const u = el * el * (3 - 2 * el);
     return { S, E: [lerp(E0[0], E1[0], u), lerp(E0[1], E1[1], u)], Hd: [lerp(H0[0], H1[0], u), lerp(H0[1], H1[1], u)] };
   };

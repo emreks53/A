@@ -11,7 +11,7 @@
 // büyür, meyve verir (bilfiil). Yukarıdan adamın üzerine nur iner; adam ağacın yanında ışıkla yıkanır (mazhardır).
 // Bitiş: adam (yan) nur altında, meyveli ağacın yanında, aydınlık yeşil manzara.
 import { W, H, clamp, lerp, ease, an, pop, rng, TAU, rgba } from '../motor/temel.mjs';
-import { ogeCiz, ogeAcarak, gokTuvali, konturCiz, darbe, PALET } from '../motor/kalem.mjs';
+import { ogeCiz, gokTuvali, konturCiz, darbe, PALET } from '../motor/kalem.mjs';
 import { kameraIle, ekranda, salinim } from '../motor/sahne.mjs';
 import { kb } from '../motor/zaman.mjs';
 import { insanYan, DURUS, pozKaristir } from '../motor/insan.mjs';
@@ -48,9 +48,9 @@ const KAM = Y.puruzsuzYol([
   { t: 48.95, x: 618, y: 1100, z: 1.36 },
   { t: 50.5, x: 610, y: 992, z: 0.95 },
   { t: 51.75, x: 618, y: 968, z: 0.99 },
-  { t: 52.4, x: 620, y: 908, z: 0.94 },
-  { t: 53.3, x: 86, y: 778, z: 2.3 },
-  { t: 53.62, x: 82, y: 782, z: 2.38 },
+  { t: 52.35, x: 620, y: 908, z: 0.94 },
+  { t: 53.15, x: 86, y: 778, z: 2.3 },
+  { t: 53.7, x: 80, y: 783, z: 2.4 },
   { t: 54.35, x: 383, y: 1222, z: 1.3 },
   { t: 55.4, x: 385, y: 1216, z: 1.36 },
   { t: 56.05, x: 389, y: 1210, z: 1.34 },
@@ -67,7 +67,9 @@ const POZ_NUR = { ...POZ_GOGUS, bas: -0.3, govde: -0.03 };
 
 function adamPoz(t) {
   let p = pozKaristir(POZ_EGIK, POZ_BAKIS, an(t, T.taniyan, 0.65, ease.inOutCubic));
-  p = pozKaristir(p, POZ_GOGUS, an(t, T.seven - 0.02, 0.6, ease.inOutCubic));
+  const eg = an(t, T.seven - 0.02, 0.62, ease.inOutCubic);
+  p = pozKaristir(p, POZ_GOGUS, eg);
+  p.omuz[1] -= 0.36 * Math.sin(Math.PI * eg); // dirsek geriye kaçar: el gövdeye yakın yükselir, öne uzanmaz
   p = pozKaristir(p, POZ_NUR, an(t, T.mazhar + 0.05, 0.9, ease.inOutSine));
   p.govde += 0.006 * Math.sin(t * 2.0);
   p.bas += 0.008 * Math.sin(t * 2.0 + 0.6);
@@ -170,6 +172,7 @@ export default {
       const X = yc.X + (ar() < 0.5 ? -1 : 1) * (6 + ar() * (8 + Z * 0.55));
       const [x, y] = Y.proj(X, Z);
       if (x < -150 || x > 1350) continue;
+      if (x < 500 && Z < 70) continue; // sol: kapılar ve hayal ağacı için sakin tarlalar
       if (x > 465 && x < 628 && Z < 26) continue; // adamın başının arkası
       if (x > 612 && x < 795 && Z < 60) continue; // nurun önü
       if (Z > 30 && x < 330) continue; // kapıların çevresi
@@ -332,7 +335,7 @@ export default {
       const acil0 = an(t, 54.0, 0.5, ease.inOutCubic), kapan = 1 - an(t, 56.35, 0.6, ease.inOutSine);
       const acil = acil0 * kapan;
       if (acil > 0) {
-        ogeAcarak(g, toprak, KESIT.cx, KESIT.y0, acil0, { mod: 'daire', merkez: [TOH.x - KESIT.cx, TOH.y - KESIT.y0], yumusak: 0.05, alfa: kapan });
+        Y.acarakCiz(g, toprak, KESIT.cx, KESIT.y0, acil0, { mod: 'daire', merkez: [TOH.x - KESIT.cx, TOH.y - KESIT.y0], yumusak: 0.05, alfa: kapan });
         // kökler
         for (const k of kokler) {
           const u = an(t, k.t0, 0.7, ease.outCubic);
@@ -360,7 +363,7 @@ export default {
       const hs = 1 - an(t, T.fiil + 0.45, 0.6, ease.inOutSine);
       if (hy > 0 && hs > 0) {
         Y.isikNokta(g, AG.x, AG.y - AG.boy * 0.62, 330, 0.16 * hy * hs);
-        ogeAcarak(g, hayal, AG.x, AG.y, hy, { mod: 'sil', yon: -Math.PI / 2, alfa: hs * (0.85 + 0.15 * Math.sin(t * 4)) });
+        Y.acarakCiz(g, hayal, AG.x, AG.y, hy, { mod: 'sil', yon: -Math.PI / 2, alfa: hs * (0.85 + 0.15 * Math.sin(t * 4)) });
       }
       // mazhardır: yukarıdan inen nur (adamın arkasında; adam ışıkta okunur kalır)
       const ni = an(t, T.mazhar, 0.6, ease.outCubic);
@@ -492,7 +495,8 @@ function nurSutunu(g, t, ni) {
   gr.addColorStop(1, 'rgba(255,214,128,0.85)');
   g.fillStyle = gr;
   g.filter = 'blur(22px)';
-  for (const [k, a] of [[1.0, 0.5], [0.5, 0.5]]) {
+  for (const [k, a, kar] of [[1.15, 0.3, 'source-over'], [1.0, 0.5, 'screen'], [0.5, 0.5, 'screen']]) {
+    g.globalCompositeOperation = kar;
     g.globalAlpha = a * nefes * ni;
     g.beginPath();
     g.moveTo(x - gen0 * k, yUst);
@@ -504,6 +508,7 @@ function nurSutunu(g, t, ni) {
   }
   g.filter = 'none';
   g.globalAlpha = 1;
+  g.globalCompositeOperation = 'screen';
   // inen kalem ışınları (ince, altın)
   const r = rng(808);
   for (let i = 0; i < 9; i++) {
@@ -567,7 +572,7 @@ function envarCiz(g, t) {
 }
 
 function kivilcim(ctx, cam, t) {
-  const t0 = 53.5, t1 = 54.22;
+  const t0 = 53.62, t1 = 54.25;
   if (t < t0 || t > t1 + 0.25) return;
   const p0 = [KAPILAR[1][0], KAPI_Y - 24], p1 = [250, 1000], p2 = [TOH.x, TOH.y];
   const at = (u) => [(1 - u) * (1 - u) * p0[0] + 2 * u * (1 - u) * p1[0] + u * u * p2[0], (1 - u) * (1 - u) * p0[1] + 2 * u * (1 - u) * p1[1] + u * u * p2[1]];
