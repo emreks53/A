@@ -174,7 +174,7 @@ export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
     kivrim.push(pts);
   }
   return oge({
-    ad: `s07-kuruntu9-${h}-${w}-${tohum}-${yon}-${egil}`, olcek, sekil: sek, zemin: null, pay: 150,
+    ad: `s07-kuruntu10-${h}-${w}-${tohum}-${yon}-${egil}`, olcek, sekil: sek, zemin: null, pay: 150,
     arka: '#80788F', arkaBulanik: 8, arkaTasma: false,
     arkaCiz: (t, yol) => {
       const g = t.createLinearGradient(0, b.y0, 0, 0);
@@ -193,9 +193,9 @@ export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
     },
     tarama: [
       // açık geçiş: gök, bulut ve sis gibi yatıka yakın saten süpürüş (biçim atmosfere karışır)
-      { ton, renkler: [[0, '#A39CB4'], [1, '#6E6682']], yon: -0.16, aralik: 3.1, boy: [30, 96], esikler: [0.1, 0.3], alfa: 0.38, gecisAci: 0.06, esikYay: 0.14 },
+      { ton, renkler: [[0, '#A39CB4'], [1, '#6E6682']], yon: -0.16, aralik: 3.1, boy: [30, 96], esikler: [0.17, 0.34], alfa: 0.38, gecisAci: 0.06, esikYay: 0.07 },
       // koyu geçişler: eğilme yönüne yatık dik çapraz tarama (uzunluk ve eğilme okunur)
-      { ton, renkler: [[0, '#7A7290'], [0.6, '#575069'], [1, '#41394F']], yon: -Math.PI / 2 + 0.38 * yon, aralik: 3.3, boy: [26, 84], esikler: [0.46, 0.68, 0.84], alfa: 0.4, gecisAci: 0.24, esikYay: 0.14 },
+      { ton, renkler: [[0, '#7A7290'], [0.6, '#575069'], [1, '#41394F']], yon: -Math.PI / 2 + 0.38 * yon, aralik: 3.3, boy: [26, 84], esikler: [0.46, 0.66, 0.82], alfa: 0.42, gecisAci: 0.24, esikYay: 0.1 },
     ],
     kontur: null,
     detay: (c) => {
