@@ -80,9 +80,9 @@ function tacliCiz(g, A, x, y, { s = 1, u = 1, t = 0, faz = 0 } = {}) {
   g.save();
   g.translate(x, y);
   g.scale(s, s);
-  if (u > 0) ogeCiz(g, A.govde, 0, 0, { sy: ease.outBack(clamp(u * 2.6), 1.2) });
+  if (u > 0) ogeCiz(g, A.govde, 0, 0, { sy: ease.outBack(clamp(u * 3.2), 1.2) });
   A.kumeler.forEach((k, i) => {
-    const v = clamp((u - 0.28 - k.t * 0.3) / 0.4);
+    const v = clamp((u - 0.12 - k.t * 0.28) / 0.45);
     if (v <= 0) return;
     ogeCiz(g, k.oge, k.x, k.y, { s: ease.outBack(v, 1.7), r: Math.sin(t * 1.2 + i + faz) * 0.015 });
   });
@@ -125,8 +125,10 @@ function egriGeometri(boy, tohum, { dalSay = 3, derin = 4, egrilik = 0.32, yayil
       sol.push([pts[i][0] - ty * w, pts[i][1] + tx * w]);
       sag.push([pts[i][0] + ty * w, pts[i][1] - tx * w]);
     }
+    kenarlar.push(sol, [...sag]);
     return { pts: [...sol, ...sag.reverse()], kapali: true };
   };
+  const kenarlar = [];
   const dal = (x, y, a, L, k0, d) => {
     const n = 8, pts = [[x, y]];
     let px = x, py = y, aa = a;
@@ -160,9 +162,12 @@ function egriGeometri(boy, tohum, { dalSay = 3, derin = 4, egrilik = 0.32, yayil
     }
   };
   const k = boy * kalin;
-  dal(0, -boy * 0.04, govdeAci, boy * 0.42, k, 0);
-  parca.push({ pts: svg(`M${-k * 1.7} 0C${-k * 0.9} ${-boy * 0.01} ${-k * 0.6} ${-boy * 0.04} ${-k * 0.5} ${-boy * 0.09}L${k * 0.5} ${-boy * 0.09}C${k * 0.6} ${-boy * 0.04} ${k * 0.9} ${-boy * 0.01} ${k * 1.7} 0Z`)[0].pts, kapali: true });
-  return { parca, uclar, dikenler };
+  dal(0, 2, govdeAci, boy * 0.44, k, 0);
+  const kok = svg(`M${-k * 1.7} 2C${-k * 0.9} ${-boy * 0.01} ${-k * 0.6} ${-boy * 0.04} ${-k * 0.48} ${-boy * 0.1}L${k * 0.48} ${-boy * 0.1}C${k * 0.6} ${-boy * 0.04} ${k * 0.9} ${-boy * 0.01} ${k * 1.7} 2Z`)[0].pts;
+  parca.push({ pts: kok, kapali: true });
+  const yarim = Math.floor(kok.length / 2);
+  kenarlar.push(svg(`M${-k * 1.7} 2C${-k * 0.9} ${-boy * 0.01} ${-k * 0.6} ${-boy * 0.04} ${-k * 0.48} ${-boy * 0.1}`)[0].pts, svg(`M${k * 1.7} 2C${k * 0.9} ${-boy * 0.01} ${k * 0.6} ${-boy * 0.04} ${k * 0.48} ${-boy * 0.1}`)[0].pts);
+  return { parca, uclar, dikenler, kenarlar };
 }
 const AGAC_PAL = {
   kara: { arka: '#6F6882', tara: [[0, '#857D98'], [0.5, '#585069'], [1, '#332D40']], kontur: '#28222F' },
@@ -174,8 +179,11 @@ function egriAgacOge(ad, Gm, palet, olcek, { diken = true } = {}) {
   return oge({
     ad, olcek, sekil: Gm.parca, arka: P.arka, arkaAlfa: 0.88,
     tarama: { ton: TON.gurultulu((x, y) => 0.55, 0.3, 0.02, ad.length), renkler: P.tara, yon: -Math.PI / 2 + 0.25, aralik: 2.8, boy: [12, 40], kal: 1.15, alfa: 0.55, esikler: [0.18, 0.45, 0.72] },
-    kontur: P.kontur, konturKal: 1.9, titreme: 0.5,
-    detay: (c, api) => { if (diken) for (const d of Gm.dikenler) api.cizgi(d, { renk: P.kontur, kal: 1.5, alfa: 0.9 }); },
+    kontur: null,
+    detay: (c, api) => {
+      for (const e of Gm.kenarlar) api.cizgi(e, { renk: P.kontur, kal: 1.9, alfa: 0.9, titreme: 0.4 });
+      if (diken) for (const d of Gm.dikenler) api.cizgi(d, { renk: P.kontur, kal: 1.5, alfa: 0.9 });
+    },
   });
 }
 /** Karanlık eğri ağaç (koyu ya da sisli); çiçekli: aynı dallar kahverengi + uçlarda çiçek kümeleri */
@@ -264,19 +272,19 @@ function yolOge() {
 }
 function kaldirimOge() {
   // çarşı meydanı: yoldan aşağı uzanan sakin taş döşeme (sol kenarı çimene yumuşakça karışır)
-  const x0 = 760, x1 = 2200, y0 = 1296, y1 = 2300;
-  const sekil = svg(`M${x0} ${y0}L${x1} ${y0}L${x1} ${y1}L${x0 - 260} ${y1}C${x0 - 200} 1900 ${x0 - 120} 1600 ${x0 - 40} 1420C${x0 - 20} 1370 ${x0 - 10} 1330 ${x0} ${y0}Z`);
+  const x0 = -480, x1 = 2200, y0 = 1294, y1 = 2300;
+  const sekil = cokgen([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]);
   return oge({
-    ad: 's10-v-kaldirim2', olcek: 0.85, sekil, arka: '#F1E3C8', arkaAlfa: 0.85, arkaBulanik: 10,
+    ad: 's10-v-kaldirim3', olcek: 0.75, sekil, arka: '#F1E3C8', arkaAlfa: 0.85, arkaBulanik: 10,
     tarama: { ton: TON.gurultulu((x, y) => clamp(0.28 + 0.3 * clamp((y - y0) / 600)), 0.12, 0.01, 9), renkler: [[0, '#EAD9B8'], [1, '#B89B74']], yon: -0.04, aralik: 3.8, boy: [26, 70], kal: 1.1, alfa: 0.4, esikler: [0.3, 0.62] },
     kontur: null,
     detay: (c, api) => {
       let y = y0 + 22, sira = 0;
       while (y < y1) {
         const h = 26 + (y - y0) * 0.1;
-        api.cizgi([[x0 - 300, y], [x1, y]], { renk: '#B0967A', kal: 1.2, alfa: 0.28 });
+        api.cizgi([[x0, y], [x1, y]], { renk: '#B0967A', kal: 1.2, alfa: 0.28 });
         const w = 90 + (y - y0) * 0.22;
-        for (let x = x0 - 300 + (sira % 2) * w * 0.5; x < x1; x += w) api.cizgi([[x, y], [x - 3, y + h]], { renk: '#B0967A', kal: 1.1, alfa: 0.24 });
+        for (let x = x0 + (sira % 2) * w * 0.5; x < x1; x += w) api.cizgi([[x, y], [x - 3, y + h]], { renk: '#B0967A', kal: 1.1, alfa: 0.24 });
         y += h; sira++;
       }
     },
@@ -757,14 +765,14 @@ export function bahceCizV(g, cam, t, B) {
     g.restore();
   }
   g.save(); katman(g, cam, 1); ogeCiz(g, V.zBahce, 0, 0);
-  if (B.carsi > 0) acarak(g, V.kaldirim, 0, 0, an(B.carsi, 0.02, 0.6), { mod: 'daire', merkez: [1000, 1320], yumusak: 0.3 });
+  if (B.carsi > 0) acarak(g, V.kaldirim, 0, 0, an(B.carsi, 0.0, 0.75, ease.inOutSine), { mod: 'sil', yon: Math.PI, yumusak: 0.25 });
   g.restore();
   for (const a of V.tacArka) {
-    const u = clamp((t - va(a.sx, a.sy)) / 0.7);
+    const u = clamp((t - va(a.sx, a.sy)) / 0.55);
     g.save(); katman(g, cam, a.f); tacliCiz(g, a.A, a.sx, a.sy, { s: a.s, u, t, faz: a.faz }); g.restore();
   }
   for (const a of V.tacOrta) {
-    const u = clamp((t - va(a.sx, a.sy)) / 0.7);
+    const u = clamp((t - va(a.sx, a.sy)) / 0.55);
     g.save(); katman(g, cam, a.f); tacliCiz(g, a.A, a.sx, a.sy, { s: a.s, u, t, faz: a.faz }); g.restore();
   }
   for (const sv of V.serviler) {

@@ -94,12 +94,22 @@ export function altyaziCiz(ctx, t) {
   }
 }
 
-function yaziCiz(ctx, s, x, y, a) {
-  if (a <= 0.003) return;
-  ctx.save();
-  ctx.globalAlpha = a;
+// Her mana önce kendi katmanına tam opak çizilir (buğu + mürekkep), sonra saydamlıkla basılır: giriş ve çıkışta
+// buğu ile yazı birlikte solar (yazıdan önce beyaz bir hayalet kalmaz).
+const katmanlar = new Map();
+function katman(s) {
+  if (katmanlar.has(s)) return katmanlar.get(s);
+  const pay = 48;
+  const olc = tuval(10, 10).getContext('2d');
+  olc.font = YAZI.font(YAZI.boy);
+  const m = olc.measureText(s);
+  const w = Math.ceil(m.width + pay * 2), h = Math.ceil(YAZI.boy * 1.6 + pay * 2);
+  const c = tuval(w, h);
+  const ctx = c.getContext('2d');
+  ctx.font = YAZI.font(YAZI.boy);
+  ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';
-  // filmin beyazından yumuşak buğu (iki katman: geniş ve dar)
+  const x = pay, y = pay + YAZI.boy * 1.1;
   ctx.fillStyle = YAZI.bugu;
   ctx.shadowColor = 'rgba(250,251,248,0.95)';
   ctx.shadowBlur = 34;
@@ -113,5 +123,16 @@ function yaziCiz(ctx, s, x, y, a) {
   ctx.strokeText(s, x, y);
   ctx.fillStyle = YAZI.renk;
   ctx.fillText(s, x, y);
+  const k = { c, ox: x, oy: y };
+  katmanlar.set(s, k);
+  return k;
+}
+
+function yaziCiz(ctx, s, x, y, a) {
+  if (a <= 0.003) return;
+  const k = katman(s);
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, a);
+  ctx.drawImage(k.c, x - k.ox, y - k.oy);
   ctx.restore();
 }
