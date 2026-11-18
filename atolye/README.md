@@ -6,7 +6,10 @@ Burada **render stilleri** (art style) araştırılır, sıfırdan yenileri üre
 konunca fark yalnızca stilden gelir.
 
 - Katalog: [`KATALOG.md`](KATALOG.md) (görselli liste), [`katalog.json`](katalog.json) (makine için)
-- Galeri: [`galeri.html`](galeri.html) (tarayıcıda açın)
+- Galeri: [`galeri.html`](galeri.html) (tarayıcıda açın). Her stilin altında 15 **kullanım işareti** dairesi
+  vardır: stil bir videoda kullanılınca bir daire işaretlenir, yeniden dokununca boşalır. Yayımlanan
+  claude.ai galerisinde işaretler artifact'in kalıcı veritabanında (`isaretler/<kod>`) saklanır ve yalnız sahibi
+  değiştirebilir; yerel `galeri.html`'de yalnızca o tarayıcıda saklanır.
 - Bütün örnekler tek sayfada: [`pafta.webp`](pafta.webp)
 
 Görseller yapay zekâ görsel üreticisiyle değil, **kodla çizilir** (SVG / Canvas). Her örnek gerçek bir
