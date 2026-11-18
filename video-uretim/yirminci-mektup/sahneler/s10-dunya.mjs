@@ -365,42 +365,110 @@ export function yesilMaske(g, cam, tg) {
   g.restore();
 }
 
-/** Işıklı rahmet yağmuru (ekran uzayında). guc 0..1; siper: yağmursuz bölge (ekran elipsi) */
-export function yagmurCiz(ctx, t, guc, { zeminY = 1380, siper = null, tohum = 9 } = {}) {
+/**
+ * Işıklı rahmet yağmuru (ekran uzayında). Damlalar derinliğe dağılır: uzaktakiler küçük, yavaş, soluk ve ufka;
+ * yakındakiler iri, hızlı ve ekranın altına düşer. Her damla: uçları incelen saten bir iz + yumuşak parıltı + ışıklı
+ * inci uç (bazıları bir an ışıldar). Düştüğü yerde küçük bir ışık halkası açılır, iki zerre sıçrar.
+ * siper: yağmursuz bölge (ağacın tacı, ekran elipsi); yalnız ağaç derinliğindeki damlalara uygulanır.
+ */
+export function yagmurCiz(ctx, t, guc, { zeminY = 1380, siper = null, tohum = 9, z = 1 } = {}) {
   if (guc <= 0.003) return;
   const r = rng(tohum);
-  const n = Math.round(230 * guc);
+  const N = 200, n = Math.round(N * guc);
+  const egim = 0.13, tepe = -160, OMUR = 0.5;
+  const zk = Math.sqrt(clamp(z, 0.4, 1.4));
+  const altyazi = (x, y) => (y > 1390 && y < 1640 && x > 150 && x < 930 ? 0.55 : 1);
+  const altinda = (x, y) => {
+    if (!siper) return false;
+    const dx = (x - siper.x) / Math.max(1, siper.rx);
+    return Math.abs(dx) < 1 && y > siper.y - siper.ry * Math.sqrt(1 - dx * dx);
+  };
+  const damlalar = [], halkalar = [];
+  for (let i = 0; i < N; i++) {
+    const d = Math.pow(r(), 1.5);
+    const x0 = r.ara(-260, W + 60), faz = r(), hk = r.ara(0.9, 1.1), sicak = r() < 0.55, aK = r.ara(0.7, 1), par = r();
+    if (i >= n) continue;
+    const inis = lerp(zeminY + 6, H + 40, d);
+    const hiz = lerp(1150, 2250, d) * hk;
+    const yol = inis - tepe;
+    const p = (faz * yol + t * hiz) % yol;
+    const y = tepe + p, x = x0 + y * egim;
+    const a = aK * guc * lerp(0.5, 1, d);
+    const siperli = d < 0.5; // ağaç derinliğine yakın damlalar tacın altına girmez
+    // bir önceki damlanın düştüğü yer (halka)
+    const tau = p / hiz;
+    const lx = x0 + inis * egim;
+    if (tau < OMUR && !(siperli && altinda(lx, inis - 4))) halkalar.push({ x: lx, y: inis, u: tau / OMUR, d, a: aK * guc });
+    if (siperli && altinda(x, y)) continue;
+    damlalar.push({ x, y, d, a, sicak, par, i });
+  }
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
-  const egim = 0.16;
-  for (let i = 0; i < 230; i++) {
-    const x0 = r.ara(-260, W + 60), faz = r(), hiz = r.ara(1500, 2100), boy = r.ara(44, 88), renk = r() < 0.45 ? '#FFEFC2' : '#F4F8FF';
-    const k = r.ara(1.8, 2.9), a = r.ara(0.65, 1);
-    if (i >= n) continue;
-    const yol = zeminY + 160;
-    const y = ((faz * yol + t * hiz) % yol) - 120;
-    const x = x0 + y * egim;
-    if (y > zeminY) continue;
-    if (siper) {
-      const dx = (x - siper.x) / siper.rx;
-      if (Math.abs(dx) < 1 && y > siper.y - siper.ry * Math.sqrt(1 - dx * dx)) continue;
+  // yere düşen ışık halkacıkları (önce: damlalar önlerinden geçer)
+  for (const h of halkalar) {
+    const R = (3 + lerp(8, 32, h.d) * ease.outCubic(h.u)) * zk;
+    const a = Math.pow(1 - h.u, 1.4) * h.a * lerp(0.55, 1, h.d) * altyazi(h.x, h.y);
+    if (a < 0.01) continue;
+    ctx.save();
+    ctx.translate(h.x, h.y);
+    ctx.scale(1, 0.3);
+    const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 1.7);
+    gr.addColorStop(0, rgba('#FFE7AE', 0.32 * a));
+    gr.addColorStop(0.6, rgba('#FFE7AE', 0.14 * a));
+    gr.addColorStop(1, 'rgba(255,231,174,0)');
+    ctx.fillStyle = gr;
+    ctx.fillRect(-R * 1.7, -R * 1.7, R * 3.4, R * 3.4);
+    ctx.restore();
+    // halkanın ön yayı koyu kalemle (açık zeminde seçilsin), arka yayı ve içi ışıkla
+    const lw = lerp(1.1, 1.9, h.d);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = rgba('#8E7046', 0.5 * a);
+    ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.ellipse(h.x, h.y + 0.8, R, R * 0.3, 0, 0.15, Math.PI - 0.15); ctx.stroke();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.strokeStyle = rgba('#FFF8E2', 0.9 * a);
+    ctx.lineWidth = lw * 0.8;
+    ctx.beginPath(); ctx.ellipse(h.x, h.y - 0.6, R * 0.97, R * 0.28, 0, 0, TAU); ctx.stroke();
+    if (h.d > 0.35 && h.u > 0.15) {
+      ctx.strokeStyle = rgba('#FFF4D8', 0.55 * a);
+      ctx.beginPath(); ctx.ellipse(h.x, h.y, R * 0.55, R * 0.165, 0, 0, TAU); ctx.stroke();
     }
-    const y1 = Math.min(y + boy, zeminY);
-    cizgiDarbe(ctx, x, y, x + (y1 - y) * egim, y1, k, renk, a * guc);
+    if (h.u < 0.6) {
+      const v = h.u / 0.6, yuk = Math.sin(v * Math.PI) * lerp(4, 15, h.d) * zk;
+      ctx.fillStyle = rgba('#FFFBEA', 0.9 * a);
+      for (const sx of [-1, 1]) { ctx.beginPath(); ctx.arc(h.x + sx * R * 0.55, h.y - yuk, lerp(0.9, 1.9, h.d), 0, TAU); ctx.fill(); }
+    }
   }
-  // sıçrayan damlacıklar (zeminde küçük ışıklı halkalar)
-  const r2 = rng(tohum + 1);
-  for (let i = 0; i < Math.round(26 * guc); i++) {
-    const x = r2.ara(0, W), per = r2.ara(0.35, 0.6), f = r2();
-    const u = ((t / per + f) % 1);
-    if (siper && Math.abs(x - siper.x) < siper.rx * 0.9) continue;
-    const y = zeminY - 6 + r2.ara(-14, 30);
-    const R = 3 + u * 14;
-    ctx.strokeStyle = `rgba(255,248,226,${0.6 * (1 - u) * guc})`;
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.ellipse(x, y, R, R * 0.32, 0, 0, TAU);
-    ctx.stroke();
+  // damlalar
+  ctx.lineCap = 'round';
+  for (const k of damlalar) {
+    const boy = lerp(22, 74, k.d) * zk, kal = lerp(1.0, 2.3, k.d) * zk;
+    const ya = Math.max(tepe, k.y - boy), xa = k.x - (k.y - ya) * egim;
+    const a = k.a * altyazi(k.x, k.y);
+    ctx.strokeStyle = rgba(k.sicak ? '#FFD98A' : '#D8E6FF', 0.17 * a);
+    ctx.lineWidth = kal * 5.5;
+    ctx.beginPath(); ctx.moveTo(xa, ya); ctx.lineTo(k.x, k.y); ctx.stroke();
+    cizgiDarbe(ctx, xa, ya, k.x, k.y, kal, k.sicak ? '#FFEBB8' : '#F1F6FF', 0.72 * a);
+    const R = kal * 2.3;
+    const gr = ctx.createRadialGradient(k.x, k.y, 0, k.x, k.y, R * 2.2);
+    gr.addColorStop(0, rgba('#FFFDF4', 0.95 * a));
+    gr.addColorStop(0.3, rgba(k.sicak ? '#FFE2A0' : '#E6EEFF', 0.45 * a));
+    gr.addColorStop(1, 'rgba(255,240,200,0)');
+    ctx.fillStyle = gr;
+    ctx.fillRect(k.x - R * 2.2, k.y - R * 2.2, R * 4.4, R * 4.4);
+    if (k.par < 0.14) {
+      // bir an ışıldayan damla: ince dört kollu yıldızcık
+      const tw = Math.max(0, Math.sin(t * 13 + k.i * 3.1));
+      if (tw > 0.25) {
+        const L = R * 3.2 * tw;
+        ctx.strokeStyle = rgba('#FFF6DA', 0.75 * a * tw);
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(k.x - L, k.y); ctx.lineTo(k.x + L, k.y);
+        ctx.moveTo(k.x, k.y - L); ctx.lineTo(k.x, k.y + L);
+        ctx.stroke();
+      }
+    }
   }
   ctx.restore();
 }

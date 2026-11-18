@@ -126,8 +126,8 @@ export function labirentHazirla() {
   ince = LB.seviyeOlustur(0.2, b.x0 / LB.HUCRE - 1, b.y0 / LB.HUCRE - 1, b.x1 / LB.HUCRE + 1, b.y1 / LB.HUCRE + 1, { tohum: 11 });
   // eriyen labirentin altından çıkan sıcak ışık zemini (kalem taramalı)
   sicakZemin = oge({
-    ad: 's10-lab-sicak2', olcek: 0.8, sekil: dikdortgen(0, 0, 1500, 2400), arka: '#F8EDCD', arkaAlfa: 0.85, arkaBulanik: 10,
-    tarama: { ton: TON.gurultulu(() => 0.5, 0.22, 0.004, 9), renkler: [[0, '#F6E6B8'], [1, '#DDBB6A']], yon: -0.42, aralik: 3.6, boy: [40, 110], kal: 1.15, alfa: 0.4, esikler: [0.25, 0.55] },
+    ad: 's10-lab-sicak3', olcek: 0.8, sekil: dikdortgen(0, 0, 1500, 2400), arka: '#F6E1AE', arkaAlfa: 0.85, arkaBulanik: 10,
+    tarama: { ton: TON.gurultulu(() => 0.55, 0.22, 0.004, 9), renkler: [[0, '#F1D894'], [1, '#D3A248']], yon: -0.42, aralik: 3.6, boy: [40, 110], kal: 1.15, alfa: 0.45, esikler: [0.25, 0.55] },
     kontur: null, pay: 2,
   });
   bulutlar = [
@@ -212,7 +212,7 @@ export function labirentCiz(ctx, t, Z) {
     ctx.scale(zz, zz);
     ogeCiz(ctx, sicakZemin, -750, -1200);
     ctx.restore();
-    M.hale(ctx, ax, ay, Math.max(200, Rs * 0.9), '#FFF3CC', 0.45);
+    M.hale(ctx, ax, ay, Math.max(200, Rs * 0.9), '#FFE7AE', 0.4);
   }
   ctx.drawImage(tb, 0, 0);
   if (tAltin) {

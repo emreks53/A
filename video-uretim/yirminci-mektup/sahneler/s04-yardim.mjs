@@ -3,7 +3,7 @@
 // su, altın halka. Motor dosyalarına dokunmadan, onların üstüne kurulur.
 import { tuval, rng, clamp, lerp, TAU, rgba, W, H } from '../motor/temel.mjs';
 import { oge, ogeCiz, konturCiz, tara, darbe, TON, FILM } from '../motor/kalem.mjs';
-import { svg, elips, cokgen, kalp, donustur } from '../motor/sekil.mjs';
+import { svg, elips, cokgen, kalp, donustur, yenidenOrnekle, yumusat, icinde, path2d } from '../motor/sekil.mjs';
 import { RENK, OLCU, ON_DURUS } from '../motor/insan.mjs';
 
 // ---------------------------------------------------------------- ışık zeminleri (tam ekran, ekran uzayında)
@@ -143,13 +143,17 @@ export function insanHazirla(olcek) { onParcalar(olcek); }
 
 /**
  * Önden büyük plan erkek (bel altı çayırın arkasında kalır; bacaklar çizilmez, yalnız kalça ve uyluk başı).
- * poz: ON_DURUS alanları + basKalk 0..1 (çene hafifçe yukarı: saç bandı incelir, kulaklar iner, boyun uzar),
- * nefes (birim: omuzlar yükselir, gövde hafifçe uzar). Döner: { gogus, bas, eller } (dünya koordinatı).
+ * poz: ON_DURUS alanları + basKalk -0.3..1 (çene hafifçe yukarı: saç bandı incelir, kulaklar iner, boyun uzar;
+ * eksi: baş hafifçe öne eğik), nefes (birim: omuzlar yükselir, gövde hafifçe uzar), gogus 0..1 (nefeste göğüs ve
+ * omuzlar hafifçe genişler), bilek [sol, sağ] (elin ön kola göre gecikme dönüşü, rad).
+ * Döner: { gogus, bas, eller } (dünya koordinatı).
  */
 export function insanOnBuyuk(ctx, x, y, poz = ON_DURUS, { s = 1, olcek = 3, alfa = 1 } = {}) {
   const P = onParcalar(olcek);
   const p = { ...ON_DURUS, ...poz };
-  const k = clamp(p.basKalk || 0), nef = p.nefes || 0;
+  const k = clamp(p.basKalk || 0, -0.3, 1), nef = p.nefes || 0;
+  const gen = 1 + 0.022 * (p.gogus || 0);
+  const bilek = p.bilek || [0, 0];
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(s, s);
@@ -162,7 +166,7 @@ export function insanOnBuyuk(ctx, x, y, poz = ON_DURUS, { s = 1, olcek = 3, alfa
   const omuzY = ky - OLCU.govde - nef;
   const kolGeo = (yon, i) => {
     const a1 = yon * p.kol[i];
-    const sx = yon * 34, sy = omuzY + 9;
+    const sx = yon * 34 * gen, sy = omuzY + 9;
     const dirsek = [sx + Math.sin(a1) * OLCU.kol, sy + Math.cos(a1) * OLCU.kol];
     const a2 = a1 - yon * p.dirsek[i];
     const bil = [dirsek[0] + Math.sin(a2) * OLCU.onkol, dirsek[1] + Math.cos(a2) * OLCU.onkol];
@@ -170,7 +174,7 @@ export function insanOnBuyuk(ctx, x, y, poz = ON_DURUS, { s = 1, olcek = 3, alfa
   };
   const eller = [null, null];
   [-1, 1].forEach((yon, i) => { const g = kolGeo(yon, i); ogeCiz(ctx, P.kol, g.sx, g.sy, { r: -g.a1 }); });
-  ogeCiz(ctx, P.govde, 0, ky, { sy: (129 + nef) / 129 });
+  ogeCiz(ctx, P.govde, 0, ky, { sx: gen, sy: (129 + nef) / 129 });
   ogeCiz(ctx, P.boyun, 0, omuzY - 6, { sy: 1 + 0.28 * k });
   const basY = omuzY - 18 - 4.2 * k;
   ctx.save();
@@ -178,7 +182,7 @@ export function insanOnBuyuk(ctx, x, y, poz = ON_DURUS, { s = 1, olcek = 3, alfa
   ctx.rotate(p.bas);
   ogeCiz(ctx, P.kulak, -22.5, -30 + 4.5 * k);
   ogeCiz(ctx, P.kulak, 22.5, -30 + 4.5 * k);
-  const hs = 1 - 0.045 * k;
+  const hs = 1 - 0.045 * Math.abs(k); // öne eğilişte de yukarı bakışta da baş önden biraz kısalır
   ogeCiz(ctx, P.bas, 0, 0, { sy: hs });
   // saç: başın tepesine doğru sıkışır (yukarı bakınca alından çok saç değil yüz görünür)
   ctx.save();
@@ -189,7 +193,7 @@ export function insanOnBuyuk(ctx, x, y, poz = ON_DURUS, { s = 1, olcek = 3, alfa
   ctx.restore();
   [-1, 1].forEach((yon, i) => {
     const g = kolGeo(yon, i);
-    ogeCiz(ctx, P.el, g.bil[0] - Math.sin(g.a2) * 3, g.bil[1] - Math.cos(g.a2) * 3, { r: -g.a2 });
+    ogeCiz(ctx, P.el, g.bil[0] - Math.sin(g.a2) * 3, g.bil[1] - Math.cos(g.a2) * 3, { r: -g.a2 - bilek[i] });
     ogeCiz(ctx, P.onkol, g.dirsek[0], g.dirsek[1], { r: -g.a2 });
     eller[i] = g.bil;
   });
@@ -199,38 +203,202 @@ export function insanOnBuyuk(ctx, x, y, poz = ON_DURUS, { s = 1, olcek = 3, alfa
 }
 
 // ---------------------------------------------------------------- stilize kalp
-/** Kalp çizgisi alanı: (x, y) noktasında, kalbin iç içe çizgilerine teğet yön (kaba örtük kalp fonksiyonundan) */
-function kalpYon(r) {
-  const f = (X, Y) => Math.pow(X * X + Y * Y - 1, 3) - X * X * Y * Y * Y;
-  return (x, y) => {
-    const X = x / (r * 0.98), Y = -(y + r * 0.08) / (r * 0.98);
-    const e = 0.01;
-    const gx = (f(X + e, Y) - f(X - e, Y)) / (2 * e), gy = -(f(X, Y + e) - f(X, Y - e)) / (2 * e);
+// S-232 dilinde değerli bir nesne: gül-kırmızısı arka buğu, biçimi saran kalem taraması (ton koyulaştıkça katlar
+// artar), yerel rengin koyu konturu, içte ince altın pervaz (çift cetvel + aralarında altın noktalar). Işık leke
+// değil: lopların kıvrımını izleyen beyaz kalem taramasıyla (saten hilal) ve alt kenarda yansıyan ışık çizgileriyle.
+
+/** Kalbin dış hattından içeri doğru d kadar içerlek kapalı hat (normaller boyunca kaydırma, kıvrık uç döngüleri
+ *  ayıklanır, köşeler yumuşatılır). Döner: [[x, y], ...] */
+const icHatOnbellek = new Map();
+function kalpIcHat(r, d) {
+  const k = r + '|' + d;
+  if (icHatOnbellek.has(k)) return icHatOnbellek.get(k);
+  const P = yenidenOrnekle(kalp(r)[0].pts, 2, true);
+  const n = P.length;
+  let alan = 0;
+  for (let i = 0; i < n; i++) { const a = P[i], b = P[(i + 1) % n]; alan += a[0] * b[1] - b[0] * a[1]; }
+  const yon = alan > 0 ? 1 : -1; // içe bakan normalin işareti
+  const ham = [];
+  for (let i = 0; i < n; i++) {
+    const a = P[(i - 3 + n) % n], b = P[(i + 3) % n];
+    let tx = b[0] - a[0], ty = b[1] - a[1];
+    const tl = Math.hypot(tx, ty) || 1;
+    tx /= tl; ty /= tl;
+    ham.push([P[i][0] - ty * d * yon, P[i][1] + tx * d * yon]);
+  }
+  // dış hatta d'den yakın düşen noktalar (uçta kendini kesen döngü) atılır
+  const S = P.filter((_, i) => i % 2 === 0);
+  const tut = ham.filter(([x, y]) => {
+    let m = Infinity;
+    for (const [px, py] of S) { const v = (x - px) * (x - px) + (y - py) * (y - py); if (v < m) m = v; }
+    return Math.sqrt(m) >= d * 0.97;
+  });
+  // içbükey köşede (iki lopun buluştuğu yer) kaydırılmış noktalar arasında açılan boşluk: köşe çevresinde d yarıçaplı yay
+  const dolu = [];
+  for (let i = 0; i < tut.length; i++) {
+    const a = tut[i], b = tut[(i + 1) % tut.length];
+    dolu.push(a);
+    const ara = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    if (ara > 6) {
+      const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+      let c = P[0], m = Infinity;
+      for (const p of P) { const v = (p[0] - mx) ** 2 + (p[1] - my) ** 2; if (v < m) { m = v; c = p; } }
+      const a0 = Math.atan2(a[1] - c[1], a[0] - c[0]);
+      let a1 = Math.atan2(b[1] - c[1], b[0] - c[0]);
+      while (a1 - a0 > Math.PI) a1 -= TAU;
+      while (a1 - a0 < -Math.PI) a1 += TAU;
+      const say = Math.ceil(ara / 2);
+      for (let k = 1; k < say; k++) { const aa = lerp(a0, a1, k / say); dolu.push([c[0] + Math.cos(aa) * d, c[1] + Math.sin(aa) * d]); }
+    }
+  }
+  const sonuc = yumusat(yenidenOrnekle(dolu, 3, true), 2, true);
+  icHatOnbellek.set(k, sonuc);
+  return sonuc;
+}
+
+/** Kalbin gövde alanı: iç uzaklık ızgarası → yastık yüzey normali (stilize hacim) */
+const alanOnbellek = new Map();
+function kalpAlan(r) {
+  if (alanOnbellek.has(r)) return alanOnbellek.get(r);
+  const sekil = kalp(r);
+  const P = yenidenOrnekle(sekil[0].pts, 5, true);
+  const g = 4, x0 = -1.12 * r, y0 = -1.12 * r;
+  const nx = Math.ceil((2.24 * r) / g) + 1, ny = Math.ceil((2.12 * r) / g) + 1;
+  const D = new Float32Array(nx * ny);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const x = x0 + i * g, y = y0 + j * g;
+    let m = Infinity;
+    for (let k = 0, L = P.length; k < L; k++) {
+      const a = P[k], b = P[(k + 1) % L];
+      const ex = b[0] - a[0], ey = b[1] - a[1];
+      const u = clamp(((x - a[0]) * ex + (y - a[1]) * ey) / (ex * ex + ey * ey || 1));
+      const dx = a[0] + ex * u - x, dy = a[1] + ey * u - y;
+      const v = dx * dx + dy * dy;
+      if (v < m) m = v;
+    }
+    D[j * nx + i] = (icinde(sekil, x, y) ? 1 : -1) * Math.sqrt(m);
+  }
+  const ornek = (A, x, y) => {
+    const fx = clamp((x - x0) / g, 0, nx - 1.001), fy = clamp((y - y0) / g, 0, ny - 1.001);
+    const i = Math.floor(fx), j = Math.floor(fy), u = fx - i, v = fy - j;
+    const a = A[j * nx + i], b = A[j * nx + i + 1], c = A[(j + 1) * nx + i], e = A[(j + 1) * nx + i + 1];
+    return lerp(lerp(a, b, u), lerp(c, e, u), v);
+  };
+  // yüzey: kenarlarda yuvarlanan yastık + bütün kalbi kapsayan alçak kubbe (lopların arasındaki çukur yumuşasın)
+  const Dp = 0.42 * r;
+  const yuk = (x, y) => {
+    const u = clamp(ornek(D, x, y) / Dp);
+    const yas = Dp * 0.8 * Math.sqrt(1 - (1 - u) * (1 - u));
+    const q = 1 - (x * x + (y + 0.18 * r) * (y + 0.18 * r)) / (1.35 * r * 1.35 * r);
+    return yas + 0.42 * r * Math.sqrt(Math.max(0, q)) * clamp(u * 3);
+  };
+  const normal = (x, y) => {
+    const e = 3;
+    const gx = (yuk(x + e, y) - yuk(x - e, y)) / (2 * e), gy = (yuk(x, y + e) - yuk(x, y - e)) / (2 * e);
+    const l = Math.hypot(gx, gy, 1);
+    return [-gx / l, -gy / l, 1 / l];
+  };
+  const A = { uzak: (x, y) => ornek(D, x, y), normal };
+  alanOnbellek.set(r, A);
+  return A;
+}
+
+/** Kalp sprite'ı (merkez 0,0; en ~2.1r) */
+export function kalpOge(r, olcek = 1) {
+  const A = kalpAlan(r);
+  const L = (() => { const v = [-0.5, -0.72, 0.62], l = Math.hypot(...v); return v.map((q) => q / l); })();
+  // gölge tonu: yastık yüzeyde dağınık ışık (sol üstten) + sağ alta doğru genel koyulaşma
+  const golge = (x, y) => {
+    const [a, b, c] = A.normal(x, y);
+    const dif = Math.max(0, a * L[0] + b * L[1] + c * L[2]);
+    const cukur = Math.exp(-(x * x + (y + 0.6 * r) * (y + 0.6 * r)) / (0.05 * r * r)); // lopların buluştuğu çukur sert kararmasın
+    return clamp(0.98 - 0.86 * dif + 0.16 * ((x / r) * 0.45 + (y / r) * 0.55) - 0.22 * cukur);
+  };
+  const ton = TON.gurultulu(golge, 0.07, 0.014, 12);
+  // kenarı saran tarama yönü: iç uzaklık alanının eş-uzaklık çizgilerine teğet
+  const sarYon = (x, y) => {
+    const e = 4;
+    const gx = A.uzak(x + e, y) - A.uzak(x - e, y), gy = A.uzak(x, y + e) - A.uzak(x, y - e);
     return Math.atan2(gy, gx) + Math.PI / 2;
   };
-}
-/** Kalp sprite'ı (merkez 0,0; en ~2.1r): gül pembesi buğu, kalbin biçimini izleyen saten tarama, koyu gül kontur, parıltı */
-export function kalpOge(r, olcek = 1) {
+  const kenar = (x, y) => clamp(1 - A.uzak(x, y) / (0.2 * r)) * (1 - 0.8 * Math.exp(-(x * x + (y + 0.6 * r) * (y + 0.6 * r)) / (0.06 * r * r)));
   return oge({
-    ad: `s04-kalp2-${r}`, olcek, sekil: kalp(r), arka: '#F3B6C5', arkaAlfa: 0.85, arkaBulanik: r * 0.025,
+    ad: `s04-kalp3-${r}`, olcek, sekil: kalp(r), arka: '#E58C9F', arkaBulanik: r * 0.03,
+    arkaCiz: (c, yol) => {
+      const gr = c.createRadialGradient(-0.48 * r, -0.6 * r, 0, -0.3 * r, -0.4 * r, 1.7 * r);
+      gr.addColorStop(0, 'rgba(252,212,216,0.92)');
+      gr.addColorStop(0.4, 'rgba(232,112,136,0.92)');
+      gr.addColorStop(1, 'rgba(172,40,74,0.94)');
+      c.fillStyle = gr;
+      c.fill(yol);
+      c.strokeStyle = gr;
+      c.lineWidth = r * 0.08;
+      c.stroke(yol);
+    },
     tarama: [
-      { ton: TON.gurultulu(TON.kure(-0.05 * r, -0.25 * r, 1.22 * r, { lx: -0.4, ly: -0.62, lz: 0.68, ortam: 0.1 }), 0.06, 0.012, 5),
-        renkler: [[0, '#F5C3CF'], [0.55, '#E68BA3'], [1, '#B0446A']], yon: -1.05, gecisAci: 0.14, aralik: 3.1, boy: [26, 70], kal: 1.2, alfa: 0.55, esikler: [0.16, 0.42, 0.7] },
+      // gövde: eğik saten tarama; katlar tonla artar, geçişlerde açı hafifçe döner (çapraz tarama)
+      { ton, renkler: [[0, '#F2A3B1'], [0.5, '#D43F5F'], [1, '#86183A']], yon: -1.02, gecisAci: 0.32, aralik: 3.0, boy: [26, 70], kal: 1.2, alfa: 0.5, esikler: [0.16, 0.4, 0.62] },
+      // kenarı saran tarama: hacmi biçimin kıvrımıyla verir (yalnız gölgeli yanda belirgin)
+      { ton: (x, y) => ton(x, y) * (0.3 + 0.7 * kenar(x, y)), renkler: [[0, '#DE6F8A'], [1, '#7E1636']], yonF: sarYon, gecisAci: 0.1, aralik: 3.2, boy: [22, 54], kal: 1.15, alfa: 0.48, esikler: [0.46, 0.66] },
+      // derin gölge: sağ alt lop ve uç
+      { ton, renkler: [[0, '#A93556'], [1, '#6A1631']], yon: 0.62, gecisAci: 0.12, aralik: 3.3, boy: [18, 46], kal: 1.15, alfa: 0.42, esikler: [0.7, 0.84] },
     ],
-    kontur: '#9A3858', konturKal: 2.4, titreme: 0.4,
+    kontur: '#741B39', konturKal: 2.6, titreme: 0.45,
     detay: (c, api) => {
-      // sol üst lopta parlak bir benek ve kıvrımı izleyen iki ince ışık çizgisi
-      api.dolgu(elips(-0.5 * r, -0.66 * r, 0.13 * r, 0.075 * r).map((p) => ({ ...p, pts: p.pts.map(([px, py]) => {
-        const a = -0.55, dx = px + 0.5 * r, dy = py + 0.66 * r;
-        return [-0.5 * r + dx * Math.cos(a) - dy * Math.sin(a), -0.66 * r + dx * Math.sin(a) + dy * Math.cos(a)];
-      }) })), '#FFFFFF', 0.75);
-      const yay = (r0, a0, a1, cx, cy) => Array.from({ length: 24 }, (_, i) => { const a = lerp(a0, a1, i / 23); return [cx + Math.cos(a) * r0, cy + Math.sin(a) * r0]; });
-      api.cizgi(yay(0.36 * r, -2.75, -1.75, -0.45 * r, -0.42 * r), { renk: '#FFFFFF', kal: 2.2, alfa: 0.85, uc: 0.35 });
+      const rr = rng(r * 7 + 3);
+      // 1) ışık: sol lopun kıvrımını izleyen beyaz kalem hilali (yay yay kısa saten darbeler, ortası yoğun)
+      const hilal = (cx, cy, R0, R1, a0, a1, yogun, alfa, renk) => {
+        c.save();
+        c.clip(path2d(kalp(r)));
+        const satir = Math.round((R1 - R0) / 2.7);
+        for (let s = 0; s <= satir; s++) {
+          const v = s / satir; // 0 iç .. 1 dış
+          const R = lerp(R0, R1, v);
+          const agirlik = Math.pow(Math.sin(Math.PI * clamp(v * 1.05)), 0.9);
+          let a = a0 + rr.ara(0, 0.06);
+          while (a < a1) {
+            const boy = rr.ara(18, 46) / R;
+            const orta = (a + boy / 2 - a0) / (a1 - a0);
+            const yog = agirlik * Math.pow(Math.sin(Math.PI * clamp(orta)), 1.4) * yogun;
+            if (rr() < yog) {
+              const pts = [];
+              for (let k = 0; k <= 8; k++) { const aa = a + (boy * k) / 8; pts.push([cx + Math.cos(aa) * R, cy + Math.sin(aa) * R]); }
+              c.fillStyle = rgba(renk, alfa * rr.ara(0.55, 1) * (0.45 + 0.55 * yog));
+              darbe(c, pts, rr.ara(1.0, 1.5), { incelme: 0.35, sivri: 0.5, faz: rr() * TAU });
+            }
+            a += boy * rr.ara(1.05, 1.5);
+          }
+        }
+        c.restore();
+      };
+      hilal(-0.5 * r, -0.42 * r, 0.2 * r, 0.47 * r, -3.0, -1.2, 1.0, 0.8, '#FFF4F1');
+      hilal(-0.5 * r, -0.42 * r, 0.28 * r, 0.41 * r, -2.65, -1.65, 0.9, 0.75, '#FFFFFF');
+      hilal(0.5 * r, -0.42 * r, 0.28 * r, 0.43 * r, -2.4, -1.45, 0.5, 0.45, '#FFEFEC');
+      // 2) yansıyan ışık: sağ alt kenarın içinde, hatta paralel ince açık pembe çizgiler
+      const yansi = kalpIcHat(r, 0.085 * r);
+      const parca = yansi.filter(([x, y]) => x > 0.08 * r && y > -0.25 * r && y < 0.82 * r);
+      for (let k = 0; k < 3; k++) {
+        const kay = k * 3.2;
+        const pts = parca.map(([x, y]) => [x - kay * 0.6, y - kay * 0.8]);
+        if (pts.length > 4) api.cizgi(pts, { renk: '#F8C7D1', kal: 1.25, alfa: 0.5 - k * 0.12, uc: 0.35, titreme: 0.5 });
+      }
+      // 3) altın pervaz: dış cetvel, iç cetvel ve aralarında altın noktalar (tezhip)
+      const dis = kalpIcHat(r, 0.05 * r), ic = kalpIcHat(r, 0.108 * r), orta = kalpIcHat(r, 0.079 * r);
+      api.halka(dis, { renk: '#B4801F', kal: 2.5, alfa: 0.95, titreme: 0.35 });
+      api.halka(dis.map(([x, y]) => [x + 0.7, y + 1.0]), { renk: '#FBE39A', kal: 1.0, alfa: 0.92, titreme: 0.3 });
+      api.halka(ic, { renk: '#BA8826', kal: 1.45, alfa: 0.9, titreme: 0.3 });
+      const nokta = yenidenOrnekle(orta, 15, true);
+      for (const [x, y] of nokta) {
+        c.fillStyle = 'rgba(176,124,36,0.95)';
+        c.beginPath(); c.arc(x, y, 2.0, 0, TAU); c.fill();
+        c.fillStyle = 'rgba(252,230,160,0.95)';
+        c.beginPath(); c.arc(x - 0.5, y - 0.6, 0.8, 0, TAU); c.fill();
+      }
     },
   });
 }
-/** Kalbin iç boşluğu (suyun dolduğu yer) */
-export const kalpIc = (r) => donustur(kalp(0.86 * r), { y: -0.02 * r });
+/** Kalbin iç boşluğu (suyun dolduğu yer): altın pervazın hemen içi */
+export const kalpIc = (r) => [{ pts: kalpIcHat(r, 0.125 * r), kapali: true }];
 /** Berrak su dokusu: iç boşluk biçiminde, çıplak filme yakın açık su rengi + derinleştikçe koyulaşan yatay tarama */
 export function suOge(r, olcek = 1) {
   return oge({

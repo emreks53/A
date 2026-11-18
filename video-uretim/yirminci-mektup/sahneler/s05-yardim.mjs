@@ -1,8 +1,8 @@
 // s05 yardımcıları: dört simge (kandil, çiçekli dalda kuş, yarılmış nar, bal peteği), simge levhaları, ışık zemini
-// (sıcak ve loş iki sürüm), gri sürüm üretimi. Hepsi S-232 tekniğiyle (buğu + saten tarama + koyu kontur) önbelleğe çizilir.
+// (sıcak ve loş iki sürüm; altta altın taramalı buğu), alt tezhip pervazı, gri sürüm üretimi. Hepsi S-232 tekniğiyle (buğu + saten tarama + koyu kontur) önbelleğe çizilir.
 import { tuval, rng, clamp, lerp, ease, TAU, rgba, W, H } from '../motor/temel.mjs';
-import { oge, ogeCiz, konturCiz, tara, TON, FILM, bulutSekli } from '../motor/kalem.mjs';
-import { svg, elips, cokgen, donustur, icinde, path2d, yumusat } from '../motor/sekil.mjs';
+import { oge, ogeCiz, konturCiz, tara, TON, FILM } from '../motor/kalem.mjs';
+import { svg, elips, cokgen, donustur, icinde, path2d, yumusat, yildiz } from '../motor/sekil.mjs';
 import * as M from '../motor/motifler.mjs';
 
 export const OL = 1.6; // simge sprite çözünürlüğü (ekranda ~1-1.1 ölçekle çizilir)
@@ -32,8 +32,10 @@ export const ZEMIN = { X0: -120, Y0: -150, w: 1320, h: 2220 };
 export function zeminTuvali(tur, kx, ky) {
   const { X0, Y0, w, h } = ZEMIN;
   const P = tur === 'sicak'
-    ? { merkez: '#FFF4D8', orta: '#F2E5C4', kenar: '#E2D6C6', alt: '#E6DDD6', tara: [[0, '#F1E3BD'], [0.5, '#DEC89A'], [1, '#B79F78']], alfa: 0.3 }
-    : { merkez: '#EEECF0', orta: '#E0DCE4', kenar: '#CDC8D4', alt: '#D2CDD8', tara: [[0, '#D8D4DE'], [0.5, '#B6B0C2'], [1, '#948CA4']], alfa: 0.3 };
+    ? { merkez: '#FFF4D8', orta: '#F2E5C4', kenar: '#E2D6C6', alt: '#E6DDD6', tara: [[0, '#F1E3BD'], [0.5, '#DEC89A'], [1, '#B79F78']], alfa: 0.3,
+      buguAlt: '#EFE4CA', altin: [[0, '#EFDCA8'], [0.5, '#D8B56A'], [1, '#B48A3A']], altinAlfa: 0.23 }
+    : { merkez: '#EEECF0', orta: '#E0DCE4', kenar: '#CDC8D4', alt: '#D2CDD8', tara: [[0, '#D8D4DE'], [0.5, '#B6B0C2'], [1, '#948CA4']], alfa: 0.3,
+      buguAlt: '#DAD5DF', altin: [[0, '#DDD7DE'], [0.5, '#BDB3BB'], [1, '#9A919B']], altinAlfa: 0.24 };
   const c = tuval(w, h);
   const ctx = c.getContext('2d');
   ctx.fillStyle = FILM;
@@ -55,15 +57,121 @@ export function zeminTuvali(tur, kx, ky) {
   ctx.drawImage(tmp, 0, 0);
   ctx.filter = 'none';
   ctx.restore();
+  // alt buğu: filmin altına doğru yavaşça koyulaşan sıcak (loşta gri-leylak) arka yüz rengi
+  const ab = t.createLinearGradient(0, 1330 - Y0, 0, h);
+  ab.addColorStop(0, rgba(P.buguAlt, 0));
+  ab.addColorStop(0.3, rgba(P.buguAlt, 0.3));
+  ab.addColorStop(0.65, rgba(P.buguAlt, 0.62));
+  ab.addColorStop(1, rgba(P.buguAlt, 0.9));
+  t.clearRect(0, 0, w, h);
+  t.fillStyle = ab;
+  t.fillRect(0, 0, w, h);
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.filter = 'blur(10px)';
+  ctx.drawImage(tmp, 0, 0);
+  ctx.filter = 'none';
+  ctx.restore();
   // ön yüz: uzun saten süpürüşler, kaynaktan uzaklaştıkça koyulaşır
   const ton = (x, y) => {
     const d = Math.hypot(x - cx, (y - cy) * 0.85) / 1250;
-    const alt = clamp((y + Y0 - 1350) / 600); // bulut yatağının arkası daha sakin
-    return clamp((0.1 + 0.85 * Math.pow(d, 1.25)) * (1 - 0.4 * alt));
+    const alt = clamp((y + Y0 - 1350) / 600); // alt bant sakin: orada nötr tarama azalır, yerini altın tarama alır
+    return clamp((0.1 + 0.85 * Math.pow(d, 1.25)) * (1 - 0.6 * alt));
   };
   tara(ctx, { x0: 0, y0: 0, x1: w, y1: h, yon: -0.157, aralik: 3.6, boy: [170, 430], kal: 1.3, alfa: P.alfa, ton,
     renkler: P.tara, esikler: [0.22, 0.5, 0.78], gecisAci: 0.04, tohum: tur === 'sicak' ? 51 : 52, minUc: 10, incelme: 0.1, esikYay: 0.12, yumusak: 0.25 });
+  // ince altın kalem taraması: altyazı bandının altından başlar, aşağı indikçe kat kat artar (aynı saten yönünde)
+  const altTon = (x, y) => {
+    const yw = y + Y0;
+    const u = clamp((yw - 1600) / 380);
+    const kenar = Math.abs(x + X0 - 540) / 700; // yanlara doğru biraz daha koyu
+    return clamp(u <= 0 ? 0 : 0.12 + 0.62 * Math.pow(u, 1.2) + 0.1 * kenar * u);
+  };
+  tara(ctx, { x0: 0, y0: 1500 - Y0, x1: w, y1: h, yon: -0.157, aralik: 4.4, boy: [90, 260], kal: 1.05, alfa: P.altinAlfa, ton: altTon,
+    renkler: P.altin, esikler: [0.26, 0.56, 0.8], gecisAci: 0.05, tohum: tur === 'sicak' ? 61 : 62, minUc: 8, incelme: 0.12, esikYay: 0.1, yumusak: 0.3 });
   return { tuval: c, ox: 0, oy: 0, olcek: 1, w, h, sinir: { x0: 0, y0: 0, x1: w, y1: h, w, h, cx: w / 2, cy: h / 2 } };
+}
+
+// ---------------------------------------------------------------- tezhip pervazı (alt süs çizgisi)
+/**
+ * Ortada küçük sekiz kollu rozet, iki yana uzanan rumi kıvrımlı ince bir dal (kıvrım tepelerinde rumi yaprağı ve
+ * helezon filiz), üstte ve altta uçlara doğru incelip sönen altın cetveller. Yerel (0,0) = pervazın ortası.
+ */
+export const PERVAZ = { L: 440, Y: 1756 };
+export function pervazOge() {
+  const L = PERVAZ.L;
+  const AL = '#A87B22', AL2 = '#C39A3E', ACIK = '#F2DDA6';
+  const zarfX = (x) => clamp((L - Math.abs(x)) / 150); // uçlara doğru sönüm
+  const sekil = cokgen([[-L - 10, -34], [L + 10, -34], [L + 10, 34], [-L - 10, 34]]);
+  // rumi yaprağı: kıvrık uçlu, yarık yaprak (yerel: sapı (0,0), ucu +x yönünde)
+  const rumi = svg('M0 0C5 -5 13 -8.5 22 -7.5C27 -7 30.5 -4.5 29.5 -1C27.5 -3.5 23.5 -4.2 20.5 -2.6C22.5 -1.6 23 0.4 21.5 1.6C15 3.2 7 2.6 0 0Z');
+  return oge({
+    ad: 's05-pervaz', olcek: 1.5, sekil, zemin: null, arka: null, tarama: null, kontur: null, pay: 6,
+    detay: (c, api) => {
+      // cetveller (uçlara doğru incelir); iç kıl çizgileri daha kısa
+      for (const [y, kal, alfa, uz, renk] of [[-25, 1.55, 0.82, 1, AL], [25, 1.55, 0.82, 1, AL], [-30.5, 0.95, 0.6, 0.9, AL2], [30.5, 0.95, 0.6, 0.9, AL2]]) {
+        for (const yon of [-1, 1]) {
+          const pts = [];
+          for (let k = 0; k <= 60; k++) pts.push([yon * (28 + (L * uz - 28) * (k / 60)), y]);
+          api.cizgi(pts, { renk, kal, alfa, uc: 0.45, titreme: 0.25 });
+        }
+      }
+      // cetvel uçlarında küçük benekler (rozetin iki yanında)
+      for (const yon of [-1, 1]) for (const y of [-25, 25]) api.dolgu(elips(yon * 22, y, 2.3, 2.3), AL, 0.85);
+      // rumi kıvrımlı dal: iki yana
+      const lam = 108, A = 8.5, x0 = 34;
+      for (const yon of [-1, 1]) {
+        const dal = [];
+        for (let x = x0; x <= L - 20; x += 2) {
+          const e = zarfX(x);
+          dal.push([yon * x, -A * e * Math.sin((2 * Math.PI * (x - x0)) / lam)]);
+        }
+        api.cizgi(dal, { renk: AL, kal: 1.6, alfa: 0.85, uc: 0.2, titreme: 0.2 });
+        // her yarım dalgada (tepe/çukur): rumi yaprağı ve helezon filiz
+        for (let k = 0; ; k++) {
+          const x = x0 + lam / 4 + (k * lam) / 2;
+          if (x > L - 40) break;
+          const e = zarfX(x);
+          if (e < 0.25) break;
+          const sy = k % 2 === 0 ? -1 : 1; // -1: tepe yukarıda
+          const px = yon * x, py = sy * A * e;
+          // kanonik çerçeve (sağ yan, tepe yukarı) → aynalama: x yon ile, y -sy ile
+          const ayna = (dx, dy) => [px + yon * dx, py - sy * dy];
+          const bs = 0.74 * (0.55 + 0.45 * e);
+          // yaprak: dalın dışına, ilerleme yönüne eğik
+          const ra = -0.48, ca = Math.cos(ra), sa = Math.sin(ra);
+          const yap = rumi.map((p) => ({ ...p, pts: p.pts.map(([qx, qy]) => ayna((qx * ca - qy * sa) * bs, (qx * sa + qy * ca) * bs)) }));
+          api.dolgu(yap, ACIK, 0.95 * e);
+          api.tara(yap, { ton: () => 0.55, renkler: [[0, '#EBCB7E'], [1, '#C79A40']], yon: 0.7, aralik: 1.9, boy: [4, 10], esikler: [0.3], alfa: 0.6 * e, kal: 0.9 });
+          api.sekilKontur(yap, { renk: AL, kal: 1.25, alfa: 0.9 * e, titreme: 0.15 });
+          // helezon filiz: tepeyi geçince daldan ayrılır, dalganın iç cebine (tepenin altına) kıvrılarak girer
+          const hel = [];
+          const sx0 = 22, sy0 = A * e * (1 - Math.cos((2 * Math.PI * sx0) / lam)); // tepeye göre
+          const C = [sx0 - 8, sy0 + 6.4];
+          const R0 = Math.hypot(sx0 - C[0], sy0 - C[1]) * (0.75 + 0.25 * e);
+          const a0 = Math.atan2(sy0 - C[1], sx0 - C[0]);
+          for (let j = 0; j <= 40; j++) {
+            const s = j / 40;
+            const a = a0 + s * Math.PI * 1.7;
+            const r = R0 * (1 - 0.74 * Math.pow(s, 0.85));
+            hel.push(ayna(C[0] + Math.cos(a) * r, C[1] + Math.sin(a) * r));
+          }
+          api.cizgi(hel, { renk: AL, kal: 1.2, alfa: 0.85 * e, uc: 0.4, titreme: 0.08 });
+          const son = hel[hel.length - 1];
+          api.dolgu(elips(son[0], son[1], 1.5, 1.5), AL, 0.85 * e);
+        }
+      }
+      // orta rozet: küçük sekiz kollu yıldız (kaynaktaki desenin yankısı), teal göbek
+      const yz = yildiz(0, 0, 8, 15, 8.5, -Math.PI / 2);
+      api.dolgu(yz, ACIK, 1);
+      api.tara(yz, { ton: TON.radyal(0, 0, 15, 0.2, 0.7), renkler: [[0, '#EBCB7E'], [1, '#B98A2E']], yonF: (x, y) => Math.atan2(y, x), aralik: 1.8, boy: [4, 9], esikler: [0.3, 0.55], alfa: 0.6, kal: 0.9 });
+      api.sekilKontur(yz, { renk: AL, kal: 1.4, alfa: 0.95, titreme: 0.1 });
+      api.dolgu(elips(0, 0, 4, 4), '#2F6F67', 0.9);
+      api.halka(elips(0, 0, 4, 4)[0].pts, { renk: '#1F4F49', kal: 1, alfa: 0.9 });
+      // rozetin iki yanında küçük damla benekler
+      for (const yon of [-1, 1]) api.dolgu(donustur(svg('M0 -4C3 -1 3 2 0 4C-3 2 -3 -1 0 -4Z'), { x: yon * 24, y: 0 }), AL, 0.75);
+    },
+  });
 }
 
 // ---------------------------------------------------------------- simge levhası
@@ -467,22 +575,4 @@ export function altinHalka(ctx, x, y, R, { alfa = 1, kal = 3, tohum = 1 } = {}) 
   konturCiz(ctx, elips(x, y, R, R, n)[0].pts, { renk: '#C99428', kal, alfa: 0.9 * alfa, kapali: true, titreme: 0.7, tohum, adim: 3 });
   const R2 = R * 0.975 - 5;
   if (R2 > 4) konturCiz(ctx, elips(x, y, R2, R2, n)[0].pts, { renk: '#E2B94F', kal: Math.max(1.1, kal * 0.42), alfa: 0.55 * alfa, kapali: true, titreme: 0.6, tohum: tohum + 50, adim: 3 });
-}
-
-// ---------------------------------------------------------------- alt bulut yatağı
-export function bulutYatagi() {
-  const liste = [
-    { x: 300, y: 1640, w: 380, t: 21 }, { x: 790, y: 1630, w: 360, t: 22 },
-    { x: 40, y: 1700, w: 520, t: 3 }, { x: 1040, y: 1690, w: 500, t: 12 }, { x: 560, y: 1730, w: 560, t: 7 },
-    { x: 250, y: 1810, w: 640, t: 5 }, { x: 860, y: 1820, w: 660, t: 9 },
-    { x: -40, y: 1910, w: 700, t: 16 }, { x: 560, y: 1930, w: 780, t: 14 }, { x: 1120, y: 1920, w: 700, t: 18 },
-  ];
-  return liste.map((b) => ({
-    ...b,
-    oge: oge({
-      ad: `s05-bulut-${b.w}-${b.t}`, olcek: 1.1, sekil: bulutSekli(b.w, b.t), arka: '#F1E8F0', arkaAlfa: 0.55, arkaBulanik: 16, arkaTasma: false,
-      tarama: { ton: (x, y) => clamp((y + b.w * 0.05) / (b.w * 0.14)) * 0.7, renkler: [[0, '#E2DAEE'], [1, '#B7AFD6']], yon: -0.157, aralik: 3.4, boy: [30, 110], esikler: [0.2, 0.45], alfa: 0.32 },
-      kontur: null,
-    }),
-  }));
 }

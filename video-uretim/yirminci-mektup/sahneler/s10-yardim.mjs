@@ -289,3 +289,84 @@ export function yerGolgesi(ctx, x, y, w, alfa = 0.22) {
   ctx.fillRect(-w, -w, 2 * w, 2 * w);
   ctx.restore();
 }
+
+// ---------------------------------------------------------------- sis şeritleri (bir kez çizilir, karede tuval ayrılmaz)
+const sisSeritleri = new Map();
+/**
+ * Yatayda dikişsiz döşenebilen yumuşak sis şeridi (w × h px): üst üste binen buğulu loblar ve lobların alt
+ * kenarında soluk lila kalem çizgileri (bulut gibi). Önbelleğe alınır.
+ */
+export function sisSeridi(ad, { w = 2400, h = 360, renk = '#ECE8F4', cizgi = '#A9A2C0', kume = 7, tohum = 1, yogun = 1, cizgiA = 0.16 } = {}) {
+  let c = sisSeritleri.get(ad);
+  if (c) return c;
+  c = tuval(w, h);
+  const g = c.getContext('2d');
+  const r = rng(tohum);
+  const loblar = [];
+  const lob = (x, y, rx, ryK, a) => {
+    const ryMax = Math.min(y, h - y) * 0.96;
+    loblar.push({ x: ((x % w) + w) % w, y, rx, ry: ryMax * ryK, a: a * yogun });
+  };
+  // ince, sürekli taban buğusu
+  for (let i = 0; i < 6; i++) lob((i + r()) * (w / 6), h * 0.5, w * 0.14, r.ara(0.35, 0.55), r.ara(0.1, 0.16));
+  // ayrı ayrı seçilen sis kümeleri (aralarında boşluk: sürüklenme gözle izlenir)
+  for (let k = 0; k < kume; k++) {
+    const cx = (k + r.ara(-0.25, 0.25)) * (w / kume);
+    const cy = h * (0.5 + r.ara(-0.1, 0.1));
+    const n = 3 + Math.floor(r() * 3);
+    const gen = (w / kume) * r.ara(0.35, 0.6);
+    for (let i = 0; i < n; i++) lob(cx + r.ara(-0.7, 0.7) * gen, cy + r.ara(-0.08, 0.08) * h, gen * r.ara(0.45, 0.8), r.ara(0.45, 0.95), r.ara(0.28, 0.6));
+  }
+  const sar = (x, rx, fn) => { for (const dx of [-w, 0, w]) if (x + dx + rx > 0 && x + dx - rx < w) fn(x + dx); };
+  for (const l of loblar) {
+    sar(l.x, l.rx, (x) => {
+      g.save();
+      g.translate(x, l.y);
+      g.scale(l.rx, l.ry);
+      const gr = g.createRadialGradient(0, 0, 0, 0, 0, 1);
+      gr.addColorStop(0, rgba(renk, l.a));
+      gr.addColorStop(0.55, rgba(renk, l.a * 0.55));
+      gr.addColorStop(1, rgba(renk, 0));
+      g.fillStyle = gr;
+      g.beginPath(); g.arc(0, 0, 1, 0, TAU); g.fill();
+      g.restore();
+    });
+  }
+  // lobların altında yatay, uçları incelen soluk kalem çizgileri
+  for (const l of loblar) {
+    const n = 2 + Math.floor(r() * 3);
+    for (let k = 0; k < n; k++) {
+      const yy = l.y + l.ry * r.ara(0.05, 0.5);
+      const L = l.rx * r.ara(0.5, 1.2);
+      const xx = l.x + r.ara(-0.4, 0.4) * l.rx;
+      const a = cizgiA * r.ara(0.6, 1.1) * yogun;
+      sar(xx, L, (x) => {
+        g.fillStyle = rgba(cizgi, a);
+        darbe(g, [[x - L / 2, yy], [x, yy + r.ara(-1.5, 1.5)], [x + L / 2, yy + r.ara(-2, 2)]], r.ara(1.0, 1.5), { incelme: 0.4, sivri: 0.6, dalga: 0.1 });
+      });
+    }
+  }
+  sisSeritleri.set(ad, c);
+  return c;
+}
+/**
+ * Sis şeridini yatayda döşeyerek çizer (geçerli dönüşümde). y: şerit ortası; hiz px/sn (+ sağa); olcek: şerit ölçeği;
+ * [xa, xb]: kaplanacak aralık.
+ */
+export function sisCiz(g, serit, y, t, { hiz = 20, olcek = 1, alfa = 1, xa = -600, xb = 2600, kay = 0 } = {}) {
+  if (alfa <= 0.003) return;
+  const w = serit.width * olcek, h = serit.height * olcek;
+  const ofs = (((t * hiz + kay) % w) + w) % w;
+  g.save();
+  g.globalAlpha *= clamp(alfa);
+  for (let x = xa - w + ofs; x < xb; x += w) {
+    if (x + w < xa) continue;
+    g.drawImage(serit, x, y - h / 2, w, h);
+  }
+  g.restore();
+}
+
+/** Rüzgârda sallanma için yatay kayma (shear) katsayısı: iki sinüsün toplamı, ani olmayan esinti */
+export function sallanma(t, faz, A) {
+  return A * (0.62 * Math.sin(t * 1.25 + faz) + 0.38 * Math.sin(t * 2.6 + faz * 1.7 + 0.8));
+}

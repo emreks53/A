@@ -106,6 +106,10 @@ function yanDurum(t) {
 function yanSahne(ctx, t) {
   const sl = salinim(t, 3, 0.3, 10);
   const c = kamYan(t);
+  // vahşetgâh: ormanın içine yavaş itme ve yana kayma (paralaks derinlik verir). Kaymalar 'tenezzühgâh'ta sıfıra
+  // iner: renk dalgası ve bahçe kareleri aynen kalır.
+  const ow = an(t, T.o2 - 0.32, 0.5, ease.inOutSine) * (1 - an(t, T.vah, T.ten - T.vah, ease.outSine));
+  if (ow > 0) { c.x += 80 * ow; c.y += 16 * ow; c.z *= Math.exp(Math.log(0.92) * ow); } // sağdan sola, geriden içeri
   const cam = { x: c.x + sl.x / c.z, y: c.y + sl.y / c.z, z: c.z, r: sl.r };
   const S = yanDurum(t);
   const adamEk = ekranda(cam, S.adam.x, G - 150 * S_ADAM / 0.72);
@@ -162,7 +166,19 @@ function yanSahne(ctx, t) {
     // ağacın tacı altı yağmursuz
     const [cx, cy, cz] = ekranda(cam, AGAC.x + 20, AGAC.y - 600);
     const siper = D.agac ? { x: cx, y: cy + 80 * cz, rx: 420 * cz * an(t, T.rah + 0.3, 1.1), ry: 260 * cz } : null;
-    yagmurCiz(ctx, t, yag, { zeminY: zy, siper });
+    // ıslanan toprak: yağmur altında zemin hafifçe koyulaşır (ışıklı damla ve halkalar seçilir)
+    if (zy < H) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      const gr = ctx.createLinearGradient(0, zy - 30, 0, H);
+      gr.addColorStop(0, 'rgba(255,255,255,1)');
+      gr.addColorStop(0.08, `rgba(${255 - 32 * yag},${255 - 34 * yag},${255 - 20 * yag},1)`);
+      gr.addColorStop(1, `rgba(${255 - 44 * yag},${255 - 46 * yag},${255 - 28 * yag},1)`);
+      ctx.fillStyle = gr;
+      ctx.fillRect(0, zy - 30, W, H - zy + 30);
+      ctx.restore();
+    }
+    yagmurCiz(ctx, t, yag, { zeminY: zy, siper, z: cam.z });
   }
   return { cam };
 }
@@ -280,6 +296,40 @@ function kuslar(g, cam, t) {
   }
 }
 
+// ---------------------------------------------------------------- labirent → yan görünüş geçişi
+// Labirentin erime yarıçapı (s10-labirent ile aynı eğri); yeni dünya bu dairenin biraz gerisinden açılır, böylece
+// dışarıdan içe: gri labirent → altın erime cephesi → sıcak ışık kuşağı → yeni dünya.
+const GECIS = { bas: 98.0, son: 98.58, mx: W / 2, my: H / 2 };
+const erimeR = (t) => 1900 * an(t, T.bul + 0.12, 1.0, (u) => u * u * (1.6 - 0.6 * u));
+function gecisCiz(ctx, t) {
+  labirentCiz(ctx, t, T);
+  const Rs = erimeR(t);
+  const Rr = Rs * 1.08 - 330; // açılan dairenin tam görünen kısmı
+  const yum = 240; // yumuşak kenar
+  if (Rr + yum <= 0) return;
+  const { mx, my } = GECIS;
+  const K = tampon('s10-gecis');
+  const g = K.getContext('2d');
+  yanSahne(g, t);
+  radyalMaske(g, mx, my, [[0, 1], [Math.max(0.5, Rr), 1], [Math.max(1, Rr) + yum, 0]], 'destination-in');
+  ctx.drawImage(K, 0, 0);
+  // kenarda sıcak altın ışık kuşağı (screen), içte yumuşak, dışta erime cephesine karışır
+  const k0 = Math.max(0, Rr - 60), k1 = Math.max(k0 + 1, Rr + yum + 120);
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  const gr = ctx.createRadialGradient(mx, my, k0, mx, my, k1);
+  gr.addColorStop(0, 'rgba(255,214,140,0)');
+  gr.addColorStop(0.45, 'rgba(255,212,128,0.42)');
+  gr.addColorStop(0.7, 'rgba(255,226,160,0.3)');
+  gr.addColorStop(1, 'rgba(255,226,160,0)');
+  ctx.fillStyle = gr;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+  const guc = clamp((Rr + yum) / 300) * (1 - an(t, GECIS.son - 0.16, 0.16));
+  dalgaHalkasi(ctx, mx, my, Math.max(3, Rr + yum * 0.42), 0.8 * guc, { renk: '#E2AE4E', kal: 2.8, tohum: 91 });
+  dalgaHalkasi(ctx, mx, my, Math.max(3, Rr + yum * 0.9), 0.4 * guc, { renk: '#EBC36E', kal: 1.8, tohum: 92 });
+}
+
 export default {
   sesler: [
     { t: T.egr, tur: 'nur', guc: 0.45, sure: 2.0 },
@@ -304,13 +354,13 @@ export default {
     kameraKur();
   },
   ciz(ctx, t) {
-    const tepe = T.gecis; // ışık geçişinin doruğu
-    if (t < tepe) {
-      labirentCiz(ctx, t, T);
-      isikBas(ctx, 0.9 * an(t, tepe - 0.42, 0.42, ease.inQuad), '#FFF4DA');
-    } else {
-      yanSahne(ctx, t);
-      isikBas(ctx, 0.9 * (1 - an(t, tepe, 0.5, ease.outQuad)), '#FFF4DA');
-    }
+    // labirent → yan görünüş: ekran beyazlamaz. Eriyen labirentin ışık alanı içinden yeni dünya açılır (kapı gibi);
+    // açılan dairenin kenarında sıcak altın bir ışık kuşağı dışa doğru yürür.
+    if (t < GECIS.bas) labirentCiz(ctx, t, T);
+    else if (t < GECIS.son) gecisCiz(ctx, t);
+    else yanSahne(ctx, t);
+    // ölçülü, sıcak altın ışık dalgası (doruğu tepe anında; ekranı örtmez)
+    const dalga = an(t, T.gecis - 0.4, 0.4, ease.inOutSine) * (1 - an(t, T.gecis, 0.42, ease.inOutSine));
+    isikBas(ctx, 0.13 * dalga, '#FFD993');
   },
 };

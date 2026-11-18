@@ -1,13 +1,17 @@
 // 5. cümle: "Evet, bütün hakiki saadet ve hâlis sürur ve şirin nimet ve safi lezzet, elbette marifetullah ve
 // muhabbetullahtadır. Onlar, onsuz olamaz."
-// Yazısız, temiz bir infografik; altta sakin bir bulut yatağı. s04'ün altın halkaları (aynı biçim ve zamanlamayla)
-// sürüp solarken üstte kaynak çizilir: merkezinde gül olan marifet madalyonu (küçük, loş), kalemin ucunda ışıltı.
+// Yazısız, temiz bir infografik; zemin altta ince altın taramalı bir buğuyla koyulaşır, altyazının altında ortadan
+// iki yana çizilen ince bir tezhip pervazı (rumi kıvrımı) sayfayı kapatır. s04'ün altın halkaları (aynı biçim ve
+// zamanlamayla) sürüp solarken üstte kaynak çizilir: merkezinde gül olan marifet madalyonu (küçük, loş).
+// Kamera: simgeler girerken yavaşça itilir ve her yeni simgeye hafifçe yönelir; "elbette"de geri çekilip kaynağı
+// ve dört simgeyi birlikte çerçeveler.
 // "bütün": dört levhanın oturacağı noktalı yay alttan iki yana çizilir. Levhalar kelimelerinde taşmalı pop ile
 // belirir: turkuaz kandil (saadet, alev tutuşur ve titrer), çiçekli dalda öten kuş (sürur, başını kesik kesik oynatır,
 // gagasından ses yayları), yarılan nar (nimet, tanelerde parıltı), bal peteği ve damlası (lezzet, damla düşer).
 // "elbette": kaynak büyür ve aydınlanır; "marifetullah": madalyonun halkası parlar, dalga vurur, halkadan dört simgeye
-// altın ışık iplikleri akar; "muhabbetullahtadır": gül parlar, pembe dalga, ipliklere örülerek ikinci bir gül ipliği
-// akar; varışta levhalarda halka dalgası, simgeler tam renge gelip parlar. "Onlar": levhalar birlikte nefes alır.
+// altın ışık iplikleri akar (parlak, kuyruklu bir uç önde gider; iplik boyunca ışık kesikleri ve kuyruklu ışık
+// darbeleri akar); "muhabbetullahtadır": gül parlar, pembe dalga, ipliklere örülerek ikinci bir gül ipliği akar;
+// varışta levhalarda halka dalgası ve parıltı, simgeler tam renge gelip parlar. "Onlar": levhalar birlikte nefes alır.
 // "onsuz olamaz": kaynağın ışığı çekilir, madalyon solar ve örtülür; karanlık ipliklerden aşağı iner; kandil söner
 // (duman), kuş susar (başı düşer), nar kurur, bal donuklaşır; zemin loşlaşır. Bitiş: loş, soluk zemin, gri simgeler.
 import { W, H, clamp, lerp, ease, an, pop, TAU, rgba, tuval, smooth } from '../motor/temel.mjs';
@@ -43,6 +47,9 @@ const LR = Y.LR;
 const KS = 540, KO = 1.25;
 let kTuval, kCtx;
 
+// kamera yönelişi: sıfır hızla başlar, erken hızlanır, uzun ve yumuşak oturur
+const yonelis = (u) => { const w = 1 - Math.pow(1 - u, 1.8); return w * w * (3 - 2 * w); };
+
 // zaman eğrileri
 const CAN_DUSUK = 0.34;
 function canlilik(t) {
@@ -68,7 +75,7 @@ const karaVaris = (i) => KARA_BAS + IPLIK_SIRA[i] * 0.05 + KARA_SURE;
 const bagli = (t, i) => (0.55 * an(t, altinVaris(i) - 0.05, 0.35, ease.outCubic) + 0.45 * an(t, gulVaris(i) - 0.05, 0.35, ease.outCubic)) * (1 - an(t, karaVaris(i) - 0.12, 0.3));
 const simgeOlum = (t, i) => an(t, karaVaris(i) - 0.06, 0.5, ease.inOutSine);
 
-let zSicak, zLos, bulutlar, levha, levhaG, kandil, kandilG, alev, kus, kusG, dal, dalG, narK, narA, narKuruG, narAG, petek, petekG, petekP, damla, damlaG;
+let zSicak, zLos, pervaz, pervazG, levha, levhaG, kandil, kandilG, alev, kus, kusG, dal, dalG, narK, narA, narKuruG, narAG, petek, petekG, petekP, damla, damlaG;
 let iplikler = [], narYildiz = [];
 let kam;
 
@@ -113,42 +120,123 @@ function cizgiYol(ctx, pts) {
   ctx.moveTo(pts[0][0], pts[0][1]);
   for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
 }
-/** ışık ipliği: yumuşak hale + altın kalem + parlak öz */
-function isikIplik(ctx, pts, { alfa = 1, hale = '#F6D985', kalem = '#B98424', oz = '#FFFCEB', kal = 3.0, tohum = 1, genis = 1 } = {}) {
-  if (!pts || alfa <= 0.01) return;
+// iplik renkleri: golge (açık zeminde ışığa kontrast veren sıcak buğu, multiply), hale (screen), kalem, öz, baş
+const IR = {
+  altin: { golge: '#E2A23A', hale: '#FFD466', kalem: '#AE771A', oz: '#FFFDF2', bas: '#FFE49A' },
+  gul: { golge: '#DE8199', hale: '#FFBDCD', kalem: '#B04A6B', oz: '#FFF3F6', bas: '#FFD0DC' },
+};
+/**
+ * Işık ipliği: sıcak gölge-buğu (zemini hafifçe koyultup ışığı seçtirir) + parlak hale + kalem kenarı + beyaz öz +
+ * öz boyunca akan ışık kesikleri. faz0: yolun başının ipliğin tamamındaki yay uzunluğu (kesikler dünyaya sabit akar).
+ */
+function isikIplik(ctx, pts, t, { alfa = 1, P = IR.altin, kal = 3.6, tohum = 1, genis = 1, akis = 1, faz0 = 0 } = {}) {
+  if (!pts || pts.length < 2 || alfa <= 0.01) return;
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   cizgiYol(ctx, pts);
-  ctx.strokeStyle = rgba(hale, 0.14 * alfa);
-  ctx.lineWidth = 30 * genis;
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.strokeStyle = rgba(P.golge, 0.1 * alfa);
+  ctx.lineWidth = 34 * genis;
   ctx.stroke();
-  ctx.strokeStyle = rgba(hale, 0.26 * alfa);
-  ctx.lineWidth = 14 * genis;
+  ctx.strokeStyle = rgba(P.golge, 0.16 * alfa);
+  ctx.lineWidth = 13 * genis;
   ctx.stroke();
-  ctx.strokeStyle = rgba(hale, 0.42 * alfa);
-  ctx.lineWidth = 6 * genis;
+  ctx.globalCompositeOperation = 'screen';
+  ctx.strokeStyle = rgba(P.hale, 0.5 * alfa);
+  ctx.lineWidth = 17 * genis;
+  ctx.stroke();
+  ctx.strokeStyle = rgba(P.hale, 0.75 * alfa);
+  ctx.lineWidth = 7.5 * genis;
   ctx.stroke();
   ctx.restore();
-  konturCiz(ctx, pts, { renk: kalem, kal, alfa: 0.92 * alfa, kapali: false, titreme: 0.35, tohum, uc: 0.03, adim: 2.4 });
+  konturCiz(ctx, pts, { renk: P.kalem, kal, alfa: 0.88 * alfa, kapali: false, titreme: 0.35, tohum, uc: 0.03, adim: 2.4 });
   ctx.save();
   ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   cizgiYol(ctx, pts);
-  ctx.strokeStyle = rgba(oz, 0.85 * alfa);
-  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = rgba(P.oz, 0.95 * alfa);
+  ctx.lineWidth = kal * 0.5;
   ctx.stroke();
+  if (akis > 0.01) {
+    // akan ışık: öz boyunca kaynaktan simgeye kayan parlak kesikler
+    ctx.globalCompositeOperation = 'screen';
+    ctx.setLineDash([24, 30, 7, 47]);
+    ctx.lineDashOffset = faz0 - t * 150;
+    ctx.strokeStyle = rgba(P.hale, 0.7 * alfa * akis);
+    ctx.lineWidth = 10 * genis;
+    ctx.stroke();
+    ctx.strokeStyle = rgba('#FFFFFF', alfa * akis);
+    ctx.lineWidth = kal * 0.85;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
   ctx.restore();
 }
-/** ışık boncuğu */
-function boncuk(ctx, x, y, r, alfa, renk = '#FFF1C0') {
+/** ışık başı: sıcak çevre (multiply) + geniş hale + beyaz çekirdek + dört kollu parıltı */
+function isikBasi(ctx, x, y, r, alfa, P = IR.altin) {
   if (alfa <= 0.01) return;
-  M.hale(ctx, x, y, r * 4.5, renk, 0.85 * alfa);
+  M.hale(ctx, x, y, r * 5.5, P.golge, 0.34 * alfa, 'multiply');
+  M.hale(ctx, x, y, r * 8.5, P.bas, 0.95 * alfa);
+  M.hale(ctx, x, y, r * 3, '#FFFFFF', 0.9 * alfa);
   ctx.save();
-  ctx.fillStyle = `rgba(255,253,244,${0.95 * alfa})`;
+  ctx.fillStyle = `rgba(255,255,252,${alfa})`;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, TAU);
   ctx.fill();
   ctx.restore();
+  Y.parilti(ctx, x, y, r * 3.8, alfa);
+}
+/** kuyruklu ışık: yol üzerinde u'daki parlak baş ve arkasında incelen, sönen kuyruk ([u0, u1] dışında çizilmez) */
+function kuyrukluIsik(ctx, y, u, { boy = 0.14, P = IR.altin, alfa = 1, r = 5, u0 = 0, u1 = 1, genis = 1 } = {}) {
+  if (alfa <= 0.01) return;
+  const n = 7;
+  const parcalar = [];
+  for (let k = 0; k < n; k++) {
+    const a = u - boy * (1 - k / n), b = u - boy * (1 - (k + 1) / n);
+    const seg = parca(y, Math.max(u0, a), Math.min(u1, b));
+    if (seg) parcalar.push([seg, (k + 1) / n]);
+  }
+  ctx.save();
+  ctx.lineJoin = 'round';
+  // altta doygun sıcak iz (multiply): beyaz öz açık zeminde ancak böyle seçilir; uç uca eklenir (kesişme koyulaşmasın)
+  ctx.lineCap = 'butt';
+  ctx.globalCompositeOperation = 'multiply';
+  for (const [seg, f] of parcalar) {
+    cizgiYol(ctx, seg);
+    ctx.strokeStyle = rgba(P.golge, 0.26 * f * alfa);
+    ctx.lineWidth = (7 + 11 * f) * genis;
+    ctx.stroke();
+  }
+  ctx.lineCap = 'round';
+  ctx.globalCompositeOperation = 'screen';
+  for (const [seg, f] of parcalar) {
+    cizgiYol(ctx, seg);
+    ctx.strokeStyle = rgba(P.hale, 0.55 * f * alfa);
+    ctx.lineWidth = (5 + 13 * f) * genis;
+    ctx.stroke();
+    ctx.strokeStyle = rgba('#FFFFFF', 0.95 * f * alfa);
+    ctx.lineWidth = (1.6 + 3 * f) * genis;
+    ctx.stroke();
+  }
+  ctx.restore();
+  if (u > u0 && u < u1) {
+    const [x, yy] = noktaAl(y, u);
+    isikBasi(ctx, x, yy, r, alfa, P);
+  }
+}
+
+/** akış ucunun ardında saçılan küçük kıvılcımlar (ipliğin iki yanına hafifçe açılıp söner) */
+function kivilcimlar(ctx, y, u, t, tohum, alfa, renk = '#FFFDF0') {
+  if (alfa <= 0.02) return;
+  for (let j = 1; j <= 5; j++) {
+    const uj = u - j * 0.032;
+    if (uj <= 0.01) break;
+    const [x, yy, a] = noktaAl(y, uj);
+    const yan = Math.sin(j * 12.9 + tohum * 3.1) * (3 + 3.2 * j);
+    const tit = 0.65 + 0.35 * Math.sin(t * 23 + j * 2.3 + tohum);
+    Y.parilti(ctx, x - Math.sin(a) * yan, yy + Math.cos(a) * yan, 7 - j * 0.7, alfa * (1 - j / 6) * tit, renk);
+  }
 }
 
 // ---------------------------------------------------------------- kaynak (madalyon + gül), ara tuvalde
@@ -190,7 +278,7 @@ export default {
   hazirla() {
     zSicak = Y.zeminTuvali('sicak', K.x, K.y);
     zLos = Y.zeminTuvali('los', K.x, K.y);
-    bulutlar = Y.bulutYatagi();
+    pervaz = Y.pervazOge(); pervazG = Y.griSurum(pervaz, { doyum: 0.1, kontrast: 0.85 });
     levha = Y.levhaOge(); levhaG = Y.griSurum(levha);
     kandil = Y.kandilOge(); kandilG = Y.griSurum(kandil);
     alev = Y.alevOge();
@@ -219,11 +307,18 @@ export default {
       const p2 = [p3[0] + v[0] * 150 * 0.6, p3[1] - 150];
       return yolHazirla(bezier(p0, p1, p2, p3, 150));
     });
+    // her anahtar bir simgenin girdiği an; o andan sonraki bölüm kameranın o simgeye yönelişidir (öne yüklü, uzun
+    // süzülen yumuşatma: pop'la birlikte yola çıkar, bir sonraki simgeye kadar yavaşça oturur). Yönelişler küçük
+    // (≤ 40 px kayma, ≤ %8 itme): levhalar kadrajda kalır, altyazı bandına inmez.
     kam = kameraYolu([
       { t: T.bas, x: 540, y: 960, z: 1.0 },
       { t: 35.2, x: 540, y: 960, z: 1.0, e: ease.lin },
-      { t: 41.4, x: 540, y: 950, z: 1.02, e: ease.inOutSine },
-      { t: 42.8, x: 540, y: 958, z: 1.035, e: ease.inOutCubic },
+      { t: T.saadet, x: 539, y: 966, z: 1.014, e: ease.inOutSine }, // "Evet, bütün hakiki": çok yavaş itme başlar
+      { t: T.surur, x: 503, y: 985, z: 1.066, e: yonelis }, // kandile (sol) yöneliş
+      { t: T.nimet, x: 517, y: 998, z: 1.08, e: yonelis }, // kuşa
+      { t: T.lezzet, x: 536, y: 1000, z: 1.066, e: yonelis }, // nara
+      { t: T.elbette, x: 541, y: 988, z: 1.05, e: yonelis }, // bala: hafif geri çekilip dört simgeyi birlikte gösterir
+      { t: 42.8, x: 540, y: 958, z: 1.035, e: ease.inOutCubic }, // "elbette": kaynağa doğru yükselir
       { t: 45.1, x: 540, y: 958, z: 1.04, e: ease.inOutSine },
       { t: T.son, x: 540, y: 935, z: 1.08, e: ease.inOutSine },
     ]);
@@ -244,21 +339,37 @@ export default {
       if (los > 0.001) ogeCiz(g, zLos, Y.ZEMIN.X0, Y.ZEMIN.Y0, { alfa: los });
     }, 0.5);
 
-    // 2) alt bulut yatağı (sakin; altyazı bandının arkasında yumuşak)
-    kameraIle(ctx, cam, (g) => {
-      // bulutların altında soluk sis: sıralar arasındaki boşluklar koyu bant gibi görünmesin
-      const rg = g.createLinearGradient(0, 1590, 0, 1980);
-      rg.addColorStop(0, 'rgba(247,244,248,0)');
-      rg.addColorStop(0.45, 'rgba(246,243,248,0.7)');
-      rg.addColorStop(1, 'rgba(244,241,247,0.88)');
-      g.fillStyle = rg;
-      g.fillRect(-200, 1590, 1480, 600);
-      // bulutlar aşağıdan süzülerek yerleşir (önce arkadakiler)
-      bulutlar.forEach((b, k) => {
-        const yuk = an(t, T.bas + 0.05 + (bulutlar.length - 1 - k) * 0.06, 1.5, ease.outCubic);
-        ogeCiz(g, b.oge, b.x + Math.sin(t * 0.21 + k * 1.7) * 14 + (t - 40) * (k % 2 ? -3 : 3), b.y + (1 - yuk) * 300);
-      });
-    }, 0.85);
+    // 2) alt tezhip pervazı: "bütün"de noktalı yayla aynı jestle ortadan iki yana çizilerek açılır (kalemin iki ucunda
+    // ışıltı); loşlukta grileşir
+    const pv = an(t, T.butun + 0.02, 1.3, ease.inOutCubic);
+    if (pv > 0) {
+      kameraIle(ctx, cam, (g) => {
+        const px = 540, py = Y.PERVAZ.Y;
+        const a = 0.9 * (1 - 0.25 * ol);
+        if (los < 0.999) ogeAcarak(g, pervaz, px, py, pv, { mod: 'daire', merkez: [0, 0], yumusak: 0.08, alfa: a * (1 - los) });
+        if (los > 0.001) ogeCiz(g, pervazG, px, py, { alfa: a * los });
+        if (pv < 1) {
+          const R = Math.hypot(pervaz.w / 2, pervaz.h / 2);
+          const rr = (pv * 1.08 - 0.03) * R;
+          const ip = Math.sin(Math.PI * clamp(pv / 0.95));
+          if (rr < Y.PERVAZ.L) for (const yon of [-1, 1]) Y.parilti(g, px + yon * rr, py, 13, 0.9 * ip);
+        }
+      }, 1);
+    }
+
+    // ışık akarken zemin kenarlardan hafifçe koyulaşır (yalnız zemin ve pervaz): açık zeminde ışık daha çok seçilsin
+    const vurgu = an(t, T.elbette, 1.0, ease.inOutSine) * (1 - an(t, T.onsuz + 0.1, 1.0, ease.inOutSine));
+    if (vurgu > 0.005) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      const vg = ctx.createRadialGradient(540, 820, 260, 540, 860, 1250);
+      vg.addColorStop(0, 'rgba(226,206,166,0)');
+      vg.addColorStop(0.55, `rgba(226,206,166,${0.22 * vurgu})`);
+      vg.addColorStop(1, `rgba(214,190,146,${0.42 * vurgu})`);
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
 
     // s04'ten devralınan altın halkalar: ekran uzayında, s04'le aynı biçim ve zamanlama; yeni halka doğmaz, söner
     if (t < T.bas + 1.6) {
@@ -368,9 +479,9 @@ export default {
               const o = 5 * Math.sin(fz) * tp;
               pembe.push({ p: [x - Math.sin(a) * o, yy + Math.cos(a) * o], ust: Math.cos(fz) > 0 });
             }
-            isikIplik(g, pembe.map((q) => q.p), { alfa: 0.9, hale: '#F7C3CF', kalem: '#B4506F', oz: '#FFF1F4', kal: 1.7, tohum: 40 + i, genis: 0.55 * genis });
+            isikIplik(g, pembe.map((q) => q.p), t, { alfa: 0.9, P: IR.gul, kal: 1.8, tohum: 40 + i, genis: 0.55 * genis, akis: 0 });
           }
-          isikIplik(g, parca(y, kc, ak), { alfa: nab, tohum: 30 + i, genis });
+          isikIplik(g, parca(y, kc, ak), t, { alfa: nab, tohum: 30 + i, genis, faz0: kc * y.L + i * 17 });
           if (pembe) {
             // üstten geçen kısımlar altın ipliğin üzerine yeniden çizilir
             let seg = [];
@@ -460,20 +571,31 @@ export default {
     }
 
     kameraIle(ctx, cam, (g) => {
-      // 8) iplik boncukları (akan ışık)
+      // 8) akan ışık: akış cephesinde kuyruklu parlak baş; bağlandıktan sonra iplik boyunca kuyruklu ışık darbeleri
       iplikler.forEach((y, i) => {
         const ak = altinAkis(t, i), kc = karaCephe(t, i), gk = gulAkis(t, i);
         if (ak <= 0) return;
-        // akış ucunda parlak baş
-        if (ak < 1 && ak > kc) { const [x, yy] = noktaAl(y, ak); boncuk(g, x, yy, 6, 1); }
-        if (gk > 0 && gk < 1 && gk > kc) { const [x, yy] = noktaAl(y, gk); boncuk(g, x, yy, 5.5, 1, '#FFD5DF'); }
-        const n = 3;
+        if (ak < 1 && ak > kc) {
+          kuyrukluIsik(g, y, ak, { boy: 0.24, r: 7.5, u0: kc, alfa: Math.min(1, ak * 6), genis: 1.15 });
+          kivilcimlar(g, y, ak, t, i, Math.min(1, ak * 6) * (1 - smooth(0.85, 1, ak)));
+        }
+        if (gk > 0 && gk < 1 && gk > kc) {
+          kuyrukluIsik(g, y, gk, { boy: 0.2, r: 6.2, u0: kc, P: IR.gul, alfa: Math.min(1, gk * 6) });
+          kivilcimlar(g, y, gk, t, i + 7, Math.min(1, gk * 6) * (1 - smooth(0.85, 1, gk)), '#FFE6EE');
+        }
+        // darbeler: altın ve (gül ipliği geldikten sonra) pembe, dönüşümlü
+        const n = 2;
         for (let k = 0; k < n; k++) {
-          const u = ((t - T.marifet) * 0.62 + k / n + i * 0.17) % 1;
-          if (u <= kc + 0.02 || u >= ak - 0.02) continue;
-          const pembe = u < gk && (k % 2 === 1);
-          const [x, yy] = noktaAl(y, u);
-          boncuk(g, x, yy, 4.2, 0.9 * Math.sin(u * Math.PI) ** 0.5, pembe ? '#FFD3DE' : '#FFEFB8');
+          const u = ((t - T.marifet) * 0.5 + k / n + i * 0.23) % 1;
+          if (u <= kc + 0.03 || u >= ak - 0.03) continue;
+          const pembe = k === 1 && u < gk;
+          kuyrukluIsik(g, y, u, { boy: 0.13, r: 4.2, u0: kc, u1: ak, P: pembe ? IR.gul : IR.altin, alfa: 0.9 * Math.sin(u * Math.PI) ** 0.6, genis: 0.85 });
+        }
+        // varış parıltısı (iplik levhaya değdiğinde)
+        const p3 = y.pts[y.pts.length - 1];
+        for (const tv of [altinVaris(i), gulVaris(i)]) {
+          const v = (t - tv + 0.06) / 0.5;
+          if (v > 0 && v < 1 && t < KARA_BAS) Y.parilti(g, p3[0], p3[1], 30 * (0.6 + 0.4 * ease.outCubic(v)), Math.sin(Math.PI * v) ** 0.7);
         }
       });
 

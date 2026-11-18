@@ -6,7 +6,7 @@
 // katmanına çevirme: Xw = sx + 1210·f, Yw = sy − 60·f.
 import { tuval, W, H, clamp, lerp, ease, an, rng, TAU, rgba, smooth, pop } from '../motor/temel.mjs';
 import { oge, ogeCiz, konturCiz, darbe, TON, PALET, FILM } from '../motor/kalem.mjs';
-import { acarak, yerGolgesi, yurumePlani } from './s10-yardim.mjs';
+import { acarak, yerGolgesi, yurumePlani, sisSeridi, sisCiz, sallanma } from './s10-yardim.mjs';
 import { svg, elips, cokgen, dikdortgen, sivriKemer, yumusat, donustur, yuvarlakDikdortgen } from '../motor/sekil.mjs';
 import { kameraUygula, ekranda } from '../motor/sahne.mjs';
 import { insanYan, insanOn, DURUS, ON_DURUS } from '../motor/insan.mjs';
@@ -80,9 +80,9 @@ function tacliCiz(g, A, x, y, { s = 1, u = 1, t = 0, faz = 0 } = {}) {
   g.save();
   g.translate(x, y);
   g.scale(s, s);
-  if (u > 0) ogeCiz(g, A.govde, 0, 0, { sy: ease.outBack(clamp(u * 3.2), 1.2) });
+  if (u > 0) ogeCiz(g, A.govde, 0, 0, { sy: ease.outBack(clamp(u * 2.6), 1.2) });
   A.kumeler.forEach((k, i) => {
-    const v = clamp((u - 0.12 - (1 - k.t) * 0.28) / 0.45);
+    const v = clamp((u - 0.02 - (1 - k.t) * 0.2) / 0.38);
     if (v <= 0) return;
     ogeCiz(g, k.oge, k.x, k.y, { s: ease.outBack(v, 1.7), r: Math.sin(t * 1.2 + i + faz) * 0.015 });
   });
@@ -220,23 +220,25 @@ function cicekliAgac(K, boy, tohum, olcek, renk = 'pembe') {
   });
   return { govde, kumeler };
 }
-function karanlikCiz(g, K, x, y, s, t, faz) {
+function karanlikCiz(g, K, x, y, s, t, faz, A = 0.012) {
   g.save();
   g.translate(x, y);
   g.scale(s, s);
-  g.rotate(Math.sin(t * 0.7 + faz) * 0.006);
+  // tabanı sabit, tepesi rüzgârla salınan yatay kayma (dallar esintiyle sallanır)
+  g.transform(1, 0, sallanma(t, faz, A), 1, 0, 0);
   ogeCiz(g, K.oge, 0, 0);
   g.restore();
 }
-function cicekliCiz(g, C, x, y, s, t, u, faz) {
+/** kumeT(k): kümenin açılmaya başladığı an (sn); verilmezse u'ya göre sıralı açılır */
+function cicekliCiz(g, C, x, y, s, t, u, faz, A = 0.005, kumeT = null) {
   if (u <= 0) return;
   g.save();
   g.translate(x, y);
   g.scale(s, s);
-  g.rotate(Math.sin(t * 0.6 + faz) * 0.005);
+  g.transform(1, 0, sallanma(t, faz, A), 1, 0, 0);
   ogeCiz(g, C.govde, 0, 0, { alfa: clamp(u * 3) });
   C.kumeler.forEach((k, i) => {
-    const v = clamp((u - 0.2 - k.t * 0.4) / 0.4);
+    const v = kumeT ? clamp((t - kumeT(k)) / 0.38) : clamp((u - 0.2 - k.t * 0.4) / 0.4);
     if (v > 0) ogeCiz(g, k.oge, k.x, k.y, { s: ease.outBack(v, 1.7), r: Math.sin(t * 1.3 + i) * 0.03 });
   });
   g.restore();
@@ -678,25 +680,47 @@ export function bahceHazirla() {
     V.tarh.push({ sx, sy: 1282 + r.ara(-3, 3), o: V.laleler[(i * 3) % 4], s: r.ara(0.9, 1.1) });
     V.tarh.push({ sx: sx + 8, sy: 1294 + r.ara(-3, 3), o: V.laleler[(i * 3 + 1) % 4], s: r.ara(1.05, 1.25) });
   }
-  // gözler (karanlıkta, koyu boşluklarda)
-  V.gozler = [[150, 1150, 0.8], [420, 1090, 0.78], [620, 1170, 0.84], [860, 1112, 0.8], [1000, 1196, 0.88], [330, 1240, 0.88], [780, 1250, 0.9]].map(([sx, sy, f], k) => ({ sx, sy, f, k }));
+  // gözler (karanlıkta, koyu boşluklarda): kat 0 arka sıradan sonra, kat 1 orta sıradan sonra çizilir.
+  // gez: yavaşça yana süzülen çift (px/sn); atla: [t (vahşetgâh'tan sonra), dx] kapanıp az ötede yeniden açılan çift
+  V.gozler = [
+    { sx: 150, sy: 1150, f: 0.8, kat: 0 }, { sx: 420, sy: 1090, f: 0.78, kat: 0, gez: 9 }, { sx: 620, sy: 1170, f: 0.84, kat: 0, atla: [0.95, 70] },
+    { sx: 860, sy: 1112, f: 0.8, kat: 0 }, { sx: 1000, sy: 1196, f: 0.88, kat: 1, gez: -12 }, { sx: 330, sy: 1240, f: 0.88, kat: 1, atla: [1.3, -60] },
+    { sx: 780, sy: 1250, f: 0.9, kat: 1 }, { sx: 1180, sy: 1135, f: 0.8, kat: 0 },
+  ].map((e, k) => ({ ...e, k }));
+  // sis şeritleri (önceden çizilir) ve rüzgârda savrulan kuru yapraklar
+  V.sis = [
+    sisSeridi('s10-sis-a', { w: 2400, h: 360, renk: '#DDD8EA', cizgi: '#8C85A4', kume: 7, tohum: 21, yogun: 1 }),
+    sisSeridi('s10-sis-b', { w: 2200, h: 300, renk: '#E2DEED', cizgi: '#8C85A4', kume: 6, tohum: 37, yogun: 0.95 }),
+    sisSeridi('s10-sis-c', { w: 2600, h: 420, renk: '#E6E2F0', cizgi: '#9690AC', kume: 7, tohum: 53, yogun: 0.9 }),
+  ];
+  V.kuruYaprak = oge({
+    ad: 's10-kuru-yaprak', olcek: 2, sekil: svg('M0 -9C5 -6 7 -1 6 4C5 8 2 10 0 11C-2 10 -5 8 -6 4C-7 -1 -5 -6 0 -9Z'), arka: '#8E8296', arkaAlfa: 0.85,
+    tarama: { ton: () => 0.6, renkler: [[0, '#857A90'], [1, '#4E4658']], yon: 1.2, aralik: 1.8, boy: [4, 10], kal: 0.9, alfa: 0.6, esikler: [0.3] },
+    kontur: '#3A3344', konturKal: 1.2, pay: 4,
+    detay: (c, api) => { api.cizgi([[0, -8], [0, 13]], { renk: '#3A3344', kal: 1.0, alfa: 0.8 }); },
+  });
 }
 
 // ---------------------------------------------------------------- çizim: karanlık hâl
-function sisBant(g, cam, t, sy, f, a, hiz, x0 = -200, x1 = 1900) {
+/** Sürüklenen sis katmanı (referans ekran koordinatı, f paralaksı); yoğunluğu yavaşça nefes alır */
+function sisKat(g, cam, t, i, sy, f, alfa, hiz, olcek = 1, kay = 0) {
   g.save(); katman(g, cam, f);
-  const per = 520;
-  const kay = ((t * hiz) % per + per) % per;
-  for (let x = x0 - per + kay; x < x1; x += per) {
-    g.save();
-    g.translate(x, sy);
-    g.scale(400, 56);
-    const gg = g.createRadialGradient(0, 0, 0, 0, 0, 1);
-    gg.addColorStop(0, `rgba(228,224,238,${a})`);
-    gg.addColorStop(1, 'rgba(228,224,238,0)');
-    g.fillStyle = gg;
-    g.beginPath(); g.arc(0, 0, 1, 0, TAU); g.fill();
-    g.restore();
+  sisCiz(g, V.sis[i % V.sis.length], sy, t, { hiz, olcek, alfa: alfa * (0.86 + 0.14 * Math.sin(t * 0.8 + i * 1.9 + sy * 0.01)), xa: -700, xb: 2500, kay });
+  g.restore();
+}
+/** Rüzgârda savrulan birkaç kuru yaprak (soldan sağa, takla atarak) */
+function kuruYapraklar(g, cam, t, Z) {
+  const t0 = Z.vah - 0.1;
+  if (t < t0) return;
+  g.save(); katman(g, cam, 1.05);
+  for (let i = 0; i < 7; i++) {
+    const u = (t - t0 - i * 0.27) / 2.4;
+    if (u <= 0 || u >= 1) continue;
+    const x = lerp(-80 + (i % 3) * 120, 1900, u) + Math.sin(u * 7 + i) * 30;
+    const y = 520 + i * 105 + Math.sin(u * 5.3 + i * 1.7) * 60 + u * 140;
+    const r = t * (3 + (i % 3)) + i;
+    const b = 1.5 + (i % 3) * 0.3;
+    ogeCiz(g, V.kuruYaprak, x, y, { sy: b, sx: b * Math.cos(t * 4.2 + i), r, alfa: clamp(u * 8) * clamp((1 - u) * 8) * 0.9 });
   }
   g.restore();
 }
@@ -708,41 +732,73 @@ export function karanlikCizV(g, cam, t, Z) {
   gr.addColorStop(1, 'rgba(110,104,132,0.35)');
   g.fillStyle = gr;
   g.fillRect(0, 0, W, H);
+  // gökte, ağaçların ardında sürüklenen ince sis
+  sisKat(g, cam, t, 2, 700, 0.7, 0.3, 16, 1.3);
   g.save(); katman(g, cam, 1); ogeCiz(g, V.zKara, 0, 0); g.restore();
-  for (const a of V.karaArka) { g.save(); katman(g, cam, a.f); karanlikCiz(g, a.K, a.sx, a.sy, a.s, t, a.faz); g.restore(); }
-  sisBant(g, cam, t, 1120, 0.8, 0.55, 14);
-  gozCiz(g, cam, t, Z, 0.8);
-  for (const a of V.karaOrta) { g.save(); katman(g, cam, a.f); karanlikCiz(g, a.K, a.sx, a.sy, a.s, t, a.faz); g.restore(); }
-  g.save(); katman(g, cam, 0.95); karanlikCiz(g, V.karaOrtaAgac, CESME.sx, CESME.sy, 1, t, 3); g.restore();
-  sisBant(g, cam, t, 1235, 0.9, 0.5, -10);
-  gozCiz(g, cam, t, Z, 0.88);
-  sisBant(g, cam, t, 1330, 1.0, 0.42, 18);
-  for (const d of V.dev) { g.save(); katman(g, cam, d.f); karanlikCiz(g, d.K, d.sx, d.sy, 1, t, d.faz); g.restore(); }
+  for (const a of V.karaArka) { g.save(); katman(g, cam, a.f); karanlikCiz(g, a.K, a.sx, a.sy, a.s, t, a.faz, 0.01); g.restore(); }
+  sisKat(g, cam, t, 0, 1105, 0.8, 0.62, 30);
+  gozCiz(g, cam, t, Z, 0);
+  for (const a of V.karaOrta) { g.save(); katman(g, cam, a.f); karanlikCiz(g, a.K, a.sx, a.sy, a.s, t, a.faz, 0.014); g.restore(); }
+  g.save(); katman(g, cam, 0.95); karanlikCiz(g, V.karaOrtaAgac, CESME.sx, CESME.sy, 1, t, 3, 0.014); g.restore();
+  sisKat(g, cam, t, 1, 1238, 0.9, 0.5, -38, 1.05);
+  gozCiz(g, cam, t, Z, 1);
+  sisKat(g, cam, t, 2, 1350, 1.0, 0.42, 46, 1.1, 900);
+  for (const d of V.dev) { g.save(); katman(g, cam, d.f); karanlikCiz(g, d.K, d.sx, d.sy, 1, t, d.faz, 0.018); g.restore(); }
+  // tepede, dev ağaçların önünden geçen soluk bir sis tülü
+  sisKat(g, cam, t, 1, 780, 1.05, 0.22, -52, 1.3, 400);
+  kuruYapraklar(g, cam, t, Z);
   g.save(); katman(g, cam, 1.15);
   for (const o of V.on) ogeCiz(g, o.kara, o.sx, o.sy);
   g.restore();
-  sisBant(g, cam, t, 1560, 1.1, 0.22, 24);
+  sisKat(g, cam, t, 0, 1690, 1.12, 0.3, 64, 1.45, 1300);
+  // kenarlarda yumuşak karartma: göz ortadaki sisli derinliğe çekilir
+  const vg = g.createRadialGradient(W / 2, 1000, 420, W / 2, 1000, 1300);
+  vg.addColorStop(0, 'rgba(40,34,58,0)');
+  vg.addColorStop(1, 'rgba(40,34,58,0.34)');
+  g.fillStyle = vg;
+  g.fillRect(0, 0, W, H);
 }
-function gozCiz(g, cam, t, Z, fKat) {
+// göz kırpma eğrisi: u (sn) kırpmanın başından beri; 0,15 sn'de kapanıp açılır
+const kirpma = (u) => (u >= 0 && u < 0.15 ? Math.abs(Math.cos((u / 0.15) * Math.PI)) : 1);
+function gozCiz(g, cam, t, Z, kat) {
   for (const e of V.gozler) {
-    if (Math.abs(e.f - fKat) > 0.045) continue;
-    const ac = an(t, Z.vah + 0.05 + e.k * 0.13, 0.25);
+    if (e.kat !== kat) continue;
+    const t0 = Z.vah + 0.05 + e.k * 0.12;
+    const ac = an(t, t0, 0.3);
     if (ac <= 0) continue;
-    const kirp = (t * 0.9 + e.k * 0.37) % 2.3;
-    const kapak = kirp < 0.14 ? Math.abs(Math.cos((kirp / 0.14) * Math.PI)) : 1;
-    const [x, y, z] = refEkran(cam, e.sx, e.sy, e.f);
+    // her çiftin kendi ritmi; tek sayılılar çift kırpar
+    const per = 1.15 + (e.k % 3) * 0.33;
+    const ph = (t - t0 + 0.6 + e.k * 0.41) % per;
+    let kapak = kirpma(ph);
+    if (e.k % 2) kapak = Math.min(kapak, kirpma(ph - 0.26));
+    // kapanıp az ötede yeniden açılan çift (yer değiştirir)
+    let dx = (e.gez || 0) * (t - t0);
+    if (e.atla) {
+      const ta = Z.vah + e.atla[0];
+      const kapali = an(t, ta, 0.1, ease.inOutSine) * (1 - an(t, ta + 0.38, 0.12, ease.inOutSine));
+      kapak *= 1 - kapali;
+      if (t > ta + 0.2) dx += e.atla[1];
+    }
+    // etrafa bakınır: iki göz birlikte hafifçe yana kayar, baş azıcık eğilir
+    const bak = Math.sin(t * 0.85 + e.k * 2.3) * 3.4 + Math.sin(t * 2.2 + e.k) * 1.1;
+    const egik = Math.sin(t * 0.6 + e.k * 1.1) * 0.12;
+    const nabiz = 0.82 + 0.18 * Math.sin(t * 2.4 + e.k * 1.3);
+    const [x, y, z] = refEkran(cam, e.sx + dx, e.sy, e.f);
     g.save();
     g.globalCompositeOperation = 'screen';
-    for (const dx of [-8, 8]) {
-      const gx = x + dx * z, gy = y;
-      const gr = g.createRadialGradient(gx, gy, 0, gx, gy, 18 * z);
-      gr.addColorStop(0, `rgba(240,232,160,${0.9 * ac})`);
-      gr.addColorStop(0.25, `rgba(230,220,140,${0.35 * ac})`);
-      gr.addColorStop(1, 'rgba(230,220,140,0)');
+    for (const sx of [-1, 1]) {
+      const gx = x + (sx * 9.5 + bak * 0.35) * z, gy = y + sx * 9.5 * egik * z;
+      const R = 26 * z;
+      const gr = g.createRadialGradient(gx, gy, 0, gx, gy, R);
+      gr.addColorStop(0, `rgba(244,226,150,${0.85 * ac * nabiz * (0.35 + 0.65 * kapak)})`);
+      gr.addColorStop(0.25, `rgba(232,208,128,${0.32 * ac * nabiz * (0.35 + 0.65 * kapak)})`);
+      gr.addColorStop(1, 'rgba(232,208,128,0)');
       g.fillStyle = gr;
-      g.fillRect(gx - 18 * z, gy - 18 * z, 36 * z, 36 * z);
-      g.fillStyle = `rgba(255,250,210,${ac})`;
-      g.beginPath(); g.ellipse(gx, gy, 4.2 * z, 2.8 * z * kapak * ac, 0, 0, TAU); g.fill();
+      g.fillRect(gx - R, gy - R, 2 * R, 2 * R);
+      if (kapak > 0.04) {
+        g.fillStyle = `rgba(255,248,206,${ac})`;
+        g.beginPath(); g.ellipse(gx + bak * 0.25 * z, gy, 5.2 * z, 3.4 * z * kapak * ac, egik, 0, TAU); g.fill();
+      }
     }
     g.restore();
   }
@@ -776,11 +832,11 @@ export function bahceCizV(g, cam, t, B) {
   if (B.carsi > 0) acarak(g, V.kaldirim, 0, 0, an(B.carsi, 0.0, 0.75, ease.inOutSine), { mod: 'sil', yon: Math.PI, yumusak: 0.25 });
   g.restore();
   for (const a of V.tacArka) {
-    const u = clamp((t - va(a.sx, a.sy)) / 0.55);
+    const u = clamp((t - va(a.sx, a.sy - 0.5 * 520 * a.s)) / 0.55);
     g.save(); katman(g, cam, a.f); tacliCiz(g, a.A, a.sx, a.sy, { s: a.s, u, t, faz: a.faz }); g.restore();
   }
   for (const a of V.tacOrta) {
-    const u = clamp((t - va(a.sx, a.sy)) / 0.55);
+    const u = clamp((t - va(a.sx, a.sy - 0.5 * 560 * a.s)) / 0.55);
     g.save(); katman(g, cam, a.f); tacliCiz(g, a.A, a.sx, a.sy, { s: a.s, u, t, faz: a.faz }); g.restore();
   }
   for (const sv of V.serviler) {
@@ -816,7 +872,9 @@ export function bahceOnPlan(g, cam, t, B) {
   const va = (sx, sy) => B.varis(sx, sy);
   const d = V.dev[0];
   g.save(); katman(g, cam, d.f);
-  cicekliCiz(g, V.cicekDev, d.sx, d.sy, 1, t, clamp((t - va(150, 900)) / 1.0), d.faz);
+  // dallar dalga gövdeye varınca kahverengiye döner; her çiçek kümesi dalga kendisine vardığı an açar
+  cicekliCiz(g, V.cicekDev, d.sx, d.sy, 1, t, clamp((t - va(d.sx + 120, d.sy - 300)) / 0.3), d.faz, lerp(0.018, 0.005, an(t, va(150, 900) + 0.3, 1.0)),
+    (k) => va(d.sx + k.x, d.sy + k.y) - 0.04);
   g.restore();
   // fener zinciri: çiçekli dalın ucundan çarşının damına
   if (B.carsi > 0) {

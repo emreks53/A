@@ -9,6 +9,8 @@
 // kamera gülün merkezine iner. "içindeki": ışık zerreleri merkezde toplanıp altın bir nektar damlası olur.
 // "lezzet-i ruhaniyedir": damla parlar ve düşer; altın halkalar yayılarak ekranı doldurur. Bitiş: altın halkalar
 // (540, 900) merkezli yayılıp soluyor, açık krem zemin.
+// Gövde dili (yalnız gövde, giysi kıpırtısı yok): nefeste omuz ve göğüs, ışık vuruşlarında baş ve omuz kalkışı,
+// kollar açılırken ön kol ve el yaylı gecikmeyle izler; arka plan katmanları adamın çevresinde yavaş yörünge kayar.
 import { W, H, clamp, lerp, ease, an, pop, rng, TAU, smooth, tuval } from '../motor/temel.mjs';
 import { ogeCiz, gokTuvali, darbe, konturCiz } from '../motor/kalem.mjs';
 import { salinim, kameraIle, ekranda } from '../motor/sahne.mjs';
@@ -38,6 +40,7 @@ const GX = 540, GY = 900;
 const S = 2.8; // figür ölçeği
 const AYAK = GY + 274 * S; // insanOnBuyuk'te göğüs, ayak tabanından 274 birim yukarıda
 const F = { gok: 0.3, bulut: 0.35, uzak: 0.55, orta: 0.8, on: 1.12 };
+const ADAM_OLCEK = [4, 6];
 
 let zG, zK, gok, bulutlar, tUzak, tOrta, tOn, cicekler, agaclar, kalpB, suB, katman, maske, ic, gecici, hR;
 
@@ -65,9 +68,12 @@ function atis(t, t0, ara = 0.95) {
   return b(u) + 0.6 * b(u - 0.2);
 }
 // göğüs ışığının nabzı (hâlis, sürur kelimelerinde iki vuruş, sonra sakin atış)
-function nabiz(t) {
+function nabizAna(t) {
   const v = (t0, a) => (t < t0 ? 0 : a * Math.sin(Math.min(1, (t - t0) / 0.07) * Math.PI / 2) * Math.exp(-(t - t0) / 0.32));
-  return v(T.halis, 1) + v(T.halis + 0.24, 0.55) + v(T.surur, 0.85) + v(T.surur + 0.24, 0.45) + 0.35 * atis(t, T.surur + 0.95, 0.95);
+  return v(T.halis, 1) + v(T.halis + 0.24, 0.55) + v(T.surur, 0.85) + v(T.surur + 0.24, 0.45);
+}
+function nabiz(t) {
+  return nabizAna(t) + 0.35 * atis(t, T.surur + 0.95, 0.95);
 }
 
 export default {
@@ -92,11 +98,12 @@ export default {
     bulutlar = [M.bulutOge(300, 5, 1.1), M.bulutOge(230, 9, 1.1), M.bulutOge(260, 14, 1.1)];
     tUzak = tepe({ w: 1640, ad: 's04-tepe-uzak', renk: 'lila', X0: -290, Yalt: 2000, olcek: 1.15, tohum: 4,
       sirt: tumsekler(1160, [[-120, 120, 260], [250, 70, 200], [620, 40, 260], [950, 105, 210], [1300, 140, 230]]) });
-    tOrta = tepe({ w: 1620, ad: 's04-tepe-orta', renk: 'ada', X0: -280, Yalt: 2050, olcek: 1.2, tohum: 8,
+    tOrta = tepe({ w: 1620, ad: 's04-tepe-orta', renk: 'ada', X0: -280, Yalt: 2050, olcek: 1.6, tohum: 8,
       sirt: tumsekler(1215, [[-60, 60, 330], [400, 18, 220], [1150, 70, 360]]) });
     tOn = tepe({ w: 1560, ad: 's04-tepe-on', renk: 'cayir', X0: -240, Yalt: 2150, olcek: 1.3, tohum: 3, ot: 1,
       sirt: tumsekler(1290, [[-80, 70, 300], [540, 46, 330], [1180, 80, 300]]) });
-    agaclar = [{ A: M.agac({ boy: 200, tohum: 51, olcek: 1.25 }), x: 175, f: F.orta }, { A: M.agac({ boy: 165, tohum: 57, olcek: 1.25 }), x: 930, f: F.orta }];
+    // ağaçlar ve orta tepe göğse dalışta da (z^0.8 ≈ 1.9) bulanıklaşmasın diye daha yüksek olcekle
+    agaclar = [{ A: M.agac({ boy: 200, tohum: 51, olcek: 2 }), x: 175, f: F.orta }, { A: M.agac({ boy: 165, tohum: 57, olcek: 2 }), x: 930, f: F.orta }];
     agaclar.forEach((a) => { a.y = tOrta.ust(a.x) + 18; });
     // çiçekler: ön çayırın sırtında ve alt köşelerde (altyazı bandının ortası boş)
     const r = rng(404);
@@ -113,7 +120,8 @@ export default {
       cicekler.push({ x, y: tOn.ust(x) + dy, s: k * r.ara(0.92, 1.08) * (buyuk ? 1.22 : 1), faz: r() * TAU, oge: M.cicekOge(buyuk ? 26 : 22, buyuk ? (k > 1.4 ? 2.6 : 1.9) : 1.6, renk) });
     }
     cicekler.sort((a, b) => a.y - b.y);
-    insanHazirla(3);
+    // figür parçaları iki çözünürlükte: duruşta olcek 4, göğse dalışta 6 (ekran ölçeği / olcek ≤ ~1,15 kalsın)
+    for (const o of ADAM_OLCEK) insanHazirla(o);
     kalpB = kalpOge(300, 2);
     suB = suOge(300, 2);
     hR = M.nektarDamla(26, 2.4);
@@ -212,22 +220,87 @@ function pencereMaskesi(c, cx, cy, R, yumusak) {
 }
 
 // ---------------------------------------------------------------- adam sahnesi
+// ---------------------------------------------------------------- adamın gövde dili
+// nefes: içe çekiş kısa, veriş uzun (0..1)
+function nefesEgri(t) {
+  // evre: hâlis'te derin bir içe çekiş başlar (önceki döngünün verişi sahnenin sakin girişine düşer)
+  const P = 3.4, ui = 0.4;
+  const u = (((t - (T.halis - 0.12)) % P) + P) % P / P;
+  return u < ui ? ease.inOutSine(u / ui) : 1 - ease.inOutSine((u - ui) / (1 - ui));
+}
+// kol açılışı (üst kol); sağ kol biraz geriden gelir
+const kolAc = (t, i) => an(t, T.halis + 0.1 + i * 0.08, 1.15, ease.inOutCubic);
+const kolHedef = (t, i) => lerp(0.07, 0.36, kolAc(t, i)) + 0.012 * nefesEgri(t);
+const dirsekHedef = (t, i) => lerp(0.1, -0.09, kolAc(t, i));
+// baş: önce hafifçe öne eğik, hâlis'te kalkar; her ışık nabzında biraz daha kalkar
+const basHedef = (t) => lerp(-0.14, 0.78, an(t, T.halis - 0.04, 1.0, ease.inOutCubic)) + 0.16 * nabizAna(t - 0.06);
+/**
+ * Yaylı izleme (belirlenimci: her karede sahne başından sabit adımla benzetim). Ön kol üst kolu, el ön kolu,
+ * baş eğimi hedefini gecikmeyle ve yumuşak bir oturmayla izler.
+ */
+function govdeDili(t) {
+  const t0 = 24.6, dt = 1 / 240;
+  const kol = [0, 1].map((i) => kolHedef(t0, i));
+  const A2 = [0, 1].map((i) => kol[i] - dirsekHedef(t0, i)), vA = [0, 0];
+  const E = [...A2], vE = [0, 0];
+  let bk = basHedef(t0), vb = 0, om = 0, vo = 0;
+  for (let s = t0; s < t; s += dt) {
+    const h = Math.min(dt, t - s), u = s + h;
+    for (let i = 0; i < 2; i++) {
+      // ön kol (mutlak açı, kolun dışa açılışı +): w 8.5, sönüm 0.48 → hafif sarkma ve oturma
+      const hA = kolHedef(u, i) - dirsekHedef(u, i);
+      vA[i] += (72.25 * (hA - A2[i]) - 2 * 0.48 * 8.5 * vA[i]) * h;
+      A2[i] += vA[i] * h;
+      // el: ön kolu izler (w 11, sönüm 0.42)
+      vE[i] += (121 * (A2[i] - E[i]) - 2 * 0.42 * 11 * vE[i]) * h;
+      E[i] += vE[i] * h;
+    }
+    vb += (81 * (basHedef(u) - bk) - 2 * 0.72 * 9 * vb) * h;
+    bk += vb * h;
+    // omuzlar ışık vuruşlarında hafifçe kalkar (sevinçle derin nefes), yumuşak iner
+    vo += (144 * (nabizAna(u) - om) - 2 * 0.75 * 12 * vo) * h;
+    om += vo * h;
+  }
+  const k = [0, 1].map((i) => kolHedef(t, i));
+  return {
+    kol: k,
+    dirsek: [0, 1].map((i) => k[i] - A2[i]),
+    bilek: [0, 1].map((i) => (i ? 1 : -1) * (E[i] - A2[i])), // insanOnBuyuk'te sol kolun açısı ters işaretli
+    basKalk: bk,
+    omuzKalk: om,
+  };
+}
+// arka plan katmanlarının yörünge kayması: kamera adamın çevresinde çok yavaş döner gibi (adam f = 1'de sabit)
+const yorunge = (t) => 52 * (2 * an(t, 24.9, 4.3, ease.inOutSine) - 1);
+function katmanda(ctx, cam, t, f, fn) {
+  ctx.save();
+  ctx.translate(yorunge(t) * (1 - f), 0);
+  kameraIle(ctx, cam, fn, f);
+  ctx.restore();
+}
+
 function adamDunyasi(ctx, t, cam, gsx, gsy) {
   const ruhA = an(t, Z.toplan + 0.55, 0.7, ease.inOutSine); // göğüsteki ışık
   const sur = an(t, T.halis, 0.9, ease.outCubic); // sürur
   const nb = nabiz(t);
   // gök, bulutlar
-  kameraIle(ctx, cam, (g) => ogeCiz(g, gok, -210, -180), F.gok);
-  kameraIle(ctx, cam, (g) => {
+  katmanda(ctx, cam, t, F.gok, (g) => ogeCiz(g, gok, -210, -180));
+  katmanda(ctx, cam, t, F.bulut, (g) => {
     const bx = [[120, 300], [900, 190], [760, 560]];
     bulutlar.forEach((b, i) => ogeCiz(g, b, bx[i][0] + (t - 24) * (i % 2 ? -6 : 7), bx[i][1], { alfa: 0.92 }));
-  }, F.bulut);
-  // uzak ve orta tepeler, küçük ağaçlar
-  kameraIle(ctx, cam, (g) => ogeCiz(g, tUzak.oge, tUzak.X0, tUzak.Y0), F.uzak);
-  kameraIle(ctx, cam, (g) => {
+  });
+  // uzak ve orta tepeler, küçük ağaçlar (rüzgârda tabandan hafifçe salınır)
+  katmanda(ctx, cam, t, F.uzak, (g) => ogeCiz(g, tUzak.oge, tUzak.X0, tUzak.Y0));
+  katmanda(ctx, cam, t, F.orta, (g) => {
     ogeCiz(g, tOrta.oge, tOrta.X0, tOrta.Y0);
-    for (const a of agaclar) M.agacCiz(g, a.A, a.x, a.y, { t, salinim: 1 });
-  }, F.orta);
+    agaclar.forEach((a, i) => {
+      g.save();
+      g.translate(a.x, a.y);
+      g.rotate(0.011 * Math.sin(t * 0.85 + i * 2.1) + 0.005 * Math.sin(t * 2.1 + i));
+      M.agacCiz(g, a.A, 0, 0, { t, salinim: 1.8 });
+      g.restore();
+    });
+  });
   // adamın arkasından yayılan ışık: geniş sıcak buğu + ince ışık çizgileri
   const zz = cam.z;
   M.hale(ctx, gsx, gsy, 520 * zz * (0.6 + 0.4 * ruhA + 0.25 * sur), '#FFEBD2', (0.25 * ruhA + 0.25 * sur) * (1 + 0.5 * nb));
@@ -241,16 +314,19 @@ function adamDunyasi(ctx, t, cam, gsx, gsy) {
   lc.setTransform(1, 0, 0, 1, 0, 0);
   lc.globalCompositeOperation = 'source-over';
   lc.clearRect(0, 0, W, H);
-  const acil = an(t, T.halis + 0.1, 1.1, ease.inOutCubic);
-  const kalk = 0.8 * an(t, T.halis, 1.0, ease.inOutCubic);
-  const nef = 1.4 * Math.sin(t * 1.75) + 2.2 * kalk;
+  const kalk = an(t, T.halis, 1.0, ease.inOutCubic);
+  const nf = nefesEgri(t);
+  const { omuzKalk, ...gd } = govdeDili(t);
+  const govde = 0.014 * Math.sin(t * 0.55 + 0.3);
   const poz = {
     ...ON_DURUS,
-    kol: [lerp(0.07, 0.36, acil) + 0.008 * Math.sin(t * 1.75), lerp(0.07, 0.34, acil) + 0.008 * Math.sin(t * 1.75)],
-    dirsek: [lerp(0.1, -0.1, acil), lerp(0.1, -0.08, acil)],
-    bas: 0.025 * Math.sin(t * 0.7 + 0.4) - 0.015 * kalk, govde: 0.01 * Math.sin(t * 0.55), basKalk: kalk, nefes: nef,
+    ...gd,
+    bas: 0.022 * Math.sin(t * 0.7 + 0.4) - 0.35 * govde - 0.012 * kalk, govde,
+    nefes: 1.7 * nf + 1.8 * kalk + 1.6 * omuzKalk, gogus: nf + 0.5 * kalk,
   };
-  kameraIle(lc, cam, (g) => insanOnBuyuk(g, GX, AYAK, poz, { s: S, olcek: 3 }), 1);
+  // parça çözünürlüğü o anki ekran ölçeğine göre
+  const ol = S * cam.z / ADAM_OLCEK[0] > 1.15 ? ADAM_OLCEK[1] : ADAM_OLCEK[0];
+  kameraIle(lc, cam, (g) => insanOnBuyuk(g, GX, AYAK, poz, { s: S, olcek: ol }), 1);
   // göğüs ışığının gövdeye vurması (yalnız figürün üstüne)
   const isik = 0.35 * ruhA + 0.25 * sur + 0.25 * nb;
   if (isik > 0.01) {
@@ -266,10 +342,10 @@ function adamDunyasi(ctx, t, cam, gsx, gsy) {
   }
   ctx.drawImage(L, 0, 0);
   // ön çayır ve çiçekler (adamın belini örter)
-  kameraIle(ctx, cam, (g) => {
+  katmanda(ctx, cam, t, F.on, (g) => {
     ogeCiz(g, tOn.oge, tOn.X0, tOn.Y0);
     for (const c of cicekler) ogeCiz(g, c.oge, c.x, c.y, { s: c.s, r: Math.sin(t * 1.2 + c.faz) * 0.05 });
-  }, F.on);
+  });
   // nabız dalgaları: hâlis ve sürur vuruşlarında göğüsten havaya yayılan yumuşak ışık (çizgisiz)
   for (const t0 of [T.halis, T.surur]) {
     const v = an(t, t0, 1.1, ease.lin);

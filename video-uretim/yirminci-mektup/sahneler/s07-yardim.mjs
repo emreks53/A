@@ -1,9 +1,9 @@
 // s07 yardımcıları: ortak geometrili (yeşil / gri iki paletli) zemin katmanları, ağır bulut, kuruntu gölgesi, sis,
 // dikenli çalı (kemiklere sarılan sarmal dahil), yağmur, sürtünmesiz yürüyüş benzetimi (ayak kayması yok), iskelet ve
 // zemin çözücü (diz çökme için), tekdüze kübik eğri (kamera).
-import { tuval, rng, clamp, lerp, ease, TAU, rgba, gurultu2, smooth } from '../motor/temel.mjs';
+import { tuval, rng, clamp, lerp, ease, TAU, rgba, gurultu2, smooth, rampa } from '../motor/temel.mjs';
 import { oge, darbe, TON, PALET, bulutSekli } from '../motor/kalem.mjs';
-import { svg, cokgen, path2d } from '../motor/sekil.mjs';
+import { svg, cokgen, path2d, sinir } from '../motor/sekil.mjs';
 import { OLCU } from '../motor/insan.mjs';
 
 // ---------------------------------------------------------------- tekdüze kübik eğri (Fritsch-Carlson)
@@ -79,49 +79,236 @@ export function agirBulut(w, tohum, olcek = 1, koyu = 0) {
   });
 }
 
-// ---------------------------------------------------------------- kuruntu gölgesi (yüzsüz, belirsiz)
+// ---------------------------------------------------------------- kuruntu gölgesi (yüzsüz, uzun, eğilen)
 /**
- * Sisten yükselen, öne eğik, kambur ve belirsiz bir kütle: üst üste binmiş yumuşak kümelerden oluşan yoğunluk alanı.
- * Kenarı yoktur (tarama yoğunluğu kenara doğru söner, arka buğu bulanıktır); yüz, göz, uzuv yoktur.
- * egim: tepenin yana (adama doğru) eğilmesi. (0,0) taban ortası.
+ * Sisten yükselen uzun, adama doğru eğilen bir sis gölgesi (kalem taraması, bulanık leke değil). Biçim: dipte
+ * geniş, yukarı doğru incelen ve tepesi öne kıvrılan iki sis dili (biri uzun, dışarıda biri kısa) tabanda
+ * birleşir; kenarları dumana benzer biçimde hafifçe dalgalanır. Yüz, baş, uzuv yoktur. Kenar, taramanın bittiği
+ * yerde ve üst yarıda yer yer kesik bir kalem konturuyla seçilir; alt kısım tarama seyrelerek sise karışır
+ * (tabanda birkaç ince sis kıvrımı yana akar).
+ * yon: +1 sağa (adama doğru) eğilir, -1 sola. (0,0) taban ortası (zeminde), yukarı -y.
  */
-export function golgeOge(h, w, tohum, olcek = 1, egim = 0.25) {
+export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
   const r = rng(tohum);
-  const bloblar = [];
-  const N = 7;
-  for (let i = 0; i < N; i++) {
-    const v = i / (N - 1);
-    bloblar.push([egim * h * 0.38 * v * v + r.ara(-0.04, 0.04) * w, -v * h * 0.8, w * lerp(0.44, 0.3, v) * r.ara(0.9, 1.08)]);
-  }
-  const tp = bloblar[N - 1];
-  bloblar.push([tp[0] - w * 0.3 - egim * w * 0.2, tp[1] + h * 0.13, w * 0.23], [tp[0] + w * 0.28 + egim * w * 0.2, tp[1] + h * 0.16, w * 0.21]);
-  bloblar.push([tp[0] + egim * w * 0.35, tp[1] - h * 0.06, w * 0.24]);
-  const yogun = (x, y) => {
-    let m = 0;
-    for (const [bx, by, R] of bloblar) m = Math.max(m, 1 - Math.hypot(x - bx, (y - by) * 0.92) / R);
-    return m;
+  // bir sis dili: omurga boyunca, dipten tepeye incelen yarı genişlik; tepe yumuşak yuvarlak
+  const dil = (x0, H, W, eg, f) => {
+    const N = 90;
+    const sag = [], sol = [];
+    let x = x0, y = W * 0.18;
+    const L = H + W * 0.18;
+    for (let i = 0; i <= N; i++) {
+      const v = i / N;
+      const a = yon * eg * Math.pow(v, 1.9) + 0.05 * Math.sin(v * 4 + f);
+      const tk = (W * 0.42) / L; // tepe kubbesi (boyu, tepe genişliğine yakın: küt ve yuvarlak)
+      const tepe = v < 1 - tk ? 1 : Math.sqrt(Math.max(0, 1 - ((v - (1 - tk)) / tk) ** 2));
+      // dipte geniş (sise açılır), yukarı doğru incelir, küt kubbe
+      const hw = (W / 2) * (1 - 0.46 * Math.pow(v, 1.1)) * tepe;
+      // eğilmenin dışı (sırt) tepeye yakın kamburlaşır, içi hafifçe çukurlaşır: boynuz değil, eğilen bir duruş
+      const sirt = 1 + 0.2 * Math.exp(-(((v - 0.74) / 0.13) ** 2));
+      const karin = 1 - 0.12 * Math.exp(-(((v - 0.6) / 0.15) ** 2));
+      const dS = (1 + 0.1 * Math.sin(v * 7 + f) + 0.045 * Math.sin(v * 19 + f * 2.3)) * (yon > 0 ? karin : sirt);
+      const dL = (1 + 0.1 * Math.sin(v * 6.5 + f * 1.6) + 0.045 * Math.sin(v * 17 + f * 0.7)) * (yon > 0 ? sirt : karin);
+      const nx = Math.cos(a), ny = Math.sin(a);
+      sag.push([x + nx * hw * dS, y + ny * hw * dS, v]);
+      sol.push([x - nx * hw * dL, y - ny * hw * dL, v]);
+      x += (Math.sin(a) * L) / N;
+      y -= (Math.cos(a) * L) / N;
+    }
+    return { pts: [...sag, ...sol.reverse()], H };
   };
-  const sonum = (y) => 1 - smooth(-h * 0.36, -h * 0.02, y);
-  const ton = (x, y) => clamp(yogun(x, y) * 2.0) * sonum(y) * 0.95;
-  const ex = egim * h * 0.38;
-  const x0 = -w * 0.8 + Math.min(0, ex) - w * 0.1, x1 = w * 0.8 + Math.max(0, ex) + w * 0.1;
-  const sek = cokgen([[x0, -h * 1.12], [x1, -h * 1.12], [x1, w * 0.3], [x0, w * 0.3]]);
+  const ana = dil(0, h, w, egil, r() * TAU);
+  const yan = dil(-yon * w * 0.28, h * r.ara(0.5, 0.62), w * 0.62, egil * 0.85, r() * TAU);
+  const diller = [yan, ana];
+  const sek = diller.map((d) => ({ pts: d.pts.map((q) => [q[0], q[1]]), kapali: true }));
+  // dış hat (öteki dilin içinde kalmayan noktalar) → kenar uzaklığı ızgarası ve kontur
+  const dis = [];
+  diller.forEach((d, j) => {
+    const o = [sek[1 - j]];
+    let kosu = [];
+    for (const q of d.pts) {
+      if (!icindeSekil(o, q[0], q[1])) kosu.push(q);
+      else if (kosu.length) { dis.push(kosu); kosu = []; }
+    }
+    if (kosu.length) dis.push(kosu);
+  });
+  const tum = dis.flat();
+  const b = sinirPts(tum);
+  const G = 4;
+  const gx0 = b.x0 - 8, gy0 = b.y0 - 8, gw = Math.ceil((b.x1 - b.x0 + 16) / G), gh = Math.ceil((b.y1 - b.y0 + 16) / G);
+  const gK = new Float32Array(gw * gh);
+  const seyrek = tum.filter((_, i) => i % 2 === 0);
+  for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) {
+    const px = gx0 + (i + 0.5) * G, py = gy0 + (j + 0.5) * G;
+    let en = Infinity;
+    for (const q of seyrek) { const d = (px - q[0]) ** 2 + (py - q[1]) ** 2; if (d < en) en = d; }
+    gK[j * gw + i] = Math.sqrt(en);
+  }
+  const hucre = (x, y) => clamp(Math.floor((y - gy0) / G), 0, gh - 1) * gw + clamp(Math.floor((x - gx0) / G), 0, gw - 1);
+  // ton: yukarıda dolu; kenar şeridi biraz koyu (biçim seçilsin); aşağıda önce kenarlar sonra iç söner; gürültü
+  // tabana doğru artar: etek düz bir çizgiyle kesilmez, tüy tüy sise dağılır
+  const gr = gurultu2(tohum + 3);
+  const ton = (x, y) => {
+    const vv = -y / h;
+    const kd = gK[hucre(x, y)];
+    const nn = gr.fbm(x * 0.013, y * 0.013, 3);
+    const alt = 1 - smooth(0.04, 0.55, vv + 0.2 * nn);
+    const kenar = 1 - smooth(8, 34, kd);
+    const kenarSon = 1 - alt * (1 - smooth(8, 60, kd + 44 * nn));
+    const dolu = smooth(0.06, 0.56, vv + 0.2 * nn);
+    const n2 = gr.fbm(x * 0.03 + 7, y * 0.008, 2);
+    // dış kenar kesik bir çizgi değil: taramalar son 4–20 px içinde düzensiz biter (yumuşak ama seçilen kenar)
+    const yumusak = smooth(5, 24, kd + 12 * gr.fbm(x * 0.06 + 3, y * 0.06, 2));
+    return clamp((dolu * (0.52 + 0.4 * kenar) + 0.12 * nn + 0.12 * n2) * kenarSon * yumusak);
+  };
+  // tabanda yana akan ince sis kıvrımları
+  const kivrim = [];
+  for (let k = 0; k < 4; k++) {
+    const sg = k % 2 ? 1 : -1;
+    const sx = sg * w * r.ara(0.25, 0.4), sy = -h * r.ara(0.03, 0.12);
+    const Lk = r.ara(70, 140), dy = r.ara(4, 14);
+    const pts = [];
+    for (let q = 0; q <= 16; q++) {
+      const u = q / 16;
+      pts.push([sx + sg * Lk * u, sy + dy * u * u + Math.sin(u * 3 + k) * 3]);
+    }
+    kivrim.push(pts);
+  }
   return oge({
-    ad: `s07-golge3-${h}-${w}-${tohum}-${egim}`, olcek, sekil: sek, zemin: null, pay: 10,
-    arka: '#5D5569', arkaBulanik: 24, arkaTasma: false,
-    arkaCiz: (t) => {
-      for (const [bx, by, R] of bloblar) {
-        const a = 0.62 * sonum(by);
-        const g = t.createRadialGradient(bx, by, 0, bx, by, R * 1.08);
-        g.addColorStop(0, rgba('#4A4259', a));
-        g.addColorStop(0.6, rgba('#4A4259', a * 0.75));
-        g.addColorStop(1, rgba('#4A4259', 0));
-        t.fillStyle = g;
-        t.fillRect(bx - R * 1.1, by - R * 1.1, R * 2.2, R * 2.2);
-      }
+    ad: `s07-kuruntu9-${h}-${w}-${tohum}-${yon}-${egil}`, olcek, sekil: sek, zemin: null, pay: 150,
+    arka: '#80788F', arkaBulanik: 8, arkaTasma: false,
+    arkaCiz: (t, yol) => {
+      const g = t.createLinearGradient(0, b.y0, 0, 0);
+      g.addColorStop(0, rgba('#80788F', 0.26));
+      g.addColorStop(0.5, rgba('#80788F', 0.17));
+      g.addColorStop(1, rgba('#80788F', 0));
+      t.fillStyle = g;
+      t.fill(yol);
+      // buğu kenardan içeri çekilir: taramanın düzensiz bittiği kenarda açık bir hale şeridi kalmaz
+      t.globalCompositeOperation = 'destination-out';
+      t.lineWidth = 60;
+      t.lineJoin = 'round';
+      t.strokeStyle = '#000';
+      t.stroke(yol);
+      t.globalCompositeOperation = 'source-over';
     },
-    tarama: { ton, renkler: [[0, '#8F88A2'], [0.6, '#5C5470'], [1, '#3A3349']], yon: -1.05, aralik: 3.2, boy: [22, 70], esikler: [0.12, 0.34, 0.56, 0.76], alfa: 0.5, karisim: 'source-over' },
+    tarama: [
+      // açık geçiş: gök, bulut ve sis gibi yatıka yakın saten süpürüş (biçim atmosfere karışır)
+      { ton, renkler: [[0, '#A39CB4'], [1, '#6E6682']], yon: -0.16, aralik: 3.1, boy: [30, 96], esikler: [0.1, 0.3], alfa: 0.38, gecisAci: 0.06, esikYay: 0.14 },
+      // koyu geçişler: eğilme yönüne yatık dik çapraz tarama (uzunluk ve eğilme okunur)
+      { ton, renkler: [[0, '#7A7290'], [0.6, '#575069'], [1, '#41394F']], yon: -Math.PI / 2 + 0.38 * yon, aralik: 3.3, boy: [26, 84], esikler: [0.46, 0.68, 0.84], alfa: 0.4, gecisAci: 0.24, esikYay: 0.14 },
+    ],
     kontur: null,
+    detay: (c) => {
+      c.save();
+      for (const pts of kivrim) {
+        c.fillStyle = rgba('#655D78', 0.18);
+        darbe(c, pts, 2.4, { incelme: 0.45 });
+      }
+      c.restore();
+    },
+  });
+}
+function icindeSekil(sekil, x, y) {
+  let ic = false;
+  for (const yol of sekil) {
+    const p = yol.pts;
+    for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+      const [xi, yi] = p[i], [xj, yj] = p[j];
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi + 1e-12) + xi) ic = !ic;
+    }
+  }
+  return ic;
+}
+function elipsYol(cx, cy, rx, ry) {
+  const n = Math.max(24, Math.ceil((TAU * Math.max(rx, ry)) / 4));
+  const pts = [];
+  for (let k = 0; k < n; k++) { const a = (k / n) * TAU; pts.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]); }
+  return { pts, kapali: true };
+}
+function sinirPts(pts) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [x, y] of pts) { if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
+  return { x0, y0, x1, y1 };
+}
+
+/**
+ * Yağmur bulutu (maddeten): agirBulut ile aynı dil, ama kenarı kesik çıkartma gibi durmasın diye arka buğu kenara
+ * kadar sürülür (beyaz hale kalmaz), kenar birkaç piksel yumuşatılır ve alt kenar yağmura dönen sarkık kalem
+ * çizgileriyle (virga) çözülür. Böylece sisteki gölgelerin taramalı, çözülen kenarlarıyla aynı dokuyu paylaşır.
+ */
+export function yagmurBulutuOge(w, tohum, olcek = 1, egim = 0.14) {
+  const sek = bulutSekli(w, tohum);
+  const tara = [[0, '#9C95AD'], [0.5, '#6E6782'], [1, '#463F55']];
+  const govde = oge({
+    ad: `s07-yagmur-bulut-${w}-${tohum}`, olcek, sekil: sek, arka: '#8E879E', arkaAlfa: 0.8, arkaBulanik: 9, pay: 120,
+    tarama: [
+      { ton: (x, y) => clamp(0.25 + (y + w * 0.18) / (w * 0.26)), renkler: tara, yon: -0.157, aralik: 3.0, boy: [30, 110], esikler: [0.15, 0.42, 0.7], alfa: 0.42, gecisAci: 0.05 },
+    ],
+    kontur: null,
+  });
+  const S = govde.olcek;
+  const c = tuval(govde.tuval.width, govde.tuval.height);
+  const g = c.getContext('2d');
+  // yumuşak kenar maskesi: şekil + bulanıklık; alt kenar daha geniş bir bantta söner
+  const m = tuval(c.width, c.height);
+  const mg = m.getContext('2d');
+  mg.setTransform(S, 0, 0, S, govde.ox * S, govde.oy * S);
+  mg.fillStyle = '#fff';
+  mg.fill(path2d(sek));
+  mg.setTransform(1, 0, 0, 1, 0, 0);
+  g.drawImage(govde.tuval, 0, 0);
+  g.globalCompositeOperation = 'destination-in';
+  g.filter = `blur(${(2.4 * S).toFixed(1)}px)`;
+  g.drawImage(m, 0, 0);
+  g.filter = 'none';
+  g.globalCompositeOperation = 'source-over';
+  // virga: alt kenardan sarkan, yağmur eğimindeki kalem çizgileri; boyları ortada uzun, yanlarda kısa
+  const b = sinir(sek);
+  const r = rng(tohum + 17);
+  g.setTransform(S, 0, 0, S, govde.ox * S, govde.oy * S);
+  for (let i = 0; i < 150; i++) {
+    const u = r();
+    const x = lerp(b.x0 + w * 0.1, b.x1 - w * 0.1, u);
+    const merkez = 1 - Math.abs(u - 0.5) * 2;
+    const y0 = b.y1 - r.ara(6, 22);
+    const Lv = r.ara(18, 34) + 70 * merkez * r();
+    const pts = [];
+    for (let k = 0; k <= 8; k++) { const yy = y0 + (Lv * k) / 8; pts.push([x - (yy - y0) * egim, yy]); }
+    const renk = rampa(tara, r.ara(0.55, 0.95));
+    g.fillStyle = `rgba(${renk[0] | 0},${renk[1] | 0},${renk[2] | 0},${(0.42 * r.ara(0.6, 1)).toFixed(3)})`;
+    darbe(g, pts, r.ara(1.1, 1.6), { incelme: 0.5, sivri: 0.6 });
+  }
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  return { ...govde, tuval: c };
+}
+
+/** Göğüsteki koyu bulut (manen): küçük, kabarık (birkaç yuvarlak lob), koyu ve taralı bir bulut; parlak hale yok */
+export function gogusBulutuOge(w, tohum, olcek = 2.4) {
+  const r = rng(tohum);
+  const R = w / 2;
+  const loblar = [[-0.5, 0.12, 0.42], [-0.12, -0.2, 0.56], [0.36, -0.06, 0.46], [0.08, 0.2, 0.44], [0.62, 0.2, 0.3], [-0.72, 0.3, 0.26]];
+  const daireler = loblar.map(([x, y, rr]) => [x * R + r.ara(-1, 1), y * R + r.ara(-1, 1), rr * R]);
+  const sek = daireler.map(([x, y, rr]) => elipsYol(x, y, rr, rr));
+  // birleşik dış hat: başka bir lobun içinde kalmayan çember yayları (iç kesişimlere kontur çizilmez)
+  const icinde = (x, y, haric) => daireler.some(([cx, cy, rr], j) => j !== haric && (x - cx) ** 2 + (y - cy) ** 2 < (rr - 0.3) ** 2);
+  const yaylar = [];
+  daireler.forEach(([cx, cy, rr], j) => {
+    const n = 64;
+    let k0 = 0;
+    while (k0 < n && !icinde(cx + rr * Math.cos((k0 / n) * TAU), cy + rr * Math.sin((k0 / n) * TAU), j)) k0++;
+    let yay = [];
+    for (let q = 0; q <= n; q++) {
+      const a = ((k0 + q) / n) * TAU, x = cx + rr * Math.cos(a), y = cy + rr * Math.sin(a);
+      if (!icinde(x, y, j)) yay.push([x, y]);
+      else if (yay.length) { yaylar.push(yay); yay = []; }
+    }
+    if (yay.length) yaylar.push(yay);
+  });
+  return oge({
+    ad: `s07-gogus-bulut3-${w}-${tohum}`, olcek, sekil: sek, zemin: '#CFC9D8', arka: '#6F6882', arkaAlfa: 0.8, arkaBulanik: 3, pay: 8,
+    tarama: { ton: (x, y) => clamp(0.42 + (y + R * 0.1) / (R * 0.9)), renkler: [[0, '#857E98'], [0.5, '#5A536C'], [1, '#3A3348']], yon: -0.157, aralik: 2.2, boy: [8, 24], esikler: [0.1, 0.34, 0.58, 0.8], alfa: 0.62, gecisAci: 0.3 },
+    kontur: null,
+    detay: (c, api) => { for (const y of yaylar) if (y.length > 2) api.cizgi(y, { renk: '#3E3749', kal: 1.3, alfa: 0.62, titreme: 0.25 }); },
   });
 }
 
