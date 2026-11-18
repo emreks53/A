@@ -183,6 +183,7 @@ export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
       g.addColorStop(1, rgba('#80788F', 0));
       t.fillStyle = g;
       t.fill(yol);
+      globalThis.__sek = sek;
       // buğu kenardan içeri çekilir: taramanın düzensiz bittiği kenarda açık bir hale şeridi kalmaz
       t.globalCompositeOperation = 'destination-out';
       t.lineWidth = 60;
@@ -190,6 +191,7 @@ export function kuruntuOge({ h, w, tohum, yon = 1, egil = 0.75, olcek = 1 }) {
       t.strokeStyle = '#000';
       t.stroke(yol);
       t.globalCompositeOperation = 'source-over';
+      { const d = t.getImageData(0, 0, t.canvas.width, t.canvas.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; console.log('DBG arka px', n, t.lineWidth, t.getTransform()); }
     },
     tarama: [
       // açık geçiş: gök, bulut ve sis gibi yatıka yakın saten süpürüş (biçim atmosfere karışır)
