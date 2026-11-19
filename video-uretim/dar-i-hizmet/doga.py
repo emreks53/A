@@ -1671,3 +1671,575 @@ def ciz_yagmur(t: Tuval, M, zaman, yogunluk, alan=(0, 0, W, H), ruzgar=0.0, tohu
             continue
         t.isik(yol_daire(px, py, 2.2), M, '#FFF1C9', guc=0.55 * a, yumusak=2.5)
     return dict(sayi=int(np.count_nonzero(gor)))
+
+
+# ================================================================================================================
+# 6. UÇUŞAN YAPRAKLAR / TAÇ YAPRAKLARI
+# ================================================================================================================
+def ciz_ucusan_yapraklar(t: Tuval, M, zaman, sayi, alan=(0, 0, W, H), ruzgar=1.0, tohum=0, tur='yaprak',
+                         boyut=1.0, renkler=None, yog=0.5):
+    """Rüzgârda takla atan yapraklar/taç yaprakları (deterministik, zaman saniye)."""
+    if sayi <= 0:
+        return None
+    x0, y0, x1, y1 = alan
+    gen_, yuk_ = x1 - x0, y1 - y0
+    rng = np.random.default_rng(7707 + tohum)
+    n = int(sayi)
+    if renkler is None:
+        renkler = (['#93BC86', '#7FAE80', '#B9C98B', '#8FB2A2'] if tur == 'yaprak'
+                   else ['#F0CFCB', '#EDB9BA', '#F4D6C6', '#E9A9AE'])
+    yollar = {c: ([], []) for c in renkler}
+    golge = []
+    yon = 1.0 if ruzgar >= 0 else -1.0
+    hz = abs(ruzgar)
+    for i in range(n):
+        fx, fy = rng.uniform(0, 1, 2)
+        vx = (90 + 160 * rng.uniform()) * hz * yon + rng.uniform(-15, 15)
+        vy = 40 + 60 * rng.uniform()
+        sal_f, sal_a = rng.uniform(0.5, 1.2), rng.uniform(18, 46)
+        don_h = rng.uniform(-3.0, 3.0)
+        tak_h = rng.uniform(1.5, 4.0)
+        f1, f2, f3 = rng.uniform(0, 6.28, 3)
+        L = (rng.uniform(16, 26) if tur == 'yaprak' else rng.uniform(11, 17)) * boyut
+        c = renkler[i % len(renkler)]
+        # konum (döngüsel; alan dışına çıkınca öbür yandan girer)
+        pad = 60
+        px = x0 - pad + ((fx * (gen_ + 2 * pad) + vx * zaman + sal_a * math.sin(zaman * sal_f * 6.28 + f1)) %
+                         (gen_ + 2 * pad))
+        py = y0 - pad + ((fy * (yuk_ + 2 * pad) + vy * zaman + 0.5 * sal_a * math.sin(zaman * sal_f * 3.1 + f2)) %
+                         (yuk_ + 2 * pad))
+        aci = math.degrees(f3 + don_h * zaman) + 25 * math.sin(zaman * sal_f * 6.28 + f1)
+        tak = math.cos(zaman * tak_h + f2)  # takla: görünen genişlik
+        ag = 1.0
+        # kenarlarda yumuşak giriş/çıkış
+        ag *= min(1.0, max(0.0, (px - x0 + pad) / pad), max(0.0, (x1 + pad - px) / pad))
+        ag *= min(1.0, max(0.0, (py - y0 + pad) / pad), max(0.0, (y1 + pad - py) / pad))
+        if ag <= 0.02:
+            continue
+        if tur == 'yaprak':
+            pts = _yaprak_np(0, 0, L, L * 0.28, 0, kivrim=0.12 * tak)
+            pts[:, 0] -= L * 0.5
+            pts[:, 1] *= max(0.18, abs(tak))
+        else:
+            # taç yaprağı: yelpaze/kaşık biçimi
+            a = np.linspace(-math.pi / 2, math.pi / 2, 14)
+            rr = L * 0.5 * (0.75 + 0.25 * np.cos(a * 3)) ** 0.5
+            pts = np.concatenate([[[-L * 0.5, 0]], np.stack([np.cos(a) * rr, np.sin(a) * rr * 0.9], 1)], 0)
+            pts[:, 1] *= max(0.2, abs(tak))
+        ca, sa = math.cos(math.radians(aci)), math.sin(math.radians(aci))
+        P = np.stack([pts[:, 0] * ca - pts[:, 1] * sa + px, pts[:, 0] * sa + pts[:, 1] * ca + py], 1)
+        yollar[c][0].append(_poly(P))
+        yollar[c][1].append(ag * (0.75 + 0.25 * abs(tak)))
+        if tak < 0:  # arka yüzü görünürken biraz daha koyu
+            golge.append((_poly(P), ag * 0.5 * abs(tak)))
+    k = yollar_kirp([yol_dikdortgen(x0 - 80, y0 - 80, x1 + 80, y1 + 80)], M, 4)
+    if k.bos():
+        return None
+    B = _Boya(t, M, k, tohum=tohum + 77)
+    if golge:
+        B.lavi([g_[0] for g_ in golge], '#5E7F6A' if tur == 'yaprak' else '#C9707E', yog=yog * 0.5, kenar=0.8,
+               dalga=0.04, islak=0.6, islak_gen=1.5, gran=0.06, akis=0.1, alfalar=[g_[1] for g_ in golge],
+               siluet=False, sakla=False)
+    for c, (yy, aa) in yollar.items():
+        if yy:
+            B.lavi(yy, c, yog=yog, kenar=0.8, dalga=0.04, islak=1.0, islak_gen=1.8, gran=0.06, akis=0.15,
+                   toplam=True, alfalar=aa, ust=0.6, siluet=False, sakla=False)
+    B.bitir(sakla_sonra=False, sakla_global=False)
+    return None
+
+
+# ================================================================================================================
+# 7. ÇİÇEK FİDANI (şakayık / gül)
+# ================================================================================================================
+_FIDAN_IS = {}
+
+
+def _fidan_iskelet(tohum):
+    if tohum in _FIDAN_IS:
+        return _FIDAN_IS[tohum]
+    rng = np.random.default_rng(6101 + tohum * 13)
+    n = int(rng.choice([2, 3, 3, 1, 2]))
+    cicekler = []
+    for i in range(n):
+        u = (i + 0.5) / n - 0.5
+        cicekler.append(dict(dx=u * 0.62 + rng.uniform(-0.06, 0.06), h=rng.uniform(0.72, 1.0) if i != n // 2 else 1.0,
+                             r=rng.uniform(0.17, 0.21), egim=rng.uniform(0.32, 0.45), aci=rng.uniform(-14, 14),
+                             f=(0.0 if i == n // 2 else rng.uniform(0.25, 1.0)), tohum=int(rng.integers(0, 999)),
+                             bx=rng.uniform(-0.05, 0.05), kiv=rng.uniform(-0.12, 0.12)))
+    # tomurcuklar (küçük, kapalı)
+    tomur = []
+    for i in range(int(rng.integers(1, 4))):
+        tomur.append(dict(dx=rng.uniform(-0.45, 0.45), h=rng.uniform(0.55, 0.9), r=rng.uniform(0.045, 0.06),
+                          kiv=rng.uniform(-0.2, 0.2), aci=rng.uniform(-20, 20)))
+    # yapraklar: sapların üzerinde, 3'lü gruplar
+    yapraklar = []
+    for i in range(int(rng.integers(5, 8))):
+        hedef = rng.integers(0, n + len(tomur))
+        u = rng.uniform(0.15, 0.7)
+        taraf = rng.choice([-1, 1])
+        for j, da in enumerate((-32, 0, 32)):
+            yapraklar.append(dict(sap=int(hedef), u=u, taraf=int(taraf), aci=60 * taraf + da + rng.uniform(-8, 8),
+                                  L=rng.uniform(0.17, 0.26) * (0.8 if j != 1 else 1.0), kat=int(rng.random() < 0.45),
+                                  kiv=rng.uniform(-0.15, 0.15)))
+    isk = dict(cicekler=cicekler, tomur=tomur, yapraklar=yapraklar)
+    _FIDAN_IS[tohum] = isk
+    return isk
+
+
+def _sap_noktalari(x, y, dx, h, kiv, sallanma, solgun, boy, n=12):
+    """Tabandan başa kavisli sap (yerel). solgun: baş aşağı/dışa sarkar."""
+    u = np.linspace(0, 1, n)
+    ux = x + dx * boy * u ** 1.4 + kiv * boy * np.sin(u * math.pi) * 0.5
+    uy = y - h * boy * u
+    # sallanma: üstte daha çok
+    ux = ux + sallanma * boy * 0.09 * u ** 1.6
+    if solgun > 0:
+        sg = np.sign(dx) if abs(dx) > 0.02 else 1.0
+        ux = ux + solgun * boy * 0.12 * u ** 2 * sg
+        uy = uy + solgun * boy * 0.10 * u ** 2.5
+    return np.stack([ux, uy], 1)
+
+
+def _tomurcuk_yollari(px, py, r, aci, acik, renk_):
+    """Kapalı tomurcuk: sivri uçlu pembe gövde + çanak yapraklar. acik 0..1 çanakların ayrılması."""
+    a = math.radians(aci)
+    ca, sa = math.cos(a), math.sin(a)
+
+    def don(P):
+        return np.stack([P[:, 0] * ca - P[:, 1] * sa + px, P[:, 0] * sa + P[:, 1] * ca + py], 1)
+    u = np.linspace(0, 2 * math.pi, 40, endpoint=False)
+    # damla biçimli gövde (uç yukarıda)
+    bx = np.sin(u) * r * (0.9 + 0.1 * acik)
+    by = -np.cos(u) * r * 1.15
+    by = np.where(by < 0, by * (1.25 - 0.2 * acik), by)
+    bx = bx * (1 - 0.35 * np.clip(-by / (r * 1.4), 0, 1) ** 2)
+    govde = don(np.stack([bx, by], 1))
+    canak = []
+    for s_ in (-1, 1, 0):
+        L = r * (1.5 if s_ else 1.25)
+        P = _yaprak_np(0, r * 0.35, L, r * 0.42, -90 + s_ * (22 + 30 * acik), kivrim=-0.1 * s_)
+        canak.append(don(P))
+    return govde, canak
+
+
+def ciz_cicek_fidani(t: Tuval, M, x, y, boy, renk_='allik', acilma=0.0, sallanma=0.0, solgunluk=0.0, tohum=0,
+                     isik=(-0.6, -0.8), sakla_sonra=True):
+    from motor import acilma_radyal
+    isk = _fidan_iskelet(tohum)
+    ac = float(acilma)
+    sg = min(1.0, max(0.0, float(solgunluk)))
+    lx, ly = isik
+    ln = math.hypot(lx, ly) + 1e-9
+    lx, ly = lx / ln, ly / ln
+    renk_k = EL.CICEK_RENK.get(renk_, EL.CICEK_RENK['allik'])
+    # saplar
+    saplar = []
+    for c in isk['cicekler']:
+        saplar.append(_sap_noktalari(x + c['bx'] * boy, y, c['dx'], c['h'] * 0.86, c['kiv'], sallanma, sg, boy))
+    for tm in isk['tomur']:
+        saplar.append(_sap_noktalari(x, y, tm['dx'], tm['h'] * 0.86, tm['kiv'], sallanma * 1.2, sg * 1.2, boy))
+    # kırpıntı
+    allp = np.concatenate(saplar, 0)
+    pad = boy * 0.45
+    B = _boya_ac(t, M, (allp[:, 0].min() - pad, allp[:, 1].min() - pad, allp[:, 0].max() + pad, y + 10),
+                 tohum=tohum + 21)
+    if B is None:
+        return None
+    sonuc = []
+    # --- 1) çiçekler (öndeki: daha alçak olanlar önce) ---
+    sira = sorted(range(len(isk['cicekler'])), key=lambda i: -saplar[i][-1, 1])
+    tomur_ciz = []
+    for i in sira:
+        c = isk['cicekler'][i]
+        p = min(1.0, max(0.0, ac * 1.3 - 0.3 * c['f']))
+        px, py = saplar[i][-1]
+        r = c['r'] * boy
+        egim = min(0.75, c['egim'] + 0.25 * sg)
+        aci = c['aci'] + sallanma * 9 + sg * 18 * (1 if c['dx'] >= 0 else -1)
+        acik_q = sstep(0.32, 0.78, p)  # açılış (radyal beliriş)
+        cy_ = py - r * 0.08
+        if acik_q > 0.001:
+            ac_f = 0.45 + 0.55 * sstep(0.55, 1.0, p)
+            yg = 1.0 - 0.12 * sg
+            if acik_q < 0.999:
+                with t.gorunurluk(1.0, acilma_radyal(acik_q, px, cy_, r * 1.08, dalga=0.16, on=0.18,
+                                                     tohum=c['tohum']), M=M):
+                    EL.sakayik(t, M, px, cy_, r, renk_, tohum=c['tohum'], acilma=ac_f, yog=yg, egim=egim, aci=aci)
+            else:
+                EL.sakayik(t, M, px, cy_, r, renk_, tohum=c['tohum'], acilma=ac_f, yog=yg, egim=egim, aci=aci)
+        # tomurcuk (açılınca çiçeğin arkasında kalır ve solar)
+        tb = 1.0 - sstep(0.5, 0.85, p)
+        if tb > 0.01:
+            rb = r * (0.26 + 0.14 * sstep(0.0, 0.45, p))
+            tomur_ciz.append((px, py - rb * 0.6, rb, aci * 0.5, sstep(0.15, 0.5, p), tb))
+        sonuc.append((nokta_donustur(M, px, cy_), r * math.sqrt(abs(np.linalg.det(np.asarray(M)[:2, :2]))), p))
+    for j, tm in enumerate(isk['tomur']):
+        px, py = saplar[len(isk['cicekler']) + j][-1]
+        tomur_ciz.append((px, py, tm['r'] * boy, tm['aci'] + sallanma * 10, 0.15 * min(1, ac), 1.0))
+    # --- 2) tomurcuklar ---
+    if tomur_ciz:
+        gv, gva, cn, cna = [], [], [], []
+        for (px, py, rb, aci, acik, a) in tomur_ciz:
+            govde, canak = _tomurcuk_yollari(px, py, rb, aci, acik, renk_)
+            gv.append(_poly(govde))
+            gva.append(a)
+            for cc in canak:
+                cn.append(_poly(cc))
+                cna.append(a)
+        izc = B.lavi(cn, '#7DA676', yog=0.55, kenar=0.8, dalga=0.05, islak=1.0, islak_gen=1.6, gran=0.08, akis=0.15,
+                     toplam=True, alfalar=cna, ust=0.4, renk2='#6C9A70')
+        B.sakla(izc)
+        izg = B.lavi(gv, renk_k[2], yog=0.55, kenar=0.8, dalga=0.05, islak=1.1, islak_gen=1.8, gran=0.08,
+                     akis=0.15, alfalar=gva, renk2=renk_k[3])
+        B.sakla(izg)
+    # --- 3) yapraklar (ön kat), saplar, arka kat ---
+    yap = ([], [], []), ([], [], [])
+    for yp in isk['yapraklar']:
+        sp = saplar[min(yp['sap'], len(saplar) - 1)]
+        j = int(yp['u'] * (len(sp) - 1))
+        px, py = sp[j]
+        aci = -90 + yp['aci'] + sallanma * 12 + sg * 28 * yp['taraf']
+        L = yp['L'] * boy
+        P = _yaprak_np(px, py, L, L * 0.27, aci, kivrim=yp['kiv'] * yp['taraf'] + 0.1 * sg * yp['taraf'])
+        hedef = yap[yp['kat']]
+        hedef[0].append(_poly(P))
+        ar = math.radians(aci)
+        nx, ny = -math.sin(ar), math.cos(ar)
+        if nx * (-lx) + ny * (-ly) < 0:
+            nx, ny = -nx, -ny
+        h = _yaprak_np(px + nx * L * 0.07, py + ny * L * 0.07, L * 0.95, L * 0.12, aci,
+                       kivrim=yp['kiv'] * yp['taraf'] + 0.1 * sg * yp['taraf'])
+        hedef[1].append(_poly(h))
+    sol = 1.0 - 0.15 * sg
+    if yap[0][0]:
+        iz = B.lavi(yap[0][0], '#8DB783', yog=0.52 * sol, kenar=0.9, dalga=0.05, islak=1.0, islak_gen=2.2, gran=0.08,
+                    akis=0.18, toplam=True, ust=0.5, renk2='#74A57A')
+        B.lavi(yap[0][1], '#4F8463', yog=0.30, kenar=0.8, dalga=0.05, islak=0.8, islak_gen=1.8, gran=0.08, akis=0.1,
+               siluet=False)
+        B.sakla(iz)
+    sap_y = []
+    w0 = max(0.9, boy * 0.011)
+    for sp in saplar:
+        sap_y.append(_poly(_serit_np(sp, np.linspace(w0, w0 * 0.6, len(sp)))))
+    iz = B.lavi(sap_y, '#7E9467', yog=0.6, kenar=0.7, dalga=0.04, islak=0.7, islak_gen=1.5, gran=0.1, akis=0.12,
+                renk2='#8A8A62')
+    B.sakla(iz)
+    if yap[1][0]:
+        B.lavi(yap[1][0], '#6E9C76', yog=0.55 * sol, kenar=0.9, dalga=0.05, islak=1.0, islak_gen=2.2, gran=0.08,
+               akis=0.18, toplam=True, ust=0.5, renk2='#5F8E72')
+        B.lavi(yap[1][1], '#3F6F57', yog=0.30, kenar=0.8, dalga=0.05, islak=0.8, islak_gen=1.8, gran=0.08, akis=0.1,
+               siluet=False)
+    B.bitir(sakla_sonra=sakla_sonra)
+    return dict(cicekler=sonuc, kutu=nokta_donustur(M, allp[:, 0].min() - pad, allp[:, 1].min() - pad) +
+                nokta_donustur(M, allp[:, 0].max() + pad, y))
+
+
+# ================================================================================================================
+# 8. ZEMİN ÖĞELERİ: yol, taş, dere, çimen, tarh
+# ================================================================================================================
+def _genislikler(noktalar, genislik, daralma):
+    P = np.asarray(noktalar, np.float64)
+    if np.ndim(genislik) == 0:
+        d = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))])
+        u = d / max(d[-1], 1e-6)
+        return float(genislik) * (1.0 - daralma * u)
+    return np.asarray(genislik, np.float64)
+
+
+def _yumusak_omurga(noktalar, n=None):
+    """Catmull-Rom ile sıklaştırılmış omurga (n,2)."""
+    P = np.asarray(noktalar, np.float64)
+    if len(P) < 3:
+        return P
+    n = n or max(40, 12 * len(P))
+    Q = np.concatenate([P[:1] * 2 - P[1:2], P, P[-1:] * 2 - P[-2:-1]], 0)
+    out = []
+    per = max(2, n // (len(P) - 1))
+    for i in range(1, len(Q) - 2):
+        p0, p1, p2, p3 = Q[i - 1], Q[i], Q[i + 1], Q[i + 2]
+        for s in np.linspace(0, 1, per, endpoint=False):
+            s2, s3 = s * s, s * s * s
+            out.append(0.5 * ((2 * p1) + (-p0 + p2) * s + (2 * p0 - 5 * p1 + 4 * p2 - p3) * s2 +
+                              (-p0 + 3 * p1 - 3 * p2 + p3) * s3))
+    out.append(P[-1])
+    return np.array(out)
+
+
+def ciz_yol(t: Tuval, M, noktalar, genislik, tohum=0, daralma=0.88, sakla_sonra=True):
+    rng = np.random.default_rng(1201 + tohum)
+    P0 = np.asarray(noktalar, np.float64)
+    om = _yumusak_omurga(P0)
+    w = _genislikler(P0, genislik, daralma)
+    # genişliği sık omurgaya aktar
+    d0 = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(P0, axis=0), axis=1))])
+    d1 = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(om, axis=0), axis=1))])
+    wo = np.interp(d1 / max(d1[-1], 1e-6), d0 / max(d0[-1], 1e-6), w) * 0.5
+    # kenarlara hafif düzensizlik
+    f = rng.uniform(0, 6.28, 2)
+    u = d1 / max(d1[-1], 1e-6)
+    wo_s = wo * (1 + 0.06 * np.sin(u * 37 + f[0]) + 0.04 * np.sin(u * 83 + f[1]))
+    kutu = (om[:, 0].min() - wo.max() - 20, om[:, 1].min() - 20, om[:, 0].max() + wo.max() + 20,
+            om[:, 1].max() + wo.max() + 20)
+    B = _boya_ac(t, M, kutu, tohum=tohum + 31)
+    if B is None:
+        return None
+    yol_s = _poly(_serit_np(om, wo_s))
+    # küçük taşlar (önde)
+    cak = []
+    nc = int(d1[-1] / 40)
+    for i in range(nc):
+        s = rng.uniform(0, 1) ** 0.8
+        j = min(int(s * (len(om) - 1)), len(om) - 2)
+        tan = om[j + 1] - om[j]
+        tan /= np.linalg.norm(tan) + 1e-9
+        nor = np.array([-tan[1], tan[0]])
+        side = rng.choice([-1, 1]) * rng.uniform(0.55, 0.95)
+        c = om[j] + nor * wo[j] * side
+        r = max(0.8, wo[j] * rng.uniform(0.025, 0.06))
+        cak.append(_poly(_cakil(rng, c[0], c[1], r)))
+    if cak:
+        iz = B.lavi(cak, '#B9AFA6', yog=0.45, kenar=0.7, dalga=0.05, islak=0.9, islak_gen=1.5, gran=0.12, akis=0.15)
+        B.sakla(iz)
+    # kenar sırrı: iki kenar boyunca içte koyu bant
+    kenar_y = []
+    for sgn in (-1, 1):
+        tan = np.gradient(om, axis=0)
+        tan /= np.linalg.norm(tan, axis=1, keepdims=True) + 1e-9
+        nor = np.stack([-tan[:, 1], tan[:, 0]], 1)
+        o2 = om + nor * (sgn * wo_s * 0.8)[:, None]
+        kenar_y.append(_poly(_serit_np(o2, wo_s * 0.22)))
+    B.lavi(kenar_y, '#CDB290', yog=0.28, kenar=1.2, dalga=0.14, islak=0.6, islak_gen=3, gran=0.16, akis=0.2,
+           siluet=False)
+    # orta iz: yürünmüş, biraz açık; lekeler
+    lek = []
+    for i in range(int(d1[-1] / 90)):
+        s = rng.uniform(0.0, 0.95)
+        j = int(s * (len(om) - 1))
+        c = om[j]
+        lek.append(EL.damla_blob(c[0] + rng.uniform(-0.3, 0.3) * wo[j], c[1], 1.0, tohum=int(rng.integers(0, 999)),
+                                 duzensizlik=0.2, lob=4, rx=wo[j] * rng.uniform(0.2, 0.45),
+                                 ry=wo[j] * rng.uniform(0.06, 0.12)))
+    B.lavi(lek, '#D6BE98', yog=0.22, kenar=1.4, dalga=0.18, islak=0.5, islak_gen=3, gran=0.16, akis=0.2,
+           siluet=False, toplam=True, ust=0.3)
+    B.lavi(yol_s, '#E7D3AF', yog=0.5, kenar=1.3, dalga=0.12, islak=0.85, islak_gen=3.5, gran=0.16, akis=0.18,
+           renk2='#E2C9A2')
+    B.bitir(sakla_sonra=sakla_sonra)
+    return dict(omurga=[nokta_donustur(M, p[0], p[1]) for p in om[::max(1, len(om) // 24)]])
+
+
+def _tas_sekli(x, y, r, rng, yass=1.0):
+    """Taban (x,y) üzerinde duran yuvarlak kaya noktaları; yass < 1 yassı."""
+    n = 40
+    a = np.linspace(0, 2 * math.pi, n, endpoint=False)
+    f = rng.uniform(0, 6.28, 3)
+    rr = r * (1 + 0.09 * np.sin(2 * a + f[0]) + 0.05 * np.sin(3 * a + f[1]) + 0.03 * np.sin(5 * a + f[2]))
+    hx = rng.uniform(1.05, 1.3)
+    hy = rng.uniform(0.72, 0.95) * yass
+    px = np.cos(a) * rr * hx
+    py = np.sin(a) * rr * hy
+    py = np.where(py > 0, py * 0.35, py)  # alt düz
+    return np.stack([px + x, py + y - r * hy * 0.3], 1), r * hy
+
+
+def _tas_boya(B, M, x, y, r, rng, isik, yass=1.0, renk1='#CFC6BE', renk2='#C3B8B4', golge='#8F8898', golge_yer=True,
+              islak_tas=0.0):
+    lx, ly = isik
+    P, hh = _tas_sekli(x, y, r, rng, yass)
+    yol = _poly(P)
+    d = r * 0.55
+    gol = yol_op(yol, _poly(P + np.array([lx * d, ly * d])), 'fark')
+    # çatlak/yüzey çizgisi
+    cz = []
+    if r * math.sqrt(abs(np.linalg.det(np.asarray(M)[:2, :2]))) > 14:
+        a0 = rng.uniform(-0.4, 0.4)
+        q = np.array([[x + r * (0.1 + a0), y - hh * 0.9], [x + r * (0.25 + a0), y - hh * 0.55],
+                      [x + r * (0.18 + a0), y - hh * 0.25]])
+        cz.append(_poly(q, kapali=False))
+    olc = math.sqrt(abs(np.linalg.det(np.asarray(M)[:2, :2])))
+    iz = B.lavi(yol, renk1, yog=0.5 + 0.12 * islak_tas, Mloc=M, kenar=1.0, dalga=0.08, islak=1.0, islak_gen=2.5,
+                gran=0.18, akis=0.22, renk2=renk2, isik_kenar=(lx * r * 0.3 * olc, ly * r * 0.3 * olc, 0.35))
+    B.lavi(gol, golge, yog=0.36 + 0.1 * islak_tas, Mloc=M, kenar=1.0, dalga=0.1, islak=0.9, islak_gen=2.2, gran=0.16,
+           akis=0.15, siluet=False)
+    if cz:
+        B.lavi(cz, golge, yog=0.32, Mloc=M, kenar=0.6, dalga=0.1, islak=0.2, islak_gen=1, gran=0.1, akis=0.1,
+               cizgi=max(0.8, r * 0.03), siluet=False, esik=False)
+    B.sakla(iz)
+    if golge_yer:
+        # zemine düşen gölge (sağ-alt), taşın arkasında
+        gx = x - lx * r * 0.5
+        gy = y + r * 0.04
+        gol2 = yol_elips(gx, gy, r * 1.35, r * 0.22)
+        B.lavi(gol2, '#A9A2B4', yog=0.32, Mloc=M, yumusak=max(1.5, r * 0.08 * olc), dalga=0.1, islak=0.0, gran=0.12,
+               akis=0.15)
+    return iz
+
+
+def ciz_tas(t: Tuval, M, x, y, r, tohum=0, isik=(-0.6, -0.8), yass=1.0, sakla_sonra=True):
+    rng = np.random.default_rng(2207 + tohum)
+    lx, ly = isik
+    ln = math.hypot(lx, ly) + 1e-9
+    B = _boya_ac(t, M, (x - r * 2.2, y - r * 1.4, x + r * 2.2, y + r * 0.5), tohum=tohum + 41)
+    if B is None:
+        return None
+    _tas_boya(B, M, x, y, r, rng, (lx / ln, ly / ln), yass=yass)
+    B.bitir(sakla_sonra=sakla_sonra)
+    return dict(tepe=nokta_donustur(M, x, y - r))
+
+
+def ciz_cimen(t: Tuval, M, x0, x1, y, yogunluk=1.0, sallanma=0.0, tohum=0, boy=(14, 34), sakla_sonra=True):
+    rng = np.random.default_rng(3307 + tohum)
+    B = _boya_ac(t, M, (x0 - 20, y - boy[1] * 1.3, x1 + 20, y + 6), tohum=tohum + 51)
+    if B is None:
+        return None
+    _cimen_boya(B, M, x0, x1, y, yogunluk, sallanma, rng, boy=boy)
+    B.bitir(sakla_sonra=sakla_sonra)
+    return None
+
+
+def ciz_tarh(t: Tuval, M, x0, x1, y, tohum=0, yuk=None, bolum='hepsi', sakla_sonra=True):
+    """Koyu, zengin topraklı bahçe tarhı. y: bitkilerin dikildiği üst yüzey çizgisi."""
+    rng = np.random.default_rng(4407 + tohum)
+    L = x1 - x0
+    hh = float(yuk if yuk is not None else min(60.0, max(26.0, L * 0.07)))
+    B = _boya_ac(t, M, (x0 - 20, y - hh, x1 + 20, y + hh), tohum=tohum + 61)
+    if B is None:
+        return None
+    xs = np.linspace(x0, x1, 40)
+    u = (xs - x0) / L
+    yuv = np.sin(np.clip(u, 0, 1) * math.pi) ** 0.35
+    f = rng.uniform(0, 6.28, 3)
+    ust = y - hh * 0.30 * yuv + hh * 0.06 * np.sin(u * 13 + f[0])
+    on_ust = y + hh * 0.12 * yuv + hh * 0.04 * np.sin(u * 17 + f[1])  # ön yüzün başladığı çizgi
+    alt = y + hh * 0.55 * (0.4 + 0.6 * yuv) + hh * 0.04 * np.sin(u * 11 + f[2])
+    tum = _poly(np.concatenate([np.stack([xs, ust], 1), np.stack([xs[::-1], alt[::-1]], 1)], 0))
+    on = _poly(np.concatenate([np.stack([xs, on_ust], 1), np.stack([xs[::-1], alt[::-1]], 1)], 0))
+    if bolum in ('hepsi', 'on'):
+        # topak ve benekler
+        ben = []
+        for i in range(int(L / 9)):
+            xx = rng.uniform(x0 + 6, x1 - 6)
+            uu = (xx - x0) / L
+            yv = math.sin(uu * math.pi) ** 0.35
+            yt = y - hh * 0.30 * yv
+            yb = y + hh * 0.55 * (0.4 + 0.6 * yv)
+            yy = rng.uniform(yt + 2, yb - 2)
+            ben.append(_poly(_cakil(rng, xx, yy, rng.uniform(0.8, 2.2))))
+        izb = B.lavi(ben, '#5C463D', yog=0.4, kenar=0.6, dalga=0.05, islak=0.5, islak_gen=1, gran=0.1, akis=0.1,
+                     siluet=False)
+        if bolum == 'on':
+            B.lavi(on, '#7A5E4E', yog=0.55, kenar=1.1, dalga=0.12, islak=0.9, islak_gen=3, gran=0.24, akis=0.2,
+                   renk2='#6E5548')
+            B.lavi(on, '#5D4A46', yog=0.3, kenar=1.1, dalga=0.12, islak=0.7, islak_gen=3, gran=0.2, akis=0.2,
+                   siluet=False, yog_fn=lambda X, Y: np.clip((Y - y) / (hh * 0.5), 0, 1))
+            B.bitir(sakla_sonra=sakla_sonra)
+            return dict(ust_y=float(nokta_donustur(M, (x0 + x1) / 2, ust.min())[1]))
+    # tam tarh: üst yüzey açık (ışık), ön yüz koyu sır
+    def isik_fn(X, Y):
+        return 0.75 + 0.45 * np.clip((Y - (y - hh * 0.3)) / (hh * 0.9), 0, 1)
+    B.lavi(tum, '#8A6A55', yog=0.55, kenar=1.1, dalga=0.12, islak=0.9, islak_gen=3, gran=0.24, akis=0.2,
+           renk2='#7A5E4E', yog_fn=isik_fn)
+    B.lavi(on, '#5D4A46', yog=0.32, kenar=1.1, dalga=0.12, islak=0.8, islak_gen=3, gran=0.2, akis=0.2, siluet=False,
+           yog_fn=lambda X, Y: 0.4 + 0.6 * np.clip((Y - y) / (hh * 0.5), 0, 1))
+    # karık çizgileri (üst yüzeyde)
+    kr = []
+    for j in range(3):
+        yy = y - hh * (0.05 + 0.08 * j)
+        xa, xb = x0 + L * (0.08 + 0.05 * j), x1 - L * (0.08 + 0.05 * j)
+        c = _dalgali_cizgi(rng, xa, xb, yy, 1.2, n=24)
+        kr.append(_poly(_serit_np(c, np.sin(np.linspace(0, math.pi, len(c))) * 1.2 + 0.2)))
+    B.lavi(kr, '#5A4740', yog=0.25, kenar=0.8, dalga=0.1, islak=0.4, islak_gen=1.5, gran=0.2, akis=0.15,
+           siluet=False)
+    B.bitir(sakla_sonra=sakla_sonra)
+    return dict(ust_y=float(nokta_donustur(M, (x0 + x1) / 2, ust.min())[1]))
+
+
+def ciz_dere(t: Tuval, M, noktalar, genislik, zaman=0.0, tohum=0, daralma=0.6, taslar=0.5, tas_sayi=3,
+             sakla_sonra=True):
+    rng = np.random.default_rng(5507 + tohum)
+    P0 = np.asarray(noktalar, np.float64)
+    om = _yumusak_omurga(P0, n=160)
+    w = _genislikler(P0, genislik, daralma)
+    d0 = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(P0, axis=0), axis=1))])
+    d1 = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(om, axis=0), axis=1))])
+    Ltop = d1[-1]
+    wo = np.interp(d1 / max(Ltop, 1e-6), d0 / max(d0[-1], 1e-6), w) * 0.5
+    f = rng.uniform(0, 6.28, 4)
+    u = d1 / max(Ltop, 1e-6)
+    wl = wo * (1 + 0.08 * np.sin(u * 23 + f[0]) + 0.05 * np.sin(u * 61 + f[1]))
+    wr = wo * (1 + 0.08 * np.sin(u * 29 + f[2]) + 0.05 * np.sin(u * 53 + f[3]))
+    tan = np.gradient(om, axis=0)
+    tan /= np.linalg.norm(tan, axis=1, keepdims=True) + 1e-9
+    nor = np.stack([-tan[:, 1], tan[:, 0]], 1)
+    sol = om + nor * wl[:, None]
+    sag = om - nor * wr[:, None]
+    su = _poly(np.concatenate([sol, sag[::-1]], 0))
+    kutu = (om[:, 0].min() - wo.max() * 1.6, om[:, 1].min() - wo.max() * 1.6, om[:, 0].max() + wo.max() * 1.6,
+            om[:, 1].max() + wo.max() * 1.6)
+    B = _boya_ac(t, M, kutu, tohum=tohum + 71)
+    if B is None:
+        return None
+    isik = (-0.6, -0.8)
+    # 1) basamak taşları (önde)
+    tas_konum = []
+    if tas_sayi > 0:
+        j = int(np.clip(taslar, 0, 1) * (len(om) - 1))
+        for q in range(tas_sayi):
+            fr = (q + 0.5) / tas_sayi * 2 - 1  # -1..1 enine
+            c = om[j] + nor[j] * fr * wo[j] * 0.78 + tan[j] * rng.uniform(-0.12, 0.12) * wo[j]
+            r = wo[j] * rng.uniform(0.2, 0.26)
+            tas_konum.append((c[0], c[1], r))
+        for (cx, cy, r) in sorted(tas_konum, key=lambda q: -q[1]):
+            _tas_boya(B, M, cx, cy + r * 0.25, r, rng, isik, yass=0.55, renk1='#D2CBC4', renk2='#C6BEBB',
+                      golge_yer=False, islak_tas=0.5)
+    # 2) ışık dalgacıkları (kâğıt beyazı): akışla ilerler
+    dalg = []
+    hiz = 38.0
+    nd = int(Ltop / 26)
+    for i in range(nd):
+        s0 = rng.uniform(0, 1)
+        lat = rng.uniform(-0.7, 0.7)
+        ln_ = rng.uniform(0.5, 1.0)
+        s = ((s0 * Ltop + hiz * zaman * rng.uniform(0.8, 1.2)) % Ltop)
+        # ömür: belir-sön (dalgacık titremesin diye konumla bağlı)
+        faz = (s0 * 7.3 + zaman * 0.6 * rng.uniform(0.7, 1.3)) % 1.0
+        a = math.sin(faz * math.pi) ** 2
+        if a < 0.15:
+            continue
+        jj = int(np.searchsorted(d1, s))
+        jj = min(max(jj, 1), len(om) - 2)
+        wj = wo[jj]
+        Lr = wj * 0.55 * ln_ * a
+        ss = np.linspace(s - Lr, s + Lr, 8)
+        cx_ = np.interp(ss, d1, om[:, 0]) + np.interp(ss, d1, nor[:, 0]) * lat * wj
+        cy_ = np.interp(ss, d1, om[:, 1]) + np.interp(ss, d1, nor[:, 1]) * lat * wj
+        kal = np.sin(np.linspace(0, math.pi, 8)) * max(0.6, wj * 0.035) * a
+        dalg.append(_poly(_serit_np(np.stack([cx_, cy_], 1), kal + 0.05)))
+    # taşların çevresinde akış izi (V dalgası)
+    for (cx, cy, r) in tas_konum:
+        j = int(np.argmin(np.sum((om - [cx, cy]) ** 2, 1)))
+        for sgn in (-1, 1):
+            q = np.array([[cx + tan[j, 0] * r * 0.9, cy + tan[j, 1] * r * 0.9 - r * 0.1],
+                          [cx + tan[j, 0] * r * 1.8 + nor[j, 0] * sgn * r * 0.6,
+                           cy + tan[j, 1] * r * 1.8 + nor[j, 1] * sgn * r * 0.6]])
+            q = np.array([q[0], (q[0] + q[1]) / 2 + nor[j] * sgn * r * 0.1, q[1]])
+            dalg.append(_poly(_serit_np(q, np.array([r * 0.08, r * 0.06, r * 0.02]))))
+    if dalg:
+        B.sakla_yol(dalg, M, yumusak=0.5)
+    # 3) su: derin orta + açık geniş lavi
+    orta = _poly(_serit_np(om + nor * ((wl - wr) * 0.5)[:, None] * 0, wo * 0.55))
+    B.lavi(orta, '#86A9C8', yog=0.3, yumusak=max(2.0, float(wo.mean()) * 0.12 *
+                                                 math.sqrt(abs(np.linalg.det(np.asarray(M)[:2, :2])))),
+           dalga=0.1, islak=0.0, gran=0.1, akis=0.25, siluet=False)
+    B.lavi(su, '#A8C7DE', yog=0.5, kenar=1.1, dalga=0.1, islak=1.0, islak_gen=3, gran=0.12, akis=0.22,
+           renk2='#9EC0D6')
+    # 4) kıyılar: toprak bandı (su silüeti saklamada)
+    B.sakla_yol(su, M, yumusak=0.6)
+    kiyi = []
+    for (kenar_pts, sgn) in ((sol, 1), (sag, -1)):
+        o2 = kenar_pts + nor * (sgn * wo * 0.1)[:, None]
+        kiyi.append(_poly(_serit_np(o2, wo * 0.16 + 1.0)))
+    B.lavi(kiyi, '#BBA785', yog=0.38, kenar=1.2, dalga=0.18, islak=0.8, islak_gen=2.5, gran=0.18, akis=0.2,
+           renk2='#A8A57E')
+    B.bitir(sakla_sonra=sakla_sonra)
+    return dict(taslar=[nokta_donustur(M, cx, cy) for (cx, cy, r) in tas_konum],
+                omurga=[nokta_donustur(M, p[0], p[1]) for p in om[::8]])

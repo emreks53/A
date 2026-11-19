@@ -716,6 +716,30 @@ def _capalar(sk, Mf):
     return out
 
 
+def sinir_kutusu(poz, pay=6.0):
+    """Pozun yerel sınır kutusu (x0, y0, x1, y1), yon=+1 için (yon=-1'de x'ler ters işaretli)."""
+    sk = iskelet(poz)
+    pts = []
+    deri, sac, sakal, kulak = bas_yollari()
+    for yol in (sac, sakal, deri):
+        b = yol.computeTightBounds()
+        pts += list(_uygula(sk['M_bas'], [(b.left(), b.top()), (b.right(), b.top()), (b.left(), b.bottom()),
+                                            (b.right(), b.bottom())]))
+    for t in ('on', 'ar'):
+        pts += list(_uygula(sk['M_ayak_' + t], _ayakkabi_pts(sk['tp_' + t])))
+        pts += list(_uygula(sk['M_el_' + t], [(-6, -13), (66, -13), (66, 13), (-6, 13)]))
+        for k, r in (('S_', 21), ('E_', 17), ('Wr_', 14), ('H_', 50), ('K_', 24)):
+            c = sk[k + t]
+            pts += [c + (r, 0), c - (r, 0), c + (0, r), c - (0, r)]
+    for s_ in np.linspace(-0.12 * sk['LT'], sk['LT'], 8):
+        c = sk.C(s_)
+        pts += [c + (48, 0), c - (48, 0), c + (0, 48), c - (0, 48)]
+    pts = np.array(pts)
+    x0, y0 = pts.min(0) - pay
+    x1, y1 = pts.max(0) + pay
+    return float(x0), float(y0), float(x1), min(float(y1), 2.0)
+
+
 # =================================================================================================================
 # pozlar
 # =================================================================================================================
@@ -822,10 +846,10 @@ def _poz_diz_dua():
              kivrim_on=0.18, yan_on=-1.0, kivrim_ar=0.18, yan_ar=-1.0)
     _ayak_parmakta(p, 'on')
     _ayak_parmakta(p, 'ar', dx=-3.0)
-    kol_ik(p, 'on', (50.0, -238.0))
-    el_aci(p, 'on', 128.0)
-    kol_ik(p, 'ar', (58.0, -245.0))
-    el_aci(p, 'ar', 132.0)
+    kol_ik(p, 'on', (64.0, -228.0))
+    el_aci(p, 'on', 122.0)
+    kol_ik(p, 'ar', (72.0, -236.0))
+    el_aci(p, 'ar', 126.0)
     return p
 
 
@@ -846,16 +870,16 @@ def _bas_yere(p, a_h=104.7, alin=(29.6, -31.0), yuk=-0.6):
 def _poz_secde():
     p = bos_poz()
     kok = DIZ - L_UYLUK * _asg(6.0)
-    p.update(kx=kok[0], ky=kok[1], bel=117.0, gogus=8.0,
+    p.update(kx=kok[0], ky=kok[1], bel=122.0, gogus=8.0,
              kivrim_on=0.0, yan_on=1.0, kivrim_ar=0.0, yan_ar=1.0, kol_kisalt_on=0.75, kol_kisalt_ar=0.75,
-             ust_kisalt_on=0.55, ust_kisalt_ar=0.55)
+             ust_kisalt_on=0.35, ust_kisalt_ar=0.35)
     _ayak_parmakta(p, 'on')
     _ayak_parmakta(p, 'ar', dx=-3.0)
     _bas_yere(p)
     sk = iskelet(p)
     bx = sk['Hp'][0]
     for t, dx in (('on', 0.0), ('ar', 5.0)):
-        kol_ik(p, t, (bx - 26.0 + dx, -7.6), isaret=+1)
+        kol_ik(p, t, (bx - 24.0 + dx, -7.6), isaret=-1)
         el_aci(p, t, 90.0)
     return p
 
