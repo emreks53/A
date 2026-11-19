@@ -561,6 +561,11 @@ def ciz_bahce(V, cam: Kamera, evre=None):
     if s['islak'] > 0.01 and hasattr(esyalar, 'ciz_islak_toprak'):
         esyalar.ciz_islak_toprak(t, M @ M_yerlestir(AGAC_X + 24, AGAC_Y + 8, 1.0), 105, 26, s['islak'], tohum=3)
 
+    # --- orta planda genç fideler (bahçe hissi) ---
+    for j, (fx, fy, fb, fr) in enumerate([(330, 1300, 120, 'beyaz'), (612, 1286, 105, 'allik'), (842, 1306, 118, 'seftali')]):
+        doga.ciz_cicek_fidani(t, M, fx, fy, fb, renk_=fr, acilma=min(1.0, s['acilma'][j % 2] * 0.85), sallanma=sal,
+                              solgunluk=s['solgunluk'], tohum=60 + j)
+
     # --- arka sıra çiçekler, çimen ---
     for i in (0, 1):
         x, y, b, r = CICEKLER[i]

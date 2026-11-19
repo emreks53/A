@@ -71,3 +71,26 @@ if __name__ == '__main__':
         parca.append(etiket(cv2.resize(kirp(img, kx - 230, 0, kx + 230, 1500), None, fx=0.5, fy=0.5,
                                        interpolation=cv2.INTER_AREA), f'kuyruk {q}'))
     pafta(parca, 'nur_isin_kuyruk')
+
+    # ---- kalkan: göğüs yakın planı (sahne 'dinî olmamak': kamera ~2.3), yağmur ---------------------------------
+    poz = insan.POZLAR['oturus_hasta']
+    kw = insan.capalar(poz, M_yerlestir(ADAM_X, ADAM_Y, ADAM_OLCEK), yon=-1)['kalp']
+    cam = Kamera(kw[0], kw[1] - 40, 2.3)
+    parca = []
+    for (kal, z) in ((0.0, 13.6), (25.0, 13.7), (50.0, 13.8), (79.0, 13.9), (79.0, 14.32), (79.0, 14.75)):
+        with Sure(f'kalkan {kal}'):
+            img, bilgi = kare(0.0, z, cam=cam, kalkan=kal, yagmur=1.0, poz=poz, gok_koyu=1.0)
+        kx, ky = int(bilgi['kalp'][0]), int(bilgi['kalp'][1])
+        parca.append(etiket(cv2.resize(kirp(img, kx - 380, ky - 420, kx + 380, ky + 340), None, fx=0.6, fy=0.6,
+                                       interpolation=cv2.INTER_AREA), f'kalkan {kal} z {z}'))
+    pafta(parca, 'nur_kalkan', sutun=3)
+    img, bilgi = kare(0.0, 13.9, cam=cam, kalkan=79.0, yagmur=1.0, poz=poz, gok_koyu=1.0)
+    kx, ky = int(bilgi['kalp'][0]), int(bilgi['kalp'][1])
+    zum(img, kx - 240, ky - 240, kx + 40, ky + 20, f=2, ad='nur_kalkan_yakin')
+    # nabız ardışık (kenar yarıçapı/parlaklığı sıçramasız): 8 kare, kenarın sol üst çeyreği
+    parca = []
+    for i in range(8):
+        img, bilgi = kare(0.0, 13.9 + i / 30.0, cam=cam, kalkan=79.0, yagmur=1.0, poz=poz, gok_koyu=1.0)
+        kx, ky = int(bilgi['kalp'][0]), int(bilgi['kalp'][1])
+        parca.append(etiket(kirp(img, kx - 220, ky - 220, kx - 20, ky - 20), f'k{i}'))
+    pafta(parca, 'nur_kalkan_ardisik', sutun=8, bosluk=4)

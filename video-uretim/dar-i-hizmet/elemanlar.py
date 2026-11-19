@@ -57,7 +57,7 @@ def bulut_yolu(cx, cy, gen, yuk, tohum=0, lob=6):
     return yol_op(p, kes, 'kesisim')
 
 
-def gok(t: Tuval, M, bulutlar=(), ust='#5F8FC4', orta='#8DB2D7', alt='#EAD6CB', yog=0.82, tohum=1,
+def gok(t: Tuval, M, bulutlar=(), ust='#6A95C6', orta='#99BADA', alt='#EAD6CB', yog=0.78, tohum=1,
         ufuk=0.78, alt_yog=0.35, kirp=None, ek_maske=None, gran=0.09, bulut_alfa=1.0):
     """Bütün ekranı kaplayan gök lavisi; bulutlar boş kâğıt olarak saklanır (alt kenarları ıslak karışır).
     M: dünya->ekran (bulut konumları için). bulutlar: [(cx, cy, gen, yuk, tohum), ...] dünya biriminde."""

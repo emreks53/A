@@ -1848,7 +1848,8 @@ def _kalp_isin(t, M, cx, cy, R, isin, kuyruk, zaman, isin_ust, hb, guc=1.0):
     sig_w = R * (0.75 + 1.45 * _ss1(hb - 0.5 * R, hb + 6.5 * R, u)
                  + 0.55 * np.sqrt(np.clip((u - hb) / Ltop, 0.0, 1.0)))
     dolu = 1.0 - _ss1(top - 4.0 * R, top + 0.2 * R, u)    # sütun ön ucun ardından dolar (iz genişler)
-    v_col = (0.16 + 0.84 * w_ac) * dolu * kok
+    kok_col = _ss1(bot - 1.0 * R, bot + 5.0 * R, u)       # sütunun kuyruğu yumuşak (kopunca düz kesik kalmaz)
+    v_col = (0.16 + 0.84 * w_ac) * dolu * kok_col
     # ---- maskeler (2B) -----------------------------------------------------------------------------------
     sak0 = t.sakla_maske(k)
     sak = np.zeros((k.h, k.w), np.float32) if sak0 is None else sak0.copy()
@@ -1943,21 +1944,21 @@ def _kalp_kalkan(t, M, cx, cy, s, r, kalkan, zaman, tohum=0):
     dd = (d / wob - Kp).astype(np.float32)
     sig = max(1.0, 0.030 * Kp)
     glow = np.exp(-dd ** 2 / (2 * sig ** 2)).astype(np.float32)
-    glow_w = np.exp(-dd ** 2 / (2 * (3.4 * sig) ** 2)).astype(np.float32)
+    glow_w = np.exp(-dd ** 2 / (2 * max(3.0, 0.10 * Kp) ** 2)).astype(np.float32)
     ic = (np.exp(-np.minimum(dd, 0.0) ** 2 / (2 * (0.20 * Kp) ** 2)) * (dd < 0)).astype(np.float32)
     gg = a * (0.74 + 0.26 * puls)
     # ıslak kenarlı soluk halka (ince bant: iki kenarında pigment birikir); figürün ve arka planın üstünden geçer
     w = max(1.4, 0.022 * Kp)
     bant = (_ss1(-w - 1.0, -w + 1.0, dd) * (1.0 - _ss1(w - 1.0, w + 1.0, dd))).astype(np.float32)
-    t.lavi([], M, '#E3AE4E', yog=0.16 * a, maske=(k, bant), kenar=0.5, dalga=0.06, islak=1.5,
+    t.lavi([], M, '#E0A946', yog=0.22 * a, maske=(k, bant), kenar=0.5, dalga=0.06, islak=1.5,
            islak_gen=max(1.0, 0.5 * w), gran=0.14, akis=0.25, sakla=False, tohum=tohum + 62)
     # yumuşak ışıma: önceden boyanmışı parlatır, SONRA boyanan gökte kısmi saklama + açık altın ton
-    t.lavi([], M, '#F6D27A', yog=0.12 * a, maske=(k, glow_w), kenar=0.0, dalga=0.0, islak=0.0, gran=0.05,
+    t.lavi([], M, '#F6D27A', yog=0.16 * a, maske=(k, glow_w), kenar=0.0, dalga=0.0, islak=0.0, gran=0.05,
            akis=0.0, sakla=True)
-    t.isik([], I3, '#FFD88A', guc=0.20 * gg, yumusak=0.0, maske=(k, glow_w))
-    t.isik([], I3, '#FFEFC6', guc=0.42 * gg, yumusak=0.0, maske=(k, glow))
-    t.isik([], I3, '#FFE6B0', guc=0.07 * gg, yumusak=0.0, maske=(k, ic))
-    t.sakla_ekle([], I3, yumusak=0.0, guc=0.6 * gg, maske=(k, np.maximum(glow, 0.55 * glow_w)))
+    t.isik([], I3, '#FFD88A', guc=0.26 * gg, yumusak=0.0, maske=(k, glow_w))
+    t.isik([], I3, '#FFF0CC', guc=0.55 * gg, yumusak=0.0, maske=(k, glow))
+    t.isik([], I3, '#FFE6B0', guc=0.08 * gg, yumusak=0.0, maske=(k, ic))
+    t.sakla_ekle([], I3, yumusak=0.0, guc=0.72 * gg, maske=(k, np.maximum(glow, 0.6 * glow_w)))
 
 
 def ciz_kalp_nuru(t: Tuval, M, r, parlaklik=1.0, isin=0.0, zaman=0.0, isin_ust=-80.0, kalkan=0.0, isin_kuyruk=0.0,
