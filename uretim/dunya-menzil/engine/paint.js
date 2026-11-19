@@ -121,16 +121,19 @@
       blur is in user units (scales with the current transform). */
   const OFF = 20000;
   E.softFill = (ctx, path, color, blur) => {
+    // Chromium scales shadowOffset by the CTM, so bake the transform into the path and draw at identity.
     const m = ctx.getTransform();
     const sc = Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) || 1;
+    const p2 = new Path2D();
+    p2.addPath(path, new DOMMatrix().translate(-OFF, 0).multiply(m));
     ctx.save();
-    ctx.setTransform(new DOMMatrix().translate(-OFF, 0).multiply(m));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.shadowColor = color;
     ctx.shadowBlur = Math.max(0.5, blur * sc * 2);
     ctx.shadowOffsetX = OFF;
     ctx.shadowOffsetY = 0;
     ctx.fillStyle = color;
-    ctx.fill(path);
+    ctx.fill(p2);
     ctx.restore();
   };
 

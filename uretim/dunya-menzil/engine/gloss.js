@@ -54,9 +54,20 @@
     const fill = tone === 'light' ? '#F7EEDB' : '#232B44';
     const halo = tone === 'light' ? 'rgba(14,16,30,0.78)' : 'rgba(250,247,238,0.95)';
     const stagger = Math.min(0.022, 0.32 / Math.max(1, chars.length));
-    // halo pass (soft, no box): blurred copy behind the text for legibility on busy paint
+    // halo pass (soft, no box): a blurred copy behind the text for legibility on busy paint.
+    // Fast: glyphs are drawn far off-canvas and only their blurred shadow lands in place
+    // (ctx.filter blur would cost ~30 ms per call).
     ctx.save();
-    ctx.filter = `blur(${tone === 'light' ? 9 : 7}px)`;
+    const OFF = 20000;
+    ctx.setTransform(new DOMMatrix().translate(-OFF, 0).multiply(ctx.getTransform()));
+    ctx.shadowColor = halo;
+    ctx.shadowBlur = tone === 'light' ? 18 : 14;
+    ctx.shadowOffsetX = OFF;
+    ctx.shadowOffsetY = 0;
+    ctx.fillStyle = halo;
+    ctx.strokeStyle = halo;
+    ctx.lineWidth = size * 0.16;
+    ctx.lineJoin = 'round';
     let hx = cx;
     for (let i = 0; i < chars.length; i++) {
       const ch = chars[i];
@@ -64,10 +75,7 @@
       const k = E.clamp((t - tStart - i * stagger) / FADE_IN);
       if (k > 0) {
         ctx.globalAlpha = E.ease.outCubic(k) * alphaOut * 0.9;
-        ctx.fillStyle = halo;
         ctx.fillText(ch, hx, y);
-        ctx.lineWidth = size * 0.16;
-        ctx.strokeStyle = halo;
         ctx.strokeText(ch, hx, y);
       }
       hx += w;

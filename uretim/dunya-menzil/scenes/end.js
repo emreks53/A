@@ -3,7 +3,7 @@
 (function () {
   const E = window.E;
   const N = 180;
-  const src = (i) => `ending/frames/${String(i).padStart(4, '0')}.png`;
+  const src = (i) => `ending/frames/frame_${String(i).padStart(4, '0')}.png`;
   const idx = (lt) => E.clamp(Math.round(lt * 30) + 1, 1, N);
   const imgs = {};
 

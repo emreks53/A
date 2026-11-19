@@ -30,12 +30,12 @@ BOOK_H = 240.0       # spine height
 BOOK_D = 170.0       # cover width (depth from spine to fore-edge)
 
 # Raised bands (hubs): centre positions measured from the TOP of the spine.
-HUBS_FROM_TOP = [20.0, 44.0, 168.0, 222.0]
+HUBS_FROM_TOP = [20.0, 44.0, 172.0, 222.0]
 HUB_HALF = 3.0       # half width of a hub (mm)
 HUB_HEIGHT = 1.45    # how far a hub stands proud of the spine (mm)
-TITLE_PANEL = (48.5, 163.5)    # from top
+TITLE_PANEL = (49.3, 166.7)    # from top (between the hub fillets)
 ORNAMENT_PANEL = (24.0, 40.0)
-AUTHOR_PANEL = (172.5, 217.5)
+AUTHOR_PANEL = (177.3, 216.7)
 
 # Spine texture resolution (pixels per mm)
 SPINE_PPM = 12
@@ -131,16 +131,19 @@ def rahle_half_width(y):
     return hw - 7.0 + 7.0 * math.sin(t * math.pi / 2) ** 2
 
 
+FOOT_ARCH_RISE = 0.22  # x RAHLE_HINGE
+
+
 def cart_y0():
-    return 0.10 * RAHLE_HINGE + 0.27 * RAHLE_HINGE + 7.0
+    return 0.10 * RAHLE_HINGE + FOOT_ARCH_RISE * RAHLE_HINGE + 6.0
 
 
 def rahle_cartouche():
     """Lobed horizontal cartouche (lattice field) in the lower part of a leaf."""
     y0 = cart_y0()
-    y1 = RAHLE_HINGE - rahle_notch_len() - 6.0
+    y1 = RAHLE_HINGE - rahle_notch_len() - 5.0
     yc, hh = (y0 + y1) / 2, (y1 - y0) / 2
-    hx = 0.36 * RAHLE_W
+    hx = 0.40 * RAHLE_W
     pts = []
     n = 80
     for i in range(n):
@@ -151,6 +154,69 @@ def rahle_cartouche():
         y = hh * math.copysign(abs(s_) ** 0.35, s_) * (1 - 0.35 * abs(c) ** 6)
         pts.append((x, yc + y))
     return pts
+
+
+LATTICE_P = 26.0       # star-and-cross pitch (mm)
+LATTICE_STRAP = 4.4    # strap width (mm)
+
+
+def offset_poly(poly, d):
+    """Mitred inward offset of a CCW polygon (y up) by d (mm)."""
+    n = len(poly)
+    lines = []
+    for i in range(n):
+        x1, y1 = poly[i]
+        x2, y2 = poly[(i + 1) % n]
+        dx, dy = x2 - x1, y2 - y1
+        L = math.hypot(dx, dy)
+        nx, ny = -dy / L, dx / L                 # left normal = inward for CCW
+        lines.append(((x1 + nx * d, y1 + ny * d), (dx / L, dy / L)))
+    out = []
+    for i in range(n):
+        (p0, u0), (p1, u1) = lines[i - 1], lines[i]
+        den = u0[0] * u1[1] - u0[1] * u1[0]
+        if abs(den) < 1e-9:
+            out.append(p1)
+            continue
+        t = ((p1[0] - p0[0]) * u1[1] - (p1[1] - p0[1]) * u1[0]) / den
+        out.append((p0[0] + u0[0] * t, p0[1] + u0[1] * t))
+    return out
+
+
+def star_cross_tiles(P):
+    """Exact star-and-cross tiling: {8/2} stars on a square lattice (pitch P,
+    touching tip to tip) and pointed four-armed crosses at the cell centres.
+    Returns (star, cross) polygons centred on the origin, CCW."""
+    r = P / 2
+    ri = r * math.cos(math.pi / 4) / math.cos(math.pi / 8)
+    star = [((r if k % 2 == 0 else ri) * math.cos(k * math.pi / 8),
+             (r if k % 2 == 0 else ri) * math.sin(k * math.pi / 8)) for k in range(16)]
+    a, b = 0.1464466 * P, 0.3535534 * P
+    cross = [(0, -r), (a, -b), (a, -a), (b, -a), (r, 0), (b, a), (a, a), (a, b),
+             (0, r), (-a, b), (-a, a), (-b, a), (-r, 0), (-b, -a), (-a, -a), (-a, -b)]
+    return star, cross
+
+
+def rahle_lattice_tiles():
+    """Tiles of the lower strapwork lattice kept inside the cartouche:
+    list of (centreline polygon, hole polygon)."""
+    cart = rahle_cartouche()
+    yc = sum(p[1] for p in cart) / len(cart)
+    P, w = LATTICE_P, LATTICE_STRAP
+    star, cross = star_cross_tiles(P)
+    cands = []
+    for i in range(-3, 3):
+        cands.append((star, (i + 0.5) * P, yc))
+    for i in range(-3, 4):
+        for sg in (-1, 1):
+            cands.append((cross, i * P, yc + sg * 0.5 * P))
+    tiles = []
+    for shape, x0, y0 in cands:
+        cl = [(x0 + x, y0 + y) for x, y in shape]
+        hole = offset_poly(cl, w / 2)
+        if all(_inside(cart, x, y) and _dist_to_poly(cart, x, y) > w * 0.55 for x, y in hole):
+            tiles.append((cl, hole))
+    return tiles
 
 
 def rahle_window(yh=None, U=None):
@@ -209,7 +275,7 @@ def rahle_leaf(which):
     aw = 0.25 * W
     hwf = rahle_half_width(0.0)
     out += [(-hwf, 0.0), (-aw, 0.0)]
-    arch = _pointed_arch(0.0, 0.10 * yh, aw, 0.27 * yh, 22)
+    arch = _pointed_arch(0.0, 0.10 * yh, aw, FOOT_ARCH_RISE * yh, 22)
     out += arch
     out += [(aw, 0.0), (hwf, 0.0)]
     # --- right side up to the crest (with hinge notch for finger 4)
@@ -258,21 +324,10 @@ def rahle_leaf(which):
             continue
         x0 = -hw_h + f * fw
         holes.append([(x0, yh - nh), (x0 + fw, yh - nh), (x0 + fw, yh + nh), (x0, yh + nh)])
-    # lower part (the face turned to the viewer): star-and-cross lattice in a
-    # lobed cartouche between the foot arch and the hinge
-    cart = rahle_cartouche()
-    pitch_l = 13.0
-    R_l = 4.7
-    yc_l = sum(p[1] for p in cart) / len(cart)
-    for j in range(4):
-        y = yc_l + 12.0 * (j - 1.5)
-        for i in range(-6, 7):
-            x = pitch_l * i
-            if _inside(cart, x, y) and _dist_to_poly(cart, x, y) > R_l + 1.9:
-                holes.append(_star8(x, y, R_l))
-            cx, cy = x + pitch_l / 2, y + 6.0
-            if _inside(cart, cx, cy) and _dist_to_poly(cart, cx, cy) > 3.6:
-                holes.append(_lozenge(cx, cy, 4.0, 4.0))
+    # lower part (the face turned to the viewer): interlaced star-and-cross
+    # strapwork (4.4 mm straps) in a lobed cartouche between the foot arch and the hinge
+    for _cl, hole in rahle_lattice_tiles():
+        holes.append(hole)
     # upper part: star-and-cross lattice inside the mihrab window
     win = rahle_window()
     pitch = 15.0

@@ -185,85 +185,110 @@ def srgb(h):
 
 
 # ============================================================ MATERIALS
-LEATHER_HEX = "#D7B099"     # pale dusty rose-tan (albedo); tuned against renders
-GOLD_LIN = (0.74, 0.47, 0.18, 1.0)
+LEATHER_HEX = "#D6A396"     # very light, faded rose leaning to light tan (albedo); tuned against renders
+# Deep, slightly aged gold. On very light leather the foil (which mirrors the
+# table) can never be much brighter than the leather, so it is kept a little
+# deeper and more saturated than the hide; with the blocking halo the titles
+# then read clearly as gold on pale leather.
+GOLD_LIN = (0.84, 0.58, 0.20, 1.0)      # bright end
+GOLD_DARK = (0.62, 0.40, 0.12, 1.0)     # duller / rubbed foil
+GOLD_ROUGH = (0.37, -0.12)              # roughness = a + b * foil_var  (0.25-0.28)
+TABLE_TINT = (1.0, 1.0, 1.0, 1.0)
+# leather grain: tile size of the tileable grain map (m), bump depth (m), roughness creases / span
+GRAIN = dict(tile=0.105, bump=0.00040, rough_crease=0.56, rough_span=0.24)
 
 
-def mat_leather(name, spine_img=None, base_hex=LEATHER_HEX, cover_img=None, ivory=False):
+def mat_leather(name, spine_img=None, base_hex=LEATHER_HEX, cover_img=None, ivory=False, seed=0):
     """Fine grained leather with optional gold-foil artwork.
     spine_img: RGB (gold mask, height, foil var) mapped via 'UVMap' (CLIP).
-    cover_img: same layout mapped via 'UVBoard' (used for the Kur'an cover)."""
+    cover_img: same layout mapped via 'UVBoard' (used for the Kur'an cover).
+    seed: per-volume variation (tone, mottling placement)."""
+    rnd = random.Random(1000 + seed)
     m, nb, out = new_material(name)
     tc = nb.node("ShaderNodeTexCoord", (-1800, 0))
-    # --- leather grain (tileable 51.2 mm), box-projected in object space
+    # per-volume offset so no two hides share the same mottling
+    obj = nb.node("ShaderNodeMapping", (-1700, 500))
+    obj.inputs["Location"].default_value = (rnd.uniform(-5, 5), rnd.uniform(-5, 5), rnd.uniform(-5, 5))
+    nb.link(tc.outputs["Object"], obj.inputs["Vector"])
+    ocoord = obj.outputs["Vector"]
+    # --- leather grain (tileable, 82 mm tile -> ~1.5-2.7 mm pebbles), box-projected
     mp = nb.node("ShaderNodeMapping", (-1600, 200))
-    mp.inputs["Scale"].default_value = (1 / 0.0512,) * 3
-    nb.link(tc.outputs["Object"], mp.inputs["Vector"])
+    mp.inputs["Scale"].default_value = (1 / (GRAIN["tile"] if not ivory else 0.075),) * 3
+    nb.link(ocoord, mp.inputs["Vector"])
     gi = nb.node("ShaderNodeTexImage", (-1400, 200), image=load_img("leather_grain.png"), projection="BOX",
                  projection_blend=0.3, interpolation="Linear")
     nb.link(mp.outputs["Vector"], gi.inputs["Vector"])
     grain = gi.outputs["Color"]
-    # --- mottling: large-scale tonal variation (dyed hide is never uniform)
+    # --- mottling: gentle large-scale tonal variation (dyed hide is never uniform)
     nz = nb.node("ShaderNodeTexNoise", (-1400, 600))
-    nz.inputs["Scale"].default_value = 38.0
+    nz.inputs["Scale"].default_value = 34.0
     nz.inputs["Detail"].default_value = 2.0
-    nz.inputs["Roughness"].default_value = 0.55
-    nb.link(tc.outputs["Object"], nz.inputs["Vector"])
+    nz.inputs["Roughness"].default_value = 0.5
+    nb.link(ocoord, nz.inputs["Vector"])
+    base = srgb(base_hex)
+    v = rnd.uniform(0.975, 1.025)                    # +-2.5 % value per volume
+    hue = rnd.uniform(-0.012, 0.012)                 # tiny warm/cool drift
+    base = (min(1, base[0] * v * (1 + hue)), base[1] * v, min(1, base[2] * v * (1 - hue)), 1.0)
+    if ivory:
+        dark = (base[0] * 0.965, base[1] * 0.955, base[2] * 0.93, 1)
+        light = (min(1, base[0] * 1.01), min(1, base[1] * 1.01), min(1, base[2] * 1.015), 1)
+    else:
+        dark = (base[0] * 0.935, base[1] * 0.90, base[2] * 0.89, 1)     # a touch deeper / rosier
+        light = (min(1, base[0] * 1.025), min(1, base[1] * 1.04), min(1, base[2] * 1.035), 1)  # tan-er
+    mr = nb.node("ShaderNodeMapRange", (-1150, 600))
+    mr.inputs["From Min"].default_value = 0.30
+    mr.inputs["From Max"].default_value = 0.70
+    nb.link(nz.outputs["Fac"], mr.inputs["Value"])
+    col = nb.mix_rgb(mr.outputs["Result"], dark, light, (-950, 600))
+    # fine grain: creases a little darker
+    gcol = nb.math("MULTIPLY_ADD", grain, 0.12, (-1150, 350))
+    gcol.node.inputs[2].default_value = 0.88
+    col = nb.mix_rgb(1.0, col, gcol, (-800, 500), blend="MULTIPLY")
+    # handling: the tail (bottom ~15 mm) is a little darker
+    sepz = nb.node("ShaderNodeSeparateXYZ", (-1600, 800))
+    nb.link(tc.outputs["Object"], sepz.inputs[0])
+    tail = nb.node("ShaderNodeMapRange", (-1400, 800))
+    tail.inputs["From Min"].default_value = 0.0
+    tail.inputs["From Max"].default_value = 0.015
+    tail.inputs["To Min"].default_value = 0.90 if not ivory else 0.95
+    tail.inputs["To Max"].default_value = 1.0
+    nb.link(sepz.outputs["Z"], tail.inputs["Value"])
+    col = nb.mix_rgb(1.0, col, tail.outputs["Result"], (-700, 700), blend="MULTIPLY")
+    # --- edge wear / burnish from the per-vertex 'wear' attribute (darker, glossier)
     nz2 = nb.node("ShaderNodeTexNoise", (-1400, 900))
     nz2.inputs["Scale"].default_value = 210.0
     nz2.inputs["Detail"].default_value = 2.0
-    nb.link(tc.outputs["Object"], nz2.inputs["Vector"])
-    base = srgb(base_hex)
-    if ivory:
-        dark = (base[0] * 0.93, base[1] * 0.91, base[2] * 0.86, 1)
-        light = (min(1, base[0] * 1.02), min(1, base[1] * 1.02), min(1, base[2] * 1.03), 1)
-    else:
-        dark = (base[0] * 0.87, base[1] * 0.80, base[2] * 0.78, 1)     # a touch deeper / redder
-        light = (min(1, base[0] * 1.05), min(1, base[1] * 1.08), min(1, base[2] * 1.07), 1)  # tan-er
-    mr = nb.node("ShaderNodeMapRange", (-1150, 600))
-    mr.inputs["From Min"].default_value = 0.32
-    mr.inputs["From Max"].default_value = 0.68
-    nb.link(nz.outputs["Fac"], mr.inputs["Value"])
-    col = nb.mix_rgb(mr.outputs["Result"], dark, light, (-950, 600))
-    # fine grain darkening in creases
-    gcol = nb.math("MULTIPLY_ADD", grain, 0.10, (-1150, 350))
-    gcol.node.inputs[2].default_value = 0.90
-    col = nb.mix_rgb(1.0, col, gcol, (-800, 500), blend="MULTIPLY")
-    fine = nb.math("MULTIPLY_ADD", nz2.outputs["Fac"], 0.08, (-1150, 900))
-    fine.node.inputs[2].default_value = 0.96
-    col = nb.mix_rgb(1.0, col, fine, (-650, 600), blend="MULTIPLY")
-    # --- edge wear / burnish from the per-vertex 'wear' attribute
+    nb.link(ocoord, nz2.inputs["Vector"])
     at = nb.node("ShaderNodeAttribute", (-1400, -300), attribute_name="wear")
     wn = nb.math("MULTIPLY", at.outputs["Fac"], nz2.outputs["Fac"], (-1150, -300))
-    wn = nb.math("MULTIPLY", wn, 1.6, (-1000, -300), clamp=True)
-    wear_col = (min(1, base[0] * 1.05), min(1, base[1] * 1.10), min(1, base[2] * 1.12), 1) if not ivory else \
+    wn = nb.math("MULTIPLY", wn, 1.5, (-1000, -300), clamp=True)
+    wear_col = (base[0] * 0.84, base[1] * 0.78, base[2] * 0.76, 1) if not ivory else \
         (base[0] * 0.95, base[1] * 0.93, base[2] * 0.88, 1)
     col = nb.mix_rgb(wn, col, wear_col, (-500, 500))
     cv = nb.node("ShaderNodeAttribute", (-1400, -450), attribute_name="cavity")
     cvf = nb.math("MULTIPLY", cv.outputs["Fac"], 0.22 if not ivory else 0.12, (-1150, -450))
     col = nb.mix_rgb(cvf, col, (base[0] * 0.55, base[1] * 0.42, base[2] * 0.38, 1), (-350, 500))
-    # --- roughness (grain tops a little smoother, burnished wear glossier)
+    # --- roughness from the grain: tops 0.40, creases 0.58; burnished wear -0.15
     rough_in = nb.node("ShaderNodeMath", (-700, 0), operation="MULTIPLY_ADD")
     nb.link(grain, rough_in.inputs[0])
-    rough_in.inputs[1].default_value = 0.18
-    rough_in.inputs[2].default_value = 0.22 if not ivory else 0.24
+    rough_in.inputs[1].default_value = -GRAIN["rough_span"] if not ivory else -0.15
+    rough_in.inputs[2].default_value = GRAIN["rough_crease"] if not ivory else 0.55     # ivory: 0.40-0.55
     rough2 = nb.node("ShaderNodeMath", (-550, 0), operation="MULTIPLY_ADD")
     nb.link(wn, rough2.inputs[0])
-    rough2.inputs[1].default_value = -0.12
+    rough2.inputs[1].default_value = -0.15
     nb.link(rough_in.outputs[0], rough2.inputs[2])
-    # --- bump: grain then debossed artwork
+    # --- bump: grain (+ faint long creases) then debossed artwork
     b1 = nb.node("ShaderNodeBump", (-500, -200))
-    b1.inputs["Strength"].default_value = 0.85
-    b1.inputs["Distance"].default_value = 0.00011
-    # long soft creases along the spine (from years of opening) + grain
+    b1.inputs["Strength"].default_value = 1.0
+    b1.inputs["Distance"].default_value = GRAIN["bump"] if not ivory else 0.00020   # finer, shallower ivory grain
     mpc = nb.node("ShaderNodeMapping", (-1600, -150))
     mpc.inputs["Scale"].default_value = (120.0, 120.0, 7.0)
-    nb.link(tc.outputs["Object"], mpc.inputs["Vector"])
+    nb.link(ocoord, mpc.inputs["Vector"])
     crz = nb.node("ShaderNodeTexNoise", (-1400, -150))
     crz.inputs["Scale"].default_value = 1.0
     crz.inputs["Detail"].default_value = 1.0
     nb.link(mpc.outputs["Vector"], crz.inputs["Vector"])
-    hsum1 = nb.math("MULTIPLY_ADD", crz.outputs["Fac"], 0.45, (-900, -150))
+    hsum1 = nb.math("MULTIPLY_ADD", crz.outputs["Fac"], 0.30, (-900, -150))
     nb.link(grain, hsum1.node.inputs[2])
     nb.link(hsum1, b1.inputs["Height"])
     normal = b1.outputs["Normal"]
@@ -292,22 +317,26 @@ def mat_leather(name, spine_img=None, base_hex=LEATHER_HEX, cover_img=None, ivor
         gvar = sep.outputs["Blue"] if gvar is None else nb.math("MAXIMUM", gvar, sep.outputs["Blue"], (-800, -800))
     if heights:
         hsum = heights[0] if len(heights) == 1 else nb.math("ADD", heights[0], heights[1], (-650, -700))
+        # blocking halo + blind tooling: pressed leather is darker (burnished)
+        dk = nb.math("MULTIPLY_ADD", hsum, -0.68, (-500, 650))
+        dk.node.inputs[2].default_value = 1.0
+        col = nb.mix_rgb(1.0, col, nb.math("MAXIMUM", dk, 0.25, (-350, 650)), (-250, 600), blend="MULTIPLY")
         hneg = nb.math("MULTIPLY", hsum, -1.0, (-500, -700))
         b2 = nb.node("ShaderNodeBump", (-300, -400))
         b2.inputs["Strength"].default_value = 1.0
-        b2.inputs["Distance"].default_value = 0.00022
+        b2.inputs["Distance"].default_value = 0.00035
         nb.link(hneg, b2.inputs["Height"])
         nb.link(normal, b2.inputs["Normal"])
         normal = b2.outputs["Normal"]
-    leather = principled(nb, (0, 300), base=col, rough=rough2.outputs[0], spec=0.55, normal=normal,
-                         sheen=0.30 if not ivory else 0.22, sheen_rough=0.40, sheen_tint=(1.0, 0.94, 0.90, 1),
+    leather = principled(nb, (0, 300), base=col, rough=rough2.outputs[0], spec=0.5, normal=normal,
+                         sheen=0.07 if not ivory else 0.05, sheen_rough=0.45, sheen_tint=(1.0, 1.0, 1.0, 1),
                          coat=0.0)
     if goldmask is None:
         nb.link(leather.outputs[0], out.inputs["Surface"])
         return m
-    gold_col = nb.mix_rgb(gvar, (GOLD_LIN[0] * 0.78, GOLD_LIN[1] * 0.74, GOLD_LIN[2] * 0.70, 1), GOLD_LIN, (0, -300))
-    grough = nb.math("MULTIPLY_ADD", gvar, -0.22, (0, -500))
-    grough.node.inputs[2].default_value = 0.50
+    gold_col = nb.mix_rgb(gvar, GOLD_DARK, GOLD_LIN, (0, -300))
+    grough = nb.math("MULTIPLY_ADD", gvar, GOLD_ROUGH[1], (0, -500))
+    grough.node.inputs[2].default_value = GOLD_ROUGH[0]
     gold = principled(nb, (300, -300), base=gold_col, metal=1.0, rough=grough, normal=normal)
     mix = nb.node("ShaderNodeMixShader", (900, 0))
     nb.link(goldmask, mix.inputs[0])
@@ -346,9 +375,9 @@ def mat_paper_edge(name, gilt=False):
         p = principled(nb, (0, 0), base=col, rough=0.78, spec=0.35, normal=bump.outputs["Normal"],
                        sss=0.0)
     else:
-        col = nb.mix_rgb(lines, (0.80, 0.46, 0.13, 1), (0.55, 0.30, 0.08, 1), (-450, 0))
-        r = nb.math("MULTIPLY_ADD", lines, 0.20, (-450, -200))
-        r.node.inputs[2].default_value = 0.42
+        col = nb.mix_rgb(lines, (0.84, 0.55, 0.19, 1), (0.62, 0.37, 0.10, 1), (-450, 0))
+        r = nb.math("MULTIPLY_ADD", lines, 0.10, (-450, -200))      # fine page-line variation
+        r.node.inputs[2].default_value = 0.18
         bump = nb.node("ShaderNodeBump", (-450, -400))
         bump.inputs["Strength"].default_value = 0.3
         bump.inputs["Distance"].default_value = 0.00004
@@ -456,7 +485,7 @@ def mat_wood(name, light, dark, axis="X", ring_period=0.0035, warp_amp=0.010, wa
 
 
 def mat_wood_img(name, col_img, h_img, tex_size, coord="OBJECT", offset=(0.0, 0.0), rough=0.32, coat=0.0,
-                 carve_img=None, along="X", bump=0.35):
+                 carve_img=None, along="X", bump=0.35, pore_rough=0.25, coat_rough=0.2, tint=None):
     """Image-based wood. Texture (grain along image X) covers tex_size metres.
     coord OBJECT: object-space X/Y (grain along local X if along=='X', local Y if 'Y').
     coord UV: uses UVMap scaled by the leaf size (grain along V)."""
@@ -488,8 +517,9 @@ def mat_wood_img(name, col_img, h_img, tex_size, coord="OBJECT", offset=(0.0, 0.
     nb.link(cmb.outputs[0], hi.inputs["Vector"])
     col = ci.outputs["Color"]
     h = hi.outputs["Color"]
-    rr = nb.math("MULTIPLY_ADD", h, -0.08, (-500, -100))
-    rr.node.inputs[2].default_value = rough + 0.05
+    # open pores live in the roughness (not the bump: fine grain aliases into zigzags)
+    rr = nb.math("MULTIPLY_ADD", h, -pore_rough, (-500, -100))
+    rr.node.inputs[2].default_value = rough + pore_rough * 0.85
     normal = None
     if bump > 0:
         bmp = nb.node("ShaderNodeBump", (-500, -300))
@@ -503,15 +533,18 @@ def mat_wood_img(name, col_img, h_img, tex_size, coord="OBJECT", offset=(0.0, 0.
         nb.link(uv.outputs["UV"], cv.inputs["Vector"])
         b2 = nb.node("ShaderNodeBump", (-200, -500))
         b2.inputs["Strength"].default_value = 1.0
-        b2.inputs["Distance"].default_value = 0.0011
+        b2.inputs["Distance"].default_value = 0.0015
         nb.link(cv.outputs["Color"], b2.inputs["Height"])
         if normal is not None:
             nb.link(normal, b2.inputs["Normal"])
         normal = b2.outputs["Normal"]
-        dk = nb.math("SUBTRACT", 0.80, cv.outputs["Color"], (-400, -800))
-        dk = nb.math("MULTIPLY", dk, 2.2, (-250, -800), clamp=True)
+        # dust / old oil collects in the carving: darker crevices
+        dk = nb.math("SUBTRACT", 0.78, cv.outputs["Color"], (-400, -800))
+        dk = nb.math("MULTIPLY", dk, 1.6, (-250, -800), clamp=True)
         col = nb.mix_rgb(dk, col, (0.02, 0.012, 0.008, 1), (-200, 200))
-    kw = dict(base=col, rough=rr, spec=0.5, coat=coat, coat_rough=0.2)
+    if tint is not None:
+        col = nb.mix_rgb(1.0, col, tint, (0, 250), blend="MULTIPLY")
+    kw = dict(base=col, rough=rr, spec=0.5, coat=coat, coat_rough=coat_rough)
     if normal is not None:
         kw["normal"] = normal
     p = principled(nb, (100, 0), **kw)
@@ -577,7 +610,7 @@ def chaikin(pts, iters=2, closed=False):
 
 
 def build_case(name, T, D, H, bt, spine_th=1.7, gd=1.15, jy0=2.6, jy1=9.5, rc=0.9, hubs_from_top=None,
-               hub_h=None, coll=None, front_board_slot=False):
+               hub_h=None, coll=None, front_board_slot=False, rr=0.9, edge_frac=0.42):
     """Leather case (boards + rounded spine with raised hubs) as one mesh.
     Local frame (mm -> m at the end): x across thickness, y spine(0)->fore-edge(D), z up.
     UVMap: u = arc length along the outer path / spine arc length (0..1 on the spine),
@@ -653,7 +686,7 @@ def build_case(name, T, D, H, bt, spine_th=1.7, gd=1.15, jy0=2.6, jy1=9.5, rc=0.
     def fore_pts(side):
         xo = side * T / 2
         xi = side * (T / 2 - bt)
-        r = min(rc, bt * 0.4)
+        r = min(rc, bt * edge_frac)
         res = []
         # outer corner arc from normal (side,0) to (0,1)
         c = (xo - side * r, D - r)
@@ -698,7 +731,6 @@ def build_case(name, T, D, H, bt, spine_th=1.7, gd=1.15, jy0=2.6, jy1=9.5, rc=0.
         while z <= zc + 6.5:
             zs.add(round(z, 4))
             z += 0.6
-    rr = 0.9
     n_round = 5
     for zend, sgn in ((0.0, 1), (H, -1)):
         for j in range(n_round + 1):
@@ -709,7 +741,7 @@ def build_case(name, T, D, H, bt, spine_th=1.7, gd=1.15, jy0=2.6, jy1=9.5, rc=0.
     zs = sorted(v for v in zs if -1e-6 <= v <= H + 1e-6)
 
     def inset_at(z, th):
-        r = min(rr, 0.42 * th)
+        r = min(rr, edge_frac * th)
         d = min(z, H - z)
         if d >= r:
             return 0.0, 0.0
@@ -871,7 +903,7 @@ def make_book(idx, title, T, mat_case, mat_paper, mat_hb, coll):
     root = bpy.data.objects.new("Book_%02d" % idx, None)
     root.empty_display_size = 0.05
     link(root, coll)
-    case = build_case("Book_%02d_case" % idx, T, D, H, bt, coll=coll)
+    case = build_case("Book_%02d_case" % idx, T, D, H, bt, coll=coll, rc=1.2, rr=1.1, edge_frac=0.45)
     case.data.materials.append(mat_case)
     case.data.materials.append(mat_case)
     pb, y_sp, wp = build_pageblock("Book_%02d_pages" % idx, T, D, H, bt, coll=coll)
@@ -891,8 +923,8 @@ def leaf_mesh(name, which, coll):
     cu = bpy.data.curves.new(name + "_cu", "CURVE")
     cu.dimensions = "2D"
     cu.fill_mode = "BOTH"
-    cu.extrude = (spec.RAHLE_T / 2 - 0.8) * MM
-    cu.bevel_depth = 0.8 * MM
+    cu.extrude = (spec.RAHLE_T / 2 - 1.5) * MM
+    cu.bevel_depth = 1.5 * MM
     cu.bevel_resolution = 2
     cu.resolution_u = 1
     for poly in [outline] + holes:
@@ -963,12 +995,12 @@ def quran_on_rahle(coll, root, hinge, dA, dB, th, mats):
     a0 = (rhs.y * (-dB.z) - (-dB.y) * rhs.z) / det
     a0 += 0.002
     S = H / 240.0
-    case = build_case("Quran_case", T, D, H, 3.0, spine_th=1.9, gd=1.25, jy0=2.8, jy1=10.0, rc=0.9,
+    case = build_case("Quran_case", T, D, H, 3.4, spine_th=1.9, gd=1.25, jy0=2.8, jy1=10.0, rc=2.0,
                       hubs_from_top=[v * S for v in (24.0, 70.0, 170.0, 216.0)], hub_h=1.25, coll=coll,
-                      front_board_slot=True)
+                      front_board_slot=True, rr=2.0, edge_frac=0.49)
     case.data.materials.append(mats["q_spine"])
     case.data.materials.append(mats["q_cover"])
-    pb, y_sp, wp = build_pageblock("Quran_pages", T, D, H, 3.0, sq=2.6, spine_th=1.9, coll=coll)
+    pb, y_sp, wp = build_pageblock("Quran_pages", T, D, H, 3.4, sq=2.6, spine_th=1.9, coll=coll)
     pb.data.materials.append(mats["gilt"])
     hb = build_headband("Quran_headband", y_sp, wp, H - 2.6 + 1.0, r=1.15, coll=coll)
     hb.data.materials.append(mats["q_hb"])
@@ -989,8 +1021,22 @@ def quran_on_rahle(coll, root, hinge, dA, dB, th, mats):
 
 
 # ============================================================ SCENE
+EXPOSURE = 0.15
+SUN_DIR = (0.84, 0.18, -0.50)
+SUN_ENERGY = 15.0
+FILL_ENERGY = 1.6
+SKY_ENERGY = 38.0
+WINDOW_Y0 = -0.80                   # front edge of the window opening (m)
+ACCENT = dict(energy=0.0, dist=2.6, size_deg=10.0)     # optional brighter sun patch on the source book (tested: more light only bleaches the pale hero and weakens its gold title)
+WALLWASH = dict(energy=70.0, size=(2.4, 1.2), loc=(-0.55, -1.10, 1.75), aim=(0.25, 0.62, 0.95))
+CARD = dict(energy=3.0, size=0.35, offset=(0.30, -0.55, 0.10))   # fill card on Muhâkemat (in the hero's shadow)
+KEY = dict(energy=0.0, size=0.8, loc=(-0.90, -0.95, 0.75), aim=(0.06, 0.0, 0.12), spread=70.0)
 RAHLE_POS = (-0.025, -0.420, 0.0)   # hinge position on the table
-RAHLE_YAW = 36.0                    # degrees; front turned toward camera-right
+ROW_RADIUS = 1.8                    # m, gentle concave arc of the row
+HERO_PULL = 0.048                   # m the source book is pulled out of the row
+MUHAKEMAT_SHIFT = (0.010, -4.0)     # (m to the right, degrees)
+HERO_TURN = -3.0                    # degrees (negative = spine turned toward frame centre / window)
+RAHLE_YAW = 30.0                    # degrees; front turned toward camera-right
 
 
 def build():
@@ -1008,18 +1054,22 @@ def build():
     mats["gilt"] = mat_paper_edge("GiltEdge", gilt=True)
     mats["hb"] = mat_headband("Headband", "#F1E6D2", "#B9806F")
     mats["q_hb"] = mat_headband("QuranHeadband", "#F4EEDF", "#C9A15A")
-    mats["q_cover"] = mat_leather("QuranCover", spine_img=None, base_hex="#E9E0CE", ivory=True,
-                                  cover_img=load_img("quran_cover.png"))
-    mats["q_spine"] = mat_leather("QuranSpine", spine_img=load_img("quran_spine.png"), base_hex="#E9E0CE",
-                                  ivory=True)
+    mats["q_cover"] = mat_leather("QuranCover", spine_img=None, base_hex="#ECE3D2", ivory=True,
+                                  cover_img=load_img("quran_cover.png"), seed=99)
+    mats["q_spine"] = mat_leather("QuranSpine", spine_img=load_img("quran_spine.png"), base_hex="#ECE3D2",
+                                  ivory=True, seed=99)
     walnut_l, walnut_d = "#80553A", "#3B2316"
+    # oiled walnut: satin wood (0.38) under a thin oil coat (0.35 @ 0.22)
     mats["rahleA"] = mat_wood_img("RahleWalnutA", "wood_walnut.jpg", "wood_walnut_h.jpg", (0.40, 0.20), coord="UV",
-                                  offset=(0.02, 0.0), rough=0.40, coat=0.0, carve_img=load_img("rahle_A.png"), bump=0.0)
+                                  offset=(0.02, 0.0), rough=0.38, coat=0.35, coat_rough=0.22,
+                                  carve_img=load_img("rahle_A.png"), bump=0.0, pore_rough=0.30)
     mats["rahleB"] = mat_wood_img("RahleWalnutB", "wood_walnut.jpg", "wood_walnut_h.jpg", (0.40, 0.20), coord="UV",
-                                  offset=(0.05, 0.08), rough=0.40, coat=0.0, carve_img=load_img("rahle_B.png"), bump=0.0)
+                                  offset=(0.05, 0.08), rough=0.38, coat=0.35, coat_rough=0.22,
+                                  carve_img=load_img("rahle_B.png"), bump=0.0, pore_rough=0.30)
+    # oiled oak table: satin, pores in the roughness
     mats["table"] = mat_wood_img("TableOak", "wood_table.jpg", "wood_table_h.jpg", (1.4, 1.6), coord="OBJECT",
-                                 rough=0.13, coat=0.0, bump=0.0)
-    mats["wall"] = mat_plaster("Plaster", "#F3ECE0")
+                                 rough=0.30, coat=0.0, bump=0.0, pore_rough=0.22, tint=TABLE_TINT)
+    mats["wall"] = mat_plaster("Plaster", "#F1EDE6")
     mats["wall_side"] = mat_plaster("PlasterSide", "#ECE3D4")
     mats["frame"] = mat_simple("WindowFrame", "#E9E2D6", 0.6)
     mats["brass"] = mat_brass("Brass")
@@ -1029,11 +1079,11 @@ def build():
     # ---------------- books in a gentle arc, spines to camera
     books = []
     total = sum(T for _, T in spec.BOOKS) + 0.35 * (len(spec.BOOKS) - 1)
-    R_row = 1.25
+    R_row = ROW_RADIUS
     row_cx, row_y = 0.012, 0.0
     cum = -total / 2
     for i, (title, T) in enumerate(spec.BOOKS):
-        m = mat_leather("Leather_%02d" % i, spine_img=load_img("spine_%02d.png" % i))
+        m = mat_leather("Leather_%02d" % i, spine_img=load_img("spine_%02d.png" % i), seed=i)
         root = make_book(i, title, T, m, mats["paper"], mats["hb"], coll)
         xc = (cum + T / 2) * MM
         cum += T + 0.35
@@ -1044,11 +1094,15 @@ def build():
         jitter_r = random.uniform(-0.5, 0.5)
         jitter_y = random.uniform(-0.0012, 0.0012)
         if i == spec.HERO:
-            # pulled forward ~4 cm, turned a touch toward the window light
-            fwd = 0.048
-            px -= fwd * math.sin(ang) * 0 + 0.0
-            py -= fwd
-            rz += math.radians(3.0)
+            # pulled forward ~4.8 cm and turned toward the frame centre / window,
+            # so its spine catches the raking daylight
+            py -= HERO_PULL
+            rz += math.radians(HERO_TURN)
+            jitter_r = 0.0
+        if i == spec.HERO + 1:
+            # Muhâkemat: a little to the right and turned so it is not lost behind the hero
+            px += MUHAKEMAT_SHIFT[0]
+            rz += math.radians(MUHAKEMAT_SHIFT[1])
             jitter_r = 0.0
         root.location = (px, py + jitter_y, 0.0)
         root.rotation_euler = (0.0, 0.0, rz + math.radians(jitter_r))
@@ -1115,7 +1169,8 @@ def build():
 
     # left wall with a window opening (out of frame; shapes the daylight)
     WX = -0.95
-    op_y0, op_y1, op_z0, op_z1 = -1.45, 0.05, 0.10, 1.75
+    # window: its front jamb throws a soft shade line across the foreground table
+    op_y0, op_y1, op_z0, op_z1 = WINDOW_Y0, 0.05, 0.10, 1.75
     depth = 0.28
 
     def box(name, x0, x1, y0, y1, z0, z1, mat):
@@ -1132,7 +1187,7 @@ def build():
     box("LW_top", WX - depth, WX, op_y0, op_y1, op_z1, 3.0, mats["wall_side"])
     # window mullions / transom (thin, painted wood)
     my = (op_y0 + op_y1) / 2
-    box("Mullion", WX - depth * 0.6, WX - depth * 0.6 + 0.05, my - 0.025, my + 0.025, op_z0, op_z1, mats["frame"])
+    # (no central mullion: its shadow stripe would cross the table strip the spines' gold mirrors)
     box("Transom", WX - depth * 0.6, WX - depth * 0.6 + 0.05, op_y0, op_y1, 1.18, 1.23, mats["frame"])
     # ceiling (keeps world light from above realistic)
     box("Ceiling", WX, 1.65, -2.75, 0.65, 1.95, 2.05, mats["wall_side"])
@@ -1144,19 +1199,19 @@ def build():
     # ---------------- lights
     # sun through the window
     sun_d = bpy.data.lights.new("Sun", "SUN")
-    sun_d.energy = 18.0
-    sun_d.angle = math.radians(3.5)
+    sun_d.energy = SUN_ENERGY
+    sun_d.angle = math.radians(5.0)
     sun_d.color = (1.0, 0.93, 0.85)
     sun = bpy.data.objects.new("Sun", sun_d)
     link(sun)
-    direction = Vector((0.74, 0.42, -0.56)).normalized()   # light travel direction
+    direction = Vector(SUN_DIR).normalized()   # light travel direction: rakes along the row from the window
     sun.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
     # soft skylight filling the window opening
     sky_d = bpy.data.lights.new("WindowSky", "AREA")
     sky_d.shape = "RECTANGLE"
     sky_d.size = op_z1 - op_z0          # local X -> world Z after the rotation below
     sky_d.size_y = op_y1 - op_y0
-    sky_d.energy = 62.0
+    sky_d.energy = SKY_ENERGY
     sky_d.color = (0.94, 0.96, 1.0)
     sky = bpy.data.objects.new("WindowSky", sky_d)
     link(sky)
@@ -1166,20 +1221,97 @@ def build():
     fill_d = bpy.data.lights.new("RoomFill", "AREA")
     fill_d.shape = "RECTANGLE"
     fill_d.size, fill_d.size_y = 2.0, 1.4
-    fill_d.energy = 7.0
+    fill_d.energy = FILL_ENERGY
     fill_d.color = (1.0, 0.95, 0.88)
     fill = bpy.data.objects.new("RoomFill", fill_d)
     link(fill)
     fill.location = (1.1, -1.9, 0.85)
     fill.rotation_euler = (Vector((0.0, 0.0, 0.18)) - fill.location).to_track_quat("-Z", "Y").to_euler()
     fill_d.cycles.cast_shadow = True
+    # accent: a brighter patch of the same sunlight centred on the pulled-out
+    # source book (same direction as the sun, soft edged), ~+0.4 EV locally
+    if ACCENT["energy"] > 0:
+        hero = bpy.data.objects["Book_%02d" % spec.HERO]
+        bpy.context.view_layer.update()
+        tgt = hero.matrix_world @ Vector((0.0, -0.004, 0.13))
+        sp_d = bpy.data.lights.new("SunAccent", "SPOT")
+        sp_d.energy = ACCENT["energy"]
+        sp_d.spot_size = math.radians(ACCENT["size_deg"])
+        sp_d.spot_blend = 1.0
+        sp_d.shadow_soft_size = 0.04
+        sp_d.color = sun_d.color
+        sp = bpy.data.objects.new("SunAccent", sp_d)
+        link(sp)
+        sp.location = tgt - direction * ACCENT["dist"]
+        sp.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
+        sp.visible_camera = False
+    # wall wash: skylight bouncing off the window reveal / ceiling onto the
+    # back wall (diffuse only, so it never shows up in reflections)
+    if WALLWASH["energy"] > 0:
+        ww_d = bpy.data.lights.new("WallWash", "AREA")
+        ww_d.shape = "RECTANGLE"
+        ww_d.size, ww_d.size_y = WALLWASH["size"]
+        ww_d.energy = WALLWASH["energy"]
+        ww_d.color = (1.0, 0.97, 0.93)
+        ww = bpy.data.objects.new("WallWash", ww_d)
+        link(ww)
+        ww.location = WALLWASH["loc"]
+        ww.rotation_euler = (Vector(WALLWASH["aim"]) - Vector(WALLWASH["loc"])).to_track_quat("-Z", "Y").to_euler()
+        ww.visible_camera = False
+        ww.visible_glossy = False
+        ww.visible_transmission = False
+        # light linking: it only reaches the wall (as if flagged off the set)
+        recv = bpy.data.collections.new("WallWashReceivers")
+        sc.collection.children.link(recv)
+        recv.objects.link(bpy.data.objects["WallBack"])
+        sc.collection.children[recv.name].hide_viewport = False
+        ww.light_linking.receiver_collection = recv
+    # fill card: a small white card just out of frame bounces light into the
+    # last volume, which sits in the pulled-out book's shadow (linked to it only)
+    if CARD["energy"] > 0:
+        last = bpy.data.objects["Book_%02d" % (spec.HERO + 1)]
+        bpy.context.view_layer.update()
+        tgt = last.matrix_world @ Vector((0.0, -0.004, 0.13))
+        cd_d = bpy.data.lights.new("FillCard", "AREA")
+        cd_d.shape = "SQUARE"
+        cd_d.size = CARD["size"]
+        cd_d.energy = CARD["energy"]
+        cd_d.color = (1.0, 0.96, 0.94)
+        cd = bpy.data.objects.new("FillCard", cd_d)
+        link(cd)
+        cd.location = tgt + Vector(CARD["offset"])
+        cd.rotation_euler = (tgt - cd.location).to_track_quat("-Z", "Y").to_euler()
+        cd.visible_camera = False
+        cd.visible_glossy = False
+        recv2 = bpy.data.collections.new("FillCardReceivers")
+        sc.collection.children.link(recv2)
+        for ch in last.children:
+            recv2.objects.link(ch)
+        cd.light_linking.receiver_collection = recv2
+    # soft key: the bright front part of the window opening seen from the books
+    # (sits inside the window aperture, so it is physically where daylight enters)
+    if KEY["energy"] > 0:
+        key_d = bpy.data.lights.new("WindowKey", "AREA")
+        key_d.shape = "SQUARE"
+        key_d.size = KEY["size"]
+        key_d.energy = KEY["energy"]
+        key_d.spread = math.radians(KEY["spread"])
+        key_d.color = (1.0, 0.96, 0.91)
+        key = bpy.data.objects.new("WindowKey", key_d)
+        link(key)
+        key.location = KEY["loc"]
+        key.rotation_euler = (Vector(KEY["aim"]) - Vector(KEY["loc"])).to_track_quat("-Z", "Y").to_euler()
+        key.visible_camera = False
     # world = soft warm ambient (rest of the room)
     world = bpy.data.worlds.new("Room")
     sc.world = world
     world.use_nodes = True
     bg = world.node_tree.nodes["Background"]
+    # the room is closed except for the window (modelled by the WindowSky
+    # area light), so the world is black and not sampled: no wasted shadow rays
     bg.inputs["Color"].default_value = (0.86, 0.80, 0.72, 1.0)
-    bg.inputs["Strength"].default_value = 0.07
+    bg.inputs["Strength"].default_value = 0.0
+    world.cycles.sampling_method = "NONE"
 
     # ---------------- camera
     cam_d = bpy.data.cameras.new("Cam")
@@ -1224,13 +1356,13 @@ def build():
 
 
 CAM = dict(
-    tgt0=(0.030, -0.140, 0.100), tgt1=(0.030, -0.140, 0.100),
-    dist0=1.48, dist1=1.36,          # metres to the look-at point
-    pitch0=27.0, pitch1=26.0,        # degrees below horizontal
+    tgt0=(0.000, -0.140, 0.100), tgt1=(0.000, -0.140, 0.100),
+    dist0=1.56, dist1=1.445,         # metres to the look-at point (12 cm push)
+    pitch0=27.2, pitch1=26.5,        # degrees below horizontal (kept high: the Kur'an must not hide titles)
     yaw0=4.5, yaw1=1.5,              # degrees (positive = camera to the right)
     arc=1.0,                         # extra lateral bulge (deg) mid-move
-    rise=0.008,                      # pedestal rise over the move (m)
-    aim_dz0=0.0848, aim_dz1=0.0891,  # aim above the orbit target (book tops ~35% from the top)
+    rise=0.006,                      # pedestal rise over the move (m)
+    aim_dz0=0.1033, aim_dz1=0.1028,  # aim above the orbit target: book tops ~37% from the top, rahle foot < 93%
 )
 
 
@@ -1293,14 +1425,14 @@ def setup_render(sc, a):
     sc.render.resolution_x, sc.render.resolution_y = 1080, 1920
     sc.render.resolution_percentage = int(a.get("pct") or 100)
     sc.render.pixel_aspect_x = sc.render.pixel_aspect_y = 1
-    cy.samples = 8
+    cy.samples = 7                   # ~31-32 s / frame at 1080x1920 on 3 CPU threads (measured)
     cy.use_adaptive_sampling = True
     cy.adaptive_threshold = 0.06
     cy.adaptive_min_samples = 4
     cy.use_denoising = True
     cy.denoiser = "OPENIMAGEDENOISE"
     cy.denoising_input_passes = "RGB_ALBEDO_NORMAL"
-    cy.denoising_prefilter = "FAST"
+    cy.denoising_prefilter = "ACCURATE"   # aux passes are noisy in the defocused areas at 8 spp
     cy.denoising_quality = "BALANCED"
     cy.max_bounces = 3
     cy.diffuse_bounces = 2
@@ -1331,7 +1463,7 @@ def setup_render(sc, a):
             vs.look = "Medium High Contrast"
         except TypeError:
             pass
-    vs.exposure = -0.55
+    vs.exposure = EXPOSURE
     print("[build] view", vs.view_transform, "look", vs.look)
     vs.gamma = 1.0
     sc.display_settings.display_device = "sRGB"

@@ -13,7 +13,7 @@
 #   KULLIYAT_SCRATCH   scratch dir holding kulliyat.blend   (default below)
 #   KULLIYAT_FRAMES    output dir for frame_####.png        (default: $KULLIYAT_SCRATCH/frames)
 #   KULLIYAT_THREADS   Cycles CPU threads per worker        (default: 3)
-#   KULLIYAT_SAMPLES   override max samples (default: value stored in the .blend, 8)
+#   KULLIYAT_SAMPLES   override max samples (default: value stored in the .blend, 7)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
