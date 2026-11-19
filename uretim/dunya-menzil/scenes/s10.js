@@ -62,8 +62,8 @@
     const w = (i) => E.T(i) - shot.start;
     const T = { on: w(82), ci: w(83), es: w(85), in: w(86), ed: w(87) };
     T.tilt0 = T.in - 0.2; T.tilt1 = T.in + 1.1;     // camera rises with the heart
-    T.rise0 = T.in - 0.08; T.rise1 = T.in + 0.92;     // the heart rises up the column
-    T.dis0 = T.rise1 - 0.02; T.dis1 = T.rise1 + 0.33; // ...and dissolves into the light before the bleed (3.0)
+    T.rise0 = T.in - 0.08; T.rise1 = T.in + 0.86;     // the heart rises up the column
+    T.dis0 = T.rise1 - 0.02; T.dis1 = T.rise1 + 0.3; // ...and dissolves into the light before the bleed (3.0)
     return T;
   }
 
@@ -424,7 +424,7 @@
       const cam = camAt(lt, T);
       const light = ep(lt, T.on - 0.15, T.on + 1.0, 'inOutSine');
       const fieldA = ep(lt, T.on - 0.1, T.in + 0.6, 'inOutSine');
-      const front = lerp(-480, GY + GR + 60, ep(lt, T.on - 0.12, T.ci + 0.05, 'inOutSine'));
+      const front = lerp(-480, GY + GR + 60, ep(lt, T.on - 0.3, T.ci + 0.05, 'inOutSine'));
       const flare = ep(lt, T.ci - 0.05, T.ci + 0.25, 'outCubic') * (1 - 0.45 * ep(lt, T.ci + 0.4, T.in + 0.4, 'inOutSine'));
       const lit = ep(lt, T.ci - 0.05, T.es + 0.5, 'inOutSine');      // how much of the ornament carries the light
       const k = cam.k;                                                 // tilt progress
@@ -443,7 +443,7 @@
       shafts(L, lt, front, ep(lt, T.on - 0.15, T.on + 0.35, 'outSine') * (1 - 0.5 * ep(lt, T.rise1, T.dis1)), flare, GY + GR + 380);
       if (fieldA > 0) {
         const [fx, fy] = FIELD_S;
-        const fadeEnd = 1 - 0.75 * ep(lt, T.dis0, T.dis1 + 0.25);       // matches s11's sky at the bleed point
+        const fadeEnd = 1 - 0.85 * ep(lt, T.dis0, T.dis1 + 0.2);       // matches s11's sky at the bleed point
         E.glow(L.light, fx, fy, 900, '#FFE7B8', 0.28 * fieldA * fadeEnd);
         E.motes(L.light, { x: fx - 520, y: fy - 300, w: 1040, h: 1500, n: 36, t: lt, seed: 31, color: '#FFF1CF', size: 3, a: 0.7 * fieldA, rise: 26 });
       }
@@ -565,10 +565,17 @@
       E.glow(Lc, H.pos[0], H.pos[1], H.r * (4.5 + 4 * dis), '#FFD3C4', (0.35 + hl) * (1 - dis) + 0.25 * Math.sin(PI * dis));
       if (dis < 1) E.props.heartLight(L, H.pos[0], H.pos[1], H.r * (1 + 0.25 * dis), { t: lt, glow: 0.75 + hl + 0.2 * rise, rot: H.rot, alpha: 1 - dis, color: hc });
       // it dissolves into the light: a bloom of bare paper and warm light that settles into the field
-      const bl = Math.sin(PI * seg(lt, T.dis0 - 0.05, T.dis1 + 0.3));
+      const bl = Math.sin(PI * seg(lt, T.dis0 - 0.06, T.dis1 + 0.12));
       if (bl > 0) {
         rlift(L.paint, H.pos[0], H.pos[1], H.r * (2 + 5 * dis), 0.7 * bl);
         E.glow(Lc, H.pos[0], H.pos[1], 160 + 260 * dis, '#FFF0D2', 0.4 * bl);
+      }
+
+      // ---- the light settles into the warm cream of s11's morning sky around the bleed point (540, 300)
+      const settle = ep(lt, T.dis0, T.dis1 + 0.22, 'inOutSine');
+      if (settle > 0) {
+        E.resetCamera(L);
+        rbloom(L.paint, 540, 330, 900, '#EEDFC2', 0.9 * settle, 1.15);
       }
 
       // ---- rising into the light: a luminous haze climbs over the sinking world (keeps the subtitle band calm)

@@ -126,11 +126,12 @@
   }
   function coil(rb, lt, tight, alone, sinkY, manDX) {
     const n = 150, pts = [], front = [];
-    const margin = E.lerp(30, 5, tight);
+    const margin = E.lerp(32, -6, tight);
     const chest = [MX + 0.07 * MH + manDX, FEET - 0.71 * MH + sinkY];
-    const yA = rb.yA, yB = E.lerp(rb.yB, rb.yA + (rb.yB - rb.yA) * 0.82, tight);
+    const yA = rb.yA, yB = E.lerp(rb.yB, rb.yA + (rb.yB - rb.yA) * 0.74, tight);
+    const spin = 0.22 * lt + 0.9 * tight; // the coils keep winding, and wind in hard at "sarılsa"
     for (let i = 0; i <= n; i++) {
-      const u = i / n, th = rb.th0 + u * rb.turns * E.TAU;
+      const u = i / n, th = rb.th0 + spin * E.smooth(E.clamp(u / 0.3)) + u * rb.turns * E.TAU;
       const yb = E.lerp(yA, yB, u);
       const left = BACK_X(yb) + manDX;
       const gh = globeHalf(yb, tight);
@@ -145,7 +146,7 @@
       pts.push([X, Y]);
       front.push(Math.sin(th) > -0.05 || u < 0.08);
     }
-    return { pts, front };
+    return { pts, front, tight };
   }
   /** paint the front (which=true) or back (false) runs of a ribbon, revealed to p */
   function paintRibbon(L, rb, C, p, which, lt, a) {
@@ -153,7 +154,7 @@
     const n = pts.length - 1;
     const last = Math.min(n, Math.floor(p * n));
     if (last < 2 || a <= 0.01) return;
-    const W = rb.W;
+    const W = rb.W * (1 + 0.14 * C.tight);
     const half = [], face = [];
     for (let i = 0; i <= last; i++) {
       const q = pts[Math.min(n, i + 1)], o = pts[Math.max(0, i - 1)];
@@ -350,7 +351,7 @@
     // ---- the false world: squeezed by the hug, filled with dark water; then it sinks, dragging him down ----
     const fill = E.ep(lt, K.fill0, K.fill1, 'inOutSine');
     {
-      const sq = 0.03 * tight + 0.012 * Math.sin(lt * 26) * E.ep(lt, K.hug0, K.hug0 + 0.15) * (1 - E.ep(lt, K.hug0 + 0.15, K.hug1));
+      const sq = 0.05 * tight + 0.016 * Math.sin(lt * 26) * E.ep(lt, K.hug0, K.hug0 + 0.15) * (1 - E.ep(lt, K.hug0 + 0.15, K.hug1));
       const tilt = 0.05 * E.ep(lt, K.sink0, K.sink1, 'inOutSine');
       E.save(L);
       E.translate(L, GX, GCY + GR + sinkY); E.rotate(L, tilt); E.scale(L, 1 - sq, 1 + sq * 0.7); E.translate(L, -GX, -(GCY + GR));
@@ -365,6 +366,21 @@
       hg2.addColorStop(0, 'rgba(118,130,176,0.5)'); hg2.addColorStop(1, 'rgba(118,130,176,0)');
       pnt.fillStyle = hg2; pnt.fillRect(GX - GR, GCY - GR, GR * 2, GR * 2);
       pnt.restore();
+      // the squeeze cracks the glass (a thin bright fracture on the moonlit shoulder)
+      const ck = E.ep(lt, K.hug0 + 0.28, K.hug0 + 0.42, 'outCubic');
+      if (ck > 0) {
+        const C0 = [[0.52, -0.6], [0.44, -0.47], [0.47, -0.36], [0.36, -0.22], [0.39, -0.1], [0.3, 0.04]];
+        const C1 = [[0.44, -0.47], [0.32, -0.44], [0.24, -0.48]];
+        const C2 = [[0.36, -0.22], [0.46, -0.16], [0.5, -0.06]];
+        const P = (arr, k) => { const m = Math.max(2, Math.ceil(arr.length * k)); const path = new Path2D(); arr.slice(0, m).forEach(([x, y], i) => (i ? path.lineTo(GX + x * GR, GCY + y * GR) : path.moveTo(GX + x * GR, GCY + y * GR))); return path; };
+        pnt.save(); pnt.globalCompositeOperation = 'source-over'; pnt.lineJoin = 'round'; pnt.lineCap = 'round';
+        pnt.strokeStyle = 'rgba(226,232,248,0.62)'; pnt.lineWidth = 2;
+        pnt.stroke(P(C0, ck)); pnt.lineWidth = 1.3; pnt.stroke(P(C1, E.clamp(ck * 1.6 - 0.6))); pnt.stroke(P(C2, E.clamp(ck * 1.6 - 0.6)));
+        pnt.restore();
+        E.pencil(L.ink, P(C0, ck), { w: 1, a: 0.3, double: false });
+        const fl = Math.exp(-Math.max(0, lt - K.hug0 - 0.3) * 6) * ck;
+        if (fl > 0.02) E.glow(L.light, GX + 0.45 * GR, GCY - 0.45 * GR, 60, '#DDE6FF', 0.5 * fl);
+      }
       if (fill > 0) {
         // dark water rising inside the glass, drowning the little house
         const wy = GCY + GR - 2.05 * GR * fill;
@@ -555,6 +571,7 @@
         { t: T0 + K.rib[0] + 0.02, type: 'whoosh', gain: 0.28 },
         { t: T0 + K.rib[1] + 0.02, type: 'whoosh', gain: 0.22, pitch: 0.8 },
         { t: T0 + K.hug0 + 0.12, type: 'thorn', gain: 0.2 },
+        { t: T0 + K.hug0 + 0.3, type: 'chime', gain: 0.07, pitch: 2 },
         { t: T0 + K.fill0 + 0.08, type: 'drone', gain: 0.22, dur: 3.4 },
         { t: T0 + K.sink0 + 0.05, type: 'water', gain: 0.42 },
         { t: T0 + K.sink0 + 0.35, type: 'bubbles', gain: 0.3, dur: 1.8 },
