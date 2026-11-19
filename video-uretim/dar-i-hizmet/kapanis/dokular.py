@@ -122,7 +122,7 @@ def _cift_cizgi(c, x0, x1, y, ppm, paint, ters=False):
 
 YAZAR = "Bediüzzaman Said Nursî"
 BASLIK_EN_ORAN = 0.70        # baslik murekkebinin sirt enine orani (aksan/kuyruk dahil, cap ortasina simetrik)
-BASLIK_CAP_MM = 9.4          # tum ciltlerde ayni buyuk harf yuksekligi (ince sirtlarda kucultulur)
+BASLIK_CAP_MM = 10.5          # tum ciltlerde ayni buyuk harf yuksekligi (ince sirtlarda kucultulur)
 
 
 def _dikey_yazi(metin, font_yolu, ppm, cap_mm, en_mm, boy_mm):
@@ -225,7 +225,7 @@ def sirt_dokusu(ad, ppm=16):
     dx = np.minimum(xx, arc - xx)
     n = _gurultu((Hp // 8 + 1, W // 8 + 1), 2.0, RNG)
     n = np.asarray(Image.fromarray(n).resize((W, Hp), Image.BILINEAR))
-    yas = np.exp(-dy / 3.5) * 0.95 + np.exp(-dx / 1.4) * 0.55
+    yas = np.exp(-dy / 3.5) * 0.95 + np.exp(-dx / 1.2) * 0.35
     yas = yas * (0.75 + 0.35 * n)
     yas += 0.10 * np.clip(_gurultu((Hp // 16 + 1, W // 16 + 1), 1.5, RNG), 0, None).repeat(16, 0).repeat(16, 1)[:Hp, :W]
     yas = np.maximum(yas, 0.45 * ndimage.gaussian_filter(kor, 0.15 * ppm))

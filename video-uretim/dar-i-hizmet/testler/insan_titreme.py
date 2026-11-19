@@ -30,5 +30,5 @@ for ad, fn, n, kw in [('kalkis', insan.kalkis, 60, {}), ('secdeye', insan.secdey
 
 # secdeye: avuçlar yere değdikten sonra kaymıyor mu? (bilek konumu, yerel = dünya; dizler DIZ'de sabit)
 ws = np.array([insan.iskelet(insan.secdeye(i / 60))['Wr_on'] for i in range(61)])
-yerde = ws[:, 1] > -8.0
+yerde = ws[:, 1] > -9.5          # düz basan elde bilek yerden ~9.3 birim yukarıda
 print('secdeye: avuç yerdeyken bilek x aralığı', np.ptp(ws[yerde, 0]).round(3), ' (0 = kaymıyor)')

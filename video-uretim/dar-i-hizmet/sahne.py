@@ -88,7 +88,7 @@ SON_CEKILIS = (26.62, 27.42)  # kapıdan geri çekiliş
 AGAC_X, AGAC_Y = 450.0, 1415.0
 ADAM_Y = 1400.0
 SULA_X = 690.0           # sulama (yon -1)
-SECDE_X = 600.0          # secde, diz, dua (yon +1): kalça kökeni; alın ~+295
+SECDE_X = 635.0          # secde, diz, dua (yon +1): kalça kökeni; alın ~+295
 OTUR_X = 735.0           # hastalık (yon +1)
 ADAM_OLCEK = 0.95
 AGAC_OLCEK = 0.86
@@ -382,16 +382,16 @@ def durum(V, evre=None):
     s['sicak'] = ilerle(V, 10.05, 10.95, e_out) if evre_k == 'secde' else 0.0
     s['dalga_nur'] = ilerle(V, T_UBUDIYET, T_UBUDIYET + 0.9, lambda x: x) if evre_k == 'secde' else 0.0
     # kalp nuru
-    s['nur'] = 0.0 if once else anahtar(V, [(T_DINI - 0.05, 0.0), (T_DINI + 0.45, 1.0), (T_KUVVET - 0.1, 1.0),
-                                            (T_KUVVET + 0.4, 0.0)])
-    s['nur_isin'] = 0.0 if once else anahtar(V, [(17.80, 0.0), (18.55, 1.0), (T_KUVVET - 0.25, 1.0),
-                                                 (T_KUVVET + 0.15, 0.0)], e_in)
+    s['nur'] = 0.0 if once else anahtar(V, [(T_DINI - 0.05, 0.0), (T_DINI + 0.45, 1.0), (T_KUVVET + 0.05, 1.0),
+                                            (T_KUVVET + 0.45, 0.0)])
+    s['nur_isin'] = 0.0 if once else ilerle(V, 17.78, 18.78, lambda x: x)
+    s['nur_kuyruk'] = 0.0 if once else ilerle(V, T_KUVVET - 0.35, T_KUVVET + 0.25, lambda x: x)
     # güneş ve saat
     s['gunes'] = 1.0 if V > 20.9 else 0.0
     s['saat'] = anahtar(V, [(21.85, 0.0), (22.25, 1.0)])
     s['dilim'] = ilerle(V, T_SAATI - 0.02, T_SAATI + 0.55, e_io)
     s['gun'] = ilerle(V, T_GUN - 0.12, T_GUN + 0.48, e_io)
-    s['tamam'] = anahtar(V, [(T_GUN + 0.40, 0.0), (T_GUN + 0.58, 1.0), (T_GUN + 1.25, 0.0)])
+    s['tamam'] = ilerle(V, T_GUN + 0.40, T_GUN + 1.40, lambda x: x)
     s['kadran'] = anahtar(V, [(23.95, 1.0), (24.6, 0.0)])
     # şikâyet ve şükür
     s['sikayet'] = ilerle(V, T_SEKVA - 0.04, T_SEKVA + 0.55, e_io)
@@ -690,7 +690,8 @@ def ciz_adam(t, V, s, M):
         kx, ky = bilgi['kalp']
         Mn = M_bilesik(M_oteleme(kx, ky), M_olcek(M[0, 0] * ADAM_OLCEK))
         _k(esyalar.ciz_kalp_nuru, t, Mn, 26, parlaklik=s['nur'], isin=s['nur_isin'], zaman=V,
-           kalkan=(40.0 / ADAM_OLCEK) * s['nur'] if s['yagmur'] > 0.05 else 0.0)
+           kalkan=(40.0 / ADAM_OLCEK) * s['nur'] * min(1.0, s['yagmur'] * 3.0), isin_kuyruk=s['nur_kuyruk'],
+           bas_ust=bilgi['bas_ust'][1])
     if s['sukur'] > 0.05:
         # şükür: avuçlardan güneşe süzülen ışık zerreleri
         ex, ey = bilgi['el_on']
@@ -726,8 +727,9 @@ def ciz_gok_bahce(t, V, s, cam):
         yelkovan_onceki = 360.0 * ilerle(V - 1.0 / FPS, T_SAATI - 0.02, T_SAATI + 0.55, e_io)
         _k(esyalar.ciz_saat, t, Ms, 175, dilim=s['dilim'], gun=s['gun'], gorunurluk=s['saat'], tohum=1,
            akrep=akrep, yelkovan=yelkovan, yelkovan_onceki=yelkovan_onceki, kadran=s['kadran'], tamam=s['tamam'])
-        if s['tamam'] > 0.01:
-            t.isik(yol_daire(0, 0, 175 * 2.0), Ms, '#FFE2B0', guc=0.35 * s['tamam'], yumusak=70 * Ms[0, 0])
+        parla = math.sin(math.pi * s['tamam'])
+        if parla > 0.01:
+            t.isik(yol_daire(0, 0, 175 * 2.0), Ms, '#FFE2B0', guc=0.32 * parla, yumusak=70 * Ms[0, 0])
         if s['sukur'] > 0.05:
             t.isik(yol_op_cember(0, 0, 175 * (1.05 + 0.5 * s['sukur']), 40), Ms, '#FFE6B4',
                    guc=0.28 * (1 - s['sukur']) + 0.05, yumusak=30 * Ms[0, 0])

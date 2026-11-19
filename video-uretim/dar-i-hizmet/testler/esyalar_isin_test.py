@@ -21,7 +21,7 @@ def kare(isin, zaman, cam=Kamera(535, 1090, 0.94), parlaklik=1.0, kalkan=0.0, ku
         Mi = np.linalg.inv(M)
         kw = Mi @ np.array([kc[0], kc[1], 1.0])
         doga.ciz_yagmur(T, M, zaman, yagmur, alan=(-300, -400, 1400, 2300), ruzgar=-0.1, tohum=5,
-                        zemin_y=ADAM_Y + 20, korunan=(kw[0], kw[1], kalkan * ADAM_OLCEK))
+                        zemin_y=ADAM_Y + 20, korunan=(kw[0], kw[1], kalkan * ADAM_OLCEK) if kalkan > 0 else None)
     bilgi = insan.ciz_insan(T, Madam, poz, yon=-1, battaniye=1.0, nefes=(zaman * 0.25) % 1.0)
     kx, ky = bilgi['kalp']
     Mn = M_bilesik(M_oteleme(kx, ky), M_olcek(M[0, 0] * ADAM_OLCEK))

@@ -37,18 +37,25 @@ import ayarlar as A  # noqa: E402
 CFG = {
     "tohum": 7,
     "lens": 75,
-    "pitch": 10.5,               # daha onden bakis: ayni dikey aralikta konu daha genis
+    "pitch": 19.0,               # basamak ustleri ve siralar arasi bosluk okunsun (alt sira baslari ust sira altinda)
+    "yaw": 7.0,                  # hafif uc-ceyrek: kamera sagda, golgeli sag yuzler gorunur
     "mesafe": 3.05,
-    "hedef": [0.0, 0.18, 0.30],
-    "fstop": 3.2,                # ~f/2.8 (1/3 durak kisik): ust sira basliklari okunur kalsin
+    "hedef": [0.0, 0.22, 0.30],
+    "fstop": 4.5,                # odak Lem'alar sirtinda; on (7'li) sira da keskin
     "samples": 64,
     "esik": 0.04,
     "rx": 540,
     "ry": 960,
-    "dolly": 0.055,              # hareket boyunca mesafenin %5.5'i kadar yaklas
-    "kaydir_v": -0.006,          # kamera kendi yukari ekseninde 6 mm asagi (cok hafif dikey suruklenme)
-    "hedef_kuran_ust": 0.060,    # kadraj: Kur'an ust kenari (ustten oran)
-    "hedef_lem_alt": 0.662,      # kadraj: Lem'alar + kurdele alt kenari (dolly sonunda da < 0.68 kalsin)
+    "dolly": 0.035,              # hareket boyunca mesafenin %3.5'i kadar yaklas (on plan buyutmesi sinirli)
+    "kaydir_v": -0.004,          # kamera kendi yukari ekseninde 4 mm asagi (cok hafif dikey suruklenme)
+    # kadraj hedefleri hareketin SON karesinde (t=1) cozulur: Kur'an ust payi >= %8, alt kenar < y 1300 (0.677)
+    "hedef_kuran_ust": 0.083,
+    "hedef_lem_alt": 0.673,
+    "hedef_x": 0.495,
+    "rahle_bosluk": 0.036,       # raf alt yuzu ile 6'li sira baslari arasi (gorunen ~3 cm hava)
+    "gunes_yuk": 27.0,
+    "parilti_guc": 45.0,
+    "on_guc": 32.0,
 }
 CFG_DOSYA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ayar.json")
 
@@ -105,26 +112,34 @@ def kadraj_olc():
     return out
 
 
-def kamera_coz(cfg, sahne):
-    """Kur'an ust kenari ve Lem'alar alt kenari hedef oranlara gelsin."""
+def kamera_coz(cfg, sahne, t_coz=1.0):
+    """Hareketin son karesinde (t=1) Kur'an ust kenari ve Lem'alar/kurdele alt kenari hedef oranlara gelsin,
+    kaide + rahle + Kur'an grubu yatayda hedef_x'e ortalansin."""
     import bpy
     cam = bpy.context.scene.camera
-    for it in range(14):
-        sahne.kamera_konum(cam, cfg, 0.0)
+    for it in range(24):
+        sahne.kamera_konum(cam, cfg, t_coz)
         k = kadraj_olc()
         top, bot = k["kuran"]["y0"], max(k["lemalar"]["y1"], k["kurdele"]["y1"])
         span, hspan = bot - top, cfg["hedef_lem_alt"] - cfg["hedef_kuran_ust"]
         cfg["mesafe"] *= (span / hspan) ** 0.9
         mid, hmid = (top + bot) / 2, (cfg["hedef_lem_alt"] + cfg["hedef_kuran_ust"]) / 2
-        # kadrajda asagi kaymissa (mid buyuk) hedefi asagi indir
+        grup = [k[g] for g in ("kaide", "rahle", "kuran", "lemalar", "kurdele") if g in k]
+        midx = (min(g["x0"] for g in grup) + max(g["x1"] for g in grup)) / 2
         h = list(cfg["hedef"])
-        frame_h = 2 * cfg["mesafe"] * math.tan(math.atan(18.0 / cfg["lens"]))
+        frame_h = cfg["mesafe"] * 36.0 / cfg["lens"]
         h[2] -= (mid - hmid) * frame_h * 0.9
+        h[0] += (midx - cfg.get("hedef_x", 0.5)) * frame_h * 9.0 / 16.0 * 0.9
         cfg["hedef"] = h
-        if abs(span - hspan) < 0.0015 and abs(mid - hmid) < 0.0015:
+        if abs(span - hspan) < 0.001 and abs(mid - hmid) < 0.001 and abs(midx - cfg.get("hedef_x", 0.5)) < 0.001:
             break
     sahne.kamera_konum(cam, cfg, 0.0)
-    return kadraj_olc()
+    k0 = kadraj_olc()
+    sahne.kamera_konum(cam, cfg, 1.0)
+    k1 = kadraj_olc()
+    sahne.kamera_konum(cam, cfg, 0.0)
+    k0["_son"] = k1
+    return k0
 
 
 # ------------------------------------------------------------------ render
@@ -133,6 +148,11 @@ def kur(cfg):
     sc = sahne.sahne_kur(cfg)
     k = kamera_coz(cfg, sahne)
     return sahne, sc, k
+
+
+def _kadraj_yaz(k):
+    for ad, kk in (("t=0", k), ("t=1", k.get("_son", {}))):
+        print("KADRAJ", ad, json.dumps({a: {x: round(v, 3) for x, v in b.items()} for a, b in kk.items() if a != "_son"}))
 
 
 def render_kare(path, cfg, t=0.0, z_pass=False):
@@ -223,6 +243,49 @@ def sirt_olc(img_path, mask_path, erode=1, yaz=True):
     return out
 
 
+def sahne_olc(img_path, mask_path, yaz=True):
+    """Sirt disi hedef tonlar: duvar, Kur'an on kapagi (yaldiz haric), kaide on/ust yuzleri, altyazi bandi,
+    goruntu parlaklik yuzdelikleri (8 bit)."""
+    import cv2
+    import numpy as np
+    import sahne as S_
+    im = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)[..., :3][..., ::-1].astype(np.float32)
+    im /= 65535.0 if im.max() > 255 else 255.0
+    mk = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+    if mk.shape != im.shape[:2]:
+        mk = cv2.resize(mk, (im.shape[1], im.shape[0]), interpolation=cv2.INTER_NEAREST)
+    ker = np.ones((5, 5), np.uint8)
+    lum = im @ np.array([0.2126, 0.7152, 0.0722], np.float32)
+    hsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
+    out = {}
+    for ad, v in S_.MASKE.items():
+        m = cv2.erode((mk == v).astype(np.uint8), ker, iterations=1).astype(bool)
+        if ad == "kuran":
+            m &= ~((hsv[..., 0] > 28) & (hsv[..., 1] > 0.18))      # yaldiz haric
+        if m.sum() < 30:
+            continue
+        L = lum[m]
+        sel_med = m & (lum >= np.percentile(L, 35)) & (lum <= np.percentile(L, 65))
+        sel_hi = m & (lum >= np.percentile(L, 70)) & (lum <= np.percentile(L, 90))
+        out[ad] = dict(medyan=_hex(im[sel_med].mean(0)), aydinlik=_hex(im[sel_hi].mean(0)),
+                       L_med=float(np.median(L)), L_hi=float(np.percentile(L, 80)), n=int(m.sum()))
+    H = im.shape[0]
+    bant = im[int(H * 1330 / 1920):int(H * 1590 / 1920)]
+    out["altyazi"] = _hex(bant.reshape(-1, 3).mean(0))
+    out["P0.1"], out["P50"], out["P99"], out["P99.9"] = [float(np.percentile(lum, q) * 255) for q in (0.1, 50, 99, 99.9)]
+    if "kaide_on" in out and "kaide_ust" in out:
+        out["ust/on"] = out["kaide_ust"]["L_med"] / out["kaide_on"]["L_med"]
+        out["ust/on_aydinlik"] = out["kaide_ust"]["L_hi"] / out["kaide_on"]["L_hi"]
+    if yaz:
+        for ad in S_.MASKE:
+            if ad in out:
+                print(f"TON {ad:9s} medyan {out[ad]['medyan']}  aydinlik {out[ad]['aydinlik']}  (n={out[ad]['n']})")
+        print(f"TON altyazi bandi ort {out['altyazi']}  ust/on parlaklik {out.get('ust/on', 0):.3f} "
+              f"(aydinlik {out.get('ust/on_aydinlik', 0):.3f})  L P0.1/P50/P99/P99.9 = "
+              f"{out['P0.1']:.0f}/{out['P50']:.0f}/{out['P99']:.0f}/{out['P99.9']:.0f}")
+    return out
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "test"
     ek = json.loads(sys.argv[2]) if len(sys.argv) > 2 and cmd != "olc" else None
@@ -237,17 +300,20 @@ def main():
     if cmd == "test":
         cfg = cfg_yukle(ek)
         sahne, sc, k = kur(cfg)
-        print("KADRAJ", json.dumps({a: {kk: round(vv, 3) for kk, vv in b.items()} for a, b in k.items()}))
-        print("KAMERA", cfg["mesafe"], cfg["hedef"])
+        _kadraj_yaz(k)
+        print("KAMERA", cfg["mesafe"], cfg["hedef"], "odak", sahne.cfgG.get("_odak"), "rahle", sahne.cfgG.get("_rahle"),
+              "kurdele", sahne.cfgG.get("_kurdele_uzunluk"))
         ad = cfg.get("ad", "deneme")
         dt = render_kare(os.path.join(A.TEST, ad + ".png"), cfg, cfg.get("t", 0.0))
         print(f"SURE {dt:.1f}s")
         if cfg.get("maske", True):
             maske_render(os.path.join(A.TEST, ad + "_maske.png"))
             sirt_olc(os.path.join(A.TEST, ad + ".png"), os.path.join(A.TEST, ad + "_maske.png"))
+            sahne_olc(os.path.join(A.TEST, ad + ".png"), os.path.join(A.TEST, ad + "_maske.png"))
     if cmd == "olc":
         # python3 kapanis.py olc <goruntu.png> <maske.png>
         sirt_olc(sys.argv[2], sys.argv[3], erode=int(sys.argv[4]) if len(sys.argv) > 4 else 1)
+        sahne_olc(sys.argv[2], sys.argv[3])
     if cmd == "zaman":
         cfg = cfg_yukle(dict(ek or {}, rx=1080, ry=1920, samples=128, esik=0.02))
         sahne, sc, k = kur(cfg)
@@ -257,10 +323,10 @@ def main():
         import bpy
         import numpy as np
         cfg = cfg_yukle(dict(ek or {}, samples=ek.get("samples", 160) if ek else 160, esik=0.015))
-        # 1.25x cozunurluk, %3 genis goruntu alani (hareket/salinim payi)
+        # 1.5x cozunurluk, %3 genis goruntu alani (salinim payi): dolly sonunda on plan bile alt-ornekli kalir
         pay = 1.03
         so = cfg.get("test_olcek", 1.0)
-        cfg_b = dict(cfg, rx=int(round(1350 * so)), ry=int(round(2400 * so)))
+        cfg_b = dict(cfg, rx=int(round(1620 * so)), ry=int(round(2880 * so)))
         sahne, sc, k = kur(cfg_b)
         sc.camera.data.lens = cfg_b["lens"] / pay
         sc.render.image_settings.color_depth = "16"
@@ -282,7 +348,10 @@ def main():
         sc.view_layers[0].material_override = None
         maske_render(os.path.join(A.SCRATCH, "kare1_maske.png"))
         sirt_olc(os.path.join(A.SCRATCH, "kare1_buyuk.png"), os.path.join(A.SCRATCH, "kare1_maske.png"), erode=2)
-        json.dump(dict(cfg_b, pay=pay, kadraj=k, sure=dt), open(os.path.join(A.SCRATCH, "kare1_bilgi.json"), "w"), indent=1)
+        sahne_olc(os.path.join(A.SCRATCH, "kare1_buyuk.png"), os.path.join(A.SCRATCH, "kare1_maske.png"))
+        json.dump(dict(cfg_b, pay=pay, kadraj=k, sure=dt, odak=list(sahne.cfgG.get("_odak", ())),
+                       rahle=sahne.cfgG.get("_rahle"), kurdele_m=sahne.cfgG.get("_kurdele_uzunluk")),
+                  open(os.path.join(A.SCRATCH, "kare1_bilgi.json"), "w"), indent=1)
         print(f"KARE1 {dt:.1f}s")
     if cmd in ("son", "hepsi"):
         cfg = cfg_yukle(dict(ek or {}, samples=128, esik=0.02, rx=1080, ry=1920))
