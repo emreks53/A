@@ -8,11 +8,11 @@ import { svg, elips, cokgen, yenidenOrnekle } from '../motor/sekil.mjs';
 import * as M from '../motor/motifler.mjs';
 
 // ================================================================ dünya geometrisi
-export const S = 0.62; // adamın ölçeği (boy ~238 px)
+export const S = 0.8; // adamın ölçeği (boy ~307 px; basamak yüksekliği bacak boyunun ~%22'si, gerçek merdivene yakın)
 export const LEG = 184 * S; // kalça ekleminden ayak bileğine
 export const ANK = 11 * S; // ayak bileği ile taban arası
 
-const R = 40, D = 50, N = 7; // basamak yüksekliği, derinliği, sahanlığa kadar kanat başına basamak
+const R = 32, D = 40, N = 9; // basamak yüksekliği, derinliği, sahanlığa kadar kanat başına basamak (dış ölçü: (N+1)·R = 320, (N+1)·D = 400)
 const AX = 540, YP = 800, LW = 200; // eksen, sahanlık üstü, sahanlık eni
 const PX0 = AX - LW / 2, PX1 = AX + LW / 2;
 const KMIN = -10; // bulutların içine inen en alt basamak
@@ -20,12 +20,12 @@ const YALT = 1600; // yapının (bulutlara gömülü) alt ucu
 const TH = 230; // kanat kalınlığı (basamak burun çizgisinden köprü kemerine yatay uzaklık)
 export const Y = (k) => YP + (N + 1 - k) * R; // k. basamağın üst yüzü (N+1: sahanlık)
 export const T = (k) => PX0 - (N + 1 - k) * D; // k. basamağın basış yüzünün sol kenarı
-export const F = (k) => T(k) + 14; // k. basamakta ayak bileğinin x'i
+export const F = (k) => T(k) + 9; // k. basamakta ayak bileğinin x'i (topuk burunda, parmak ucu bir sonraki rıhtı geçmez)
 const ayna = (x) => 2 * AX - x;
 
 export const G = {
   R, D, N, AX, YP, PX0, PX1, Y, T, F,
-  NUR: { x: AX, y: 450, r: 56 }, // nur küresinin dünya yeri (kemerin içinde, üstte)
+  NUR: { x: AX, y: 392, r: 56 }, // nur küresinin dünya yeri (kemerin sivri kısmında, adamın başının üstünde)
   KEMER: { w: 200, h: 330, k: 175, kal: 22 }, // dış en, düz gövde boyu, sivri kısım boyu, ayak kalınlığı
   APEX: 880, // köprü kemerinin tepe noktası (sahanlığın altında)
 };
@@ -293,21 +293,21 @@ export function nurCiz(ctx, x, y, r, t, { guc = 1, alfa = 1, isin = 1, hale = 1 
 }
 
 // ================================================================ merdiven çıkan adam (ters kinematik)
-const P_ADIM = 0.42; // basamak periyodu
-const SW = 0.34; // salınım süresi
-export const S1 = 8.5; // ilk salınımın başlangıcı
+const P_ADIM = 0.355; // basamak periyodu
+const SW = 0.29; // salınım süresi
+export const S1 = 8.3; // ilk salınımın başlangıcı
 const kaydir = (j) => S1 + (j - 1) * P_ADIM;
-const AYAK0 = [T(0) + 12, T(0) + 22]; // başlangıçta [uzak, yakın] ayak bileği x
+const AYAK0 = [T(0) + 2, T(0) + 9]; // başlangıçta [uzak, yakın] ayak bileği x
 const FA = AX + 9, FB = AX - 11; // sahanlıkta son duruş (yakın ayak önde)
 // salınımlar: f: 1 yakın (ön) ayak, 0 uzak (arka) ayak; x0,k0 → x1,k1; s başlangıç, d süre; th: topuk kalkışı
 const SALINIM = [];
-SALINIM.push({ f: 1, x0: AYAK0[1], k0: 0, x1: F(1), k1: 1, s: kaydir(1), d: SW, th: 0.28, lift: 26 });
-SALINIM.push({ f: 0, x0: AYAK0[0], k0: 0, x1: F(2), k1: 2, s: kaydir(2), d: SW, th: 0.4, lift: 20 });
-for (let j = 3; j <= N + 1; j++) SALINIM.push({ f: j % 2, x0: F(j - 2), k0: j - 2, x1: F(j), k1: j, s: kaydir(j), d: SW, th: 0.42, lift: 20 });
+SALINIM.push({ f: 1, x0: AYAK0[1], k0: 0, x1: F(1), k1: 1, s: kaydir(1), d: SW, th: 0.3, lift: 14 });
+SALINIM.push({ f: 0, x0: AYAK0[0], k0: 0, x1: F(2), k1: 2, s: kaydir(2), d: SW, th: 0.42, lift: 12 });
+for (let j = 3; j <= N + 1; j++) SALINIM.push({ f: j % 2, x0: F(j - 2), k0: j - 2, x1: F(j), k1: j, s: kaydir(j), d: SW, th: 0.45, lift: 12 });
 {
   const son = SALINIM[SALINIM.length - 1]; // sahanlığa basış (j = N+1, uzak ayak)
   const s9 = son.s + son.d + 0.06;
-  SALINIM.push({ f: 1, x0: F(N), k0: N, x1: FA, k1: N + 1, s: s9, d: 0.36, th: 0.38, lift: 26 });
+  SALINIM.push({ f: 1, x0: F(N), k0: N, x1: FA, k1: N + 1, s: s9, d: 0.36, th: 0.38, lift: 12 });
   SALINIM.push({ f: 0, x0: F(N + 1), k0: N + 1, x1: FB, k1: N + 1, s: s9 + 0.36 + 0.02, d: 0.32, th: 0.24, lift: 8 });
 }
 const HR = 0.12; // topuk kalkışı penceresi
@@ -405,11 +405,13 @@ export function ayak(f, t) {
       const u = (t - s.s) / s.d;
       const [xs, ys] = topukKalkik(s.x0, s.k0, s.th);
       const xe = s.x1, ye = Y(s.k1) - ANK;
-      const ex = ease.inOutCubic(u);
-      const ey = 1 - Math.pow(1 - u, 2.2);
+      // önce yüksel (ara basamağın ve hedef basamağın burnunu aş), sonra ilerle, en sonda basamağa dik in:
+      // parmak ucu hiçbir an basamağın içinden geçmez, ayak havada sarkmaz
+      const yTop = Math.min(ys, ye) - s.lift;
+      const ex = ease.inOutSine(clamp((u - 0.12) / 0.76));
       const bx = lerp(xs, xe, ex);
-      const by = lerp(ys, ye, ey) - s.lift * Math.sin(Math.PI * u);
-      const a3 = u < 0.45 ? lerp(-s.th, 0.12, ease.inOutSine(u / 0.45)) : lerp(0.12, 0, ease.inOutSine((u - 0.45) / 0.55));
+      const by = u < 0.5 ? lerp(ys, yTop, ease.outCubic(u / 0.5)) : lerp(yTop, ye, ease.inOutSine((u - 0.5) / 0.5));
+      const a3 = u < 0.4 ? lerp(-s.th, 0.1, ease.inOutSine(u / 0.4)) : lerp(0.1, 0, ease.inOutSine((u - 0.4) / 0.6));
       return { x: bx, y: by, a3 };
     }
     x = s.x1; k = s.k1;
@@ -467,7 +469,7 @@ export function adamDurum(t) {
   poz.omuz = [kolArka, kolOn];
   poz.dirsek = [lerp(0.12, 0.22 + 0.3 * Math.max(0, kolArka), yuru), lerp(0.16, 0.22 + 0.3 * Math.max(0, kolOn), yuru)];
   const nefes = 0.006 * Math.sin(t * 2.2);
-  poz.govde = zamanEgri(t, [[S1 - 0.2, -0.02], [S1 + 0.15, 0.13], [t2 - 0.75, 0.13], [t2 - 0.2, 0.04], [t2 + 0.25, 0.0], [t2 + 0.6, -0.035]]) + nefes;
+  poz.govde = zamanEgri(t, [[S1 - 0.2, -0.02], [S1 + 0.15, 0.17], [t2 - 0.75, 0.17], [t2 - 0.2, 0.05], [t2 + 0.25, 0.0], [t2 + 0.6, -0.035]]) + nefes;
   poz.bas = zamanEgri(t, [[8.2, -0.16], [S1 + 0.2, 0.04], [t2 - 0.6, 0.04], [t2 - 0.1, -0.06], [t2 + 0.25, -0.06], [t2 + 0.75, -0.38]]);
   poz.el = [0, 0];
   return { x: ox, y: oy, poz, maxOran, ayaklar };

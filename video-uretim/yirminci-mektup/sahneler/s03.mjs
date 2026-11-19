@@ -264,18 +264,15 @@ export default {
       if (saadet > 0) isikCiz(ctx, t, msx, msy, Rs, saadet * (1 - sel));
 
       // dalışta altyazı bandının ardı yumuşak bir ışık örtüsüyle sakinleşir
-      const ortu = an(t, DALIS.bas + 0.04, 0.3, ease.inOutSine);
+      const ortu = an(t, DALIS.bas - 0.02, 0.3, ease.inOutSine);
       if (ortu > 0) {
-        const gb = ctx.createLinearGradient(0, 1120, 0, 1920);
-        gb.addColorStop(0, 'rgba(255,246,222,0)');
-        gb.addColorStop(0.35, `rgba(255,246,222,${0.5 * ortu})`);
-        gb.addColorStop(0.65, `rgba(255,246,222,${0.5 * ortu})`);
-        gb.addColorStop(1, `rgba(255,246,222,${0.3 * ortu})`);
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
+        // figürler altyazının arkasından geçerken bant ışıkla örtülür (s02 dalışıyla aynı dil)
+        const gb = ctx.createLinearGradient(0, H * 0.5, 0, H);
+        gb.addColorStop(0, 'rgba(252,244,220,0)');
+        gb.addColorStop(0.4, `rgba(252,244,220,${0.84 * ortu})`);
+        gb.addColorStop(1, `rgba(252,244,220,${0.92 * ortu})`);
         ctx.fillStyle = gb;
-        ctx.fillRect(0, 1120, W, 800);
-        ctx.restore();
+        ctx.fillRect(0, 0, W, H);
       }
       // 9) dalış: madalyondan taşan ışık seli (ışığın içine girilir)
       if (sel > 0) {

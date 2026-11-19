@@ -107,6 +107,16 @@ export default {
 
     if (dunya) {
       dunyaCiz(ctx, t, cam, nsx, nsy, nr);
+      // dalışta ekranın alt yarısı nurun sıcak ışığıyla örtülür (altyazı bandı sakin kalır)
+      const ort = an(t, ITME.t0 + 0.18, 0.5, ease.inOutSine);
+      if (ort > 0) {
+        const gr = ctx.createLinearGradient(0, H * 0.42, 0, H);
+        gr.addColorStop(0, 'rgba(252,242,214,0)');
+        gr.addColorStop(0.45, `rgba(252,242,214,${0.82 * ort})`);
+        gr.addColorStop(1, `rgba(252,242,214,${0.95 * ort})`);
+        ctx.fillStyle = gr;
+        ctx.fillRect(0, 0, W, H);
+      }
     }
 
     // nur küresi (dünyanın önünde; ışık)
@@ -282,7 +292,8 @@ function kemerCiz(g, t) {
 let adamKatman = null;
 function adamCiz(g, t, z = 1) {
   const ol = S * z > 1.6 ? 4 : 1.5; // itmede yüksek çözünürlüklü parçalar
-  const gor = an(t, ADAM.gorun, 0.32, ease.inOutSine);
+  // nura dalışta adam ışığa karışarak çekilir (dev boyutta altyazının arkasından geçmez)
+  const gor = an(t, ADAM.gorun, 0.32, ease.inOutSine) * (1 - an(t, ITME.t0 + 0.22, 0.34, ease.inOutSine));
   if (gor <= 0) return;
   const d = adamDurum(t);
   // belirirken arkasında yumuşak bir ışık

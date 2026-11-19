@@ -253,7 +253,7 @@ def kitap(ad, T, sirt_mat, deri_mat, kagit_mat, H=0.24, D=0.17, konum=(0, 0, 0),
     for p in me.polygons:
         p.use_smooth = True
     sirt = nesne(ad + '-sirt', me, sirt_mat, kok)
-    so = sirt.modifiers.new('kalinlik', 'SOLIDIFY'); so.thickness = 0.0024; so.offset = 1.0
+    so = sirt.modifiers.new('kalinlik', 'SOLIDIFY'); so.thickness = 0.0024; so.offset = -1.0  # kabuk içe: sırt kapakların dışına taşmaz
     # sırt ile kapaklar arasında hafif oluk (eklem): ince koyu silindirler
     return kok
 
@@ -277,10 +277,13 @@ o = nodes.new('ShaderNodeOutputMaterial'); bs = nodes.new('ShaderNodeBsdfPrincip
 bs.inputs['Base Color'].default_value = (0.075, 0.055, 0.042, 1); bs.inputs['Roughness'].default_value = 0.9
 duvar.data.materials.append(dm)
 
-# yay biçiminde dik ciltler (Mektubat hariç), RNK sırasıyla soldan sağa
-C = Vector((0.0, 0.40, 0.0))
-R = 0.43
-ara = 0.0045
+# yay biçiminde dik ciltler (Mektubat hariç), RNK sırasıyla soldan sağa. Yayın merkezi ÖNDE (kamera tarafında):
+# sırtlar yay üzerinde yan yana durur, ciltlerin arka uçları dışa doğru açılır; hiçbir cilt ötekinin içine girmez.
+# Ciltler dik durur (yana eğilme yok; üst köşeler birbirine değmez).
+R = 0.9
+Y_ORTA = 0.06  # ortadaki cildin sırtının y'si
+C = Vector((0.0, Y_ORTA - R, 0.0))
+ara = 0.005
 dizi = [k for k in kitaplar if k['id'] != 'mektubat']
 toplam = sum(k['kalinlik'] / 1000 for k in dizi) + ara * (len(dizi) - 1)
 aci_top = toplam / R
@@ -292,36 +295,36 @@ for k in dizi:
     am = a + (T / 2) / R
     tn = random.uniform(0.965, 1.035)
     sm = deri('deri-sirt-' + k['id'], renk=(DERI_RENK[0] * tn, DERI_RENK[1] * tn * random.uniform(0.985, 1.015), DERI_RENK[2] * tn), yaldiz=os.path.join(DOKU, f"sirt-{k['id']}-yaldiz.png"), yuk=os.path.join(DOKU, f"sirt-{k['id']}-yuk.png"))
-    poz = C + Vector((math.sin(am) * R, -math.cos(am) * R, 0))
-    poz.y += random.uniform(-0.002, 0.002)
-    kitap(k['id'], T, sm, deri_mat, kagit_mat, konum=poz, don=(random.uniform(-0.005, 0.005), random.uniform(-0.012, 0.012), am + random.uniform(-0.01, 0.01)))
+    poz = C + Vector((math.sin(am) * R, math.cos(am) * R, 0))
+    poz.y += random.uniform(-0.0015, 0.0015)
+    # sırt C'ye (kameraya) bakar: yerel -y → (-sin am, -cos am)  ⇒  z dönüşü -am
+    kitap(k['id'], T, sm, deri_mat, kagit_mat, konum=poz, don=(0, 0, -am + random.uniform(-0.004, 0.004)))
     a += (T + ara) / R
 
 # Mektubat: önde, ön kapağı üstte yatar; sırtı kameraya bakar, adı soldan sağa okunur
 mk = next(k for k in kitaplar if k['id'] == 'mektubat')
 Tm = mk['kalinlik'] / 1000
 sm = deri('deri-sirt-mektubat', yaldiz=os.path.join(DOKU, 'sirt-mektubat-yaldiz.png'), yuk=os.path.join(DOKU, 'sirt-mektubat-yuk.png'))
-MK_KONUM = (0.012, -0.175, Tm / 2)
-mektubat = kitap('mektubat', Tm, sm, deri_mat, kagit_mat, konum=MK_KONUM, don=(0, math.radians(-90), math.radians(-11)))
+MK_KONUM = (0.012, -0.195, Tm / 2)
+mektubat = kitap('mektubat', Tm, sm, deri_mat, kagit_mat, konum=MK_KONUM, don=(0, math.radians(-90), math.radians(-8)))
 # yerel z (boy) ekseni yatayda sola uzanır; kitabı ortala
 mektubat.location.x += 0.12
 
-# kurdele: sayfaların arasından (alt kesimden) masaya sarkan ipek şerit
+# kurdele: sayfaların arasından, kitabın alt ucundan çıkıp masaya sarkan ipek şerit (kitabın yerel koordinatında:
+# x kalınlık (+x ön kapak, yukarı), y derinlik, z boy (0: alt uç); masa yerel x = -Tm/2)
 def kurdele():
-    noktalar = [(0.0, 0.05, 0.0), (0.035, 0.06, 0.0), (0.06, 0.075, -0.012), (0.085, 0.09, -0.018), (0.12, 0.10, -0.019)]
+    m = -Tm / 2 + 0.0006
+    noktalar = [(0.0, 0.098, 0.03), (0.0, 0.1, -0.003), (-0.006, 0.104, -0.016), (m + 0.0012, 0.109, -0.03), (m, 0.114, -0.058), (m, 0.12, -0.085)]
     cu = bpy.data.curves.new('kurdele', 'CURVE'); cu.dimensions = '3D'
     sp = cu.splines.new('BEZIER'); sp.bezier_points.add(len(noktalar) - 1)
     for p, c in zip(sp.bezier_points, noktalar):
         p.co = c; p.handle_left_type = p.handle_right_type = 'AUTO'
-    cu.extrude = 0.0042; cu.twist_mode = 'MINIMUM'
+    cu.extrude = 0.0048; cu.twist_mode = 'MINIMUM'
     ob = bpy.data.objects.new('kurdele', cu); sc.collection.objects.link(ob)
-    ob.data.materials.append(ipek('ipek', (0.36, 0.07, 0.07)))
+    ob.data.materials.append(ipek('ipek', (0.22, 0.025, 0.035)))
     return ob
 kur = kurdele()
 kur.parent = mektubat
-kur.location = (0.0, 0.0, 0.0)
-kur.rotation_euler = (0, math.radians(90), 0)
-kur.location = (0.0, 0.11, -0.002)
 
 # Kur'an-ı Kerim: fildişi deri, yaldızlı; arkada ortada ahşap sehpada dik
 kuran_deri = deri('kuran-deri', renk=(0.010, 0.042, 0.024), cilali=0.2, olcek=9)
@@ -329,7 +332,7 @@ kuran_on = deri('kuran-on', renk=(0.010, 0.042, 0.024), yaldiz=os.path.join(DOKU
                 yaldiz_renk=(0.95, 0.70, 0.30), yaldiz_metal=1.0, cilali=0.15, olcek=9)
 kuran_kagit = kagit('kuran-sayfa', (0.92, 0.74, 0.42), yaldizli=True)
 KW, KH, KT = 0.175, 0.245, 0.052
-kuran = bos('kuran', (0.0, 0.33, 0.075), (math.radians(-12), 0, 0))
+kuran = bos('kuran', (0.0, 0.42, 0.0757), (math.radians(-12), 0, 0))
 # yerel: x en (-KW/2..KW/2), y kalınlık (ön kapak y=-KT/2), z boy
 kutu('kuran-arka', -KW / 2, KW / 2, KT / 2 - 0.003, KT / 2, 0, KH, kuran_deri, kuran)
 kutu('kuran-sayfa', -KW / 2 + 0.002, KW / 2 - 0.004, -KT / 2 + 0.003, KT / 2 - 0.003, 0.003, KH - 0.003, kuran_kagit, kuran)
@@ -349,7 +352,7 @@ me = bpy.data.meshes.new('kuran-on'); bm.to_mesh(me); bm.free()
 on = nesne('kuran-on', me, kuran_on, kuran)
 bv = on.modifiers.new('pah', 'BEVEL'); bv.width = 0.0009; bv.segments = 3
 # sehpa: eğik sırt tahtası + ön dudak + taban
-sehpa = bos('sehpa', (0.0, 0.37, -0.03))
+sehpa = bos('sehpa', (0.0, 0.46, -0.03))
 kutu('sehpa-taban', -0.13, 0.13, -0.09, 0.07, 0.0, 0.10, sehpa_mat, sehpa, pah=0.004)
 kutu('sehpa-dudak', -0.12, 0.12, -0.095, -0.07, 0.10, 0.118, sehpa_mat, sehpa, pah=0.003)
 sirt_tahta = kutu('sehpa-sirt', -0.10, 0.10, -0.01, 0.005, 0.10, 0.36, sehpa_mat, sehpa, pah=0.003)
