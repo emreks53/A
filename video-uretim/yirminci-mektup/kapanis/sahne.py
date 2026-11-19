@@ -178,9 +178,10 @@ def ipek(ad, renk):
     bsdf = nodes.new('ShaderNodeBsdfPrincipled')
     links.new(bsdf.outputs['BSDF'], out.inputs['Surface'])
     bsdf.inputs['Base Color'].default_value = (*renk, 1)
-    bsdf.inputs['Roughness'].default_value = 0.32
-    bsdf.inputs['Sheen Weight'].default_value = 0.6
-    bsdf.inputs['Specular IOR Level'].default_value = 0.6
+    bsdf.inputs['Roughness'].default_value = 0.72
+    bsdf.inputs['Sheen Weight'].default_value = 0.12
+    bsdf.inputs['Sheen Tint'].default_value = (*renk, 1)
+    bsdf.inputs['Specular IOR Level'].default_value = 0.12
     return mat
 
 # ---------------------------------------------------------------- geometri yardımcıları
@@ -319,9 +320,9 @@ def kurdele():
     sp = cu.splines.new('BEZIER'); sp.bezier_points.add(len(noktalar) - 1)
     for p, c in zip(sp.bezier_points, noktalar):
         p.co = c; p.handle_left_type = p.handle_right_type = 'AUTO'
-    cu.extrude = 0.0048; cu.twist_mode = 'MINIMUM'
+    cu.extrude = 0.0055; cu.twist_mode = 'MINIMUM'
     ob = bpy.data.objects.new('kurdele', cu); sc.collection.objects.link(ob)
-    ob.data.materials.append(ipek('ipek', (0.22, 0.025, 0.035)))
+    ob.data.materials.append(ipek('ipek', (0.13, 0.012, 0.02)))
     return ob
 kur = kurdele()
 kur.parent = mektubat
